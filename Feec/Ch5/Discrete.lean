@@ -1,4 +1,8 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.BGG
+public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
 # Chapter 5.2: discretization of the BGG (weak-symmetry) complex
@@ -73,7 +77,7 @@ mapping constant of the concrete complex) enter only as fields of `ContHyp` / `D
 
 open scoped RealInnerProductSpace
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.Ch5.Discrete
 

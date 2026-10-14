@@ -22,7 +22,9 @@ Coverage (thesis numbering):
 * **Prop 3.6** (constraint propagation): algebraic core `div_propagation`,
   `violation_evolution` (closed system for `(tr E, vskw E, tr B, vskw B)`), `energy_flux`
   (`½ ∂_t e = div F`), `energy_nonneg`, `energy_eq_zero_iff`; field versions
-  `div_const_field` and the full theorem `prop_3_6` on `ℝ³` (compact spatial support, `C²`).
+  `div_const_field` and the full theorem `prop_3_6` on `ℝ³` (`C²`, compact spatial support
+  locally uniformly in time); `prop_3_6_hyps_nonvacuous` (nonzero fields satisfying the
+  regularity, support and evolution hypotheses).
 * **§3.5** (plane waves): `planeWave_weyl` (the linearized Riemann tensor of the TT wave is
   `[[E, B], [B, -E]]` with explicit `E, B`), `planeWave_EB` (for `f ∈ C³`, `E, B` are
   symmetric, trace-free and solve (3.3)–(3.4) at every point).
@@ -32,13 +34,15 @@ Corrections and gaps filled (details in the docstrings):
 * Lemma 3.5: "`A` is then trace-free" should be `curl A`; part (3) needs only symmetry,
   `div A = 0` and `grad tr A = 0`.
 * Prop 3.4: the linearization misses the factor `ε`; the equivalence is pointwise and needs
-  only `C¹`; it cites Prop 3.2 where Prop 3.3 is meant; of the 24 equations only 16 are
-  independent (6 constraints + 10 evolution equations), not "6 + 18".
+  only `C¹`; it cites Prop 3.2 where Prop 3.3 is meant; the thesis counts "6 constraints + 18
+  evolution equations" (at most 24 conditions); on symmetric trace-free jets exactly 16 of
+  them are independent (6 constraints + 10 evolution equations).
 * Prop 3.6: the thesis' proof is a forward reference to Cor 4.5 ("Theorem 4.5") whose
   hypotheses are never verified (they are only conjectured in Prop 4.17); "`curl E` is TSD"
   should be `curl B`. Here: a direct proof on `ℝ³` by divergence propagation and the energy
   method.
-* §3.5: `A₋` should be `Aₓ`; `f ∈ C³` (not `C²`) is needed.
+* §3.5: `A₋` should be `Aₓ`; the standing hypothesis `f ∈ C²` is inconsistent with the later
+  use of `f'''` (the thesis itself switches to `f ∈ C³`); we assume `f ∈ C³` throughout.
 
 Not formalized: the nonlinear EB system of §3.4 (quoted from Anderson–Choquet-Bruhat–York; it
 needs the 3+1 split and extrinsic curvature; its extracted B-equation sign `+ sym curl E` must
@@ -349,8 +353,9 @@ Bianchi identity `∂_[α C_βγ]δθ = 0` for `C = [[E, B], [B, -E]]` holds iff
 Thesis gap: `div` and matrix `curl` are used before being defined (conventions fixed as in
 Lemma 3.5; the signs depend on them); the equivalence is pointwise and needs only `C ∈ C¹`
 (field version: `linBianchi_field_iff`); "using the symmetries in Proposition 3.2" should cite
-Prop 3.3. Trace-freeness is not needed for this equivalence (all 24 equations are independent
-on symmetric jets); it is needed for the count of 16 (`linBianchi_iff_sym`,
+Prop 3.3. Trace-freeness is not needed for this equivalence (the 24 equations are not reduced
+by assuming trace-freeness here; their independence on general symmetric jets is not proved);
+it is needed for the count of 16 (`linBianchi_iff_sym`,
 `EBJetSym_surjective`). The linearization step "`∇_[α W_βγ]δθ = ∂_[α C_βγ]δθ + O(ε²)`" misses
 the factor `ε` on the right; this module starts from the linearized identity. -/
 theorem linBianchi_iff (dE dB : Jet4) (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) :
@@ -414,7 +419,8 @@ theorem trace_symm (A : Matrix (Fin 3) (Fin 3) ℝ) : (symm A).trace = A.trace :
 Bianchi identity is equivalent to the 6 constraints `div E = div B = 0` and the symmetric parts
 `Ė + sym curl B = 0`, `Ḃ - sym curl E = 0` of the evolution equations.
 
-Correction: the thesis counts "6 constraints + 18 evolution equations". The trace parts of the
+Refinement: the thesis counts "6 constraints + 18 evolution equations" (at most 24
+conditions); only 16 of them are independent on symmetric trace-free jets. The trace parts of the
 evolution equations are `0 = 0` (`trace_curl_of_symm`) and the skew parts repeat the constraints
 (`curl_symm`), so the content is 6 constraints plus 10 evolution equations (each `sym curl`
 equation is valued in symmetric trace-free matrices, a 5-dimensional space); see
@@ -460,8 +466,8 @@ theorem div_divJet (v : Fin 3 → ℝ) : div (divJet v) = v := by
 `ℝ³ × ℝ³ × Sym₀ × Sym₀` (dimension `3 + 3 + 5 + 5 = 16`). So the 24 Bianchi components of
 `linBianchi_iff_sym` have rank exactly 16: 6 constraints plus 10 evolution equations.
 
-Thesis gap: the thesis asserts "6 constraints + 18 evolution equations" without checking
-independence. -/
+Refinement: the thesis counts "6 constraints + 18 evolution equations" (at most 24
+conditions) without determining how many are independent; the answer is 16. -/
 theorem EBJetSym_surjective (v w : Fin 3 → ℝ) (P Q : Matrix (Fin 3) (Fin 3) ℝ)
     (hP : Pᵀ = P ∧ P.trace = 0) (hQ : Qᵀ = Q ∧ Q.trace = 0) :
     ∃ dE dB : Jet4, IsSymTF dE ∧ IsSymTF dB ∧ div (sp dE) = v ∧ div (sp dB) = w ∧
@@ -807,8 +813,8 @@ linearized Weyl field `[[E, B], [B, -E]] = Rjet(∂∂h)` with `E = waveE`, `B =
 are symmetric, trace-free and solve the linearized EB system (3.3)–(3.4) at every point
 (`div E = div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`).
 
-Thesis gap: `f ∈ C²` is assumed at first, but the EB equations involve `f'''`, so `f ∈ C³` is
-needed (the thesis notes this at the end). -/
+Correction (inconsistent hypotheses): the thesis first assumes `f ∈ C²`, but the EB
+equations involve `f'''`; the thesis itself then switches to `f ∈ C³`, which we assume. -/
 theorem planeWave_EB {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ Ap Ax : ℝ) (p : E4) :
     Rjet (jet2 (fun y a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) p) =
       T (waveE κ Ap Ax f p) (waveB κ Ap Ax f p) (waveB κ Ap Ax f p) (-waveE κ Ap Ax f p) ∧
@@ -1192,10 +1198,16 @@ theorem fluxD_zero_left (dE dB : Matrix (Fin 3) (Fin 3) ℝ) (c : Fin 3) :
   simp [fluxD]
 
 /-- **Thesis Prop 3.6** (constraint propagation for the linearized EB system), on `ℝ³`.
-Let `E, B : ℝ⁴ → ℝ^{3×3}` be `C²` (jointly in `(t, x)`), vanish for `x` outside a fixed compact
-`K ⊆ ℝ³` (uniformly in `t`), and solve `Ė = -curl B`, `Ḃ = curl E` for `t > 0`. If `E(0, ·)` and
-`B(0, ·)` are TSD (symmetric, trace-free, divergence-free), then `E(t, ·)` and `B(t, ·)` are
-TSD for all `t ≥ 0`.
+Let `E, B : ℝ⁴ → ℝ^{3×3}` be `C²` (jointly in `(t, x)`), have compact spatial support locally
+uniformly in time (for each `s` a compact `K_s ⊆ ℝ³` containing the spatial supports for all
+`|r - s| ≤ 1`), and solve `Ė = -curl B`, `Ḃ = curl E` for `t > 0`. If `E(0, ·)` and `B(0, ·)`
+are TSD (symmetric, trace-free, divergence-free), then `E(t, ·)` and `B(t, ·)` are TSD for all
+`t ≥ 0`.
+
+The support hypothesis is local in time on purpose: by finite propagation speed it holds for
+solutions with compactly supported Cauchy data, whereas a support set uniform in all `t` would
+force (via the strong Huygens principle for the wave equation satisfied by TSD solutions) `E` and
+`B` to vanish, making the statement vacuous.
 
 Thesis gap: the thesis argues by "Theorem 4.5" (i.e. Cor 4.5), with neither the domain, the
 boundary conditions nor the functional-analytic hypotheses of Cor 4.5 (skew-adjointness,
@@ -1206,12 +1218,18 @@ compact spatial support and prove it directly, by (1) `∂_t div E = -div curl B
 `½ ∂_t e = div F` (`energy_flux`), so `∫ e(t) dx` is constant, and `e(0) = 0`, `e ≥ 0` give
 `e(t) ≡ 0` (`energy_eq_zero_iff`). Also: "Similarly, `curl E` is TSD" should read `curl B`. -/
 theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
-    (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j) {K : Set (Fin 3 → ℝ)} (hK : IsCompact K)
-    (hsupp : ∀ t x, x ∉ K → E (ev t x) = 0 ∧ B (ev t x) = 0)
+    (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
+    (hsupp : ∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧
+      ∀ r ∈ Metric.closedBall s 1, ∀ x ∉ K, E (ev r x) = 0 ∧ B (ev r x) = 0)
     (hEeq : ∀ Y : E4, 0 < Y 0 → jet4 E Y 0 = -curl (sp (jet4 B Y)))
     (hBeq : ∀ Y : E4, 0 < Y 0 → jet4 B Y 0 = curl (sp (jet4 E Y)))
     (h0 : ∀ x, TSDAt E (ev 0 x) ∧ TSDAt B (ev 0 x)) (t : ℝ) (ht : 0 ≤ t) (x : Fin 3 → ℝ) :
     TSDAt E (ev t x) ∧ TSDAt B (ev t x) := by
+  -- compact support of each time slice
+  have hsl : ∀ s, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧
+      ∀ y ∉ K, E (ev s y) = 0 ∧ B (ev s y) = 0 := fun s => by
+    obtain ⟨K, hK, hsK⟩ := hsupp s
+    exact ⟨K, hK, hsK s (Metric.mem_closedBall_self zero_le_one)⟩
   -- regularity
   have hE1 : ∀ i j, ContDiff ℝ 1 fun Y => E Y i j := fun i j => (hEc i j).of_le (by norm_num)
   have hB1 : ∀ i j, ContDiff ℝ 1 fun Y => B Y i j := fun i j => (hBc i j).of_le (by norm_num)
@@ -1238,17 +1256,15 @@ theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
   have he'_cont : ∀ s, Continuous fun y =>
       energyD (E (ev s y)) (B (ev s y)) (jet4 E (ev s y) 0) (jet4 B (ev s y) 0) := fun s =>
     hΦe'.continuous.comp (contDiff_ev s).continuous
-  have he_int : ∀ s, Integrable fun y => energy (E (ev s y)) (B (ev s y)) := fun s =>
-    (he_cont s).integrable_of_hasCompactSupport (HasCompactSupport.intro hK fun y hy => by
-      simp [(hsupp s y hy).1, (hsupp s y hy).2, energy])
-  have hzero' : ∀ s y, y ∉ K →
-      energyD (E (ev s y)) (B (ev s y)) (jet4 E (ev s y) 0) (jet4 B (ev s y) 0) = 0 := by
-    intro s y hy
-    rw [(hsupp s y hy).1, (hsupp s y hy).2, energyD_zero_left]
+  have he_int : ∀ s, Integrable fun y => energy (E (ev s y)) (B (ev s y)) := fun s => by
+    obtain ⟨K, hK, hsK⟩ := hsl s
+    exact (he_cont s).integrable_of_hasCompactSupport (HasCompactSupport.intro hK fun y hy => by
+      simp [(hsK y hy).1, (hsK y hy).2, energy])
   -- the spatial integrals of the flux divergence vanish
   have hflux : ∀ s c, ∫ y, fluxD (E (ev s y)) (B (ev s y)) (jet4 E (ev s y) c.succ)
       (jet4 B (ev s y) c.succ) c = 0 := by
     intro s c
+    obtain ⟨K, hK, hsK⟩ := hsl s
     have hΦ : Differentiable ℝ fun Y => flux (E Y) (B Y) c :=
       (cd_flux hE1 hB1 c).differentiable (by norm_num)
     have hg : Differentiable ℝ fun y => flux (E (ev s y)) (B (ev s y)) c :=
@@ -1264,12 +1280,13 @@ theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
         (contDiff_ev s).continuous).integrable_of_hasCompactSupport
         (HasCompactSupport.intro hK fun y hy => by
           simp only [Function.comp_apply]
-          rw [(hsupp s y hy).1, (hsupp s y hy).2, fluxD_zero_left])
+          rw [(hsK y hy).1, (hsK y hy).2, fluxD_zero_left])
     have hgint : Integrable fun y => flux (E (ev s y)) (B (ev s y)) c :=
-      ((cd_flux hE1 hB1 c).continuous.comp (contDiff_ev s).continuous).integrable_of_hasCompactSupport
+      ((cd_flux hE1 hB1 c).continuous.comp
+        (contDiff_ev s).continuous).integrable_of_hasCompactSupport
         (HasCompactSupport.intro hK fun y hy => by
           simp only [Function.comp_apply]
-          simp [(hsupp s y hy).1, (hsupp s y hy).2, flux])
+          simp [(hsK y hy).1, (hsK y hy).2, flux])
     have ibp := integral_mul_fderiv_eq_neg_fderiv_mul_of_integrable (μ := volume)
       (f := fun _ : Fin 3 → ℝ => (1 : ℝ)) (g := fun y => flux (E (ev s y)) (B (ev s y)) c)
       (v := Pi.single c 1) (by simp) (by simpa [hg'] using hG'int) (by simpa using hgint)
@@ -1279,6 +1296,12 @@ theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
   have hI : ∀ s, HasDerivAt (fun r => ∫ y, energy (E (ev r y)) (B (ev r y)))
       (∫ y, energyD (E (ev s y)) (B (ev s y)) (jet4 E (ev s y) 0) (jet4 B (ev s y) 0)) s := by
     intro s
+    obtain ⟨K, hK, hsK⟩ := hsupp s
+    have hzero' : ∀ r ∈ Metric.ball s 1, ∀ y ∉ K,
+        energyD (E (ev r y)) (B (ev r y)) (jet4 E (ev r y) 0) (jet4 B (ev r y) 0) = 0 := by
+      intro r hr y hy
+      have h := hsK r (Metric.ball_subset_closedBall hr) y hy
+      rw [h.1, h.2, energyD_zero_left]
     set S := (fun p : ℝ × (Fin 3 → ℝ) => ev p.1 p.2) '' (Metric.closedBall s 1 ×ˢ K)
     have hS : IsCompact S := ((isCompact_closedBall s 1).prod hK).image continuous_ev
     obtain ⟨C, hC⟩ := hS.exists_bound_of_continuousOn hΦe'.continuous.continuousOn
@@ -1292,7 +1315,7 @@ theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
       by_cases hy : y ∈ K
       · rw [indicator_of_mem hy]
         exact hC (ev r y) ⟨(r, y), ⟨Metric.ball_subset_closedBall hr, hy⟩, rfl⟩
-      · rw [hzero' r y hy, indicator_of_notMem hy, norm_zero]
+      · rw [hzero' r hr y hy, indicator_of_notMem hy, norm_zero]
     · exact (integrableOn_const hK.measure_lt_top.ne).integrable_indicator hK.measurableSet
     · exact Eventually.of_forall fun y r _ =>
         hd_energy (m := fun r => E (ev r y)) (n := fun r => B (ev r y))
@@ -1312,11 +1335,12 @@ theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     rw [integral_const_mul, integral_finsetSum]
     · simp [hflux]
     · intro c _
+      obtain ⟨K, hK, hsK⟩ := hsl s
       exact ((cd_fluxD hE1 hB1 (hEp c.succ) (hBp c.succ) c).continuous.comp
         (contDiff_ev s).continuous).integrable_of_hasCompactSupport
         (HasCompactSupport.intro hK fun y hy => by
           simp only [Function.comp_apply]
-          rw [(hsupp s y hy).1, (hsupp s y hy).2, fluxD_zero_left])
+          rw [(hsK y hy).1, (hsK y hy).2, fluxD_zero_left])
   have hconst := const_of_deriv_pos hI hI0 t ht
   have hinit : ∫ y, energy (E (ev 0 y)) (B (ev 0 y)) = 0 := by
     have : (fun y => energy (E (ev 0 y)) (B (ev 0 y))) = fun _ => 0 := by
@@ -1328,6 +1352,129 @@ theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
   have heq := (Continuous.ae_eq_iff_eq volume (he_cont t) continuous_const).1 hae
   have hx := (energy_eq_zero_iff _ _).1 (congrFun heq x)
   exact ⟨⟨hx.1.1, hx.1.2, (hdiv t ht x).1⟩, ⟨hx.2.1, hx.2.2, (hdiv t ht x).2⟩⟩
+
+/-! ### Non-vacuity of the hypotheses of Prop 3.6 -/
+
+open scoped ContDiff
+
+/-- Spatial projection `(t, x) ↦ x` as a continuous linear map. -/
+def spProj : E4 →L[ℝ] (Fin 3 → ℝ) :=
+  ContinuousLinearMap.pi fun c => ContinuousLinearMap.proj c.succ
+
+/-- `spProj (t, x) = x`. -/
+@[simp] theorem spProj_ev (t : ℝ) (x : Fin 3 → ℝ) : spProj (ev t x) = x := by
+  ext c; simp [spProj, ev]
+
+/-- Chain rule for a field that depends only on the spatial variables. -/
+theorem pd_spProj {f : (Fin 3 → ℝ) → ℝ} (hf : Differentiable ℝ f) (μ : Fin 4) (Y : E4) :
+    pd μ (fun Y => f (spProj Y)) Y = fderiv ℝ f (spProj Y) (spProj (Pi.single μ 1)) := by
+  unfold pd
+  rw [show (fun Y => f (spProj Y)) = f ∘ spProj from rfl,
+    fderiv_comp Y (hf _) spProj.differentiableAt, spProj.fderiv]
+  rfl
+
+/-- A field that depends only on `x` has vanishing time derivative. -/
+theorem pd_spProj_zero {f : (Fin 3 → ℝ) → ℝ} (hf : Differentiable ℝ f) (Y : E4) :
+    pd 0 (fun Y => f (spProj Y)) Y = 0 := by
+  rw [pd_spProj hf]
+  have : spProj (Pi.single 0 1) = 0 := by
+    ext c; simp [spProj, Fin.succ_ne_zero]
+  simp [this]
+
+/-- Spatial partials of a field that depends only on `x`. -/
+theorem pd_spProj_succ {f : (Fin 3 → ℝ) → ℝ} (hf : Differentiable ℝ f) (c : Fin 3) (Y : E4) :
+    pd c.succ (fun Y => f (spProj Y)) Y = pd c f (spProj Y) := by
+  rw [pd_spProj hf]
+  have : spProj (Pi.single c.succ 1) = Pi.single c 1 := by
+    ext d; simp [spProj, Pi.single_apply, Fin.succ_inj]
+  simp [this, pd]
+
+/-- Partial derivatives of smooth functions on `ℝ³` are smooth. -/
+theorem contDiff_pd3 {f : (Fin 3 → ℝ) → ℝ} (hf : ContDiff ℝ ∞ f) (i : Fin 3) :
+    ContDiff ℝ ∞ (pd i f) :=
+  (hf.fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
+
+/-- `tsupport (∂_i f) ⊆ tsupport f`. -/
+theorem tsupport_pd_subset (f : (Fin 3 → ℝ) → ℝ) (i : Fin 3) : tsupport (pd i f) ⊆ tsupport f := by
+  refine closure_minimal (fun x hx => ?_) (isClosed_tsupport f)
+  refine tsupport_fderiv_subset (𝕜 := ℝ) (subset_tsupport _ ?_)
+  intro h
+  exact hx (by simp [pd, h])
+
+/-- A differentiable compactly supported function with vanishing partials is zero. -/
+theorem eq_zero_of_pd_eq_zero {f : (Fin 3 → ℝ) → ℝ} (hf : Differentiable ℝ f)
+    (hc : HasCompactSupport f) (h : ∀ i x, pd i f x = 0) (x : Fin 3 → ℝ) : f x = 0 := by
+  have hd : fderiv ℝ f = 0 := by
+    funext y
+    refine ContinuousLinearMap.coe_injective ((Pi.basisFun ℝ (Fin 3)).ext fun i => ?_)
+    simpa [pd] using h i y
+  obtain ⟨y, hy⟩ : ∃ y, y ∉ tsupport f := by
+    by_contra! hall
+    exact hc.ne_univ (Set.eq_univ_of_forall hall)
+  rw [is_const_of_fderiv_eq_zero hf (congrFun hd) x y]
+  exact image_eq_zero_of_notMem_tsupport hy
+
+/-- A fixed smooth bump function on `ℝ³` (equal to `1` near `0`). -/
+noncomputable def bump3 : ContDiffBump (0 : Fin 3 → ℝ) := ⟨1, 2, one_pos, one_lt_two⟩
+
+/-- The static field `E(t, x) = ∇²φ(x)` built from `φ = bump3`. -/
+noncomputable def hessField (Y : E4) : Matrix (Fin 3) (Fin 3) ℝ :=
+  Matrix.of fun a b => pd a (pd b bump3) (spProj Y)
+
+/-- Entries of the Hessian of `bump3` are smooth. -/
+theorem contDiff_hess (a b : Fin 3) : ContDiff ℝ ∞ (pd a (pd b bump3)) :=
+  contDiff_pd3 (contDiff_pd3 bump3.contDiff b) a
+
+/-- Non-vacuity of the hypotheses of `prop_3_6` other than TSD initial data: the static fields
+`E = ∇²φ`, `B = 0` with `φ` a smooth bump are `C²`, have compact spatial support, solve the
+linearized EB system, and are nonzero. (They are not TSD at `t = 0`, since `tr E = Δφ ≢ 0`; a
+nonzero solution with TSD data, e.g. the linearized Weyl field of a TT wave with compactly
+supported Cauchy data, needs the solution theory of the wave equation and is not constructed.) -/
+theorem prop_3_6_hyps_nonvacuous :
+    ∃ E B : E4 → Matrix (Fin 3) (Fin 3) ℝ,
+      (∀ i j, ContDiff ℝ 2 fun Y => E Y i j) ∧ (∀ i j, ContDiff ℝ 2 fun Y => B Y i j) ∧
+      (∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧
+        ∀ r ∈ Metric.closedBall s 1, ∀ x ∉ K, E (ev r x) = 0 ∧ B (ev r x) = 0) ∧
+      (∀ Y : E4, 0 < Y 0 → jet4 E Y 0 = -curl (sp (jet4 B Y))) ∧
+      (∀ Y : E4, 0 < Y 0 → jet4 B Y 0 = curl (sp (jet4 E Y))) ∧
+      ∃ x, E (ev 0 x) ≠ 0 := by
+  have hd : ∀ a b, Differentiable ℝ (pd a (pd b bump3)) := fun a b =>
+    (contDiff_hess a b).differentiable (by simp)
+  have hB : ∀ Y, jet4 (fun _ : E4 => (0 : Matrix (Fin 3) (Fin 3) ℝ)) Y = 0 := by
+    intro Y; funext μ; ext i j; simp [jet4, pd]
+  refine ⟨hessField, fun _ => 0, fun i j => ?_, fun _ _ => contDiff_const, fun s => ?_,
+    fun Y _ => ?_, fun Y _ => ?_, ?_⟩
+  · exact ((contDiff_hess i j).of_le (by simp)).comp spProj.contDiff
+  · refine ⟨tsupport bump3, bump3.hasCompactSupport.isCompact, fun r _ x hx => ⟨?_, rfl⟩⟩
+    ext a b
+    simp only [hessField, spProj_ev, Matrix.of_apply, Matrix.zero_apply]
+    exact image_eq_zero_of_notMem_tsupport fun h =>
+      hx (tsupport_pd_subset _ b (tsupport_pd_subset _ a h))
+  · rw [hB]; ext a b
+    simp [jet4, hessField, pd_spProj_zero (hd a b), sp, curl]
+  · rw [hB]; ext a b
+    simp only [Pi.zero_apply, Matrix.zero_apply, curl, sp, jet4, hessField, Matrix.of_apply]
+    simp only [pd_spProj_succ (hd _ _)]
+    set x := spProj Y
+    have hc : ∀ c d, pd c (pd a (pd d bump3)) x = pd a (pd c (pd d bump3)) x := fun c d =>
+      pd_comm' ((contDiff_pd3 bump3.contDiff d).of_le (by simp)) c a x
+    have hs : ∀ c d, pd c (pd d bump3) = pd d (pd c bump3) := fun c d =>
+      funext (pd_comm' (bump3.contDiff (n := 2)) c d)
+    simp only [hc]
+    fin_cases b <;>
+      simp [eps3_explicit, Fin.sum_univ_three, hs 1 0, hs 2 0, hs 2 1]
+  · by_contra! h
+    have hφ : ∀ b x, pd b bump3 x = 0 := by
+      intro b
+      refine eq_zero_of_pd_eq_zero ((contDiff_pd3 bump3.contDiff b).differentiable (by simp))
+        ?_ fun a x => ?_
+      · exact bump3.hasCompactSupport.mono'
+          ((subset_tsupport _).trans (tsupport_pd_subset _ b))
+      · simpa [hessField] using congrFun (congrFun (h x) a) b
+    have := eq_zero_of_pd_eq_zero ((bump3.contDiff (n := 1)).differentiable one_ne_zero)
+      bump3.hasCompactSupport hφ 0
+    rw [bump3.one_of_mem_closedBall (Metric.mem_closedBall_self zero_le_one)] at this
+    exact one_ne_zero this
 
 end Prop36
 

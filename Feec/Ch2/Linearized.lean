@@ -33,14 +33,18 @@ Formalizes §2.7–§2.8 of the thesis (Thm 2.3, (2.5), (2.10), Prop 2.4, (2.11)
   (`Rjet_pairSkew`, `Rjet_bianchi1`).
 * `Hjet_gauge`: gauge invariance `H(2∂_(a ξ_b)) = 0` (end of §2.7);
   `Hjet_bianchi`: linearized Bianchi `∂^b H_bd = 0` (new).
-* `Hjet_lorentz`, `lorentz_eq_iff`: **Prop 2.4(b) corrected** (`H = −½ □h̄`) and (2.11);
+* `Hjet_lorentz`, `lorentz_eq_iff`, `Hsym_lorentz_eq_iff`: **Prop 2.4(b) corrected**
+  (`H = −½ □h̄`) and (2.11) (jet and symbol level);
   `thesis_prop_2_4b_false`: the printed `H = −□h̄` is false.
 * `exists_lorentz_gauge`: Prop 2.4(a), with the wave solver as the explicit hypothesis
   `WaveSolvable`.
 * `plane_wave`: Prop 2.5 with genuine derivatives (`□h̄ = 0`, `∂^a h̄_ab = 0`, `H = 0`).
-* `isTT_iff`, `finrank_ttSpace`: the TT normal form (2.13) and its two degrees of freedom.
+* `isTT_iff`, `finrank_ttSub`: the TT normal form (2.13) and its two degrees of freedom.
 * `tt_gauge`, `tt_gauge_fun`: **Prop 2.6 corrected** (gauge vector `−B`, amplitudes
-  `A'₊ = (A₁₁ − A₂₂)/2`, `A'ₓ = A₁₂`); `thesis_gauge_fails`: the printed `B` fails.
+  `A'₊ = (A₁₁ − A₂₂)/2`, `A'ₓ = A₁₂`); `thesis_gauge_fails`, `thesis_gauge_fails_contra`:
+  the printed `B` fails (covariant and contravariant readings).
+* `Rjet_tt`, `Rjet_tt_support`, `Rjet_ttWave`: (2.15a–c), `R_{αiβj} = −½ ∂_α∂_β h_ij` in TT
+  gauge, and these are the only non-zero components.
 * `tt_accel`, `tt_accel_fun`: **(2.15) corrected** accelerations
   `a¹ = (κ²/2)(A₊v¹ + Aₓv²) f''`; `thesis_accel_fails`.
 * Function level (genuine `fderiv` derivatives): `jet2_isSymJet2` (Schwarz), `jet2_trRev`,
@@ -428,6 +432,14 @@ theorem Hsym_lorentz (k : Fin 4 → ℝ) {h : Sym2} (hs : ∀ i j, h i j = h j i
 lemma lorentzJet_symbolJet (k : Fin 4 → ℝ) (h : Sym2) (hL : ∀ b, divSym k h b = 0) :
     LorentzJet (symbolJet k h) := fun i b => by rw [divJ_symbolJet, hL, mul_zero]
 
+/-- **Thesis (2.11)**, symbol level: in Lorentz gauge `k^a h̄_ab = 0`,
+`H_bd = 8πT_bd ⟺ (k·k) h̄_bd = −16πT_bd`. -/
+theorem Hsym_lorentz_eq_iff (k : Fin 4 → ℝ) {h : Sym2} (hs : ∀ i j, h i j = h j i)
+    (hL : ∀ b, divSym k h b = 0) (T : Sym2) (b d : Fin 4) :
+    Hsym k h b d = 8 * Real.pi * T b d ↔ dot k k * trRev h b d = -16 * Real.pi * T b d := by
+  rw [Hsym_lorentz k hs hL]
+  constructor <;> intro h <;> linarith
+
 /-! ## Prop 2.5 algebra, TT gauge (2.12)–(2.13), Prop 2.6 -/
 
 /-- Covector `k_a = κ(−1, 0, 0, 1)` of the wave vector `k^a = κ(1, 0, 0, 1)`. -/
@@ -457,7 +469,8 @@ lemma ttAmp_isTT (κ Ap Ax : ℝ) : IsTT κ (ttAmp Ap Ax) where
 /-- **Thesis (2.13)**: for `κ ≠ 0`, the TT conditions (2.12) hold iff `A` has the `+`/`×`
 form, with `A₊ = A₁₁`, `Aₓ = A₁₂`.
 
-Thesis gap: `κ ≠ 0` is needed and not stated. -/
+Thesis gap: `κ ≠ 0` is needed; it is only implicit in the thesis (`k^a = k(1,0,0,1)`, later
+divided by `k`). -/
 theorem isTT_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Sym2) : IsTT κ A ↔ A = ttAmp (A 1 1) (A 1 2) := by
   refine ⟨fun h => ?_, fun h => h ▸ ttAmp_isTT κ _ _⟩
   have hu : ∀ a, A a 0 = 0 := fun a => by
@@ -507,6 +520,28 @@ theorem finrank_ttSpace : Module.finrank ℝ ttSpace = 2 := by
     funext i; fin_cases i <;> simp [h1, h2]
   rw [ttSpace, LinearMap.finrank_range_of_inj hinj, Module.finrank_fin_fun]
 
+/-- The TT amplitudes (2.12) as a submodule (the conditions are linear in `A`). -/
+def ttSub (κ : ℝ) : Submodule ℝ Sym2 where
+  carrier := {A | IsTT κ A}
+  zero_mem' := ⟨fun _ _ => rfl, fun _ => by simp, fun _ => by simp, by simp [tr]⟩
+  add_mem' {A B} hA hB :=
+    ⟨fun a b => by simp [hA.symm a b, hB.symm a b],
+      fun a => by simp [add_mul, sum_add_distrib, hA.lorentz a, hB.lorentz a],
+      fun a => by simp [add_mul, sum_add_distrib, hA.transverse a, hB.transverse a],
+      by have := hA.traceless; have := hB.traceless; simp_all [tr, mul_add, sum_add_distrib]⟩
+  smul_mem' c A hA :=
+    ⟨fun a b => by simp [hA.symm a b],
+      fun a => by simp [mul_assoc, ← mul_sum, hA.lorentz a],
+      fun a => by simp [mul_assoc, ← mul_sum, hA.transverse a],
+      by have := hA.traceless; simp only [tr] at this ⊢; simp [mul_left_comm _ c, ← mul_sum, this]⟩
+
+/-- **Thesis (2.13)**, "only two degrees of freedom", stated directly: for `κ ≠ 0` the space
+`{A | A satisfies (2.12)}` has dimension `2`. -/
+theorem finrank_ttSub {κ : ℝ} (hκ : κ ≠ 0) : Module.finrank ℝ (ttSub κ) = 2 := by
+  have : ttSub κ = ttSpace := by
+    ext A; exact (mem_ttSpace_iff hκ A).symm
+  rw [this, finrank_ttSpace]
+
 /-- Amplitude after the gauge change `ξ_a = B_a g(k·x)`, `g' = f`:
 `A'_ab = A_ab − k_a B_b − k_b B_a + η_ab (k^c B_c)`. -/
 def gaugeAmp (k : Fin 4 → ℝ) (A : Sym2) (B : Fin 4 → ℝ) : Sym2 :=
@@ -518,7 +553,9 @@ def Bcorr (κ : ℝ) (A : Sym2) : Fin 4 → ℝ :=
   let B0 := -(A 0 0 + tr A / 2) / (2 * κ)
   fun j => if j = 0 then B0 else (kTT κ j * B0 - A j 0) / κ
 
-/-- The thesis' gauge vector: `B₀ = (A₀₀ + τ/2)/(2κ)`, `B_j = (A_j0 − k_j B₀)/κ`. -/
+/-- The thesis' gauge vector: `B₀ = (A₀₀ + τ/2)/(2κ)`, `B_j = (A_j0 − k_j B₀)/κ`, read as
+**covariant** components `B_a`. (The thesis writes `B^a` but mixes index positions; the
+contravariant reading fails too, on the same witness of `thesis_gauge_fails`.) -/
 def Bthesis (κ : ℝ) (A : Sym2) : Fin 4 → ℝ :=
   let B0 := (A 0 0 + tr A / 2) / (2 * κ)
   fun j => if j = 0 then B0 else (A j 0 - kTT κ j * B0) / κ
@@ -551,7 +588,9 @@ theorem tt_gauge {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j = A
   exact ⟨e, e ▸ ttAmp_isTT κ _ _⟩
 
 /-- The thesis' gauge vector `B` (Prop 2.6) does **not** reach TT gauge: for `κ = 1` and an
-admissible symmetric `A` with `A k = 0`, the transformed amplitude is not transverse. -/
+admissible symmetric `A` with `A k = 0`, the transformed amplitude is not transverse.
+`Bthesis` uses the covariant reading of the printed `B`; `thesis_gauge_fails_contra` covers
+the contravariant reading. -/
 theorem thesis_gauge_fails :
     ∃ κ : ℝ, ∃ A : Sym2, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧ ¬ IsTT κ (gaugeAmp (kTT κ) A (Bthesis κ A)) := by
@@ -560,6 +599,19 @@ theorem thesis_gauge_fails :
     fin_cases a <;> simp [A, raise, kTT, Fin.sum_univ_four, η], fun h => ?_⟩
   have := h.transverse 0
   simp [A, gaugeAmp, Bthesis, kTT, dot, tr, etaM, uObs, Fin.sum_univ_four, η] at this
+  norm_num at this
+
+/-- The thesis' gauge vector read as **contravariant** components `B^a` (lowered to
+`B_a = η_aa B^a`) also fails to reach TT gauge, on the same witness. -/
+theorem thesis_gauge_fails_contra :
+    ∃ κ : ℝ, ∃ A : Sym2, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
+      (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧
+        ¬ IsTT κ (gaugeAmp (kTT κ) A (raise (Bthesis κ A))) := by
+  let A : Sym2 := ![![1, 0, 0, -1], ![0, 0, 0, 0], ![0, 0, 0, 0], ![-1, 0, 0, 1]]
+  refine ⟨1, A, one_ne_zero, fun i j => by fin_cases i <;> fin_cases j <;> rfl, fun a => by
+    fin_cases a <;> simp [A, raise, kTT, Fin.sum_univ_four, η], fun h => ?_⟩
+  have := h.transverse 0
+  simp [A, gaugeAmp, Bthesis, raise, kTT, dot, tr, etaM, uObs, Fin.sum_univ_four, η] at this
   norm_num at this
 
 /-! ## Geodesic deviation in TT gauge (2.15) -/
@@ -578,6 +630,81 @@ theorem tt_accel (κ Ap Ax s : ℝ) (v : Fin 4 → ℝ) :
       accelJ D v 0 = 0 ∧ accelJ D v 3 = 0 := by
   simp only [accelJ, Rjet, kTT, ttAmp, Fin.sum_univ_four, η]
   refine ⟨?_, ?_, ?_, ?_⟩ <;> simp <;> ring
+
+/-! ### Riemann components in TT gauge (2.15a–c) -/
+
+/-- Longitudinal indices `{0, 3}` (time and the propagation direction `x³`). -/
+def IsLong (i : Fin 4) : Prop := i = 0 ∨ i = 3
+
+instance (i : Fin 4) : Decidable (IsLong i) := inferInstanceAs (Decidable (_ ∨ _))
+
+/-- The 2-jet of a TT-gauge field depending only on `(x⁰, x³)`: `∂_i ∂_j h_ab = 0` unless
+`i, j ∈ {0, 3}`, and `h_ab = 0` unless `a, b ∈ {1, 2}`. -/
+structure IsTTJet (D : Jet2) : Prop where
+  long_i : ∀ i j a b, ¬ IsLong i → D i j a b = 0
+  long_j : ∀ i j a b, ¬ IsLong j → D i j a b = 0
+  trans_a : ∀ i j a b, IsLong a → D i j a b = 0
+  trans_b : ∀ i j a b, IsLong b → D i j a b = 0
+
+lemma IsTTJet.support {D : Jet2} (hD : IsTTJet D) {i j a b : Fin 4} (h : D i j a b ≠ 0) :
+    IsLong i ∧ IsLong j ∧ ¬ IsLong a ∧ ¬ IsLong b := by
+  refine ⟨?_, ?_, fun hc => h (hD.trans_a _ _ _ _ hc), fun hc => h (hD.trans_b _ _ _ _ hc)⟩ <;>
+    by_contra hc
+  exacts [h (hD.long_i _ _ _ _ hc), h (hD.long_j _ _ _ _ hc)]
+
+/-- **Thesis (2.15a–c)**: in TT gauge, for `i, j ∈ {1, 2}`,
+`R_{αiβj} = −½ ∂_α ∂_β h_ij` (exactly, at the jet level). The thesis restricts to
+`α, β ∈ {0, 3}`; for other `α, β` both sides vanish. -/
+theorem Rjet_tt {D : Jet2} (hD : IsSymJet2 D) (hT : IsTTJet D) {α β i j : Fin 4}
+    (hi : ¬ IsLong i) (hj : ¬ IsLong j) :
+    Rjet D α i β j = -(1/2) * D α β i j := by
+  simp only [Rjet]
+  rw [hT.long_j _ _ _ _ hi, hT.long_i _ _ _ _ hj, hT.long_i _ _ _ _ hj, hD.deriv_symm β α]
+  ring
+
+/-- **Thesis (2.15)**, "the only non-zero components": in TT gauge, `R_abcd = 0` unless each
+of the pairs `(a, b)` and `(c, d)` has exactly one longitudinal index. With pair-skewness
+(`Rjet_pairSkew`) every non-zero component is thus `±R_{αiβj}`, given by `Rjet_tt`. -/
+theorem Rjet_tt_support {D : Jet2} (hT : IsTTJet D) {a b c d : Fin 4}
+    (h : Rjet D a b c d ≠ 0) : (IsLong a ↔ ¬ IsLong b) ∧ (IsLong c ↔ ¬ IsLong d) := by
+  by_contra hm
+  apply h
+  have z : ∀ p q r t, (IsLong p ∧ IsLong q ∧ ¬ IsLong r ∧ ¬ IsLong t →
+      (IsLong a ↔ ¬ IsLong b) ∧ (IsLong c ↔ ¬ IsLong d)) → D p q r t = 0 := by
+    intro p q r t himp
+    by_contra hne
+    exact hm (himp (hT.support hne))
+  simp only [Rjet]
+  rw [z c b d a (by tauto), z c a b d (by tauto), z d b c a (by tauto), z d a b c (by tauto)]
+  ring
+
+/-- The 2-jet `k_i k_j A_ab s` of the TT plane wave `ttAmp A₊ Aₓ · f(k·x)` (`s = f''`) is a
+symmetric TT jet. -/
+lemma ttWaveJet_props (κ Ap Ax s : ℝ) :
+    IsSymJet2 (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) ∧
+      IsTTJet (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) := by
+  refine ⟨⟨fun i j a b => by ring, fun i j a b => ?_⟩, ⟨?_, ?_, ?_, ?_⟩⟩
+  · fin_cases a <;> fin_cases b <;> simp [ttAmp]
+  · intro i j a b h; fin_cases i <;> simp [IsLong, kTT] at h ⊢
+  · intro i j a b h; fin_cases j <;> simp [IsLong, kTT] at h ⊢
+  · intro i j a b h; fin_cases a <;> simp [IsLong] at h ⊢ <;> fin_cases b <;> simp [ttAmp]
+  · intro i j a b h; fin_cases b <;> simp [IsLong] at h ⊢ <;> fin_cases a <;> simp [ttAmp]
+
+/-- **Thesis (2.15a–c)** for the TT plane wave (cf. the components `C_{αiβj}` in §2.9):
+`R_{α1β1} = −½ k_α k_β A₊ s`, `R_{α2β2} = ½ k_α k_β A₊ s`, `R_{α1β2} = −½ k_α k_β Aₓ s`,
+with `s = f''(k·x)` (valid for all `α, β`; both sides vanish unless `α, β ∈ {0, 3}`). -/
+theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
+    let D : Jet2 := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
+    Rjet D α 1 β 1 = -(1/2) * kTT κ α * kTT κ β * Ap * s ∧
+      Rjet D α 2 β 2 = (1/2) * kTT κ α * kTT κ β * Ap * s ∧
+      Rjet D α 1 β 2 = -(1/2) * kTT κ α * kTT κ β * Ax * s := by
+  intro D
+  obtain ⟨hS, hT⟩ := ttWaveJet_props κ Ap Ax s
+  have n1 : ¬ IsLong 1 := by decide
+  have n2 : ¬ IsLong 2 := by decide
+  rw [Rjet_tt hS hT n1 n1, Rjet_tt hS hT n2 n2, Rjet_tt hS hT n1 n2]
+  simp only [ttAmp]
+  refine ⟨?_, ?_, ?_⟩ <;> simp <;> ring
 
 /-! ## The coupling constant (§2.4) -/
 
@@ -724,8 +851,8 @@ lemma trRev_mul_const (h : Sym2) (c : ℝ) :
 perturbation `h` with trace reversal `h̄` (`h = trRev h̄`, `trRev_trRev`) solves the vacuum
 linearized equations `H(h) = 0`.
 
-Thesis gap: the Lorentz-gauge step uses the symmetry of `A` (unstated). The sign
-conventions are fixed in the module docstring (`k` covariant, `k·k = ∑ η i k_i k_i`). -/
+Convention: `k` is covariant, `k·k = ∑ η i k_i k_i` and the phase is `k_c x^c` (see the
+module docstring); the thesis leaves these index placements implicit. -/
 theorem plane_wave {k : Fin 4 → ℝ} (hk : dot k k = 0) {A : Sym2} (hA : ∀ a b, A a b = A b a)
     (hker : ∀ a, ∑ b, A a b * raise k b = 0) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) :
     let hbar : E4 → Sym2 := fun y a b => A a b * f (phaseL k y)
@@ -831,7 +958,8 @@ theorem exists_lorentz_gauge (hW : WaveSolvable) {hb : E4 → Sym2}
 wave `ttAmp ((A₁₁ − A₂₂)/2) A₁₂ · f(k·x)`; by `plane_wave` it is again a Lorentz-gauge
 vacuum solution.
 
-Thesis gap: `g ∈ C¹` with `g' = f` (an antiderivative) must be supplied; `κ ≠ 0` is needed. -/
+Remark: the thesis takes `g ∈ C³` with `g' = f`; here only `g` differentiable with
+`deriv g = f` is needed. `κ ≠ 0` is explicit (the thesis divides by `k`). -/
 theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j = A j i)
     (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f g : ℝ → ℝ} (hg : Differentiable ℝ g)
     (hgf : deriv g = f) (y : E4) :

@@ -1,4 +1,10 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.Tensor
+public import Mathlib.Analysis.Calculus.Deriv.Pow
+public import Mathlib.Analysis.Calculus.FDeriv.Symmetric
+public import Mathlib.Analysis.RCLike.Lemmas
+public import Mathlib.Analysis.Real.Pi.Bounds
 
 /-!
 # Ch 2: linearized gravity on Minkowski space (jet, symbol and plane-wave level)
@@ -72,7 +78,7 @@ linearized Riemann tensor (2.6), with `Hjet_eq_einstein` checking `H = Ric âˆ’ Â
 open Finset
 open scoped ContDiff
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.Linearized
 

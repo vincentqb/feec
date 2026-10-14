@@ -1,5 +1,14 @@
-import Feec.Ch3.Bivector
-import Feec.Ch2.Linearized
+module
+
+public import Feec.Ch2.Linearized
+public import Feec.Ch3.Bivector
+public import Mathlib.Algebra.Order.Star.Real
+public import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
+public import Mathlib.Analysis.Calculus.Deriv.Prod
+public import Mathlib.Analysis.Calculus.LineDeriv.IntegrationByParts
+public import Mathlib.Analysis.Calculus.ParametricIntegral
+public import Mathlib.LinearAlgebra.CrossProduct
+public import Mathlib.LinearAlgebra.Matrix.DotProduct
 
 /-!
 # Ch 3 §3.3–3.5: the linearized Einstein–Bianchi (EB) system
@@ -64,7 +73,7 @@ bounded domains.
 
 open Matrix
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 namespace EB

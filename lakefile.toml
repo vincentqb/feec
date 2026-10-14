@@ -1,0 +1,17 @@
+name = "Feec"
+version = "0.1.0"
+defaultTargets = ["Feec"]
+
+[leanOptions]
+pp.unicode.fun = true
+autoImplicit = false
+relaxedAutoImplicit = false
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "6e2a148e19b0c1dbde6f99cdcfa73fe1f4094ed4"
+
+[[lean_lib]]
+name = "Feec"

@@ -1,4 +1,12 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.BGG
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.InnerProductSpace.Calculus
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
+public import Mathlib.Analysis.SpecialFunctions.Exponential
+public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 
 /-!
 # Chapter 6: the time-dependent BGG construction
@@ -68,7 +76,7 @@ are recorded in `docs/audit.json`.
 open scoped RealInnerProductSpace
 open Set Filter Topology
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.Ch6
 

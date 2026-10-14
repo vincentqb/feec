@@ -23,14 +23,21 @@ inner product, `ι k : V k → W k` the inclusion). Coverage:
   (`UHilbertComplex.toHilbertComplex`), with closed range in `W` ⇔ `IsClosedAt`, and the
   W-level Poincaré equivalence `UHilbertComplex.isClosed_range_iff_poincare`.
 
-Not here: the `W`-level decomposition `W = cl 𝔅 ⊕ ℌ ⊕ cl 𝔅*` (needs adjoints; HodgeW/M4) and the
-compactness results (W-level, M16).
+* **compactness ⇒ closed, finite-dimensional `ℌ`** in bounded form (compactness of `ι` on
+  `(𝔷^k)ᗮ`, resp. on `ℌ`): `isClosedAt_of_isCompactOperator`,
+  `finiteDimensional_H_of_isCompactOperator`, `closed_and_fredholm_of_isCompactOperator`;
+* degree 0: `hodge_V_zero` (`V^0 = ℌ^0 ⊕ (𝔷^0)ᗮ`), Poincaré is `poincare 0`;
+* finite-length counterexample `0 → ℓ² → ℓ² → 0` (`fredholm_not_closed_fin`), and failure of
+  exactness with `ℌ = 0` (`fredholmCounterexample_not_exact`).
+
+Not here: the `W`-level decomposition `W = cl 𝔅 ⊕ ℌ ⊕ cl 𝔅*` (needs adjoints; HodgeW/M4), and the
+derivation of the compactness hypotheses above from the thesis' `V ∩ V* ⋐ W` (needs adjoints).
 
 Indexing: `C.H k ⊆ V (k+1)` is `ℌ^{k+1}`; `ℌ^0` is `C.H0 = C.Z 0`.
 -/
 
-open scoped RealInnerProductSpace
-open Set
+open scoped RealInnerProductSpace Topology
+open Set Filter
 
 noncomputable section
 
@@ -153,8 +160,8 @@ theorem poincare_iff (k : ℕ) :
     C.IsClosedAt k ↔ ∃ c : ℝ, ∀ u ∈ (C.Z k)ᗮ, ‖u‖ ≤ c * ‖C.d k u‖ :=
   ⟨C.poincare k, fun ⟨_, hc⟩ => C.isClosedAt_of_poincare k hc⟩
 
-/-- Thesis Thm 4.2, `W`-norm form ("equivalently `‖z‖ ≤ C ‖dz‖`"): for `u ∈ (𝔷^k)ᗮ`,
-`‖u‖_W ≤ ‖u‖_V ≤ c ‖d u‖_W`. -/
+/-- Thesis Thm 4.2, restated with `W`-norms on the right (this module's reformulation; the
+thesis states only `‖z‖_V ≤ C ‖dz‖`): for `u ∈ (𝔷^k)ᗮ`, `‖u‖_W ≤ ‖u‖_V ≤ c ‖d u‖_W`. -/
 theorem poincare_W (k : ℕ) (hB : C.IsClosedAt k) :
     ∃ c : ℝ, ∀ u ∈ (C.Z k)ᗮ,
       ‖C.ι k u‖ ≤ ‖u‖ ∧ ‖u‖ ≤ c * ‖C.ι (k + 1) (C.d k u)‖ := by
@@ -194,7 +201,12 @@ theorem isClosed_image_Z (k : ℕ) : IsClosed (C.ι k '' C.Z k) := by
   ext x; simp
 
 /-- Thesis §4.2: "`𝔅^k` is closed in `W^k` (or, equivalently, in `V^k` since the norms for
-`W^k` and `V^k` are equivalent on `𝔷^k`, which contains `𝔅^k`)". -/
+`W^k` and `V^k` are equivalent on `𝔷^k`, which contains `𝔅^k`)".
+
+Thesis gap: asserted without proof. Norm equivalence on `𝔷` alone is not quite enough; one also
+needs `𝔷` closed in both `V` and `W` (`ι(𝔷)` closed in `W`, `isClosed_image_Z`, uses that
+`ι` is an isometry on the complete space `𝔷`, `isometry_ι_Z`). Then closedness of `𝔅` in either
+space is closedness in `𝔷`. -/
 theorem isClosedAt_iff_isClosed_image (k : ℕ) :
     C.IsClosedAt k ↔ IsClosed (C.ι (k + 1) '' C.B k) := by
   have : CompleteSpace (C.Z (k + 1)) := (C.isClosed_Z (k + 1)).completeSpace_coe
@@ -373,18 +385,254 @@ theorem finiteDimensional_H_iff (k : ℕ) (hB : C.IsClosedAt k) :
 /-- Harmonic `0`-forms `ℌ^0 = 𝔷^0` (there is no `𝔅^0`); `C.H k` only covers `ℌ^{k+1}`. -/
 def H0 : Submodule ℝ (V 0) := C.Z 0
 
+instance : C.H0.HasOrthogonalProjection := inferInstanceAs (C.Z 0).HasOrthogonalProjection
+
 /-- Thesis §4.2: an exact complex (`𝔅 = 𝔷`) has no harmonic forms (no closedness needed). -/
 theorem H_eq_bot_of_exact (k : ℕ) (h : C.B k = C.Z (k + 1)) : C.H k = ⊥ := by
   rw [H, ← h, inf_comm, Submodule.inf_orthogonal_eq_bot]
 
 /-- Under closed range, `ℌ^{k+1} = 0` iff the complex is exact at `k+1`.
-Without closed range the converse fails (`fredholm_not_closed`). -/
+Without closed range the converse fails (`fredholmCounterexample_not_exact`). -/
 theorem exact_iff_H_eq_bot (k : ℕ) (hB : C.IsClosedAt k) :
     C.B k = C.Z (k + 1) ↔ C.H k = ⊥ := by
   refine ⟨C.H_eq_bot_of_exact k, fun h => ?_⟩
   rw [← C.B_sup_H k hB, h, sup_bot_eq]
 
+/-- Without closed range, exactness fails: if `𝔅^{k+1}` is not closed it is not all of the
+(closed) `𝔷^{k+1}`. -/
+theorem B_ne_Z_of_not_isClosedAt (k : ℕ) (h : ¬ C.IsClosedAt k) : C.B k ≠ C.Z (k + 1) := by
+  intro he
+  apply h
+  unfold IsClosedAt
+  rw [he]
+  exact C.isClosed_Z (k + 1)
+
+/-- **Thesis Thm 4.1 in degree 0.** `V^0 = ℌ^0 ⊕ (𝔷^0)^{⊥V}` orthogonally (there is no `𝔅^0`),
+with `ℌ^0 = 𝔷^0` (`H0`). -/
+theorem hodge_V_zero : C.H0 ⊔ (C.H0)ᗮ = ⊤ ∧ C.H0 ⟂ (C.H0)ᗮ :=
+  ⟨Submodule.sup_orthogonal_of_hasOrthogonalProjection, Submodule.isOrtho_orthogonal_right _⟩
+
+/-! ### Compactness ⇒ closed range and finite-dimensional harmonic forms -/
+
+/-- `‖u‖_V ≤ ‖u‖_W + ‖d u‖`. -/
+theorem norm_le_add (k : ℕ) (u : V k) : ‖u‖ ≤ ‖C.ι k u‖ + ‖C.d k u‖ := by
+  have h := C.norm_sq_eq k u
+  rw [C.norm_d k u]
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
+  rw [h]; nlinarith [norm_nonneg (C.ι k u), norm_nonneg (C.ι (k + 1) (C.d k u))]
+
+/-- **Thesis §4.2, "compactness property ⇒ closed" (bounded-model form).** If the inclusion
+`ι : V^k → W^k` restricted to `(𝔷^k)^{⊥V}` is a compact operator, then `𝔅^{k+1}` is closed.
+
+Thesis gap: the thesis asserts this without proof. Proof here: otherwise Poincaré
+(`poincare_iff`) fails, giving `u_n ∈ 𝔷ᗮ` with `‖u_n‖_V = 1` and `‖d u_n‖ ≤ 1/(n+1)`; by
+compactness `ι u_{φ n} → a`. The map `u ↦ (ι u, d u)` is antilipschitz on the complete space
+`𝔷ᗮ` (since `‖u‖_V ≤ ‖ι u‖ + ‖d u‖`), so has closed range: `(a, 0) = (ι w, d w)`, whence `w = 0`
+(`d` is injective on `𝔷ᗮ`), `a = 0`, and `‖u_{φ n}‖_V → 0`, a contradiction.
+
+Relation to the thesis' hypothesis: the thesis' compactness property is that `V^k ∩ V^k_*`
+embeds compactly in `W^k`. Since `(𝔷^k)^{⊥V} ⊆ V^k ∩ V^k_*` with `d* = 0` there, the two norms
+agree on it and the thesis' property implies the hypothesis here; that derivation needs adjoints
+and is left to the `W`-level modules. -/
+theorem isClosedAt_of_isCompactOperator (k : ℕ)
+    (hK : IsCompactOperator ((C.ι k).comp (C.Z k)ᗮ.subtypeL)) : C.IsClosedAt k := by
+  set K := (C.ι k).comp (C.Z k)ᗮ.subtypeL
+  let Φ : (C.Z k)ᗮ →L[ℝ] W k × V (k + 1) := K.prod (C.dPerp k)
+  have hΦ : ∀ x, ‖x‖ ≤ (2 : NNReal) * ‖Φ x‖ := fun x => by
+    have h1 := C.norm_le_add k x
+    have h2 : ‖Φ x‖ = max ‖K x‖ ‖C.dPerp k x‖ := rfl
+    have h3 : ‖K x‖ ≤ ‖Φ x‖ := h2 ▸ le_max_left _ _
+    have h4 : ‖C.dPerp k x‖ ≤ ‖Φ x‖ := h2 ▸ le_max_right _ _
+    have h5 : ‖C.ι k x‖ + ‖C.d k x‖ = ‖K x‖ + ‖C.dPerp k x‖ := rfl
+    change ‖(x : V k)‖ ≤ (2 : ℝ) * ‖Φ x‖
+    linarith
+  have hcl : IsClosed (range Φ) :=
+    (Φ.antilipschitz_of_bound hΦ).isClosed_range Φ.uniformContinuous
+  by_contra hB
+  rw [poincare_iff] at hB
+  push Not at hB
+  have hseq : ∀ n : ℕ, ∃ v : (C.Z k)ᗮ, ‖v‖ = 1 ∧ ‖C.dPerp k v‖ ≤ 1 / ((n : ℝ) + 1) := by
+    intro n
+    obtain ⟨u, hu, h⟩ := hB ((n : ℝ) + 1)
+    have hu0 : 0 < ‖u‖ := lt_of_le_of_lt (by positivity) h
+    refine ⟨‖u‖⁻¹ • ⟨u, hu⟩, ?_, ?_⟩
+    · rw [norm_smul, norm_inv, norm_norm]
+      exact inv_mul_cancel₀ hu0.ne'
+    · rw [map_smul, norm_smul, norm_inv, norm_norm]
+      change ‖u‖⁻¹ * ‖C.d k u‖ ≤ _
+      rw [inv_mul_le_iff₀ hu0, mul_one_div, le_div_iff₀ (by positivity)]
+      linarith
+  choose v hv1 hvd using hseq
+  obtain ⟨Kc, hKc, hsub⟩ := IsCompactOperator.image_closedBall_subset_compact
+    (f := (K : (C.Z k)ᗮ →ₗ[ℝ] W k)) hK 1
+  obtain ⟨a, -, φ, hφ, hlim⟩ := hKc.tendsto_subseq (x := fun n => K (v n))
+    (fun n => hsub ⟨v n, by simp [hv1], rfl⟩)
+  have hd : Tendsto (fun n => C.dPerp k (v (φ n))) atTop (𝓝 0) := by
+    refine squeeze_zero_norm (fun n => (hvd (φ n)).trans ?_)
+      tendsto_one_div_add_atTop_nhds_zero_nat
+    gcongr
+    exact_mod_cast hφ.id_le n
+  have hΦlim : Tendsto (fun n => Φ (v (φ n))) atTop (𝓝 (a, 0)) := hlim.prodMk_nhds hd
+  obtain ⟨w, hw⟩ := hcl.mem_of_tendsto hΦlim (Eventually.of_forall fun n => ⟨_, rfl⟩)
+  have hw0 : w = 0 := C.dPerp_injective k ((congrArg Prod.snd hw).trans (map_zero _).symm)
+  have ha : a = 0 := by
+    have := congrArg Prod.fst hw
+    rw [hw0, map_zero] at this
+    exact this.symm
+  rw [ha] at hlim
+  have hn : Tendsto (fun n => ‖v (φ n)‖) atTop (𝓝 0) := by
+    refine squeeze_zero (fun n => norm_nonneg _) (fun n => C.norm_le_add k (v (φ n))) ?_
+    have := hlim.norm.add hd.norm
+    simp only [norm_zero, add_zero] at this
+    exact this
+  simp only [hv1] at hn
+  exact one_ne_zero (tendsto_nhds_unique tendsto_const_nhds hn)
+
+/-- **Thesis §4.2, "compactness ⇒ finite-dimensional harmonic forms" (bounded-model form).**
+If `ι` restricted to `ℌ^{k+1}` is a compact operator, then `ℌ^{k+1}` is finite-dimensional.
+
+Thesis gap: unproved in the thesis. Proof: `ι` is an isometry on cycles, so the closed unit ball
+of the complete space `ℌ^{k+1}` is homeomorphic to a closed subset of a compact set; Riesz's
+theorem. The thesis' compactness property implies the hypothesis (`ℌ ⊆ V ∩ V*`, norms agree
+there). -/
+theorem finiteDimensional_H_of_isCompactOperator (k : ℕ)
+    (hK : IsCompactOperator ((C.ι (k + 1)).comp (C.H k).subtypeL)) :
+    FiniteDimensional ℝ (C.H k) := by
+  have hclH : IsClosed (C.H k : Set (V (k + 1))) :=
+    (Submodule.isClosed_orthogonal _).inter (C.isClosed_Z _)
+  have : CompleteSpace (C.H k) := hclH.completeSpace_coe
+  set f := (C.ι (k + 1)).comp (C.H k).subtypeL
+  have hiso : Isometry f :=
+    AddMonoidHomClass.isometry_of_norm f fun h => (C.norm_of_mem_Z h.2.2).symm
+  obtain ⟨Kc, hKc, hsub⟩ := IsCompactOperator.image_closedBall_subset_compact
+    (f := (f : C.H k →ₗ[ℝ] W (k + 1))) hK 1
+  have hc : IsCompact (f '' Metric.closedBall 0 1) :=
+    hKc.of_isClosed_subset (hiso.isClosedEmbedding.isClosedMap _ Metric.isClosed_closedBall) hsub
+  exact FiniteDimensional.of_isCompact_closedBall₀ ℝ zero_lt_one
+    (hiso.isEmbedding.isCompact_iff.2 hc)
+
+/-- **Thesis §4.2: a complex with the compactness property is closed and Fredholm** (bounded
+form, at degree `k+1`): `𝔅^{k+1}` is closed, `ℌ^{k+1}` is finite-dimensional, and so is the
+cohomology `𝔷^{k+1}/𝔅^{k+1}`. -/
+theorem closed_and_fredholm_of_isCompactOperator (k : ℕ)
+    (hZ : IsCompactOperator ((C.ι k).comp (C.Z k)ᗮ.subtypeL))
+    (hH : IsCompactOperator ((C.ι (k + 1)).comp (C.H k).subtypeL)) :
+    C.IsClosedAt k ∧ FiniteDimensional ℝ (C.H k) ∧ FiniteDimensional ℝ (C.Cohomology k) := by
+  have hB := C.isClosedAt_of_isCompactOperator k hZ
+  have hfd := C.finiteDimensional_H_of_isCompactOperator k hH
+  exact ⟨hB, hfd, (C.finiteDimensional_H_iff k hB).1 hfd⟩
+
 end HilbertComplex
+
+/-! ### Graph complexes of bounded operators
+
+A complex of *bounded* operators `D k : E k → E (k+1)` on Hilbert spaces gives a bounded domain
+complex with `V k` = graph of `D k` in `E k ×₂ E (k+1)`. Used for the counterexamples below. -/
+
+namespace GraphCx
+
+variable {E : ℕ → Type*}
+    [∀ k, NormedAddCommGroup (E k)] [∀ k, InnerProductSpace ℝ (E k)] [∀ k, CompleteSpace (E k)]
+    (D : ∀ k, E k →L[ℝ] E (k + 1))
+
+/-- Graph of `D k` in `E k ×₂ E (k+1)` (the domain space `V k` with its graph norm). -/
+def G (k : ℕ) : Submodule ℝ (WithLp 2 (E k × E (k + 1))) :=
+  (WithLp.sndL 2 ℝ (E k) (E (k + 1)) - (D k).comp (WithLp.fstL 2 ℝ (E k) (E (k + 1)))).ker
+
+omit [∀ k, CompleteSpace (E k)] in
+variable {D} in
+/-- Membership in the graph of `D k`. -/
+theorem mem_G {k : ℕ} {x : WithLp 2 (E k × E (k + 1))} : x ∈ G D k ↔ x.snd = D k x.fst := by
+  simp [G, sub_eq_zero]
+
+/-- Graphs of bounded maps are closed, hence complete. -/
+instance completeSpace_G (k : ℕ) : CompleteSpace (G D k) :=
+  (ContinuousLinearMap.isClosed_ker _).completeSpace_coe
+
+/-- The graph point `(x, D k x)`. -/
+def mk (k : ℕ) (x : E k) : G D k := ⟨WithLp.toLp 2 (x, D k x), mem_G.2 rfl⟩
+
+/-- Inclusion `V k → E k`, `(x, D x) ↦ x`. -/
+def ι (k : ℕ) : G D k →L[ℝ] E k := (WithLp.fstL 2 ℝ (E k) (E (k + 1))).comp (G D k).subtypeL
+
+/-- The differential `V k → V (k+1)`, `(x, D_k x) ↦ (D_k x, D_{k+1} D_k x)`. -/
+def dd (k : ℕ) : G D k →L[ℝ] G D (k + 1) :=
+  ((WithLp.prodContinuousLinearEquiv 2 ℝ (E (k + 1)) (E (k + 1 + 1))).symm.toContinuousLinearMap.comp
+    ((ContinuousLinearMap.id ℝ (E (k + 1))).prod (D (k + 1)))).comp
+    ((WithLp.sndL 2 ℝ (E k) (E (k + 1))).comp (G D k).subtypeL)
+    |>.codRestrict (G D (k + 1)) fun _ => mem_G.2 rfl
+
+/-- The bounded domain complex of a complex of bounded operators. -/
+def complex (hD : ∀ k x, D (k + 1) (D k x) = 0) : HilbertComplex (fun k => G D k) E where
+  ι := ι D
+  ι_injective k u v huv := by
+    have h1 : (u : WithLp 2 (E k × E (k + 1))).fst = (v : WithLp 2 (E k × E (k + 1))).fst := huv
+    have h2 : (u : WithLp 2 (E k × E (k + 1))).snd = (v : WithLp 2 (E k × E (k + 1))).snd := by
+      rw [mem_G.1 u.2, mem_G.1 v.2, h1]
+    exact Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h1 h2))
+  d := dd D
+  d_comp_d k := by
+    refine ContinuousLinearMap.ext fun u => Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext ?_ ?_))
+    · change D (k + 1) (u : WithLp 2 (E k × E (k + 1))).snd = 0
+      rw [mem_G.1 u.2, hD]
+    · change D (k + 2) (D (k + 1) (u : WithLp 2 (E k × E (k + 1))).snd) = 0
+      rw [mem_G.1 u.2, hD]
+  inner_graph k u v := by
+    change ⟪(u : WithLp 2 (E k × E (k + 1))), (v : WithLp 2 (E k × E (k + 1)))⟫ = _
+    rw [WithLp.prod_inner_apply]
+    rfl
+
+variable {D}
+
+/-- Cycles of the graph complex: `u ∈ 𝔷^k ↔ D k (ι u) = 0`. -/
+theorem mem_Z_iff (hD : ∀ k x, D (k + 1) (D k x) = 0) {k : ℕ} (u : G D k) :
+    u ∈ (complex D hD).Z k ↔ (u : WithLp 2 (E k × E (k + 1))).snd = 0 := by
+  change dd D k u = 0 ↔ _
+  constructor
+  · intro h
+    exact congrArg (fun w : G D (k + 1) => (w : WithLp 2 (E (k + 1) × E (k + 1 + 1))).fst) h
+  · intro h
+    refine Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h ?_))
+    change D (k + 1) (u : WithLp 2 (E k × E (k + 1))).snd = 0
+    rw [h, map_zero]
+
+/-- If `D k` is injective, `𝔷^k = 0`. -/
+theorem Z_eq_bot_of_injective (hD : ∀ k x, D (k + 1) (D k x) = 0) {k : ℕ}
+    (hinj : Function.Injective (D k)) : (complex D hD).Z k = ⊥ := by
+  rw [eq_bot_iff]
+  intro u hu
+  have h0 := (mem_Z_iff hD u).1 hu
+  have h1 : D k (u : WithLp 2 (E k × E (k + 1))).fst = 0 := by rw [← mem_G.1 u.2, h0]
+  have h2 := hinj (h1.trans (map_zero _).symm)
+  rw [Submodule.mem_bot]
+  exact Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h2 h0))
+
+/-- A Poincaré-violating sequence: if `‖x_n‖ = 1` and `‖D k x_n‖ → 0` with `D k` injective, then
+`𝔅^{k+1}` is not closed. -/
+theorem not_isClosedAt_of_injective (hD : ∀ k x, D (k + 1) (D k x) = 0) {k : ℕ}
+    (hinj : Function.Injective (D k)) (x : ℕ → E k) (hx : ∀ n, ‖x n‖ = 1)
+    (hDx : ∀ n, ‖D k (x n)‖ ≤ 1 / ((n : ℝ) + 1)) : ¬ (complex D hD).IsClosedAt k := by
+  intro hB
+  obtain ⟨c, hc⟩ := (complex D hD).poincare k hB
+  obtain ⟨n, hn⟩ := exists_nat_gt c
+  set u := mk D k (x n)
+  have h := hc u (by
+    rw [Z_eq_bot_of_injective hD hinj, Submodule.bot_orthogonal_eq_top]; trivial)
+  have h1 : 1 ≤ ‖u‖ := by
+    have := (complex D hD).norm_ι_le k u
+    have hι : (complex D hD).ι k u = x n := rfl
+    rwa [hι, hx] at this
+  have h2 : ‖(complex D hD).d k u‖ ≤ 1 / ((n : ℝ) + 1) := by
+    rw [(complex D hD).norm_d]
+    exact hDx n
+  have h3 : ‖u‖ ≤ max c 0 * (1 / ((n : ℝ) + 1)) :=
+    h.trans ((mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)).trans
+      (mul_le_mul_of_nonneg_left h2 (le_max_right _ _)))
+  have hm : max c 0 < (n : ℝ) + 1 := max_lt (by linarith) (by positivity)
+  rw [mul_one_div, le_div_iff₀ (by positivity)] at h3
+  nlinarith
+
+end GraphCx
 
 /-! ### Counterexample to "a Fredholm Hilbert complex is always closed" -/
 
@@ -430,6 +678,24 @@ theorem A_single (n : ℕ) : A (lp.single 2 n 1) = lp.single 2 n (1 / ((n : ℝ)
   · subst h; simp
   · simp [lp.single_apply, Pi.single_eq_of_ne h]
 
+/-- `‖e_n‖ = 1`. -/
+theorem norm_single (n : ℕ) : ‖(lp.single 2 n 1 : L2)‖ = 1 := by
+  rw [lp.norm_single (by norm_num), norm_one]
+
+/-- `‖A e_n‖ = 1/(n+1)`. -/
+theorem norm_A_single (n : ℕ) : ‖A (lp.single 2 n 1)‖ = 1 / ((n : ℝ) + 1) := by
+  rw [A_single, lp.norm_single (by norm_num), Real.norm_eq_abs, abs_of_pos (by positivity)]
+
+/-- `range A` is dense: anything orthogonal to every `A e_n` vanishes. -/
+theorem eq_zero_of_inner_A_single {y : L2} (hy : ∀ n, ⟪A (lp.single 2 n 1), y⟫ = 0) : y = 0 := by
+  refine lp.ext (funext fun n => ?_)
+  have := hy n
+  rw [A_single, lp.inner_single_left] at this
+  have hn : (n : ℝ) + 1 ≠ 0 := by positivity
+  simpa [hn] using this
+
+/-! #### Infinite periodic version: `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` -/
+
 /-- The operators of the complex: `D k = A` for even `k`, `0` for odd `k`. -/
 def D (k : ℕ) : L2 →L[ℝ] L2 := if Even k then A else 0
 
@@ -448,74 +714,76 @@ theorem D_comp_D (k : ℕ) (x : L2) : D (k + 1) (D k x) = 0 := by
   · have : ¬ Even k := Nat.not_even_iff_odd.2 hk
     simp [D, this]
 
-/-- Graph of `D k` in `ℓ² ×₂ ℓ²` (this is the domain space `V k` with its graph norm). -/
-def G (k : ℕ) : Submodule ℝ (WithLp 2 (L2 × L2)) :=
-  (WithLp.sndL 2 ℝ L2 L2 - (D k).comp (WithLp.fstL 2 ℝ L2 L2)).ker
+/-- `D k` is injective for even `k`. -/
+theorem D_injective_of_even {k : ℕ} (hk : Even k) : Function.Injective (D k) := by
+  rw [D_of_even hk]; exact A_injective
 
-/-- Membership in the graph of `D k`. -/
-theorem mem_G {k : ℕ} {x : WithLp 2 (L2 × L2)} : x ∈ G k ↔ x.snd = D k x.fst := by
-  simp [G, sub_eq_zero]
+/-! #### Finite-length version: `0 → ℓ² --A--> ℓ² → 0` -/
 
-/-- Graphs of bounded maps are closed, hence complete. -/
-instance (k : ℕ) : CompleteSpace (G k) :=
-  (ContinuousLinearMap.isClosed_ker _).completeSpace_coe
+/-- The spaces of the length-one complex: `ℓ²` in degrees `0, 1`, the zero space above. -/
+def S : ℕ → Submodule ℝ L2
+  | 0 => ⊤
+  | 1 => ⊤
+  | _ + 2 => ⊥
 
-/-- The graph point `(x, D k x)`. -/
-def mk (k : ℕ) (x : L2) : G k := ⟨WithLp.toLp 2 (x, D k x), mem_G.2 rfl⟩
+/-- Each `S k` is closed. -/
+theorem isClosed_S : ∀ k, IsClosed (S k : Set L2)
+  | 0 => by simp [S]
+  | 1 => by simp [S]
+  | _ + 2 => by simp [S]
 
-/-- Inclusion `V k → W k = ℓ²`, `(x, D x) ↦ x`. -/
-def ι (k : ℕ) : G k →L[ℝ] L2 := (WithLp.fstL 2 ℝ L2 L2).comp (G k).subtypeL
+instance (k : ℕ) : CompleteSpace (S k) := (isClosed_S k).completeSpace_coe
 
-/-- The differential `V k → V (k+1)`, `(x, D_k x) ↦ (D_k x, D_{k+1} D_k x)`. -/
-def dd (k : ℕ) : G k →L[ℝ] G (k + 1) :=
-  ((WithLp.prodContinuousLinearEquiv 2 ℝ L2 L2).symm.toContinuousLinearMap.comp
-    ((ContinuousLinearMap.id ℝ L2).prod (D (k + 1)))).comp
-    ((WithLp.sndL 2 ℝ L2 L2).comp (G k).subtypeL) |>.codRestrict (G (k + 1)) fun _ => mem_G.2 rfl
+/-- Elements of `S (k+2) = 0` vanish. -/
+theorem eq_zero_of_S (k : ℕ) (w : S (k + 2)) : w = 0 :=
+  Subtype.ext ((Submodule.mem_bot ℝ).1 w.2)
 
-/-- First component of `dd k u` is the second component of `u`. -/
-theorem dd_fst (k : ℕ) (u : G k) :
-    ((dd k u : WithLp 2 (L2 × L2))).fst = (u : WithLp 2 (L2 × L2)).snd :=
-  rfl
+/-- `A` viewed as `S 0 → S 1`. -/
+def A₀₁ : S 0 →L[ℝ] S 1 :=
+  (A.comp (S 0).subtypeL).codRestrict (S 1) fun _ => Submodule.mem_top
+
+/-- The operators of `0 → ℓ² --A--> ℓ² → 0`. -/
+def Dfin : ∀ k, S k →L[ℝ] S (k + 1)
+  | 0 => A₀₁
+  | _ + 1 => 0
+
+/-- `Dfin (k+1) = 0`. -/
+theorem Dfin_succ (k : ℕ) : Dfin (k + 1) = 0 := rfl
+
+/-- `Dfin (k+1) ∘ Dfin k = 0`. -/
+theorem Dfin_comp (k : ℕ) (x : S k) : Dfin (k + 1) (Dfin k x) = 0 := by
+  rw [Dfin_succ]; rfl
+
+/-- `Dfin 0 = A` is injective. -/
+theorem Dfin_zero_injective : Function.Injective (Dfin 0) := fun _ _ h =>
+  Subtype.ext (A_injective (congrArg Subtype.val h))
+
+end FredholmCE
+
+namespace FredholmCE
+
+instance (k : ℕ) : CompleteSpace (GraphCx.G D k) := GraphCx.completeSpace_G D k
+instance (k : ℕ) : CompleteSpace (GraphCx.G Dfin k) := GraphCx.completeSpace_G Dfin k
 
 end FredholmCE
 
 open FredholmCE in
 /-- The ℓ² Hilbert complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ℓ² --0--> ⋯` with
 `A = diag(1/(n+1))`, as a bounded domain complex (`V k` = graph of `D k`). -/
-def fredholmCounterexample : HilbertComplex (fun k => G k) (fun _ => L2) where
-  ι := ι
-  ι_injective k u v huv := by
-    have h1 : (u : WithLp 2 (L2 × L2)).fst = (v : WithLp 2 (L2 × L2)).fst := huv
-    have h2 : (u : WithLp 2 (L2 × L2)).snd = (v : WithLp 2 (L2 × L2)).snd := by
-      rw [mem_G.1 u.2, mem_G.1 v.2, h1]
-    exact Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h1 h2))
-  d := dd
-  d_comp_d k := by
-    refine ContinuousLinearMap.ext fun u => Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext ?_ ?_))
-    · change D (k + 1) (u : WithLp 2 (L2 × L2)).snd = 0
-      rw [mem_G.1 u.2, D_comp_D]
-    · change D (k + 2) (D (k + 1) (u : WithLp 2 (L2 × L2)).snd) = 0
-      rw [mem_G.1 u.2, D_comp_D]
-  inner_graph k u v := by
-    change ⟪(u : WithLp 2 (L2 × L2)), (v : WithLp 2 (L2 × L2))⟫ = _
-    rw [WithLp.prod_inner_apply]
-    rfl
+def fredholmCounterexample : HilbertComplex (fun k => GraphCx.G D k) (fun _ => L2) :=
+  GraphCx.complex D D_comp_D
 
+open FredholmCE in
+/-- The finite-length complex `0 → ℓ² --A--> ℓ² → 0` (`W k = 0` for `k ≥ 2`), as a bounded
+domain complex. -/
+def fredholmCounterexampleFin : HilbertComplex (fun k => GraphCx.G Dfin k) (fun k => S k) :=
+  GraphCx.complex Dfin Dfin_comp
 
 namespace FredholmCE
 
 /-- `𝔷^j = ker A = 0` for even `j`. -/
-theorem Z_eq_bot_of_even {j : ℕ} (hj : Even j) : fredholmCounterexample.Z j = ⊥ := by
-  rw [eq_bot_iff]
-  intro u hu
-  have hu' : dd j u = 0 := hu
-  have h0 : (u : WithLp 2 (L2 × L2)).snd = 0 :=
-    congrArg (fun w : G (j + 1) => (w : WithLp 2 (L2 × L2)).fst) hu'
-  have h1 : A (u : WithLp 2 (L2 × L2)).fst = 0 := by
-    rw [← h0, mem_G.1 u.2, D_of_even hj]
-  have h2 := A_injective (h1.trans (map_zero A).symm)
-  rw [Submodule.mem_bot]
-  exact Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h2 h0))
+theorem Z_eq_bot_of_even {j : ℕ} (hj : Even j) : fredholmCounterexample.Z j = ⊥ :=
+  GraphCx.Z_eq_bot_of_injective D_comp_D (D_injective_of_even hj)
 
 /-- All harmonic spaces vanish: for even `k`, `𝔅^{k+1} = range A` is dense; for odd `k`,
 `𝔷^{k+1} = ker A = 0`. -/
@@ -525,14 +793,12 @@ theorem H_eq_bot (k : ℕ) : fredholmCounterexample.H k = ⊥ := by
   rcases Nat.even_or_odd k with hk | hk
   · obtain ⟨-, horth⟩ := fredholmCounterexample.mem_H_iff.1 hu
     have hs : (u : WithLp 2 (L2 × L2)).snd = 0 := by
-      rw [mem_G.1 u.2, D_of_odd hk.add_one]; rfl
+      rw [GraphCx.mem_G.1 u.2, D_of_odd hk.add_one]; rfl
     have hf : (u : WithLp 2 (L2 × L2)).fst = 0 := by
-      refine lp.ext (funext fun n => ?_)
-      have := horth (mk k (lp.single 2 n 1))
+      refine eq_zero_of_inner_A_single fun n => ?_
+      have := horth (GraphCx.mk D k (lp.single 2 n 1))
       change ⟪D k (lp.single 2 n 1), (u : WithLp 2 (L2 × L2)).fst⟫ = 0 at this
-      rw [D_of_even hk, A_single, lp.inner_single_left] at this
-      have hn : (n : ℝ) + 1 ≠ 0 := by positivity
-      simpa [hn] using this
+      rwa [D_of_even hk] at this
     rw [Submodule.mem_bot]
     exact Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext hf hs))
   · have := hu.2
@@ -540,24 +806,51 @@ theorem H_eq_bot (k : ℕ) : fredholmCounterexample.H k = ⊥ := by
 
 /-- `𝔅^1 = range A` is not closed: `‖e_n‖ = 1` but `‖A e_n‖ = 1/(n+1)` violates Poincaré
 (Thm 4.2). -/
-theorem not_isClosedAt_zero : ¬ fredholmCounterexample.IsClosedAt 0 := by
-  intro hB
-  obtain ⟨c, hc⟩ := fredholmCounterexample.poincare 0 hB
-  obtain ⟨n, hn⟩ := exists_nat_gt c
-  set u := mk 0 (lp.single 2 n 1)
-  have h := hc u (by
-    rw [Z_eq_bot_of_even (⟨0, rfl⟩ : Even 0), Submodule.bot_orthogonal_eq_top]; trivial)
-  have h1 : 1 ≤ ‖u‖ := by
-    have := fredholmCounterexample.norm_ι_le 0 u
-    have hι : fredholmCounterexample.ι 0 u = lp.single 2 n 1 := rfl
-    rwa [hι, lp.norm_single (by norm_num), norm_one] at this
-  have h2 : ‖fredholmCounterexample.d 0 u‖ = 1 / ((n : ℝ) + 1) := by
-    rw [fredholmCounterexample.norm_d]
-    change ‖D 0 (lp.single 2 n 1)‖ = _
-    rw [D_of_even (⟨0, rfl⟩ : Even 0), A_single, lp.norm_single (by norm_num), Real.norm_eq_abs,
-      abs_of_pos (by positivity)]
-  rw [h2, mul_one_div, le_div_iff₀ (by positivity)] at h
-  nlinarith
+theorem not_isClosedAt_zero : ¬ fredholmCounterexample.IsClosedAt 0 :=
+  GraphCx.not_isClosedAt_of_injective D_comp_D (D_injective_of_even ⟨0, rfl⟩)
+    (fun n => lp.single 2 n 1) (fun n => norm_single n)
+    (fun n => by rw [D_of_even ⟨0, rfl⟩, norm_A_single])
+
+/-- Finite version: `𝔷^0 = ker A = 0`. -/
+theorem fin_Z_zero : fredholmCounterexampleFin.Z 0 = ⊥ :=
+  GraphCx.Z_eq_bot_of_injective Dfin_comp Dfin_zero_injective
+
+/-- Finite version: `𝔷^1 = V^1` (the next map is `0`). -/
+theorem fin_Z_one : fredholmCounterexampleFin.Z 1 = ⊤ := by
+  rw [eq_top_iff]
+  intro u _
+  refine (GraphCx.mem_Z_iff Dfin_comp u).2 (eq_zero_of_S 0 _)
+
+/-- Finite version: `V^k = 0` for `k ≥ 2`. -/
+theorem fin_V_eq_zero (k : ℕ) (u : GraphCx.G Dfin (k + 2)) : u = 0 := by
+  refine Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext ?_ ?_))
+  · exact eq_zero_of_S k _
+  · exact eq_zero_of_S (k + 1) _
+
+/-- Finite version: all harmonic spaces vanish. -/
+theorem fin_H_eq_bot : ∀ k, fredholmCounterexampleFin.H k = ⊥
+  | 0 => by
+    rw [eq_bot_iff]
+    intro u hu
+    obtain ⟨-, horth⟩ := fredholmCounterexampleFin.mem_H_iff.1 hu
+    have hs : (u : WithLp 2 (S 1 × S 2)).snd = 0 := eq_zero_of_S 0 _
+    have hf : (u : WithLp 2 (S 1 × S 2)).fst = 0 := by
+      refine Subtype.ext (eq_zero_of_inner_A_single fun n => ?_)
+      have := horth (GraphCx.mk Dfin 0 ⟨lp.single 2 n 1, Submodule.mem_top⟩)
+      exact this
+    rw [Submodule.mem_bot]
+    exact Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext hf hs))
+  | k + 1 => by
+    rw [eq_bot_iff]
+    intro u _
+    rw [Submodule.mem_bot]
+    exact fin_V_eq_zero k u
+
+/-- Finite version: `𝔅^1 = range A` is not closed. -/
+theorem fin_not_isClosedAt_zero : ¬ fredholmCounterexampleFin.IsClosedAt 0 :=
+  GraphCx.not_isClosedAt_of_injective Dfin_comp Dfin_zero_injective
+    (fun n => ⟨lp.single 2 n 1, Submodule.mem_top⟩) (fun n => norm_single n)
+    (fun n => (norm_A_single n).le)
 
 end FredholmCE
 
@@ -566,11 +859,16 @@ open FredholmCE in
 With the thesis' definition (Fredholm = all harmonic spaces `ℌ^k` finite-dimensional) the
 claim is false: the complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯`, `A = diag(1/(n+1))`, has
 `ℌ^0 = 𝔷^0 = 0` and `ℌ^{k+1} = 0` for all `k` (so it is Fredholm in the thesis' sense), but
-`𝔅^1 = range A` is not closed.
+`𝔅^1 = range A` is not closed. See `fredholm_not_closed_fin` for a finite-length version.
+
+Reading of the definition: the thesis introduces `ℌ^k` only "assuming that `𝔅^k` is closed"
+(§4.2), which would make "Fredholm ⇒ closed" vacuous. The claim is only meaningful with
+`ℌ^k := 𝔷^k ∩ (𝔅^k)ᗮ` defined unconditionally, which is the Foundation definition `H` used here;
+the refutation is with respect to that reading.
 
 Correction: the true statements are "finite-dimensional *algebraic* cohomology ⇒ closed"
 (Brüning–Lesch's definition of Fredholm), `isClosedAt_of_finiteDimensional_cohomology`, and
-"compactness property ⇒ closed" (W-level model, not stated in this file). -/
+"compactness ⇒ closed" (`HilbertComplex.isClosedAt_of_isCompactOperator`). -/
 theorem fredholm_not_closed :
     fredholmCounterexample.H0 = ⊥ ∧ (∀ k, fredholmCounterexample.H k = ⊥) ∧
       (FiniteDimensional ℝ fredholmCounterexample.H0 ∧
@@ -579,6 +877,33 @@ theorem fredholm_not_closed :
   refine ⟨Z_eq_bot_of_even (⟨0, rfl⟩ : Even 0), H_eq_bot, ⟨?_, fun k => ?_⟩, not_isClosedAt_zero⟩
   · rw [HilbertComplex.H0, Z_eq_bot_of_even (⟨0, rfl⟩ : Even 0)]; infer_instance
   · rw [H_eq_bot]; infer_instance
+
+open FredholmCE in
+/-- In `fredholmCounterexample`, `ℌ^1 = 0` but the complex is not exact at degree 1
+(`𝔅^1 ≠ 𝔷^1`): the converse of `H_eq_bot_of_exact` fails without closed range. -/
+theorem fredholmCounterexample_not_exact :
+    fredholmCounterexample.H 0 = ⊥ ∧ fredholmCounterexample.B 0 ≠ fredholmCounterexample.Z 1 :=
+  ⟨H_eq_bot 0, fredholmCounterexample.B_ne_Z_of_not_isClosedAt 0 not_isClosedAt_zero⟩
+
+open FredholmCE in
+/-- **Refutation of Thesis §4.2 "Fredholm ⇒ closed", finite-length form.** The thesis' Hilbert
+complexes have finite length `0 → W^0 → ⋯ → W^n → 0`; already for `n = 1`,
+`0 → ℓ² --A--> ℓ² → 0` with `A = diag(1/(n+1))` has `ℌ^0 = 0`, `ℌ^1 = 0`, `W^k = 0` for `k ≥ 2`
+(so every `ℌ^k` is finite-dimensional), yet `𝔅^1 = range A` is not closed and the complex is not
+exact at degree 1 (`𝔅^1 ≠ 𝔷^1 = ℓ²`), although `ℌ^1 = 0`. The same caveat on the reading of
+`ℌ^k` as in `fredholm_not_closed` applies. -/
+theorem fredholm_not_closed_fin :
+    (∀ k (w : S (k + 2)), w = 0) ∧
+      fredholmCounterexampleFin.H0 = ⊥ ∧ fredholmCounterexampleFin.Z 1 = ⊤ ∧
+      (∀ k, fredholmCounterexampleFin.H k = ⊥) ∧
+      (FiniteDimensional ℝ fredholmCounterexampleFin.H0 ∧
+        ∀ k, FiniteDimensional ℝ (fredholmCounterexampleFin.H k)) ∧
+      ¬ fredholmCounterexampleFin.IsClosedAt 0 ∧
+      fredholmCounterexampleFin.B 0 ≠ fredholmCounterexampleFin.Z 1 := by
+  refine ⟨eq_zero_of_S, fin_Z_zero, fin_Z_one, fin_H_eq_bot, ⟨?_, fun k => ?_⟩, fin_not_isClosedAt_zero,
+    fredholmCounterexampleFin.B_ne_Z_of_not_isClosedAt 0 fin_not_isClosedAt_zero⟩
+  · rw [HilbertComplex.H0, fin_Z_zero]; infer_instance
+  · rw [fin_H_eq_bot]; infer_instance
 
 
 /-! ### Bridge: the unbounded (W-level) complex as a bounded domain complex -/

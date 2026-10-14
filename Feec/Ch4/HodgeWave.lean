@@ -44,6 +44,23 @@ than the thesis', existence statements from `WellPosedHom` are *weaker* than the
 `C⁰([0,T];D(L)) ∩ C¹([0,T];W)`. The thesis' classes are `IsClassicalSolution`
 (`Feec.Ch4.Restriction`) and `IsClassicalWeakSolution` (`C⁰([0,T];V) ∩ C¹([0,T];W)`), with the
 `_classical` versions of Thms 4.6/4.7 stated for them.
+
+## References
+
+* [QuennevilleBelair2015], §4.4 (the system (4.4), the operator (4.5), Thm 4.6, the weak form
+  (4.7)/(4.8), weak uniqueness, Thm 4.7) and §4.3 (Thm 4.3, the existence theorem for
+  skew-adjoint generators used in Thm 4.6)
+* [Arnold2018] (the FEEC framework of Hilbert complexes `d`, dual complexes `d*`)
+* [AFW2010] (abstract Hilbert complexes, domains `V^k`, `V*_k` of `d` and `d*`)
+* [BruningLesch1992] (Hilbert complexes)
+* [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9 (as cited in [QuennevilleBelair2015, §4.3]
+  for Thm 4.3)
+* [Pazy1983], §1.10 (unitary groups and Stone's theorem: a densely defined skew-adjoint operator
+  generates a unitary group; this is the existence input that enters here as a hypothesis)
+* [Geveci1988] (mixed first-order formulation of the wave equation, the scalar antecedent of
+  (4.4); cf. [QuennevilleBelair2015, §4.8])
+* [GilletteHolstZhu2017] (FEEC for evolution problems; cited in [QuennevilleBelair2015, §4.8]
+  as the 2012 Gillette–Holst preprint)
 -/
 
 open scoped RealInnerProductSpace
@@ -135,7 +152,9 @@ theorem tot_waveOp_mkDom (σ : H.d0.domain) (u : H.midDomain) (ρ : H.d1†.doma
 
 Note: the thesis displays this computation; the four adjoint identities it uses are
 `⟪σ, d0* v⟫ = ⟪d0 σ, v⟫`, `⟪u, d0 τ⟫ = ⟪d0* u, τ⟫`, `⟪u, d1* μ⟫ = ⟪d1 u, μ⟫` and
-`⟪ρ, d1 v⟫ = ⟪d1* ρ, v⟫`. No closed range and no `d** = d` is needed. -/
+`⟪ρ, d1 v⟫ = ⟪d1* ρ, v⟫`. No closed range and no `d** = d` is needed.
+
+See [QuennevilleBelair2015, Thm 4.6] (proof, first display). -/
 theorem waveOp_isSkewSymm : IsSkewSymm H.waveOp := by
   intro x y
   rw [tot_inner, tot_inner, tot_waveOp, tot_waveOp]
@@ -162,7 +181,8 @@ theorem ker_le_domain' {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGro
   obtain ⟨y, rfl, -⟩ := mem_ker_iff.1 hx
   exact y.2
 
-/-- `B*₁ ⊆ Z*₁`: `range d1* ⊆ ker d0*` (the dual complex property `d0* d1* = 0`). -/
+/-- `B*₁ ⊆ Z*₁`: `range d1* ⊆ ker d0*` (the dual complex property `d0* d1* = 0`).
+Cf. the dual complex of a Hilbert complex in [AFW2010] and [Arnold2018]. -/
 theorem range_adjoint_d1_le : LinearMap.range H.d1†.toFun ≤ H.d0†.ker := by
   rintro _ ⟨ρ, rfl⟩
   exact mem_ker_iff.2 ⟨⟨_, H.adjoint_map_mem ρ⟩, rfl, H.adjoint_comp_zero ρ⟩
@@ -174,7 +194,8 @@ theorem range_adjoint_d1_le : LinearMap.range H.d1†.toFun ≤ H.d0†.ker := b
 (Thesis Thm 4.7, first bullet: "it certainly belongs to `C⁰([0,T], V)`").
 
 Thesis gap: this orthogonality (from `d1 d0 = 0`) is what makes the graph norm of `L` control
-the `V`-norms of `σ` and `u`; it is not mentioned in the thesis. -/
+the `V`-norms of `σ` and `u`; it is not mentioned in the thesis.
+See [QuennevilleBelair2015, Thm 4.7] (proof, first part). -/
 theorem norm_embed (σ : H.d0.domain) (ρ : H.d1†.domain) :
     ‖H.d0 σ + H.d1† ρ‖ ^ 2 = ‖H.d0 σ‖ ^ 2 + ‖H.d1† ρ‖ ^ 2 := by
   rw [norm_add_sq_real, real_inner_comm, H.inner_adjoint_d0]
@@ -211,7 +232,9 @@ Thesis gap: density of `D(L)` is never proved, but it is needed both for `L*` to
 and for the hypothesis of Thm 4.3. The proof here needs **no closed range** and no von Neumann
 `D(d*d)`-core argument: `ker d0* ∩ V1` is dense in `ker d0*` (project `V1` off `cl B⁰ ⊆ Z¹`),
 `ker d1 ∩ V1*` is dense in `ker d1` (project `V1*` off `(Z¹)ᗮ ⊆ Z*₁`), and
-`ker d1 + ker d0* ⊇ cl B⁰ + (cl B⁰)ᗮ = W1`. -/
+`ker d1 + ker d0* ⊇ cl B⁰ + (cl B⁰)ᗮ = W1`.
+
+Used for [QuennevilleBelair2015, Thm 4.6] (with `D(L)` as in §4.4, (4.5)). -/
 theorem dense_midDomain : Dense (H.midDomain : Set W1) := by
   set K := H.d0†.kerᗮ
   have : CompleteSpace H.d0†.ker := H.isClosed_ker_adjoint_d0.completeSpace_coe
@@ -243,7 +266,8 @@ theorem dense_midDomain : Dense (H.midDomain : Set W1) := by
     _ ≤ H.midDomain.topologicalClosure :=
       sup_le (H.orthogonal_ker_adjoint_d0_le.trans h2) (hK ▸ h1)
 
-/-- `D(L) = V0 × (V1 ∩ V1*) × V2*` is dense in `W` (missing in the thesis; needed for Thm 4.6). -/
+/-- `D(L) = V0 × (V1 ∩ V1*) × V2*` is dense in `W` (missing in the thesis; needed for Thm 4.6).
+See [QuennevilleBelair2015, §4.4, (4.5) and Thm 4.6]. -/
 theorem dense_domL : Dense (H.waveOp.domain : Set (Tot W0 W1 W2)) := by
   have hs : Dense ((H.d0.domain : Set W0) ×ˢ ((H.midDomain : Set W1) ×ˢ
       (H.d1†.domain : Set W2))) :=
@@ -276,7 +300,10 @@ is used, so **no closed range** is needed; (ii) omits the ρ-step ("the argument
 written out here with the dual projection onto `(ker d0*)ᗮ = cl B⁰ ⊆ Z¹`;
 (iii) uses `d** = d` for `d0`, `d1` (closed and densely defined), here in the form
 `mem_graph_iff_of_isClosed`. The bound (4.6) is replaced by the adjoint identity
-`⟪L*ξ, η⟫ = ⟪ξ, Lη⟫`, which avoids estimating constants. -/
+`⟪L*ξ, η⟫ = ⟪ξ, Lη⟫`, which avoids estimating constants.
+
+See [QuennevilleBelair2015, Thm 4.6] (proof, "It remains to show that `D(L*) ⊂ D(L)`"; the
+thesis attributes the argument to Arnold). -/
 theorem adjoint_waveOp_domain_le : H.waveOp†.domain ≤ H.waveOp.domain := by
   intro x hx
   have key : ∀ y : H.waveOp.domain, ⟪H.waveOp† ⟨x, hx⟩, (y : Tot W0 W1 W2)⟫ =
@@ -372,7 +399,10 @@ and skew-adjoint, `L* = -L`, for **every** Hilbert complex of length 2.
 
 Strengthening: the thesis assumes closed range; it is not needed (see
 `adjoint_waveOp_domain_le`). Thesis gap: density of `D(L)` (`dense_domL`) is not proved in
-the thesis. -/
+the thesis.
+
+See [QuennevilleBelair2015, Thm 4.6]; skew-adjointness is the hypothesis of
+[QuennevilleBelair2015, Thm 4.3] and of Stone's theorem, cf. [Pazy1983, §1.10]. -/
 theorem waveOp_isSkewAdjoint : IsSkewAdjoint H.waveOp :=
   (isSkewAdjoint_iff _ H.dense_domL).2 ⟨H.waveOp_isSkewSymm, H.adjoint_waveOp_domain_le⟩
 
@@ -385,7 +415,7 @@ open LinearPMap
 /-- `-L` is skew-adjoint when `L` is (used to pass from `L` to the evolution `ξ' = -Lξ`).
 
 Thesis gap: (4.4) reads `ξ' = -Lξ`, while Thm 4.3 is stated for `U' = LU`; the thesis applies
-Thm 4.3 silently, which requires this lemma. -/
+Thm 4.3 silently, which requires this lemma. See [QuennevilleBelair2015, (4.4) and Thm 4.3]. -/
 theorem IsSkewAdjoint.neg {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [CompleteSpace E] {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L) : IsSkewAdjoint (-L) := by
   have hD : Dense ((-L).domain : Set E) := hL.dense_domain
@@ -415,7 +445,8 @@ variable {W0 W1 W2 : Type*}
 
 open LinearPMap
 
-/-- The generator `-L` of the Hodge wave evolution `ξ' = -Lξ` (4.4) is skew-adjoint. -/
+/-- The generator `-L` of the Hodge wave evolution `ξ' = -Lξ` (4.4) is skew-adjoint.
+See [QuennevilleBelair2015, §4.4, (4.4)–(4.5) and Thm 4.6]. -/
 theorem neg_waveOp_isSkewAdjoint : IsSkewAdjoint (-H.waveOp) :=
   H.waveOp_isSkewAdjoint.neg
 
@@ -426,7 +457,9 @@ section Energy
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 /-- Energy conservation `‖U(t)‖ = ‖U₀‖` for strong solutions of `U' = LU`, `L` skew-symmetric
-(Thesis Thm 4.6, "energy is conserved"; auxiliary, general `L`). -/
+(Thesis Thm 4.6, "energy is conserved"; auxiliary, general `L`).
+See [QuennevilleBelair2015, Thm 4.6]; cf. the norm-preserving unitary groups of
+[Pazy1983, §1.10]. -/
 theorem norm_eq_of_isStrongSolution {L : E →ₗ.[ℝ] E} (hL : IsSkewSymm L) {T : ℝ} {U₀ : E}
     {U : ℝ → E} (hU : IsStrongSolution L T U₀ 0 U) : ∀ t ∈ Icc 0 T, ‖U t‖ = ‖U₀‖ := by
   have hc : ∀ t ∈ Icc (0 : ℝ) T, ‖U t‖ ^ 2 = ‖U 0‖ ^ 2 := by
@@ -453,7 +486,11 @@ by `IsSkewAdjoint.neg`. Thesis gap: density of `D(L)` (`dense_domL`) and the ρ-
 supplied. Scope (critic item 5): `IsStrongSolution` asks only for pointwise derivatives, so the
 existence part is weaker than the thesis' `C⁰([0,T];D(L)) ∩ C¹([0,T];W)` (see
 `thm_4_6_classical`) and the uniqueness part is stronger. Uniqueness and energy conservation
-are proved, not assumed. -/
+are proved, not assumed.
+
+See [QuennevilleBelair2015, Thm 4.6]; the existence input is [QuennevilleBelair2015, Thm 4.3]
+(cited there from [CazenaveHaraux1998, Prop 4.1.6 and Cor 2.4.9]); cf. Stone's theorem,
+[Pazy1983, §1.10]. -/
 theorem thm_4_6 {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) :
     Dense (H.waveOp.domain : Set (Tot W0 W1 W2)) ∧ IsSkewAdjoint H.waveOp ∧
@@ -469,7 +506,10 @@ theorem thm_4_6 {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {ξ₀ : Tot W0 W1 
 /-- **Thesis Thm 4.6** with the thesis' regularity `ξ ∈ C⁰([0,T];D(L)) ∩ C¹([0,T];W)`
 (critic item 5): if the existence hypothesis provides classical solutions
 (`WellPosedClassical`, standing for Stone's theorem), the solution is classical, unique among
-strong solutions, and conserves energy. -/
+strong solutions, and conserves energy.
+
+See [QuennevilleBelair2015, Thm 4.6] (regularity class as stated there); existence via
+[QuennevilleBelair2015, Thm 4.3]. -/
 theorem thm_4_6_classical {T : ℝ} {Adm : (ℝ → Tot W0 W1 W2) → Prop}
     (hHY : WellPosedClassical (-H.waveOp) T Adm) (hAdm : Adm 0) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) :
@@ -483,7 +523,8 @@ theorem thm_4_6_classical {T : ℝ} {Adm : (ℝ → Tot W0 W1 W2) → Prop}
     norm_eq_of_isStrongSolution hS hξ.toIsStrongSolution⟩
 
 /-- Thesis Thm 4.6 with existence from a unitary group generated by `-L`
-(`UnitaryGroupGenerator`, the conclusion of Stone's theorem), for every horizon `T`. -/
+(`UnitaryGroupGenerator`, the conclusion of Stone's theorem), for every horizon `T`.
+See [QuennevilleBelair2015, Thm 4.6]; cf. [Pazy1983, §1.10]. -/
 theorem thm_4_6_of_unitaryGroupGenerator (G : UnitaryGroupGenerator (-H.waveOp)) (T : ℝ)
     {ξ₀ : Tot W0 W1 W2} (h0 : ξ₀ ∈ H.waveOp.domain) :
     ∃ ξ, IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ ∧
@@ -494,7 +535,8 @@ theorem thm_4_6_of_unitaryGroupGenerator (G : UnitaryGroupGenerator (-H.waveOp))
 /-- A unitary group stand-in yields **classical** solutions of the homogeneous problem:
 `U t = S t U₀` satisfies `L U(t) = S t (L U₀)`, which is continuous in `t`, so
 `U ∈ C⁰([0,T];D(L)) ∩ C¹([0,T];X)` (Thesis Thm 4.3, homogeneous case, with the thesis'
-regularity; auxiliary, general `L`). -/
+regularity; auxiliary, general `L`).
+See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983, §1.10]. -/
 theorem _root_.Feec.UnitaryGroupGenerator.wellPosedClassical {E : Type*}
     [NormedAddCommGroup E] [InnerProductSpace ℝ E] {L : E →ₗ.[ℝ] E}
     (G : UnitaryGroupGenerator L) (T : ℝ) : WellPosedClassical L T (fun F => F = 0) := by
@@ -513,7 +555,8 @@ theorem _root_.Feec.UnitaryGroupGenerator.wellPosedClassical {E : Type*}
 /-- **Thesis Thm 4.6** with the thesis' regularity, existence coming from a unitary group
 generated by `-L` (`UnitaryGroupGenerator`, the conclusion of Stone's theorem): for every
 `ξ₀ ∈ D(L)` and every horizon `T`, `ξ' = -Lξ`, `ξ(0) = ξ₀` has a solution in
-`C⁰([0,T];D(L)) ∩ C¹([0,T];W)`, unique among strong solutions, conserving energy. -/
+`C⁰([0,T];D(L)) ∩ C¹([0,T];W)`, unique among strong solutions, conserving energy.
+See [QuennevilleBelair2015, Thm 4.6]; cf. [Pazy1983, §1.10]. -/
 theorem thm_4_6_classical_of_unitaryGroupGenerator (G : UnitaryGroupGenerator (-H.waveOp))
     (T : ℝ) {ξ₀ : Tot W0 W1 W2} (h0 : ξ₀ ∈ H.waveOp.domain) :
     ∃ ξ, IsClassicalSolution (-H.waveOp) T ξ₀ 0 ξ ∧
@@ -525,14 +568,15 @@ theorem thm_4_6_classical_of_unitaryGroupGenerator (G : UnitaryGroupGenerator (-
 
 /-- Bridge to the algebraic segment model: `V0 → V1 → W2` with `d0` corestricted to `V1`
 (via `map_mem`) and the `W`-inner products on the domains (Thesis §4.4, test space
-`V = V0 × V1 × W2` of the weak form). -/
+`V = V0 × V1 × W2` of the weak form). See [QuennevilleBelair2015, §4.4, (4.7)]. -/
 def toComplex3 : Complex3 H.d0.domain H.d1.domain W2 where
   d0 := LinearMap.codRestrict H.d1.domain H.d0.toFun H.map_mem
   d1 := H.d1.toFun
   d1_d0 := H.comp_zero
 
 /-- The skew form `a` of (4.7) in terms of `d0`, `d1`:
-`a(σ,u,ρ; τ,v,μ) = -(u, d0 τ) + (d0 σ, v) + (ρ, d1 v) - (d1 u, μ)`. -/
+`a(σ,u,ρ; τ,v,μ) = -(u, d0 τ) + (d0 σ, v) + (ρ, d1 v) - (d1 u, μ)`.
+See [QuennevilleBelair2015, §4.4] (the form `a` defined after (4.7)). -/
 theorem toComplex3_a (σ : H.d0.domain) (u : H.d1.domain) (ρ : W2) (τ : H.d0.domain)
     (v : H.d1.domain) (μ : W2) :
     H.toComplex3.a σ u ρ τ v μ =
@@ -543,7 +587,8 @@ theorem toComplex3_a (σ : H.d0.domain) (u : H.d1.domain) (ρ : W2) (τ : H.d0.d
 `(ξ'(t), ψ) + a(ξ(t), ψ) = 0` for all `ψ = (τ, v, μ) ∈ V`, with `ξ(0) = ξ₀`.
 
 Scope (critic item 5): membership in `V` is pointwise and the derivative is pointwise in `W`;
-the thesis' class `C⁰([0,T];V) ∩ C¹([0,T];W)` is `IsClassicalWeakSolution`. -/
+the thesis' class `C⁰([0,T];V) ∩ C¹([0,T];W)` is `IsClassicalWeakSolution`.
+See [QuennevilleBelair2015, §4.4, (4.7)–(4.8)]. -/
 structure IsWeakSolution (T : ℝ) (ξ₀ : Tot W0 W1 W2) (ξ : ℝ → Tot W0 W1 W2) : Prop where
   mem0 : ∀ t ∈ Icc 0 T, (tot W0 W1 W2 (ξ t)).1 ∈ H.d0.domain
   mem1 : ∀ t ∈ Icc 0 T, (tot W0 W1 W2 (ξ t)).2.1 ∈ H.d1.domain
@@ -555,7 +600,8 @@ structure IsWeakSolution (T : ℝ) (ξ₀ : Tot W0 W1 W2) (ξ : ℝ → Tot W0 W
 
 /-- Weak solution in the thesis' class `C⁰([0,T];V) ∩ C¹([0,T];W)` (Thesis §4.4):
 additionally `t ↦ d0 σ(t)`, `t ↦ d1 u(t)` and `t ↦ ξ'(t)` are continuous on `[0,T]`
-(continuity of `σ, u, ρ` in `W` follows from differentiability). -/
+(continuity of `σ, u, ρ` in `W` follows from differentiability).
+See [QuennevilleBelair2015, §4.4, (4.7)–(4.8)]. -/
 structure IsClassicalWeakSolution (T : ℝ) (ξ₀ : Tot W0 W1 W2) (ξ : ℝ → Tot W0 W1 W2) : Prop
     extends H.IsWeakSolution T ξ₀ ξ where
   contV : ∃ G0 : ℝ → W1, ∃ G1 : ℝ → W2, ContinuousOn G0 (Icc 0 T) ∧ ContinuousOn G1 (Icc 0 T) ∧
@@ -564,7 +610,7 @@ structure IsClassicalWeakSolution (T : ℝ) (ξ₀ : Tot W0 W1 W2) (ξ : ℝ →
     ∀ t ∈ Icc 0 T, HasDerivWithinAt ξ (D t) (Icc 0 T) t
 
 /-- Antisymmetry of the weak form, `a(ψ, ψ) = 0` (Thesis §4.4, used for weak uniqueness;
-not stated in the thesis). -/
+not stated in the thesis). Cf. [QuennevilleBelair2015, §4.4, after (4.8)]. -/
 theorem a_self (σ : H.d0.domain) (u : H.d1.domain) (ρ : W2) :
     H.toComplex3.a σ u ρ σ u ρ = 0 :=
   H.toComplex3.a_self σ u ρ
@@ -573,7 +619,7 @@ theorem a_self (σ : H.d0.domain) (u : H.d1.domain) (ρ : W2) :
 `ξ' = -Lξ` is a weak solution (4.8) with the same initial data.
 
 Thesis gap: "easily follows" — the three identities use `(d0* u, τ) = (u, d0 τ)` and
-`(d1* ρ, v) = (ρ, d1 v)`. -/
+`(d1* ρ, v) = (ρ, d1 v)`. See [QuennevilleBelair2015, Thm 4.7] (first bullet and proof). -/
 theorem isWeakSolution_of_isStrongSolution {T : ℝ} {ξ₀ : Tot W0 W1 W2} {ξ : ℝ → Tot W0 W1 W2}
     (hξ : IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ) : H.IsWeakSolution T ξ₀ ξ where
   mem0 t ht := (((mem_domL H).1 (hξ.mem t ht)).1)
@@ -604,7 +650,8 @@ strong solution (`ξ ∈ C⁰([0,T];D(L)) ∩ C¹([0,T];W)`) is a weak solution 
 
 Thesis gap: "it certainly belongs to `C⁰([0,T], V)`" needs `d0 σ ⟂ d1* ρ` (`norm_embed`): here
 `d0 σ(t) = P (d0 σ(t) + d1* ρ(t))` with `P` the orthogonal projection onto `cl(range d0)`,
-so continuity of `Lξ` gives continuity of `d0 σ`. -/
+so continuity of `Lξ` gives continuity of `d0 σ`.
+See [QuennevilleBelair2015, Thm 4.7] (first bullet and proof). -/
 theorem isClassicalWeakSolution_of_isClassicalSolution {T : ℝ} {ξ₀ : Tot W0 W1 W2}
     {ξ : ℝ → Tot W0 W1 W2} (hξ : IsClassicalSolution (-H.waveOp) T ξ₀ 0 ξ) :
     H.IsClassicalWeakSolution T ξ₀ ξ where
@@ -645,7 +692,8 @@ same initial value agree on `[0,T]`.
 Thesis gap: "taking `τ = σ1 - σ2`, … we get `‖σ1 - σ2‖² + … = 0`" skips the energy argument:
 testing with `e(t) = ξ1(t) - ξ2(t)` gives `(e', e) + a(e, e) = 0`, `a(e, e) = 0`
 (`a_self`), so `d/dt ‖e‖² = 0` and `e ≡ 0` from `e(0) = 0` (`Feec.energy_zero`). Only pointwise
-membership `e(t) ∈ V` is used, so this is stronger than the thesis' statement. -/
+membership `e(t) ∈ V` is used, so this is stronger than the thesis' statement.
+See [QuennevilleBelair2015, §4.4, paragraph after (4.8)]. -/
 theorem weak_unique {T : ℝ} {ξ₀ : Tot W0 W1 W2} {ξ₁ ξ₂ : ℝ → Tot W0 W1 W2}
     (h₁ : H.IsWeakSolution T ξ₀ ξ₁) (h₂ : H.IsWeakSolution T ξ₀ ξ₂) : EqOn ξ₁ ξ₂ (Icc 0 T) := by
   have hcont : ∀ {ξ}, H.IsWeakSolution T ξ₀ ξ → ContinuousOn ξ (Icc 0 T) := fun h t ht =>
@@ -696,7 +744,8 @@ theorem _root_.Feec.IsStrongSolution.of_eqOn {E : Type*} [NormedAddCommGroup E]
 Thm 4.6, a weak solution with initial value in `D(L)` is a strong solution.
 
 Correction: the thesis' proof cites "Theorem 4.7" itself for the existence of a strong
-solution; it is Thm 4.6 (`thm_4_6`, here through its existence hypothesis `WellPosedHom`). -/
+solution; it is Thm 4.6 (`thm_4_6`, here through its existence hypothesis `WellPosedHom`).
+See [QuennevilleBelair2015, Thm 4.7] (second bullet and proof). -/
 theorem weak_imp_strong {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) {ξ : ℝ → Tot W0 W1 W2} (hξ : H.IsWeakSolution T ξ₀ ξ) :
     IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ := by
@@ -705,7 +754,8 @@ theorem weak_imp_strong {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {ξ₀ : To
 
 /-- **Thesis Thm 4.7, second bullet**, with the thesis' regularity: if the existence hypothesis
 provides classical solutions, a weak solution with data in `D(L)` lies in
-`C⁰([0,T];D(L)) ∩ C¹([0,T];W)` and solves (4.4). -/
+`C⁰([0,T];D(L)) ∩ C¹([0,T];W)` and solves (4.4).
+See [QuennevilleBelair2015, Thm 4.7] (second bullet). -/
 theorem weak_imp_classical {T : ℝ} {Adm : (ℝ → Tot W0 W1 W2) → Prop}
     (hHY : WellPosedClassical (-H.waveOp) T Adm) (hAdm : Adm 0) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) {ξ : ℝ → Tot W0 W1 W2} (hξ : H.IsWeakSolution T ξ₀ ξ) :
@@ -726,7 +776,8 @@ theorem weak_imp_classical {T : ℝ} {Adm : (ℝ → Tot W0 W1 W2) → Prop}
 /-- **Thesis Thm 4.7** (corrected): under the existence hypothesis of Thm 4.6, for initial data
 in `D(L)`, strong solutions of (4.4) and weak solutions of (4.7)/(4.8) coincide.
 
-Correction: the proof uses Thm 4.6 (not Thm 4.7, as the thesis cites). -/
+Correction: the proof uses Thm 4.6 (not Thm 4.7, as the thesis cites).
+See [QuennevilleBelair2015, Thm 4.7]. -/
 theorem thm_4_7 {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) (ξ : ℝ → Tot W0 W1 W2) :
     IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ ↔ H.IsWeakSolution T ξ₀ ξ :=
@@ -734,7 +785,7 @@ theorem thm_4_7 {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {ξ₀ : Tot W0 W1 
 
 /-- **Thesis Thm 4.7** with the thesis' regularity classes: under classical existence,
 for data in `D(L)`, classical strong solutions (`C⁰(D(L)) ∩ C¹(W)`) and classical weak
-solutions (`C⁰(V) ∩ C¹(W)`) coincide. -/
+solutions (`C⁰(V) ∩ C¹(W)`) coincide. See [QuennevilleBelair2015, Thm 4.7]. -/
 theorem thm_4_7_classical {T : ℝ} {Adm : (ℝ → Tot W0 W1 W2) → Prop}
     (hHY : WellPosedClassical (-H.waveOp) T Adm) (hAdm : Adm 0) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) (ξ : ℝ → Tot W0 W1 W2) :
@@ -768,7 +819,9 @@ variable [FiniteDimensional ℝ W0] [FiniteDimensional ℝ W1] [FiniteDimensiona
 
 /-- **Non-vacuity of the hypotheses of Thm 4.6/4.7**: for every Hilbert complex of
 finite-dimensional spaces the classical existence hypothesis of `thm_4_6_classical` and
-`thm_4_7_classical` holds (with continuous forcing), via `exp(-tL)` and Duhamel's formula. -/
+`thm_4_7_classical` holds (with continuous forcing), via `exp(-tL)` and Duhamel's formula.
+Hypotheses of [QuennevilleBelair2015, Thm 4.3] as used in Thms 4.6/4.7 (no counterpart in the
+thesis). -/
 theorem wellPosedClassical_neg_waveOp (T : ℝ) :
     WellPosedClassical (-H.waveOp) T (fun F => ContinuousOn F (Icc 0 T)) := by
   obtain ⟨A, hA⟩ := exists_eq_bddOp (-H.waveOp) (eq_top_of_dense _ H.dense_domL)
@@ -801,7 +854,8 @@ def idComplex : HilbertComplex2 ℝ ℝ ℝ where
 
 /-- **The hypotheses of Thm 4.6/4.7 are satisfiable with a nonzero Hodge wave operator**
 (critic item 6): for `ℝ --id--> ℝ --0--> ℝ`, `WellPosedHom (-L) T` and the classical existence
-hypothesis hold for every `T`, and `L ≠ 0` on `D(L)`. -/
+hypothesis hold for every `T`, and `L ≠ 0` on `D(L)`. Witness for the hypotheses of
+[QuennevilleBelair2015, Thms 4.6 and 4.7] (no counterpart in the thesis). -/
 theorem nonvacuous :
     (∃ x : idComplex.waveOp.domain, idComplex.waveOp x ≠ 0) ∧
       ∀ T, WellPosedHom (-idComplex.waveOp) T ∧

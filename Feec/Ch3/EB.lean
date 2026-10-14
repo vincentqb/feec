@@ -33,16 +33,15 @@ Corrections and gaps filled (details in the docstrings):
 * `div` and the matrix `curl` are used before being defined; the conventions are fixed here.
 * Lemma 3.5: "`A` is then trace-free" should be `curl A`; part (3) needs only symmetry,
   `div A = 0` and `grad tr A = 0`.
-* Prop 3.4: the linearization misses the factor `ε`; the equivalence is pointwise and needs
-  only `C¹`; it cites Prop 3.2 where Prop 3.3 is meant; the thesis counts "6 constraints + 18
+* Prop 3.4: the equivalence is pointwise and needs only `C¹`; it cites Prop 3.2 where Prop 3.3 is meant; the thesis counts "6 constraints + 18
   evolution equations" (at most 24 conditions); on symmetric trace-free jets exactly 16 of
   them are independent (6 constraints + 10 evolution equations).
 * Prop 3.6: the thesis' proof is a forward reference to Cor 4.5 ("Theorem 4.5") whose
   hypotheses are never verified (they are only conjectured in Prop 4.17); "`curl E` is TSD"
-  should be `curl B`. Here: a direct proof on `ℝ³` by divergence propagation and the energy
-  method.
-* §3.5: `A₋` should be `Aₓ`; the standing hypothesis `f ∈ C²` is inconsistent with the later
-  use of `f'''` (the thesis itself switches to `f ∈ C³`); we assume `f ∈ C³` throughout.
+  should be `curl B`; in §3.4 "as seen in Proposition 3.4" (TSD propagation) should cite
+  Prop 3.6. Here: a direct proof on `ℝ³` by divergence propagation and the energy method.
+* §3.5: `A₋` should be `Aₓ`. As in the thesis, `f ∈ C²` suffices for the wave equation and
+  `f ∈ C³` is assumed for the EB equations.
 
 Not formalized: the nonlinear EB system of §3.4 (quoted from Anderson–Choquet-Bruhat–York; it
 needs the 3+1 split and extrinsic curvature; its extracted B-equation sign `+ sym curl E` must
@@ -198,7 +197,7 @@ def bianchi2 (dE dB : Jet4) (α β γ δ θ : Fin 4) : ℝ :=
 def EBJet (dE dB : Jet4) : Prop :=
   div (sp dE) = 0 ∧ div (sp dB) = 0 ∧ dE 0 + curl (sp dB) = 0 ∧ dB 0 - curl (sp dE) = 0
 
-/-- The reduced form (Thesis Prop 3.4(c) as corrected): constraints plus the symmetric parts
+/-- The reduced form (Thesis Prop 3.4, count refinement): constraints plus the symmetric parts
 of the evolution equations. -/
 def EBJetSym (dE dB : Jet4) : Prop :=
   div (sp dE) = 0 ∧ div (sp dB) = 0 ∧ dE 0 + symm (curl (sp dB)) = 0 ∧
@@ -356,8 +355,8 @@ Lemma 3.5; the signs depend on them); the equivalence is pointwise and needs onl
 Prop 3.3. Trace-freeness is not needed for this equivalence (the 24 equations are not reduced
 by assuming trace-freeness here; their independence on general symmetric jets is not proved);
 it is needed for the count of 16 (`linBianchi_iff_sym`,
-`EBJetSym_surjective`). The linearization step "`∇_[α W_βγ]δθ = ∂_[α C_βγ]δθ + O(ε²)`" misses
-the factor `ε` on the right; this module starts from the linearized identity. -/
+`EBJetSym_surjective`). This module starts from the linearized identity
+`∂_[α C_βγ]δθ = 0` (the thesis' `0 = ε∂_[α C_βγ]δθ + O(ε²)` at first order). -/
 theorem linBianchi_iff (dE dB : Jet4) (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJet dE dB := by
   have sE : ∀ μ i j, dE μ i j = dE μ j i := fun μ i j => by
@@ -403,15 +402,15 @@ theorem linBianchi_iff (dE dB : Jet4) (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : �
 /-- Jets of symmetric trace-free matrices (pointwise TSD up to the divergence condition). -/
 def IsSymTF (dX : Jet4) : Prop := ∀ μ, (dX μ)ᵀ = dX μ ∧ (dX μ).trace = 0
 
-/-- `sym A = A` for symmetric `A` (used in Thesis Prop 3.4(c)). -/
+/-- `sym A = A` for symmetric `A` (used in Thesis Prop 3.4, count refinement). -/
 theorem symm_of_isSymm {A : Matrix (Fin 3) (Fin 3) ℝ} (h : Aᵀ = A) : symm A = A := by
   rw [symm, h, ← two_smul ℝ A, smul_smul]; norm_num
 
-/-- `sym A` is symmetric (used in Thesis Prop 3.4(c)). -/
+/-- `sym A` is symmetric (used in Thesis Prop 3.4, count refinement). -/
 theorem symm_transpose (A : Matrix (Fin 3) (Fin 3) ℝ) : (symm A)ᵀ = symm A := by
   simp [symm, Matrix.transpose_add, add_comm]
 
-/-- `tr sym A = tr A` (used in Thesis Prop 3.4(c)). -/
+/-- `tr sym A = tr A` (used in Thesis Prop 3.4, count refinement). -/
 theorem trace_symm (A : Matrix (Fin 3) (Fin 3) ℝ) : (symm A).trace = A.trace := by
   simp [symm, Matrix.trace_add, Matrix.trace_transpose, Matrix.trace_smul]; ring
 
@@ -463,8 +462,9 @@ theorem div_divJet (v : Fin 3 → ℝ) : div (divJet v) = v := by
 
 /-- **Thesis Prop 3.4**, independence of the 16 equations: on jets of symmetric trace-free
 `E`, `B`, the map `(dE, dB) ↦ (div E, div B, Ė + sym curl B, Ḃ - sym curl E)` is onto
-`ℝ³ × ℝ³ × Sym₀ × Sym₀` (dimension `3 + 3 + 5 + 5 = 16`). So the 24 Bianchi components of
-`linBianchi_iff_sym` have rank exactly 16: 6 constraints plus 10 evolution equations.
+`ℝ³ × ℝ³ × Sym₀ × Sym₀` (dimension `3 + 3 + 5 + 5 = 16`). Together with `linBianchi_iff_sym`,
+on such jets the Bianchi identity is equivalent to 16 independent equations: 6 constraints
+plus 10 evolution equations.
 
 Refinement: the thesis counts "6 constraints + 18 evolution equations" (at most 24
 conditions) without determining how many are independent; the answer is 16. -/
@@ -813,8 +813,8 @@ linearized Weyl field `[[E, B], [B, -E]] = Rjet(∂∂h)` with `E = waveE`, `B =
 are symmetric, trace-free and solve the linearized EB system (3.3)–(3.4) at every point
 (`div E = div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`).
 
-Correction (inconsistent hypotheses): the thesis first assumes `f ∈ C²`, but the EB
-equations involve `f'''`; the thesis itself then switches to `f ∈ C³`, which we assume. -/
+Remark: the thesis assumes `f ∈ C²` so that `h` solves the wave equation, and then `f ∈ C³`
+for the EB equations (which involve `f'''`); we assume `f ∈ C³`, as the thesis does here. -/
 theorem planeWave_EB {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ Ap Ax : ℝ) (p : E4) :
     Rjet (jet2 (fun y a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) p) =
       T (waveE κ Ap Ax f p) (waveB κ Ap Ax f p) (waveB κ Ap Ax f p) (-waveE κ Ap Ax f p) ∧

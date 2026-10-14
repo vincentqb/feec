@@ -33,6 +33,18 @@ remark exactly, and fills the other gaps of Ch 7.
 Not formalized: convergence rates and errors (numerical), boundary conditions (the plane wave
 does not satisfy the homogeneous essential BCs of (4.14); a modelling remark), and the
 hybridization/preconditioner promised in the Introduction (absent from the thesis).
+
+## References
+
+* [QuennevilleBelair2015], Ch. 7 (numerical experiments, Tables 7.1–7.2, Figs 7.1–7.4);
+  §4.10 (the systems (4.14), (4.15) and Prop 4.18); §4.3–§4.4 (constraint propagation and the
+  abstract Hodge wave equation); §3.4 (Lemma 3.5) and §3.5 (gravitational plane waves)
+* [Arnold2018] (FEEC framework: Hilbert complexes and their discrete subcomplexes)
+* [AFW2010] (discrete Hilbert complexes and the discrete adjoint `d₀*`)
+* [GilletteHolstZhu2017] (FEEC for evolution problems)
+* [Hiptmair2002] (discrete de Rham complexes for electromagnetic wave problems)
+* [HiptmairXu2007] (auxiliary-space AMG preconditioning in `H(curl)`, `H(div)`)
+* [Wald1984] (linearized gravitational plane waves in TT gauge)
 -/
 
 open LinearMap InnerProductSpace
@@ -52,14 +64,18 @@ variable {V0 V1 V2 : Type*}
   [NormedAddCommGroup V2] [InnerProductSpace ℝ V2] [FiniteDimensional ℝ V2]
 
 /-- One Crank–Nicolson step, with half step `s = Δt/2`, of the discrete full EB system (4.14):
-`σ̇ = d₀* E`, `Ė = -d₀ σ - d₁* B`, `Ḃ = d₁ E` (thesis operator `L`, l. 2842). -/
+`σ̇ = d₀* E`, `Ė = -d₀ σ - d₁* B`, `Ḃ = d₁ E` (thesis operator `L`, l. 2842).
+
+See [QuennevilleBelair2015, §4.10, (4.14)] and [QuennevilleBelair2015, Ch. 7]. -/
 def FullStep (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ)
     (σ σ' : V0) (E E' : V1) (B B' : V2) : Prop :=
   σ' - σ = s • adjoint d0 (E' + E) ∧
   E' - E = -(s • (d0 (σ' + σ) + adjoint d1 (B' + B))) ∧
   B' - B = s • d1 (E' + E)
 
-/-- One Crank–Nicolson step of the discrete reduced system (4.15): `Ė = -d₁* B`, `Ḃ = d₁ E`. -/
+/-- One Crank–Nicolson step of the discrete reduced system (4.15): `Ė = -d₁* B`, `Ḃ = d₁ E`.
+
+See [QuennevilleBelair2015, §4.10, (4.15)] and [QuennevilleBelair2015, Ch. 7]. -/
 def RedStep (d1 : V1 →ₗ[ℝ] V2) (s : ℝ) (E E' : V1) (B B' : V2) : Prop :=
   E' - E = -(s • adjoint d1 (B' + B)) ∧ B' - B = s • d1 (E' + E)
 
@@ -68,7 +84,10 @@ step keeps `d₀* E = 0`, and padded with `σ = 0` it is a full CN step.
 
 Thesis gap: Ch 7 only says the two schemes "might give equal approximations". The equality is
 exact, but it needs the discrete divergence condition `d₀* E = 0` on the data (true for the `L²`
-projection of a divergence-free field, false in general for the canonical interpolant). -/
+projection of a divergence-free field, false in general for the canonical interpolant).
+
+See [QuennevilleBelair2015, Prop 4.18] (continuous version) and [QuennevilleBelair2015, Ch. 7];
+the discrete adjoint `d₀*` is that of the discrete subcomplex, cf. [AFW2010]. -/
 theorem red_to_full (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd : d1 ∘ₗ d0 = 0)
     (s : ℝ) (E E' : V1) (B B' : V2) (h : RedStep d1 s E E' B B')
     (hE : adjoint d0 E = 0) :
@@ -85,7 +104,9 @@ theorem red_to_full (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd : d1 �
 
 /-- The divergence hypothesis of `red_to_full` is necessary (Thesis Ch 7, l. 4289–4291).
 If `s ≠ 0` and a reduced CN step, padded with `σ = 0`, is a full CN step, then `d₀* E = 0`.
-So for data with `d₀* E⁰ ≠ 0` the full scheme moves `σ` off `0` and the schemes differ. -/
+So for data with `d₀* E⁰ ≠ 0` the full scheme moves `σ` off `0` and the schemes differ.
+
+Converse direction to [QuennevilleBelair2015, Prop 4.18], discrete CN version. -/
 theorem red_to_full_necessary (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd : d1 ∘ₗ d0 = 0)
     {s : ℝ} (hs : s ≠ 0) (E E' : V1) (B B' : V2) (h : RedStep d1 s E E' B B')
     (hf : FullStep d0 d1 s 0 0 E E' B B') : adjoint d0 E = 0 := by
@@ -104,7 +125,11 @@ theorem red_to_full_necessary (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) 
 /-- Uniqueness of the full CN step (Thesis Ch 7, l. 4283–4285; used implicitly).
 
 Thesis gap: the solvability of the CN linear system `(M + sK)xⁿ⁺¹ = (M - sK)xⁿ` is never argued.
-Two steps from the same state differ by `(a, b, c)` with `‖a‖² + ‖b‖² + ‖c‖² = 0`. -/
+Two steps from the same state differ by `(a, b, c)` with `‖a‖² + ‖b‖² + ‖c‖² = 0`.
+
+See [QuennevilleBelair2015, Ch. 7]; the argument is the standard energy argument for CN applied
+to a skew-adjoint Hodge-wave operator, cf. [QuennevilleBelair2015, §4.4] and
+[GilletteHolstZhu2017]. -/
 theorem full_step_unique (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ)
     (σ : V0) (E : V1) (B : V2) (σ₁ σ₂ : V0) (E₁ E₂ : V1) (B₁ B₂ : V2)
     (h₁ : FullStep d0 d1 s σ σ₁ E E₁ B B₁) (h₂ : FullStep d0 d1 s σ σ₂ E E₂ B B₂) :
@@ -176,7 +201,10 @@ private theorem inner_sub_add_eq {W : Type*} [NormedAddCommGroup W] [InnerProduc
 
 The conserved quantity is the total `‖σ‖² + ‖E‖² + ‖B‖²`, not `‖E‖` alone (`E` and `B` exchange
 energy). This is consistent with, but does not by itself explain, the discrete "Norm of E"
-values in Table 7.1; under-resolution of the `ω = 20` wave is an equally plausible cause. -/
+values in Table 7.1; under-resolution of the `ω = 20` wave is an equally plausible cause.
+
+See [QuennevilleBelair2015, Ch. 7, Table 7.1]; discrete analog of the energy identity for the
+abstract Hodge wave equation, [QuennevilleBelair2015, §4.4]; cf. [GilletteHolstZhu2017]. -/
 theorem full_step_energy (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ)
     (σ σ' : V0) (E E' : V1) (B B' : V2) (h : FullStep d0 d1 s σ σ' E E' B B') :
     ‖σ'‖ ^ 2 + ‖E'‖ ^ 2 + ‖B'‖ ^ 2 = ‖σ‖ ^ 2 + ‖E‖ ^ 2 + ‖B‖ ^ 2 := by
@@ -194,7 +222,9 @@ theorem full_step_energy (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : 
   rw [inner_sub_add_eq] at e1 e2 e3
   linarith
 
-/-- Discrete energy conservation of a reduced CN step (Thesis Ch 7, (4.15)). -/
+/-- Discrete energy conservation of a reduced CN step (Thesis Ch 7, (4.15)).
+
+See [QuennevilleBelair2015, Ch. 7, Table 7.2] and [QuennevilleBelair2015, §4.10, (4.15)]. -/
 theorem red_step_energy (d1 : V1 →ₗ[ℝ] V2) (s : ℝ) (E E' : V1) (B B' : V2)
     (h : RedStep d1 s E E' B B') : ‖E'‖ ^ 2 + ‖B'‖ ^ 2 = ‖E‖ ^ 2 + ‖B‖ ^ 2 := by
   have := full_step_energy (0 : V1 →ₗ[ℝ] V1) d1 s 0 0 E E' B B'
@@ -238,7 +268,9 @@ theorem fullStep_iff (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ)
 /-- The CN system matrix is invertible for every `s` (Thesis Ch 7, l. 4283–4285).
 
 Thesis gap: never argued. Injectivity is `full_step_unique`; surjectivity follows in finite
-dimension. -/
+dimension.
+
+See [QuennevilleBelair2015, Ch. 7]. -/
 theorem fullLHS_bijective (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ) :
     Function.Bijective (fullLHS d0 d1 s) := by
   have hinj : Function.Injective (fullLHS d0 d1 s) := by
@@ -291,7 +323,9 @@ Thesis gap: the thesis only observes agreement to 3–4 digits in Tables 7.1/7.2
 "hint". Here: if `σ⁰ = 0` and `E⁰` is discretely divergence-free (`d₀* E⁰ = 0`), the full CN
 iterates satisfy `σⁿ = 0` and agree with the reduced CN iterates for every `n`; moreover
 `d₀* Eⁿ = 0` for all `n`. The residual table discrepancies must come from solver tolerances or
-from how the initial data were projected. -/
+from how the initial data were projected.
+
+See [QuennevilleBelair2015, Prop 4.18] and [QuennevilleBelair2015, Ch. 7, Tables 7.1–7.2]. -/
 theorem cn_iterates_agree (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd : d1 ∘ₗ d0 = 0) (s : ℝ)
     (E : ℕ → V1) (B : ℕ → V2) (σ' : ℕ → V0) (E' : ℕ → V1) (B' : ℕ → V2)
     (hE0 : adjoint d0 (E 0) = 0)
@@ -313,7 +347,10 @@ theorem cn_iterates_agree (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd 
 /-- Standalone discrete Thesis Prop 4.18 (first bullet), CN version (Thesis Ch 7,
 l. 4289–4291): a full CN sequence started with `σ⁰ = 0` and `d₀* E⁰ = 0` keeps `σⁿ = 0` and
 `d₀* Eⁿ = 0`, and `(Eⁿ, Bⁿ)` is a reduced CN sequence. Unlike `cn_iterates_agree`, no reduced
-sequence is assumed; it is constructed from `red_step_existsUnique`. -/
+sequence is assumed; it is constructed from `red_step_existsUnique`.
+
+See [QuennevilleBelair2015, Prop 4.18] (first bullet, continuous version); constraint
+propagation in the abstract setting is [QuennevilleBelair2015, §4.3, Thm 4.5]. -/
 theorem full_iter_reduces (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd : d1 ∘ₗ d0 = 0) (s : ℝ)
     (σ : ℕ → V0) (E : ℕ → V1) (B : ℕ → V2)
     (hfull : ∀ n, FullStep d0 d1 s (σ n) (σ (n + 1)) (E n) (E (n + 1)) (B n) (B (n + 1)))
@@ -349,7 +386,10 @@ theorem full_iter_energy (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : 
 variable {V3 : Type*} [NormedAddCommGroup V3] [InnerProductSpace ℝ V3]
 
 /-- Discrete divergence of `B` is conserved by a full CN step when `d₂ ∘ d₁ = 0`
-(Thesis Figs 7.1–7.4 plot this divergence; the thesis gives no reason for it). -/
+(Thesis Figs 7.1–7.4 plot this divergence; the thesis gives no reason for it).
+
+See [QuennevilleBelair2015, Ch. 7, Figs 7.1–7.4]; the mechanism is the subcomplex property
+`d₂ ∘ d₁ = 0` of the discrete de Rham complex, cf. [AFW2010], [Arnold2018]. -/
 theorem div_B_invariant_full (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (d2 : V2 →ₗ[ℝ] V3)
     (hd2 : d2 ∘ₗ d1 = 0) (s : ℝ) (σ σ' : V0) (E E' : V1) (B B' : V2)
     (h : FullStep d0 d1 s σ σ' E E' B B') : d2 B' = d2 B := by
@@ -437,7 +477,9 @@ theorem signJ_mul_self : (signJ : Matrix (Idx n0 n1 n2) (Idx n0 n1 n2) ℝ) * si
 Correction (inferred gap): the thesis only says "other matrices are inverted with MINRES" and
 never assembles the CN matrix. In the natural sign convention for the test functions, `M + sK`
 is not symmetric, so MINRES does not apply to it directly. Multiplying the `σ` and `B` block rows by `-1` gives
-`J(M + sK) = [[-M0, sGᵀ, 0], [sG, M1, sCᵀ], [0, sC, -M2]]`, which is symmetric (indefinite). -/
+`J(M + sK) = [[-M0, sGᵀ, 0], [sG, M1, sCᵀ], [0, sC, -M2]]`, which is symmetric (indefinite).
+
+See [QuennevilleBelair2015, Ch. 7] (solver description, l. 4284–4285). -/
 theorem minres_symm {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
     (h0 : M0.IsSymm) (h1 : M1.IsSymm) (h2 : M2.IsSymm) (G : Matrix n1 n0 ℝ)
     (C : Matrix n2 n1 ℝ) (s : ℝ) :
@@ -466,7 +508,9 @@ theorem dotProduct_mulVec_skew {ι : Type*} [Fintype ι] {K : Matrix ι ι ℝ} 
 /-- The CN matrix `M + sK` is invertible for SPD `M`, skew `K` and every real `s`
 (Thesis Ch 7, l. 4283–4285).
 
-Thesis gap: never argued. If `(M + sK)x = 0` then `0 = xᵀMx + s xᵀKx = xᵀMx`, so `x = 0`. -/
+Thesis gap: never argued. If `(M + sK)x = 0` then `0 = xᵀMx + s xᵀKx = xᵀMx`, so `x = 0`.
+
+See [QuennevilleBelair2015, Ch. 7]. -/
 theorem cn_matrix_det_ne_zero {ι : Type*} [Fintype ι] [DecidableEq ι] {M K : Matrix ι ι ℝ}
     (hM : M.PosDef) (hK : Kᵀ = -K) (s : ℝ) : (M + s • K).det ≠ 0 := by
   intro hdet
@@ -480,7 +524,9 @@ theorem cn_matrix_det_ne_zero {ι : Type*} [Fintype ι] [DecidableEq ι] {M K : 
   linarith
 
 /-- Energy conservation of the matrix CN step: if `(M + sK)x' = (M - sK)x` with `M` symmetric
-and `K` skew, then `x'ᵀMx' = xᵀMx` (Thesis Ch 7). -/
+and `K` skew, then `x'ᵀMx' = xᵀMx` (Thesis Ch 7).
+
+See [QuennevilleBelair2015, Ch. 7]; matrix form of `full_step_energy`. -/
 theorem cn_matrix_energy {ι : Type*} [Fintype ι] {M K : Matrix ι ι ℝ} (hM : M.IsSymm)
     (hK : Kᵀ = -K) (s : ℝ) (x x' : ι → ℝ) (h : (M + s • K) *ᵥ x' = (M - s • K) *ᵥ x) :
     x' ⬝ᵥ (M *ᵥ x') = x ⬝ᵥ (M *ᵥ x) := by
@@ -532,7 +578,9 @@ theorem massM_posDef {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matri
     linarith
 
 /-- The CN matrix of the full EB system is invertible for every `s` (Thesis Ch 7, (4.14) with
-CN and SPD mass matrices). -/
+CN and SPD mass matrices).
+
+See [QuennevilleBelair2015, §4.10, (4.14)] and [QuennevilleBelair2015, Ch. 7]. -/
 theorem cn_invertible {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
     (h0 : M0.PosDef) (h1 : M1.PosDef) (h2 : M2.PosDef) (G : Matrix n1 n0 ℝ)
     (C : Matrix n2 n1 ℝ) (s : ℝ) : IsUnit (massM M0 M1 M2 + s • stiffK G C) := by
@@ -552,13 +600,19 @@ def zJet (P : Matrix (Fin 3) (Fin 3) ℝ) : Jet1 := Pi.single 2 P
 def curlZ (P : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
   Matrix.of fun i j => ![-P i 1, P i 0, 0] j
 
-/-- Electric amplitude of the Ch 7 plane wave (Thesis Ch 7, l. 4272–4280). -/
+/-- Electric amplitude of the Ch 7 plane wave (Thesis Ch 7, l. 4272–4280).
+
+See [QuennevilleBelair2015, Ch. 7] and [QuennevilleBelair2015, §3.5]; cf. [Wald1984]. -/
 def E0 (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ap, -Ax, 0; -Ax, Ap, 0; 0, 0, 0]
 
-/-- Magnetic amplitude of the Ch 7 plane wave; the thesis never gives it. -/
+/-- Magnetic amplitude of the Ch 7 plane wave; the thesis never gives it.
+
+Cf. the plane-wave computation of [QuennevilleBelair2015, §3.5]. -/
 def B0 (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ax, Ap, 0; Ap, Ax, 0; 0, 0, 0]
 
-/-- Row-wise curl (Thesis Lemma 3.5 convention) of a `z`-only jet (Thesis Ch 7). -/
+/-- Row-wise curl (Thesis Lemma 3.5 convention) of a `z`-only jet (Thesis Ch 7).
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem curl_zJet (P : Matrix (Fin 3) (Fin 3) ℝ) : curl (zJet P) = curlZ P := by
   ext a b
   simp only [curl, zJet, Matrix.of_apply, Fin.sum_univ_three, Pi.single_apply]
@@ -582,7 +636,9 @@ theorem div_smul (c : ℝ) (J : Jet1) : div (c • J) = c • div J := by
 
 Thesis gap: `B` is never given, and the constraint checks (symmetric, trace-free,
 divergence-free) are not made. `B0` is the plane-wave partner of `E0`; the opposite sign
-convention flips `B`. -/
+convention flips `B`.
+
+See [QuennevilleBelair2015, Ch. 7], [QuennevilleBelair2015, §3.5]. -/
 theorem planeWave (Ap Ax : ℝ) :
     curlZ (B0 Ap Ax) = E0 Ap Ax ∧ curlZ (E0 Ap Ax) = -B0 Ap Ax ∧
     (E0 Ap Ax).IsSymm ∧ (B0 Ap Ax).IsSymm ∧
@@ -641,7 +697,10 @@ Thesis gap: `B` is missing; here `B = B0 sin(ω(z - t))`. The fields `E, B` are 
 trace-free and row-wise divergence-free, and satisfy `Ė = -curl B`, `Ḃ = curl E` entrywise at
 every `(x, t)`, with `curl`, `div` the foundation's row-wise operators applied to the true
 spatial jet. Not claimed: the homogeneous essential boundary conditions of (4.14) on the unit
-cube, which this wave violates (e.g. `E₀₁ ≠ 0` on `x₀ = 0`). -/
+cube, which this wave violates (e.g. `E₀₁ ≠ 0` on `x₀ = 0`).
+
+See [QuennevilleBelair2015, Ch. 7], [QuennevilleBelair2015, §3.5] (gravitational plane waves in
+the EB variables); cf. [Wald1984] for linearized plane waves in TT gauge. -/
 theorem planeWave_solves (Ap Ax ω t : ℝ) (x : Fin 3 → ℝ) :
     (∀ a b, HasDerivAt (fun t => pw (E0 Ap Ax) ω t x a b)
       (-(curl (jetOf (pw (B0 Ap Ax) ω t) x)) a b) t) ∧
@@ -697,7 +756,9 @@ theorem steps_mesh32 : ⌊(7.5 : ℝ) * (240 * Real.sqrt 2)⌋₊ = 2545 := by
   rw [Nat.floor_eq_iff (by positivity)]
   constructor <;> push_cast <;> nlinarith
 
-/-- Step counts of Thesis Table 7.1a: `⌊7.5 / Δt_k⌋ = 900, 1272, 1800, 2545`. -/
+/-- Step counts of Thesis Table 7.1a: `⌊7.5 / Δt_k⌋ = 900, 1272, 1800, 2545`.
+
+See [QuennevilleBelair2015, Ch. 7, Table 7.1]. -/
 theorem stepCount_table :
     stepCount 0 = 900 ∧ stepCount 1 = 1272 ∧ stepCount 2 = 1800 ∧ stepCount 3 = 2545 := by
   have s2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
@@ -717,7 +778,9 @@ Thesis gap: `T/Δt` is not an integer there. Reading the "Step count" column as 
 of fixed size `Δt` (the natural reading; the thesis does not describe its stepping loop), the
 runs stop at `t ≈ 7.4953` and `t ≈ 7.4983`, and the text does not say at which time the error
 is measured. On meshes `k = 0, 2` the final
-time is exactly `7.5`. -/
+time is exactly `7.5`.
+
+See [QuennevilleBelair2015, Ch. 7, Table 7.1]. -/
 theorem final_time_table :
     (stepCount 0 : ℝ) * dt 0 = 7.5 ∧ (stepCount 1 : ℝ) * dt 1 < 7.5 ∧
     (stepCount 2 : ℝ) * dt 2 = 7.5 ∧ (stepCount 3 : ℝ) * dt 3 < 7.5 := by
@@ -733,7 +796,9 @@ theorem final_time_table :
   · rw [pow_succ, s2, mul_one_div, div_lt_iff₀ (by positivity)]; push_cast; nlinarith
 
 /-- Cell counts `6 (4·2^k)³` of the structured 6-tetrahedra-per-cube meshes (Thesis
-Table 7.1a; the mesh type is not stated in the thesis). -/
+Table 7.1a; the mesh type is not stated in the thesis).
+
+See [QuennevilleBelair2015, Ch. 7, Table 7.1]. -/
 theorem cellCount_table :
     (List.range 4).map (fun k => 6 * (4 * 2 ^ k) ^ 3) = [384, 3072, 24576, 196608] := by
   decide

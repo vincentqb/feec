@@ -1,6 +1,6 @@
 module
 
-public import Feec.Ch4.Torus
+public import Feec.Ch4.TorusGroup
 
 /-!
 # Thesis Prop 4.19 on the flat torus `𝕋³`: the strong-symmetry complex
@@ -45,6 +45,23 @@ complex-valued fields viewed as a real Hilbert space.
 * All hypotheses of `Feec.Constraints.prop_4_17` for `S1 = S2 = L²(TSD)`: `L2TSDS_le_ker`,
   `projKc_mem_domL`, `curlST_mem_L2TSDT`, `adjoint_curlST_mem_L2TSDS`; hence
   **`prop_4_19_torus`** and its group form `prop_4_19_torus_group`.
+* **Existence**: `symGroup`, an explicit Stone group (`Feec.UnitaryGroupGenerator`) for `-L`,
+  built as the fibrewise exponential of the skew symbol `waveSymS` (`waveSymS_skew`) with the
+  machinery of `Feec.Ch4.TorusGroup` (`mulGroup`, `UnitaryGroupGenerator.transport`, `totL2`);
+  its generator domain is exactly `D(L)` (`mem_domain_neg_waveOp_sym_iff`,
+  `neg_waveOp_sym_apply`). Hence **`prop_4_19_torus_exists`** (a strong solution exists for all
+  TSD data `E₀ ∈ H(curl, S)`, `B₀ ∈ H(sym curl, T)`, and it propagates the constraints),
+  `prop_4_19_torus_symGroup` (unconditional group form), `dense_domL_sym`,
+  `mem_closure_domL_inf_Kc_sym` (`D(L) ∩ K` dense in `K`), and `prop_4_19_torus_iff`.
+* **Closed range** (the thesis defers it to its next chapter): `symComplex_closedRange`, from the
+  uniform fibre preimage bounds `hessS_preimage` and `curlS_preimage` (the latter via
+  `norm_divR_sq_le_curlR`: `|A ξ| ≤ |ξ × A|` for symmetric `A` with `ξᵀ A ξ = 0`) and the
+  general `isClosed_range_mulOp`; hence the Hodge decomposition without closures
+  `symComplex_hodge`.
+* Bridge to the `ℂ³ˣ³`-valued model of `Feec.Ch4.Torus` (Prop 4.17): `map_embL2_L2TSDS`,
+  `map_embL2_L2TSDT` (`embL2` maps both `L²(TSD)`s onto `Feec.Torus.L2TSD`), `embL2_projS`,
+  `embL2_projT`, `embL2_sym_mem_Hcurl_iff`, `curlT_embL2` (`curl` on `S` is the matrix curl),
+  `embL2_adjoint_curlST_apply` (`curl* = sym ∘ curl`).
 
 ## Correction
 
@@ -57,18 +74,25 @@ Checked against the thesis text:
   `H² × H(curl, S) ∩ H̊(div div, S) × H̊(sym curl, T)`, misplaces the boundary conditions; it
   should be `D(L) = H̊²(R) × (H̊(curl, S) ∩ H(div div, S)) × H(sym curl, T)`, as in the proof
   and in the solution spaces after (4.17). On `𝕋³` there are no boundary conditions.
-* In the solution space after (4.17), `E ∈ C¹([0, T]; L²(M))` should read `L²(S) = W1`; in the
-  proof, `-grad(H̊²(R) ∩ 0)` should read `-grad grad(H̊²(R) ∩ {0})`.
+* In the solution space after (4.17), `E ∈ C¹([0, T]; L²(M))` is imprecise rather than wrong
+  (`E` takes values in the closed subspace `L²(S) = W1`, so it is equally `C¹` into `L²(S)`);
+  in the proof, `-grad(H̊²(R) ∩ 0)` should read `-grad grad(H̊²(R) ∩ {0})`.
+* In the proof's third itemized check, `div div(H̊(curl, S) ∩ L²(TSD)) = 0` applies `div div`
+  outside its domain `H(div div, S)` as written; it is meaningful because
+  `L²(TSD) ⊆ H(div div, S)` (`L2TSDS_le_HdivdivS`), and the relevant set is the middle factor
+  of `D(L) ∩ K`, as in `L2TSDS_le_ker`.
 * The projection and density "conjectures" are theorems on `𝕋³` (see above), and the density
   ones are not needed (`prop_4_17`). The projections `P_{L²(TSD)}` in `L²(S)`, `L²(T)` agree
-  with the one in `L²(M)` (`coe_projS`, `coe_projT`), so the thesis' notation is unambiguous.
+  with the one in `L²(M)` (`coe_projS`, `coe_projT`, `embL2_projS`, `embL2_projT`), so the
+  thesis' notation is unambiguous.
+* "If we show that these complexes are closed, there is a unique solution": existence and
+  uniqueness need only skew-adjointness of `L` (`symGroup` is built without closed range);
+  closed range holds anyway on `𝕋³` (`symComplex_closedRange`).
 
 What remains open: the bounded-domain setting of the thesis (`H̊²`, `H̊(curl, S)`), where the
-projection conjecture is not settled here (cf. the docstring of `Feec.Constraints.prop_4_17`);
-the closed-range property of (4.16) ("we show in the next chapter that these complexes are
-closed"), which `prop_4_19_torus` does not need; and the existence of solutions, which is not
-constructed: `prop_4_19_torus` quantifies over strong solutions, and `prop_4_19_torus_group`
-assumes a Stone group (`Feec.UnitaryGroupGenerator`) for `-L`.
+projection conjecture is not settled here (cf. the docstring of `Feec.Constraints.prop_4_17`
+and `Feec.Ch4.BoundedDomain` for the matrix complex of Prop 4.17); real-valued fields
+(conjugate-symmetric coefficients) are not treated separately.
 
 ## References
 
@@ -508,7 +532,7 @@ See [QuennevilleBelair2015, §4.11, Prop 4.19] (first itemized hypothesis of Thm
 theorem projKc_mem_domL : ∀ x ∈ symComplex.domL,
     projKc L2R L2TSDS L2TSDT x ∈ symComplex.domL := by
   intro x hx
-  rw [mem_domL] at hx ⊢
+  rw [Constraints.mem_domL] at hx ⊢
   rw [tot_projKc]
   refine ⟨symComplex.d0.domain.zero_mem, ⟨projS_mem_HcurlS hx.2.1.1, ?_⟩, ?_⟩
   · exact (LinearPMap.mem_ker_iff.1 (L2TSDS_le_ker (L2TSDS.starProjection_apply_mem _))).elim
@@ -551,6 +575,8 @@ theorem dense_HsymCurlT_L2TSDT {ρ : L2T} (hρ : ρ ∈ L2TSDT) :
 data `(0, E₀, B₀)`, `E₀, B₀ ∈ L²(TSD)`, keeps `σ ≡ 0` and `E, B ∈ L²(TSD)` for all
 `t ∈ [0, T]`, and `(E, B)` solves the reduced system. No projection or density hypothesis is
 assumed: they are proved (`projKc_mem_domL`, `dense_HcurlS_L2TSDS`, `dense_HsymCurlT_L2TSDT`).
+Such solutions exist (`prop_4_19_torus_exists`, via the constructed group `symGroup`), so the
+statement is not vacuous.
 
 Correction: the thesis works on a bounded domain, where it leaves
 `P_{L²(TSD)} (H̊(curl, S) ∩ H(div div, S)) ⊆ H̊(curl, S) ∩ H(div div, S)` and
@@ -570,9 +596,9 @@ theorem prop_4_19_torus {T : ℝ} {E₀ : L2S} {B₀ : L2T} {U : ℝ → Tot L2R
         (fun t => (tot L2R L2S L2T (U t)).2.2) :=
   prop_4_17 L2TSDS_le_ker projKc_mem_domL curlST_mem_L2TSDT adjoint_curlST_mem_L2TSDS hE₀ hB₀ hU
 
-/-- Group form of `prop_4_19_torus`: given a Stone group for `-L` (the existence input,
-`Feec.UnitaryGroupGenerator`), every orbit starting in `D(L) ∩ K` stays in
-`K = {0} × L²(TSD) × L²(TSD)` for `t ≥ 0`.
+/-- Group form of `prop_4_19_torus`: for any Stone group for `-L`
+(`Feec.UnitaryGroupGenerator`; one is constructed below, `symGroup`), every orbit starting in
+`D(L) ∩ K` stays in `K = {0} × L²(TSD) × L²(TSD)` for `t ≥ 0`.
 
 See [QuennevilleBelair2015, Prop 4.19 and Thm 4.3]; cf. [Pazy1983, §1.10]. -/
 theorem prop_4_19_torus_group (G : UnitaryGroupGenerator (-symComplex.waveOp)) {t : ℝ}
@@ -582,6 +608,516 @@ theorem prop_4_19_torus_group (G : UnitaryGroupGenerator (-symComplex.waveOp)) {
     (isStrongSolution_orbit G t ⟨x, hx⟩) hxK t ⟨ht, le_rfl⟩
 
 end Periodic
+
+section Group
+
+open HilbertComplex2 Constraints Filter
+
+/-- The fibre `ℂ × S × T` of the state `(σ, E, B)` at one frequency. -/
+abbrev FibS := Tot ℂ Sym3 Tr3
+
+/-- `curl_ξ ∘ (grad grad)_ξ = 0` on `S` (fibre form of `d1 d0 = 0`). -/
+theorem curlS_hessS (ξ : Freq) (c : ℂ) : curlS ξ (hessS ξ c) = 0 :=
+  Subtype.ext (curlSym_hessM ξ c)
+
+/-- **The fibre symbol of `-L` for (4.16)** at the frequency `ξ`:
+`(c, A, ρ) ↦ (div div_ξ A, -(grad grad)_ξ c - sym curl_ξ ρ, curl_ξ A)`, i.e.
+`-L(σ, E, B) = (d0* E, -d0 σ - d1* B, d1 E)` with `d0 = grad grad`, `d0* = div div`,
+`d1 = curl`, `d1* = sym curl` (the system (4.18)). -/
+def waveSymS (ξ : Freq) : FibS →L[ℝ] FibS :=
+  (Constraints.totL (W0 := ℂ) (W1 := Sym3) (W2 := Tr3)).symm.toContinuousLinearMap ∘L
+    ((divdivS ξ ∘L (ContinuousLinearMap.fst ℝ Sym3 Tr3 ∘L ContinuousLinearMap.snd ℝ ℂ _)).prod
+      ((-(hessS ξ ∘L ContinuousLinearMap.fst ℝ ℂ (Sym3 × Tr3)) -
+          symCurlS ξ ∘L (ContinuousLinearMap.snd ℝ Sym3 Tr3 ∘L ContinuousLinearMap.snd ℝ ℂ _)).prod
+        (curlS ξ ∘L (ContinuousLinearMap.fst ℝ Sym3 Tr3 ∘L ContinuousLinearMap.snd ℝ ℂ _))))
+    ∘L (Constraints.totL (W0 := ℂ) (W1 := Sym3) (W2 := Tr3)).toContinuousLinearMap
+
+/-- `waveSymS` in coordinates. -/
+theorem tot_waveSymS (ξ : Freq) (x : FibS) :
+    tot _ _ _ (waveSymS ξ x) = (divdivS ξ (tot _ _ _ x).2.1,
+      -(hessS ξ (tot _ _ _ x).1) - symCurlS ξ (tot _ _ _ x).2.2, curlS ξ (tot _ _ _ x).2.1) := by
+  simp [waveSymS]
+
+/-- `⟪div div_ξ A, c⟫ = ⟪A, (grad grad)_ξ c⟫` (`adjoint_hessS`). -/
+theorem inner_divdivS_left (ξ : Freq) (A : Sym3) (c : ℂ) :
+    ⟪divdivS ξ A, c⟫ = ⟪A, hessS ξ c⟫ := by
+  rw [← adjoint_hessS, ContinuousLinearMap.adjoint_inner_left]
+
+/-- `⟪sym curl_ξ ρ, A⟫ = ⟪ρ, curl_ξ A⟫` (`adjoint_curlS`). -/
+theorem inner_symCurlS_left (ξ : Freq) (ρ : Tr3) (A : Sym3) :
+    ⟪symCurlS ξ ρ, A⟫ = ⟪ρ, curlS ξ A⟫ := by
+  rw [← adjoint_curlS, ContinuousLinearMap.adjoint_inner_left]
+
+/-- **The fibre symbols are skew**: `⟪W_ξ x, y⟫ = -⟪x, W_ξ y⟫`. -/
+theorem waveSymS_skew (ξ : Freq) (x y : FibS) : ⟪waveSymS ξ x, y⟫ = -⟪x, waveSymS ξ y⟫ := by
+  rw [inner_tot, inner_tot, tot_waveSymS, tot_waveSymS]
+  simp only [inner_neg_left, inner_neg_right, inner_sub_left, inner_sub_right]
+  have h1 := inner_divdivS_left ξ (tot _ _ _ x).2.1 (tot _ _ _ y).1
+  have h2 := inner_divdivS_left ξ (tot _ _ _ y).2.1 (tot _ _ _ x).1
+  have h3 := inner_symCurlS_left ξ (tot _ _ _ x).2.2 (tot _ _ _ y).2.1
+  have h4 := inner_symCurlS_left ξ (tot _ _ _ y).2.2 (tot _ _ _ x).2.1
+  have c1 := real_inner_comm (tot _ _ _ x).1 (divdivS ξ (tot _ _ _ y).2.1)
+  have c2 := real_inner_comm (tot _ _ _ y).2.1 (hessS ξ (tot _ _ _ x).1)
+  have c3 := real_inner_comm (tot _ _ _ x).2.1 (symCurlS ξ (tot _ _ _ y).2.2)
+  have c4 := real_inner_comm (tot _ _ _ y).2.2 (curlS ξ (tot _ _ _ x).2.1)
+  linarith
+
+/-- `⟪(grad grad)_ξ c, sym curl_ξ ρ⟫ = 0` (`curl grad grad = 0`). -/
+theorem inner_hessS_symCurlS (ξ : Freq) (c : ℂ) (ρ : Tr3) :
+    ⟪hessS ξ c, symCurlS ξ ρ⟫ = 0 := by
+  rw [real_inner_comm, inner_symCurlS_left, curlS_hessS, inner_zero_right]
+
+/-- `‖W_ξ x‖² = ‖div div A‖² + ‖grad grad c‖² + ‖sym curl ρ‖² + ‖curl A‖²`. -/
+theorem norm_sq_waveSymS (ξ : Freq) (x : FibS) :
+    ‖waveSymS ξ x‖ ^ 2 = ‖divdivS ξ (tot _ _ _ x).2.1‖ ^ 2 + ‖hessS ξ (tot _ _ _ x).1‖ ^ 2 +
+      ‖symCurlS ξ (tot _ _ _ x).2.2‖ ^ 2 + ‖curlS ξ (tot _ _ _ x).2.1‖ ^ 2 := by
+  rw [norm_sq_tot, tot_waveSymS]
+  rw [sub_eq_add_neg, ← neg_add, norm_neg, norm_add_sq_real, inner_hessS_symCurlS]
+  ring
+
+/-- The fibre symbols of `-L` on the frequency lattice. -/
+def waveSymSK (k : Z3) : FibS →L[ℝ] FibS := waveSymS (freq k)
+
+/-- The Fourier-side identification `ℓ²(ℤ³; ℂ × S × T) ≃ ℓ²(ℂ) × ℓ²(S) × ℓ²(T)`. -/
+abbrev ΦS : L2 Z3 FibS ≃ₗᵢ[ℝ] Tot L2R L2S L2T := totL2
+
+/-- Coordinates of `ΦS⁻¹ y` at the mode `k`. -/
+theorem tot_ΦS_symm_apply (y : Tot L2R L2S L2T) (k : Z3) :
+    tot _ _ _ (ΦS.symm y k) = ((tot _ _ _ y).1 k, (tot _ _ _ y).2.1 k, (tot _ _ _ y).2.2 k) := by
+  rw [totL2_symm_apply, LinearEquiv.apply_symm_apply]
+
+/-- Coordinates of `ΦS v` at the mode `k`. -/
+theorem tot_ΦS_apply (v : L2 Z3 FibS) (k : Z3) :
+    ((tot _ _ _ (ΦS v)).1 k, (tot _ _ _ (ΦS v)).2.1 k, (tot _ _ _ (ΦS v)).2.2 k) =
+      tot _ _ _ (v k) :=
+  tot_totL2Fun v k
+
+/-- `D(L)` for (4.16) on the Fourier side: `σ ∈ H²(R)`, `E ∈ H(curl, S) ∩ H(div div, S)`,
+`B ∈ H(sym curl, T)`, as four weighted-`ℓ²` conditions. -/
+theorem mem_domL_sym_iff_summable (y : Tot L2R L2S L2T) :
+    y ∈ symComplex.domL ↔
+      (Summable fun k => ‖hessS (freq k) ((tot _ _ _ y).1 k)‖ ^ 2) ∧
+      (Summable fun k => ‖curlS (freq k) ((tot _ _ _ y).2.1 k)‖ ^ 2) ∧
+      (Summable fun k => ‖divdivS (freq k) ((tot _ _ _ y).2.1 k)‖ ^ 2) ∧
+      (Summable fun k => ‖symCurlS (freq k) ((tot _ _ _ y).2.2 k)‖ ^ 2) := by
+  rw [Constraints.mem_domL]
+  have h2 : symComplex.d1†.domain = HsymCurlT := adjoint_curlST_domain
+  have h1 : symComplex.d0†.domain = HdivdivS := adjoint_hessT_domain
+  rw [midDomain, Submodule.mem_inf, h1, h2]
+  have e0 : (tot _ _ _ y).1 ∈ symComplex.d0.domain ↔
+      Summable fun k => ‖hessS (freq k) ((tot _ _ _ y).1 k)‖ ^ 2 := memℓp_two_iff
+  have e1 : (tot _ _ _ y).2.1 ∈ symComplex.d1.domain ↔
+      Summable fun k => ‖curlS (freq k) ((tot _ _ _ y).2.1 k)‖ ^ 2 := memℓp_two_iff
+  have e2 : (tot _ _ _ y).2.1 ∈ HdivdivS ↔
+      Summable fun k => ‖divdivS (freq k) ((tot _ _ _ y).2.1 k)‖ ^ 2 := memℓp_two_iff
+  have e3 : (tot _ _ _ y).2.2 ∈ HsymCurlT ↔
+      Summable fun k => ‖symCurlS (freq k) ((tot _ _ _ y).2.2 k)‖ ^ 2 := memℓp_two_iff
+  constructor
+  · rintro ⟨a, ⟨b, c⟩, d⟩; exact ⟨e0.1 a, e1.1 b, e2.1 c, e3.1 d⟩
+  · rintro ⟨a, b, c, d⟩; exact ⟨e0.2 a, ⟨e1.2 b, e2.2 c⟩, e3.2 d⟩
+
+/-- The multiplier domain of the fibre symbols, as the same four weighted-`ℓ²` conditions (the
+cross term vanishes, `inner_hessS_symCurlS`). -/
+theorem mem_mulDomain_waveSymSK (v : L2 Z3 FibS) :
+    v ∈ mulDomain waveSymSK ↔
+      (Summable fun k => ‖hessS (freq k) (tot _ _ _ (v k)).1‖ ^ 2) ∧
+      (Summable fun k => ‖curlS (freq k) (tot _ _ _ (v k)).2.1‖ ^ 2) ∧
+      (Summable fun k => ‖divdivS (freq k) (tot _ _ _ (v k)).2.1‖ ^ 2) ∧
+      (Summable fun k => ‖symCurlS (freq k) (tot _ _ _ (v k)).2.2‖ ^ 2) := by
+  rw [mem_mulDomain, memℓp_two_iff]
+  set D : Z3 → ℝ := fun k => ‖divdivS (freq k) (tot _ _ _ (v k)).2.1‖ ^ 2
+  set G : Z3 → ℝ := fun k => ‖hessS (freq k) (tot _ _ _ (v k)).1‖ ^ 2
+  set C2 : Z3 → ℝ := fun k => ‖symCurlS (freq k) (tot _ _ _ (v k)).2.2‖ ^ 2
+  set C1 : Z3 → ℝ := fun k => ‖curlS (freq k) (tot _ _ _ (v k)).2.1‖ ^ 2
+  have e : (fun k => ‖waveSymSK k (v k)‖ ^ 2) = D + G + C2 + C1 :=
+    funext fun k => norm_sq_waveSymS _ _
+  have hD : 0 ≤ D := fun _ => sq_nonneg _
+  have hG : 0 ≤ G := fun _ => sq_nonneg _
+  have hC2 : 0 ≤ C2 := fun _ => sq_nonneg _
+  have hC1 : 0 ≤ C1 := fun _ => sq_nonneg _
+  rw [e, summable_add_iff_of_nonneg (add_nonneg (add_nonneg hD hG) hC2) hC1,
+    summable_add_iff_of_nonneg (add_nonneg hD hG) hC2, summable_add_iff_of_nonneg hD hG]
+  tauto
+
+/-- **Domain identification**: `D(L) = ΦS D(mulOp waveSymSK)`. -/
+theorem mem_domain_neg_waveOp_sym_iff (y : Tot L2R L2S L2T) :
+    y ∈ (-symComplex.waveOp).domain ↔ ΦS.symm y ∈ (mulOp waveSymSK).domain := by
+  change y ∈ symComplex.domL ↔ ΦS.symm y ∈ mulDomain waveSymSK
+  rw [mem_domL_sym_iff_summable, mem_mulDomain_waveSymSK]
+  simp only [tot_ΦS_symm_apply]
+
+/-- `(grad grad)* = div div` fibrewise, applied. -/
+theorem adjoint_hessT_apply (u : hessT†.domain) (k : Z3) :
+    (hessT† u : L2R) k = divdivS (freq k) ((u : L2S) k) := by
+  have h := adjoint_mulOp_apply (fun k => hessS (freq k)) u k
+  rw [adjoint_hessS] at h
+  exact h
+
+/-- `curl* = sym curl` fibrewise, applied. -/
+theorem adjoint_curlST_apply (u : curlST†.domain) (k : Z3) :
+    (curlST† u : L2S) k = symCurlS (freq k) ((u : L2T) k) := by
+  have h := adjoint_mulOp_apply (fun k => curlS (freq k)) u k
+  rw [adjoint_curlS] at h
+  exact h
+
+/-- First coordinate of `L` at the mode `k`: `-(div div E)_k`. -/
+theorem symWaveOp_c0 (y : symComplex.waveOp.domain) (k : Z3) :
+    ((tot _ _ _ (symComplex.waveOp y)).1 : L2R) k =
+      -divdivS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.1 k) := by
+  rw [Constraints.tot_waveOp]
+  change -((symComplex.d0† (symComplex.prV1s ⟨y.1, y.2⟩) : L2R) k) = _
+  rw [neg_inj]
+  exact adjoint_hessT_apply (symComplex.prV1s ⟨y.1, y.2⟩) k
+
+/-- Second coordinate of `L` at the mode `k`: `(grad grad σ + sym curl B)_k`. -/
+theorem symWaveOp_c1 (y : symComplex.waveOp.domain) (k : Z3) :
+    ((tot _ _ _ (symComplex.waveOp y)).2.1 : L2S) k =
+      hessS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).1 k) +
+        symCurlS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.2 k) := by
+  rw [Constraints.tot_waveOp]
+  change (symComplex.d0 (symComplex.pr0 ⟨y.1, y.2⟩) : L2S) k +
+    (symComplex.d1† (symComplex.prV2s ⟨y.1, y.2⟩) : L2S) k = _
+  have h2 : (symComplex.d1† (symComplex.prV2s ⟨y.1, y.2⟩) : L2S) k =
+      symCurlS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.2 k) :=
+    adjoint_curlST_apply (symComplex.prV2s ⟨y.1, y.2⟩) k
+  rw [h2]
+  rfl
+
+/-- Third coordinate of `L` at the mode `k`: `-(curl E)_k`. -/
+theorem symWaveOp_c2 (y : symComplex.waveOp.domain) (k : Z3) :
+    ((tot _ _ _ (symComplex.waveOp y)).2.2 : L2T) k =
+      -curlS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.1 k) := by
+  rw [Constraints.tot_waveOp]
+  rfl
+
+set_option maxHeartbeats 1000000 in
+/-- **Operator identification**: `-L = ΦS ∘ mulOp waveSymSK ∘ ΦS⁻¹` on `D(L)`. -/
+theorem neg_waveOp_sym_apply (y : (-symComplex.waveOp).domain) :
+    (-symComplex.waveOp) y = ΦS (mulOp waveSymSK
+      ⟨ΦS.symm y, (mem_domain_neg_waveOp_sym_iff y).1 y.2⟩) := by
+  rw [← LinearIsometryEquiv.symm_apply_eq]
+  refine lp.ext (funext fun k => ?_)
+  rw [mulOp_apply]
+  apply (tot ℂ Sym3 Tr3).injective
+  have hR : tot ℂ Sym3 Tr3 (waveSymSK k (ΦS.symm y k)) =
+      (divdivS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.1 k),
+        -(hessS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).1 k)) -
+          symCurlS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.2 k),
+        curlS (freq k) ((tot _ _ _ (y : Tot L2R L2S L2T)).2.1 k)) := by
+    rw [waveSymSK, tot_waveSymS, tot_ΦS_symm_apply]
+  have hw : tot _ _ _ ((-symComplex.waveOp) y) =
+      -tot _ _ _ (symComplex.waveOp ⟨y.1, y.2⟩) := by
+    rw [LinearPMap.neg_apply]
+    exact (tot L2R L2S L2T).map_neg _
+  have e0 := symWaveOp_c0 ⟨y.1, y.2⟩ k
+  have e1 := symWaveOp_c1 ⟨y.1, y.2⟩ k
+  have e2 := symWaveOp_c2 ⟨y.1, y.2⟩ k
+  refine (tot_ΦS_symm_apply _ k).trans (Eq.trans ?_ hR.symm)
+  rw [hw]
+  refine Prod.ext ?_ (Prod.ext ?_ ?_)
+  · change -((tot _ _ _ (symComplex.waveOp ⟨y.1, y.2⟩)).1 : L2R) k = _
+    rw [e0, neg_neg]
+  · change -((tot _ _ _ (symComplex.waveOp ⟨y.1, y.2⟩)).2.1 : L2S) k = _
+    rw [e1, neg_add', sub_eq_add_neg]
+  · change -((tot _ _ _ (symComplex.waveOp ⟨y.1, y.2⟩)).2.2 : L2T) k = _
+    rw [e2, neg_neg]
+
+/-- **Existence for (4.18) on `𝕋³`: the Stone group of `-L`**, built fibrewise. Each fibre
+symbol `waveSymS ξ` is a skew operator on the finite-dimensional fibre `ℂ × S × T`, so
+`exp(t W_ξ)` is orthogonal; the multiplier group `mulGroup` on `ℓ²(ℤ³; ℂ × S × T)` is transported to `L²(R) × L²(S) × L²(T)` by `ΦS`. This is the instance of
+Thm 4.3 (Stone's theorem) that the thesis invokes for (4.18), constructed here without Stone's
+theorem.
+
+See [QuennevilleBelair2015, §4.11, (4.18) and Thm 4.3]; cf. [Pazy1983, §1.10]. -/
+def symGroup : UnitaryGroupGenerator (-symComplex.waveOp) :=
+  (mulGroup waveSymSK fun k => waveSymS_skew (freq k)).transport ΦS
+    mem_domain_neg_waveOp_sym_iff neg_waveOp_sym_apply
+
+/-- The group acts fibrewise by `exp(t W_ξ)`: `ΦS⁻¹ (S t y) = (exp(t W_{ξ_k}) (ΦS⁻¹ y)_k)_k`. -/
+theorem symGroup_S_apply (t : ℝ) (y : Tot L2R L2S L2T) (k : Z3) :
+    ΦS.symm (symGroup.S t y) k = NormedSpace.exp (t • waveSymSK k) (ΦS.symm y k) := by
+  change ΦS.symm (ΦS _) k = _
+  rw [LinearIsometryEquiv.symm_apply_apply]
+  rfl
+
+/-- `ini E₀ B₀ = (0, E₀, B₀) ∈ D(L)` when `E₀ ∈ H(curl, S) ∩ L²(TSD)` and `B₀ ∈ H(sym curl, T)`
+(the `div div` condition is automatic, `L2TSDS_le_HdivdivS`). -/
+theorem ini_mem_domL_sym {E₀ : L2S} {B₀ : L2T} (hE₀ : E₀ ∈ L2TSDS) (hE : E₀ ∈ HcurlS)
+    (hB : B₀ ∈ HsymCurlT) : ini L2R E₀ B₀ ∈ symComplex.domL := by
+  rw [Constraints.mem_domL]
+  simp only [ini, LinearEquiv.apply_symm_apply]
+  refine ⟨Submodule.zero_mem _, ⟨hE, ?_⟩, ?_⟩
+  · change E₀ ∈ hessT†.domain
+    rw [adjoint_hessT_domain]; exact L2TSDS_le_HdivdivS hE₀
+  · change B₀ ∈ curlST†.domain
+    rw [adjoint_curlST_domain]; exact hB
+
+/-- **Thesis Prop 4.19 on `𝕋³`, with existence.** For data `E₀ ∈ H(curl, S) ∩ L²(TSD)`,
+`B₀ ∈ H(sym curl, T) ∩ L²(TSD)`, the Hodge wave (4.18) of the strong-symmetry complex has a
+strong solution on `[0, T]` with data `(0, E₀, B₀)` (the orbit of `symGroup`), and every such
+solution keeps `σ ≡ 0`, `E, B ∈ L²(TSD)` and solves the reduced system. No hypothesis remains
+besides the data.
+
+See [QuennevilleBelair2015, §4.11, Prop 4.19 and Thm 4.3]. -/
+theorem prop_4_19_torus_exists (T : ℝ) {E₀ : L2S} {B₀ : L2T} (hE₀ : E₀ ∈ L2TSDS)
+    (hB₀ : B₀ ∈ L2TSDT) (hE : E₀ ∈ HcurlS) (hB : B₀ ∈ HsymCurlT) :
+    ∃ U : ℝ → Tot L2R L2S L2T,
+      IsStrongSolution (-symComplex.waveOp) T (ini L2R E₀ B₀) 0 U ∧
+      (∀ t ∈ Icc 0 T, U t ∈ Kc L2R L2TSDS L2TSDT) ∧
+      IsReducedSolution symComplex T E₀ B₀ (fun t => (tot L2R L2S L2T (U t)).2.1)
+        (fun t => (tot L2R L2S L2T (U t)).2.2) := by
+  have hU := isStrongSolution_orbit symGroup T ⟨_, ini_mem_domL_sym hE₀ hE hB⟩
+  exact ⟨_, hU, prop_4_19_torus hE₀ hB₀ hU⟩
+
+/-- Group form of Prop 4.19 on `𝕋³`, unconditional: orbits of the constructed group `symGroup`
+starting in `D(L) ∩ K` stay in `K = {0} × L²(TSD) × L²(TSD)` for `t ≥ 0`. -/
+theorem prop_4_19_torus_symGroup {t : ℝ} (ht : 0 ≤ t) {x : Tot L2R L2S L2T}
+    (hx : x ∈ symComplex.domL) (hxK : x ∈ Kc L2R L2TSDS L2TSDT) :
+    symGroup.S t x ∈ Kc L2R L2TSDS L2TSDT :=
+  prop_4_19_torus_group symGroup ht hx hxK
+
+/-- `D(L)` is dense (it is the image of the dense multiplier domain under `ΦS`). -/
+theorem dense_domL_sym : Dense (symComplex.domL : Set (Tot L2R L2S L2T)) := by
+  have h : (symComplex.domL : Set (Tot L2R L2S L2T)) = ΦS '' (mulDomain waveSymSK) := by
+    ext y
+    constructor
+    · intro hy
+      exact ⟨ΦS.symm y, (mem_domain_neg_waveOp_sym_iff y).1 hy, ΦS.apply_symm_apply y⟩
+    · rintro ⟨v, hv, rfl⟩
+      refine (mem_domain_neg_waveOp_sym_iff _).2 ?_
+      change ΦS.symm (ΦS v) ∈ mulDomain waveSymSK
+      rwa [LinearIsometryEquiv.symm_apply_apply]
+  rw [h]
+  exact ΦS.surjective.denseRange.dense_image ΦS.continuous (dense_mulDomain _)
+
+/-- `D(L) ∩ K` is dense in `K` (`hdense` of `prop_4_17_iff`): `P_K` maps the dense `D(L)` into
+`D(L) ∩ K` (`projKc_mem_domL`) and fixes `K`. -/
+theorem mem_closure_domL_inf_Kc_sym {x : Tot L2R L2S L2T} (hx : x ∈ Kc L2R L2TSDS L2TSDT) :
+    x ∈ closure ((symComplex.domL : Set (Tot L2R L2S L2T)) ∩ Kc L2R L2TSDS L2TSDT) := by
+  have hfix : projKc L2R L2TSDS L2TSDT x = x := by
+    rw [← starProjection_Kc]; exact Submodule.starProjection_eq_self_iff.2 hx
+  have h1 : projKc L2R L2TSDS L2TSDT x ∈
+      closure (projKc L2R L2TSDS L2TSDT '' (symComplex.domL : Set (Tot L2R L2S L2T))) :=
+    image_closure_subset_closure_image (projKc L2R L2TSDS L2TSDT).continuous
+      ⟨x, dense_domL_sym x, rfl⟩
+  rw [hfix] at h1
+  refine closure_mono ?_ h1
+  rintro _ ⟨y, hy, rfl⟩
+  exact ⟨projKc_mem_domL y hy, projKc_mem _ _ _ y⟩
+
+/-- **Prop 4.19 on `𝕋³`, characterization form** (`prop_4_17_iff` for the constructed group):
+the TSD constraints propagate for all data in `K` iff `P_K D(L) ⊆ D(L)`. Both sides hold here
+(`projKc_mem_domL`); the statement records that the projection hypothesis is exactly what is
+needed. -/
+theorem prop_4_19_torus_iff :
+    (∀ (T : ℝ) (U₀ : Tot L2R L2S L2T) (U : ℝ → Tot L2R L2S L2T), U₀ ∈ Kc L2R L2TSDS L2TSDT →
+      IsStrongSolution (-symComplex.waveOp) T U₀ 0 U → ∀ t ∈ Icc 0 T,
+        U t ∈ Kc L2R L2TSDS L2TSDT) ↔
+      ∀ x ∈ symComplex.domL, projKc L2R L2TSDS L2TSDT x ∈ symComplex.domL :=
+  prop_4_17_iff symGroup L2TSDS_le_ker curlST_mem_L2TSDT adjoint_curlST_mem_L2TSDS
+    fun _ hk => mem_closure_domL_inf_Kc_sym hk
+
+end Group
+
+section ClosedRange
+
+open HilbertComplex2
+
+/-- The range of a multiplier with uniformly bounded fibre preimages is fibrewise:
+`range (mulOp m) = {v | ∀ i, v i ∈ range (m i)}`. -/
+theorem range_mulOp_eq {ι E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (m : ι → E →L[ℝ] F) {C : ℝ}
+    (hC : ∀ i x, ∃ x', m i x' = m i x ∧ ‖x'‖ ≤ C * ‖m i x‖) :
+    (LinearMap.range (mulOp m).toFun : Set (L2 ι F)) =
+      {v | ∀ i, v i ∈ LinearMap.range (m i : E →ₗ[ℝ] F)} := by
+  ext v
+  constructor
+  · rintro ⟨u, rfl⟩ i
+    exact ⟨(u : L2 ι E) i, rfl⟩
+  · intro hv
+    choose x hx using hv
+    choose x' hx' using fun i => hC i (x i)
+    have hmem : Memℓp x' 2 := by
+      refine (lp.memℓp (C • v)).mono' fun i => ?_
+      calc ‖x' i‖ ≤ C * ‖m i (x i)‖ := (hx' i).2
+        _ = C * ‖v i‖ := congrArg (fun z => C * ‖z‖) (hx i)
+        _ ≤ |C| * ‖v i‖ := by gcongr; exact le_abs_self C
+        _ = ‖(C • v : L2 ι F) i‖ := by
+          rw [lp.coeFn_smul, Pi.smul_apply, norm_smul, Real.norm_eq_abs]
+    have hfun : (fun i => m i (x' i)) = ⇑v := funext fun i => (hx' i).1.trans (hx i)
+    have hu : (⟨x', hmem⟩ : L2 ι E) ∈ mulDomain m := by
+      change Memℓp (fun i => m i (x' i)) 2
+      rw [hfun]; exact lp.memℓp v
+    refine ⟨⟨⟨x', hmem⟩, hu⟩, lp.ext (funext fun i => ?_)⟩
+    exact (hx' i).1.trans (hx i)
+
+/-- **Closed range of multipliers**: if every fibre value `m i x` has a preimage of norm
+`≤ C ‖m i x‖` (`C` uniform in `i`), the multiplier has closed range. -/
+theorem isClosed_range_mulOp {ι E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℝ F] [FiniteDimensional ℝ F]
+    (m : ι → E →L[ℝ] F) {C : ℝ} (hC : ∀ i x, ∃ x', m i x' = m i x ∧ ‖x'‖ ≤ C * ‖m i x‖) :
+    IsClosed (LinearMap.range (mulOp m).toFun : Set (L2 ι F)) := by
+  rw [range_mulOp_eq m hC]
+  have : {v : L2 ι F | ∀ i, v i ∈ LinearMap.range (m i : E →ₗ[ℝ] F)} =
+      ⋂ i, (fun v : L2 ι F => v i) ⁻¹' (LinearMap.range (m i : E →ₗ[ℝ] F) : Set F) := by
+    ext; simp
+  rw [this]
+  exact isClosed_iInter fun i => (Submodule.closed_of_finiteDimensional _).preimage
+    (lp.evalCLM ℝ (fun _ : ι => F) 2 i).continuous
+
+/-- The lattice frequencies are `0` or of size `≥ 2π`: `freq k = 0 ∨ 4π² ≤ |ξ_k|²`. -/
+theorem freq_eq_zero_or (k : Z3) : freq k = 0 ∨ 4 * Real.pi ^ 2 ≤ ‖freq k‖ ^ 2 := by
+  by_cases hk : k = 0
+  · left; subst hk; ext j; simp [freq]
+  · right
+    obtain ⟨j, hj⟩ : ∃ j, k j ≠ 0 := by
+      by_contra h; push Not at h; exact hk (funext h)
+    have h1 : (1 : ℝ) ≤ (k j : ℝ) ^ 2 := by
+      have h0 : (0 : ℤ) < k j ^ 2 := lt_of_le_of_ne (sq_nonneg _) (Ne.symm (pow_ne_zero 2 hj))
+      have : (1 : ℤ) ≤ k j ^ 2 := h0
+      exact_mod_cast this
+    rw [norm_sq_freq]
+    have hle : (freq k) j ^ 2 ≤ ∑ c, (freq k) c ^ 2 :=
+      Finset.single_le_sum (f := fun c => (freq k) c ^ 2) (fun c _ => sq_nonneg _)
+        (Finset.mem_univ j)
+    have hfj : (freq k) j = 2 * Real.pi * k j := rfl
+    rw [hfj] at hle
+    nlinarith [Real.pi_pos]
+
+/-- `freq k = 0 ∨ 2 ≤ |ξ_k|²`. -/
+theorem freq_eq_zero_or_two_le (k : Z3) : freq k = 0 ∨ 2 ≤ ‖freq k‖ ^ 2 :=
+  (freq_eq_zero_or k).imp_right fun h => le_trans (by nlinarith [Real.two_le_pi]) h
+
+/-- `‖M‖² = ∑ₐ ∑_b |M_{ab}|²`. -/
+theorem norm_sq_mat_eq (M : Mat3) : ‖M‖ ^ 2 = ∑ a, ∑ b, ‖M (a, b)‖ ^ 2 := by
+  rw [EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]
+
+/-- Cauchy–Schwarz: `|∑ₐ ξ_a z_a|² ≤ |ξ|² ∑ₐ |z_a|²` (`ξ` real, `z` complex). -/
+theorem norm_sum_freq_mul_sq_le (ξ : Freq) (z : Fin 3 → ℂ) :
+    ‖∑ a, (ξ a : ℂ) * z a‖ ^ 2 ≤ ‖ξ‖ ^ 2 * ∑ a, ‖z a‖ ^ 2 := by
+  rw [norm_sq_freq]
+  simp only [Complex.sq_norm, Complex.normSq_apply, Fin.sum_univ_three]
+  simp only [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im, Complex.ofReal_re,
+    Complex.ofReal_im, zero_mul, sub_zero, add_zero]
+  nlinarith [sq_nonneg (ξ 0 * (z 1).re - ξ 1 * (z 0).re), sq_nonneg (ξ 0 * (z 2).re - ξ 2 * (z 0).re),
+    sq_nonneg (ξ 1 * (z 2).re - ξ 2 * (z 1).re), sq_nonneg (ξ 0 * (z 1).im - ξ 1 * (z 0).im),
+    sq_nonneg (ξ 0 * (z 2).im - ξ 2 * (z 0).im), sq_nonneg (ξ 1 * (z 2).im - ξ 2 * (z 1).im)]
+
+/-- Lagrange identity for one complex vector: `|ξ × v|² + |v · ξ|² = |ξ|² |v|²`. -/
+theorem lagrange_vec (ξ : Freq) (v : Fin 3 → ℂ) :
+    ∑ b, ‖cross ξ v b‖ ^ 2 + ‖∑ a, v a * ξ a‖ ^ 2 = ‖ξ‖ ^ 2 * ∑ a, ‖v a‖ ^ 2 := by
+  rw [norm_sq_freq]
+  simp only [Complex.sq_norm, Complex.normSq_apply, Fin.sum_univ_three, cross]
+  simp [Complex.mul_re, Complex.mul_im]
+  ring
+
+/-- For symmetric `x`, `ξ × (x ξ) = ξᵀ (curl_ξ x)`, i.e. `(ξ × (x ξ))_b = ∑ₐ ξ_a (ξ × x_a)_b`. -/
+theorem cross_divR_eq (ξ : Freq) {x : Mat3} (hx : x ∈ symSub) (b : Fin 3) :
+    cross ξ (fun a => divR ξ x a) b = ∑ a, (ξ a : ℂ) * curlR ξ x (a, b) := by
+  have s10 := hx 1 0; have s20 := hx 2 0; have s21 := hx 2 1
+  fin_cases b <;> simp [cross, divR_apply, curlR_apply, Fin.sum_univ_three, s10, s20, s21] <;> ring
+
+/-- **Fibre estimate for closed range of `curl` on `S`**: for symmetric `x` with
+`ξᵀ x ξ = 0`, `|x ξ| ≤ |ξ × x|` (row-wise curl). Proof: `|ξ|² |x ξ|² = |ξ × (x ξ)|²` (Lagrange,
+`ξ · x ξ = 0`), `ξ × (x ξ) = ξᵀ (curl_ξ x)` by symmetry, and Cauchy–Schwarz. -/
+theorem norm_divR_sq_le_curlR (ξ : Freq) {x : Mat3} (hx : x ∈ symSub)
+    (h0 : ∑ a, divR ξ x a * ξ a = 0) : ‖divR ξ x‖ ^ 2 ≤ ‖curlR ξ x‖ ^ 2 := by
+  have hL := lagrange_vec ξ (fun a => divR ξ x a)
+  simp only [h0, norm_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
+    add_zero] at hL
+  have hC : ∑ b, ‖cross ξ (fun a => divR ξ x a) b‖ ^ 2 ≤ ‖ξ‖ ^ 2 * ‖curlR ξ x‖ ^ 2 := by
+    simp_rw [cross_divR_eq ξ hx]
+    calc ∑ b, ‖∑ a, (ξ a : ℂ) * curlR ξ x (a, b)‖ ^ 2
+        ≤ ∑ b, ‖ξ‖ ^ 2 * ∑ a, ‖curlR ξ x (a, b)‖ ^ 2 :=
+          Finset.sum_le_sum fun b _ => norm_sum_freq_mul_sq_le ξ _
+      _ = ‖ξ‖ ^ 2 * ‖curlR ξ x‖ ^ 2 := by
+          rw [← Finset.mul_sum, norm_sq_mat_eq, Finset.sum_comm]
+  have hv : ‖divR ξ x‖ ^ 2 = ∑ a, ‖divR ξ x a‖ ^ 2 := EuclideanSpace.norm_sq_eq _
+  rcases eq_or_lt_of_le (sq_nonneg ‖ξ‖) with h | h
+  · have hξ : ξ = 0 := norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 h.symm)
+    have : divR ξ x = 0 := by ext a; simp [divR_apply, hξ]
+    rw [this, norm_zero]; exact le_trans (by norm_num) (sq_nonneg _)
+  · rw [hv]
+    exact le_of_mul_le_mul_left (hL ▸ hC) h
+
+/-- The curl symbol vanishes at `ξ = 0`. -/
+theorem curlS_zero (A : Sym3) : curlS 0 A = 0 := by
+  have h := norm_curlSym_le 0 (A : Mat3)
+  rw [norm_zero, zero_mul] at h
+  exact Subtype.ext (norm_le_zero_iff.1 h)
+
+/-- The Hessian symbol vanishes at `ξ = 0`. -/
+theorem hessS_zero (c : ℂ) : hessS 0 c = 0 := by
+  apply Subtype.ext
+  rw [coe_hessS, ZeroMemClass.coe_zero, ← norm_eq_zero, norm_hessM, norm_zero]
+  simp
+
+/-- Fibre preimages for `grad grad`: at a lattice frequency, `c` itself works with constant `1`
+(`|ξ|² ≥ 1` unless `ξ = 0`). -/
+theorem hessS_preimage (k : Z3) (c : ℂ) :
+    ∃ c', hessS (freq k) c' = hessS (freq k) c ∧ ‖c'‖ ≤ 1 * ‖hessS (freq k) c‖ := by
+  rcases freq_eq_zero_or k with h | h
+  · exact ⟨0, by rw [h, hessS_zero, hessS_zero], by simp⟩
+  · refine ⟨c, rfl, ?_⟩
+    rw [one_mul, ← Submodule.norm_coe, coe_hessS, norm_hessM]
+    exact le_mul_of_one_le_left (norm_nonneg _) (by nlinarith [Real.two_le_pi])
+
+/-- **Fibre preimages for `curl : S → T`** with constant `1`: for `|ξ|² ≥ 2` (or `ξ = 0`), every
+`curl_ξ A` is `curl_ξ X` with `‖X‖ ≤ ‖curl_ξ A‖`, namely `X = A - (ξᵀ A ξ / |ξ|⁴) ξ ξᵀ`
+(the component of `A` orthogonal to the kernel `ℂ ξ ξᵀ`, up to the choice of complement):
+`|ξ|² ‖X‖² = ‖curl X‖² + ‖X ξ‖² ≤ 2 ‖curl X‖²` by `norm_divR_sq_le_curlR`. -/
+theorem curlS_preimage (ξ : Freq) (hξ : ξ = 0 ∨ 2 ≤ ‖ξ‖ ^ 2) (A : Sym3) :
+    ∃ X, curlS ξ X = curlS ξ A ∧ ‖X‖ ≤ 1 * ‖curlS ξ A‖ := by
+  rcases hξ with rfl | hξ
+  · exact ⟨0, by rw [curlS_zero, curlS_zero], by simp⟩
+  have hs : ξ 0 ^ 2 + ξ 1 ^ 2 + ξ 2 ^ 2 ≠ 0 := by
+    rw [norm_sq_freq, Fin.sum_univ_three] at hξ; linarith
+  have hD0 : ((ξ 0 : ℂ) ^ 2 + (ξ 1 : ℂ) ^ 2 + (ξ 2 : ℂ) ^ 2) ^ 2 ≠ 0 := by
+    have h := Complex.ofReal_ne_zero.2 hs
+    push_cast at h
+    exact pow_ne_zero 2 h
+  obtain ⟨t, key⟩ : ∃ t : ℂ, t * ((ξ 0 : ℂ) ^ 2 + (ξ 1 : ℂ) ^ 2 + (ξ 2 : ℂ) ^ 2) ^ 2 =
+      ∑ a, ∑ b, (A : Mat3) (a, b) * ξ b * ξ a := ⟨_, div_mul_cancel₀ _ hD0⟩
+  refine ⟨A + hessS ξ t, by rw [_root_.map_add, curlS_hessS, add_zero], ?_⟩
+  set X : Sym3 := A + hessS ξ t with hX
+  have hXc : (X : Mat3) = (A : Mat3) + hessM ξ t := rfl
+  have h0 : ∑ a, divR ξ (X : Mat3) a * ξ a = 0 := by
+    rw [hXc]
+    simp only [_root_.map_add, PiLp.add_apply, divR_apply, hessM_apply, Fin.sum_univ_three]
+      at key ⊢
+    linear_combination -key
+  have hlag := lagrange ξ (X : Mat3)
+  have hdiv := norm_divR_sq_le_curlR ξ X.2 h0
+  have hcurl : ‖curlS ξ A‖ = ‖curlR ξ (X : Mat3)‖ := by
+    rw [← Submodule.norm_coe, ← norm_curlSym, ← coe_curlS, hX, _root_.map_add, curlS_hessS, add_zero]
+  rw [one_mul, hcurl, ← Submodule.norm_coe]
+  have hsq : ‖(X : Mat3)‖ ^ 2 ≤ ‖curlR ξ (X : Mat3)‖ ^ 2 := by
+    nlinarith [sq_nonneg ‖(X : Mat3)‖, sq_nonneg ‖curlR ξ (X : Mat3)‖]
+  exact (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 hsq
+
+/-- **The periodic strong-symmetry complex (4.16) is closed** (closed ranges): the thesis defers
+this ("we show in the next chapter that these complexes are closed"); on `𝕋³` it follows from
+the fibre preimage bounds `hessS_preimage` (`|ξ|² ≥ 4π²` off `ξ = 0`) and `curlS_preimage`.
+
+See [QuennevilleBelair2015, §4.11, after (4.18)]; cf. [AFW2010] (closed Hilbert complexes). -/
+theorem symComplex_closedRange : symComplex.ClosedRange :=
+  ⟨isClosed_range_mulOp (fun k => hessS (freq k)) (C := 1) fun k c => hessS_preimage k c,
+    isClosed_range_mulOp (fun k => curlS (freq k)) (C := 1) fun k A =>
+      curlS_preimage (freq k) (freq_eq_zero_or_two_le k) A⟩
+
+/-- **Hodge decomposition of `L²(S)` on `𝕋³`, without closures** (Thesis Thm 4.1 for the
+complex (4.16)): `L²(S) = grad grad H²(R) ⊕ ℌ ⊕ sym curl H(sym curl, T)`, pairwise orthogonal.
+
+See [QuennevilleBelair2015, Thm 4.1 and §4.11]. -/
+theorem symComplex_hodge :
+    LinearMap.range symComplex.d0.toFun ⊔ symComplex.harmonic ⊔
+        LinearMap.range symComplex.d1†.toFun = ⊤ ∧
+      LinearMap.range symComplex.d0.toFun ⟂ symComplex.harmonic ∧
+      symComplex.harmonic ⟂ LinearMap.range symComplex.d1†.toFun ∧
+      LinearMap.range symComplex.d0.toFun ⟂ LinearMap.range symComplex.d1†.toFun :=
+  symComplex.hodge_W_of_closedRange symComplex_closedRange
+
+end ClosedRange
 
 section Model
 
@@ -666,5 +1202,65 @@ theorem matrixFourier_mem_tr
     rw [sum_matrixFourier_diag, h, _root_.map_zero, lp.coeFn_zero, Pi.zero_apply]
 
 end Model
+
+section Bridge
+
+/-! ### Relation to the `ℂ³ˣ³`-valued model of `Feec.Ch4.Torus` -/
+
+/-- `L²(TSD) ⊆ L²(S)` is the TSD subspace of `Feec.Torus` seen through `embL2`. -/
+theorem embL2_sym_mem_L2TSD_iff (A : L2S) : embL2 symSub A ∈ L2TSD ↔ A ∈ L2TSDS := Iff.rfl
+
+/-- `L²(TSD) ⊆ L²(T)` is the TSD subspace of `Feec.Torus` seen through `embL2`. -/
+theorem embL2_tr_mem_L2TSD_iff (ρ : L2T) : embL2 trSub ρ ∈ L2TSD ↔ ρ ∈ L2TSDT := Iff.rfl
+
+/-- **`embL2` maps `L²(TSD) ⊆ L²(S)` onto `Feec.Torus.L2TSD`** (TSD fields are symmetric). -/
+theorem map_embL2_L2TSDS : L2TSDS.map (embL2 symSub).toLinearMap = L2TSD := by
+  ext A
+  constructor
+  · rintro ⟨u, hu, rfl⟩; exact hu
+  · intro hA
+    obtain ⟨u, rfl⟩ := (mem_fibreSub_iff_embL2 symSub).1 fun k => tsd_le_symSub _ (hA k)
+    exact ⟨u, hA, rfl⟩
+
+/-- **`embL2` maps `L²(TSD) ⊆ L²(T)` onto `Feec.Torus.L2TSD`** (TSD fields are trace-free). -/
+theorem map_embL2_L2TSDT : L2TSDT.map (embL2 trSub).toLinearMap = L2TSD := by
+  ext A
+  constructor
+  · rintro ⟨u, hu, rfl⟩; exact hu
+  · intro hA
+    obtain ⟨u, rfl⟩ := (mem_fibreSub_iff_embL2 trSub).1 fun k => tsd_le_trSub _ (hA k)
+    exact ⟨u, hA, rfl⟩
+
+/-- The TSD projections agree: `embL2 (P_TSD A) = P_TSD (embL2 A)` for `A ∈ L²(S)`. -/
+theorem embL2_projS (A : L2S) :
+    embL2 symSub (L2TSDS.starProjection A) = L2TSD.starProjection (embL2 symSub A) :=
+  lp.ext (funext fun k => by
+    rw [embL2_apply, projS_apply, coe_projS, projTSD_apply]; rfl)
+
+/-- The TSD projections agree: `embL2 (P_TSD ρ) = P_TSD (embL2 ρ)` for `ρ ∈ L²(T)`. -/
+theorem embL2_projT (ρ : L2T) :
+    embL2 trSub (L2TSDT.starProjection ρ) = L2TSD.starProjection (embL2 trSub ρ) :=
+  lp.ext (funext fun k => by
+    rw [embL2_apply, projT_apply, coe_projT, projTSD_apply]; rfl)
+
+/-- `H(curl, S)` is `Feec.Torus.Hcurl` restricted to symmetric fields. -/
+theorem embL2_sym_mem_Hcurl_iff (A : L2S) : embL2 symSub A ∈ Hcurl ↔ A ∈ HcurlS := by
+  change Memℓp (fun k => curlSym (freq k) ((A k : Sym3) : Mat3)) 2 ↔
+    Memℓp (fun k => curlS (freq k) (A k)) 2
+  rw [← memℓp_norm_iff, ← memℓp_norm_iff (f := fun k => curlS (freq k) (A k))]
+  simp only [← coe_curlS, Submodule.norm_coe]
+
+/-- **`curl` on `H(curl, S)` is the curl of `Feec.Torus` (the matrix complex of Prop 4.17)**:
+`curlT (embL2 A) = embL2 (curlST A)`. -/
+theorem curlT_embL2 (A : curlST.domain) :
+    curlT ⟨embL2 symSub A, (embL2_sym_mem_Hcurl_iff A).2 A.2⟩ = embL2 trSub (curlST A) := rfl
+
+/-- **`sym curl` is `sym ∘` the curl of `Feec.Torus`**:
+`embL2 (curl* ρ)_k = sym (curl_ξ ρ_k)`. -/
+theorem embL2_adjoint_curlST_apply (ρ : curlST†.domain) (k : Z3) :
+    embL2 symSub (curlST† ρ) k = symM (curlSym (freq k) ((ρ : L2T) k)) := by
+  rw [embL2_apply, adjoint_curlST_apply, coe_symCurlS]
+
+end Bridge
 
 end Feec.TorusSym

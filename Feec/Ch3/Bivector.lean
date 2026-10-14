@@ -21,7 +21,9 @@ Coverage (thesis numbering):
   trace-free.
 * Prop 3.1 (electric/magnetic parts symmetric, trace-free, orthogonal to `n`): `prop_3_1`, for
   arbitrary `n`.
-* Eq. (3.2) (reconstruction of `W` from `E, B`): `weyl_reconstruct`.
+* Eq. (3.2) (reconstruction of `W` from `E, B`): `weyl_reconstruct_unit` for an arbitrary unit
+  timelike `n` (via the homogenised identity `recon_hom`), and the frame-adapted special case
+  `n = ∂_t`, `weyl_reconstruct`.
 * "The Weyl tensor has 10 independent components" (n = 4): `finrank_weylSpace`.
 
 Corrections and gaps filled (see the individual docstrings):
@@ -30,11 +32,13 @@ Corrections and gaps filled (see the individual docstrings):
 * the [10]-lemma, `tr B = 0` in the corollary, (3.2), and dim = 10 are proved rather than cited;
 * Prop 3.1's symmetry-of-`B` argument (which needs the spatial projector) is replaced by the
   block-form route (`W*` is again Weyl);
-* the sign of the `B`-terms in (3.2) is tied to `ω_{bcd} = ω_{abcd} n^a`.
+* the sign of the `B`-terms in (3.2) is tied to `ω_{bcd} = ω_{abcd} n^a`;
+* the thesis' "Proposition 3.2 thus leads to the following matrix representation" should cite
+  Prop 3.3 (the matrix form of Weyl tensors comes from Prop 3.3, not 3.2).
 
-Scope: frame level only (no change of frame / general `g`); this is the pointwise content used
-by Chs 3–4. The Lorentz covariance needed to pass from `n = ∂_t` to an arbitrary unit timelike
-`n` in (3.2) is not formalised (Prop 3.1 itself is proved for arbitrary `n`).
+Scope: a fixed Minkowski orthonormal frame (`g = η`); this is the pointwise content used by
+Chs 3–4. Within that frame, Prop 3.1 holds for arbitrary `n` and (3.2) for arbitrary unit
+timelike `n`. The Weyl count is for `n = 4` only (not the general `n(n+1)(n+2)(n-3)/12`).
 -/
 
 open Matrix Equiv
@@ -555,7 +559,8 @@ structure IsWeylLike (C : T4 (Fin 4)) : Prop where
 `[[E, B], [B, -E]]` with `E, B` symmetric and trace-free.
 
 Thesis gap: `tr B = 0` needs Prop 3.3(ii) together with `H = Bᵀ = B`; the thesis does not say
-so. -/
+so. Correction: the thesis introduces this matrix form with "Proposition 3.2 thus leads to";
+it follows from Prop 3.3. -/
 theorem weyl_iff (C : T4 (Fin 4)) :
     IsWeylLike C ↔ ∃ E B : Matrix (Fin 3) (Fin 3) ℝ, Eᵀ = E ∧ trace E = 0 ∧ Bᵀ = B ∧
       trace B = 0 ∧ C = T E B B (-E) := by
@@ -762,13 +767,13 @@ private theorem recon_inr_inr {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E)
     simp [toMat, recon, nBω, p, q, ωU_eq, emb, Fin.sum_univ_four, lmet, gη, nL, η] <;>
     linarith [hE' 0 1, hE' 0 2, hE' 1 2, hB' 0 1, hB' 0 2, hB' 1 2]
 
-/-- **Thesis eq. (3.2)** (Bel reconstruction), in the frame `n = ∂_t`: an algebraic Weyl tensor
+/-- **Thesis eq. (3.2), special case `n = ∂_t`** (Bel reconstruction): an algebraic Weyl tensor
 is recovered from its electric and magnetic parts `E_{ab} = W_{0a0b}`, `B_{ab} = W*_{0a0b}`.
 
 Thesis gap: "a straightforward calculation" in the thesis; here it is checked on the 36
 bivector components. The sign of the `B`-terms requires the spatial volume form
 `ω_{bcd} = ω_{abcd} n^a` (as stated after (3.2)); the `n^d` convention used in the proof of
-Prop 3.1 has the opposite sign. -/
+Prop 3.1 has the opposite sign. The general unit timelike `n` is `weyl_reconstruct_unit`. -/
 theorem weyl_reconstruct {W : T4 (Fin 4)} (hW : IsWeylLike W) :
     W = recon (fun a b => W 0 a 0 b) (fun a b => rdual W 0 a 0 b) := by
   obtain ⟨E, B, hE, htrE, hB, -, rfl⟩ := (weyl_iff W).1 hW
@@ -780,6 +785,205 @@ theorem weyl_reconstruct {W : T4 (Fin 4)} (hW : IsWeylLike W) :
   · exact (recon_inl_inr hE hB i j).symm
   · exact (recon_inr_inl hE hB i j).symm
   · exact (recon_inr_inr hE hB htrE i j).symm
+
+/-! ### (3.2) for a general unit timelike `n` -/
+/-- index lowering `n_a = η_{ab} n^b`. -/
+def lowr (n : Fin 4 → ℝ) (a : Fin 4) : ℝ := η a * n a
+
+/-- `η(n, n) = n_a n^a`. -/
+def nsq (n : Fin 4 → ℝ) : ℝ := ∑ a, η a * n a ^ 2
+
+/-- the electric part `X_{ab} = n^c n^d C_{cadb}` of a (0,4)-tensor relative to `n`. -/
+def elec (n : Fin 4 → ℝ) (C : T4 (Fin 4)) (a b : Fin 4) : ℝ :=
+  ∑ c, ∑ d, n c * n d * C c a d b
+
+/-- `ω^e{}_{ab}` for the spatial volume form `ω_{bcd} = ω_{abcd} n^a`. -/
+def ωUn (n : Fin 4 → ℝ) (e a b : Fin 4) : ℝ := η e * ∑ f, n f * eps4 f e a b
+
+/-- `n_{[c} B_{d]e} ω^e{}_{ab}` for a general `n`. -/
+def nBωn (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) : ℝ :=
+  ∑ e, (lowr n c * B d e - lowr n d * B c e) / 2 * ωUn n e a b
+
+/-- the `g`-part of (3.2): `2 [g_{a[c} E_{d]b} - g_{b[c} E_{d]a}]`. -/
+def reconG (E : Fin 4 → Fin 4 → ℝ) : T4 (Fin 4) := fun a b c d =>
+  2 * ((gη a c * E d b - gη a d * E c b) / 2 - (gη b c * E d a - gη b d * E c a) / 2)
+
+/-- the `n`-part of (3.2): `2 [2 n_a n_{[c} E_{d]b} - 2 n_b n_{[c} E_{d]a}`
+`- n_{[c} B_{d]e} ω^e{}_{ab} - n_{[a} B_{b]e} ω^e{}_{cd}]`. -/
+def reconR (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) : T4 (Fin 4) := fun a b c d =>
+  2 * ((2 * lowr n a * lowr n c * E d b - 2 * lowr n a * lowr n d * E c b) / 2
+    - (2 * lowr n b * lowr n c * E d a - 2 * lowr n b * lowr n d * E c a) / 2
+    - nBωn n B c d a b - nBωn n B a b c d)
+
+/-- a symmetric trace-free `3 × 3` matrix in five free parameters. -/
+def stf (x₁ x₂ x₃ x₄ x₅ : ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
+  !![x₁, x₂, x₃; x₂, x₄, x₅; x₃, x₅, -x₁ - x₄]
+
+/-- explicit table of `n^c n^d C_{cadb}` for `C = [[E, B], [H, D]]`. -/
+def elecT (n : Fin 4 → ℝ) (E B H D : Matrix (Fin 3) (Fin 3) ℝ) : Fin 4 → Fin 4 → ℝ :=
+  ![
+    ![
+      E 0 0 * n 1 ^ 2 + E 1 1 * n 2 ^ 2 + E 2 2 * n 3 ^ 2 + E 0 1 * n 1 * n 2
+        + E 0 2 * n 1 * n 3 + E 1 0 * n 1 * n 2 + E 1 2 * n 2 * n 3 + E 2 0 * n 1 * n 3
+        + E 2 1 * n 2 * n 3,
+      B 1 2 * n 2 ^ 2 - B 2 1 * n 3 ^ 2 - B 0 1 * n 1 * n 3 + B 0 2 * n 1 * n 2
+        - B 1 1 * n 2 * n 3 + B 2 2 * n 2 * n 3 - E 0 0 * n 0 * n 1 - E 1 0 * n 0 * n 2
+        - E 2 0 * n 0 * n 3,
+      -B 0 2 * n 1 ^ 2 + B 2 0 * n 3 ^ 2 + B 0 0 * n 1 * n 3 + B 1 0 * n 2 * n 3
+        - B 1 2 * n 1 * n 2 - B 2 2 * n 1 * n 3 - E 0 1 * n 0 * n 1 - E 1 1 * n 0 * n 2
+        - E 2 1 * n 0 * n 3,
+      B 0 1 * n 1 ^ 2 - B 1 0 * n 2 ^ 2 - B 0 0 * n 1 * n 2 + B 1 1 * n 1 * n 2
+        - B 2 0 * n 2 * n 3 + B 2 1 * n 1 * n 3 - E 0 2 * n 0 * n 1 - E 1 2 * n 0 * n 2
+        - E 2 2 * n 0 * n 3],
+    ![
+      -H 1 2 * n 3 ^ 2 + H 2 1 * n 2 ^ 2 - E 0 0 * n 0 * n 1 - E 0 1 * n 0 * n 2
+        - E 0 2 * n 0 * n 3 - H 1 0 * n 1 * n 3 - H 1 1 * n 2 * n 3 + H 2 0 * n 1 * n 2
+        + H 2 2 * n 2 * n 3,
+      D 1 1 * n 3 ^ 2 + D 2 2 * n 2 ^ 2 + E 0 0 * n 0 ^ 2 + B 0 1 * n 0 * n 3
+        - B 0 2 * n 0 * n 2 - D 1 2 * n 2 * n 3 - D 2 1 * n 2 * n 3 + H 1 0 * n 0 * n 3
+        - H 2 0 * n 0 * n 2,
+      -D 1 0 * n 3 ^ 2 + E 0 1 * n 0 ^ 2 - B 0 0 * n 0 * n 3 + B 0 2 * n 0 * n 1
+        + D 1 2 * n 1 * n 3 + D 2 0 * n 2 * n 3 - D 2 2 * n 1 * n 2 + H 1 1 * n 0 * n 3
+        - H 2 1 * n 0 * n 2,
+      -D 2 0 * n 2 ^ 2 + E 0 2 * n 0 ^ 2 + B 0 0 * n 0 * n 2 - B 0 1 * n 0 * n 1
+        + D 1 0 * n 2 * n 3 - D 1 1 * n 1 * n 3 + D 2 1 * n 1 * n 2 + H 1 2 * n 0 * n 3
+        - H 2 2 * n 0 * n 2],
+    ![
+      H 0 2 * n 3 ^ 2 - H 2 0 * n 1 ^ 2 - E 1 0 * n 0 * n 1 - E 1 1 * n 0 * n 2
+        - E 1 2 * n 0 * n 3 + H 0 0 * n 1 * n 3 + H 0 1 * n 2 * n 3 - H 2 1 * n 1 * n 2
+        - H 2 2 * n 1 * n 3,
+      -D 0 1 * n 3 ^ 2 + E 1 0 * n 0 ^ 2 + B 1 1 * n 0 * n 3 - B 1 2 * n 0 * n 2
+        + D 0 2 * n 2 * n 3 + D 2 1 * n 1 * n 3 - D 2 2 * n 1 * n 2 - H 0 0 * n 0 * n 3
+        + H 2 0 * n 0 * n 1,
+      D 0 0 * n 3 ^ 2 + D 2 2 * n 1 ^ 2 + E 1 1 * n 0 ^ 2 - B 1 0 * n 0 * n 3
+        + B 1 2 * n 0 * n 1 - D 0 2 * n 1 * n 3 - D 2 0 * n 1 * n 3 - H 0 1 * n 0 * n 3
+        + H 2 1 * n 0 * n 1,
+      -D 2 1 * n 1 ^ 2 + E 1 2 * n 0 ^ 2 + B 1 0 * n 0 * n 2 - B 1 1 * n 0 * n 1
+        - D 0 0 * n 2 * n 3 + D 0 1 * n 1 * n 3 + D 2 0 * n 1 * n 2 - H 0 2 * n 0 * n 3
+        + H 2 2 * n 0 * n 1],
+    ![
+      -H 0 1 * n 2 ^ 2 + H 1 0 * n 1 ^ 2 - E 2 0 * n 0 * n 1 - E 2 1 * n 0 * n 2
+        - E 2 2 * n 0 * n 3 - H 0 0 * n 1 * n 2 - H 0 2 * n 2 * n 3 + H 1 1 * n 1 * n 2
+        + H 1 2 * n 1 * n 3,
+      -D 0 2 * n 2 ^ 2 + E 2 0 * n 0 ^ 2 + B 2 1 * n 0 * n 3 - B 2 2 * n 0 * n 2
+        + D 0 1 * n 2 * n 3 - D 1 1 * n 1 * n 3 + D 1 2 * n 1 * n 2 + H 0 0 * n 0 * n 2
+        - H 1 0 * n 0 * n 1,
+      -D 1 2 * n 1 ^ 2 + E 2 1 * n 0 ^ 2 - B 2 0 * n 0 * n 3 + B 2 2 * n 0 * n 1
+        - D 0 0 * n 2 * n 3 + D 0 2 * n 1 * n 2 + D 1 0 * n 1 * n 3 + H 0 1 * n 0 * n 2
+        - H 1 1 * n 0 * n 1,
+      D 0 0 * n 2 ^ 2 + D 1 1 * n 1 ^ 2 + E 2 2 * n 0 ^ 2 + B 2 0 * n 0 * n 2
+        - B 2 1 * n 0 * n 1 - D 0 1 * n 1 * n 2 - D 1 0 * n 1 * n 2 + H 0 2 * n 0 * n 2
+        - H 1 2 * n 0 * n 1]]
+
+/-- `elec` of a block tensor is the explicit table `elecT`. -/
+theorem elec_T (n : Fin 4 → ℝ) (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
+    elec n (T E B H D) = elecT n E B H D := by
+  funext a b
+  fin_cases a <;> fin_cases b <;>
+  · simp [elec, elecT, Fin.sum_univ_four, T, ofMat_apply, sgn, pidx]
+    ring
+
+/-- explicit table of `ω^e{}_{ab}`. -/
+theorem ωUn_eq (n : Fin 4 → ℝ) (e a b : Fin 4) : ωUn n e a b = (
+    ![![![0, 0, 0, 0], ![0, 0, n 3, -n 2], ![0, -n 3, 0, n 1], ![0, n 2, -n 1, 0]],
+      ![![0, 0, n 3, -n 2], ![0, 0, 0, 0], ![-n 3, 0, 0, n 0], ![n 2, 0, -n 0, 0]],
+      ![![0, -n 3, 0, n 1], ![n 3, 0, 0, -n 0], ![0, 0, 0, 0], ![-n 1, n 0, 0, 0]],
+      ![![0, n 2, -n 1, 0], ![-n 2, 0, n 0, 0], ![n 1, -n 0, 0, 0], ![0, 0, 0, 0]]]
+      : Fin 4 → Fin 4 → Fin 4 → ℝ) e a b := by
+  fin_cases e <;> fin_cases a <;> fin_cases b <;>
+    simp [ωUn, η, eps4_eq, lcZ, Fin.sum_univ_four]
+
+/-- Homogenised form of (3.2) on the 36 bivector components: for every `n` (no normalisation),
+`η(n,n)² W = R_n - η(n,n) G_n`, where `G_n`, `R_n` are the `g`- and `n`-parts of the right-hand
+side of (3.2) built from `E_n = elec n W`, `B_n = elec n W*`. Both sides are homogeneous of
+degree 4 in `n`, so this is the polynomial identity behind (3.2). -/
+theorem recon_hom (e₁ e₂ e₃ e₄ e₅ b₁ b₂ b₃ b₄ b₅ : ℝ) (n : Fin 4 → ℝ) (I J : Ix) :
+    let E := stf e₁ e₂ e₃ e₄ e₅
+    let B := stf b₁ b₂ b₃ b₄ b₅
+    nsq n ^ 2 * toMat (T E B B (-E)) I J =
+      toMat (reconR n (elec n (T E B B (-E))) (elec n (T B (-E) (-E) (-B)))) I J
+        - nsq n * toMat (reconG (elec n (T E B B (-E)))) I J := by
+  intro E B
+  rw [elec_T, elec_T, T, toMat_ofMat]
+  rcases I with i | i <;> rcases J with j | j <;> fin_cases i <;> fin_cases j <;>
+  · simp only [toMat, reconR, reconG, nBωn, ωUn_eq, Fin.sum_univ_four, nsq, lowr, gη, p, q,
+      of_apply, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk, Fin.isValue]
+    simp only [E, B, elecT, stf, η, Matrix.cons_val, fromBlocks_apply₁₁, fromBlocks_apply₁₂,
+      fromBlocks_apply₂₁, fromBlocks_apply₂₂, Fin.isValue, of_apply, Matrix.neg_apply]
+    simp only [Fin.reduceEq, ite_false, ite_true]
+    ring
+
+
+/-- `l_{ab} = g_{ab} + 2 n_a n_b` for a general `n`. -/
+def lmetN (n : Fin 4 → ℝ) (a b : Fin 4) : ℝ := gη a b + 2 * lowr n a * lowr n b
+
+/-- right-hand side of (3.2) for a general `n`:
+`2 [l_{a[c} E_{d]b} - l_{b[c} E_{d]a} - n_{[c} B_{d]e} ω^e{}_{ab} - n_{[a} B_{b]e} ω^e{}_{cd}]`. -/
+def reconN (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) : T4 (Fin 4) := fun a b c d =>
+  2 * ((lmetN n a c * E d b - lmetN n a d * E c b) / 2
+    - (lmetN n b c * E d a - lmetN n b d * E c a) / 2 - nBωn n B c d a b - nBωn n B a b c d)
+
+/-- `n_{[c} B_{d]e} ω^e{}_{ab}` is skew in `(c, d)`. -/
+theorem nBωn_swap_left (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) :
+    nBωn n B d c a b = -nBωn n B c d a b := by
+  rw [nBωn, nBωn, ← Finset.sum_neg_distrib]; exact Finset.sum_congr rfl fun e _ => by ring
+
+/-- `n_{[c} B_{d]e} ω^e{}_{ab}` is skew in `(a, b)`. -/
+theorem nBωn_swap_right (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) :
+    nBωn n B c d b a = -nBωn n B c d a b := by
+  rw [nBωn, nBωn, ← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun e _ => ?_
+  have : ωUn n e b a = -ωUn n e a b := by
+    unfold ωUn
+    rw [← mul_neg, ← Finset.sum_neg_distrib]
+    exact congrArg _ (Finset.sum_congr rfl fun f _ => by rw [eps4_swap23]; ring)
+  rw [this]; ring
+
+/-- the general-`n` right-hand side of (3.2) is a double 2-form. -/
+theorem pairSkew_reconN (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) :
+    PairSkew (reconN n E B) := by
+  intro a b c d
+  simp only [reconN, nBωn_swap_left n B b a, nBωn_swap_right n B _ _ b a,
+    nBωn_swap_left n B d c, nBωn_swap_right n B _ _ d c]
+  constructor <;> ring
+
+/-- a symmetric trace-free `3 × 3` matrix is an `stf`. -/
+theorem eq_stf {E : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htr : trace E = 0) :
+    E = stf (E 0 0) (E 0 1) (E 0 2) (E 1 1) (E 1 2) := by
+  have hE' := fun i j => congrFun (congrFun hE i) j
+  simp only [transpose_apply] at hE'
+  simp only [trace, Fin.sum_univ_three, diag] at htr
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [stf] <;> linarith [hE' 0 1, hE' 0 2, hE' 1 2]
+
+/-- **Thesis eq. (3.2)** (Bel reconstruction) for an arbitrary unit timelike `n`
+(`η(n, n) = -1`, either time orientation), in a fixed Minkowski orthonormal frame:
+`W_{abcd} = 4 l_{[a[c} E_{d]b]} - 2 n_{[c} B_{d]e} ω^e{}_{ab} - 2 n_{[a} B_{b]e} ω^e{}_{cd}` with
+`E_{ab} = n^c n^d W_{cadb}`, `B_{ab} = n^c n^d W*_{cadb}` (the tensors of Prop 3.1),
+`l_{ab} = η_{ab} + 2 n_a n_b` and `ω_{bcd} = ω_{abcd} n^a`.
+
+Thesis gap: the thesis states (3.2) for a general `n` as "a straightforward calculation". Here it is
+proved without any frame change: `recon_hom` is the homogenised polynomial identity, valid for all
+`n`, and `η(n,n) = -1` specialises it. -/
+theorem weyl_reconstruct_unit {W : T4 (Fin 4)} (hW : IsWeylLike W) {n : Fin 4 → ℝ}
+    (hn : nsq n = -1) : W = reconN n (elec n W) (elec n (rdual W)) := by
+  obtain ⟨E, B, hE, htrE, hB, htrB, rfl⟩ := (weyl_iff W).1 hW
+  obtain ⟨x₁, x₂, x₃, x₄, x₅, rfl⟩ : ∃ x₁ x₂ x₃ x₄ x₅, E = stf x₁ x₂ x₃ x₄ x₅ :=
+    ⟨_, _, _, _, _, eq_stf hE htrE⟩
+  obtain ⟨y₁, y₂, y₃, y₄, y₅, rfl⟩ : ∃ y₁ y₂ y₃ y₄ y₅, B = stf y₁ y₂ y₃ y₄ y₅ :=
+    ⟨_, _, _, _, _, eq_stf hB htrB⟩
+  rw [rdual_T]
+  refine (eq_ofMat_toMat (pairSkew_ofMat _)).trans ?_
+  rw [eq_ofMat_toMat (pairSkew_reconN _ _ _)]
+  congr 1
+  ext I J
+  have h := recon_hom x₁ x₂ x₃ x₄ x₅ y₁ y₂ y₃ y₄ y₅ n I J
+  simp only [hn] at h
+  have hsplit : ∀ X Y : Fin 4 → Fin 4 → ℝ,
+      toMat (reconN n X Y) I J = toMat (reconR n X Y) I J + toMat (reconG X) I J := by
+    intro X Y; simp only [toMat, of_apply, reconN, reconR, reconG, lmetN]; ring
+  rw [hsplit, ← T]
+  linear_combination h
 
 /-! ### `** = -1` on 2-forms -/
 

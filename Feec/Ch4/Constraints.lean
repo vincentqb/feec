@@ -26,8 +26,9 @@ Coverage (thesis ids; see `docs/BLUEPRINT.md`, module M8):
   density hypothesis; `prop_4_17_necessary`/`prop_4_17_iff` show that, given a Stone group and
   density of `D(L) ∩ K` in `K`, the projection hypothesis is also necessary. The time reversal
   `R(σ, E, B) = (-σ, E, -B)` of (4.14) is `revT`/`waveOp_revT`. The hypothesis holds for the
-  periodic complex on `𝕋³` and fails (its `H̊(curl)` part) on smooth bounded domains; neither
-  PDE fact is formalized (see the docstring of `prop_4_17`).
+  periodic complex on `𝕋³` (`Feec.Torus.projKc_mem_domL`, giving `Feec.Torus.prop_4_17_torus`);
+  its failure (the `H̊(curl)` part) on smooth bounded domains is not formalized (see the
+  docstring of `prop_4_17`).
 * **Lemma 3.5 (pointwise)**: `trace_curl`, `two_vskw_curl`, `div_curl`, `trace_curl_of_symm`,
   `curl_TSD`, `curl_TSD_div` (the operator hypotheses of `prop_4_17` in the TSD case).
 * **§4.8** (critic item 14): mixed weak scalar wave ⇔ second-order weak form under the

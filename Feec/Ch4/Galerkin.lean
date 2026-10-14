@@ -9,16 +9,17 @@ spaces, used later for the elliptic projection (§4.6) and the BGG saddle point 
 * Thm 4.8 (Lax–Milgram): `lax_milgram`, with the stability bound `lax_milgram_bound`.
 * §4.5 definitions: `InfSupCond` (Riesz form), `DenseRangeCond` (quantifier on the second slot,
   correcting the thesis' "equivalently"), and `infSupCond_iff_attained` (the thesis' attained
-  form, same constant).
+  form, strengthened to the same constant).
 * Thm 4.9 (Babuška–Nečas): `existsUnique_solution`, `existsUnique_solution_dual`,
   `norm_le_of_solution`, `infSup_const_iff` (best constant `‖L⁻¹‖⁻¹`), and the corrected
-  equivalence `babuska_necas_iff` ("exists" ↦ "exists unique"), with the counterexample
-  `surjective_not_infSup` (backward shift on `ℓ²`) to the thesis' converse.
+  equivalence `babuska_necas_iff` / `babuska_necas_iff_dual` ("exists" ↦ "exists unique"),
+  with the counterexample `surjective_not_infSup` (backward shift on `ℓ²`) to the thesis' converse.
 * Thm 4.10 (quasi-optimality): `quasi_opt`, `quasi_opt_infDist`, `thm_4_10`, with `a` bounded on
   all of `X` (correction), and discrete well-posedness `discrete_existsUnique`.
 * Thm 4.11 (Brezzi), corrected (`B : X → Y*`, inf-sup of `b` with the inf over `q`) and proved:
   `brezzi`, `brezzi_unique`, `brezzi_stability`, `brezzi_wellPosed`, and the bilinear-form
-  statement `thm_4_11`.
+  statement `thm_4_11`; `not_infSup_first_of_ker_ne_bot` shows the thesis-literal inf-sup on `b`
+  fails whenever `Z ≠ 0`.
 
 Saddle point data are given in Riesz form: `b(v,q) = ⟪B v, q⟫` with `B : X →L[ℝ] Y`, and the
 right-hand sides by their representatives; `thm_4_11` states the functional form.
@@ -55,8 +56,9 @@ theorem norm_sharp (u : V) : ‖B♯ u‖ = ‖B u‖ := by
 Riesz form `γ ‖u‖ ≤ ‖B u‖` is equivalent, with the *same* constant, to the attained form
 `∀ u, ∃ v, ‖v‖ ≤ 1 ∧ γ ‖u‖ ≤ B u v` (the thesis' `a(u,v) ≥ γ ‖u‖ ‖v‖`, normalized).
 
-Thesis gap: the equality of constants uses that the supremum is attained at the Riesz
-representative; this is false in general Banach spaces. -/
+The thesis' equivalence (with `γ` existentially quantified on both sides) is correct and holds
+in any normed space: from `sup ≥ γ ‖u‖` pick `v` reaching `γ/2`. This lemma proves the stronger
+same-constant version, which uses that the supremum is attained at the Riesz representative. -/
 theorem infSupCond_iff_attained :
     InfSupCond B ↔ ∃ γ, 0 < γ ∧ ∀ u, ∃ v, ‖v‖ ≤ 1 ∧ γ * ‖u‖ ≤ B u v := by
   constructor
@@ -217,6 +219,18 @@ theorem babuska_necas_iff :
       exact ⟨u, ext_inner_right ℝ fun v => by rw [continuousLinearMapOfBilin_apply, hu]⟩
   · exact denseRange_of_solvable fun f => (hs f).exists
 
+/-- **Thesis Thm 4.9** (Babuška–Nečas), corrected, with right-hand sides `f ∈ V*` as in the
+thesis: inf-sup and dense range hold iff `B u v = f v` (all `v`) is uniquely solvable for every
+`f ∈ V*`. See `babuska_necas_iff` for the correction ("exists" ↦ "exists unique"). -/
+theorem babuska_necas_iff_dual :
+    (InfSupCond B ∧ DenseRangeCond B) ↔ ∀ f : StrongDual ℝ V, ∃! u, ∀ v, B u v = f v := by
+  rw [babuska_necas_iff]
+  constructor
+  · intro hs f
+    simpa only [toDual_symm_apply] using hs ((toDual ℝ V).symm f)
+  · intro hs f
+    simpa only [toDual_apply_apply] using hs (toDual ℝ V f)
+
 /-! ## Lax–Milgram (Thm 4.8) -/
 
 omit [CompleteSpace V] in
@@ -343,7 +357,8 @@ variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
 condition on a subspace `K` and Galerkin orthogonality, `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) ‖u - w‖` for
 every `w ∈ K`.
 
-Correction: the thesis assumes `a` bounded only on `Xₕ × Xₕ`, but the proof uses the bound on
+Correction: the theorem statement restates boundedness of `a` only on `Xₕ × Xₕ`, while the
+proof needs the standing hypothesis (thesis, paragraph before Thm 4.10) that `a` is bounded on
 `X × X`; here `‖B‖` is the norm on all of `X`. Neither completeness, finite dimension nor the
 orthogonal projection `rₕ` is needed. -/
 theorem quasi_opt (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X) {γ : ℝ} (hγ : 0 < γ)
@@ -438,6 +453,20 @@ private lemma norm_sq_adj (Bs : X →L[ℝ] Y) (q : Y) :
     ⟪Bs (adj Bs q), q⟫ = ‖adj Bs q‖ ^ 2 := by
   rw [← ContinuousLinearMap.adjoint_inner_right, real_inner_self_eq_norm_sq]
 
+omit [InnerProductSpace ℝ X] [CompleteSpace X] [InnerProductSpace ℝ Y] [CompleteSpace Y] in
+/-- **Correction to Thesis Thm 4.11**: the thesis' inf-sup hypothesis on `b`, read with its own
+convention (inf over the first argument `u ∈ X`), `β ‖u‖ ≤ sup_{‖q‖ ≤ 1} b(u,q)`, can only hold
+when `Z = {u | b(u,·) = 0} = 0`. Hence in any genuine saddle point problem (`Z ≠ 0`) it fails,
+and the inf must be taken over `q` (as in `brezzi`, `thm_4_11`). Only normed spaces are needed. -/
+theorem not_infSup_first_of_ker_ne_bot [NormedSpace ℝ X] [NormedSpace ℝ Y]
+    (b : X →L[ℝ] Y →L[ℝ] ℝ) {z : X} (hz : ∀ q, b z q = 0) (hz0 : z ≠ 0) :
+    ¬ ∃ β > 0, ∀ u, β * ‖u‖ ≤ ‖b u‖ := by
+  rintro ⟨β, hβ, h⟩
+  have hbz : b z = 0 := ContinuousLinearMap.ext hz
+  have := h z
+  rw [hbz, norm_zero] at this
+  exact absurd this (not_le.mpr (mul_pos hβ (norm_pos_iff.mpr hz0)))
+
 /-- Brezzi, lifting step: if `Bᵀ` is bounded below by `β`, then `B Bᵀ` is onto, so every
 `G ∈ Y` is `B u_G` with `u_G = Bᵀ w` and `β ‖u_G‖ ≤ ‖G‖`. -/
 theorem brezzi_lift (Bs : X →L[ℝ] Y) {β : ℝ} (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adj Bs q‖)
@@ -504,7 +533,8 @@ point problem `a(u,v) + b(v,p) = F(v)`, `b(u,q) = G(q)`, with `b(v,q) = ⟪B v, 
 
 Correction: the thesis writes `B : Y → X*` while defining `b(u,q) = Bu(q)`; here
 `B : X → Y`. Its inf-sup hypothesis on `b`, read with the thesis' own convention (inf over the
-first argument), fails whenever `Z ≠ 0`; the correct hypothesis is `inf_q sup_v`, i.e.
+first argument), fails whenever `Z ≠ 0` (`not_infSup_first_of_ker_ne_bot`); the correct
+hypothesis is `inf_q sup_v`, i.e.
 `β ‖q‖ ≤ ‖Bᵀ q‖`. `a` is bounded on all of `X`. Thesis gap: no proof is given; the proof here
 lifts `G` through `B Bᵀ` (Lax–Milgram), solves on `Z` by Thm 4.9, and recovers `p` from
 `Z ∩ Zᗮ = 0`. -/
@@ -696,7 +726,8 @@ Then for all `F ∈ X*`, `G ∈ Y*` the saddle point problem `a(u,v) + b(v,p) = 
 `b(u,q) = G q` has a unique solution, and `‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)` (well-posedness).
 
 Correction: the thesis' inf-sup convention (inf over the first argument) applied to `b` is
-unsatisfiable when `Z ≠ 0`, and its `B : Y → X*` should be `B : X → Y*`; `a` is assumed bounded
+unsatisfiable when `Z ≠ 0` (`not_infSup_first_of_ker_ne_bot`), and its `B : Y → X*` should be
+`B : X → Y*`; `a` is assumed bounded
 on all of `X`. Thesis gap: no proof is given in the thesis. -/
 theorem thm_4_11 (a : X →L[ℝ] X →L[ℝ] ℝ) (b : X →L[ℝ] Y →L[ℝ] ℝ)
     (hZ : ∃ γ > 0, ∀ z, (∀ q, b z q = 0) →

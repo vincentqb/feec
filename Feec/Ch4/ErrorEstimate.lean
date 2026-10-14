@@ -18,6 +18,20 @@ product, `d` is linear on the domain type).
 * `discrete_solution_exists`, `discrete_solution_unique`: well-posedness of (4.10).
 * `thm_4_14_pointwise`, `thm_4_14`: Thm 4.14 (corrected regularity `ξ ∈ C¹([0,T]; V)`).
 * `convergence`, `convergence_exists`: convergence in `L∞(0,T; W)` from density alone.
+
+## References
+
+* [QuennevilleBelair2015], §4.4 (abstract Hodge wave equation (4.7)–(4.8)), §4.5 (Thm 4.9,
+  Thm 4.10: inf-sup and quasi-optimality), §4.6 (discretization (4.10), Lemma 4.12, Prop 4.13,
+  elliptic projection (4.11), Thm 4.14)
+* [Arnold2018] (FEEC framework: Hilbert complexes, subcomplexes, stability of discretizations)
+* [AFW2010], §3 (approximation of Hilbert complexes by subcomplexes, graph norms on `Vᵏ`)
+* [Babuska1971], [BoffiBrezziFortin2013] (inf-sup stability and quasi-optimality of Galerkin
+  methods)
+* [Dupont1973], [Baker1976] (energy-method error estimates for second-order hyperbolic
+  equations)
+* [Geveci1988] (mixed finite element methods for the wave equation), [GilletteHolstZhu2017]
+  (FEEC for evolution problems)
 -/
 
 open scoped RealInnerProductSpace
@@ -36,7 +50,8 @@ right derivative `q'` on `[0,T)`, `G` is continuous on `[0,T]` with right deriva
 Correction: the thesis assumes `Q ∈ C¹([0,T])`, but applies the lemma (l.2423) to `Q = ‖εₕ‖`,
 which is not differentiable where `εₕ` vanishes; only `Q²` is differentiable there. The hypothesis
 is therefore on `Q²`; the proof compares `√(Q² + ε²)` with `√(Q(0)² + ε²) + (G − G 0)/2` and lets
-`ε → 0`. -/
+`ε → 0`.
+See [QuennevilleBelair2015, Lemma 4.12] (§4.6). -/
 theorem lemma_4_12 {Q q' F G : ℝ → ℝ} {T : ℝ}
     (hQc : ContinuousOn Q (Icc 0 T)) (hQ0 : ∀ t ∈ Icc 0 T, 0 ≤ Q t)
     (hq : ∀ t ∈ Ico 0 T, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
@@ -119,7 +134,8 @@ theorem integral_primitive_Icc {F : ℝ → ℝ} {T : ℝ} (hFc : ContinuousOn F
 
 /-- **Thesis Lemma 4.12** (l.2287), integral form as stated in the thesis:
 `Q t ≤ Q 0 + ½ ∫₀ᵗ F` for `F ≥ 0` continuous on `[0,T]` and `d/dt Q² ≤ F Q` (corrected
-hypotheses as in `lemma_4_12`). -/
+hypotheses as in `lemma_4_12`).
+See [QuennevilleBelair2015, Lemma 4.12]. -/
 theorem lemma_4_12_integral {Q q' F : ℝ → ℝ} {T : ℝ}
     (hQc : ContinuousOn Q (Icc 0 T)) (hQ0 : ∀ t ∈ Icc 0 T, 0 ≤ Q t)
     (hq : ∀ t ∈ Ico 0 T, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
@@ -135,7 +151,8 @@ theorem lemma_4_12_integral {Q q' F : ℝ → ℝ} {T : ℝ}
 
 /-- **Thesis Lemma 4.12**, sharpness remark (l.2297): `Q(t) = t`, `F = 2` satisfy the hypotheses
 of `lemma_4_12_integral` (`d/dt Q² = 2t = F Q`), and the resulting bound `Q t ≤ Q 0 + ½∫₀ᵗ F`
-is an equality. -/
+is an equality.
+See [QuennevilleBelair2015, Lemma 4.12] and the remark following it. -/
 theorem lemma_4_12_sharp {T : ℝ} :
     (∀ t ∈ Icc 0 T, t ≤ 0 + (1 / 2) * ∫ _ in (0:ℝ)..t, (2 : ℝ)) ∧
       ∀ t : ℝ, t = 0 + (1 / 2) * ∫ _ in (0:ℝ)..t, (2 : ℝ) := by
@@ -155,7 +172,8 @@ section Energy
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 /-- `‖f t‖ ≤ ‖f 0‖ + ∫₀ᵗ ‖f'‖` on `[0,T]`: the step "`|f(t)| ≤ |f(0)| + |∫₀ᵗ ḟ|`" of the
-proof of Thm 4.14, obtained from Lemma 4.12 (so no completeness of `E` is needed). -/
+proof of Thm 4.14, obtained from Lemma 4.12 (so no completeness of `E` is needed).
+See [QuennevilleBelair2015, proof of Thm 4.14]. -/
 theorem norm_le_norm_zero_add_integral {f f' : ℝ → E} {T : ℝ}
     (hfc : ContinuousOn f (Icc 0 T))
     (hf : ∀ t ∈ Ico 0 T, HasDerivWithinAt f (f' t) (Ici t) t)
@@ -173,7 +191,9 @@ theorem norm_le_norm_zero_add_integral {f f' : ℝ → E} {T : ℝ}
   linarith
 
 /-- Energy estimate for the projected error (proof of Thm 4.14): if
-`(ε̇, ε) = (ė, ε) − (e, ε)` on `[0,T)`, then `‖ε t‖ ≤ ‖ε 0‖ + ∫₀ᵗ (‖ė‖ + ‖e‖)`. -/
+`(ε̇, ε) = (ė, ε) − (e, ε)` on `[0,T)`, then `‖ε t‖ ≤ ‖ε 0‖ + ∫₀ᵗ (‖ė‖ + ‖e‖)`.
+See [QuennevilleBelair2015, proof of Thm 4.14]; the energy argument for the projected error
+follows [Baker1976], [Dupont1973]. -/
 theorem projected_error_bound {ε ε' e e' : ℝ → E} {T : ℝ}
     (hεc : ContinuousOn ε (Icc 0 T)) (hε : ∀ t ∈ Ico 0 T, HasDerivWithinAt ε (ε' t) (Ici t) t)
     (hec : ContinuousOn e (Icc 0 T)) (he'c : ContinuousOn e' (Icc 0 T))
@@ -194,7 +214,8 @@ theorem projected_error_bound {ε ε' e e' : ℝ → E} {T : ℝ}
   linarith
 
 /-- Core of **Thm 4.14** (pointwise, sharp form): with `ξ − ξₕ = ε − e`,
-`‖ε t − e t‖ ≤ ‖ε 0‖ + ‖e t‖ + t ‖e 0‖ + (1 + t) ∫₀ᵗ ‖ė‖`. -/
+`‖ε t − e t‖ ≤ ‖ε 0‖ + ‖e t‖ + t ‖e 0‖ + (1 + t) ∫₀ᵗ ‖ė‖`.
+See [QuennevilleBelair2015, Thm 4.14 and its proof]. -/
 theorem error_bound_core {ε ε' e e' : ℝ → E} {T : ℝ}
     (hεc : ContinuousOn ε (Icc 0 T)) (hε : ∀ t ∈ Ico 0 T, HasDerivWithinAt ε (ε' t) (Ici t) t)
     (hec : ContinuousOn e (Icc 0 T)) (he : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (e' t) (Ici t) t)
@@ -241,7 +262,9 @@ variable {X0 X1 X2 : Type*}
   (C : Complex3 X0 X1 X2)
 
 /-- The space `V = V⁰ × V¹ × W²` of §4.6: a type synonym of `X0 × X1 × X2` carrying the graph
-inner product `(σ,τ) + (dσ,dτ) + (u,v) + (du,dv) + (ρ,μ)`, so that `‖ξ‖² = C.nV2 σ u ρ`. -/
+inner product `(σ,τ) + (dσ,dτ) + (u,v) + (du,dv) + (ρ,μ)`, so that `‖ξ‖² = C.nV2 σ u ρ`.
+See [QuennevilleBelair2015, §4.4–4.6]; the domain spaces `Vᵏ` with graph norm as in
+[AFW2010, §3], [Arnold2018]. -/
 def VSp (_C : Complex3 X0 X1 X2) : Type _ := X0 × X1 × X2
 
 instance : AddCommGroup C.VSp := inferInstanceAs (AddCommGroup (X0 × X1 × X2))
@@ -276,7 +299,8 @@ theorem VSp.induction {C : Complex3 X0 X1 X2} {P : C.VSp → Prop} (h : ∀ σ u
     (ξ : C.VSp) : P ξ :=
   h (C.vEquiv ξ).1 (C.vEquiv ξ).2.1 (C.vEquiv ξ).2.2
 
-/-- The graph inner product on `V`. -/
+/-- The graph inner product on `V`.
+See [QuennevilleBelair2015, §4.6]; cf. [AFW2010, §3] (the `V`-inner product). -/
 def vInner (ξ ψ : C.VSp) : ℝ :=
   ⟪(C.vEquiv ξ).1, (C.vEquiv ψ).1⟫ + ⟪C.d0 (C.vEquiv ξ).1, C.d0 (C.vEquiv ψ).1⟫
     + ⟪(C.vEquiv ξ).2.1, (C.vEquiv ψ).2.1⟫
@@ -382,7 +406,8 @@ theorem toW_injective : Function.Injective C.toW := by
 
 /-! ### The forms `a` and `A` on `V` -/
 
-/-- The skew form `a` of (4.7) as a bilinear form on `V`. -/
+/-- The skew form `a` of (4.7) as a bilinear form on `V`.
+See [QuennevilleBelair2015, (4.7)]. -/
 def aL : C.VSp →ₗ[ℝ] C.VSp →ₗ[ℝ] ℝ :=
   LinearMap.mk₂ ℝ (fun ξ ψ => C.a (C.vEquiv ξ).1 (C.vEquiv ξ).2.1 (C.vEquiv ξ).2.2
       (C.vEquiv ψ).1 (C.vEquiv ψ).2.1 (C.vEquiv ψ).2.2)
@@ -405,7 +430,8 @@ theorem aL_self (ξ : C.VSp) : C.aL ξ ξ = 0 := by
   induction ξ using VSp.induction
   exact C.a_self _ _ _
 
-/-- The shifted form `A = (·,·)_W + a` (§4.6) as a bilinear form on `V`. -/
+/-- The shifted form `A = (·,·)_W + a` (§4.6) as a bilinear form on `V`.
+See [QuennevilleBelair2015, §4.6] (the form `A` of Prop 4.13). -/
 def bigAL : C.VSp →ₗ[ℝ] C.VSp →ₗ[ℝ] ℝ :=
   LinearMap.mk₂ ℝ (fun ξ ψ => ⟪C.toW ξ, C.toW ψ⟫ + C.aL ξ ψ)
     (fun ξ₁ ξ₂ ψ => by simp only [map_add, inner_add_left, LinearMap.add_apply]; ring)
@@ -433,7 +459,8 @@ private theorem cs4 (x1 x2 x3 x4 y1 y2 y3 y4 : ℝ) :
 /-- Boundedness of `A` on `V × V` with constant `2` (thesis l.2336: "uniformly bounded in h").
 Thesis gap: the bound is asserted without proof or constant. Proof: `|(ξ,ψ)_W| ≤ ‖ξ‖_V ‖ψ‖_V`
 and `|a(ξ,ψ)| ≤ ‖ξ‖_V ‖ψ‖_V`, each by Cauchy–Schwarz. The constant `2` is not optimized; it is
-the constant entering `norm_AL_le` and hence the quasi-optimality constant `1 + 2√12` of `ellProj_quasiopt`. -/
+the constant entering `norm_AL_le` and hence the quasi-optimality constant `1 + 2√12` of `ellProj_quasiopt`.
+See [QuennevilleBelair2015, §4.6, proof of Thm 4.14]. -/
 theorem abs_bigA_le (σ τ : X0) (u v : X1) (ρ μ : X2) :
     |C.bigA σ u ρ τ v μ| ≤ 2 * √(C.nV2 σ u ρ) * √(C.nV2 τ v μ) := by
   have i1 := abs_real_inner_le_norm σ τ
@@ -467,7 +494,8 @@ theorem abs_bigAL_le (ξ ψ : C.VSp) : |C.bigAL ξ ψ| ≤ 2 * ‖ξ‖ * ‖ψ�
   rw [bigAL_mkV, norm_mkV, norm_mkV]
   exact C.abs_bigA_le _ _ _ _ _ _
 
-/-- `A` as a continuous bilinear form on `(V, ‖·‖_V)`, with `‖A‖ ≤ 2`. -/
+/-- `A` as a continuous bilinear form on `(V, ‖·‖_V)`, with `‖A‖ ≤ 2`.
+See [QuennevilleBelair2015, §4.6]. -/
 def AL : C.VSp →L[ℝ] C.VSp →L[ℝ] ℝ :=
   C.bigAL.mkContinuous₂ 2 fun ξ ψ => by
     rw [Real.norm_eq_abs]; exact C.abs_bigAL_le ξ ψ
@@ -482,14 +510,16 @@ theorem AL_self (ξ : C.VSp) : C.AL ξ ξ = ‖C.toW ξ‖ ^ 2 := by
   rw [AL_apply, aL_self, add_zero, real_inner_self_eq_norm_sq]
 
 /-- `A(ψ, ψ) = 0` forces `ψ = 0`: the dense-range condition for `A` on `V` (and on any
-subspace). -/
+subspace).
+See [QuennevilleBelair2015, §4.5] (dense-range condition of Thm 4.9); cf. [Babuska1971]. -/
 theorem AL_self_eq_zero {ξ : C.VSp} (h : C.AL ξ ξ = 0) : ξ = 0 := by
   rw [AL_self, sq_eq_zero_iff, norm_eq_zero] at h
   exact C.toW_injective (h.trans (map_zero _).symm)
 
 /-! ## Prop 4.13: the inf-sup condition for `A` -/
 
-/-- The test function `ψ = (σ, u + dσ, ρ − du)` of the proof of Prop 4.13. -/
+/-- The test function `ψ = (σ, u + dσ, ρ − du)` of the proof of Prop 4.13.
+See [QuennevilleBelair2015, proof of Prop 4.13]. -/
 def tst : C.VSp →ₗ[ℝ] C.VSp where
   toFun ξ := C.mkV (C.vEquiv ξ).1 ((C.vEquiv ξ).2.1 + C.d0 (C.vEquiv ξ).1)
     ((C.vEquiv ξ).2.2 - C.d1 (C.vEquiv ξ).2.1)
@@ -540,7 +570,9 @@ theorem prop_4_13_test_norm (σ : X0) (u : X1) (ρ : X2) :
 Correction: the thesis writes `V = V⁰ × V¹ × V²`; the space is `V = V⁰ × V¹ × W²` (§4.4; the
 `ρ`-component carries only the `W²` norm, as in `nV2`). The proof is the thesis's: `A(ξ;ψ) ≥ ½‖ξ‖²`
 and `‖ψ‖ ≤ √3 ‖ξ‖`, the latter left unproved in the thesis. Only `d ∘ d = 0` is used, so the same
-statement covers every subcomplex (see `infSup_of_tst_mem`). -/
+statement covers every subcomplex (see `infSup_of_tst_mem`).
+See [QuennevilleBelair2015, Prop 4.13]; cf. [Babuska1971], [BoffiBrezziFortin2013] (inf-sup
+conditions), and the discrete Hodge Laplacian inf-sup argument of [AFW2010, §3], [Arnold2018]. -/
 theorem prop_4_13 (σ : X0) (u : X1) (ρ : X2) :
     √(C.nV2 σ u ρ) * √(C.nV2 σ (u + C.d0 σ) (ρ - C.d1 u)) / √12
       ≤ C.bigA σ u ρ σ (u + C.d0 σ) (ρ - C.d1 u) := by
@@ -578,7 +610,8 @@ theorem prop_4_13_V (ξ : C.VSp) : ‖ξ‖ * ‖C.tst ξ‖ / √12 ≤ C.AL ξ
 
 /-- **Prop 4.13, inf-sup form**, on any subspace `K ⊆ V` stable under the test map (in particular
 `V` itself and every subcomplex `Vₕ`, see `Sub.tst_mem`): for every `w ∈ K` there is `v ∈ K`,
-`‖v‖_V ≤ 1`, with `(1/√12) ‖w‖_V ≤ A(w, v)`. This is the hypothesis of `Galerkin.quasi_opt`. -/
+`‖v‖_V ≤ 1`, with `(1/√12) ‖w‖_V ≤ A(w, v)`. This is the hypothesis of `Galerkin.quasi_opt`.
+See [QuennevilleBelair2015, Prop 4.13, Thm 4.9]; cf. [Babuska1971], [BoffiBrezziFortin2013]. -/
 theorem infSup_of_tst_mem (K : Submodule ℝ C.VSp) (hK : ∀ ξ ∈ K, C.tst ξ ∈ K) :
     ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ 1 / √12 * ‖w‖ ≤ C.AL w v := by
   intro w hw
@@ -598,7 +631,8 @@ theorem infSup_of_tst_mem (K : Submodule ℝ C.VSp) (hK : ∀ ξ ∈ K, C.tst ξ
         _ ≤ _ := this
 
 /-- **Prop 4.13** (continuous level), in the inf-sup form of Thm 4.9:
-`(1/√12) ‖ξ‖_V ≤ ‖A(ξ, ·)‖_{V*}`. -/
+`(1/√12) ‖ξ‖_V ≤ ‖A(ξ, ·)‖_{V*}`.
+See [QuennevilleBelair2015, Prop 4.13, Thm 4.9]; cf. [Babuska1971]. -/
 theorem prop_4_13_infSup (ξ : C.VSp) : 1 / √12 * ‖ξ‖ ≤ ‖C.AL ξ‖ := by
   obtain ⟨v, -, hv, h⟩ := C.infSup_of_tst_mem ⊤ (fun _ _ => trivial) ξ trivial
   calc 1 / √12 * ‖ξ‖ ≤ C.AL ξ v := h
@@ -609,7 +643,8 @@ theorem prop_4_13_infSup (ξ : C.VSp) : 1 / √12 * ‖ξ‖ ≤ ‖C.AL ξ‖ :
 
 /-! ## The discrete space `Vₕ = Vₕ⁰ × Vₕ¹ × Vₕ²` -/
 
-/-- The discrete space `Vₕ = Vₕ⁰ × Vₕ¹ × Vₕ²` of a subcomplex, as a subspace of `V`. -/
+/-- The discrete space `Vₕ = Vₕ⁰ × Vₕ¹ × Vₕ²` of a subcomplex, as a subspace of `V`.
+See [QuennevilleBelair2015, §4.6]; subcomplexes as in [AFW2010, §3], [Arnold2018]. -/
 def Sub.toV (S : C.Sub) : Submodule ℝ C.VSp :=
   (S.V0h.prod (S.V1h.prod S.V2h)).comap C.vEquiv.toLinearMap
 
@@ -624,7 +659,9 @@ theorem Sub.mkV_mem_toV {S : C.Sub} {σ : X0} {u : X1} {ρ : X2} :
   Iff.rfl
 
 /-- The subcomplex property makes `Vₕ` stable under the test map of Prop 4.13 (thesis: "this
-result also holds at the discrete level by the same proof", l.2366). -/
+result also holds at the discrete level by the same proof", l.2366).
+See [QuennevilleBelair2015, proof of Prop 4.13] (subcomplex property); cf. [AFW2010, §3],
+[Arnold2018]. -/
 theorem Sub.tst_mem (S : C.Sub) {ξ : C.VSp} (hξ : ξ ∈ S.toV) : C.tst ξ ∈ S.toV := by
   induction ξ using VSp.induction with
   | h σ u ρ =>
@@ -641,7 +678,9 @@ instance Sub.finiteDimensional_toV (S : C.Sub) [FiniteDimensional ℝ S.V0h]
   obtain ⟨h0, h1, h2⟩ := Sub.mem_toV.1 hξ
   exact ⟨(⟨_, h0⟩, ⟨_, h1⟩, ⟨_, h2⟩), rfl⟩
 
-/-- Discrete Prop 4.13: the inf-sup condition on `Vₕ` with the `h`-independent constant `1/√12`. -/
+/-- Discrete Prop 4.13: the inf-sup condition on `Vₕ` with the `h`-independent constant `1/√12`.
+See [QuennevilleBelair2015, Prop 4.13]; uniform discrete inf-sup stability in the sense of
+[Babuska1971], [BoffiBrezziFortin2013]; cf. [AFW2010, §3], [Arnold2018]. -/
 theorem Sub.infSup (S : C.Sub) :
     ∀ w ∈ S.toV, ∃ v ∈ S.toV, ‖v‖ ≤ 1 ∧ 1 / √12 * ‖w‖ ≤ C.AL w v :=
   C.infSup_of_tst_mem S.toV fun _ h => Sub.tst_mem C S h
@@ -657,7 +696,8 @@ theorem one_div_sqrt12_pos : (0:ℝ) < 1 / √12 := by positivity
 /-- **(4.11)**, well-posedness of the elliptic projection: for `ζ ∈ V` there is a unique
 `Πₕζ ∈ Vₕ` with `A(Πₕζ, ψ) = A(ζ, ψ)` for all `ψ ∈ Vₕ`. The thesis argues "square system +
 injectivity (test with `ψ = Πₕζ`)", which is correct on a finite-dimensional `Vₕ`; here it
-follows from the discrete inf-sup condition (Prop 4.13) and `Galerkin.discrete_existsUnique`. -/
+follows from the discrete inf-sup condition (Prop 4.13) and `Galerkin.discrete_existsUnique`.
+See [QuennevilleBelair2015, (4.11), Thm 4.9]; cf. [Babuska1971], [BoffiBrezziFortin2013]. -/
 theorem ellProj_existsUnique (ζ : C.VSp) :
     ∃! p, p ∈ S.toV ∧ ∀ ψ ∈ S.toV, C.AL p ψ = C.AL ζ ψ :=
   Galerkin.discrete_existsUnique C.AL S.toV one_div_sqrt12_pos (Sub.infSup C S) (C.AL ζ)
@@ -673,7 +713,8 @@ theorem ellProjFun_eq {ζ p : C.VSp} (hp : p ∈ S.toV) (h : ∀ ψ ∈ S.toV, C
     C.ellProjFun S ζ = p :=
   (C.ellProj_existsUnique S ζ).unique (C.ellProjFun_spec S ζ) ⟨hp, h⟩
 
-/-- Stability of the elliptic projection: `‖Πₕζ‖_V ≤ 2√12 ‖ζ‖_V`, uniformly in `h`. -/
+/-- Stability of the elliptic projection: `‖Πₕζ‖_V ≤ 2√12 ‖ζ‖_V`, uniformly in `h`.
+See [QuennevilleBelair2015, §4.6, Thm 4.9]. -/
 theorem norm_ellProjFun_le (ζ : C.VSp) : ‖C.ellProjFun S ζ‖ ≤ 2 * √12 * ‖ζ‖ := by
   obtain ⟨hm, hs⟩ := C.ellProjFun_spec S ζ
   obtain ⟨v, hv, hv1, h⟩ := Sub.infSup C S _ hm
@@ -691,7 +732,10 @@ theorem norm_ellProjFun_le (ζ : C.VSp) : ‖C.ellProjFun S ζ‖ ≤ 2 * √12 
   linarith
 
 /-- **The elliptic projection** `Πₕ : V → V` (values in `Vₕ`) of (4.11), as a bounded linear
-map with `‖Πₕ‖ ≤ 2√12`. -/
+map with `‖Πₕ‖ ≤ 2√12`.
+See [QuennevilleBelair2015, (4.11)]; elliptic projections in error analyses of second-order
+hyperbolic problems as in [Baker1976]; for mixed wave formulations cf. [Geveci1988],
+[GilletteHolstZhu2017]. -/
 def ellProj : C.VSp →L[ℝ] C.VSp :=
   LinearMap.mkContinuous
     { toFun := C.ellProjFun S
@@ -728,7 +772,8 @@ theorem norm_ellProj_le : ‖C.ellProj S‖ ≤ 2 * √12 :=
 `‖ζ − Πₕζ‖_V ≤ (1 + 2√12) ‖ζ − ψ‖_V` for every `ψ ∈ Vₕ`.
 
 Thesis gap: the thesis only asserts "there exists a constant C"; the constant
-`C = 1 + ‖A‖·√12 ≤ 1 + 2√12` follows from `‖A‖ ≤ 2` (`norm_AL_le`) and Prop 4.13. -/
+`C = 1 + ‖A‖·√12 ≤ 1 + 2√12` follows from `‖A‖ ≤ 2` (`norm_AL_le`) and Prop 4.13.
+See [QuennevilleBelair2015, Thm 4.10, §4.6]; cf. [Babuska1971], [BoffiBrezziFortin2013]. -/
 theorem ellProj_quasiopt (ζ : C.VSp) {ψ : C.VSp} (hψ : ψ ∈ S.toV) :
     ‖ζ - C.ellProj S ζ‖ ≤ (1 + 2 * √12) * ‖ζ - ψ‖ := by
   have h := Galerkin.quasi_opt C.AL S.toV one_div_sqrt12_pos (Sub.infSup C S) (u := ζ)
@@ -740,7 +785,8 @@ theorem ellProj_quasiopt (ζ : C.VSp) {ψ : C.VSp} (hψ : ψ ∈ S.toV) :
   gcongr
   exact C.norm_AL_le
 
-/-- Quasi-optimality, best-approximation form: `‖ζ − Πₕζ‖_V ≤ (1 + 2√12) dist_V(ζ, Vₕ)`. -/
+/-- Quasi-optimality, best-approximation form: `‖ζ − Πₕζ‖_V ≤ (1 + 2√12) dist_V(ζ, Vₕ)`.
+See [QuennevilleBelair2015, Thm 4.10]; cf. [Babuska1971]. -/
 theorem ellProj_quasiopt_infDist (ζ : C.VSp) :
     ‖ζ - C.ellProj S ζ‖ ≤ (1 + 2 * √12) * Metric.infDist ζ (S.toV : Set C.VSp) := by
   have hC : 0 < 1 + 2 * √12 := by positivity
@@ -768,7 +814,8 @@ end EllProj
 Correction: the thesis's weak solutions are only `C⁰([0,T]; V) ∩ C¹([0,T]; W)` (l.2113), but
 the proof of Thm 4.14 differentiates `ξₕ^Π = Πₕξ`, and `Πₕ` is bounded on `V`, not on `W`
 (it involves `d`); so `ξ ∈ C¹([0,T]; V)` is assumed. Such a `ξ` is in particular a weak solution
-in the thesis's sense (`IsWeakSol.hasDerivWithinAt_toW`). -/
+in the thesis's sense (`IsWeakSol.hasDerivWithinAt_toW`).
+See [QuennevilleBelair2015, (4.8), §4.4, Thm 4.14]. -/
 def IsWeakSol (T : ℝ) (ξ ξ' : ℝ → C.VSp) : Prop :=
   ContinuousOn ξ (Icc 0 T) ∧ ContinuousOn ξ' (Icc 0 T) ∧
     (∀ t ∈ Ico 0 T, HasDerivWithinAt ξ (ξ' t) (Ici t) t) ∧
@@ -784,7 +831,8 @@ theorem IsWeakSol.hasDerivWithinAt_toW {T : ℝ} {ξ ξ' : ℝ → C.VSp} (h : C
 /-- A **discrete solution** of (4.10) on `[0,T]`: `ξₕ(t) ∈ Vₕ`, `ξₕ` continuous on `[0,T]` with
 right derivative `ξₕ'` on `[0,T)`, and `(ξ̇ₕ, ψ)_W + a(ξₕ, ψ) = 0` for all `ψ ∈ Vₕ`. (The thesis
 asks `ξₕ ∈ C¹([0,T]; Vₕ)`; one-sided derivatives suffice and make uniqueness stronger; the
-solutions constructed in `discrete_solution_exists` are `C¹` on `ℝ`.) -/
+solutions constructed in `discrete_solution_exists` are `C¹` on `ℝ`.)
+See [QuennevilleBelair2015, (4.10)]. -/
 def IsDiscreteSol (S : C.Sub) (T : ℝ) (ξh ξh' : ℝ → C.VSp) : Prop :=
   ContinuousOn ξh (Icc 0 T) ∧ (∀ t ∈ Icc 0 T, ξh t ∈ S.toV) ∧
     (∀ t ∈ Ico 0 T, HasDerivWithinAt ξh (ξh' t) (Ici t) t) ∧
@@ -818,7 +866,8 @@ def aFlat : S.toV →ₗ[ℝ] Module.Dual ℝ S.toV :=
   C.aL.compl₁₂ S.toV.subtype S.toV.subtype
 
 /-- The discrete operator `Mₕ : Vₕ → Vₕ`, `(Mₕ ξ, ψ)_W = −a(ξ, ψ)` for `ψ ∈ Vₕ`, so that (4.10)
-reads `ξ̇ₕ = Mₕ ξₕ`. -/
+reads `ξ̇ₕ = Mₕ ξₕ`.
+See [QuennevilleBelair2015, (4.10)]. -/
 def opMh : S.toV →L[ℝ] S.toV :=
   LinearMap.toContinuousLinearMap
     (-((LinearEquiv.ofBijective (C.gramW S) (C.gramW_bijective S)).symm.toLinearMap.comp
@@ -836,7 +885,8 @@ theorem opMh_spec (ξ ψ : S.toV) : ⟪C.toW (C.opMh S ξ), C.toW ψ⟫ = -C.aL 
 
 /-- **Existence of the discrete solution** (thesis l.2316: "a square system of linear ordinary
 differential equations"): for every `ξ₀ ∈ Vₕ` there is a `C¹` trajectory `ξₕ : ℝ → Vₕ` with
-`ξₕ(0) = ξ₀` solving (4.10) for all `t`, namely `ξₕ(t) = exp(t Mₕ) ξ₀`. -/
+`ξₕ(0) = ξ₀` solving (4.10) for all `t`, namely `ξₕ(t) = exp(t Mₕ) ξ₀`.
+See [QuennevilleBelair2015, §4.6]. -/
 theorem discrete_solution_exists {ξ₀ : C.VSp} (h₀ : ξ₀ ∈ S.toV) :
     ∃ ξh ξh' : ℝ → C.VSp, ξh 0 = ξ₀ ∧ (∀ t, ξh t ∈ S.toV) ∧ (∀ t, HasDerivAt ξh (ξh' t) t) ∧
       Continuous ξh' ∧ ∀ t, ∀ ψ ∈ S.toV, ⟪C.toW (ξh' t), C.toW ψ⟫ + C.aL (ξh t) ψ = 0 := by
@@ -867,7 +917,8 @@ theorem isDiscreteSol_of_global {T : ℝ} {ξh ξh' : ℝ → C.VSp} (hm : ∀ t
 omit [FiniteDimensional ℝ S.toV] in
 /-- **Uniqueness of the discrete solution**: two discrete solutions with the same initial value
 agree on `[0,T]`. Energy proof (thesis l.2120 at the discrete level): `d/dt ‖ξ₁ − ξ₂‖_W² =
-−2a(ξ₁ − ξ₂, ξ₁ − ξ₂) = 0`, then Lemma 4.12 with `F = 0`; the `W`-norm is definite on `V`. -/
+−2a(ξ₁ − ξ₂, ξ₁ − ξ₂) = 0`, then Lemma 4.12 with `F = 0`; the `W`-norm is definite on `V`.
+See [QuennevilleBelair2015, §4.6]. -/
 theorem discrete_solution_unique {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
     (h₁ : C.IsDiscreteSol S T ξ₁ ξ₁') (h₂ : C.IsDiscreteSol S T ξ₂ ξ₂') (h0 : ξ₁ 0 = ξ₂ 0) :
     ∀ t ∈ Icc 0 T, ξ₁ t = ξ₂ t := by
@@ -925,7 +976,10 @@ elliptic-projection error and `εₕ = Πₕξ − ξₕ` the projected error. T
 
 The proof is the thesis's: the error equation `(ε̇ₕ, ψ) + a(εₕ, ψ) = (ė, ψ) − (e, ψ)` on `Vₕ`
 (from (4.8), (4.10), (4.11)), tested with `ψ = εₕ` and `a(εₕ, εₕ) = 0`, then Lemma 4.12 and
-`|f(t)| ≤ |f(0)| + ∫₀ᵗ |ḟ|`. -/
+`|f(t)| ≤ |f(0)| + ∫₀ᵗ |ḟ|`.
+See [QuennevilleBelair2015, Thm 4.14]; classical analogues for second-order hyperbolic
+equations in [Dupont1973], [Baker1976], for mixed methods [Geveci1988], and in the FEEC setting
+[GilletteHolstZhu2017]. -/
 theorem thm_4_14_pointwise {T : ℝ} {ξ ξ' ξh ξh' : ℝ → C.VSp} (hξ : C.IsWeakSol T ξ ξ')
     (hξh : C.IsDiscreteSol S T ξh ξh') :
     ∀ t ∈ Icc 0 T, ‖C.toW (ξ t - ξh t)‖ ≤ ‖C.toW (C.ellProj S (ξ 0) - ξh 0)‖
@@ -975,7 +1029,9 @@ Correction: (i) `ξ ∈ C¹([0,T]; V)` is required (see `IsWeakSol`), since the 
 differentiates `Πₕξ`; (ii) the factor `(1 + T)` is loose — the proof gives
 `t ‖e(0)‖ + (1 + t) ∫₀ᵗ ‖ė‖` (`thm_4_14_pointwise`). Thesis gap: the step from
 `‖εₕ(t)‖ ≤ ‖εₕ(0)‖ + ∫₀ᵗ(‖ė‖ + ‖e‖)` to the `(1 + T)` bound uses `‖e(s)‖ ≤ ‖e(0)‖ + ∫₀ˢ ‖ė‖`
-for the `L¹` norm of `e`, which is spelled out in `error_bound_core`. -/
+for the `L¹` norm of `e`, which is spelled out in `error_bound_core`.
+See [QuennevilleBelair2015, Thm 4.14]; cf. [Baker1976], [Dupont1973], [Geveci1988],
+[GilletteHolstZhu2017]. -/
 theorem thm_4_14 {T : ℝ} {ξ ξ' ξh ξh' : ℝ → C.VSp} (hξ : C.IsWeakSol T ξ ξ')
     (hξh : C.IsDiscreteSol S T ξh ξh') :
     ∀ t ∈ Icc 0 T, ‖C.toW (ξ t - ξh t)‖ ≤ ‖C.toW (C.ellProj S (ξ 0) - ξh 0)‖
@@ -1007,7 +1063,9 @@ variable {ι : Type*} {l : Filter ι} (S : ι → C.Sub)
 
 /-- The thesis's density hypothesis (§4.6, l.2261): for each `i` and `v ∈ Vⁱ`,
 `inf_{w ∈ Vₕⁱ} ‖v − w‖_{Vⁱ} → 0` as `h → 0` (along the filter `l`), written out with the graph
-norms of `V⁰`, `V¹` and the `W²` norm. -/
+norms of `V⁰`, `V¹` and the `W²` norm.
+See [QuennevilleBelair2015, §4.6]; cf. the approximation hypothesis of [AFW2010, §3],
+[Arnold2018]. -/
 def DensityHyp (l : Filter ι) (S : ι → C.Sub) : Prop :=
   (∀ σ : X0, ∀ δ > 0, ∀ᶠ h in l, ∃ τ ∈ (S h).V0h, ‖σ - τ‖ ^ 2 + ‖C.d0 (σ - τ)‖ ^ 2 < δ) ∧
   (∀ u : X1, ∀ δ > 0, ∀ᶠ h in l, ∃ v ∈ (S h).V1h, ‖u - v‖ ^ 2 + ‖C.d1 (u - v)‖ ^ 2 < δ) ∧
@@ -1048,7 +1106,8 @@ theorem DensityHyp.approx_compact (hd : C.DensityHyp l S) {K : Set C.VSp} (hK : 
 alone (with Prop 4.13 and quasi-optimality), `‖ζ − Πₕζ‖_V → 0` uniformly for `ζ ∈ K`.
 
 Correction (thesis l.2449: "if we have a Hilbert complex with the compactness property, the
-elliptic projection converges"): compactness is not needed. -/
+elliptic projection converges"): compactness is not needed.
+See [QuennevilleBelair2015, §4.6, Thm 4.10]. -/
 theorem DensityHyp.ellProj_tendsto [∀ h, FiniteDimensional ℝ (S h).toV] (hd : C.DensityHyp l S)
     {K : Set C.VSp} (hK : IsCompact K) {δ : ℝ} (hδ : 0 < δ) :
     ∀ᶠ h in l, ∀ ζ ∈ K, ‖ζ - C.ellProj (S h) ζ‖ ≤ δ := by
@@ -1066,7 +1125,8 @@ uniformly on `[0,T]` (i.e. in `L∞(0,T; W)`).
 
 Correction: the thesis states this under the compactness property and for `ξₕ(0) = Πₕξ(0)`;
 neither is needed beyond `εₕ(0) → 0` (see `convergence_of_initProj`): density, Prop 4.13 and
-Thm 4.14 suffice. -/
+Thm 4.14 suffice.
+See [QuennevilleBelair2015, §4.6, discussion after Thm 4.14]. -/
 theorem convergence [∀ h, FiniteDimensional ℝ (S h).toV] (hd : C.DensityHyp l S) {T : ℝ}
     {ξ ξ' : ℝ → C.VSp} (hξ : C.IsWeakSol T ξ ξ') {ξh ξh' : ι → ℝ → C.VSp}
     (hξh : ∀ h, C.IsDiscreteSol (S h) T (ξh h) (ξh' h))

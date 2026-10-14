@@ -178,15 +178,7 @@ private theorem mem_two_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ
     {K : Set E} {x : E} (h : (1 / 2 : ℝ) • x ∈ K) : x ∈ (fun x => (2 : ℝ) • x) '' K :=
   ⟨_, h, show (2 : ℝ) • ((1 / 2 : ℝ) • x) = x by rw [smul_smul]; norm_num⟩
 
-/-- `N(d1)ᗮ ⊆ N(d0*)`: since `B⁰ ⊆ Z¹`, `(Z¹)ᗮ ⊆ (B⁰)ᗮ = Z*₀`. -/
-theorem orthogonal_ker_d1_le : H.d1.kerᗮ ≤ H.d0†.ker := by
-  rw [← H.orthogonal_range_d0]
-  exact Submodule.orthogonal_le H.range_d0_le_ker_d1
-
-/-- `N(d0*)ᗮ ⊆ N(d1)`: `N(d0*)ᗮ = cl B⁰ ⊆ Z¹`. -/
-theorem orthogonal_ker_adjoint_d0_le : H.d0†.kerᗮ ≤ H.d1.ker := by
-  rw [← H.orthogonal_range_d0, Submodule.orthogonal_orthogonal_eq_closure]
-  exact Submodule.topologicalClosure_minimal _ H.range_d0_le_ker_d1 (isClosed_ker H.closed1)
+-- `orthogonal_ker_d1_le` and `orthogonal_ker_adjoint_d0_le` live in `Feec.Ch4.Adjoint`.
 
 /-- **Thesis §4.2, "compactness ⇒ closed", for `d1`.** If `V¹ ∩ V₁* ↪ W¹` is compact then
 `B² = R(d1)` is closed.

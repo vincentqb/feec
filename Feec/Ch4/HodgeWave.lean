@@ -167,20 +167,8 @@ theorem range_adjoint_d1_le : LinearMap.range H.d1†.toFun ≤ H.d0†.ker := b
   rintro _ ⟨ρ, rfl⟩
   exact mem_ker_iff.2 ⟨⟨_, H.adjoint_map_mem ρ⟩, rfl, H.adjoint_comp_zero ρ⟩
 
-/-- `(Z¹)ᗮ = cl B*₁ ⊆ Z*₁`, i.e. `(ker d1)ᗮ ⊆ ker d0*`, **without closed range**
-(Thesis Thm 4.6, σ-step).
-
-Thesis gap: the thesis uses `(Z¹)ᗮ = B*₁`, which needs closed range; only the inclusion
-`(Z¹)ᗮ = cl(range d1*) ⊆ ker d0*` is needed, and it holds in every Hilbert complex. -/
-theorem orthogonal_ker_d1_le : H.d1.kerᗮ ≤ H.d0†.ker := by
-  rw [orthogonal_ker _ H.dense1 H.closed1]
-  exact Submodule.topologicalClosure_minimal _ H.range_adjoint_d1_le H.isClosed_ker_adjoint_d0
-
-/-- `(Z*₁)ᗮ = cl B⁰ ⊆ Z¹`, i.e. `(ker d0*)ᗮ ⊆ ker d1`, **without closed range**
-(Thesis Thm 4.6, ρ-step, omitted in the thesis as "similar"). -/
-theorem orthogonal_ker_adjoint_d0_le : H.d0†.kerᗮ ≤ H.d1.ker := by
-  rw [← H.orthogonal_range_d0, Submodule.orthogonal_orthogonal_eq_closure]
-  exact Submodule.topologicalClosure_minimal _ H.range_d0_le_ker_d1 (isClosed_ker H.closed1)
+-- `orthogonal_ker_d1_le` (`(ker d1)ᗮ ⊆ ker d0*`) and `orthogonal_ker_adjoint_d0_le`
+-- (`(ker d0*)ᗮ ⊆ ker d1`), both without closed range, live in `Feec.Ch4.Adjoint`.
 
 /-- `⟪d0 σ, d1* ρ⟫ = 0` and hence `‖d0 σ + d1* ρ‖² = ‖d0 σ‖² + ‖d1* ρ‖²`
 (Thesis Thm 4.7, first bullet: "it certainly belongs to `C⁰([0,T], V)`").

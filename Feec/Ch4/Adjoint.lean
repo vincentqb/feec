@@ -740,6 +740,21 @@ theorem range_d0_le_ker_d1 : LinearMap.range H.d0.toFun ≤ H.d1.ker := by
   rintro _ ⟨x, rfl⟩
   exact (LinearPMap.mem_ker_iff).2 ⟨⟨_, H.map_mem x⟩, rfl, H.comp_zero x⟩
 
+/-- `(Z¹)ᗮ ⊆ Z*₁`, i.e. `(ker d1)ᗮ ⊆ ker d0*`, **without closed range**: since `B⁰ ⊆ Z¹`,
+`(Z¹)ᗮ ⊆ (B⁰)ᗮ = Z*₀` (Thesis Thm 4.6, σ-step).
+
+Thesis gap: the thesis uses `(Z¹)ᗮ = B*₁`, which needs closed range; only the inclusion
+`(ker d1)ᗮ ⊆ ker d0*` is needed, and it holds in every Hilbert complex. -/
+theorem orthogonal_ker_d1_le : H.d1.kerᗮ ≤ H.d0†.ker := by
+  rw [← H.orthogonal_range_d0]
+  exact Submodule.orthogonal_le H.range_d0_le_ker_d1
+
+/-- `(Z*₁)ᗮ = cl B⁰ ⊆ Z¹`, i.e. `(ker d0*)ᗮ ⊆ ker d1`, **without closed range**
+(Thesis Thm 4.6, ρ-step, omitted in the thesis as "similar"). -/
+theorem orthogonal_ker_adjoint_d0_le : H.d0†.kerᗮ ≤ H.d1.ker := by
+  rw [← H.orthogonal_range_d0, Submodule.orthogonal_orthogonal_eq_closure]
+  exact Submodule.topologicalClosure_minimal _ H.range_d0_le_ker_d1 (isClosed_ker H.closed1)
+
 /-- `ℌ = (cl B⁰)ᗮ ∩ (cl B*₁)ᗮ` (Thesis Thm 4.1, `W`-level). -/
 theorem harmonic_eq :
     H.harmonic = (LinearMap.range H.d0.toFun).topologicalClosureᗮ ⊓

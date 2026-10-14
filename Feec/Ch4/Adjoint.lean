@@ -1,4 +1,8 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.Complex
+public import Feec.Foundation.Operators
+public import Mathlib.Analysis.Normed.Lp.lpSpace
 
 /-!
 # Unbounded operators: adjoints, graph relations, closed range (Thesis §4.1–4.2)
@@ -50,7 +54,7 @@ takes a junk value otherwise).
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 

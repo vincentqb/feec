@@ -1,4 +1,7 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.Tensor
+public import Mathlib.LinearAlgebra.Matrix.Permutation
 
 /-!
 # Ch 3 §3.1–3.3: Hodge duality, the Bel decomposition, and the Weyl block structure
@@ -55,6 +58,8 @@ spin-2 equation?"), which is not in `docs/references.bib`; the same holds for th
 * [ACBY1997] (nonlinear analogue of the Prop 3.3 block structure)
 * [Wald1984] (Weyl tensor, volume form, Hodge duality)
 -/
+
+@[expose] public section
 
 open Matrix Equiv
 
@@ -1161,3 +1166,5 @@ theorem finrank_weylSpace : Module.finrank ℝ weylSpace = 10 := by
 
 end Bivector
 end Feec
+
+end

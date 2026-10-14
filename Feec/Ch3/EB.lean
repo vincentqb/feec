@@ -43,10 +43,23 @@ Corrections and gaps filled (details in the docstrings):
 * §3.5: `A₋` should be `Aₓ`. As in the thesis, `f ∈ C²` suffices for the wave equation and
   `f ∈ C³` is assumed for the EB equations.
 
-Not formalized: the nonlinear EB system of §3.4 (quoted from Anderson–Choquet-Bruhat–York; it
+Not formalized: the nonlinear EB system of §3.4 (the thesis cites [Friedrich1996]; cf.
+[ACBY1997]; it
 needs the 3+1 split and extrinsic curvature; its extracted B-equation sign `+ sym curl E` must
 be `-` to recover (3.4)); distributional (`H(curl)`) versions of Lemma 3.5; Prop 3.6 on
 bounded domains.
+
+## References
+
+* [QuennevilleBelair2015], Ch. 3 (§3.2 Bel decomposition, §3.3 linearized Bel decomposition,
+  §3.4 linearized EB system: Prop 3.4, Lemma 3.5, Prop 3.6; §3.5 gravitational waves), §2.8
+  (TT plane waves), §4.3 (Cor 4.5, the thesis' route to Prop 3.6, replaced here)
+* [Bel1958] (the electric–magnetic decomposition of the Weyl tensor)
+* [Friedrich1996] (the vacuum EB system; the nonlinear constraints and evolution equations
+  quoted at the end of thesis §3.4)
+* [ACBY1997] (the Einstein–Bianchi hyperbolic system, non-vacuum case)
+* [Wald1984], §4.4 (linearized gravity and gravitational radiation in the TT gauge)
+* [Alcubierre2008] (3+1 formulation; electric and magnetic parts of the Weyl tensor)
 -/
 
 open Matrix
@@ -112,11 +125,14 @@ theorem isSymm_iff_vskw_eq_zero (A : Matrix (Fin 3) (Fin 3) ℝ) : Aᵀ = A ↔ 
 Thesis gap: neither the matrix `curl` (defined only inside the proof) nor the row-wise `div`
 is defined before use; here `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}` and `(div A)_a = ∂_b A_{ab}`
 (foundation `curl`, `div`). The identity is pointwise; for `A ∈ H(curl)` it holds in the
-distributional sense by linearity (not formalized). -/
+distributional sense by linearity (not formalized).
+
+See [QuennevilleBelair2015, Lemma 3.5]. -/
 theorem trace_curl (dA : Jet1) : (curl dA).trace = -2 * vdiv (vskwJ dA) := by
   simp [Matrix.trace, curl, vdiv, vskwJ, vskw, eps3_explicit, Fin.sum_univ_three]; ring
 
-/-- **Thesis Lemma 3.5 (3)**: `2 vskw curl A = grad tr A - div Aᵀ`. -/
+/-- **Thesis Lemma 3.5 (3)**: `2 vskw curl A = grad tr A - div Aᵀ`.
+See [QuennevilleBelair2015, Lemma 3.5]. -/
 theorem two_vskw_curl (dA : Jet1) : (2 : ℝ) • vskw (curl dA) = trJ dA - div (transJ dA) := by
   ext a
   fin_cases a <;>
@@ -136,7 +152,8 @@ theorem two_vskw_curl' (dA : Jet1) :
   simp [div, transJ, skwJ, Fin.sum_univ_three]; ring
 
 /-- **Thesis Lemma 3.5 (1)**: `div curl A = 0`, for a second jet `d2A b c = ∂_b ∂_c A` that is
-symmetric in `(b, c)` (Schwarz; see `div_curl_field` for `C²` fields). -/
+symmetric in `(b, c)` (Schwarz; see `div_curl_field` for `C²` fields).
+See [QuennevilleBelair2015, Lemma 3.5]. -/
 theorem div_curl (d2A : Fin 3 → Jet1) (hsym : ∀ b c, d2A b c = d2A c b) :
     div (fun b => curl (d2A b)) = 0 := by
   ext a
@@ -169,7 +186,8 @@ theorem curl_symm {dA : Jet1} (hsym : ∀ c, (dA c)ᵀ = dA c) (htr : trJ dA = 0
   simpa [smul_smul] using this
 
 /-- **Thesis Lemma 3.5, conclusion**: `A` TSD (symmetric, trace-free, divergence-free) implies
-`curl A` symmetric and trace-free, and (at second order) divergence-free (`div_curl`). -/
+`curl A` symmetric and trace-free, and (at second order) divergence-free (`div_curl`).
+See [QuennevilleBelair2015, Lemma 3.5 and proof of Prop 3.6]. -/
 theorem curl_TSD {dA : Jet1} (hsym : ∀ c, (dA c)ᵀ = dA c) (htr : ∀ c, (dA c).trace = 0)
     (hdiv : div dA = 0) : (curl dA)ᵀ = curl dA ∧ (curl dA).trace = 0 :=
   ⟨curl_symm hsym (funext htr) hdiv, trace_curl_of_symm hsym⟩
@@ -185,7 +203,8 @@ abbrev Jet4 := Fin 4 → Matrix (Fin 3) (Fin 3) ℝ
 /-- Spatial part `(∂_1, ∂_2, ∂_3)` of a spacetime jet. -/
 def sp (dX : Jet4) : Jet1 := fun c => dX c.succ
 
-/-- The jet `∂_μ C` of the Weyl field `C = [[E, B], [B, -E]]` (block form of Prop 3.3). -/
+/-- The jet `∂_μ C` of the Weyl field `C = [[E, B], [B, -E]]` (block form of Prop 3.3).
+See [QuennevilleBelair2015, Prop 3.3]; the decomposition goes back to [Bel1958]. -/
 def dWeyl (dE dB : Jet4) (μ : Fin 4) : T4 (Fin 4) := T (dE μ) (dB μ) (dB μ) (-dE μ)
 
 /-- The linearized second Bianchi expression `∂_α C_{βγδθ} + ∂_β C_{γαδθ} + ∂_γ C_{αβδθ}`. -/
@@ -193,7 +212,9 @@ def bianchi2 (dE dB : Jet4) (α β γ δ θ : Fin 4) : ℝ :=
   dWeyl dE dB α β γ δ θ + dWeyl dE dB β γ α δ θ + dWeyl dE dB γ α β δ θ
 
 /-- The linearized EB system (Thesis (3.3)–(3.4)) on jets:
-`div E = 0`, `div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`. -/
+`div E = 0`, `div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`.
+See [QuennevilleBelair2015, §3.4, Prop 3.4]; cf. the nonlinear EB system of [Friedrich1996]
+and [ACBY1997]. -/
 def EBJet (dE dB : Jet4) : Prop :=
   div (sp dE) = 0 ∧ div (sp dB) = 0 ∧ dE 0 + curl (sp dB) = 0 ∧ dB 0 - curl (sp dE) = 0
 
@@ -356,7 +377,10 @@ Prop 3.3. Trace-freeness is not needed for this equivalence (the 24 equations ar
 by assuming trace-freeness here; their independence on general symmetric jets is not proved);
 it is needed for the count of 16 (`linBianchi_iff_sym`,
 `EBJetSym_surjective`). This module starts from the linearized identity
-`∂_[α C_βγ]δθ = 0` (the thesis' `0 = ε∂_[α C_βγ]δθ + O(ε²)` at first order). -/
+`∂_[α C_βγ]δθ = 0` (the thesis' `0 = ε∂_[α C_βγ]δθ + O(ε²)` at first order).
+
+See [QuennevilleBelair2015, Prop 3.4]; the nonlinear analogue is in [Friedrich1996]
+(cf. [ACBY1997]). -/
 theorem linBianchi_iff (dE dB : Jet4) (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJet dE dB := by
   have sE : ∀ μ i j, dE μ i j = dE μ j i := fun μ i j => by
@@ -423,7 +447,9 @@ conditions); only 16 of them are independent on symmetric trace-free jets. The t
 evolution equations are `0 = 0` (`trace_curl_of_symm`) and the skew parts repeat the constraints
 (`curl_symm`), so the content is 6 constraints plus 10 evolution equations (each `sym curl`
 equation is valued in symmetric trace-free matrices, a 5-dimensional space); see
-`EBJetSym_surjective` for the independence of these 16 equations. -/
+`EBJetSym_surjective` for the independence of these 16 equations.
+
+See [QuennevilleBelair2015, §3.4, Prop 3.4]. -/
 theorem linBianchi_iff_sym (dE dB : Jet4) (hE : IsSymTF dE) (hB : IsSymTF dB) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJetSym dE dB := by
   rw [linBianchi_iff dE dB (fun μ => (hE μ).1) (fun μ => (hB μ).1)]
@@ -467,7 +493,9 @@ on such jets the Bianchi identity is equivalent to 16 independent equations: 6 c
 plus 10 evolution equations.
 
 Refinement: the thesis counts "6 constraints + 18 evolution equations" (at most 24
-conditions) without determining how many are independent; the answer is 16. -/
+conditions) without determining how many are independent; the answer is 16.
+
+See [QuennevilleBelair2015, §3.4, Prop 3.4]. -/
 theorem EBJetSym_surjective (v w : Fin 3 → ℝ) (P Q : Matrix (Fin 3) (Fin 3) ℝ)
     (hP : Pᵀ = P ∧ P.trace = 0) (hQ : Qᵀ = Q ∧ Q.trace = 0) :
     ∃ dE dB : Jet4, IsSymTF dE ∧ IsSymTF dB ∧ div (sp dE) = v ∧ div (sp dB) = w ∧
@@ -499,7 +527,9 @@ theorem EBJetSym_surjective (v w : Fin 3 → ℝ) (P Q : Matrix (Fin 3) (Fin 3) 
 (field version: `div_const_field`).
 
 Thesis gap: the thesis proves Prop 3.6 only by a forward reference to Cor 4.5 (cited as
-"Theorem 4.5"), whose hypotheses it never verifies; this step is missing. -/
+"Theorem 4.5"), whose hypotheses it never verifies; this step is missing.
+
+See [QuennevilleBelair2015, Prop 3.6, Cor 4.5]. -/
 theorem div_propagation (d2E d2B : Fin 4 → Fin 4 → Matrix (Fin 3) (Fin 3) ℝ)
     (hsE : ∀ μ ν, d2E μ ν = d2E ν μ) (hsB : ∀ μ ν, d2B μ ν = d2B ν μ)
     (hE : ∀ c : Fin 3, d2E c.succ 0 = -curl (sp (d2B c.succ)))
@@ -525,7 +555,8 @@ theorem div_propagation (d2E d2B : Fin 4 → Fin 4 → Matrix (Fin 3) (Fin 3) �
 `β̇ = ½ grad a + curl α - ½ div E`.
 With `div E = div B = 0` (step 1), `(a, α, b, β)` solves a closed homogeneous first-order system.
 
-Thesis gap: not in the thesis (it relies on Cor 4.5 instead). -/
+Thesis gap: not in the thesis (it relies on Cor 4.5 instead).
+Cf. [QuennevilleBelair2015, Prop 3.6, Cor 4.5]. -/
 theorem violation_evolution (dE dB : Jet4) (hE : dE 0 = -curl (sp dB))
     (hB : dB 0 = curl (sp dE)) :
     (dE 0).trace = 2 * vdiv (vskwJ (sp dB)) ∧
@@ -600,7 +631,8 @@ theorem energy_eq_zero_iff (E B : Matrix (Fin 3) (Fin 3) ℝ) :
 and `F = flux E B` (both differentiated by the product rule: `energyD`, `fluxD`).
 
 Thesis gap: not in the thesis; this replaces the unverified appeal to Cor 4.5 (energy proof on
-`ℝ³`; field version `prop_3_6`). -/
+`ℝ³`; field version `prop_3_6`).
+Cf. [QuennevilleBelair2015, Prop 3.6, Cor 4.5]. -/
 theorem energy_flux (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (hE : dE 0 = -curl (sp dB)) (hB : dB 0 = curl (sp dE)) (hdE : div (sp dE) = 0)
     (hdB : div (sp dB) = 0) :
@@ -671,7 +703,8 @@ def curlF (A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 3 → �
 /-- **Thesis Lemma 3.5 (1)** for fields: `div curl A = 0` for a `C²` matrix field on `ℝ³`.
 
 Thesis gap: the thesis uses symmetry of second derivatives without stating any regularity;
-here `A ∈ C²` (distributional version for `A ∈ H(curl)` not formalized). -/
+here `A ∈ C²` (distributional version for `A ∈ H(curl)` not formalized).
+See [QuennevilleBelair2015, Lemma 3.5]. -/
 theorem div_curl_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hA : ∀ a b, ContDiff ℝ 2 fun y => A y a b) (x : Fin 3 → ℝ) :
     div (jet3 (curlF A) x) = 0 := by
@@ -691,7 +724,8 @@ theorem div_curl_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
   exact div_curl _ fun b c => by ext a d; simp [pd_comm' (hA a d)]
 
 /-- **Thesis Lemma 3.5, conclusion** for fields: if a `C²` matrix field `A` on `ℝ³` is TSD
-(symmetric, trace-free and divergence-free everywhere), then so is `curl A`. -/
+(symmetric, trace-free and divergence-free everywhere), then so is `curl A`.
+See [QuennevilleBelair2015, Lemma 3.5 and proof of Prop 3.6]. -/
 theorem curl_TSD_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hA : ∀ a b, ContDiff ℝ 2 fun y => A y a b) (hsym : ∀ y, (A y)ᵀ = A y)
     (htr : ∀ y, (A y).trace = 0) (hdiv : ∀ y, div (jet3 A y) = 0) (x : Fin 3 → ℝ) :
@@ -748,7 +782,9 @@ theorem pd_weyl {E B : E4 → Matrix (Fin 3) (Fin 3) ℝ} {p : E4}
 `Ė + curl B = 0` and `Ḃ - curl E = 0` there.
 
 Thesis gap: the equivalence is pointwise and only needs `C ∈ C¹` (differentiability at the
-point suffices); see `linBianchi_iff` for the remaining corrections. -/
+point suffices); see `linBianchi_iff` for the remaining corrections.
+
+See [QuennevilleBelair2015, Prop 3.4]. -/
 theorem linBianchi_field_iff {E B : E4 → Matrix (Fin 3) (Fin 3) ℝ} (p : E4)
     (hEs : ∀ y, (E y)ᵀ = E y) (hBs : ∀ y, (B y)ᵀ = B y)
     (hE : ∀ i j, DifferentiableAt ℝ (fun y => E y i j) p)
@@ -774,7 +810,9 @@ tensor `[[E, B], [B, -E]]` with `E = (κ²/2) s · ampE`, `B = (κ²/2) s · amp
 
 Correction: the thesis writes the amplitudes `A₊` and `A₋`; the second is `Aₓ`. Its list of
 "non-zero components" is complete only up to the Riemann symmetries; here the full tensor is
-identified. -/
+identified.
+
+See [QuennevilleBelair2015, §3.5] (TT plane waves: §2.8); cf. [Wald1984, §4.4]. -/
 theorem planeWave_weyl (κ Ap Ax s : ℝ) :
     Rjet (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) =
       T ((κ ^ 2 / 2 * s) • ampE Ap Ax) ((κ ^ 2 / 2 * s) • ampB Ap Ax)
@@ -814,7 +852,9 @@ are symmetric, trace-free and solve the linearized EB system (3.3)–(3.4) at ev
 (`div E = div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`).
 
 Remark: the thesis assumes `f ∈ C²` so that `h` solves the wave equation, and then `f ∈ C³`
-for the EB equations (which involve `f'''`); we assume `f ∈ C³`, as the thesis does here. -/
+for the EB equations (which involve `f'''`); we assume `f ∈ C³`, as the thesis does here.
+
+See [QuennevilleBelair2015, §3.5] (TT plane waves: §2.8); cf. [Wald1984, §4.4]. -/
 theorem planeWave_EB {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ Ap Ax : ℝ) (p : E4) :
     Rjet (jet2 (fun y a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) p) =
       T (waveE κ Ap Ax f p) (waveB κ Ap Ax f p) (waveB κ Ap Ax f p) (-waveE κ Ap Ax f p) ∧
@@ -1216,7 +1256,9 @@ hypotheses later only conjectured in Prop 4.17. Correction: we state the result 
 compact spatial support and prove it directly, by (1) `∂_t div E = -div curl B = 0`
 (`div_const_field`) and (2) the energy method for the violations `(tr E, vskw E, tr B, vskw B)`:
 `½ ∂_t e = div F` (`energy_flux`), so `∫ e(t) dx` is constant, and `e(0) = 0`, `e ≥ 0` give
-`e(t) ≡ 0` (`energy_eq_zero_iff`). Also: "Similarly, `curl E` is TSD" should read `curl B`. -/
+`e(t) ≡ 0` (`energy_eq_zero_iff`). Also: "Similarly, `curl E` is TSD" should read `curl B`.
+
+See [QuennevilleBelair2015, Prop 3.6] (thesis proof via [QuennevilleBelair2015, Cor 4.5]). -/
 theorem prop_3_6 (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
     (hsupp : ∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧

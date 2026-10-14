@@ -34,6 +34,16 @@ Not here: the `W`-level decomposition `W = cl 𝔅 ⊕ ℌ ⊕ cl 𝔅*` (needs 
 derivation of the compactness hypotheses above from the thesis' `V ∩ V* ⋐ W` (needs adjoints).
 
 Indexing: `C.H k ⊆ V (k+1)` is `ℌ^{k+1}`; `ℌ^0` is `C.H0 = C.Z 0`.
+
+## References
+
+* [QuennevilleBelair2015], §4.2 (Hilbert complexes, Thm 4.1, Thm 4.2, the compactness and
+  Fredholm remarks); the thesis follows [BruningLesch1992] and [AFW2010] there.
+* [BruningLesch1992] (Hilbert complexes; domain complex; Fredholm = finite-dimensional
+  cohomology, Fredholm ⇒ closed range).
+* [AFW2010], §3 (abstract Hilbert complexes: domain complex, closed and Fredholm complexes,
+  Hodge decomposition, Poincaré inequality, compactness property).
+* [Arnold2018] (book treatment of Hilbert complexes in finite element exterior calculus).
 -/
 
 open scoped RealInnerProductSpace Topology
@@ -51,7 +61,8 @@ variable {V W : ℕ → Type*}
 
 /-! ### Graph-norm bookkeeping -/
 
-/-- The graph norm: `‖u‖_V² = ‖u‖_W² + ‖d u‖_W²` (Thesis §4.1, with `‖dv‖` read as `‖Tv‖`). -/
+/-- The graph norm: `‖u‖_V² = ‖u‖_W² + ‖d u‖_W²` (Thesis §4.1, with `‖dv‖` read as `‖Tv‖`).
+See [QuennevilleBelair2015, §4.1–4.2]; cf. [AFW2010, §3]. -/
 theorem norm_sq_eq (k : ℕ) (u : V k) :
     ‖u‖ ^ 2 = ‖C.ι k u‖ ^ 2 + ‖C.ι (k + 1) (C.d k u)‖ ^ 2 := by
   simpa only [real_inner_self_eq_norm_sq] using C.inner_graph k u u
@@ -90,7 +101,8 @@ theorem mem_orthogonal_Z_iff {k : ℕ} {v : V k} :
   rw [real_inner_comm, C.inner_of_mem_Z hz, real_inner_comm]
 
 /-- Harmonic forms, `W`-description: `ℌ^{k+1} = 𝔷^{k+1} ∩ (𝔅^{k+1})^{⊥W}`.
-(Thesis §4.2; the `V`- and `W`-orthogonal complements of `𝔅` agree on cycles.) -/
+(Thesis §4.2; the `V`- and `W`-orthogonal complements of `𝔅` agree on cycles.)
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem mem_H_iff {k : ℕ} {u : V (k + 1)} :
     u ∈ C.H k ↔ C.d (k + 1) u = 0 ∧ ∀ v : V k, ⟪C.ι (k + 1) (C.d k v), C.ι (k + 1) u⟫ = 0 := by
   rw [H, Submodule.mem_inf, and_comm]
@@ -133,7 +145,10 @@ with `‖u‖_V ≤ c ‖d u‖` for all `u ∈ (𝔷^k)^{⊥V}`.
 Thesis gap: the hypothesis "closed complex" (`𝔅^{k+1}` closed) is not in the statement, and the
 "bounded inverse" step is the Banach open-mapping theorem, which needs `𝔅^{k+1}` complete.
 Here: `d^k : (𝔷^k)ᗮ → 𝔅^{k+1}` is injective (`dPerp_injective`), onto (`range_dPerp`), and
-antilipschitz by `antilipschitz_of_injective_of_isClosed_range`. -/
+antilipschitz by `antilipschitz_of_injective_of_isClosed_range`.
+
+See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3] (Poincaré inequality for closed
+Hilbert complexes), [Arnold2018]. -/
 theorem poincare (k : ℕ) (hB : C.IsClosedAt k) :
     ∃ c : ℝ, ∀ u ∈ (C.Z k)ᗮ, ‖u‖ ≤ c * ‖C.d k u‖ := by
   have hcl : IsClosed (range (C.dPerp k)) := by rw [range_dPerp]; exact hB
@@ -146,7 +161,8 @@ theorem poincare (k : ℕ) (hB : C.IsClosedAt k) :
 closed.
 
 Thesis gap: the converse is not stated, although "compactness ⇒ closed" relies on it. Proof:
-`d^k` is antilipschitz on the complete space `(𝔷^k)ᗮ`, so its range is closed. -/
+`d^k` is antilipschitz on the complete space `(𝔷^k)ᗮ`, so its range is closed.
+Cf. [QuennevilleBelair2015, Thm 4.2], [AFW2010, §3]. -/
 theorem isClosedAt_of_poincare (k : ℕ) {c : ℝ} (hc : ∀ u ∈ (C.Z k)ᗮ, ‖u‖ ≤ c * ‖C.d k u‖) :
     C.IsClosedAt k := by
   have hbd : ∀ x : (C.Z k)ᗮ, ‖x‖ ≤ (c.toNNReal : ℝ) * ‖C.dPerp k x‖ := fun x =>
@@ -155,13 +171,15 @@ theorem isClosedAt_of_poincare (k : ℕ) {c : ℝ} (hc : ∀ u ∈ (C.Z k)ᗮ, �
   have := hA.isClosed_range (C.dPerp k).uniformContinuous
   rwa [range_dPerp] at this
 
-/-- **Thesis Thm 4.2, corrected form:** `𝔅^{k+1}` is closed iff a Poincaré inequality holds. -/
+/-- **Thesis Thm 4.2, corrected form:** `𝔅^{k+1}` is closed iff a Poincaré inequality holds.
+See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem poincare_iff (k : ℕ) :
     C.IsClosedAt k ↔ ∃ c : ℝ, ∀ u ∈ (C.Z k)ᗮ, ‖u‖ ≤ c * ‖C.d k u‖ :=
   ⟨C.poincare k, fun ⟨_, hc⟩ => C.isClosedAt_of_poincare k hc⟩
 
 /-- Thesis Thm 4.2, restated with `W`-norms on the right (this module's reformulation; the
-thesis states only `‖z‖_V ≤ C ‖dz‖`): for `u ∈ (𝔷^k)ᗮ`, `‖u‖_W ≤ ‖u‖_V ≤ c ‖d u‖_W`. -/
+thesis states only `‖z‖_V ≤ C ‖dz‖`): for `u ∈ (𝔷^k)ᗮ`, `‖u‖_W ≤ ‖u‖_V ≤ c ‖d u‖_W`.
+See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3]. -/
 theorem poincare_W (k : ℕ) (hB : C.IsClosedAt k) :
     ∃ c : ℝ, ∀ u ∈ (C.Z k)ᗮ,
       ‖C.ι k u‖ ≤ ‖u‖ ∧ ‖u‖ ≤ c * ‖C.ι (k + 1) (C.d k u)‖ := by
@@ -169,7 +187,8 @@ theorem poincare_W (k : ℕ) (hB : C.IsClosedAt k) :
   exact ⟨c, fun u hu => ⟨C.norm_ι_le k u, C.norm_d k u ▸ hc u hu⟩⟩
 
 /-- Thesis Thm 4.2, corrected, entirely in `W`-norms: `𝔅^{k+1}` is closed iff
-`‖u‖_W ≤ c ‖d u‖_W` on `(𝔷^k)ᗮ`. (`‖u‖_V ≤ ‖u‖_W + ‖du‖_W` gives the `V`-form.) -/
+`‖u‖_W ≤ c ‖d u‖_W` on `(𝔷^k)ᗮ`. (`‖u‖_V ≤ ‖u‖_W + ‖du‖_W` gives the `V`-form.)
+See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3]. -/
 theorem isClosedAt_iff_poincare_W (k : ℕ) :
     C.IsClosedAt k ↔
       ∃ c : ℝ, ∀ u ∈ (C.Z k)ᗮ, ‖C.ι k u‖ ≤ c * ‖C.ι (k + 1) (C.d k u)‖ := by
@@ -206,7 +225,9 @@ theorem isClosed_image_Z (k : ℕ) : IsClosed (C.ι k '' C.Z k) := by
 Thesis gap: asserted without proof. Norm equivalence on `𝔷` alone is not quite enough; one also
 needs `𝔷` closed in both `V` and `W` (`ι(𝔷)` closed in `W`, `isClosed_image_Z`, uses that
 `ι` is an isometry on the complete space `𝔷`, `isometry_ι_Z`). Then closedness of `𝔅` in either
-space is closedness in `𝔷`. -/
+space is closedness in `𝔷`.
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem isClosedAt_iff_isClosed_image (k : ℕ) :
     C.IsClosedAt k ↔ IsClosed (C.ι (k + 1) '' C.B k) := by
   have : CompleteSpace (C.Z (k + 1)) := (C.isClosed_Z (k + 1)).completeSpace_coe
@@ -223,7 +244,7 @@ theorem isClosedAt_iff_isClosed_image (k : ℕ) :
 /-! ### Thm 4.1: Hodge decomposition of `V` -/
 
 /-- **Thesis §4.2 (`𝔷 = 𝔅 ⊕ ℌ`).** Under closed range, cycles split into boundaries and
-harmonic forms. -/
+harmonic forms. See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem B_sup_H (k : ℕ) (hB : C.IsClosedAt k) : C.B k ⊔ C.H k = C.Z (k + 1) := by
   have : CompleteSpace (C.B k) := hB.completeSpace_coe
   exact Submodule.sup_orthogonal_inf_of_hasOrthogonalProjection (C.B_le_Z k)
@@ -237,7 +258,10 @@ theorem B_inf_H (k : ℕ) : C.B k ⊓ C.H k = ⊥ :=
 
 Thesis gap: the proof is one sentence; the facts used are `𝔅 ⊆ 𝔷` closed, `𝔷` closed in `V`
 (continuity of `d`), and `𝔷 = 𝔅 ⊕ ℌ`. Only closedness of `𝔅^{k+1}` (not of the whole
-complex) is needed. -/
+complex) is needed.
+
+See [QuennevilleBelair2015, Thm 4.1]; cf. [AFW2010, §3] (Hodge decomposition of a closed
+Hilbert complex), [BruningLesch1992], [Arnold2018]. -/
 theorem hodge_V (k : ℕ) (hB : C.IsClosedAt k) :
     C.B k ⊔ C.H k ⊔ (C.Z (k + 1))ᗮ = ⊤ ∧ C.B k ⟂ C.H k ∧ C.B k ⟂ (C.Z (k + 1))ᗮ ∧
       C.H k ⟂ (C.Z (k + 1))ᗮ := by
@@ -248,7 +272,7 @@ theorem hodge_V (k : ℕ) (hB : C.IsClosedAt k) :
   · exact (Submodule.isOrtho_orthogonal_right _).mono_left inf_le_right
 
 /-- Thesis Thm 4.1, orthogonality in the `W` inner product as well (the three summands are
-pairwise `W`-orthogonal; this uses `dz = 0` on `𝔷`). -/
+pairwise `W`-orthogonal; this uses `dz = 0` on `𝔷`). See [QuennevilleBelair2015, Thm 4.1]. -/
 theorem hodge_V_orthogonal_W (k : ℕ) :
     (∀ b ∈ C.B k, ∀ h ∈ C.H k, ⟪C.ι (k + 1) b, C.ι (k + 1) h⟫ = 0) ∧
     (∀ z ∈ C.Z (k + 1), ∀ w ∈ (C.Z (k + 1))ᗮ, ⟪C.ι (k + 1) z, C.ι (k + 1) w⟫ = 0) := by
@@ -257,7 +281,7 @@ theorem hodge_V_orthogonal_W (k : ℕ) :
     exact (Submodule.mem_orthogonal _ _).1 hh.1 b hb
   · rw [real_inner_comm]; exact C.mem_orthogonal_Z_iff.1 hw z hz
 
-/-- Uniqueness in the Hodge decomposition. -/
+/-- Uniqueness in the Hodge decomposition. Cf. [QuennevilleBelair2015, Thm 4.1]. -/
 theorem hodge_V_unique (k : ℕ) {b b' h h' z z' : V (k + 1)} (hb : b ∈ C.B k) (hb' : b' ∈ C.B k)
     (hh : h ∈ C.H k) (hh' : h' ∈ C.H k) (hz : z ∈ (C.Z (k + 1))ᗮ) (hz' : z' ∈ (C.Z (k + 1))ᗮ)
     (heq : b + h + z = b' + h' + z') : b = b' ∧ h = h' ∧ z = z' := by
@@ -307,7 +331,8 @@ theorem harmonicToCohomology_bijective (k : ℕ) (hB : C.IsClosedAt k) :
     exact neg_mem hb
 
 /-- **Thesis §4.2:** under closed range, harmonic forms represent cohomology,
-`ℌ^{k+1} ≅ 𝔷^{k+1}/𝔅^{k+1}`. -/
+`ℌ^{k+1} ≅ 𝔷^{k+1}/𝔅^{k+1}`.
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 def harmonicEquivCohomology (k : ℕ) (hB : C.IsClosedAt k) : C.H k ≃ₗ[ℝ] C.Cohomology k :=
   LinearEquiv.ofBijective _ (C.harmonicToCohomology_bijective k hB)
 
@@ -319,7 +344,10 @@ Correction: with the thesis' definition of Fredholm (finite-dimensional *harmoni
 claim is false, see `fredholmCounterexample`. Proof: pick an algebraic complement `G` of `𝔅` in
 `𝔷` (finite-dimensional); `(x, g) ↦ d x + g : (𝔷^k)ᗮ × G → 𝔷^{k+1}` is a continuous linear
 bijection of Banach spaces, hence a homeomorphism, and `𝔅` is the image of the closed set
-`(𝔷^k)ᗮ × {0}`. -/
+`(𝔷^k)ᗮ × {0}`.
+
+See [QuennevilleBelair2015, §4.2] (the claim being corrected); cf. [BruningLesch1992] (Fredholm
+complexes have closed range). -/
 theorem isClosedAt_of_finiteDimensional_cohomology (k : ℕ)
     [FiniteDimensional ℝ (C.Cohomology k)] : C.IsClosedAt k := by
   have : CompleteSpace (C.Z (k + 1)) := (C.isClosed_Z (k + 1)).completeSpace_coe
@@ -392,7 +420,8 @@ theorem H_eq_bot_of_exact (k : ℕ) (h : C.B k = C.Z (k + 1)) : C.H k = ⊥ := b
   rw [H, ← h, inf_comm, Submodule.inf_orthogonal_eq_bot]
 
 /-- Under closed range, `ℌ^{k+1} = 0` iff the complex is exact at `k+1`.
-Without closed range the converse fails (`fredholmCounterexample_not_exact`). -/
+Without closed range the converse fails (`fredholmCounterexample_not_exact`).
+See [QuennevilleBelair2015, §4.2]. -/
 theorem exact_iff_H_eq_bot (k : ℕ) (hB : C.IsClosedAt k) :
     C.B k = C.Z (k + 1) ↔ C.H k = ⊥ := by
   refine ⟨C.H_eq_bot_of_exact k, fun h => ?_⟩
@@ -408,7 +437,7 @@ theorem B_ne_Z_of_not_isClosedAt (k : ℕ) (h : ¬ C.IsClosedAt k) : C.B k ≠ C
   exact C.isClosed_Z (k + 1)
 
 /-- **Thesis Thm 4.1 in degree 0.** `V^0 = ℌ^0 ⊕ (𝔷^0)^{⊥V}` orthogonally (there is no `𝔅^0`),
-with `ℌ^0 = 𝔷^0` (`H0`). -/
+with `ℌ^0 = 𝔷^0` (`H0`). See [QuennevilleBelair2015, Thm 4.1]. -/
 theorem hodge_V_zero : C.H0 ⊔ (C.H0)ᗮ = ⊤ ∧ C.H0 ⟂ (C.H0)ᗮ :=
   ⟨Submodule.sup_orthogonal_of_hasOrthogonalProjection, Submodule.isOrtho_orthogonal_right _⟩
 
@@ -433,7 +462,9 @@ compactness `ι u_{φ n} → a`. The map `u ↦ (ι u, d u)` is antilipschitz on
 Relation to the thesis' hypothesis: the thesis' compactness property is that `V^k ∩ V^k_*`
 embeds compactly in `W^k`. Since `(𝔷^k)^{⊥V} ⊆ V^k ∩ V^k_*` with `d* = 0` there, the two norms
 agree on it and the thesis' property implies the hypothesis here; that derivation needs adjoints
-and is left to the `W`-level modules. -/
+and is left to the `W`-level modules.
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3] (compactness property), [Arnold2018]. -/
 theorem isClosedAt_of_isCompactOperator (k : ℕ)
     (hK : IsCompactOperator ((C.ι k).comp (C.Z k)ᗮ.subtypeL)) : C.IsClosedAt k := by
   set K := (C.ι k).comp (C.Z k)ᗮ.subtypeL
@@ -494,7 +525,9 @@ If `ι` restricted to `ℌ^{k+1}` is a compact operator, then `ℌ^{k+1}` is fin
 Thesis gap: unproved in the thesis. Proof: `ι` is an isometry on cycles, so the closed unit ball
 of the complete space `ℌ^{k+1}` is homeomorphic to a closed subset of a compact set; Riesz's
 theorem. The thesis' compactness property implies the hypothesis (`ℌ ⊆ V ∩ V*`, norms agree
-there). -/
+there).
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem finiteDimensional_H_of_isCompactOperator (k : ℕ)
     (hK : IsCompactOperator ((C.ι (k + 1)).comp (C.H k).subtypeL)) :
     FiniteDimensional ℝ (C.H k) := by
@@ -513,7 +546,8 @@ theorem finiteDimensional_H_of_isCompactOperator (k : ℕ)
 
 /-- **Thesis §4.2: a complex with the compactness property is closed and Fredholm** (bounded
 form, at degree `k+1`): `𝔅^{k+1}` is closed, `ℌ^{k+1}` is finite-dimensional, and so is the
-cohomology `𝔷^{k+1}/𝔅^{k+1}`. -/
+cohomology `𝔷^{k+1}/𝔅^{k+1}`.
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem closed_and_fredholm_of_isCompactOperator (k : ℕ)
     (hZ : IsCompactOperator ((C.ι k).comp (C.Z k)ᗮ.subtypeL))
     (hH : IsCompactOperator ((C.ι (k + 1)).comp (C.H k).subtypeL)) :
@@ -868,7 +902,10 @@ the refutation is with respect to that reading.
 
 Correction: the true statements are "finite-dimensional *algebraic* cohomology ⇒ closed"
 (Brüning–Lesch's definition of Fredholm), `isClosedAt_of_finiteDimensional_cohomology`, and
-"compactness ⇒ closed" (`HilbertComplex.isClosedAt_of_isCompactOperator`). -/
+"compactness ⇒ closed" (`HilbertComplex.isClosedAt_of_isCompactOperator`).
+
+See [QuennevilleBelair2015, §4.2] (the refuted sentence); cf. [BruningLesch1992] (where Fredholm
+means finite-dimensional cohomology). -/
 theorem fredholm_not_closed :
     fredholmCounterexample.H0 = ⊥ ∧ (∀ k, fredholmCounterexample.H k = ⊥) ∧
       (FiniteDimensional ℝ fredholmCounterexample.H0 ∧
@@ -891,7 +928,8 @@ complexes have finite length `0 → W^0 → ⋯ → W^n → 0`; already for `n =
 `0 → ℓ² --A--> ℓ² → 0` with `A = diag(1/(n+1))` has `ℌ^0 = 0`, `ℌ^1 = 0`, `W^k = 0` for `k ≥ 2`
 (so every `ℌ^k` is finite-dimensional), yet `𝔅^1 = range A` is not closed and the complex is not
 exact at degree 1 (`𝔅^1 ≠ 𝔷^1 = ℓ²`), although `ℌ^1 = 0`. The same caveat on the reading of
-`ℌ^k` as in `fredholm_not_closed` applies. -/
+`ℌ^k` as in `fredholm_not_closed` applies.
+See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992]. -/
 theorem fredholm_not_closed_fin :
     (∀ k (w : S (k + 2)), w = 0) ∧
       fredholmCounterexampleFin.H0 = ⊥ ∧ fredholmCounterexampleFin.Z 1 = ⊤ ∧
@@ -960,7 +998,9 @@ product, `ι k` the inclusion. All bounded-model results (`poincare_iff`, `hodge
 `isClosedAt_of_finiteDimensional_cohomology`, …) apply to it.
 
 Thesis gap: the thesis passes between `(W, d)` and `(V, d)` implicitly; completeness of `V k`
-is exactly closedness of `d k`, and `d (V k) ⊆ V (k+1)` is the `map_mem` field. -/
+is exactly closedness of `d k`, and `d (V k) ⊆ V (k+1)` is the `map_mem` field.
+
+See [QuennevilleBelair2015, §4.2] (domain complex); cf. [BruningLesch1992], [AFW2010, §3]. -/
 def toHilbertComplex : HilbertComplex (fun k => C.domainSpace k) W where
   ι k := (WithLp.fstL 2 ℝ (W k) (W (k + 1))).comp (C.domainSpace k).subtypeL
   ι_injective k u v huv := by
@@ -991,7 +1031,7 @@ theorem toHilbertComplex_ι_d (k : ℕ) (u : C.domainSpace k) :
   exact ⟨y, hy1.symm, hy2.symm⟩
 
 /-- **Bridge (critic item 8):** the bounded model is closed at `k` iff `range (d k)` is closed in
-`W (k+1)` (the thesis' definition of a closed complex). -/
+`W (k+1)` (the thesis' definition of a closed complex). See [QuennevilleBelair2015, §4.2]. -/
 theorem toHilbertComplex_isClosedAt_iff (k : ℕ) :
     C.toHilbertComplex.IsClosedAt k ↔
       IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) := by
@@ -1005,7 +1045,8 @@ theorem toHilbertComplex_isClosedAt_iff (k : ℕ) :
     exact ⟨_, ⟨C.graphPt k x, rfl⟩, rfl⟩
 
 /-- **Thesis Thm 4.2 at the W level (corrected):** `range (d k)` is closed in `W (k+1)` iff
-`‖x‖ ≤ c ‖d x‖` for all `x ∈ D(d k)` that are `W`-orthogonal to `ker (d k)`. -/
+`‖x‖ ≤ c ‖d x‖` for all `x ∈ D(d k)` that are `W`-orthogonal to `ker (d k)`.
+See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem isClosed_range_iff_poincare (k : ℕ) :
     IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) ↔
       ∃ c : ℝ, ∀ x : (C.d k).domain,

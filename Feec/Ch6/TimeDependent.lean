@@ -23,19 +23,26 @@ No convergence theorem is stated. This file proves corrected versions of all of 
     `Sol62.energy_const`, `Sol61.unique`, `Sol62.unique` (including `φ` and `λ`).
 * §2 Discrete problem (`Sol63` over the foundation's `BGGData`, FE spaces with `L²` products).
   - `Sol63.constraint`, `Sol63.hidden_constraint`; `no_solution_of_incompatible` and
-    `no_solution_of_incompatible_phi` refute Prop 6.2 as stated;
-  - corrected Prop 6.2: `prop_6_2_necessary` (C1–C3), `prop_6_2_exists` (existence via
-    `linear_ode_exists`, i.e. `NormedSpace.exp` and variation of constants),
+    `no_solution_of_incompatible_phi` refute Prop 6.2 as stated, and `prop_6_2_false` does so
+    for the concrete data `cexBGG` (exact rows, `d` injective, `S₀,ₕ` surjective,
+    `ker S₀,ₕ ≠ 0`, `cexBGG_hyps`);
+  - corrected Prop 6.2: `prop_6_2_necessary` (C1–C3), `prop_6_2_exists_regular` (existence via
+    `linear_ode_exists`, i.e. `NormedSpace.exp` and variation of constants, with `C¹` dynamic
+    variables on `ℝ` and continuous `φₕ`, `λₕ`), `prop_6_2_exists`,
     `prop_6_2` (existence ⇔ C1–C3), `prop_6_2_exists_of_continuousOn`, `Sol63.uniq`,
     `Sol63.unique` (including `φₕ` and `λₕ`).
 * §3 Error equations: `prop_6_3_a` … `prop_6_3_e` (fifth equation missing from the thesis),
   `prop_6_3_c_split` (corrected third equation, `Sₕ` only on discrete functions).
 * §4 `energy_estimate_integral`, and the new conditional convergence theorem `ch6_convergence`
-  (with `ch6_convergence_rate`).
+  (with `ch6_convergence_rate`); `ch6_convergence_Sol63` discharges its discrete hypotheses
+  from a solution of (6.3) (skew form `a63`, `a63_self`).
 
 Modelling notes. Time derivatives are right derivatives on `[0,T)` and trajectories are
-continuous on `[0,T]` (weaker than the thesis' `C¹`, so uniqueness is stronger; existence in
-§2 gives `HasDerivAt` everywhere). Test spaces `N ∈ W²`, `µ ∈ W̃²` replace the undefined `V²`,
+continuous on `[0,T]` (weaker than the thesis' `C¹`, so uniqueness is stronger). Existence in
+§2 (`prop_6_2_exists_regular`) delivers more: two-sided derivatives at every `t ∈ ℝ`, `C¹`
+dynamic variables and continuous `φₕ`, `λₕ`. Values at `t = T` of `Λ`, `φₕ` and of the
+derivative fields are not constrained by the solution structures, so the corresponding
+uniqueness/continuity statements are on `[0,T)`. Test spaces `N ∈ W²`, `µ ∈ W̃²` replace the undefined `V²`,
 `Ṽ²`. Existence for the continuous problem (6.1) (Thm 4.3/4.6 for the complex (5.1)) and the
 EB application §6.3 (Sobolev and FE spaces) are not formalized here; the corrected statements
 are recorded in `docs/audit.json`.
@@ -132,9 +139,11 @@ def J : W1 →L[ℝ] StrongDual ℝ (X V0 Vt0) :=
 lemma J_apply (μ : W1) (x : X V0 Vt0) : D.J μ x = ⟪μ, D.B x⟫ := by
   simp [J, InnerProductSpace.toDual_apply_apply, ContinuousLinearMap.adjoint_inner_left]
 
-/-- **The multiplier space `W̌¹`**: the completion of `(W¹, |||·|||)`, realised as the closure
-of `J(W¹)` in the (complete) dual `(V⁰ × Ṽ⁰)*`. An element `Λ ∈ W̌¹` pairs with
-`(τ, ψ)` as `Λ(τ, ψ)`, extending `(λ, dτ − Sψ)`. -/
+/-- **The multiplier space `W̌¹`**: the closure of `J(W¹)` in the (complete) dual
+`(V⁰ × Ṽ⁰)*`. This is the completion of `W¹ / ker J` for the seminorm `|||·||| = ‖J ·‖`; it is the
+completion of `(W¹, |||·|||)` itself exactly when `J` is injective, i.e. when `range B` is dense
+in `W¹` (the thesis assumes `S Ṽ⁰` dense in `W¹`; `ContData` does not). An element `Λ ∈ W̌¹`
+pairs with `(τ, ψ)` as `Λ(τ, ψ)`, extending `(λ, dτ − Sψ)`. -/
 def Wcheck : Submodule ℝ (StrongDual ℝ (X V0 Vt0)) := D.J.range.topologicalClosure
 
 /-- `W¹ ⊆ W̌¹` via `J`. -/
@@ -354,8 +363,8 @@ theorem Sol62.continuousOn_Λ {T : ℝ} {f : ℝ → Wt1} (s : D.Sol62 T f)
   exact (D.continuous_ell.comp_continuousOn hp).congr fun t ht => s.Λ_eq ht
 
 /-- **Prop 6.1(i) under closed range.** If `B = (d, −S)` has closed range, the multiplier is a
-genuine `λ(t) ∈ W¹`. (In EB the range `grad H̊¹ + H̊¹(V)` is dense, not closed, which is why
-`W̌¹ = H⁻¹(div, V)` is needed there.) -/
+genuine `λ(t) ∈ W¹`. (Remark, not formalized: in EB the range `grad H̊¹ + H̊¹(V)` is expected
+to be dense but not closed in `L²`, which is why the thesis needs `W̌¹ = H⁻¹(div, V)` there.) -/
 theorem prop_6_1_i_closedRange (hR : IsClosed (D.B.range : Set W1)) {T : ℝ} {f : ℝ → Wt1}
     (s : D.Sol61 T f) :
     ∃ s' : D.Sol62 T f, s'.toTraj = s.toTraj ∧ ∃ lam : ℝ → W1,
@@ -895,18 +904,26 @@ lemma adjoint_S0_injective (hS : Function.Surjective D.S0) :
 
 /-- **Corrected Prop 6.2, existence.** Assume finite-dimensional FE spaces, `d : Ṽₕ⁰ → Ṽₕ¹`
 injective, `S₀,ₕ` surjective (thesis hypothesis (5.4)) and `f` continuous. Data satisfying the
-compatibility conditions (C1)–(C3) admit a solution of (6.3) on `[0,T]` (in fact on all of `ℝ`),
-with `λₕ` determined (no initial value).
+compatibility conditions (C1)–(C3) admit a solution of (6.3) on `[0,T]`,
+with `λₕ` determined (no initial value). Regularity is exported: `σₕ, uₕ, Mₕ, ρₕ` have
+two-sided derivatives at every `t ∈ ℝ` (equal to the derivative fields of the solution), those
+derivatives are continuous (so the dynamic variables are `C¹`), and `φₕ`, `λₕ` are continuous
+(the thesis' `φₕ ∈ C⁰`, `λₕ ∈ C⁰`; `λₕ ∈ C¹` when `f ∈ C¹` since `λₕ` is a fixed linear image of
+`uₕ`).
 
 Thesis gap: the thesis argues "the system is square, so uniqueness implies existence", which is
 invalid for this differential-algebraic system (see `no_solution_of_incompatible`). Proof here:
 eliminate `φₕ = Φ(σₕ, f)` and `λₕ = (S₀,ₕ*)⁻¹ d* uₕ`, solve the resulting linear ODE by
 variation of constants (`linear_ode_exists`), and show the hidden constraint (C2) propagates. -/
-theorem prop_6_2_exists (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
+theorem prop_6_2_exists_regular (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
     {f : ℝ → Pt1} (hf : Continuous f) (T : ℝ) {σ₀ : P0} {φ₀ : Pt0} {u₀ : Pt1} {M₀ : P2}
     {ρ₀ : Pt2} (hC1 : D.d0 σ₀ = D.S0 φ₀) (hC2 : ∀ ψ, D.S0 ψ = 0 → ⟪u₀, D.dt0 ψ⟫ = 0)
     (hC3 : ∀ ψ, D.S0 ψ = 0 → ⟪D.dt0 φ₀, D.dt0 ψ⟫ = ⟪f 0, D.dt0 ψ⟫) :
-    ∃ s : Sol63 D T f, s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧ s.u 0 = u₀ ∧ s.M 0 = M₀ ∧ s.ρ 0 = ρ₀ := by
+    ∃ s : Sol63 D T f, (s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧ s.u 0 = u₀ ∧ s.M 0 = M₀ ∧ s.ρ 0 = ρ₀) ∧
+      (∀ t, HasDerivAt s.σ (s.σ' t) t) ∧ (∀ t, HasDerivAt s.u (s.u' t) t) ∧
+      (∀ t, HasDerivAt s.M (s.M' t) t) ∧ (∀ t, HasDerivAt s.ρ (s.ρ' t) t) ∧
+      Continuous s.σ' ∧ Continuous s.u' ∧ Continuous s.M' ∧ Continuous s.ρ' ∧
+      Continuous s.φ ∧ Continuous s.lam := by
   classical
   set Φ := phiMap D hdinj hS
   obtain ⟨R, hR⟩ := LinearMap.exists_leftInverse_of_injective (LinearMap.adjoint D.S0)
@@ -980,6 +997,13 @@ theorem prop_6_2_exists (hdinj : Function.Injective D.dt0) (hS : Function.Surjec
       rw [LinearMap.adjoint_inner_left]; exact hhid t ψ hψ)
     simp only [lam, ← hμ]
     rw [show R (LinearMap.adjoint D.S0 μ) = μ from LinearMap.congr_fun hR μ]
+  have hσc : Continuous σ := continuous_iff_continuousAt.2 fun t => (hσ t).continuousAt
+  have huc : Continuous u := continuous_iff_continuousAt.2 fun t => (hu t).continuousAt
+  have hφc : Continuous φ := Φ.continuous_of_finiteDimensional.comp (hσc.prodMk hf)
+  have hlamc : Continuous lam := R.continuous_of_finiteDimensional.comp
+    ((LinearMap.adjoint D.dt0).continuous_of_finiteDimensional.comp huc)
+  have hMc : Continuous M := continuous_iff_continuousAt.2 fun t => (hM t).continuousAt
+  have hρc : Continuous ρ := continuous_iff_continuousAt.2 fun t => (hρ t).continuousAt
   refine ⟨{
     σ := σ, φ := φ, u := u, M := M, ρ := ρ, lam := lam
     σ' := fun t => LinearMap.adjoint D.d0 (lam t), u' := u'
@@ -1000,7 +1024,7 @@ theorem prop_6_2_exists (hdinj : Function.Injective D.dt0) (hS : Function.Surjec
     ee := fun t _ ζ => by
       show ⟪D.d0 (σ t) - D.S0 (Φ (σ t, f t)), ζ⟫ = 0
       rw [show D.S0 (Φ (σ t, f t)) = D.d0 (σ t) from S0_phiMap hdinj hS _, sub_self,
-        inner_zero_left] }, ?_, ?_, ?_, ?_, ?_⟩
+        inner_zero_left] }, ⟨?_, ?_, ?_, ?_, ?_⟩, hσ, hu, hM, hρ, ?_, ?_, ?_, ?_, hφc, hlamc⟩
   · simp [σ, hx0]
   · show Φ (σ 0, f 0) = φ₀
     rw [show σ 0 = σ₀ by simp [σ, hx0]]
@@ -1008,6 +1032,24 @@ theorem prop_6_2_exists (hdinj : Function.Injective D.dt0) (hS : Function.Surjec
   · simp [u, hx0]
   · simp [M, hx0]
   · simp [ρ, hx0]
+  · exact (LinearMap.adjoint D.d0).continuous_of_finiteDimensional.comp hlamc
+  · exact ((hf.sub (D.dt0.continuous_of_finiteDimensional.comp hφc)).sub
+      ((LinearMap.adjoint D.S1).continuous_of_finiteDimensional.comp hMc)).sub
+      ((LinearMap.adjoint D.dt1).continuous_of_finiteDimensional.comp hρc)
+  · exact D.S1.continuous_of_finiteDimensional.comp huc
+  · exact D.dt1.continuous_of_finiteDimensional.comp huc
+
+/-- **Corrected Prop 6.2, existence** (data form of `prop_6_2_exists_regular`). Assume
+finite-dimensional FE spaces, `d : Ṽₕ⁰ → Ṽₕ¹` injective, `S₀,ₕ` surjective and `f` continuous.
+Data satisfying (C1)–(C3) admit a solution of (6.3) on `[0,T]`. -/
+theorem prop_6_2_exists (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
+    {f : ℝ → Pt1} (hf : Continuous f) (T : ℝ) {σ₀ : P0} {φ₀ : Pt0} {u₀ : Pt1} {M₀ : P2}
+    {ρ₀ : Pt2} (hC1 : D.d0 σ₀ = D.S0 φ₀) (hC2 : ∀ ψ, D.S0 ψ = 0 → ⟪u₀, D.dt0 ψ⟫ = 0)
+    (hC3 : ∀ ψ, D.S0 ψ = 0 → ⟪D.dt0 φ₀, D.dt0 ψ⟫ = ⟪f 0, D.dt0 ψ⟫) :
+    ∃ s : Sol63 D T f, s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧ s.u 0 = u₀ ∧ s.M 0 = M₀ ∧ s.ρ 0 = ρ₀ :=
+  let ⟨s, hs, _⟩ := prop_6_2_exists_regular (M₀ := M₀) (ρ₀ := ρ₀) hdinj hS hf T hC1 hC2 hC3
+  ⟨s, hs⟩
+
 
 /-- **Corrected Prop 6.2 (existence ⇔ compatibility).** For `T > 0`, `d` injective on `Ṽₕ⁰`,
 `S₀,ₕ` surjective and `f` continuous, (6.3) has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff
@@ -1051,6 +1093,59 @@ theorem prop_6_2_exists_of_continuousOn (hdinj : Function.Injective D.dt0)
 end Existence
 
 end Discrete
+
+/-! ### A concrete counterexample to Prop 6.2 as stated -/
+
+section Counterexample
+
+/-- `e₁ = (0, 1) ∈ ℝ²`, spanning `ker S₀,ₕ` in `cexBGG`. -/
+def cexE1 : EuclideanSpace ℝ (Fin 2) := EuclideanSpace.single 1 1
+
+/-- Concrete discrete BGG data refuting Prop 6.2: `Vₕ⁰ = Vₕ¹ = ℝ`, `Ṽₕ⁰ = Ṽₕ¹ = ℝ²`,
+`W²ₕ = W̃²ₕ = ℝ`; `d = id` on `Vₕ⁰` and on `Ṽₕ⁰`, `S₀,ₕ` = first coordinate, all other maps
+zero. Both rows are exact, `d` is injective on `Ṽₕ⁰`, `S₀,ₕ` is surjective and the
+anticommutation holds, yet `ker S₀,ₕ = ℝ e₁ ≠ 0` (`cexBGG_hyps`). -/
+def cexBGG : Feec.BGGData ℝ ℝ ℝ (EuclideanSpace ℝ (Fin 2)) (EuclideanSpace ℝ (Fin 2)) ℝ where
+  d0 := LinearMap.id
+  d1 := 0
+  dt0 := LinearMap.id
+  dt1 := 0
+  S0 := (EuclideanSpace.proj (0 : Fin 2) : EuclideanSpace ℝ (Fin 2) →L[ℝ] ℝ).toLinearMap
+  S1 := 0
+  d1_d0 := fun _ => rfl
+  dt1_dt0 := fun _ => rfl
+  anticomm := fun _ => by simp
+
+/-- `cexBGG` satisfies every hypothesis of Prop 6.2 (and of the corrected `prop_6_2`), both
+rows are exact, and `e₁ ∈ ker S₀,ₕ` has `d e₁ ≠ 0`. -/
+theorem cexBGG_hyps : Function.Injective cexBGG.dt0 ∧ Function.Surjective cexBGG.S0 ∧
+    cexBGG.ExactTop ∧ cexBGG.ExactBot ∧ cexBGG.S0 cexE1 = 0 ∧ cexBGG.dt0 cexE1 ≠ 0 := by
+  refine ⟨fun a b h => h, fun r => ⟨EuclideanSpace.single 0 r, by simp [cexBGG]⟩, ?_, ?_,
+    by simp [cexBGG, cexE1], ?_⟩
+  · simp [Feec.BGGData.ExactTop, cexBGG, LinearMap.range_id]
+  · simp [Feec.BGGData.ExactBot, cexBGG, LinearMap.range_id]
+  · intro h
+    have := congrArg (fun v : EuclideanSpace ℝ (Fin 2) => v 1) h
+    simp [cexBGG, cexE1] at this
+
+/-- **Thesis Prop 6.2 is false (concrete instance).** For the data `cexBGG`, which satisfy all
+hypotheses of Prop 6.2 (exact rows, `d` injective on `Ṽₕ⁰`, `S₀,ₕ` surjective, anticommutation):
+(a) the initial value `u₀ = e₁` admits no solution, for any source `f` and any `σ₀, φ₀, M₀, ρ₀`;
+(b) even the compatible data `σ₀ = 0`, `φ₀ = e₁` (so `dσ₀ = S₀,ₕφ₀`), `u₀ = 0`, `f = 0` admit no
+solution, so `φ₀` cannot be prescribed freely. This makes `no_solution_of_incompatible` and
+`no_solution_of_incompatible_phi` non-vacuous. -/
+theorem prop_6_2_false {T : ℝ} (hT : 0 < T) :
+    (∀ f : ℝ → EuclideanSpace ℝ (Fin 2), ¬ ∃ s : Sol63 cexBGG T f, s.u 0 = cexE1) ∧
+    cexBGG.d0 0 = cexBGG.S0 cexE1 ∧
+    ¬ ∃ s : Sol63 cexBGG T 0, s.σ 0 = 0 ∧ s.φ 0 = cexE1 ∧ s.u 0 = 0 := by
+  obtain ⟨-, -, -, -, hψ, hdψ⟩ := cexBGG_hyps
+  refine ⟨fun f => ?_, by rw [map_zero, hψ], ?_⟩
+  · have := no_solution_of_incompatible (D := cexBGG) (f := f) hT.le hψ hdψ
+    simpa [cexBGG] using this
+  · rintro ⟨s, -, hs, -⟩
+    exact no_solution_of_incompatible_phi hT hψ hdψ ⟨s, hs⟩
+
+end Counterexample
 
 /-! ## §3. Error equations (Prop 6.3) -/
 
@@ -1283,5 +1378,85 @@ theorem ch6_convergence_rate {X : Type*} [NormedAddCommGroup X] [InnerProductSpa
   nlinarith [h1 t ht]
 
 end Convergence
+
+/-! ### Bridge: the discrete side of `ch6_convergence` from a solution of (6.3) -/
+
+section Bridge
+
+variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
+  [NormedAddCommGroup P0] [InnerProductSpace ℝ P0]
+  [NormedAddCommGroup P1] [InnerProductSpace ℝ P1]
+  [NormedAddCommGroup P2] [InnerProductSpace ℝ P2]
+  [NormedAddCommGroup Pt0] [InnerProductSpace ℝ Pt0]
+  [NormedAddCommGroup Pt1] [InnerProductSpace ℝ Pt1]
+  [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
+
+variable (D : Feec.BGGData P0 P1 P2 Pt0 Pt1 Pt2) in
+/-- The discrete skew form of (6.3): for `x = ((σ, u, M, ρ), φ)` and `y = ((τ, v, N, μ), ψ)`,
+`aₕ(x, y) = −(u, dψ) + (dφ, v) + (M, S₁,ₕ v) + (ρ, dv) − (S₁,ₕ u, N) − (du, μ)`, so that (6.3a–d)
+summed read `(ξ̇ₕ, η) + aₕ(ξₕ, η) − (λₕ, dτ − S₀,ₕψ) = (f, v)`. -/
+def a63 (x y : (P0 × Pt1 × P2 × Pt2) × Pt0) : ℝ :=
+  -⟪x.1.2.1, D.dt0 y.2⟫ + ⟪D.dt0 x.2, y.1.2.1⟫ + ⟪x.1.2.2.1, D.S1 y.1.2.1⟫ +
+    ⟪x.1.2.2.2, D.dt1 y.1.2.1⟫ - ⟪D.S1 x.1.2.1, y.1.2.2.1⟫ - ⟪D.dt1 x.1.2.1, y.1.2.2.2⟫
+
+/-- `aₕ` is skew: `aₕ(x, x) = 0` (the energy argument of §6.2). -/
+lemma a63_self (D : Feec.BGGData P0 P1 P2 Pt0 Pt1 Pt2) (x : (P0 × Pt1 × P2 × Pt2) × Pt0) :
+    a63 D x x = 0 := by
+  simp only [a63]
+  rw [real_inner_comm x.1.2.1, real_inner_comm x.1.2.2.1, real_inner_comm x.1.2.2.2]
+  ring
+
+/-- **Ch 6 convergence for the discrete scheme (6.3).** `ch6_convergence` with its discrete
+hypotheses (`hdisc`, `hBh`, `hmem`, `hskew`, regularity of `ξₕ`) discharged by a solution
+`s : Sol63 D T f`. The discrete energy space `Vₕ⁰ × Ṽₕ¹ × W²ₕ × W̃²ₕ` embeds in the continuous
+energy space `X` by `ι`, which preserves the (`L²`-sum) inner product (`hι`), and `Ṽₕ⁰` maps to the
+algebraic space `Z` by `j`; `Xh = range (ι × j)`. The continuous forms `Ah`, `Bh` restrict to the
+discrete ones (`hAh`, `hBh`), and `f(t)` represents `F(t)` on `ι(Ṽₕ¹)` (`hF`). The remaining
+hypotheses (the continuous equation tested on `Xh` and the elliptic projection) are those of
+`ch6_convergence`. -/
+theorem ch6_convergence_Sol63 {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X]
+    [AddCommGroup Z] [Module ℝ Z] {D : Feec.BGGData P0 P1 P2 Pt0 Pt1 Pt2}
+    (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X)
+    (hι : ∀ a b, ⟪ι a, ι b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ + ⟪a.2.2.2, b.2.2.2⟫)
+    (j : Pt0 →ₗ[ℝ] Z) (A Ah : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ) (Bh : (X × Z) →ₗ[ℝ] P1)
+    (hAh : ∀ a φ b ψ, Ah (ι a, j φ) (ι b, j ψ) = a63 D (a, φ) (b, ψ))
+    (hBh : ∀ a ψ, Bh (ι a, j ψ) = D.d0 a.1 - D.S0 ψ) (P : X →L[ℝ] X) {T : ℝ}
+    {f : ℝ → Pt1} (s : Sol63 D T f)
+    (ξ ξ' : ℝ → X) (χ : ℝ → Z) (ℓ : ℝ → (X × Z) →ₗ[ℝ] ℝ) (F : ℝ → X)
+    (hF : ∀ t ∈ Ico 0 T, ∀ a, ⟪F t, ι a⟫ = ⟪f t, a.2.1⟫)
+    (hξc : ContinuousOn ξ (Icc 0 T)) (hξ'c : ContinuousOn ξ' (Icc 0 T))
+    (hξd : ∀ t ∈ Ico 0 T, HasDerivWithinAt ξ (ξ' t) (Ici t) t)
+    (hcont : ∀ t ∈ Ico 0 T, ∀ η ∈ LinearMap.range ((ι : (P0 × Pt1 × P2 × Pt2) →ₗ[ℝ] X).prodMap j),
+      ⟪ξ' t, η.1⟫ + A (ξ t, χ t) η - ℓ t η = ⟪F t, η.1⟫)
+    (Q : ℝ → Z) (lamP : ℝ → P1)
+    (hPmem : ∀ t ∈ Icc 0 T, (P (ξ t), Q t) ∈ LinearMap.range ((ι : (P0 × Pt1 × P2 × Pt2) →ₗ[ℝ] X).prodMap j))
+    (hPB : ∀ t ∈ Icc 0 T, Bh (P (ξ t), Q t) = 0)
+    (hproj : ∀ t ∈ Ico 0 T, ∀ η ∈ LinearMap.range ((ι : (P0 × Pt1 × P2 × Pt2) →ₗ[ℝ] X).prodMap j),
+      Ah (P (ξ t), Q t) η - ⟪lamP t, Bh η⟫ = A (ξ t, χ t) η - ℓ t η) :
+    ∀ t ∈ Icc 0 T, ‖ξ t - ι (s.σ t, s.u t, s.M t, s.ρ t)‖ ≤
+      ‖ξ t - P (ξ t)‖ + ‖P (ξ 0) - ι (s.σ 0, s.u 0, s.M 0, s.ρ 0)‖ +
+        ∫ r in (0:ℝ)..t, ‖P (ξ' r) - ξ' r‖ := by
+  set Xh := LinearMap.range ((ι : (P0 × Pt1 × P2 × Pt2) →ₗ[ℝ] X).prodMap j)
+  have hrange : ∀ η ∈ Xh, ∃ b ψ, η = (ι b, j ψ) := by
+    rintro η ⟨⟨b, ψ⟩, rfl⟩; exact ⟨b, ψ, rfl⟩
+  refine ch6_convergence Xh A Ah Bh P ξ ξ' χ ℓ F hξc hξ'c hξd hcont
+    (fun t => ι (s.σ t, s.u t, s.M t, s.ρ t)) (fun t => ι (s.σ' t, s.u' t, s.M' t, s.ρ' t))
+    (fun t => j (s.φ t)) s.lam (fun t _ => ⟨((s.σ t, s.u t, s.M t, s.ρ t), s.φ t), rfl⟩)
+    (fun t ht => by simp only [hBh]; exact sub_eq_zero.mpr (s.constraint ht))
+    (ι.continuous.comp_continuousOn (s.cσ.prodMk (s.cu.prodMk (s.cM.prodMk s.cρ))))
+    (fun t ht => ι.hasFDerivAt.comp_hasDerivWithinAt t
+      ((s.dσ t ht).prodMk ((s.du t ht).prodMk ((s.dM t ht).prodMk (s.dρ t ht)))))
+    (fun t ht η hη => ?_) Q lamP hPmem hPB hproj (fun η hη => ?_)
+  · obtain ⟨⟨τ, v, N, μ⟩, ψ, rfl⟩ := hrange η hη
+    simp only [hι, hAh, hBh, hF t ht, a63]
+    have ha := s.ea t (Ico_subset_Icc_self ht) τ ψ
+    have hb := s.eb t ht v
+    have hc := s.ec t ht N
+    have hd := s.ed t ht μ
+    linarith
+  · obtain ⟨b, ψ, rfl⟩ := hrange η hη
+    rw [hAh]; exact a63_self D _
+
+end Bridge
 
 end Feec.Ch6

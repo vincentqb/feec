@@ -23,13 +23,17 @@ takes a junk value otherwise).
   `isClosed_range_adjoint_iff`, `range_eq_orthogonal_ker_adjoint`; the unbounded Poincaré
   inequality `poincare_of_isClosed_range` and its converse `isClosed_range_of_poincare`, combined
   in `isClosed_range_iff_poincare` (Thm 4.2, W-level form).
-* **Skew-adjointness**: `IsSkewAdjoint.dense_domain`, `isSkewAdjoint_iff` (skew-symmetric and
-  `D(T*) ⊂ D(T)`).
+* **Self-adjointness and skew-adjointness**: `isSelfAdjoint_iff` (symmetric and `D(T*) ⊂ D(T)`, the thesis'
+  stated form), `isSkewAdjoint_iff` (skew version), literal forms `isSelfAdjoint_iff_le_adjoint`,
+  `isSkewAdjoint_iff_neg_le_adjoint`, the thesis' definitions of (skew-)symmetric via
+  `isSymm_iff_le_adjoint`, `isSkewSymm_iff_neg_le_adjoint`, and `IsSkewAdjoint.dense_domain`.
 * **Dual complex** (§4.2): `HilbertComplex2.dual` (with `dual_dual`), `closedRange_dual_iff`
   ("closed ⇒ dual closed") and `range_adjoint_d0_eq` / `range_adjoint_d1_eq` (`B* = Zᗮ`).
 * **Hodge decomposition in `W`** (Thm 4.1, `W`-level): `HilbertComplex2.hodge_W`
   (`W1 = cl B⁰ ⊕ ℌ ⊕ cl B*₁`, unconditionally), `hodge_W_of_closedRange` (no closures),
-  `harmonic_eq`, `ker_d1_eq` (`Z¹ = cl B⁰ ⊕ ℌ`), `ker_adjoint_d0_eq` (`Z*₀ = ℌ ⊕ cl B*₁`).
+  `harmonic_eq`, `harmonic_eq_ker_inf_orthogonal_range` (thesis' `ℌ = Z¹ ∩ (B¹)ᗮ`), the end
+  positions `hodge_W0` (`W0 = Z⁰ ⊕ cl B*₀`), `hodge_W2` (`W2 = cl B¹ ⊕ Z*₂`) and their
+  closed-range forms, `ker_d1_eq` (`Z¹ = cl B⁰ ⊕ ℌ`), `ker_adjoint_d0_eq` (`Z*₀ = ℌ ⊕ cl B*₁`).
 * Graph-norm Poincaré `poincare_graphNorm_of_isClosed_range` (literal form of Thm 4.2).
 -/
 
@@ -181,8 +185,9 @@ theorem dense_adjoint_domain (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set 
 
 /-- von Neumann: `T** = T` for closed densely defined `T`.
 
-Thesis gap: used implicitly (the dual of the dual complex is the original complex; `d** = d` in
-the proof of Thm 4.6) but never stated or proved. -/
+Thesis gap: stated in passing in the proof of Thm 4.6 ("`d` is a closed operator and so
+`d** = d`") and equivalent to the §4.1 graph relation `Γ(T) = Γ̃(T*)ᗮ`, but not proved; density
+of `D(d)` is also needed and not mentioned. -/
 theorem adjoint_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClosed) :
     T†† = T := by
   apply LinearPMap.eq_of_eq_graph
@@ -312,7 +317,7 @@ theorem exists_bounded_inverse (T : E →ₗ.[ℝ] F) (hc : T.IsClosed)
 
 Thesis gap: the statement of Thm 4.2 does not include closed range, which is only assumed in
 the surrounding text ("Assuming that `Bᵏ` is closed"); the existence of the bounded inverse of
-`dₖ` is asserted without proof. Here it is the closed graph theorem applied to the inverse on
+`dₖ` is justified only by an unnamed appeal to the bounded inverse theorem. Here it is the closed graph theorem applied to the inverse on
 `R(T)` (`exists_bounded_inverse`). The thesis' graph-norm form is
 `poincare_graphNorm_of_isClosed_range`. -/
 theorem poincare_of_isClosed_range {T : E →ₗ.[ℝ] F} (hc : T.IsClosed)
@@ -483,8 +488,10 @@ theorem IsSkewAdjoint.dense_domain {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
 
 /-- Thesis §4.1: `T` is skew-adjoint iff it is skew-symmetric and `D(T*) ⊂ D(T)`.
 
-Thesis gap: the thesis states only the self-adjoint version; the skew version is what Thm 4.4
-and Thm 4.6 use. -/
+Thesis gap: the thesis states this only for the self-adjoint case (`isSelfAdjoint_iff`), the skew
+version being left to the parenthetical "(or skew-adjoint)"; the skew version is what Thm 4.4
+and Thm 4.6 use. Here skew-symmetry is `Feec.IsSkewSymm`; its equivalence with the thesis'
+definition (`-T ≤ T*`) is `isSkewSymm_iff_neg_le_adjoint`. -/
 theorem isSkewAdjoint_iff (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
     IsSkewAdjoint L ↔ IsSkewSymm L ∧ L†.domain ≤ L.domain := by
   constructor
@@ -497,6 +504,71 @@ theorem isSkewAdjoint_iff (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
       rw [LinearPMap.neg_apply, inner_neg_right]
       exact hS x y
     have hle : -L ≤ L† := hfa.le_adjoint hD
+    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+
+/-- Symmetry on the domain, `⟪A x, y⟫ = ⟪x, A y⟫` (the analogue of `Feec.IsSkewSymm`). -/
+def IsSymm (A : E →ₗ.[ℝ] E) : Prop :=
+  ∀ x y : A.domain, ⟪A x, (y : E)⟫ = ⟪(x : E), A y⟫
+
+/-- Thesis §4.1 definition of *symmetric*: `D(T) ⊂ D(T*)` and `T*` restricted to `D(T)` is `T`,
+i.e. `T ≤ T*`. For densely defined `T` this is `IsSymm T`. -/
+theorem isSymm_iff_le_adjoint (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
+    IsSymm L ↔ L ≤ L† := by
+  constructor
+  · intro h
+    exact (show L.IsFormalAdjoint L from h).le_adjoint hD
+  · intro hle x y
+    have hy : (y : E) ∈ L†.domain := hle.1 y.2
+    have h1 := adjoint_isFormalAdjoint hD ⟨y, hy⟩ x
+    have h2 : L† ⟨y, hy⟩ = L y := (hle.2 (x := y) (y := ⟨y, hy⟩) rfl).symm
+    rw [h2] at h1
+    rw [real_inner_comm, ← h1, real_inner_comm]
+
+/-- Thesis §4.1 definition of *skew-symmetric*: `D(T) ⊂ D(T*)` and `T*` restricted to `D(T)` is
+`-T`, i.e. `-T ≤ T*`. For densely defined `T` this is the foundation's `Feec.IsSkewSymm`. -/
+theorem isSkewSymm_iff_neg_le_adjoint (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
+    IsSkewSymm L ↔ -L ≤ L† := by
+  constructor
+  · intro hS
+    have hfa : L.IsFormalAdjoint (-L) := fun x y => by
+      rw [LinearPMap.neg_apply, inner_neg_right]
+      exact hS x y
+    exact hfa.le_adjoint hD
+  · intro hle x y
+    have hx : (x : E) ∈ L†.domain := hle.1 x.2
+    have h1 := adjoint_isFormalAdjoint hD ⟨x, hx⟩ y
+    have h2 : L† ⟨x, hx⟩ = -L x := (hle.2 (x := x) (y := ⟨x, hx⟩) rfl).symm
+    rw [h2, inner_neg_left] at h1
+    linarith
+
+/-- Thesis §4.1, literal form: `T` is self-adjoint iff `T ≤ T*` (symmetric in the thesis' sense)
+and `D(T*) ⊂ D(T)`. No density is needed for this formulation. -/
+theorem isSelfAdjoint_iff_le_adjoint (L : E →ₗ.[ℝ] E) :
+    IsSelfAdjoint L ↔ L ≤ L† ∧ L†.domain ≤ L.domain := by
+  rw [isSelfAdjoint_def]
+  constructor
+  · intro h
+    rw [h]
+    exact ⟨le_rfl, le_rfl⟩
+  · rintro ⟨hle, hdom⟩
+    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+
+/-- Thesis §4.1: a densely defined `T` is self-adjoint iff it is symmetric and `D(T*) ⊂ D(T)`.
+
+Thesis gap: stated without proof. -/
+theorem isSelfAdjoint_iff (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
+    IsSelfAdjoint L ↔ IsSymm L ∧ L†.domain ≤ L.domain := by
+  rw [isSelfAdjoint_iff_le_adjoint, isSymm_iff_le_adjoint L hD]
+
+/-- Thesis §4.1, literal skew form: `T` is skew-adjoint iff `-T ≤ T*` and `D(T*) ⊂ D(T)`. -/
+theorem isSkewAdjoint_iff_neg_le_adjoint (L : E →ₗ.[ℝ] E) :
+    IsSkewAdjoint L ↔ -L ≤ L† ∧ L†.domain ≤ L.domain := by
+  constructor
+  · intro h
+    have h' : L† = -L := h
+    rw [h']
+    exact ⟨le_rfl, le_rfl⟩
+  · rintro ⟨hle, hdom⟩
     exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
 
 end Skew
@@ -721,9 +793,9 @@ theorem ker_adjoint_d0_eq :
 /-- **Hodge decomposition in `W`** (Thesis Thm 4.1, `W`-level, no closed-range hypothesis):
 `W1 = cl B⁰ ⊕ ℌ ⊕ cl B*₁`, an orthogonal sum of closed subspaces.
 
-Thesis gap: the thesis states the decomposition only for closed complexes, obtaining
-`B*ₖ = (Zᵏ)ᗮ` from (4.1); the unconditional form with closures is not stated. Here both are
-proved, see `hodge_W_of_closedRange` for the closed case. -/
+Extension: the thesis states the decomposition only for closed complexes, obtaining
+`B*ₖ = (Zᵏ)ᗮ` from (4.1); this unconditional form with closures strengthens it. The closed
+case is `hodge_W_of_closedRange`. -/
 theorem hodge_W :
     (LinearMap.range H.d0.toFun).topologicalClosure ⊔ H.harmonic ⊔
         (LinearMap.range H.d1†.toFun).topologicalClosure = ⊤ ∧
@@ -754,6 +826,47 @@ theorem hodge_W_of_closedRange (h : H.ClosedRange) :
     (isClosed_range_adjoint_iff _ H.dense1 H.closed1).2 h.2
   have := H.hodge_W
   rwa [h.1.submodule_topologicalClosure_eq, h1.submodule_topologicalClosure_eq] at this
+
+/-- The thesis' definition of the harmonic forms, `ℌ¹ = Z¹ ∩ (B¹)ᗮ` (Thesis §4.2), agrees with
+`harmonic = N(d1) ∩ N(d0*)` by (4.1a). -/
+theorem harmonic_eq_ker_inf_orthogonal_range :
+    H.harmonic = H.d1.ker ⊓ (LinearMap.range H.d0.toFun)ᗮ := by
+  rw [orthogonal_range_d0, harmonic]
+
+/-- **Hodge decomposition at the first position** (Thesis Thm 4.1, `W`-level):
+`W0 = Z⁰ ⊕ cl B*₀`, an orthogonal sum, with `B*₀ = R(d0*)`. -/
+theorem hodge_W0 :
+    H.d0.ker ⊔ (LinearMap.range H.d0†.toFun).topologicalClosure = ⊤ ∧
+      H.d0.ker ⟂ (LinearMap.range H.d0†.toFun).topologicalClosure := by
+  have : CompleteSpace H.d0.ker := (isClosed_ker H.closed0).completeSpace_coe
+  rw [← orthogonal_ker _ H.dense0 H.closed0]
+  exact ⟨Submodule.sup_orthogonal_of_hasOrthogonalProjection, Submodule.isOrtho_orthogonal_right _⟩
+
+/-- **Hodge decomposition at the last position** (Thesis Thm 4.1, `W`-level):
+`W2 = cl B¹ ⊕ Z*₂`, an orthogonal sum, with `B¹ = R(d1)` and `Z*₂ = N(d1*)`. -/
+theorem hodge_W2 :
+    (LinearMap.range H.d1.toFun).topologicalClosure ⊔ H.d1†.ker = ⊤ ∧
+      (LinearMap.range H.d1.toFun).topologicalClosure ⟂ H.d1†.ker := by
+  set A := (LinearMap.range H.d1.toFun).topologicalClosure
+  have : CompleteSpace A := (Submodule.isClosed_topologicalClosure _).completeSpace_coe
+  have hA : Aᗮ = H.d1†.ker := by
+    rw [Submodule.orthogonal_closure, orth_range_eq_ker_adjoint _ H.dense1]
+  rw [← hA]
+  exact ⟨Submodule.sup_orthogonal_of_hasOrthogonalProjection, Submodule.isOrtho_orthogonal_right _⟩
+
+/-- `W0 = Z⁰ ⊕ B*₀` for a closed complex (Thesis Thm 4.1, `W`-level, no closures). -/
+theorem hodge_W0_of_closedRange (h : H.ClosedRange) :
+    H.d0.ker ⊔ LinearMap.range H.d0†.toFun = ⊤ ∧ H.d0.ker ⟂ LinearMap.range H.d0†.toFun := by
+  have h0 : IsClosed (LinearMap.range H.d0†.toFun : Set W0) :=
+    (isClosed_range_adjoint_iff _ H.dense0 H.closed0).2 h.1
+  have := H.hodge_W0
+  rwa [h0.submodule_topologicalClosure_eq] at this
+
+/-- `W2 = B¹ ⊕ Z*₂` for a closed complex (Thesis Thm 4.1, `W`-level, no closures). -/
+theorem hodge_W2_of_closedRange (h : H.ClosedRange) :
+    LinearMap.range H.d1.toFun ⊔ H.d1†.ker = ⊤ ∧ LinearMap.range H.d1.toFun ⟂ H.d1†.ker := by
+  have := H.hodge_W2
+  rwa [h.2.submodule_topologicalClosure_eq] at this
 
 end HilbertComplex2
 

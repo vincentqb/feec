@@ -21,10 +21,13 @@ stand-in for Stone's theorem.
   (`UnitaryGroupGenerator.wellPosedHom`), that its generator is skew-symmetric
   (`UnitaryGroupGenerator.isSkewSymm`), and that it is inhabited for bounded skew `A` via
   `NormedSpace.exp` (`Feec.expGroup`).
-* `Feec.bddOp_standing_hypotheses`: all of the above at once for a bounded skew `A`.
+* `Feec.exists_classical_solution_bddOp`: the bounded-case solutions are classical
+  (`C¹` on `ℝ`, with `t ↦ A (U t)` continuous), not merely `IsStrongSolution`.
+* `Feec.bddOp_standing_hypotheses`: all of the above at once for a bounded skew `A`;
+  `Feec.rotGen_standing_hypotheses`: a concrete nonzero instance (rotation generator on `ℝ²`).
 
-Scope: the solutions produced satisfy `IsStrongSolution` (pointwise derivative within
-`[0,T]`); for bounded `A` they are in fact `C¹`, but no stronger predicate is stated here.
+Scope: `IsStrongSolution` only asks for a pointwise derivative within `[0,T]`; the bounded
+witnesses are shown to be `C¹` separately.
 The unbounded case (e.g. the Hodge wave operator) still needs Stone's theorem, i.e. a
 `UnitaryGroupGenerator` hypothesis.
 -/
@@ -100,6 +103,63 @@ theorem exp_smul_mul_exp_neg_smul (A : E →L[ℝ] E) (t : ℝ) :
   rw [← exp_add_of_commute ((Commute.refl A).smul_left t |>.smul_right (-t)), neg_smul,
     add_neg_cancel, exp_zero]
 
+/-- Duhamel's formula `U t = exp(tA) (U₀ + ∫₀ᵗ exp(-sA) G s ds)` for a forcing `G` on `ℝ`. -/
+def duhamel (A : E →L[ℝ] E) (U₀ : E) (G : ℝ → E) (t : ℝ) : E :=
+  exp (t • A) (U₀ + ∫ s in (0:ℝ)..t, exp ((-s) • A) (G s))
+
+omit [CompleteSpace E] in
+@[simp] theorem duhamel_zero (A : E →L[ℝ] E) (U₀ : E) (G : ℝ → E) : duhamel A U₀ G 0 = U₀ := by
+  simp [duhamel]
+
+/-- For continuous `G`, Duhamel's formula solves `U' = A U + G` on all of `ℝ`. -/
+theorem hasDerivAt_duhamel (A : E →L[ℝ] E) (U₀ : E) {G : ℝ → E} (hG : Continuous G) (t : ℝ) :
+    HasDerivAt (duhamel A U₀ G) (A (duhamel A U₀ G t) + G t) t := by
+  have hgc : Continuous fun s : ℝ => exp ((-s) • A) (G s) :=
+    ((continuous_exp_smul A).comp continuous_neg).clm_apply hG
+  have hv := (hgc.integral_hasStrictDerivAt 0 t).hasDerivAt.const_add U₀
+  have hc : HasDerivAt (fun s : ℝ => exp (s • A)) (A * exp (t • A)) t :=
+    hasDerivAt_exp_smul_const' (𝕂 := ℝ) A t
+  refine HasDerivAt.congr_deriv (f := duhamel A U₀ G) (hc.clm_apply hv) ?_
+  change (A * exp (t • A)) _ + exp (t • A) (exp ((-t) • A) (G t)) = A (duhamel A U₀ G t) + G t
+  rw [mul_apply_eq_comp, ← mul_apply_eq_comp (exp (t • A)), exp_smul_mul_exp_neg_smul,
+    one_apply_eq_self]
+  rfl
+
+/-- For continuous `G`, the Duhamel solution is `C¹` on `ℝ`. -/
+theorem contDiff_duhamel (A : E →L[ℝ] E) (U₀ : E) {G : ℝ → E} (hG : Continuous G) :
+    ContDiff ℝ 1 (duhamel A U₀ G) := by
+  have hd := hasDerivAt_duhamel A U₀ hG
+  have hc : Continuous (duhamel A U₀ G) := continuous_iff_continuousAt.2 fun t =>
+    (hd t).continuousAt
+  rw [contDiff_one_iff_deriv]
+  refine ⟨fun t => (hd t).differentiableAt, ?_⟩
+  rw [show deriv (duhamel A U₀ G) = fun t => A (duhamel A U₀ G t) + G t from
+    funext fun t => (hd t).deriv]
+  exact (A.continuous.comp hc).add hG
+
+/-- **Classical solutions for bounded `L`** (Thesis Thm 4.3, bounded case, with the
+regularity of critic item 5). For every bounded `A`, `U₀ ∈ E` and `F ∈ C([0,T]; E)`, `T ≥ 0`,
+there is a strong solution `U` of `U' = A U + F`, `U 0 = U₀`, which is moreover the restriction
+of a `C¹` function on `ℝ`, with `t ↦ A (U t)` continuous: `U ∈ C¹([0,T]; E) ∩ C([0,T]; D(L))`.
+
+Thesis gap: the thesis' notion of solution is classical, while `IsStrongSolution` only asks for
+a pointwise derivative; this shows the bounded witnesses are classical. -/
+theorem exists_classical_solution_bddOp (A : E →L[ℝ] E) {T : ℝ} (hT : 0 ≤ T) (U₀ : E)
+    {F : ℝ → E} (hF : ContinuousOn F (Icc 0 T)) :
+    ∃ U : ℝ → E, IsStrongSolution (bddOp A) T U₀ F U ∧ ContDiff ℝ 1 U ∧
+      Continuous fun t => A (U t) := by
+  -- continuous extension of `F` from `[0,T]` to `ℝ`
+  set G : ℝ → E := fun s => F (projIcc 0 T hT s) with hGdef
+  have hGc : Continuous G := hF.comp_continuous (continuous_subtype_val.comp continuous_projIcc)
+    (fun s => (projIcc 0 T hT s).2)
+  have hGF : ∀ t ∈ Icc 0 T, G t = F t := fun t ht => by
+    simp [hGdef, projIcc_of_mem hT ht]
+  have hU := contDiff_duhamel A U₀ hGc
+  refine ⟨duhamel A U₀ G, ⟨fun _ _ => trivial, fun t ht => ?_, duhamel_zero A U₀ G⟩, hU,
+    A.continuous.comp hU.continuous⟩
+  have := (hasDerivAt_duhamel A U₀ hGc t).hasDerivWithinAt (s := Icc 0 T)
+  rwa [hGF t ht] at this
+
 /-- **Non-vacuity of `WellPosedExistence` (Thesis Thm 4.3, bounded case).**
 For every everywhere-defined bounded `A` and every `F ∈ C([0,T]; E)`, Duhamel's formula
 `U t = exp(tA) (U₀ + ∫₀ᵗ exp(-sA) F s ds)` is a strong solution of `U' = A U + F`, `U 0 = U₀`.
@@ -112,29 +172,10 @@ theorem wellPosedExistence_bddOp (A : E →L[ℝ] E) (T : ℝ) :
     WellPosedExistence (bddOp A) T (fun F => ContinuousOn F (Icc 0 T)) := by
   intro U₀ _ F hF
   by_cases hT : 0 ≤ T
-  swap
+  · obtain ⟨U, hU, -⟩ := exists_classical_solution_bddOp A hT U₀ hF
+    exact ⟨U, hU⟩
   · refine ⟨fun _ => U₀, fun _ _ => trivial, fun t ht => ?_, rfl⟩
     exact absurd (ht.1.trans ht.2) hT
-  -- continuous extension of `F` from `[0,T]` to `ℝ`
-  set G : ℝ → E := fun s => F (projIcc 0 T hT s) with hGdef
-  have hGc : Continuous G := hF.comp_continuous (continuous_subtype_val.comp continuous_projIcc)
-    (fun s => (projIcc 0 T hT s).2)
-  have hGF : ∀ t ∈ Icc 0 T, G t = F t := fun t ht => by
-    simp [hGdef, projIcc_of_mem hT ht]
-  set g : ℝ → E := fun s => exp ((-s) • A) (G s) with hgdef
-  have hgc : Continuous g :=
-    ((continuous_exp_smul A).comp continuous_neg).clm_apply hGc
-  set v : ℝ → E := fun t => U₀ + ∫ s in (0:ℝ)..t, g s with hvdef
-  refine ⟨fun t => exp (t • A) (v t), fun _ _ => trivial, fun t ht => ?_, ?_⟩
-  · have hv : HasDerivAt v (g t) t := (hgc.integral_hasStrictDerivAt 0 t).hasDerivAt.const_add U₀
-    have hc : HasDerivAt (fun s : ℝ => exp (s • A)) (A * exp (t • A)) t :=
-      hasDerivAt_exp_smul_const' (𝕂 := ℝ) A t
-    have := (hc.clm_apply hv).hasDerivWithinAt (s := Icc 0 T)
-    convert this using 1
-    change A (exp (t • A) (v t)) + F t = (A * exp (t • A)) (v t) + exp (t • A) (g t)
-    rw [mul_apply_eq_comp, hgdef, ← hGF t ht, ← mul_apply_eq_comp (exp (t • A)),
-      exp_smul_mul_exp_neg_smul, one_apply_eq_self]
-  · simp [hvdef]
 
 /-- **Non-vacuity of `WellPosedHom`** (Thesis Thm 4.3/4.6 hypothesis, bounded case):
 `U t = exp(tA) U₀` is a strong solution of `U' = A U`. -/
@@ -268,5 +309,40 @@ theorem bddOp_standing_hypotheses [CompleteSpace E] (A : E →L[ℝ] E)
       WellPosedHom (bddOp A) T :=
   ⟨dense_bddOp_domain A, isSkewAdjoint_bddOp A hA, wellPosedExistence_bddOp A T,
     (expGroup A hA).wellPosedHom T⟩
+
+/-! ### A concrete nonzero example: the rotation generator on `ℝ²` -/
+
+/-- The rotation generator `J (x₀, x₁) = (-x₁, x₀)` on `EuclideanSpace ℝ (Fin 2)`. -/
+def rotGen : EuclideanSpace ℝ (Fin 2) →L[ℝ] EuclideanSpace ℝ (Fin 2) :=
+  (EuclideanSpace.proj (0 : Fin 2)).smulRight (EuclideanSpace.single (1 : Fin 2) (1 : ℝ)) -
+    (EuclideanSpace.proj (1 : Fin 2)).smulRight (EuclideanSpace.single (0 : Fin 2) (1 : ℝ))
+
+theorem rotGen_apply (x : EuclideanSpace ℝ (Fin 2)) :
+    rotGen x = x 0 • EuclideanSpace.single (1 : Fin 2) (1 : ℝ) -
+      x 1 • EuclideanSpace.single (0 : Fin 2) (1 : ℝ) := by
+  simp [rotGen]
+
+/-- `J` is skew-symmetric. -/
+theorem rotGen_skew (x y : EuclideanSpace ℝ (Fin 2)) : ⟪rotGen x, y⟫ = -⟪x, rotGen y⟫ := by
+  simp only [rotGen_apply, inner_sub_left, inner_sub_right, inner_smul_left, inner_smul_right,
+    EuclideanSpace.inner_single_left, EuclideanSpace.inner_single_right]
+  simp
+  ring
+
+/-- `J ≠ 0`, so the witness below is not the trivial operator. -/
+theorem rotGen_ne_zero : rotGen ≠ 0 := by
+  intro h
+  have := congrArg (fun f : EuclideanSpace ℝ (Fin 2) →L[ℝ] EuclideanSpace ℝ (Fin 2) =>
+    f (EuclideanSpace.single 0 1) 1) h
+  simp [rotGen_apply] at this
+
+/-- **A concrete nonzero witness** for the Ch. 4 standing hypotheses (Thesis §4.2, Thm 4.3,
+Cor 4.5): the rotation generator `J ≠ 0` on `ℝ²` satisfies all of them. -/
+theorem rotGen_standing_hypotheses (T : ℝ) :
+    rotGen ≠ 0 ∧ Dense ((bddOp rotGen).domain : Set (EuclideanSpace ℝ (Fin 2))) ∧
+      IsSkewAdjoint (bddOp rotGen) ∧
+      WellPosedExistence (bddOp rotGen) T (fun F => ContinuousOn F (Icc 0 T)) ∧
+      WellPosedHom (bddOp rotGen) T :=
+  ⟨rotGen_ne_zero, bddOp_standing_hypotheses rotGen rotGen_skew T⟩
 
 end Feec

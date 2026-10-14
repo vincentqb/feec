@@ -19,7 +19,9 @@ Fields are modelled by their Fourier coefficients: `L2V = ℓ²(ℤ³; ℂ³)` (
 `L2M = ℓ²(ℤ³; ℂ³ˣ³)` (matrix fields), as real Hilbert spaces (inner product `Re ⟨·,·⟩`).
 `fieldFourier` is the linear isometric equivalence `L²(𝕋³; ℂᴾ) ≃ₗᵢ ℓ²(ℤ³; ℂᴾ)`, built from
 Mathlib's Hilbert basis `UnitAddTorus.mFourierBasis` componentwise (`fieldFourier_apply`: the
-coefficients are `mFourierCoeff`). The operators are Fourier multipliers with `ξ = 2πk`
+coefficients are `mFourierCoeff`). Its measure is Mathlib's default `volume` on `𝕋³`
+(`volume_unitAddTorus_eq`); `fieldFourierVolume` is the same map stated with that instance. The
+operators are Fourier multipliers with `ξ = 2πk`
 (`freq`): `grad u ↦ i u ξᵀ`, row-wise `curl A ↦ i (ξ × A_a)_a` (thesis convention
 `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`, as in `Feec.curl`), `div A ↦ i A ξ`. The Sobolev spaces
 `H¹`, `H(curl)`, `H(div)` are the corresponding weighted-`ℓ²` conditions (`mulDomain`). This is
@@ -122,6 +124,7 @@ def mulDomain : Submodule ℝ (L2 ι E) where
     convert Memℓp.const_smul hu r using 1
     ext i; simp
 
+/-- Membership in `mulDomain m`, by definition. -/
 theorem mem_mulDomain {u : L2 ι E} : u ∈ mulDomain m ↔ Memℓp (fun i => m i (u i)) 2 := Iff.rfl
 
 /-- The (unbounded) multiplier operator `u ↦ (m i (u i))ᵢ` on `ℓ²`. -/
@@ -132,8 +135,10 @@ def mulOp : L2 ι E →ₗ.[ℝ] L2 ι F where
       map_add' := fun u v => by ext i; simp; rfl
       map_smul' := fun r u => by ext i; simp [Pi.smul_apply] }
 
+/-- `mulOp m` acts fibrewise by `m i`. -/
 theorem mulOp_apply (u : (mulOp m).domain) (i : ι) : mulOp m u i = m i ((u : L2 ι E) i) := rfl
 
+/-- Single-mode sequences `lp.single 2 i x` lie in the domain of every multiplier. -/
 theorem single_mem_mulDomain [DecidableEq ι] (i : ι) (x : E) :
     lp.single 2 i x ∈ mulDomain m := by
   have : (fun j => m j ((lp.single 2 i x : L2 ι E) j)) = ⇑(lp.single 2 i (m i x) : L2 ι F) := by
@@ -144,6 +149,7 @@ theorem single_mem_mulDomain [DecidableEq ι] (i : ι) (x : E) :
   rw [mem_mulDomain, this]
   exact lp.memℓp _
 
+/-- A multiplier maps the single mode `x` at `i` to the single mode `m i x` at `i`. -/
 theorem mulOp_single [DecidableEq ι] (i : ι) (x : E) :
     mulOp m ⟨lp.single 2 i x, single_mem_mulDomain m i x⟩ = lp.single 2 i (m i x) := by
   ext j
@@ -222,9 +228,11 @@ def fibreSub (K : ι → Submodule ℝ E) : Submodule ℝ (L2 ι E) where
   add_mem' := fun hu hv i => by simpa using (K i).add_mem (hu i) (hv i)
   smul_mem' := fun r u hu i => by simpa using (K i).smul_mem r (hu i)
 
+/-- Membership in `fibreSub K`, by definition. -/
 theorem mem_fibreSub {K : ι → Submodule ℝ E} {u : L2 ι E} : u ∈ fibreSub K ↔ ∀ i, u i ∈ K i :=
   Iff.rfl
 
+/-- A fibrewise subspace with finite-dimensional fibres is closed in `ℓ²`. -/
 theorem isClosed_fibreSub [FiniteDimensional ℝ E] (K : ι → Submodule ℝ E) :
     IsClosed (fibreSub K : Set (L2 ι E)) := by
   have : (fibreSub K : Set (L2 ι E)) = ⋂ i, (lp.evalCLM ℝ (fun _ : ι => E) 2 i) ⁻¹' (K i) := by
@@ -233,6 +241,7 @@ theorem isClosed_fibreSub [FiniteDimensional ℝ E] (K : ι → Submodule ℝ E)
   exact isClosed_iInter fun i =>
     (K i).closed_of_finiteDimensional.preimage (ContinuousLinearMap.continuous _)
 
+/-- Fibrewise subspaces are complete (being closed), so admit orthogonal projections. -/
 instance [FiniteDimensional ℝ E] (K : ι → Submodule ℝ E) : CompleteSpace (fibreSub K) :=
   (isClosed_fibreSub K).completeSpace_coe
 
@@ -252,39 +261,47 @@ theorem starProjection_fibreSub_apply [FiniteDimensional ℝ E] (K : ι → Subm
 
 end Fibre
 
-
-
+/-- Complex vectors `ℂ³` (fibre of vector fields). -/
 abbrev Vec3 := EuclideanSpace ℂ (Fin 3)
+/-- Complex `3 × 3` matrices, with the Frobenius norm (fibre of matrix fields). -/
 abbrev Mat3 := EuclideanSpace ℂ (Fin 3 × Fin 3)
+/-- Real frequency vectors `ξ ∈ ℝ³`. -/
 abbrev Freq := EuclideanSpace ℝ (Fin 3)
 
+/-- The real inner product on `ℂ³` in real coordinates. -/
 theorem inner_vec (u v : Vec3) :
     ⟪u, v⟫ = ∑ a, ((u a).re * (v a).re + (u a).im * (v a).im) := by
   simp [PiLp.inner_apply, Complex.mul_re]; congr 1; ext a; ring
 
+/-- The real (Frobenius) inner product on `ℂ³ˣ³` in real coordinates. -/
 theorem inner_mat (A B : Mat3) :
     ⟪A, B⟫ = ∑ a, ∑ b, ((A (a, b)).re * (B (a, b)).re + (A (a, b)).im * (B (a, b)).im) := by
   simp only [PiLp.inner_apply, Complex.inner, Fintype.sum_prod_type, Complex.mul_re,
     Complex.conj_re, Complex.conj_im]
   congr 1; ext a; congr 1; ext b; ring
 
+/-- `‖u‖²` on `ℂ³` in real coordinates. -/
 theorem norm_sq_vec (u : Vec3) : ‖u‖ ^ 2 = ∑ a, ((u a).re ^ 2 + (u a).im ^ 2) := by
   rw [← real_inner_self_eq_norm_sq, inner_vec]; simp [sq]
 
+/-- `‖A‖²` on `ℂ³ˣ³` in real coordinates. -/
 theorem norm_sq_mat (A : Mat3) : ‖A‖ ^ 2 = ∑ a, ∑ b, ((A (a, b)).re ^ 2 + (A (a, b)).im ^ 2) := by
   rw [← real_inner_self_eq_norm_sq, inner_mat]; simp [sq]
 
+/-- `‖ξ‖² = ∑ ξ_c²`. -/
 theorem norm_sq_freq (ξ : Freq) : ‖ξ‖ ^ 2 = ∑ c, ξ c ^ 2 := by
   rw [EuclideanSpace.norm_sq_eq]; simp
 
 /-- A matrix from its entries. -/
 def mat (f : Fin 3 → Fin 3 → ℂ) : Mat3 := WithLp.toLp 2 fun p => f p.1 p.2
 
+/-- Entries of `mat f`. -/
 @[simp] theorem mat_apply (f : Fin 3 → Fin 3 → ℂ) (a b : Fin 3) : mat f (a, b) = f a b := rfl
 
 /-- A vector from its entries. -/
 def vec (f : Fin 3 → ℂ) : Vec3 := WithLp.toLp 2 f
 
+/-- Entries of `vec f`. -/
 @[simp] theorem vec_apply (f : Fin 3 → ℂ) (a : Fin 3) : vec f a = f a := rfl
 
 /-- The cross product `ξ × v` of a real and a complex vector. -/
@@ -300,6 +317,7 @@ def curlR (ξ : Freq) : Mat3 →L[ℝ] Mat3 :=
       map_smul' := fun r M => by
         ext ⟨a, b⟩; fin_cases b <;> simp [cross, Complex.real_smul] <;> ring }
 
+/-- Entries of `curlR ξ M`: row `a` is the cross product `ξ × M_a`. -/
 theorem curlR_apply (ξ : Freq) (M : Mat3) (a b : Fin 3) :
     curlR ξ M (a, b) = cross ξ (fun d => M (a, d)) b := rfl
 
@@ -317,6 +335,7 @@ def divR (ξ : Freq) : Mat3 →L[ℝ] Vec3 :=
       map_smul' := fun r M => by
         ext a; simp [Complex.real_smul, Finset.mul_sum, mul_assoc] }
 
+/-- Entries of `divR ξ M = M ξ`. -/
 theorem divR_apply (ξ : Freq) (M : Mat3) (a : Fin 3) : divR ξ M a = ∑ b, M (a, b) * ξ b := rfl
 
 /-- The outer product `c ξᵀ`. -/
@@ -336,6 +355,7 @@ def tsd (ξ : Freq) : Submodule ℝ Mat3 where
     · simp [Complex.real_smul, ← Finset.mul_sum, h2]
     · simp [Complex.real_smul, mul_assoc, ← Finset.mul_sum, h3 a]
 
+/-- Membership in the TSD fibre, by definition. -/
 theorem mem_tsd {ξ : Freq} {M : Mat3} : M ∈ tsd ξ ↔
     (∀ a b, M (a, b) = M (b, a)) ∧ ∑ a, M (a, a) = 0 ∧ ∀ a, ∑ b, M (a, b) * ξ b = 0 := Iff.rfl
 
@@ -367,28 +387,34 @@ def jM : Mat3 →L[ℝ] Mat3 :=
       map_add' := fun M N => smul_add _ M N
       map_smul' := fun r M => smul_comm _ r M }
 
+/-- `jM` multiplies every entry by `i`. -/
 theorem jM_apply (M : Mat3) (p : Fin 3 × Fin 3) : jM M p = Complex.I * M p := rfl
 
+/-- Multiplication by `i` is an isometry. -/
 theorem norm_jM (M : Mat3) : ‖jM M‖ = ‖M‖ := by
   change ‖(Complex.I : ℂ) • M‖ = ‖M‖
   rw [norm_smul, Complex.norm_I, one_mul]
 
+/-- Multiplication by `i` preserves the TSD fibre. -/
 theorem jM_mem_tsd {ξ : Freq} {M : Mat3} (hM : M ∈ tsd ξ) : jM M ∈ tsd ξ := by
   obtain ⟨h1, h2, h3⟩ := hM
   refine ⟨fun a b => by simp [jM_apply, h1 a b], ?_, fun a => ?_⟩
   · simp [jM_apply, ← Finset.mul_sum, h2]
   · simp [jM_apply, mul_assoc, ← Finset.mul_sum, h3 a]
 
+/-- The real curl symbol is skew-adjoint. -/
 theorem inner_curlR (ξ : Freq) (A B : Mat3) : ⟪curlR ξ A, B⟫ = -⟪A, curlR ξ B⟫ := by
   simp only [inner_mat, curlR_apply, cross, Fin.sum_univ_three]
   simp [Complex.mul_re, Complex.mul_im]
   ring
 
+/-- Multiplication by `i` is skew-adjoint for the real inner product. -/
 theorem inner_jM (A B : Mat3) : ⟪jM A, B⟫ = -⟪A, jM B⟫ := by
   simp only [inner_mat, jM_apply, Fin.sum_univ_three]
   simp [Complex.mul_re, Complex.mul_im]
   ring
 
+/-- Multiplication by `i` commutes with the real curl symbol. -/
 theorem jM_curlR (ξ : Freq) (A : Mat3) : jM (curlR ξ A) = curlR ξ (jM A) := by
   ext ⟨a, b⟩; fin_cases b <;> simp [jM_apply, curlR_apply, cross] <;> ring
 
@@ -400,6 +426,7 @@ theorem lagrange (ξ : Freq) (A : Mat3) :
   simp [Complex.mul_re, Complex.mul_im]
   ring
 
+/-- TSD matrices are divergence-free on the symbol level: `M ξ = 0`. -/
 theorem divR_eq_zero_of_mem_tsd {ξ : Freq} {M : Mat3} (hM : M ∈ tsd ξ) : divR ξ M = 0 := by
   ext a; simp [divR_apply, hM.2.2 a]
 
@@ -410,9 +437,11 @@ def gradSym (ξ : Freq) : Vec3 →L[ℝ] Mat3 :=
       map_add' := fun u v => by ext ⟨a, b⟩; simp; ring
       map_smul' := fun r u => by ext ⟨a, b⟩; simp [Complex.real_smul]; ring }
 
+/-- Entries of `gradSym ξ u = i u ξᵀ`. -/
 theorem gradSym_apply (ξ : Freq) (u : Vec3) (a b : Fin 3) :
     gradSym ξ u (a, b) = Complex.I * u a * ξ b := rfl
 
+/-- `curl ∘ grad = 0` on the symbol level (real curl symbol). -/
 theorem curlR_gradSym (ξ : Freq) (u : Vec3) : curlR ξ (gradSym ξ u) = 0 := by
   ext ⟨a, b⟩; fin_cases b <;> simp [curlR_apply, gradSym_apply, cross] <;> ring
 
@@ -430,12 +459,13 @@ theorem inner_outer_tsd {ξ : Freq} {M : Mat3} (hM : M ∈ tsd ξ) (c : Vec3) :
   linear_combination (c 0).re * r 0 + (c 1).re * r 1 + (c 2).re * r 2 + (c 0).im * i 0 +
     (c 1).im * i 1 + (c 2).im * i 2
 
+/-- The gradient symbol is an outer product: `i u ξᵀ = (i u) ξᵀ`. -/
 theorem gradSym_eq_outer (ξ : Freq) (u : Vec3) : gradSym ξ u = outer ((Complex.I : ℂ) • u) ξ := by
   ext ⟨a, b⟩; simp [gradSym_apply, outer, mul_assoc]
 
 section Torus
 
-/-- skew maps commute with projections onto invariant subspaces -/
+/-- Skew-adjoint maps commute with orthogonal projections onto invariant subspaces. -/
 theorem starProjection_comm_of_skew {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     (K : Submodule ℝ E) [K.HasOrthogonalProjection] (T : E →L[ℝ] E)
     (hT : ∀ x y, ⟪T x, y⟫ = -⟪x, T y⟫) (hK : ∀ x ∈ K, T x ∈ K) (x : E) :
@@ -447,18 +477,23 @@ theorem starProjection_comm_of_skew {E : Type*} [NormedAddCommGroup E] [InnerPro
 /-- The curl symbol `M ↦ i (ξ × M_a)_a`. -/
 def curlSym (ξ : Freq) : Mat3 →L[ℝ] Mat3 := jM ∘L curlR ξ
 
+/-- `curlSym ξ = jM ∘ curlR ξ`, by definition. -/
 theorem curlSym_apply (ξ : Freq) (M : Mat3) : curlSym ξ M = jM (curlR ξ M) := rfl
 
+/-- `‖curlSym ξ M‖ = ‖curlR ξ M‖`. -/
 theorem norm_curlSym (ξ : Freq) (M : Mat3) : ‖curlSym ξ M‖ = ‖curlR ξ M‖ := norm_jM _
 
+/-- The curl symbol preserves the TSD fibre (Lemma 3.5 on the symbol). -/
 theorem curlSym_mem_tsd {ξ : Freq} {M : Mat3} (hM : M ∈ tsd ξ) : curlSym ξ M ∈ tsd ξ :=
   jM_mem_tsd (curlR_mem_tsd hM)
 
+/-- The curl symbol is self-adjoint (`curl* = curl` fibrewise). -/
 theorem adjoint_curlSym (ξ : Freq) : ContinuousLinearMap.adjoint (curlSym ξ) = curlSym ξ := by
   refine ((ContinuousLinearMap.eq_adjoint_iff _ _).2 fun x y => ?_).symm
   simp only [curlSym_apply]
   rw [inner_jM, inner_curlR, jM_curlR, neg_neg]
 
+/-- `curl ∘ grad = 0` on the symbol level. -/
 theorem curlSym_gradSym (ξ : Freq) (u : Vec3) : curlSym ξ (gradSym ξ u) = 0 := by
   rw [curlSym_apply, curlR_gradSym, _root_.map_zero]
 
@@ -469,6 +504,7 @@ theorem proj_curlSym (ξ : Freq) (M : Mat3) :
     starProjection_comm_of_skew _ jM inner_jM (fun _ h => jM_mem_tsd h),
     starProjection_comm_of_skew _ (curlR ξ) (inner_curlR ξ) (fun _ h => curlR_mem_tsd h)]
 
+/-- On the TSD fibre, `‖ξ × M‖ = |ξ| ‖M‖` (Lagrange identity with `M ξ = 0`). -/
 theorem norm_curlR_of_mem_tsd {ξ : Freq} {M : Mat3} (hM : M ∈ tsd ξ) :
     ‖curlR ξ M‖ = ‖ξ‖ * ‖M‖ := by
   have h := lagrange ξ M
@@ -480,10 +516,12 @@ theorem norm_freq_mul_norm_proj (ξ : Freq) (A : Mat3) :
     ‖ξ‖ * ‖(tsd ξ).starProjection A‖ = ‖(tsd ξ).starProjection (curlSym ξ A)‖ := by
   rw [proj_curlSym, norm_curlSym, norm_curlR_of_mem_tsd ((tsd ξ).starProjection_apply_mem A)]
 
+/-- **Key fibre estimate**: `|ξ| ‖P_ξ A‖ ≤ ‖curl_ξ A‖`. -/
 theorem norm_freq_mul_norm_proj_le (ξ : Freq) (A : Mat3) :
     ‖ξ‖ * ‖(tsd ξ).starProjection A‖ ≤ ‖curlSym ξ A‖ := by
   rw [norm_freq_mul_norm_proj]; exact (tsd ξ).norm_starProjection_apply_le _
 
+/-- The curl symbol is bounded by `|ξ|`: `‖curl_ξ A‖ ≤ |ξ| ‖A‖`. -/
 theorem norm_curlSym_le (ξ : Freq) (A : Mat3) : ‖curlSym ξ A‖ ≤ ‖ξ‖ * ‖A‖ := by
   rw [norm_curlSym]
   have h := lagrange ξ A
@@ -520,9 +558,11 @@ def divSym (ξ : Freq) : Mat3 →L[ℝ] Vec3 :=
       map_smul' := fun r M => by
         ext a; simp [Complex.real_smul, Finset.mul_sum]; congr 1; ext b; ring }
 
+/-- Entries of `divSym ξ M = i M ξ`. -/
 theorem divSym_apply (ξ : Freq) (M : Mat3) (a : Fin 3) :
     divSym ξ M a = Complex.I * ∑ b, M (a, b) * ξ b := rfl
 
+/-- `‖divSym ξ M‖ = ‖divR ξ M‖`. -/
 theorem norm_divSym (ξ : Freq) (M : Mat3) : ‖divSym ξ M‖ = ‖divR ξ M‖ := by
   have : divSym ξ M = (Complex.I : ℂ) • divR ξ M := by ext a; simp [divSym_apply, divR_apply]
   rw [this, norm_smul, Complex.norm_I, one_mul]
@@ -548,9 +588,11 @@ def H1M : Submodule ℝ L2M := mulDomain fun k => ‖freq k‖ • ContinuousLin
 /-- `L²(TSD)`: symmetric, trace-free, divergence-free matrix fields. -/
 def L2TSD : Submodule ℝ L2M := fibreSub fun k => tsd (freq k)
 
+/-- `L²(TSD)` is closed, so admits an orthogonal projection `P_TSD`. -/
 instance : L2TSD.HasOrthogonalProjection :=
   inferInstanceAs (fibreSub fun k => tsd (freq k)).HasOrthogonalProjection
 
+/-- The domain of the periodic curl is `H(curl)`. -/
 theorem curlT_domain : curlT.domain = Hcurl := rfl
 
 /-- `curl* = curl` on the torus. -/
@@ -561,6 +603,7 @@ theorem adjoint_curlT : curlT† = curlT := by
 theorem adjoint_gradT : gradT† = mulOp fun k => -divSym (freq k) := by
   rw [gradT, adjoint_mulOp]; simp only [adjoint_gradSym]
 
+/-- The domain of `grad*` is `H(div)`. -/
 theorem adjoint_gradT_domain : gradT†.domain = Hdiv := by
   rw [adjoint_gradT]
   ext A
@@ -630,6 +673,7 @@ theorem H1M_le_Hcurl : H1M ≤ Hcurl := fun A hA => by
   simp only [_root_.smul_apply, ContinuousLinearMap.id_apply, norm_smul, norm_norm]
   exact norm_curlSym_le _ _
 
+/-- `L²(TSD) ⊆ H(div)`: TSD fields are divergence-free. -/
 theorem L2TSD_le_Hdiv : L2TSD ≤ Hdiv := fun A hA => by
   change Memℓp _ 2
   convert (zero_memℓp : Memℓp (0 : Z3 → Vec3) 2) using 1
@@ -692,8 +736,13 @@ data `(0, E₀, B₀)`, `E₀, B₀ ∈ L²(TSD)`, keeps `σ ≡ 0` and `E, B �
 `t ∈ [0, T]`, and `(E, B)` solves the reduced system (4.15). No projection or density
 hypothesis is assumed: they are proved (`projKc_mem_domL`) or unnecessary (`prop_4_17`).
 
-Correction: the thesis' "conjecture" `P_{L²(TSD)} H(curl) ⊆ H(curl)` (and its `H(div)`
-variant) is a theorem on `𝕋³`; the bounded-domain case remains open here.
+Correction: the thesis works on a bounded domain `Ω ⊂ ℝ³` (complex
+`H̊¹(V) → H̊(curl; M) → L²(M)`), where it leaves `P_{L²(TSD)} D(L) ⊆ D(L)` as a "conjecture".
+This theorem concerns the *periodic analogue* (`Ω` replaced by `𝕋³`, no boundary conditions):
+there the analogue of the conjecture, `P_{L²(TSD)} H(curl) ⊆ H(curl)` (indeed `⊆ H¹`) and
+`P_{L²(TSD)} (H(curl) ∩ H(div)) ⊆ H(curl) ∩ H(div)`, is a theorem (`projTSD_mem_Hcurl`,
+`projTSD_mem_H1`, `projTSD_mem_Hcurl_Hdiv`, `projKc_mem_domL`). The thesis' bounded-domain
+conjecture itself is not settled here (see the docstring of `Feec.Constraints.prop_4_17`).
 
 See [QuennevilleBelair2015, §4.10, Prop 4.17]; cf. [ACBY1997]. -/
 theorem prop_4_17_torus {T : ℝ} {E₀ B₀ : L2M} {U : ℝ → Tot L2V L2M L2M} (hE₀ : E₀ ∈ L2TSD)
@@ -714,6 +763,7 @@ theorem prop_4_17_torus_group (G : UnitaryGroupGenerator (-periodicComplex.waveO
   Kc_propagate L2TSD_le_ker projKc_mem_domL curlT_mem_L2TSD adjoint_curlT_mem_L2TSD
     (isStrongSolution_orbit G t ⟨x, hx⟩) hxK t ⟨ht, le_rfl⟩
 
+/-- Outer products `c ξᵀ` are curl-free on the symbol level. -/
 theorem curlSym_outer (ξ : Freq) (c : Vec3) : curlSym ξ (outer c ξ) = 0 := by
   have : curlR ξ (outer c ξ) = 0 := by
     ext ⟨a, b⟩; fin_cases b <;> simp [curlR_apply, outer, cross] <;> ring
@@ -740,7 +790,7 @@ end Periodic
 
 section Real
 
-/-- self-adjoint maps commute with projections onto invariant subspaces -/
+/-- Self-adjoint maps commute with orthogonal projections onto invariant subspaces. -/
 theorem starProjection_comm_of_selfAdj {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     (K : Submodule ℝ E) [K.HasOrthogonalProjection] (T : E →L[ℝ] E)
     (hT : ∀ x y, ⟪T x, y⟫ = ⟪x, T y⟫) (hK : ∀ x ∈ K, T x ∈ K) (x : E) :
@@ -756,23 +806,28 @@ def conjM : Mat3 →L[ℝ] Mat3 :=
       map_add' := fun M N => by ext ⟨a, b⟩; simp
       map_smul' := fun r M => by ext ⟨a, b⟩; simp [Complex.real_smul] }
 
+/-- Entries of `conjM M`. -/
 theorem conjM_apply (M : Mat3) (a b : Fin 3) : conjM M (a, b) = (starRingEnd ℂ) (M (a, b)) := rfl
 
+/-- Entrywise conjugation is self-adjoint for the real inner product. -/
 theorem inner_conjM (A B : Mat3) : ⟪conjM A, B⟫ = ⟪A, conjM B⟫ := by
   simp only [inner_mat, conjM_apply, Complex.conj_re, Complex.conj_im]
   congr 1; ext a; congr 1; ext b; ring
 
+/-- The TSD fibre is even in `ξ`. -/
 theorem tsd_neg (ξ : Freq) : tsd (-ξ) = tsd ξ := by
   ext M
   refine and_congr Iff.rfl (and_congr Iff.rfl (forall_congr' fun a => ?_))
   simp only [PiLp.neg_apply, Complex.ofReal_neg, mul_neg, Finset.sum_neg_distrib, neg_eq_zero]
 
+/-- Entrywise conjugation preserves the TSD fibre. -/
 theorem conjM_mem_tsd {ξ : Freq} {M : Mat3} (hM : M ∈ tsd ξ) : conjM M ∈ tsd ξ := by
   obtain ⟨h1, h2, h3⟩ := hM
   refine ⟨fun a b => by simp [conjM_apply, h1 a b], ?_, fun a => ?_⟩
   · simpa [conjM_apply] using congrArg (starRingEnd ℂ) h2
   · simpa [conjM_apply] using congrArg (starRingEnd ℂ) (h3 a)
 
+/-- `freq (-k) = -freq k`. -/
 theorem freq_neg (k : Z3) : freq (-k) = -freq k := by
   ext j; simp [freq]
 
@@ -836,6 +891,7 @@ def swapL2 : PiLp 2 (fun _ : P => lp (fun _ : ι => ℂ) 2) ≃ₗᵢ[ℂ]
     rw [← PiLp.norm_sq_eq_of_L2] at h3
     exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h3
 
+/-- Entries of `swapL2 f`. -/
 @[simp] theorem swapL2_apply (f : PiLp 2 (fun _ : P => lp (fun _ : ι => ℂ) 2)) (k : ι) (p : P) :
     swapL2 f k p = (f p : ι → ℂ) k := rfl
 
@@ -845,6 +901,39 @@ end Swap
 `Mathlib.Analysis.Fourier.AddCircleMulti` for `UnitAddTorus.mFourierBasis`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
+/-- The normalised measure used here (the local `MeasureSpace UnitAddCircle` instance, as in
+`Mathlib.Analysis.Fourier.AddCircleMulti`) *is* Mathlib's default `volume` on `ℝ/ℤ`
+(`AddCircle.measureSpace 1`, the Haar measure of total mass `1`); the two instances are
+propositionally (not definitionally) equal. -/
+theorem measureSpace_unitAddCircle_eq :
+    (⟨AddCircle.haarAddCircle⟩ : MeasureSpace UnitAddCircle) = AddCircle.measureSpace 1 := by
+  rw [AddCircle.measureSpace]
+  congr 1
+  rw [ENNReal.ofReal_one, one_smul]
+  rfl
+
+/-- The measure on `𝕋³` underlying `fieldFourier` is the default `volume` on
+`UnitAddTorus (Fin 3) = Fin 3 → ℝ/ℤ` (product of Mathlib's default `volume` on `ℝ/ℤ`). -/
+theorem volume_unitAddTorus_eq :
+    (volume : Measure (UnitAddTorus (Fin 3))) =
+      @volume (UnitAddTorus (Fin 3)) (@MeasureSpace.pi (Fin 3) _ (fun _ => UnitAddCircle)
+        fun _ => AddCircle.measureSpace 1) := by
+  have h : (AddCircle.haarAddCircle : Measure UnitAddCircle) =
+      @volume UnitAddCircle (AddCircle.measureSpace 1) := by
+    rw [AddCircle.volume_eq_smul_haarAddCircle, ENNReal.ofReal_one, one_smul]
+  exact congrArg Measure.pi (funext fun _ => h)
+
+/-- Equal measures give the same `Lp` space, as a linear isometric equivalence acting as the
+identity on representatives (`coeFn_lpCongrMeasure`). -/
+def lpCongrMeasure {α : Type*} [MeasurableSpace α] {μ ν : Measure α} (h : μ = ν) :
+    Lp ℂ 2 μ ≃ₗᵢ[ℂ] Lp ℂ 2 ν := by
+  subst h; exact LinearIsometryEquiv.refl ℂ _
+
+/-- `lpCongrMeasure` does not change the underlying function. -/
+theorem coeFn_lpCongrMeasure {α : Type*} [MeasurableSpace α] {μ ν : Measure α} (h : μ = ν)
+    (f : Lp ℂ 2 μ) : (lpCongrMeasure h f : α → ℂ) = f := by
+  subst h; rfl
+
 /-- **Fourier coefficients of `L²` fields on `𝕋³`**: componentwise
 `UnitAddTorus.mFourierBasis.repr` (Parseval), then `swapL2`; a linear isometric equivalence
 `L²(𝕋³; ℂᴾ) ≃ₗᵢ ℓ²(ℤ³; ℂᴾ)`. -/
@@ -853,6 +942,8 @@ def fieldFourier (P : Type*) [Fintype P] :
       lp (fun _ : (Fin 3 → ℤ) => EuclideanSpace ℂ P) 2 :=
   (LinearIsometryEquiv.piLpCongrRight 2 fun _ => UnitAddTorus.mFourierBasis.repr).trans swapL2
 
+/-- The entries of `fieldFourier P f` are the Fourier coefficients `mFourierCoeff` of the
+components of `f`. -/
 theorem fieldFourier_apply (P : Type*) [Fintype P]
     (f : PiLp 2 (fun _ : P => Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin 3)))))
     (k : Fin 3 → ℤ) (p : P) :
@@ -876,5 +967,33 @@ theorem matrixFourier_apply
     (k : Z3) (a b : Fin 3) :
     matrixFourier f k (a, b) = UnitAddTorus.mFourierCoeff (f (a, b)) k :=
   fieldFourier_apply _ f k (a, b)
+
+/-- `fieldFourier` with Mathlib's default `volume` on `𝕋³` (no local instance needed by users):
+`fieldFourier P` precomposed with the identification `lpCongrMeasure volume_unitAddTorus_eq`. -/
+def fieldFourierVolume (P : Type*) [Fintype P] :
+    PiLp 2 (fun _ : P => Lp ℂ 2 (@volume (UnitAddTorus (Fin 3))
+      (@MeasureSpace.pi (Fin 3) _ (fun _ => UnitAddCircle) fun _ => AddCircle.measureSpace 1)))
+      ≃ₗᵢ[ℂ] lp (fun _ : (Fin 3 → ℤ) => EuclideanSpace ℂ P) 2 :=
+  (LinearIsometryEquiv.piLpCongrRight 2 fun _ =>
+    lpCongrMeasure volume_unitAddTorus_eq.symm).trans (fieldFourier P)
+
+/-- The entries of `fieldFourierVolume P f` are the Fourier coefficients of the components of
+`f`, computed as integrals against Mathlib's default `volume` on `𝕋³`. -/
+theorem fieldFourierVolume_apply (P : Type*) [Fintype P]
+    (f : PiLp 2 (fun _ : P => Lp ℂ 2 (@volume (UnitAddTorus (Fin 3))
+      (@MeasureSpace.pi (Fin 3) _ (fun _ => UnitAddCircle) fun _ => AddCircle.measureSpace 1))))
+    (k : Fin 3 → ℤ) (p : P) :
+    fieldFourierVolume P f k p =
+      ∫ x, UnitAddTorus.mFourier (-k) x • (f p : UnitAddTorus (Fin 3) → ℂ) x
+        ∂(@volume (UnitAddTorus (Fin 3))
+          (@MeasureSpace.pi (Fin 3) _ (fun _ => UnitAddCircle) fun _ =>
+            AddCircle.measureSpace 1)) := by
+  have key : ∀ g : UnitAddTorus (Fin 3) → ℂ, UnitAddTorus.mFourierCoeff g k =
+      ∫ x, UnitAddTorus.mFourier (-k) x • g x ∂(@volume (UnitAddTorus (Fin 3))
+        (@MeasureSpace.pi (Fin 3) _ (fun _ => UnitAddCircle) fun _ => AddCircle.measureSpace 1)) :=
+    fun g => by rw [UnitAddTorus.mFourierCoeff, volume_unitAddTorus_eq]
+  rw [fieldFourierVolume, LinearIsometryEquiv.trans_apply, fieldFourier_apply]
+  change UnitAddTorus.mFourierCoeff (lpCongrMeasure _ (f p) : UnitAddTorus (Fin 3) → ℂ) k = _
+  rw [coeFn_lpCongrMeasure, key]
 
 end Feec.Torus

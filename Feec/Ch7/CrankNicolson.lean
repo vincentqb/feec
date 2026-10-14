@@ -1,4 +1,10 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.Tensor
+public import Mathlib.Algebra.Order.Floor.Semifield
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
+public import Mathlib.LinearAlgebra.Matrix.PosDef
 
 /-!
 # Chapter 7: Crank–Nicolson discretization of the linearized EB system
@@ -50,7 +56,7 @@ hybridization/preconditioner promised in the Introduction (absent from the thesi
 open LinearMap InnerProductSpace
 open scoped RealInnerProductSpace
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.CrankNicolson
 

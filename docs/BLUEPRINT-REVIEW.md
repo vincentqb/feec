@@ -27,6 +27,17 @@
 
 4. **Props 4.17/4.19: the "true on 𝕋³" fix is wrong as written.** The hypothesis P_{L²(TSD)} H(curl) ⊂ H(curl) fails on every domain, including 𝕋³. Counterexample: A = e₁(∇f)ᵀ with f = f(x₂) ∈ H¹ \ H². Then A ∈ H(curl) and tr A = 0, but curl of the rows of sym A involves f'', so sym A ∉ H(curl). So the hypothesis is vacuous everywhere. The table should say that, and state that any 𝕋³ result needs a different proof (e.g. Fourier, or the abstract Prop 4.16 route).
 
+   *Note (2026-10-14): the counterexample does not refute the hypothesis on 𝕋³.* It computes
+   the pointwise projection `dev sym A`, but `P_{L²(TSD)}` is the L² projection, which also
+   imposes `div = 0`. For `A = e₁(∇f)ᵀ` every Fourier coefficient has the form `c ξᵀ`, which is
+   orthogonal to the TSD fibre, so `P_TSD A = 0 ∈ H(curl)` (`Feec.Torus.projTSD_eq_zero_of_outer`,
+   `mem_Hcurl_of_outer`). In the Fourier model the hypothesis is proved: `P_TSD H(curl) ⊆ H¹`
+   (`projTSD_mem_H1`), the projection hypothesis of `prop_4_17` holds (`projKc_mem_domL`), and
+   periodic Prop 4.17 holds unconditionally (`prop_4_17_torus`), via a Fourier proof as this
+   item suggested. Not covered: the identification of the Fourier weights with weak
+   derivatives, Prop 4.19 on 𝕋³, and the `H̊(curl)` case on bounded domains, where the
+   claimed failure is neither proved nor refuted.
+
 5. **Say which theorems are weaker than the thesis.** `IsStrongSolution` drops C⁰([0,T];D(L)) and C¹([0,T];W): it only has pointwise `HasDerivWithinAt`. That makes uniqueness stronger than the thesis. But the existence conclusions of `cor_4_5`, `thm_4_6` and `weak_imp_strong` are weaker than Thm 4.3/4.6/4.7. Either add an `IsClassicalSolution` (continuity of t ↦ L U t and of U′) supplied by the existence hypothesis, or record the weakening in docstrings and the README. Likewise, `IsWeakSolution` on `H.d0.domain` (W-norm subtype) does not capture ξ ∈ C⁰(V).
 
 6. **Add a non-vacuity witness for the existence hypotheses.** Prove `WellPosedHom L T` (and `WellPosedExistence` for continuous F) for an everywhere-defined bounded skew L, via `NormedSpace.exp`. This shows the hypotheses are satisfiable. Optionally derive `WellPosedHom` from the `UnitaryGroupGenerator` structure, so the existence conclusions rest on a recognisable stand-in for Stone's theorem.

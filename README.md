@@ -23,7 +23,7 @@ lake build
 
 | Module | Thesis |
 |---|---|
-| `Feec.Foundation` | Shared definitions: unbounded operators, Hilbert complexes, evolution problems, BGG data |
+| `Feec.Foundation.{Operators, Evolution, Complex, BGG, Tensor}` | Shared definitions: unbounded operators, strong solutions and existence hypotheses, Hilbert complexes and the Hodge wave operator, BGG data, component tensors (re-exported by `Feec.Foundation`) |
 | `Feec.Ch2.Curvature` | §2.3–2.4: Riemann symmetries, Prop 2.1, Ricci and Einstein tensors |
 | `Feec.Ch2.Linearized` | §2.4–2.8: Thm 2.3, Props 2.4–2.6, TT gauge, plane waves, geodesic deviation |
 | `Feec.Ch3.Bivector` | §3.1–3.3: Hodge duality, Props 3.1–3.3, Weyl block structure |
@@ -35,6 +35,7 @@ lake build
 | `Feec.Ch4.Galerkin` | §4.5: Thms 4.8–4.11 (Lax–Milgram, Babuška–Nečas, quasi-optimality, Brezzi) |
 | `Feec.Ch4.ErrorEstimate` | §4.6: Lemma 4.12, Prop 4.13, elliptic projection, Thm 4.14, convergence |
 | `Feec.Ch4.Constraints` | §4.7–4.11: Koszul complexes, wave equations, Props 4.16–4.19 |
+| `Feec.Ch4.Torus` | §4.10: Prop 4.17 on the periodic complex over 𝕋³ (Fourier model) |
 | `Feec.Ch5.BGG` | §5.1: Props 5.1–5.2 |
 | `Feec.Ch5.Discrete` | §5.2–5.3: Props 5.3, 5.4, 5.6, Thm 5.5, abstract core of Prop 5.7 |
 | `Feec.Ch6.TimeDependent` | Ch. 6: Props 6.1–6.3, a convergence theorem |
@@ -57,7 +58,7 @@ declaration that refutes or corrects the original; module docstrings list the re
 - **Lemma 4.12**: `Q ∈ C¹` fails where the lemma is applied; only `Q²` needs to be differentiable (`lemma_4_12`).
 - **Thm 4.14**: it needs `ξ ∈ C¹(V)`, and the `(1 + T)` factor is sharpened (`thm_4_14_pointwise`, `thm_4_14`).
 - **§4.10**: two of the four proposed discretizations are not subcomplexes (`pgrad_not_mem_PminusLambda1`).
-- **Props 4.17, 4.19**: the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`).
+- **Props 4.17, 4.19**: the density conjectures are unnecessary (`prop_4_17`), and the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`, `prop_4_17_iff`). For the periodic complex on 𝕋³ the projection conjecture is a theorem (`projTSD_mem_H1`, `projKc_mem_domL`), so Prop 4.17 holds there with no extra hypothesis (`prop_4_17_torus`). Prop 4.19 on 𝕋³ and both propositions on bounded domains are not formalized.
 - **(5.1)**: exactness at `Ṽ¹` is used but never proved (`exact_mid`).
 - **Prop 5.4**: exactness at `V_h¹` cannot be dropped (`prop54_counterexample_noTopExact`).
 - **Prop 6.2**: false as stated; it holds exactly under compatibility conditions (C1)–(C3) (`prop_6_2_false`, `prop_6_2`).
@@ -73,8 +74,11 @@ Uniqueness, energy conservation and constraint propagation are proved. Mathlib a
 Sobolev spaces on domains, traces or finite element spaces. Concrete complexes (de Rham,
 `H(curl)`, `H(div)`, polynomial finite element spaces) therefore enter only as instances of
 abstract structures, with their analytic facts (closed range, bounded cochain projections,
-density, regular decompositions) as hypotheses. Pseudo-Riemannian geometry is done in
-components at the jet level. Out of scope: the nonlinear Einstein–Bianchi system (§3.4), the
+density, regular decompositions) as hypotheses. The exception is `Feec.Ch4.Torus`, which
+models fields on 𝕋³ by their Fourier coefficients (a proved isometry `L²(𝕋³) ≃ ℓ²(ℤ³)`) and
+defines `H¹`, `H(curl)` and `H(div)` by Fourier weights; that these multipliers are weak
+derivatives is not formalized. Pseudo-Riemannian geometry is done in components at the jet
+level. Out of scope: the nonlinear Einstein–Bianchi system (§3.4), the
 bounded-domain versions of Lemma 3.5 and Prop 3.6, the concrete finite element computations of
 §5.3 (Props 5.7–5.9 beyond the abstract core of Prop 5.7),
 and the numerical results of Ch. 7. All cited works are collected in

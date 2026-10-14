@@ -23,6 +23,17 @@ spaces, used later for the elliptic projection (§4.6) and the BGG saddle point 
 
 Saddle point data are given in Riesz form: `b(v,q) = ⟪B v, q⟫` with `B : X →L[ℝ] Y`, and the
 right-hand sides by their representatives; `thm_4_11` states the functional form.
+
+## References
+
+* [QuennevilleBelair2015], §4.5 (Thm 4.8 Lax–Milgram, the inf-sup and dense range conditions,
+  Thm 4.9, Thm 4.10 quasi-optimality, Thm 4.11 Brezzi); used in §4.6 and Ch. 5
+* [Babuska1971] (inf-sup condition, generalized Lax–Milgram, quasi-optimality of Galerkin
+  approximations)
+* [Brezzi1974] (existence, uniqueness and stability for saddle point problems; Thm 4.11)
+* [BoffiBrezziFortin2013], Ch. 4 (saddle point problems in Hilbert spaces)
+* [Arnold2018] (abstract well-posedness and Galerkin stability framework of FEEC)
+* [AFW2010] (stability of Galerkin and mixed methods via inf-sup conditions in FEEC)
 -/
 
 open scoped RealInnerProductSpace
@@ -42,10 +53,14 @@ variable {B : V →L[ℝ] V →L[ℝ] ℝ}
 /-- The Riesz operator of a bilinear form: `⟪B♯ u, v⟫ = B u v`. -/
 local postfix:1024 "♯" => continuousLinearMapOfBilin (𝕜 := ℝ)
 
-/-- The inf-sup condition (thesis §4.5), Riesz form: `γ ‖u‖ ≤ ‖B u ·‖_{V*}`. -/
+/-- The inf-sup condition (thesis §4.5), Riesz form: `γ ‖u‖ ≤ ‖B u ·‖_{V*}`.
+
+See [QuennevilleBelair2015, §4.5]; cf. [Babuska1971]. -/
 def InfSupCond (B : V →L[ℝ] V →L[ℝ] ℝ) : Prop := ∃ γ, 0 < γ ∧ ∀ u, γ * ‖u‖ ≤ ‖B u‖
 
-/-- The dense range condition (thesis §4.5), with the quantifier on the *second* slot. -/
+/-- The dense range condition (thesis §4.5), with the quantifier on the *second* slot.
+
+See [QuennevilleBelair2015, §4.5]; cf. [Babuska1971]. -/
 def DenseRangeCond (B : V →L[ℝ] V →L[ℝ] ℝ) : Prop := ∀ v, (∀ u, B u v = 0) → v = 0
 
 /-- Riesz isometry: `‖B♯ u‖ = ‖B u ·‖_{V*}`. -/
@@ -58,7 +73,9 @@ Riesz form `γ ‖u‖ ≤ ‖B u‖` is equivalent, with the *same* constant, t
 
 The thesis' equivalence (with `γ` existentially quantified on both sides) is correct and holds
 in any normed space: from `sup ≥ γ ‖u‖` pick `v` reaching `γ/2`. This lemma proves the stronger
-same-constant version, which uses that the supremum is attained at the Riesz representative. -/
+same-constant version, which uses that the supremum is attained at the Riesz representative.
+
+See [QuennevilleBelair2015, §4.5]. -/
 theorem infSupCond_iff_attained :
     InfSupCond B ↔ ∃ γ, 0 < γ ∧ ∀ u, ∃ v, ‖v‖ ≤ 1 ∧ γ * ‖u‖ ≤ B u v := by
   constructor
@@ -131,7 +148,9 @@ theorem equivOfInfSup_apply (h : InfSupCond B) (hd : DenseRangeCond B) (u v : V)
 /-- **Thesis Thm 4.9** (Babuška–Nečas), forward direction, Riesz-representative form.
 
 Thesis gap: the thesis gives no proof and writes "there exists"; the conclusion is existence
-*and uniqueness*. -/
+*and uniqueness*.
+
+See [QuennevilleBelair2015, Thm 4.9]; cf. [Babuska1971]. -/
 theorem existsUnique_solution (h : InfSupCond B) (hd : DenseRangeCond B) (f : V) :
     ∃! u, ∀ v, B u v = ⟪f, v⟫ := by
   refine ⟨(equivOfInfSup h hd).symm f, fun v => ?_, fun u hu => ?_⟩
@@ -155,7 +174,9 @@ theorem norm_le_of_solution {γ : ℝ} (hγ : 0 < γ) (h : ∀ u, γ * ‖u‖ �
 
 /-- **Thesis Thm 4.9**, the constant: under inf-sup and dense range, a constant `γ ≥ 0`
 is admissible in the inf-sup condition iff `γ ‖L⁻¹‖ ≤ 1`; i.e. the best inf-sup constant is
-`‖L⁻¹‖⁻¹`. -/
+`‖L⁻¹‖⁻¹`.
+
+See [QuennevilleBelair2015, Thm 4.9] (the identity following its statement). -/
 theorem infSup_const_iff (h : InfSupCond B) (hd : DenseRangeCond B) {γ : ℝ} (hγ : 0 ≤ γ) :
     (∀ u, γ * ‖u‖ ≤ ‖B u‖) ↔
       γ * ‖((equivOfInfSup h hd).symm : V →L[ℝ] V)‖ ≤ 1 := by
@@ -206,7 +227,9 @@ theorem infSup_of_bijective (hinj : Function.Injective (B♯))
 
 Correction: the thesis states the converse with "there exists `u`"; that is false (see
 `surjective_not_infSup`: the backward shift on `ℓ²`). Uniqueness is required, and the converse
-uses the bounded inverse theorem. -/
+uses the bounded inverse theorem.
+
+See [QuennevilleBelair2015, Thm 4.9]; cf. [Babuska1971]. -/
 theorem babuska_necas_iff :
     (InfSupCond B ∧ DenseRangeCond B) ↔ ∀ f : V, ∃! u, ∀ v, B u v = ⟪f, v⟫ := by
   refine ⟨fun h => existsUnique_solution h.1 h.2, fun hs => ⟨?_, ?_⟩⟩
@@ -250,14 +273,18 @@ theorem infSupCond_of_isCoercive (h : IsCoercive B) : InfSupCond B ∧ DenseRang
 
 /-- **Thesis Thm 4.8** (Lax–Milgram): a bounded coercive bilinear form `B` on a Hilbert space
 admits, for every `f ∈ V*`, a unique `u` with `B u v = f v` for all `v`. Obtained here as a
-special case of Thm 4.9. -/
+special case of Thm 4.9.
+
+See [QuennevilleBelair2015, Thm 4.8]. -/
 theorem lax_milgram (h : IsCoercive B) (f : StrongDual ℝ V) : ∃! u, ∀ v, B u v = f v :=
   existsUnique_solution_dual (infSupCond_of_isCoercive h).1 (infSupCond_of_isCoercive h).2 f
 
 omit [CompleteSpace V] in
 /-- **Thesis Thm 4.8**, stability bound `‖u‖ ≤ α⁻¹ ‖f‖`.
 
-Thesis gap: the bound is the useful part of Lax–Milgram but is not stated. -/
+Thesis gap: the bound is the useful part of Lax–Milgram but is not stated.
+
+See [QuennevilleBelair2015, Thm 4.8]. -/
 theorem lax_milgram_bound {α : ℝ} (hα : 0 < α) (hc : ∀ u, α * ‖u‖ * ‖u‖ ≤ B u u)
     {f : StrongDual ℝ V} {u : V} (hu : ∀ v, B u v = f v) : ‖u‖ ≤ α⁻¹ * ‖f‖ := by
   rw [le_inv_mul_iff₀ hα]
@@ -328,7 +355,9 @@ lemma shift_single : shift (lp.single 2 0 (1 : ℝ)) = 0 := by
 /-- **Correction to Thesis Thm 4.9** (converse): the bounded bilinear form
 `B u v = ⟪S u, v⟫` on `ℓ²`, with `S` the backward shift, satisfies the dense range condition
 and is solvable for every right-hand side, yet violates the inf-sup condition (`S e₀ = 0`).
-Hence "there exists `u`" in the thesis' converse must be "there exists a unique `u`". -/
+Hence "there exists `u`" in the thesis' converse must be "there exists a unique `u`".
+
+Concerns [QuennevilleBelair2015, Thm 4.9]. -/
 theorem surjective_not_infSup :
     ∃ B : L2 →L[ℝ] L2 →L[ℝ] ℝ, (∀ f, ∃ u, ∀ v, B u v = ⟪f, v⟫) ∧ DenseRangeCond B ∧
       ¬ InfSupCond B := by
@@ -360,7 +389,9 @@ every `w ∈ K`.
 Correction: the theorem statement restates boundedness of `a` only on `Xₕ × Xₕ`, while the
 proof needs the standing hypothesis (thesis, paragraph before Thm 4.10) that `a` is bounded on
 `X × X`; here `‖B‖` is the norm on all of `X`. Neither completeness, finite dimension nor the
-orthogonal projection `rₕ` is needed. -/
+orthogonal projection `rₕ` is needed.
+
+See [QuennevilleBelair2015, Thm 4.10]; cf. [Babuska1971]. -/
 theorem quasi_opt (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X) {γ : ℝ} (hγ : 0 < γ)
     (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v)
     {u uh : X} (huh : uh ∈ K) (horth : ∀ v ∈ K, B (u - uh) v = 0) :
@@ -399,7 +430,9 @@ theorem quasi_opt_infDist (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X
 `Xₕ`), the discrete inf-sup condition alone gives a unique Galerkin solution `uₕ ∈ K`.
 
 Thesis gap: existence and uniqueness of `uₕ` are used but not argued (Thm 4.9 on `Xₕ` would also
-need dense range on `Xₕ`, which holds here by rank–nullity). -/
+need dense range on `Xₕ`, which holds here by rank–nullity).
+
+See [QuennevilleBelair2015, Thm 4.10]. -/
 theorem discrete_existsUnique (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X)
     [FiniteDimensional ℝ K] {γ : ℝ} (hγ : 0 < γ)
     (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v) (F : StrongDual ℝ X) :
@@ -430,7 +463,9 @@ theorem discrete_existsUnique (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule �
 
 /-- **Thesis Thm 4.10** as stated, corrected: let `u` solve `B u v = F v` on `X`, and `uₕ ∈ K`
 solve `B uₕ v = F v` for `v ∈ K`. Then `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) inf_{w ∈ K} ‖u - w‖`, where the
-constant `C = 1 + ‖B‖/γ` is independent of `u`, `uₕ` and (for uniform `γ`) of `h`. -/
+constant `C = 1 + ‖B‖/γ` is independent of `u`, `uₕ` and (for uniform `γ`) of `h`.
+
+See [QuennevilleBelair2015, Thm 4.10]; cf. [Babuska1971]. -/
 theorem thm_4_10 (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X) {γ : ℝ} (hγ : 0 < γ)
     (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v) (F : StrongDual ℝ X)
     {u uh : X} (hu : ∀ v, B u v = F v) (huh : uh ∈ K) (huhF : ∀ v ∈ K, B uh v = F v) :
@@ -457,7 +492,9 @@ omit [InnerProductSpace ℝ X] [CompleteSpace X] [InnerProductSpace ℝ Y] [Comp
 /-- **Correction to Thesis Thm 4.11**: the thesis' inf-sup hypothesis on `b`, read with its own
 convention (inf over the first argument `u ∈ X`), `β ‖u‖ ≤ sup_{‖q‖ ≤ 1} b(u,q)`, can only hold
 when `Z = {u | b(u,·) = 0} = 0`. Hence in any genuine saddle point problem (`Z ≠ 0`) it fails,
-and the inf must be taken over `q` (as in `brezzi`, `thm_4_11`). Only normed spaces are needed. -/
+and the inf must be taken over `q` (as in `brezzi`, `thm_4_11`). Only normed spaces are needed.
+
+Concerns [QuennevilleBelair2015, Thm 4.11]; the correct condition is that of [Brezzi1974]. -/
 theorem not_infSup_first_of_ker_ne_bot [NormedSpace ℝ X] [NormedSpace ℝ Y]
     (b : X →L[ℝ] Y →L[ℝ] ℝ) {z : X} (hz : ∀ q, b z q = 0) (hz0 : z ≠ 0) :
     ¬ ∃ β > 0, ∀ u, β * ‖u‖ ≤ ‖b u‖ := by
@@ -495,7 +532,9 @@ theorem brezzi_lift (Bs : X →L[ℝ] Y) {β : ℝ} (hβ : 0 < β) (hb : ∀ q, 
   · rw [← h0, mul_zero]; exact norm_nonneg _
 
 /-- **Thesis Thm 4.11** (Brezzi), uniqueness half: the discrete inf-sup on `Z = ker B` and the
-inf-sup of `b` (inf over `q ∈ Y`) force uniqueness of the saddle point. -/
+inf-sup of `b` (inf over `q ∈ Y`) force uniqueness of the saddle point.
+
+See [QuennevilleBelair2015, Thm 4.11]; cf. [Brezzi1974], [BoffiBrezziFortin2013, Ch. 4]. -/
 theorem brezzi_unique (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) {γ : ℝ} (hγ : 0 < γ)
     (hZ : ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z') {β : ℝ} (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adj Bs q‖) {F : X} {G : Y} {u u' : X} {p p' : Y}
@@ -537,7 +576,9 @@ first argument), fails whenever `Z ≠ 0` (`not_infSup_first_of_ker_ne_bot`); th
 hypothesis is `inf_q sup_v`, i.e.
 `β ‖q‖ ≤ ‖Bᵀ q‖`. `a` is bounded on all of `X`. Thesis gap: no proof is given; the proof here
 lifts `G` through `B Bᵀ` (Lax–Milgram), solves on `Z` by Thm 4.9, and recovers `p` from
-`Z ∩ Zᗮ = 0`. -/
+`Z ∩ Zᗮ = 0`.
+
+See [QuennevilleBelair2015, Thm 4.11]; cf. [Brezzi1974], [BoffiBrezziFortin2013, Ch. 4]. -/
 theorem brezzi (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y)
     (hZ : ∃ γ > 0, ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z')
     (hZd : ∀ z' ∈ Bs.ker, (∀ z ∈ Bs.ker, a z z' = 0) → z' = 0)
@@ -601,7 +642,9 @@ theorem brezzi (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y)
 /-- **Thesis Thm 4.11**, stability (the thesis' "well-posed" constant, made explicit): every
 solution satisfies `‖u‖ ≤ γ⁻¹‖F‖ + β⁻¹(1 + ‖a‖/γ)‖G‖` and `‖p‖ ≤ β⁻¹(‖F‖ + ‖a‖‖u‖)`.
 
-Thesis gap: no constant is given; it depends on `‖a‖`, `γ` and `β`. -/
+Thesis gap: no constant is given; it depends on `‖a‖`, `γ` and `β`.
+
+See [QuennevilleBelair2015, Thm 4.11]; cf. [Brezzi1974], [BoffiBrezziFortin2013, Ch. 4]. -/
 theorem brezzi_stability (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) {γ : ℝ} (hγ : 0 < γ)
     (hZ : ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z') {β : ℝ} (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adj Bs q‖) {F : X} {G : Y} {u : X} {p : Y}
@@ -653,7 +696,9 @@ theorem brezzi_stability (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) 
     exact (hb p).trans ht
 
 /-- **Thesis Thm 4.11**, well-posedness in the thesis' sense: unique solvability and
-`‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)` with `C` depending only on `‖a‖`, `γ`, `β`. -/
+`‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)` with `C` depending only on `‖a‖`, `γ`, `β`.
+
+See [QuennevilleBelair2015, §4.5, Thm 4.11]; cf. [Brezzi1974]. -/
 theorem brezzi_wellPosed (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y)
     (hZ : ∃ γ > 0, ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z')
     (hZd : ∀ z' ∈ Bs.ker, (∀ z ∈ Bs.ker, a z z' = 0) → z' = 0)
@@ -728,7 +773,9 @@ Then for all `F ∈ X*`, `G ∈ Y*` the saddle point problem `a(u,v) + b(v,p) = 
 Correction: the thesis' inf-sup convention (inf over the first argument) applied to `b` is
 unsatisfiable when `Z ≠ 0` (`not_infSup_first_of_ker_ne_bot`), and its `B : Y → X*` should be
 `B : X → Y*`; `a` is assumed bounded
-on all of `X`. Thesis gap: no proof is given in the thesis. -/
+on all of `X`. Thesis gap: no proof is given in the thesis.
+
+See [QuennevilleBelair2015, Thm 4.11]; cf. [Brezzi1974], [BoffiBrezziFortin2013, Ch. 4]. -/
 theorem thm_4_11 (a : X →L[ℝ] X →L[ℝ] ℝ) (b : X →L[ℝ] Y →L[ℝ] ℝ)
     (hZ : ∃ γ > 0, ∀ z, (∀ q, b z q = 0) →
       ∃ z', (∀ q, b z' q = 0) ∧ ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z')

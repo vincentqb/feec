@@ -25,8 +25,11 @@ operators are Fourier multipliers with `ξ = 2πk`
 (`freq`): `grad u ↦ i u ξᵀ`, row-wise `curl A ↦ i (ξ × A_a)_a` (thesis convention
 `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`, as in `Feec.curl`), `div A ↦ i A ξ`. The Sobolev spaces
 `H¹`, `H(curl)`, `H(div)` are the corresponding weighted-`ℓ²` conditions (`mulDomain`). This is
-the standard Fourier characterization of periodic Sobolev spaces; the identification of these
-multipliers with weak derivatives of `L²(𝕋³)` functions is *not* formalized here.
+the standard Fourier characterization of periodic Sobolev spaces. That these multipliers are the
+weak derivatives of `L²(𝕋³)` fields (tested against smooth periodic functions), so that these
+spaces are the weak-derivative Sobolev spaces, is proved in `Feec.Ch4.TorusWeak`
+(`Feec.TorusWeak.matrixFourier_mem_Hcurl_iff`, `Feec.TorusWeak.curlT_matrixFourier`,
+`Feec.TorusWeak.vectorFourier_mem_gradT_domain_iff`, `Feec.TorusWeak.matrixFourier_mem_Hdiv_iff`).
 
 Real vs complex: the theorems are stated for complex-valued fields, viewed as a real Hilbert
 space. Real-valued fields are exactly the conjugate-symmetric sequences `Â(-k) = conj Â(k)`
@@ -72,12 +75,15 @@ computes `dev sym A`, the *pointwise* projection onto symmetric trace-free matri
 `c_k = i f̂(k) e₁`, which is orthogonal to every TSD fibre, so `P_TSD A = 0 ∈ H(curl)`
 (`projTSD_eq_zero_of_outer`).
 
-What remains open: bounded domains (the thesis' setting `H̊¹(V) → H̊(curl; M) → L²(M)`), where the
-`H̊(curl)` part of the hypothesis is expected to fail (see the docstring of `prop_4_17`), and
-Prop 4.19 (complex (4.16), `W1 = L²(S)`, `W2 = L²(T)`), whose periodic case should follow from
-the same fibre algebra but is not formalized. The existence of solutions is not constructed
-here: `prop_4_17_torus` quantifies over strong solutions, and `prop_4_17_torus_group` assumes a
-Stone group (`Feec.UnitaryGroupGenerator`) for `-L`.
+Related results in other files. `prop_4_17_torus` quantifies over strong solutions and
+`prop_4_17_torus_group` assumes a Stone group (`Feec.UnitaryGroupGenerator`) for `-L`; the group
+is constructed explicitly in `Feec.Ch4.TorusGroup` (`periodicGroup`), which gives existence
+(`prop_4_17_torus_exists`, `prop_4_17_torus_classical`). The periodic Prop 4.19 (complex (4.16),
+`W1 = L²(S)`, `W2 = L²(T)`) is `Feec.TorusSym.prop_4_19_torus` and
+`Feec.TorusSym.prop_4_19_torus_exists` in `Feec.Ch4.TorusSym`. On bounded domains (the thesis'
+setting `H̊¹(V) → H̊(curl; M) → L²(M)`) the projection hypothesis and the conclusion of
+Prop 4.17 are both false (`Feec.BoundedDomain.thesisComplex_not_projection_hyp`,
+`Feec.BoundedDomain.thesisComplex_not_propagate` in `Feec.Ch4.BoundedDomain`).
 
 ## References
 
@@ -742,7 +748,7 @@ This theorem concerns the *periodic analogue* (`Ω` replaced by `𝕋³`, no bou
 there the analogue of the conjecture, `P_{L²(TSD)} H(curl) ⊆ H(curl)` (indeed `⊆ H¹`) and
 `P_{L²(TSD)} (H(curl) ∩ H(div)) ⊆ H(curl) ∩ H(div)`, is a theorem (`projTSD_mem_Hcurl`,
 `projTSD_mem_H1`, `projTSD_mem_Hcurl_Hdiv`, `projKc_mem_domL`). The thesis' bounded-domain
-conjecture itself is not settled here (see the docstring of `Feec.Constraints.prop_4_17`).
+conjecture itself is false (`Feec.BoundedDomain.thesisComplex_not_projection_hyp`).
 
 See [QuennevilleBelair2015, §4.10, Prop 4.17]; cf. [ACBY1997]. -/
 theorem prop_4_17_torus {T : ℝ} {E₀ B₀ : L2M} {U : ℝ → Tot L2V L2M L2M} (hE₀ : E₀ ∈ L2TSD)

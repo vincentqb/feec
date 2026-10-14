@@ -36,6 +36,10 @@ lake build
 | `Feec.Ch4.ErrorEstimate` | §4.6: Lemma 4.12, Prop 4.13, elliptic projection, Thm 4.14, convergence |
 | `Feec.Ch4.Constraints` | §4.7–4.11: Koszul complexes, wave equations, Props 4.16–4.19 |
 | `Feec.Ch4.Torus` | §4.10: Prop 4.17 on the periodic complex over 𝕋³ (Fourier model) |
+| `Feec.Ch4.TorusWeak` | §4.10: the Fourier-weight `H¹`, `H(curl)`, `H(div)` on 𝕋³ are the weak-derivative Sobolev spaces |
+| `Feec.Ch4.TorusGroup` | §4.3, §4.10: explicit Stone group on 𝕋³, Thm 4.3 (with forcing), existence for Prop 4.17 |
+| `Feec.Ch4.TorusSym` | §4.11: complex (4.16) on 𝕋³, closed range and Hodge decomposition, Prop 4.19 with existence |
+| `Feec.Ch4.BoundedDomain` | §4.10: the complex `H̊¹ → H̊(curl) → L²` on bounded domains; Prop 4.17 fails there |
 | `Feec.Ch5.BGG` | §5.1: Props 5.1–5.2 |
 | `Feec.Ch5.Discrete` | §5.2–5.3: Props 5.3, 5.4, 5.6, Thm 5.5, abstract core of Prop 5.7 |
 | `Feec.Ch6.TimeDependent` | Ch. 6: Props 6.1–6.3, a convergence theorem |
@@ -58,7 +62,7 @@ declaration that refutes or corrects the original; module docstrings list the re
 - **Lemma 4.12**: `Q ∈ C¹` fails where the lemma is applied; only `Q²` needs to be differentiable (`lemma_4_12`).
 - **Thm 4.14**: it needs `ξ ∈ C¹(V)`, and the `(1 + T)` factor is sharpened (`thm_4_14_pointwise`, `thm_4_14`).
 - **§4.10**: two of the four proposed discretizations are not subcomplexes (`pgrad_not_mem_PminusLambda1`).
-- **Props 4.17, 4.19**: the density conjectures are unnecessary (`prop_4_17`), and the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`, `prop_4_17_iff`). For the periodic complex on 𝕋³ the projection conjecture is a theorem (`projTSD_mem_H1`, `projKc_mem_domL`), so Prop 4.17 holds there with no extra hypothesis (`prop_4_17_torus`). Prop 4.19 on 𝕋³ and both propositions on bounded domains are not formalized.
+- **Props 4.17, 4.19**: the density conjectures are unnecessary (`prop_4_17`), and the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`, `prop_4_17_iff`). On 𝕋³ the projection conjecture is a theorem (`projTSD_mem_H1`, `projKc_mem_domL`), and Props 4.17 and 4.19 hold with no extra hypothesis, with existence of solutions (`prop_4_17_torus_exists`, `prop_4_19_torus_exists`). On every nonempty bounded open `Ω ⊆ ℝ³` the projection conjecture is false for the thesis's complex, so Prop 4.17 is vacuous as stated, and its conclusion fails: some TSD data have no TSD-preserving solution (`thesisComplex_not_projection_hyp`, `thesisComplex_not_propagate`). The proof's step from the density hypothesis to density of `H̊(curl) ∩ L²(TSD)` in `L²(TSD)` is invalid (`not_dense_TSD_inter_HcurlZero`).
 - **(5.1)**: exactness at `Ṽ¹` is used but never proved (`exact_mid`).
 - **Prop 5.4**: exactness at `V_h¹` cannot be dropped (`prop54_counterexample_noTopExact`).
 - **Prop 6.2**: false as stated; it holds exactly under compatibility conditions (C1)–(C3) (`prop_6_2_false`, `prop_6_2`).
@@ -69,15 +73,19 @@ declaration that refutes or corrects the original; module docstrings list the re
 The thesis's analytic existence results are taken as explicit hypotheses, never as axioms,
 because Mathlib lacks C₀-semigroups and the Hille–Yosida and Stone theorems. Existence for
 evolution problems enters as `WellPosedExistence` or `WellPosedHom` (standing for Thm 4.3).
-`Feec.Ch4.Existence` shows these hypotheses hold for bounded generators.
+`Feec.Ch4.Existence` shows these hypotheses hold for bounded generators, and
+`Feec.Ch4.TorusGroup` and `Feec.Ch4.TorusSym` construct the groups for the periodic complexes;
+on bounded domains the group is still a hypothesis.
 Uniqueness, energy conservation and constraint propagation are proved. Mathlib also has no
 Sobolev spaces on domains, traces or finite element spaces. Concrete complexes (de Rham,
 `H(curl)`, `H(div)`, polynomial finite element spaces) therefore enter only as instances of
 abstract structures, with their analytic facts (closed range, bounded cochain projections,
 density, regular decompositions) as hypotheses. The exception is `Feec.Ch4.Torus`, which
 models fields on 𝕋³ by their Fourier coefficients (a proved isometry `L²(𝕋³) ≃ ℓ²(ℤ³)`) and
-defines `H¹`, `H(curl)` and `H(div)` by Fourier weights; that these multipliers are weak
-derivatives is not formalized. Pseudo-Riemannian geometry is done in components at the jet
+defines `H¹`, `H(curl)` and `H(div)` by Fourier weights; `Feec.Ch4.TorusWeak` proves these are
+the weak-derivative Sobolev spaces. `Feec.Ch4.BoundedDomain` builds `H̊¹`, `H̊(curl)` and `H(div)`
+on bounded domains from their definitions (graph closures and weak derivatives), with
+`L²(Ω; ℝ³ˣ³)` modelled as nine copies of `L²(Ω)`. Pseudo-Riemannian geometry is done in components at the jet
 level. Out of scope: the nonlinear Einstein–Bianchi system (§3.4), the
 bounded-domain versions of Lemma 3.5 and Prop 3.6, the concrete finite element computations of
 §5.3 (Props 5.7–5.9 beyond the abstract core of Prop 5.7),

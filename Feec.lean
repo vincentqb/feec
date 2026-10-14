@@ -6,6 +6,7 @@ public import Feec.Ch2.Linearized
 public import Feec.Ch3.Bivector
 public import Feec.Ch3.EB
 public import Feec.Ch4.Adjoint
+public import Feec.Ch4.BoundedDomain
 public import Feec.Ch4.Constraints
 public import Feec.Ch4.ErrorEstimate
 public import Feec.Ch4.Existence
@@ -15,6 +16,9 @@ public import Feec.Ch4.HodgeW
 public import Feec.Ch4.HodgeWave
 public import Feec.Ch4.Restriction
 public import Feec.Ch4.Torus
+public import Feec.Ch4.TorusGroup
+public import Feec.Ch4.TorusSym
+public import Feec.Ch4.TorusWeak
 public import Feec.Ch5.BGG
 public import Feec.Ch5.Discrete
 public import Feec.Ch6.TimeDependent

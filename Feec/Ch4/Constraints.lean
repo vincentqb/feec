@@ -27,8 +27,8 @@ Coverage (thesis ids; see `docs/BLUEPRINT.md`, module M8):
   density of `D(L) ∩ K` in `K`, the projection hypothesis is also necessary. The time reversal
   `R(σ, E, B) = (-σ, E, -B)` of (4.14) is `revT`/`waveOp_revT`. The hypothesis holds for the
   periodic complex on `𝕋³` (`Feec.Torus.projKc_mem_domL`, giving `Feec.Torus.prop_4_17_torus`);
-  its failure (the `H̊(curl)` part) on smooth bounded domains is not formalized (see the
-  docstring of `prop_4_17`).
+  on bounded domains it fails, and so does TSD propagation (`Feec.Ch4.BoundedDomain`; see the
+  docstring of `prop_4_17`). Prop 4.19 on `𝕋³` is `Feec.TorusSym.prop_4_19_torus`.
 * **Lemma 3.5 (pointwise)**: `trace_curl`, `two_vskw_curl`, `div_curl`, `trace_curl_of_symm`,
   `curl_TSD`, `curl_TSD_div` (the operator hypotheses of `prop_4_17` in the TSD case).
 * **§4.8** (critic item 14): mixed weak scalar wave ⇔ second-order weak form under the
@@ -1408,15 +1408,18 @@ domain:
   giving `Feec.Torus.prop_4_17_torus`. The review's claim that the hypothesis fails on every
   domain via `A = e₁ (∇f)ᵀ` confuses `P_TSD` with the pointwise `dev sym`: that `A` is
   orthogonal to `L²(TSD)` on `𝕋³` (`Feec.Torus.projTSD_eq_zero_of_outer`);
-* its `H̊(curl)` part (electric boundary condition) fails on every smooth bounded domain `Ω`
-  (not formalized; it needs traces and elliptic regularity):
-  a symmetric traceless matrix whose rows have zero tangential trace vanishes, so
-  `P_TSD E ∈ H̊(curl)` would force `P_TSD E = 0` on `∂Ω`; but for `E = φ A` with
-  `φ ∈ C_c^∞(Ω)`, `∫ φ ≠ 0`, `dev sym A ≠ 0`, the Dirichlet Lamé-type problem defining
-  `P_TSD E = dev sym (E - grad w)` gives a nonzero boundary flux of `dev sym grad w`.
+* its `H̊(curl)` part (electric boundary condition) fails on every nonempty bounded open
+  `Ω ⊆ ℝ³`, for the thesis' complex `H̊¹(V) → H̊(curl; M) → L²(M)`
+  (`Feec.BoundedDomain.thesisComplex_not_projection_hyp`, in `Feec.Ch4.BoundedDomain`). Every
+  field in `L²(TSD) ∩ H̊(curl)` has zero mean
+  (`Feec.BoundedDomain.integral_eq_zero_of_mem_TSD_of_mem_HcurlZero`), while `L²(TSD)` contains
+  the constant symmetric trace-free fields; so for `E = g · diag(1, -1, 0)` with a bump `g`,
+  `P_TSD E` has nonzero mean and `P_TSD E ∉ H̊(curl)`. The conclusion fails too: there is TSD
+  data in `D(L) ∩ K` from which every strong solution leaves `K`
+  (`Feec.BoundedDomain.thesisComplex_not_propagate`; non-vacuous given a Stone group,
+  `Feec.BoundedDomain.thesisComplex_orbit_not_propagate`).
 So the statement is a genuine theorem (its hypotheses are satisfiable) but does not apply to
-bounded domains with the `H̊(curl)` condition, where by `prop_4_17_iff` TSD propagation fails
-for some data unless `D(L) ∩ K` is not dense in `K`.
+bounded domains with the `H̊(curl)` condition.
 
 See [QuennevilleBelair2015, §4.10, Prop 4.17 and §4.11, Prop 4.19]; for the EB system cf.
 [ACBY1997]. -/

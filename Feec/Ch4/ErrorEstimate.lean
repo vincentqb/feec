@@ -1,5 +1,11 @@
-import Feec.Foundation
-import Feec.Ch4.Galerkin
+module
+
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Mathlib.Analysis.InnerProductSpace.Calculus
+public import Mathlib.Analysis.SpecialFunctions.Exponential
+public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
+public import Feec.Foundation.Complex
+public import Feec.Ch4.Galerkin
 
 /-!
 # Ch 4.6: discretization, Lemma 4.12, Prop 4.13, elliptic projection, Thm 4.14, convergence
@@ -37,7 +43,7 @@ product, `d` is linear on the domain type).
 open scoped RealInnerProductSpace
 open Set Filter Topology
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 

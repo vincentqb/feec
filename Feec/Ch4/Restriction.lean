@@ -1,5 +1,6 @@
-import Feec.Foundation
-import Feec.Ch4.Existence
+module
+
+public import Feec.Ch4.Existence
 
 /-!
 # Restriction to invariant subspaces and constraint propagation (Thesis §4.3)
@@ -49,7 +50,7 @@ existence hypothesis `WellPosedClassical`; `cor_4_5_classical` transfers it to `
 open scoped RealInnerProductSpace
 open Set
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 

@@ -18,6 +18,8 @@ remark exactly, and fills the other gaps of Ch 7.
     both CN steps are well defined for every `s`;
   - `full_step_energy`, `red_step_energy`, `full_iter_energy`: exact energy conservation;
   - `cn_iterates_agree`: the full and reduced CN iterates coincide for all `n`, with `σⁿ = 0`;
+  - `full_iter_reduces`: a full CN sequence with `σ⁰ = 0`, `d₀* E⁰ = 0` is itself a reduced
+    CN sequence with `σⁿ = 0` (discrete Prop 4.18, first bullet);
   - `div_B_invariant_*`: `d2 Bⁿ` is conserved when `d2 ∘ d1 = 0`.
 * §2 (matrix form). With block mass matrix `M = diag(M0, M1, M2)` and stiffness
   `K = [[0, -Gᵀ, 0], [G, 0, Cᵀ], [0, -C, 0]]`: `K` is skew, `M + sK` is invertible when the
@@ -170,8 +172,11 @@ private theorem inner_sub_add_eq {W : Type*} [NormedAddCommGroup W] [InnerProduc
   rw [inner_sub_left, inner_add_right, inner_add_right, real_inner_self_eq_norm_sq,
     real_inner_self_eq_norm_sq, real_inner_comm x y]; ring
 
-/-- Discrete energy conservation of a full CN step (Thesis Ch 7; explains the low discrete
-"Norm of E" in Table 7.1: energy lost in the initial projection is never recovered). -/
+/-- Discrete energy conservation of a full CN step (Thesis Ch 7).
+
+The conserved quantity is the total `‖σ‖² + ‖E‖² + ‖B‖²`, not `‖E‖` alone (`E` and `B` exchange
+energy). This is consistent with, but does not by itself explain, the discrete "Norm of E"
+values in Table 7.1; under-resolution of the `ω = 20` wave is an equally plausible cause. -/
 theorem full_step_energy (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ)
     (σ σ' : V0) (E E' : V1) (B B' : V2) (h : FullStep d0 d1 s σ σ' E E' B B') :
     ‖σ'‖ ^ 2 + ‖E'‖ ^ 2 + ‖B'‖ ^ 2 = ‖σ‖ ^ 2 + ‖E‖ ^ 2 + ‖B‖ ^ 2 := by
@@ -305,6 +310,33 @@ theorem cn_iterates_agree (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd 
     obtain ⟨e1, e2, e3⟩ := full_step_unique d0 d1 s 0 (E n) (B n) _ _ _ _ _ _ hfn hf
     exact ⟨e1, e2, e3, hdiv'⟩
 
+/-- Standalone discrete Thesis Prop 4.18 (first bullet), CN version (Thesis Ch 7,
+l. 4289–4291): a full CN sequence started with `σ⁰ = 0` and `d₀* E⁰ = 0` keeps `σⁿ = 0` and
+`d₀* Eⁿ = 0`, and `(Eⁿ, Bⁿ)` is a reduced CN sequence. Unlike `cn_iterates_agree`, no reduced
+sequence is assumed; it is constructed from `red_step_existsUnique`. -/
+theorem full_iter_reduces (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (hd : d1 ∘ₗ d0 = 0) (s : ℝ)
+    (σ : ℕ → V0) (E : ℕ → V1) (B : ℕ → V2)
+    (hfull : ∀ n, FullStep d0 d1 s (σ n) (σ (n + 1)) (E n) (E (n + 1)) (B n) (B (n + 1)))
+    (hσ0 : σ 0 = 0) (hE0 : adjoint d0 (E 0) = 0) :
+    ∀ n, σ n = 0 ∧ adjoint d0 (E n) = 0 ∧ RedStep d1 s (E n) (E (n + 1)) (B n) (B (n + 1)) := by
+  have step : ∀ n, σ n = 0 → adjoint d0 (E n) = 0 →
+      σ (n + 1) = 0 ∧ adjoint d0 (E (n + 1)) = 0 ∧
+        RedStep d1 s (E n) (E (n + 1)) (B n) (B (n + 1)) := by
+    intro n hσ hE
+    obtain ⟨y, hy, -⟩ := red_step_existsUnique d1 s (E n) (B n)
+    obtain ⟨hdiv', hf⟩ := red_to_full d0 d1 hd s _ _ _ _ hy hE
+    have hfn := hfull n
+    rw [hσ] at hfn
+    obtain ⟨e1, e2, e3⟩ := full_step_unique d0 d1 s 0 (E n) (B n) _ _ _ _ _ _ hfn hf
+    rw [e2, e3]
+    exact ⟨e1, hdiv', hy⟩
+  have inv : ∀ n, σ n = 0 ∧ adjoint d0 (E n) = 0 := by
+    intro n
+    induction n with
+    | zero => exact ⟨hσ0, hE0⟩
+    | succ n ih => exact ⟨(step n ih.1 ih.2).1, (step n ih.1 ih.2).2.1⟩
+  exact fun n => ⟨(inv n).1, (inv n).2, (step n (inv n).1 (inv n).2).2.2⟩
+
 /-- Energy conservation along full CN iterates (Thesis Ch 7). -/
 theorem full_iter_energy (d0 : V0 →ₗ[ℝ] V1) (d1 : V1 →ₗ[ℝ] V2) (s : ℝ)
     (σ : ℕ → V0) (E : ℕ → V1) (B : ℕ → V2)
@@ -402,8 +434,9 @@ theorem signJ_mul_self : (signJ : Matrix (Idx n0 n1 n2) (Idx n0 n1 n2) ℝ) * si
 
 /-- MINRES applicability (Thesis Ch 7, l. 4284–4285).
 
-Correction: the CN matrix `M + sK` is not symmetric, so MINRES does not apply to it as written.
-Multiplying the `σ` and `B` block rows by `-1` gives
+Correction (inferred gap): the thesis only says "other matrices are inverted with MINRES" and
+never assembles the CN matrix. In the natural sign convention for the test functions, `M + sK`
+is not symmetric, so MINRES does not apply to it directly. Multiplying the `σ` and `B` block rows by `-1` gives
 `J(M + sK) = [[-M0, sGᵀ, 0], [sG, M1, sCᵀ], [0, sC, -M2]]`, which is symmetric (indefinite). -/
 theorem minres_symm {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
     (h0 : M0.IsSymm) (h1 : M1.IsSymm) (h2 : M2.IsSymm) (G : Matrix n1 n0 ℝ)
@@ -680,8 +713,10 @@ theorem stepCount_table :
 /-- On meshes `k = 1, 3` the final CN time `N_k Δt_k` falls short of `T = 7.5`
 (Thesis Table 7.1a).
 
-Thesis gap: `T/Δt` is not an integer there, so the runs stop at `t ≈ 7.4953` and `t ≈ 7.4983`;
-the text does not say at which time the error is measured. On meshes `k = 0, 2` the final
+Thesis gap: `T/Δt` is not an integer there. Reading the "Step count" column as `⌊T/Δt⌋` steps
+of fixed size `Δt` (the natural reading; the thesis does not describe its stepping loop), the
+runs stop at `t ≈ 7.4953` and `t ≈ 7.4983`, and the text does not say at which time the error
+is measured. On meshes `k = 0, 2` the final
 time is exactly `7.5`. -/
 theorem final_time_table :
     (stepCount 0 : ℝ) * dt 0 = 7.5 ∧ (stepCount 1 : ℝ) * dt 1 < 7.5 ∧

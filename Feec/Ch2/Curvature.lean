@@ -13,9 +13,10 @@ results the thesis states without proof.
 * `riemComp_skew`, `riemComp_bianchi`, `lower_riemComp_skew`, `prop_2_1_jet`, `prop_2_1`:
   Prop 2.1 (corrected) for the coordinate formula (2.2) of a torsion-free metric-compatible
   connection, at the jet level and for `C²` fields on `ℝⁿ`.
-* `ricci_symm`: symmetry of the Ricci tensor; `einstein_symm`.
-* `einstein_zero_iff`: vacuum `G = 0 ⇔ Ric = 0`, corrected to `n ≠ 2`;
-  `einstein_zero_iff_fails_two` shows the hypothesis is needed.
+* `ricci_symm`, `ricci_symm_of_inv`, `ricci_field_symm`: symmetry of the Ricci tensor,
+  abstractly and for the curvature (2.2) of the Levi-Civita connection; `einstein_symm`.
+* `einstein_zero_iff`: vacuum `G = 0 ⇔ Ric = 0` for every `n ≠ 2` (the thesis' `n = 4`
+  included); `einstein_zero_iff_fails_two` shows the hypothesis is needed.
 * `algCurvEquiv`, `finrank_algCurv_four`: the component count `n²(n²−1)/12 = 20` for `n = 4`.
 
 Not formalized: the geometric derivation of (2.3) and the existence of geodesic families
@@ -202,14 +203,31 @@ theorem deviation_eq_zero_iff {C : T4 ι} (hs : PairSkew C) (hb : Bianchi1 C)
 omit [DecidableEq ι] in
 /-- Thesis §2.3: the Ricci tensor `R_ab = R^c_acb = g^{ce} R_eacb` is symmetric.
 
-Thesis gap: the thesis cites only the interchange symmetry; the proof also needs the
-inverse metric to be symmetric (`hgi`). -/
+Formalization note: here `gi` is an arbitrary matrix, so its symmetry is assumed (`hgi`);
+for the actual inverse of a symmetric metric this is automatic, see `ricci_symm_of_inv`. -/
 theorem ricci_symm (gi : Matrix ι ι ℝ) (hgi : gi.IsSymm) {C : T4 ι}
     (hi : Interchange C) (a b : ι) :
     ∑ c, ∑ e, gi c e * C e a c b = ∑ c, ∑ e, gi c e * C e b c a := by
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun e _ => Finset.sum_congr rfl fun c _ => ?_
   rw [hi e a c b, ← hgi.apply c e]
+
+/-- A left inverse of a symmetric matrix is symmetric. -/
+lemma isSymm_of_mul_eq_one {g gi : Matrix ι ι ℝ} (hg : g.IsSymm)
+    (hinv : gi * g = 1) : gi.IsSymm := by
+  have h1 : g * gi.transpose = 1 := by
+    rw [← hg.eq, ← Matrix.transpose_mul, hinv, Matrix.transpose_one]
+  unfold Matrix.IsSymm
+  calc gi.transpose = (gi * g) * gi.transpose := by rw [hinv, Matrix.one_mul]
+    _ = gi * (g * gi.transpose) := Matrix.mul_assoc _ _ _
+    _ = gi := by rw [h1, Matrix.mul_one]
+
+/-- Thesis §2.3: the Ricci tensor `R_ab = g^{ce} R_eacb` is symmetric, for `g` symmetric with
+inverse `gi` and `C` having the interchange symmetry. -/
+theorem ricci_symm_of_inv (g gi : Matrix ι ι ℝ) (hg : g.IsSymm) (hinv : gi * g = 1)
+    {C : T4 ι} (hi : Interchange C) (a b : ι) :
+    ∑ c, ∑ e, gi c e * C e a c b = ∑ c, ∑ e, gi c e * C e b c a :=
+  ricci_symm gi (isSymm_of_mul_eq_one hg hinv) hi a b
 
 end AlgebraicCurvature
 
@@ -275,8 +293,9 @@ product rule applied to `hcomp`); symmetry of second derivatives (`hddg`, Schwar
 torsion-free connection. This is the thesis' argument `0 = [∇_c, ∇_d] g_ab`.
 
 Thesis gap: the thesis uses the action of the commutator on (0,2)-tensors without
-deriving it, and its display has a garbled factor and dropped sign; here the identity is
-proved from (2.2) directly. -/
+deriving it, and (as far as the extracted text shows) its display carries a factor `2`
+inconsistent with the `∇_[c∇_d]` definition and `+` signs where the (0,2) commutator gives
+`−`; here the identity is proved from (2.2) directly. -/
 theorem lower_riemComp_skew (g : Matrix ι ι ℝ) (hg : g.IsSymm)
     (Γ : ι → ι → ι → ℝ) (dΓ : ι → ι → ι → ι → ℝ) (dg : ι → ι → ι → ℝ)
     (ddg : ι → ι → ι → ι → ℝ)
@@ -436,6 +455,39 @@ theorem prop_2_1 (g : (Fin n → ℝ) → Matrix (Fin n) (Fin n) ℝ)
   · intro f e a b
     exact pd_pd_comm _ (hgC a b) f e x
 
+/-- Thesis §2.3, "the Ricci tensor is symmetric", for the actual curvature (2.2) of the
+Levi-Civita connection: under the hypotheses of `prop_2_1` and an inverse `gi` of `g x`,
+the Ricci tensor `R_ab = R^c_acb` of `riemField Γ x` is symmetric.
+
+Proof: `R^c_acb = g^{ce} R_eacb` (as `gi * g = 1`), then `ricci_symm_of_inv` with the
+interchange symmetry from `prop_2_1`. -/
+theorem ricci_field_symm (g : (Fin n → ℝ) → Matrix (Fin n) (Fin n) ℝ)
+    (Γ : (Fin n → ℝ) → Fin n → Fin n → Fin n → ℝ)
+    (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
+    (hΓd : ∀ a b c, Differentiable ℝ fun x => Γ x a b c)
+    (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b)
+    (hcompat : ∀ x e a b,
+      pd e (fun y => g y a b) x = ∑ r, (g x r b * Γ x r e a + g x a r * Γ x r e b))
+    (x : Fin n → ℝ) (gi : Matrix (Fin n) (Fin n) ℝ) (hinv : gi * g x = 1) (a b : Fin n) :
+    ∑ c, riemField Γ x c a c b = ∑ c, riemField Γ x c b c a := by
+  have hraise : ∀ a b, ∑ c, ∑ e, gi c e * lower (g x) (riemField Γ x) e a c b
+      = ∑ c, riemField Γ x c a c b := by
+    intro a b
+    refine sum_congr rfl fun c _ => ?_
+    simp only [lower, mul_sum]
+    rw [Finset.sum_comm]
+    have hcf : ∀ f, ∑ e, gi c e * (g x e f) = (1 : Matrix (Fin n) (Fin n) ℝ) c f := by
+      intro f; rw [← hinv]; rfl
+    calc ∑ f, ∑ e, gi c e * (g x e f * riemField Γ x f a c b)
+        = ∑ f, (1 : Matrix (Fin n) (Fin n) ℝ) c f * riemField Γ x f a c b := by
+          refine sum_congr rfl fun f _ => ?_
+          rw [← hcf f, sum_mul]
+          exact sum_congr rfl fun e _ => by ring
+      _ = riemField Γ x c a c b := by simp [Matrix.one_apply]
+  rw [← hraise a b, ← hraise b a]
+  exact ricci_symm_of_inv (g x) gi (hg x) hinv
+    (prop_2_1 g Γ hg hgC hΓd hΓ hcompat x).2.2 a b
+
 end ConnectionField
 
 section Einstein
@@ -456,9 +508,11 @@ theorem einstein_symm (g gi Ric : Matrix (Fin n) (Fin n) ℝ) (hg : g.IsSymm)
 
 /-- Thesis §2.4: in vacuum, Einstein's equations `G = 0` are equivalent to Ricci-flatness.
 
-Correction: the thesis argues via "tr G = 0 iff tr Ric = 0", which is not sufficient and
-is dimension dependent: `tr_g G = (1 − n/2) tr_g Ric`. The equivalence needs `n ≠ 2`
-(see `einstein_zero_iff_fails_two`). Proof: `G = 0 ⇒ (1 − n/2) R = 0 ⇒ R = 0 ⇒
+Thesis gap: the dimension dependence is implicit and the final step is omitted. The thesis
+works in a four-dimensional spacetime and argues via "tr G = 0 iff tr Ric = 0", using
+`tr_g G = (1 − n/2) tr_g Ric`; this needs `n ≠ 2` (see `einstein_zero_iff_fails_two`), and
+one still has to conclude `Ric = G + ½ R g`. Stated here for every `n ≠ 2`, in particular
+`n = 4`. Proof: `G = 0 ⇒ (1 − n/2) R = 0 ⇒ R = 0 ⇒
 Ric = G + ½ R g = 0`. -/
 theorem einstein_zero_iff (hn : n ≠ 2) (g gi Ric : Matrix (Fin n) (Fin n) ℝ)
     (hinv : gi * g = 1) : einstein g gi Ric = 0 ↔ Ric = 0 := by
@@ -480,9 +534,12 @@ theorem einstein_zero_iff (hn : n ≠ 2) (g gi Ric : Matrix (Fin n) (Fin n) ℝ)
   · rintro rfl
     simp
 
-/-- Correction to thesis §2.4: for `n = 2` the equivalence `G = 0 ⇔ Ric = 0` fails.
-With `g = gi = 1` and `Ric = 1`, the Einstein tensor vanishes but `Ric ≠ 0`
-(in dimension 2 the Einstein tensor of any metric vanishes identically). -/
+/-- Thesis §2.4, sharpness of the hypothesis `n ≠ 2` in `einstein_zero_iff` (the thesis
+itself works in dimension 4): for `n = 2` the algebraic equivalence `G = 0 ⇔ Ric = 0`
+fails, witnessed by `g = gi = Ric = 1`.
+
+Remark (not proved here): this is realized geometrically by the unit sphere `S²`, where
+`Ric = g`; in fact in dimension 2 the Einstein tensor of every metric vanishes. -/
 theorem einstein_zero_iff_fails_two :
     ∃ g gi Ric : Matrix (Fin 2) (Fin 2) ℝ, gi * g = 1 ∧ einstein g gi Ric = 0 ∧ Ric ≠ 0 := by
   refine ⟨1, 1, 1, by simp, ?_, one_ne_zero⟩

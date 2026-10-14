@@ -1,5 +1,7 @@
-import Feec.Ch4.Adjoint
-import Feec.Ch4.Restriction
+module
+
+public import Feec.Ch4.Adjoint
+public import Feec.Ch4.Restriction
 
 /-!
 # The abstract Hodge wave equation (Thesis §4.4: Thm 4.6, Thm 4.7)
@@ -66,7 +68,7 @@ than the thesis', existence statements from `WellPosedHom` are *weaker* than the
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.HilbertComplex2
 

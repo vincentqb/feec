@@ -1,4 +1,13 @@
-import Feec.Foundation
+module
+
+public import Mathlib.Algebra.Order.Archimedean.Real.Hom
+public import Mathlib.Analysis.Calculus.ContDiff.Deriv
+public import Mathlib.Analysis.Calculus.Deriv.Shift
+public import Mathlib.Analysis.LocallyConvex.AbsConvexOpen
+public import Mathlib.Analysis.SpecialFunctions.Exponential
+public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
+public import Feec.Foundation.Evolution
+public import Feec.Foundation.Operators
 
 /-!
 # Non-vacuity of the existence hypotheses (Thesis Thm 4.3, Hille–Yosida / Stone)
@@ -44,7 +53,7 @@ The unbounded case (e.g. the Hodge wave operator) still needs Stone's theorem, i
 open scoped RealInnerProductSpace
 open Set NormedSpace
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 

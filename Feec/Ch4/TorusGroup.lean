@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Analysis.Normed.Group.Tannery
 public import Feec.Ch4.Torus
+public import Feec.Ch4.HodgeWave
 
 /-!
 # The periodic Hodge wave group on `𝕋³`: Prop 4.17 with existence
@@ -415,10 +416,10 @@ abbrev fibP2 : Vec3 × Mat3 × Mat3 →L[ℝ] Mat3 :=
 `(σ, u, ρ) ↦ (-div_ξ u, -grad_ξ σ - curl_ξ ρ, curl_ξ u)`, i.e.
 `-L(σ,u,ρ) = (d0* u, -d0 σ - d1* ρ, d1 u)` with `d0 = grad`, `d0* = -div`, `d1 = d1* = curl`. -/
 def waveSym (ξ : Freq) : Fib →L[ℝ] Fib :=
-  (totL (W0 := Vec3) (W1 := Mat3) (W2 := Mat3)).symm.toContinuousLinearMap ∘L
+  (Constraints.totL (W0 := Vec3) (W1 := Mat3) (W2 := Mat3)).symm.toContinuousLinearMap ∘L
     ((-(divSym ξ ∘L fibP1)).prod
       ((-(gradSym ξ ∘L fibP0) - curlSym ξ ∘L fibP2).prod (curlSym ξ ∘L fibP1))) ∘L
-    (totL (W0 := Vec3) (W1 := Mat3) (W2 := Mat3)).toContinuousLinearMap
+    (Constraints.totL (W0 := Vec3) (W1 := Mat3) (W2 := Mat3)).toContinuousLinearMap
 
 /-- `waveSym` in coordinates. -/
 theorem tot_waveSym (ξ : Freq) (x : Fib) :
@@ -488,7 +489,7 @@ theorem mem_domL_iff_summable (y : Tot L2V L2M L2M) :
       (Summable fun k => ‖curlSym (freq k) ((tot _ _ _ y).2.1 k)‖ ^ 2) ∧
       (Summable fun k => ‖divSym (freq k) ((tot _ _ _ y).2.1 k)‖ ^ 2) ∧
       (Summable fun k => ‖curlSym (freq k) ((tot _ _ _ y).2.2 k)‖ ^ 2) := by
-  rw [mem_domL]
+  rw [Constraints.mem_domL]
   have h2 : periodicComplex.d1†.domain = Hcurl := by
     change curlT†.domain = Hcurl; rw [adjoint_curlT]; rfl
   have h1 : periodicComplex.d0†.domain = Hdiv := adjoint_gradT_domain
@@ -545,7 +546,7 @@ theorem adjoint_curlT_apply (u : curlT†.domain) (k : Z3) :
 theorem waveOp_c0 (y : periodicComplex.waveOp.domain) (k : Z3) :
     ((tot _ _ _ (periodicComplex.waveOp y)).1 : L2V) k =
       divSym (freq k) ((tot _ _ _ (y : Tot L2V L2M L2M)).2.1 k) := by
-  rw [tot_waveOp]
+  rw [Constraints.tot_waveOp]
   change -((periodicComplex.d0† (periodicComplex.prV1s ⟨y.1, y.2⟩) : L2V) k) = _
   rw [neg_eq_iff_eq_neg]
   exact adjoint_gradT_apply (periodicComplex.prV1s ⟨y.1, y.2⟩) k
@@ -555,7 +556,7 @@ theorem waveOp_c1 (y : periodicComplex.waveOp.domain) (k : Z3) :
     ((tot _ _ _ (periodicComplex.waveOp y)).2.1 : L2M) k =
       gradSym (freq k) ((tot _ _ _ (y : Tot L2V L2M L2M)).1 k) +
         curlSym (freq k) ((tot _ _ _ (y : Tot L2V L2M L2M)).2.2 k) := by
-  rw [tot_waveOp]
+  rw [Constraints.tot_waveOp]
   change (periodicComplex.d0 (periodicComplex.pr0 ⟨y.1, y.2⟩) : L2M) k +
     (periodicComplex.d1† (periodicComplex.prV2s ⟨y.1, y.2⟩) : L2M) k = _
   have h2 : (periodicComplex.d1† (periodicComplex.prV2s ⟨y.1, y.2⟩) : L2M) k =
@@ -568,7 +569,7 @@ theorem waveOp_c1 (y : periodicComplex.waveOp.domain) (k : Z3) :
 theorem waveOp_c2 (y : periodicComplex.waveOp.domain) (k : Z3) :
     ((tot _ _ _ (periodicComplex.waveOp y)).2.2 : L2M) k =
       -curlSym (freq k) ((tot _ _ _ (y : Tot L2V L2M L2M)).2.1 k) := by
-  rw [tot_waveOp]
+  rw [Constraints.tot_waveOp]
   rfl
 
 /-- **`-L` is the Fourier multiplier `waveSymK`** (conjugated by `fibIso`). -/
@@ -639,7 +640,7 @@ theorem ini_mem_domL_iff {E₀ B₀ : L2M} :
     rw [midDomain]
     change Hcurl ⊓ gradT†.domain = _
     rw [adjoint_gradT_domain]
-  rw [mem_domL, tot_ini, h1, h2]
+  rw [Constraints.mem_domL, tot_ini, h1, h2]
   simp only [Submodule.zero_mem, true_and]
 
 /-- For TSD data, `(0, E₀, B₀) ∈ D(L)` iff `E₀, B₀ ∈ H(curl)` (TSD fields are divergence-free). -/
@@ -693,6 +694,98 @@ theorem prop_4_17_torus_group_periodic {t : ℝ} (ht : 0 ≤ t) {x : Tot L2V L2M
     (hx : x ∈ periodicComplex.domL) (hxK : x ∈ Kc L2V L2TSD L2TSD) :
     periodicGroup.S t x ∈ Kc L2V L2TSD L2TSD :=
   prop_4_17_torus_group periodicGroup ht hx hxK
+
+/-- **Thesis Thm 4.6 (operator part) on `𝕋³`**: the periodic Hodge wave operator is densely
+defined and skew-adjoint, `L* = -L`, and so is the generator `-L` of `periodicGroup`. This is
+the hypothesis of Thm 4.3 (Stone), here consistent with the explicit group above.
+See [QuennevilleBelair2015, Thm 4.3, Thm 4.6]. -/
+theorem periodic_waveOp_isSkewAdjoint :
+    Dense (periodicComplex.waveOp.domain : Set (Tot L2V L2M L2M)) ∧
+      IsSkewAdjoint periodicComplex.waveOp ∧ IsSkewAdjoint (-periodicComplex.waveOp) :=
+  ⟨periodicComplex.dense_domL, periodicComplex.waveOp_isSkewAdjoint,
+    periodicComplex.neg_waveOp_isSkewAdjoint⟩
+
+/-- Time reversal of the explicit group: `R U(t) = U(-t) R` on `D(L)`, with
+`R(σ, E, B) = (-σ, E, -B)` (`Feec.Constraints.revT`). -/
+theorem periodicGroup_revT (t : ℝ) {x : Tot L2V L2M L2M} (hx : x ∈ periodicComplex.domL) :
+    revT L2V L2M L2M (periodicGroup.S t x) = periodicGroup.S (-t) (revT L2V L2M L2M x) := by
+  have hRL : ∀ y : (-periodicComplex.waveOp).domain,
+      (-periodicComplex.waveOp) ⟨revT L2V L2M L2M y, revT_mem_domL periodicComplex y.2⟩ =
+        -revT L2V L2M L2M ((-periodicComplex.waveOp) y) := fun y => by
+    rw [LinearPMap.neg_apply, LinearPMap.neg_apply, _root_.map_neg, neg_neg]
+    exact neg_eq_iff_eq_neg.2 (waveOp_revT periodicComplex y)
+  exact group_reversal periodicGroup _ revT_revT (fun y hy => revT_mem_domL periodicComplex hy)
+    hRL t x hx
+
+/-- **Prop 4.17 on `𝕋³` for all time** (group form): the explicit group maps `D(L) ∩ K` into
+`K = {0} × L²(TSD) × L²(TSD)` for **every** `t ∈ ℝ` (forward invariance plus time reversal).
+See [QuennevilleBelair2015, §4.10, Prop 4.17] ("for all time"). -/
+theorem prop_4_17_torus_group_all (t : ℝ) {x : Tot L2V L2M L2M}
+    (hx : x ∈ periodicComplex.domL) (hxK : x ∈ Kc L2V L2TSD L2TSD) :
+    periodicGroup.S t x ∈ Kc L2V L2TSD L2TSD :=
+  invariant_of_reversal periodicGroup _ (revT L2V L2M L2M) revT_revT
+    (fun _ hy => revT_mem_domL periodicComplex hy) (fun s _ hy => periodicGroup_revT s hy)
+    (fun _ hy => revT_mem_Kc hy) (fun _ hs _ hy hyK => prop_4_17_torus_group_periodic hs hy hyK)
+    t x hx hxK
+
+/-- `R (0, E₀, B₀) = (0, E₀, -B₀)`. -/
+theorem revT_ini (E₀ B₀ : L2M) : revT L2V L2M L2M (ini L2V E₀ B₀) = ini L2V E₀ (-B₀) :=
+  (tot L2V L2M L2M).injective (by rw [tot_revT, tot_ini, tot_ini]; simp)
+
+/-- **Prop 4.17 on `𝕋³` backward in time.** For TSD data `(0, E₀, B₀) ∈ D(L)` and `T`, the
+backward orbit `U(-t) = U(-t)(0, E₀, B₀)`, `t ∈ [0, T]`, stays in `K`, and the time-reversed
+fields `(E(-t), -B(-t))` solve the reduced system (4.15) with data `(E₀, -B₀)`. Together with
+`prop_4_17_torus_exists` this is the "for all time" statement of the thesis.
+See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem prop_4_17_torus_backward (T : ℝ) {E₀ B₀ : L2M} (hE₀ : E₀ ∈ L2TSD) (hB₀ : B₀ ∈ L2TSD)
+    (hD : ini L2V E₀ B₀ ∈ periodicComplex.domL) :
+    (∀ t ∈ Icc 0 T, periodicGroup.S (-t) (ini L2V E₀ B₀) ∈ Kc L2V L2TSD L2TSD) ∧
+      IsReducedSolution periodicComplex T E₀ (-B₀)
+        (fun t => (tot L2V L2M L2M (periodicGroup.S (-t) (ini L2V E₀ B₀))).2.1)
+        (fun t => -(tot L2V L2M L2M (periodicGroup.S (-t) (ini L2V E₀ B₀))).2.2) := by
+  have hD' : ini L2V E₀ (-B₀) ∈ periodicComplex.domL := by
+    rw [← revT_ini]; exact revT_mem_domL periodicComplex hD
+  have hU := isStrongSolution_orbit periodicGroup T ⟨_, hD'⟩
+  have h := prop_4_17_torus hE₀ (L2TSD.neg_mem hB₀) hU
+  have hK0 : ini L2V E₀ B₀ ∈ Kc L2V L2TSD L2TSD := by
+    rw [mem_Kc, tot_ini]; exact ⟨rfl, hE₀, hB₀⟩
+  have he : ∀ t, periodicGroup.S t (ini L2V E₀ (-B₀)) =
+      revT L2V L2M L2M (periodicGroup.S (-t) (ini L2V E₀ B₀)) := fun t => by
+    rw [periodicGroup_revT _ hD, neg_neg, revT_ini]
+  refine ⟨fun t _ => prop_4_17_torus_group_all _ hD hK0, ?_⟩
+  convert h.2 using 2 <;> simp only [he, tot_revT]
+
+/-- **Prop 4.17 on `𝕋³` with the thesis' regularity and energy conservation.** For TSD data
+`(0, E₀, B₀) ∈ D(L)` there exists a solution `U ∈ C⁰([0,T]; D(L)) ∩ C¹([0,T]; X)` of (4.14)
+(`IsClassicalSolution`, the class of Thm 4.3/4.6); it is unique among strong solutions, stays
+in `K`, its `(E, B)` solves (4.15), and it conserves the energy
+`‖E(t)‖² + ‖B(t)‖² = ‖E₀‖² + ‖B₀‖²`.
+See [QuennevilleBelair2015, §4.10, Prop 4.17, Thm 4.3, Thm 4.6]. -/
+theorem prop_4_17_torus_classical (T : ℝ) {E₀ B₀ : L2M} (hE₀ : E₀ ∈ L2TSD) (hB₀ : B₀ ∈ L2TSD)
+    (hD : ini L2V E₀ B₀ ∈ periodicComplex.domL) :
+    ∃ U : ℝ → Tot L2V L2M L2M,
+      IsClassicalSolution (-periodicComplex.waveOp) T (ini L2V E₀ B₀) 0 U ∧
+      (∀ U', IsStrongSolution (-periodicComplex.waveOp) T (ini L2V E₀ B₀) 0 U' →
+        EqOn U' U (Icc 0 T)) ∧
+      (∀ t ∈ Icc 0 T, U t ∈ Kc L2V L2TSD L2TSD) ∧
+      IsReducedSolution periodicComplex T E₀ B₀ (fun t => (tot L2V L2M L2M (U t)).2.1)
+        (fun t => (tot L2V L2M L2M (U t)).2.2) ∧
+      ∀ t ∈ Icc 0 T, ‖(tot L2V L2M L2M (U t)).2.1‖ ^ 2 + ‖(tot L2V L2M L2M (U t)).2.2‖ ^ 2 =
+        ‖E₀‖ ^ 2 + ‖B₀‖ ^ 2 := by
+  obtain ⟨U, hU⟩ := periodicGroup.wellPosedClassical T (ini L2V E₀ B₀) hD 0 rfl
+  have hS : IsSkewSymm (-periodicComplex.waveOp) :=
+    isSkewSymm_neg (Constraints.waveOp_isSkewSymm periodicComplex)
+  have h := prop_4_17_torus hE₀ hB₀ hU.toIsStrongSolution
+  refine ⟨U, hU, fun U' hU' => strong_unique _ hS hU' hU.toIsStrongSolution, h.1, h.2,
+    fun t ht => ?_⟩
+  have hn := HilbertComplex2.norm_eq_of_isStrongSolution hS hU.toIsStrongSolution t ht
+  have h0 := ((mem_Kc).1 (h.1 t ht)).1
+  have e1 := norm_sq_tot (U t)
+  have e2 := norm_sq_tot (ini L2V E₀ B₀)
+  rw [hn, e2, tot_ini, h0] at e1
+  simp only [norm_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
+    zero_add] at e1
+  exact e1.symm
 
 end Prop417
 

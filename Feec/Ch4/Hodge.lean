@@ -1,4 +1,8 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.Complex
+public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import Mathlib.Analysis.Normed.Operator.Compact.Basic
 
 /-!
 # Bounded-model Hodge theory (Thesis §4.2: Thm 4.1, Thm 4.2)
@@ -49,7 +53,7 @@ Indexing: `C.H k ⊆ V (k+1)` is `ℌ^{k+1}`; `ℌ^0` is `C.H0 = C.Z 0`.
 open scoped RealInnerProductSpace Topology
 open Set Filter
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 namespace HilbertComplex

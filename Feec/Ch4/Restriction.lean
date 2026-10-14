@@ -105,7 +105,8 @@ theorem map_orthogonal_mem (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)
     rw [real_inner_comm]; exact congrFun this ⟨k, hk⟩
 
 /-- Under the hypotheses of Thesis Thm 4.4, `L` commutes with `P_K` on `D(L)`:
-`L (P_K x) = P_K (L x)`. (Stated in the audit's corrected Thm 4.4; only skew-symmetry is used.) -/
+`L (P_K x) = P_K (L x)`. (Stated in the audit's corrected Thm 4.4; uses skew-symmetry and
+density of `D(L)`.) -/
 theorem commute_proj (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
     (hL : IsSkewSymm L) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
@@ -233,9 +234,10 @@ theorem IsStrongSolution.hasDerivWithinAt_Ici (hU : IsStrongSolution L T U₀ F 
 /-- Uniqueness half of **Thesis Thm 4.3**: strong solutions of `U' = L U + F`, `U(0) = U₀`
 are unique on `[0,T]` for skew-symmetric `L`.
 
-Thesis gap: the thesis cites uniqueness from Hille–Yosida [16]; it is elementary (energy
-identity `d/dt ‖U - U'‖² = 2⟪L(U - U'), U - U'⟫ = 0`) and needs neither density nor
-skew-adjointness. Since `IsStrongSolution` is weaker than the thesis' solution class
+Remark (alternative elementary proof): the thesis obtains uniqueness from Hille–Yosida [16];
+here it is proved directly by the energy method (energy identity
+`d/dt ‖U - U'‖² = 2⟪L(U - U'), U - U'⟫ = 0`), which needs neither density nor skew-adjointness.
+Since `IsStrongSolution` is weaker than the thesis' solution class
 `C⁰(D(L)) ∩ C¹(X)`, this uniqueness statement is stronger than the thesis'. -/
 theorem strongSolution_unique (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L) {T : ℝ} {U₀ : E}
     {F U U' : ℝ → E} (h : IsStrongSolution L T U₀ F U) (h' : IsStrongSolution L T U₀ F U') :
@@ -357,9 +359,9 @@ admissible forcing `F` the restricted problem `U' = L̃ U + F`, `U(0) = U₀` ha
 in `K`, unique among `K`-valued strong solutions, which coincides on `[0,T]` with every
 `X`-valued strong solution of `U' = L U + F`.
 
-Thesis gap: the identification with the `X`-solution and the constraint `U(t) ∈ K` are only
-implicit in the thesis. Correction (simpler route): existence is taken from the hypothesis
-`WellPosedExistence` on `X` (standing in for Thm 4.3; Hille–Yosida is not in Mathlib) and
+Remark (simpler route, not a gap): the thesis proof applies Thm 4.3 to `L̃` on `K` and then
+observes that the `K`-solution also solves the `X`-problem. Here existence is taken from the
+hypothesis `WellPosedExistence` on `X` (standing in for Thm 4.3; Hille–Yosida is not in Mathlib) and
 transferred to `K` by `constraint_propagation`; Thm 4.3 on `K` is not needed. Weaker than the
 thesis: the solution class is `IsStrongSolution`; the full regularity is `cor_4_5_classical`. -/
 theorem cor_4_5 [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))

@@ -1,4 +1,10 @@
-import Feec.Ch4.Existence
+module
+
+public import Mathlib.Analysis.Calculus.Deriv.Prod
+public import Mathlib.RingTheory.MvPolynomial.EulerIdentity
+public import Feec.Ch4.Existence
+public import Feec.Foundation.Complex
+public import Feec.Foundation.Tensor
 
 /-!
 # Thesis §4.7–4.11: polynomial complexes, wave equations, constraint propagation
@@ -72,10 +78,10 @@ propagation statements stronger than the thesis', but the existence conclusions
 * [ACBY1997] (the Einstein–Bianchi system behind Props 4.17/4.19)
 -/
 
+@[expose] public noncomputable section
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
-
-noncomputable section
 
 namespace Feec.Constraints
 

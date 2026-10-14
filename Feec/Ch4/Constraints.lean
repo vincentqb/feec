@@ -1394,13 +1394,21 @@ in both `S1 = S2 = L²(TSD)`, and `hd1`, `hd1s` are the distributional Lemma 3.5
 
 Thesis gap / Correction: the density "conjectures" of the thesis are not needed, and the
 projection hypothesis cannot be dropped (`prop_4_17_iff`). Whether it holds depends on the
-domain; the following PDE facts are not formalized (they need Fourier analysis, traces and
-elliptic regularity):
-* it holds for the periodic complex on the flat torus `𝕋³`: at frequency `ξ` the TSD fibre
-  `{M symmetric, tr M = 0, M ξ = 0}` is orthogonal to every `c ξᵀ`, so `P_TSD` kills the
-  longitudinal part of each row and `|ξ| |(P_TSD A)^(ξ)| ≤ |ξ × rows(Â(ξ))|`; hence
-  `P_TSD H(curl) ⊆ H¹ ⊆ H(curl)`;
-* its `H̊(curl)` part (electric boundary condition) fails on every smooth bounded domain `Ω`:
+domain:
+* it holds for the periodic complex on the flat torus `𝕋³`, and Prop 4.17 holds there
+  unconditionally: this is formalized in `Feec.Ch4.Torus` on the Fourier side (`ℓ²(ℤ³)`,
+  isometric to `L²(𝕋³)` by `Feec.Torus.fieldFourier`). At frequency `ξ` the TSD fibre
+  `{M symmetric, tr M = 0, M ξ = 0}` is orthogonal to every `c ξᵀ`
+  (`Feec.Torus.inner_outer_tsd`), the fibre projection commutes with the curl symbol, and
+  `|ξ| |(P_TSD A)^(ξ)| = |P_ξ(ξ × rows(Â(ξ)))| ≤ |ξ × rows(Â(ξ))|`
+  (`Feec.Torus.norm_freq_mul_norm_proj`); hence `P_TSD H(curl) ⊆ H¹ ⊆ H(curl)`
+  (`Feec.Torus.projTSD_mem_H1`, `Feec.Torus.H1M_le_Hcurl`). All hypotheses of this theorem are
+  discharged for the periodic complex `Feec.Torus.periodicComplex` with `S1 = S2 = L²(TSD)`,
+  giving `Feec.Torus.prop_4_17_torus`. The review's claim that the hypothesis fails on every
+  domain via `A = e₁ (∇f)ᵀ` confuses `P_TSD` with the pointwise `dev sym`: that `A` is
+  orthogonal to `L²(TSD)` on `𝕋³` (`Feec.Torus.projTSD_eq_zero_of_outer`);
+* its `H̊(curl)` part (electric boundary condition) fails on every smooth bounded domain `Ω`
+  (not formalized; it needs traces and elliptic regularity):
   a symmetric traceless matrix whose rows have zero tangential trace vanishes, so
   `P_TSD E ∈ H̊(curl)` would force `P_TSD E = 0` on `∂Ω`; but for `E = φ A` with
   `φ ∈ C_c^∞(Ω)`, `∫ φ ≠ 0`, `dev sym A ≠ 0`, the Dirichlet Lamé-type problem defining

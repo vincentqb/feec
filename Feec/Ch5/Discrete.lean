@@ -8,15 +8,22 @@ filling the gaps found in the audit (`docs/BLUEPRINT.md` §4, M10; critic item 3
 
 **Part 1 (pure finite-dimensional algebra, on arbitrary inner product spaces).**
 * `discrete_anticomm`, `surj_of_54`: the unlabeled claims after the setup (line 3304ff).
-* `exact_55`: exactness of the discrete complex (5.5) at `Ṽ_h¹` (used, never proved).
+* `exact_55`: exactness of the discrete complex (5.5) at `Ṽ_h¹` (the discrete Hodge
+  decomposition without harmonic part), used in Prop 5.4 and Thm 5.5 but never derived from
+  the two exact discrete complexes assumed in Prop 5.3.
 * `prop54_unique`, `prop54_existsUnique` (via `sysForm_bijective`): **Prop 5.4** with minimal
-  hypotheses; `prop54_hB_necessary` and `prop54_counterexample_noTopExact` show that the
-  condition `dV_h⁰ + S₀,hṼ_h⁰ = V_h¹` and top exactness at `V_h¹` (never mentioned) are needed.
+  hypotheses; `prop54_hB_necessary` shows the condition `dV_h⁰ + S₀,hṼ_h⁰ = V_h¹` is needed,
+  and `prop54_counterexample_noTopExact` shows that the exactness at `V_h¹` assumed in Prop 5.3
+  (but never invoked in the thesis' proof of Prop 5.4) cannot be dropped.
+* `cons_of_56c`, `complex_55`, `decomp_55`: (5.6c) forces `dσ_h = S₀,hφ_h`; (5.5) is a
+  complex; `Ṽ_h¹ = dpr₂Γ_h ⊕ Z_hᗮ` (reusable forms of steps inlined in Thm 5.5).
 * `prop_5_6`: **Prop 5.6** (error equation), with the multiplier as a functional.
 * `thm55_lhs_identity`: the coercivity identity of the proof of Thm 5.5 (lost `ε`'s restored).
 * `minNorm_bound`, `norm_le_of_sub_mem`: the min-norm step missing from Prop 5.3(b).
-* `dof_commute`: the degree-of-freedom argument behind **Prop 5.7** ((5.4) for canonical
-  projections), without the invalid density step.
+* `dof_commute`, `dof_hS_of_span`, `dof_commute_of_span`: the degree-of-freedom argument
+  behind **Prop 5.7** ((5.4) for canonical projections), without the invalid density step. The
+  concrete Lagrange-P2 → Nédélec computation (5.8) is *not* formalized: it enters as the
+  hypothesis that each `ℓ_k ∘ S₀` lies in the span of the `m_i`.
 
 **Part 2 (the discretization of a `BGGData`).** `ContHyp` collects the *continuous*,
 `h`-independent hypotheses (Poincaré, exactness, Hodge, regular decomposition with its
@@ -30,6 +37,14 @@ total cochain projections; `Disc.Bounded` the uniform projection bounds; `Disc.H
 * `Disc.prop_5_4`: **Prop 5.4** (unique solvability of (5.6)) in the discretization.
 * `Disc.thm_5_5`: **Thm 5.5**, the quantitative a priori estimate, with full signature and the
   explicit `h`-independent constant `C55`.
+* `nonvacuous`: a concrete instance of `ContHyp + Disc + Bounded + Hyp54` with nonzero spaces
+  and `S₁ ≠ 0` (identity discretization of a finite-dimensional complex).
+
+Caveat on the hypotheses (inherited from the thesis): `Disc.Bounded` asks for uniformly bounded
+total cochain projections, `Disc.Hyp54` asks the *same* projections to satisfy (5.4). The thesis
+verifies (5.4) only for canonical projections (Prop 5.7), which are not bounded on `H(curl)`;
+whether some bounded (e.g. smoothed) commuting projections satisfy (5.4) in the elasticity /
+Einstein–Bianchi application is not known to us and is not addressed by the thesis.
 
 Modeling: "type = domain with `W`-inner product" (foundation §E/§F); graph norms are explicit
 (`gr2`, `Disc.gn2`). Missing analytic facts (Sobolev spaces, finite element spaces, the open
@@ -89,9 +104,11 @@ theorem surj_of_54 {Dm X1h Y0h : Type*} [AddCommGroup Dm] [Module ℝ Dm] [AddCo
     (h54 : S0h ∘ₗ Pt0 = P1S0) (hs : Function.Surjective P1S0) : Function.Surjective S0h :=
   fun y => let ⟨ψ, hψ⟩ := hs y; ⟨Pt0 ψ, by rw [← LinearMap.comp_apply, h54, hψ]⟩
 
-/-- Thesis §5.2, complex (5.5) is exact at `Ṽ_h¹` (used in Prop 5.4 and Thm 5.5, never proved).
-Thesis gap: needs exactness of *both* discrete complexes, at `Ṽ_h¹` and at `V_h¹`
-(the latter is never mentioned; see `prop54_counterexample_noTopExact`). -/
+/-- Thesis §5.2, complex (5.5) is exact at `Ṽ_h¹` (the discrete Hodge decomposition without
+harmonic part).
+Thesis gap: the proofs of Prop 5.4 and Thm 5.5 use this exactness without deriving it. It
+follows from the exactness of the two discrete complexes assumed in Prop 5.3, at `Ṽ_h¹` *and*
+at `V_h¹`, plus `dS₀ = -S₁d`. -/
 theorem exact_55 (dX0 : X0 →ₗ[ℝ] X1) (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1)
     (dY1 : Y1 →ₗ[ℝ] Y2) (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2)
     (hanti : ∀ ψ, dX1 (S0 ψ) = -S1 (dY0 ψ))
@@ -104,9 +121,11 @@ theorem exact_55 (dX0 : X0 →ₗ[ℝ] X1) (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 �
 /-- **Thesis Prop 5.4 (uniqueness), minimal hypotheses.** The homogeneous discrete system (5.6)
 has only the trivial solution.
 Correction: none of the uniform-in-`h` bounds of Prop 5.3 are needed. What is used is
-`dS₀ = -S₁d`, injectivity of `d` on `Ṽ_h⁰`, exactness at `Ṽ_h¹` *and at `V_h¹`* (never mentioned
-in the thesis) and `dV_h⁰ + S₀Ṽ_h⁰ = V_h¹` (weaker than surjectivity of `S₀,h`).
-Thesis gap: the "discrete Hodge decomposition" without harmonic part is `exact_55`. -/
+`dS₀ = -S₁d`, injectivity of `d` on `Ṽ_h⁰`, exactness at `Ṽ_h¹` and at `V_h¹` (both part of the
+"two exact complexes" assumed in Prop 5.3) and `dV_h⁰ + S₀Ṽ_h⁰ = V_h¹` (weaker than
+surjectivity of `S₀,h`).
+Thesis gap: the "discrete Hodge decomposition" without harmonic part, i.e. exactness of (5.5)
+at `Ṽ_h¹`, is used but never derived from those assumptions; it is `exact_55`. -/
 theorem prop54_unique
     (dX0 : X0 →ₗ[ℝ] X1) (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
     (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2)
@@ -159,7 +178,9 @@ theorem prop54_hB_necessary
       (∀ μ, ⟪dX0 σ - S0 φ, μ⟫ = 0) :=
   ⟨0, 0, 0, l, hl, fun τ ψ => by simp [hperp], fun v => by simp, fun μ => by simp⟩
 
-/-- **Thesis Prop 5.4: top exactness at `V_h¹` cannot be dropped.** All spaces `ℝ`,
+/-- **Thesis Prop 5.4: the exactness at `V_h¹` assumed in Prop 5.3 cannot be dropped.** (It is
+an assumed hypothesis that the thesis' proof never invokes; it enters through `exact_55`.)
+All spaces `ℝ`,
 `dX0 = dX1 = dY1 = S1 = 0`, `dY0 = S0 = id`. Every other hypothesis of `prop54_unique` holds
 (even `S₀,h` is onto), exactness at `V_h¹` fails, and `(σ,φ,u,λ) = (0,0,1,1)` solves the
 homogeneous system. -/
@@ -320,7 +341,10 @@ theorem thm55_lhs_identity
 and every `ℓ_k ∘ S₀` vanishes on the joint kernel of the `m_i` (the thesis' Leibniz-rule
 computation (5.8)). Then `Π¹S₀Π̃⁰ = Π¹S₀`.
 Correction: the thesis' "by density" step is invalid (canonical projections are not continuous
-on `Ṽ⁰`) and unnecessary: the degree-of-freedom argument applies to every `ψ` directly. -/
+on `Ṽ⁰`) and unnecessary: the degree-of-freedom argument applies to every `ψ` directly.
+Not formalized: the real content of Prop 5.7, the Leibniz/edge-moment computation (5.8)
+establishing `hS` for Lagrange-P2 → Nédélec, is assumed here as `hS` (see `dof_hS_of_span`
+for the usual sufficient condition). -/
 theorem dof_commute {Y X ι κ : Type*} [AddCommGroup Y] [Module ℝ Y] [AddCommGroup X]
     [Module ℝ X] (m : ι → Y →ₗ[ℝ] ℝ) (ℓ : κ → X →ₗ[ℝ] ℝ) (S0 : Y →ₗ[ℝ] X)
     (Pt0 : Y →ₗ[ℝ] Y) (P1 : X →ₗ[ℝ] X)
@@ -331,6 +355,36 @@ theorem dof_commute {Y X ι κ : Type*} [AddCommGroup Y] [Module ℝ Y] [AddComm
   refine hP1 _ _ fun k => ?_
   have := hS (Pt0 ψ - ψ) (fun i => by simp [hPt0]) k
   rwa [map_sub, map_sub, sub_eq_zero] at this
+
+/-- Thesis Prop 5.7, the usual sufficient condition for `hS` of `dof_commute`: every degree of
+freedom `ℓ_k ∘ S₀` of `S₀ψ` is a linear combination of the degrees of freedom `m_i` of `ψ`.
+(For `S₀ = I` and Lagrange-P2 → Nédélec, each edge moment of `Iω` is `τ_e ·` a P2 edge moment
+of `ω`; that concrete computation is not formalized.) -/
+theorem dof_hS_of_span {Y X ι κ : Type*} [AddCommGroup Y] [Module ℝ Y] [AddCommGroup X]
+    [Module ℝ X] (m : ι → Y →ₗ[ℝ] ℝ) (ℓ : κ → X →ₗ[ℝ] ℝ) (S0 : Y →ₗ[ℝ] X)
+    (hspan : ∀ k, ℓ k ∘ₗ S0 ∈ Submodule.span ℝ (Set.range m)) :
+    ∀ ω, (∀ i, m i ω = 0) → ∀ k, ℓ k (S0 ω) = 0 := by
+  intro ω hω k
+  have key : ∀ f ∈ Submodule.span ℝ (Set.range m), f ω = 0 := by
+    intro f hf
+    induction hf using Submodule.span_induction with
+    | mem x hx => obtain ⟨i, rfl⟩ := hx; exact hω i
+    | zero => simp
+    | add x y _ _ hx hy => simp [hx, hy]
+    | smul a x _ hx => simp [hx]
+  exact key _ (hspan k)
+
+/-- **Thesis Prop 5.7 (abstract form)**: if `Π¹` depends only on the `ℓ_k`, `Π̃⁰` preserves the
+`m_i`, and each `ℓ_k ∘ S₀` lies in the span of the `m_i`, then (5.4) `Π¹S₀Π̃⁰ = Π¹S₀` holds for
+every `ψ` (no density argument). -/
+theorem dof_commute_of_span {Y X ι κ : Type*} [AddCommGroup Y] [Module ℝ Y] [AddCommGroup X]
+    [Module ℝ X] (m : ι → Y →ₗ[ℝ] ℝ) (ℓ : κ → X →ₗ[ℝ] ℝ) (S0 : Y →ₗ[ℝ] X)
+    (Pt0 : Y →ₗ[ℝ] Y) (P1 : X →ₗ[ℝ] X)
+    (hP1 : ∀ x y, (∀ k, ℓ k x = ℓ k y) → P1 x = P1 y)
+    (hPt0 : ∀ i ψ, m i (Pt0 ψ) = m i ψ)
+    (hspan : ∀ k, ℓ k ∘ₗ S0 ∈ Submodule.span ℝ (Set.range m)) (ψ : Y) :
+    P1 (S0 (Pt0 ψ)) = P1 (S0 ψ) :=
+  dof_commute m ℓ S0 Pt0 P1 hP1 hPt0 (dof_hS_of_span m ℓ S0 hspan) ψ
 
 end Generic
 
@@ -475,7 +529,7 @@ subcomplexes, with cochain projections.
 Correction: the thesis takes *canonical* projections, yet applies them (and (5.4)) to arbitrary
 elements of `Ṽ⁰, Ṽ¹` produced by continuous decompositions. Here the projections are total
 linear maps (bounded cochain projections, e.g. smoothed projections), idempotent on the
-discrete spaces and commuting with `d`. -/
+discrete spaces and commuting with `d`. See the caveat at `Hyp54`. -/
 structure Disc (D : BGGData V0 V1 W2 Vt0 Vt1 Wt2) where
   V0h : Submodule ℝ V0
   V1h : Submodule ℝ V1
@@ -522,12 +576,23 @@ def S1h : Vt1 →ₗ[ℝ] W2 := Q.P2 ∘ₗ D.S1
 /-- `Z_h = N(S₁,h) ∩ N(d) ∩ Ṽ_h¹` -/
 def Zh : Submodule ℝ Vt1 := Q.Vt1h ⊓ (LinearMap.ker Q.S1h ⊓ LinearMap.ker D.dt1)
 
+/-- `Γ_h = {(σ_h, φ_h) ∈ V_h⁰ × Ṽ_h⁰ | dσ_h = S₀,h φ_h}`. -/
+def Γh : Submodule ℝ (V0 × Vt0) :=
+  Q.V0h.prod Q.Vt0h ⊓
+    LinearMap.ker (D.d0 ∘ₗ LinearMap.fst ℝ V0 Vt0 - Q.S0h ∘ₗ LinearMap.snd ℝ V0 Vt0)
+
+theorem mem_Γh {x : V0 × Vt0} : x ∈ Q.Γh ↔ x.1 ∈ Q.V0h ∧ x.2 ∈ Q.Vt0h ∧ D.d0 x.1 = Q.S0h x.2 := by
+  simp [Γh, sub_eq_zero, and_assoc]
+
 /-- The `h`-dependent graph norm on `Ṽ¹` (squared), the thesis' `‖·‖_{Γ_h}`.
 Correction: the thesis calls it "the graph norm of `Γ_h`", but `Γ_h` is a space of pairs; the
 proof only makes sense for `‖w‖² + ‖S₁,h w‖² + ‖dw‖²`. -/
 def gn2 (w : Vt1) : ℝ := ‖w‖ ^ 2 + ‖Q.S1h w‖ ^ 2 + ‖D.dt1 w‖ ^ 2
 
-/-- The surjectivity hypothesis (5.4), for the total projections: `S₀,h Π̃⁰ = Π¹ S₀`. -/
+/-- The surjectivity hypothesis (5.4), for the total projections: `S₀,h Π̃⁰ = Π¹ S₀`.
+Caveat: the thesis checks (5.4) only for canonical projections (Prop 5.7), which do not satisfy
+`Bounded`; no projection is known to us satisfying `Disc + Bounded + Hyp54` in the
+elasticity / Einstein–Bianchi application (cf. `nonvacuous` for an abstract instance). -/
 def Hyp54 : Prop := ∀ ψ, Q.P1 (D.S0 (Q.Pt0 ψ)) = Q.P1 (D.S0 ψ)
 
 /-- **Uniform (in `h`) bounds on the projections** (thesis gap: assumed implicitly in the proof
@@ -565,8 +630,9 @@ theorem exact_t1 {Cp CR CS : ℝ} (H : ContHyp D Cp CR CS) {u : Vt1} (hu : u ∈
   rw [Q.commt0, add_zero] at *
   exact Q.Pt1_id _ hu
 
-/-- Discrete exactness at `V_h¹`, derived (the thesis never mentions it, yet Prop 5.4 fails
-without it: `prop54_counterexample_noTopExact`). -/
+/-- Discrete exactness at `V_h¹`, derived from continuous exactness and the cochain projections
+(Prop 5.3 assumes it as part of "two exact complexes"; the thesis' proof of Prop 5.4 never
+invokes it, yet Prop 5.4 fails without it: `prop54_counterexample_noTopExact`). -/
 theorem exact_1 {Cp CR CS : ℝ} (H : ContHyp D Cp CR CS) {μ : V1} (hμ : μ ∈ Q.V1h)
     (hd : D.d1 μ = 0) : ∃ ρ ∈ Q.V0h, D.d0 ρ = μ := by
   obtain ⟨ρ, hρ⟩ := H.exact1 μ hd
@@ -590,6 +656,64 @@ theorem exact_55_h {Cp CR CS : ℝ} (H : ContHyp D Cp CR CS) {u : Vt1} (hu : u �
     (by rw [Q.anticomm_h, LinearMap.mem_ker.1 hu2, neg_zero])
   exact ⟨ρ, hρ, χ, hχ, hρ', rfl⟩
 
+/-- Thesis §5.2 (unlabeled, used in Thm 5.5): equation (5.6c) forces the discrete constraint
+`dσ_h = S₀,h φ_h` *exactly*, since `dσ_h - S₀,hφ_h ∈ V_h¹` (as `dV_h⁰ ⊂ V_h¹`, `S₀,hṼ_h⁰ ⊂ V_h¹`)
+may be taken as test function. -/
+theorem cons_of_56c {σh : V0} {φh : Vt0} (hσh : σh ∈ Q.V0h)
+    (h3 : ∀ μ ∈ Q.V1h, ⟪D.d0 σh - Q.S0h φh, μ⟫ = 0) : D.d0 σh = Q.S0h φh :=
+  sub_eq_zero.1 (inner_self_eq_zero.1
+    (h3 _ (Submodule.sub_mem _ (Q.d0_mem σh hσh) (Q.S0h_mem φh))))
+
+/-- Thesis §5.2: (5.5) is a complex, i.e. `(S₁,h, d) ∘ (0, d) = 0` on `Γ_h`. -/
+theorem complex_55 {x : V0 × Vt0} (hx : x ∈ Q.Γh) :
+    Q.S1h (D.dt0 x.2) = 0 ∧ D.dt1 (D.dt0 x.2) = 0 := by
+  obtain ⟨-, -, h⟩ := Q.mem_Γh.1 hx
+  refine ⟨?_, D.dt1_dt0 _⟩
+  have := Q.anticomm_h x.2
+  rw [← h, D.d1_d0] at this
+  exact neg_eq_zero.1 this.symm
+
+/-- `Z_h` is exactly the image `d(pr₂ Γ_h)` (exactness of (5.5) at `Ṽ_h¹` plus `complex_55`). -/
+theorem Zh_eq_map {Cp CR CS : ℝ} (H : ContHyp D Cp CR CS) :
+    Q.Zh = Q.Γh.map (D.dt0 ∘ₗ LinearMap.snd ℝ V0 Vt0) := by
+  ext u
+  constructor
+  · intro hu
+    obtain ⟨ρ, hρ, χ, hχ, hρχ, rfl⟩ := exact_55_h H hu
+    exact ⟨(ρ, χ), Q.mem_Γh.2 ⟨hρ, hχ, hρχ⟩, rfl⟩
+  · rintro ⟨x, hx, rfl⟩
+    obtain ⟨hS, hd⟩ := complex_55 hx
+    exact ⟨Q.dt0_mem _ (Q.mem_Γh.1 hx).2.1, hS, hd⟩
+
+/-- **Discrete Hodge decomposition without harmonic part** (thesis §5.2, used in Prop 5.4 and
+Thm 5.5): `Ṽ_h¹ = d(pr₂ Γ_h) ⊕ (Z_hᗮ ∩ Ṽ_h¹)`, orthogonally, with unique `d`-component.
+Thesis gap: used without proof; it rests on exactness of (5.5) (`exact_55_h`). -/
+theorem decomp_55 {Cp CR CS : ℝ} (H : ContHyp D Cp CR CS) [FiniteDimensional ℝ Q.Vt1h]
+    {w : Vt1} (hw : w ∈ Q.Vt1h) :
+    ∃ x ∈ Q.Γh, ∃ ω ∈ Q.Vt1h, ω ∈ Q.Zhᗮ ∧ w = D.dt0 x.2 + ω ∧
+      ∀ x' ∈ Q.Γh, ∀ ω' ∈ Q.Zhᗮ, w = D.dt0 x'.2 + ω' → D.dt0 x'.2 = D.dt0 x.2 ∧ ω' = ω := by
+  have : FiniteDimensional ℝ Q.Zh := Submodule.finiteDimensional_of_le inf_le_left
+  set z := Q.Zh.starProjection w
+  have hz : z ∈ Q.Zh := Q.Zh.starProjection_apply_mem w
+  have hω : w - z ∈ Q.Zhᗮ := Q.Zh.sub_starProjection_mem_orthogonal w
+  have hzm : z ∈ Q.Γh.map (D.dt0 ∘ₗ LinearMap.snd ℝ V0 Vt0) := by rw [← Zh_eq_map H]; exact hz
+  obtain ⟨x, hx, hxz⟩ := hzm
+  simp only [LinearMap.comp_apply, LinearMap.snd_apply] at hxz
+  refine ⟨x, hx, w - z, Submodule.sub_mem _ hw hz.1, hω, by rw [hxz]; abel, ?_⟩
+  intro x' hx' ω' hω' hw'
+  have hz' : D.dt0 x'.2 ∈ Q.Zh := by
+    rw [Zh_eq_map H]; exact ⟨x', hx', rfl⟩
+  -- `a := dx'₂ - z ∈ Z_h ∩ Z_hᗮ`
+  have ha1 : D.dt0 x'.2 - z ∈ Q.Zh := Submodule.sub_mem _ hz' hz
+  have ha2 : D.dt0 x'.2 - z ∈ Q.Zhᗮ := by
+    have : D.dt0 x'.2 - z = (w - z) - ω' := by rw [hw']; abel
+    rw [this]; exact Submodule.sub_mem _ hω hω'
+  have ha : D.dt0 x'.2 - z = 0 :=
+    inner_self_eq_zero.1 (Submodule.inner_right_of_mem_orthogonal ha1 ha2)
+  have hxz' : D.dt0 x'.2 = z := sub_eq_zero.1 ha
+  refine ⟨hxz'.trans hxz.symm, ?_⟩
+  rw [hw', hxz']; abel
+
 /-- `V_h¹ = dV_h⁰ + S₀,hṼ_h⁰`, the exact condition of Prop 5.4, **derived** from (5.4), the
 regular decomposition and exactness at `V¹`.
 Thesis gap: the thesis derives the stronger "S₀,h onto" from an unproved surjectivity of
@@ -609,7 +733,9 @@ def Ca (Cp CS CP : ℝ) : ℝ := (1 + Cp ^ 2) * CP * CS
 if `dσ = S₀,h φ` then `‖σ‖_V ≤ C_a ‖dφ‖`.
 Correction: the thesis states only `‖σ_h‖ ≤ C‖dφ_h‖`; the proof of Thm 5.5 needs the `V`-norm
 form. The constant is derived from the continuous Poincaré constant, `‖S₀‖` and the projection
-bound (the thesis assumes `S₀,h` uniformly bounded; here this is derived). -/
+bound. The thesis hypothesis "`S₀,h` uniformly bounded" is *replaced* by the graph-norm bound on
+`Π¹` over all of `V¹` (`Bounded.P1`) together with `boundS0`; this is stronger than the thesis
+hypothesis, which the thesis checks (Prop 5.8) for canonical projections only. -/
 theorem prop_5_3_a {Cp CR CS CP : ℝ} (H : ContHyp D Cp CR CS) (B : Q.Bounded CP)
     {σ : V0} {φ : Vt0} (h : D.d0 σ = Q.S0h φ) :
     gr2 D.d0 σ ≤ Ca Cp CS CP ^ 2 * ‖D.dt0 φ‖ ^ 2 := by
@@ -968,7 +1094,9 @@ Thesis gaps / corrections:
   `ε = 1/C_a²`; Prop 5.3(a) is used in its `V`-norm form; Prop 5.3(b) supplies `‖ω_h‖`.
 * The constant is explicit; it depends only on `h`-independent constants.
 * `λ_h` need not lie in `V_h¹`, and the continuous equations are only needed on discrete test
-  functions. -/
+  functions.
+* Caveat (inherited from the thesis): `B` and `h54` are imposed on the same projections; see
+  `Hyp54`. -/
 theorem thm_5_5 {Cp CR CS CP : ℝ} (H : ContHyp D Cp CR CS) (B : Q.Bounded CP) (h54 : Q.Hyp54)
     [FiniteDimensional ℝ Q.Vt1h]
     {h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
@@ -1001,8 +1129,7 @@ theorem thm_5_5 {Cp CR CS CP : ℝ} (H : ContHyp D Cp CR CS) (B : Q.Bounded CP) 
   set Cb' := Cb Cp CR CS CP with hCb_def
   have hCb0 : 0 ≤ Cb' := by rw [hCb_def, Cb]; positivity
   -- step 0: the discrete constraint and `(e_σ, e_φ) ∈ Γ_h`
-  have hcons : D.d0 σh = Q.S0h φh := sub_eq_zero.1 (inner_self_eq_zero.1
-    (h3 _ (Submodule.sub_mem _ (Q.d0_mem σh hσh) (Q.S0h_mem φh))))
+  have hcons : D.d0 σh = Q.S0h φh := cons_of_56c hσh h3
   obtain ⟨eσ, heσ⟩ : ∃ e, e = Q.P0 σ - σh := ⟨_, rfl⟩
   obtain ⟨eφ, heφ⟩ : ∃ e, e = Q.Pt0 φ - φh := ⟨_, rfl⟩
   have heσm : eσ ∈ Q.V0h := heσ ▸ Submodule.sub_mem _ (Q.P0_mem σ) hσh
@@ -1143,6 +1270,90 @@ theorem thm_5_5 {Cp CR CS CP : ℝ} (H : ContHyp D Cp CR CS) (B : Q.Bounded CP) 
     (le_add_of_nonneg_right (sq_nonneg _)) (le_add_of_nonneg_left (sq_nonneg _)) hg3
     (gr2_nonneg _ _) (gr2_nonneg _ _)
 
+/-- The identity discretization `V_h = V`, all projections the identity (meaningful for a
+finite-dimensional continuous complex). -/
+def top (D : BGGData V0 V1 W2 Vt0 Vt1 Wt2) : Disc D where
+  V0h := ⊤
+  V1h := ⊤
+  W2h := ⊤
+  Vt0h := ⊤
+  Vt1h := ⊤
+  Wt2h := ⊤
+  d0_mem _ _ := Submodule.mem_top
+  d1_mem _ _ := Submodule.mem_top
+  dt0_mem _ _ := Submodule.mem_top
+  dt1_mem _ _ := Submodule.mem_top
+  P0 := LinearMap.id
+  P1 := LinearMap.id
+  P2 := LinearMap.id
+  Pt0 := LinearMap.id
+  Pt1 := LinearMap.id
+  Pt2 := LinearMap.id
+  P0_mem _ := Submodule.mem_top
+  P1_mem _ := Submodule.mem_top
+  P2_mem _ := Submodule.mem_top
+  Pt0_mem _ := Submodule.mem_top
+  Pt1_mem _ := Submodule.mem_top
+  Pt2_mem _ := Submodule.mem_top
+  P0_id _ _ := rfl
+  P1_id _ _ := rfl
+  P2_id _ _ := rfl
+  Pt0_id _ _ := rfl
+  Pt1_id _ _ := rfl
+  Pt2_id _ _ := rfl
+  comm0 _ := rfl
+  comm1 _ := rfl
+  commt0 _ := rfl
+  commt1 _ := rfl
+
+/-- The identity discretization has uniformly bounded projections (`C_Π = 1`). -/
+theorem top_bounded (D : BGGData V0 V1 W2 Vt0 Vt1 Wt2) : (top D).Bounded 1 where
+  CP_nonneg := zero_le_one
+  P1 x := by simp [top]
+  P2 z := by simp [top]
+  Pt1 v := by simp [top]
+
+/-- The identity discretization satisfies (5.4). -/
+theorem top_hyp54 (D : BGGData V0 V1 W2 Vt0 Vt1 Wt2) : (top D).Hyp54 := fun _ => rfl
+
 end Disc
+
+/-- A small BGG-type complex: `V⁰ = 0`, `V¹ = W² = Ṽ⁰ = Ṽ¹ = W̃² = ℝ`, `d⁰ = 0`, `d¹ = id`,
+`d̃⁰ = id`, `d̃¹ = 0`, `S₀ = id`, `S₁ = -id`. -/
+def exampleBGG : BGGData (EuclideanSpace ℝ (Fin 0)) ℝ ℝ ℝ ℝ ℝ where
+  d0 := 0
+  d1 := LinearMap.id
+  dt0 := LinearMap.id
+  dt1 := 0
+  S0 := LinearMap.id
+  S1 := -LinearMap.id
+  d1_d0 _ := by simp
+  dt1_dt0 _ := by simp
+  anticomm _ := by simp
+
+/-- **Non-vacuity of the hypotheses of Props 5.3, 5.4 and Thm 5.5**: `ContHyp`, `Disc`,
+`Disc.Bounded` and `Disc.Hyp54` are simultaneously satisfiable with nonzero discrete spaces
+and `S₁ ≠ 0` (identity discretization of `exampleBGG`, all constants `1`). -/
+theorem nonvacuous :
+    ∃ (D : BGGData (EuclideanSpace ℝ (Fin 0)) ℝ ℝ ℝ ℝ ℝ) (Q : Disc D),
+      ContHyp D 1 1 1 ∧ Q.Bounded 1 ∧ Q.Hyp54 ∧ D.S1 ≠ 0 ∧ D.S0 ≠ 0 ∧
+      Q.V1h ≠ ⊥ ∧ Q.Vt0h ≠ ⊥ ∧ Q.Vt1h ≠ ⊥ := by
+  refine ⟨exampleBGG, Disc.top _, ?_, Disc.top_bounded _, Disc.top_hyp54 _, ?_, ?_, ?_, ?_, ?_⟩
+  · refine
+      { Cp_nonneg := zero_le_one, CR_nonneg := zero_le_one, CS_nonneg := zero_le_one,
+        poinc0 := fun σ => by simp [Subsingleton.elim σ 0],
+        poinct0 := fun φ => by simp [exampleBGG],
+        exact1 := fun μ hμ => ⟨0, by simpa [exampleBGG, eq_comm] using hμ⟩,
+        hodget1 := fun v => ⟨v, 0, by simp [exampleBGG]⟩,
+        reg := fun x => ⟨x, by simp [exampleBGG]⟩,
+        boundS0 := fun ψ => by simp [exampleBGG, gr2],
+        boundS1 := fun v => by simp [exampleBGG, gr2] }
+  · intro h
+    have := LinearMap.congr_fun h 1
+    simp [exampleBGG] at this
+  · intro h
+    have := LinearMap.congr_fun h 1
+    simp [exampleBGG] at this
+  all_goals exact top_ne_bot
 
 end Feec.Ch5.Discrete

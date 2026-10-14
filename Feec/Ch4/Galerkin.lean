@@ -1,4 +1,8 @@
-import Feec.Foundation
+module
+
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
 # Galerkin theory: Lax–Milgram, Babuška–Nečas, quasi-optimality, Brezzi (thesis §4.5)
@@ -39,7 +43,7 @@ right-hand sides by their representatives; `thm_4_11` states the functional form
 open scoped RealInnerProductSpace
 open InnerProductSpace
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.Galerkin
 
@@ -308,7 +312,7 @@ abbrev L2 := lp (fun _ : ℕ => ℝ) 2
 
 private lemma two_toReal_pos : 0 < (2 : ENNReal).toReal := by norm_num
 
-private lemma memℓp_shift (x : L2) : Memℓp (fun n => x (n + 1)) 2 := by
+lemma memℓp_shift (x : L2) : Memℓp (fun n => x (n + 1)) 2 := by
   have hx := (memℓp_gen_iff two_toReal_pos).1 (lp.memℓp x)
   exact (memℓp_gen_iff two_toReal_pos).2 ((summable_nat_add_iff 1).2 hx)
 

@@ -27,6 +27,10 @@ takes a junk value otherwise).
   `D(T*) ⊂ D(T)`).
 * **Dual complex** (§4.2): `HilbertComplex2.dual` (with `dual_dual`), `closedRange_dual_iff`
   ("closed ⇒ dual closed") and `range_adjoint_d0_eq` / `range_adjoint_d1_eq` (`B* = Zᗮ`).
+* **Hodge decomposition in `W`** (Thm 4.1, `W`-level): `HilbertComplex2.hodge_W`
+  (`W1 = cl B⁰ ⊕ ℌ ⊕ cl B*₁`, unconditionally), `hodge_W_of_closedRange` (no closures),
+  `harmonic_eq`, `ker_d1_eq` (`Z¹ = cl B⁰ ⊕ ℌ`), `ker_adjoint_d0_eq` (`Z*₀ = ℌ ⊕ cl B*₁`).
+* Graph-norm Poincaré `poincare_graphNorm_of_isClosed_range` (literal form of Thm 4.2).
 -/
 
 open scoped RealInnerProductSpace
@@ -161,7 +165,7 @@ theorem mem_graph_iff_of_isClosed {T : E →ₗ.[ℝ] F} (hT : Dense (T.domain :
 
 /-- The adjoint of a closed densely defined operator is densely defined (Thesis §4.1).
 
-Thesis gap: the thesis' one-line argument is made precise: `y ⊥ D(T*)` gives
+This is the thesis' own argument (§4.1), formalized: `y ⊥ D(T*)` gives
 `(0, y) ∈ Γ̃(T*)ᗮ = Γ(T)`, hence `y = 0`. -/
 theorem dense_adjoint_domain (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) : Dense (T†.domain : Set F) := by
@@ -196,7 +200,7 @@ theorem adjoint_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) (
 
 /-- Thesis (4.1c): `R(T*)ᗮ = N(T)` for closed densely defined `T`.
 
-Thesis gap: stated without proof; closedness of `T` is essential. -/
+Thesis gap: stated without proof (the thesis assumes `T` closed, as is needed here). -/
 theorem orthogonal_range_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) : (LinearMap.range T†.toFun)ᗮ = T.ker := by
   ext x
@@ -216,8 +220,8 @@ theorem orthogonal_ker (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) (h
 
 /-- Thesis (4.1d): `N(T*)ᗮ = cl R(T)`.
 
-Thesis gap: stated without proof (and for closed `T`); only density of `D(T)` is needed, via
-(4.1a) `Feec.orth_range_eq_ker_adjoint`. -/
+Thesis gap: stated without proof. The thesis assumes `T` closed; only density of `D(T)` is
+needed, via (4.1a) `Feec.orth_range_eq_ker_adjoint`. -/
 theorem orthogonal_ker_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) :
     T†.kerᗮ = (LinearMap.range T.toFun).topologicalClosure := by
   rw [← orth_range_eq_ker_adjoint T hT, Submodule.orthogonal_orthogonal_eq_closure]
@@ -306,8 +310,11 @@ theorem exists_bounded_inverse (T : E →ₗ.[ℝ] F) (hc : T.IsClosed)
 /-- Abstract Poincaré inequality for a closed operator with closed range:
 `‖x‖ ≤ c ‖T x‖` on `D(T) ∩ N(T)ᗮ` (Thesis Thm 4.2, unbounded/W-level form).
 
-Thesis gap: Thm 4.2 omits the closed-range hypothesis and does not name the bounded inverse
-theorem; here it is the closed graph theorem applied to the inverse on `R(T)`. -/
+Thesis gap: the statement of Thm 4.2 does not include closed range, which is only assumed in
+the surrounding text ("Assuming that `Bᵏ` is closed"); the existence of the bounded inverse of
+`dₖ` is asserted without proof. Here it is the closed graph theorem applied to the inverse on
+`R(T)` (`exists_bounded_inverse`). The thesis' graph-norm form is
+`poincare_graphNorm_of_isClosed_range`. -/
 theorem poincare_of_isClosed_range {T : E →ₗ.[ℝ] F} (hc : T.IsClosed)
     (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
     ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ := by
@@ -359,12 +366,37 @@ theorem isClosed_range_iff_poincare {T : E →ₗ.[ℝ] F} (hc : T.IsClosed) :
       ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ :=
   ⟨poincare_of_isClosed_range hc, fun ⟨_, h⟩ => isClosed_range_of_poincare hc h⟩
 
+/-- Thesis Thm 4.2, literal graph-norm (`V`-norm) form: for a closed operator with closed range
+there is `C` with `‖x‖_V ≤ C ‖T x‖` for every `x ∈ D(T)` that is `V`-orthogonal to `N(T)`.
+Here `‖x‖_V² = ‖x‖² + ‖T x‖²` and `⟪z, x⟫_V = ⟪z, x⟫ + ⟪T z, T x⟫` (graph inner product).
+Since `T z = 0` on `N(T)`, `V`-orthogonality to `N(T)` coincides with `W`-orthogonality, so this
+follows from the `W`-level form `poincare_of_isClosed_range`. -/
+theorem poincare_graphNorm_of_isClosed_range {T : E →ₗ.[ℝ] F} (hc : T.IsClosed)
+    (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
+    ∃ C, ∀ x : T.domain, (∀ z : T.domain, T z = 0 → ⟪(z : E), x⟫ + ⟪T z, T x⟫ = 0) →
+      Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ C * ‖T x‖ := by
+  obtain ⟨c, hc'⟩ := poincare_of_isClosed_range hc hR
+  refine ⟨Real.sqrt (c ^ 2 + 1), fun x hx => ?_⟩
+  have hxk : (x : E) ∈ T.kerᗮ := by
+    rw [Submodule.mem_orthogonal]
+    intro u hu
+    obtain ⟨z, rfl, hz⟩ := (LinearPMap.mem_ker_iff).1 hu
+    have := hx z hz
+    rwa [hz, inner_zero_left, add_zero] at this
+  have h2 : ‖(x : E)‖ ^ 2 ≤ c ^ 2 * ‖T x‖ ^ 2 := by
+    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) (hc' x hxk) 2
+  calc Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ Real.sqrt ((c ^ 2 + 1) * ‖T x‖ ^ 2) :=
+        Real.sqrt_le_sqrt (by nlinarith)
+    _ = Real.sqrt (c ^ 2 + 1) * ‖T x‖ := by
+        rw [Real.sqrt_mul (by positivity), Real.sqrt_sq (norm_nonneg _)]
+
 /-- **Closed range theorem**, first half: if `T` is closed, densely defined and `R(T)` is
 closed, then `R(T*) = N(T)ᗮ`; in particular `R(T*)` is closed.
 
-Thesis gap (§4.2): "if `(W, d)` is closed then so is the dual complex" and `B*ₖ = (Zᵏ)ᗮ` are
-attributed to (4.1), which only gives closures; the closed range theorem is needed. Proof:
-bounded inverse on `R(T)` (closed graph theorem), then Riesz representation on `R(T)`. -/
+Thesis gap (§4.2): the thesis obtains `B*ₖ = (Zᵏ)ᗮ` from (4.1b) together with the
+closedness of `B*ₖ`, and that closedness ("if `(W, d)` is closed then so is the dual complex")
+is asserted without proof. The missing ingredient is this closed range theorem. Proof: bounded
+inverse on `R(T)` (closed graph theorem), then Riesz representation on `R(T)`. -/
 theorem range_adjoint_eq_orthogonal_ker (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
     LinearMap.range T†.toFun = T.kerᗮ := by
@@ -393,8 +425,8 @@ theorem range_adjoint_eq_orthogonal_ker (T : E →ₗ.[ℝ] F) (hT : Dense (T.do
     exact ⟨⟨_, hmem⟩, adjoint_apply_eq hT ⟨_, hmem⟩ key⟩
 
 /-- **Closed range theorem**: for closed densely defined `T`, `R(T*)` is closed iff `R(T)` is.
-This is "closed complex ⇔ closed dual complex" (Thesis §4.2), which the thesis asserts from
-(4.1) alone. -/
+This is "closed complex ⇔ closed dual complex" (Thesis §4.2), which the thesis asserts without
+proof. -/
 theorem isClosed_range_adjoint_iff (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) :
     IsClosed (LinearMap.range T†.toFun : Set E) ↔ IsClosed (LinearMap.range T.toFun : Set F) := by
@@ -476,6 +508,9 @@ section KerCounterexample
 /-- `ℓ²(ℕ, ℝ)`. -/
 local notation "ℓ2" => lp (fun _ : ℕ => ℝ) 2
 
+/-! Auxiliary objects for the counterexample, namespaced to avoid clashes. -/
+namespace KerCE
+
 /-- Finitely supported sequences: the span of the `lp.single` vectors. -/
 def finSupp : Submodule ℝ ℓ2 :=
   Submodule.span ℝ (Set.range fun p : ℕ × ℝ => lp.single 2 p.1 p.2)
@@ -528,10 +563,13 @@ theorem not_isClosed_finSupp : ¬ IsClosed (finSupp : Set ℓ2) := by
   change (1 / 2 : ℝ) ^ N = 0 at this
   exact pow_ne_zero N (by norm_num) this
 
+end KerCE
+
+open KerCE in
 /-- Refutation of the thesis claim (§4.3) "the kernel of a (not-necessarily-bounded) linear
 operator is closed": the zero operator on the dense, non-closed subspace of finitely supported
-sequences in `ℓ²` is densely defined (and bounded on its domain), but its kernel — its whole
-domain — is not closed. Compare `isClosed_ker`, which needs `T` closed. -/
+sequences in `ℓ²` is densely defined (and bounded on its domain, hence closable), but its
+kernel — its whole domain — is not closed. Compare `isClosed_ker`, which needs `T` closed. -/
 theorem exists_not_isClosed_ker :
     ∃ T : ℓ2 →ₗ.[ℝ] ℓ2, Dense (T.domain : Set ℓ2) ∧ (∀ x : T.domain, T x = 0) ∧
       ¬ IsClosed (T.ker : Set ℓ2) := by
@@ -593,8 +631,8 @@ theorem dual_dual : H.dual.dual = H := by
 
 /-- A Hilbert complex is closed iff its dual complex is closed (Thesis §4.2).
 
-Correction: the thesis derives this from (4.1); it is the closed range theorem
-`isClosed_range_adjoint_iff`. -/
+Thesis gap: asserted without proof; it is the closed range theorem
+`isClosed_range_adjoint_iff` applied to `d0` and `d1`. -/
 theorem closedRange_dual_iff : H.dual.ClosedRange ↔ H.ClosedRange := by
   change IsClosed (LinearMap.range H.d1†.toFun : Set W1) ∧
       IsClosed (LinearMap.range H.d0†.toFun : Set W0) ↔ _
@@ -611,6 +649,111 @@ theorem range_adjoint_d0_eq (h : H.ClosedRange) :
 theorem range_adjoint_d1_eq (h : H.ClosedRange) :
     LinearMap.range H.d1†.toFun = H.d1.kerᗮ :=
   range_adjoint_eq_orthogonal_ker _ H.dense1 H.closed1 h.2
+
+/-! ### Hodge decomposition in `W` (Thesis Thm 4.1, `W`-level) -/
+
+/-- Harmonic forms `ℌ¹ = Z¹ ∩ Z*₁ = N(d1) ∩ N(d0*)` (Thesis §4.2, Thm 4.1). -/
+def harmonic : Submodule ℝ W1 := H.d1.ker ⊓ H.d0†.ker
+
+/-- `(B⁰)ᗮ = Z*₀`, i.e. (4.1a) for `d0`. -/
+theorem orthogonal_range_d0 : (LinearMap.range H.d0.toFun)ᗮ = H.d0†.ker :=
+  orth_range_eq_ker_adjoint _ H.dense0
+
+/-- `(B*₁)ᗮ = Z¹`, i.e. (4.1c) for `d1`. -/
+theorem orthogonal_range_adjoint_d1 : (LinearMap.range H.d1†.toFun)ᗮ = H.d1.ker :=
+  orthogonal_range_adjoint _ H.dense1 H.closed1
+
+/-- `B⁰ ⊂ Z¹` (from `d1 d0 = 0`). -/
+theorem range_d0_le_ker_d1 : LinearMap.range H.d0.toFun ≤ H.d1.ker := by
+  rintro _ ⟨x, rfl⟩
+  exact (LinearPMap.mem_ker_iff).2 ⟨⟨_, H.map_mem x⟩, rfl, H.comp_zero x⟩
+
+/-- `ℌ = (cl B⁰)ᗮ ∩ (cl B*₁)ᗮ` (Thesis Thm 4.1, `W`-level). -/
+theorem harmonic_eq :
+    H.harmonic = (LinearMap.range H.d0.toFun).topologicalClosureᗮ ⊓
+      (LinearMap.range H.d1†.toFun).topologicalClosureᗮ := by
+  rw [Submodule.orthogonal_closure, Submodule.orthogonal_closure, orthogonal_range_d0,
+    orthogonal_range_adjoint_d1, harmonic, inf_comm]
+
+/-- `cl B⁰ ⟂ ℌ` (Thesis Thm 4.1, `W`-level). -/
+theorem isOrtho_closure_range_d0_harmonic :
+    (LinearMap.range H.d0.toFun).topologicalClosure ⟂ H.harmonic :=
+  (Submodule.isOrtho_iff_le.2 (H.harmonic_eq ▸ inf_le_left)).symm
+
+/-- `ℌ ⟂ cl B*₁` (Thesis Thm 4.1, `W`-level). -/
+theorem isOrtho_harmonic_closure_range_adjoint_d1 :
+    H.harmonic ⟂ (LinearMap.range H.d1†.toFun).topologicalClosure :=
+  Submodule.isOrtho_iff_le.2 (H.harmonic_eq ▸ inf_le_right)
+
+/-- `cl B⁰ ⟂ cl B*₁` (Thesis Thm 4.1, `W`-level). -/
+theorem isOrtho_closure_range_d0_closure_range_adjoint_d1 :
+    (LinearMap.range H.d0.toFun).topologicalClosure ⟂
+      (LinearMap.range H.d1†.toFun).topologicalClosure := by
+  rw [Submodule.isOrtho_iff_le, Submodule.orthogonal_closure, orthogonal_range_adjoint_d1]
+  exact Submodule.topologicalClosure_minimal _ H.range_d0_le_ker_d1 (isClosed_ker H.closed1)
+
+/-- `Z¹ = cl B⁰ ⊕ ℌ` (orthogonal sum; Thesis §4.2, `W`-level). -/
+theorem ker_d1_eq :
+    H.d1.ker = (LinearMap.range H.d0.toFun).topologicalClosure ⊔ H.harmonic := by
+  set A := (LinearMap.range H.d0.toFun).topologicalClosure
+  set C := (LinearMap.range H.d1†.toFun).topologicalClosure
+  have : CompleteSpace A := (Submodule.isClosed_topologicalClosure _).completeSpace_coe
+  have hC : Cᗮ = H.d1.ker := by
+    rw [Submodule.orthogonal_closure, orthogonal_range_adjoint_d1]
+  have hAC : A ≤ Cᗮ := Submodule.isOrtho_iff_le.1
+    H.isOrtho_closure_range_d0_closure_range_adjoint_d1
+  rw [H.harmonic_eq, ← hC]
+  exact (Submodule.sup_orthogonal_inf_of_hasOrthogonalProjection hAC).symm
+
+/-- `Z*₀ = ℌ ⊕ cl B*₁` (orthogonal sum; Thesis §4.2, `W`-level). -/
+theorem ker_adjoint_d0_eq :
+    H.d0†.ker = H.harmonic ⊔ (LinearMap.range H.d1†.toFun).topologicalClosure := by
+  set A := (LinearMap.range H.d0.toFun).topologicalClosure
+  set C := (LinearMap.range H.d1†.toFun).topologicalClosure
+  have : CompleteSpace C := (Submodule.isClosed_topologicalClosure _).completeSpace_coe
+  have hA : Aᗮ = H.d0†.ker := by
+    rw [Submodule.orthogonal_closure, orthogonal_range_d0]
+  have hCA : C ≤ Aᗮ := Submodule.isOrtho_iff_le.1
+    H.isOrtho_closure_range_d0_closure_range_adjoint_d1.symm
+  rw [H.harmonic_eq, ← hA, sup_comm, inf_comm]
+  exact (Submodule.sup_orthogonal_inf_of_hasOrthogonalProjection hCA).symm
+
+/-- **Hodge decomposition in `W`** (Thesis Thm 4.1, `W`-level, no closed-range hypothesis):
+`W1 = cl B⁰ ⊕ ℌ ⊕ cl B*₁`, an orthogonal sum of closed subspaces.
+
+Thesis gap: the thesis states the decomposition only for closed complexes, obtaining
+`B*ₖ = (Zᵏ)ᗮ` from (4.1); the unconditional form with closures is not stated. Here both are
+proved, see `hodge_W_of_closedRange` for the closed case. -/
+theorem hodge_W :
+    (LinearMap.range H.d0.toFun).topologicalClosure ⊔ H.harmonic ⊔
+        (LinearMap.range H.d1†.toFun).topologicalClosure = ⊤ ∧
+      (LinearMap.range H.d0.toFun).topologicalClosure ⟂ H.harmonic ∧
+      H.harmonic ⟂ (LinearMap.range H.d1†.toFun).topologicalClosure ∧
+      (LinearMap.range H.d0.toFun).topologicalClosure ⟂
+        (LinearMap.range H.d1†.toFun).topologicalClosure := by
+  refine ⟨?_, H.isOrtho_closure_range_d0_harmonic, H.isOrtho_harmonic_closure_range_adjoint_d1,
+    H.isOrtho_closure_range_d0_closure_range_adjoint_d1⟩
+  set C := (LinearMap.range H.d1†.toFun).topologicalClosure
+  have : CompleteSpace C := (Submodule.isClosed_topologicalClosure _).completeSpace_coe
+  have hC : Cᗮ = H.d1.ker := by
+    rw [Submodule.orthogonal_closure, orthogonal_range_adjoint_d1]
+  rw [← H.ker_d1_eq, ← hC, sup_comm]
+  exact Submodule.sup_orthogonal_of_hasOrthogonalProjection
+
+/-- **Hodge decomposition in `W` for a closed complex** (Thesis Thm 4.1, `W`-level):
+`W1 = B⁰ ⊕ ℌ ⊕ B*₁` without closures, with `B*₁ = (Z¹)ᗮ` (`range_adjoint_d1_eq`).
+
+Thesis gap: closedness of `B*₁` (needed to drop the closure) is the closed range theorem
+`isClosed_range_adjoint_iff`, which the thesis does not prove. -/
+theorem hodge_W_of_closedRange (h : H.ClosedRange) :
+    LinearMap.range H.d0.toFun ⊔ H.harmonic ⊔ LinearMap.range H.d1†.toFun = ⊤ ∧
+      LinearMap.range H.d0.toFun ⟂ H.harmonic ∧
+      H.harmonic ⟂ LinearMap.range H.d1†.toFun ∧
+      LinearMap.range H.d0.toFun ⟂ LinearMap.range H.d1†.toFun := by
+  have h1 : IsClosed (LinearMap.range H.d1†.toFun : Set W1) :=
+    (isClosed_range_adjoint_iff _ H.dense1 H.closed1).2 h.2
+  have := H.hodge_W
+  rwa [h.1.submodule_topologicalClosure_eq, h1.submodule_topologicalClosure_eq] at this
 
 end HilbertComplex2
 

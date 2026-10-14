@@ -26,6 +26,18 @@ carries a spurious factor `½` relative to (2.2); we work with (2.2) (the commut
 convention) throughout.
 
 Everything lives in `Feec.Curvature` to avoid clashes with other chapters.
+
+## References
+
+* [QuennevilleBelair2015], Ch. 2, §2.3 (Riemann curvature tensor, Prop 2.1, eqs. (2.2)–(2.4))
+  and §2.4 (Einstein's equations)
+* [Wald1984], §3.2 (curvature: symmetries of the Riemann tensor, Ricci and Einstein tensors),
+  §3.3 (geodesic deviation), §4.3 (Einstein's equation)
+* [Alcubierre2008], Ch. 1 (the convention `R^a_bcd v^b = ∇_[c∇_d] v^a` and geodesic
+  deviation, cited by the thesis at p. 37)
+* [Stewart1991] (tensoriality of `∇_[c∇_d] v^a`, cited by the thesis at p. 33)
+* Frauendiener (2007), thesis reference [10] (Bianchi ⇔ interchange ∧ `C_[abcd] = 0`); not
+  in `docs/references.bib`
 -/
 
 open Finset
@@ -50,7 +62,9 @@ def alt4 (C : T4 ι) (a b c d : ι) : ℝ :=
 Bianchi identity imply the interchange symmetry `C_abcd = C_cdab`.
 
 Thesis gap: the thesis gives no proof, only the citation. Here: add the Bianchi identity
-at `(a,b,c,d)`, `(b,c,d,a)`, `(c,d,a,b)`, `(d,a,b,c)` and use pair skew. -/
+at `(a,b,c,d)`, `(b,c,d,a)`, `(c,d,a,b)`, `(d,a,b,c)` and use pair skew.
+
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2] for the classical statement. -/
 theorem interchange_of_bianchi {C : T4 ι} (hs : PairSkew C) (hb : Bianchi1 C) :
     Interchange C := by
   intro a b c d
@@ -67,7 +81,9 @@ antisymmetric part `C_[abcd] = 0`.
 
 Thesis gap: stated by citation only; proved here. Under pair skew and interchange, the
 24 terms of `alt4` fall into three classes of eight, so `alt4 C a b c d = 8 (C_abcd +
-C_acdb + C_adbc)`. -/
+C_acdb + C_adbc)`.
+
+See [QuennevilleBelair2015, §2.3] (citing Frauendiener, thesis ref. [10]). -/
 theorem bianchi_iff {C : T4 ι} (hs : PairSkew C) :
     Bianchi1 C ↔ Interchange C ∧ ∀ a b c d, alt4 C a b c d = 0 := by
   constructor
@@ -102,7 +118,9 @@ theorem bianchi_iff {C : T4 ι} (hs : PairSkew C) :
 tensor (pair skew + first Bianchi) that is skew under the swap `b ↔ d` vanishes.
 
 Proof: the swap symmetry and pair skew give `2 C_abcd = C_acbd`; applied twice,
-`4 C_abcd = C_abcd`. -/
+`4 C_abcd = C_abcd`.
+
+See [QuennevilleBelair2015, §2.3, eq. (2.3)]; cf. [Wald1984, §3.3]. -/
 theorem eq_zero_of_symm_bd {C : T4 ι} (hs : PairSkew C) (hb : Bianchi1 C)
     (h : ∀ a b c d, C a b c d + C a d c b = 0) : C = 0 := by
   -- `2 C_abcd = C_acbd` for all indices
@@ -129,7 +147,10 @@ satisfies `C(Y, T, X, T) = 0` for all `Y, T, X`, then `C = 0`.
 
 Thesis gap: the "iff" is asserted without proof. Here: polarize in `T` at `e_b + e_d`
 to get `C_abcd + C_adcb = 0`, then apply `eq_zero_of_symm_bd`. (The geometric step,
-realizing given `T, X` at a point by a family of geodesics, is not formalized.) -/
+realizing given `T, X` at a point by a family of geodesics, is not formalized.)
+
+See [QuennevilleBelair2015, §2.3, after eq. (2.3)]; cf. [Wald1984, §3.3],
+[Alcubierre2008, Ch. 1]. -/
 theorem eq_zero_of_deviation {C : T4 ι} (hs : PairSkew C) (hb : Bianchi1 C)
     (h : ∀ Y Tv X : ι → ℝ, deviationForm C Y Tv X = 0) : C = 0 := by
   apply eq_zero_of_symm_bd hs hb
@@ -164,7 +185,10 @@ def deviation (gi : Matrix ι ι ℝ) (C : T4 ι) (X Tv : ι → ℝ) : ι → �
 algebraic curvature tensor `C` and an invertible inverse metric `gi`, all geodesic
 deviations `a^a = -R^a_cbd X^b T^c T^d` vanish iff `C = 0`.
 
-Thesis gap: the "iff" was asserted without proof (see `eq_zero_of_deviation`). -/
+Thesis gap: the "iff" was asserted without proof (see `eq_zero_of_deviation`).
+
+See [QuennevilleBelair2015, §2.3, eq. (2.3)]; cf. [Wald1984, §3.3],
+[Alcubierre2008, Ch. 1]. -/
 theorem deviation_eq_zero_iff {C : T4 ι} (hs : PairSkew C) (hb : Bianchi1 C)
     (g gi : Matrix ι ι ℝ) (hinv : g * gi = 1) :
     (∀ X Tv : ι → ℝ, deviation gi C X Tv = 0) ↔ C = 0 := by
@@ -204,7 +228,9 @@ omit [DecidableEq ι] in
 /-- Thesis §2.3: the Ricci tensor `R_ab = R^c_acb = g^{ce} R_eacb` is symmetric.
 
 Formalization note: here `gi` is an arbitrary matrix, so its symmetry is assumed (`hgi`);
-for the actual inverse of a symmetric metric this is automatic, see `ricci_symm_of_inv`. -/
+for the actual inverse of a symmetric metric this is automatic, see `ricci_symm_of_inv`.
+
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 theorem ricci_symm (gi : Matrix ι ι ℝ) (hgi : gi.IsSymm) {C : T4 ι}
     (hi : Interchange C) (a b : ι) :
     ∑ c, ∑ e, gi c e * C e a c b = ∑ c, ∑ e, gi c e * C e b c a := by
@@ -223,7 +249,9 @@ lemma isSymm_of_mul_eq_one {g gi : Matrix ι ι ℝ} (hg : g.IsSymm)
     _ = gi := by rw [h1, Matrix.mul_one]
 
 /-- Thesis §2.3: the Ricci tensor `R_ab = g^{ce} R_eacb` is symmetric, for `g` symmetric with
-inverse `gi` and `C` having the interchange symmetry. -/
+inverse `gi` and `C` having the interchange symmetry.
+
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 theorem ricci_symm_of_inv (g gi : Matrix ι ι ℝ) (hg : g.IsSymm) (hinv : gi * g = 1)
     {C : T4 ι} (hi : Interchange C) (a b : ι) :
     ∑ c, ∑ e, gi c e * C e a c b = ∑ c, ∑ e, gi c e * C e b c a :=
@@ -241,14 +269,16 @@ Index conventions: `Γ a b c = Γ^a_{bc}`, `dΓ e a b c = ∂_e Γ^a_{bc}`, `dg 
 variable {ι : Type*} [Fintype ι]
 
 /-- The coordinate formula (2.2): `R^α_{μβν} = ∂_β Γ^α_{μν} − ∂_ν Γ^α_{μβ}
-+ Γ^α_{γβ} Γ^γ_{μν} − Γ^α_{γν} Γ^γ_{μβ}`, from the values of `Γ` and `∂Γ` at a point. -/
++ Γ^α_{γβ} Γ^γ_{μν} − Γ^α_{γν} Γ^γ_{μβ}`, from the values of `Γ` and `∂Γ` at a point.
+See [QuennevilleBelair2015, §2.3, eq. (2.2)]; cf. [Wald1984, §3.4]. -/
 def riemComp (Γ : ι → ι → ι → ℝ) (dΓ : ι → ι → ι → ι → ℝ) : T4 ι :=
   fun a b c d => dΓ c a b d - dΓ d a b c + ∑ e, (Γ a e c * Γ e b d - Γ a e d * Γ e b c)
 
 /-- Lower the first index with the metric: `R_abcd = g_ae R^e_bcd`. -/
 def lower (g : Matrix ι ι ℝ) (R : T4 ι) : T4 ι := fun a b c d => ∑ e, g a e * R e b c d
 
-/-- Thesis Prop 2.1, skew-symmetry in the second pair, for formula (2.2) (any connection). -/
+/-- Thesis Prop 2.1, skew-symmetry in the second pair, for formula (2.2) (any connection).
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 theorem riemComp_skew (Γ : ι → ι → ι → ℝ) (dΓ : ι → ι → ι → ι → ℝ) (a b c d : ι) :
     riemComp Γ dΓ a b c d = -riemComp Γ dΓ a b d c := by
   simp only [riemComp]
@@ -262,7 +292,9 @@ torsion-free connection (`Γ` and `∂Γ` symmetric in the lower indices); no me
 
 Correction: the thesis proof concludes with `R_[abcd] v^b = 0` (a four-index
 antisymmetrisation, which is not the Bianchi identity) and calls `v` a vector where a
-1-form is meant. The correct statement is `R^a_{[bcd]} = 0`, proved here directly. -/
+1-form is meant. The correct statement is `R^a_{[bcd]} = 0`, proved here directly.
+
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 theorem riemComp_bianchi (Γ : ι → ι → ι → ℝ) (dΓ : ι → ι → ι → ι → ℝ)
     (hΓ : ∀ a b c, Γ a b c = Γ a c b) (hdΓ : ∀ e a b c, dΓ e a b c = dΓ e a c b) :
     Bianchi1 (riemComp Γ dΓ) := by
@@ -295,7 +327,9 @@ torsion-free connection. This is the thesis' argument `0 = [∇_c, ∇_d] g_ab`.
 Thesis gap: the thesis uses the action of the commutator on (0,2)-tensors without
 deriving it, and (as far as the extracted text shows) its display carries a factor `2`
 inconsistent with the `∇_[c∇_d]` definition and `+` signs where the (0,2) commutator gives
-`−`; here the identity is proved from (2.2) directly. -/
+`−`; here the identity is proved from (2.2) directly.
+
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 theorem lower_riemComp_skew (g : Matrix ι ι ℝ) (hg : g.IsSymm)
     (Γ : ι → ι → ι → ℝ) (dΓ : ι → ι → ι → ι → ℝ) (dg : ι → ι → ι → ℝ)
     (ddg : ι → ι → ι → ι → ℝ)
@@ -344,7 +378,9 @@ theorem lower_riemComp_skew (g : Matrix ι ι ℝ) (hg : g.IsSymm)
 /-- Thesis Prop 2.1 (jet level, corrected): for a torsion-free metric-compatible
 connection, the lowered Riemann tensor (2.2) is skew in each pair and satisfies the first
 Bianchi identity; hence (by `interchange_of_bianchi`) it also has the interchange
-symmetry. -/
+symmetry.
+
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 theorem prop_2_1_jet (g : Matrix ι ι ℝ) (hg : g.IsSymm)
     (Γ : ι → ι → ι → ℝ) (dΓ : ι → ι → ι → ι → ℝ) (dg : ι → ι → ι → ℝ)
     (ddg : ι → ι → ι → ι → ℝ)
@@ -415,7 +451,9 @@ def riemField (Γ : (Fin n → ℝ) → Fin n → Fin n → Fin n → ℝ) (x : 
 symmetric metric field `g` on `ℝⁿ` and a differentiable connection `Γ` that is torsion-free
 and metric-compatible (i.e. the Levi-Civita connection), the lowered Riemann tensor
 `R_abcd = g_ae R^e_bcd` of (2.2) satisfies `R_abcd = −R_bacd = −R_abdc`, the first Bianchi
-identity `R_a[bcd] = 0`, and the interchange symmetry `R_abcd = R_cdab`. -/
+identity `R_a[bcd] = 0`, and the interchange symmetry `R_abcd = R_cdab`.
+
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 theorem prop_2_1 (g : (Fin n → ℝ) → Matrix (Fin n) (Fin n) ℝ)
     (Γ : (Fin n → ℝ) → Fin n → Fin n → Fin n → ℝ)
     (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
@@ -460,7 +498,9 @@ Levi-Civita connection: under the hypotheses of `prop_2_1` and an inverse `gi` o
 the Ricci tensor `R_ab = R^c_acb` of `riemField Γ x` is symmetric.
 
 Proof: `R^c_acb = g^{ce} R_eacb` (as `gi * g = 1`), then `ricci_symm_of_inv` with the
-interchange symmetry from `prop_2_1`. -/
+interchange symmetry from `prop_2_1`.
+
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 theorem ricci_field_symm (g : (Fin n → ℝ) → Matrix (Fin n) (Fin n) ℝ)
     (Γ : (Fin n → ℝ) → Fin n → Fin n → Fin n → ℝ)
     (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
@@ -495,12 +535,13 @@ section Einstein
 variable {n : ℕ}
 
 /-- The Einstein tensor `G = Ric - ½ (tr_g Ric) g` in matrix form, `tr_g Ric = tr(g⁻¹ Ric)`.
-(Thesis §2.3 writes `G_ab = R_ac − ½ g_ac R`, an index typo for `R_ab − ½ g_ab R`.) -/
+(Thesis §2.3 writes `G_ab = R_ac − ½ g_ac R`, an index typo for `R_ab − ½ g_ab R`.)
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 def einstein (g gi Ric : Matrix (Fin n) (Fin n) ℝ) : Matrix (Fin n) (Fin n) ℝ :=
   Ric - ((1 / 2 : ℝ) * Matrix.trace (gi * Ric)) • g
 
 /-- Thesis §2.3: the Einstein tensor "inherits symmetry from the Ricci tensor" (it also
-needs `g` symmetric). -/
+needs `g` symmetric). See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 theorem einstein_symm (g gi Ric : Matrix (Fin n) (Fin n) ℝ) (hg : g.IsSymm)
     (hRic : Ric.IsSymm) : (einstein g gi Ric).IsSymm := by
   unfold einstein
@@ -513,7 +554,9 @@ works in a four-dimensional spacetime and argues via "tr G = 0 iff tr Ric = 0", 
 `tr_g G = (1 − n/2) tr_g Ric`; this needs `n ≠ 2` (see `einstein_zero_iff_fails_two`), and
 one still has to conclude `Ric = G + ½ R g`. Stated here for every `n ≠ 2`, in particular
 `n = 4`. Proof: `G = 0 ⇒ (1 − n/2) R = 0 ⇒ R = 0 ⇒
-Ric = G + ½ R g = 0`. -/
+Ric = G + ½ R g = 0`.
+
+See [QuennevilleBelair2015, §2.4]; cf. [Wald1984, §4.3]. -/
 theorem einstein_zero_iff (hn : n ≠ 2) (g gi Ric : Matrix (Fin n) (Fin n) ℝ)
     (hinv : gi * g = 1) : einstein g gi Ric = 0 ↔ Ric = 0 := by
   unfold einstein
@@ -539,7 +582,9 @@ itself works in dimension 4): for `n = 2` the algebraic equivalence `G = 0 ⇔ R
 fails, witnessed by `g = gi = Ric = 1`.
 
 Remark (not proved here): this is realized geometrically by the unit sphere `S²`, where
-`Ric = g`; in fact in dimension 2 the Einstein tensor of every metric vanishes. -/
+`Ric = g`; in fact in dimension 2 the Einstein tensor of every metric vanishes.
+
+See [QuennevilleBelair2015, §2.4]. -/
 theorem einstein_zero_iff_fails_two :
     ∃ g gi Ric : Matrix (Fin 2) (Fin 2) ℝ, gi * g = 1 ∧ einstein g gi Ric = 0 ∧ Ric ≠ 0 := by
   refine ⟨1, 1, 1, by simp, ?_, one_ne_zero⟩
@@ -719,7 +764,8 @@ lemma recon_parMat_mem (p : Fin 20 → ℝ) : recon (parMat p) ∈ algCurv (Fin 
   linarith
 
 /-- Thesis §2.3, independent-component count for `n = 4`: the space of algebraic curvature
-tensors (pair skew + first Bianchi) is isomorphic to `ℝ²⁰`. -/
+tensors (pair skew + first Bianchi) is isomorphic to `ℝ²⁰`.
+See [QuennevilleBelair2015, §2.3]. -/
 def algCurvEquiv : algCurv (Fin 4) ≃ₗ[ℝ] (Fin 20 → ℝ) where
   toFun C := fun k => bivMat C (parIdx k).1 (parIdx k).2
   map_add' C D := rfl
@@ -748,7 +794,9 @@ def algCurvEquiv : algCurv (Fin 4) ≃ₗ[ℝ] (Fin 20 → ℝ) where
 form a space of dimension `n²(n²−1)/12`.
 
 Thesis gap: asserted without proof or reference. Proved here for `n = 4` via the
-explicit isomorphism `algCurvEquiv`; general `n` is not formalized. -/
+explicit isomorphism `algCurvEquiv`; general `n` is not formalized.
+
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 theorem finrank_algCurv_four : Module.finrank ℝ (algCurv (Fin 4)) = 20 := by
   rw [algCurvEquiv.finrank_eq]; simp
 

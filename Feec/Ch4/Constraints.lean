@@ -46,6 +46,30 @@ within `[0,T]`; graph-norm continuity is not required). This makes the uniquenes
 propagation statements stronger than the thesis', but the existence conclusions
 (`prop_4_16_exists`, `prop_4_18`) weaker than the thesis' `C⁰([0,T]; D(L)) ∩ C¹([0,T]; W)`
 (critic item 5): they give a strong solution, not its graph-norm continuity.
+
+## References
+
+* [QuennevilleBelair2015], §4.3 (Thm 4.3, Thm 4.4, Cor 4.5: well-posedness and constraint
+  propagation), §4.4 ((4.4)/(4.5), Thm 4.6), §4.7 (polynomial de Rham complex, Koszul
+  decomposition), §4.8 (scalar wave), §4.9 ((4.12), Prop 4.16), §4.10 ((4.14)/(4.15),
+  Props 4.17 and 4.18, discretizations), §4.11 ((4.16)–(4.18), Prop 4.19), and §3.4 (Lemma 3.5)
+* [Arnold2018] (the FEEC framework: Hilbert complexes, dual complexes, the Hodge wave equation)
+* [AFW2010], §3 (abstract Hilbert complexes, `ker d* = (range d)ᗮ`, Hodge decomposition)
+* [BruningLesch1992] (Hilbert complexes)
+* [AFW2006], §3 (polynomial differential forms, the Koszul complex and homotopy formula, the
+  spaces `P_rΛ^k` and `P_r⁻Λ^k`)
+* [Arnold2013] (spaces of finite element differential forms; cited in
+  [QuennevilleBelair2015, §4.7])
+* [Hiptmair2002] (Nédélec edge elements, Maxwell's equations)
+* [Geveci1988], [GilletteHolstZhu2017] (mixed formulation of the wave equation; cited in
+  [QuennevilleBelair2015, §4.8])
+* [Baker1976], [Dupont1973] (second-order Galerkin formulation of the wave equation; cited in
+  [QuennevilleBelair2015, §4.8])
+* [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9 (as cited in [QuennevilleBelair2015, §4.3]
+  for Thm 4.3)
+* [Pazy1983], §1.1 and §1.10 (groups `exp(tA)` of bounded operators; unitary groups and
+  Stone's theorem, the existence input behind `Feec.UnitaryGroupGenerator`)
+* [ACBY1997] (the Einstein–Bianchi system behind Props 4.17/4.19)
 -/
 
 open scoped RealInnerProductSpace
@@ -75,7 +99,9 @@ theorem const_of_hasDerivWithinAt_zero {f : ℝ → ℝ} {T : ℝ}
     (fun t ht => hasDerivWithinAt_Ici (h t (Ico_subset_Icc_self ht)) ht)
 
 /-- The kernel of a closed operator is closed (graph-preimage argument).
-Correction of thesis §4.1/§4.3: "the kernel of an unbounded operator is closed" needs closedness. -/
+Correction of thesis §4.1/§4.3: "the kernel of an unbounded operator is closed" needs closedness.
+
+Cf. [QuennevilleBelair2015, §4.1]. -/
 theorem isClosed_ker {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F]
     (A : E →ₗ.[ℝ] F) (hA : A.IsClosed) : IsClosed (A.ker : Set E) := by
   have : (A.ker : Set E) = (fun x : E => (x, (0 : F))) ⁻¹' (A.graph : Set (E × F)) := by
@@ -92,7 +118,9 @@ Let `A` be skew-symmetric, `K` a subspace with an orthogonal "projection" `P` (`
 
 Thesis gap: the thesis routes this through Thm 4.4 (skew-adjointness of the restriction) and
 Hille–Yosida, which needs the density of `D(A) ∩ K` in `K` that Props 4.16/4.17/4.19 only
-"conjecture". Neither density nor skew-adjointness nor semigroup theory is needed. -/
+"conjecture". Neither density nor skew-adjointness nor semigroup theory is needed.
+
+See [QuennevilleBelair2015, Thm 4.4 and Cor 4.5] (§4.3). -/
 theorem propagate (A : E →ₗ.[ℝ] E) (hA : IsSkewSymm A) (K : Submodule ℝ E) (P : E →L[ℝ] E)
     (hPK : ∀ x, P x ∈ K) (hPo : ∀ x, x - P x ∈ Kᗮ) (hPD : ∀ x ∈ A.domain, P x ∈ A.domain)
     (hAK : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K)
@@ -138,7 +166,10 @@ theorem propagate (A : E →ₗ.[ℝ] E) (hA : IsSkewSymm A) (K : Submodule ℝ 
   rw [h0]; exact hPK _
 
 /-- **Thesis Thm 4.3/4.6 (uniqueness part)**: strong solutions of `U' = A U + F` for a
-skew-symmetric `A` are unique (energy identity; no skew-adjointness or semigroup needed). -/
+skew-symmetric `A` are unique (energy identity; no skew-adjointness or semigroup needed).
+
+See [QuennevilleBelair2015, Thm 4.3 and Thm 4.6] (Thm 4.3 is cited there from
+[CazenaveHaraux1998, Prop 4.1.6 and Cor 2.4.9]). -/
 theorem strong_unique (A : E →ₗ.[ℝ] E) (hA : IsSkewSymm A) {T : ℝ} {U₀ : E} {F U U' : ℝ → E}
     (hU : IsStrongSolution A T U₀ F U) (hU' : IsStrongSolution A T U₀ F U') :
     EqOn U U' (Icc 0 T) := by
@@ -230,7 +261,9 @@ theorem mem_domL {x : Tot W0 W1 W2} : x ∈ H.domL ↔ (tot W0 W1 W2 x).1 ∈ H.
 @[simp] theorem coe_prV1s (x : H.domL) : (H.prV1s x : W1) = (tot W0 W1 W2 x).2.1 := rfl
 @[simp] theorem coe_prV2s (x : H.domL) : (H.prV2s x : W2) = (tot W0 W1 W2 x).2.2 := rfl
 
-/-- The Hodge wave operator (4.5) in coordinates. -/
+/-- The Hodge wave operator (4.5) in coordinates.
+
+See [QuennevilleBelair2015, §4.4, (4.5)]. -/
 theorem tot_waveOp (x : H.waveOp.domain) :
     tot W0 W1 W2 (H.waveOp x) = (-(H.d0† (H.prV1s ⟨x.1, x.2⟩)),
       H.d0 (H.pr0 ⟨x.1, x.2⟩) + H.d1† (H.prV2s ⟨x.1, x.2⟩), -(H.d1 (H.prV1 ⟨x.1, x.2⟩))) := by
@@ -239,7 +272,9 @@ theorem tot_waveOp (x : H.waveOp.domain) :
 
 /-- The Hodge wave operator is skew-symmetric on `D(L)` (the four adjoint identities).
 Proved here directly so that Props 4.16/4.18 need no skew-symmetry hypothesis; no closed range
-and no `d** = d` is used (only the formal-adjoint identities enter). -/
+and no `d** = d` is used (only the formal-adjoint identities enter).
+
+See [QuennevilleBelair2015, Thm 4.6] (proof, first display). -/
 theorem waveOp_isSkewSymm : IsSkewSymm H.waveOp := by
   intro x y
   rw [inner_tot, inner_tot, tot_waveOp, tot_waveOp]
@@ -255,11 +290,15 @@ theorem waveOp_isSkewSymm : IsSkewSymm H.waveOp := by
   have c2 := real_inner_comm (H.d1† (H.prV2s ⟨y.1, y.2⟩)) (tot W0 W1 W2 (x : Tot W0 W1 W2)).2.1
   linarith
 
-/-- Thesis (4.1a) for `d0`: `ker d0* = (range d0)ᗮ`. -/
+/-- Thesis (4.1a) for `d0`: `ker d0* = (range d0)ᗮ`.
+
+See [QuennevilleBelair2015, §4.1, (4.1a)]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem ker_adj0_eq : H.d0†.ker = (LinearMap.range H.d0.toFun)ᗮ :=
   (orth_range_eq_ker_adjoint H.d0 H.dense0).symm
 
-/-- Thesis (4.1a) for `d1`: `ker d1* = (range d1)ᗮ`. -/
+/-- Thesis (4.1a) for `d1`: `ker d1* = (range d1)ᗮ`.
+
+See [QuennevilleBelair2015, §4.1, (4.1a)]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem ker_adj1_eq : H.d1†.ker = (LinearMap.range H.d1.toFun)ᗮ :=
   (orth_range_eq_ker_adjoint H.d1 H.dense1).symm
 
@@ -272,18 +311,24 @@ instance : (H.d0†.ker).HasOrthogonalProjection := by
   have : CompleteSpace (H.d0†.ker) := (isClosed_ker_adj0 H).completeSpace_coe
   infer_instance
 
-/-- `B ⊆ Z`: `range d0 ⊆ ker d1` (Def. of Hilbert complex, §4.2). -/
+/-- `B ⊆ Z`: `range d0 ⊆ ker d1` (Def. of Hilbert complex, §4.2).
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [Arnold2018]. -/
 theorem range_d0_le_ker_d1 : LinearMap.range H.d0.toFun ≤ H.d1.ker := by
   rintro _ ⟨x, rfl⟩
   exact mem_ker_iff.2 ⟨⟨_, H.map_mem x⟩, rfl, H.comp_zero x⟩
 
-/-- `(ker d0*)ᗮ = closure (range d0) ⊆ ker d1`: no closed range needed. -/
+/-- `(ker d0*)ᗮ = closure (range d0) ⊆ ker d1`: no closed range needed.
+
+Cf. the Hodge decomposition [QuennevilleBelair2015, Thm 4.1] and [AFW2010, §3]. -/
 theorem ker_adj0_orth_le : (H.d0†.ker)ᗮ ≤ H.d1.ker := by
   rw [ker_adj0_eq H, Submodule.orthogonal_orthogonal_eq_closure]
   exact Submodule.topologicalClosure_minimal _ (range_d0_le_ker_d1 H)
     (isClosed_ker H.d1 H.closed1)
 
-/-- `d0* d1* = 0` in the form `range d1* ⊆ ker d0*`. -/
+/-- `d0* d1* = 0` in the form `range d1* ⊆ ker d0*`.
+
+Cf. the dual complex of a Hilbert complex in [AFW2010, §3] and [Arnold2018]. -/
 theorem adj1_mem_ker_adj0 (ρ : H.d1†.domain) : H.d1† ρ ∈ H.d0†.ker := by
   rw [ker_adj0_eq H, Submodule.mem_orthogonal]
   rintro _ ⟨σ, rfl⟩
@@ -366,7 +411,9 @@ theorem starProjection_Kc (x : Tot W0 W1 W2) :
 end Kc
 
 /-- The constraint subspace `K = {0} × ker d0* × Y ⊆ W0 × W1 × W2` of Prop 4.16
-(`σ = 0`, "`div u = 0`", `ρ ∈ Y`). With `Y = ⊤` this is the subspace of Prop 4.18. -/
+(`σ = 0`, "`div u = 0`", `ρ ∈ Y`). With `Y = ⊤` this is the subspace of Prop 4.18.
+
+See [QuennevilleBelair2015, §4.9, Prop 4.16]. -/
 def K (Y : Submodule ℝ W2) : Submodule ℝ (Tot W0 W1 W2) := Kc W0 (H.d0†.ker) Y
 
 /-- Membership in the constraint subspace `K`. -/
@@ -395,7 +442,10 @@ variable {H Y}
 
 /-- `P_K` preserves `D(L)`: the "first itemized hypothesis" of Thm 4.4, proved abstractly
 (no closed range, no contractibility, no exactness). Uses `(ker d0*)ᗮ = cl(range d0) ⊆ ker d1`
-and `Yᗮ ⊆ ker d1* ⊆ V2*`. -/
+and `Yᗮ ⊆ ker d1* ⊆ V2*`.
+
+See [QuennevilleBelair2015, Thm 4.4] (first itemized hypothesis) and the proof of Prop 4.16
+(§4.9). -/
 theorem projK_mem_domL (hY : LinearMap.range H.d1.toFun ≤ Y) {x : Tot W0 W1 W2}
     (hx : x ∈ H.domL) : projK H Y x ∈ H.domL := by
   rw [mem_domL] at hx ⊢
@@ -417,7 +467,10 @@ theorem projK_mem_domL (hY : LinearMap.range H.d1.toFun ≤ Y) {x : Tot W0 W1 W2
 omit [Y.HasOrthogonalProjection] in
 /-- `L (D(L) ∩ K) ⊆ K`: the "third itemized hypothesis" of Thm 4.4. For `(0, u, ρ)` with
 `u ∈ ker d0*`: `L(0,u,ρ) = (0, d1* ρ, -d1 u)`, `d1* ρ ∈ ker d0*` since `d0* d1* = 0`, and
-`d1 u ∈ Y` by hypothesis. -/
+`d1 u ∈ Y` by hypothesis.
+
+See [QuennevilleBelair2015, Thm 4.4] (third itemized hypothesis) and the proof of Prop 4.16
+(§4.9). -/
 theorem waveOp_mem_K (hY : LinearMap.range H.d1.toFun ≤ Y) (x : H.waveOp.domain)
     (hx : (x : Tot W0 W1 W2) ∈ K H Y) : H.waveOp x ∈ K H Y := by
   rw [mem_K] at hx ⊢
@@ -445,7 +498,10 @@ Thesis gap / Correction: the thesis assumes two density "conjectures", uses the 
 electric complex (4.13) while stating (4.12), uses the wrong Hodge decomposition for `ρ`, and
 asserts the false inclusion `P_{H(div,0)} H(curl) ⊆ H̊(curl)`. None of this is needed: the
 proposition holds unconditionally, for both boundary conditions, with no closed range,
-contractibility or density hypothesis. Skew-symmetry of `L` is proved (`waveOp_isSkewSymm`). -/
+contractibility or density hypothesis. Skew-symmetry of `L` is proved (`waveOp_isSkewSymm`).
+
+See [QuennevilleBelair2015, §4.9, Prop 4.16] (via Cor 4.5); cf. [Hiptmair2002] for the Maxwell
+setting. -/
 theorem prop_4_16 (hY : LinearMap.range H.d1.toFun ≤ Y) {T : ℝ} {U₀ : Tot W0 W1 W2}
     {U : ℝ → Tot W0 W1 W2} (hU : IsStrongSolution (-H.waveOp) T U₀ 0 U) (hU₀ : U₀ ∈ K H Y) :
     ∀ t ∈ Icc 0 T, U t ∈ K H Y :=
@@ -457,7 +513,9 @@ theorem prop_4_16 (hY : LinearMap.range H.d1.toFun ≤ Y) {T : ℝ} {U₀ : Tot 
 
 /-- Prop 4.16 with existence: under the well-posedness hypothesis of Thm 4.6
 (`WellPosedHom`, standing for Stone's theorem), data in `D(L) ∩ K` have a unique strong
-solution, and it stays in `K`. -/
+solution, and it stays in `K`.
+
+See [QuennevilleBelair2015, Prop 4.16 and Thm 4.6]; cf. Stone's theorem, [Pazy1983, §1.10]. -/
 theorem prop_4_16_exists (hY : LinearMap.range H.d1.toFun ≤ Y) {T : ℝ}
     (hHY : WellPosedHom (-H.waveOp) T) {U₀ : Tot W0 W1 W2} (hD : U₀ ∈ H.domL)
     (hU₀ : U₀ ∈ K H Y) :
@@ -467,7 +525,9 @@ theorem prop_4_16_exists (hY : LinearMap.range H.d1.toFun ≤ Y) {T : ℝ}
   exact ⟨U, hU, prop_4_16 hY hU hU₀, fun U' hU' =>
     strong_unique _ (isSkewSymm_neg (waveOp_isSkewSymm H)) hU hU'⟩
 
-/-- Prop 4.16 for the opposite sign convention `ξ' = L ξ` (time reversal). -/
+/-- Prop 4.16 for the opposite sign convention `ξ' = L ξ` (time reversal).
+
+See [QuennevilleBelair2015, Prop 4.16]. -/
 theorem prop_4_16' (hY : LinearMap.range H.d1.toFun ≤ Y) {T : ℝ} {U₀ : Tot W0 W1 W2}
     {U : ℝ → Tot W0 W1 W2} (hU : IsStrongSolution H.waveOp T U₀ 0 U) (hU₀ : U₀ ∈ K H Y) :
     ∀ t ∈ Icc 0 T, U t ∈ K H Y :=
@@ -478,7 +538,9 @@ theorem prop_4_16' (hY : LinearMap.range H.d1.toFun ≤ Y) {T : ℝ} {U₀ : Tot
 
 variable (H) in
 /-- Strong solution of the reduced system (4.15), `E' = -d1* B`, `B' = d1 E` (for the
-linearized EB complex: `Ė = -curl B`, `Ḃ = curl E`), with `E ∈ V1`, `B ∈ V2*`. -/
+linearized EB complex: `Ė = -curl B`, `Ḃ = curl E`), with `E ∈ V1`, `B ∈ V2*`.
+
+See [QuennevilleBelair2015, §4.10, (4.15)]. -/
 structure IsReducedSolution (T : ℝ) (E₀ : W1) (B₀ : W2) (E : ℝ → W1) (B : ℝ → W2) : Prop where
   memE : ∀ t ∈ Icc 0 T, E t ∈ H.d1.domain
   memB : ∀ t ∈ Icc 0 T, B t ∈ H.d1†.domain
@@ -498,7 +560,9 @@ omit [CompleteSpace W0] [CompleteSpace W1] [CompleteSpace W2] in
 
 /-- The divergence constraint `E ∈ ker d0*` is propagated by the reduced system (4.15):
 `d/dt ⟪d0 σ, E⟫ = -⟪d0 σ, d1* B⟫ = 0`. In particular `E(t) ∈ V1 ∩ V1*`, the regularity
-required by the thesis for (4.15). -/
+required by the thesis for (4.15).
+
+See [QuennevilleBelair2015, §4.10, Prop 4.18]. -/
 theorem reduced_mem_ker {T : ℝ} {E₀ : W1} {B₀ : W2} {E : ℝ → W1} {B : ℝ → W2}
     (hR : IsReducedSolution H T E₀ B₀ E B) (hE₀ : E₀ ∈ H.d0†.ker) :
     ∀ t ∈ Icc 0 T, E t ∈ H.d0†.ker := by
@@ -523,7 +587,9 @@ theorem reduced_mem_ker {T : ℝ} {E₀ : W1} {B₀ : W2} {E : ℝ → W1} {B : 
 `(E, B)` solves the reduced system (4.15).
 
 Thesis gap: the thesis gives no proof. Here (i) is Prop 4.16 with `Y = W2`, followed by
-reading off the components. -/
+reading off the components.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.18]. -/
 theorem prop_4_18_i {T : ℝ} {E₀ : W1} {B₀ : W2} {U : ℝ → Tot W0 W1 W2}
     (hE₀ : E₀ ∈ H.d0†.ker) (hU : IsStrongSolution (-H.waveOp) T (ini W0 E₀ B₀) 0 U) :
     (∀ t ∈ Icc 0 T, (tot W0 W1 W2 (U t)).1 = 0 ∧ (tot W0 W1 W2 (U t)).2.1 ∈ H.d0†.ker) ∧
@@ -556,7 +622,9 @@ theorem prop_4_18_i {T : ℝ} {E₀ : W1} {B₀ : W2} {U : ℝ → Tot W0 W1 W2}
     rfl
 
 /-- **Thesis Prop 4.18 (ii)**: if `(E, B)` solves the reduced system (4.15) with
-`E₀ ∈ ker d0*`, then `(0, E, B)` solves (4.14) with data `(0, E₀, B₀)`. -/
+`E₀ ∈ ker d0*`, then `(0, E, B)` solves (4.14) with data `(0, E₀, B₀)`.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.18]. -/
 theorem prop_4_18_ii {T : ℝ} {E₀ : W1} {B₀ : W2} {E : ℝ → W1} {B : ℝ → W2}
     (hE₀ : E₀ ∈ H.d0†.ker) (hR : IsReducedSolution H T E₀ B₀ E B) :
     IsStrongSolution (-H.waveOp) T (ini W0 E₀ B₀) 0
@@ -586,7 +654,9 @@ theorem prop_4_18_ii {T : ℝ} {E₀ : W1} {B₀ : W2} {E : ℝ → W1} {B : ℝ
   rfl
 
 /-- Uniqueness for the reduced system (4.15) (the thesis says "the solution" without proof):
-via Prop 4.18 (ii) and the energy uniqueness for the skew-symmetric `-L`. -/
+via Prop 4.18 (ii) and the energy uniqueness for the skew-symmetric `-L`.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.18]. -/
 theorem reduced_unique {T : ℝ} {E₀ : W1} {B₀ : W2} {E E' : ℝ → W1} {B B' : ℝ → W2}
     (hE₀ : E₀ ∈ H.d0†.ker) (h : IsReducedSolution H T E₀ B₀ E B)
     (h' : IsReducedSolution H T E₀ B₀ E' B') : EqOn E E' (Icc 0 T) ∧ EqOn B B' (Icc 0 T) := by
@@ -603,7 +673,10 @@ unique solution, it keeps `E ∈ ker d0*`, and `(0, E, B)` is the solution of (4
 
 Thesis gap: "the solution to (4.15)" presupposed uniqueness, which was not established, and
 the data space `V¹ × V²` is too weak for strong solutions of (4.14): `B₀` must lie in
-`V2* = D(d1*)`, not merely in `W2`, and `E₀` in `V1 ∩ ker d0*`. -/
+`V2* = D(d1*)`, not merely in `W2`, and `E₀` in `V1 ∩ ker d0*`.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.18 and Thm 4.6]; cf. Stone's theorem,
+[Pazy1983, §1.10]. -/
 theorem prop_4_18 {T : ℝ} (hHY : WellPosedHom (-H.waveOp) T) {E₀ : W1} {B₀ : W2}
     (hE₀ : E₀ ∈ H.d1.domain) (hE₀k : E₀ ∈ H.d0†.ker) (hB₀ : B₀ ∈ H.d1†.domain) :
     ∃ E B, IsReducedSolution H T E₀ B₀ E B ∧ (∀ t ∈ Icc 0 T, E t ∈ H.d0†.ker) ∧
@@ -635,7 +708,9 @@ variable {W0 W1 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
 /-- Mixed weak form of the §4.8 Hodge wave: `u ∈ C⁰(V0) ∩ C¹(W0)`, `ρ ∈ C¹(W1)`,
 `(u̇, v) = -(ρ, d v)` for `v ∈ V0` and `(ρ̇, μ) = (d u, μ)` for `μ ∈ W1`. With `d = d1`
 (`curl`) this is also the reduced Maxwell system of §4.9 (`σ ≡ 0`), whose elimination
-`(ü, v) = -(curl u, curl v)` is `mixed_imp_secondOrder`. -/
+`(ü, v) = -(curl u, curl v)` is `mixed_imp_secondOrder`.
+
+See [QuennevilleBelair2015, §4.8]; cf. [Geveci1988], [GilletteHolstZhu2017]. -/
 structure IsMixedWeak (d : W0 →ₗ.[ℝ] W1) (T : ℝ) (w : ℝ → d.domain) (u' : ℝ → W0)
     (ρ ρ' : ℝ → W1) : Prop where
   du : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun s => (w s : W0)) (u' t) (Icc 0 T) t
@@ -646,7 +721,9 @@ structure IsMixedWeak (d : W0 →ₗ.[ℝ] W1) (T : ℝ) (w : ℝ → d.domain) 
 
 /-- Second-order weak form `(ü, v) = -(d u, d v)`: `u ∈ C⁰(V0) ∩ C¹(W0)` and, for each test
 `v ∈ V0`, `t ↦ (u̇, v)` is differentiable with derivative `-(d u, d v)` (the thesis' `ü` only
-exists in `V0'`, so it is read as this duality pairing). -/
+exists in `V0'`, so it is read as this duality pairing).
+
+See [QuennevilleBelair2015, §4.8]; cf. [Baker1976], [Dupont1973]. -/
 structure IsSecondOrderWeak (d : W0 →ₗ.[ℝ] W1) (T : ℝ) (w : ℝ → d.domain) (u' : ℝ → W0) :
     Prop where
   du : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun s => (w s : W0)) (u' t) (Icc 0 T) t
@@ -658,7 +735,9 @@ variable {d : W0 →ₗ.[ℝ] W1} {T : ℝ} {w : ℝ → d.domain} {u' : ℝ →
 
 /-- **§4.8, mixed ⇒ second order**: a mixed weak solution has `ρ̇ = d u`, its `u` solves the
 second-order weak form, and `u̇(t) ⊥ ker d` for all `t` (for `d = grad` on `H¹`:
-`∫ u̇ = 0`). -/
+`∫ u̇ = 0`).
+
+See [QuennevilleBelair2015, §4.8]; cf. [Geveci1988]. -/
 theorem mixed_imp_secondOrder {ρ ρ' : ℝ → W1} (h : IsMixedWeak d T w u' ρ ρ') :
     IsSecondOrderWeak d T w u' ∧ (∀ t ∈ Icc 0 T, ρ' t = d (w t)) ∧
       ∀ t ∈ Icc 0 T, ∀ z : d.domain, d z = 0 → ⟪u' t, (z : W0)⟫ = 0 := by
@@ -675,7 +754,9 @@ theorem mixed_imp_secondOrder {ρ ρ' : ℝ → W1} (h : IsMixedWeak d T w u' ρ
 
 /-- **§4.8, second order ⇒ mixed** (converse, under the compatibility condition): if `u` solves
 the second-order weak form and `u̇(0) = -d* ρ₀` weakly for some `ρ₀ ∈ W1`, then
-`ρ(t) = ρ₀ + ∫₀ᵗ d u` makes `(u, ρ)` a mixed weak solution. -/
+`ρ(t) = ρ₀ + ∫₀ᵗ d u` makes `(u, ρ)` a mixed weak solution.
+
+See [QuennevilleBelair2015, §4.8]; cf. [Geveci1988]. -/
 theorem secondOrder_imp_mixed [CompleteSpace W1] (hT : 0 ≤ T) (h : IsSecondOrderWeak d T w u')
     (ρ₀ : W1) (hρ₀ : ∀ v : d.domain, ⟪u' 0, (v : W0)⟫ = -⟪ρ₀, d v⟫) :
     ∃ ρ ρ' : ℝ → W1, IsMixedWeak d T w u' ρ ρ' ∧ ρ 0 = ρ₀ := by
@@ -712,7 +793,9 @@ natural boundary conditions.** Whenever `ker d ≠ 0` (for `d = grad` on `H¹`: 
 mixed weak solution.
 
 Correction: the correspondence holds onto second-order solutions with `u̇(0) ∈ range(-d*)`
-(`secondOrder_imp_mixed`; `ρ` is then determined by `ρ₀`, `mixed_rho_unique`), which under closed range is `u̇(0) ⊥ ker d`, i.e. `∫ u̇(0) = 0`. -/
+(`secondOrder_imp_mixed`; `ρ` is then determined by `ρ₀`, `mixed_rho_unique`), which under closed range is `u̇(0) ⊥ ker d`, i.e. `∫ u̇(0) = 0`.
+
+See [QuennevilleBelair2015, §4.8]. -/
 theorem secondOrder_not_mixed (hT : 0 ≤ T) (z : d.domain) (hz : d z = 0) (hz0 : (z : W0) ≠ 0) :
     IsSecondOrderWeak d T (fun t => t • z) (fun _ => (z : W0)) ∧
       ¬ ∃ ρ ρ', IsMixedWeak d T (fun t => t • z) (fun _ => (z : W0)) ρ ρ' := by
@@ -750,7 +833,9 @@ variable {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
 
 /-- Mixed weak form (4.12) of the Hodge wave on `V0 --d0--> V1 --d1--> W2` (for the vector
 wave: `d0 = grad`, `d1 = curl`): `(σ̇, τ) = (u, d0 τ)`, `(u̇, v) = -(ρ, d1 v) - (d0 σ, v)`,
-`(ρ̇, μ) = (d1 u, μ)` for `τ ∈ V0`, `v ∈ V1`, `μ ∈ W2`; `σ = sg`, `u = w` as in §4.8. -/
+`(ρ̇, μ) = (d1 u, μ)` for `τ ∈ V0`, `v ∈ V1`, `μ ∈ W2`; `σ = sg`, `u = w` as in §4.8.
+
+See [QuennevilleBelair2015, §4.9, (4.12)]. -/
 structure IsMixedWeak3 (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (T : ℝ) (sg : ℝ → d0.domain)
     (σ' : ℝ → W0) (w : ℝ → d1.domain) (u' : ℝ → W1) (ρ ρ' : ℝ → W2) : Prop where
   dσ : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun s => (sg s : W0)) (σ' t) (Icc 0 T) t
@@ -769,7 +854,9 @@ variable {d0 : W0 →ₗ.[ℝ] W1} {d1 : W1 →ₗ.[ℝ] W2} {T : ℝ} {sg : ℝ
 
 Thesis gap: the thesis writes `(ü, v) = -(curl u, curl v) - (grad σ̇, v)`, but `σ ∈ C¹(W0)`
 only, so `grad σ̇` need not exist; the `d0 σ` term must stay under the time derivative
-(see `mixed3_eliminate_of_reg` for the thesis' form under extra regularity). -/
+(see `mixed3_eliminate_of_reg` for the thesis' form under extra regularity).
+
+See [QuennevilleBelair2015, §4.9]. -/
 theorem mixed3_eliminate (h : IsMixedWeak3 d0 d1 T sg σ' w u' ρ ρ') :
     (∀ t ∈ Icc 0 T, ∀ τ : d0.domain, ⟪σ' t, (τ : W0)⟫ = ⟪(w t : W1), d0 τ⟫) ∧
       ∀ t ∈ Icc 0 T, ∀ v : d1.domain, HasDerivWithinAt
@@ -785,7 +872,9 @@ theorem mixed3_eliminate (h : IsMixedWeak3 d0 d1 T sg σ' w u' ρ ρ') :
 
 /-- §4.9 elimination in the thesis' form `(ü, v) = -(d1 u, d1 v) - (d0 σ̇, v)`, valid when
 `t ↦ d0 σ(t)` is differentiable in `W1` with derivative `g` (`g = d0 σ̇` for `σ ∈ C¹(V0)`,
-since `d0` is closed). -/
+since `d0` is closed).
+
+See [QuennevilleBelair2015, §4.9]. -/
 theorem mixed3_eliminate_of_reg (h : IsMixedWeak3 d0 d1 T sg σ' w u' ρ ρ') {g : ℝ → W1}
     (hg : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun s => d0 (sg s)) (g t) (Icc 0 T) t) :
     ∀ t ∈ Icc 0 T, ∀ v : d1.domain, HasDerivWithinAt (fun s => ⟪u' s, (v : W1)⟫)
@@ -809,7 +898,9 @@ open Finset
 proof or citation in the thesis): with `d = ∑ eᵢ ∂ᵢ` and `κ = ∑ xⱼ ιⱼ`,
 `dκ + κd = ∑ xᵢ ∂ᵢ + ∑ eᵢ ιᵢ` (Euler operator plus form-degree operator), from the Weyl
 relations `[∂ᵢ, xⱼ] = δᵢⱼ`, the CAR `ιⱼ eᵢ + eᵢ ιⱼ = δᵢⱼ`, and commutation of the polynomial
-and exterior factors. On `H_r Λ^k` the right side acts by `r + k`. -/
+and exterior factors. On `H_r Λ^k` the right side acts by `r + k`.
+
+See [QuennevilleBelair2015, §4.7] and [AFW2006, §3]; cf. [AFW2010], [Arnold2013]. -/
 theorem koszul_homotopy_core {A : Type*} [Ring A] {n : ℕ} (D X e ι : Fin n → A)
     (hDX : ∀ i j, D i * X j = X j * D i + if i = j then 1 else 0)
     (hDι : ∀ i j, D i * ι j = ι j * D i)
@@ -846,14 +937,18 @@ that bookkeeping and the polynomial-forms model are not formalized here (only th
 operator identity is), and the eigen-relation is a hypothesis.
 
 Correction: the thesis states `H_r Λ^k = κ H_{r-1}Λ^{k+1} ⊕ d H_{r+1}Λ^{k-1}` without the
-hypothesis `r + k > 0` (i.e. `c ≠ 0`); it fails for `r = k = 0` (the constants). -/
+hypothesis `r + k > 0` (i.e. `c ≠ 0`); it fails for `r = k = 0` (the constants).
+
+See [QuennevilleBelair2015, §4.7]; cf. [AFW2006, §3], [Arnold2013]. -/
 theorem koszul_decomp (d κ : M →ₗ[𝕜] M) {c : 𝕜} (hc : c ≠ 0) {ω : M}
     (hω : d (κ ω) + κ (d ω) = c • ω) : ω = κ (c⁻¹ • d ω) + d (c⁻¹ • κ ω) := by
   rw [_root_.map_smul, _root_.map_smul, ← smul_add, add_comm, hω, smul_smul, inv_mul_cancel₀ hc, one_smul]
 
 /-- **§4.7(d), directness**, abstractly: if `d² = 0`, `κ² = 0`, and `ω = κ α = d β` is an
 eigenvector of `dκ + κd` with eigenvalue `c ≠ 0`, then `ω = 0`. (Uses `κ ∘ κ = 0`, which the
-thesis does not mention; as for `koszul_decomp`, the eigen-relation is a hypothesis.) -/
+thesis does not mention; as for `koszul_decomp`, the eigen-relation is a hypothesis.)
+
+See [QuennevilleBelair2015, §4.7]; cf. [AFW2006, §3], [Arnold2013]. -/
 theorem koszul_direct (d κ : M →ₗ[𝕜] M) (hdd : ∀ x, d (d x) = 0) (hκκ : ∀ x, κ (κ x) = 0)
     {c : 𝕜} (hc : c ≠ 0) {ω α β : M} (hω : d (κ ω) + κ (d ω) = c • ω) (hα : ω = κ α)
     (hβ : ω = d β) : ω = 0 := by
@@ -888,7 +983,9 @@ def PLambda0 (r : ℕ) : Set Poly3 := {f | f.totalDegree ≤ r}
 
 /-- `P_r⁻ Λ¹(ℝ³) = P_{r-1}(ℝ³)³ ⊕ x × H_{r-1}(ℝ³)³` (Nédélec edge elements of the first kind),
 for `r ≥ 1`. For `r = 0` natural-number subtraction gives `PminusLambda1 0 = PminusLambda1 1`
-(a junk value, never used: the results below assume `1 ≤ r` or only use the `P_{r-1}` part). -/
+(a junk value, never used: the results below assume `1 ≤ r` or only use the `P_{r-1}` part).
+
+See [QuennevilleBelair2015, §4.7]; cf. [AFW2006], [AFW2010], [Arnold2013], [Hiptmair2002]. -/
 def PminusLambda1 (r : ℕ) : Set (Fin 3 → Poly3) :=
   {v | ∃ p q : Fin 3 → Poly3, (∀ i, (p i).totalDegree ≤ r - 1) ∧
     (∀ i, (q i).IsHomogeneous (r - 1)) ∧ v = p + xCross q}
@@ -904,7 +1001,10 @@ theorem totalDegree_pderiv_le (i : Fin 3) (f : Poly3) :
   omega
 
 /-- The valid pairing of §4.10 (corrected list): `grad P_r Λ⁰ ⊆ P_r⁻ Λ¹`, since
-`grad P_r ⊆ P_{r-1}³`. -/
+`grad P_r ⊆ P_{r-1}³`.
+
+See [QuennevilleBelair2015, §4.10]; cf. the subcomplex property of `P_r⁻Λ` in [AFW2006],
+[AFW2010]. -/
 theorem pgrad_mem_PminusLambda1 {r : ℕ} {f : Poly3} (hf : f ∈ PLambda0 r) :
     pgrad f ∈ PminusLambda1 r :=
   ⟨pgrad f, 0, fun i => (totalDegree_pderiv_le i f).trans (Nat.sub_le_sub_right hf 1),
@@ -921,7 +1021,10 @@ theorem pgrad_X0_pow (r : ℕ) :
 listed for the matrix wave equation (4.14)) are not subcomplexes.
 
 Correction: use `P_r Λ⁰` with `P_r⁻ Λ¹` (`pgrad_mem_PminusLambda1`). Proof: `x · (x × q) = 0`,
-so `x · v` has degree `≤ r` for `v ∈ P_r⁻Λ¹`, while `x · grad x₀^{r+1} = (r+1) x₀^{r+1}`. -/
+so `x · v` has degree `≤ r` for `v ∈ P_r⁻Λ¹`, while `x · grad x₀^{r+1} = (r+1) x₀^{r+1}`.
+
+See [QuennevilleBelair2015, §4.10]; cf. the admissible pairings of `PΛ`/`P⁻Λ` spaces in [AFW2006],
+[AFW2010]. -/
 theorem pgrad_not_mem_PminusLambda1 {r : ℕ} (hr : 1 ≤ r) :
     X 0 ^ (r + 1) ∈ PLambda0 (r + 1) ∧ pgrad (X 0 ^ (r + 1)) ∉ PminusLambda1 r := by
   refine ⟨by simp [PLambda0, totalDegree_X_pow], ?_⟩
@@ -943,7 +1046,9 @@ theorem pgrad_not_mem_PminusLambda1 {r : ℕ} (hr : 1 ≤ r) :
   simp [Finsupp.sum_add_index'] at hdeg
 
 /-- The `r = 1` instance in function form (lowest-order Whitney/Nédélec fields `a + b × x`):
-`grad x₀² = (2x₀, 0, 0)` is not of this form. -/
+`grad x₀² = (2x₀, 0, 0)` is not of this form.
+
+See [QuennevilleBelair2015, §4.10]; cf. [Hiptmair2002]. -/
 theorem grad_sq_not_whitney :
     ¬ ∃ a b : Fin 3 → ℝ, ∀ x : Fin 3 → ℝ, 2 * x 0 = a 0 + (b 1 * x 2 - b 2 * x 1) := by
   rintro ⟨a, b, h⟩
@@ -972,21 +1077,29 @@ theorem eps3_apply (i j k : Fin 3) : eps3 i j k =
     else 0 := by
   fin_cases i <;> fin_cases j <;> fin_cases k <;> simp [eps3, Matrix.det_fin_three]
 
-/-- **Lemma 3.5**: `tr curl A = -2 div vskw A`. -/
+/-- **Lemma 3.5**: `tr curl A = -2 div vskw A`.
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem trace_curl (dA : Jet1) : (curl dA).trace = -2 * ∑ a, vskw (dA a) a := by
   simp [Matrix.trace, curl, vskw, eps3_apply, Fin.sum_univ_three]; ring
 
-/-- **Lemma 3.5**: `2 vskw curl A = grad tr A - div Aᵀ`. -/
+/-- **Lemma 3.5**: `2 vskw curl A = grad tr A - div Aᵀ`.
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem two_vskw_curl (dA : Jet1) (a : Fin 3) :
     2 * vskw (curl dA) a = ∑ b, dA a b b - ∑ b, dA b b a := by
   fin_cases a <;> simp [curl, vskw, eps3_apply, Fin.sum_univ_three] <;> ring
 
-/-- **Lemma 3.5**: `div curl A = 0` (second jet `d2A b = ∂_b (dA)`, symmetric). -/
+/-- **Lemma 3.5**: `div curl A = 0` (second jet `d2A b = ∂_b (dA)`, symmetric).
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem div_curl (d2A : Fin 3 → Jet1) (hsym : ∀ b c, d2A b c = d2A c b) (a : Fin 3) :
     ∑ b, curl (d2A b) a b = 0 := by
   fin_cases a <;> simp [curl, eps3_apply, Fin.sum_univ_three, hsym 1 0, hsym 2 0, hsym 2 1] <;> ring
 
-/-- **Lemma 3.5, second bullet**: if `A` is symmetric, then `tr curl A = 0`. -/
+/-- **Lemma 3.5, second bullet**: if `A` is symmetric, then `tr curl A = 0`.
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem trace_curl_of_symm (dA : Jet1) (hsym : ∀ c, (dA c)ᵀ = dA c) : (curl dA).trace = 0 := by
   have hs : ∀ c i j, dA c i j = dA c j i := fun c i j => by
     simpa [Matrix.transpose_apply] using congrFun (congrFun (hsym c) j) i
@@ -999,7 +1112,9 @@ theorem trace_curl_of_symm (dA : Jet1) (hsym : ∀ c, (dA c)ᵀ = dA c) : (curl 
 symmetric, traceless and divergence-free (at the level of first derivatives), then `curl A`
 is symmetric and traceless. This is the pointwise content of the hypotheses `hd1`, `hd1s` of
 `prop_4_17` for `S1 = S2 = L²(TSD)`; the divergence part is `div_curl`, and the combination
-is `curl_TSD_div`. -/
+is `curl_TSD_div`.
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem curl_TSD (dA : Jet1) (hsym : ∀ c, (dA c)ᵀ = dA c) (htr : ∀ c, (dA c).trace = 0)
     (hdiv : div dA = 0) : (curl dA)ᵀ = curl dA ∧ (curl dA).trace = 0 := by
   have hs : ∀ c i j, dA c i j = dA c j i := fun c i j => by
@@ -1020,7 +1135,9 @@ theorem curl_TSD (dA : Jet1) (hsym : ∀ c, (dA c)ᵀ = dA c) (htr : ∀ c, (dA 
 
 /-- **Lemma 3.5, third bullet**: if `A` is TSD, then `curl A` is TSD. `dA` is the first jet of
 `A` and `d2A b = ∂_b (dA)` its (symmetric) second jet; `∑_b ∂_b (curl A)_{ab} = 0` is
-`div curl A = 0`. Linear with constant coefficients, hence valid distributionally. -/
+`div curl A = 0`. Linear with constant coefficients, hence valid distributionally.
+
+See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem curl_TSD_div (dA : Jet1) (d2A : Fin 3 → Jet1) (hsym2 : ∀ b c, d2A b c = d2A c b)
     (hsym : ∀ c, (dA c)ᵀ = dA c) (htr : ∀ c, (dA c).trace = 0) (hdiv : div dA = 0) :
     (curl dA)ᵀ = curl dA ∧ (curl dA).trace = 0 ∧ ∀ a, ∑ b, curl (d2A b) a b = 0 :=
@@ -1051,7 +1168,9 @@ theorem group_inner_map_map (t : ℝ) (x y : E) : ⟪G.S t x, G.S t y⟫ = ⟪x,
   (LinearMap.norm_map_iff_inner_map_map (G.S t)).mp (G.norm_map t) x y
 
 /-- The orbit `t ↦ S t x` of `x ∈ D(L)` is the strong solution of `U' = L U`, `U 0 = x`
-(the existence half of Thesis Thm 4.3, homogeneous case, from the Stone stand-in). -/
+(the existence half of Thesis Thm 4.3, homogeneous case, from the Stone stand-in).
+
+See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983, §1.10]. -/
 theorem isStrongSolution_orbit (T : ℝ) (x : L.domain) :
     IsStrongSolution L T x 0 (fun t => G.S t x) := by
   refine ⟨fun t _ => G.mem_domain_apply x t, fun t _ => ?_, by simp [G.map_zero]⟩
@@ -1060,7 +1179,9 @@ theorem isStrongSolution_orbit (T : ℝ) (x : L.domain) :
   exact (G.hasDerivAt_apply x t).hasDerivWithinAt
 
 /-- **Reducing subspace**: if a closed subspace `K` is invariant under the whole group
-(`t ∈ ℝ`), then `P_K D(L) ⊆ D(L)` and `L P_K = P_K L` on `D(L)`. -/
+(`t ∈ ℝ`), then `P_K D(L) ⊆ D(L)` and `L P_K = P_K L` on `D(L)`.
+
+Cf. unitary groups and Stone's theorem in [Pazy1983, §1.10]. -/
 theorem reducing_of_invariant (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (hK : ∀ t, ∀ x ∈ K, G.S t x ∈ K) :
     ∀ x : L.domain, ∃ h : K.starProjection (x : E) ∈ L.domain,
@@ -1081,7 +1202,9 @@ theorem reducing_of_invariant (K : Submodule ℝ E) [K.HasOrthogonalProjection]
 
 /-- **Necessity of the projection hypothesis** for constraint propagation: if every group
 trajectory starting in `D(L) ∩ K` stays in `K` for all `t ∈ ℝ` and `D(L) ∩ K` is dense in `K`,
-then `P_K D(L) ⊆ D(L)`. -/
+then `P_K D(L) ⊆ D(L)`.
+
+Cf. [QuennevilleBelair2015, Thm 4.4] (first itemized hypothesis) and [Pazy1983, §1.10]. -/
 theorem projection_hyp_necessary (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (hdense : ∀ k ∈ K, k ∈ closure ((L.domain : Set E) ∩ K))
     (hprop : ∀ t, ∀ x ∈ L.domain, x ∈ K → G.S t x ∈ K) :
@@ -1100,7 +1223,9 @@ theorem projection_hyp_necessary (K : Submodule ℝ E) [K.HasOrthogonalProjectio
 
 /-- **Time reversal**: if `R` is a continuous involution with `R D(L) ⊆ D(L)` and
 `L R = -R L` on `D(L)`, then `R S t = S (-t) R` on `D(L)` (both sides solve `U' = L U`;
-energy uniqueness, using that a generator is skew-symmetric). -/
+energy uniqueness, using that a generator is skew-symmetric).
+
+Cf. [Pazy1983, §1.10]. -/
 theorem group_reversal (R : E →L[ℝ] E) (hRR : ∀ x, R (R x) = x)
     (hRD : ∀ x ∈ L.domain, R x ∈ L.domain)
     (hRL : ∀ x : L.domain, L ⟨R x, hRD x x.2⟩ = -R (L x)) :
@@ -1157,7 +1282,9 @@ variable {W0 W1 W2 : Type*}
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
 
 variable (W0 W1 W2) in
-/-- The time reversal `R(σ, u, ρ) = (-σ, u, -ρ)` of the Hodge wave (4.14). -/
+/-- The time reversal `R(σ, u, ρ) = (-σ, u, -ρ)` of the Hodge wave (4.14).
+
+See [QuennevilleBelair2015, §4.10, (4.14)]. -/
 def revT : Tot W0 W1 W2 →L[ℝ] Tot W0 W1 W2 :=
   (totL (W0 := W0) (W1 := W1) (W2 := W2)).symm.toContinuousLinearMap ∘L
     ((-ContinuousLinearMap.id ℝ W0).prodMap
@@ -1192,7 +1319,9 @@ theorem revT_mem_domL {x : Tot W0 W1 W2} (hx : x ∈ H.domL) : revT W0 W1 W2 x �
   rw [tot_revT]
   exact ⟨H.d0.domain.neg_mem hx.1, hx.2.1, H.d1†.domain.neg_mem hx.2.2⟩
 
-/-- Time-reversal symmetry of (4.14): `L R = -R L` on `D(L)`. -/
+/-- Time-reversal symmetry of (4.14): `L R = -R L` on `D(L)`.
+
+See [QuennevilleBelair2015, §4.10, (4.14)]. -/
 theorem waveOp_revT (x : H.waveOp.domain) :
     H.waveOp ⟨revT W0 W1 W2 x, revT_mem_domL H x.2⟩ = -revT W0 W1 W2 (H.waveOp x) := by
   apply (tot W0 W1 W2).injective
@@ -1210,7 +1339,9 @@ theorem waveOp_revT (x : H.waveOp.domain) :
 variable {H} {S1 : Submodule ℝ W1} {S2 : Submodule ℝ W2}
 
 /-- `L (D(L) ∩ K) ⊆ K` for `K = {0} × S1 × S2` (the "third itemized hypothesis" of Thm 4.4,
-as checked in Props 4.17/4.19 via Lemma 3.5). -/
+as checked in Props 4.17/4.19 via Lemma 3.5).
+
+See [QuennevilleBelair2015, Thm 4.4] and the proofs of Props 4.17 and 4.19 (§4.10, §4.11). -/
 theorem waveOp_mem_Kc (hS1 : S1 ≤ H.d0†.ker) (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
     (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1) (x : H.waveOp.domain)
     (hx : (x : Tot W0 W1 W2) ∈ Kc W0 S1 S2) : H.waveOp x ∈ Kc W0 S1 S2 := by
@@ -1228,7 +1359,9 @@ theorem waveOp_mem_Kc (hS1 : S1 ≤ H.d0†.ker) (hd1 : ∀ u : H.d1.domain, (u 
 variable [S1.HasOrthogonalProjection] [S2.HasOrthogonalProjection]
 
 /-- Sufficiency: under the projection hypothesis `P_K D(L) ⊆ D(L)` and invariance, strong
-solutions of (4.14) starting in `K = {0} × S1 × S2` stay in `K`. -/
+solutions of (4.14) starting in `K = {0} × S1 × S2` stay in `K`.
+
+See [QuennevilleBelair2015, Thm 4.4 and Cor 4.5]. -/
 theorem Kc_propagate (hS1 : S1 ≤ H.d0†.ker)
     (hPD : ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL)
     (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
@@ -1268,7 +1401,10 @@ elliptic regularity):
   `P_TSD E = dev sym (E - grad w)` gives a nonzero boundary flux of `dev sym grad w`.
 So the statement is a genuine theorem (its hypotheses are satisfiable) but does not apply to
 bounded domains with the `H̊(curl)` condition, where by `prop_4_17_iff` TSD propagation fails
-for some data unless `D(L) ∩ K` is not dense in `K`. -/
+for some data unless `D(L) ∩ K` is not dense in `K`.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.17 and §4.11, Prop 4.19]; for the EB system cf.
+[ACBY1997]. -/
 theorem prop_4_17 (hS1 : S1 ≤ H.d0†.ker) (hPD : ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL)
     (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
     (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1) {T : ℝ} {E₀ : W1} {B₀ : W2}
@@ -1284,7 +1420,9 @@ theorem prop_4_17 (hS1 : S1 ≤ H.d0†.ker) (hPD : ∀ x ∈ H.domL, projKc W0 
 `-L` generates an orthogonal group (Stone stand-in), `D(L) ∩ K` is dense in `K`, and every
 strong solution of (4.14) starting in `D(L) ∩ K` stays in `K`, then `P_K D(L) ⊆ D(L)`.
 Proof: forward invariance, the time reversal `R(σ, E, B) = (-σ, E, -B)` (`waveOp_revT`,
-`group_reversal`) for backward invariance, then the reducing-subspace argument. -/
+`group_reversal`) for backward invariance, then the reducing-subspace argument.
+
+Cf. [QuennevilleBelair2015, Props 4.17 and 4.19] and [Pazy1983, §1.10]. -/
 theorem prop_4_17_necessary (G : UnitaryGroupGenerator (-H.waveOp))
     (hdense : ∀ k ∈ Kc W0 S1 S2, k ∈ closure ((H.domL : Set (Tot W0 W1 W2)) ∩ Kc W0 S1 S2))
     (hprop : ∀ (T : ℝ) (U₀ : Tot W0 W1 W2) (U : ℝ → Tot W0 W1 W2), U₀ ∈ Kc W0 S1 S2 →
@@ -1304,7 +1442,9 @@ theorem prop_4_17_necessary (G : UnitaryGroupGenerator (-H.waveOp))
   exact hprop t y _ hyK (isStrongSolution_orbit G t ⟨y, hy⟩) t ⟨ht, le_rfl⟩
 
 /-- **Props 4.17/4.19, characterization**: with a Stone group for `-L` and `D(L) ∩ K` dense in
-`K`, TSD-type constraints propagate for all data iff `P_K D(L) ⊆ D(L)`. -/
+`K`, TSD-type constraints propagate for all data iff `P_K D(L) ⊆ D(L)`.
+
+Cf. [QuennevilleBelair2015, Props 4.17 and 4.19] and [Pazy1983, §1.10]. -/
 theorem prop_4_17_iff (G : UnitaryGroupGenerator (-H.waveOp)) (hS1 : S1 ≤ H.d0†.ker)
     (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
     (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1)
@@ -1343,7 +1483,9 @@ theorem isClosed_toPMap_top {F G : Type*} [NormedAddCommGroup F] [NormedSpace �
   rw [this]
   exact isClosed_eq (A.continuous.comp continuous_fst) continuous_snd
 
-/-- The Hilbert complex of bounded operators `A0 : W0 → W1`, `A1 : W1 → W2`, `A1 A0 = 0`. -/
+/-- The Hilbert complex of bounded operators `A0 : W0 → W1`, `A1 : W1 → W2`, `A1 A0 = 0`.
+
+Cf. Hilbert complexes in [BruningLesch1992], [AFW2010, §3]. -/
 def boundedComplex (A0 : W0 →L[ℝ] W1) (A1 : W1 →L[ℝ] W2) (h : ∀ x, A1 (A0 x) = 0) :
     HilbertComplex2 W0 W1 W2 where
   d0 := (A0 : W0 →ₗ[ℝ] W1).toPMap ⊤
@@ -1424,11 +1566,15 @@ theorem boundedWave_skew (x y : Tot W0 W1 W2) :
   rw [neg_waveOp_boundedComplex A0 A1 h] at hs
   exact hs ⟨x, trivial⟩ ⟨y, trivial⟩
 
-/-- **Stone group for (4.14) on a bounded complex**: `-L` generates `t ↦ exp(t(-L))`. -/
+/-- **Stone group for (4.14) on a bounded complex**: `-L` generates `t ↦ exp(t(-L))`.
+
+Cf. [Pazy1983, §1.1] (uniformly continuous groups `exp(tA)` of bounded operators). -/
 def boundedGroup : UnitaryGroupGenerator (-(boundedComplex A0 A1 h).waveOp) :=
   (neg_waveOp_boundedComplex A0 A1 h).symm ▸ expGroup _ (boundedWave_skew A0 A1 h)
 
-/-- **Non-vacuity of `WellPosedHom (-L)`** (critic item 6) for every bounded complex. -/
+/-- **Non-vacuity of `WellPosedHom (-L)`** (critic item 6) for every bounded complex.
+
+Cf. [QuennevilleBelair2015, Thm 4.6]. -/
 theorem wellPosedHom_boundedComplex (T : ℝ) :
     WellPosedHom (-(boundedComplex A0 A1 h).waveOp) T :=
   (boundedGroup A0 A1 h).wellPosedHom T

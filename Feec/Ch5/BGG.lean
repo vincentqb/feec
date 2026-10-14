@@ -1,4 +1,9 @@
-import Feec.Ch4.Galerkin
+module
+
+public import Feec.Ch4.Galerkin
+public import Feec.Foundation.BGG
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
+public import Mathlib.Topology.Algebra.Module.LinearPMap
 
 /-!
 # The abstract BGG framework (thesis §5.1): Props 5.1 and 5.2
@@ -52,7 +57,7 @@ topological statements are made on it).
 open scoped RealInnerProductSpace
 open Set Filter Topology
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec.Ch5.BGG
 
@@ -1365,14 +1370,14 @@ end Analytic
 section Example
 
 /-- `c • id` on `ℝ` -/
-private def sc (c : ℝ) : ℝ →L[ℝ] ℝ := c • ContinuousLinearMap.id ℝ ℝ
+def sc (c : ℝ) : ℝ →L[ℝ] ℝ := c • ContinuousLinearMap.id ℝ ℝ
 
 @[simp] private lemma sc_apply (c x : ℝ) : sc c x = c * x := rfl
 
-private lemma sc_injective {c : ℝ} (hc : c ≠ 0) : Function.Injective (sc c) := fun x y h => by
+lemma sc_injective {c : ℝ} (hc : c ≠ 0) : Function.Injective (sc c) := fun x y h => by
   simpa [hc] using h
 
-private lemma sc_surjective {c : ℝ} (hc : c ≠ 0) : Function.Surjective (sc c) := fun y =>
+lemma sc_surjective {c : ℝ} (hc : c ≠ 0) : Function.Surjective (sc c) := fun y =>
   ⟨y / c, by simp [mul_div_cancel₀ _ hc]⟩
 
 /-- A nontrivial BGG datum on `ℝ`: `ι⁰ = 3/5`, `d⁰ = 4/5` (graph norm `9/25 + 16/25 = 1`),

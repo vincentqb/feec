@@ -14,6 +14,26 @@ Conventions: real scalars only; `open scoped RealInnerProductSpace` (so `⟪x, y
 complexes indexed by explicit segments `k, k+1, k+2` (no `k-1`).
 No `axiom`, no `sorry`: missing theory (Hille–Yosida/Stone, Sobolev spaces, traces)
 enters only as explicit hypotheses / structure fields.
+
+## References
+
+* [QuennevilleBelair2015], §2.2–2.3 (Minkowski metric, Riemann-tensor symmetries, Prop 2.1),
+  §3.1 (Levi-Civita symbol), §3.4 (Lemma 3.5: `curl`, `div`, `vskw`), §4.1 (unbounded operators,
+  adjoints, (4.1a)), §4.2 (Hilbert complexes, domain complex, cycles/boundaries/harmonic forms),
+  §4.3 (Thm 4.3, Thm 4.4), §4.4 (Hodge wave operator (4.5), Thm 4.6, weak form (4.7)),
+  §4.6 (subcomplexes, bounded cochain projections, the form `A`), §5.1 (BGG data, complex (5.1))
+* [Arnold2018] (FEEC framework: Hilbert complexes, domain complexes, subcomplexes and bounded
+  cochain projections)
+* [AFW2010] (closed Hilbert complexes, Hodge decomposition, approximation by subcomplexes with
+  bounded cochain projections; the thesis' main FEEC source, cited there as [5])
+* [AFW2006] (FEEC, cited by the thesis together with [AFW2010])
+* [BruningLesch1992] (unbounded Hilbert complexes; cited by the thesis for §4.2)
+* [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9 (the Hille–Yosida corollary the thesis cites for
+  Thm 4.3; here only the hypothesis `WellPosedExistence`)
+* [Pazy1983], §1.10 (Stone's theorem) and Ch. 4 (inhomogeneous problems): classical background
+  for the existence hypothesis
+* [ArnoldHu2021] (complexes from complexes: the BGG-type construction behind `BGGData`)
+* [Wald1984], §3.2 (symmetries of the Riemann tensor)
 -/
 
 open scoped RealInnerProductSpace
@@ -30,16 +50,18 @@ open LinearPMap
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
-/-- Skew-adjoint (possibly unbounded) operator: `A† = -A` (equal domains). -/
+/-- Skew-adjoint (possibly unbounded) operator: `A† = -A` (equal domains).
+See [QuennevilleBelair2015, §4.1]; cf. [Pazy1983, §1.10] (Stone's theorem). -/
 def IsSkewAdjoint [CompleteSpace E] (A : E →ₗ.[ℝ] E) : Prop := A† = -A
 
 /-- Skew-symmetry on the domain: `⟪A x, y⟫ = -⟪x, A y⟫`. (Weaker than skew-adjoint;
-enough for all energy/uniqueness/constraint-propagation arguments.) -/
+enough for all energy/uniqueness/constraint-propagation arguments.)
+See [QuennevilleBelair2015, §4.1] (skew-symmetric operators). -/
 def IsSkewSymm (A : E →ₗ.[ℝ] E) : Prop :=
   ∀ x y : A.domain, ⟪A x, (y : E)⟫ = -⟪(x : E), A y⟫
 
 /-- Restriction of `L` to an invariant subspace `K`, as an operator `K → K`
-(domain `D(L) ∩ K`). Used by Thm 4.4. -/
+(domain `D(L) ∩ K`). Used by Thm 4.4. See [QuennevilleBelair2015, Thm 4.4] (the operator `L̃`). -/
 def restrictTo (L : E →ₗ.[ℝ] E) (K : Submodule ℝ E)
     (hinv : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) : K →ₗ.[ℝ] K where
   domain := L.domain.comap K.subtype
@@ -48,7 +70,8 @@ def restrictTo (L : E →ₗ.[ℝ] E) (K : Submodule ℝ E)
       map_add' := fun x y => by ext; simp [← LinearPMap.map_add]; rfl
       map_smul' := fun c x => by ext; simp [← LinearPMap.map_smul]; rfl }
 
-/-- (4.1a) `(range T)ᗮ = ker T†` for densely defined `T` (no closedness needed). -/
+/-- (4.1a) `(range T)ᗮ = ker T†` for densely defined `T` (no closedness needed).
+See [QuennevilleBelair2015, §4.1, (4.1a)] (stated there for closed `T`). -/
 theorem orth_range_eq_ker_adjoint {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F]
     [CompleteSpace E] [CompleteSpace F]
     (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) :
@@ -71,7 +94,7 @@ theorem orth_range_eq_ker_adjoint {F : Type*} [NormedAddCommGroup F] [InnerProdu
     rw [hy0] at this
     simpa [real_inner_comm] using this.symm
 
-/-- Skew-adjoint ⇒ skew-symmetric. -/
+/-- Skew-adjoint ⇒ skew-symmetric. See [QuennevilleBelair2015, §4.1]. -/
 theorem IsSkewAdjoint.isSkewSymm [CompleteSpace E] {L : E →ₗ.[ℝ] E}
     (hD : Dense (L.domain : Set E)) (hL : IsSkewAdjoint L) : IsSkewSymm L := by
   intro x y
@@ -92,7 +115,8 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 /-- Strong solution of `U' = L U + F` on `[0,T]` with `U 0 = U₀`.
 Derivatives are within `Icc 0 T` (one-sided at the endpoints). Continuity of `U` in `E`
-follows from `deriv`; graph-norm continuity is NOT part of the predicate (no module needs it). -/
+follows from `deriv`; graph-norm continuity is NOT part of the predicate (no module needs it).
+See [QuennevilleBelair2015, Thm 4.3] and the definition of strong solution in §4.4. -/
 structure IsStrongSolution (L : E →ₗ.[ℝ] E) (T : ℝ) (U₀ : E) (F U : ℝ → E) : Prop where
   mem : ∀ t ∈ Icc 0 T, U t ∈ L.domain
   deriv : ∀ t (ht : t ∈ Icc 0 T), HasDerivWithinAt U (L ⟨U t, mem t ht⟩ + F t) (Icc 0 T) t
@@ -101,16 +125,20 @@ structure IsStrongSolution (L : E →ₗ.[ℝ] E) (T : ℝ) (U₀ : E) (F U : �
 /-- **Explicit hypothesis standing in for Thm 4.3 (Hille–Yosida / Stone), which Mathlib lacks.**
 For every initial datum in `D(L)` and every admissible forcing there is a strong solution.
 `Adm` abstracts the class "`C([0,T];X) ∩ (W^{1,1}(0,T;X) ∪ L¹(0,T;D(L)))`".
-Never assumed as an `axiom`; always a theorem hypothesis. Uniqueness is *proved* (energy). -/
+Never assumed as an `axiom`; always a theorem hypothesis. Uniqueness is *proved* (energy).
+See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998, Prop 4.1.6, Cor 2.4.9] and
+[Pazy1983, §1.10, Ch. 4]. -/
 def WellPosedExistence (L : E →ₗ.[ℝ] E) (T : ℝ) (Adm : (ℝ → E) → Prop) : Prop :=
   ∀ U₀ ∈ L.domain, ∀ F, Adm F → ∃ U, IsStrongSolution L T U₀ F U
 
-/-- Homogeneous version (`F = 0`), the form used in Thm 4.6. -/
+/-- Homogeneous version (`F = 0`), the form used in Thm 4.6.
+See [QuennevilleBelair2015, Thm 4.6]. -/
 def WellPosedHom (L : E →ₗ.[ℝ] E) (T : ℝ) : Prop :=
   ∀ U₀ ∈ L.domain, ∃ U, IsStrongSolution L T U₀ 0 U
 
 /-- Energy lemma: if `⟪e', e⟫ = 0` on `[0,T)` then `e(0) = 0` forces `e ≡ 0` on `[0,T]`.
-The single engine behind every uniqueness statement (Thm 4.3/4.6/4.7, Cor 4.5, Ch 6). -/
+The single engine behind every uniqueness statement (Thm 4.3/4.6/4.7, Cor 4.5, Ch 6).
+Abstracts the energy argument for uniqueness of weak solutions in [QuennevilleBelair2015, §4.4]. -/
 theorem energy_zero {e e' : ℝ → E} {T : ℝ}
     (hcont : ContinuousOn e (Icc 0 T))
     (hd : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (e' t) (Ici t) t)
@@ -130,7 +158,8 @@ end Evolution
 /-! ## §C. Unbounded Hilbert complexes (the thesis' / Brüning–Lesch picture) -/
 
 /-- A length-2 Hilbert complex `W0 --d0--> W1 --d1--> W2` of closed, densely defined operators
-(§4.4 setup). Closed range is **not** part of the structure (see `HilbertComplex2.ClosedRange`). -/
+(§4.4 setup). Closed range is **not** part of the structure (see `HilbertComplex2.ClosedRange`).
+See [QuennevilleBelair2015, §4.2, §4.4]; cf. [BruningLesch1992], [AFW2010], [Arnold2018]. -/
 structure HilbertComplex2 (W0 W1 W2 : Type*)
     [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
     [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
@@ -154,14 +183,17 @@ variable {W0 W1 W2 : Type*}
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
     (H : HilbertComplex2 W0 W1 W2)
 
-/-- Closed-range hypothesis (a closed complex in AFW's sense). -/
+/-- Closed-range hypothesis (a closed complex in AFW's sense).
+See [QuennevilleBelair2015, §4.2] ("closed" Hilbert complex); cf. [AFW2010]. -/
 def ClosedRange : Prop :=
   IsClosed (LinearMap.range H.d0.toFun : Set W1) ∧ IsClosed (LinearMap.range H.d1.toFun : Set W2)
 
-/-- Domain of the middle space of the Hodge wave operator: `V1 ∩ V1*`. -/
+/-- Domain of the middle space of the Hodge wave operator: `V1 ∩ V1*`.
+See [QuennevilleBelair2015, §4.4] (`D(L)` in (4.5)). -/
 def midDomain : Submodule ℝ W1 := H.d1.domain ⊓ H.d0†.domain
 
-/-- The product space `W = W0 × W1 × W2` with the ℓ² inner product. -/
+/-- The product space `W = W0 × W1 × W2` with the ℓ² inner product.
+See [QuennevilleBelair2015, §4.4]. -/
 abbrev Tot (W0 W1 W2 : Type*) := WithLp 2 (W0 × WithLp 2 (W1 × W2))
 
 /-- coordinates of `Tot` -/
@@ -170,7 +202,8 @@ def tot (W0 W1 W2 : Type*)
     [NormedAddCommGroup W1] [InnerProductSpace ℝ W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] : Tot W0 W1 W2 ≃ₗ[ℝ] W0 × W1 × W2 :=
   (WithLp.linearEquiv 2 ℝ _).trans ((LinearEquiv.refl ℝ W0).prodCongr (WithLp.linearEquiv 2 ℝ _))
-/-- domain `V0 × (V1 ∩ V1*) × V2*` of the Hodge wave operator, as a submodule of `Tot`. -/
+/-- domain `V0 × (V1 ∩ V1*) × V2*` of the Hodge wave operator, as a submodule of `Tot`.
+See [QuennevilleBelair2015, §4.4, (4.5)]. -/
 def domL : Submodule ℝ (Tot W0 W1 W2) :=
   (H.d0.domain.prod (H.midDomain.prod H.d1†.domain)).comap (tot W0 W1 W2).toLinearMap
 /-- the coordinate projections of `domL` into the operator domains -/
@@ -187,7 +220,8 @@ def prV2s : H.domL →ₗ[ℝ] H.d1†.domain :=
   LinearMap.codRestrict _ ((LinearMap.snd ℝ _ _).comp ((LinearMap.snd ℝ _ _).comp
     ((tot W0 W1 W2).toLinearMap.comp H.domL.subtype))) (fun x => x.2.2.2)
 
-/-- Hodge wave operator (4.5): `L(σ,u,ρ) = (-d0* u, d0 σ + d1* ρ, -d1 u)` on `domL`. -/
+/-- Hodge wave operator (4.5): `L(σ,u,ρ) = (-d0* u, d0 σ + d1* ρ, -d1 u)` on `domL`.
+See [QuennevilleBelair2015, §4.4, (4.5)] and Thm 4.6. -/
 def waveOp : Tot W0 W1 W2 →ₗ.[ℝ] Tot W0 W1 W2 where
   domain := H.domL
   toFun := (tot W0 W1 W2).symm.toLinearMap.comp
@@ -197,7 +231,8 @@ def waveOp : Tot W0 W1 W2 →ₗ.[ℝ] Tot W0 W1 W2 where
 
 end HilbertComplex2
 
-/-- ℕ-indexed unbounded Hilbert complex (W-level). `segment k` gives the length-2 piece. -/
+/-- ℕ-indexed unbounded Hilbert complex (W-level). `segment k` gives the length-2 piece.
+See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010], [Arnold2018]. -/
 structure UHilbertComplex (W : ℕ → Type*)
     [∀ k, NormedAddCommGroup (W k)] [∀ k, InnerProductSpace ℝ (W k)] [∀ k, CompleteSpace (W k)]
     where
@@ -228,7 +263,9 @@ end UHilbertComplex
 /-! ## §D. Bounded "domain complex" (AFW): `V k` carries the graph inner product -/
 
 /-- `V k` = domain of `d k` with its graph inner product, `ι k : V k → W k` the inclusion.
-All Hodge/Poincaré/cohomology arguments live in `V` using Mathlib's `ᗮ`/`starProjection`. -/
+All Hodge/Poincaré/cohomology arguments live in `V` using Mathlib's `ᗮ`/`starProjection`.
+See [QuennevilleBelair2015, §4.2] (the domain complex, Thms 4.1–4.2); cf. [AFW2010],
+[Arnold2018]. -/
 structure HilbertComplex (V W : ℕ → Type*)
     [∀ k, NormedAddCommGroup (V k)] [∀ k, InnerProductSpace ℝ (V k)] [∀ k, CompleteSpace (V k)]
     [∀ k, NormedAddCommGroup (W k)] [∀ k, InnerProductSpace ℝ (W k)] [∀ k, CompleteSpace (W k)]
@@ -247,13 +284,14 @@ variable {V W : ℕ → Type*}
     [∀ k, NormedAddCommGroup (W k)] [∀ k, InnerProductSpace ℝ (W k)] [∀ k, CompleteSpace (W k)]
     (C : HilbertComplex V W)
 
-/-- cycles `𝔷^k = ker d^k ⊂ V^k` -/
+/-- cycles `𝔷^k = ker d^k ⊂ V^k`. See [QuennevilleBelair2015, §4.2]. -/
 def Z (k : ℕ) : Submodule ℝ (V k) := (C.d k).ker
-/-- boundaries `𝔅^{k+1} = d^k V^k ⊂ V^{k+1}` -/
+/-- boundaries `𝔅^{k+1} = d^k V^k ⊂ V^{k+1}`. See [QuennevilleBelair2015, §4.2]. -/
 def B (k : ℕ) : Submodule ℝ (V (k + 1)) := (C.d k).range
-/-- harmonic forms `ℌ^{k+1} = 𝔅^{k+1}ᗮ ∩ 𝔷^{k+1}` -/
+/-- harmonic forms `ℌ^{k+1} = 𝔅^{k+1}ᗮ ∩ 𝔷^{k+1}`.
+See [QuennevilleBelair2015, §4.2] (and Thm 4.1, Hodge decomposition); cf. [AFW2010]. -/
 def H (k : ℕ) : Submodule ℝ (V (k + 1)) := (C.B k)ᗮ ⊓ C.Z (k + 1)
-/-- closed complex at position `k → k+1` -/
+/-- closed complex at position `k → k+1`. See [QuennevilleBelair2015, §4.2]. -/
 def IsClosedAt (k : ℕ) : Prop := IsClosed (C.B k : Set (V (k + 1)))
 
 theorem d_d (k : ℕ) (u : V k) : C.d (k + 1) (C.d k u) = 0 := by
@@ -268,18 +306,22 @@ instance (k : ℕ) : (C.Z k).HasOrthogonalProjection := by
   have : CompleteSpace (C.Z k) := (C.isClosed_Z k).completeSpace_coe
   infer_instance
 
-/-- On cycles the `V`- and `W`-inner products agree. -/
+/-- On cycles the `V`- and `W`-inner products agree.
+See [QuennevilleBelair2015, §4.2] (equivalence of the `V`- and `W`-norms on `𝔷^k`). -/
 theorem inner_of_mem_Z {k : ℕ} {u v : V k} (hu : u ∈ C.Z k) :
     ⟪u, v⟫ = ⟪C.ι k u, C.ι k v⟫ := by
   have : C.d k u = 0 := hu
   simp [C.inner_graph, this]
 
-/-- A subcomplex: subspaces `Vh k` with `d (Vh k) ⊆ Vh (k+1)`. -/
+/-- A subcomplex: subspaces `Vh k` with `d (Vh k) ⊆ Vh (k+1)`.
+See [QuennevilleBelair2015, §4.6] (subcomplex property); cf. [AFW2010], [Arnold2018]. -/
 structure Subcomplex where
   Vh : ∀ k, Submodule ℝ (V k)
   d_mem : ∀ k, ∀ u ∈ Vh k, C.d k u ∈ Vh (k + 1)
 
-/-- Bounded cochain projections onto a subcomplex (AFW 2010, Thm 5.9 abstracted). -/
+/-- Bounded cochain projections onto a subcomplex (AFW 2010, Thm 5.9 abstracted).
+See [QuennevilleBelair2015, §4.6] (third standing assumption) and Thm 4.15 (citing [AFW2010]);
+cf. [Arnold2018]. -/
 structure CochainProjection (S : C.Subcomplex) where
   π : ∀ k, V k →L[ℝ] V k
   mem : ∀ k u, π k u ∈ S.Vh k
@@ -294,6 +336,8 @@ Used where only algebra + inner products are needed (Prop 4.13, Thm 4.14, Ch 5.2
 each type carries the **W** inner product and `d` is a linear map on the domain type.
 Graph norms are explicit functions. -/
 
+/-- Algebraic length-2 complex segment `X0 → X1 → X2`.
+See [QuennevilleBelair2015, §4.4, §4.6]. -/
 structure Complex3 (X0 X1 X2 : Type*) [AddCommGroup X0] [Module ℝ X0]
     [AddCommGroup X1] [Module ℝ X1] [AddCommGroup X2] [Module ℝ X2] where
   d0 : X0 →ₗ[ℝ] X1
@@ -308,22 +352,27 @@ variable {X0 X1 X2 : Type*}
   [NormedAddCommGroup X2] [InnerProductSpace ℝ X2]
   (C : Complex3 X0 X1 X2)
 
-/-- skew form `a(σ,u,ρ; τ,v,μ)` of the weak Hodge wave (4.7). -/
+/-- skew form `a(σ,u,ρ; τ,v,μ)` of the weak Hodge wave (4.7).
+See [QuennevilleBelair2015, §4.4, (4.7)–(4.8)]. -/
 def a (σ : X0) (u : X1) (ρ : X2) (τ : X0) (v : X1) (μ : X2) : ℝ :=
   -⟪u, C.d0 τ⟫ + ⟪C.d0 σ, v⟫ + ⟪ρ, C.d1 v⟫ - ⟪C.d1 u, μ⟫
 
-/-- `A = (·,·)_W + a` (the shifted form of §4.6). -/
+/-- `A = (·,·)_W + a` (the shifted form of §4.6).
+See [QuennevilleBelair2015, §4.6] (definition before Prop 4.13). -/
 def bigA (σ : X0) (u : X1) (ρ : X2) (τ : X0) (v : X1) (μ : X2) : ℝ :=
   ⟪σ, τ⟫ + ⟪u, v⟫ + ⟪ρ, μ⟫ + C.a σ u ρ τ v μ
 
-/-- squared `V`-norm on `V0 × V1 × W2`. -/
+/-- squared `V`-norm on `V0 × V1 × W2`. See [QuennevilleBelair2015, §4.4, §4.6]. -/
 def nV2 (σ : X0) (u : X1) (ρ : X2) : ℝ :=
   ‖σ‖ ^ 2 + ‖C.d0 σ‖ ^ 2 + ‖u‖ ^ 2 + ‖C.d1 u‖ ^ 2 + ‖ρ‖ ^ 2
 
+/-- `a` is alternating: `a(ξ, ξ) = 0`, the identity behind weak uniqueness in
+[QuennevilleBelair2015, §4.4] and the nonsingularity of (4.11) in §4.6. -/
 theorem a_self (σ : X0) (u : X1) (ρ : X2) : C.a σ u ρ σ u ρ = 0 := by
   simp only [a, real_inner_comm (C.d0 σ) u, real_inner_comm (C.d1 u) ρ]; ring
 
-/-- A subcomplex of the algebraic segment. -/
+/-- A subcomplex of the algebraic segment.
+See [QuennevilleBelair2015, §4.6] (subcomplex property `dVh⁰ ⊂ Vh¹`, `dVh¹ ⊂ Vh²`). -/
 structure Sub where
   V0h : Submodule ℝ X0
   V1h : Submodule ℝ X1
@@ -337,7 +386,8 @@ end Complex3
 
 /-- Top complex `V0 → V1 → W2`, bottom complex `Ṽ0 → Ṽ1 → W̃2`, connecting maps
 `S0 : Ṽ0 → V1`, `S1 : Ṽ1 → W2`, anticommuting. Algebraic core only; analytic hypotheses
-(closed ranges, continuity, completeness, regularity `d¹V¹ ⊆ d¹S₀Ṽ⁰`) are added per theorem. -/
+(closed ranges, continuity, completeness, regularity `d¹V¹ ⊆ d¹S₀Ṽ⁰`) are added per theorem.
+See [QuennevilleBelair2015, §5.1]; cf. [ArnoldHu2021]. -/
 structure BGGData (V0 V1 W2 Vt0 Vt1 Wt2 : Type*)
     [AddCommGroup V0] [Module ℝ V0] [AddCommGroup V1] [Module ℝ V1]
     [AddCommGroup W2] [Module ℝ W2] [AddCommGroup Vt0] [Module ℝ Vt0]
@@ -360,23 +410,27 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [AddCommGroup Vt1] [Module ℝ Vt1] [AddCommGroup Wt2] [Module ℝ Wt2]
   (D : BGGData V0 V1 W2 Vt0 Vt1 Wt2)
 
-/-- exactness hypotheses, stated separately so that they appear explicitly in theorems -/
+/-- exactness hypotheses, stated separately so that they appear explicitly in theorems.
+See [QuennevilleBelair2015, §5.1] (both complexes assumed exact). -/
 def ExactTop : Prop := LinearMap.ker D.d1 = LinearMap.range D.d0
 def ExactBot : Prop := LinearMap.ker D.dt1 = LinearMap.range D.dt0
 
-/-- `Γ = {(σ, φ) | d σ = S φ}` -/
+/-- `Γ = {(σ, φ) | d σ = S φ}`. See [QuennevilleBelair2015, §5.1, (5.1)]. -/
 def Γ : Submodule ℝ (V0 × Vt0) :=
   LinearMap.ker (D.d0.comp (LinearMap.fst ℝ V0 Vt0) - D.S0.comp (LinearMap.snd ℝ V0 Vt0))
 
 theorem mem_Γ {x : V0 × Vt0} : x ∈ D.Γ ↔ D.d0 x.1 = D.S0 x.2 := by
   simp [Γ, sub_eq_zero]
 
-/-- first operator `(0 d) : Γ → Ṽ¹` of the complex (5.1) -/
+/-- first operator `(0 d) : Γ → Ṽ¹` of the complex (5.1).
+See [QuennevilleBelair2015, §5.1, (5.1)]. -/
 def D0 : D.Γ →ₗ[ℝ] Vt1 := D.dt0.comp ((LinearMap.snd ℝ V0 Vt0).comp D.Γ.subtype)
 
-/-- second operator `(S, d) : Ṽ¹ → W² × W̃²` of the complex (5.1) -/
+/-- second operator `(S, d) : Ṽ¹ → W² × W̃²` of the complex (5.1).
+See [QuennevilleBelair2015, §5.1, (5.1)]. -/
 def D1 : Vt1 →ₗ[ℝ] W2 × Wt2 := D.S1.prod D.dt1
 
+/-- (5.1) is a complex. See [QuennevilleBelair2015, §5.1]; cf. [ArnoldHu2021]. -/
 theorem D1_D0 (x : D.Γ) : D.D1 (D.D0 x) = 0 := by
   obtain ⟨⟨σ, φ⟩, hx⟩ := x
   have h := D.d1_d0 σ
@@ -389,38 +443,49 @@ end BGGData
 
 section Tensor
 
-/-- (0,4)-tensor in components over an index type `ι`. -/
+/-- (0,4)-tensor in components over an index type `ι`.
+See [QuennevilleBelair2015, §2.3, §3.2]. -/
 abbrev T4 (ι : Type*) := ι → ι → ι → ι → ℝ
 
 variable {ι : Type*}
 
+/-- skew-symmetry in each of the two index pairs.
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 def PairSkew (C : T4 ι) : Prop :=
   ∀ a b c d, C a b c d = -C b a c d ∧ C a b c d = -C a b d c
+/-- first (algebraic) Bianchi identity `C_{a[bcd]} = 0`.
+See [QuennevilleBelair2015, Prop 2.1]; cf. [Wald1984, §3.2]. -/
 def Bianchi1 (C : T4 ι) : Prop := ∀ a b c d, C a b c d + C a c d b + C a d b c = 0
+/-- interchange (pair) symmetry `C_{abcd} = C_{cdab}`.
+See [QuennevilleBelair2015, §2.3]; cf. [Wald1984, §3.2]. -/
 def Interchange (C : T4 ι) : Prop := ∀ a b c d, C a b c d = C c d a b
 
-/-- Minkowski metric, signature (−+++), diagonal entries. -/
+/-- Minkowski metric, signature (−+++), diagonal entries.
+See [QuennevilleBelair2015, §2.2, §2.7]; cf. [Wald1984]. -/
 def η : Fin 4 → ℝ := ![-1, 1, 1, 1]
 
-/-- Levi-Civita symbol on `Fin 3` (determinant of basis rows). -/
+/-- Levi-Civita symbol on `Fin 3` (determinant of basis rows).
+See [QuennevilleBelair2015, §3.1]. -/
 def eps3 (i j k : Fin 3) : ℝ :=
   Matrix.det (Matrix.of ![Pi.single i (1 : ℝ), Pi.single j 1, Pi.single k 1])
 
-/-- Levi-Civita symbol on `Fin 4`. -/
+/-- Levi-Civita symbol on `Fin 4`. See [QuennevilleBelair2015, §3.1]. -/
 def eps4 (a b c d : Fin 4) : ℝ :=
   Matrix.det (Matrix.of ![Pi.single a (1 : ℝ), Pi.single b 1, Pi.single c 1, Pi.single d 1])
 
 /-- first jet of a 3×3 matrix field: `dA c = ∂_c A`. -/
 abbrev Jet1 := Fin 3 → Matrix (Fin 3) (Fin 3) ℝ
 
-/-- row-wise curl, thesis convention `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`. -/
+/-- row-wise curl, thesis convention `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`.
+See [QuennevilleBelair2015, Lemma 3.5]. -/
 def curl (dA : Jet1) : Matrix (Fin 3) (Fin 3) ℝ :=
   Matrix.of fun a b => ∑ c, ∑ d, eps3 b c d * dA c a d
 
-/-- row-wise divergence `(div A)_a = ∂_b A_{ab}`. -/
+/-- row-wise divergence `(div A)_a = ∂_b A_{ab}`. See [QuennevilleBelair2015, Lemma 3.5]. -/
 def div (dA : Jet1) : Fin 3 → ℝ := fun a => ∑ b, dA b a b
 
-/-- `(vskw A)_a = ½ ε_{abc} A_{bc}`. NB: the BGG map is `S₁ = 2·vskw` (thesis says `vskw`). -/
+/-- `(vskw A)_a = ½ ε_{abc} A_{bc}`. NB: the BGG map is `S₁ = 2·vskw` (thesis says `vskw`).
+See [QuennevilleBelair2015, Lemma 3.5] (definition) and §5.3 (use as the BGG map). -/
 def vskw (A : Matrix (Fin 3) (Fin 3) ℝ) : Fin 3 → ℝ :=
   fun a => (1 / 2 : ℝ) * ∑ b, ∑ c, eps3 a b c * A b c
 

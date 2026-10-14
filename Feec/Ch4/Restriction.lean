@@ -1,4 +1,5 @@
 import Feec.Foundation
+import Feec.Ch4.Existence
 
 /-!
 # Restriction to invariant subspaces and constraint propagation (Thesis §4.3)
@@ -21,7 +22,9 @@ Core formal content of Thesis §4.3:
 Existence of solutions (Thesis Thm 4.3, Hille–Yosida/Stone) is not in Mathlib and enters only
 as the explicit hypotheses `WellPosedExistence` / `WellPosedClassical`; uniqueness and
 constraint propagation are proved. These hypotheses are satisfiable (bounded skew generators,
-via `exp(tA)` and Duhamel's formula): see `Feec.Ch4.Existence`.
+via `exp(tA)` and Duhamel's formula): see `Feec.Ch4.Existence`, and here
+`wellPosedClassical_bddOp` and `cor_4_5_hypotheses_bddOp_ker` (the full hypothesis set of
+Cor 4.5 with `K = ker B`, `B` bounded and commuting with `A`).
 
 ## Solution notions (critic item 5)
 
@@ -53,7 +56,8 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 /-- Thesis Thm 4.4, hypothesis (ii) is redundant: if `D` is dense and `P_K D ⊆ D`, then
 `D ∩ K` is dense in `K`.
 
-Thesis gap: the thesis lists "`D(L) ∩ K` dense in `K`" as an independent hypothesis. -/
+Correction (redundant hypothesis, not a gap): the thesis lists "`D(L) ∩ K` dense in `K`" as
+an independent hypothesis; it is implied by (i) and density of `D(L)`. -/
 theorem dense_inter_of_proj_mem (D : Submodule ℝ E) (hD : Dense (D : Set E))
     (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (hPD : ∀ x ∈ D, K.starProjection x ∈ D) :
@@ -260,9 +264,11 @@ theorem strongSolution_unique (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L) {T : �
 solution of `U' = L U + F` with `U₀ ∈ K` and `F(t) ∈ K`, and `K` satisfies hypotheses (i) and
 (iii) of Thm 4.4, then `U(t) ∈ K` for all `t ∈ [0,T]`.
 
-Thesis gap: the thesis derives this implicitly from Thm 4.4 + Thm 4.3 on `K`. Here it is
-proved directly by the energy method applied to `V = (I - P_K) U`: only skew-symmetry of `L`
-is used — no density of `D(L)`, no skew-adjointness, no semigroup theory. -/
+Remark (simpler route, not a gap): the thesis proof of Cor 4.5 obtains this by applying
+Thm 4.3 to `L̃` on `K` (via Thm 4.4) and explicitly identifying the resulting `K`-solution with
+the unique `X`-solution. Here it is proved directly by the energy method applied to
+`V = (I - P_K) U`: only skew-symmetry of `L` and hypotheses (i), (iii) are used — no density of
+`D(L)`, no skew-adjointness, no semigroup theory. -/
 theorem constraint_propagation (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L)
     (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
@@ -302,8 +308,9 @@ hypothesis `WellPosedExistence` (standing in for Thm 4.3, Hille–Yosida/Stone, 
 Mathlib), the problem `U' = L U + F`, `U(0) = U₀ ∈ D(L) ∩ K`, `F(t) ∈ K`, has a strong solution;
 it stays in `K` and is unique.
 
-Correction: the constraint `U(t) ∈ K` is made an explicit conclusion; hypothesis (ii) of
-Thm 4.4 is dropped (redundant). Weaker than the thesis: the existence conclusion is for
+Remark: the thesis states Cor 4.5 for the `K`-valued problem (see `cor_4_5`); this is the
+equivalent ambient reformulation, with `U(t) ∈ K` as a conclusion. Hypothesis (ii) of Thm 4.4
+is dropped (redundant, `dense_inter_of_proj_mem`). Weaker than the thesis: the existence conclusion is for
 `IsStrongSolution` (no `C⁰(D(L)) ∩ C¹` regularity); see `cor_4_5_classical`. -/
 theorem cor_4_5_ambient [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
     (hL : IsSkewAdjoint L) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
@@ -464,7 +471,7 @@ variable {E Y : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 Correction (Thesis §4.3): the thesis asserts that the kernel of any not-necessarily-bounded
 operator is closed, which is false (zero operator on a dense non-closed domain, see
-`Feec.Ch4.Adjoint`); closedness of `M` is required. -/
+`Feec.exists_not_isClosed_ker` in `Feec.Ch4.Adjoint`); closedness of `M` is required. -/
 theorem isClosed_ker_of_isClosed (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed) :
     IsClosed (M.ker : Set E) := by
   have : (M.ker : Set E) = (fun x => (x, (0 : Y))) ⁻¹' (M.graph : Set (E × Y)) := by
@@ -524,5 +531,52 @@ theorem constraint_ker_exists [CompleteSpace E] (L : E →ₗ.[ℝ] E)
     fun U' hU' => strongSolution_unique L (hL.isSkewSymm hD) hU hU'⟩
 
 end Kernel
+
+/-! ## Non-vacuity of the Cor 4.5 hypotheses (bounded generators) -/
+
+section Witness
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+
+/-- **Non-vacuity of `WellPosedClassical`** (the hypothesis of `cor_4_5_classical`, standing in
+for Thesis Thm 4.3 with its `C⁰(D(L)) ∩ C¹(X)` regularity): for every bounded `A` it holds with
+the admissible class `C([0,T]; E)`. Built from the Duhamel solutions of
+`Feec.exists_classical_solution_bddOp`. -/
+theorem wellPosedClassical_bddOp [CompleteSpace E] (A : E →L[ℝ] E) (T : ℝ) :
+    WellPosedClassical (bddOp A) T (fun F => ContinuousOn F (Icc 0 T)) := by
+  intro U₀ _ F hF
+  by_cases hT : 0 ≤ T
+  · obtain ⟨U, hU, -, hAU⟩ := exists_classical_solution_bddOp A hT U₀ hF
+    exact ⟨U, hU, ⟨fun t => A (U t), hAU.continuousOn, fun _ _ => rfl⟩,
+      ⟨fun t => A (U t) + F t, hAU.continuousOn.add hF, fun _ _ => rfl⟩⟩
+  · have hE : Icc (0 : ℝ) T = ∅ := Icc_eq_empty (by linarith)
+    exact ⟨fun _ => U₀, ⟨fun t ht => by simp [hE] at ht, fun t ht => by simp [hE] at ht, rfl⟩,
+      ⟨0, by simp [hE], fun t ht => by simp [hE] at ht⟩,
+      ⟨0, by simp [hE], fun t ht => by simp [hE] at ht⟩⟩
+
+/-- **Non-vacuity of the full hypothesis set of Thesis Cor 4.5** (for `cor_4_5_ambient`,
+`cor_4_5`, `cor_4_5_classical`): for a bounded skew `A` and a bounded `B` commuting with `A`,
+the constraint space `K = ker B` (closed, so it has an orthogonal projection) satisfies (i) and
+(iii) of Thm 4.4, `bddOp A` is densely defined and skew-adjoint, and `WellPosedClassical` holds
+with admissible class `C([0,T]; E)`. `K` is nontrivial whenever `B` is neither `0` nor injective
+(e.g. `B = A` when `A` has a nontrivial kernel). -/
+theorem cor_4_5_hypotheses_bddOp_ker [CompleteSpace E] (A B : E →L[ℝ] E)
+    (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (hAB : A.comp B = B.comp A) (T : ℝ) :
+    ∃ _ : (LinearMap.ker (B : E →ₗ[ℝ] E)).HasOrthogonalProjection,
+      Dense ((bddOp A).domain : Set E) ∧ IsSkewAdjoint (bddOp A) ∧
+      (∀ x : (bddOp A).domain, (LinearMap.ker (B : E →ₗ[ℝ] E)).starProjection (x : E) ∈ (bddOp A).domain) ∧
+      (∀ x : (bddOp A).domain, (x : E) ∈ LinearMap.ker (B : E →ₗ[ℝ] E) → bddOp A x ∈ LinearMap.ker (B : E →ₗ[ℝ] E)) ∧
+      WellPosedClassical (bddOp A) T (fun F => ContinuousOn F (Icc 0 T)) := by
+  have hc : IsClosed (LinearMap.ker (B : E →ₗ[ℝ] E) : Set E) := B.isClosed_ker
+  have : CompleteSpace (LinearMap.ker (B : E →ₗ[ℝ] E)) := hc.completeSpace_coe
+  refine ⟨inferInstance, dense_bddOp_domain A, isSkewAdjoint_bddOp A hA, fun _ => trivial,
+    fun x hx => ?_, wellPosedClassical_bddOp A T⟩
+  rw [LinearMap.mem_ker] at hx ⊢
+  have := congrArg (fun C : E →L[ℝ] E => C (x : E)) hAB
+  simp only [ContinuousLinearMap.comp_apply] at this
+  change B (A (x : E)) = 0
+  rw [← this, show B (x : E) = 0 from hx, map_zero]
+
+end Witness
 
 end Feec

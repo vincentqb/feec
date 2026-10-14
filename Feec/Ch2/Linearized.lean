@@ -57,6 +57,16 @@ Formalizes §2.7–§2.8 of the thesis (Thm 2.3, (2.5), (2.10), Prop 2.4, (2.11)
 Thm 2.2 (`d/dε ψ_ε^* g(ε) = h + 2Eξ`) and the ε-expansion of the Einstein tensor itself
 (the step "`H = dG/dε` at `η`" before (2.6)) are not formalized; `H` enters through the
 linearized Riemann tensor (2.6), with `Hjet_eq_einstein` checking `H = Ric − ½ η R`.
+
+## References
+
+* [QuennevilleBelair2015], §2.4 (coupling constant), §2.7 (linearization: (2.5), Thm 2.3,
+  (2.6)–(2.11)), §2.8 (gravitational waves: Props 2.4–2.6, (2.12)–(2.15)).
+* [Wald1984], §4.4 (linearized gravity, Lorentz and TT gauges, gravitational radiation);
+  the thesis cites pp. 75, 183, 441.
+* [Alcubierre2008], pp. 39, 44–45 (linearized Einstein tensor; geodesic deviation in a
+  TT plane wave), as cited by the thesis.
+* [Stewart1991], p. 24, as cited by the thesis (§2.7).
 -/
 
 open Finset
@@ -92,14 +102,18 @@ def tr (h : Sym2) : ℝ := ∑ i, η i * h i i
 /-- Trace reversal `h̄_ab = h_ab − ½ η_ab h` (thesis §2.7, `n = 4`). -/
 def trRev (h : Sym2) : Sym2 := fun a b => h a b - etaM a b * tr h / 2
 
-/-- (2.5): `tr h̄ = −tr h`. -/
+/-- (2.5): `tr h̄ = −tr h`.
+
+See [QuennevilleBelair2015, §2.7, (2.5)]; cf. [Wald1984, §4.4]. -/
 theorem trRev_trace (h : Sym2) : tr (trRev h) = -tr h := by
   simp only [tr, trRev, etaM, Fin.sum_univ_four, η]; simp; ring
 
 /-- (2.5): trace reversal is an involution in dimension 4, `h = h̄ − ½ η tr h̄`.
 
 Thesis gap: this uses `n = 4` silently (`tr η = 4`); in dimension `n` one has
-`tr h̄ = (1 − n/2) tr h` and `h = h̄ − η tr h̄/(n − 2)`, so the formula fails at `n = 2`. -/
+`tr h̄ = (1 − n/2) tr h` and `h = h̄ − η tr h̄/(n − 2)`, so the formula fails at `n = 2`.
+
+See [QuennevilleBelair2015, §2.7, (2.5)]; cf. [Wald1984, §4.4]. -/
 theorem trRev_trRev (h : Sym2) : trRev (trRev h) = h := by
   funext a b
   simp only [trRev, trRev_trace]
@@ -112,7 +126,9 @@ lemma trRev_symm {h : Sym2} (hs : ∀ a b, h a b = h b a) (a b : Fin 4) :
   split_ifs with hab <;> simp [hab]
 
 /-- Gauge law (2.5): if `h ↦ h + ∂_a ξ_b + ∂_b ξ_a` (`P a b = ∂_a ξ_b`), then
-`h̄ ↦ h̄ + ∂_a ξ_b + ∂_b ξ_a − η_ab ∂^c ξ_c`. -/
+`h̄ ↦ h̄ + ∂_a ξ_b + ∂_b ξ_a − η_ab ∂^c ξ_c`.
+
+See [QuennevilleBelair2015, §2.7, (2.5)]; cf. [Wald1984, §4.4]. -/
 theorem trRev_gauge (h P : Sym2) :
     trRev (fun a b => h a b + P a b + P b a) =
       fun a b => trRev h a b + P a b + P b a - etaM a b * ∑ c, η c * P c c := by
@@ -188,14 +204,19 @@ theorem Hjet_eq_bar_symJ (D : Jet2) (b d : Fin 4) :
 field, `H` written in `h` equals `H` written in `h̄`.
 
 Thesis gap: the computation uses `n = 4` (via `h = h̄ − ½ η tr h̄`) and commuting partials
-silently; both are explicit here (`Fin 4`, `IsSymJet2`). -/
+silently; both are explicit here (`Fin 4`, `IsSymJet2`).
+
+See [QuennevilleBelair2015, Thm 2.3]; cf. [Wald1984, §4.4] and
+[Alcubierre2008, p. 39] (followed by the thesis). -/
 theorem Hjet_eq_bar {D : Jet2} (hD : IsSymJet2 D) (b d : Fin 4) :
     Hjet D b d = HbarJet (barJ D) b d := by
   rw [← hD.symJ_eq]; exact Hjet_eq_bar_symJ D b d
 
 /-- **Thesis Thm 2.3**, operator form `H = E(div h̄) − ½ □h̄ − ½ η div div h̄`:
 `H_bd = ½(∂_b L_d + ∂_d L_b) − ½ □h̄_bd − ½ η_bd ∂^a L_a` with `L_b = ∂^a h̄_ab`.
-This exact identity is what Prop 2.4(b) rests on. -/
+This exact identity is what Prop 2.4(b) rests on.
+
+See [QuennevilleBelair2015, Thm 2.3]; cf. [Wald1984, §4.4]. -/
 theorem Hjet_eq_div {D : Jet2} (hD : IsSymJet2 D) (b d : Fin 4) :
     Hjet D b d = (1/2) * (divJ (barJ D) b d + divJ (barJ D) d b)
       - (1/2) * boxJ (barJ D) b d - etaM b d / 2 * ∑ a, η a * divJ (barJ D) a a := by
@@ -242,7 +263,9 @@ field `ξ`, at the level of its 3-jet. By linearity `H(h + 2∂_(a ξ_b)) = H(h)
 
 Thesis gap: the thesis writes the trace as `4∇·ξ` (it is `2∇·ξ`), its displayed line
 equals `2H`, and the `η_bd` group is silently dropped; the conclusion is nevertheless
-correct, as proved here. -/
+correct, as proved here.
+
+See [QuennevilleBelair2015, §2.7]; cf. [Wald1984, §4.4]. -/
 theorem Hjet_gauge {X : Jet2} (hX : IsSymJet3ξ X) (b d : Fin 4) :
     Hjet (gaugeJet X) b d = 0 := by
   rw [← hX.sym3_eq]; exact Hjet_gauge_sym3 X b d
@@ -273,7 +296,9 @@ theorem Hjet_bianchi_sym (Y : Jet3) (d : Fin 4) : ∑ b, η b * Hjet (sym3J Y b)
 (`∂_m H_bd = Hjet (Y m) b d` by linearity of `H`).
 
 Thesis gap: not stated in the thesis; it is the companion of gauge invariance that forces
-`∂^b T_bd = 0` for the linearized source and makes the gauge freedom consistent. -/
+`∂^b T_bd = 0` for the linearized source and makes the gauge freedom consistent.
+
+See [QuennevilleBelair2015, §2.7] (the identity is not stated there); cf. [Wald1984, §4.4]. -/
 theorem Hjet_bianchi {Y : Jet3} (hY : IsSymJet3 Y) (d : Fin 4) :
     ∑ b, η b * Hjet (Y b) b d = 0 := by
   rw [← hY.sym3J_eq]; exact Hjet_bianchi_sym Y d
@@ -281,7 +306,9 @@ theorem Hjet_bianchi {Y : Jet3} (hY : IsSymJet3 Y) (d : Fin 4) :
 /-! ## Linearized Riemann tensor (2.6) and `H = Ric − ½ η R` -/
 
 /-- Linearized Riemann tensor (2.6):
-`R_abcd = ½(∂_c∂_b h_da − ∂_c∂_a h_bd − ∂_d∂_b h_ca + ∂_d∂_a h_bc)`. -/
+`R_abcd = ½(∂_c∂_b h_da − ∂_c∂_a h_bd − ∂_d∂_b h_ca + ∂_d∂_a h_bc)`.
+
+See [QuennevilleBelair2015, (2.6)]; cf. [Wald1984, §4.4], and [Alcubierre2008]. -/
 def Rjet (D : Jet2) : T4 (Fin 4) := fun a b c d =>
   (1/2) * (D c b d a - D c a b d - D d b c a + D d a b c)
 
@@ -307,7 +334,10 @@ theorem Rjet_bianchi1 {D : Jet2} (hD : IsSymJet2 D) : Bianchi1 (Rjet D) := by
   linarith
 
 /-- **Thesis Thm 2.3** (derivation): the operator `H` of Thm 2.3 is the linearized Einstein
-tensor `Ric − ½ η R` built from the linearized Riemann tensor (2.6). -/
+tensor `Ric − ½ η R` built from the linearized Riemann tensor (2.6).
+
+See [QuennevilleBelair2015, Thm 2.3 and (2.6)–(2.8)]; cf. [Alcubierre2008, p. 39]
+(followed by the thesis). -/
 theorem Hjet_eq_einstein {D : Jet2} (hD : IsSymJet2 D) (b d : Fin 4) :
     Hjet D b d = RicJ D b d - etaM b d / 2 * scalJ D := by
   rw [← hD.symJ_eq]
@@ -322,7 +352,9 @@ def LorentzJet (D : Jet2) : Prop := ∀ i b, divJ (barJ D) i b = 0
 /-- **Thesis Prop 2.4(b), corrected**: in Lorentz gauge `H_bd = −½ □h̄_bd`.
 
 Correction: the thesis states `H = −□h̄`, which contradicts its own (2.11)
-(`□h̄ = −16πT` with `H = 8πT`); the factor `½` is restored (see `thesis_prop_2_4b_false`). -/
+(`□h̄ = −16πT` with `H = 8πT`); the factor `½` is restored (see `thesis_prop_2_4b_false`).
+
+See [QuennevilleBelair2015, Prop 2.4(b)]; cf. [Wald1984, §4.4]. -/
 theorem Hjet_lorentz {D : Jet2} (hD : IsSymJet2 D) (hL : LorentzJet D) (b d : Fin 4) :
     Hjet D b d = -(1/2) * boxJ (barJ D) b d := by
   have hL' : ∀ i b, divJ (barJ D) i b = 0 := hL
@@ -331,7 +363,9 @@ theorem Hjet_lorentz {D : Jet2} (hD : IsSymJet2 D) (hL : LorentzJet D) (b d : Fi
 /-- **Thesis (2.11)**: in Lorentz gauge, `H_bd = 8πT_bd ⟺ □h̄_bd = −16πT_bd`.
 
 Correction: the thesis cites the nonexistent "Theorem 2.4" and writes `T_ab` for `T_bd`;
-this follows from the corrected Prop 2.4(b). -/
+this follows from the corrected Prop 2.4(b).
+
+See [QuennevilleBelair2015, (2.11)]; cf. [Wald1984, §4.4]. -/
 theorem lorentz_eq_iff {D : Jet2} (hD : IsSymJet2 D) (hL : LorentzJet D) (T : Sym2)
     (b d : Fin 4) :
     Hjet D b d = 8 * Real.pi * T b d ↔ boxJ (barJ D) b d = -16 * Real.pi * T b d := by
@@ -367,7 +401,9 @@ lemma divJ_symbolJet (k : Fin 4 → ℝ) (h : Sym2) (i b : Fin 4) :
   exact sum_congr rfl fun _ _ => by ring
 
 /-- The thesis' Prop 2.4(b), `H = −□h̄` in Lorentz gauge, is false: a symmetric jet in
-Lorentz gauge with `H₁₁ ≠ −□h̄₁₁`. -/
+Lorentz gauge with `H₁₁ ≠ −□h̄₁₁`.
+
+See [QuennevilleBelair2015, Prop 2.4(b)]. -/
 theorem thesis_prop_2_4b_false :
     ∃ D : Jet2, IsSymJet2 D ∧ LorentzJet D ∧ Hjet D 1 1 ≠ -boxJ (barJ D) 1 1 := by
   -- `D = k ⊗ k ⊗ h` with `k = (1,0,0,0)`, `h = e₁ ⊗ e₁ − e₂ ⊗ e₂` (trace-free, `h̄ = h`).
@@ -392,7 +428,9 @@ lemma boxJ_symbolJet (k : Fin 4 → ℝ) (h : Sym2) (a b : Fin 4) :
   exact sum_congr rfl fun _ _ => by ring
 
 /-- **Thesis Thm 2.3** at the symbol level (`∂ ↦ k`, `□ ↦ k·k`):
-`H = ½(k_b L_d + k_d L_b) − ½ (k·k) h̄_bd − ½ η_bd k^a L_a`, `L = divSym k h`. -/
+`H = ½(k_b L_d + k_d L_b) − ½ (k·k) h̄_bd − ½ η_bd k^a L_a`, `L = divSym k h`.
+
+See [QuennevilleBelair2015, Thm 2.3]. -/
 theorem Hsym_eq (k : Fin 4 → ℝ) {h : Sym2} (hs : ∀ i j, h i j = h j i) (b d : Fin 4) :
     Hsym k h b d = (1/2) * (k b * divSym k h d + k d * divSym k h b)
       - (1/2) * dot k k * trRev h b d - etaM b d / 2 * ∑ a, η a * k a * divSym k h a := by
@@ -422,7 +460,9 @@ theorem Hsym_div (k : Fin 4 → ℝ) {h : Sym2} (hs : ∀ i j, h i j = h j i) (d
   rw [← this]; exact sum_congr rfl fun _ _ => by rw [Hsym]; ring
 
 /-- **Thesis Prop 2.4(b), corrected**, symbol level: in Lorentz gauge `k^a h̄_ab = 0`,
-`H = −½ (k·k) h̄`, i.e. `H = −½ □h̄` with `□ ↦ k·k`. -/
+`H = −½ (k·k) h̄`, i.e. `H = −½ □h̄` with `□ ↦ k·k`.
+
+See [QuennevilleBelair2015, Prop 2.4(b)]. -/
 theorem Hsym_lorentz (k : Fin 4 → ℝ) {h : Sym2} (hs : ∀ i j, h i j = h j i)
     (hL : ∀ b, divSym k h b = 0) (b d : Fin 4) :
     Hsym k h b d = -(1/2) * dot k k * trRev h b d := by
@@ -433,7 +473,9 @@ lemma lorentzJet_symbolJet (k : Fin 4 → ℝ) (h : Sym2) (hL : ∀ b, divSym k 
     LorentzJet (symbolJet k h) := fun i b => by rw [divJ_symbolJet, hL, mul_zero]
 
 /-- **Thesis (2.11)**, symbol level: in Lorentz gauge `k^a h̄_ab = 0`,
-`H_bd = 8πT_bd ⟺ (k·k) h̄_bd = −16πT_bd`. -/
+`H_bd = 8πT_bd ⟺ (k·k) h̄_bd = −16πT_bd`.
+
+See [QuennevilleBelair2015, (2.11)]. -/
 theorem Hsym_lorentz_eq_iff (k : Fin 4 → ℝ) {h : Sym2} (hs : ∀ i j, h i j = h j i)
     (hL : ∀ b, divSym k h b = 0) (T : Sym2) (b d : Fin 4) :
     Hsym k h b d = 8 * Real.pi * T b d ↔ dot k k * trRev h b d = -16 * Real.pi * T b d := by
@@ -449,7 +491,9 @@ def kTT (κ : ℝ) : Fin 4 → ℝ := ![-κ, 0, 0, κ]
 def uObs : Fin 4 → ℝ := ![1, 0, 0, 0]
 
 /-- The TT conditions (2.12) on a constant amplitude: symmetric, `A_ab k^b = 0`,
-`A_ab u^b = 0`, `η^{ab} A_ab = 0`. -/
+`A_ab u^b = 0`, `η^{ab} A_ab = 0`.
+
+See [QuennevilleBelair2015, §2.8, (2.12)]; cf. [Wald1984, §4.4]. -/
 structure IsTT (κ : ℝ) (A : Sym2) : Prop where
   symm : ∀ a b, A a b = A b a
   lorentz : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0
@@ -470,7 +514,9 @@ lemma ttAmp_isTT (κ Ap Ax : ℝ) : IsTT κ (ttAmp Ap Ax) where
 form, with `A₊ = A₁₁`, `Aₓ = A₁₂`.
 
 Thesis gap: `κ ≠ 0` is needed; it is only implicit in the thesis (`k^a = k(1,0,0,1)`, later
-divided by `k`). -/
+divided by `k`).
+
+See [QuennevilleBelair2015, §2.8, (2.12)–(2.13)]; cf. [Wald1984, §4.4]. -/
 theorem isTT_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Sym2) : IsTT κ A ↔ A = ttAmp (A 1 1) (A 1 2) := by
   refine ⟨fun h => ?_, fun h => h ▸ ttAmp_isTT κ _ _⟩
   have hu : ∀ a, A a 0 = 0 := fun a => by
@@ -503,14 +549,18 @@ def ttLin : (Fin 2 → ℝ) →ₗ[ℝ] Sym2 where
 /-- The space of TT amplitudes. -/
 def ttSpace : Submodule ℝ Sym2 := LinearMap.range ttLin
 
-/-- **Thesis (2.12)–(2.13)**: for `κ ≠ 0`, `ttSpace` is exactly the set of TT amplitudes. -/
+/-- **Thesis (2.12)–(2.13)**: for `κ ≠ 0`, `ttSpace` is exactly the set of TT amplitudes.
+
+See [QuennevilleBelair2015, (2.12)–(2.13)]. -/
 theorem mem_ttSpace_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Sym2) : A ∈ ttSpace ↔ IsTT κ A := by
   constructor
   · rintro ⟨p, rfl⟩; exact ttAmp_isTT κ _ _
   · intro h; exact ⟨![A 1 1, A 1 2], by simpa [ttLin] using ((isTT_iff hκ A).1 h).symm⟩
 
 /-- **Thesis (2.13)**, "only two degrees of freedom": the TT amplitudes form a
-2-dimensional space. -/
+2-dimensional space.
+
+See [QuennevilleBelair2015, (2.13)]; cf. [Wald1984, §4.4]. -/
 theorem finrank_ttSpace : Module.finrank ℝ ttSpace = 2 := by
   have hinj : Function.Injective ttLin := by
     intro p q h
@@ -536,7 +586,9 @@ def ttSub (κ : ℝ) : Submodule ℝ Sym2 where
       by have := hA.traceless; simp only [tr] at this ⊢; simp [mul_left_comm _ c, ← mul_sum, this]⟩
 
 /-- **Thesis (2.13)**, "only two degrees of freedom", stated directly: for `κ ≠ 0` the space
-`{A | A satisfies (2.12)}` has dimension `2`. -/
+`{A | A satisfies (2.12)}` has dimension `2`.
+
+See [QuennevilleBelair2015, (2.13)]; cf. [Wald1984, §4.4]. -/
 theorem finrank_ttSub {κ : ℝ} (hκ : κ ≠ 0) : Module.finrank ℝ (ttSub κ) = 2 := by
   have : ttSub κ = ttSpace := by
     ext A; exact (mem_ttSpace_iff hκ A).symm
@@ -566,7 +618,9 @@ def Bthesis (κ : ℝ) (A : Sym2) : Fin 4 → ℝ :=
 
 Correction: the thesis' derivation uses `η₀₀ = +1`, `k₀ = +κ`, contradicting (−+++); its
 `B` has the wrong sign and fails (`thesis_gauge_fails`). The resulting amplitudes
-`A'₊ = (A₁₁ − A₂₂)/2`, `A'ₓ = A₁₂` are not recorded in the thesis. -/
+`A'₊ = (A₁₁ − A₂₂)/2`, `A'ₓ = A₁₂` are not recorded in the thesis.
+
+See [QuennevilleBelair2015, Prop 2.6]; cf. [Wald1984, §4.4]. -/
 theorem tt_gauge {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j = A j i)
     (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) :
     gaugeAmp (kTT κ) A (Bcorr κ A) = ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2) ∧
@@ -590,7 +644,9 @@ theorem tt_gauge {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j = A
 /-- The thesis' gauge vector `B` (Prop 2.6) does **not** reach TT gauge: for `κ = 1` and an
 admissible symmetric `A` with `A k = 0`, the transformed amplitude is not transverse.
 `Bthesis` uses the covariant reading of the printed `B`; `thesis_gauge_fails_contra` covers
-the contravariant reading. -/
+the contravariant reading.
+
+See [QuennevilleBelair2015, Prop 2.6]. -/
 theorem thesis_gauge_fails :
     ∃ κ : ℝ, ∃ A : Sym2, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧ ¬ IsTT κ (gaugeAmp (kTT κ) A (Bthesis κ A)) := by
@@ -602,7 +658,9 @@ theorem thesis_gauge_fails :
   norm_num at this
 
 /-- The thesis' gauge vector read as **contravariant** components `B^a` (lowered to
-`B_a = η_aa B^a`) also fails to reach TT gauge, on the same witness. -/
+`B_a = η_aa B^a`) also fails to reach TT gauge, on the same witness.
+
+See [QuennevilleBelair2015, Prop 2.6]. -/
 theorem thesis_gauge_fails_contra :
     ∃ κ : ℝ, ∃ A : Sym2, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧
@@ -622,7 +680,10 @@ def accelJ (D : Jet2) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ := -∑ j, η i * Rj
 /-- **Thesis (2.15), corrected**: for the 2-jet `k_i k_j A_ab s` of the TT plane wave
 (`s = f''(k·x)`), `a¹ = (κ²/2)(A₊v¹ + Aₓv²) s`, `a² = (κ²/2)(Aₓv¹ − A₊v²) s`, `a⁰ = a³ = 0`.
 
-Correction: the thesis gives `−(κ²/2)(…) f(k·x)` (sign, and `f` for `f''`). -/
+Correction: the thesis gives `−(κ²/2)(…) f(k·x)` (sign, and `f` for `f''`).
+
+See [QuennevilleBelair2015, §2.8, (2.15)]; cf. [Alcubierre2008, pp. 44–45]
+(followed by the thesis). -/
 theorem tt_accel (κ Ap Ax s : ℝ) (v : Fin 4 → ℝ) :
     let D : Jet2 := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
     accelJ D v 1 = κ ^ 2 / 2 * (Ap * v 1 + Ax * v 2) * s ∧
@@ -654,7 +715,9 @@ lemma IsTTJet.support {D : Jet2} (hD : IsTTJet D) {i j a b : Fin 4} (h : D i j a
 
 /-- **Thesis (2.15a–c)**: in TT gauge, for `i, j ∈ {1, 2}`,
 `R_{αiβj} = −½ ∂_α ∂_β h_ij` (exactly, at the jet level). The thesis restricts to
-`α, β ∈ {0, 3}`; for other `α, β` both sides vanish. -/
+`α, β ∈ {0, 3}`; for other `α, β` both sides vanish.
+
+See [QuennevilleBelair2015, (2.15a–c)]; cf. [Alcubierre2008]. -/
 theorem Rjet_tt {D : Jet2} (hD : IsSymJet2 D) (hT : IsTTJet D) {α β i j : Fin 4}
     (hi : ¬ IsLong i) (hj : ¬ IsLong j) :
     Rjet D α i β j = -(1/2) * D α β i j := by
@@ -664,7 +727,9 @@ theorem Rjet_tt {D : Jet2} (hD : IsSymJet2 D) (hT : IsTTJet D) {α β i j : Fin 
 
 /-- **Thesis (2.15)**, "the only non-zero components": in TT gauge, `R_abcd = 0` unless each
 of the pairs `(a, b)` and `(c, d)` has exactly one longitudinal index. With pair-skewness
-(`Rjet_pairSkew`) every non-zero component is thus `±R_{αiβj}`, given by `Rjet_tt`. -/
+(`Rjet_pairSkew`) every non-zero component is thus `±R_{αiβj}`, given by `Rjet_tt`.
+
+See [QuennevilleBelair2015, (2.15a–c)]. -/
 theorem Rjet_tt_support {D : Jet2} (hT : IsTTJet D) {a b c d : Fin 4}
     (h : Rjet D a b c d ≠ 0) : (IsLong a ↔ ¬ IsLong b) ∧ (IsLong c ↔ ¬ IsLong d) := by
   by_contra hm
@@ -692,7 +757,9 @@ lemma ttWaveJet_props (κ Ap Ax s : ℝ) :
 
 /-- **Thesis (2.15a–c)** for the TT plane wave (cf. the components `C_{αiβj}` in §2.9):
 `R_{α1β1} = −½ k_α k_β A₊ s`, `R_{α2β2} = ½ k_α k_β A₊ s`, `R_{α1β2} = −½ k_α k_β Aₓ s`,
-with `s = f''(k·x)` (valid for all `α, β`; both sides vanish unless `α, β ∈ {0, 3}`). -/
+with `s = f''(k·x)` (valid for all `α, β`; both sides vanish unless `α, β ∈ {0, 3}`).
+
+See [QuennevilleBelair2015, (2.15a–c)]. -/
 theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
     let D : Jet2 := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
     Rjet D α 1 β 1 = -(1/2) * kTT κ α * kTT κ β * Ap * s ∧
@@ -710,7 +777,9 @@ theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
 
 /-- **Thesis §2.4 constant, corrected**: with `G = 6.67430·10⁻¹¹` and `c = 299792458` (SI),
 `8πG/c⁴ ∈ (2.07, 2.09)·10⁻⁴³ s²/(m·kg)`, whereas the thesis' value `≈ 5·10⁻⁴⁴` is
-`2πG/c⁴ ∈ (5.1, 5.3)·10⁻⁴⁴`. -/
+`2πG/c⁴ ∈ (5.1, 5.3)·10⁻⁴⁴`.
+
+See [QuennevilleBelair2015, §2.4]; cf. [Wald1984, Ch. 4]. -/
 theorem einstein_const_bounds :
     let G : ℝ := 6.67430e-11
     let c : ℝ := 299792458
@@ -796,7 +865,9 @@ def jet2 (h : E4 → Sym2) (x : E4) : Jet2 := fun i j a b => pd i (pd j (fun y =
 def Hfun (h : E4 → Sym2) (x : E4) (b d : Fin 4) : ℝ := Hjet (jet2 h x) b d
 
 /-- Schwarz: the 2-jet of a `C²` symmetric field satisfies `IsSymJet2`, so all jet-level
-identities apply to genuine fields. -/
+identities apply to genuine fields.
+
+See [QuennevilleBelair2015, §2.7] (function-level bridge). -/
 theorem jet2_isSymJet2 {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : E4) : IsSymJet2 (jet2 h x) where
   deriv_symm i j a b := pd_pd_comm (hC a b) i j x
@@ -852,7 +923,9 @@ perturbation `h` with trace reversal `h̄` (`h = trRev h̄`, `trRev_trRev`) solv
 linearized equations `H(h) = 0`.
 
 Convention: `k` is covariant, `k·k = ∑ η i k_i k_i` and the phase is `k_c x^c` (see the
-module docstring); the thesis leaves these index placements implicit. -/
+module docstring); the thesis leaves these index placements implicit.
+
+See [QuennevilleBelair2015, Prop 2.5]; cf. [Wald1984, §4.4]. -/
 theorem plane_wave {k : Fin 4 → ℝ} (hk : dot k k = 0) {A : Sym2} (hA : ∀ a b, A a b = A b a)
     (hker : ∀ a, ∑ b, A a b * raise k b = 0) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) :
     let hbar : E4 → Sym2 := fun y a b => A a b * f (phaseL k y)
@@ -887,7 +960,10 @@ theorem plane_wave {k : Fin 4 → ℝ} (hk : dot k k = 0) {A : Sym2} (hA : ∀ a
 
 /-- **Hypothesis** (classical, absent from Mathlib): the inhomogeneous wave equation `□u = S`
 has a smooth solution on ℝ⁴ for every smooth source `S` (e.g. zero Cauchy data and
-Duhamel/Kirchhoff). This is the solver Prop 2.4(a) uses without citation. -/
+Duhamel/Kirchhoff). This is the solver Prop 2.4(a) uses without citation.
+
+Cf. [Wald1984, §4.4], where the Lorentz gauge is likewise reached by solving a wave
+equation. -/
 def WaveSolvable : Prop :=
   ∀ S : E4 → ℝ, ContDiff ℝ ∞ S → ∃ u : E4 → ℝ, ContDiff ℝ ∞ u ∧ ∀ x, box u x = S x
 
@@ -926,7 +1002,9 @@ trace reversal of `h − 2∂_(a ξ_b)`.
 
 Thesis gap: the existence of `ξ` (solving `□ξ_b = ∂^a h̄_ab` on ℝ⁴) is used without
 citation; it is the explicit hypothesis `WaveSolvable`. Also, the thesis says it finds a
-diffeomorphism, but only the infinitesimal gauge vector `ξ` is produced (and needed). -/
+diffeomorphism, but only the infinitesimal gauge vector `ξ` is produced (and needed).
+
+See [QuennevilleBelair2015, Prop 2.4(a)]; cf. [Wald1984, §4.4]. -/
 theorem exists_lorentz_gauge (hW : WaveSolvable) {hb : E4 → Sym2}
     (hsm : ∀ a b, ContDiff ℝ ∞ fun y => hb y a b) :
     ∃ ξ : Fin 4 → E4 → ℝ, (∀ a, ContDiff ℝ ∞ (ξ a)) ∧
@@ -959,7 +1037,9 @@ wave `ttAmp ((A₁₁ − A₂₂)/2) A₁₂ · f(k·x)`; by `plane_wave` it is
 vacuum solution.
 
 Remark: the thesis takes `g ∈ C³` with `g' = f`; here only `g` differentiable with
-`deriv g = f` is needed. `κ ≠ 0` is explicit (the thesis divides by `k`). -/
+`deriv g = f` is needed. `κ ≠ 0` is explicit (the thesis divides by `k`).
+
+See [QuennevilleBelair2015, Prop 2.6]; cf. [Wald1984, §4.4]. -/
 theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j = A j i)
     (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f g : ℝ → ℝ} (hg : Differentiable ℝ g)
     (hgf : deriv g = f) (y : E4) :
@@ -977,7 +1057,9 @@ theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j
 
 /-- **Thesis (2.15), corrected** (field level): for the TT plane wave
 `h_ab = ttAmp A₊ Aₓ · f(k·x)` with `f ∈ C²`, `a¹ = (κ²/2)(A₊v¹ + Aₓv²) f''(k·x)` and
-`a² = (κ²/2)(Aₓv¹ − A₊v²) f''(k·x)`. -/
+`a² = (κ²/2)(Aₓv¹ − A₊v²) f''(k·x)`.
+
+See [QuennevilleBelair2015, (2.15)]; cf. [Alcubierre2008]. -/
 theorem tt_accel_fun (κ Ap Ax : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (v : Fin 4 → ℝ) (x : E4) :
     let D := jet2 (fun y a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x
     let s := deriv (deriv f) (phaseL (kTT κ) x)
@@ -990,7 +1072,9 @@ theorem tt_accel_fun (κ Ap Ax : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) 
   exact tt_accel κ Ap Ax s v
 
 /-- The thesis' accelerations `a¹ = −(κ²/2)(A₊v¹ + Aₓv²) f(k·x)` (after (2.15)) are wrong:
-for `f(t) = t²`, `κ = A₊ = v¹ = 1`, `Aₓ = 0` at `x = 0` the true value is `1`, not `0`. -/
+for `f(t) = t²`, `κ = A₊ = v¹ = 1`, `Aₓ = 0` at `x = 0` the true value is `1`, not `0`.
+
+See [QuennevilleBelair2015, §2.8, after (2.15)]. -/
 theorem thesis_accel_fails :
     ¬ ∀ (κ Ap Ax : ℝ) (f : ℝ → ℝ), ContDiff ℝ 2 f → ∀ (v : Fin 4 → ℝ) (x : E4),
       accelJ (jet2 (fun y a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x) v 1 =
@@ -1030,7 +1114,9 @@ theorem jet2_trRev {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y 
   exact pd_trRev (fun a' b' => differentiable_pd (hC a' b') j x) i a b
 
 /-- **Thesis Thm 2.3** for a genuine `C²` symmetric field: both forms of `H` agree,
-`H(h) = ∂^a∂_(b h̄_d)a − ½(□h̄_bd + η_bd ∂^a∂^e h̄_ea)` with the genuine 2-jet of `h̄`. -/
+`H(h) = ∂^a∂_(b h̄_d)a − ½(□h̄_bd + η_bd ∂^a∂^e h̄_ea)` with the genuine 2-jet of `h̄`.
+
+See [QuennevilleBelair2015, Thm 2.3]; cf. [Wald1984, §4.4]. -/
 theorem Hfun_eq_bar {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : E4) (b d : Fin 4) :
     Hfun h x b d = HbarJet (jet2 (fun y => trRev (h y)) x) b d := by
@@ -1039,7 +1125,9 @@ theorem Hfun_eq_bar {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y
 /-- **Thesis Prop 2.4(b), corrected**, for a genuine `C²` symmetric field: if `h̄ = trRev h`
 is in Lorentz gauge (`∂^a h̄_ab = 0` everywhere), then `H(h) = −½ □h̄`.
 
-Correction: the thesis states `H = −□h̄` (see `thesis_prop_2_4b_false`). -/
+Correction: the thesis states `H = −□h̄` (see `thesis_prop_2_4b_false`).
+
+See [QuennevilleBelair2015, Prop 2.4(b)]; cf. [Wald1984, §4.4]. -/
 theorem Hfun_lorentz {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (hL : ∀ y b, divF (fun z => trRev (h z)) y b = 0)
     (x : E4) (b d : Fin 4) :
@@ -1060,7 +1148,9 @@ theorem Hfun_lorentz {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h 
   rfl
 
 /-- **Thesis (2.11)** for genuine fields: in Lorentz gauge,
-`H(h) = 8πT ⟺ □h̄ = −16πT`. -/
+`H(h) = 8πT ⟺ □h̄ = −16πT`.
+
+See [QuennevilleBelair2015, (2.11)]; cf. [Wald1984, §4.4]. -/
 theorem lorentz_fun_iff {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (hL : ∀ y b, divF (fun z => trRev (h z)) y b = 0)
     (T : E4 → Sym2) (x : E4) (b d : Fin 4) :
@@ -1080,7 +1170,9 @@ lemma Hjet_add (D G : Jet2) (b d : Fin 4) :
 `h ∈ C²` and `ξ ∈ C³`.
 
 Thesis gap: the thesis' check has the trace `4∇·ξ` (should be `2∇·ξ`) and displays `2H`;
-the needed regularity (`ξ ∈ C³`, to commute third derivatives) is unstated. -/
+the needed regularity (`ξ ∈ C³`, to commute third derivatives) is unstated.
+
+See [QuennevilleBelair2015, §2.7]; cf. [Wald1984, §4.4]. -/
 theorem Hfun_gauge {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     {ξ : Fin 4 → E4 → ℝ} (hξ : ∀ a, ContDiff ℝ 3 (ξ a)) (x : E4) (b d : Fin 4) :
     Hfun (fun y a b => h y a b + (pd a (ξ b) y + pd b (ξ a) y)) x b d = Hfun h x b d := by
@@ -1140,7 +1232,9 @@ lemma pd_Hjet {J : E4 → Jet2} {x : E4} (hJ : DifferentiableAt ℝ J x) (m b d 
 symmetric `h`.
 
 Thesis gap: not in the thesis; it is the consistency condition `∂^b T_bd = 0` behind the
-linearized equations (2.10) and their gauge freedom. -/
+linearized equations (2.10) and their gauge freedom.
+
+See [QuennevilleBelair2015, §2.7]; cf. [Wald1984, §4.4]. -/
 theorem Hfun_bianchi {h : E4 → Sym2} (hC : ∀ a b, ContDiff ℝ 3 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : E4) (d : Fin 4) :
     ∑ b, η b * pd b (fun y => Hfun h y b d) x = 0 := by

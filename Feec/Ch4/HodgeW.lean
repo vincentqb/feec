@@ -11,7 +11,9 @@ Complements `Feec.Ch4.Adjoint` (which proves the `W`-level Hodge decomposition, 
 * **Compactness property, precisely stated** (thesis: "`Vᵏ ∩ Vₖ*` is a dense and compact
   subspace of `Wᵏ`", corrected to a compact *inclusion*): `HilbertComplex2.HasCompactEmbedding`
   (`V¹ ∩ V₁* ↪ W1`, norm `‖u‖² + ‖d1 u‖² + ‖d0* u‖²`), `HasCompactEmbedding0` (`V⁰ ↪ W0`),
-  `HasCompactEmbedding2` (`V₂* ↪ W2`); non-vacuity `hasCompactEmbedding_of_finiteDimensional`.
+  `HasCompactEmbedding2` (`V₂* ↪ W2`); non-vacuity `hasCompactEmbedding_of_finiteDimensional`
+  and, in infinite dimensions, `FredholmCE.hasCompactEmbedding_infiniteDimensional` (all three
+  inclusions for `A⁻¹ = diag(n+1)` on `ℓ²`, via compactness of `A`, `isCompactOperator_A`).
 * **Compactness ⇒ closed** (the thesis' actual claim, unproved there):
   `isClosed_range_d0_of_compact`, `isClosed_range_d1_of_compact`, `closedRange_of_compact`, and
   the end-position forms `isClosed_range_d0_of_compact0`, `isClosed_range_d1_of_compact2`.
@@ -21,7 +23,8 @@ Complements `Feec.Ch4.Adjoint` (which proves the `W`-level Hodge decomposition, 
   decomposition in `closed_and_fredholm_of_compact`.
 * **"Fredholm ⇒ closed" refuted with the project's `W`-level definitions** (critic item 10):
   `fredholm_not_closed_W` for `0 → ℓ² --diag(1/(n+1))--> ℓ² → ℝ⁰ → 0` (built with
-  `HilbertComplex2.ofBounded`); the Brüning–Lesch version (finite-dimensional algebraic
+  `HilbertComplex2.ofBounded`), and its bounded-model form `fredholm_not_closed_V`
+  (`FiniteDimensional (H k)` for all `k`, `¬ IsClosedAt 0`); the Brüning–Lesch version (finite-dimensional algebraic
   cohomology ⇒ closed) at the `W` level: `UHilbertComplex.isClosed_range_of_finiteDimensional_cohomology`,
   `HilbertComplex2.isClosed_range_d0_of_finiteDimensional_cohomology`.
 * **Bridge to the bounded model** (critic item 8): for `UHilbertComplex`,
@@ -408,7 +411,7 @@ namespace FredholmCE
 abbrev R0 := EuclideanSpace ℝ (Fin 0)
 
 /-- The `W`-level complex `0 → ℓ² --A--> ℓ² --0--> ℝ⁰ → 0`, `A = diag(1/(n+1))`, as a
-`HilbertComplex2` (the thesis' setting of §4.2 with `n = 2`). -/
+`HilbertComplex2`, i.e. a Hilbert complex of three spaces `W0 → W1 → W2` as in Thesis §4.2. -/
 def cxW : HilbertComplex2 L2 L2 R0 :=
   HilbertComplex2.ofBounded A 0 fun _ => rfl
 
@@ -441,6 +444,186 @@ theorem cxW_not_isClosed_range_d0 : ¬ IsClosed (LinearMap.range cxW.d0.toFun : 
     rw [mul_one_div, div_lt_one (by positivity)]; linarith
   linarith
 
+/-! #### An infinite-dimensional witness of the compactness property -/
+
+/-- The unit vectors `e_n` of `ℓ²` are orthonormal. -/
+theorem orthonormal_single : Orthonormal ℝ (fun n : ℕ => (lp.single 2 n (1 : ℝ) : L2)) := by
+  rw [orthonormal_iff_ite]
+  intro i j
+  rw [lp.inner_single_left, lp.single_apply]
+  by_cases h : i = j
+  · subst h; simp
+  · simp [h]
+
+/-- `ℓ²` is infinite-dimensional. -/
+theorem not_finiteDimensional_L2 : ¬ FiniteDimensional ℝ L2 := fun _ =>
+  Module.Finite.not_linearIndependent_of_infinite _ orthonormal_single.linearIndependent
+
+/-- Truncation `A_N = Σ_{n<N} (1/(n+1)) ⟨e_n, ·⟩ e_n` of `A` (finite rank). -/
+def Atr (N : ℕ) : L2 →L[ℝ] L2 :=
+  ∑ n ∈ Finset.range N, (1 / ((n : ℝ) + 1)) •
+    (ContinuousLinearMap.toSpanSingleton ℝ (lp.single 2 n (1 : ℝ) : L2)).comp
+      (innerSL ℝ (lp.single 2 n (1 : ℝ) : L2))
+
+/-- `(A_N x)_m = x_m/(m+1)` for `m < N`, else `0`. -/
+theorem Atr_apply (N : ℕ) (x : L2) (m : ℕ) :
+    Atr N x m = if m < N then x m / ((m : ℝ) + 1) else 0 := by
+  simp only [Atr, FunLike.coe_sum, lp.coeFn_sum, Finset.sum_apply,
+    FunLike.coe_smul, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.toSpanSingleton_apply, innerSL_apply_apply, lp.coeFn_smul, Pi.smul_apply,
+    lp.inner_single_left, lp.single_apply]
+  split_ifs with h
+  · rw [Finset.sum_eq_single m]
+    · simp [div_eq_inv_mul]
+    · intro b _ hb; simp [Pi.single_eq_of_ne hb.symm]
+    · intro hm; exact absurd (Finset.mem_range.2 h) hm
+  · refine Finset.sum_eq_zero fun b hb => ?_
+    have : m ≠ b := fun e => h (e ▸ Finset.mem_range.1 hb)
+    simp [Pi.single_eq_of_ne this]
+
+/-- `A_N` is compact (a finite sum of rank-one operators). -/
+theorem isCompactOperator_Atr (N : ℕ) : IsCompactOperator (Atr N) := by
+  unfold Atr
+  refine Finset.sum_induction _ (fun T : L2 →L[ℝ] L2 => IsCompactOperator T)
+    (fun S T hS hT => by rw [FunLike.coe_add]; exact hS.add hT)
+    (by rw [FunLike.coe_zero]; exact isCompactOperator_zero) fun n _ => ?_
+  rw [FunLike.coe_smul]
+  have h1 : IsCompactOperator (innerSL ℝ (lp.single 2 n (1 : ℝ) : L2)) :=
+    isCompactOperator_of_locallyCompactSpace_dom _
+  exact (h1.clm_comp (ContinuousLinearMap.toSpanSingleton ℝ (lp.single 2 n (1 : ℝ) : L2))).smul
+    (1 / ((n : ℝ) + 1))
+
+/-- `‖A - A_N‖ ≤ 1/(N+1)`. -/
+theorem norm_sub_Atr_le (N : ℕ) (x : L2) : ‖(A - Atr N) x‖ ≤ 1 / ((N : ℝ) + 1) * ‖x‖ := by
+  have hN : (0 : ℝ) < (N : ℝ) + 1 := by positivity
+  calc ‖(A - Atr N) x‖ ≤ ‖(1 / ((N : ℝ) + 1)) • x‖ := by
+        refine lp.norm_mono two_ne_zero fun m => ?_
+        rw [_root_.sub_apply, lp.coeFn_sub, Pi.sub_apply, A_apply, Atr_apply,
+          lp.coeFn_smul, Pi.smul_apply, smul_eq_mul, norm_mul]
+        split_ifs with h
+        · simp only [sub_self, norm_zero]; positivity
+        · rw [sub_zero, norm_div, mul_comm, div_eq_mul_inv]
+          refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+          rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_pos (by positivity), abs_of_pos (by positivity),
+            one_div]
+          exact inv_anti₀ hN (by exact_mod_cast Nat.add_le_add_right (not_lt.1 h) 1)
+    _ = 1 / ((N : ℝ) + 1) * ‖x‖ := by
+        rw [lp.norm_const_smul two_ne_zero, Real.norm_eq_abs, abs_of_pos (by positivity)]
+
+/-- `A = diag(1/(n+1))` is a compact operator (norm limit of the `A_N`). -/
+theorem isCompactOperator_A : IsCompactOperator A := by
+  refine isCompactOperator_of_tendsto (l := atTop) (F := Atr) ?_ (Eventually.of_forall isCompactOperator_Atr)
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  refine squeeze_zero (fun _ => norm_nonneg _) (fun N => ?_) tendsto_one_div_add_atTop_nhds_zero_nat
+  rw [norm_sub_rev]
+  exact ContinuousLinearMap.opNorm_le_bound _ (by positivity) (norm_sub_Atr_le N)
+
+/-- The unbounded operator `A⁻¹ = diag(n+1)` on `ℓ²`, with domain `R(A)`. -/
+def invA : L2 →ₗ.[ℝ] L2 := ((A : L2 →ₗ[ℝ] L2).toPMap ⊤).inverse
+
+/-- `N(A) = 0`. -/
+theorem ker_A_toPMap : ((A : L2 →ₗ[ℝ] L2).toPMap ⊤).ker = ⊥ := by
+  rw [HilbertComplex2.ker_toPMap_top, LinearMap.ker_eq_bot]; exact A_injective
+
+/-- `D(A⁻¹) = R(A)`. -/
+theorem invA_domain : invA.domain = LinearMap.range (A : L2 →ₗ[ℝ] L2) := by
+  rw [invA, inverse_domain, HilbertComplex2.range_toPMap_top]
+
+/-- `A⁻¹` is closed (its graph is the flipped graph of `A`). -/
+theorem invA_isClosed : invA.IsClosed :=
+  (inverse_closed_iff ker_A_toPMap).2 (HilbertComplex2.isClosed_toPMap_top A)
+
+/-- `(A v, v)` lies in the graph of `A⁻¹`. -/
+theorem mem_graph_invA (v : L2) : (A v, v) ∈ invA.graph := by
+  rw [invA, inverse_graph ker_A_toPMap]
+  exact ⟨(v, A v), (mem_graph_iff _).2 ⟨⟨v, Submodule.mem_top⟩, rfl, rfl⟩, rfl⟩
+
+/-- `A (A⁻¹ u) = u`. -/
+theorem A_invA (u : invA.domain) : A (invA u) = u := by
+  have h : ((u : L2), invA u) ∈ ((A : L2 →ₗ[ℝ] L2).toPMap ⊤).inverse.graph := invA.mem_graph u
+  rw [inverse_graph ker_A_toPMap] at h
+  obtain ⟨⟨a, b⟩, hab, he⟩ := h
+  obtain ⟨y, hy1, hy2⟩ := (mem_graph_iff _).1 hab
+  simp only [LinearEquiv.coe_coe, LinearEquiv.prodComm_apply, Prod.swap_prod_mk, Prod.mk.injEq] at he
+  dsimp only at hy1 hy2
+  rw [← he.1, ← he.2, ← hy2, ← hy1]; rfl
+
+/-- `A⁻¹` is densely defined. -/
+theorem dense_invA_domain : Dense (invA.domain : Set L2) := by
+  rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
+    eq_bot_iff]
+  intro y hy
+  refine (Submodule.mem_bot ℝ).2 (eq_zero_of_inner_A_single fun n => ?_)
+  exact (Submodule.mem_orthogonal _ _).1 hy _ (invA_domain ▸ ⟨_, rfl⟩)
+
+/-- The `A⁻¹`-graph unit ball lies in the compact set `cl A(B̄(0,1))`. -/
+theorem mem_closure_image_A {u : invA.domain} (hu : ‖invA u‖ ^ 2 ≤ 1) :
+    (u : L2) ∈ closure (A '' Metric.closedBall 0 1) := by
+  refine subset_closure ⟨invA u, ?_, A_invA u⟩
+  rw [mem_closedBall_zero_iff]
+  nlinarith [norm_nonneg (invA u)]
+
+/-- Equal partial maps agree pointwise. -/
+private theorem apply_eq_of_eq {f g : L2 →ₗ.[ℝ] L2} (h : f = g) (x : L2) (hf : x ∈ f.domain)
+    (hg : x ∈ g.domain) : f ⟨x, hf⟩ = g ⟨x, hg⟩ := by
+  subst h; rfl
+
+/-- `0 → ℓ² --A⁻¹--> ℓ² --0--> ℝ⁰ → 0`: `V⁰ = D(A⁻¹)` with compact inclusion in `W0 = ℓ²`. -/
+def cxK0 : HilbertComplex2 L2 L2 R0 where
+  d0 := invA
+  d1 := ((0 : L2 →L[ℝ] R0) : L2 →ₗ[ℝ] R0).toPMap ⊤
+  dense0 := dense_invA_domain
+  dense1 := by simp
+  closed0 := invA_isClosed
+  closed1 := HilbertComplex2.isClosed_toPMap_top 0
+  map_mem _ := Submodule.mem_top
+  comp_zero _ := Subsingleton.elim _ _
+
+/-- `0 → ℝ⁰ --0--> ℓ² --A⁻¹--> ℓ² → 0`: `V¹ ∩ V₁* = D(A⁻¹)` with compact inclusion in `ℓ²`. -/
+def cxK1 : HilbertComplex2 R0 L2 L2 where
+  d0 := ((0 : R0 →L[ℝ] L2) : R0 →ₗ[ℝ] L2).toPMap ⊤
+  d1 := invA
+  dense0 := by simp
+  dense1 := dense_invA_domain
+  closed0 := HilbertComplex2.isClosed_toPMap_top 0
+  closed1 := invA_isClosed
+  map_mem _ := invA.domain.zero_mem
+  comp_zero _ := invA.map_zero
+
+/-- `0 → ℝ⁰ --0--> ℓ² --(A⁻¹)*--> ℓ² → 0`: `V₂* = D((A⁻¹)**) = D(A⁻¹)` with compact inclusion. -/
+def cxK2 : HilbertComplex2 R0 L2 L2 where
+  d0 := ((0 : R0 →L[ℝ] L2) : R0 →ₗ[ℝ] L2).toPMap ⊤
+  d1 := invA†
+  dense0 := by simp
+  dense1 := dense_adjoint_domain invA dense_invA_domain invA_isClosed
+  closed0 := HilbertComplex2.isClosed_toPMap_top 0
+  closed1 := LinearPMap.adjoint_isClosed dense_invA_domain
+  map_mem _ := (invA†).domain.zero_mem
+  comp_zero _ := (invA†).map_zero
+
+/-- **Non-vacuity of the compactness property in infinite dimensions** (Thesis §4.2): on the
+infinite-dimensional space `ℓ²`, with the unbounded operator `A⁻¹ = diag(n+1)` (compact
+resolvent, the model of `d` on a compact manifold), all three compact inclusions hold:
+`V⁰ ↪ W0` for `cxK0`, `V¹ ∩ V₁* ↪ W1` for `cxK1`, `V₂* ↪ W2` for `cxK2`. Compactness of the
+inclusion is compactness of `A` (`isCompactOperator_A`). -/
+theorem hasCompactEmbedding_infiniteDimensional :
+    ¬ FiniteDimensional ℝ L2 ∧ cxK0.HasCompactEmbedding0 ∧ cxK1.HasCompactEmbedding ∧
+      cxK2.HasCompactEmbedding2 := by
+  have hK := isCompactOperator_A.isCompact_closure_image_closedBall (f := (A : L2 →ₗ[ℝ] L2)) 1
+  refine ⟨not_finiteDimensional_L2, ⟨_, hK, fun u h hu => ?_⟩, ⟨_, hK, fun u h1 h0 hu => ?_⟩,
+    ⟨_, hK, fun u h hu => ?_⟩⟩
+  · change ‖u‖ ^ 2 + ‖invA ⟨u, h⟩‖ ^ 2 ≤ 1 at hu
+    exact mem_closure_image_A (u := ⟨u, h⟩) (by nlinarith [norm_nonneg u])
+  · change ‖u‖ ^ 2 + ‖invA ⟨u, h1⟩‖ ^ 2 + ‖cxK1.d0† ⟨u, h0⟩‖ ^ 2 ≤ 1 at hu
+    exact mem_closure_image_A (u := ⟨u, h1⟩)
+      (by nlinarith [norm_nonneg u, norm_nonneg (cxK1.d0† ⟨u, h0⟩)])
+  · have e := adjoint_adjoint invA dense_invA_domain invA_isClosed
+    have h' : u ∈ invA.domain := e ▸ h
+    have hv := apply_eq_of_eq e u h h'
+    change ‖u‖ ^ 2 + ‖(invA†)† ⟨u, h⟩‖ ^ 2 ≤ 1 at hu
+    rw [hv] at hu
+    exact mem_closure_image_A (u := ⟨u, h'⟩) (by nlinarith [norm_nonneg u])
+
 end FredholmCE
 
 open FredholmCE in
@@ -451,6 +634,11 @@ operators has all harmonic spaces finite-dimensional — `ℌ⁰ = N(d0) = 0`,
 `ℌ¹ = N(d1) ∩ N(d0*) = 0`, `ℌ² = N(d1*) ⊆ ℝ⁰` — so it is Fredholm in the thesis' sense, but it is
 not closed (`R(d0)` is not closed). Consequently it also fails the compactness property
 (`closedRange_of_compact`), which is therefore a genuine restriction.
+
+Here "Fredholm" is read literally as "the harmonic `k`-forms `Zᵏ ∩ Zᵏ*` are finite dimensional"
+(thesis §4.2). The thesis introduces `ℌᵏ` only under the standing assumption that `Bᵏ` is closed;
+under that precondition "Fredholm ⇒ closed" would be circular, so the only non-circular reading
+is the one refuted here.
 
 Correction: the claim holds with Brüning–Lesch's definition of Fredholm (finite-dimensional
 algebraic cohomology `Zᵏ/Bᵏ`), which is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`
@@ -611,12 +799,13 @@ theorem isCompactOperator_orthogonal_Z_zero (hC : (C.segment 0).HasCompactEmbedd
 (critic item 9; the derivation dropped from M5). If `V⁰ ↪ W⁰` and every
 `V^{k+1} ∩ V*_{k+1} ↪ W^{k+1}` are compact, then the bounded model is closed at every degree,
 all harmonic spaces `ℌ^{k+1}` are finite-dimensional and so is every cohomology space; in `W`,
-every `R(d k)` is closed. -/
+every `R(d k)` is closed, and the degree-0 harmonic space `ℌ⁰ = N(d 0)` is finite-dimensional. -/
 theorem closed_and_fredholm_of_compact (h0 : (C.segment 0).HasCompactEmbedding0)
     (h : ∀ k, (C.segment k).HasCompactEmbedding) (k : ℕ) :
     C.toHilbertComplex.IsClosedAt k ∧ FiniteDimensional ℝ (C.toHilbertComplex.H k) ∧
       FiniteDimensional ℝ (C.toHilbertComplex.Cohomology k) ∧
-      IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) := by
+      IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) ∧
+      FiniteDimensional ℝ (C.d 0).ker := by
   have hZ : IsCompactOperator ((C.toHilbertComplex.ι k).comp
       (C.toHilbertComplex.Z k)ᗮ.subtypeL) := by
     cases k with
@@ -624,7 +813,8 @@ theorem closed_and_fredholm_of_compact (h0 : (C.segment 0).HasCompactEmbedding0)
     | succ j => exact C.isCompactOperator_orthogonal_Z j (h j)
   obtain ⟨hB, hH, hc⟩ :=
     C.toHilbertComplex.closed_and_fredholm_of_isCompactOperator k hZ (C.isCompactOperator_H k (h k))
-  exact ⟨hB, hH, hc, (C.toHilbertComplex_isClosedAt_iff k).1 hB⟩
+  exact ⟨hB, hH, hc, (C.toHilbertComplex_isClosedAt_iff k).1 hB,
+    (C.segment 0).finiteDimensional_ker_d0_of_compact0 h0⟩
 
 /-! #### Algebraic cohomology: bounded model versus `W` level -/
 
@@ -852,7 +1042,7 @@ theorem closed_and_fredholm_V (h0 : H.HasCompactEmbedding0) (h1 : H.HasCompactEm
     | 0 => h1
     | 1 => H.hasCompactEmbedding_segment_one h2
     | j + 2 => H.hasCompactEmbedding_segment_add_two j
-  obtain ⟨hB, hH, hc, -⟩ := H.toU.closed_and_fredholm_of_compact h0 hall k
+  obtain ⟨hB, hH, hc, -, -⟩ := H.toU.closed_and_fredholm_of_compact h0 hall k
   exact ⟨hB, hH, hc⟩
 
 /-- **Correction of Thesis §4.2 ("Fredholm ⇒ closed"), Brüning–Lesch form for a
@@ -865,5 +1055,30 @@ theorem isClosed_range_d0_of_finiteDimensional_cohomology
   H.toU.isClosed_range_of_finiteDimensional_cohomology 0
 
 end HilbertComplex2
+
+open FredholmCE in
+/-- **Refutation of Thesis §4.2 "A Fredholm Hilbert complex is always closed", in the bounded
+model** (critic item 10, literal form). For the bounded domain complex of `cxW`
+(`0 → ℓ² --diag(1/(n+1))--> ℓ² → ℝ⁰ → 0`), every harmonic space `ℌᵏ` of the project's
+`HilbertComplex` is finite-dimensional (indeed `ℌ¹ = 0`), but the complex is not closed at
+degree 0. The `W`-level form is `fredholm_not_closed_W`; the correct statement (finite-dimensional
+algebraic cohomology ⇒ closed) is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`. -/
+theorem fredholm_not_closed_V :
+    (∀ k, FiniteDimensional ℝ (cxW.toHilbertComplex.H k)) ∧ ¬ cxW.toHilbertComplex.IsClosedAt 0 := by
+  refine ⟨fun k => (cxW.toU.finiteDimensional_H_iff_harmonic k).2 ?_, ?_⟩
+  · match k with
+    | 0 =>
+      change FiniteDimensional ℝ cxW.harmonic
+      rw [cxW_harmonic]; infer_instance
+    | 1 =>
+      have : FiniteDimensional ℝ (HilbertComplex2.extW L2 L2 R0 2) :=
+        inferInstanceAs (FiniteDimensional ℝ R0)
+      infer_instance
+    | j + 2 =>
+      have : FiniteDimensional ℝ (HilbertComplex2.extW L2 L2 R0 (j + 3)) :=
+        inferInstanceAs (FiniteDimensional ℝ (⊥ : Submodule ℝ R0))
+      infer_instance
+  · rw [HilbertComplex2.toHilbertComplex_isClosedAt_zero_iff]
+    exact cxW_not_isClosed_range_d0
 
 end Feec

@@ -35,6 +35,18 @@ embed `W¹` into `W̌¹`, and its exact form is density of `d⁰V⁰ + S₀Ṽ�
 replaces the sum norm (equivalent). Model choices: `S₀, S₁` are only assumed bounded in graph
 norms (implied by the thesis' boundedness on `W̃⁰, W̃¹`); `W² × W̃²` carries the sup norm (only
 topological statements are made on it).
+
+## References
+
+* [QuennevilleBelair2015], §5.1 (Props 5.1, 5.2, (5.1)–(5.3)); §4.2 (Hilbert complexes, Thms 4.1,
+  4.2), §4.5 (Brezzi's theorem, Thm 4.11)
+* [ArnoldHu2021] (the general BGG construction of complexes from complexes)
+* [BruningLesch1992], [AFW2010], [Arnold2018] (closed Hilbert complexes, Hodge decomposition,
+  Poincaré inequality, mixed Hodge Laplacian)
+* [AFW2007] (weakly imposed symmetry)
+* [DuranLiberman1992], [Falk2008] (multiplier formulation of Reissner–Mindlin plates; the norm
+  `|||·|||` mirrors the limiting case `t = 0`)
+* [Brezzi1974], [BoffiBrezziFortin2013] (saddle point problems)
 -/
 
 open scoped RealInnerProductSpace
@@ -65,7 +77,9 @@ lemma S1_dt0_of_mem {x : V0 × Vt0} (hx : x ∈ D.Γ) : D.S1 (D.dt0 x.2) = 0 := 
 
 /-- **Thesis Prop 5.1** (closed range of `(0 d)`, algebraic part): `R(0 d) = R(d̃⁰) ∩ N(S₁)`.
 Thesis gap: the thesis proves closedness of `R(0 d)` by a sequential argument; this one-line
-characterisation (using exactness of the top complex at `V¹`) is missing. -/
+characterisation (using exactness of the top complex at `V¹`) is missing.
+
+See [QuennevilleBelair2015, Prop 5.1]. -/
 theorem range_D0 (hT : D.ExactTop) :
     LinearMap.range D.D0 = LinearMap.range D.dt0 ⊓ LinearMap.ker D.S1 := by
   ext y
@@ -84,7 +98,10 @@ theorem range_D0 (hT : D.ExactTop) :
 Thesis gap: never stated or proved, yet needed for (5.2) to be well posed without harmonic
 term, for the Hodge decomposition `u = d̃χ + w` in the proof of Prop 5.2, and for the transposed
 Brezzi condition. It follows from exactness of the bottom complex at `Ṽ¹` and of the top
-complex at `V¹`. -/
+complex at `V¹`.
+
+Cf. [QuennevilleBelair2015, §5.1, (5.1)]; for exactness of BGG-type complexes in general, cf.
+[ArnoldHu2021]. -/
 theorem exact_mid (hT : D.ExactTop) (hB : D.ExactBot) :
     LinearMap.ker D.D1 = LinearMap.range D.D0 := by
   rw [range_D0 D hT, ← hB]
@@ -139,7 +156,9 @@ end Algebra
 exactness of the bottom complex at `Ṽ¹`, closed ranges of `d¹`, `d̃¹` and the regularity
 `d¹V¹ ⊆ d¹S₀Ṽ⁰`, the range of `u ↦ (S₁u, d̃¹u)` is closed.
 Thesis gap: the thesis' proof goes through a Hodge decomposition of `Ṽ¹`; here only the open
-mapping theorem on `R(d̃¹)` is used (typos `Z̃ = N(d⁰)` and "`W¹`" for `W²` corrected). -/
+mapping theorem on `R(d̃¹)` is used (typos `Z̃ = N(d⁰)` and "`W¹`" for `W²` corrected).
+
+See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
 theorem isClosed_range_prod {V1 W2 Vt0 Vt1 Wt2 : Type*}
     [NormedAddCommGroup V1] [NormedSpace ℝ V1]
     [NormedAddCommGroup W2] [NormedSpace ℝ W2]
@@ -267,7 +286,10 @@ injective, dense inclusion `ι` into its `W`-space; the operators `d` are bounde
 The thesis assumes `S₀ : W̃⁰ → W¹`, `S₁ : W̃¹ → W²` bounded; only the (weaker, and implied)
 boundedness `S₀ : Ṽ⁰ → V¹`, `S₁ : Ṽ¹ → W²` in graph norms is used. Closed ranges, exactness,
 regularity and injectivity of `S₀` are *not* fields: they are the explicit hypotheses
-`BGGHilb.Hyps` (and `Function.Injective D.S0`) of the theorems that use them. -/
+`BGGHilb.Hyps` (and `Function.Injective D.S0`) of the theorems that use them.
+
+See [QuennevilleBelair2015, §5.1]; Hilbert complexes and graph-norm domains as in
+[BruningLesch1992], [AFW2010], [Arnold2018]. -/
 structure BGGHilb (W0 W1 Wt0 Wt1 W2 Wt2 V0 V1 Vt0 Vt1 : Type*)
     [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
     [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
@@ -353,7 +375,9 @@ lemma mem_Z1 {u : Vt1} : u ∈ D.Z1 ↔ D.S1 u = 0 ∧ D.dt1 u = 0 := by
 /-- The explicit analytic hypotheses (H1)–(H3), (H6) of §5.1 (corrected form, see
 `docs/audit.json`): `d⁰, d̃⁰` injective with closed range (exactness at `V⁰`, `Ṽ⁰`), exactness at
 `V¹`, `Ṽ¹`, closed ranges of `d¹, d̃¹`, and the regularity hypothesis, of which only the
-direction `d¹V¹ ⊆ d¹S₀Ṽ⁰` has content. Ranges are closed in the `W`-spaces, as in the thesis. -/
+direction `d¹V¹ ⊆ d¹S₀Ṽ⁰` has content. Ranges are closed in the `W`-spaces, as in the thesis.
+
+See [QuennevilleBelair2015, §5.1, hypotheses of Prop 5.1]. -/
 structure Hyps : Prop where
   d0_injective : Function.Injective D.d0
   dt0_injective : Function.Injective D.dt0
@@ -392,7 +416,9 @@ lemma exists_poincare {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [
   exact ⟨K, K.2, fun x => hK.le_mul_norm (map_zero f) x⟩
 
 /-- `Γ` is closed in `V⁰ × Ṽ⁰` (thesis Prop 5.1, corrected: the thesis' `(σ, φ) ∈ Γ̄` is
-meaningless for limit points of the completion; closedness of `Γ` is the usable statement). -/
+meaningless for limit points of the completion; closedness of `Γ` is the usable statement).
+
+See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
 theorem isClosed_Γ : IsClosed (D.Γ : Set (V0 × Vt0)) := by
   have : (D.Γ : Set (V0 × Vt0)) = {x | D.d0 x.1 = D.S0 x.2} := by
     ext x; exact D.mem_Γ
@@ -405,7 +431,10 @@ instance : CompleteSpace D.Γ := D.isClosed_Γ.completeSpace_coe
 `‖σ‖_{V⁰} ≤ C ‖d̃φ‖` and `‖φ‖_{Ṽ⁰} ≤ C ‖d̃φ‖`.
 Thesis gap: the thesis derives `‖σ‖ ≤ C_p‖dφ‖` from "the closed Hilbert complex", which only
 controls the part orthogonal to the kernel; the direct proof chains the Poincaré inequalities of
-`d⁰`, `d̃⁰` (injective, closed range) with `‖S₀‖`. The bound here is in the stronger `V`-norms. -/
+`d⁰`, `d̃⁰` (injective, closed range) with `‖S₀‖`. The bound here is in the stronger `V`-norms.
+
+See [QuennevilleBelair2015, §5.1, after Prop 5.1]; cf. the Poincaré inequality for closed
+Hilbert complexes [QuennevilleBelair2015, Thm 4.2], [AFW2010], [Arnold2018]. -/
 theorem poincare_Γ (h : D.Hyps) :
     ∃ C, 0 ≤ C ∧ ∀ x ∈ D.Γ, ‖x.1‖ ≤ C * ‖D.ιt1 (D.dt0 x.2)‖ ∧
       ‖x.2‖ ≤ C * ‖D.ιt1 (D.dt0 x.2)‖ := by
@@ -434,7 +463,9 @@ lemma exactt1' (h : D.Hyps) (z : Vt1) (hz : D.dt1 z = 0) : ∃ φ, D.dt0 φ = z 
   rw [h.exactt1] at this
   exact this
 
-/-- **Thesis Prop 5.1** (closed range of `(S, d)`). -/
+/-- **Thesis Prop 5.1** (closed range of `(S, d)`).
+
+See [QuennevilleBelair2015, Prop 5.1]. -/
 theorem isClosed_range_T (h : D.Hyps) : IsClosed (Set.range D.T) :=
   isClosed_range_prod D.d1 D.dt0 D.dt1 D.S0 D.S1 D.anticomm D.dt1_dt0 (D.exactt1' h)
     h.d1_closed h.dt1_closed h.reg
@@ -444,7 +475,9 @@ lemma isClosed_Z1 : IsClosed (D.Z1 : Set Vt1) := D.T.isClosed_ker
 instance : CompleteSpace D.Z1 := D.isClosed_Z1.completeSpace_coe
 
 /-- Exactness of (5.1) at `Ṽ¹` (missing in the thesis, cf. `exact_mid`), in the form used
-below: `N(S₁) ∩ N(d̃¹) = d̃(π₂ Γ)`. -/
+below: `N(S₁) ∩ N(d̃¹) = d̃(π₂ Γ)`.
+
+Cf. [QuennevilleBelair2015, §5.1]. -/
 theorem mem_Z1_iff (h : D.Hyps) {u : Vt1} : u ∈ D.Z1 ↔ ∃ x ∈ D.Γ, D.dt0 x.2 = u := by
   have e := exact_mid D.toBGGData h.exact1 h.exactt1
   have h1 : u ∈ D.Z1 ↔ u ∈ LinearMap.ker D.toBGGData.D1 := by
@@ -459,7 +492,10 @@ lemma dt0_mem_Z1 {x : V0 × Vt0} (hx : x ∈ D.Γ) : D.dt0 x.2 ∈ D.Z1 :=
 
 /-- **Poincaré inequality for (5.1) at `Ṽ¹`** (thesis, after Prop 5.1):
 `‖u‖_{Ṽ¹} ≤ C ‖(S₁u, d̃¹u)‖` for `u ⊥ N(S₁) ∩ N(d̃¹)` (orthogonality in the graph inner product,
-which agrees with `W̃¹`-orthogonality against `N(d̃¹)`). -/
+which agrees with `W̃¹`-orthogonality against `N(d̃¹)`).
+
+See [QuennevilleBelair2015, §5.1, after Prop 5.1]; cf. the Poincaré inequality for closed
+Hilbert complexes [QuennevilleBelair2015, Thm 4.2], [AFW2010], [Arnold2018]. -/
 theorem poincare_T (h : D.Hyps) : ∃ C, 0 ≤ C ∧ ∀ w ∈ D.Z1ᗮ, ‖w‖ ≤ C * ‖D.T w‖ := by
   let f : D.Z1ᗮ →L[ℝ] W2 × Wt2 := D.T ∘L D.Z1ᗮ.subtypeL
   have hf : Function.Injective f := by
@@ -481,7 +517,10 @@ theorem poincare_T (h : D.Hyps) : ∃ C, 0 ≤ C ∧ ∀ w ∈ D.Z1ᗮ, ‖w‖ 
 
 /-- Hodge decomposition of `Ṽ¹` for the complex (5.1), *without harmonic part* (thesis, proof of
 Prop 5.2): `u = d̃χ + w` with `(ρ, χ) ∈ Γ` and `w ⊥ N(S₁) ∩ N(d̃¹)`.
-Thesis gap: the absence of a harmonic part is exactness of (5.1) at `Ṽ¹` (`exact_mid`). -/
+Thesis gap: the absence of a harmonic part is exactness of (5.1) at `Ṽ¹` (`exact_mid`).
+
+See [QuennevilleBelair2015, proof of Prop 5.2]; cf. the Hodge decomposition of closed Hilbert
+complexes [QuennevilleBelair2015, Thm 4.1], [BruningLesch1992], [AFW2010], [Arnold2018]. -/
 theorem hodge_Vt1 (h : D.Hyps) (u : Vt1) : ∃ x ∈ D.Γ, ∃ w ∈ D.Z1ᗮ, u = D.dt0 x.2 + w := by
   obtain ⟨x, hx, hxu⟩ := (D.mem_Z1_iff h).1 (D.Z1.starProjection_apply_mem u)
   exact ⟨x, hx, _, D.Z1.sub_starProjection_mem_orthogonal u, by rw [hxu]; abel⟩
@@ -501,11 +540,15 @@ def Γbar : Submodule ℝ W0 :=
 /-- The first operator `(0 d) : Γ̄ ⊃ Γ → W̃¹` of (5.1), as an unbounded operator `W⁰ → W̃¹` with
 graph `{(σ, d̃φ) | (σ, φ) ∈ Γ}` (its domain lies in, and is dense in, `Γ̄`: `D0op_domain`).
 It is a well-defined operator when `S₀` is injective (`D0op_graph`); this is where injectivity
-of `S₀` is used, as the thesis says. -/
+of `S₀` is used, as the thesis says.
+
+See [QuennevilleBelair2015, (5.1)]. -/
 def D0op : W0 →ₗ.[ℝ] Wt1 := (D.Γ.map (D.LΓ : V0 × Vt0 →ₗ[ℝ] W0 × Wt1)).toLinearPMap
 
 /-- The second operator `(S, d) : W̃¹ ⊃ Ṽ¹ → W² × W̃²` of (5.1), with graph
-`{(u, S₁u, d̃¹u) | u ∈ Ṽ¹}`. -/
+`{(u, S₁u, d̃¹u) | u ∈ Ṽ¹}`.
+
+See [QuennevilleBelair2015, (5.1)]. -/
 def D1op : Wt1 →ₗ.[ℝ] W2 × Wt2 :=
   (LinearMap.range ((D.ιt1.prod D.T : Vt1 →L[ℝ] Wt1 × (W2 × Wt2)) :
     Vt1 →ₗ[ℝ] Wt1 × (W2 × Wt2))).toLinearPMap
@@ -555,7 +598,9 @@ lemma exists_bound_Γ (h : D.Hyps) : ∃ C : NNReal, ∀ x : D.Γ,
   rw [Prod.norm_def]
   exact max_le h1 h2
 
-/-- **Thesis Prop 5.1**, closedness of `(0 d)`. -/
+/-- **Thesis Prop 5.1**, closedness of `(0 d)`.
+
+See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
 theorem D0op_isClosed (h : D.Hyps) (hS0 : Function.Injective D.S0) : D.D0op.IsClosed := by
   obtain ⟨C, hC⟩ := D.exists_bound_Γ h
   let g : D.Γ →L[ℝ] W0 × Wt1 := D.LΓ ∘L D.Γ.subtypeL
@@ -589,7 +634,9 @@ theorem D0op_isClosed_range (h : D.Hyps) (hS0 : Function.Injective D.S0) :
   exact hg.isClosed_range g.uniformContinuous
 
 /-- **Thesis Prop 5.1**, closedness of `(S, d)` ("clearly closed": the graph norm controls the
-`Ṽ¹`-norm). -/
+`Ṽ¹`-norm).
+
+See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
 theorem D1op_isClosed : D.D1op.IsClosed := by
   let g : Vt1 →L[ℝ] Wt1 × (W2 × Wt2) := D.ιt1.prod D.T
   have hb : ∀ v, ‖v‖ ≤ (2 : NNReal) * ‖g v‖ := by
@@ -605,7 +652,9 @@ theorem D1op_isClosed : D.D1op.IsClosed := by
   rw [D.D1op_graph]
   exact hg.isClosed_range g.uniformContinuous
 
-/-- **Thesis Prop 5.1**, closed range of `(S, d)` (in `W² × W̃²`). -/
+/-- **Thesis Prop 5.1**, closed range of `(S, d)` (in `W² × W̃²`).
+
+See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
 theorem D1op_isClosed_range (h : D.Hyps) :
     IsClosed (LinearMap.range D.D1op.toFun : Set (W2 × Wt2)) := by
   have hset : (LinearMap.range D.D1op.toFun : Set (W2 × Wt2)) = Set.range D.T := by
@@ -651,7 +700,9 @@ theorem range_D0op_le_ker_D1op (hS0 : Function.Injective D.S0) :
   exact D.mem_ker_D1op.2 ⟨_, D.dt0_mem_Z1 hx, rfl⟩
 
 /-- **Exactness of (5.1)** (missing in the thesis), for the unbounded operators:
-`N(S, d) = R(0 d)` at `W̃¹`, and `(0 d)` is injective. -/
+`N(S, d) = R(0 d)` at `W̃¹`, and `(0 d)` is injective.
+
+Cf. [QuennevilleBelair2015, Prop 5.1]; cf. [ArnoldHu2021]. -/
 theorem exact_D0op_D1op (h : D.Hyps) (hS0 : Function.Injective D.S0) :
     D.D1op.ker = LinearMap.range D.D0op.toFun ∧ D.D0op.ker = ⊥ := by
   constructor
@@ -686,7 +737,11 @@ Corrections / gaps filled: `Γ̄` is realised concretely as a closed subspace of
 thesis' "`(σ, φ) ∈ Γ̄`" makes sense (closedness of the graph of `(0 d)` in `W⁰ × W̃¹` is the same
 as in `Γ̄ × W̃¹`, `Γ̄` being closed); the Poincaré inequalities used implicitly are proved
 (`poincare_Γ`, `poincare_T`); typos `Z̃ = N(d⁰)`, `W¹`/`W²` corrected; exactness at `Ṽ¹`
-(`exact_mid`) is proved. `W² × W̃²` carries the (equivalent) sup norm. -/
+(`exact_mid`) is proved. `W² × W̃²` carries the (equivalent) sup norm.
+
+See [QuennevilleBelair2015, Prop 5.1]. Closed Hilbert complexes as in [BruningLesch1992], [AFW2010], [Arnold2018];
+the general construction of complexes from complexes is [ArnoldHu2021]; the weak-symmetry
+mechanism is that of [AFW2007]. -/
 theorem prop_5_1 (h : D.Hyps) (hS0 : Function.Injective D.S0) :
     D.D0op.IsClosed ∧ D.D0op.domain.topologicalClosure = D.Γbar ∧
     IsClosed (LinearMap.range D.D0op.toFun : Set Wt1) ∧
@@ -702,7 +757,9 @@ theorem prop_5_1 (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 /-! ### The saddle point problem (5.3) and Prop 5.2 -/
 
 /-- The bilinear form `a` of (5.3):
-`a(σ,φ,u; τ,ψ,v) = (σ,τ) - (u, d̃ψ) + (d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v)` (all `W`-inner products). -/
+`a(σ,φ,u; τ,ψ,v) = (σ,τ) - (u, d̃ψ) + (d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v)` (all `W`-inner products).
+
+See [QuennevilleBelair2015, (5.3)]; symmetry imposed weakly as in [AFW2007]. -/
 def aForm : Xsp V0 Vt0 Vt1 →L[ℝ] Xsp V0 Vt0 Vt1 →L[ℝ] ℝ :=
   ip (D.ι0 ∘L pσ V0 Vt0 Vt1) (D.ι0 ∘L pσ V0 Vt0 Vt1)
     - ip (D.ιt1 ∘L pu V0 Vt0 Vt1) (D.ιt1 ∘L D.dt0 ∘L pφ V0 Vt0 Vt1)
@@ -737,7 +794,10 @@ local notation "adj" => ContinuousLinearMap.adjoint
 
 /-- **The multiplier space `W̌¹`**: the completion of `W¹` in
 `|||λ||| = sup_{(τ,ψ)} (λ, dτ - Sψ)/‖(τ,ψ)‖`, realised as the closure of `R(B*)` in `V⁰ × Ṽ⁰`
-(`|||λ||| = ‖B*λ‖`, see `tripleNorm_spec`, `jW`). -/
+(`|||λ||| = ‖B*λ‖`, see `tripleNorm_spec`, `jW`).
+
+See [QuennevilleBelair2015, §5.1, before Prop 5.2]; analogous to the multiplier norm in the
+limiting case `t = 0` of the Reissner–Mindlin plate [Falk2008], cf. [DuranLiberman1992]. -/
 def Wcheck : Submodule ℝ (Psp V0 Vt0) := (adj D.Bop).range.topologicalClosure
 
 instance : CompleteSpace D.Wcheck :=
@@ -747,7 +807,9 @@ instance : CompleteSpace D.Wcheck :=
 def tripleNorm (l : W1) : ℝ := ‖adj D.Bop l‖
 
 /-- Thesis §5.1 (definition of `|||·|||`): `|||λ||| = ‖B*λ‖` is the thesis' supremum: `(λ, dτ - Sψ) ≤ |||λ||| ‖(τ,ψ)‖`, with equality attained
-on the unit ball. -/
+on the unit ball.
+
+See [QuennevilleBelair2015, §5.1, before Prop 5.2]. -/
 theorem tripleNorm_spec (l : W1) :
     (∀ q, ⟪l, D.Bop q⟫ ≤ D.tripleNorm l * ‖q‖) ∧
       ∃ q, ‖q‖ ≤ 1 ∧ ⟪l, D.Bop q⟫ = D.tripleNorm l := by
@@ -769,7 +831,9 @@ theorem tripleNorm_le (l : W1) : D.tripleNorm l ≤ ‖D.Bop‖ * ‖l‖ := by
   exact (adj D.Bop).le_opNorm l
 
 /-- **`|||·|||` is a norm** (thesis: "is actually a norm", no proof), under the corrected density
-hypothesis `d⁰V⁰ + S₀Ṽ⁰` dense in `W¹`. -/
+hypothesis `d⁰V⁰ + S₀Ṽ⁰` dense in `W¹`.
+
+See [QuennevilleBelair2015, §5.1, before Prop 5.2]. -/
 theorem tripleNorm_definite
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1))
@@ -802,7 +866,9 @@ def jW : W1 →L[ℝ] D.Wcheck :=
     Submodule.le_topologicalClosure _ (LinearMap.mem_range_self _ l)
 
 /-- Thesis §5.1 / Prop 5.2: **`W̌¹` is the completion of `(W¹, |||·|||)`**: `jW` is isometric for `|||·|||`, has dense
-range, and is injective under the density hypothesis. -/
+range, and is injective under the density hypothesis.
+
+See [QuennevilleBelair2015, §5.1, Prop 5.2]. -/
 theorem jW_spec
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1)) :
@@ -856,7 +922,10 @@ lemma mem_ker_Bs (y : Xsp V0 Vt0 Vt1) :
 lemma mkX_mem_ker {σ : V0} {φ : Vt0} (u : Vt1) (h : (σ, φ) ∈ D.Γ) : mkX σ φ u ∈ D.Bs.ker :=
   (D.mem_ker_Bs _).2 h
 
-/-- Inf-sup of `b` with constant `1` (thesis: "holds by definition of the norm on `W̌¹`"). -/
+/-- Inf-sup of `b` with constant `1` (thesis: "holds by definition of the norm on `W̌¹`").
+
+See [QuennevilleBelair2015, proof of Prop 5.2]; the inf-sup condition on `b` of Brezzi's theorem
+[QuennevilleBelair2015, Thm 4.11], [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem infSup_b : ∀ μ : D.Wcheck, 1 * ‖μ‖ ≤ ‖adj D.Bs μ‖ := by
   intro μ
   rw [one_mul]
@@ -918,7 +987,10 @@ test function restored: `(τ, ψ, v) = (σ - ερ, φ - εχ, u + ε d̃φ)` whe
 `(ρ, χ) ∈ Γ`, `w ⊥ N(S₁) ∩ N(d̃¹)`, and `ε = 1/c²`.
 Thesis gaps: the ε's are lost in the text; the decomposition without harmonic part needs
 exactness of (5.1) at `Ṽ¹` (`hodge_Vt1`); the final step `a ≥ C ‖x‖ ‖y‖` needs the bounds
-`‖x‖², ‖y - x‖² ≤ 2c² Q`, written out below. -/
+`‖x‖², ‖y - x‖² ≤ 2c² Q`, written out below.
+
+See [QuennevilleBelair2015, proof of Prop 5.2]; the inf-sup condition on the kernel of Brezzi's
+theorem [QuennevilleBelair2015, Thm 4.11], [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem infSup_a (h : D.Hyps) :
     ∃ γ > 0, ∀ z ∈ D.Bs.ker, ∃ z' ∈ D.Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ D.aForm z z' := by
   obtain ⟨C1, hC1, hP1⟩ := D.poincare_Γ h
@@ -1063,7 +1135,10 @@ theorem infSup_a (h : D.Hyps) :
 `x ∈ Z` then `y = 0`. Thesis gap: Brezzi's theorem for the non-symmetric `a` needs this second
 condition, which the thesis never checks. Proof: `a(y, y) = ‖τ‖² + ‖S₁v‖² + ‖d̃v‖²`; testing with
 `(0, 0, d̃ψ)` gives `ψ = 0`; then `v ∈ N(S₁) ∩ N(d̃¹) = R(0 d)` by exactness at `Ṽ¹`, and testing
-with `(ρ, χ, 0)`, `d̃χ = v`, gives `v = 0`. (Injectivity of `S₀` is not needed.) -/
+with `(ρ, χ, 0)`, `d̃χ = v`, gives `v = 0`. (Injectivity of `S₀` is not needed.)
+
+Cf. [QuennevilleBelair2015, proof of Prop 5.2]; Brezzi's theorem for non-symmetric `a`:
+[Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem nondeg_a (h : D.Hyps) :
     ∀ z' ∈ D.Bs.ker, (∀ z ∈ D.Bs.ker, D.aForm z z' = 0) → z' = 0 := by
   intro z' hz' hall
@@ -1111,7 +1186,10 @@ theorem nondeg_a (h : D.Hyps) :
 Proof by Brezzi (M7 `brezzi_wellPosed`): inf-sup of `b` (`infSup_b`), inf-sup of `a` on
 `Z = Γ × Ṽ¹` (`infSup_a`) and the transposed condition (`nondeg_a`, missing in the thesis).
 Correction: neither density of `S₀Ṽ⁰` nor injectivity of `S₀` is needed for well-posedness on
-`X × W̌¹`; density only serves to embed `W¹` into `W̌¹` (`jW_spec`). -/
+`X × W̌¹`; density only serves to embed `W¹` into `W̌¹` (`jW_spec`).
+
+See [QuennevilleBelair2015, Prop 5.2], via Brezzi's theorem [QuennevilleBelair2015, Thm 4.11],
+[Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem prop_5_2_wellPosed (h : D.Hyps) :
     (∀ (F : Xsp V0 Vt0 Vt1) (G : D.Wcheck), ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck,
       (∀ y, D.aForm xl.1 y + D.bForm y xl.2 = ⟪F, y⟫) ∧ ∀ μ, D.bForm xl.1 μ = ⟪G, μ⟫) ∧
@@ -1133,7 +1211,10 @@ def Saddle (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) : Prop :=
 is a unique solution, and `‖(σ,φ,u)‖_V + |||λ||| ≤ C ‖f‖`.
 
 Corrections: `λ ∈ W̌¹`, not `W¹` as (5.3) says; the density hypothesis of the thesis is not
-needed here (it is used in `jW_spec`); the transposed Brezzi condition is added and proved. -/
+needed here (it is used in `jW_spec`); the transposed Brezzi condition is added and proved.
+
+See [QuennevilleBelair2015, Prop 5.2], via Brezzi's theorem [QuennevilleBelair2015, Thm 4.11],
+[Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem prop_5_2 (h : D.Hyps) :
     (∀ f : Wt1, ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck, D.Saddle f xl.1 xl.2) ∧
     ∃ C, ∀ (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck), D.Saddle f x l →
@@ -1161,7 +1242,10 @@ theorem prop_5_2 (h : D.Hyps) :
       _ = _ := by ring
 
 /-- The reduced Hodge Laplacian (5.2): `(σ, φ) ∈ Γ`, `(σ, τ) - (u, d̃ψ) = 0` for `(τ, ψ) ∈ Γ`, and
-`(d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v) = (f, v)` for `v ∈ Ṽ¹`. -/
+`(d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v) = (f, v)` for `v ∈ Ṽ¹`.
+
+See [QuennevilleBelair2015, (5.2)]; the mixed Hodge Laplacian of a closed Hilbert complex as in
+[AFW2010], [Arnold2018]. -/
 def Reduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) : Prop :=
   (pσ V0 Vt0 Vt1 x, pφ V0 Vt0 Vt1 x) ∈ D.Γ ∧
   (∀ τ ψ, (τ, ψ) ∈ D.Γ →
@@ -1205,7 +1289,10 @@ theorem reduced_of_saddle {f : Wt1} {x : Xsp V0 Vt0 Vt1} {l : D.Wcheck}
 
 /-- **(5.2) is a well-posed Hodge Laplacian** (thesis: asserted without proof): for every
 `f ∈ W̃¹` it has exactly one solution. Uniqueness is the inf-sup of `a` on `Z`; existence comes
-from (5.3). -/
+from (5.3).
+
+See [QuennevilleBelair2015, §5.1, (5.2)]; cf. well-posedness of the mixed Hodge Laplacian
+[AFW2010], [Arnold2018]. -/
 theorem reduced_existsUnique (h : D.Hyps) (f : Wt1) : ∃! x, D.Reduced f x := by
   obtain ⟨⟨xl, hxl, -⟩, -⟩ := (D.prop_5_2 h).1 f, ()
   refine ⟨xl.1, D.reduced_of_saddle hxl, fun x' hx' => ?_⟩
@@ -1239,7 +1326,9 @@ theorem existsUnique_multiplier (h : D.Hyps) {f : Wt1} {x : Xsp V0 Vt0 Vt1}
   rw [← this]
 
 /-- Thesis §5.1, (5.3) ↔ (5.2) plus multiplier equation: `(x, λ)` solves (5.3) iff `x` solves (5.2) and `λ` is
-the (unique, `existsUnique_multiplier`) multiplier. -/
+the (unique, `existsUnique_multiplier`) multiplier.
+
+See [QuennevilleBelair2015, §5.1, (5.2)–(5.3)]. -/
 theorem saddle_iff_reduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
     D.Saddle f x l ↔ D.Reduced f x ∧
       ∀ y, D.bForm y l = ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫ - D.aForm x y := by
@@ -1249,7 +1338,9 @@ theorem saddle_iff_reduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
   · rintro ⟨hr, hm⟩
     exact ⟨fun y => by rw [hm y]; ring, (D.forall_bForm_eq_zero_iff x).2 hr.1⟩
 
-/-- The system (5.3) *as written in the thesis*, with `λ, μ ∈ W¹`. -/
+/-- The system (5.3) *as written in the thesis*, with `λ, μ ∈ W¹`.
+
+See [QuennevilleBelair2015, (5.3)]. -/
 def Saddle53 (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : W1) : Prop :=
   (∀ y, D.aForm x y - ⟪l, D.ι1 (D.d0 (pσ V0 Vt0 Vt1 y) - D.S0 (pφ V0 Vt0 Vt1 y))⟫ =
     ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫) ∧

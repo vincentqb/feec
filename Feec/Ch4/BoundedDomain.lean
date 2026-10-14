@@ -4,21 +4,30 @@ public import Mathlib.Analysis.Distribution.AEEqOfIntegralContDiff
 public import Mathlib.Analysis.Calculus.LineDeriv.IntegrationByParts
 public import Mathlib.Analysis.Calculus.BumpFunction.Normed
 public import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
+public import Mathlib.Analysis.Calculus.FDeriv.Symmetric
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.LinearAlgebra.CrossProduct
 public import Feec.Ch4.Constraints
 
 /-!
-# Thesis Prop 4.17 on bounded domains: the projection hypothesis and the proposition fail
+# Thesis Prop 4.17 on bounded domains: the projection hypothesis and TSD propagation fail
 
 Prop 4.17 ([QuennevilleBelair2015, §4.10]) propagates the TSD constraint (symmetric, trace-free,
 divergence-free) for the matrix Hodge wave (4.14) of the complex
-`H̊¹(V) → H̊(curl, M) → L²(M)` on a bounded contractible `Ω ⊆ ℝ³`, under the "conjectures"
-`P_{L²(TSD)} (H̊(curl, M) ∩ H(div, M)) ⊆ H̊(curl, M) ∩ H(div, M)` and "`H̊(curl, M) ∩ L²(TSD)` is
-dense in `L²(TSD)`". `Feec.Constraints.prop_4_17` proves the abstract statement under the
-projection hypothesis; `Feec.Ch4.Torus` proves the hypothesis and Prop 4.17 on the flat torus.
-This file settles the bounded case: **both conjectures and the proposition itself are false on
-every nonempty bounded open `Ω ⊆ ℝ³`** (contractible or not; e.g. the cube `(0, π)³` or a ball).
+`H̊¹(V) → H̊(curl, M) → L²(M)` on a bounded contractible `Ω ⊆ ℝ³`. Its hypotheses are the
+"conjectures" `P_{L²(TSD)} (H̊(curl, M) ∩ H(div, M)) ⊆ H̊(curl, M) ∩ H(div, M)`,
+`P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)`, and "`H̊(curl, M) ∩ H(div, M, 0)` is dense in
+`H(div, M, 0)`" (plus the same with `H(curl, M)`), from which the proof infers
+"`H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`". `Feec.Constraints.prop_4_17` proves the abstract
+statement under the projection hypothesis; `Feec.Ch4.Torus` proves the hypothesis and Prop 4.17 on
+the flat torus. This file settles the bounded case, on every nonempty bounded open `Ω ⊆ ℝ³`
+(contractible or not; e.g. the cube `(0, π)³` or a ball), for the thesis' complex itself
+(`thesisComplex`, with `d0 = grad` on `H̊¹` and `d1 = curl` on `H̊(curl)`):
+* the first projection hypothesis is **false**, so Prop 4.17 as stated is vacuously true;
+* the literal density hypothesis is **true** (in every Hilbert complex), but the inferred density
+  of `H̊(curl, M) ∩ L²(TSD)` in `L²(TSD)` is **false**;
+* the **conclusion** of Prop 4.17 fails: there is TSD data in `D(L)` for which no strong solution
+  of (4.14) stays TSD, and the Stone-group orbit (Thm 4.3) is such a solution leaving `K`.
 
 ## The mathematics
 
@@ -39,24 +48,36 @@ every nonempty bounded open `Ω ⊆ ℝ³`** (contractible or not; e.g. the cube
    `g ≥ 0`, `g ≠ 0`, we have `E ∈ C_c^∞ ⊆ H̊(curl) ∩ H(div)` and `⟪E, A⟫ = 2 ∫ g > 0`, so
    `P_TSD E` has nonzero mean and `P_TSD E ∉ H̊(curl)`. (`P_TSD` is nonlocal: `E` is compactly
    supported but `P_TSD E` is not, and it does not vanish on `∂Ω`.)
-4. *The density conjecture fails* (`not_dense_TSD_inter_HcurlZero`): `H̊(curl) ∩ L²(TSD)` lies in
-   the closed subspace of zero-mean fields, which misses `diag(1, -1, 0) ∈ L²(TSD)`.
-5. *Prop 4.17 fails* (`exists_data_not_propagate`): for the TSD datum `(0, 0, β)`,
+4. *Density* (`dense_domain_d1_inter_ker_adj0`, `not_dense_TSD_inter_HcurlZero`): in any Hilbert
+   complex `P_{ker d0*}` maps `D(d1)` into itself, since `(ker d0*)ᗮ = closure (range d0) ⊆ ker d1`;
+   so `D(d1) ∩ ker d0*` is dense in `ker d0*`. But `H̊(curl) ∩ L²(TSD)` lies in the closed
+   subspace of zero-mean fields, which misses `diag(1, -1, 0) ∈ L²(TSD)`.
+5. *TSD propagation fails* (`exists_data_not_propagate`): for the TSD datum `(0, 0, β)`,
    `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ) ∈ H(curl) ∩ L²(TSD)`, the functional `ℓ(E) = ⟪E, diag(1, -1, 0)⟫`
    vanishes on `K ∩ D(L)`, but `d/dt ℓ(E)|₀ = ℓ(-curl β) = ℓ(diag(1, -1, 0)) = 2|Ω| ≠ 0`
    (`curlM_betaField`). Hence every strong solution leaves `K` immediately.
+6. *The thesis' complex* (`thesisComplex`): `grad` is the graph closure of the row-wise gradient
+   on `C_c^∞(Ω; ℝ³)` (`gradClosure`, closable by the fundamental lemma); `curl grad = 0` on
+   `C_c^∞` (Schwarz, `pd_pd_comm`) passes to the closures, so `grad H̊¹ ⊆ ker curl`;
+   `D(grad*) = H(div)` with `grad* = -div` (`mem_adjoint_gradClosure_iff`) and
+   `ker grad* = H(div, 0) ⊇ L²(TSD)` (`mem_ker_adjoint_gradClosure_iff`,
+   `thesisComplex_TSD_le_ker`).
 
 ## Model
 
 `Ω ⊆ ℝ³ = Fin 3 → ℝ` is open and bounded, with Lebesgue measure. `L²(Ω; ℝ³ˣ³)` is `L2M Ω`, the
-`ℓ²`-sum of nine copies of `L²(Ω)` (canonically isometric to `L²(Ω; ℝ³ˣ³)` with the Frobenius
-norm). Spaces are defined honestly, by their standard definitions:
+`ℓ²`-sum of nine copies of `L²(Ω)`, and `L²(Ω; ℝ³)` is `L2V Ω` (three copies); these are
+canonically isometric to the Bochner spaces with the Frobenius/Euclidean norms (the isometry is not
+formalized). Spaces are defined honestly, by their standard definitions:
 * `C_c^∞(Ω)`: `IsTest` (smooth, compact support inside `Ω`); `pd k` is `∂_k` (`fderiv`).
+* `H̊¹(Ω; ℝ³)`: the domain of `gradClosure`, the closure of `C_c^∞(Ω; ℝ³)` in the graph norm of
+  the row-wise gradient `(grad φ)_{ij} = ∂_j φ_i`.
 * `H̊(curl, M)`: `HcurlZero`, the closure of `C_c^∞(Ω; ℝ³ˣ³)` in the graph norm of the
   row-wise curl `curlM` (thesis convention `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`);
   `curlClosure` is the corresponding closed, densely defined operator (`isClosed_curlClosure`,
   `dense_domain_curlClosure`, `mem_domain_curlClosure`).
-* `H(div, M)`: `HdivM`, fields with a weak row-wise divergence in `L²`.
+* `H(div, M)`: `HdivM`, fields with a weak row-wise divergence in `L²`; `H(div, M, 0)`:
+  `HdivZero`, weakly divergence-free fields (no boundary condition).
 * `L²(TSD)`: `TSD`, symmetric, trace-free and weakly divergence-free in `Ω`, no boundary
   condition; a closed subspace (`isClosed_TSD`), so `P_{L²(TSD)}` is `(TSD Ω).starProjection`.
 
@@ -65,32 +86,42 @@ norm). Spaces are defined honestly, by their standard definitions:
 * `eq_zero_of_symm_of_trace_of_cross` (pointwise lemma), `curl_symm_of_mem_TSD`,
   `integral_eq_zero_of_mem_TSD_of_mem_HcurlZero` (zero mean).
 * `projTSD_not_mem_HcurlZero`, `exists_projTSD_not_mem_HcurlZero` (projection hypothesis false),
-  `not_dense_TSD_inter_HcurlZero` (density conjecture false).
+  `not_dense_TSD_inter_HcurlZero` (inferred density false), `dense_domain_d1_inter_ker_adj0`
+  (literal density true in any Hilbert complex).
 * For any Hilbert complex `H : W0 → L²(Ω; ℝ³ˣ³) → W2` with `D(d1) ⊆ H̊(curl)`:
   `not_projection_hyp` (the hypothesis `hPD` of `Feec.Constraints.prop_4_17` fails, if
   `C_c^∞ ⊆ V1 ∩ V1*`) and `not_dense_domL_inter_Kc` (the density hypothesis of
   `Feec.Constraints.prop_4_17_iff` fails). If moreover `W2 = L²(Ω; ℝ³ˣ³)` and `d1` is (a
-  restriction of) `curlClosure`: `smoothField_mem_adjoint` (`d1* ⊇ curl` on `C¹` fields) and
-  `exists_data_not_propagate` (Prop 4.17 fails for every strong solution).
-* The concrete complex `curlComplex` (`0 → H̊(curl) → L²`) satisfies all these hypotheses:
-  `curlComplex_not_projection_hyp`, `curlComplex_not_propagate`.
+  restriction of) `curlClosure`: `smoothField_mem_adjoint` (`d1* ⊇ curl` on `C¹` fields),
+  `exists_data_not_propagate` (every strong solution from `(0, 0, β)` leaves `K`) and
+  `exists_orbit_not_propagate` (given a Stone group, its orbit is such a solution).
+* The thesis' complex `thesisComplex` (`H̊¹ → H̊(curl) → L²`): `thesisComplex_TSD_le_ker`,
+  `thesisComplex_dense_literal`, `thesisComplex_not_projection_hyp`,
+  `thesisComplex_not_propagate`, `thesisComplex_orbit_not_propagate`. The simpler
+  `curlComplex` (`0 → H̊(curl) → L²`) satisfies the same hypotheses.
 
 ## Correction
 
-The thesis' conjectures behind Prop 4.17 on a bounded domain are false, and so is the
-proposition: there is TSD initial data in `D(L)` for which no strong solution of (4.14) stays
-TSD. The obstruction is global: `H̊(curl) ∩ L²(TSD)` fields have zero mean, while `L²(TSD)`
-contains constants and `curl` does not preserve the zero-mean condition on `H(curl)` (no
-boundary condition on `B`). On the torus the hypothesis holds (`Feec.Torus.prop_4_17_torus`).
+The first projection hypothesis of Prop 4.17 is false on bounded domains, so the proposition as
+stated is vacuously true; its conclusion is false: there is TSD initial data in `D(L)` for which
+no strong solution of (4.14) stays TSD, and if `-L` generates a unitary group (Thm 4.3) its orbit
+is a strong solution leaving `K`. The obstruction is global: `H̊(curl) ∩ L²(TSD)` fields have zero
+mean, while `L²(TSD)` contains constants and `curl` does not preserve the zero-mean condition on
+`H(curl)` (no boundary condition on `B`). On the torus the hypothesis holds
+(`Feec.Torus.prop_4_17_torus`).
 
-Thesis gap: the proof of Prop 4.17 checks the hypotheses of Theorem 4.5 only modulo the
-conjectures; with the electric boundary condition the constraint set `K` is not invariant.
+Thesis gap: the density hypothesis "`H̊(curl, M) ∩ H(div, M, 0)` is dense in `H(div, M, 0)`" is
+true, but the step "so that `H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`" in the proof of
+Prop 4.17 is invalid (its conclusion is false); and with the electric boundary condition the
+constraint set `K` is not invariant, so Theorem 4.5 does not apply.
 
-Not formalized: the thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)` itself (the results above
-only use properties of `d1`, and `curlComplex` shows they are satisfiable); existence of
-strong solutions (Stone's theorem, Thm 4.3): `exists_data_not_propagate` is stated for every
-strong solution, so it refutes Prop 4.17 as soon as one exists, which the thesis asserts.
-Prop 4.19 on bounded domains is not treated.
+Not formalized: Stone's theorem (existence of the group in Thm 4.3) on bounded domains; the
+non-vacuous refutations `exists_orbit_not_propagate` and `thesisComplex_orbit_not_propagate` take
+the group as the hypothesis `G : Feec.UnitaryGroupGenerator (-L)` (the stand-in also used by
+`Feec.Constraints.prop_4_17_necessary`), while `exists_data_not_propagate` and
+`thesisComplex_not_propagate` quantify over all strong solutions. The second projection
+hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is not decided (not needed: the first already
+fails). Prop 4.19 on bounded domains is not treated.
 
 ## References
 
@@ -626,7 +657,8 @@ Proof: let `C = curl B` (from the graph closure). `C` is symmetric (`curl_symm_o
 the linear field `v = x_a e_b`, test the graph closure against `Ψ = skewOf v` (rows `e_j × v`,
 not compactly supported): `0 = ∫ C : Ψ = ∫ B : curl Ψ = δ_{ab} ∫ tr B - ∫ B_{ab}`.
 
-Correction: this refutes the thesis' conjectures behind Prop 4.17 on bounded domains
+Correction: this refutes the first projection hypothesis of Prop 4.17 and the density of
+`H̊(curl) ∩ L²(TSD)` in `L²(TSD)` claimed in its proof, on bounded domains
 (`projTSD_not_mem_HcurlZero`, `not_dense_TSD_inter_HcurlZero`).
 See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
 theorem integral_eq_zero_of_mem_TSD_of_mem_HcurlZero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
@@ -792,12 +824,14 @@ theorem diagA_transpose : diagA.transpose = diagA := by
 /-- `diag(1, -1, 0)` is trace-free. -/
 theorem diagA_trace : diagA.trace = 0 := by simp [diagA, Matrix.trace, Fin.sum_univ_three]
 
-/-- **The density conjecture of Prop 4.17 fails on every nonempty bounded open `Ω`:**
+/-- **The density claimed in the proof of Prop 4.17 fails on every nonempty bounded open `Ω`:**
 `H̊(curl, M) ∩ L²(TSD)` is not dense in `L²(TSD)`. Indeed it lies in the closed subspace
 `{B | ∫_Ω B = 0}`, which misses the constant field `diag(1, -1, 0) ∈ L²(TSD)`.
 
-Correction: the thesis' claim that `H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`
-([QuennevilleBelair2015, §4.10, proof of Prop 4.17]) is false. -/
+Thesis gap: the claim that `H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`
+([QuennevilleBelair2015, §4.10, proof of Prop 4.17]) is false; it does not follow from the
+stated (and true, `dense_domain_d1_inter_ker_adj0`) density of `H̊(curl, M) ∩ H(div, M, 0)` in
+`H(div, M, 0)`. -/
 theorem not_dense_TSD_inter_HcurlZero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     constField hΩ hb diagA ∈ TSD Ω ∧
@@ -981,6 +1015,377 @@ theorem dense_domain_curlClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   refine Finset.sum_congr rfl fun ij _ => ?_
   exact integral_mul_eq_inner _ (hΨ ij).memLp
 
+/-! ## The closed operator `grad` on `H̊¹` and the thesis' complex -/
+
+section Grad
+
+open scoped LinearPMap
+
+/-- Schwarz: partial derivatives of a `C²` function commute. -/
+theorem pd_pd_comm {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (a b : Fin 3) (x : R3) :
+    pd a (pd b f) x = pd b (pd a f) x := by
+  have hd : Differentiable ℝ (fderiv ℝ f) :=
+    (hf.fderiv_right (m := 1) (by norm_num)).differentiable (by norm_num)
+  have e : ∀ v w : R3, fderiv ℝ (fun y => fderiv ℝ f y v) x w = fderiv ℝ (fderiv ℝ f) x w v := by
+    intro v w
+    rw [fderiv_clm_apply (hd x) (differentiableAt_const _)]
+    simp
+  change fderiv ℝ (fun y => fderiv ℝ f y (Pi.single b 1)) x (Pi.single a 1) =
+    fderiv ℝ (fun y => fderiv ℝ f y (Pi.single a 1)) x (Pi.single b 1)
+  rw [e, e]
+  exact (ContDiffAt.isSymmSndFDerivAt (hf.contDiffAt (x := x)) (by simp)) _ _
+
+/-- The row-wise gradient of a vector field, `(grad φ)_{ij} = ∂_j φ_i`. -/
+def gradM (φ : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij => pd ij.2 (φ ij.1)
+
+/-- The gradient of a test vector field has test components. -/
+theorem isTest_gradM {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) (ij : Ix) :
+    IsTest Ω (gradM φ ij) := (hφ ij.1).pdiff ij.2
+
+/-- `curl grad = 0` for `C²` vector fields (row-wise). -/
+theorem curlM_gradM {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, ContDiff ℝ 2 (φ i)) (ik : Ix) (x : R3) :
+    curlM (gradM φ) ik x = 0 := by
+  simp only [curlM, gradM]
+  rw [pd_pd_comm (hφ _), sub_self]
+
+variable (Ω) in
+/-- The graph of the row-wise gradient on `C_c^∞(Ω; ℝ³)`, in `L²(Ω; ℝ³) × L²(Ω; ℝ³ˣ³)`. -/
+def gradGraph : Set (L2V Ω × L2M Ω) :=
+  {p | ∃ φ : Fin 3 → R3 → ℝ, (∀ i, IsTest Ω (φ i)) ∧
+    (∀ i, (p.1 i : R3 → ℝ) =ᵐ[volume.restrict Ω] φ i) ∧
+      ∀ ij, (p.2 ij : R3 → ℝ) =ᵐ[volume.restrict Ω] gradM φ ij}
+
+variable (Ω) in
+/-- The graph of grad on `C_c^∞(Ω; ℝ³)` is a linear subspace. -/
+def gradGraphSub : Submodule ℝ (L2V Ω × L2M Ω) where
+  carrier := gradGraph Ω
+  zero_mem' := by
+    refine ⟨0, fun _ => IsTest.zero, fun i => ?_, fun ij => ?_⟩
+    · filter_upwards [Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x hx
+      simpa using hx
+    · filter_upwards [Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x hx
+      simpa [gradM] using hx
+  add_mem' := by
+    rintro ⟨u, c⟩ ⟨u', c'⟩ ⟨φ, hφ, hp1, hp2⟩ ⟨φ', hφ', hq1, hq2⟩
+    refine ⟨φ + φ', fun i => (hφ i).add (hφ' i), fun i => ?_, fun ij => ?_⟩
+    · filter_upwards [Lp.coeFn_add (u i) (u' i), hp1 i, hq1 i] with x h1 h2 h3
+      simp only [Prod.fst_add, PiLp.add_apply, Pi.add_apply] at h1 ⊢
+      rw [h1, h2, h3]
+    · filter_upwards [Lp.coeFn_add (c ij) (c' ij), hp2 ij, hq2 ij] with x h1 h2 h3
+      simp only [Prod.snd_add, PiLp.add_apply, Pi.add_apply] at h1 ⊢
+      rw [h1, h2, h3]
+      simp only [gradM, Pi.add_apply]
+      rw [pd_add (hφ _).differentiable (hφ' _).differentiable]
+  smul_mem' := by
+    rintro r ⟨u, c⟩ ⟨φ, hφ, hp1, hp2⟩
+    refine ⟨fun i x => r * φ i x, fun i => (hφ i).const_mul r, fun i => ?_, fun ij => ?_⟩
+    · filter_upwards [Lp.coeFn_smul r (u i), hp1 i] with x h1 h2
+      simp only [Prod.smul_fst, PiLp.smul_apply, Pi.smul_apply, smul_eq_mul] at h1 ⊢
+      rw [h1, h2]
+    · filter_upwards [Lp.coeFn_smul r (c ij), hp2 ij] with x h1 h2
+      simp only [Prod.smul_snd, PiLp.smul_apply, Pi.smul_apply, smul_eq_mul] at h1 ⊢
+      rw [h1, h2]
+      simp only [gradM]
+      rw [pd_const_mul (hφ _).differentiable]
+
+/-- The defining identity of the closure of the grad graph, tested against a `C¹` matrix field
+`Ψ` (no boundary condition on `Ψ`): `∫ G : Ψ = -Σ_{ij} ∫ v_i ∂_j Ψ_{ij}`. -/
+theorem closure_gradGraph_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {v : L2V Ω}
+    {G : L2M Ω} (h : (v, G) ∈ closure (gradGraph Ω)) {Ψ : Ix → R3 → ℝ}
+    (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
+    ∑ ij, ∫ x, G ij x * Ψ ij x ∂volume.restrict Ω =
+      -∑ ij : Ix, ∫ x, v ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := by
+  have m1 : ∀ ij, MemLp (Ψ ij) 2 (volume.restrict Ω) := fun ij =>
+    memLp_of_continuous hΩ hb (hΨ ij).continuous
+  have m2 : ∀ ij : Ix, MemLp (pd ij.2 (Ψ ij)) 2 (volume.restrict Ω) := fun ij =>
+    memLp_of_continuous hΩ hb (continuous_pd (hΨ _) _)
+  let F : L2V Ω × L2M Ω → ℝ := fun p =>
+    ∑ ij, ⟪p.2 ij, (m1 ij).toLp _⟫ + ∑ ij : Ix, ⟪p.1 ij.1, (m2 ij).toLp _⟫
+  have hF : Continuous F := by
+    apply Continuous.add
+    · refine continuous_finsetSum _ fun ij _ => ?_
+      exact ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : Ix => L2 Ω) ij).continuous.comp continuous_snd).inner
+        continuous_const
+    · refine continuous_finsetSum _ fun ij _ => ?_
+      exact ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin 3 => L2 Ω) ij.1).continuous.comp
+        continuous_fst).inner continuous_const
+  have hsub : gradGraph Ω ⊆ F ⁻¹' {0} := by
+    rintro ⟨u, c⟩ ⟨φ, hφ, hp1, hp2⟩
+    simp only [mem_preimage, mem_singleton_iff, F, ← integral_mul_eq_inner]
+    have e1 : ∀ ij, ∫ x, c ij x * Ψ ij x ∂volume.restrict Ω =
+        -∫ x, φ ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := fun ij => by
+      rw [← integral_pd_mul (hφ ij.1) (hΨ ij)]
+      exact integral_congr_ae ((hp2 ij).mono fun x hx => by simp only; rw [hx]; rfl)
+    have e2 : ∀ ij : Ix, ∫ x, u ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω =
+        ∫ x, φ ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := fun ij =>
+      integral_congr_ae ((hp1 ij.1).mono fun x hx => by simp only; rw [hx])
+    simp only [e1, e2, Finset.sum_neg_distrib, neg_add_cancel]
+  have := closure_minimal hsub (isClosed_singleton.preimage hF) h
+  simp only [F, mem_preimage, mem_singleton_iff, ← integral_mul_eq_inner] at this
+  linarith
+
+/-- A vector field orthogonal to every test vector field vanishes. -/
+theorem eq_zero_of_forall_integralV (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {v : L2V Ω}
+    (h : ∀ ψ : Fin 3 → R3 → ℝ, (∀ i, IsTest Ω (ψ i)) →
+      ∑ i, ∫ x, v i x * ψ i x ∂volume.restrict Ω = 0) : v = 0 := by
+  refine (WithLp.ext_iff 2).2 (funext fun i => ?_)
+  refine L2_ext_of_integral hΩ hb fun g hg => ?_
+  have e := h (fun k => if k = i then g else 0) fun k => by
+    split_ifs
+    exacts [hg, IsTest.zero]
+  have e2 : ∀ k : Fin 3, ∫ x, v k x * (if k = i then g else 0) x ∂volume.restrict Ω =
+      if k = i then ∫ x, v i x * g x ∂volume.restrict Ω else 0 := by
+    intro k
+    split_ifs with hk
+    · rw [hk]
+    · simp
+  simp only [e2, Finset.sum_ite_eq', Finset.mem_univ, ite_true] at e
+  rw [e]
+  have : ∫ x, (0 : L2V Ω).ofLp i x * g x ∂volume.restrict Ω = 0 := by
+    rw [integral_mul_eq_inner _ hg.memLp]
+    simp
+  exact this.symm
+
+/-- The closure of the grad graph is a graph (grad on `C_c^∞` is closable). -/
+theorem gradGraph_closable (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    ∀ x ∈ (gradGraphSub Ω).topologicalClosure, x.1 = 0 → x.2 = 0 := by
+  rintro ⟨v, G⟩ hx (h0 : v = 0)
+  subst h0
+  refine eq_zero_of_forall_integral hΩ hb fun Ψ hΨ => ?_
+  rw [closure_gradGraph_identity hΩ hb hx fun ij => (hΨ ij).contDiff_one]
+  rw [neg_eq_zero]
+  refine Finset.sum_eq_zero fun ij _ => ?_
+  rw [integral_mul_eq_inner _ (memLp_of_continuous hΩ hb (continuous_pd (hΨ ij).contDiff_one
+    ij.2))]
+  simp
+
+/-- `grad : H̊¹(Ω; ℝ³) → L²(Ω; ℝ³ˣ³)`. -/
+def gradClosure : L2V Ω →ₗ.[ℝ] L2M Ω := (gradGraphSub Ω).topologicalClosure.toLinearPMap
+
+/-- The graph of `gradClosure` is the closure of the grad graph. -/
+theorem gradClosure_graph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    (gradClosure (Ω := Ω)).graph = (gradGraphSub Ω).topologicalClosure :=
+  Submodule.toLinearPMap_graph_eq _ (gradGraph_closable hΩ hb)
+
+/-- `(u, grad u)` is a graph-norm limit of `(φₙ, grad φₙ)`, `φₙ ∈ C_c^∞`. -/
+theorem mem_closure_gradClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (u : (gradClosure (Ω := Ω)).domain) :
+    ((u : L2V Ω), gradClosure u) ∈ closure (gradGraph Ω) :=
+  Submodule.mem_graph_toLinearPMap (gradGraph_closable hΩ hb) u
+
+/-- `gradClosure` is a closed operator. -/
+theorem isClosed_gradClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    (gradClosure (Ω := Ω)).IsClosed := by
+  rw [LinearPMap.IsClosed, gradClosure_graph hΩ hb]
+  exact Submodule.isClosed_topologicalClosure _
+
+/-- The `L²` class of a vector field with components in `C_c^∞(Ω)`. -/
+def testFieldV {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) : L2V Ω :=
+  WithLp.toLp 2 fun i => (hφ i).memLp.toLp (φ i)
+
+/-- Reading off the value of a partial map from a point of its graph. -/
+theorem apply_eq_of_mem_graph {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
+    [Module ℝ F] {T : E →ₗ.[ℝ] F} {a : E} {b : F} (h : (a, b) ∈ T.graph) (ha : a ∈ T.domain) :
+    T ⟨a, ha⟩ = b := by
+  obtain ⟨y, hy1, hy2⟩ := (LinearPMap.mem_graph_iff T).1 h
+  have e : y = ⟨a, ha⟩ := Subtype.ext hy1
+  rw [← e]
+  exact hy2
+
+/-- `(φ, grad φ)` lies in the graph of `gradClosure` for `φ ∈ C_c^∞(Ω; ℝ³)`. -/
+theorem testFieldV_mem_graph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) :
+    (testFieldV hφ, testField (isTest_gradM hφ)) ∈ (gradClosure (Ω := Ω)).graph := by
+  rw [gradClosure_graph hΩ hb]
+  exact subset_closure ⟨φ, hφ, fun i => (hφ i).memLp.coeFn_toLp,
+    fun ij => coeFn_testField (isTest_gradM hφ) ij⟩
+
+/-- `C_c^∞(Ω; ℝ³) ⊆ H̊¹(Ω; ℝ³)`. -/
+theorem testFieldV_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) :
+    testFieldV hφ ∈ (gradClosure (Ω := Ω)).domain := by
+  obtain ⟨y, hy, -⟩ := (LinearPMap.mem_graph_iff _).1 (testFieldV_mem_graph hΩ hb hφ)
+  have e : (y : L2V Ω) = testFieldV hφ := hy
+  exact e ▸ y.2
+
+/-- On `C_c^∞(Ω; ℝ³)`, `gradClosure` is the classical gradient. -/
+theorem gradClosure_testFieldV (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) :
+    gradClosure ⟨testFieldV hφ, testFieldV_mem_domain hΩ hb hφ⟩ =
+      testField (isTest_gradM hφ) :=
+  apply_eq_of_mem_graph (testFieldV_mem_graph hΩ hb hφ) _
+
+/-- `H̊¹(Ω; ℝ³)` is dense in `L²(Ω; ℝ³)`. -/
+theorem dense_domain_gradClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    Dense ((gradClosure (Ω := Ω)).domain : Set (L2V Ω)) := by
+  rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
+    Submodule.eq_bot_iff]
+  intro v hv
+  refine eq_zero_of_forall_integralV hΩ hb fun ψ hψ => ?_
+  have h0 := (Submodule.mem_orthogonal' _ _).1 hv _ (testFieldV_mem_domain hΩ hb hψ)
+  rw [PiLp.inner_apply] at h0
+  rw [← h0]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  exact integral_mul_eq_inner _ (hψ i).memLp
+
+/-- `grad H̊¹ ⊆ H̊(curl)` with `curl grad = 0`. -/
+theorem gradClosure_mem_closure_curlGraph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (u : (gradClosure (Ω := Ω)).domain) :
+    (gradClosure u, (0 : L2M Ω)) ∈ closure (curlGraph Ω) := by
+  let f : L2V Ω × L2M Ω →L[ℝ] L2M Ω × L2M Ω :=
+    (ContinuousLinearMap.snd ℝ (L2V Ω) (L2M Ω)).prod 0
+  have := map_mem_closure f.continuous (mem_closure_gradClosure hΩ hb u)
+    (t := curlGraph Ω) ?_
+  · simpa [f] using this
+  rintro ⟨v, G⟩ ⟨φ, hφ, -, hp2⟩
+  refine ⟨gradM φ, isTest_gradM hφ, fun ij => ⟨hp2 ij, ?_⟩⟩
+  filter_upwards [Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x hx
+  simp only [f, ContinuousLinearMap.prod_apply]
+  rw [curlM_gradM (fun i => (hφ i).contDiff.of_le (by simp))]
+  simpa using hx
+
+
+/-- `⟪B, Φ⟫ = Σ_{ij} ∫_Ω B_{ij} Φ_{ij}` for a test matrix field `Φ`. -/
+theorem inner_testField (B : L2M Ω) {Φ : Ix → R3 → ℝ} (hΦ : ∀ ij, IsTest Ω (Φ ij)) :
+    ⟪B, testField hΦ⟫ = ∑ ij, ∫ x, B ij x * Φ ij x ∂volume.restrict Ω := by
+  rw [PiLp.inner_apply]
+  exact Finset.sum_congr rfl fun ij _ => (integral_mul_eq_inner _ (hΦ ij).memLp).symm
+
+/-- `⟪v, φ⟫ = Σ_i ∫_Ω v_i φ_i` for a test vector field `φ`. -/
+theorem inner_testFieldV (v : L2V Ω) {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) :
+    ⟪v, testFieldV hφ⟫ = ∑ i, ∫ x, v i x * φ i x ∂volume.restrict Ω := by
+  rw [PiLp.inner_apply]
+  exact Finset.sum_congr rfl fun i _ => (integral_mul_eq_inner _ (hφ i).memLp).symm
+
+/-- A point of the grad graph is `(φ, grad φ)` as `L²` classes. -/
+theorem eq_of_mem_gradGraph {v : L2V Ω} {G : L2M Ω} {φ : Fin 3 → R3 → ℝ}
+    (hφ : ∀ i, IsTest Ω (φ i)) (hp1 : ∀ i, (v i : R3 → ℝ) =ᵐ[volume.restrict Ω] φ i)
+    (hp2 : ∀ ij, (G ij : R3 → ℝ) =ᵐ[volume.restrict Ω] gradM φ ij) :
+    v = testFieldV hφ ∧ G = testField (isTest_gradM hφ) :=
+  ⟨(WithLp.ext_iff 2).2 (funext fun i => Lp.ext ((hp1 i).trans (hφ i).memLp.coeFn_toLp.symm)),
+    (WithLp.ext_iff 2).2 (funext fun ij =>
+      Lp.ext ((hp2 ij).trans (coeFn_testField (isTest_gradM hφ) ij).symm))⟩
+
+/-- If `B` has weak row-wise divergence `D`, then `B ∈ D(grad*)` and `grad* B = -D`. -/
+theorem adjoint_gradClosure_of_weakDiv (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {B : L2M Ω} {D : L2V Ω} (hD : ∀ φ : Fin 3 → R3 → ℝ, (∀ i, IsTest Ω (φ i)) →
+      ∑ ij : Ix, ∫ x, B ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω =
+        -∑ i, ∫ x, D i x * φ i x ∂volume.restrict Ω) :
+    ∃ h : B ∈ (gradClosure (Ω := Ω))†.domain, (gradClosure (Ω := Ω))† ⟨B, h⟩ = -D := by
+  have key : ∀ u : (gradClosure (Ω := Ω)).domain,
+      ⟪-D, (u : L2V Ω)⟫ = ⟪B, gradClosure u⟫ := by
+    intro u
+    have hsub : gradGraph Ω ⊆
+        (fun p : L2V Ω × L2M Ω => ⟪B, p.2⟫ - ⟪-D, p.1⟫) ⁻¹' {0} := by
+      rintro ⟨v, G⟩ ⟨φ, hφ, hp1, hp2⟩
+      obtain ⟨rfl, rfl⟩ := eq_of_mem_gradGraph hφ hp1 hp2
+      simp only [mem_preimage, mem_singleton_iff, inner_neg_left, sub_neg_eq_add]
+      rw [inner_testField, inner_testFieldV]
+      have := hD φ hφ
+      simp only [gradM] at this ⊢
+      linarith
+    have h := closure_minimal hsub (isClosed_singleton.preimage
+      ((continuous_const.inner continuous_snd).sub (continuous_const.inner continuous_fst)))
+      (mem_closure_gradClosure hΩ hb u)
+    simp only [mem_preimage, mem_singleton_iff, sub_eq_zero] at h
+    exact h.symm
+  have hmem := LinearPMap.mem_adjoint_domain_of_exists _ ⟨_, key⟩
+  exact ⟨hmem, LinearPMap.adjoint_apply_eq (dense_domain_gradClosure hΩ hb) ⟨_, hmem⟩ key⟩
+
+/-- The adjoint identity against test vector fields:
+`⟪grad* B, φ⟫ = Σ_{ij} ∫ B_{ij} ∂_j φ_i`. -/
+theorem adjoint_gradClosure_inner (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (B : (gradClosure (Ω := Ω))†.domain) {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) :
+    ∑ i, ∫ x, (gradClosure (Ω := Ω))† B i x * φ i x ∂volume.restrict Ω =
+      ∑ ij : Ix, ∫ x, B.1 ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω := by
+  have e := LinearPMap.adjoint_isFormalAdjoint (dense_domain_gradClosure hΩ hb) B
+    ⟨_, testFieldV_mem_domain hΩ hb hφ⟩
+  simp only at e
+  rw [gradClosure_testFieldV hΩ hb hφ, inner_testField, inner_testFieldV] at e
+  exact e
+
+/-- `D(grad*) = H(div)` (row-wise divergence, no boundary condition), `grad* = -div`. -/
+theorem mem_adjoint_gradClosure_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2M Ω} :
+    B ∈ (gradClosure (Ω := Ω))†.domain ↔ B ∈ HdivM Ω := by
+  constructor
+  · intro hB
+    refine ⟨-(gradClosure (Ω := Ω))† ⟨B, hB⟩, fun φ hφ => ?_⟩
+    rw [← adjoint_gradClosure_inner hΩ hb ⟨B, hB⟩ hφ]
+    simp only [PiLp.neg_apply, ← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [← integral_neg]
+    refine integral_congr_ae ?_
+    filter_upwards [Lp.coeFn_neg (((gradClosure (Ω := Ω))† ⟨B, hB⟩).ofLp i)] with x hx
+    rw [hx, Pi.neg_apply]
+    ring
+  · rintro ⟨D, hD⟩
+    exact (adjoint_gradClosure_of_weakDiv hΩ hb hD).1
+
+variable (Ω) in
+/-- `H(div, Ω; ℝ³ˣ³, 0)`: weakly (row-wise) divergence-free fields, no boundary condition. -/
+def HdivZero : Set (L2M Ω) :=
+  {B | ∀ φ : Fin 3 → R3 → ℝ, (∀ i, IsTest Ω (φ i)) →
+    ∑ ij : Ix, ∫ x, B ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0}
+
+/-- `ker grad* = H(div, 0)`. -/
+theorem mem_ker_adjoint_gradClosure_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {B : L2M Ω} : B ∈ (gradClosure (Ω := Ω))†.ker ↔ B ∈ HdivZero Ω := by
+  constructor
+  · intro hB φ hφ
+    obtain ⟨y, rfl, hy0⟩ := LinearPMap.mem_ker_iff.1 hB
+    rw [← adjoint_gradClosure_inner hΩ hb y hφ, hy0]
+    refine Finset.sum_eq_zero fun i _ => ?_
+    rw [integral_mul_eq_inner _ (hφ i).memLp]
+    simp
+  · intro hB
+    obtain ⟨h, h'⟩ := adjoint_gradClosure_of_weakDiv hΩ hb (D := 0) fun φ hφ => by
+      rw [hB φ hφ, eq_comm, neg_eq_zero]
+      refine Finset.sum_eq_zero fun i _ => ?_
+      rw [integral_mul_eq_inner _ (hφ i).memLp]
+      simp
+    exact LinearPMap.mem_ker_iff.2 ⟨⟨B, h⟩, rfl, by rw [h', neg_zero]⟩
+
+end Grad
+
+/-! ## The literal density hypothesis holds in every Hilbert complex -/
+
+section Gen
+
+open Feec.HilbertComplex2 Feec.Constraints LinearPMap
+
+variable {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+  [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
+
+/-- In any Hilbert complex, `P_{ker d0*}` maps `D(d1)` into `D(d1)`: `u - P u ∈ (ker d0*)ᗮ =
+closure (range d0) ⊆ ker d1`. -/
+theorem starProjection_ker_adj0_mem_domain (H : HilbertComplex2 W0 W1 W2) {u : W1}
+    (hu : u ∈ H.d1.domain) : (H.d0†.ker).starProjection u ∈ H.d1.domain := by
+  have h1 := (H.d0†.ker).sub_starProjection_mem_orthogonal u
+  obtain ⟨y, hy, -⟩ := mem_ker_iff.1 (ker_adj0_orth_le H h1)
+  have e : (H.d0†.ker).starProjection u = u - (u - (H.d0†.ker).starProjection u) := by abel
+  rw [e]
+  exact H.d1.domain.sub_mem hu (hy ▸ y.2)
+
+/-- **The thesis' literal density hypothesis holds in every Hilbert complex**: `V1 ∩ ker d0*` is
+dense in `ker d0*`. For the thesis' complex this is "`H̊(curl, M) ∩ H(div, M, 0)` is dense in
+`H(div, M, 0)`" (`thesisComplex_dense_literal`). Proof: `P_{ker d0*}` maps `D(d1)` into
+`D(d1) ∩ ker d0*` (`starProjection_ker_adj0_mem_domain`), is continuous, and `D(d1)` is dense.
+
+Thesis gap: [QuennevilleBelair2015, §4.10, proof of Prop 4.17] infers from this that
+"`H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`"; the inference is invalid and its conclusion
+false on bounded domains (`not_dense_TSD_inter_HcurlZero`). -/
+theorem dense_domain_d1_inter_ker_adj0 (H : HilbertComplex2 W0 W1 W2) :
+    ∀ k ∈ H.d0†.ker, k ∈ closure ((H.d1.domain : Set W1) ∩ H.d0†.ker) := by
+  intro k hk
+  have := map_mem_closure (H.d0†.ker).starProjection.continuous (H.dense1 k)
+    (t := (H.d1.domain : Set W1) ∩ H.d0†.ker) fun u hu =>
+      ⟨starProjection_ker_adj0_mem_domain H hu, (H.d0†.ker).starProjection_apply_mem u⟩
+  rwa [(H.d0†.ker).starProjection_eq_self_iff.2 hk] at this
+
+end Gen
+
+
 /-! ## Consequences for Prop 4.17 on bounded domains -/
 
 section Complex
@@ -1119,7 +1524,8 @@ theorem smoothField_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   exact ⟨hmem, adjoint_apply_eq H.dense1 ⟨_, hmem⟩ key⟩
 
 variable {W0 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0] in
-/-- **Prop 4.17 is false on every nonempty bounded open `Ω ⊆ ℝ³`.** Let
+/-- **The conclusion of Prop 4.17 fails on every nonempty bounded open `Ω ⊆ ℝ³`** (for every
+strong solution; see `exists_orbit_not_propagate` for one that exists given a Stone group). Let
 `H : W0 → L²(Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` be any Hilbert complex whose `d1` is (a restriction of)
 the closure of curl on `C_c^∞` (the thesis' `curl` on `H̊(curl, M)`). Take the TSD datum
 `(σ₀, E₀, B₀) = (0, 0, β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, which lies in `D(L) ∩ K`,
@@ -1131,7 +1537,11 @@ Proof: on `K ∩ D(L)`, `E ∈ H̊(curl) ∩ L²(TSD)`, so `ℓ(E) = ⟪E, diag(
 `[0, T]`, so `ℓ(Ė(0)) = 0`; but `Ė(0) = -curl β = diag(1, -1, 0)` (`smoothField_mem_adjoint`,
 `curlM_betaField`), and `ℓ(diag(1, -1, 0)) = 2 |Ω| > 0`.
 
-Correction: refutes [QuennevilleBelair2015, §4.10, Prop 4.17] on bounded domains. -/
+As a statement about all strong solutions this is vacuous if none exists; Stone's theorem is not
+in Mathlib, and `exists_orbit_not_propagate` supplies the solution from the group stand-in.
+
+Correction: refutes the conclusion (TSD propagation) of [QuennevilleBelair2015, §4.10,
+Prop 4.17] on bounded domains. -/
 theorem exists_data_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (H : HilbertComplex2 W0 (L2M Ω) (L2M Ω))
     (hd1 : ∀ u : H.d1.domain, ((u : L2M Ω), H.d1 u) ∈ closure (curlGraph Ω)) :
@@ -1185,6 +1595,29 @@ theorem exists_data_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω
   simp [Fintype.sum_prod_type, Fin.sum_univ_three, diagA] at heq
   linarith
 
+variable {W0 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0] in
+/-- **Prop 4.17 fails for the Stone group, if one exists** (non-vacuous form of
+`exists_data_not_propagate`). If `-L` generates an orthogonal group `G` (the Stone stand-in
+`Feec.UnitaryGroupGenerator`, as in `Feec.Constraints.prop_4_17_necessary`), the orbit
+`t ↦ G.S t (0, 0, β)` **is** a strong solution of (4.14) on every `[0, T]`
+(`Feec.Constraints.isStrongSolution_orbit`), and it leaves `K = {0} × L²(TSD) × L²(TSD)`.
+
+Correction: refutes the conclusion of [QuennevilleBelair2015, §4.10, Prop 4.17] on bounded
+domains, conditionally only on Stone's theorem (Thm 4.3), which the thesis invokes. -/
+theorem exists_orbit_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) (H : HilbertComplex2 W0 (L2M Ω) (L2M Ω))
+    (hd1 : ∀ u : H.d1.domain, ((u : L2M Ω), H.d1 u) ∈ closure (curlGraph Ω))
+    (G : UnitaryGroupGenerator (-H.waveOp)) :
+    ∃ B₀ : L2M Ω, B₀ ∈ TSD Ω ∧ ini W0 0 B₀ ∈ H.domL ∧
+      ini W0 0 B₀ ∈ Kc W0 (TSD Ω) (TSD Ω) ∧
+      ∀ T > 0, IsStrongSolution (-H.waveOp) T (ini W0 0 B₀) 0 (fun t => G.S t (ini W0 0 B₀)) ∧
+        ∃ t ∈ Icc 0 T, G.S t (ini W0 0 B₀) ∉ Kc W0 (TSD Ω) (TSD Ω) := by
+  obtain ⟨B₀, hB, hD, hK, hall⟩ := exists_data_not_propagate hΩ hb hne H hd1
+  refine ⟨B₀, hB, hD, hK, fun T hT => ?_⟩
+  have hU := isStrongSolution_orbit G T ⟨_, hD⟩
+  exact ⟨hU, hall T hT _ hU⟩
+
+
 /-! ### A concrete complex satisfying the hypotheses -/
 
 /-- The zero-dimensional space, used as `W0` in `curlComplex`. -/
@@ -1193,8 +1626,8 @@ abbrev W0triv := EuclideanSpace ℝ (Fin 0)
 /-- The Hilbert complex `0 → L²(Ω; ℝ³ˣ³) --curl--> L²(Ω; ℝ³ˣ³)`, with `d1 = curlClosure` (the
 thesis' `curl` on `H̊(curl, M)`). It shows that the hypotheses of `not_projection_hyp`,
 `not_dense_domL_inter_Kc` and `exists_data_not_propagate`, which only concern `d1` (and
-`C_c^∞ ⊆ V1*`), are satisfiable; they hold equally for the thesis' complex
-`H̊¹(V) → H̊(curl, M) → L²(M)`, which is not constructed here. -/
+`C_c^∞ ⊆ V1*`), are satisfiable with a trivial `d0`; the thesis' complex
+`H̊¹(V) → H̊(curl, M) → L²(M)` is `thesisComplex`. -/
 def curlComplex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
     HilbertComplex2 W0triv (L2M Ω) (L2M Ω) where
   d0 := (0 : W0triv →ₗ[ℝ] L2M Ω).toPMap ⊤
@@ -1242,8 +1675,9 @@ theorem curlComplex_not_projection_hyp (hΩ : IsOpen Ω) (hb : Bornology.IsBound
       ⟨mem_domain_curlClosure.2 (testField_mem_HcurlZero hΩ hb hΦ),
         curlComplex_adjoint_d0_domain hΩ hb _⟩
 
-/-- **Prop 4.17 fails for `curlComplex`**: explicit TSD data in `D(L)` for which every strong
-solution of (4.14), on any `[0, T]`, `T > 0`, leaves `K = {0} × L²(TSD) × L²(TSD)`. -/
+/-- **TSD propagation (the conclusion of Prop 4.17) fails for `curlComplex`**: explicit TSD
+data in `D(L)` for which every strong solution of (4.14), on any `[0, T]`, `T > 0`, leaves
+`K = {0} × L²(TSD) × L²(TSD)`. -/
 theorem curlComplex_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     ∃ B₀ : L2M Ω, B₀ ∈ TSD Ω ∧ ini W0triv 0 B₀ ∈ (curlComplex hΩ hb).domL ∧
@@ -1254,5 +1688,96 @@ theorem curlComplex_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω
   exists_data_not_propagate hΩ hb hne _ (mem_closure_curlClosure hΩ hb)
 
 end Complex
+
+/-! ### The thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)` -/
+
+section Thesis
+
+open Feec.HilbertComplex2 Feec.Constraints
+open scoped LinearPMap
+
+/-- The thesis' complex `H̊¹(Ω; ℝ³) --grad--> H̊(curl, Ω; ℝ³ˣ³) --curl--> L²(Ω; ℝ³ˣ³)`. -/
+def thesisComplex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    HilbertComplex2 (L2V Ω) (L2M Ω) (L2M Ω) where
+  d0 := gradClosure
+  d1 := curlClosure
+  dense0 := dense_domain_gradClosure hΩ hb
+  dense1 := dense_domain_curlClosure hΩ hb
+  closed0 := isClosed_gradClosure hΩ hb
+  closed1 := isClosed_curlClosure hΩ hb
+  map_mem := fun u => mem_domain_curlClosure.2 ⟨0, gradClosure_mem_closure_curlGraph hΩ hb u⟩
+  comp_zero := fun u => apply_eq_of_mem_graph
+    (by rw [curlClosure_graph hΩ hb]; exact gradClosure_mem_closure_curlGraph hΩ hb u) _
+
+/-- `C_c^∞(Ω; ℝ³ˣ³) ⊆ V1 ∩ V1* = H̊(curl) ∩ H(div)` for `thesisComplex`. -/
+theorem thesisComplex_test_mem_midDomain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (Φ : Ix → R3 → ℝ) (hΦ : ∀ ij, IsTest Ω (Φ ij)) :
+    testField hΦ ∈ (thesisComplex hΩ hb).midDomain :=
+  Submodule.mem_inf.2 ⟨mem_domain_curlClosure.2 (testField_mem_HcurlZero hΩ hb hΦ),
+    (mem_adjoint_gradClosure_iff hΩ hb).2 (testField_mem_HdivM hΩ hb hΦ)⟩
+
+/-- `L²(TSD) ⊆ ker d0* = H(div, 0)` for `thesisComplex`: the hypothesis `hS1` of
+`Feec.Constraints.prop_4_17` holds, so on bounded domains it is exactly `hPD` that fails. -/
+theorem thesisComplex_TSD_le_ker (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    TSD Ω ≤ (thesisComplex hΩ hb).d0†.ker := fun _ hB =>
+  (mem_ker_adjoint_gradClosure_iff hΩ hb).2 hB.2.2
+
+/-- **The thesis' density conjecture, as literally stated, is true**: `H̊(curl, M) ∩ H(div, M, 0)`
+is dense in `H(div, M, 0)` (weakly divergence-free fields) on every bounded open `Ω`. (Then so is
+the larger `H(curl, M) ∩ H(div, M, 0)`.)
+
+Thesis gap: what fails is the deduction "so that `H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`"
+in [QuennevilleBelair2015, §4.10, proof of Prop 4.17]; see `not_dense_TSD_inter_HcurlZero`. -/
+theorem thesisComplex_dense_literal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    ∀ k ∈ HdivZero Ω, k ∈ closure (HcurlZero Ω ∩ HdivZero Ω) := by
+  intro k hk
+  have := dense_domain_d1_inter_ker_adj0 (thesisComplex hΩ hb) k
+    ((mem_ker_adjoint_gradClosure_iff hΩ hb).2 hk)
+  refine closure_mono ?_ this
+  rintro u ⟨hu1, hu2⟩
+  exact ⟨mem_domain_curlClosure.1 hu1, (mem_ker_adjoint_gradClosure_iff hΩ hb).1 hu2⟩
+
+/-- **The projection hypothesis of Prop 4.17 fails for the thesis' complex**
+`H̊¹ → H̊(curl) → L²` on every nonempty bounded open `Ω`, for `S1 = L²(TSD)` and any `S2`.
+So Prop 4.17, as stated, has a false hypothesis on bounded domains.
+
+Correction: refutes the first conjecture of [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem thesisComplex_not_projection_hyp (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) (S2 : Submodule ℝ (L2M Ω)) [S2.HasOrthogonalProjection] :
+    ¬ ∀ x ∈ (thesisComplex hΩ hb).domL,
+      projKc (L2V Ω) (TSD Ω) S2 x ∈ (thesisComplex hΩ hb).domL :=
+  not_projection_hyp hΩ hb hne _ S2 (fun _ hu => mem_domain_curlClosure.1 hu)
+    (thesisComplex_test_mem_midDomain hΩ hb)
+
+/-- **The conclusion of Prop 4.17 fails for the thesis' complex**: explicit TSD data
+`(0, 0, β) ∈ D(L) ∩ K` such that every strong solution of (4.14) on any `[0, T]`, `T > 0`, leaves
+`K = {0} × L²(TSD) × L²(TSD)`. (Existence of a solution: `thesisComplex_orbit_not_propagate`.)
+
+Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem thesisComplex_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    ∃ B₀ : L2M Ω, B₀ ∈ TSD Ω ∧ ini (L2V Ω) 0 B₀ ∈ (thesisComplex hΩ hb).domL ∧
+      ini (L2V Ω) 0 B₀ ∈ Kc (L2V Ω) (TSD Ω) (TSD Ω) ∧
+      ∀ T > 0, ∀ U : ℝ → Tot (L2V Ω) (L2M Ω) (L2M Ω),
+        IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T (ini (L2V Ω) 0 B₀) 0 U →
+          ∃ t ∈ Icc 0 T, U t ∉ Kc (L2V Ω) (TSD Ω) (TSD Ω) :=
+  exists_data_not_propagate hΩ hb hne _ (mem_closure_curlClosure hΩ hb)
+
+/-- **The conclusion of Prop 4.17 fails for the thesis' complex, given a Stone group**: if `-L`
+generates an orthogonal group `G` (Thm 4.3 via Stone's theorem; `Feec.UnitaryGroupGenerator`),
+the orbit of the TSD datum `(0, 0, β)` is a strong solution of (4.14) that leaves `K` on every
+`[0, T]`, `T > 0`.
+
+Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem thesisComplex_orbit_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) (G : UnitaryGroupGenerator (-(thesisComplex hΩ hb).waveOp)) :
+    ∃ B₀ : L2M Ω, B₀ ∈ TSD Ω ∧ ini (L2V Ω) 0 B₀ ∈ (thesisComplex hΩ hb).domL ∧
+      ini (L2V Ω) 0 B₀ ∈ Kc (L2V Ω) (TSD Ω) (TSD Ω) ∧
+      ∀ T > 0, IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T (ini (L2V Ω) 0 B₀) 0
+          (fun t => G.S t (ini (L2V Ω) 0 B₀)) ∧
+        ∃ t ∈ Icc 0 T, G.S t (ini (L2V Ω) 0 B₀) ∉ Kc (L2V Ω) (TSD Ω) (TSD Ω) :=
+  exists_orbit_not_propagate hΩ hb hne _ (mem_closure_curlClosure hΩ hb) G
+
+end Thesis
 
 end Feec.BoundedDomain

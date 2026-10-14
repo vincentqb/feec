@@ -22,8 +22,8 @@ polynomials.
   `C^∞`. `partialT c φ x = d/dt φ(x + t e_c)|_{t=0}`; on smooth `φ` it is the classical partial
   derivative of the lift (`partialT_proj`).
 * `HasWeakPartial j f g` (`g = ∂_j f` weakly) means `∫ f ∂_j φ = -∫ g φ` for every smooth `φ`.
-  This is the analogue on `𝕋³` of the definition in [Brezis2011, §9.1]. It uses the bilinear pairing (no complex
-  conjugation), as for distributions.
+  This is the analogue on `𝕋³` of the definition in [Brezis2011, §9.1]. It uses the bilinear
+  pairing (no complex conjugation), as for distributions.
 * More generally, `IsWeakFO α f g` (`g = Σ_{c,p} α_{cp} ∂_c f_p` weakly). Special cases are the
   weak gradient `IsWeakGrad` (`G_{ab} = ∂_b u_a`), the weak row-wise curl `IsWeakCurl`
   (`(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`, the convention of `Feec.curl`) and the weak row-wise
@@ -37,15 +37,21 @@ not affect the definition of weak derivatives.
 
 * Integration by parts on `𝕋³`: `integral_partialT_eq_zero` (`∫ ∂_c φ = 0`, by differentiating
   translation invariance of Haar measure under the integral sign) and hence
-  `mFourierCoeff_partialT`: `(∂_c φ)^(k) = 2πi k_c φ̂(k)` for `C¹` functions. Also
+  `mFourierCoeff_partialT`: `(∂_c φ)^(k) = 2πi k_c φ̂(k)` for `C¹` functions, and
+  `integral_mul_partialT`: `∫ ψ ∂_c φ = -∫ (∂_c ψ) φ`. Also
   `isSmooth_mFourier` (characters are test functions), `partialT_mFourier`, and the Parseval
   pairing `hasSum_pairing`: `∫ f ψ = Σ_k ψ̂(-k) f̂(k)`.
 * `isWeakFO_iff`: `g = Σ α_{cp} ∂_c f_p` weakly iff `ĝ(k) = Σ α_{cp} 2πi k_c f̂_p(k)` for all `k`.
 * Scalar case: `hasWeakPartial_iff` (`(∂_j f)^(k) = 2πi k_j f̂(k)`), `HasWeakPartial.unique`, and
   **`exists_hasWeakPartial_iff`**: `f` has a weak `∂_j f ∈ L²` iff
-  `Σ_k |2πk_j|² |f̂(k)|² < ∞`.
+  `Σ_k |2πk_j|² |f̂(k)|² < ∞`. Scalar `H¹`: `summable_norm_freq_iff`
+  (`Σ_k |ξ_k|² |f̂(k)|² < ∞` iff all three weak partials exist in `L²`). Consistency with the
+  classical derivative: `hasWeakPartial_toL2` (for `C¹` `φ`, `∂_j φ` is its weak derivative).
 * Fields: `isWeakGrad_iff`, `isWeakCurl_iff`, `isWeakDiv_iff` give the Fourier coefficients of
-  the weak operators as the symbols `gradSym`, `curlSym`, `divSym` of `Feec.Ch4.Torus`.
+  the weak operators as the symbols `gradSym`, `curlSym`, `divSym` of `Feec.Ch4.Torus`;
+  `IsWeakGrad.unique`, `IsWeakCurl.unique`, `IsWeakDiv.unique`. Real-valuedness:
+  `isReal_matrixFourier_iff` (`Ā = A` iff `Feec.Torus.IsReal`, via `mFourierCoeff_star`) and
+  `IsWeakCurl.star_eq_self` (the weak curl of a real field is real).
 * The Sobolev spaces of `Feec.Ch4.Torus` (through `vectorFourier`/`matrixFourier`):
   - `vectorFourier_mem_gradT_domain_iff`, `exists_isWeakGrad_iff`: `H¹(𝕋³; ℂ³) = D(gradT)` is
     the set of fields with a weak gradient in `L²`.
@@ -203,6 +209,21 @@ theorem partialT_mul {φ ψ : T3 → ℂ} (hφ : Differentiable ℝ (φ ∘ proj
   simp only [Pi.single_zero, proj_zero, add_zero] at this
   unfold partialT at this ⊢
   exact this
+
+/-- **Integration by parts on `𝕋³`**: `∫ ψ ∂_c φ = -∫ (∂_c ψ) φ` for `C¹` functions (no boundary
+terms on the torus). -/
+theorem integral_mul_partialT {φ ψ : T3 → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj))
+    (hψ : ContDiff ℝ 1 (ψ ∘ proj)) (c : Fin 3) :
+    ∫ x, ψ x * partialT c φ x = -∫ x, partialT c ψ x * φ x := by
+  have hψφ : ContDiff ℝ 1 ((fun x => ψ x * φ x) ∘ proj) := hψ.mul hφ
+  have h0 := integral_partialT_eq_zero hψφ c
+  simp_rw [partialT_mul (hψ.differentiable one_ne_zero) (hφ.differentiable one_ne_zero)] at h0
+  have hcψ := continuous_of_comp_proj hψ.continuous
+  have hcφ := continuous_of_comp_proj hφ.continuous
+  rw [integral_add (f := fun x => partialT c ψ x * φ x) (g := fun x => ψ x * partialT c φ x)
+    (integrable_of_continuous ((continuous_partialT hψ c).mul hcφ))
+    (integrable_of_continuous (hcψ.mul (continuous_partialT hφ c)))] at h0
+  linear_combination h0
 
 /-- The characters in coordinates: `e_n(proj y) = exp(2πi n·y)`. -/
 theorem mFourier_proj (n : Fin 3 → ℤ) (y : Fin 3 → ℝ) :
@@ -438,6 +459,50 @@ theorem exists_hasWeakPartial_iff (j : Fin 3) (f : L2T) :
     refine ⟨ofCoeff ⟨_, hm⟩, (hasWeakPartial_iff j f _).2 fun k => ?_⟩
     rw [mFourierCoeff_ofCoeff]
 
+/-- The `L²` class of a continuous function on `𝕋³`. -/
+def toL2 {φ : T3 → ℂ} (hφ : Continuous φ) : L2T := (⟨φ, hφ⟩ : C(T3, ℂ)).toLp 2 volume ℂ
+
+/-- `toL2` does not change Fourier coefficients. -/
+theorem mFourierCoeff_toL2 {φ : T3 → ℂ} (hφ : Continuous φ) (k : Fin 3 → ℤ) :
+    mFourierCoeff (toL2 hφ : T3 → ℂ) k = mFourierCoeff φ k :=
+  mFourierCoeff_toLp (⟨φ, hφ⟩ : C(T3, ℂ)) k
+
+/-- `toL2 hφ` is `φ` almost everywhere. -/
+theorem toL2_ae_eq {φ : T3 → ℂ} (hφ : Continuous φ) : (toL2 hφ : T3 → ℂ) =ᵐ[volume] φ :=
+  ContinuousMap.coeFn_toLp (p := 2) (𝕜 := ℂ) (μ := volume) (⟨φ, hφ⟩ : C(T3, ℂ))
+
+/-- **The weak derivative extends the classical one**: for a `C¹` function `φ` on `𝕋³`, the
+classical partial derivative `∂_j φ` is the weak partial derivative of `φ` in `L²`. -/
+theorem hasWeakPartial_toL2 {φ : T3 → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj)) (j : Fin 3) :
+    HasWeakPartial j (toL2 (continuous_of_comp_proj hφ.continuous))
+      (toL2 (continuous_partialT hφ j)) :=
+  (hasWeakPartial_iff j _ _).2 fun k => by
+    rw [mFourierCoeff_toL2, mFourierCoeff_toL2, mFourierCoeff_partialT hφ]
+
+/-- Fourier coefficients of the complex conjugate: `(f̄)^(k) = conj f̂(-k)`. -/
+theorem mFourierCoeff_star (f : L2T) (k : Fin 3 → ℤ) :
+    mFourierCoeff ((star f : L2T) : T3 → ℂ) k =
+      (starRingEnd ℂ) (mFourierCoeff (f : T3 → ℂ) (-k)) := by
+  rw [mFourierCoeff, mFourierCoeff, ← integral_conj]
+  refine integral_congr_ae ?_
+  filter_upwards [Lp.coeFn_star f] with x hx
+  rw [hx]
+  simp [mFourier_neg, smul_eq_mul]
+
+/-- An `L²` function is real-valued (`f̄ = f`) iff `f̂(-k) = conj f̂(k)` for all `k`. -/
+theorem star_eq_self_iff (f : L2T) :
+    star f = f ↔ ∀ k, mFourierCoeff (f : T3 → ℂ) (-k) =
+      (starRingEnd ℂ) (mFourierCoeff (f : T3 → ℂ) k) := by
+  constructor
+  · intro h k
+    have := mFourierCoeff_star f (-k)
+    rwa [h, neg_neg] at this
+  · intro h
+    refine eq_of_mFourierCoeff_eq fun k => ?_
+    have := h (-k)
+    rw [neg_neg] at this
+    rw [mFourierCoeff_star, this]
+
 end Scalar
 
 section Fields
@@ -535,6 +600,37 @@ theorem isWeakDiv_iff (A : MField) (D : VField) :
   · intro h a k
     rw [← hs, ← h k, vectorFourier_apply']
 
+/-- Weak gradients are unique. -/
+theorem IsWeakGrad.unique {u : VField} {G₁ G₂ : MField} (h₁ : IsWeakGrad u G₁)
+    (h₂ : IsWeakGrad u G₂) : G₁ = G₂ :=
+  matrixFourier.injective <| lp.ext <| funext fun k => by
+    rw [(isWeakGrad_iff u G₁).1 h₁ k, (isWeakGrad_iff u G₂).1 h₂ k]
+
+/-- Weak curls are unique. -/
+theorem IsWeakCurl.unique {A C₁ C₂ : MField} (h₁ : IsWeakCurl A C₁) (h₂ : IsWeakCurl A C₂) :
+    C₁ = C₂ :=
+  matrixFourier.injective <| lp.ext <| funext fun k => by
+    rw [(isWeakCurl_iff A C₁).1 h₁ k, (isWeakCurl_iff A C₂).1 h₂ k]
+
+/-- Weak divergences are unique. -/
+theorem IsWeakDiv.unique {A : MField} {D₁ D₂ : VField} (h₁ : IsWeakDiv A D₁)
+    (h₂ : IsWeakDiv A D₂) : D₁ = D₂ :=
+  vectorFourier.injective <| lp.ext <| funext fun k => by
+    rw [(isWeakDiv_iff A D₁).1 h₁ k, (isWeakDiv_iff A D₂).1 h₂ k]
+
+/-- **Real-valued fields**: `A` is real-valued (`Ā_p = A_p` for every entry) iff its Fourier
+coefficients satisfy `Feec.Torus.IsReal` (`Â(-k) = conj Â(k)`). -/
+theorem isReal_matrixFourier_iff (A : MField) :
+    IsReal (matrixFourier A) ↔ ∀ p, star (A p) = A p := by
+  simp only [star_eq_self_iff]
+  constructor
+  · rintro h ⟨a, b⟩ k
+    have := congrArg (fun M : Mat3 => M (a, b)) (h k)
+    simpa only [matrixFourier_apply, conjM_apply] using this
+  · intro h k
+    ext ⟨a, b⟩
+    rw [conjM_apply, matrixFourier_apply, matrixFourier_apply, h (a, b) k]
+
 end Fields
 
 section Sobolev
@@ -575,8 +671,9 @@ theorem exists_isWeakGrad_iff (u : VField) :
     exact ⟨WithLp.toLp 2 fun p => g p.1 p.2, fun a b => hg a b⟩
 
 /-- **The Fourier multiplier `gradT` is the weak gradient.** -/
-theorem gradT_vectorFourier {u : VField} {G : MField} (h : IsWeakGrad u G)
-    (hu : vectorFourier u ∈ gradT.domain) : gradT ⟨vectorFourier u, hu⟩ = matrixFourier G :=
+theorem gradT_vectorFourier {u : VField} {G : MField} (h : IsWeakGrad u G) :
+    gradT ⟨vectorFourier u, (vectorFourier_mem_gradT_domain_iff u).2 ⟨G, h⟩⟩ =
+      matrixFourier G :=
   lp.ext <| funext fun k => ((isWeakGrad_iff u G).1 h k).symm
 
 /-- **`H(curl; 𝕋³)` is the weak-curl space**: `Hcurl` (Fourier weights) consists exactly of the
@@ -594,9 +691,17 @@ theorem matrixFourier_mem_Hcurl_iff (A : MField) :
     exact lp.memℓp _
 
 /-- **The Fourier multiplier `curlT` is the weak curl.** -/
-theorem curlT_matrixFourier {A C : MField} (h : IsWeakCurl A C)
-    (hA : matrixFourier A ∈ curlT.domain) : curlT ⟨matrixFourier A, hA⟩ = matrixFourier C :=
+theorem curlT_matrixFourier {A C : MField} (h : IsWeakCurl A C) :
+    curlT ⟨matrixFourier A, (matrixFourier_mem_Hcurl_iff A).2 ⟨C, h⟩⟩ = matrixFourier C :=
   lp.ext <| funext fun k => ((isWeakCurl_iff A C).1 h k).symm
+
+/-- **The weak curl preserves real-valuedness** (the physical-side form of
+`Feec.Torus.isReal_curlT`). -/
+theorem IsWeakCurl.star_eq_self {A C : MField} (h : IsWeakCurl A C)
+    (hA : ∀ p, star (A p) = A p) : ∀ p, star (C p) = C p := by
+  rw [← isReal_matrixFourier_iff] at hA ⊢
+  rw [← curlT_matrixFourier h]
+  exact isReal_curlT ⟨_, _⟩ hA
 
 /-- **`H(div; 𝕋³)` is the weak-divergence space.** -/
 theorem matrixFourier_mem_Hdiv_iff (A : MField) :
@@ -612,14 +717,15 @@ theorem matrixFourier_mem_Hdiv_iff (A : MField) :
     exact lp.memℓp _
 
 /-- **The Fourier multiplier `divT` is the weak divergence.** -/
-theorem divT_matrixFourier {A : MField} {D : VField} (h : IsWeakDiv A D)
-    (hA : matrixFourier A ∈ divT.domain) : divT ⟨matrixFourier A, hA⟩ = vectorFourier D :=
+theorem divT_matrixFourier {A : MField} {D : VField} (h : IsWeakDiv A D) :
+    divT ⟨matrixFourier A, (matrixFourier_mem_Hdiv_iff A).2 ⟨D, h⟩⟩ = vectorFourier D :=
   lp.ext <| funext fun k => ((isWeakDiv_iff A D).1 h k).symm
 
 /-- The Hilbert adjoint of the periodic gradient is minus the weak divergence:
 `grad* A = -div A` for `A ∈ D(grad*) = H(div)`. -/
-theorem adjoint_gradT_matrixFourier {A : MField} {D : VField} (h : IsWeakDiv A D)
-    (hA : matrixFourier A ∈ gradT†.domain) : gradT† ⟨matrixFourier A, hA⟩ = -vectorFourier D := by
+theorem adjoint_gradT_matrixFourier {A : MField} {D : VField} (h : IsWeakDiv A D) :
+    gradT† ⟨matrixFourier A, adjoint_gradT_domain ▸ (matrixFourier_mem_Hdiv_iff A).2 ⟨D, h⟩⟩ =
+      -vectorFourier D := by
   have key : ∀ (T : L2M →ₗ.[ℝ] L2V), T = (mulOp fun k => -divSym (freq k)) →
       ∀ hx : matrixFourier A ∈ T.domain, T ⟨matrixFourier A, hx⟩ = -vectorFourier D := by
     rintro T rfl hx
@@ -627,7 +733,7 @@ theorem adjoint_gradT_matrixFourier {A : MField} {D : VField} (h : IsWeakDiv A D
     rw [mulOp_apply]
     simp only [_root_.neg_apply, lp.coeFn_neg, Pi.neg_apply]
     rw [(isWeakDiv_iff A D).1 h k]
-  exact key _ adjoint_gradT hA
+  exact key _ adjoint_gradT _
 
 /-- A finite double sum of nonnegative sequences is summable iff each one is. -/
 theorem summable_sum_sum_iff {P Q : Type*} [Fintype P] [Fintype Q] {F : Z3 → P → Q → ℝ}
@@ -661,6 +767,17 @@ theorem matrixFourier_mem_H1M_iff (A : MField) :
   rw [show (fun k => ‖(‖freq k‖ • ContinuousLinearMap.id ℝ Mat3) ((matrixFourier A : L2M) k)‖ ^
       (2 : ℝ≥0∞).toReal) = _ from funext e]
   exact summable_sum_sum_iff fun _ _ _ => by positivity
+
+/-- **Scalar `H¹(𝕋³; ℂ)` is the weak-`H¹` space**: `Σ_k |ξ_k|² |f̂(k)|² < ∞` (`ξ_k = 2πk`) iff
+`f` has all three weak partial derivatives in `L²`. -/
+theorem summable_norm_freq_iff (f : L2T) :
+    (Summable fun k : Z3 => ‖freq k‖ ^ 2 * ‖mFourierCoeff (f : T3 → ℂ) k‖ ^ 2) ↔
+      ∀ j, ∃ g, HasWeakPartial j f g := by
+  simp_rw [exists_hasWeakPartial_iff, norm_sq_freq, Finset.sum_mul, freq_apply]
+  have := summable_sum_sum_iff (P := Fin 3) (Q := Unit)
+    (F := fun k c (_ : Unit) => (2 * Real.pi * k c) ^ 2 * ‖mFourierCoeff (f : T3 → ℂ) k‖ ^ 2)
+    fun _ _ _ => by positivity
+  simpa using this
 
 end Sobolev
 

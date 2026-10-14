@@ -37,6 +37,19 @@ Complements `Feec.Ch4.Adjoint` (which proves the `W`-level Hodge decomposition, 
   `map_H_zero_eq_harmonic`, `closed_and_fredholm_V`.
 
 Density of `V ∩ V*` (also in the thesis' definition) is never needed and is not assumed.
+
+## References
+
+* [QuennevilleBelair2015], §4.2 (Hilbert complexes, domain complex, harmonic forms, the
+  compactness property and the claims "compactness ⇒ Fredholm ⇒ closed", Thm 4.1, Thm 4.2);
+  the thesis follows [BruningLesch1992] and [AFW2010] there. §4.4 (Thms 4.6–4.7) is the
+  length-2 setting `W0 → W1 → W2` of `HilbertComplex2`.
+* [BruningLesch1992] (Hilbert complexes; Fredholm = finite-dimensional cohomology, which
+  implies closed range).
+* [AFW2010], §3 (abstract Hilbert complexes: domain complex, closed and Fredholm complexes,
+  Hodge decomposition, Poincaré inequality, compactness property).
+* [Arnold2018] (book treatment of Hilbert complexes and the compactness property in finite
+  element exterior calculus).
 -/
 
 open scoped RealInnerProductSpace Topology
@@ -146,19 +159,22 @@ variable {W0 W1 W2 : Type*}
 
 Correction: the thesis says "`Vᵏ ∩ Vₖ*` is a dense and compact subspace of `Wᵏ`"; a compact
 subspace is `{0}`, so the intended meaning is a compact inclusion. Density is not needed for
-any conclusion below and is omitted. -/
+any conclusion below and is omitted.
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3] (compactness property, stated there as a
+compact inclusion `Vᵏ ∩ Vₖ* ⊆ Wᵏ`), [Arnold2018]. -/
 def HasCompactEmbedding : Prop :=
   ∃ K : Set W1, IsCompact K ∧ ∀ (u : W1) (h1 : u ∈ H.d1.domain) (h0 : u ∈ H.d0†.domain),
     ‖u‖ ^ 2 + ‖H.d1 ⟨u, h1⟩‖ ^ 2 + ‖H.d0† ⟨u, h0⟩‖ ^ 2 ≤ 1 → u ∈ K
 
 /-- Compactness property at the first space: `V⁰ ∩ V₀* = V⁰ = D(d0)` (since `d_{-1} = 0`, so
-`V₀* = W0`) embeds compactly in `W0`. -/
+`V₀* = W0`) embeds compactly in `W0`. See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 def HasCompactEmbedding0 : Prop :=
   ∃ K : Set W0, IsCompact K ∧ ∀ (u : W0) (h : u ∈ H.d0.domain),
     ‖u‖ ^ 2 + ‖H.d0 ⟨u, h⟩‖ ^ 2 ≤ 1 → u ∈ K
 
 /-- Compactness property at the last space: `V² ∩ V₂* = D(d1*)` (since `d2 = 0`, so `V² = W2`)
-embeds compactly in `W2`. -/
+embeds compactly in `W2`. See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 def HasCompactEmbedding2 : Prop :=
   ∃ K : Set W2, IsCompact K ∧ ∀ (u : W2) (h : u ∈ H.d1†.domain),
     ‖u‖ ^ 2 + ‖H.d1† ⟨u, h⟩‖ ^ 2 ≤ 1 → u ∈ K
@@ -185,7 +201,9 @@ private theorem mem_two_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ
 
 Thesis gap: asserted without proof. Proof: on `D(d1) ∩ N(d1)ᗮ ⊆ N(d0*)` the `V ∩ V*`-norm is
 the graph norm of `d1`, so a failing Poincaré sequence has a convergent subsequence whose limit
-lies in `N(d1) ∩ N(d1)ᗮ = 0` but has norm `1` (`isClosed_range_of_ball_subset_compact`). -/
+lies in `N(d1) ∩ N(d1)ᗮ = 0` but has norm `1` (`isClosed_range_of_ball_subset_compact`).
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem isClosed_range_d1_of_compact (hC : H.HasCompactEmbedding) :
     IsClosed (LinearMap.range H.d1.toFun : Set W2) := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -208,7 +226,9 @@ theorem isClosed_range_d1_of_compact (hC : H.HasCompactEmbedding) :
 
 Thesis gap: asserted without proof. Proof: the same argument applied to the closed operator
 `d0*` on `D(d0*) ∩ N(d0*)ᗮ ⊆ N(d1)`, followed by the closed range theorem
-(`isClosed_range_adjoint_iff`). -/
+(`isClosed_range_adjoint_iff`).
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem isClosed_range_d0_of_compact (hC : H.HasCompactEmbedding) :
     IsClosed (LinearMap.range H.d0.toFun : Set W1) := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -230,7 +250,8 @@ theorem isClosed_range_d0_of_compact (hC : H.HasCompactEmbedding) :
   simpa using sq_half_le hx1 zero_le_one hdx1 (norm_nonneg _) le_rfl (norm_nonneg _)
 
 /-- **Thesis §4.2: the compactness property implies the complex is closed.** Compactness of
-`V¹ ∩ V₁* ↪ W¹` alone gives closed range of both `d0` and `d1`. -/
+`V¹ ∩ V₁* ↪ W¹` alone gives closed range of both `d0` and `d1`.
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [Arnold2018]. -/
 theorem closedRange_of_compact (hC : H.HasCompactEmbedding) : H.ClosedRange :=
   ⟨H.isClosed_range_d0_of_compact hC, H.isClosed_range_d1_of_compact hC⟩
 
@@ -242,7 +263,9 @@ theorem isClosed_harmonic : IsClosed (H.harmonic : Set W1) :=
 
 Thesis gap: asserted without proof. Proof: on `ℌ¹ ⊆ V¹ ∩ V₁*` we have `d1 = 0`, `d0* = 0`, so
 its `W`-unit ball is in the `V ∩ V*`-unit ball, hence in a compact set; `ℌ¹` is closed, so Riesz's
-theorem applies. -/
+theorem applies.
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [Arnold2018]. -/
 theorem finiteDimensional_harmonic_of_compact (hC : H.HasCompactEmbedding) :
     FiniteDimensional ℝ H.harmonic := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -254,7 +277,8 @@ theorem finiteDimensional_harmonic_of_compact (hC : H.HasCompactEmbedding) :
   nlinarith [norm_nonneg x]
 
 /-- **Thesis §4.2, compactness at the first space ⇒ `B¹` closed.** If `V⁰ ↪ W0` is compact
-(graph norm of `d0`) then `R(d0)` is closed. (Here `N(d0)ᗮ` needs no adjoint.) -/
+(graph norm of `d0`) then `R(d0)` is closed. (Here `N(d0)ᗮ` needs no adjoint.)
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem isClosed_range_d0_of_compact0 (hC : H.HasCompactEmbedding0) :
     IsClosed (LinearMap.range H.d0.toFun : Set W1) := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -268,7 +292,8 @@ theorem isClosed_range_d0_of_compact0 (hC : H.HasCompactEmbedding0) :
   simp only [Real.norm_eq_abs, abs_of_pos (by norm_num : (0 : ℝ) < 1 / 2)] at this ⊢
   linarith
 
-/-- **Thesis §4.2, compactness at the first space ⇒ `ℌ⁰ = Z⁰ = N(d0)` finite-dimensional.** -/
+/-- **Thesis §4.2, compactness at the first space ⇒ `ℌ⁰ = Z⁰ = N(d0)` finite-dimensional.**
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem finiteDimensional_ker_d0_of_compact0 (hC : H.HasCompactEmbedding0) :
     FiniteDimensional ℝ H.d0.ker := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -279,7 +304,8 @@ theorem finiteDimensional_ker_d0_of_compact0 (hC : H.HasCompactEmbedding0) :
   nlinarith [norm_nonneg x]
 
 /-- **Thesis §4.2, compactness at the last space ⇒ `B²` closed.** If `V₂* = D(d1*) ↪ W2` is
-compact then `R(d1)` is closed (via the closed range theorem). -/
+compact then `R(d1)` is closed (via the closed range theorem).
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem isClosed_range_d1_of_compact2 (hC : H.HasCompactEmbedding2) :
     IsClosed (LinearMap.range H.d1.toFun : Set W2) := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -297,7 +323,8 @@ theorem isClosed_range_d1_of_compact2 (hC : H.HasCompactEmbedding2) :
   linarith
 
 /-- **Thesis §4.2, compactness at the last space ⇒ `ℌ² = Z*₂ = N(d1*)` finite-dimensional.**
-(`ℌ² = Z² ∩ (B²)ᗮ = (B²)ᗮ = N(d1*)` by (4.1a).) -/
+(`ℌ² = Z² ∩ (B²)ᗮ = (B²)ᗮ = N(d1*)` by (4.1a).)
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem finiteDimensional_ker_adjoint_d1_of_compact2 (hC : H.HasCompactEmbedding2) :
     FiniteDimensional ℝ H.d1†.ker := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -315,7 +342,10 @@ Hodge decomposition `W1 = B¹ ⊕ ℌ¹ ⊕ B*₁` holds without closures.
 
 Correction: the thesis' chain "compactness ⇒ Fredholm ⇒ closed" is replaced by
 "compactness ⇒ closed and Fredholm"; the middle step "Fredholm ⇒ closed" is false
-(`fredholm_not_closed_W`). Only the middle compactness is needed for closedness. -/
+(`fredholm_not_closed_W`). Only the middle compactness is needed for closedness.
+
+See [QuennevilleBelair2015, §4.2, Thm 4.1]; cf. [AFW2010, §3] (compactness property and
+Hodge decomposition), [BruningLesch1992], [Arnold2018]. -/
 theorem closed_and_fredholm_of_compact (h0 : H.HasCompactEmbedding0)
     (h1 : H.HasCompactEmbedding) (h2 : H.HasCompactEmbedding2) :
     H.ClosedRange ∧ FiniteDimensional ℝ H.d0.ker ∧ FiniteDimensional ℝ H.harmonic ∧
@@ -329,7 +359,7 @@ theorem closed_and_fredholm_of_compact (h0 : H.HasCompactEmbedding0)
     H.finiteDimensional_ker_adjoint_d1_of_compact2 h2, H.hodge_W_of_closedRange hC⟩
 
 /-- Non-vacuity: every complex with finite-dimensional `W1` has the middle compactness
-property (`K` = closed unit ball). -/
+property (`K` = closed unit ball). Cf. [QuennevilleBelair2015, §4.2]. -/
 theorem hasCompactEmbedding_of_finiteDimensional [FiniteDimensional ℝ W1] :
     H.HasCompactEmbedding := by
   refine ⟨Metric.closedBall 0 1, isCompact_closedBall 0 1, fun u _ _ hu => ?_⟩
@@ -367,7 +397,7 @@ theorem range_toPMap_top (f : W0 →ₗ[ℝ] W1) :
   rw [LinearMap.range_comp, Submodule.range_subtype, Submodule.map_top]
 
 /-- A bounded complex `W0 --A--> W1 --B--> W2` (`B A = 0`) as a Hilbert complex of
-everywhere-defined operators. -/
+everywhere-defined operators. Cf. [QuennevilleBelair2015, §4.2]; [AFW2010, §3]. -/
 def ofBounded (A : W0 →L[ℝ] W1) (B : W1 →L[ℝ] W2) (hBA : ∀ x, B (A x) = 0) :
     HilbertComplex2 W0 W1 W2 where
   d0 := (A : W0 →ₗ[ℝ] W1).toPMap ⊤
@@ -597,7 +627,10 @@ def cxK2 : HilbertComplex2 R0 L2 L2 where
 infinite-dimensional space `ℓ²`, with the unbounded operator `A⁻¹ = diag(n+1)` (compact
 resolvent, the model of `d` on a compact manifold), all three compact inclusions hold:
 `V⁰ ↪ W0` for `cxK0`, `V¹ ∩ V₁* ↪ W1` for `cxK1`, `V₂* ↪ W2` for `cxK2`. Compactness of the
-inclusion is compactness of `A` (`isCompactOperator_A`). -/
+inclusion is compactness of `A` (`isCompactOperator_A`).
+
+Cf. [QuennevilleBelair2015, §4.2]; [AFW2010, §3], [Arnold2018] (the compactness property for
+the de Rham complex on a bounded Lipschitz domain, the motivating example). -/
 theorem hasCompactEmbedding_infiniteDimensional :
     ¬ FiniteDimensional ℝ L2 ∧ cxK0.HasCompactEmbedding0 ∧ cxK1.HasCompactEmbedding ∧
       cxK2.HasCompactEmbedding2 := by
@@ -631,6 +664,9 @@ Here "Fredholm" is read literally as "the harmonic `k`-forms `Zᵏ ∩ Zᵏ*` ar
 (thesis §4.2). The thesis introduces `ℌᵏ` only under the standing assumption that `Bᵏ` is closed;
 under that precondition "Fredholm ⇒ closed" would be circular, so the only non-circular reading
 is the one refuted here.
+
+See [QuennevilleBelair2015, §4.2] for the refuted claim; cf. [BruningLesch1992] (Fredholm
+defined by finite-dimensional cohomology), [AFW2010, §3].
 
 Correction: the claim holds with Brüning–Lesch's definition of Fredholm (finite-dimensional
 algebraic cohomology `Zᵏ/Bᵏ`), which is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`
@@ -680,7 +716,10 @@ the bounded-model harmonic space `ℌ^{k+1} = 𝔅ᗮ ∩ 𝔷 ⊆ V^{k+1}` (gra
 
 Thesis gap: the thesis identifies the two descriptions in one line via (4.1); here the
 identification of `V`- and `W`-orthogonality on cycles (`HilbertComplex.mem_H_iff`) and (4.1a)
-are made explicit. -/
+are made explicit.
+
+See [QuennevilleBelair2015, §4.2] (definition of `ℌᵏ`); cf. [AFW2010, §3],
+[BruningLesch1992]. -/
 theorem map_H_eq_harmonic (k : ℕ) :
     (C.toHilbertComplex.H k).map (C.toHilbertComplex.ι (k + 1)).toLinearMap =
       (C.segment k).harmonic := by
@@ -722,7 +761,9 @@ If `V^{k+1} ∩ V*_{k+1} ↪ W^{k+1}` is compact, then `ι` restricted to `(𝔷
 compact operator.
 
 Thesis gap (filled, also missing from M5): `(𝔷^{k+1})^{⊥V} ⊆ V ∩ V*` with `d* = 0` there, so the
-`V`-norm and the `V ∩ V*`-norm agree on it. -/
+`V`-norm and the `V ∩ V*`-norm agree on it.
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem isCompactOperator_orthogonal_Z (k : ℕ) (hC : (C.segment k).HasCompactEmbedding) :
     IsCompactOperator ((C.toHilbertComplex.ι (k + 1)).comp
       (C.toHilbertComplex.Z (k + 1))ᗮ.subtypeL) := by
@@ -751,7 +792,8 @@ theorem isCompactOperator_orthogonal_Z (k : ℕ) (hC : (C.segment k).HasCompactE
   have : ‖u‖ < 1 := hw
   nlinarith [norm_nonneg u]
 
-/-- **The thesis' compactness property implies M5's compactness hypothesis on `ℌ^{k+1}`.** -/
+/-- **The thesis' compactness property implies M5's compactness hypothesis on `ℌ^{k+1}`.**
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem isCompactOperator_H (k : ℕ) (hC : (C.segment k).HasCompactEmbedding) :
     IsCompactOperator ((C.toHilbertComplex.ι (k + 1)).comp (C.toHilbertComplex.H k).subtypeL) := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -769,7 +811,8 @@ theorem isCompactOperator_H (k : ℕ) (hC : (C.segment k).HasCompactEmbedding) :
   have : ‖w‖ < 1 := hw
   nlinarith [norm_nonneg w]
 
-/-- **Compactness of `V⁰ ↪ W⁰` gives M5's hypothesis at degree 0.** -/
+/-- **Compactness of `V⁰ ↪ W⁰` gives M5's hypothesis at degree 0.**
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3]. -/
 theorem isCompactOperator_orthogonal_Z_zero (hC : (C.segment 0).HasCompactEmbedding0) :
     IsCompactOperator ((C.toHilbertComplex.ι 0).comp (C.toHilbertComplex.Z 0)ᗮ.subtypeL) := by
   obtain ⟨K, hK, hsub⟩ := hC
@@ -791,7 +834,9 @@ theorem isCompactOperator_orthogonal_Z_zero (hC : (C.segment 0).HasCompactEmbedd
 (critic item 9; the derivation dropped from M5). If `V⁰ ↪ W⁰` and every
 `V^{k+1} ∩ V*_{k+1} ↪ W^{k+1}` are compact, then the bounded model is closed at every degree,
 all harmonic spaces `ℌ^{k+1}` are finite-dimensional and so is every cohomology space; in `W`,
-every `R(d k)` is closed, and the degree-0 harmonic space `ℌ⁰ = N(d 0)` is finite-dimensional. -/
+every `R(d k)` is closed, and the degree-0 harmonic space `ℌ⁰ = N(d 0)` is finite-dimensional.
+
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992], [Arnold2018]. -/
 theorem closed_and_fredholm_of_compact (h0 : (C.segment 0).HasCompactEmbedding0)
     (h : ∀ k, (C.segment k).HasCompactEmbedding) (k : ℕ) :
     C.toHilbertComplex.IsClosedAt k ∧ FiniteDimensional ℝ (C.toHilbertComplex.H k) ∧
@@ -855,7 +900,8 @@ theorem map_cyclesEquiv (k : ℕ) :
     exact hy
 
 /-- Cohomology in the bounded model ≅ the `W`-level algebraic cohomology
-`N(d_{k+1}) / R(d_k)`. -/
+`N(d_{k+1}) / R(d_k)`. See [QuennevilleBelair2015, §4.2] (`Hᵏ = Zᵏ/Bᵏ`); cf. [BruningLesch1992],
+[AFW2010, §3]. -/
 def cohomologyEquiv (k : ℕ) :
     C.toHilbertComplex.Cohomology k ≃ₗ[ℝ]
       (C.d (k + 1)).ker ⧸ (LinearMap.range (C.d k).toFun).comap (C.d (k + 1)).ker.subtype :=
@@ -864,7 +910,9 @@ def cohomologyEquiv (k : ℕ) :
 /-- **Correction of Thesis §4.2 ("Fredholm ⇒ closed"), Brüning–Lesch form at the `W` level:**
 if the algebraic cohomology `N(d_{k+1}) / R(d_k)` is finite-dimensional, then `R(d_k)` is closed
 in `W^{k+1}`. Transported from the bounded model
-(`HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`) via `cohomologyEquiv`. -/
+(`HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`) via `cohomologyEquiv`.
+
+See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
 theorem isClosed_range_of_finiteDimensional_cohomology (k : ℕ)
     [FiniteDimensional ℝ ((C.d (k + 1)).ker ⧸
       (LinearMap.range (C.d k).toFun).comap (C.d (k + 1)).ker.subtype)] :
@@ -928,7 +976,7 @@ def extD : ∀ k, extW W0 W1 W2 k →ₗ.[ℝ] extW W0 W1 W2 (k + 1)
 
 /-- **Bridge (critic item 8).** A length-2 Hilbert complex `W0 → W1 → W2` (the setting of
 Thm 4.6/4.7) extended by zero to an ℕ-indexed `UHilbertComplex`; its segment `0` is `H` itself
-(`toU_segment_zero`). -/
+(`toU_segment_zero`). See [QuennevilleBelair2015, §4.2, §4.4]. -/
 def toU : UHilbertComplex (extW W0 W1 W2) where
   d := H.extD
   dense
@@ -958,7 +1006,8 @@ theorem toU_segment_zero : H.toU.segment 0 = H := rfl
 /-- **Bridge (critic item 8): the bounded domain complex of a `HilbertComplex2`**, `V k = D(d k)`
 with the graph inner product (via the complete graph `UHilbertComplex.domainSpace`). All
 bounded-model results (`HilbertComplex.poincare_iff`, `hodge_V`, `harmonicEquivCohomology`, …)
-apply to it. -/
+apply to it. See [QuennevilleBelair2015, §4.2] (domain complex); cf. [AFW2010, §3],
+[Arnold2018]. -/
 abbrev toHilbertComplex := H.toU.toHilbertComplex
 
 /-- Closed at degree 0 in the bounded model ⇔ `R(d0)` closed in `W1`. -/
@@ -988,7 +1037,7 @@ theorem toHilbertComplex_isClosedAt_add_two (k : ℕ) : H.toHilbertComplex.IsClo
     simp
 
 /-- `H.ClosedRange` (thesis: closed Hilbert complex) ⇔ the bounded model is closed at every
-degree. -/
+degree. See [QuennevilleBelair2015, §4.2] (closed Hilbert complex); cf. [AFW2010, §3]. -/
 theorem closedRange_iff_isClosedAt :
     H.ClosedRange ↔ ∀ k, H.toHilbertComplex.IsClosedAt k := by
   constructor
@@ -1024,7 +1073,8 @@ theorem hasCompactEmbedding_segment_add_two (k : ℕ) :
 
 /-- **Thesis §4.2, compactness ⇒ closed and Fredholm, in the bounded model of a
 `HilbertComplex2`.** Under the three compact embeddings, the bounded model is closed at every
-degree and has finite-dimensional harmonic and cohomology spaces. -/
+degree and has finite-dimensional harmonic and cohomology spaces.
+See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [Arnold2018]. -/
 theorem closed_and_fredholm_V (h0 : H.HasCompactEmbedding0) (h1 : H.HasCompactEmbedding)
     (h2 : H.HasCompactEmbedding2) (k : ℕ) :
     H.toHilbertComplex.IsClosedAt k ∧ FiniteDimensional ℝ (H.toHilbertComplex.H k) ∧
@@ -1038,7 +1088,8 @@ theorem closed_and_fredholm_V (h0 : H.HasCompactEmbedding0) (h1 : H.HasCompactEm
   exact ⟨hB, hH, hc⟩
 
 /-- **Correction of Thesis §4.2 ("Fredholm ⇒ closed"), Brüning–Lesch form for a
-`HilbertComplex2`:** if `N(d1) / R(d0)` is finite-dimensional then `R(d0)` is closed. -/
+`HilbertComplex2`:** if `N(d1) / R(d0)` is finite-dimensional then `R(d0)` is closed.
+See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992]. -/
 theorem isClosed_range_d0_of_finiteDimensional_cohomology
     [hfd : FiniteDimensional ℝ (H.d1.ker ⧸ (LinearMap.range H.d0.toFun).comap H.d1.ker.subtype)] :
     IsClosed (LinearMap.range H.d0.toFun : Set W1) :=
@@ -1054,7 +1105,9 @@ model** (critic item 10, literal form). For the bounded domain complex of `cxW`
 (`0 → ℓ² --diag(1/(n+1))--> ℓ² → ℝ⁰ → 0`), every harmonic space `ℌᵏ` of the project's
 `HilbertComplex` is finite-dimensional (indeed `ℌ¹ = 0`), but the complex is not closed at
 degree 0. The `W`-level form is `fredholm_not_closed_W`; the correct statement (finite-dimensional
-algebraic cohomology ⇒ closed) is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`. -/
+algebraic cohomology ⇒ closed) is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`.
+
+See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
 theorem fredholm_not_closed_V :
     (∀ k, FiniteDimensional ℝ (cxW.toHilbertComplex.H k)) ∧ ¬ cxW.toHilbertComplex.IsClosedAt 0 := by
   refine ⟨fun k => (cxW.toU.finiteDimensional_H_iff_harmonic k).2 ?_, ?_⟩

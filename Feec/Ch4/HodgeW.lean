@@ -1,5 +1,7 @@
-import Feec.Ch4.Adjoint
-import Feec.Ch4.Hodge
+module
+
+public import Feec.Ch4.Adjoint
+public import Feec.Ch4.Hodge
 
 /-!
 # `W`-level Hodge theory: compactness, Fredholm, and the bounded-model bridge (Thesis §4.2)
@@ -55,7 +57,7 @@ Density of `V ∩ V*` (also in the thesis' definition) is never needed and is no
 open scoped RealInnerProductSpace Topology
 open Set Filter LinearPMap
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace Feec
 

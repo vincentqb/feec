@@ -1,4 +1,10 @@
-import Feec.Foundation
+module
+
+public import Feec.Foundation.Tensor
+public import Mathlib.Analysis.Calculus.FDeriv.Symmetric
+public import Mathlib.LinearAlgebra.Dimension.Constructions
+public import Mathlib.LinearAlgebra.Matrix.Symmetric
+public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!
 # Ch 2.3–2.4: curvature tensors in components
@@ -39,6 +45,8 @@ Everything lives in `Feec.Curvature` to avoid clashes with other chapters.
 * Frauendiener (2007), thesis reference [10] (Bianchi ⇔ interchange ∧ `C_[abcd] = 0`); not
   in `docs/references.bib`
 -/
+
+@[expose] public section
 
 open Finset
 

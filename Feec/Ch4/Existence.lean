@@ -30,6 +30,15 @@ Scope: `IsStrongSolution` only asks for a pointwise derivative within `[0,T]`; t
 witnesses are shown to be `C¹` separately.
 The unbounded case (e.g. the Hodge wave operator) still needs Stone's theorem, i.e. a
 `UnitaryGroupGenerator` hypothesis.
+
+## References
+
+* [QuennevilleBelair2015], §4.1 (unbounded operators), §4.3 (Thm 4.3, Thm 4.4, Cor 4.5),
+  §4.4 (Thm 4.6, the abstract Hodge wave equation)
+* [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9 (the results the thesis cites for Thm 4.3)
+* [Pazy1983], Ch. 1 (uniformly continuous semigroups, Hille–Yosida, Stone's theorem) and
+  Ch. 4 (the inhomogeneous initial value problem, Duhamel's formula)
+* [Arnold2018] (Hilbert-complex setting of the Hodge wave operator, the unbounded case)
 -/
 
 open scoped RealInnerProductSpace
@@ -58,7 +67,8 @@ def bddOp (A : E →L[ℝ] E) : E →ₗ.[ℝ] E := (A : E →ₗ[ℝ] E).toPMap
 /-- `bddOp A` acts as `A`. -/
 @[simp] theorem bddOp_apply (A : E →L[ℝ] E) (x : (bddOp A).domain) : bddOp A x = A x := rfl
 
-/-- `bddOp A` is densely defined (Thesis §4.2 standing hypothesis `D(L)` dense). -/
+/-- `bddOp A` is densely defined (Thesis §4.2 standing hypothesis `D(L)` dense).
+See [QuennevilleBelair2015, Thm 4.3] (hypothesis `D(L)` dense). -/
 theorem dense_bddOp_domain (A : E →L[ℝ] E) : Dense ((bddOp A).domain : Set E) := by
   simp [dense_univ]
 
@@ -72,7 +82,8 @@ theorem adjoint_eq_neg_of_skew [CompleteSpace E] {A : E →L[ℝ] E}
 
 /-- A bounded operator with `⟪A x, y⟫ = -⟪x, A y⟫` is skew-adjoint as an unbounded operator:
 `(bddOp A)† = -bddOp A` (equal domains). Thesis §4.2: the bounded case of the skew-adjoint
-operators to which Thm 4.3 applies. -/
+operators to which Thm 4.3 applies.
+See [QuennevilleBelair2015, §4.1, Thm 4.3]. -/
 theorem isSkewAdjoint_bddOp [CompleteSpace E] (A : E →L[ℝ] E)
     (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) : IsSkewAdjoint (bddOp A) := by
   unfold IsSkewAdjoint bddOp
@@ -103,7 +114,8 @@ theorem exp_smul_mul_exp_neg_smul (A : E →L[ℝ] E) (t : ℝ) :
   rw [← exp_add_of_commute ((Commute.refl A).smul_left t |>.smul_right (-t)), neg_smul,
     add_neg_cancel, exp_zero]
 
-/-- Duhamel's formula `U t = exp(tA) (U₀ + ∫₀ᵗ exp(-sA) G s ds)` for a forcing `G` on `ℝ`. -/
+/-- Duhamel's formula `U t = exp(tA) (U₀ + ∫₀ᵗ exp(-sA) G s ds)` for a forcing `G` on `ℝ`.
+Classical variation-of-constants formula; cf. [Pazy1983], Ch. 4. -/
 def duhamel (A : E →L[ℝ] E) (U₀ : E) (G : ℝ → E) (t : ℝ) : E :=
   exp (t • A) (U₀ + ∫ s in (0:ℝ)..t, exp ((-s) • A) (G s))
 
@@ -143,7 +155,10 @@ there is a strong solution `U` of `U' = A U + F`, `U 0 = U₀`, which is moreove
 of a `C¹` function on `ℝ`, with `t ↦ A (U t)` continuous: `U ∈ C¹([0,T]; E) ∩ C([0,T]; D(L))`.
 
 Thesis gap: the thesis' notion of solution is classical, while `IsStrongSolution` only asks for
-a pointwise derivative; this shows the bounded witnesses are classical. -/
+a pointwise derivative; this shows the bounded witnesses are classical.
+
+See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983], Ch. 1 (uniformly continuous
+semigroups `exp(tA)`) and Ch. 4 (inhomogeneous problem), [CazenaveHaraux1998]. -/
 theorem exists_classical_solution_bddOp (A : E →L[ℝ] E) {T : ℝ} (hT : 0 ≤ T) (U₀ : E)
     {F : ℝ → E} (hF : ContinuousOn F (Icc 0 T)) :
     ∃ U : ℝ → E, IsStrongSolution (bddOp A) T U₀ F U ∧ ContDiff ℝ 1 U ∧
@@ -167,7 +182,10 @@ No skewness is needed for existence; it is needed for uniqueness/energy (proved 
 
 Thesis gap: Thm 4.3 is only cited (Hille–Yosida/Stone); the project replaces it by the
 hypothesis `WellPosedExistence`. This theorem shows that hypothesis is satisfiable, with the
-thesis' admissible class (which is `C([0,T];E)` when `D(L) = E`). -/
+thesis' admissible class (which is `C([0,T];E)` when `D(L) = E`).
+
+See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998, Prop 4.1.6] (as cited there)
+and [Pazy1983], Ch. 4. -/
 theorem wellPosedExistence_bddOp (A : E →L[ℝ] E) (T : ℝ) :
     WellPosedExistence (bddOp A) T (fun F => ContinuousOn F (Icc 0 T)) := by
   intro U₀ _ F hF
@@ -178,7 +196,8 @@ theorem wellPosedExistence_bddOp (A : E →L[ℝ] E) (T : ℝ) :
     exact absurd (ht.1.trans ht.2) hT
 
 /-- **Non-vacuity of `WellPosedHom`** (Thesis Thm 4.3/4.6 hypothesis, bounded case):
-`U t = exp(tA) U₀` is a strong solution of `U' = A U`. -/
+`U t = exp(tA) U₀` is a strong solution of `U' = A U`.
+See [QuennevilleBelair2015, Thm 4.3, Thm 4.6]; cf. [Pazy1983], Ch. 1. -/
 theorem wellPosedHom_bddOp (A : E →L[ℝ] E) (T : ℝ) : WellPosedHom (bddOp A) T := by
   intro U₀ _
   refine ⟨fun t => exp (t • A) U₀, fun _ _ => trivial, fun t _ => ?_, by simp⟩
@@ -193,7 +212,10 @@ end Exp
 This is the conclusion of Stone's theorem for a skew-adjoint `L` (Thesis Thm 4.3 cites
 Hille–Yosida/Stone; Mathlib has neither), packaged as a hypothesis structure:
 `S` is a group of isometries, strongly continuous, and `L` is its generator, i.e.
-`D(L) = {x | t ↦ S t x differentiable at 0}` with `L x = (d/dt) S t x |_{t=0}`. -/
+`D(L) = {x | t ↦ S t x differentiable at 0}` with `L x = (d/dt) S t x |_{t=0}`.
+
+See [QuennevilleBelair2015, Thm 4.3]; Stone's theorem: cf. [Pazy1983], Ch. 1, and
+[CazenaveHaraux1998] (cited by the thesis for Thm 4.3). -/
 structure UnitaryGroupGenerator (L : E →ₗ.[ℝ] E) where
   /-- the group `t ↦ S t = e^{tL}` -/
   S : ℝ → E →L[ℝ] E
@@ -241,7 +263,8 @@ theorem apply_comm (x : L.domain) (t : ℝ) :
 /-- **`WellPosedHom` from the Stone stand-in.** If `L` generates an orthogonal group `S`, then
 `U t = S t U₀` is a strong solution of `U' = L U`, `U 0 = U₀`, for every `U₀ ∈ D(L)`.
 Thesis Thm 4.3/4.6: this is the existence half of Thm 4.3 (homogeneous case) derived from
-the conclusion of Stone's theorem, so the existence conclusions of Ch. 4 rest on that. -/
+the conclusion of Stone's theorem, so the existence conclusions of Ch. 4 rest on that.
+See [QuennevilleBelair2015, Thm 4.3, Thm 4.6]; cf. [Pazy1983], Ch. 1. -/
 theorem wellPosedHom (G : UnitaryGroupGenerator L) (T : ℝ) : WellPosedHom L T := by
   intro U₀ hU₀
   refine ⟨fun t => G.S t U₀, fun t _ => G.mem_domain_apply ⟨U₀, hU₀⟩ t, fun t _ => ?_, ?_⟩
@@ -252,7 +275,8 @@ theorem wellPosedHom (G : UnitaryGroupGenerator L) (T : ℝ) : WellPosedHom L T 
 
 /-- The generator of an orthogonal group is skew-symmetric (easy half of Stone's theorem):
 differentiate `⟪S t x, S t y⟫ = ⟪x, y⟫` at `t = 0`. Sanity check that the structure
-`UnitaryGroupGenerator` is consistent with the skew-adjointness hypotheses of Ch. 4. -/
+`UnitaryGroupGenerator` is consistent with the skew-adjointness hypotheses of Ch. 4.
+Cf. Stone's theorem in [Pazy1983], Ch. 1; [QuennevilleBelair2015, Thm 4.3]. -/
 theorem isSkewSymm (G : UnitaryGroupGenerator L) : IsSkewSymm L := by
   intro x y
   have hconst : (fun t => ⟪G.S t x, G.S t y⟫) = fun _ => ⟪(x : E), (y : E)⟫ := by
@@ -287,7 +311,7 @@ theorem hasDerivAt_exp_smul_apply_zero [CompleteSpace E] (A : E →L[ℝ] E) (x 
 
 /-- **The Stone stand-in is inhabited:** a bounded skew-symmetric `A` generates the orthogonal
 group `t ↦ exp(tA)` (`NormedSpace.exp` in the C*-algebra `E →L[ℝ] E`; `tA` is skew-adjoint,
-so `exp(tA)` is unitary). -/
+so `exp(tA)` is unitary). Cf. uniformly continuous groups in [Pazy1983], Ch. 1. -/
 def expGroup [CompleteSpace E] (A : E →L[ℝ] E) (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) :
     UnitaryGroupGenerator (bddOp A) where
   S t := exp (t • A)
@@ -301,7 +325,8 @@ def expGroup [CompleteSpace E] (A : E →L[ℝ] E) (hA : ∀ x y, ⟪A x, y⟫ =
 /-- **Joint non-vacuity of the Ch. 4 standing hypotheses** (Thesis §4.2, Thm 4.3, Cor 4.5):
 for every bounded skew-symmetric `A`, the operator `L = bddOp A` is densely defined,
 skew-adjoint, satisfies `WellPosedExistence` with the thesis' admissible forcings
-`C([0,T];E)`, and `WellPosedHom` follows from its Stone group `expGroup A hA`. -/
+`C([0,T];E)`, and `WellPosedHom` follows from its Stone group `expGroup A hA`.
+See [QuennevilleBelair2015, §4.3, Thm 4.3, Cor 4.5]. -/
 theorem bddOp_standing_hypotheses [CompleteSpace E] (A : E →L[ℝ] E)
     (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (T : ℝ) :
     Dense ((bddOp A).domain : Set E) ∧ IsSkewAdjoint (bddOp A) ∧
@@ -337,7 +362,8 @@ theorem rotGen_ne_zero : rotGen ≠ 0 := by
   simp [rotGen_apply] at this
 
 /-- **A concrete nonzero witness** for the Ch. 4 standing hypotheses (Thesis §4.2, Thm 4.3,
-Cor 4.5): the rotation generator `J ≠ 0` on `ℝ²` satisfies all of them. -/
+Cor 4.5): the rotation generator `J ≠ 0` on `ℝ²` satisfies all of them.
+See [QuennevilleBelair2015, §4.3]. -/
 theorem rotGen_standing_hypotheses (T : ℝ) :
     rotGen ≠ 0 ∧ Dense ((bddOp rotGen).domain : Set (EuclideanSpace ℝ (Fin 2))) ∧
       IsSkewAdjoint (bddOp rotGen) ∧

@@ -6,6 +6,7 @@ import Feec.Ch3.Bivector
 import Feec.Ch3.EB
 import Feec.Ch4.Adjoint
 import Feec.Ch4.Constraints
+import Feec.Ch4.ErrorEstimate
 import Feec.Ch4.Existence
 import Feec.Ch4.Galerkin
 import Feec.Ch4.Hodge

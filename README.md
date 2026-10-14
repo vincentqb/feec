@@ -57,7 +57,7 @@ declaration that refutes or corrects the original; module docstrings list the re
 - **Lemma 4.12**: `Q ∈ C¹` fails where the lemma is applied; only `Q²` needs to be differentiable (`lemma_4_12`).
 - **Thm 4.14**: it needs `ξ ∈ C¹(V)`, and the `(1 + T)` factor is sharpened (`thm_4_14_pointwise`, `thm_4_14`).
 - **§4.10**: two of the four proposed discretizations are not subcomplexes (`pgrad_not_mem_PminusLambda1`).
-- **Props 4.17, 4.19**: the projection hypothesis, which fails on smooth bounded domains, is necessary for the conclusion (`prop_4_17_necessary`).
+- **Props 4.17, 4.19**: the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`).
 - **(5.1)**: exactness at `Ṽ¹` is used but never proved (`exact_mid`).
 - **Prop 5.4**: exactness at `V_h¹` cannot be dropped (`prop54_counterexample_noTopExact`).
 - **Prop 6.2**: false as stated; it holds exactly under compatibility conditions (C1)–(C3) (`prop_6_2_false`, `prop_6_2`).

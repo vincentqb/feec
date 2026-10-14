@@ -39,6 +39,21 @@ Corrections and gaps filled (see the individual docstrings):
 Scope: a fixed Minkowski orthonormal frame (`g = η`); this is the pointwise content used by
 Chs 3–4. Within that frame, Prop 3.1 holds for arbitrary `n` and (3.2) for arbitrary unit
 timelike `n`. The Weyl count is for `n = 4` only (not the general `n(n+1)(n+2)(n-3)/12`).
+
+The "[10]-lemma" above is thesis reference [10] (J. Frauendiener, "Discretisation of the
+spin-2 equation?"), which is not in `docs/references.bib`; the same holds for thesis reference
+[12] (C. Pope, *Geometry and Group Theory*), cited for Hodge duality in §3.1.
+
+## References
+
+* [QuennevilleBelair2015], Ch. 3, §§3.1–3.3 (Props 3.1–3.3, eq. (3.2)); Ch. 2 for the
+  first-Bianchi reformulation used in `bianchi_iff`
+* [Bel1958] (the electric/magnetic decomposition of the Weyl tensor)
+* [Alcubierre2008] (the Weyl tensor and its electric/magnetic parts in 3+1 numerical relativity)
+* [Friedrich1996] (Weyl tensor and Bel decomposition in hyperbolic reductions of Einstein's
+  equations)
+* [ACBY1997] (nonlinear analogue of the Prop 3.3 block structure)
+* [Wald1984] (Weyl tensor, volume form, Hodge duality)
 -/
 
 open Matrix Equiv
@@ -271,6 +286,7 @@ theorem ldual_ofMat (M : Matrix Ix Ix ℝ) : ldual (ofMat M) = ofMat (Sᵀ * M) 
   rw [ldual_eq, swapPairs_ofMat, rdual_ofMat, swapPairs_ofMat, transpose_mul, transpose_transpose]
 
 /-- **Thesis Prop 3.2 (right dual).** `C ↦ C*` acts on blocks as `[[E,B],[H,D]] ↦ [[B,-E],[D,-H]]`.
+See [QuennevilleBelair2015, Prop 3.2].
 
 Correction: the thesis' formula `C*_{abcd} v^c w^d = C_{abef} (ε^{ef}{}_{cd} v^c w^d)` and
 `B_{ab} = C_{0aef} ε^{ef}{}_{0b}` miss the factor `½` (without it `t∧x ↦ 2 y∧z`); `rdual`
@@ -279,12 +295,14 @@ theorem rdual_T (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     rdual (T E B H D) = T B (-E) D (-H) := by
   rw [T, rdual_ofMat, S, fromBlocks_multiply, T]; simp
 
-/-- **Thesis Prop 3.2 (left dual).** `C ↦ *C` acts as `[[E,B],[H,D]] ↦ [[H,D],[-E,-B]]`. -/
+/-- **Thesis Prop 3.2 (left dual).** `C ↦ *C` acts as `[[E,B],[H,D]] ↦ [[H,D],[-E,-B]]`.
+See [QuennevilleBelair2015, Prop 3.2]. -/
 theorem ldual_T (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     ldual (T E B H D) = T H D (-E) (-B) := by
   rw [T, ldual_ofMat, S, fromBlocks_transpose, fromBlocks_multiply, T]; simp
 
-/-- **Thesis Prop 3.2 (double dual).** `C ↦ *C*` acts as `[[E,B],[H,D]] ↦ [[D,-H],[-B,E]]`. -/
+/-- **Thesis Prop 3.2 (double dual).** `C ↦ *C*` acts as `[[E,B],[H,D]] ↦ [[D,-H],[-B,E]]`.
+See [QuennevilleBelair2015, Prop 3.2]. -/
 theorem ldual_rdual_T (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     ldual (rdual (T E B H D)) = T D (-H) (-B) E := by
   rw [rdual_T, ldual_T, neg_neg]
@@ -293,6 +311,8 @@ theorem ldual_rdual_T (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
 /-- **Thesis Prop 3.2.** For a double 2-form `C` (skew in each pair) set, as in the thesis,
 `E_{ab} = C_{0a0b}`, `B_{ab} = C*_{0a0b}`, `H_{ab} = *C_{0a0b}`, `D_{ab} = *C*_{0a0b}`.
 Then `C` has bivector block matrix `[[E,B],[H,D]]`, and the three duals act as stated.
+See [QuennevilleBelair2015, Prop 3.2] (block layout following thesis ref. [10], Frauendiener,
+not in `references.bib`).
 
 Correction: `B, H, D` carry the factor `½` built into `rdual`/`ldual` (missing in the thesis'
 formula for `B_{ab}`). -/
@@ -319,7 +339,7 @@ theorem prop_3_2 {C : T4 (Fin 4)} (hC : PairSkew C) :
   · exact ldual_rdual_T _ _ _ _
 
 /-- Thesis §3.2: `(W*)* = -W` for every double 2-form (`** = -1` on 2-forms, signature
-`(-+++)`). -/
+`(-+++)`). See [QuennevilleBelair2015, §3.2]. -/
 theorem rdual_rdual {C : T4 (Fin 4)} (hC : PairSkew C) : rdual (rdual C) = -C := by
   rw [eq_T_blocks hC, rdual_T, rdual_T, T_neg]
 
@@ -332,7 +352,8 @@ theorem ldual_rdual_comm {C : T4 (Fin 4)} (hC : PairSkew C) :
     ldual (rdual C) = rdual (ldual C) := by
   rw [eq_T_blocks hC, rdual_T, ldual_T, ldual_T, rdual_T]
 
-/-- Thesis §3.2: for `W` with the interchange symmetry, `*W_{abcd} = W*_{cdab}`. -/
+/-- Thesis §3.2: for `W` with the interchange symmetry, `*W_{abcd} = W*_{cdab}`.
+See [QuennevilleBelair2015, §3.2]. -/
 theorem ldual_eq_rdual_swap {C : T4 (Fin 4)} (hC : Interchange C) (a b c d : Fin 4) :
     ldual C a b c d = rdual C c d a b := by
   rw [ldual_eq]; simp only [swapPairs, rdual]
@@ -354,7 +375,8 @@ theorem interchange_ofMat_iff (M : Matrix Ix Ix ℝ) : Interchange (ofMat M) ↔
   rw [interchange_iff_swapPairs, swapPairs_ofMat, ofMat_injective.eq_iff]
 
 /-- **Thesis Prop 3.3(i).** The interchange symmetry `C_{abcd} = C_{cdab}` is equivalent to
-`E, D` symmetric and `H = Bᵀ`. -/
+`E, D` symmetric and `H = Bᵀ`. See [QuennevilleBelair2015, Prop 3.3]; cf. [ACBY1997] for the
+nonlinear analogue. -/
 theorem interchange_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     Interchange (T E B H D) ↔ Eᵀ = E ∧ Dᵀ = D ∧ H = Bᵀ := by
   rw [T, interchange_ofMat_iff, fromBlocks_transpose, fromBlocks_inj]
@@ -444,7 +466,8 @@ theorem alt4_0123 {C : T4 (Fin 4)} (hC : PairSkew C) : alt4 C 0 1 2 3 =
     s2 2 3 0 1, s1 3 2 0 1, s1 3 2 1 0, s2 2 3 1 0, s2 0 1 3 2, s1 0 2 1 3, s1 0 3 2 1,
     s1 1 2 3 0, s1 0 2 3 1]
 
-/-- **Thesis Prop 3.3(ii).** `C_{[abcd]} = 0` is equivalent to `tr B + tr H = 0`. -/
+/-- **Thesis Prop 3.3(ii).** `C_{[abcd]} = 0` is equivalent to `tr B + tr H = 0`.
+See [QuennevilleBelair2015, Prop 3.3]. -/
 theorem alt_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (∀ a b c d, alt4 (T E B H D) a b c d = 0) ↔ trace B + trace H = 0 := by
   have h6 : alt4 (T E B H D) 0 1 2 3 = (1 / 6) * (trace B + trace H) := by
@@ -458,7 +481,9 @@ theorem alt_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
 /-- First Bianchi `C_{a[bcd]} = 0` for a double 2-form is equivalent to the interchange symmetry
 plus `C_{[abcd]} = 0` (thesis: "the 16 conditions ... break into 15 + 1", cited from [10]).
 
-Thesis gap: the thesis cites this without proof; it is proved here. -/
+Thesis gap: the thesis cites this without proof; it is proved here. See
+[QuennevilleBelair2015, §2 (after Prop 2.1) and proof of Prop 3.3]; the source cited there is
+thesis ref. [10] (Frauendiener), not in `references.bib`. -/
 theorem bianchi_iff {C : T4 (Fin 4)} (hC : PairSkew C) :
     Bianchi1 C ↔ Interchange C ∧ ∀ a b c d, alt4 C a b c d = 0 := by
   have s1 := fun a b c d => (hC a b c d).1
@@ -499,7 +524,7 @@ theorem bianchi_iff {C : T4 (Fin 4)} (hC : PairSkew C) :
         hI d c a b, hI d c b a]
 
 /-- Thesis Prop 3.3, Bianchi part: for `C = [[E,B],[H,D]]`, first Bianchi holds iff
-`E, D` are symmetric, `H = Bᵀ` and `tr B + tr H = 0`. -/
+`E, D` are symmetric, `H = Bᵀ` and `tr B + tr H = 0`. See [QuennevilleBelair2015, Prop 3.3]. -/
 theorem bianchi_T_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     Bianchi1 (T E B H D) ↔ (Eᵀ = E ∧ Dᵀ = D ∧ H = Bᵀ) ∧ trace B + trace H = 0 := by
   rw [bianchi_iff (C := T E B H D) (pairSkew_ofMat _), interchange_iff, alt_iff]
@@ -523,7 +548,8 @@ theorem mtr_T (E B H D : Matrix (Fin 3) (Fin 3) ℝ) (b c : Fin 4) : mtr (T E B 
 `tr E = 0`, `B, H` symmetric and `D = -Eᵀ`.
 
 Thesis gap: the final step `D = -Eᵀ + δ tr E/2` uses `tr E = 0` (from the singleton
-condition) and the summed diagonal equations `tr D = tr E / 2`; both are made explicit. -/
+condition) and the summed diagonal equations `tr D = tr E / 2`; both are made explicit.
+See [QuennevilleBelair2015, Prop 3.3]. -/
 theorem tracefree_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (∀ b c, mtr (T E B H D) b c = 0) ↔ trace E = 0 ∧ Bᵀ = B ∧ Hᵀ = H ∧ D = -Eᵀ := by
   simp only [mtr_T]
@@ -549,7 +575,7 @@ theorem tracefree_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
 /-! ### Algebraic Weyl tensors: the block form -/
 
 /-- An algebraic Weyl tensor in a Minkowski orthonormal frame: skew in each pair, first
-Bianchi identity, and `η`-trace-free. -/
+Bianchi identity, and `η`-trace-free. See [QuennevilleBelair2015, §3.2]; cf. [Wald1984]. -/
 structure IsWeylLike (C : T4 (Fin 4)) : Prop where
   pairSkew : PairSkew C
   bianchi : Bianchi1 C
@@ -560,7 +586,8 @@ structure IsWeylLike (C : T4 (Fin 4)) : Prop where
 
 Thesis gap: `tr B = 0` needs Prop 3.3(ii) together with `H = Bᵀ = B`; the thesis does not say
 so. Correction: the thesis introduces this matrix form with "Proposition 3.2 thus leads to";
-it follows from Prop 3.3. -/
+it follows from Prop 3.3. See [QuennevilleBelair2015, Prop 3.3 and the display after it];
+cf. [ACBY1997] for the nonlinear case. -/
 theorem weyl_iff (C : T4 (Fin 4)) :
     IsWeylLike C ↔ ∃ E B : Matrix (Fin 3) (Fin 3) ℝ, Eᵀ = E ∧ trace E = 0 ∧ Bᵀ = B ∧
       trace B = 0 ∧ C = T E B B (-E) := by
@@ -581,7 +608,8 @@ theorem weyl_iff (C : T4 (Fin 4)) :
     · rw [htrB]; ring
 
 /-- **Thesis §3.2 (omitted classical fact).** For an algebraic Weyl tensor the left and right
-duals coincide, `*W = W*`; both have block matrix `[[B, -E], [-E, -B]]`. -/
+duals coincide, `*W = W*`; both have block matrix `[[B, -E], [-E, -B]]`.
+See [QuennevilleBelair2015, §3.2]. -/
 theorem ldual_eq_rdual {W : T4 (Fin 4)} (hW : IsWeylLike W) : ldual W = rdual W := by
   obtain ⟨E, B, -, -, -, -, rfl⟩ := (weyl_iff W).1 hW
   rw [ldual_T, rdual_T]
@@ -652,7 +680,10 @@ Thesis gap: the thesis' proof of the symmetry of `B` uses the 3D contraction
 uses orthogonality before proving it. Here the proof instead goes through the block form
 (Prop 3.3): `W*` is again an algebraic Weyl tensor (`IsWeylLike.rdual`, using `*W = W*`), so `B`
 is the electric part of `W*` and inherits its properties. Stated in a Minkowski orthonormal
-frame; `n` need not be unit timelike for these algebraic conclusions. -/
+frame; `n` need not be unit timelike for these algebraic conclusions.
+
+See [QuennevilleBelair2015, Prop 3.1]; the decomposition is due to [Bel1958]; cf.
+[Alcubierre2008] and [Friedrich1996]. -/
 theorem prop_3_1 {W : T4 (Fin 4)} (hW : IsWeylLike W) (n : Fin 4 → ℝ) :
     let E : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * W c a d b
     let B : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * rdual W c a d b
@@ -773,7 +804,8 @@ is recovered from its electric and magnetic parts `E_{ab} = W_{0a0b}`, `B_{ab} =
 Thesis gap: "a straightforward calculation" in the thesis; here it is checked on the 36
 bivector components. The sign of the `B`-terms requires the spatial volume form
 `ω_{bcd} = ω_{abcd} n^a` (as stated after (3.2)); the `n^d` convention used in the proof of
-Prop 3.1 has the opposite sign. The general unit timelike `n` is `weyl_reconstruct_unit`. -/
+Prop 3.1 has the opposite sign. The general unit timelike `n` is `weyl_reconstruct_unit`.
+See [QuennevilleBelair2015, eq. (3.2)]; cf. [Bel1958]. -/
 theorem weyl_reconstruct {W : T4 (Fin 4)} (hW : IsWeylLike W) :
     W = recon (fun a b => W 0 a 0 b) (fun a b => rdual W 0 a 0 b) := by
   obtain ⟨E, B, hE, htrE, hB, -, rfl⟩ := (weyl_iff W).1 hW
@@ -964,7 +996,7 @@ theorem eq_stf {E : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htr : trace E =
 
 Thesis gap: the thesis states (3.2) for a general `n` as "a straightforward calculation". Here it is
 proved without any frame change: `recon_hom` is the homogenised polynomial identity, valid for all
-`n`, and `η(n,n) = -1` specialises it. -/
+`n`, and `η(n,n) = -1` specialises it. See [QuennevilleBelair2015, eq. (3.2)]; cf. [Bel1958]. -/
 theorem weyl_reconstruct_unit {W : T4 (Fin 4)} (hW : IsWeylLike W) {n : Fin 4 → ℝ}
     (hn : nsq n = -1) : W = reconN n (elec n W) (elec n (rdual W)) := by
   obtain ⟨E, B, hE, htrE, hB, htrB, rfl⟩ := (weyl_iff W).1 hW
@@ -1000,7 +1032,7 @@ theorem rdual_prod (u w : Fin 4 → Fin 4 → ℝ) :
   ring
 
 /-- Thesis §3.1, `** = (-1)^{kl+t}` for `k = l = 2`, `t = 1`: `** = -1` on 2-forms in
-signature `(-+++)`. -/
+signature `(-+++)`. See [QuennevilleBelair2015, §3.1]; cf. [Wald1984]. -/
 theorem hodge2_hodge2 (w : Fin 4 → Fin 4 → ℝ) (hw : ∀ a b, w a b = -w b a) :
     hodge2 (hodge2 w) = -w := by
   have hβ : ∀ a b, β (.inl 0) a b = -β (.inl 0) b a := fun a b => by
@@ -1121,7 +1153,9 @@ def weylEquiv : weylSpace ≃ₗ[ℝ] STF × STF where
 components (here: the space of algebraic Weyl tensors w.r.t. `η` has dimension 10).
 
 Thesis gap: stated without proof ("it can be shown"); proved here for `n = 4` via the block
-form `[[E, B], [B, -E]]` with `E, B` symmetric trace-free (5 + 5). -/
+form `[[E, B], [B, -E]]` with `E, B` symmetric trace-free (5 + 5).
+See [QuennevilleBelair2015, §3.2] (which cites [Alcubierre2008, p. 288] and [Friedrich1996] for
+the Riemann/Weyl splitting). -/
 theorem finrank_weylSpace : Module.finrank ℝ weylSpace = 10 := by
   rw [LinearEquiv.finrank_eq weylEquiv, Module.finrank_prod, finrank_STF]
 

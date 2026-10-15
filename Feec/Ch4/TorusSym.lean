@@ -1,6 +1,7 @@
 module
 
 public import Feec.Ch4.TorusGroup
+public import Feec.Ch4.TorusWeak
 
 /-!
 # Thesis Prop 4.19 on the flat torus `𝕋³`: the strong-symmetry complex
@@ -27,7 +28,8 @@ coefficients of symmetric resp. trace-free `L²` matrix fields (`matrixFourier_m
 `H²(R)`, `H(curl, S)`, `H(div div, S)`, `H(sym curl, T)`, `H¹(S)` are the corresponding
 weighted-`ℓ²` conditions (`mulDomain`; `mem_H2R_iff`). As in `Feec.Ch4.Torus`, the identification
 of these multipliers with weak derivatives is not formalized, and the theorems are stated for
-complex-valued fields viewed as a real Hilbert space.
+complex-valued fields viewed as a real Hilbert space; the real-valued fields of the thesis are the
+conjugate-symmetric coefficient sequences, and are preserved (section *Real-valued fields*).
 
 ## Main results
 
@@ -62,6 +64,13 @@ complex-valued fields viewed as a real Hilbert space.
   `map_embL2_L2TSDT` (`embL2` maps both `L²(TSD)`s onto `Feec.Torus.L2TSD`), `embL2_projS`,
   `embL2_projT`, `embL2_sym_mem_Hcurl_iff`, `curlT_embL2` (`curl` on `S` is the matrix curl),
   `embL2_adjoint_curlST_apply` (`curl* = sym ∘ curl`).
+* **Real-valued fields** (conjugate-symmetric coefficients, as `Feec.Torus.IsReal`): `IsRealR`,
+  `IsRealS`, `IsRealT` (`isRealR_scalarFourier_iff`: `f̄ = f`; `isRealS_iff_embL2`,
+  `isRealT_iff_embL2`: the matrix `IsReal`). They are preserved by `P_TSD` (`isRealS_projS`,
+  `isRealT_projT`), `grad grad` (`isRealS_hessT`), `curl` (`isRealT_curlST`), `div div`
+  (`isRealR_divdiv`), `sym curl` (`isRealS_symCurl`) and the group (`isRealTot_symGroup`, all
+  `t ∈ ℝ`); every strong solution with real data is real (`isRealTot_of_isStrongSolution`), and
+  **`prop_4_19_torus_exists_real`** is Prop 4.19 on `𝕋³` within real fields.
 
 ## Correction
 
@@ -91,8 +100,7 @@ Checked against the thesis text:
 
 What remains open: the bounded-domain setting of the thesis (`H̊²`, `H̊(curl, S)`), where the
 projection conjecture is not settled here (cf. the docstring of `Feec.Constraints.prop_4_17`
-and `Feec.Ch4.BoundedDomain` for the matrix complex of Prop 4.17); real-valued fields
-(conjugate-symmetric coefficients) are not treated separately.
+and `Feec.Ch4.BoundedDomain` for the matrix complex of Prop 4.17).
 
 ## References
 
@@ -1262,5 +1270,298 @@ theorem embL2_adjoint_curlST_apply (ρ : curlST†.domain) (k : Z3) :
   rw [embL2_apply, adjoint_curlST_apply, coe_symCurlS]
 
 end Bridge
+
+open HilbertComplex2 Constraints
+
+/-! ## Real-valued fields
+
+Real fields have conjugate-symmetric Fourier coefficients; the operators of (4.16)/(4.17), the
+TSD projections and the group `symGroup` preserve them, so Prop 4.19 holds within real fields. -/
+
+section Real
+
+/-- Entrywise conjugation commutes with `sym`. -/
+theorem symM_conjM (M : Mat3) : symM (conjM M) = conjM (symM M) := by
+  ext ⟨a, b⟩; simp [symM_apply, conjM_apply, Complex.real_smul, map_ofNat]
+
+/-- Entrywise conjugation preserves `S`. -/
+theorem conjM_mem_symSub {M : Mat3} (hM : M ∈ symSub) : conjM M ∈ symSub := fun a b => by
+  simp [conjM_apply, mem_symSub.1 hM a b]
+
+/-- Entrywise conjugation preserves `T`. -/
+theorem conjM_mem_trSub {M : Mat3} (hM : M ∈ trSub) : conjM M ∈ trSub := by
+  rw [mem_trSub] at hM ⊢
+  simpa [conjM_apply] using congrArg (starRingEnd ℂ) hM
+
+/-- Entrywise conjugation of symmetric matrices. -/
+def conjS : Sym3 →L[ℝ] Sym3 :=
+  (conjM ∘L symSub.subtypeL).codRestrict symSub fun A => conjM_mem_symSub A.2
+
+/-- Entrywise conjugation of trace-free matrices. -/
+def conjT : Tr3 →L[ℝ] Tr3 :=
+  (conjM ∘L trSub.subtypeL).codRestrict trSub fun ρ => conjM_mem_trSub ρ.2
+
+/-- `conjS` is `conjM` on the underlying matrix. -/
+@[simp] theorem coe_conjS (A : Sym3) : (conjS A : Mat3) = conjM A := rfl
+
+/-- `conjT` is `conjM` on the underlying matrix. -/
+@[simp] theorem coe_conjT (ρ : Tr3) : (conjT ρ : Mat3) = conjM ρ := rfl
+
+/-- Entrywise conjugation is an involution. -/
+theorem conjM_conjM (M : Mat3) : conjM (conjM M) = M := by
+  ext ⟨a, b⟩; simp [conjM_apply]
+
+/-- `conjS` is an involution. -/
+theorem conjS_conjS (A : Sym3) : conjS (conjS A) = A := Subtype.ext (conjM_conjM _)
+
+/-- `conjT` is an involution. -/
+theorem conjT_conjT (ρ : Tr3) : conjT (conjT ρ) = ρ := Subtype.ext (conjM_conjM _)
+
+/-- Hessian symbol and conjugation: `(grad grad)_{-ξ} c̄ = conj ((grad grad)_ξ c)`. -/
+theorem hessM_neg_conj (ξ : Freq) (c : ℂ) :
+    hessM (-ξ) ((starRingEnd ℂ) c) = conjM (hessM ξ c) := by
+  ext ⟨a, b⟩; simp [hessM_apply, conjM_apply]
+
+/-- Curl symbol and conjugation: `curl_{-ξ} M̄ = conj (curl_ξ M)` (the symbol `i ξ ×` is
+odd in `ξ` and purely imaginary). -/
+theorem curlSym_neg_conjM (ξ : Freq) (M : Mat3) :
+    curlSym (-ξ) (conjM M) = conjM (curlSym ξ M) := by
+  ext ⟨a, b⟩
+  fin_cases b <;> simp [curlSym_apply, jM_apply, curlR_apply, cross, conjM_apply] <;> ring
+
+/-- `grad grad` symbol on `S` and conjugation. -/
+theorem hessS_neg_conj (ξ : Freq) (c : ℂ) :
+    hessS (-ξ) ((starRingEnd ℂ) c) = conjS (hessS ξ c) :=
+  Subtype.ext (hessM_neg_conj ξ c)
+
+/-- `curl : S → T` symbol and conjugation. -/
+theorem curlS_neg_conjS (ξ : Freq) (A : Sym3) : curlS (-ξ) (conjS A) = conjT (curlS ξ A) :=
+  Subtype.ext (curlSym_neg_conjM ξ A)
+
+/-- `sym curl : T → S` symbol and conjugation. -/
+theorem symCurlS_neg_conjT (ξ : Freq) (ρ : Tr3) :
+    symCurlS (-ξ) (conjT ρ) = conjS (symCurlS ξ ρ) := by
+  apply Subtype.ext
+  rw [coe_symCurlS, coe_conjS, coe_symCurlS, coe_conjT, curlSym_neg_conjM, symM_conjM]
+
+/-- `div div : S → R` symbol and conjugation (`-ξᵀ A ξ` is even in `ξ`). -/
+theorem divdivS_neg_conjS (ξ : Freq) (A : Sym3) :
+    divdivS (-ξ) (conjS A) = (starRingEnd ℂ) (divdivS ξ A) := by
+  simp [divdivS_apply, conjM_apply]
+
+/-- The TSD projection in `S` and conjugation (`tsd (-ξ) = tsd ξ`, conjugation-invariant). -/
+theorem projS_neg_conjS (ξ : Freq) (A : Sym3) :
+    (tsdS (-ξ)).starProjection (conjS A) = conjS ((tsdS ξ).starProjection A) := by
+  apply Subtype.ext
+  rw [coe_projS, coe_conjS, coe_conjS, coe_projS, tsd_neg]
+  exact starProjection_comm_of_selfAdj _ conjM inner_conjM (fun _ h => conjM_mem_tsd h) _
+
+/-- The TSD projection in `T` and conjugation. -/
+theorem projT_neg_conjT (ξ : Freq) (ρ : Tr3) :
+    (tsdT (-ξ)).starProjection (conjT ρ) = conjT ((tsdT ξ).starProjection ρ) := by
+  apply Subtype.ext
+  rw [coe_projT, coe_conjT, coe_conjT, coe_projT, tsd_neg]
+  exact starProjection_comm_of_selfAdj _ conjM inner_conjM (fun _ h => conjM_mem_tsd h) _
+
+/-- Fourier coefficients of a real-valued scalar field: `û(-k) = conj û(k)`
+(`isRealR_scalarFourier_iff`). -/
+def IsRealR (u : L2R) : Prop := ∀ k, u (-k) = (starRingEnd ℂ) (u k)
+/-- Fourier coefficients of a real-valued symmetric-matrix field: `Â(-k) = conj Â(k)`
+(`isRealS_iff_embL2`, cf. `Feec.TorusWeak.isReal_matrixFourier_iff`). -/
+def IsRealS (A : L2S) : Prop := ∀ k, A (-k) = conjS (A k)
+/-- Fourier coefficients of a real-valued trace-free-matrix field: `ρ̂(-k) = conj ρ̂(k)`
+(`isRealT_iff_embL2`). -/
+def IsRealT (ρ : L2T) : Prop := ∀ k, ρ (-k) = conjT (ρ k)
+
+/-- `P_TSD` on `L²(S)` maps real fields to real fields. -/
+theorem isRealS_projS {A : L2S} (hA : IsRealS A) : IsRealS (L2TSDS.starProjection A) :=
+  fun k => by rw [projS_apply, projS_apply, hA, freq_neg, projS_neg_conjS]
+
+/-- `P_TSD` on `L²(T)` maps real fields to real fields. -/
+theorem isRealT_projT {ρ : L2T} (hρ : IsRealT ρ) : IsRealT (L2TSDT.starProjection ρ) :=
+  fun k => by rw [projT_apply, projT_apply, hρ, freq_neg, projT_neg_conjT]
+
+/-- `grad grad : H²(R) → L²(S)` maps real fields to real fields. -/
+theorem isRealS_hessT (u : hessT.domain) (hu : IsRealR u) : IsRealS (hessT u) := fun k => by
+  change hessS (freq (-k)) ((u : L2R) (-k)) = conjS (hessS (freq k) ((u : L2R) k))
+  rw [hu, freq_neg, hessS_neg_conj]
+
+/-- `curl : H(curl, S) → L²(T)` maps real fields to real fields. -/
+theorem isRealT_curlST (A : curlST.domain) (hA : IsRealS A) : IsRealT (curlST A) := fun k => by
+  change curlS (freq (-k)) ((A : L2S) (-k)) = conjT (curlS (freq k) ((A : L2S) k))
+  rw [hA, freq_neg, curlS_neg_conjS]
+
+/-- `div div = (grad grad)* : H(div div, S) → L²(R)` maps real fields to real fields. -/
+theorem isRealR_divdiv (A : hessT†.domain) (hA : IsRealS A) : IsRealR (hessT† A) := fun k => by
+  rw [adjoint_hessT_apply, adjoint_hessT_apply, hA, freq_neg, divdivS_neg_conjS]
+
+/-- `sym curl = curl* : H(sym curl, T) → L²(S)` maps real fields to real fields. -/
+theorem isRealS_symCurl (ρ : curlST†.domain) (hρ : IsRealT ρ) : IsRealS (curlST† ρ) := fun k => by
+  rw [adjoint_curlST_apply, adjoint_curlST_apply, hρ, freq_neg, symCurlS_neg_conjT]
+
+end Real
+
+section RealGroup
+
+open HilbertComplex2 Constraints
+
+/-- `ℚ`-algebra structure on fibre operators, for `NormedSpace.exp` (as in
+`Feec.Ch4.Existence`). -/
+local instance instNormedAlgebraRatFibS : NormedAlgebra ℚ (FibS →L[ℝ] FibS) :=
+  NormedAlgebra.restrictScalars ℚ ℝ _
+
+/-- Complex conjugation `ℂ → ℂ` as a real-linear map. -/
+def conjC : ℂ →L[ℝ] ℂ := Complex.conjCLE.toContinuousLinearMap
+
+/-- `conjC` is complex conjugation. -/
+@[simp] theorem conjC_apply (c : ℂ) : conjC c = (starRingEnd ℂ) c := rfl
+
+/-- Fibrewise conjugation `(c, A, ρ) ↦ (c̄, Ā, ρ̄)` on `ℂ × S × T`. -/
+def conjFib : FibS →L[ℝ] FibS :=
+  (Constraints.totL (W0 := ℂ) (W1 := Sym3) (W2 := Tr3)).symm.toContinuousLinearMap ∘L
+    (conjC.prodMap (conjS.prodMap conjT)) ∘L
+    (Constraints.totL (W0 := ℂ) (W1 := Sym3) (W2 := Tr3)).toContinuousLinearMap
+
+/-- `conjFib` in coordinates. -/
+theorem tot_conjFib (x : FibS) :
+    tot _ _ _ (conjFib x) = ((starRingEnd ℂ) (tot _ _ _ x).1, conjS (tot _ _ _ x).2.1,
+      conjT (tot _ _ _ x).2.2) := by
+  simp [conjFib]; rfl
+
+/-- `conjFib` is an involution. -/
+theorem conjFib_mul_self : conjFib * conjFib = 1 := by
+  ext1 x
+  apply (tot ℂ Sym3 Tr3).injective
+  simp [tot_conjFib, conjS_conjS, conjT_conjT]
+
+/-- `conjFib` as a unit (it is an involution). -/
+def conjFibU : (FibS →L[ℝ] FibS)ˣ := ⟨conjFib, conjFib, conjFib_mul_self, conjFib_mul_self⟩
+
+/-- The fibre symbol of `-L` intertwines the conjugations at `ξ` and `-ξ`:
+`W_{-ξ} x̄ = conj (W_ξ x)`. -/
+theorem waveSymS_neg_conjFib (ξ : Freq) (x : FibS) :
+    waveSymS (-ξ) (conjFib x) = conjFib (waveSymS ξ x) := by
+  apply (tot ℂ Sym3 Tr3).injective
+  rw [tot_waveSymS, tot_conjFib, tot_conjFib, tot_waveSymS]
+  simp only [divdivS_neg_conjS, hessS_neg_conj, symCurlS_neg_conjT, curlS_neg_conjS,
+    _root_.map_sub, _root_.map_neg]
+
+/-- `W_{-ξ} = J W_ξ J` with `J = conjFib`. -/
+theorem waveSymS_neg (ξ : Freq) : waveSymS (-ξ) = conjFib * waveSymS ξ * conjFib := by
+  ext1 x
+  change _ = conjFib (waveSymS ξ (conjFib x))
+  rw [← waveSymS_neg_conjFib]
+  exact congrArg (waveSymS (-ξ))
+    (congrArg (fun f : FibS →L[ℝ] FibS => f x) conjFib_mul_self).symm
+
+/-- `exp(t W_{-ξ}) x̄ = conj (exp(t W_ξ) x)` (`NormedSpace.exp_units_conj`). -/
+theorem exp_waveSymS_neg_conjFib (t : ℝ) (ξ : Freq) (v : FibS) :
+    NormedSpace.exp (t • waveSymS (-ξ)) (conjFib v) =
+      conjFib (NormedSpace.exp (t • waveSymS ξ) v) := by
+  have h : t • waveSymS (-ξ) = (conjFibU : FibS →L[ℝ] FibS) * (t • waveSymS ξ) *
+      ↑conjFibU⁻¹ := by
+    rw [waveSymS_neg, mul_smul_comm, smul_mul_assoc]; rfl
+  rw [h, NormedSpace.exp_units_conj]
+  change conjFib (NormedSpace.exp (t • waveSymS ξ) (conjFib (conjFib v))) = _
+  rw [show conjFib (conjFib v) = v from
+    congrArg (fun f : FibS →L[ℝ] FibS => f v) conjFib_mul_self]
+
+/-- A state `(σ, E, B)` is real-valued: all three components have conjugate-symmetric
+coefficients. -/
+def IsRealTot (y : Tot L2R L2S L2T) : Prop :=
+  IsRealR (tot _ _ _ y).1 ∧ IsRealS (tot _ _ _ y).2.1 ∧ IsRealT (tot _ _ _ y).2.2
+
+/-- Reality of a state on the Fourier side: `v(-k) = J v(k)` for `v = ΦS⁻¹ y`. -/
+theorem isRealTot_iff (y : Tot L2R L2S L2T) :
+    IsRealTot y ↔ ∀ k, ΦS.symm y (-k) = conjFib (ΦS.symm y k) := by
+  have e : ∀ k, ΦS.symm y (-k) = conjFib (ΦS.symm y k) ↔
+      (tot _ _ _ y).1 (-k) = (starRingEnd ℂ) ((tot _ _ _ y).1 k) ∧
+        (tot _ _ _ y).2.1 (-k) = conjS ((tot _ _ _ y).2.1 k) ∧
+        (tot _ _ _ y).2.2 (-k) = conjT ((tot _ _ _ y).2.2 k) := fun k => by
+    rw [← (tot ℂ Sym3 Tr3).injective.eq_iff, tot_conjFib, tot_ΦS_symm_apply, tot_ΦS_symm_apply]
+    simp only [Prod.mk.injEq]
+  simp only [e, forall_and]
+  rfl
+
+/-- **The group `symGroup` preserves real-valued states**, for all `t ∈ ℝ`: it acts fibrewise
+by `exp(t W_{ξ_k})` (`symGroup_S_apply`) and these intertwine the conjugations at `±k`
+(`exp_waveSymS_neg_conjFib`). -/
+theorem isRealTot_symGroup (t : ℝ) {y : Tot L2R L2S L2T} (hy : IsRealTot y) :
+    IsRealTot (symGroup.S t y) := by
+  rw [isRealTot_iff] at hy ⊢
+  intro k
+  rw [symGroup_S_apply, symGroup_S_apply, hy k, waveSymSK, waveSymSK, freq_neg,
+    exp_waveSymS_neg_conjFib]
+
+/-- Real data `E₀`, `B₀` give a real initial state `(0, E₀, B₀)`. -/
+theorem isRealTot_ini {E₀ : L2S} {B₀ : L2T} (hE : IsRealS E₀) (hB : IsRealT B₀) :
+    IsRealTot (ini L2R E₀ B₀) := by
+  refine ⟨fun k => ?_, ?_, ?_⟩ <;> simp only [tot_ini]
+  · simp
+  · exact hE
+  · exact hB
+
+/-- **Every strong solution of (4.18) on `𝕋³` with real data is real**: by uniqueness
+(`Feec.Constraints.strong_unique`, `L` skew-symmetric) it is the orbit of `symGroup`, which
+preserves reality (`isRealTot_symGroup`). -/
+theorem isRealTot_of_isStrongSolution {T : ℝ} {U₀ : Tot L2R L2S L2T} {U : ℝ → Tot L2R L2S L2T}
+    (hU : IsStrongSolution (-symComplex.waveOp) T U₀ 0 U) (hU₀ : IsRealTot U₀) :
+    ∀ t ∈ Icc 0 T, IsRealTot (U t) := by
+  intro t ht
+  have h0 : U₀ ∈ (-symComplex.waveOp).domain := hU.init ▸ hU.mem 0 ⟨le_rfl, ht.1.trans ht.2⟩
+  rw [strong_unique _ symGroup.isSkewSymm hU (isStrongSolution_orbit symGroup T ⟨U₀, h0⟩) ht]
+  exact isRealTot_symGroup t hU₀
+
+/-- **Thesis Prop 4.19 on `𝕋³` for real-valued fields.** For real data
+`E₀ ∈ H(curl, S) ∩ L²(TSD)`, `B₀ ∈ H(sym curl, T) ∩ L²(TSD)` (`IsRealS`, `IsRealT`), the Hodge
+wave (4.18) has a strong solution on `[0, T]` with data `(0, E₀, B₀)` that keeps `σ ≡ 0`,
+`E, B ∈ L²(TSD)`, solves the reduced system, and is real-valued at every time. It is the unique
+strong solution (`Feec.Constraints.strong_unique`), and every strong solution with real data is
+real (`isRealTot_of_isStrongSolution`).
+
+Correction: the fields of the thesis (the electric and magnetic parts of the Weyl tensor,
+[ACBY1997]) are real-valued, while `prop_4_19_torus_exists` is proved for complex
+coefficients viewed as a real Hilbert space; this theorem recovers the real statement as the
+conjugation-invariant part.
+
+See [QuennevilleBelair2015, §4.11, Prop 4.19 and Thm 4.3]. -/
+theorem prop_4_19_torus_exists_real (T : ℝ) {E₀ : L2S} {B₀ : L2T} (hE₀ : E₀ ∈ L2TSDS)
+    (hB₀ : B₀ ∈ L2TSDT) (hE : E₀ ∈ HcurlS) (hB : B₀ ∈ HsymCurlT) (hEr : IsRealS E₀)
+    (hBr : IsRealT B₀) :
+    ∃ U : ℝ → Tot L2R L2S L2T,
+      IsStrongSolution (-symComplex.waveOp) T (ini L2R E₀ B₀) 0 U ∧
+      (∀ t ∈ Icc 0 T, U t ∈ Kc L2R L2TSDS L2TSDT) ∧
+      IsReducedSolution symComplex T E₀ B₀ (fun t => (tot L2R L2S L2T (U t)).2.1)
+        (fun t => (tot L2R L2S L2T (U t)).2.2) ∧
+      ∀ t, IsRealTot (U t) := by
+  have hU := isStrongSolution_orbit symGroup T ⟨_, ini_mem_domL_sym hE₀ hE hB⟩
+  exact ⟨_, hU, (prop_4_19_torus hE₀ hB₀ hU).1, (prop_4_19_torus hE₀ hB₀ hU).2,
+    fun t => isRealTot_symGroup t (isRealTot_ini hEr hBr)⟩
+
+end RealGroup
+
+section RealBridge
+
+open MeasureTheory
+
+/-- `IsRealS` is `Feec.Torus.IsReal` of the underlying `ℂ³ˣ³`-valued sequence. -/
+theorem isRealS_iff_embL2 (A : L2S) : IsRealS A ↔ Feec.Torus.IsReal (embL2 symSub A) :=
+  forall_congr' fun k => by
+    rw [embL2_apply, embL2_apply, ← coe_conjS]; exact Subtype.ext_iff
+
+/-- `IsRealT` is `Feec.Torus.IsReal` of the underlying `ℂ³ˣ³`-valued sequence. -/
+theorem isRealT_iff_embL2 (ρ : L2T) : IsRealT ρ ↔ Feec.Torus.IsReal (embL2 trSub ρ) :=
+  forall_congr' fun k => by
+    rw [embL2_apply, embL2_apply, ← coe_conjT]; exact Subtype.ext_iff
+
+attribute [local instance] Feec.Torus.instMeasureSpaceUnitAddCircle_feec in
+/-- **Real-valued scalar fields**: `f ∈ L²(𝕋³; ℂ)` is real-valued (`f̄ = f`) iff its Fourier
+coefficients satisfy `IsRealR`. -/
+theorem isRealR_scalarFourier_iff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin 3)))) :
+    IsRealR (scalarFourier f) ↔ star f = f := by
+  rw [Feec.TorusWeak.star_eq_self_iff]
+  simp only [IsRealR, scalarFourier_apply]
+
+end RealBridge
 
 end Feec.TorusSym

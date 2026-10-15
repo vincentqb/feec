@@ -25,6 +25,8 @@ particular Stone's, `Feec.HilbertComplex2.waveGroup`).
   is `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` curl-free. **`thesisBox_Kmax_ne_bot`**: `K* ≠ 0` (it contains
   `diag(1, -1, 0)`).
 
+The forward-only version (`t ≥ 0`) is `Feec.Box.thesisBox_forward_iff` in `Feec.Ch4.BoxForward`.
+
 The identification of the parity spaces with the Sobolev spaces of the box (traces) is not
 proved; see `Feec.Ch4.Box`.
 

@@ -5,7 +5,7 @@ public import Mathlib.MeasureTheory.Integral.Pi
 public import Feec.Ch4.Box
 
 /-!
-# A nonzero element of `K*` on the box: the constant field `diag(1, -1, 0)`
+# Nonzero elements of `K*` on the box: the constant fields `diag(1, -1, 0)` and `e₀e₁ᵀ + e₁e₀ᵀ`
 
 `Feec.Box.mem_Kmax_boxTSD_iff` identifies the largest invariant subspace `K*` of
 `K = {0} × L²(TSD) × L²(TSD)` on the box `Q = (0, ½)³` with the thesis' boundary conditions: it
@@ -23,6 +23,12 @@ entries `sq(x₀)`, `-sq(x₁)`, `0`, with `sq` the square wave `sign(sin 2πx)`
 * `staticB_mem_boxTSD`: `staticB ∈ boxTSD (-1)` (parities, symmetric, trace-free and
   divergence-free on `Q`), `curlSym_staticB`: it is curl-free, `staticB_ne_zero`.
 * **`staticB_mem_Kmax`**: `(0, 0, staticB) ∈ K*`, so `K* ≠ 0`.
+* **`offB_mem_Kmax`**: the constant field `e₀e₁ᵀ + e₁e₀ᵀ` (`offB`, extension entries
+  `B₀₁ = sq(x₁)`, `B₁₀ = sq(x₀)`) also gives an element of `K*`, linearly independent of the
+  first; so `dim K* ≥ 2`. Both are Hessians of harmonic functions (`(x₀² - x₁²)/2`, `x₀x₁`).
+  Non-constant Hessians of harmonic functions are further elements of `K*` (their extensions
+  have no tangential jumps), not formalized here; whether `K*` is infinite-dimensional is
+  therefore not settled in Lean.
 
 ## References
 
@@ -373,5 +379,176 @@ theorem staticB_mem_Kmax :
     fun h => staticB_ne_zero ?_⟩
   have := congrArg (fun x => (HilbertComplex2.tot L2V L2M L2M x).2.2) h
   simpa [tot_ini] using this
+
+/-! ## A second static field: the off-diagonal `e₀e₁ᵀ + e₁e₀ᵀ` -/
+
+/-- `sq(x_a)` is not zero in `L²`: it is `1` on the box. -/
+theorem axisSqL_ne_zero (a : Fin 3) : axisSqL a ≠ 0 := by
+  intro h1
+  have hae : axisSq a =ᵐ[volume] 0 := by
+    have := axisSqL_ae a
+    rw [h1] at this
+    exact this.symm.trans (Lp.coeFn_zero ℂ 2 (volume : Measure T3))
+  have hpos : 0 < volume boxSet := by
+    refine isOpen_boxSet.measure_pos volume ⟨proj fun _ => 1 / 4, proj_mem_boxSet fun _ => ?_⟩
+    constructor <;> norm_num
+  have hnull : volume {x | axisSq a x ≠ 0} = 0 :=
+    ae_iff.1 (hae.mono fun x hx => by simpa using hx)
+  refine hpos.ne' (measure_mono_null (fun x hx => ?_) hnull)
+  obtain ⟨t, ht, e⟩ := hx a (mem_univ a)
+  change axisSq a x ≠ 0
+  rw [axisSq, ← e, sqWave_coe ht]
+  exact one_ne_zero
+
+/-- The entries of the magnetic-slot extension of `e₀e₁ᵀ + e₁e₀ᵀ` (the Hessian of the harmonic
+function `x₀x₁`): `B₀₁ = sq(x₁)`, `B₁₀ = sq(x₀)`, `0` otherwise. -/
+def offEntry (p : Fin 3 × Fin 3) : L2T :=
+  if p = (0, 1) then axisSqL 1 else if p = (1, 0) then axisSqL 0 else 0
+
+/-- **The constant field `e₀e₁ᵀ + e₁e₀ᵀ` on `Q`** (the Hessian of `x₀x₁`), extended with the
+magnetic-slot parities (`ParRow (-1)`), on the Fourier side. -/
+def offB : L2M := matrixFourier (WithLp.toLp 2 offEntry)
+
+theorem entry_offB (p : Fin 3 × Fin 3) : entry p offB = mFourierBasis.repr (offEntry p) := by
+  ext k
+  rw [entry_apply, offB]
+  obtain ⟨a, b⟩ := p
+  rw [matrixFourier_apply, ← mFourierBasis_repr]
+
+theorem ofCoeff_entry_offB (p : Fin 3 × Fin 3) : ofCoeff (entry p offB) = offEntry p := by
+  rw [entry_offB, ofCoeff, LinearIsometryEquiv.symm_apply_apply]
+
+theorem repr_symm_entry_offB (p : Fin 3 × Fin 3) :
+    mFourierBasis.repr.symm (entry p offB) = offEntry p := ofCoeff_entry_offB p
+
+theorem offEntry_01 : offEntry (0, 1) = axisSqL 1 := by simp [offEntry]
+
+theorem offEntry_10 : offEntry (1, 0) = axisSqL 0 := by simp [offEntry]
+
+theorem offEntry_other {p : Fin 3 × Fin 3} (h0 : p ≠ (0, 1)) (h1 : p ≠ (1, 0)) :
+    offEntry p = 0 := by simp [offEntry, h0, h1]
+
+theorem offB_apply (k : Z3) (a b : Fin 3) :
+    offB k (a, b) = if (a, b) = (0, 1) then axisCoef 1 k
+      else if (a, b) = (1, 0) then axisCoef 0 k else 0 := by
+  rw [← entry_apply, entry_offB, offEntry]
+  split_ifs
+  · exact repr_axisSqL 1 k
+  · exact repr_axisSqL 0 k
+  · simp
+
+theorem offB_mem_ParRow : offB ∈ ParRow (-1) := by
+  intro i k a b
+  rw [offB_apply, offB_apply]
+  fin_cases a <;> fin_cases b <;> fin_cases i <;> simp [axisCoef_refl, colSign]
+
+theorem offB_mem_boxSym : offB ∈ boxSym := by
+  rw [mem_boxSym]
+  intro a b
+  by_cases hab : (a, b) = (0, 1) ∨ (a, b) = (1, 0)
+  · -- `sq(x₁) - sq(x₀)` vanishes on the box
+    have key : ZeroOnBox (entry (0, 1) offB - entry (1, 0) offB) := by
+      rw [ZeroOnBox]
+      have e : ofCoeff (entry (0, 1) offB - entry (1, 0) offB) = axisSqL 1 - axisSqL 0 := by
+        rw [ofCoeff, _root_.map_sub, repr_symm_entry_offB, repr_symm_entry_offB, offEntry_01,
+          offEntry_10]
+      rw [e]
+      have h1 := ae_restrict_of_ae (μ := volume) (s := boxSet) (axisSqL_ae 0)
+      have h2 := ae_restrict_of_ae (μ := volume) (s := boxSet) (axisSqL_ae 1)
+      have h3 := ae_restrict_of_ae (μ := volume) (s := boxSet)
+        (Lp.coeFn_sub (axisSqL 1) (axisSqL 0))
+      filter_upwards [h1, h2, h3, ae_restrict_mem measurableSet_boxSet] with x e1 e2 e3 hx
+      rw [e3, Pi.sub_apply, e1, e2]
+      obtain ⟨t0, ht0, e0⟩ := hx 0 (mem_univ 0)
+      obtain ⟨t1, ht1, e1'⟩ := hx 1 (mem_univ 1)
+      simp only [axisSq, ← e0, ← e1', sqWave_coe ht0, sqWave_coe ht1, Pi.zero_apply, sub_self]
+    rcases hab with h | h
+    · simp only [Prod.mk.injEq] at h
+      obtain ⟨rfl, rfl⟩ := h
+      exact key
+    · simp only [Prod.mk.injEq] at h
+      obtain ⟨rfl, rfl⟩ := h
+      have := boxZero.neg_mem key
+      rwa [neg_sub] at this
+  · push Not at hab
+    have h1 : (b, a) ≠ (0, 1) := fun h => hab.2 (by
+      simp only [Prod.mk.injEq] at h ⊢; exact ⟨h.2, h.1⟩)
+    have h2 : (b, a) ≠ (1, 0) := fun h => hab.1 (by
+      simp only [Prod.mk.injEq] at h ⊢; exact ⟨h.2, h.1⟩)
+    rw [entry_offB, entry_offB, offEntry_other hab.1 hab.2, offEntry_other h1 h2, sub_self]
+    exact boxZero.zero_mem
+
+theorem offB_mem_boxTr : offB ∈ boxTr := by
+  rw [mem_boxTr]
+  have e : ∑ a : Fin 3, entry (a, a) offB = 0 := by
+    rw [Fin.sum_univ_three, entry_offB, entry_offB, entry_offB,
+      offEntry_other (by decide) (by decide), offEntry_other (by decide) (by decide),
+      offEntry_other (by decide) (by decide)]
+    simp
+  rw [e]
+  exact boxZero.zero_mem
+
+theorem offB_mem_boxDiv : offB ∈ boxDiv := by
+  rw [mem_boxDiv]
+  intro a φ hφ hs
+  simp only [ofCoeff_entry_offB]
+  have hz : ∀ b, ∫ x, ((0 : L2T) : T3 → ℂ) x * partialT b φ x = 0 := fun b => by
+    rw [integral_congr_ae ((Lp.coeFn_zero ℂ 2 (volume : Measure T3)).mono fun x hx => by
+      dsimp only; rw [hx, Pi.zero_apply, zero_mul] :
+        (fun x => ((0 : L2T) : T3 → ℂ) x * partialT b φ x) =ᵐ[volume] 0)]
+    simp
+  rw [Fin.sum_univ_three]
+  rcases (show a = 0 ∨ a = 1 ∨ a = 2 by fin_cases a <;> simp) with rfl | rfl | rfl
+  · rw [offEntry_other (by decide) (by decide), offEntry_01,
+      offEntry_other (by decide) (by decide), integral_axisSqL_mul_partialT 1 hφ hs, hz, hz]
+    simp
+  · rw [offEntry_10, offEntry_other (by decide) (by decide),
+      offEntry_other (by decide) (by decide), integral_axisSqL_mul_partialT 0 hφ hs, hz, hz]
+    simp
+  · rw [offEntry_other (by decide) (by decide), offEntry_other (by decide) (by decide),
+      offEntry_other (by decide) (by decide), hz, hz, hz]
+    simp
+
+theorem offB_mem_boxTSD : offB ∈ boxTSD (-1) :=
+  ⟨⟨⟨offB_mem_ParRow, offB_mem_boxSym⟩, offB_mem_boxTr⟩, offB_mem_boxDiv⟩
+
+/-- `offB` is curl-free. -/
+theorem curlSym_offB (k : Z3) : curlSym (freq k) (offB k) = 0 := by
+  have h01 := freq_mul_axisCoef (a := 0) (c := 1) (by decide) k
+  have h02 := freq_mul_axisCoef (a := 0) (c := 2) (by decide) k
+  have h10 := freq_mul_axisCoef (a := 1) (c := 0) (by decide) k
+  have h12 := freq_mul_axisCoef (a := 1) (c := 2) (by decide) k
+  ext ⟨a, b⟩
+  simp only [curlSym_apply, jM_apply, curlR_apply, cross, offB_apply]
+  fin_cases a <;> fin_cases b <;> simp [h01, h02, h10, h12]
+
+/-- **`K*` is at least two-dimensional**: `(0, 0, diag(1, -1, 0))` and
+`(0, 0, e₀e₁ᵀ + e₁e₀ᵀ)` (the Hessians of the harmonic functions `(x₀² - x₁²)/2` and `x₀x₁`) are
+linearly independent elements of `K*` on the box with the thesis' boundary conditions.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem offB_mem_Kmax :
+    ini L2V (0 : L2M) offB ∈ Kmax periodicGroup (Kc L2V (boxTSD 1) (boxTSD (-1))) ∧
+      LinearIndependent ℝ ![ini L2V (0 : L2M) staticB, ini L2V (0 : L2M) offB] := by
+  refine ⟨(mem_Kmax_boxTSD_iff _).2 ⟨offB, offB_mem_boxTSD, curlSym_offB, rfl⟩, ?_⟩
+  rw [LinearIndependent.pair_iff]
+  intro s t hst
+  have hB : s • staticB + t • offB = 0 := by
+    have := congrArg (fun x => (HilbertComplex2.tot L2V L2M L2M x).2.2) hst
+    simpa [tot_ini] using this
+  have hp : ∀ p, s • staticEntry p + t • offEntry p = 0 := by
+    intro p
+    have := congrArg (fun A => mFourierBasis.repr.symm (entry p A)) hB
+    simp only [_root_.map_add, _root_.map_smul, _root_.map_zero] at this
+    rw [RCLike.real_smul_eq_coe_smul (K := ℂ) s, RCLike.real_smul_eq_coe_smul (K := ℂ) t,
+      _root_.map_smul, _root_.map_smul, repr_symm_entry_staticB, repr_symm_entry_offB,
+      ← RCLike.real_smul_eq_coe_smul, ← RCLike.real_smul_eq_coe_smul] at this
+    exact this
+  have h00 := hp (0, 0)
+  have h01 := hp (0, 1)
+  rw [staticEntry_00, offEntry_other (by decide) (by decide), smul_zero, add_zero] at h00
+  rw [staticEntry_other (by decide) (by decide), offEntry_01, smul_zero, zero_add] at h01
+  exact ⟨(smul_eq_zero.1 h00).resolve_right (axisSqL_ne_zero 0),
+    (smul_eq_zero.1 h01).resolve_right (axisSqL_ne_zero 1)⟩
 
 end Feec.Box

@@ -40,38 +40,60 @@ Results for Prop 4.19 on `symComplexD`, on every nonempty bounded open `Ω`
   every `E ∈ ker d0*` has `∫_Ω E = 0` (`integral_eq_zero_of_mem_ker_symComplexD`, tested against
   `∇²(x_a x_b)`), and `L²(TSD) ∩ H̊(div div, S) ⊆ ker d0*` (`TSDS_inf_domain_le_ker`). The boundary
   condition of `H̊(div div, S)` now plays the role that `H̊(curl, S)` plays in `Feec.Ch4.BoundedSym`.
-* **Hypotheses.** `L²(TSD) ⊄ ker d0*` (`diag(1, -1, 0) ∉ H̊(div div, S)`,
-  `symComplexD_not_TSDS_le_ker`), so `hS1` of `Feec.Constraints.prop_4_17` fails for the thesis'
-  `K`. It holds for `TSDSk = L²(TSD) ∩ ker d0*`, which has the same data in `D(L)`
-  (`symComplexD_mem_Kc_iff`). The projection hypothesis fails for `K = {0} × L²(TSD) × S2`, every
-  `S2` (`symComplexD_not_projection_hyp`: `P_{L²(TSD)} (g · diag(1, -1, 0))` has nonzero mean); the
-  density of `H(curl, S) ∩ H̊(div div, S) ∩ L²(TSD)` in `L²(TSD)` fails (`symComplexD_not_dense`).
-  `hd1`, `hd1s` hold: Lemma 3.5 without boundary condition (`symComplexD_d1_mem_TSDT`,
-  `symComplexD_adjoint_d1_mem_TSDS`).
+* **Hypotheses of Theorem 4.4, transported to `symComplexD`.** The thesis checks the hypotheses
+  of its Theorem 4.4 (`P_K D(L) ⊆ D(L)`, `D(L) ∩ K` dense in `K`, `L(D(L) ∩ K) ⊆ K`) for the
+  spaces of `symComplexB`; here they are read with `D(L)` of `symComplexD`. The projection
+  hypothesis fails for `K = {0} × L²(TSD) × S2`, every `S2` (`symComplexD_not_projection_hyp`:
+  `P_{L²(TSD)} (g · diag(1, -1, 0))` has nonzero mean); the density of
+  `D(L) ∩ K`, i.e. of `H(curl, S) ∩ H̊(div div, S) ∩ L²(TSD)` in `L²(TSD)`, fails
+  (`symComplexD_not_dense`). (The literal per-component analogue "`H(curl, S) ∩ L²(TSD)` dense in
+  `L²(TSD)`" has no boundary condition and is not refuted here.) The invariance hypothesis holds:
+  the thesis' argument uses only `div div (D ∩ L²(TSD)) = 0`, which is true
+  (`TSDS_inf_domain_le_ker`), and `hd1`, `hd1s` hold by Lemma 3.5 without boundary condition
+  (`symComplexD_d1_mem_TSDT`, `symComplexD_adjoint_d1_mem_TSDS`). The formal
+  `Feec.Constraints.prop_4_17` also asks `S1 ≤ ker d0*`; this fails for `S1 = L²(TSD)`
+  (`symComplexD_not_TSDS_le_ker`, `diag(1, -1, 0) ∉ H̊(div div, S)`), a consequence of the density
+  failure rather than a separate defect (density and invariance would give
+  `L²(TSD) = closure(D ∩ L²(TSD)) ⊆ ker d0*`, a closed set). It holds for
+  `TSDSk = L²(TSD) ∩ ker d0*`, which has the same data in `D(L)` (`symComplexD_mem_Kc_iff`).
 * **The obstruction does not reach the conclusion.** Unlike for `symComplexB`, the constant
   direction is invisible to the evolution: `⟪sym curl B, diag(1, -1, 0)⟫ = 0` for every
   `B ∈ H̊(sym curl, T)` (`symComplexD_inner_adjoint_d1_constS`), and for TSD data in `D(L)` the
   unique solution has `σ ≡ 0`, `E(t) ∈ ker d0*` and `∫_Ω E(t) = 0` for all `t`
-  (`symComplexD_prop_4_16`). The refutation `symComplexB_betaT_not_propagate` has no analogue:
-  `β ∉ H̊(sym curl, T)`.
+  (`symComplexD_prop_4_16`). The datum of the refutation `symComplexB_betaT_not_propagate` is not
+  admissible: `β ∉ H̊(sym curl, T)` (`betaT_not_mem_symComplexD_adjoint_d1`).
+* **The magnetic constants.** `diag(1, -1, 0) ∉ H̊(sym curl, T)`
+  (`constT_not_mem_symComplexD_adjoint_d1`), although it is a stationary datum of (4.16); and for
+  every `B ∈ H̊(sym curl, T)`, `⟪B, diag(1, -1, 0)⟫ = -⟪sym curl B, β⟫`
+  (`inner_constT_eq_neg_inner_betaS`). Whether `∫_Ω B = 0` on `L²(TSD) ∩ H̊(sym curl, T)` is not
+  decided.
 * **What holds** (`symComplexD_prop_4_19_max`): Prop 4.19 on the maximal invariant subspace
   `K* = {0} × S1* × S2*` of `{0} × TSDSk × L²(TSD)`, with every hypothesis of
   `Feec.Constraints.prop_4_17`, maximality, `diag(1, -1, 0) ∉ S1*`, and unconditional existence,
-  uniqueness and propagation.
+  uniqueness and propagation. Whether `K* ≠ {0}` is not established: the stationary magnetic
+  data used for (4.16) (`constT`, harmonic Hessians) carry no boundary condition, and `constT`
+  is excluded here.
 
 ## Correction
 
 [QuennevilleBelair2015, §4.11, Prop 4.19], read with its printed data space
-`H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)`: on every nonempty bounded open `Ω ⊆ ℝ³` its
-projection and density hypotheses are false, and its `K = {0} × L²(TSD) × L²(TSD)` violates the
-requirement `L²(TSD) ⊆ ker (div div)` used in the proof (`L²(TSD) ∩ ker (div div)` must be used).
-The proof's argument therefore does not apply with either placement of the boundary conditions.
+`H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)`: on every nonempty bounded open `Ω ⊆ ℝ³`
+the first two hypotheses of Theorem 4.4, transported to this `D(L)` with
+`K = {0} × L²(TSD) × L²(TSD)`, are false (`P_K D(L) ⊄ D(L)`; `D(L) ∩ K` not dense in `K`). The
+proof's argument therefore does not apply with either placement of the boundary conditions.
 
 ## Thesis gap (open)
 
 Whether the *conclusion* of Prop 4.19 holds for `symComplexD` is not settled. A refutation in the
 style of `Feec.Ch4.BoundedSym` needs a vector `N ⊥ D(L) ∩ K` with `⟪L x₀, N⟫ ≠ 0` for some
-`x₀ ∈ D(L) ∩ K`; the constant fields (the only such `N` found) give `0`. Heuristically (not formalized), in the
+`x₀ ∈ D(L) ∩ K`. The only candidate tested is the electric constant `N = (0, diag(1, -1, 0), 0)`,
+which gives `0` (`symComplexD_inner_adjoint_d1_constS`). The magnetic constant
+`N = (0, 0, diag(1, -1, 0))` is not tested: it would need `⟪B, diag(1, -1, 0)⟫ = 0` on
+`L²(TSD) ∩ H̊(sym curl, T)` (equivalently `⟪sym curl B, β⟫ = 0`, `inner_constT_eq_neg_inner_betaS`)
+and `⟪curl E, diag(1, -1, 0)⟫ ≠ 0` for some `E ∈ L²(TSD) ∩ H(curl, S) ∩ H̊(div div, S)`; the latter
+is a boundary term (`diag(1, -1, 0) ∉ H̊(sym curl, T)`, `constT_not_mem_symComplexD_adjoint_d1`),
+and exhibiting such an `E` needs explicit non-compactly-supported members of `H̊(div div, S)`.
+Heuristically (not formalized), in the
 interior the constraint violations `(div E, tr E, skew B, div B)` obey a closed first-order system
 (Lemma 3.5), so whether TSD propagates is decided by the boundary conditions this system inherits
 from `H̊(div div, S)` and `H̊(sym curl, T)`; deciding it needs boundary regularity (traces,
@@ -978,10 +1000,11 @@ theorem integral_constS_00 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
   simp [diagA]
 
 /-- **`L²(TSD) ⊄ D(d0*) = H̊(div div, S)`** for `symComplexD`: the constant TSD field
-`diag(1, -1, 0)` is not in `H̊(div div, S)`. So the hypothesis `L²(TSD) ⊆ ker d0*` of
-`Feec.Constraints.prop_4_17` fails for the thesis' `K = {0} × L²(TSD) × S2` with these boundary
-conditions (it holds for `{0} × (L²(TSD) ∩ ker d0*) × S2`, which has the same `D(L) ∩ K`,
-`TSDS_inf_domain_le_ker`). -/
+`diag(1, -1, 0)` is not in `H̊(div div, S)`. So the hypothesis `S1 ≤ ker d0*` of the formal
+`Feec.Constraints.prop_4_17` fails for `S1 = L²(TSD)` with these boundary conditions (it holds for
+`L²(TSD) ∩ ker d0*`, which has the same `D(L) ∩ K`, `TSDS_inf_domain_le_ker`). The thesis' proof
+only uses `div div (D ∩ L²(TSD)) = 0`, which holds; the failure here reflects the failure of
+density (`symComplexD_not_dense`). -/
 theorem constS_not_mem_adjoint_d0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : constS hΩ hb ∉ (symComplexD hΩ hb).d0†.domain := fun hD => by
   have h := integral_eq_zero_of_mem_TSDS_dual hΩ hb (constS_mem_TSDS hΩ hb) hD 0 0
@@ -1208,24 +1231,105 @@ theorem symComplexD_d1_mem_TSDT (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   change ∑ ij : Ix, ∫ x, C ij x * gradM φ ij x ∂volume.restrict Ω = 0
   rw [← e1, e2, e3]
 
+/-- **`H̊(sym curl, T) ⊆ H(sym curl, T)` with the same `sym curl`**: every `ρ ∈ D(d1*)` of
+`symComplexD` lies in `D(curl*)` for the complex (4.16) (`symComplexB`), with
+`curl* ρ = d1* ρ`. Here `⟪d1* ρ, Φ⟫ = ⟪ρ, curl Φ⟫` for symmetric test fields `Φ`
+(`smoothS_mem_symComplexD_d1`), and `adjoint_curlS_of_weak` applies. -/
+theorem symComplexD_adjoint_d1_curlS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (ρ : (symComplexD hΩ hb).d1†.domain) :
+    ∃ h : (ρ : L2T Ω) ∈ (curlS (Ω := Ω))†.domain,
+      (curlS (Ω := Ω))† ⟨_, h⟩ = (symComplexD hΩ hb).d1† ρ :=
+  adjoint_curlS_of_weak hΩ hb fun Φ hΦ hs => by
+    obtain ⟨hm, em⟩ := smoothS_mem_symComplexD_d1 hΩ hb (fun ij => (hΦ ij).contDiff_one) hs
+    have := LinearPMap.adjoint_isFormalAdjoint (symComplexD hΩ hb).dense1 ρ ⟨_, hm⟩
+    simp only at this
+    rw [em, smoothS, curlSmoothS, Submodule.coe_inner, Submodule.coe_inner, inner_smoothField,
+      inner_smoothField] at this
+    exact this.symm
+
 /-- **`sym curl (H̊(sym curl, T) ∩ L²(TSD)) ⊆ L²(TSD)`** for `symComplexD` (Lemma 3.5): the
-hypothesis `hd1s` of `Feec.Constraints.prop_4_17`. Here `d1* = sym curl` on `H̊(sym curl, T)`
-satisfies `⟪d1* ρ, Φ⟫ = ⟪ρ, curl Φ⟫` for symmetric test fields `Φ`, so `ρ ∈ D(curl*)` for the
-complex (4.16) with the same value (`adjoint_curlS_of_weak`), and `adjoint_curlS_mem_TSDS`
-applies. -/
+hypothesis `hd1s` of `Feec.Constraints.prop_4_17`. By `symComplexD_adjoint_d1_curlS`, `ρ` lies in
+`D(curl*)` for (4.16) with the same value, and `adjoint_curlS_mem_TSDS` applies. -/
 theorem symComplexD_adjoint_d1_mem_TSDS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (ρ : (symComplexD hΩ hb).d1†.domain) (hρ : (ρ : L2T Ω) ∈ TSDT Ω) :
     (symComplexD hΩ hb).d1† ρ ∈ TSDS Ω := by
-  obtain ⟨h, e⟩ := adjoint_curlS_of_weak hΩ hb (B := (ρ : L2T Ω))
-    (C := (symComplexD hΩ hb).d1† ρ) fun Φ hΦ hs => by
-      obtain ⟨hm, em⟩ := smoothS_mem_symComplexD_d1 hΩ hb (fun ij => (hΦ ij).contDiff_one) hs
-      have := LinearPMap.adjoint_isFormalAdjoint (symComplexD hΩ hb).dense1 ρ ⟨_, hm⟩
-      simp only at this
-      rw [em, smoothS, curlSmoothS, Submodule.coe_inner, Submodule.coe_inner, inner_smoothField,
-        inner_smoothField] at this
-      exact this.symm
+  obtain ⟨h, e⟩ := symComplexD_adjoint_d1_curlS hΩ hb ρ
   rw [← e]
   exact adjoint_curlS_mem_TSDS hΩ hb ⟨_, h⟩ hρ
+
+/-! ## Prop 4.19 for `symComplexD`: `β` and the constant magnetic field are not admissible -/
+
+/-- **`β ∉ H̊(sym curl, T)`** for `symComplexD`, on every nonempty bounded open `Ω`
+(`D(d1*) = D(symcurlD)`, `symComplexD_adjoint_d1`). Otherwise `sym curl β` would be the same in
+`H(sym curl, T)` (`symComplexD_adjoint_d1_curlS`), where `⟪sym curl β, diag(1, -1, 0)⟫ = -2 |Ω|`
+(`inner_constS_adjoint_betaT`), while on `H̊(sym curl, T)` this pairing vanishes
+(`symComplexD_inner_adjoint_d1_constS`). So the datum `(0, E₀, β)` behind the refutation of
+Prop 4.19 for (4.16) (`symComplexB_betaT_not_propagate`) is not in `D(L)` here. -/
+theorem betaT_not_mem_symComplexD_adjoint_d1 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) : betaT hΩ hb ∉ (symComplexD hΩ hb).d1†.domain := fun hβ => by
+  obtain ⟨h, e⟩ := symComplexD_adjoint_d1_curlS hΩ hb ⟨_, hβ⟩
+  have h1 := inner_constS_adjoint_betaT hΩ hb h
+  rw [e, real_inner_comm, symComplexD_inner_adjoint_d1_constS hΩ hb ⟨_, hβ⟩] at h1
+  have := volume_real_pos hΩ hb hne
+  linarith
+
+theorem betaT_not_mem_symcurlD_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) : betaT hΩ hb ∉ (symcurlD (Ω := Ω)).domain := by
+  rw [← symComplexD_adjoint_d1 hΩ hb]
+  exact betaT_not_mem_symComplexD_adjoint_d1 hΩ hb hne
+
+theorem betaField_symm (i j : Fin 3) : betaField (i, j) = betaField (j, i) := by
+  fin_cases i <;> fin_cases j <;> rfl
+
+/-- `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, as a symmetric field in `H(curl, S) = D(d1)`. -/
+def betaS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : L2S Ω :=
+  smoothS hΩ hb contDiff_one_betaField betaField_symm
+
+/-- **The mean of a magnetic field in `H̊(sym curl, T)` is a pairing of its `sym curl`**: for
+every `B ∈ D(d1*)` of `symComplexD`, `⟪B, diag(1, -1, 0)⟫ = -⟪sym curl B, β⟫`, since
+`β ∈ H(curl, S)` with `curl β = -diag(1, -1, 0)` (`curlM_betaField`). -/
+theorem inner_constT_eq_neg_inner_betaS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (B : (symComplexD hΩ hb).d1†.domain) :
+    ⟪(B : L2T Ω), constT hΩ hb⟫ = -⟪(symComplexD hΩ hb).d1† B, betaS hΩ hb⟫ := by
+  obtain ⟨hm, em⟩ := smoothS_mem_symComplexD_d1 hΩ hb contDiff_one_betaField betaField_symm
+  have e := LinearPMap.adjoint_isFormalAdjoint (symComplexD hΩ hb).dense1 B ⟨_, hm⟩
+  simp only at e
+  rw [betaS, e, em, curlSmoothS, Submodule.coe_inner, Submodule.coe_inner, inner_smoothField,
+    constT_coe, inner_constField]
+  simp only [curlM_betaField, mul_neg, integral_neg, Finset.sum_neg_distrib, neg_neg]
+  refine Finset.sum_congr rfl fun ij _ => ?_
+  rw [← integral_const_mul]
+  exact integral_congr_ae (Eventually.of_forall fun x => mul_comm _ _)
+
+/-- `⟪diag(1, -1, 0), diag(1, -1, 0)⟫ = 2 |Ω|`. -/
+theorem inner_constT_self (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    ⟪constT hΩ hb, constT hΩ hb⟫ = 2 * volume.real Ω := by
+  rw [Submodule.coe_inner, constT_coe, inner_constField]
+  simp only [integral_constField]
+  simp [Fintype.sum_prod_type, Fin.sum_univ_three, diagA]
+  ring
+
+/-- **The constant magnetic field `diag(1, -1, 0)` is not in `H̊(sym curl, T)`** (`symComplexD`),
+on every nonempty bounded open `Ω`, although it lies in `L²(TSD) ∩ H(sym curl, T)` with
+`sym curl = 0` (`symComplexB_constT_mem_S2max`). Otherwise its `sym curl` in `H̊(sym curl, T)`
+would equal that in `H(sym curl, T)`, i.e. `0` (`symComplexD_adjoint_d1_curlS`,
+`adjoint_curlS_eq_zero`), and `inner_constT_eq_neg_inner_betaS` would give
+`2 |Ω| = ⟪diag(1, -1, 0), diag(1, -1, 0)⟫ = 0`. -/
+theorem constT_not_mem_symComplexD_adjoint_d1 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) : constT hΩ hb ∉ (symComplexD hΩ hb).d1†.domain := fun hc => by
+  obtain ⟨h, e⟩ := symComplexD_adjoint_d1_curlS hΩ hb ⟨_, hc⟩
+  obtain ⟨h0, e0⟩ := adjoint_curlS_eq_zero hΩ hb (Ψ := fun ij _ => diagA ij.1 ij.2)
+    (fun _ => contDiff_const) (fun _ => by simpa [Matrix.trace] using diagA_trace)
+    fun ij x => by simp [curlM, BoundedDomain.pd]
+  have hz : (symComplexD hΩ hb).d1† ⟨_, hc⟩ = 0 := by
+    rw [← e]
+    exact e0
+  have h1 := inner_constT_eq_neg_inner_betaS hΩ hb ⟨_, hc⟩
+  rw [hz, inner_zero_left, neg_zero] at h1
+  change ⟪constT hΩ hb, constT hΩ hb⟫ = 0 at h1
+  rw [inner_constT_self] at h1
+  have := volume_real_pos hΩ hb hne
+  linarith
 
 /-! ## Prop 4.19 for `symComplexD`: diagnosis and the maximal form -/
 
@@ -1265,12 +1369,13 @@ theorem symComplexD_mem_Kc_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 /-- **Diagnosis of Prop 4.19 with the boundary conditions of its statement** (`symComplexD`,
 `D(L) = H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)`), on every nonempty bounded open
 `Ω ⊆ ℝ³`, for the thesis' `K = {0} × L²(TSD) × L²(TSD)`:
-1. `L²(TSD) ⊄ ker d0*` (`diag(1, -1, 0) ∉ H̊(div div, S)`), so `hS1` of
-   `Feec.Constraints.prop_4_17` fails; it holds for `L²(TSD) ∩ ker d0*`, which has the same
-   data in `D(L)` (`symComplexD_mem_Kc_iff`);
+1. `L²(TSD) ⊄ ker d0*` (`diag(1, -1, 0) ∉ H̊(div div, S)`), so the hypothesis `hS1` of the formal
+   `Feec.Constraints.prop_4_17` fails (not used by the thesis' proof, which only needs
+   `div div (D ∩ L²(TSD)) = 0`; it reflects item 3's density failure); it holds for
+   `L²(TSD) ∩ ker d0*`, which has the same data in `D(L)` (`symComplexD_mem_Kc_iff`);
 2. `hd1` and `hd1s` hold (Lemma 3.5 without boundary condition);
-3. the projection hypothesis fails for `K` (every `S2`), and `H(curl, S) ∩ H̊(div div, S) ∩ L²(TSD)`
-   is not dense in `L²(TSD)`;
+3. the hypotheses of Theorem 4.4 transported to `symComplexD` fail: `P_K D(L) ⊄ D(L)` (every
+   `S2`), and `H(curl, S) ∩ H̊(div div, S) ∩ L²(TSD)` is not dense in `L²(TSD)`;
 4. for `L²(TSD) ∩ ker d0*` the `H̊(div div)` part of the projection hypothesis holds
    automatically: `P_{L²(TSD) ∩ ker d0*}` maps into `ker d0* ⊆ D(d0*)`;
 5. the obstruction behind the refutation of Prop 4.19 for (4.16) is absent:
@@ -1313,8 +1418,11 @@ invariant subspace `K* = {0} × S1* × S2*` satisfies every hypothesis of
 its data propagate: every `(0, E₀, B₀) ∈ D(L)` with `E₀ ∈ S1*`, `B₀ ∈ S2*` has a unique strong
 solution, which stays in `{0} × L²(TSD) × L²(TSD)` and solves the reduced system.
 
-Scope: as for `symComplexB_prop_4_19_max`, `K*` is invariant by construction. What is open here is
-whether `K* ⊇ D(L) ∩ K`, i.e. the conclusion of Prop 4.19 for these boundary conditions. -/
+Scope: as for `symComplexB_prop_4_19_max`, `K*` is invariant by construction. Two things are open
+here: whether `K* ⊇ D(L) ∩ K`, i.e. the conclusion of Prop 4.19 for these boundary conditions, and
+whether `K* ≠ {0}` at all (the nonzero stationary data found for (4.16), such as `constT`, are not
+admissible here, `constT_not_mem_symComplexD_adjoint_d1`). If `K* = {0}` this statement carries
+no information about solutions. -/
 theorem symComplexD_prop_4_19_max (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     let G := (symComplexD hΩ hb).waveGroup

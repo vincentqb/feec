@@ -30,9 +30,14 @@ together. Eigenvectors for distinct eigenvalues are linearly independent
 * `linearIndependent_hessL2_expCos`: the `L²(Ω)` classes of `∇²h_{n+1}`, `n ∈ ℕ`, are linearly
   independent.
 * `not_finiteDimensional_obstr`: `obstr` is infinite-dimensional.
+* `not_finiteDimensional_orth_closure_TSD_inter_HcurlZero`,
+  `not_TSD_le_span_closure_sup_finiteDimensional`: `closure (L²(TSD) ∩ H̊(curl, M))` has infinite
+  codimension in `L²(TSD)`; no finite-dimensional correction restores the density used in the
+  thesis.
 * `thesisComplex_not_finiteDimensional_S2max`: the magnetic slot `S2*` of the maximal
   propagating constraint space of the thesis' complex is infinite-dimensional (it contains the
-  harmonic Hessians as stationary data).
+  harmonic Hessians as stationary data). This is a statement about the **stationary** part of
+  `K*` only; it does not show that `K*` contains any non-stationary datum.
 
 Correction: the defect of the density claimed in [QuennevilleBelair2015, §4.10, proof of
 Prop 4.17] is infinite-dimensional: `L²(TSD) ∩ H̊(curl, M)` misses an infinite-dimensional
@@ -257,6 +262,50 @@ theorem not_finiteDimensional_obstr (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   have hli : LinearIndependent ℝ v :=
     LinearIndependent.of_comp (obstr Ω hΩ hb).subtype (linearIndependent_hessL2_expCos hΩ hb hne)
   exact Module.Finite.not_linearIndependent_of_infinite v hli
+
+/-- **The closure of `L²(TSD) ∩ H̊(curl, M)` has infinite codimension in `L²(TSD)`**: on a
+nonempty bounded open `Ω`, the orthogonal complement in `L²(TSD)` of
+`closure (L²(TSD) ∩ H̊(curl, M))` is infinite-dimensional (it contains `obstr`, because the closure
+lies in `L²(TSD₀)`, `closure_TSD_inter_HcurlZero_subset`). This is the quantitative form of
+`Feec.BoundedDomain.not_dense_TSD_inter_HcurlZero`.
+
+Correction: [QuennevilleBelair2015, §4.10, proof of Prop 4.17] claims density. -/
+theorem not_finiteDimensional_orth_closure_TSD_inter_HcurlZero (hΩ : IsOpen Ω)
+    (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    ¬ FiniteDimensional ℝ
+      (TSD Ω ⊓ (Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)))ᗮ :
+        Submodule ℝ (L2M Ω)) := by
+  intro hfin
+  have hle : obstr Ω hΩ hb ≤
+      TSD Ω ⊓ (Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)))ᗮ :=
+    inf_le_inf_left _ (Submodule.orthogonal_le
+      (Submodule.span_le.2 (closure_TSD_inter_HcurlZero_subset hΩ hb)))
+  exact not_finiteDimensional_obstr hΩ hb hne (Submodule.finiteDimensional_of_le hle)
+
+/-- **No finite-dimensional correction restores density**: for every finite-dimensional subspace
+`F`, `L²(TSD) ⊄ span (closure (L²(TSD) ∩ H̊(curl, M))) + F`, on a nonempty bounded open `Ω`.
+
+Proof: if `G ∈ obstr` equals `z + f` with `z` in the span (`⊆ L²(TSD₀)`) and `f ∈ F`, then the
+orthogonal projection `P` onto `L²(TSD₀)ᗮ` gives `G = P G = P f`, so `obstr ⊆ P F` would be
+finite-dimensional, contradicting `not_finiteDimensional_obstr`. -/
+theorem not_TSD_le_span_closure_sup_finiteDimensional (hΩ : IsOpen Ω)
+    (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) (F : Submodule ℝ (L2M Ω))
+    [FiniteDimensional ℝ F] :
+    ¬ TSD Ω ≤ Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)) ⊔ F := by
+  intro hle
+  have hspan : Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)) ≤
+      TSD0 Ω hΩ hb := Submodule.span_le.2 (closure_TSD_inter_HcurlZero_subset hΩ hb)
+  set P := (TSD0 Ω hΩ hb)ᗮ.starProjection
+  have hob : obstr Ω hΩ hb ≤ F.map (P : L2M Ω →ₗ[ℝ] L2M Ω) := by
+    intro G hG
+    obtain ⟨z, hz, f, hf, rfl⟩ := Submodule.mem_sup.1 (hle hG.1)
+    refine ⟨f, hf, ?_⟩
+    have hPG : P (z + f) = z + f := Submodule.starProjection_eq_self_iff.2 hG.2
+    have hPz : P z = 0 := (Submodule.starProjection_apply_eq_zero_iff _).2
+      (Submodule.le_orthogonal_orthogonal _ (hspan hz))
+    change P f = z + f
+    rw [← hPG, map_add, hPz, zero_add]
+  exact not_finiteDimensional_obstr hΩ hb hne (Submodule.finiteDimensional_of_le hob)
 
 open Feec.Constraints in
 /-- **The stationary part of the maximal propagating constraint space is infinite-dimensional**:

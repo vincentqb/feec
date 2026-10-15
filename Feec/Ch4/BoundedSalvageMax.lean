@@ -42,12 +42,21 @@ For the thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)` on a nonempty bou
 complex with `ι D(d1) ⊆ H̊(curl, M)`):
 * `S1* ⊆ L²(TSD₀)` (`S1max_le_TSD0`) and `d1*` maps `S2* ∩ D(d1*)` into `L²(TSD₀)`
   (`adj1_mem_TSD0_of_mem_S2max`), using `Feec.BoundedDomain.mem_TSD0_of_mem_HcurlZero`;
-* `S2*` contains the Hessians of all smooth harmonic functions, e.g. the constants
-  (`thesisComplex_hessL2_mem_S2max`, `thesisComplex_constField_mem_S2max`), so `K* ≠ 0` and the
-  corrected Prop 4.17 is not vacuous (`S2*` is even infinite-dimensional,
-  `Feec.BoundedDomain.thesisComplex_not_finiteDimensional_S2max` in `Feec.Ch4.BoundedSalvageDim`);
-* `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ) ∈ L²(TSD)` is not in `S2*` (`thesisComplex_betaField_not_mem_S2max`),
-  so `K* ⊊ K`.
+* `S2*` contains every curl-free field of `L²(TSD)` as a stationary datum
+  (`thesisComplex_mem_S2max_of_weakCurl_eq_zero`), e.g. the Hessians of smooth harmonic functions
+  and the constants (`thesisComplex_hessL2_mem_S2max`, `thesisComplex_constField_mem_S2max`); this
+  stationary part is infinite-dimensional
+  (`Feec.BoundedDomain.thesisComplex_not_finiteDimensional_S2max` in `Feec.Ch4.BoundedSalvageDim`);
+* `diag(1, -1, 0) ∈ L²(TSD)` is not in `S1*` (`thesisComplex_constField_diagA_not_mem_S1max`) and
+  `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ) ∈ L²(TSD)` is not in `S2*` (`thesisComplex_betaField_not_mem_S2max`),
+  so `K* ⊊ K` in both slots.
+
+What this does and does not show: `K*` is invariant by definition, and the hypotheses of
+`prop_4_17` for it follow from invariance, so the corrected Prop 4.17 is the thesis' argument run
+on the largest subspace where it can work. Its content is the identification above and
+maximality. Every element of `K*` exhibited here is **stationary** (`d1* B = 0`), where
+propagation is trivial; no nonzero element of `S1*` and no non-stationary element of `K*` is
+known. It is open whether `K*` contains any non-stationary datum on any bounded domain.
 
 The resulting statement (`thesisComplex_prop_4_17_max`): for every datum `(0, E₀, B₀) ∈ D(L)`
 with `E₀ ∈ S1*`, `B₀ ∈ S2*`, (4.14) has a unique strong solution on `[0, T]`; it stays in
@@ -581,15 +590,49 @@ theorem thesisComplex_betaField_not_mem_S2max (hne : Ω.Nonempty) (S2 : Submodul
   rw [e] at this
   exact curl_betaField_not_mem_TSD0 hΩ hb hne this
 
+/-- **`S1* ⊊ L²(TSD)`**: `diag(1, -1, 0) ∈ L²(TSD)` is not in `S1*`, for any `S2`, because
+`S1* ⊆ L²(TSD₀)` and constants with nonzero mean are not in `L²(TSD₀)`. -/
+theorem thesisComplex_constField_diagA_not_mem_S1max (hne : Ω.Nonempty)
+    (S2 : Submodule ℝ (L2M Ω)) [S2.HasOrthogonalProjection] :
+    constField hΩ hb diagA ∉ S1max G (TSD Ω) S2 := fun hm =>
+  constField_diagA_not_mem_TSD0 hΩ hb hne (thesisComplex_S1max_le_TSD0 hΩ hb G S2 hm)
+
+/-- **Every curl-free magnetic field of `S2` is a stationary datum**: if `B ∈ S2` has weak curl
+`0` (`Σ_{ij} ∫_Ω B_{ij} (curl Φ)_{ij} = 0` for all test fields `Φ`), then `B ∈ D(d1*)`,
+`d1* B = 0`, and `B ∈ S2*`. With `S2 = L²(TSD)` this is the static part `L²(TSD) ∩ ker curl` of
+`K*` (on simply connected `Ω`: the Hessians `∇²h`, `h` harmonic, `∇²h ∈ L²`). -/
+theorem thesisComplex_mem_S2max_of_weakCurl_eq_zero (S2 : Submodule ℝ (L2M Ω))
+    [S2.HasOrthogonalProjection] {B : L2M Ω} (hB : B ∈ S2)
+    (hc : ∀ Φ : Ix → R3 → ℝ, (∀ ij, IsTest Ω (Φ ij)) →
+      ∑ ij, ∫ x, B ij x * curlM Φ ij x ∂MeasureTheory.volume.restrict Ω = 0) :
+    B ∈ S2max G (TSD Ω) S2 := by
+  obtain ⟨h, e⟩ := thesisComplex_adjoint_d1_apply hΩ hb (C := 0) fun Φ hΦ => by
+    rw [hc Φ hΦ]
+    refine (Finset.sum_eq_zero fun ij _ => ?_).symm
+    refine MeasureTheory.integral_eq_zero_of_ae ?_
+    have hz : ((0 : L2M Ω) ij : R3 → ℝ) =ᵐ[MeasureTheory.volume.restrict Ω] 0 := by
+      rw [PiLp.zero_apply]; exact MeasureTheory.Lp.coeFn_zero _ _ _
+    filter_upwards [hz] with x hx
+    rw [hx, Pi.zero_apply, zero_mul]
+  exact mem_S2max_of_adj1_eq_zero G ⟨B, h⟩ hB e
+
 /-- **Corrected Prop 4.17 on bounded domains** (thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)`,
 `K = {0} × L²(TSD) × L²(TSD)`, `K* = {0} × S1* × S2*` for the Hodge wave group):
 1. `K* = {0} × S1* × S2*` with `S1* ⊆ L²(TSD₀)` and `S2* ⊆ L²(TSD)`;
-2. `(S1*, S2*)` satisfies all hypotheses of `Feec.Constraints.prop_4_17`, and is the largest
-   such pair inside `(L²(TSD), L²(TSD))` (`le_max_of_prop_4_17_hyps`);
-3. non-vacuity and strictness: `diag(1, -1, 0) ∈ S2*` (more generally every harmonic Hessian,
-   `thesisComplex_hessL2_mem_S2max`), and `β ∈ L²(TSD) \ S2*`;
+2. `(S1*, S2*)` satisfies all hypotheses of `Feec.Constraints.prop_4_17` (projection hypothesis,
+   `d1 (V1 ∩ S1*) ⊆ S2*`, `d1* (V2* ∩ S2*) ⊆ S1*`), and it is the largest such pair: every closed
+   `S1' ≤ L²(TSD)`, `S2' ≤ L²(TSD)` satisfying them lies in `(S1*, S2*)`;
+3. strictness: `diag(1, -1, 0) ∈ L²(TSD) \ S1*` and `β ∈ L²(TSD) \ S2*`, so `K* ⊊ K` in both
+   slots; and `diag(1, -1, 0) ∈ S2*`, a nonzero **stationary** datum;
 4. every datum `(0, E₀, B₀) ∈ D(L)` with `E₀ ∈ S1*`, `B₀ ∈ S2*` has, on every `[0, T]`, a unique
    strong solution of (4.14); it stays in `K* ⊆ K` and solves (4.15).
+
+Scope: `K*` is invariant by definition, so items 2 and 4 are the thesis' argument run on the
+largest subspace where it can work; the content is in items 1 and 3 and in maximality. The only
+elements of `K*` exhibited are stationary (`d1* B = 0`: harmonic Hessians, constants,
+`thesisComplex_mem_S2max_of_weakCurl_eq_zero`), where propagation is trivial. No nonzero element
+of `S1*` and no non-stationary element of `K*` is known. It is open whether `K*` contains any
+non-stationary datum; on the cube the research notes expect `S1* = 0`.
 
 Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]: its projection hypothesis fails on every
 nonempty bounded open `Ω`, and its conclusion fails for `(0, 0, β)`; this statement replaces
@@ -601,6 +644,19 @@ theorem thesisComplex_prop_4_17_max (hne : Ω.Nonempty) :
       S1max G (TSD Ω) (TSD Ω) ≤ TSD0 Ω hΩ hb ∧ S2max G (TSD Ω) (TSD Ω) ≤ TSD Ω ∧
       (∀ x ∈ (thesisComplex hΩ hb).domL, projKc (L2V Ω) (S1max G (TSD Ω) (TSD Ω))
         (S2max G (TSD Ω) (TSD Ω)) x ∈ (thesisComplex hΩ hb).domL) ∧
+      (∀ u : (thesisComplex hΩ hb).d1.domain, (u : L2M Ω) ∈ S1max G (TSD Ω) (TSD Ω) →
+        (thesisComplex hΩ hb).d1 u ∈ S2max G (TSD Ω) (TSD Ω)) ∧
+      (∀ ρ : (thesisComplex hΩ hb).d1†.domain, (ρ : L2M Ω) ∈ S2max G (TSD Ω) (TSD Ω) →
+        (thesisComplex hΩ hb).d1† ρ ∈ S1max G (TSD Ω) (TSD Ω)) ∧
+      (∀ (S1' S2' : Submodule ℝ (L2M Ω)) [S1'.HasOrthogonalProjection]
+        [S2'.HasOrthogonalProjection], S1' ≤ TSD Ω → S2' ≤ TSD Ω →
+        (∀ x ∈ (thesisComplex hΩ hb).domL, projKc (L2V Ω) S1' S2' x ∈ (thesisComplex hΩ hb).domL) →
+        (∀ u : (thesisComplex hΩ hb).d1.domain, (u : L2M Ω) ∈ S1' →
+          (thesisComplex hΩ hb).d1 u ∈ S2') →
+        (∀ ρ : (thesisComplex hΩ hb).d1†.domain, (ρ : L2M Ω) ∈ S2' →
+          (thesisComplex hΩ hb).d1† ρ ∈ S1') →
+        S1' ≤ S1max G (TSD Ω) (TSD Ω) ∧ S2' ≤ S2max G (TSD Ω) (TSD Ω)) ∧
+      constField hΩ hb diagA ∈ TSD Ω ∧ constField hΩ hb diagA ∉ S1max G (TSD Ω) (TSD Ω) ∧
       constField hΩ hb diagA ∈ S2max G (TSD Ω) (TSD Ω) ∧ constField hΩ hb diagA ≠ 0 ∧
       smoothField hΩ hb betaField (fun ij => (contDiff_one_of_top (contDiff_betaField ij)).continuous)
         ∈ TSD Ω ∧
@@ -617,7 +673,14 @@ theorem thesisComplex_prop_4_17_max (hne : Ω.Nonempty) :
             (fun t => (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2) := by
   intro G
   refine ⟨Kmax_eq_Kc G, thesisComplex_S1max_le_TSD0 hΩ hb G _, S2max_le G,
-    projKcMax_mem_domL G, thesisComplex_constField_mem_S2max hΩ hb G diagA_transpose diagA_trace,
+    projKcMax_mem_domL G,
+    fun u hu => d1_mem_S2max G (thesisComplex_TSD_le_ker hΩ hb) u hu,
+    fun ρ hρ => adj1_mem_S1max G ρ hρ,
+    fun S1' S2' _ _ h1 h2 hPD hd1 hd1s =>
+      le_max_of_prop_4_17_hyps G (thesisComplex_TSD_le_ker hΩ hb) h1 h2 hPD hd1 hd1s,
+    constField_mem_TSD hΩ hb diagA_transpose diagA_trace,
+    thesisComplex_constField_diagA_not_mem_S1max hΩ hb G hne _,
+    thesisComplex_constField_mem_S2max hΩ hb G diagA_transpose diagA_trace,
     fun h0 => constField_diagA_not_mem_TSD0 hΩ hb hne (h0 ▸ Submodule.zero_mem _),
     betaField_mem_TSD hΩ hb, thesisComplex_betaField_not_mem_S2max hΩ hb G hne _,
     fun T E₀ B₀ hD hE₀ hB₀ => ?_⟩

@@ -21,8 +21,12 @@ propagation that applies to every datum and to every complex with the electric b
    `tr B = 0`, and symmetry of `B` gives the claim. The linear fields `φ = x_a e_b` recover
    `integral_eq_zero_of_mem_TSD_of_mem_HcurlZero`.
 2. *The space `L²(TSD₀)`* (`TSD0`): TSD fields orthogonal to every `∇φ`, `φ ∈ C¹(ℝ³; ℝ³)`
-   (formally `L²(TSD) ∩ H̊(div, M)`, i.e. `B n = 0` on `∂Ω`; this identification is not used). It is closed (`isClosed_TSD0`) and contains `Z`
-   (`mem_TSD0_of_mem_HcurlZero`), hence its closure (`closure_TSD_inter_HcurlZero_subset`).
+   (for Lipschitz `Ω`, where `C¹(ℝ³)|_Ω` is dense in `H¹(Ω)`, this is `L²(TSD) ∩ H̊(div, M)`,
+   i.e. `B n = 0` on `∂Ω`; the identification is not used). It is closed (`isClosed_TSD0`) and
+   contains `Z` (`mem_TSD0_of_mem_HcurlZero`), hence its closure
+   (`closure_TSD_inter_HcurlZero_subset`); that closure even has infinite codimension in
+   `L²(TSD)` (`not_finiteDimensional_orth_closure_TSD_inter_HcurlZero`,
+   `not_TSD_le_span_closure_sup_finiteDimensional` in `Feec.Ch4.BoundedSalvageDim`).
 3. *The obstruction* `obstr = L²(TSD) ⊓ TSD₀ᗮ`, the orthogonal complement of `TSD₀` in `L²(TSD)`
    (`TSD0_sup_obstr`). Every gradient field `∇φ`, `φ ∈ C¹`, is orthogonal to `TSD₀`
    (`gradField_mem_orth`); in particular the constants (`constField_mem_orth`) and every Hessian
@@ -34,20 +38,27 @@ propagation that applies to every datum and to every complex with the electric b
    (4.14) from `(0, E₀, B₀)` stays in `K = {0} × S1 × S2` on `[0, T]`, `T > 0`, then
    `ι (d1* B₀) ∈ TSD₀`. (`E(t) ∈ Z` for `t ∈ [0, T]`, `TSD₀` is closed, and `Ė(0) = -d1* B₀`.)
    The refutation `not_propagate_of_adjoint` follows: if `⟪ι (d1* B₀), G⟫ ≠ 0` for some
-   `G ⊥ TSD₀`, every strong solution leaves `K`. With `ι = id` this covers the thesis' complex
-   (`thesisComplex_adjoint_mem_TSD0`, `thesisComplex_curl_mem_TSD0`); the inclusion
-   `H̊(curl, S) ⊆ H̊(curl, M)` covers the strong-symmetry complex (4.16) of Prop 4.19 and
-   `u ∈ H̊(curl, M)` the weak-symmetry method of Ch. 6, without building them here.
+   `G ⊥ TSD₀`, every strong solution leaves `K`. With `ι = id` this is instantiated for the
+   thesis' complex (`thesisComplex_adjoint_mem_TSD0`, `thesisComplex_curl_mem_TSD0`). It applies
+   to the strong-symmetry complex (4.16) of Prop 4.19 (via `ι : L²(S) → L²(M)`, using
+   `H̊(curl, S) ⊆ H̊(curl, M)`) once that complex is built on `Ω`; it is **not** instantiated
+   here.
 5. *Any evolution in `H̊(curl, M)`* (`deriv_mem_TSD0_of_path`, `path_not_TSD_of_deriv_not_mem`):
-   the same argument for a bare path `u(t) ∈ L²(TSD) ∩ H̊(curl, M)`, which is the form that applies
-   to the weak-symmetry (BGG) method of Ch. 6: there `u̇(0) = -curl β ∉ L²(TSD₀)`
-   (`curl_betaField_not_mem_TSD0`) for the datum with magnetic part `β`.
+   the same argument for a bare path `u(t) ∈ L²(TSD) ∩ H̊(curl, M)`. This is the form that would
+   apply to the weak-symmetry (BGG) method of Ch. 6, whose `u` lies in `H̊(curl, M)`, once its
+   bounded-domain system is built: for the datum with magnetic part `β` one expects
+   `u̇(0) = -curl β`, and `curl β ∉ L²(TSD₀)` is proved (`curl_betaField_not_mem_TSD0`). The
+   identity `u̇(0) = -curl β` is not proved, because `Feec.Ch6` only has abstract operators.
 
 ## Status of the analysis this file follows
 
-Verified here: items 1-5; in `Feec.Ch4.BoundedSalvageDim`, that `obstr` is infinite-dimensional
-(`not_finiteDimensional_obstr`, via the harmonic functions `e^{-n x₁} cos(n x₂)`); in
-`Feec.Ch4.BoundedSalvageMax`, the corrected (maximal) Prop 4.17. Not formalized:
+Verified here: items 1-5 (for item 5, the abstract path lemma and `curl β ∉ L²(TSD₀)`); in
+`Feec.Ch4.BoundedSalvageDim`, that `obstr` is infinite-dimensional (`not_finiteDimensional_obstr`,
+via the harmonic functions `e^{-n x₁} cos(n x₂)`), so `closure Z` has infinite codimension in
+`L²(TSD)`; in `Feec.Ch4.BoundedSalvageMax`, the corrected (maximal) Prop 4.17, whose exhibited
+elements are all stationary. Not formalized:
+* *Instances for Prop 4.19 and Ch. 6*: the criterion of item 4 is instantiated only for the
+  thesis' complex of Prop 4.17.
 * *Density* (`closure Z = TSD₀`, so `obstr` is exactly the orthogonal complement of `closure Z` in
   `L²(TSD)`): on domains star-shaped with respect to a ball it follows from zero extension,
   dilation `B(x/λ)` and mollification; for Lipschitz `Ω` it needs a Bogovskii-type right inverse
@@ -140,8 +151,10 @@ theorem inner_gradField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : Fi
   inner_smoothField hΩ hb _ _ B
 
 variable (Ω) in
-/-- `L²(TSD₀) = L²(TSD) ∩ H̊(div, M)`: TSD fields orthogonal to the gradient `∇φ` of every `C¹`
-vector field `φ` on `ℝ³` (no boundary condition on `φ`); weakly, `B n = 0` on `∂Ω`. -/
+/-- `L²(TSD₀)`: TSD fields orthogonal to the gradient `∇φ` of every `C¹` vector field `φ` on
+`ℝ³` (no boundary condition on `φ`); weakly, `B n = 0` on `∂Ω`. For Lipschitz `Ω` this is
+`L²(TSD) ∩ H̊(div, M)`; for a general bounded open `Ω` the two may differ, and the identification
+is not used. -/
 def TSD0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : Submodule ℝ (L2M Ω) where
   carrier := {B | B ∈ TSD Ω ∧ ∀ (φ : Fin 3 → R3 → ℝ) (hφ : ∀ i, ContDiff ℝ 1 (φ i)),
     ⟪B, gradField hΩ hb hφ⟫ = 0}
@@ -337,8 +350,8 @@ theorem hessL2_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 �
     simp [pd]
 
 /-- **Hessians of smooth harmonic functions lie in the obstruction space**: they are TSD and,
-being gradients, orthogonal to `L²(TSD₀)`. E.g. `h = Re (x₁ + i x₂)ⁿ`, `n ≥ 2`, gives
-infinitely many independent elements (not formalized). -/
+being gradients, orthogonal to `L²(TSD₀)`. They span an infinite-dimensional subspace
+(`not_finiteDimensional_obstr` in `Feec.Ch4.BoundedSalvageDim`, via `e^{-n x₁} cos(n x₂)`). -/
 theorem hessL2_mem_obstr (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 → ℝ}
     (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x, lap h x = 0) : hessL2 hΩ hb hh ∈ obstr Ω hΩ hb :=
   ⟨hessL2_mem_TSD hΩ hb hh hΔ, by rw [hessL2_eq_gradField]; exact gradField_mem_orth hΩ hb _⟩
@@ -380,12 +393,12 @@ theorem mem_of_hasDerivWithinAt_Icc {F : Type*} [NormedAddCommGroup F] [NormedSp
 path `u` of matrix fields stays in `L²(TSD) ∩ H̊(curl, M)` on `[0, T]`, `T > 0`, and has right
 derivative `u'` at `0`, then `u' ∈ L²(TSD₀)`.
 
-This is the form that applies to the weak-symmetry (BGG) method of Ch. 6 ((6.2)/(6.5)), whose
-electric unknown `u` also lies in `H̊(curl, M)`: for the datum with magnetic part `β`, the
-`u`-equation gives `u̇(0) = -curl β = diag(1, -1, 0) ∉ L²(TSD₀)`
-(`curl_betaField_not_mem_TSD0`), so `u(t)` leaves `L²(TSD)` immediately. (The Ch. 6 data in
-`Feec.Ch6` are abstract bounded operators, so the bounded-domain BGG system itself is not
-instantiated here.) -/
+This is the form that would apply to the weak-symmetry (BGG) method of Ch. 6 ((6.2)/(6.5)),
+whose electric unknown `u` also lies in `H̊(curl, M)`, once that system is built on `Ω`: for the
+datum with magnetic part `β`, the `u`-equation should give `u̇(0) = -curl β = diag(1, -1, 0)`,
+which is not in `L²(TSD₀)` (`curl_betaField_not_mem_TSD0`), so `u(t)` would leave `L²(TSD)`
+immediately. Only the last step is proved: the Ch. 6 data in `Feec.Ch6` are abstract bounded
+operators, so the bounded-domain BGG system and its `u̇(0)` are not formalized. -/
 theorem deriv_mem_TSD0_of_path (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {u : ℝ → L2M Ω}
     {u' : L2M Ω} {T : ℝ} (hT : 0 < T) (hu : HasDerivWithinAt u u' (Icc 0 T) 0)
     (hK : ∀ t ∈ Icc 0 T, u t ∈ TSD Ω ∧ u t ∈ HcurlZero Ω) : u' ∈ TSD0 Ω hΩ hb :=
@@ -415,10 +428,11 @@ then `ι (d1* B₀) ∈ L²(TSD₀)`.
 Proof: `ι E(t) ∈ L²(TSD) ∩ H̊(curl, M) ⊆ L²(TSD₀)` for `t ∈ [0, T]`
 (`mem_TSD0_of_mem_HcurlZero`); `L²(TSD₀)` is closed, so it contains `ι Ė(0) = -ι (d1* B₀)`.
 
-Instances: `ι = id` for the thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)` of Prop 4.17
-(`thesisComplex_adjoint_mem_TSD0`); the inclusion `L²(S) → L²(M)` for the strong-symmetry complex
-(4.16) of Prop 4.19 (`H̊(curl, S) ⊆ H̊(curl, M)`); the `u`-component for the weak-symmetry method
-of Ch. 6 (`u ∈ H̊(curl, M)`).
+Instantiated for `ι = id` and the thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)` of Prop 4.17
+(`thesisComplex_adjoint_mem_TSD0`). It applies, once those complexes are built on `Ω`, to the
+strong-symmetry complex (4.16) of Prop 4.19 via the inclusion `L²(S) → L²(M)`
+(`H̊(curl, S) ⊆ H̊(curl, M)`); neither that instance nor the Ch. 6 weak-symmetry system is
+formalized here.
 
 Correction: the conclusion of [QuennevilleBelair2015, §4.10, Prop 4.17] (and of Prop 4.19, §4.11)
 requires `d1* B₀ ∈ L²(TSD₀)` on bounded domains; TSD data `B₀` without this property leave `K`. -/
@@ -452,7 +466,8 @@ theorem adjoint_mem_TSD0_of_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
   rw [hp0, hp2, LinearPMap.map_zero, zero_add] at hm
   simpa using hm
 
-/-- **Refutation criterion** (covers Props 4.17, 4.19 and the weak-symmetry method at once): in
+/-- **Refutation criterion** (instantiated here for Prop 4.17; it applies to Prop 4.19 once
+complex (4.16) is built with `ι D(d1) ⊆ H̊(curl, M)`): in
 the setting of `adjoint_mem_TSD0_of_propagate`, if `⟪ι (d1* B₀), G⟫ ≠ 0` for some `G ⊥ L²(TSD₀)`
 (e.g. a constant field or a gradient `∇φ`, `φ ∈ C¹`), then every strong solution of (4.14) from
 `(0, E₀, B₀)` leaves `K = {0} × S1 × S2` on every `[0, T]`, `T > 0`.

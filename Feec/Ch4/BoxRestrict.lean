@@ -139,7 +139,8 @@ theorem mem_boxZero {f : L2 Z3 ℂ} : f ∈ boxZero ↔ ZeroOnBox f := Iff.rfl
 
 /-- `boxZero` is closed. -/
 theorem isClosed_boxZero : IsClosed (boxZero : Set (L2 Z3 ℂ)) := by
-  have e : (boxZero : Set (L2 Z3 ℂ)) = ⋂ φ : {φ : L2T // (φ : T3 → ℂ) =ᵐ[volume.restrict boxSetᶜ] 0},
+  have e : (boxZero : Set (L2 Z3 ℂ)) =
+      ⋂ φ : {φ : L2T // (φ : T3 → ℂ) =ᵐ[volume.restrict boxSetᶜ] 0},
       {f | ⟪ofCoeff f, (φ : L2T)⟫_ℂ = 0} := by
     ext f
     simp only [SetLike.mem_coe, mem_boxZero, zeroOnBox_iff, mem_iInter, mem_ofPred_eq,

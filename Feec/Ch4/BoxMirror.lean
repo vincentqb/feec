@@ -22,11 +22,13 @@ vectors by `D_i = diag(s_i)` and on matrices by `M ↦ D_i M D_i`. The *mirror* 
 * `B(R_i x) = -D_i B(x) D_i` (a pseudo-tensor; `mirrorM (-1)`),
 and for the complex (4.16) of Prop 4.19, `u` even (`mirrorR`), `S` even, `T` odd. These are the
 parities forced by the complex: the symbols intertwine (`gradSym_mirror`, `curlSym_mirror`,
-`hessS_mirror`, `curlS_mirror`). On a face `x_i ∈ {0, ½}` an entry odd in `x_i` vanishes, so the
-encoded boundary conditions are `σ · n = 0`; `E_{nτ} = 0` (`E n ∥ n`); `B_{ττ} = 0` for
-`B ∈ D(curl*)`. Unlike the row-wise conditions, `D_i M D_i` preserves symmetry and trace, so
-`E_{ab}` and `E_{ba}` have the same parity and the TSD fibres are permuted by the reflections
-(`mirrorM_mem_tsd`).
+`hessS_mirror`, `curlS_mirror`). On a face `x_i ∈ {0, ½}` an entry odd in `x_i` vanishes, and
+the trace conditions of the domains are those of the odd entries that the operator
+differentiates across the face: `σ · n = 0` for `σ ∈ D(grad)`; `E_{nτ} = 0` for `E ∈ D(curl)`
+and `E_{τn} = 0` for `E ∈ D(grad*) = H(div)`; `B_{ττ} = 0` for `B ∈ D(curl*)`. For (4.16): `u`
+even (`∂_n u = 0`), `S_{nτ} = 0`, `T_{ττ} = 0`. Unlike the row-wise conditions, `D_i M D_i`
+preserves symmetry and trace, so `E_{ab}` and `E_{ba}` have the same parity and the TSD fibres
+are permuted by the reflections (`matSgn_mem_tsd`).
 
 The box complexes are `mirrorComplex` (for Prop 4.17) and `mirrorSymComplex` (for Prop 4.19):
 the periodic complexes of `Feec.Ch4.Torus`, `Feec.Ch4.TorusSym` restricted to the parity
@@ -218,7 +220,8 @@ def mirrorMf (ε : ℝ) (hε : ε * ε = 1) : Refl3 Mat3 where
     simp only [matSgn_apply, ← mul_assoc, ← Complex.ofReal_mul]
     have : ε * sgn i a * sgn i b * ε * sgn i a * sgn i b = 1 := by
       have h1 := sgn_mul_self i a; have h2 := sgn_mul_self i b
-      linear_combination (sgn i a * sgn i a * (sgn i b * sgn i b)) * hε + (sgn i b * sgn i b) * h1 + h2
+      linear_combination (sgn i a * sgn i a * (sgn i b * sgn i b)) * hε +
+        (sgn i b * sgn i b) * h1 + h2
     rw [this, Complex.ofReal_one, one_mul]
   inner_map i M N := by
     simp only [inner_mat, matSgn_apply, Complex.mul_re, Complex.mul_im, Complex.ofReal_re,
@@ -226,7 +229,8 @@ def mirrorMf (ε : ℝ) (hε : ε * ε = 1) : Refl3 Mat3 where
     refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
     have h1 := sgn_mul_self i a; have h2 := sgn_mul_self i b
     have : (ε * sgn i a * sgn i b) * (ε * sgn i a * sgn i b) = 1 := by
-      linear_combination (sgn i a * sgn i a * (sgn i b * sgn i b)) * hε + (sgn i b * sgn i b) * h1 + h2
+      linear_combination (sgn i a * sgn i a * (sgn i b * sgn i b)) * hε +
+        (sgn i b * sgn i b) * h1 + h2
     linear_combination ((M (a, b)).re * (N (a, b)).re + (M (a, b)).im * (N (a, b)).im) * this
   comm i j M := by ext ⟨a, b⟩; simp only [matSgn_apply]; push_cast; ring
 

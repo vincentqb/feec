@@ -79,7 +79,8 @@ theorem sqWave_coe {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) (1 / 2)) : sqWave (t : Un
         ((2 * Real.pi * t : ℝ) : ℂ) * I := by push_cast; ring
     rw [this, exp_ofReal_mul_I_im]
   have hs : 0 < Real.sin (2 * Real.pi * t) :=
-    Real.sin_pos_of_pos_of_lt_pi (by nlinarith [Real.pi_pos, ht.1]) (by nlinarith [Real.pi_pos, ht.2])
+    Real.sin_pos_of_pos_of_lt_pi (by nlinarith [Real.pi_pos, ht.1])
+      (by nlinarith [Real.pi_pos, ht.2])
   unfold sqWave
   rw [h]
   simp only [hs, ↓reduceIte]
@@ -130,7 +131,8 @@ theorem mFourierCoeff_axisSq (a : Fin 3) (k : Z3) :
     simp [mFourier, axisSq, smul_eq_mul]
   rw [mFourierCoeff, e, integral_fintype_prod_volume_eq_prod
     (fun i y => fourier (-k i) y * if i = a then sqWave y else 1)]
-  have hother : ∀ i, i ≠ a → ∫ y : UnitAddCircle, (fourier (-k i) y * if i = a then sqWave y else 1) =
+  have hother : ∀ i, i ≠ a →
+      ∫ y : UnitAddCircle, (fourier (-k i) y * if i = a then sqWave y else 1) =
       if k i = 0 then 1 else 0 := by
     intro i hi
     simp only [hi, ↓reduceIte, mul_one]
@@ -301,11 +303,13 @@ theorem staticB_mem_boxDiv : staticB ∈ boxDiv := by
   simp only [ofCoeff_entry_staticB]
   have hz : ∀ b, ∫ x, ((0 : L2T) : T3 → ℂ) x * partialT b φ x = 0 := fun b => by
     rw [integral_congr_ae ((Lp.coeFn_zero ℂ 2 (volume : Measure T3)).mono fun x hx => by
-      dsimp only; rw [hx, Pi.zero_apply, zero_mul] : (fun x => ((0 : L2T) : T3 → ℂ) x * partialT b φ x) =ᵐ[volume] 0)]
+      dsimp only; rw [hx, Pi.zero_apply, zero_mul] :
+        (fun x => ((0 : L2T) : T3 → ℂ) x * partialT b φ x) =ᵐ[volume] 0)]
     simp
   have hneg : ∫ x, ((-axisSqL 1 : L2T) : T3 → ℂ) x * partialT 1 φ x = 0 := by
     rw [integral_congr_ae ((Lp.coeFn_neg (axisSqL 1)).mono fun x hx => by
-      dsimp only; rw [hx, Pi.neg_apply, neg_mul] : (fun x => ((-axisSqL 1 : L2T) : T3 → ℂ) x * partialT 1 φ x)
+      dsimp only; rw [hx, Pi.neg_apply, neg_mul] :
+        (fun x => ((-axisSqL 1 : L2T) : T3 → ℂ) x * partialT 1 φ x)
         =ᵐ[volume] fun x => -((axisSqL 1 : T3 → ℂ) x * partialT 1 φ x)), integral_neg,
       integral_axisSqL_mul_partialT 1 hφ hs, neg_zero]
   rw [Fin.sum_univ_three]

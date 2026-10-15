@@ -69,16 +69,16 @@ def rowMf (ε : ℝ) (hε : ε * ε = 1) : Refl3 Mat3 where
     simp only [rowSgn_apply, colSign_eq, ← mul_assoc]
     have : (ε : ℂ) * colSignR i b * ε * colSignR i b = 1 := by
       have h := colSignR_mul_self i b
-      rw [show (ε : ℂ) * colSignR i b * ε * colSignR i b = ((ε * ε * (colSignR i b * colSignR i b) : ℝ) : ℂ)
-        by push_cast; ring, hε, h]
+      rw [show (ε : ℂ) * colSignR i b * ε * colSignR i b =
+        ((ε * ε * (colSignR i b * colSignR i b) : ℝ) : ℂ) by push_cast; ring, hε, h]
       simp
     rw [this, one_mul]
   inner_map i M N := by
     simp only [inner_mat, rowSgn_apply, colSign_eq]
     refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
     have h := colSignR_mul_self i b
-    have e : ∀ z : ℂ, (ε : ℂ) * (colSignR i b : ℂ) * z = ((ε * colSignR i b : ℝ) : ℂ) * z := fun z => by
-      push_cast; ring
+    have e : ∀ z : ℂ, (ε : ℂ) * (colSignR i b : ℂ) * z = ((ε * colSignR i b : ℝ) : ℂ) * z :=
+      fun z => by push_cast; ring
     rw [e, e]
     simp only [Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, zero_mul,
       sub_zero, add_zero]
@@ -259,7 +259,8 @@ theorem thesisBox_Kmax_ne_bot (G : UnitaryGroupGenerator (-thesisBoxComplex.wave
     rw [thesisBox_mem_Kmax_iff']
     refine ⟨staticB, staticB_mem_boxTSD, curlSym_staticB, ?_⟩
     apply (tot L2V L2M L2M).injective
-    have e := tot_incl (G0 := rowV) (G1 := rowE) (G2 := rowB) (ini rowV.fix (0 : rowE.fix) ⟨staticB, hBm⟩)
+    have e := tot_incl (G0 := rowV) (G1 := rowE) (G2 := rowB)
+      (ini rowV.fix (0 : rowE.fix) ⟨staticB, hBm⟩)
     simp only [e, tot_ini]
     rfl
   rw [hbot, Submodule.mem_bot] at hx

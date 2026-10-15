@@ -229,7 +229,8 @@ omit [CompleteSpace W] [CompleteSpace V] in
 /-- Restrictions of closed operators are closed. -/
 theorem isClosed_res (hT : Intertwines G G' T) (hc : T.IsClosed) : (res T G G' hT).IsClosed := by
   have e : ((res T G G' hT).graph : Set (G.fix × G'.fix)) =
-      (Prod.map (Subtype.val : G.fix → W) (Subtype.val : G'.fix → V)) ⁻¹' (T.graph : Set (W × V)) := by
+      (Prod.map (Subtype.val : G.fix → W) (Subtype.val : G'.fix → V)) ⁻¹'
+        (T.graph : Set (W × V)) := by
     ext ⟨x, y⟩
     simp only [SetLike.mem_coe, LinearPMap.mem_graph_iff, mem_preimage, Prod.map_apply]
     constructor

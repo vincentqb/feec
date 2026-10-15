@@ -27,9 +27,9 @@ The converse direction uses test fields `𝓕⁻¹ (χ M₀)`, `χ ∈ C_c^∞`,
 `curl_{2πξ} F(ξ)` (`locallyIntegrable_curl`), and Mathlib's fundamental lemma
 `ae_eq_of_integral_contDiff_smul_eq`.
 
-Scope: only `H(curl)` is identified here. The analogous statements for `H¹` (gradient) and
-`H(div)` on `ℝ³`, and for the spaces of `Feec.Ch4.WholeSym`, are not formalized; they would
-follow the same pattern.
+Scope: only `H(curl)` is identified here. `H¹`, `H(div)` and `L²(TSD)` are identified in
+`Feec.Ch4.WholeIdent` (by a generic version of the argument below). The spaces of
+`Feec.Ch4.WholeSym` (complex (4.16)) are not identified with physical fields.
 
 ## References
 

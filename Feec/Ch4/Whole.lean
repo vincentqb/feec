@@ -18,7 +18,7 @@ space `ℝ³`, with no boundary: the physically natural setting of an isolated s
 
 Fields are modelled by their Fourier transforms: `L2V = L²(ℝ³_ξ; ℂ³)` and
 `L2M = L²(ℝ³_ξ; ℂ³ˣ³)` (Lebesgue measure), as real Hilbert spaces (inner product `Re ⟨·,·⟩`).
-The identification with physical fields is Plancherel's theorem, Mathlib's
+The ambient spaces are identified with physical `L²` fields by Plancherel's theorem, Mathlib's
 `MeasureTheory.Lp.fourierTransformₗᵢ` (`fieldFourierW`, `vectorFourierW`, `matrixFourierW`),
 which is the Fourier transform `𝓕 f (ξ) = ∫ e^{-2πi ⟪x, ξ⟫} f x dx` on Schwartz fields
 (`fieldFourierW_toLp`) and preserves the real inner product (`inner_fieldFourierW`). With this
@@ -27,13 +27,16 @@ convention `∂_c ↦ 2πi ξ_c`, so the operators are multiplication operators 
 `curl A ↦ i (2πξ × Â_a)_a` (`curlW`, the thesis' convention as in `Feec.curl`), `div A ↦ i Â (2πξ)`
 (`Hdiv`). The spaces `H¹`, `H(curl)`, `H(div)` are the corresponding weighted-`L²` conditions
 (`Feec.Whole.mulDomain`, `Feec.Ch4.WholeMul`); `L²(TSD)` is the fibrewise subspace
-`{Â(ξ) ∈ tsd (2πξ) a.e.}` (`L2TSD`). Identifications proved: Plancherel and the Schwartz-level
-formula above, and, in `Feec.Ch4.WholeWeak`, that the Fourier `H(curl)` is the weak-derivative
-`H(curl)` tested against Schwartz fields (`Feec.WholeWeak.mem_Hcurl_iff_weak`). The analogous
-identifications of `H¹` and `H(div)` are not formalized.
-As on `𝕋³`, the theorems are stated for complex-valued fields viewed as a real Hilbert space;
-real-valued fields (`Â(-ξ) = conj Â(ξ)`) are a special case of the propagation statements, but
-the preservation of reality by the solution group is not formalized here.
+`{Â(ξ) ∈ tsd (2πξ) a.e.}` (`L2TSD`). These Fourier-side definitions are identified with the
+physical (weak-derivative) ones in companion files: `H(curl)` in `Feec.Ch4.WholeWeak`
+(`Feec.WholeWeak.mem_Hcurl_iff_weak`), `H¹` and `H(div)` in `Feec.Ch4.WholeIdent`
+(`Feec.WholeIdent.mem_H1_iff_weak`, `Feec.WholeIdent.mem_Hdiv_iff_weak`), and `L²(TSD)` as the
+space of symmetric, trace-free, weakly divergence-free `L²` fields
+(`Feec.WholeIdent.fourier_mem_L2TSD_iff`). Weak derivatives are tested against Schwartz fields.
+As on `𝕋³`, the theorems here are stated for complex-valued fields viewed as a real Hilbert
+space. `Feec.Ch4.WholeReal` restricts the complex to real-valued fields
+(`Â(-ξ) = conj Â(ξ)`, `Feec.WholeReal.fourier_mem_fix_iff`) and proves Prop 4.17 there, with
+existence (`Feec.WholeReal.real_prop_4_17_whole_exists`).
 
 ## Main results
 
@@ -56,18 +59,21 @@ the preservation of reality by the solution group is not formalized here.
   and `prop_4_17_whole_group` (the Stone group preserves `D(L) ∩ K` for all `t ∈ ℝ`).
 * Remark: the complex is **not closed** (`not_isClosed_range_gradW`,
   `not_closedRange_wholeComplex`): `grad` is injective on `L²(ℝ³)` (`ker_gradW`) but has no
-  Poincaré inequality (low frequencies). The range of `curl` is not closed either (the same
-  low-frequency argument on `L²(TSD)`), but that is not formalized here. Neither Prop 4.17 nor
-  the existence theory needs closed range.
+  Poincaré inequality (low frequencies). The range of `curl` is not closed either
+  (`Feec.WholeRange.not_isClosed_range_curlW`). Neither Prop 4.17 nor the existence theory needs
+  closed range.
 
 ## Correction
 
 As on `𝕋³`, the thesis' "conjecture" `P_{L²(TSD)} D(L) ⊆ D(L)` is a theorem on `ℝ³`, in the
 stronger form `P_TSD H(curl) ⊆ H(curl) ∩ Ḣ¹` with `curl P_TSD = P_TSD curl`, and the density
-conjectures are unnecessary. What makes the bounded-domain statement fail is the boundary
-condition, not the analysis: the propagation mechanism (the fibrewise commutation of `P_TSD`
-with the curl symbol, `Feec.Torus.proj_curlSym`) is the same on `𝕋³` and `ℝ³`. Unlike the torus,
-`grad` is injective on `ℝ³` (`ker_gradW`: no constant mode), but the complex has no closed range.
+conjectures are unnecessary. The propagation mechanism is the fibrewise commutation of `P_TSD`
+with the curl symbol (`Feec.Torus.proj_curlSym`), the same on `𝕋³` and `ℝ³`. Interpretation (not
+a theorem): together with the bounded-domain counterexamples (`Feec.Ch4.BoundedDomain`) and the
+box with mirror boundary conditions, where Prop 4.17 holds (`Feec.Box.mirror_prop_4_17_exists`),
+this indicates that the bounded-domain failure comes from the thesis' boundary conditions. Unlike
+the torus, `grad` is injective on `ℝ³` (`ker_gradW`: no constant mode), but the complex does not
+have closed range.
 
 ## References
 
@@ -561,8 +567,9 @@ the Hodge wave (4.14) has a solution in `C⁰([0,T]; D(L)) ∩ C¹([0,T]; X)` (t
 Stone group `Feec.HilbertComplex2.waveGroup` of `wholeComplex`), unique among strong solutions,
 which stays in `K = {0} × L²(TSD) × L²(TSD)`, and whose `(E, B)` solves (4.15).
 
-Thesis gap: the thesis takes existence from Thm 4.3 (Hille–Yosida); here it is Stone's theorem
-(`Feec.Ch4.Stone`) applied to the skew-adjoint `-L`.
+Remark: the thesis takes existence from Thm 4.3 (Hille–Yosida); here it comes from Stone's
+theorem (`Feec.Ch4.Stone`) applied to the skew-adjoint `-L`, a different route to the same
+conclusion.
 See [QuennevilleBelair2015, §4.10, Prop 4.17, Thm 4.3]; cf. [Pazy1983, §1.10]. -/
 theorem prop_4_17_whole_exists (T : ℝ) {E₀ B₀ : L2M} (hE₀ : E₀ ∈ L2TSD) (hB₀ : B₀ ∈ L2TSD)
     (hE₀c : E₀ ∈ Hcurl) (hB₀c : B₀ ∈ Hcurl) :

@@ -24,7 +24,8 @@ strongly measurable (`stronglyMeasurable_projS`, `stronglyMeasurable_projT`, fro
 `continuous_divdivS`, `continuous_symCurlS`). Not formalized: the identification of `L2S`, `L2T`
 with Fourier transforms of symmetric resp. trace-free physical fields (on `𝕋³` this is
 `Feec.TorusSym.matrixFourier_mem_sym`), and of the multipliers with weak derivatives
-(`Feec.Ch4.WholeWeak` does this for `H(curl; M)` only).
+(`Feec.Ch4.WholeWeak` and `Feec.Ch4.WholeIdent` do this for `H¹(V)`, `H(curl; M)`, `H(div; M)`
+and `L²(TSD)` of the complex of Prop 4.17 only).
 
 ## Main results
 

@@ -20,8 +20,8 @@ propagation that applies to every datum and to every complex with the electric b
    `curl (skewOf φ)_{jk} = δ_{jk} div φ - ∂_j φ_k` (`curlM_skewOf`); the `δ` term dies by
    `tr B = 0`, and symmetry of `B` gives the claim. The linear fields `φ = x_a e_b` recover
    `integral_eq_zero_of_mem_TSD_of_mem_HcurlZero`.
-2. *The space `L²(TSD₀)`* (`TSD0`): TSD fields orthogonal to every `∇φ`, `φ ∈ C¹(ℝ³; ℝ³)`, i.e.
-   `L²(TSD) ∩ H̊(div, M)`. It is closed (`isClosed_TSD0`) and contains `Z`
+2. *The space `L²(TSD₀)`* (`TSD0`): TSD fields orthogonal to every `∇φ`, `φ ∈ C¹(ℝ³; ℝ³)`
+   (formally `L²(TSD) ∩ H̊(div, M)`, i.e. `B n = 0` on `∂Ω`; this identification is not used). It is closed (`isClosed_TSD0`) and contains `Z`
    (`mem_TSD0_of_mem_HcurlZero`), hence its closure (`closure_TSD_inter_HcurlZero_subset`).
 3. *The obstruction* `obstr = L²(TSD) ⊓ TSD₀ᗮ`, the orthogonal complement of `TSD₀` in `L²(TSD)`
    (`TSD0_sup_obstr`). Every gradient field `∇φ`, `φ ∈ C¹`, is orthogonal to `TSD₀`
@@ -38,21 +38,36 @@ propagation that applies to every datum and to every complex with the electric b
    (`thesisComplex_adjoint_mem_TSD0`, `thesisComplex_curl_mem_TSD0`); the inclusion
    `H̊(curl, S) ⊆ H̊(curl, M)` covers the strong-symmetry complex (4.16) of Prop 4.19 and
    `u ∈ H̊(curl, M)` the weak-symmetry method of Ch. 6, without building them here.
+5. *Any evolution in `H̊(curl, M)`* (`deriv_mem_TSD0_of_path`, `path_not_TSD_of_deriv_not_mem`):
+   the same argument for a bare path `u(t) ∈ L²(TSD) ∩ H̊(curl, M)`, which is the form that applies
+   to the weak-symmetry (BGG) method of Ch. 6: there `u̇(0) = -curl β ∉ L²(TSD₀)`
+   (`curl_betaField_not_mem_TSD0`) for the datum with magnetic part `β`.
 
 ## Status of the analysis this file follows
 
-Verified here: items 1-4. Not formalized:
+Verified here: items 1-5; in `Feec.Ch4.BoundedSalvageDim`, that `obstr` is infinite-dimensional
+(`not_finiteDimensional_obstr`, via the harmonic functions `e^{-n x₁} cos(n x₂)`); in
+`Feec.Ch4.BoundedSalvageMax`, the corrected (maximal) Prop 4.17. Not formalized:
 * *Density* (`closure Z = TSD₀`, so `obstr` is exactly the orthogonal complement of `closure Z` in
   `L²(TSD)`): on domains star-shaped with respect to a ball it follows from zero extension,
   dilation `B(x/λ)` and mollification; for Lipschitz `Ω` it needs a Bogovskii-type right inverse
   of `div` on symmetric trace-free fields. Only `closure Z ⊆ TSD₀` is proved.
-* *Size of `obstr`*: with trace-free Korn (closed range of `dev sym ∇`), `obstr` consists of the
-  `dev sym ∇v` with `Δv + ⅓ ∇ div v = 0`; it is infinite-dimensional (e.g. the Hessians of
-  `Re (x₁ + i x₂)ⁿ`). Only the inclusion of the gradient-type fields is proved.
+* *Exact description of `obstr`*: with trace-free Korn (closed range of `dev sym ∇`), `obstr`
+  should consist of the `dev sym ∇v` with `Δv + ⅓ ∇ div v = 0`. Only the inclusion of the
+  harmonic Hessians (and of the constants) is proved.
+* *Interior propagation* (thesis Prop 3.6 localized): for TSD data the solution should stay TSD
+  on `{(t, x) : t < dist(x, ∂Ω)}`, by a local energy estimate for the closed symmetric hyperbolic
+  system satisfied by `(tr E, tr B, vskw E, vskw B)` (Lemma 3.5); constraint violations are
+  created at the wall. This needs local energy estimates, which are not in the repository.
+* *Other boundary conditions*: the magnetic condition (`E ∈ H(curl) ∩ H̊(div)`, `B ∈ H̊(curl)`)
+  is the same problem under `(E, B) ↦ (B, -E)`; tensorial mirror conditions on a box, obtained as
+  reflection-invariant subspaces of the torus, should satisfy Props 4.17/4.19. Formally the
+  latter is the torus result `Feec.Torus.prop_4_17_torus` restricted to an invariant subspace;
+  identifying that subspace with a box model needs an `L²(box)` model that is not built.
 
-Correction: the closure of `L²(TSD) ∩ H̊(curl, M)` in `L²(TSD)` is not `L²(TSD)` but lies in
-`L²(TSD₀) = L²(TSD) ∩ H̊(div, M)`; the missing directions include every Hessian of a harmonic
-function, not only the constants.
+Correction: the closure of `L²(TSD) ∩ H̊(curl, M)` in `L²(TSD)`, claimed to be `L²(TSD)` in the
+proof of [QuennevilleBelair2015, §4.10, Prop 4.17], lies in the closed subspace `L²(TSD₀)`; the
+missing directions include every Hessian of a harmonic function, not only the constants.
 
 ## References
 
@@ -360,6 +375,32 @@ theorem mem_of_hasDerivWithinAt_Icc {F : Type*} [NormedAddCommGroup F] [NormedSp
   refine hC.mem_of_tendsto ht (eventually_nhdsWithin_of_forall fun t ht' => ?_)
   rw [slope_def_module]
   exact C.smul_mem _ (C.sub_mem (hmem t ht'.1) (hmem 0 ⟨le_rfl, hT.le⟩))
+
+/-- **The `Ė(0)` argument for any evolution in `H̊(curl, M)`** (no complex, no equation): if a
+path `u` of matrix fields stays in `L²(TSD) ∩ H̊(curl, M)` on `[0, T]`, `T > 0`, and has right
+derivative `u'` at `0`, then `u' ∈ L²(TSD₀)`.
+
+This is the form that applies to the weak-symmetry (BGG) method of Ch. 6 ((6.2)/(6.5)), whose
+electric unknown `u` also lies in `H̊(curl, M)`: for the datum with magnetic part `β`, the
+`u`-equation gives `u̇(0) = -curl β = diag(1, -1, 0) ∉ L²(TSD₀)`
+(`curl_betaField_not_mem_TSD0`), so `u(t)` leaves `L²(TSD)` immediately. (The Ch. 6 data in
+`Feec.Ch6` are abstract bounded operators, so the bounded-domain BGG system itself is not
+instantiated here.) -/
+theorem deriv_mem_TSD0_of_path (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {u : ℝ → L2M Ω}
+    {u' : L2M Ω} {T : ℝ} (hT : 0 < T) (hu : HasDerivWithinAt u u' (Icc 0 T) 0)
+    (hK : ∀ t ∈ Icc 0 T, u t ∈ TSD Ω ∧ u t ∈ HcurlZero Ω) : u' ∈ TSD0 Ω hΩ hb :=
+  mem_of_hasDerivWithinAt_Icc (isClosed_TSD0 hΩ hb) hT hu fun t ht =>
+    mem_TSD0_of_mem_HcurlZero hΩ hb (hK t ht).1 (hK t ht).2
+
+/-- Contrapositive of `deriv_mem_TSD0_of_path`: a path in `H̊(curl, M)` whose initial velocity is
+not in `L²(TSD₀)` leaves `L²(TSD)` on every `[0, T]`, `T > 0`. -/
+theorem path_not_TSD_of_deriv_not_mem (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {u : ℝ → L2M Ω} {u' : L2M Ω} {T : ℝ} (hT : 0 < T) (hu : HasDerivWithinAt u u' (Icc 0 T) 0)
+    (hcurl : ∀ t ∈ Icc 0 T, u t ∈ HcurlZero Ω) (hu' : u' ∉ TSD0 Ω hΩ hb) :
+    ∃ t ∈ Icc 0 T, u t ∉ TSD Ω := by
+  by_contra h
+  simp only [not_exists, not_and, not_not] at h
+  exact hu' (deriv_mem_TSD0_of_path hΩ hb hT hu fun t ht => ⟨h t ht, hcurl t ht⟩)
 
 variable {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
   [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]

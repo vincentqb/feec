@@ -28,7 +28,7 @@ For an orthogonal group `S` (generator `-L`) and a closed subspace `K`, let
   of `prop_4_17` lies in `(S1*, S2*)` (`le_max_of_prop_4_17_hyps`);
 * a datum `x ∈ D(L) ∩ K` lies in `K*` iff the solutions from `x` and from `R x` both stay in `K`
   for all `t ≥ 0` (`mem_Kmax_iff_propagate`); stationary data (`L x = 0`) always do
-  (`mem_Kmax_of_waveOp_eq_zero`).
+  (`mem_Kmax_of_apply_eq_zero`, `mem_S2max_of_adj1_eq_zero`).
 
 Correction: the research notes behind this file claim that `x ∈ D(L) ∩ K` propagates for all
 `t ≥ 0` iff `x ∈ K*`. Forward propagation of `x` alone is weaker. Example (not formalized): the
@@ -44,7 +44,8 @@ complex with `ι D(d1) ⊆ H̊(curl, M)`):
   (`adj1_mem_TSD0_of_mem_S2max`), using `Feec.BoundedDomain.mem_TSD0_of_mem_HcurlZero`;
 * `S2*` contains the Hessians of all smooth harmonic functions, e.g. the constants
   (`thesisComplex_hessL2_mem_S2max`, `thesisComplex_constField_mem_S2max`), so `K* ≠ 0` and the
-  corrected Prop 4.17 is not vacuous;
+  corrected Prop 4.17 is not vacuous (`S2*` is even infinite-dimensional,
+  `Feec.BoundedDomain.thesisComplex_not_finiteDimensional_S2max` in `Feec.Ch4.BoundedSalvageDim`);
 * `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ) ∈ L²(TSD)` is not in `S2*` (`thesisComplex_betaField_not_mem_S2max`),
   so `K* ⊊ K`.
 

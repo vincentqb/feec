@@ -31,7 +31,9 @@ This is the `W^{1,1}` branch of the forcing class of [QuennevilleBelair2015, Thm
 Correction: `ForcingW11` asks for a derivative at every point of `(0,T)` off a countable set, with
 `F'` integrable. Such `F` lie in `C([0,T]; X) ∩ W^{1,1}(0,T; X)`, but a general `W^{1,1}` function
 is only differentiable almost everywhere, so this is a (large) subclass of the thesis' class; it
-contains `C¹([0,T]; X)` and piecewise-`C¹` forcing.
+contains `C¹([0,T]; X)` and piecewise-`C¹` forcing. The full class
+`C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))` is treated in `Feec.Ch4.StoneForcing`
+(`ForcingThm43Full`, `Feec.thm_4_3_full`).
 
 ## References
 

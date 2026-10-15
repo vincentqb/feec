@@ -51,9 +51,12 @@ continuous on `[0,T]` (weaker than the thesis' `C¹`, so uniqueness is stronger)
 dynamic variables and continuous `φₕ`, `λₕ`. Values at `t = T` of `Λ`, `φₕ` and of the
 derivative fields are not constrained by the solution structures, so the corresponding
 uniqueness/continuity statements are on `[0,T)`. Test spaces `N ∈ W²`, `µ ∈ W̃²` replace the undefined `V²`,
-`Ṽ²`. Existence for the continuous problem (6.1) (Thm 4.3/4.6 for the complex (5.1)) and the
-EB application §6.3 (Sobolev and FE spaces) are not formalized here; the corrected statements
-are recorded in `docs/audit.json`.
+`Ṽ²`. Existence for the continuous problem (6.1) (Thm 4.3/4.6 for the complex (5.1)) is not
+formalized here for the abstract data; the concrete complex (5.1) with the boundary conditions of
+§6.3 is built in `Feec.Ch6.Bounded` (on bounded domains, where TSD propagation fails:
+`Feec.Ch6.Bounded.bggComplex_verdict`) and in `Feec.Ch6.Whole` (on `ℝ³`, where it holds:
+`Feec.Ch6.Whole.bggWhole_verdict`). The finite element spaces of §6.3 are not formalized; the
+corrected statements are recorded in `docs/audit.json`.
 
 ## References
 

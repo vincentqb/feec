@@ -87,13 +87,18 @@ boundary conditions (as noted in `Feec.Ch4.TorusSym`); this file uses the space 
 Thesis gap: the zero-mean obstruction (and its generalization `TSD₀`) is a boundary effect,
 absent on `𝕋³`, where Prop 4.19 holds (`Feec.TorusSym.prop_4_19_torus_exists`).
 
-Not formalized: `D(curl*) = H(sym curl, T)` and `D((grad grad)*) = H(div div, S)` exactly (only
-`⊇` on smooth or weakly differentiable fields); the density of `H(sym curl, T) ∩ L²(TSD)` in
-`L²(TSD)`; the closed-range property of (4.16) on `Ω`; the dual-boundary-condition variant of the
-data space (`H̊(div div, S) × H̊(sym curl, T)`), where the zero-mean argument does not apply
-directly (for `B₀ ∈ H̊(sym curl, T)`, `⟪sym curl B₀, const⟫ = 0`); a non-stationary element of
-`K*` or a nonzero element of `S1*` (open; on boxes the research notes expect only static data);
-the tensorial mirror boundary conditions on boxes under which Prop 4.19 should hold.
+Proved in `Feec.Ch4.BoundedSymExt`: `D(curl*) = H(sym curl, T)` and
+`D((grad grad)*) = H(div div, S)` exactly (`Feec.BoundedSym.mem_adjoint_curlS_iff`,
+`Feec.BoundedSym.mem_adjoint_hessS_iff`); for the dual-boundary-condition placement printed in
+Prop 4.19 (`symComplexD`, with `D(L)` the printed data space), the projection hypothesis and the
+density fail (`symComplexD_not_projection_hyp`, `symComplexD_not_dense`), while whether the
+conclusion of Prop 4.19 holds there is not decided. Under tensorial mirror conditions on a box,
+in a parity model, Prop 4.19 holds for the operators of (4.16) with mirror conditions
+(`Feec.Box.mirror_prop_4_19_exists` in `Feec.Ch4.BoxMirror`).
+
+Not formalized: the density of `H(sym curl, T) ∩ L²(TSD)` in `L²(TSD)`; the closed-range
+property of (4.16) on `Ω`; a non-stationary element of `K*` or a nonzero element of `S1*` (open;
+the box results of `Feec.Ch4.BoxThesis` cover the boundary conditions of Prop 4.17 only).
 
 ## References
 

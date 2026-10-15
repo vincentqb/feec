@@ -40,13 +40,20 @@ searching the project for these hypotheses:
 The torus results already have unconditional forms in their own modules
 (`Feec.Torus.prop_4_17_torus_exists`, `Feec.Torus.prop_4_17_torus_group_periodic`,
 `Feec.TorusSym.prop_4_19_torus_exists`, `Feec.TorusSym.prop_4_19_torus_symGroup`). The Ch. 6
-discrete existence results (`prop_6_2_exists`) were never conditional. Existence for the
-continuous Ch. 6 problem (6.1) is not covered: `Feec.ContData` carries no Hilbert-complex
-structure (closedness, density, `W`-inner product on `Γ`) from which (6.1) could be written as
-the Hodge wave equation of a `HilbertComplex2`.
+discrete existence results (`prop_6_2_exists`) were never conditional. For the continuous
+Ch. 6 problem (6.1), the abstract `Feec.ContData` carries no Hilbert-complex structure, so
+existence is not stated for it; the concrete complex (5.1) is built as a `HilbertComplex2` on
+bounded domains in `Feec.Ch6.Bounded` (existence and uniqueness: `bggComplex_prop_4_16`) and on
+`ℝ³` in `Feec.Ch6.Whole` (`bggWhole_verdict`). The full forcing class of Thm 4.3,
+`C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(L)))`, is covered by `Feec.thm_4_3_full`
+(`Feec.Ch4.StoneForcing`).
 
 Thesis gap: Thm 4.14 assumes the exact solution in `C¹([0,T]; V)` without saying for which data
-it exists; `exists_isWeakSol_unconditional` shows `ξ₀ ∈ D(L²)` suffices.
+it exists; `exists_isWeakSol_unconditional` shows `ξ₀ ∈ D(L²)` suffices. For `ξ₀ ∈ D(L)` alone
+the `C¹(V)` solution can fail to exist (`Feec.FredholmCE.cxK1_exists_not_isWeakSol`), but the
+convergence claimed after Thm 4.14 still holds, for `D(L)` data with `ξₕ(0) = Πₕ ξ₀` and for `W`
+data with `ξₕ(0) → ξ₀` (`HilbertComplex2.convergence_domL_weakSolution`,
+`HilbertComplex2.convergence_W_exists` in `Feec.Ch4.ErrorEstimateDL`), without a rate.
 
 ## References
 
@@ -337,8 +344,9 @@ Thesis gap: Thm 4.14 assumes `ξ ∈ C¹([0,T]; V)` without saying for which dat
 `D(L²)` is a sufficient condition (the derivative `-e^{-tL} L ξ₀` is continuous in the graph
 norm of `L`, which controls the `V`-norm, `norm_toV_le`). It is not claimed to be necessary:
 `C¹(V)` only needs `t ↦ L ξ(t)` continuous into `V`. The thesis' Thm 4.3 regularity
-`C⁰(D(L)) ∩ C¹(W)` does not by itself supply `ξ̇ ∈ C⁰(V)`; whether `ξ₀ ∈ D(L)` alone can fail
-to give `C¹(V)` is not formalized here.
+`C⁰(D(L)) ∩ C¹(W)` does not by itself supply `ξ̇ ∈ C⁰(V)`: for `ξ₀ ∈ D(L)` alone it can fail
+(`Feec.FredholmCE.cxK1_exists_not_isWeakSol`, `Feec.FredholmCE.cxK1_convergence_without_C1` in
+`Feec.Ch4.ErrorEstimateDL`).
 See [QuennevilleBelair2015, §4.6, Thm 4.14]; cf. [Pazy1983, §1.2, Thm 2.4]. -/
 theorem exists_isWeakSol_unconditional (T : ℝ) (x : H.domL)
     (hx : (H.waveOp ⟨x.1, x.2⟩ : Tot W0 W1 W2) ∈ H.domL) :

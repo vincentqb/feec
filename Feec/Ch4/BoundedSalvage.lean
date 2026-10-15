@@ -48,7 +48,8 @@ propagation that applies to every datum and to every complex with the electric b
    apply to the weak-symmetry (BGG) method of Ch. 6, whose `u` lies in `H̊(curl, M)`, once its
    bounded-domain system is built: for the datum with magnetic part `β` one expects
    `u̇(0) = -curl β`, and `curl β ∉ L²(TSD₀)` is proved (`curl_betaField_not_mem_TSD0`). The
-   identity `u̇(0) = -curl β` is not proved, because `Feec.Ch6` only has abstract operators.
+   Ch. 6 system on bounded domains is built in `Feec.Ch6.Bounded`, where the failure is proved
+   (`Feec.Ch6.Bounded.E_not_TSD_of_adjoint`, `Feec.Ch6.Bounded.bggComplex_not_propagate`).
 
 ## Status of the analysis this file follows
 
@@ -56,26 +57,33 @@ Verified here: items 1-5 (for item 5, the abstract path lemma and `curl β ∉ L
 `Feec.Ch4.BoundedSalvageDim`, that `obstr` is infinite-dimensional (`not_finiteDimensional_obstr`,
 via the harmonic functions `e^{-n x₁} cos(n x₂)`), so `closure Z` has infinite codimension in
 `L²(TSD)`; in `Feec.Ch4.BoundedSalvageMax`, the corrected (maximal) Prop 4.17, whose exhibited
-elements are all stationary. Not formalized:
+elements are all stationary. Proved in later modules:
 * *Instance for Ch. 6*: the criterion of item 4 is instantiated for the thesis' complex of
-  Prop 4.17 here and for the complex (4.16) of Prop 4.19 in `Feec.Ch4.BoundedSym`
-  (`Feec.BoundedSym.symComplexB_mem_TSD0_of_propagate`), but not for the Ch. 6 BGG system.
+  Prop 4.17 here, for the complex (4.16) of Prop 4.19 in `Feec.Ch4.BoundedSym`
+  (`Feec.BoundedSym.symComplexB_mem_TSD0_of_propagate`), and for the Ch. 6 BGG complex in
+  `Feec.Ch6.Bounded` (`Feec.Ch6.Bounded.E_not_TSD_of_adjoint`).
 * *Density* (`closure Z = TSD₀`, so `obstr` is exactly the orthogonal complement of `closure Z` in
-  `L²(TSD)`): on domains star-shaped with respect to a ball it follows from zero extension,
-  dilation `B(x/λ)` and mollification; for Lipschitz `Ω` it needs a Bogovskii-type right inverse
-  of `div` on symmetric trace-free fields. Only `closure Z ⊆ TSD₀` is proved.
+  `L²(TSD)`): `Feec.Ch4.BoundedDensity` proves it for domains star-shaped with respect to a ball,
+  in particular convex domains and balls (`closure_TSD_inter_HcurlZero_eq`), by zero extension,
+  dilation and mollification.
+* *Interior propagation* (thesis Prop 3.6 localized): for TSD data the solution stays TSD on
+  `{x : dist(x, ℝ³ ∖ Ω) > t}`, by a local energy estimate for the system satisfied by
+  `(tr E, tr B, vskw E, vskw B)` (Lemma 3.5); for `(0, 0, β)` the violation is present in the
+  boundary layer (`Feec.Ch4.BoundedInterior`: `thesisComplex_TSD_depDomain`,
+  `thesisComplex_beta_violation_boundary_layer`).
+* *Mirror conditions on a box*: realized as reflection-invariant subspaces of the torus in
+  `Feec.Ch4.BoxMirror`, where Props 4.17/4.19 hold with existence
+  (`Feec.Box.mirror_prop_4_17_exists`, `Feec.Box.mirror_prop_4_19_exists`).
+
+Not formalized:
+* Density for Lipschitz `Ω`: it needs a Bogovskii-type right inverse of `div` on symmetric
+  trace-free fields.
 * *Exact description of `obstr`*: with trace-free Korn (closed range of `dev sym ∇`), `obstr`
   should consist of the `dev sym ∇v` with `Δv + ⅓ ∇ div v = 0`. Only the inclusion of the
   harmonic Hessians (and of the constants) is proved.
-* *Interior propagation* (thesis Prop 3.6 localized): for TSD data the solution should stay TSD
-  on `{(t, x) : t < dist(x, ∂Ω)}`, by a local energy estimate for the closed symmetric hyperbolic
-  system satisfied by `(tr E, tr B, vskw E, vskw B)` (Lemma 3.5); constraint violations are
-  created at the wall. This needs local energy estimates, which are not in the repository.
-* *Other boundary conditions*: the magnetic condition (`E ∈ H(curl) ∩ H̊(div)`, `B ∈ H̊(curl)`)
-  is the same problem under `(E, B) ↦ (B, -E)`; tensorial mirror conditions on a box, obtained as
-  reflection-invariant subspaces of the torus, should satisfy Props 4.17/4.19. Formally the
-  latter is the torus result `Feec.Torus.prop_4_17_torus` restricted to an invariant subspace;
-  identifying that subspace with a box model needs an `L²(box)` model that is not built.
+* The magnetic condition (`E ∈ H(curl) ∩ H̊(div)`, `B ∈ H̊(curl)`), the same problem under
+  `(E, B) ↦ (B, -E)`; the identification of the box parity subspaces with Sobolev and trace
+  spaces on the box; sharpness of the unit propagation speed.
 
 Correction: the closure of `L²(TSD) ∩ H̊(curl, M)` in `L²(TSD)`, claimed to be `L²(TSD)` in the
 proof of [QuennevilleBelair2015, §4.10, Prop 4.17], lies in the closed subspace `L²(TSD₀)`; the
@@ -394,12 +402,11 @@ theorem mem_of_hasDerivWithinAt_Icc {F : Type*} [NormedAddCommGroup F] [NormedSp
 path `u` of matrix fields stays in `L²(TSD) ∩ H̊(curl, M)` on `[0, T]`, `T > 0`, and has right
 derivative `u'` at `0`, then `u' ∈ L²(TSD₀)`.
 
-This is the form that would apply to the weak-symmetry (BGG) method of Ch. 6 ((6.2)/(6.5)),
-whose electric unknown `u` also lies in `H̊(curl, M)`, once that system is built on `Ω`: for the
-datum with magnetic part `β`, the `u`-equation should give `u̇(0) = -curl β = diag(1, -1, 0)`,
-which is not in `L²(TSD₀)` (`curl_betaField_not_mem_TSD0`), so `u(t)` would leave `L²(TSD)`
-immediately. Only the last step is proved: the Ch. 6 data in `Feec.Ch6` are abstract bounded
-operators, so the bounded-domain BGG system and its `u̇(0)` are not formalized. -/
+This is the form that applies to the weak-symmetry (BGG) method of Ch. 6, whose electric
+unknown `u` also lies in `H̊(curl, M)`. The Ch. 6 system on bounded domains is built in
+`Feec.Ch6.Bounded`, where for the datum with magnetic part `(m, β)` every strong solution has
+`u(t) ∉ L²(TSD)` for some `t ∈ [0, T]` (`Feec.Ch6.Bounded.bggComplex_not_propagate`), via the
+analogous abstract criterion `Feec.Ch6.Bounded.E_not_TSD_of_adjoint`. -/
 theorem deriv_mem_TSD0_of_path (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {u : ℝ → L2M Ω}
     {u' : L2M Ω} {T : ℝ} (hT : 0 < T) (hu : HasDerivWithinAt u u' (Icc 0 T) 0)
     (hK : ∀ t ∈ Icc 0 T, u t ∈ TSD Ω ∧ u t ∈ HcurlZero Ω) : u' ∈ TSD0 Ω hΩ hb :=

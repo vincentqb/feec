@@ -35,6 +35,9 @@ Correction: the research notes behind this file claim that `x ∈ D(L) ∩ K` pr
 complex `0 → H¹(ℝ) --d/dx--> L²(ℝ)`, `S1 = S2 = L²(0, ∞)`; (4.14) is `Ė = B'`, `Ḃ = E'`, so
 `E - B` moves right and `E + B` moves left. The datum `(0, f, -f)` with `supp f ⊆ (1, 2)` stays in
 `K` for `t ≥ 0` but not for `t < 0`, and `R` of it, `(0, f, f)`, leaves `K` for `t > 0`.
+On the box with the thesis' boundary conditions (parity model) the gap closes: forward
+invariance alone already forces `x ∈ K*` (`Feec.Box.forward_iff_mem_Kmax`,
+`Feec.Box.thesisBox_forward_iff` in `Feec.Ch4.BoxForward`).
 
 ## Bounded domains
 
@@ -56,17 +59,22 @@ What this does and does not show: `K*` is invariant by definition, and the hypot
 on the largest subspace where it can work. Its content is the identification above and
 maximality. Every element of `K*` exhibited here is **stationary** (`d1* B = 0`), where
 propagation is trivial; no nonzero element of `S1*` and no non-stationary element of `K*` is
-known. It is open whether `K*` contains any non-stationary datum on any bounded domain.
+known. It is open whether `K*` contains any non-stationary datum on a general bounded domain.
+On the box `(0, 1/2)³` with the thesis' boundary conditions, in the parity model of the torus,
+`K*` consists exactly of the stationary data in `K` (`Feec.Box.thesisBox_mem_Kmax_iff` in
+`Feec.Ch4.BoxThesis`).
 
 The resulting statement (`thesisComplex_prop_4_17_max`): for every datum `(0, E₀, B₀) ∈ D(L)`
 with `E₀ ∈ S1*`, `B₀ ∈ S2*`, (4.14) has a unique strong solution on `[0, T]`; it stays in
 `{0} × S1* × S2* ⊆ {0} × L²(TSD) × L²(TSD)`, and `(E, B)` solves (4.15).
 
-Not formalized: identifying `S1*`, `S2*` concretely. On the cube `(0, π)³` the research notes
-argue that `S1* = 0` and `S2* = L²(TSD) ∩ ker curl` (only static data propagate), by splitting
-`S` into eigenspaces of the row-wise Maxwell operator and comparing sine and cosine profiles;
-that needs spectral theory of the bounded-domain Maxwell operator, which is not in this
-repository.
+Identifying `S1*`, `S2*` concretely: on a cube the research notes argue that `S1* = 0` and
+`S2* = L²(TSD) ∩ ker curl` (only static data propagate). This is proved in the parity model of
+the box (`Feec.Box.thesisBox_mem_Kmax_iff'`: `x ∈ K*` iff `x = (0, 0, B₀)` with `B₀` TSD and
+curl-free), by Fourier series on the torus rather than by spectral theory of the bounded-domain
+Maxwell operator. Not formalized: the identification of those parity subspaces with the spaces
+`H̊¹`, `H̊(curl)`, `H(curl)` of `Feec.Ch4.BoundedDomain` on the box (it needs traces), and any
+concrete description of `S1*`, `S2*` on other domains.
 
 ## References
 
@@ -632,7 +640,8 @@ largest subspace where it can work; the content is in items 1 and 3 and in maxim
 elements of `K*` exhibited are stationary (`d1* B = 0`: harmonic Hessians, constants,
 `thesisComplex_mem_S2max_of_weakCurl_eq_zero`), where propagation is trivial. No nonzero element
 of `S1*` and no non-stationary element of `K*` is known. It is open whether `K*` contains any
-non-stationary datum; on the cube the research notes expect `S1* = 0`.
+non-stationary datum; on the box, in the parity model, it does not
+(`Feec.Box.thesisBox_mem_Kmax_iff`).
 
 Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]: its projection hypothesis fails on every
 nonempty bounded open `Ω`, and its conclusion fails for `(0, 0, β)`; this statement replaces

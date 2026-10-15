@@ -126,8 +126,10 @@ discharged by Stone's theorem (`Feec.stoneGroup`, `Feec.Ch4.Stone`):
 (`Feec.Ch4.StoneApplications`) need no hypothesis beyond `Ω` nonempty, bounded and open.
 Prop 4.19 on bounded domains is treated in `Feec.Ch4.BoundedSym`, and the salvage (the maximal
 invariant constraint space and the infinite-dimensional obstruction) in `Feec.Ch4.BoundedSalvage`,
-`Feec.Ch4.BoundedSalvageMax` and `Feec.Ch4.BoundedSalvageDim`. The second projection hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is also
-false on every nonempty bounded open `Ω`, and `D(curl*) = H(curl, M)` exactly; both are proved in
+`Feec.Ch4.BoundedSalvageMax` and `Feec.Ch4.BoundedSalvageDim`; the density question in
+`Feec.Ch4.BoundedDensity`; interior propagation at unit speed in `Feec.Ch4.BoundedInterior`; the
+box `(0, ½)³` in a parity model in `Feec.Ch4.BoxThesis` and `Feec.Ch4.BoxMirror`. The second
+projection hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is also false on every nonempty bounded open `Ω`, and `D(curl*) = H(curl, M)` exactly; both are proved in
 `Feec.Ch4.BoundedDomainExt` (`thesisComplex_not_projection_hyp2`, `mem_adjoint_curlClosure_iff`).
 
 ## References
@@ -1734,10 +1736,12 @@ theorem thesisComplex_TSD_le_ker (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 
 /-- **The thesis' density conjecture, as literally stated, is true**: `H̊(curl, M) ∩ H(div, M, 0)`
 is dense in `H(div, M, 0)` (weakly divergence-free fields) on every bounded open `Ω`. (Then so is
-the larger `H(curl, M) ∩ H(div, M, 0)`.)
+the larger `H(curl, M) ∩ H(div, M, 0)`: `dense_HcurlM_inter_HdivZero` in
+`Feec.Ch4.BoundedDensity`.)
 
 Thesis gap: what fails is the deduction "so that `H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`"
-in [QuennevilleBelair2015, §4.10, proof of Prop 4.17]; see `not_dense_TSD_inter_HcurlZero`. -/
+in [QuennevilleBelair2015, §4.10, proof of Prop 4.17]; see `not_dense_TSD_inter_HcurlZero` and,
+on domains star-shaped with respect to a ball, `prop417_density_gap`. -/
 theorem thesisComplex_dense_literal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
     ∀ k ∈ HdivZero Ω, k ∈ closure (HcurlZero Ω ∩ HdivZero Ω) := by
   intro k hk

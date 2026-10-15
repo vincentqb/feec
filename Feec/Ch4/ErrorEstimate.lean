@@ -1131,7 +1131,10 @@ uniformly on `[0,T]` (i.e. in `L∞(0,T; W)`).
 
 Correction: the thesis states this under the compactness property and for `ξₕ(0) = Πₕξ(0)`;
 neither is needed beyond `εₕ(0) → 0` (see `convergence_of_initProj`): density, Prop 4.13 and
-Thm 4.14 suffice.
+Thm 4.14 suffice. The assumption `ξ ∈ C¹([0,T]; V)` is removed in `Feec.Ch4.ErrorEstimateDL`:
+convergence holds for every `ξ₀ ∈ D(L)` with `ξₕ(0) = Πₕ ξ₀`
+(`HilbertComplex2.convergence_domL_weakSolution`) and for every `ξ₀ ∈ W` with `ξₕ(0) → ξ₀`
+(`HilbertComplex2.convergence_W`), without a rate.
 See [QuennevilleBelair2015, §4.6, discussion after Thm 4.14]. -/
 theorem convergence [∀ h, FiniteDimensional ℝ (S h).toV] (hd : C.DensityHyp l S) {T : ℝ}
     {ξ ξ' : ℝ → C.VSp} (hξ : C.IsWeakSol T ξ ξ') {ξh ξh' : ι → ℝ → C.VSp}

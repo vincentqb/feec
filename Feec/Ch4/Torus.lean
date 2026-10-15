@@ -83,7 +83,10 @@ is constructed explicitly in `Feec.Ch4.TorusGroup` (`periodicGroup`), which give
 `Feec.TorusSym.prop_4_19_torus_exists` in `Feec.Ch4.TorusSym`. On bounded domains (the thesis'
 setting `H̊¹(V) → H̊(curl; M) → L²(M)`) the projection hypothesis and the conclusion of
 Prop 4.17 are both false (`Feec.BoundedDomain.thesisComplex_not_projection_hyp`,
-`Feec.BoundedDomain.thesisComplex_not_propagate` in `Feec.Ch4.BoundedDomain`).
+`Feec.BoundedDomain.thesisComplex_not_propagate` in `Feec.Ch4.BoundedDomain`). On the whole
+space `ℝ³` (also no boundary) Props 4.17 and 4.19 hold with existence (`Feec.Ch4.Whole`,
+`Feec.Ch4.WholeSym`); on the box `(0, ½)³` with the thesis' boundary conditions, realized as
+parity subspaces of this complex, only stationary data propagate (`Feec.Ch4.BoxThesis`).
 
 ## References
 

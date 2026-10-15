@@ -737,4 +737,117 @@ theorem mem_Kmax_boxTSD_iff (x : X) :
 
 end Dynamics
 
+/-! ## The box dynamics: the periodic group preserves the parity space -/
+
+section BoxDynamics
+
+/-- `ξ_{R_i k}`: reflection of the `i`-th frequency. -/
+theorem freq_refl_apply (i : Fin 3) (k : Z3) (j : Fin 3) :
+    freq (refl i k) j = if j = i then -freq k j else freq k j := by
+  by_cases h : j = i
+  · subst h; simp [freq, refl]
+  · simp [freq, refl, h]
+
+/-- The row-wise sign action `A_{ab} ↦ τ colSign i b A_{ab}` on a fibre. -/
+def rowSgn (τ : ℂ) (i : Fin 3) : Mat3 →L[ℝ] Mat3 :=
+  LinearMap.toContinuousLinearMap
+    { toFun := fun M => mat fun a b => τ * colSign i b * M (a, b)
+      map_add' := fun M N => by ext ⟨a, b⟩; simp [mul_add]
+      map_smul' := fun r M => by ext ⟨a, b⟩; simp [Complex.real_smul]; ring }
+
+@[simp] theorem rowSgn_apply (τ : ℂ) (i : Fin 3) (M : Mat3) (a b : Fin 3) :
+    rowSgn τ i M (a, b) = τ * colSign i b * M (a, b) := rfl
+
+/-- The reflection `x_i ↦ -x_i` on a fibre of the state `(σ, E, B)`, with the parities of the
+thesis' complex: `σ` odd, `E ∈ ParRow 1`, `B ∈ ParRow (-1)`. -/
+def reflFib (i : Fin 3) : Fib →L[ℝ] Fib :=
+  (Constraints.totL (W0 := Vec3) (W1 := Mat3) (W2 := Mat3)).symm.toContinuousLinearMap ∘L
+    ((-ContinuousLinearMap.id ℝ Vec3).prodMap ((rowSgn 1 i).prodMap (rowSgn (-1) i))) ∘L
+    (Constraints.totL (W0 := Vec3) (W1 := Mat3) (W2 := Mat3)).toContinuousLinearMap
+
+theorem tot_reflFib (i : Fin 3) (x : Fib) :
+    tot _ _ _ (reflFib i x) =
+      (-(tot _ _ _ x).1, rowSgn 1 i (tot _ _ _ x).2.1, rowSgn (-1) i (tot _ _ _ x).2.2) := by
+  simp [reflFib]; rfl
+
+/-- **The wave symbol intertwines the reflections**: `W_{R_i k} ρ_i = ρ_i W_k`. -/
+theorem waveSym_refl (i : Fin 3) (k : Z3) (x : Fib) :
+    waveSym (freq (refl i k)) (reflFib i x) = reflFib i (waveSym (freq k) x) := by
+  apply (tot Vec3 Mat3 Mat3).injective
+  rw [tot_waveSym, tot_reflFib, tot_reflFib, tot_waveSym]
+  obtain ⟨σ, u, ρ⟩ := tot _ _ _ x
+  simp only
+  refine Prod.ext ?_ (Prod.ext ?_ ?_)
+  · ext a
+    simp only [PiLp.neg_apply, divSym_apply, rowSgn_apply, freq_refl_apply, Fin.sum_univ_three]
+    fin_cases i <;> simp [colSign] <;> ring
+  · ext ⟨a, b⟩
+    simp only [PiLp.neg_apply, PiLp.sub_apply, gradSym_apply, curlSym_apply, jM_apply,
+      curlR_apply, cross, rowSgn_apply, freq_refl_apply]
+    fin_cases i <;> fin_cases b <;> simp [colSign] <;> ring
+  · ext ⟨a, b⟩
+    simp only [curlSym_apply, jM_apply, curlR_apply, cross, rowSgn_apply, freq_refl_apply]
+    fin_cases i <;> fin_cases b <;> simp [colSign] <;> ring
+
+/-- The parity space of the box model: `x̂(R_i k) = ρ_i x̂(k)`. -/
+def Par : Submodule ℝ X where
+  carrier := {x | ∀ i k, fib x (refl i k) = reflFib i (fib x k)}
+  zero_mem' := by intro i k; simp [fib_zero]
+  add_mem' := by
+    intro x y hx hy i k
+    simp only [mem_ofPred_eq] at hx hy
+    rw [fib_add, fib_add, hx, hy, _root_.map_add]
+  smul_mem' := by
+    intro r x hx i k
+    simp only [mem_ofPred_eq] at hx
+    rw [fib_smul, fib_smul, hx, _root_.map_smul]
+
+/-- `Par = ParV × ParRow 1 × ParRow (-1)`. -/
+theorem mem_Par_iff (x : X) :
+    x ∈ Par ↔ (tot _ _ _ x).1 ∈ ParV ∧ (tot _ _ _ x).2.1 ∈ ParRow 1 ∧
+      (tot _ _ _ x).2.2 ∈ ParRow (-1) := by
+  have e : ∀ i k, (fib x (refl i k) = reflFib i (fib x k)) ↔
+      ((tot _ _ _ x).1 (refl i k) = -(tot _ _ _ x).1 k ∧
+        (tot _ _ _ x).2.1 (refl i k) = rowSgn 1 i ((tot _ _ _ x).2.1 k) ∧
+        (tot _ _ _ x).2.2 (refl i k) = rowSgn (-1) i ((tot _ _ _ x).2.2 k)) := by
+    intro i k
+    rw [← (tot Vec3 Mat3 Mat3).injective.eq_iff, tot_reflFib, fib, fib,
+      tot_fibIso_symm_apply, tot_fibIso_symm_apply]
+    simp only [Prod.mk.injEq]
+  change (∀ i k, fib x (refl i k) = reflFib i (fib x k)) ↔ _
+  simp only [e]
+  constructor
+  · intro h
+    refine ⟨fun i k a => ?_, fun i k a b => ?_, fun i k a b => ?_⟩
+    · rw [(h i k).1]; rfl
+    · rw [(h i k).2.1]; rfl
+    · rw [(h i k).2.2]; rfl
+  · rintro ⟨h0, h1, h2⟩ i k
+    refine ⟨?_, ?_, ?_⟩
+    · ext a; exact h0 i k a
+    · ext ⟨a, b⟩; exact h1 i k a b
+    · ext ⟨a, b⟩; exact h2 i k a b
+
+set_option synthInstance.maxHeartbeats 200000 in
+/-- **The box evolution is well defined**: the periodic Hodge wave group preserves the parity
+space `Par` of the box model, so its restriction is a group on the box state space. -/
+theorem periodicGroup_mem_Par {x : X} (hx : x ∈ Par) (t : ℝ) : periodicGroup.S t x ∈ Par := by
+  intro i k
+  have hsc : SemiconjBy (reflFib i) (t • waveSymK k) (t • waveSymK (refl i k)) := by
+    ext1 y
+    change reflFib i ((t • waveSymK k) y) = (t • waveSymK (refl i k)) (reflFib i y)
+    simp only [_root_.smul_apply, _root_.map_smul, waveSymK]
+    rw [waveSym_refl]
+  let _ : NormedAlgebra ℚ (Fib →L[ℝ] Fib) := NormedAlgebra.restrictScalars ℚ ℝ (Fib →L[ℝ] Fib)
+  have hexp : reflFib i * exp (t • waveSymK k) = exp (t • waveSymK (refl i k)) * reflFib i :=
+    SemiconjBy.exp_right hsc
+  change fibIso.symm (periodicGroup.S t x) (refl i k) =
+    reflFib i (fibIso.symm (periodicGroup.S t x) k)
+  rw [periodicGroup_apply, periodicGroup_apply]
+  have hxk : fibIso.symm x (refl i k) = reflFib i (fibIso.symm x k) := hx i k
+  rw [hxk]
+  exact (congrArg (fun A : Fib →L[ℝ] Fib => A (fibIso.symm x k)) hexp).symm
+
+end BoxDynamics
+
 end Feec.Box

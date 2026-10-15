@@ -26,14 +26,16 @@ searching the project for these hypotheses:
   the graph-norm differentiability lemmas `UnitaryGroupGenerator.continuous_graph`,
   `UnitaryGroupGenerator.hasDerivAt_graph` and the bound `norm_toV_le`) and
   `HilbertComplex2.convergence_unconditional` (`ξₕ → ξ` uniformly in `W` on `[0,T]` for every
-  `ξ₀ ∈ D(L²)`, the exact solution no longer assumed).
+  `ξ₀ ∈ D(L²)`, the exact solution no longer assumed), with `Complex3.isWeakSol_unique`
+  (energy uniqueness of weak solutions in `C¹([0,T]; V)`).
 * Constraints: `Constraints.prop_4_16_classical_unconditional`,
   `Constraints.prop_4_17_exists_unconditional` (abstract Props 4.17/4.19 with existence and the
   thesis' regularity), `Constraints.prop_4_17_group_unconditional` (the Stone group of `-L`
-  maps `D(L) ∩ K` into `K` for `t ≥ 0`).
+  maps `D(L) ∩ K` into `K` for `t ≥ 0`), `Constraints.prop_4_17_group_all_unconditional`
+  (for all `t ∈ ℝ`, via time reversal).
 * Bounded domains: `BoundedDomain.thesisComplex_waveGroup_not_invariant`: the Stone group of
-  the thesis' complex on any nonempty bounded open `Ω` does not leave
-  `D(L) ∩ K` inside `K`.
+  the thesis' complex on any nonempty bounded open `Ω` moves a TSD datum in `D(L) ∩ K` out of
+  `K` within every time interval `[0,T]`, `T > 0`.
 
 The torus results already have unconditional forms in their own modules
 (`Feec.Torus.prop_4_17_torus_exists`, `Feec.Torus.prop_4_17_torus_group_periodic`,
@@ -142,6 +144,55 @@ theorem UnitaryGroupGenerator.hasDerivAt_graph (G : UnitaryGroupGenerator A)
   rw [hAz, hz']
 
 end GraphDeriv
+
+namespace Complex3
+
+open HilbertComplex2 (Tot tot)
+
+variable {X0 X1 X2 : Type*}
+  [NormedAddCommGroup X0] [InnerProductSpace ℝ X0]
+  [NormedAddCommGroup X1] [InnerProductSpace ℝ X1]
+  [NormedAddCommGroup X2] [InnerProductSpace ℝ X2]
+  {C : Complex3 X0 X1 X2}
+
+/-- **Uniqueness of weak solutions in `C¹([0,T]; V)`** (`IsWeakSol`, the class of Thm 4.14):
+two weak solutions with the same initial value agree on `[0,T]`. Energy proof (thesis l.2120):
+testing (4.8) for both with `ψ = ξ₁ − ξ₂` gives `d/dt ‖ξ₁ − ξ₂‖_W² = −2a(ξ₁ − ξ₂, ξ₁ − ξ₂) = 0`,
+then Lemma 4.12 with `F = 0`; the `W`-norm is definite on `V`. The continuous counterpart of
+`Complex3.discrete_solution_unique`.
+See [QuennevilleBelair2015, §4.4, l.2120 and §4.6]. -/
+theorem isWeakSol_unique {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
+    (h₁ : C.IsWeakSol T ξ₁ ξ₁') (h₂ : C.IsWeakSol T ξ₂ ξ₂') (h0 : ξ₁ 0 = ξ₂ 0) :
+    ∀ t ∈ Icc 0 T, ξ₁ t = ξ₂ t := by
+  obtain ⟨c₁, -, d₁, e₁⟩ := h₁
+  obtain ⟨c₂, -, d₂, e₂⟩ := h₂
+  set e : ℝ → Tot X0 X1 X2 := fun t => C.toW (ξ₁ t - ξ₂ t) with he
+  have hec : ContinuousOn e (Icc 0 T) := C.toW.continuous.comp_continuousOn (c₁.sub c₂)
+  have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (C.toW (ξ₁' t - ξ₂' t)) (Ici t) t :=
+    fun t ht => C.toW.hasFDerivAt.comp_hasDerivWithinAt t ((d₁ t ht).sub (d₂ t ht))
+  have key := lemma_4_12 (Q := fun t => ‖e t‖) (q' := fun t => 2 * ⟪e t, C.toW (ξ₁' t - ξ₂' t)⟫)
+    (F := fun _ => 0) (G := fun _ => 0) hec.norm (fun _ _ => norm_nonneg _)
+    (fun t ht => (hed t ht).norm_sq) continuousOn_const
+    (fun t _ => hasDerivWithinAt_const _ _ _) (fun _ _ => le_rfl)
+    (fun t ht => by
+      have E1 := e₁ t ht (ξ₁ t - ξ₂ t)
+      have E2 := e₂ t ht (ξ₁ t - ξ₂ t)
+      have hs := C.aL_self (ξ₁ t - ξ₂ t)
+      simp only [he, map_sub, inner_sub_left, inner_sub_right, LinearMap.sub_apply] at E1 E2 hs ⊢
+      have r1 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₁' t))
+      have r2 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₂' t))
+      have r3 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₁' t))
+      have r4 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₂' t))
+      rw [zero_mul]
+      linarith)
+  intro t ht
+  have h := key t ht
+  simp only [he, h0, sub_self, map_zero, norm_zero, add_zero, zero_div] at h
+  have : C.toW (ξ₁ t - ξ₂ t) = C.toW 0 := by
+    rw [map_zero]; exact norm_le_zero_iff.1 h
+  exact sub_eq_zero.1 (C.toW_injective this)
+
+end Complex3
 
 namespace HilbertComplex2
 
@@ -279,12 +330,15 @@ theorem weak_identity (z w : H.domL) (hw : (w : Tot W0 W1 W2) = -H.waveOp ⟨z.1
 complex and every `ξ₀ ∈ D(L²)` (`ξ₀ ∈ D(L)`, `L ξ₀ ∈ D(L)`), there is a weak solution
 `ξ ∈ C¹([0,T]; V)` of (4.8) in the sense of `Feec.Complex3.IsWeakSol` (the class used by
 `Feec.Complex3.thm_4_14` and `Feec.Complex3.convergence_exists`) with `ξ(0) = ξ₀`; it is the
-orbit `e^{-tL} ξ₀` of the Stone group, read in `V`, and it is the classical solution of (4.4).
+orbit `e^{-tL} ξ₀` of the Stone group, read in `V` (the last conjunct), and it is the only
+such weak solution on `[0,T]` (`Complex3.isWeakSol_unique`).
 
 Thesis gap: Thm 4.14 assumes `ξ ∈ C¹([0,T]; V)` without saying for which data this holds;
-`D(L²)` suffices (the derivative `-e^{-tL} L ξ₀` is continuous in the graph norm of `L`, which
-controls the `V`-norm, `norm_toV_le`). The thesis' Thm 4.3 regularity
-`C⁰(D(L)) ∩ C¹(W)` does not give `C¹(V)`.
+`D(L²)` is a sufficient condition (the derivative `-e^{-tL} L ξ₀` is continuous in the graph
+norm of `L`, which controls the `V`-norm, `norm_toV_le`). It is not claimed to be necessary:
+`C¹(V)` only needs `t ↦ L ξ(t)` continuous into `V`. The thesis' Thm 4.3 regularity
+`C⁰(D(L)) ∩ C¹(W)` does not by itself supply `ξ̇ ∈ C⁰(V)`; whether `ξ₀ ∈ D(L)` alone can fail
+to give `C¹(V)` is not formalized here.
 See [QuennevilleBelair2015, §4.6, Thm 4.14]; cf. [Pazy1983, §1.2, Thm 2.4]. -/
 theorem exists_isWeakSol_unconditional (T : ℝ) (x : H.domL)
     (hx : (H.waveOp ⟨x.1, x.2⟩ : Tot W0 W1 W2) ∈ H.domL) :
@@ -318,7 +372,8 @@ theorem exists_isWeakSol_unconditional (T : ℝ) (x : H.domL)
 /-- **Convergence of the semi-discrete method (4.10)**, unconditional on the exact solution:
 for every Hilbert complex, every family of finite-dimensional subcomplexes `Vₕ` satisfying the
 density hypothesis, and every `ξ₀ ∈ D(L²)`, the exact weak solution `ξ ∈ C¹([0,T]; V)` with
-`ξ(0) = ξ₀` exists (`exists_isWeakSol_unconditional`), the discrete solutions with
+`ξ(0) = ξ₀` exists (`exists_isWeakSol_unconditional`) and is unique on `[0,T]`
+(`Complex3.isWeakSol_unique`), the discrete solutions with
 `ξₕ(0) = Πₕ ξ₀` exist, and `ξₕ → ξ` in `W`, uniformly on `[0,T]`.
 `Feec.Complex3.convergence_exists` with its hypothesis "`ξ` is a weak solution in
 `C¹([0,T]; V)`" discharged by Stone's theorem.
@@ -327,6 +382,8 @@ theorem convergence_unconditional {ι : Type*} {l : Filter ι} {S : ι → H.toC
     [∀ h, FiniteDimensional ℝ (S h).toV] (hd : H.toComplex3.DensityHyp l S) (T : ℝ)
     (x : H.domL) (hx : (H.waveOp ⟨x.1, x.2⟩ : Tot W0 W1 W2) ∈ H.domL) :
     ∃ ξ ξ' : ℝ → H.toComplex3.VSp, ξ 0 = H.toV x ∧ H.toComplex3.IsWeakSol T ξ ξ' ∧
+      (∀ ζ ζ' : ℝ → H.toComplex3.VSp, H.toComplex3.IsWeakSol T ζ ζ' → ζ 0 = H.toV x →
+        EqOn ζ ξ (Icc 0 T)) ∧
       ∃ ξh ξh' : ι → ℝ → H.toComplex3.VSp,
         (∀ h, H.toComplex3.IsDiscreteSol (S h) T (ξh h) (ξh' h)) ∧
         (∀ h, ξh h 0 = H.toComplex3.ellProj (S h) (H.toV x)) ∧
@@ -334,7 +391,8 @@ theorem convergence_unconditional {ι : Type*} {l : Filter ι} {S : ι → H.toC
           (fun t => H.toComplex3.toW (ξ t)) l (Icc 0 T) := by
   obtain ⟨ξ, ξ', h0, hξ, -⟩ := H.exists_isWeakSol_unconditional T x hx
   obtain ⟨ξh, ξh', hs, hi, hc⟩ := Complex3.convergence_exists hd hξ
-  exact ⟨ξ, ξ', h0, hξ, ξh, ξh', hs, fun h => h0 ▸ hi h, hc⟩
+  exact ⟨ξ, ξ', h0, hξ, fun ζ ζ' hζ hζ0 => Complex3.isWeakSol_unique hζ hξ (hζ0.trans h0.symm),
+    ξh, ξh', hs, fun h => h0 ▸ hi h, hc⟩
 
 end HilbertComplex2
 
@@ -404,6 +462,29 @@ theorem prop_4_17_group_unconditional (hS1 : S1 ≤ H.d0†.ker)
   Kc_propagate hS1 hPD hd1 hd1s (isStrongSolution_orbit H.waveGroup t ⟨x, hx⟩) hxK t
     ⟨ht, le_rfl⟩
 
+/-- **Props 4.17/4.19, group form for all times**, unconditional: under the hypotheses of
+`prop_4_17`, the Hodge wave group `e^{-tL}` maps `D(L) ∩ K` into `K` for every `t ∈ ℝ`.
+Forward invariance is `prop_4_17_group_unconditional`; backward invariance follows from the
+time reversal `R(σ, E, B) = (-σ, E, -B)` of (4.14) (`Constraints.waveOp_revT`,
+`Constraints.group_reversal`, `Constraints.invariant_of_reversal`), which preserves `D(L)` and
+`K`. Abstract counterpart of `Feec.Torus.prop_4_17_torus_group_periodic`.
+See [QuennevilleBelair2015, Props 4.17 and 4.19, Thm 4.3]; cf. [Pazy1983, §1.10]. -/
+theorem prop_4_17_group_all_unconditional (hS1 : S1 ≤ H.d0†.ker)
+    (hPD : ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL)
+    (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
+    (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1) (t : ℝ)
+    {x : Tot W0 W1 W2} (hx : x ∈ H.domL) (hxK : x ∈ Kc W0 S1 S2) :
+    H.waveGroup.S t x ∈ Kc W0 S1 S2 := by
+  have hRL : ∀ y : (-H.waveOp).domain, (-H.waveOp) ⟨revT W0 W1 W2 y, revT_mem_domL H y.2⟩ =
+      -revT W0 W1 W2 ((-H.waveOp) y) := fun y => by
+    rw [LinearPMap.neg_apply, LinearPMap.neg_apply, _root_.map_neg, neg_neg]
+    exact neg_eq_iff_eq_neg.2 (waveOp_revT H y)
+  exact invariant_of_reversal H.waveGroup _ (revT W0 W1 W2) revT_revT
+    (fun y hy => revT_mem_domL H hy)
+    (group_reversal H.waveGroup _ revT_revT (fun y hy => revT_mem_domL H hy) hRL)
+    (fun y hy => revT_mem_Kc hy)
+    (fun s hs y hy hyK => prop_4_17_group_unconditional hS1 hPD hd1 hd1s hs hy hyK) t x hx hxK
+
 end Constraints
 
 namespace BoundedDomain
@@ -412,22 +493,27 @@ open HilbertComplex2 Constraints
 
 variable {Ω : Set R3}
 
-/-- **The Stone group of the thesis' complex does not preserve the TSD constraint** on any
-nonempty bounded open `Ω ⊆ ℝ³`: for `H̊¹ → H̊(curl) → L²` there are a TSD datum
-`x = (0, 0, β) ∈ D(L) ∩ K` and a time `t ∈ [0, 1]` with `e^{-tL} x ∉ K`,
-`K = {0} × L²(TSD) × L²(TSD)`. The orbit is a strong solution, so this is
-`thesisComplex_orbit_not_propagate_unconditional` for `T = 1`.
+/-- **The Stone group of the thesis' complex does not preserve the TSD constraint, and the
+orbit leaves `K` immediately**, on any nonempty bounded open `Ω ⊆ ℝ³`: for
+`H̊¹ → H̊(curl) → L²` there is a TSD datum `x = (0, 0, β) ∈ D(L) ∩ K` such that for every
+`T > 0` some `t ∈ [0, T]` has `e^{-tL} x ∉ K`, `K = {0} × L²(TSD) × L²(TSD)`. The orbit is a
+strong solution on every `[0,T]`, so this is `thesisComplex_orbit_not_propagate_unconditional`
+applied to it.
 
-Correction: [QuennevilleBelair2015, §4.10, Prop 4.17] (cf. the group form
-`Feec.Torus.prop_4_17_torus_group_periodic`, true on the torus). -/
+Thesis gap: [QuennevilleBelair2015, §4.10, Prop 4.17] is vacuously true on bounded domains,
+since its conjectured projection hypothesis fails there
+(`Feec.BoundedDomain.thesisComplex_not_projection_hyp`); what fails is the conclusion,
+propagation of the TSD constraint, which the thesis expected. Contrast the group form
+`Feec.Torus.prop_4_17_torus_group_periodic`, true on the torus. -/
 theorem thesisComplex_waveGroup_not_invariant (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     ∃ x ∈ (thesisComplex hΩ hb).domL, x ∈ Kc (L2V Ω) (TSD Ω) (TSD Ω) ∧
-      ∃ t ∈ Icc (0 : ℝ) 1,
+      ∀ T > 0, ∃ t ∈ Icc (0 : ℝ) T,
         (thesisComplex hΩ hb).waveGroup.S t x ∉ Kc (L2V Ω) (TSD Ω) (TSD Ω) := by
   obtain ⟨B₀, -, hD, hK, hall⟩ := thesisComplex_orbit_not_propagate_unconditional hΩ hb hne
-  obtain ⟨-, hnot⟩ := hall 1 one_pos
-  exact ⟨_, hD, hK, hnot _ (isStrongSolution_orbit (thesisComplex hΩ hb).waveGroup 1 ⟨_, hD⟩)⟩
+  refine ⟨_, hD, hK, fun T hT => ?_⟩
+  obtain ⟨-, hnot⟩ := hall T hT
+  exact hnot _ (isStrongSolution_orbit (thesisComplex hΩ hb).waveGroup T ⟨_, hD⟩)
 
 end BoundedDomain
 

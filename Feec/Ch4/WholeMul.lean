@@ -399,7 +399,8 @@ theorem adjoint_mulOp (hm : StronglyMeasurable m) :
   have hS := measurableSet_truncSet hm
   have hb' : ∀ n, ∀ a ∈ truncSet m n, ‖ContinuousLinearMap.adjoint (m a)‖ ≤ n := fun n a ha => by
     rw [LinearIsometryEquiv.norm_map]; exact ha
-  have hdom : (mulOp μ m)†.domain ≤ (mulOp μ fun a => ContinuousLinearMap.adjoint (m a)).domain := by
+  have hdom :
+      (mulOp μ m)†.domain ≤ (mulOp μ fun a => ContinuousLinearMap.adjoint (m a)).domain := by
     intro y hy
     have hcutadj : ∀ n a, cut E (truncSet m n) a =
         ContinuousLinearMap.adjoint (cut E (truncSet m n) a) := fun n a => by
@@ -553,7 +554,8 @@ theorem stronglyMeasurable_clm_of_apply {β : Type*} [MeasurableSpace β] {f : �
     funext c
     refine ContinuousLinearMap.ext fun x => ?_
     simp only [FunLike.coe_sum, Finset.sum_apply,
-      ContinuousLinearMap.smulRight_apply, LinearMap.coe_toContinuousLinearMap', Module.Basis.coord_apply]
+      ContinuousLinearMap.smulRight_apply, LinearMap.coe_toContinuousLinearMap',
+      Module.Basis.coord_apply]
     conv_lhs => rw [← b.sum_repr x]
     rw [_root_.map_sum]
     simp [_root_.map_smul]

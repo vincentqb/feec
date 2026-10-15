@@ -28,9 +28,12 @@ convention `∂_c ↦ 2πi ξ_c`, so the operators are multiplication operators 
 (`Hdiv`). The spaces `H¹`, `H(curl)`, `H(div)` are the corresponding weighted-`L²` conditions
 (`Feec.Whole.mulDomain`, `Feec.Ch4.WholeMul`); `L²(TSD)` is the fibrewise subspace
 `{Â(ξ) ∈ tsd (2πξ) a.e.}` (`L2TSD`). Identifications proved: Plancherel and the Schwartz-level
-formula above. The identification of the multipliers with weak derivatives (tested against
-Schwartz fields) is `Feec.Ch4.WholeWeak` where available; see that file for what is covered.
-Real-valued fields (`Â(-ξ) = conj Â(ξ)`) are a special case, as on `𝕋³`.
+formula above, and, in `Feec.Ch4.WholeWeak`, that the Fourier `H(curl)` is the weak-derivative
+`H(curl)` tested against Schwartz fields (`Feec.WholeWeak.mem_Hcurl_iff_weak`). The analogous
+identifications of `H¹` and `H(div)` are not formalized.
+As on `𝕋³`, the theorems are stated for complex-valued fields viewed as a real Hilbert space;
+real-valued fields (`Â(-ξ) = conj Â(ξ)`) are a special case of the propagation statements, but
+the preservation of reality by the solution group is not formalized here.
 
 ## Main results
 
@@ -46,6 +49,7 @@ Real-valued fields (`Â(-ξ) = conj Â(ξ)`) are a special case, as on `𝕋³`.
   `projKc_mem_domL` (the projection hypothesis, from `projTSD_mem_Hcurl`), `curlW_mem_L2TSD`
   (Lemma 3.5), `adjoint_curlW_mem_L2TSD`; also `projTSD_mem_H1` (`P_TSD H(curl) ⊆ Ḣ¹`) and
   `curlW_projTSD` (`curl P_TSD = P_TSD curl`).
+* Prop 4.19 on `ℝ³` (complex (4.16)) is `Feec.WholeSym.prop_4_19_whole` in `Feec.Ch4.WholeSym`.
 * **`prop_4_17_whole`** (every strong solution with TSD data propagates the constraints and
   solves (4.15)), **`prop_4_17_whole_exists`** (existence and uniqueness of a classical solution
   for TSD data in `H(curl)`, via Stone's theorem: `Feec.Constraints.prop_4_17_exists_unconditional`)
@@ -63,7 +67,7 @@ stronger form `P_TSD H(curl) ⊆ H(curl) ∩ Ḣ¹` with `curl P_TSD = P_TSD cur
 conjectures are unnecessary. What makes the bounded-domain statement fail is the boundary
 condition, not the analysis: the propagation mechanism (the fibrewise commutation of `P_TSD`
 with the curl symbol, `Feec.Torus.proj_curlSym`) is the same on `𝕋³` and `ℝ³`. Unlike the torus,
-`ℝ³` has no harmonic fields and no zero mode, but also no closed range.
+`grad` is injective on `ℝ³` (`ker_gradW`: no constant mode), but the complex has no closed range.
 
 ## References
 

@@ -18,22 +18,25 @@ On a bounded open `Ω ⊆ ℝ³`, TSD propagation (the conclusion of thesis Prop
 condition creates a TSD violation at `∂Ω`. This file proves that the violation cannot enter the
 **domain of dependence**: for TSD data, the solution stays TSD at time `t` at every point whose
 Euclidean distance to `ℝ³ \ Ω` exceeds `t`. So the obstruction travels inward at most at unit
-speed, and for the explicit datum `(0, 0, β)` it is confined to the boundary layer of width `t`
-and nonzero there.
+speed. For the explicit datum `(0, 0, β)` it stays in the boundary layer of width `t`, and is
+nonzero there at some `t ∈ [0, T]`, for every `T > 0`.
 
 The interior argument uses no boundary condition and no boundedness: `WeakEB.ae_viol_eq_zero`
 and `WeakEB.ae_viol_eq_zero_depDomain` hold on every open `Ω ⊆ ℝ³`, bounded or not. For
 `Ω = ℝ³` the domain of dependence is all of `ℝ³`, which gives global TSD propagation on the
-whole space (`WeakEB.mem_TSD_univ`). Boundedness and the boundary condition `H̊(curl)` enter only
-through the thesis' complex `thesisComplex`: its existence theory and the boundary-layer
-violation.
+whole space (`WeakEB.mem_TSD_univ`): all three conditions of `L²(TSD)` (symmetry, trace-freeness,
+weak divergence-freeness) are propagated from `t = 0`. Boundedness and the boundary condition
+`H̊(curl)` enter only through the thesis' complex `thesisComplex`: its existence theory and the
+boundary-layer violation.
 
 ## The mathematics
 
 1. *Constraints that propagate globally.* Prop 4.18 (i) gives `σ ≡ 0`, `div E ≡ 0` and the
    reduced system `Ė = -curl* B`, `Ḃ = curl E`; `∂_t div B = div curl E = 0`, so `div B ≡ 0`
    (`weakEB_of_strongSolution`). In the interior, tested against `C_c^∞(Ω; ℝ³ˣ³)`, both curls are
-   the classical curl (`WeakEB`); no boundary condition enters.
+   the classical curl (`WeakEB`); no boundary condition enters. `WeakEB` assumes `div E = div B = 0`
+   only at `t = 0`; testing against `∇φ` and `curl ∇φ = 0` conserve it (`WeakEB.divE`,
+   `WeakEB.divB`).
 2. *The violation system.* Let `a(X)_k = ε_{kij} X_{ij}` (twice the axial vector of `skw X`) and
    `τ(X) = tr X`. The distributional Lemma 3.5 identities are `τ(curl Y) = -div a(Y)`, which holds
    for every `Y ∈ L²` (`sum_integral_curlM_cTr`), and `a(curl Y) = ∇τ(Y) + curl a(Y)`, which holds
@@ -76,7 +79,7 @@ violation.
   `t ∈ [0, T]` but, for some `t ∈ [0, T]`, not symmetric and trace-free on a non-null subset of
   `Ω \ depDomain Ω t` (`thesisComplex_violation_boundary_layer`: existential-datum form).
 * Abstract core, on any open `Ω ⊆ ℝ³`: `WeakEB.ae_viol_eq_zero` (any `L²` pair `E, B` with the
-  interior weak equations, divergence-free, with vanishing initial violation),
+  interior weak equations, divergence-free at `t = 0`, with vanishing initial violation),
   `WeakEB.ae_viol_eq_zero_depDomain`, `Nf_eq_zero_of_cone` (mollified form). Whole space:
   `WeakEB.ae_symTF_univ`, `WeakEB.mem_TSD_univ`.
 
@@ -96,7 +99,9 @@ and the boundary obstruction is confined to the layer `{dist(·, ∂Ω) ≤ t}`.
 the violation actually reaches distance `t` from `∂Ω` (sharpness of the unit speed); only its
 existence somewhere in the layer, at some time in every `[0, T]`, is shown. On `ℝ³`,
 `WeakEB.mem_TSD_univ` assumes the interior equations (`WeakEB`) and does not construct the
-solution; the Fourier model of the whole space is in `Feec.Ch4.WholeSym`.
+solution; the Fourier model of the whole space is in `Feec.Ch4.WholeSym`, and the identification
+of its `L²` space with `L2M univ` is not made here. So on `ℝ³` this is a second, energy-method
+proof of TSD propagation for solutions of the weak equations, not a new existence result.
 
 ## References
 
@@ -617,19 +622,50 @@ section Weak
 variable {Ω : Set R3}
 
 /-- The weak (interior, distributional) content of a solution of (4.15) on `[0, T]`:
-`E, B` are continuous, weakly divergence-free, and `Ė = -curl B`, `Ḃ = curl E` tested against
-`C_c^∞(Ω; ℝ³ˣ³)`. No boundary condition enters. -/
+`E, B` are continuous, weakly divergence-free **at `t = 0`**, and `Ė = -curl B`, `Ḃ = curl E`
+tested against `C_c^∞(Ω; ℝ³ˣ³)`. No boundary condition enters. Divergence-freeness at later
+times is a consequence (`WeakEB.divE`, `WeakEB.divB`: `∂_t div = div curl = 0`). -/
 structure WeakEB (Ω : Set R3) (T : ℝ) (E B : ℝ → L2M Ω) : Prop where
   contE : ContinuousOn E (Icc 0 T)
   contB : ContinuousOn B (Icc 0 T)
-  divE : ∀ t ∈ Icc 0 T, E t ∈ HdivZero Ω
-  divB : ∀ t ∈ Icc 0 T, B t ∈ HdivZero Ω
+  divE0 : E 0 ∈ HdivZero Ω
+  divB0 : B 0 ∈ HdivZero Ω
   derivE : ∀ t ∈ Icc 0 T, ∀ Φ : Ix → R3 → ℝ, (∀ ij, IsTest Ω (Φ ij)) →
     HasDerivWithinAt (fun s => ∑ ij, ∫ x, E s ij x * Φ ij x ∂volume.restrict Ω)
       (-∑ ij, ∫ x, B t ij x * curlM Φ ij x ∂volume.restrict Ω) (Icc 0 T) t
   derivB : ∀ t ∈ Icc 0 T, ∀ Φ : Ix → R3 → ℝ, (∀ ij, IsTest Ω (Φ ij)) →
     HasDerivWithinAt (fun s => ∑ ij, ∫ x, B s ij x * Φ ij x ∂volume.restrict Ω)
       (∑ ij, ∫ x, E t ij x * curlM Φ ij x ∂volume.restrict Ω) (Icc 0 T) t
+
+open Feec.Constraints in
+/-- `div E` is conserved: testing `Ė = -curl B` against `∇φ` and `curl ∇φ = 0` give
+`∂_t ⟨E, ∇φ⟩ = 0`, so `E(t)` is weakly divergence-free for all `t ∈ [0, T]`. -/
+theorem WeakEB.divE {T : ℝ} {E B : ℝ → L2M Ω} (h : WeakEB Ω T E B) :
+    ∀ t ∈ Icc 0 T, E t ∈ HdivZero Ω := by
+  intro t ht φ hφ
+  have hc := const_of_hasDerivWithinAt_zero (T := T)
+    (f := fun s => ∑ ij, ∫ x, E s ij x * gradM φ ij x ∂volume.restrict Ω) (fun s hs => by
+      refine (h.derivE s hs _ (isTest_gradM hφ)).congr_deriv ?_
+      rw [neg_eq_zero]
+      refine Finset.sum_eq_zero fun ij _ => ?_
+      simp [curlM_gradM fun i => (hφ i).contDiff.of_le (by simp)]) t ht
+  simp only [gradM] at hc
+  rw [hc]
+  exact h.divE0 φ hφ
+
+open Feec.Constraints in
+/-- `div B` is conserved: `∂_t ⟨B, ∇φ⟩ = ⟨E, curl ∇φ⟩ = 0`. -/
+theorem WeakEB.divB {T : ℝ} {E B : ℝ → L2M Ω} (h : WeakEB Ω T E B) :
+    ∀ t ∈ Icc 0 T, B t ∈ HdivZero Ω := by
+  intro t ht φ hφ
+  have hc := const_of_hasDerivWithinAt_zero (T := T)
+    (f := fun s => ∑ ij, ∫ x, B s ij x * gradM φ ij x ∂volume.restrict Ω) (fun s hs => by
+      refine (h.derivB s hs _ (isTest_gradM hφ)).congr_deriv ?_
+      refine Finset.sum_eq_zero fun ij _ => ?_
+      simp [curlM_gradM fun i => (hφ i).contDiff.of_le (by simp)]) t ht
+  simp only [gradM] at hc
+  rw [hc]
+  exact h.divB0 φ hφ
 
 open Feec.HilbertComplex2 Feec.Constraints in
 /-- **Strong solutions of (4.14) with TSD data satisfy the interior equations.** For data
@@ -673,22 +709,10 @@ theorem weakEB_of_strongSolution (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     simp only [innerSL_apply_apply, real_inner_comm _ (testField hΦ), inner_testField]
     exact (closure_curlGraph_identity hΩ hb (mem_closure_curlClosure hΩ hb ⟨E t, hR.memE t ht⟩)
       fun ij => (hΦ ij).contDiff_one).symm
+  have hE0 : E 0 = E₀ := hR.initE
+  have hB0 : B 0 = B₀ := hR.initB
   refine ⟨fun t ht => (h1 t ht).1, ⟨fun t ht => (hR.derivE t ht).continuousWithinAt,
-    fun t ht => (hR.derivB t ht).continuousWithinAt,
-    fun t ht => (mem_ker_adjoint_gradClosure_iff hΩ hb).1 (h1 t ht).2, ?_, hdE, hdB⟩⟩
-  -- `div B` is conserved
-  intro t ht φ hφ
-  have hg : ∀ ij, IsTest Ω (gradM φ ij) := isTest_gradM hφ
-  have hc := const_of_hasDerivWithinAt_zero (T := T)
-    (f := fun s => ∑ ij, ∫ x, B s ij x * gradM φ ij x ∂volume.restrict Ω) (fun s hs => by
-      refine (hdB s hs _ hg).congr_deriv ?_
-      refine Finset.sum_eq_zero fun ij _ => ?_
-      simp [curlM_gradM fun i => (hφ i).contDiff.of_le (by simp)]) t ht
-  simp only [gradM] at hc
-  rw [hc]
-  have h0 : B 0 = B₀ := hR.initB
-  rw [h0]
-  exact hB₀.2.2 φ hφ
+    fun t ht => (hR.derivB t ht).continuousWithinAt, hE0 ▸ hE₀.2.2, hB0 ▸ hB₀.2.2, hdE, hdB⟩⟩
 
 end Weak
 
@@ -1629,8 +1653,9 @@ theorem depDomain_univ (t : ℝ) : depDomain (univ : Set R3) t = univ :=
 /-- **The whole space `ℝ³`.** With no boundary, the domain of dependence is all of `ℝ³`, so the
 interior estimate gives global constraint propagation: if `E, B` satisfy `WeakEB` on `Ω = ℝ³`
 and their violations vanish at `t = 0`, then `E(t)` and `B(t)` are symmetric and trace-free a.e.
-on `ℝ³` for every `t ∈ [0, T]`. This is the TSD part of the conclusion of Prop 4.17 on `ℝ³`, by
-the energy method instead of the projection hypothesis; the solution itself is assumed. -/
+on `ℝ³` for every `t ∈ [0, T]`. This is the symmetric/trace-free part of the conclusion of
+Prop 4.17 on `ℝ³`, by the energy method instead of the projection hypothesis; the solution itself
+is assumed. -/
 theorem WeakEB.ae_symTF_univ {E B : ℝ → L2M (univ : Set R3)} (h : WeakEB univ T E B)
     (h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0)
     {t : ℝ} (ht : t ∈ Icc 0 T) :
@@ -1638,7 +1663,11 @@ theorem WeakEB.ae_symTF_univ {E B : ℝ → L2M (univ : Set R3)} (h : WeakEB uni
   have := h.ae_symTF_depDomain isOpen_univ h0 ht
   rwa [depDomain_univ] at this
 
-/-- On `ℝ³`, `WeakEB` with TSD data keeps `E(t)`, `B(t)` in `L²(TSD)` for all `t ∈ [0, T]`. -/
+/-- **TSD propagation on `ℝ³`.** If `E, B` satisfy the weak equations `WeakEB` on `Ω = ℝ³` and
+`E(0), B(0) ∈ L²(TSD)`, then `E(t), B(t) ∈ L²(TSD)` for all `t ∈ [0, T]`. Only the initial data
+are assumed TSD: divergence-freeness is conserved (`WeakEB.divE`, `WeakEB.divB`), symmetry and
+trace-freeness propagate by the energy method (`WeakEB.ae_symTF_univ`). The solution is assumed,
+not constructed (see the Thesis gap paragraph of the module docstring). -/
 theorem WeakEB.mem_TSD_univ {E B : ℝ → L2M (univ : Set R3)} (h : WeakEB univ T E B)
     (hE₀ : E 0 ∈ TSD univ) (hB₀ : B 0 ∈ TSD univ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     E t ∈ TSD univ ∧ B t ∈ TSD univ := by

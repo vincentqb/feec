@@ -22,21 +22,35 @@ On every nonempty bounded open `Ω ⊆ ℝ³`, for the TSD datum
 `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` (symmetric, trace-free,
 divergence-free, `M = 0`), the continuous Ch. 6 problem (6.1) has a unique strong solution
 (Stone's theorem), and on every `[0, T]`, `T > 0` (`bggComplex_verdict`):
-* `σ ≡ 0` and `div div u ≡ 0` weakly: these propagate for all data (`bggComplex_prop_4_16`);
-* `u(t) ∉ L²(TSD)` for some `t ∈ [0, T]` (`bggComplex_not_propagate`, for any `E₀`, any `M₀`);
-* the magnetic field `B(t)` is not symmetric for some `t ∈ [0, T]`
-  (`bggComplex_B_not_symm`, for any `E₀`, any `M₀`).
-So imposing the symmetry of `E` weakly does not cure the bounded-domain failure: the Ch. 6
-continuous problem loses the TSD constraint exactly as (4.14) and (4.18) do. Both refutations
-hold for every Hilbert complex whose second operator is `u ↦ (S₁ u, curl u)` on `H̊(curl, M)`,
-whatever its first operator (`IsSkwCurl`, `B_not_symm_of_isSkwCurl`,
-`not_propagate_of_isSkwCurl`), so they do not depend on how the thesis' `Γ` is realised.
+* `σ ≡ 0` and `div div u ≡ 0` weakly: these propagate for all data in `D(L)` with
+  `div div E₀ = 0` (`bggComplex_prop_4_16`);
+* `u(t) ∉ L²(TSD)` for some `t ∈ [0, T]` (`bggComplex_not_propagate`; this holds for every
+  strong solution from `(0, E₀, (m, β))`, any `E₀`, any `m`);
+* the magnetic field `B(t)` is not symmetric for some `t ∈ [0, T]` (`bggComplex_B_not_symm`,
+  again for any `E₀`, any `m`).
+Strong solutions of the Hodge wave equation of (5.1) are exactly the solutions of (6.1) with
+the regularity `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)` (`bggComplex_eq61`, `bggComplex_of_eq61`). So
+imposing the symmetry of `E` weakly does not cure the bounded-domain failure: the Ch. 6
+continuous problem loses the TSD constraint, as (4.14) and (4.18) do. Both refutations hold for
+every Hilbert complex whose second operator is `u ↦ (S₁ u, curl u)` on `H̊(curl, M)`, whatever its
+first operator (`IsSkwCurl`, `B_not_symm_of_isSkwCurl`, `not_propagate_of_isSkwCurl`), so they do
+not depend on how the thesis' `Γ` is realised.
 
 The loss of symmetry of `B` is new also for Ch. 4: from `(0, E₀, β)` it holds for (4.14)
-(`thesisComplex_B_not_symm`), for the reduced system (4.15) (`thesisComplex_reduced_B_not_symm`),
+(`thesisComplex_B_not_symm`; with existence, `thesisComplex_exists_B_not_symm`), for the reduced
+system (4.15) (`thesisComplex_reduced_B_not_symm`, `thesisComplex_reduced_exists_B_not_symm`),
 which are the two systems run in Ch. 7, and for (4.18) with `B ∈ L²(T)`
 (`symComplexB_B_not_symm`). The earlier refutations only showed that `(E, B)` leaves
 `L²(TSD)²`.
+
+## The boundary is the cause
+
+On the whole space `ℝ³` (no boundary) the same Ch. 6 system propagates TSD: `u` stays in
+`L²(TSD)`, `M` stays `0` and `B` stays in `L²(TSD)` (`Feec.Ch6.Whole.bggWhole_verdict`, in
+`Feec.Ch6.Whole`). The mechanism here needs `Ω` bounded: it pairs `E ∈ H̊(curl, M)` with linear
+fields, and uses the linearly growing datum `β`, neither of which is in `L²(ℝ³)`. The thesis
+works on bounded domains and states the boundary conditions explicitly (§6.3), so the
+bounded-domain setting is the faithful one.
 
 ## The mathematics
 
@@ -53,8 +67,8 @@ which are the two systems run in Ch. 7, and for (4.18) with `B ∈ L²(T)`
    magnetic data with no boundary condition, `(m, Ψ) ∈ D(d1*)` with
    `d1* (m, Ψ) = S₁* m + curl Ψ`; `S₁* m` is skew, hence orthogonal to `diag(1, -1, 0)`, so
    `u̇(0) = -d1* (m, β)` pairs to `2|Ω|` with `diag(1, -1, 0)` for every `m`.
-4. *`u` leaves `L²(TSD)`*: `Feec.BoundedDomain.not_propagate_of_adjoint` (TSD fields in
-   `H̊(curl, M)` lie in `L²(TSD₀) ⊥ diag(1, -1, 0)`).
+4. *`u` leaves `L²(TSD)`* (`E_not_TSD_of_adjoint`): TSD fields in `H̊(curl, M)` lie in
+   `L²(TSD₀) ⊥ diag(1, -1, 0)`, which is closed; only `σ(0) = 0` enters.
 
 ## Model
 
@@ -67,31 +81,40 @@ The thesis' `Γ = {(σ, φ) ∈ H̊¹ × H̊¹(V) : grad σ = φ}` with the norm
 its `σ`-projection, so `Γ̄ = L²(Ω)` and `(0 d)(σ, grad σ) = grad grad σ`; we take for the domain
 the closure `H̊²(Ω)` of `C_c^∞(Ω)` in the graph norm (`hessM`). The `σ`-projection of `Γ`,
 `{σ ∈ H̊¹ : grad σ ∈ H̊¹(V)}`, contains `H̊²(Ω)` and equals it on Lipschitz domains (not
-formalized); the refutations do not use this choice (`IsSkwCurl`). A strong solution of the Hodge
-wave equation of `bggComplex` solves (6.1) (`bggComplex_eq61`), with
-`(σ, u, (M, B)) ↔ (σ, u, (M, ρ))` in the thesis' notation.
+formalized); the refutations do not use this choice (`IsSkwCurl`). In the thesis' notation
+`(σ, u, (M, B)) ↔ (σ, u, (M, ρ))`.
 
 ## Main results
 
 * Complex (5.1) on `Ω`: `skwCurl` (closed, `isClosed_skwCurl`), `hessM` (closed, densely defined,
   symmetric values, `curl grad grad = 0`), `bggComplex`, `mem_ker_adjoint_hessM_iff`
   (`ker (grad grad)* = H(div div, M, 0)`), `TSD_le_ker_bgg`; `hodgeWave_weak_eqs`,
-  `bggComplex_eq61` ((6.1a)–(6.1d) for strong solutions).
+  `hodgeWave_of_weak_eqs`, `bggComplex_eq61`, `bggComplex_of_eq61` (strong solutions of the
+  Hodge wave equation of (5.1) are exactly the solutions of (6.1a)–(6.1d)).
 * What propagates: `bggComplex_prop_4_16` (`σ ≡ 0`, `div div u ≡ 0`, existence, uniqueness).
 * What does not: `bggComplex_not_propagate`, `bggComplex_B_not_symm`, `bggComplex_verdict`;
-  for Ch. 4/7: `thesisComplex_B_not_symm`, `thesisComplex_reduced_B_not_symm`,
+  for Ch. 4/7: `thesisComplex_B_not_symm`, `thesisComplex_exists_B_not_symm`,
+  `thesisComplex_reduced_B_not_symm`, `thesisComplex_reduced_exists_B_not_symm`,
   `symComplexB_B_not_symm`; the abstract criteria `not_symm_of_adjoint`,
-  `reduced_not_symm_of_adjoint`, `exists_not_symm_of_path`.
+  `reduced_not_symm_of_adjoint`, `exists_not_symm_of_path`, `E_not_TSD_of_adjoint`.
+* The maximal invariant constraint space (`Feec.Ch4.BoundedSalvageMax`) for the Ch. 6 complex:
+  `bggComplex_S1max_le_TSD0`, `bggComplex_betaPair_not_mem_S2max` (`K* ⊊ K`),
+  `bggComplex_prop_4_17_max`.
+
+## Thesis gap
+
+[QuennevilleBelair2015, §6.1, §6.3]: the thesis states no constraint-propagation result for the
+Ch. 6 method; it is introduced (Ch. 5 introduction) as a weak-symmetry replacement for the
+strong-symmetry formulation (4.16)/(4.18), whose solutions Prop 4.19 claims stay TSD. The
+natural expectation, that (6.1) keeps TSD data TSD, is false on bounded domains with the thesis'
+boundary conditions (`bggComplex_verdict`) and true on `ℝ³` (`Feec.Ch6.Whole.bggWhole_verdict`).
 
 ## Correction
 
-[QuennevilleBelair2015, §6.1, §6.3]: the thesis states no constraint-propagation result for the
-Ch. 6 method; the method is introduced (Ch. 5 introduction) as a weak-symmetry replacement for
-the strong-symmetry formulation (4.16)/(4.18), whose solutions Prop 4.19 claims stay TSD. On
-bounded domains with the thesis' boundary conditions the continuous
-problem (6.1) does not keep TSD data TSD: `u` leaves `L²(TSD)` and `B` loses symmetry
-immediately. The same holds for (4.14) and (4.15), the systems of the Ch. 7 experiments, with
-homogeneous boundary conditions.
+[QuennevilleBelair2015, §4.10–4.11, Props 4.17/4.19]: their bounded-domain failure
+(`Feec.Ch4.BoundedDomain`, `Feec.Ch4.BoundedSym`) carries over to the Ch. 6 method, and to
+(4.14) and (4.15), the systems of the Ch. 7 experiments, with homogeneous boundary conditions:
+`B` loses symmetry, which the earlier refutations did not show.
 
 Not formalized / open: which of the algebraic constraints of `E` (symmetry, i.e. the weak
 symmetry `M ≡ 0`; trace; row divergence, i.e. the multiplier `λ = (S*)⁻¹ d* u` of (6.2)) is
@@ -324,6 +347,47 @@ theorem reduced_not_symm_of_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   rw [_root_.map_neg, inner_neg_left]
   exact neg_ne_zero.2 (hc _)
 
+/-- **The electric field leaves `L²(TSD)` (abstract criterion, Hodge wave (4.14)).** Let
+`ι : W1 → L²(Ω; ℝ³ˣ³)` be continuous linear with `ι D(d1) ⊆ H̊(curl, M)`. If
+`⟪ι (d1* B₀), G⟫ ≠ 0` for some `G ⊥ L²(TSD₀)` (e.g. a constant field), then for any `E₀`, every
+strong solution of `ξ' = -L ξ` from `(0, E₀, B₀)` has `ι E(t) ∉ L²(TSD)` for some `t ∈ [0, T]`, on
+every `[0, T]`, `T > 0`.
+
+This strengthens `Feec.BoundedDomain.not_propagate_of_adjoint` (which concludes only that `U(t)`
+leaves `{0} × S1 × S2`): only `σ(0) = 0` enters, not `σ(t) = 0`. Proof: if `ι E(t) ∈ L²(TSD)` on
+`[0, T]`, then `ι E(t) ∈ L²(TSD) ∩ H̊(curl, M) ⊆ L²(TSD₀)` (`mem_TSD0_of_mem_HcurlZero`), which is
+closed, so `ι Ė(0) = -ι (d0 σ(0) + d1* B₀) = -ι (d1* B₀) ∈ L²(TSD₀) ⊥ G`. -/
+theorem E_not_TSD_of_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (H : HilbertComplex2 W0 W1 W2) (ι : W1 →L[ℝ] L2M Ω)
+    (hι : ∀ u ∈ H.d1.domain, ι u ∈ HcurlZero Ω) {E₀ : W1} {B₀ : W2} (hB₀ : B₀ ∈ H.d1†.domain)
+    {G : L2M Ω} (hG : G ∈ (TSD0 Ω hΩ hb)ᗮ) (hc : ⟪ι (H.d1† ⟨B₀, hB₀⟩), G⟫ ≠ 0) :
+    ∀ T > 0, ∀ U : ℝ → Tot W0 W1 W2, IsStrongSolution (-H.waveOp) T (ini W0 E₀ B₀) 0 U →
+      ∃ t ∈ Icc 0 T, ι (tot W0 W1 W2 (U t)).2.1 ∉ TSD Ω := by
+  intro T hT U hU
+  by_contra hall
+  simp only [not_exists, not_and, not_not] at hall
+  have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT.le⟩
+  let Φ : Tot W0 W1 W2 →L[ℝ] L2M Ω := ι.comp
+    ((ContinuousLinearMap.fst ℝ W1 W2).comp ((ContinuousLinearMap.snd ℝ W0 _).comp
+      (Constraints.totL (W0 := W0) (W1 := W1) (W2 := W2)).toContinuousLinearMap))
+  have hΦ : ∀ y, Φ y = ι (tot W0 W1 W2 y).2.1 := fun y => rfl
+  have hmem : ∀ t ∈ Icc 0 T, (Φ ∘ U) t ∈ TSD0 Ω hΩ hb := by
+    intro t ht
+    have hD := (Feec.Constraints.mem_domL H).1 (hU.mem t ht)
+    have hE : (tot W0 W1 W2 (U t)).2.1 ∈ H.d1.domain := (Submodule.mem_inf.1 hD.2.1).1
+    simp only [Function.comp_apply, hΦ]
+    exact mem_TSD0_of_mem_HcurlZero hΩ hb (hall t ht) (hι _ hE)
+  have hd := Φ.hasFDerivAt.comp_hasDerivWithinAt (0 : ℝ) (hU.deriv 0 h0)
+  have hm := mem_of_hasDerivWithinAt_Icc (isClosed_TSD0 hΩ hb) hT hd hmem
+  have hp0 : H.pr0 ⟨U 0, hU.mem 0 h0⟩ = 0 := Subtype.ext (by simp [hU.init])
+  have hp2 : H.prV2s ⟨U 0, hU.mem 0 h0⟩ = ⟨B₀, hB₀⟩ := Subtype.ext (by simp [hU.init])
+  rw [Pi.zero_apply, add_zero, LinearPMap.neg_apply, _root_.map_neg, hΦ,
+    Constraints.tot_waveOp] at hm
+  simp only at hm
+  rw [hp0, hp2, LinearPMap.map_zero, zero_add] at hm
+  have hm' : ι (H.d1† ⟨B₀, hB₀⟩) ∈ TSD0 Ω hΩ hb := by simpa using hm
+  exact hc (by rw [real_inner_comm]; exact (Submodule.mem_orthogonal' _ _).1 hG _ hm')
+
 /-! ## §3. Instances: the complexes of (4.14)/(4.15) (run in Ch. 7) and (4.16) -/
 
 /-- `β`, as an element of `L²(Ω; ℝ³ˣ³)`. -/
@@ -341,9 +405,9 @@ theorem thesisComplex_adjoint_betaL (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   rw [e, smoothField_curlM_betaField, inner_neg_left, inner_constField_diagA]
 
 /-- **(4.14) on bounded domains: `B` loses symmetry.** For the thesis' complex
-`H̊¹(V) → H̊(curl, M) → L²(M)` (the system run in Ch. 7, Table 7.1, there with plane-wave
-boundary data) on any nonempty bounded
-open `Ω`, from `(0, E₀, β)` with any `E₀`, every strong solution of (4.14) on `[0, T]`, `T > 0`, has
+`H̊¹(V) → H̊(curl, M) → L²(M)` (the system run in Ch. 7, Table 7.1; Ch. 7 states no boundary
+conditions, and its plane-wave exact solution does not satisfy the homogeneous ones, so whether
+Table 7.1 is covered is our inference, not established) on any nonempty bounded open `Ω`, from `(0, E₀, β)` with any `E₀`, every strong solution of (4.14) on `[0, T]`, `T > 0`, has
 `B(t)` non-symmetric for some `t ∈ [0, T]`, although `β` is symmetric (TSD). This sharpens
 `Feec.BoundedDomain.thesisComplex_not_propagate` (which only shows `(E, B) ∉ L²(TSD)²`) by naming a
 constraint that is lost: the symmetry of `B`. -/
@@ -375,6 +439,41 @@ theorem thesisComplex_reduced_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBou
       have := volume_real_pos hΩ hb hne
       linarith) hT hR
   simpa using this
+
+/-- **(4.14) from `(0, 0, β)`: existence, uniqueness, and loss of symmetry of `B`.** For the
+thesis' complex on a nonempty bounded open `Ω` and every `T > 0`, (4.14) has a unique strong
+solution from `(0, 0, β)` (Stone's theorem, `prop_4_16_exists_unconditional`), and its `B(t)` is not
+symmetric for some `t ∈ [0, T]` (`thesisComplex_B_not_symm`). -/
+theorem thesisComplex_exists_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    ∀ T > 0, ∃ U, IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T
+        (ini (L2V Ω) 0 (betaL hΩ hb)) 0 U ∧
+      (∀ U', IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T
+        (ini (L2V Ω) 0 (betaL hΩ hb)) 0 U' → EqOn U U' (Icc 0 T)) ∧
+      ∃ t ∈ Icc 0 T, (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 ∉ symL2 Ω := by
+  intro T hT
+  obtain ⟨h, -⟩ := thesisComplex_adjoint_betaL hΩ hb
+  have hD : ini (L2V Ω) 0 (betaL hΩ hb) ∈ (thesisComplex hΩ hb).domL := by
+    rw [Feec.Constraints.mem_domL, tot_ini]
+    exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, h⟩
+  obtain ⟨U, hU, -, huniq⟩ := prop_4_16_exists_unconditional (thesisComplex hΩ hb) ⊤ le_top T hD
+    (by rw [mem_K, tot_ini]; exact ⟨rfl, Submodule.zero_mem _, Submodule.mem_top⟩)
+  exact ⟨U, hU, huniq, thesisComplex_B_not_symm hΩ hb hne 0 T hT U hU⟩
+
+/-- **(4.15) from `(0, β)`: existence, uniqueness, and loss of symmetry of `B`.** For the
+thesis' complex and every `T > 0`, the reduced system (4.15) has a unique strong solution from
+`(E, B)(0) = (0, β)` (`prop_4_18_unconditional`), and `B(t)` is not symmetric for some
+`t ∈ [0, T]` (`thesisComplex_reduced_B_not_symm`). -/
+theorem thesisComplex_reduced_exists_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {T : ℝ} (hT : 0 < T) :
+    ∃ E B, IsReducedSolution (thesisComplex hΩ hb) T 0 (betaL hΩ hb) E B ∧
+      (∀ E' B', IsReducedSolution (thesisComplex hΩ hb) T 0 (betaL hΩ hb) E' B' →
+        EqOn E E' (Icc 0 T) ∧ EqOn B B' (Icc 0 T)) ∧
+      ∃ t ∈ Icc 0 T, B t ∉ symL2 Ω := by
+  obtain ⟨h, -⟩ := thesisComplex_adjoint_betaL hΩ hb
+  obtain ⟨E, B, hR, -, -, huniq⟩ := prop_4_18_unconditional (thesisComplex hΩ hb) T
+    (Submodule.zero_mem _) (Submodule.zero_mem _) h
+  exact ⟨E, B, hR, huniq, thesisComplex_reduced_B_not_symm hΩ hb hne 0 hT hR⟩
 
 /-- **(4.18) on bounded domains: `B ∈ L²(T)` loses symmetry.** For the strong-symmetry complex
 (4.16) `H̊²(R) → H̊(curl, S) → L²(T)` (Prop 4.19), from `(0, E₀, β)`, any `E₀ ∈ L²(S)`: every
@@ -732,6 +831,83 @@ theorem bggComplex_eq61 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {T : ℝ
   · rw [hc]; rfl
   · rw [hc]; rfl
 
+/-- **Converse of `hodgeWave_weak_eqs`** (any Hilbert complex): a path `U = (σ, u, ρ)` with
+`σ(t) ∈ V⁰`, `u(t) ∈ V¹` and a derivative `(σ̇, u̇, ρ̇)` satisfying the weak equations
+`(σ̇, τ) = (u, d0 τ)`, `(u̇, v) + (d0 σ, v) + (ρ, d1 v) = 0`, `ρ̇ = d1 u` at every `t ∈ [0, T]`, with
+`U(0) = U₀`, is a strong solution of the Hodge wave equation. The first equation gives
+`u ∈ D(d0*)`, `d0* u = σ̇`; the second gives `ρ ∈ D(d1*)`, `d1* ρ = -(u̇ + d0 σ)`. -/
+theorem hodgeWave_of_weak_eqs (H : HilbertComplex2 W0 W1 W2) {T : ℝ} {U₀ : Tot W0 W1 W2}
+    {U : ℝ → Tot W0 W1 W2} (hinit : U 0 = U₀)
+    (hw : ∀ t ∈ Icc 0 T, ∃ (hσ : (tot W0 W1 W2 (U t)).1 ∈ H.d0.domain)
+      (hu : (tot W0 W1 W2 (U t)).2.1 ∈ H.d1.domain) (σ' : W0) (u' : W1) (ρ' : W2),
+      HasDerivWithinAt U ((tot W0 W1 W2).symm (σ', u', ρ')) (Icc 0 T) t ∧
+      (∀ τ : H.d0.domain, ⟪σ', (τ : W0)⟫ = ⟪(tot W0 W1 W2 (U t)).2.1, H.d0 τ⟫) ∧
+      (∀ v : H.d1.domain, ⟪u', (v : W1)⟫ + ⟪H.d0 ⟨_, hσ⟩, (v : W1)⟫ +
+        ⟪(tot W0 W1 W2 (U t)).2.2, H.d1 v⟫ = 0) ∧
+      ρ' = H.d1 ⟨_, hu⟩) :
+    IsStrongSolution (-H.waveOp) T U₀ 0 U := by
+  have key : ∀ t ∈ Icc 0 T, ∃ hD : U t ∈ H.domL, HasDerivWithinAt U
+      (-(H.waveOp ⟨U t, hD⟩)) (Icc 0 T) t := by
+    intro t ht
+    obtain ⟨hσ, hu, σ', u', ρ', hd, ha, hb, hc⟩ := hw t ht
+    have hu' : (tot W0 W1 W2 (U t)).2.1 ∈ H.d0†.domain :=
+      LinearPMap.mem_adjoint_domain_of_exists _ ⟨σ', ha⟩
+    have kb : ∀ v : H.d1.domain, ⟪-(u' + H.d0 ⟨_, hσ⟩), (v : W1)⟫ =
+        ⟪(tot W0 W1 W2 (U t)).2.2, H.d1 v⟫ := fun v => by
+      rw [inner_neg_left, inner_add_left]; linarith [hb v]
+    have hρ : (tot W0 W1 W2 (U t)).2.2 ∈ H.d1†.domain :=
+      LinearPMap.mem_adjoint_domain_of_exists _ ⟨_, kb⟩
+    have hD : U t ∈ H.domL :=
+      (Feec.Constraints.mem_domL H).2 ⟨hσ, Submodule.mem_inf.2 ⟨hu, hu'⟩, hρ⟩
+    refine ⟨hD, hd.congr_deriv ?_⟩
+    have e0 : H.d0† (H.prV1s ⟨U t, hD⟩) = σ' := LinearPMap.adjoint_apply_eq H.dense0 _ ha
+    have e1 : H.d1† (H.prV2s ⟨U t, hD⟩) = -(u' + H.d0 ⟨_, hσ⟩) :=
+      LinearPMap.adjoint_apply_eq H.dense1 _ kb
+    have e2 : H.d1 (H.prV1 ⟨U t, hD⟩) = ρ' := hc.symm
+    have e3 : H.d0 (H.pr0 ⟨U t, hD⟩) = H.d0 ⟨_, hσ⟩ := rfl
+    apply (tot W0 W1 W2).injective
+    rw [_root_.map_neg, Constraints.tot_waveOp, LinearEquiv.apply_symm_apply]
+    simp only [e0, e1, e2, e3, Prod.neg_mk, neg_neg, Prod.mk.injEq, true_and, and_true]
+    abel
+  choose hD hd using key
+  exact ⟨hD, fun t ht => by rw [Pi.zero_apply, add_zero]; exact hd t ht, hinit⟩
+
+/-- **(6.1) implies the Hodge wave equation of (5.1)** (converse of `bggComplex_eq61`): a path
+`U = (σ, u, (M, B))` with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)` whose derivative satisfies
+(6.1a)–(6.1d) at every `t ∈ [0, T]`, with `U(0) = U₀`, is a strong solution. So strong solutions
+of the Hodge wave equation of `bggComplex` are exactly the solutions of (6.1) with this
+regularity (`bggComplex_eq61`). -/
+theorem bggComplex_of_eq61 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {T : ℝ}
+    {U₀ : Tot (L2 Ω) (L2M Ω) (W2B Ω)} {U : ℝ → Tot (L2 Ω) (L2M Ω) (W2B Ω)} (hinit : U 0 = U₀)
+    (hw : ∀ t ∈ Icc 0 T,
+      ∃ (hσ : (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).1 ∈ (hessM (Ω := Ω)).domain)
+        (hu : (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.1 ∈ (curlClosure (Ω := Ω)).domain)
+        (σ' : L2 Ω) (u' : L2M Ω) (ρ' : W2B Ω),
+        HasDerivWithinAt U ((tot (L2 Ω) (L2M Ω) (W2B Ω)).symm (σ', u', ρ')) (Icc 0 T) t ∧
+        (∀ τ : (hessM (Ω := Ω)).domain,
+          ⟪σ', (τ : L2 Ω)⟫ - ⟪(tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.1, hessM τ⟫ = 0) ∧
+        (∀ v : (curlClosure (Ω := Ω)).domain,
+          ⟪u', (v : L2M Ω)⟫ + ⟪hessM ⟨_, hσ⟩, (v : L2M Ω)⟫ +
+            ⟪(WithLp.ofLp (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.2).1, skwL (v : L2M Ω)⟫ +
+            ⟪(WithLp.ofLp (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.2).2, curlClosure v⟫ = 0) ∧
+        (WithLp.ofLp ρ').1 = skwL (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.1 ∧
+        (WithLp.ofLp ρ').2 = curlClosure ⟨_, hu⟩) :
+    IsStrongSolution (-(bggComplex hΩ hb).waveOp) T U₀ 0 U := by
+  refine hodgeWave_of_weak_eqs (bggComplex hΩ hb) hinit fun t ht => ?_
+  obtain ⟨hσ, hu, σ', u', ρ', hd, ha, hb', hc1, hc2⟩ := hw t ht
+  refine ⟨hσ, hu, σ', u', ρ', hd, fun τ => sub_eq_zero.1 (ha τ), fun v => ?_, ?_⟩
+  · have := hb' ⟨v.1, v.2⟩
+    have e2 : ⟪(tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.2, (bggComplex hΩ hb).d1 v⟫ =
+        ⟪(WithLp.ofLp (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.2).1, skwL (v : L2M Ω)⟫ +
+          ⟪(WithLp.ofLp (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.2).2,
+            curlClosure (⟨v.1, v.2⟩ : (curlClosure (Ω := Ω)).domain)⟫ := rfl
+    have e3 : ⟪(bggComplex hΩ hb).d0 ⟨_, hσ⟩, (v : L2M Ω)⟫ =
+        ⟪hessM ⟨_, hσ⟩, (v : L2M Ω)⟫ := rfl
+    rw [e2]
+    erw [e3]
+    linarith
+  · exact WithLp.ofLp_injective 2 (Prod.ext hc1 hc2)
+
 /-! ## §6. Ch. 6 on a bounded domain: TSD and the symmetry of `B` are not propagated -/
 
 /-- The magnetic datum `(M₀, B₀) = (m, β)` of the Ch. 6 system. -/
@@ -817,25 +993,27 @@ theorem B_not_symm_of_isSkwCurl (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   simpa [sndB_apply] using this
 
 /-- **`u` leaves `L²(TSD)`, for every complex with second operator `(S₁, curl)` on
-`H̊(curl, M)`.** From `(0, E₀, (m, β))`: every strong solution leaves `{0} × L²(TSD) × S2` on
-every `[0, T]`, `T > 0`, for every `S2`. -/
+`H̊(curl, M)`** (any first operator). From `(0, E₀, (m, β))`, any `E₀`, `m`: every strong solution
+has `u(t) ∉ L²(TSD)` for some `t ∈ [0, T]`, on every `[0, T]`, `T > 0` (`E_not_TSD_of_adjoint`
+with `G = diag(1, -1, 0)`). -/
 theorem not_propagate_of_isSkwCurl (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (H : HilbertComplex2 W0 (L2M Ω) (W2B Ω)) (hH : IsSkwCurl H)
-    (E₀ : L2M Ω) (m : L2V Ω) (S2 : Submodule ℝ (W2B Ω)) :
+    (E₀ : L2M Ω) (m : L2V Ω) :
     ∀ T > 0, ∀ U : ℝ → Tot W0 (L2M Ω) (W2B Ω),
       IsStrongSolution (-H.waveOp) T (ini W0 E₀ (betaPair hΩ hb m)) 0 U →
-        ∃ t ∈ Icc 0 T, U t ∉ Kc W0 (TSD Ω) S2 := by
+        ∃ t ∈ Icc 0 T, (tot W0 (L2M Ω) (W2B Ω) (U t)).2.1 ∉ TSD Ω := by
   obtain ⟨h, -, e⟩ := adjoint_betaPair_of_isSkwCurl hΩ hb H hH m
-  refine not_propagate_of_adjoint hΩ hb H (ContinuousLinearMap.id ℝ _)
-    (fun u hu => ⟨_, (hH ⟨u, hu⟩).1⟩) (S1 := TSD Ω) (S2 := S2) (fun u hu => hu)
-    (E₀ := E₀) h (constField_mem_orth hΩ hb diagA) ?_
-  rw [ContinuousLinearMap.id_apply, e]
-  have := volume_real_pos hΩ hb hne
-  linarith
+  have := E_not_TSD_of_adjoint hΩ hb H (ContinuousLinearMap.id ℝ _)
+    (fun u hu => ⟨_, (hH ⟨u, hu⟩).1⟩) (E₀ := E₀) h (constField_mem_orth hΩ hb diagA) (by
+      rw [ContinuousLinearMap.id_apply, e]
+      have := volume_real_pos hΩ hb hne
+      linarith)
+  simpa using this
 
 /-- **Ch. 6 on bounded domains: `B` loses symmetry.** For the BGG complex (5.1) on any nonempty
 bounded open `Ω`, from `(σ, u, (M, B))(0) = (0, E₀, (m, β))` with any `E₀`, `m`: every strong
-solution of the Hodge wave equation (equivalently of (6.1), `bggComplex_eq61`) on `[0, T]`,
+solution of the Hodge wave equation (equivalently of (6.1) with `σ(t) ∈ H̊²`,
+`u(t) ∈ H̊(curl, M)`: `bggComplex_eq61`, `bggComplex_of_eq61`) on `[0, T]`,
 `T > 0`, has `B(t)` non-symmetric for some `t ∈ [0, T]`, although `β` is symmetric. -/
 theorem bggComplex_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (E₀ : L2M Ω) (m : L2V Ω) :
@@ -845,22 +1023,20 @@ theorem bggComplex_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   B_not_symm_of_isSkwCurl hΩ hb hne _ (bggComplex_isSkwCurl hΩ hb) E₀ m
 
 /-- **Ch. 6 on bounded domains: `u` leaves `L²(TSD)`.** In the setting of
-`bggComplex_B_not_symm`, every strong solution leaves `{0} × L²(TSD) × S2` on every `[0, T]`,
-`T > 0`, for every `S2 ⊆ L²(Ω; ℝ³) × L²(Ω; ℝ³ˣ³)`: since `σ ≡ 0` (`bggComplex_prop_4_16`), this
-means `u(t) ∉ L²(TSD)` for some `t`. (`u(t) ∈ L²(TSD) ∩ H̊(curl, M) ⊆ L²(TSD₀) ⊥ diag(1, -1, 0)`,
-`Feec.BoundedDomain.not_propagate_of_adjoint`.) -/
+`bggComplex_B_not_symm` (any `E₀`, any `m`), every strong solution has `u(t) ∉ L²(TSD)` for some
+`t ∈ [0, T]`, on every `[0, T]`, `T > 0`. (`u(t) ∈ L²(TSD) ∩ H̊(curl, M) ⊆ L²(TSD₀) ⊥ diag(1, -1, 0)`,
+while `⟪u̇(0), diag(1, -1, 0)⟫ = 2|Ω|`; `E_not_TSD_of_adjoint`.) -/
 theorem bggComplex_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) (E₀ : L2M Ω) (m : L2V Ω) (S2 : Submodule ℝ (W2B Ω)) :
+    (hne : Ω.Nonempty) (E₀ : L2M Ω) (m : L2V Ω) :
     ∀ T > 0, ∀ U : ℝ → Tot (L2 Ω) (L2M Ω) (W2B Ω),
       IsStrongSolution (-(bggComplex hΩ hb).waveOp) T (ini (L2 Ω) E₀ (betaPair hΩ hb m)) 0 U →
-        ∃ t ∈ Icc 0 T, U t ∉ Kc (L2 Ω) (TSD Ω) S2 :=
-  not_propagate_of_isSkwCurl hΩ hb hne _ (bggComplex_isSkwCurl hΩ hb) E₀ m S2
+        ∃ t ∈ Icc 0 T, (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.1 ∉ TSD Ω :=
+  not_propagate_of_isSkwCurl hΩ hb hne _ (bggComplex_isSkwCurl hΩ hb) E₀ m
 
 /-- **Prop 4.16 for the Ch. 6 complex** (what does propagate, unconditionally): for data
 `(0, E₀, ρ₀) ∈ D(L)` with `div div E₀ = 0` weakly (e.g. `E₀ ∈ L²(TSD)`, `TSD_le_ker_bgg`), the
 Hodge wave equation of (5.1) has a unique strong solution on `[0, T]`, and `σ(t) = 0` and
-`div div u(t) = 0` weakly for all `t`. In the multiplier form (6.2) this is the statement that
-the `Γ`-constraint `dσ = Sφ` is exact and `σ` stays zero. -/
+`div div u(t) = 0` weakly for all `t`. -/
 theorem bggComplex_prop_4_16 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (T : ℝ)
     {E₀ : L2M Ω} {ρ₀ : W2B Ω} (hD : ini (L2 Ω) E₀ ρ₀ ∈ (bggComplex hΩ hb).domL)
     (hE₀ : E₀ ∈ (bggComplex hΩ hb).d0†.ker) :
@@ -887,6 +1063,10 @@ open `Ω ⊆ ℝ³`, the TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))` lies i
 * `u(t) ∉ L²(TSD)` for some `t ∈ [0, T]`;
 * `B(t)` is not symmetric for some `t ∈ [0, T]`.
 
+The failure is caused by the boundary: on `ℝ³` the same system propagates TSD
+(`Feec.Ch6.Whole.bggWhole_verdict`), and the argument here needs `Ω` bounded (it pairs with
+linear fields and uses the linearly growing `β`).
+
 Correction: the bounded-domain failure of Props 4.17/4.19 ([QuennevilleBelair2015, §4.10–4.11])
 carries over to the Ch. 6 method ([QuennevilleBelair2015, §6.1, §6.3]): imposing the symmetry of
 `E` weakly does not restore TSD propagation. -/
@@ -908,10 +1088,65 @@ theorem bggComplex_verdict (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
   · rw [mem_Kc, tot_ini]
     exact ⟨rfl, Submodule.zero_mem _, mem_TSDB.2 ⟨rfl, betaField_mem_TSD hΩ hb⟩⟩
   obtain ⟨U, hU, hσ, huniq⟩ := bggComplex_prop_4_16 hΩ hb T hD (Submodule.zero_mem _)
-  refine ⟨U, hU, huniq, fun t ht => (hσ t ht).1, ?_, bggComplex_B_not_symm hΩ hb hne 0 0 T hT U hU⟩
-  obtain ⟨t, ht, hn⟩ := bggComplex_not_propagate hΩ hb hne 0 0 ⊤ T hT U hU
-  refine ⟨t, ht, fun hE => hn ?_⟩
-  rw [mem_Kc]
-  exact ⟨(hσ t ht).1, hE, Submodule.mem_top⟩
+  exact ⟨U, hU, huniq, fun t ht => (hσ t ht).1, bggComplex_not_propagate hΩ hb hne 0 0 T hT U hU,
+    bggComplex_B_not_symm hΩ hb hne 0 0 T hT U hU⟩
+
+/-! ## §7. The maximal invariant constraint space `K*` for the Ch. 6 complex -/
+
+section Max
+
+variable (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (S2 : Submodule ℝ (W2B Ω))
+  [S2.HasOrthogonalProjection]
+
+/-- `D(d1) ⊆ H̊(curl, M)` for `bggComplex`, in the form used by `Feec.Ch4.BoundedSalvageMax`. -/
+theorem bggComplex_d1_mem_HcurlZero :
+    ∀ u ∈ (bggComplex hΩ hb).d1.domain, ContinuousLinearMap.id ℝ (L2M Ω) u ∈ HcurlZero Ω :=
+  fun u hu => ⟨_, ((bggComplex_isSkwCurl hΩ hb) ⟨u, hu⟩).1⟩
+
+/-- **The electric slot of `K*` lies in `L²(TSD₀)`** for the Ch. 6 complex: with
+`K = {0} × L²(TSD) × S2` and `K* = {x | e^{-tL} x ∈ K for all t ∈ ℝ}` (`Feec.Constraints.Kmax`,
+for the Hodge wave group of `bggComplex`), `S1* ⊆ L²(TSD₀)`. -/
+theorem bggComplex_S1max_le_TSD0 :
+    S1max (bggComplex hΩ hb).waveGroup (TSD Ω) S2 ≤ TSD0 Ω hΩ hb :=
+  fun u hu => S1max_le_TSD0 _ hΩ hb (ContinuousLinearMap.id ℝ _)
+    (bggComplex_d1_mem_HcurlZero hΩ hb) (fun _ hv => hv) u hu
+
+/-- **`K* ⊊ K` for the Ch. 6 complex**: the TSD magnetic datum `(m, β)` is not in `S2*`, for any
+`m` and any `S2` (`d1* (S2* ∩ D(d1*)) ⊆ L²(TSD₀) ⊥ diag(1, -1, 0)`, but
+`⟪d1* (m, β), diag(1, -1, 0)⟫ = -2|Ω| ≠ 0`). -/
+theorem bggComplex_betaPair_not_mem_S2max (hne : Ω.Nonempty) (m : L2V Ω) :
+    betaPair hΩ hb m ∉ S2max (bggComplex hΩ hb).waveGroup (TSD Ω) S2 := by
+  intro hmem
+  obtain ⟨h, -, e⟩ := adjoint_betaPair_of_isSkwCurl hΩ hb _ (bggComplex_isSkwCurl hΩ hb) m
+  have h1 := adj1_mem_TSD0_of_mem_S2max _ hΩ hb (ContinuousLinearMap.id ℝ _)
+    (bggComplex_d1_mem_HcurlZero hΩ hb) (fun _ hv => hv) ⟨_, h⟩ hmem
+  have h2 := (Submodule.mem_orthogonal' _ _).1 (constField_mem_orth hΩ hb diagA) _ h1
+  rw [real_inner_comm, ContinuousLinearMap.id_apply, e] at h2
+  have := volume_real_pos hΩ hb hne
+  linarith
+
+/-- **Corrected Prop 4.17 for the Ch. 6 complex** (`Feec.Constraints.prop_4_17_max_unconditional`
+specialised to `bggComplex`, `K = {0} × L²(TSD) × S2`): every datum `(0, E₀, ρ₀) ∈ D(L)` with
+`E₀ ∈ S1*`, `ρ₀ ∈ S2*` has, on every `[0, T]`, a unique strong solution; it stays in
+`K* ⊆ K` and solves (4.15). Scope: `K*` is invariant by definition, so this is the thesis'
+argument run on the largest subspace where it works; the content for Ch. 6 is
+`S1* ⊆ L²(TSD₀)` (`bggComplex_S1max_le_TSD0`) and `K* ⊊ K` (`bggComplex_betaPair_not_mem_S2max`).
+No non-stationary element of `K*` is exhibited. -/
+theorem bggComplex_prop_4_17_max (T : ℝ) {E₀ : L2M Ω} {ρ₀ : W2B Ω}
+    (hD : ini (L2 Ω) E₀ ρ₀ ∈ (bggComplex hΩ hb).domL)
+    (hE₀ : E₀ ∈ S1max (bggComplex hΩ hb).waveGroup (TSD Ω) S2)
+    (hB₀ : ρ₀ ∈ S2max (bggComplex hΩ hb).waveGroup (TSD Ω) S2) :
+    ∃ U, IsStrongSolution (-(bggComplex hΩ hb).waveOp) T (ini (L2 Ω) E₀ ρ₀) 0 U ∧
+      (∀ U', IsStrongSolution (-(bggComplex hΩ hb).waveOp) T (ini (L2 Ω) E₀ ρ₀) 0 U' →
+        EqOn U' U (Icc 0 T)) ∧
+      (∀ t ∈ Icc 0 T, U t ∈ Kc (L2 Ω) (TSD Ω) S2) ∧
+      IsReducedSolution (bggComplex hΩ hb) T E₀ ρ₀
+        (fun t => (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.1)
+        (fun t => (tot (L2 Ω) (L2M Ω) (W2B Ω) (U t)).2.2) := by
+  obtain ⟨U, hU, huniq, hK, hred⟩ := prop_4_17_max_unconditional (bggComplex hΩ hb)
+    (TSD_le_ker_bgg hΩ hb) T hD hE₀ hB₀
+  exact ⟨U, hU, huniq, fun t ht => Kc_mono (S1max_le _) (S2max_le _) (hK t ht), hred⟩
+
+end Max
 
 end Feec.Ch6.Bounded

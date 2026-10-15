@@ -17,8 +17,8 @@ domains star-shaped with respect to a ball, so that the description is exact:
 * `exists_smooth_TSD_dist_lt`, `mem_closure_TSD_inter_HcurlZero_of_mem_TSD0`: if `Ω` is
   bounded, open and star-shaped with respect to every point of a ball `B(x₀, s)`, `s > 0`, every
   `B ∈ L²(TSD₀)` is an `L²` limit of fields with components in `C_c^∞(Ω)` that are pointwise
-  symmetric, trace-free and divergence-free; such fields lie in `L²(TSD) ∩ H̊(curl, M)` (`testField_mem_TSD`,
-  `Feec.BoundedDomain.testField_mem_HcurlZero`).
+  symmetric, trace-free and divergence-free; such fields lie in `L²(TSD) ∩ H̊(curl, M)`
+  (`testField_mem_TSD`, `Feec.BoundedDomain.testField_mem_HcurlZero`).
 * `closure_TSD_inter_HcurlZero_eq`: hence `closure Z = L²(TSD₀)`; for convex `Ω`
   (`closure_TSD_inter_HcurlZero_eq_of_convex`, e.g. a ball, `closure_TSD_inter_HcurlZero_eq_ball`)
   the hypothesis holds automatically (`exists_starBall_of_convex`).

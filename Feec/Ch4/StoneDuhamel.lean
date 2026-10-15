@@ -3,7 +3,7 @@ module
 public import Mathlib.MeasureTheory.Integral.DivergenceTheorem
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Feec.Ch4.Stone
-public import Feec.Ch4.TorusGroup
+public import Feec.Ch4.Duhamel
 
 /-!
 # Duhamel's formula for `W^{1,1}`-in-time forcing
@@ -18,7 +18,7 @@ formula `U(t) = S(t) U₀ + S(t) ∫₀ᵗ S(-s) F(s) ds` is a classical solutio
 
 This is the `W^{1,1}` branch of the forcing class of [QuennevilleBelair2015, Thm 4.3]; the
 `C([0,T]; D(A))` branch is `UnitaryGroupGenerator.wellPosedClassical_forcing`
-(`Feec.Ch4.TorusGroup`). The two are combined in `ForcingThm43`.
+(`Feec.Ch4.Duhamel`). The two are combined in `ForcingThm43`.
 
 ## Main results
 

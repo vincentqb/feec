@@ -86,10 +86,14 @@ defines `H¹`, `H(curl)` and `H(div)` by Fourier weights; `Feec.Ch4.TorusWeak` p
 the weak-derivative Sobolev spaces. `Feec.Ch4.BoundedDomain` builds `H̊¹`, `H̊(curl)` and `H(div)`
 on bounded domains from their definitions (graph closures and weak derivatives), with
 `L²(Ω; ℝ³ˣ³)` modelled as nine copies of `L²(Ω)`. Pseudo-Riemannian geometry is done in components at the jet
-level. Out of scope: the nonlinear Einstein–Bianchi system (§3.4), the
-bounded-domain versions of Lemma 3.5 and Prop 3.6, the concrete finite element computations of
-§5.3 (Props 5.7–5.9 beyond the abstract core of Prop 5.7),
-and the numerical results of Ch. 7. All cited works are collected in
+level. Lemma 3.5 is proved on bounded domains in distributional form for fields with the
+`H̊(curl)` boundary condition: `curl B` is symmetric for `B ∈ L²(TSD) ∩ H̊(curl)`
+(`Feec.BoundedDomain.curl_symm_of_mem_TSD`), and `curl` maps `H̊(curl, S) ∩ L²(TSD)` into
+`L²(TSD)` (`Feec.BoundedSym.curlS_mem_TSDT`; the adjoint version is `adjoint_curlS_mem_TSDS`).
+Out of scope: the nonlinear Einstein–Bianchi system (§3.4), Lemma 3.5 on bounded domains for
+fields in `H(curl)` without a boundary condition (`Feec.BoundedDomain.HcurlM`), Prop 3.6 on
+bounded domains, the concrete finite element computations of §5.3 (Props 5.7–5.9 beyond the
+abstract core of Prop 5.7), and the numerical results of Ch. 7. All cited works are collected in
 [`docs/references.bib`](docs/references.bib).
 
 ## Citing

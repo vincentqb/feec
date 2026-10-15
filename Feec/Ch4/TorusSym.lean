@@ -49,7 +49,7 @@ conjugate-symmetric coefficient sequences, and are preserved (section *Real-valu
   **`prop_4_19_torus`** and its group form `prop_4_19_torus_group`.
 * **Existence**: `symGroup`, an explicit Stone group (`Feec.UnitaryGroupGenerator`) for `-L`,
   built as the fibrewise exponential of the skew symbol `waveSymS` (`waveSymS_skew`) with the
-  machinery of `Feec.Ch4.TorusGroup` (`mulGroup`, `UnitaryGroupGenerator.transport`, `totL2`);
+  machinery of `Feec.Ch4.TorusGroup` (`mulGroup`, `totL2`) and `UnitaryGroupGenerator.transport`;
   its generator domain is exactly `D(L)` (`mem_domain_neg_waveOp_sym_iff`,
   `neg_waveOp_sym_apply`). Hence **`prop_4_19_torus_exists`** (a strong solution exists for all
   TSD data `E₀ ∈ H(curl, S)`, `B₀ ∈ H(sym curl, T)`, and it propagates the constraints),

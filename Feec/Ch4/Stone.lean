@@ -485,24 +485,6 @@ theorem cauchySeq_apply_of_dense {T : ℕ → E →L[ℝ] E} (hT : ∀ n x, ‖T
 local instance instNormedAlgebraRatOpStone : NormedAlgebra ℚ (E →L[ℝ] E) :=
   NormedAlgebra.restrictScalars ℚ ℝ _
 
-/-- For skew `B`, `‖exp(tB) x - x‖ ≤ |t| ‖B x‖` (mean value theorem; `exp(sB)` is an isometry
-commuting with `B`). Same statement as `Feec.Torus.norm_exp_smul_sub_le`, reproved here to
-keep this module independent of the periodic model. -/
-theorem norm_exp_smul_sub_le_of_skew {B : E →L[ℝ] E} (hB : ∀ x y, ⟪B x, y⟫ = -⟪x, B y⟫)
-    (t : ℝ) (x : E) : ‖exp (t • B) x - x‖ ≤ |t| * ‖B x‖ := by
-  have hd : ∀ s ∈ (univ : Set ℝ), HasDerivWithinAt (fun s : ℝ => exp (s • B) x)
-      (exp (s • B) (B x)) univ s := by
-    intro s _
-    have h := hasDerivAt_exp_smul_apply B x s
-    have hc : B (exp (s • B) x) = exp (s • B) (B x) := by
-      have : Commute B (exp (s • B)) := ((Commute.refl B).smul_right s).exp_right
-      exact congrArg (fun C : E →L[ℝ] E => C x) this.eq
-    rw [hc] at h
-    exact h.hasDerivWithinAt
-  have := (convex_univ).norm_image_sub_le_of_norm_hasDerivWithin_le hd
-    (fun s _ => (norm_exp_smul_apply hB s (B x)).le) (mem_univ 0) (mem_univ t)
-  simpa [zero_smul, exp_zero, Real.norm_eq_abs, mul_comm] using this
-
 /-- The approximating orthogonal groups `U_n(t) = exp(t B_n)`. -/
 def approxU (hA : IsSkewAdjoint A) (n : ℕ) (t : ℝ) : E →L[ℝ] E := exp (t • approxB hA n)
 
@@ -530,7 +512,7 @@ theorem norm_approxU_sub_le (hA : IsSkewAdjoint A) (n m : ℕ) (t : ℝ) (x : E)
     congr 2
     simp only [D]; abel
   rw [he, mul_apply_eq_comp, ← _root_.map_sub, norm_approxU_apply]
-  exact norm_exp_smul_sub_le_of_skew hD t x
+  exact norm_exp_smul_sub_le hD t x
 
 /-- `(exp(t B_n) x)_n` is Cauchy: on `D(A)` by `norm_approxU_sub_le`, then by density. -/
 theorem cauchySeq_approxU (hA : IsSkewAdjoint A) (t : ℝ) (x : E) :
@@ -602,7 +584,7 @@ theorem norm_stoneS_sub_le (hA : IsSkewAdjoint A) (x : A.domain) (t s : ℝ) :
     rw [← approxU_add, add_sub_cancel]
   rw [e, mul_apply_eq_comp, ← _root_.map_sub, norm_approxU_apply]
   calc ‖approxU hA n (t - s) x - x‖ ≤ |t - s| * ‖approxB hA n x‖ :=
-        norm_exp_smul_sub_le_of_skew (approxB_skew hA n) _ _
+        norm_exp_smul_sub_le (approxB_skew hA n) _ _
     _ ≤ |t - s| * ‖A x‖ := by gcongr; exact norm_approxB_apply_domain_le hA n x
 
 /-- Strong continuity: `t ↦ S(t) x` is continuous (Lipschitz on `D(A)`, then uniform

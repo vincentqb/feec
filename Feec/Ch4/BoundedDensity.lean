@@ -6,7 +6,7 @@ public import Mathlib.Analysis.Normed.Lp.SmoothApprox
 public import Feec.Ch4.BoundedSalvage
 
 /-!
-# Density of smooth TSD fields in `L²(TSD₀)` on star-shaped domains ("Thm B")
+# Density of smooth TSD fields in `L²(TSD₀)` and `L²(TSD)` on star-shaped domains ("Thm B")
 
 `Feec.Ch4.BoundedSalvage` proves that on a bounded open `Ω ⊆ ℝ³` the closure of
 `Z = L²(TSD) ∩ H̊(curl, M)` lies in the closed subspace `L²(TSD₀)` of TSD fields orthogonal to every
@@ -22,9 +22,17 @@ domains star-shaped with respect to a ball, so that the description is exact:
 * `closure_TSD_inter_HcurlZero_eq`: hence `closure Z = L²(TSD₀)`; for convex `Ω`
   (`closure_TSD_inter_HcurlZero_eq_of_convex`, e.g. a ball, `closure_TSD_inter_HcurlZero_eq_ball`)
   the hypothesis holds automatically (`exists_starBall_of_convex`).
-* `obstr_eq_of_convex`, `mem_obstr_iff_of_convex`: the obstruction space is exactly the
+* `obstr_eq`, `mem_obstr_iff` (and `_of_convex` forms): the obstruction space is exactly the
   orthogonal complement of `Z` in `L²(TSD)`, i.e. a TSD field is in `obstr` iff it is orthogonal to
   every TSD field in `H̊(curl, M)`.
+* `exists_smooth_TSD_HcurlM_dist_lt`, `closure_TSD_inter_HcurlM_eq` (and `_of_convex`, `_ball`):
+  without the boundary condition the density holds in full, `closure (L²(TSD) ∩ H(curl, M)) =
+  L²(TSD)`: every `B ∈ L²(TSD)` is an `L²` limit of fields smooth on `ℝ³`, symmetric and
+  trace-free, divergence-free on `Ω`, which lie in `L²(TSD) ∩ H(curl, M)`
+  (`smoothField_mem_TSD_of_div_on`, `smoothField_mem_HcurlM`).
+* `density_dichotomy`: both density statements conjectured in the proof of Prop 4.17, decided on
+  the same domains: the `H(curl, M)` one holds, the `H̊(curl, M)` one fails, with closure exactly
+  `L²(TSD₀)`.
 
 ## The mathematics
 
@@ -49,19 +57,30 @@ Let `B ∈ L²(TSD₀)` and let `b` be its zero extension to `ℝ³` (`zext`).
    (`MeasureTheory.MemLp.exist_eLpNorm_sub_le`) and an `ε/3` argument conclude. Restricting to `Ω`
    only decreases the norm.
 
+For `B ∈ L²(TSD)` without the boundary condition, step 1 fails at `∂Ω`, so the order is reversed
+in space: the mollified zero extension is divergence-free at every `y` whose `r`-ball lies in `Ω`
+(`sum_pd_molli_zext_of_TSD`), and the *expansion* `x ↦ (b ⋆ ρ)(x₀ + c (x - x₀))`, `1/2 ≤ c < 1`,
+`r < s (1 - c) / 4`, samples only such `y` for `x ∈ closure Ω`
+(`closedBall_dil_subset_of_starBall`). The result is smooth on `ℝ³` and pointwise TSD on `Ω`
+but not compactly supported in `Ω`, so it lies in `H(curl, M)` and not in general in
+`H̊(curl, M)`. Dilation with `c ≥ 1/2` is bounded on `L²` by `8` (`eLpNorm_dil_le_eight`), which
+suffices for the same `ε`-argument (`eLpNorm_dil_molli_sub_le₂`).
+
 ## Status
 
-Verified: items 1-4 and the corollaries above, for every bounded open `Ω` star-shaped with
-respect to a ball (in particular every nonempty bounded open convex `Ω`). Not formalized: the
-Lipschitz case (finite unions of star-shaped pieces need a partition of unity compatible with
-the divergence constraint, i.e. a Bogovskii-type right inverse of `div` on symmetric trace-free
-fields), and the identification `L²(TSD₀) = L²(TSD) ∩ H̊(div, M)` for Lipschitz `Ω`.
+Verified: items 1-4, the `L²(TSD)` variant and the corollaries above, for every bounded open `Ω`
+star-shaped with respect to a ball (in particular every nonempty bounded open convex `Ω`). Not
+formalized: the Lipschitz case (finite unions of star-shaped pieces need a partition of unity
+compatible with the divergence constraint, i.e. a Bogovskii-type right inverse of `div` on
+symmetric trace-free fields), and the identification `L²(TSD₀) = L²(TSD) ∩ H̊(div, M)` for Lipschitz `Ω`.
 
-Correction: the proof of [QuennevilleBelair2015, §4.10, Prop 4.17] infers that
-`H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`. On a domain star-shaped with respect to a ball its
-closure is exactly `L²(TSD₀)`, the TSD fields with `B n = 0` weakly on `∂Ω`, a closed subspace of
-infinite codimension in `L²(TSD)` (`Feec.BoundedDomain.not_finiteDimensional_obstr` in
-`Feec.Ch4.BoundedSalvageDim`).
+Correction: in the proof of [QuennevilleBelair2015, §4.10, Prop 4.17] the hypotheses of Thm 4.5
+are reduced to conjectures, among them that `H̊(curl, M) ∩ L²(TSD)` and `H(curl, M) ∩ L²(TSD)`
+are dense in `L²(TSD)` (derived there from conjectured densities in `H(div, M, 0)`). On a domain
+star-shaped with respect to a ball the second holds (`closure_TSD_inter_HcurlM_eq`) and the first
+fails: the closure of `H̊(curl, M) ∩ L²(TSD)` is exactly `L²(TSD₀)`, the TSD fields with `B n = 0`
+weakly on `∂Ω`, a closed subspace of infinite codimension in `L²(TSD)`
+(`Feec.BoundedDomain.not_finiteDimensional_obstr` in `Feec.Ch4.BoundedSalvageDim`).
 
 ## References
 
@@ -151,7 +170,8 @@ theorem dil_eq (x₀ : R3) (c : ℝ) (f : R3 → ℝ) :
   congr 1
   abel
 
-/-- **Dilation with `c ≥ 1` is an `L²`-contraction**: `‖f(x₀ + c (· - x₀))‖₂ = c^{-3/2} ‖f‖₂`. -/
+/-- **Dilation with `c ≥ 1` is an `L²`-contraction**: `‖f(x₀ + c (· - x₀))‖₂ ≤ ‖f‖₂`. (The norm
+scales by `c^{-3/2}`; only the inequality is proved.) -/
 theorem eLpNorm_dil_le (x₀ : R3) {c : ℝ} (hc : 1 ≤ c) {f : R3 → ℝ}
     (hf : AEStronglyMeasurable f volume) :
     eLpNorm (dil x₀ c f) 2 volume ≤ eLpNorm f 2 volume := by
@@ -690,25 +710,43 @@ theorem closure_TSD_inter_HcurlZero_eq_of_convex (hΩ : IsOpen Ω) (hb : Bornolo
   obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
   exact closure_TSD_inter_HcurlZero_eq hΩ hb hs hstar
 
-/-- The span of the closure is `L²(TSD₀)` itself. -/
+/-- The span of the closure is `L²(TSD₀)` itself (star-shaped with respect to a ball). -/
+theorem span_closure_TSD_inter_HcurlZero_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)) = TSD0 Ω hΩ hb := by
+  rw [closure_TSD_inter_HcurlZero_eq hΩ hb hs hstar, Submodule.span_eq]
+
+/-- The span of the closure is `L²(TSD₀)` itself (convex `Ω`). -/
 theorem span_closure_TSD_inter_HcurlZero_eq_of_convex (hΩ : IsOpen Ω)
     (hb : Bornology.IsBounded Ω) (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :
     Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)) = TSD0 Ω hΩ hb := by
   rw [closure_TSD_inter_HcurlZero_eq_of_convex hΩ hb hc hne, Submodule.span_eq]
 
-/-- **The obstruction space is exactly the orthogonal complement of `L²(TSD) ∩ H̊(curl, M)` in
-`L²(TSD)`** on a nonempty bounded open convex `Ω`: `obstr = L²(TSD) ⊓ (closure Z)ᗮ`. -/
+/-- **`obstr = L²(TSD) ⊓ (closure Z)ᗮ`** on a bounded open `Ω` star-shaped with respect to a ball,
+`Z = L²(TSD) ∩ H̊(curl, M)`. Given `closure_TSD_inter_HcurlZero_eq` this is a rewrite of the
+definition `obstr = L²(TSD) ⊓ L²(TSD₀)ᗮ`; the content is in `mem_obstr_iff`. -/
+theorem obstr_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    obstr Ω hΩ hb = TSD Ω ⊓
+      (Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)))ᗮ := by
+  rw [span_closure_TSD_inter_HcurlZero_eq hΩ hb hs hstar]
+  rfl
+
+/-- `obstr_eq` for a nonempty bounded open convex `Ω`. -/
 theorem obstr_eq_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hc : Convex ℝ Ω)
     (hne : Ω.Nonempty) :
     obstr Ω hΩ hb = TSD Ω ⊓
       (Submodule.span ℝ (closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)))ᗮ := by
-  rw [span_closure_TSD_inter_HcurlZero_eq_of_convex hΩ hb hc hne]
-  rfl
+  obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
+  exact obstr_eq hΩ hb hs hstar
 
-/-- **Characterization of the obstruction space** (convex `Ω`): a TSD field is in `obstr` iff it
-is orthogonal to every TSD field in `H̊(curl, M)`. -/
-theorem mem_obstr_iff_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hc : Convex ℝ Ω)
-    (hne : Ω.Nonempty) {G : L2M Ω} :
+/-- **Characterization of the obstruction space** (star-shaped with respect to a ball): a TSD
+field is in `obstr` iff it is orthogonal to every TSD field in `H̊(curl, M)`. -/
+theorem mem_obstr_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {G : L2M Ω} :
     G ∈ obstr Ω hΩ hb ↔
       G ∈ TSD Ω ∧ ∀ Z ∈ TSD Ω, Z ∈ HcurlZero Ω → ⟪G, Z⟫ = 0 := by
   refine ⟨fun h => ⟨h.1, fun Z hZ hZ' => inner_eq_zero_of_mem_obstr hΩ hb h hZ hZ'⟩,
@@ -716,7 +754,7 @@ theorem mem_obstr_iff_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) 
   show G ∈ (TSD0 Ω hΩ hb)ᗮ
   rw [Submodule.mem_orthogonal']
   intro B hB
-  rw [← SetLike.mem_coe, ← closure_TSD_inter_HcurlZero_eq_of_convex hΩ hb hc hne] at hB
+  rw [← SetLike.mem_coe, ← closure_TSD_inter_HcurlZero_eq hΩ hb hs hstar] at hB
   have hcl : IsClosed {B : L2M Ω | ⟪G, B⟫ = 0} :=
     isClosed_eq (continuous_const.inner continuous_id) continuous_const
   have := closure_minimal (s := (TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω)
@@ -724,11 +762,453 @@ theorem mem_obstr_iff_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) 
   rw [Set.mem_ofPred_eq] at this
   exact this
 
+/-- `mem_obstr_iff` for a nonempty bounded open convex `Ω`. -/
+theorem mem_obstr_iff_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hc : Convex ℝ Ω)
+    (hne : Ω.Nonempty) {G : L2M Ω} :
+    G ∈ obstr Ω hΩ hb ↔
+      G ∈ TSD Ω ∧ ∀ Z ∈ TSD Ω, Z ∈ HcurlZero Ω → ⟪G, Z⟫ = 0 := by
+  obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
+  exact mem_obstr_iff hΩ hb hs hstar
+
 /-- **Thm B on a ball**: `closure (L²(TSD) ∩ H̊(curl, M)) = L²(TSD₀)` for `Ω = B(x₀, R)`. -/
 theorem closure_TSD_inter_HcurlZero_eq_ball (x₀ : R3) {R : ℝ} (hR : 0 < R) :
     closure ((TSD (Metric.ball x₀ R) : Set (L2M (Metric.ball x₀ R))) ∩
       HcurlZero (Metric.ball x₀ R)) =
       TSD0 (Metric.ball x₀ R) Metric.isOpen_ball Metric.isBounded_ball :=
   closure_TSD_inter_HcurlZero_eq_of_convex _ _ (convex_ball x₀ R) (Metric.nonempty_ball.2 hR)
+
+/-! ## Density of smooth TSD fields in `L²(TSD)`: the `H(curl, M)` half of the conjecture
+
+Running the dilation the other way (`c < 1`, expanding `Ω` about `x₀`) and mollifying gives fields
+that are smooth on all of `ℝ³` and pointwise TSD on a neighbourhood of `closure Ω`, but not
+compactly supported in `Ω`. They lie in `H(curl, M)` (no boundary condition). This is why the
+`H(curl, M)` half of the density conjecture in the proof of Prop 4.17 holds while the `H̊(curl, M)`
+half fails. -/
+
+/-- **Dilation with `c ≥ 1/2`**: `‖f(x₀ + c (· - x₀))‖₂ ≤ 8 ‖f‖₂`. (The norm scales by
+`c^{-3/2}`, at most `2^{3/2} < 8` for `c ≥ 1/2`; only the bound is proved.) -/
+theorem eLpNorm_dil_le_eight (x₀ : R3) {c : ℝ} (hc : 1 / 2 ≤ c) {f : R3 → ℝ}
+    (hf : AEStronglyMeasurable f volume) :
+    eLpNorm (dil x₀ c f) 2 volume ≤ 8 * eLpNorm f 2 volume := by
+  have hcpos : 0 < c := by linarith
+  have hc0 : c ≠ 0 := hcpos.ne'
+  set g : R3 → ℝ := fun y => f ((x₀ - c • x₀) + y)
+  have hmp : MeasurePreserving (fun y : R3 => (x₀ - c • x₀) + y) volume volume :=
+    measurePreserving_add_left volume _
+  have hg : AEStronglyMeasurable g volume := hf.comp_measurePreserving hmp
+  have hgn : eLpNorm g 2 volume = eLpNorm f 2 volume := eLpNorm_comp_measurePreserving hf hmp
+  have hmap := Measure.map_addHaar_smul (volume : Measure R3) hc0
+  rw [dil_eq, ← eLpNorm_map_measure (by rw [hmap]; exact hg.smul_measure _)
+    (measurable_const_smul c).aemeasurable, hmap,
+    eLpNorm_smul_measure_of_ne_top (by norm_num), ← hgn]
+  swap; · exact hg
+  have h1 : ENNReal.ofReal |(c ^ Module.finrank ℝ R3)⁻¹| ≤ (8 : ℝ≥0∞) ^ (2 : ℝ) := by
+    rw [ENNReal.rpow_two, show ((8 : ℝ≥0∞) ^ 2) = ENNReal.ofReal 64 by norm_num,
+      ENNReal.ofReal_le_ofReal_iff (by norm_num), abs_inv, abs_pow, abs_of_pos hcpos,
+      Module.finrank_fin_fun]
+    have : (1 / 8 : ℝ) ≤ c ^ 3 := by nlinarith [pow_le_pow_left₀ (by norm_num) hc 3]
+    calc (c ^ 3)⁻¹ ≤ (1 / 8 : ℝ)⁻¹ := inv_anti₀ (by norm_num) this
+      _ ≤ 64 := by norm_num
+  have h2 : ENNReal.ofReal |(c ^ Module.finrank ℝ R3)⁻¹| ^ (1 / (2 : ℝ≥0∞)).toReal ≤ 8 := by
+    have e : (1 / (2 : ℝ≥0∞)).toReal = 1 / 2 := by norm_num
+    rw [e]
+    calc ENNReal.ofReal |(c ^ Module.finrank ℝ R3)⁻¹| ^ (1 / 2 : ℝ)
+        ≤ ((8 : ℝ≥0∞) ^ (2 : ℝ)) ^ (1 / 2 : ℝ) := ENNReal.rpow_le_rpow h1 (by norm_num)
+      _ = 8 := by rw [← ENNReal.rpow_mul]; norm_num
+  rw [smul_eq_mul]
+  exact mul_le_mul_left h2 _
+
+/-- Two-sided version of `eLpNorm_dil_molli_sub_le_of_continuous`: for a continuous compactly
+supported `g`, `dil x₀ c (g ⋆ ρ_φ)` is `ε`-close to `g` in `L²` once `|c - 1|` and the bump radius
+are small. -/
+theorem eLpNorm_dil_molli_sub_le_of_continuous₂ (x₀ : R3) {g : R3 → ℝ} (hgc : Continuous g)
+    (hgs : HasCompactSupport g) {ε : ℝ} (hε : 0 < ε) :
+    ∃ η > 0, η ≤ 1 / 2 ∧ ∀ c : ℝ, |c - 1| < η → ∀ φ : ContDiffBump (0 : R3), φ.rOut < η →
+      eLpNorm (dil x₀ c (molli φ g) - g) 2 volume ≤ ENNReal.ofReal ε := by
+  obtain ⟨R, hR0, hR⟩ : ∃ R > 0, tsupport g ⊆ Metric.closedBall x₀ R := by
+    obtain ⟨R, hR⟩ := hgs.isCompact.isBounded.subset_closedBall x₀
+    exact ⟨max R 1, by positivity, hR.trans (Metric.closedBall_subset_closedBall (le_max_left _ _))⟩
+  have hsupp : ∀ x, g x ≠ 0 → dist x x₀ ≤ R := fun x hx =>
+    hR (subset_tsupport _ hx)
+  set K := Metric.closedBall x₀ (2 * (R + 1))
+  have hK : volume K ≠ ⊤ := measure_closedBall_lt_top.ne
+  set M := (volume K).toReal
+  have hKM : volume K ^ (1 / ENNReal.toReal 2) = ENNReal.ofReal (Real.sqrt M) := by
+    rw [← ENNReal.ofReal_toReal hK, Real.sqrt_eq_rpow, ENNReal.ofReal_rpow_of_nonneg
+      ENNReal.toReal_nonneg (by norm_num)]
+    norm_num
+    rfl
+  set ε' := ε / (Real.sqrt M + 1)
+  have hε' : 0 < ε' := by positivity
+  have hε'M : ε' * Real.sqrt M ≤ ε := by
+    rw [div_mul_eq_mul_div, div_le_iff₀ (by positivity)]
+    nlinarith [Real.sqrt_nonneg M]
+  obtain ⟨δ, hδ, hδg⟩ := Metric.uniformContinuous_iff.1
+    (hgs.uniformContinuous_of_continuous hgc) (ε' / 2) (by positivity)
+  refine ⟨min (1 / 2) (δ / (2 * (R + 1))), by positivity, min_le_left _ _,
+    fun c hc φ hφ => ?_⟩
+  have hc12 : 1 / 2 ≤ c := by
+    have := hc.trans_le (min_le_left _ _)
+    rw [abs_lt] at this
+    linarith
+  have hcpos : 0 < c := by linarith
+  have hφδ : φ.rOut < δ := hφ.trans_le ((min_le_right _ _).trans
+    (div_le_self hδ.le (by linarith)))
+  have hcR : |c - 1| * (2 * (R + 1)) < δ := by
+    have : |c - 1| < δ / (2 * (R + 1)) := hc.trans_le (min_le_right _ _)
+    rwa [lt_div_iff₀ (by positivity)] at this
+  have hgl : LocallyIntegrable g volume := hgc.locallyIntegrable
+  have hy : ∀ x, dist (x₀ + c • (x - x₀)) x₀ = c * dist x x₀ := by
+    intro x
+    rw [dist_eq_norm, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_of_nonneg
+      hcpos.le]
+  have hyx : ∀ x, dist (x₀ + c • (x - x₀)) x = |c - 1| * dist x x₀ := by
+    intro x
+    rw [dist_eq_norm, dist_eq_norm, show x₀ + c • (x - x₀) - x = (c - 1) • (x - x₀) by
+      rw [sub_smul, one_smul]; abel, norm_smul, Real.norm_eq_abs]
+  have hpt : ∀ x, dist (dil x₀ c (molli φ g) x) (g x) ≤ ε' := by
+    intro x
+    set y := x₀ + c • (x - x₀)
+    have h1 : dist (molli φ g y) (g y) ≤ ε' / 2 := by
+      rw [molli_eq_normed_convolution]
+      refine φ.dist_normed_convolution_le hgc.aestronglyMeasurable fun z hz => ?_
+      exact (hδg (lt_of_lt_of_le (Metric.mem_ball.1 hz) hφδ.le)).le
+    have h2 : dist (g y) (g x) ≤ ε' / 2 := by
+      by_cases h : g y = 0 ∧ g x = 0
+      · rw [h.1, h.2, dist_self]; positivity
+      have hxR : dist x x₀ ≤ 2 * (R + 1) := by
+        rcases not_and_or.1 h with h | h
+        · have := hsupp y h
+          rw [hy] at this
+          nlinarith [dist_nonneg (x := x) (y := x₀)]
+        · linarith [hsupp x h]
+      refine (hδg ?_).le
+      rw [hyx]
+      calc |c - 1| * dist x x₀ ≤ |c - 1| * (2 * (R + 1)) :=
+            mul_le_mul_of_nonneg_left hxR (abs_nonneg _)
+        _ < δ := hcR
+    calc dist (dil x₀ c (molli φ g) x) (g x) ≤ dist (molli φ g y) (g y) + dist (g y) (g x) :=
+          dist_triangle _ _ _
+      _ ≤ ε' := by linarith
+  have hφ1 : φ.rOut < 1 := hφ.trans_le ((min_le_left _ _).trans (by norm_num))
+  have hs1 : Function.support (dil x₀ c (molli φ g)) ⊆ K := by
+    intro x hx
+    have hm : x₀ + c • (x - x₀) ∈ Function.support (molli φ g) := hx
+    obtain ⟨u, hu, v, hv, huv⟩ := support_convolution_subset _ hm
+    rw [φ.support_normed_eq] at hv
+    have hu' := hsupp u hu
+    have hv' : ‖v‖ < φ.rOut := by simpa using hv
+    have : dist (x₀ + c • (x - x₀)) x₀ ≤ R + 1 := by
+      rw [← huv, dist_eq_norm, show u + v - x₀ = (u - x₀) + v by abel]
+      calc ‖(u - x₀) + v‖ ≤ ‖u - x₀‖ + ‖v‖ := norm_add_le _ _
+        _ ≤ R + 1 := by rw [← dist_eq_norm]; linarith
+    rw [hy] at this
+    show dist x x₀ ≤ 2 * (R + 1)
+    nlinarith [dist_nonneg (x := x) (y := x₀)]
+  have hs2 : Function.support g ⊆ K := fun x hx =>
+    (hsupp x hx).trans (by linarith)
+  have hmeas : AEStronglyMeasurable (dil x₀ c (molli φ g) - g) volume :=
+    ((continuous_dil x₀ c (continuous_molli φ hgl)).sub hgc).aestronglyMeasurable
+  refine (eLpNorm_sub_le_of_dist_bdd volume (by norm_num) measurableSet_closedBall.nullMeasurableSet
+    hε'.le hmeas hpt hs1 hs2).trans ?_
+  rw [hKM, ← ENNReal.ofReal_mul hε'.le]
+  exact ENNReal.ofReal_le_ofReal hε'M
+
+/-- **Two-sided dilated mollification converges in `L²(ℝ³)`**: for `f ∈ L²(ℝ³)` and `ε > 0`,
+`x ↦ (f ⋆ ρ_φ)(x₀ + c (x - x₀))` is `ε`-close to `f` once `|c - 1|` and the bump radius are
+small (`c < 1` allowed). Same `ε`-argument as `eLpNorm_dil_molli_sub_le`, with the dilation bound
+`eLpNorm_dil_le_eight` in place of the contraction. -/
+theorem eLpNorm_dil_molli_sub_le₂ (x₀ : R3) {f : R3 → ℝ} (hf : MemLp f 2 volume) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∃ η > 0, η ≤ 1 / 2 ∧ ∀ c : ℝ, |c - 1| < η → ∀ φ : ContDiffBump (0 : R3), φ.rOut < η →
+      eLpNorm (dil x₀ c (molli φ f) - f) 2 volume ≤ ENNReal.ofReal ε := by
+  have hε10 : 0 < ε / 10 := by positivity
+  obtain ⟨g, hgs, hgd, hfg⟩ := hf.exist_eLpNorm_sub_le (by norm_num) (by norm_num) hε10
+  have hgc : Continuous g := hgd.continuous
+  have hgm : MemLp g 2 volume := hgc.memLp_of_hasCompactSupport hgs
+  obtain ⟨η, hη, hη2, hηg⟩ := eLpNorm_dil_molli_sub_le_of_continuous₂ x₀ hgc hgs hε10
+  refine ⟨η, hη, hη2, fun c hc φ hφ => ?_⟩
+  have hc12 : 1 / 2 ≤ c := by
+    have := hc.trans_le hη2
+    rw [abs_lt] at this
+    linarith
+  have hfgm : MemLp (f - g) 2 volume := hf.sub hgm
+  have hli : LocallyIntegrable (f - g) volume := hfgm.locallyIntegrable (by norm_num)
+  have hgl : LocallyIntegrable g volume := hgc.locallyIntegrable
+  have e : dil x₀ c (molli φ f) - f =
+      dil x₀ c (molli φ (f - g)) + (dil x₀ c (molli φ g) - g) + -(f - g) := by
+    have : f = (f - g) + g := by abel
+    conv_lhs => rw [this, molli_add φ hli hgl, dil_add]
+    abel
+  have b1 : eLpNorm (dil x₀ c (molli φ (f - g))) 2 volume ≤ ENNReal.ofReal (8 * (ε / 10)) := by
+    refine (eLpNorm_dil_le_eight x₀ hc12 (continuous_molli φ hli).aestronglyMeasurable).trans ?_
+    rw [ENNReal.ofReal_mul (by norm_num), ENNReal.ofReal_ofNat]
+    gcongr
+    exact (eLpNorm_molli_le φ hfgm).trans hfg
+  rw [e]
+  calc eLpNorm (dil x₀ c (molli φ (f - g)) + (dil x₀ c (molli φ g) - g) + -(f - g)) 2 volume
+      ≤ eLpNorm (dil x₀ c (molli φ (f - g)) + (dil x₀ c (molli φ g) - g)) 2 volume +
+          eLpNorm (-(f - g)) 2 volume := eLpNorm_add_le (by norm_num)
+    _ ≤ (eLpNorm (dil x₀ c (molli φ (f - g))) 2 volume +
+          eLpNorm (dil x₀ c (molli φ g) - g) 2 volume) + eLpNorm (f - g) 2 volume := by
+        rw [eLpNorm_neg]
+        gcongr
+        exact eLpNorm_add_le (by norm_num)
+    _ ≤ (ENNReal.ofReal (8 * (ε / 10)) + ENNReal.ofReal (ε / 10)) + ENNReal.ofReal (ε / 10) := by
+        gcongr
+        exact hηg c hc φ hφ
+    _ = ENNReal.ofReal ε := by
+        rw [← ENNReal.ofReal_add (by positivity) hε10.le,
+          ← ENNReal.ofReal_add (by positivity) hε10.le]
+        congr 1; ring
+
+/-- **Mollifying a TSD field away from the boundary**: for `B ∈ L²(TSD)` (no boundary condition)
+the mollified zero extension is pointwise divergence-free at every `y` with
+`closedBall y r ⊆ Ω`, `r` the bump radius: the test field `t ↦ ρ(y - t) e_j` is then in
+`C_c^∞(Ω)`. -/
+theorem sum_pd_molli_zext_of_TSD (hΩ : IsOpen Ω) {B : L2M Ω} (hB : B ∈ TSD Ω)
+    (φ : ContDiffBump (0 : R3)) (j : Fin 3) {y : R3}
+    (hy : Metric.closedBall y φ.rOut ⊆ Ω) :
+    ∑ k, pd k (molli φ (zext B (j, k))) y = 0 := by
+  set ρ := φ.normed volume
+  have hρ : ContDiff ℝ ∞ ρ := φ.contDiff_normed
+  have hρd : Differentiable ℝ ρ := hρ.differentiable (by simp)
+  have hsup : ∀ t, ρ (y - t) ≠ 0 → t ∈ Metric.closedBall y φ.rOut := by
+    intro t ht
+    have : y - t ∈ Function.support ρ := ht
+    rw [φ.support_normed_eq, Metric.mem_ball, dist_zero_right] at this
+    rw [Metric.mem_closedBall, dist_eq_norm, norm_sub_rev]
+    exact this.le
+  have hT : IsTest Ω (fun t => ρ (y - t)) := by
+    refine ⟨hρ.comp (by fun_prop), HasCompactSupport.intro (isCompact_closedBall y φ.rOut)
+      fun t ht => ?_, ?_⟩
+    · by_contra h
+      exact ht (hsup t h)
+    · exact (closure_minimal (fun t ht => hsup t ht) Metric.isClosed_closedBall).trans hy
+  set ψ : Fin 3 → R3 → ℝ := fun i => if i = j then (fun t => ρ (y - t)) else 0 with hψd
+  have hψ : ∀ i, IsTest Ω (ψ i) := fun i => by
+    simp only [hψd]
+    split_ifs
+    · exact hT
+    · exact IsTest.zero
+  have hpd : ∀ k i t, pd k (ψ i) t = if i = j then -pd k ρ (y - t) else 0 := by
+    intro k i t
+    by_cases hi : i = j
+    · simp only [hψd, hi, ite_true]
+      exact pd_comp_sub hρd y k t
+    · simp only [hψd, hi, ite_false]
+      simp [pd]
+  have e := (mem_TSD.1 hB).2.2 ψ hψ
+  simp only [hpd, mul_ite, mul_zero, Fintype.sum_prod_type] at e
+  rw [Finset.sum_eq_single j (fun i _ hi => by simp [hi]) (by simp)] at e
+  calc ∑ k, pd k (molli φ (zext B (j, k))) y
+      = ∑ k, ∫ t in Ω, B (j, k) t * pd k ρ (y - t) := by
+        refine Finset.sum_congr rfl fun k _ => ?_
+        rw [pd_molli φ (locallyIntegrable_zext hΩ B _), zext,
+          show (fun t => Ω.indicator (B (j, k) : R3 → ℝ) t * pd k ρ (y - t)) =
+            Ω.indicator (fun t => B (j, k) t * pd k ρ (y - t)) from
+            funext fun t => by by_cases ht : t ∈ Ω <;> simp [ht],
+          integral_indicator hΩ.measurableSet]
+    _ = -∑ k, ∫ t in Ω, (if j = j then B (j, k) t * -pd k ρ (y - t) else 0) := by
+        simp [integral_neg]
+    _ = 0 := by rw [e, neg_zero]
+
+/-- **Expansion about the center of a ball of star-shapedness.** If `Ω` is star-shaped with
+respect to every point of `B(x₀, s)`, `1/2 ≤ c < 1` and `r < s (1 - c) / 4`, then for
+`x ∈ closure Ω` the ball `closedBall (x₀ + c (x - x₀)) r` lies in `Ω`. -/
+theorem closedBall_dil_subset_of_starBall {x₀ : R3} {s : ℝ}
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {c r : ℝ} (hc2 : 1 / 2 ≤ c)
+    (hc1 : c < 1) (hr : r < s * (1 - c) / 4) {x : R3} (hx : x ∈ closure Ω) :
+    Metric.closedBall (x₀ + c • (x - x₀)) r ⊆ Ω := by
+  intro t ht
+  have hcpos : 0 < c := by linarith
+  have hc' : 1 < c⁻¹ := one_lt_inv₀ hcpos |>.2 hc1
+  have hr0 : 0 ≤ r := Metric.nonempty_closedBall.1 ⟨t, ht⟩
+  have hs : 0 < s := by nlinarith
+  set v : R3 := c⁻¹ • (t - (x₀ + c • (x - x₀)))
+  have hv : ‖v‖ ≤ 2 * r := by
+    rw [norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hcpos.le), ← dist_eq_norm]
+    have hd : dist t (x₀ + c • (x - x₀)) ≤ r := ht
+    have hci : c⁻¹ ≤ 2 := by
+      rw [inv_le_comm₀ hcpos (by norm_num)]; linarith
+    exact mul_le_mul hci hd dist_nonneg (by norm_num)
+  have hr' : 2 * r < s * (c⁻¹ - 1) / 2 := by
+    have : 1 - c ≤ c⁻¹ - 1 := by
+      have : c ≤ c⁻¹ := (le_of_lt hc1).trans hc'.le
+      have h2 : c * c⁻¹ = 1 := mul_inv_cancel₀ hcpos.ne'
+      nlinarith
+    nlinarith
+  have hmem := dil_mem_of_starBall hstar hc' hr' hx hv
+  convert hmem using 1
+  simp only [v, inv_inv, smul_sub, smul_add, smul_smul, mul_inv_cancel₀ hcpos.ne',
+    mul_inv_cancel_left₀ hcpos.ne', one_smul]
+  abel
+
+/-- A `C¹` matrix field on `ℝ³` that is symmetric, trace-free and divergence-free at every point
+of `Ω` defines an element of `L²(TSD)` (weak divergence by integration by parts against
+`C_c^∞(Ω)`, `integral_pd_mul`). -/
+theorem smoothField_mem_TSD_of_div_on (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ : Ix → R3 → ℝ}
+    (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) (hsym : ∀ i j, Ψ (i, j) = Ψ (j, i))
+    (htr : ∀ x, ∑ i, Ψ (i, i) x = 0) (hdiv : ∀ j, ∀ x ∈ Ω, ∑ k, pd k (Ψ (j, k)) x = 0) :
+    smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈ TSD Ω := by
+  set K := smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)
+  have hKc := coeFn_smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)
+  refine ⟨fun i j => ?_, ?_, fun φ hφ => ?_⟩
+  · refine Lp.ext ?_
+    filter_upwards [hKc (i, j), hKc (j, i)] with x h1 h2
+    rw [h1, h2, hsym]
+  · simp only [Fin.sum_univ_three]
+    refine Lp.ext ?_
+    filter_upwards [Lp.coeFn_add (K (0, 0) + K (1, 1)) (K (2, 2)),
+      Lp.coeFn_add (K (0, 0)) (K (1, 1)), hKc (0, 0), hKc (1, 1), hKc (2, 2),
+      Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x h1 h2 h3 h4 h5 h6
+    rw [h1, Pi.add_apply, h2, Pi.add_apply, h3, h4, h5, h6]
+    simpa [Fin.sum_univ_three] using htr x
+  · have h1 : ∀ ij : Ix, ∫ x, K ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω =
+        -∫ x, φ ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := fun ij => by
+      rw [integral_congr_ae (g := fun x => pd ij.2 (φ ij.1) x * Ψ ij x)
+        ((hKc ij).mono fun x hx => by simp only; rw [hx, mul_comm]),
+        integral_pd_mul (hφ ij.1) (hΨ ij) ij.2]
+    simp only [h1, Fintype.sum_prod_type, Finset.sum_neg_distrib, neg_eq_zero]
+    refine Finset.sum_eq_zero fun i _ => ?_
+    rw [← integral_finsetSum _ fun j _ => integrable_mul_of_compact (hφ i).continuous
+      (hφ i).hasCompactSupport (continuous_pd (hΨ _) _)]
+    refine (integral_congr_ae (Eventually.of_forall fun x => ?_)).trans (integral_zero _ _)
+    simp only [← Finset.mul_sum]
+    by_cases hx : x ∈ Ω
+    · rw [hdiv i x hx, mul_zero]
+    · rw [(hφ i).eq_zero_of_notMem hx, zero_mul]
+
+/-- A `C¹` matrix field on `ℝ³` lies in `H(curl, M)` (weak curl = classical curl, by integration by
+parts against `C_c^∞(Ω; ℝ³ˣ³)`; no boundary condition). -/
+theorem smoothField_mem_HcurlM (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ : Ix → R3 → ℝ}
+    (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
+    smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈ HcurlM Ω :=
+  (thesisComplex_adjoint_d1_iff hΩ hb).1 (smoothField_mem_adjoint hΩ hb (thesisComplex hΩ hb)
+    (mem_closure_curlClosure hΩ hb) hΨ).1
+
+/-- **Density of smooth TSD fields in `L²(TSD)`.** Let `Ω ⊆ ℝ³` be bounded, open and star-shaped
+with respect to every point of a ball `B(x₀, s)`, `s > 0`. Every `B ∈ L²(TSD)` (no boundary
+condition) is an `L²(Ω)` limit of fields smooth on `ℝ³` that are symmetric and trace-free
+everywhere and divergence-free on `Ω`; these lie in `L²(TSD) ∩ H(curl, M)`
+(`smoothField_mem_TSD_of_div_on`, `smoothField_mem_HcurlM`).
+
+Proof: with `b` the zero extension of `B`, `b ⋆ ρ` is pointwise divergence-free at every `y`
+whose `r`-ball lies in `Ω` (`sum_pd_molli_zext_of_TSD`). The expanded field
+`x ↦ (b ⋆ ρ)(x₀ + c (x - x₀))`, `1/2 ≤ c < 1`, `r < s (1 - c) / 4`, only samples such `y` for
+`x ∈ Ω` (`closedBall_dil_subset_of_starBall`). `L²` convergence: `eLpNorm_dil_molli_sub_le₂`. -/
+theorem exists_smooth_TSD_HcurlM_dist_lt (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {B : L2M Ω}
+    (hB : B ∈ TSD Ω) {ε : ℝ} (hε : 0 < ε) :
+    ∃ (Ψ : Ix → R3 → ℝ) (hΨ : ∀ ij, ContDiff ℝ ∞ (Ψ ij)), (∀ i j, Ψ (i, j) = Ψ (j, i)) ∧
+      (∀ x, ∑ i, Ψ (i, i) x = 0) ∧ (∀ j, ∀ x ∈ Ω, ∑ k, pd k (Ψ (j, k)) x = 0) ∧
+      dist B (smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)) < ε := by
+  set ε' := ε / 4 with hε'd
+  have hε' : 0 < ε' := by positivity
+  have hex := fun ij => eLpNorm_dil_molli_sub_le₂ x₀ (memLp_zext hΩ B ij) hε'
+  choose η hη hη2 hηP using hex
+  set η₀ := Finset.univ.inf' Finset.univ_nonempty η
+  have hη₀ : 0 < η₀ := (Finset.lt_inf'_iff _).2 fun ij _ => hη ij
+  have hη₀le : ∀ ij, η₀ ≤ η ij := fun ij => Finset.inf'_le _ (Finset.mem_univ ij)
+  have hη₀2 : η₀ ≤ 1 / 2 := (hη₀le (0, 0)).trans (hη2 _)
+  set c := 1 - η₀ / 2 with hcd
+  have hc1 : c < 1 := by linarith
+  have hc2 : 1 / 2 ≤ c := by linarith
+  set r := min (η₀ / 2) (s * (1 - c) / 8)
+  have hr : 0 < r := lt_min (by positivity) (by nlinarith)
+  set φ : ContDiffBump (0 : R3) := ⟨r / 2, r, by positivity, by linarith⟩
+  have hφr : φ.rOut = r := rfl
+  have hφs : φ.rOut < s * (1 - c) / 4 := by
+    rw [hφr]
+    exact (min_le_right _ _).trans_lt (by nlinarith)
+  set Ψ : Ix → R3 → ℝ := fun ij => dil x₀ c (molli φ (zext B ij))
+  have hΨ : ∀ ij, ContDiff ℝ ∞ (Ψ ij) := fun ij =>
+    contDiff_dil x₀ c (contDiff_molli φ (locallyIntegrable_zext hΩ B ij))
+  refine ⟨Ψ, hΨ, fun i j => ?_, fun x => ?_, fun j x hx => ?_, ?_⟩
+  · simp only [Ψ, zext_symm hB i j]
+  · exact sum_molli_zext_diag hΩ hB φ _
+  · simp only [Ψ]
+    rw [Finset.sum_congr rfl fun k _ => pd_dil x₀ c
+      ((contDiff_molli φ (locallyIntegrable_zext hΩ B _)).differentiable (by simp)) k x,
+      ← Finset.mul_sum, sum_pd_molli_zext_of_TSD hΩ hB φ j
+        (closedBall_dil_subset_of_starBall hstar hc2 hc1 hφs (subset_closure hx)), mul_zero]
+  have hcomp : ∀ ij, dist (B ij) (smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ij) ≤ ε' := by
+    intro ij
+    have hlt : |c - 1| < η ij := by
+      rw [abs_lt]; constructor <;> linarith [hη₀le ij]
+    have hφη : φ.rOut < η ij := by
+      rw [hφr]; exact (min_le_left _ _).trans_lt (by linarith [hη₀le ij])
+    have hest := hηP ij c hlt φ hφη
+    have e1 : smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ij =
+        (memLp_of_continuous hΩ hb (hΨ ij).continuous).toLp (Ψ ij) := rfl
+    rw [e1, dist_edist, ← Lp.toLp_coeFn (B ij) (Lp.memLp _), Lp.edist_toLp_toLp]
+    refine ENNReal.toReal_le_of_le_ofReal hε'.le ?_
+    calc eLpNorm ((B ij : R3 → ℝ) - Ψ ij) 2 (volume.restrict Ω)
+        = eLpNorm (zext B ij - Ψ ij) 2 (volume.restrict Ω) := by
+          refine eLpNorm_congr_ae ?_
+          filter_upwards [indicator_ae_eq_restrict (μ := volume) (f := (B ij : R3 → ℝ))
+            hΩ.measurableSet.nullMeasurableSet] with x hx
+          simp only [Pi.sub_apply, zext, hx]
+      _ ≤ eLpNorm (zext B ij - Ψ ij) 2 volume :=
+          eLpNorm_mono_measure _ Measure.restrict_le_self
+      _ = eLpNorm (Ψ ij - zext B ij) 2 volume := eLpNorm_sub_comm _ _ _ _
+      _ ≤ ENNReal.ofReal ε' := hest
+  rw [PiLp.dist_eq_of_L2, Real.sqrt_lt' hε]
+  calc ∑ ij, dist (B ij) (smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ij) ^ 2
+        ≤ ∑ _ij : Ix, ε' ^ 2 :=
+        Finset.sum_le_sum fun ij _ => pow_le_pow_left₀ dist_nonneg (hcomp ij) 2
+    _ = 9 * ε' ^ 2 := by simp
+    _ < ε ^ 2 := by rw [hε'd]; nlinarith
+
+/-- **`closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)`** on a bounded open `Ω` star-shaped with respect
+to a ball: the `H(curl, M)` half of the density conjecture in the proof of
+[QuennevilleBelair2015, Prop 4.17] holds. Compare `closure_TSD_inter_HcurlZero_eq`: with the
+boundary condition of `H̊(curl, M)` the closure is the proper subspace `L²(TSD₀)`. -/
+theorem closure_TSD_inter_HcurlM_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlM Ω) = TSD Ω := by
+  refine (closure_minimal inter_subset_left isClosed_TSD).antisymm fun B hB => ?_
+  rw [Metric.mem_closure_iff]
+  intro ε hε
+  obtain ⟨Ψ, hΨ, hsym, htr, hdiv, hd⟩ := exists_smooth_TSD_HcurlM_dist_lt hΩ hb hs hstar hB hε
+  have hΨ1 : ∀ ij, ContDiff ℝ 1 (Ψ ij) := fun ij => (hΨ ij).of_le (by simp)
+  exact ⟨_, ⟨smoothField_mem_TSD_of_div_on hΩ hb hΨ1 hsym htr hdiv,
+    smoothField_mem_HcurlM hΩ hb hΨ1⟩, hd⟩
+
+/-- `closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)` on a nonempty bounded open convex `Ω`. -/
+theorem closure_TSD_inter_HcurlM_eq_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :
+    closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlM Ω) = TSD Ω := by
+  obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
+  exact closure_TSD_inter_HcurlM_eq hΩ hb hs hstar
+
+/-- `closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)` on a ball. -/
+theorem closure_TSD_inter_HcurlM_eq_ball (x₀ : R3) {R : ℝ} (hR : 0 < R) :
+    closure ((TSD (Metric.ball x₀ R) : Set (L2M (Metric.ball x₀ R))) ∩
+      HcurlM (Metric.ball x₀ R)) = TSD (Metric.ball x₀ R) :=
+  closure_TSD_inter_HcurlM_eq_of_convex Metric.isOpen_ball Metric.isBounded_ball
+    (convex_ball x₀ R) (Metric.nonempty_ball.2 hR)
+
+/-- **The two density conjectures of Prop 4.17, decided.** On a nonempty bounded open `Ω ⊆ ℝ³`
+star-shaped with respect to a ball (e.g. a ball, a cube, any nonempty bounded open convex set):
+* `closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)`: the `B`-field conjecture holds;
+* `closure (L²(TSD) ∩ H̊(curl, M)) = L²(TSD₀) ≠ L²(TSD)`: the `E`-field conjecture fails, and the
+  closure is identified exactly (the constant `diag(1, -1, 0)` is TSD but not in it,
+  `not_dense_TSD_inter_HcurlZero`).
+
+The whole difference is the boundary condition carried by `H̊(curl, M)`.
+See [QuennevilleBelair2015, §4.10, proof of Prop 4.17]. -/
+theorem density_dichotomy (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlM Ω) = TSD Ω ∧
+      closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω) = TSD0 Ω hΩ hb ∧
+      closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω) ≠ TSD Ω := by
+  refine ⟨closure_TSD_inter_HcurlM_eq hΩ hb hs hstar,
+    closure_TSD_inter_HcurlZero_eq hΩ hb hs hstar, fun h => ?_⟩
+  obtain ⟨h1, h2⟩ := not_dense_TSD_inter_HcurlZero hΩ hb hne
+  exact h2 (by rw [h]; exact h1)
 
 end Feec.BoundedDomain

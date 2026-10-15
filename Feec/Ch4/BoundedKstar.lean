@@ -2,6 +2,7 @@ module
 
 public import Feec.Ch4.BoundedSalvageMax
 public import Feec.Ch4.BoundedSym
+public import Feec.Ch4.BoxForward
 public import Mathlib.Analysis.InnerProductSpace.MeanErgodic
 
 /-!
@@ -25,9 +26,8 @@ behind the box proof and reduces the question for general domains to an eigenval
 * **`starProjection_Per_mem_Kmax`** (no hypothesis): if `S t x ∈ K` for `t ≥ 0`, then the
   projection of `x` onto the `τ`-periodic vectors lies in `K*`, for every `τ > 0`. Proof: von
   Neumann's mean ergodic theorem for `S τ` (Mathlib) and periodicity.
-* **`mem_Kmax_of_forward`**: under `PurePoint`, forward invariance implies `x ∈ K*`. This is the
-  general form of the box statement `Feec.Box.forward_iff_mem_Kmax`; without a spectral
-  hypothesis it is false (the transport example, not formalized, in the docstring of
+* **`mem_Kmax_of_forward`**: under `PurePoint`, forward invariance implies `x ∈ K*`. Without a
+  spectral hypothesis it is false (the transport example, not formalized, in the docstring of
   `Feec.Ch4.BoundedSalvageMax`).
 * **`Kmax_le_Stat`**: under `PurePoint`, `K*` is stationary iff its periodic elements are.
 * **`exists_isEigenSq_mem_Kmax`**: under `EigenDense`, a non-stationary `K*` contains a nonzero
@@ -47,6 +47,16 @@ behind the box proof and reduces the question for general domains to an eigenval
   `S t (0, u, 0) = (0, cos(ωt) u, (sin(ωt)/ω) d1 u)`.
 * `Kmax_spectral`: the three statements together for `S1 ≤ ker d0*`.
 
+## The torus: a non-vacuous instance
+
+`Feec.Box.eigenDense_periodicGroup`: `EigenDense` holds for the Fourier group
+`Feec.Torus.periodicGroup` (each Fourier mode splits into a stationary part and a frequency
+`|ξ_k|` part; single modes are dense). Hence on the torus forward invariance of **any** closed
+`K` is equivalent to `x ∈ K*` (`Feec.Box.periodic_forward_iff_mem_Kmax`), and the box statement
+`Feec.Box.forward_iff_mem_Kmax` is recovered from the abstract mechanism plus
+`Feec.Box.mem_Kmax_iff` (`Feec.Box.forward_iff_stationary_of_eigenDense`). This covers the group
+`periodicGroup` only; the "every group" form `Feec.Box.thesisBox_forward_iff` is not re-derived.
+
 ## Bounded domains
 
 `Feec.BoundedDomain.thesisComplex_Kmax_spectral` (complex of Prop 4.17,
@@ -57,7 +67,10 @@ from the compactness property of the complex (Rellich, and a Weber–Weck select
 `H̊(curl) ∩ H(div)`); Mathlib has neither, and the selection theorem is known under boundary
 regularity, so `EigenDense` is **not** proved for any domain here. Under it: forward invariance
 ⇔ `K*`, and `K*` contains a moving datum iff `curl* curl u = ω² u` (`ω > 0`) has a nonzero solution
-`u ∈ L²(TSD) ∩ H̊(curl, M)` with `curl u ∈ L²(TSD)`; every such `u` lies in `S1* ⊆ L²(TSD₀)`.
+`u ∈ L²(TSD) ∩ H̊(curl, M)` with `curl u ∈ D(curl*)`; every such `u` lies in `S1* ⊆ L²(TSD₀)`.
+The condition `curl u ∈ L²(TSD)` is automatic (`Feec.BoundedDomain.curl_mem_TSD`: the curl of a
+field in `H̊(curl) ∩ L²(TSD)` is symmetric, trace-free and weakly divergence-free;
+`Feec.BoundedSym.curlS_mem_TSDT` for (4.16)).
 
 What is not decided: whether such TSD eigenfields exist on a given bounded domain. On the box,
 in the parity model, `K*` has no non-stationary element (`Feec.Box.thesisBox_mem_Kmax_iff`).
@@ -861,6 +874,75 @@ open Feec.HilbertComplex2 Feec.Constraints
 
 variable {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 
+section CurlTSD
+
+open MeasureTheory
+
+/-- For a symmetric `B` and a pointwise skew-symmetric field `A`, `∫ B : A = 0`. -/
+theorem sum_integral_mul_skew_eq_zero {B : L2M Ω} (hB : ∀ j k, B (j, k) = B (k, j))
+    {A : Ix → R3 → ℝ} (hA : ∀ j k x, A (k, j) x = -A (j, k) x) :
+    ∑ jk, ∫ x, B jk x * A jk x ∂volume.restrict Ω = 0 := by
+  have h : ∑ jk, ∫ x, B jk x * A jk x ∂volume.restrict Ω =
+      -∑ jk, ∫ x, B jk x * A jk x ∂volume.restrict Ω := by
+    rw [← Finset.sum_neg_distrib]
+    refine Fintype.sum_equiv (Equiv.prodComm _ _) _ _ fun jk => ?_
+    obtain ⟨j, k⟩ := jk
+    simp only [Equiv.prodComm_apply, Prod.swap_prod_mk]
+    rw [hB j k, ← integral_neg]
+    congr 1
+    ext x
+    rw [hA j k x]
+    ring
+  linarith
+
+/-- `curl (g I)` is skew-symmetric (its rows are `∇g × e_i`). -/
+theorem curlM_diag_swap (g : R3 → ℝ) (j k : Fin 3) (x : R3) :
+    curlM (fun ij x => if ij.1 = ij.2 then g x else 0) (k, j) x =
+      -curlM (fun ij x => if ij.1 = ij.2 then g x else 0) (j, k) x := by
+  have hz : ∀ (m : Fin 3) (y : R3), pd m (fun _ : R3 => (0 : ℝ)) y = 0 := fun m y => by simp [pd]
+  fin_cases j <;> fin_cases k <;> simp [curlM, hz]
+
+/-- **The curl of a symmetric field in `H̊(curl)` is trace-free**: if `(B, C)` lies in the
+closure of the curl graph and `B` is symmetric, then `tr C = 0` (test against `Ψ = g I`, whose
+curl is skew, so `∫ tr C g = ∫ B : curl (g I) = 0`). -/
+theorem curl_trace_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B C : L2M Ω}
+    (h : (B, C) ∈ closure (curlGraph Ω)) (hB : ∀ j k, B (j, k) = B (k, j)) :
+    ∑ i, C (i, i) = 0 := by
+  refine L2_ext_of_integral hΩ hb fun g hg => ?_
+  have e := closure_curlGraph_identity hΩ hb h (Ψ := fun ij x => if ij.1 = ij.2 then g x else 0)
+    (fun ij => by
+      by_cases hij : ij.1 = ij.2
+      · simpa [hij] using hg.contDiff_one
+      · simpa [hij] using (contDiff_const : ContDiff ℝ 1 fun _ : R3 => (0 : ℝ)))
+  rw [sum_integral_mul_skew_eq_zero hB (curlM_diag_swap g)] at e
+  rw [integral_mul_eq_inner _ hg.memLp, integral_mul_eq_inner _ hg.memLp, sum_inner,
+    inner_zero_left]
+  simp only [← integral_mul_eq_inner _ hg.memLp]
+  simpa [mul_ite, integral_ite_zero, Fintype.sum_prod_type] using e
+
+/-- **`curl (H̊(curl) ∩ L²(TSD)) ⊆ L²(TSD)`** for the full matrix complex: `curl B` is symmetric
+(`curl_symm_of_mem_TSD`), trace-free (`curl_trace_eq_zero`), and weakly divergence-free
+(`div curl = 0`, tested against `∇φ`). The analogue for (4.16) is
+`Feec.BoundedSym.curlS_mem_TSDT`. -/
+theorem curl_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B C : L2M Ω}
+    (h : (B, C) ∈ closure (curlGraph Ω)) (hB : B ∈ TSD Ω) : C ∈ TSD Ω := by
+  refine ⟨fun i j => curl_symm_of_mem_TSD hΩ hb h hB i j, curl_trace_eq_zero hΩ hb h hB.1,
+    fun φ hφ => ?_⟩
+  have e := closure_curlGraph_identity hΩ hb h (Ψ := gradM φ)
+    fun ij => (hφ ij.1).pdiff ij.2 |>.contDiff_one
+  have h0 : ∀ ij x, curlM (gradM φ) ij x = 0 := fun ij x =>
+    curlM_gradM (fun i => (hφ i).contDiff.of_le (by simp)) ij x
+  simp only [h0, mul_zero, integral_zero, Finset.sum_const_zero] at e
+  exact e
+
+/-- For the thesis' complex, `d1 = curl` maps `D(d1) ∩ L²(TSD)` into `L²(TSD)`. -/
+theorem thesisComplex_d1_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {u : L2M Ω}
+    (hu : u ∈ TSD Ω) (h1 : u ∈ (thesisComplex hΩ hb).d1.domain) :
+    (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ TSD Ω :=
+  curl_mem_TSD hΩ hb (mem_closure_curlClosure hΩ hb ⟨u, h1⟩) hu
+
+end CurlTSD
+
 /-- **`K*` on a bounded domain, thesis' complex `H̊¹(V) → H̊(curl, M) → L²(M)`**, for any
 orthogonal group `G` generated by its Hodge wave operator and with
 `K = {0} × L²(TSD) × L²(TSD)`.
@@ -875,7 +957,8 @@ Under `hD`:
 1. a datum whose forward orbit (`t ≥ 0`) stays in `K` lies in `K*`;
 2. `K*` is stationary iff every `E ∈ S1*` lies in `H̊(curl, M)` with `curl E = 0` (no hypothesis);
 3. `K*` contains a non-stationary datum iff there are `ω > 0` and a nonzero
-   `u ∈ L²(TSD) ∩ H̊(curl, M)` with `curl u ∈ L²(TSD) ∩ D(curl*)` and `curl* curl u = ω² u`;
+   `u ∈ L²(TSD) ∩ H̊(curl, M)` with `curl u ∈ D(curl*)` and `curl* curl u = ω² u` (then
+   `curl u ∈ L²(TSD)` automatically, `thesisComplex_d1_mem_TSD`);
 4. every such `u` lies in `S1* ⊆ L²(TSD₀)`, and `(0, u, 0)` moves:
    `S t (0, u, 0) = (0, cos(ωt) u, (sin(ωt)/ω) curl u)` (`Feec.Constraints.S_eq_of_isEigenSq`).
 
@@ -891,20 +974,22 @@ theorem thesisComplex_Kmax_spectral
     (¬ Kmax G K ≤ Stat G ↔ ∃ ω : ℝ, 0 < ω ∧ ∃ u : L2M Ω, u ≠ 0 ∧ u ∈ TSD Ω ∧
       ∃ (h1 : u ∈ (thesisComplex hΩ hb).d1.domain)
         (h3 : (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ (thesisComplex hΩ hb).d1†.domain),
-        (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ TSD Ω ∧
-          (thesisComplex hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u) ∧
+        (thesisComplex hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u) ∧
     (∀ (ω : ℝ), 0 < ω → ∀ u : L2M Ω, u ∈ TSD Ω →
       ∀ (h1 : u ∈ (thesisComplex hΩ hb).d1.domain)
         (h3 : (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ (thesisComplex hΩ hb).d1†.domain),
-        (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ TSD Ω →
-          (thesisComplex hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u →
+        (thesisComplex hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u →
             u ∈ S1max G (TSD Ω) (TSD Ω) ∧ u ∈ TSD0 Ω hΩ hb ∧
               (u ≠ 0 → ini (L2V Ω) u (0 : L2M Ω) ∉ Stat G)) := by
   intro K
   obtain ⟨h1, h2, h3⟩ := Kmax_spectral (G := G) (S2 := TSD Ω) (thesisComplex_TSD_le_ker hΩ hb) hD
-  refine ⟨h1, h2, h3, fun ω hω u hu hu1 hu3 hS e => ?_⟩
+  refine ⟨h1, h2, h3.trans ?_, fun ω hω u hu hu1 hu3 e => ?_⟩
+  · refine exists_congr fun ω => and_congr_right fun _ => exists_congr fun u =>
+      and_congr_right fun _ => and_congr_right fun hu => exists_congr fun h1 => ?_
+    exact ⟨fun ⟨h3, _, e⟩ => ⟨h3, e⟩, fun ⟨h3, e⟩ => ⟨h3, thesisComplex_d1_mem_TSD hΩ hb hu h1, e⟩⟩
   obtain ⟨hu2, e2⟩ := exists_adj0_eq_zero_of_mem_ker (thesisComplex_TSD_le_ker hΩ hb hu)
-  obtain ⟨-, hm, hns⟩ := eigen_mem_S1max (G := G) hω hu hu1 hu2 e2 hu3 hS e
+  obtain ⟨-, hm, hns⟩ := eigen_mem_S1max (G := G) hω hu hu1 hu2 e2 hu3
+    (thesisComplex_d1_mem_TSD hΩ hb hu hu1) e
   exact ⟨hm, thesisComplex_S1max_le_TSD0 hΩ hb G _ hm, hns⟩
 
 end Feec.BoundedDomain
@@ -920,8 +1005,8 @@ variable {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 `EigenDense G` as `Feec.BoundedDomain.thesisComplex_Kmax_spectral`: forward invariance is
 equivalent to `x ∈ K*`; `K*` is stationary iff `S1* ⊆ ker d1`; `K*` contains a non-stationary
 datum iff `d1* d1 u = ω² u` has a nonzero solution `u ∈ L²(TSD) ∩ D(d1)` with
-`d1 u ∈ L²(TSD) ∩ D(d1*)`, `ω > 0`; and every such `u` lies in `S1*`, has `u ∈ L²(TSD₀)`, and
-moves. -/
+`d1 u ∈ D(d1*)`, `ω > 0` (`d1 u ∈ L²(TSD)` is automatic, `curlS_mem_TSDT`); and every such `u`
+lies in `S1*`, has `u ∈ L²(TSD₀)`, and moves. -/
 theorem symComplexB_Kmax_spectral
     (G : UnitaryGroupGenerator (-(symComplexB hΩ hb).waveOp)) (hD : EigenDense G) :
     let K := Kc (L2 Ω) (TSDS Ω) (TSDT Ω)
@@ -931,20 +1016,142 @@ theorem symComplexB_Kmax_spectral
     (¬ Kmax G K ≤ Stat G ↔ ∃ ω : ℝ, 0 < ω ∧ ∃ u : L2S Ω, u ≠ 0 ∧ u ∈ TSDS Ω ∧
       ∃ (h1 : u ∈ (symComplexB hΩ hb).d1.domain)
         (h3 : (symComplexB hΩ hb).d1 ⟨u, h1⟩ ∈ (symComplexB hΩ hb).d1†.domain),
-        (symComplexB hΩ hb).d1 ⟨u, h1⟩ ∈ TSDT Ω ∧
-          (symComplexB hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u) ∧
+        (symComplexB hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u) ∧
     (∀ (ω : ℝ), 0 < ω → ∀ u : L2S Ω, u ∈ TSDS Ω →
       ∀ (h1 : u ∈ (symComplexB hΩ hb).d1.domain)
         (h3 : (symComplexB hΩ hb).d1 ⟨u, h1⟩ ∈ (symComplexB hΩ hb).d1†.domain),
-        (symComplexB hΩ hb).d1 ⟨u, h1⟩ ∈ TSDT Ω →
-          (symComplexB hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u →
+        (symComplexB hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u →
             u ∈ S1max G (TSDS Ω) (TSDT Ω) ∧ (u : L2M Ω) ∈ TSD0 Ω hΩ hb ∧
               (u ≠ 0 → ini (L2 Ω) u (0 : L2T Ω) ∉ Stat G)) := by
   intro K
   obtain ⟨h1, h2, h3⟩ := Kmax_spectral (G := G) (S2 := TSDT Ω) (TSDS_le_ker hΩ hb) hD
-  refine ⟨h1, h2, h3, fun ω hω u hu hu1 hu3 hS e => ?_⟩
+  refine ⟨h1, h2, h3.trans ?_, fun ω hω u hu hu1 hu3 e => ?_⟩
+  · refine exists_congr fun ω => and_congr_right fun _ => exists_congr fun u =>
+      and_congr_right fun _ => and_congr_right fun hu => exists_congr fun h1 => ?_
+    exact ⟨fun ⟨h3, _, e⟩ => ⟨h3, e⟩, fun ⟨h3, e⟩ => ⟨h3, curlS_mem_TSDT hΩ hb ⟨u, h1⟩ hu, e⟩⟩
   obtain ⟨hu2, e2⟩ := exists_adj0_eq_zero_of_mem_ker (TSDS_le_ker hΩ hb hu)
-  obtain ⟨-, hm, hns⟩ := eigen_mem_S1max (G := G) hω hu hu1 hu2 e2 hu3 hS e
+  obtain ⟨-, hm, hns⟩ := eigen_mem_S1max (G := G) hω hu hu1 hu2 e2 hu3
+    (curlS_mem_TSDT hΩ hb ⟨u, hu1⟩ hu) e
   exact ⟨hm, symComplexB_S1max_le_TSD0 hΩ hb G _ u hm, hns⟩
 
 end Feec.BoundedSym
+
+/-! ## The torus: `EigenDense` holds, and the box statement follows -/
+
+namespace Feec.Box
+
+open Feec.Torus Feec.Constraints HilbertComplex2 NormedSpace
+
+
+/-- On an eigenvector of `A²` (`A² w = -ω² w`, `A³ = -ω² A`, `ω ≠ 0`):
+`exp(tA) w = cos(ωt) w + (sin(ωt)/ω) A w`. -/
+theorem exp_smul_apply_of_sq {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [CompleteSpace E] (A : E →L[ℝ] E) {ω : ℝ} (hω : ω ≠ 0)
+    (h3 : ∀ x, A (A (A x)) = -(ω ^ 2) • A x) {w : E} (hw : A (A w) = -(ω ^ 2) • w) (t : ℝ) :
+    exp (t • A) w = Real.cos (ω * t) • w + (Real.sin (ω * t) / ω) • A w := by
+  rw [exp_smul_apply_eq A hω h3 t w, hw]
+  have : ω ^ 2 ≠ 0 := pow_ne_zero 2 hω
+  match_scalars <;> field_simp
+  ring
+
+/-- The state concentrated on the Fourier mode `k`, with fibre value `v`. -/
+noncomputable def modeVec (k : Z3) (v : Fib) : X := fibIso (lp.single 2 k v)
+
+/-- `modeVec k` is additive. -/
+theorem modeVec_add (k : Z3) (v w : Fib) : modeVec k (v + w) = modeVec k v + modeVec k w := by
+  simp [modeVec, lp.single_add]
+
+/-- `modeVec k` is homogeneous. -/
+theorem modeVec_smul (k : Z3) (c : ℝ) (v : Fib) : modeVec k (c • v) = c • modeVec k v := by
+  simp [modeVec, lp.single_smul]
+
+/-- The periodic group acts on a single mode by `exp(t W_k)` (`Feec.Torus.periodicGroup_apply`). -/
+theorem S_modeVec (t : ℝ) (k : Z3) (v : Fib) :
+    periodicGroup.S t (modeVec k v) = modeVec k (exp (t • waveSymK k) v) := by
+  apply fibIso.symm.injective
+  refine lp.ext (funext fun j => ?_)
+  rw [periodicGroup_apply]
+  simp only [modeVec, LinearIsometryEquiv.symm_apply_apply]
+  by_cases h : j = k
+  · subst h; simp
+  · simp [h]
+
+/-- A single mode killed by its symbol is stationary. -/
+theorem modeVec_mem_Stat {k : Z3} {v : Fib} (hv : waveSymK k v = 0) :
+    modeVec k v ∈ Stat periodicGroup :=
+  mem_Stat.2 fun t => by rw [S_modeVec, exp_smul_apply_of_eq_zero _ hv]
+
+/-- A single mode with `W_k² w = -|ξ_k|² w` lies in `FreqSub |ξ_k|`. -/
+theorem modeVec_mem_Freq {k : Z3} (hk : 0 < ‖freq k‖) {w : Fib}
+    (hw : waveSymK k (waveSymK k w) = -(‖freq k‖ ^ 2) • w) :
+    modeVec k w ∈ FreqSub periodicGroup ‖freq k‖ := by
+  have hω := hk.ne'
+  have he := exp_smul_apply_of_sq (waveSymK k) hω (waveSymK_cube k) hw
+  refine mem_Freq.2 fun t => ?_
+  have hp : ‖freq k‖ * (Real.pi / (2 * ‖freq k‖)) = Real.pi / 2 := by field_simp
+  rw [S_modeVec, S_modeVec, he, he, hp, Real.cos_pi_div_two, Real.sin_pi_div_two]
+  rw [← modeVec_smul, ← modeVec_smul, ← modeVec_add]
+  congr 1
+  module
+
+/-- Every single mode splits as a stationary part `v + |ξ_k|⁻² W_k² v` plus a frequency-`|ξ_k|`
+part `-|ξ_k|⁻² W_k² v` (for `ξ_k = 0`, `W_k = 0` and the mode is stationary). -/
+theorem modeVec_mem (k : Z3) (v : Fib) :
+    modeVec k v ∈ (Stat periodicGroup ⊔ ⨆ ω : Ioi (0 : ℝ), FreqSub periodicGroup ω) := by
+  rcases (norm_nonneg (freq k)).eq_or_lt with h0 | hk
+  · refine Submodule.mem_sup_left (modeVec_mem_Stat ?_)
+    rw [waveSymK, (norm_eq_zero.1 h0.symm), waveSym_zero]
+  have hω2 : ‖freq k‖ ^ 2 ≠ 0 := pow_ne_zero 2 hk.ne'
+  have hv : v = (v - -(‖freq k‖ ^ 2)⁻¹ • waveSymK k (waveSymK k v)) +
+      -(‖freq k‖ ^ 2)⁻¹ • waveSymK k (waveSymK k v) := by abel
+  rw [hv, modeVec_add]
+  refine Submodule.add_mem_sup (modeVec_mem_Stat ?_) ?_
+  · simp only [map_sub, map_smul, waveSymK_cube]
+    match_scalars; field_simp
+    ring
+  · refine (le_iSup (fun τ : Ioi (0 : ℝ) => FreqSub periodicGroup τ) ⟨‖freq k‖, hk⟩) ?_
+    refine modeVec_mem_Freq hk ?_
+    simp only [map_smul, map_neg, waveSymK_cube, smul_smul, smul_neg, neg_smul, neg_neg]
+    match_scalars; field_simp
+
+/-- **`EigenDense` holds for the torus group** `Feec.Torus.periodicGroup`: single modes span a
+dense subspace of `L²` (`lp.hasSum_single`) and each splits into eigenvectors (`modeVec_mem`).
+This is a non-vacuous instance of the hypothesis of `exists_isEigenSq_mem_Kmax`. -/
+theorem eigenDense_periodicGroup : EigenDense periodicGroup := by
+  intro x
+  have hs : HasSum (fun k => modeVec k (fibIso.symm x k)) x := by
+    have := (lp.hasSum_single (p := 2) (by norm_num) (fibIso.symm x)).map
+      fibIso.toLinearIsometry.toContinuousLinearMap fibIso.continuous
+    convert this using 1
+    · simp [modeVec, Function.comp_def]
+    · exact (LinearIsometryEquiv.apply_symm_apply fibIso x).symm
+  exact mem_closure_of_tendsto hs (Eventually.of_forall fun s =>
+    Submodule.sum_mem _ fun k _ => modeVec_mem k _)
+
+/-- On the torus, forward invariance of **any** closed `K` implies `x ∈ K*`
+(`Feec.Constraints.mem_Kmax_of_forward` with `eigenDense_periodicGroup`). -/
+theorem periodic_mem_Kmax_of_forward {K : Submodule ℝ X} (hK : IsClosed (K : Set X)) {x : X}
+    (hx : ∀ t, 0 ≤ t → periodicGroup.S t x ∈ K) : x ∈ Kmax periodicGroup K :=
+  mem_Kmax_of_forward (purePoint_of_eigenDense eigenDense_periodicGroup) hK hx
+
+/-- On the torus, for closed `K`: forward invariance iff `x ∈ K*`. -/
+theorem periodic_forward_iff_mem_Kmax {K : Submodule ℝ X} (hK : IsClosed (K : Set X)) (x : X) :
+    (∀ t, 0 ≤ t → periodicGroup.S t x ∈ K) ↔ x ∈ Kmax periodicGroup K :=
+  ⟨periodic_mem_Kmax_of_forward hK, fun hx t _ => hx t⟩
+
+/-- **`Feec.Box.forward_iff_mem_Kmax` recovered from the abstract mechanism**: for `S1`, `S2` as in
+`Feec.Box.mem_Kmax_iff`, forward invariance of `K = {0} × S1 × S2` iff `x ∈ K` is stationary. The
+forward-to-`K*` step is `periodic_mem_Kmax_of_forward` (mean ergodic theorem and
+`eigenDense_periodicGroup`), replacing the Cesàro computation of `Feec.Ch4.BoxForward`; the
+`K*`-to-stationary step is `Feec.Box.mem_Kmax_iff`. -/
+theorem forward_iff_stationary_of_eigenDense {S1 S2 : Submodule ℝ L2M}
+    [S1.HasOrthogonalProjection] [S2.HasOrthogonalProjection]
+    (hS1 : S1 ≤ ParRow 1 ⊓ boxSym ⊓ boxTr) (hS2 : S2 ≤ ParRow (-1) ⊓ boxSym ⊓ boxTr) (x : X) :
+    (∀ t, 0 ≤ t → periodicGroup.S t x ∈ Kc L2V S1 S2) ↔
+      x ∈ Kc L2V S1 S2 ∧ ∀ t, periodicGroup.S t x = x := by
+  have hK : IsClosed (Kc L2V S1 S2 : Set X) := by
+    rw [← Submodule.orthogonal_orthogonal (Kc L2V S1 S2)]
+    exact Submodule.isClosed_orthogonal _
+  rw [periodic_forward_iff_mem_Kmax hK, mem_Kmax_iff hS1 hS2]
+
+end Feec.Box

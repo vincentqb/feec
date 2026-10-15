@@ -10,13 +10,16 @@ public import Feec.Ch4.BoundedDensity
 public import Feec.Ch4.BoundedDomain
 public import Feec.Ch4.BoundedDomainExt
 public import Feec.Ch4.BoundedInterior
+public import Feec.Ch4.BoundedKstar
 public import Feec.Ch4.BoundedSalvage
 public import Feec.Ch4.BoundedSalvageDim
 public import Feec.Ch4.BoundedSalvageMax
 public import Feec.Ch4.BoundedSym
+public import Feec.Ch4.BoundedSymDual
 public import Feec.Ch4.BoundedSymExt
 public import Feec.Ch4.Box
 public import Feec.Ch4.BoxForward
+public import Feec.Ch4.BoxIdent
 public import Feec.Ch4.BoxMirror
 public import Feec.Ch4.BoxReduce
 public import Feec.Ch4.BoxRestrict

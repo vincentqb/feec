@@ -33,10 +33,13 @@ Module map, corrections to the thesis, and scope of the formalization.
 | `Feec.Ch4.BoundedDomain`, `Feec.Ch4.BoundedDomainExt` | §4.10: the complex `H̊¹ → H̊(curl) → L²` on bounded domains, `D(curl*) = H(curl)`; Prop 4.17 fails there |
 | `Feec.Ch4.BoundedSalvage`, `Feec.Ch4.BoundedSalvageMax`, `Feec.Ch4.BoundedSalvageDim` | §4.10: what survives on bounded domains: the obstruction space (infinite-dimensional), a necessary condition for propagation, Prop 4.17 on the maximal invariant constraint space |
 | `Feec.Ch4.BoundedDensity` | §4.10: the density conjectures of Prop 4.17 are true; the density inferred from them fails for `H̊(curl)` (star-shaped domains) |
+| `Feec.Ch4.BoundedKstar` | §4.10–4.11: `K*` by spectral theory: forward invariance ⇔ `K*` under pure point spectrum; under `EigenDense`, `K*` moves iff a TSD eigenfield of `curl* curl` exists |
 | `Feec.Ch4.BoundedInterior` | §4.10, Prop 3.6: TSD propagates in the interior at unit speed; the violation starts at the boundary |
 | `Feec.Ch4.BoundedSym` | §4.11: complex (4.16) on bounded domains; Prop 4.19 fails there, and its corrected maximal form |
 | `Feec.Ch4.BoundedSymExt` | §4.11: adjoint domains of (4.16); the boundary conditions as printed in Prop 4.19 |
+| `Feec.Ch4.BoundedSymDual` | §4.11: with the boundary conditions as printed, the conclusion of Prop 4.19 fails on the unit ball |
 | `Feec.Ch4.Box`, `Feec.Ch4.BoxRestrict`, `Feec.Ch4.BoxReduce`, `Feec.Ch4.BoxStatic`, `Feec.Ch4.BoxThesis`, `Feec.Ch4.BoxForward` | §4.10: the box `(0, ½)³` as parity subspaces of the 𝕋³ model; with the thesis's boundary conditions only stationary data propagate, even forward in time |
+| `Feec.Ch4.BoxIdent` | §4.10: the parity model is the bounded-domain complex on `(0, ½)³`; the box results hold on every open cube, `(0, π)³` included |
 | `Feec.Ch4.BoxMirror` | §4.10–4.11: Props 4.17 and 4.19 on the box with tensorial mirror boundary conditions |
 | `Feec.Ch5.BGG` | §5.1: Props 5.1–5.2 |
 | `Feec.Ch5.Discrete` | §5.2–5.3: Props 5.3, 5.4, 5.6, Thm 5.5, abstract core of Prop 5.7 |
@@ -62,7 +65,7 @@ declaration that refutes or corrects the original; module docstrings list the re
 - **Lemma 4.12**: `Q ∈ C¹` fails where the lemma is applied; only `Q²` needs to be differentiable (`lemma_4_12`).
 - **Thm 4.14**: it needs `ξ ∈ C¹(V)`, and the `(1 + T)` factor is sharpened (`thm_4_14_pointwise`, `thm_4_14`). `ξ₀ ∈ D(L)` does not give `C¹(V)` (`cxK1_exists_not_isWeakSol`), but the convergence claimed after the theorem holds for every `ξ₀ ∈ D(L)`, without a rate (`convergence_domL_weakSolution`, `convergence_W`).
 - **§4.10**: two of the four proposed discretizations are not subcomplexes (`pgrad_not_mem_PminusLambda1`).
-- **Props 4.17, 4.19**: the density conjectures are unnecessary (`prop_4_17`), and the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`, `prop_4_17_iff`). Without a boundary the projection conjecture is a theorem and Props 4.17 and 4.19 hold with no extra hypothesis, with existence of solutions: on 𝕋³ (`projKc_mem_domL`, `prop_4_17_torus_exists`, `prop_4_19_torus_exists`) and on ℝ³ (`Whole.projKc_mem_domL`, `prop_4_17_whole_exists`, `prop_4_19_whole_exists`, and for real fields `real_prop_4_17_whole_exists`). On every nonempty bounded open `Ω ⊆ ℝ³` both projection hypotheses are false for the thesis's complexes, so Props 4.17 and 4.19 are vacuous as stated (`thesisComplex_not_projection_hyp`, `thesisComplex_not_projection_hyp2`, `symComplexB_not_projection_hyp`). Their conclusions fail too, with no extra hypothesis: for explicit TSD data, (4.14) and (4.18) have a strong solution and every strong solution leaves the constraint set (`thesisComplex_orbit_not_propagate_unconditional`, `symComplexB_not_propagate_unconditional`). The density conjectures themselves are true on every bounded domain (`thesisComplex_dense_literal`, `dense_HcurlM_inter_HdivZero`); the invalid step is the inference that `H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`: its closure has infinite codimension (`not_dense_TSD_inter_HcurlZero`, `not_TSD_le_span_closure_sup_finiteDimensional`), and on domains star-shaped with respect to a ball it is exactly `L²(TSD₀)` (`prop417_density_gap`). The failure starts at the boundary: TSD propagates in the interior at unit speed, and for the datum `(0, 0, β)` the violation is present in the boundary layer (`thesisComplex_TSD_depDomain`, `thesisComplex_beta_violation_boundary_layer`). What survives on bounded domains: Props 4.16 and 4.18, and Props 4.17/4.19 on the largest invariant constraint space `K* ⊊ K` (`thesisComplex_prop_4_17_max`, `symComplexB_prop_4_19_max`). On the box `(0, ½)³` with the boundary conditions of Prop 4.17, in a parity model, `K*` consists exactly of the stationary data, and forward invariance alone already forces this (`thesisBox_mem_Kmax_iff`, `thesisBox_forward_iff`); with tensorial mirror conditions Props 4.17 and 4.19 hold (`mirror_prop_4_17_exists`, `mirror_prop_4_19_exists`). For the boundary conditions as printed in Prop 4.19 (`symComplexD`), the projection hypothesis and the density fail (`symComplexD_not_projection_hyp`, `symComplexD_not_dense`).
+- **Props 4.17, 4.19**: the density conjectures are unnecessary (`prop_4_17`), and the projection hypothesis is necessary for the conclusion (`prop_4_17_necessary`, `prop_4_17_iff`). Without a boundary the projection conjecture is a theorem and Props 4.17 and 4.19 hold with no extra hypothesis, with existence of solutions: on 𝕋³ (`projKc_mem_domL`, `prop_4_17_torus_exists`, `prop_4_19_torus_exists`) and on ℝ³ (`Whole.projKc_mem_domL`, `prop_4_17_whole_exists`, `prop_4_19_whole_exists`, and for real fields `real_prop_4_17_whole_exists`). On every nonempty bounded open `Ω ⊆ ℝ³` both projection hypotheses are false for the thesis's complexes, so Props 4.17 and 4.19 are vacuous as stated (`thesisComplex_not_projection_hyp`, `thesisComplex_not_projection_hyp2`, `symComplexB_not_projection_hyp`). Their conclusions fail too, with no extra hypothesis: for explicit TSD data, (4.14) and (4.18) have a strong solution and every strong solution leaves the constraint set (`thesisComplex_orbit_not_propagate_unconditional`, `symComplexB_not_propagate_unconditional`). The density conjectures themselves are true on every bounded domain (`thesisComplex_dense_literal`, `dense_HcurlM_inter_HdivZero`); the invalid step is the inference that `H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`: its closure has infinite codimension (`not_dense_TSD_inter_HcurlZero`, `not_TSD_le_span_closure_sup_finiteDimensional`), and on domains star-shaped with respect to a ball it is exactly `L²(TSD₀)` (`prop417_density_gap`). The failure starts at the boundary: TSD propagates in the interior at unit speed, and for the datum `(0, 0, β)` the violation is present in the boundary layer (`thesisComplex_TSD_depDomain`, `thesisComplex_beta_violation_boundary_layer`). What survives on bounded domains: Props 4.16 and 4.18, and Props 4.17/4.19 on the largest invariant constraint space `K* ⊊ K` (`thesisComplex_prop_4_17_max`, `symComplexB_prop_4_19_max`). On every open cube, `(0, π)³` included, with the boundary conditions of Prop 4.17, `K*` consists exactly of the stationary data, and forward invariance alone already forces this (`openCube_mem_Kmax_iff'`, `openCube_forward_iff`, `piCube_mem_Kmax_iff`; proved in a parity model of `(0, ½)³`, `thesisBox_mem_Kmax_iff`, `thesisBox_forward_iff`, which `Feec.Ch4.BoxIdent` identifies with the bounded-domain complex); with tensorial mirror conditions, in the parity model, Props 4.17 and 4.19 hold (`mirror_prop_4_17_exists`, `mirror_prop_4_19_exists`). For the boundary conditions as printed in Prop 4.19 (`symComplexD`), the projection hypothesis and the density fail (`symComplexD_not_projection_hyp`, `symComplexD_not_dense`), and on the unit ball so does the conclusion: for an explicit TSD datum the unique strong solution leaves the constraint set (`symComplexD_ball_not_propagate_unconditional`).
 - **(5.1)**: exactness at `Ṽ¹` is used but never proved (`exact_mid`).
 - **Prop 5.4**: exactness at `V_h¹` cannot be dropped (`prop54_counterexample_noTopExact`).
 - **Prop 6.2**: false as stated; it holds exactly under compatibility conditions (C1)–(C3) (`prop_6_2_false`, `prop_6_2`).
@@ -112,21 +115,27 @@ built:
   (`WeakEB.mem_TSD_univ`), which are assumed, not constructed. Density of `L²(TSD) ∩ H̊(curl)` in
   `L²(TSD₀)` is proved for domains star-shaped with respect to a ball, not for Lipschitz domains.
 * The box `(0, ½)³` (`Feec.Ch4.Box*`): parity subspaces of the 𝕋³ model, encoding the thesis's
-  boundary conditions or tensorial mirror conditions. These subspaces are not identified with the
-  Sobolev and trace spaces of the box.
+  boundary conditions or tensorial mirror conditions. For the thesis's conditions,
+  `Feec.Ch4.BoxIdent` identifies them (real fields, by restriction) with `H̊¹`, `H̊(curl)`,
+  `H(curl)`, `H(div)` and `L²(TSD)` of the bounded-domain model on `(0, ½)³`, and carries the results
+  to every open cube by `x ↦ a x + b`. The mirror and even (Neumann) classes are not identified.
 
 The thesis states its Ch. 4 results with boundary conditions on a bounded `Ω` (§4.10, §6.3), so
 the bounded-domain modules are the faithful setting; 𝕋³ and ℝ³ have no boundary and serve as a
 contrast. Verdicts: Props 4.17 and 4.19 hold on 𝕋³ and ℝ³ and fail on every bounded domain; on
-the box with the boundary conditions of Prop 4.17 only stationary data propagate, and with mirror
-conditions both propositions hold. For the boundary conditions printed in Prop 4.19
-(`symComplexD`), the hypotheses fail and the conclusion is not decided, nor is whether its `K*`
-is nonzero. The Ch. 6 weak-symmetry system on bounded domains loses TSD and the symmetry of `B`
-(`Feec.Ch6.Bounded.bggComplex_verdict`), with homogeneous boundary conditions and zero forcing,
-and propagates TSD on ℝ³ (`Feec.Ch6.Whole.bggWhole_verdict`). Not formalized for Ch. 6: the
-multiplier form (6.2), the transfer of the failure to the semi-discrete scheme (6.5), and its
-bearing on Ch. 7, which states no boundary conditions and whose plane-wave exact solution does
-not satisfy the homogeneous ones.
+every open cube with the boundary conditions of Prop 4.17 only stationary data propagate, and on
+the box with mirror conditions (parity model) both propositions hold. For the boundary conditions
+printed in Prop 4.19 (`symComplexD`), the hypotheses fail, and the conclusion fails on the unit
+ball (`Feec.BoundedSymDual`); other domains, and whether its `K*` is nonzero, are not decided. On
+a general bounded domain no non-stationary element of `K*` is known; `Feec.Ch4.BoundedKstar`
+reduces the question to the existence of a nonzero TSD eigenfield of `curl* curl`, under the
+explicit hypothesis `EigenDense` (pure point spectrum), which is proved on 𝕋³ but for no bounded
+domain (it needs Rellich–Kondrachov and Maxwell compactness). The Ch. 6 weak-symmetry system on
+bounded domains loses TSD and the symmetry of `B` (`Feec.Ch6.Bounded.bggComplex_verdict`), with
+homogeneous boundary conditions and zero forcing, and propagates TSD on ℝ³
+(`Feec.Ch6.Whole.bggWhole_verdict`). Not formalized for Ch. 6: the multiplier form (6.2), the
+transfer of the failure to the semi-discrete scheme (6.5), and its bearing on Ch. 7, which states
+no boundary conditions and whose plane-wave exact solution does not satisfy the homogeneous ones.
 
 Pseudo-Riemannian geometry is done in components at the jet level. Out of scope: the nonlinear
 Einstein–Bianchi system (§3.4), the concrete finite element computations of §5.3 (Props 5.7–5.9

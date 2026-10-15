@@ -38,8 +38,9 @@ on `𝕋³` after extension, which on `Q` adds the normal traces of the odd entr
 divergence differentiates across a face: `E_{τn} = 0` (hence `E_{nτ} = 0` by symmetry) and
 `B_{nn} = 0` for Prop 4.17, `S_{τn} = 0` and `T_{nn} = 0` for Prop 4.19. So the propagated
 constraint space is TSD on `Q` *with these wall conditions*, not the thesis' `L²(TSD)`. That
-these parity spaces are the bounded-domain Sobolev spaces with the stated traces is not proved
-(it needs traces on `∂Q`).
+these parity spaces are the bounded-domain Sobolev spaces with the stated traces is not proved:
+`Feec.Ch4.BoxIdent` identifies only the parity classes of the thesis' boundary conditions, and the
+repository has no bounded-domain definition of the mirror trace spaces.
 
 ## Main results
 

@@ -23,7 +23,7 @@ lake build
 
 - Stone's theorem on real Hilbert spaces (`Feec.stoneGroup`), which discharges the existence hypotheses of Ch. 4.
 - The abstract Hodge wave equation (Thms 4.6–4.7), Brezzi theory, the semi-discrete error estimate (Thm 4.14), and the BGG weak-symmetry construction (Ch. 5–6).
-- Props 4.17/4.19: proved on 𝕋³ and ℝ³; on every bounded domain their hypotheses and conclusions fail, and they hold on the largest invariant constraint space, which for Prop 4.17 on a box contains only stationary data. The Ch. 6 method inherits the bounded-domain failure.
+- Props 4.17/4.19: proved on 𝕋³ and ℝ³; on every bounded domain their hypotheses and conclusions fail, and they hold on the largest invariant constraint space, which for Prop 4.17 on every cube contains only stationary data. The Ch. 6 method inherits the bounded-domain failure.
 - Eighteen corrections to the thesis, each pinned to a Lean declaration, e.g. Prop 2.4(b) is off by a factor ½, "Fredholm ⇒ closed" is false, Prop 6.2 needs compatibility conditions.
 
 See [`docs/OVERVIEW.md`](docs/OVERVIEW.md) for the module map, the full list of corrections and the

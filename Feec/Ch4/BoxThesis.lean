@@ -27,8 +27,9 @@ particular Stone's, `Feec.HilbertComplex2.waveGroup`).
 
 The forward-only version (`t ≥ 0`) is `Feec.Box.thesisBox_forward_iff` in `Feec.Ch4.BoxForward`.
 
-The identification of the parity spaces with the Sobolev spaces of the box (traces) is not
-proved; see `Feec.Ch4.Box`.
+The parity spaces are identified with the bounded-domain spaces of `Q` in `Feec.Ch4.BoxIdent`,
+which transfers these results to `Feec.BoundedDomain.thesisComplex` on every open cube
+(`Feec.BoxIdent.openCube_mem_Kmax_iff'`).
 
 ## References
 

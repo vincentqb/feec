@@ -82,13 +82,16 @@ the first two hypotheses of Theorem 4.4, transported to this `D(L)` with
 `K = {0} × L²(TSD) × L²(TSD)`, are false (`P_K D(L) ⊄ D(L)`; `D(L) ∩ K` not dense in `K`). The
 proof's argument therefore does not apply with either placement of the boundary conditions.
 
-## Thesis gap (open)
+## The conclusion of Prop 4.19 for `symComplexD`
 
-Whether the *conclusion* of Prop 4.19 holds for `symComplexD` is not settled. A refutation in the
+Settled negatively on the unit ball in `Feec.Ch4.BoundedSymDual`
+(`Feec.BoundedSymDual.symComplexD_ball_not_propagate_unconditional`), with a test vector of the
+form `N = (0, 0, curl sym ∇v)`, `v ∈ H̊¹`; other domains are not decided. The rest of this section
+records the approach tested here. A refutation in the
 style of `Feec.Ch4.BoundedSym` needs a vector `N ⊥ D(L) ∩ K` with `⟪L x₀, N⟫ ≠ 0` for some
 `x₀ ∈ D(L) ∩ K`. The only candidate tested is the electric constant `N = (0, diag(1, -1, 0), 0)`,
 which gives `0` (`symComplexD_inner_adjoint_d1_constS`). The magnetic constant
-`N = (0, 0, diag(1, -1, 0))` is not tested: it would need `⟪B, diag(1, -1, 0)⟫ = 0` on
+`N = (0, 0, diag(1, -1, 0))` is not tested (nor in `Feec.Ch4.BoundedSymDual`): it would need `⟪B, diag(1, -1, 0)⟫ = 0` on
 `L²(TSD) ∩ H̊(sym curl, T)` (equivalently `⟪sym curl B, β⟫ = 0`, `inner_constT_eq_neg_inner_betaS`)
 and `⟪curl E, diag(1, -1, 0)⟫ ≠ 0` for some `E ∈ L²(TSD) ∩ H(curl, S) ∩ H̊(div div, S)`; the latter
 is a boundary term (`diag(1, -1, 0) ∉ H̊(sym curl, T)`, `constT_not_mem_symComplexD_adjoint_d1`),

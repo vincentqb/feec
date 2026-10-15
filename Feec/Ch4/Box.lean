@@ -49,13 +49,15 @@ Normalization: `𝕋³` has volume `1` and `Q` volume `1/8`, so on each parity c
 inner product is `8` times the `L²(Q)` inner product of the restrictions; the factor is the same
 in every slot and does not affect adjoints, the Hodge wave operator or invariant subspaces.
 
-What is not proved: that these parity spaces are the bounded-domain spaces of
-`Feec.Ch4.BoundedDomain` for `Ω = Q`, i.e. that extension by parity is an isometry (up to the
-factor `8`) from `H̊¹(Q)`, `H̊(curl, Q)`, `H(curl, Q)` onto the parity subspaces of `H¹(𝕋³)`,
-`H(curl, 𝕋³)`. This is the classical reflection principle (the odd extension of a field with
-vanishing trace, and the even extension of any field, have no jumps), but it needs traces on
-`∂Q`, which are not in the repository. The box model here is therefore the box *with the
-boundary conditions encoded by parities*.
+Identification: `Feec.Ch4.BoxIdent` proves that, for real fields, restriction to `Q` is a
+bijection (norms scaled by `8^{-1/2}`, operators intertwined) from these parity spaces onto the
+bounded-domain spaces of `Feec.Ch4.BoundedDomain` for `Ω = Q`: `ParV ∩ H¹` onto `H̊¹(Q)`,
+`ParRow 1 ∩ H(curl)` onto `H̊(curl, Q)`, `ParRow (-1) ∩ H(curl)` onto `H(curl, Q)`,
+`ParRow 1 ∩ H(div)` onto `H(div, Q)` and `boxTSD (±1)` onto `L²(TSD)(Q)`
+(`Feec.BoxIdent.bijOn_resB_HcurlZero`, `Feec.BoxIdent.bijOn_resBV_H1Zero`, ...), and transfers the
+results below to `Feec.BoundedDomain.thesisComplex` on `Q` and on every open cube
+(`Feec.BoxIdent.openCube_mem_Kmax_iff'`). That file does not identify the even (Neumann) or
+mirror parity classes.
 
 ## Main results
 

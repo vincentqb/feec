@@ -23,11 +23,18 @@ Sequel to `Feec.Ch4.BoundedDomain` (same model: `Ω ⊆ ℝ³` open and bounded,
    `L²(Ω; ℝ³ˣ³)`, and with `ι = Fin 3` identifies `L2V Ω` with `L²(Ω; ℝ³)`. The zero-mean theorem
    behind the refutation of the first projection hypothesis is restated for Bochner fields.
 3. *The second projection hypothesis of Prop 4.17 is false* (`not_projection_hyp_adjoint`,
-   `HcurlM_not_projection`, `thesisComplex_not_projection_hyp2`, `not_projection_hyp_S2`): on every
+   `HcurlM_not_projection`, `thesisComplex_not_projection_hyp2`, `not_projection_hyp_S2`,
+   Bochner form `HcurlM_not_projection_bochner`): on every
    nonempty bounded open `Ω ⊆ ℝ³` (ball, cube, smooth or not),
    `P_{L²(TSD)} H(curl, M) ⊄ H(curl, M)`. Consequently the hypothesis `hPD` of
    `Feec.Constraints.prop_4_17` fails a second, independent time: through its `B`-component, for
-   every choice of the `E`-constraint space `S1`.
+   every choice of the `E`-constraint space `S1`. These refutations are non-constructive (closed
+   graph theorem): no single `B ∈ H(curl)` with `P_{L²(TSD)} B ∉ H(curl)` is exhibited.
+4. *Quantitative form* (`projection_unbounded`): for every `C` there is a smooth curl-free `E`
+   with `P_{L²(TSD)} E` smooth and `‖curl P_{L²(TSD)} E‖ > C ‖E‖ = C ‖E‖_{H(curl)}`: `P_{L²(TSD)}`
+   is unbounded for the `H(curl)` graph norm on smooth fields.
+5. *General formula* (`starProjection_smoothField_eq`, `starProjection_grad`):
+   `P_{L²(TSD)} ∇w = dev sym ∇w` for `C²` fields `w` with `div dev sym ∇w = 0`.
 
 ## The mathematics of 3
 
@@ -50,11 +57,18 @@ everywhere-defined linear map on the Banach space `graph(d1*)` with closed graph
 A single explicit counterexample (not formalized; it needs singular integrals): on the cube
 `(0, 1)³`, let `φ = Re √(x₁ + i x₂)`, harmonic in the cube with `∇φ ~ ρ^{-1/2}`,
 `∇²φ ~ ρ^{-3/2}` near the edge `ρ = |(x₁, x₂)| = 0`; then `E = ∇(φ e₃) ∈ H(curl)` (`curl E = 0`),
-`P_{L²(TSD)} E = sym E`, but `curl (sym E) ∉ L²` since `∫ ρ^{-3} ρ dρ = ∞`. On a ball, use
-`w` harmonic and divergence-free with boundary trace in `H^{1/2} \ H^{3/2}`. In general,
-`P_{L²(TSD)} ∇w = dev sym ∇w` for every `w ∈ H¹` with `div dev sym ∇w = 0`, and
-(on a Lipschitz domain) `curl dev sym ∇w ∈ L²` forces `curl w ∈ H¹` (it is `½ sym ∇ curl w`
-by Lemma 3.5; Korn's inequality), which `w ∈ H¹` does not.
+`P_{L²(TSD)} E = sym E`, but `curl (sym E) ∉ L²` since `∫ ρ^{-3} ρ dρ = ∞`.
+
+*General form* (`starProjection_grad`, formalized for `C²` fields on `ℝ³`): if
+`div dev sym ∇w = 0` in `Ω` (equivalently `Δw + ⅓ ∇ div w = 0`, a Lamé-type system), then
+`P_{L²(TSD)} ∇w = dev sym ∇w`, because `∇w - dev sym ∇w = skew ∇w + ⅓ (div w) I` is orthogonal to
+symmetric trace-free fields. *Heuristic* (not formalized): row-wise `curl ∇w = 0`, so
+`curl sym ∇w = -curl skew ∇w`, which is `±½ (∇ curl w)ᵀ` when `div w = 0` (in general the `dev`
+part adds a term in `∇ div w`); hence `curl P_{L²(TSD)} ∇w ∈ L²` asks for `∇ curl w ∈ L²`, one
+derivative more than `∇w ∈ H(curl)` provides. A counterexample must therefore have
+`curl w ∉ H¹` (harmonic gradients `w = ∇h` give `curl w = 0` and are *not* counterexamples). The
+fields `w_t` above have `‖∇ curl w_t‖ ~ t ‖∇w_t‖`, which is what the closed-graph argument uses;
+`projection_unbounded` records the resulting unboundedness without the closed graph theorem.
 
 ## Correction
 
@@ -673,5 +687,216 @@ theorem thesisComplex_not_projection_hyp2 (hΩ : IsOpen Ω) (hb : Bornology.IsBo
       projKc (L2V Ω) S1 (TSD Ω) x ∈ (thesisComplex hΩ hb).domL :=
   ⟨not_projection_hyp_adjoint hΩ hb hne _ (mem_closure_curlClosure hΩ hb),
     not_projection_hyp_S2 hΩ hb hne _ (mem_closure_curlClosure hΩ hb) S1⟩
+
+/-! ## Quantitative form: `P_{L²(TSD)}` is unbounded in the `H(curl)` graph norm -/
+
+/-- **`P_{L²(TSD)}` is unbounded for the `H(curl)` graph norm**, explicitly (no closed graph
+theorem): for every `C` there is `t` such that `E_t` is smooth, curl-free (so
+`‖E_t‖_{H(curl)} = ‖E_t‖`) and in `H(curl, M)`, `P_{L²(TSD)} E_t = B_t` is smooth and in
+`H(curl, M)`, yet `‖curl B_t‖ > C ‖E_t‖`.
+
+See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem projection_unbounded (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    (C : ℝ) : ∃ t : ℝ, curlM (gradFld t) = 0 ∧
+      smoothField hΩ hb (gradFld t) (fun ij => (contDiff_gradFld t ij).continuous) ∈ HcurlM Ω ∧
+      smoothField hΩ hb (symFld t) (fun ij => (contDiff_symFld t ij).continuous) ∈ HcurlM Ω ∧
+      (TSD Ω).starProjection
+          (smoothField hΩ hb (gradFld t) (fun ij => (contDiff_gradFld t ij).continuous)) =
+        smoothField hΩ hb (symFld t) (fun ij => (contDiff_symFld t ij).continuous) ∧
+      C * ‖smoothField hΩ hb (gradFld t) (fun ij => (contDiff_gradFld t ij).continuous)‖ <
+        ‖smoothField hΩ hb (curlM (symFld t))
+          (continuous_curlM fun ij => (contDiff_symFld t ij).of_le (by simp))‖ := by
+  set t : ℝ := 2 * |C| + 2
+  refine ⟨t, funext fun ij => funext fun x => curlM_gradFld t ij x,
+    (thesisComplex_adjoint_d1_iff hΩ hb).1 (smoothField_mem_adjoint hΩ hb (thesisComplex hΩ hb)
+      (mem_closure_curlClosure hΩ hb) fun ij => (contDiff_gradFld t ij).of_le (by simp)).1,
+    (thesisComplex_adjoint_d1_iff hΩ hb).1 (smoothField_mem_adjoint hΩ hb (thesisComplex hΩ hb)
+      (mem_closure_curlClosure hΩ hb) fun ij => (contDiff_symFld t ij).of_le (by simp)).1,
+    starProjection_gradFld hΩ hb t, ?_⟩
+  set E := smoothField hΩ hb (gradFld t) (fun ij => (contDiff_gradFld t ij).continuous)
+  set cB := smoothField hΩ hb (curlM (symFld t))
+    (continuous_curlM fun ij => (contDiff_symFld t ij).of_le (by simp))
+  have h1 : ‖cB‖ ^ 2 = t ^ 2 / 2 * ‖E‖ ^ 2 := norm_sq_curlSymFld hΩ hb t
+  have h2 : 0 < ‖E‖ ^ 2 := norm_sq_gradFld hΩ hb hne t
+  have hC : C ^ 2 < t ^ 2 / 2 := by
+    have := abs_nonneg C
+    have := sq_abs C
+    nlinarith
+  have key : (|C| * ‖E‖) ^ 2 < ‖cB‖ ^ 2 := by
+    rw [h1, mul_pow, sq_abs]
+    exact mul_lt_mul_of_pos_right hC h2
+  calc C * ‖E‖ ≤ |C| * ‖E‖ := mul_le_mul_of_nonneg_right (le_abs_self C) (norm_nonneg _)
+    _ < ‖cB‖ := lt_of_pow_lt_pow_left₀ 2 (norm_nonneg _) key
+
+/-! ## Bochner form of the second refutation -/
+
+variable (Ω) in
+/-- `L²(TSD)` transported to the Bochner space `L²(Ω; ℝ³ˣ³)` through `bochnerM`. -/
+abbrev TSDb : Submodule ℝ (Lp (EuclideanSpace ℝ Ix) 2 (volume.restrict Ω)) :=
+  (TSD Ω).map ((bochnerM Ω).symm.toLinearEquiv : L2M Ω →ₗ[ℝ] _)
+
+/-- `P_{TSDb} = bochnerM⁻¹ ∘ P_{L²(TSD)} ∘ bochnerM`. -/
+theorem bochnerM_starProjection_TSDb (F : Lp (EuclideanSpace ℝ Ix) 2 (volume.restrict Ω)) :
+    bochnerM Ω ((TSDb Ω).starProjection F) = (TSD Ω).starProjection (bochnerM Ω F) := by
+  rw [Submodule.starProjection_map_apply, LinearIsometryEquiv.symm_symm,
+    LinearIsometryEquiv.apply_symm_apply]
+
+/-- **Second projection hypothesis, Bochner form**: on `L²(Ω; ℝ³ˣ³)` (Frobenius norm),
+`P_{L²(TSD)} H(curl, M) ⊄ H(curl, M)`, with `L²(TSD)` and `H(curl, M)` transported through the
+isometry `bochnerM`.
+
+Correction: refutes the second conjecture of [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem HcurlM_not_projection_bochner (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    ¬ ∀ F : Lp (EuclideanSpace ℝ Ix) 2 (volume.restrict Ω), bochnerM Ω F ∈ HcurlM Ω →
+      bochnerM Ω ((TSDb Ω).starProjection F) ∈ HcurlM Ω := by
+  intro h
+  refine HcurlM_not_projection hΩ hb hne fun B hB => ?_
+  have := h ((bochnerM Ω).symm B) (by simpa using hB)
+  rwa [bochnerM_starProjection_TSDb, LinearIsometryEquiv.apply_symm_apply] at this
+
+/-! ## General form: `P_{L²(TSD)} ∇w = dev sym ∇w` -/
+
+/-- A `C¹` matrix field that is pointwise symmetric, trace-free and row-wise divergence-free lies
+in `L²(TSD)` (generalizes `symFld_mem_TSD`). -/
+theorem smoothField_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Φ : Ix → R3 → ℝ}
+    (hΦ : ∀ ij, ContDiff ℝ 1 (Φ ij)) (hsym : ∀ i j x, Φ (i, j) x = Φ (j, i) x)
+    (htr : ∀ x, ∑ i, Φ (i, i) x = 0) (hdiv : ∀ i x, ∑ j, pd j (Φ (i, j)) x = 0) :
+    smoothField hΩ hb Φ (fun ij => (hΦ ij).continuous) ∈ TSD Ω := by
+  set K := smoothField hΩ hb Φ (fun ij => (hΦ ij).continuous)
+  have hKc := coeFn_smoothField hΩ hb Φ (fun ij => (hΦ ij).continuous)
+  refine ⟨fun i j => ?_, ?_, fun φ hφ => ?_⟩
+  · refine Lp.ext ?_
+    filter_upwards [hKc (i, j), hKc (j, i)] with x h1 h2
+    rw [h1, h2, hsym]
+  · simp only [Fin.sum_univ_three]
+    refine Lp.ext ?_
+    filter_upwards [Lp.coeFn_add (K (0, 0) + K (1, 1)) (K (2, 2)),
+      Lp.coeFn_add (K (0, 0)) (K (1, 1)), hKc (0, 0), hKc (1, 1), hKc (2, 2),
+      Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x h1 h2 h3 h4 h5 h6
+    rw [h1, Pi.add_apply, h2, Pi.add_apply, h3, h4, h5, h6]
+    simpa [Fin.sum_univ_three] using htr x
+  · have h1 : ∀ ij : Ix, ∫ x, K ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω =
+        -∫ x, φ ij.1 x * pd ij.2 (Φ ij) x ∂volume.restrict Ω := fun ij => by
+      rw [integral_congr_ae (g := fun x => pd ij.2 (φ ij.1) x * Φ ij x)
+        ((hKc ij).mono fun x hx => by simp only; rw [hx, mul_comm]),
+        integral_pd_mul (hφ ij.1) (hΦ ij) ij.2]
+    simp only [h1, Fintype.sum_prod_type, Finset.sum_neg_distrib, neg_eq_zero]
+    refine Finset.sum_eq_zero fun i _ => ?_
+    rw [← integral_finsetSum _ fun j _ => integrable_mul_of_compact (hφ i).continuous
+      (hφ i).hasCompactSupport (continuous_pd (hΦ _) _)]
+    simp [← Finset.mul_sum, hdiv]
+
+/-- A continuous matrix field whose symmetric part is a scalar multiple of the identity
+(`R + Rᵀ = s I`, i.e. `R` = skew + scalar · I) is orthogonal to `L²(TSD)`. -/
+theorem inner_smoothField_eq_zero_of_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {R : Ix → R3 → ℝ} (hR : ∀ ij, Continuous (R ij)) {s : R3 → ℝ} (hs : Continuous s)
+    (hRs : ∀ i j x, R (i, j) x + R (j, i) x = if i = j then s x else 0)
+    {B : L2M Ω} (hB : B ∈ TSD Ω) : ⟪smoothField hΩ hb R hR, B⟫ = 0 := by
+  set S := smoothField hΩ hb R hR
+  have hS := coeFn_smoothField hΩ hb R hR
+  set sL : L2 Ω := (memLp_of_continuous hΩ hb hs).toLp _
+  have hsL := MemLp.coeFn_toLp (memLp_of_continuous hΩ hb hs)
+  have hsum : ∀ i j, S (i, j) + S (j, i) = if i = j then sL else 0 := fun i j => by
+    split_ifs with h
+    · refine Lp.ext ?_
+      filter_upwards [Lp.coeFn_add (S (i, j)) (S (j, i)), hS (i, j), hS (j, i), hsL]
+        with x h1 h2 h3 h4
+      rw [h1, Pi.add_apply, h2, h3, h4, hRs]
+      simp [h]
+    · refine Lp.ext ?_
+      filter_upwards [Lp.coeFn_add (S (i, j)) (S (j, i)), hS (i, j), hS (j, i),
+        Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x h1 h2 h3 h4
+      rw [h1, Pi.add_apply, h2, h3, h4, hRs]
+      simp [h]
+  rw [PiLp.inner_apply]
+  have e1 : ∑ ij : Ix, ⟪S ij, B ij⟫ = ∑ ij : Ix, ⟪S ij.swap, B ij.swap⟫ :=
+    Fintype.sum_equiv (Equiv.prodComm _ _) _ _ fun _ => rfl
+  have e2 : ∑ ij : Ix, ⟪S ij, B ij⟫ + ∑ ij : Ix, ⟪S ij.swap, B ij.swap⟫ = 0 := by
+    rw [← Finset.sum_add_distrib]
+    have h3 : ∀ ij : Ix, ⟪S ij, B ij⟫ + ⟪S ij.swap, B ij.swap⟫ =
+        if ij.1 = ij.2 then ⟪sL, B (ij.1, ij.1)⟫ else 0 := by
+      rintro ⟨i, j⟩
+      simp only [Prod.swap_prod_mk]
+      rw [hB.1 j i, ← inner_add_left, hsum]
+      split_ifs with h
+      · subst h; rfl
+      · exact inner_zero_left _
+    rw [Finset.sum_congr rfl fun ij _ => h3 ij, Fintype.sum_prod_type]
+    simp only [Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
+    rw [← inner_sum, hB.2.1, inner_zero_right]
+  linarith
+
+/-- **General formula for `P_{L²(TSD)}` on smooth fields**: if `D` is a `C¹` symmetric, trace-free,
+row-wise divergence-free field and `G + Gᵀ - 2D = s I` (so `G - D` = skew + scalar · I), then
+`P_{L²(TSD)} G = D`. -/
+theorem starProjection_smoothField_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {G D : Ix → R3 → ℝ} (hG : ∀ ij, Continuous (G ij)) (hD : ∀ ij, ContDiff ℝ 1 (D ij))
+    (hsym : ∀ i j x, D (i, j) x = D (j, i) x) (htr : ∀ x, ∑ i, D (i, i) x = 0)
+    (hdiv : ∀ i x, ∑ j, pd j (D (i, j)) x = 0) {s : R3 → ℝ} (hs : Continuous s)
+    (hGD : ∀ i j x, G (i, j) x + G (j, i) x - 2 * D (i, j) x = if i = j then s x else 0) :
+    (TSD Ω).starProjection (smoothField hΩ hb G hG) =
+      smoothField hΩ hb D (fun ij => (hD ij).continuous) := by
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+    (smoothField_mem_TSD hΩ hb hD hsym htr hdiv) fun B hB => ?_
+  have hR : ∀ ij, Continuous (fun x => G ij x - D ij x) := fun ij =>
+    (hG ij).sub (hD ij).continuous
+  have e : smoothField hΩ hb G hG - smoothField hΩ hb D (fun ij => (hD ij).continuous) =
+      smoothField hΩ hb (fun ij x => G ij x - D ij x) hR := by
+    refine (WithLp.ext_iff 2).2 (funext fun ij => Lp.ext ?_)
+    filter_upwards [Lp.coeFn_sub (smoothField hΩ hb G hG ij)
+        (smoothField hΩ hb D (fun ij => (hD ij).continuous) ij),
+      coeFn_smoothField hΩ hb G hG ij, coeFn_smoothField hΩ hb D (fun ij => (hD ij).continuous) ij,
+      coeFn_smoothField hΩ hb _ hR ij] with x h1 h2 h3 h4
+    simp only [PiLp.sub_apply] at h1 ⊢
+    rw [h1, Pi.sub_apply, h2, h3, h4]
+  rw [e]
+  refine inner_smoothField_eq_zero_of_mem_TSD hΩ hb hR hs (fun i j x => ?_) hB
+  have := hGD i j x
+  rw [hsym j i x]
+  linarith
+
+/-- `C²` functions have `C¹` partial derivatives. -/
+theorem contDiff_pd {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) : ContDiff ℝ 1 (pd k f) := by
+  unfold pd
+  exact (hf.fderiv_right (by norm_num)).clm_apply contDiff_const
+
+/-- The gradient `(∇w)_{ij} = ∂_j w_i` of a vector field `w`. -/
+def gradW (w : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij => pd ij.2 (w ij.1)
+
+/-- `dev sym ∇w = ½ (∇w + ∇wᵀ) - ⅓ (div w) I`. -/
+def devSymGrad (w : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij x =>
+  (pd ij.2 (w ij.1) x + pd ij.1 (w ij.2) x) / 2 -
+    (if ij.1 = ij.2 then (1 : ℝ) else 0) * (∑ k, pd k (w k) x) / 3
+
+theorem contDiff_devSymGrad {w : Fin 3 → R3 → ℝ} (hw : ∀ i, ContDiff ℝ 2 (w i)) (ij : Ix) :
+    ContDiff ℝ 1 (devSymGrad w ij) :=
+  (((contDiff_pd (hw _) _).add (contDiff_pd (hw _) _)).div_const 2).sub
+    ((contDiff_const.mul (ContDiff.sum fun k _ => contDiff_pd (hw k) k)).div_const 3)
+
+/-- **`P_{L²(TSD)} ∇w = dev sym ∇w`** for a `C²` vector field `w` on `ℝ³` with
+`div dev sym ∇w = 0` in `Ω` (i.e. `Δw + ⅓ ∇ div w = 0`): `∇w - dev sym ∇w = skew ∇w + ⅓ (div w) I`
+is orthogonal to `L²(TSD)`. Generalizes `starProjection_gradFld` (`w = w_t`, `div w_t = 0`).
+
+See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem starProjection_grad (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {w : Fin 3 → R3 → ℝ}
+    (hw : ∀ i, ContDiff ℝ 2 (w i)) (hdiv : ∀ i x, ∑ j, pd j (devSymGrad w (i, j)) x = 0) :
+    (TSD Ω).starProjection
+        (smoothField hΩ hb (gradW w) fun ij => continuous_pd ((hw ij.1).of_le (by norm_num)) ij.2) =
+      smoothField hΩ hb (devSymGrad w) fun ij => (contDiff_devSymGrad hw ij).continuous := by
+  refine starProjection_smoothField_eq hΩ hb _ (contDiff_devSymGrad hw) (fun i j x => ?_)
+    (fun x => ?_) hdiv (s := fun x => 2 / 3 * ∑ k, pd k (w k) x)
+    (continuous_const.mul (continuous_finsetSum _ fun k _ =>
+      continuous_pd ((hw k).of_le (by norm_num)) k)) (fun i j x => ?_)
+  · rcases eq_or_ne i j with rfl | h
+    · rfl
+    · simp [devSymGrad, h, h.symm, add_comm]
+  · simp only [devSymGrad, ↓reduceIte, one_mul, Fin.sum_univ_three]
+    ring
+  · rcases eq_or_ne i j with rfl | h
+    · simp only [gradW, devSymGrad, ↓reduceIte]
+      ring
+    · simp only [gradW, devSymGrad, h, ↓reduceIte]
+      ring
 
 end Feec.BoundedDomain

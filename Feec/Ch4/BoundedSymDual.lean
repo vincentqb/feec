@@ -47,7 +47,8 @@ carries the sup norm, so `B` is not `Metric.ball 0 1`) **TSD does not propagate*
 
 ## Main results
 
-* **`symComplexD_ball_not_propagate`**, **`symComplexD_ball_not_propagate_unconditional`**: the
+* **`symComplexD_ball_not_propagate`**, **`symComplexD_ball_not_propagate_unconditional`**,
+  `symComplexD_ball_not_propagate_TSDSk`: the
   TSD datum `x₀ ∈ D(L) ∩ K` has, on every `[0, T]`, `T > 0`, a unique strong solution (Stone's
   theorem), and it leaves `K = {0} × L²(TSD) × L²(TSD)`; `x₀` also lies in the variant
   `{0} × (L²(TSD) ∩ ker d0*) × L²(TSD)` of `Feec.Ch4.BoundedSymExt`.
@@ -64,7 +65,10 @@ carries the sup norm, so `B` is not `Metric.ball 0 1`) **TSD does not propagate*
 `H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)` and `K = {0} × L²(TSD) × L²(TSD)`: the
 conclusion is false on the unit ball of `ℝ³`. With the placement of the boundary conditions used
 in the proof (`symComplexB`) it is false on every bounded domain (`Feec.Ch4.BoundedSym`), so on the
-unit ball Prop 4.19 fails with either placement.
+unit ball the conclusion of Prop 4.19 fails with either placement. Prop 4.19 itself is an
+implication whose projection and density hypotheses already fail on bounded domains
+(`Feec.Ch4.BoundedSymExt`), so what is refuted here is its conclusion (TSD propagation for every
+TSD datum of the printed data space), not the implication.
 
 ## Scope
 
@@ -971,6 +975,20 @@ theorem symComplexD_ball_not_propagate_unconditional :
   have skew := H.neg_waveOp_isSkewAdjoint.isSkewSymm H.neg_waveOp_isSkewAdjoint.dense_domain
   exact ⟨hU, fun U hU' => strongSolution_unique _ skew hU' hU,
     symComplexD_ball_not_propagate.2.2.2 T hT _ hU⟩
+
+/-- **The `TSDSk` variant, stated directly**: for `K = {0} × (L²(TSD) ∩ ker d0*) × L²(TSD)`,
+the datum `x₀` lies in `D(L) ∩ K` and, for every `T > 0`, every strong solution of (4.18) on
+`[0, T]` from `x₀` leaves `K` (it already leaves the larger `{0} × L²(TSD) × L²(TSD)`). -/
+theorem symComplexD_ball_not_propagate_TSDSk :
+    x0 ∈ (symComplexD isOpen_ball3 isBounded_ball3).domL ∧
+      x0 ∈ Kc (L2 ball3) (TSDSk ball3 isOpen_ball3 isBounded_ball3) (TSDT ball3) ∧
+      ∀ T > 0, ∀ U : ℝ → Tot (L2 ball3) (L2S ball3) (L2T ball3),
+        IsStrongSolution (-(symComplexD isOpen_ball3 isBounded_ball3).waveOp) T x0 0 U →
+          ∃ t ∈ Icc 0 T, U t ∉ Kc (L2 ball3) (TSDSk ball3 isOpen_ball3 isBounded_ball3)
+            (TSDT ball3) := by
+  refine ⟨x0_mem_domL, symComplexD_ball_not_propagate_unconditional.2.2.1, fun T hT U hU => ?_⟩
+  obtain ⟨t, ht, hnot⟩ := symComplexD_ball_not_propagate.2.2.2 T hT U hU
+  exact ⟨t, ht, fun h => hnot (Kc_mono inf_le_left le_rfl h)⟩
 
 /-- **`K*` does not contain `D(L) ∩ K`** on the unit ball: `x₀ ∈ D(L) ∩ K` but `x₀ ∉ K*`, for
 `K = {0} × (L²(TSD) ∩ ker d0*) × L²(TSD)` and the Hodge wave group of `symComplexD`. So the

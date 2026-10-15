@@ -16,7 +16,12 @@ length 2 and every family of finite-dimensional subcomplexes satisfying the dens
 
 * **The claim is true, and more.** `HilbertComplex2.convergence_domL`: for every `ξ₀ ∈ D(L)` and
   `ξₕ(0) = Πₕ ξ₀`, `ξₕ → e^{-tL} ξ₀` in `W`, uniformly on `[0,T]` (in `L∞(0,T; W)`).
-  `HilbertComplex2.convergence_W`: for every `ξ₀ ∈ W` (the solution is then the mild solution
+  `HilbertComplex2.eqOn_waveGroup_of_isWeakSolution` identifies every weak solution of
+  (4.7)–(4.8) (`HilbertComplex2.IsWeakSolution`) with `ξ₀ ∈ D(L)` with `e^{-tL} ξ₀` on `[0,T]`, so
+  `convergence_domL_weakSolution` states the remark literally: `ξₕ → ξ` for the thesis's weak
+  solution `ξ`; `convergence_domL_classicalWeak_exists` adds existence of `ξ` in
+  `C⁰([0,T]; V) ∩ C¹([0,T]; W)` and of the discrete solutions.
+  `HilbertComplex2.convergence_W`: for every `ξ₀ ∈ W` (the limit is then the mild solution
   `e^{-tL} ξ₀` of the Stone group) and every choice of discrete data with `ξₕ(0) → ξ₀` in `W`,
   the same uniform convergence holds; `HilbertComplex2.exists_init_W` constructs such data
   (the `W`-orthogonal projection onto `Vₕ`), and `convergence_W_exists` packages both.
@@ -24,27 +29,31 @@ length 2 and every family of finite-dimensional subcomplexes satisfying the dens
   (`IsSkewAdjoint.exists_mem_domain_sq_near`, via the resolvent `c (c - A)⁻¹`), apply the
   `D(L²)` result to `ζ₀`, and control the rest by `‖e^{-tL}‖ = 1` and the `W`-stability of the
   semi-discrete flow (`Complex3.discrete_stability`, uniform in `h`).
-* **An error estimate in terms of the regularity of `ξ₀`** (`HilbertComplex2.error_bound_W`,
-  `error_bound_W'`): for every `ζ₀ ∈ D(L²)`, with `ζ` its exact solution and `e = Πₕζ − ζ`,
+* **A comparison-datum error bound** (`HilbertComplex2.error_bound_W`, `error_bound_W'`): for
+  every `ζ₀ ∈ D(L²)`, with `ζ` its exact solution and `e = Πₕζ − ζ`,
   `‖e^{-tL}ξ₀ − ξₕ(t)‖_W ≤ 2‖ξ₀ − ζ₀‖_W + ‖ξ₀ − ξₕ(0)‖_W + ‖e(t)‖_W + (1 + t)(‖e(0)‖_W +
-  ∫₀ᵗ ‖ė‖_W)`. Minimizing over `ζ₀` gives a K-functional bound between `W` and `D(L²)`; rates
-  for `ξ₀ ∈ D(L)` or `W` follow from rates of approximation of `ξ₀` by `D(L²)` data, which are
-  not formalized.
+  ∫₀ᵗ ‖ė‖_W)`. This is only a K-functional-type bound: the projection errors of `ζ` are not
+  bounded here by a norm of `ζ₀` in `D(L²)` times a function of `h`, so no genuine K-functional
+  `inf_{ζ₀} (‖ξ₀ − ζ₀‖_W + s ‖ζ₀‖_{D(L²)})` and no rate for `ξ₀ ∈ D(L)` or `W` is derived.
 * **Thm 4.14 itself does not cover `D(L)` data.** `HilbertComplex2.embW_deriv_zero_of_isWeakSol`:
   a weak solution in `C¹([0,T]; V)` (`T > 0`) has `ξ̇(0) = −L ξ₀`, so `L ξ₀ ∈ V` is necessary
   (`not_isWeakSol_of_not_mem`). `FredholmCE.cxK1_exists_not_isWeakSol`: for the complex
   `0 → ℓ² --diag(n+1)--> ℓ²` there is `ξ₀ ∈ D(L) \ D(L²)` for which no weak solution in
-  `C¹([0,T]; V)` exists for any `T > 0`; so the right side of Thm 4.14, which involves
-  `Πₕ ξ̇`, is not available, while `convergence_domL` still gives convergence (without rate).
+  `C¹([0,T]; V)` exists for any `T > 0` (the obstruction is at `t = 0`: `ξ̇(0) ∉ V`); so the
+  right side of Thm 4.14, which involves `Πₕ ξ̇`, is not available. On the same complex, the
+  coordinate truncations `V¹ₕ = V²ₕ = span{e_0, …, e_{N-1}}` (`FredholmCE.cxK1Sub`) satisfy the
+  density hypothesis (`FredholmCE.cxK1Sub_densityHyp`), and `FredholmCE.cxK1_convergence_without_C1`
+  shows the discrete solutions for this `ξ₀` converge anyway: a concrete, infinite-dimensional
+  case of convergence (without rate) outside the reach of Thm 4.14.
 
 Thesis gap: the remark after Thm 4.14 does not say which data are allowed; Thm 4.14's bound
 needs `ξ̇ ∈ V` (`ξ ∈ C¹([0,T]; V)` in the corrected form), which fails for some `D(L)` data
 (`cxK1_exists_not_isWeakSol`). Convergence nevertheless holds for all `D(L)` data, and even for
 all `W` data, but by a density argument, not from the bound of Thm 4.14.
 
-Scope: the density hypothesis `Complex3.DensityHyp` on the subcomplexes is assumed as in the
-thesis; this module does not construct a family satisfying it in infinite dimensions (in
-particular not for `cxK1`).
+Scope: in the general theorems the density hypothesis `Complex3.DensityHyp` is assumed as in the
+thesis; the only infinite-dimensional family constructed here is `FredholmCE.cxK1Sub`. Whether
+`ξ̇(t) ∉ V` for all `t` (not only `t = 0`) in the `cxK1` example is not formalized.
 
 ## References
 
@@ -316,12 +325,13 @@ theorem error_bound_W (T : ℝ) (x : H.domL) (hx : (H.waveOp ⟨x.1, x.2⟩ : To
         norm_add_le _ _
     _ ≤ _ := by rw [e1, e2, hζ0]; linarith
 
-/-- **Error bound in terms of the regularity of `ξ₀`** (K-functional form of
-`error_bound_W`): for every `x ∈ D(L²)` with exact solution `ζ` and `e = Πₕζ − ζ`,
+/-- **Comparison-datum error bound** (a K-functional-type rearrangement of `error_bound_W`):
+for every `x ∈ D(L²)` with exact solution `ζ` and `e = Πₕζ − ζ`,
 `‖e^{-tL}ξ₀ − ξₕ(t)‖_W ≤ 2‖ξ₀ − x‖_W + ‖ξ₀ − ξₕ(0)‖_W + ‖e(t)‖_W + (1 + t) ‖e(0)‖_W
 + (1 + t) ∫₀ᵗ ‖ė‖_W`.
 Only `W`-quantities of the data enter besides the elliptic-projection errors of the comparison
-solution; taking the infimum over `x` bounds the error by approximation of `ξ₀` by `D(L²)` data.
+solution. The projection errors depend on `x` and are not bounded here by `‖x‖_{D(L²)}`, so
+this is not a genuine K-functional bound and yields no rate by itself.
 See [QuennevilleBelair2015, Thm 4.14]. -/
 theorem error_bound_W' (T : ℝ) (x : H.domL)
     (hx : (H.waveOp ⟨x.1, x.2⟩ : Tot W0 W1 W2) ∈ H.domL) :
@@ -515,6 +525,66 @@ theorem convergence_W_exists {ι : Type*} {l : Filter ι} {S : ι → H.toComple
   have h0 : Tendsto (fun h => H.embW (ξh h 0)) l (𝓝 ξ₀) := by simpa only [hinit] using hvt
   exact ⟨ξh, ξh', hsol, h0, H.convergence_W hd T ξ₀ hsol h0⟩
 
+/-- For `ξ₀ ∈ D(L)`, the orbit `t ↦ e^{-tL} ξ₀` of the Stone group is a strong solution of
+`ξ' = −L ξ`, `ξ(0) = ξ₀` on `[0,T]`. See [QuennevilleBelair2015, Thm 4.6]; [Pazy1983, §1.2]. -/
+theorem isStrongSolution_waveGroup (T : ℝ) (x : H.domL) :
+    IsStrongSolution (-H.waveOp) T x 0 (fun t => H.waveGroup.S t x) := by
+  let x' : (-H.waveOp).domain := ⟨x.1, x.2⟩
+  refine ⟨fun t _ => H.waveGroup.mem_domain_apply x' t, fun t _ => ?_, ?_⟩
+  · simp only [Pi.zero_apply, add_zero]
+    rw [H.waveGroup.apply_comm x' t]
+    exact (H.waveGroup.hasDerivAt_apply x' t).hasDerivWithinAt
+  · simp [H.waveGroup.map_zero]
+
+/-- **Every thesis-class weak solution is the Stone orbit.** For `ξ₀ ∈ D(L)` and every weak
+solution `ξ` of (4.7)–(4.8) on `[0,T]` (`HilbertComplex2.IsWeakSolution`, which contains the
+thesis's class `C⁰([0,T]; V) ∩ C¹([0,T]; W)`), `ξ(t) = e^{-tL} ξ₀` on `[0,T]`. Weak ⇒ strong
+(`weak_imp_strong_unconditional`, Thm 4.7) and uniqueness of strong solutions
+(`thm_4_6_strong_unconditional`, Thm 4.6). See [QuennevilleBelair2015, Thms 4.6, 4.7]. -/
+theorem eqOn_waveGroup_of_isWeakSolution {T : ℝ} (x : H.domL) {ξ : ℝ → Tot W0 W1 W2}
+    (hξ : H.IsWeakSolution T x ξ) : EqOn ξ (fun t => H.waveGroup.S t x) (Icc 0 T) := by
+  have hstr := H.weak_imp_strong_unconditional (ξ₀ := (x : Tot W0 W1 W2)) x.2 hξ
+  obtain ⟨-, -, η, -, huniq, -⟩ := H.thm_4_6_strong_unconditional T (ξ₀ := (x : Tot W0 W1 W2)) x.2
+  intro t ht
+  rw [huniq ξ hstr ht, huniq _ (H.isStrongSolution_waveGroup T x) ht]
+
+/-- **The remark after Thm 4.14, for the thesis's weak solutions.** For `ξ₀ ∈ D(L)`, every weak
+solution `ξ` of (4.7)–(4.8) with `ξ(0) = ξ₀` and every family of discrete solutions of (4.10)
+with `ξₕ(0) = Πₕ ξ₀`: `ξₕ → ξ` in `W`, uniformly on `[0,T]`. No `D(L²)` assumption and no
+`C¹([0,T]; V)` regularity of `ξ` is needed (compare `Complex3.convergence`).
+Correction: the thesis derives this from the bound of Thm 4.14, which is not available for all
+`D(L)` data (`FredholmCE.cxK1_exists_not_isWeakSol`); the proof is `convergence_domL` plus
+`eqOn_waveGroup_of_isWeakSolution`.
+See [QuennevilleBelair2015, §4.6, remark after Thm 4.14]. -/
+theorem convergence_domL_weakSolution {ι : Type*} {l : Filter ι} {S : ι → H.toComplex3.Sub}
+    [∀ h, FiniteDimensional ℝ (S h).toV] (hd : H.toComplex3.DensityHyp l S) (T : ℝ)
+    (x : H.domL) {ξ : ℝ → Tot W0 W1 W2} (hξ : H.IsWeakSolution T x ξ)
+    {ξh ξh' : ι → ℝ → H.toComplex3.VSp}
+    (hξh : ∀ h, H.toComplex3.IsDiscreteSol (S h) T (ξh h) (ξh' h))
+    (hinit : ∀ h, ξh h 0 = H.toComplex3.ellProj (S h) (H.toV x)) :
+    TendstoUniformlyOn (fun h t => H.embW (ξh h t)) ξ l (Icc 0 T) :=
+  (H.convergence_domL hd T x hξh hinit).congr_right
+    (fun _ ht => (H.eqOn_waveGroup_of_isWeakSolution x hξ ht).symm)
+
+/-- Existence form of `convergence_domL_weakSolution`: for `ξ₀ ∈ D(L)` there is a weak solution
+`ξ` in the thesis's class `C⁰([0,T]; V) ∩ C¹([0,T]; W)` (`IsClassicalWeakSolution`), unique among
+weak solutions, and the discrete solutions with `ξₕ(0) = Πₕ ξ₀` exist and converge to it in `W`
+uniformly on `[0,T]`. See [QuennevilleBelair2015, §4.4, §4.6, remark after Thm 4.14]. -/
+theorem convergence_domL_classicalWeak_exists {ι : Type*} {l : Filter ι}
+    {S : ι → H.toComplex3.Sub} [∀ h, FiniteDimensional ℝ (S h).toV]
+    (hd : H.toComplex3.DensityHyp l S) (T : ℝ) (x : H.domL) :
+    ∃ ξ, H.IsClassicalWeakSolution T x ξ ∧
+      (∀ ξ', H.IsWeakSolution T x ξ' → EqOn ξ' ξ (Icc 0 T)) ∧
+      ∃ ξh ξh' : ι → ℝ → H.toComplex3.VSp,
+        (∀ h, H.toComplex3.IsDiscreteSol (S h) T (ξh h) (ξh' h)) ∧
+        (∀ h, ξh h 0 = H.toComplex3.ellProj (S h) (H.toV x)) ∧
+        TendstoUniformlyOn (fun h t => H.embW (ξh h t)) ξ l (Icc 0 T) := by
+  obtain ⟨ξ, hξ, huniq⟩ :=
+    H.exists_classicalWeakSolution_unconditional T (ξ₀ := (x : Tot W0 W1 W2)) x.2
+  obtain ⟨-, ξh, ξh', hsol, hinit, -⟩ := H.convergence_domL_exists hd T x
+  exact ⟨ξ, hξ, huniq, ξh, ξh', hsol, hinit,
+    H.convergence_domL_weakSolution hd T x hξ.toIsWeakSolution hsol hinit⟩
+
 end HilbertComplex2
 
 namespace FredholmCE
@@ -567,7 +637,8 @@ theorem harm_not_mem : harm ∉ invA.domain := by
 `0 → ℓ² --diag(n+1)--> ℓ²` (`FredholmCE.cxK1`) the datum `ξ₀ = (0, 0, ρ)`,
 `ρ = (1/(n+1)²)ₙ`, lies in `D(L)` but not in `D(L²)`, and for every `T > 0` there is no weak
 solution in `C¹([0,T]; V)` starting at `ξ₀`: `L ξ₀ = (0, (1/(n+1))ₙ, 0)` and
-`(1/(n+1))ₙ ∉ D(diag(n+1))`. Convergence still holds for this datum (`convergence_domL`).
+`(1/(n+1))ₙ ∉ D(diag(n+1))`. Convergence still holds for this datum (`convergence_domL`;
+concretely with coordinate truncations, `cxK1_convergence_without_C1`).
 See [QuennevilleBelair2015, Thm 4.14]. -/
 theorem cxK1_exists_not_isWeakSol :
     ∃ x : cxK1.domL, (cxK1.waveOp ⟨x.1, x.2⟩ : Tot R0 L2 L2) ∉ cxK1.domL ∧
@@ -607,6 +678,186 @@ theorem cxK1_exists_not_isWeakSol :
   refine ⟨x, fun hx => ?_, hnot⟩
   obtain ⟨ξ, ξ', h0, hξ, -⟩ := cxK1.exists_isWeakSol_unconditional 1 x hx
   exact hnot 1 one_pos ⟨ξ, ξ', h0, hξ⟩
+
+/-! ### A concrete family of subcomplexes for `cxK1`: coordinate truncation -/
+
+/-- Sequences supported in `{0, …, N-1}`: `span{e_0, …, e_{N-1}} ⊆ ℓ²`. -/
+def trunc (N : ℕ) : Submodule ℝ L2 where
+  carrier := {x | ∀ n, N ≤ n → x n = 0}
+  add_mem' {x y} hx hy n hn := by rw [lp.coeFn_add, Pi.add_apply, hx n hn, hy n hn, add_zero]
+  zero_mem' n _ := rfl
+  smul_mem' c x hx n hn := by rw [lp.coeFn_smul, Pi.smul_apply, hx n hn, smul_zero]
+
+theorem mem_trunc {N : ℕ} {x : L2} : x ∈ trunc N ↔ ∀ n, N ≤ n → x n = 0 := Iff.rfl
+
+/-- The truncation `P_N x = Σ_{n<N} x_n e_n`. -/
+def truncSum (N : ℕ) (x : L2) : L2 := ∑ n ∈ Finset.range N, lp.single 2 n (x n)
+
+theorem truncSum_apply (N : ℕ) (x : L2) (m : ℕ) :
+    truncSum N x m = if m < N then x m else 0 := by
+  unfold truncSum
+  rw [lp.coeFn_sum, Finset.sum_apply]
+  simp only [lp.single_apply]
+  split_ifs with h
+  · rw [Finset.sum_eq_single m]
+    · simp
+    · intro b _ hb; simp [Pi.single_eq_of_ne hb.symm]
+    · intro hm; exact absurd (Finset.mem_range.2 h) hm
+  · refine Finset.sum_eq_zero fun b hb => ?_
+    have : m ≠ b := fun e => h (e ▸ Finset.mem_range.1 hb)
+    simp [Pi.single_eq_of_ne this]
+
+theorem truncSum_mem (N : ℕ) (x : L2) : truncSum N x ∈ trunc N := fun n hn => by
+  rw [truncSum_apply]; simp [not_lt.2 hn]
+
+theorem truncSum_eq_self {N : ℕ} {x : L2} (hx : x ∈ trunc N) : truncSum N x = x :=
+  lp.ext <| funext fun m => by
+    rw [truncSum_apply]
+    split_ifs with h
+    · rfl
+    · exact (hx m (not_lt.1 h)).symm
+
+/-- `P_N x → x` in `ℓ²`. -/
+theorem tendsto_truncSum (x : L2) : Tendsto (fun N => truncSum N x) atTop (𝓝 x) :=
+  (lp.hasSum_single (by norm_num) x).tendsto_sum_nat
+
+instance (N : ℕ) : FiniteDimensional ℝ (trunc N) := by
+  have := FiniteDimensional.span_of_finite ℝ
+    (Set.finite_range fun n : Fin N => (lp.single 2 (n : ℕ) (1 : ℝ) : L2))
+  refine Submodule.finiteDimensional_of_le
+    (S₂ := Submodule.span ℝ (Set.range fun n : Fin N => (lp.single 2 (n : ℕ) (1 : ℝ) : L2)))
+    fun x hx => ?_
+  rw [← truncSum_eq_self hx]
+  refine Submodule.sum_mem _ fun n hn => ?_
+  have e : (lp.single 2 n (x n) : L2) = x n • lp.single 2 n (1 : ℝ) :=
+    lp.ext <| funext fun m => by
+      by_cases h : m = n
+      · subst h; simp
+      · simp [lp.single_apply, Pi.single_eq_of_ne h]
+  rw [e]
+  exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨⟨n, Finset.mem_range.1 hn⟩, rfl⟩)
+
+/-- `‖A x‖ ≤ ‖x‖`. -/
+theorem norm_A_apply_le (x : L2) : ‖A x‖ ≤ ‖x‖ :=
+  lp.norm_mono two_ne_zero fun n => by rw [A_apply]; exact norm_div_succ_le _ n
+
+/-- `A` preserves `trunc N`. -/
+theorem A_mem_trunc {N : ℕ} {x : L2} (hx : x ∈ trunc N) : A x ∈ trunc N := fun n hn => by
+  rw [A_apply, hx n hn, zero_div]
+
+/-- `trunc N ⊆ D(A⁻¹) = R(A)`. -/
+theorem trunc_le_domain (N : ℕ) : trunc N ≤ invA.domain := by
+  intro x hx
+  rw [invA_domain]
+  refine ⟨(∑ n ∈ Finset.range N, lp.single 2 n (((n : ℝ) + 1) * x n) : L2), ?_⟩
+  · refine lp.ext <| funext fun m => ?_
+    change A _ m = x m
+    rw [A_apply, lp.coeFn_sum, Finset.sum_apply]
+    simp only [lp.single_apply]
+    by_cases h : m < N
+    · rw [Finset.sum_eq_single m]
+      · have : (m : ℝ) + 1 ≠ 0 := by positivity
+        simp only [Pi.single_eq_same]; field_simp
+      · intro b _ hb; simp [Pi.single_eq_of_ne hb.symm]
+      · intro hm; exact absurd (Finset.mem_range.2 h) hm
+    · rw [Finset.sum_eq_zero fun b hb => ?_, zero_div, hx m (not_lt.1 h)]
+      have : m ≠ b := fun e => h (e ▸ Finset.mem_range.1 hb)
+      simp [Pi.single_eq_of_ne this]
+
+/-- `A⁻¹` preserves `trunc N`. -/
+theorem invA_mem_trunc {N : ℕ} (u : invA.domain) (hu : (u : L2) ∈ trunc N) :
+    invA u ∈ trunc N := fun n hn => by
+  have h := congrArg (fun y : L2 => y n) (A_invA u)
+  simp only [A_apply] at h
+  rw [hu n hn] at h
+  have : (n : ℝ) + 1 ≠ 0 := by positivity
+  simpa [div_eq_zero_iff, this] using h
+
+/-- **Coordinate truncation subcomplexes of `cxK1`**: `V⁰ₕ = 0`, `V¹ₕ = V²ₕ = span{e_0, …, e_{N-1}}`
+(`d1 = diag(n+1)` maps `V¹ₕ` into `V²ₕ`). The spectral Galerkin spaces of the model operator. -/
+def cxK1Sub (N : ℕ) : cxK1.toComplex3.Sub where
+  V0h := ⊥
+  V1h := (trunc N).comap (cxK1.d1.domain.subtype)
+  V2h := trunc N
+  d0_mem σ _ := by
+    have : σ = 0 := Subsingleton.elim _ _
+    rw [this, map_zero]; exact zero_mem _
+  d1_mem u hu := invA_mem_trunc u hu
+
+instance (N : ℕ) : FiniteDimensional ℝ (cxK1Sub N).V0h :=
+  inferInstanceAs (FiniteDimensional ℝ (⊥ : Submodule ℝ cxK1.d0.domain))
+
+instance (N : ℕ) : FiniteDimensional ℝ (cxK1Sub N).V1h :=
+  LinearEquiv.finiteDimensional (Submodule.comapSubtypeEquivOfLe (trunc_le_domain N)).symm
+
+instance (N : ℕ) : FiniteDimensional ℝ (cxK1Sub N).V2h :=
+  inferInstanceAs (FiniteDimensional ℝ (trunc N))
+
+/-- Eventually `‖x − P_N x‖² < δ`. -/
+theorem eventually_norm_sub_truncSum_sq_lt (x : L2) {δ : ℝ} (hδ : 0 < δ) :
+    ∀ᶠ N in atTop, ‖x - truncSum N x‖ ^ 2 < δ := by
+  have hε : 0 < min 1 δ := lt_min one_pos hδ
+  filter_upwards [Metric.tendsto_nhds.1 (tendsto_truncSum x) _ hε] with N hN
+  rw [dist_eq_norm, norm_sub_rev] at hN
+  have h1 : ‖x - truncSum N x‖ < 1 := hN.trans_le (min_le_left _ _)
+  have h2 : ‖x - truncSum N x‖ < δ := hN.trans_le (min_le_right _ _)
+  nlinarith [norm_nonneg (x - truncSum N x)]
+
+/-- **The truncation family satisfies the density hypothesis** (as `N → ∞`): a concrete,
+infinite-dimensional instance of `Complex3.DensityHyp`. For `u ∈ D(A⁻¹)` with `f = A⁻¹ u`, the
+approximant `A (P_N f) ∈ V¹ₕ` has `‖u − A P_N f‖ ≤ ‖f − P_N f‖` and `A⁻¹ (u − A P_N f) = f − P_N f`.
+See [QuennevilleBelair2015, §4.6] (density hypothesis). -/
+theorem cxK1Sub_densityHyp : cxK1.toComplex3.DensityHyp atTop cxK1Sub := by
+  refine ⟨fun σ δ hδ => Eventually.of_forall fun N => ⟨0, zero_mem _, ?_⟩,
+    fun u δ hδ => ?_, fun ρ δ hδ => ?_⟩
+  · have : σ = 0 := Subsingleton.elim _ _
+    subst this
+    simpa using hδ
+  · set f : L2 := invA u
+    filter_upwards [eventually_norm_sub_truncSum_sq_lt f (half_pos hδ)] with N hN
+    have hmem : A (truncSum N f) ∈ invA.domain :=
+      trunc_le_domain N (A_mem_trunc (truncSum_mem N f))
+    let v' : invA.domain := ⟨A (truncSum N f), hmem⟩
+    have hv : invA v' = truncSum N f := A_injective (A_invA v')
+    set v : cxK1.d1.domain := v'
+    refine ⟨v, A_mem_trunc (truncSum_mem N f), ?_⟩
+    have e1 : ‖u - v‖ ≤ ‖f - truncSum N f‖ := by
+      change ‖(u : L2) - A (truncSum N f)‖ ≤ _
+      rw [← A_invA u, ← map_sub]
+      exact norm_A_apply_le _
+    have e2 : cxK1.toComplex3.d1 (u - v) = f - truncSum N f := by
+      change cxK1.d1 (u - v) = _
+      rw [LinearPMap.map_sub]
+      change invA u - invA v' = _
+      rw [hv]
+    rw [e2]
+    have := norm_nonneg (u - v)
+    nlinarith
+  · filter_upwards [eventually_norm_sub_truncSum_sq_lt ρ hδ] with N hN
+    exact ⟨truncSum N ρ, truncSum_mem N ρ, hN⟩
+
+/-- **Convergence without Thm 4.14's regularity, on a concrete infinite-dimensional example.**
+For the complex `0 → ℓ² --diag(n+1)--> ℓ²` (`cxK1`) with the coordinate truncation subcomplexes
+(`cxK1Sub`, which satisfy the density hypothesis), there is `ξ₀ ∈ D(L) \ D(L²)` such that
+* for no `T > 0` is there a weak solution in `C¹([0,T]; V)` starting at `ξ₀` (it fails already at
+  `t = 0`: `ξ̇(0) = −L ξ₀ ∉ V`), so `Complex3.thm_4_14` does not apply; yet
+* for every `T`, the discrete solutions with `ξₕ(0) = Πₕ ξ₀` exist and converge to the
+  thesis-class weak solution (equivalently, to `e^{-tL} ξ₀`) in `W`, uniformly on `[0,T]`.
+See [QuennevilleBelair2015, Thm 4.14 and the remark after it]. -/
+theorem cxK1_convergence_without_C1 :
+    ∃ x : cxK1.domL, (cxK1.waveOp ⟨x.1, x.2⟩ : Tot R0 L2 L2) ∉ cxK1.domL ∧
+      (∀ T > 0, ¬ ∃ ξ ξ' : ℝ → cxK1.toComplex3.VSp, ξ 0 = cxK1.toV x ∧
+        cxK1.toComplex3.IsWeakSol T ξ ξ') ∧
+      ∀ T : ℝ, ∃ ξ, cxK1.IsClassicalWeakSolution T x ξ ∧
+        ∃ ξh ξh' : ℕ → ℝ → cxK1.toComplex3.VSp,
+          (∀ N, cxK1.toComplex3.IsDiscreteSol (cxK1Sub N) T (ξh N) (ξh' N)) ∧
+          (∀ N, ξh N 0 = cxK1.toComplex3.ellProj (cxK1Sub N) (cxK1.toV x)) ∧
+          TendstoUniformlyOn (fun N t => cxK1.embW (ξh N t)) ξ atTop (Icc 0 T) := by
+  obtain ⟨x, hx, hnot⟩ := cxK1_exists_not_isWeakSol
+  refine ⟨x, hx, hnot, fun T => ?_⟩
+  obtain ⟨ξ, hξ, -, ξh, ξh', hsol, hinit, hc⟩ :=
+    cxK1.convergence_domL_classicalWeak_exists cxK1Sub_densityHyp T x
+  exact ⟨ξ, hξ, ξh, ξh', hsol, hinit, hc⟩
 
 end FredholmCE
 

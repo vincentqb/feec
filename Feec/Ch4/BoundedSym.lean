@@ -1,7 +1,6 @@
 module
 
-public import Feec.Ch4.StoneApplications
-public import Feec.Ch4.BoundedDomainExt
+public import Feec.Ch4.BoundedSalvageDim
 
 /-!
 # Thesis Prop 4.19 on bounded domains: the strong-symmetry complex (4.16)
@@ -43,44 +42,58 @@ As in `Feec.Ch4.BoundedDomain`: `L²(Ω; ℝ³ˣ³) = L2M Ω` (nine copies of `L
   `E_t`, `B_t` of `Feec.Ch4.BoundedDomainExt`), so `hPD` fails also through the `B`-component.
 * **Density hypothesis false**: `not_dense_TSDS_inter_domain` (`H̊(curl, S) ∩ L²(TSD)` misses the
   constant `diag(1, -1, 0)`), from the zero-mean theorem `integral_eq_zero_of_mem_TSDS`.
-* **Conclusion false**: `symComplexB_not_propagate` (every strong solution from the TSD datum
-  `(0, 0, β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, leaves `K = {0} × L²(TSD) × L²(TSD)`), and
+* **Conclusion false**: `symComplexB_betaT_not_propagate` (from `(0, E₀, β)`,
+  `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, for every `E₀`, every strong solution leaves
+  `{0} × L²(TSD) × S2`), `symComplexB_not_propagate` (the TSD datum `(0, 0, β) ∈ D(L) ∩ K`), and
   `symComplexB_not_propagate_unconditional` (a strong solution exists, by Stone's theorem). The
-  abstract mechanism is `not_propagate_of_functional`.
+  mechanism is `Feec.BoundedDomain.not_propagate_of_adjoint` applied through the inclusion
+  `ι : L²(S) → L²(M)`, which maps `H̊(curl, S)` into `H̊(curl, M)`
+  (`symL2_subtypeL_mem_HcurlZero`).
 * **Diagnosis**: `symComplexB_diagnosis`. The remaining hypotheses of
   `Feec.Constraints.prop_4_17` hold on `Ω` (the thesis' third itemized check, Lemma 3.5):
   `TSDS_le_ker` (`L²(TSD) ⊆ ker div div`), `curlS_mem_TSDT`, `adjoint_curlS_mem_TSDS`.
-* **What survives** (salvage):
+* **What survives** (salvage, reusing `TSD₀` and the obstruction space of
+  `Feec.Ch4.BoundedSalvage`):
   * `symComplexB_prop_4_16`: `σ ≡ 0` and `div div E ≡ 0` propagate unconditionally, with
     existence and uniqueness; `symComplexB_prop_4_18`: the reduction (4.18) ⇔ reduced system.
-  * `sum_integral_mul_pd_eq_zero_of_mem_TSD`: every `B ∈ L²(TSD) ∩ H̊(curl, M)` is orthogonal to
-    `∇φ` for **every** `C¹` field `φ` (weakly `B n = 0`), i.e. lies in the closed subspace
-    `TSD0 = L²(TSD) ∩ H̊(div)` (`mem_TSD0_of_mem_domain`); the zero-mean theorem is the case of
-    linear `φ`.
-  * `adjoint_mem_TSD0_of_propagate`: **necessary condition** for propagation: if a strong
-    solution from `(0, E₀, B₀)` stays in `K` on some `[0, T]`, `T > 0`, then
-    `sym curl B₀ ∈ TSD0`. (Hence `β` fails: `sym curl β = -∇(x₁, -x₂, 0)`.)
+  * `mem_TSD0_of_mem_domain`: `H̊(curl, S) ∩ L²(TSD) ⊆ TSD₀` (orthogonal to `∇φ` for every `C¹`
+    field `φ`; weakly `E n = 0`). `not_finiteDimensional_obstrS`: the part of `L²(TSD) ∩ L²(S)`
+    orthogonal to `TSD₀`, hence to the closure of `H̊(curl, S) ∩ L²(TSD)`, is
+    infinite-dimensional (harmonic Hessians), so no finite-dimensional correction rescues the
+    density conjecture.
+  * `symComplexB_mem_TSD0_of_propagate`: **necessary condition** for propagation: if a strong
+    solution from `(0, E₀, B₀)` stays in `K` on some `[0, T]`, `T > 0`, then `E₀ ∈ TSD₀` and
+    `sym curl B₀ ∈ TSD₀`.
+  * `symComplexB_prop_4_19_max`: **corrected Prop 4.19**, unconditional, in maximal form. For the
+    Hodge wave group, `K* = {x | ∀ t, e^{-tL} x ∈ K} = {0} × S1* × S2*` (from
+    `Feec.Ch4.BoundedSalvageMax`) satisfies every hypothesis of `prop_4_17`, is the largest such
+    constraint space, and its data propagate; `S1* ⊆ TSD₀`; `diag(1, -1, 0) ∉ S1*`, `β ∉ S2*`;
+    the stationary data (`sym curl B = 0`: harmonic Hessians `symComplexB_hessT_mem_S2max`,
+    `diag(1, -1, 0)`) lie in `S2*`, which is infinite-dimensional.
 
 ## Correction
 
 [QuennevilleBelair2015, §4.11, Prop 4.19], on every nonempty bounded open `Ω ⊆ ℝ³` (ball, cube,
 contractible or not):
 * both projection conjectures are false, so Prop 4.19 as stated is vacuously true;
-* the conjectured density of `H̊(curl, S) ∩ L²(TSD)` in `L²(TSD)` is false;
+* the conjectured density of `H̊(curl, S) ∩ L²(TSD)` in `L²(TSD)` is false, by an
+  infinite-dimensional margin;
 * its conclusion is false: TSD data in `D(L)` whose (existing, unique) solution leaves `K`;
 * the third itemized check of the proof (`div div`, `sym curl`, `curl` preserve TSD) is correct.
 The data space `H² × H(curl, S) ∩ H̊(div div, S) × H̊(sym curl, T)` in the statement misplaces the
 boundary conditions (as noted in `Feec.Ch4.TorusSym`); this file uses the space of the proof,
 `D(L) = H̊²(R) × (H̊(curl, S) ∩ H(div div, S)) × H(sym curl, T)`.
 
-Thesis gap: the zero-mean obstruction (and its generalization `TSD0`) is a boundary effect,
+Thesis gap: the zero-mean obstruction (and its generalization `TSD₀`) is a boundary effect,
 absent on `𝕋³`, where Prop 4.19 holds (`Feec.TorusSym.prop_4_19_torus_exists`).
 
 Not formalized: `D(curl*) = H(sym curl, T)` and `D((grad grad)*) = H(div div, S)` exactly (only
 `⊇` on smooth or weakly differentiable fields); the density of `H(sym curl, T) ∩ L²(TSD)` in
 `L²(TSD)`; the closed-range property of (4.16) on `Ω`; the dual-boundary-condition variant of the
 data space (`H̊(div div, S) × H̊(sym curl, T)`), where the zero-mean argument does not apply
-directly; a maximal propagating subspace (`{x | ∀ t, e^{-tL} x ∈ K}`) and its computation.
+directly (for `B₀ ∈ H̊(sym curl, T)`, `⟪sym curl B₀, const⟫ = 0`); a non-stationary element of
+`K*` or a nonzero element of `S1*` (open; on boxes the research notes expect only static data);
+the tensorial mirror boundary conditions on boxes under which Prop 4.19 should hold.
 
 ## References
 
@@ -401,41 +414,34 @@ theorem dense_domain_curlS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
 
 /-! ## `grad grad : H̊²(Ω) → H̊(curl, S)` -/
 
-/-- The Hessian `(grad grad φ)_{ij} = ∂_j ∂_i φ`. -/
-def hessF (φ : R3 → ℝ) : Ix → R3 → ℝ := fun ij => BoundedDomain.pd ij.2 (BoundedDomain.pd ij.1 φ)
-
 /-- The double divergence `div div Ψ = Σ_{ij} ∂_i ∂_j Ψ_{ij}` of a matrix field. -/
 def divdivF (Ψ : Ix → R3 → ℝ) (x : R3) : ℝ :=
   ∑ ij : Ix, BoundedDomain.pd ij.1 (BoundedDomain.pd ij.2 (Ψ ij)) x
-
-/-- `∂_k` of a `C²` function is `C¹`. -/
-theorem contDiff_pd {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) :
-    ContDiff ℝ 1 (BoundedDomain.pd k f) :=
-  (hf.fderiv_right (m := 1) (by norm_num)).clm_apply contDiff_const
 
 theorem continuous_divdivF {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 2 (Ψ ij)) :
     Continuous (divdivF Ψ) :=
   continuous_finsetSum _ fun ij _ => continuous_pd (contDiff_pd (hΨ ij) ij.2) ij.1
 
-theorem isTest_hessF {φ : R3 → ℝ} (hφ : IsTest Ω φ) (ij : Ix) : IsTest Ω (hessF φ ij) :=
+theorem isTest_hessField {φ : R3 → ℝ} (hφ : IsTest Ω φ) (ij : Ix) : IsTest Ω (hessField φ ij) :=
   (hφ.pdiff _).pdiff _
 
 /-- The Hessian is symmetric (Schwarz). -/
-theorem hessF_swap {φ : R3 → ℝ} (hφ : ContDiff ℝ 2 φ) (i j : Fin 3) :
-    hessF φ (i, j) = hessF φ (j, i) :=
+theorem hessField_swap {φ : R3 → ℝ} (hφ : ContDiff ℝ 2 φ) (i j : Fin 3) :
+    hessField φ (i, j) = hessField φ (j, i) :=
   funext fun x => pd_pd_comm hφ j i x
 
 /-- `curl grad grad = 0`. -/
-theorem curlM_hessF {φ : R3 → ℝ} (hφ : IsTest Ω φ) (ik : Ix) (x : R3) :
-    curlM (hessF φ) ik x = 0 :=
+theorem curlM_hessField {φ : R3 → ℝ} (hφ : IsTest Ω φ) (ik : Ix) (x : R3) :
+    curlM (hessField φ) ik x = 0 :=
   curlM_gradM (φ := fun i => BoundedDomain.pd i φ)
     (fun i => (hφ.pdiff i).contDiff.of_le (by simp)) ik x
 
 /-- Integration by parts twice: `∫ ∂_j ∂_i φ ψ = ∫ φ ∂_i ∂_j ψ` for `φ ∈ C_c^∞(Ω)`, `ψ ∈ C²`. -/
-theorem integral_hessF_mul {φ ψ : R3 → ℝ} (hφ : IsTest Ω φ) (hψ : ContDiff ℝ 2 ψ) (i j : Fin 3) :
-    ∫ x, hessF φ (i, j) x * ψ x ∂volume.restrict Ω =
+theorem integral_hessField_mul {φ ψ : R3 → ℝ} (hφ : IsTest Ω φ) (hψ : ContDiff ℝ 2 ψ)
+    (i j : Fin 3) :
+    ∫ x, hessField φ (i, j) x * ψ x ∂volume.restrict Ω =
       ∫ x, φ x * BoundedDomain.pd i (BoundedDomain.pd j ψ) x ∂volume.restrict Ω := by
-  simp only [hessF]
+  simp only [hessField]
   rw [integral_pd_mul (hφ.pdiff i) (hψ.of_le (by norm_num)) j,
     integral_pd_mul hφ (contDiff_pd hψ j) i, neg_neg]
 
@@ -443,7 +449,7 @@ variable (Ω) in
 /-- The graph of `grad grad` on `C_c^∞(Ω)`, in `L²(Ω) × L²(Ω; ℝ³ˣ³)`. -/
 def hessGraph : Set (L2 Ω × L2M Ω) :=
   {p | ∃ φ : R3 → ℝ, IsTest Ω φ ∧ (p.1 : R3 → ℝ) =ᵐ[volume.restrict Ω] φ ∧
-    ∀ ij, (p.2 ij : R3 → ℝ) =ᵐ[volume.restrict Ω] hessF φ ij}
+    ∀ ij, (p.2 ij : R3 → ℝ) =ᵐ[volume.restrict Ω] hessField φ ij}
 
 variable (Ω) in
 /-- The span of `hessGraph`. -/
@@ -473,7 +479,7 @@ theorem closure_hessGraph_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
     have e1 : ∀ ij : Ix, ∫ x, c ij x * Ψ ij x ∂volume.restrict Ω =
         ∫ x, φ x * BoundedDomain.pd ij.1 (BoundedDomain.pd ij.2 (Ψ ij)) x ∂volume.restrict Ω :=
         fun ij => by
-      rw [← integral_hessF_mul hφ (hΨ ij)]
+      rw [← integral_hessField_mul hφ (hΨ ij)]
       exact integral_congr_ae ((hp2 ij).mono fun x hx => by simp only; rw [hx])
     have e2 : ∫ x, u x * divdivF Ψ x ∂volume.restrict Ω =
         ∫ x, φ x * divdivF Ψ x ∂volume.restrict Ω :=
@@ -534,14 +540,14 @@ def testFieldR {φ : R3 → ℝ} (hφ : IsTest Ω φ) : L2 Ω := hφ.memLp.toLp 
 /-- Its Hessian, as an element of `L²(S)`. -/
 def hessTestField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : R3 → ℝ} (hφ : IsTest Ω φ) :
     L2S Ω :=
-  ⟨smoothField hΩ hb (hessF φ) (fun ij => (isTest_hessF hφ ij).continuous),
-    smoothField_mem_symL2 hΩ hb _ (hessF_swap (hφ.contDiff.of_le (by simp)))⟩
+  ⟨smoothField hΩ hb (hessField φ) (fun ij => (isTest_hessField hφ ij).continuous),
+    smoothField_mem_symL2 hΩ hb _ (hessField_swap (hφ.contDiff.of_le (by simp)))⟩
 
 theorem testFieldR_mem_graph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : R3 → ℝ}
     (hφ : IsTest Ω φ) : (testFieldR hφ, hessTestField hΩ hb hφ) ∈ (hessS (Ω := Ω)).graph := by
   rw [hessS_graph hΩ hb, mem_hessSGraph]
   exact subset_closure (Submodule.subset_span ⟨φ, hφ, hφ.memLp.coeFn_toLp,
-    coeFn_smoothField hΩ hb (hessF φ) (fun ij => (isTest_hessF hφ ij).continuous)⟩)
+    coeFn_smoothField hΩ hb (hessField φ) (fun ij => (isTest_hessField hφ ij).continuous)⟩)
 
 /-- `C_c^∞(Ω) ⊆ H̊²(Ω)`. -/
 theorem testFieldR_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : R3 → ℝ}
@@ -574,11 +580,11 @@ theorem hessS_mem_curlSGraph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   have hle : hessGraphSub Ω ≤ (curlGraphSSub Ω).comap (f : L2 Ω × L2M Ω →ₗ[ℝ] _) := by
     refine Submodule.span_le.2 ?_
     rintro ⟨v, H⟩ ⟨φ, hφ, -, hp2⟩
-    refine Submodule.subset_span ⟨hessF φ, isTest_hessF hφ,
-      hessF_swap (hφ.contDiff.of_le (by simp)), fun ij => ⟨hp2 ij, ?_⟩⟩
+    refine Submodule.subset_span ⟨hessField φ, isTest_hessField hφ,
+      hessField_swap (hφ.contDiff.of_le (by simp)), fun ij => ⟨hp2 ij, ?_⟩⟩
     filter_upwards [Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x hx
     simp only [f]
-    rw [curlM_hessF hφ]
+    rw [curlM_hessField hφ]
     simpa using hx
   have h := mem_closure_hessS hΩ hb u
   rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at h
@@ -630,7 +636,7 @@ theorem inner_testFieldR (f : L2 Ω) {φ : R3 → ℝ} (hφ : IsTest Ω φ) :
 theorem inner_hessTestField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (B : L2S Ω)
     {φ : R3 → ℝ} (hφ : IsTest Ω φ) :
     ⟪B, hessTestField hΩ hb hφ⟫ =
-      ∑ ij, ∫ x, (B : L2M Ω) ij x * hessF φ ij x ∂volume.restrict Ω := by
+      ∑ ij, ∫ x, (B : L2M Ω) ij x * hessField φ ij x ∂volume.restrict Ω := by
   rw [Submodule.coe_inner, hessTestField, inner_smoothField]
 
 /-- **`(grad grad)* ⊇ div div`, weakly**: if `B ∈ L²(S)` has a weak double divergence `D`
@@ -638,7 +644,7 @@ theorem inner_hessTestField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (B :
 `(grad grad)* B = D`. -/
 theorem adjoint_hessS_of_weak (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2S Ω}
     {D : L2 Ω} (hD : ∀ φ : R3 → ℝ, IsTest Ω φ →
-      ∑ ij, ∫ x, (B : L2M Ω) ij x * hessF φ ij x ∂volume.restrict Ω =
+      ∑ ij, ∫ x, (B : L2M Ω) ij x * hessField φ ij x ∂volume.restrict Ω =
         ∫ x, D x * φ x ∂volume.restrict Ω) :
     ∃ h : B ∈ (hessS (Ω := Ω))†.domain, (hessS (Ω := Ω))† ⟨B, h⟩ = D := by
   have key : ∀ u : (hessS (Ω := Ω)).domain, ⟪D, (u : L2 Ω)⟫ = ⟪B, hessS u⟫ := by
@@ -650,7 +656,8 @@ theorem adjoint_hessS_of_weak (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B
       refine Submodule.span_le.2 ?_
       rintro ⟨v, H⟩ ⟨φ, hφ, hp1, hp2⟩
       have ev : v = testFieldR hφ := Lp.ext (hp1.trans hφ.memLp.coeFn_toLp.symm)
-      have eH : H = smoothField hΩ hb (hessF φ) (fun ij => (isTest_hessF hφ ij).continuous) :=
+      have eH : H = smoothField hΩ hb (hessField φ)
+          (fun ij => (isTest_hessField hφ ij).continuous) :=
         (WithLp.ext_iff 2).2 (funext fun ij =>
           Lp.ext ((hp2 ij).trans (coeFn_smoothField hΩ hb _ _ ij).symm))
       simp only [SetLike.mem_coe, LinearMap.mem_ker, ContinuousLinearMap.coe_coe, hG, ev, eH,
@@ -667,7 +674,7 @@ theorem adjoint_hessS_of_weak (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B
 condition). -/
 theorem mem_ker_adjoint_hessS_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2S Ω} :
     B ∈ (hessS (Ω := Ω))†.ker ↔ ∀ φ : R3 → ℝ, IsTest Ω φ →
-      ∑ ij, ∫ x, (B : L2M Ω) ij x * hessF φ ij x ∂volume.restrict Ω = 0 := by
+      ∑ ij, ∫ x, (B : L2M Ω) ij x * hessField φ ij x ∂volume.restrict Ω = 0 := by
   constructor
   · intro hB φ hφ
     obtain ⟨y, rfl, hy0⟩ := LinearPMap.mem_ker_iff.1 hB
@@ -696,11 +703,11 @@ theorem testFieldS_mem_adjoint_hessS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded
   have hΦ2 : ∀ ij, ContDiff ℝ 2 (Φ ij) := fun ij => (hΦ ij).contDiff.of_le (by simp)
   have hm := memLp_of_continuous hΩ hb (continuous_divdivF hΦ2)
   refine (adjoint_hessS_of_weak hΩ hb (D := hm.toLp _) fun φ hφ => ?_).1
-  have e1 : ∀ ij : Ix, ∫ x, ((testFieldS hΩ hb hΦ hs : L2S Ω) : L2M Ω) ij x * hessF φ ij x
+  have e1 : ∀ ij : Ix, ∫ x, ((testFieldS hΩ hb hΦ hs : L2S Ω) : L2M Ω) ij x * hessField φ ij x
       ∂volume.restrict Ω =
         ∫ x, φ x * BoundedDomain.pd ij.1 (BoundedDomain.pd ij.2 (Φ ij)) x ∂volume.restrict Ω := by
     intro ij
-    rw [← integral_hessF_mul hφ (hΦ2 ij)]
+    rw [← integral_hessField_mul hφ (hΦ2 ij)]
     refine integral_congr_ae ((coeFn_smoothField hΩ hb Φ (fun ij => (hΦ ij).continuous) ij).mono
       fun x hx => ?_)
     simp only [testFieldS] at hx ⊢
@@ -791,74 +798,6 @@ theorem not_dense_TSDS_inter_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   simp [Fintype.sum_prod_type, Fin.sum_univ_three, diagA] at h0
   linarith
 
-/-! ## An abstract obstruction to constraint propagation -/
-
-section Abstract
-
-variable {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
-  [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
-  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
-
-/-- **A functional obstruction to Props 4.17/4.19.** Let `ℓ` be a continuous functional on
-`W1` that vanishes on `V1 ∩ S1`, and `ρ ∈ V2*` with `ℓ (d1* ρ) ≠ 0`. Then every strong solution
-of the Hodge wave equation from `(0, 0, ρ)`, on any `[0, T]` with `T > 0`, leaves
-`K = {0} × S1 × S2`. Proof: if `U` stayed in `K`, `ℓ(E(t)) ≡ 0`, so `ℓ(Ė(0)) = -ℓ(d1* ρ) = 0`.
-
-(Not in the thesis; the mechanism behind `Feec.BoundedDomain.exists_data_not_propagate`.) -/
-theorem not_propagate_of_functional (H : HilbertComplex2 W0 W1 W2) (S1 : Submodule ℝ W1)
-    (S2 : Submodule ℝ W2) (ℓ : W1 →L[ℝ] ℝ) (hℓ : ∀ u : H.d1.domain, (u : W1) ∈ S1 → ℓ u = 0)
-    (ρ : H.d1†.domain) (hρ : ℓ (H.d1† ρ) ≠ 0) {T : ℝ} (hT : 0 < T) {U : ℝ → Tot W0 W1 W2}
-    (hU : IsStrongSolution (-H.waveOp) T (ini W0 0 (ρ : W2)) 0 U) :
-    ∃ t ∈ Icc 0 T, U t ∉ Kc W0 S1 S2 := by
-  by_contra hall
-  simp only [not_exists, not_and, not_not] at hall
-  let m : Tot W0 W1 W2 →L[ℝ] ℝ := ℓ.comp ((ContinuousLinearMap.fst ℝ W1 W2).comp
-    ((ContinuousLinearMap.snd ℝ W0 _).comp
-      (Constraints.totL (W0 := W0) (W1 := W1) (W2 := W2)).toContinuousLinearMap))
-  have hm : ∀ y, m y = ℓ (tot W0 W1 W2 y).2.1 := fun y => rfl
-  have hzero : ∀ t ∈ Icc 0 T, m (U t) = 0 := by
-    intro t ht
-    have hD := (Feec.Constraints.mem_domL H).1 (hU.mem t ht)
-    have hE : (tot W0 W1 W2 (U t)).2.1 ∈ H.d1.domain := (Submodule.mem_inf.1 hD.2.1).1
-    rw [hm]
-    exact hℓ ⟨_, hE⟩ ((mem_Kc).1 (hall t ht)).2.1
-  have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT.le⟩
-  have hd := m.hasFDerivAt.comp_hasDerivWithinAt (0 : ℝ) (hU.deriv 0 h0)
-  have hd0 : HasDerivWithinAt (m ∘ U) 0 (Icc 0 T) 0 :=
-    (hasDerivWithinAt_const (0 : ℝ) (Icc 0 T) (0 : ℝ)).congr (fun t ht => hzero t ht)
-      (hzero 0 h0)
-  have heq := (uniqueDiffOn_Icc hT 0 h0).eq_deriv _ hd hd0
-  have hp0 : H.pr0 ⟨U 0, hU.mem 0 h0⟩ = 0 := Subtype.ext (by simp [hU.init])
-  have hp2 : H.prV2s ⟨U 0, hU.mem 0 h0⟩ = ρ := Subtype.ext (by simp [hU.init])
-  rw [Pi.zero_apply, add_zero, LinearPMap.neg_apply, _root_.map_neg, hm,
-    HilbertComplex2.tot_waveOp] at heq
-  simp only at heq
-  rw [hp0, hp2, LinearPMap.map_zero, zero_add, neg_eq_zero] at heq
-  exact hρ heq
-
-/-- A closed subspace contains the (one-sided) derivative at `0` of a curve lying in it on
-`[0, T]`, `T > 0`. -/
-theorem mem_of_hasDerivWithinAt_Icc {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
-    (M : Submodule ℝ X) (hM : IsClosed (M : Set X)) {f : ℝ → X} {f' : X} {T : ℝ} (hT : 0 < T)
-    (hf : HasDerivWithinAt f f' (Icc 0 T) 0) (hmem : ∀ t ∈ Icc 0 T, f t ∈ M) : f' ∈ M := by
-  have ht := hasDerivWithinAt_iff_tendsto_slope.1 hf
-  have e : Icc 0 T \ {0} = Ioc 0 T := by
-    ext t
-    simp only [Set.mem_sdiff, mem_Icc, mem_singleton_iff, mem_Ioc]
-    constructor
-    · rintro ⟨⟨h1, h2⟩, h3⟩
-      exact ⟨lt_of_le_of_ne h1 (Ne.symm h3), h2⟩
-    · rintro ⟨h1, h2⟩
-      exact ⟨⟨h1.le, h2⟩, h1.ne'⟩
-  rw [e] at ht
-  have := left_nhdsWithin_Ioc_neBot hT
-  refine hM.mem_of_tendsto ht (eventually_nhdsWithin_of_forall fun t htT => ?_)
-  rw [slope_def_module]
-  exact M.smul_mem _ (M.sub_mem (hmem t (Ioc_subset_Icc_self htT))
-    (hmem 0 ⟨le_rfl, hT.le⟩))
-
-end Abstract
-
 /-! ## Prop 4.19 on `Ω`: the projection hypothesis and the conclusion fail -/
 
 /-- `g · diag(1, -1, 0)` for a bump `g`: a symmetric test field. -/
@@ -946,12 +885,42 @@ theorem inner_constS_adjoint_betaT (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
   simp [Fintype.sum_prod_type, Fin.sum_univ_three, diagA]
   ring
 
+/-- The inclusion `L²(S) → L²(Ω; ℝ³ˣ³)`; it maps `H̊(curl, S)` into `H̊(curl, M)`. -/
+theorem symL2_subtypeL_mem_HcurlZero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    ∀ u ∈ (symComplexB hΩ hb).d1.domain, (symL2 Ω).subtypeL u ∈ HcurlZero Ω :=
+  fun u hu => mem_HcurlZero_of_mem_domain hΩ hb ⟨u, hu⟩
+
+/-- `⟪sym curl β, diag(1, -1, 0)⟫ = -2 |Ω|`. -/
+theorem inner_adjoint_betaT_constField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (h : betaT hΩ hb ∈ (symComplexB hΩ hb).d1†.domain) :
+    ⟪(symL2 Ω).subtypeL ((symComplexB hΩ hb).d1† ⟨_, h⟩), constField hΩ hb diagA⟫ =
+      -(2 * volume.real Ω) := by
+  rw [real_inner_comm]
+  exact inner_constS_adjoint_betaT hΩ hb h
+
+/-- **From `(0, E₀, β)`, for any `E₀` and any `S2`, every strong solution of (4.18) leaves
+`{0} × L²(TSD) × S2`** on every `[0, T]`, `T > 0`: `sym curl β = -diag(1, -1, 0)` pairs nonzero
+with `diag(1, -1, 0) ∈ TSD₀ᗮ` (`Feec.BoundedDomain.not_propagate_of_adjoint`, with
+`ι : L²(S) → L²(M)` the inclusion). -/
+theorem symComplexB_betaT_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) (S2 : Submodule ℝ (L2T Ω)) (E₀ : L2S Ω) :
+    ∀ T > 0, ∀ U : ℝ → Tot (L2 Ω) (L2S Ω) (L2T Ω),
+      IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) E₀ (betaT hΩ hb)) 0 U →
+        ∃ t ∈ Icc 0 T, U t ∉ Kc (L2 Ω) (TSDS Ω) S2 := by
+  obtain ⟨h, -⟩ := betaT_mem_adjoint hΩ hb
+  refine not_propagate_of_adjoint hΩ hb (symComplexB hΩ hb) (symL2 Ω).subtypeL
+    (symL2_subtypeL_mem_HcurlZero hΩ hb) (S1 := TSDS Ω) (S2 := S2) (fun u hu => hu)
+    (E₀ := E₀) (B₀ := betaT hΩ hb) h (constField_mem_orth hΩ hb diagA) ?_
+  rw [inner_adjoint_betaT_constField hΩ hb h]
+  have := volume_real_pos hΩ hb hne
+  linarith
+
 /-- **The conclusion of Prop 4.19 fails on every nonempty bounded open `Ω ⊆ ℝ³`** for the
 thesis' complex (4.16), for every strong solution: the TSD datum `(σ₀, E₀, B₀) = (0, 0, β)`,
 `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ) ∈ H(sym curl, T) ∩ L²(TSD)`, lies in `D(L) ∩ K`,
 `K = {0} × L²(TSD) × L²(TSD)`, and every strong solution of (4.18) on `[0, T]`, `T > 0`, leaves
-`K`. Proof: `ℓ(E) = ⟪E, diag(1, -1, 0)⟫` vanishes on `H̊(curl, S) ∩ L²(TSD)`
-(`inner_constS_eq_zero`), while `ℓ(sym curl β) = -2|Ω| ≠ 0` (`not_propagate_of_functional`).
+`K` (`symComplexB_betaT_not_propagate`). Proof: every `E ∈ H̊(curl, S) ∩ L²(TSD)` lies in
+`TSD₀ ⊥ diag(1, -1, 0)`, while `⟪sym curl β, diag(1, -1, 0)⟫ = -2|Ω| ≠ 0`.
 
 Correction: refutes the conclusion of [QuennevilleBelair2015, §4.11, Prop 4.19] on bounded
 domains. -/
@@ -963,20 +932,12 @@ theorem symComplexB_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω
         IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) 0 B₀) 0 U →
           ∃ t ∈ Icc 0 T, U t ∉ Kc (L2 Ω) (TSDS Ω) (TSDT Ω) := by
   obtain ⟨h, -⟩ := betaT_mem_adjoint hΩ hb
-  refine ⟨betaT hΩ hb, betaT_mem_TSDT hΩ hb, ?_, ?_, fun T hT U hU => ?_⟩
+  refine ⟨betaT hΩ hb, betaT_mem_TSDT hΩ hb, ?_, ?_,
+    symComplexB_betaT_not_propagate hΩ hb hne _ 0⟩
   · rw [Feec.Constraints.mem_domL, tot_ini]
     exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, h⟩
   · rw [mem_Kc, tot_ini]
     exact ⟨rfl, Submodule.zero_mem _, betaT_mem_TSDT hΩ hb⟩
-  refine not_propagate_of_functional (symComplexB hΩ hb) (TSDS Ω) (TSDT Ω)
-    (innerSL ℝ (constS hΩ hb)) (fun u hu => ?_) ⟨_, h⟩ ?_ hT hU
-  · rw [innerSL_apply_apply, real_inner_comm]
-    exact inner_constS_eq_zero hΩ hb u hu
-  · rw [innerSL_apply_apply]
-    change ⟪constS hΩ hb, (curlS (Ω := Ω))† ⟨_, h⟩⟫ ≠ 0
-    rw [inner_constS_adjoint_betaT hΩ hb h]
-    have := volume_real_pos hΩ hb hne
-    linarith
 
 /-- **The conclusion of Prop 4.19 fails on bounded domains, unconditionally**: for the TSD datum
 `(0, 0, β) ∈ D(L) ∩ K`, on every `[0, T]` with `T > 0`, the Hodge wave equation (4.18) has a
@@ -1130,122 +1091,39 @@ theorem symComplexB_not_projection_hyp2 (hΩ : IsOpen Ω) (hb : Bornology.IsBoun
 
 /-! ## What survives: the obstruction space `TSD₀` and a necessary condition -/
 
-/-- The `L²` class of the gradient `(∇φ)_{jk} = ∂_k φ_j` of a `C¹` vector field on `ℝ³`. -/
-def gradField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (φ : Fin 3 → R3 → ℝ)
-    (hφ : ∀ i, ContDiff ℝ 1 (φ i)) : L2M Ω :=
-  smoothField hΩ hb (gradM φ) fun jk =>
-    show Continuous (gradM φ jk) from continuous_pd (hφ jk.1) jk.2
-
-variable (Ω) in
-/-- `TSD₀ = L²(TSD) ∩ H̊(div)`: TSD fields orthogonal to `∇φ` for **every** `C¹` vector field `φ`
-on `ℝ³` (no boundary condition), i.e. weakly `B n = 0` on `∂Ω`. A closed subspace. -/
-def TSD0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : Submodule ℝ (L2M Ω) :=
-  TSD Ω ⊓ ⨅ φ : {φ : Fin 3 → R3 → ℝ // ∀ i, ContDiff ℝ 1 (φ i)},
-    LinearMap.ker ((innerSL ℝ (gradField hΩ hb φ.1 φ.2)) : L2M Ω →ₗ[ℝ] ℝ)
-
-theorem mem_TSD0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2M Ω} :
-    B ∈ TSD0 Ω hΩ hb ↔ B ∈ TSD Ω ∧ ∀ φ : Fin 3 → R3 → ℝ, (∀ i, ContDiff ℝ 1 (φ i)) →
-      ∑ jk : Ix, ∫ x, B jk x * BoundedDomain.pd jk.2 (φ jk.1) x ∂volume.restrict Ω = 0 := by
-  have e : ∀ φ (hφ : ∀ i, ContDiff ℝ 1 (φ i)), innerSL ℝ (gradField hΩ hb φ hφ) B =
-      ∑ jk : Ix, ∫ x, B jk x * BoundedDomain.pd jk.2 (φ jk.1) x ∂volume.restrict Ω := by
-    intro φ hφ
-    rw [innerSL_apply_apply, real_inner_comm, gradField, inner_smoothField]
-    rfl
-  simp only [TSD0, Submodule.mem_inf, Submodule.mem_iInf, LinearMap.mem_ker,
-    ContinuousLinearMap.coe_coe, e, Subtype.forall]
-
-theorem isClosed_TSD0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
-    IsClosed (TSD0 Ω hΩ hb : Set (L2M Ω)) := by
-  rw [TSD0, Submodule.coe_inf, Submodule.coe_iInf]
-  exact isClosed_TSD.inter (isClosed_iInter fun φ => ContinuousLinearMap.isClosed_ker _)
-
-/-- **Generalized zero mean.** Every `B ∈ L²(TSD) ∩ H̊(curl, M)` is orthogonal to `∇φ` for every
-`C¹` field `φ : ℝ³ → ℝ³` with no boundary condition. Proof: `C = curl B` is symmetric
-(`curl_symm_of_mem_TSD`); test the graph closure against the skew field `skewOf φ`:
-`0 = ⟪C, skewOf φ⟫ = ⟪B, curl (skewOf φ)⟫ = ⟪B, I div φ - (∇φ)ᵀ⟫ = -⟪B, ∇φ⟫`
-(`curlM_skewOf`, `tr B = 0`, `B = Bᵀ`). With `φ` linear this is
-`Feec.BoundedDomain.integral_eq_zero_of_mem_TSD_of_mem_HcurlZero`. -/
-theorem sum_integral_mul_pd_eq_zero_of_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    {B : L2M Ω} (hB : B ∈ TSD Ω) (hB' : B ∈ HcurlZero Ω)
-    {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, ContDiff ℝ 1 (φ i)) :
-    ∑ jk : Ix, ∫ x, B jk x * BoundedDomain.pd jk.2 (φ jk.1) x ∂volume.restrict Ω = 0 := by
-  obtain ⟨C, hC⟩ := hB'
-  have hCs := curl_symm_of_mem_TSD hΩ hb hC hB
-  have e := closure_curlGraph_identity hΩ hb hC (Ψ := skewOf φ) (contDiff_skewOf hφ)
-  rw [sum_integral_mul_skewOf_eq_zero hCs] at e
-  simp only [curlM_skewOf (fun i => (hφ i).differentiable one_ne_zero), mul_sub] at e
-  set d : R3 → ℝ := fun x => ∑ m, BoundedDomain.pd m (φ m) x
-  have hdm : MemLp d 2 (volume.restrict Ω) :=
-    memLp_of_continuous hΩ hb (continuous_finsetSum _ fun m _ => continuous_pd (hφ m) m)
-  have hpm : ∀ j k, MemLp (BoundedDomain.pd j (φ k)) 2 (volume.restrict Ω) := fun j k =>
-    memLp_of_continuous hΩ hb (continuous_pd (hφ k) j)
-  rw [Finset.sum_congr rfl fun jk _ => integral_sub
-    (integrable_mul _ (by split_ifs; exacts [hdm, MemLp.zero])) (integrable_mul _ (hpm _ _))]
-    at e
-  rw [Finset.sum_sub_distrib] at e
-  have h1 : ∑ jk : Ix, ∫ x, B jk x * (if jk.1 = jk.2 then d x else 0) ∂volume.restrict Ω = 0 := by
-    simp only [mul_ite, mul_zero, integral_ite_zero, Fintype.sum_prod_type, Finset.sum_ite_eq,
-      Finset.mem_univ, ite_true]
-    simp only [fun f : L2 Ω => integral_mul_eq_inner f hdm, ← sum_inner, hB.2.1, inner_zero_left]
-  rw [h1, zero_sub] at e
-  rw [eq_comm, neg_eq_zero] at e
-  rw [← e]
-  refine Fintype.sum_equiv (Equiv.prodComm _ _) _ _ fun jk => ?_
-  obtain ⟨j, k⟩ := jk
-  simp only [Equiv.prodComm_apply, Prod.swap_prod_mk]
-  rw [hB.1 j k]
-
 /-- `H̊(curl, S) ∩ L²(TSD) ⊆ TSD₀`. -/
 theorem mem_TSD0_of_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (E : (curlS (Ω := Ω)).domain) (hE : (E : L2S Ω) ∈ TSDS Ω) :
     ((E : L2S Ω) : L2M Ω) ∈ TSD0 Ω hΩ hb :=
-  (mem_TSD0 hΩ hb).2 ⟨hE, fun _ hφ => sum_integral_mul_pd_eq_zero_of_mem_TSD hΩ hb hE
-    (mem_HcurlZero_of_mem_domain hΩ hb E) hφ⟩
+  mem_TSD0_of_mem_HcurlZero hΩ hb hE (mem_HcurlZero_of_mem_domain hΩ hb E)
 
 /-- **A necessary condition for TSD propagation on `Ω`** (salvage of Prop 4.19). If some strong
-solution of (4.18) from `(0, E₀, B₀) ∈ D(L)` stays in `K = {0} × L²(TSD) × L²(TSD)` on `[0, T]`,
-`T > 0`, then `sym curl B₀ = curl* B₀ ∈ TSD₀`: the initial electric velocity `Ė(0) = -sym curl B₀`
-must be orthogonal to every gradient `∇φ`, `φ ∈ C¹(ℝ³; ℝ³)`. Proof: `E(t) ∈ H̊(curl, S) ∩ L²(TSD)
-⊆ TSD₀` (`mem_TSD0_of_mem_domain`), and `TSD₀` is closed, so it contains `Ė(0)`.
+solution of (4.18) from `(0, E₀, B₀)` stays in `K = {0} × L²(TSD) × S2` on `[0, T]`, `T > 0`,
+then `E₀ ∈ TSD₀` and `B₀ ∈ H(sym curl, T) = D(curl*)` with `sym curl B₀ = curl* B₀ ∈ TSD₀`: the
+initial electric field and velocity `Ė(0) = -sym curl B₀` are orthogonal to every gradient `∇φ`,
+`φ ∈ C¹(ℝ³; ℝ³)` (weakly, `E₀ n = 0` and `(sym curl B₀) n = 0` on `∂Ω`). Proof:
+`E(t) ∈ H̊(curl, S) ∩ L²(TSD) ⊆ TSD₀` (`mem_TSD0_of_mem_domain`) and `TSD₀` is closed, so it
+contains `E(0)` and `Ė(0)` (`Feec.BoundedDomain.adjoint_mem_TSD0_of_propagate`, with
+`ι : L²(S) → L²(M)` the inclusion).
 
-For `B₀ = β`, `sym curl β = -diag(1, -1, 0) = -∇(x₁, -x₂, 0)` violates this
-(`symComplexB_not_propagate`). Not in the thesis. -/
-theorem adjoint_mem_TSD0_of_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    {E₀ : L2S Ω} {B₀ : L2T Ω} (hB₀ : B₀ ∈ (curlS (Ω := Ω))†.domain) {T : ℝ} (hT : 0 < T)
+For `B₀ = β`, `sym curl β = -diag(1, -1, 0)` violates this
+(`symComplexB_betaT_not_propagate`).
+
+Correction: [QuennevilleBelair2015, §4.11, Prop 4.19]; not in the thesis. -/
+theorem symComplexB_mem_TSD0_of_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {S2 : Submodule ℝ (L2T Ω)} {E₀ : L2S Ω} {B₀ : L2T Ω} {T : ℝ} (hT : 0 < T)
     {U : ℝ → Tot (L2 Ω) (L2S Ω) (L2T Ω)}
     (hU : IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) E₀ B₀) 0 U)
-    (hK : ∀ t ∈ Icc 0 T, U t ∈ Kc (L2 Ω) (TSDS Ω) (TSDT Ω)) :
-    (((curlS (Ω := Ω))† ⟨B₀, hB₀⟩ : L2S Ω) : L2M Ω) ∈ TSD0 Ω hΩ hb := by
-  set H := symComplexB hΩ hb
-  let π : Tot (L2 Ω) (L2S Ω) (L2T Ω) →L[ℝ] L2M Ω := (symL2 Ω).subtypeL.comp
-    ((ContinuousLinearMap.fst ℝ (L2S Ω) (L2T Ω)).comp ((ContinuousLinearMap.snd ℝ (L2 Ω) _).comp
-      (Constraints.totL (W0 := L2 Ω) (W1 := L2S Ω) (W2 := L2T Ω)).toContinuousLinearMap))
-  have hπ : ∀ y, π y = (((tot (L2 Ω) (L2S Ω) (L2T Ω) y).2.1 : L2S Ω) : L2M Ω) := fun y => rfl
-  let M : Submodule ℝ (Tot (L2 Ω) (L2S Ω) (L2T Ω)) := (TSD0 Ω hΩ hb).comap (π : _ →ₗ[ℝ] L2M Ω)
-  have hM : IsClosed (M : Set (Tot (L2 Ω) (L2S Ω) (L2T Ω))) :=
-    (isClosed_TSD0 hΩ hb).preimage π.continuous
-  have hmem : ∀ t ∈ Icc 0 T, U t ∈ M := by
-    intro t ht
-    have hD := (Feec.Constraints.mem_domL H).1 (hU.mem t ht)
-    have hE : (tot (L2 Ω) (L2S Ω) (L2T Ω) (U t)).2.1 ∈ H.d1.domain :=
-      (Submodule.mem_inf.1 hD.2.1).1
-    show π (U t) ∈ TSD0 Ω hΩ hb
-    rw [hπ]
-    exact mem_TSD0_of_mem_domain hΩ hb ⟨_, hE⟩ ((mem_Kc).1 (hK t ht)).2.1
+    (hK : ∀ t ∈ Icc 0 T, U t ∈ Kc (L2 Ω) (TSDS Ω) S2) :
+    (E₀ : L2M Ω) ∈ TSD0 Ω hΩ hb ∧ ∃ h : B₀ ∈ (curlS (Ω := Ω))†.domain,
+      (((curlS (Ω := Ω))† ⟨B₀, h⟩ : L2S Ω) : L2M Ω) ∈ TSD0 Ω hΩ hb := by
   have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT.le⟩
-  have hd := mem_of_hasDerivWithinAt_Icc M hM hT (hU.deriv 0 h0) hmem
-  rw [Pi.zero_apply, add_zero] at hd
-  have hp0 : H.pr0 ⟨U 0, hU.mem 0 h0⟩ = 0 := Subtype.ext (by simp [hU.init])
-  have hp2 : H.prV2s ⟨U 0, hU.mem 0 h0⟩ = ⟨B₀, hB₀⟩ := Subtype.ext (by simp [hU.init])
-  have e : π ((-H.waveOp) ⟨U 0, hU.mem 0 h0⟩) =
-      -(((curlS (Ω := Ω))† ⟨B₀, hB₀⟩ : L2S Ω) : L2M Ω) := by
-    rw [hπ, LinearPMap.neg_apply, _root_.map_neg, HilbertComplex2.tot_waveOp]
-    simp only [Prod.snd_neg, Prod.fst_neg]
-    rw [hp0, hp2, LinearPMap.map_zero, zero_add]
-    rfl
-  have h' : π ((-H.waveOp) ⟨U 0, hU.mem 0 h0⟩) ∈ TSD0 Ω hΩ hb := hd
-  rw [e] at h'
-  simpa using (TSD0 Ω hΩ hb).neg_mem h'
+  have hD := (Feec.Constraints.mem_domL (symComplexB hΩ hb)).1 (hU.mem 0 h0)
+  have hK0 := (mem_Kc).1 (hK 0 h0)
+  rw [hU.init, tot_ini] at hD hK0
+  refine ⟨mem_TSD0_of_mem_domain hΩ hb ⟨E₀, (Submodule.mem_inf.1 hD.2.1).1⟩ hK0.2.1, ?_⟩
+  exact adjoint_mem_TSD0_of_propagate hΩ hb (symComplexB hΩ hb) (symL2 Ω).subtypeL
+    (symL2_subtypeL_mem_HcurlZero hΩ hb) (S1 := TSDS Ω) (S2 := S2) (fun u hu => hu) hT hU hK
 
 /-! ## What survives: Props 4.16 and 4.18 for (4.16) on `Ω` -/
 
@@ -1262,7 +1140,7 @@ theorem symComplexB_prop_4_16 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (T
     ∃ U, IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) E₀ B₀) 0 U ∧
       (∀ t ∈ Icc 0 T, (tot (L2 Ω) (L2S Ω) (L2T Ω) (U t)).1 = 0 ∧
         ∀ φ : R3 → ℝ, IsTest Ω φ → ∑ ij, ∫ x, (((tot (L2 Ω) (L2S Ω) (L2T Ω) (U t)).2.1 : L2S Ω) :
-          L2M Ω) ij x * hessF φ ij x ∂volume.restrict Ω = 0) ∧
+          L2M Ω) ij x * hessField φ ij x ∂volume.restrict Ω = 0) ∧
       ∀ U', IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) E₀ B₀) 0 U' →
         EqOn U U' (Icc 0 T) := by
   have hK : ini (L2 Ω) E₀ B₀ ∈ K (symComplexB hΩ hb) ⊤ := by
@@ -1445,5 +1323,219 @@ theorem symComplexB_diagnosis (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h
         (TSDT Ω).starProjection B ∈ (symComplexB hΩ hb).d1†.domain :=
   ⟨TSDS_le_ker hΩ hb, curlS_mem_TSDT hΩ hb, adjoint_curlS_mem_TSDS hΩ hb,
     symComplexB_not_projection_hyp hΩ hb hne _, not_projection_hyp_adjoint_curlS hΩ hb hne⟩
+
+/-! ## Corrected Prop 4.19: the maximal propagating constraint space -/
+
+section Max
+
+variable (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+
+/-- The Hessian `∇²h` of a smooth harmonic function, as an element of `L²(T)`
+(`tr ∇²h = Δh = 0`). -/
+def hessT {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x, lap h x = 0) : L2T Ω :=
+  ⟨hessL2 hΩ hb hh, smoothField_mem_trL2 hΩ hb _ hΔ⟩
+
+/-- The Hessian `∇²h` of a smooth function, as an element of `L²(S)` (Schwarz). -/
+def hessSym {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) : L2S Ω :=
+  ⟨hessL2 hΩ hb hh, smoothField_mem_symL2 hΩ hb _ fun i j =>
+    funext fun x => (pd_pd_comm (hh.of_le (by simp)) i j x).symm⟩
+
+/-- `diag(1, -1, 0)`, as an element of `L²(TSD) ⊆ L²(T)`. -/
+def constT : L2T Ω :=
+  ⟨smoothField hΩ hb (fun ij _ => diagA ij.1 ij.2) (fun _ => continuous_const),
+    smoothField_mem_trL2 hΩ hb _ fun _ => by simpa [Matrix.trace] using diagA_trace⟩
+
+theorem constT_coe : (constT hΩ hb : L2M Ω) = constField hΩ hb diagA := rfl
+
+theorem constT_mem_TSDT : constT hΩ hb ∈ TSDT Ω :=
+  constField_mem_TSD hΩ hb diagA_transpose diagA_trace
+
+/-- `sym curl` of a `C¹` trace-free field with `curl Ψ = 0` vanishes: such `Ψ ∈ D(curl*)` with
+`curl* Ψ = 0`. -/
+theorem adjoint_curlS_eq_zero {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij))
+    (htr : ∀ x, ∑ i, Ψ (i, i) x = 0) (hc : ∀ ij x, curlM Ψ ij x = 0) :
+    ∃ h : (⟨smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous),
+        smoothField_mem_trL2 hΩ hb _ htr⟩ : L2T Ω) ∈ (symComplexB hΩ hb).d1†.domain,
+      (symComplexB hΩ hb).d1† ⟨_, h⟩ = 0 := by
+  obtain ⟨h, e⟩ := smoothField_mem_adjoint_curlS hΩ hb hΨ htr
+  refine ⟨h, Subtype.ext ?_⟩
+  change ((curlS (Ω := Ω))† ⟨_, h⟩ : L2M Ω) = 0
+  rw [e]
+  refine smoothField_eq_zero hΩ hb _ _ fun ij x => ?_
+  simp [symF, hc]
+
+variable (G : UnitaryGroupGenerator (-(symComplexB hΩ hb).waveOp))
+
+/-- **The electric slot of `K*` lies in `TSD₀`** for (4.16): every `E ∈ S1*` satisfies
+`E ⊥ ∇φ` for all `C¹` fields `φ` (weakly `E n = 0`), in particular `∫_Ω E = 0`
+(`Feec.BoundedDomain.S1max_le_TSD0` with `ι : L²(S) → L²(M)` the inclusion). -/
+theorem symComplexB_S1max_le_TSD0 (S2 : Submodule ℝ (L2T Ω)) [S2.HasOrthogonalProjection] :
+    ∀ u ∈ S1max G (TSDS Ω) S2, (u : L2M Ω) ∈ TSD0 Ω hΩ hb :=
+  S1max_le_TSD0 G hΩ hb (symL2 Ω).subtypeL (symL2_subtypeL_mem_HcurlZero hΩ hb) fun _ hu => hu
+
+/-- **`S1* ⊊ L²(TSD)`** for (4.16): `diag(1, -1, 0) ∈ L²(TSD) ∩ L²(S)` is not in `S1*`. -/
+theorem symComplexB_constS_not_mem_S1max (hne : Ω.Nonempty) (S2 : Submodule ℝ (L2T Ω))
+    [S2.HasOrthogonalProjection] : constS hΩ hb ∉ S1max G (TSDS Ω) S2 := fun hm =>
+  constField_diagA_not_mem_TSD0 hΩ hb hne (symComplexB_S1max_le_TSD0 hΩ hb G S2 _ hm)
+
+/-- **`S2* ⊊ L²(TSD)`** for (4.16): `β ∈ L²(TSD) ∩ H(sym curl, T)` is not in `S2*`, for any
+`S2`: otherwise `sym curl β = -diag(1, -1, 0) ∈ S1* ⊆ TSD₀`, which has nonzero mean. -/
+theorem symComplexB_betaT_not_mem_S2max (hne : Ω.Nonempty) (S2 : Submodule ℝ (L2T Ω))
+    [S2.HasOrthogonalProjection] : betaT hΩ hb ∉ S2max G (TSDS Ω) S2 := by
+  intro hm
+  obtain ⟨h, -⟩ := betaT_mem_adjoint hΩ hb
+  have hT := symComplexB_S1max_le_TSD0 hΩ hb G S2 _ (adj1_mem_S1max G ⟨_, h⟩ hm)
+  have hc := inner_adjoint_betaT_constField hΩ hb h
+  have h0 := (Submodule.mem_orthogonal' _ _).1 (constField_mem_orth hΩ hb diagA) _ hT
+  rw [real_inner_comm] at h0
+  rw [show ((symL2 Ω).subtypeL ((symComplexB hΩ hb).d1† ⟨_, h⟩) : L2M Ω) =
+    (((symComplexB hΩ hb).d1† ⟨_, h⟩ : L2S Ω) : L2M Ω) from rfl, h0] at hc
+  have := volume_real_pos hΩ hb hne
+  linarith
+
+/-- **Hessians of smooth harmonic functions are stationary magnetic data for (4.16)**:
+`∇²h ∈ L²(TSD) ∩ H(sym curl, T)` with `sym curl ∇²h = 0` (`curl ∇²h = 0`), so `(0, 0, ∇²h)` is a
+stationary point of (4.18) in `K`, and `∇²h ∈ S2*`. -/
+theorem symComplexB_hessT_mem_S2max {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x, lap h x = 0) :
+    hessT hΩ hb hh hΔ ∈ S2max G (TSDS Ω) (TSDT Ω) := by
+  obtain ⟨hadj, e⟩ := adjoint_curlS_eq_zero hΩ hb
+    (fun ij => contDiff_one_of_top (contDiff_hessField hh ij)) hΔ fun ij x => by
+      rw [hessField_eq_gradM]
+      exact curlM_gradM (fun i => (contDiff_pd_top hh i).of_le (by simp)) ij x
+  exact mem_S2max_of_adj1_eq_zero G ⟨_, hadj⟩ (hessL2_mem_TSD hΩ hb hh hΔ) e
+
+/-- **`diag(1, -1, 0)` is a nonzero stationary magnetic datum for (4.16)**: `constT ∈ S2*`. -/
+theorem symComplexB_constT_mem_S2max : constT hΩ hb ∈ S2max G (TSDS Ω) (TSDT Ω) := by
+  obtain ⟨hadj, e⟩ := adjoint_curlS_eq_zero hΩ hb (Ψ := fun ij _ => diagA ij.1 ij.2)
+    (fun _ => contDiff_const) (fun _ => by simpa [Matrix.trace] using diagA_trace)
+    fun ij x => by simp [curlM, BoundedDomain.pd]
+  exact mem_S2max_of_adj1_eq_zero G ⟨_, hadj⟩ (constT_mem_TSDT hΩ hb) e
+
+theorem constT_ne_zero (hne : Ω.Nonempty) : constT hΩ hb ≠ 0 := fun h0 =>
+  constField_diagA_not_mem_TSD0 hΩ hb hne (by
+    rw [← constT_coe, h0]; exact Submodule.zero_mem _)
+
+/-- **The stationary part of `S2*` is infinite-dimensional** for (4.16) on a nonempty bounded
+open `Ω`: it contains the independent harmonic Hessians `∇²(e^{-n x₁} cos(n x₂))`
+(`Feec.BoundedDomain.linearIndependent_hessL2_expCos`). -/
+theorem symComplexB_not_finiteDimensional_S2max (hne : Ω.Nonempty) :
+    ¬ FiniteDimensional ℝ (S2max G (TSDS Ω) (TSDT Ω)) := by
+  intro hfin
+  let v : ℕ → S2max G (TSDS Ω) (TSDT Ω) := fun n =>
+    ⟨_, symComplexB_hessT_mem_S2max hΩ hb G (contDiff_expCos ((n : ℝ) + 1)) (lap_expCos _)⟩
+  have hli : LinearIndependent ℝ v :=
+    LinearIndependent.of_comp ((trL2 Ω).subtype ∘ₗ (S2max G (TSDS Ω) (TSDT Ω)).subtype)
+      (linearIndependent_hessL2_expCos hΩ hb hne)
+  exact Module.Finite.not_linearIndependent_of_infinite v hli
+
+end Max
+
+/-- **The obstruction in `L²(S)` is infinite-dimensional**: on a nonempty bounded open `Ω`,
+`L²(TSD) ∩ L²(S)` orthogonal to `TSD₀` (pulled back to `L²(S)`) contains the independent
+harmonic Hessians; and since `H̊(curl, S) ∩ L²(TSD) ⊆ TSD₀`, the orthogonal complement of the
+closure of `H̊(curl, S) ∩ L²(TSD)` in `L²(TSD) ∩ L²(S)` is infinite-dimensional: no
+finite-dimensional correction makes the density conjecture of Prop 4.19 true.
+
+Correction: [QuennevilleBelair2015, §4.11, Prop 4.19] conjectures density. -/
+theorem not_finiteDimensional_obstrS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    ¬ FiniteDimensional ℝ (TSDS Ω ⊓ ((TSD0 Ω hΩ hb).comap (symL2 Ω).subtype)ᗮ :
+        Submodule ℝ (L2S Ω)) ∧
+      ¬ FiniteDimensional ℝ (TSDS Ω ⊓ (Submodule.span ℝ
+        (closure ((TSDS Ω : Set (L2S Ω)) ∩ (curlS (Ω := Ω)).domain)))ᗮ : Submodule ℝ (L2S Ω)) := by
+  have hmem : ∀ n : ℕ, hessSym hΩ hb (contDiff_expCos ((n : ℝ) + 1)) ∈
+      TSDS Ω ⊓ ((TSD0 Ω hΩ hb).comap (symL2 Ω).subtype)ᗮ := fun n => by
+    have ho := hessL2_mem_obstr hΩ hb (contDiff_expCos ((n : ℝ) + 1)) (lap_expCos _)
+    refine ⟨ho.1, (Submodule.mem_orthogonal' _ _).2 fun u hu => ?_⟩
+    rw [Submodule.coe_inner]
+    exact (Submodule.mem_orthogonal' _ _).1 ho.2 _ hu
+  have hle : (TSDS Ω ⊓ ((TSD0 Ω hΩ hb).comap (symL2 Ω).subtype)ᗮ : Submodule ℝ (L2S Ω)) ≤
+      TSDS Ω ⊓ (Submodule.span ℝ
+        (closure ((TSDS Ω : Set (L2S Ω)) ∩ (curlS (Ω := Ω)).domain)))ᗮ := by
+    refine inf_le_inf_left _ (Submodule.orthogonal_le (Submodule.span_le.2 ?_))
+    refine closure_minimal (fun E hE => mem_TSD0_of_mem_domain hΩ hb ⟨E, hE.2⟩ hE.1) ?_
+    exact (isClosed_TSD0 hΩ hb).preimage continuous_subtype_val
+  have h1 : ¬ FiniteDimensional ℝ (TSDS Ω ⊓ ((TSD0 Ω hΩ hb).comap (symL2 Ω).subtype)ᗮ :
+      Submodule ℝ (L2S Ω)) := by
+    intro hfin
+    let v : ℕ → (TSDS Ω ⊓ ((TSD0 Ω hΩ hb).comap (symL2 Ω).subtype)ᗮ : Submodule ℝ (L2S Ω)) :=
+      fun n => ⟨_, hmem n⟩
+    have hli : LinearIndependent ℝ v :=
+      LinearIndependent.of_comp ((symL2 Ω).subtype ∘ₗ Submodule.subtype _)
+        (linearIndependent_hessL2_expCos hΩ hb hne)
+    exact Module.Finite.not_linearIndependent_of_infinite v hli
+  exact ⟨h1, fun hfin => h1 (Submodule.finiteDimensional_of_le hle)⟩
+
+/-- **Corrected Prop 4.19 on bounded domains** (complex (4.16)
+`H̊²(R) → H̊(curl, S) → L²(T)`, `K = {0} × L²(TSD) × L²(TSD)`, `K* = {x | ∀ t, e^{-tL} x ∈ K}`
+for the Hodge wave group of Stone's theorem, `Feec.HilbertComplex2.waveGroup`), on every
+nonempty bounded open `Ω ⊆ ℝ³`, with no hypothesis:
+1. `K* = {0} × S1* × S2*` with `S1* ⊆ TSD₀` (weakly `E n = 0`) and `S2* ⊆ L²(TSD)`;
+2. `(S1*, S2*)` satisfies all hypotheses of `Feec.Constraints.prop_4_17` (projection hypothesis,
+   `curl (V1 ∩ S1*) ⊆ S2*`, `sym curl (V2* ∩ S2*) ⊆ S1*`), and it is the largest such pair inside
+   `L²(TSD) × L²(TSD)`;
+3. strictness: `diag(1, -1, 0) ∈ L²(TSD) ∩ L²(S) \ S1*` and `β ∈ L²(TSD) ∩ L²(T) \ S2*`; while
+   `diag(1, -1, 0) ∈ S2*` is a nonzero **stationary** datum, and the stationary part of `S2*` is
+   infinite-dimensional (`symComplexB_not_finiteDimensional_S2max`);
+4. every datum `(0, E₀, B₀) ∈ D(L)` with `E₀ ∈ S1*`, `B₀ ∈ S2*` has, on every `[0, T]`, a unique
+   strong solution of (4.18); it stays in `K* ⊆ K` and solves the reduced system.
+
+Scope: as for `Feec.BoundedDomain.thesisComplex_prop_4_17_max`, `K*` is invariant by definition,
+so items 2 and 4 run the thesis' argument on the largest subspace where it can work; the content
+is in items 1 and 3 and in maximality. The only elements of `K*` exhibited are stationary
+(`sym curl B = 0`); no nonzero element of `S1*` and no non-stationary element of `K*` is known.
+
+Correction: [QuennevilleBelair2015, §4.11, Prop 4.19]: its projection hypotheses fail on every
+nonempty bounded open `Ω` and its conclusion fails for `(0, 0, β)`; this statement replaces
+`L²(TSD) × L²(TSD)` by the maximal admissible `S1* × S2*`. -/
+theorem symComplexB_prop_4_19_max (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    let G := (symComplexB hΩ hb).waveGroup
+    Kmax G (Kc (L2 Ω) (TSDS Ω) (TSDT Ω)) =
+        Kc (L2 Ω) (S1max G (TSDS Ω) (TSDT Ω)) (S2max G (TSDS Ω) (TSDT Ω)) ∧
+      (∀ u ∈ S1max G (TSDS Ω) (TSDT Ω), (u : L2M Ω) ∈ TSD0 Ω hΩ hb) ∧
+      S2max G (TSDS Ω) (TSDT Ω) ≤ TSDT Ω ∧
+      (∀ x ∈ (symComplexB hΩ hb).domL, projKc (L2 Ω) (S1max G (TSDS Ω) (TSDT Ω))
+        (S2max G (TSDS Ω) (TSDT Ω)) x ∈ (symComplexB hΩ hb).domL) ∧
+      (∀ u : (symComplexB hΩ hb).d1.domain, (u : L2S Ω) ∈ S1max G (TSDS Ω) (TSDT Ω) →
+        (symComplexB hΩ hb).d1 u ∈ S2max G (TSDS Ω) (TSDT Ω)) ∧
+      (∀ ρ : (symComplexB hΩ hb).d1†.domain, (ρ : L2T Ω) ∈ S2max G (TSDS Ω) (TSDT Ω) →
+        (symComplexB hΩ hb).d1† ρ ∈ S1max G (TSDS Ω) (TSDT Ω)) ∧
+      (∀ (S1' : Submodule ℝ (L2S Ω)) (S2' : Submodule ℝ (L2T Ω)) [S1'.HasOrthogonalProjection]
+        [S2'.HasOrthogonalProjection], S1' ≤ TSDS Ω → S2' ≤ TSDT Ω →
+        (∀ x ∈ (symComplexB hΩ hb).domL, projKc (L2 Ω) S1' S2' x ∈ (symComplexB hΩ hb).domL) →
+        (∀ u : (symComplexB hΩ hb).d1.domain, (u : L2S Ω) ∈ S1' →
+          (symComplexB hΩ hb).d1 u ∈ S2') →
+        (∀ ρ : (symComplexB hΩ hb).d1†.domain, (ρ : L2T Ω) ∈ S2' →
+          (symComplexB hΩ hb).d1† ρ ∈ S1') →
+        S1' ≤ S1max G (TSDS Ω) (TSDT Ω) ∧ S2' ≤ S2max G (TSDS Ω) (TSDT Ω)) ∧
+      constS hΩ hb ∈ TSDS Ω ∧ constS hΩ hb ∉ S1max G (TSDS Ω) (TSDT Ω) ∧
+      betaT hΩ hb ∈ TSDT Ω ∧ betaT hΩ hb ∉ S2max G (TSDS Ω) (TSDT Ω) ∧
+      constT hΩ hb ∈ S2max G (TSDS Ω) (TSDT Ω) ∧ constT hΩ hb ≠ 0 ∧
+      ¬ FiniteDimensional ℝ (S2max G (TSDS Ω) (TSDT Ω)) ∧
+      ∀ (T : ℝ) (E₀ : L2S Ω) (B₀ : L2T Ω), ini (L2 Ω) E₀ B₀ ∈ (symComplexB hΩ hb).domL →
+        E₀ ∈ S1max G (TSDS Ω) (TSDT Ω) → B₀ ∈ S2max G (TSDS Ω) (TSDT Ω) →
+        ∃ U, IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) E₀ B₀) 0 U ∧
+          (∀ U', IsStrongSolution (-(symComplexB hΩ hb).waveOp) T (ini (L2 Ω) E₀ B₀) 0 U' →
+            EqOn U' U (Icc 0 T)) ∧
+          (∀ t ∈ Icc 0 T, U t ∈ Kc (L2 Ω) (TSDS Ω) (TSDT Ω)) ∧
+          IsReducedSolution (symComplexB hΩ hb) T E₀ B₀
+            (fun t => (tot (L2 Ω) (L2S Ω) (L2T Ω) (U t)).2.1)
+            (fun t => (tot (L2 Ω) (L2S Ω) (L2T Ω) (U t)).2.2) := by
+  intro G
+  refine ⟨Kmax_eq_Kc G, symComplexB_S1max_le_TSD0 hΩ hb G _, S2max_le G,
+    projKcMax_mem_domL G,
+    fun u hu => d1_mem_S2max G (TSDS_le_ker hΩ hb) u hu,
+    fun ρ hρ => adj1_mem_S1max G ρ hρ,
+    fun S1' S2' _ _ h1 h2 hPD hd1 hd1s =>
+      le_max_of_prop_4_17_hyps G (TSDS_le_ker hΩ hb) h1 h2 hPD hd1 hd1s,
+    constS_mem_TSDS hΩ hb, symComplexB_constS_not_mem_S1max hΩ hb G hne _,
+    betaT_mem_TSDT hΩ hb, symComplexB_betaT_not_mem_S2max hΩ hb G hne _,
+    symComplexB_constT_mem_S2max hΩ hb G, constT_ne_zero hΩ hb hne,
+    symComplexB_not_finiteDimensional_S2max hΩ hb G hne,
+    fun T E₀ B₀ hD hE₀ hB₀ => ?_⟩
+  obtain ⟨U, hU, huniq, hK, hred⟩ := prop_4_17_max_unconditional (symComplexB hΩ hb)
+    (TSDS_le_ker hΩ hb) T hD hE₀ hB₀
+  exact ⟨U, hU, huniq, fun t ht => Kc_mono (S1max_le G) (S2max_le G) (hK t ht), hred⟩
 
 end Feec.BoundedSym

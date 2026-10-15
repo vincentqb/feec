@@ -38,8 +38,12 @@ For a Hilbert complex `W0 --d0--> W1 --d1--> W2` of closed, densely defined oper
 
 ## Existence and solution classes (critic item 5)
 
-Stone's theorem / Hille–Yosida is not in Mathlib; existence enters only as the explicit
-hypotheses `WellPosedHom (-L) T` or `WellPosedClassical (-L) T Adm` (Thm 4.3 for `-L`).
+Stone's theorem / Hille–Yosida is not in Mathlib; in this module existence enters as the
+explicit hypotheses `WellPosedHom (-L) T` or `WellPosedClassical (-L) T Adm` (Thm 4.3 for `-L`).
+These are discharged for every Hilbert complex by Stone's theorem (`Feec.stoneGroup`,
+`Feec.Ch4.Stone`): `Feec.HilbertComplex2.waveGroup`, `thm_4_6_unconditional`,
+`thm_4_7_unconditional` (`Feec.Ch4.StoneApplications`) and `thm_4_6_strong_unconditional`
+(`Feec.Ch4.Unconditional`) state Thms 4.6/4.7 without them.
 `IsStrongSolution` and `IsWeakSolution` are pointwise notions (membership in `D(L)`, resp. `V`,
 and a derivative in `W` at each `t ∈ [0,T]`): uniqueness statements for them are *stronger*
 than the thesis', existence statements from `WellPosedHom` are *weaker* than the thesis'
@@ -58,7 +62,8 @@ than the thesis', existence statements from `WellPosedHom` are *weaker* than the
 * [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9 (as cited in [QuennevilleBelair2015, §4.3]
   for Thm 4.3)
 * [Pazy1983], §1.10 (unitary groups and Stone's theorem: a densely defined skew-adjoint operator
-  generates a unitary group; this is the existence input that enters here as a hypothesis)
+  generates a unitary group; this is the existence input that enters here as a hypothesis and
+is proved in `Feec.Ch4.Stone`)
 * [Geveci1988] (mixed first-order formulation of the wave equation, the scalar antecedent of
   (4.4); cf. [QuennevilleBelair2015, §4.8])
 * [GilletteHolstZhu2017] (FEEC for evolution problems; cited in [QuennevilleBelair2015, §4.8]

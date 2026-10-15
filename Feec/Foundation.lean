@@ -19,7 +19,8 @@ Sections:
 Conventions: real scalars only; `open scoped RealInnerProductSpace` (so `⟪x, y⟫ = ⟪x, y⟫_ℝ`);
 complexes indexed by explicit segments `k, k+1, k+2` (no `k-1`).
 No `axiom`, no `sorry`: missing theory (Hille–Yosida/Stone, Sobolev spaces, traces)
-enters only as explicit hypotheses / structure fields.
+enters only as explicit hypotheses / structure fields. Stone's theorem is later proved in
+`Feec.Ch4.Stone`, which discharges the existence hypotheses for skew-adjoint generators.
 
 ## References
 

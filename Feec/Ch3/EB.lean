@@ -55,8 +55,10 @@ Corrections and gaps filled (details in the docstrings):
 Not formalized: the nonlinear EB system of §3.4 (the thesis cites [Friedrich1996]; cf.
 [ACBY1997]; it
 needs the 3+1 split and extrinsic curvature; its extracted B-equation sign `+ sym curl E` must
-be `-` to recover (3.4)); distributional (`H(curl)`) versions of Lemma 3.5; Prop 3.6 on
-bounded domains.
+be `-` to recover (3.4)); distributional versions of Lemma 3.5 for `H(curl)` fields without a
+boundary condition; Prop 3.6 on bounded domains. (With the `H̊(curl)` boundary condition the
+distributional form is proved: `Feec.BoundedDomain.curl_symm_of_mem_TSD`,
+`Feec.BoundedSym.curlS_mem_TSDT`.)
 
 ## References
 

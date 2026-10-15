@@ -25,7 +25,11 @@ as the explicit hypotheses `WellPosedExistence` / `WellPosedClassical`; uniquene
 constraint propagation are proved. These hypotheses are satisfiable (bounded skew generators,
 via `exp(tA)` and Duhamel's formula): see `Feec.Ch4.Existence`, and here
 `wellPosedClassical_bddOp` and `cor_4_5_hypotheses_bddOp_ker` (the full hypothesis set of
-Cor 4.5 with `K = ker B`, `B` bounded and commuting with `A`).
+Cor 4.5 with `K = ker B`, `B` bounded and commuting with `A`). For skew-adjoint generators the
+hypotheses are discharged by Stone's theorem (`Feec.Ch4.Stone`): see `thm_4_3_unconditional`,
+`cor_4_5_unconditional`, `cor_4_5_classical_unconditional` and `cor_4_5_ambient_unconditional`
+(`Feec.Ch4.StoneApplications`) and `constraint_ker_exists_unconditional`
+(`Feec.Ch4.Unconditional`).
 
 ## Solution notions (critic item 5)
 
@@ -327,7 +331,8 @@ theorem constraint_propagation (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L)
 /-- **Thesis Cor 4.5**, ambient form: under the hypotheses of Thm 4.4 and the existence
 hypothesis `WellPosedExistence` (standing in for Thm 4.3, Hille–Yosida/Stone, absent from
 Mathlib), the problem `U' = L U + F`, `U(0) = U₀ ∈ D(L) ∩ K`, `F(t) ∈ K`, has a strong solution;
-it stays in `K` and is unique.
+it stays in `K` and is unique. Without the existence hypothesis (forcing in `ForcingThm43`):
+`Feec.cor_4_5_ambient_unconditional`.
 
 Remark: the thesis states Cor 4.5 for the `K`-valued problem (see `cor_4_5`); this is the
 equivalent ambient reformulation, with `U(t) ∈ K` as a conclusion. Hypothesis (ii) of Thm 4.4

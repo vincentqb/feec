@@ -27,7 +27,9 @@ the flat torus. This file settles the bounded case, on every nonempty bounded op
 * the literal density hypothesis is **true** (in every Hilbert complex), but the inferred density
   of `H̊(curl, M) ∩ L²(TSD)` in `L²(TSD)` is **false**;
 * the **conclusion** of Prop 4.17 fails: there is TSD data in `D(L)` for which no strong solution
-  of (4.14) stays TSD, and the Stone-group orbit (Thm 4.3) is such a solution leaving `K`.
+  of (4.14) stays TSD, and the Stone-group orbit (Thm 4.3) is such a solution leaving `K`. The
+  group exists by Stone's theorem (`Feec.stoneGroup`), so this holds with no hypothesis
+  (`thesisComplex_orbit_not_propagate_unconditional` in `Feec.Ch4.StoneApplications`).
 
 ## The mathematics
 
@@ -104,8 +106,8 @@ canonically isometric to the Bochner spaces with the Frobenius/Euclidean norms (
 
 The first projection hypothesis of Prop 4.17 is false on bounded domains, so the proposition as
 stated is vacuously true; its conclusion is false: there is TSD initial data in `D(L)` for which
-no strong solution of (4.14) stays TSD, and if `-L` generates a unitary group (Thm 4.3) its orbit
-is a strong solution leaving `K`. The obstruction is global: `H̊(curl) ∩ L²(TSD)` fields have zero
+no strong solution of (4.14) stays TSD, and the orbit of the unitary group of `-L` (Thm 4.3,
+which exists by Stone's theorem) is a strong solution leaving `K`. The obstruction is global: `H̊(curl) ∩ L²(TSD)` fields have zero
 mean, while `L²(TSD)` contains constants and `curl` does not preserve the zero-mean condition on
 `H(curl)` (no boundary condition on `B`). On the torus the hypothesis holds
 (`Feec.Torus.prop_4_17_torus`).
@@ -115,12 +117,16 @@ true, but the step "so that `H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`" 
 Prop 4.17 is invalid (its conclusion is false); and with the electric boundary condition the
 constraint set `K` is not invariant, so Theorem 4.5 does not apply.
 
-Not formalized: Stone's theorem (existence of the group in Thm 4.3) on bounded domains; the
-non-vacuous refutations `exists_orbit_not_propagate` and `thesisComplex_orbit_not_propagate` take
-the group as the hypothesis `G : Feec.UnitaryGroupGenerator (-L)` (the stand-in also used by
-`Feec.Constraints.prop_4_17_necessary`), while `exists_data_not_propagate` and
-`thesisComplex_not_propagate` quantify over all strong solutions. Prop 4.19 on bounded domains is
-not treated. The second projection hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is also
+In this file the non-vacuous refutations `exists_orbit_not_propagate` and
+`thesisComplex_orbit_not_propagate` take the group as the hypothesis
+`G : Feec.UnitaryGroupGenerator (-L)`, while `exists_data_not_propagate` and
+`thesisComplex_not_propagate` quantify over all strong solutions. The group hypothesis is
+discharged by Stone's theorem (`Feec.stoneGroup`, `Feec.Ch4.Stone`):
+`exists_orbit_not_propagate_unconditional` and `thesisComplex_orbit_not_propagate_unconditional`
+(`Feec.Ch4.StoneApplications`) need no hypothesis beyond `Ω` nonempty, bounded and open.
+Prop 4.19 on bounded domains is treated in `Feec.Ch4.BoundedSym`, and the salvage (the maximal
+invariant constraint space and the infinite-dimensional obstruction) in `Feec.Ch4.BoundedSalvage`,
+`Feec.Ch4.BoundedSalvageMax` and `Feec.Ch4.BoundedSalvageDim`. The second projection hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is also
 false on every nonempty bounded open `Ω`, and `D(curl*) = H(curl, M)` exactly; both are proved in
 `Feec.Ch4.BoundedDomainExt` (`thesisComplex_not_projection_hyp2`, `mem_adjoint_curlClosure_iff`).
 
@@ -1526,7 +1532,8 @@ theorem smoothField_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 
 variable {W0 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0] in
 /-- **The conclusion of Prop 4.17 fails on every nonempty bounded open `Ω ⊆ ℝ³`** (for every
-strong solution; see `exists_orbit_not_propagate` for one that exists given a Stone group). Let
+strong solution; see `exists_orbit_not_propagate` for one that exists given a Stone group, and
+`exists_orbit_not_propagate_unconditional` for existence via Stone's theorem). Let
 `H : W0 → L²(Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` be any Hilbert complex whose `d1` is (a restriction of)
 the closure of curl on `C_c^∞` (the thesis' `curl` on `H̊(curl, M)`). Take the TSD datum
 `(σ₀, E₀, B₀) = (0, 0, β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, which lies in `D(L) ∩ K`,
@@ -1597,14 +1604,16 @@ theorem exists_data_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω
   linarith
 
 variable {W0 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0] in
-/-- **Prop 4.17 fails for the Stone group, if one exists** (non-vacuous form of
+/-- **Prop 4.17 fails for the Stone group** (non-vacuous form of
 `exists_data_not_propagate`). If `-L` generates an orthogonal group `G` (the Stone stand-in
 `Feec.UnitaryGroupGenerator`, as in `Feec.Constraints.prop_4_17_necessary`), the orbit
 `t ↦ G.S t (0, 0, β)` **is** a strong solution of (4.14) on every `[0, T]`
 (`Feec.Constraints.isStrongSolution_orbit`), and it leaves `K = {0} × L²(TSD) × L²(TSD)`.
+Such a `G` always exists by Stone's theorem; the hypothesis-free form is
+`exists_orbit_not_propagate_unconditional` (`Feec.Ch4.StoneApplications`).
 
 Correction: refutes the conclusion of [QuennevilleBelair2015, §4.10, Prop 4.17] on bounded
-domains, conditionally only on Stone's theorem (Thm 4.3), which the thesis invokes. -/
+domains, given the group of Thm 4.3, which the thesis invokes and `Feec.stoneGroup` constructs. -/
 theorem exists_orbit_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (H : HilbertComplex2 W0 (L2M Ω) (L2M Ω))
     (hd1 : ∀ u : H.d1.domain, ((u : L2M Ω), H.d1 u) ∈ closure (curlGraph Ω))
@@ -1767,7 +1776,8 @@ theorem thesisComplex_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
 /-- **The conclusion of Prop 4.17 fails for the thesis' complex, given a Stone group**: if `-L`
 generates an orthogonal group `G` (Thm 4.3 via Stone's theorem; `Feec.UnitaryGroupGenerator`),
 the orbit of the TSD datum `(0, 0, β)` is a strong solution of (4.14) that leaves `K` on every
-`[0, T]`, `T > 0`.
+`[0, T]`, `T > 0`. Such a `G` always exists by Stone's theorem; the hypothesis-free form is
+`thesisComplex_orbit_not_propagate_unconditional` (`Feec.Ch4.StoneApplications`).
 
 Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
 theorem thesisComplex_orbit_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)

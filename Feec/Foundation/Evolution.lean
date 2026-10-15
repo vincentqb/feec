@@ -8,7 +8,10 @@ public import Mathlib.Analysis.Calculus.MeanValue
 
 Strong solutions of `U' = L U + F`, the explicit well-posedness hypotheses standing in for
 Thm 4.3 (Hille–Yosida / Stone, which Mathlib lacks), and the energy lemma behind every
-uniqueness statement. No `axiom`: existence enters only as an explicit hypothesis.
+uniqueness statement. No `axiom`: existence enters only as an explicit hypothesis. For
+skew-adjoint generators the hypotheses are discharged downstream by Stone's theorem
+(`Feec.stoneGroup` in `Feec.Ch4.Stone`; `Feec.IsSkewAdjoint.wellPosedHom` and
+`Feec.IsSkewAdjoint.wellPosedExistence_thm43` in `Feec.Ch4.StoneApplications`).
 
 ## References
 
@@ -45,6 +48,8 @@ structure IsStrongSolution (L : E →ₗ.[ℝ] E) (T : ℝ) (U₀ : E) (F U : �
 For every initial datum in `D(L)` and every admissible forcing there is a strong solution.
 `Adm` abstracts the class "`C([0,T];X) ∩ (W^{1,1}(0,T;X) ∪ L¹(0,T;D(L)))`".
 Never assumed as an `axiom`; always a theorem hypothesis. Uniqueness is *proved* (energy).
+For skew-adjoint `L` it is a theorem, `Feec.IsSkewAdjoint.wellPosedExistence_thm43` (Stone),
+with the forcing class `ForcingThm43`.
 See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998, Prop 4.1.6, Cor 2.4.9] and
 [Pazy1983, §1.10, Ch. 4]. -/
 def WellPosedExistence (L : E →ₗ.[ℝ] E) (T : ℝ) (Adm : (ℝ → E) → Prop) : Prop :=

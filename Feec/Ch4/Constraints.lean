@@ -28,7 +28,11 @@ Coverage (thesis ids; see `docs/BLUEPRINT.md`, module M8):
   `R(σ, E, B) = (-σ, E, -B)` of (4.14) is `revT`/`waveOp_revT`. The hypothesis holds for the
   periodic complex on `𝕋³` (`Feec.Torus.projKc_mem_domL`, giving `Feec.Torus.prop_4_17_torus`);
   on bounded domains it fails, and so does TSD propagation (`Feec.Ch4.BoundedDomain`; see the
-  docstring of `prop_4_17`). Prop 4.19 on `𝕋³` is `Feec.TorusSym.prop_4_19_torus`.
+  docstring of `prop_4_17`). Prop 4.19 on `𝕋³` is `Feec.TorusSym.prop_4_19_torus`. The group
+  hypotheses of `prop_4_17_necessary`/`prop_4_17_iff` are discharged by Stone's theorem
+  (`prop_4_17_necessary_unconditional`, `prop_4_17_iff_unconditional` in
+  `Feec.Ch4.StoneApplications`); the corrected maximal form on bounded domains is
+  `Feec.Constraints.prop_4_17_max_unconditional` (`Feec.Ch4.BoundedSalvageMax`).
 * **Lemma 3.5 (pointwise)**: `trace_curl`, `two_vskw_curl`, `div_curl`, `trace_curl_of_symm`,
   `curl_TSD`, `curl_TSD_div` (the operator hypotheses of `prop_4_17` in the TSD case).
 * **§4.8** (critic item 14): mixed weak scalar wave ⇔ second-order weak form under the
@@ -46,7 +50,10 @@ Coverage (thesis ids; see `docs/BLUEPRINT.md`, module M8):
 * **Existence hypotheses** (critic item 6): the Stone stand-in `Feec.UnitaryGroupGenerator`
   of `Feec.Ch4.Existence` is used throughout. `boundedComplex`, `boundedGroup`,
   `wellPosedHom_boundedComplex` and `exists_nontrivial_wellPosed` show that `WellPosedHom (-L)`
-  and the group hypothesis of `prop_4_17_iff` hold for a nontrivial `HilbertComplex2`.
+  and the group hypothesis of `prop_4_17_iff` hold for a nontrivial `HilbertComplex2`. For
+  every Hilbert complex these hypotheses are discharged by Stone's theorem
+  (`Feec.HilbertComplex2.waveGroup`); the unconditional forms of Props 4.16–4.18 are in
+  `Feec.Ch4.StoneApplications` and `Feec.Ch4.Unconditional`.
 
 Solutions are strong solutions in the sense of `Feec.IsStrongSolution` (pointwise derivatives
 within `[0,T]`; graph-norm continuity is not required). This makes the uniqueness and
@@ -1416,8 +1423,8 @@ domain:
   the constant symmetric trace-free fields; so for `E = g · diag(1, -1, 0)` with a bump `g`,
   `P_TSD E` has nonzero mean and `P_TSD E ∉ H̊(curl)`. The conclusion fails too: there is TSD
   data in `D(L) ∩ K` from which every strong solution leaves `K`
-  (`Feec.BoundedDomain.thesisComplex_not_propagate`; non-vacuous given a Stone group,
-  `Feec.BoundedDomain.thesisComplex_orbit_not_propagate`).
+  (`Feec.BoundedDomain.thesisComplex_not_propagate`; with existence of a solution, via Stone's
+  theorem, `Feec.BoundedDomain.thesisComplex_orbit_not_propagate_unconditional`).
 So the statement is a genuine theorem (its hypotheses are satisfiable) but does not apply to
 bounded domains with the `H̊(curl)` condition.
 
@@ -1435,7 +1442,8 @@ theorem prop_4_17 (hS1 : S1 ≤ H.d0†.ker) (hPD : ∀ x ∈ H.domL, projKc W0 
     (prop_4_18_i (hS1 hE₀) hU).2⟩
 
 /-- **Necessity of the projection hypothesis in Props 4.17/4.19** (not in the thesis). If
-`-L` generates an orthogonal group (Stone stand-in), `D(L) ∩ K` is dense in `K`, and every
+`-L` generates an orthogonal group (always true, by Stone's theorem; see
+`prop_4_17_necessary_unconditional`), `D(L) ∩ K` is dense in `K`, and every
 strong solution of (4.14) starting in `D(L) ∩ K` stays in `K`, then `P_K D(L) ⊆ D(L)`.
 Proof: forward invariance, the time reversal `R(σ, E, B) = (-σ, E, -B)` (`waveOp_revT`,
 `group_reversal`) for backward invariance, then the reducing-subspace argument.

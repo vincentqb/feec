@@ -14,8 +14,10 @@ public import Feec.Foundation.Operators
 
 Mathlib has no Hille–Yosida or Stone theorem, so the project states existence of time evolutions
 as the explicit hypotheses `Feec.WellPosedExistence` / `Feec.WellPosedHom` (Foundation §B).
-This module shows that these hypotheses are satisfiable and that they follow from a recognisable
-stand-in for Stone's theorem.
+This module shows that these hypotheses are satisfiable and that they follow from the conclusion
+of Stone's theorem, `Feec.UnitaryGroupGenerator`. Stone's theorem itself is proved in
+`Feec.Ch4.Stone` (`Feec.stoneGroup`: every skew-adjoint `L` generates such a group), so for
+skew-adjoint generators these hypotheses are discharged; see `Feec.Ch4.StoneApplications`.
 
 * `Feec.bddOp A`: an everywhere-defined bounded operator `A : E →L[ℝ] E` as a `LinearPMap`.
 * `Feec.wellPosedHom_bddOp`, `Feec.wellPosedExistence_bddOp`: for **every** bounded `A`,
@@ -39,8 +41,9 @@ stand-in for Stone's theorem.
 
 Scope: `IsStrongSolution` only asks for a pointwise derivative within `[0,T]`; the bounded
 witnesses are shown to be `C¹` separately.
-The unbounded case (e.g. the Hodge wave operator) still needs Stone's theorem, i.e. a
-`UnitaryGroupGenerator` hypothesis.
+The unbounded case (e.g. the Hodge wave operator) is covered by Stone's theorem,
+`Feec.stoneGroup` in `Feec.Ch4.Stone`, which constructs a `UnitaryGroupGenerator` for every
+skew-adjoint operator.
 
 ## References
 
@@ -191,9 +194,10 @@ For every everywhere-defined bounded `A` and every `F ∈ C([0,T]; E)`, Duhamel'
 `U t = exp(tA) (U₀ + ∫₀ᵗ exp(-sA) F s ds)` is a strong solution of `U' = A U + F`, `U 0 = U₀`.
 No skewness is needed for existence; it is needed for uniqueness/energy (proved elsewhere).
 
-Thesis gap: Thm 4.3 is only cited (Hille–Yosida/Stone); the project replaces it by the
+Thesis gap: Thm 4.3 is only cited (Hille–Yosida/Stone); the project states it as the
 hypothesis `WellPosedExistence`. This theorem shows that hypothesis is satisfiable, with the
-thesis' admissible class (which is `C([0,T];E)` when `D(L) = E`).
+thesis' admissible class (which is `C([0,T];E)` when `D(L) = E`). For unbounded skew-adjoint
+generators it is discharged by Stone's theorem (`Feec.IsSkewAdjoint.wellPosedExistence_thm43`).
 
 See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998, Prop 4.1.6] (as cited there)
 and [Pazy1983], Ch. 4. -/
@@ -221,7 +225,9 @@ end Exp
 
 /-- `L` generates a strongly continuous orthogonal ("unitary") group `S`.
 This is the conclusion of Stone's theorem for a skew-adjoint `L` (Thesis Thm 4.3 cites
-Hille–Yosida/Stone; Mathlib has neither), packaged as a hypothesis structure:
+Hille–Yosida/Stone; Mathlib has neither), packaged as a structure; Stone's theorem
+(`Feec.stoneGroup`, `Feec.isSkewAdjoint_iff_nonempty_unitaryGroupGenerator` in
+`Feec.Ch4.Stone`) shows it is inhabited exactly when `L` is skew-adjoint:
 `S` is a group of isometries, strongly continuous, and `L` is its generator, i.e.
 `D(L) = {x | t ↦ S t x differentiable at 0}` with `L x = (d/dt) S t x |_{t=0}`.
 

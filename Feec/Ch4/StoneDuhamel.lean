@@ -193,8 +193,12 @@ theorem wellPosedClassical_W11 (T : ℝ) : WellPosedClassical A T (ForcingW11 T)
       convert h3 using 1
       have e : (⟨_, hU t ht⟩ : A.domain) = ⟨_, G.mem_domain_apply ⟨U₀, hU₀⟩ t⟩ +
           ⟨_, G.mem_domain_apply ⟨w t, mem t ht⟩ t⟩ := rfl
-      rw [e, LinearPMap.map_add, Constraints.group_apply_neg_apply, hP t ht, G.apply_comm,
-        G.apply_comm]
+      have hinv : G.S t (G.S (-t) (Fe t)) = Fe t := by
+        have := congrArg (fun B : E →L[ℝ] E => B (Fe t)) (G.map_add t (-t))
+        simp only [add_neg_cancel, G.map_zero, one_apply_eq_self,
+          mul_apply_eq_comp] at this
+        exact this.symm
+      rw [e, LinearPMap.map_add, hinv, hP t ht, G.apply_comm, G.apply_comm]
       abel
     · simp [w, G.map_zero]
   · have hE : Icc (0 : ℝ) T = ∅ := Icc_eq_empty (by linarith)

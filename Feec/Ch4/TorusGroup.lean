@@ -72,9 +72,10 @@ because the group is diagonalized by the Fourier transform.
 
 Correction: as in `Feec.Torus.prop_4_17_torus`, this is the periodic analogue (`Ω` replaced by
 `𝕋³`, no boundary conditions) of the thesis' bounded-domain Prop 4.17. On a bounded domain
-the projection conjecture remains open, and for the thesis' (unbounded) bounded-domain
-complex existence still enters only through a `Feec.UnitaryGroupGenerator` hypothesis (for
-bounded-operator complexes it is discharged in `Feec.Ch4.Existence`/`Feec.Ch4.Constraints`).
+the projection conjecture is false (`Feec.BoundedDomain.thesisComplex_not_projection_hyp`) and
+so is the conclusion (`Feec.BoundedDomain.thesisComplex_orbit_not_propagate_unconditional`).
+For an arbitrary Hilbert complex the group is supplied by Stone's theorem (`Feec.stoneGroup`,
+`Feec.HilbertComplex2.waveGroup`); the explicit Fourier group here does not depend on it.
 
 ## References
 

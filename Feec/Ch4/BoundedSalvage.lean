@@ -57,8 +57,9 @@ Verified here: items 1-5 (for item 5, the abstract path lemma and `curl β ∉ L
 via the harmonic functions `e^{-n x₁} cos(n x₂)`), so `closure Z` has infinite codimension in
 `L²(TSD)`; in `Feec.Ch4.BoundedSalvageMax`, the corrected (maximal) Prop 4.17, whose exhibited
 elements are all stationary. Not formalized:
-* *Instances for Prop 4.19 and Ch. 6*: the criterion of item 4 is instantiated only for the
-  thesis' complex of Prop 4.17.
+* *Instance for Ch. 6*: the criterion of item 4 is instantiated for the thesis' complex of
+  Prop 4.17 here and for the complex (4.16) of Prop 4.19 in `Feec.Ch4.BoundedSym`
+  (`Feec.BoundedSym.symComplexB_mem_TSD0_of_propagate`), but not for the Ch. 6 BGG system.
 * *Density* (`closure Z = TSD₀`, so `obstr` is exactly the orthogonal complement of `closure Z` in
   `L²(TSD)`): on domains star-shaped with respect to a ball it follows from zero extension,
   dilation `B(x/λ)` and mollification; for Lipschitz `Ω` it needs a Bogovskii-type right inverse

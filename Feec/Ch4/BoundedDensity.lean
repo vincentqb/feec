@@ -30,9 +30,16 @@ domains star-shaped with respect to a ball, so that the description is exact:
   L²(TSD)`: every `B ∈ L²(TSD)` is an `L²` limit of fields smooth on `ℝ³`, symmetric and
   trace-free, divergence-free on `Ω`, which lie in `L²(TSD) ∩ H(curl, M)`
   (`smoothField_mem_TSD_of_div_on`, `smoothField_mem_HcurlM`).
-* `density_dichotomy`: both density statements conjectured in the proof of Prop 4.17, decided on
-  the same domains: the `H(curl, M)` one holds, the `H̊(curl, M)` one fails, with closure exactly
-  `L²(TSD₀)`.
+* `density_dichotomy`: the two `L²(TSD)` density statements that the proof of Prop 4.17 *infers*
+  from its conjectured `H(div, M, 0)` densities, decided on the same domains: the `H(curl, M)` one
+  holds, the `H̊(curl, M)` one fails, with closure exactly `L²(TSD₀)`.
+* `prop417_density_gap`: the gap stated as an invalid inference. The literal conjectures
+  (`H̊(curl, M) ∩ H(div, M, 0)` and `H(curl, M) ∩ H(div, M, 0)` dense in `H(div, M, 0)`) are true
+  (`Feec.BoundedDomain.thesisComplex_dense_literal`, `dense_HcurlM_inter_HdivZero`), yet the
+  inferred `H̊(curl, M) ∩ L²(TSD)` density in `L²(TSD)` is false.
+* `closure_TSD_inter_HcurlM_inter_HdivM_eq`: the `H(curl, M)` density also holds within
+  `H(curl, M) ∩ H(div, M)`, the `B`-component of `D(L)` in Prop 4.17 (trivially, since
+  `L²(TSD) ⊆ H(div, M)`).
 
 ## The mathematics
 
@@ -54,7 +61,7 @@ Let `B ∈ L²(TSD₀)` and let `b` be its zero extension to `ℝ³` (`zext`).
    `eLpNorm_dil_le`, by the change of variables `x ↦ c x`), and for a continuous compactly
    supported `g` the dilated mollification converges uniformly with support in a fixed ball
    (`eLpNorm_dil_molli_sub_le_of_continuous`); the density of `C_c^∞(ℝ³)` in `L²(ℝ³)`
-   (`MeasureTheory.MemLp.exist_eLpNorm_sub_le`) and an `ε/3` argument conclude. Restricting to `Ω`
+   (`MeasureTheory.MemLp.exist_eLpNorm_sub_le`) and an `ε`-splitting argument conclude. Restricting to `Ω`
    only decreases the norm.
 
 For `B ∈ L²(TSD)` without the boundary condition, step 1 fails at `∂Ω`, so the order is reversed
@@ -74,13 +81,19 @@ formalized: the Lipschitz case (finite unions of star-shaped pieces need a parti
 compatible with the divergence constraint, i.e. a Bogovskii-type right inverse of `div` on
 symmetric trace-free fields), and the identification `L²(TSD₀) = L²(TSD) ∩ H̊(div, M)` for Lipschitz `Ω`.
 
-Correction: in the proof of [QuennevilleBelair2015, §4.10, Prop 4.17] the hypotheses of Thm 4.5
-are reduced to conjectures, among them that `H̊(curl, M) ∩ L²(TSD)` and `H(curl, M) ∩ L²(TSD)`
-are dense in `L²(TSD)` (derived there from conjectured densities in `H(div, M, 0)`). On a domain
-star-shaped with respect to a ball the second holds (`closure_TSD_inter_HcurlM_eq`) and the first
-fails: the closure of `H̊(curl, M) ∩ L²(TSD)` is exactly `L²(TSD₀)`, the TSD fields with `B n = 0`
-weakly on `∂Ω`, a closed subspace of infinite codimension in `L²(TSD)`
-(`Feec.BoundedDomain.not_finiteDimensional_obstr` in `Feec.Ch4.BoundedSalvageDim`).
+Thesis gap: for the second hypothesis of Thm 4.5, the proof of
+[QuennevilleBelair2015, §4.10, Prop 4.17] conjectures (and Prop 4.17 assumes) that
+`H̊(curl, M) ∩ H(div, M, 0)` and `H(curl, M) ∩ H(div, M, 0)` are dense in `H(div, M, 0)`,
+"so that" `H̊(curl, M) ∩ L²(TSD)` and `H(curl, M) ∩ L²(TSD)` are dense in `L²(TSD)`. The two
+conjectures themselves are true on every bounded open `Ω`
+(`Feec.BoundedDomain.thesisComplex_dense_literal`, `dense_HcurlM_inter_HdivZero`); the error is
+the inference. On a domain star-shaped with respect to a ball the inferred `H(curl, M)` density
+holds (`closure_TSD_inter_HcurlM_eq`), but the inferred `H̊(curl, M)` density is false: the
+closure of `H̊(curl, M) ∩ L²(TSD)` is exactly `L²(TSD₀)`, the TSD fields with `B n = 0` weakly on
+`∂Ω`, a closed subspace of infinite codimension in `L²(TSD)`
+(`Feec.BoundedDomain.not_finiteDimensional_obstr` in `Feec.Ch4.BoundedSalvageDim`). Density of a
+set in `H(div, M, 0)` does not give density of its intersection with the closed subspace
+`L²(TSD) ⊆ H(div, M, 0)`.
 
 ## References
 
@@ -777,13 +790,13 @@ theorem closure_TSD_inter_HcurlZero_eq_ball (x₀ : R3) {R : ℝ} (hR : 0 < R) :
       TSD0 (Metric.ball x₀ R) Metric.isOpen_ball Metric.isBounded_ball :=
   closure_TSD_inter_HcurlZero_eq_of_convex _ _ (convex_ball x₀ R) (Metric.nonempty_ball.2 hR)
 
-/-! ## Density of smooth TSD fields in `L²(TSD)`: the `H(curl, M)` half of the conjecture
+/-! ## Density of smooth TSD fields in `L²(TSD)`: the inferred `H(curl, M)` density
 
 Running the dilation the other way (`c < 1`, expanding `Ω` about `x₀`) and mollifying gives fields
 that are smooth on all of `ℝ³` and pointwise TSD on a neighbourhood of `closure Ω`, but not
 compactly supported in `Ω`. They lie in `H(curl, M)` (no boundary condition). This is why the
-`H(curl, M)` half of the density conjecture in the proof of Prop 4.17 holds while the `H̊(curl, M)`
-half fails. -/
+inferred `H(curl, M)` density in the proof of Prop 4.17 holds while the inferred `H̊(curl, M)`
+density fails. -/
 
 /-- **Dilation with `c ≥ 1/2`**: `‖f(x₀ + c (· - x₀))‖₂ ≤ 8 ‖f‖₂`. (The norm scales by
 `c^{-3/2}`, at most `2^{3/2} < 8` for `c ≥ 1/2`; only the bound is proved.) -/
@@ -1162,8 +1175,8 @@ theorem exists_smooth_TSD_HcurlM_dist_lt (hΩ : IsOpen Ω) (hb : Bornology.IsBou
     _ < ε ^ 2 := by rw [hε'd]; nlinarith
 
 /-- **`closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)`** on a bounded open `Ω` star-shaped with respect
-to a ball: the `H(curl, M)` half of the density conjecture in the proof of
-[QuennevilleBelair2015, Prop 4.17] holds. Compare `closure_TSD_inter_HcurlZero_eq`: with the
+to a ball: the `H(curl, M)` density in `L²(TSD)` that the proof of
+[QuennevilleBelair2015, Prop 4.17] infers from its conjectured `H(div, M, 0)` density holds. Compare `closure_TSD_inter_HcurlZero_eq`: with the
 boundary condition of `H̊(curl, M)` the closure is the proper subspace `L²(TSD₀)`. -/
 theorem closure_TSD_inter_HcurlM_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {x₀ : R3} {s : ℝ} (hs : 0 < s)
@@ -1191,15 +1204,17 @@ theorem closure_TSD_inter_HcurlM_eq_ball (x₀ : R3) {R : ℝ} (hR : 0 < R) :
   closure_TSD_inter_HcurlM_eq_of_convex Metric.isOpen_ball Metric.isBounded_ball
     (convex_ball x₀ R) (Metric.nonempty_ball.2 hR)
 
-/-- **The two density conjectures of Prop 4.17, decided.** On a nonempty bounded open `Ω ⊆ ℝ³`
-star-shaped with respect to a ball (e.g. a ball, a cube, any nonempty bounded open convex set):
-* `closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)`: the `B`-field conjecture holds;
-* `closure (L²(TSD) ∩ H̊(curl, M)) = L²(TSD₀) ≠ L²(TSD)`: the `E`-field conjecture fails, and the
-  closure is identified exactly (the constant `diag(1, -1, 0)` is TSD but not in it,
+/-- **The two inferred `L²(TSD)` densities of Prop 4.17, decided.** The proof of
+[QuennevilleBelair2015, §4.10, Prop 4.17] conjectures densities in `H(div, M, 0)` (true,
+`prop417_density_gap`) and infers from them the two statements below. On a nonempty bounded open
+`Ω ⊆ ℝ³` star-shaped with respect to a ball (e.g. a ball, a cube, any nonempty bounded open
+convex set):
+* `closure (L²(TSD) ∩ H(curl, M)) = L²(TSD)`: the inferred `B`-field density holds;
+* `closure (L²(TSD) ∩ H̊(curl, M)) = L²(TSD₀) ≠ L²(TSD)`: the inferred `E`-field density fails,
+  and the closure is identified exactly (the constant `diag(1, -1, 0)` is TSD but not in it,
   `not_dense_TSD_inter_HcurlZero`).
 
-The whole difference is the boundary condition carried by `H̊(curl, M)`.
-See [QuennevilleBelair2015, §4.10, proof of Prop 4.17]. -/
+The whole difference is the boundary condition carried by `H̊(curl, M)`. -/
 theorem density_dichotomy (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {x₀ : R3} {s : ℝ} (hs : 0 < s)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
@@ -1210,5 +1225,54 @@ theorem density_dichotomy (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne :
     closure_TSD_inter_HcurlZero_eq hΩ hb hs hstar, fun h => ?_⟩
   obtain ⟨h1, h2⟩ := not_dense_TSD_inter_HcurlZero hΩ hb hne
   exact h2 (by rw [h]; exact h1)
+
+/-- `H̊(curl, M) ⊆ H(curl, M)`: the graph-closure limit `C` of `curl Φₙ` is a weak curl. -/
+theorem HcurlZero_subset_HcurlM (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    HcurlZero Ω ⊆ HcurlM Ω := by
+  rintro B ⟨C, hC⟩
+  exact ⟨C, fun Φ hΦ =>
+    (closure_curlGraph_identity hΩ hb hC fun ij => (hΦ ij).contDiff_one).symm⟩
+
+/-- **The literal `H(curl, M)` conjecture of Prop 4.17 holds** on every bounded open `Ω`:
+`H(curl, M) ∩ H(div, M, 0)` is dense in `H(div, M, 0)` [QuennevilleBelair2015, §4.10]. It follows
+from the `H̊(curl, M)` one (`thesisComplex_dense_literal`) since `H̊(curl, M) ⊆ H(curl, M)`. -/
+theorem dense_HcurlM_inter_HdivZero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    ∀ k ∈ HdivZero Ω, k ∈ closure (HcurlM Ω ∩ HdivZero Ω) := fun k hk =>
+  closure_mono (inter_subset_inter_left _ (HcurlZero_subset_HcurlM hΩ hb))
+    (thesisComplex_dense_literal hΩ hb k hk)
+
+/-- **Thesis gap in the proof of Prop 4.17, stated in Lean.** On a nonempty bounded open
+`Ω ⊆ ℝ³` star-shaped with respect to a ball, the two density conjectures of
+[QuennevilleBelair2015, §4.10, Prop 4.17] hold:
+* `H̊(curl, M) ∩ H(div, M, 0)` is dense in `H(div, M, 0)` (`thesisComplex_dense_literal`);
+* `H(curl, M) ∩ H(div, M, 0)` is dense in `H(div, M, 0)` (`dense_HcurlM_inter_HdivZero`);
+
+and so does the inferred `H(curl, M)` density in `L²(TSD)`. The inferred `H̊(curl, M)` density does
+not: `closure (L²(TSD) ∩ H̊(curl, M)) = L²(TSD₀) ≠ L²(TSD)`. So the step "so that
+`H̊(curl, M) ∩ L²(TSD)` is dense in `L²(TSD)`" is an invalid inference. The first two items need
+only `Ω` bounded and open. -/
+theorem prop417_density_gap (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    (∀ k ∈ HdivZero Ω, k ∈ closure (HcurlZero Ω ∩ HdivZero Ω)) ∧
+      (∀ k ∈ HdivZero Ω, k ∈ closure (HcurlM Ω ∩ HdivZero Ω)) ∧
+      closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlM Ω) = TSD Ω ∧
+      closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω) = TSD0 Ω hΩ hb ∧
+      closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω) ≠ TSD Ω :=
+  ⟨thesisComplex_dense_literal hΩ hb, dense_HcurlM_inter_HdivZero hΩ hb,
+    density_dichotomy hΩ hb hne hs hstar⟩
+
+/-- **`closure (L²(TSD) ∩ H(curl, M) ∩ H(div, M)) = L²(TSD)`** on a bounded open `Ω` star-shaped
+with respect to a ball: density inside the `B`-component `H(curl, M) ∩ H(div, M)` of the domain
+`D(L)` used in [QuennevilleBelair2015, Prop 4.17]. Since `L²(TSD) ⊆ H(div, M)`
+(`TSD_subset_HdivM`) this is `closure_TSD_inter_HcurlM_eq` rewritten. -/
+theorem closure_TSD_inter_HcurlM_inter_HdivM_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    closure ((TSD Ω : Set (L2M Ω)) ∩ (HcurlM Ω ∩ HdivM Ω)) = TSD Ω := by
+  have : (TSD Ω : Set (L2M Ω)) ∩ (HcurlM Ω ∩ HdivM Ω) = (TSD Ω : Set (L2M Ω)) ∩ HcurlM Ω := by
+    ext B
+    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, TSD_subset_HdivM h.1⟩⟩
+  rw [this, closure_TSD_inter_HcurlM_eq hΩ hb hs hstar]
 
 end Feec.BoundedDomain

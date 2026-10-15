@@ -49,7 +49,7 @@ skew-adjoint, and the group is unique.
 The consequences for Ch. 4 (Thm 4.3, Cor 4.5, Thm 4.6, Props 4.17/4.19 without existence
 hypotheses) are in `Feec.Ch4.StoneApplications`.
 
-Correction (to the classical Yosida route): the Yosida approximant `c A (c - A)⁻¹` of a
+Remark (choice of approximant): the Yosida approximant `c A (c - A)⁻¹` of a
 skew-adjoint `A` is dissipative, not skew (for `A = iω` it is `(icω - ω²) c/(c² + ω²)`), so its
 exponential is only a contraction semigroup. The symmetrized approximant `B_n` above is skew,
 so all approximating groups are orthogonal and the group law passes to the limit directly.

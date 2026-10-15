@@ -67,8 +67,8 @@ the flat torus. This file settles the bounded case, on every nonempty bounded op
 
 `Ω ⊆ ℝ³ = Fin 3 → ℝ` is open and bounded, with Lebesgue measure. `L²(Ω; ℝ³ˣ³)` is `L2M Ω`, the
 `ℓ²`-sum of nine copies of `L²(Ω)`, and `L²(Ω; ℝ³)` is `L2V Ω` (three copies); these are
-canonically isometric to the Bochner spaces with the Frobenius/Euclidean norms (the isometry is not
-formalized). Spaces are defined honestly, by their standard definitions:
+canonically isometric to the Bochner spaces with the Frobenius/Euclidean norms (the isometry is
+`piL2Equiv` in `Feec.Ch4.BoundedDomainExt`). Spaces are defined honestly, by their standard definitions:
 * `C_c^∞(Ω)`: `IsTest` (smooth, compact support inside `Ω`); `pd k` is `∂_k` (`fderiv`).
 * `H̊¹(Ω; ℝ³)`: the domain of `gradClosure`, the closure of `C_c^∞(Ω; ℝ³)` in the graph norm of
   the row-wise gradient `(grad φ)_{ij} = ∂_j φ_i`.
@@ -119,9 +119,10 @@ Not formalized: Stone's theorem (existence of the group in Thm 4.3) on bounded d
 non-vacuous refutations `exists_orbit_not_propagate` and `thesisComplex_orbit_not_propagate` take
 the group as the hypothesis `G : Feec.UnitaryGroupGenerator (-L)` (the stand-in also used by
 `Feec.Constraints.prop_4_17_necessary`), while `exists_data_not_propagate` and
-`thesisComplex_not_propagate` quantify over all strong solutions. The second projection
-hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is not decided (not needed: the first already
-fails). Prop 4.19 on bounded domains is not treated.
+`thesisComplex_not_propagate` quantify over all strong solutions. Prop 4.19 on bounded domains is
+not treated. The second projection hypothesis `P_{L²(TSD)} H(curl, M) ⊆ H(curl, M)` is also
+false on every nonempty bounded open `Ω`, and `D(curl*) = H(curl, M)` exactly; both are proved in
+`Feec.Ch4.BoundedDomainExt` (`thesisComplex_not_projection_hyp2`, `mem_adjoint_curlClosure_iff`).
 
 ## References
 

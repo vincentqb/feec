@@ -10,7 +10,7 @@ public import Mathlib.Analysis.Calculus.ParametricIntegral
 public import Mathlib.Analysis.Calculus.Deriv.MeanValue
 
 /-!
-# Interior TSD propagation on bounded domains (finite speed of propagation)
+# Interior TSD propagation (finite speed of propagation)
 
 On a bounded open `Ω ⊆ ℝ³`, TSD propagation (the conclusion of thesis Prop 4.17,
 [QuennevilleBelair2015, §4.10]) fails for the system (4.14) of the complex
@@ -21,6 +21,13 @@ Euclidean distance to `ℝ³ \ Ω` exceeds `t`. So the obstruction travels inwar
 speed, and for the explicit datum `(0, 0, β)` it is confined to the boundary layer of width `t`
 and nonzero there.
 
+The interior argument uses no boundary condition and no boundedness: `WeakEB.ae_viol_eq_zero`
+and `WeakEB.ae_viol_eq_zero_depDomain` hold on every open `Ω ⊆ ℝ³`, bounded or not. For
+`Ω = ℝ³` the domain of dependence is all of `ℝ³`, which gives global TSD propagation on the
+whole space (`WeakEB.mem_TSD_univ`). Boundedness and the boundary condition `H̊(curl)` enter only
+through the thesis' complex `thesisComplex`: its existence theory and the boundary-layer
+violation.
+
 ## The mathematics
 
 1. *Constraints that propagate globally.* Prop 4.18 (i) gives `σ ≡ 0`, `div E ≡ 0` and the
@@ -28,10 +35,10 @@ and nonzero there.
    (`weakEB_of_strongSolution`). In the interior, tested against `C_c^∞(Ω; ℝ³ˣ³)`, both curls are
    the classical curl (`WeakEB`); no boundary condition enters.
 2. *The violation system.* Let `a(X)_k = ε_{kij} X_{ij}` (twice the axial vector of `skw X`) and
-   `τ(X) = tr X`. For weakly divergence-free `Y`, the distributional Lemma 3.5 identities
-   `τ(curl Y) = -div a(Y)` and `a(curl Y) = ∇τ(Y) + curl a(Y)` hold (`sum_integral_curlM_cTr`,
-   `sum_integral_curlM_cAx`), so `W = (a_E, τ_E, a_B, τ_B)` solves, weakly in `Ω`, the closed
-   first-order system
+   `τ(X) = tr X`. The distributional Lemma 3.5 identities are `τ(curl Y) = -div a(Y)`, which holds
+   for every `Y ∈ L²` (`sum_integral_curlM_cTr`), and `a(curl Y) = ∇τ(Y) + curl a(Y)`, which holds
+   for weakly divergence-free `Y` (`sum_integral_curlM_cAx`). So `W = (a_E, τ_E, a_B, τ_B)`
+   solves, weakly in `Ω`, the closed first-order system
    `∂_t a_E = -∇τ_B - curl a_B`, `∂_t τ_E = div a_B`, `∂_t a_B = ∇τ_E + curl a_E`,
    `∂_t τ_B = -div a_E` (`WeakEB.deriv_axE`, …; the closed system of Prop 3.6,
    cf. `Feec.violation_evolution`). It has the energy identity `½ ∂_t |W|² = div F(W)`,
@@ -49,7 +56,9 @@ and nonzero there.
 5. *Removing the mollifier.* Letting `ε → 0`, Lebesgue differentiation
    (`ContDiffBump.ae_convolution_tendsto_right_of_locallyIntegrable`) gives `W(t) = 0` a.e. on
    `{|y - x| < r - t}` whenever `{|z - x| < r} ⊆ Ω` (`WeakEB.ae_viol_eq_zero`), and a countable
-   cover gives the statement on the whole domain of dependence (`thesisComplex_TSD_depDomain`).
+   cover gives the statement on the whole domain of dependence (`WeakEB.ae_viol_eq_zero_depDomain`,
+   `thesisComplex_TSD_depDomain`). Local integrability `L² ⊆ L¹_loc` and the Cauchy–Schwarz bound
+   `|X ⋆ ρ| ≤ ‖ρ‖_{L²(ℝ³)} ‖X‖` replace any finiteness of `|Ω|`.
 
 ## Main results
 
@@ -59,11 +68,17 @@ and nonzero there.
 * `thesisComplex_TSD_depDomain`: the same a.e. on `depDomain Ω t` (distance to `ℝ³ \ Ω` larger
   than `t`); `thesisComplex_TSD_depDomain_exists`: with existence and uniqueness of the solution
   (Stone's theorem).
-* `thesisComplex_violation_boundary_layer`: for the datum `(0, 0, β)` of
-  `thesisComplex_not_propagate`, every solution is TSD on `depDomain Ω t` but, for some
-  `t ∈ [0, T]`, not symmetric and trace-free on a non-null subset of `Ω \ depDomain Ω t`.
-* Abstract core: `WeakEB.ae_viol_eq_zero` (any `L²` pair `E, B` with the interior weak equations,
-  divergence-free, with vanishing initial violation), `Nf_eq_zero_of_cone` (mollified form).
+* `thesisComplex_TSD_depDomain_distrib` (distributional form: `∫_Ω (E_{ij} - E_{ji}) g = 0`,
+  `∫_Ω (tr E) g = 0` for `g` supported in `depDomain Ω t`) and `thesisComplex_TSD_depDomain_local`
+  (the restrictions of `E(t)`, `B(t)` to `depDomain Ω t` lie in `L²(TSD)(depDomain Ω t)`).
+* `thesisComplex_beta_violation_boundary_layer`: for the explicit datum `(0, 0, β)`,
+  `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` (`betaL2`), the unique solution is TSD on `depDomain Ω t` for all
+  `t ∈ [0, T]` but, for some `t ∈ [0, T]`, not symmetric and trace-free on a non-null subset of
+  `Ω \ depDomain Ω t` (`thesisComplex_violation_boundary_layer`: existential-datum form).
+* Abstract core, on any open `Ω ⊆ ℝ³`: `WeakEB.ae_viol_eq_zero` (any `L²` pair `E, B` with the
+  interior weak equations, divergence-free, with vanishing initial violation),
+  `WeakEB.ae_viol_eq_zero_depDomain`, `Nf_eq_zero_of_cone` (mollified form). Whole space:
+  `WeakEB.ae_symTF_univ`, `WeakEB.mem_TSD_univ`.
 
 ## Model and conventions
 
@@ -71,7 +86,7 @@ As in `Feec.Ch4.BoundedDomain`: `L²(Ω; ℝ³ˣ³) = L2M Ω` (nine copies of `L
 `IsTest`, row-wise curl `curlM`. `R3 = Fin 3 → ℝ` carries the sup metric, so Euclidean balls are
 written with `dist₂`. Symmetry and trace-freeness are stated pointwise a.e. for representatives
 (`SymTF`); with the global divergence-free property this is `L²(TSD)` locally
-(`mem_TSD_of_ae_symTF` for the global version).
+(`resM_mem_TSD`; `mem_TSD_of_ae_symTF` for the global version).
 
 ## Thesis gap
 
@@ -79,7 +94,9 @@ The thesis does not discuss domains of dependence; Prop 4.17 asserts global TSD 
 fails on bounded domains. What survives is local: TSD propagates in the interior at unit speed,
 and the boundary obstruction is confined to the layer `{dist(·, ∂Ω) ≤ t}`. Not proved here: that
 the violation actually reaches distance `t` from `∂Ω` (sharpness of the unit speed); only its
-existence somewhere in the layer is shown.
+existence somewhere in the layer, at some time in every `[0, T]`, is shown. On `ℝ³`,
+`WeakEB.mem_TSD_univ` assumes the interior equations (`WeakEB`) and does not construct the
+solution; the Fourier model of the whole space is in `Feec.Ch4.WholeSym`.
 
 ## References
 
@@ -392,13 +409,11 @@ variable {Ω : Set R3}
 /-- Extension by zero of `X ∈ L²(Ω)` to `ℝ³`. -/
 def ext0 (X : L2 Ω) : R3 → ℝ := Ω.indicator (X : R3 → ℝ)
 
-theorem integrable_ext0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (X : L2 Ω) :
-    Integrable (ext0 X) := by
-  have : IsFiniteMeasure (volume.restrict Ω) := isFiniteMeasure_restrict.2 hb.measure_lt_top.ne
-  exact (integrable_indicator_iff hΩ.measurableSet).2 ((Lp.memLp X).integrable (by norm_num))
-
-theorem locallyIntegrable_ext0 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (X : L2 Ω) :
-    LocallyIntegrable (ext0 X) := (integrable_ext0 hΩ hb X).locallyIntegrable
+/-- `X ∈ L²(Ω)` extended by zero is locally integrable on `ℝ³` (`L² ⊆ L¹_loc`); no boundedness
+of `Ω` is needed. -/
+theorem locallyIntegrable_ext0 (hΩ : IsOpen Ω) (X : L2 Ω) : LocallyIntegrable (ext0 X) :=
+  ((memLp_indicator_iff_restrict hΩ.measurableSet.nullMeasurableSet).2
+    (Lp.memLp X)).locallyIntegrable (by norm_num)
 
 /-- Mollification `(X ⋆ ρ)(y) = ∫_Ω X(z) ρ(y - z) dz` (`X` extended by zero). -/
 def mol (ρ : R3 → ℝ) (X : L2 Ω) : R3 → ℝ :=
@@ -411,19 +426,19 @@ theorem mol_apply (hΩ : IsOpen Ω) (ρ : R3 → ℝ) (X : L2 Ω) (y : R3) :
   simp only [ContinuousLinearMap.lsmul_apply, smul_eq_mul, ext0]
   rw [indicator_mul_left]
 
-theorem contDiff_mol (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ρ : R3 → ℝ}
+theorem contDiff_mol (hΩ : IsOpen Ω) {ρ : R3 → ℝ}
     (hρ : ContDiff ℝ 1 ρ) (hcρ : HasCompactSupport ρ) (X : L2 Ω) : ContDiff ℝ 1 (mol ρ X) := by
   have := hcρ.contDiff_convolution_right (n := 1) (ContinuousLinearMap.lsmul ℝ ℝ)
-    (locallyIntegrable_ext0 hΩ hb X) (by exact_mod_cast hρ)
+    (locallyIntegrable_ext0 hΩ X) (by exact_mod_cast hρ)
   exact_mod_cast this
 
-theorem pd_mol (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ρ : R3 → ℝ}
+theorem pd_mol (hΩ : IsOpen Ω) {ρ : R3 → ℝ}
     (hρ : ContDiff ℝ 1 ρ) (hcρ : HasCompactSupport ρ) (X : L2 Ω) (k : Fin 3) (y : R3) :
     pd k (mol ρ X) y = mol (pd k ρ) X y := by
   have h : HasFDerivAt (mol ρ X) _ y := hcρ.hasFDerivAt_convolution_right
-    (ContinuousLinearMap.lsmul ℝ ℝ) (locallyIntegrable_ext0 hΩ hb X) hρ y
+    (ContinuousLinearMap.lsmul ℝ ℝ) (locallyIntegrable_ext0 hΩ X) hρ y
   rw [pd, h.fderiv, convolution_precompR_apply (𝕜 := ℝ) (L := ContinuousLinearMap.lsmul ℝ ℝ)
-    (locallyIntegrable_ext0 hΩ hb X) (hcρ.fderiv (𝕜 := ℝ))
+    (locallyIntegrable_ext0 hΩ X) (hcρ.fderiv (𝕜 := ℝ))
     (hρ.continuous_fderiv one_ne_zero)]
   rfl
 
@@ -434,36 +449,44 @@ theorem mol_zero (hΩ : IsOpen Ω) (ρ : R3 → ℝ) (y : R3) : mol ρ (0 : L2 �
     rw [hz, Pi.zero_apply, zero_mul]
   rw [integral_congr_ae this, integral_zero]
 
+/-- The reflected, translated kernel `z ↦ ρ(y - z)` is in `L²(ℝ³)`. -/
+theorem memLp_ker {ρ : R3 → ℝ} (hρ : Continuous ρ) (hcρ : HasCompactSupport ρ) (y : R3) :
+    MemLp (fun z => ρ (y - z)) 2 volume :=
+  (hρ.comp (continuous_const.sub continuous_id)).memLp_of_hasCompactSupport
+    (hcρ.comp_homeomorph (Homeomorph.subLeft y))
+
+theorem eLpNorm_ker {ρ : R3 → ℝ} (hρ : Continuous ρ) (y : R3) :
+    eLpNorm (fun z => ρ (y - z)) 2 volume = eLpNorm ρ 2 volume :=
+  eLpNorm_comp_measurePreserving (g := ρ) (f := fun z => y - z) hρ.aestronglyMeasurable
+    (Measure.measurePreserving_sub_left volume y)
+
 /-- The reflected, translated kernel `z ↦ ρ(y - z)` as an element of `L²(Ω)`. -/
-def kerL (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ρ : R3 → ℝ} (hρ : Continuous ρ) (y : R3) :
-    L2 Ω :=
-  (memLp_of_continuous hΩ hb (f := fun z => ρ (y - z))
-    (hρ.comp (continuous_const.sub continuous_id))).toLp _
+def kerL {ρ : R3 → ℝ} (hρ : Continuous ρ) (hcρ : HasCompactSupport ρ) (y : R3) : L2 Ω :=
+  ((memLp_ker hρ hcρ y).restrict Ω).toLp _
+
+/-- `‖ρ(y - ·)‖_{L²(Ω)} ≤ ‖ρ‖_{L²(ℝ³)}`, uniformly in `y`. -/
+theorem norm_kerL_le {ρ : R3 → ℝ} (hρ : Continuous ρ) (hcρ : HasCompactSupport ρ) (y : R3) :
+    ‖(kerL hρ hcρ y : L2 Ω)‖ ≤ (eLpNorm ρ 2 volume).toReal := by
+  rw [kerL, Lp.norm_toLp, ← eLpNorm_ker hρ y]
+  exact ENNReal.toReal_mono (memLp_ker hρ hcρ y).eLpNorm_ne_top
+    (eLpNorm_mono_measure _ Measure.restrict_le_self)
 
 /-- `mol` as an inner product with the reflected, translated kernel. -/
-theorem mol_eq_inner (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ρ : R3 → ℝ}
-    (hρ : Continuous ρ) (X : L2 Ω) (y : R3) : mol ρ X y = ⟪X, kerL hΩ hb hρ y⟫ := by
+theorem mol_eq_inner (hΩ : IsOpen Ω) {ρ : R3 → ℝ} (hρ : Continuous ρ)
+    (hcρ : HasCompactSupport ρ) (X : L2 Ω) (y : R3) : mol ρ X y = ⟪X, kerL hρ hcρ y⟫ := by
   rw [mol_apply hΩ]
   exact integral_mul_eq_inner X _
 
-/-- Uniform bound `|mol ρ X y| ≤ M ‖X‖`. -/
-theorem exists_abs_mol_le (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ρ : R3 → ℝ}
+/-- Uniform bound `|mol ρ X y| ≤ ‖ρ‖_{L²(ℝ³)} ‖X‖` (Cauchy–Schwarz; any open `Ω`). -/
+theorem exists_abs_mol_le (hΩ : IsOpen Ω) {ρ : R3 → ℝ}
     (hρ : Continuous ρ) (hcρ : HasCompactSupport ρ) :
     ∃ M, 0 ≤ M ∧ ∀ (X : L2 Ω) y, |mol ρ X y| ≤ M * ‖X‖ := by
-  have : IsFiniteMeasure (volume.restrict Ω) := isFiniteMeasure_restrict.2 hb.measure_lt_top.ne
-  obtain ⟨C, hC⟩ := hρ.bounded_above_of_compact_support hcρ
-  have hC0 : 0 ≤ C := (norm_nonneg _).trans (hC 0)
-  refine ⟨(measureUnivNNReal (volume.restrict Ω) : ℝ) ^ (2 : ℝ≥0∞).toReal⁻¹ * C,
-    by positivity, fun X y => ?_⟩
-  rw [mol_eq_inner hΩ hb hρ]
+  refine ⟨(eLpNorm ρ 2 volume).toReal, ENNReal.toReal_nonneg, fun X y => ?_⟩
+  rw [mol_eq_inner hΩ hρ hcρ]
   refine (abs_real_inner_le_norm _ _).trans ?_
   rw [mul_comm]
   gcongr
-  refine Lp.norm_le_of_ae_bound hC0 ?_
-  filter_upwards [MemLp.coeFn_toLp (memLp_of_continuous hΩ hb (f := fun z => ρ (y - z))
-      (hρ.comp (continuous_const.sub continuous_id)))] with z hz
-  rw [kerL, hz]
-  exact hC _
+  exact norm_kerL_le hρ hcρ y
 
 end Mollify
 
@@ -738,11 +761,11 @@ theorem pd_refl (hρ : ContDiff ℝ 1 ρ) (y : R3) (c : Fin 3) (z : R3) :
   simp
 
 /-- `∫_Ω X ∂_c[ρ(y - ·)] = -∂_c (X ⋆ ρ)(y)`. -/
-theorem integral_mul_pd_refl (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem integral_mul_pd_refl (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (X : L2 Ω) (y : R3) (c : Fin 3) :
     ∫ z, X z * pd c (fun z => ρ (y - z)) z ∂volume.restrict Ω = -pd c (mol ρ X) y := by
   simp_rw [pd_refl hρ y c, mul_neg]
-  rw [integral_neg, pd_mol hΩ hb hρ hcρ, mol_apply hΩ]
+  rw [integral_neg, pd_mol hΩ hρ hcρ, mol_apply hΩ]
 
 end Viol
 
@@ -779,7 +802,8 @@ theorem pd_vflux {aE aB : Fin 3 → R3 → ℝ} {tE tB : R3 → ℝ} (haE : ∀ 
     pd c (fun y => vflux (fun k => aE k y) (fun k => aB k y) (tE y) (tB y) c) y =
       pd c (aE (c + 1)) y * aB (c + 2) y + aE (c + 1) y * pd c (aB (c + 2)) y -
         (pd c (aE (c + 2)) y * aB (c + 1) y + aE (c + 2) y * pd c (aB (c + 1)) y) -
-        (pd c tB y * aE c y + tB y * pd c (aE c) y) + (pd c tE y * aB c y + tE y * pd c (aB c) y) := by
+        (pd c tB y * aE c y + tB y * pd c (aE c) y) +
+          (pd c tE y * aB c y + tE y * pd c (aB c) y) := by
   have d := fun (f : R3 → ℝ) (hf : Differentiable ℝ f) => (hf y).hasFDerivAt
   have h := ((((d _ (haE (c + 1))).mul (d _ (haB (c + 2)))).sub
     ((d _ (haE (c + 2))).mul (d _ (haB (c + 1))))).sub ((d _ htB).mul (d _ (haE c)))).add
@@ -807,9 +831,9 @@ theorem hasDerivAt_of_within {f : ℝ → ℝ} {f' t : ℝ}
   h.hasDerivAt (Icc_mem_nhds ht.1 ht.2)
 
 section
-variable (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : WeakEB Ω T E B)
+variable (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
   (hρ : ContDiff ℝ ∞ ρ) (hcρ : HasCompactSupport ρ) (hsupp : tsupport ρ ⊆ Metric.closedBall 0 ε)
-include hΩ hb h hρ hcρ hsupp
+include hΩ h hρ hcρ hsupp
 
 theorem hasDerivAt_mA_E {s : ℝ} (hs : s ∈ Ioo 0 T) {y : R3} (hy : Metric.closedBall y ε ⊆ Ω)
     (k : Fin 3) :
@@ -819,7 +843,7 @@ theorem hasDerivAt_mA_E {s : ℝ} (hs : s ∈ Ioo 0 T) {y : R3} (hy : Metric.clo
   have hρ1 : ContDiff ℝ 1 ρ := hρ.of_le (by simp)
   have := hasDerivAt_of_within (h.deriv_axE (Ioo_subset_Icc_self hs) k
     (isTest_refl hρ hsupp hy)) hs
-  simp only [integral_mul_pd_refl hΩ hb hρ1 hcρ] at this
+  simp only [integral_mul_pd_refl hΩ hρ1 hcρ] at this
   simp only [← mol_apply hΩ] at this
   delta mA mT
   convert this using 1
@@ -830,7 +854,7 @@ theorem hasDerivAt_mT_E {s : ℝ} (hs : s ∈ Ioo 0 T) {y : R3} (hy : Metric.clo
   have hρ1 : ContDiff ℝ 1 ρ := hρ.of_le (by simp)
   have := hasDerivAt_of_within (h.deriv_trE (Ioo_subset_Icc_self hs)
     (isTest_refl hρ hsupp hy)) hs
-  simp only [integral_mul_pd_refl hΩ hb hρ1 hcρ, Finset.sum_neg_distrib, neg_neg] at this
+  simp only [integral_mul_pd_refl hΩ hρ1 hcρ, Finset.sum_neg_distrib, neg_neg] at this
   simp only [← mol_apply hΩ] at this
   delta mA mT
   exact this
@@ -843,7 +867,7 @@ theorem hasDerivAt_mA_B {s : ℝ} (hs : s ∈ Ioo 0 T) {y : R3} (hy : Metric.clo
   have hρ1 : ContDiff ℝ 1 ρ := hρ.of_le (by simp)
   have := hasDerivAt_of_within (h.deriv_axB (Ioo_subset_Icc_self hs) k
     (isTest_refl hρ hsupp hy)) hs
-  simp only [integral_mul_pd_refl hΩ hb hρ1 hcρ] at this
+  simp only [integral_mul_pd_refl hΩ hρ1 hcρ] at this
   simp only [← mol_apply hΩ] at this
   delta mA mT
   convert this using 1
@@ -854,7 +878,7 @@ theorem hasDerivAt_mT_B {s : ℝ} (hs : s ∈ Ioo 0 T) {y : R3} (hy : Metric.clo
   have hρ1 : ContDiff ℝ 1 ρ := hρ.of_le (by simp)
   have := hasDerivAt_of_within (h.deriv_trB (Ioo_subset_Icc_self hs)
     (isTest_refl hρ hsupp hy)) hs
-  simp only [integral_mul_pd_refl hΩ hb hρ1 hcρ, Finset.sum_neg_distrib] at this
+  simp only [integral_mul_pd_refl hΩ hρ1 hcρ, Finset.sum_neg_distrib] at this
   simp only [← mol_apply hΩ] at this
   delta mA mT
   exact this
@@ -876,20 +900,20 @@ def Qf (ρ : R3 → ℝ) (E B : ℝ → L2M Ω) (s : ℝ) (y : R3) : ℝ :=
     ∑ k, mA ρ B k s y * (pd k (mT ρ E s) y - pd (k + 2) (mA ρ E (k + 1) s) y +
       pd (k + 1) (mA ρ E (k + 2) s) y) + mT ρ B s y * -∑ c, pd c (mA ρ E c s) y
 
-theorem contDiff_mA (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem contDiff_mA (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (X : ℝ → L2M Ω) (k : Fin 3) (s : ℝ) :
-    ContDiff ℝ 1 (mA ρ X k s) := contDiff_mol hΩ hb hρ hcρ _
+    ContDiff ℝ 1 (mA ρ X k s) := contDiff_mol hΩ hρ hcρ _
 
-theorem contDiff_mT (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem contDiff_mT (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (X : ℝ → L2M Ω) (s : ℝ) :
-    ContDiff ℝ 1 (mT ρ X s) := contDiff_mol hΩ hb hρ hcρ _
+    ContDiff ℝ 1 (mT ρ X s) := contDiff_mol hΩ hρ hcρ _
 
 /-- `W · A(∂) W = div F(W)` for the mollified violations, everywhere. -/
-theorem Qf_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem Qf_eq (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (E B : ℝ → L2M Ω) (s : ℝ) (y : R3) :
     Qf ρ E B s y = ∑ c, pd c (fun y => Flf ρ E B c s y) y := by
-  have dA := fun (X : ℝ → L2M Ω) k => (contDiff_mA hΩ hb hρ hcρ X k s).differentiable one_ne_zero
-  have dT := fun (X : ℝ → L2M Ω) => (contDiff_mT hΩ hb hρ hcρ X s).differentiable one_ne_zero
+  have dA := fun (X : ℝ → L2M Ω) k => (contDiff_mA hΩ hρ hcρ X k s).differentiable one_ne_zero
+  have dT := fun (X : ℝ → L2M Ω) => (contDiff_mT hΩ hρ hcρ X s).differentiable one_ne_zero
   simp only [Flf]
   simp only [pd_vflux (aE := fun k => mA ρ E k s) (aB := fun k => mA ρ B k s) (dA E) (dA B)
     (dT E) (dT B)]
@@ -897,14 +921,14 @@ theorem Qf_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff �
     (mT ρ B s y) (fun c k => pd c (mA ρ E k s) y) (fun c k => pd c (mA ρ B k s) y)
     (fun c => pd c (mT ρ E s) y) (fun c => pd c (mT ρ B s) y)
 
-theorem hasDerivAt_Nf (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : WeakEB Ω T E B)
+theorem hasDerivAt_Nf (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (hρ : ContDiff ℝ ∞ ρ) (hcρ : HasCompactSupport ρ) (hsupp : tsupport ρ ⊆ Metric.closedBall 0 ε)
     {s : ℝ} (hs : s ∈ Ioo 0 T) {y : R3} (hy : Metric.closedBall y ε ⊆ Ω) :
     HasDerivAt (fun s => Nf ρ E B s y) (2 * Qf ρ E B s y) s := by
-  have aE := fun k => hasDerivAt_mA_E hΩ hb h hρ hcρ hsupp hs hy k
-  have aB := fun k => hasDerivAt_mA_B hΩ hb h hρ hcρ hsupp hs hy k
-  have tE := hasDerivAt_mT_E hΩ hb h hρ hcρ hsupp hs hy
-  have tB := hasDerivAt_mT_B hΩ hb h hρ hcρ hsupp hs hy
+  have aE := fun k => hasDerivAt_mA_E hΩ h hρ hcρ hsupp hs hy k
+  have aB := fun k => hasDerivAt_mA_B hΩ h hρ hcρ hsupp hs hy k
+  have tE := hasDerivAt_mT_E hΩ h hρ hcρ hsupp hs hy
+  have tB := hasDerivAt_mT_B hΩ h hρ hcρ hsupp hs hy
   have hN := (((((((((aE 0).pow 2).add ((aE 1).pow 2)).add ((aE 2).pow 2)).add (tE.pow 2)).add
     ((aB 0).pow 2)).add ((aB 1).pow 2)).add ((aB 2).pow 2)).add (tB.pow 2))
   have e : (fun s => Nf ρ E B s y) = fun s => mA ρ E 0 s y ^ 2 + mA ρ E 1 s y ^ 2 +
@@ -934,7 +958,7 @@ theorem norm_trV_le (X : L2M Ω) : ‖trV X‖ ≤ 3 * ‖X‖ := by
     PiLp.norm_apply_le X (2, 2)]
 
 /-- Uniform bounds on the mollified violations and their first derivatives on `[0, T] × ℝ³`. -/
-theorem exists_bound_moll (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : WeakEB Ω T E B)
+theorem exists_bound_moll (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (hρ : ContDiff ℝ 1 ρ) (hcρ : HasCompactSupport ρ) :
     ∃ A, 0 ≤ A ∧ ∀ s ∈ Icc 0 T, ∀ X ∈ ({E, B} : Set (ℝ → L2M Ω)), ∀ y,
       (∀ k, |mA ρ X k s y| ≤ A) ∧ |mT ρ X s y| ≤ A ∧
@@ -949,10 +973,10 @@ theorem exists_bound_moll (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : W
   have hC0 : 0 ≤ C := by positivity
   have hpd : ∀ c, Continuous (pd c ρ) ∧ HasCompactSupport (pd c ρ) := fun c =>
     ⟨continuous_pd hρ c, HasCompactSupport.fderiv_apply ℝ hcρ _⟩
-  obtain ⟨M, hM0, hM⟩ := exists_abs_mol_le hΩ hb hρ.continuous hcρ
-  obtain ⟨M0, hM00, hM0'⟩ := exists_abs_mol_le hΩ hb (hpd 0).1 (hpd 0).2
-  obtain ⟨M1, hM10, hM1'⟩ := exists_abs_mol_le hΩ hb (hpd 1).1 (hpd 1).2
-  obtain ⟨M2, hM20, hM2'⟩ := exists_abs_mol_le hΩ hb (hpd 2).1 (hpd 2).2
+  obtain ⟨M, hM0, hM⟩ := exists_abs_mol_le hΩ hρ.continuous hcρ
+  obtain ⟨M0, hM00, hM0'⟩ := exists_abs_mol_le hΩ (hpd 0).1 (hpd 0).2
+  obtain ⟨M1, hM10, hM1'⟩ := exists_abs_mol_le hΩ (hpd 1).1 (hpd 1).2
+  obtain ⟨M2, hM20, hM2'⟩ := exists_abs_mol_le hΩ (hpd 2).1 (hpd 2).2
   set Ms := M + M0 + M1 + M2
   have hMs : ∀ c, ∀ (Y : L2 Ω) y, |mol (pd c ρ) Y y| ≤ Ms * ‖Y‖ := by
     intro c Y y
@@ -970,24 +994,24 @@ theorem exists_bound_moll (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : W
   refine ⟨fun k => (hMs' _ y).trans (hA _ (hax k)), (hMs' _ y).trans (hA _ htr), fun c =>
     ⟨fun k => ?_, ?_⟩⟩
   · change |pd c (mol ρ (axV (X s) k)) y| ≤ _
-    rw [pd_mol hΩ hb hρ hcρ]
+    rw [pd_mol hΩ hρ hcρ]
     exact (hMs c _ y).trans (hA _ (hax k))
   · change |pd c (mol ρ (trV (X s))) y| ≤ _
-    rw [pd_mol hΩ hb hρ hcρ]
+    rw [pd_mol hΩ hρ hcρ]
     exact (hMs c _ y).trans (hA _ htr)
 
-theorem continuousOn_mA (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : Continuous ρ)
+theorem continuousOn_mA (hΩ : IsOpen Ω) (hρ : Continuous ρ) (hcρ : HasCompactSupport ρ)
     {X : ℝ → L2M Ω} (hX : ContinuousOn X (Icc 0 T)) (k : Fin 3) (y : R3) :
     ContinuousOn (fun s => mA ρ X k s y) (Icc 0 T) := by
-  simp only [mA, mol_eq_inner hΩ hb hρ]
+  simp only [mA, mol_eq_inner hΩ hρ hcρ]
   refine ContinuousOn.inner ?_ continuousOn_const
   exact ((continuous_component _).comp_continuousOn hX).sub
     ((continuous_component _).comp_continuousOn hX)
 
-theorem continuousOn_mT (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : Continuous ρ)
+theorem continuousOn_mT (hΩ : IsOpen Ω) (hρ : Continuous ρ) (hcρ : HasCompactSupport ρ)
     {X : ℝ → L2M Ω} (hX : ContinuousOn X (Icc 0 T)) (y : R3) :
     ContinuousOn (fun s => mT ρ X s y) (Icc 0 T) := by
-  simp only [mT, mol_eq_inner hΩ hb hρ]
+  simp only [mT, mol_eq_inner hΩ hρ hcρ]
   refine ContinuousOn.inner ?_ continuousOn_const
   simp only [trV]
   exact continuousOn_finsetSum _ fun i _ => (continuous_component _).comp_continuousOn hX
@@ -1057,30 +1081,30 @@ theorem abs_Qf_le {s : ℝ} {y : R3} {A : ℝ} (hA : 0 ≤ A)
   nlinarith [t1, t2, t3, t4]
 
 
-theorem contDiff_Flf (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem contDiff_Flf (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (E B : ℝ → L2M Ω) (c : Fin 3) (s : ℝ) :
     ContDiff ℝ 1 (fun y => Flf ρ E B c s y) := by
-  have a := fun (X : ℝ → L2M Ω) k => contDiff_mA hΩ hb hρ hcρ X k s
-  have t := fun (X : ℝ → L2M Ω) => contDiff_mT hΩ hb hρ hcρ X s
+  have a := fun (X : ℝ → L2M Ω) k => contDiff_mA hΩ hρ hcρ X k s
+  have t := fun (X : ℝ → L2M Ω) => contDiff_mT hΩ hρ hcρ X s
   simp only [Flf, vflux]
   exact ((((a E _).mul (a B _)).sub ((a E _).mul (a B _))).sub ((t B).mul (a E _))).add
     ((t E).mul (a B _))
 
-theorem continuous_Nf (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem continuous_Nf (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (E B : ℝ → L2M Ω) (s : ℝ) : Continuous (Nf ρ E B s) := by
-  have a := fun (X : ℝ → L2M Ω) k => (contDiff_mA hΩ hb hρ hcρ X k s).continuous
-  have t := fun (X : ℝ → L2M Ω) => (contDiff_mT hΩ hb hρ hcρ X s).continuous
+  have a := fun (X : ℝ → L2M Ω) k => (contDiff_mA hΩ hρ hcρ X k s).continuous
+  have t := fun (X : ℝ → L2M Ω) => (contDiff_mT hΩ hρ hcρ X s).continuous
   change Continuous fun y => dens _ _ _ _
   unfold dens
   exact (((continuous_finsetSum _ fun k _ => (a E k).pow 2).add ((t E).pow 2)).add
     (continuous_finsetSum _ fun k _ => (a B k).pow 2)).add ((t B).pow 2)
 
-theorem continuous_Qf (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hρ : ContDiff ℝ 1 ρ)
+theorem continuous_Qf (hΩ : IsOpen Ω) (hρ : ContDiff ℝ 1 ρ)
     (hcρ : HasCompactSupport ρ) (E B : ℝ → L2M Ω) (s : ℝ) : Continuous (Qf ρ E B s) := by
   have e : Qf ρ E B s = fun y => ∑ c, pd c (fun y => Flf ρ E B c s y) y :=
-    funext (Qf_eq hΩ hb hρ hcρ E B s)
+    funext (Qf_eq hΩ hρ hcρ E B s)
   rw [e]
-  exact continuous_finsetSum _ fun c _ => continuous_pd (contDiff_Flf hΩ hb hρ hcρ E B c s) c
+  exact continuous_finsetSum _ fun c _ => continuous_pd (contDiff_Flf hΩ hρ hcρ E B c s) c
 
 /-- **Local energy estimate (finite speed of propagation) for the mollified violations.**
 If the violations vanish at `t = 0` and the mollifier radius `ε` is such that `B̄(y, ε) ⊆ Ω` for
@@ -1088,13 +1112,13 @@ If the violations vanish at `t = 0` and the mollifier radius `ε` is such that `
 the backward cone `√(δ² + |y - x|²) < R - t` (unit speed). Proof: the weighted energy
 `e(t) = ∫ χ(R - t - q) |W|²` satisfies `e' = ∫ (-χ' |W|² - 2 ∇ψ · F(W)) ≤ 0` (`Qf_eq`,
 integration by parts, `abs_two_flux_le`, `sum_pd_wt_sq_le`) and `e(0) = 0`. -/
-theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : WeakEB Ω T E B)
+theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0)
     (hρ : ContDiff ℝ ∞ ρ) (hcρ : HasCompactSupport ρ) (hsupp : tsupport ρ ⊆ Metric.closedBall 0 ε)
     {x : R3} {R δ : ℝ} (hδ : 0 < δ) (hgood : ∀ y, dist₂ y x < R → Metric.closedBall y ε ⊆ Ω)
     {t : ℝ} (ht : t ∈ Icc 0 T) {y : R3} (hy : qd x δ y < R - t) : Nf ρ E B t y = 0 := by
   have hρ1 : ContDiff ℝ 1 ρ := hρ.of_le (by simp)
-  obtain ⟨A, hA0, hA⟩ := exists_bound_moll hΩ hb h hρ1 hcρ
+  obtain ⟨A, hA0, hA⟩ := exists_bound_moll hΩ h hρ1 hcρ
   obtain ⟨D, hD⟩ := exists_abs_dχ_le
   have hD0 : 0 ≤ D := (abs_nonneg _).trans (hD 0)
   have hEm : E ∈ ({E, B} : Set (ℝ → L2M Ω)) := by simp
@@ -1110,10 +1134,10 @@ theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : 
   set F : ℝ → R3 → ℝ := fun s y => wt x δ R s y * Nf ρ E B s y with hF
   set F' : ℝ → R3 → ℝ := fun s y =>
     -dχ (R - s - qd x δ y) * Nf ρ E B s y + wt x δ R s y * (2 * Qf ρ E B s y) with hF'
-  have cF : ∀ s, Continuous (F s) := fun s => (cwt s).mul (continuous_Nf hΩ hb hρ1 hcρ E B s)
+  have cF : ∀ s, Continuous (F s) := fun s => (cwt s).mul (continuous_Nf hΩ hρ1 hcρ E B s)
   have cF' : ∀ s, Continuous (F' s) := fun s =>
-    ((cdχ s).neg.mul (continuous_Nf hΩ hb hρ1 hcρ E B s)).add
-      ((cwt s).mul (continuous_const.mul (continuous_Qf hΩ hb hρ1 hcρ E B s)))
+    ((cdχ s).neg.mul (continuous_Nf hΩ hρ1 hcρ E B s)).add
+      ((cwt s).mul (continuous_const.mul (continuous_Qf hΩ hρ1 hcρ E B s)))
   have F0 : ∀ s, 0 ≤ s → ∀ y, y ∉ Metric.closedBall x R → F s y = 0 := fun s hs y hy => by
     simp only [hF, (wt_far hs (le_dist₂_of_notMem hy)).1, zero_mul]
   have F'0 : ∀ s, 0 ≤ s → ∀ y, R ≤ dist₂ y x → F' s y = 0 := fun s hs y hy => by
@@ -1141,9 +1165,9 @@ theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : 
           continuous_const)
       have hN : ContinuousOn (fun s => Nf ρ E B s y) (Icc 0 T) := by
         have a := fun (X : ℝ → L2M Ω) (hX : ContinuousOn X (Icc 0 T)) k =>
-          continuousOn_mA hΩ hb hρ1.continuous hX k y
+          continuousOn_mA hΩ hρ1.continuous hcρ hX k y
         have b := fun (X : ℝ → L2M Ω) (hX : ContinuousOn X (Icc 0 T)) =>
-          continuousOn_mT hΩ hb hρ1.continuous hX y
+          continuousOn_mT hΩ hρ1.continuous hcρ hX y
         change ContinuousOn (fun s => dens _ _ _ _) _
         unfold dens
         exact (((continuousOn_finsetSum _ fun k _ => (a E h.contE k).pow 2).add
@@ -1180,7 +1204,7 @@ theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : 
       -- differentiability in time
       by_cases hy : dist₂ y x < R
       · exact (hasDerivAt_wt_time R s y).mul
-          (hasDerivAt_Nf hΩ hb h hρ hcρ hsupp hs (hgood y hy))
+          (hasDerivAt_Nf hΩ h hρ hcρ hsupp hs (hgood y hy))
       · rw [not_lt] at hy
         rw [show F' s y = 0 from F'0 s hs.1.le y hy]
         refine (hasDerivAt_const s (0 : ℝ)).congr_of_eventuallyEq ?_
@@ -1194,10 +1218,10 @@ theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : 
     -- integrate by parts the flux term
     set G : R3 → ℝ := fun y => -dχ (R - t' - qd x δ y) * Nf ρ E B t' y -
       2 * ∑ c, pd c (wt x δ R t') y * Flf ρ E B c t' y with hG
-    have cFl := fun c => contDiff_Flf hΩ hb hρ1 hcρ E B c t'
+    have cFl := fun c => contDiff_Flf hΩ hρ1 hcρ E B c t'
     have cpw : ∀ c, Continuous (pd c (wt x δ R t')) := fun c =>
       continuous_pd ((contDiff_wt hδ R t').of_le (by simp)) c
-    have cG : Continuous G := ((cdχ t').neg.mul (continuous_Nf hΩ hb hρ1 hcρ E B t')).sub
+    have cG : Continuous G := ((cdχ t').neg.mul (continuous_Nf hΩ hρ1 hcρ E B t')).sub
       (continuous_const.mul (continuous_finsetSum _ fun c _ => (cpw c).mul (cFl c).continuous))
     have G0 : ∀ y, y ∉ Metric.closedBall x R → G y = 0 := fun y hy => by
       have hy' := le_dist₂_of_notMem hy
@@ -1219,16 +1243,18 @@ theorem Nf_eq_zero_of_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : 
       simp only [Measure.restrict_univ] at hibp
       rw [integral_add, hibp]
       · ring
-      · exact integrable_of_eq_zero_off (x := x) (R := R) ((cwt t').mul (continuous_pd (cFl c) c)) fun y hy => by
+      · exact integrable_of_eq_zero_off (x := x) (R := R)
+          ((cwt t').mul (continuous_pd (cFl c) c)) fun y hy => by
           simp only [(wt_far (δ := δ) ht'.1.le (le_dist₂_of_notMem (x := x) hy)).1, zero_mul]
-      · exact integrable_of_eq_zero_off (x := x) (R := R) ((cpw c).mul (cFl c).continuous) fun y hy => by
+      · exact integrable_of_eq_zero_off (x := x) (R := R)
+          ((cpw c).mul (cFl c).continuous) fun y hy => by
           simp only [pd_wt_far hδ ht'.1.le (le_dist₂_of_notMem (x := x) hy), zero_mul]
     have hsplit : ∀ y, F' t' y = G y + 2 * ∑ c, (wt x δ R t' y *
         pd c (fun y => Flf ρ E B c t' y) y + pd c (wt x δ R t') y * Flf ρ E B c t' y) :=
       fun y => by
         have e1 : wt x δ R t' y * ∑ c, pd c (fun y => Flf ρ E B c t' y) y =
             ∑ c, wt x δ R t' y * pd c (fun y => Flf ρ E B c t' y) y := Finset.mul_sum _ _ _
-        simp only [hF', hG, Qf_eq hΩ hb hρ1 hcρ E B t' y, Finset.sum_add_distrib, ← e1]
+        simp only [hF', hG, Qf_eq hΩ hρ1 hcρ E B t' y, Finset.sum_add_distrib, ← e1]
         ring
     rw [integral_congr_ae (Eventually.of_forall hsplit), integral_add intG
       ((integrable_finsetSum _ fun c _ => hP c).const_mul 2), integral_const_mul,
@@ -1295,14 +1321,14 @@ theorem tendsto_bumpSeq_rOut : Tendsto (fun n => (bumpSeq n).rOut) atTop (𝓝 0
 
 /-- Lebesgue differentiation: if the mollifications of `V` vanish eventually at every point of
 `S ⊆ Ω`, then `V = 0` a.e. on `S`. -/
-theorem ae_eq_zero_of_mol_eventually (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (V : L2 Ω)
+theorem ae_eq_zero_of_mol_eventually (hΩ : IsOpen Ω) (V : L2 Ω)
     {S : Set R3} (hS : MeasurableSet S) (hSΩ : S ⊆ Ω)
     (hev : ∀ y ∈ S, ∀ᶠ n in atTop, mol ((bumpSeq n).normed volume) V y = 0) :
     ∀ᵐ y ∂volume.restrict S, V y = 0 := by
   have hconv := ContDiffBump.ae_convolution_tendsto_right_of_locallyIntegrable (μ := volume)
     (φ := bumpSeq) (l := atTop) (K := 2) tendsto_bumpSeq_rOut
     (Eventually.of_forall fun n => by simp only [bumpSeq]; ring_nf; rfl)
-    (locallyIntegrable_ext0 hΩ hb V)
+    (locallyIntegrable_ext0 hΩ V)
   rw [ae_restrict_iff' hS]
   filter_upwards [hconv] with y hy hyS
   simp only [← mol_eq_conv] at hy
@@ -1315,7 +1341,7 @@ theorem ae_eq_zero_of_mol_eventually (hΩ : IsOpen Ω) (hb : Bornology.IsBounded
 /-- **Interior TSD propagation, in the `L²` setting of `WeakEB`.** If the violations vanish at
 `t = 0` and the Euclidean ball `{|z - x| < r}` lies in `Ω`, then at time `t ∈ [0, T]` the
 violations `a(E), τ(E), a(B), τ(B)` vanish a.e. on the ball `{|y - x| < r - t}`. -/
-theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h : WeakEB Ω T E B)
+theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0)
     {x : R3} {r : ℝ} (hr : ∀ z, dist₂ z x < r → z ∈ Ω) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ∀ᵐ y ∂volume.restrict {y | dist₂ y x < r - t}, (∀ k, axV (E t) k y = 0) ∧
@@ -1326,7 +1352,7 @@ theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (
   have hcone : ∀ n y, dist₂ y x < r - t - 3 * ε n →
       Nf ((bumpSeq n).normed volume) E B t y = 0 := by
     intro n y hy
-    refine Nf_eq_zero_of_cone (x := x) (ε := ε n) (R := r - 2 * ε n) (δ := ε n) hΩ hb h h0
+    refine Nf_eq_zero_of_cone (x := x) (ε := ε n) (R := r - 2 * ε n) (δ := ε n) hΩ h h0
       ((bumpSeq n).contDiff_normed (n := ⊤)) (bumpSeq n).hasCompactSupport_normed
       (bumpSeq n).tsupport_normed_eq.subset (hε n) (fun z hz w hw => hr w ?_) ht ?_
     · have h1 := dist₂_le_two_dist w z
@@ -1350,16 +1376,16 @@ theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (
   have comp := fun n y (hn : Nf ((bumpSeq n).normed volume) E B t y = 0) =>
     eq_zero_of_dens_eq_zero hn
   have haE : ∀ k, ∀ᵐ y ∂volume.restrict {y | dist₂ y x < r - t}, axV (E t) k y = 0 := fun k =>
-    ae_eq_zero_of_mol_eventually hΩ hb _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
+    ae_eq_zero_of_mol_eventually hΩ _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
       (comp n y hn).1 k
   have hτE : ∀ᵐ y ∂volume.restrict {y | dist₂ y x < r - t}, trV (E t) y = 0 :=
-    ae_eq_zero_of_mol_eventually hΩ hb _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
+    ae_eq_zero_of_mol_eventually hΩ _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
       (comp n y hn).2.1
   have haB : ∀ k, ∀ᵐ y ∂volume.restrict {y | dist₂ y x < r - t}, axV (B t) k y = 0 := fun k =>
-    ae_eq_zero_of_mol_eventually hΩ hb _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
+    ae_eq_zero_of_mol_eventually hΩ _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
       (comp n y hn).2.2.1 k
   have hτB : ∀ᵐ y ∂volume.restrict {y | dist₂ y x < r - t}, trV (B t) y = 0 :=
-    ae_eq_zero_of_mol_eventually hΩ hb _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
+    ae_eq_zero_of_mol_eventually hΩ _ hS hSΩ fun y hy => (hev y hy).mono fun n hn =>
       (comp n y hn).2.2.2
   filter_upwards [ae_all_iff.2 haE, hτE, ae_all_iff.2 haB, hτB] with y h1 h2 h3 h4
   exact ⟨h1, h2, h3, h4⟩
@@ -1443,7 +1469,7 @@ theorem thesisComplex_TSD_cone (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {
     rw [hU0]
     exact ⟨(symm_trace_viol_of_TSD hE₀).1, (symm_trace_viol_of_TSD hE₀).2,
       (symm_trace_viol_of_TSD hB₀).1, (symm_trace_viol_of_TSD hB₀).2⟩
-  have hv := hW.ae_viol_eq_zero hΩ hb h0 hr ht
+  have hv := hW.ae_viol_eq_zero hΩ h0 hr ht
   have hSΩ : {y | dist₂ y x < r - t} ⊆ Ω := fun y hy => hr y (by
     simp only [mem_ofPred_eq] at hy; linarith [ht.1])
   refine ⟨hσ t ht, hW.divE t ht, hW.divB t ht, ?_⟩
@@ -1523,16 +1549,17 @@ theorem mem_TSD_of_ae_symTF {X : L2M Ω} (hX : ∀ᵐ y ∂volume.restrict Ω, S
       with y hy h1 h2 h3
     rw [h1, Pi.add_apply, h2, Pi.add_apply, h3, Pi.zero_apply, ← hy.2, Fin.sum_univ_three]
 
-/-- **The boundary obstruction lives in the boundary layer.** On every nonempty bounded open
-`Ω ⊆ ℝ³` there is TSD data `(0, 0, β) ∈ D(L)` such that for every `T > 0` (4.14) has a strong
+/-- **The boundary obstruction lives in the boundary layer** (existential-datum form; see
+`thesisComplex_beta_violation_boundary_layer` for the explicit `β`). On every nonempty bounded
+open `Ω ⊆ ℝ³` there is TSD data `(0, 0, B₀) ∈ D(L)` such that for every `T > 0` (4.14) has a strong
 solution on `[0, T]` (Stone's theorem), and every such solution
 * is TSD on the domain of dependence `depDomain Ω t` for every `t ∈ [0, T]`
   (`thesisComplex_TSD_depDomain`), but
 * fails to be symmetric and trace-free on a non-null subset of the boundary layer
   `Ω \ depDomain Ω t` (points within distance `t` of `∂Ω`) for some `t ∈ [0, T]`.
 
-So TSD propagation fails exactly by a violation that is created at `∂Ω` and confined to the
-layer of width `t`. Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+So the violation is excluded from the domain of dependence and is present in the layer of width
+`t` at some `t ∈ [0, T]`. Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
 theorem thesisComplex_violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     ∃ B₀ : L2M Ω, B₀ ∈ TSD Ω ∧ ini (L2V Ω) 0 B₀ ∈ (thesisComplex hΩ hb).domL ∧
@@ -1563,5 +1590,272 @@ theorem thesisComplex_violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology
   exact ⟨hσ, mem_TSD_of_ae_symTF (hall'.mono fun y hy => hy.1) hdE,
     mem_TSD_of_ae_symTF (hall'.mono fun y hy => hy.2) hdB⟩
 end Main
+
+/-! ## Arbitrary open domains, the whole space, and local forms -/
+
+section Open
+
+variable {Ω : Set R3} {T : ℝ} {E B : ℝ → L2M Ω}
+
+/-- **Interior finite speed of propagation on an arbitrary open `Ω ⊆ ℝ³`** (bounded or not,
+including `Ω = ℝ³`). Under `WeakEB` with vanishing initial violation, at time `t ∈ [0, T]` the
+violations `a(E), τ(E), a(B), τ(B)` vanish a.e. on the domain of dependence `depDomain Ω t`. -/
+theorem WeakEB.ae_viol_eq_zero_depDomain (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
+    (h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0)
+    {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ∀ᵐ y ∂volume.restrict (depDomain Ω t), (∀ k, axV (E t) k y = 0) ∧
+      trV (E t) y = 0 ∧ (∀ k, axV (B t) k y = 0) ∧ trV (B t) y = 0 := by
+  set s : {p : R3 × ℝ // ∀ z, dist₂ z p.1 < p.2 → z ∈ Ω} → Set R3 :=
+    fun p => {y | dist₂ y p.1.1 < p.1.2 - t}
+  obtain ⟨I, hI, hIU⟩ := TopologicalSpace.isOpen_iUnion_countable s
+    fun p => isOpen_ball₂ _ _
+  rw [depDomain_eq_iUnion, ← hIU, ae_restrict_biUnion_iff _ hI]
+  intro p _
+  exact h.ae_viol_eq_zero hΩ h0 p.2 ht
+
+/-- The same, stated as pointwise symmetry and trace-freeness of the representatives. -/
+theorem WeakEB.ae_symTF_depDomain (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
+    (h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0)
+    {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ∀ᵐ y ∂volume.restrict (depDomain Ω t), SymTF (E t) y ∧ SymTF (B t) y := by
+  have hv := h.ae_viol_eq_zero_depDomain hΩ h0 ht
+  have h1 := ae_symTF_of_viol _ (depDomain_subset ht.1) (hv.mono fun y hy => ⟨hy.1, hy.2.1⟩)
+  have h2 := ae_symTF_of_viol _ (depDomain_subset ht.1) (hv.mono fun y hy => ⟨hy.2.2.1, hy.2.2.2⟩)
+  filter_upwards [h1, h2] with y h1 h2 using ⟨h1, h2⟩
+
+theorem depDomain_univ (t : ℝ) : depDomain (univ : Set R3) t = univ :=
+  eq_univ_of_forall fun _ => ⟨t + 1, by linarith, fun _ _ => mem_univ _⟩
+
+/-- **The whole space `ℝ³`.** With no boundary, the domain of dependence is all of `ℝ³`, so the
+interior estimate gives global constraint propagation: if `E, B` satisfy `WeakEB` on `Ω = ℝ³`
+and their violations vanish at `t = 0`, then `E(t)` and `B(t)` are symmetric and trace-free a.e.
+on `ℝ³` for every `t ∈ [0, T]`. This is the TSD part of the conclusion of Prop 4.17 on `ℝ³`, by
+the energy method instead of the projection hypothesis; the solution itself is assumed. -/
+theorem WeakEB.ae_symTF_univ {E B : ℝ → L2M (univ : Set R3)} (h : WeakEB univ T E B)
+    (h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0)
+    {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ∀ᵐ y ∂volume.restrict (univ : Set R3), SymTF (E t) y ∧ SymTF (B t) y := by
+  have := h.ae_symTF_depDomain isOpen_univ h0 ht
+  rwa [depDomain_univ] at this
+
+/-- On `ℝ³`, `WeakEB` with TSD data keeps `E(t)`, `B(t)` in `L²(TSD)` for all `t ∈ [0, T]`. -/
+theorem WeakEB.mem_TSD_univ {E B : ℝ → L2M (univ : Set R3)} (h : WeakEB univ T E B)
+    (hE₀ : E 0 ∈ TSD univ) (hB₀ : B 0 ∈ TSD univ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    E t ∈ TSD univ ∧ B t ∈ TSD univ := by
+  have h0 : (∀ k, axV (E 0) k = 0) ∧ trV (E 0) = 0 ∧ (∀ k, axV (B 0) k = 0) ∧ trV (B 0) = 0 :=
+    ⟨(symm_trace_viol_of_TSD hE₀).1, (symm_trace_viol_of_TSD hE₀).2,
+      (symm_trace_viol_of_TSD hB₀).1, (symm_trace_viol_of_TSD hB₀).2⟩
+  have hs := h.ae_symTF_univ h0 ht
+  exact ⟨mem_TSD_of_ae_symTF (hs.mono fun y hy => hy.1) (h.divE t ht),
+    mem_TSD_of_ae_symTF (hs.mono fun y hy => hy.2) (h.divB t ht)⟩
+
+end Open
+
+/-! ### Distributional and local `L²(TSD)` forms -/
+
+section Local
+
+variable {Ω : Set R3}
+
+/-- If `V = 0` a.e. on a measurable `S`, then `∫_Ω V g = 0` for every `g` supported in `S`. -/
+theorem integral_mul_eq_zero_of_ae {S : Set R3} (hS : MeasurableSet S) {V g : R3 → ℝ}
+    (hV : ∀ᵐ y ∂volume.restrict S, V y = 0) (hg : Function.support g ⊆ S) :
+    ∫ y, V y * g y ∂volume.restrict Ω = 0 := by
+  refine integral_eq_zero_of_ae (ae_restrict_of_ae ?_)
+  filter_upwards [(ae_restrict_iff' hS).1 hV] with y hy
+  by_cases hyS : y ∈ S
+  · simp [hy hyS]
+  · simp [Function.notMem_support.1 fun h => hyS (hg h)]
+
+theorem measurableSet_depDomain (t : ℝ) : MeasurableSet (depDomain Ω t) := by
+  rw [depDomain_eq_iUnion]
+  exact (isOpen_iUnion fun p => isOpen_ball₂ _ _).measurableSet
+
+/-- Restriction `L²(Ω) → L²(S)` for `S ⊆ Ω`. -/
+def resL2 {S : Set R3} (hS : S ⊆ Ω) (f : L2 Ω) : L2 S :=
+  (Measure.restrict_restrict_of_subset (μ := volume) hS ▸ (Lp.memLp f).restrict S).toLp _
+
+theorem coeFn_resL2 {S : Set R3} (hS : S ⊆ Ω) (f : L2 Ω) :
+    (resL2 hS f : R3 → ℝ) =ᵐ[volume.restrict S] f :=
+  MemLp.coeFn_toLp _
+
+/-- Restriction `L²(Ω; ℝ³ˣ³) → L²(S; ℝ³ˣ³)`, componentwise. -/
+def resM {S : Set R3} (hS : S ⊆ Ω) (X : L2M Ω) : L2M S := WithLp.toLp 2 fun ij => resL2 hS (X ij)
+
+/-- **Local `L²(TSD)`.** If `X ∈ H(div, 0; Ω)` is symmetric and trace-free a.e. on `S ⊆ Ω`, its
+restriction to `S` lies in `L²(TSD)(S)` (symmetric, trace-free, weakly divergence-free in `S`). -/
+theorem resM_mem_TSD (hΩ : IsOpen Ω) {S : Set R3} (hS : S ⊆ Ω) {X : L2M Ω}
+    (hX : X ∈ HdivZero Ω) (hsym : ∀ᵐ y ∂volume.restrict S, SymTF X y) : resM hS X ∈ TSD S := by
+  have hc : ∀ ij, ((resM hS X) ij : R3 → ℝ) =ᵐ[volume.restrict S] X ij := fun ij =>
+    coeFn_resL2 hS (X ij)
+  refine mem_TSD_of_ae_symTF ?_ fun φ hφ => ?_
+  · filter_upwards [hsym, ae_all_iff.2 hc] with y hy hcy
+    refine ⟨fun i j => ?_, ?_⟩
+    · rw [hcy, hcy, hy.1]
+    · simp only [hcy]; exact hy.2
+  · have hφΩ : ∀ i, IsTest Ω (φ i) := fun i =>
+      ⟨(hφ i).contDiff, (hφ i).hasCompactSupport, (hφ i).tsupport_subset.trans hS⟩
+    rw [← hX φ hφΩ]
+    refine Finset.sum_congr rfl fun ij _ => ?_
+    rw [integral_congr_ae ((hc ij).mono fun y hy => by simp only; rw [hy]),
+      setIntegral_eq_of_subset_of_forall_sdiff_eq_zero hΩ.measurableSet hS fun y hy => ?_]
+    have : y ∉ tsupport (φ ij.1) := fun h => hy.2 ((hφ ij.1).tsupport_subset h)
+    simp [pd, fderiv_of_notMem_tsupport (𝕜 := ℝ) this]
+
+end Local
+
+
+section ThesisLocal
+
+variable {Ω : Set R3}
+
+open Feec.HilbertComplex2 Feec.Constraints
+
+/-- **Distributional form.** Under the hypotheses of `thesisComplex_TSD_cone`, at `t ∈ [0, T]`:
+for every scalar `g` supported in the domain of dependence `depDomain Ω t` (in particular every
+`g ∈ C_c^∞` with support in a cone `{|y - x| < r - t}`), `∫_Ω (E_{ij} - E_{ji}) g = 0` and
+`∫_Ω (tr E) g = 0`, and likewise for `B`. -/
+theorem thesisComplex_TSD_depDomain_distrib (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {E₀ B₀ : L2M Ω} (hE₀ : E₀ ∈ TSD Ω) (hB₀ : B₀ ∈ TSD Ω) {T : ℝ}
+    {U : ℝ → Tot (L2V Ω) (L2M Ω) (L2M Ω)}
+    (hU : IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T (ini (L2V Ω) E₀ B₀) 0 U)
+    {t : ℝ} (ht : t ∈ Icc 0 T) {g : R3 → ℝ} (hg : Function.support g ⊆ depDomain Ω t) :
+    (∀ i j, ∫ y, ((tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 (i, j) y -
+        (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 (j, i) y) * g y ∂volume.restrict Ω = 0) ∧
+      ∫ y, (∑ i, (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 (i, i) y) * g y
+        ∂volume.restrict Ω = 0 ∧
+      (∀ i j, ∫ y, ((tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 (i, j) y -
+        (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 (j, i) y) * g y ∂volume.restrict Ω = 0) ∧
+      ∫ y, (∑ i, (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 (i, i) y) * g y
+        ∂volume.restrict Ω = 0 := by
+  have h := thesisComplex_TSD_depDomain hΩ hb hE₀ hB₀ hU ht
+  have hm := measurableSet_depDomain (Ω := Ω) t
+  refine ⟨fun i j => integral_mul_eq_zero_of_ae hm (h.mono fun y hy => ?_) hg,
+    integral_mul_eq_zero_of_ae hm (h.mono fun y hy => hy.1.2) hg,
+    fun i j => integral_mul_eq_zero_of_ae hm (h.mono fun y hy => ?_) hg,
+    integral_mul_eq_zero_of_ae hm (h.mono fun y hy => hy.2.2) hg⟩
+  · rw [hy.1.1 i j, sub_self]
+  · rw [hy.2.1 i j, sub_self]
+
+/-- **Local `L²(TSD)` form.** Under the hypotheses of `thesisComplex_TSD_cone`, at `t ∈ [0, T]`
+the restrictions of `E(t)` and `B(t)` to the open set `depDomain Ω t` lie in
+`L²(TSD)(depDomain Ω t)`: symmetric, trace-free and weakly divergence-free there. -/
+theorem thesisComplex_TSD_depDomain_local (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {E₀ B₀ : L2M Ω} (hE₀ : E₀ ∈ TSD Ω) (hB₀ : B₀ ∈ TSD Ω) {T : ℝ}
+    {U : ℝ → Tot (L2V Ω) (L2M Ω) (L2M Ω)}
+    (hU : IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T (ini (L2V Ω) E₀ B₀) 0 U)
+    {t : ℝ} (ht : t ∈ Icc 0 T) :
+    resM (depDomain_subset ht.1) (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 ∈ TSD (depDomain Ω t) ∧
+      resM (depDomain_subset ht.1) (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 ∈
+        TSD (depDomain Ω t) := by
+  have h := thesisComplex_TSD_depDomain hΩ hb hE₀ hB₀ hU ht
+  obtain ⟨-, hdE, hdB, -⟩ := thesisComplex_TSD_cone hΩ hb hE₀ hB₀ hU (x := 0) (r := 0)
+    (fun z hz => absurd hz (not_lt.2 (Real.sqrt_nonneg _))) ht
+  exact ⟨resM_mem_TSD hΩ _ hdE (h.mono fun y hy => hy.1),
+    resM_mem_TSD hΩ _ hdB (h.mono fun y hy => hy.2)⟩
+
+/-- The `L²` class of the explicit TSD field `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` on `Ω`. -/
+def betaL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : L2M Ω :=
+  smoothField hΩ hb betaField (fun ij => (contDiff_betaField ij).continuous)
+
+/-- For the explicit datum `(0, 0, β)`, every strong solution of (4.14) for `thesisComplex`
+leaves `K = {0} × L²(TSD) × L²(TSD)` somewhere in `[0, T]`, `T > 0` (the argument of
+`exists_data_not_propagate`, with `B₀ = β` pinned). -/
+theorem beta_leaves_K (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {T : ℝ} (hT : 0 < T) {U : ℝ → Tot (L2V Ω) (L2M Ω) (L2M Ω)}
+    (hU : IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T (ini (L2V Ω) 0 (betaL2 hΩ hb)) 0 U) :
+    ∃ t ∈ Icc 0 T, U t ∉ Kc (L2V Ω) (TSD Ω) (TSD Ω) := by
+  set H := thesisComplex hΩ hb
+  have hd1 := mem_closure_curlClosure hΩ hb
+  have hβ : ∀ ij, ContDiff ℝ 1 (betaField ij) := fun ij => (contDiff_betaField ij).of_le (by simp)
+  obtain ⟨hadj, hadj'⟩ := smoothField_mem_adjoint hΩ hb H hd1 hβ
+  unfold betaL2 at hU
+  by_contra hall
+  simp only [not_exists, not_and, not_not] at hall
+  set K := constField hΩ hb diagA
+  let ℓ : Tot (L2V Ω) (L2M Ω) (L2M Ω) →L[ℝ] ℝ := (innerSL ℝ K).comp
+    ((ContinuousLinearMap.fst ℝ (L2M Ω) (L2M Ω)).comp ((ContinuousLinearMap.snd ℝ (L2V Ω) _).comp
+      (Constraints.totL (W0 := L2V Ω) (W1 := L2M Ω) (W2 := L2M Ω)).toContinuousLinearMap))
+  have hℓ : ∀ y, ℓ y = ⟪K, (tot (L2V Ω) (L2M Ω) (L2M Ω) y).2.1⟫ := fun y => rfl
+  have hzero : ∀ t ∈ Icc 0 T, ℓ (U t) = 0 := by
+    intro t ht
+    have hD := (Feec.Constraints.mem_domL H).1 (hU.mem t ht)
+    have hE : (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 ∈ H.d1.domain :=
+      (Submodule.mem_inf.1 hD.2.1).1
+    rw [hℓ, real_inner_comm, inner_constField]
+    refine Finset.sum_eq_zero fun ij _ => ?_
+    rw [integral_eq_zero_of_mem_TSD_of_mem_HcurlZero hΩ hb ((mem_Kc).1 (hall t ht)).2.1
+      ⟨_, hd1 ⟨_, hE⟩⟩, mul_zero]
+  have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT.le⟩
+  have hd := ℓ.hasFDerivAt.comp_hasDerivWithinAt (0 : ℝ) (hU.deriv 0 h0)
+  have hd0 : HasDerivWithinAt (ℓ ∘ U) 0 (Icc 0 T) 0 :=
+    (hasDerivWithinAt_const (0 : ℝ) (Icc 0 T) (0 : ℝ)).congr (fun t ht => hzero t ht)
+      (hzero 0 h0)
+  have heq := (uniqueDiffOn_Icc hT 0 h0).eq_deriv _ hd hd0
+  have hp0 : H.pr0 ⟨U 0, hU.mem 0 h0⟩ = 0 := Subtype.ext (by simp [hU.init])
+  have hp2 : H.prV2s ⟨U 0, hU.mem 0 h0⟩ =
+      ⟨smoothField hΩ hb betaField (fun ij => (hβ ij).continuous), hadj⟩ :=
+    Subtype.ext (by simp [hU.init])
+  rw [Pi.zero_apply, add_zero, LinearPMap.neg_apply, _root_.map_neg, hℓ,
+    Constraints.tot_waveOp] at heq
+  simp only at heq
+  rw [hp0, hp2, hadj', LinearPMap.map_zero, zero_add, real_inner_comm, inner_constField] at heq
+  have hI : ∀ ij : Ix, ∫ x, smoothField hΩ hb (curlM betaField) (continuous_curlM hβ) ij x
+      ∂volume.restrict Ω = volume.real Ω * -diagA ij.1 ij.2 := fun ij => by
+    rw [integral_congr_ae (coeFn_smoothField hΩ hb _ _ ij)]
+    simp only [curlM_betaField, integral_const, measureReal_restrict_apply_univ, smul_eq_mul]
+  simp only [hI] at heq
+  have hpos : 0 < volume.real Ω := by
+    rw [measureReal_def]
+    exact ENNReal.toReal_pos (hΩ.measure_pos volume hne).ne' hb.measure_lt_top.ne
+  simp [Fintype.sum_prod_type, Fin.sum_univ_three, diagA] at heq
+  linarith
+
+/-- **The boundary obstruction of the explicit datum `(0, 0, β)` lives in the boundary layer.**
+On every nonempty bounded open `Ω ⊆ ℝ³`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD, `(0, 0, β) ∈ D(L)`,
+and for every `T > 0`, (4.14) has a strong solution on `[0, T]` (Stone's theorem), unique among
+strong solutions; it is TSD a.e. on `depDomain Ω t` for every `t ∈ [0, T]`, but for some
+`t ∈ [0, T]` it is not a.e. symmetric and trace-free on the boundary layer `Ω \ depDomain Ω t`.
+Correction: [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
+theorem thesisComplex_beta_violation_boundary_layer (hΩ : IsOpen Ω)
+    (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    betaL2 hΩ hb ∈ TSD Ω ∧ ini (L2V Ω) 0 (betaL2 hΩ hb) ∈ (thesisComplex hΩ hb).domL ∧
+      ∀ T > 0, ∃ U : ℝ → Tot (L2V Ω) (L2M Ω) (L2M Ω),
+        IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T (ini (L2V Ω) 0 (betaL2 hΩ hb)) 0 U ∧
+        (∀ U', IsStrongSolution (-(thesisComplex hΩ hb).waveOp) T
+          (ini (L2V Ω) 0 (betaL2 hΩ hb)) 0 U' → EqOn U' U (Icc 0 T)) ∧
+        (∀ t ∈ Icc 0 T, ∀ᵐ y ∂volume.restrict (depDomain Ω t),
+          SymTF (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 y ∧
+            SymTF (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 y) ∧
+        ∃ t ∈ Icc 0 T, ¬ ∀ᵐ y ∂volume.restrict (Ω \ depDomain Ω t),
+          SymTF (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 y ∧
+            SymTF (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 y := by
+  have hβ : ∀ ij, ContDiff ℝ 1 (betaField ij) := fun ij => (contDiff_betaField ij).of_le (by simp)
+  have hB₀ : betaL2 hΩ hb ∈ TSD Ω := betaField_mem_TSD hΩ hb
+  obtain ⟨hadj, -⟩ := smoothField_mem_adjoint hΩ hb (thesisComplex hΩ hb)
+    (mem_closure_curlClosure hΩ hb) hβ
+  have hD : ini (L2V Ω) 0 (betaL2 hΩ hb) ∈ (thesisComplex hΩ hb).domL := by
+    rw [Feec.Constraints.mem_domL, tot_ini]
+    exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, hadj⟩
+  have h0 : (0 : L2M Ω) ∈ TSD Ω := Submodule.zero_mem _
+  refine ⟨hB₀, hD, fun T hT => ?_⟩
+  obtain ⟨U, hU, huniq, -⟩ := (thesisComplex hΩ hb).thm_4_6_unconditional T hD
+  have hS := hU.toIsStrongSolution
+  refine ⟨U, hS, huniq, fun t ht => thesisComplex_TSD_depDomain hΩ hb h0 hB₀ hS ht, ?_⟩
+  obtain ⟨t, ht, hnot⟩ := beta_leaves_K hΩ hb hne hT hS
+  refine ⟨t, ht, fun hlayer => hnot ?_⟩
+  have hdep := thesisComplex_TSD_depDomain hΩ hb h0 hB₀ hS ht
+  have hall' : ∀ᵐ y ∂volume.restrict Ω, SymTF (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.1 y ∧
+      SymTF (tot (L2V Ω) (L2M Ω) (L2M Ω) (U t)).2.2 y := by
+    have := (ae_restrict_union_iff _ _ _).2 ⟨hdep, hlayer⟩
+    rwa [union_sdiff_cancel (depDomain_subset ht.1)] at this
+  obtain ⟨hσ, hdE, hdB, -⟩ := thesisComplex_TSD_cone hΩ hb h0 hB₀ hS (x := 0) (r := 0)
+    (fun z hz => absurd hz (not_lt.2 (Real.sqrt_nonneg _))) ht
+  rw [mem_Kc]
+  exact ⟨hσ, mem_TSD_of_ae_symTF (hall'.mono fun y hy => hy.1) hdE,
+    mem_TSD_of_ae_symTF (hall'.mono fun y hy => hy.2) hdB⟩
+
+end ThesisLocal
+
 
 end Feec.BoundedDomain

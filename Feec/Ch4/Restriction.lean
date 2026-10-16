@@ -7,17 +7,25 @@ public import Feec.Ch4.Existence
 
 Core formal content of Thesis §4.3:
 
-* `skewAdjoint_restrict` — **Thesis Thm 4.4** (skew-adjoint restriction), without the
-  redundant density hypothesis (ii); `thm_4_4` is the literal statement.
+* `IsReducing` (`Feec.Foundation.Operators`) packages hypotheses (i) `P_K D(L) ⊆ D(L)` and
+  (iii) `L (D(L) ∩ K) ⊆ K` of Thm 4.4: `IsSkewAdjoint.isReducing_iff` (and
+  `IsSkewSymm.isReducing_iff` for densely defined skew-symmetric `L`).
+* `IsSkewAdjoint.restrictTo` — **Thesis Thm 4.4** (skew-adjoint restriction) for a reducing
+  subspace, without the redundant hypothesis (ii) and without a density hypothesis on `D(L)`;
+  `skewAdjoint_restrict` and `thm_4_4` are the thesis-shaped corollaries.
 * `dense_inter_of_proj_mem` — hypothesis (ii) of Thm 4.4 follows from (i) and density of `D(L)`.
 * `map_orthogonal_mem`, `commute_proj` — `L(D(L) ∩ Kᗮ) ⊆ Kᗮ` and `L P_K = P_K L` on `D(L)`.
 * `strongSolution_unique` — uniqueness half of **Thesis Thm 4.3** by the energy method.
 * `constraint_propagation` — the actual content of **Thesis Cor 4.5**: strong solutions with
   data in `K` stay in `K`. Needs only skew-symmetry (no density, no semigroups).
-* `cor_4_5` (restricted form, as in the thesis), `cor_4_5_ambient` (ambient form),
-  `cor_4_5_classical` (with the full `C⁰(D(L̃)) ∩ C¹(K)` regularity).
-* `constraint_ker` — the §4.3 application `K = ker M`, with the corrected hypothesis `M` closed;
-  `isClosed_ker_of_isClosed` replaces the false claim that kernels of unbounded operators are
+* `IsSkewAdjoint.exists_strongSolution_restrictTo` (restricted form, as in the thesis),
+  `WellPosedExistence.exists_mem_of_isReducing` (ambient form),
+  `IsSkewAdjoint.exists_classicalSolution_restrictTo` (with the full `C⁰(D(L̃)) ∩ C¹(K)`
+  regularity), all for a reducing `K` and without density hypotheses; `cor_4_5`,
+  `cor_4_5_ambient`, `cor_4_5_classical` are the thesis-shaped corollaries.
+* `constraint_ker`, `WellPosedExistence.exists_mem_ker` — the §4.3 application `K = ker M`,
+  with the corrected hypothesis `M` closed; `isClosed_ker` (`Feec.Foundation.Operators`)
+  replaces the false claim that kernels of unbounded operators are
   closed (refuted in `Feec.Ch4.Adjoint`, `exists_not_isClosed_ker`).
 
 Existence of solutions (Thesis Thm 4.3, Hille–Yosida/Stone) is not in Mathlib and enters only
@@ -155,24 +163,55 @@ theorem proj_orth_mem_of_le (D M : Submodule ℝ E) [M.HasOrthogonalProjection]
 
 variable [CompleteSpace E]
 
-/-- **Thesis Thm 4.4** (skew-adjoint restriction). Let `L` be skew-adjoint with dense domain and
-`K` a closed subspace with (i) `P_K D(L) ⊆ D(L)` and (iii) `L (D(L) ∩ K) ⊆ K`. Then
-`L̃ = L|_{D(L) ∩ K} : K → K` is skew-adjoint.
+omit [CompleteSpace E] in
+/-- For a densely defined skew-symmetric `L`, hypotheses (i) `P_K D(L) ⊆ D(L)` and (iii)
+`L (D(L) ∩ K) ⊆ K` of Thesis Thm 4.4 make `K` reducing (`commute_proj`). -/
+theorem IsSkewSymm.isReducing {L : E →ₗ.[ℝ] E} (hL : IsSkewSymm L) (hD : Dense (L.domain : Set E))
+    {K : Submodule ℝ E} [K.HasOrthogonalProjection]
+    (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
+    (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) : IsReducing L K :=
+  ⟨h1, commute_proj L hD hL K h1 h3⟩
+
+omit [CompleteSpace E] in
+/-- For a densely defined skew-symmetric `L`, `K` is reducing iff hypotheses (i) and (iii) of
+Thesis Thm 4.4 hold. -/
+theorem IsSkewSymm.isReducing_iff {L : E →ₗ.[ℝ] E} (hL : IsSkewSymm L)
+    (hD : Dense (L.domain : Set E)) {K : Submodule ℝ E} [K.HasOrthogonalProjection] :
+    IsReducing L K ↔ (∀ x : L.domain, K.starProjection (x : E) ∈ L.domain) ∧
+      ∀ x : L.domain, (x : E) ∈ K → L x ∈ K :=
+  ⟨fun h => ⟨h.proj_mem, h.mapsTo⟩, fun h => hL.isReducing hD h.1 h.2⟩
+
+/-- For skew-adjoint `L`, hypotheses (i) and (iii) of Thesis Thm 4.4 make `K` reducing. -/
+theorem IsSkewAdjoint.isReducing {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
+    {K : Submodule ℝ E} [K.HasOrthogonalProjection]
+    (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
+    (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) : IsReducing L K :=
+  hL.isSkewSymmetric.isReducing hL.dense_domain h1 h3
+
+/-- For skew-adjoint `L`, `K` is reducing iff hypotheses (i) and (iii) of Thesis Thm 4.4 hold. -/
+theorem IsSkewAdjoint.isReducing_iff {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
+    {K : Submodule ℝ E} [K.HasOrthogonalProjection] :
+    IsReducing L K ↔ (∀ x : L.domain, K.starProjection (x : E) ∈ L.domain) ∧
+      ∀ x : L.domain, (x : E) ∈ K → L x ∈ K :=
+  hL.isSkewSymmetric.isReducing_iff hL.dense_domain
+
+/-- **Skew-adjoint restriction** (Thesis Thm 4.4). If `L` is skew-adjoint and `K` reduces `L`,
+then `L̃ = L|_{D(L) ∩ K} : K → K` is skew-adjoint.
 
 Correction: hypothesis (ii) (`D(L) ∩ K` dense in `K`) is dropped — it follows from (i)
-(`dense_inter_of_proj_mem`). The step-3 estimate `|⟨u, L w⟩| ≤ C‖P_K w‖` is replaced by the exact
-identity `⟨L̃* u, w⟩ = ⟨u, L w⟩` for `w ∈ D(L)`, giving `u ∈ D(L*) = D(L)` with explicit witness.
+(`dense_inter_of_proj_mem`), and so is the density of `D(L)` (`IsSkewAdjoint.dense_domain`).
+The step-3 estimate `|⟨u, L w⟩| ≤ C‖P_K w‖` is replaced by the exact identity
+`⟨L̃* u, w⟩ = ⟨u, L w⟩` for `w ∈ D(L)`, giving `u ∈ D(L*) = D(L)` with explicit witness.
 
-See [QuennevilleBelair2015, Thm 4.4]. -/
-theorem skewAdjoint_restrict (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
-    (hL : IsSkewAdjoint L)
-    (K : Submodule ℝ E) [K.HasOrthogonalProjection] [CompleteSpace K]
-    (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
-    (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) :
-    IsSkewAdjoint (restrictTo L K h3) := by
-  set Lt := restrictTo L K h3 with hLt
-  have skew := hL.isSkewSymm hD
-  have hDt : Dense (Lt.domain : Set K) := dense_restrictTo_domain L hD K h1 h3
+Thesis: Thm 4.4. See [QuennevilleBelair2015, Thm 4.4]. -/
+theorem IsSkewAdjoint.restrictTo {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
+    {K : Submodule ℝ E} [K.HasOrthogonalProjection] [CompleteSpace K] (hK : IsReducing L K) :
+    IsSkewAdjoint (Feec.restrictTo L K hK.mapsTo) := by
+  set Lt := Feec.restrictTo L K hK.mapsTo with hLt
+  have skew := hL.isSkewSymmetric
+  have h1 := hK.proj_mem
+  have hDt : Dense (Lt.domain : Set K) :=
+    dense_restrictTo_domain L hL.dense_domain K h1 hK.mapsTo
   have hform : Lt.IsFormalAdjoint (-Lt) := by
     intro x y
     rw [LinearPMap.neg_apply, Submodule.coe_inner, Submodule.coe_inner, Submodule.coe_neg,
@@ -192,8 +231,7 @@ theorem skewAdjoint_restrict (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set 
     have hsplit : L x = L ⟨_, h1 x⟩ + L ⟨_, hz⟩ := by
       rw [← LinearPMap.map_add]; congr 1; ext; simp
     have e1 : ⟪(u : E), L ⟨_, hz⟩⟫ = 0 :=
-      Submodule.inner_right_of_mem_orthogonal u.2
-        (map_orthogonal_mem L hD skew K h1 h3 ⟨_, hz⟩ hzK)
+      Submodule.inner_right_of_mem_orthogonal u.2 (hK.map_orthogonal_mem ⟨_, hz⟩ hzK)
     have e2 : ⟪((Lt† ⟨u, hu⟩ : K) : E), (x : E)⟫
         = ⟪((Lt† ⟨u, hu⟩ : K) : E), K.starProjection (x : E)⟫ := by
       rw [← sub_eq_zero, ← inner_sub_right]
@@ -206,8 +244,21 @@ theorem skewAdjoint_restrict (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set 
   rw [hL] at hmem
   exact hmem
 
+/-- **Thesis Thm 4.4** (skew-adjoint restriction), with the hypotheses (i), (iii) and the
+(redundant) density of `D(L)`. Corollary of `IsSkewAdjoint.restrictTo`.
+
+See [QuennevilleBelair2015, Thm 4.4]. -/
+theorem skewAdjoint_restrict (L : E →ₗ.[ℝ] E) (_hD : Dense (L.domain : Set E))
+    (hL : IsSkewAdjoint L)
+    (K : Submodule ℝ E) [K.HasOrthogonalProjection] [CompleteSpace K]
+    (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
+    (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) :
+    IsSkewAdjoint (restrictTo L K h3) :=
+  hL.restrictTo (hL.isReducing h1 h3)
+
 /-- **Thesis Thm 4.4**, literal form with all three itemized hypotheses (the second is unused;
-see `skewAdjoint_restrict` and `dense_inter_of_proj_mem`). See [QuennevilleBelair2015, Thm 4.4]. -/
+see `IsSkewAdjoint.restrictTo` and `dense_inter_of_proj_mem`).
+See [QuennevilleBelair2015, Thm 4.4]. -/
 theorem thm_4_4 (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) (hL : IsSkewAdjoint L)
     (K : Submodule ℝ E) [K.HasOrthogonalProjection] [CompleteSpace K]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
@@ -235,13 +286,6 @@ theorem energy_zero_of_exists {e : ℝ → E} {T : ℝ} (hcont : ContinuousOn e 
   refine energy_zero (e' := e') hcont (fun t ht => ?_) (fun t ht => ?_) h0
   · simp only [e', ht, ↓reduceDIte]; exact (hd t ht).choose_spec.1
   · simp only [e', ht, ↓reduceDIte]; exact (hd t ht).choose_spec.2
-
-/-- Skew-symmetry gives `⟪L x, x⟫ = 0` (the energy identity). -/
-theorem IsSkewSymm.inner_self {L : E →ₗ.[ℝ] E} (hL : IsSkewSymm L) (x : L.domain) :
-    ⟪L x, (x : E)⟫ = 0 := by
-  have h := hL x x
-  have h2 : ⟪(x : E), L x⟫ = ⟪L x, (x : E)⟫ := real_inner_comm _ _
-  linarith
 
 variable {L : E →ₗ.[ℝ] E} {T : ℝ} {U₀ : E} {F U : ℝ → E}
 
@@ -328,10 +372,27 @@ theorem constraint_propagation (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L)
   rw [sub_eq_zero.1 (hV t ht)]
   exact K.starProjection_apply_mem _
 
+/-- Existence, constraint propagation and uniqueness for a reducing subspace (ambient form of
+Thesis Cor 4.5): under the existence hypothesis `WellPosedExistence` (standing in for Thm 4.3),
+for skew-symmetric `L` and `K` reducing `L`, the problem `U' = L U + F`, `U(0) = U₀ ∈ D(L) ∩ K`,
+`F(t) ∈ K`, has a strong solution; it stays in `K` and is unique.
+
+Thesis: Cor 4.5. See [QuennevilleBelair2015, Cor 4.5]. -/
+theorem WellPosedExistence.exists_mem_of_isReducing {Adm : (ℝ → E) → Prop}
+    (hHY : WellPosedExistence L T Adm) (hL : IsSkewSymm L) {K : Submodule ℝ E}
+    [K.HasOrthogonalProjection] (hK : IsReducing L K) (hU₀ : U₀ ∈ L.domain ⊓ K) (hF : Adm F)
+    (hFK : ∀ t ∈ Icc 0 T, F t ∈ K) :
+    ∃ U, IsStrongSolution L T U₀ F U ∧ (∀ t ∈ Icc 0 T, U t ∈ K) ∧
+      ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) := by
+  obtain ⟨U, hU⟩ := hHY U₀ hU₀.1 F hF
+  exact ⟨U, hU, constraint_propagation L hL K hK.proj_mem hK.mapsTo hU hU₀.2 hFK,
+    fun U' hU' => strongSolution_unique L hL hU hU'⟩
+
 /-- **Thesis Cor 4.5**, ambient form: under the hypotheses of Thm 4.4 and the existence
 hypothesis `WellPosedExistence` (standing in for Thm 4.3, Hille–Yosida/Stone, absent from
 Mathlib), the problem `U' = L U + F`, `U(0) = U₀ ∈ D(L) ∩ K`, `F(t) ∈ K`, has a strong solution;
-it stays in `K` and is unique. Without the existence hypothesis (forcing in `ForcingThm43`):
+it stays in `K` and is unique. Corollary of `WellPosedExistence.exists_mem_of_isReducing`.
+Without the existence hypothesis (forcing in `ForcingThm43`):
 `Feec.cor_4_5_ambient_unconditional`.
 
 Remark: the thesis states Cor 4.5 for the `K`-valued problem (see `cor_4_5`); this is the
@@ -340,7 +401,7 @@ is dropped (redundant, `dense_inter_of_proj_mem`). Weaker than the thesis: the e
 `IsStrongSolution` (no `C⁰(D(L)) ∩ C¹` regularity); see `cor_4_5_classical`.
 
 See [QuennevilleBelair2015, Cor 4.5]. -/
-theorem cor_4_5_ambient [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
+theorem cor_4_5_ambient [CompleteSpace E] (L : E →ₗ.[ℝ] E) (_hD : Dense (L.domain : Set E))
     (hL : IsSkewAdjoint L) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K)
@@ -348,11 +409,8 @@ theorem cor_4_5_ambient [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.
     {U₀ : E} (hU₀ : U₀ ∈ L.domain ⊓ K) {F : ℝ → E} (hF : Adm F)
     (hFK : ∀ t ∈ Icc 0 T, F t ∈ K) :
     ∃ U, IsStrongSolution L T U₀ F U ∧ (∀ t ∈ Icc 0 T, U t ∈ K) ∧
-      ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) := by
-  have skew := hL.isSkewSymm hD
-  obtain ⟨U, hU⟩ := hHY U₀ hU₀.1 F hF
-  exact ⟨U, hU, constraint_propagation L skew K h1 h3 hU hU₀.2 hFK,
-    fun U' hU' => strongSolution_unique L skew hU hU'⟩
+      ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) :=
+  hHY.exists_mem_of_isReducing hL.isSkewSymmetric (hL.isReducing h1 h3) hU₀ hF hFK
 
 /-- A `K`-valued strong solution of the restricted problem is an `X`-valued strong solution. -/
 theorem IsStrongSolution.coe_restrictTo {K : Submodule ℝ E}
@@ -388,6 +446,30 @@ theorem IsStrongSolution.restrictTo {K : Submodule ℝ E} [K.HasOrthogonalProjec
   · apply Subtype.ext
     rw [← Submodule.starProjection_apply, hU.init, (K.starProjection_eq_self_iff).2 U₀.2]
 
+/-- Restricted form of Thesis Cor 4.5: for skew-adjoint `L` and `K` reducing `L`,
+`L̃ = L|_{D(L) ∩ K}` is skew-adjoint on `K`, and, under the existence hypothesis
+`WellPosedExistence`, for `U₀ ∈ D(L̃)` and `K`-valued admissible forcing `F` the restricted
+problem `U' = L̃ U + F`, `U(0) = U₀` has a strong solution in `K`, unique among `K`-valued
+strong solutions, which coincides on `[0,T]` with every `X`-valued strong solution.
+
+Thesis: Cor 4.5. See [QuennevilleBelair2015, Cor 4.5]. -/
+theorem IsSkewAdjoint.exists_strongSolution_restrictTo [CompleteSpace E] (hL : IsSkewAdjoint L)
+    {K : Submodule ℝ E} [K.HasOrthogonalProjection] [CompleteSpace K] (hK : IsReducing L K)
+    {Adm : (ℝ → E) → Prop} (hHY : WellPosedExistence L T Adm)
+    (U₀ : K) (hU₀ : (U₀ : E) ∈ L.domain) (F : ℝ → K) (hF : Adm fun t => (F t : E)) :
+    IsSkewAdjoint (Feec.restrictTo L K hK.mapsTo) ∧
+    ∃ Ut : ℝ → K, IsStrongSolution (Feec.restrictTo L K hK.mapsTo) T U₀ F Ut ∧
+      (∀ V, IsStrongSolution (Feec.restrictTo L K hK.mapsTo) T U₀ F V → EqOn V Ut (Icc 0 T)) ∧
+      ∀ U, IsStrongSolution L T U₀ (fun t => F t) U → ∀ t ∈ Icc 0 T, (Ut t : E) = U t := by
+  have skew := hL.isSkewSymmetric
+  obtain ⟨U, hU⟩ := hHY U₀ hU₀ _ hF
+  have hUK := constraint_propagation L skew K hK.proj_mem hK.mapsTo hU U₀.2
+    (fun t _ => (F t).2)
+  have hUt := hU.restrictTo hK.mapsTo hUK
+  refine ⟨hL.restrictTo hK, _, hUt, fun V hV t ht => ?_, fun U' hU' t ht => ?_⟩
+  · exact Subtype.ext (strongSolution_unique L skew hV.coe_restrictTo hUt.coe_restrictTo ht)
+  · exact strongSolution_unique L skew hUt.coe_restrictTo hU' ht
+
 /-- **Thesis Cor 4.5** (restricted form, as stated in the thesis). Under the hypotheses of
 Thm 4.4, `L̃ = L|_{D(L) ∩ K}` is skew-adjoint on `K`, and for `U₀ ∈ D(L̃)` and `K`-valued
 admissible forcing `F` the restricted problem `U' = L̃ U + F`, `U(0) = U₀` has a strong solution
@@ -399,9 +481,10 @@ observes that the `K`-solution also solves the `X`-problem. Here existence is ta
 hypothesis `WellPosedExistence` on `X` (standing in for Thm 4.3; Hille–Yosida is not in Mathlib) and
 transferred to `K` by `constraint_propagation`; Thm 4.3 on `K` is not needed. Weaker than the
 thesis: the solution class is `IsStrongSolution`; the full regularity is `cor_4_5_classical`.
+Corollary of `IsSkewAdjoint.exists_strongSolution_restrictTo`.
 
 See [QuennevilleBelair2015, Cor 4.5 and its proof]. -/
-theorem cor_4_5 [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
+theorem cor_4_5 [CompleteSpace E] (L : E →ₗ.[ℝ] E) (_hD : Dense (L.domain : Set E))
     (hL : IsSkewAdjoint L) (K : Submodule ℝ E) [K.HasOrthogonalProjection] [CompleteSpace K]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K)
@@ -410,14 +493,8 @@ theorem cor_4_5 [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain :
     IsSkewAdjoint (Feec.restrictTo L K h3) ∧
     ∃ Ut : ℝ → K, IsStrongSolution (Feec.restrictTo L K h3) T U₀ F Ut ∧
       (∀ V, IsStrongSolution (Feec.restrictTo L K h3) T U₀ F V → EqOn V Ut (Icc 0 T)) ∧
-      ∀ U, IsStrongSolution L T U₀ (fun t => F t) U → ∀ t ∈ Icc 0 T, (Ut t : E) = U t := by
-  have skew := hL.isSkewSymm hD
-  obtain ⟨U, hU⟩ := hHY U₀ hU₀ _ hF
-  have hUK := constraint_propagation L skew K h1 h3 hU U₀.2 (fun t _ => (F t).2)
-  have hUt := hU.restrictTo h3 hUK
-  refine ⟨skewAdjoint_restrict L hD hL K h1 h3, _, hUt, fun V hV t ht => ?_, fun U' hU' t ht => ?_⟩
-  · exact Subtype.ext (strongSolution_unique L skew hV.coe_restrictTo hUt.coe_restrictTo ht)
-  · exact strongSolution_unique L skew hUt.coe_restrictTo hU' ht
+      ∀ U, IsStrongSolution L T U₀ (fun t => F t) U → ∀ t ∈ Icc 0 T, (Ut t : E) = U t :=
+  hL.exists_strongSolution_restrictTo (hL.isReducing h1 h3) hHY U₀ hU₀ F hF
 
 /-! ### Classical solutions (critic item 5) -/
 
@@ -445,37 +522,37 @@ theorem WellPosedClassical.wellPosedExistence {Adm : (ℝ → E) → Prop}
     (h : WellPosedClassical L T Adm) : WellPosedExistence L T Adm :=
   fun U₀ hU₀ F hF => (h U₀ hU₀ F hF).imp fun _ hU => hU.toIsStrongSolution
 
-/-- **Thesis Cor 4.5** with the thesis' regularity: if the existence hypothesis provides
-classical solutions on `X`, the restricted solution is classical in `K`, i.e.
-`U ∈ C⁰([0,T]; D(L̃)) ∩ C¹([0,T]; K)`; it is unique and coincides with the `X`-solution.
-See [QuennevilleBelair2015, Cor 4.5]. -/
-theorem cor_4_5_classical [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
-    (hL : IsSkewAdjoint L) (K : Submodule ℝ E) [K.HasOrthogonalProjection] [CompleteSpace K]
-    (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
-    (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K)
-    {T : ℝ} {Adm : (ℝ → E) → Prop} (hHY : WellPosedClassical L T Adm)
+/-- Restricted form of Thesis Cor 4.5 with the thesis' regularity: for skew-adjoint `L` and `K`
+reducing `L`, if the existence hypothesis provides classical solutions on `X`, the restricted
+solution is classical in `K`, i.e. `U ∈ C⁰([0,T]; D(L̃)) ∩ C¹([0,T]; K)`; it is unique and
+coincides with the `X`-solution.
+
+Thesis: Cor 4.5. See [QuennevilleBelair2015, Cor 4.5]. -/
+theorem IsSkewAdjoint.exists_classicalSolution_restrictTo [CompleteSpace E]
+    (hL : IsSkewAdjoint L) {K : Submodule ℝ E} [K.HasOrthogonalProjection] [CompleteSpace K]
+    (hK : IsReducing L K) {Adm : (ℝ → E) → Prop} (hHY : WellPosedClassical L T Adm)
     (U₀ : K) (hU₀ : (U₀ : E) ∈ L.domain) (F : ℝ → K) (hF : Adm fun t => (F t : E)) :
-    IsSkewAdjoint (Feec.restrictTo L K h3) ∧
-    ∃ Ut : ℝ → K, IsClassicalSolution (Feec.restrictTo L K h3) T U₀ F Ut ∧
-      (∀ V, IsStrongSolution (Feec.restrictTo L K h3) T U₀ F V → EqOn V Ut (Icc 0 T)) ∧
+    IsSkewAdjoint (Feec.restrictTo L K hK.mapsTo) ∧
+    ∃ Ut : ℝ → K, IsClassicalSolution (Feec.restrictTo L K hK.mapsTo) T U₀ F Ut ∧
+      (∀ V, IsStrongSolution (Feec.restrictTo L K hK.mapsTo) T U₀ F V → EqOn V Ut (Icc 0 T)) ∧
       ∀ U, IsStrongSolution L T U₀ (fun t => F t) U → ∀ t ∈ Icc 0 T, (Ut t : E) = U t := by
-  have skew := hL.isSkewSymm hD
+  have skew := hL.isSkewSymmetric
   obtain ⟨U, hU⟩ := hHY U₀ hU₀ _ hF
-  have hUK := constraint_propagation L skew K h1 h3 hU.toIsStrongSolution U₀.2
-    (fun t _ => (F t).2)
-  have hUt := hU.toIsStrongSolution.restrictTo h3 hUK
+  have hUK := constraint_propagation L skew K hK.proj_mem hK.mapsTo hU.toIsStrongSolution
+    U₀.2 (fun t _ => (F t).2)
+  have hUt := hU.toIsStrongSolution.restrictTo hK.mapsTo hUK
   have hcoe : ∀ t ∈ Icc 0 T, ((K.orthogonalProjectionOnto (U t) : K) : E) = U t := fun t ht => by
     rw [← Submodule.starProjection_apply, (K.starProjection_eq_self_iff).2 (hUK t ht)]
   -- `L̃ Ũ(t)` is `P_K (L U(t))`, continuous in `K`
-  have hLt : ∀ t (ht : t ∈ Icc 0 T), ((Feec.restrictTo L K h3 ⟨_, hUt.mem t ht⟩ : K) : E)
+  have hLt : ∀ t (ht : t ∈ Icc 0 T), ((Feec.restrictTo L K hK.mapsTo ⟨_, hUt.mem t ht⟩ : K) : E)
       = L ⟨U t, hU.mem t ht⟩ := fun t ht => congrArg L (Subtype.ext (hcoe t ht))
   obtain ⟨G, hGc, hG⟩ := hU.graph
   obtain ⟨G', hG'c, hG'⟩ := hU.c1
   have hGK : ∀ t (ht : t ∈ Icc 0 T), G t ∈ K := fun t ht =>
-    hG t ht ▸ h3 ⟨U t, hU.mem t ht⟩ (hUK t ht)
+    hG t ht ▸ hK.mapsTo ⟨U t, hU.mem t ht⟩ (hUK t ht)
   have hG'K : ∀ t (ht : t ∈ Icc 0 T), G' t ∈ K := fun t ht =>
-    hG' t ht ▸ K.add_mem (h3 ⟨U t, hU.mem t ht⟩ (hUK t ht)) (F t).2
-  refine ⟨skewAdjoint_restrict L hD hL K h1 h3, _,
+    hG' t ht ▸ K.add_mem (hK.mapsTo ⟨U t, hU.mem t ht⟩ (hUK t ht)) (F t).2
+  refine ⟨hL.restrictTo hK, _,
     ⟨hUt, ⟨fun t => K.orthogonalProjectionOnto (G t),
       K.orthogonalProjectionOnto.continuous.comp_continuousOn hGc, fun t ht => ?_⟩,
       ⟨fun t => K.orthogonalProjectionOnto (G' t),
@@ -490,6 +567,24 @@ theorem cor_4_5_classical [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hD : Dense (
   · exact Subtype.ext (strongSolution_unique L skew hV.coe_restrictTo hUt.coe_restrictTo ht)
   · exact strongSolution_unique L skew hUt.coe_restrictTo hU' ht
 
+
+/-- **Thesis Cor 4.5** with the thesis' regularity: if the existence hypothesis provides
+classical solutions on `X`, the restricted solution is classical in `K`, i.e.
+`U ∈ C⁰([0,T]; D(L̃)) ∩ C¹([0,T]; K)`; it is unique and coincides with the `X`-solution.
+Corollary of `IsSkewAdjoint.exists_classicalSolution_restrictTo`.
+See [QuennevilleBelair2015, Cor 4.5]. -/
+theorem cor_4_5_classical [CompleteSpace E] (L : E →ₗ.[ℝ] E) (_hD : Dense (L.domain : Set E))
+    (hL : IsSkewAdjoint L) (K : Submodule ℝ E) [K.HasOrthogonalProjection] [CompleteSpace K]
+    (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
+    (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K)
+    {T : ℝ} {Adm : (ℝ → E) → Prop} (hHY : WellPosedClassical L T Adm)
+    (U₀ : K) (hU₀ : (U₀ : E) ∈ L.domain) (F : ℝ → K) (hF : Adm fun t => (F t : E)) :
+    IsSkewAdjoint (Feec.restrictTo L K h3) ∧
+    ∃ Ut : ℝ → K, IsClassicalSolution (Feec.restrictTo L K h3) T U₀ F Ut ∧
+      (∀ V, IsStrongSolution (Feec.restrictTo L K h3) T U₀ F V → EqOn V Ut (Icc 0 T)) ∧
+      ∀ U, IsStrongSolution L T U₀ (fun t => F t) U → ∀ t ∈ Icc 0 T, (Ut t : E) = U t :=
+  hL.exists_classicalSolution_restrictTo (hL.isReducing h1 h3) hHY U₀ hU₀ F hF
+
 end Evolution
 
 /-! ## §4.3 application: constraints `K = ker M` -/
@@ -501,27 +596,20 @@ variable {E Y : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
   [NormedAddCommGroup Y] [NormedSpace ℝ Y]
 
 /-- The kernel of a **closed** (possibly unbounded) operator is closed:
-`ker M = {x | (x, 0) ∈ Γ(M)}`.
+`ker M = {x | (x, 0) ∈ Γ(M)}`. Explicit-argument form of `Feec.isClosed_ker`.
 
 Correction (Thesis §4.3): the thesis asserts that the kernel of any not-necessarily-bounded
 operator is closed, which is false (zero operator on a dense non-closed domain, see
 `Feec.exists_not_isClosed_ker` in `Feec.Ch4.Adjoint`); closedness of `M` is required.
 See [QuennevilleBelair2015, §4.3]. -/
 theorem isClosed_ker_of_isClosed (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed) :
-    IsClosed (M.ker : Set E) := by
-  have : (M.ker : Set E) = (fun x => (x, (0 : Y))) ⁻¹' (M.graph : Set (E × Y)) := by
-    ext x
-    simp only [SetLike.mem_coe, LinearPMap.mem_ker_iff, mem_preimage, LinearPMap.mem_graph_iff]
-    constructor
-    · rintro ⟨y, rfl, hy⟩; exact ⟨y, rfl, hy⟩
-    · rintro ⟨y, hy, hy0⟩; exact ⟨y, hy.symm, hy0⟩
-  rw [this]
-  exact IsClosed.preimage (continuous_id.prodMk continuous_const) hM
+    IsClosed (M.ker : Set E) :=
+  isClosed_ker hM
 
 /-- For closed `M` on a Hilbert space, `ker M` admits an orthogonal projection. -/
 theorem hasOrthogonalProjection_ker [CompleteSpace E] (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed) :
     M.ker.HasOrthogonalProjection := by
-  have : CompleteSpace M.ker := (isClosed_ker_of_isClosed M hM).completeSpace_coe
+  have : CompleteSpace M.ker := (isClosed_ker hM).completeSpace_coe
   infer_instance
 
 /-- **Constraint propagation for `K = ker M`** (Thesis §4.3, after Cor 4.5): if `M` is closed,
@@ -547,11 +635,31 @@ theorem constraint_ker [CompleteSpace E] (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm
   rw [show (⟨U t, _⟩ : M.domain) = y from Subtype.ext hy]
   exact hy0
 
+/-- Constraint propagation into `ker M` with existence: for skew-symmetric `L`, closed `M`, the
+hypotheses (i) and (iii) of Thesis Thm 4.4 for `K = ker M`, and the existence hypothesis
+standing in for Thm 4.3, the unique strong solution satisfies `M U(t) = 0` on `[0,T]`.
+
+Thesis: §4.3. See [QuennevilleBelair2015, §4.3, Thm 4.3, Cor 4.5]. -/
+theorem WellPosedExistence.exists_mem_ker [CompleteSpace E] {L : E →ₗ.[ℝ] E} {T : ℝ}
+    {Adm : (ℝ → E) → Prop} (hHY : WellPosedExistence L T Adm) (hL : IsSkewSymm L)
+    (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed)
+    (h1 : haveI := hasOrthogonalProjection_ker M hM
+      ∀ x : L.domain, M.ker.starProjection (x : E) ∈ L.domain)
+    (h3 : ∀ x : L.domain, (x : E) ∈ M.ker → L x ∈ M.ker)
+    {U₀ : E} (hU₀ : U₀ ∈ L.domain ⊓ M.ker) {F : ℝ → E} (hF : Adm F)
+    (hFK : ∀ t ∈ Icc 0 T, F t ∈ M.ker) :
+    ∃ U, IsStrongSolution L T U₀ F U ∧ (∀ t ∈ Icc 0 T, ∃ h : U t ∈ M.domain, M ⟨U t, h⟩ = 0) ∧
+      ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) := by
+  obtain ⟨U, hU⟩ := hHY U₀ hU₀.1 F hF
+  exact ⟨U, hU, constraint_ker L hL M hM h1 h3 hU hU₀.2 hFK,
+    fun U' hU' => strongSolution_unique L hL hU hU'⟩
+
 /-- **Thesis §4.3** with existence: under the hypotheses of Thm 4.4 for `K = ker M` (`M` closed)
 and the existence hypothesis standing in for Thm 4.3, the unique strong solution satisfies the
-constraint `M U(t) = 0` on `[0,T]`. See [QuennevilleBelair2015, §4.3, Thm 4.3, Cor 4.5]. -/
+constraint `M U(t) = 0` on `[0,T]`. Corollary of `WellPosedExistence.exists_mem_ker`.
+See [QuennevilleBelair2015, §4.3, Thm 4.3, Cor 4.5]. -/
 theorem constraint_ker_exists [CompleteSpace E] (L : E →ₗ.[ℝ] E)
-    (hD : Dense (L.domain : Set E)) (hL : IsSkewAdjoint L)
+    (_hD : Dense (L.domain : Set E)) (hL : IsSkewAdjoint L)
     (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed)
     (h1 : haveI := hasOrthogonalProjection_ker M hM
       ∀ x : L.domain, M.ker.starProjection (x : E) ∈ L.domain)
@@ -560,10 +668,8 @@ theorem constraint_ker_exists [CompleteSpace E] (L : E →ₗ.[ℝ] E)
     {U₀ : E} (hU₀ : U₀ ∈ L.domain ⊓ M.ker) {F : ℝ → E} (hF : Adm F)
     (hFK : ∀ t ∈ Icc 0 T, F t ∈ M.ker) :
     ∃ U, IsStrongSolution L T U₀ F U ∧ (∀ t ∈ Icc 0 T, ∃ h : U t ∈ M.domain, M ⟨U t, h⟩ = 0) ∧
-      ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) := by
-  obtain ⟨U, hU⟩ := hHY U₀ hU₀.1 F hF
-  exact ⟨U, hU, constraint_ker L (hL.isSkewSymm hD) M hM h1 h3 hU hU₀.2 hFK,
-    fun U' hU' => strongSolution_unique L (hL.isSkewSymm hD) hU hU'⟩
+      ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) :=
+  hHY.exists_mem_ker hL.isSkewSymmetric M hM h1 h3 hU₀ hF hFK
 
 end Kernel
 

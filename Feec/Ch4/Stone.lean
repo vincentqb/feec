@@ -19,8 +19,9 @@ skew-adjoint, and the group is unique.
 
 ## Main results
 
-* `Feec.IsSkewAdjoint.dense_domain`: `A† = -A` forces `D(A)` dense (Mathlib's adjoint is junk
-  `0` off dense domains), so density is never a separate hypothesis.
+* `Feec.IsSkewAdjoint.dense_domain` (in `Feec.Foundation.Operators`): `A† = -A` forces `D(A)`
+  dense (Mathlib's adjoint is junk `0` off dense domains), so density is never a separate
+  hypothesis.
 * The resolvent: for real `z ≠ 0`, `z - A : D(A) → E` is bijective
   (`IsSkewSymm.shiftOp_injective`, `IsSkewAdjoint.shiftOp_surjective`: closed range from
   `|z| ‖x‖ ≤ ‖(z - A) x‖`, dense range from `ker (z + A) = 0`), and
@@ -76,31 +77,6 @@ namespace Feec
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
   {A : E →ₗ.[ℝ] E}
 
-/-! ### Skew-adjoint operators are densely defined -/
-
-/-- A skew-adjoint operator (`A† = -A`) is densely defined. As for Mathlib's
-`IsSelfAdjoint.dense_domain`, this is not part of the definition: the adjoint of a non-densely
-defined operator is `0` on its domain, which forces `A = 0` on `D(A)`, hence `D(A) = E`. -/
-theorem IsSkewAdjoint.dense_domain (hA : IsSkewAdjoint A) : Dense (A.domain : Set E) := by
-  by_contra h
-  have hle : A† ≤ -A := hA ▸ le_rfl
-  have hzero : ∀ x : A.domain, A x = 0 := by
-    intro x
-    have hx : (x : E) ∈ A†.domain := by rw [hA]; exact x.2
-    have h2 : A† ⟨x, hx⟩ = (-A) x := hle.2 rfl
-    rw [adjoint_apply_of_not_dense h, LinearPMap.neg_apply] at h2
-    exact neg_eq_zero.1 h2.symm
-  have htop : A.domain = ⊤ := by
-    rw [Submodule.eq_top_iff']
-    intro y
-    have hy : y ∈ A†.domain := by
-      rw [mem_adjoint_domain_iff]
-      have : (innerₛₗ ℝ y).comp A.toFun = 0 := by
-        ext x; simp [hzero x]
-      rw [this]; exact continuous_zero
-    rw [hA] at hy; exact hy
-  exact h (by rw [htop]; simp [dense_univ])
-
 /-- Membership in `D(A†)` with `A† y = w` transfers to `D(A)` with `A y = -w` for skew-adjoint
 `A`. -/
 theorem IsSkewAdjoint.mem_domain_of_adjoint (hA : IsSkewAdjoint A) {y w : E}
@@ -124,19 +100,15 @@ omit [CompleteSpace E] in
 /-- `(z - A) x = z x - A x`. -/
 @[simp] theorem shiftOp_apply (z : ℝ) (x : A.domain) : shiftOp A z x = z • (x : E) - A x := rfl
 
-omit [CompleteSpace E] in
-/-- `⟪A x, x⟫ = 0` for skew-symmetric `A`. -/
-theorem IsSkewSymm.inner_self_eq_zero (hS : IsSkewSymm A) (x : A.domain) : ⟪A x, (x : E)⟫ = 0 := by
-  have := hS x x
-  rw [real_inner_comm (A x) (x : E)] at this
-  linarith
+@[deprecated IsSkewSymm.inner_self (since := "2026-10-16")]
+alias IsSkewSymm.inner_self_eq_zero := IsSkewSymm.inner_self
 
 omit [CompleteSpace E] in
 /-- `‖(z - A) x‖² = z² ‖x‖² + ‖A x‖²` for skew-symmetric `A`. -/
 theorem IsSkewSymm.norm_sq_shiftOp (hS : IsSkewSymm A) (z : ℝ) (x : A.domain) :
     ‖shiftOp A z x‖ ^ 2 = z ^ 2 * ‖(x : E)‖ ^ 2 + ‖A x‖ ^ 2 := by
   rw [shiftOp_apply, norm_sub_sq_real, real_inner_smul_left, real_inner_comm,
-    hS.inner_self_eq_zero, norm_smul, mul_pow, Real.norm_eq_abs, sq_abs]
+    hS.inner_self, norm_smul, mul_pow, Real.norm_eq_abs, sq_abs]
   ring
 
 omit [CompleteSpace E] in
@@ -174,14 +146,14 @@ theorem IsSkewAdjoint.orthogonal_range_shiftOp (hA : IsSkewAdjoint A) {z : ℝ} 
   obtain ⟨hyD, hAy⟩ := hA.mem_domain_of_adjoint h
   have h0 : shiftOp A (-z) ⟨y, hyD⟩ = 0 := by
     rw [shiftOp_apply, hAy]; simp
-  have := (hA.isSkewSymm hA.dense_domain).shiftOp_injective (neg_ne_zero.2 hz)
+  have := (hA.isSkewSymmetric).shiftOp_injective (neg_ne_zero.2 hz)
     (h0.trans (_root_.map_zero _).symm)
   exact congrArg Subtype.val this
 
 /-- The range of `z - A` is closed (for `z ≠ 0`). -/
 theorem IsSkewAdjoint.isClosed_range_shiftOp (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) :
     IsClosed (LinearMap.range (shiftOp A z) : Set E) := by
-  have hS := hA.isSkewSymm hA.dense_domain
+  have hS := hA.isSkewSymmetric
   refine IsSeqClosed.isClosed fun {u y} hu huy => ?_
   choose x hx using hu
   have hz' : 0 < |z| := abs_pos.2 hz
@@ -219,7 +191,7 @@ theorem IsSkewAdjoint.shiftOp_surjective (hA : IsSkewAdjoint A) {z : ℝ} (hz : 
 /-- `z - A` as a linear equivalence `D(A) ≃ E` (skew-adjoint `A`, `z ≠ 0`). -/
 def shiftEquiv (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) : A.domain ≃ₗ[ℝ] E :=
   LinearEquiv.ofBijective (shiftOp A z)
-    ⟨(hA.isSkewSymm hA.dense_domain).shiftOp_injective hz, hA.shiftOp_surjective hz⟩
+    ⟨(hA.isSkewSymmetric).shiftOp_injective hz, hA.shiftOp_surjective hz⟩
 
 /-- `(z - A)⁻¹ y ∈ D(A)`, as an element of the domain. -/
 def resD (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) (y : E) : A.domain := (shiftEquiv hA hz).symm y
@@ -237,7 +209,7 @@ theorem resD_shiftOp (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) (x : A.doma
 /-- `‖R(z) y‖ ≤ |z|⁻¹ ‖y‖`. -/
 theorem norm_resD_le (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) (y : E) :
     ‖(resD hA hz y : E)‖ ≤ |z|⁻¹ * ‖y‖ := by
-  have h := (hA.isSkewSymm hA.dense_domain).abs_mul_norm_le z (resD hA hz y)
+  have h := (hA.isSkewSymmetric).abs_mul_norm_le z (resD hA hz y)
   rw [shiftOp_apply, shiftOp_resD] at h
   rw [le_inv_mul_iff₀ (abs_pos.2 hz)]
   exact h
@@ -278,7 +250,7 @@ theorem resolvent_apply_domain (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) (
 /-- `⟪R(z) x, y⟫ = -⟪x, R(-z) y⟫`: the adjoint of `R(z)` is `-R(-z) = (z + A)⁻¹`. -/
 theorem inner_resolvent_left (hA : IsSkewAdjoint A) {z : ℝ} (hz : z ≠ 0) (x y : E) :
     ⟪resolvent hA z x, y⟫ = -⟪x, resolvent hA (-z) y⟫ := by
-  have hS := hA.isSkewSymm hA.dense_domain
+  have hS := hA.isSkewSymmetric
   have hz' : -z ≠ 0 := neg_ne_zero.2 hz
   set u := resD hA hz x
   set v := resD hA hz' y
@@ -823,7 +795,7 @@ theorem S_eq (G G' : UnitaryGroupGenerator L) : G.S = G'.S := by
     have hn : ∀ s, HasDerivAt (fun s => ‖e s‖ ^ 2) 0 s := by
       intro s
       have := (hde s).norm_sq
-      rwa [real_inner_comm, IsSkewSymm.inner_self_eq_zero hS, mul_zero] at this
+      rwa [real_inner_comm, IsSkewSymm.inner_self hS, mul_zero] at this
     have hc := is_const_of_deriv_eq_zero (fun s => (hn s).differentiableAt) (fun s => (hn s).deriv)
       t 0
     simp only [e, G.map_zero, G'.map_zero, sub_self, norm_zero] at hc

@@ -17,7 +17,7 @@ takes a junk value otherwise).
 * **Graph relations** (§4.1): `graph_orthogonal` (`Γ(T)ᗮ = Γ̃(T*)`), `closure_graph`
   (`cl Γ(T) = Γ̃(T*)ᗮ`), `graph_eq_orthogonal` (`Γ(T) = Γ̃(T*)ᗮ` for closed `T`), with the
   rotated graph `Γ̃(T*) = {(x, y) | (y, -x) ∈ Γ(T*)}` taken in `E ⊕₂ F`.
-* **Closed kernels**: `isClosed_ker`; the thesis' unrestricted claim (§4.3) is refuted by
+* **Closed kernels**: `isClosed_ker` (in `Feec.Foundation.Operators`); the thesis' unrestricted claim (§4.3) is refuted by
   `exists_not_isClosed_ker`.
 * `dense_adjoint_domain` (`D(T*)` dense) and `adjoint_adjoint` (`T** = T`), for closed densely
   defined `T`.
@@ -30,7 +30,8 @@ takes a junk value otherwise).
 * **Self-adjointness and skew-adjointness**: `isSelfAdjoint_iff` (symmetric and `D(T*) ⊂ D(T)`, the thesis'
   stated form), `isSkewAdjoint_iff` (skew version), literal forms `isSelfAdjoint_iff_le_adjoint`,
   `isSkewAdjoint_iff_neg_le_adjoint`, the thesis' definitions of (skew-)symmetric via
-  `isSymm_iff_le_adjoint`, `isSkewSymm_iff_neg_le_adjoint`, and `IsSkewAdjoint.dense_domain`.
+  `isSymm_iff_le_adjoint`, `isSkewSymm_iff_neg_le_adjoint`; density of a skew-adjoint domain is
+  `IsSkewAdjoint.dense_domain` (in `Feec.Foundation.Operators`).
 * **Dual complex** (§4.2): `HilbertComplex2.dual` (with `dual_dual`), `closedRange_dual_iff`
   ("closed ⇒ dual closed") and `range_adjoint_d0_eq` / `range_adjoint_d1_eq` (`B* = Zᗮ`).
 * **Hodge decomposition in `W`** (Thm 4.1, `W`-level): `HilbertComplex2.hodge_W`
@@ -58,34 +59,9 @@ open Set LinearPMap
 
 namespace Feec
 
-/-! ### Closed kernels -/
+/-! ### Closed kernels
 
-section Kernel
-
-variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-  [NormedAddCommGroup F] [NormedSpace ℝ F]
-
-/-- `N(T) = {x | (x, 0) ∈ Γ(T)}` (auxiliary, Thesis §4.1). -/
-theorem ker_eq_preimage_graph (T : E →ₗ.[ℝ] F) :
-    (T.ker : Set E) = (fun x => (x, (0 : F))) ⁻¹' (T.graph : Set (E × F)) := by
-  ext x
-  simp only [SetLike.mem_coe, mem_preimage, LinearPMap.mem_ker_iff, LinearPMap.mem_graph_iff]
-  constructor
-  · rintro ⟨y, rfl, hy⟩; exact ⟨y, rfl, hy⟩
-  · rintro ⟨y, hy, hy0⟩; exact ⟨y, hy.symm, hy0⟩
-
-/-- The kernel of a **closed** unbounded operator is closed.
-
-Thesis §4.2 (`Zᵏ` closed, used for `W = Z ⊕ Zᗮ`) and §4.3 (constraint propagation into `ker M`).
-Thesis gap: the thesis (§4.3) asserts this for every "not-necessarily-bounded linear operator";
-closedness of `T` is needed (see `exists_not_isClosed_ker`).
-
-See [QuennevilleBelair2015, §4.2, §4.3]. -/
-theorem isClosed_ker {T : E →ₗ.[ℝ] F} (hc : T.IsClosed) : IsClosed (T.ker : Set E) := by
-  rw [ker_eq_preimage_graph]
-  exact hc.preimage (continuous_id.prodMk continuous_const)
-
-end Kernel
+`ker_eq_preimage_graph` and `isClosed_ker` live in `Feec.Foundation.Operators`. -/
 
 /-! ### Graph relations, `T** = T`, (4.1a–d) -/
 
@@ -498,32 +474,6 @@ section Skew
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
 
-/-- A skew-adjoint operator is densely defined. This holds by Mathlib's junk-value convention for
-the adjoint (cf. `IsSelfAdjoint.dense_domain`), and matches the thesis' definition (§4.1),
-which presupposes a dense domain. -/
-theorem IsSkewAdjoint.dense_domain {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L) :
-    Dense (L.domain : Set E) := by
-  by_contra h
-  have hle : -L ≤ L† := hL ▸ le_rfl
-  have hzero : L.toFun = 0 := by
-    ext x
-    have hx : (x : E) ∈ L†.domain := hle.1 x.2
-    have h1 : L† ⟨x, hx⟩ = 0 := adjoint_apply_of_not_dense h _
-    have h2 : L† ⟨x, hx⟩ = -L x := (hle.2 (x := x) (y := ⟨x, hx⟩) rfl).symm
-    rw [h1] at h2
-    exact neg_eq_zero.1 h2.symm
-  have htop : L.domain = ⊤ := by
-    rw [Submodule.eq_top_iff']
-    intro y
-    have hy : y ∈ L†.domain := by
-      rw [mem_adjoint_domain_iff, hzero, LinearMap.comp_zero]
-      exact continuous_zero
-    rw [hL] at hy
-    exact hy
-  apply h
-  rw [htop, Submodule.top_coe]
-  exact dense_univ
-
 /-- Thesis §4.1: `T` is skew-adjoint iff it is skew-symmetric and `D(T*) ⊂ D(T)`.
 
 Thesis gap: the thesis states this only for the self-adjoint case (`isSelfAdjoint_iff`), the skew
@@ -536,7 +486,7 @@ theorem isSkewAdjoint_iff (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
     IsSkewAdjoint L ↔ IsSkewSymm L ∧ L†.domain ≤ L.domain := by
   constructor
   · intro hL
-    refine ⟨IsSkewAdjoint.isSkewSymm hD hL, ?_⟩
+    refine ⟨hL.isSkewSymmetric, ?_⟩
     rw [hL]
     exact le_rfl
   · rintro ⟨hS, hdom⟩

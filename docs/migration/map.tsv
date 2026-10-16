@@ -33,3 +33,17 @@ Feec.cor_4_5_ambient	Feec.WellPosedExistence.exists_mem_of_isReducing	generalize
 Feec.cor_4_5	Feec.IsSkewAdjoint.exists_strongSolution_restrictTo	generalize
 Feec.cor_4_5_classical	Feec.IsSkewAdjoint.exists_classicalSolution_restrictTo	generalize
 Feec.constraint_ker_exists	Feec.WellPosedExistence.exists_mem_ker	generalize
+Feec.IsSkewAdjoint.dense_domain	Feec.IsSkewAdjoint.dense_domain	dedup
+Feec.isClosed_ker	Feec.isClosed_ker	dedup
+Feec.isClosed_ker_of_isClosed	Feec.isClosed_ker	dedup
+Feec.IsSkewSymm.inner_self	Feec.IsSkewSymm.inner_self	dedup
+Feec.IsSkewSymm.inner_self_eq_zero	Feec.IsSkewSymm.inner_self	dedup
+Feec.IsSkewAdjoint.isSkewSymm	Feec.IsSkewAdjoint.isSkewSymmetric	generalize
+Feec.commute_proj	Feec.IsSkewSymm.isReducing	generalize
+Feec.map_orthogonal_mem	Feec.IsReducingPair.map_orthogonal_mem	generalize
+Feec.skewAdjoint_restrict	Feec.IsSkewAdjoint.restrictTo	generalize
+Feec.thm_4_4	Feec.IsSkewAdjoint.restrictTo	generalize
+Feec.cor_4_5_ambient	Feec.WellPosedExistence.exists_mem_of_isReducing	generalize
+Feec.cor_4_5	Feec.IsSkewAdjoint.exists_strongSolution_restrictTo	generalize
+Feec.cor_4_5_classical	Feec.IsSkewAdjoint.exists_classicalSolution_restrictTo	generalize
+Feec.constraint_ker_exists	Feec.WellPosedExistence.exists_mem_ker	generalize

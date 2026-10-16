@@ -50,7 +50,7 @@ bibliography cited in the docstrings.
   school  = {University of Minnesota},
   year    = {2015},
   month   = jun,
-  url     = {https://www-users.cse.umn.edu/~arnold/papers/QuennevilleThesis.pdf}
+  url     = {http://hdl.handle.net/11299/175309}
 }
 
 @book{Arnold2018FEEC,

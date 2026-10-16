@@ -1,6 +1,7 @@
 module
 
 public import Feec.Foundation.Complex
+public import Feec.HilbertComplex.DomainComplex
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Analysis.Normed.Operator.Compact.Basic
 
@@ -1056,38 +1057,52 @@ theorem isClosed_range_iff_poincare (k : ℕ) :
       ∃ c : ℝ, ∀ x : (C.d k).domain,
         (∀ z : (C.d k).domain, C.d k z = 0 → ⟪(x : W k), (z : W k)⟫ = 0) →
           ‖(x : W k)‖ ≤ c * ‖C.d k x‖ := by
-  rw [← toHilbertComplex_isClosedAt_iff, DomainComplex.isClosedAt_iff_poincare_W]
-  -- `u ∈ 𝔷ᗮ` in the graph space ↔ `ι u ⊥_W ker d`
-  have hZ : ∀ u : C.domainSpace k, u ∈ C.toHilbertComplex.Z k ↔
-      (u : WithLp 2 (W k × W (k + 1))).snd = 0 := fun u => by
-    change C.dV k u = 0 ↔ _
-    constructor
-    · intro h; exact congrArg (fun w : C.domainSpace (k + 1) =>
-        (w : WithLp 2 (W (k + 1) × W (k + 1 + 1))).fst) h
-    · intro h
-      refine Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h rfl))
-  have hperp : ∀ x : (C.d k).domain, C.graphPt k x ∈ (C.toHilbertComplex.Z k)ᗮ ↔
+  rw [LinearPMap.isClosed_range_iff_exists_norm_le (C.closed k)]
+  have hperp : ∀ x : (C.d k).domain, (x : W k) ∈ (C.d k).kerᗮ ↔
       ∀ z : (C.d k).domain, C.d k z = 0 → ⟪(x : W k), (z : W k)⟫ = 0 := fun x => by
-    rw [DomainComplex.mem_orthogonal_Z_iff]
+    rw [Submodule.mem_orthogonal']
     constructor
     · intro h z hz
-      exact h (C.graphPt k z) ((hZ _).2 hz)
-    · intro h w hw
-      obtain ⟨z, hz1, hz2⟩ := C.mem_domainSpace.1 w.2
-      have : C.toHilbertComplex.ι k w = z := hz1.symm
-      rw [this]
-      exact h z (hz2.trans ((hZ w).1 hw))
-  constructor
-  · rintro ⟨c, hc⟩
-    exact ⟨c, fun x hx => hc (C.graphPt k x) ((hperp x).2 hx)⟩
-  · rintro ⟨c, hc⟩
-    refine ⟨c, fun u hu => ?_⟩
-    obtain ⟨x, hx1, hx2⟩ := C.mem_domainSpace.1 u.2
-    have hu' : u = C.graphPt k x :=
-      Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext hx1.symm hx2.symm))
-    subst hu'
-    exact hc x ((hperp x).1 hu)
+      exact h z ((LinearPMap.coe_mem_ker_iff).2 hz)
+    · intro h u hu
+      obtain ⟨z, rfl, hz⟩ := (LinearPMap.mem_ker_iff).1 hu
+      exact h z hz
+  simp only [hperp]
 
 end UHilbertComplex
+
+/-! ### Bridge: the general domain complex as a bounded `DomainComplex` -/
+
+namespace HilbertComplex
+
+variable {W : ℕ → Type*}
+    [∀ k, NormedAddCommGroup (W k)] [∀ k, InnerProductSpace ℝ (W k)] [∀ k, CompleteSpace (W k)]
+    (H : HilbertComplex ℝ (ComplexShape.up ℕ) W)
+
+/-- The domain complex of an `ℕ`-indexed real Hilbert complex as a bounded `DomainComplex`
+(strangler bridge: `HilbertComplex.domainComplex` generalizes `DomainComplex`). -/
+def toDomainComplex : DomainComplex (fun k => H.domainSpace k) W where
+  ι k := H.domainIncl k
+  ι_injective k := H.domainIncl_injective k
+  d k := H.domainD k (k + 1)
+  d_comp_d k := ContinuousLinearMap.ext fun u => H.domainD_comp_domainD k (k + 1) (k + 1 + 1) u
+  inner_graph k u v := by
+    rw [← H.inner_graphSnd_eq_of_rel (show (ComplexShape.up ℕ).Rel k (k + 1) from rfl)]
+    change ⟪(u : WithLp 2 (W k × W ((ComplexShape.up ℕ).next k))),
+      (v : WithLp 2 (W k × W ((ComplexShape.up ℕ).next k)))⟫ = _
+    rw [WithLp.prod_inner_apply]
+    rfl
+
+/-- The bounded model is closed at `k` iff the complex has closed range at `k + 1`. -/
+theorem toDomainComplex_isClosedAt_iff (k : ℕ) :
+    H.toDomainComplex.IsClosedAt k ↔ H.ClosedRangeAt (k + 1) := by
+  have e : (H.toDomainComplex.B k : Set (H.domainSpace (k + 1))) =
+      LinearMap.range (H.domainD k (k + 1) : H.domainSpace k →ₗ[ℝ] H.domainSpace (k + 1)) :=
+    rfl
+  rw [DomainComplex.IsClosedAt, e, ← H.domainComplex_closedRangeAt_iff, ClosedRangeAt,
+    H.domainComplex.boundaries_eq (show (ComplexShape.up ℕ).Rel k (k + 1) from rfl),
+    range_domainComplex_d]
+
+end HilbertComplex
 
 end Feec

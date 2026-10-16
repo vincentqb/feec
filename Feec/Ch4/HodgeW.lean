@@ -2,6 +2,7 @@ module
 
 public import Feec.Ch4.Adjoint
 public import Feec.Ch4.Hodge
+public import Feec.HilbertComplex.Compactness
 
 /-!
 # `W`-level Hodge theory: compactness, Fredholm, and the bounded-model bridge (Thesis §4.2)
@@ -77,71 +78,16 @@ omit [CompleteSpace E] in
 /-- A closed subspace whose unit ball lies in a compact set is finite-dimensional (Riesz). -/
 theorem finiteDimensional_of_ball_subset_compact {S : Submodule ℝ E}
     (hS : IsClosed (S : Set E)) {K : Set E} (hK : IsCompact K)
-    (hsub : ∀ x ∈ S, ‖x‖ ≤ 1 → x ∈ K) : FiniteDimensional ℝ S := by
-  have hiso : Isometry (S.subtype : S → E) := isometry_subtype_coe
-  have himg : (S.subtype : S → E) '' Metric.closedBall 0 1 = (S : Set E) ∩ Metric.closedBall 0 1 := by
-    ext x
-    simp only [mem_image, mem_inter_iff, Metric.mem_closedBall, dist_zero_right]
-    constructor
-    · rintro ⟨y, hy, rfl⟩
-      exact ⟨y.2, by simpa using hy⟩
-    · rintro ⟨hx, hx1⟩
-      exact ⟨⟨x, hx⟩, by simpa using hx1, rfl⟩
-  have hc : IsCompact ((S : Set E) ∩ Metric.closedBall 0 1) :=
-    hK.of_isClosed_subset (hS.inter Metric.isClosed_closedBall)
-      (fun x hx => hsub x hx.1 (by simpa using hx.2))
-  exact FiniteDimensional.of_isCompact_closedBall₀ ℝ zero_lt_one
-    (hiso.isEmbedding.isCompact_iff.2 (himg ▸ hc))
+    (hsub : ∀ x ∈ S, ‖x‖ ≤ 1 → x ∈ K) : FiniteDimensional ℝ S :=
+  Submodule.finiteDimensional_of_closedBall_subset_isCompact hS hK hsub
 
 /-- Compactness ⇒ closed range, for a closed operator: if the unit ball of `D(T) ∩ N(T)ᗮ` in
 the box graph norm lies in a compact subset of `E`, then `R(T)` is closed. -/
 theorem isClosed_range_of_ball_subset_compact {T : E →ₗ.[ℝ] F} (hc : T.IsClosed)
     {K : Set E} (hK : IsCompact K)
     (hsub : ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ 1 → ‖T x‖ ≤ 1 → (x : E) ∈ K) :
-    IsClosed (LinearMap.range T.toFun : Set F) := by
-  by_contra hR
-  rw [isClosed_range_iff_poincare hc] at hR
-  push Not at hR
-  have hseq : ∀ n : ℕ, ∃ v : T.domain, (v : E) ∈ T.kerᗮ ∧ ‖(v : E)‖ = 1 ∧
-      ‖T v‖ ≤ 1 / ((n : ℝ) + 1) := by
-    intro n
-    obtain ⟨u, hu, h⟩ := hR ((n : ℝ) + 1)
-    have hu0 : 0 < ‖(u : E)‖ := lt_of_le_of_lt (by positivity) h
-    refine ⟨‖(u : E)‖⁻¹ • u, ?_, ?_, ?_⟩
-    · exact Submodule.smul_mem _ _ hu
-    · change ‖‖(u : E)‖⁻¹ • (u : E)‖ = 1
-      rw [norm_smul, norm_inv, norm_norm]
-      exact inv_mul_cancel₀ hu0.ne'
-    · rw [LinearPMap.map_smul, norm_smul, norm_inv, norm_norm]
-      rw [inv_mul_le_iff₀ hu0, mul_one_div, le_div_iff₀ (by positivity)]
-      linarith
-  choose v hvk hv1 hvd using hseq
-  have hvd' : ∀ n, ‖T (v n)‖ ≤ 1 := fun n =>
-    (hvd n).trans (div_le_one_of_le₀ (by linarith [(n.cast_nonneg : (0 : ℝ) ≤ n)])
-      (by positivity))
-  obtain ⟨a, -, φ, hφ, hlim⟩ := hK.tendsto_subseq (x := fun n => (v n : E))
-    (fun n => hsub (v n) (hvk n) (hv1 n).le (hvd' n))
-  have hd : Tendsto (fun n => T (v (φ n))) atTop (𝓝 0) := by
-    refine squeeze_zero_norm (fun n => (hvd (φ n)).trans ?_)
-      tendsto_one_div_add_atTop_nhds_zero_nat
-    gcongr
-    exact_mod_cast hφ.id_le n
-  have hgr : ((a, 0) : E × F) ∈ (T.graph : Set (E × F)) :=
-    hc.mem_of_tendsto (hlim.prodMk_nhds hd)
-      (Eventually.of_forall fun n => T.mem_graph (v (φ n)))
-  obtain ⟨y, hy1, hy2⟩ := (LinearPMap.mem_graph_iff _).1 hgr
-  have hker : a ∈ T.ker := (LinearPMap.mem_ker_iff).2 ⟨y, by simpa using hy1.symm, by simpa using hy2⟩
-  have hperp : a ∈ T.kerᗮ :=
-    (Submodule.isClosed_orthogonal _).mem_of_tendsto hlim
-      (Eventually.of_forall fun n => hvk (φ n))
-  have ha : a = 0 := by
-    have := Submodule.inf_orthogonal_eq_bot T.ker
-    have hmem : a ∈ T.ker ⊓ T.kerᗮ := ⟨hker, hperp⟩
-    rw [this] at hmem
-    exact hmem
-  have hn : Tendsto (fun n => ‖(v (φ n) : E)‖) atTop (𝓝 ‖a‖) := hlim.norm
-  simp only [hv1, ha, norm_zero] at hn
-  exact one_ne_zero (tendsto_nhds_unique tendsto_const_nhds hn)
+    IsClosed (LinearMap.range T.toFun : Set F) :=
+  LinearPMap.isClosed_range_of_subset_isCompact hc hK hsub
 
 end Generic
 
@@ -196,6 +142,21 @@ private theorem mem_two_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ
     {K : Set E} {x : E} (h : (1 / 2 : ℝ) • x ∈ K) : x ∈ (fun x => (2 : ℝ) • x) '' K :=
   ⟨_, h, show (2 : ℝ) • ((1 / 2 : ℝ) • x) = x by rw [smul_smul]; norm_num⟩
 
+/-- The middle compactness property (squared-sum form) is compactness of the middle space of
+the pair `d0`, `d1` (box form). -/
+theorem hasCompactPair_of_compact (hC : H.HasCompactEmbedding) :
+    Feec.Operator.HasCompactPair H.d0 H.d1 := by
+  obtain ⟨K, hK, hsub⟩ := hC
+  refine ⟨_, isCompact_two_smul hK, fun x h1 h0 hx hd1 hd0 => mem_two_smul
+    (hsub _ (Submodule.smul_mem _ _ h1) (Submodule.smul_mem _ _ h0) ?_)⟩
+  have e1 : H.d1 ⟨(1 / 2 : ℝ) • x, Submodule.smul_mem _ _ h1⟩ = (1 / 2 : ℝ) • H.d1 ⟨x, h1⟩ :=
+    LinearPMap.map_smul _ _ ⟨x, h1⟩
+  have e0 : H.d0† ⟨(1 / 2 : ℝ) • x, Submodule.smul_mem _ _ h0⟩ =
+      (1 / 2 : ℝ) • H.d0† ⟨x, h0⟩ :=
+    LinearPMap.map_smul _ _ ⟨x, h0⟩
+  rw [e1, e0, norm_smul, norm_smul, norm_smul]
+  simpa using sq_half_le hx hd1 hd0 (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)
+
 -- `orthogonal_ker_d1_le` and `orthogonal_ker_adjoint_d0_le` live in `Feec.Ch4.Adjoint`.
 
 /-- **Thesis §4.2, "compactness ⇒ closed", for `d1`.** If `V¹ ∩ V₁* ↪ W¹` is compact then
@@ -207,21 +168,8 @@ lies in `N(d1) ∩ N(d1)ᗮ = 0` but has norm `1` (`isClosed_range_of_ball_subse
 
 See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem isClosed_range_d1_of_compact (hC : H.HasCompactEmbedding) :
-    IsClosed (LinearMap.range H.d1.toFun : Set W2) := by
-  obtain ⟨K, hK, hsub⟩ := hC
-  refine isClosed_range_of_ball_subset_compact H.closed1 (isCompact_two_smul hK) ?_
-  intro x hx hx1 hdx1
-  obtain ⟨y, hy, hy0⟩ := (LinearPMap.mem_ker_iff).1 (H.orthogonal_ker_d1_le hx)
-  refine mem_two_smul (hsub _ (Submodule.smul_mem _ _ x.2)
-    (by rw [hy]; exact Submodule.smul_mem _ _ y.2) ?_)
-  have e1 : H.d1 ⟨(1 / 2 : ℝ) • (x : W1), Submodule.smul_mem _ _ x.2⟩ = (1 / 2 : ℝ) • H.d1 x :=
-    LinearPMap.map_smul _ _ _
-  have e0 : ∀ h, H.d0† ⟨(1 / 2 : ℝ) • (x : W1), h⟩ = 0 := fun h => by
-    have : (⟨(1 / 2 : ℝ) • (x : W1), h⟩ : H.d0†.domain) = (1 / 2 : ℝ) • y :=
-      Subtype.ext (by simp [hy])
-    rw [this, LinearPMap.map_smul, hy0, smul_zero]
-  rw [e1, e0, norm_smul, norm_smul, norm_zero]
-  simpa using sq_half_le hx1 hdx1 zero_le_one (norm_nonneg _) (norm_nonneg _) le_rfl
+    IsClosed (LinearMap.range H.d1.toFun : Set W2) :=
+  (H.hasCompactPair_of_compact hC).isClosed_range_right H.dense0 H.closed1 H.map_mem H.comp_zero
 
 /-- **Thesis §4.2, "compactness ⇒ closed", for `d0`.** If `V¹ ∩ V₁* ↪ W¹` is compact then
 `B¹ = R(d0)` is closed.
@@ -232,24 +180,9 @@ Thesis gap: asserted without proof. Proof: the same argument applied to the clos
 
 See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [BruningLesch1992]. -/
 theorem isClosed_range_d0_of_compact (hC : H.HasCompactEmbedding) :
-    IsClosed (LinearMap.range H.d0.toFun : Set W1) := by
-  obtain ⟨K, hK, hsub⟩ := hC
-  refine (isClosed_range_adjoint_iff _ H.dense0 H.closed0).1 ?_
-  refine isClosed_range_of_ball_subset_compact (adjoint_isClosed H.dense0)
-    (isCompact_two_smul hK) ?_
-  intro x hx hx1 hdx1
-  obtain ⟨y, hy, hy0⟩ := (LinearPMap.mem_ker_iff).1 (H.orthogonal_ker_adjoint_d0_le hx)
-  refine mem_two_smul (hsub _ (by rw [hy]; exact Submodule.smul_mem _ _ y.2)
-    (Submodule.smul_mem _ _ x.2) ?_)
-  have e0 : H.d0† ⟨(1 / 2 : ℝ) • (x : W1), Submodule.smul_mem _ _ x.2⟩ =
-      (1 / 2 : ℝ) • H.d0† x :=
-    LinearPMap.map_smul _ _ _
-  have e1 : ∀ h, H.d1 ⟨(1 / 2 : ℝ) • (x : W1), h⟩ = 0 := fun h => by
-    have : (⟨(1 / 2 : ℝ) • (x : W1), h⟩ : H.d1.domain) = (1 / 2 : ℝ) • y :=
-      Subtype.ext (by simp [hy])
-    rw [this, LinearPMap.map_smul, hy0, smul_zero]
-  rw [e0, e1, norm_smul, norm_smul, norm_zero]
-  simpa using sq_half_le hx1 zero_le_one hdx1 (norm_nonneg _) le_rfl (norm_nonneg _)
+    IsClosed (LinearMap.range H.d0.toFun : Set W1) :=
+  (H.hasCompactPair_of_compact hC).isClosed_range_left H.dense0 H.closed0 H.closed1 H.map_mem
+    H.comp_zero
 
 /-- **Thesis §4.2: the compactness property implies the complex is closed.** Compactness of
 `V¹ ∩ V₁* ↪ W¹` alone gives closed range of both `d0` and `d1`.
@@ -269,14 +202,8 @@ theorem applies.
 
 See [QuennevilleBelair2015, §4.2]; cf. [AFW2010, §3], [Arnold2018]. -/
 theorem finiteDimensional_harmonic_of_compact (hC : H.HasCompactEmbedding) :
-    FiniteDimensional ℝ H.harmonic := by
-  obtain ⟨K, hK, hsub⟩ := hC
-  refine finiteDimensional_of_ball_subset_compact H.isClosed_harmonic hK fun x hx hx1 => ?_
-  obtain ⟨h1, e1⟩ := exists_apply_eq_zero_of_mem_ker hx.1
-  obtain ⟨h0, e0⟩ := exists_apply_eq_zero_of_mem_ker hx.2
-  refine hsub x h1 h0 ?_
-  rw [e1, e0, norm_zero, norm_zero]
-  nlinarith [norm_nonneg x]
+    FiniteDimensional ℝ H.harmonic :=
+  (H.hasCompactPair_of_compact hC).finiteDimensional H.dense0 H.closed1
 
 /-- **Thesis §4.2, compactness at the first space ⇒ `B¹` closed.** If `V⁰ ↪ W0` is compact
 (graph norm of `d0`) then `R(d0)` is closed. (Here `N(d0)ᗮ` needs no adjoint.)
@@ -918,11 +845,10 @@ See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
 theorem isClosed_range_of_finiteDimensional_cohomology (k : ℕ)
     [FiniteDimensional ℝ ((C.d (k + 1)).ker ⧸
       (LinearMap.range (C.d k).toFun).comap (C.d (k + 1)).ker.subtype)] :
-    IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) := by
-  have : FiniteDimensional ℝ (C.toHilbertComplex.Cohomology k) :=
-    (C.cohomologyEquiv k).symm.finiteDimensional
-  exact (C.toHilbertComplex_isClosedAt_iff k).1
-    (C.toHilbertComplex.isClosedAt_of_finiteDimensional_cohomology k)
+    IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) :=
+  LinearPMap.isClosed_range_of_finiteDimensional_quotient (C.closed k)
+    (LinearPMap.isClosed_ker (C.closed (k + 1))) (Feec.Operator.range_le_ker (C.map_mem k)
+      (C.comp_zero k))
 
 end UHilbertComplex
 

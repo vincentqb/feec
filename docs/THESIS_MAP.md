@@ -17,7 +17,7 @@ hand, rerun after renaming. A declaration is listed under a thesis id when
 Every backticked name in a list item below is checked by `scripts/MapCheck.sh`
 (`#check @name` must elaborate).
 
-Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 equations/sections/chapters, 800 distinct declarations (169 with a thesis-numbered name).
+Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 equations/sections/chapters, 831 distinct declarations (169 with a thesis-numbered name).
 
 ## Results
 
@@ -84,14 +84,15 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Thm 4.1
 
+- tagged: `Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`, `Feec.HilbertComplex.hodge`, `Feec.HilbertComplex.hodge_domain`, `Feec.HilbertComplex.hodge_domainComplex`, `Feec.HilbertComplex.hodge_domain_of_closedRangeAt`, `Feec.HilbertComplex.hodge_of_closedRangeAt`
 - cited: `Feec.Ch5.BGG.BGGHilb.hodge_Vt1`, `Feec.Constraints.ker_adj0_orth_le`, `Feec.DomainComplex.hodge_V`, `Feec.DomainComplex.hodge_V_orthogonal_W`, `Feec.DomainComplex.hodge_V_unique`, `Feec.DomainComplex.hodge_V_zero`, `Feec.HilbertComplex2.closed_and_fredholm_of_compact`, `Feec.HilbertComplex2.hodge_W`, `Feec.HilbertComplex2.hodge_W0`, `Feec.HilbertComplex2.hodge_W0_of_closedRange`, `Feec.HilbertComplex2.hodge_W2`, `Feec.HilbertComplex2.hodge_W2_of_closedRange`, `Feec.HilbertComplex2.hodge_W_of_closedRange`, `Feec.TorusSym.symComplex_hodge`
-- modules: Feec.Ch4.Adjoint, Feec.Ch4.Constraints, Feec.Ch4.Hodge, Feec.Ch4.HodgeW, Feec.Ch4.TorusSym, Feec.Ch5.BGG
+- modules: Feec.Ch4.Adjoint, Feec.Ch4.Constraints, Feec.Ch4.Hodge, Feec.Ch4.HodgeW, Feec.Ch4.TorusSym, Feec.Ch5.BGG, Feec.HilbertComplex.Compactness, Feec.HilbertComplex.DomainComplex, Feec.HilbertComplex.Hodge
 
 ### Thm 4.2
 
-- tagged: `LinearPMap.exists_norm_le_of_isClosed_range`, `LinearPMap.isClosed_range_iff_exists_norm_le`
+- tagged: `Feec.HilbertComplex.closedRangeAt_iff_poincare`, `Feec.HilbertComplex.closedRangeAt_iff_poincare_adjoint`, `Feec.HilbertComplex.closedRangeAt_iff_poincare_of_rel`, `LinearPMap.exists_norm_le_of_isClosed_range`, `LinearPMap.isClosed_range_iff_exists_norm_le`
 - cited: `Feec.Ch5.BGG.BGGHilb.poincare_T`, `Feec.Ch5.BGG.BGGHilb.poincare_Γ`, `Feec.DomainComplex.isClosedAt_iff_poincare_W`, `Feec.DomainComplex.isClosedAt_of_poincare`, `Feec.DomainComplex.poincare`, `Feec.DomainComplex.poincare_W`, `Feec.DomainComplex.poincare_iff`, `Feec.UHilbertComplex.isClosed_range_iff_poincare`, `Feec.isClosed_range_iff_poincare`, `Feec.poincare_graphNorm_of_isClosed_range`, `Feec.poincare_of_isClosed_range`
-- modules: Feec.Ch4.Adjoint, Feec.Ch4.Hodge, Feec.Ch5.BGG, Feec.ForMathlib.LinearPMap.ClosedRange
+- modules: Feec.Ch4.Adjoint, Feec.Ch4.Hodge, Feec.Ch5.BGG, Feec.ForMathlib.LinearPMap.ClosedRange, Feec.HilbertComplex.Hodge
 
 ### Thm 4.3
 
@@ -316,8 +317,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Eq (4.1)
 
+- tagged: `Feec.HilbertComplex.orthogonal_boundaries`, `Feec.HilbertComplex.orthogonal_cycles`
 - cited: `Feec.Constraints.ker_adj0_eq`, `Feec.Constraints.ker_adj1_eq`, `Feec.orth_range_eq_ker_adjoint`, `Feec.orthogonal_ker`, `Feec.orthogonal_ker_adjoint`, `Feec.orthogonal_range_adjoint`, `Feec.range_eq_orthogonal_ker_adjoint`
-- modules: Feec.Ch4.Adjoint, Feec.Ch4.Constraints, Feec.Foundation.Operators
+- modules: Feec.Ch4.Adjoint, Feec.Ch4.Constraints, Feec.Foundation.Operators, Feec.HilbertComplex.Hodge
 
 ### Eq (4.4)
 
@@ -487,9 +489,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Sec §4.2
 
-- tagged: `Feec.HilbertComplex`, `Feec.HilbertComplex.ClosedRangeAt`, `Feec.HilbertComplex.boundaries`, `Feec.HilbertComplex.cycles`, `Feec.HilbertComplex.dual`, `Feec.HilbertComplex.harmonic`
+- tagged: `Feec.HilbertComplex`, `Feec.HilbertComplex.ClosedRangeAt`, `Feec.HilbertComplex.HasCompactProperty`, `Feec.HilbertComplex.HasCompactProperty.isCompactOperator_resolvent_wave`, `Feec.HilbertComplex.HasCompactPropertyAt`, `Feec.HilbertComplex.HasCompactPropertyAt.closedRangeAt`, `Feec.HilbertComplex.HasCompactPropertyAt.closedRangeAt_of_rel`, `Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`, `Feec.HilbertComplex.HasCompactPropertyAt.finiteDimensional_harmonic`, `Feec.HilbertComplex.HasCompactPropertyAt.isClosed_range`, `Feec.HilbertComplex.boundaries`, `Feec.HilbertComplex.boundaries_sup_harmonic`, `Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`, `Feec.HilbertComplex.closure_boundaries_sup_harmonic`, `Feec.HilbertComplex.cohomology`, `Feec.HilbertComplex.cohomologyEquivHarmonic`, `Feec.HilbertComplex.cycles`, `Feec.HilbertComplex.domainComplex`, `Feec.HilbertComplex.domainComplex_closedRangeAt_iff`, `Feec.HilbertComplex.domainSpace`, `Feec.HilbertComplex.dual`, `Feec.HilbertComplex.dual_closedRangeAt_iff`, `Feec.HilbertComplex.exact_iff_harmonic_eq_bot`, `Feec.HilbertComplex.harmonic`, `Feec.HilbertComplex.harmonicToCohomology_surjective_iff`, `Feec.HilbertComplex.harmonic_eq`, `Feec.HilbertComplex.map_domainIncl_harmonic`
 - cited: `Feec.Constraints.range_d0_le_ker_d1`, `Feec.DomainComplex`, `Feec.DomainComplex.B`, `Feec.DomainComplex.B_sup_H`, `Feec.DomainComplex.H`, `Feec.DomainComplex.IsClosedAt`, `Feec.DomainComplex.Z`, `Feec.DomainComplex.closed_and_fredholm_of_isCompactOperator`, `Feec.DomainComplex.exact_iff_H_eq_bot`, `Feec.DomainComplex.finiteDimensional_H_of_isCompactOperator`, `Feec.DomainComplex.harmonicEquivCohomology`, `Feec.DomainComplex.inner_of_mem_Z`, `Feec.DomainComplex.isClosedAt_iff_isClosed_image`, `Feec.DomainComplex.isClosedAt_of_finiteDimensional_cohomology`, `Feec.DomainComplex.isClosedAt_of_isCompactOperator`, `Feec.DomainComplex.mem_H_iff`, `Feec.DomainComplex.norm_sq_eq`, `Feec.FredholmCE.hasCompactEmbedding_infiniteDimensional`, `Feec.HilbertComplex2`, `Feec.HilbertComplex2.ClosedRange`, `Feec.HilbertComplex2.HasCompactEmbedding`, `Feec.HilbertComplex2.HasCompactEmbedding0`, `Feec.HilbertComplex2.HasCompactEmbedding2`, `Feec.HilbertComplex2.closedRange_dual_iff`, `Feec.HilbertComplex2.closedRange_iff_isClosedAt`, `Feec.HilbertComplex2.closedRange_of_compact`, `Feec.HilbertComplex2.closed_and_fredholm_V`, `Feec.HilbertComplex2.closed_and_fredholm_of_compact`, `Feec.HilbertComplex2.dual`, `Feec.HilbertComplex2.dual_dual`, `Feec.HilbertComplex2.finiteDimensional_harmonic_of_compact`, `Feec.HilbertComplex2.finiteDimensional_ker_adjoint_d1_of_compact2`, `Feec.HilbertComplex2.finiteDimensional_ker_d0_of_compact0`, `Feec.HilbertComplex2.harmonic`, `Feec.HilbertComplex2.harmonic_eq_ker_inf_orthogonal_range`, `Feec.HilbertComplex2.hasCompactEmbedding_of_finiteDimensional`, `Feec.HilbertComplex2.isClosed_range_d0_of_compact`, `Feec.HilbertComplex2.isClosed_range_d0_of_compact0`, `Feec.HilbertComplex2.isClosed_range_d0_of_finiteDimensional_cohomology`, `Feec.HilbertComplex2.isClosed_range_d1_of_compact`, `Feec.HilbertComplex2.isClosed_range_d1_of_compact2`, `Feec.HilbertComplex2.ofBounded`, `Feec.HilbertComplex2.range_adjoint_d0_eq`, `Feec.HilbertComplex2.range_adjoint_d1_eq`, `Feec.HilbertComplex2.toHilbertComplex`, `Feec.HilbertComplex2.toU`, `Feec.UHilbertComplex`, `Feec.UHilbertComplex.closed_and_fredholm_of_compact`, `Feec.UHilbertComplex.cohomologyEquiv`, `Feec.UHilbertComplex.isClosed_range_of_finiteDimensional_cohomology`, `Feec.UHilbertComplex.isCompactOperator_H`, `Feec.UHilbertComplex.isCompactOperator_orthogonal_Z`, `Feec.UHilbertComplex.isCompactOperator_orthogonal_Z_zero`, `Feec.UHilbertComplex.map_H_eq_harmonic`, `Feec.UHilbertComplex.toHilbertComplex`, `Feec.UHilbertComplex.toHilbertComplex_isClosedAt_iff`, `Feec.exists_bounded_inverse`, `Feec.fredholm_not_closed`, `Feec.fredholm_not_closed_V`, `Feec.fredholm_not_closed_W`, `Feec.fredholm_not_closed_fin`, `Feec.isClosed_ker`, `Feec.isClosed_range_adjoint_iff`, `Feec.range_adjoint_eq_orthogonal_ker`, `Feec.range_eq_orthogonal_ker_adjoint`
-- modules: Feec.Ch4.Adjoint, Feec.Ch4.Constraints, Feec.Ch4.Hodge, Feec.Ch4.HodgeW, Feec.Foundation.Complex, Feec.Foundation.Operators, Feec.HilbertComplex.Basic, Feec.HilbertComplex.Dual
+- modules: Feec.Ch4.Adjoint, Feec.Ch4.Constraints, Feec.Ch4.Hodge, Feec.Ch4.HodgeW, Feec.Foundation.Complex, Feec.Foundation.Operators, Feec.HilbertComplex.Basic, Feec.HilbertComplex.Compactness, Feec.HilbertComplex.DomainComplex, Feec.HilbertComplex.Dual, Feec.HilbertComplex.Hodge
 
 ### Sec §4.3
 

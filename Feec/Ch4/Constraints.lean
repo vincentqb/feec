@@ -12,8 +12,10 @@ public import Feec.Foundation.Tensor
 Coverage (thesis ids; see `docs/BLUEPRINT.md`, module M8):
 
 * **Constraint propagation, abstract engine** (fills Thm 4.4/Cor 4.5 as used in §4.9–4.11):
-  `propagate` (energy method; skew-symmetry only, no density, no semigroups),
-  `strong_unique`, `isClosed_ker`.
+  `propagate` (energy method; skew-symmetry only, no density, no semigroups) and
+  `strong_unique`, special cases of `IsStrongSolution.mem_of_invariant` and
+  `IsStrongSolution.unique` (`Feec.Foundation.Evolution`, dissipative generators); `isClosed_ker`
+  (`Feec.isClosed_ker`).
 * **Hodge wave operator**: `waveOp_isSkewSymm` (proved, so no skew-symmetry hypothesis is
   needed below), `ker_adj0_orth_le` (`cl(range d0) ⊆ ker d1`, no closed range).
 * **Prop 4.16** (`prop_4_16`, `prop_4_16_exists`): with `K = {0} × ker d0* × Y` (`K`,
@@ -117,18 +119,14 @@ Correction of thesis §4.1/§4.3: "the kernel of an unbounded operator is closed
 
 Cf. [QuennevilleBelair2015, §4.1]. -/
 theorem isClosed_ker {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F]
-    (A : E →ₗ.[ℝ] F) (hA : A.IsClosed) : IsClosed (A.ker : Set E) := by
-  have : (A.ker : Set E) = (fun x : E => (x, (0 : F))) ⁻¹' (A.graph : Set (E × F)) := by
-    ext x
-    simp only [SetLike.mem_coe, mem_ker_iff, mem_preimage, mem_graph_iff]
-    exact ⟨fun ⟨y, hy, h0⟩ => ⟨y, hy.symm, h0⟩, fun ⟨y, hy, h0⟩ => ⟨y, hy.symm, h0⟩⟩
-  rw [this]
-  exact hA.preimage (continuous_id.prodMk continuous_const)
+    (A : E →ₗ.[ℝ] F) (hA : A.IsClosed) : IsClosed (A.ker : Set E) :=
+  _root_.Feec.isClosed_ker hA
 
 /-- **Energy-method constraint propagation** (fills Thm 4.4 / Cor 4.5 as used in §4.9–4.11).
 Let `A` be skew-symmetric, `K` a subspace with an orthogonal "projection" `P` (`P x ∈ K`,
 `x - P x ⊥ K`) preserving `D(A)`, and `A (D(A) ∩ K) ⊆ K`. Then every strong solution of
-`U' = A U` starting in `K` stays in `K`.
+`U' = A U` starting in `K` stays in `K`. Special case of `IsStrongSolution.mem_of_invariant`
+(dissipative `A`, forcing in `K`); `P` is then the orthogonal projection onto `K`.
 
 Thesis gap: the thesis routes this through Thm 4.4 (skew-adjointness of the restriction) and
 Hille–Yosida, which needs the density of `D(A) ∩ K` in `K` that Props 4.16/4.17/4.19 only
@@ -140,79 +138,22 @@ theorem propagate (A : E →ₗ.[ℝ] E) (hA : IsSkewSymm A) (K : Submodule ℝ 
     (hAK : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K)
     {T : ℝ} {U₀ : E} {U : ℝ → E} (hU : IsStrongSolution A T U₀ 0 U) (hU₀ : U₀ ∈ K) :
     ∀ t ∈ Icc 0 T, U t ∈ K := by
-  classical
-  set e : ℝ → E := fun t => U t - P (U t) with he_def
-  set e' : ℝ → E := fun t =>
-    if h : t ∈ Icc 0 T then A ⟨U t, hU.mem t h⟩ - P (A ⟨U t, hU.mem t h⟩) else 0
-  have hcont : ContinuousOn U (Icc 0 T) := fun t ht => (hU.deriv t ht).continuousWithinAt
-  have key := energy_zero (e := e) (e' := e') (T := T)
-    (hcont.sub (P.continuous.comp_continuousOn hcont))
-    (fun t ht => by
-      have ht' := Ico_subset_Icc_self ht
-      have h1 := hasDerivWithinAt_Ici (hU.deriv t ht') ht
-      have h2 := h1.sub (P.hasFDerivAt.comp_hasDerivWithinAt t h1)
-      rw [show e' t = _ from dite_eq_left ht']
-      simp only [Pi.zero_apply, add_zero] at h2
-      exact h2)
-    (fun t ht => by
-      have ht' := Ico_subset_Icc_self ht
-      rw [show e' t = _ from dite_eq_left ht']
-      have hPu : P (U t) ∈ A.domain := hPD _ (hU.mem t ht')
-      have hVt : e t ∈ A.domain := A.domain.sub_mem (hU.mem t ht') hPu
-      have hsplit : (⟨U t, hU.mem t ht'⟩ : A.domain) = ⟨P (U t), hPu⟩ + ⟨e t, hVt⟩ := by
-        ext; simp [e]
-      have he : e t ∈ Kᗮ := hPo (U t)
-      have h1 : ⟪P (A ⟨U t, hU.mem t ht'⟩), e t⟫ = 0 :=
-        (Submodule.mem_orthogonal K _).1 he _ (hPK _)
-      have h2 : ⟪A ⟨P (U t), hPu⟩, e t⟫ = 0 :=
-        (Submodule.mem_orthogonal K _).1 he _ (hAK _ (hPK _))
-      have h3 : ⟪A ⟨e t, hVt⟩, e t⟫ = 0 := by
-        have := hA ⟨e t, hVt⟩ ⟨e t, hVt⟩
-        rw [real_inner_comm (A ⟨e t, hVt⟩) (e t)] at this
-        linarith
-      rw [inner_sub_left, h1, hsplit, LinearPMap.map_add, inner_add_left, h2, h3]; simp)
-    (by
-      have hm : U₀ - P U₀ ∈ K := K.sub_mem hU₀ (hPK _)
-      have := (Submodule.mem_orthogonal K _).1 (hPo U₀) _ hm
-      simpa [e, hU.init] using this)
-  intro t ht
-  have h0 : U t = P (U t) := sub_eq_zero.1 (key t ht)
-  rw [h0]; exact hPK _
+  have : K.HasOrthogonalProjection := ⟨fun v => ⟨P v, hPK v, hPo v⟩⟩
+  have hP : ∀ x, K.starProjection x = P x := fun x =>
+    Submodule.eq_starProjection_of_mem_orthogonal (hPK x) (hPo x)
+  exact hU.mem_of_invariant hA.isDissipative (fun x => by rw [hP]; exact hPD x x.2) hAK hU₀
+    fun _ _ => K.zero_mem
 
 /-- **Thesis Thm 4.3/4.6 (uniqueness part)**: strong solutions of `U' = A U + F` for a
 skew-symmetric `A` are unique (energy identity; no skew-adjointness or semigroup needed).
+Special case of `IsStrongSolution.unique` (dissipative `A`).
 
 See [QuennevilleBelair2015, Thm 4.3 and Thm 4.6] (Thm 4.3 is cited there from
 [CazenaveHaraux1998, Prop 4.1.6 and Cor 2.4.9]). -/
 theorem strong_unique (A : E →ₗ.[ℝ] E) (hA : IsSkewSymm A) {T : ℝ} {U₀ : E} {F U U' : ℝ → E}
     (hU : IsStrongSolution A T U₀ F U) (hU' : IsStrongSolution A T U₀ F U') :
-    EqOn U U' (Icc 0 T) := by
-  classical
-  set e' : ℝ → E := fun t =>
-    if h : t ∈ Icc 0 T then A ⟨U t, hU.mem t h⟩ - A ⟨U' t, hU'.mem t h⟩ else 0
-  have hc : ∀ {V : ℝ → E} {G}, IsStrongSolution A T U₀ G V → ContinuousOn V (Icc 0 T) :=
-    fun h t ht => (h.deriv t ht).continuousWithinAt
-  have key := energy_zero (e := fun t => U t - U' t) (e' := e') (T := T)
-    ((hc hU).sub (hc hU'))
-    (fun t ht => by
-      have ht' := Ico_subset_Icc_self ht
-      have := (hasDerivWithinAt_Ici (hU.deriv t ht') ht).sub
-        (hasDerivWithinAt_Ici (hU'.deriv t ht') ht)
-      rw [show e' t = _ from dite_eq_left ht']
-      simp only [add_sub_add_right_eq_sub] at this
-      exact this)
-    (fun t ht => by
-      have ht' := Ico_subset_Icc_self ht
-      rw [show e' t = _ from dite_eq_left ht']
-      have hd : U t - U' t ∈ A.domain := A.domain.sub_mem (hU.mem t ht') (hU'.mem t ht')
-      have hs : A ⟨U t, hU.mem t ht'⟩ - A ⟨U' t, hU'.mem t ht'⟩ = A ⟨_, hd⟩ := by
-        rw [← LinearPMap.map_sub]; rfl
-      have := hA ⟨_, hd⟩ ⟨_, hd⟩
-      rw [real_inner_comm (A ⟨_, hd⟩) (U t - U' t)] at this
-      rw [hs]; linarith)
-    (by simp [hU.init, hU'.init])
-  intro t ht
-  exact sub_eq_zero.1 (key t ht)
+    EqOn U U' (Icc 0 T) :=
+  hU.unique hA.isDissipative hU'
 
 /-- Skew-symmetry is preserved by negation (the thesis evolves by `ξ' = -Lξ`). -/
 theorem isSkewSymm_neg {A : E →ₗ.[ℝ] E} (hA : IsSkewSymm A) : IsSkewSymm (-A) := by
@@ -223,10 +164,8 @@ theorem isSkewSymm_neg {A : E →ₗ.[ℝ] E} (hA : IsSkewSymm A) : IsSkewSymm (
 
 /-- The kernel of a partial linear map lies in its domain. -/
 theorem ker_le_domain {F : Type*} [AddCommGroup F] [Module ℝ F] (A : E →ₗ.[ℝ] F) :
-    A.ker ≤ A.domain := by
-  intro x hx
-  obtain ⟨y, rfl, -⟩ := mem_ker_iff.1 hx
-  exact y.2
+    A.ker ≤ A.domain :=
+  LinearPMap.ker_le_domain
 
 end Generic
 

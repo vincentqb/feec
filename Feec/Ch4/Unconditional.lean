@@ -4,34 +4,32 @@ public import Feec.Ch4.StoneApplications
 public import Feec.Ch4.ErrorEstimate
 
 /-!
-# Unconditional forms of the remaining Ch. 4 results that assumed existence
+# Remaining Ch. 4 results with their existence hypotheses discharged
 
 `Feec.Ch4.StoneApplications` discharges, via Stone's theorem (`Feec.stoneGroup`), the existence
 hypotheses (`WellPosedHom`, `WellPosedExistence`, `WellPosedClassical`, `UnitaryGroupGenerator`)
-of Thm 4.3, Cor 4.5, Thm 4.6 (classical form), Thm 4.7, Props 4.16–4.19 and of the
-bounded-domain counterexample to Prop 4.17. This module covers the remaining sites found by
-searching the project for these hypotheses:
+of Thm 4.3, Cor 4.5, Thm 4.6 (classical form), Thm 4.7, Props 4.16–4.18 and of the
+bounded-domain counterexample to Prop 4.17. This module covers the remaining sites. Each fact is
+stated once; former names are kept as corollaries or aliases.
 
 * `constraint_ker_exists_unconditional`: the kernel-constraint corollary after Cor 4.5
   (`Feec.constraint_ker_exists`), forcing in `ForcingThm43`.
-* Hodge wave equation of any Hilbert complex:
-  `HilbertComplex2.thm_4_6_strong_unconditional` (the full statement of `thm_4_6`),
-  `HilbertComplex2.thm_4_3_hodgeWave_thm43` (inhomogeneous, forcing in `ForcingThm43`),
-  `HilbertComplex2.weak_imp_strong_unconditional`,
-  `HilbertComplex2.weak_imp_classical_unconditional` (Thm 4.7, second bullet),
-  `HilbertComplex2.exists_classicalWeakSolution_unconditional` (existence and uniqueness of
-  weak solutions of (4.7)/(4.8) in `C⁰(V) ∩ C¹(W)`).
-* Semi-discrete convergence (§4.6): `HilbertComplex2.exists_isWeakSol_unconditional` (for
+* Hodge wave equation of any Hilbert complex: `HilbertComplex2.thm_4_6_strong_unconditional`
+  (the full statement of `thm_4_6`), `HilbertComplex2.thm_4_3_hodgeWave_thm43`
+  (inhomogeneous, forcing in `ForcingThm43`) and `HilbertComplex2.weak_imp_strong_unconditional`,
+  all corollaries of the results of `Feec.Ch4.StoneApplications`;
+  `HilbertComplex2.existsUnique_classicalWeakSolution` (existence and uniqueness of weak
+  solutions of (4.7)/(4.8) in `C⁰(V) ∩ C¹(W)`).
+* Semi-discrete convergence (§4.6): `HilbertComplex2.exists_isWeakSol_of_waveOp_mem` (for
   `ξ₀ ∈ D(L²)` the exact solution exists in the class `C¹([0,T]; V)` assumed by Thm 4.14, via
   the graph-norm differentiability lemmas `UnitaryGroupGenerator.continuous_graph`,
   `UnitaryGroupGenerator.hasDerivAt_graph` and the bound `norm_toV_le`) and
-  `HilbertComplex2.convergence_unconditional` (`ξₕ → ξ` uniformly in `W` on `[0,T]` for every
-  `ξ₀ ∈ D(L²)`, the exact solution no longer assumed), with `Complex3.isWeakSol_unique`
+  `HilbertComplex2.tendstoUniformlyOn_discreteSol` (`ξₕ → ξ` uniformly in `W` on `[0,T]` for
+  every `ξ₀ ∈ D(L²)`, the exact solution no longer assumed), with `Complex3.isWeakSol_unique`
   (energy uniqueness of weak solutions in `C¹([0,T]; V)`).
-* Constraints: `Constraints.prop_4_16_classical_unconditional`,
-  `Constraints.prop_4_17_exists_unconditional` (abstract Props 4.17/4.19 with existence and the
-  thesis' regularity), `Constraints.prop_4_17_group_unconditional` (the Stone group of `-L`
-  maps `D(L) ∩ K` into `K` for `t ≥ 0`), `Constraints.prop_4_17_group_all_unconditional`
+* Constraints: `Constraints.existsUnique_classicalSolution_mem_Kc` (abstract Props 4.17/4.19
+  with existence and the thesis' regularity), `Constraints.waveGroup_mem_Kc_of_nonneg` (the
+  Stone group of `-L` maps `D(L) ∩ K` into `K` for `t ≥ 0`), `Constraints.waveGroup_mem_Kc`
   (for all `t ∈ ℝ`, via time reversal).
 * Bounded domains: `BoundedDomain.thesisComplex_waveGroup_not_invariant`: the Stone group of
   the thesis' complex on any nonempty bounded open `Ω` moves a TSD datum in `D(L) ∩ K` out of
@@ -45,11 +43,11 @@ Ch. 6 problem (6.1), the abstract `Feec.ContData` carries no Hilbert-complex str
 existence is not stated for it; the concrete complex (5.1) is built as a `HilbertComplex2` on
 bounded domains in `Feec.Ch6.Bounded` (existence and uniqueness: `bggComplex_prop_4_16`) and on
 `ℝ³` in `Feec.Ch6.Whole` (`bggWhole_verdict`). The full forcing class of Thm 4.3,
-`C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(L)))`, is covered by `Feec.thm_4_3_full`
-(`Feec.Ch4.StoneForcing`).
+`C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(L)))`, is covered by
+`Feec.IsSkewAdjoint.existsUnique_classicalSolution` (`Feec.Ch4.StoneForcing`).
 
 Thesis gap: Thm 4.14 assumes the exact solution in `C¹([0,T]; V)` without saying for which data
-it exists; `exists_isWeakSol_unconditional` shows `ξ₀ ∈ D(L²)` suffices. For `ξ₀ ∈ D(L)` alone
+it exists; `exists_isWeakSol_of_waveOp_mem` shows `ξ₀ ∈ D(L²)` suffices. For `ξ₀ ∈ D(L)` alone
 the `C¹(V)` solution can fail to exist (`Feec.FredholmCE.cxK1_exists_not_isWeakSol`), but the
 convergence claimed after Thm 4.14 still holds, for `D(L)` data with `ξₕ(0) = Πₕ ξ₀` and for `W`
 data with `ξₕ(0) → ξ₀` (`HilbertComplex2.convergence_domL_weakSolution`,
@@ -80,8 +78,8 @@ variable {E Y : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [Complet
 /-- **Constraint `M U = 0` after Cor 4.5**, unconditional: for skew-adjoint `L`, a closed `M`
 whose kernel satisfies the hypotheses of Thm 4.4, data in `D(L) ∩ ker M` and `ker M`-valued
 forcing in `ForcingThm43`, the unique strong solution satisfies `M U(t) = 0` on `[0,T]`.
-`Feec.constraint_ker_exists` with its `WellPosedExistence` hypothesis discharged by Stone's
-theorem. See [QuennevilleBelair2015, §4.3, after Cor 4.5]. -/
+Corollary of `IsSkewAdjoint.existsUnique_classicalSolution_mem` with `K = ker M`.
+See [QuennevilleBelair2015, §4.3, after Cor 4.5]. -/
 theorem constraint_ker_exists_unconditional (L : E →ₗ.[ℝ] E) (hL : IsSkewAdjoint L)
     (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed)
     (h1 : haveI := hasOrthogonalProjection_ker M hM
@@ -91,8 +89,13 @@ theorem constraint_ker_exists_unconditional (L : E →ₗ.[ℝ] E) (hL : IsSkewA
     (hFK : ∀ t ∈ Icc 0 T, F t ∈ M.ker) :
     ∃ U, IsStrongSolution L T U₀ F U ∧ (∀ t ∈ Icc 0 T, ∃ h : U t ∈ M.domain, M ⟨U t, h⟩ = 0) ∧
       ∀ U', IsStrongSolution L T U₀ F U' → EqOn U U' (Icc 0 T) :=
-  constraint_ker_exists L hL.dense_domain hL M hM h1 h3 (hL.wellPosedExistence_thm43 T) hU₀ hF
-    hFK
+  by
+  have := hasOrthogonalProjection_ker M hM
+  obtain ⟨U, hU, hK, huniq⟩ := hL.existsUnique_classicalSolution_mem h1 h3 hU₀ hF.admissible hFK
+  refine ⟨U, hU.toIsStrongSolution, fun t ht => ?_, fun U' hU' => (huniq U' hU').symm⟩
+  obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 (hK t ht)
+  have hmem : U t ∈ M.domain := by rw [hy]; exact y.2
+  exact ⟨hmem, by rw [← hy0]; exact congrArg M (Subtype.ext hy)⟩
 
 end Kernel
 
@@ -165,7 +168,8 @@ variable {X0 X1 X2 : Type*}
 /-- **Uniqueness of weak solutions in `C¹([0,T]; V)`** (`IsWeakSol`, the class of Thm 4.14):
 two weak solutions with the same initial value agree on `[0,T]`. Energy proof (thesis l.2120):
 testing (4.8) for both with `ψ = ξ₁ − ξ₂` gives `d/dt ‖ξ₁ − ξ₂‖_W² = −2a(ξ₁ − ξ₂, ξ₁ − ξ₂) = 0`,
-then Lemma 4.12 with `F = 0`; the `W`-norm is definite on `V`. The continuous counterpart of
+then the energy inequality `norm_le_norm_zero_of_inner_deriv_nonpos`; the `W`-norm is definite
+on `V`. The continuous counterpart of
 `Complex3.discrete_solution_unique`.
 See [QuennevilleBelair2015, §4.4, l.2120 and §4.6]. -/
 theorem isWeakSol_unique {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
@@ -177,24 +181,19 @@ theorem isWeakSol_unique {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
   have hec : ContinuousOn e (Icc 0 T) := C.toW.continuous.comp_continuousOn (c₁.sub c₂)
   have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (C.toW (ξ₁' t - ξ₂' t)) (Ici t) t :=
     fun t ht => C.toW.hasFDerivAt.comp_hasDerivWithinAt t ((d₁ t ht).sub (d₂ t ht))
-  have key := lemma_4_12 (Q := fun t => ‖e t‖) (q' := fun t => 2 * ⟪e t, C.toW (ξ₁' t - ξ₂' t)⟫)
-    (F := fun _ => 0) (G := fun _ => 0) hec.norm (fun _ _ => norm_nonneg _)
-    (fun t ht => (hed t ht).norm_sq) continuousOn_const
-    (fun t _ => hasDerivWithinAt_const _ _ _) (fun _ _ => le_rfl)
-    (fun t ht => by
-      have E1 := e₁ t ht (ξ₁ t - ξ₂ t)
-      have E2 := e₂ t ht (ξ₁ t - ξ₂ t)
-      have hs := C.aL_self (ξ₁ t - ξ₂ t)
-      simp only [he, map_sub, inner_sub_left, inner_sub_right, LinearMap.sub_apply] at E1 E2 hs ⊢
-      have r1 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₁' t))
-      have r2 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₂' t))
-      have r3 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₁' t))
-      have r4 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₂' t))
-      rw [zero_mul]
-      linarith)
+  have key := norm_le_norm_zero_of_inner_deriv_nonpos hec hed (fun t ht => by
+    have E1 := e₁ t ht (ξ₁ t - ξ₂ t)
+    have E2 := e₂ t ht (ξ₁ t - ξ₂ t)
+    have hs := C.aL_self (ξ₁ t - ξ₂ t)
+    simp only [he, map_sub, inner_sub_left, inner_sub_right, LinearMap.sub_apply] at E1 E2 hs ⊢
+    have r1 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₁' t))
+    have r2 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₂' t))
+    have r3 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₁' t))
+    have r4 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₂' t))
+    linarith)
   intro t ht
   have h := key t ht
-  simp only [he, h0, sub_self, map_zero, norm_zero, add_zero, zero_div] at h
+  simp only [he, h0, sub_self, map_zero, norm_zero] at h
   have : C.toW (ξ₁ t - ξ₂ t) = C.toW 0 := by
     rw [map_zero]; exact norm_le_zero_iff.1 h
   exact sub_eq_zero.1 (C.toW_injective this)
@@ -212,59 +211,55 @@ variable {W0 W1 W2 : Type*}
 /-- **Thesis Thm 4.6**, full statement, unconditional: for every Hilbert complex of length 2,
 `L` is densely defined and skew-adjoint, and every `ξ₀ ∈ D(L)` has a strong solution of
 `ξ' = -Lξ`, `ξ(0) = ξ₀` on `[0,T]`, which is unique and conserves energy.
-`HilbertComplex2.thm_4_6` with its `WellPosedHom` hypothesis discharged by Stone's theorem
-(`IsSkewAdjoint.wellPosedHom`); the classical form is
-`HilbertComplex2.thm_4_6_unconditional`. See [QuennevilleBelair2015, Thm 4.6]. -/
+Corollary of the classical form `HilbertComplex2.existsUnique_classicalSolution_neg_waveOp`.
+See [QuennevilleBelair2015, Thm 4.6]. -/
 theorem thm_4_6_strong_unconditional (T : ℝ) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) :
     Dense (H.waveOp.domain : Set (Tot W0 W1 W2)) ∧ IsSkewAdjoint H.waveOp ∧
       ∃ ξ, IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ ∧
         (∀ ξ', IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ' → EqOn ξ' ξ (Icc 0 T)) ∧
-        ∀ t ∈ Icc 0 T, ‖ξ t‖ = ‖ξ₀‖ :=
-  H.thm_4_6 (H.neg_waveOp_isSkewAdjoint.wellPosedHom T) h0
+        ∀ t ∈ Icc 0 T, ‖ξ t‖ = ‖ξ₀‖ := by
+  obtain ⟨ξ, hξ, huniq, hnorm⟩ := H.existsUnique_classicalSolution_neg_waveOp T h0
+  exact ⟨H.dense_domL, H.waveOp_isSkewAdjoint, ξ, hξ.toIsStrongSolution, huniq, hnorm⟩
 
 /-- The inhomogeneous Hodge wave equation `ξ' = -Lξ + F` with forcing in `ForcingThm43`
 (`C([0,T]; D(L))`, or continuous with integrable derivative off a countable set) has a classical
 solution in `C⁰([0,T]; D(L)) ∩ C¹([0,T]; W)`, unique among strong solutions, for every Hilbert
-complex. Extends `HilbertComplex2.thm_4_3_hodgeWave` (forcing in `C([0,T]; D(L))`).
+complex. Corollary of `IsSkewAdjoint.existsUnique_classicalSolution`.
 See [QuennevilleBelair2015, Thm 4.3, §4.4]. -/
 theorem thm_4_3_hodgeWave_thm43 (T : ℝ) {ξ₀ : Tot W0 W1 W2} (h0 : ξ₀ ∈ H.waveOp.domain)
     {F : ℝ → Tot W0 W1 W2} (hF : ForcingThm43 (-H.waveOp) T F) :
     ∃ ξ, IsClassicalSolution (-H.waveOp) T ξ₀ F ξ ∧
       ∀ ξ', IsStrongSolution (-H.waveOp) T ξ₀ F ξ' → EqOn ξ' ξ (Icc 0 T) :=
-  thm_4_3_unconditional H.neg_waveOp_isSkewAdjoint T h0 hF
+  H.neg_waveOp_isSkewAdjoint.existsUnique_classicalSolution T h0 hF.admissible
 
-/-- **Thesis Thm 4.7, second bullet** (weak ⇒ strong), unconditional: a weak solution of
-(4.7)/(4.8) with initial value in `D(L)` is a strong solution of (4.4).
-`HilbertComplex2.weak_imp_strong` with its `WellPosedHom` hypothesis discharged.
+/-- **Thesis Thm 4.7, second bullet** (weak ⇒ strong): a weak solution of (4.7)/(4.8) with
+initial value in `D(L)` is a strong solution of (4.4). Corollary of
+`HilbertComplex2.isClassicalSolution_of_isWeakSolution`.
 See [QuennevilleBelair2015, Thm 4.7]. -/
 theorem weak_imp_strong_unconditional {T : ℝ} {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) {ξ : ℝ → Tot W0 W1 W2} (hξ : H.IsWeakSolution T ξ₀ ξ) :
     IsStrongSolution (-H.waveOp) T ξ₀ 0 ξ :=
-  H.weak_imp_strong (H.neg_waveOp_isSkewAdjoint.wellPosedHom T) h0 hξ
+  (H.isClassicalSolution_of_isWeakSolution h0 hξ).toIsStrongSolution
 
-/-- **Thesis Thm 4.7, second bullet**, with the thesis' regularity, unconditional: a weak
-solution with initial value in `D(L)` lies in `C⁰([0,T]; D(L)) ∩ C¹([0,T]; W)` and solves
-(4.4). `HilbertComplex2.weak_imp_classical` with its `WellPosedClassical` hypothesis
-discharged. See [QuennevilleBelair2015, Thm 4.7]. -/
-theorem weak_imp_classical_unconditional {T : ℝ} {ξ₀ : Tot W0 W1 W2}
-    (h0 : ξ₀ ∈ H.waveOp.domain) {ξ : ℝ → Tot W0 W1 W2} (hξ : H.IsWeakSolution T ξ₀ ξ) :
-    IsClassicalSolution (-H.waveOp) T ξ₀ 0 ξ :=
-  H.weak_imp_classical (H.neg_waveOp_isSkewAdjoint.wellPosedClassical T) rfl h0 hξ
+@[deprecated (since := "2026-10-16")] alias weak_imp_classical_unconditional :=
+  isClassicalSolution_of_isWeakSolution
 
 /-- **Existence and uniqueness of weak solutions** of the Hodge wave equation (4.7)/(4.8)
 (Thesis §4.4), unconditional: for every Hilbert complex and every `ξ₀ ∈ D(L)` there is a weak
 solution in the thesis' class `C⁰([0,T]; V) ∩ C¹([0,T]; W)`, and every weak solution with the
-same initial value agrees with it on `[0,T]`. Combines `thm_4_6_unconditional`,
+same initial value agrees with it on `[0,T]`. Combines `existsUnique_classicalSolution_neg_waveOp`,
 `isClassicalWeakSolution_of_isClassicalSolution` and `weak_unique`.
 See [QuennevilleBelair2015, §4.4, (4.7)–(4.8) and Thm 4.7]. -/
-theorem exists_classicalWeakSolution_unconditional (T : ℝ) {ξ₀ : Tot W0 W1 W2}
+theorem existsUnique_classicalWeakSolution (T : ℝ) {ξ₀ : Tot W0 W1 W2}
     (h0 : ξ₀ ∈ H.waveOp.domain) :
     ∃ ξ, H.IsClassicalWeakSolution T ξ₀ ξ ∧
       ∀ ξ', H.IsWeakSolution T ξ₀ ξ' → EqOn ξ' ξ (Icc 0 T) := by
-  obtain ⟨ξ, hξ, -, -⟩ := H.thm_4_6_unconditional T h0
+  obtain ⟨ξ, hξ, -, -⟩ := H.existsUnique_classicalSolution_neg_waveOp T h0
   have hw := H.isClassicalWeakSolution_of_isClassicalSolution hξ
   exact ⟨ξ, hw, fun ξ' hξ' => H.weak_unique hξ' hw.toIsWeakSolution⟩
+
+alias exists_classicalWeakSolution_unconditional := existsUnique_classicalWeakSolution
 
 /-! ### The exact solution in `C¹([0,T]; V)` and convergence of the semi-discrete method -/
 
@@ -348,7 +343,7 @@ norm of `L`, which controls the `V`-norm, `norm_toV_le`). It is not claimed to b
 (`Feec.FredholmCE.cxK1_exists_not_isWeakSol`, `Feec.FredholmCE.cxK1_convergence_without_C1` in
 `Feec.Ch4.ErrorEstimateDL`).
 See [QuennevilleBelair2015, §4.6, Thm 4.14]; cf. [Pazy1983, §1.2, Thm 2.4]. -/
-theorem exists_isWeakSol_unconditional (T : ℝ) (x : H.domL)
+theorem exists_isWeakSol_of_waveOp_mem (T : ℝ) (x : H.domL)
     (hx : (H.waveOp ⟨x.1, x.2⟩ : Tot W0 W1 W2) ∈ H.domL) :
     ∃ ξ ξ' : ℝ → H.toComplex3.VSp, ξ 0 = H.toV x ∧ H.toComplex3.IsWeakSol T ξ ξ' ∧
       ∀ t, ξ t = H.toV ⟨H.waveGroup.S t x, H.waveGroup.mem_domain_apply ⟨x.1, x.2⟩ t⟩ := by
@@ -377,16 +372,18 @@ theorem exists_isWeakSol_unconditional (T : ℝ) (x : H.domL)
     rw [LinearPMap.neg_apply, hxy] at h
     exact h.symm
 
+alias exists_isWeakSol_unconditional := exists_isWeakSol_of_waveOp_mem
+
 /-- **Convergence of the semi-discrete method (4.10)**, unconditional on the exact solution:
 for every Hilbert complex, every family of finite-dimensional subcomplexes `Vₕ` satisfying the
 density hypothesis, and every `ξ₀ ∈ D(L²)`, the exact weak solution `ξ ∈ C¹([0,T]; V)` with
-`ξ(0) = ξ₀` exists (`exists_isWeakSol_unconditional`) and is unique on `[0,T]`
+`ξ(0) = ξ₀` exists (`exists_isWeakSol_of_waveOp_mem`) and is unique on `[0,T]`
 (`Complex3.isWeakSol_unique`), the discrete solutions with
 `ξₕ(0) = Πₕ ξ₀` exist, and `ξₕ → ξ` in `W`, uniformly on `[0,T]`.
 `Feec.Complex3.convergence_exists` with its hypothesis "`ξ` is a weak solution in
 `C¹([0,T]; V)`" discharged by Stone's theorem.
 See [QuennevilleBelair2015, §4.6, Thm 4.14 and the convergence remark after it]. -/
-theorem convergence_unconditional {ι : Type*} {l : Filter ι} {S : ι → H.toComplex3.Sub}
+theorem tendstoUniformlyOn_discreteSol {ι : Type*} {l : Filter ι} {S : ι → H.toComplex3.Sub}
     [∀ h, FiniteDimensional ℝ (S h).toV] (hd : H.toComplex3.DensityHyp l S) (T : ℝ)
     (x : H.domL) (hx : (H.waveOp ⟨x.1, x.2⟩ : Tot W0 W1 W2) ∈ H.domL) :
     ∃ ξ ξ' : ℝ → H.toComplex3.VSp, ξ 0 = H.toV x ∧ H.toComplex3.IsWeakSol T ξ ξ' ∧
@@ -397,10 +394,13 @@ theorem convergence_unconditional {ι : Type*} {l : Filter ι} {S : ι → H.toC
         (∀ h, ξh h 0 = H.toComplex3.ellProj (S h) (H.toV x)) ∧
         TendstoUniformlyOn (fun h t => H.toComplex3.toW (ξh h t))
           (fun t => H.toComplex3.toW (ξ t)) l (Icc 0 T) := by
-  obtain ⟨ξ, ξ', h0, hξ, -⟩ := H.exists_isWeakSol_unconditional T x hx
+  obtain ⟨ξ, ξ', h0, hξ, -⟩ := H.exists_isWeakSol_of_waveOp_mem T x hx
   obtain ⟨ξh, ξh', hs, hi, hc⟩ := Complex3.convergence_exists hd hξ
   exact ⟨ξ, ξ', h0, hξ, fun ζ ζ' hζ hζ0 => Complex3.isWeakSol_unique hζ hξ (hζ0.trans h0.symm),
     ξh, ξh', hs, fun h => h0 ▸ hi h, hc⟩
+
+@[deprecated (since := "2026-10-16")] alias convergence_unconditional :=
+  tendstoUniformlyOn_discreteSol
 
 end HilbertComplex2
 
@@ -414,19 +414,6 @@ variable {W0 W1 W2 : Type*}
   [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
   {H : HilbertComplex2 W0 W1 W2}
 
-/-- **Prop 4.16 with existence and the thesis' regularity**, unconditional: for every closed
-`Y ⊇ range d1` and data in `D(L) ∩ K`, `K = {0} × ker d0* × Y`, the Hodge wave equation has a
-solution in `C⁰([0,T]; D(L)) ∩ C¹([0,T]; W)`, unique among strong solutions, which stays in
-`K`. Strengthens `prop_4_16_exists_unconditional` (strong solutions).
-See [QuennevilleBelair2015, Prop 4.16]. -/
-theorem prop_4_16_classical_unconditional (Y : Submodule ℝ W2) [Y.HasOrthogonalProjection]
-    (hY : LinearMap.range H.d1.toFun ≤ Y) (T : ℝ) {U₀ : Tot W0 W1 W2} (hD : U₀ ∈ H.domL)
-    (hU₀ : U₀ ∈ K H Y) :
-    ∃ U, IsClassicalSolution (-H.waveOp) T U₀ 0 U ∧ (∀ t ∈ Icc 0 T, U t ∈ K H Y) ∧
-      ∀ U', IsStrongSolution (-H.waveOp) T U₀ 0 U' → EqOn U' U (Icc 0 T) := by
-  obtain ⟨U, hU, huniq, -⟩ := H.thm_4_6_unconditional T hD
-  exact ⟨U, hU, prop_4_16 hY hU.toIsStrongSolution hU₀, huniq⟩
-
 variable {S1 : Submodule ℝ W1} {S2 : Submodule ℝ W2}
   [S1.HasOrthogonalProjection] [S2.HasOrthogonalProjection]
 
@@ -436,13 +423,13 @@ under the projection hypothesis `P_K D(L) ⊆ D(L)`, data `(0, E₀, B₀) ∈ D
 `B₀ ∈ S2` have a solution of (4.14) in `C⁰([0,T]; D(L)) ∩ C¹([0,T]; W)`, unique among strong
 solutions, that stays in `K`, and its `(E, B)` components solve the reduced system (4.15).
 `Constraints.prop_4_17` (which quantifies over given solutions) together with
-`HilbertComplex2.thm_4_6_unconditional`.
+`HilbertComplex2.existsUnique_classicalSolution_neg_waveOp`.
 
-The projection hypothesis is not removable (`prop_4_17_iff_unconditional`), and it fails for
+The projection hypothesis is not removable (`propagates_iff_projKc_mem_domL`), and it fails for
 the thesis' complex on every nonempty bounded domain
-(`BoundedDomain.thesisComplex_orbit_not_propagate_unconditional`).
+(`BoundedDomain.thesisComplex_tsd_not_propagates`).
 See [QuennevilleBelair2015, §4.10, Prop 4.17; §4.11, Prop 4.19]. -/
-theorem prop_4_17_exists_unconditional (hS1 : S1 ≤ H.d0†.ker)
+theorem existsUnique_classicalSolution_mem_Kc (hS1 : S1 ≤ H.d0†.ker)
     (hPD : ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL)
     (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
     (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1) (T : ℝ) {E₀ : W1} {B₀ : W2}
@@ -452,16 +439,18 @@ theorem prop_4_17_exists_unconditional (hS1 : S1 ≤ H.d0†.ker)
       IsReducedSolution H T E₀ B₀ (fun t => (tot W0 W1 W2 (U t)).2.1)
         (fun t => (tot W0 W1 W2 (U t)).2.2) ∧
       ∀ U', IsStrongSolution (-H.waveOp) T (ini W0 E₀ B₀) 0 U' → EqOn U' U (Icc 0 T) := by
-  obtain ⟨U, hU, huniq, -⟩ := H.thm_4_6_unconditional T hD
+  obtain ⟨U, hU, huniq, -⟩ := H.existsUnique_classicalSolution_neg_waveOp T hD
   obtain ⟨hK, hR⟩ := prop_4_17 hS1 hPD hd1 hd1s hE₀ hB₀ hU.toIsStrongSolution
   exact ⟨U, hU, hK, hR, huniq⟩
+
+alias prop_4_17_exists_unconditional := existsUnique_classicalSolution_mem_Kc
 
 /-- **Props 4.17/4.19, group form**, unconditional: under the hypotheses of `prop_4_17`, the
 Hodge wave group `e^{-tL}` of the complex (`HilbertComplex2.waveGroup`, from Stone's theorem)
 maps `D(L) ∩ K` into `K` for every `t ≥ 0`. Abstract counterpart of
 `Feec.Torus.prop_4_17_torus_group_periodic`.
 See [QuennevilleBelair2015, Props 4.17 and 4.19, Thm 4.3]; cf. [Pazy1983, §1.10]. -/
-theorem prop_4_17_group_unconditional (hS1 : S1 ≤ H.d0†.ker)
+theorem waveGroup_mem_Kc_of_nonneg (hS1 : S1 ≤ H.d0†.ker)
     (hPD : ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL)
     (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
     (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1) {t : ℝ} (ht : 0 ≤ t)
@@ -470,14 +459,17 @@ theorem prop_4_17_group_unconditional (hS1 : S1 ≤ H.d0†.ker)
   Kc_propagate hS1 hPD hd1 hd1s (isStrongSolution_orbit H.waveGroup t ⟨x, hx⟩) hxK t
     ⟨ht, le_rfl⟩
 
+@[deprecated (since := "2026-10-16")] alias prop_4_17_group_unconditional :=
+  waveGroup_mem_Kc_of_nonneg
+
 /-- **Props 4.17/4.19, group form for all times**, unconditional: under the hypotheses of
 `prop_4_17`, the Hodge wave group `e^{-tL}` maps `D(L) ∩ K` into `K` for every `t ∈ ℝ`.
-Forward invariance is `prop_4_17_group_unconditional`; backward invariance follows from the
+Forward invariance is `waveGroup_mem_Kc_of_nonneg`; backward invariance follows from the
 time reversal `R(σ, E, B) = (-σ, E, -B)` of (4.14) (`Constraints.waveOp_revT`,
 `Constraints.group_reversal`, `Constraints.invariant_of_reversal`), which preserves `D(L)` and
 `K`. Abstract counterpart of `Feec.Torus.prop_4_17_torus_group_periodic`.
 See [QuennevilleBelair2015, Props 4.17 and 4.19, Thm 4.3]; cf. [Pazy1983, §1.10]. -/
-theorem prop_4_17_group_all_unconditional (hS1 : S1 ≤ H.d0†.ker)
+theorem waveGroup_mem_Kc (hS1 : S1 ≤ H.d0†.ker)
     (hPD : ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL)
     (hd1 : ∀ u : H.d1.domain, (u : W1) ∈ S1 → H.d1 u ∈ S2)
     (hd1s : ∀ ρ : H.d1†.domain, (ρ : W2) ∈ S2 → H.d1† ρ ∈ S1) (t : ℝ)
@@ -491,7 +483,9 @@ theorem prop_4_17_group_all_unconditional (hS1 : S1 ≤ H.d0†.ker)
     (fun y hy => revT_mem_domL H hy)
     (group_reversal H.waveGroup _ revT_revT (fun y hy => revT_mem_domL H hy) hRL)
     (fun y hy => revT_mem_Kc hy)
-    (fun s hs y hy hyK => prop_4_17_group_unconditional hS1 hPD hd1 hd1s hs hy hyK) t x hx hxK
+    (fun s hs y hy hyK => waveGroup_mem_Kc_of_nonneg hS1 hPD hd1 hd1s hs hy hyK) t x hx hxK
+
+alias prop_4_17_group_all_unconditional := waveGroup_mem_Kc
 
 end Constraints
 
@@ -505,8 +499,7 @@ variable {Ω : Set R3}
 orbit leaves `K` immediately**, on any nonempty bounded open `Ω ⊆ ℝ³`: for
 `H̊¹ → H̊(curl) → L²` there is a TSD datum `x = (0, 0, β) ∈ D(L) ∩ K` such that for every
 `T > 0` some `t ∈ [0, T]` has `e^{-tL} x ∉ K`, `K = {0} × L²(TSD) × L²(TSD)`. The orbit is a
-strong solution on every `[0,T]`, so this is `thesisComplex_orbit_not_propagate_unconditional`
-applied to it.
+strong solution on every `[0,T]`, so this is `thesisComplex_tsd_not_propagates` applied to it.
 
 Thesis gap: [QuennevilleBelair2015, §4.10, Prop 4.17] is vacuously true on bounded domains,
 since its conjectured projection hypothesis fails there
@@ -518,7 +511,7 @@ theorem thesisComplex_waveGroup_not_invariant (hΩ : IsOpen Ω) (hb : Bornology.
     ∃ x ∈ (thesisComplex hΩ hb).domL, x ∈ Kc (L2V Ω) (TSD Ω) (TSD Ω) ∧
       ∀ T > 0, ∃ t ∈ Icc (0 : ℝ) T,
         (thesisComplex hΩ hb).waveGroup.S t x ∉ Kc (L2V Ω) (TSD Ω) (TSD Ω) := by
-  obtain ⟨B₀, -, hD, hK, hall⟩ := thesisComplex_orbit_not_propagate_unconditional hΩ hb hne
+  obtain ⟨B₀, -, hD, hK, hall⟩ := thesisComplex_tsd_not_propagates hΩ hb hne
   refine ⟨_, hD, hK, fun T hT => ?_⟩
   obtain ⟨-, hnot⟩ := hall T hT
   exact hnot _ (isStrongSolution_orbit (thesisComplex hΩ hb).waveGroup T ⟨_, hD⟩)

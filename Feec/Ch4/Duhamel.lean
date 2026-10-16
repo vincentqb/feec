@@ -3,6 +3,7 @@ module
 public import Mathlib.Analysis.Calculus.ParametricIntervalIntegral
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Feec.Ch4.Restriction
+public import Feec.Evolution.Forcing
 
 /-!
 # Duhamel's formula for a unitary group (Thesis Thm 4.3, inhomogeneous case)
@@ -20,12 +21,13 @@ Nothing here depends on a particular operator: the periodic Hodge wave group
 * `UnitaryGroupGenerator.integral_mem_domain`: `∫₀ᵗ S(-s) F(s) ds ∈ D(A)`, and `A` commutes
   with the integral (differentiation under the integral sign);
 * **`UnitaryGroupGenerator.duhamel`**: Duhamel's formula solves `U' = A U + F` everywhere;
-* `ForcingDL A T`: the forcing class `C([0,T]; D(A))`;
+* `WellPosedClassical.mono`: classical well-posedness is antitone in the forcing class;
 * **`UnitaryGroupGenerator.wellPosedClassical_forcing`**: Thm 4.3 with forcing in
   `ForcingDL A T`, i.e. `WellPosedClassical A T (ForcingDL A T)`.
 
-Correction: the thesis' forcing class is `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))`;
-`ForcingDL` is its subclass `C([0,T]; D(A))` (the `W^{1,1}` part is `Feec.Ch4.StoneDuhamel`).
+Correction: the thesis' forcing class is `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))`
+(`ForcingClass.admissible`, `Feec.Evolution.Forcing`); `ForcingDL = ForcingClass.contDomain` is
+its subclass `C([0,T]; D(A))`. The full class is treated in `Feec.Ch4.StoneForcing`.
 
 ## References
 
@@ -154,11 +156,11 @@ theorem UnitaryGroupGenerator.duhamel {F : ℝ → E} (hFD : ∀ s, F s ∈ A.do
     rw [hval, hinv, hA t]
     abel
 
-/-- The forcing class `C([0,T]; D(A))`: `F(t) ∈ D(A)` on `[0,T]`, with `F` and `t ↦ A F(t)`
-continuous on `[0,T]`. -/
-def ForcingDL (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
-  ∃ hF : ∀ t ∈ Icc 0 T, F t ∈ A.domain, ContinuousOn F (Icc 0 T) ∧
-    ∃ H : ℝ → E, ContinuousOn H (Icc 0 T) ∧ ∀ t (ht : t ∈ Icc 0 T), A ⟨F t, hF t ht⟩ = H t
+omit [CompleteSpace E] in
+/-- `WellPosedClassical` is antitone in the forcing class. -/
+theorem WellPosedClassical.mono {T : ℝ} {Adm Adm' : (ℝ → E) → Prop}
+    (h : WellPosedClassical A T Adm) (hle : ∀ F, Adm' F → Adm F) : WellPosedClassical A T Adm' :=
+  fun U₀ hU₀ F hF => h U₀ hU₀ F (hle F hF)
 
 include G in
 /-- **Thesis Thm 4.3 (existence) from a unitary group, inhomogeneous case**: for

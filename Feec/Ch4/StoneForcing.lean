@@ -4,6 +4,7 @@ public import Mathlib.MeasureTheory.Function.ContinuousMapDense
 public import Mathlib.MeasureTheory.Measure.OpenPos
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.IntegrationByParts
 public import Feec.Ch4.StoneDuhamel
+public import Feec.Evolution.Forcing
 
 /-!
 # Thesis Thm 4.3 with the full forcing class `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(L)))`
@@ -18,26 +19,15 @@ This module proves exactly that, for every real Hilbert space, with the group of
 
 ## The forcing classes
 
-* `IsW11 T F`: `F` agrees a.e. on `(0,T)` with `x₀ + ∫₀ᵗ g` for some `x₀ ∈ X` and some `g`
-  Bochner integrable on `(0,T)`. This is the definition of `W^{1,1}(0,T; X)` via the integral
-  representation of its elements ([CazenaveHaraux1998, Ch. 1]: `u ∈ W^{1,1}` iff
-  `u = x₀ + ∫₀ᵗ g` a.e. with `g ∈ L¹`, and then `g = u'` is the weak derivative). We take the
-  integral form as the definition. That `g` is the weak derivative is proved
-  (`IsW11.exists_weakDeriv`: `∫₀ᵀ φ' F = -∫₀ᵀ φ g` for `C¹` test functions vanishing at `0`
-  and `T`). The equivalence with "absolutely continuous with integrable a.e. derivative" is not
-  proved; it holds because a Hilbert space has the Radon–Nikodým property, and it fails for
-  general Banach `X`. For continuous `F` the a.e. identity holds at every point of `[0,T]`
-  with `x₀ = F 0` (`isW11_iff`). `C¹([0,T]; X)` forcing is covered (`isW11_of_hasDerivAt`,
-  `forcingThm43Full_of_C1`). In the `W^{1,1}` branch the requirement `F ∈ C([0,T]; X)` only
-  selects the continuous representative (the integral form is continuous); it is kept to
-  mirror the thesis statement.
-* `IsL1D A T F`: `F(t) ∈ D(A)` for a.e. `t ∈ (0,T)`, and `t ↦ A F(t)` agrees a.e. with an
-  integrable `H`. Together with continuity of `F` (so `F` is integrable), this says that `F`
-  has a representative in `L¹(0,T; D(A))` for the graph norm: `t ↦ (F t, A F t)` is
-  integrable with values a.e. in the graph of `A`.
-* `ForcingThm43Full A T F := ContinuousOn F [0,T] ∧ (IsW11 T F ∨ IsL1D A T F)`, the thesis'
-  class. It contains the class `ForcingThm43` of `Feec.Ch4.StoneDuhamel`
-  (`forcingThm43Full_of_forcingThm43`).
+The classes are defined in `Feec.Evolution.Forcing`: `ForcingClass.w11` (`W^{1,1}(0,T; X)` in its
+integral form `F = x₀ + ∫₀^· g` a.e., [CazenaveHaraux1998, Ch. 1]), `ForcingClass.l1Domain`
+(`L¹(0,T; D(A))` for the graph norm) and `ForcingClass.admissible`, the thesis' class
+`C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))`. This module proves that `g` is the weak
+derivative (`ForcingClass.w11.exists_weakDeriv`: `∫₀ᵀ φ' F = -∫₀ᵀ φ g` for `C¹` test functions
+vanishing at `0` and `T`). The equivalence with "absolutely continuous with integrable a.e.
+derivative" is not proved; it holds because a Hilbert space has the Radon–Nikodým property, and
+it fails for general Banach `X`. In the `W^{1,1}` branch the requirement `F ∈ C([0,T]; X)` only
+selects the continuous representative; it is kept to mirror the thesis statement.
 
 ## Main results
 
@@ -52,11 +42,14 @@ This module proves exactly that, for every real Hilbert space, with the group of
   `A U(t) = S(t) A U₀ + S(t) F(0) + ∫₀ᵗ S(t-s) g(s) ds - F(t)` (`W^{1,1}`, `g` the weak
   derivative) and `A U(t) = S(t) A U₀ + ∫₀ᵗ S(t-s) A F(s) ds` (`L¹(D(A))`). For skew-adjoint
   `A` apply them to `G = stoneGroup hA`.
-* `UnitaryGroupGenerator.wellPosedClassical_thm43Full`, `IsSkewAdjoint.wellPosedClassical_thm43Full`:
-  classical solutions for every forcing in `ForcingThm43Full`.
-* `integral_deriv_smul_primitive`, `IsW11.exists_weakDeriv`: `g` is the weak derivative.
-* **`thm_4_3_full`**: Thesis Thm 4.3 as stated: existence of a solution in
-  `C⁰([0,T]; D(A)) ∩ C¹([0,T]; X)`, unique among strong solutions.
+* `UnitaryGroupGenerator.wellPosedClassical_admissible`, `IsSkewAdjoint.wellPosedClassical_of_le`:
+  classical solutions for every admissible forcing (and so for every smaller class:
+  `wellPosedClassical_W11`, `wellPosedClassical_thm43`, `IsSkewAdjoint.wellPosedClassical_thm43Full`
+  are corollaries).
+* `integral_deriv_smul_primitive`, `ForcingClass.w11.exists_weakDeriv`: `g` is the weak derivative.
+* **`IsSkewAdjoint.existsUnique_classicalSolution`** (formerly `thm_4_3_full`): Thesis Thm 4.3 as
+  stated: existence of a solution in `C⁰([0,T]; D(A)) ∩ C¹([0,T]; X)`, unique among strong
+  solutions.
 
 Thesis gap: the thesis gives no proof (it cites [CazenaveHaraux1998]); this module supplies one,
 with no hypothesis beyond those of the statement. Uniqueness is proved among strong solutions
@@ -79,99 +72,6 @@ namespace Feec
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
   {A : E →ₗ.[ℝ] E}
-
-/-! ### Forcing classes -/
-
-/-- `F ∈ W^{1,1}(0,T; X)`: `F = x₀ + ∫₀^· g` a.e. on `(0,T)`, for some `x₀ ∈ X` and some
-`g` Bochner integrable on `(0,T)`; `g` is then the weak derivative (`IsW11.exists_weakDeriv`).
-Equivalence with absolute continuity plus an integrable a.e. derivative needs the
-Radon–Nikodým property of `X` (true for Hilbert spaces) and is not proved here.
-See [CazenaveHaraux1998, Ch. 1]. -/
-def IsW11 (T : ℝ) (F : ℝ → E) : Prop :=
-  ∃ (x₀ : E) (g : ℝ → E), IntegrableOn g (Ioc 0 T) ∧
-    F =ᵐ[volume.restrict (Ioo 0 T)] fun t => x₀ + ∫ s in (0 : ℝ)..t, g s
-
-/-- `F ∈ L¹(0,T; D(A))` (graph norm): `F(t) ∈ D(A)` for a.e. `t ∈ (0,T)`, with `t ↦ A F(t)`
-a.e. equal to a Bochner integrable `H`. (Integrability of `F` itself is automatic in
-`ForcingThm43Full`, where `F` is continuous on `[0,T]`.) -/
-def IsL1D (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
-  ∃ H : ℝ → E, IntegrableOn H (Ioc 0 T) ∧
-    ∀ᵐ t ∂(volume.restrict (Ioo 0 T)), ∃ h : F t ∈ A.domain, A ⟨F t, h⟩ = H t
-
-/-- The forcing class of [QuennevilleBelair2015, Thm 4.3]:
-`F ∈ C([0,T], X)` and `F ∈ W^{1,1}(0,T; X) ∪ L¹(0,T; D(A))`. -/
-def ForcingThm43Full (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
-  ContinuousOn F (Icc 0 T) ∧ (IsW11 T F ∨ IsL1D A T F)
-
-omit [CompleteSpace E] in
-/-- The primitive `t ↦ ∫₀ᵗ g` of `g ∈ L¹(0,T)` is continuous on `[0,T]`. -/
-theorem continuousOn_primitive_Icc_of_integrableOn {g : ℝ → E} {T : ℝ} (hT : 0 ≤ T)
-    (hg : IntegrableOn g (Ioc 0 T)) :
-    ContinuousOn (fun t => ∫ s in (0 : ℝ)..t, g s) (Icc 0 T) := by
-  have h := intervalIntegral.continuousOn_primitive_interval' (μ := volume)
-    ((intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2 hg) left_mem_uIcc
-  rwa [uIcc_of_le hT] at h
-
-omit [CompleteSpace E] in
-/-- For continuous `F`, membership in `W^{1,1}` holds pointwise on `[0,T]`:
-`F ∈ C([0,T]; X) ∩ W^{1,1}(0,T; X)` iff `F(t) = F(0) + ∫₀ᵗ g` for all `t ∈ [0,T]`, with `g`
-integrable. -/
-theorem isW11_iff {T : ℝ} {F : ℝ → E} (hF : ContinuousOn F (Icc 0 T)) :
-    IsW11 T F ↔ ∃ g : ℝ → E, IntegrableOn g (Ioc 0 T) ∧
-      ∀ t ∈ Icc 0 T, F t = F 0 + ∫ s in (0 : ℝ)..t, g s := by
-  constructor
-  · rintro ⟨x₀, g, hg, hae⟩
-    refine ⟨g, hg, ?_⟩
-    rcases lt_or_ge 0 T with hT | hT
-    · have hP : ContinuousOn (fun t => x₀ + ∫ s in (0 : ℝ)..t, g s) (Icc 0 T) := by
-        exact continuousOn_const.add (continuousOn_primitive_Icc_of_integrableOn hT.le hg)
-      have hae' : F =ᵐ[volume.restrict (Icc 0 T)] fun t => x₀ + ∫ s in (0 : ℝ)..t, g s := by
-        rwa [← Measure.restrict_congr_set (Ioo_ae_eq_Icc (μ := volume))]
-      have heq := Measure.eqOn_Icc_of_ae_eq volume hT.ne hae' hF hP
-      have h0 : F 0 = x₀ := by
-        simpa using heq (left_mem_Icc.2 hT.le)
-      intro t ht
-      rw [heq ht, h0]
-    · intro t ht
-      have : t = 0 := le_antisymm (ht.2.trans hT) ht.1
-      subst this
-      simp
-  · rintro ⟨g, hg, hpt⟩
-    refine ⟨F 0, g, hg, ?_⟩
-    filter_upwards [ae_restrict_mem measurableSet_Ioo] with t ht
-    exact hpt t (Ioo_subset_Icc_self ht)
-
-/-- A continuous `F` with a derivative `F'` on `(0,T)` off a countable set, `F'` integrable on
-`(0,T)`, is in `W^{1,1}(0,T; X)` (fundamental theorem of calculus,
-`integral_eq_of_hasDerivAt_off_countable_of_le`), with `g = F'`. -/
-theorem isW11_of_hasDerivAt {T : ℝ} {F F' : ℝ → E} {s : Set ℝ} (hs : s.Countable)
-    (hFc : ContinuousOn F (Icc 0 T)) (hd : ∀ t ∈ Ioo 0 T \ s, HasDerivAt F (F' t) t)
-    (hi : IntegrableOn F' (Ioc 0 T)) : IsW11 T F := by
-  refine (isW11_iff hFc).2 ⟨F', hi, fun t ht => ?_⟩
-  have := integral_eq_of_hasDerivAt_off_countable_of_le F F' ht.1 hs (hFc.mono
-    (Icc_subset_Icc le_rfl ht.2)) (fun x hx => hd x ⟨⟨hx.1.1, hx.1.2.trans_le ht.2⟩, hx.2⟩)
-    ((intervalIntegrable_iff_integrableOn_Ioc_of_le ht.1).2
-      (hi.mono_set (Ioc_subset_Ioc le_rfl ht.2)))
-  rw [this]; abel
-
-/-- `C¹([0,T]; X) ⊆ C([0,T]; X) ∩ W^{1,1}(0,T; X)`: a continuous `F` whose derivative on `(0,T)`
-extends continuously to `[0,T]` is in the thesis' forcing class (through the `W^{1,1}` branch). -/
-theorem forcingThm43Full_of_C1 {T : ℝ} {F F' : ℝ → E} (hFc : ContinuousOn F (Icc 0 T))
-    (hF' : ContinuousOn F' (Icc 0 T)) (hd : ∀ t ∈ Ioo 0 T, HasDerivAt F (F' t) t) :
-    ForcingThm43Full A T F :=
-  ⟨hFc, Or.inl (isW11_of_hasDerivAt countable_empty hFc (fun t ht => hd t ht.1)
-    ((hF'.integrableOn_compact isCompact_Icc).mono_set Ioc_subset_Icc_self))⟩
-
-/-- `ForcingThm43` (`C([0,T]; D(A))` or continuous with integrable derivative off a countable
-set) is contained in the thesis' class `ForcingThm43Full`. -/
-theorem forcingThm43Full_of_forcingThm43 {T : ℝ} {F : ℝ → E} (hF : ForcingThm43 A T F) :
-    ForcingThm43Full A T F := by
-  rcases hF with ⟨hFD, hFc, H, hHc, hH⟩ | ⟨hFc, F', s, hs, hi, hd⟩
-  · refine ⟨hFc, Or.inr ⟨H, ?_, ?_⟩⟩
-    · exact (hHc.integrableOn_compact isCompact_Icc).mono_set Ioc_subset_Icc_self
-    · filter_upwards [ae_restrict_mem measurableSet_Ioo] with t ht
-      exact ⟨hFD t (Ioo_subset_Icc_self ht), hH t (Ioo_subset_Icc_self ht)⟩
-  · exact ⟨hFc, Or.inl (isW11_of_hasDerivAt hs hFc hd hi.1)⟩
 
 /-! ### `L¹` approximation by continuous functions -/
 
@@ -225,7 +125,7 @@ theorem norm_primitive_sub_le {g g' : ℝ → E} {t r : ℝ} (ht : 0 ≤ t)
 /-- **`g` is the weak (distributional) derivative of `F = x₀ + ∫₀^· g`**, for `g ∈ L¹(0,T; X)`:
 `∫₀ᵀ φ'(t) F(t) dt = -∫₀ᵀ φ(t) g(t) dt` for every `C¹` test function `φ` vanishing at `0` and
 `T` (in particular for every `φ ∈ C_c^∞(0,T)`). This is the characterisation of
-`W^{1,1}(0,T; X)` in [CazenaveHaraux1998, Ch. 1]; it justifies reading `g` in `IsW11` as `F'`.
+`W^{1,1}(0,T; X)` in [CazenaveHaraux1998, Ch. 1]; it justifies reading `g` in `ForcingClass.w11` as `F'`.
 Proof: integration by parts for continuous `g`, extended by `L¹` density with the error bound
 `(T ‖φ'‖_∞ + ‖φ‖_∞) ‖g - gₙ‖_{L¹}`. -/
 theorem integral_deriv_smul_primitive {x₀ : E} {g : ℝ → E} {T : ℝ} (hT : 0 ≤ T)
@@ -242,7 +142,7 @@ theorem integral_deriv_smul_primitive {x₀ : E} {g : ℝ → E} {T : ℝ} (hT :
   have hgi : IntervalIntegrable g volume 0 T :=
     (intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2 hg
   have hPc : ∀ k : ℝ → E, IntegrableOn k (Ioc 0 T) → ContinuousOn (P k) (Icc 0 T) := fun k hk =>
-    continuousOn_const.add (continuousOn_primitive_Icc_of_integrableOn hT hk)
+    continuousOn_const.add (ForcingClass.continuousOn_primitive hT hk)
   have hI1 : ∀ k : ℝ → E, IntegrableOn k (Ioc 0 T) →
       IntervalIntegrable (fun t => φ' t • P k t) volume 0 T := fun k hk =>
     (hφ'.continuousOn.smul (hPc k hk)).intervalIntegrable_of_Icc hT
@@ -299,10 +199,11 @@ theorem integral_deriv_smul_primitive {x₀ : E} {g : ℝ → E} {T : ℝ} (hT :
     _ = δ * (T * M' + M) := by ring
     _ ≤ ε * (T * M' + M) := mul_le_mul_of_nonneg_right hδε (by positivity)
 
-/-- **Weak-derivative form of `IsW11`**: if `F ∈ W^{1,1}(0,T; X)` (`T ≥ 0`), there is
+/-- **Weak-derivative form of `ForcingClass.w11`**: if `F ∈ W^{1,1}(0,T; X)` (`T ≥ 0`), there is
 `g ∈ L¹(0,T; X)` with `∫₀ᵀ φ' F = -∫₀ᵀ φ g` for every `C¹` function `φ` vanishing at `0` and `T`.
 See [CazenaveHaraux1998, Ch. 1]. -/
-theorem IsW11.exists_weakDeriv {T : ℝ} {F : ℝ → E} (hT : 0 ≤ T) (hF : IsW11 T F) :
+theorem ForcingClass.w11.exists_weakDeriv {T : ℝ} {F : ℝ → E} (hT : 0 ≤ T)
+    (hF : ForcingClass.w11 T F) :
     ∃ g : ℝ → E, IntegrableOn g (Ioc 0 T) ∧ ∀ φ φ' : ℝ → ℝ, (∀ t, HasDerivAt φ (φ' t) t) →
       Continuous φ' → φ 0 = 0 → φ T = 0 →
         ∫ t in (0 : ℝ)..T, φ' t • F t = -∫ t in (0 : ℝ)..T, φ t • g t := by
@@ -315,6 +216,9 @@ theorem IsW11.exists_weakDeriv {T : ℝ} {F : ℝ → E} (hT : 0 ≤ T) (hF : Is
     rwa [← Measure.restrict_congr_set (Ioo_ae_eq_Ioc (μ := volume))]
   filter_upwards [(ae_restrict_iff' measurableSet_Ioc).1 h] with t ht htm
   rw [ht htm]
+
+@[deprecated (since := "2026-10-16")] alias IsW11.exists_weakDeriv :=
+  ForcingClass.w11.exists_weakDeriv
 
 /-! ### Classical solutions: congruence and the empty interval -/
 
@@ -463,7 +367,7 @@ theorem integral_mem_domain_of_primitive {x₀ : E} {g : ℝ → E} {t : ℝ} (h
   have hgi : IntervalIntegrable g volume 0 t :=
     (intervalIntegrable_iff_integrableOn_Ioc_of_le ht).2 hg
   have hPc : ∀ k : ℝ → E, IntegrableOn k (Ioc 0 t) → ContinuousOn (P k) (Icc 0 t) := fun k hk =>
-    continuousOn_const.add (continuousOn_primitive_Icc_of_integrableOn ht hk)
+    continuousOn_const.add (ForcingClass.continuousOn_primitive ht hk)
   have hWi : ∀ k : ℝ → E, IntegrableOn k (Ioc 0 t) →
       IntervalIntegrable (fun r => G.S (-r) (P k r)) volume 0 t := fun k hk =>
     (G.continuous_uncurry.comp_continuousOn (continuous_neg.continuousOn.prodMk (hPc k hk))
@@ -626,7 +530,7 @@ theorem duhamel_W11 {T : ℝ} (hT : 0 ≤ T) {U₀ : E} (hU₀ : U₀ ∈ A.doma
     G.intervalIntegrable_apply ((intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2 hg)
       continuous_neg
   have hJc : ContinuousOn (fun t => ∫ r in (0 : ℝ)..t, G.S (-r) (g r)) (Icc 0 T) :=
-    continuousOn_primitive_Icc_of_integrableOn hT
+    ForcingClass.continuousOn_primitive hT
       ((intervalIntegrable_iff_integrableOn_Ioc_of_le hT).1 hgi)
   have hdom : ∀ t ∈ Icc 0 T, ∃ h : (∫ r in (0 : ℝ)..t, G.S (-r) (F r)) ∈ A.domain,
       A ⟨_, h⟩ = F 0 + (∫ r in (0 : ℝ)..t, G.S (-r) (g r)) - G.S (-t) (F t) := by
@@ -666,7 +570,7 @@ theorem duhamel_L1 {T : ℝ} (hT : 0 ≤ T) {U₀ : E} (hU₀ : U₀ ∈ A.domai
     G.intervalIntegrable_apply ((intervalIntegrable_iff_integrableOn_Ioc_of_le hT).2 hH)
       continuous_neg
   have hJc : ContinuousOn (fun t => ∫ r in (0 : ℝ)..t, G.S (-r) (H r)) (Icc 0 T) :=
-    continuousOn_primitive_Icc_of_integrableOn hT
+    ForcingClass.continuousOn_primitive hT
       ((intervalIntegrable_iff_integrableOn_Ioc_of_le hT).1 hHi)
   have hdom : ∀ t ∈ Icc 0 T, ∃ h : (∫ r in (0 : ℝ)..t, G.S (-r) (F r)) ∈ A.domain,
       A ⟨_, h⟩ = ∫ r in (0 : ℝ)..t, G.S (-r) (H r) := by
@@ -685,29 +589,56 @@ theorem duhamel_L1 {T : ℝ} (hT : 0 ≤ T) {U₀ : E} (hU₀ : U₀ ∈ A.domai
 /-! ### Thm 4.3 -/
 
 include G in
-/-- **Thesis Thm 4.3 (existence) for the thesis' forcing class**: for `U₀ ∈ D(A)` and
-`F ∈ C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))` there is a classical solution
-`U ∈ C⁰([0,T]; D(A)) ∩ C¹([0,T]; X)` of `U' = A U + F`, `U(0) = U₀`, namely Duhamel's
-`U = G.duhamelSol U₀ F`. The generator image `A U(t)` is given explicitly in `duhamel_W11` and
-`duhamel_L1`. See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998, Prop 4.1.6],
-[Pazy1983, §4.2]. -/
-theorem wellPosedClassical_thm43Full (T : ℝ) : WellPosedClassical A T (ForcingThm43Full A T) := by
+/-- **Classical solutions for the admissible forcing class** (Thesis Thm 4.3, existence): for
+`U₀ ∈ D(A)` and `F ∈ C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))` (`ForcingClass.admissible`)
+there is a classical solution `U ∈ C⁰([0,T]; D(A)) ∩ C¹([0,T]; X)` of `U' = A U + F`,
+`U(0) = U₀`, namely Duhamel's `U = G.duhamelSol U₀ F`. The generator image `A U(t)` is given
+explicitly in `duhamel_W11` and `duhamel_L1`. Every smaller forcing class
+(`ForcingClass.contDomain`, `ForcingClass.derivOffCountable`, `ForcingThm43`) follows by
+`WellPosedClassical.mono`. See [QuennevilleBelair2015, Thm 4.3]; cf.
+[CazenaveHaraux1998, Prop 4.1.6], [Pazy1983, §4.2]. -/
+theorem wellPosedClassical_admissible (T : ℝ) :
+    WellPosedClassical A T (ForcingClass.admissible A T) := by
   rintro U₀ hU₀ F ⟨hFc, hF⟩
   rcases lt_or_ge T 0 with hT | hT
   · exact ⟨_, isClassicalSolution_of_neg hT (G.duhamelSol_zero U₀ F)⟩
   rcases hF with hW | ⟨H, hH, hD⟩
-  · obtain ⟨g, hg, hpt⟩ := (isW11_iff hFc).1 hW
+  · obtain ⟨g, hg, hpt⟩ := (ForcingClass.w11_iff hFc).1 hW
     exact ⟨_, (G.duhamel_W11 hT hU₀ hFc hg hpt).1⟩
   · exact ⟨_, (G.duhamel_L1 hT hU₀ hFc hH hD).1⟩
 
+@[deprecated (since := "2026-10-16")] alias wellPosedClassical_thm43Full :=
+  wellPosedClassical_admissible
+
+include G in
+/-- **Thesis Thm 4.3 (existence), `W^{1,1}`-type forcing** (`ForcingW11`, continuous with an
+integrable derivative off a countable set). Corollary of `wellPosedClassical_admissible`.
+See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983, §4.2, Cor 4.2.5]. -/
+theorem wellPosedClassical_W11 (T : ℝ) : WellPosedClassical A T (ForcingW11 T) :=
+  (G.wellPosedClassical_admissible T).mono fun _ hF => ForcingClass.derivOffCountable.admissible hF
+
+include G in
+/-- **Thesis Thm 4.3 (existence)** for `ForcingThm43 = C([0,T]; D(A)) ∪ ForcingW11`.
+Corollary of `wellPosedClassical_admissible`. See [QuennevilleBelair2015, Thm 4.3]. -/
+theorem wellPosedClassical_thm43 (T : ℝ) : WellPosedClassical A T (ForcingThm43 A T) :=
+  (G.wellPosedClassical_admissible T).mono fun _ hF => hF.admissible
+
 end UnitaryGroupGenerator
+
+/-- **Classical well-posedness for every skew-adjoint generator**: for any forcing class `Adm`
+contained in `ForcingClass.admissible A T`, `WellPosedClassical A T Adm`, from Stone's theorem.
+See [QuennevilleBelair2015, Thm 4.3]. -/
+theorem IsSkewAdjoint.wellPosedClassical_of_le (hA : IsSkewAdjoint A) {T : ℝ}
+    {Adm : (ℝ → E) → Prop} (hAdm : ∀ F, Adm F → ForcingClass.admissible A T F) :
+    WellPosedClassical A T Adm :=
+  ((stoneGroup hA).wellPosedClassical_admissible T).mono hAdm
 
 /-- Classical solutions of `U' = A U + F` for every skew-adjoint `A` and every forcing in the
 thesis' class `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))`, from Stone's theorem.
 See [QuennevilleBelair2015, Thm 4.3]. -/
 theorem IsSkewAdjoint.wellPosedClassical_thm43Full (hA : IsSkewAdjoint A) (T : ℝ) :
     WellPosedClassical A T (ForcingThm43Full A T) :=
-  (stoneGroup hA).wellPosedClassical_thm43Full T
+  hA.wellPosedClassical_of_le fun _ hF => hF
 
 /-- `WellPosedExistence A T (ForcingThm43Full A T)` for every skew-adjoint `A`: the existence
 hypothesis of `Feec.Foundation.Evolution` holds for the thesis' full forcing class.
@@ -716,17 +647,23 @@ theorem IsSkewAdjoint.wellPosedExistence_thm43Full (hA : IsSkewAdjoint A) (T : �
     WellPosedExistence A T (ForcingThm43Full A T) :=
   (hA.wellPosedClassical_thm43Full T).wellPosedExistence
 
-/-- **Thesis Thm 4.3**, as stated: for `A` skew-adjoint (its domain is then dense), `U₀ ∈ D(A)`
-and `F ∈ C([0,T], X)` in at least one of `W^{1,1}(0,T; X)` and `L¹(0,T; D(A))`, there is a
+/-- **Existence and uniqueness for skew-adjoint generators** (Thesis Thm 4.3, as stated): for
+`A` skew-adjoint (its domain is then dense), `U₀ ∈ D(A)` and `F` admissible
+(`F ∈ C([0,T], X)` in at least one of `W^{1,1}(0,T; X)` and `L¹(0,T; D(A))`), there is a
 solution `U ∈ C⁰([0,T], D(A)) ∩ C¹([0,T], X)` of `U' = A U + F`, `U(0) = U₀`, and it is unique
-among strong solutions (a larger class than `C⁰(D(A)) ∩ C¹(X)`).
+among strong solutions (a larger class than `C⁰(D(A)) ∩ C¹(X)`). Uniqueness is
+`IsStrongSolution.unique`. The statements for smaller forcing classes (`thm_4_3_unconditional`,
+`thm_4_3_of_isSkewAdjoint`) and for the Hodge wave operator are corollaries.
 See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998, Prop 4.1.6, Cor 2.4.9]. -/
-theorem thm_4_3_full (hA : IsSkewAdjoint A) (T : ℝ) {U₀ : E} (hU₀ : U₀ ∈ A.domain)
-    {F : ℝ → E} (hF : ForcingThm43Full A T F) :
+theorem IsSkewAdjoint.existsUnique_classicalSolution (hA : IsSkewAdjoint A) (T : ℝ) {U₀ : E}
+    (hU₀ : U₀ ∈ A.domain) {F : ℝ → E} (hF : ForcingClass.admissible A T F) :
     ∃ U, IsClassicalSolution A T U₀ F U ∧
       ∀ U', IsStrongSolution A T U₀ F U' → EqOn U' U (Icc 0 T) := by
-  obtain ⟨U, hU⟩ := hA.wellPosedClassical_thm43Full T U₀ hU₀ F hF
-  exact ⟨U, hU, fun U' hU' => strongSolution_unique A (hA.isSkewSymm hA.dense_domain) hU'
-    hU.toIsStrongSolution⟩
+  obtain ⟨U, hU⟩ := (hA.wellPosedClassical_of_le fun _ h => h) U₀ hU₀ F hF
+  exact ⟨U, hU, fun U' hU' =>
+    hU'.unique (hA.isSkewSymm hA.dense_domain).isDissipative hU.toIsStrongSolution⟩
+
+@[deprecated (since := "2026-10-16")] alias thm_4_3_full :=
+  IsSkewAdjoint.existsUnique_classicalSolution
 
 end Feec

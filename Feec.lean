@@ -57,6 +57,21 @@ public import Feec.Ch6.Bounded
 public import Feec.Ch6.TimeDependent
 public import Feec.Ch6.Whole
 public import Feec.Ch7.CrankNicolson
+public import Feec.Repair.C2
+public import Feec.Repair.C410
+public import Feec.Repair.C417
+public import Feec.Repair.C417BggCube
+public import Feec.Repair.C417BggTorus
+public import Feec.Repair.C417Compress
+public import Feec.Repair.C417Cube
+public import Feec.Repair.C417CubeDense
+public import Feec.Repair.C417Ext
+public import Feec.Repair.C417Pi
+public import Feec.Repair.C419Cube
+public import Feec.Repair.C419Pi
+public import Feec.Repair.C67
+public import Feec.Repair.C67Minres
+public import Feec.Repair.C67Prop62
 
 /-!
 # Feec
@@ -66,7 +81,8 @@ V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General
 PhD thesis, University of Minnesota, 2015.
 
 This root module publicly imports every module of the library. `Feec.Foundation` re-exports
-its parts `Feec.Foundation.{Operators, Evolution, Complex, BGG, Tensor}`.
+its parts `Feec.Foundation.{Operators, Evolution, Complex, BGG, Tensor}`. The modules
+`Feec.Repair.*` prove corrected versions of the thesis results listed in `docs/OVERVIEW.md`.
 
 ## References
 

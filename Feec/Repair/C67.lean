@@ -10,13 +10,17 @@ public import Feec.Repair.C67Minres
   in its dynamic-data form (`prop_6_2_dynamic`, `prop_6_2_wellposed`: a solution exists iff
   `u₀ ⊥ d(ker S₀,ₕ)`, it is unique, and `φₕ(0) = Φ(σ₀, f(0))` is forced), and admissibility of
   the projected initial data used by the Ch. 6 convergence theorem (`projected_C2`,
-  `projected_C3_iff`, `ch6_convergence_projected`).
-* `Feec.Repair.C67Minres`: the Ch. 7 solver claim (MINRES on the CN matrices). The CN matrix
-  `M + sK` is not symmetric (`cn_matrix_not_isSymm`, `cnSystem_not_isSymm_of_ne`); its
-  `J`-symmetrization is symmetric, nonsingular and indefinite (`minres_symm`,
-  `minres_matrix_isUnit`, `minres_matrix_not_posDef`, `minres_matrix_not_negDef`), and its
-  unique solution is the coefficient vector of the CN iterate of (4.14) / (4.15)
-  (`fullStep_iff_matrix`, `minres_solution_iff_cnStep`, `minres_solution_iff_redStep`).
+  `projected_C3_iff`, `ch6_convergence_projected`; `projected_Q0_counterexample`: the
+  projected algebraic datum `Q(0)` can be inadmissible). `f` need only be continuous on `[0,T]`.
+* `Feec.Repair.C67Minres`: the Ch. 7 solver claim (MINRES on the "other matrices"), under two
+  readings. Monolithic reading (MINRES on the CN matrix): `M + sK` is not symmetric
+  (`cn_matrix_not_isSymm`, `cnSystem_not_isSymm_of_ne`); its `J`-symmetrization is symmetric,
+  nonsingular and indefinite (`minres_matrix_indefinite`), and its unique solution is the
+  coefficient vector of the CN iterate of (4.14) / (4.15) (`fullStep_iff_matrix`,
+  `minres_solution_iff_cnStep`, `minres_solution_iff_redStep`). Block-elimination reading
+  (mass solves around an `E` Schur complement solve): equivalent to the CN system
+  (`cn_schur_iff`, `cn_step_schur`), and the Schur complement is SPD (`schurE_posDef`), so the
+  thesis claim holds as stated.
 
 See [QuennevilleBelair2015, §6.2, Prop 6.2] and [QuennevilleBelair2015, Ch. 7].
 -/

@@ -2,38 +2,47 @@ module
 
 public import Feec.Ch7.CrankNicolson
 public import Mathlib.Analysis.InnerProductSpace.GramMatrix
+public import Mathlib.Algebra.Order.Star.Real
 
 /-!
 # Repair of the thesis Ch. 7 solver claim: MINRES on the symmetrized Crank–Nicolson system
 
 [QuennevilleBelair2015, Ch. 7, l. 4284–4285]: the mass matrices are inverted by
 Jacobi-preconditioned CG and "other matrices are inverted with MINRES preconditioned with AMG".
-Implicitly these are the Crank–Nicolson (CN) matrices of the full system (4.14) and the reduced
-system (4.15), and MINRES applies to them.
+The thesis never assembles the system, so which "other matrices" are meant is a matter of
+reading. Two readings are treated here, and neither is asserted to be the thesis' intent.
 
-Defect. MINRES needs a symmetric nonsingular matrix. In the natural block form the CN matrix
-`M + sK` (`M = diag(M0, M1, M2)` SPD, `K` skew, `s = Δt/2`) is nonsingular but not symmetric
-whenever `s ≠ 0` and the coupling is nonzero (`cn_matrix_not_isSymm`), so MINRES does not apply
-to it as written. The thesis never assembles the system.
-
-Repair (this file), building on `Feec.CrankNicolson` (§2 there: `minres_symm`,
-`minres_system_iff`, `cn_invertible`).
-* Matrix level. `cn_matrix_transpose`: `(M + sK)ᵀ = M − sK`; `cn_matrix_not_isSymm`;
-  `minres_matrix_isUnit`: `J(M + sK)` is nonsingular (`J = diag(−I, I, −I)`);
-  `minres_matrix_not_posDef`, `minres_matrix_not_negDef`: it is indefinite as soon as the
-  `σ`/`B` blocks and the `E` block are nonempty, so CG does not apply and MINRES is the right
-  Krylov method; `minres_cn_existsUnique`, `minres_cn_iff`: the symmetrized CN system
+Monolithic reading: MINRES is applied to the Crank–Nicolson (CN) matrix `M + sK` of (4.14) /
+(4.15) (`M = diag(M0, M1, M2)` SPD, `K` skew, `s = Δt/2`). Then the claim needs a repair: MINRES
+needs a symmetric nonsingular matrix, and `M + sK` is nonsingular but not symmetric whenever
+`s ≠ 0` and the coupling is nonzero (`cn_matrix_not_isSymm`). Its `J`-symmetrization is the
+right system.
+* `cn_matrix_transpose`: `(M + sK)ᵀ = M − sK`; `cn_matrix_not_isSymm`.
+* `minres_matrix_indefinite` (packaged), from `minres_symm`, `minres_matrix_isUnit`,
+  `minres_matrix_not_posDef`, `minres_matrix_not_negDef`: `J(M + sK)` (`J = diag(−I, I, −I)`)
+  is symmetric, nonsingular and indefinite once the `E` block and the `σ` or `B` block are
+  nonempty. So under this reading MINRES, not CG, is the Krylov method.
+* `minres_cn_existsUnique`, `minres_cn_iff`: the symmetrized CN system
   `J(M + sK) x' = J(M − sK) x` has exactly one solution, the CN update.
-* Bridge to the scheme. For bases `b0, b1, b2` of the FE spaces `V0, V1, V2` (with their `L²`
-  inner products) and `d0 = grad`, `d1 = curl`: `Mᵢ` are the Gram (mass) matrices
-  (`Matrix.gram`), `G = gradMat` (`Gᵢⱼ = (b1ᵢ, d0 b0ⱼ)`), `C = curlMat`
-  (`Cᵢⱼ = (b2ᵢ, d1 b1ⱼ)`), and `coordVec` the coefficient vector. `fullStep_iff_matrix`: a full
-  CN step of (4.14) (`Feec.CrankNicolson.FullStep`) is exactly `(M + sK) c(x') = (M − sK) c(x)`;
-  `minres_solution_iff_cnStep`: a vector solves the symmetrized system iff it is the coefficient
-  vector of the CN iterate `cnStep x`; `cnSystem_not_isSymm_of_ne`: for `s ≠ 0` and
-  `d0 ≠ 0 ∨ d1 ≠ 0` the assembled `M + sK` is not symmetric. The reduced system (4.15) is the
-  case of an empty `σ` block (`redStep_iff_matrix`, `minres_solution_iff_redStep`), where `J`
-  is `diag(I, −I)`.
+
+Block-elimination (Schur complement) reading: the separate mass solves suggest eliminating
+`σ' = M0⁻¹(r₀ + s Gᵀ E')`, `B' = M2⁻¹(r₂ + s C E')` and solving
+`S E' = r₁ − s G M0⁻¹ r₀ − s Cᵀ M2⁻¹ r₂` with `S = M1 + s²(G M0⁻¹ Gᵀ + Cᵀ M2⁻¹ C)`. Under this
+reading the thesis claim holds as stated. `cn_schur_iff`: the elimination is equivalent to the
+CN system. `schurE_posDef`: `S` is SPD, so MINRES (and CG) apply. `cn_step_schur`: the `E` block
+of the CN step is `S⁻¹(…)`.
+
+Bridge to the scheme. Take bases `b0, b1, b2` of abstract finite-dimensional inner-product spaces
+`V0, V1, V2` and abstract linear maps `d0 : V0 → V1`, `d1 : V1 → V2`. In the thesis these are the
+FE spaces with their `L²` products and `d0 = grad`, `d1 = curl`, but no concrete FE space is
+instantiated here. `Mᵢ` are the Gram matrices (`Matrix.gram`), `G = gradMat`
+(`Gᵢⱼ = (b1ᵢ, d0 b0ⱼ)`), `C = curlMat` (`Cᵢⱼ = (b2ᵢ, d1 b1ⱼ)`), and `coordVec` is the coefficient
+vector. `fullStep_iff_matrix`: a full CN step of (4.14) (`Feec.CrankNicolson.FullStep`) is
+exactly `(M + sK) c(x') = (M − sK) c(x)`. `minres_solution_iff_cnStep`: a vector solves the
+symmetrized system iff it is the coefficient vector of the CN iterate `cnStep x`.
+`cnSystem_not_isSymm_of_ne`: for `s ≠ 0` and `d0 ≠ 0 ∨ d1 ≠ 0` the assembled `M + sK` is not
+symmetric. The reduced system (4.15) is the case of an empty `σ` block (`redStep_iff_matrix`,
+`minres_solution_iff_redStep`), where `J` is `diag(I, −I)`.
 
 Not formalized: AMG preconditioning and MINRES convergence (numerical).
 -/
@@ -82,8 +91,9 @@ omit [Fintype n0] [Fintype n1] [Fintype n2] [DecidableEq n0] [DecidableEq n1]
   [DecidableEq n2] in
 /-- **The CN matrix is not symmetric** (Thesis Ch. 7, l. 4284–4285). For symmetric mass blocks,
 `s ≠ 0` and nonzero coupling (`G ≠ 0` or `C ≠ 0`), `M + sK` is not symmetric, so MINRES does not
-apply to the unsymmetrized CN system. Refutes the implicit claim of
-[QuennevilleBelair2015, Ch. 7] that MINRES applies to the CN matrices as they stand. -/
+apply to the unsymmetrized CN system. Refutes the monolithic reading of
+[QuennevilleBelair2015, Ch. 7] (MINRES on the CN matrix as it stands); under the
+block-elimination reading the claim holds (`schurE_posDef`). -/
 theorem cn_matrix_not_isSymm {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
     (h0 : M0.IsSymm) (h1 : M1.IsSymm) (h2 : M2.IsSymm) {G : Matrix n1 n0 ℝ}
     {C : Matrix n2 n1 ℝ} {s : ℝ} (hs : s ≠ 0) (hGC : G ≠ 0 ∨ C ≠ 0) :
@@ -126,7 +136,8 @@ theorem minres_matrix_diag (M0 : Matrix n0 n0 ℝ) (M1 : Matrix n1 n1 ℝ) (M2 :
 
 /-- **The symmetrized CN matrix is not positive definite** when the `σ` block or the `B` block
 is nonempty (its diagonal has the entries `−M0 i i < 0`, `−M2 i i < 0`). So CG does not apply;
-MINRES (symmetric indefinite) is the appropriate Krylov method. Repair of
+under the monolithic reading MINRES (symmetric indefinite) is the appropriate Krylov method.
+Repair of
 [QuennevilleBelair2015, Ch. 7, l. 4284–4285]. -/
 theorem minres_matrix_not_posDef {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ}
     {M2 : Matrix n2 n2 ℝ} (h0 : M0.PosDef) (h2 : M2.PosDef) (G : Matrix n1 n0 ℝ)
@@ -180,7 +191,171 @@ theorem minres_cn_existsUnique {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ}
     rw [minres_cn_iff] at hy
     rw [← hy, mulVec_mulVec, nonsing_inv_mul _ hdet, one_mulVec]
 
+/-- **Packaged: the symmetrized CN matrix is symmetric, nonsingular and indefinite.** For SPD
+mass blocks, every `s`, a nonempty `E` block and a nonempty `σ` or `B` block, `A = J(M + sK)`
+is symmetric, invertible, and has vectors `v`, `w` with `vᵀAv < 0 < wᵀAw` (basis vectors of the
+`σ`/`B` block and of the `E` block). These are exactly the matrix properties for which MINRES
+(and not CG) is the Krylov method. Repair of [QuennevilleBelair2015, Ch. 7, l. 4284–4285] under
+the monolithic reading. -/
+theorem minres_matrix_indefinite {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ}
+    {M2 : Matrix n2 n2 ℝ} (h0 : M0.PosDef) (h1 : M1.PosDef) (h2 : M2.PosDef)
+    (G : Matrix n1 n0 ℝ) (C : Matrix n2 n1 ℝ) (s : ℝ) [Nonempty n1]
+    (hn : Nonempty n0 ∨ Nonempty n2) :
+    (signJ * (massM M0 M1 M2 + s • stiffK G C)).IsSymm ∧
+      IsUnit (signJ * (massM M0 M1 M2 + s • stiffK G C)) ∧
+      (∃ v, v ⬝ᵥ ((signJ * (massM M0 M1 M2 + s • stiffK G C)) *ᵥ v) < 0) ∧
+      ∃ w, 0 < w ⬝ᵥ ((signJ * (massM M0 M1 M2 + s • stiffK G C)) *ᵥ w) := by
+  have hd : ∀ (A : Matrix (Idx n0 n1 n2) (Idx n0 n1 n2) ℝ) k,
+      Pi.single k 1 ⬝ᵥ (A *ᵥ Pi.single k 1) = A k k := fun A k => by
+    simp
+  obtain ⟨d0, d1, d2⟩ := minres_matrix_diag M0 M1 M2 G C s
+  refine ⟨minres_symm h0.isHermitian.eq h1.isHermitian.eq h2.isHermitian.eq G C s,
+    minres_matrix_isUnit h0 h1 h2 G C s, ?_, ?_⟩
+  · rcases hn with ⟨⟨i⟩⟩ | ⟨⟨i⟩⟩
+    · exact ⟨Pi.single (.inl i) 1, by rw [hd, d0]; linarith [h0.diag_pos (i := i)]⟩
+    · exact ⟨Pi.single (.inr (.inr i)) 1, by rw [hd, d2]; linarith [h2.diag_pos (i := i)]⟩
+  · obtain ⟨i⟩ := ‹Nonempty n1›
+    exact ⟨Pi.single (.inr (.inl i)) 1, by rw [hd, d1]; exact h1.diag_pos⟩
+
 end MatrixLevel
+
+/-! ## Block elimination (Schur complement) reading of Ch. 7
+
+Thesis l. 4284–4285 inverts the mass matrices separately (CG + Jacobi). This fits a block
+elimination: eliminate `σ'` and `B'` with `M0⁻¹`, `M2⁻¹` and solve the `E` Schur complement
+system `S E' = rhs`, `S = M1 + s²(G M0⁻¹ Gᵀ + Cᵀ M2⁻¹ C)`. Under this reading the "other
+matrix" is `S`, which is SPD (`schurE_posDef`), so MINRES applies to it directly (as would CG),
+and the thesis claim is true as stated. `cn_schur_iff` proves that the elimination is
+equivalent to the monolithic CN system. -/
+
+section Schur
+
+variable {n0 n1 n2 : Type*} [Fintype n0] [Fintype n1] [Fintype n2]
+  [DecidableEq n0] [DecidableEq n1] [DecidableEq n2]
+
+/-- `σ` block of a vector on `Idx n0 n1 n2`. -/
+def blk0 (x : Idx n0 n1 n2 → ℝ) : n0 → ℝ := fun i => x (.inl i)
+/-- `E` block. -/
+def blk1 (x : Idx n0 n1 n2 → ℝ) : n1 → ℝ := fun i => x (.inr (.inl i))
+/-- `B` block. -/
+def blk2 (x : Idx n0 n1 n2 → ℝ) : n2 → ℝ := fun i => x (.inr (.inr i))
+
+/-- The `E` Schur complement `S = M1 + s²(G M0⁻¹ Gᵀ + Cᵀ M2⁻¹ C)` of the CN matrix. -/
+def schurE (M0 : Matrix n0 n0 ℝ) (M1 : Matrix n1 n1 ℝ) (M2 : Matrix n2 n2 ℝ)
+    (G : Matrix n1 n0 ℝ) (C : Matrix n2 n1 ℝ) (s : ℝ) : Matrix n1 n1 ℝ :=
+  M1 + s ^ 2 • (G * M0⁻¹ * Gᵀ + Cᵀ * M2⁻¹ * C)
+
+omit [DecidableEq n0] [DecidableEq n1] [DecidableEq n2] in
+/-- Block rows of `(M + sK) x`: `M0 σ − s Gᵀ E`, `M1 E + s G σ + s Cᵀ B`, `M2 B − s C E`. -/
+theorem cn_mulVec_eq_iff (M0 : Matrix n0 n0 ℝ) (M1 : Matrix n1 n1 ℝ) (M2 : Matrix n2 n2 ℝ)
+    (G : Matrix n1 n0 ℝ) (C : Matrix n2 n1 ℝ) (s : ℝ) (x r : Idx n0 n1 n2 → ℝ) :
+    (massM M0 M1 M2 + s • stiffK G C) *ᵥ x = r ↔
+      M0 *ᵥ blk0 x - s • (Gᵀ *ᵥ blk1 x) = blk0 r ∧
+      M1 *ᵥ blk1 x + s • (G *ᵥ blk0 x) + s • (Cᵀ *ᵥ blk2 x) = blk1 r ∧
+      M2 *ᵥ blk2 x - s • (C *ᵥ blk1 x) = blk2 r := by
+  have e0 : ∀ i, ((massM M0 M1 M2 + s • stiffK G C) *ᵥ x) (.inl i) =
+      (M0 *ᵥ blk0 x - s • (Gᵀ *ᵥ blk1 x)) i := fun i => by
+    simp [mulVec, dotProduct, Fintype.sum_sum_type, massM, stiffK, blk0, blk1,
+      Finset.mul_sum, sub_eq_add_neg, mul_assoc, mul_comm]
+  have e1 : ∀ i, ((massM M0 M1 M2 + s • stiffK G C) *ᵥ x) (.inr (.inl i)) =
+      (M1 *ᵥ blk1 x + s • (G *ᵥ blk0 x) + s • (Cᵀ *ᵥ blk2 x)) i := fun i => by
+    simp [mulVec, dotProduct, Fintype.sum_sum_type, massM, stiffK, blk0, blk1, blk2,
+      Finset.mul_sum, mul_assoc, mul_comm]
+    ring
+  have e2 : ∀ i, ((massM M0 M1 M2 + s • stiffK G C) *ᵥ x) (.inr (.inr i)) =
+      (M2 *ᵥ blk2 x - s • (C *ᵥ blk1 x)) i := fun i => by
+    simp [mulVec, dotProduct, Fintype.sum_sum_type, massM, stiffK, blk1, blk2,
+      Finset.mul_sum, sub_eq_add_neg, mul_assoc, mul_comm]
+    ring
+  constructor
+  · rintro rfl
+    exact ⟨funext fun i => (e0 i).symm, funext fun i => (e1 i).symm,
+      funext fun i => (e2 i).symm⟩
+  · rintro ⟨h0, h1, h2⟩
+    funext k
+    rcases k with i | i | i
+    · rw [e0, h0]; rfl
+    · rw [e1, h1]; rfl
+    · rw [e2, h2]; rfl
+
+omit [Fintype n0] [Fintype n1] [Fintype n2] [DecidableEq n0] [DecidableEq n1]
+  [DecidableEq n2] in
+lemma mulVec_eq_iff_inv {n : Type*} [Fintype n] [DecidableEq n] {M : Matrix n n ℝ}
+    (hM : IsUnit M) (y v : n → ℝ) : M *ᵥ y = v ↔ y = M⁻¹ *ᵥ v := by
+  have hdet := (isUnit_iff_isUnit_det M).mp hM
+  constructor
+  · rintro rfl; rw [mulVec_mulVec, nonsing_inv_mul _ hdet, one_mulVec]
+  · rintro rfl; rw [mulVec_mulVec, mul_nonsing_inv _ hdet, one_mulVec]
+
+omit [DecidableEq n1] in
+/-- **Block elimination of the CN system.** For SPD `M0`, `M2` (any `M1`, `s`), the CN system
+`(M + sK) x = r` holds iff
+`σ = M0⁻¹(r₀ + s Gᵀ E)`, `B = M2⁻¹(r₂ + s C E)` and
+`S E = r₁ − s G M0⁻¹ r₀ − s Cᵀ M2⁻¹ r₂` with `S = schurE`. So a CN step can be computed by two
+mass-matrix solves (CG + Jacobi in the thesis) around one solve with `S`. Supports the
+block-elimination reading of [QuennevilleBelair2015, Ch. 7, l. 4284–4285]. -/
+theorem cn_schur_iff {M0 : Matrix n0 n0 ℝ} (M1 : Matrix n1 n1 ℝ) {M2 : Matrix n2 n2 ℝ}
+    (h0 : M0.PosDef) (h2 : M2.PosDef) (G : Matrix n1 n0 ℝ) (C : Matrix n2 n1 ℝ) (s : ℝ)
+    (x r : Idx n0 n1 n2 → ℝ) :
+    (massM M0 M1 M2 + s • stiffK G C) *ᵥ x = r ↔
+      blk0 x = M0⁻¹ *ᵥ (blk0 r + s • (Gᵀ *ᵥ blk1 x)) ∧
+      blk2 x = M2⁻¹ *ᵥ (blk2 r + s • (C *ᵥ blk1 x)) ∧
+      schurE M0 M1 M2 G C s *ᵥ blk1 x =
+        blk1 r - s • (G *ᵥ (M0⁻¹ *ᵥ blk0 r)) - s • (Cᵀ *ᵥ (M2⁻¹ *ᵥ blk2 r)) := by
+  rw [cn_mulVec_eq_iff]
+  have r0 : M0 *ᵥ blk0 x - s • (Gᵀ *ᵥ blk1 x) = blk0 r ↔
+      blk0 x = M0⁻¹ *ᵥ (blk0 r + s • (Gᵀ *ᵥ blk1 x)) := by
+    rw [sub_eq_iff_eq_add]; exact mulVec_eq_iff_inv h0.isUnit _ _
+  have r2 : M2 *ᵥ blk2 x - s • (C *ᵥ blk1 x) = blk2 r ↔
+      blk2 x = M2⁻¹ *ᵥ (blk2 r + s • (C *ᵥ blk1 x)) := by
+    rw [sub_eq_iff_eq_add]; exact mulVec_eq_iff_inv h2.isUnit _ _
+  rw [r0, r2]
+  constructor
+  · rintro ⟨hσ, h1, hB⟩
+    refine ⟨hσ, hB, ?_⟩
+    rw [hσ, hB] at h1
+    rw [← h1]
+    simp only [schurE, add_mulVec, smul_mulVec, mulVec_add, mulVec_smul, ← mulVec_mulVec]
+    module
+  · rintro ⟨hσ, hB, hS⟩
+    refine ⟨hσ, ?_, hB⟩
+    rw [hσ, hB]
+    rw [eq_sub_iff_add_eq, eq_sub_iff_add_eq] at hS
+    rw [← hS]
+    simp only [schurE, add_mulVec, smul_mulVec, mulVec_add, mulVec_smul, ← mulVec_mulVec]
+    module
+
+omit [DecidableEq n1] in
+/-- **The Schur complement is SPD.** For SPD `M0, M1, M2` and every `s`,
+`S = M1 + s²(G M0⁻¹ Gᵀ + Cᵀ M2⁻¹ C)` is positive definite, so MINRES (and CG) apply to the
+`E` system of the block elimination. Under this reading the thesis claim
+[QuennevilleBelair2015, Ch. 7, l. 4284–4285] holds as stated. -/
+theorem schurE_posDef {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
+    (h0 : M0.PosDef) (h1 : M1.PosDef) (h2 : M2.PosDef) (G : Matrix n1 n0 ℝ)
+    (C : Matrix n2 n1 ℝ) (s : ℝ) : (schurE M0 M1 M2 G C s).PosDef := by
+  have hG : (G * M0⁻¹ * Gᵀ).PosSemidef := by
+    simpa [conjTranspose_eq_transpose_of_trivial] using
+      h0.inv.posSemidef.mul_mul_conjTranspose_same G
+  have hC : (Cᵀ * M2⁻¹ * C).PosSemidef := by
+    simpa [conjTranspose_eq_transpose_of_trivial] using
+      h2.inv.posSemidef.conjTranspose_mul_mul_same C
+  exact h1.add_posSemidef ((hG.add hC).smul (sq_nonneg s))
+
+/-- **The CN step via block elimination.** For SPD blocks and every `s`, if
+`(M + sK) x' = r` (for the CN step, `r = (M − sK) x`), then the `E` block of `x'` is
+`S⁻¹(r₁ − s G M0⁻¹ r₀ − s Cᵀ M2⁻¹ r₂)`; its `σ`, `B` blocks are then given by the two mass
+solves of `cn_schur_iff`. -/
+theorem cn_step_schur {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
+    (h0 : M0.PosDef) (h1 : M1.PosDef) (h2 : M2.PosDef) (G : Matrix n1 n0 ℝ)
+    (C : Matrix n2 n1 ℝ) (s : ℝ) {x' r : Idx n0 n1 n2 → ℝ}
+    (hx' : (massM M0 M1 M2 + s • stiffK G C) *ᵥ x' = r) :
+    blk1 x' = (schurE M0 M1 M2 G C s)⁻¹ *ᵥ
+      (blk1 r - s • (G *ᵥ (M0⁻¹ *ᵥ blk0 r)) - s • (Cᵀ *ᵥ (M2⁻¹ *ᵥ blk2 r))) :=
+  (mulVec_eq_iff_inv (schurE_posDef h0 h1 h2 G C s).isUnit _ _).1
+    ((cn_schur_iff M1 h0 h2 G C s x' r).1 hx').2.2
+
+end Schur
+
 
 /-! ## Bridge: the assembled CN system of (4.14) / (4.15) -/
 
@@ -347,7 +522,8 @@ omit [FiniteDimensional ℝ V0] [FiniteDimensional ℝ V1] [FiniteDimensional �
   [Fintype n0] [DecidableEq n0] [DecidableEq n1] [DecidableEq n2] in
 /-- **The assembled CN matrix of (4.14) is not symmetric** for `s ≠ 0` as soon as `grad` or
 `curl` is nonzero on the FE spaces. So MINRES does not apply to the CN matrix itself, only to
-its `J`-symmetrization. Refutes the implicit claim of [QuennevilleBelair2015, Ch. 7]. -/
+its `J`-symmetrization. Refutes the monolithic reading of [QuennevilleBelair2015, Ch. 7]
+(see the module docstring for the block-elimination reading, under which the claim holds). -/
 theorem cnSystem_not_isSymm_of_ne (b0 : Module.Basis n0 ℝ V0) (b1 : Module.Basis n1 ℝ V1)
     (b2 : Module.Basis n2 ℝ V2) {d0 : V0 →ₗ[ℝ] V1} {d1 : V1 →ₗ[ℝ] V2} {s : ℝ} (hs : s ≠ 0)
     (hd : d0 ≠ 0 ∨ d1 ≠ 0) :

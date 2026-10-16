@@ -3,11 +3,11 @@ module
 public import Feec.Repair.C417Cube
 
 /-!
-# Prop 4.17 with mirror boundary conditions on every open cube, in particular `(0, π)³`
+# Prop 4.17 with mirror boundary conditions on every open cube
 
-Ch. 7 of the thesis runs (4.14)/(4.15) on the cube `(0, π)³`. `Feec.Repair.C417Cube` proves the
-repaired Prop 4.17 on `Q = (0, ½)³`. This file carries it along `T x = 2s x + b`, which maps `Q`
-onto `openCube b s = ∏ᵢ (bᵢ, bᵢ + s)` (`Feec.BoxIdent.mem_Qr_iff_openCube`):
+`Feec.Repair.C417Cube` proves the repaired Prop 4.17 on `Q = (0, ½)³`. This file carries it
+along `T x = 2s x + b`, which maps `Q` onto `openCube b s = ∏ᵢ (bᵢ, bᵢ + s)`
+(`Feec.BoxIdent.mem_Qr_iff_openCube`):
 
 * `scaleComplex`: a Hilbert complex with both differentials multiplied by `λ ≠ 0` (adjoints
   scale by `λ`, `D(L)` is unchanged, `L` scales by `λ`), and the hypotheses of the abstract
@@ -17,11 +17,13 @@ onto `openCube b s = ∏ᵢ (bᵢ, bᵢ + s)` (`Feec.BoxIdent.mem_Qr_iff_openCub
   cancels): `mirrorCxCube_d1_eq` (`d1` is the weak curl on the cube).
 * **`mirrorCxCube_prop_4_17_exists`**, `mirrorCxCube_projection_hyp`, `mirrorCxCube_Kmax_eq`,
   `mirrorCxCube_exists_nonstationary`, and the constraint spaces lie in `L²(TSD)` of the cube
-  (`TSDmECube_le_TSD`, `TSDmBCube_le_TSD`); `piCube_mirror_prop_4_17_exists` for `(0, π)³`.
+  (`TSDmECube_le_TSD`, `TSDmBCube_le_TSD`); `piCube_mirror_prop_4_17_exists` for `(0, π)³`,
+  `unitCube_mirror_prop_4_17_exists` for the unit cube `(0, 1)³` (the domain meshed in Ch. 7;
+  the Ch. 7 test solution, with time-dependent boundary values, is not covered).
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17), Ch. 7 (the cube `(0, π)³`)
+* [QuennevilleBelair2015], §4.10 (Prop 4.17), Ch. 7 (the unit cube mesh)
 -/
 
 @[expose] public noncomputable section
@@ -308,7 +310,7 @@ boundary conditions.** For data `(0, E₀, B₀) ∈ D(L)` with `E₀ ∈ TSDmEC
 (TSD on the cube with the wall conditions), (4.14) has a strong solution on `[0, T]`, unique
 among strong solutions, staying in `{0} × TSDmECube × TSDmBCube`, whose `(E, B)` solves (4.15).
 
-See [QuennevilleBelair2015, §4.10, Prop 4.17; Ch. 7]. -/
+See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
 theorem mirrorCxCube_prop_4_17_exists (T : ℝ) {E₀ B₀ : BoundedDomain.L2M (openCube b s)}
     (hE₀ : E₀ ∈ TSDmECube b s hs) (hB₀ : B₀ ∈ TSDmBCube b s hs)
     (hD : ini (BoundedDomain.L2V (openCube b s)) E₀ B₀ ∈ (mirrorCxCube b s hs).domL) :
@@ -435,7 +437,7 @@ theorem mirrorCxCube_exists_nonstationary
   rw [← h1]
   exact lpmap_congr' _ _ _ (totJ_cosStateCube hs).symm
 
-/-- **The cube `(0, π)³` of Ch. 7**: Prop 4.17 with mirror boundary conditions, with existence and
+/-- **The cube `(0, π)³`**: Prop 4.17 with mirror boundary conditions, with existence and
 uniqueness, on `openCube 0 π = (0, π)³` (`Feec.BoxIdent.openCube_zero_pi`). -/
 theorem piCube_mirror_prop_4_17_exists (T : ℝ) {E₀ B₀ : BoundedDomain.L2M (openCube 0 Real.pi)}
     (hE₀ : E₀ ∈ TSDmECube 0 Real.pi Real.pi_pos) (hB₀ : B₀ ∈ TSDmBCube 0 Real.pi Real.pi_pos)
@@ -448,6 +450,20 @@ theorem piCube_mirror_prop_4_17_exists (T : ℝ) {E₀ B₀ : BoundedDomain.L2M 
       IsReducedSolution (mirrorCxCube 0 Real.pi Real.pi_pos) T E₀ B₀
         (fun t => (tot _ _ _ (U t)).2.1) (fun t => (tot _ _ _ (U t)).2.2) :=
   mirrorCxCube_prop_4_17_exists Real.pi_pos T hE₀ hB₀ hD
+
+/-- **The unit cube `(0, 1)³`** (the domain meshed in Ch. 7): Prop 4.17 with mirror boundary
+conditions, with existence and uniqueness, on `openCube 0 1`. The Ch. 7 test solution is a plane
+wave with non-zero, time-dependent boundary values, so it is not an instance. -/
+theorem unitCube_mirror_prop_4_17_exists (T : ℝ) {E₀ B₀ : BoundedDomain.L2M (openCube 0 1)}
+    (hE₀ : E₀ ∈ TSDmECube 0 1 one_pos) (hB₀ : B₀ ∈ TSDmBCube 0 1 one_pos)
+    (hD : ini _ E₀ B₀ ∈ (mirrorCxCube 0 1 one_pos).domL) :
+    ∃ U, IsStrongSolution (-(mirrorCxCube 0 1 one_pos).waveOp) T (ini _ E₀ B₀) 0 U ∧
+      (∀ U', IsStrongSolution (-(mirrorCxCube 0 1 one_pos).waveOp) T
+        (ini _ E₀ B₀) 0 U' → EqOn U' U (Icc 0 T)) ∧
+      (∀ t ∈ Icc 0 T, U t ∈ Kc _ (TSDmECube 0 1 one_pos) (TSDmBCube 0 1 one_pos)) ∧
+      IsReducedSolution (mirrorCxCube 0 1 one_pos) T E₀ B₀
+        (fun t => (tot _ _ _ (U t)).2.1) (fun t => (tot _ _ _ (U t)).2.2) :=
+  mirrorCxCube_prop_4_17_exists one_pos T hE₀ hB₀ hD
 
 end MirrorCube
 

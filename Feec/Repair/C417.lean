@@ -3,6 +3,7 @@ module
 public import Feec.Repair.C417CubeDense
 public import Feec.Repair.C417Pi
 public import Feec.Repair.C419Cube
+public import Feec.Repair.C419Pi
 public import Feec.Repair.C417BggCube
 public import Feec.Ch4.Whole
 public import Feec.Ch4.WholeSym
@@ -14,7 +15,7 @@ public import Feec.Ch4.WholeSym
 bounded contractible `Ω`, with the boundary conditions of (4.14) (`H̊¹(V) → H̊(curl, M) → L²(M)`),
 of (4.16) (`H̊²(R) → H̊(curl, S) → L²(T)`), and of §6.3 for the BGG system, data `(0, E₀, B₀)` with
 `E₀`, `B₀` TSD give a unique solution with `σ ≡ 0` and `E`, `B` TSD for all time (under projection
-and density conjectures for Props 4.17/4.19). Ch. 7 runs this on the cube `(0, π)³`.
+and density conjectures for Props 4.17/4.19). Ch. 7 runs (4.14) numerically on a unit cube mesh.
 
 **Defect.** The abstract implication holds (`Feec.Constraints.prop_4_17`; the projection
 hypothesis is necessary, `Feec.Constraints.prop_4_17_iff`; the density conjectures are not
@@ -28,16 +29,26 @@ and the conclusions fail (`Feec.BoundedDomain.thesisComplex_orbit_not_propagate_
 **Repair.** The corrected statements:
 * `prop_4_17_corrected`: Prop 4.17 holds on `𝕋³` and `ℝ³` (no boundary) for all TSD data, fails
   with the thesis' boundary conditions on every bounded domain, and holds, with existence,
-  uniqueness, `K* = K` and non-stationary TSD data, on every open cube (in particular `(0, π)³`)
-  with tensorial mirror boundary conditions (`σ · n = 0`, `E_{nτ} = 0`; constraint: TSD with the
-  wall conditions `E_{τn} = 0`, `B_{nn} = 0`), for Hilbert complexes of `L²` fields whose curl is
-  the weak curl (`Feec.Repair.C417Cube`, `Feec.Repair.C417CubeDense`, `Feec.Repair.C417Pi`).
-* `prop_4_19_corrected`: the same for Prop 4.19 on `𝕋³`, `ℝ³` and, with mirror boundary
-  conditions (`∂_n u = 0`, `S_{nτ} = 0`), on the box `Q = (0, ½)³` (`Feec.Repair.C419Cube`).
+  uniqueness, `K* = K` and non-stationary TSD data, on every open cube (e.g. the unit cube
+  `(0, 1)³`, `unitCube_mirror_prop_4_17_exists`) with tensorial mirror boundary conditions
+  (`σ · n = 0`, `E_{nτ} = 0`; constraint: TSD with the wall conditions `E_{τn} = 0`,
+  `B_{nn} = 0` in the reflection sense, i.e. the mirror extension is divergence-free on `𝕋³`),
+  for Hilbert complexes of `L²` fields whose curl is the weak curl (`Feec.Repair.C417Cube`,
+  `Feec.Repair.C417CubeDense`, `Feec.Repair.C417Pi`).
+* `prop_4_19_corrected`, `prop_4_19_corrected_cube`: the same for Prop 4.19 on `𝕋³`, `ℝ³` and,
+  with mirror boundary conditions (`∂_n u = 0`, `S_{nτ} = 0`; constraint TSD with `T_{nn} = 0` in
+  the reflection sense), on the box `Q = (0, ½)³` (`Feec.Repair.C419Cube`) and on every open
+  cube (`Feec.Repair.C419Pi`).
 * `ch6_corrected`: the Ch. 6 BGG system propagates TSD on `ℝ³`, on `𝕋³`
   (`Feec.Repair.C417BggTorus`) and, with mirror boundary conditions (`M` a pseudo-vector, `B` a
   pseudo-tensor), on `Q` (`Feec.Repair.C417BggCube`), where `M ≡ 0` and `B` stays TSD; it fails on
-  every bounded domain with the §6.3 conditions.
+  every bounded domain with the §6.3 conditions. The cube transport does not apply here: `d1`
+  combines the zeroth-order `S₁` with the first-order curl, so a dilation does not conjugate the
+  system on `Q` to the one on another cube.
+
+The Ch. 7 test solution (a plane wave with non-zero, time-dependent boundary values) satisfies
+no homogeneous boundary condition, mirror or thesis, so it is not an instance of any statement
+here.
 
 Boundary conditions on the box are encoded by the method of images (the mirror extension to
 `𝕋³` has the required regularity across the faces); a trace-theoretic definition is not
@@ -46,7 +57,7 @@ formalized. Curved domains are not covered: there the mirror conditions do not f
 
 ## References
 
-* [QuennevilleBelair2015], §4.10–4.11, Ch. 6, Ch. 7
+* [QuennevilleBelair2015], §4.10–4.11, Ch. 6, Ch. 7 (unit cube mesh)
 * [AFW2010] (Hilbert complexes), [ArnoldHu2021] (BGG)
 -/
 
@@ -161,11 +172,12 @@ theorem prop_4_17_corrected :
       (mirrorCxQ_exists_nonstationary G).2⟩⟩
 
 
-/-- **Thesis Prop 4.17, corrected statement on cubes (Ch. 7 setting).** On every open cube
-`∏ᵢ (bᵢ, bᵢ + s)`, in particular `(0, π)³`, with tensorial mirror boundary conditions: for TSD
-data (with the wall conditions) in `D(L)`, (4.14) has a unique strong solution, which stays in
-`K = {0} × TSDmECube × TSDmBCube ⊆ {0} × L²(TSD) × L²(TSD)` and solves (4.15); `d1` is the weak curl;
-and a non-stationary datum lies in `D(L) ∩ K*` for every group. -/
+/-- **Thesis Prop 4.17, corrected statement on cubes.** On every open cube
+`∏ᵢ (bᵢ, bᵢ + s)` (e.g. `(0, 1)³`: `unitCube_mirror_prop_4_17_exists`), with tensorial mirror
+boundary conditions: for TSD data (with the wall conditions, in the reflection sense) in `D(L)`,
+(4.14) has a unique strong solution, which stays in
+`K = {0} × TSDmECube × TSDmBCube ⊆ {0} × L²(TSD) × L²(TSD)` and solves (4.15); `d1` is the weak
+curl; and a non-stationary datum lies in `D(L) ∩ K*` for every group. -/
 theorem prop_4_17_corrected_cube {b : BoundedDomain.R3} {s : ℝ} (hs : 0 < s) :
     (∀ (T : ℝ) {E₀ B₀ : BoundedDomain.L2M (openCube b s)}, E₀ ∈ TSDmECube b s hs →
       B₀ ∈ TSDmBCube b s hs → ini _ E₀ B₀ ∈ (mirrorCxCube b s hs).domL →
@@ -192,18 +204,22 @@ theorem prop_4_17_corrected_cube {b : BoundedDomain.R3} {s : ℝ} (hs : 0 < s) :
 
 /-- **Thesis Prop 4.19, corrected statement.**
 1. On `𝕋³` and `ℝ³`: for TSD data in `H(curl, S) × H(sym curl, T)`, (4.18) has a (classical on
-   `ℝ³`) strong solution staying in `K = {0} × L²(TSD) × L²(TSD)` and solving the reduced system.
+   `ℝ³`) strong solution, unique among strong solutions, staying in
+   `K = {0} × L²(TSD) × L²(TSD)` and solving the reduced system.
 2. On every nonempty bounded open `Ω` with the boundary conditions of (4.16): some TSD datum in
    `D(L) ∩ K` has its strong solutions leave `K`.
 3. On the box `Q = (0, ½)³` with tensorial mirror boundary conditions (`∂_n u = 0`, `S_{nτ} = 0`;
-   constraint TSD with the wall conditions): unique strong solutions staying in
-   `{0} × TSDSm × TSDTm` (TSD fields on `Q`) and solving the reduced system, and a non-stationary
-   datum in `D(L) ∩ K*` for every group. -/
+   constraint TSD with the wall conditions in the reflection sense): unique strong solutions
+   staying in `{0} × TSDSm × TSDTm` (TSD fields on `Q`) and solving the reduced system, and a
+   non-stationary datum in `D(L) ∩ K*` for every group. On every open cube:
+   `prop_4_19_corrected_cube`. -/
 theorem prop_4_19_corrected :
     (∀ (T : ℝ) {E₀ : TorusSym.L2S} {B₀ : TorusSym.L2T}, E₀ ∈ TorusSym.L2TSDS →
       B₀ ∈ TorusSym.L2TSDT → E₀ ∈ TorusSym.HcurlS → B₀ ∈ TorusSym.HsymCurlT →
       ∃ U : ℝ → Tot TorusSym.L2R TorusSym.L2S TorusSym.L2T,
         IsStrongSolution (-TorusSym.symComplex.waveOp) T (ini TorusSym.L2R E₀ B₀) 0 U ∧
+        (∀ U', IsStrongSolution (-TorusSym.symComplex.waveOp) T (ini TorusSym.L2R E₀ B₀) 0 U' →
+          EqOn U' U (Icc 0 T)) ∧
         (∀ t ∈ Icc 0 T, U t ∈ Kc TorusSym.L2R TorusSym.L2TSDS TorusSym.L2TSDT) ∧
         IsReducedSolution TorusSym.symComplex T E₀ B₀ (fun t => (tot _ _ _ (U t)).2.1)
           (fun t => (tot _ _ _ (U t)).2.2)) ∧
@@ -240,13 +256,48 @@ theorem prop_4_19_corrected :
     (∀ E ∈ TSDSm, E ∈ BoundedSym.TSDS Qr) ∧ (∀ B ∈ TSDTm, B ∈ BoundedSym.TSDT Qr) ∧
     (∀ G : UnitaryGroupGenerator (-mirrorSymCxQ.waveOp),
       ∃ x ∈ mirrorSymCxQ.domL, x ∈ Kmax G (Kc RQ TSDSm TSDTm) ∧ ∃ t, G.S t x ≠ x) :=
-  ⟨fun T _ _ hE hB hEc hBc => TorusSym.prop_4_19_torus_exists T hE hB hEc hBc,
+  ⟨fun T _ _ hE hB hEc hBc => by
+      obtain ⟨U, hU, hK, hR⟩ := TorusSym.prop_4_19_torus_exists T hE hB hEc hBc
+      exact ⟨U, hU, fun U' hU' => strong_unique _
+        (isSkewSymm_neg (Constraints.waveOp_isSkewSymm TorusSym.symComplex)) hU' hU, hK, hR⟩,
     fun T _ _ hE hB hEc hBc => Feec.WholeSym.prop_4_19_whole_exists T hE hB hEc hBc,
     fun hΩ hb hne => BoundedSym.symComplexB_not_propagate_unconditional hΩ hb hne,
     fun T _ _ hE hB hD => mirrorSymCxQ_prop_4_19_exists T hE hB hD,
     fun _ hE => TSDSm_le_TSDS hE, fun _ hB => TSDTm_le_TSDT hB,
     fun G => ⟨cosStateS, (mirrorSymCxQ_exists_nonstationary G).1,
       (mirrorSymCxQ_exists_nonstationary G).2⟩⟩
+
+/-- **Thesis Prop 4.19, corrected statement on cubes.** On every open cube `∏ᵢ (bᵢ, bᵢ + s)`
+with tensorial mirror boundary conditions (`∂_n u = 0`, `S_{nτ} = 0`): for TSD data (with the
+wall conditions, in the reflection sense) in `D(L)`, (4.18) has a unique strong solution, which
+stays in `{0} × TSDSmCube × TSDTmCube ⊆ {0} × L²(TSD) × L²(TSD)` and solves the reduced system;
+the projection hypothesis holds; and a non-stationary datum lies in `D(L) ∩ K*` for every group.
+The operators are the conjugates of those on `Q` by the dilation, with the chain-rule factors
+`(2s)⁻²` (Hessian) and `(2s)⁻¹` (curl). -/
+theorem prop_4_19_corrected_cube {b : BoundedDomain.R3} {s : ℝ} (hs : 0 < s) :
+    (∀ (T : ℝ) {E₀ : BoundedSym.L2S (openCube b s)} {B₀ : BoundedSym.L2T (openCube b s)},
+      E₀ ∈ TSDSmCube b s hs → B₀ ∈ TSDTmCube b s hs →
+      ini _ E₀ B₀ ∈ (mirrorSymCxCube b s hs).domL →
+      ∃ U : ℝ → Tot (BoundedDomain.L2 (openCube b s)) (BoundedSym.L2S (openCube b s))
+          (BoundedSym.L2T (openCube b s)),
+        IsStrongSolution (-(mirrorSymCxCube b s hs).waveOp) T (ini _ E₀ B₀) 0 U ∧
+        (∀ U', IsStrongSolution (-(mirrorSymCxCube b s hs).waveOp) T (ini _ E₀ B₀) 0 U' →
+          EqOn U' U (Icc 0 T)) ∧
+        (∀ t ∈ Icc 0 T, U t ∈ Kc _ (TSDSmCube b s hs) (TSDTmCube b s hs)) ∧
+        IsReducedSolution (mirrorSymCxCube b s hs) T E₀ B₀ (fun t => (tot _ _ _ (U t)).2.1)
+          (fun t => (tot _ _ _ (U t)).2.2)) ∧
+    (∀ E ∈ TSDSmCube b s hs, E ∈ BoundedSym.TSDS (openCube b s)) ∧
+    (∀ B ∈ TSDTmCube b s hs, B ∈ BoundedSym.TSDT (openCube b s)) ∧
+    (∀ x ∈ (mirrorSymCxCube b s hs).domL,
+      projKc _ (TSDSmCube b s hs) (TSDTmCube b s hs) x ∈ (mirrorSymCxCube b s hs).domL) ∧
+    (∀ G : UnitaryGroupGenerator (-(mirrorSymCxCube b s hs).waveOp),
+      ∃ x ∈ (mirrorSymCxCube b s hs).domL,
+        x ∈ Kmax G (Kc _ (TSDSmCube b s hs) (TSDTmCube b s hs)) ∧ ∃ t, G.S t x ≠ x) :=
+  ⟨fun T _ _ hE hB hD => mirrorSymCxCube_prop_4_19_exists hs T hE hB hD,
+    fun _ hE => TSDSmCube_le_TSDS hs hE, fun _ hB => TSDTmCube_le_TSDT hs hB,
+    mirrorSymCxCube_projection_hyp hs,
+    fun G => ⟨_, (mirrorSymCxCube_exists_nonstationary hs G).1,
+      (mirrorSymCxCube_exists_nonstationary hs G).2⟩⟩
 
 /-- **The Ch. 6 claim, corrected statement.** The Hodge wave equation of the BGG complex (5.1)
 (weakly imposed symmetry) propagates TSD data, with existence and uniqueness, `σ ≡ 0`, `u` TSD,

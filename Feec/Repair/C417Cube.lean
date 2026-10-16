@@ -8,7 +8,7 @@ public import Feec.Repair.C417Ext
 **Thesis claim** ([QuennevilleBelair2015, §4.10, Prop 4.17, p. 67]). On a bounded contractible
 `Ω`, for the complex `H̊¹(V) → H̊(curl, M) → L²(M)`, data `(0, E₀, B₀)` with `E₀`, `B₀` TSD give
 a solution of (4.14) with `σ ≡ 0` and `E`, `B` TSD for all time, solving the EB equations; Ch. 7
-runs this on a cube.
+runs (4.14) numerically on a unit cube mesh.
 
 **Defect.** With these boundary conditions the projection hypothesis and the conclusion fail on
 every bounded domain (`Feec.BoundedDomain.thesisComplex_orbit_not_propagate_unconditional`), and
@@ -52,8 +52,10 @@ faces, i.e. with the wall conditions `E_{τn} = 0`, `B_{nn} = 0` (weakly).
 
 ## Scope
 
-The box is `Q = (0, ½)³`; every open cube, in particular the cube `(0, π)³` of Ch. 7, is its
-image under `x ↦ 2s x + b`, and the transport is `Feec.Repair.C417Pi`. Curved domains are not
+The box is `Q = (0, ½)³`; every open cube, e.g. the unit cube `(0, 1)³` meshed in Ch. 7, is its
+image under `x ↦ 2s x + b`, and the transport is `Feec.Repair.C417Pi`. The Ch. 7 test solution
+itself (a plane wave whose boundary values are non-zero and time-dependent) satisfies no
+homogeneous boundary condition and is not an instance of this repair. Curved domains are not
 treated: on a curved boundary `σ · n = 0` does not give `(∇σ)_{nτ} = 0` (second fundamental form),
 so these conditions do not form a complex there (analysis, not formalized).
 

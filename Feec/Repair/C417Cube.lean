@@ -52,8 +52,8 @@ faces, i.e. with the wall conditions `E_{τn} = 0`, `B_{nn} = 0` (weakly).
 
 ## Scope
 
-The box is `Q = (0, ½)³`; the cube `(0, π)³` of Ch. 7 is its image under `x ↦ 2π x`, but the
-transport of this complex along dilations is not formalized here. Curved domains are not
+The box is `Q = (0, ½)³`; every open cube, in particular the cube `(0, π)³` of Ch. 7, is its
+image under `x ↦ 2s x + b`, and the transport is `Feec.Repair.C417Pi`. Curved domains are not
 treated: on a curved boundary `σ · n = 0` does not give `(∇σ)_{nτ} = 0` (second fundamental form),
 so these conditions do not form a complex there (analysis, not formalized).
 

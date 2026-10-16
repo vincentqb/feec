@@ -1,6 +1,7 @@
 module
 
 public import Feec.Foundation.BGG
+public import Feec.Variational.GalerkinEvolution
 public import Mathlib.Analysis.Calculus.MeanValue
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.Calculus
@@ -103,6 +104,7 @@ lemma hasDerivWithinAt_Ici_eq_zero {E : Type*} [NormedAddCommGroup E] [NormedSpa
   hasDerivWithinAt_Ici_unique ht (g₂ := fun _ => (0 : E)) hg h (hasDerivWithinAt_const _ _ _)
 
 /-- `‖x‖² = 0`-type extraction used repeatedly: `⟪x, x⟫ = 0 → x = 0`. -/
+@[deprecated inner_self_eq_zero +typeChanged (since := "2026-10-16")]
 lemma eq_zero_of_inner_self {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     {x : E} (h : ⟪x, x⟫ = 0) : x = 0 :=
   inner_self_eq_zero.mp h
@@ -331,7 +333,7 @@ variable {D}
 /-- (6.2e) forces the constraint `dσ = Sφ` at every time. -/
 theorem Sol62.constraint {T : ℝ} {f : ℝ → Wt1} (s : D.Sol62 T f) {t : ℝ} (ht : t ∈ Icc 0 T) :
     D.d0 (s.σ t) = D.S0 (s.φ t) :=
-  sub_eq_zero.mp (eq_zero_of_inner_self (s.ee t ht _))
+  sub_eq_zero.mp (inner_self_eq_zero.mp (s.ee t ht _))
 
 /-- **Thesis Prop 6.1, first bullet.** A solution of (6.2) satisfies `dσ = Sφ` and solves (6.1)
 with the same data.
@@ -642,7 +644,7 @@ conditions satisfy this condition"): (6.3e) imposes the constraint algebraically
 it is not propagated from the data. -/
 theorem Sol63.constraint {T : ℝ} {f : ℝ → Pt1} (s : Sol63 D T f) {t : ℝ} (ht : t ∈ Icc 0 T) :
     D.d0 (s.σ t) = D.S0 (s.φ t) :=
-  sub_eq_zero.mp (eq_zero_of_inner_self (s.ee t ht _))
+  sub_eq_zero.mp (inner_self_eq_zero.mp (s.ee t ht _))
 
 /-- Hidden constraint: every solution has `uₕ(t) ⊥ d(ker S₀,ₕ)` (take `τ = 0` in (6.3a)). -/
 theorem Sol63.hidden_constraint {T : ℝ} {f : ℝ → Pt1} (s : Sol63 D T f) {t : ℝ}
@@ -661,7 +663,7 @@ theorem no_solution_of_incompatible {T : ℝ} (hT : 0 ≤ T) {f : ℝ → Pt1} {
   rintro ⟨s, hs⟩
   have h := s.hidden_constraint ⟨le_rfl, hT⟩ hψ
   rw [hs] at h
-  exact hdψ (eq_zero_of_inner_self h)
+  exact hdψ (inner_self_eq_zero.mp h)
 
 /-- Prop 6.2 also fails for compatible `u₀`: `φ₀` is not free. With `f = 0`, data
 `(σ₀, φ₀) = (0, ψ)`, `ψ ∈ ker S₀,ₕ`, `dψ ≠ 0` (so `(σ₀, φ₀) ∈ Γₕ`), admit no solution. Refutes [QuennevilleBelair2015, Prop 6.2]. -/
@@ -679,7 +681,7 @@ theorem no_solution_of_incompatible_phi {T : ℝ} (hT : 0 < T) {ψ : Pt0}
     have := D.anticomm ψ; rw [hψ, map_zero] at this; exact neg_eq_zero.mp this.symm
   rw [hu', hS1, D.dt1_dt0, hs] at hb
   simp only [inner_zero_right, Pi.zero_apply, inner_zero_left, add_zero, zero_add] at hb
-  exact hdψ (eq_zero_of_inner_self hb)
+  exact hdψ (inner_self_eq_zero.mp hb)
 
 /-- **Corrected Prop 6.2, necessity.** Every solution satisfies (C1) `dσ₀ = S₀,ₕφ₀`,
 (C2) `(u₀, dψ) = 0` and (C3) `(dφ₀, dψ) = (f(0), dψ)` for all `ψ ∈ ker S₀,ₕ`.
@@ -754,14 +756,14 @@ theorem Sol63.uniq {T : ℝ} (s : Sol63 D T 0) (hdinj : Function.Injective D.dt0
     rw [(hz t ht).2.1, hψ] at this
     simp only [inner_zero_left, inner_zero_right, map_zero, zero_sub, inner_neg_right, sub_zero,
       sub_neg_eq_add, zero_add] at this
-    exact eq_zero_of_inner_self this
+    exact inner_self_eq_zero.mp this
   · intro t ht
     have ht' := Ico_subset_Icc_self ht
     have hu' : s.u' t = 0 := hasDerivWithinAt_Ici_eq_zero ht (fun x hx => (hz x hx).2.1) (s.du t ht)
     have := s.eb t ht (D.dt0 (s.φ t))
     rw [hu', (hz t ht').2.2.1, (hz t ht').2.2.2] at this
     simp only [inner_zero_left, Pi.zero_apply, zero_add, add_zero] at this
-    exact hdinj (by rw [map_zero]; exact eq_zero_of_inner_self this)
+    exact hdinj (by rw [map_zero]; exact inner_self_eq_zero.mp this)
 
 /-- Difference of two solutions of (6.3) with the same source (linearity, Thesis §6.2). -/
 def Sol63.sub {T : ℝ} {f : ℝ → Pt1} (s₁ s₂ : Sol63 D T f) : Sol63 D T 0 where
@@ -855,7 +857,7 @@ lemma psi_bijective (hdinj : Function.Injective D.dt0) (hS : Function.Surjective
     have h1 : D.S0 φ = 0 := congrArg Prod.fst hφ
     have h3 := inner_psi_snd (D := D) φ ⟨φ, h1⟩
     rw [hφ, Prod.snd_zero, inner_zero_right] at h3
-    exact hdinj (by rw [map_zero]; exact eq_zero_of_inner_self h3.symm)
+    exact hdinj (by rw [map_zero]; exact inner_self_eq_zero.mp h3.symm)
   refine ⟨hinj, (LinearMap.injective_iff_surjective_of_finrank_eq_finrank ?_).mp hinj⟩
   have := LinearMap.finrank_range_add_finrank_ker D.S0
   rw [LinearMap.range_eq_top.mpr hS, finrank_top] at this
@@ -924,7 +926,7 @@ lemma exists_adjoint_S0 {z : Pt0} (hz : ∀ ψ, D.S0 ψ = 0 → ⟪z, ψ⟫ = 0)
     · intro h
       have := h (LinearMap.adjoint D.S0 (D.S0 x)) ⟨_, rfl⟩
       rw [LinearMap.adjoint_inner_right] at this
-      exact eq_zero_of_inner_self this
+      exact inner_self_eq_zero.mp this
     · rintro h _ ⟨μ, rfl⟩
       rw [LinearMap.adjoint_inner_right, h, inner_zero_left]
   have : z ∈ Rᗮᗮ := by
@@ -943,7 +945,7 @@ lemma adjoint_S0_injective (hS : Function.Surjective D.S0) :
   obtain ⟨ψ, rfl⟩ := hS μ
   have := congrArg (fun z => ⟪z, ψ⟫) hμ
   simp only [LinearMap.adjoint_inner_left, inner_zero_left] at this
-  exact eq_zero_of_inner_self this
+  exact inner_self_eq_zero.mp this
 
 /-- **Corrected Prop 6.2, existence.** Assume finite-dimensional FE spaces, `d : Ṽₕ⁰ → Ṽₕ¹`
 injective, `S₀,ₕ` surjective (thesis hypothesis (5.4)) and `f` continuous. Data satisfying the
@@ -1287,55 +1289,11 @@ theorem energy_estimate_integral {e e' r : ℝ → E} {g : ℝ → ℝ} {T : ℝ
     (he' : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (e' t) (Ici t) t)
     (heq : ∀ t ∈ Ico 0 T, ⟪e' t, e t⟫ = ⟪r t, e t⟫)
     (hg : ContinuousOn g (Icc 0 T)) (hg0 : ∀ t, 0 ≤ g t) (hr : ∀ t ∈ Ico 0 T, ‖r t‖ ≤ g t) :
-    ∀ t ∈ Icc 0 T, ‖e t‖ ≤ ‖e 0‖ + ∫ s in (0:ℝ)..t, g s := by
-  intro t ht
-  have hT : 0 ≤ T := ht.1.trans ht.2
-  set G : ℝ → ℝ := fun s => g (projIcc 0 T hT s)
-  have hGc : Continuous G :=
-    hg.comp_continuous (continuous_subtype_val.comp continuous_projIcc) fun s => (projIcc 0 T hT s).2
-  have hGg : ∀ s ∈ Icc 0 T, G s = g s := fun s hs => by simp [G, projIcc_of_mem hT hs]
-  set I : ℝ → ℝ := fun x => ∫ s in (0:ℝ)..x, G s
-  have hI : ∀ x, HasDerivAt I (G x) x := fun x => (hGc.integral_hasStrictDerivAt 0 x).hasDerivAt
-  have hI0 : ∀ x, 0 ≤ x → 0 ≤ I x := fun x hx =>
-    intervalIntegral.integral_nonneg hx fun s _ => hg0 _
-  have hIg : I t = ∫ s in (0:ℝ)..t, g s := intervalIntegral.integral_congr fun s hs => by
-    rw [uIcc_of_le ht.1] at hs; exact hGg s ⟨hs.1, hs.2.trans ht.2⟩
-  have key : ∀ ε > 0, ‖e t‖ ≤ ‖e 0‖ + I t + ε * (1 + t) := by
-    intro ε hε
-    set B : ℝ → ℝ := fun x => ‖e 0‖ + I x + ε * (1 + x)
-    have hBd : ∀ x, HasDerivAt B (G x + ε) x := fun x => by
-      exact (((hI x).const_add ‖e 0‖).add
-        (((hasDerivAt_id x).const_add 1).const_mul ε)).congr_deriv (by simp)
-    have hBpos : ∀ x, 0 ≤ x → 0 < B x := fun x hx => by
-      have := hI0 x hx; simp only [B]; nlinarith [norm_nonneg (e 0)]
-    have hle := image_le_of_deriv_right_lt_deriv_boundary' (a := 0) (b := T)
-      (f := fun s => ‖e s‖ ^ 2) (f' := fun s => 2 * ⟪e s, e' s⟫) (he.norm.pow 2)
-      (fun s hs => (he' s hs).norm_sq) (B := fun x => B x ^ 2)
-      (B' := fun x => 2 * B x * (G x + ε))
-      (by have := hBpos 0 le_rfl; simp only [B, I, intervalIntegral.integral_same]
-          nlinarith [norm_nonneg (e 0)])
-      (fun x _ => ((hBd x).continuousAt.pow 2).continuousWithinAt)
-      (fun x _ => by
-        have := (hBd x).pow 2
-        convert this.hasDerivWithinAt using 1; simp only [Nat.cast_ofNat]; ring)
-      (fun x hx hfx => by
-        have hBx := hBpos x hx.1
-        have hnorm : ‖e x‖ = B x := by
-          have := congrArg Real.sqrt hfx
-          rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq hBx.le] at this
-        rw [real_inner_comm, heq x hx]
-        have h1 : ⟪r x, e x⟫ ≤ ‖r x‖ * ‖e x‖ := real_inner_le_norm _ _
-        have h2 : ‖r x‖ ≤ G x := by rw [hGg x (Ico_subset_Icc_self hx)]; exact hr x hx
-        have h3 : ‖r x‖ * ‖e x‖ ≤ G x * B x := by
-          rw [hnorm]; exact mul_le_mul_of_nonneg_right h2 hBx.le
-        nlinarith)
-      ht
-    exact (pow_le_pow_iff_left₀ (norm_nonneg _) (hBpos t ht.1).le two_ne_zero).mp hle
-  rw [← hIg]
-  refine le_of_forall_pos_le_add fun δ hδ => ?_
-  have h1t : 0 < 1 + t := by linarith [ht.1]
-  have := key (δ / (1 + t)) (div_pos hδ h1t)
-  rwa [div_mul_cancel₀ _ h1t.ne'] at this
+    ∀ t ∈ Icc 0 T, ‖e t‖ ≤ ‖e 0‖ + ∫ s in (0:ℝ)..t, g s :=
+  Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := ℝ) he he' hg
+    (fun t _ => hg0 t) fun t ht => by
+      rw [RCLike.re_to_real, heq t ht]
+      exact (real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right (hr t ht) (norm_nonneg _))
 
 /-- **New theorem: conditional convergence for Ch 6** (the thesis states none).
 
@@ -1400,16 +1358,13 @@ theorem ch6_convergence {X Z Y : Type*} [NormedAddCommGroup X] [InnerProductSpac
     simp only [e', inner_sub_left]
     simp only [η] at h1 h2 h3 h4 h5 ⊢
     linarith
-  have hest := energy_estimate_integral (e := e) (e' := e') (r := fun s => P (ξ' s) - ξ' s)
-    (g := fun s => ‖P (ξ' s) - ξ' s‖)
-    ((P.continuous.comp_continuousOn hξc).sub hξhc)
+  exact Variational.norm_sub_le_of_projected_error (𝕜 := ℝ) (u := ξ) (p := fun t => P (ξ t))
+    (uh := ξh) (ε' := e') ((P.continuous.comp_continuousOn hξc).sub hξhc)
     (fun t ht => (P.hasFDerivAt.comp_hasDerivWithinAt t (hξd t ht)).sub (hξhd t ht))
-    herr ((P.continuous.comp_continuousOn hξ'c).sub hξ'c).norm (fun _ => norm_nonneg _)
-    (fun _ _ => le_rfl)
-  intro t ht
-  calc ‖ξ t - ξh t‖ = ‖(ξ t - P (ξ t)) + e t‖ := by simp [e]
-    _ ≤ ‖ξ t - P (ξ t)‖ + ‖e t‖ := norm_add_le _ _
-    _ ≤ _ := by have := hest t ht; simp only [e] at this ⊢; linarith
+    ((P.continuous.comp_continuousOn hξ'c).sub hξ'c).norm (fun _ _ => norm_nonneg _)
+    fun t ht => by
+      rw [RCLike.re_to_real]
+      exact (herr t ht).trans_le (real_inner_le_norm _ _)
 
 /-- Rate form of `ch6_convergence`: if the projection errors and the initial discrete error are
 `≤ ε` (e.g. `ε = C hʳ` from Thm 5.5-type approximation estimates, which are hypotheses here),

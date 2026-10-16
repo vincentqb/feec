@@ -6,6 +6,7 @@ public import Mathlib.Analysis.SpecialFunctions.Exponential
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Feec.Foundation.Complex
 public import Feec.Ch4.Galerkin
+public import Feec.Variational.GalerkinEvolution
 
 /-!
 # Ch 4.6: discretization, Lemma 4.12, Prop 4.13, elliptic projection, Thm 4.14, convergence
@@ -65,78 +66,22 @@ theorem lemma_4_12 {Q q' F G : ℝ → ℝ} {T : ℝ}
     (hG : ∀ t ∈ Ico 0 T, HasDerivWithinAt G (F t) (Ici t) t)
     (hF : ∀ t ∈ Ico 0 T, 0 ≤ F t)
     (hle : ∀ t ∈ Ico 0 T, q' t ≤ F t * Q t) :
-    ∀ t ∈ Icc 0 T, Q t ≤ Q 0 + (G t - G 0) / 2 := by
-  intro t ht
-  have h0T : (0:ℝ) ∈ Icc 0 T := ⟨le_rfl, ht.1.trans ht.2⟩
-  have hQ00 := hQ0 0 h0T
-  refine le_of_forall_pos_le_add fun ε hε => ?_
-  set f : ℝ → ℝ := fun s => Real.sqrt (Q s ^ 2 + ε ^ 2)
-  have hpos : ∀ s, 0 < Q s ^ 2 + ε ^ 2 := fun s => by positivity
-  have hfc : ContinuousOn f (Icc 0 T) :=
-    ((hQc.pow 2).add continuousOn_const).sqrt
-  have hf' : ∀ s ∈ Ico 0 T,
-      HasDerivWithinAt f (q' s / (2 * Real.sqrt (Q s ^ 2 + ε ^ 2))) (Ici s) s := by
-    intro s hs
-    have := ((hq s hs).add_const (ε ^ 2)).sqrt (hpos s).ne'
-    simpa using this
-  have hB : ContinuousOn (fun s => Real.sqrt (Q 0 ^ 2 + ε ^ 2) + (G s - G 0) / 2) (Icc 0 T) :=
-    continuousOn_const.add ((hGc.sub continuousOn_const).div_const 2)
-  have hB' : ∀ s ∈ Ico 0 T, HasDerivWithinAt
-      (fun s => Real.sqrt (Q 0 ^ 2 + ε ^ 2) + (G s - G 0) / 2) (F s / 2) (Ici s) s := by
-    intro s hs
-    simpa using (((hG s hs).sub_const (G 0)).div_const 2).const_add (Real.sqrt (Q 0 ^ 2 + ε ^ 2))
-  have bound : ∀ s ∈ Ico 0 T, q' s / (2 * Real.sqrt (Q s ^ 2 + ε ^ 2)) ≤ F s / 2 := by
-    intro s hs
-    have hQs : Q s ≤ Real.sqrt (Q s ^ 2 + ε ^ 2) := by
-      calc Q s = Real.sqrt (Q s ^ 2) := (Real.sqrt_sq (hQ0 s (Ico_subset_Icc_self hs))).symm
-        _ ≤ _ := Real.sqrt_le_sqrt (by nlinarith)
-    rw [div_le_iff₀ (by positivity)]
-    calc q' s ≤ F s * Q s := hle s hs
-      _ ≤ F s * Real.sqrt (Q s ^ 2 + ε ^ 2) := mul_le_mul_of_nonneg_left hQs (hF s hs)
-      _ = F s / 2 * (2 * Real.sqrt (Q s ^ 2 + ε ^ 2)) := by ring
-  have key := image_le_of_deriv_right_le_deriv_boundary hfc hf' (by simp [f]) hB hB' bound ht
-  have hQt : Q t ≤ f t := by
-    calc Q t = Real.sqrt (Q t ^ 2) := (Real.sqrt_sq (hQ0 t ht)).symm
-      _ ≤ _ := Real.sqrt_le_sqrt (by nlinarith)
-  have hsq0 : Real.sqrt (Q 0 ^ 2 + ε ^ 2) ≤ Q 0 + ε := by
-    rw [Real.sqrt_le_left]
-    · nlinarith
-    · positivity
-  linarith
+    ∀ t ∈ Icc 0 T, Q t ≤ Q 0 + (G t - G 0) / 2 :=
+  le_add_half_sub_of_sq_deriv_le_mul hQc hQ0 hq hGc hG hF hle
 
 /-- Extension of a function continuous on `[0,T]` to a continuous function on `ℝ`
 (constant outside `[0,T]`), agreeing with it on `[0,T]`. -/
 theorem exists_continuous_extend_Icc {F : ℝ → ℝ} {T : ℝ} (hT : 0 ≤ T)
     (hFc : ContinuousOn F (Icc 0 T)) :
-    ∃ F₁ : ℝ → ℝ, Continuous F₁ ∧ EqOn F₁ F (Icc 0 T) := by
-  refine ⟨fun s => F (projIcc 0 T hT s), ?_, fun s hs => by simp [projIcc_of_mem hT hs]⟩
-  exact hFc.comp_continuous (continuous_subtype_val.comp continuous_projIcc)
-    fun s => (projIcc 0 T hT s).2
+    ∃ F₁ : ℝ → ℝ, Continuous F₁ ∧ EqOn F₁ F (Icc 0 T) :=
+  hFc.exists_continuous_eqOn_Icc hT
 
 /-- Primitive of a function continuous on `[0,T]`: `t ↦ ∫₀ᵗ F` is continuous on `[0,T]` with
 right derivative `F t` on `[0,T)`. -/
 theorem integral_primitive_Icc {F : ℝ → ℝ} {T : ℝ} (hFc : ContinuousOn F (Icc 0 T)) :
     ContinuousOn (fun t => ∫ s in (0:ℝ)..t, F s) (Icc 0 T) ∧
-      ∀ t ∈ Ico 0 T, HasDerivWithinAt (fun t => ∫ s in (0:ℝ)..t, F s) (F t) (Ici t) t := by
-  rcases lt_or_ge T 0 with hT | hT
-  · exact ⟨by simp [Icc_eq_empty (not_le.2 hT)],
-      fun t ht => absurd (ht.1.trans_lt ht.2) (lt_asymm hT)⟩
-  obtain ⟨F₁, hF₁, hEq⟩ := exists_continuous_extend_Icc hT hFc
-  have hI : ∀ t ∈ Icc 0 T, ∫ s in (0:ℝ)..t, F s = ∫ s in (0:ℝ)..t, F₁ s := by
-    intro t ht
-    refine intervalIntegral.integral_congr fun s hs => (hEq ?_).symm
-    rw [uIcc_of_le ht.1] at hs
-    exact ⟨hs.1, hs.2.trans ht.2⟩
-  have hd : ∀ t, HasDerivAt (fun t => ∫ s in (0:ℝ)..t, F₁ s) (F₁ t) t := fun t =>
-    (hF₁.integral_hasStrictDerivAt 0 t).hasDerivAt
-  refine ⟨?_, fun t ht => ?_⟩
-  · refine (continuous_iff_continuousAt.2 fun t => (hd t).continuousAt).continuousOn.congr ?_
-    exact fun t ht => hI t ht
-  · have ht' : t ∈ Icc 0 T := Ico_subset_Icc_self ht
-    rw [← hEq ht']
-    refine (hd t).hasDerivWithinAt.congr_of_eventuallyEq ?_ (hI t ht')
-    filter_upwards [Icc_mem_nhdsGE ht.2] with s hs
-    exact hI s ⟨ht.1.trans hs.1, hs.2⟩
+      ∀ t ∈ Ico 0 T, HasDerivWithinAt (fun t => ∫ s in (0:ℝ)..t, F s) (F t) (Ici t) t :=
+  hFc.intervalIntegral_primitive_Icc
 
 /-- **Thesis Lemma 4.12** (l.2287), integral form as stated in the thesis:
 `Q t ≤ Q 0 + ½ ∫₀ᵗ F` for `F ≥ 0` continuous on `[0,T]` and `d/dt Q² ≤ F Q` (corrected
@@ -147,12 +92,8 @@ theorem lemma_4_12_integral {Q q' F : ℝ → ℝ} {T : ℝ}
     (hq : ∀ t ∈ Ico 0 T, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
     (hFc : ContinuousOn F (Icc 0 T)) (hF : ∀ t ∈ Ico 0 T, 0 ≤ F t)
     (hle : ∀ t ∈ Ico 0 T, q' t ≤ F t * Q t) :
-    ∀ t ∈ Icc 0 T, Q t ≤ Q 0 + (1 / 2) * ∫ s in (0:ℝ)..t, F s := by
-  intro t ht
-  obtain ⟨hGc, hG⟩ := integral_primitive_Icc hFc
-  have := lemma_4_12 hQc hQ0 hq hGc hG hF hle t ht
-  simp only [intervalIntegral.integral_same, sub_zero] at this
-  linarith
+    ∀ t ∈ Icc 0 T, Q t ≤ Q 0 + (1 / 2) * ∫ s in (0:ℝ)..t, F s :=
+  le_add_half_integral_of_sq_deriv_le_mul hQc hQ0 hq hFc hF hle
 
 
 /-- **Thesis Lemma 4.12**, sharpness remark (l.2297): `Q(t) = t`, `F = 2` satisfy the hypotheses
@@ -184,17 +125,8 @@ theorem norm_le_norm_zero_add_integral {f f' : ℝ → E} {T : ℝ}
     (hfc : ContinuousOn f (Icc 0 T))
     (hf : ∀ t ∈ Ico 0 T, HasDerivWithinAt f (f' t) (Ici t) t)
     (hf'c : ContinuousOn f' (Icc 0 T)) :
-    ∀ t ∈ Icc 0 T, ‖f t‖ ≤ ‖f 0‖ + ∫ s in (0:ℝ)..t, ‖f' s‖ := by
-  intro t ht
-  have := lemma_4_12_integral (Q := fun s => ‖f s‖) (q' := fun s => 2 * ⟪f s, f' s⟫)
-    (F := fun s => 2 * ‖f' s‖) hfc.norm (fun _ _ => norm_nonneg _)
-    (fun s hs => (hf s hs).norm_sq) (continuousOn_const.mul hf'c.norm)
-    (fun _ _ => by positivity)
-    (fun s _ => by
-      have := real_inner_le_norm (f s) (f' s)
-      nlinarith [norm_nonneg (f s), norm_nonneg (f' s)]) t ht
-  rw [intervalIntegral.integral_const_mul] at this
-  linarith
+    ∀ t ∈ Icc 0 T, ‖f t‖ ≤ ‖f 0‖ + ∫ s in (0:ℝ)..t, ‖f' s‖ :=
+  Evolution.Energy.norm_le_add_integral_norm_deriv hfc hf hf'c
 
 /-- Energy estimate for the projected error (proof of Thm 4.14): if
 `(ε̇, ε) = (ė, ε) − (e, ε)` on `[0,T)`, then `‖ε t‖ ≤ ‖ε 0‖ + ∫₀ᵗ (‖ė‖ + ‖e‖)`.
@@ -205,19 +137,12 @@ theorem projected_error_bound {ε ε' e e' : ℝ → E} {T : ℝ}
     (hec : ContinuousOn e (Icc 0 T)) (he'c : ContinuousOn e' (Icc 0 T))
     (herr : ∀ t ∈ Ico 0 T, ⟪ε' t, ε t⟫ = ⟪e' t, ε t⟫ - ⟪e t, ε t⟫) :
     ∀ t ∈ Icc 0 T, ‖ε t‖ ≤ ‖ε 0‖ + ∫ s in (0:ℝ)..t, (‖e' s‖ + ‖e s‖) := by
-  intro t ht
-  have := lemma_4_12_integral (Q := fun s => ‖ε s‖) (q' := fun s => 2 * ⟪ε s, ε' s⟫)
-    (F := fun s => 2 * (‖e' s‖ + ‖e s‖)) hεc.norm
-    (fun _ _ => norm_nonneg _) (fun s hs => (hε s hs).norm_sq)
-    (continuousOn_const.mul (he'c.norm.add hec.norm))
-    (fun _ _ => by positivity)
-    (fun s hs => by
-      rw [real_inner_comm, herr s hs]
-      have h1 := real_inner_le_norm (e' s) (ε s)
-      have h2 := neg_le_of_abs_le (abs_real_inner_le_norm (e s) (ε s))
-      nlinarith [norm_nonneg (ε s)]) t ht
-  rw [intervalIntegral.integral_const_mul] at this
-  linarith
+  refine Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := ℝ) hεc hε
+    (he'c.norm.add hec.norm) (fun _ _ => by positivity) fun s hs => ?_
+  rw [RCLike.re_to_real, herr s hs]
+  have h1 := real_inner_le_norm (e' s) (ε s)
+  have h2 := neg_le_of_abs_le (abs_real_inner_le_norm (e s) (ε s))
+  nlinarith [norm_nonneg (ε s)]
 
 /-- Core of **Thm 4.14** (pointwise, sharp form): with `ξ − ξₕ = ε − e`,
 `‖ε t − e t‖ ≤ ‖ε 0‖ + ‖e t‖ + t ‖e 0‖ + (1 + t) ∫₀ᵗ ‖ė‖`.
@@ -921,39 +846,44 @@ theorem isDiscreteSol_of_global {T : ℝ} {ξh ξh' : ℝ → C.VSp} (hm : ∀ t
     fun t _ => (hd t).hasDerivWithinAt, fun t _ => heq t⟩
 
 omit [FiniteDimensional ℝ S.toV] in
-/-- **Uniqueness of the discrete solution**: two discrete solutions with the same initial value
-agree on `[0,T]`. Energy proof (thesis l.2120 at the discrete level): `d/dt ‖ξ₁ − ξ₂‖_W² =
-−2a(ξ₁ − ξ₂, ξ₁ − ξ₂) = 0`, then Lemma 4.12 with `F = 0`; the `W`-norm is definite on `V`.
+variable {C S} in
+/-- **Stability of the semi-discrete scheme (4.10)** in `W`, uniform in the subcomplex: for two
+discrete solutions on the same `Vₕ`, `‖ξ₁(t) − ξ₂(t)‖_W ≤ ‖ξ₁(0) − ξ₂(0)‖_W` on `[0,T]`
+(energy argument: `a(ψ, ψ) = 0`, then the energy estimate with zero forcing).
 See [QuennevilleBelair2015, §4.6]. -/
-theorem discrete_solution_unique {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
-    (h₁ : C.IsDiscreteSol S T ξ₁ ξ₁') (h₂ : C.IsDiscreteSol S T ξ₂ ξ₂') (h0 : ξ₁ 0 = ξ₂ 0) :
-    ∀ t ∈ Icc 0 T, ξ₁ t = ξ₂ t := by
+theorem IsDiscreteSol.norm_toW_sub_le {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
+    (h₁ : C.IsDiscreteSol S T ξ₁ ξ₁') (h₂ : C.IsDiscreteSol S T ξ₂ ξ₂') :
+    ∀ t ∈ Icc 0 T, ‖C.toW (ξ₁ t - ξ₂ t)‖ ≤ ‖C.toW (ξ₁ 0 - ξ₂ 0)‖ := by
   obtain ⟨c₁, m₁, d₁, e₁⟩ := h₁
   obtain ⟨c₂, m₂, d₂, e₂⟩ := h₂
   set e : ℝ → Tot X0 X1 X2 := fun t => C.toW (ξ₁ t - ξ₂ t) with he
   have hec : ContinuousOn e (Icc 0 T) := C.toW.continuous.comp_continuousOn (c₁.sub c₂)
   have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (C.toW (ξ₁' t - ξ₂' t)) (Ici t) t :=
     fun t ht => C.toW.hasFDerivAt.comp_hasDerivWithinAt t ((d₁ t ht).sub (d₂ t ht))
-  have key := lemma_4_12 (Q := fun t => ‖e t‖) (q' := fun t => 2 * ⟪e t, C.toW (ξ₁' t - ξ₂' t)⟫)
-    (F := fun _ => 0) (G := fun _ => 0) hec.norm (fun _ _ => norm_nonneg _)
-    (fun t ht => (hed t ht).norm_sq) continuousOn_const
-    (fun t _ => hasDerivWithinAt_const _ _ _) (fun _ _ => le_rfl)
-    (fun t ht => by
+  have key := Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := ℝ) (g := 0)
+    hec hed continuousOn_const (fun _ _ => le_rfl) (fun t ht => by
       have hm : ξ₁ t - ξ₂ t ∈ S.toV :=
         S.toV.sub_mem (m₁ t (Ico_subset_Icc_self ht)) (m₂ t (Ico_subset_Icc_self ht))
       have E1 := e₁ t ht _ hm
       have E2 := e₂ t ht _ hm
       have hs := C.aL_self (ξ₁ t - ξ₂ t)
+      rw [RCLike.re_to_real, Pi.zero_apply, zero_mul]
       simp only [he, map_sub, inner_sub_left, inner_sub_right, LinearMap.sub_apply] at E1 E2 hs ⊢
-      have r1 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₁' t))
-      have r2 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₂' t))
-      have r3 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₁' t))
-      have r4 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₂' t))
-      rw [zero_mul]
       linarith)
   intro t ht
-  have h := key t ht
-  simp only [he, h0, sub_self, map_zero, norm_zero, add_zero, zero_div] at h
+  simpa only [he, Pi.zero_apply, intervalIntegral.integral_zero, add_zero] using key t ht
+
+omit [FiniteDimensional ℝ S.toV] in
+/-- **Uniqueness of the discrete solution**: two discrete solutions with the same initial value
+agree on `[0,T]`. Energy proof (thesis l.2120 at the discrete level): `d/dt ‖ξ₁ − ξ₂‖_W² =
+−2a(ξ₁ − ξ₂, ξ₁ − ξ₂) = 0` (`IsDiscreteSol.norm_toW_sub_le`); the `W`-norm is definite on `V`.
+See [QuennevilleBelair2015, §4.6]. -/
+theorem discrete_solution_unique {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
+    (h₁ : C.IsDiscreteSol S T ξ₁ ξ₁') (h₂ : C.IsDiscreteSol S T ξ₂ ξ₂') (h0 : ξ₁ 0 = ξ₂ 0) :
+    ∀ t ∈ Icc 0 T, ξ₁ t = ξ₂ t := by
+  intro t ht
+  have h := h₁.norm_toW_sub_le h₂ t ht
+  rw [h0, sub_self, map_zero, norm_zero] at h
   have : C.toW (ξ₁ t - ξ₂ t) = C.toW 0 := by
     rw [map_zero]; exact norm_le_zero_iff.1 h
   exact sub_eq_zero.1 (C.toW_injective this)

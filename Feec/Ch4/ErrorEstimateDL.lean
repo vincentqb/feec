@@ -127,36 +127,11 @@ variable {X0 X1 X2 : Type*}
 /-- **Stability of the semi-discrete scheme (4.10)** in `W`, uniform in the subcomplex: for two
 discrete solutions on the same `Vₕ`, `‖ξ₁(t) − ξ₂(t)‖_W ≤ ‖ξ₁(0) − ξ₂(0)‖_W` on `[0,T]`
 (energy argument: `a(ψ, ψ) = 0`, then Lemma 4.12). The constant is `1`, independent of `h`.
-See [QuennevilleBelair2015, §4.6]; this is the estimate behind `Complex3.discrete_solution_unique`. -/
+See [QuennevilleBelair2015, §4.6]; this is `Complex3.IsDiscreteSol.norm_toW_sub_le`. -/
 theorem discrete_stability (S : C.Sub) {T : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → C.VSp}
     (h₁ : C.IsDiscreteSol S T ξ₁ ξ₁') (h₂ : C.IsDiscreteSol S T ξ₂ ξ₂') :
-    ∀ t ∈ Icc 0 T, ‖C.toW (ξ₁ t - ξ₂ t)‖ ≤ ‖C.toW (ξ₁ 0 - ξ₂ 0)‖ := by
-  obtain ⟨c₁, m₁, d₁, e₁⟩ := h₁
-  obtain ⟨c₂, m₂, d₂, e₂⟩ := h₂
-  set e : ℝ → Tot X0 X1 X2 := fun t => C.toW (ξ₁ t - ξ₂ t) with he
-  have hec : ContinuousOn e (Icc 0 T) := C.toW.continuous.comp_continuousOn (c₁.sub c₂)
-  have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (C.toW (ξ₁' t - ξ₂' t)) (Ici t) t :=
-    fun t ht => C.toW.hasFDerivAt.comp_hasDerivWithinAt t ((d₁ t ht).sub (d₂ t ht))
-  have key := lemma_4_12 (Q := fun t => ‖e t‖) (q' := fun t => 2 * ⟪e t, C.toW (ξ₁' t - ξ₂' t)⟫)
-    (F := fun _ => 0) (G := fun _ => 0) hec.norm (fun _ _ => norm_nonneg _)
-    (fun t ht => (hed t ht).norm_sq) continuousOn_const
-    (fun t _ => hasDerivWithinAt_const _ _ _) (fun _ _ => le_rfl)
-    (fun t ht => by
-      have hm : ξ₁ t - ξ₂ t ∈ S.toV :=
-        S.toV.sub_mem (m₁ t (Ico_subset_Icc_self ht)) (m₂ t (Ico_subset_Icc_self ht))
-      have E1 := e₁ t ht _ hm
-      have E2 := e₂ t ht _ hm
-      have hs := C.aL_self (ξ₁ t - ξ₂ t)
-      simp only [he, map_sub, inner_sub_left, inner_sub_right, LinearMap.sub_apply] at E1 E2 hs ⊢
-      have r1 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₁' t))
-      have r2 := real_inner_comm (C.toW (ξ₁ t)) (C.toW (ξ₂' t))
-      have r3 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₁' t))
-      have r4 := real_inner_comm (C.toW (ξ₂ t)) (C.toW (ξ₂' t))
-      rw [zero_mul]
-      linarith)
-  intro t ht
-  have h := key t ht
-  simpa only [he, sub_self, zero_div, add_zero] using h
+    ∀ t ∈ Icc 0 T, ‖C.toW (ξ₁ t - ξ₂ t)‖ ≤ ‖C.toW (ξ₁ 0 - ξ₂ 0)‖ :=
+  h₁.norm_toW_sub_le h₂
 
 end Complex3
 

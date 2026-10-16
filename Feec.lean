@@ -1,6 +1,14 @@
 module
 
 public import Feec.Foundation
+public import Feec.ForMathlib.Analysis.Gronwall
+public import Feec.ForMathlib.Analysis.Inequalities
+public import Feec.ForMathlib.Calculus.Partial
+public import Feec.ForMathlib.Calculus.TimeSlice
+public import Feec.ForMathlib.Lp.CountEquiv
+public import Feec.ForMathlib.Lp.ProdEquiv
+public import Feec.Operator.Multiplication
+public import Feec.Operator.Resolvent
 public import Feec.Ch2.Curvature
 public import Feec.Ch2.Linearized
 public import Feec.Ch3.Bivector

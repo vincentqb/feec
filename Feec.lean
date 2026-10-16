@@ -18,6 +18,7 @@ public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
 public import Feec.Semigroup.Basic
 public import Feec.Semigroup.Invariance
+public import Feec.Semigroup.Perturbation
 public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Stone
 public import Feec.Ch2.Curvature

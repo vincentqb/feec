@@ -174,11 +174,17 @@ See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983, §4.2], [CazenaveHaraux1998
 theorem UnitaryGroupGenerator.wellPosedClassical_forcing (T : ℝ) :
     WellPosedClassical A T (ForcingDL A T) := by
   intro U₀ hU₀ F hF
-  have hgen := G.generator_toC0Group
-  have hF' : Evolution.ForcingClass.admissible G.toC0Group.generator 0 T F := by
+  let G' : C0Group ℝ E := ⟨G.S, G.map_zero, G.map_add, G.continuous_apply⟩
+  have hgen : G'.generator = A := by
+    have hdom : G'.generator.domain = A.domain := by
+      ext x
+      rw [C0Group.mem_domain_generator_iff, G.mem_domain_iff]
+    exact LinearPMap.ext hdom fun x hx hx' =>
+      G'.generator_apply_eq (x := ⟨x, hx⟩) (G.hasDerivAt_zero ⟨x, hx'⟩)
+  have hF' : Evolution.ForcingClass.admissible G'.generator 0 T F := by
     rw [hgen]; exact ForcingClass.contDomain.admissible hF
-  obtain ⟨U, h0, hU, -⟩ := G.toC0Group.existsUnique_classicalSolution
-    (show U₀ ∈ G.toC0Group.generator.domain by rw [hgen]; exact hU₀) hF'
+  obtain ⟨U, h0, hU, -⟩ := G'.existsUnique_classicalSolution
+    (show U₀ ∈ G'.generator.domain by rw [hgen]; exact hU₀) hF'
   rw [hgen] at hU
   exact ⟨U, IsClassicalSolution.of_evolution hU h0 hF.choose_spec.1⟩
 

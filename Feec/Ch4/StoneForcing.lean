@@ -600,11 +600,8 @@ explicitly in `duhamel_W11` and `duhamel_L1`. Every smaller forcing class
 theorem wellPosedClassical_admissible (T : ℝ) :
     WellPosedClassical A T (ForcingClass.admissible A T) := by
   intro U₀ hU₀ F hF
-  have hgen := G.generator_toC0Group
-  obtain ⟨U, h0, hU, -⟩ := G.toC0Group.existsUnique_classicalSolution
-    (show U₀ ∈ G.toC0Group.generator.domain by rw [hgen]; exact hU₀)
-    (show Evolution.ForcingClass.admissible G.toC0Group.generator 0 T F by rw [hgen]; exact hF)
-  rw [hgen] at hU
+  obtain ⟨U, h0, hU, -⟩ := LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution
+    (isSkewAdjoint_iff_linearPMap.1 G.isSkewAdjoint) hU₀ hF
   exact ⟨U, IsClassicalSolution.of_evolution hU h0 hF.1⟩
 
 @[deprecated (since := "2026-10-16")] alias wellPosedClassical_thm43Full :=

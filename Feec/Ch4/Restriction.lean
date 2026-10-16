@@ -241,20 +241,8 @@ Since `IsStrongSolution` is weaker than the thesis' solution class
 See [QuennevilleBelair2015, Thm 4.3]; cf. [CazenaveHaraux1998], [Pazy1983, §1.10]. -/
 theorem strongSolution_unique (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L) {T : ℝ} {U₀ : E}
     {F U U' : ℝ → E} (h : IsStrongSolution L T U₀ F U) (h' : IsStrongSolution L T U₀ F U') :
-    EqOn U U' (Icc 0 T) := by
-  have hd : ∀ t ∈ Ico 0 T, ∃ e', HasDerivWithinAt (fun t => U t - U' t) e' (Ici t) t ∧
-      ⟪e', U t - U' t⟫ = 0 := by
-    intro t ht
-    have ht' := Ico_subset_Icc_self ht
-    have hm : U t - U' t ∈ L.domain := L.domain.sub_mem (h.mem t ht') (h'.mem t ht')
-    refine ⟨L ⟨U t - U' t, hm⟩, ?_, hL.inner_self ⟨_, hm⟩⟩
-    have hsub : (⟨U t - U' t, hm⟩ : L.domain) = ⟨U t, h.mem t ht'⟩ - ⟨U' t, h'.mem t ht'⟩ := rfl
-    rw [hsub, LinearPMap.map_sub]
-    convert (h.hasDerivWithinAt_Ici ht).sub (h'.hasDerivWithinAt_Ici ht) using 1
-    abel
-  intro t ht
-  exact sub_eq_zero.1 (energy_zero_of_exists (h.continuousOn.sub h'.continuousOn) hd
-    (by simp [h.init, h'.init]) t ht)
+    EqOn U U' (Icc 0 T) :=
+  h.unique hL.isDissipative h'
 
 /-- **Constraint propagation** (the real content of **Thesis Cor 4.5**): if `U` is a strong
 solution of `U' = L U + F` with `U₀ ∈ K` and `F(t) ∈ K`, and `K` satisfies hypotheses (i) and
@@ -272,34 +260,8 @@ theorem constraint_propagation (L : E →ₗ.[ℝ] E) (hL : IsSkewSymm L)
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K)
     {T : ℝ} {U₀ : E} {F U : ℝ → E} (hU : IsStrongSolution L T U₀ F U)
-    (hU₀ : U₀ ∈ K) (hFK : ∀ t ∈ Icc 0 T, F t ∈ K) : ∀ t ∈ Icc 0 T, U t ∈ K := by
-  set P := K.starProjection
-  have hd : ∀ t ∈ Ico 0 T, ∃ e', HasDerivWithinAt (fun t => U t - P (U t)) e' (Ici t) t ∧
-      ⟪e', U t - P (U t)⟫ = 0 := by
-    intro t ht
-    have ht' := Ico_subset_Icc_self ht
-    have hD := hU.hasDerivWithinAt_Ici ht
-    refine ⟨_, hD.sub (P.hasFDerivAt.comp_hasDerivWithinAt t hD), ?_⟩
-    have hVperp : U t - P (U t) ∈ Kᗮ := K.sub_starProjection_mem_orthogonal _
-    have hPu : P (U t) ∈ L.domain := h1 ⟨U t, hU.mem t ht'⟩
-    have hVt : U t - P (U t) ∈ L.domain := L.domain.sub_mem (hU.mem t ht') hPu
-    have hsplit : L ⟨U t, hU.mem t ht'⟩ = L ⟨P (U t), hPu⟩ + L ⟨U t - P (U t), hVt⟩ := by
-      rw [← LinearPMap.map_add]; congr 1; ext; simp
-    have e1 : ⟪P (L ⟨U t, hU.mem t ht'⟩ + F t), U t - P (U t)⟫ = 0 :=
-      Submodule.inner_right_of_mem_orthogonal (K.starProjection_apply_mem _) hVperp
-    have e2 : ⟪L ⟨P (U t), hPu⟩, U t - P (U t)⟫ = 0 :=
-      Submodule.inner_right_of_mem_orthogonal (h3 _ (K.starProjection_apply_mem _)) hVperp
-    have e3 : ⟪F t, U t - P (U t)⟫ = 0 :=
-      Submodule.inner_right_of_mem_orthogonal (hFK t ht') hVperp
-    have e4 : ⟪L ⟨U t - P (U t), hVt⟩, U t - P (U t)⟫ = 0 := hL.inner_self ⟨_, hVt⟩
-    rw [inner_sub_left, e1, sub_zero, inner_add_left, e3, add_zero, hsplit, inner_add_left,
-      e2, e4, add_zero]
-  have hV := energy_zero_of_exists
-    (hU.continuousOn.sub (P.continuous.comp_continuousOn hU.continuousOn)) hd
-    (by simp [P, hU.init, (K.starProjection_eq_self_iff).2 hU₀])
-  intro t ht
-  rw [sub_eq_zero.1 (hV t ht)]
-  exact K.starProjection_apply_mem _
+    (hU₀ : U₀ ∈ K) (hFK : ∀ t ∈ Icc 0 T, F t ∈ K) : ∀ t ∈ Icc 0 T, U t ∈ K :=
+  hU.mem_of_invariant hL.isDissipative h1 h3 hU₀ hFK
 
 /-- Existence, constraint propagation and uniqueness for a reducing subspace (ambient form of
 Thesis Cor 4.5): under the existence hypothesis `WellPosedExistence` (standing in for Thm 4.3),
@@ -438,6 +400,24 @@ structure IsClassicalSolution (L : E →ₗ.[ℝ] E) (T : ℝ) (U₀ : E) (F U :
   /-- `U ∈ C¹([0,T]; X)`: `t ↦ U'(t) = L U(t) + F(t)` is continuous. -/
   c1 : ∃ G : ℝ → E, ContinuousOn G (Icc 0 T) ∧
     ∀ t (ht : t ∈ Icc 0 T), L ⟨U t, mem t ht⟩ + F t = G t
+
+/-- A classical solution in the sense of `Feec.Evolution.IsClassicalSolution` (graph form,
+time set `Icc 0 T`). -/
+theorem IsClassicalSolution.toEvolution (hU : IsClassicalSolution L T U₀ F U) :
+    Evolution.IsClassicalSolution L (Icc 0 T) F U :=
+  let ⟨G, hGc, hG⟩ := hU.graph
+  Evolution.IsClassicalSolution.iff.2 ⟨hU.mem, hU.deriv, G, hGc, hG⟩
+
+theorem IsClassicalSolution.of_evolution (hU : Evolution.IsClassicalSolution L (Icc 0 T) F U)
+    (h0 : U 0 = U₀) (hF : ContinuousOn F (Icc 0 T)) : IsClassicalSolution L T U₀ F U := by
+  obtain ⟨hm, hd, G, hGc, hG⟩ := Evolution.IsClassicalSolution.iff.1 hU
+  exact ⟨⟨hm, hd, h0⟩, ⟨G, hGc, hG⟩, ⟨G + F, hGc.add hF, fun t ht => by rw [hG t ht]; rfl⟩⟩
+
+/-- `Feec.IsClassicalSolution` is `Feec.Evolution.IsClassicalSolution` on `[0,T]` plus the
+initial value, for continuous forcing. -/
+theorem isClassicalSolution_iff_evolution (hF : ContinuousOn F (Icc 0 T)) :
+    IsClassicalSolution L T U₀ F U ↔ Evolution.IsClassicalSolution L (Icc 0 T) F U ∧ U 0 = U₀ :=
+  ⟨fun h => ⟨h.toEvolution, h.init⟩, fun h => .of_evolution h.1 h.2 hF⟩
 
 /-- **Explicit hypothesis standing in for Thesis Thm 4.3** with the thesis' full regularity:
 classical solutions exist for initial data in `D(L)` and admissible forcing.

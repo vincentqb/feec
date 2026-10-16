@@ -4,6 +4,7 @@ public import Mathlib.Analysis.Calculus.ParametricIntervalIntegral
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Feec.Ch4.Restriction
 public import Feec.Evolution.Forcing
+public import Feec.Evolution.WellPosed
 
 /-!
 # Duhamel's formula for a unitary group (Thesis Thm 4.3, inhomogeneous case)
@@ -172,27 +173,14 @@ this covers its subclass `C([0,T]; D(A))`.
 See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983, §4.2], [CazenaveHaraux1998, Prop 4.1.6]. -/
 theorem UnitaryGroupGenerator.wellPosedClassical_forcing (T : ℝ) :
     WellPosedClassical A T (ForcingDL A T) := by
-  rintro U₀ hU₀ F ⟨hFD, hFc, H, hHc, hH⟩
-  by_cases hT : 0 ≤ T
-  · set P := projIcc 0 T hT
-    have hFD' : ∀ s, F (P s) ∈ A.domain := fun s => hFD _ (P s).2
-    have hF' : Continuous fun s => F (P s) :=
-      hFc.comp_continuous (continuous_subtype_val.comp continuous_projIcc) fun s => (P s).2
-    have hAF' : Continuous fun s => A ⟨F (P s), hFD' s⟩ :=
-      (hHc.comp_continuous (continuous_subtype_val.comp continuous_projIcc) fun s => (P s).2).congr
-        fun s => (hH _ (P s).2).symm
-    obtain ⟨hU, hc, hd⟩ := G.duhamel hFD' hF' hAF' ⟨U₀, hU₀⟩
-    have hP : ∀ t ∈ Icc 0 T, F (P t) = F t := fun t ht => by
-      simp only [P, projIcc_of_mem hT ht]
-    refine ⟨_, ⟨fun t _ => hU t, fun t ht => ?_, ?_⟩, ⟨_, hc.continuousOn, fun _ _ => rfl⟩,
-      ⟨_, hc.continuousOn.add hFc, fun _ _ => rfl⟩⟩
-    · rw [← hP t ht]; exact (hd t).hasDerivWithinAt
-    · simp [G.map_zero]
-  · have hE : Icc (0 : ℝ) T = ∅ := Icc_eq_empty (by linarith)
-    refine ⟨fun _ => U₀, ⟨fun t ht => ?_, fun t ht => ?_, rfl⟩, ⟨0, ?_, fun t ht => ?_⟩,
-      ⟨0, ?_, fun t ht => ?_⟩⟩ <;>
-      first | (rw [hE] at ht; exact absurd ht (Set.notMem_empty t)) |
-        (rw [hE]; exact continuousOn_empty _)
+  intro U₀ hU₀ F hF
+  have hgen := G.generator_toC0Group
+  have hF' : Evolution.ForcingClass.admissible G.toC0Group.generator 0 T F := by
+    rw [hgen]; exact ForcingClass.contDomain.admissible hF
+  obtain ⟨U, h0, hU, -⟩ := G.toC0Group.existsUnique_classicalSolution
+    (show U₀ ∈ G.toC0Group.generator.domain by rw [hgen]; exact hU₀) hF'
+  rw [hgen] at hU
+  exact ⟨U, IsClassicalSolution.of_evolution hU h0 hF.choose_spec.1⟩
 
 end Duhamel
 

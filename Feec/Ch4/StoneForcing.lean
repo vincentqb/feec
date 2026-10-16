@@ -599,13 +599,13 @@ explicitly in `duhamel_W11` and `duhamel_L1`. Every smaller forcing class
 [CazenaveHaraux1998, Prop 4.1.6], [Pazy1983, §4.2]. -/
 theorem wellPosedClassical_admissible (T : ℝ) :
     WellPosedClassical A T (ForcingClass.admissible A T) := by
-  rintro U₀ hU₀ F ⟨hFc, hF⟩
-  rcases lt_or_ge T 0 with hT | hT
-  · exact ⟨_, isClassicalSolution_of_neg hT (G.duhamelSol_zero U₀ F)⟩
-  rcases hF with hW | ⟨H, hH, hD⟩
-  · obtain ⟨g, hg, hpt⟩ := (ForcingClass.w11_iff hFc).1 hW
-    exact ⟨_, (G.duhamel_W11 hT hU₀ hFc hg hpt).1⟩
-  · exact ⟨_, (G.duhamel_L1 hT hU₀ hFc hH hD).1⟩
+  intro U₀ hU₀ F hF
+  have hgen := G.generator_toC0Group
+  obtain ⟨U, h0, hU, -⟩ := G.toC0Group.existsUnique_classicalSolution
+    (show U₀ ∈ G.toC0Group.generator.domain by rw [hgen]; exact hU₀)
+    (show Evolution.ForcingClass.admissible G.toC0Group.generator 0 T F by rw [hgen]; exact hF)
+  rw [hgen] at hU
+  exact ⟨U, IsClassicalSolution.of_evolution hU h0 hF.1⟩
 
 @[deprecated (since := "2026-10-16")] alias wellPosedClassical_thm43Full :=
   wellPosedClassical_admissible
@@ -659,9 +659,11 @@ theorem IsSkewAdjoint.existsUnique_classicalSolution (hA : IsSkewAdjoint A) (T :
     (hU₀ : U₀ ∈ A.domain) {F : ℝ → E} (hF : ForcingClass.admissible A T F) :
     ∃ U, IsClassicalSolution A T U₀ F U ∧
       ∀ U', IsStrongSolution A T U₀ F U' → EqOn U' U (Icc 0 T) := by
-  obtain ⟨U, hU⟩ := (hA.wellPosedClassical_of_le fun _ h => h) U₀ hU₀ F hF
-  exact ⟨U, hU, fun U' hU' =>
-    hU'.unique (hA.isSkewSymm hA.dense_domain).isDissipative hU.toIsStrongSolution⟩
+  obtain ⟨U, h0, hU, huniq⟩ :=
+    LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution (isSkewAdjoint_iff_linearPMap.1 hA)
+      hU₀ hF
+  exact ⟨U, IsClassicalSolution.of_evolution hU h0 hF.1, fun U' hU' =>
+    huniq U' hU'.init hU'.toEvolution⟩
 
 @[deprecated (since := "2026-10-16")] alias thm_4_3_full :=
   IsSkewAdjoint.existsUnique_classicalSolution

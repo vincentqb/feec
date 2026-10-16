@@ -1,6 +1,13 @@
 module
 
 public import Feec.Foundation
+public import Feec.Evolution.Constrained
+public import Feec.Evolution.Duhamel
+public import Feec.Evolution.Energy
+public import Feec.Evolution.Forcing
+public import Feec.Evolution.Solution
+public import Feec.Evolution.Tangent
+public import Feec.Evolution.WellPosed
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Calculus.Partial
@@ -9,6 +16,10 @@ public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
+public import Feec.Semigroup.Basic
+public import Feec.Semigroup.Invariance
+public import Feec.Semigroup.Spectral
+public import Feec.Semigroup.Stone
 public import Feec.Ch2.Curvature
 public import Feec.Ch2.Linearized
 public import Feec.Ch3.Bivector

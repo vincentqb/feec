@@ -25,6 +25,14 @@ change stated on `h = trRev h̄` (`h ↦ h − 2∂_(a ξ_b)`) is `prop_2_6_metr
 
 The algebra is `Feec.Linearized.tt_gauge`, the field-level identity for a given antiderivative is
 `Feec.Linearized.tt_gauge_fun`; this file adds the FTC step and bundles the conclusions.
+`box_ttGaugeVec` records that the gauge vector is residual (`□ξ_b = 0`, since `k` is null).
+
+The other Ch. 2 corrections already have proved corrected statements in the chapter modules:
+Prop 2.4(b) `H = −½□h̄` in Lorentz gauge (`Feec.Linearized.Hjet_lorentz`,
+`Feec.Linearized.Hfun_lorentz`); (2.15) with `+κ²/2` and `f''` (`Feec.Linearized.tt_accel`,
+`Feec.Linearized.tt_accel_fun`); the §2.4 constant `8πG/c⁴ ∈ (2.07, 2.09)·10⁻⁴³`
+(`Feec.Linearized.einstein_const_bounds`); `G = 0 ⇔ Ric = 0` for `n ≠ 2`
+(`Feec.Curvature.einstein_zero_iff`).
 -/
 
 @[expose] public noncomputable section
@@ -62,6 +70,25 @@ lemma contDiff_ttGaugeVec (κ : ℝ) (A : Sym2) {f : ℝ → ℝ} (hf : ContDiff
 
 lemma dot_kTT (κ : ℝ) : dot (kTT κ) (kTT κ) = 0 := by
   simp [dot, kTT, Fin.sum_univ_four, η]
+
+/-- The gauge vector of Prop 2.6 is a residual gauge: `□ξ_b = 0`. Indeed `ξ_b = B_b g(k·x)`
+with `k` null, so `□ξ_b = B_b (k·k) g''(k·x) = 0`. This is the step behind the thesis' remark
+that the gauge change preserves the Lorentz gauge (`∂^a(2∂_(aξ_b) − η_ab ∂·ξ) = □ξ_b`). -/
+lemma box_ttGaugeVec (κ : ℝ) (A : Sym2) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (b : Fin 4)
+    (x : E4) : box (ttGaugeVec κ A f b) x = 0 := by
+  have hc : Continuous f := hf.continuous
+  have hd : Differentiable ℝ f := hf.differentiable (by norm_num)
+  have e : ∀ i, pd i (ttGaugeVec κ A f b) =
+      fun y => (Bcorr κ A b * kTT κ i) * f (phaseL (kTT κ) y) := by
+    intro i; funext y
+    have := pd_wave (differentiable_antideriv hc) (Bcorr κ A b) (kTT κ) i y
+    rw [deriv_antideriv hc] at this
+    exact this
+  simp only [box, e, pd_wave hd]
+  have : ∑ i, η i * (Bcorr κ A b * kTT κ i * kTT κ i * deriv f (phaseL (kTT κ) x)) =
+      dot (kTT κ) (kTT κ) * (Bcorr κ A b * deriv f (phaseL (kTT κ) x)) := by
+    simp only [dot, sum_mul]; exact sum_congr rfl fun _ _ => by ring
+  rw [this, dot_kTT, zero_mul]
 
 /-- **Thesis Prop 2.6, repaired** (existence of the TT gauge for a plane wave).
 

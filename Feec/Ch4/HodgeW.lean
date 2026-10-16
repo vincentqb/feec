@@ -671,7 +671,7 @@ See [QuennevilleBelair2015, §4.2] for the refuted claim; cf. [BruningLesch1992]
 defined by finite-dimensional cohomology), [AFW2010, §3].
 
 Correction: the claim holds with Brüning–Lesch's definition of Fredholm (finite-dimensional
-algebraic cohomology `Zᵏ/Bᵏ`), which is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`
+algebraic cohomology `Zᵏ/Bᵏ`), which is `DomainComplex.isClosedAt_of_finiteDimensional_cohomology`
 (at the `W` level: `HilbertComplex2.isClosed_range_d0_of_finiteDimensional_cohomology`,
 `UHilbertComplex.isClosed_range_of_finiteDimensional_cohomology`); and
 "compactness ⇒ closed and Fredholm" is `HilbertComplex2.closed_and_fredholm_of_compact`. -/
@@ -717,7 +717,7 @@ the bounded-model harmonic space `ℌ^{k+1} = 𝔅ᗮ ∩ 𝔷 ⊆ V^{k+1}` (gra
 `W`-level harmonic space `N(d_{k+1}) ∩ N(d_k*)` of the segment `W^k → W^{k+1} → W^{k+2}`.
 
 Thesis gap: the thesis identifies the two descriptions in one line via (4.1); here the
-identification of `V`- and `W`-orthogonality on cycles (`HilbertComplex.mem_H_iff`) and (4.1a)
+identification of `V`- and `W`-orthogonality on cycles (`DomainComplex.mem_H_iff`) and (4.1a)
 are made explicit.
 
 See [QuennevilleBelair2015, §4.2] (definition of `ℌᵏ`); cf. [AFW2010, §3],
@@ -912,7 +912,7 @@ def cohomologyEquiv (k : ℕ) :
 /-- **Correction of Thesis §4.2 ("Fredholm ⇒ closed"), Brüning–Lesch form at the `W` level:**
 if the algebraic cohomology `N(d_{k+1}) / R(d_k)` is finite-dimensional, then `R(d_k)` is closed
 in `W^{k+1}`. Transported from the bounded model
-(`HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`) via `cohomologyEquiv`.
+(`DomainComplex.isClosedAt_of_finiteDimensional_cohomology`) via `cohomologyEquiv`.
 
 See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
 theorem isClosed_range_of_finiteDimensional_cohomology (k : ℕ)
@@ -1007,7 +1007,7 @@ theorem toU_segment_zero : H.toU.segment 0 = H := rfl
 
 /-- **Bridge (critic item 8): the bounded domain complex of a `HilbertComplex2`**, `V k = D(d k)`
 with the graph inner product (via the complete graph `UHilbertComplex.domainSpace`). All
-bounded-model results (`HilbertComplex.poincare_iff`, `hodge_V`, `harmonicEquivCohomology`, …)
+bounded-model results (`DomainComplex.poincare_iff`, `hodge_V`, `harmonicEquivCohomology`, …)
 apply to it. See [QuennevilleBelair2015, §4.2] (domain complex); cf. [AFW2010, §3],
 [Arnold2018]. -/
 abbrev toHilbertComplex := H.toU.toHilbertComplex
@@ -1105,9 +1105,9 @@ open FredholmCE in
 /-- **Refutation of Thesis §4.2 "A Fredholm Hilbert complex is always closed", in the bounded
 model** (critic item 10, literal form). For the bounded domain complex of `cxW`
 (`0 → ℓ² --diag(1/(n+1))--> ℓ² → ℝ⁰ → 0`), every harmonic space `ℌᵏ` of the project's
-`HilbertComplex` is finite-dimensional (indeed `ℌ¹ = 0`), but the complex is not closed at
+`DomainComplex` is finite-dimensional (indeed `ℌ¹ = 0`), but the complex is not closed at
 degree 0. The `W`-level form is `fredholm_not_closed_W`; the correct statement (finite-dimensional
-algebraic cohomology ⇒ closed) is `HilbertComplex.isClosedAt_of_finiteDimensional_cohomology`.
+algebraic cohomology ⇒ closed) is `DomainComplex.isClosedAt_of_finiteDimensional_cohomology`.
 
 See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
 theorem fredholm_not_closed_V :

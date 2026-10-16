@@ -18,6 +18,9 @@ For a Hilbert complex `W0 --d0--> W1 --d1--> W2` of closed, densely defined oper
   (density of `D(L)`, missing in the thesis), `adjoint_waveOp_domain_le` (`D(L*) ⊆ D(L)`:
   the u-, σ- and ρ-steps, the last omitted in the thesis), `waveOp_isSkewAdjoint` (`L* = -L`),
   `IsSkewAdjoint.neg` / `neg_waveOp_isSkewAdjoint` (sign of (4.4)).
+  `waveOp_eq_sub_adjoint`: `L = T − T†` for the signed differential `T (σ, u, ρ) = (0, d0 σ,
+  −d1 u)` (`sd`, with `adjoint_sd`, `isClosed_sd`, `sd_comp`), so `waveOp_isSkewAdjoint` is a
+  shim over `LinearPMap.isSkewAdjoint_sub_adjoint` (`Feec.HilbertComplex.Dirac`).
   Closed range is replaced by `orthogonal_ker_d1_le` (`(ker d1)ᗮ ⊆ ker d0*`) and
   `orthogonal_ker_adjoint_d0_le` (`(ker d0*)ᗮ ⊆ ker d1`); `(4.1a)` for `d0` is
   `HilbertComplex2.orthogonal_range_d0` (`Feec.Ch4.Adjoint`).
@@ -401,8 +404,199 @@ theorem adjoint_waveOp_domain_le : H.waveOp†.domain ≤ H.waveOp.domain := by
       ← inner_sub_right, this, neg_neg]
   exact (mem_domL H).2 ⟨hσ, Submodule.mem_inf.2 ⟨hu2, hu1⟩, hρ⟩
 
+/-! ### `L = T − T†` for the signed differential `T (σ, u, ρ) = (0, d0 σ, −d1 u)`
+
+The bridge to the general theory (`Feec.HilbertComplex.Dirac`): `T T = 0`, `T` is closed and
+densely defined, `T† (σ, u, ρ) = (d0* u, −d1* ρ, 0)`, and the Hodge wave operator (4.5) is
+`T − T†`, which is skew-adjoint by `LinearPMap.isSkewAdjoint_sub_adjoint`. This works in every
+universe, unlike the `Fin 3` window `ShortHilbertComplex.toHilbertComplex`. -/
+
+/-- The domain `V0 × V1 × W2` of the signed differential (auxiliary). -/
+def sdDom : Submodule ℝ (Tot W0 W1 W2) :=
+  (H.d0.domain.prod (H.d1.domain.prod ⊤)).comap (tot W0 W1 W2).toLinearMap
+
+/-- The domain `W0 × V1* × V2*` of the adjoint of the signed differential (auxiliary). -/
+def sdAdjDom : Submodule ℝ (Tot W0 W1 W2) :=
+  ((⊤ : Submodule ℝ W0).prod (H.d0†.domain.prod H.d1†.domain)).comap (tot W0 W1 W2).toLinearMap
+
+/-- coordinate projections (auxiliary) -/
+def sdPr0 : H.sdDom →ₗ[ℝ] H.d0.domain :=
+  LinearMap.codRestrict _ ((LinearMap.fst ℝ _ _).comp ((tot W0 W1 W2).toLinearMap.comp
+    H.sdDom.subtype)) (fun x => x.2.1)
+def sdPr1 : H.sdDom →ₗ[ℝ] H.d1.domain :=
+  LinearMap.codRestrict _ ((LinearMap.fst ℝ _ _).comp ((LinearMap.snd ℝ _ _).comp
+    ((tot W0 W1 W2).toLinearMap.comp H.sdDom.subtype))) (fun x => x.2.2.1)
+def sdAdjPr1 : H.sdAdjDom →ₗ[ℝ] H.d0†.domain :=
+  LinearMap.codRestrict _ ((LinearMap.fst ℝ _ _).comp ((LinearMap.snd ℝ _ _).comp
+    ((tot W0 W1 W2).toLinearMap.comp H.sdAdjDom.subtype))) (fun x => x.2.2.1)
+def sdAdjPr2 : H.sdAdjDom →ₗ[ℝ] H.d1†.domain :=
+  LinearMap.codRestrict _ ((LinearMap.snd ℝ _ _).comp ((LinearMap.snd ℝ _ _).comp
+    ((tot W0 W1 W2).toLinearMap.comp H.sdAdjDom.subtype))) (fun x => x.2.2.2)
+
+/-- The signed total differential `T (σ, u, ρ) = (0, d0 σ, −d1 u)`. -/
+def sd : Tot W0 W1 W2 →ₗ.[ℝ] Tot W0 W1 W2 where
+  domain := H.sdDom
+  toFun := (tot W0 W1 W2).symm.toLinearMap.comp ((0 : H.sdDom →ₗ[ℝ] W0).prod
+    ((H.d0.toFun.comp H.sdPr0).prod (-(H.d1.toFun.comp H.sdPr1))))
+
+/-- `(σ, u, ρ) ↦ (d0* u, −d1* ρ, 0)`, the adjoint of `sd` (`adjoint_sd`). -/
+def sdAdj : Tot W0 W1 W2 →ₗ.[ℝ] Tot W0 W1 W2 where
+  domain := H.sdAdjDom
+  toFun := (tot W0 W1 W2).symm.toLinearMap.comp ((H.d0†.toFun.comp H.sdAdjPr1).prod
+    ((-(H.d1†.toFun.comp H.sdAdjPr2)).prod (0 : H.sdAdjDom →ₗ[ℝ] W2)))
+
+theorem tot_sd (x : H.sd.domain) : tot W0 W1 W2 (H.sd x) =
+    (0, H.d0 ⟨(tot W0 W1 W2 x).1, x.2.1⟩, -(H.d1 ⟨(tot W0 W1 W2 x).2.1, x.2.2.1⟩)) := by
+  change (tot W0 W1 W2) ((tot W0 W1 W2).symm _) = _
+  rw [LinearEquiv.apply_symm_apply]; rfl
+
+theorem tot_sdAdj (y : H.sdAdj.domain) : tot W0 W1 W2 (H.sdAdj y) =
+    (H.d0† ⟨(tot W0 W1 W2 y).2.1, y.2.2.1⟩, -(H.d1† ⟨(tot W0 W1 W2 y).2.2, y.2.2.2⟩), 0) := by
+  change (tot W0 W1 W2) ((tot W0 W1 W2).symm _) = _
+  rw [LinearEquiv.apply_symm_apply]; rfl
+
+theorem mem_sdDom {x : Tot W0 W1 W2} : x ∈ H.sdDom ↔
+    (tot W0 W1 W2 x).1 ∈ H.d0.domain ∧ (tot W0 W1 W2 x).2.1 ∈ H.d1.domain := by
+  simp [sdDom, Submodule.mem_prod]
+
+theorem mem_sdAdjDom {x : Tot W0 W1 W2} : x ∈ H.sdAdjDom ↔
+    (tot W0 W1 W2 x).2.1 ∈ H.d0†.domain ∧ (tot W0 W1 W2 x).2.2 ∈ H.d1†.domain := by
+  simp [sdAdjDom, Submodule.mem_prod]
+
+theorem inner_sd (x : H.sd.domain) (y : H.sdAdj.domain) :
+    ⟪H.sd x, (y : Tot W0 W1 W2)⟫ = ⟪(x : Tot W0 W1 W2), H.sdAdj y⟫ := by
+  rw [tot_inner, tot_inner, tot_sd, tot_sdAdj]
+  have a0 := adjoint_isFormalAdjoint H.dense0 ⟨(tot W0 W1 W2 y).2.1, y.2.2.1⟩
+    ⟨(tot W0 W1 W2 x).1, x.2.1⟩
+  have a1 := adjoint_isFormalAdjoint H.dense1 ⟨(tot W0 W1 W2 y).2.2, y.2.2.2⟩
+    ⟨(tot W0 W1 W2 x).2.1, x.2.2.1⟩
+  simp only at a0 a1
+  simp only [inner_zero_left, inner_zero_right, inner_neg_left, inner_neg_right]
+  have c0 := real_inner_comm (H.d0 ⟨(tot W0 W1 W2 x).1, x.2.1⟩) (tot W0 W1 W2 y).2.1
+  have c1 := real_inner_comm (H.d1 ⟨(tot W0 W1 W2 x).2.1, x.2.2.1⟩) (tot W0 W1 W2 y).2.2
+  have c2 := real_inner_comm (H.d0† ⟨(tot W0 W1 W2 y).2.1, y.2.2.1⟩) (tot W0 W1 W2 x).1
+  have c3 := real_inner_comm (H.d1† ⟨(tot W0 W1 W2 y).2.2, y.2.2.2⟩) (tot W0 W1 W2 x).2.1
+  linarith
+
+theorem dense_sdDom : Dense (H.sd.domain : Set (Tot W0 W1 W2)) := by
+  have hs : Dense ((H.d0.domain : Set W0) ×ˢ ((H.d1.domain : Set W1) ×ˢ (univ : Set W2))) :=
+    H.dense0.prod (H.dense1.prod dense_univ)
+  have := hs.preimage (totL (W0 := W0) (W1 := W1) (W2 := W2)).toHomeomorph.isOpenMap
+  convert this using 1
+  ext x
+  change x ∈ H.sdDom ↔ _
+  rw [mem_sdDom, Set.mem_preimage, ContinuousLinearEquiv.coe_toHomeomorph, totL_apply]
+  simp [Set.mem_prod]
+
+theorem dense_sdAdjDom : Dense (H.sdAdj.domain : Set (Tot W0 W1 W2)) := by
+  have hs : Dense ((univ : Set W0) ×ˢ ((H.d0†.domain : Set W1) ×ˢ (H.d1†.domain : Set W2))) :=
+    dense_univ.prod ((dense_adjoint_domain _ H.dense0 H.closed0).prod
+      (dense_adjoint_domain _ H.dense1 H.closed1))
+  have := hs.preimage (totL (W0 := W0) (W1 := W1) (W2 := W2)).toHomeomorph.isOpenMap
+  convert this using 1
+  ext x
+  change x ∈ H.sdAdjDom ↔ _
+  rw [mem_sdAdjDom, Set.mem_preimage, ContinuousLinearEquiv.coe_toHomeomorph, totL_apply]
+  simp [Set.mem_prod]
+
+omit [CompleteSpace W0] [CompleteSpace W1] [CompleteSpace W2] in
+/-- A point of `Tot` from its three components (auxiliary). -/
+theorem tot_symm_mk (a : W0) (b : W1) (c : W2) :
+    tot W0 W1 W2 ((tot W0 W1 W2).symm (a, b, c)) = (a, b, c) :=
+  LinearEquiv.apply_symm_apply _ _
+
+/-- `T† = (σ, u, ρ) ↦ (d0* u, −d1* ρ, 0)`. -/
+theorem adjoint_sd : H.sd† = H.sdAdj := by
+  have hle : H.sdAdj ≤ H.sd† :=
+    IsFormalAdjoint.le_adjoint H.dense_sdDom fun x y => H.inner_sd x y
+  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  have key : ∀ x : H.sd.domain, ⟪H.sd† ⟨y, hy⟩, (x : Tot W0 W1 W2)⟫ = ⟪y, H.sd x⟫ :=
+    fun x => adjoint_isFormalAdjoint H.dense_sdDom ⟨y, hy⟩ x
+  refine (H.mem_sdAdjDom).2 ⟨?_, ?_⟩
+  · refine mem_adjoint_domain_of_exists _ ⟨(tot W0 W1 W2 (H.sd† ⟨y, hy⟩)).1, fun σ => ?_⟩
+    have hx : (tot W0 W1 W2).symm ((σ : W0), 0, 0) ∈ H.sd.domain := by
+      rw [show H.sd.domain = H.sdDom from rfl, mem_sdDom, tot_symm_mk]
+      exact ⟨σ.2, Submodule.zero_mem _⟩
+    have := key ⟨_, hx⟩
+    rw [tot_inner, tot_inner, tot_sd] at this
+    simp only [tot_symm_mk, inner_zero_right, add_zero, zero_add] at this
+    rw [this]; simp
+  · refine mem_adjoint_domain_of_exists _ ⟨-(tot W0 W1 W2 (H.sd† ⟨y, hy⟩)).2.1, fun u => ?_⟩
+    have hx : (tot W0 W1 W2).symm (0, (u : W1), 0) ∈ H.sd.domain := by
+      rw [show H.sd.domain = H.sdDom from rfl, mem_sdDom, tot_symm_mk]
+      exact ⟨Submodule.zero_mem _, u.2⟩
+    have := key ⟨_, hx⟩
+    rw [tot_inner, tot_inner, tot_sd] at this
+    simp only [tot_symm_mk, inner_zero_right, add_zero, zero_add] at this
+    rw [inner_neg_left, this]; simp
+
+/-- `(T†)† = T`, so `T` is closed. -/
+theorem adjoint_sdAdj : H.sdAdj† = H.sd := by
+  have hle : H.sd ≤ H.sdAdj† :=
+    IsFormalAdjoint.le_adjoint H.dense_sdAdjDom fun x y => by
+      rw [real_inner_comm, ← H.inner_sd y x, real_inner_comm]
+  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  have key : ∀ x : H.sdAdj.domain, ⟪H.sdAdj† ⟨y, hy⟩, (x : Tot W0 W1 W2)⟫ = ⟪y, H.sdAdj x⟫ :=
+    fun x => adjoint_isFormalAdjoint H.dense_sdAdjDom ⟨y, hy⟩ x
+  refine (H.mem_sdDom).2 ⟨?_, ?_⟩
+  · rw [← LinearPMap.adjoint_adjoint H.d0 H.dense0 H.closed0]
+    refine mem_adjoint_domain_of_exists _ ⟨(tot W0 W1 W2 (H.sdAdj† ⟨y, hy⟩)).2.1, fun u => ?_⟩
+    have hx : (tot W0 W1 W2).symm (0, (u : W1), 0) ∈ H.sdAdj.domain := by
+      rw [show H.sdAdj.domain = H.sdAdjDom from rfl, mem_sdAdjDom, tot_symm_mk]
+      exact ⟨u.2, Submodule.zero_mem _⟩
+    have := key ⟨_, hx⟩
+    rw [tot_inner, tot_inner, tot_sdAdj] at this
+    simp only [tot_symm_mk, inner_zero_right, add_zero, zero_add] at this
+    rw [this]; simp
+  · rw [← LinearPMap.adjoint_adjoint H.d1 H.dense1 H.closed1]
+    refine mem_adjoint_domain_of_exists _ ⟨-(tot W0 W1 W2 (H.sdAdj† ⟨y, hy⟩)).2.2, fun ρ => ?_⟩
+    have hx : (tot W0 W1 W2).symm (0, 0, (ρ : W2)) ∈ H.sdAdj.domain := by
+      rw [show H.sdAdj.domain = H.sdAdjDom from rfl, mem_sdAdjDom, tot_symm_mk]
+      exact ⟨Submodule.zero_mem _, ρ.2⟩
+    have := key ⟨_, hx⟩
+    rw [tot_inner, tot_inner, tot_sdAdj] at this
+    simp only [tot_symm_mk, inner_zero_right, add_zero, zero_add] at this
+    rw [inner_neg_left, this]; simp
+
+theorem isClosed_sd : H.sd.IsClosed := by
+  rw [← H.adjoint_sdAdj]; exact adjoint_isClosed H.dense_sdAdjDom
+
+theorem sd_mapsTo (x : H.sd.domain) : (H.sd x : Tot W0 W1 W2) ∈ H.sd.domain := by
+  rw [show H.sd.domain = H.sdDom from rfl, mem_sdDom, tot_sd]
+  exact ⟨Submodule.zero_mem _, H.map_mem _⟩
+
+theorem sd_comp (x : H.sd.domain) : H.sd ⟨_, H.sd_mapsTo x⟩ = 0 := by
+  apply (tot W0 W1 W2).injective
+  rw [tot_sd, LinearEquiv.map_zero]
+  have e0 : H.d0 ⟨(tot W0 W1 W2 (H.sd x)).1, (H.sd_mapsTo x).1⟩ = 0 :=
+    LinearPMap.apply_mk_eq_zero H.d0 _ (by rw [tot_sd])
+  have e1 : H.d1 ⟨(tot W0 W1 W2 (H.sd x)).2.1, (H.sd_mapsTo x).2.1⟩ = 0 := by
+    have key : ∀ (a : W1) (ha : a ∈ H.d1.domain), a = H.d0 ⟨(tot W0 W1 W2 x).1, x.2.1⟩ →
+        H.d1 ⟨a, ha⟩ = 0 := by
+      rintro _ _ rfl; exact H.comp_zero _
+    exact key _ _ (by rw [tot_sd])
+  rw [e0, e1, neg_zero]; rfl
+
+/-- **The Hodge wave operator is `T − T†`** for the signed differential `T = sd`. -/
+theorem waveOp_eq_sub_adjoint : H.waveOp = H.sd - H.sd† := by
+  rw [adjoint_sd]
+  refine LinearPMap.ext ?_ fun x hx hx' => ?_
+  · ext x
+    change x ∈ H.domL ↔ x ∈ H.sdDom ∧ x ∈ H.sdAdjDom
+    rw [mem_domL, mem_sdDom, mem_sdAdjDom]
+    simp only [midDomain, Submodule.mem_inf]
+    tauto
+  · apply (tot W0 W1 W2).injective
+    rw [tot_waveOp, LinearPMap.sub_apply, _root_.map_sub, tot_sd, tot_sdAdj]
+    simp only [Prod.mk_sub_mk, zero_sub, sub_neg_eq_add, sub_zero]
+    rfl
+
 /-- **Thesis Thm 4.6 (operator part)**: the Hodge wave operator `L` of (4.5) is densely defined
 and skew-adjoint, `L* = -L`, for **every** Hilbert complex of length 2.
+
+Strangler shim over the general theory: `L = T − T†` (`waveOp_eq_sub_adjoint`) and
+`LinearPMap.isSkewAdjoint_sub_adjoint`; for complexes of any length see
+`Feec.HilbertComplex.isSkewAdjoint_wave`. The direct proof is `adjoint_waveOp_domain_le`.
 
 Strengthening: the thesis assumes closed range; it is not needed (see
 `adjoint_waveOp_domain_le`). Thesis gap: density of `D(L)` (`dense_domL`) is not proved in
@@ -410,8 +604,9 @@ the thesis.
 
 See [QuennevilleBelair2015, Thm 4.6]; skew-adjointness is the hypothesis of
 [QuennevilleBelair2015, Thm 4.3] and of Stone's theorem, cf. [Pazy1983, §1.10]. -/
-theorem waveOp_isSkewAdjoint : IsSkewAdjoint H.waveOp :=
-  (isSkewAdjoint_iff _ H.dense_domL).2 ⟨H.waveOp_isSkewSymm, H.adjoint_waveOp_domain_le⟩
+theorem waveOp_isSkewAdjoint : IsSkewAdjoint H.waveOp := by
+  rw [waveOp_eq_sub_adjoint]
+  exact LinearPMap.isSkewAdjoint_sub_adjoint H.dense_sdDom H.isClosed_sd H.sd_mapsTo H.sd_comp
 
 end Feec.HilbertComplex2
 

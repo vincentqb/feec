@@ -14,6 +14,11 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
+public import Feec.HilbertComplex.Basic
+public import Feec.HilbertComplex.Dirac
+public import Feec.HilbertComplex.Dual
+public import Feec.HilbertComplex.Short
+public import Feec.HilbertComplex.Window
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
 public import Feec.Semigroup.Basic

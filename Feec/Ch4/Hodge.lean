@@ -7,7 +7,7 @@ public import Mathlib.Analysis.Normed.Operator.Compact.Basic
 /-!
 # Bounded-model Hodge theory (Thesis §4.2: Thm 4.1, Thm 4.2)
 
-Works in the bounded domain-complex model `Feec.HilbertComplex V W` (`V k` carries the graph
+Works in the bounded domain-complex model `Feec.DomainComplex V W` (`V k` carries the graph
 inner product, `ι k : V k → W k` the inclusion). Coverage:
 
 * graph-norm bookkeeping, `(𝔷^k)^{⊥V} = V^k ∩ (𝔷^k)^{⊥W}` (`mem_orthogonal_Z_iff`) and the
@@ -56,12 +56,12 @@ open Set Filter
 @[expose] public noncomputable section
 
 namespace Feec
-namespace HilbertComplex
+namespace DomainComplex
 
 variable {V W : ℕ → Type*}
     [∀ k, NormedAddCommGroup (V k)] [∀ k, InnerProductSpace ℝ (V k)] [∀ k, CompleteSpace (V k)]
     [∀ k, NormedAddCommGroup (W k)] [∀ k, InnerProductSpace ℝ (W k)] [∀ k, CompleteSpace (W k)]
-    (C : HilbertComplex V W)
+    (C : DomainComplex V W)
 
 /-! ### Graph-norm bookkeeping -/
 
@@ -560,7 +560,7 @@ theorem closed_and_fredholm_of_isCompactOperator (k : ℕ)
   have hfd := C.finiteDimensional_H_of_isCompactOperator k hH
   exact ⟨hB, hfd, (C.finiteDimensional_H_iff k hB).1 hfd⟩
 
-end HilbertComplex
+end DomainComplex
 
 /-! ### Graph complexes of bounded operators
 
@@ -601,7 +601,7 @@ def dd (k : ℕ) : G D k →L[ℝ] G D (k + 1) :=
     |>.codRestrict (G D (k + 1)) fun _ => mem_G.2 rfl
 
 /-- The bounded domain complex of a complex of bounded operators. -/
-def complex (hD : ∀ k x, D (k + 1) (D k x) = 0) : HilbertComplex (fun k => G D k) E where
+def complex (hD : ∀ k x, D (k + 1) (D k x) = 0) : DomainComplex (fun k => G D k) E where
   ι := ι D
   ι_injective k u v huv := by
     have h1 : (u : WithLp 2 (E k × E (k + 1))).fst = (v : WithLp 2 (E k × E (k + 1))).fst := huv
@@ -808,13 +808,13 @@ end FredholmCE
 open FredholmCE in
 /-- The ℓ² Hilbert complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ℓ² --0--> ⋯` with
 `A = diag(1/(n+1))`, as a bounded domain complex (`V k` = graph of `D k`). -/
-def fredholmCounterexample : HilbertComplex (fun k => GraphCx.G D k) (fun _ => L2) :=
+def fredholmCounterexample : DomainComplex (fun k => GraphCx.G D k) (fun _ => L2) :=
   GraphCx.complex D D_comp_D
 
 open FredholmCE in
 /-- The finite-length complex `0 → ℓ² --A--> ℓ² → 0` (`W k = 0` for `k ≥ 2`), as a bounded
 domain complex. -/
-def fredholmCounterexampleFin : HilbertComplex (fun k => GraphCx.G Dfin k) (fun k => S k) :=
+def fredholmCounterexampleFin : DomainComplex (fun k => GraphCx.G Dfin k) (fun k => S k) :=
   GraphCx.complex Dfin Dfin_comp
 
 namespace FredholmCE
@@ -906,7 +906,7 @@ the refutation is with respect to that reading.
 
 Correction: the true statements are "finite-dimensional *algebraic* cohomology ⇒ closed"
 (Brüning–Lesch's definition of Fredholm), `isClosedAt_of_finiteDimensional_cohomology`, and
-"compactness ⇒ closed" (`HilbertComplex.isClosedAt_of_isCompactOperator`).
+"compactness ⇒ closed" (`DomainComplex.isClosedAt_of_isCompactOperator`).
 
 See [QuennevilleBelair2015, §4.2] (the refuted sentence); cf. [BruningLesch1992] (where Fredholm
 means finite-dimensional cohomology). -/
@@ -916,7 +916,7 @@ theorem fredholm_not_closed :
         ∀ k, FiniteDimensional ℝ (fredholmCounterexample.H k)) ∧
       ¬ fredholmCounterexample.IsClosedAt 0 := by
   refine ⟨Z_eq_bot_of_even (⟨0, rfl⟩ : Even 0), H_eq_bot, ⟨?_, fun k => ?_⟩, not_isClosedAt_zero⟩
-  · rw [HilbertComplex.H0, Z_eq_bot_of_even (⟨0, rfl⟩ : Even 0)]; infer_instance
+  · rw [DomainComplex.H0, Z_eq_bot_of_even (⟨0, rfl⟩ : Even 0)]; infer_instance
   · rw [H_eq_bot]; infer_instance
 
 open FredholmCE in
@@ -944,7 +944,7 @@ theorem fredholm_not_closed_fin :
       fredholmCounterexampleFin.B 0 ≠ fredholmCounterexampleFin.Z 1 := by
   refine ⟨eq_zero_of_S, fin_Z_zero, fin_Z_one, fin_H_eq_bot, ⟨?_, fun k => ?_⟩, fin_not_isClosedAt_zero,
     fredholmCounterexampleFin.B_ne_Z_of_not_isClosedAt 0 fin_not_isClosedAt_zero⟩
-  · rw [HilbertComplex.H0, fin_Z_zero]; infer_instance
+  · rw [DomainComplex.H0, fin_Z_zero]; infer_instance
   · rw [fin_H_eq_bot]; infer_instance
 
 
@@ -1005,7 +1005,7 @@ Thesis gap: the thesis passes between `(W, d)` and `(V, d)` implicitly; complete
 is exactly closedness of `d k`, and `d (V k) ⊆ V (k+1)` is the `map_mem` field.
 
 See [QuennevilleBelair2015, §4.2] (domain complex); cf. [BruningLesch1992], [AFW2010, §3]. -/
-def toHilbertComplex : HilbertComplex (fun k => C.domainSpace k) W where
+def toHilbertComplex : DomainComplex (fun k => C.domainSpace k) W where
   ι k := (WithLp.fstL 2 ℝ (W k) (W (k + 1))).comp (C.domainSpace k).subtypeL
   ι_injective k u v huv := by
     have h1 : (u : WithLp 2 (W k × W (k + 1))).fst = (v : WithLp 2 (W k × W (k + 1))).fst := huv
@@ -1039,7 +1039,7 @@ theorem toHilbertComplex_ι_d (k : ℕ) (u : C.domainSpace k) :
 theorem toHilbertComplex_isClosedAt_iff (k : ℕ) :
     C.toHilbertComplex.IsClosedAt k ↔
       IsClosed (LinearMap.range (C.d k).toFun : Set (W (k + 1))) := by
-  rw [HilbertComplex.isClosedAt_iff_isClosed_image]
+  rw [DomainComplex.isClosedAt_iff_isClosed_image]
   congr! 1
   ext y; constructor
   · rintro ⟨_, ⟨u, rfl⟩, rfl⟩
@@ -1056,7 +1056,7 @@ theorem isClosed_range_iff_poincare (k : ℕ) :
       ∃ c : ℝ, ∀ x : (C.d k).domain,
         (∀ z : (C.d k).domain, C.d k z = 0 → ⟪(x : W k), (z : W k)⟫ = 0) →
           ‖(x : W k)‖ ≤ c * ‖C.d k x‖ := by
-  rw [← toHilbertComplex_isClosedAt_iff, HilbertComplex.isClosedAt_iff_poincare_W]
+  rw [← toHilbertComplex_isClosedAt_iff, DomainComplex.isClosedAt_iff_poincare_W]
   -- `u ∈ 𝔷ᗮ` in the graph space ↔ `ι u ⊥_W ker d`
   have hZ : ∀ u : C.domainSpace k, u ∈ C.toHilbertComplex.Z k ↔
       (u : WithLp 2 (W k × W (k + 1))).snd = 0 := fun u => by
@@ -1068,7 +1068,7 @@ theorem isClosed_range_iff_poincare (k : ℕ) :
       refine Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext h rfl))
   have hperp : ∀ x : (C.d k).domain, C.graphPt k x ∈ (C.toHilbertComplex.Z k)ᗮ ↔
       ∀ z : (C.d k).domain, C.d k z = 0 → ⟪(x : W k), (z : W k)⟫ = 0 := fun x => by
-    rw [HilbertComplex.mem_orthogonal_Z_iff]
+    rw [DomainComplex.mem_orthogonal_Z_iff]
     constructor
     · intro h z hz
       exact h (C.graphPt k z) ((hZ _).2 hz)

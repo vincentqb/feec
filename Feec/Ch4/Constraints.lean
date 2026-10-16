@@ -5,6 +5,7 @@ public import Mathlib.RingTheory.MvPolynomial.EulerIdentity
 public import Feec.Ch4.Existence
 public import Feec.Foundation.Complex
 public import Feec.Foundation.Tensor
+public import Feec.HilbertComplex.Reducing
 
 /-!
 # Thesis §4.7–4.11: polynomial complexes, wave equations, constraint propagation
@@ -1289,6 +1290,15 @@ theorem waveOp_revT (x : H.waveOp.domain) :
     Subtype.ext (by simp [tot_revT])
   simp only [h0, h1, h1s, h2s, LinearPMap.map_neg, Prod.neg_mk, neg_neg, neg_add]
 
+/-- The time reversal anti-intertwines the generator of every group of `-L`: `R D(L) ⊆ D(L)` and
+`(-L) R = -R (-L)` (auxiliary, for `Feec.C0Group.IsIsometric.antiIntertwines_S`). -/
+theorem intertwines_revT (G : UnitaryGroupGenerator (-H.waveOp)) :
+    Intertwines (revT W0 W1 W2) G.toC0Group.generator (-G.toC0Group.generator) := by
+  rw [G.generator_toC0Group, neg_neg]
+  refine ⟨fun y => revT_mem_domL H y.2, fun y => ?_⟩
+  rw [LinearPMap.neg_apply, _root_.map_neg]
+  exact waveOp_revT H ⟨y, y.2⟩
+
 variable {H} {S1 : Submodule ℝ W1} {S2 : Submodule ℝ W2}
 
 /-- `L (D(L) ∩ K) ⊆ K` for `K = {0} × S1 × S2` (the "third itemized hypothesis" of Thm 4.4,
@@ -1395,16 +1405,14 @@ theorem prop_4_17_necessary (G : UnitaryGroupGenerator (-H.waveOp))
     ∀ x ∈ H.domL, projKc W0 S1 S2 x ∈ H.domL := by
   intro x hx
   rw [← starProjection_Kc]
-  have hRL : ∀ y : (-H.waveOp).domain, (-H.waveOp) ⟨revT W0 W1 W2 y, revT_mem_domL H y.2⟩ =
-      -revT W0 W1 W2 ((-H.waveOp) y) := fun y => by
-    rw [LinearPMap.neg_apply, LinearPMap.neg_apply, _root_.map_neg, neg_neg]
-    exact neg_eq_iff_eq_neg.2 (waveOp_revT H y)
-  refine projection_hyp_necessary G _ hdense ?_ x hx
-  refine invariant_of_reversal G _ (revT W0 W1 W2) revT_revT (fun y hy => revT_mem_domL H hy)
-    (group_reversal G _ revT_revT (fun y hy => revT_mem_domL H hy) hRL)
-    (fun y hy => revT_mem_Kc hy) ?_
-  intro t ht y hy hyK
-  exact hprop t y _ hyK (isStrongSolution_orbit G t ⟨y, hy⟩) t ⟨ht, le_rfl⟩
+  have hgen : G.toC0Group.generator = -H.waveOp := G.generator_toC0Group
+  have hK := G.isIsometric_toC0Group.isReducing_of_forward_invariant (revT W0 W1 W2)
+    (intertwines_revT H G) revT_revT (Kc W0 S1 S2) (fun y hy => revT_mem_Kc hy)
+    (by rw [hgen]; exact hdense) fun t ht y hy hyK => by
+      rw [hgen] at hy
+      exact hprop t y _ hyK (isStrongSolution_orbit G t ⟨y, hy⟩) t ⟨ht, le_rfl⟩
+  rw [hgen] at hK
+  exact hK.proj_mem ⟨x, hx⟩
 
 /-- **Props 4.17/4.19, characterization**: with a Stone group for `-L` and `D(L) ∩ K` dense in
 `K`, TSD-type constraints propagate for all data iff `P_K D(L) ⊆ D(L)`.

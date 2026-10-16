@@ -202,19 +202,11 @@ theorem dense_domain_neg_waveOp (H : HilbertComplex2 W0 W1 W2) :
     Dense ((-H.waveOp).domain : Set (Tot W0 W1 W2)) :=
   H.neg_waveOp_isSkewAdjoint.dense_domain
 
-/-- **Time reversal on all of `W`**: `R S t = S (-t) R`, from `group_reversal` on `D(L)` and
-density. -/
+/-- **Time reversal on all of `W`**: `R S t = S (-t) R`
+(`Feec.C0Group.IsIsometric.antiIntertwines_S`). -/
 theorem revT_S (t : ℝ) (x : Tot W0 W1 W2) :
-    revT W0 W1 W2 (G.S t x) = G.S (-t) (revT W0 W1 W2 x) := by
-  have hRL : ∀ y : (-H.waveOp).domain, (-H.waveOp) ⟨revT W0 W1 W2 y, revT_mem_domL H y.2⟩ =
-      -revT W0 W1 W2 ((-H.waveOp) y) := fun y => by
-    rw [LinearPMap.neg_apply, LinearPMap.neg_apply, _root_.map_neg, neg_neg]
-    exact neg_eq_iff_eq_neg.2 (waveOp_revT H y)
-  have hrev := group_reversal G _ revT_revT (fun y hy => revT_mem_domL H hy) hRL t
-  have := Continuous.ext_on (dense_domain_neg_waveOp H)
-    ((revT W0 W1 W2).continuous.comp (G.S t).continuous)
-    ((G.S (-t)).continuous.comp (revT W0 W1 W2).continuous) fun y hy => hrev y hy
-  exact congrFun this x
+    revT W0 W1 W2 (G.S t x) = G.S (-t) (revT W0 W1 W2 x) :=
+  G.isIsometric_toC0Group.antiIntertwines_S _ (intertwines_revT H G) t x
 
 variable {S1 : Submodule ℝ W1} {S2 : Submodule ℝ W2}
 

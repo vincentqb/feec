@@ -19,8 +19,13 @@ public import Feec.HilbertComplex.Compactness
 public import Feec.HilbertComplex.Dirac
 public import Feec.HilbertComplex.DomainComplex
 public import Feec.HilbertComplex.Dual
+public import Feec.HilbertComplex.Equivariant
 public import Feec.HilbertComplex.Hodge
+public import Feec.HilbertComplex.HodgeWave
+public import Feec.HilbertComplex.Reality
+public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.Short
+public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent

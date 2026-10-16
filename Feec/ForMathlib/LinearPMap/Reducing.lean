@@ -1,0 +1,291 @@
+module
+
+public import Feec.ForMathlib.LinearPMap.Skew
+public import Feec.ForMathlib.LinearPMap.GraphSpace
+
+/-!
+# Reducing subspaces of unbounded operators, and restriction
+
+For `T : E →ₗ.[𝕜] F` and closed subspaces `K ⊆ E`, `L ⊆ F` with orthogonal projections:
+
+* `LinearPMap.IsReducingPair T K L`: `P_K D(T) ⊆ D(T)` and `T P_K = P_L T` on `D(T)`;
+  `LinearPMap.IsReducing A K := A.IsReducingPair K K`.
+* `LinearPMap.restrict A K h : K →ₗ.[𝕜] K`, the part of `A` in an invariant subspace `K`
+  (domain `D(A) ∩ K`).
+
+## Main results
+
+* `IsReducingPair.mapsTo`, `.map_orthogonal_mem`, `.orthogonal` (`(Kᗮ, Lᗮ)` reduces `T`),
+  `.adjoint` (`(L, K)` reduces `T†`), `isReducingPair_bot`, `isReducingPair_top`.
+* `IsSkewSymmetric.isReducing_iff`, `IsSkewAdjoint.isReducing_iff`: for a densely defined
+  skew-symmetric operator, `K` reduces `A` iff `P_K D(A) ⊆ D(A)` and `A (D(A) ∩ K) ⊆ K`
+  (`IsSkewSymmetric.commute_proj`).
+* `IsSkewAdjoint.restrict`: the part of a skew-adjoint operator in a reducing subspace is
+  skew-adjoint (no density hypothesis on `D(A) ∩ K`: `dense_restrict_domain`).
+* `dense_inter_of_proj_mem`, `proj_orthogonal_mem_of_le`, `hasOrthogonalProjection_ker`.
+
+## References
+
+* [QuennevilleBelair2015], Thm 4.4 (the operator `L̃`)
+* [Kato1995], §III.5.6 (reduction of operators)
+-/
+
+open scoped InnerProductSpace
+open Set
+
+@[expose] public noncomputable section
+
+namespace LinearPMap
+
+variable {𝕜 E F : Type*} [RCLike 𝕜]
+  [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+
+/-- `T : E → F` is *reduced* by the pair `(K, L)` of closed subspaces: the projection `P_K`
+preserves `D(T)` and `T P_K = P_L T` on `D(T)`. For `T : E → E` and `K = L` this is the usual
+notion of a reducing subspace (`IsReducing`). -/
+structure IsReducingPair (T : E →ₗ.[𝕜] F) (K : Submodule 𝕜 E) (L : Submodule 𝕜 F)
+    [K.HasOrthogonalProjection] [L.HasOrthogonalProjection] : Prop where
+  /-- `P_K D(T) ⊆ D(T)`. -/
+  proj_mem : ∀ x : T.domain, K.starProjection (x : E) ∈ T.domain
+  /-- `T P_K = P_L T` on `D(T)`. -/
+  comm : ∀ x : T.domain, T ⟨_, proj_mem x⟩ = L.starProjection (T x)
+
+/-- `K` reduces `A : E → E`: `P_K D(A) ⊆ D(A)` and `A P_K = P_K A` on `D(A)`. -/
+abbrev IsReducing (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : Prop :=
+  A.IsReducingPair K K
+
+section IsReducingPair
+
+variable {T : E →ₗ.[𝕜] F} {K : Submodule 𝕜 E} {L : Submodule 𝕜 F}
+  [K.HasOrthogonalProjection] [L.HasOrthogonalProjection]
+
+/-- A reducing pair maps `D(T) ∩ K` into `L`. -/
+theorem IsReducingPair.mapsTo (h : T.IsReducingPair K L) (x : T.domain) (hx : (x : E) ∈ K) :
+    T x ∈ L := by
+  have hx' : (⟨K.starProjection (x : E), h.proj_mem x⟩ : T.domain) = x :=
+    Subtype.ext ((K.starProjection_eq_self_iff).2 hx)
+  have e := h.comm x
+  rw [hx'] at e
+  rw [e]
+  exact L.starProjection_apply_mem _
+
+/-- A reducing pair maps `D(T) ∩ Kᗮ` into `Lᗮ`. -/
+theorem IsReducingPair.map_orthogonal_mem (h : T.IsReducingPair K L) (z : T.domain)
+    (hz : (z : E) ∈ Kᗮ) : T z ∈ Lᗮ := by
+  have h0 : (⟨K.starProjection (z : E), h.proj_mem z⟩ : T.domain) = 0 :=
+    Subtype.ext ((Submodule.starProjection_apply_eq_zero_iff K).2 hz)
+  have e := h.comm z
+  rw [h0, LinearPMap.map_zero] at e
+  exact (Submodule.starProjection_apply_eq_zero_iff L).1 e.symm
+
+/-- If `(K, L)` reduces `T`, so does `(Kᗮ, Lᗮ)`. -/
+theorem IsReducingPair.orthogonal (h : T.IsReducingPair K L) : T.IsReducingPair Kᗮ Lᗮ := by
+  have hmem : ∀ x : T.domain, Kᗮ.starProjection (x : E) ∈ T.domain := fun x => by
+    rw [Submodule.starProjection_orthogonal_val]; exact T.domain.sub_mem x.2 (h.proj_mem x)
+  refine ⟨hmem, fun x => ?_⟩
+  have e : (⟨_, hmem x⟩ : T.domain) = x - ⟨_, h.proj_mem x⟩ := by
+    ext; simp
+  rw [e, LinearPMap.map_sub, h.comm, Submodule.starProjection_orthogonal_val]
+
+/-- The trivial subspaces reduce every operator. -/
+theorem isReducingPair_bot (T : E →ₗ.[𝕜] F) : T.IsReducingPair ⊥ ⊥ := by
+  refine ⟨fun x => by simp [Submodule.starProjection_bot], fun x => ?_⟩
+  have : (⟨(⊥ : Submodule 𝕜 E).starProjection (x : E), by simp [Submodule.starProjection_bot]⟩ :
+      T.domain) = 0 := Subtype.ext (by simp [Submodule.starProjection_bot])
+  rw [this, LinearPMap.map_zero]; simp [Submodule.starProjection_bot]
+
+theorem isReducingPair_top (T : E →ₗ.[𝕜] F) : T.IsReducingPair ⊤ ⊤ :=
+  ⟨fun x => by simp [Submodule.starProjection_top], fun x => by simp [Submodule.starProjection_top]⟩
+
+/-- If `(K, L)` reduces a densely defined `T`, then `(L, K)` reduces `T†`. -/
+theorem IsReducingPair.adjoint [CompleteSpace E] (h : T.IsReducingPair K L)
+    (hd : Dense (T.domain : Set E)) : T†.IsReducingPair L K := by
+  have key : ∀ y : T†.domain, ∀ x : T.domain,
+      ⟪K.starProjection (T† y), (x : E)⟫_𝕜 = ⟪L.starProjection (y : F), T x⟫_𝕜 := by
+    intro y x
+    rw [K.inner_starProjection_left_eq_right, L.inner_starProjection_left_eq_right, ← h.comm x]
+    exact adjoint_isFormalAdjoint hd y ⟨_, h.proj_mem x⟩
+  have hmem : ∀ y : T†.domain, L.starProjection (y : F) ∈ T†.domain := fun y =>
+    mem_adjoint_domain_of_exists _ ⟨_, key y⟩
+  exact ⟨hmem, fun y => adjoint_apply_eq hd ⟨_, hmem y⟩ (key y)⟩
+
+end IsReducingPair
+
+/-! ### The part of an operator in an invariant subspace -/
+
+section Restrict
+
+/-- The part of `A` in an invariant subspace `K`, as an operator `K → K` with domain
+`D(A) ∩ K`. -/
+def restrict (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E)
+    (hinv : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) : K →ₗ.[𝕜] K where
+  domain := A.domain.comap K.subtype
+  toFun :=
+    { toFun := fun x => ⟨A ⟨(x : K), x.2⟩, hinv ⟨_, x.2⟩ (x : K).2⟩
+      map_add' := fun x y => by ext; simp [← LinearPMap.map_add]; rfl
+      map_smul' := fun c x => by ext; simp [← LinearPMap.map_smul]; rfl }
+
+theorem mem_restrict_domain {A : E →ₗ.[𝕜] E} {K : Submodule 𝕜 E}
+    {hinv : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K} {x : K} :
+    x ∈ (A.restrict K hinv).domain ↔ (x : E) ∈ A.domain := Iff.rfl
+
+/-- `Ã x = A x` for the part `Ã = A.restrict K hinv`. -/
+@[simp] theorem restrict_apply (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E)
+    (hinv : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) (x : (A.restrict K hinv).domain) :
+    ((A.restrict K hinv x : K) : E) = A ⟨((x : K) : E), x.2⟩ := rfl
+
+/-- If `D` is dense and `P_K D ⊆ D`, then `D ∩ K` is dense in `K`. -/
+theorem dense_inter_of_proj_mem (D : Submodule 𝕜 E) (hD : Dense (D : Set E))
+    (K : Submodule 𝕜 E) [K.HasOrthogonalProjection]
+    (hPD : ∀ x ∈ D, K.starProjection x ∈ D) :
+    ∀ k ∈ K, k ∈ _root_.closure ((D : Set E) ∩ K) := by
+  intro k hk
+  have hcont : Continuous K.starProjection := K.starProjection.continuous
+  have : K.starProjection k ∈ _root_.closure (K.starProjection '' (D : Set E)) :=
+    map_mem_closure hcont (hD k) (fun x hx => mem_image_of_mem _ hx)
+  rw [(K.starProjection_eq_self_iff).2 hk] at this
+  refine closure_mono ?_ this
+  rintro _ ⟨x, hx, rfl⟩
+  exact ⟨hPD x hx, K.starProjection_apply_mem x⟩
+
+/-- If `D(A)` is dense and `P_K D(A) ⊆ D(A)`, the part of `A` in `K` is densely defined. -/
+theorem dense_restrict_domain (A : E →ₗ.[𝕜] E) (hD : Dense (A.domain : Set E))
+    (K : Submodule 𝕜 E) [K.HasOrthogonalProjection]
+    (h1 : ∀ x : A.domain, K.starProjection (x : E) ∈ A.domain)
+    (h3 : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) :
+    Dense ((A.restrict K h3).domain : Set K) := by
+  have hd : Dense ((K.orthogonalProjectionOnto) '' (A.domain : Set E)) :=
+    (Function.Surjective.denseRange (f := (K.orthogonalProjectionOnto : E → K))
+      (fun k : K => ⟨(k : E), K.orthogonalProjectionOnto_mem_subspace_eq_self k⟩)).dense_image
+      (K.orthogonalProjectionOnto).continuous hD
+  refine hd.mono ?_
+  rintro _ ⟨x, hx, rfl⟩
+  change ((K.orthogonalProjectionOnto x : K) : E) ∈ A.domain
+  rw [← Submodule.starProjection_apply]
+  exact h1 ⟨x, hx⟩
+
+/-- If a closed subspace `M` lies inside `D`, then `P_{Mᗮ} D ⊆ D`. -/
+theorem proj_orthogonal_mem_of_le (D M : Submodule 𝕜 E) [M.HasOrthogonalProjection]
+    (hMD : M ≤ D) : ∀ x ∈ D, Mᗮ.starProjection x ∈ D := by
+  intro x hx
+  rw [Submodule.starProjection_orthogonal_val]
+  exact D.sub_mem hx (hMD (M.starProjection_apply_mem x))
+
+/-- For a closed operator `M` on a Hilbert space, `ker M` has an orthogonal projection. -/
+theorem hasOrthogonalProjection_ker [CompleteSpace E] {G : Type*} [NormedAddCommGroup G]
+    [NormedSpace 𝕜 G] (M : E →ₗ.[𝕜] G) (hM : M.IsClosed) : M.ker.HasOrthogonalProjection := by
+  have : CompleteSpace M.ker := (isClosed_ker hM).completeSpace_coe
+  infer_instance
+
+end Restrict
+
+/-! ### Skew-symmetric operators: reducing iff invariant with invariant domain -/
+
+section Skew
+
+variable {A : E →ₗ.[𝕜] E} {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
+
+/-- For a densely defined skew-symmetric `A` with `P_K D(A) ⊆ D(A)` and `A (D(A) ∩ K) ⊆ K`:
+`A (D(A) ∩ Kᗮ) ⊆ Kᗮ`. -/
+theorem IsSkewSymmetric.map_orthogonal_mem (hA : A.IsSkewSymmetric)
+    (hD : Dense (A.domain : Set E))
+    (h1 : ∀ x : A.domain, K.starProjection (x : E) ∈ A.domain)
+    (h3 : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K)
+    (z : A.domain) (hz : (z : E) ∈ Kᗮ) : A z ∈ Kᗮ := by
+  have hDt := dense_restrict_domain A hD K h1 h3
+  have hf : Continuous (fun k : K => ⟪(k : E), A z⟫_𝕜) :=
+    continuous_subtype_val.inner continuous_const
+  have := Continuous.ext_on hDt hf continuous_const (fun v hv => by
+    have hv' : ((v : K) : E) ∈ A.domain := hv
+    have hLv : A ⟨v, hv'⟩ ∈ K := h3 ⟨v, hv'⟩ v.2
+    have e := hA z ⟨v, hv'⟩
+    have e0 : ⟪(z : E), A ⟨v, hv'⟩⟫_𝕜 = 0 := Submodule.inner_left_of_mem_orthogonal hLv hz
+    rw [e0, neg_zero] at e
+    exact inner_eq_zero_symm.1 e)
+  exact (Submodule.mem_orthogonal K _).2 fun k hk => congrFun this ⟨k, hk⟩
+
+/-- Under the same hypotheses, `A P_K = P_K A` on `D(A)`. -/
+theorem IsSkewSymmetric.commute_proj (hA : A.IsSkewSymmetric) (hD : Dense (A.domain : Set E))
+    (h1 : ∀ x : A.domain, K.starProjection (x : E) ∈ A.domain)
+    (h3 : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) (x : A.domain) :
+    A ⟨K.starProjection (x : E), h1 x⟩ = K.starProjection (A x) := by
+  have hz : (x : E) - K.starProjection x ∈ A.domain := A.domain.sub_mem x.2 (h1 x)
+  have hsplit : A x = A ⟨_, h1 x⟩ + A ⟨_, hz⟩ := by
+    rw [← LinearPMap.map_add]; congr 1; ext; simp
+  have hK : A ⟨_, h1 x⟩ ∈ K := h3 ⟨_, h1 x⟩ (K.starProjection_apply_mem _)
+  have hKp : A ⟨_, hz⟩ ∈ Kᗮ :=
+    hA.map_orthogonal_mem hD h1 h3 ⟨_, hz⟩ (K.sub_starProjection_mem_orthogonal _)
+  rw [hsplit, _root_.map_add, (K.starProjection_eq_self_iff).2 hK,
+    (Submodule.starProjection_apply_eq_zero_iff K).2 hKp, add_zero]
+
+theorem IsSkewSymmetric.isReducing (hA : A.IsSkewSymmetric) (hD : Dense (A.domain : Set E))
+    (h1 : ∀ x : A.domain, K.starProjection (x : E) ∈ A.domain)
+    (h3 : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) : A.IsReducing K :=
+  ⟨h1, hA.commute_proj hD h1 h3⟩
+
+/-- For a densely defined skew-symmetric `A`, `K` reduces `A` iff `P_K D(A) ⊆ D(A)` and
+`A (D(A) ∩ K) ⊆ K`. -/
+theorem IsSkewSymmetric.isReducing_iff (hA : A.IsSkewSymmetric)
+    (hD : Dense (A.domain : Set E)) :
+    A.IsReducing K ↔ (∀ x : A.domain, K.starProjection (x : E) ∈ A.domain) ∧
+      ∀ x : A.domain, (x : E) ∈ K → A x ∈ K :=
+  ⟨fun h => ⟨h.proj_mem, h.mapsTo⟩, fun h => hA.isReducing hD h.1 h.2⟩
+
+variable [CompleteSpace E]
+
+theorem IsSkewAdjoint.isReducing (hA : A.IsSkewAdjoint)
+    (h1 : ∀ x : A.domain, K.starProjection (x : E) ∈ A.domain)
+    (h3 : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) : A.IsReducing K :=
+  hA.isSkewSymmetric.isReducing hA.dense_domain h1 h3
+
+/-- For skew-adjoint `A`, `K` reduces `A` iff `P_K D(A) ⊆ D(A)` and `A (D(A) ∩ K) ⊆ K`. -/
+theorem IsSkewAdjoint.isReducing_iff (hA : A.IsSkewAdjoint) :
+    A.IsReducing K ↔ (∀ x : A.domain, K.starProjection (x : E) ∈ A.domain) ∧
+      ∀ x : A.domain, (x : E) ∈ K → A x ∈ K :=
+  hA.isSkewSymmetric.isReducing_iff hA.dense_domain
+
+/-- **Skew-adjoint restriction.** If `A` is skew-adjoint and `K` reduces `A`, the part
+`Ã = A|_{D(A) ∩ K} : K → K` is skew-adjoint. No density of `D(A) ∩ K` in `K` is assumed: it
+follows (`dense_restrict_domain`). Thesis: Thm 4.4 (corrected). -/
+theorem IsSkewAdjoint.restrict (hA : A.IsSkewAdjoint) [CompleteSpace K] (hK : A.IsReducing K) :
+    (A.restrict K hK.mapsTo).IsSkewAdjoint := by
+  set At := A.restrict K hK.mapsTo with hAt
+  have skew := hA.isSkewSymmetric
+  have h1 := hK.proj_mem
+  have hDt : Dense (At.domain : Set K) :=
+    dense_restrict_domain A hA.dense_domain K h1 hK.mapsTo
+  have hform : At.IsFormalAdjoint (-At) := by
+    intro x y
+    rw [LinearPMap.neg_apply, Submodule.coe_inner, Submodule.coe_inner, Submodule.coe_neg,
+      inner_neg_right]
+    exact skew ⟨_, x.2⟩ ⟨_, y.2⟩
+  have hle : -At ≤ At† := hform.le_adjoint hDt
+  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 ?_)).symm
+  intro u hu
+  have key : ∀ x : A.domain, ⟪((At† ⟨u, hu⟩ : K) : E), (x : E)⟫_𝕜 = ⟪(u : E), A x⟫_𝕜 := by
+    intro x
+    set px : At.domain := ⟨K.orthogonalProjectionOnto x, by
+      change ((K.orthogonalProjectionOnto x : K) : E) ∈ A.domain
+      rw [← Submodule.starProjection_apply]; exact h1 x⟩
+    have hadj := LinearPMap.adjoint_isFormalAdjoint hDt ⟨u, hu⟩ px
+    have hz : (x : E) - K.starProjection x ∈ A.domain := A.domain.sub_mem x.2 (h1 x)
+    have hzK : (x : E) - K.starProjection x ∈ Kᗮ := K.sub_starProjection_mem_orthogonal _
+    have hsplit : A x = A ⟨_, h1 x⟩ + A ⟨_, hz⟩ := by
+      rw [← LinearPMap.map_add]; congr 1; ext; simp
+    have e1 : ⟪(u : E), A ⟨_, hz⟩⟫_𝕜 = 0 :=
+      Submodule.inner_right_of_mem_orthogonal u.2 (hK.map_orthogonal_mem ⟨_, hz⟩ hzK)
+    have e2 : ⟪((At† ⟨u, hu⟩ : K) : E), (x : E)⟫_𝕜
+        = ⟪((At† ⟨u, hu⟩ : K) : E), K.starProjection (x : E)⟫_𝕜 := by
+      rw [← sub_eq_zero, ← inner_sub_right]
+      exact Submodule.inner_right_of_mem_orthogonal (At† ⟨u, hu⟩).2 hzK
+    rw [e2, hsplit, inner_add_right, e1, add_zero]
+    have := hadj
+    simp only [Submodule.coe_inner] at this
+    convert this using 2 <;> rfl
+  have hmem : (u : E) ∈ A†.domain := LinearPMap.mem_adjoint_domain_of_exists _ ⟨_, key⟩
+  rw [hA] at hmem
+  exact hmem
+
+end Skew
+
+end LinearPMap

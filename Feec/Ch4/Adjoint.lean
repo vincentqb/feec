@@ -2,6 +2,7 @@ module
 
 public import Feec.Foundation.Complex
 public import Feec.Foundation.Operators
+public import Feec.Operator.Adjoint
 public import Mathlib.Analysis.Normed.Lp.lpSpace
 
 /-!
@@ -11,6 +12,11 @@ This module supplies the unbounded-operator facts that the thesis states without
 and uses throughout Chapter 4. Real Hilbert spaces throughout; `T†` is Mathlib's
 `LinearPMap.adjoint`, and all statements carry `Dense T.domain` explicitly (Mathlib's adjoint
 takes a junk value otherwise).
+
+The operator-level statements are thin real-scalar specializations of the `RCLike` API in
+`Feec.ForMathlib.LinearPMap.{GraphSpace,ClosedRange,Skew}` (all four (4.1) identities, the closed
+range theorem and the Poincaré inequality are combined in `LinearPMap.closedRange_tfae`), and the
+dual-complex lemmas are specializations of `Feec.Operator` (`Feec.Operator.Adjoint`).
 
 ## Coverage
 
@@ -59,42 +65,39 @@ open Set LinearPMap
 
 namespace Feec
 
-/-! ### Closed kernels
+/-! ### Graph relations, `T** = T`, (4.1a–d), closed range, skew-adjointness
 
-`ker_eq_preimage_graph` and `isClosed_ker` live in `Feec.Foundation.Operators`. -/
-
-/-! ### Graph relations, `T** = T`, (4.1a–d) -/
+The statements below are the real-scalar (`𝕜 := ℝ`) specializations of the `RCLike` results in
+`Feec.ForMathlib.LinearPMap.{GraphSpace,ClosedRange,Skew}`, kept with their old statements. -/
 
 section Adjoint
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace ℝ F] [CompleteSpace F]
 
-/-- The graph `Γ(T)` as a subspace of the Hilbert sum `E ⊕₂ F`. -/
-def graphL2 (T : E →ₗ.[ℝ] F) : Submodule ℝ (WithLp 2 (E × F)) :=
-  T.graph.comap (WithLp.linearEquiv 2 ℝ (E × F)).toLinearMap
+/-- The graph `Γ(T)` as a subspace of the Hilbert sum `E ⊕₂ F` (`LinearPMap.graphL2`). -/
+abbrev graphL2 (T : E →ₗ.[ℝ] F) : Submodule ℝ (WithLp 2 (E × F)) := T.graphL2
 
-/-- The rotated graph of the adjoint, `Γ̃(T*) = {(x, y) | (y, -x) ∈ Γ(T*)}` (Thesis §4.1),
-as a subspace of `E ⊕₂ F`. -/
-def rotAdjGraph (T : E →ₗ.[ℝ] F) : Submodule ℝ (WithLp 2 (E × F)) :=
-  T†.graph.comap (((LinearMap.snd ℝ E F).prod (-LinearMap.fst ℝ E F)).comp
-    (WithLp.linearEquiv 2 ℝ (E × F)).toLinearMap)
+/-- The rotated graph of the adjoint, `Γ̃(T*) = {(x, y) | (y, -x) ∈ Γ(T*)}` (Thesis §4.1)
+(`LinearPMap.rotAdjGraph`). -/
+abbrev rotAdjGraph (T : E →ₗ.[ℝ] F) : Submodule ℝ (WithLp 2 (E × F)) := T.rotAdjGraph
 
 omit [CompleteSpace E] [CompleteSpace F] in
 /-- Membership in `graphL2` (auxiliary, Thesis §4.1). -/
 theorem mem_graphL2 {T : E →ₗ.[ℝ] F} {p : WithLp 2 (E × F)} :
-    p ∈ graphL2 T ↔ WithLp.ofLp p ∈ T.graph := Iff.rfl
+    p ∈ graphL2 T ↔ WithLp.ofLp p ∈ T.graph := LinearPMap.mem_graphL2
 
 omit [CompleteSpace F] in
 /-- Membership in the rotated graph `Γ̃(T*)` (auxiliary, Thesis §4.1). -/
 theorem mem_rotAdjGraph {T : E →ₗ.[ℝ] F} {p : WithLp 2 (E × F)} :
-    p ∈ rotAdjGraph T ↔ ((WithLp.ofLp p).2, -(WithLp.ofLp p).1) ∈ T†.graph := Iff.rfl
+    p ∈ rotAdjGraph T ↔ ((WithLp.ofLp p).2, -(WithLp.ofLp p).1) ∈ T†.graph :=
+  LinearPMap.mem_rotAdjGraph
 
 omit [CompleteSpace E] [CompleteSpace F] in
 /-- A closed operator has closed graph in `E ⊕₂ F` (auxiliary, Thesis §4.1). -/
 theorem isClosed_graphL2 {T : E →ₗ.[ℝ] F} (hc : T.IsClosed) :
     IsClosed (graphL2 T : Set (WithLp 2 (E × F))) :=
-  hc.preimage (WithLp.prod_continuous_ofLp 2 E F)
+  LinearPMap.isClosed_graphL2 hc
 
 omit [CompleteSpace F] in
 /-- Graph relation `Γ(T)ᗮ = Γ̃(T*)` (Thesis §4.1), for densely defined `T`.
@@ -103,81 +106,34 @@ Thesis gap: stated without proof; the orthogonal complement is in the ℓ² sum 
 
 See [QuennevilleBelair2015, §4.1]. -/
 theorem graph_orthogonal (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) :
-    (graphL2 T)ᗮ = rotAdjGraph T := by
-  ext p
-  rw [Submodule.mem_orthogonal, mem_rotAdjGraph, LinearPMap.mem_graph_iff]
-  constructor
-  · intro h
-    have key : ∀ x : T.domain, ⟪-(WithLp.ofLp p).1, (x : E)⟫ = ⟪(WithLp.ofLp p).2, T x⟫ := by
-      intro x
-      have := h (WithLp.toLp 2 ((x : E), T x)) (by simp [mem_graphL2])
-      simp only [WithLp.prod_inner_apply] at this
-      rw [inner_neg_left]
-      linarith [real_inner_comm (x : E) (WithLp.ofLp p).1,
-        real_inner_comm (T x) (WithLp.ofLp p).2]
-    have hmem := mem_adjoint_domain_of_exists _ ⟨_, key⟩
-    exact ⟨⟨_, hmem⟩, rfl, adjoint_apply_eq hT ⟨_, hmem⟩ key⟩
-  · rintro ⟨y, hy, hTy⟩ u hu
-    rw [mem_graphL2, LinearPMap.mem_graph_iff] at hu
-    obtain ⟨x, hx, hTx⟩ := hu
-    have h := adjoint_isFormalAdjoint hT y x
-    rw [hTy, hy, inner_neg_left] at h
-    rw [WithLp.prod_inner_apply, ← hx, ← hTx]
-    linarith [real_inner_comm (x : E) (WithLp.ofLp p).1,
-        real_inner_comm (T x) (WithLp.ofLp p).2]
+    (graphL2 T)ᗮ = rotAdjGraph T :=
+  LinearPMap.graph_orthogonal T hT
 
 /-- `cl Γ(T) = Γ̃(T*)ᗮ` (Thesis §4.1, second graph relation; garbled in the extracted text).
 See [QuennevilleBelair2015, §4.1]. -/
 theorem closure_graph (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) :
-    (graphL2 T).topologicalClosure = (rotAdjGraph T)ᗮ := by
-  rw [← graph_orthogonal T hT, Submodule.orthogonal_orthogonal_eq_closure]
+    (graphL2 T).topologicalClosure = (rotAdjGraph T)ᗮ :=
+  LinearPMap.closure_graph T hT
 
 /-- `Γ(T) = Γ̃(T*)ᗮ` for closed densely defined `T` (Thesis §4.1, third graph relation).
 See [QuennevilleBelair2015, §4.1]. -/
 theorem graph_eq_orthogonal (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
-    (hc : T.IsClosed) : graphL2 T = (rotAdjGraph T)ᗮ := by
-  rw [← closure_graph T hT, (isClosed_graphL2 hc).submodule_topologicalClosure_eq]
+    (hc : T.IsClosed) : graphL2 T = (rotAdjGraph T)ᗮ :=
+  LinearPMap.graph_eq_orthogonal T hT hc
 
 /-- Weak characterisation of the graph of a closed densely defined operator:
 `(x, y) ∈ Γ(T)` iff `⟪T* w, x⟫ = ⟪w, y⟫` for all `w ∈ D(T*)` (Thesis §4.1, the relation
 `Γ(T) = Γ̃(T*)ᗮ` unpacked). -/
 theorem mem_graph_iff_of_isClosed {T : E →ₗ.[ℝ] F} (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) {x : E} {y : F} :
-    (x, y) ∈ T.graph ↔ ∀ w : T†.domain, ⟪T† w, x⟫ = ⟪(w : F), y⟫ := by
-  have h : (x, y) ∈ T.graph ↔ WithLp.toLp 2 (x, y) ∈ (rotAdjGraph T)ᗮ := by
-    rw [← graph_eq_orthogonal T hT hc, mem_graphL2, WithLp.ofLp_toLp]
-  rw [h, Submodule.mem_orthogonal]
-  constructor
-  · intro H w
-    have := H (WithLp.toLp 2 (-(T† w), (w : F))) (by
-      rw [mem_rotAdjGraph, LinearPMap.mem_graph_iff]
-      exact ⟨w, by simp⟩)
-    simp only [WithLp.prod_inner_apply, inner_neg_left] at this
-    linarith
-  · intro H u hu
-    rw [mem_rotAdjGraph, LinearPMap.mem_graph_iff] at hu
-    obtain ⟨w, hw, hTw⟩ := hu
-    simp only at hw hTw
-    have hu1 : (WithLp.ofLp u).1 = -(T† w) := by rw [hTw, neg_neg]
-    simp only [WithLp.prod_inner_apply]
-    rw [hu1, ← hw, inner_neg_left, H w]
-    ring
+    (x, y) ∈ T.graph ↔ ∀ w : T†.domain, ⟪T† w, x⟫ = ⟪(w : F), y⟫ :=
+  LinearPMap.mem_graph_iff_of_isClosed hT hc
 
 /-- The adjoint of a closed densely defined operator is densely defined (Thesis §4.1).
-
-This is the thesis' own argument (§4.1), formalized: `y ⊥ D(T*)` gives
-`(0, y) ∈ Γ̃(T*)ᗮ = Γ(T)`, hence `y = 0`. See [QuennevilleBelair2015, §4.1]. -/
+See [QuennevilleBelair2015, §4.1]. -/
 theorem dense_adjoint_domain (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
-    (hc : T.IsClosed) : Dense (T†.domain : Set F) := by
-  rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
-    Submodule.eq_bot_iff]
-  intro y hy
-  have hg : ((0 : E), y) ∈ T.graph := by
-    rw [mem_graph_iff_of_isClosed hT hc]
-    intro w
-    rw [inner_zero_right, real_inner_comm]
-    exact ((Submodule.mem_orthogonal' _ _).1 hy _ w.2).symm
-  exact T.graph_fst_eq_zero_snd hg rfl
+    (hc : T.IsClosed) : Dense (T†.domain : Set F) :=
+  LinearPMap.dense_adjoint_domain T hT hc
 
 /-- von Neumann: `T** = T` for closed densely defined `T`.
 
@@ -187,53 +143,26 @@ of `D(d)` is also needed and not mentioned.
 
 See [QuennevilleBelair2015, §4.1 and proof of Thm 4.6]. -/
 theorem adjoint_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClosed) :
-    T†† = T := by
-  apply LinearPMap.eq_of_eq_graph
-  rw [adjoint_graph_eq_graph_adjoint (dense_adjoint_domain T hT hc)]
-  ext ⟨x, y⟩
-  rw [Submodule.mem_adjoint_iff, mem_graph_iff_of_isClosed hT hc]
-  constructor
-  · intro h w
-    have := h w (T† w) (T†.mem_graph w)
-    linarith
-  · intro h a b hab
-    rw [LinearPMap.mem_graph_iff] at hab
-    obtain ⟨w, rfl, rfl⟩ := hab
-    simp only [h w, sub_self]
+    T†† = T :=
+  LinearPMap.adjoint_adjoint T hT hc
 
 /-- Thesis (4.1c): `R(T*)ᗮ = N(T)` for closed densely defined `T`.
-
-Thesis gap: stated without proof (the thesis assumes `T` closed, as is needed here).
-
 See [QuennevilleBelair2015, (4.1c)]. -/
 theorem orthogonal_range_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
-    (hc : T.IsClosed) : (LinearMap.range T†.toFun)ᗮ = T.ker := by
-  ext x
-  have hk : x ∈ T.ker ↔ (x, (0 : F)) ∈ T.graph := by
-    rw [← SetLike.mem_coe, ker_eq_preimage_graph]; rfl
-  rw [hk, mem_graph_iff_of_isClosed hT hc, Submodule.mem_orthogonal]
-  simp only [inner_zero_right, LinearMap.mem_range, forall_exists_index,
-    forall_apply_eq_imp_iff]
-  rfl
+    (hc : T.IsClosed) : (LinearMap.range T†.toFun)ᗮ = T.ker :=
+  LinearPMap.orthogonal_range_adjoint T hT hc
 
 /-- Thesis (4.1b): `N(T)ᗮ = cl R(T*)` for closed densely defined `T`.
-
-Thesis gap: stated without proof; follows from (4.1c) by taking `ᗮ`.
-
 See [QuennevilleBelair2015, (4.1b)]. -/
 theorem orthogonal_ker (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClosed) :
-    T.kerᗮ = (LinearMap.range T†.toFun).topologicalClosure := by
-  rw [← orthogonal_range_adjoint T hT hc, Submodule.orthogonal_orthogonal_eq_closure]
+    T.kerᗮ = (LinearMap.range T†.toFun).topologicalClosure :=
+  LinearPMap.orthogonal_ker T hT hc
 
-/-- Thesis (4.1d): `N(T*)ᗮ = cl R(T)`.
-
-Thesis gap: stated without proof. The thesis assumes `T` closed; only density of `D(T)` is
-needed, via (4.1a) `Feec.orth_range_eq_ker_adjoint`.
-
+/-- Thesis (4.1d): `N(T*)ᗮ = cl R(T)`; only density of `D(T)` is needed.
 See [QuennevilleBelair2015, (4.1d)]. -/
 theorem orthogonal_ker_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) :
-    T†.kerᗮ = (LinearMap.range T.toFun).topologicalClosure := by
-  rw [← orth_range_eq_ker_adjoint T hT, Submodule.orthogonal_orthogonal_eq_closure]
+    T†.kerᗮ = (LinearMap.range T.toFun).topologicalClosure :=
+  LinearPMap.orthogonal_ker_adjoint T hT
 
 end Adjoint
 
@@ -248,223 +177,77 @@ omit [CompleteSpace F] in
 /-- Every value of a closed operator is attained on `D(T) ∩ N(T)ᗮ` (auxiliary for the closed
 range theorem, Thesis §4.2). -/
 theorem exists_orth_preimage {T : E →ₗ.[ℝ] F} (hc : T.IsClosed) (x : T.domain) :
-    ∃ z : T.domain, (z : E) ∈ T.kerᗮ ∧ T z = T x := by
-  have : CompleteSpace T.ker := (isClosed_ker hc).completeSpace_coe
-  have hK : T.ker.starProjection (x : E) ∈ T.ker := T.ker.starProjection_apply_mem _
-  refine ⟨x - ⟨_, T.ker_le_domain hK⟩, Submodule.sub_starProjection_mem_orthogonal (x : E), ?_⟩
-  rw [LinearPMap.map_sub, (LinearPMap.coe_mem_ker_iff (x := ⟨_, T.ker_le_domain hK⟩)).1 hK,
-    sub_zero]
+    ∃ z : T.domain, (z : E) ∈ T.kerᗮ ∧ T z = T x :=
+  LinearPMap.exists_mem_orthogonal_ker_eq hc x
 
 omit [CompleteSpace E] [CompleteSpace F] in
 /-- `T` is injective on `D(T) ∩ N(T)ᗮ` (auxiliary, Thesis §4.2). -/
 theorem eq_of_mem_orthogonal_ker {T : E →ₗ.[ℝ] F} {x x' : T.domain} (hx : (x : E) ∈ T.kerᗮ)
-    (hx' : (x' : E) ∈ T.kerᗮ) (h : T x = T x') : x = x' := by
-  have h3 : ((x - x' : T.domain) : E) ∈ T.ker ⊓ T.kerᗮ :=
-    ⟨(LinearPMap.coe_mem_ker_iff).2 (by rw [LinearPMap.map_sub, h, sub_self]), sub_mem hx hx'⟩
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at h3
-  exact sub_eq_zero.1 (Subtype.ext h3)
+    (hx' : (x' : E) ∈ T.kerᗮ) (h : T x = T x') : x = x' :=
+  LinearPMap.eq_of_mem_orthogonal_ker hx hx' h
 
 /-- For a closed operator with closed range there is a bounded right inverse
-`g : R(T) → D(T) ∩ N(T)ᗮ` (closed graph theorem). This is the bounded-inverse step behind
-Thesis Thm 4.2 and the closed range theorem (§4.2). See [QuennevilleBelair2015, §4.2]. -/
+`g : R(T) → D(T) ∩ N(T)ᗮ` (closed graph theorem). See [QuennevilleBelair2015, §4.2]. -/
 theorem exists_bounded_inverse (T : E →ₗ.[ℝ] F) (hc : T.IsClosed)
     (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
     ∃ g : LinearMap.range T.toFun →L[ℝ] E,
-      ∀ y, g y ∈ T.kerᗮ ∧ ∃ hy : g y ∈ T.domain, T ⟨g y, hy⟩ = y := by
-  have : CompleteSpace (LinearMap.range T.toFun) := hR.completeSpace_coe
-  let D₀ : Submodule ℝ E := T.domain ⊓ T.kerᗮ
-  let T₀ : D₀ →ₗ[ℝ] LinearMap.range T.toFun :=
-    LinearMap.codRestrict _ (T.toFun.comp (Submodule.inclusion inf_le_left))
-      (fun z => LinearMap.mem_range_self _ _)
-  have hinj : Function.Injective T₀ := by
-    intro z z' hzz'
-    have := eq_of_mem_orthogonal_ker (T := T) (x := Submodule.inclusion inf_le_left z)
-      (x' := Submodule.inclusion inf_le_left z') z.2.2 z'.2.2 (congrArg Subtype.val hzz')
-    exact Subtype.ext (congrArg (fun w : T.domain => (w : E)) this)
-  have hsurj : Function.Surjective T₀ := by
-    rintro ⟨_, x, rfl⟩
-    obtain ⟨z, hz, hTz⟩ := exists_orth_preimage hc x
-    exact ⟨⟨z, z.2, hz⟩, Subtype.ext hTz⟩
-  let e := LinearEquiv.ofBijective T₀ ⟨hinj, hsurj⟩
-  let g₀ : LinearMap.range T.toFun →ₗ[ℝ] E := D₀.subtype.comp e.symm.toLinearMap
-  have hg₀ : ∀ y, g₀ y ∈ T.kerᗮ ∧ ∃ hy : g₀ y ∈ T.domain, T ⟨g₀ y, hy⟩ = y := fun y =>
-    ⟨(e.symm y).2.2, (e.symm y).2.1, congrArg Subtype.val (e.apply_symm_apply y)⟩
-  have hgraph : IsClosed (g₀.graph : Set (LinearMap.range T.toFun × E)) := by
-    have hset : (g₀.graph : Set (LinearMap.range T.toFun × E)) =
-        {p | (p.2, (p.1 : F)) ∈ T.graph} ∩ {p | p.2 ∈ T.kerᗮ} := by
-      ext ⟨y, x⟩
-      simp only [SetLike.mem_coe, LinearMap.mem_graph_iff, mem_inter_iff, Set.mem_ofPred_eq]
-      constructor
-      · rintro rfl
-        obtain ⟨hk, hd, hT⟩ := hg₀ y
-        exact ⟨(LinearPMap.mem_graph_iff _).2 ⟨⟨_, hd⟩, rfl, hT⟩, hk⟩
-      · rintro ⟨hg, hk⟩
-        obtain ⟨z, hz, hTz⟩ := (LinearPMap.mem_graph_iff _).1 hg
-        simp only at hz hTz
-        have hw : x ∈ D₀ := ⟨hz ▸ z.2, hk⟩
-        have he : e.symm y = ⟨x, hw⟩ := by
-          rw [LinearEquiv.symm_apply_eq]
-          apply Subtype.ext
-          change (y : F) = T ⟨x, hw.1⟩
-          rw [← hTz]
-          congr 1
-          exact Subtype.ext hz
-        change x = ((e.symm y : D₀) : E)
-        rw [he]
-    rw [hset]
-    exact (hc.preimage (continuous_snd.prodMk (continuous_subtype_val.comp continuous_fst))).inter
-      ((Submodule.isClosed_orthogonal _).preimage continuous_snd)
-  exact ⟨⟨g₀, g₀.continuous_of_isClosed_graph hgraph⟩, hg₀⟩
+      ∀ y, g y ∈ T.kerᗮ ∧ ∃ hy : g y ∈ T.domain, T ⟨g y, hy⟩ = y :=
+  LinearPMap.exists_rightInverse_of_isClosed_range T hc hR
 
 /-- Abstract Poincaré inequality for a closed operator with closed range:
 `‖x‖ ≤ c ‖T x‖` on `D(T) ∩ N(T)ᗮ` (Thesis Thm 4.2, unbounded/W-level form).
 
 Thesis gap: the statement of Thm 4.2 does not include closed range, which is only assumed in
-the surrounding text ("Assuming that `Bᵏ` is closed"); the existence of the bounded inverse of
-`dₖ` is justified only by an unnamed appeal to the bounded inverse theorem. Here it is the closed graph theorem applied to the inverse on
-`R(T)` (`exists_bounded_inverse`). The thesis' graph-norm form is
-`poincare_graphNorm_of_isClosed_range`.
+the surrounding text ("Assuming that `Bᵏ` is closed").
 
-See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3] (Poincaré inequality for closed
-Hilbert complexes) and [Arnold2018]. -/
+See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3] and [Arnold2018]. -/
 theorem poincare_of_isClosed_range {T : E →ₗ.[ℝ] F} (hc : T.IsClosed)
     (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
-    ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ := by
-  obtain ⟨g, hg⟩ := exists_bounded_inverse T hc hR
-  refine ⟨‖g‖, fun x hx => ?_⟩
-  have hy : T x ∈ LinearMap.range T.toFun := ⟨x, rfl⟩
-  obtain ⟨hk, hd, hT⟩ := hg ⟨T x, hy⟩
-  have hgx : (⟨g ⟨T x, hy⟩, hd⟩ : T.domain) = x := eq_of_mem_orthogonal_ker hk hx hT
-  have hgx' : g ⟨T x, hy⟩ = (x : E) := congrArg Subtype.val hgx
-  calc ‖(x : E)‖ = ‖g ⟨T x, hy⟩‖ := by rw [hgx']
-    _ ≤ ‖g‖ * ‖(⟨T x, hy⟩ : LinearMap.range T.toFun)‖ := g.le_opNorm _
-    _ = ‖g‖ * ‖T x‖ := rfl
+    ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ :=
+  LinearPMap.exists_norm_le_of_isClosed_range hc hR
 
 /-- Converse of the Poincaré inequality: for a closed operator, a Poincaré bound on
-`D(T) ∩ N(T)ᗮ` implies closed range (Thesis Thm 4.2, converse; missing from the thesis).
-Cf. [QuennevilleBelair2015, Thm 4.2]. -/
+`D(T) ∩ N(T)ᗮ` implies closed range (Thesis Thm 4.2, converse; missing from the thesis). -/
 theorem isClosed_range_of_poincare {T : E →ₗ.[ℝ] F} (hc : T.IsClosed) {c : ℝ}
     (hP : ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖) :
-    IsClosed (LinearMap.range T.toFun : Set F) := by
-  let G : Submodule ℝ (E × F) := T.graph ⊓ T.kerᗮ.comap (LinearMap.fst ℝ E F)
-  have hG : IsClosed (G : Set (E × F)) :=
-    hc.inter ((Submodule.isClosed_orthogonal _).preimage continuous_fst)
-  have : CompleteSpace G := hG.completeSpace_coe
-  let π : G →L[ℝ] F := (ContinuousLinearMap.snd ℝ E F).comp G.subtypeL
-  have hbound : ∀ p : G, ‖p‖ ≤ (max c 1).toNNReal * ‖π p‖ := by
-    rintro ⟨⟨a, b⟩, hab, ha⟩
-    obtain ⟨x, hx, hTx⟩ := (LinearPMap.mem_graph_iff _).1 hab
-    simp only at hx hTx
-    have h1 : ‖a‖ ≤ c * ‖b‖ := by rw [← hx, ← hTx]; exact hP x (hx ▸ ha)
-    rw [Real.coe_toNNReal _ (le_trans zero_le_one (le_max_right _ _))]
-    change ‖((a, b) : E × F)‖ ≤ max c 1 * ‖b‖
-    refine norm_prod_le_iff.2 ⟨h1.trans ?_, le_mul_of_one_le_left (norm_nonneg _) (le_max_right _ _)⟩
-    exact mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)
-  have hrange : Set.range π = (LinearMap.range T.toFun : Set F) := by
-    ext y
-    constructor
-    · rintro ⟨⟨⟨a, b⟩, hab, ha⟩, rfl⟩
-      obtain ⟨x, -, hTx⟩ := (LinearPMap.mem_graph_iff _).1 hab
-      exact ⟨x, hTx⟩
-    · rintro ⟨x, rfl⟩
-      obtain ⟨z, hz, hTz⟩ := exists_orth_preimage hc x
-      exact ⟨⟨((z : E), T z), T.mem_graph z, hz⟩, hTz⟩
-  rw [← hrange]
-  exact (π.antilipschitz_of_bound hbound).isClosed_range π.uniformContinuous
+    IsClosed (LinearMap.range T.toFun : Set F) :=
+  LinearPMap.isClosed_range_of_norm_le hc hP
 
 /-- Thesis Thm 4.2 (unbounded form, with converse): a closed operator has closed range iff it
-satisfies a Poincaré inequality on `D(T) ∩ N(T)ᗮ`. See [QuennevilleBelair2015, Thm 4.2];
-cf. [AFW2010, §3]. -/
+satisfies a Poincaré inequality on `D(T) ∩ N(T)ᗮ`. See [QuennevilleBelair2015, Thm 4.2]. -/
 theorem isClosed_range_iff_poincare {T : E →ₗ.[ℝ] F} (hc : T.IsClosed) :
     IsClosed (LinearMap.range T.toFun : Set F) ↔
       ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ :=
-  ⟨poincare_of_isClosed_range hc, fun ⟨_, h⟩ => isClosed_range_of_poincare hc h⟩
+  LinearPMap.isClosed_range_iff_exists_norm_le hc
 
-/-- Thesis Thm 4.2, literal graph-norm (`V`-norm) form: for a closed operator with closed range
-there is `C` with `‖x‖_V ≤ C ‖T x‖` for every `x ∈ D(T)` that is `V`-orthogonal to `N(T)`.
-Here `‖x‖_V² = ‖x‖² + ‖T x‖²` and `⟪z, x⟫_V = ⟪z, x⟫ + ⟪T z, T x⟫` (graph inner product).
-Since `T z = 0` on `N(T)`, `V`-orthogonality to `N(T)` coincides with `W`-orthogonality, so this
-follows from the `W`-level form `poincare_of_isClosed_range`.
-
-See [QuennevilleBelair2015, Thm 4.2]; cf. [AFW2010, §3] and [Arnold2018]. -/
+/-- Thesis Thm 4.2, literal graph-norm (`V`-norm) form. See [QuennevilleBelair2015, Thm 4.2]. -/
 theorem poincare_graphNorm_of_isClosed_range {T : E →ₗ.[ℝ] F} (hc : T.IsClosed)
     (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
     ∃ C, ∀ x : T.domain, (∀ z : T.domain, T z = 0 → ⟪(z : E), x⟫ + ⟪T z, T x⟫ = 0) →
-      Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ C * ‖T x‖ := by
-  obtain ⟨c, hc'⟩ := poincare_of_isClosed_range hc hR
-  refine ⟨Real.sqrt (c ^ 2 + 1), fun x hx => ?_⟩
-  have hxk : (x : E) ∈ T.kerᗮ := by
-    rw [Submodule.mem_orthogonal]
-    intro u hu
-    obtain ⟨z, rfl, hz⟩ := (LinearPMap.mem_ker_iff).1 hu
-    have := hx z hz
-    rwa [hz, inner_zero_left, add_zero] at this
-  have h2 : ‖(x : E)‖ ^ 2 ≤ c ^ 2 * ‖T x‖ ^ 2 := by
-    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) (hc' x hxk) 2
-  calc Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ Real.sqrt ((c ^ 2 + 1) * ‖T x‖ ^ 2) :=
-        Real.sqrt_le_sqrt (by nlinarith)
-    _ = Real.sqrt (c ^ 2 + 1) * ‖T x‖ := by
-        rw [Real.sqrt_mul (by positivity), Real.sqrt_sq (norm_nonneg _)]
+      Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ C * ‖T x‖ :=
+  LinearPMap.exists_graphNorm_le_of_isClosed_range hc hR
 
 /-- **Closed range theorem**, first half: if `T` is closed, densely defined and `R(T)` is
-closed, then `R(T*) = N(T)ᗮ`; in particular `R(T*)` is closed.
-
-Thesis gap (§4.2): the thesis obtains `B*ₖ = (Zᵏ)ᗮ` from (4.1b) together with the
-closedness of `B*ₖ`, and that closedness ("if `(W, d)` is closed then so is the dual complex")
-is asserted without proof. The missing ingredient is this closed range theorem. Proof: bounded
-inverse on `R(T)` (closed graph theorem), then Riesz representation on `R(T)`.
-
+closed, then `R(T*) = N(T)ᗮ`. Thesis gap (§4.2): asserted without proof.
 See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992]. -/
 theorem range_adjoint_eq_orthogonal_ker (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
-    LinearMap.range T†.toFun = T.kerᗮ := by
-  apply le_antisymm
-  · rw [orthogonal_ker T hT hc]; exact Submodule.le_topologicalClosure _
-  · intro f hf
-    obtain ⟨g, hg⟩ := exists_bounded_inverse T hc hR
-    have : CompleteSpace (LinearMap.range T.toFun) := hR.completeSpace_coe
-    let φ : StrongDual ℝ (LinearMap.range T.toFun) := (innerSL ℝ f).comp g
-    let y₀ : LinearMap.range T.toFun := (InnerProductSpace.toDual ℝ _).symm φ
-    have key : ∀ x : T.domain, ⟪f, (x : E)⟫ = ⟪(y₀ : F), T x⟫ := by
-      intro x
-      have hy : T x ∈ LinearMap.range T.toFun := ⟨x, rfl⟩
-      obtain ⟨-, hd, hTg⟩ := hg ⟨T x, hy⟩
-      have h1 : ((x - ⟨_, hd⟩ : T.domain) : E) ∈ T.ker :=
-        (LinearPMap.coe_mem_ker_iff).2 (by rw [LinearPMap.map_sub, hTg]; exact sub_self _)
-      have h2 := Submodule.inner_left_of_mem_orthogonal h1 hf
-      have h3 : ⟪(y₀ : F), T x⟫ = φ ⟨T x, hy⟩ :=
-        (InnerProductSpace.toDual_symm_apply (x := (⟨T x, hy⟩ : LinearMap.range T.toFun)))
-      rw [h3]
-      change ⟪f, (x : E)⟫ = ⟪f, g ⟨T x, hy⟩⟫
-      change ⟪f, (x : E) - g ⟨T x, hy⟩⟫ = 0 at h2
-      rw [inner_sub_right] at h2
-      linarith
-    have hmem : (y₀ : F) ∈ T†.domain := mem_adjoint_domain_of_exists _ ⟨f, key⟩
-    exact ⟨⟨_, hmem⟩, adjoint_apply_eq hT ⟨_, hmem⟩ key⟩
+    LinearMap.range T†.toFun = T.kerᗮ :=
+  LinearPMap.range_adjoint_eq_orthogonal_ker T hT hc hR
 
 /-- **Closed range theorem**: for closed densely defined `T`, `R(T*)` is closed iff `R(T)` is.
-This is "closed complex ⇔ closed dual complex" (Thesis §4.2), which the thesis asserts without
-proof. See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
+See [QuennevilleBelair2015, §4.2]; cf. [BruningLesch1992], [AFW2010, §3]. -/
 theorem isClosed_range_adjoint_iff (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) :
-    IsClosed (LinearMap.range T†.toFun : Set E) ↔ IsClosed (LinearMap.range T.toFun : Set F) := by
-  constructor
-  · intro h
-    have := range_adjoint_eq_orthogonal_ker T† (dense_adjoint_domain T hT hc)
-      (adjoint_isClosed hT) h
-    rw [adjoint_adjoint T hT hc] at this
-    rw [this]
-    exact Submodule.isClosed_orthogonal _
-  · intro h
-    rw [range_adjoint_eq_orthogonal_ker T hT hc h]
-    exact Submodule.isClosed_orthogonal _
+    IsClosed (LinearMap.range T†.toFun : Set E) ↔ IsClosed (LinearMap.range T.toFun : Set F) :=
+  LinearPMap.isClosed_range_adjoint_iff T hT hc
 
 /-- Under closed range, Thesis (4.1d) holds without closure: `R(T) = N(T*)ᗮ` (§4.2).
 See [QuennevilleBelair2015, (4.1d), §4.2]. -/
 theorem range_eq_orthogonal_ker_adjoint (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hR : IsClosed (LinearMap.range T.toFun : Set F)) :
-    LinearMap.range T.toFun = T†.kerᗮ := by
-  rw [orthogonal_ker_adjoint T hT, hR.submodule_topologicalClosure_eq]
+    LinearMap.range T.toFun = T†.kerᗮ :=
+  LinearPMap.range_eq_orthogonal_ker_adjoint T hT hR
 
 end ClosedRange
 
@@ -475,94 +258,42 @@ section Skew
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
 
 /-- Thesis §4.1: `T` is skew-adjoint iff it is skew-symmetric and `D(T*) ⊂ D(T)`.
-
-Thesis gap: the thesis states this only for the self-adjoint case (`isSelfAdjoint_iff`), the skew
-version being left to the parenthetical "(or skew-adjoint)"; the skew version is what Thm 4.4
-and Thm 4.6 use. Here skew-symmetry is `Feec.IsSkewSymm`; its equivalence with the thesis'
-definition (`-T ≤ T*`) is `isSkewSymm_iff_neg_le_adjoint`.
-
 See [QuennevilleBelair2015, §4.1]. -/
 theorem isSkewAdjoint_iff (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
-    IsSkewAdjoint L ↔ IsSkewSymm L ∧ L†.domain ≤ L.domain := by
-  constructor
-  · intro hL
-    refine ⟨hL.isSkewSymmetric, ?_⟩
-    rw [hL]
-    exact le_rfl
-  · rintro ⟨hS, hdom⟩
-    have hfa : L.IsFormalAdjoint (-L) := fun x y => by
-      rw [LinearPMap.neg_apply, inner_neg_right]
-      exact hS x y
-    have hle : -L ≤ L† := hfa.le_adjoint hD
-    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+    IsSkewAdjoint L ↔ IsSkewSymm L ∧ L†.domain ≤ L.domain :=
+  LinearPMap.isSkewAdjoint_iff hD
 
-/-- Symmetry on the domain, `⟪A x, y⟫ = ⟪x, A y⟫` (the analogue of `Feec.IsSkewSymm`). -/
+/-- Symmetry on the domain, `⟪A x, y⟫ = ⟪x, A y⟫` (definitionally `LinearPMap.IsSymmetric`). -/
 def IsSymm (A : E →ₗ.[ℝ] E) : Prop :=
   ∀ x y : A.domain, ⟪A x, (y : E)⟫ = ⟪(x : E), A y⟫
 
-/-- Thesis §4.1 definition of *symmetric*: `D(T) ⊂ D(T*)` and `T*` restricted to `D(T)` is `T`,
-i.e. `T ≤ T*`. For densely defined `T` this is `IsSymm T`. See [QuennevilleBelair2015, §4.1]. -/
+/-- Thesis §4.1 definition of *symmetric*: `T ≤ T*`. See [QuennevilleBelair2015, §4.1]. -/
 theorem isSymm_iff_le_adjoint (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
-    IsSymm L ↔ L ≤ L† := by
-  constructor
-  · intro h
-    exact (show L.IsFormalAdjoint L from h).le_adjoint hD
-  · intro hle x y
-    have hy : (y : E) ∈ L†.domain := hle.1 y.2
-    have h1 := adjoint_isFormalAdjoint hD ⟨y, hy⟩ x
-    have h2 : L† ⟨y, hy⟩ = L y := (hle.2 (x := y) (y := ⟨y, hy⟩) rfl).symm
-    rw [h2] at h1
-    rw [real_inner_comm, ← h1, real_inner_comm]
+    IsSymm L ↔ L ≤ L† :=
+  LinearPMap.isSymmetric_iff_le_adjoint hD
 
-/-- Thesis §4.1 definition of *skew-symmetric*: `D(T) ⊂ D(T*)` and `T*` restricted to `D(T)` is
-`-T`, i.e. `-T ≤ T*`. For densely defined `T` this is the foundation's `Feec.IsSkewSymm`.
-See [QuennevilleBelair2015, §4.1]. -/
+/-- Thesis §4.1 definition of *skew-symmetric*: `-T ≤ T*`. See [QuennevilleBelair2015, §4.1]. -/
 theorem isSkewSymm_iff_neg_le_adjoint (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
-    IsSkewSymm L ↔ -L ≤ L† := by
-  constructor
-  · intro hS
-    have hfa : L.IsFormalAdjoint (-L) := fun x y => by
-      rw [LinearPMap.neg_apply, inner_neg_right]
-      exact hS x y
-    exact hfa.le_adjoint hD
-  · intro hle x y
-    have hx : (x : E) ∈ L†.domain := hle.1 x.2
-    have h1 := adjoint_isFormalAdjoint hD ⟨x, hx⟩ y
-    have h2 : L† ⟨x, hx⟩ = -L x := (hle.2 (x := x) (y := ⟨x, hx⟩) rfl).symm
-    rw [h2, inner_neg_left] at h1
-    linarith
+    IsSkewSymm L ↔ -L ≤ L† :=
+  LinearPMap.isSkewSymmetric_iff_neg_le_adjoint hD
 
-/-- Thesis §4.1, literal form: `T` is self-adjoint iff `T ≤ T*` (symmetric in the thesis' sense)
-and `D(T*) ⊂ D(T)`. No density is needed for this formulation.
+/-- Thesis §4.1, literal form: `T` is self-adjoint iff `T ≤ T*` and `D(T*) ⊂ D(T)`.
 See [QuennevilleBelair2015, §4.1]. -/
 theorem isSelfAdjoint_iff_le_adjoint (L : E →ₗ.[ℝ] E) :
-    IsSelfAdjoint L ↔ L ≤ L† ∧ L†.domain ≤ L.domain := by
-  rw [isSelfAdjoint_def]
-  constructor
-  · intro h
-    rw [h]
-    exact ⟨le_rfl, le_rfl⟩
-  · rintro ⟨hle, hdom⟩
-    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+    IsSelfAdjoint L ↔ L ≤ L† ∧ L†.domain ≤ L.domain :=
+  LinearPMap.isSelfAdjoint_iff_le_adjoint
 
 /-- Thesis §4.1: a densely defined `T` is self-adjoint iff it is symmetric and `D(T*) ⊂ D(T)`.
-
-Thesis gap: stated without proof. See [QuennevilleBelair2015, §4.1]. -/
+See [QuennevilleBelair2015, §4.1]. -/
 theorem isSelfAdjoint_iff (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)) :
-    IsSelfAdjoint L ↔ IsSymm L ∧ L†.domain ≤ L.domain := by
-  rw [isSelfAdjoint_iff_le_adjoint, isSymm_iff_le_adjoint L hD]
+    IsSelfAdjoint L ↔ IsSymm L ∧ L†.domain ≤ L.domain :=
+  LinearPMap.isSelfAdjoint_iff hD
 
 /-- Thesis §4.1, literal skew form: `T` is skew-adjoint iff `-T ≤ T*` and `D(T*) ⊂ D(T)`.
 See [QuennevilleBelair2015, §4.1]. -/
 theorem isSkewAdjoint_iff_neg_le_adjoint (L : E →ₗ.[ℝ] E) :
-    IsSkewAdjoint L ↔ -L ≤ L† ∧ L†.domain ≤ L.domain := by
-  constructor
-  · intro h
-    have h' : L† = -L := h
-    rw [h']
-    exact ⟨le_rfl, le_rfl⟩
-  · rintro ⟨hle, hdom⟩
-    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+    IsSkewAdjoint L ↔ -L ≤ L† ∧ L†.domain ≤ L.domain :=
+  LinearPMap.isSkewAdjoint_iff_neg_le_adjoint
 
 end Skew
 
@@ -661,18 +392,16 @@ variable {W0 W1 W2 : Type*}
     (H : HilbertComplex2 W0 W1 W2)
 
 /-- `⟪d1* u, d0 v⟫ = 0` (auxiliary for the dual complex, Thesis §4.2). -/
-theorem inner_adjoint_d0 (u : H.d1†.domain) (v : H.d0.domain) : ⟪H.d1† u, H.d0 v⟫ = 0 := by
-  have := adjoint_isFormalAdjoint H.dense1 u ⟨H.d0 v, H.map_mem v⟩
-  rw [H.comp_zero, inner_zero_right] at this
-  exact this
+theorem inner_adjoint_d0 (u : H.d1†.domain) (v : H.d0.domain) : ⟪H.d1† u, H.d0 v⟫ = 0 :=
+  Operator.inner_adjoint_apply_eq_zero H.dense1 H.map_mem H.comp_zero u v
 
 /-- `d1* V₂* ⊂ V₁*` (Thesis §4.2, dual complex). -/
 theorem adjoint_map_mem (u : H.d1†.domain) : H.d1† u ∈ H.d0†.domain :=
-  mem_adjoint_domain_of_exists _ ⟨0, fun v => by rw [inner_zero_left, H.inner_adjoint_d0]⟩
+  Operator.adjoint_mapsTo H.dense1 H.map_mem H.comp_zero u
 
 /-- `d0* d1* = 0` (Thesis §4.2, dual complex). -/
 theorem adjoint_comp_zero (u : H.d1†.domain) : H.d0† ⟨H.d1† u, H.adjoint_map_mem u⟩ = 0 :=
-  adjoint_apply_eq H.dense0 _ fun v => by rw [inner_zero_left, H.inner_adjoint_d0]
+  Operator.adjoint_comp_eq_zero H.dense0 H.dense1 H.map_mem H.comp_zero u
 
 /-- The dual Hilbert complex `W2 --d1*--> W1 --d0*--> W0` (Thesis §4.2).
 
@@ -740,9 +469,8 @@ theorem orthogonal_range_adjoint_d1 : (LinearMap.range H.d1†.toFun)ᗮ = H.d1.
   orthogonal_range_adjoint _ H.dense1 H.closed1
 
 /-- `B⁰ ⊂ Z¹` (from `d1 d0 = 0`). -/
-theorem range_d0_le_ker_d1 : LinearMap.range H.d0.toFun ≤ H.d1.ker := by
-  rintro _ ⟨x, rfl⟩
-  exact (LinearPMap.mem_ker_iff).2 ⟨⟨_, H.map_mem x⟩, rfl, H.comp_zero x⟩
+theorem range_d0_le_ker_d1 : LinearMap.range H.d0.toFun ≤ H.d1.ker :=
+  Operator.range_le_ker H.map_mem H.comp_zero
 
 /-- `(Z¹)ᗮ ⊆ Z*₁`, i.e. `(ker d1)ᗮ ⊆ ker d0*`, **without closed range**: since `B⁰ ⊆ Z¹`,
 `(Z¹)ᗮ ⊆ (B⁰)ᗮ = Z*₀` (Thesis Thm 4.6, σ-step).
@@ -751,16 +479,14 @@ Thesis gap: the thesis uses `(Z¹)ᗮ = B*₁`, which needs closed range; only t
 `(ker d1)ᗮ ⊆ ker d0*` is needed, and it holds in every Hilbert complex.
 
 See [QuennevilleBelair2015, proof of Thm 4.6]. -/
-theorem orthogonal_ker_d1_le : H.d1.kerᗮ ≤ H.d0†.ker := by
-  rw [← H.orthogonal_range_d0]
-  exact Submodule.orthogonal_le H.range_d0_le_ker_d1
+theorem orthogonal_ker_d1_le : H.d1.kerᗮ ≤ H.d0†.ker :=
+  Operator.orthogonal_ker_le_ker_adjoint H.dense0 H.map_mem H.comp_zero
 
 /-- `(Z*₁)ᗮ = cl B⁰ ⊆ Z¹`, i.e. `(ker d0*)ᗮ ⊆ ker d1`, **without closed range**
 (Thesis Thm 4.6, ρ-step, omitted in the thesis as "similar").
 See [QuennevilleBelair2015, proof of Thm 4.6]. -/
-theorem orthogonal_ker_adjoint_d0_le : H.d0†.kerᗮ ≤ H.d1.ker := by
-  rw [← H.orthogonal_range_d0, Submodule.orthogonal_orthogonal_eq_closure]
-  exact Submodule.topologicalClosure_minimal _ H.range_d0_le_ker_d1 (isClosed_ker H.closed1)
+theorem orthogonal_ker_adjoint_d0_le : H.d0†.kerᗮ ≤ H.d1.ker :=
+  Operator.orthogonal_ker_adjoint_le_ker H.dense0 H.closed1 H.map_mem H.comp_zero
 
 /-- `ℌ = (cl B⁰)ᗮ ∩ (cl B*₁)ᗮ` (Thesis Thm 4.1, `W`-level). -/
 theorem harmonic_eq :

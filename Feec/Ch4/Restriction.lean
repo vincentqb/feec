@@ -69,6 +69,9 @@ namespace Feec
 section Restriction
 open LinearPMap
 
+/-! The statements of this section are real-scalar specializations of the `RCLike` API in
+`Feec.ForMathlib.LinearPMap.Reducing`, kept with their old statements. -/
+
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 
 /-- `L̃ x = L x` for the restriction `L̃ = restrictTo L K h3` of Thesis Thm 4.4. -/
@@ -77,7 +80,7 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     ((restrictTo L K h3 x : K) : E) = L ⟨((x : K) : E), x.2⟩ := rfl
 
 /-- Thesis Thm 4.4, hypothesis (ii) is redundant: if `D` is dense and `P_K D ⊆ D`, then
-`D ∩ K` is dense in `K`.
+`D ∩ K` is dense in `K` (`LinearPMap.dense_inter_of_proj_mem`).
 
 See [QuennevilleBelair2015, Thm 4.4 (ii)].
 
@@ -86,15 +89,8 @@ an independent hypothesis; it is implied by (i) and density of `D(L)`. -/
 theorem dense_inter_of_proj_mem (D : Submodule ℝ E) (hD : Dense (D : Set E))
     (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (hPD : ∀ x ∈ D, K.starProjection x ∈ D) :
-    ∀ k ∈ K, k ∈ closure ((D : Set E) ∩ K) := by
-  intro k hk
-  have hcont : Continuous K.starProjection := K.starProjection.continuous
-  have : K.starProjection k ∈ closure (K.starProjection '' (D : Set E)) :=
-    map_mem_closure hcont (hD k) (fun x hx => mem_image_of_mem _ hx)
-  rw [(K.starProjection_eq_self_iff).2 hk] at this
-  refine closure_mono ?_ this
-  rintro _ ⟨x, hx, rfl⟩
-  exact ⟨hPD x hx, K.starProjection_apply_mem x⟩
+    ∀ k ∈ K, k ∈ closure ((D : Set E) ∩ K) :=
+  LinearPMap.dense_inter_of_proj_mem D hD K hPD
 
 /-- Domain of the restricted operator `L̃` is dense in `K` (consequence of Thesis Thm 4.4 (i)).
 See [QuennevilleBelair2015, Thm 4.4]. -/
@@ -102,16 +98,8 @@ theorem dense_restrictTo_domain (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : S
     (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) :
-    Dense ((restrictTo L K h3).domain : Set K) := by
-  have hd : Dense ((K.orthogonalProjectionOnto) '' (L.domain : Set E)) :=
-    (Function.Surjective.denseRange (f := (K.orthogonalProjectionOnto : E → K))
-      (fun k : K => ⟨(k : E), K.orthogonalProjectionOnto_mem_subspace_eq_self k⟩)).dense_image
-      (K.orthogonalProjectionOnto).continuous hD
-  refine hd.mono ?_
-  rintro _ ⟨x, hx, rfl⟩
-  change ((K.orthogonalProjectionOnto x : K) : E) ∈ L.domain
-  rw [← Submodule.starProjection_apply]
-  exact h1 ⟨x, hx⟩
+    Dense ((restrictTo L K h3).domain : Set K) :=
+  LinearPMap.dense_restrict_domain L hD K h1 h3
 
 /-- First step of the proof of Thesis Thm 4.4: `L (D(L) ∩ Kᗮ) ⊆ Kᗮ`.
 Only skew-symmetry and density of `D(L)` are used. See [QuennevilleBelair2015, proof of Thm 4.4]. -/
@@ -119,47 +107,24 @@ theorem map_orthogonal_mem (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E)
     (hL : IsSkewSymm L) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K)
-    (z : L.domain) (hz : (z : E) ∈ Kᗮ) : L z ∈ Kᗮ := by
-  have hDt := dense_restrictTo_domain L hD K h1 h3
-  have hf : Continuous (fun k : K => ⟪(k : E), L z⟫) :=
-    continuous_subtype_val.inner continuous_const
-  have := Continuous.ext_on hDt hf continuous_const (fun v hv => by
-    have hv' : ((v : K) : E) ∈ L.domain := hv
-    have hLv : L ⟨v, hv'⟩ ∈ K := h3 ⟨v, hv'⟩ v.2
-    have e := hL z ⟨v, hv'⟩
-    have e0 : ⟪(z : E), L ⟨v, hv'⟩⟫ = 0 := by
-      rw [real_inner_comm]; exact Submodule.inner_right_of_mem_orthogonal hLv hz
-    change ⟪((v : K) : E), L z⟫ = 0
-    rw [real_inner_comm, e, e0, neg_zero])
-  exact (Submodule.mem_orthogonal' K _).2 fun k hk => by
-    rw [real_inner_comm]; exact congrFun this ⟨k, hk⟩
+    (z : L.domain) (hz : (z : E) ∈ Kᗮ) : L z ∈ Kᗮ :=
+  LinearPMap.IsSkewSymmetric.map_orthogonal_mem hL hD h1 h3 z hz
 
 /-- Under the hypotheses of Thesis Thm 4.4, `L` commutes with `P_K` on `D(L)`:
-`L (P_K x) = P_K (L x)`. (Stated in the audit's corrected Thm 4.4; uses skew-symmetry and
-density of `D(L)`.) See [QuennevilleBelair2015, Thm 4.4]. -/
+`L (P_K x) = P_K (L x)`. See [QuennevilleBelair2015, Thm 4.4]. -/
 theorem commute_proj (L : E →ₗ.[ℝ] E) (hD : Dense (L.domain : Set E))
     (hL : IsSkewSymm L) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) (x : L.domain) :
-    L ⟨K.starProjection (x : E), h1 x⟩ = K.starProjection (L x) := by
-  have hz : (x : E) - K.starProjection x ∈ L.domain := L.domain.sub_mem x.2 (h1 x)
-  have hsplit : L x = L ⟨_, h1 x⟩ + L ⟨_, hz⟩ := by
-    rw [← LinearPMap.map_add]; congr 1; ext; simp
-  have hK : L ⟨_, h1 x⟩ ∈ K := h3 ⟨_, h1 x⟩ (K.starProjection_apply_mem _)
-  have hKp : L ⟨_, hz⟩ ∈ Kᗮ :=
-    map_orthogonal_mem L hD hL K h1 h3 ⟨_, hz⟩ (K.sub_starProjection_mem_orthogonal _)
-  rw [hsplit, _root_.map_add, (K.starProjection_eq_self_iff).2 hK,
-    (Submodule.starProjection_apply_eq_zero_iff K).2 hKp, add_zero]
+    L ⟨K.starProjection (x : E), h1 x⟩ = K.starProjection (L x) :=
+  LinearPMap.IsSkewSymmetric.commute_proj hL hD h1 h3 x
 
 /-- Abstract fill of the first itemized hypothesis of Props 4.16/4.18 (used with Cor 4.5):
 if a closed subspace `M` lies inside `D`, then `P_{Mᗮ} D ⊆ D`.
 See [QuennevilleBelair2015, Props 4.16, 4.18]. -/
 theorem proj_orth_mem_of_le (D M : Submodule ℝ E) [M.HasOrthogonalProjection]
-    (hMD : M ≤ D) : ∀ x ∈ D, Mᗮ.starProjection x ∈ D := by
-  intro x hx
-  have h : Mᗮ.starProjection x = x - M.starProjection x :=
-    eq_sub_of_add_eq' (M.starProjection_add_starProjection_orthogonal x)
-  rw [h]; exact D.sub_mem hx (hMD (M.starProjection_apply_mem x))
+    (hMD : M ≤ D) : ∀ x ∈ D, Mᗮ.starProjection x ∈ D :=
+  LinearPMap.proj_orthogonal_mem_of_le D M hMD
 
 variable [CompleteSpace E]
 
@@ -170,7 +135,7 @@ theorem IsSkewSymm.isReducing {L : E →ₗ.[ℝ] E} (hL : IsSkewSymm L) (hD : D
     {K : Submodule ℝ E} [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) : IsReducing L K :=
-  ⟨h1, commute_proj L hD hL K h1 h3⟩
+  LinearPMap.IsSkewSymmetric.isReducing hL hD h1 h3
 
 omit [CompleteSpace E] in
 /-- For a densely defined skew-symmetric `L`, `K` is reducing iff hypotheses (i) and (iii) of
@@ -179,70 +144,34 @@ theorem IsSkewSymm.isReducing_iff {L : E →ₗ.[ℝ] E} (hL : IsSkewSymm L)
     (hD : Dense (L.domain : Set E)) {K : Submodule ℝ E} [K.HasOrthogonalProjection] :
     IsReducing L K ↔ (∀ x : L.domain, K.starProjection (x : E) ∈ L.domain) ∧
       ∀ x : L.domain, (x : E) ∈ K → L x ∈ K :=
-  ⟨fun h => ⟨h.proj_mem, h.mapsTo⟩, fun h => hL.isReducing hD h.1 h.2⟩
+  LinearPMap.IsSkewSymmetric.isReducing_iff hL hD
 
 /-- For skew-adjoint `L`, hypotheses (i) and (iii) of Thesis Thm 4.4 make `K` reducing. -/
 theorem IsSkewAdjoint.isReducing {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
     {K : Submodule ℝ E} [K.HasOrthogonalProjection]
     (h1 : ∀ x : L.domain, K.starProjection (x : E) ∈ L.domain)
     (h3 : ∀ x : L.domain, (x : E) ∈ K → L x ∈ K) : IsReducing L K :=
-  hL.isSkewSymmetric.isReducing hL.dense_domain h1 h3
+  LinearPMap.IsSkewAdjoint.isReducing hL h1 h3
 
 /-- For skew-adjoint `L`, `K` is reducing iff hypotheses (i) and (iii) of Thesis Thm 4.4 hold. -/
 theorem IsSkewAdjoint.isReducing_iff {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
     {K : Submodule ℝ E} [K.HasOrthogonalProjection] :
     IsReducing L K ↔ (∀ x : L.domain, K.starProjection (x : E) ∈ L.domain) ∧
       ∀ x : L.domain, (x : E) ∈ K → L x ∈ K :=
-  hL.isSkewSymmetric.isReducing_iff hL.dense_domain
+  LinearPMap.IsSkewAdjoint.isReducing_iff hL
 
 /-- **Skew-adjoint restriction** (Thesis Thm 4.4). If `L` is skew-adjoint and `K` reduces `L`,
-then `L̃ = L|_{D(L) ∩ K} : K → K` is skew-adjoint.
+then `L̃ = L|_{D(L) ∩ K} : K → K` is skew-adjoint. Specialization of
+`LinearPMap.IsSkewAdjoint.restrict`.
 
 Correction: hypothesis (ii) (`D(L) ∩ K` dense in `K`) is dropped — it follows from (i)
 (`dense_inter_of_proj_mem`), and so is the density of `D(L)` (`IsSkewAdjoint.dense_domain`).
-The step-3 estimate `|⟨u, L w⟩| ≤ C‖P_K w‖` is replaced by the exact identity
-`⟨L̃* u, w⟩ = ⟨u, L w⟩` for `w ∈ D(L)`, giving `u ∈ D(L*) = D(L)` with explicit witness.
 
 Thesis: Thm 4.4. See [QuennevilleBelair2015, Thm 4.4]. -/
 theorem IsSkewAdjoint.restrictTo {L : E →ₗ.[ℝ] E} (hL : IsSkewAdjoint L)
     {K : Submodule ℝ E} [K.HasOrthogonalProjection] [CompleteSpace K] (hK : IsReducing L K) :
-    IsSkewAdjoint (Feec.restrictTo L K hK.mapsTo) := by
-  set Lt := Feec.restrictTo L K hK.mapsTo with hLt
-  have skew := hL.isSkewSymmetric
-  have h1 := hK.proj_mem
-  have hDt : Dense (Lt.domain : Set K) :=
-    dense_restrictTo_domain L hL.dense_domain K h1 hK.mapsTo
-  have hform : Lt.IsFormalAdjoint (-Lt) := by
-    intro x y
-    rw [LinearPMap.neg_apply, Submodule.coe_inner, Submodule.coe_inner, Submodule.coe_neg,
-      inner_neg_right]
-    exact skew ⟨_, x.2⟩ ⟨_, y.2⟩
-  have hle : -Lt ≤ Lt† := hform.le_adjoint hDt
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 ?_)).symm
-  intro u hu
-  have key : ∀ x : L.domain, ⟪((Lt† ⟨u, hu⟩ : K) : E), (x : E)⟫ = ⟪(u : E), L x⟫ := by
-    intro x
-    set px : Lt.domain := ⟨K.orthogonalProjectionOnto x, by
-      change ((K.orthogonalProjectionOnto x : K) : E) ∈ L.domain
-      rw [← Submodule.starProjection_apply]; exact h1 x⟩
-    have hadj := LinearPMap.adjoint_isFormalAdjoint hDt ⟨u, hu⟩ px
-    have hz : (x : E) - K.starProjection x ∈ L.domain := L.domain.sub_mem x.2 (h1 x)
-    have hzK : (x : E) - K.starProjection x ∈ Kᗮ := K.sub_starProjection_mem_orthogonal _
-    have hsplit : L x = L ⟨_, h1 x⟩ + L ⟨_, hz⟩ := by
-      rw [← LinearPMap.map_add]; congr 1; ext; simp
-    have e1 : ⟪(u : E), L ⟨_, hz⟩⟫ = 0 :=
-      Submodule.inner_right_of_mem_orthogonal u.2 (hK.map_orthogonal_mem ⟨_, hz⟩ hzK)
-    have e2 : ⟪((Lt† ⟨u, hu⟩ : K) : E), (x : E)⟫
-        = ⟪((Lt† ⟨u, hu⟩ : K) : E), K.starProjection (x : E)⟫ := by
-      rw [← sub_eq_zero, ← inner_sub_right]
-      exact Submodule.inner_right_of_mem_orthogonal (Lt† ⟨u, hu⟩).2 hzK
-    rw [e2, hsplit, inner_add_right, e1, add_zero]
-    have := hadj
-    simp only [Submodule.coe_inner] at this
-    convert this using 2 <;> rfl
-  have hmem : (u : E) ∈ L†.domain := LinearPMap.mem_adjoint_domain_of_exists _ ⟨_, key⟩
-  rw [hL] at hmem
-  exact hmem
+    IsSkewAdjoint (Feec.restrictTo L K hK.mapsTo) :=
+  LinearPMap.IsSkewAdjoint.restrict hL hK
 
 /-- **Thesis Thm 4.4** (skew-adjoint restriction), with the hypotheses (i), (iii) and the
 (redundant) density of `D(L)`. Corollary of `IsSkewAdjoint.restrictTo`.
@@ -608,9 +537,8 @@ theorem isClosed_ker_of_isClosed (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed) :
 
 /-- For closed `M` on a Hilbert space, `ker M` admits an orthogonal projection. -/
 theorem hasOrthogonalProjection_ker [CompleteSpace E] (M : E →ₗ.[ℝ] Y) (hM : M.IsClosed) :
-    M.ker.HasOrthogonalProjection := by
-  have : CompleteSpace M.ker := (isClosed_ker hM).completeSpace_coe
-  infer_instance
+    M.ker.HasOrthogonalProjection :=
+  LinearPMap.hasOrthogonalProjection_ker M hM
 
 /-- **Constraint propagation for `K = ker M`** (Thesis §4.3, after Cor 4.5): if `M` is closed,
 `P_{ker M} D(L) ⊆ D(L)`, `L (D(L) ∩ ker M) ⊆ ker M`, `M U₀ = 0` and `M F(t) = 0`, then every

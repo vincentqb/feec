@@ -4,6 +4,8 @@ public import Feec.Ch4.BoundedSalvageMax
 public import Feec.Ch4.BoundedSym
 public import Feec.Ch4.BoxForward
 public import Mathlib.Analysis.InnerProductSpace.MeanErgodic
+public import Feec.Ch4.Stone
+public import Feec.Semigroup.Spectral
 
 /-!
 # When does `K*` contain moving data? A spectral mechanism
@@ -145,98 +147,59 @@ instance : (Stat G).HasOrthogonalProjection := by
   have : CompleteSpace (Stat G) := isClosed_Stat.completeSpace_coe
   infer_instance
 
+omit [CompleteSpace E] in
+/-- `K* = Kmax G K` is the invariant core `C0Group.invariantCore` of the underlying group. -/
+theorem Kmax_eq_invariantCore (K : Submodule ℝ E) : Kmax G K = G.toC0Group.invariantCore K := by
+  ext x
+  rw [mem_Kmax, C0Group.mem_invariantCore]
+  rfl
+
 /-- **Mean ergodic theorem for the time-`τ` map**:
-`N⁻¹ Σ_{n < N} S(n τ) x → P_{Per τ} x`. -/
+`N⁻¹ Σ_{n < N} S(n τ) x → P_{Per τ} x` (`C0Group.IsIsometric.tendsto_birkhoffAverage`). -/
 theorem tendsto_birkhoffAverage_S (τ : ℝ) (x : E) :
     Tendsto (fun N => birkhoffAverage ℝ (G.S τ) _root_.id N x) atTop
       (𝓝 ((Per G τ).starProjection x)) :=
-  (G.S τ).tendsto_birkhoffAverage_orthogonalProjection (norm_S_le_one τ) x
+  G.isIsometric_toC0Group.tendsto_birkhoffAverage τ x
 
 /-- **The periodic part of a forward-invariant datum lies in `K*`.** If `K` is closed and
 `S t x ∈ K` for all `t ≥ 0`, then for every `τ > 0` the projection of `x` onto the `τ`-periodic
-vectors lies in `K* = Kmax G K`. No spectral hypothesis. -/
+vectors lies in `K* = Kmax G K`. No spectral hypothesis
+(`C0Group.IsIsometric.starProjection_periodic_mem_invariantCore`). -/
 theorem starProjection_Per_mem_Kmax {K : Submodule ℝ E} (hK : IsClosed (K : Set E)) {τ : ℝ}
     (hτ : 0 < τ) {x : E} (hx : ∀ t, 0 ≤ t → G.S t x ∈ K) :
     (Per G τ).starProjection x ∈ Kmax G K := by
-  set p := (Per G τ).starProjection x
-  have hfwd : ∀ s, 0 ≤ s → G.S s p ∈ K := by
-    intro s hs
-    have ht := ((G.S s).continuous.tendsto _).comp (tendsto_birkhoffAverage_S (G := G) τ x)
-    refine hK.mem_of_tendsto ht (Eventually.of_forall fun N => ?_)
-    simp only [Function.comp_apply, birkhoffAverage, birkhoffSum, map_smul, map_sum, id]
-    refine K.smul_mem _ (K.sum_mem fun n _ => ?_)
-    rw [iterate_S, ← mul_apply_eq_comp, ← G.map_add]
-    exact hx _ (by have := hτ.le; positivity)
-  intro t
-  obtain ⟨n, hn⟩ := exists_nat_ge (-t / τ)
-  have hp : p ∈ Per G τ := (Per G τ).starProjection_apply_mem x
-  rw [← S_nat_mul_of_mem_Per hp n, ← mul_apply_eq_comp, ← G.map_add]
-  refine hfwd _ ?_
-  have := (div_le_iff₀ hτ).1 hn
-  linarith
+  rw [Kmax_eq_invariantCore]
+  exact G.isIsometric_toC0Group.starProjection_periodic_mem_invariantCore hK hτ hx
 
 variable (G) in
-/-- Pure point spectrum, in group form: the periodic vectors span a dense subspace. -/
+/-- Pure point spectrum, in group form: the periodic vectors span a dense subspace
+(`C0Group.IsPurePoint`). -/
 def PurePoint : Prop := Dense ((⨆ τ : Ioi (0 : ℝ), Per G τ : Submodule ℝ E) : Set E)
 
 theorem eq_zero_of_starProjection_Per (hPP : PurePoint G) {z : E}
-    (h : ∀ τ, 0 < τ → (Per G τ).starProjection z = 0) : z = 0 := by
-  let Z : Submodule ℝ E := LinearMap.ker (innerSL ℝ z).toLinearMap
-  have hle : (⨆ τ : Ioi (0 : ℝ), Per G τ : Submodule ℝ E) ≤ Z := by
-    refine iSup_le fun τ y hy => ?_
-    have hz : z ∈ (Per G τ)ᗮ := by
-      simpa [h τ τ.2] using (Per G τ).sub_starProjection_mem_orthogonal z
-    simp only [Z, LinearMap.mem_ker, ContinuousLinearMap.coe_coe, innerSL_apply_apply]
-    rw [real_inner_comm]
-    exact Submodule.inner_right_of_mem_orthogonal hy hz
-  have hZ : IsClosed (Z : Set E) := (innerSL ℝ z).isClosed_ker
-  have : z ∈ Z := by
-    have := closure_mono hle (hPP z)
-    rwa [hZ.closure_eq] at this
-  simpa [Z] using this
+    (h : ∀ τ, 0 < τ → (Per G τ).starProjection z = 0) : z = 0 :=
+  C0Group.IsPurePoint.eq_zero_of_starProjection (G := G.toC0Group) hPP h
 
 omit [CompleteSpace E] in
 theorem starProjection_eq_zero_of_mem {N P : Submodule ℝ E} [P.HasOrthogonalProjection] {z : E}
-    (hz : z ∈ Nᗮ) (hP : P.starProjection z ∈ N) : P.starProjection z = 0 := by
-  have h1 : ⟪P.starProjection z, z - P.starProjection z⟫ = 0 :=
-    Submodule.inner_right_of_mem_orthogonal (P.starProjection_apply_mem z)
-      (P.sub_starProjection_mem_orthogonal z)
-  have h2 : ⟪P.starProjection z, z⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hP hz
-  rw [inner_sub_right, h2, zero_sub, neg_eq_zero] at h1
-  exact inner_self_eq_zero.1 h1
+    (hz : z ∈ Nᗮ) (hP : P.starProjection z ∈ N) : P.starProjection z = 0 :=
+  C0Group.starProjection_eq_zero_of_mem hz hP
 
-/-- **Forward invariance implies `K*` under pure point spectrum.** -/
+/-- **Forward invariance implies `K*` under pure point spectrum**
+(`C0Group.IsIsometric.mem_invariantCore_of_forward_invariant`). -/
 theorem mem_Kmax_of_forward (hPP : PurePoint G) {K : Submodule ℝ E} (hK : IsClosed (K : Set E))
     {x : E} (hx : ∀ t, 0 ≤ t → G.S t x ∈ K) : x ∈ Kmax G K := by
-  have hN : IsClosed (Kmax G K : Set E) := isClosed_Kmax hK
-  have : CompleteSpace (Kmax G K) := hN.completeSpace_coe
-  set N := Kmax G K
-  set z := x - N.starProjection x
-  have hz : z ∈ Nᗮ := N.sub_starProjection_mem_orthogonal x
-  have h0 : z = 0 := by
-    refine eq_zero_of_starProjection_Per hPP fun τ hτ => starProjection_eq_zero_of_mem hz ?_
-    rw [map_sub]
-    refine N.sub_mem (starProjection_Per_mem_Kmax hK hτ hx) (Kmax_le (G := G) (K := N) ?_)
-    exact starProjection_Per_mem_Kmax hN hτ fun t _ => S_mem_Kmax (N.starProjection_apply_mem x) t
-  have := N.starProjection_apply_mem x
-  rwa [← sub_eq_zero.1 h0] at this
+  rw [Kmax_eq_invariantCore]
+  exact G.isIsometric_toC0Group.mem_invariantCore_of_forward_invariant hPP hK hx
 
-/-- **`K*` is stationary iff its periodic elements are**, under pure point spectrum. -/
+/-- **`K*` is stationary iff its periodic elements are**, under pure point spectrum
+(`C0Group.IsIsometric.invariantCore_le_stationary`). -/
 theorem Kmax_le_Stat (hPP : PurePoint G) {K : Submodule ℝ E} (hK : IsClosed (K : Set E))
     (hkey : ∀ τ, 0 < τ → ∀ x ∈ Kmax G K, x ∈ Per G τ → x ∈ Stat G) : Kmax G K ≤ Stat G := by
-  intro x hx
-  set z := x - (Stat G).starProjection x
-  have hz : z ∈ (Stat G)ᗮ := (Stat G).sub_starProjection_mem_orthogonal x
-  have h0 : z = 0 := by
-    refine eq_zero_of_starProjection_Per hPP fun τ hτ => starProjection_eq_zero_of_mem hz ?_
-    rw [map_sub, (Per G τ).starProjection_eq_self_iff.2
-      (Stat_le_Per τ ((Stat G).starProjection_apply_mem x))]
-    refine (Stat G).sub_mem (hkey τ hτ _ (Kmax_le (G := G) (K := Kmax G K) ?_)
-      ((Per G τ).starProjection_apply_mem x))
-      ((Stat G).starProjection_apply_mem x)
-    exact starProjection_Per_mem_Kmax (isClosed_Kmax hK) hτ fun t _ => S_mem_Kmax hx t
-  have := (Stat G).starProjection_apply_mem x
-  rwa [← sub_eq_zero.1 h0] at this
+  rw [Kmax_eq_invariantCore]
+  refine G.isIsometric_toC0Group.invariantCore_le_stationary hPP hK fun τ hτ x hx => ?_
+  rw [← Kmax_eq_invariantCore] at hx
+  exact hkey τ hτ x hx
 
 end Periodic
 
@@ -600,6 +563,16 @@ theorem exists_isEigenSq_mem_Kmax (hD : EigenDense G) {K : Submodule ℝ E}
   have hz0 : z = 0 := inner_self_eq_zero.1 ((hZ z).1 hzZ)
   have := (Stat G).starProjection_apply_mem x
   rwa [← sub_eq_zero.1 hz0] at this
+
+/-- **Compact resolvent ⇒ `EigenDense`.** If `(1 - L)⁻¹` is compact, the eigenvectors of `L²`
+span a dense subspace (`LinearPMap.IsSkewAdjoint.dense_span_isEigenSq`: the spectral theorem for
+the compact self-adjoint operator `(1 - L²)⁻¹`), so `EigenDense G` holds. -/
+theorem eigenDense_of_compactResolvent (hK : IsCompactOperator (Operator.resolvent L 1)) :
+    EigenDense G := by
+  have hd := LinearPMap.IsSkewAdjoint.dense_span_isEigenSq G.isSkewAdjoint hK
+  let e : {v : E // ∃ ω, LinearPMap.IsEigenSq L ω v} → E := Subtype.val
+  refine eigenDense_of_isEigenSq e (fun v => v.2.choose) (fun v => v.2.choose_spec) ?_
+  simpa [e, Subtype.range_coe] using hd
 
 end Spectral
 
@@ -992,6 +965,28 @@ theorem thesisComplex_Kmax_spectral
     (thesisComplex_d1_mem_TSD hΩ hb hu hu1) e
   exact ⟨hm, thesisComplex_S1max_le_TSD0 hΩ hb G _ hm, hns⟩
 
+/-- `Feec.BoundedDomain.thesisComplex_Kmax_spectral` with the hypothesis `EigenDense G` replaced
+by compactness of the resolvent `(1 - L)⁻¹` of the Hodge wave operator `L`
+(`Feec.Constraints.eigenDense_of_compactResolvent`). -/
+theorem thesisComplex_Kmax_spectral_of_compactResolvent
+    (G : UnitaryGroupGenerator (-(thesisComplex hΩ hb).waveOp))
+    (hK : IsCompactOperator (Operator.resolvent (-(thesisComplex hΩ hb).waveOp) 1)) :
+    let K := Kc (L2V Ω) (TSD Ω) (TSD Ω)
+    (∀ x, (∀ t, 0 ≤ t → G.S t x ∈ K) ↔ x ∈ Kmax G K) ∧
+    (Kmax G K ≤ Stat G ↔ ∀ u ∈ S1max G (TSD Ω) (TSD Ω),
+      ∃ h1 : u ∈ (thesisComplex hΩ hb).d1.domain, (thesisComplex hΩ hb).d1 ⟨u, h1⟩ = 0) ∧
+    (¬ Kmax G K ≤ Stat G ↔ ∃ ω : ℝ, 0 < ω ∧ ∃ u : L2M Ω, u ≠ 0 ∧ u ∈ TSD Ω ∧
+      ∃ (h1 : u ∈ (thesisComplex hΩ hb).d1.domain)
+        (h3 : (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ (thesisComplex hΩ hb).d1†.domain),
+        (thesisComplex hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u) ∧
+    (∀ (ω : ℝ), 0 < ω → ∀ u : L2M Ω, u ∈ TSD Ω →
+      ∀ (h1 : u ∈ (thesisComplex hΩ hb).d1.domain)
+        (h3 : (thesisComplex hΩ hb).d1 ⟨u, h1⟩ ∈ (thesisComplex hΩ hb).d1†.domain),
+        (thesisComplex hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u →
+            u ∈ S1max G (TSD Ω) (TSD Ω) ∧ u ∈ TSD0 Ω hΩ hb ∧
+              (u ≠ 0 → ini (L2V Ω) u (0 : L2M Ω) ∉ Stat G)) :=
+  thesisComplex_Kmax_spectral hΩ hb G (Feec.Constraints.eigenDense_of_compactResolvent hK)
+
 end Feec.BoundedDomain
 
 namespace Feec.BoundedSym
@@ -1033,6 +1028,27 @@ theorem symComplexB_Kmax_spectral
   obtain ⟨-, hm, hns⟩ := eigen_mem_S1max (G := G) hω hu hu1 hu2 e2 hu3
     (curlS_mem_TSDT hΩ hb ⟨u, hu1⟩ hu) e
   exact ⟨hm, symComplexB_S1max_le_TSD0 hΩ hb G _ u hm, hns⟩
+
+/-- `Feec.BoundedSym.symComplexB_Kmax_spectral` with the hypothesis `EigenDense G` replaced by
+compactness of the resolvent `(1 - L)⁻¹` of the Hodge wave operator `L`. -/
+theorem symComplexB_Kmax_spectral_of_compactResolvent
+    (G : UnitaryGroupGenerator (-(symComplexB hΩ hb).waveOp))
+    (hK : IsCompactOperator (Operator.resolvent (-(symComplexB hΩ hb).waveOp) 1)) :
+    let K := Kc (L2 Ω) (TSDS Ω) (TSDT Ω)
+    (∀ x, (∀ t, 0 ≤ t → G.S t x ∈ K) ↔ x ∈ Kmax G K) ∧
+    (Kmax G K ≤ Stat G ↔ ∀ u ∈ S1max G (TSDS Ω) (TSDT Ω),
+      ∃ h1 : u ∈ (symComplexB hΩ hb).d1.domain, (symComplexB hΩ hb).d1 ⟨u, h1⟩ = 0) ∧
+    (¬ Kmax G K ≤ Stat G ↔ ∃ ω : ℝ, 0 < ω ∧ ∃ u : L2S Ω, u ≠ 0 ∧ u ∈ TSDS Ω ∧
+      ∃ (h1 : u ∈ (symComplexB hΩ hb).d1.domain)
+        (h3 : (symComplexB hΩ hb).d1 ⟨u, h1⟩ ∈ (symComplexB hΩ hb).d1†.domain),
+        (symComplexB hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u) ∧
+    (∀ (ω : ℝ), 0 < ω → ∀ u : L2S Ω, u ∈ TSDS Ω →
+      ∀ (h1 : u ∈ (symComplexB hΩ hb).d1.domain)
+        (h3 : (symComplexB hΩ hb).d1 ⟨u, h1⟩ ∈ (symComplexB hΩ hb).d1†.domain),
+        (symComplexB hΩ hb).d1† ⟨_, h3⟩ = ω ^ 2 • u →
+            u ∈ S1max G (TSDS Ω) (TSDT Ω) ∧ (u : L2M Ω) ∈ TSD0 Ω hΩ hb ∧
+              (u ≠ 0 → ini (L2 Ω) u (0 : L2T Ω) ∉ Stat G)) :=
+  symComplexB_Kmax_spectral hΩ hb G (Feec.Constraints.eigenDense_of_compactResolvent hK)
 
 end Feec.BoundedSym
 

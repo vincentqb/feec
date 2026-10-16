@@ -8,6 +8,7 @@ public import Mathlib.Analysis.SpecialFunctions.Exponential
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Feec.Foundation.Evolution
 public import Feec.Foundation.Operators
+public import Feec.Semigroup.Basic
 
 /-!
 # Non-vacuity of the existence hypotheses (Thesis Thm 4.3, Hille–Yosida / Stone)
@@ -307,6 +308,53 @@ theorem isSkewSymm (G : UnitaryGroupGenerator L) : IsSkewSymm L := by
 
 end UnitaryGroupGenerator
 
+/-! ### Bridge to `Feec.C0Group` (`Feec.Semigroup.Basic`)
+
+`UnitaryGroupGenerator L` is an isometric `C0Group ℝ E` together with the identification of its
+generator with `L`. -/
+
+namespace UnitaryGroupGenerator
+
+variable {L : E →ₗ.[ℝ] E}
+
+/-- The underlying strongly continuous group. -/
+def toC0Group (G : UnitaryGroupGenerator L) : C0Group ℝ E :=
+  ⟨G.S, G.map_zero, G.map_add, G.continuous_apply⟩
+
+@[simp] theorem toC0Group_S (G : UnitaryGroupGenerator L) : G.toC0Group.S = G.S := rfl
+
+theorem isIsometric_toC0Group (G : UnitaryGroupGenerator L) : G.toC0Group.IsIsometric :=
+  G.norm_map
+
+/-- The generator of the underlying group is `L`. -/
+theorem generator_toC0Group [CompleteSpace E] (G : UnitaryGroupGenerator L) :
+    G.toC0Group.generator = L := by
+  have hdom : G.toC0Group.generator.domain = L.domain := by
+    ext x
+    rw [G.toC0Group.mem_domain_generator_iff, G.mem_domain_iff]
+    rfl
+  refine LinearPMap.ext hdom fun x hx hx' => ?_
+  exact G.toC0Group.generator_apply_eq (x := ⟨x, hx⟩) (G.hasDerivAt_zero ⟨x, hx'⟩)
+
+end UnitaryGroupGenerator
+
+/-- An isometric `C0Group` with generator `L`, as a `UnitaryGroupGenerator L`. -/
+def C0Group.toUnitaryGroupGenerator [CompleteSpace E] (G : C0Group ℝ E) (hG : G.IsIsometric)
+    {L : E →ₗ.[ℝ] E} (hL : G.generator = L) : UnitaryGroupGenerator L where
+  S := G.S
+  map_zero := G.map_zero
+  map_add := G.map_add
+  norm_map := hG
+  continuous_apply := G.strongCont
+  mem_domain_iff x := by rw [← G.mem_domain_generator_iff, hL]
+  hasDerivAt_zero x := by
+    subst hL
+    exact G.hasDerivAt_generator x
+
+@[simp] theorem C0Group.toUnitaryGroupGenerator_S [CompleteSpace E] (G : C0Group ℝ E)
+    (hG : G.IsIsometric) {L : E →ₗ.[ℝ] E} (hL : G.generator = L) :
+    (G.toUnitaryGroupGenerator hG hL).S = G.S := rfl
+
 section Transport
 
 variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F]
@@ -354,11 +402,8 @@ theorem exp_smul_add [CompleteSpace E] (A : E →L[ℝ] E) (s t : ℝ) :
 
 /-- For skew `A`, `exp(tA)` is an isometry (it is unitary since `tA` is skew-adjoint). -/
 theorem norm_exp_smul_apply [CompleteSpace E] {A : E →L[ℝ] E}
-    (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (t : ℝ) (x : E) : ‖exp (t • A) x‖ = ‖x‖ := by
-  have hskew : t • A ∈ skewAdjoint (E →L[ℝ] E) := by
-    rw [skewAdjoint.mem_iff, star_smul, star_trivial, ContinuousLinearMap.star_eq_adjoint,
-      adjoint_eq_neg_of_skew hA, smul_neg]
-  exact ContinuousLinearMap.norm_map_of_mem_unitary (exp_mem_unitary_of_mem_skewAdjoint hskew) x
+    (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (t : ℝ) (x : E) : ‖exp (t • A) x‖ = ‖x‖ :=
+  C0Group.norm_exp_ofReal_smul_apply hA t x
 
 /-- `(d/dt) exp(tA) x |_{t=0} = A x`. -/
 theorem hasDerivAt_exp_smul_apply_zero [CompleteSpace E] (A : E →L[ℝ] E) (x : E) :
@@ -369,19 +414,8 @@ theorem hasDerivAt_exp_smul_apply_zero [CompleteSpace E] (A : E →L[ℝ] E) (x 
 /-- For skew `A`, `‖exp(tA) x - x‖ ≤ |t| ‖A x‖` (mean value theorem; `exp(sA)` is an isometry
 commuting with `A`). -/
 theorem norm_exp_smul_sub_le [CompleteSpace E] {A : E →L[ℝ] E}
-    (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (t : ℝ) (x : E) : ‖exp (t • A) x - x‖ ≤ |t| * ‖A x‖ := by
-  have hd : ∀ s ∈ (univ : Set ℝ), HasDerivWithinAt (fun s : ℝ => exp (s • A) x)
-      (exp (s • A) (A x)) univ s := by
-    intro s _
-    have h := hasDerivAt_exp_smul_apply A x s
-    have hc : A (exp (s • A) x) = exp (s • A) (A x) := by
-      have : Commute A (exp (s • A)) := ((Commute.refl A).smul_right s).exp_right
-      exact congrArg (fun B : E →L[ℝ] E => B x) this.eq
-    rw [hc] at h
-    exact h.hasDerivWithinAt
-  have := (convex_univ).norm_image_sub_le_of_norm_hasDerivWithin_le hd
-    (fun s _ => (norm_exp_smul_apply hA s (A x)).le) (mem_univ 0) (mem_univ t)
-  simpa [zero_smul, exp_zero, Real.norm_eq_abs, mul_comm] using this
+    (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (t : ℝ) (x : E) : ‖exp (t • A) x - x‖ ≤ |t| * ‖A x‖ :=
+  C0Group.norm_exp_ofReal_smul_sub_le hA t x
 
 /-- **The Stone stand-in is inhabited:** a bounded skew-symmetric `A` generates the orthogonal
 group `t ↦ exp(tA)` (`NormedSpace.exp` in the C*-algebra `E →L[ℝ] E`; `tA` is skew-adjoint,

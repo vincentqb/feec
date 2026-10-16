@@ -601,8 +601,8 @@ variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E}
 open Feec
 
 /-- **Stone's theorem**: `A` is skew-adjoint iff it generates a strongly continuous group of
-isometries, and that group is unique.
-Thesis: Thm 4.3 (existence input, proved here; the thesis cites it). -/
+isometries, and that group is unique. The thesis cites this existence input for Thm 4.3.
+Thesis: Thm 4.3. -/
 theorem isSkewAdjoint_iff_existsUnique_isometricGroup :
     A.IsSkewAdjoint ↔ ∃! G : C0Group 𝕜 E, G.IsIsometric ∧ G.generator = A := by
   constructor

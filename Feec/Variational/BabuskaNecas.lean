@@ -347,3 +347,33 @@ theorem norm_toSesq_le {X Y : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
     rw [norm_toSesq_apply]; exact B.le_opNorm x
 
 end Feec.Variational
+
+namespace Feec.Variational
+
+variable {𝕜 X Y : Type*} [RCLike 𝕜]
+  [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X]
+  [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y] [CompleteSpace Y]
+  {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
+
+/-- In Hilbert spaces the supremum of the inf-sup condition is attained, with the same constant:
+`InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. Thesis: §4.5 -/
+theorem infSup_iff_forall_exists_norm_le_one (hγ : 0 < γ) :
+    InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ * ‖x‖ ≤ ‖B x y‖ := by
+  refine ⟨fun h x => ?_, InfSup.of_forall_exists_norm_le_one hγ⟩
+  set v := rieszOp B x
+  have hv : ‖v‖ = ‖B x‖ := norm_rieszOp_apply B x
+  rcases eq_or_ne v 0 with h0 | h0
+  · refine ⟨0, by simp, ?_⟩
+    have := h.le x
+    rw [← hv, h0, norm_zero] at this
+    simpa using this
+  · have hpos : 0 < ‖v‖ := norm_pos_iff.2 h0
+    refine ⟨((‖v‖⁻¹ : ℝ) : 𝕜) • v, ?_, ?_⟩
+    · rw [norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm, inv_mul_cancel₀ hpos.ne']
+    · have e : ‖B x (((‖v‖⁻¹ : ℝ) : 𝕜) • v)‖ = ‖v‖ := by
+        rw [← inner_rieszOp, inner_smul_real_left, norm_smul, Real.norm_eq_abs, abs_inv,
+          abs_norm, inner_self_eq_norm_sq_to_K, norm_pow, RCLike.norm_ofReal, abs_norm, sq,
+          ← mul_assoc, inv_mul_cancel₀ hpos.ne', one_mul]
+      rw [e, hv]; exact h.le x
+
+end Feec.Variational

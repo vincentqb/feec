@@ -21,6 +21,11 @@ public import Feec.Fourier.ExteriorSymbol
 public import Feec.Fourier.FibreReducing
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
+public import Feec.HilbertComplex.Approximation.CochainProjection
+public import Feec.HilbertComplex.Approximation.DiscreteHodge
+public import Feec.HilbertComplex.Approximation.MixedError
+public import Feec.HilbertComplex.Approximation.SemidiscreteWave
+public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Discrete
@@ -34,7 +39,9 @@ public import Feec.HilbertComplex.DomainComplex
 public import Feec.HilbertComplex.Dual
 public import Feec.HilbertComplex.Equivariant
 public import Feec.HilbertComplex.Hodge
+public import Feec.HilbertComplex.HodgeLaplacian
 public import Feec.HilbertComplex.HodgeWave
+public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.Short
@@ -49,6 +56,14 @@ public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.Perturbation
 public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Stone
+public import Feec.TimeStepping.BlockMatrix
+public import Feec.TimeStepping.Cayley
+public import Feec.Variational.BabuskaNecas
+public import Feec.Variational.Fortin
+public import Feec.Variational.Galerkin
+public import Feec.Variational.GalerkinEvolution
+public import Feec.Variational.InfSup
+public import Feec.Variational.SaddlePoint
 public import Feec.Ch2.Curvature
 public import Feec.Ch2.Linearized
 public import Feec.Ch3.Bivector

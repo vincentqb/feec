@@ -14,6 +14,12 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
+public import Feec.Fourier.ClosedRange
+public import Feec.Fourier.Euclidean
+public import Feec.Fourier.ExteriorSymbol
+public import Feec.Fourier.FibreReducing
+public import Feec.Fourier.SymbolComplex
+public import Feec.Fourier.Torus
 public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.Compactness
 public import Feec.HilbertComplex.Dirac
@@ -27,6 +33,8 @@ public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
+public import Feec.Models.Euclidean.DeRham
+public import Feec.Models.Torus.DeRham
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
 public import Feec.Semigroup.Basic

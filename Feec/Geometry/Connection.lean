@@ -8,7 +8,9 @@ public import Feec.ForMathlib.Calculus.Partial
 
 The coordinate formula (2.2) `R^a_{bcd} = ∂_c Γ^a_{bd} - ∂_d Γ^a_{bc} + Γ^a_{ec} Γ^e_{bd} -
 Γ^a_{ed} Γ^e_{bc}` at the jet level (over any commutative ring and index type), and for
-connection fields on `ℝ^ι`.
+connection fields on `ℝ^ι`. The thesis' Ch. 2 background (manifolds, covariant derivative,
+curvature) follows [Wald1984], with [Alcubierre2008], [BaumgarteShapiro2010], [Carroll2004]
+and [Stewart1991] as further general references.
 
 ## Main results
 
@@ -26,6 +28,10 @@ connection fields on `ℝ^ι`.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.3 (Prop 2.1, (2.2))
 * [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.4
+* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008]
+* [T. W. Baumgarte, S. L. Shapiro, *Numerical Relativity: Solving Einstein's Equations on the Computer*][BaumgarteShapiro2010]
+* [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004]
+* [J. Stewart, *Advanced General Relativity*][Stewart1991]
 -/
 
 open Finset Matrix
@@ -39,7 +45,11 @@ section Jet
 variable {ι : Type*} [Fintype ι] {R : Type*} [CommRing R]
 
 /-- The coordinate formula (2.2) for `R^a_{bcd}` from the values of `Γ^a_{bc} = Γ a b c` and
-`∂_e Γ^a_{bc} = dΓ e a b c` at a point. [QuennevilleBelair2015], (2.2) -/
+`∂_e Γ^a_{bc} = dΓ e a b c` at a point. [QuennevilleBelair2015], (2.2)
+
+The thesis defines `R^a_{bcd} v^b := ∇_{[c} ∇_{d]} v^a` following [Alcubierre2008] (after noting
+its tensoriality, [Stewart1991], p. 33) and derives (2.2); here (2.2) is the definition, and the
+commutator definition and its tensoriality are not formalized. -/
 def riemComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) : ι → ι → ι → ι → R :=
   fun a b c d => dΓ c a b d - dΓ d a b c + ∑ e, (Γ a e c * Γ e b d - Γ a e d * Γ e b c)
 
@@ -156,7 +166,8 @@ connection), with coordinate partial derivatives `partialDeriv`. -/
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
 /-- The Riemann tensor field `R^a_bcd(x)` of a connection field `Γ`, by formula (2.2).
-[QuennevilleBelair2015], (2.2) -/
+[QuennevilleBelair2015], (2.2); the thesis' commutator definition, following [Alcubierre2008],
+is not formalized (see `riemComp`). -/
 def riemField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι → ι → ι → ι → ℝ :=
   riemComp (Γ x) (fun e a b c => partialDeriv e (fun y => Γ y a b c) x)
 

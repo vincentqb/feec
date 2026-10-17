@@ -12,7 +12,8 @@ public import Mathlib.Data.Matrix.Block
 Pointwise linear algebra in a Minkowski orthonormal frame (`η = diag(-1,1,1,1)`). A double
 2-form is a `(0,4)`-tensor skew in each pair (`CurvatureTensor.PairSkew`); it is parametrised
 by its bivector matrix in the basis `(t∧x, t∧y, t∧z | y∧z, z∧x, x∧y)`, written in blocks
-`ofBlocks E B H D = [[E, B], [H, D]]`.
+`ofBlocks E B H D = [[E, B], [H, D]]`; the division into four `3 × 3` blocks is that of
+[Frauendiener2007] ([QuennevilleBelair2015], §3.3).
 
 ## Main definitions
 
@@ -34,6 +35,7 @@ by its bivector matrix in the basis `(t∧x, t∧y, t∧z | y∧z, z∧x, x∧y)
   §3.2–3.3 (Prop 3.3)
 * [R. M. Wald, *General Relativity*][Wald1984]
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
 -/
 
 @[expose] public section
@@ -70,10 +72,12 @@ def β (I : Ix) (a b : Fin 4) : ℝ :=
 def ofMat (M : Matrix Ix Ix ℝ) : Tensor4 :=
   fun a b c d => ∑ I, ∑ J, β I a b * β J c d * M I J
 
-/-- the double 2-form whose bivector matrix is `[[E, B], [H, D]]`. -/
+/-- the double 2-form whose bivector matrix is `[[E, B], [H, D]]` (block division of
+[QuennevilleBelair2015], §3.3, following [Frauendiener2007]). -/
 def ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) : Tensor4 := ofMat (fromBlocks E B H D)
 
-/-- the bivector matrix `M_{IJ} = C(e_I, e_J) = C_{p_I q_I p_J q_J}` of a (0,4)-tensor. -/
+/-- the bivector matrix `M_{IJ} = C(e_I, e_J) = C_{p_I q_I p_J q_J}` of a (0,4)-tensor: the `6 × 6`
+representation of [QuennevilleBelair2015], §3.3, as in [Frauendiener2007]. -/
 def toMat (C : Tensor4) : Matrix Ix Ix ℝ := Matrix.of fun I J => C (p I) (q I) (p J) (q J)
 
 /-- sign of the pair `(a, b)` relative to the basis bivector `pidx a b` (zero on the diagonal). -/
@@ -140,7 +144,8 @@ theorem eq_ofMat_toMat {C : Tensor4} (hC : PairSkew C) : C = ofMat (toMat C) := 
       (fun c d => (hC _ _ c d).2) c d]
   ring
 
-/-- the `E`-block of the bivector matrix (thesis: `[[E, B], [H, D]]`). -/
+/-- the `E`-block of the bivector matrix (thesis: `[[E, B], [H, D]]`, the blocks `blkE`, `blkB`,
+`blkH`, `blkD` of [QuennevilleBelair2015], §3.3, following [Frauendiener2007]). -/
 def blkE (C : Tensor4) : Matrix (Fin 3) (Fin 3) ℝ := (toMat C).toBlocks₁₁
 /-- the `B`-block. -/
 def blkB (C : Tensor4) : Matrix (Fin 3) (Fin 3) ℝ := (toMat C).toBlocks₁₂
@@ -153,7 +158,8 @@ def blkD (C : Tensor4) : Matrix (Fin 3) (Fin 3) ℝ := (toMat C).toBlocks₂₂
 theorem blkE_apply (C : Tensor4) (i j : Fin 3) : blkE C i j = C 0 i.succ 0 j.succ := by
   fin_cases i <;> fin_cases j <;> rfl
 
-/-- a double 2-form is `ofBlocks` of its four blocks. -/
+/-- a double 2-form is `ofBlocks` of its four blocks (the representation
+`[[E, B], [H, D]]` of [QuennevilleBelair2015], §3.3, following [Frauendiener2007]). -/
 theorem eq_ofBlocks_blocks {C : Tensor4} (hC : PairSkew C) :
     C = ofBlocks (blkE C) (blkB C) (blkH C) (blkD C) := by
   rw [ofBlocks, blkE, blkB, blkH, blkD, fromBlocks_toBlocks]; exact eq_ofMat_toMat hC
@@ -293,7 +299,7 @@ theorem altPart_0123 {C : Tensor4} (hC : PairSkew C) : altPart C 0 1 2 3 =
     s1 1 2 3 0, s1 0 2 3 1]
 
 /-- **Thesis Prop 3.3(ii).** `C_{[abcd]} = 0` is equivalent to `tr B + tr H = 0`.
-See [QuennevilleBelair2015], Prop 3.3. -/
+See [QuennevilleBelair2015], Prop 3.3; cf. [ACBY1997] for the nonlinear analogue. -/
 theorem altPart_ofBlocks_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (∀ a b c d, altPart (ofBlocks E B H D) a b c d = 0) ↔ trace B + trace H = 0 := by
   have h6 : altPart (ofBlocks E B H D) 0 1 2 3 = (1 / 6) * (trace B + trace H) := by
@@ -310,12 +316,13 @@ theorem altPart_eq_alt4 (C : Tensor4) (a b c d : Fin 4) :
   rw [altPart_expand]; unfold CurvatureTensor.alt4; ring
 
 /-- First Bianchi `C_{a[bcd]} = 0` for a double 2-form is equivalent to the interchange symmetry
-plus `C_{[abcd]} = 0` (thesis: "the 16 conditions ... break into 15 + 1", cited from [10]).
+plus `C_{[abcd]} = 0` (thesis: "the 16 conditions ... break into 15 + 1", cited from
+[Frauendiener2007]).
 
 Thesis gap: the thesis cites this without proof; it is a corollary of
 `Feec.CurvatureTensor.bianchi_iff` (any commutative ring with `2` invertible). See
 [QuennevilleBelair2015], §2 (after Prop 2.1) and proof of Prop 3.3; the source cited there is
-thesis ref. [10] (Frauendiener), not in `references.bib`. -/
+[Frauendiener2007]. -/
 theorem bianchi_iff_altPart {C : Tensor4} (hC : PairSkew C) :
     Bianchi1 C ↔ Interchange C ∧ ∀ a b c d, altPart C a b c d = 0 := by
   rw [CurvatureTensor.bianchi_iff hC]
@@ -323,7 +330,8 @@ theorem bianchi_iff_altPart {C : Tensor4} (hC : PairSkew C) :
     false_or]
 
 /-- Thesis Prop 3.3, Bianchi part: for `C = [[E,B],[H,D]]`, first Bianchi holds iff
-`E, D` are symmetric, `H = Bᵀ` and `tr B + tr H = 0`. See [QuennevilleBelair2015], Prop 3.3. -/
+`E, D` are symmetric, `H = Bᵀ` and `tr B + tr H = 0`. See [QuennevilleBelair2015], Prop 3.3;
+cf. [ACBY1997] for the nonlinear analogue. -/
 theorem bianchi_ofBlocks_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     Bianchi1 (ofBlocks E B H D) ↔ (Eᵀ = E ∧ Dᵀ = D ∧ H = Bᵀ) ∧ trace B + trace H = 0 := by
   rw [bianchi_iff_altPart (C := ofBlocks E B H D) (pairSkew_ofMat _), interchange_iff,
@@ -349,7 +357,7 @@ theorem mtr_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) (b c : Fin 4) : mtr 
 
 Thesis gap: the final step `D = -Eᵀ + δ tr E/2` uses `tr E = 0` (from the singleton
 condition) and the summed diagonal equations `tr D = tr E / 2`; both are made explicit.
-See [QuennevilleBelair2015], Prop 3.3. -/
+See [QuennevilleBelair2015], Prop 3.3; cf. [ACBY1997] for the nonlinear analogue. -/
 theorem tracefree_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (∀ b c, mtr (ofBlocks E B H D) b c = 0) ↔ trace E = 0 ∧ Bᵀ = B ∧ Hᵀ = H ∧ D = -Eᵀ := by
   simp only [mtr_ofBlocks]

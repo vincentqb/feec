@@ -23,6 +23,8 @@ public import Feec.Geometry.Bivector
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.1–3.2 (Prop 3.2)
 * [R. M. Wald, *General Relativity*][Wald1984]
+* [C. N. Pope, *Geometry and Group Theory*][Pope2008]
+* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
 -/
 
 @[expose] public section
@@ -35,11 +37,13 @@ namespace Feec.DoubleForm
 
 /-! ### Hodge duals of a double 2-form -/
 
-/-- right dual `C*_{abcd} = ½ C_{abef} ω^{ef}{}_{cd}` (Minkowski frame, `ω = ε`). -/
+/-- right dual `C*_{abcd} = ½ C_{abef} ω^{ef}{}_{cd}` (Minkowski frame, `ω = ε`): the Hodge dual
+of [QuennevilleBelair2015], §3.1 (as detailed in [Pope2008]) on the second pair. -/
 def rdual (C : Tensor4) : Tensor4 :=
   fun a b c d => (1 / 2) * ∑ e, ∑ f, C a b e f * Metric.minkowski4 ℝ e * Metric.minkowski4 ℝ f * leviCivita4 ℝ e f c d
 
-/-- left dual `*C_{abcd} = ½ ω_{ab}{}^{ef} C_{efcd}`. -/
+/-- left dual `*C_{abcd} = ½ ω_{ab}{}^{ef} C_{efcd}`: the Hodge dual of [QuennevilleBelair2015],
+§3.1 (as detailed in [Pope2008]) on the first pair. -/
 def ldual (C : Tensor4) : Tensor4 :=
   fun a b c d => (1 / 2) * ∑ e, ∑ f, leviCivita4 ℝ a b e f * Metric.minkowski4 ℝ e * Metric.minkowski4 ℝ f * C e f c d
 
@@ -94,8 +98,7 @@ theorem ldual_rdual_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
 /-- **Thesis Prop 3.2.** For a double 2-form `C` (skew in each pair) set, as in the thesis,
 `E_{ab} = C_{0a0b}`, `B_{ab} = C*_{0a0b}`, `H_{ab} = *C_{0a0b}`, `D_{ab} = *C*_{0a0b}`.
 Then `C` has bivector block matrix `[[E,B],[H,D]]`, and the three duals act as stated.
-See [QuennevilleBelair2015], Prop 3.2 (block layout following thesis ref. [10], Frauendiener,
-not in `references.bib`).
+See [QuennevilleBelair2015], Prop 3.2 (block layout following [Frauendiener2007]).
 
 Correction: `B, H, D` carry the factor `½` built into `rdual`/`ldual` (missing in the thesis'
 formula for `B_{ab}`). -/
@@ -147,7 +150,9 @@ theorem ldual_eq_rdual_swap {C : Tensor4} (hC : Interchange C) (a b c d : Fin 4)
 
 /-! ### `** = -1` on 2-forms -/
 
-/-- Hodge star of a 2-form in Minkowski space, `(*w)_{cd} = ½ w_{ef} ω^{ef}{}_{cd}`. -/
+/-- Hodge star of a 2-form in Minkowski space, `(*w)_{cd} = ½ w_{ef} ω^{ef}{}_{cd}`: the case
+`k = l = 2` of the Hodge dual defined via the volume form in [QuennevilleBelair2015], §3.1,
+following [Pope2008]. -/
 def hodge2 (w : Fin 4 → Fin 4 → ℝ) : Fin 4 → Fin 4 → ℝ :=
   fun c d => (1 / 2) * ∑ e, ∑ f, w e f * Metric.minkowski4 ℝ e * Metric.minkowski4 ℝ f * leviCivita4 ℝ e f c d
 
@@ -160,7 +165,7 @@ theorem rdual_prod (u w : Fin 4 → Fin 4 → ℝ) :
   ring
 
 /-- Thesis §3.1, `** = (-1)^{kl+t}` for `k = l = 2`, `t = 1`: `** = -1` on 2-forms in
-signature `(-+++)`. See [QuennevilleBelair2015], §3.1; cf. [Wald1984]. -/
+signature `(-+++)`. See [QuennevilleBelair2015], §3.1; cf. [Pope2008] and [Wald1984]. -/
 theorem hodge2_hodge2 (w : Fin 4 → Fin 4 → ℝ) (hw : ∀ a b, w a b = -w b a) :
     hodge2 (hodge2 w) = -w := by
   have hβ : ∀ a b, β (.inl 0) a b = -β (.inl 0) b a := fun a b => by

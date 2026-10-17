@@ -5,7 +5,11 @@ public import Feec.Geometry.Hodge2
 /-!
 # Algebraic Weyl tensors: block form, electric and magnetic parts, reconstruction
 
-In a four-dimensional Minkowski orthonormal frame.
+In a four-dimensional Minkowski orthonormal frame. The thesis presents the Bel decomposition
+following [Friedrich1996] and [ACBY1997], and its linearized form following [Frauendiener2007]
+([QuennevilleBelair2015], §1.1, §3.2–3.3). Its uses for gravitational-wave extraction
+([Sperhake2007]; [Alcubierre2008], §8.6–8.9) and for visualising curvature ([Owen2011]) are
+motivation only and are not formalized.
 
 ## Main definitions
 
@@ -33,6 +37,9 @@ In a four-dimensional Minkowski orthonormal frame.
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 * [R. M. Wald, *General Relativity*][Wald1984]
+* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+* [U. Sperhake, *Binary black-hole evolutions of excision and puncture data*][Sperhake2007]
+* [R. Owen, J. Brink, Y. Chen, J. D. Kaplan, G. Lovelace, K. D. Matthews, D. A. Nichols, M. A. Scheel, F. Zhang, A. Zimmerman, K. S. Thorne, *Frame-dragging vortexes and tidal tendexes attached to colliding black holes: visualizing the curvature of spacetime*][Owen2011]
 -/
 
 @[expose] public section
@@ -46,7 +53,10 @@ namespace Feec.DoubleForm
 /-! ### Algebraic Weyl tensors: the block form -/
 
 /-- An algebraic Weyl tensor in a Minkowski orthonormal frame: skew in each pair, first
-Bianchi identity, and `η`-trace-free. See [QuennevilleBelair2015], §3.2; cf. [Wald1984]. -/
+Bianchi identity, and `η`-trace-free. See [QuennevilleBelair2015], §3.2, which splits the
+Riemann tensor as `R = M + W` (Ricci part plus Weyl tensor) following [Alcubierre2008], p. 288
+and [Friedrich1996]; only the algebraic Weyl tensor is formalized here, not the splitting.
+Cf. [Wald1984]. -/
 structure IsWeyl (C : Tensor4) : Prop where
   pairSkew : PairSkew C
   bianchi : Bianchi1 C
@@ -58,7 +68,8 @@ structure IsWeyl (C : Tensor4) : Prop where
 Thesis gap: `tr B = 0` needs Prop 3.3(ii) together with `H = Bᵀ = B`; the thesis does not say
 so. Correction: the thesis introduces this matrix form with "Proposition 3.2 thus leads to";
 it follows from Prop 3.3. See [QuennevilleBelair2015], Prop 3.3 and the display after it;
-cf. [ACBY1997] for the nonlinear case. -/
+cf. [ACBY1997] for the nonlinear case; the linearized block form is that of
+[Frauendiener2007]. -/
 theorem weyl_iff (C : Tensor4) :
     IsWeyl C ↔ ∃ E B : Matrix (Fin 3) (Fin 3) ℝ, Eᵀ = E ∧ trace E = 0 ∧ Bᵀ = B ∧
       trace B = 0 ∧ C = ofBlocks E B B (-E) := by
@@ -153,8 +164,9 @@ uses orthogonality before proving it. Here the proof instead goes through the bl
 is the electric part of `W*` and inherits its properties. Stated in a Minkowski orthonormal
 frame; `n` need not be unit timelike for these algebraic conclusions.
 
-See [QuennevilleBelair2015], Prop 3.1; the decomposition is due to [Bel1958]; cf.
-[Alcubierre2008] and [Friedrich1996]. -/
+See [QuennevilleBelair2015], Prop 3.1; the decomposition is due to [Bel1958]; the thesis
+follows [Friedrich1996] and [ACBY1997] (linearized: [Frauendiener2007]); cf.
+[Alcubierre2008]. -/
 theorem electric_magnetic_props {W : Tensor4} (hW : IsWeyl W) (n : Fin 4 → ℝ) :
     let E : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * W c a d b
     let B : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * rdual W c a d b
@@ -276,7 +288,7 @@ Thesis gap: "a straightforward calculation" in the thesis; here it is checked on
 bivector components. The sign of the `B`-terms requires the spatial volume form
 `ω_{bcd} = ω_{abcd} n^a` (as stated after (3.2)); the `n^d` convention used in the proof of
 Prop 3.1 has the opposite sign. The general unit timelike `n` is `weyl_reconstruct_unit`.
-See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958]. -/
+See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958], [Friedrich1996] and [ACBY1997]. -/
 theorem weyl_reconstruct {W : Tensor4} (hW : IsWeyl W) :
     W = recon (fun a b => W 0 a 0 b) (fun a b => rdual W 0 a 0 b) := by
   obtain ⟨E, B, hE, htrE, hB, -, rfl⟩ := (weyl_iff W).1 hW
@@ -467,7 +479,8 @@ theorem eq_stf {E : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htr : trace E =
 
 Thesis gap: the thesis states (3.2) for a general `n` as "a straightforward calculation". Here it is
 proved without any frame change: `recon_hom` is the homogenised polynomial identity, valid for all
-`n`, and `η(n,n) = -1` specialises it. See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958]. -/
+`n`, and `η(n,n) = -1` specialises it. See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958],
+[Friedrich1996] and [ACBY1997]. -/
 theorem weyl_reconstruct_unit {W : Tensor4} (hW : IsWeyl W) {n : Fin 4 → ℝ}
     (hn : nsq n = -1) : W = reconN n (elec n W) (elec n (rdual W)) := by
   obtain ⟨E, B, hE, htrE, hB, htrB, rfl⟩ := (weyl_iff W).1 hW

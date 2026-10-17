@@ -14,7 +14,9 @@ public import Mathlib.Algebra.CharP.Invertible
 
 Component-level `(0,4)`-tensors `C : ι → ι → ι → ι → R` over any index type and any commutative
 ring, their symmetries, and the algebraic facts behind the curvature results of thesis
-§2.3–§2.4 (stated there without proof).
+§2.3–§2.4 (stated there without proof). The thesis' background on curvature and Einstein's
+equations follows [Wald1984], with [Alcubierre2008], [BaumgarteShapiro2010], [Carroll2004]
+and [Stewart1991] as further general references ([QuennevilleBelair2015], Ch. 2 intro).
 
 ## Main definitions
 
@@ -27,7 +29,7 @@ ring, their symmetries, and the algebraic facts behind the curvature results of 
 ## Main results
 
 * `interchange_of_bianchi`, `bianchi_iff` (with `2` invertible): for pair-skew `C`,
-  Bianchi ⇔ interchange ∧ `C_[abcd] = 0` (the lemma cited from Frauendiener, thesis ref. [10]).
+  Bianchi ⇔ interchange ∧ `C_[abcd] = 0` (the lemma the thesis takes from [Frauendiener2007]).
 * `eq_zero_of_deviation`, `deviation_eq_zero_iff` (with `3` invertible): an algebraic curvature
   tensor with vanishing deviation forms vanishes.
 * `ricci_isSymm`, `ricci_isSymm_of_inv`, `einstein_isSymm`.
@@ -41,6 +43,11 @@ ring, their symmetries, and the algebraic facts behind the curvature results of 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.3 (Prop 2.1, (2.2)–(2.4)), §2.4 (Einstein's equations)
 * [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.3, §4.3
+* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008]
+* [T. W. Baumgarte, S. L. Shapiro, *Numerical Relativity: Solving Einstein's Equations on the Computer*][BaumgarteShapiro2010]
+* [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004]
+* [J. Stewart, *Advanced General Relativity*][Stewart1991]
+* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
 -/
 
 open Finset Matrix
@@ -77,7 +84,7 @@ theorem eq_of_two_mul_eq [Invertible (2 : R)] {x y : R} (h : 2 * x = 2 * y) : x 
 
 /-- Pair skew and the first Bianchi identity imply the interchange symmetry `C_abcd = C_cdab`
 (sum the Bianchi identities at `(a,b,c,d)`, `(b,a,d,c)`, `(c,a,b,d)`, `(d,a,b,c)`).
-[QuennevilleBelair2015], §2.3 (cited from [10]) -/
+[QuennevilleBelair2015], §2.3 (cited there from [Frauendiener2007]) -/
 theorem interchange_of_bianchi [Invertible (2 : R)] {C : ι → ι → ι → ι → R} (hs : PairSkew C)
     (hb : Bianchi1 C) : Interchange C := by
   intro a b c d
@@ -96,7 +103,8 @@ theorem alt4_eq_zero_of_bianchi {C : ι → ι → ι → ι → R} (hs : PairSk
     (hs c d b a).1 - 2 * hb d a b c
 
 /-- For `C` skew in each pair, the first Bianchi identity holds iff `C` has the interchange
-symmetry and vanishing totally antisymmetric part. [QuennevilleBelair2015], §2.3 (cited from [10]) -/
+symmetry and vanishing totally antisymmetric part. [QuennevilleBelair2015], §2.3 (cited there
+from [Frauendiener2007]) -/
 theorem bianchi_iff [Invertible (2 : R)] {C : ι → ι → ι → ι → R} (hs : PairSkew C) :
     Bianchi1 C ↔ Interchange C ∧ ∀ a b c d, alt4 C a b c d = 0 := by
   refine ⟨fun hb => ⟨interchange_of_bianchi hs hb, alt4_eq_zero_of_bianchi hs hb⟩, ?_⟩

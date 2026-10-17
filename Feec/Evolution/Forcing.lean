@@ -35,7 +35,7 @@ The real, `[0,T]` predicates `Feec.ForcingClass.* A T F` and the older names `Fo
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.3 (Thm 4.3)
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Ch. 1 (`W^{1,p}` in time), Prop 4.1.6
+  Ch. 1 (`W^{1,p}` in time), Prop 4.1.6, Cor 2.4.9
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §4.2 (forcing in `W^{1,1}` or in `L¹(0,T; D(A))`)
 -/
@@ -79,7 +79,8 @@ def l1Domain (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
     ∀ᵐ t ∂(volume.restrict (Ioo a b)), ∃ h : F t ∈ A.domain, A ⟨F t, h⟩ = H t
 
 /-- The forcing class of [QuennevilleBelair2015], Thm 4.3 on `[a,b]`:
-`F ∈ C([a,b], X)` and `F ∈ W^{1,1}(a,b; X) ∪ L¹(a,b; D(A))`. -/
+`F ∈ C([a,b], X)` and `F ∈ W^{1,1}(a,b; X) ∪ L¹(a,b; D(A))`, the hypotheses on the forcing in
+the Hille–Yosida corollary the thesis cites, [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9. -/
 def admissible (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
   ContinuousOn F (Icc a b) ∧ (w11 a b F ∨ l1Domain A a b F)
 

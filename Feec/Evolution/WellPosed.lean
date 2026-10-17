@@ -25,14 +25,15 @@ problem `U' = A U + F` on `[a,b]`, `U a = U₀`, has a classical solution, Duham
   `C¹([a,b]; E)`.
 * `C0Group.existsUnique_classicalSolution`: the same for groups.
 * `LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution`: for a skew-adjoint generator on a
-  Hilbert space (Stone's group `LinearPMap.IsSkewAdjoint.group`). [QuennevilleBelair2015], Thm 4.3 as stated.
+  Hilbert space (Stone's group `LinearPMap.IsSkewAdjoint.group`). [QuennevilleBelair2015], Thm 4.3 as stated,
+  the corollary of the Hille–Yosida theorem of [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9.
 
 ## References
 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §4.1–4.2
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Prop 4.1.6
+  Prop 4.1.6, Cor 2.4.9
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.3 (Thm 4.3)
 -/
@@ -62,7 +63,9 @@ generator): for `U₀ ∈ D(A)` and admissible forcing
 `U ∈ C([a,b]; D(A)) ∩ C¹([a,b]; E)` of `U' = A U + F`, `U a = U₀` (Duhamel's formula
 `Evolution.mild G.S a U₀ F`), and every strong solution with the same initial value agrees with
 it on `[a,b]`. Cf. [Pazy1983], Thm 4.1.3, Thm 4.2.4, Cor 4.2.5,
-[CazenaveHaraux1998], Prop 4.1.6. -/
+[CazenaveHaraux1998], Prop 4.1.6. This is the Hille–Yosida half of the thesis's citation
+[CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9; Cor 2.4.9 (skew-adjoint operators generate
+isometry groups) is needed only for `LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution`. -/
 theorem existsUnique_classicalSolution {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain) {F : ℝ → E}
     {a b : ℝ} (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution G.generator (Icc a b) F U ∧
@@ -138,7 +141,11 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 /-- **Thesis Thm 4.3, as stated**: for a skew-adjoint `A`, `U₀ ∈ D(A)` and admissible forcing
 `F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`, there is a classical solution of
 `U' = A U + F`, `U a = U₀` (Duhamel's formula for Stone's group), unique among strong
-solutions. -/
+solutions. The thesis introduces [QuennevilleBelair2015], Thm 4.3 as a corollary of the
+Hille–Yosida theorem, [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9: Cor 2.4.9 (a skew-adjoint
+operator generates a group of isometries) is Stone's group `LinearPMap.IsSkewAdjoint.group`, and
+Prop 4.1.6 is `C0Semigroup.existsUnique_classicalSolution`. The thesis's density hypothesis on
+`D(A)` is not assumed: it follows from skew-adjointness (`LinearPMap.IsSkewAdjoint.dense_domain`). -/
 theorem existsUnique_classicalSolution (hA : A.IsSkewAdjoint) {U₀ : E} (hU₀ : U₀ ∈ A.domain)
     {F : ℝ → E} {a b : ℝ} (hF : Evolution.ForcingClass.admissible A a b F) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution A (Icc a b) F U ∧

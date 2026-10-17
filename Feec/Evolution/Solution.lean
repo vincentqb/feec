@@ -34,6 +34,8 @@ they are two-sided.
   §4.3 (Thm 4.3), §4.4 (strong solutions, uniqueness by energy)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §4.1 (classical and strong solutions of the inhomogeneous problem)
+* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
+  Prop 4.1.6, Cor 2.4.9
 -/
 
 open Set Filter Topology
@@ -56,7 +58,9 @@ structure IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → 
 
 /-- `U` is a **classical solution** of `U' = A U + F` on `I`: a strong solution such that
 `t ↦ A (U t)` is continuous on `I` (i.e. `U ∈ C(I; D(A)) ∩ C¹(I; E)` when `F` is continuous).
-See [QuennevilleBelair2015], Thm 4.3; cf. [Pazy1983], §4.1. -/
+See [QuennevilleBelair2015], Thm 4.3; cf. [Pazy1983], §4.1. This is the solution class
+`C([a,b]; D(A)) ∩ C¹([a,b]; E)` of the Hille–Yosida corollary the thesis cites,
+[CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9. -/
 structure IsClassicalSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop
     extends IsStrongSolution A I F U where
   deriv_cont : ∃ V : ℝ → E, ContinuousOn V I ∧ ∀ t ∈ I, (U t, V t) ∈ A.graph

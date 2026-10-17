@@ -19,6 +19,8 @@ public import Feec.Fourier.ClosedRange
 public import Feec.Fourier.Euclidean
 public import Feec.Fourier.ExteriorSymbol
 public import Feec.Fourier.FibreReducing
+public import Feec.Fourier.GradCurlSymbol
+public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
 public import Feec.HilbertComplex.Approximation.CochainProjection
@@ -48,7 +50,11 @@ public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Models.Euclidean.DeRham
+public import Feec.Models.Euclidean.GradCurl
+public import Feec.Models.Euclidean.SymCurl
 public import Feec.Models.Torus.DeRham
+public import Feec.Models.Torus.GradCurl
+public import Feec.Models.Torus.SymCurl
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
 public import Feec.Semigroup.Basic

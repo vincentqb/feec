@@ -185,6 +185,19 @@ namespace Fourier
 
 /-! ### Fibre gaps from homotopies -/
 
+/-- The orthogonal complement of the kernel of the zero map is `0`. -/
+theorem eq_zero_of_mem_orthogonal_ker_zero {E F : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {v : E}
+    (hv : v ∈ (LinearMap.ker ((0 : E →L[𝕜] F) : E →ₗ[𝕜] F))ᗮ) : v = 0 := by
+  have : LinearMap.ker ((0 : E →L[𝕜] F) : E →ₗ[𝕜] F) = ⊤ := by ext; simp
+  rwa [this, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hv
+
+/-- A gap `|ξ| ‖v‖ ≤ ‖m v‖` gives the uniform gap `‖v‖ ≤ R⁻¹ ‖m v‖` on `|ξ| ≥ R > 0`. -/
+theorem le_inv_mul_of_mul_le {R s x y : ℝ} (hR : 0 < R) (hs : R ≤ s) (hx : 0 ≤ x)
+    (h : s * x ≤ y) : x ≤ R⁻¹ * y := by
+  rw [inv_mul_eq_div, le_div_iff₀ hR]
+  nlinarith
+
 section Homotopy
 
 variable {E₀ E₁ E₂ : Type*} [NormedAddCommGroup E₀] [InnerProductSpace 𝕜 E₀]

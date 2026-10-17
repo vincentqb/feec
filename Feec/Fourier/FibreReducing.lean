@@ -205,6 +205,15 @@ structure IsFibreReducing (K : ∀ i, β → Submodule 𝕜 (E i)) : Prop where
   map : ∀ i j ξ, (K i ξ).map (S.m i j ξ : E i →ₗ[𝕜] E j) ≤ K j ξ
   map_adj : ∀ i j ξ, (K j ξ).map (ContinuousLinearMap.adjoint (S.m i j ξ) : E j →ₗ[𝕜] E i) ≤ K i ξ
 
+variable {S} in
+/-- The adjoint condition from `m (K i ξ)ᗮ ⊆ (K j ξ)ᗮ`. -/
+theorem IsFibreReducing.of_orthogonal {K : ∀ i, β → Submodule 𝕜 (E i)}
+    [∀ i ξ, (K i ξ).HasOrthogonalProjection]
+    (map : ∀ i j ξ, (K i ξ).map (S.m i j ξ : E i →ₗ[𝕜] E j) ≤ K j ξ)
+    (map_orth : ∀ i j ξ, (K i ξ)ᗮ.map (S.m i j ξ : E i →ₗ[𝕜] E j) ≤ (K j ξ)ᗮ) :
+    S.IsFibreReducing K :=
+  ⟨map, fun i j ξ => map_adjoint_le_of_map_orthogonal _ _ _ (map_orth i j ξ)⟩
+
 variable [MeasurableSpace β] [OpensMeasurableSpace β] [∀ i, FiniteDimensional 𝕜 (E i)]
 
 variable {S} in

@@ -11,6 +11,7 @@ public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
 public import Feec.Fourier.SpectralGalerkin
 public import Feec.Fourier.Weak
+public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Evolution.Constrained

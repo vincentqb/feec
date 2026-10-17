@@ -17,7 +17,7 @@ hand, rerun after renaming. A declaration is listed under a thesis id when
 Every backticked name in a list item below is checked by `scripts/MapCheck.sh`
 (`#check @name` must elaborate).
 
-Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 equations/sections/chapters, 1267 distinct declarations (169 with a thesis-numbered name).
+Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 equations/sections/chapters, 1275 distinct declarations (169 with a thesis-numbered name).
 
 ## Results
 
@@ -37,9 +37,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 ### Prop 2.4
 
 - named: `Feec.Linearized.thesis_prop_2_4b_false`
-- tagged: `Feec.LinearizedGravity.Hfun_lorentz`, `Feec.LinearizedGravity.Hjet_lorentz`, `Feec.LinearizedGravity.Hsym_lorentz`, `Feec.LinearizedGravity.LorentzJet`, `Feec.LinearizedGravity.exists_lorentz_gauge`, `Feec.LinearizedGravity.not_Hjet_eq_neg_boxJ`
+- tagged: `Feec.Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ`, `Feec.LinearizedGravity.Hfun_lorentz`, `Feec.LinearizedGravity.Hjet_lorentz`, `Feec.LinearizedGravity.Hsym_lorentz`, `Feec.LinearizedGravity.LorentzJet`, `Feec.LinearizedGravity.exists_lorentz_gauge`, `Feec.LinearizedGravity.not_Hjet_eq_neg_boxJ`
 - cited: `Feec.Linearized.Hfun_lorentz`, `Feec.Linearized.Hjet_lorentz`, `Feec.Linearized.Hsym_lorentz`, `Feec.Linearized.exists_lorentz_gauge`, `Feec.Linearized.thesis_prop_2_4b_false`
-- modules: Feec.Ch2.Linearized, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge, Feec.Physics.LinearizedGravity.PlaneWave
+- modules: Feec.Ch2.Linearized, Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge
 
 ### Prop 2.5
 
@@ -51,8 +51,8 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 - named: `Feec.Repair.C2.prop_2_6`, `Feec.Repair.C2.prop_2_6_metric`
 - tagged: `Feec.LinearizedGravity.exists_ttGauge`, `Feec.LinearizedGravity.trRev_sub_gauge_eq_ttAmp`, `Feec.LinearizedGravity.tt_gauge_fun`
-- cited: `Feec.Linearized.thesis_gauge_fails`, `Feec.Linearized.thesis_gauge_fails_contra`, `Feec.Linearized.tt_gauge`, `Feec.Linearized.tt_gauge_fun`, `Feec.LinearizedGravity.not_isTT_gaugeAmp_printed`, `Feec.LinearizedGravity.not_isTT_gaugeAmp_printed_contra`, `Feec.LinearizedGravity.tt_gauge`, `Feec.Repair.C2.prop_2_6`, `Feec.Repair.C2.prop_2_6_metric`
-- modules: Feec.Ch2.Linearized, Feec.Physics.LinearizedGravity.PlaneWave, Feec.Repair.C2
+- cited: `Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed`, `Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed_contra`, `Feec.Linearized.thesis_gauge_fails`, `Feec.Linearized.thesis_gauge_fails_contra`, `Feec.Linearized.tt_gauge`, `Feec.Linearized.tt_gauge_fun`, `Feec.LinearizedGravity.not_isTT_gaugeAmp_printed`, `Feec.LinearizedGravity.not_isTT_gaugeAmp_printed_contra`, `Feec.LinearizedGravity.tt_gauge`, `Feec.Repair.C2.prop_2_6`, `Feec.Repair.C2.prop_2_6_metric`
+- modules: Feec.Ch2.Linearized, Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.PlaneWave, Feec.Repair.C2
 
 ### Prop 3.1
 
@@ -342,9 +342,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Eq (2.15)
 
-- tagged: `Feec.LinearizedGravity.not_accel_printed`, `Feec.LinearizedGravity.tt_accel_fun`
+- tagged: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.LinearizedGravity.not_accel_printed`, `Feec.LinearizedGravity.tt_accel_fun`
 - cited: `Feec.Linearized.Rjet_tt`, `Feec.Linearized.Rjet_ttWave`, `Feec.Linearized.Rjet_tt_support`, `Feec.Linearized.thesis_accel_fails`, `Feec.Linearized.tt_accel`, `Feec.Linearized.tt_accel_fun`, `Feec.LinearizedGravity.Rjet_tt`, `Feec.LinearizedGravity.Rjet_ttWave`, `Feec.LinearizedGravity.Rjet_tt_support`, `Feec.LinearizedGravity.tt_accel`
-- modules: Feec.Ch2.Linearized, Feec.Physics.LinearizedGravity.PlaneWave
+- modules: Feec.Ch2.Linearized, Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Eq (3.2)
 
@@ -491,9 +491,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Sec §2.4
 
-- tagged: `Feec.CurvatureTensor.einstein_eq_zero_iff`, `Feec.CurvatureTensor.exists_einstein_eq_zero_ne_zero_two`, `Feec.LinearizedGravity.einstein_const_bounds`
+- tagged: `Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two`, `Feec.CurvatureTensor.einstein_eq_zero_iff`, `Feec.CurvatureTensor.exists_einstein_eq_zero_ne_zero_two`, `Feec.LinearizedGravity.einstein_const_bounds`
 - cited: `Feec.Curvature.einstein_zero_iff`, `Feec.Curvature.einstein_zero_iff_fails_two`, `Feec.Linearized.einstein_const_bounds`
-- modules: Feec.Ch2.Curvature, Feec.Ch2.Linearized, Feec.Geometry.AlgebraicCurvature, Feec.Physics.LinearizedGravity.PlaneWave
+- modules: Feec.Ch2.Curvature, Feec.Ch2.Linearized, Feec.Counterexamples.Curvature, Feec.Geometry.AlgebraicCurvature, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §2.7
 
@@ -503,9 +503,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Sec §2.8
 
-- tagged: `Feec.LinearizedGravity.not_accel_printed`, `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`
+- tagged: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.LinearizedGravity.not_accel_printed`, `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`
 - cited: `Feec.Linearized.IsTT`, `Feec.Linearized.isTT_iff`, `Feec.Linearized.thesis_accel_fails`, `Feec.Linearized.tt_accel`, `Feec.LinearizedGravity.IsTT`, `Feec.LinearizedGravity.isTT_iff`, `Feec.LinearizedGravity.tt_accel`
-- modules: Feec.Algebra.TransverseTraceless, Feec.Ch2.Linearized, Feec.Physics.LinearizedGravity.PlaneWave
+- modules: Feec.Algebra.TransverseTraceless, Feec.Ch2.Linearized, Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §3.1
 
@@ -582,9 +582,9 @@ Counts at generation: 40 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 64 eq
 
 ### Sec §4.10
 
-- tagged: `Feec.Koszul.Proxy3.koszul_empty`, `Feec.Koszul.Proxy3.vec1_extDeriv`, `Feec.Koszul.Proxy3.vec1_koszul`, `Feec.Koszul.Proxy3.vec2_extDeriv`, `Feec.Koszul.Proxy3.vec2_koszul`, `Feec.Koszul.Proxy3.vol_extDeriv`, `Feec.Koszul.extDeriv_mem_polyFormMinus`, `Feec.Koszul.polyFormMinus`, `Feec.Models.Cube.Mirror.complex`, `Feec.Models.Cube.Parity.complex`
+- tagged: `Feec.Counterexamples.PolynomialForms.extDeriv_not_mem_polyFormMinus`, `Feec.Counterexamples.PolynomialForms.grad_sq_not_whitney`, `Feec.Counterexamples.PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus`, `Feec.Koszul.Proxy3.koszul_empty`, `Feec.Koszul.Proxy3.vec1_extDeriv`, `Feec.Koszul.Proxy3.vec1_koszul`, `Feec.Koszul.Proxy3.vec2_extDeriv`, `Feec.Koszul.Proxy3.vec2_koszul`, `Feec.Koszul.Proxy3.vol_extDeriv`, `Feec.Koszul.extDeriv_mem_polyFormMinus`, `Feec.Koszul.polyFormMinus`, `Feec.Models.Cube.Mirror.complex`, `Feec.Models.Cube.Parity.complex`
 - cited: `Feec.BoundedDomain.HcurlM_not_projection`, `Feec.BoundedDomain.HcurlM_not_projection_bochner`, `Feec.BoundedDomain.adjoint_mem_TSD0_of_propagate`, `Feec.BoundedDomain.closure_TSD_inter_HcurlZero_subset`, `Feec.BoundedDomain.dense_HcurlM_inter_HdivZero`, `Feec.BoundedDomain.dense_domain_d1_inter_ker_adj0`, `Feec.BoundedDomain.density_dichotomy`, `Feec.BoundedDomain.eq_zero_of_symm_of_trace_of_cross`, `Feec.BoundedDomain.exists_data_not_propagate`, `Feec.BoundedDomain.exists_orbit_not_propagate`, `Feec.BoundedDomain.exists_orbit_not_propagate_unconditional`, `Feec.BoundedDomain.exists_projTSD_not_mem_HcurlZero`, `Feec.BoundedDomain.exists_tsd_not_propagates`, `Feec.BoundedDomain.integral_eq_zero_bochner`, `Feec.BoundedDomain.integral_eq_zero_of_mem_TSD_of_mem_HcurlZero`, `Feec.BoundedDomain.not_dense_TSD_inter_HcurlZero`, `Feec.BoundedDomain.not_dense_domL_inter_Kc`, `Feec.BoundedDomain.not_finiteDimensional_obstr`, `Feec.BoundedDomain.not_finiteDimensional_orth_closure_TSD_inter_HcurlZero`, `Feec.BoundedDomain.not_projection_hyp`, `Feec.BoundedDomain.not_projection_hyp_S2`, `Feec.BoundedDomain.not_projection_hyp_adjoint`, `Feec.BoundedDomain.not_propagate_of_adjoint`, `Feec.BoundedDomain.projTSD_not_mem_HcurlZero`, `Feec.BoundedDomain.projection_unbounded`, `Feec.BoundedDomain.prop417_density_gap`, `Feec.BoundedDomain.starProjection_grad`, `Feec.BoundedDomain.sum_integral_mul_pd_eq_zero`, `Feec.BoundedDomain.thesisComplex_adjoint_mem_TSD0`, `Feec.BoundedDomain.thesisComplex_beta_violation_boundary_layer`, `Feec.BoundedDomain.thesisComplex_dense_literal`, `Feec.BoundedDomain.thesisComplex_not_projection_hyp`, `Feec.BoundedDomain.thesisComplex_not_projection_hyp2`, `Feec.BoundedDomain.thesisComplex_not_propagate`, `Feec.BoundedDomain.thesisComplex_orbit_not_propagate`, `Feec.BoundedDomain.thesisComplex_orbit_not_propagate_unconditional`, `Feec.BoundedDomain.thesisComplex_prop_4_17_max`, `Feec.BoundedDomain.thesisComplex_tsd_not_propagates`, `Feec.BoundedDomain.thesisComplex_violation_boundary_layer`, `Feec.BoundedDomain.thesisComplex_waveGroup_not_invariant`, `Feec.BoundedSym.symComplexB_prop_4_16`, `Feec.BoundedSym.symComplexB_prop_4_18`, `Feec.Box.forward_boxTSD_iff`, `Feec.Box.mem_Kmax_boxTSD_iff`, `Feec.Box.mirror_prop_4_17`, `Feec.Box.mirror_prop_4_17_exists`, `Feec.Box.offB_mem_Kmax`, `Feec.Box.staticB_mem_Kmax`, `Feec.Box.thesisBox_mem_Kmax_iff`, `Feec.Ch6.Bounded.bggComplex_verdict`, `Feec.Constraints.IsReducedSolution`, `Feec.Constraints.existsUnique_classicalSolution_mem_Kc`, `Feec.Constraints.grad_sq_not_whitney`, `Feec.Constraints.pgrad_mem_PminusLambda1`, `Feec.Constraints.pgrad_not_mem_PminusLambda1`, `Feec.Constraints.prop_4_17`, `Feec.Constraints.prop_4_17_exists_unconditional`, `Feec.Constraints.prop_4_17_max`, `Feec.Constraints.prop_4_17_max_unconditional`, `Feec.Constraints.prop_4_18`, `Feec.Constraints.prop_4_18_i`, `Feec.Constraints.prop_4_18_ii`, `Feec.Constraints.reduced_mem_ker`, `Feec.Constraints.reduced_unique`, `Feec.Constraints.revT`, `Feec.Constraints.waveOp_revT`, `Feec.CrankNicolson.FullStep`, `Feec.CrankNicolson.RedStep`, `Feec.CrankNicolson.cn_invertible`, `Feec.CrankNicolson.red_step_energy`, `Feec.Models.BoundedDomain.eq_zero_of_symm_of_trace_of_cross`, `Feec.Repair.C417.mirrorCxCube_prop_4_17_exists`, `Feec.Repair.C417.mirrorCxQ_prop_4_17_exists`, `Feec.Torus.projKc_mem_domL`, `Feec.Torus.prop_4_17_torus`, `Feec.Torus.prop_4_17_torus_backward`, `Feec.Torus.prop_4_17_torus_classical`, `Feec.Torus.prop_4_17_torus_exists`, `Feec.Torus.prop_4_17_torus_group_all`, `Feec.Whole.projKc_mem_domL`, `Feec.Whole.prop_4_17_whole`, `Feec.Whole.prop_4_17_whole_exists`, `Feec.WholeReal.real_prop_4_17_whole`, `Feec.WholeReal.real_prop_4_17_whole_exists`
-- modules: Feec.Algebra.PolynomialForm, Feec.Algebra.Proxy3, Feec.Ch4.BoundedDensity, Feec.Ch4.BoundedDomain, Feec.Ch4.BoundedDomainExt, Feec.Ch4.BoundedInterior, Feec.Ch4.BoundedSalvage, Feec.Ch4.BoundedSalvageDim, Feec.Ch4.BoundedSalvageMax, Feec.Ch4.BoundedSym, Feec.Ch4.Box, Feec.Ch4.BoxIdent, Feec.Ch4.BoxMirror, Feec.Ch4.BoxStatic, Feec.Ch4.BoxThesis, Feec.Ch4.Constraints, Feec.Ch4.StoneApplications, Feec.Ch4.Torus, Feec.Ch4.TorusGroup, Feec.Ch4.TorusWeak, Feec.Ch4.Unconditional, Feec.Ch4.Whole, Feec.Ch4.WholeReal, Feec.Ch6.Bounded, Feec.Ch7.CrankNicolson, Feec.Models.BoundedDomain.GradCurl, Feec.Models.Cube.Mirror, Feec.Models.Cube.Parity, Feec.Repair.C410, Feec.Repair.C417, Feec.Repair.C417Cube, Feec.Repair.C417Pi
+- modules: Feec.Algebra.PolynomialForm, Feec.Algebra.Proxy3, Feec.Ch4.BoundedDensity, Feec.Ch4.BoundedDomain, Feec.Ch4.BoundedDomainExt, Feec.Ch4.BoundedInterior, Feec.Ch4.BoundedSalvage, Feec.Ch4.BoundedSalvageDim, Feec.Ch4.BoundedSalvageMax, Feec.Ch4.BoundedSym, Feec.Ch4.Box, Feec.Ch4.BoxIdent, Feec.Ch4.BoxMirror, Feec.Ch4.BoxStatic, Feec.Ch4.BoxThesis, Feec.Ch4.Constraints, Feec.Ch4.StoneApplications, Feec.Ch4.Torus, Feec.Ch4.TorusGroup, Feec.Ch4.TorusWeak, Feec.Ch4.Unconditional, Feec.Ch4.Whole, Feec.Ch4.WholeReal, Feec.Ch6.Bounded, Feec.Ch7.CrankNicolson, Feec.Counterexamples.PolynomialForms, Feec.Models.BoundedDomain.GradCurl, Feec.Models.Cube.Mirror, Feec.Models.Cube.Parity, Feec.Repair.C410, Feec.Repair.C417, Feec.Repair.C417Cube, Feec.Repair.C417Pi
 
 ### Sec §4.11
 

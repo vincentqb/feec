@@ -826,7 +826,7 @@ Feec.Curvature.ricci_field_symm	Feec.CurvatureTensor.ricci_riemField_isSymm	gene
 Feec.Curvature.einstein	Feec.CurvatureTensor.einstein	generalize
 Feec.Curvature.einstein_symm	Feec.CurvatureTensor.einstein_isSymm	generalize
 Feec.Curvature.einstein_zero_iff	Feec.CurvatureTensor.einstein_eq_zero_iff	generalize
-Feec.Curvature.einstein_zero_iff_fails_two	Feec.CurvatureTensor.exists_einstein_eq_zero_ne_zero_two	counterexample
+Feec.Curvature.einstein_zero_iff_fails_two	Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two	counterexample
 Feec.Curvature.bivPair	Feec.CurvatureTensor.bivPair	rename
 Feec.Curvature.bivForm	Feec.CurvatureTensor.bivForm	rename
 Feec.Curvature.bivForm_swap	Feec.CurvatureTensor.bivForm_swap	rename
@@ -1645,7 +1645,7 @@ Feec.Linearized.divSym	Feec.LinearizedGravity.divSym	generalize
 Feec.Linearized.trRev_const_mul	Feec.Metric.trRev_smul	generalize
 Feec.Linearized.trRev_mul_const	Feec.Metric.trRev_smul	generalize
 Feec.Linearized.divJ_symbolJet	Feec.LinearizedGravity.divJ_symbolJet	generalize
-Feec.Linearized.thesis_prop_2_4b_false	Feec.LinearizedGravity.not_Hjet_eq_neg_boxJ	counterexample
+Feec.Linearized.thesis_prop_2_4b_false	Feec.Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ	counterexample
 Feec.Linearized.Hjet_const_mul	Feec.LinearizedGravity.Hjet_smul	generalize
 Feec.Linearized.boxJ_symbolJet	Feec.LinearizedGravity.boxJ_symbolJet	generalize
 Feec.Linearized.Hsym_eq	Feec.LinearizedGravity.Hsym_eq	generalize
@@ -1674,8 +1674,8 @@ Feec.Linearized.gaugeAmp	Feec.LinearizedGravity.gaugeAmp	rename
 Feec.Linearized.Bcorr	Feec.LinearizedGravity.Bcorr	rename
 Feec.Linearized.Bthesis	Feec.LinearizedGravity.BPrinted	rename
 Feec.Linearized.tt_gauge	Feec.LinearizedGravity.tt_gauge	rename
-Feec.Linearized.thesis_gauge_fails	Feec.LinearizedGravity.not_isTT_gaugeAmp_printed	counterexample
-Feec.Linearized.thesis_gauge_fails_contra	Feec.LinearizedGravity.not_isTT_gaugeAmp_printed_contra	counterexample
+Feec.Linearized.thesis_gauge_fails	Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed	counterexample
+Feec.Linearized.thesis_gauge_fails_contra	Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed_contra	counterexample
 Feec.Linearized.accelJ	Feec.LinearizedGravity.accelJ	rename
 Feec.Linearized.tt_accel	Feec.LinearizedGravity.tt_accel	rename
 Feec.Linearized.IsLong	Feec.LinearizedGravity.IsLong	rename
@@ -1709,7 +1709,7 @@ Feec.Linearized.divF_gaugeTR	Feec.LinearizedGravity.divF_gaugeTR	generalize
 Feec.Linearized.exists_lorentz_gauge	Feec.LinearizedGravity.exists_lorentz_gauge	generalize
 Feec.Linearized.tt_gauge_fun	Feec.LinearizedGravity.tt_gauge_fun	rename
 Feec.Linearized.tt_accel_fun	Feec.LinearizedGravity.tt_accel_fun	rename
-Feec.Linearized.thesis_accel_fails	Feec.LinearizedGravity.not_accel_printed	counterexample
+Feec.Linearized.thesis_accel_fails	Feec.Counterexamples.LinearizedGravity.not_accel_printed	counterexample
 Feec.Linearized.pd_trRev	Feec.LinearizedGravity.partialDeriv_trRev	generalize
 Feec.Linearized.jet2_trRev	Feec.LinearizedGravity.jet2_trRev	generalize
 Feec.Linearized.Hfun_eq_bar	Feec.LinearizedGravity.Hfun_eq_bar	generalize
@@ -2954,3 +2954,6 @@ Feec.FredholmCE.cxK1_exists_not_isWeakSol	Feec.Counterexamples.ClassicalRegulari
 Feec.HilbertComplex2.not_isWeakSol_of_not_mem	Feec.Counterexamples.ClassicalRegularity.apply_add_mem_domain_of_lift	generalize
 Feec.HilbertComplex2.embW_deriv_zero_of_isWeakSol	Feec.Counterexamples.ClassicalRegularity.apply_add_mem_domain_of_lift	generalize
 Feec.FredholmCE.cxK1	Feec.Counterexamples.ClassicalRegularity.invShort	generalize
+Feec.Constraints.grad_sq_not_whitney	Feec.Counterexamples.PolynomialForms.grad_sq_not_whitney	rename
+Feec.Constraints.pgrad_not_mem_PminusLambda1	Feec.Counterexamples.PolynomialForms.extDeriv_not_mem_polyFormMinus	generalize
+Feec.Repair.C410.pgrad_not_mem_PminusLambda1_of_le	Feec.Counterexamples.PolynomialForms.extDeriv_not_mem_polyFormMinus	generalize

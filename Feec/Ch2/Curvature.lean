@@ -2,6 +2,7 @@ module
 
 public import Feec.Foundation.Tensor
 public import Feec.Geometry.Connection
+public import Feec.Counterexamples.Curvature
 public import Mathlib.Analysis.Calculus.FDeriv.Symmetric
 public import Mathlib.LinearAlgebra.Dimension.Constructions
 public import Mathlib.LinearAlgebra.Matrix.Symmetric
@@ -211,11 +212,11 @@ theorem einstein_zero_iff (hn : n ≠ 2) (g gi Ric : Matrix (Fin n) (Fin n) ℝ)
   CurvatureTensor.einstein_eq_zero_iff (by simpa using (by exact_mod_cast hn : (n : ℝ) ≠ 2))
     g gi Ric hinv
 
-/-- Shim of `Feec.CurvatureTensor.exists_einstein_eq_zero_ne_zero_two`.
+/-- Shim of `Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two`.
 See [QuennevilleBelair2015, §2.4]. -/
 theorem einstein_zero_iff_fails_two :
     ∃ g gi Ric : Matrix (Fin 2) (Fin 2) ℝ, gi * g = 1 ∧ einstein g gi Ric = 0 ∧ Ric ≠ 0 :=
-  CurvatureTensor.exists_einstein_eq_zero_ne_zero_two
+  Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two
 
 end Einstein
 

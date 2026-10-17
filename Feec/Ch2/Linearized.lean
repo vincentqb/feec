@@ -2,6 +2,7 @@ module
 
 public import Feec.Foundation.Tensor
 public import Feec.Physics.LinearizedGravity.PlaneWave
+public import Feec.Counterexamples.LinearizedGravity
 
 /-!
 # Ch 2: linearized gravity on Minkowski space (shim)
@@ -356,7 +357,7 @@ Lorentz gauge with `H₁₁ ≠ −□h̄₁₁`.
 See [QuennevilleBelair2015, Prop 2.4(b)]. -/
 theorem thesis_prop_2_4b_false :
     ∃ D : Jet2, IsSymJet2 D ∧ LorentzJet D ∧ Hjet D 1 1 ≠ -boxJ (barJ D) 1 1 :=
-  LinearizedGravity.not_Hjet_eq_neg_boxJ
+  Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ
 
 /-- `H` is linear in the jet (scalar multiples). -/
 lemma Hjet_const_mul (c : ℝ) (D : Jet2) (b d : Fin 4) :
@@ -527,7 +528,7 @@ See [QuennevilleBelair2015, Prop 2.6]. -/
 theorem thesis_gauge_fails :
     ∃ κ : ℝ, ∃ A : Sym2, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧ ¬ IsTT κ (gaugeAmp (kTT κ) A (Bthesis κ A)) :=
-  LinearizedGravity.not_isTT_gaugeAmp_printed
+  Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed
 
 /-- The thesis' gauge vector read as **contravariant** components `B^a` (lowered to
 `B_a = η_aa B^a`) also fails to reach TT gauge, on the same witness.
@@ -537,7 +538,7 @@ theorem thesis_gauge_fails_contra :
     ∃ κ : ℝ, ∃ A : Sym2, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧
         ¬ IsTT κ (gaugeAmp (kTT κ) A (raise (Bthesis κ A))) :=
-  LinearizedGravity.not_isTT_gaugeAmp_printed_contra
+  Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed_contra
 
 /-- Relative acceleration `a^i = −R^i_{0j0} v^j` (particles at rest, separation `v^j`). -/
 abbrev accelJ (D : Jet2) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
@@ -827,7 +828,7 @@ theorem thesis_accel_fails :
     ¬ ∀ (κ Ap Ax : ℝ) (f : ℝ → ℝ), ContDiff ℝ 2 f → ∀ (v : Fin 4 → ℝ) (x : E4),
       accelJ (jet2 (fun y a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x) v 1 =
         -(κ ^ 2 / 2) * (Ap * v 1 + Ax * v 2) * f (phaseL (kTT κ) x) :=
-  LinearizedGravity.not_accel_printed
+  Counterexamples.LinearizedGravity.not_accel_printed
 
 /-- `∂_i` commutes with trace reversal. -/
 lemma pd_trRev {F : E4 → Sym2} {x : E4} (hF : ∀ a b, DifferentiableAt ℝ (fun y => F y a b) x)

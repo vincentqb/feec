@@ -11,10 +11,13 @@ public import Feec.Counterexamples.BoundedSymTSD
 public import Feec.Counterexamples.ClassicalRegularity
 public import Feec.Counterexamples.ConstrainedEvolution
 public import Feec.Counterexamples.CubeStationary
+public import Feec.Counterexamples.Curvature
 public import Feec.Counterexamples.DiscreteBGG
 public import Feec.Counterexamples.Ell2
 public import Feec.Counterexamples.Fredholm
+public import Feec.Counterexamples.LinearizedGravity
 public import Feec.Counterexamples.NonClosedRangeEuclidean
+public import Feec.Counterexamples.PolynomialForms
 public import Feec.Examples.NonVacuity
 public import Feec.Numerics.CrankNicolsonTable
 public import Feec.Domain.Complexes

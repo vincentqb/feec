@@ -1,0 +1,123 @@
+module
+
+public import Feec.Algebra.PolynomialForm
+public import Mathlib.Basic.Real.Basic
+
+/-!
+# `P_{r+1}Λ⁰ → P_r⁻Λ¹` is not a pair of a subcomplex
+
+Thesis §4.10 lists `P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × …` among the discretizations of the matrix wave
+equation (4.14). These are not subcomplexes: in every dimension, over every field of
+characteristic zero, the exterior derivative of a nonzero homogeneous `0`-form of degree
+`s ≥ r + 1` is not in `P_r⁻Λ¹` (`extDeriv_not_mem_polyFormMinus`), so
+`d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹` (`not_map_extDeriv_polyForm_le_polyFormMinus`). The admissible pairing
+is `P_rΛ⁰` with `P_r⁻Λ¹` (`Feec.Koszul.extDeriv_mem_polyFormMinus` and
+`Feec.Koszul.polyForm_le_polyFormMinus`).
+
+Proof: `κ (P_r⁻Λ¹) ⊆ P_rΛ⁰` since `κ (P_{r-1}Λ¹) ⊆ P_rΛ⁰` and `κ κ = 0`, while the homotopy
+formula gives `κ d ω = s ω`, of degree `s > r`, for `ω ∈ H_sΛ⁰`.
+
+The three-dimensional function form for `r = 1` (lowest-order Nédélec fields `a + b × x`) is
+`grad_sq_not_whitney`.
+
+## References
+
+* [QuennevilleBelair2015], §4.10
+* [AFW2006], §3; [Arnold2018], Ch. 7
+-/
+
+open Finset MvPolynomial
+
+@[expose] public noncomputable section
+
+namespace Feec.Counterexamples.PolynomialForms
+
+open Feec.Koszul ExteriorFibre
+
+variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
+
+/-- The Koszul differential vanishes on `0`-forms. -/
+theorem koszul_eq_zero_of_isDeg_zero {ω : PolyForm K d} (hω : IsDeg 0 ω) : koszul ω = 0 := by
+  funext s
+  rw [koszul_apply]
+  refine sum_eq_zero fun j hj => ?_
+  rw [hω (insert j s) (by rw [card_insert_of_notMem (mem_compl.1 hj)]; omega), mul_zero]
+
+/-- `κ (P_r⁻Λ¹) ⊆ P_rΛ⁰`. -/
+theorem koszul_mem_polyForm_of_mem_polyFormMinus {r : ℕ} (hr : 1 ≤ r) {v : PolyForm K d}
+    (hv : v ∈ polyFormMinus K d r 1) : koszul v ∈ polyForm K d r 0 := by
+  obtain ⟨a, ha, b, ⟨c, -, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hv
+  change koszul (a + koszul c) ∈ _
+  rw [koszul_add, koszul_koszul, add_zero]
+  have := koszul_mem_polyForm ha
+  rwa [Nat.sub_add_cancel hr] at this
+
+/-- **`d ω ∉ P_r⁻Λ¹`** for every nonzero homogeneous `0`-form `ω` of degree `s ≥ r + 1`
+(`r ≥ 1`), in every dimension. Thesis: §4.10 (refuted) -/
+theorem extDeriv_not_mem_polyFormMinus [CharZero K] {r s : ℕ} (hr : 1 ≤ r) (hs : r + 1 ≤ s)
+    {ω : PolyForm K d} (hω : ω ∈ homForm K d s 0) (hne : ω ≠ 0) :
+    extDeriv ω ∉ polyFormMinus K d r 1 := by
+  intro hv
+  have h1 := koszul_mem_polyForm_of_mem_polyFormMinus hr hv
+  have h2 := extDeriv_koszul_add_koszul_extDeriv_of_mem hω
+  rw [koszul_eq_zero_of_isDeg_zero hω.1] at h2
+  have h0 : extDeriv (0 : PolyForm K d) = 0 := by
+    funext t; simp [extDeriv_apply]
+  rw [h0, zero_add, add_zero] at h2
+  rw [h2] at h1
+  obtain ⟨t, ht⟩ : ∃ t, ω t ≠ 0 := by
+    by_contra h
+    simp only [ne_eq, not_exists, not_not] at h
+    exact hne (funext h)
+  have hc : ((s : ℕ) : K) ≠ 0 := Nat.cast_ne_zero.2 (by omega)
+  have hhom : ((((s : ℕ) : K) • ω) t).IsHomogeneous s := by
+    rw [Pi.smul_apply, smul_eq_C_mul]
+    have := (isHomogeneous_C d ((s : ℕ) : K)).mul (hω.2 t)
+    rwa [zero_add] at this
+  have hne' : (((s : ℕ) : K) • ω) t ≠ 0 := by
+    rw [Pi.smul_apply]
+    exact smul_ne_zero hc ht
+  have := h1.2 t
+  rw [hhom.totalDegree hne'] at this
+  omega
+
+/-- The `0`-form `x_j^s`. -/
+def monomialForm (j : d) (s : ℕ) : PolyForm K d := fun t => if t = ∅ then X j ^ s else 0
+
+omit [Fintype d] in
+theorem monomialForm_mem (j : d) (s : ℕ) : monomialForm (K := K) j s ∈ homForm K d s 0 := by
+  refine ⟨fun t ht => ?_, fun t => ?_⟩
+  · simp only [monomialForm]
+    rw [ite_eq_right_iff]
+    intro h
+    exact absurd (by simp [h]) ht
+  · simp only [monomialForm]
+    split_ifs
+    · exact isHomogeneous_X_pow j s
+    · exact isHomogeneous_zero _ _ _
+
+omit [Fintype d] in
+theorem monomialForm_ne_zero (j : d) (s : ℕ) : monomialForm (K := K) j s ≠ 0 := fun h => by
+  have := congrFun h ∅
+  simp [monomialForm] at this
+
+/-- **`d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹`** in every dimension `≥ 1` (`r ≥ 1`): the pairs
+`P_{r+1}Λ⁰ × P_r⁻Λ¹` listed in thesis §4.10 are not subcomplexes. Thesis: §4.10 (refuted) -/
+theorem not_map_extDeriv_polyForm_le_polyFormMinus [CharZero K] [Nonempty d] {r : ℕ} (hr : 1 ≤ r) :
+    ¬ (polyForm K d (r + 1) 0).map (extDerivₗ K d) ≤ polyFormMinus K d r 1 := fun h => by
+  obtain ⟨j⟩ := ‹Nonempty d›
+  exact extDeriv_not_mem_polyFormMinus hr le_rfl (monomialForm_mem j (r + 1))
+    (monomialForm_ne_zero j (r + 1))
+    (h ⟨_, homForm_le_polyForm _ _ (monomialForm_mem j (r + 1)), rfl⟩)
+
+/-- The `r = 1` instance in function form (lowest-order Nédélec fields `a + b × x` on `ℝ³`):
+`grad x₀² = (2x₀, 0, 0)` is not of this form. Thesis: §4.10 (refuted) -/
+theorem grad_sq_not_whitney :
+    ¬ ∃ a b : Fin 3 → ℝ, ∀ x : Fin 3 → ℝ, 2 * x 0 = a 0 + (b 1 * x 2 - b 2 * x 1) := by
+  rintro ⟨a, b, h⟩
+  have h0 := h 0
+  have h1 := h (Pi.single 0 1)
+  simp at h0 h1
+  linarith
+
+end Feec.Counterexamples.PolynomialForms

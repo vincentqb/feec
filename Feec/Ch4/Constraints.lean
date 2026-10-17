@@ -6,6 +6,7 @@ public import Feec.Ch4.Existence
 public import Feec.Foundation.Complex
 public import Feec.Foundation.Tensor
 public import Feec.HilbertComplex.Reducing
+public import Feec.Counterexamples.PolynomialForms
 
 /-!
 # Thesis §4.7–4.11: polynomial complexes, wave equations, constraint propagation
@@ -1004,12 +1005,8 @@ theorem pgrad_not_mem_PminusLambda1 {r : ℕ} (hr : 1 ≤ r) :
 
 See [QuennevilleBelair2015, §4.10]; cf. [Hiptmair2002]. -/
 theorem grad_sq_not_whitney :
-    ¬ ∃ a b : Fin 3 → ℝ, ∀ x : Fin 3 → ℝ, 2 * x 0 = a 0 + (b 1 * x 2 - b 2 * x 1) := by
-  rintro ⟨a, b, h⟩
-  have h0 := h 0
-  have h1 := h (Pi.single 0 1)
-  simp at h0 h1
-  linarith
+    ¬ ∃ a b : Fin 3 → ℝ, ∀ x : Fin 3 → ℝ, 2 * x 0 = a 0 + (b 1 * x 2 - b 2 * x 1) :=
+  Counterexamples.PolynomialForms.grad_sq_not_whitney
 
 end Nedelec
 

@@ -651,7 +651,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«CurvatureTensor».«einstein» -- map.tsv
 #check @«Feec».«CurvatureTensor».«einstein_isSymm» -- map.tsv
 #check @«Feec».«CurvatureTensor».«einstein_eq_zero_iff» -- map.tsv
-#check @«Feec».«CurvatureTensor».«exists_einstein_eq_zero_ne_zero_two» -- map.tsv
+#check @«Feec».«Counterexamples».«Curvature».«exists_einstein_eq_zero_ne_zero_two» -- map.tsv
 #check @«Feec».«CurvatureTensor».«bivPair» -- map.tsv
 #check @«Feec».«CurvatureTensor».«bivForm» -- map.tsv
 #check @«Feec».«CurvatureTensor».«bivForm_swap» -- map.tsv
@@ -1429,7 +1429,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«LinearizedGravity».«divSym» -- map.tsv
 #check @«Feec».«Metric».«trRev_smul» -- map.tsv
 #check @«Feec».«LinearizedGravity».«divJ_symbolJet» -- map.tsv
-#check @«Feec».«LinearizedGravity».«not_Hjet_eq_neg_boxJ» -- map.tsv
+#check @«Feec».«Counterexamples».«LinearizedGravity».«not_Hjet_eq_neg_boxJ» -- map.tsv
 #check @«Feec».«LinearizedGravity».«Hjet_smul» -- map.tsv
 #check @«Feec».«LinearizedGravity».«boxJ_symbolJet» -- map.tsv
 #check @«Feec».«LinearizedGravity».«Hsym_eq» -- map.tsv
@@ -1457,8 +1457,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«LinearizedGravity».«Bcorr» -- map.tsv
 #check @«Feec».«LinearizedGravity».«BPrinted» -- map.tsv
 #check @«Feec».«LinearizedGravity».«tt_gauge» -- map.tsv
-#check @«Feec».«LinearizedGravity».«not_isTT_gaugeAmp_printed» -- map.tsv
-#check @«Feec».«LinearizedGravity».«not_isTT_gaugeAmp_printed_contra» -- map.tsv
+#check @«Feec».«Counterexamples».«LinearizedGravity».«not_isTT_gaugeAmp_printed» -- map.tsv
+#check @«Feec».«Counterexamples».«LinearizedGravity».«not_isTT_gaugeAmp_printed_contra» -- map.tsv
 #check @«Feec».«LinearizedGravity».«accelJ» -- map.tsv
 #check @«Feec».«LinearizedGravity».«tt_accel» -- map.tsv
 #check @«Feec».«LinearizedGravity».«IsLong» -- map.tsv
@@ -1491,7 +1491,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«LinearizedGravity».«exists_lorentz_gauge» -- map.tsv
 #check @«Feec».«LinearizedGravity».«tt_gauge_fun» -- map.tsv
 #check @«Feec».«LinearizedGravity».«tt_accel_fun» -- map.tsv
-#check @«Feec».«LinearizedGravity».«not_accel_printed» -- map.tsv
+#check @«Feec».«Counterexamples».«LinearizedGravity».«not_accel_printed» -- map.tsv
 #check @«Feec».«LinearizedGravity».«partialDeriv_trRev» -- map.tsv
 #check @«Feec».«LinearizedGravity».«jet2_trRev» -- map.tsv
 #check @«Feec».«LinearizedGravity».«Hfun_eq_bar» -- map.tsv
@@ -2150,6 +2150,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Counterexamples».«ClassicalRegularity».«exists_datum_not_C1» -- map.tsv
 #check @«Feec».«Counterexamples».«ClassicalRegularity».«apply_add_mem_domain_of_lift» -- map.tsv
 #check @«Feec».«Counterexamples».«ClassicalRegularity».«invShort» -- map.tsv
+#check @«Feec».«Counterexamples».«PolynomialForms».«grad_sq_not_whitney» -- map.tsv
+#check @«Feec».«Counterexamples».«PolynomialForms».«extDeriv_not_mem_polyFormMinus» -- map.tsv
 #check @«Feec».«Curvature».«prop_2_1» -- THESIS_MAP.md
 #check @«Feec».«Curvature».«prop_2_1_jet» -- THESIS_MAP.md
 #check @«Feec».«Bianchi1» -- THESIS_MAP.md
@@ -2164,6 +2166,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Linearized».«Hjet_eq_einstein» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Hsym_eq» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«thesis_prop_2_4b_false» -- THESIS_MAP.md
+#check @«Feec».«LinearizedGravity».«not_Hjet_eq_neg_boxJ» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Hfun_lorentz» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Hjet_lorentz» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Hsym_lorentz» -- THESIS_MAP.md
@@ -2175,6 +2178,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Linearized».«thesis_gauge_fails_contra» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«tt_gauge» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«tt_gauge_fun» -- THESIS_MAP.md
+#check @«Feec».«LinearizedGravity».«not_isTT_gaugeAmp_printed» -- THESIS_MAP.md
+#check @«Feec».«LinearizedGravity».«not_isTT_gaugeAmp_printed_contra» -- THESIS_MAP.md
 #check @«Feec».«Bivector».«prop_3_1» -- THESIS_MAP.md
 #check @«Feec».«Bivector».«prop_3_2» -- THESIS_MAP.md
 #check @«Feec».«Bivector».«ldual_T» -- THESIS_MAP.md
@@ -2654,6 +2659,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Linearized».«mem_ttSpace_iff» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«finrank_ttSpace» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«finrank_ttSub» -- THESIS_MAP.md
+#check @«Feec».«LinearizedGravity».«not_accel_printed» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Rjet_tt» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Rjet_ttWave» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«Rjet_tt_support» -- THESIS_MAP.md
@@ -2719,6 +2725,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Curvature».«ricci_symm_of_inv» -- THESIS_MAP.md
 #check @«Feec».«Interchange» -- THESIS_MAP.md
 #check @«Feec».«T4» -- THESIS_MAP.md
+#check @«Feec».«CurvatureTensor».«exists_einstein_eq_zero_ne_zero_two» -- THESIS_MAP.md
 #check @«Feec».«Curvature».«einstein_zero_iff» -- THESIS_MAP.md
 #check @«Feec».«Curvature».«einstein_zero_iff_fails_two» -- THESIS_MAP.md
 #check @«Feec».«Linearized».«einstein_const_bounds» -- THESIS_MAP.md
@@ -2875,6 +2882,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Constraints».«secondOrder_not_mixed» -- THESIS_MAP.md
 #check @«Feec».«Constraints».«mixed3_eliminate» -- THESIS_MAP.md
 #check @«Feec».«Constraints».«mixed3_eliminate_of_reg» -- THESIS_MAP.md
+#check @«Feec».«Counterexamples».«PolynomialForms».«not_map_extDeriv_polyForm_le_polyFormMinus» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«Proxy3».«koszul_empty» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«Proxy3».«vec1_extDeriv» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«Proxy3».«vec1_koszul» -- THESIS_MAP.md

@@ -31,8 +31,9 @@ ring, their symmetries, and the algebraic facts behind the curvature results of 
 * `eq_zero_of_deviation`, `deviation_eq_zero_iff` (with `3` invertible): an algebraic curvature
   tensor with vanishing deviation forms vanishes.
 * `ricci_isSymm`, `ricci_isSymm_of_inv`, `einstein_isSymm`.
-* `einstein_eq_zero_iff`: vacuum `G = 0 ⇔ Ric = 0` over any field in every dimension `n ≠ 2`;
-  `exists_einstein_eq_zero_ne_zero_two`: the hypothesis is needed.
+* `einstein_eq_zero_iff`: vacuum `G = 0 ⇔ Ric = 0` over any field in every dimension `n ≠ 2`
+  (the hypothesis is needed:
+  `Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two`).
 * `algCurvEquiv`, `finrank_algCurv_four`: over `ℝ`, `dim = n²(n²-1)/12 = 20` for `n = 4`.
 
 ## References
@@ -256,15 +257,6 @@ theorem einstein_eq_zero_iff (hn : (Fintype.card ι : K) ≠ 2) (g gi Ric : Matr
     simp
 
 end Field
-
-/-- In dimension `2` the equivalence `G = 0 ⇔ Ric = 0` fails (`g = gi = Ric = 1`).
-Thesis: §2.4 -/
-theorem exists_einstein_eq_zero_ne_zero_two {K : Type*} [Field K] [Invertible (2 : K)] :
-    ∃ g gi Ric : Matrix (Fin 2) (Fin 2) K, gi * g = 1 ∧ einstein g gi Ric = 0 ∧ Ric ≠ 0 := by
-  refine ⟨1, 1, 1, by simp, ?_, one_ne_zero⟩
-  unfold einstein
-  simp only [Matrix.one_mul, Matrix.trace_one, Fintype.card_fin]
-  rw [show ((2 : ℕ) : K) = 2 by norm_num, invOf_mul_self, one_smul, sub_self]
 
 /-! ### The space of algebraic curvature tensors -/
 

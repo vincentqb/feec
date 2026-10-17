@@ -7,6 +7,7 @@ public import Feec.Domain.Constrained
 public import Feec.Domain.L2Field
 public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
+public import Feec.Fourier.SpectralGalerkin
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Evolution.Constrained

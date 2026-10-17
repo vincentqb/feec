@@ -10,6 +10,11 @@ Genuine fields `h : ℝ^ι → Sym(ι)` (any dimension, any constant metric `g` 
 with coordinate derivatives `partialDeriv`. The jet identities of
 `Feec.Physics.LinearizedGravity.Einstein` apply through `jet2_isSymJet2` (Schwarz).
 
+Scope: the thesis' gauge freedom is not formalized as such (§2.5: diffeomorphisms and
+diffeomorphic manifolds, after [Wald1984]; §2.6: the Lie derivative as the derivative of the
+pullback by a flow, after [Stewart1991], p. 20 and [Wald1984], p. 439). Only its first-order
+outcome, the gauge term `2∂_(a ξ_b)` (`gaugeTR`, `Hfun_gauge`), enters, as a definition.
+
 ## Main definitions
 
 * `jet2 h x`: the genuine 2-jet `∂_i ∂_j h_ab (x)`; `Hfun g gi h x = Hjet g gi (jet2 h x)`.
@@ -27,10 +32,10 @@ with coordinate derivatives `partialDeriv`. The jet identities of
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.7 (Thm 2.3, (2.5), (2.10)–(2.11)), §2.8 (Prop 2.4)
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4; pp. 75, 183, 441
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4; pp. 75, 183, 439, 441
 * [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004],
   p. 277
-* [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 24
+* [J. Stewart, *Advanced General Relativity*][Stewart1991], pp. 20, 24
 * [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], p. 39
 -/
 

@@ -14,6 +14,12 @@ below are exact identities on jets; only the trace-reversal involution needs `n 
 
 Indices are lowered; `∂^c = gi^{cc'} ∂_{c'}`, `□ = gi^{ij} ∂_i ∂_j`, `h̄ = h - ½ (tr h) g`.
 
+The thesis' Ch. 2 background (tensors, metric, covariant derivative, curvature, Einstein's
+equations) follows [Wald1984] and also refers to [Alcubierre2008], [Carroll2004] and
+[Stewart1991], among others. Here only its flat, linearized part is formalized: `H` is defined
+directly as an operator on jets about a constant metric, and the one-parameter family
+`g(ε) = η + εh + O(ε²)` of exact solutions behind it is not formalized.
+
 ## Main definitions
 
 * `IsSymJet2 D` (Schwarz and `h` symmetric), `IsSymJet3ξ`, `IsSymJet3`.

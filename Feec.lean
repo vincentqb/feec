@@ -90,6 +90,7 @@ public import Feec.HilbertComplex.HodgeLaplacian
 public import Feec.HilbertComplex.HodgeWave
 public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Reality
+public import Feec.HilbertComplex.ReducedSystem
 public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport

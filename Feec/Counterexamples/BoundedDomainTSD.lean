@@ -14,7 +14,8 @@ on every nonempty bounded open `Ω`:
 * the constant field `diag(1, -1, 0)` lies in the obstruction of `L²(TSD)` for `H̊(curl)`
   (`obstruction_ne_bot`), so `L²(TSD) ∩ H̊(curl)` is not dense in `L²(TSD)`
   (`not_dense_tsd_inter`) — the density claimed in the proof of Prop 4.17 fails;
-* the projection hypothesis fails (`exists_projTSD_not_mem_domain`), and
+* the projection hypothesis fails (`exists_projTSD_not_mem_domain`), `D(L) ∩ K` is not dense in
+  `K` (`not_mem_closure_wave_domain_inter`), and
   `{0} × L²(TSD) × S₂` reduces the wave operator of **no** short complex with
   `D(d₁) ⊆ H̊(curl)` containing the test fields (`not_isReducing_tsd`);
 * TSD data do **not propagate**: from `(0, 0, β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, every strong
@@ -230,6 +231,46 @@ theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
   have h1 := hP.2.1
   rw [HilbertComplex.totalSub_starProjection_apply] at h1
   exact hnot (hd₁ h1)
+
+/-- **`D(L) ∩ K` is not dense in `K`** for `K = {0} × L²(TSD) × S₂` and every short complex with
+`D(d₁) ⊆ H̊(curl)`: the datum `(0, diag(1, -1, 0), 0) ∈ K` is orthogonal to the middle
+components of `D(L) ∩ K`, so it is not in the closure (the density hypothesis of Prop 4.17
+fails). Thesis: Prop 4.17 -/
+theorem not_mem_closure_wave_domain_inter (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
+    [CompleteSpace W₀] [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) W₂) (S₂ : Submodule ℝ W₂)
+    (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) :
+    ∃ k ∈ HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) S₂),
+      k ∉ closure ((S.wave.domain : Set (PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂))) ∩
+        HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) S₂)) := by
+  set G := constField hΩ hb diagA
+  let k : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) :=
+    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) 1 G)
+  have hk1 : (k 1 : L2F ℝ Ω Ix) = G :=
+    Pi.single_eq_same (M := ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) 1 G
+  have hkK : k ∈ HilbertComplex.totalSub
+      (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) S₂) := by
+    intro i
+    match i with
+    | 0 => exact Submodule.zero_mem _
+    | 1 => exact hk1 ▸ constField_mem_tsd hΩ hb diagA_transpose diagA_trace
+    | 2 => exact Submodule.zero_mem _
+  refine ⟨k, hkK, fun hcl => ?_⟩
+  let f : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) → ℝ :=
+    fun y => ⟪(y 1 : L2F ℝ Ω Ix), G⟫_ℝ
+  have hf : Continuous f :=
+    ((PiLp.continuous_apply 2 _ 1).inner continuous_const)
+  have hsub : (S.wave.domain : Set (PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂))) ∩
+      HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) S₂) ⊆
+      f ⁻¹' {0} := by
+    rintro y ⟨hyD, hyK⟩
+    have hyD' : y ∈ S.wave.domain := hyD
+    rw [S.mem_wave_domain] at hyD'
+    exact inner_constField_eq_zero hΩ hb diagA ⟨hyK 1, hd₁ hyD'.2.1⟩
+  have h0 := closure_minimal hsub (isClosed_singleton.preimage hf) hcl
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, f, hk1] at h0
+  exact constField_diagA_ne_zero hΩ hb hne (inner_self_eq_zero.1 h0)
 
 /-- The magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`. -/
 def betaField : Ix → R3 → ℝ := fun ij =>

@@ -2152,6 +2152,12 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Counterexamples».«ClassicalRegularity».«invShort» -- map.tsv
 #check @«Feec».«Counterexamples».«PolynomialForms».«grad_sq_not_whitney» -- map.tsv
 #check @«Feec».«Counterexamples».«PolynomialForms».«extDeriv_not_mem_polyFormMinus» -- map.tsv
+#check @«Feec».«Counterexamples».«BoundedDomainTSD».«not_mem_closure_wave_domain_inter» -- map.tsv
+#check @«Feec».«Counterexamples».«BoundedSymTSD».«not_isReducing_tsd» -- map.tsv
+#check @«Feec».«Counterexamples».«BoundedSymTSD».«not_dense_tsdS_inter» -- map.tsv
+#check @«Feec».«Counterexamples».«BoundedSymTSD».«constS» -- map.tsv
+#check @«Feec».«Counterexamples».«BoundedSymTSD».«constS_mem_tsdS» -- map.tsv
+#check @«Feec».«Counterexamples».«BoundedSymTSD».«inner_constS_eq_zero» -- map.tsv
 #check @«Feec».«Curvature».«prop_2_1» -- THESIS_MAP.md
 #check @«Feec».«Curvature».«prop_2_1_jet» -- THESIS_MAP.md
 #check @«Feec».«Bianchi1» -- THESIS_MAP.md
@@ -2576,6 +2582,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«TorusSym».«prop_4_19_torus_symGroup» -- THESIS_MAP.md
 #check @«Feec».«WholeSym».«prop_4_19_whole» -- THESIS_MAP.md
 #check @«Feec».«WholeSym».«prop_4_19_whole_group» -- THESIS_MAP.md
+#check @«Feec».«Counterexamples».«BoundedSymTSD».«exists_projTSD_not_mem_domain» -- THESIS_MAP.md
 #check @«Feec».«Models».«BoundedDomain».«not_propagates_sym» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorSym».«invariantCore_eq» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorSym».«propagatesQ» -- THESIS_MAP.md

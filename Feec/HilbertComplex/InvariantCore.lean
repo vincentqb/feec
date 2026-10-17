@@ -679,8 +679,8 @@ theorem mem_invariantCore₁_of_eq_zero (u : S.d₁.domain) (hu : (u : W₁) ∈
   refine PiLp.ext fun i => ?_
   fin_cases i
   · show ((S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu'⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) = 0
-    rw [wave_inj₁_zero u hu', show S.d₀† ⟨u, hu'⟩ = S.d₀† z from LinearPMap.apply_congr' _ _ _ hz, hz0,
-      neg_zero]
+    rw [wave_inj₁_zero u hu',
+      show S.d₀† ⟨u, hu'⟩ = S.d₀† z from LinearPMap.apply_congr' _ _ _ hz, hz0, neg_zero]
     rfl
   · exact wave_inj₁_one u hu'
   · show ((S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu'⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) = 0

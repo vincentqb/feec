@@ -18,6 +18,19 @@ On a bounded open `Ω ⊆ ℝ³` let `Z = L²(TSD) ∩ H̊(curl, M)`.
   `Feec.Domain.exists_isTestField_ker_dist_lt` for the row-homogeneous TSD operator `tsdOp`.
 * Hence `cl Z = L²(TSD₀)` (`closure_eq_tsd₀`) and the obstruction of `L²(TSD)` for `H̊(curl)`
   is `L²(TSD) ⊓ L²(TSD₀)ᗮ` (`obstruction_eq`).
+* **The obstruction is large**: Hessians of harmonic functions lie in it
+  (`hessL2_mem_obstruction`); it is infinite-dimensional (`not_finiteDimensional_obstruction`) and
+  no finite-dimensional correction restores density
+  (`not_tsd_le_closure_sup_finiteDimensional`).
+* **Without the boundary condition density holds**: `cl (L²(TSD) ∩ H(curl)) = L²(TSD)` on
+  star-shaped domains (`closure_tsd_inf_curl_maximal`), by the expansion form of the constrained
+  density theorem, `Feec.Domain.exists_contDiff_ker_on_dist_lt`.
+* **The `Ė(0)` argument** (`adjoint_mem_tsd₀_of_propagates`): if a strong solution from
+  `(0, E₀, B₀)` keeps `E` in `L²(TSD)`, then `d₁† B₀ ∈ L²(TSD₀)`.
+* **The largest propagating constraint space** `K*` (`Feec.ShortHilbertComplex.coreSub`):
+  `S₁* ⊆ L²(TSD₀)` (`invariantCore₁_le_tsd₀`), curl-free fields of `S₂` are stationary data in
+  `S₂*` (`mem_invariantCore₂_of_curl_eq_zero`, `hessL2_mem_invariantCore₂`), and `S₂*` is
+  infinite-dimensional (`not_finiteDimensional_invariantCore₂`).
 
 ## References
 

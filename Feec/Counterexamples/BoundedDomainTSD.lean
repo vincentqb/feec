@@ -23,11 +23,26 @@ on every nonempty bounded open `Ω`:
   constraint (`tsd_not_propagates`), through the `Ė(0)` obstruction
   `Feec.ShortHilbertComplex.not_propagates_of_inner_ne_zero`.
 
+  With existence (the wave group orbit): `exists_isStrongSolution_tsd_not_propagates`; for every
+  datum `(0, E₀, β)`, any `E₀`: `betaL2_not_propagates` (`d₁† β = curl β ∉ L²(TSD₀)`).
+* the **magnetic** projection hypothesis fails too, independently: `P_{L²(TSD)} D(d₁†) ⊄ D(d₁†)`
+  for every short complex with `d₁ ⊆ curl_min` (`not_starProjection_mem_adjoint_domain`, by the
+  closed graph theorem; `H(curl)` form `not_starProjection_mem_curl_maximal`, Bochner form
+  `not_starProjection_mem_curl_maximal_bochner`, both parts `not_projection_magnetic`), and
+  `P_{L²(TSD)}` is unbounded in the `H(curl)` graph norm (`projection_unbounded`);
+* **the density gap** (`density_dichotomy`, `density_gap`): on domains star-shaped with respect to
+  a ball, the literal density conjectures hold and `cl (L²(TSD) ∩ H(curl)) = L²(TSD)`, but
+  `cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀) ≠ L²(TSD)`;
+* **the corrected Prop 4.17** (`invariantCore_tsd`): the invariant core `K*` of
+  `K = {0} × L²(TSD) × L²(TSD)` is `{0} × S₁* × S₂*`, a reducing subcomplex, the largest one, with
+  `S₁* ⊆ L²(TSD₀)`, `diag(1, -1, 0) ∈ L²(TSD) \ S₁*`, `β ∈ L²(TSD) \ S₂*`, and the nonzero
+  stationary datum `diag(1, -1, 0) ∈ S₂*`;
+* the violation is confined to the **boundary layer** `Ω \ depDomain Ω t`
+  (`beta_violation_boundary_layer`, `violation_boundary_layer`), by the interior finite speed of
+  propagation of `Feec.Models.BoundedDomain.tsd_depDomain`.
+
 Propagation holds instead on `ℝ³`, on the torus and on cubes with mirror boundary conditions
 (`Feec.EinsteinBianchi.{euclidean,torus,cube}_tsd_propagates`).
-
-The Models names of wave 5 (`Feec.Models.BoundedDomain.not_propagates`, …) are deprecated
-aliases.
 
 ## References
 
@@ -702,7 +717,8 @@ theorem not_starProjection_mem_adjoint_domain (hΩ : IsOpen Ω) (hb : Bornology.
 theorem not_starProjection_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     ¬ ∀ B ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain,
-      (tsd Ω).starProjection B ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain := by
+      (tsd Ω).starProjection B ∈
+        ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain := by
   have e := adjoint_gradCurl_d₁ (𝕜 := ℝ) hΩ
   have h := not_starProjection_mem_adjoint_domain hΩ hb hne (gradCurl ℝ hΩ) le_rfl
   rwa [e] at h
@@ -950,8 +966,8 @@ theorem beta_violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
   refine ⟨U, hU0, hS, fun V hV0 hV t ht => huniq V hV0 hV t ht, hdep, ?_⟩
   obtain ⟨t, ht, hnot⟩ := betaL2_not_propagates hΩ hb hne (gradCurl ℝ hΩ) le_rfl hT hS
     (by rw [hU0]; rfl) (by rw [hU0]; rfl)
-  exact ⟨t, ht, fun hlayer => hnot (mem_tsd_of_ae_layer hΩ hS (by rw [hU0]; exact h0) (by rw [hU0]; exact hE)
-    (by rw [hU0]; exact hB) ht hlayer)⟩
+  exact ⟨t, ht, fun hlayer => hnot (mem_tsd_of_ae_layer hΩ hS (by rw [hU0]; exact h0)
+    (by rw [hU0]; exact hE) (by rw [hU0]; exact hB) ht hlayer)⟩
 
 /-- **The boundary obstruction lives in the boundary layer** (existential-datum form): on every
 nonempty bounded open `Ω` there is TSD data `(0, 0, B₀) ∈ D(L)` such that for every `T > 0` a strong

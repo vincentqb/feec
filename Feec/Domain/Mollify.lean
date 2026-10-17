@@ -25,6 +25,11 @@ Let `E` be a finite-dimensional real normed space with an additive Haar measure 
   order, e.g. pointwise algebraic constraints together with `div`), is an `L²` limit of test fields
   `φ` with `A φ = 0` everywhere. This is the general form of the density of smooth TSD fields in
   `L²(TSD₀)` (thesis Prop 4.17 density gap).
+* **interior constraints** (`exists_contDiff_ker_on_dist_lt`): if `A u = 0` only in `𝒟'(Ω)` (no
+  boundary condition), `u` is an `L²(Ω)` limit of fields smooth on `E` with `A φ = 0` on `Ω`
+  (mollification followed by an expansion about the centre, `c < 1`,
+  `closedBall_dil_subset_of_starBall`, with the two-sided estimates
+  `eLpNorm_dil_le_of_half_le`, `eLpNorm_dil_molli_sub_le_of_abs`).
 
 ## References
 

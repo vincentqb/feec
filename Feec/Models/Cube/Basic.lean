@@ -681,7 +681,7 @@ theorem mFourier_reflB (ε : d → Bool) (n : d → ℤ) (x : UnitAddTorus d) :
 
 /-- **Fourier coefficients of a reflected function**: `(g ∘ R_ε)^(n) = ĝ(flip_ε n)`; the
 physical reflections of `𝕋ᵈ` are the frequency reflections of the Fourier side
-(`Feec.Models.Cube.MirrorTorus.flip`). -/
+(`Feec.Models.Cube.MirrorExt.flipAt`). -/
 theorem mFourierCoeff_comp_reflB (ε : d → Bool) (g : UnitAddTorus d → ℂ) (n : d → ℤ) :
     mFourierCoeff (fun x => g (reflB ε x)) n = mFourierCoeff g (flipB ε n) := by
   simp only [mFourierCoeff]

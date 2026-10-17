@@ -17,7 +17,8 @@ constraints propagate depends on the domain and the boundary conditions:
   `tsd_propagates_classical`; and in `L²` (any strong solution, any forcing in the constraint):
   `euclidean_tsd_propagates`;
 * **on the torus `𝕋³`**: `torus_tsd_propagates`;
-* **on every open cube with tensorial mirror boundary conditions**: `cube_tsd_propagates`;
+* **on every open cube with tensorial mirror boundary conditions**: `cube_tsd_propagates`,
+  `cube_tsd_existsUnique`;
 * **on bounded domains with the thesis' boundary conditions** (`H̊(curl)` for the curl, i.e.
   any complex with `d₁ ≤ curl_min`) the constraints do **not** propagate:
   `Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`.
@@ -30,9 +31,6 @@ model complexes of `Feec.Models.*`; the proofs are one-line references.
 * [QuennevilleBelair2015], Prop 3.6, §4.10 (Prop 4.17)
 * [ACBY1997], [Friedrich1996]
 -/
-
-
-open Feec.Legacy
 
 open Set
 
@@ -71,8 +69,35 @@ theorem torus_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Torus.Grad
   Models.Torus.GradCurl.tsd_propagates hU h0 hF
 
 /-- **EB constraints propagate on every open cube `∏ (bᵢ, bᵢ + s)` with mirror boundary
-conditions** (the thesis' row-wise conditions only propagate stationary data); this is
-`Feec.Models.Cube.Mirror.propagatesCube`. Thesis: Prop 4.17 (corrected) -/
-alias cube_tsd_propagates := Models.Cube.Mirror.propagatesCube
+conditions** (the thesis' row-wise conditions only propagate stationary data,
+`Feec.Counterexamples.CubeStationary`): strong solutions of the Hodge wave equation of the mirror
+complex `Feec.Models.Cube.Mirror.complexCube` with data and forcing in the constraint
+`Feec.Models.Cube.Mirror.tsdCube` stay there. Thesis: Prop 4.17 (corrected) -/
+theorem cube_tsd_propagates {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s) {a c : ℝ}
+    {F U : ℝ → PiLp 2 (Models.Cube.Mirror.SpaceCube b s)}
+    (hU : Evolution.IsStrongSolution (Models.Cube.Mirror.complexCube b s hs).wave (Icc a c) F U)
+    (h0 : U a ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs))
+    (hF : ∀ t ∈ Icc a c, F t ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs)) :
+    ∀ t ∈ Icc a c, U t ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs) :=
+  Models.Cube.Mirror.propagatesCube hs hU h0 hF
+
+/-- **The EB system on every open cube with mirror boundary conditions, with existence and
+uniqueness**: for TSD data in `D(L)` and admissible TSD forcing, the Hodge wave equation has a
+classical solution, unique among strong solutions, which stays TSD.
+Thesis: Prop 4.17 (corrected) -/
+theorem cube_tsd_existsUnique {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s)
+    {U₀ : PiLp 2 (Models.Cube.Mirror.SpaceCube b s)}
+    (hU₀ : U₀ ∈ (Models.Cube.Mirror.complexCube b s hs).wave.domain)
+    (hU₀S : U₀ ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs))
+    {F : ℝ → PiLp 2 (Models.Cube.Mirror.SpaceCube b s)} {a c : ℝ}
+    (hF : Evolution.ForcingClass.admissible (Models.Cube.Mirror.complexCube b s hs).wave a c F)
+    (hFS : ∀ t ∈ Icc a c, F t ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs)) :
+    ∃ U, U a = U₀ ∧
+      Evolution.IsClassicalSolution (Models.Cube.Mirror.complexCube b s hs).wave (Icc a c) F U ∧
+      (∀ t ∈ Icc a c, U t ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs)) ∧
+      ∀ V, V a = U₀ →
+        Evolution.IsStrongSolution (Models.Cube.Mirror.complexCube b s hs).wave (Icc a c) F V →
+          EqOn V U (Icc a c) :=
+  Models.Cube.Mirror.existsUnique_memCube hs hU₀ hU₀S hF hFS
 
 end Feec.EinsteinBianchi

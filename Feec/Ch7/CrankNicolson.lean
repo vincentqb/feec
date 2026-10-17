@@ -5,6 +5,7 @@ public import Mathlib.Algebra.Order.Floor.Semifield
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 public import Mathlib.LinearAlgebra.Matrix.PosDef
+public import Feec.TimeStepping.BlockMatrix
 
 /-!
 # Chapter 7: Crank–Nicolson discretization of the linearized EB system
@@ -489,19 +490,17 @@ See [QuennevilleBelair2015, Ch. 7] (solver description, l. 4284–4285). -/
 theorem minres_symm {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matrix n2 n2 ℝ}
     (h0 : M0.IsSymm) (h1 : M1.IsSymm) (h2 : M2.IsSymm) (G : Matrix n1 n0 ℝ)
     (C : Matrix n2 n1 ℝ) (s : ℝ) :
-    (signJ * (massM M0 M1 M2 + s • stiffK G C)).IsSymm := by
-  ext i j
-  rcases i with i | i | i <;> rcases j with j | j | j <;>
-    simp [signJ, massM, stiffK, diagonal_mul, h0.apply, h1.apply, h2.apply]
+    (signJ * (massM M0 M1 M2 + s • stiffK G C)).IsSymm :=
+  TimeStepping.isSymm_diagonal_mul_add_smul _ (massM_isSymm h0 h1 h2) (stiffK_transpose G C)
+    (fun i j hij => by
+      rcases i with i | i | i <;> rcases j with j | j | j <;> simp_all [massM])
+    (fun i j hij => by
+      rcases i with i | i | i <;> rcases j with j | j | j <;> simp_all [stiffK]) s
 
 /-- The symmetrized system has the same solutions as the CN system, since `J² = I`. -/
 theorem minres_system_iff (A : Matrix (Idx n0 n1 n2) (Idx n0 n1 n2) ℝ)
-    (x b : Idx n0 n1 n2 → ℝ) : (signJ * A) *ᵥ x = signJ *ᵥ b ↔ A *ᵥ x = b := by
-  constructor
-  · intro h
-    have := congrArg (signJ *ᵥ ·) h
-    simpa [mulVec_mulVec, ← Matrix.mul_assoc, signJ_mul_self] using this
-  · intro h; rw [← mulVec_mulVec, h]
+    (x b : Idx n0 n1 n2 → ℝ) : (signJ * A) *ᵥ x = signJ *ᵥ b ↔ A *ᵥ x = b :=
+  TimeStepping.mulVec_diagonal_mul_iff _ (fun i => by rcases i with i | i | i <;> norm_num) A x b
 
 /-- `xᵀ K x = 0` for skew `K` (Thesis Ch 7, CN energy argument). -/
 theorem dotProduct_mulVec_skew {ι : Type*} [Fintype ι] {K : Matrix ι ι ℝ} (hK : Kᵀ = -K)

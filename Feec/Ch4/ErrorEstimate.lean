@@ -531,6 +531,12 @@ theorem norm_sq_div_two_le_AL_tst (ξ : C.VSp) : ‖ξ‖ ^ 2 / 2 ≤ C.AL ξ (C
   rw [bigAL_mkV]
   exact C.prop_4_13_lower _ _ _
 
+/-- The test map of Prop 4.13 is bounded: `‖tst ξ‖_V ≤ √3 ‖ξ‖_V`. -/
+theorem norm_tst_le (ξ : C.VSp) : ‖C.tst ξ‖ ≤ √3 * ‖ξ‖ := by
+  induction ξ using VSp.induction
+  rw [tst_mkV, norm_mkV, norm_mkV, ← Real.sqrt_mul (by norm_num)]
+  exact Real.sqrt_le_sqrt (C.prop_4_13_test_norm _ _ _)
+
 /-- Prop 4.13 on `V`: `(1/√12) ‖ξ‖_V ‖tst ξ‖_V ≤ A(ξ, tst ξ)`. -/
 theorem prop_4_13_V (ξ : C.VSp) : ‖ξ‖ * ‖C.tst ξ‖ / √12 ≤ C.AL ξ (C.tst ξ) := by
   induction ξ using VSp.induction
@@ -565,12 +571,14 @@ theorem infSup_of_tst_mem (K : Submodule ℝ C.VSp) (hK : ∀ ξ ∈ K, C.tst ξ
 `(1/√12) ‖ξ‖_V ≤ ‖A(ξ, ·)‖_{V*}`.
 See [QuennevilleBelair2015, Prop 4.13, Thm 4.9]; cf. [Babuska1971]. -/
 theorem prop_4_13_infSup (ξ : C.VSp) : 1 / √12 * ‖ξ‖ ≤ ‖C.AL ξ‖ := by
-  obtain ⟨v, -, hv, h⟩ := C.infSup_of_tst_mem ⊤ (fun _ _ => trivial) ξ trivial
-  calc 1 / √12 * ‖ξ‖ ≤ C.AL ξ v := h
-    _ ≤ ‖C.AL ξ v‖ := Real.le_norm_self _
-    _ ≤ ‖C.AL ξ‖ * ‖v‖ := (C.AL ξ).le_opNorm v
-    _ ≤ ‖C.AL ξ‖ * 1 := by gcongr
-    _ = _ := mul_one _
+  have h := Variational.InfSup.of_testMap (B := C.AL) C.tst (c := 1 / 2) (M := √3)
+    (by norm_num) (by positivity) C.norm_tst_le
+    (fun ζ => by rw [RCLike.re_to_real]; have := C.norm_sq_div_two_le_AL_tst ζ; linarith)
+  have e : (1 / 2 : ℝ) / √3 = 1 / √12 := by
+    rw [show (12 : ℝ) = 2 ^ 2 * 3 by norm_num, Real.sqrt_mul (by norm_num),
+      Real.sqrt_sq (by norm_num)]
+    field_simp
+  rw [← e]; exact h.le ξ
 
 /-! ## The discrete space `Vₕ = Vₕ⁰ × Vₕ¹ × Vₕ²` -/
 
@@ -923,39 +931,20 @@ theorem thm_4_14_pointwise {T : ℝ} {ξ ξ' ξh ξh' : ℝ → C.VSp} (hξ : C.
       + (1 + t) * ∫ s in (0:ℝ)..t, ‖C.projErr S (ξ' s)‖ := by
   obtain ⟨c, c', d, w⟩ := hξ
   obtain ⟨ch, mh, dh, eh⟩ := hξh
-  set P := C.ellProj S
-  set ε : ℝ → Tot X0 X1 X2 := fun t => C.toW (P (ξ t) - ξh t) with hε
-  set ε' : ℝ → Tot X0 X1 X2 := fun t => C.toW (P (ξ' t) - ξh' t) with hε'
-  set e : ℝ → Tot X0 X1 X2 := fun t => C.projErr S (ξ t) with he
-  set e' : ℝ → Tot X0 X1 X2 := fun t => C.projErr S (ξ' t) with he'
-  have hεc : ContinuousOn ε (Icc 0 T) :=
-    C.toW.continuous.comp_continuousOn ((P.continuous.comp_continuousOn c).sub ch)
-  have hεd : ∀ t ∈ Ico 0 T, HasDerivWithinAt ε (ε' t) (Ici t) t := fun t ht =>
-    C.toW.hasFDerivAt.comp_hasDerivWithinAt t
-      ((P.hasFDerivAt.comp_hasDerivWithinAt t (d t ht)).sub (dh t ht))
-  have hec : ContinuousOn e (Icc 0 T) := (C.projErr S).continuous.comp_continuousOn c
-  have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (e' t) (Ici t) t := fun t ht =>
-    (C.projErr S).hasFDerivAt.comp_hasDerivWithinAt t (d t ht)
-  have he'c : ContinuousOn e' (Icc 0 T) := (C.projErr S).continuous.comp_continuousOn c'
-  have herr : ∀ t ∈ Ico 0 T, ⟪ε' t, ε t⟫ = ⟪e' t, ε t⟫ - ⟪e t, ε t⟫ := by
-    intro t ht
-    have hψ : P (ξ t) - ξh t ∈ S.toV :=
-      S.toV.sub_mem (C.ellProj_mem S _) (mh t (Ico_subset_Icc_self ht))
-    have E1 := w t ht (P (ξ t) - ξh t)
-    have E2 := eh t ht _ hψ
-    have E3 := C.ellProj_spec S (ξ t) hψ
-    have hs := C.aL_self (P (ξ t) - ξh t)
-    simp only [AL_apply] at E3
-    simp only [hε, hε', he, he', projErr_apply, map_sub, inner_sub_left, inner_sub_right,
-      LinearMap.sub_apply] at E1 E2 E3 hs ⊢
-    linarith
-  have core := error_bound_core hεc hεd hec hed he'c herr
+  have h := Variational.GalerkinEvolution.error_bound_refined (𝕜 := ℝ) C.toW
+    (fun x ψ => C.aL x ψ) (fun x y ψ => by simp only [map_sub, LinearMap.sub_apply]) S.toV
+    (fun ψ _ => by rw [C.aL_self, RCLike.re_to_real]) (C.ellProj S) (C.ellProj_mem S)
+    (fun ζ ψ hψ => by
+      have E := C.ellProj_spec S ζ hψ
+      simp only [AL_apply] at E
+      simp only [map_sub, inner_sub_right, LinearMap.sub_apply]
+      have h1 := real_inner_comm (C.toW (C.ellProj S ζ)) (C.toW ψ)
+      have h2 := real_inner_comm (C.toW ζ) (C.toW ψ)
+      linarith)
+    c c' d (fun t ht ψ _ => by rw [real_inner_comm]; exact w t ht ψ) ch mh dh
+    (fun t ht ψ hψ => by rw [real_inner_comm]; exact eh t ht ψ hψ)
   intro t ht
-  have h := core t ht
-  have hid : ε t - e t = C.toW (ξ t - ξh t) := by
-    simp only [hε, he, projErr_apply, ← map_sub]; congr 1; abel
-  rw [hid] at h
-  exact h
+  simpa only [sub_zero, projErr_apply] using h t ht
 
 /-- **Thm 4.14** in the thesis's form: for `t ∈ [0,T]`,
 `‖ξ(t) − ξₕ(t)‖_W ≤ ‖εₕ(0)‖_W + ‖e(t)‖_W + (1 + T)(‖e(0)‖_W + ∫₀ᵀ ‖ė‖_W)`; taking the

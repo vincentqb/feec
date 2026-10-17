@@ -253,3 +253,97 @@ theorem existsUnique_galerkin_sesq {K : Submodule 𝕜 X} {L : Submodule 𝕜 Y}
     exact congrArg Subtype.val (h.injective this)
 
 end Feec.Variational
+
+/-! ### Real bilinear forms as sesquilinear forms -/
+
+namespace Feec.Variational
+
+section Real
+
+variable {X Y : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] [NormedAddCommGroup Y]
+  [NormedSpace ℝ Y]
+
+/-- A real bilinear form seen as a sesquilinear form (`starRingEnd ℝ` is the identity). -/
+def toSesq (B : X →L[ℝ] Y →L[ℝ] ℝ) : X →L[ℝ] Y →L⋆[ℝ] ℝ :=
+  LinearMap.mkContinuous₂
+    (LinearMap.mk₂'ₛₗ (RingHom.id ℝ) (starRingEnd ℝ) (fun x y => B x y)
+      (fun x x' y => by simp) (fun a x y => by simp) (fun x y y' => by simp)
+      (fun a x y => by simp))
+    ‖B‖ fun x y => B.le_opNorm₂ x y
+
+@[simp] theorem toSesq_apply (B : X →L[ℝ] Y →L[ℝ] ℝ) (x : X) (y : Y) : toSesq B x y = B x y :=
+  rfl
+
+/-- A real linear functional seen as an antilinear one. -/
+def toAnti (f : Y →L[ℝ] ℝ) : Y →L⋆[ℝ] ℝ :=
+  LinearMap.mkContinuous
+    { toFun := f, map_add' := f.map_add, map_smul' := fun a y => by simp } ‖f‖ f.le_opNorm
+
+@[simp] theorem toAnti_apply (f : Y →L[ℝ] ℝ) (y : Y) : toAnti f y = f y := rfl
+
+theorem norm_toAnti (f : Y →L[ℝ] ℝ) : ‖toAnti f‖ = ‖f‖ :=
+  le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun y => f.le_opNorm y)
+    (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun y => (toAnti f).le_opNorm y)
+
+theorem toSesq_apply_eq (B : X →L[ℝ] Y →L[ℝ] ℝ) (x : X) : toSesq B x = toAnti (B x) := rfl
+
+theorem norm_toSesq_apply (B : X →L[ℝ] Y →L[ℝ] ℝ) (x : X) : ‖toSesq B x‖ = ‖B x‖ :=
+  norm_toAnti (B x)
+
+theorem toAnti_injective : Function.Injective (toAnti : (Y →L[ℝ] ℝ) → Y →L⋆[ℝ] ℝ) :=
+  fun f g h => ContinuousLinearMap.ext fun y => by
+    simpa using congrArg (fun F => F y) h
+
+theorem toAnti_surjective : Function.Surjective (toAnti : (Y →L[ℝ] ℝ) → Y →L⋆[ℝ] ℝ) := by
+  intro F
+  refine ⟨LinearMap.mkContinuous
+    { toFun := F, map_add' := F.map_add, map_smul' := fun a y => by simp } ‖F‖ F.le_opNorm,
+    ContinuousLinearMap.ext fun y => rfl⟩
+
+end Real
+
+end Feec.Variational
+
+namespace Feec.Variational
+
+variable {𝕜 X Y : Type*} [RCLike 𝕜]
+  [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X]
+  [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y] [CompleteSpace Y]
+  {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
+
+/-- **The best inf-sup constant** is `‖B⁻¹‖⁻¹`: under inf-sup and separation, `γ' ≥ 0` is an
+admissible constant iff `γ' ‖B⁻¹‖ ≤ 1`. Thesis: Thm 4.9 -/
+theorem infSup_iff_mul_norm_symm_le (h : InfSup B γ) (hs : SeparatingRight B) {γ' : ℝ}
+    (hγ' : 0 ≤ γ') :
+    (∀ x, γ' * ‖x‖ ≤ ‖B x‖) ↔
+      γ' * ‖((equivOfInfSup h hs).symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X)‖ ≤ 1 := by
+  set e := equivOfInfSup h hs
+  constructor
+  · intro hb
+    rcases hγ'.lt_or_eq with hγ' | rfl
+    · rw [← le_div_iff₀' hγ']
+      refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun f => ?_
+      have := hb (e.symm f)
+      rw [show B (e.symm f) = e (e.symm f) from rfl, ContinuousLinearEquiv.apply_symm_apply]
+        at this
+      rw [ContinuousLinearEquiv.coe_coe, div_mul_eq_mul_div, one_mul, le_div_iff₀' hγ']
+      exact this
+    · simp
+  · intro hb x
+    calc γ' * ‖x‖ = γ' * ‖(e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X) (e x)‖ := by simp
+      _ ≤ γ' * (‖(e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X)‖ * ‖e x‖) := by
+          gcongr; exact ContinuousLinearMap.le_opNorm _ _
+      _ = (γ' * ‖(e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X)‖) * ‖e x‖ := by ring
+      _ ≤ 1 * ‖e x‖ := by gcongr
+      _ = ‖B x‖ := one_mul _
+
+end Feec.Variational
+
+namespace Feec.Variational
+
+theorem norm_toSesq_le {X Y : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+    [NormedAddCommGroup Y] [NormedSpace ℝ Y] (B : X →L[ℝ] Y →L[ℝ] ℝ) : ‖toSesq B‖ ≤ ‖B‖ :=
+  ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x => by
+    rw [norm_toSesq_apply]; exact B.le_opNorm x
+
+end Feec.Variational

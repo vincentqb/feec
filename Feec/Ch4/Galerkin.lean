@@ -3,6 +3,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.LinearAlgebra.Dual.Lemmas
+public import Feec.Variational.SaddlePoint
 
 /-!
 # Galerkin theory: Lax–Milgram, Babuška–Nečas, quasi-optimality, Brezzi (thesis §4.5)
@@ -149,6 +150,19 @@ theorem equivOfInfSup_apply (h : InfSupCond B) (hd : DenseRangeCond B) (u v : V)
     ⟪equivOfInfSup h hd u, v⟫ = B u v :=
   continuousLinearMapOfBilin_apply B u v
 
+omit [CompleteSpace V] in
+/-- `InfSupCond` is the inf-sup condition (`Feec.Variational.InfSup`) of `B` seen as a
+sesquilinear form. -/
+theorem infSupCond_iff_exists_infSup :
+    InfSupCond B ↔ ∃ γ, Variational.InfSup (Variational.toSesq B) γ :=
+  ⟨fun ⟨γ, hγ, h⟩ => ⟨γ, ⟨hγ, fun u => by rw [Variational.norm_toSesq_apply]; exact h u⟩⟩,
+    fun ⟨γ, h⟩ => ⟨γ, h.pos, fun u => by rw [← Variational.norm_toSesq_apply]; exact h.le u⟩⟩
+
+omit [CompleteSpace V] in
+/-- `DenseRangeCond` is `Feec.Variational.SeparatingRight`. -/
+theorem denseRangeCond_iff_separatingRight :
+    DenseRangeCond B ↔ Variational.SeparatingRight (Variational.toSesq B) := Iff.rfl
+
 /-- **Thesis Thm 4.9** (Babuška–Nečas), forward direction, Riesz-representative form.
 
 Thesis gap: the thesis gives no proof and writes "there exists"; the conclusion is existence
@@ -157,11 +171,9 @@ Thesis gap: the thesis gives no proof and writes "there exists"; the conclusion 
 See [QuennevilleBelair2015, Thm 4.9]; cf. [Babuska1971]. -/
 theorem existsUnique_solution (h : InfSupCond B) (hd : DenseRangeCond B) (f : V) :
     ∃! u, ∀ v, B u v = ⟪f, v⟫ := by
-  refine ⟨(equivOfInfSup h hd).symm f, fun v => ?_, fun u hu => ?_⟩
-  · rw [← equivOfInfSup_apply h hd, ContinuousLinearEquiv.apply_symm_apply]
-  · apply (equivOfInfSup h hd).injective
-    rw [ContinuousLinearEquiv.apply_symm_apply]
-    exact ext_inner_right ℝ fun v => by rw [equivOfInfSup_apply, hu]
+  obtain ⟨γ, hγ⟩ := infSupCond_iff_exists_infSup.1 h
+  exact (existsUnique_congr fun u => forall_congr' fun v => by
+    rw [Variational.toSesq_apply, real_inner_comm]).1 (Variational.existsUnique_inner hγ hd f)
 
 /-- **Thesis Thm 4.9**, forward direction, for a functional `f ∈ V*`. -/
 theorem existsUnique_solution_dual (h : InfSupCond B) (hd : DenseRangeCond B)
@@ -236,15 +248,10 @@ uses the bounded inverse theorem.
 See [QuennevilleBelair2015, Thm 4.9]; cf. [Babuska1971]. -/
 theorem babuska_necas_iff :
     (InfSupCond B ∧ DenseRangeCond B) ↔ ∀ f : V, ∃! u, ∀ v, B u v = ⟪f, v⟫ := by
-  refine ⟨fun h => existsUnique_solution h.1 h.2, fun hs => ⟨?_, ?_⟩⟩
-  · refine infSup_of_bijective (fun u u' huu => ?_) (fun f => ?_)
-    · obtain ⟨w, -, hw⟩ := hs ((B♯) u)
-      have h1 := hw u fun v => (continuousLinearMapOfBilin_apply B u v).symm
-      have h2 := hw u' fun v => by rw [huu]; exact (continuousLinearMapOfBilin_apply B u' v).symm
-      rw [h1, h2]
-    · obtain ⟨u, hu, -⟩ := hs f
-      exact ⟨u, ext_inner_right ℝ fun v => by rw [continuousLinearMapOfBilin_apply, hu]⟩
-  · exact denseRange_of_solvable fun f => (hs f).exists
+  rw [infSupCond_iff_exists_infSup, denseRangeCond_iff_separatingRight,
+    Variational.babuskaNecas_iff_inner]
+  exact forall_congr' fun f => existsUnique_congr fun u => forall_congr' fun v => by
+    rw [Variational.toSesq_apply, real_inner_comm]
 
 /-- **Thesis Thm 4.9** (Babuška–Nečas), corrected, with right-hand sides `f ∈ V*` as in the
 thesis: inf-sup and dense range hold iff `B u v = f v` (all `v`) is uniquely solvable for every
@@ -280,8 +287,15 @@ admits, for every `f ∈ V*`, a unique `u` with `B u v = f v` for all `v`. Obtai
 special case of Thm 4.9.
 
 See [QuennevilleBelair2015, Thm 4.8]. -/
-theorem lax_milgram (h : IsCoercive B) (f : StrongDual ℝ V) : ∃! u, ∀ v, B u v = f v :=
-  existsUnique_solution_dual (infSupCond_of_isCoercive h).1 (infSupCond_of_isCoercive h).2 f
+theorem lax_milgram (h : IsCoercive B) (f : StrongDual ℝ V) : ∃! u, ∀ v, B u v = f v := by
+  obtain ⟨α, hα, hc⟩ := h
+  have H := Variational.existsUnique_of_coercive (B := Variational.toSesq B) hα
+    (fun x => by rw [Variational.toSesq_apply, RCLike.re_to_real, sq, ← mul_assoc]; exact hc x)
+    (Variational.toAnti f)
+  refine (existsUnique_congr fun u => ?_).1 H
+  rw [Variational.toSesq_apply_eq]
+  exact ⟨fun h v => by simpa using congrArg (fun F => F v) h,
+    fun h => congrArg _ (ContinuousLinearMap.ext h)⟩
 
 omit [CompleteSpace V] in
 /-- **Thesis Thm 4.8**, stability bound `‖u‖ ≤ α⁻¹ ‖f‖`.
@@ -386,6 +400,14 @@ section QuasiOpt
 
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
 
+/-- The attained inf-sup condition on `K` is `Feec.Variational.InfSup` of the restriction. -/
+theorem infSup_restrict_of_forall (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X) {γ : ℝ}
+    (hγ : 0 < γ) (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v) :
+    Variational.InfSup (Variational.restrict B K K) γ :=
+  Variational.InfSup.of_forall_exists_norm_le_one hγ fun w => by
+    obtain ⟨v, hv, hv1, h⟩ := hinf w w.2
+    exact ⟨⟨v, hv⟩, hv1, h.trans (Real.le_norm_self _)⟩
+
 /-- **Thesis Thm 4.10** (quasi-optimality, Céa/Babuška), abstract core: under a discrete inf-sup
 condition on a subspace `K` and Galerkin orthogonality, `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) ‖u - w‖` for
 every `w ∈ K`.
@@ -399,36 +421,15 @@ See [QuennevilleBelair2015, Thm 4.10]; cf. [Babuska1971]. -/
 theorem quasi_opt (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X) {γ : ℝ} (hγ : 0 < γ)
     (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v)
     {u uh : X} (huh : uh ∈ K) (horth : ∀ v ∈ K, B (u - uh) v = 0) :
-    ∀ w ∈ K, ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * ‖u - w‖ := by
-  intro w hw
-  obtain ⟨v, hv, hv1, hγv⟩ := hinf (w - uh) (K.sub_mem hw huh)
-  have key : B (w - uh) v = B (w - u) v := by
-    have : w - uh = (w - u) + (u - uh) := by abel
-    rw [this, map_add, add_apply, horth v hv, add_zero]
-  have hB : B (w - u) v ≤ ‖B‖ * ‖w - u‖ := by
-    calc B (w - u) v ≤ ‖B (w - u) v‖ := Real.le_norm_self _
-      _ ≤ ‖B (w - u)‖ * ‖v‖ := (B (w - u)).le_opNorm v
-      _ ≤ (‖B‖ * ‖w - u‖) * 1 := by
-          gcongr
-          · exact B.le_opNorm _
-      _ = _ := mul_one _
-  have h2 : ‖w - uh‖ ≤ ‖B‖ / γ * ‖u - w‖ := by
-    rw [div_mul_eq_mul_div, le_div_iff₀ hγ, norm_sub_rev u w]; linarith
-  calc ‖u - uh‖ = ‖(u - w) + (w - uh)‖ := by congr 1; abel
-    _ ≤ ‖u - w‖ + ‖w - uh‖ := norm_add_le _ _
-    _ ≤ ‖u - w‖ + ‖B‖ / γ * ‖u - w‖ := by linarith
-    _ = _ := by ring
+    ∀ w ∈ K, ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * ‖u - w‖ := fun _ hw =>
+  (infSup_restrict_of_forall B K hγ hinf).norm_sub_le_of_orthogonal huh horth hw
 
 /-- **Thesis Thm 4.10**, best-approximation form: `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) dist(u, K)`. -/
 theorem quasi_opt_infDist (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X) {γ : ℝ} (hγ : 0 < γ)
     (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v)
     {u uh : X} (huh : uh ∈ K) (horth : ∀ v ∈ K, B (u - uh) v = 0) :
-    ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * Metric.infDist u K := by
-  have hC : 0 < 1 + ‖B‖ / γ := by positivity
-  rw [← div_le_iff₀' hC]
-  refine Metric.le_infDist ⟨0, K.zero_mem⟩ |>.2 fun w hw => ?_
-  rw [div_le_iff₀' hC, dist_eq_norm]
-  exact quasi_opt B K hγ hinf huh horth w hw
+    ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * Metric.infDist u K :=
+  (infSup_restrict_of_forall B K hγ hinf).norm_sub_le_infDist huh horth
 
 /-- Thesis Thm 4.10, discrete well-posedness: on a finite-dimensional subspace `K` (the space
 `Xₕ`), the discrete inf-sup condition alone gives a unique Galerkin solution `uₕ ∈ K`.
@@ -440,30 +441,8 @@ See [QuennevilleBelair2015, Thm 4.10]. -/
 theorem discrete_existsUnique (B : X →L[ℝ] X →L[ℝ] ℝ) (K : Submodule ℝ X)
     [FiniteDimensional ℝ K] {γ : ℝ} (hγ : 0 < γ)
     (hinf : ∀ w ∈ K, ∃ v ∈ K, ‖v‖ ≤ 1 ∧ γ * ‖w‖ ≤ B w v) (F : StrongDual ℝ X) :
-    ∃! uh, uh ∈ K ∧ ∀ v ∈ K, B uh v = F v := by
-  let Φ : K →ₗ[ℝ] Module.Dual ℝ K :=
-    { toFun := fun w => (B (w : X)).toLinearMap.comp K.subtype
-      map_add' := fun x y => by ext v; simp
-      map_smul' := fun c x => by ext v; simp }
-  have hΦ : ∀ w v : K, Φ w v = B w v := fun _ _ => rfl
-  have hinj : Function.Injective Φ := by
-    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
-    intro w hw
-    obtain ⟨v, hv, -, hγv⟩ := hinf w w.2
-    have : B w v = 0 := by rw [← hΦ w ⟨v, hv⟩, hw]; rfl
-    rw [this] at hγv
-    have : ‖(w : X)‖ = 0 := le_antisymm (by nlinarith [norm_nonneg (w : X)]) (norm_nonneg _)
-    exact Subtype.ext (norm_eq_zero.mp this)
-  have hsurj := (LinearMap.injective_iff_surjective_of_finrank_eq_finrank
-    (Subspace.dual_finrank_eq).symm).1 hinj
-  obtain ⟨w, hw⟩ := hsurj (F.toLinearMap.comp K.subtype)
-  refine ⟨w, ⟨w.2, fun v hv => ?_⟩, ?_⟩
-  · rw [← hΦ w ⟨v, hv⟩, hw]; rfl
-  · rintro y ⟨hy, hyF⟩
-    have : Φ ⟨y, hy⟩ = Φ w := by
-      ext v
-      rw [hΦ, hΦ, hyF v v.2, ← hΦ w v, hw]; rfl
-    exact congrArg Subtype.val (hinj this)
+    ∃! uh, uh ∈ K ∧ ∀ v ∈ K, B uh v = F v :=
+  Variational.existsUnique_galerkin rfl (infSup_restrict_of_forall B K hγ hinf) F
 
 /-- **Thesis Thm 4.10** as stated, corrected: let `u` solve `B u v = F v` on `X`, and `uₕ ∈ K`
 solve `B uₕ v = F v` for `v ∈ K`. Then `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) inf_{w ∈ K} ‖u - w‖`, where the
@@ -508,32 +487,42 @@ theorem not_infSup_first_of_ker_ne_bot [NormedSpace ℝ X] [NormedSpace ℝ Y]
   rw [hbz, norm_zero] at this
   exact absurd this (not_le.mpr (mul_pos hβ (norm_pos_iff.mpr hz0)))
 
+/-- The old saddle point equations are `Feec.Variational.IsSaddleSolution` for `a` seen as a
+sesquilinear form and the Riesz functionals of `F`, `G`. -/
+theorem isSaddleSolution_iff (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) (F : X) (G : Y) (u : X)
+    (p : Y) :
+    Variational.IsSaddleSolution (Variational.toSesq a) Bs (innerSLFlip ℝ F) (innerSLFlip ℝ G)
+        u p ↔ (∀ v, a u v + ⟪Bs v, p⟫ = ⟪F, v⟫) ∧ ∀ q, ⟪Bs u, q⟫ = ⟪G, q⟫ := by
+  constructor
+  · rintro ⟨h1, h2⟩
+    refine ⟨fun v => ?_, fun q => ?_⟩
+    · have := h1 v
+      rwa [Variational.toSesq_apply, ContinuousLinearMap.adjoint_inner_right,
+        innerSLFlip_apply_apply, real_inner_comm F v] at this
+    · have := h2 q
+      rwa [innerSLFlip_apply_apply, real_inner_comm (Bs u) q, real_inner_comm G q] at this
+  · rintro ⟨h1, h2⟩
+    refine ⟨fun v => ?_, fun q => ?_⟩
+    · rw [Variational.toSesq_apply, ContinuousLinearMap.adjoint_inner_right,
+        innerSLFlip_apply_apply, real_inner_comm F v]; exact h1 v
+    · rw [innerSLFlip_apply_apply, real_inner_comm (Bs u) q, real_inner_comm G q]; exact h2 q
+
+omit [CompleteSpace X] [CompleteSpace Y] in
+/-- The old inf-sup hypothesis on `Z = ker B` is `Feec.Variational.InfSup` of the restriction. -/
+theorem infSup_ker_of_forall (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) {γ : ℝ} (hγ : 0 < γ)
+    (hZ : ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z') :
+    Variational.InfSup (Variational.restrict (Variational.toSesq a) Bs.ker Bs.ker) γ :=
+  Variational.InfSup.of_forall_exists_norm_le_one hγ fun z => by
+    obtain ⟨z', hz', h1, h2⟩ := hZ z z.2
+    exact ⟨⟨z', hz'⟩, h1, h2.trans (Real.le_norm_self _)⟩
+
 /-- Brezzi, lifting step: if `Bᵀ` is bounded below by `β`, then `B Bᵀ` is onto, so every
 `G ∈ Y` is `B u_G` with `u_G = Bᵀ w` and `β ‖u_G‖ ≤ ‖G‖`. -/
 theorem brezzi_lift (Bs : X →L[ℝ] Y) {β : ℝ} (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adj Bs q‖)
     (G : Y) : ∃ w : Y, Bs (adj Bs w) = G ∧ β * ‖adj Bs w‖ ≤ ‖G‖ := by
-  let Bc : Y →L[ℝ] Y →L[ℝ] ℝ := (innerSL ℝ).comp (Bs.comp (adj Bs))
-  have hBc : ∀ p q, Bc p q = ⟪Bs (adj Bs p), q⟫ := fun _ _ => rfl
-  have hcoer : IsCoercive Bc := by
-    refine ⟨β ^ 2, by positivity, fun q => ?_⟩
-    rw [hBc, norm_sq_adj]
-    have h0 : 0 ≤ β * ‖q‖ := by positivity
-    have := mul_self_le_mul_self h0 (hb q)
-    nlinarith
-  obtain ⟨w, hw, -⟩ := lax_milgram hcoer (toDual ℝ Y G)
-  have hMw : Bs (adj Bs w) = G :=
-    ext_inner_right ℝ fun q => by rw [← hBc, hw, toDual_apply_apply]
-  refine ⟨w, hMw, ?_⟩
-  have h1 : ‖adj Bs w‖ ^ 2 ≤ ‖G‖ * ‖w‖ := by
-    rw [← norm_sq_adj, hMw, real_inner_comm]
-    calc ⟪w, G⟫ ≤ ‖w‖ * ‖G‖ := real_inner_le_norm _ _
-      _ = ‖G‖ * ‖w‖ := mul_comm _ _
-  rcases (norm_nonneg (adj Bs w)).lt_or_eq with hpos | h0
-  · have h2 := hb w
-    have : β * ‖adj Bs w‖ * ‖adj Bs w‖ ≤ ‖G‖ * ‖adj Bs w‖ := by
-      nlinarith [norm_nonneg G]
-    exact le_of_mul_le_mul_right this hpos
-  · rw [← h0, mul_zero]; exact norm_nonneg _
+  obtain ⟨w, hw, hβw⟩ := Variational.exists_lift hβ hb (innerSLFlip ℝ G)
+  refine ⟨w, ext_inner_left ℝ fun q => by rw [hw, innerSLFlip_apply_apply], ?_⟩
+  rwa [Variational.norm_innerSLFlip] at hβw
 
 /-- **Thesis Thm 4.11** (Brezzi), uniqueness half: the discrete inf-sup on `Z = ker B` and the
 inf-sup of `b` (inf over `q ∈ Y`) force uniqueness of the saddle point.
@@ -544,32 +533,10 @@ theorem brezzi_unique (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) {γ
     (hb : ∀ q, β * ‖q‖ ≤ ‖adj Bs q‖) {F : X} {G : Y} {u u' : X} {p p' : Y}
     (h1 : ∀ v, a u v + ⟪Bs v, p⟫ = ⟪F, v⟫) (h2 : ∀ q, ⟪Bs u, q⟫ = ⟪G, q⟫)
     (h1' : ∀ v, a u' v + ⟪Bs v, p'⟫ = ⟪F, v⟫) (h2' : ∀ q, ⟪Bs u', q⟫ = ⟪G, q⟫) :
-    u = u' ∧ p = p' := by
-  have hBu : Bs u = Bs u' := ext_inner_right ℝ fun q => by rw [h2, h2']
-  have hu : u = u' := by
-    have he : u - u' ∈ Bs.ker := by
-      show Bs (u - u') = 0
-      rw [map_sub, hBu, sub_self]
-    obtain ⟨z', hz', -, hγz⟩ := hZ _ he
-    have hz'0 : Bs z' = 0 := hz'
-    have : a (u - u') z' = 0 := by
-      have e1 := h1 z'
-      have e2 := h1' z'
-      rw [hz'0, inner_zero_left, add_zero] at e1 e2
-      rw [map_sub, sub_apply, e1, e2, sub_self]
-    rw [this] at hγz
-    have : ‖u - u'‖ = 0 := le_antisymm (by nlinarith [norm_nonneg (u - u')]) (norm_nonneg _)
-    exact sub_eq_zero.mp (norm_eq_zero.mp this)
-  subst hu
-  refine ⟨rfl, ?_⟩
-  have hv : ∀ v, ⟪v, adj Bs (p - p')⟫ = 0 := fun v => by
-    rw [ContinuousLinearMap.adjoint_inner_right, inner_sub_right]
-    linarith [h1 v, h1' v]
-  have hq : adj Bs (p - p') = 0 := inner_self_eq_zero.mp (hv _)
-  have := hb (p - p')
-  rw [hq, norm_zero] at this
-  have : ‖p - p'‖ = 0 := le_antisymm (by nlinarith [norm_nonneg (p - p')]) (norm_nonneg _)
-  exact (sub_eq_zero.mp (norm_eq_zero.mp this))
+    u = u' ∧ p = p' :=
+  Variational.IsSaddleSolution.unique (infSup_ker_of_forall a Bs hγ hZ) hβ hb
+    ((isSaddleSolution_iff a Bs F G u p).2 ⟨h1, h2⟩)
+    ((isSaddleSolution_iff a Bs F G u' p').2 ⟨h1', h2'⟩)
 
 /-- **Thesis Thm 4.11** (Brezzi), corrected and proved: existence and uniqueness for the saddle
 point problem `a(u,v) + b(v,p) = F(v)`, `b(u,q) = G(q)`, with `b(v,q) = ⟪B v, q⟫`.
@@ -590,58 +557,11 @@ theorem brezzi (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y)
     ∃! up : X × Y, (∀ v, a up.1 v + ⟪Bs v, up.2⟫ = ⟪F, v⟫) ∧ ∀ q, ⟪Bs up.1, q⟫ = ⟪G, q⟫ := by
   obtain ⟨γ, hγ, hZ⟩ := hZ
   obtain ⟨β, hβ, hb⟩ := hb
-  set Z := Bs.ker
-  have : CompleteSpace Z := Bs.isClosed_ker.completeSpace_coe
-  let aZ : Z →L[ℝ] Z →L[ℝ] ℝ := a.bilinearComp Z.subtypeL Z.subtypeL
-  have haZ : ∀ z z' : Z, aZ z z' = a z z' := fun _ _ => rfl
-  have hinfZ : InfSupCond aZ := infSupCond_iff_attained.2 ⟨γ, hγ, fun z => by
-    obtain ⟨z', hz', h1, h2⟩ := hZ z z.2
-    exact ⟨⟨z', hz'⟩, h1, h2⟩⟩
-  have hdZ : DenseRangeCond aZ := fun z' hz' =>
+  have hs : Variational.SeparatingRight
+      (Variational.restrict (Variational.toSesq a) Bs.ker Bs.ker) := fun z' hz' =>
     Subtype.ext (hZd z' z'.2 fun z hz => hz' ⟨z, hz⟩)
-  obtain ⟨w0, hw0, -⟩ := brezzi_lift Bs hβ hb G
-  set uG := adj Bs w0
-  let ℓ : StrongDual ℝ Z := (innerSL ℝ F - a uG).comp Z.subtypeL
-  have hℓ : ∀ z' : Z, ℓ z' = ⟪F, (z' : X)⟫ - a uG z' := fun _ => rfl
-  obtain ⟨z, hz, -⟩ := existsUnique_solution_dual hinfZ hdZ ℓ
-  set u := uG + (z : X)
-  have hBz : Bs z = 0 := z.2
-  have hBu : Bs u = G := by rw [map_add, hw0, hBz, add_zero]
-  set r := F - (toDual ℝ X).symm (a u)
-  have hr : ∀ v, ⟪r, v⟫ = ⟪F, v⟫ - a u v := fun v => by
-    rw [inner_sub_left, toDual_symm_apply]
-  have hrZ : r ∈ Zᗮ := by
-    rw [Submodule.mem_orthogonal]
-    intro z' hz'
-    have := hz ⟨z', hz'⟩
-    rw [haZ, hℓ] at this
-    rw [real_inner_comm, hr, map_add, add_apply]
-    simp only at this
-    linarith
-  obtain ⟨p, hp, -⟩ := brezzi_lift Bs hβ hb (Bs r)
-  have hadj : adj Bs p = r := by
-    have h1 : r - adj Bs p ∈ Z := by
-      show Bs (r - adj Bs p) = 0
-      rw [map_sub, hp, sub_self]
-    have h2 : r - adj Bs p ∈ Zᗮ := by
-      refine Zᗮ.sub_mem hrZ ?_
-      rw [Submodule.mem_orthogonal]
-      intro z' hz'
-      rw [ContinuousLinearMap.adjoint_inner_right, show Bs z' = 0 from hz', inner_zero_left]
-    have : r - adj Bs p ∈ Z ⊓ Zᗮ := ⟨h1, h2⟩
-    rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at this
-    exact (sub_eq_zero.mp this).symm
-  refine ⟨(u, p), ⟨fun v => ?_, fun q => by rw [hBu]⟩, ?_⟩
-  · show a u v + ⟪Bs v, p⟫ = ⟪F, v⟫
-    rw [← ContinuousLinearMap.adjoint_inner_right, hadj, real_inner_comm, hr]
-    ring
-  · rintro ⟨u', p'⟩ ⟨h1', h2'⟩
-    obtain ⟨e1, e2⟩ := brezzi_unique a Bs hγ hZ hβ hb (u := u') (p := p') h1' h2'
-      (fun v => by
-        rw [← ContinuousLinearMap.adjoint_inner_right, hadj, real_inner_comm, hr]
-        ring)
-      (fun q => by rw [hBu])
-    rw [e1, e2]
+  exact (existsUnique_congr fun up : X × Y => isSaddleSolution_iff a Bs F G up.1 up.2).1
+    (Variational.existsUnique_isSaddleSolution (infSup_ker_of_forall a Bs hγ hZ) hs hβ hb _ _)
 
 /-- **Thesis Thm 4.11**, stability (the thesis' "well-posed" constant, made explicit): every
 solution satisfies `‖u‖ ≤ γ⁻¹‖F‖ + β⁻¹(1 + ‖a‖/γ)‖G‖` and `‖p‖ ≤ β⁻¹(‖F‖ + ‖a‖‖u‖)`.
@@ -654,50 +574,15 @@ theorem brezzi_stability (a : X →L[ℝ] X →L[ℝ] ℝ) (Bs : X →L[ℝ] Y) 
     (hb : ∀ q, β * ‖q‖ ≤ ‖adj Bs q‖) {F : X} {G : Y} {u : X} {p : Y}
     (h1 : ∀ v, a u v + ⟪Bs v, p⟫ = ⟪F, v⟫) (h2 : ∀ q, ⟪Bs u, q⟫ = ⟪G, q⟫) :
     ‖u‖ ≤ γ⁻¹ * ‖F‖ + β⁻¹ * (1 + ‖a‖ / γ) * ‖G‖ ∧ ‖p‖ ≤ β⁻¹ * (‖F‖ + ‖a‖ * ‖u‖) := by
-  have hBu : Bs u = G := ext_inner_right ℝ fun q => h2 q
-  constructor
-  · obtain ⟨w0, hw0, hβw⟩ := brezzi_lift Bs hβ hb G
-    set uG := adj Bs w0
-    have hzZ : u - uG ∈ Bs.ker := by
-      show Bs (u - uG) = 0
-      rw [map_sub, hBu, hw0, sub_self]
-    obtain ⟨z', hz', hz'1, hγz⟩ := hZ _ hzZ
-    have hz'0 : Bs z' = 0 := hz'
-    have e1 := h1 z'
-    rw [hz'0, inner_zero_left, add_zero] at e1
-    have haz : a (u - uG) z' ≤ ‖F‖ + ‖a‖ * ‖uG‖ := by
-      rw [map_sub, sub_apply, e1]
-      have i1 : ⟪F, z'⟫ ≤ ‖F‖ := (real_inner_le_norm _ _).trans
-        (by nlinarith [norm_nonneg F])
-      have i2 : -(a uG z') ≤ ‖a‖ * ‖uG‖ := by
-        have := (neg_le_abs (a uG z')).trans (a.le_opNorm₂ uG z')
-        calc -(a uG z') ≤ ‖a‖ * ‖uG‖ * ‖z'‖ := this
-          _ ≤ ‖a‖ * ‖uG‖ * 1 := by gcongr
-          _ = _ := mul_one _
-      linarith
-    have hz : ‖u - uG‖ ≤ γ⁻¹ * (‖F‖ + ‖a‖ * ‖uG‖) := by
-      rw [le_inv_mul_iff₀ hγ]; linarith
-    have huG : ‖uG‖ ≤ β⁻¹ * ‖G‖ := by rw [le_inv_mul_iff₀ hβ]; exact hβw
-    calc ‖u‖ = ‖uG + (u - uG)‖ := by congr 1; abel
-      _ ≤ ‖uG‖ + ‖u - uG‖ := norm_add_le _ _
-      _ ≤ ‖uG‖ + γ⁻¹ * (‖F‖ + ‖a‖ * ‖uG‖) := by gcongr
-      _ = γ⁻¹ * ‖F‖ + (1 + ‖a‖ / γ) * ‖uG‖ := by ring
-      _ ≤ γ⁻¹ * ‖F‖ + (1 + ‖a‖ / γ) * (β⁻¹ * ‖G‖) := by gcongr
-      _ = _ := by ring
-  · set t := adj Bs p
-    have e := h1 t
-    rw [norm_sq_adj] at e
-    have hle : ‖t‖ ^ 2 ≤ (‖F‖ + ‖a‖ * ‖u‖) * ‖t‖ := by
-      have i1 : ⟪F, t⟫ ≤ ‖F‖ * ‖t‖ := real_inner_le_norm _ _
-      have i2 : -(a u t) ≤ ‖a‖ * ‖u‖ * ‖t‖ :=
-        (neg_le_abs (a u t)).trans (a.le_opNorm₂ u t)
-      nlinarith
-    have ht : ‖t‖ ≤ ‖F‖ + ‖a‖ * ‖u‖ := by
-      rcases (norm_nonneg t).lt_or_eq with hpos | h0
-      · rw [sq] at hle; exact le_of_mul_le_mul_right hle hpos
-      · rw [← h0]; positivity
-    rw [le_inv_mul_iff₀ hβ]
-    exact (hb p).trans ht
+  have hs := (isSaddleSolution_iff a Bs F G u p).2 ⟨h1, h2⟩
+  have hu := hs.norm_fst_le (infSup_ker_of_forall a Bs hγ hZ) hβ hb
+  have hp := hs.norm_snd_le hβ hb
+  rw [Variational.norm_innerSLFlip, Variational.norm_innerSLFlip] at hu
+  rw [Variational.norm_innerSLFlip] at hp
+  have ha := Variational.norm_toSesq_le a
+  refine ⟨hu.trans ?_, hp.trans ?_⟩
+  · gcongr
+  · gcongr
 
 /-- **Thesis Thm 4.11**, well-posedness in the thesis' sense: unique solvability and
 `‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)` with `C` depending only on `‖a‖`, `γ`, `β`.

@@ -252,6 +252,27 @@ theorem div_eq_zero_of_mem_tsd {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) : div �
   ext a
   rw [div_apply, mulVec_apply_eq_zero hM a, mul_zero]; rfl
 
+/-- `div_ξ M = 0` iff `M ξ = 0`. -/
+theorem div_eq_zero_iff {ξ : Freq} {M : Mat} :
+    div ξ M = 0 ↔ ∀ a, ∑ b, M (a, b) * (ξ b : ℂ) = 0 := by
+  constructor
+  · intro h a
+    have := congrArg (fun v : Vec => v a) h
+    simpa [div_apply] using this
+  · intro h; ext a; simp [div_apply, h a]
+
+/-- **The TSD fibre is the pointwise TSD condition plus the divergence constraint**:
+`M ∈ tsd ξ` iff `M` is symmetric and trace-free (`M ∈ tsd 0`) and `div_ξ M = 0`. -/
+theorem mem_tsd_iff_div {ξ : Freq} {M : Mat} : M ∈ tsd ξ ↔ M ∈ tsd 0 ∧ div ξ M = 0 := by
+  rw [div_eq_zero_iff, mem_tsd, mem_tsd]
+  have h0 : toMatrix M *ᵥ cfreq 0 = 0 := by ext a; simp [cfreq, mulVec, dotProduct]
+  have hv : toMatrix M *ᵥ cfreq ξ = 0 ↔ ∀ a, ∑ b, M (a, b) * (ξ b : ℂ) = 0 := by
+    constructor
+    · intro h a; simpa [cfreq, mulVec, dotProduct] using congrFun h a
+    · intro h; ext a; simpa [cfreq, mulVec, dotProduct] using h a
+  rw [hv]
+  exact ⟨fun h => ⟨⟨h.1, h.2.1, h0⟩, h.2.2⟩, fun h => ⟨h.1.1, h.1.2.1, h.2⟩⟩
+
 /-- On the TSD fibre the curl symbol is `|ξ|` times an isometry: `‖curl_ξ v‖ = |ξ| ‖v‖`. -/
 theorem norm_curl_of_mem_tsd {ξ : Freq} {v : Mat} (hv : v ∈ tsd ξ) :
     ‖curl ξ v‖ = ‖ξ‖ * ‖v‖ := by

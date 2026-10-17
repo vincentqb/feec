@@ -26,6 +26,9 @@ isolated source.
 * **`mem_domain_grad_iff_weak`**, **`mem_domain_curl_iff_weak`**: `H¹` and `H(curl)` of the
   Fourier model are the weak-derivative spaces tested against all Schwartz fields (formal
   adjoints `-div` and the row-wise `curl`).
+* **`fourier_mem_constraint_iff`**, `constraint_eq_image`: the constraint space `L²(TSD)` is the
+  Fourier image of the physical TSD fields: symmetric and trace-free a.e., and weakly
+  divergence-free (`mem_ker_adjoint_grad_iff_weak`: `⟪f, ∇φ⟫ = 0` for all Schwartz `φ`).
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
   real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
@@ -188,6 +191,72 @@ theorem mem_domain_curl_iff_weak
       ∀ φ : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 2),
         ⟪A, (Weak.formalAdjointOp (gradCurl.m 1 2) φ).toLp 2⟫_ℂ = ⟪B, φ.toLp 2⟫_ℂ :=
   Weak.mem_graph_iff_weak_of_isLinear curl_isLinear (gradCurl.cont 1 2) A B
+
+/-! ### The TSD constraint in physical variables -/
+
+theorem adjoint_grad_eq : (complex.d 0 1)† = Operator.mulOp volume fun x =>
+    ContinuousLinearMap.adjoint (gradCurl.m 0 1 (Fourier.Euclidean.scale x)) :=
+  (Fourier.Euclidean.symbolComplex gradCurl).adjoint_d 0 1
+
+/-- The kernel of `grad† = div` on the Fourier side: `div_{2πx} u(x) = 0` a.e. -/
+theorem mem_ker_adjoint_grad_iff_ae {u : Space 1} :
+    u ∈ ((complex.d 0 1)†).ker ↔
+      ∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))),
+        div (Fourier.Euclidean.scale x) (u x) = 0 := by
+  rw [adjoint_grad_eq, Operator.mem_ker_mulOp]
+  exact Filter.eventually_congr (Filter.Eventually.of_forall fun x => by
+    change ContinuousLinearMap.adjoint (grad _) _ = 0 ↔ _
+    rw [adjoint_grad])
+
+/-- **Weakly divergence-free fields**: `𝓕 f ∈ ker grad†` iff `⟪f, ∇φ⟫ = 0` for every Schwartz
+vector field `φ`, with `∇φ = Weak.symbolOp grad φ` the classical gradient
+(`(∇φ)_{ab} = ∂_b φ_a`). -/
+theorem mem_ker_adjoint_grad_iff_weak
+    (f : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
+    𝓕 f ∈ ((complex.d 0 1)†).ker ↔
+      ∀ φ : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 0),
+        ⟪f, (Weak.symbolOp (gradCurl.m 0 1) φ).toLp 2⟫_ℂ = 0 := by
+  rw [adjoint_grad_eq]
+  refine Weak.mem_ker_iff_weak ?_ (Weak.symbolOp (gradCurl.m 0 1)) (fun φ x => ?_) f
+  · exact (ContinuousLinearMap.adjoint (𝕜 := ℂ) (E := W3 Vec Mat Mat 0)
+      (F := W3 Vec Mat Mat 1)).continuous.comp
+        ((gradCurl.cont 0 1).comp Fourier.Euclidean.continuous_scale)
+  · rw [ContinuousLinearMap.adjoint_adjoint, Weak.fourier_symbolOp grad_isLinear]
+
+/-- **The constraint space of Prop 4.17 on `ℝ³` is the physical TSD space**: `𝓕 f ∈ L²(TSD)` iff
+`f(x)` is symmetric and trace-free for a.e. `x` and `div f = 0` weakly (`⟪f, ∇φ⟫ = 0` for every
+Schwartz vector field `φ`).
+See [QuennevilleBelair2015], §3.4, §4.10 (the spaces of Prop 4.17). -/
+theorem fourier_mem_constraint_iff
+    (f : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
+    𝓕 f ∈ constraint 1 ↔
+      (∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))), f x ∈ tsd 0) ∧
+        ∀ φ : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 0),
+          ⟪f, (Weak.symbolOp (gradCurl.m 0 1) φ).toLp 2⟫_ℂ = 0 := by
+  have h1 : (∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))), f x ∈ tsd 0) ↔
+      ∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))), (𝓕 f : Space 1) x ∈ tsd 0 := by
+    simp only [tsd_eq_ker 0]
+    exact Weak.ae_map_eq_zero_iff_fourier (tsdMap 0) f
+  rw [h1, ← mem_ker_adjoint_grad_iff_weak, mem_ker_adjoint_grad_iff_ae, ← Filter.eventually_and,
+    Operator.mem_fibreSub]
+  exact Filter.eventually_congr (Filter.Eventually.of_forall fun x => mem_tsd_iff_div)
+
+/-- Set form: `L²(TSD) = 𝓕 {f | f symmetric, trace-free a.e., weakly divergence-free}`. -/
+theorem constraint_eq_image :
+    (constraint 1 : Set (Space 1)) = (fun f => 𝓕 f) ''
+      {f : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3))) | (∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))), f x ∈ tsd 0) ∧
+        ∀ φ : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 0),
+          ⟪f, (Weak.symbolOp (gradCurl.m 0 1) φ).toLp 2⟫_ℂ = 0} := by
+  ext A
+  constructor
+  · intro hA
+    set e := Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin 3)) (W3 Vec Mat Mat 1)
+    have hA' : 𝓕 (e.symm A) = A := e.apply_symm_apply A
+    refine ⟨e.symm A, ?_, hA'⟩
+    rw [Set.mem_ofPred_eq, ← fourier_mem_constraint_iff, hA']
+    exact hA
+  · rintro ⟨f, hf, rfl⟩
+    exact (fourier_mem_constraint_iff f).2 hf
 
 /-! ### No closed range -/
 

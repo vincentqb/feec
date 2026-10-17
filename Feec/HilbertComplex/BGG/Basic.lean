@@ -39,6 +39,10 @@ ring `R`, any complex shape, any length.
   §5.1 (BGG data, complex (5.1), Prop 5.1)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes from complexes: the BGG
   construction)
+* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
+  §3 (regularity hypothesis of `Segment.range_D1`)
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+  (regularity hypothesis of `Segment.range_D1`)
 -/
 
 @[expose] public noncomputable section
@@ -159,7 +163,9 @@ theorem D0_injective (hd0 : Function.Injective D.d0) (hdt0 : Function.Injective 
   rfl
 
 /-- **Range of `(S₁, d̃¹)`** under the regularity hypothesis `d¹V¹ ⊆ d¹S₀Ṽ⁰`:
-`R(S₁, d̃¹) = {(ρ, μ) | ∃ w, d̃¹w = μ, ρ - S₁w ∈ R(d¹)}`. [QuennevilleBelair2015], Prop 5.1 (proof) -/
+`R(S₁, d̃¹) = {(ρ, μ) | ∃ w, d̃¹w = μ, ρ - S₁w ∈ R(d¹)}`. [QuennevilleBelair2015], Prop 5.1 (proof).
+For `H̊(curl)` the thesis obtains the hypothesis from the regular decomposition
+[HiptmairXu2007], §3 and [Hiptmair2002], Lemma 2.4 (not formalized; `hreg` is assumed). -/
 theorem range_D1 (hreg : LinearMap.range D.d1 ≤ LinearMap.range (D.d1 ∘ₗ D.S0)) :
     (LinearMap.range D.D1 : Set (V2 × Vt2)) =
       {p | ∃ w, D.dt1 w = p.2 ∧ p.1 - D.S1 w ∈ LinearMap.range D.d1} := by

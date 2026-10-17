@@ -42,6 +42,13 @@ symmetries (5.1), `Γ̄ ⊃ Γ --(0 d̃)--> W̃¹ ⊃ Ṽ¹ --(S₁, d̃)--> W²
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the BGG construction)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (weakly imposed symmetry)
+* [R. Durán, E. Liberman, *On mixed finite element methods for the Reissner–Mindlin plate model*][DuranLiberman1992]
+  (multiplier replacing `H̊²`)
+* [R. S. Falk, *Finite elements for the Reissner–Mindlin plate*][Falk2008] (multiplier replacing `H̊²`)
+* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
+  §3 (regular decomposition, regularity hypothesis)
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+  (regular decomposition, regularity hypothesis)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (closed Hilbert complexes)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
   (closed Hilbert complexes)
@@ -239,7 +246,10 @@ lemma mem_Z1 {u : Vt1} : u ∈ D.Z1 ↔ D.S1 u = 0 ∧ D.dt1 u = 0 := by
 `V¹`, `Ṽ¹`, closed ranges of `d¹, d̃¹`, and the regularity hypothesis, of which only the
 direction `d¹V¹ ⊆ d¹S₀Ṽ⁰` has content. Ranges are closed in the `W`-spaces, as in the thesis.
 
-See [QuennevilleBelair2015], §5.1, hypotheses of Prop 5.1. -/
+See [QuennevilleBelair2015], §5.1, hypotheses of Prop 5.1. For the `H̊¹ × H̊¹(V) → H̊(curl, M)`
+example the thesis derives `reg` (`curl H̊(curl) = curl H̊¹(V)`) from the regular decomposition
+`H̊(curl) = H̊¹(V) + grad H¹`, [HiptmairXu2007], §3 and [Hiptmair2002], Lemma 2.4; that
+decomposition is not formalized, `reg` is assumed. -/
 structure Hyps : Prop where
   d0_injective : Function.Injective D.d0
   dt0_injective : Function.Injective D.dt0
@@ -612,7 +622,8 @@ as in `Γ̄ × W̃¹`, `Γ̄` being closed); the Poincaré inequalities used imp
 See [QuennevilleBelair2015], Prop 5.1. Closed Hilbert complexes as in [BruningLesch1992], [AFW2010],
 [Arnold2018];
 the general construction of complexes from complexes is [ArnoldHu2021]; the weak-symmetry
-mechanism is that of [AFW2007]. -/
+mechanism is that of [AFW2007], and replacing `H̊²(R)` by `H̊¹(R) × H̊¹(V)` (the constraint
+`dσ = Sφ` of `Γ`) is the plate-bending device of [DuranLiberman1992], [Falk2008]. -/
 theorem isClosed_closedRange_exact (h : D.Hyps) (hS0 : Function.Injective D.S0) :
     D.D0op.IsClosed ∧ D.D0op.domain.topologicalClosure = D.Γbar ∧
     IsClosed (LinearMap.range D.D0op.toFun : Set Wt1) ∧
@@ -933,7 +944,9 @@ namespace Hilb
 /-- **The BGG complex (5.1) as a Hilbert complex** on `ComplexShape.fin3`:
 `Γ̄ → W̃¹ → W² × W̃²`. [QuennevilleBelair2015], Prop 5.1
 
-See [QuennevilleBelair2015], Prop 5.1, (5.1); cf. [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], Prop 5.1, (5.1); cf. [ArnoldHu2021]. The complex with weak
+symmetries combines the weak symmetry of [AFW2007] with the plate-bending multiplier of
+[DuranLiberman1992], [Falk2008]. -/
 def toHilbertComplex : HilbertComplex 𝕜 ComplexShape.fin3
     (ShortHilbertComplex.W3 D.Γbar Wt1 (WithLp 2 (W2 × Wt2))) :=
   (D.toShort h hS0).toHilbertComplex

@@ -11,6 +11,8 @@ mixed Hodge Laplacian of the complex with weak symmetries (5.1) is the saddle po
 (5.3) on `X × W̌¹`, `X = V⁰ × Ṽ⁰ × Ṽ¹`, where the constraint `dσ = Sφ` is imposed weakly by a
 multiplier `λ` in the space `W̌¹`, the completion of `W¹` in `|||λ||| = ‖B*λ‖`,
 `B(τ, ψ) = dτ - Sψ` (the mechanism of weakly imposed symmetry in elasticity, [AFW2007]).
+Replacing `H̊²(R)` by `H̊¹(R) × H̊¹(V)` through this multiplier is the device used for plate
+bending in [DuranLiberman1992] and [Falk2008] ([QuennevilleBelair2015], Ch. 5 intro).
 
 ## Main definitions
 
@@ -276,14 +278,18 @@ def Wcheck : Submodule ℝ (Psp V0 Vt0) := (adj D.Bop).range.topologicalClosure
 instance : CompleteSpace D.Wcheck :=
   (Submodule.isClosed_topologicalClosure _).completeSpace_coe
 
-/-- `|||λ|||` (thesis §5.1), with the ℓ² norm on `V⁰ × Ṽ⁰`. -/
+/-- `|||λ|||` (thesis §5.1), with the ℓ² norm on `V⁰ × Ṽ⁰`.
+
+See [QuennevilleBelair2015], §5.1, before Prop 5.2; the multiplier norm of the plate-bending
+formulations [DuranLiberman1992], [Falk2008]. -/
 def tripleNorm (l : W1) : ℝ := ‖adj D.Bop l‖
 
 /-- Thesis §5.1 (definition of `|||·|||`): `|||λ||| = ‖B*λ‖` is the thesis' supremum:
 `(λ, dτ - Sψ) ≤ |||λ||| ‖(τ,ψ)‖`, with equality attained
 on the unit ball.
 
-See [QuennevilleBelair2015], §5.1, before Prop 5.2. -/
+See [QuennevilleBelair2015], §5.1, before Prop 5.2; cf. the multiplier norm of
+[DuranLiberman1992] and of the Reissner–Mindlin plate at `t = 0` [Falk2008]. -/
 theorem tripleNorm_spec (l : W1) :
     (∀ q, ⟪l, D.Bop q⟫ ≤ D.tripleNorm l * ‖q‖) ∧
       ∃ q, ‖q‖ ≤ 1 ∧ ⟪l, D.Bop q⟫ = D.tripleNorm l := by
@@ -307,7 +313,9 @@ theorem tripleNorm_le (l : W1) : D.tripleNorm l ≤ ‖D.Bop‖ * ‖l‖ := by
 /-- **`|||·|||` is a norm** (thesis: "is actually a norm", no proof), under the corrected density
 hypothesis `d⁰V⁰ + S₀Ṽ⁰` dense in `W¹`.
 
-See [QuennevilleBelair2015], §5.1, before Prop 5.2. -/
+See [QuennevilleBelair2015], §5.1, before Prop 5.2. The thesis calls this analogous to the
+Reissner–Mindlin analysis at `t = 0` [Falk2008]; the proof here is a direct orthogonality
+argument and uses nothing from [Falk2008]. -/
 theorem tripleNorm_definite
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1))
@@ -343,7 +351,8 @@ def jW : W1 →L[ℝ] D.Wcheck :=
 `|||·|||`, has dense
 range, and is injective under the density hypothesis.
 
-See [QuennevilleBelair2015], §5.1, Prop 5.2. -/
+See [QuennevilleBelair2015], §5.1, Prop 5.2; the completion is the analogue of the multiplier
+space of [Falk2008] (limiting case `t = 0`), cf. [DuranLiberman1992]. -/
 theorem jW_spec
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1)) :
@@ -664,7 +673,9 @@ Correction: neither density of `S₀Ṽ⁰` nor injectivity of `S₀` is needed 
 `X × W̌¹`; density only serves to embed `W¹` into `W̌¹` (`jW_spec`).
 
 See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
-[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected) -/
+[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected). The symmetry
+is imposed weakly as in [AFW2007]; the multiplier space `W̌¹` is the analogue of [Falk2008]
+(`t = 0`). -/
 theorem saddle_wellPosed (h : D.Hyps) :
     (∀ (F : Xsp V0 Vt0 Vt1) (G : D.Wcheck), ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck,
       (∀ y, D.aForm xl.1 y + D.bForm y xl.2 = ⟪F, y⟫) ∧ ∀ μ, D.bForm xl.1 μ = ⟪G, μ⟫) ∧
@@ -689,7 +700,8 @@ Corrections: `λ ∈ W̌¹`, not `W¹` as (5.3) says; the density hypothesis of 
 needed here (it is used in `jW_spec`); the transposed Brezzi condition is added and proved.
 
 See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
-[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected) -/
+[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected). Weak
+imposition of the constraint as in [AFW2007]; multiplier space as in [Falk2008] (`t = 0`). -/
 theorem existsUnique_isSaddle (h : D.Hyps) :
     (∀ f : Wt1, ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck, D.IsSaddle f xl.1 xl.2) ∧
     ∃ C, ∀ (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck), D.IsSaddle f x l →
@@ -790,7 +802,10 @@ theorem existsUnique_isReduced (h : D.Hyps) (f : Wt1) : ∃! x, D.IsReduced f x 
   exact sub_eq_zero.1 (norm_eq_zero.1 this)
 
 /-- Thesis §5.1 (after (5.3)), converse direction made precise: a solution of (5.2) extends to a
-solution of (5.3) with a **unique** multiplier `λ ∈ W̌¹`. -/
+solution of (5.3) with a **unique** multiplier `λ ∈ W̌¹`.
+
+See [QuennevilleBelair2015], §5.1, (5.2)–(5.3); the multiplier replaces `H̊²(R)` by
+`H̊¹(R) × H̊¹(V)` as for plate bending in [DuranLiberman1992], [Falk2008]. -/
 theorem existsUnique_multiplier (h : D.Hyps) {f : Wt1} {x : Xsp V0 Vt0 Vt1}
     (hx : D.IsReduced f x) : ∃! l : D.Wcheck, D.IsSaddle f x l := by
   obtain ⟨xl, hxl, huniq⟩ := (D.existsUnique_isSaddle h).1 f
@@ -804,7 +819,7 @@ theorem existsUnique_multiplier (h : D.Hyps) {f : Wt1} {x : Xsp V0 Vt0 Vt1}
 and `λ` is
 the (unique, `existsUnique_multiplier`) multiplier.
 
-See [QuennevilleBelair2015], §5.1, (5.2)–(5.3). -/
+See [QuennevilleBelair2015], §5.1, (5.2)–(5.3); weakly imposed constraint as in [AFW2007]. -/
 theorem isSaddle_iff_isReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
     D.IsSaddle f x l ↔ D.IsReduced f x ∧
       ∀ y, D.bForm y l = ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫ - D.aForm x y := by

@@ -367,7 +367,8 @@ complexes (5.1) only:
 * `boundS0`, `boundS1`: boundedness of `S₀ : Ṽ⁰ → V¹` and `S₁ : Ṽ¹ → W²` in graph norms.
 
 See [QuennevilleBelair2015], §5.1 (Prop 5.1), Prop 5.3; for the concrete regular decomposition
-the thesis cites [HiptmairXu2007], §3 and [Hiptmair2002], Lemma 2.4. Poincaré inequalities and
+the thesis cites [HiptmairXu2007], §3 and [Hiptmair2002], Lemma 2.4 (not formalized: `reg` and
+`C_R` are assumed). Poincaré inequalities and
 Hodge decompositions of closed Hilbert complexes: [AFW2010], [Arnold2018], [BruningLesch1992]. -/
 structure Stability (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (Cp CR CS : ℝ) : Prop where
   Cp_nonneg : 0 ≤ Cp

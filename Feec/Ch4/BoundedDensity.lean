@@ -4,6 +4,7 @@ public import Mathlib.Analysis.Calculus.BumpFunction.Convolution
 public import Mathlib.Analysis.Calculus.ContDiff.Convolution
 public import Mathlib.Analysis.Normed.Lp.SmoothApprox
 public import Feec.Ch4.BoundedSalvage
+public import Feec.Models.BoundedDomain.Density
 
 /-!
 # Density of smooth TSD fields in `L²(TSD₀)` and `L²(TSD)` on star-shaped domains ("Thm B")
@@ -704,9 +705,20 @@ respect to a ball. -/
 theorem closure_TSD_inter_HcurlZero_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {x₀ : R3} {s : ℝ} (hs : 0 < s)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
-    closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω) = TSD0 Ω hΩ hb :=
-  (closure_TSD_inter_HcurlZero_subset hΩ hb).antisymm fun _ hB =>
-    mem_closure_TSD_inter_HcurlZero_of_mem_TSD0 hΩ hb hs hstar hB
+    closure ((TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω) = TSD0 Ω hΩ hb := by
+  have hT : TSD0 Ω hΩ hb = Feec.Models.BoundedDomain.tsd₀ Ω hΩ hb := by
+    ext B
+    rw [mem_TSD0, Feec.Models.BoundedDomain.mem_tsd₀, TSD_eq_tsd]
+    rfl
+  have hZ : (TSD Ω : Set (L2M Ω)) ∩ HcurlZero Ω = ((Feec.Models.BoundedDomain.tsd Ω ⊓
+      ((Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain :
+        Submodule ℝ (L2M Ω)) : Set (L2M Ω)) := by
+    ext B
+    rw [Submodule.coe_inf, mem_inter_iff, mem_inter_iff, SetLike.mem_coe, SetLike.mem_coe,
+      TSD_eq_tsd, mem_HcurlZero_iff_minimal]
+    rfl
+  rw [hT, hZ, ← Submodule.topologicalClosure_coe,
+    Feec.Models.BoundedDomain.closure_eq_tsd₀ hΩ hb hs hstar]
 
 /-- A nonempty open convex set is star-shaped with respect to a ball. -/
 theorem exists_starBall_of_convex (hΩ : IsOpen Ω) (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :

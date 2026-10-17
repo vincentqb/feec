@@ -157,6 +157,34 @@ differentials. -/
 abbrev fixedComplex : HilbertComplex 𝕜 c fun i => A.fixed i :=
   A.reducingSubcomplex_fixed.toHilbertComplex
 
+/-- A closed subspace `K` seen inside a complete subspace `S`. -/
+instance comap_subtype_hasOrthogonalProjection (i : ι) (K : Submodule 𝕜 (W i))
+    [K.HasOrthogonalProjection] : (K.comap (A.fixed i).subtype).HasOrthogonalProjection := by
+  have hc : IsClosed (K.comap (A.fixed i).subtype : Set (A.fixed i)) :=
+    (K.isClosed_of_hasOrthogonalProjection).preimage continuous_subtype_val
+  have : CompleteSpace (K.comap (A.fixed i).subtype) := hc.completeSpace_coe
+  infer_instance
+
+/-- **Invariant reducing subcomplexes descend to the fixed complex**: if `K` reduces `H` and every
+`K i` is invariant under the action, then `K ∩ Fix` reduces the fixed (method-of-images) complex. -/
+theorem reducingSubcomplex_comap_fixed {K : ∀ i, Submodule 𝕜 (W i)}
+    [∀ i, (K i).HasOrthogonalProjection] (hK : H.ReducingSubcomplex K)
+    (hA : ∀ g i, ∀ x ∈ K i, A.act g i x ∈ K i) :
+    A.fixedComplex.ReducingSubcomplex fun i => (K i).comap (A.fixed i).subtype := by
+  have hS : ∀ i (x : A.fixed i), ∃ y : A.fixed i,
+      A.reducingSubcomplex_fixed.toScaledEmbedding.J i y = (K i).starProjection
+        (A.reducingSubcomplex_fixed.toScaledEmbedding.J i x) := by
+    intro i x
+    refine ⟨⟨(K i).starProjection x, fun g => ?_⟩, rfl⟩
+    have e : (K i).starProjection (A.act g i x) = A.act g i ((K i).starProjection x) := by
+      refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+        (hA g i _ ((K i).starProjection_apply_mem x)) fun k hk => ?_
+      rw [← A.act_act_inv g i k, ← _root_.map_sub, LinearIsometryEquiv.inner_map_map]
+      exact (K i).starProjection_inner_eq_zero _ _ (hA g⁻¹ i k hk)
+    change A.act g i ((K i).starProjection x) = (K i).starProjection x
+    rw [← e, x.2 g]
+  exact A.reducingSubcomplex_fixed.toScaledEmbedding.reducingSubcomplex_comap hK hS
+
 variable [Fintype ι] [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- `Γ`-symmetric data and forcing give `Γ`-symmetric solutions of the Hodge wave equation. -/

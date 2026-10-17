@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.SymbolComplex
 public import Feec.HilbertComplex.Reality
+public import Feec.HilbertComplex.Equivariant
 
 /-!
 # Real fields in a symbol complex
@@ -89,6 +90,22 @@ def count_neg {β : Type*} [AddGroup β] [MeasurableSpace β] [MeasurableSinglet
         (fun x => neg_neg x) (fun x => neg_neg x)).symm s
     rw [e, neg_injective.encard_image]
   invol := neg_neg
+
+/-- Any involution of a countable type is a reflection for the counting measure (e.g. the
+reflection `n ↦ (…, -n_k, …)` of `ℤᵈ`). -/
+def count_of_involutive {β : Type*} [MeasurableSpace β] [MeasurableSingletonClass β]
+    [Countable β] (σ : β → β) (hσ : Function.Involutive σ) :
+    Reflection (Measure.count : Measure β) where
+  σ := σ
+  measurePreserving := by
+    refine ⟨measurable_of_countable σ, ?_⟩
+    ext s hs
+    rw [Measure.map_apply (measurable_of_countable σ) hs,
+      Measure.count_apply (hs.preimage (measurable_of_countable σ)), Measure.count_apply hs]
+    have e : σ ⁻¹' s = σ '' s :=
+      congrFun (Set.image_eq_preimage_of_inverse (f := σ) (g := σ) hσ hσ).symm s
+    rw [e, hσ.injective.encard_image]
+  invol := hσ
 
 /-- `ξ ↦ -ξ` for a negation-invariant measure (Lebesgue measure on `ℝᵈ`). -/
 def neg {β : Type*} [AddGroup β] [MeasurableSpace β] [MeasurableNeg β] (ν : Measure β)
@@ -245,6 +262,151 @@ theorem inner_entryConj (v w : EuclideanSpace ℂ ι) :
   simp [mul_comm]
 
 end Entry
+
+/-! ### Symmetries of symbol complexes -/
+
+section Symmetry
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [MeasurableSpace α] {μ : Measure α}
+  {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+
+/-- `u ↦ ρ ∘ u ∘ σ` on `L²(μ; E)`, for a reflection `σ` and a fibre map `ρ`. -/
+def symLp (R : Reflection μ) (ρ : E →L[𝕜] E) : Lp E 2 μ →L[𝕜] Lp E 2 μ :=
+  (ρ.compLpL 2 μ).comp (Lp.compMeasurePreservingₗᵢ 𝕜 R.σ R.measurePreserving).toContinuousLinearMap
+
+theorem coeFn_symLp (R : Reflection μ) (ρ : E →L[𝕜] E) (u : Lp E 2 μ) :
+    symLp R ρ u =ᵐ[μ] fun a => ρ (u (R.σ a)) := by
+  have h1 := ρ.coeFn_compLpL (p := 2) (μ := μ)
+    (Lp.compMeasurePreservingₗᵢ 𝕜 R.σ R.measurePreserving u)
+  have h2 := Lp.coeFn_compMeasurePreserving u R.measurePreserving
+  filter_upwards [h1, h2] with a h1 h2
+  change (ρ.compLpL 2 μ (Lp.compMeasurePreservingₗᵢ 𝕜 R.σ R.measurePreserving u)) a = _
+  rw [h1]
+  exact congrArg ρ h2
+
+/-- An involutive fibre map gives an involution of `L²`. -/
+theorem symLp_symLp (R : Reflection μ) {ρ : E →L[𝕜] E} (hρ : ∀ v, ρ (ρ v) = v)
+    (u : Lp E 2 μ) : symLp R ρ (symLp R ρ u) = u := by
+  refine Lp.ext ?_
+  filter_upwards [coeFn_symLp R ρ (symLp R ρ u), R.ae_comp (coeFn_symLp R ρ u)] with a h1 h2
+  rw [h1, h2, R.invol, hρ]
+
+/-- A fibre isometry gives an isometry of `L²`. -/
+theorem inner_symLp (R : Reflection μ) {ρ : E →L[𝕜] E} (hρ : ∀ v w, ⟪ρ v, ρ w⟫_𝕜 = ⟪v, w⟫_𝕜)
+    (u w : Lp E 2 μ) : ⟪symLp R ρ u, symLp R ρ w⟫_𝕜 = ⟪u, w⟫_𝕜 := by
+  rw [L2.inner_def, L2.inner_def]
+  have : (fun a => ⟪symLp R ρ u a, symLp R ρ w a⟫_𝕜) =ᵐ[μ]
+      fun a => ⟪(u : Lp E 2 μ) (R.σ a), w (R.σ a)⟫_𝕜 := by
+    filter_upwards [coeFn_symLp R ρ u, coeFn_symLp R ρ w] with a h1 h2
+    rw [h1, h2, hρ]
+  rw [integral_congr_ae this]
+  exact R.integral_comp fun a => ⟪(u : Lp E 2 μ) a, w a⟫_𝕜
+
+/-- **The unitary involution `u ↦ ρ ∘ u ∘ σ`** of `L²(μ; E)`. -/
+def symLpEquiv (R : Reflection μ) (ρ : E →L[𝕜] E) (hρ : ∀ v, ρ (ρ v) = v)
+    (hρ' : ∀ v w, ⟪ρ v, ρ w⟫_𝕜 = ⟪v, w⟫_𝕜) : Lp E 2 μ ≃ₗᵢ[𝕜] Lp E 2 μ where
+  toLinearEquiv := LinearEquiv.ofInvolutive (symLp R ρ).toLinearMap (symLp_symLp R hρ)
+  norm_map' u := by
+    change ‖symLp R ρ u‖ = ‖u‖
+    rw [norm_eq_sqrt_re_inner (𝕜 := 𝕜), norm_eq_sqrt_re_inner (𝕜 := 𝕜), inner_symLp R hρ']
+
+@[simp] theorem symLpEquiv_apply (R : Reflection μ) (ρ : E →L[𝕜] E) (hρ : ∀ v, ρ (ρ v) = v)
+    (hρ' : ∀ v w, ⟪ρ v, ρ w⟫_𝕜 = ⟪v, w⟫_𝕜) (u : Lp E 2 μ) :
+    symLpEquiv R ρ hρ hρ' u = symLp R ρ u := rfl
+
+/-- `u ↦ ρ ∘ u ∘ σ` preserves a fibrewise subspace whose fibres are mapped by `ρ`. -/
+theorem symLp_mem_fibreSub (R : Reflection μ) (ρ : E →L[𝕜] E) {K : α → Submodule 𝕜 E}
+    (hK : ∀ a, ∀ v ∈ K (R.σ a), ρ v ∈ K a) {u : Lp E 2 μ} (hu : u ∈ Operator.fibreSub μ K) :
+    symLp R ρ u ∈ Operator.fibreSub μ K := by
+  filter_upwards [coeFn_symLp R ρ u, R.ae_comp (Operator.mem_fibreSub.1 hu)] with a h1 h2
+  rw [h1]
+  exact hK a _ h2
+
+end Symmetry
+
+namespace SymbolComplex
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [MeasurableSpace α] {μ : Measure α} {ι : Type*}
+  {c : ComplexShape ι} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+  [∀ i, InnerProductSpace 𝕜 (E i)]
+
+/-- **Commuting fibre symmetries** of a symbol complex: for each `k : κ` a reflection `σ_k` of
+the frequency space and fibre unitary involutions `ρ k i` with `m (σ_k a) ∘ ρ_k = ρ_k ∘ m a`,
+pairwise commuting (e.g. the reflections `x_k ↦ -x_k` of a torus, `n ↦ (…, -n_k, …)` on the
+frequencies, acting tensorially on the fibres). -/
+structure Symmetries (S : SymbolComplex 𝕜 μ c E) (κ : Type*) where
+  /-- the frequency reflections -/
+  R : κ → Reflection μ
+  /-- the fibre maps -/
+  ρ : κ → ∀ i, E i →L[𝕜] E i
+  invol : ∀ k i v, ρ k i (ρ k i v) = v
+  inner_ρ : ∀ k i v w, ⟪ρ k i v, ρ k i w⟫_𝕜 = ⟪v, w⟫_𝕜
+  symm : ∀ k i j a v, S.m i j ((R k).σ a) (ρ k i v) = ρ k j (S.m i j a v)
+  comm_σ : ∀ k l a, (R k).σ ((R l).σ a) = (R l).σ ((R k).σ a)
+  comm_ρ : ∀ k l i v, ρ k i (ρ l i v) = ρ l i (ρ k i v)
+
+namespace Symmetries
+
+variable {S : SymbolComplex 𝕜 μ c E} {κ : Type*} (Y : S.Symmetries κ) [∀ i, CompleteSpace (E i)]
+
+theorem ae_mulOp (k : κ) {i j : ι} (u : (S.toHilbertComplex.d i j).domain) :
+    (fun a => S.m i j a (symLp (Y.R k) (Y.ρ k i) (u : Lp (E i) 2 μ) a)) =ᵐ[μ]
+      symLp (Y.R k) (Y.ρ k j) (S.toHilbertComplex.d i j u) := by
+  filter_upwards [coeFn_symLp (Y.R k) (Y.ρ k i) (u : Lp (E i) 2 μ),
+    coeFn_symLp (Y.R k) (Y.ρ k j) (S.toHilbertComplex.d i j u),
+    (Y.R k).ae_comp (S.coeFn_d u)] with a h1 h2 h3
+  rw [h1, h2, h3]
+  have := Y.symm k i j ((Y.R k).σ a) ((u : Lp (E i) 2 μ) ((Y.R k).σ a))
+  rwa [(Y.R k).invol] at this
+
+/-- **The induced commuting unitary involutions of the symbol Hilbert complex.** -/
+def toInvolutions : S.toHilbertComplex.Involutions κ where
+  R k i := symLpEquiv (Y.R k) (Y.ρ k i) (Y.invol k i) (Y.inner_ρ k i)
+  invol k i u := symLp_symLp (Y.R k) (Y.invol k i) u
+  comm k l i u := by
+    refine Lp.ext ?_
+    change (symLp (Y.R k) (Y.ρ k i) (symLp (Y.R l) (Y.ρ l i) u) : α → E i) =ᵐ[μ]
+      symLp (Y.R l) (Y.ρ l i) (symLp (Y.R k) (Y.ρ k i) u)
+    filter_upwards [coeFn_symLp (Y.R k) (Y.ρ k i) (symLp (Y.R l) (Y.ρ l i) u),
+      coeFn_symLp (Y.R l) (Y.ρ l i) (symLp (Y.R k) (Y.ρ k i) u),
+      (Y.R k).ae_comp (coeFn_symLp (Y.R l) (Y.ρ l i) u),
+      (Y.R l).ae_comp (coeFn_symLp (Y.R k) (Y.ρ k i) u)] with a h1 h2 h3 h4
+    rw [h1, h2, h3, h4, Y.comm_σ, Y.comm_ρ]
+  mapsTo k i j u := (Lp.memLp _).ae_eq (Y.ae_mulOp k u).symm
+  comm_d k i j u := (Operator.mulOp_apply_eq_iff _ _).2 (Y.ae_mulOp k u)
+
+@[simp] theorem toInvolutions_R (k : κ) (i : ι) (u : Lp (E i) 2 μ) :
+    Y.toInvolutions.R k i u = symLp (Y.R k) (Y.ρ k i) u := rfl
+
+variable [Fintype κ]
+
+/-- The action of `(ℤ/2)^κ` generated by the fibre symmetries. -/
+abbrev toAction : S.toHilbertComplex.Action (Multiplicative (κ → ZMod 2)) :=
+  Y.toInvolutions.toAction
+
+/-- **Symmetric fields**: the fields fixed by the action are those fixed by every symmetry. -/
+theorem mem_fixed_toAction [DecidableEq κ] {i : ι} {u : Lp (E i) 2 μ} :
+    u ∈ Y.toAction.fixed i ↔ ∀ k, symLp (Y.R k) (Y.ρ k i) u = u :=
+  Y.toInvolutions.mem_fixed_toAction
+
+/-- Fibrewise subspaces mapped to themselves by the symmetries are invariant under the action. -/
+theorem act_mem_fibreSub {K : ∀ i, α → Submodule 𝕜 (E i)}
+    (hK : ∀ k i a, ∀ v ∈ K i ((Y.R k).σ a), Y.ρ k i v ∈ K i a)
+    (g : Multiplicative (κ → ZMod 2)) (i : ι) {u : Lp (E i) 2 μ}
+    (hu : u ∈ Operator.fibreSub μ (K i)) : Y.toAction.act g i u ∈ Operator.fibreSub μ (K i) := by
+  let T : Submonoid (∀ i, Lp (E i) 2 μ ≃ₗᵢ[𝕜] Lp (E i) 2 μ) :=
+    { carrier := {v | ∀ i' (u' : Lp (E i') 2 μ), u' ∈ Operator.fibreSub μ (K i') →
+        v i' u' ∈ Operator.fibreSub μ (K i')}
+      one_mem' := fun i' u' h => h
+      mul_mem' := fun {a b} ha hb i' u' h => ha i' _ (hb i' u' h) }
+  have hS : ∀ k, Y.toInvolutions.R k ∈ T := fun k i' u' hu' =>
+    symLp_mem_fibreSub (Y.R k) (Y.ρ k i') (hK k i') hu'
+  exact (Submonoid.noncommProd_mem T _ _ (Y.toInvolutions.pairwise_commute _ _) fun k _ =>
+    Submonoid.pow_mem _ (hS k) _) i u hu
+
+end Symmetries
+
+end SymbolComplex
 
 end Feec.Fourier
 

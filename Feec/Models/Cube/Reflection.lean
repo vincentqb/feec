@@ -1,6 +1,7 @@
 module
 
 public import Feec.Models.Cube.Basic
+public import Feec.Models.Torus.GradCurl
 public import Feec.Legacy.Box.Mirror
 
 /-!
@@ -256,3 +257,234 @@ theorem reflAct_mem {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
 
 
 end Feec.Models.Cube
+
+/-! ### Tensorial reflections of the torus grad–curl complex (Fourier side)
+
+The reflection `x_k ↦ -x_k` of `𝕋³` acts on the Fourier coefficients of the complex
+`Feec.Models.Torus.GradCurl.complex` by `n ↦ (…, -n_k, …)` on the frequencies and tensorially on
+the fibres: `v ↦ D_k v` on vectors, `M ↦ D_k M D_k` on the matrices of `H(curl)` and
+`M ↦ -D_k M D_k` on those of `L²` (`D_k = diag(±1)`, `det D_k = -1`). These are the mirror
+boundary conditions (`σ · n = 0`, `E_{nτ} = 0`, `B_{nn} = 0`); they preserve the TSD fibres, so
+the TSD constraint reduces the fixed complex. -/
+
+namespace Feec.Models.Cube.MirrorTorus
+
+open scoped InnerProductSpace
+open Feec.Fourier Feec.Fourier.GradCurl
+
+/-- The sign `s_k(a)`: `-1` if `a = k`, `1` otherwise. -/
+def sgn (k a : Fin 3) : ℂ := if a = k then -1 else 1
+
+theorem sgn_mul_self (k a : Fin 3) : sgn k a * sgn k a = 1 := by
+  unfold sgn; split_ifs <;> norm_num
+
+theorem conj_sgn (k a : Fin 3) : (starRingEnd ℂ) (sgn k a) = sgn k a := by
+  unfold sgn; split_ifs <;> simp
+
+/-- `ε_{bcd} s_c s_d = -s_b ε_{bcd}` (`det D_k = -1`). -/
+theorem leviCivita3_sgn (k b c d : Fin 3) :
+    leviCivita3 ℂ b c d * (sgn k c * sgn k d) = -(sgn k b * leviCivita3 ℂ b c d) := by
+  fin_cases k <;> fin_cases b <;> fin_cases c <;> fin_cases d <;>
+    simp [sgn, leviCivita3_apply]
+
+/-- The reflection `n ↦ (…, -n_k, …)` of the frequencies `ℤ³`. -/
+def flip (k : Fin 3) (n : Fin 3 → ℤ) : Fin 3 → ℤ := fun a => if a = k then -n a else n a
+
+theorem flip_flip (k : Fin 3) : Function.Involutive (flip k) := fun n => by
+  funext a; unfold flip; split_ifs <;> simp
+
+theorem flip_comm (k l : Fin 3) (n : Fin 3 → ℤ) : flip k (flip l n) = flip l (flip k n) := by
+  funext a; unfold flip; split_ifs <;> simp
+
+theorem freq_flip (k : Fin 3) (n : Fin 3 → ℤ) (a : Fin 3) :
+    ((Fourier.Torus.freq (flip k n) a : ℝ) : ℂ) = sgn k a * (Fourier.Torus.freq n a : ℂ) := by
+  simp only [Fourier.Torus.freq_apply, flip, sgn]
+  split_ifs <;> push_cast <;> ring
+
+/-- `v ↦ D_k v`. -/
+def vecR (k : Fin 3) : Vec →L[ℂ] Vec :=
+  LinearMap.toContinuousLinearMap
+    { toFun := fun v => WithLp.toLp 2 fun a => sgn k a * v a
+      map_add' := fun v w => by ext a; simp; ring
+      map_smul' := fun z v => by ext a; simp; ring }
+
+@[simp] theorem vecR_apply (k : Fin 3) (v : Vec) (a : Fin 3) : vecR k v a = sgn k a * v a := rfl
+
+/-- `M ↦ D_k M D_k`. -/
+def matR (k : Fin 3) : Mat →L[ℂ] Mat :=
+  LinearMap.toContinuousLinearMap
+    { toFun := fun M => WithLp.toLp 2 fun p => sgn k p.1 * sgn k p.2 * M p
+      map_add' := fun M N => by ext p; simp; ring
+      map_smul' := fun z M => by ext p; simp; ring }
+
+@[simp] theorem matR_apply (k : Fin 3) (M : Mat) (p : Fin 3 × Fin 3) :
+    matR k M p = sgn k p.1 * sgn k p.2 * M p := rfl
+
+theorem grad_flip (k : Fin 3) (n : Fin 3 → ℤ) (v : Vec) :
+    grad (Fourier.Torus.freq (flip k n)) (vecR k v) = matR k (grad (Fourier.Torus.freq n) v) := by
+  ext ⟨a, b⟩
+  rw [grad_apply, matR_apply, grad_apply, vecR_apply, freq_flip]
+  ring
+
+theorem curl_flip (k : Fin 3) (n : Fin 3 → ℤ) (M : Mat) :
+    curl (Fourier.Torus.freq (flip k n)) (matR k M) = -matR k (curl (Fourier.Torus.freq n) M) := by
+  ext ⟨a, b⟩
+  rw [PiLp.neg_apply, matR_apply, curl_apply, curl_apply]
+  simp only [matR_apply, freq_flip, Finset.mul_sum, ← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun c _ => Finset.sum_congr rfl fun d _ => ?_
+  linear_combination (Complex.I * sgn k a * (Fourier.Torus.freq n c : ℂ) * M (a, d)) *
+    leviCivita3_sgn k b c d
+
+theorem vecR_vecR (k : Fin 3) (v : Vec) : vecR k (vecR k v) = v := by
+  ext a; rw [vecR_apply, vecR_apply, ← mul_assoc, sgn_mul_self, one_mul]
+
+theorem matR_matR (k : Fin 3) (M : Mat) : matR k (matR k M) = M := by
+  ext p; rw [matR_apply, matR_apply]
+  linear_combination (M p) * (sgn k p.2 * sgn k p.2 * sgn_mul_self k p.1 + sgn_mul_self k p.2)
+
+theorem neg_matR_neg_matR (k : Fin 3) (M : Mat) : (-matR k) ((-matR k) M) = M := by
+  rw [_root_.neg_apply, _root_.neg_apply, _root_.map_neg, neg_neg,
+    matR_matR]
+
+theorem vecR_comm (k l : Fin 3) (v : Vec) : vecR k (vecR l v) = vecR l (vecR k v) := by
+  ext a; simp only [vecR_apply]; ring
+
+theorem matR_comm (k l : Fin 3) (M : Mat) : matR k (matR l M) = matR l (matR k M) := by
+  ext p; simp only [matR_apply]; ring
+
+theorem neg_matR_comm (k l : Fin 3) (M : Mat) :
+    (-matR k) ((-matR l) M) = (-matR l) ((-matR k) M) := by
+  simp only [_root_.neg_apply, _root_.map_neg, neg_neg, matR_comm]
+
+theorem inner_vecR (k : Fin 3) (v w : Vec) : ⟪vecR k v, vecR k w⟫_ℂ = ⟪v, w⟫_ℂ := by
+  simp only [inner_vec, vecR_apply, map_mul, conj_sgn]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  linear_combination ((starRingEnd ℂ) (v a) * w a) * sgn_mul_self k a
+
+theorem inner_matR (k : Fin 3) (M N : Mat) : ⟪matR k M, matR k N⟫_ℂ = ⟪M, N⟫_ℂ := by
+  simp only [inner_mat, matR_apply, map_mul, conj_sgn]
+  refine Finset.sum_congr rfl fun a _ => Finset.sum_congr rfl fun b _ => ?_
+  linear_combination ((starRingEnd ℂ) (M (a, b)) * N (a, b)) *
+    (sgn k b * sgn k b * sgn_mul_self k a + sgn_mul_self k b)
+
+theorem matR_mem_tsd (k : Fin 3) (n : Fin 3 → ℤ) {M : Mat}
+    (hM : M ∈ tsd (Fourier.Torus.freq (flip k n))) : matR k M ∈ tsd (Fourier.Torus.freq n) := by
+  obtain ⟨h1, h2, h3⟩ := mem_tsd.1 hM
+  refine mem_tsd.2 ⟨?_, ?_, ?_⟩
+  · ext a b
+    have := congrFun (congrFun h1 a) b
+    simp only [Matrix.transpose_apply, toMatrix_apply] at this ⊢
+    rw [matR_apply, matR_apply, this]; ring
+  · have e : (toMatrix (matR k M)).trace = (toMatrix M).trace := by
+      simp only [Matrix.trace, Matrix.diag, toMatrix_apply, matR_apply]
+      refine Finset.sum_congr rfl fun a _ => ?_
+      rw [sgn_mul_self, one_mul]
+    rw [e, h2]
+  · ext a
+    have := congrFun h3 a
+    simp only [Matrix.mulVec, dotProduct, toMatrix_apply, cfreq, Pi.zero_apply] at this ⊢
+    simp only [freq_flip] at this
+    rw [show (∑ b, matR k M (a, b) * (Fourier.Torus.freq n b : ℂ)) =
+        sgn k a * ∑ b, M (a, b) * (sgn k b * (Fourier.Torus.freq n b : ℂ)) by
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl fun b _ => ?_
+      rw [matR_apply]; ring, this, mul_zero]
+
+open ShortHilbertComplex in
+/-- The fibre maps of the `k`-th reflection on the three spaces. -/
+def fib (k : Fin 3) : ∀ i : Fin 3, W3 Vec Mat Mat i →L[ℂ] W3 Vec Mat Mat i
+  | 0 => vecR k
+  | 1 => matR k
+  | 2 => -matR k
+
+/-- **The tensorial reflections of the torus grad–curl complex**, as fibre symmetries. -/
+def symmetries : (Fourier.Torus.symbolComplex gradCurl).Symmetries (Fin 3) where
+  R k := Reflection.count_of_involutive (flip k) (flip_flip k)
+  ρ := fib
+  invol k i v := by
+    fin_cases i
+    · exact vecR_vecR k v
+    · exact matR_matR k v
+    · exact neg_matR_neg_matR k v
+  inner_ρ k i v w := by
+    fin_cases i
+    · exact inner_vecR k v w
+    · exact inner_matR k v w
+    · exact (inner_neg_neg _ _).trans (inner_matR k v w)
+  symm k i j n v := by
+    change gradCurl.m i j (Fourier.Torus.freq (flip k n)) (fib k i v) = fib k j (gradCurl.m i j _ v)
+    fin_cases i <;> fin_cases j
+    all_goals first
+      | (change (0 : _ →L[ℂ] _) _ = fib k _ ((0 : _ →L[ℂ] _) v); simp)
+      | exact grad_flip k n v
+      | (change curl _ (matR k v) = -matR k (curl _ v); exact curl_flip k n v)
+  comm_σ k l n := flip_comm k l n
+  comm_ρ k l i v := by
+    fin_cases i
+    · exact vecR_comm k l v
+    · exact matR_comm k l v
+    · exact neg_matR_comm k l v
+
+/-- **The mirror action of `(ℤ/2)³`** on the torus grad–curl complex. -/
+abbrev action : Models.Torus.GradCurl.complex.Action ReflGroup := symmetries.toAction
+
+/-- **The mirror cube complex** (Fourier side): the fields of the torus complex with the mirror
+parities, i.e. the fixed complex of `action` (method of images). -/
+abbrev complex := action.fixedComplex
+
+/-- The TSD constraint fibres are permuted by the reflections. -/
+theorem fib_mem_tsdK (k i : Fin 3) (n : Fin 3 → ℤ) {v : ShortHilbertComplex.W3 Vec Mat Mat i}
+    (hv : v ∈ tsdK i (Fourier.Torus.freq (flip k n))) : fib k i v ∈ tsdK i (Fourier.Torus.freq n) := by
+  fin_cases i
+  · have h0 : (v : Vec) = 0 := (Submodule.mem_bot ℂ).1 hv
+    change vecR k v ∈ (⊥ : Submodule ℂ Vec)
+    have h1 : vecR k (v : Vec) = 0 := by rw [h0]; exact (vecR k).map_zero
+    rw [h1]
+    exact Submodule.zero_mem _
+  · exact matR_mem_tsd k n hv
+  · exact Submodule.neg_mem _ (matR_mem_tsd k n hv)
+
+/-- The mirror action preserves the TSD constraint `{0} × L²(TSD) × L²(TSD)`. -/
+theorem act_mem_constraint (g : ReflGroup) (i : Fin 3) {x : Models.Torus.GradCurl.Space i}
+    (hx : x ∈ Models.Torus.GradCurl.constraint i) :
+    action.act g i x ∈ Models.Torus.GradCurl.constraint i :=
+  symmetries.act_mem_fibreSub (K := fun i n => tsdK i (Fourier.Torus.freq n))
+    (fun k i n _ hv => fib_mem_tsdK k i n hv) g i hx
+
+/-- The TSD constraint of the mirror cube complex. -/
+abbrev constraint (i : Fin 3) : Submodule ℂ (action.fixed i) :=
+  (Models.Torus.GradCurl.constraint i).comap (action.fixed i).subtype
+
+/-- **The TSD constraint reduces the mirror cube complex.** -/
+theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
+  action.reducingSubcomplex_comap_fixed Models.Torus.GradCurl.reducingSubcomplex
+    act_mem_constraint
+
+/-- **Prop 4.17 on the cube with mirror boundary conditions** (Fourier side, any time interval,
+with forcing): TSD data and forcing give strong solutions that stay TSD.
+See [QuennevilleBelair2015], §4.10 (Prop 4.17). -/
+theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => action.fixed i}
+    (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
+    (h0 : U a ∈ HilbertComplex.totalSub constraint)
+    (hF : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub constraint) :
+    ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
+  reducingSubcomplex.propagates hU h0 hF
+
+/-- Prop 4.17 on the mirror cube with existence and uniqueness.
+See [QuennevilleBelair2015], §4.10 (Prop 4.17). -/
+theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ ∈ complex.wave.domain)
+    (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 fun i => action.fixed i}
+    {a b : ℝ} (hF : Evolution.ForcingClass.admissible complex.wave a b F)
+    (hFK : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub constraint) :
+    ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution complex.wave (Icc a b) F U ∧
+      (∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint) ∧
+      ∀ V, V a = U₀ → Evolution.IsStrongSolution complex.wave (Icc a b) F V →
+        EqOn V U (Icc a b) :=
+  reducingSubcomplex.existsUnique_mem hU₀ hU₀K hF hFK
+
+/-- The fields with the mirror parities are those fixed by each reflection. -/
+theorem mem_fixed_iff {i : Fin 3} {x : Models.Torus.GradCurl.Space i} :
+    x ∈ action.fixed i ↔ ∀ k, symLp (symmetries.R k) (fib k i) x = x :=
+  symmetries.mem_fixed_toAction
+
+end Feec.Models.Cube.MirrorTorus

@@ -1,0 +1,255 @@
+module
+
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.Topology.Algebra.Module.Star
+public import Feec.Variational.Galerkin
+
+/-!
+# Babuška–Nečas and Lax–Milgram over `ℝ` and `ℂ`
+
+For Hilbert spaces `X`, `Y` over `𝕜 = ℝ` or `ℂ` and a bounded sesquilinear form
+`B : X →L[𝕜] Y →L⋆[𝕜] 𝕜` (linear in `x`, antilinear in `y`), the problem
+"find `x` with `B x = f`" is uniquely solvable for every antilinear functional `f` iff `B` has
+the inf-sup property and separates the second slot. Mathlib's Lax–Milgram is real-only; here it
+is a corollary of Babuška–Nečas over `RCLike`.
+
+## Main definitions
+
+* `Feec.Variational.rieszOp B : X →L[𝕜] Y`, with `B x y = ⟪y, rieszOp B x⟫`.
+
+## Main results
+
+* `Feec.Variational.innerSLFlip_surjective`, `norm_innerSLFlip`: Riesz representation of the
+  antidual, `f y = ⟪y, g⟫` with `‖f‖ = ‖g‖`.
+* `InfSup.surjective`, `existsUnique_apply_eq`, `existsUnique_inner`: Babuška–Nečas.
+* `exists_infSup_of_bijective`: the converse, by the bounded inverse theorem.
+* `babuskaNecas_iff`, `babuskaNecas_iff_inner`: the equivalence (with "exists unique"; the
+  thesis' converse with "exists" is false).
+* `infSup_of_coercive`, `existsUnique_of_coercive`: Lax–Milgram for `α ‖x‖² ≤ re B x x`.
+* `existsUnique_galerkin_sesq`: discrete well-posedness for sesquilinear forms on
+  finite-dimensional trial and test spaces of equal dimension.
+
+## References
+
+* [QuennevilleBelair2015], Thm 4.8 (Lax–Milgram), Thm 4.9 (Babuška–Nečas)
+* [Babuska1971]; [BoffiBrezziFortin2013], Ch. 4; [Arnold2018], Ch. 4
+-/
+
+open Module
+
+@[expose] public noncomputable section
+
+namespace Feec.Variational
+
+variable {𝕜 X Y : Type*} [RCLike 𝕜]
+  [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
+  [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y]
+
+local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
+
+/-! ### Riesz representation of antilinear functionals -/
+
+/-- `‖y ↦ ⟪y, g⟫‖ = ‖g‖`. -/
+theorem norm_innerSLFlip (g : Y) : ‖innerSLFlip 𝕜 g‖ = ‖g‖ := by
+  refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun y => ?_) ?_
+  · rw [innerSLFlip_apply_apply, mul_comm]; exact norm_inner_le_norm y g
+  · rcases (norm_nonneg g).eq_or_lt with hg | hg
+    · rw [← hg]; exact norm_nonneg _
+    · refine le_of_mul_le_mul_right ?_ hg
+      calc ‖g‖ * ‖g‖ = ‖⟪g, g⟫‖ := by
+            rw [inner_self_eq_norm_sq_to_K, norm_pow, RCLike.norm_ofReal, abs_norm, sq]
+        _ = ‖innerSLFlip 𝕜 g g‖ := by rw [innerSLFlip_apply_apply]
+        _ ≤ ‖innerSLFlip 𝕜 g‖ * ‖g‖ := (innerSLFlip 𝕜 g).le_opNorm g
+
+variable [CompleteSpace Y]
+
+/-- **Riesz representation of the antidual**: every bounded antilinear `f` is `y ↦ ⟪y, g⟫`. -/
+theorem innerSLFlip_surjective : Function.Surjective (innerSLFlip 𝕜 : Y →L[𝕜] Y →L⋆[𝕜] 𝕜) := by
+  intro f
+  let φ : Y →L[𝕜] 𝕜 := ((starL 𝕜 : 𝕜 ≃L⋆[𝕜] 𝕜) : 𝕜 →L⋆[𝕜] 𝕜).comp f
+  refine ⟨(InnerProductSpace.toDual 𝕜 Y).symm φ, ContinuousLinearMap.ext fun y => ?_⟩
+  rw [innerSLFlip_apply_apply, ← inner_conj_symm, InnerProductSpace.toDual_symm_apply]
+  simp [φ]
+
+/-! ### The Riesz operator of a form -/
+
+variable [CompleteSpace X]
+
+/-- The **Riesz operator** of a bounded sesquilinear form: `B x y = ⟪y, rieszOp B x⟫`. -/
+def rieszOp (B : X →L[𝕜] Y →L⋆[𝕜] 𝕜) : X →L[𝕜] Y :=
+  ContinuousLinearMap.adjoint
+    ((((InnerProductSpace.toDual 𝕜 X).symm : StrongDual 𝕜 X ≃ₗᵢ⋆[𝕜] X) :
+      StrongDual 𝕜 X →L⋆[𝕜] X).comp B.flip)
+
+variable {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
+
+@[simp] theorem inner_rieszOp (B : X →L[𝕜] Y →L⋆[𝕜] 𝕜) (x : X) (y : Y) :
+    ⟪y, rieszOp B x⟫ = B x y := by
+  rw [rieszOp, ContinuousLinearMap.adjoint_inner_right]
+  simp [InnerProductSpace.toDual_symm_apply]
+
+theorem innerSLFlip_rieszOp (B : X →L[𝕜] Y →L⋆[𝕜] 𝕜) (x : X) :
+    innerSLFlip 𝕜 (rieszOp B x) = B x :=
+  ContinuousLinearMap.ext fun y => by rw [innerSLFlip_apply_apply, inner_rieszOp]
+
+/-- `‖rieszOp B x‖ = ‖B x‖`. -/
+theorem norm_rieszOp_apply (B : X →L[𝕜] Y →L⋆[𝕜] 𝕜) (x : X) : ‖rieszOp B x‖ = ‖B x‖ := by
+  rw [← innerSLFlip_rieszOp B x, norm_innerSLFlip]
+
+/-! ### Babuška–Nečas -/
+
+namespace InfSup
+
+theorem isClosed_range_rieszOp (h : InfSup B γ) :
+    IsClosed ((LinearMap.range (rieszOp B : X →ₗ[𝕜] Y) : Submodule 𝕜 Y) : Set Y) := by
+  have : AntilipschitzWith (γ⁻¹).toNNReal (rieszOp B) := by
+    refine ContinuousLinearMap.antilipschitz_of_bound _ fun x => ?_
+    rw [Real.coe_toNNReal _ (inv_pos.2 h.pos).le, norm_rieszOp_apply]
+    exact h.norm_le x
+  exact this.isClosed_range (rieszOp B).uniformContinuous
+
+/-- **Babuška–Nečas**, existence: inf-sup and separation make `B` onto the antidual.
+Thesis: Thm 4.9 -/
+theorem surjective (h : InfSup B γ) (hs : SeparatingRight B) : Function.Surjective B := by
+  have hc := h.isClosed_range_rieszOp
+  have : CompleteSpace (LinearMap.range (rieszOp B : X →ₗ[𝕜] Y)) := hc.completeSpace_coe
+  have htop : LinearMap.range (rieszOp B : X →ₗ[𝕜] Y) = ⊤ := by
+    rw [← Submodule.orthogonal_eq_bot_iff, Submodule.eq_bot_iff]
+    intro y hy
+    refine hs y fun x => ?_
+    rw [← inner_rieszOp]
+    exact Submodule.inner_left_of_mem_orthogonal (LinearMap.mem_range_self _ x) hy
+  intro f
+  obtain ⟨g, rfl⟩ := innerSLFlip_surjective f
+  obtain ⟨x, hx⟩ := LinearMap.range_eq_top.1 htop g
+  exact ⟨x, by rw [← innerSLFlip_rieszOp]; exact congrArg _ hx⟩
+
+end InfSup
+
+/-- **Babuška–Nečas** (Thm 4.9): under inf-sup and separation, `B x = f` has a unique solution
+for every bounded antilinear `f`, and `‖x‖ ≤ γ⁻¹ ‖f‖`. Thesis: Thm 4.9 -/
+theorem existsUnique_apply_eq (h : InfSup B γ) (hs : SeparatingRight B) (f : Y →L⋆[𝕜] 𝕜) :
+    ∃! x, B x = f := by
+  obtain ⟨x, hx⟩ := h.surjective hs f
+  exact ⟨x, hx, fun x' hx' => h.injective (hx'.trans hx.symm)⟩
+
+/-- **Babuška–Nečas**, Riesz-representative form: `B x y = ⟪y, g⟫` for all `y` has a unique
+solution. Thesis: Thm 4.9 -/
+theorem existsUnique_inner (h : InfSup B γ) (hs : SeparatingRight B) (g : Y) :
+    ∃! x, ∀ y, B x y = ⟪y, g⟫ := by
+  obtain ⟨x, hx, hu⟩ := existsUnique_apply_eq h hs (innerSLFlip 𝕜 g)
+  refine ⟨x, fun y => by rw [hx, innerSLFlip_apply_apply], fun x' hx' => hu x' ?_⟩
+  exact ContinuousLinearMap.ext fun y => by rw [hx', innerSLFlip_apply_apply]
+
+/-- Under inf-sup and separation, `B` is an isomorphism of `X` onto the antidual of `Y`. -/
+def equivOfInfSup (h : InfSup B γ) (hs : SeparatingRight B) : X ≃L[𝕜] (Y →L⋆[𝕜] 𝕜) :=
+  ContinuousLinearEquiv.ofBijective B (LinearMap.ker_eq_bot.2 h.injective)
+    (LinearMap.range_eq_top.2 (h.surjective hs))
+
+@[simp] theorem equivOfInfSup_apply (h : InfSup B γ) (hs : SeparatingRight B) (x : X) :
+    equivOfInfSup h hs x = B x := rfl
+
+omit [CompleteSpace Y] in
+/-- The converse of Babuška–Nečas: a bijective `B` satisfies the inf-sup condition (bounded
+inverse theorem). Thesis: Thm 4.9 -/
+theorem exists_infSup_of_bijective (hB : Function.Bijective B) : ∃ γ, InfSup B γ := by
+  let e := ContinuousLinearEquiv.ofBijective B (LinearMap.ker_eq_bot.2 hB.1)
+    (LinearMap.range_eq_top.2 hB.2)
+  have hpos : 0 < ‖(e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X)‖ + 1 := by positivity
+  refine ⟨(‖(e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X)‖ + 1)⁻¹, ⟨inv_pos.2 hpos, fun x => ?_⟩⟩
+  rw [inv_mul_le_iff₀ hpos]
+  calc ‖x‖ = ‖e.symm (B x)‖ := by
+        rw [show B x = e x from rfl, ContinuousLinearEquiv.symm_apply_apply]
+    _ ≤ ‖(e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X)‖ * ‖B x‖ :=
+        (e.symm : (Y →L⋆[𝕜] 𝕜) →L[𝕜] X).le_opNorm (B x)
+    _ ≤ _ := by gcongr; linarith
+
+/-- **Babuška–Nečas, equivalence** (Thm 4.9, corrected): `B` has the inf-sup property and
+separates the second slot iff `B x = f` is uniquely solvable for every antilinear `f`.
+The thesis' converse with "there exists" alone is false. Thesis: Thm 4.9 (corrected) -/
+theorem babuskaNecas_iff :
+    ((∃ γ, InfSup B γ) ∧ SeparatingRight B) ↔ ∀ f : Y →L⋆[𝕜] 𝕜, ∃! x, B x = f := by
+  refine ⟨fun ⟨⟨γ, h⟩, hs⟩ => existsUnique_apply_eq h hs, fun H => ⟨?_, fun y hy => ?_⟩⟩
+  · refine exists_infSup_of_bijective ⟨fun x x' hxx' => ?_, fun f => (H f).exists⟩
+    obtain ⟨z, -, hz⟩ := H (B x)
+    exact (hz x rfl).trans (hz x' hxx'.symm).symm
+  · obtain ⟨x, hx, -⟩ := H (innerSLFlip 𝕜 y)
+    have := hy x
+    rw [hx, innerSLFlip_apply_apply] at this
+    exact inner_self_eq_zero.1 this
+
+/-- **Babuška–Nečas, equivalence**, Riesz-representative form. Thesis: Thm 4.9 (corrected) -/
+theorem babuskaNecas_iff_inner :
+    ((∃ γ, InfSup B γ) ∧ SeparatingRight B) ↔ ∀ g : Y, ∃! x, ∀ y, B x y = ⟪y, g⟫ := by
+  rw [babuskaNecas_iff]
+  have key : ∀ (g : Y) (x : X), (∀ y, B x y = ⟪y, g⟫) ↔ B x = innerSLFlip 𝕜 g := fun g x =>
+    ⟨fun h => ContinuousLinearMap.ext fun y => by rw [h, innerSLFlip_apply_apply],
+      fun h y => by rw [h, innerSLFlip_apply_apply]⟩
+  constructor
+  · intro H g; simpa only [key] using H (innerSLFlip 𝕜 g)
+  · intro H f
+    obtain ⟨g, rfl⟩ := innerSLFlip_surjective f
+    simpa only [key] using H g
+
+/-! ### Lax–Milgram -/
+
+section Coercive
+
+variable {B : X →L[𝕜] X →L⋆[𝕜] 𝕜} {α : ℝ}
+
+omit [CompleteSpace X] in
+/-- A coercive form, `α ‖x‖² ≤ re B x x`, satisfies the inf-sup condition with constant `α`.
+Thesis: Thm 4.8 -/
+theorem infSup_of_coercive (hα : 0 < α) (hB : ∀ x, α * ‖x‖ ^ 2 ≤ RCLike.re (B x x)) :
+    InfSup B α := by
+  simpa using InfSup.of_testMap (B := B) id hα one_pos (fun x => by simp) hB
+
+omit [CompleteSpace X] in
+/-- A coercive form separates the second slot. -/
+theorem separatingRight_of_coercive (hα : 0 < α)
+    (hB : ∀ x, α * ‖x‖ ^ 2 ≤ RCLike.re (B x x)) : SeparatingRight B := by
+  intro y hy
+  have := hB y
+  rw [hy y, map_zero] at this
+  have : ‖y‖ ^ 2 ≤ 0 := by nlinarith [sq_nonneg ‖y‖]
+  exact norm_eq_zero.1 (by nlinarith [norm_nonneg y])
+
+/-- **Lax–Milgram** over `ℝ` and `ℂ`: a bounded coercive sesquilinear form gives a unique
+solution of `B x = f` for every antilinear `f`, with `‖x‖ ≤ α⁻¹ ‖f‖`. Thesis: Thm 4.8 -/
+theorem existsUnique_of_coercive (hα : 0 < α) (hB : ∀ x, α * ‖x‖ ^ 2 ≤ RCLike.re (B x x))
+    (f : X →L⋆[𝕜] 𝕜) : ∃! x, B x = f :=
+  existsUnique_apply_eq (infSup_of_coercive hα hB) (separatingRight_of_coercive hα hB) f
+
+end Coercive
+
+/-! ### Discrete well-posedness for sesquilinear forms -/
+
+omit [CompleteSpace X] [CompleteSpace Y] in
+/-- **Discrete well-posedness** (sesquilinear forms): with the discrete inf-sup condition on
+finite-dimensional `K`, `L` of equal dimension, the Galerkin problem `uₕ ∈ K`, `B uₕ v = F v`
+(`v ∈ L`) has a unique solution for every bounded antilinear `F`. Thesis: Thm 4.10 -/
+theorem existsUnique_galerkin_sesq {K : Submodule 𝕜 X} {L : Submodule 𝕜 Y}
+    [FiniteDimensional 𝕜 K] [FiniteDimensional 𝕜 L] (hdim : finrank 𝕜 K = finrank 𝕜 L)
+    (h : InfSup (restrict B K L) γ) (F : Y →L⋆[𝕜] 𝕜) :
+    ∃! uh, uh ∈ K ∧ ∀ v ∈ L, B uh v = F v := by
+  set A := rieszOp (restrict B K L)
+  have hinj : Function.Injective A := fun x x' hxx' => h.injective (by
+    rw [← innerSLFlip_rieszOp (restrict B K L) x, ← innerSLFlip_rieszOp (restrict B K L) x']
+    exact congrArg _ hxx')
+  have hsurj : Function.Surjective A :=
+    (LinearMap.injective_iff_surjective_of_finrank_eq_finrank hdim).1 hinj
+  obtain ⟨g, hg⟩ := innerSLFlip_surjective (F.comp L.subtypeL)
+  obtain ⟨w, hw⟩ := hsurj g
+  have hBw : restrict B K L w = F.comp L.subtypeL := by
+    rw [← innerSLFlip_rieszOp]; exact (congrArg _ hw).trans hg
+  refine ⟨w, ⟨w.2, fun v hv => ?_⟩, ?_⟩
+  · have := congrArg (fun f => f ⟨v, hv⟩) hBw
+    simpa using this
+  · rintro y ⟨hy, hyF⟩
+    have : restrict B K L ⟨y, hy⟩ = restrict B K L w :=
+      ContinuousLinearMap.ext fun v => by
+        rw [hBw, restrict_apply, hyF v v.2]; rfl
+    exact congrArg Subtype.val (h.injective this)
+
+end Feec.Variational

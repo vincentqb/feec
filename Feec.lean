@@ -66,6 +66,7 @@ public import Feec.Fourier.SpectralGalerkin
 public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
+public import Feec.Fourier.TorusSpectral
 public import Feec.Fourier.TorusWeak
 public import Feec.Fourier.Weak
 public import Feec.Geometry.AlgebraicCurvature
@@ -156,6 +157,7 @@ public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.Parity
 public import Feec.Models.Cube.Reflection
+public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Models.Cube.Static
 public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham

@@ -19,8 +19,8 @@ the constant `diag(1, -1, 0)`, `Feec.Box.staticB_mem_Kmax`, and the linearly ind
 further examples, not formalized here). So no non-stationary datum has its whole orbit
 (`t ∈ ℝ`, as in the definition of `K*`) in `K`. The forward-only version (`t ≥ 0`), which is
 weaker in general (see the correction in `Feec.Ch4.BoundedSalvageMax`), also holds on the box:
-`Feec.Ch4.BoxForward` (`Feec.Box.forward_boxTSD_iff`) extracts the `N_ω`-components from the
-forward orbit by Cesàro means (the orbits are almost periodic).
+`Feec.Box.forward_boxTSD_iff` (in `Feec.Ch4.BoxIdent`), a consequence of the pure point spectrum
+of the torus wave group and the mean ergodic theorem (`Feec.Models.Cube.Parity.forward_tsd_iff`).
 
 ## The box model (method of images)
 

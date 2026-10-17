@@ -25,7 +25,7 @@ particular Stone's, `Feec.HilbertComplex2.waveGroup`).
   is `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` curl-free. **`thesisBox_Kmax_ne_bot`**: `K* ≠ 0` (it contains
   `diag(1, -1, 0)`).
 
-The forward-only version (`t ≥ 0`) is `Feec.Box.thesisBox_forward_iff` in `Feec.Ch4.BoxForward`.
+The forward-only version (`t ≥ 0`) is `Feec.Box.thesisBox_forward_iff` in `Feec.Ch4.BoxIdent`.
 
 The parity spaces are identified with the bounded-domain spaces of `Q` in `Feec.Ch4.BoxIdent`,
 which transfers these results to `Feec.BoundedDomain.thesisComplex` on every open cube

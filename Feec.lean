@@ -15,6 +15,7 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
+public import Feec.Fourier.BGGSymbol
 public import Feec.Fourier.ClosedRange
 public import Feec.Fourier.Euclidean
 public import Feec.Fourier.ExteriorSymbol
@@ -49,9 +50,11 @@ public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
+public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
 public import Feec.Models.Euclidean.SymCurl
+public import Feec.Models.Torus.BGG
 public import Feec.Models.Torus.DeRham
 public import Feec.Models.Torus.GradCurl
 public import Feec.Models.Torus.SymCurl

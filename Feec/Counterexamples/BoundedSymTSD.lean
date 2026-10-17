@@ -2,6 +2,7 @@ module
 
 public import Feec.Counterexamples.BoundedDomainTSD
 public import Feec.Models.BoundedDomain.SymCurl
+public import Feec.Models.BoundedDomain.InvariantCore
 
 /-!
 # Bounded domains: TSD constraints for the Hessian–curl complex (thesis Prop 4.19 refuted)
@@ -580,6 +581,48 @@ theorem invariantCore_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne :
     constT_mem_invariantCore₂ hΩ hb _, constT_ne_zero hΩ hb hne,
     not_finiteDimensional_invariantCore₂ hΩ hb hne _,
     fun _ hU₀ hK T => ShortHilbertComplex.existsUnique_mem_coreSub hU₀ hK 0 T⟩
+
+/-- **When does `K*` of (4.16) contain a moving datum?** For the Hessian–curl complex and
+`K = {0} × L²(TSD) ∩ L²(S) × L²(TSD) ∩ L²(T)`, under a complete set of eigenvectors of `L²`
+(`hD`, the hypothesis of `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral`): forward
+invariance is equivalent to membership in `K*`; `K*` is stationary iff `S₁* ⊆ ker d₁`; `K*`
+contains a non-stationary datum iff `d₁† d₁ u = ω² u` has a nonzero solution
+`u ∈ L²(TSD) ∩ D(d₁)` with `d₁ u ∈ D(d₁†)`, `ω > 0` (`d₁ u ∈ L²(TSD)` is automatic,
+`hessCurl_d₁_mem_tsdT`); and every such `u` lies in `S₁*`, has `u ∈ L²(TSD₀)`, and moves. -/
+theorem hessCurl_coreSub_spectral (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hD : (hessCurl ℝ hΩ).EigenDense) :
+    (∀ x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ Ω) (symSub ℝ Ω) (trSub ℝ Ω)),
+      (∀ t, 0 ≤ t → (hessCurl ℝ hΩ).toHilbertComplex.waveGroup.S t x ∈
+        HilbertComplex.totalSub (ShortHilbertComplex.family3 ⊥ (tsdS Ω) (tsdT Ω))) ↔
+          x ∈ (hessCurl ℝ hΩ).coreSub (tsdS Ω) (tsdT Ω)) ∧
+    ((hessCurl ℝ hΩ).coreSub (tsdS Ω) (tsdT Ω) ≤
+        (hessCurl ℝ hΩ).stationary ↔
+      ∀ v ∈ (hessCurl ℝ hΩ).invariantCore₁ (tsdS Ω) (tsdT Ω),
+        ∃ h1 : v ∈ (hessCurl ℝ hΩ).d₁.domain, (hessCurl ℝ hΩ).d₁ ⟨v, h1⟩ = 0) ∧
+    (¬ (hessCurl ℝ hΩ).coreSub (tsdS Ω) (tsdT Ω) ≤
+        (hessCurl ℝ hΩ).stationary ↔
+      ∃ w : ℝ, 0 < w ∧ ∃ v : symSub ℝ Ω, v ≠ 0 ∧ v ∈ tsdS Ω ∧ (hessCurl ℝ hΩ).IsEigenfield w v) ∧
+    (∀ w : ℝ, 0 < w → ∀ v : symSub ℝ Ω, v ∈ tsdS Ω → (hessCurl ℝ hΩ).IsEigenfield w v →
+          v ∈ (hessCurl ℝ hΩ).invariantCore₁ (tsdS Ω) (tsdT Ω) ∧
+            (v : L2F ℝ Ω Ix) ∈ tsd₀ Ω hΩ hb ∧
+            (v ≠ 0 → ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2 ℝ Ω) (symSub ℝ Ω) (trSub ℝ Ω)
+              v ∉ (hessCurl ℝ hΩ).stationary)) := by
+  have H :=
+    ShortHilbertComplex.coreSub_spectral (S := hessCurl ℝ hΩ) (S₁ := tsdS Ω) (S₂ := tsdT Ω)
+      (tsdS_le_ker hΩ) hD
+  refine ⟨H.1, H.2.1, ?_, fun w hw v hv hE => ?_⟩
+  · rw [H.2.2]
+    refine exists_congr fun w => and_congr_right fun _ => exists_congr fun v =>
+        and_congr_right fun _ => and_congr_right fun hv => ?_
+    unfold ShortHilbertComplex.IsEigenfield
+    exact exists_congr fun h1 => exists_congr fun _ =>
+      ⟨And.right, And.intro (hessCurl_d₁_mem_tsdT hΩ ⟨v, h1⟩ hv)⟩
+  obtain ⟨hv1, hv3, e⟩ := hE
+  obtain ⟨h2, e2⟩ := LinearPMap.exists_apply_eq_zero_of_mem_ker (tsdS_le_ker hΩ hv)
+  obtain ⟨-, hm, hns⟩ := ShortHilbertComplex.eigenfield_mem_invariantCore₁
+    (S := hessCurl ℝ hΩ) (S₂ := tsdT Ω) hw hv hv1 h2 e2 hv3
+    (hessCurl_d₁_mem_tsdT hΩ ⟨v, hv1⟩ hv) e
+  exact ⟨hm, invariantCore₁_le_tsd₀ hΩ hb (hessCurl ℝ hΩ) le_rfl (tsdT Ω) hm, hns⟩
 
 end InvariantCore
 

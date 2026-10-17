@@ -98,6 +98,7 @@ public import Feec.HilbertComplex.Hodge
 public import Feec.HilbertComplex.HodgeLaplacian
 public import Feec.HilbertComplex.HodgeWave
 public import Feec.HilbertComplex.InvariantCore
+public import Feec.HilbertComplex.InvariantCoreSpectral
 public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.ReducedSystem
@@ -114,6 +115,7 @@ public import Feec.Models.BoundedDomain.DeRham
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.Hessian
 public import Feec.Models.BoundedDomain.Interior
+public import Feec.Models.BoundedDomain.InvariantCore
 public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.Ident
@@ -124,6 +126,7 @@ public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.Parity
+public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Models.Cube.Static
 public import Feec.Models.Euclidean.BGG

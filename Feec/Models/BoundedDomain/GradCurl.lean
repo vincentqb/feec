@@ -119,7 +119,7 @@ zero tangential component for a unit vector `n` (`n × M_i = 0`) vanishes. Hence
 zero tangential trace (the `H̊(curl)` boundary condition) vanishes on `∂Ω` wherever it has a
 trace; `integral_eq_zero_of_mem_TSD_of_mem_HcurlZero` is the trace-free integrated form.
 
-See [QuennevilleBelair2015, §4.10, Prop 4.17] (the conjecture this refutes). -/
+See [QuennevilleBelair2015], §4.10, Prop 4.17 (the conjecture this refutes). -/
 theorem eq_zero_of_symm_of_trace_of_cross (M : Matrix (Fin 3) (Fin 3) ℝ) (n : Fin 3 → ℝ)
     (hn : n ⬝ᵥ n = 1) (hsym : Mᵀ = M) (htr : M.trace = 0) (hcross : ∀ i, n ⨯₃ M i = 0) :
     M = 0 := by
@@ -347,11 +347,12 @@ theorem curlM_skewOf {ψ : Fin 3 → R3 → ℝ} (hψ : ∀ i, Differentiable �
   simp only [curlM, skewOf, pd_sub (hd _ _) (hd _ _), pd_ite_zero]
   fin_cases j <;> fin_cases k <;> simp [Fin.sum_univ_three] <;> ring
 
-/-- For a symmetric `C`, `∫ C : skewOf ψ = 0`. -/
-theorem sum_integral_mul_skewOf_eq_zero {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j, k) = C (k, j))
-    (ψ : Fin 3 → R3 → ℝ) : ∑ jk, ∫ x, C jk x * skewOf ψ jk x ∂volume.restrict Ω = 0 := by
-  have h : ∑ jk, ∫ x, C jk x * skewOf ψ jk x ∂volume.restrict Ω =
-      -∑ jk, ∫ x, C jk x * skewOf ψ jk x ∂volume.restrict Ω := by
+/-- For a symmetric `C` and a pointwise skew-symmetric field `A`, `∫ C : A = 0`. -/
+theorem sum_integral_mul_eq_zero_of_skew {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j, k) = C (k, j))
+    {A : Ix → R3 → ℝ} (hA : ∀ j k x, A (k, j) x = -A (j, k) x) :
+    ∑ jk, ∫ x, C jk x * A jk x ∂volume.restrict Ω = 0 := by
+  have h : ∑ jk, ∫ x, C jk x * A jk x ∂volume.restrict Ω =
+      -∑ jk, ∫ x, C jk x * A jk x ∂volume.restrict Ω := by
     rw [← Finset.sum_neg_distrib]
     refine Fintype.sum_equiv (Equiv.prodComm _ _) _ _ fun jk => ?_
     obtain ⟨j, k⟩ := jk
@@ -359,9 +360,14 @@ theorem sum_integral_mul_skewOf_eq_zero {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j,
     rw [hC j k, ← integral_neg]
     congr 1
     ext x
-    rw [skewOf_swap ψ j k x]
+    rw [hA j k x]
     ring
   linarith
+
+/-- For a symmetric `C`, `∫ C : skewOf ψ = 0`. -/
+theorem sum_integral_mul_skewOf_eq_zero {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j, k) = C (k, j))
+    (ψ : Fin 3 → R3 → ℝ) : ∑ jk, ∫ x, C jk x * skewOf ψ jk x ∂volume.restrict Ω = 0 :=
+  sum_integral_mul_eq_zero_of_skew hC (skewOf_swap ψ)
 
 theorem integral_ite_zero (c : Prop) [Decidable c] (f : R3 → ℝ) :
     ∫ x, (if c then f x else 0) ∂volume.restrict Ω =

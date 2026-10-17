@@ -667,6 +667,11 @@ theorem curlM_diagOf (g : R3 → ℝ) (ij : Ix) (x : R3) :
   simp only [curlM, diagOf, skewOf, pd_ite_zero]
   fin_cases a <;> fin_cases b <;> simp
 
+/-- `curl (g I)` is skew-symmetric (its rows are `∇g × e_i`). -/
+theorem curlM_diagOf_swap (g : R3 → ℝ) (j k : Fin 3) (x : R3) :
+    curlM (diagOf g) (k, j) x = -curlM (diagOf g) (j, k) x := by
+  rw [curlM_diagOf, curlM_diagOf, skewOf_swap]
+
 /-- `∂_k ((f + g)/2) = (∂_k f + ∂_k g)/2`. -/
 theorem pd_avg {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
     (x : R3) : pd k (fun y => (f y + g y) / 2) x = (pd k f x + pd k g x) / 2 := by
@@ -987,29 +992,41 @@ theorem tsdS_le_ker (hΩ : IsOpen Ω) : tsdS Ω ≤ (hessCurl ℝ hΩ).d₀†.k
     rw [e]
     exact hB.2.2 _ hψ
 
+/-- The weak identity of `curl_min` against test fields: `⟪curl u, Φ⟫ = ⟪u, curl Φ⟫`. -/
+theorem inner_minimal_curl_testField (hΩ : IsOpen Ω)
+    (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (Φ : Ix → R3 → ℝ)
+    (hΦ : IsTestField Ω Φ) :
+    ⟪(curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω u, testField hΦ⟫_ℝ =
+      ⟪(u : L2F ℝ Ω Ix), testField ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply
+          hΦ)⟫_ℝ := by
+  have e := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).closure_testGraph_inner_testField
+    ((curlOp 3).mem_closure_minimal hΩ u) hΦ
+  rwa [testField_congr _ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hΦ)
+    (curlOp_formalAdj_apply Φ)] at e
+
+/-- **The curl of a symmetric field in `H̊(curl)` is trace-free**: test against `Ψ = g I`, whose
+curl is skew, so `∫ tr (curl u) g = ∫ u : curl (g I) = 0`. Part of [QuennevilleBelair2015],
+Lemma 3.5 (§3.4). -/
+theorem trace_minimal_curl_eq_zero (hΩ : IsOpen Ω)
+    (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
+    (hu : ∀ i j, (u : L2F ℝ Ω Ix) (i, j) = (u : L2F ℝ Ω Ix) (j, i)) :
+    ∑ i, ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω u : L2F ℝ Ω Ix) (i, i) = 0 := by
+  refine L2.eq_zero_of_forall_inner_toL2 hΩ _ fun g hg => ?_
+  rw [← inner_testField_diagOf _ hg, inner_minimal_curl_testField hΩ u _ (isTestField_diagOf hg),
+    inner_testField_curl_eq _ (isTestField_diagOf hg)]
+  simp only [curlM_diagOf]
+  exact sum_integral_mul_skewOf_eq_zero hu _
+
 /-- **Lemma 3.5 for `curl_min`**: `curl (L²(TSD) ∩ H̊(curl)) ⊆ L²(TSD)` (symmetric by
-`curl_symm_of_mem_tsd`; trace-free as `curl (g I)` is skew; divergence-free as
-`curl ∘ grad = 0`). [QuennevilleBelair2015], Lemma 3.5 (§3.4) -/
+`curl_symm_of_mem_tsd`; trace-free as `curl (g I)` is skew, `trace_minimal_curl_eq_zero`;
+divergence-free as `curl ∘ grad = 0`). [QuennevilleBelair2015], Lemma 3.5 (§3.4) -/
 theorem minimal_curl_mem_tsd (hΩ : IsOpen Ω)
     (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hu : (u : L2F ℝ Ω Ix) ∈ tsd Ω) :
     (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω u ∈ tsd Ω := by
-  have hid : ∀ (Φ : Ix → R3 → ℝ) (hΦ : IsTestField Ω Φ),
-      ⟪(curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω u, testField hΦ⟫_ℝ =
-        ⟪(u : L2F ℝ Ω Ix), testField ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply
-            hΦ)⟫_ℝ :=
-    fun Φ hΦ => by
-      have e := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).closure_testGraph_inner_testField
-        ((curlOp 3).mem_closure_minimal hΩ u) hΦ
-      rwa [testField_congr _ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hΦ)
-        (curlOp_formalAdj_apply Φ)] at e
-  refine ⟨curl_symm_of_mem_tsd hΩ u hu, ?_, fun φ hφ => ?_⟩
-  · refine L2.eq_zero_of_forall_inner_toL2 hΩ _ fun g hg => ?_
-    rw [← inner_testField_diagOf _ hg, hid _ (isTestField_diagOf hg),
-      inner_testField_curl_eq _ (isTestField_diagOf hg)]
-    simp only [curlM_diagOf]
-    exact sum_integral_mul_skewOf_eq_zero hu.1 _
-  · rw [hid, testField_congr _ IsTestField.zero
-      (isComplexPair_grad_curl φ fun i => (hφ i).contDiff), testField_zero, inner_zero_right]
+  have hid := inner_minimal_curl_testField hΩ u
+  refine ⟨curl_symm_of_mem_tsd hΩ u hu, trace_minimal_curl_eq_zero hΩ u hu.1, fun φ hφ => ?_⟩
+  rw [hid, testField_congr _ IsTestField.zero
+    (isComplexPair_grad_curl φ fun i => (hφ i).contDiff), testField_zero, inner_zero_right]
 
 /-- **`curl (H̊(curl, S) ∩ L²(TSD)) ⊆ L²(TSD)`** for (4.16) (Lemma 3.5, the thesis' third
 itemized check in the proof of Prop 4.19). [QuennevilleBelair2015], Lemma 3.5, Prop. 4.19 -/

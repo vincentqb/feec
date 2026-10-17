@@ -21,6 +21,22 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > Naming greps (`prop_[0-9]`, `Ch[0-9]`, …) apply to identifiers only, never to comments or
 > docstrings; do not strip thesis references from documentation.
 
+
+> **Citation convention (user decision, 2026-10-17; Mathlib/doc-gen4 style).**
+> * Every cited work has a BibTeX entry in `docs/references.bib` (key `AuthorYear`, DOI when one
+>   exists, verified against Crossref). No citation without an entry.
+> * Inline citations are bare links `[Key]`, with the location *outside* the brackets:
+>   `[QuennevilleBelair2015], Prop. 4.17 (§4.10, p. 66)`, `see [AFW2010], Thm 3.5`.
+>   Never `[Key, Thm 4.6]` (doc-gen4 would read the whole bracket as the key).
+> * Each module docstring ends with `## References` listing
+>   `* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]`
+>   (author(s), italic title, then `[Key]`).
+> * Thesis traceability uses the same convention (`[QuennevilleBelair2015], Prop. 4.17, corrected`);
+>   the separate `Thesis:` tag is retired, and `scripts/ThesisMap.sh` reads these citations.
+> * Wave W6 rewrites existing citations to this form (mechanically where possible) and adds
+>   `scripts/CheckCitations.sh` (every `[Key]` in `Feec/` exists in `references.bib`; no
+>   `[Key, …]` forms; every module has a `## References` section) to the verification gate.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

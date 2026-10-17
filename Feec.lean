@@ -4,6 +4,7 @@ public import Feec.Foundation
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
+public import Feec.Domain.FiniteSpeed
 public import Feec.Domain.L2Field
 public import Feec.Domain.Mollify
 public import Feec.Domain.Obstruction

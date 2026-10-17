@@ -4,35 +4,15 @@ public import Feec.Ch2.Linearized
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 
 /-!
-# Repair of thesis Prop 2.6 (TT gauge for plane waves): the existence statement
+# Repair of thesis Prop 2.6 (TT gauge for plane waves): the existence statement (shim)
 
-[QuennevilleBelair2015, §2.8, Prop 2.6] claims: every plane wave `h̄_ab = A_ab f(k·x)` of
-Prop 2.5 with `k^a = κ(1, 0, 0, 1)` is gauge-related, via `ξ_a = B_a g(k·x)` with `g' = f` and
-the printed `B`, to a plane wave `A'_ab f(k·x)` satisfying the TT conditions (2.12) with
-`u = (1, 0, 0, 0)`.
+Strangler shim over `Feec.Physics.LinearizedGravity.PlaneWave` (`exists_ttGauge`,
+`trRev_sub_gauge_eq_ttAmp`, `ttGaugeVec`, `box_ttGaugeVec`). The declarations keep their old
+statements.
 
-Defect: the printed `B` has the wrong sign (the derivation uses `η₀₀ = +1`, `k₀ = +κ`, against
-the signature (−+++)); it fails under both index readings (`Feec.Linearized.thesis_gauge_fails`,
-`Feec.Linearized.thesis_gauge_fails_contra`). Also `κ ≠ 0` is used (division by `κ`) but not
-stated.
+## References
 
-Repair (this file): the existence statement itself, `prop_2_6`. For `κ ≠ 0` and every `f ∈ C²`
-there is a `C³` gauge vector `ξ` (namely `ξ_b = (Bcorr κ A)_b g(k·x)` with
-`g(t) = ∫₀ᵗ f`, the fundamental theorem of calculus supplying `g' = f`) and a TT amplitude
-`A' = ttAmp ((A₁₁ − A₂₂)/2) A₁₂` with `h̄ − (2∂_(a ξ_b) − η_ab ∂·ξ) = A' f(k·x)`; the result is a
-Lorentz-gauge solution of `□h̄' = 0`, and its trace reversal solves `H = 0`. The same gauge
-change stated on `h = trRev h̄` (`h ↦ h − 2∂_(a ξ_b)`) is `prop_2_6_metric`.
-
-The algebra is `Feec.Linearized.tt_gauge`, the field-level identity for a given antiderivative is
-`Feec.Linearized.tt_gauge_fun`; this file adds the FTC step and bundles the conclusions.
-`box_ttGaugeVec` records that the gauge vector is residual (`□ξ_b = 0`, since `k` is null).
-
-The other Ch. 2 corrections already have proved corrected statements in the chapter modules:
-Prop 2.4(b) `H = −½□h̄` in Lorentz gauge (`Feec.Linearized.Hjet_lorentz`,
-`Feec.Linearized.Hfun_lorentz`); (2.15) with `+κ²/2` and `f''` (`Feec.Linearized.tt_accel`,
-`Feec.Linearized.tt_accel_fun`); the §2.4 constant `8πG/c⁴ ∈ (2.07, 2.09)·10⁻⁴³`
-(`Feec.Linearized.einstein_const_bounds`); `G = 0 ⇔ Ric = 0` for `n ≠ 2`
-(`Feec.Curvature.einstein_zero_iff`).
+* [QuennevilleBelair2015], §2.8, Prop 2.6; [Wald1984], §4.4
 -/
 
 @[expose] public noncomputable section
@@ -42,53 +22,39 @@ namespace Feec.Repair.C2
 open Feec.Linearized Finset
 
 /-- The antiderivative `g(t) = ∫₀ᵗ f` used to build the gauge vector of Prop 2.6. -/
-def antideriv (f : ℝ → ℝ) : ℝ → ℝ := fun t => ∫ s in (0 : ℝ)..t, f s
+abbrev antideriv (f : ℝ → ℝ) : ℝ → ℝ :=
+  LinearizedGravity.antideriv f
 
 /-- FTC: `g' = f` for continuous `f`. -/
 lemma deriv_antideriv {f : ℝ → ℝ} (hf : Continuous f) : deriv (antideriv f) = f :=
-  funext fun t => Continuous.deriv_integral f hf 0 t
+  LinearizedGravity.deriv_antideriv hf
 
 lemma differentiable_antideriv {f : ℝ → ℝ} (hf : Continuous f) :
-    Differentiable ℝ (antideriv f) := fun t =>
-  (hf.integral_hasStrictDerivAt 0 t).hasDerivAt.differentiableAt
+    Differentiable ℝ (antideriv f) :=
+  LinearizedGravity.differentiable_antideriv hf
 
 /-- If `f ∈ C²` then `g = ∫₀ f ∈ C³`. -/
-lemma contDiff_antideriv {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) : ContDiff ℝ 3 (antideriv f) := by
-  have hc : Continuous f := hf.continuous
-  have := (contDiff_succ_iff_deriv (𝕜 := ℝ) (f := antideriv f) (n := 2)).mpr
-    ⟨differentiable_antideriv hc, by simp, by rw [deriv_antideriv hc]; exact hf⟩
-  exact this
+lemma contDiff_antideriv {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) : ContDiff ℝ 3 (antideriv f) :=
+  LinearizedGravity.contDiff_antideriv hf
 
 /-- The gauge vector of Prop 2.6 (corrected): `ξ_b(z) = (Bcorr κ A)_b · g(k·z)`,
 `g = ∫₀ f`. -/
-def ttGaugeVec (κ : ℝ) (A : Sym2) (f : ℝ → ℝ) : Fin 4 → E4 → ℝ :=
-  fun b z => Bcorr κ A b * antideriv f (phaseL (kTT κ) z)
+abbrev ttGaugeVec (κ : ℝ) (A : Sym2) (f : ℝ → ℝ) : Fin 4 → E4 → ℝ :=
+  LinearizedGravity.ttGaugeVec κ A f
 
 lemma contDiff_ttGaugeVec (κ : ℝ) (A : Sym2) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (b : Fin 4) :
     ContDiff ℝ 3 (ttGaugeVec κ A f b) :=
-  contDiff_const.mul ((contDiff_antideriv hf).comp (phaseL (kTT κ)).contDiff)
+  LinearizedGravity.contDiff_ttGaugeVec κ A hf b
 
-lemma dot_kTT (κ : ℝ) : dot (kTT κ) (kTT κ) = 0 := by
-  simp [dot, kTT, Fin.sum_univ_four, η]
+lemma dot_kTT (κ : ℝ) : dot (kTT κ) (kTT κ) = 0 :=
+  LinearizedGravity.dot_kTT κ
 
 /-- The gauge vector of Prop 2.6 is a residual gauge: `□ξ_b = 0`. Indeed `ξ_b = B_b g(k·x)`
 with `k` null, so `□ξ_b = B_b (k·k) g''(k·x) = 0`. This is the step behind the thesis' remark
 that the gauge change preserves the Lorentz gauge (`∂^a(2∂_(aξ_b) − η_ab ∂·ξ) = □ξ_b`). -/
 lemma box_ttGaugeVec (κ : ℝ) (A : Sym2) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (b : Fin 4)
-    (x : E4) : box (ttGaugeVec κ A f b) x = 0 := by
-  have hc : Continuous f := hf.continuous
-  have hd : Differentiable ℝ f := hf.differentiable (by norm_num)
-  have e : ∀ i, pd i (ttGaugeVec κ A f b) =
-      fun y => (Bcorr κ A b * kTT κ i) * f (phaseL (kTT κ) y) := by
-    intro i; funext y
-    have := pd_wave (differentiable_antideriv hc) (Bcorr κ A b) (kTT κ) i y
-    rw [deriv_antideriv hc] at this
-    exact this
-  simp only [box, e, pd_wave hd]
-  have : ∑ i, η i * (Bcorr κ A b * kTT κ i * kTT κ i * deriv f (phaseL (kTT κ) x)) =
-      dot (kTT κ) (kTT κ) * (Bcorr κ A b * deriv f (phaseL (kTT κ) x)) := by
-    simp only [dot, sum_mul]; exact sum_congr rfl fun _ _ => by ring
-  rw [this, dot_kTT, zero_mul]
+    (x : E4) : box (ttGaugeVec κ A f b) x = 0 :=
+  LinearizedGravity.box_ttGaugeVec κ A hf b x
 
 /-- **Thesis Prop 2.6, repaired** (existence of the TT gauge for a plane wave).
 
@@ -116,14 +82,8 @@ theorem prop_2_6 {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A i j = A
           fun a b => A' a b * f (phaseL (kTT κ) y)) ∧
         (∀ x a b, box (fun y => A' a b * f (phaseL (kTT κ) y)) x = 0) ∧
         (∀ x b, divF (fun y a b => A' a b * f (phaseL (kTT κ) y)) x b = 0) ∧
-        (∀ x b d, Hfun (fun y => trRev (fun a b => A' a b * f (phaseL (kTT κ) y))) x b d = 0) := by
-  have hc : Continuous f := hf.continuous
-  have hTT := (tt_gauge hκ hA hker)
-  have hIs : IsTT κ (ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2)) := hTT.1 ▸ hTT.2
-  set A' := ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2) with hA'
-  obtain ⟨hbox, hdiv, hH⟩ := plane_wave (dot_kTT κ) hIs.symm hIs.lorentz hf
-  refine ⟨_, rfl, contDiff_ttGaugeVec κ A hf, A', hIs, rfl, fun y => ?_, hbox, hdiv, hH⟩
-  exact tt_gauge_fun hκ hA hker (differentiable_antideriv hc) (deriv_antideriv hc) y
+        (∀ x b d, Hfun (fun y => trRev (fun a b => A' a b * f (phaseL (kTT κ) y))) x b d = 0) :=
+  LinearizedGravity.exists_ttGauge hκ hA hker hf
 
 /-- **Thesis Prop 2.6, repaired**, stated on the metric perturbation `h = trRev h̄` (the
 thesis' gauge freedom `h ↦ h − 2∂_(a ξ_b)`, (2.5)): with the gauge vector of `prop_2_6`, the
@@ -136,18 +96,7 @@ theorem prop_2_6_metric {κ : ℝ} (hκ : κ ≠ 0) {A : Sym2} (hA : ∀ i j, A 
     let ξ := ttGaugeVec κ A f
     let h : Sym2 := trRev fun a b => A a b * f (phaseL (kTT κ) y)
     trRev (fun a b => h a b - pd a (ξ b) y - pd b (ξ a) y) =
-      fun a b => ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2) a b * f (phaseL (kTT κ) y) := by
-  intro ξ h
-  have hc : Continuous f := hf.continuous
-  have e : (fun a b => A a b * f (phaseL (kTT κ) y)) - gaugeTR (ttGaugeVec κ A f) y =
       fun a b => ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2) a b * f (phaseL (kTT κ) y) :=
-    tt_gauge_fun hκ hA hker (differentiable_antideriv hc) (deriv_antideriv hc) y
-  have h1 : (fun a b => h a b - pd a (ξ b) y - pd b (ξ a) y) =
-      fun a b => h a b + (fun a b => -pd a (ξ b) y) a b + (fun a b => -pd a (ξ b) y) b a := by
-    funext a b; ring
-  rw [h1, trRev_gauge, trRev_trRev, ← e]
-  funext a b
-  simp only [Pi.sub_apply, gaugeTR, ξ, sum_neg_distrib, mul_neg]
-  ring
+  LinearizedGravity.trRev_sub_gauge_eq_ttAmp hκ hA hker hf y
 
 end Feec.Repair.C2

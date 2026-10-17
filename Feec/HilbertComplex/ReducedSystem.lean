@@ -31,7 +31,8 @@ the solution of the full system.
 
 * `ShortHilbertComplex.isReducedSolution_iff`: reduced solutions are the strong solutions of
   `U' = L U` for the complex `reduced S`.
-* `ShortHilbertComplex.IsReducedSolution.unique`, `ShortHilbertComplex.existsUnique_reducedSolution`:
+* `ShortHilbertComplex.IsReducedSolution.unique`,
+  `ShortHilbertComplex.existsUnique_reducedSolution`:
   existence (classical regularity) and uniqueness for every datum in `D(d₁) × D(d₁†)`.
 * `ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`: the divergence constraint
   `E ∈ N(d₀†)` propagates.
@@ -310,8 +311,8 @@ theorem isReducedSolution_of_isStrongSolution {a b : ℝ} {U : ℝ → PiLp 2 (W
   have hK := S.divFree_propagates ⊤ (fun _ => Submodule.mem_top) hU ha hF
   have hσ : ∀ t ∈ Icc a b, (U t 0 : W₀) = 0 := fun t ht =>
     ((S.mem_totalSub_divFreeSub).1 (hK t ht)).1
-  refine ⟨fun t ht => ⟨hσ t ht, ((S.mem_totalSub_divFreeSub).1 (hK t ht)).2.1⟩, ⟨fun t ht => (S.mem_wave_domain.1 (hU.mem_domain ht)).2.1,
-    fun t ht => (S.mem_wave_domain.1 (hU.mem_domain ht)).2.2.2, fun t ht => ?_, fun t ht => ?_⟩⟩
+  refine ⟨fun t ht => ⟨hσ t ht, ((S.mem_totalSub_divFreeSub).1 (hK t ht)).2.1⟩,
+    ⟨fun t ht => (S.mem_wave_domain.1 (hU.mem_domain ht)).2.1, fun t ht => (S.mem_wave_domain.1 (hU.mem_domain ht)).2.2.2, fun t ht => ?_, fun t ht => ?_⟩⟩
   · have := hasDerivWithinAt_apply (hU.hasDerivWithinAt ht) 1
     rw [Pi.zero_apply, add_zero, wave_apply_one] at this
     refine this.congr_deriv ?_

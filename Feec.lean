@@ -19,6 +19,7 @@ public import Feec.Counterexamples.DiscreteBGG
 public import Feec.Counterexamples.Ell2
 public import Feec.Counterexamples.Fredholm
 public import Feec.Counterexamples.LinearizedGravity
+public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
 public import Feec.Domain.Complexes
@@ -92,6 +93,7 @@ public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.ReducedSystem
 public import Feec.HilbertComplex.Reducing
+public import Feec.HilbertComplex.SecondOrder
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window

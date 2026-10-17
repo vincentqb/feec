@@ -3,6 +3,7 @@ module
 public import Feec.Domain.Operators
 public import Feec.Domain.Obstruction
 public import Feec.HilbertComplex.Reducing
+public import Feec.HilbertComplex.Density
 public import Mathlib.Analysis.Calculus.BumpFunction.Normed
 public import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
 public import Mathlib.LinearAlgebra.CrossProduct
@@ -488,5 +489,228 @@ theorem integral_eq_zero_of_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   simp only [Fin.sum_univ_three] at htr
   fin_cases a <;> fin_cases b <;> simp [Fintype.sum_prod_type, Fin.sum_univ_three] at e ⊢ <;>
     linarith
+
+/-! ## Calculus of partial derivatives -/
+
+theorem pd_of_hasFDerivAt {f : R3 → ℝ} {f' : R3 →L[ℝ] ℝ} {x : R3} (h : HasFDerivAt f f' x)
+    (k : Fin 3) : pd k f x = f' (Pi.single k 1) := by rw [pd, h.fderiv]
+
+theorem pd_add {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
+    (x : R3) : pd k (f + g) x = pd k f x + pd k g x := by
+  rw [pd, fderiv_add (hf x) (hg x)]
+  rfl
+
+theorem pd_const_mul {f : R3 → ℝ} (hf : Differentiable ℝ f) (c : ℝ) (k : Fin 3) (x : R3) :
+    pd k (fun y => c * f y) x = c * pd k f x := by
+  rw [pd, fderiv_const_mul (hf x)]
+  rfl
+
+theorem pd_neg (f : R3 → ℝ) (k : Fin 3) (x : R3) : pd k (fun y => -f y) x = -pd k f x := by
+  unfold pd
+  simp
+
+/-- The product rule `∂_k (f g) = f ∂_k g + g ∂_k f`. -/
+theorem pd_mul {f g : R3 → ℝ} {y : R3} (hf : DifferentiableAt ℝ f y)
+    (hg : DifferentiableAt ℝ g y) (k : Fin 3) :
+    pd k (fun x => f x * g x) y = f y * pd k g y + g y * pd k f y := by
+  rw [pd, fderiv_fun_mul hf hg]
+  rfl
+
+theorem pd_sum {ι : Type*} (s : Finset ι) {f : ι → R3 → ℝ}
+    (hf : ∀ i ∈ s, Differentiable ℝ (f i)) (k : Fin 3) (x : R3) :
+    pd k (fun y => ∑ i ∈ s, f i y) x = ∑ i ∈ s, pd k (f i) x := by
+  unfold pd
+  rw [fderiv_fun_sum fun i hi => (hf i hi).differentiableAt]
+  simp
+
+theorem contDiff_pd {n : ℕ} {f : R3 → ℝ} (hf : ContDiff ℝ (n + 1) f) (k : Fin 3) :
+    ContDiff ℝ n (pd k f) := by
+  unfold pd
+  exact (hf.fderiv_right (by norm_cast)).clm_apply contDiff_const
+
+theorem contDiff_pd_top {f : R3 → ℝ} (hf : ContDiff ℝ ∞ f) (k : Fin 3) :
+    ContDiff ℝ ∞ (pd k f) := by
+  unfold pd
+  exact (hf.fderiv_right (by simp)).clm_apply contDiff_const
+
+/-- **Schwarz**: `∂_a ∂_b f = ∂_b ∂_a f` for `f ∈ C²`. -/
+theorem pd_pd_comm {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (a b : Fin 3) (x : R3) :
+    pd a (pd b f) x = pd b (pd a f) x :=
+  fderiv_fderiv_comm hf _ _ x
+
+/-- The row-wise gradient `(∇φ)_{ij} = ∂_j φ_i`. -/
+def gradM (φ : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij => pd ij.2 (φ ij.1)
+
+/-- `curl ∇φ = 0` for `φ ∈ C²`. -/
+theorem curlM_gradM {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, ContDiff ℝ 2 (φ i)) (ik : Ix) (x : R3) :
+    curlM (gradM φ) ik x = 0 := by
+  simp only [curlM, gradM]
+  rw [pd_pd_comm (hφ _), sub_self]
+
+/-! ## Continuous fields on a bounded domain -/
+
+/-- The `L²(Ω)` class of a field continuous on `ℝ³` (`Ω` bounded). -/
+def smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*} (Ψ : ι → R3 → ℝ)
+    (hΨ : ∀ i, Continuous (Ψ i)) : L2F ℝ Ω ι :=
+  toL2F fun i => memLp_of_continuous hΩ.measurableSet hb (hΨ i)
+
+theorem coeFn_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
+    (Ψ : ι → R3 → ℝ) (hΨ : ∀ i, Continuous (Ψ i)) (i : ι) :
+    (smoothField hΩ hb Ψ hΨ i : R3 → ℝ) =ᵐ[volume.restrict Ω] Ψ i :=
+  MemLp.coeFn_toLp (memLp_of_continuous hΩ.measurableSet hb (hΨ i))
+
+/-- `⟪F, Ψ⟫ = Σ_i ∫_Ω F_i Ψ_i`. -/
+theorem inner_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*} [Fintype ι]
+    (Ψ : ι → R3 → ℝ) (hΨ : ∀ i, Continuous (Ψ i)) (F : L2F ℝ Ω ι) :
+    ⟪F, smoothField hΩ hb Ψ hΨ⟫_ℝ = ∑ i, ∫ x, F i x * Ψ i x ∂volume.restrict Ω :=
+  inner_toL2F_eq F _
+
+/-- `‖Ψ‖² = ∫_Ω Σ_i Ψ_i²`. -/
+theorem norm_sq_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
+    [Fintype ι] (Ψ : ι → R3 → ℝ) (hΨ : ∀ i, Continuous (Ψ i)) :
+    ‖smoothField hΩ hb Ψ hΨ‖ ^ 2 = ∫ x, ∑ i, Ψ i x ^ 2 ∂volume.restrict Ω := by
+  have hint : ∀ i, Integrable (fun x => Ψ i x ^ 2) (volume.restrict Ω) := fun i =>
+    (((hΨ i).pow 2).locallyIntegrable.integrableOn_isCompact hb.isCompact_closure).mono_set
+      subset_closure
+  rw [← real_inner_self_eq_norm_sq, inner_smoothField,
+    integral_finsetSum (f := fun i x => Ψ i x ^ 2) _ fun i _ => hint i]
+  refine Finset.sum_congr rfl fun i _ => integral_congr_ae ?_
+  filter_upwards [coeFn_smoothField hΩ hb Ψ hΨ i] with x hx
+  rw [hx, sq]
+
+/-- A continuous field vanishing on `Ω` is `0` in `L²(Ω)`. -/
+theorem smoothField_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
+    {Ψ : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i)) (h0 : ∀ i, ∀ x ∈ Ω, Ψ i x = 0) :
+    smoothField hΩ hb Ψ hΨ = 0 := by
+  refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
+  filter_upwards [coeFn_smoothField hΩ hb Ψ hΨ i, Lp.coeFn_zero ℝ 2 (volume.restrict Ω),
+    ae_restrict_mem hΩ.measurableSet] with x h1 h2 hx
+  rw [h1, h0 i x hx]
+  exact h2.symm
+
+/-- A continuous field whose `L²(Ω)` class vanishes vanishes on `Ω`. -/
+theorem eqOn_zero_of_smoothField_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {ι : Type*} {Ψ : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i))
+    (h0 : smoothField hΩ hb Ψ hΨ = 0) (i : ι) : ∀ x ∈ Ω, Ψ i x = 0 := by
+  have hae : Ψ i =ᵐ[volume.restrict Ω] fun _ => (0 : ℝ) := by
+    filter_upwards [coeFn_smoothField hΩ hb Ψ hΨ i, Lp.coeFn_zero ℝ 2 (volume.restrict Ω)]
+      with x h1 h2
+    rw [← h1, h0]
+    exact h2
+  exact fun x hx => Measure.eqOn_open_of_ae_eq hae hΩ (hΨ i).continuousOn continuousOn_const hx
+
+theorem smoothField_sub (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
+    {Ψ Φ : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i)) (hΦ : ∀ i, Continuous (Φ i)) :
+    smoothField hΩ hb Ψ hΨ - smoothField hΩ hb Φ hΦ =
+      smoothField hΩ hb (fun i x => Ψ i x - Φ i x) (fun i => (hΨ i).sub (hΦ i)) := by
+  refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
+  filter_upwards [Lp.coeFn_sub (smoothField hΩ hb Ψ hΨ i) (smoothField hΩ hb Φ hΦ i),
+    coeFn_smoothField hΩ hb Ψ hΨ i, coeFn_smoothField hΩ hb Φ hΦ i,
+    coeFn_smoothField hΩ hb _ (fun i => (hΨ i).sub (hΦ i)) i] with x h1 h2 h3 h4
+  simp only [PiLp.sub_apply] at h1 ⊢
+  rw [h1, Pi.sub_apply, h2, h3]
+  exact h4.symm
+
+/-! ## Smooth fields in `H(curl)` and in `D(d₁†)` -/
+
+/-- **A `C¹` field (no boundary condition) lies in `H(curl) = D(curl_max)`** with
+`curl_max Ψ = curl Ψ`. -/
+theorem smoothField_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
+    ∃ h : smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈
+        ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain,
+      (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω ⟨_, h⟩ =
+        smoothField hΩ hb (curlM Ψ) (continuous_curlM hΨ) := by
+  have hcurl : ∀ ij, MemLp ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.apply Ψ ij) 2
+      (volume.restrict Ω) := fun ij => by
+    rw [← curlM_eq_formalAdj_apply]
+    exact memLp_of_continuous hΩ.measurableSet hb (continuous_curlM hΨ ij)
+  obtain ⟨hmem, hval⟩ := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.smooth_mem_maximal_domain
+    hΩ (N := 1) curlOp_isOrderLE.formalAdj hΨ
+    (fun ij => memLp_of_continuous hΩ.measurableSet hb (hΨ ij).continuous) hcurl
+  refine ⟨hmem, hval.trans ?_⟩
+  refine (WithLp.ext_iff 2).2 (funext fun ij => ?_)
+  exact MemLp.toLp_congr (hcurl ij) (memLp_of_continuous hΩ.measurableSet hb
+    (continuous_curlM hΨ ij)) (Eventually.of_forall fun x => by rw [← curlM_eq_formalAdj_apply])
+
+/-- **`C¹` fields lie in `D(d₁†)`** for every short complex with `d₁ ⊆ curl_min`, with
+`d₁† Ψ = curl Ψ` (the adjoint of a restriction extends `curl_max`). -/
+theorem smoothField_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {W₀ : Type*}
+    [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) {Ψ : Ix → R3 → ℝ}
+    (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
+    ∃ h : smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈ S.d₁†.domain,
+      S.d₁† ⟨_, h⟩ = smoothField hΩ hb (curlM Ψ) (continuous_curlM hΨ) := by
+  have hmax : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω)† ≤ S.d₁† :=
+    LinearPMap.adjoint_le_adjoint_of_le S.dense₁ hd₁
+  obtain ⟨hmem, hval⟩ := smoothField_mem_curl_maximal hΩ hb hΨ
+  have e := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).adjoint_minimal (Ω := Ω)
+  have key : ∀ T : L2F ℝ Ω Ix →ₗ.[ℝ] L2F ℝ Ω Ix,
+      T = (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω →
+      ∃ h : smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈ T.domain,
+        T ⟨_, h⟩ = smoothField hΩ hb (curlM Ψ) (continuous_curlM hΨ) := by
+    rintro _ rfl; exact ⟨hmem, hval⟩
+  obtain ⟨hmem', hval'⟩ := key _ e
+  refine ⟨hmax.1 hmem', ?_⟩
+  rw [← hmax.2 (x := ⟨_, hmem'⟩) (y := ⟨_, hmax.1 hmem'⟩) rfl, hval']
+
+/-- A `C¹` field on `ℝ³` that is symmetric, trace-free and divergence-free at every point of `Ω`
+lies in `L²(TSD)` (weak divergence by integration by parts against `C_c^∞(Ω)`). -/
+theorem smoothField_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ : Ix → R3 → ℝ}
+    (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) (hsym : ∀ i j, ∀ x ∈ Ω, Ψ (i, j) x = Ψ (j, i) x)
+    (htr : ∀ x ∈ Ω, ∑ i, Ψ (i, i) x = 0) (hdiv : ∀ j, ∀ x ∈ Ω, ∑ k, pd k (Ψ (j, k)) x = 0) :
+    smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈ tsd Ω := by
+  set K := smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)
+  have hKc := coeFn_smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)
+  have hΩm := ae_restrict_mem (μ := volume) hΩ.measurableSet
+  refine ⟨fun i j => ?_, ?_, fun φ hφ => ?_⟩
+  · refine Lp.ext ?_
+    filter_upwards [hKc (i, j), hKc (j, i), hΩm] with x h1 h2 hx
+    rw [h1, h2, hsym i j x hx]
+  · simp only [Fin.sum_univ_three]
+    refine Lp.ext ?_
+    filter_upwards [Lp.coeFn_add (K (0, 0) + K (1, 1)) (K (2, 2)),
+      Lp.coeFn_add (K (0, 0)) (K (1, 1)), hKc (0, 0), hKc (1, 1), hKc (2, 2),
+      Lp.coeFn_zero ℝ 2 (volume.restrict Ω), hΩm] with x h1 h2 h3 h4 h5 h6 hx
+    rw [h1, Pi.add_apply, h2, Pi.add_apply, h3, h4, h5, h6]
+    simpa [Fin.sum_univ_three] using htr x hx
+  · rw [inner_grad_testField _ hφ]
+    have h1 : ∀ ij : Ix, ∫ x, K ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω =
+        -∫ x, φ ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := fun ij => by
+      rw [integral_congr_ae (g := fun x => pd ij.2 (φ ij.1) x * Ψ ij x)
+        ((hKc ij).mono fun x hx => by simp only; rw [hx, mul_comm]),
+        integral_pd_mul (hφ ij.1) (hΨ ij) ij.2]
+    simp only [h1, Fintype.sum_prod_type, Finset.sum_neg_distrib, neg_eq_zero]
+    refine Finset.sum_eq_zero fun i _ => ?_
+    rw [← integral_finsetSum (f := fun j x => φ i x * pd j (Ψ (i, j)) x) _ fun j _ =>
+      (((hφ i).continuous.mul (continuous_pd (hΨ _) _)).integrable_of_hasCompactSupport
+        (hφ i).hasCompactSupport.mul_right).restrict]
+    refine (integral_congr_ae (Eventually.of_forall fun x => ?_)).trans (integral_zero _ _)
+    simp only [← Finset.mul_sum]
+    by_cases hx : x ∈ Ω
+    · rw [hdiv i x hx, mul_zero]
+    · rw [(hφ i).eq_zero_of_notMem hx, zero_mul]
+
+/-! ## The literal density hypothesis of Prop 4.17 -/
+
+/-- **`H̊(curl) ∩ H(div, 0)` is dense in `H(div, 0)`** on every open `Ω ⊆ ℝ³` (bounded or not,
+any `𝕜`): the literal density conjecture in the proof of Prop 4.17 is true, an instance of
+`Feec.HilbertComplex.mem_closure_domain_inter_ker_adjoint`. What fails is the inference that
+`H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`. Thesis: Prop 4.17 -/
+theorem dense_curl_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω) {B : L2F 𝕜 Ω Ix}
+    (hB : B ∈ (gradCurl 𝕜 hΩ).d₀†.ker) :
+    B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).minimal Ω).domain : Set (L2F 𝕜 Ω Ix)) ∩
+      (gradCurl 𝕜 hΩ).d₀†.ker) :=
+  (gradCurl 𝕜 hΩ).mem_closure_domain_inter_ker_adjoint hB
+
+/-- **`H(curl) ∩ H(div, 0)` is dense in `H(div, 0)`** (the second literal conjecture of
+Prop 4.17): `H̊(curl) ⊆ H(curl)`. Thesis: Prop 4.17 -/
+theorem dense_curl_maximal_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω)
+    {B : L2F 𝕜 Ω Ix} (hB : B ∈ (gradCurl 𝕜 hΩ).d₀†.ker) :
+    B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).maximal Ω).domain : Set (L2F 𝕜 Ω Ix)) ∩
+      (gradCurl 𝕜 hΩ).d₀†.ker) :=
+  closure_mono (Set.inter_subset_inter_left _
+    ((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).minimal_le_maximal hΩ).1) (dense_curl_inter_divFree hΩ hB)
 
 end Feec.Models.BoundedDomain

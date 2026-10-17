@@ -698,4 +698,335 @@ theorem exists_isTestField_ker_dist_lt {ι κ : Type*} [Fintype ι] [Fintype κ]
           have : (Fintype.card ι : ℝ) < N ^ 2 := by rw [hN]; nlinarith
           nlinarith [sq_nonneg ε, sq_pos_of_pos hε]
 
+/-! ## Expansion: density of smooth fields satisfying an interior constraint
+
+Running the dilation the other way (`c < 1`, expanding `Ω` about the centre `x₀`) after
+mollifying gives fields smooth on all of `E` that satisfy an *interior* constraint pointwise on a
+neighbourhood of `cl Ω`, but are not compactly supported in `Ω`. -/
+
+/-- **Dilation with `c ≥ 1/2`** is bounded on `L²(E)`: `‖f(x₀ + c (· - x₀))‖₂ ≤ 2ⁿ ‖f‖₂`,
+`n = dim E` (the norm scales by `c^{-n/2}`). -/
+theorem eLpNorm_dil_le_of_half_le (x₀ : E) {c : ℝ} (hc : 1 / 2 ≤ c) {f : E → ℝ}
+    (hf : AEStronglyMeasurable f volume) :
+    eLpNorm (dil x₀ c f) 2 volume ≤ 2 ^ Module.finrank ℝ E * eLpNorm f 2 volume := by
+  have hcpos : 0 < c := by linarith
+  have hc0 : c ≠ 0 := hcpos.ne'
+  set n := Module.finrank ℝ E
+  set g : E → ℝ := fun y => f ((x₀ - c • x₀) + y)
+  have hmp : MeasurePreserving (fun y : E => (x₀ - c • x₀) + y) volume volume :=
+    measurePreserving_add_left volume _
+  have hg : AEStronglyMeasurable g volume := hf.comp_measurePreserving hmp
+  have hgn : eLpNorm g 2 volume = eLpNorm f 2 volume := eLpNorm_comp_measurePreserving hf hmp
+  have hmap := Measure.map_addHaar_smul (volume : Measure E) hc0
+  rw [dil_eq, ← eLpNorm_map_measure (by rw [hmap]; exact hg.smul_measure _)
+    (measurable_const_smul c).aemeasurable, hmap,
+    eLpNorm_smul_measure_of_ne_top (by norm_num), ← hgn]
+  swap; · exact hg
+  have h1 : ENNReal.ofReal |(c ^ n)⁻¹| ≤ ((2 : ℝ≥0∞) ^ n) ^ (2 : ℝ) := by
+    rw [ENNReal.rpow_two, ← pow_mul, show ((2 : ℝ≥0∞) ^ (n * 2)) = ENNReal.ofReal (2 ^ (n * 2))
+      by rw [ENNReal.ofReal_pow (by norm_num)]; simp, ENNReal.ofReal_le_ofReal_iff (by positivity),
+      abs_inv, abs_pow, abs_of_pos hcpos]
+    have h2 : ((1 : ℝ) / 2) ^ n ≤ c ^ n := pow_le_pow_left₀ (by norm_num) hc n
+    calc (c ^ n)⁻¹ ≤ (((1 : ℝ) / 2) ^ n)⁻¹ := inv_anti₀ (by positivity) h2
+      _ = 2 ^ n := by rw [one_div, inv_pow, inv_inv]
+      _ ≤ 2 ^ (n * 2) := pow_le_pow_right₀ (by norm_num) (by omega)
+  have h2 : ENNReal.ofReal |(c ^ n)⁻¹| ^ (1 / (2 : ℝ≥0∞)).toReal ≤ 2 ^ n := by
+    have e : (1 / (2 : ℝ≥0∞)).toReal = 1 / 2 := by norm_num
+    rw [e]
+    calc ENNReal.ofReal |(c ^ n)⁻¹| ^ (1 / 2 : ℝ)
+        ≤ (((2 : ℝ≥0∞) ^ n) ^ (2 : ℝ)) ^ (1 / 2 : ℝ) := ENNReal.rpow_le_rpow h1 (by norm_num)
+      _ = 2 ^ n := by rw [← ENNReal.rpow_mul]; norm_num
+  rw [smul_eq_mul]
+  exact mul_le_mul_left h2 _
+
+/-- Two-sided version of `eLpNorm_dil_molli_sub_le_of_continuous`: for a continuous compactly
+supported `g`, `dil x₀ c (g ⋆ ρ_φ)` is `ε`-close to `g` in `L²` once `|c - 1|` and the bump radius
+are small. -/
+theorem eLpNorm_dil_molli_sub_le_of_continuous_of_abs (x₀ : E) {g : E → ℝ} (hgc : Continuous g)
+    (hgs : HasCompactSupport g) {ε : ℝ} (hε : 0 < ε) :
+    ∃ η > 0, η ≤ 1 / 2 ∧ ∀ c : ℝ, |c - 1| < η → ∀ φ : ContDiffBump (0 : E), φ.rOut < η →
+      eLpNorm (dil x₀ c (molli φ g) - g) 2 volume ≤ ENNReal.ofReal ε := by
+  obtain ⟨R, hR0, hR⟩ : ∃ R > 0, tsupport g ⊆ Metric.closedBall x₀ R := by
+    obtain ⟨R, hR⟩ := hgs.isCompact.isBounded.subset_closedBall x₀
+    exact ⟨max R 1, by positivity, hR.trans (Metric.closedBall_subset_closedBall (le_max_left _ _))⟩
+  have hsupp : ∀ x, g x ≠ 0 → dist x x₀ ≤ R := fun x hx =>
+    hR (subset_tsupport _ hx)
+  set K := Metric.closedBall x₀ (2 * (R + 1))
+  have hK : volume K ≠ ⊤ := measure_closedBall_lt_top.ne
+  set M := (volume K).toReal
+  have hKM : volume K ^ (1 / ENNReal.toReal 2) = ENNReal.ofReal (Real.sqrt M) := by
+    rw [← ENNReal.ofReal_toReal hK, Real.sqrt_eq_rpow, ENNReal.ofReal_rpow_of_nonneg
+      ENNReal.toReal_nonneg (by norm_num)]
+    norm_num
+    rfl
+  set ε' := ε / (Real.sqrt M + 1)
+  have hε' : 0 < ε' := by positivity
+  have hε'M : ε' * Real.sqrt M ≤ ε := by
+    rw [div_mul_eq_mul_div, div_le_iff₀ (by positivity)]
+    nlinarith [Real.sqrt_nonneg M]
+  obtain ⟨δ, hδ, hδg⟩ := Metric.uniformContinuous_iff.1
+    (hgs.uniformContinuous_of_continuous hgc) (ε' / 2) (by positivity)
+  refine ⟨min (1 / 2) (δ / (2 * (R + 1))), by positivity, min_le_left _ _,
+    fun c hc φ hφ => ?_⟩
+  have hc12 : 1 / 2 ≤ c := by
+    have := hc.trans_le (min_le_left _ _)
+    rw [abs_lt] at this
+    linarith
+  have hcpos : 0 < c := by linarith
+  have hφδ : φ.rOut < δ := hφ.trans_le ((min_le_right _ _).trans
+    (div_le_self hδ.le (by linarith)))
+  have hcR : |c - 1| * (2 * (R + 1)) < δ := by
+    have : |c - 1| < δ / (2 * (R + 1)) := hc.trans_le (min_le_right _ _)
+    rwa [lt_div_iff₀ (by positivity)] at this
+  have hgl : LocallyIntegrable g volume := hgc.locallyIntegrable
+  have hy : ∀ x, dist (x₀ + c • (x - x₀)) x₀ = c * dist x x₀ := by
+    intro x
+    rw [dist_eq_norm, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_of_nonneg
+      hcpos.le]
+  have hyx : ∀ x, dist (x₀ + c • (x - x₀)) x = |c - 1| * dist x x₀ := by
+    intro x
+    rw [dist_eq_norm, dist_eq_norm, show x₀ + c • (x - x₀) - x = (c - 1) • (x - x₀) by
+      rw [sub_smul, one_smul]; abel, norm_smul, Real.norm_eq_abs]
+  have hpt : ∀ x, dist (dil x₀ c (molli φ g) x) (g x) ≤ ε' := by
+    intro x
+    set y := x₀ + c • (x - x₀)
+    have h1 : dist (molli φ g y) (g y) ≤ ε' / 2 := by
+      rw [molli_eq_normed_convolution]
+      refine φ.dist_normed_convolution_le hgc.aestronglyMeasurable fun z hz => ?_
+      exact (hδg (lt_of_lt_of_le (Metric.mem_ball.1 hz) hφδ.le)).le
+    have h2 : dist (g y) (g x) ≤ ε' / 2 := by
+      by_cases h : g y = 0 ∧ g x = 0
+      · rw [h.1, h.2, dist_self]; positivity
+      have hxR : dist x x₀ ≤ 2 * (R + 1) := by
+        rcases not_and_or.1 h with h | h
+        · have := hsupp y h
+          rw [hy] at this
+          nlinarith [dist_nonneg (x := x) (y := x₀)]
+        · linarith [hsupp x h]
+      refine (hδg ?_).le
+      rw [hyx]
+      calc |c - 1| * dist x x₀ ≤ |c - 1| * (2 * (R + 1)) :=
+            mul_le_mul_of_nonneg_left hxR (abs_nonneg _)
+        _ < δ := hcR
+    calc dist (dil x₀ c (molli φ g) x) (g x) ≤ dist (molli φ g y) (g y) + dist (g y) (g x) :=
+          dist_triangle _ _ _
+      _ ≤ ε' := by linarith
+  have hφ1 : φ.rOut < 1 := hφ.trans_le ((min_le_left _ _).trans (by norm_num))
+  have hs1 : Function.support (dil x₀ c (molli φ g)) ⊆ K := by
+    intro x hx
+    have hm : x₀ + c • (x - x₀) ∈ Function.support (molli φ g) := hx
+    obtain ⟨u, hu, v, hv, huv⟩ := support_convolution_subset _ hm
+    rw [φ.support_normed_eq] at hv
+    have hu' := hsupp u hu
+    have hv' : ‖v‖ < φ.rOut := by simpa using hv
+    have : dist (x₀ + c • (x - x₀)) x₀ ≤ R + 1 := by
+      rw [← huv, dist_eq_norm, show u + v - x₀ = (u - x₀) + v by abel]
+      calc ‖(u - x₀) + v‖ ≤ ‖u - x₀‖ + ‖v‖ := norm_add_le _ _
+        _ ≤ R + 1 := by rw [← dist_eq_norm]; linarith
+    rw [hy] at this
+    show dist x x₀ ≤ 2 * (R + 1)
+    nlinarith [dist_nonneg (x := x) (y := x₀)]
+  have hs2 : Function.support g ⊆ K := fun x hx =>
+    (hsupp x hx).trans (by linarith)
+  have hmeas : AEStronglyMeasurable (dil x₀ c (molli φ g) - g) volume :=
+    ((continuous_dil x₀ c (continuous_molli φ hgl)).sub hgc).aestronglyMeasurable
+  refine (eLpNorm_sub_le_of_dist_bdd volume (by norm_num) measurableSet_closedBall.nullMeasurableSet
+    hε'.le hmeas hpt hs1 hs2).trans ?_
+  rw [hKM, ← ENNReal.ofReal_mul hε'.le]
+  exact ENNReal.ofReal_le_ofReal hε'M
+
+/-- **Two-sided dilated mollification converges in `L²(E)`**: for `f ∈ L²(E)` and `ε > 0`,
+`x ↦ (f ⋆ ρ_φ)(x₀ + c (x - x₀))` is `ε`-close to `f` once `|c - 1|` and the bump radius are
+small (`c < 1` allowed). -/
+theorem eLpNorm_dil_molli_sub_le_of_abs (x₀ : E) {f : E → ℝ} (hf : MemLp f 2 volume) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∃ η > 0, η ≤ 1 / 2 ∧ ∀ c : ℝ, |c - 1| < η → ∀ φ : ContDiffBump (0 : E), φ.rOut < η →
+      eLpNorm (dil x₀ c (molli φ f) - f) 2 volume ≤ ENNReal.ofReal ε := by
+  set N : ℝ := 2 ^ Module.finrank ℝ E with hN
+  have hN0 : 0 < N := by positivity
+  set ε₀ := ε / (N + 2) with hε₀d
+  have hε₀ : 0 < ε₀ := by positivity
+  obtain ⟨g, hgs, hgd, hfg⟩ := hf.exist_eLpNorm_sub_le (by norm_num) (by norm_num) hε₀
+  have hgc : Continuous g := hgd.continuous
+  have hgm : MemLp g 2 volume := hgc.memLp_of_hasCompactSupport hgs
+  obtain ⟨η, hη, hη2, hηg⟩ := eLpNorm_dil_molli_sub_le_of_continuous_of_abs x₀ hgc hgs hε₀
+  refine ⟨η, hη, hη2, fun c hc φ hφ => ?_⟩
+  have hc12 : 1 / 2 ≤ c := by
+    have := hc.trans_le hη2
+    rw [abs_lt] at this
+    linarith
+  have hfgm : MemLp (f - g) 2 volume := hf.sub hgm
+  have hli : LocallyIntegrable (f - g) volume := hfgm.locallyIntegrable (by norm_num)
+  have hgl : LocallyIntegrable g volume := hgc.locallyIntegrable
+  have e : dil x₀ c (molli φ f) - f =
+      dil x₀ c (molli φ (f - g)) + (dil x₀ c (molli φ g) - g) + -(f - g) := by
+    have : f = (f - g) + g := by abel
+    conv_lhs => rw [this, molli_add φ hli hgl, dil_add]
+    abel
+  have b1 : eLpNorm (dil x₀ c (molli φ (f - g))) 2 volume ≤ ENNReal.ofReal (N * ε₀) := by
+    refine (eLpNorm_dil_le_of_half_le x₀ hc12 (continuous_molli φ hli).aestronglyMeasurable).trans
+      ?_
+    rw [ENNReal.ofReal_mul hN0.le, hN, ENNReal.ofReal_pow (by norm_num), ENNReal.ofReal_ofNat]
+    gcongr
+    exact (eLpNorm_molli_le φ hfgm).trans hfg
+  rw [e]
+  calc eLpNorm (dil x₀ c (molli φ (f - g)) + (dil x₀ c (molli φ g) - g) + -(f - g)) 2 volume
+      ≤ eLpNorm (dil x₀ c (molli φ (f - g)) + (dil x₀ c (molli φ g) - g)) 2 volume +
+          eLpNorm (-(f - g)) 2 volume := eLpNorm_add_le (by norm_num)
+    _ ≤ (eLpNorm (dil x₀ c (molli φ (f - g))) 2 volume +
+          eLpNorm (dil x₀ c (molli φ g) - g) 2 volume) + eLpNorm (f - g) 2 volume := by
+        rw [eLpNorm_neg]
+        gcongr
+        exact eLpNorm_add_le (by norm_num)
+    _ ≤ (ENNReal.ofReal (N * ε₀) + ENNReal.ofReal ε₀) + ENNReal.ofReal ε₀ := by
+        gcongr
+        exact hηg c hc φ hφ
+    _ = ENNReal.ofReal ε := by
+        rw [← ENNReal.ofReal_add (by positivity) hε₀.le,
+          ← ENNReal.ofReal_add (by positivity) hε₀.le]
+        congr 1
+        rw [hε₀d]; field_simp; ring
+
+omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
+  [(volume : Measure E).IsAddHaarMeasure] in
+/-- **Expansion about the centre of a ball of star-shapedness.** If `Ω` is star-shaped with
+respect to every point of `B(x₀, s)`, `1/2 ≤ c < 1` and `r < s (1 - c) / 4`, then for
+`x ∈ cl Ω` the ball `B̄(x₀ + c (x - x₀), r)` lies in `Ω`. -/
+theorem closedBall_dil_subset_of_starBall {x₀ : E} {s : ℝ}
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {c r : ℝ} (hc2 : 1 / 2 ≤ c)
+    (hc1 : c < 1) (hr : r < s * (1 - c) / 4) {x : E} (hx : x ∈ closure Ω) :
+    Metric.closedBall (x₀ + c • (x - x₀)) r ⊆ Ω := by
+  intro t ht
+  have hcpos : 0 < c := by linarith
+  have hc' : 1 < c⁻¹ := one_lt_inv₀ hcpos |>.2 hc1
+  have hr0 : 0 ≤ r := Metric.nonempty_closedBall.1 ⟨t, ht⟩
+  have hs : 0 < s := by nlinarith
+  set v : E := c⁻¹ • (t - (x₀ + c • (x - x₀)))
+  have hv : ‖v‖ ≤ 2 * r := by
+    rw [norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hcpos.le), ← dist_eq_norm]
+    have hd : dist t (x₀ + c • (x - x₀)) ≤ r := ht
+    have hci : c⁻¹ ≤ 2 := by
+      rw [inv_le_comm₀ hcpos (by norm_num)]; linarith
+    exact mul_le_mul hci hd dist_nonneg (by norm_num)
+  have hr' : 2 * r < s * (c⁻¹ - 1) / 2 := by
+    have : 1 - c ≤ c⁻¹ - 1 := by
+      have : c ≤ c⁻¹ := (le_of_lt hc1).trans hc'.le
+      have h2 : c * c⁻¹ = 1 := mul_inv_cancel₀ hcpos.ne'
+      nlinarith
+    nlinarith
+  have hmem := dil_mem_of_starBall hstar hc' hr' hx hv
+  convert hmem using 1
+  simp only [v, inv_inv, smul_sub, smul_add, smul_smul, mul_inv_cancel₀ hcpos.ne',
+    mul_inv_cancel_left₀ hcpos.ne', one_smul]
+  abel
+
+omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
+/-- The reflected kernel `s ↦ ρ(y - s)` of a bump supported in `B̄(0, r)` is a test function on
+`Ω` when `B̄(y, r) ⊆ Ω`. -/
+theorem isTest_comp_sub_of_closedBall_subset {ρ : E → ℝ} (hρ : IsTest (univ : Set E) ρ)
+    {r : ℝ} (hsupp : tsupport ρ ⊆ Metric.closedBall 0 r) {y : E}
+    (hy : Metric.closedBall y r ⊆ Ω) : IsTest Ω (fun s => ρ (y - s)) := by
+  have hz : ∀ z, z ∉ Metric.closedBall y r → ρ (y - z) = 0 := fun z hz =>
+    image_eq_zero_of_notMem_tsupport fun h => hz (by
+      have := hsupp h
+      rw [Metric.mem_closedBall, dist_zero_right] at this
+      rwa [Metric.mem_closedBall, dist_eq_norm, norm_sub_rev])
+  refine ⟨(hρ.comp_sub y).contDiff, HasCompactSupport.intro (isCompact_closedBall y r) hz, ?_⟩
+  refine (closure_minimal (fun z hz' => ?_) Metric.isClosed_closedBall).trans hy
+  by_contra hc
+  exact hz' (hz z hc)
+
+/-- **Density of smooth fields satisfying an interior constraint** on a bounded open `Ω`
+star-shaped with respect to a ball. Let `A` be a row-homogeneous constant-coefficient operator
+and `u ∈ L²(Ω; ℝ^ι)` with `A u = 0` in `𝒟'(Ω)` (tested against `C_c^∞(Ω)` only: **no** boundary
+condition). Then `u` is an `L²(Ω)` limit of fields `φ` smooth on all of `E` with `A φ = 0` at every
+point of `Ω`: `φ = ū ⋆ ρ` expanded about the centre (`c < 1`), so that only points whose
+`ρ`-ball lies in `Ω` are sampled. Compare `exists_isTestField_ker_dist_lt`, where a boundary
+condition gives test fields. -/
+theorem exists_contDiff_ker_on_dist_lt {ι κ : Type*} [Fintype ι] [Fintype κ] [DecidableEq κ]
+    (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : E} {s : ℝ} (hs : 0 < s)
+    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω)
+    (A : ConstCoeffOp E ℝ ι κ) {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (u : L2F ℝ Ω ι)
+    (hu : ∀ ψ : κ → E → ℝ, IsTestField Ω ψ →
+      ∑ i, ∫ x, Ω.indicator (u i) x * A.formalAdj.apply ψ i x = 0)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ (φ : ι → E → ℝ) (hφ : ∀ i, ContDiff ℝ ∞ (φ i)), (∀ j, ∀ x ∈ Ω, A.apply φ j x = 0) ∧
+      dist u (toL2F fun i => memLp_of_continuous hΩ.measurableSet hb (hφ i).continuous) < ε := by
+  rcases isEmpty_or_nonempty ι with hι | hι
+  · refine ⟨fun i => isEmptyElim i, fun i => isEmptyElim i, fun j x _ => ?_, ?_⟩
+    · simp [ConstCoeffOp.apply]
+    · rw [Subsingleton.elim u (toL2F fun i => isEmptyElim i), dist_self]; exact hε
+  have hm : ∀ i, MemLp (Ω.indicator (u i : E → ℝ)) 2 volume := fun i =>
+    (memLp_indicator_iff_restrict hΩ.measurableSet.nullMeasurableSet).2 (Lp.memLp (u i))
+  have hl : ∀ i, LocallyIntegrable (Ω.indicator (u i : E → ℝ)) volume := fun i =>
+    (hm i).locallyIntegrable (by norm_num)
+  set N : ℝ := (Fintype.card ι : ℝ) + 1 with hN
+  have hN0 : 0 < N := by positivity
+  set ε' := ε / N with hε'd
+  have hε' : 0 < ε' := by positivity
+  have hex := fun i => eLpNorm_dil_molli_sub_le_of_abs x₀ (hm i) hε'
+  choose η hη hη2 hηP using hex
+  set η₀ := Finset.univ.inf' Finset.univ_nonempty η
+  have hη₀ : 0 < η₀ := (Finset.lt_inf'_iff _).2 fun i _ => hη i
+  have hη₀le : ∀ i, η₀ ≤ η i := fun i => Finset.inf'_le _ (Finset.mem_univ i)
+  obtain ⟨i₀⟩ := hι
+  have hη₀2 : η₀ ≤ 1 / 2 := (hη₀le i₀).trans (hη2 _)
+  set c := 1 - η₀ / 2 with hcd
+  have hc1 : c < 1 := by linarith
+  have hc2 : 1 / 2 ≤ c := by linarith
+  set r := min (η₀ / 2) (s * (1 - c) / 8)
+  have hr : 0 < r := lt_min (by positivity) (by nlinarith)
+  set φ : ContDiffBump (0 : E) := ⟨r / 2, r, by positivity, by linarith⟩
+  have hφr : φ.rOut = r := rfl
+  have hφs : φ.rOut < s * (1 - c) / 4 := by
+    rw [hφr]
+    exact (min_le_right _ _).trans_lt (by nlinarith)
+  set Φ : ι → E → ℝ := fun i => dil x₀ c (molli φ (Ω.indicator (u i)))
+  have hΦ : ∀ i, ContDiff ℝ ∞ (Φ i) := fun i => contDiff_dil x₀ c (contDiff_molli φ (hl i))
+  refine ⟨Φ, hΦ, fun j x hx => ?_, ?_⟩
+  · -- `A Φ = c^k (A (ū ⋆ ρ)) ∘ dil`, and the kernel at the dilated point is a test field on `Ω`
+    have hρ : IsTest (univ : Set E) (φ.normed volume) :=
+      ⟨φ.contDiff_normed, φ.hasCompactSupport_normed, subset_univ _⟩
+    rw [ConstCoeffOp.apply_dil hA x₀ c (fun i => contDiff_molli φ (hl i)) j x]
+    have e := ConstCoeffOp.apply_convolution A hρ hl j (x₀ + c • (x - x₀))
+    have hball := closedBall_dil_subset_of_starBall hstar hc2 hc1 hφs (subset_closure hx)
+    have hker := isTest_comp_sub_of_closedBall_subset hρ φ.tsupport_normed_eq.subset hball
+    have h0 := hu _ (IsTestField.single j hker)
+    rw [show (fun i => molli φ (Ω.indicator (u i : E → ℝ))) = fun i =>
+      Ω.indicator (u i : E → ℝ) ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] φ.normed volume
+      from rfl, e, h0, mul_zero]
+  · -- componentwise estimate
+    have hcomp : ∀ i, dist (u i) ((toL2F fun i => memLp_of_continuous hΩ.measurableSet hb
+        (hΦ i).continuous : L2F ℝ Ω ι) i) ≤ ε' := by
+      intro i
+      have hlt : |c - 1| < η i := by
+        rw [abs_lt]; constructor <;> linarith [hη₀le i]
+      have hφη : φ.rOut < η i := by
+        rw [hφr]; exact (min_le_left _ _).trans_lt (by linarith [hη₀le i])
+      have hest := hηP i c hlt φ hφη
+      have e1 : (toL2F fun i => memLp_of_continuous hΩ.measurableSet hb (hΦ i).continuous :
+          L2F ℝ Ω ι) i = (memLp_of_continuous hΩ.measurableSet hb (hΦ i).continuous).toLp (Φ i) :=
+        rfl
+      rw [e1, dist_edist, ← Lp.toLp_coeFn (u i) (Lp.memLp _), Lp.edist_toLp_toLp]
+      refine ENNReal.toReal_le_of_le_ofReal hε'.le ?_
+      calc eLpNorm ((u i : E → ℝ) - Φ i) 2 (volume.restrict Ω)
+          = eLpNorm (Ω.indicator (u i : E → ℝ) - Φ i) 2 (volume.restrict Ω) := by
+            refine eLpNorm_congr_ae ?_
+            filter_upwards [indicator_ae_eq_restrict (μ := volume) (f := (u i : E → ℝ))
+              hΩ.measurableSet.nullMeasurableSet] with x hx
+            simp only [Pi.sub_apply, hx]
+        _ ≤ eLpNorm (Ω.indicator (u i : E → ℝ) - Φ i) 2 volume :=
+            eLpNorm_mono_measure _ Measure.restrict_le_self
+        _ = eLpNorm (Φ i - Ω.indicator (u i : E → ℝ)) 2 volume := eLpNorm_sub_comm _ _ _ _
+        _ ≤ ENNReal.ofReal ε' := hest
+    rw [PiLp.dist_eq_of_L2, Real.sqrt_lt' hε]
+    calc ∑ i, dist (u i) ((toL2F fun i => memLp_of_continuous hΩ.measurableSet hb
+          (hΦ i).continuous : L2F ℝ Ω ι) i) ^ 2 ≤ ∑ _i : ι, ε' ^ 2 :=
+          Finset.sum_le_sum fun i _ => pow_le_pow_left₀ dist_nonneg (hcomp i) 2
+      _ = (Fintype.card ι : ℝ) * ε' ^ 2 := by simp
+      _ < ε ^ 2 := by
+          rw [hε'd, div_pow, ← mul_div_assoc, div_lt_iff₀ (by positivity)]
+          have : (Fintype.card ι : ℝ) < N ^ 2 := by rw [hN]; nlinarith
+          nlinarith [sq_nonneg ε, sq_pos_of_pos hε]
+
 end Feec.Domain

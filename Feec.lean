@@ -82,6 +82,7 @@ public import Feec.HilbertComplex.BGG.Twisted
 public import Feec.HilbertComplex.BGG.WeakSymmetry
 public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.Compactness
+public import Feec.HilbertComplex.Density
 public import Feec.HilbertComplex.Dirac
 public import Feec.HilbertComplex.DomainComplex
 public import Feec.HilbertComplex.Dual
@@ -89,6 +90,7 @@ public import Feec.HilbertComplex.Equivariant
 public import Feec.HilbertComplex.Hodge
 public import Feec.HilbertComplex.HodgeLaplacian
 public import Feec.HilbertComplex.HodgeWave
+public import Feec.HilbertComplex.InvariantCore
 public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.ReducedSystem

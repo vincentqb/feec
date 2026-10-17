@@ -1,7 +1,7 @@
 module
 
 public import Feec.Domain.ConstCoeffOp
-public import Feec.HilbertComplex.Reducing
+public import Feec.HilbertComplex.InvariantCore
 public import Feec.Evolution.Tangent
 
 /-!
@@ -189,44 +189,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [CompleteSpace W₁]
   [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
-
-/-- A constraint family `K₀ × K₁ × K₂` on the three spaces of a short complex. -/
-def family3 (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    ∀ i : Fin 3, Submodule 𝕜 (W3 W₀ W₁ W₂ i)
-  | 0 => K₀
-  | 1 => K₁
-  | 2 => K₂
-
-instance instHasOrthogonalProjectionFamily3 (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁)
-    (K₂ : Submodule 𝕜 W₂) [K₀.HasOrthogonalProjection] [K₁.HasOrthogonalProjection]
-    [K₂.HasOrthogonalProjection] : ∀ i, (family3 K₀ K₁ K₂ i).HasOrthogonalProjection
-  | 0 => inferInstanceAs K₀.HasOrthogonalProjection
-  | 1 => inferInstanceAs K₁.HasOrthogonalProjection
-  | 2 => inferInstanceAs K₂.HasOrthogonalProjection
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem family3_zero (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    family3 K₀ K₁ K₂ 0 = K₀ := rfl
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem family3_one (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    family3 K₀ K₁ K₂ 1 = K₁ := rfl
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem family3_two (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    family3 K₀ K₁ K₂ 2 = K₂ := rfl
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-/-- A single nonzero component in the constraint family. -/
-theorem single_two_mem_totalSub_family3 (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁)
-    (K₂ : Submodule 𝕜 W₂) {v : W₂} (hv : v ∈ K₂) :
-    WithLp.toLp 2 (Pi.single (M := W3 W₀ W₁ W₂) 2 v) ∈
-      HilbertComplex.totalSub (family3 K₀ K₁ K₂) := by
-  intro i
-  match i with
-  | 0 => exact K₀.zero_mem
-  | 1 => exact K₁.zero_mem
-  | 2 => exact hv
 
 /-- **The tangent condition at every time**: if a strong solution of `U' = L U` on `[0, T]`,
 `T > 0`, keeps its middle component in `K₁`, then

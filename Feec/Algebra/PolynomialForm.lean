@@ -13,6 +13,10 @@ index type `d`):
 * `polyFormMinus r k = P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}` (the first-kind Nédélec /
   trimmed space).
 
+These are the shape-function spaces of the two FEEC families `P_rΛᵏ`, `P_r⁻Λᵏ`, which the thesis
+takes from [AFW2010] ([QuennevilleBelair2015], §4.7) as part of the Finite Element Exterior
+Calculus framework of [AFW2006] and [AFW2010] that it extends ([QuennevilleBelair2015], Ch. 1).
+
 ## Main results
 
 * degree bookkeeping: `d : H_rΛᵏ → H_{r-1}Λ^{k+1}`, `κ : H_rΛ^{k+1} → H_{r+1}Λᵏ`,
@@ -32,6 +36,8 @@ index type `d`):
   §4.7, §4.10
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (the spaces `P_rΛᵏ`, `P_r⁻Λᵏ`)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 

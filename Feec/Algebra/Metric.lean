@@ -13,7 +13,12 @@ public import Mathlib.Data.Fin.VecNotation
 
 A constant (pseudo-)metric on an index type `ι` is a symmetric matrix `g` with inverse `gi`
 (`gi * g = 1`); the Minkowski metric `diag(-1, 1, …, 1)` is the main instance. Tensors carry
-lower indices; contractions use `gi`.
+lower indices; contractions use `gi`. The background on metrics, index raising and traces
+follows [Wald1984] ([QuennevilleBelair2015], Ch. 2).
+
+The thesis defines the signature through Sylvester's law of inertia ([Stewart1991], p. 42;
+[QuennevilleBelair2015], §2.2); that law is not formalized here, since only the Minkowski
+signature is used and it is fixed explicitly (`minkowski`, `minkowskiMatrix`).
 
 ## Main definitions
 
@@ -36,7 +41,8 @@ lower indices; contractions use `gi`.
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.2 (signature (−+++)), §2.7 ((2.5), trace reversal)
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4
+* [R. M. Wald, *General Relativity*][Wald1984], Ch. 2–4 (§4.4: linearized gravity)
+* [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 42 (Sylvester's law of inertia)
 -/
 
 open Matrix

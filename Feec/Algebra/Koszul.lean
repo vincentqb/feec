@@ -15,13 +15,18 @@ exterior derivative and the Koszul differential are
 * `(κω)_s = Σ_{j ∉ s} ε(j, s) x_j ω_{s ∪ j}` (`κ = Σⱼ x_j ι_{e_j}`, contraction with the
   position field).
 
+The Koszul differential is the tool of the Finite Element Exterior Calculus framework
+([AFW2006], §3; [AFW2010]) behind the FEEC families `P_rΛᵏ`, `P_r⁻Λᵏ`
+(`Feec.Algebra.PolynomialForm`) that the thesis recalls in [QuennevilleBelair2015], §4.7.
+
 ## Main results
 
 * `extDeriv_extDeriv` (`d² = 0`), `koszul_koszul` (`κ² = 0`);
 * **the homotopy formula** `extDeriv_koszul_add_koszul_extDeriv`:
   `(dκ + κd) ω = (form degree) ω + (Euler operator) ω`; on forms of form degree `k` with
   homogeneous coefficients of degree `r` it is multiplication by `r + k`
-  (`extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous`) — thesis §4.7, any dimension;
+  (`extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous`) — [QuennevilleBelair2015], §4.7,
+  any dimension;
 * degree bookkeeping: `IsDeg.extDeriv`, `IsDeg.koszul`, `IsHomogeneousForm.extDeriv`,
   `IsHomogeneousForm.koszul` (`d` lowers, `κ` raises the polynomial degree by one).
 
@@ -31,6 +36,8 @@ exterior derivative and the Koszul differential are
   §4.7 (the Koszul complex and the homotopy formula, stated there without proof)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3 (the Koszul complex, (3.9))
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (the Koszul complex and the spaces `P_rΛᵏ`, `P_r⁻Λᵏ`)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 

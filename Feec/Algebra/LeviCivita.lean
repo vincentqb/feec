@@ -10,6 +10,11 @@ For `v : Fin n → Fin n` and a commutative ring `R`, the Levi-Civita symbol
 `ε_{v 0 ⋯ v (n-1)} ∈ R` is the determinant of the matrix whose `i`-th row is `e_{v i}`:
 `sign σ` on a permutation `σ`, and `0` when two indices coincide.
 
+The natural volume form is `ω = √|det g| ε` and defines the Hodge dual of a `k`-form,
+`(⋆w)_{b₁⋯b_l} = (1/k!) ω_{b₁⋯b_l}{}^{a₁⋯a_k} w_{a₁⋯a_k}`, as detailed in [Pope2008]
+([QuennevilleBelair2015], §3.1); the Hodge duals built on this symbol live in
+`Feec.Geometry.Hodge2`.
+
 ## Main definitions
 
 * `Feec.leviCivita R v`: the symbol in any dimension `n`, `det ((1 : Matrix).submatrix v id)`.
@@ -30,6 +35,7 @@ For `v : Fin n → Fin n` and a commutative ring `R`, the Levi-Civita symbol
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.1 (Levi-Civita symbol, volume form)
+* [C. N. Pope, *Geometry and Group Theory*][Pope2008] (volume form and Hodge duality)
 -/
 
 open Matrix Equiv
@@ -102,7 +108,8 @@ variable (R)
 /-- `ε_{ijk}` in three dimensions. [QuennevilleBelair2015], §3.1 -/
 def leviCivita3 (i j k : Fin 3) : R := leviCivita R ![i, j, k]
 
-/-- `ε_{abcd}` in four dimensions. [QuennevilleBelair2015], §3.1 -/
+/-- `ε_{abcd}` in four dimensions, the components of the Minkowski volume form used for the
+Hodge duals of [Pope2008]. [QuennevilleBelair2015], §3.1 -/
 def leviCivita4 (a b c d : Fin 4) : R := leviCivita R ![a, b, c, d]
 
 variable {R}

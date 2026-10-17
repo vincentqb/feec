@@ -14,6 +14,13 @@ The linearized Einstein–Bianchi (EB) system of thesis §3.4, in a fixed Minkow
 is `C = [[E, B], [B, -E]]` in the bivector block form of `Feec.Geometry.WeylDecomposition`; the
 matrix calculus (`curl`, `div`, `vskw`, Lemma 3.5) is `Feec.Algebra.MatrixSymbol`.
 
+Following [Friedrich1996] and [ACBY1997] ([QuennevilleBelair2015], Ch. 3 intro), the system
+comes from the second Bianchi identity for the Weyl tensor and its electric/magnetic
+decomposition, introduced in [Bel1958]; the linearized decomposition and EB system are as
+presented in [Frauendiener2007] ([QuennevilleBelair2015], §3.3–3.4). Only the linearized vacuum
+system is formalized: neither the nonlinear vacuum system of [Friedrich1996] nor the non-vacuum
+system of [ACBY1997] (built from four parts of the Riemann tensor).
+
 ## Main results
 
 * **Prop 3.4**: `linBianchi_iff` (the linearized second Bianchi identity for a Weyl field with
@@ -31,6 +38,7 @@ matrix calculus (`curl`, `div`, `vskw`, Lemma 3.5) is `Feec.Algebra.MatrixSymbol
 * [L. Bel, *Définition d'une densité d'énergie et d'un état de radiation totale généralisée*][Bel1958]
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm
@@ -68,7 +76,10 @@ abbrev Jet4 := Fin 4 → Matrix (Fin 3) (Fin 3) ℝ
 def sp (dX : Jet4) : SpaceJet := fun c => dX c.succ
 
 /-- The jet `∂_μ C` of the Weyl field `C = [[E, B], [B, -E]]` (block form of Prop 3.3).
-See [QuennevilleBelair2015], Prop 3.3; the decomposition goes back to [Bel1958]. -/
+See [QuennevilleBelair2015], Prop 3.3; the decomposition goes back to [Bel1958]. Following
+[Friedrich1996] and [ACBY1997], the second Bianchi identity for this field (`bianchi2`) gives a
+first-order hyperbolic system for the Weyl tensor (`EBJet`); see [QuennevilleBelair2015], Ch. 3
+intro. -/
 def dWeyl (dE dB : Jet4) (μ : Fin 4) : DoubleForm.Tensor4 := ofBlocks (dE μ) (dB μ) (dB μ) (-dE μ)
 
 /-- The linearized second Bianchi expression `∂_α C_{βγδθ} + ∂_β C_{γαδθ} + ∂_γ C_{αβδθ}`. -/
@@ -77,8 +88,10 @@ def bianchi2 (dE dB : Jet4) (α β γ δ θ : Fin 4) : ℝ :=
 
 /-- The linearized EB system (Thesis (3.3)–(3.4)) on jets:
 `div E = 0`, `div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`.
-See [QuennevilleBelair2015], §3.4, Prop 3.4; cf. the nonlinear EB system of [Friedrich1996]
-and [ACBY1997]. -/
+See [QuennevilleBelair2015], §3.4, Prop 3.4, which takes this linearized system from
+[Frauendiener2007]; cf. the nonlinear EB systems of [Friedrich1996] (vacuum) and [ACBY1997]
+(non-vacuum, from four parts of the Riemann tensor), which inspire the EB formulation
+([QuennevilleBelair2015], Introduction and Ch. 3 intro) and are not formalized here. -/
 def EBJet (dE dB : Jet4) : Prop :=
   div (sp dE) = 0 ∧ div (sp dB) = 0 ∧ dE 0 + curl (sp dB) = 0 ∧ dB 0 - curl (sp dE) = 0
 
@@ -243,8 +256,9 @@ it is needed for the count of 16 (`linBianchi_iff_sym`,
 `EBJetSym_surjective`). This module starts from the linearized identity
 `∂_[α C_βγ]δθ = 0` (the thesis' `0 = ε∂_[α C_βγ]δθ + O(ε²)` at first order).
 
-See [QuennevilleBelair2015], Prop 3.4; the nonlinear analogue is in [Friedrich1996]
-(cf. [ACBY1997]). -/
+See [QuennevilleBelair2015], Prop 3.4, a derivation as presented in [Frauendiener2007]; the
+nonlinear (vacuum) analogue is in [Friedrich1996] (cf. [ACBY1997]); only the linearized identity
+is formalized. -/
 theorem linBianchi_iff (dE dB : Jet4) (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJet dE dB := by
   have sE : ∀ μ i j, dE μ i j = dE μ j i := fun μ i j => by
@@ -313,7 +327,8 @@ evolution equations are `0 = 0` (`trace_curl_of_transpose_eq`) and the skew part
 equation is valued in symmetric trace-free matrices, a 5-dimensional space); see
 `EBJetSym_surjective` for the independence of these 16 equations.
 
-See [QuennevilleBelair2015], §3.4, Prop 3.4. -/
+See [QuennevilleBelair2015], §3.4, Prop 3.4 (system as presented in [Frauendiener2007]); cf. the
+nonlinear system of [Friedrich1996], with symmetric trace-free unknowns as here. -/
 theorem linBianchi_iff_sym (dE dB : Jet4) (hE : IsSymTF dE) (hB : IsSymTF dB) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJetSym dE dB := by
   rw [linBianchi_iff dE dB (fun μ => (hE μ).1) (fun μ => (hB μ).1)]
@@ -359,7 +374,7 @@ plus 10 evolution equations.
 Refinement: the thesis counts "6 constraints + 18 evolution equations" (at most 24
 conditions) without determining how many are independent; the answer is 16.
 
-See [QuennevilleBelair2015], §3.4, Prop 3.4. -/
+See [QuennevilleBelair2015], §3.4, Prop 3.4 (system as presented in [Frauendiener2007]). -/
 theorem EBJetSym_surjective (v w : Fin 3 → ℝ) (P Q : Matrix (Fin 3) (Fin 3) ℝ)
     (hP : Pᵀ = P ∧ P.trace = 0) (hQ : Qᵀ = Q ∧ Q.trace = 0) :
     ∃ dE dB : Jet4, IsSymTF dE ∧ IsSymTF dB ∧ div (sp dE) = v ∧ div (sp dB) = w ∧

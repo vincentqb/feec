@@ -16,6 +16,7 @@ system (`planeWave_weyl`, `planeWave_EB`).
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4 (Prop 3.4, Lemma 3.5), §3.5; §2.8 (TT plane waves)
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
+* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm
@@ -135,7 +136,7 @@ theorem pd_weyl {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} {p : (Fin
 Thesis gap: the equivalence is pointwise and only needs `C ∈ C¹` (differentiability at the
 point suffices); see `linBianchi_iff` for the remaining corrections.
 
-See [QuennevilleBelair2015], Prop 3.4. -/
+See [QuennevilleBelair2015], Prop 3.4, a derivation as presented in [Frauendiener2007]. -/
 theorem linBianchi_field_iff {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} (p : (Fin 4 → ℝ))
     (hEs : ∀ y, (E y)ᵀ = E y) (hBs : ∀ y, (B y)ᵀ = B y)
     (hE : ∀ i j, DifferentiableAt ℝ (fun y => E y i j) p)

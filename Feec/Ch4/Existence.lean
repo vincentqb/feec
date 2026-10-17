@@ -9,6 +9,7 @@ public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Feec.Foundation.Evolution
 public import Feec.Foundation.Operators
 public import Feec.Semigroup.Basic
+public import Feec.Examples.NonVacuity
 
 /-!
 # Non-vacuity of the existence hypotheses (Thesis Thm 4.3, Hille–Yosida / Stone)
@@ -443,31 +444,24 @@ theorem bddOp_standing_hypotheses [CompleteSpace E] (A : E →L[ℝ] E)
   ⟨dense_bddOp_domain A, isSkewAdjoint_bddOp A hA, wellPosedExistence_bddOp A T,
     (expGroup A hA).wellPosedHom T⟩
 
-/-! ### A concrete nonzero example: the rotation generator on `ℝ²` -/
+/-! ### A concrete nonzero example: the rotation generator on `ℝ²`
+
+Moved to `Feec.Examples.NonVacuity` (over any `RCLike 𝕜`); the old names are shims. -/
 
 /-- The rotation generator `J (x₀, x₁) = (-x₁, x₀)` on `EuclideanSpace ℝ (Fin 2)`. -/
-def rotGen : EuclideanSpace ℝ (Fin 2) →L[ℝ] EuclideanSpace ℝ (Fin 2) :=
-  (EuclideanSpace.proj (0 : Fin 2)).smulRight (EuclideanSpace.single (1 : Fin 2) (1 : ℝ)) -
-    (EuclideanSpace.proj (1 : Fin 2)).smulRight (EuclideanSpace.single (0 : Fin 2) (1 : ℝ))
+abbrev rotGen : EuclideanSpace ℝ (Fin 2) →L[ℝ] EuclideanSpace ℝ (Fin 2) := Examples.rotGen ℝ
 
 theorem rotGen_apply (x : EuclideanSpace ℝ (Fin 2)) :
     rotGen x = x 0 • EuclideanSpace.single (1 : Fin 2) (1 : ℝ) -
-      x 1 • EuclideanSpace.single (0 : Fin 2) (1 : ℝ) := by
-  simp [rotGen]
+      x 1 • EuclideanSpace.single (0 : Fin 2) (1 : ℝ) :=
+  Examples.rotGen_apply x
 
 /-- `J` is skew-symmetric. -/
-theorem rotGen_skew (x y : EuclideanSpace ℝ (Fin 2)) : ⟪rotGen x, y⟫ = -⟪x, rotGen y⟫ := by
-  simp only [rotGen_apply, inner_sub_left, inner_sub_right, inner_smul_left, inner_smul_right,
-    EuclideanSpace.inner_single_left, EuclideanSpace.inner_single_right]
-  simp
-  ring
+theorem rotGen_skew (x y : EuclideanSpace ℝ (Fin 2)) : ⟪rotGen x, y⟫ = -⟪x, rotGen y⟫ :=
+  Examples.rotGen_skew x y
 
 /-- `J ≠ 0`, so the witness below is not the trivial operator. -/
-theorem rotGen_ne_zero : rotGen ≠ 0 := by
-  intro h
-  have := congrArg (fun f : EuclideanSpace ℝ (Fin 2) →L[ℝ] EuclideanSpace ℝ (Fin 2) =>
-    f (EuclideanSpace.single 0 1) 1) h
-  simp [rotGen_apply] at this
+theorem rotGen_ne_zero : rotGen ≠ 0 := Examples.rotGen_ne_zero
 
 /-- **A concrete nonzero witness** for the Ch. 4 standing hypotheses (Thesis §4.2, Thm 4.3,
 Cor 4.5): the rotation generator `J ≠ 0` on `ℝ²` satisfies all of them.

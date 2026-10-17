@@ -6,6 +6,8 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 public import Mathlib.LinearAlgebra.Matrix.PosDef
 public import Feec.TimeStepping.BlockMatrix
+public import Feec.Numerics.CrankNicolsonTable
+public import Feec.Ch3.EB
 
 /-!
 # Chapter 7: Crank–Nicolson discretization of the linearized EB system
@@ -594,118 +596,80 @@ theorem cn_invertible {M0 : Matrix n0 n0 ℝ} {M1 : Matrix n1 n1 ℝ} {M2 : Matr
 
 end Matrix
 
-/-! ## §3. The plane-wave test solution -/
+/-! ## §3. The plane-wave test solution
+
+Moved to `Feec.Numerics.CrankNicolsonTable` (row-wise `curl`/`div` of `Feec.MatrixSymbol`); the
+old names are shims. -/
 
 section PlaneWave
 
 /-- Jet of a matrix field depending on `z = x₂` only, with `∂_z` part `P`. -/
-def zJet (P : Matrix (Fin 3) (Fin 3) ℝ) : Jet1 := Pi.single 2 P
+abbrev zJet (P : Matrix (Fin 3) (Fin 3) ℝ) : Jet1 := Numerics.CrankNicolson.zJet P
 
-/-- Amplitude of the row-wise curl of `P φ(z)`: `(curl (P φ))ᵢ = φ'(z) (-P i 1, P i 0, 0)`. -/
-def curlZ (P : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
-  Matrix.of fun i j => ![-P i 1, P i 0, 0] j
+/-- Amplitude of the row-wise curl of `P φ(z)`. -/
+abbrev curlZ (P : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
+  Numerics.CrankNicolson.curlZ P
 
-/-- Electric amplitude of the Ch 7 plane wave (Thesis Ch 7, l. 4272–4280).
+/-- Electric amplitude of the Ch 7 plane wave.
 
 See [QuennevilleBelair2015, Ch. 7] and [QuennevilleBelair2015, §3.5]; cf. [Wald1984]. -/
-def E0 (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ap, -Ax, 0; -Ax, Ap, 0; 0, 0, 0]
+abbrev E0 (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := Numerics.CrankNicolson.amplitudeE Ap Ax
 
-/-- Magnetic amplitude of the Ch 7 plane wave; the thesis never gives it.
+/-- Magnetic amplitude of the Ch 7 plane wave; the thesis never gives it. -/
+abbrev B0 (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := Numerics.CrankNicolson.amplitudeB Ap Ax
 
-Cf. the plane-wave computation of [QuennevilleBelair2015, §3.5]. -/
-def B0 (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ax, Ap, 0; Ap, Ax, 0; 0, 0, 0]
-
-/-- Row-wise curl (Thesis Lemma 3.5 convention) of a `z`-only jet (Thesis Ch 7).
-
-See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
 theorem curl_zJet (P : Matrix (Fin 3) (Fin 3) ℝ) : curl (zJet P) = curlZ P := by
-  ext a b
-  simp only [curl, zJet, Matrix.of_apply, Fin.sum_univ_three, Pi.single_apply]
-  fin_cases b <;> simp [curlZ, eps3, Matrix.det_fin_three]
+  rw [curl_eq]; exact Numerics.CrankNicolson.curl_zJet P
 
-/-- Row-wise divergence of a `z`-only jet: only the third column contributes (Thesis Ch 7). -/
-theorem div_zJet (P : Matrix (Fin 3) (Fin 3) ℝ) (a : Fin 3) : div (zJet P) a = P a 2 := by
-  simp [div, zJet, Fin.sum_univ_three, Pi.single_apply]
+theorem div_zJet (P : Matrix (Fin 3) (Fin 3) ℝ) (a : Fin 3) : div (zJet P) a = P a 2 :=
+  Numerics.CrankNicolson.div_zJet P a
 
-/-- `curl` is linear in the jet (used for the Thesis Ch 7 plane wave). -/
 theorem curl_smul (c : ℝ) (J : Jet1) : curl (c • J) = c • curl J := by
-  ext a b
-  simp [curl, Finset.mul_sum, mul_left_comm]
+  rw [curl_eq, curl_eq]; exact Numerics.CrankNicolson.curl_smul c J
 
-/-- `div` is linear in the jet (used for the Thesis Ch 7 plane wave). -/
-theorem div_smul (c : ℝ) (J : Jet1) : div (c • J) = c • div J := by
-  ext a
-  simp [div, Finset.mul_sum]
+theorem div_smul (c : ℝ) (J : Jet1) : div (c • J) = c • div J :=
+  Numerics.CrankNicolson.div_smul c J
 
-/-- Amplitude identities of the Ch 7 plane wave, for `Ė = -curl B`, `Ḃ = curl E` (Thesis (4.15)).
-
-Thesis gap: `B` is never given, and the constraint checks (symmetric, trace-free,
-divergence-free) are not made. `B0` is the plane-wave partner of `E0`; the opposite sign
-convention flips `B`.
+/-- Amplitude identities of the Ch 7 plane wave; shim over
+`Feec.Numerics.CrankNicolson.planeWave_amplitudes`.
 
 See [QuennevilleBelair2015, Ch. 7], [QuennevilleBelair2015, §3.5]. -/
 theorem planeWave (Ap Ax : ℝ) :
     curlZ (B0 Ap Ax) = E0 Ap Ax ∧ curlZ (E0 Ap Ax) = -B0 Ap Ax ∧
     (E0 Ap Ax).IsSymm ∧ (B0 Ap Ax).IsSymm ∧
     Matrix.trace (E0 Ap Ax) = 0 ∧ Matrix.trace (B0 Ap Ax) = 0 ∧
-    (∀ i, E0 Ap Ax i 2 = 0) ∧ (∀ i, B0 Ap Ax i 2 = 0) := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
-  first
-  | (ext i j; fin_cases i <;> fin_cases j <;> simp [curlZ, E0, B0])
-  | (intro i; fin_cases i <;> simp [E0, B0])
-  | (simp [Matrix.trace, Fin.sum_univ_succ, E0, B0])
+    (∀ i, E0 Ap Ax i 2 = 0) ∧ (∀ i, B0 Ap Ax i 2 = 0) :=
+  Numerics.CrankNicolson.planeWave_amplitudes Ap Ax
 
 /-- The plane-wave field `P sin(ω(z - t))`, `z = x₂`. -/
-def pw (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : Fin 3 → ℝ) :
+abbrev pw (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : Fin 3 → ℝ) :
     Matrix (Fin 3) (Fin 3) ℝ :=
-  Real.sin (ω * (x 2 - t)) • P
+  Numerics.CrankNicolson.planeWave P ω t x
 
 /-- Spatial jet `(∂_c F_{ab})(x)` of a matrix field, in coordinates. -/
-def jetOf (F : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 3 → ℝ) : Jet1 :=
-  fun c => Matrix.of fun a b => pd c (fun y => F y a b) x
+abbrev jetOf (F : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 3 → ℝ) : Jet1 :=
+  Numerics.CrankNicolson.jetOf F x
 
-/-- Spatial derivative of a plane-wave entry (Thesis Ch 7). -/
 theorem hasFDerivAt_pw (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : Fin 3 → ℝ)
     (a b : Fin 3) :
     HasFDerivAt (fun y : Fin 3 → ℝ => pw P ω t y a b)
       ((ω * Real.cos (ω * (x 2 - t)) * P a b) •
-        ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin 3 => ℝ) 2) x := by
-  have h1 : HasFDerivAt (fun y : Fin 3 → ℝ => y 2)
-      (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin 3 => ℝ) 2) x :=
-    hasFDerivAt_apply 2 x
-  have h2 := ((h1.sub_const t).const_mul ω).sin.mul_const (P a b)
-  convert h2 using 1
-  · ext y; simp [pw, mul_comm]
-  · ext v; simp; ring
+        ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin 3 => ℝ) 2) x :=
+  Numerics.CrankNicolson.hasFDerivAt_planeWave P ω t x a b
 
-/-- The spatial jet of `P sin(ω(z - t))` is `ω cos(ω(z - t))` times the `z`-jet `P`
-(Thesis Ch 7). -/
 theorem jetOf_pw (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : Fin 3 → ℝ) :
-    jetOf (pw P ω t) x = (ω * Real.cos (ω * (x 2 - t))) • zJet P := by
-  ext c a b
-  simp only [jetOf, pd, Matrix.of_apply, (hasFDerivAt_pw P ω t x a b).fderiv]
-  fin_cases c <;> simp [zJet]
+    jetOf (pw P ω t) x = (ω * Real.cos (ω * (x 2 - t))) • zJet P :=
+  Numerics.CrankNicolson.jetOf_planeWave P ω t x
 
-/-- Time derivative of a plane-wave entry (Thesis Ch 7). -/
 theorem hasDerivAt_pw (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : Fin 3 → ℝ)
     (a b : Fin 3) :
-    HasDerivAt (fun t => pw P ω t x a b) (-(ω * Real.cos (ω * (x 2 - t))) * P a b) t := by
-  have h := (((hasDerivAt_id t).const_sub (x 2)).const_mul ω).sin.mul_const (P a b)
-  convert h using 1
-  · ext t; simp [pw, mul_comm]
-  · simp only [_root_.id]; ring
+    HasDerivAt (fun t => pw P ω t x a b) (-(ω * Real.cos (ω * (x 2 - t))) * P a b) t :=
+  Numerics.CrankNicolson.hasDerivAt_planeWave P ω t x a b
 
-/-- The Ch 7 plane wave is a classical TSD solution of the linearized EB system on `ℝ³`
-(Thesis Ch 7, l. 4272–4280, with (4.15); `σ = 0` in (4.14) since `div E = 0`).
+/-- The Ch 7 plane wave is a classical TSD solution of the linearized EB system on `ℝ³`; shim
+over `Feec.Numerics.CrankNicolson.planeWave_solves`.
 
-Thesis gap: `B` is missing; here `B = B0 sin(ω(z - t))`. The fields `E, B` are symmetric,
-trace-free and row-wise divergence-free, and satisfy `Ė = -curl B`, `Ḃ = curl E` entrywise at
-every `(x, t)`, with `curl`, `div` the foundation's row-wise operators applied to the true
-spatial jet. Not claimed: the homogeneous essential boundary conditions of (4.14) on the unit
-cube, which this wave violates (e.g. `E₀₁ ≠ 0` on `x₀ = 0`).
-
-See [QuennevilleBelair2015, Ch. 7], [QuennevilleBelair2015, §3.5] (gravitational plane waves in
-the EB variables); cf. [Wald1984] for linearized plane waves in TT gauge. -/
+See [QuennevilleBelair2015, Ch. 7], [QuennevilleBelair2015, §3.5]; cf. [Wald1984]. -/
 theorem planeWave_solves (Ap Ax ω t : ℝ) (x : Fin 3 → ℝ) :
     (∀ a b, HasDerivAt (fun t => pw (E0 Ap Ax) ω t x a b)
       (-(curl (jetOf (pw (B0 Ap Ax) ω t) x)) a b) t) ∧
@@ -714,99 +678,50 @@ theorem planeWave_solves (Ap Ax ω t : ℝ) (x : Fin 3 → ℝ) :
     div (jetOf (pw (E0 Ap Ax) ω t) x) = 0 ∧ div (jetOf (pw (B0 Ap Ax) ω t) x) = 0 ∧
     (pw (E0 Ap Ax) ω t x).IsSymm ∧ (pw (B0 Ap Ax) ω t x).IsSymm ∧
     (pw (E0 Ap Ax) ω t x).trace = 0 ∧ (pw (B0 Ap Ax) ω t x).trace = 0 := by
-  obtain ⟨hB, hE, sE, sB, tE, tB, cE, cB⟩ := planeWave Ap Ax
-  refine ⟨fun a b => ?_, fun a b => ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · rw [jetOf_pw, curl_smul, curl_zJet, hB]
-    convert hasDerivAt_pw (E0 Ap Ax) ω t x a b using 1
-    simp
-  · rw [jetOf_pw, curl_smul, curl_zJet, hE]
-    convert hasDerivAt_pw (B0 Ap Ax) ω t x a b using 1
-    simp
-  · ext a; rw [jetOf_pw, div_smul]; simp [div_zJet, cE]
-  · ext a; rw [jetOf_pw, div_smul]; simp [div_zJet, cB]
-  · exact sE.smul _
-  · exact sB.smul _
-  · simp [pw, Matrix.trace_smul, tE]
-  · simp [pw, Matrix.trace_smul, tB]
+  simp only [curl_eq, div_eq]
+  exact Numerics.CrankNicolson.planeWave_solves Ap Ax ω t x
 
 end PlaneWave
 
-/-! ## §4. Table 7.1 arithmetic -/
+/-! ## §4. Table 7.1 arithmetic
+
+Moved to `Feec.Numerics.CrankNicolsonTable`; the old names are shims. -/
 
 section Table
 
 /-- Time step on mesh `k = 0, …, 3` (Thesis Table 7.1a): `Δt_k = 1 / (120 √2^k)`. -/
-def dt (k : ℕ) : ℝ := 1 / (120 * Real.sqrt 2 ^ k)
+abbrev dt (k : ℕ) : ℝ := Numerics.CrankNicolson.dt k
 
 /-- Number of CN steps actually taken to reach `T = 7.5`. -/
-def stepCount (k : ℕ) : ℕ := ⌊(7.5 : ℝ) / dt k⌋₊
+abbrev stepCount (k : ℕ) : ℕ := Numerics.CrankNicolson.stepCount k
 
-private theorem sqrt2_bounds : (1.4142 : ℝ) < Real.sqrt 2 ∧ Real.sqrt 2 < 1.4143 := by
-  constructor
-  · rw [Real.lt_sqrt (by norm_num)]; norm_num
-  · rw [Real.sqrt_lt' (by norm_num)]; norm_num
+theorem steps_mesh8 : ⌊(7.5 : ℝ) * (120 * Real.sqrt 2)⌋₊ = 1272 :=
+  Numerics.CrankNicolson.floor_mesh_one
 
-private theorem div_dt (k : ℕ) : (7.5 : ℝ) / dt k = 7.5 * (120 * Real.sqrt 2 ^ k) := by
-  rw [dt, div_div_eq_mul_div, div_one]
+theorem steps_mesh32 : ⌊(7.5 : ℝ) * (240 * Real.sqrt 2)⌋₊ = 2545 :=
+  Numerics.CrankNicolson.floor_mesh_three
 
-/-- Step count on mesh `k = 1` (Thesis Table 7.1a): `⌊7.5 · 120√2⌋ = 1272`. -/
-theorem steps_mesh8 : ⌊(7.5 : ℝ) * (120 * Real.sqrt 2)⌋₊ = 1272 := by
-  obtain ⟨h1, h2⟩ := sqrt2_bounds
-  rw [Nat.floor_eq_iff (by positivity)]
-  constructor <;> push_cast <;> nlinarith
-
-/-- Step count on mesh `k = 3` (Thesis Table 7.1a): `⌊7.5 · 240√2⌋ = 2545`. -/
-theorem steps_mesh32 : ⌊(7.5 : ℝ) * (240 * Real.sqrt 2)⌋₊ = 2545 := by
-  obtain ⟨h1, h2⟩ := sqrt2_bounds
-  rw [Nat.floor_eq_iff (by positivity)]
-  constructor <;> push_cast <;> nlinarith
-
-/-- Step counts of Thesis Table 7.1a: `⌊7.5 / Δt_k⌋ = 900, 1272, 1800, 2545`.
+/-- Step counts of Thesis Table 7.1a.
 
 See [QuennevilleBelair2015, Ch. 7, Table 7.1]. -/
 theorem stepCount_table :
-    stepCount 0 = 900 ∧ stepCount 1 = 1272 ∧ stepCount 2 = 1800 ∧ stepCount 3 = 2545 := by
-  have s2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
-  have s3 : Real.sqrt 2 ^ 3 = 2 * Real.sqrt 2 := by
-    rw [pow_succ, s2]
-  refine ⟨?_, ?_, ?_, ?_⟩ <;> simp only [stepCount, div_dt]
-  · norm_num
-  · rw [pow_one]; exact steps_mesh8
-  · rw [s2]; norm_num
-  · rw [s3, show (7.5 : ℝ) * (120 * (2 * Real.sqrt 2)) = 7.5 * (240 * Real.sqrt 2) by ring]
-    exact steps_mesh32
+    stepCount 0 = 900 ∧ stepCount 1 = 1272 ∧ stepCount 2 = 1800 ∧ stepCount 3 = 2545 :=
+  Numerics.CrankNicolson.stepCount_table
 
-/-- On meshes `k = 1, 3` the final CN time `N_k Δt_k` falls short of `T = 7.5`
-(Thesis Table 7.1a).
-
-Thesis gap: `T/Δt` is not an integer there. Reading the "Step count" column as `⌊T/Δt⌋` steps
-of fixed size `Δt` (the natural reading; the thesis does not describe its stepping loop), the
-runs stop at `t ≈ 7.4953` and `t ≈ 7.4983`, and the text does not say at which time the error
-is measured. On meshes `k = 0, 2` the final
-time is exactly `7.5`.
+/-- On meshes `k = 1, 3` the final CN time `N_k Δt_k` falls short of `T = 7.5`.
 
 See [QuennevilleBelair2015, Ch. 7, Table 7.1]. -/
 theorem final_time_table :
     (stepCount 0 : ℝ) * dt 0 = 7.5 ∧ (stepCount 1 : ℝ) * dt 1 < 7.5 ∧
-    (stepCount 2 : ℝ) * dt 2 = 7.5 ∧ (stepCount 3 : ℝ) * dt 3 < 7.5 := by
-  obtain ⟨c0, c1, c2, c3⟩ := stepCount_table
-  obtain ⟨h1, h2⟩ := sqrt2_bounds
-  have s2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
-  have hpos : 0 < Real.sqrt 2 := by positivity
-  rw [c0, c1, c2, c3]
-  refine ⟨?_, ?_, ?_, ?_⟩ <;> simp only [dt]
-  · norm_num
-  · rw [pow_one, mul_one_div, div_lt_iff₀ (by positivity)]; push_cast; nlinarith
-  · rw [s2]; norm_num
-  · rw [pow_succ, s2, mul_one_div, div_lt_iff₀ (by positivity)]; push_cast; nlinarith
+    (stepCount 2 : ℝ) * dt 2 = 7.5 ∧ (stepCount 3 : ℝ) * dt 3 < 7.5 :=
+  Numerics.CrankNicolson.finalTime_table
 
-/-- Cell counts `6 (4·2^k)³` of the structured 6-tetrahedra-per-cube meshes (Thesis
-Table 7.1a; the mesh type is not stated in the thesis).
+/-- Cell counts `6 (4·2^k)³` (Thesis Table 7.1a).
 
 See [QuennevilleBelair2015, Ch. 7, Table 7.1]. -/
 theorem cellCount_table :
-    (List.range 4).map (fun k => 6 * (4 * 2 ^ k) ^ 3) = [384, 3072, 24576, 196608] := by
-  decide
+    (List.range 4).map (fun k => 6 * (4 * 2 ^ k) ^ 3) = [384, 3072, 24576, 196608] :=
+  Numerics.CrankNicolson.cellCount_table
 
 end Table
 

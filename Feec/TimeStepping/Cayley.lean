@@ -2,6 +2,7 @@ module
 
 public import Feec.Operator.Resolvent
 public import Feec.ForMathlib.LinearPMap.Reducing
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Crank–Nicolson as a Cayley transform
@@ -26,6 +27,20 @@ For the evolution `u' = A u` with `A : E →ₗ.[𝕜] E` on a Hilbert space and
 
 These hold in any Hilbert space, so they cover finite element spaces (bounded `A`) and the
 continuous problem (unbounded skew-adjoint `A`) at once.
+
+## Three-field schemes (thesis Ch. 7)
+
+For finite-dimensional spaces `V₀ --d₀--> V₁ --d₁--> V₂` (finite element spaces with their `L²`
+products), the CN step of the full system (4.14) `σ̇ = d₀* E`, `Ė = -d₀ σ - d₁* B`, `Ḃ = d₁ E`
+is `IsFullCNStep`, that of the reduced system (4.15) `Ė = -d₁* B`, `Ḃ = d₁ E` is
+`IsReducedCNStep`:
+
+* `IsReducedCNStep.isFullCNStep_zero`: for `d₁ d₀ = 0` a reduced step from `d₀* E = 0`, padded
+  with `σ = 0`, is a full step and keeps `d₀* E = 0` (discrete Prop 4.18);
+  `IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`: the condition `d₀* E = 0` is necessary.
+* `existsUnique_isFullCNStep`, `existsUnique_isReducedCNStep`, `fullCNStep`: both steps are well
+  defined for every `s`; `IsFullCNStep.norm_sq_add`: energy conservation;
+  `IsFullCNStep.apply_eq_of_comp_eq_zero`: `d₂ B` is conserved when `d₂ d₁ = 0`.
 
 ## References
 
@@ -205,5 +220,242 @@ theorem mem_of_forall_isCNStep (hA : A.IsDissipative) (hs : 0 ≤ s) {K : Submod
   induction n with
   | zero => exact h0
   | succ n ih => exact (hU n).mem_of_isReducing hA hs hK ih
+
+/-! ### Three-field schemes for the full and reduced systems (thesis Ch. 7) -/
+
+section ThreeField
+
+open LinearMap InnerProductSpace
+open scoped RealInnerProductSpace
+
+variable {V₀ V₁ V₂ : Type*}
+  [NormedAddCommGroup V₀] [InnerProductSpace ℝ V₀] [FiniteDimensional ℝ V₀]
+  [NormedAddCommGroup V₁] [InnerProductSpace ℝ V₁] [FiniteDimensional ℝ V₁]
+  [NormedAddCommGroup V₂] [InnerProductSpace ℝ V₂] [FiniteDimensional ℝ V₂]
+
+/-- One **Crank–Nicolson step** with half step `s` of the full system (4.14)
+`σ̇ = d₀* E`, `Ė = -d₀ σ - d₁* B`, `Ḃ = d₁ E` on finite-dimensional spaces.
+See [QuennevilleBelair2015], (4.14), Ch. 7. -/
+def IsFullCNStep (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ)
+    (σ σ' : V₀) (E E' : V₁) (B B' : V₂) : Prop :=
+  σ' - σ = s • adjoint d₀ (E' + E) ∧
+  E' - E = -(s • (d₀ (σ' + σ) + adjoint d₁ (B' + B))) ∧
+  B' - B = s • d₁ (E' + E)
+
+/-- One **Crank–Nicolson step** of the reduced system (4.15) `Ė = -d₁* B`, `Ḃ = d₁ E`.
+See [QuennevilleBelair2015], (4.15), Ch. 7. -/
+def IsReducedCNStep (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) (E E' : V₁) (B B' : V₂) : Prop :=
+  E' - E = -(s • adjoint d₁ (B' + B)) ∧ B' - B = s • d₁ (E' + E)
+
+/-- `d₀* d₁* = 0` when `d₁ d₀ = 0`. -/
+theorem adjoint_adjoint_apply_eq_zero {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →ₗ[ℝ] V₂}
+    (hd : d₁ ∘ₗ d₀ = 0) (y : V₂) : adjoint d₀ (adjoint d₁ y) = 0 := by
+  rw [← LinearMap.comp_apply, ← LinearMap.adjoint_comp, hd]; simp
+
+/-- **Discrete Prop 4.18** (thesis Ch. 7, l. 4289–4291, "might give equal approximations"): a
+reduced CN step from `d₀* E = 0` keeps `d₀* E' = 0`, and padded with `σ = 0` it is a full CN
+step. See [QuennevilleBelair2015], Prop. 4.18, Ch. 7. -/
+theorem IsReducedCNStep.isFullCNStep_zero {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →ₗ[ℝ] V₂}
+    (hd : d₁ ∘ₗ d₀ = 0) {s : ℝ} {E E' : V₁} {B B' : V₂} (h : IsReducedCNStep d₁ s E E' B B')
+    (hE : adjoint d₀ E = 0) : adjoint d₀ E' = 0 ∧ IsFullCNStep d₀ d₁ s 0 0 E E' B B' := by
+  obtain ⟨h1, h2⟩ := h
+  have hE' : adjoint d₀ E' = 0 := by
+    have : adjoint d₀ (E' - E) = 0 := by
+      rw [h1, map_neg, map_smul, adjoint_adjoint_apply_eq_zero hd]; simp
+    simpa [map_sub, hE, sub_eq_zero] using this
+  refine ⟨hE', ?_, ?_, h2⟩
+  · simp [map_add, hE, hE']
+  · simpa using h1
+
+/-- The condition `d₀* E = 0` of `IsReducedCNStep.isFullCNStep_zero` is necessary (`s ≠ 0`):
+otherwise the full scheme moves `σ` off `0`. See [QuennevilleBelair2015], Prop. 4.18, Ch. 7. -/
+theorem IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep {d₀ : V₀ →ₗ[ℝ] V₁}
+    {d₁ : V₁ →ₗ[ℝ] V₂} (hd : d₁ ∘ₗ d₀ = 0) {s : ℝ} (hs : s ≠ 0) {E E' : V₁} {B B' : V₂}
+    (h : IsReducedCNStep d₁ s E E' B B') (hf : IsFullCNStep d₀ d₁ s 0 0 E E' B B') :
+    adjoint d₀ E = 0 := by
+  have hdiff : adjoint d₀ E' = adjoint d₀ E := by
+    have : adjoint d₀ (E' - E) = 0 := by
+      rw [h.1, map_neg, map_smul, adjoint_adjoint_apply_eq_zero hd]; simp
+    rwa [map_sub, sub_eq_zero] at this
+  have hsum : s • adjoint d₀ (E' + E) = 0 := by simpa using hf.1.symm
+  rw [map_add, hdiff, smul_eq_zero] at hsum
+  rcases hsum with hs0 | h2
+  · exact absurd hs0 hs
+  · have : (2 : ℝ) • adjoint d₀ E = 0 := by rw [two_smul]; exact h2
+    simpa using this
+
+omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂] in
+private theorem inner_sub_add_eq' {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
+    (x y : W) : ⟪x - y, x + y⟫ = ‖x‖ ^ 2 - ‖y‖ ^ 2 := by
+  rw [inner_sub_left, inner_add_right, inner_add_right, real_inner_self_eq_norm_sq,
+    real_inner_self_eq_norm_sq, real_inner_comm x y]; ring
+
+/-- **Energy conservation of the full CN step**: `‖σ‖² + ‖E‖² + ‖B‖²` is conserved (not `‖E‖`
+alone). See [QuennevilleBelair2015], Ch. 7 (Table 7.1). -/
+theorem IsFullCNStep.norm_sq_add {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →ₗ[ℝ] V₂} {s : ℝ}
+    {σ σ' : V₀} {E E' : V₁} {B B' : V₂} (h : IsFullCNStep d₀ d₁ s σ σ' E E' B B') :
+    ‖σ'‖ ^ 2 + ‖E'‖ ^ 2 + ‖B'‖ ^ 2 = ‖σ‖ ^ 2 + ‖E‖ ^ 2 + ‖B‖ ^ 2 := by
+  obtain ⟨h1, h2, h3⟩ := h
+  have e1 : ⟪σ' - σ, σ' + σ⟫ = s * ⟪E' + E, d₀ (σ' + σ)⟫ := by
+    rw [h1, real_inner_smul_left, LinearMap.adjoint_inner_left]
+  have e3 : ⟪B' - B, B' + B⟫ = s * ⟪d₁ (E' + E), B' + B⟫ := by
+    rw [h3, real_inner_smul_left]
+  have e2 : ⟪E' - E, E' + E⟫ =
+      -(s * ⟪E' + E, d₀ (σ' + σ)⟫) - s * ⟪d₁ (E' + E), B' + B⟫ := by
+    rw [h2, inner_neg_left, real_inner_smul_left, inner_add_left,
+      LinearMap.adjoint_inner_left, real_inner_comm (d₀ (σ' + σ)) (E' + E),
+      real_inner_comm (B' + B) (d₁ (E' + E))]
+    ring
+  rw [inner_sub_add_eq'] at e1 e2 e3
+  linarith
+
+/-- **Uniqueness of the full CN step** (the thesis never argues solvability): the difference
+`(a, b, c)` of two steps from the same state is a CN step from `0`, so its energy vanishes.
+See [QuennevilleBelair2015], Ch. 7. -/
+theorem IsFullCNStep.unique {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →ₗ[ℝ] V₂} {s : ℝ} {σ σ₁ σ₂ : V₀}
+    {E E₁ E₂ : V₁} {B B₁ B₂ : V₂} (h₁ : IsFullCNStep d₀ d₁ s σ σ₁ E E₁ B B₁)
+    (h₂ : IsFullCNStep d₀ d₁ s σ σ₂ E E₂ B B₂) : σ₁ = σ₂ ∧ E₁ = E₂ ∧ B₁ = B₂ := by
+  obtain ⟨a1, b1, c1⟩ := h₁
+  obtain ⟨a2, b2, c2⟩ := h₂
+  have hd : IsFullCNStep d₀ d₁ s 0 (σ₁ - σ₂) 0 (E₁ - E₂) 0 (B₁ - B₂) := by
+    refine ⟨?_, ?_, ?_⟩
+    · calc σ₁ - σ₂ - 0 = (σ₁ - σ) - (σ₂ - σ) := by abel
+        _ = s • adjoint d₀ (E₁ + E) - s • adjoint d₀ (E₂ + E) := by rw [a1, a2]
+        _ = s • adjoint d₀ (E₁ - E₂ + 0) := by
+          rw [← smul_sub, ← map_sub, add_zero, add_sub_add_right_eq_sub]
+    · calc E₁ - E₂ - 0 = (E₁ - E) - (E₂ - E) := by abel
+        _ = -(s • (d₀ (σ₁ + σ) + adjoint d₁ (B₁ + B)))
+            - -(s • (d₀ (σ₂ + σ) + adjoint d₁ (B₂ + B))) := by rw [b1, b2]
+        _ = -(s • (d₀ (σ₁ - σ₂ + 0) + adjoint d₁ (B₁ - B₂ + 0))) := by
+          simp only [add_zero, map_sub, map_add, smul_add, smul_sub, neg_add]; abel
+    · calc B₁ - B₂ - 0 = (B₁ - B) - (B₂ - B) := by abel
+        _ = s • d₁ (E₁ + E) - s • d₁ (E₂ + E) := by rw [c1, c2]
+        _ = s • d₁ (E₁ - E₂ + 0) := by
+          rw [← smul_sub, ← map_sub, add_zero, add_sub_add_right_eq_sub]
+  have h := hd.norm_sq_add
+  simp only [norm_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
+    add_zero] at h
+  have ha := sq_nonneg ‖σ₁ - σ₂‖
+  have hb := sq_nonneg ‖E₁ - E₂‖
+  have hc := sq_nonneg ‖B₁ - B₂‖
+  refine ⟨?_, ?_, ?_⟩ <;> rw [← sub_eq_zero, ← norm_eq_zero] <;> nlinarith
+
+/-- The reduced CN step is the full CN step for `d₀ = 0` with constant `σ`. -/
+theorem isFullCNStep_zero_iff (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) (σ σ' : V₁) (E E' : V₁)
+    (B B' : V₂) :
+    IsFullCNStep (0 : V₁ →ₗ[ℝ] V₁) d₁ s σ σ' E E' B B' ↔
+      σ' = σ ∧ IsReducedCNStep d₁ s E E' B B' := by
+  simp [IsFullCNStep, IsReducedCNStep, sub_eq_zero]
+
+/-- Uniqueness of the reduced CN step. -/
+theorem IsReducedCNStep.unique {d₁ : V₁ →ₗ[ℝ] V₂} {s : ℝ} {E E₁ E₂ : V₁} {B B₁ B₂ : V₂}
+    (h₁ : IsReducedCNStep d₁ s E E₁ B B₁) (h₂ : IsReducedCNStep d₁ s E E₂ B B₂) :
+    E₁ = E₂ ∧ B₁ = B₂ :=
+  (((isFullCNStep_zero_iff d₁ s 0 0 E E₁ B B₁).2 ⟨rfl, h₁⟩).unique
+    ((isFullCNStep_zero_iff d₁ s 0 0 E E₂ B B₂).2 ⟨rfl, h₂⟩)).2
+
+/-- The implicit side `x ↦ (M + sK) x` of the full CN step in operator form,
+`(σ, E, B) ↦ (σ - s d₀* E, E + s (d₀ σ + d₁* B), B - s d₁ E)`; the explicit side is
+`cnLHS d₀ d₁ (-s)`. -/
+def cnLHS (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) :
+    (V₀ × V₁ × V₂) →ₗ[ℝ] (V₀ × V₁ × V₂) where
+  toFun x := (x.1 - s • adjoint d₀ x.2.1, x.2.1 + s • (d₀ x.1 + adjoint d₁ x.2.2),
+    x.2.2 - s • d₁ x.2.1)
+  map_add' x y := by
+    simp only [Prod.fst_add, Prod.snd_add, map_add, Prod.mk_add_mk, Prod.mk.injEq]
+    refine ⟨?_, ?_, ?_⟩ <;> module
+  map_smul' c x := by
+    simp only [Prod.smul_fst, Prod.smul_snd, map_smul, RingHom.id_apply, Prod.smul_mk,
+      Prod.mk.injEq]
+    refine ⟨?_, ?_, ?_⟩ <;> module
+
+/-- A full CN step is the linear system `(M + sK) x' = (M - sK) x`. -/
+theorem isFullCNStep_iff_cnLHS (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ)
+    (x x' : V₀ × V₁ × V₂) :
+    IsFullCNStep d₀ d₁ s x.1 x'.1 x.2.1 x'.2.1 x.2.2 x'.2.2 ↔
+      cnLHS d₀ d₁ s x' = cnLHS d₀ d₁ (-s) x := by
+  obtain ⟨σ, E, B⟩ := x
+  obtain ⟨σ', E', B'⟩ := x'
+  simp only [IsFullCNStep, cnLHS, LinearMap.coe_mk, AddHom.coe_mk, Prod.mk.injEq]
+  have e1 : (σ' - s • adjoint d₀ E') - (σ - -s • adjoint d₀ E) =
+      (σ' - σ) - s • adjoint d₀ (E' + E) := by rw [map_add]; module
+  have e2 : (E' + s • (d₀ σ' + adjoint d₁ B')) - (E + -s • (d₀ σ + adjoint d₁ B)) =
+      (E' - E) - -(s • (d₀ (σ' + σ) + adjoint d₁ (B' + B))) := by
+    rw [map_add, map_add]; module
+  have e3 : (B' - s • d₁ E') - (B - -s • d₁ E) = (B' - B) - s • d₁ (E' + E) := by
+    rw [map_add]; module
+  refine and_congr ?_ (and_congr ?_ ?_)
+  · rw [← sub_eq_zero, ← e1, sub_eq_zero]
+  · rw [← sub_eq_zero, ← e2, sub_eq_zero]
+  · rw [← sub_eq_zero, ← e3, sub_eq_zero]
+
+/-- The CN system is invertible for every `s` (the thesis never argues this): injective by
+`IsFullCNStep.unique`, hence bijective in finite dimension. See [QuennevilleBelair2015], Ch. 7. -/
+theorem bijective_cnLHS (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) :
+    Function.Bijective (cnLHS d₀ d₁ s) := by
+  have hinj : Function.Injective (cnLHS d₀ d₁ s) := by
+    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+    intro x hx
+    have h1 := (isFullCNStep_iff_cnLHS d₀ d₁ s 0 x).2 (by rw [hx, map_zero])
+    have h2 := (isFullCNStep_iff_cnLHS d₀ d₁ s 0 0).2 (by rw [map_zero, map_zero])
+    obtain ⟨e1, e2, e3⟩ := h1.unique h2
+    exact Prod.ext e1 (Prod.ext e2 e3)
+  exact ⟨hinj, LinearMap.injective_iff_surjective.mp hinj⟩
+
+/-- **The full CN step is well defined**: from every state there is exactly one next state.
+See [QuennevilleBelair2015], Ch. 7. -/
+theorem existsUnique_isFullCNStep (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ)
+    (σ : V₀) (E : V₁) (B : V₂) :
+    ∃! x' : V₀ × V₁ × V₂, IsFullCNStep d₀ d₁ s σ x'.1 E x'.2.1 B x'.2.2 := by
+  obtain ⟨x', hx'⟩ := (bijective_cnLHS d₀ d₁ s).2 (cnLHS d₀ d₁ (-s) (σ, E, B))
+  refine ⟨x', (isFullCNStep_iff_cnLHS d₀ d₁ s (σ, E, B) x').2 hx', fun y hy => ?_⟩
+  obtain ⟨e1, e2, e3⟩ := hy.unique ((isFullCNStep_iff_cnLHS d₀ d₁ s (σ, E, B) x').2 hx')
+  exact Prod.ext e1 (Prod.ext e2 e3)
+
+/-- The reduced CN step is well defined. See [QuennevilleBelair2015], Ch. 7. -/
+theorem existsUnique_isReducedCNStep (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) (E : V₁) (B : V₂) :
+    ∃! y : V₁ × V₂, IsReducedCNStep d₁ s E y.1 B y.2 := by
+  obtain ⟨x', hx', -⟩ := existsUnique_isFullCNStep (0 : V₁ →ₗ[ℝ] V₁) d₁ s 0 E B
+  have hr := ((isFullCNStep_zero_iff d₁ s 0 x'.1 E x'.2.1 B x'.2.2).1 hx').2
+  refine ⟨(x'.2.1, x'.2.2), hr, fun y hy => ?_⟩
+  obtain ⟨e1, e2⟩ := hy.unique hr
+  exact Prod.ext e1 e2
+
+/-- The full CN time-stepping map `xⁿ ↦ xⁿ⁺¹ = (M + sK)⁻¹ (M - sK) xⁿ`. -/
+def fullCNStep (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) :
+    (V₀ × V₁ × V₂) →ₗ[ℝ] (V₀ × V₁ × V₂) :=
+  ((LinearEquiv.ofBijective (cnLHS d₀ d₁ s) (bijective_cnLHS d₀ d₁ s)).symm :
+    (V₀ × V₁ × V₂) →ₗ[ℝ] (V₀ × V₁ × V₂)) ∘ₗ cnLHS d₀ d₁ (-s)
+
+/-- `fullCNStep` performs a full CN step. -/
+theorem isFullCNStep_fullCNStep (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ)
+    (x : V₀ × V₁ × V₂) :
+    IsFullCNStep d₀ d₁ s x.1 (fullCNStep d₀ d₁ s x).1 x.2.1 (fullCNStep d₀ d₁ s x).2.1 x.2.2
+      (fullCNStep d₀ d₁ s x).2.2 := by
+  rw [isFullCNStep_iff_cnLHS]
+  exact (LinearEquiv.ofBijective (cnLHS d₀ d₁ s) (bijective_cnLHS d₀ d₁ s)).apply_symm_apply
+    (cnLHS d₀ d₁ (-s) x)
+
+variable {V₃ : Type*} [NormedAddCommGroup V₃] [InnerProductSpace ℝ V₃]
+
+/-- The discrete divergence `d₂ B` is conserved by a full CN step when `d₂ d₁ = 0` (the
+quantity plotted in thesis Figs 7.1–7.4). See [QuennevilleBelair2015], Ch. 7. -/
+theorem IsFullCNStep.apply_eq_of_comp_eq_zero {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →ₗ[ℝ] V₂}
+    {d₂ : V₂ →ₗ[ℝ] V₃} (hd₂ : d₂ ∘ₗ d₁ = 0) {s : ℝ} {σ σ' : V₀} {E E' : V₁} {B B' : V₂}
+    (h : IsFullCNStep d₀ d₁ s σ σ' E E' B B') : d₂ B' = d₂ B := by
+  have : d₂ (B' - B) = 0 := by
+    rw [h.2.2, map_smul, ← LinearMap.comp_apply, hd₂, LinearMap.zero_apply, smul_zero]
+  rwa [map_sub, sub_eq_zero] at this
+
+omit [FiniteDimensional ℝ V₀] in
+/-- The discrete divergence `d₂ B` is conserved by a reduced CN step when `d₂ d₁ = 0`. -/
+theorem IsReducedCNStep.apply_eq_of_comp_eq_zero {d₁ : V₁ →ₗ[ℝ] V₂} {d₂ : V₂ →ₗ[ℝ] V₃}
+    (hd₂ : d₂ ∘ₗ d₁ = 0) {s : ℝ} {E E' : V₁} {B B' : V₂} (h : IsReducedCNStep d₁ s E E' B B') :
+    d₂ B' = d₂ B := by
+  have : d₂ (B' - B) = 0 := by
+    rw [h.2, map_smul, ← LinearMap.comp_apply, hd₂, LinearMap.zero_apply, smul_zero]
+  rwa [map_sub, sub_eq_zero] at this
+
+end ThreeField
 
 end Feec.TimeStepping

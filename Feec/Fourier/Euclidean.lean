@@ -48,6 +48,7 @@ theorem continuous_scale : Continuous (scale (d := d)) := continuous_const_smul 
 
 theorem measurable_scale : Measurable (scale (d := d)) := continuous_scale.measurable
 
+omit [Fintype d] in
 @[simp] theorem scale_neg (x : EuclideanSpace ℝ d) : scale (-x) = -scale x := smul_neg _ _
 
 /-! ### The whole-space model of a fibre complex -/

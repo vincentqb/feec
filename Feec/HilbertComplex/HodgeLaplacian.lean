@@ -22,7 +22,7 @@ Applied to the wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, `
   `1 + T` onto is self-adjoint.
 * `LinearPMap.IsSkewAdjoint.isResolvent_sq`: the resolvent of `A²` at `1`, with norm `≤ 1`.
 * `Feec.HilbertComplex.isSelfAdjoint_hodgeLaplacian`,
-  `Feec.HilbertComplex.inner_hodgeLaplacian_self` (`⟪Δ x, x⟫ = ‖𝐝 x‖² + ‖𝐝* x‖²`),
+  `Feec.HilbertComplex.re_inner_hodgeLaplacian_self` (`re ⟪Δ x, x⟫ = ‖𝐝 x‖² + ‖𝐝* x‖²`),
   `Feec.HilbertComplex.mem_ker_hodgeLaplacian_iff` (`ker Δ = ⊕ ℌⁱ`, no closed range needed),
   `Feec.HilbertComplex.isResolvent_hodgeLaplacian` (the solution operator `(1 + Δ)⁻¹`).
 

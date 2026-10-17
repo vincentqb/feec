@@ -27,6 +27,8 @@ Hodge wave equation is the matrix system (4.14) of the Einstein–Bianchi formul
 * `starProjection_eq_zero_of_mem_orthogonal`: fields whose Fourier coefficients are orthogonal
   to the TSD fibres (e.g. `A = c ξᵀ`, gradients) have zero TSD part, though `dev sym A ≠ 0` (the
   answer to the blueprint review's claimed counterexample: `P_TSD` is not pointwise).
+* `starProjection_mem_H1`: the TSD projection maps `H(curl)` into `H¹`, with
+  `‖|ξ| P_TSD A‖ ≤ ‖curl A‖`.
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
   real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
@@ -178,6 +180,21 @@ theorem norm_le_of_mem_orthogonal {i j : Fin 3} (u : (complex.d i j).domain)
     rw [eq_zero_of_mem_orthogonal_ker_zero hv, norm_zero]
     positivity
   · exact gap _ _ (Fourier.Torus.two_pi_le_norm_freq hk)
+
+/-! ### `H¹` regularity of the TSD projection -/
+
+/-- **The TSD projection maps `H(curl)` into `H¹`**: `|ξ| P_TSD A ∈ L²` for `A ∈ H(curl)`, with
+`‖|ξ| P_TSD A‖ ≤ ‖curl A‖` (fibrewise `Feec.Fourier.GradCurl.mul_norm_starProjection_le`). -/
+theorem starProjection_mem_H1 (A : (complex.d 1 2).domain) :
+    MemLp (fun k => ((‖Fourier.Torus.freq k‖ : ℝ) : ℂ) •
+      ((constraint 1).starProjection (A : Space 1) : _ → Mat) k) 2 Measure.count := by
+  have hP := Operator.coeFn_starProjection_fibreSub (μ := Measure.count)
+    (fun k => tsdK 1 (Fourier.Torus.freq k)) AEStronglyMeasurable.of_discrete (A : Space 1)
+  have hd := (Fourier.Torus.symbolComplex gradCurl).coeFn_d A
+  refine MemLp.of_le (Lp.memLp (complex.d 1 2 A)) AEStronglyMeasurable.of_discrete ?_
+  filter_upwards [hP, hd] with k h1 h2
+  rw [h1, norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_norm]
+  exact le_of_le_of_eq (mul_norm_starProjection_le _ _) (congrArg norm h2).symm
 
 /-! ### The TSD projection is not pointwise -/
 

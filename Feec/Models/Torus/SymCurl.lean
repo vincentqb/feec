@@ -18,6 +18,8 @@ its Hodge wave equation is (4.18).
   thesis' projection and density "conjectures" are not needed; the projection hypothesis holds.
 * **`tsd_propagates`**, `tsd_propagates_neg`, **`tsd_existsUnique`**, `waveGroup_mem`: Prop 4.19 on
   `𝕋³`, with existence and uniqueness, forcing, any time interval.
+* **`closedRangeAt`**, `dual_closedRangeAt'`, **`hodge`**: closed range at every index (Poincaré
+  constant `1`) and the Hodge decomposition without closures.
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
   real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
@@ -96,6 +98,45 @@ Thesis: Prop 4.19 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
+
+/-! ### Closed range and the Hodge decomposition -/
+
+/-- **The periodic strong-symmetry complex has closed range** at every index (the thesis defers
+this to its next chapter). The incoming gap of `curl` uses `|A ξ| ≤ ‖curl_ξ A‖` for symmetric `A`
+with `ξᵀ A ξ = 0` (`Feec.Fourier.SymCurl.norm_div_le_norm_curl`). -/
+theorem closedRangeAt (i : Fin 3) : complex.ClosedRangeAt i :=
+  Fourier.Torus.closedRangeAt_of_gap (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
+
+theorem dual_closedRangeAt {i j : Fin 3} (hij : ComplexShape.fin3.Rel i j) :
+    complex.dual.ClosedRangeAt i :=
+  Fourier.Torus.dual_closedRangeAt_of_gap hij (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
+
+theorem dual_closedRangeAt_two : complex.dual.ClosedRangeAt 2 := by
+  have hn : ComplexShape.fin3.next 2 = 2 := ComplexShape.fin3.next_eq_self' 2 fun k h => by
+    have : (2 : Fin 3).val + 1 = k.val := h
+    have := k.isLt; omega
+  have h0 : complex.d 2 (ComplexShape.fin3.next 2) = 0 := complex.shape _ _ (by
+    rw [hn]; intro h; have : (2 : Fin 3).val + 1 = (2 : Fin 3).val := h; omega)
+  rw [HilbertComplex.ClosedRangeAt, HilbertComplex.boundaries_dual, h0, LinearPMap.adjoint_zero]
+  convert (isClosed_singleton (x := (0 : Space 2))) using 1
+  ext y; constructor
+  · rintro ⟨x, rfl⟩; rfl
+  · rintro rfl; exact ⟨0, rfl⟩
+
+theorem dual_closedRangeAt' (i : Fin 3) : complex.dual.ClosedRangeAt i := by
+  fin_cases i
+  · exact dual_closedRangeAt (j := 1) rfl
+  · exact dual_closedRangeAt (j := 2) rfl
+  · exact dual_closedRangeAt_two
+
+/-- **Hodge decomposition without closures** at every index (e.g. `L²(𝕋³; S)` is
+`R(grad grad) ⊕ ℌ ⊕ R(sym curl)`), pairwise orthogonal. -/
+theorem hodge (i : Fin 3) :
+    complex.boundaries i ⊔ complex.harmonic i ⊔ complex.dual.boundaries i = ⊤ ∧
+      complex.boundaries i ⟂ complex.harmonic i ∧
+      complex.harmonic i ⟂ complex.dual.boundaries i ∧
+      complex.boundaries i ⟂ complex.dual.boundaries i :=
+  complex.hodge_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i)
 
 /-! ### Real fields -/
 

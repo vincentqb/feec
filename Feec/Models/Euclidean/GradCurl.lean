@@ -20,6 +20,8 @@ isolated source.
   on `ℝ³`, with existence and uniqueness, forcing, any time interval.
 * `not_closedRangeAt_one`, `not_closedRangeAt_two`: neither differential has closed range (no
   Poincaré inequality at low frequencies), which Prop 4.17 does not need.
+* `starProjection_mem_H1`: the TSD projection maps `H(curl)` into `H¹`, with
+  `‖|ξ| P_TSD A‖ ≤ ‖curl A‖`.
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
   real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
@@ -91,6 +93,23 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
+
+/-! ### `H¹` regularity of the TSD projection -/
+
+/-- **The TSD projection maps `H(curl)` into `H¹`**: `|ξ| P_TSD A ∈ L²` for `A ∈ H(curl)`, with
+`‖|ξ| P_TSD A‖ ≤ ‖curl A‖` (fibrewise `Feec.Fourier.GradCurl.mul_norm_starProjection_le`). -/
+theorem starProjection_mem_H1 (A : (complex.d 1 2).domain) :
+    MemLp (fun k => ((‖Fourier.Euclidean.scale k‖ : ℝ) : ℂ) •
+      ((constraint 1).starProjection (A : Space 1) : _ → Mat) k) 2 volume := by
+  have hP := Operator.coeFn_starProjection_fibreSub (μ := volume)
+    (fun k => tsdK 1 (Fourier.Euclidean.scale k)) (fibreReducing.meas 1) (A : Space 1)
+  have hd := (Fourier.Euclidean.symbolComplex gradCurl).coeFn_d A
+  refine MemLp.of_le (Lp.memLp (complex.d 1 2 A)) ((Complex.continuous_ofReal.comp
+    (continuous_norm.comp Fourier.Euclidean.continuous_scale)).aestronglyMeasurable.smul
+      (Lp.aestronglyMeasurable _)) ?_
+  filter_upwards [hP, hd] with k h1 h2
+  rw [h1, norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_norm]
+  exact le_of_le_of_eq (mul_norm_starProjection_le _ _) (congrArg norm h2).symm
 
 /-! ### Real fields -/
 

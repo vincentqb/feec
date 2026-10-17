@@ -462,4 +462,173 @@ theorem inner_cjW3 : ∀ (i : Fin 3) (v w : W3 ℂ Sym Tr i), ⟪cjW3 i v, cjW3 
   | 1, v, w => inner_entryConj (Sym.val v) (Sym.val w)
   | 2, v, w => inner_entryConj (Tr.val v) (Tr.val w)
 
+
+/-! ### Fibre gaps -/
+
+/-- The complexification of a frequency. -/
+def cvec (ξ : Freq) : Vec := WithLp.toLp 2 fun a => (ξ a : ℂ)
+
+theorem norm_cvec (ξ : Freq) : ‖cvec ξ‖ = ‖ξ‖ := by
+  rw [EuclideanSpace.norm_eq, EuclideanSpace.norm_eq]
+  congr 1
+  refine Finset.sum_congr rfl fun a _ => ?_
+  simp [cvec, Complex.norm_real]
+
+/-- `‖hess_ξ c‖ = |ξ|² |c|`. -/
+theorem norm_hessM (ξ : Freq) (c : ℂ) : ‖hessM ξ c‖ = ‖ξ‖ ^ 2 * ‖c‖ := by
+  have e : hessM ξ c = grad ξ ((Complex.I * c) • cvec ξ) := by
+    ext ⟨a, b⟩
+    rw [hessM_apply, grad_apply]
+    simp only [cvec, PiLp.smul_apply, smul_eq_mul]
+    have : Complex.I * Complex.I = -1 := Complex.I_mul_I
+    linear_combination (-(c * (ξ a : ℂ) * (ξ b : ℂ))) * this
+  rw [e, norm_grad, norm_smul, norm_mul, Complex.norm_I, one_mul, norm_cvec]
+  ring
+
+/-- **Cauchy–Schwarz** for a real frequency against a complex vector. -/
+theorem norm_sum_mul_sq_le (ξ : Freq) (z : Fin 3 → ℂ) :
+    ‖∑ a, (ξ a : ℂ) * z a‖ ^ 2 ≤ ‖ξ‖ ^ 2 * ∑ a, ‖z a‖ ^ 2 := by
+  have h := norm_inner_le_norm (𝕜 := ℂ) (cvec ξ) (WithLp.toLp 2 z : Vec)
+  have hi : ⟪cvec ξ, (WithLp.toLp 2 z : Vec)⟫_ℂ = ∑ a, (ξ a : ℂ) * z a := by
+    rw [inner_vec]; simp [cvec]
+  have hz : ‖(WithLp.toLp 2 z : Vec)‖ ^ 2 = ∑ a, ‖z a‖ ^ 2 := by
+    rw [EuclideanSpace.norm_sq_eq]
+  rw [hi, norm_cvec] at h
+  calc ‖∑ a, (ξ a : ℂ) * z a‖ ^ 2 ≤ (‖ξ‖ * ‖(WithLp.toLp 2 z : Vec)‖) ^ 2 :=
+        pow_le_pow_left₀ (norm_nonneg _) h 2
+    _ = ‖ξ‖ ^ 2 * ∑ a, ‖z a‖ ^ 2 := by rw [mul_pow, hz]
+
+/-- Lagrange's identity for a real frequency and a complex vector. -/
+theorem lagrange_cross (ξ : Freq) (w : Fin 3 → ℂ) :
+    ∑ b, ‖∑ c, ∑ d, leviCivita3 ℂ b c d * ((ξ c : ℂ) * w d)‖ ^ 2 + ‖∑ a, (ξ a : ℂ) * w a‖ ^ 2 =
+      ‖ξ‖ ^ 2 * ∑ a, ‖w a‖ ^ 2 := by
+  rw [EuclideanSpace.norm_sq_eq]
+  simp only [Fin.sum_univ_three, leviCivita3_apply]
+  simp only [Complex.sq_norm, Complex.normSq_apply, Real.norm_eq_abs, sq_abs]
+  simp
+  ring
+
+/-- **The key inequality**: for a symmetric matrix with `ξᵀ A ξ = 0`, `|A ξ| ≤ ‖curl_ξ A‖`. -/
+theorem norm_div_le_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
+    (h0 : ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) = 0) : ‖div ξ M‖ ≤ ‖curl ξ M‖ := by
+  set w : Fin 3 → ℂ := fun a => ∑ b, M (a, b) * (ξ b : ℂ)
+  have hdiv : ‖div ξ M‖ ^ 2 = ∑ a, ‖w a‖ ^ 2 := by
+    rw [EuclideanSpace.norm_sq_eq]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    rw [div_apply, norm_mul, norm_neg, Complex.norm_I, one_mul]
+  -- `ξᵀ curl A = i (ξ × A ξ)`
+  have hw : ∀ d, w d = ∑ b, M (b, d) * (ξ b : ℂ) := fun d =>
+    Finset.sum_congr rfl fun b _ => by rw [hM d b]
+  have hz : ∀ b, ∑ a, (ξ a : ℂ) * curl ξ M (a, b) =
+      Complex.I * ∑ c, ∑ d, leviCivita3 ℂ b c d * ((ξ c : ℂ) * w d) := by
+    intro b
+    simp only [curl_apply, hw, Fin.sum_univ_three]
+    ring
+  have hdot : ∑ a, (ξ a : ℂ) * w a = 0 := by
+    rw [← h0]
+    refine Finset.sum_congr rfl fun a _ => ?_
+    simp only [w, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun b _ => by ring
+  have hlag := lagrange_cross ξ w
+  rw [hdot, norm_zero, zero_pow two_ne_zero, add_zero] at hlag
+  have hcs : ∑ b, ‖∑ c, ∑ d, leviCivita3 ℂ b c d * ((ξ c : ℂ) * w d)‖ ^ 2 ≤
+      ‖ξ‖ ^ 2 * ‖curl ξ M‖ ^ 2 := by
+    have : ∀ b, ‖∑ c, ∑ d, leviCivita3 ℂ b c d * ((ξ c : ℂ) * w d)‖ ^ 2 ≤
+        ‖ξ‖ ^ 2 * ∑ a, ‖curl ξ M (a, b)‖ ^ 2 := fun b => by
+      have := norm_sum_mul_sq_le ξ fun a => curl ξ M (a, b)
+      rwa [hz b, norm_mul, Complex.norm_I, one_mul] at this
+    have hC : ‖curl ξ M‖ ^ 2 = ∑ b, ∑ a, ‖curl ξ M (a, b)‖ ^ 2 := by
+      rw [EuclideanSpace.norm_sq_eq (curl ξ M), Fintype.sum_prod_type, Finset.sum_comm]
+    refine (Finset.sum_le_sum fun b _ => this b).trans ?_
+    rw [← Finset.mul_sum, hC]
+  rw [hlag] at hcs
+  rcases (norm_nonneg ξ).eq_or_lt with hξ | hξ
+  · have : ξ = 0 := norm_eq_zero.1 hξ.symm
+    have hd : div ξ M = 0 := by subst this; ext a; simp [div_apply]
+    rw [hd, norm_zero]; exact norm_nonneg _
+  · have h2 : ∑ a, ‖w a‖ ^ 2 ≤ ‖curl ξ M‖ ^ 2 :=
+      le_of_mul_le_mul_left hcs (by positivity)
+    rw [← hdiv] at h2
+    exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h2
+
+/-- **The fibre gap of the curl on symmetric matrices**: `|ξ| ‖v‖ ≤ 2 ‖curl_ξ v‖` on `N(curl_ξ)ᗮ`
+(in `S`). -/
+theorem mul_norm_le_norm_curlS {ξ : Freq} {v : Sym}
+    (hv : v ∈ Submodule.orthogonal (𝕜 := ℂ) (E := Sym) (LinearMap.ker (curlS ξ : Sym →ₗ[ℂ] Tr))) :
+    ‖ξ‖ * ‖v‖ ≤ 2 * ‖curlS ξ v‖ := by
+  have h0 : ⟪hess ξ 1, v⟫_ℂ = 0 := by
+    refine Submodule.inner_right_of_mem_orthogonal ?_ hv
+    rw [LinearMap.mem_ker, ContinuousLinearMap.coe_coe]; exact curlS_hess ξ 1
+  rw [Sym.inner_val, coe_hess, inner_mat] at h0
+  have h0' : ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * (v : Mat) (a, b) = 0 := by
+    have : ∑ a, ∑ b, (starRingEnd ℂ) (hessM ξ 1 (a, b)) * (v : Mat) (a, b) =
+        -∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * (v : Mat) (a, b) := by
+      rw [← Finset.sum_neg_distrib]
+      refine Finset.sum_congr rfl fun a _ => ?_
+      rw [← Finset.sum_neg_distrib]
+      refine Finset.sum_congr rfl fun b _ => ?_
+      rw [hessM_apply]; simp
+    rw [this, neg_eq_zero] at h0
+    exact h0
+  have hkey := norm_div_le_norm_curl (Sym.val_mem v) h0'
+  have hlag := norm_curl_sq_add_norm_div_sq ξ (v : Mat)
+  have hnv : ‖v‖ = ‖(v : Mat)‖ := rfl
+  have hnc : ‖curlS ξ v‖ = ‖curl ξ (v : Mat)‖ := rfl
+  rw [hnv, hnc]
+  have h2 : (‖ξ‖ * ‖(v : Mat)‖) ^ 2 ≤ (2 * ‖curl ξ (v : Mat)‖) ^ 2 := by
+    nlinarith [sq_nonneg ‖div ξ (v : Mat)‖, norm_nonneg (div ξ (v : Mat)),
+      norm_nonneg (curl ξ (v : Mat)), pow_le_pow_left₀ (norm_nonneg _) hkey 2]
+  exact (sq_le_sq₀ (by positivity) (by positivity)).1 h2
+
+
+@[simp] theorem hessM_zero : hessM 0 = 0 :=
+  ContinuousLinearMap.ext fun c => by ext ⟨a, b⟩; simp [hessM_apply]
+
+@[simp] theorem symCurl_m_zero (i j : Fin 3) : symCurl.m i j 0 = 0 := by
+  fin_cases i <;> fin_cases j
+  · rfl
+  · exact ContinuousLinearMap.ext fun c => Sym.ext (by
+      change hessM 0 c = 0; rw [hessM_zero]; rfl)
+  · rfl
+  · rfl
+  · rfl
+  · exact ContinuousLinearMap.ext fun v => Tr.ext (by
+      change curl 0 (Sym.val v) = 0; rw [curl_zero]; rfl)
+  · rfl
+  · rfl
+  · rfl
+
+open ShortHilbertComplex in
+/-- **The fibre gaps of the strong-symmetry complex at the torus frequencies**: `‖v‖ ≤ ‖m_ξ v‖`
+on `N(m_ξ)ᗮ` for `|ξ| ≥ 2π`, for every arrow. -/
+theorem symCurl_gap (i j : Fin 3) {ξ : Freq} (hξ : 2 * Real.pi ≤ ‖ξ‖) :
+    ∀ v ∈ (LinearMap.ker (symCurl.m i j ξ : W3 ℂ Sym Tr i →ₗ[ℂ] W3 ℂ Sym Tr j))ᗮ,
+      ‖v‖ ≤ 1 * ‖symCurl.m i j ξ v‖ := by
+  have h2pi : (2 : ℝ) ≤ 2 * Real.pi := by nlinarith [Real.two_le_pi]
+  have hξ2 : 2 ≤ ‖ξ‖ := h2pi.trans hξ
+  have zero_case : ∀ {i j : Fin 3}, symCurl.m i j ξ = 0 →
+      ∀ v ∈ (LinearMap.ker (symCurl.m i j ξ : W3 ℂ Sym Tr i →ₗ[ℂ] W3 ℂ Sym Tr j))ᗮ,
+        ‖v‖ ≤ 1 * ‖symCurl.m i j ξ v‖ := by
+    intro i j h v hv
+    rw [h] at hv
+    rw [eq_zero_of_mem_orthogonal_ker_zero hv, norm_zero]; positivity
+  fin_cases i <;> fin_cases j
+  · exact zero_case rfl
+  · intro c _
+    change ‖(show ℂ from c)‖ ≤ 1 * ‖Sym.val (hess ξ (show ℂ from c))‖
+    rw [coe_hess, norm_hessM, one_mul]
+    have : (1 : ℝ) ≤ ‖ξ‖ ^ 2 := by nlinarith
+    nlinarith [norm_nonneg (show ℂ from c)]
+  · exact zero_case rfl
+  · exact zero_case rfl
+  · exact zero_case rfl
+  · intro v hv
+    have h := mul_norm_le_norm_curlS (ξ := ξ) (v := (show Sym from v)) hv
+    change ‖(show Sym from v)‖ ≤ 1 * ‖curlS ξ (show Sym from v)‖
+    nlinarith [norm_nonneg (show Sym from v), norm_nonneg (curlS ξ (show Sym from v)),
+      mul_le_mul_of_nonneg_right hξ2 (norm_nonneg (show Sym from v))]
+  · exact zero_case rfl
+  · exact zero_case rfl
+  · exact zero_case rfl
+
 end Feec.Fourier.SymCurl

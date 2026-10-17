@@ -240,6 +240,28 @@ theorem norm_curl_of_mem_orthogonal {ξ : Freq} {v : Mat}
   exact (sq_eq_sq₀ (norm_nonneg _) (by positivity)).1 h
 
 
+/-- The divergence symbol vanishes on the TSD fibre. -/
+theorem div_eq_zero_of_mem_tsd {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) : div ξ M = 0 := by
+  ext a
+  rw [div_apply, mulVec_apply_eq_zero hM a, mul_zero]; rfl
+
+/-- On the TSD fibre the curl symbol is `|ξ|` times an isometry: `‖curl_ξ v‖ = |ξ| ‖v‖`. -/
+theorem norm_curl_of_mem_tsd {ξ : Freq} {v : Mat} (hv : v ∈ tsd ξ) :
+    ‖curl ξ v‖ = ‖ξ‖ * ‖v‖ := by
+  have h := norm_curl_sq_add_norm_div_sq ξ v
+  rw [div_eq_zero_of_mem_tsd hv, norm_zero, zero_pow two_ne_zero, add_zero, ← mul_pow] at h
+  exact (sq_eq_sq₀ (norm_nonneg _) (by positivity)).1 h
+
+/-- **`H¹` regularity of the TSD projection, fibrewise**: `|ξ| ‖P_ξ A‖ ≤ ‖curl_ξ A‖`, since
+`P_ξ` commutes with `curl_ξ` and `curl_ξ` is `|ξ|` times an isometry on `tsd ξ`. -/
+theorem mul_norm_starProjection_le (ξ : Freq) (A : Mat) :
+    ‖ξ‖ * ‖(tsd ξ).starProjection A‖ ≤ ‖curl ξ A‖ := by
+  have hcomm := starProjection_comm_of_map (curl ξ) (tsd ξ) (tsd ξ)
+    (by rintro _ ⟨v, hv, rfl⟩; exact curl_mem_tsd hv)
+    (by rw [adjoint_curl]; rintro _ ⟨v, hv, rfl⟩; exact curl_mem_tsd hv) A
+  rw [← norm_curl_of_mem_tsd (Submodule.starProjection_apply_mem _ A), ← hcomm]
+  exact Submodule.norm_starProjection_apply_le _ _
+
 /-! ### Dependence on the frequency -/
 
 theorem grad_smul (t : ℝ) (ξ : Freq) : grad (t • ξ) = (t : ℂ) • grad ξ := by

@@ -278,7 +278,7 @@ theorem mem_invariantCore_torus_iff {S1 S2 : Submodule ℝ L2M} [S1.HasOrthogona
     y ∈ torus.waveGroup.invariantCore (HilbertComplex.totalSub (constraint S1 S2)) ↔
       y ∈ HilbertComplex.totalSub (constraint S1 S2) ∧ y ∈ torus.waveGroup.stationary := by
   obtain ⟨x, rfl⟩ := totEquiv.surjective y
-  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, Feec.Legacy.Box.mem_Kmax_iff hS1 hS2,
+  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, ← Feec.Legacy.Constraints.mem_Kmax, Feec.Legacy.Box.mem_Kmax_iff hS1 hS2,
     mem_Kc_iff, mem_stationary_iff periodicComplex periodicGroup, map_Kc]
 
 /-- **`K*` on the cube with the thesis' boundary conditions**: for the cube complex and closed
@@ -306,7 +306,7 @@ theorem mem_invariantCore_tsd_iff (y : PiLp 2 (W3 L2V L2M L2M)) :
       (y 0 : L2V) = 0 ∧ (y 1 : L2M) = 0 ∧ (y 2 : L2M) ∈ boxTSD (-1) ∧
         ∀ k, curlSym (freq k) (slot2 y k) = 0 := by
   obtain ⟨x, rfl⟩ := totEquiv.surjective y
-  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, Feec.Legacy.Box.mem_Kmax_boxTSD_iff,
+  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, ← Feec.Legacy.Constraints.mem_Kmax, Feec.Legacy.Box.mem_Kmax_boxTSD_iff,
     totEquiv_apply_one, totEquiv_apply_two]
   have h0 : ((totEquiv x : PiLp 2 (W3 L2V L2M L2M)) 0 : L2V) = 0 ↔ (tot L2V L2M L2M x).1 = 0 := by
     change -((tot L2V L2M L2M x).1) = 0 ↔ _

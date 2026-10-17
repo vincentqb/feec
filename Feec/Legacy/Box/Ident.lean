@@ -146,7 +146,8 @@ theorem forward_iff_mem_Kmax {S1 S2 : Submodule ℝ L2M} [S1.HasOrthogonalProjec
     (hS2 : S2 ≤ ParRow (-1) ⊓ boxSym ⊓ boxTr) (x : X) :
     (∀ t, 0 ≤ t → periodicGroup.S t x ∈ Kc L2V S1 S2) ↔
       x ∈ Kmax periodicGroup (Kc L2V S1 S2) := by
-  rw [Models.Cube.mem_Kmax_iff periodicComplex periodicGroup, Models.Cube.map_Kc,
+  rw [Feec.Legacy.Constraints.mem_Kmax, Models.Cube.mem_Kmax_iff periodicComplex periodicGroup,
+    Models.Cube.map_Kc,
     Models.Cube.Parity.mem_invariantCore_torus_iff hS1 hS2,
     ← Models.Cube.Parity.forward_torus_iff hS1 hS2]
   simp only [Models.Cube.mem_Kc_iff, Models.Cube.totEquiv_S periodicComplex periodicGroup]

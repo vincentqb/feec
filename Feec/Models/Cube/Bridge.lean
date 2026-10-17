@@ -1,6 +1,7 @@
 module
 
-public import Feec.Legacy.BoundedDomain.SalvageMax
+public import Feec.Legacy.Constraints
+public import Feec.Legacy.HodgeWave
 public import Feec.HilbertComplex.Equivariant
 public import Feec.Semigroup.Spectral
 
@@ -292,14 +293,14 @@ theorem totEquiv_symm_waveGroup (G : UnitaryGroupGenerator (-H.waveOp)) (t : ℝ
   apply totEquiv.injective
   rw [totEquiv_S H G, LinearIsometryEquiv.apply_symm_apply, LinearIsometryEquiv.apply_symm_apply]
 
-/-- The largest invariant subspace `K*` of `K` is the invariant core of the image of `K` under
-the wave group. -/
+/-- The largest invariant subspace `K* = {x | S t x ∈ K for all t}` of `K` is the invariant core
+of the image of `K` under the wave group. -/
 theorem mem_Kmax_iff (G : UnitaryGroupGenerator (-H.waveOp)) (K : Submodule ℝ (Tot W0 W1 W2))
     (x : Tot W0 W1 W2) :
-    x ∈ Kmax G K ↔ totEquiv x ∈ H.toShort.toHilbertComplex.waveGroup.invariantCore
+    (∀ t, G.S t x ∈ K) ↔ totEquiv x ∈ H.toShort.toHilbertComplex.waveGroup.invariantCore
       (K.map (totEquiv (W0 := W0) (W1 := W1) (W2 := W2) :
         Tot W0 W1 W2 →ₗ[ℝ] PiLp 2 (W3 W0 W1 W2))) := by
-  rw [mem_Kmax, C0Group.mem_invariantCore]
+  rw [C0Group.mem_invariantCore]
   refine forall_congr' fun t => ?_
   rw [← totEquiv_S H G, Submodule.mem_map_equiv]
   change _ ↔ totEquiv.symm (totEquiv _) ∈ K

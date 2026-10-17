@@ -110,7 +110,7 @@ theorem mem_invariantCore_tsd_iff (hs : 0 < s) (y : PiLp 2 (W3 (V b s) (M b s) (
       ∃ B ∈ Feec.Legacy.BoundedDomain.TSD (openCube b s), ∃ h : B ∈ (cxCube b s).d1†.domain,
         (cxCube b s).d1† ⟨B, h⟩ = 0 ∧ y = totEquiv (ini (V b s) 0 B) := by
   obtain ⟨x, rfl⟩ := totEquiv.surjective y
-  rw [← map_Kc, ← mem_Kmax_iff (cxCube b s) (cxCube b s).waveGroup,
+  rw [← map_Kc, ← mem_Kmax_iff (cxCube b s) (cxCube b s).waveGroup, ← Feec.Legacy.Constraints.mem_Kmax,
     Feec.Legacy.BoxIdent.openCube_mem_Kmax_iff' hs]
   simp only [totEquiv.injective.eq_iff]
 

@@ -935,3 +935,40 @@ theorem isApproximating {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
   ⟨⟨_, fun h ζ => (S h).norm_ellipticProjection_le ζ⟩, hd⟩
 
 end Feec.HilbertComplex.Subcomplex
+
+/-! ### Finite Hilbert complexes -/
+
+namespace Feec.HilbertComplex.HodgeWave
+
+open _root_.Feec.HodgeWave
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] (H : HilbertComplex 𝕜 c W)
+
+/-- The Hodge wave group of `T = 𝐝` is the wave group of the complex. -/
+theorem waveGroup_totalD : Feec.HodgeWave.waveGroup H.dense_totalDomain H.isClosed_totalD
+    H.totalD_mapsTo H.totalD_comp_totalD = H.waveGroup :=
+  H.isSkewAdjoint_wave.eq_group ((Feec.HodgeWave.generator_waveGroup _ _ _ _).trans H.wave_eq.symm)
+
+/-- **Convergence of the semi-discrete method for `D(L)` data on a finite Hilbert complex** (any
+length): for `x ∈ D(L)` and an approximating family `Kₕ ⊆ Γ(𝐝)`, the semi-discrete solutions
+with `ξₕ(a) = Pₕ x` exist and converge to `e^{(t-a)L} x` in `L∞(a,b; W)`.
+See [QuennevilleBelair2015], Thm 4.14 and the convergence remark after it. -/
+theorem exists_tendstoUniformlyOn_ellipticProjection {κ : Type*} {l : Filter κ}
+    {K : κ → Submodule 𝕜 H.totalD.GraphSpace} [∀ h, FiniteDimensional 𝕜 (K h)]
+    (hK : IsApproximating l K) (a b : ℝ) (x : H.wave.domain) :
+    ∃ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+      (∀ h, IsSemidiscreteSolution (K h) (Icc a b) (ξh h) (ξh' h)) ∧
+      (∀ h, ξh h a = ellipticProjection (K h)
+        (H.totalD.toGraphSpace ⟨x, (H.mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t))
+        (fun t => H.waveGroup.S (t - a) x) l (Icc a b) := by
+  have hx : (x : PiLp 2 W) ∈ (H.totalD - H.totalD†).domain := by rw [← wave_eq]; exact x.2
+  obtain ⟨-, ξh, ξh', hξh, hinit, hconv⟩ :=
+    Feec.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection H.dense_totalDomain
+      H.isClosed_totalD H.totalD_mapsTo H.totalD_comp_totalD hK a b ⟨x, hx⟩
+  rw [waveGroup_totalD] at hconv
+  exact ⟨ξh, ξh', hξh, hinit, hconv⟩
+
+end Feec.HilbertComplex.HodgeWave

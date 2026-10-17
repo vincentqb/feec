@@ -337,6 +337,14 @@ theorem isTestField_apply [Fintype ι] (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set
     (hφ : IsTestField Ω φ) : IsTestField Ω (A.apply φ) := fun _ =>
   IsTest.sum _ fun i _ => IsTest.applyEntry _ (hφ i)
 
+theorem applyEntry_zero (P : List (List E × 𝕜)) : applyEntry P (0 : E → 𝕜) = 0 := by
+  induction P with
+  | nil => exact applyEntry_nil _
+  | cons t P ih =>
+    rw [applyEntry_cons, ih, iterDeriv_zero]
+    funext x
+    simp
+
 theorem applyEntry_add (P : List (List E × 𝕜)) {f g : E → 𝕜} (hf : ContDiff ℝ ∞ f)
     (hg : ContDiff ℝ ∞ g) : applyEntry P (f + g) = applyEntry P f + applyEntry P g := by
   funext x

@@ -15,14 +15,16 @@ In contrast with the torus (`Feec.Models.Torus.DeRham`):
 
 * **no closed range** in degrees `1 ≤ k ≤ d` (`not_closedRangeAt`): the symbol degenerates at low
   frequencies, so there is no Poincaré inequality;
-* **no `L²` harmonic forms** in any degree, for `d ≥ 1` (`harmonic_eq_bot`): the fibre harmonic spaces vanish
-  off `ξ = 0`, a null set;
+* **no `L²` harmonic forms** in any degree, for `d ≥ 1` (`harmonic_eq_bot`): the fibre harmonic
+  spaces vanish off `ξ = 0`, a null set;
 * hence the complex is not exact although `ℌᵏ = 0` (`boundaries_ne_cycles`): the cycles are the
   closure of the boundaries;
 * **the Fourier domain of `d` is the weak domain** (`mem_domain_d_iff_weak`): `d (𝓕 f) = 𝓕 g` iff
   `⟪f, δ φ⟫ = ⟪g, φ⟫` for every Schwartz `(k+1)`-form `φ`, with the codifferential
   `δ = codiff k` (the formal adjoint of `d`); on Schwartz forms `d` is the classical exterior
-  derivative `extDeriv k` (`mulOp_fourier_extDeriv`).
+  derivative `extDeriv k` (`mulOp_fourier_extDeriv`);
+* `window d`, `windowReal`, `window_conj_eq`: the full window `Λ⁰ → ⋯ → Λᵈ`; real forms give
+  real solutions of the Hodge wave equation.
 
 ## References
 
@@ -137,5 +139,41 @@ theorem mulOp_fourier_extDeriv (k : ℕ) (ψ : 𝓢(EuclideanSpace ℝ d, Form �
     ∃ h : 𝓕 (ψ.toLp 2 : L2Form d k) ∈ ((complex d).d k (k + 1)).domain,
       (complex d).d k (k + 1) ⟨_, h⟩ = 𝓕 ((extDeriv k ψ).toLp 2 : L2Form d (k + 1)) :=
   Weak.mulOp_fourier_toLp (deRham_isLinear k) ψ
+
+/-! ### The full window and real forms -/
+
+variable (d) in
+/-- The full window `Λ⁰ → ⋯ → Λᵈ` of the whole-space de Rham symbol complex. -/
+def windowSymbol : SymbolComplex ℂ (volume : Measure (EuclideanSpace ℝ d))
+    (ComplexShape.window (Fintype.card d + 1)) fun i : Fin (Fintype.card d + 1) => Form ℂ d i :=
+  (Fourier.Euclidean.symbolComplex (deRham d)).restrict
+    (fun i : Fin (Fintype.card d + 1) => (i : ℕ)) fun _ _ h => h
+
+variable (d) in
+/-- **The full `L²` de Rham complex of `ℝᵈ`** on the window `Fin (d + 1)`. -/
+abbrev window : HilbertComplex ℂ (ComplexShape.window (Fintype.card d + 1))
+    fun i : Fin (Fintype.card d + 1) => L2Form d i :=
+  (windowSymbol d).toHilbertComplex
+
+/-- **The real structure** of the whole-space de Rham window: real forms have
+`𝓕ω(-ξ) = conj 𝓕ω(ξ)` (`Feec.Fourier.Weak.fourier_fixed_iff`). -/
+def windowReal : (windowSymbol d).RealStructure (Reflection.neg volume) where
+  cj _ := entryConj
+  antilinear _ a v := entryConj_smul a v
+  invol _ v := entryConj_entryConj v
+  inner_cj _ v w := inner_entryConj v w
+  symm i j x v := by
+    change (deRham d).m i j (Fourier.Euclidean.scale (-x)) (entryConj v) = _
+    rw [Fourier.Euclidean.scale_neg]
+    exact deRham_neg_entryConj _ _ _ v
+
+/-- **Real data give real solutions** of the Hodge wave equation of the de Rham complex of `ℝᵈ`. -/
+theorem window_conj_eq {a b : ℝ} {F U : ℝ → PiLp 2 fun i : Fin (Fintype.card d + 1) =>
+      L2Form d i}
+    (hU : Evolution.IsStrongSolution (window d).wave (Icc a b) F U)
+    (h0 : windowReal.toConj.totalConj (U a) = U a)
+    (hF : ∀ t ∈ Icc a b, windowReal.toConj.totalConj (F t) = F t) :
+    ∀ t ∈ Icc a b, windowReal.toConj.totalConj (U t) = U t :=
+  windowReal.conj_eq hU h0 hF
 
 end Feec.Models.Euclidean.DeRham

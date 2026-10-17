@@ -26,6 +26,8 @@ constraint propagation) applies to it.
   (Rellich on `𝕋ᵈ`, from the fibre Cartan identity `window_cartan`) and **`window_eigenDense`**:
   the Hodge wave group of the torus de Rham complex has a dense set of eigenvectors (discrete
   spectrum).
+* `windowReal`, `window_conj_eq`: real forms (`ω̂(-k) = conj ω̂(k)`) give real solutions of the
+  Hodge wave equation.
 
 ## References
 
@@ -268,10 +270,39 @@ theorem window_hasCompactProperty : (window d).HasCompactProperty := fun i =>
   hasCompactPropertyAt_of_coercive (windowSymbol d) i (fun k => ‖Fourier.Torus.freq k‖ ^ 2)
     (window_coercive i) finite_norm_freq_sq_le
 
-set_option maxHeartbeats 1000000 in
+/-- The real structure of the total space of the window (a shortcut instance). -/
+instance instNormedSpaceRealTotal : NormedSpace ℝ (PiLp 2 fun i : Fin (Fintype.card d + 1) =>
+    Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) := inferInstance
+
+instance instIsScalarTowerRealTotal : IsScalarTower ℝ ℂ (PiLp 2 fun i : Fin (Fintype.card d + 1) =>
+    Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) := inferInstance
+
 /-- **The Hodge wave group of the de Rham complex of `𝕋ᵈ` has a dense set of eigenvectors**
 (discrete spectrum, from the compact resolvent of the wave operator). -/
 theorem window_eigenDense : (window d).isSkewAdjoint_wave.group.EigenDense :=
   window_hasCompactProperty.eigenDense_wave
+
+/-! ### Real forms -/
+
+/-- **The real structure** of the torus de Rham window: real forms have
+`ω̂(-k) = conj ω̂(k)`. -/
+def windowReal : (windowSymbol d).RealStructure Reflection.count_neg where
+  cj _ := entryConj
+  antilinear _ a v := entryConj_smul a v
+  invol _ v := entryConj_entryConj v
+  inner_cj _ v w := inner_entryConj v w
+  symm i j k v := by
+    change (deRham d).m i j (Fourier.Torus.freq (-k)) (entryConj v) = _
+    rw [Fourier.Torus.freq_neg]
+    exact deRham_neg_entryConj _ _ _ v
+
+/-- **Real data give real solutions** of the Hodge wave equation of the torus de Rham complex. -/
+theorem window_conj_eq {a b : ℝ} {F U : ℝ → PiLp 2 fun i : Fin (Fintype.card d + 1) =>
+      Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))}
+    (hU : Evolution.IsStrongSolution (window d).wave (Icc a b) F U)
+    (h0 : windowReal.toConj.totalConj (U a) = U a)
+    (hF : ∀ t ∈ Icc a b, windowReal.toConj.totalConj (F t) = F t) :
+    ∀ t ∈ Icc a b, windowReal.toConj.totalConj (U t) = U t :=
+  windowReal.conj_eq hU h0 hF
 
 end Feec.Models.Torus.DeRham

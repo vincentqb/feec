@@ -1,6 +1,7 @@
 module
 
 public import Feec.Fourier.ClosedRange
+public import Feec.Fourier.Reality
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 
 /-!
@@ -544,5 +545,31 @@ theorem deRham_harmonic_fibre {ξ : EuclideanSpace ℝ d} (hξ : ξ ≠ 0) (k : 
     rw [ContinuousLinearMap.coe_coe, adjoint_deRham, _root_.smul_apply] at h2'
     have : contrDeg k ξ v = 0 := (smul_eq_zero.1 h2').resolve_left (by simp)
     rw [← ext_contrDeg, this, map_zero]
+
+/-! ### The de Rham symbol is real -/
+
+theorem koszulDeg_neg_entryConj (k : ℕ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d k) :
+    koszulDeg k (-ξ) (entryConj v) = -entryConj (koszulDeg k ξ v) := by
+  ext u
+  simp only [koszulDeg_apply, res_apply, koszul_apply, entryConj_apply, PiLp.neg_apply,
+    map_sum, map_mul, conj_sgn, ← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  have h1 : (ext k (entryConj v) : Lam ℂ d) (u.1.erase j) =
+      conj ((ext k v : Lam ℂ d) (u.1.erase j)) := by
+    by_cases h : #(u.1.erase j) = k
+    · rw [ext_apply k _ h, ext_apply k _ h, entryConj_apply]
+    · rw [ext_apply_of_ne k _ h, ext_apply_of_ne k _ h, map_zero]
+  rw [h1]
+  simp
+
+/-- **The de Rham symbol is real**: `d_{-ξ} (conj v) = conj (d_ξ v)`. -/
+theorem deRham_neg_entryConj (i j : ℕ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d i) :
+    (deRham d).m i j (-ξ) (entryConj v) = entryConj ((deRham d).m i j ξ v) := by
+  by_cases h : i + 1 = j
+  · subst h
+    rw [deRham_m_succ, deRham_m_succ, _root_.smul_apply, _root_.smul_apply,
+      koszulDeg_neg_entryConj, entryConj_smul, Complex.conj_I, smul_neg, neg_smul]
+  · rw [(deRham d).shape i j h]
+    simp
 
 end Feec.Fourier.Exterior

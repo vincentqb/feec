@@ -328,6 +328,62 @@ theorem dense_domain_generator [CompleteSpace E] : Dense (G.generator.domain : S
   rw [slope_def_module, intervalIntegral.integral_same, sub_zero, sub_zero]
   exact Submodule.smul_of_tower_mem _ _ (hmem h)
 
+
+/-- **Orbits are continuous in the graph norm**: for a linear map `Φ` from `D(A)` to a normed space
+`V` bounded by the graph norm, `‖Φ z‖ ≤ c (‖z‖ + ‖A z‖)`, `t ↦ Φ (S t x)` is continuous for
+`x ∈ D(A)` (`A (S t x) = S t (A x)`). Cf. [Pazy1983], §1.2, Thm 2.4. -/
+theorem continuous_graph [CompleteSpace E] {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+    (Φ : G.generator.domain →ₗ[ℝ] V) (c : ℝ)
+    (hΦ : ∀ z, ‖Φ z‖ ≤ c * (‖(z : E)‖ + ‖G.generator z‖)) (x : G.generator.domain) :
+    Continuous fun s => Φ ⟨G.S s x, G.mapsTo_domain x s⟩ := by
+  rw [continuous_iff_continuousAt]
+  intro t
+  rw [ContinuousAt, tendsto_iff_norm_sub_tendsto_zero]
+  have h1 : Tendsto (fun s => c * (‖G.S s x - G.S t x‖ +
+      ‖G.S s (G.generator x) - G.S t (G.generator x)‖)) (𝓝 t) (𝓝 0) := by
+    have a := tendsto_iff_norm_sub_tendsto_zero.1 ((G.strongCont (x : E)).tendsto t)
+    have b := tendsto_iff_norm_sub_tendsto_zero.1 ((G.strongCont (G.generator x)).tendsto t)
+    simpa using (a.add b).const_mul c
+  refine squeeze_zero (fun _ => norm_nonneg _) (fun s => ?_) h1
+  rw [← _root_.map_sub]
+  refine (hΦ _).trans (le_of_eq ?_)
+  rw [LinearPMap.map_sub, G.generator_apply_S, G.generator_apply_S]
+  rfl
+
+/-- **Orbits of `D(A²)` points are differentiable in the graph norm**: for `Φ` as in
+`continuous_graph` and `x ∈ D(A)` with `A x = y ∈ D(A)`, `(d/dt) Φ (S t x) = Φ (S t y)`.
+Cf. [Pazy1983], §1.2, Thm 2.4 (c). -/
+theorem hasDerivAt_graph [CompleteSpace E] {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+    (Φ : G.generator.domain →ₗ[ℝ] V) (c : ℝ)
+    (hΦ : ∀ z, ‖Φ z‖ ≤ c * (‖(z : E)‖ + ‖G.generator z‖)) (x y : G.generator.domain)
+    (hxy : G.generator x = y) (t : ℝ) :
+    HasDerivAt (fun s => Φ ⟨G.S s x, G.mapsTo_domain x s⟩)
+      (Φ ⟨G.S t y, G.mapsTo_domain y t⟩) t := by
+  rw [hasDerivAt_iff_isLittleO]
+  have hx := hasDerivAt_iff_isLittleO.1 (G.hasDerivAt_apply x t)
+  have hy := hasDerivAt_iff_isLittleO.1 (G.hasDerivAt_apply y t)
+  rw [hxy] at hx
+  have hsum := (hx.norm_left.add hy.norm_left).const_mul_left c
+  refine Asymptotics.IsBigO.trans_isLittleO (Asymptotics.IsBigO.of_bound 1
+    (Eventually.of_forall fun s => ?_)) hsum
+  rw [one_mul, Real.norm_eq_abs]
+  set z : G.generator.domain := ⟨G.S s x, G.mapsTo_domain x s⟩ - ⟨G.S t x, G.mapsTo_domain x t⟩
+    - (s - t) • ⟨G.S t y, G.mapsTo_domain y t⟩ with hz
+  have hΦz : Φ ⟨G.S s x, G.mapsTo_domain x s⟩ - Φ ⟨G.S t x, G.mapsTo_domain x t⟩
+      - (s - t) • Φ ⟨G.S t y, G.mapsTo_domain y t⟩ = Φ z := by
+    rw [hz, _root_.map_sub, _root_.map_sub, _root_.map_smul]
+  have hsm : ∀ (r : ℝ) (w : G.generator.domain), G.generator (r • w) = r • G.generator w :=
+    fun r w => by
+      rw [show r • w = (r : 𝕜) • w from Subtype.ext (RCLike.real_smul_eq_coe_smul (K := 𝕜) r
+        (w : E)), LinearPMap.map_smul, ← RCLike.real_smul_eq_coe_smul]
+  have hAz : G.generator z = G.S s y - G.S t y - (s - t) • G.S t (G.generator y) := by
+    rw [hz, LinearPMap.map_sub, LinearPMap.map_sub, hsm,
+      G.generator_apply_S, G.generator_apply_S, G.generator_apply_S, hxy]
+  have hz' : (z : E) = G.S s x - G.S t x - (s - t) • G.S t y := rfl
+  rw [hΦz]
+  refine (hΦ z).trans (le_trans ?_ (le_abs_self _))
+  rw [hAz, hz']
+
 end Generator
 
 /-! ### Isometric groups on inner product spaces -/

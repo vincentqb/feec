@@ -346,6 +346,37 @@ theorem adjoint_resolvent (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
   rw [inner_conj_symm, _root_.map_neg, inner_conj_symm] at h
   rw [_root_.neg_apply, inner_neg_left, h]
 
+/-- **`D(A²)` is dense** for a skew-adjoint `A`: every `y` is within `δ` of some `x ∈ D(A)` with
+`A x ∈ D(A)`. Take `w ∈ D(A)` near `y` and `x = c (c - A)⁻¹ w`; then `A x = c (x - w) ∈ D(A)` and
+`x - w = (c - A)⁻¹ A w` has norm `≤ ‖A w‖ / c`. Cf. [Pazy1983], §1.2. -/
+theorem _root_.LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_near (hA : A.IsSkewAdjoint) (y : E)
+    {δ : ℝ} (hδ : 0 < δ) : ∃ x : A.domain, A x ∈ A.domain ∧ ‖y - x‖ < δ := by
+  obtain ⟨w, hw, hyw⟩ := hA.dense_domain.exists_dist_lt y (half_pos hδ)
+  set w' : A.domain := ⟨w, hw⟩
+  set c : ℝ := 2 * ‖A w'‖ / δ + 1 with hc
+  have hc0 : 0 < c := by positivity
+  have hz : RCLike.re (c : 𝕜) ≠ 0 := by rw [RCLike.ofReal_re]; exact hc0.ne'
+  have hR := isResolvent_resolvent hA hz
+  set x := hR.toDomain ((c : 𝕜) • w) with hx
+  have hAx : A x ∈ A.domain := by
+    rw [hx, hR.apply_resolvent]
+    exact A.domain.sub_mem (A.domain.smul_mem _ (hR.mem_domain _)) (A.domain.smul_mem _ hw)
+  refine ⟨x, hAx, ?_⟩
+  have hxw : (x : E) - w = resolvent A (c : 𝕜) (A w') := by
+    rw [hR.apply_domain w', hx, IsResolvent.coe_toDomain, _root_.map_smul]
+  have hb : ‖(x : E) - w‖ < δ / 2 := by
+    rw [hxw]
+    refine (norm_resolvent_apply_le hA hz _).trans_lt ?_
+    rw [RCLike.ofReal_re, abs_of_pos hc0, inv_mul_lt_iff₀ hc0, hc]
+    have := norm_nonneg (A w')
+    field_simp
+    nlinarith
+  rw [dist_eq_norm] at hyw
+  calc ‖y - x‖ = ‖(y - w) - ((x : E) - w)‖ := by congr 1; abel
+    _ ≤ ‖y - w‖ + ‖(x : E) - w‖ := norm_sub_le _ _
+    _ < δ / 2 + δ / 2 := add_lt_add hyw hb
+    _ = δ := add_halves δ
+
 end SkewAdjoint
 
 end Feec.Operator

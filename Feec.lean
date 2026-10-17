@@ -71,6 +71,7 @@ public import Feec.Geometry.Connection
 public import Feec.Geometry.Hodge2
 public import Feec.Geometry.WeylDecomposition
 public import Feec.HilbertComplex.Approximation.CochainProjection
+public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave

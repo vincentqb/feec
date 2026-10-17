@@ -36,6 +36,8 @@ condition of the Hodge wave form (`Feec.Variational.InfSup.of_testMap`).
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.2, Thm 3.1 (well-posedness of the mixed Hodge Laplacian)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (the mixed Hodge Laplacian and its stable discretization)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.9
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Prop 4.13 (the same test-function argument for the Hodge wave form)
@@ -441,7 +443,10 @@ theorem exists_testVector (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 
     exact (abs_le_of_sq_le_sq' hS (by positivity)).2
 
 /-- **Inf-sup condition for the mixed Hodge Laplacian**, with constant `1 / (16 c_P²)`, under the
-Poincaré inequalities for `d i j` and `d j k` with constant `c_P ≥ 1`. -/
+Poincaré inequalities for `d i j` and `d j k` with constant `c_P ≥ 1`. See [AFW2010], Thm 3.1;
+its discrete counterpart, uniform in the subcomplex (`Subcomplex.CochainProjection.infSup_mixedForm`),
+is the FEEC stability recalled as well known in [QuennevilleBelair2015], §4.6, citing [AFW2006],
+[AFW2010]. -/
 theorem infSup_mixedForm (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖) :
@@ -515,7 +520,8 @@ theorem norm_mixedRHS_le (f : W j) : ‖H.mixedRHS i j f‖ ≤ ‖f‖ := by
 
 /-- **Well-posedness of the mixed Hodge Laplacian**: under the Poincaré inequalities for `d i j`
 and `d j k` (closed range at `j` and `k`), for every `f ∈ Wʲ` the mixed problem `B x = F_f` has a
-unique solution. Over `ℝ` and `ℂ`, for every complex and every two consecutive arrows. -/
+unique solution. Over `ℝ` and `ℂ`, for every complex and every two consecutive arrows.
+See [AFW2010], Thm 3.1; cf. [AFW2006]. -/
 theorem existsUnique_mixed (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
@@ -523,7 +529,8 @@ theorem existsUnique_mixed (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP :
   existsUnique_apply_eq (H.infSup_mixedForm hij hjk hcP hPi hPj)
     (H.separatingRight_mixedForm hij hjk hcP hPi hPj) _
 
-/-- **Stability of the mixed Hodge Laplacian**: `‖(σ, u, p)‖ ≤ 16 c_P² ‖f‖`. -/
+/-- **Stability of the mixed Hodge Laplacian**: `‖(σ, u, p)‖ ≤ 16 c_P² ‖f‖`. See [AFW2010],
+Thm 3.1. -/
 theorem norm_le_of_mixed (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)

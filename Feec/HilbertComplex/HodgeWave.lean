@@ -42,6 +42,8 @@ For a short complex `W₀ → W₁ → W₂` the test space `D(𝐝) = V₀ × V
   §1.10 (Stone's theorem)
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
   Prop 4.1.6
+* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
+  (mixed formulation of the wave equation)
 -/
 
 open scoped InnerProductSpace
@@ -56,7 +58,9 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 /-- `U` is a **weak solution** of the Hodge wave equation `U' = (T − T†) U + F` on `I`:
 `U t ∈ D(T)` and `⟪U' t, ψ⟫ = ⟪T U t, ψ⟫ − ⟪U t, T ψ⟫ + ⟪F t, ψ⟫` for every test `ψ ∈ D(T)`
-(derivatives within `I`). [QuennevilleBelair2015], (4.7), (4.8) -/
+(derivatives within `I`). [QuennevilleBelair2015], (4.7), (4.8). For the complex
+`H(div, V) → L²(R)` this is the mixed acoustic wave formulation of [Geveci1988]
+([QuennevilleBelair2015], §4.8). -/
 structure IsWeakSolution (T : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop where
   mem : ∀ t ∈ I, U t ∈ T.domain
   deriv : ∀ t (ht : t ∈ I), ∃ U' : E, HasDerivWithinAt U U' I t ∧ ∀ ψ : T.domain,

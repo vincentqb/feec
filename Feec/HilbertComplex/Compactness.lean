@@ -35,6 +35,8 @@ inclusion (a compact subspace is `0`); density is never needed.
   §3.1.3 (compactness property)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (convergence of the discrete Hodge Laplacian under the compactness property)
 -/
 
 open scoped InnerProductSpace Topology
@@ -200,7 +202,10 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   (H : HilbertComplex 𝕜 c W)
 
 /-- **The compactness property at `i`**: the unit ball of `Vⁱ ∩ V*ᵢ`, in the norm
-`max (‖x‖, ‖d x‖, ‖d† x‖)`, lies in a compact subset of `Wⁱ`. [QuennevilleBelair2015], §4.2 (corrected) -/
+`max (‖x‖, ‖d x‖, ‖d† x‖)`, lies in a compact subset of `Wⁱ`. [QuennevilleBelair2015], §4.2 (corrected);
+see [AFW2010], §3.1.3 and [BruningLesch1992], §2. The thesis ([QuennevilleBelair2015], §4.6, after
+Prop 4.13) recalls that convergence of the discrete Hodge Laplacian [AFW2006], [AFW2010] needs this
+property; its own estimate (`HodgeWave.norm_sub_ellipticProjection_le`) does not use it. -/
 def HasCompactPropertyAt (i : ι) : Prop :=
   ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain)
     (hx' : x ∈ ((H.d (c.prev i) i)†).domain), ‖x‖ ≤ 1 → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ 1 →

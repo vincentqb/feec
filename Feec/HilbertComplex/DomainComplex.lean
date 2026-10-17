@@ -172,7 +172,8 @@ theorem domainD_comp_domainD (i j k : ι) (v : H.domainSpace i) :
     rw [domainIncl_domainD, d_domainCoord_domainD, _root_.map_zero])
 
 /-- **The domain complex**: the spaces `Vⁱ` with the bounded differentials `domainD`, as a
-Hilbert complex on the same shape. [QuennevilleBelair2015], §4.2 -/
+Hilbert complex on the same shape. [QuennevilleBelair2015], §4.2; see [BruningLesch1992], §2
+and [AFW2010], §3.1.2. -/
 def domainComplex : HilbertComplex 𝕜 c H.domainSpace where
   d i j := (H.domainD i j : H.domainSpace i →ₗ[𝕜] H.domainSpace j).toPMap ⊤
   shape i j h := by rw [H.domainD_eq_zero_of_not_rel h]; rfl

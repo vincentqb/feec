@@ -195,7 +195,8 @@ solution of `⟪ψ, ξ'⟫ + a(ξ, ψ) = 0` for `ψ ∈ K` (in particular any we
 wave equation in `C¹(Γ(T))`), and `ξₕ ∈ K` the semi-discrete solution. Then, with
 `e = P ξ - ξ` measured in `E`,
 `‖ξ(t) - ξₕ(t)‖ ≤ ‖P ξ(t₀) - ξₕ(t₀)‖ + ‖e(t)‖ + (t - t₀) ‖e(t₀)‖ + (1 + (t - t₀)) ∫ ‖e'‖`.
-[QuennevilleBelair2015], Thm 4.14 -/
+[QuennevilleBelair2015], Thm 4.14; cf. the FEEC semi-discrete analysis of [GilletteHolstZhu2017]
+(the thesis cites its 2012 preprint). -/
 theorem norm_sub_le_of_semidiscrete (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
     {ξ ξ' ξh ξh' : ℝ → T.GraphSpace} {t₀ t₁ : ℝ}
     (hξc : ContinuousOn ξ (Icc t₀ t₁)) (hξ'c : ContinuousOn ξ' (Icc t₀ t₁))

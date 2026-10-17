@@ -38,6 +38,10 @@ finite-dimensional `K ⊆ Γ(T)` (e.g. the total space of a finite element subco
   (4.7)–(4.8))
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.2 (Thm 2.4, density of `D(A²)`), §1.10
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (FEEC convergence of the discrete Hodge Laplacian)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  Thms 3.8–3.9 (stability and quasi-optimality)
 * [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
 * [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
 * [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
@@ -137,7 +141,8 @@ variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 /-- `ξₕ` is a **solution of the semi-discrete Hodge wave equation** (4.10) in `K` on the time
 set `I`: `ξₕ(t) ∈ K`, `ξₕ' = ξₕ'` within `I`, and `⟪ψ, ξₕ'⟫ + a(ξₕ, ψ) = 0` for `ψ ∈ K`.
-See [QuennevilleBelair2015], (4.10) (§4.6). -/
+See [QuennevilleBelair2015], (4.10) (§4.6); the FEEC semi-discretization of evolution problems is
+[GilletteHolstZhu2017] (the thesis cites its 2012 preprint). -/
 structure IsSemidiscreteSolution (K : Submodule 𝕜 T.GraphSpace) (I : Set ℝ)
     (ξh ξh' : ℝ → T.GraphSpace) : Prop where
   mem : ∀ t ∈ I, ξh t ∈ K
@@ -267,7 +272,9 @@ def graphD : T.GraphSpace →L[𝕜] T.GraphSpace :=
 /-- **Inf-sup by the test map `ξ ↦ ξ - d ξ`** (thesis Prop 4.13, for every operator with
 `T T = 0`, i.e. every finite Hilbert complex of any length): on every `d`-invariant `K ⊆ Γ(T)`
 the shifted form `A = ⟪·,·⟫ + a` satisfies the inf-sup condition with constant `1/√12`.
-See [QuennevilleBelair2015], Prop. 4.13. -/
+See [QuennevilleBelair2015], Prop. 4.13. Without the lower-order term the corresponding discrete
+stability is the FEEC result [AFW2006], [AFW2010], Thm 3.8, recalled by the thesis after Prop 4.13;
+here the test map gives the shifted form directly on every `d`-invariant `K`. -/
 theorem infSup_shiftedForm (K : Submodule 𝕜 T.GraphSpace)
     (hK : ∀ ξ ∈ K, graphD hmaps hcomp ξ ∈ K) :
     InfSup (Variational.restrict (shiftedForm T) K K) ((1 / 2) / √3) := by
@@ -306,7 +313,11 @@ theorem norm_ellipticProjection_le (K : Submodule 𝕜 T.GraphSpace) [FiniteDime
     fun _ hψ => shiftedForm_ellipticProjection K ζ hψ
 
 /-- **Quasi-optimality of the elliptic projection** on a subcomplex:
-`‖ζ - P_K ζ‖ ≤ (1 + √12 ‖A‖) ‖ζ - w‖` for every `w ∈ K`. -/
+`‖ζ - P_K ζ‖ ≤ (1 + √12 ‖A‖) ‖ζ - w‖` for every `w ∈ K`. [QuennevilleBelair2015], §4.6 reduces
+Thm 4.14 to this estimate; it plays the role of the quasi-optimality [AFW2010], Thm 3.9 (cf.
+[AFW2006]) for `dd* + d*d + I`. The thesis notes that the known FEEC convergence [AFW2006],
+[AFW2010] needs the compactness property and defers the lower-order term to a result of Arnold and
+Li; neither is needed here: the bound follows from `infSup_shiftedForm` on every subcomplex. -/
 theorem norm_sub_ellipticProjection_le (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
     (hK : ∀ ξ ∈ K, graphD hmaps hcomp ξ ∈ K) (ζ : T.GraphSpace) {w : T.GraphSpace}
     (hw : w ∈ K) :

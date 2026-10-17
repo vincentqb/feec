@@ -26,6 +26,8 @@ gap between `ℌ` and `ℌₕ`.
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3–3.4 (discrete Hodge decomposition, Thm 3.5 gap estimate)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (approximation of harmonic forms)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 -/
 
@@ -113,7 +115,8 @@ namespace CochainProjection
 
 variable {S} (P : S.CochainProjection)
 
-/-- **The harmonic gap**: for a harmonic `q`, `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖`. -/
+/-- **The harmonic gap**: for a harmonic `q`, `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖`. See [AFW2010],
+Thm 3.5; it enters the quasi-optimal estimate [AFW2010], Thm 3.9; cf. [AFW2006]. -/
 theorem norm_sub_starProjection_harmonicW_le {i : ι} {q : W i} (hq : q ∈ H.harmonic i) :
     ‖q - (S.harmonicW i).starProjection q‖ ≤ ‖q - P.π i q‖ := by
   rw [S.starProjection_harmonicW_eq hq, ← dist_eq_norm, ← dist_eq_norm,

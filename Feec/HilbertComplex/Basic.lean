@@ -41,6 +41,8 @@ complex (`Feec.HilbertComplex.Dual`), which then needs no index transport.
   defined operators)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (the Finite Element Exterior Calculus framework)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
@@ -54,7 +56,8 @@ namespace Feec
 /-- A Hilbert complex over `𝕜` with index shape `c`: closed densely defined operators
 `d i j : W i →ₗ.[𝕜] W j`, zero off the relation of `c`, with `R(d i j) ⊆ D(d j k)` and
 `d j k ∘ d i j = 0`. Closed range is not assumed (`HilbertComplex.ClosedRangeAt`).
-[QuennevilleBelair2015], §4.2 -/
+[QuennevilleBelair2015], §4.2, following [BruningLesch1992] and [AFW2010], §3.1; this is the
+abstract setting of Finite Element Exterior Calculus, [AFW2006], [AFW2010]. -/
 structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] {ι : Type*} (c : ComplexShape ι)
     (W : ι → Type*) [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
     [∀ i, CompleteSpace (W i)] where
@@ -126,16 +129,20 @@ theorem orthogonal_ker_adjoint_le_ker (i j k : ι) : ((H.d i j)†).kerᗮ ≤ (
 
 /-! ### Cycles, boundaries, harmonic forms -/
 
-/-- The cycles `𝔷ⁱ = N(d i (c.next i))`. [QuennevilleBelair2015], §4.2 -/
+/-- The cycles `𝔷ⁱ = N(d i (c.next i))`. [QuennevilleBelair2015], §4.2; [BruningLesch1992],
+[AFW2010], §3.1 -/
 def cycles (i : ι) : Submodule 𝕜 (W i) := (H.d i (c.next i)).ker
 
-/-- The boundaries `𝔅ⁱ = R(d (c.prev i) i)`. [QuennevilleBelair2015], §4.2 -/
+/-- The boundaries `𝔅ⁱ = R(d (c.prev i) i)`. [QuennevilleBelair2015], §4.2; [BruningLesch1992],
+[AFW2010], §3.1 -/
 def boundaries (i : ι) : Submodule 𝕜 (W i) := LinearMap.range (H.d (c.prev i) i).toFun
 
-/-- The harmonic forms `ℌⁱ = 𝔷ⁱ ∩ N((d (c.prev i) i)†)`. [QuennevilleBelair2015], §4.2 -/
+/-- The harmonic forms `ℌⁱ = 𝔷ⁱ ∩ N((d (c.prev i) i)†)`. [QuennevilleBelair2015], §4.2;
+[BruningLesch1992], [AFW2010], §3.1 -/
 def harmonic (i : ι) : Submodule 𝕜 (W i) := H.cycles i ⊓ ((H.d (c.prev i) i)†).ker
 
-/-- The complex has closed range at `i`: `𝔅ⁱ` is closed. [QuennevilleBelair2015], §4.2 -/
+/-- The complex has closed range at `i`: `𝔅ⁱ` is closed. [QuennevilleBelair2015], §4.2;
+[BruningLesch1992], [AFW2010], §3.1 -/
 def ClosedRangeAt (i : ι) : Prop := IsClosed (H.boundaries i : Set (W i))
 
 theorem boundaries_le_cycles (i : ι) : H.boundaries i ≤ H.cycles i :=

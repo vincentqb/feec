@@ -76,8 +76,10 @@ variable {W₀ W₁ : Type*} [NormedAddCommGroup W₀] [InnerProductSpace 𝕜 W
 
 /-- **Mixed weak form** of the Hodge wave equation of `0 → V₀ --d--> W₁` on the time set `I`:
 `u = w ∈ C⁰(I; V₀) ∩ C¹(I; W₀)`, `ρ ∈ C¹(I; W₁)`, `(u̇, v) = -(ρ, d v)` for `v ∈ V₀` and
-`(ρ̇, μ) = (d u, μ)` for `μ ∈ W₁`. With `d = curl` this is the reduced Maxwell system.
-See [QuennevilleBelair2015], §4.8. -/
+`(ρ̇, μ) = (d u, μ)` for `μ ∈ W₁`. With `d = curl` this is the reduced Maxwell system; with
+`d = div : H(div, V) → L²(R)` (`u` playing `σ`, `ρ` playing `u`) it is the mixed formulation of the
+acoustic wave equation of [Geveci1988], treated with FEEC in [GilletteHolstZhu2017] (the thesis
+cites its 2012 preprint). See [QuennevilleBelair2015], §4.8. -/
 structure IsMixedWeak (d : W₀ →ₗ.[𝕜] W₁) (I : Set ℝ) (w : ℝ → d.domain) (u' : ℝ → W₀)
     (ρ ρ' : ℝ → W₁) : Prop where
   du : ∀ t ∈ I, HasDerivWithinAt (fun s => (w s : W₀)) (u' t) I t
@@ -88,7 +90,8 @@ structure IsMixedWeak (d : W₀ →ₗ.[𝕜] W₁) (I : Set ℝ) (w : ℝ → d
 
 /-- **Second-order weak form** `(ü, v) = -(d u, d v)`: `u = w ∈ C⁰(I; V₀) ∩ C¹(I; W₀)` and, for
 each test `v ∈ V₀`, `t ↦ (u̇, v)` has derivative `-(d u, d v)` (`ü` exists only in `V₀'`, so it
-is read through this pairing). See [QuennevilleBelair2015], §4.8. -/
+is read through this pairing). With `d = grad` this is the standard non-mixed Galerkin formulation
+of the acoustic wave equation, [Baker1976], [Dupont1973]. See [QuennevilleBelair2015], §4.8. -/
 structure IsSecondOrderWeak (d : W₀ →ₗ.[𝕜] W₁) (I : Set ℝ) (w : ℝ → d.domain) (u' : ℝ → W₀) :
     Prop where
   du : ∀ t ∈ I, HasDerivWithinAt (fun s => (w s : W₀)) (u' t) I t
@@ -98,7 +101,7 @@ structure IsSecondOrderWeak (d : W₀ →ₗ.[𝕜] W₁) (I : Set ℝ) (w : ℝ
 
 variable {d : W₀ →ₗ.[𝕜] W₁} {I : Set ℝ} {w : ℝ → d.domain} {u' : ℝ → W₀} {ρ ρ' : ℝ → W₁}
 
-/-- In a mixed weak solution `ρ̇ = d u`. -/
+/-- In a mixed weak solution `ρ̇ = d u` (the second equation of the mixed form, cf. [Geveci1988]). -/
 theorem IsMixedWeak.deriv_eq (h : IsMixedWeak d I w u' ρ ρ') {t : ℝ} (ht : t ∈ I) :
     ρ' t = d (w t) := by
   have := h.eq_ρ t ht (ρ' t - d (w t))
@@ -111,7 +114,7 @@ theorem IsMixedWeak.inner_deriv_ker (h : IsMixedWeak d I w u' ρ ρ') {t : ℝ} 
   rw [h.eq_u t ht z, hz, inner_zero_right, neg_zero]
 
 /-- **Mixed ⇒ second order** (§4.8): the `u` of a mixed weak solution solves the second-order
-weak form. See [QuennevilleBelair2015], §4.8. -/
+weak form of [Baker1976], [Dupont1973]. See [QuennevilleBelair2015], §4.8. -/
 theorem IsMixedWeak.isSecondOrderWeak (h : IsMixedWeak d I w u' ρ ρ') :
     IsSecondOrderWeak d I w u' := by
   refine ⟨h.du, h.cont, fun t ht v => ?_⟩
@@ -121,14 +124,16 @@ theorem IsMixedWeak.isSecondOrderWeak (h : IsMixedWeak d I w u' ρ ρ') :
   · rw [inner_zero_right, zero_add, h.deriv_eq ht]
 
 /-- The compatibility condition is necessary: if `(u̇(a), z) ≠ 0` for some `z ∈ ker d`, no mixed
-weak solution has this `u`. -/
+weak solution has this `u`. So a solution of the second-order form of [Baker1976], [Dupont1973]
+need not come from a mixed one ([QuennevilleBelair2015], §4.8, corrected). -/
 theorem not_isMixedWeak_of_inner_ne_zero {a : ℝ} (ha : a ∈ I) (z : d.domain) (hz : d z = 0)
     (hu : ⟪u' a, (z : W₀)⟫_𝕜 ≠ 0) : ¬ ∃ ρ ρ', IsMixedWeak d I w u' ρ ρ' := by
   rintro ⟨ρ, ρ', h⟩
   exact hu (h.inner_deriv_ker ha z hz)
 
 /-- **Given `u` and `ρ(a)`, the `ρ` of a mixed weak solution is unique** (`ρ̇ = d u`), so the
-correspondence of `IsSecondOrderWeak.exists_isMixedWeak` is one-to-one once `ρ(a)` is fixed. -/
+correspondence of `IsSecondOrderWeak.exists_isMixedWeak` is one-to-one once `ρ(a)` is fixed.
+Cf. the mixed formulation of [Geveci1988]. -/
 theorem IsMixedWeak.eqOn_of_eq {a b : ℝ} {ρ₂ ρ₂' : ℝ → W₁}
     (h₁ : IsMixedWeak d (Icc a b) w u' ρ ρ') (h₂ : IsMixedWeak d (Icc a b) w u' ρ₂ ρ₂')
     (h0 : ρ a = ρ₂ a) : EqOn ρ ρ₂ (Icc a b) := by
@@ -148,7 +153,8 @@ second-order weak form on `[a, b]` and `u̇(a) = -d* ρ₀` weakly for some `ρ�
 `ρ(t) = ρ₀ + ∫ₐᵗ d u` makes `(u, ρ)` a mixed weak solution.
 
 Correction: the thesis claims the equivalence unconditionally; it fails whenever `ker d ≠ 0`
-(`Feec.Counterexamples.MixedWave.not_isMixedWeak`). See [QuennevilleBelair2015], §4.8. -/
+(`Feec.Counterexamples.MixedWave.not_isMixedWeak`). See [QuennevilleBelair2015], §4.8; the
+second-order form is that of [Baker1976], [Dupont1973]. -/
 theorem IsSecondOrderWeak.exists_isMixedWeak {a b : ℝ} (hab : a ≤ b)
     (h : IsSecondOrderWeak d (Icc a b) w u') (ρ₀ : W₁)
     (hρ₀ : ∀ v : d.domain, ⟪u' a, (v : W₀)⟫_𝕜 = -⟪ρ₀, d v⟫_𝕜) :

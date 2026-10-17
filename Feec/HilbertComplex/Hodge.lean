@@ -257,7 +257,8 @@ theorem isOrtho_closure_boundaries_closure_dual_boundaries (i : ι) :
 /-! ### The Hodge decomposition -/
 
 /-- **Hodge decomposition** (weak form, no closed range): `Wⁱ = cl 𝔅ⁱ ⊕ ℌⁱ ⊕ cl 𝔅*ᵢ`, with the
-three summands pairwise orthogonal, at every index of every complex. [QuennevilleBelair2015], Thm 4.1 -/
+three summands pairwise orthogonal, at every index of every complex. [QuennevilleBelair2015], Thm 4.1;
+see [BruningLesch1992], Lemma 2.1 and [AFW2010], §3.1. -/
 theorem hodge (i : ι) :
     (H.boundaries i).topologicalClosure ⊔ H.harmonic i ⊔
         (H.dual.boundaries i).topologicalClosure = ⊤ ∧
@@ -352,7 +353,8 @@ theorem inner_graph_eq_of_mem_cycles {i : ι} (x y : (H.d i (c.next i)).domain)
 /-! ### Closed range: Poincaré inequality and duality -/
 
 /-- **Poincaré inequality ⇔ closed range**, at every index: `𝔅ʲ` is closed iff
-`‖x‖ ≤ C ‖d x‖` for `x ∈ D(d (c.prev j) j) ∩ N(d (c.prev j) j)ᗮ`. [QuennevilleBelair2015], Thm 4.2 -/
+`‖x‖ ≤ C ‖d x‖` for `x ∈ D(d (c.prev j) j) ∩ N(d (c.prev j) j)ᗮ`. [QuennevilleBelair2015], Thm 4.2;
+see [BruningLesch1992] and [AFW2010], §3.1. -/
 theorem closedRangeAt_iff_poincare (j : ι) :
     H.ClosedRangeAt j ↔ ∃ C : ℝ, ∀ x : (H.d (c.prev j) j).domain,
       (x : W (c.prev j)) ∈ (H.d (c.prev j) j).kerᗮ → ‖(x : W (c.prev j))‖ ≤ C * ‖H.d _ j x‖ :=

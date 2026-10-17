@@ -28,7 +28,11 @@ stability on which the quasi-optimal error analysis of mixed finite element meth
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.4 (Thm 3.8: discrete stability; the quasi-optimal estimate Thm 3.9 also needs the harmonic
   gap, `CochainProjection.norm_sub_starProjection_harmonicW_le`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (stability of mixed discretizations)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.6 (stability of the discrete Hodge Laplacian, recalled as well known)
 -/
 
 open scoped InnerProductSpace
@@ -45,7 +49,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 /-- **The discrete Poincaré inequality for the discrete complex**: with a `W`-bounded cochain
 projection (`‖π x‖ ≤ C ‖x‖`) and the Poincaré inequality `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ`, the
-discrete complex satisfies `‖z‖ ≤ C c_P ‖dₕ z‖` on `(𝔷ₕⁱ)ᗮ`. -/
+discrete complex satisfies `‖z‖ ≤ C c_P ‖dₕ z‖` on `(𝔷ₕⁱ)ᗮ`. See [AFW2010], Thm 3.6. -/
 theorem poincare_toHilbertComplex {i j : ι} (hij : c.Rel i j) {cP C : ℝ}
     (hP : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hC : 0 ≤ C) (hπ : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) :
@@ -62,7 +66,8 @@ theorem poincare_toHilbertComplex {i j : ι} (hij : c.Rel i j) {cP C : ℝ}
   exact P.norm_le_of_forall_inner_eq_zero hij hP hC hπ (z : S.V i).2 hxo
 
 /-- **Uniform inf-sup condition for the discrete mixed Hodge Laplacian**: constant
-`1 / (16 (C c_P)²)`, independent of the subcomplex. -/
+`1 / (16 (C c_P)²)`, independent of the subcomplex. See [AFW2010], Thm 3.8; this is the
+stability that [QuennevilleBelair2015], §4.6 recalls as well known, citing [AFW2006], [AFW2010]. -/
 theorem infSup_mixedForm {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C : ℝ}
     (hcP : 1 ≤ cP) (hC : 1 ≤ C)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
@@ -73,7 +78,8 @@ theorem infSup_mixedForm {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C 
     (P.poincare_toHilbertComplex hij hPi (zero_le_one.trans hC) hπi)
     (P.poincare_toHilbertComplex hjk hPj (zero_le_one.trans hC) hπj)
 
-/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian**. -/
+/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian**. See [AFW2010], Thm 3.8;
+cf. [AFW2006]. -/
 theorem existsUnique_mixed {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C : ℝ}
     (hcP : 1 ≤ cP) (hC : 1 ≤ C)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
@@ -84,7 +90,8 @@ theorem existsUnique_mixed {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP 
     (P.poincare_toHilbertComplex hij hPi (zero_le_one.trans hC) hπi)
     (P.poincare_toHilbertComplex hjk hPj (zero_le_one.trans hC) hπj) f
 
-/-- **Uniform stability of the discrete mixed Hodge Laplacian**: `‖xₕ‖ ≤ 16 (C c_P)² ‖fₕ‖`. -/
+/-- **Uniform stability of the discrete mixed Hodge Laplacian**: `‖xₕ‖ ≤ 16 (C c_P)² ‖fₕ‖`.
+See [AFW2010], Thm 3.8; cf. [AFW2006]. -/
 theorem norm_le_of_mixed {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C : ℝ}
     (hcP : 1 ≤ cP) (hC : 1 ≤ C)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)

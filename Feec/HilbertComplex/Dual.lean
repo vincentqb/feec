@@ -64,7 +64,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- The dual complex on `c.symm`: `d* i j = (d j i)†`. [QuennevilleBelair2015], §4.2 -/
+/-- The dual complex on `c.symm`: `d* i j = (d j i)†`. [QuennevilleBelair2015], §4.2; see
+[BruningLesch1992], Lemma 2.1 and [AFW2010], §3.1.2. -/
 def dual : HilbertComplex 𝕜 c.symm W where
   d i j := (H.d j i)†
   shape i j h := by

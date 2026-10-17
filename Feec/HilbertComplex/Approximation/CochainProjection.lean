@@ -23,7 +23,11 @@ stable.
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3, Thm 3.6 (discrete Poincaré inequality)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (cochain projections)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 5.3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.7 (bounded cochain projections from smoothed canonical projections; Thm 4.15)
 -/
 
 open scoped InnerProductSpace
@@ -44,7 +48,11 @@ namespace Subcomplex
 variable (S : H.Subcomplex)
 
 /-- A **cochain projection** onto the subcomplex `S`: linear projections `πⁱ : Wⁱ → Vₕⁱ` with
-`d πⁱ = πʲ d` on `D(d i j)`. -/
+`d πⁱ = πʲ d` on `D(d i j)`. See [AFW2006] and [AFW2010], §3.3.
+[QuennevilleBelair2015], §4.7 obtains bounded cochain projections onto `P_rΛᵏ`, `P_r⁻Λᵏ` by
+combining the canonical projections with smoothers as in [AFW2010]; that construction
+(triangulations, mollification) and the rates of [QuennevilleBelair2015], Thm 4.15 are not
+formalized: here the projection and its bound are hypotheses. -/
 structure CochainProjection where
   /-- the projections -/
   π : ∀ i, W i →ₗ[𝕜] W i
@@ -97,7 +105,7 @@ private theorem exists_norm_le {i j : ι} (hij : c.Rel i j) {x : W i} (hx : x �
 
 /-- **Discrete Poincaré inequality** (`W`-bounded cochain projection): if `‖z‖ ≤ c_P ‖d z‖` on
 `(𝔷ⁱ)ᗮ ∩ D(d i j)` and `‖πⁱ x‖ ≤ C ‖x‖`, then `‖x‖ ≤ C c_P ‖d x‖` for every `x ∈ Vₕⁱ`
-orthogonal to the discrete cycles. -/
+orthogonal to the discrete cycles. See [AFW2010], Thm 3.6. -/
 theorem norm_le_of_forall_inner_eq_zero {i j : ι} (hij : c.Rel i j) {cP C : ℝ}
     (hP : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hC : 0 ≤ C) (hπ : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) {x : W i} (hx : x ∈ S.V i)
@@ -111,7 +119,8 @@ theorem norm_le_of_forall_inner_eq_zero {i j : ι} (hij : c.Rel i j) {cP C : ℝ
 
 /-- **Discrete Poincaré inequality** (cochain projection bounded in the graph norm): if
 `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ ∩ D(d i j)` and `‖π x‖² + ‖d π x‖² ≤ C² (‖x‖² + ‖d x‖²)`, then
-`‖x‖ ≤ C √(1 + c_P²) ‖d x‖` for every `x ∈ Vₕⁱ` orthogonal to the discrete cycles. -/
+`‖x‖ ≤ C √(1 + c_P²) ‖d x‖` for every `x ∈ Vₕⁱ` orthogonal to the discrete cycles.
+Cf. [AFW2010], Thm 3.6. -/
 theorem norm_le_of_forall_inner_eq_zero_of_graph {i j : ι} (hij : c.Rel i j) {cP C : ℝ}
     (hP : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hC : 0 ≤ C) (hπ : ∀ x : (H.d i j).domain, ‖P.π i x‖ ^ 2 +

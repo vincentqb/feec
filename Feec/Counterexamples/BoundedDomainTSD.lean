@@ -1,6 +1,6 @@
 module
 
-public import Feec.Models.BoundedDomain.GradCurl
+public import Feec.Models.BoundedDomain.Density
 
 /-!
 # Bounded domains: TSD constraints for the grad–curl complex (thesis Prop 4.17 refuted)
@@ -408,6 +408,496 @@ theorem tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
   obtain ⟨t, ht, hnot⟩ := S.not_propagates_of_inner_ne_zero hG ⟨_, hβ⟩ hne0 hT hU
     (by rw [hU0]; exact h0) (by rw [hU0]; exact h2)
   exact ⟨t, ht, fun hmem => hnot (hmem 1)⟩
+
+/-! ### Every datum `(0, E₀, β)` leaves the constraint; existence of the solutions -/
+
+/-- `curl β = -diag(1, -1, 0)` as an `L²` field. -/
+theorem curl_betaL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    smoothField hΩ hb (curlM betaField)
+      (continuous_curlM fun ij => (contDiff_betaField ij).of_le (by simp)) =
+      -constField hΩ hb diagA := by
+  refine (WithLp.ext_iff 2).2 (funext fun ij => Lp.ext ?_)
+  filter_upwards [coeFn_smoothField hΩ hb (curlM betaField)
+    (continuous_curlM fun ij => (contDiff_betaField ij).of_le (by simp)) ij,
+    Lp.coeFn_neg (constField hΩ hb diagA ij), coeFn_constField hΩ hb diagA ij] with x h1 h2 h3
+  simp only [PiLp.neg_apply] at h2 ⊢
+  rw [h1, h2, Pi.neg_apply, h3, curlM_betaField]
+
+/-- Constant fields are orthogonal to `L²(TSD₀)`. -/
+theorem constField_mem_orthogonal_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (A : Matrix (Fin 3) (Fin 3) ℝ) : constField hΩ hb A ∈ (tsd₀ Ω hΩ hb)ᗮ := by
+  rw [Submodule.mem_orthogonal']
+  intro B hB
+  rw [real_inner_comm, inner_constField]
+  exact Finset.sum_eq_zero fun ij _ => by rw [integral_eq_zero_of_mem_tsd₀ hΩ hb hB, mul_zero]
+
+/-- `diag(1, -1, 0) ∉ L²(TSD₀)` on a nonempty `Ω`: it has nonzero mean. -/
+theorem constField_diagA_not_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) : constField hΩ hb diagA ∉ tsd₀ Ω hΩ hb := by
+  intro h
+  have h0 := integral_eq_zero_of_mem_tsd₀ hΩ hb h 0 0
+  rw [integral_constField] at h0
+  have hpos := volume_real_pos hΩ hb hne
+  simp [diagA] at h0
+  exact hpos.ne' h0
+
+/-- `curl β ∉ L²(TSD₀)`. -/
+theorem curl_betaL2_not_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) : smoothField hΩ hb (curlM betaField)
+      (continuous_curlM fun ij => (contDiff_betaField ij).of_le (by simp)) ∉ tsd₀ Ω hΩ hb := by
+  rw [curl_betaL2]
+  intro hm
+  exact constField_diagA_not_mem_tsd₀ hΩ hb hne (by simpa using (tsd₀ Ω hΩ hb).neg_mem hm)
+
+/-- **Every datum `(0, E₀, β)` leaves `L²(TSD)` at once**: for every short complex with
+`d₁ ⊆ curl_min`, every `E₀` and every `T > 0`, every strong solution of `U' = L U` on `[0, T]` from
+`(0, E₀, β)` has its electric field outside `L²(TSD)` at some `t ∈ [0, T]`, because
+`d₁† β = curl β ∉ L²(TSD₀)` (`Feec.Models.BoundedDomain.adjoint_mem_tsd₀_of_propagates`).
+Thesis: Prop 4.17 -/
+theorem betaL2_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) {T : ℝ} (hT : 0 < T)
+    {U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))}
+    (hU : Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U)
+    (h0 : ((U 0 : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))) 0 : W₀) = 0)
+    (h2 : ((U 0 : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))) 2 :
+      L2F ℝ Ω Ix) = betaL2 hΩ hb) :
+    ∃ t ∈ Icc 0 T,
+      ((U t : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))) 1 : L2F ℝ Ω Ix) ∉
+        tsd Ω := by
+  by_contra hall
+  push Not at hall
+  obtain ⟨hB, hm⟩ := adjoint_mem_tsd₀_of_propagates hΩ hb S hd₁ hT hU h0 hall
+  obtain ⟨hβ, hβv⟩ := smoothField_mem_adjoint hΩ hb S hd₁
+    (fun ij => (contDiff_betaField ij).of_le (by simp))
+  have e : (⟨_, hB⟩ : S.d₁†.domain) = ⟨_, hβ⟩ := Subtype.ext h2
+  rw [e, hβv] at hm
+  exact curl_betaL2_not_mem_tsd₀ hΩ hb hne hm
+
+/-- **TSD data do not propagate, with existence**: for every short complex with
+`d₁ ⊆ curl_min` the TSD datum `(0, 0, β) ∈ D(L) ∩ K` has, on every `[0, T]`, `T > 0`, a strong
+solution (the wave group orbit, Stone's theorem), and every strong solution from it leaves
+`K = {0} × L²(TSD) × L²(TSD)`. Thesis: Prop 4.17 -/
+theorem exists_isStrongSolution_tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
+    [CompleteSpace W₀] (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
+    ∃ U₀ ∈ S.wave.domain, U₀ ∈ HilbertComplex.totalSub
+        (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) (tsd Ω)) ∧
+      ∀ T > 0, Evolution.IsStrongSolution S.wave (Icc 0 T) 0
+          (fun t => S.toHilbertComplex.waveGroup.S t U₀) ∧
+        ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)), U 0 = U₀ →
+          Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
+            ∃ t ∈ Icc 0 T, U t ∉ HilbertComplex.totalSub
+              (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) (tsd Ω)) := by
+  obtain ⟨U₀, hD, hK, hall⟩ := tsd_not_propagates hΩ hb hne S hd₁
+  exact ⟨U₀, hD, hK, fun T hT =>
+    ⟨S.toHilbertComplex.isStrongSolution_waveGroup hD T, hall T hT⟩⟩
+
+/-! ### The magnetic projection hypothesis fails: `P_{L²(TSD)} H(curl) ⊄ H(curl)` -/
+
+/-- `E_t = (2/t) ∇(e^{-t x₁} sin(t x₂) e₃)`: third row `(-2 a_t, 2 p_t, 0)`; curl-free. -/
+def gradFld (t : ℝ) : Ix → R3 → ℝ := fun ij =>
+  if ij = (2, 0) then (fun x => -(2 * expSin t x))
+  else if ij = (2, 1) then (fun x => 2 * expCos t x) else 0
+
+/-- `B_t = sym E_t`. -/
+def symFld (t : ℝ) : Ix → R3 → ℝ := fun ij =>
+  if ij = (0, 2) ∨ ij = (2, 0) then (fun x => -expSin t x)
+  else if ij = (1, 2) ∨ ij = (2, 1) then expCos t else 0
+
+/-- `S_t = skew E_t = E_t - B_t`. -/
+def skewFld (t : ℝ) : Ix → R3 → ℝ := fun ij =>
+  if ij = (2, 0) then (fun x => -expSin t x) else if ij = (0, 2) then expSin t
+  else if ij = (2, 1) then expCos t else if ij = (1, 2) then (fun x => -expCos t x) else 0
+
+theorem curlM_gradFld (t : ℝ) (ij : Ix) (x : R3) : curlM (gradFld t) ij x = 0 := by
+  obtain ⟨i, k⟩ := ij
+  simp only [curlM, gradFld]
+  fin_cases i <;> fin_cases k <;>
+    simp [pd_neg, pd_const_mul (differentiable_expSin t), pd_const_mul (differentiable_expCos t),
+      pd_expSin, pd_expCos]
+
+theorem curlM_symFld (t : ℝ) (ij : Ix) (x : R3) : curlM (symFld t) ij x =
+    if ij = (0, 0) then -t * expCos t x else if ij = (0, 1) then -t * expSin t x
+    else if ij = (1, 0) then -t * expSin t x else if ij = (1, 1) then t * expCos t x else 0 := by
+  obtain ⟨i, k⟩ := ij
+  simp only [curlM, symFld]
+  fin_cases i <;> fin_cases k <;> simp [pd_neg, pd_expSin, pd_expCos]
+
+theorem div_symFld (t : ℝ) (i : Fin 3) (x : R3) : ∑ j, pd j (symFld t (i, j)) x = 0 := by
+  simp only [symFld, Fin.sum_univ_three]
+  fin_cases i <;> simp [pd_neg, pd_expSin, pd_expCos]
+
+theorem symFld_symm (t : ℝ) (i j : Fin 3) : symFld t (i, j) = symFld t (j, i) := by
+  fin_cases i <;> fin_cases j <;> simp [symFld]
+
+theorem symFld_diag (t : ℝ) (i : Fin 3) : symFld t (i, i) = 0 := by
+  fin_cases i <;> simp [symFld]
+
+theorem gradFld_eq (t : ℝ) (ij : Ix) (x : R3) :
+    gradFld t ij x = symFld t ij x + skewFld t ij x := by
+  obtain ⟨i, j⟩ := ij
+  fin_cases i <;> fin_cases j <;> simp [gradFld, symFld, skewFld] <;> ring
+
+theorem skewFld_skew (t : ℝ) (i j : Fin 3) (x : R3) :
+    skewFld t (j, i) x = -skewFld t (i, j) x := by
+  fin_cases i <;> fin_cases j <;> simp [skewFld]
+
+/-- `|E_t|² = 4 e^{-2 t x₁}`. -/
+theorem sum_sq_gradFld (t : ℝ) (x : R3) :
+    ∑ ij, gradFld t ij x ^ 2 = 4 * Real.exp (-(t * x 0)) ^ 2 := by
+  simp only [Fintype.sum_prod_type, Fin.sum_univ_three, gradFld, expSin, expCos]
+  simp
+  have := Real.sin_sq_add_cos_sq (t * x 1)
+  linear_combination 4 * Real.exp (-(t * x 0)) ^ 2 * this
+
+/-- **`|curl B_t|² = (t²/2) |E_t|²`**: `curl B_t` costs one derivative more than `E_t`. -/
+theorem sum_sq_curlM_symFld (t : ℝ) (x : R3) :
+    ∑ ij, curlM (symFld t) ij x ^ 2 = t ^ 2 / 2 * ∑ ij, gradFld t ij x ^ 2 := by
+  rw [sum_sq_gradFld]
+  simp only [Fintype.sum_prod_type, Fin.sum_univ_three, curlM_symFld, expSin, expCos]
+  simp
+  have := Real.sin_sq_add_cos_sq (t * x 1)
+  linear_combination 2 * t ^ 2 * Real.exp (-(t * x 0)) ^ 2 * this
+
+theorem contDiff_gradFld (t : ℝ) (ij : Ix) : ContDiff ℝ ∞ (gradFld t ij) := by
+  unfold gradFld
+  split_ifs
+  exacts [(contDiff_const.mul (contDiff_expSin t)).neg, contDiff_const.mul (contDiff_expCos t),
+    contDiff_const]
+
+theorem contDiff_symFld (t : ℝ) (ij : Ix) : ContDiff ℝ ∞ (symFld t ij) := by
+  unfold symFld
+  split_ifs
+  exacts [(contDiff_expSin t).neg, contDiff_expCos t, contDiff_const]
+
+theorem contDiff_skewFld (t : ℝ) (ij : Ix) : ContDiff ℝ ∞ (skewFld t ij) := by
+  unfold skewFld
+  split_ifs
+  exacts [(contDiff_expSin t).neg, contDiff_expSin t, contDiff_expCos t, (contDiff_expCos t).neg,
+    contDiff_const]
+
+/-- `E_t` as an `L²` field. -/
+abbrev gradFldL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : ℝ) : L2F ℝ Ω Ix :=
+  smoothField hΩ hb (gradFld t) fun ij => (contDiff_gradFld t ij).continuous
+
+/-- `B_t` as an `L²` field. -/
+abbrev symFldL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : ℝ) : L2F ℝ Ω Ix :=
+  smoothField hΩ hb (symFld t) fun ij => (contDiff_symFld t ij).continuous
+
+/-- `curl B_t` as an `L²` field. -/
+abbrev curlSymFldL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : ℝ) : L2F ℝ Ω Ix :=
+  smoothField hΩ hb (curlM (symFld t)) (continuous_curlM fun ij => (contDiff_symFld t ij).of_le
+    (by simp))
+
+/-- `P_{L²(TSD)} E_t = B_t`: `E_t - B_t` is skew (`starProjection_smoothField_eq`). -/
+theorem starProjection_gradFld (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : ℝ) :
+    (tsd Ω).starProjection (gradFldL2 hΩ hb t) = symFldL2 hΩ hb t :=
+  starProjection_smoothField_eq hΩ hb _ (fun ij => (contDiff_symFld t ij).of_le (by simp))
+    (fun i j x _ => by rw [symFld_symm]) (fun x _ => by simp [symFld_diag])
+    (fun i x _ => div_symFld t i x) (s := fun _ => 0) continuous_const (fun i j x _ => by
+      rw [gradFld_eq, gradFld_eq, skewFld_skew, symFld_symm t j i]
+      split_ifs with h
+      · subst h; simp [symFld_diag]
+      · ring)
+
+theorem norm_sq_gradFld (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) (t : ℝ) :
+    0 < ‖gradFldL2 hΩ hb t‖ ^ 2 := by
+  rw [norm_sq_smoothField]
+  simp only [sum_sq_gradFld]
+  have : NeZero (volume.restrict Ω) := ⟨fun h => by
+    have := hΩ.measure_pos volume hne
+    rw [← Measure.restrict_apply_self, h] at this
+    simp at this⟩
+  have e : ∀ x : R3, 4 * Real.exp (-(t * x 0)) ^ 2 = Real.exp (Real.log 4 + 2 * -(t * x 0)) := by
+    intro x
+    rw [Real.exp_add, Real.exp_log (by norm_num), ← Real.exp_nat_mul]
+    norm_num
+  simp only [e]
+  refine integral_exp_pos ?_
+  have hc : Continuous fun x : R3 => Real.exp (Real.log 4 + 2 * -(t * x 0)) := by fun_prop
+  exact (((hc.locallyIntegrable (μ := volume)).integrableOn_isCompact
+    hb.isCompact_closure).mono_set subset_closure)
+
+theorem norm_sq_curlSymFld (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : ℝ) :
+    ‖curlSymFldL2 hΩ hb t‖ ^ 2 = t ^ 2 / 2 * ‖gradFldL2 hΩ hb t‖ ^ 2 := by
+  rw [norm_sq_smoothField, norm_sq_smoothField, ← integral_const_mul]
+  simp only [sum_sq_curlM_symFld]
+
+/-- **The magnetic projection hypothesis of Prop 4.17 fails** on every nonempty bounded open `Ω`,
+for every short complex with `d₁ ⊆ curl_min`: `P_{L²(TSD)}` does not map `D(d₁†)` into itself.
+Otherwise `E ↦ d₁† P E` would be bounded on the graph of `d₁†` (closed graph theorem), but the
+curl-free `E_t` have `P E_t = B_t`, `‖d₁† B_t‖ = (t/√2) ‖E_t‖`. Thesis: Prop 4.17 -/
+theorem not_starProjection_mem_adjoint_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {W₀ : Type*} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
+    [CompleteSpace W₀] (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
+    ¬ ∀ B ∈ S.d₁†.domain, (tsd Ω).starProjection B ∈ S.d₁†.domain := by
+  intro hyp
+  set A := S.d₁†
+  have hAc : A.IsClosed := LinearPMap.adjoint_isClosed S.dense₁
+  have : CompleteSpace A.graph :=
+    (show IsClosed (A.graph : Set (L2F ℝ Ω Ix × L2F ℝ Ω Ix)) from hAc).completeSpace_coe
+  have hdom : ∀ p : A.graph, (tsd Ω).starProjection (p : L2F ℝ Ω Ix × L2F ℝ Ω Ix).1 ∈ A.domain :=
+    fun p => hyp _ (LinearPMap.mem_domain_of_mem_graph (y := (p : L2F ℝ Ω Ix × L2F ℝ Ω Ix).2) p.2)
+  let g0 : A.graph →ₗ[ℝ] A.domain := LinearMap.codRestrict A.domain
+    (((tsd Ω).starProjection : L2F ℝ Ω Ix →L[ℝ] L2F ℝ Ω Ix).toLinearMap ∘ₗ
+      (LinearMap.fst ℝ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)) ∘ₗ A.graph.subtype) hdom
+  let g : A.graph →ₗ[ℝ] L2F ℝ Ω Ix := A.toFun ∘ₗ g0
+  have hgc : IsClosed (g.graph : Set (A.graph × L2F ℝ Ω Ix)) := by
+    have e : (g.graph : Set (A.graph × L2F ℝ Ω Ix)) =
+        (fun q : A.graph × L2F ℝ Ω Ix =>
+          ((tsd Ω).starProjection (q.1 : L2F ℝ Ω Ix × L2F ℝ Ω Ix).1, q.2)) ⁻¹'
+          (A.graph : Set (L2F ℝ Ω Ix × L2F ℝ Ω Ix)) := by
+      ext ⟨p, F⟩
+      simp only [SetLike.mem_coe, LinearMap.mem_graph_iff, mem_preimage]
+      constructor
+      · rintro rfl
+        exact A.mem_graph (g0 p)
+      · intro h
+        obtain ⟨y, hy1, hy2⟩ := A.mem_graph_iff.1 h
+        have e1 : y = g0 p := Subtype.ext hy1
+        change F = A (g0 p)
+        rw [← e1]
+        exact hy2.symm
+    rw [e]
+    exact hAc.preimage (((tsd Ω).starProjection.continuous.comp
+      (continuous_fst.comp (continuous_subtype_val.comp continuous_fst))).prodMk continuous_snd)
+  let gc : A.graph →L[ℝ] L2F ℝ Ω Ix := ⟨g, g.continuous_of_isClosed_graph hgc⟩
+  set t : ℝ := 2 * ‖gc‖ + 1
+  set E := gradFldL2 hΩ hb t
+  obtain ⟨hE, hE'⟩ := smoothField_mem_adjoint hΩ hb S hd₁ (Ψ := gradFld t)
+    fun ij => (contDiff_gradFld t ij).of_le (by simp)
+  obtain ⟨hB, hB'⟩ := smoothField_mem_adjoint hΩ hb S hd₁ (Ψ := symFld t)
+    fun ij => (contDiff_symFld t ij).of_le (by simp)
+  rw [smoothField_eq_zero hΩ hb _ fun ij x _ => curlM_gradFld t ij x] at hE'
+  have hpmem : ((E, 0) : L2F ℝ Ω Ix × L2F ℝ Ω Ix) ∈ A.graph := by
+    have := A.mem_graph ⟨E, hE⟩
+    rwa [hE'] at this
+  let p : A.graph := ⟨(E, 0), hpmem⟩
+  have hgp : gc p = curlSymFldL2 hΩ hb t := by
+    have : g0 p = ⟨_, hB⟩ := Subtype.ext (starProjection_gradFld hΩ hb t)
+    change A (g0 p) = _
+    rw [this, hB']
+  have hnp : ‖p‖ = ‖E‖ := by
+    change ‖((E, 0) : L2F ℝ Ω Ix × L2F ℝ Ω Ix)‖ = ‖E‖
+    simp [Prod.norm_def]
+  have hbound := gc.le_opNorm p
+  rw [hgp, hnp] at hbound
+  have h1 := norm_sq_curlSymFld hΩ hb t
+  have h2 := norm_sq_gradFld hΩ hb hne t
+  have hsq : t ^ 2 / 2 * ‖E‖ ^ 2 ≤ (‖gc‖ * ‖E‖) ^ 2 := by
+    rw [← h1]
+    exact pow_le_pow_left₀ (norm_nonneg _) hbound 2
+  have hc := norm_nonneg gc
+  have : t ^ 2 / 2 ≤ ‖gc‖ ^ 2 := by
+    rw [mul_pow] at hsq
+    exact le_of_mul_le_mul_right hsq h2
+  nlinarith
+
+/-- **`P_{L²(TSD)} H(curl) ⊄ H(curl)`** on every nonempty bounded open `Ω ⊆ ℝ³`, with
+`H(curl) = D(curl_max)` (no boundary condition). Thesis: Prop 4.17 -/
+theorem not_starProjection_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    ¬ ∀ B ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain,
+      (tsd Ω).starProjection B ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain := by
+  have e := adjoint_gradCurl_d₁ (𝕜 := ℝ) hΩ
+  have h := not_starProjection_mem_adjoint_domain hΩ hb hne (gradCurl ℝ hΩ) le_rfl
+  rwa [e] at h
+
+/-- **Both parts of the magnetic projection hypothesis fail**, for every short complex with
+`d₁ ⊆ curl_min` and every closed `S₁`: `P_{L²(TSD)} D(d₁†) ⊄ D(d₁†)`, and
+`P_K D(L) ⊄ D(L)` for `K = {0} × S₁ × L²(TSD)`. Independent of the electric failure
+(`exists_projTSD_not_mem_domain`). Thesis: Prop 4.17 -/
+theorem not_projection_magnetic (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) (S₁ : Submodule ℝ (L2F ℝ Ω Ix))
+    [S₁.HasOrthogonalProjection] :
+    (¬ ∀ B ∈ S.d₁†.domain, (tsd Ω).starProjection B ∈ S.d₁†.domain) ∧
+      ¬ ∀ x ∈ S.wave.domain, (HilbertComplex.totalSub
+        (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) S₁ (tsd Ω))).starProjection x ∈
+          S.wave.domain := by
+  refine ⟨not_starProjection_mem_adjoint_domain hΩ hb hne S hd₁, fun hPD => ?_⟩
+  refine not_starProjection_mem_adjoint_domain hΩ hb hne S hd₁ fun B hB => ?_
+  have hx := ShortHilbertComplex.inj₂_mem_wave_domain (S := S) hB
+  have h := ((S.mem_wave_domain).1 (hPD _ hx)).2.2.2
+  rwa [HilbertComplex.totalSub_starProjection_apply] at h
+
+/-- **`P_{L²(TSD)}` is unbounded for the `H(curl)` graph norm**, explicitly: for every `C` there is
+`t` with `E_t` smooth and curl-free in `H(curl)`, `P E_t = B_t ∈ H(curl)`, and
+`‖curl B_t‖ > C ‖E_t‖ = C ‖E_t‖_{H(curl)}`. Thesis: Prop 4.17 -/
+theorem projection_unbounded (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    (C : ℝ) : ∃ t : ℝ, curlM (gradFld t) = 0 ∧
+      gradFldL2 hΩ hb t ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain ∧
+      symFldL2 hΩ hb t ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain ∧
+      (tsd Ω).starProjection (gradFldL2 hΩ hb t) = symFldL2 hΩ hb t ∧
+      C * ‖gradFldL2 hΩ hb t‖ < ‖curlSymFldL2 hΩ hb t‖ := by
+  set t : ℝ := 2 * |C| + 2
+  refine ⟨t, funext fun ij => funext fun x => curlM_gradFld t ij x,
+    (smoothField_mem_curl_maximal hΩ hb fun ij => (contDiff_gradFld t ij).of_le (by simp)).1,
+    (smoothField_mem_curl_maximal hΩ hb fun ij => (contDiff_symFld t ij).of_le (by simp)).1,
+    starProjection_gradFld hΩ hb t, ?_⟩
+  set E := gradFldL2 hΩ hb t
+  set cB := curlSymFldL2 hΩ hb t
+  have h1 : ‖cB‖ ^ 2 = t ^ 2 / 2 * ‖E‖ ^ 2 := norm_sq_curlSymFld hΩ hb t
+  have h2 : 0 < ‖E‖ ^ 2 := norm_sq_gradFld hΩ hb hne t
+  have hC : C ^ 2 < t ^ 2 / 2 := by
+    have := abs_nonneg C
+    have := sq_abs C
+    nlinarith
+  have key : (|C| * ‖E‖) ^ 2 < ‖cB‖ ^ 2 := by
+    rw [h1, mul_pow, sq_abs]
+    exact mul_lt_mul_of_pos_right hC h2
+  calc C * ‖E‖ ≤ |C| * ‖E‖ := mul_le_mul_of_nonneg_right (le_abs_self C) (norm_nonneg _)
+    _ < ‖cB‖ := lt_of_pow_lt_pow_left₀ 2 (norm_nonneg _) key
+
+/-- **Bochner form**: on the Bochner space `L²(Ω; ℝ³ˣ³)` (Frobenius norm), with `L²(TSD)` and
+`H(curl)` transported through `Feec.Domain.piL2Equiv`, `P_{L²(TSD)} H(curl) ⊄ H(curl)`.
+Thesis: Prop 4.17 -/
+theorem not_starProjection_mem_curl_maximal_bochner (hΩ : IsOpen Ω)
+    (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    ¬ ∀ F : Lp (EuclideanSpace ℝ Ix) 2 (volume.restrict Ω),
+      piL2Equiv (volume.restrict Ω) ℝ Ix F ∈
+          ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain →
+        piL2Equiv (volume.restrict Ω) ℝ Ix (((tsd Ω).map
+          ((piL2Equiv (volume.restrict Ω) ℝ Ix).symm.toLinearEquiv :
+            L2F ℝ Ω Ix →ₗ[ℝ] Lp (EuclideanSpace ℝ Ix) 2 (volume.restrict Ω))).starProjection F) ∈
+          ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain := by
+  intro h
+  refine not_starProjection_mem_curl_maximal hΩ hb hne fun B hB => ?_
+  have := h ((piL2Equiv (volume.restrict Ω) ℝ Ix).symm B) (by simpa using hB)
+  rwa [Submodule.starProjection_map_apply, LinearIsometryEquiv.symm_symm,
+    LinearIsometryEquiv.apply_symm_apply, LinearIsometryEquiv.apply_symm_apply] at this
+
+/-! ### The density conjectures of Prop 4.17, decided -/
+
+/-- **The two inferred `L²(TSD)` densities of Prop 4.17, decided** on every nonempty bounded open
+`Ω` star-shaped with respect to a ball: `cl (L²(TSD) ∩ H(curl)) = L²(TSD)` holds, while
+`cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀) ≠ L²(TSD)` fails. Thesis: Prop 4.17 -/
+theorem density_dichotomy (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    (tsd Ω ⊓
+      ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain).topologicalClosure =
+        tsd Ω ∧
+      (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure =
+        tsd₀ Ω hΩ hb ∧
+      (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure ≠
+        tsd Ω :=
+  ⟨closure_tsd_inf_curl_maximal hΩ hb hs hstar, closure_eq_tsd₀ hΩ hb hs hstar,
+    not_dense_tsd_inter hΩ hb hne⟩
+
+/-- **The gap in the proof of Prop 4.17, stated in Lean.** On every nonempty bounded open `Ω`
+star-shaped with respect to a ball: the two literal density conjectures (`H̊(curl) ∩ H(div, 0)`
+and `H(curl) ∩ H(div, 0)` dense in `H(div, 0)`) hold, and so does the inferred `H(curl)` density
+in `L²(TSD)`; the inferred `H̊(curl)` density does not, its closure being `L²(TSD₀)`. So the step
+"so that `H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`" is an invalid inference. Thesis: Prop 4.17 -/
+theorem density_gap (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    {x₀ : R3} {s : ℝ} (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
+    (∀ B ∈ (gradCurl ℝ hΩ).d₀†.ker, B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal
+        Ω).domain : Set (L2F ℝ Ω Ix)) ∩ (gradCurl ℝ hΩ).d₀†.ker)) ∧
+      (∀ B ∈ (gradCurl ℝ hΩ).d₀†.ker, B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).maximal
+        Ω).domain : Set (L2F ℝ Ω Ix)) ∩ (gradCurl ℝ hΩ).d₀†.ker)) ∧
+      (tsd Ω ⊓
+        ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain).topologicalClosure =
+          tsd Ω ∧
+      (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure =
+        tsd₀ Ω hΩ hb ∧
+      (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure ≠
+        tsd Ω :=
+  ⟨fun _ hB => dense_curl_inter_divFree hΩ hB, fun _ hB => dense_curl_maximal_inter_divFree hΩ hB,
+    density_dichotomy hΩ hb hne hs hstar⟩
+
+/-! ### The largest propagating constraint space `K*` is a strict, nonzero subspace of `K` -/
+
+/-- `diag(1, -1, 0) ∉ S₁*`: `S₁* ⊆ L²(TSD₀)` and constants with nonzero mean are not in
+`L²(TSD₀)`. -/
+theorem constField_diagA_not_mem_invariantCore₁ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
+    [CompleteSpace W₀] (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
+    (S₂ : Submodule ℝ (L2F ℝ Ω Ix)) [S₂.HasOrthogonalProjection] :
+    constField hΩ hb diagA ∉ S.invariantCore₁ (tsd Ω) S₂ := fun hm =>
+  constField_diagA_not_mem_tsd₀ hΩ hb hne (invariantCore₁_le_tsd₀ hΩ hb S hd₁ S₂ hm)
+
+/-- `β ∉ S₂*` (any `S₂`, any complex with `d₁ ⊆ curl_min`): `d₁† β = curl β ∉ L²(TSD₀)`. -/
+theorem betaL2_not_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
+    [CompleteSpace W₀] (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) (S₂ : Submodule ℝ (L2F ℝ Ω Ix))
+    [S₂.HasOrthogonalProjection] : betaL2 hΩ hb ∉ S.invariantCore₂ (tsd Ω) S₂ := by
+  intro hm
+  obtain ⟨hβ, hβv⟩ := smoothField_mem_adjoint hΩ hb S hd₁
+    (fun ij => (contDiff_betaField ij).of_le (by simp))
+  have := adjoint_mem_tsd₀_of_mem_invariantCore₂ hΩ hb S hd₁.1 S₂ ⟨_, hβ⟩ hm
+  rw [hβv] at this
+  exact curl_betaL2_not_mem_tsd₀ hΩ hb hne this
+
+/-- Constant symmetric trace-free fields are stationary magnetic data: `A ∈ S₂*`. -/
+theorem constField_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (S₁ : Submodule ℝ (L2F ℝ Ω Ix)) {A : Matrix (Fin 3) (Fin 3) ℝ} (hA : Aᵀ = A)
+    (htrA : A.trace = 0) : constField hΩ hb A ∈ (gradCurl ℝ hΩ).invariantCore₂ S₁ (tsd Ω) := by
+  obtain ⟨hmem, e⟩ := smoothField_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl
+    (Ψ := fun ij _ => A ij.1 ij.2) (fun ij => contDiff_const)
+  refine ShortHilbertComplex.mem_invariantCore₂_of_eq_zero (S := gradCurl ℝ hΩ) ⟨_, hmem⟩
+    (constField_mem_tsd hΩ hb hA htrA) ?_
+  rw [e]
+  exact smoothField_eq_zero hΩ hb _ fun ij x _ => by simp [curlM, pd]
+
+/-- **Corrected Prop 4.17 on bounded domains** for the grad–curl complex
+`H̊¹ → H̊(curl) → L²` and `K = {0} × L²(TSD) × L²(TSD)`, with `K*` the invariant core of `K`
+under the wave group (`Feec.ShortHilbertComplex.coreSub`):
+1. `K* = {0} × S₁* × S₂*` with `S₁* ⊆ L²(TSD₀)` and `S₂* ⊆ L²(TSD)`;
+2. `{0} × S₁* × S₂*` is a reducing subcomplex (projection hypothesis, `d₁ S₁* ⊆ S₂*`,
+   `d₁† S₂* ⊆ S₁*`), and the largest one: every closed `S₁', S₂' ⊆ L²(TSD)` whose product reduces
+   `L` lies in `(S₁*, S₂*)`;
+3. strictness: `diag(1, -1, 0) ∈ L²(TSD) \ S₁*` and `β ∈ L²(TSD) \ S₂*`; `diag(1, -1, 0) ∈ S₂*` is a
+   nonzero **stationary** datum;
+4. every `U₀ ∈ D(L) ∩ K*` has on every `[0, T]` a classical solution of `U' = L U`, unique among
+   strong solutions, staying in `K* ⊆ K`.
+The only elements of `K*` exhibited are stationary; whether `K*` contains non-stationary data on
+a general bounded domain is open. Thesis: Prop 4.17 -/
+theorem invariantCore_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) = HilbertComplex.totalSub
+        (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3)))
+          ((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω))
+          ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω))) ∧
+      (gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω) ≤ tsd₀ Ω hΩ hb ∧
+      (gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω) ≤ tsd Ω ∧
+      (gradCurl ℝ hΩ).toHilbertComplex.ReducingSubcomplex
+        (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3)))
+          ((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω))
+          ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω))) ∧
+      (∀ (S₁' S₂' : Submodule ℝ (L2F ℝ Ω Ix)) [S₁'.HasOrthogonalProjection]
+        [S₂'.HasOrthogonalProjection], S₁' ≤ tsd Ω → S₂' ≤ tsd Ω →
+        (gradCurl ℝ hΩ).wave.IsReducing (HilbertComplex.totalSub
+          (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3))) S₁' S₂')) →
+        S₁' ≤ (gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω) ∧
+          S₂' ≤ (gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω)) ∧
+      constField hΩ hb diagA ∈ tsd Ω ∧
+      constField hΩ hb diagA ∉ (gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω) ∧
+      constField hΩ hb diagA ∈ (gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω) ∧
+      constField hΩ hb diagA ≠ 0 ∧
+      betaL2 hΩ hb ∈ tsd Ω ∧ betaL2 hΩ hb ∉ (gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω) ∧
+      ∀ U₀ ∈ (gradCurl ℝ hΩ).wave.domain, U₀ ∈ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) →
+        ∀ T : ℝ, ∃ U, U 0 = U₀ ∧ Evolution.IsClassicalSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U ∧
+          (∀ t ∈ Icc 0 T, U t ∈ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω)) ∧
+          ∀ V, V 0 = U₀ → Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 V →
+            EqOn V U (Icc 0 T) := by
+  have hker : tsd Ω ≤ ((gradCurl ℝ hΩ).d₀†).ker := fun B hB => ((mem_tsd_iff_ker hΩ).1 hB).2.2
+  refine ⟨ShortHilbertComplex.coreSub_eq,
+    invariantCore₁_le_tsd₀ hΩ hb (gradCurl ℝ hΩ) le_rfl (tsd Ω),
+    ShortHilbertComplex.invariantCore₂_le,
+    ShortHilbertComplex.reducingSubcomplex_coreSub hker,
+    fun S₁' S₂' _ _ h₁ h₂ hred => ShortHilbertComplex.le_invariantCore_of_isReducing h₁ h₂ hred,
+    constField_mem_tsd hΩ hb diagA_transpose diagA_trace,
+    constField_diagA_not_mem_invariantCore₁ hΩ hb hne (gradCurl ℝ hΩ) le_rfl (tsd Ω),
+    constField_mem_invariantCore₂ hΩ hb (tsd Ω) diagA_transpose diagA_trace,
+    constField_diagA_ne_zero hΩ hb hne, betaL2_mem_tsd hΩ hb,
+    betaL2_not_mem_invariantCore₂ hΩ hb hne (gradCurl ℝ hΩ) le_rfl (tsd Ω),
+    fun U₀ hU₀ hK T => ShortHilbertComplex.existsUnique_mem_coreSub hU₀ hK 0 T⟩
 
 end Feec.Counterexamples.BoundedDomainTSD
 

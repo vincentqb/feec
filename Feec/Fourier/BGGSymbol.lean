@@ -17,6 +17,9 @@ curl. At a frequency `ξ` the symbols are `hess_ξ c = -c ξ ξᵀ` and `bgg_ξ 
   fibre complex at every frequency (`S₁` kills symmetric matrices; Lemma 3.5 for the curl).
 * `bggFamily : FibreComplex ℂ ℝ³ ComplexShape.fin3 (W3 ℂ ℂ³ˣ³ (ℂ³ × ℂ³ˣ³))`, with measurable
   fibre projections `aestronglyMeasurable_starProjection_bggK`.
+* **`bgg_gap`**, `bgg_gap_zero`, **`bggFamily_gap`**: `‖v‖ ≤ 4 ‖m_ξ v‖` on `N(m_ξ)ᗮ` for every arrow
+  at `ξ = 0` and `|ξ| ≥ 2π` (symmetric part via the curl, skew part via `S₁`), giving closed range
+  on the torus.
 
 ## References
 
@@ -202,5 +205,133 @@ theorem hessM_ne_zero : bggFamily.m 0 1 ≠ 0 := by
   have h' : hessM (EuclideanSpace.single 0 1) = 0 := congrFun h _
   have := congrArg (fun T : ℂ →L[ℂ] Mat => T 1 (0, 0)) h'
   simp [hessM_apply] at this
+
+/-! ### The fibre gap of `(S₁, curl)` -/
+
+/-- The symmetric part `(A + Aᵀ)/2`. -/
+def symPart (M : Mat) : Mat := WithLp.toLp 2 fun p => (M p + M (p.2, p.1)) / 2
+
+theorem symPart_mem (M : Mat) : symPart M ∈ symSub := fun a b => by
+  simp only [symPart, WithLp.ofLp_toLp]; ring
+
+theorem axialL_sub_symPart (M : Mat) : axialL (M - symPart M) = axialL M := by
+  rw [_root_.map_sub, axialL_eq_zero_of_mem_symSub (symPart_mem M), sub_zero]
+
+theorem norm_sq_sub_symPart (M : Mat) : 2 * ‖M - symPart M‖ ^ 2 = ‖axialL M‖ ^ 2 := by
+  rw [EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]
+  simp only [axialL_apply, Fin.sum_univ_three, MatrixSymbol.axial_apply_zero,
+    MatrixSymbol.axial_apply_one, MatrixSymbol.axial_apply_two, PiLp.sub_apply, symPart,
+    WithLp.ofLp_toLp, toMatrix_apply]
+  simp only [Complex.sq_norm, Complex.normSq_apply]
+  simp
+  ring
+
+theorem quad_symPart (ξ : Freq) (M : Mat) :
+    ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * symPart M (a, b) =
+      ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) := by
+  simp only [symPart, WithLp.ofLp_toLp, Fin.sum_univ_three]
+  ring
+
+theorem norm_bgg_sq (ξ : Freq) (M : Mat) :
+    ‖bgg ξ M‖ ^ 2 = ‖axialL M‖ ^ 2 + ‖curl ξ M‖ ^ 2 := by
+  rw [bgg_apply, WithLp.prod_norm_sq_eq_of_L2]; rfl
+
+/-- **The fibre gap of the BGG symbol** at the torus frequencies: `‖v‖ ≤ 4 ‖(S₁, curl_ξ) v‖` on
+`N(S₁, curl_ξ)ᗮ` for `|ξ| ≥ 2π` (split `v` into its symmetric part, controlled by the curl through
+`Feec.Fourier.SymCurl.mul_norm_le_two_norm_curl`, and its skew part, controlled by `S₁`). -/
+theorem bgg_gap {ξ : Freq} (hξ : 2 * Real.pi ≤ ‖ξ‖) :
+    ∀ v ∈ (LinearMap.ker (bgg ξ : Mat →ₗ[ℂ] VM))ᗮ, ‖v‖ ≤ 4 * ‖bgg ξ v‖ := by
+  intro v hv
+  have hξ1 : 1 ≤ ‖ξ‖ := by nlinarith [Real.two_le_pi]
+  have hξpos : 0 < ‖ξ‖ := by linarith
+  have h0 : ⟪hessM ξ 1, v⟫_ℂ = 0 := by
+    refine Submodule.inner_right_of_mem_orthogonal ?_ hv
+    rw [LinearMap.mem_ker, ContinuousLinearMap.coe_coe]; exact bgg_hess ξ 1
+  rw [inner_hessM_one, neg_eq_zero] at h0
+  have hS0 : ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * symPart v (a, b) = 0 := by
+    rw [quad_symPart]; exact h0
+  have hS : ‖ξ‖ * ‖symPart v‖ ≤ 2 * ‖curl ξ (symPart v)‖ :=
+    mul_norm_le_two_norm_curl (symPart_mem v) hS0
+  have hb := norm_bgg_sq ξ v
+  have hnb1 : ‖axialL v‖ ≤ ‖bgg ξ v‖ :=
+    (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 (by nlinarith [sq_nonneg ‖curl ξ v‖])
+  have hnb2 : ‖curl ξ v‖ ≤ ‖bgg ξ v‖ :=
+    (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 (by nlinarith [sq_nonneg ‖axialL v‖])
+  have hK : ‖v - symPart v‖ ≤ ‖axialL v‖ := by
+    have := norm_sq_sub_symPart v
+    exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 (by nlinarith [sq_nonneg ‖v - symPart v‖])
+  have hcK := norm_curl_le ξ (v - symPart v)
+  have hcS : ‖curl ξ (symPart v)‖ ≤ ‖curl ξ v‖ + ‖ξ‖ * ‖v - symPart v‖ := by
+    have e : curl ξ (symPart v) = curl ξ v - curl ξ (v - symPart v) := by
+      rw [← _root_.map_sub (curl ξ) v (v - symPart v), sub_sub_cancel]
+    rw [e]
+    linarith [norm_sub_le (curl ξ v) (curl ξ (v - symPart v))]
+  have hvSK : ‖v‖ ≤ ‖symPart v‖ + ‖v - symPart v‖ := by
+    have := norm_add_le (symPart v) (v - symPart v)
+    rwa [add_sub_cancel] at this
+  have hS' : ‖symPart v‖ ≤ 2 * ‖curl ξ v‖ + 2 * ‖v - symPart v‖ := by
+    have h1 : ‖ξ‖ * ‖symPart v‖ ≤ ‖ξ‖ * (2 * ‖curl ξ v‖ + 2 * ‖v - symPart v‖) := by
+      nlinarith [norm_nonneg (curl ξ v), norm_nonneg (v - symPart v)]
+    exact le_of_mul_le_mul_left h1 hξpos
+  nlinarith [norm_nonneg (v - symPart v), norm_nonneg (symPart v)]
+
+theorem inner_symPart_sub (v : Mat) : ⟪symPart v, v - symPart v⟫_ℂ = 0 := by
+  rw [inner_mat]
+  simp only [symPart, PiLp.sub_apply, WithLp.ofLp_toLp, map_div₀, map_add, Fin.sum_univ_three]
+  ring
+
+/-- At `ξ = 0` the BGG symbol is `(S₁, 0)`, with gap `‖v‖ ≤ ‖S₁ v‖` on `N(S₁)ᗮ` (skew
+matrices). -/
+theorem bgg_gap_zero : ∀ v ∈ (LinearMap.ker (bgg 0 : Mat →ₗ[ℂ] VM))ᗮ, ‖v‖ ≤ 4 * ‖bgg 0 v‖ := by
+  intro v hv
+  have hker : symPart v ∈ LinearMap.ker (bgg 0 : Mat →ₗ[ℂ] VM) := by
+    rw [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, bgg_apply,
+      axialL_eq_zero_of_mem_symSub (symPart_mem v), curl_zero]
+    rfl
+  have h1 : ⟪symPart v, v⟫_ℂ = 0 := Submodule.inner_right_of_mem_orthogonal hker hv
+  have h2 : symPart v = 0 := by
+    have : ⟪symPart v, symPart v⟫_ℂ = 0 := by
+      have e := inner_add_right (𝕜 := ℂ) (symPart v) (symPart v) (v - symPart v)
+      rw [add_sub_cancel, inner_symPart_sub, add_zero] at e
+      rw [← e]; exact h1
+    exact inner_self_eq_zero.1 this
+  have hK := norm_sq_sub_symPart v
+  rw [h2, sub_zero] at hK
+  have hb := norm_bgg_sq 0 v
+  have : ‖v‖ ≤ ‖bgg 0 v‖ := by
+    refine (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 ?_
+    nlinarith [sq_nonneg ‖curl 0 v‖, sq_nonneg ‖v‖]
+  linarith [norm_nonneg (bgg 0 v)]
+
+open ShortHilbertComplex in
+/-- **The fibre gaps of the BGG complex at every torus frequency**: `‖v‖ ≤ 4 ‖m_ξ v‖` on
+`N(m_ξ)ᗮ` for `ξ = 0` or `|ξ| ≥ 2π`, for every arrow. -/
+theorem bggFamily_gap (i j : Fin 3) {ξ : Freq} (hξ : ξ = 0 ∨ 2 * Real.pi ≤ ‖ξ‖) :
+    ∀ v ∈ (LinearMap.ker (bggFamily.m i j ξ : W3 ℂ Mat VM i →ₗ[ℂ] W3 ℂ Mat VM j))ᗮ,
+      ‖v‖ ≤ 4 * ‖bggFamily.m i j ξ v‖ := by
+  have zero_case : ∀ {i j : Fin 3}, bggFamily.m i j ξ = 0 →
+      ∀ v ∈ (LinearMap.ker (bggFamily.m i j ξ : W3 ℂ Mat VM i →ₗ[ℂ] W3 ℂ Mat VM j))ᗮ,
+        ‖v‖ ≤ 4 * ‖bggFamily.m i j ξ v‖ := by
+    intro i j h v hv
+    rw [h] at hv
+    rw [eq_zero_of_mem_orthogonal_ker_zero hv, norm_zero]; positivity
+  fin_cases i <;> fin_cases j
+  · exact zero_case rfl
+  · rcases hξ with rfl | hξ
+    · exact zero_case hessM_zero
+    · intro c _
+      change ‖(show ℂ from c)‖ ≤ 4 * ‖hessM ξ (show ℂ from c)‖
+      rw [norm_hessM]
+      have : (1 : ℝ) ≤ ‖ξ‖ ^ 2 := by nlinarith [Real.two_le_pi]
+      nlinarith [norm_nonneg (show ℂ from c)]
+  · exact zero_case rfl
+  · exact zero_case rfl
+  · exact zero_case rfl
+  · rcases hξ with rfl | hξ
+    · exact bgg_gap_zero
+    · exact bgg_gap hξ
+  · exact zero_case rfl
+  · exact zero_case rfl
+  · exact zero_case rfl
 
 end Feec.Fourier.BGG

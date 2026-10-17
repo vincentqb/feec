@@ -222,6 +222,13 @@ theorem norm_curl_sq_add_norm_div_sq (ξ : Freq) (M : Mat) :
   simp
   ring
 
+/-- `‖curl_ξ A‖ ≤ |ξ| ‖A‖`. -/
+theorem norm_curl_le (ξ : Freq) (M : Mat) : ‖curl ξ M‖ ≤ ‖ξ‖ * ‖M‖ := by
+  have h := norm_curl_sq_add_norm_div_sq ξ M
+  have : ‖curl ξ M‖ ^ 2 ≤ (‖ξ‖ * ‖M‖) ^ 2 := by
+    rw [mul_pow, ← h]; nlinarith [sq_nonneg ‖div ξ M‖]
+  exact (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 this
+
 /-- On `N(curl_ξ)ᗮ` the divergence symbol vanishes (it is orthogonal to `R(grad_ξ)`). -/
 theorem div_eq_zero_of_mem_orthogonal {ξ : Freq} {v : Mat}
     (hv : v ∈ (LinearMap.ker (curl ξ : Mat →ₗ[ℂ] Mat))ᗮ) : div ξ v = 0 := by

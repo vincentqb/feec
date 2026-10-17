@@ -17,6 +17,8 @@ constraint; on the torus it does.
 * `BGG.complex`, `BGG.constraint = {0} × L²(TSD) × ({0} × L²(TSD))` and **`reducingSubcomplex`**.
 * **`tsd_propagates`**, `tsd_propagates_neg`, **`tsd_existsUnique`**, `waveGroup_mem`: TSD data
   stay TSD, the multiplier `M` stays `0`, and `B` stays TSD, with existence and uniqueness.
+* **`closedRangeAt`**, `dual_closedRangeAt'`, **`hodge`**: closed range at every index (Poincaré
+  constant `4`) and the Hodge decomposition without closures.
 
 ## References
 
@@ -92,5 +94,52 @@ Thesis: §6.3 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
+
+/-! ### Closed range and the Hodge decomposition -/
+
+theorem freq_cases (k : Fin 3 → ℤ) :
+    Fourier.Torus.freq k = 0 ∨ 2 * Real.pi ≤ ‖Fourier.Torus.freq k‖ := by
+  by_cases hk : k = 0
+  · exact Or.inl (Fourier.Torus.freq_eq_zero_iff.2 hk)
+  · exact Or.inr (Fourier.Torus.two_pi_le_norm_freq hk)
+
+/-- **The periodic BGG complex has closed range** at every index (Poincaré constant `4`): at
+`ξ = 0` the zeroth-order part `S₁` is still present, and controls the skew part
+(`Feec.Fourier.BGG.bggFamily_gap`). Thesis: §6.3 -/
+theorem closedRangeAt (i : Fin 3) : complex.ClosedRangeAt i :=
+  (Fourier.Torus.symbolComplex bggFamily).closedRangeAt_of_gap (C := 4)
+    (Filter.Eventually.of_forall fun k => bggFamily_gap _ _ (freq_cases k))
+
+theorem dual_closedRangeAt {i j : Fin 3} (hij : ComplexShape.fin3.Rel i j) :
+    complex.dual.ClosedRangeAt i :=
+  (Fourier.Torus.symbolComplex bggFamily).dual_closedRangeAt_of_gap hij (C := 4)
+    (Filter.Eventually.of_forall fun k => bggFamily_gap _ _ (freq_cases k))
+
+theorem dual_closedRangeAt_two : complex.dual.ClosedRangeAt 2 := by
+  have hn : ComplexShape.fin3.next 2 = 2 := ComplexShape.fin3.next_eq_self' 2 fun k h => by
+    have : (2 : Fin 3).val + 1 = k.val := h
+    have := k.isLt; omega
+  have h0 : complex.d 2 (ComplexShape.fin3.next 2) = 0 := complex.shape _ _ (by
+    rw [hn]; intro h; have : (2 : Fin 3).val + 1 = (2 : Fin 3).val := h; omega)
+  rw [HilbertComplex.ClosedRangeAt, HilbertComplex.boundaries_dual, h0, LinearPMap.adjoint_zero]
+  convert (isClosed_singleton (x := (0 : Space 2))) using 1
+  ext y; constructor
+  · rintro ⟨x, rfl⟩; rfl
+  · rintro rfl; exact ⟨0, rfl⟩
+
+theorem dual_closedRangeAt' (i : Fin 3) : complex.dual.ClosedRangeAt i := by
+  fin_cases i
+  · exact dual_closedRangeAt (j := 1) rfl
+  · exact dual_closedRangeAt (j := 2) rfl
+  · exact dual_closedRangeAt_two
+
+/-- **Hodge decomposition without closures** for the periodic BGG complex at every index,
+pairwise orthogonal. Thesis: §6.3 -/
+theorem hodge (i : Fin 3) :
+    complex.boundaries i ⊔ complex.harmonic i ⊔ complex.dual.boundaries i = ⊤ ∧
+      complex.boundaries i ⟂ complex.harmonic i ∧
+      complex.harmonic i ⟂ complex.dual.boundaries i ∧
+      complex.boundaries i ⟂ complex.dual.boundaries i :=
+  complex.hodge_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i)
 
 end Feec.Models.Torus.BGG

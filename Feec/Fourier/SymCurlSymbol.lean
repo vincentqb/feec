@@ -551,6 +551,25 @@ theorem norm_div_le_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
     rw [← hdiv] at h2
     exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h2
 
+/-- For a symmetric matrix with `ξᵀ A ξ = 0`: `|ξ| ‖A‖ ≤ 2 ‖curl_ξ A‖`. -/
+theorem mul_norm_le_two_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
+    (h0 : ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) = 0) : ‖ξ‖ * ‖M‖ ≤ 2 * ‖curl ξ M‖ := by
+  have hkey := norm_div_le_norm_curl hM h0
+  have hlag := norm_curl_sq_add_norm_div_sq ξ M
+  have h2 : (‖ξ‖ * ‖M‖) ^ 2 ≤ (2 * ‖curl ξ M‖) ^ 2 := by
+    nlinarith [sq_nonneg ‖div ξ M‖, norm_nonneg (div ξ M), norm_nonneg (curl ξ M),
+      pow_le_pow_left₀ (norm_nonneg _) hkey 2]
+  exact (sq_le_sq₀ (by positivity) (by positivity)).1 h2
+
+/-- `ξᵀ A ξ = -⟪hess_ξ 1, A⟫`. -/
+theorem inner_hessM_one (ξ : Freq) (M : Mat) :
+    ⟪hessM ξ 1, M⟫_ℂ = -∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) := by
+  rw [inner_mat, ← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun b _ => ?_
+  rw [hessM_apply]; simp
+
 /-- **The fibre gap of the curl on symmetric matrices**: `|ξ| ‖v‖ ≤ 2 ‖curl_ξ v‖` on `N(curl_ξ)ᗮ`
 (in `S`). -/
 theorem mul_norm_le_norm_curlS {ξ : Freq} {v : Sym}

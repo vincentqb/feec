@@ -9,6 +9,7 @@ public import Feec.Algebra.PolynomialForm
 public import Feec.Algebra.Proxy3
 public import Feec.Algebra.TransverseTraceless
 public import Feec.Counterexamples.BallSymTSD
+public import Feec.Counterexamples.BoundedBGG
 public import Feec.Counterexamples.BoundedDomainTSD
 public import Feec.Counterexamples.BoundedSymTSD
 public import Feec.Counterexamples.ClassicalRegularity
@@ -99,9 +100,9 @@ public import Feec.HilbertComplex.ReducedSystem
 public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.SecondOrder
 public import Feec.HilbertComplex.Short
+public import Feec.HilbertComplex.ShortDual
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
-public import Feec.Legacy.BoundedDomain.BGG
 public import Feec.Legacy.BoundedDomain.Basic
 public import Feec.Legacy.BoundedDomain.Density
 public import Feec.Legacy.BoundedDomain.Ext
@@ -110,8 +111,6 @@ public import Feec.Legacy.BoundedDomain.Kstar
 public import Feec.Legacy.BoundedDomain.Salvage
 public import Feec.Legacy.BoundedDomain.SalvageDim
 public import Feec.Legacy.BoundedDomain.SalvageMax
-public import Feec.Legacy.BoundedDomain.Sym
-public import Feec.Legacy.BoundedDomain.SymExt
 public import Feec.Legacy.Box.Basic
 public import Feec.Legacy.Box.Forward
 public import Feec.Legacy.Box.Ident
@@ -138,9 +137,11 @@ public import Feec.Legacy.Whole.Basic
 public import Feec.Legacy.Whole.Ident
 public import Feec.Legacy.Whole.Mul
 public import Feec.Legacy.Whole.Weak
+public import Feec.Models.BoundedDomain.BGG
 public import Feec.Models.BoundedDomain.DeRham
 public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
+public import Feec.Models.BoundedDomain.Hessian
 public import Feec.Models.BoundedDomain.Interior
 public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Models.Cube.Bridge

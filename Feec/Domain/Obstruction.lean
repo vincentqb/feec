@@ -61,6 +61,52 @@ theorem _root_.LinearPMap.adjoint_le_adjoint_of_le {T S : H₁ →ₗ.[𝕜] H�
 
 end AdjointAntitone
 
+/-! ## Closed-graph bound behind the projection hypotheses -/
+
+section ClosedGraph
+
+variable {𝕜 : Type*} [RCLike 𝕜] {E F : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+  [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace 𝕜 F] [CompleteSpace F]
+
+/-- **Closed-graph bound for a projection hypothesis**: if `T` is closed and a bounded `P` maps
+`D(T)` into itself, then `x ↦ T (P x)` is bounded in the graph norm of `T`. -/
+theorem _root_.LinearPMap.exists_norm_apply_le_of_mapsTo {T : E →ₗ.[𝕜] F} (hT : T.IsClosed)
+    (P : E →L[𝕜] E) (hP : ∀ x : T.domain, P x ∈ T.domain) :
+    ∃ C : ℝ, ∀ x : T.domain, ‖T ⟨P x, hP x⟩‖ ≤ C * ‖((x : E), T x)‖ := by
+  have : CompleteSpace T.graph :=
+    (show IsClosed (T.graph : Set (E × F)) from hT).completeSpace_coe
+  have hdom : ∀ p : T.graph, P (p : E × F).1 ∈ T.domain := fun p =>
+    hP ⟨_, LinearPMap.mem_domain_of_mem_graph (y := (p : E × F).2) p.2⟩
+  let g0 : T.graph →ₗ[𝕜] T.domain := LinearMap.codRestrict T.domain
+    ((P : E →L[𝕜] E).toLinearMap ∘ₗ (LinearMap.fst 𝕜 E F) ∘ₗ T.graph.subtype) hdom
+  let g : T.graph →ₗ[𝕜] F := T.toFun ∘ₗ g0
+  have hgc : IsClosed (g.graph : Set (T.graph × F)) := by
+    have e : (g.graph : Set (T.graph × F)) =
+        (fun q : T.graph × F => (P (q.1 : E × F).1, q.2)) ⁻¹' (T.graph : Set (E × F)) := by
+      ext ⟨p, y⟩
+      simp only [SetLike.mem_coe, LinearMap.mem_graph_iff, mem_preimage]
+      constructor
+      · rintro rfl
+        exact T.mem_graph (g0 p)
+      · intro h
+        obtain ⟨z, hz1, hz2⟩ := T.mem_graph_iff.1 h
+        have e1 : z = g0 p := Subtype.ext hz1
+        change y = T (g0 p)
+        rw [← e1]
+        exact hz2.symm
+    rw [e]
+    exact hT.preimage ((P.continuous.comp
+      (continuous_fst.comp (continuous_subtype_val.comp continuous_fst))).prodMk continuous_snd)
+  let gc : T.graph →L[𝕜] F := ⟨g, g.continuous_of_isClosed_graph hgc⟩
+  refine ⟨‖gc‖, fun x => ?_⟩
+  have hp : ((x : E), T x) ∈ T.graph := T.mem_graph x
+  have h := gc.le_opNorm ⟨_, hp⟩
+  have e : gc ⟨_, hp⟩ = T ⟨P x, hP x⟩ := rfl
+  rw [e] at h
+  exact h
+
+end ClosedGraph
+
 /-! ## The obstruction subspace -/
 
 section Abstract

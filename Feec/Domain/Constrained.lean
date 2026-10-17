@@ -45,6 +45,15 @@ theorem Submodule.comap_topologicalClosure_map {𝕜 M N : Type*} [RCLike 𝕜]
     hL.closure_image_eq]
   exact hL.injective.mem_set_image
 
+/-- The adjoint identity on a graph point: `⟪T† y, x⟫ = ⟪y, z⟫` for `(x, z) ∈ graph T`. -/
+theorem LinearPMap.adjoint_inner_of_mem_graph {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+    {T : E →ₗ.[𝕜] F} (hT : Dense (T.domain : Set E)) (y : T†.domain) {p : E × F}
+    (hp : p ∈ T.graph) : ⟪T† y, p.1⟫_𝕜 = ⟪(y : F), p.2⟫_𝕜 := by
+  obtain ⟨x, hx1, hx2⟩ := (LinearPMap.mem_graph_iff _).1 hp
+  rw [← hx1, ← hx2]
+  exact LinearPMap.adjoint_isFormalAdjoint hT y x
+
 namespace Feec.Domain
 
 /-! ## Scalar fields as one-component fields -/
@@ -91,7 +100,8 @@ def testGraphVia : Submodule 𝕜 (X × Y) where
     simp only at h1 h1' h2 h2'
     refine ⟨φ + ψ, hφ.add hψ, ?_, ?_⟩
     · rw [Prod.fst_add, map_add, h1, h1', testField_add]
-    · rw [Prod.snd_add, map_add, h2, h2', testField_congr _ ((A.isTestField_apply hφ).add (A.isTestField_apply hψ))
+    · rw [Prod.snd_add, map_add, h2, h2', testField_congr _ ((A.isTestField_apply hφ).add
+        (A.isTestField_apply hψ))
         (A.apply_add (fun i => (hφ i).contDiff) fun i => (hψ i).contDiff), testField_add]
   smul_mem' := by
     rintro c ⟨x, y⟩ ⟨φ, hφ, h1, h2⟩
@@ -111,7 +121,8 @@ constrained test graph and `y' ∈ Y` with `Jy y' = ψ ∈ C_c^∞`, `⟪y', y�
 theorem closure_testGraphVia_inner {p : X × Y} (hp : p ∈ (A.testGraphVia Jx Jy).topologicalClosure)
     {ψ : κ → E → 𝕜} (hψ : IsTestField Ω ψ) {y' : Y} (hy' : Jy y' = testField hψ) :
     ⟪y', p.2⟫_𝕜 = ⟪testField (A.formalAdj.isTestField_apply hψ), Jx p.1⟫_𝕜 := by
-  let S : Set (X × Y) := {q | ⟪y', q.2⟫_𝕜 = ⟪testField (A.formalAdj.isTestField_apply hψ), Jx q.1⟫_𝕜}
+  let S : Set (X × Y) := {q | ⟪y', q.2⟫_𝕜 = ⟪testField (A.formalAdj.isTestField_apply hψ), Jx
+      q.1⟫_𝕜}
   have hS : IsClosed S := isClosed_eq (continuous_const.inner continuous_snd)
     (continuous_const.inner (Jx.continuous.comp continuous_fst))
   have hsub : (A.testGraphVia Jx Jy : Set (X × Y)) ⊆ S := by
@@ -172,7 +183,8 @@ theorem dense_minimalVia_domain_of [CompleteSpace X] (hY : DenseVia Jy) (hX : De
     (LinearPMap.mem_domain_of_mem_graph (A.mem_graph_minimalVia Jx Jy hY ⟨φ, hφ, hx, hy⟩))
     |> fun h => by rwa [inner_eq_zero_symm] at h
 
-/-- **`A_via ⊆ A_min` through the embeddings**: `Jx x ∈ D(A_min)` and `A_min (Jx x) = Jy (A_via x)`. -/
+/-- **`A_via ⊆ A_min` through the embeddings**: `Jx x ∈ D(A_min)` and `A_min (Jx x) = Jy (A_via
+x)`. -/
 theorem minimalVia_graph_map (hΩ : IsOpen Ω) (hY : DenseVia Jy) (x : (A.minimalVia Jx Jy).domain) :
     (Jx x, Jy (A.minimalVia Jx Jy x)) ∈ (A.minimal Ω).graph := by
   rw [A.minimal_graph hΩ]
@@ -272,6 +284,48 @@ theorem denseVia_of_proj (hΩ : IsOpen Ω) (J : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ
     rw [← J.inner_map_map, hJ, ← hP, hPsa, hPJ] at this
     rw [← inner_conj_symm, this, map_zero]
   exact J.injective (by rw [h0, map_zero])
+
+/-- **Surjective embeddings have dense test fields** (e.g. the identity, `L2.toL2F`, or a
+reindexing of components). -/
+theorem denseVia_of_surjective (hΩ : IsOpen Ω) (J : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ)
+    (hJ : Function.Surjective J) : DenseVia J := by
+  intro y hy
+  have h0 : J y = 0 := by
+    refine L2F.eq_zero_of_forall_inner_testField hΩ (J y) fun ψ hψ => ?_
+    obtain ⟨y', hy'⟩ := hJ (testField hψ)
+    have := hy ψ hψ y' hy'
+    rw [← J.inner_map_map, hy'] at this
+    rw [← inner_conj_symm, this, map_zero]
+  exact J.injective (by rw [h0, map_zero])
+
+/-- **The adjoint of a constrained realization through the ambient adjoint**: if
+`Jy v ∈ D((A_min)†)` and `w ∈ X` represents `(A_min)† (Jy v)` along `Jx` (for a closed subspace
+`X`, its orthogonal projection), then `v ∈ D(A_via†)` and `A_via† v = w`. -/
+theorem adjoint_minimalVia_of_mem [CompleteSpace X] (hΩ : IsOpen Ω) (hY : DenseVia Jy)
+    (hd : Dense ((A.minimalVia Jx Jy).domain : Set X)) {v : Y}
+    (hv : Jy v ∈ (A.minimal Ω)†.domain) {w : X}
+    (hw : ∀ x : X, ⟪w, x⟫_𝕜 = ⟪(A.minimal Ω)† ⟨Jy v, hv⟩, Jx x⟫_𝕜) :
+    ∃ h : v ∈ (A.minimalVia Jx Jy)†.domain, (A.minimalVia Jx Jy)† ⟨v, h⟩ = w := by
+  have key : ∀ x : (A.minimalVia Jx Jy).domain,
+      ⟪w, (x : X)⟫_𝕜 = ⟪v, A.minimalVia Jx Jy x⟫_𝕜 := by
+    intro x
+    obtain ⟨y, hy1, hy2⟩ := (LinearPMap.mem_graph_iff _).1 (A.minimalVia_graph_map Jx Jy hΩ hY x)
+    simp only at hy1 hy2
+    have e := LinearPMap.adjoint_isFormalAdjoint (A.dense_minimal_domain hΩ) ⟨Jy v, hv⟩ y
+    rw [hw, ← hy1, e, hy2]
+    exact Jy.inner_map_map _ _
+  have hmem := LinearPMap.mem_adjoint_domain_of_exists _ ⟨w, key⟩
+  exact ⟨hmem, LinearPMap.adjoint_apply_eq hd ⟨v, hmem⟩ key⟩
+
+/-- **`A_via ≤ A_min` read on values**: `A_min (Jx x) = Jy (A_via x)`. -/
+theorem minimal_apply_minimalVia (hΩ : IsOpen Ω) (hY : DenseVia Jy)
+    (x : (A.minimalVia Jx Jy).domain) (h : Jx x ∈ (A.minimal Ω).domain) :
+    A.minimal Ω ⟨Jx x, h⟩ = Jy (A.minimalVia Jx Jy x) := by
+  obtain ⟨y, hy1, hy2⟩ := (LinearPMap.mem_graph_iff _).1 (A.minimalVia_graph_map Jx Jy hΩ hY x)
+  simp only at hy1 hy2
+  rw [← hy2]
+  congr 1
+  exact Subtype.ext hy1.symm
 
 end ConstCoeffOp
 

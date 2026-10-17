@@ -214,7 +214,8 @@ def divdivOp (n : ℕ) : ConstCoeffOp (Fin n → ℝ) 𝕜 (Fin n × Fin n) Unit
 
 theorem divdivOp_apply (B : Fin n × Fin n → (Fin n → ℝ) → 𝕜) (u : Unit) (x : Fin n → ℝ) :
     (divdivOp n).apply B u x =
-      ∑ ij : Fin n × Fin n, fderiv ℝ (fun y => fderiv ℝ (B ij) y (coordDir ij.2)) x (coordDir ij.1) := by
+      ∑ ij : Fin n × Fin n, fderiv ℝ (fun y => fderiv ℝ (B ij) y (coordDir ij.2)) x (coordDir
+          ij.1) := by
   simp [ConstCoeffOp.apply, divdivOp, iterDeriv_cons]
 
 /-- The symmetric part `sym M = (M + Mᵀ)/2` as a constant matrix on `𝕜^{n×n}`. -/
@@ -317,5 +318,129 @@ theorem isComplexPair_hess_curl :
   have hs : ContDiff ℝ ∞ fun z => fderiv ℝ (h ()) z (coordDir i) :=
     ((hh ()).fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
   rw [fderiv_fderiv_comm (hs.of_le (by simp)), sub_self]
+
+/-! ## Double divergence: transposition, `div div = div ∘ div`, and `div div ∘ sym curl = 0` -/
+
+theorem contDiff_fderiv_apply {f : (Fin n → ℝ) → 𝕜} (hf : ContDiff ℝ ∞ f) (v : Fin n → ℝ) :
+    ContDiff ℝ ∞ fun y => fderiv ℝ f y v :=
+  (hf.fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
+
+/-- `div div Bᵀ = div div B` for smooth `B` (Schwarz). -/
+theorem divdivOp_apply_transpose {B : Fin n × Fin n → (Fin n → ℝ) → 𝕜}
+    (hB : ∀ ij, ContDiff ℝ ∞ (B ij)) :
+    (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply (fun ij => B (ij.2, ij.1)) =
+      (divdivOp n).apply B := by
+  funext u x
+  rw [divdivOp_apply, divdivOp_apply]
+  refine Fintype.sum_equiv (Equiv.prodComm _ _) _ _ fun ij => ?_
+  obtain ⟨i, j⟩ := ij
+  exact fderiv_fderiv_comm ((hB (j, i)).of_le (by simp)) _ _ x
+
+/-- `div div B = Σᵢ ∂ᵢ (div B)ᵢ` for smooth `B`. -/
+theorem divdivOp_apply_eq_sum_divOp {B : Fin n × Fin n → (Fin n → ℝ) → 𝕜}
+    (hB : ∀ ij, ContDiff ℝ ∞ (B ij)) (u : Unit) (x : Fin n → ℝ) :
+    (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply B u x =
+      ∑ i, fderiv ℝ ((divOp n n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply B i) x (coordDir i) := by
+  rw [divdivOp_apply, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  have e : (divOp n n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply B i =
+      fun y => ∑ j, fderiv ℝ (B (i, j)) y (coordDir j) := funext fun y => divOp_apply B i y
+  rw [e, fderiv_fun_sum fun j _ =>
+    ((contDiff_fderiv_apply (hB (i, j)) (coordDir j)).differentiable (by simp)) x]
+  simp
+
+/-- `div div ∘ curl = 0` (row-wise curl). -/
+theorem isComplexPair_curl_divdiv :
+    (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (divdivOp 3) := by
+  intro f hf
+  funext u x
+  rw [divdivOp_apply_eq_sum_divOp ((curlOp 3).contDiff_apply hf),
+    isComplexPair_curl_div f hf]
+  simp
+
+/-- **`div div ∘ sym curl = 0`**: the symmetric-curl–div-div complex. -/
+theorem isComplexPair_symCurl_divdiv :
+    (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (divdivOp 3) := by
+  intro f hf
+  set C := (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f with hCdef
+  set Ct : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜 := fun ij => C (ij.2, ij.1) with hCtdef
+  have hC : ∀ ij, ContDiff ℝ ∞ (C ij) := (curlOp 3).contDiff_apply hf
+  have hCt : ∀ ij, ContDiff ℝ ∞ (Ct ij) := fun ij => hC _
+  have e : (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f = (1 / 2 : 𝕜) • (C + Ct) := by
+    funext ij x
+    rw [symCurlOp_apply]
+    simp only [Pi.smul_apply, Pi.add_apply, smul_eq_mul, hCtdef, hCdef]
+    ring
+  have h1 := (divdivOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply_smul (1 / 2 : 𝕜)
+    (f := C + Ct) fun ij => (hC ij).add (hCt ij)
+  have h2 := (divdivOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply_add hC hCt
+  rw [e, h1, h2, hCtdef, divdivOp_apply_transpose hC, hCdef, isComplexPair_curl_divdiv f hf]
+  simp
+
+/-- The Hessian is symmetric (Schwarz). -/
+theorem hessOp_apply_swap {h : Unit → (Fin n → ℝ) → 𝕜} (hh : ∀ u, ContDiff ℝ ∞ (h u))
+    (i j : Fin n) :
+    (hessOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply h (i, j) = (hessOp n).apply h (j, i) := by
+  funext x
+  rw [hessOp_apply, hessOp_apply]
+  exact fderiv_fderiv_comm ((hh ()).of_le (by simp)) _ _ x
+
+/-- `div divᵗ = hess` (two integrations by parts). -/
+theorem divdivOp_formalAdj : (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).formalAdj = hessOp
+    n := by
+  simp only [ConstCoeffOp.formalAdj, divdivOp, hessOp, adjEntry_singleton]
+  congr
+  funext ij u
+  simp
+
+/-- `hessᵗ = div div`. -/
+theorem hessOp_formalAdj : (hessOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).formalAdj = divdivOp n := by
+  rw [← divdivOp_formalAdj, ConstCoeffOp.formalAdj_formalAdj]
+
+/-! ## The BGG operator `(S₁, curl)` on `ℝ³` -/
+
+/-- The second operator `u ↦ (S₁ u, curl u)` of the BGG complex (5.1) on `ℝ³`, with
+`S₁ = 2 vskw`, `(S₁ u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}` (order `0`), and the row-wise curl. -/
+def skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) (Fin 3 ⊕ Fin 3 × Fin 3) where
+  coeff
+    | .inl i, jk => if jk = (i + 1, i + 2) then [([], 1)]
+        else if jk = (i + 2, i + 1) then [([], -1)] else []
+    | .inr ik, jl => (curlOp 3).coeff ik jl
+
+theorem skwCurlOp_apply_inl (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (i : Fin 3) (x : Fin 3 → ℝ) :
+    (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply Φ (.inl i) x =
+      Φ (i + 1, i + 2) x - Φ (i + 2, i + 1) x := by
+  simp only [ConstCoeffOp.apply, skwCurlOp, applyEntry_ite, applyEntry_singleton, applyEntry_nil']
+  have hne : (i + 2, i + 1) ≠ (i + 1, i + 2) := by
+    intro h; have := congrArg Prod.fst h; fin_cases i <;> simp at this
+  rw [Finset.sum_eq_add (i + 1, i + 2) (i + 2, i + 1) hne.symm]
+  · simp [hne, iterDeriv]
+    ring
+  · intro jk _ h
+    simp [h.1, h.2]
+  · simp
+  · simp
+
+theorem skwCurlOp_apply_inr (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (ik : Fin 3 × Fin 3) :
+    (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply Φ (.inr ik) = (curlOp 3).apply Φ ik :=
+  rfl
+
+theorem skwCurlOp_isOrderLE : (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsOrderLE 1 := by
+  intro j i t ht
+  rcases j with j | j
+  · simp only [skwCurlOp] at ht
+    split_ifs at ht <;> simp_all
+  · exact curlOp_isOrderLE j i t ht
+
+/-- **`(S₁, curl) ∘ hess = 0`**: Hessians are symmetric and curl-free. -/
+theorem isComplexPair_hess_skwCurl :
+    (hessOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair skwCurlOp := by
+  intro h hh
+  funext j x
+  rcases j with i | ik
+  · rw [skwCurlOp_apply_inl, hessOp_apply_swap hh (i + 1) (i + 2), sub_self]
+    rfl
+  · rw [skwCurlOp_apply_inr, isComplexPair_hess_curl h hh]
+    rfl
 
 end Feec.Domain

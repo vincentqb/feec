@@ -10,7 +10,7 @@ form of the corrected Prop 6.2 (`Feec.BGG.exists_discreteSolution_iff_compatible
 `Feec.BGG.exists_discreteSolution_unique`), admissibility of projected initial data
 (`Feec.BGG.projected_compatible_u`, `Feec.BGG.projected_compatible_phi_iff`), convergence from
 projected data (`Feec.BGG.exists_discreteSolution_norm_sub_le`) and the counterexample
-(`Feec.BGG.Counterexample.not_projected_compatible_phi`). The old names are aliases.
+(`Feec.Counterexamples.ConstrainedEvolution.not_projected_compatible_phi`). The old names are aliases.
 
 See [QuennevilleBelair2015, §6.2, Prop 6.2].
 -/
@@ -30,15 +30,15 @@ alias projected_C3_iff := Feec.BGG.projected_compatible_phi_iff
 alias ch6_convergence_projected := Feec.BGG.exists_discreteSolution_norm_sub_le
 
 /-- The zero space. -/
-abbrev E0 := Feec.BGG.Counterexample.E0
-alias E0_eq_zero := Feec.BGG.Counterexample.E0_eq_zero
+abbrev E0 := Feec.Counterexamples.ConstrainedEvolution.E0
+alias E0_eq_zero := Feec.Counterexamples.ConstrainedEvolution.E0_eq_zero
 /-- BGG data with `Ṽ⁰ = Ṽ¹ = ℝ`, `d = id` on `Ṽ⁰`, all other spaces zero. -/
-abbrev cexD := Feec.BGG.Counterexample.projSegment
+abbrev cexD := Feec.Counterexamples.ConstrainedEvolution.projSegment
 /-- `ι(σ, u, M, ρ) = u`. -/
-abbrev cexι := Feec.BGG.Counterexample.projι
+abbrev cexι := Feec.Counterexamples.ConstrainedEvolution.projι
 /-- The form `Ah((x, z), (y, w)) = −x w + z y`. -/
-abbrev cexAh := Feec.BGG.Counterexample.projAh
-alias projected_Q0_counterexample := Feec.BGG.Counterexample.not_projected_compatible_phi
-alias projected_Q0_counterexample_sol := Feec.BGG.Counterexample.exists_discreteSolution_projected_ne
+abbrev cexAh := Feec.Counterexamples.ConstrainedEvolution.projAh
+alias projected_Q0_counterexample := Feec.Counterexamples.ConstrainedEvolution.not_projected_compatible_phi
+alias projected_Q0_counterexample_sol := Feec.Counterexamples.ConstrainedEvolution.exists_discreteSolution_projected_ne
 
 end Feec.Repair.C67

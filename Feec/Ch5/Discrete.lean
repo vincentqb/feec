@@ -3,6 +3,7 @@ module
 public import Feec.Foundation.BGG
 public import Feec.FiniteElement.Dof
 public import Feec.HilbertComplex.BGG.Discrete
+public import Feec.Counterexamples.DiscreteBGG
 
 /-!
 # Chapter 5.2: discretization of the weak-symmetry complex (compatibility layer)
@@ -37,7 +38,8 @@ alias surj_of_54 := Feec.BGG.surjective_of_comp_eq
 alias exact_55 := Feec.BGG.exists_of_exact_rows
 alias prop54_unique := Feec.BGG.eq_zero_of_mixed_homogeneous
 alias prop54_hB_necessary := Feec.BGG.exists_mixed_homogeneous_of_perp
-alias prop54_counterexample_noTopExact := Feec.BGG.mixed_not_unique_of_not_exactTop
+alias prop54_counterexample_noTopExact :=
+  Feec.Counterexamples.DiscreteBGG.mixed_not_unique_of_not_exactTop
 alias sys56_iff := Feec.BGG.isMixedSolution_iff
 
 /-- The discrete system (5.6). See [QuennevilleBelair2015, §5.2, (5.6)]. -/

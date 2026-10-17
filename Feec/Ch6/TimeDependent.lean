@@ -2,6 +2,7 @@ module
 
 public import Feec.Foundation.BGG
 public import Feec.HilbertComplex.BGG.TimeDependent
+public import Feec.Counterexamples.ConstrainedEvolution
 
 /-!
 # Chapter 6: the time-dependent BGG construction (compatibility layer)
@@ -122,11 +123,11 @@ abbrev Sol63.ofEqOn := @Feec.BGG.DiscreteSolution.ofEqOn
 alias prop_6_2_exists_of_continuousOn := Feec.BGG.exists_discreteSolution_of_continuousOn
 
 /-- `e₁ = (0, 1) ∈ ℝ²`. -/
-abbrev cexE1 := Feec.BGG.Counterexample.kerVector
+abbrev cexE1 := Feec.Counterexamples.ConstrainedEvolution.kerVector
 /-- Concrete discrete BGG data refuting Prop 6.2. -/
-abbrev cexBGG := Feec.BGG.Counterexample.incompatibleSegment
-alias cexBGG_hyps := Feec.BGG.Counterexample.incompatibleSegment_hyps
-alias prop_6_2_false := Feec.BGG.Counterexample.not_forall_exists_discreteSolution
+abbrev cexBGG := Feec.Counterexamples.ConstrainedEvolution.incompatibleSegment
+alias cexBGG_hyps := Feec.Counterexamples.ConstrainedEvolution.incompatibleSegment_hyps
+alias prop_6_2_false := Feec.Counterexamples.ConstrainedEvolution.not_forall_exists_discreteSolution
 
 alias prop_6_3_a := Feec.BGG.errorEq_a
 alias prop_6_3_b := Feec.BGG.errorEq_b

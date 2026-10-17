@@ -5,9 +5,13 @@ public import Feec.Algebra.ExteriorFibre
 public import Feec.Algebra.Koszul
 public import Feec.Algebra.PolynomialForm
 public import Feec.Algebra.Proxy3
+public import Feec.Counterexamples.BallSymTSD
 public import Feec.Counterexamples.BoundedDomainTSD
 public import Feec.Counterexamples.BoundedSymTSD
+public import Feec.Counterexamples.ClassicalRegularity
+public import Feec.Counterexamples.ConstrainedEvolution
 public import Feec.Counterexamples.CubeStationary
+public import Feec.Counterexamples.DiscreteBGG
 public import Feec.Counterexamples.Ell2
 public import Feec.Counterexamples.Fredholm
 public import Feec.Counterexamples.NonClosedRangeEuclidean

@@ -37,6 +37,7 @@ public import Feec.Evolution.Constrained
 public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy
 public import Feec.Evolution.Forcing
+public import Feec.Evolution.Perturbation
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
@@ -44,12 +45,14 @@ public import Feec.Examples.NonVacuity
 public import Feec.FiniteElement.Dof
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
+public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
 public import Feec.ForMathlib.LinearPMap.CompPartial
 public import Feec.ForMathlib.LinearPMap.GraphSpace
+public import Feec.ForMathlib.LinearPMap.Integral
 public import Feec.ForMathlib.LinearPMap.Intertwines
 public import Feec.ForMathlib.LinearPMap.Reducing
 public import Feec.ForMathlib.LinearPMap.RestrictScalars
@@ -64,8 +67,8 @@ public import Feec.Fourier.FibreReducing
 public import Feec.Fourier.GradCurlSymbol
 public import Feec.Fourier.Reality
 public import Feec.Fourier.SpectralGalerkin
-public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.SymCurlSymbol
+public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
 public import Feec.Fourier.TorusSpectral
 public import Feec.Fourier.TorusWeak
@@ -81,13 +84,13 @@ public import Feec.HilbertComplex.Approximation.DiscreteHodge
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.Subcomplex
-public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Discrete
 public import Feec.HilbertComplex.BGG.TimeDependent
 public import Feec.HilbertComplex.BGG.ToComplex
 public import Feec.HilbertComplex.BGG.Twisted
 public import Feec.HilbertComplex.BGG.WeakSymmetry
+public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.Compactness
 public import Feec.HilbertComplex.Density
 public import Feec.HilbertComplex.Dirac
@@ -110,8 +113,8 @@ public import Feec.HilbertComplex.ShortDual
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Models.BoundedDomain.BGG
-public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.DeRham
+public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.Hessian
 public import Feec.Models.BoundedDomain.Interior
@@ -120,8 +123,8 @@ public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Mirror
-public import Feec.Models.Cube.MirrorBase
 public import Feec.Models.Cube.MirrorBGG
+public import Feec.Models.Cube.MirrorBase
 public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
@@ -151,6 +154,7 @@ public import Feec.Physics.LinearizedGravity.PlaneWave
 public import Feec.Physics.Maxwell.Constraints
 public import Feec.Semigroup.Basic
 public import Feec.Semigroup.Invariance
+public import Feec.Semigroup.Orbit
 public import Feec.Semigroup.Perturbation
 public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Stone

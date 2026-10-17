@@ -40,7 +40,12 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > **Status (2026-10-17): waves W0–W6 are done.** `Feec/Legacy` (57 modules) and
 > `Feec/Models/Cube/Bridge.lean` are deleted; the cube models are built on `Feec.Models.Torus`,
 > `Feec.Fourier` and `Feec.Models.BoundedDomain` alone, and every module of `Feec/` is imported by
-> `Feec.lean`. Every declaration of the pre-refactor tree has a row in
+> `Feec.lean`. The layer order of §1 holds for every import (siblings of one tier, e.g.
+> `Fourier`/`Geometry` → `Algebra` and `Counterexamples` → `Physics`, import each other acyclically);
+> in particular `Semigroup` no longer imports `Evolution`: the orbit calculus is
+> `Feec.Semigroup.Orbit`, Hille's theorem is `Feec.ForMathlib.LinearPMap.Integral`, and the
+> uniqueness half of the bounded perturbation theorem (via Duhamel) is `Feec.Evolution.Perturbation`.
+> Every declaration of the pre-refactor tree has a row in
 > `docs/migration/map.tsv` pointing at a current name or marked `deleted-helper` (non-main rows
 > only); `scripts/MapCheck.sh --strict` passes (5131/5131 old declarations, main 269/269).
 > `scripts/CheckCitations.sh` implements the citation gate above and passes. The verification gate

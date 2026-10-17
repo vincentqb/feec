@@ -57,7 +57,7 @@ theorem apply_add_mem_domain_of_lift {A S : E →ₗ.[𝕜] E} {F U : ℝ → E}
     ∃ h : U 0 ∈ A.domain, A ⟨U 0, h⟩ + F 0 ∈ S.domain := by
   have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT.le⟩
   obtain ⟨v, hv, hdU⟩ := hU.deriv 0 h0
-  obtain ⟨hdom, hval⟩ := Evolution.mem_graph_iff_exists.1 hv
+  obtain ⟨hdom, hval⟩ := LinearPMap.mem_graph_iff_exists.1 hv
   have hfst : HasDerivWithinAt (fun t => S.graphFst (ξ t)) (S.graphFst ξ') (Icc 0 T) 0 :=
     ((S.graphFst.restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt 0 hd).mono
       Icc_subset_Ici_self

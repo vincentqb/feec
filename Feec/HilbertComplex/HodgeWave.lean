@@ -195,7 +195,7 @@ theorem isClassicalWeakSolution_of_isClassicalSolution (hF : ContinuousOn F I)
   refine ⟨hw, ⟨fun t => K.starProjection (G t), K.starProjection.continuous.comp_continuousOn hGc,
     fun t ht => ?_⟩, hU.continuousOn_deriv hF⟩
   have hm := Submodule.mem_inf.1 (hU.mem_domain ht)
-  obtain ⟨hGt, e⟩ := Evolution.mem_graph_iff_exists.1 (hG t ht)
+  obtain ⟨hGt, e⟩ := LinearPMap.mem_graph_iff_exists.1 (hG t ht)
   beta_reduce
   rw [← e]
   change T ⟨U t, hm.1⟩ = K.starProjection (T ⟨U t, hm.1⟩ - T† ⟨U t, hm.2⟩)

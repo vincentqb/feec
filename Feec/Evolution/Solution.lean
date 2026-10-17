@@ -1,6 +1,7 @@
 module
 
 public import Feec.ForMathlib.LinearPMap.Skew
+public import Feec.ForMathlib.LinearPMap.Integral
 public import Feec.ForMathlib.Analysis.Gronwall
 
 /-!
@@ -39,13 +40,6 @@ open Set Filter Topology
 
 namespace Feec.Evolution
 
-/-- Membership in the graph, in domain form. -/
-theorem mem_graph_iff_exists {R E : Type*} [Ring R] [AddCommGroup E] [Module R E]
-    {A : E →ₗ.[R] E} {x v : E} : (x, v) ∈ A.graph ↔ ∃ h : x ∈ A.domain, A ⟨x, h⟩ = v :=
-  ⟨fun h => ⟨LinearPMap.mem_domain_of_mem_graph h,
-    ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph h)).2 h).symm⟩,
-   fun ⟨h, e⟩ => e ▸ A.mem_graph ⟨x, h⟩⟩
-
 section General
 
 variable {𝕜 E : Type*} [Ring 𝕜] [NormedAddCommGroup E] [Module 𝕜 E] [NormedSpace ℝ E]
@@ -81,7 +75,7 @@ theorem mem_domain (hU : IsStrongSolution A I F U) {t : ℝ} (ht : t ∈ I) : U 
 theorem hasDerivWithinAt (hU : IsStrongSolution A I F U) {t : ℝ} (ht : t ∈ I) :
     HasDerivWithinAt U (A ⟨U t, hU.mem_domain ht⟩ + F t) I t := by
   obtain ⟨v, hv, hd⟩ := hU.deriv t ht
-  obtain ⟨_, e⟩ := mem_graph_iff_exists.1 hv
+  obtain ⟨_, e⟩ := LinearPMap.mem_graph_iff_exists.1 hv
   rwa [e]
 
 /-- Strong solutions in domain form. -/

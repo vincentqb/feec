@@ -27,6 +27,9 @@ Hodge wave equation is the matrix system (4.14) of the Einstein–Bianchi formul
 * `starProjection_eq_zero_of_mem_orthogonal`: fields whose Fourier coefficients are orthogonal
   to the TSD fibres (e.g. `A = c ξᵀ`, gradients) have zero TSD part, though `dev sym A ≠ 0` (the
   answer to the blueprint review's claimed counterexample: `P_TSD` is not pointwise).
+* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
+  real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
+  (`Feec.Fourier.SymbolComplex.RealStructure`).
 
 ## References
 
@@ -101,6 +104,51 @@ Thesis: Prop 4.17 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
+
+/-! ### Real fields -/
+
+/-- **The real structure**: real fields are those with `Â(-ξ) = conj Â(ξ)`. -/
+def realStructure : (Fourier.Torus.symbolComplex gradCurl).RealStructure Reflection.count_neg where
+  cj := cjW3
+  antilinear := cjW3_smul
+  invol := cjW3_cjW3
+  inner_cj := inner_cjW3
+  symm i j k v := by
+    change gradCurl.m i j (Fourier.Torus.freq (-k)) (cjW3 i v) = _
+    rw [Fourier.Torus.freq_neg]; exact gradCurl_neg_cj i j _ v
+
+/-- The conjugation `C u = conj (u ∘ (-·))` of the state space. -/
+abbrev realConj : PiLp 2 Space →L[ℝ] PiLp 2 Space := realStructure.toConj.totalConj
+
+/-- **Thesis Prop 4.17 for real fields**: real TSD data and forcing give a strong solution that
+stays real and TSD. Thesis: Prop 4.17 -/
+theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
+    (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
+    (h0 : U a ∈ HilbertComplex.totalSub constraint) (h0r : realConj (U a) = U a)
+    (hF : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub constraint)
+    (hFr : ∀ t ∈ Icc a b, realConj (F t) = F t) :
+    ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
+  fun t ht => ⟨tsd_propagates hU h0 hF t ht, realStructure.conj_eq hU h0r hFr t ht⟩
+
+/-- **Prop 4.17 for real fields, with existence and uniqueness.** Thesis: Prop 4.17 -/
+theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
+    (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) (hU₀r : realConj U₀ = U₀)
+    {F : ℝ → PiLp 2 Space} {a b : ℝ}
+    (hF : Evolution.ForcingClass.admissible complex.wave a b F)
+    (hFK : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub constraint)
+    (hFr : ∀ t ∈ Icc a b, realConj (F t) = F t) :
+    ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution complex.wave (Icc a b) F U ∧
+      (∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t) ∧
+      ∀ V, V a = U₀ → Evolution.IsStrongSolution complex.wave (Icc a b) F V →
+        EqOn V U (Icc a b) := by
+  obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
+  exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
+    realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
+
+/-- The wave group maps real fields to real fields. -/
+theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
+    realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
+  realStructure.waveGroup_conj t x
 
 /-! ### Closed range -/
 

@@ -374,4 +374,92 @@ theorem curlS_ne_zero : symCurl.m 1 2 ≠ 0 := by
   simp only [coe_curlS, _root_.zero_apply, Tr.val_zero, PiLp.zero_apply] at this
   simp [M, Sym.val, curl_apply, Fin.sum_univ_three, leviCivita3_apply] at this
 
+
+/-! ### Real symbols -/
+
+theorem entryConj_mem_symSub {M : Mat} (hM : M ∈ symSub) : entryConj M ∈ symSub := fun a b => by
+  simp [hM a b]
+
+theorem entryConj_mem_trSub {M : Mat} (hM : M ∈ trSub) : entryConj M ∈ trSub := by
+  change ∑ a, conj (M (a, a)) = 0
+  rw [← map_sum, (show ∑ a, M (a, a) = 0 from hM), map_zero]
+
+/-- Entrywise conjugation on `S`. -/
+def cjS : Sym →L[ℝ] Sym :=
+  LinearMap.mkContinuous
+    { toFun := fun M => Sym.mk (entryConj (M : Mat)) (entryConj_mem_symSub M.val_mem)
+      map_add' := fun M N => Sym.ext (map_add entryConj (M : Mat) N)
+      map_smul' := fun r M => Sym.ext (entryConj.map_smul r (M : Mat)) } 1 fun M => by
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, one_mul]
+    change ‖entryConj (M : Mat)‖ ≤ ‖(M : Mat)‖
+    rw [EuclideanSpace.norm_eq, EuclideanSpace.norm_eq]
+    simp
+
+/-- Entrywise conjugation on `T`. -/
+def cjT : Tr →L[ℝ] Tr :=
+  LinearMap.mkContinuous
+    { toFun := fun M => Tr.mk (entryConj (M : Mat)) (entryConj_mem_trSub M.val_mem)
+      map_add' := fun M N => Tr.ext (map_add entryConj (M : Mat) N)
+      map_smul' := fun r M => Tr.ext (entryConj.map_smul r (M : Mat)) } 1 fun M => by
+    simp only [LinearMap.coe_mk, AddHom.coe_mk, one_mul]
+    change ‖entryConj (M : Mat)‖ ≤ ‖(M : Mat)‖
+    rw [EuclideanSpace.norm_eq, EuclideanSpace.norm_eq]
+    simp
+
+@[simp] theorem coe_cjS (M : Sym) : (cjS M : Mat) = entryConj (M : Mat) := rfl
+@[simp] theorem coe_cjT (M : Tr) : (cjT M : Mat) = entryConj (M : Mat) := rfl
+
+theorem inner_conj_conj (v w : ℂ) : ⟪conj v, conj w⟫_ℂ = ⟪w, v⟫_ℂ := by
+  simp [RCLike.inner_apply, mul_comm]
+
+/-- Complex conjugation on `ℂ` as a real-linear map. -/
+def cjC : ℂ →L[ℝ] ℂ := Complex.conjCLE.toContinuousLinearMap
+
+@[simp] theorem cjC_apply (z : ℂ) : cjC z = conj z := rfl
+
+theorem hess_neg_cj (ξ : Freq) (c : ℂ) : hess (-ξ) (cjC c) = cjS (hess ξ c) := by
+  ext ⟨a, b⟩
+  simp [coe_hess, hessM_apply]
+
+theorem curlS_neg_cj (ξ : Freq) (M : Sym) : curlS (-ξ) (cjS M) = cjT (curlS ξ M) := by
+  ext1
+  simp only [coe_curlS, coe_cjS, coe_cjT]
+  exact curl_neg_entryConj ξ _
+
+open ShortHilbertComplex in
+/-- Conjugation on the three fibres `ℂ, S, T`. -/
+def cjW3 : ∀ i : Fin 3, W3 ℂ Sym Tr i →L[ℝ] W3 ℂ Sym Tr i
+  | 0 => cjC
+  | 1 => cjS
+  | 2 => cjT
+
+open ShortHilbertComplex in
+/-- **The strong-symmetry symbols are real.** -/
+theorem symCurl_neg_cj (i j : Fin 3) (ξ : Freq) (v : W3 ℂ Sym Tr i) :
+    symCurl.m i j (-ξ) (cjW3 i v) = cjW3 j (symCurl.m i j ξ v) := by
+  fin_cases i <;> fin_cases j
+  all_goals first
+    | exact hess_neg_cj ξ v
+    | exact curlS_neg_cj ξ v
+    | exact (map_zero (cjW3 _)).symm
+
+open ShortHilbertComplex in
+theorem cjW3_smul : ∀ (i : Fin 3) (a : ℂ) (v : W3 ℂ Sym Tr i),
+    cjW3 i (a • v) = (starRingEnd ℂ) a • cjW3 i v
+  | 0, a, v => map_mul (starRingEnd ℂ) a (show ℂ from v)
+  | 1, a, v => Sym.ext (entryConj_smul a (Sym.val v))
+  | 2, a, v => Tr.ext (entryConj_smul a (Tr.val v))
+
+open ShortHilbertComplex in
+theorem cjW3_cjW3 : ∀ (i : Fin 3) (v : W3 ℂ Sym Tr i), cjW3 i (cjW3 i v) = v
+  | 0, v => Complex.conj_conj (show ℂ from v)
+  | 1, v => Sym.ext (entryConj_entryConj (Sym.val v))
+  | 2, v => Tr.ext (entryConj_entryConj (Tr.val v))
+
+open ShortHilbertComplex in
+theorem inner_cjW3 : ∀ (i : Fin 3) (v w : W3 ℂ Sym Tr i), ⟪cjW3 i v, cjW3 i w⟫_ℂ = ⟪w, v⟫_ℂ
+  | 0, v, w => inner_conj_conj (show ℂ from v) (show ℂ from w)
+  | 1, v, w => inner_entryConj (Sym.val v) (Sym.val w)
+  | 2, v, w => inner_entryConj (Tr.val v) (Tr.val w)
+
 end Feec.Fourier.SymCurl

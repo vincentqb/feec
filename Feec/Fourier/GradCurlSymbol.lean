@@ -3,6 +3,7 @@ module
 public import Feec.Fourier.FibreReducing
 public import Feec.Fourier.ClosedRange
 public import Feec.Algebra.MatrixSymbol
+public import Feec.Fourier.Reality
 
 /-!
 # The symbol of the row-wise grad–curl matrix complex
@@ -461,6 +462,52 @@ theorem curl_ne_zero : gradCurl.m 1 2 ≠ 0 := by
   have h' : curl (EuclideanSpace.single 0 1) = 0 := congrFun h _
   have := congrArg (fun T : Mat →L[ℂ] Mat => T (EuclideanSpace.single (0, 2) 1) (0, 1)) h'
   simp [curl_apply, Fin.sum_univ_three, leviCivita3_apply] at this
+
+
+/-! ### Real symbols -/
+
+theorem grad_neg_entryConj (ξ : Freq) (u : Vec) :
+    grad (-ξ) (entryConj u) = entryConj (grad ξ u) := by
+  ext ⟨a, b⟩
+  simp [grad_apply]
+
+theorem curl_neg_entryConj (ξ : Freq) (M : Mat) :
+    curl (-ξ) (entryConj M) = entryConj (curl ξ M) := by
+  ext ⟨a, b⟩
+  simp only [curl_apply, entryConj_apply, map_mul, map_sum, Complex.conj_I, conj_leviCivita3,
+    Complex.conj_ofReal, PiLp.neg_apply, Complex.ofReal_neg]
+  simp only [mul_sum, neg_mul, mul_neg, sum_neg_distrib]
+
+open ShortHilbertComplex in
+/-- Entrywise conjugation on the three fibres. -/
+def cjW3 : ∀ i : Fin 3, W3 Vec Mat Mat i →L[ℝ] W3 Vec Mat Mat i
+  | 0 => entryConj
+  | 1 => entryConj
+  | 2 => entryConj
+
+open ShortHilbertComplex in
+/-- **The grad–curl symbols are real**: `m (-ξ) (conj v) = conj (m ξ v)`. -/
+theorem gradCurl_neg_cj (i j : Fin 3) (ξ : Freq) (v : W3 Vec Mat Mat i) :
+    gradCurl.m i j (-ξ) (cjW3 i v) = cjW3 j (gradCurl.m i j ξ v) := by
+  fin_cases i <;> fin_cases j
+  all_goals first
+    | exact grad_neg_entryConj ξ v
+    | exact curl_neg_entryConj ξ v
+    | exact (map_zero (cjW3 _)).symm
+
+open ShortHilbertComplex in
+theorem cjW3_smul (i : Fin 3) (a : ℂ) (v : W3 Vec Mat Mat i) :
+    cjW3 i (a • v) = (starRingEnd ℂ) a • cjW3 i v := by
+  fin_cases i <;> exact entryConj_smul a v
+
+open ShortHilbertComplex in
+theorem cjW3_cjW3 (i : Fin 3) (v : W3 Vec Mat Mat i) : cjW3 i (cjW3 i v) = v := by
+  fin_cases i <;> exact entryConj_entryConj v
+
+open ShortHilbertComplex in
+theorem inner_cjW3 (i : Fin 3) (v w : W3 Vec Mat Mat i) :
+    ⟪cjW3 i v, cjW3 i w⟫_ℂ = ⟪w, v⟫_ℂ := by
+  fin_cases i <;> exact inner_entryConj v w
 
 end GradCurl
 

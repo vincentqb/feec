@@ -21,6 +21,7 @@ public import Feec.Fourier.Euclidean
 public import Feec.Fourier.ExteriorSymbol
 public import Feec.Fourier.FibreReducing
 public import Feec.Fourier.GradCurlSymbol
+public import Feec.Fourier.Reality
 public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus

@@ -179,14 +179,22 @@ theorem adjoint_curlClosure_inner (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω
 
 /-- **`D(curl*) = H(curl, M)`** (no boundary condition) for `curl` on `H̊(curl, M)`, and
 `curl*` is the weak curl. -/
-theorem mem_adjoint_curlClosure_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2M Ω} :
+theorem mem_adjoint_curlClosure_iff (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) {B : L2M Ω} :
     B ∈ (curlClosure (Ω := Ω))†.domain ↔ B ∈ HcurlM Ω := by
+  rw [curlClosure_eq_minimal,
+    (Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).mem_adjoint_minimal_domain_iff hΩ]
   constructor
-  · intro hB
-    exact ⟨(curlClosure (Ω := Ω))† ⟨B, hB⟩, fun Φ hΦ =>
-      (adjoint_curlClosure_inner hΩ hb ⟨B, hB⟩ hΦ).symm⟩
   · rintro ⟨C, hC⟩
-    exact (adjoint_curlClosure_of_weakCurl hΩ hb hC).1
+    refine ⟨C, fun Φ hΦ => ?_⟩
+    have := hC Φ (isTestField_of_forall hΦ)
+    rw [Feec.Models.BoundedDomain.inner_testField_eq, Feec.Models.BoundedDomain.inner_testField_eq,
+      ← curlM_eq_apply] at this
+    exact this.symm
+  · rintro ⟨C, hC⟩
+    refine ⟨C, fun Φ hΦ => ?_⟩
+    rw [Feec.Models.BoundedDomain.inner_testField_eq, Feec.Models.BoundedDomain.inner_testField_eq,
+      ← curlM_eq_apply]
+    exact (hC Φ fun ij => IsTest.ofDomain (hΦ ij)).symm
 
 
 section ThesisAdjoints
@@ -231,57 +239,35 @@ section Bochner
 
 variable {α : Type*} [MeasurableSpace α] (μ : Measure α) (ι : Type*) [Fintype ι]
 
-/-- Componentwise map `L²(μ; ℝ^ι) → ⊕ₗ² L²(μ)`. -/
+/-- Componentwise map `L²(μ; ℝ^ι) → ⊕ₗ² L²(μ)` (`Feec.Domain.toPiL2` over `ℝ`). -/
 def toPiL2 : Lp (EuclideanSpace ℝ ι) 2 μ →ₗ[ℝ] PiLp 2 (fun _ : ι => Lp ℝ 2 μ) :=
-  (WithLp.linearEquiv 2 ℝ (ι → Lp ℝ 2 μ)).symm.toLinearMap ∘ₗ
-    LinearMap.pi fun i =>
-      ((EuclideanSpace.proj i : EuclideanSpace ℝ ι →L[ℝ] ℝ).compLpL 2 μ).toLinearMap
+  Feec.Domain.toPiL2 μ ι
 
 variable {μ ι}
 
 /-- The components of `toPiL2 f` are a.e. the coordinates of `f`. -/
 theorem toPiL2_apply (f : Lp (EuclideanSpace ℝ ι) 2 μ) (i : ι) :
-    (toPiL2 μ ι f i : α → ℝ) =ᵐ[μ] fun x => f x i := by
-  change ((EuclideanSpace.proj i : EuclideanSpace ℝ ι →L[ℝ] ℝ).compLp f : α → ℝ) =ᵐ[μ] _
-  filter_upwards [(EuclideanSpace.proj i : EuclideanSpace ℝ ι →L[ℝ] ℝ).coeFn_compLp f] with x hx
-  rw [hx]
-  rfl
+    (toPiL2 μ ι f i : α → ℝ) =ᵐ[μ] fun x => f x i :=
+  Feec.Domain.toPiL2_apply f i
 
 /-- `toPiL2` preserves the `L²` inner product: `∫ ⟪f, g⟫ = Σ_i ∫ f_i g_i`. -/
 theorem inner_toPiL2 (f g : Lp (EuclideanSpace ℝ ι) 2 μ) :
-    ⟪toPiL2 μ ι f, toPiL2 μ ι g⟫ = ⟪f, g⟫ := by
-  rw [PiLp.inner_apply, L2.inner_def]
-  simp only [L2.inner_def]
-  rw [← integral_finsetSum]
-  · refine integral_congr_ae ?_
-    have h1 := ae_all_iff.2 fun i => toPiL2_apply f i
-    have h2 := ae_all_iff.2 fun i => toPiL2_apply g i
-    filter_upwards [h1, h2] with x hx hy
-    rw [PiLp.inner_apply]
-    refine Finset.sum_congr rfl fun i _ => ?_
-    rw [hx i, hy i]
-  · exact fun i _ => L2.integrable_inner _ _
+    ⟪toPiL2 μ ι f, toPiL2 μ ι g⟫ = ⟪f, g⟫ :=
+  Feec.Domain.inner_toPiL2 f g
 
 /-- `toPiL2` is onto: assemble the components into one `L²` function. -/
-theorem toPiL2_surjective : Function.Surjective (toPiL2 μ ι) := by
-  intro g
-  have hm : MemLp (fun x => (WithLp.toLp 2 fun i => g i x : EuclideanSpace ℝ ι)) 2 μ :=
-    MemLp.of_eval_piLp fun i => Lp.memLp (g i)
-  refine ⟨hm.toLp _, (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)⟩
-  filter_upwards [toPiL2_apply (hm.toLp _) i, hm.coeFn_toLp] with x h1 h2
-  rw [h1, h2]
+theorem toPiL2_surjective : Function.Surjective (toPiL2 μ ι) :=
+  Feec.Domain.toPiL2_surjective
 
 variable (μ ι) in
-/-- **`L²(μ; ℝ^ι) ≃ₗᵢ ⊕ₗ²_{i ∈ ι} L²(μ)`**: the Bochner space of `EuclideanSpace`-valued
-`L²` functions is isometric to the `ℓ²`-sum of scalar `L²` spaces, componentwise. -/
+/-- **`L²(μ; ℝ^ι) ≃ₗᵢ ⊕ₗ²_{i ∈ ι} L²(μ)`** (`Feec.Domain.piL2Equiv` over `ℝ`). -/
 def piL2Equiv : Lp (EuclideanSpace ℝ ι) 2 μ ≃ₗᵢ[ℝ] PiLp 2 (fun _ : ι => Lp ℝ 2 μ) :=
-  LinearIsometryEquiv.ofSurjective ((toPiL2 μ ι).isometryOfInner inner_toPiL2)
-    toPiL2_surjective
+  Feec.Domain.piL2Equiv μ ℝ ι
 
 /-- The components of `piL2Equiv f` are a.e. the coordinates of `f`. -/
 theorem piL2Equiv_apply (f : Lp (EuclideanSpace ℝ ι) 2 μ) (i : ι) :
     (piL2Equiv μ ι f i : α → ℝ) =ᵐ[μ] fun x => f x i :=
-  toPiL2_apply f i
+  Feec.Domain.piL2Equiv_apply f i
 
 end Bochner
 

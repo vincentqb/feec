@@ -8,6 +8,7 @@ public import Mathlib.Analysis.Calculus.FDeriv.Symmetric
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.LinearAlgebra.CrossProduct
 public import Feec.Ch4.Constraints
+public import Feec.Models.BoundedDomain.GradCurl
 
 /-!
 # Thesis Prop 4.17 on bounded domains: the projection hypothesis and TSD propagation fail
@@ -262,6 +263,23 @@ theorem const_mul (hf : IsTest Ω f) (c : ℝ) : IsTest Ω (fun x => c * f x) :=
 
 end IsTest
 
+/-- Test functions here are `Feec.Domain` test functions. -/
+theorem IsTest.toDomain {Ω : Set R3} {f : R3 → ℝ} (hf : IsTest Ω f) : Feec.Domain.IsTest Ω f :=
+  ⟨hf.1, hf.2, hf.3⟩
+
+theorem IsTest.ofDomain {Ω : Set R3} {f : R3 → ℝ} (hf : Feec.Domain.IsTest Ω f) : IsTest Ω f :=
+  ⟨hf.1, hf.2, hf.3⟩
+
+theorem isTestField_of_forall {Ω : Set R3} {ι : Type*} {Φ : ι → R3 → ℝ}
+    (hΦ : ∀ i, IsTest Ω (Φ i)) : Feec.Domain.IsTestField Ω Φ := fun i => (hΦ i).toDomain
+
+/-- The row-wise curl is the constant-coefficient operator `Feec.Domain.curlOp 3`. -/
+theorem curlM_eq_apply (Φ : Ix → R3 → ℝ) :
+    curlM Φ = (Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).apply Φ := by
+  funext ik x
+  rw [Feec.Domain.curlOp_apply]
+  rfl
+
 /-! ## `L²` spaces on a domain -/
 
 variable (Ω : Set R3)
@@ -374,10 +392,39 @@ def curlGraph : Set (L2M Ω × L2M Ω) :=
     ∀ ij, (p.1 ij : R3 → ℝ) =ᵐ[volume.restrict Ω] Φ ij ∧
       (p.2 ij : R3 → ℝ) =ᵐ[volume.restrict Ω] curlM Φ ij}
 
+/-- The curl graph is the test graph of `Feec.Domain.curlOp 3`. -/
+theorem curlGraph_eq_testGraph :
+    curlGraph Ω = ((Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).testGraph Ω :
+      Set (L2M Ω × L2M Ω)) := by
+  ext ⟨u, c⟩
+  constructor
+  · rintro ⟨Φ, hΦ, hp⟩
+    have hΦ' : Feec.Domain.IsTestField Ω Φ := fun ij => (hΦ ij).toDomain
+    refine ⟨Φ, hΦ', ?_⟩
+    rw [Prod.mk.injEq]
+    exact ⟨Feec.Domain.eq_testField hΦ' fun ij => (hp ij).1,
+      Feec.Domain.eq_testField _ fun ij => by rw [← curlM_eq_apply]; exact (hp ij).2⟩
+  · rintro ⟨Φ, hΦ, h⟩
+    rw [Prod.mk.injEq] at h
+    obtain ⟨rfl, rfl⟩ := h
+    exact ⟨Φ, fun ij => IsTest.ofDomain (hΦ ij), fun ij => ⟨Feec.Domain.coeFn_testField hΦ ij, by
+      rw [curlM_eq_apply]; exact Feec.Domain.coeFn_testField _ ij⟩⟩
+
 variable (Ω) in
 /-- `H̊(curl, Ω; ℝ³ˣ³)`: the closure of `C_c^∞(Ω; ℝ³ˣ³)` in the graph norm of the row-wise curl,
 i.e. the fields `B` such that `(B, C)` is an `L²`-limit of `(Φₙ, curl Φₙ)`, `Φₙ ∈ C_c^∞`. -/
 def HcurlZero : Set (L2M Ω) := {B | ∃ C, (B, C) ∈ closure (curlGraph Ω)}
+
+/-- `H̊(curl)` is the domain of the minimal realization of the row-wise curl. -/
+theorem mem_HcurlZero_iff_minimal {B : L2M Ω} :
+    B ∈ HcurlZero Ω ↔ B ∈ ((Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain := by
+  rw [Feec.Domain.ConstCoeffOp.minimal, Submodule.toLinearPMap_domain, Submodule.mem_map, HcurlZero,
+    mem_ofPred_eq, curlGraph_eq_testGraph, ← Submodule.topologicalClosure_coe]
+  constructor
+  · rintro ⟨C, h⟩
+    exact ⟨(B, C), h, rfl⟩
+  · rintro ⟨⟨B', C⟩, h, rfl⟩
+    exact ⟨C, h⟩
 
 variable (Ω) in
 /-- `H(div, Ω; ℝ³ˣ³)` (row-wise divergence, no boundary condition): `B` has a weak divergence
@@ -395,33 +442,16 @@ theorem closure_curlGraph_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
       ∑ ij, ∫ x, B ij x * curlM Ψ ij x ∂volume.restrict Ω := by
   have m1 : ∀ ij, MemLp (Ψ ij) 2 (volume.restrict Ω) := fun ij =>
     memLp_of_continuous hΩ hb (hΨ ij).continuous
-  have m2 : ∀ ij, MemLp (curlM Ψ ij) 2 (volume.restrict Ω) := fun ij =>
-    memLp_of_continuous hΩ hb ((continuous_pd (hΨ _) _).sub (continuous_pd (hΨ _) _))
-  let F : L2M Ω × L2M Ω → ℝ := fun p =>
-    ∑ ij, ⟪p.2 ij, (m1 ij).toLp _⟫ - ∑ ij, ⟪p.1 ij, (m2 ij).toLp _⟫
-  have hF : Continuous F := by
-    apply Continuous.sub
-    · refine continuous_finsetSum _ fun ij _ => ?_
-      exact ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : Ix => L2 Ω) ij).continuous.comp continuous_snd).inner
-        continuous_const
-    · refine continuous_finsetSum _ fun ij _ => ?_
-      exact ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : Ix => L2 Ω) ij).continuous.comp continuous_fst).inner
-        continuous_const
-  have hsub : curlGraph Ω ⊆ F ⁻¹' {0} := by
-    rintro ⟨u, c⟩ ⟨Φ, hΦ, hp⟩
-    simp only [mem_preimage, mem_singleton_iff, F, sub_eq_zero]
-    simp only [← integral_mul_eq_inner]
-    have e1 : ∀ ij, ∫ x, c ij x * Ψ ij x ∂volume.restrict Ω =
-        ∫ x, curlM Φ ij x * Ψ ij x ∂volume.restrict Ω := fun ij =>
-      integral_congr_ae ((hp ij).2.mono fun x hx => by simp only; rw [hx])
-    have e2 : ∀ ij, ∫ x, u ij x * curlM Ψ ij x ∂volume.restrict Ω =
-        ∫ x, Φ ij x * curlM Ψ ij x ∂volume.restrict Ω := fun ij =>
-      integral_congr_ae ((hp ij).1.mono fun x hx => by simp only; rw [hx])
-    simp only [e1, e2]
-    exact sum_integral_curlM_mul hΦ hΨ
-  have := closure_minimal hsub (isClosed_singleton.preimage hF) h
-  simp only [F, mem_preimage, mem_singleton_iff, sub_eq_zero, ← integral_mul_eq_inner] at this
-  exact this
+  have m2 : ∀ ij, MemLp ((Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).formalAdj.apply
+      Ψ ij) 2 (volume.restrict Ω) := fun ij => by
+    rw [Feec.Domain.curlOp_formalAdj_apply, ← curlM_eq_apply]
+    exact memLp_of_continuous hΩ hb (continuous_curlM hΨ ij)
+  rw [curlGraph_eq_testGraph, ← Submodule.topologicalClosure_coe] at h
+  have := (Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).closure_testGraph_inner
+    (N := 1) Feec.Domain.curlOp_isOrderLE h (fun ij => (hΨ ij).of_le (by norm_num)) m1 m2
+  rw [Feec.Domain.inner_toL2F, Feec.Domain.inner_toL2F] at this
+  simpa only [Feec.Domain.curlOp_formalAdj_apply, ← curlM_eq_apply, RCLike.conj_to_real]
+    using this
 
 /-- Continuity of a component `B ↦ B_{ij}`. -/
 theorem continuous_component (ij : Ix) : Continuous fun B : L2M Ω => B ij :=
@@ -487,6 +517,20 @@ theorem isClosed_TSD : IsClosed (TSD Ω : Set (L2M Ω)) := by
 instance : (TSD Ω).HasOrthogonalProjection := by
   have : CompleteSpace (TSD Ω) := isClosed_TSD.completeSpace_coe
   infer_instance
+
+/-- `L²(TSD)` is `Feec.Models.BoundedDomain.tsd`. -/
+theorem TSD_eq_tsd : TSD Ω = Feec.Models.BoundedDomain.tsd Ω := by
+  ext B
+  rw [mem_TSD, Feec.Models.BoundedDomain.mem_tsd]
+  refine and_congr_right' (and_congr_right' ?_)
+  constructor
+  · intro h φ hφ
+    rw [Feec.Models.BoundedDomain.inner_grad_testField _ hφ]
+    exact h φ fun i => IsTest.ofDomain (hφ i)
+  · intro h φ hφ
+    have := h φ fun i => (hφ i).toDomain
+    rw [Feec.Models.BoundedDomain.inner_grad_testField _ (fun i => (hφ i).toDomain)] at this
+    exact this
 
 /-- Weakly divergence-free fields are in `H(div)`: `L²(TSD) ⊆ H(div)`. -/
 theorem TSD_subset_HdivM : (TSD Ω : Set (L2M Ω)) ⊆ HdivM Ω := by
@@ -626,29 +670,15 @@ theorem L2_ext_of_integral (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {f f'
 closure of the curl graph and `B ∈ L²(TSD)`, then `C = curl B` is symmetric.
 
 See [QuennevilleBelair2015, §3.4, Lemma 3.5]. -/
-theorem curl_symm_of_mem_TSD (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B C : L2M Ω}
+theorem curl_symm_of_mem_TSD (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) {B C : L2M Ω}
     (h : (B, C) ∈ closure (curlGraph Ω)) (hB : B ∈ TSD Ω) (j k : Fin 3) :
     C (j, k) = C (k, j) := by
-  have key : ∀ m : Fin 3, C (m + 2, m + 1) = C (m + 1, m + 2) := by
-    intro m
-    refine L2_ext_of_integral hΩ hb fun g hg => ?_
-    let ψ : Fin 3 → R3 → ℝ := fun i => if i = m then g else 0
-    have hψ : ∀ i, IsTest Ω (ψ i) := fun i => by
-      by_cases hi : i = m
-      · simpa [ψ, hi] using hg
-      · simp only [ψ, hi, ite_false]
-        exact ⟨contDiff_const, HasCompactSupport.zero, by simp⟩
-    have e := closure_curlGraph_identity hΩ hb h (Ψ := skewOf ψ)
-      (contDiff_skewOf fun i => (hψ i).contDiff_one)
-    rw [sum_integral_mul_curlM_skewOf_eq_zero hΩ hb hB hψ] at e
-    fin_cases m <;>
-      simp [ψ, skewOf, Fintype.sum_prod_type, Fin.sum_univ_three, integral_neg] at e ⊢ <;>
-      linarith
-  have k0 := key 0
-  have k1 := key 1
-  have k2 := key 2
-  simp only [Fin.isValue, Fin.reduceAdd] at k0 k1 k2
-  fin_cases j <;> fin_cases k <;> simp [k0, k1, k2]
+  rw [curlGraph_eq_testGraph, ← Submodule.topologicalClosure_coe, SetLike.mem_coe,
+    ← Feec.Domain.ConstCoeffOp.minimal_graph _ hΩ] at h
+  have hdom := LinearPMap.mem_domain_of_mem_graph h
+  have hC := ((LinearPMap.image_iff hdom).2 h)
+  rw [hC]
+  exact Feec.Models.BoundedDomain.curl_symm_of_mem_tsd hΩ ⟨B, hdom⟩ (TSD_eq_tsd ▸ hB) j k
 
 /-- `∂_k x_a = δ_{ka}`. -/
 theorem pd_coord (a k : Fin 3) (x : R3) :
@@ -672,37 +702,9 @@ Correction: this refutes the first projection hypothesis of Prop 4.17 and the de
 See [QuennevilleBelair2015, §4.10, Prop 4.17]. -/
 theorem integral_eq_zero_of_mem_TSD_of_mem_HcurlZero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {B : L2M Ω} (hB : B ∈ TSD Ω) (hB' : B ∈ HcurlZero Ω) (a b : Fin 3) :
-    ∫ x, B (a, b) x ∂volume.restrict Ω = 0 := by
-  obtain ⟨C, hC⟩ := hB'
-  have hCs := curl_symm_of_mem_TSD hΩ hb hC hB
-  set v : Fin 3 → R3 → ℝ := fun i => if i = b then (fun y : R3 => y a) else 0 with hv
-  have hvd : ∀ i, ContDiff ℝ 1 (v i) := fun i => by
-    simp only [hv]
-    split_ifs
-    exacts [contDiff_apply ℝ (fun _ : Fin 3 => ℝ) a, contDiff_const]
-  have hpd : ∀ m i x, pd m (v i) x = if i = b ∧ m = a then 1 else 0 := by
-    intro m i x
-    by_cases hi : i = b
-    · simp [hv, hi, pd_coord]
-    · simp only [hv, hi, ite_false, false_and]
-      simp [pd]
-  have hdv : ∀ x, ∑ m, pd m (v m) x = if a = b then 1 else 0 := by
-    intro x
-    simp only [hpd, Fin.sum_univ_three]
-    fin_cases a <;> fin_cases b <;> simp
-  have e := closure_curlGraph_identity hΩ hb hC (Ψ := skewOf v) (contDiff_skewOf hvd)
-  rw [sum_integral_mul_skewOf_eq_zero hCs] at e
-  simp only [curlM_skewOf (fun i => (hvd i).differentiable one_ne_zero), hdv] at e
-  simp only [hpd, integral_mul_const] at e
-  have hone : MemLp (fun _ : R3 => (1 : ℝ)) 2 (volume.restrict Ω) :=
-    memLp_of_continuous hΩ hb continuous_const
-  have hI : ∀ f : L2 Ω, ∫ x, f x ∂volume.restrict Ω = ⟪f, hone.toLp _⟫ := fun f => by
-    rw [← integral_mul_eq_inner]; simp
-  have htr : ∑ i, ∫ x, B (i, i) x ∂volume.restrict Ω = 0 := by
-    simp only [hI, ← sum_inner, hB.2.1, inner_zero_left]
-  simp only [Fin.sum_univ_three] at htr
-  fin_cases a <;> fin_cases b <;> simp [Fintype.sum_prod_type, Fin.sum_univ_three] at e ⊢ <;>
-    linarith
+    ∫ x, B (a, b) x ∂volume.restrict Ω = 0 :=
+  Feec.Models.BoundedDomain.integral_eq_zero_of_mem_tsd hΩ hb ⟨B, mem_HcurlZero_iff_minimal.1 hB'⟩
+    (TSD_eq_tsd ▸ hB) a b
 
 /-! ## Test fields, constant fields, and the counterexample -/
 
@@ -967,20 +969,26 @@ theorem eq_zero_of_forall_integral (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
     simp
   exact this.symm
 
+/-- The curl graph submodule is the test graph of `Feec.Domain.curlOp 3`. -/
+theorem curlGraphSub_eq :
+    curlGraphSub Ω = (Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).testGraph Ω :=
+  SetLike.coe_injective curlGraph_eq_testGraph
+
 /-- The closure of the curl graph is a graph (curl on `C_c^∞` is closable). -/
-theorem curlGraph_closable (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+theorem curlGraph_closable (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) :
     ∀ x ∈ (curlGraphSub Ω).topologicalClosure, x.1 = 0 → x.2 = 0 := by
-  rintro ⟨B, C⟩ hx (h0 : B = 0)
-  subst h0
-  refine eq_zero_of_forall_integral hΩ hb fun Ψ hΨ => ?_
-  rw [closure_curlGraph_identity hΩ hb hx fun ij => (hΨ ij).contDiff_one]
-  refine Finset.sum_eq_zero fun ij _ => ?_
-  rw [integral_mul_eq_inner _ (memLp_of_continuous hΩ hb (continuous_curlM
-    (fun ij => (hΨ ij).contDiff_one) ij))]
-  simp
+  rw [curlGraphSub_eq]
+  exact (Feec.Domain.curlOp 3).testGraph_closable hΩ
 
 /-- `curl : H̊(curl, Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)`, the closure of curl on `C_c^∞`. -/
 def curlClosure : L2M Ω →ₗ.[ℝ] L2M Ω := (curlGraphSub Ω).topologicalClosure.toLinearPMap
+
+/-- **`curlClosure` is the minimal realization** of the row-wise curl
+(`Feec.Domain.ConstCoeffOp.minimal`). -/
+theorem curlClosure_eq_minimal :
+    curlClosure (Ω := Ω) = (Feec.Domain.curlOp 3 : Feec.Domain.ConstCoeffOp R3 ℝ Ix Ix).minimal Ω := by
+  rw [curlClosure, curlGraphSub_eq]
+  rfl
 
 /-- The graph of `curlClosure` is the closure of the curl graph. -/
 theorem curlClosure_graph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
@@ -1004,25 +1012,16 @@ theorem mem_domain_curlClosure {u : L2M Ω} :
     exact ⟨(u, C), h, rfl⟩
 
 /-- `curlClosure` is a closed operator. -/
-theorem isClosed_curlClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+theorem isClosed_curlClosure (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) :
     (curlClosure (Ω := Ω)).IsClosed := by
-  rw [LinearPMap.IsClosed, curlClosure_graph hΩ hb]
-  exact Submodule.isClosed_topologicalClosure _
+  rw [curlClosure_eq_minimal]
+  exact (Feec.Domain.curlOp 3).isClosed_minimal hΩ
 
 /-- `C_c^∞` is dense in `L²(Ω; ℝ³ˣ³)`, hence so is `H̊(curl)`. -/
-theorem dense_domain_curlClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+theorem dense_domain_curlClosure (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) :
     Dense ((curlClosure (Ω := Ω)).domain : Set (L2M Ω)) := by
-  rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
-    Submodule.eq_bot_iff]
-  intro v hv
-  refine eq_zero_of_forall_integral hΩ hb fun Ψ hΨ => ?_
-  have hmem : testField hΨ ∈ (curlClosure (Ω := Ω)).domain :=
-    mem_domain_curlClosure.2 (testField_mem_HcurlZero hΩ hb hΨ)
-  have h0 := (Submodule.mem_orthogonal' _ _).1 hv _ hmem
-  rw [PiLp.inner_apply] at h0
-  rw [← h0]
-  refine Finset.sum_congr rfl fun ij _ => ?_
-  exact integral_mul_eq_inner _ (hΨ ij).memLp
+  rw [curlClosure_eq_minimal]
+  exact (Feec.Domain.curlOp 3).dense_minimal_domain hΩ
 
 /-! ## The closed operator `grad` on `H̊¹` and the thesis' complex -/
 
@@ -1047,6 +1046,13 @@ theorem pd_pd_comm {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (a b : Fin 3) (x : R
 /-- The row-wise gradient of a vector field, `(grad φ)_{ij} = ∂_j φ_i`. -/
 def gradM (φ : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij => pd ij.2 (φ ij.1)
 
+/-- The row-wise gradient is the constant-coefficient operator `Feec.Domain.gradOp 3 3`. -/
+theorem gradM_eq_apply (φ : Fin 3 → R3 → ℝ) :
+    gradM φ = (Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).apply φ := by
+  funext ij x
+  rw [Feec.Domain.gradOp_apply]
+  rfl
+
 /-- The gradient of a test vector field has test components. -/
 theorem isTest_gradM {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) (ij : Ix) :
     IsTest Ω (gradM φ ij) := (hφ ij.1).pdiff ij.2
@@ -1063,6 +1069,24 @@ def gradGraph : Set (L2V Ω × L2M Ω) :=
   {p | ∃ φ : Fin 3 → R3 → ℝ, (∀ i, IsTest Ω (φ i)) ∧
     (∀ i, (p.1 i : R3 → ℝ) =ᵐ[volume.restrict Ω] φ i) ∧
       ∀ ij, (p.2 ij : R3 → ℝ) =ᵐ[volume.restrict Ω] gradM φ ij}
+
+/-- The grad graph is the test graph of `Feec.Domain.gradOp 3 3`. -/
+theorem gradGraph_eq_testGraph :
+    gradGraph Ω = ((Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).testGraph Ω :
+      Set (L2V Ω × L2M Ω)) := by
+  ext ⟨u, c⟩
+  constructor
+  · rintro ⟨φ, hφ, hp1, hp2⟩
+    have hφ' : Feec.Domain.IsTestField Ω φ := fun i => (hφ i).toDomain
+    refine ⟨φ, hφ', ?_⟩
+    rw [Prod.mk.injEq]
+    exact ⟨Feec.Domain.eq_testField hφ' hp1,
+      Feec.Domain.eq_testField _ fun ij => by rw [← gradM_eq_apply]; exact hp2 ij⟩
+  · rintro ⟨φ, hφ, h⟩
+    rw [Prod.mk.injEq] at h
+    obtain ⟨rfl, rfl⟩ := h
+    exact ⟨φ, fun i => IsTest.ofDomain (hφ i), fun i => Feec.Domain.coeFn_testField hφ i,
+      fun ij => by rw [gradM_eq_apply]; exact Feec.Domain.coeFn_testField _ ij⟩
 
 variable (Ω) in
 /-- The graph of grad on `C_c^∞(Ω; ℝ³)` is a linear subspace. -/
@@ -1108,30 +1132,24 @@ theorem closure_gradGraph_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
     memLp_of_continuous hΩ hb (hΨ ij).continuous
   have m2 : ∀ ij : Ix, MemLp (pd ij.2 (Ψ ij)) 2 (volume.restrict Ω) := fun ij =>
     memLp_of_continuous hΩ hb (continuous_pd (hΨ _) _)
-  let F : L2V Ω × L2M Ω → ℝ := fun p =>
-    ∑ ij, ⟪p.2 ij, (m1 ij).toLp _⟫ + ∑ ij : Ix, ⟪p.1 ij.1, (m2 ij).toLp _⟫
-  have hF : Continuous F := by
-    apply Continuous.add
-    · refine continuous_finsetSum _ fun ij _ => ?_
-      exact ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : Ix => L2 Ω) ij).continuous.comp continuous_snd).inner
-        continuous_const
-    · refine continuous_finsetSum _ fun ij _ => ?_
-      exact ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin 3 => L2 Ω) ij.1).continuous.comp
-        continuous_fst).inner continuous_const
-  have hsub : gradGraph Ω ⊆ F ⁻¹' {0} := by
-    rintro ⟨u, c⟩ ⟨φ, hφ, hp1, hp2⟩
-    simp only [mem_preimage, mem_singleton_iff, F, ← integral_mul_eq_inner]
-    have e1 : ∀ ij, ∫ x, c ij x * Ψ ij x ∂volume.restrict Ω =
-        -∫ x, φ ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := fun ij => by
-      rw [← integral_pd_mul (hφ ij.1) (hΨ ij)]
-      exact integral_congr_ae ((hp2 ij).mono fun x hx => by simp only; rw [hx]; rfl)
-    have e2 : ∀ ij : Ix, ∫ x, u ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω =
-        ∫ x, φ ij.1 x * pd ij.2 (Ψ ij) x ∂volume.restrict Ω := fun ij =>
-      integral_congr_ae ((hp1 ij.1).mono fun x hx => by simp only; rw [hx])
-    simp only [e1, e2, Finset.sum_neg_distrib, neg_add_cancel]
-  have := closure_minimal hsub (isClosed_singleton.preimage hF) h
-  simp only [F, mem_preimage, mem_singleton_iff, ← integral_mul_eq_inner] at this
-  linarith
+  have e3 : ∀ i, (Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).formalAdj.apply
+      Ψ i = fun x => -∑ j, pd j (Ψ (i, j)) x :=
+    fun i => funext fun x => Feec.Domain.gradOp_formalAdj_apply Ψ i x
+  have m3 : ∀ i, MemLp ((Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).formalAdj.apply
+      Ψ i) 2 (volume.restrict Ω) := fun i => by
+    rw [e3]
+    exact memLp_of_continuous hΩ hb
+      (continuous_finsetSum _ fun j _ => continuous_pd (hΨ _) _).neg
+  rw [gradGraph_eq_testGraph, ← Submodule.topologicalClosure_coe] at h
+  have := (Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).closure_testGraph_inner
+    (N := 1) Feec.Domain.gradOp_isOrderLE h (fun ij => (hΨ ij).of_le (by norm_num)) m1 m3
+  rw [Feec.Domain.inner_toL2F, Feec.Domain.inner_toL2F] at this
+  simp only [RCLike.conj_to_real] at this
+  rw [this, Fintype.sum_prod_type, ← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [← integral_finsetSum _ fun j _ => integrable_mul _ (m2 (i, j)), ← integral_neg]
+  refine integral_congr_ae (Eventually.of_forall fun x => ?_)
+  simp only [e3, Finset.mul_sum, mul_neg]
 
 /-- A vector field orthogonal to every test vector field vanishes. -/
 theorem eq_zero_of_forall_integralV (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {v : L2V Ω}
@@ -1155,21 +1173,27 @@ theorem eq_zero_of_forall_integralV (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
     simp
   exact this.symm
 
+/-- The grad graph submodule is the test graph of `Feec.Domain.gradOp 3 3`. -/
+theorem gradGraphSub_eq :
+    gradGraphSub Ω = (Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).testGraph Ω :=
+  SetLike.coe_injective gradGraph_eq_testGraph
+
 /-- The closure of the grad graph is a graph (grad on `C_c^∞` is closable). -/
-theorem gradGraph_closable (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+theorem gradGraph_closable (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) :
     ∀ x ∈ (gradGraphSub Ω).topologicalClosure, x.1 = 0 → x.2 = 0 := by
-  rintro ⟨v, G⟩ hx (h0 : v = 0)
-  subst h0
-  refine eq_zero_of_forall_integral hΩ hb fun Ψ hΨ => ?_
-  rw [closure_gradGraph_identity hΩ hb hx fun ij => (hΨ ij).contDiff_one]
-  rw [neg_eq_zero]
-  refine Finset.sum_eq_zero fun ij _ => ?_
-  rw [integral_mul_eq_inner _ (memLp_of_continuous hΩ hb (continuous_pd (hΨ ij).contDiff_one
-    ij.2))]
-  simp
+  rw [gradGraphSub_eq]
+  exact (Feec.Domain.gradOp 3 3).testGraph_closable hΩ
 
 /-- `grad : H̊¹(Ω; ℝ³) → L²(Ω; ℝ³ˣ³)`. -/
 def gradClosure : L2V Ω →ₗ.[ℝ] L2M Ω := (gradGraphSub Ω).topologicalClosure.toLinearPMap
+
+/-- **`gradClosure` is the minimal realization** of the row-wise gradient
+(`Feec.Domain.ConstCoeffOp.minimal`). -/
+theorem gradClosure_eq_minimal :
+    gradClosure (Ω := Ω) =
+      (Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).minimal Ω := by
+  rw [gradClosure, gradGraphSub_eq]
+  rfl
 
 /-- The graph of `gradClosure` is the closure of the grad graph. -/
 theorem gradClosure_graph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
@@ -1183,10 +1207,10 @@ theorem mem_closure_gradClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   Submodule.mem_graph_toLinearPMap (gradGraph_closable hΩ hb) u
 
 /-- `gradClosure` is a closed operator. -/
-theorem isClosed_gradClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+theorem isClosed_gradClosure (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) :
     (gradClosure (Ω := Ω)).IsClosed := by
-  rw [LinearPMap.IsClosed, gradClosure_graph hΩ hb]
-  exact Submodule.isClosed_topologicalClosure _
+  rw [gradClosure_eq_minimal]
+  exact (Feec.Domain.gradOp 3 3).isClosed_minimal hΩ
 
 /-- The `L²` class of a vector field with components in `C_c^∞(Ω)`. -/
 def testFieldV {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, IsTest Ω (φ i)) : L2V Ω :=
@@ -1225,17 +1249,10 @@ theorem gradClosure_testFieldV (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   apply_eq_of_mem_graph (testFieldV_mem_graph hΩ hb hφ) _
 
 /-- `H̊¹(Ω; ℝ³)` is dense in `L²(Ω; ℝ³)`. -/
-theorem dense_domain_gradClosure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+theorem dense_domain_gradClosure (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) :
     Dense ((gradClosure (Ω := Ω)).domain : Set (L2V Ω)) := by
-  rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
-    Submodule.eq_bot_iff]
-  intro v hv
-  refine eq_zero_of_forall_integralV hΩ hb fun ψ hψ => ?_
-  have h0 := (Submodule.mem_orthogonal' _ _).1 hv _ (testFieldV_mem_domain hΩ hb hψ)
-  rw [PiLp.inner_apply] at h0
-  rw [← h0]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  exact integral_mul_eq_inner _ (hψ i).memLp
+  rw [gradClosure_eq_minimal]
+  exact (Feec.Domain.gradOp 3 3).dense_minimal_domain hΩ
 
 /-- `grad H̊¹ ⊆ H̊(curl)` with `curl grad = 0`. -/
 theorem gradClosure_mem_closure_curlGraph (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
@@ -1314,21 +1331,33 @@ theorem adjoint_gradClosure_inner (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω
   exact e
 
 /-- `D(grad*) = H(div)` (row-wise divergence, no boundary condition), `grad* = -div`. -/
-theorem mem_adjoint_gradClosure_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2M Ω} :
+theorem mem_adjoint_gradClosure_iff (hΩ : IsOpen Ω) (_hb : Bornology.IsBounded Ω) {B : L2M Ω} :
     B ∈ (gradClosure (Ω := Ω))†.domain ↔ B ∈ HdivM Ω := by
-  constructor
-  · intro hB
-    refine ⟨-(gradClosure (Ω := Ω))† ⟨B, hB⟩, fun φ hφ => ?_⟩
-    rw [← adjoint_gradClosure_inner hΩ hb ⟨B, hB⟩ hφ]
-    simp only [PiLp.neg_apply, ← Finset.sum_neg_distrib]
-    refine Finset.sum_congr rfl fun i _ => ?_
+  rw [gradClosure_eq_minimal,
+    (Feec.Domain.gradOp 3 3 : Feec.Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).mem_adjoint_minimal_domain_iff hΩ]
+  have hneg : ∀ (w : L2V Ω) (φ : Fin 3 → R3 → ℝ) (i : Fin 3),
+      ∫ x, (-w) i x * φ i x ∂volume.restrict Ω = -∫ x, w i x * φ i x ∂volume.restrict Ω := by
+    intro w φ i
     rw [← integral_neg]
     refine integral_congr_ae ?_
-    filter_upwards [Lp.coeFn_neg (((gradClosure (Ω := Ω))† ⟨B, hB⟩).ofLp i)] with x hx
-    rw [hx, Pi.neg_apply]
-    ring
+    filter_upwards [Lp.coeFn_neg (w i)] with x hx
+    simp only [PiLp.neg_apply] at hx ⊢
+    rw [hx, Pi.neg_apply, neg_mul]
+  constructor
+  · rintro ⟨w, hw⟩
+    refine ⟨-w, fun φ hφ => ?_⟩
+    have := hw φ (isTestField_of_forall hφ)
+    rw [Feec.Models.BoundedDomain.inner_grad_testField _ (isTestField_of_forall hφ),
+      Feec.Models.BoundedDomain.inner_testField_eq] at this
+    simp only [hneg, Finset.sum_neg_distrib, neg_neg]
+    exact this.symm
   · rintro ⟨D, hD⟩
-    exact (adjoint_gradClosure_of_weakDiv hΩ hb hD).1
+    refine ⟨-D, fun φ hφ => ?_⟩
+    rw [Feec.Models.BoundedDomain.inner_grad_testField _ hφ,
+      Feec.Models.BoundedDomain.inner_testField_eq]
+    have := hD φ fun i => IsTest.ofDomain (hφ i)
+    simp only [hneg, Finset.sum_neg_distrib]
+    exact this.symm
 
 variable (Ω) in
 /-- `H(div, Ω; ℝ³ˣ³, 0)`: weakly (row-wise) divergence-free fields, no boundary condition. -/
@@ -1794,5 +1823,24 @@ theorem thesisComplex_orbit_not_propagate (hΩ : IsOpen Ω) (hb : Bornology.IsBo
   exists_orbit_not_propagate hΩ hb hne _ (mem_closure_curlClosure hΩ hb) G
 
 end Thesis
+
+end Feec.BoundedDomain
+
+namespace Feec.BoundedDomain
+
+variable {Ω : Set R3}
+
+/-- **The thesis' complex is the minimal grad–curl complex** of `Feec.Models.BoundedDomain`. -/
+theorem thesisComplex_toShort (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
+    (thesisComplex hΩ hb).toShort = Feec.Models.BoundedDomain.gradCurl ℝ hΩ := by
+  have h0 : (thesisComplex hΩ hb).d0 = (Feec.Models.BoundedDomain.gradCurl ℝ hΩ).d₀ :=
+    gradClosure_eq_minimal
+  have h1 : (thesisComplex hΩ hb).d1 = (Feec.Models.BoundedDomain.gradCurl ℝ hΩ).d₁ :=
+    curlClosure_eq_minimal
+  generalize Feec.Models.BoundedDomain.gradCurl ℝ hΩ = S at h0 h1
+  cases S
+  simp only at h0 h1
+  subst h0 h1
+  rfl
 
 end Feec.BoundedDomain

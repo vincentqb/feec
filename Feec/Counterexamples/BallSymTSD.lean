@@ -1,7 +1,7 @@
 module
 
 public import Feec.Legacy.BoundedDomain.SymExt
-public import Feec.Legacy.BoundedDomain.Interior
+public import Feec.Domain.Cutoff
 public import Mathlib.MeasureTheory.Constructions.HaarToSphere
 public import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
@@ -104,6 +104,17 @@ open MeasureTheory Set Filter Topology
 namespace Feec.Counterexamples.BallSymTSD
 
 open Feec.Legacy.BoundedDomain Feec.Legacy.BoundedSym Feec.Legacy.HilbertComplex2 Feec.Legacy.Constraints
+open Feec.Domain (dχ hasDerivAt_χ dχ_eq_zero_of_nonpos dχ_eq_zero_of_one_le exists_abs_dχ_le)
+
+/-- The product rule `∂_c (f g) = ∂_c f g + f ∂_c g`. -/
+theorem pd_mul {f g : R3 → ℝ} {y : R3} (hf : DifferentiableAt ℝ f y)
+    (hg : DifferentiableAt ℝ g y) (c : Fin 3) :
+    BoundedDomain.pd c (fun y => f y * g y) y =
+      BoundedDomain.pd c f y * g y + f y * BoundedDomain.pd c g y := by
+  have h : HasFDerivAt (fun y => f y * g y) _ y := hf.hasFDerivAt.mul hg.hasFDerivAt
+  rw [pd_of_hasFDerivAt h, BoundedDomain.pd, BoundedDomain.pd]
+  simp only [add_apply, smul_apply, smul_eq_mul]
+  ring
 
 /-! ## The unit ball and the radial cutoffs -/
 
@@ -376,7 +387,7 @@ theorem pd_pd_chi (n : ℕ) (i j : Fin 3) (x : R3) :
   have hf : DifferentiableAt ℝ (fun y => deriv (eta n) (rho y)) x :=
     ((differentiable_deriv_eta n).comp differentiable_rho) x
   have hg : DifferentiableAt ℝ (fun y : R3 => 2 * y j) x := by fun_prop
-  rw [e, BoundedDomain.pd_mul hf hg i, pd_comp_rho (differentiable_deriv_eta n),
+  rw [e, pd_mul hf hg i, pd_comp_rho (differentiable_deriv_eta n),
     BoundedDomain.pd_const_mul (by fun_prop) 2 i x, pd_coord]
 
 /-- Product rule twice for `χ_n · (c · x)`. -/
@@ -389,13 +400,13 @@ theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) 
   have e : BoundedDomain.pd j (fun y => chi n y * linF c y) =
       (fun y => BoundedDomain.pd j (chi n) y * linF c y) + (fun y => chi n y * c j) :=
     funext fun y => by
-      rw [BoundedDomain.pd_mul (differentiable_chi n y) (differentiable_linF c y), pd_linF]
+      rw [pd_mul (differentiable_chi n y) (differentiable_linF c y), pd_linF]
       rfl
   rw [e, BoundedDomain.pd_add (f := fun y => BoundedDomain.pd j (chi n) y * linF c y)
       (g := fun y => chi n y * c j) (fun y => (hdj y).mul (differentiable_linF c y))
       (fun y => (differentiable_chi n y).mul (differentiableAt_const _)),
-    BoundedDomain.pd_mul (hdj x) (differentiable_linF c x),
-    BoundedDomain.pd_mul (differentiable_chi n x) (differentiableAt_const _), pd_linF, pd_const_fun]
+    pd_mul (hdj x) (differentiable_linF c x),
+    pd_mul (differentiable_chi n x) (differentiableAt_const _), pd_linF, pd_const_fun]
   ring
 
 /-- **`div div (χ_n E₀) = 0`**: `div E₀ = 0`, and `E₀ : ∇²χ_n = 0` because `E₀` is trace-free and
@@ -680,7 +691,7 @@ theorem tendsto_pd_chi_vF (i j : Fin 3) :
   have hF : ∀ n x, BoundedDomain.pd j (fun y => chi n y * vF i y) x =
       (1 - rho x) * deriv (eta n) (rho x) * (2 * x j * pF i x) + chi n x * gExp (i, j) x := by
     intro n x
-    rw [BoundedDomain.pd_mul (differentiable_chi n x)
+    rw [pd_mul (differentiable_chi n x)
       ((contDiff_vF i).differentiable (by simp) x), pd_chi, pd_vF, vF]
     ring
   refine tendsto_toLp_of_bound isOpen_ball3.measurableSet isBounded_ball3.measure_lt_top.ne

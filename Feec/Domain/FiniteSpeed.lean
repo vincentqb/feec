@@ -1,6 +1,7 @@
 module
 
 public import Feec.Domain.Mollify
+public import Feec.Domain.Cutoff
 public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
 public import Mathlib.Analysis.SpecialFunctions.Sqrt
 public import Mathlib.Analysis.Calculus.ParametricIntegral
@@ -37,6 +38,42 @@ open MeasureTheory Set Filter Topology
 open scoped ENNReal ContDiff InnerProductSpace Convolution
 
 namespace Feec.Domain
+
+namespace FiniteSpeed
+
+/-! ## Symmetric hyperbolic operators and weak solutions -/
+
+section Operator
+
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {ι : Type*} [Fintype ι]
+
+/-- The first-order operator `(P w)ⱼ = Σᵢ ∂_{β j i} wᵢ`. -/
+def hypOp (β : ι → ι → E) : ConstCoeffOp E ℝ ι ι where
+  coeff j i := [([β j i], 1)]
+
+theorem hypOp_apply (β : ι → ι → E) (f : ι → E → ℝ) (j : ι) (y : E) :
+    (hypOp β).apply f j y = ∑ i, fderiv ℝ (f i) y (β j i) := by
+  simp [ConstCoeffOp.apply, hypOp, ConstCoeffOp.applyEntry, iterDeriv_singleton]
+
+/-- The formal adjoint `(Pᵗ ψ)ᵢ = -Σⱼ ∂_{β j i} ψⱼ`. -/
+theorem hypOp_formalAdj_apply (β : ι → ι → E) (f : ι → E → ℝ) (i : ι) (y : E) :
+    (hypOp β).formalAdj.apply f i y = -∑ j, fderiv ℝ (f j) y (β j i) := by
+  simp [ConstCoeffOp.apply, ConstCoeffOp.formalAdj, hypOp, ConstCoeffOp.adjEntry,
+    ConstCoeffOp.applyEntry, iterDeriv_singleton]
+
+variable [MeasureSpace E] [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)]
+
+/-- `W : [0, T] → L²(Ω; ℝ^ι)` is a **weak solution** of `∂ₜ W = P W`: continuous, and
+`∂ₜ ⟪W, ψ⟫ = ⟪W, Pᵗ ψ⟫` for every test field `ψ ∈ C_c^∞(Ω; ℝ^ι)` (no boundary condition). -/
+structure IsWeakSolution (β : ι → ι → E) (Ω : Set E) (T : ℝ) (W : ℝ → L2F ℝ Ω ι) : Prop where
+  cont : ContinuousOn W (Icc 0 T)
+  deriv : ∀ t ∈ Icc 0 T, ∀ (ψ : ι → E → ℝ) (hψ : IsTestField Ω ψ),
+    HasDerivWithinAt (fun s => ⟪W s, testField hψ⟫_ℝ)
+      ⟪W t, testField ((hypOp β).formalAdj.isTestField_apply hψ)⟫_ℝ (Icc 0 T) t
+
+end Operator
+
+end FiniteSpeed
 
 namespace FiniteSpeed
 
@@ -92,43 +129,6 @@ theorem norm_fderiv_qd_le (hδ : 0 < δ) (y : E) : ‖fderiv ℝ (qd x δ) y‖ 
   rw [(hasFDerivAt_qd hδ y).fderiv, norm_smul, innerSL_apply_norm, Real.norm_of_nonneg
     (inv_nonneg.2 hq.le), inv_mul_le_iff₀ hq, mul_one]
   exact norm_le_qd y
-
-/-- `χ'`, the derivative of the smooth transition. -/
-def dχ (s : ℝ) : ℝ := deriv Real.smoothTransition s
-
-theorem dχ_nonneg (s : ℝ) : 0 ≤ dχ s := Real.smoothTransition.monotone.deriv_nonneg
-
-theorem hasDerivAt_χ (s : ℝ) : HasDerivAt Real.smoothTransition (dχ s) s :=
-  ((Real.smoothTransition.contDiff (n := 1)).differentiable one_ne_zero s).hasDerivAt
-
-theorem continuous_dχ : Continuous dχ :=
-  (Real.smoothTransition.contDiff (n := 1)).continuous_deriv le_rfl
-
-theorem dχ_eq_zero_of_nonpos {s : ℝ} (hs : s ≤ 0) : dχ s = 0 := by
-  have h := hasDerivAt_χ s
-  have hl : HasDerivWithinAt Real.smoothTransition 0 (Iic s) s :=
-    (hasDerivWithinAt_const s (Iic s) (0 : ℝ)).congr
-      (fun y hy => Real.smoothTransition.zero_of_nonpos (le_trans hy hs))
-      (Real.smoothTransition.zero_of_nonpos hs)
-  exact (uniqueDiffWithinAt_Iic s).eq_deriv _ (h.hasDerivWithinAt) hl
-
-theorem dχ_eq_zero_of_one_le {s : ℝ} (hs : 1 ≤ s) : dχ s = 0 := by
-  have h := hasDerivAt_χ s
-  have hl : HasDerivWithinAt Real.smoothTransition 0 (Ici s) s :=
-    (hasDerivWithinAt_const s (Ici s) (1 : ℝ)).congr
-      (fun y hy => Real.smoothTransition.one_of_one_le (le_trans hs hy))
-      (Real.smoothTransition.one_of_one_le hs)
-  exact (uniqueDiffWithinAt_Ici s).eq_deriv _ (h.hasDerivWithinAt) hl
-
-theorem exists_abs_dχ_le : ∃ D, ∀ s, |dχ s| ≤ D := by
-  have hc : HasCompactSupport dχ := HasCompactSupport.intro (isCompact_Icc (a := (0 : ℝ))
-    (b := 1)) fun s hs => by
-      rw [mem_Icc, not_and_or, not_le, not_le] at hs
-      rcases hs with hs | hs
-      · exact dχ_eq_zero_of_nonpos hs.le
-      · exact dχ_eq_zero_of_one_le hs.le
-  obtain ⟨D, hD⟩ := continuous_dχ.bounded_above_of_compact_support hc
-  exact ⟨D, fun s => by simpa using hD s⟩
 
 /-- The cone weight `ψ(s, y) = χ(R - c s - q(y))`. -/
 def wt (x : E) (δ c R s : ℝ) (y : E) : ℝ := Real.smoothTransition (R - c * s - qd x δ y)
@@ -471,24 +471,6 @@ variable [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] [(volume : Measure E).IsNegInvariant]
   {ι : Type*} [Fintype ι] [DecidableEq ι]
 
-/-- The first-order operator `(P w)ⱼ = Σᵢ ∂_{β j i} wᵢ`. -/
-def hypOp (β : ι → ι → E) : ConstCoeffOp E ℝ ι ι where
-  coeff j i := [([β j i], 1)]
-
-omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
-  [(volume : Measure E).IsAddHaarMeasure] [DecidableEq ι] in
-theorem hypOp_apply (β : ι → ι → E) (f : ι → E → ℝ) (j : ι) (y : E) :
-    (hypOp β).apply f j y = ∑ i, fderiv ℝ (f i) y (β j i) := by
-  simp [ConstCoeffOp.apply, hypOp, ConstCoeffOp.applyEntry, iterDeriv_singleton]
-
-/-- `W : [0, T] → L²(Ω; ℝ^ι)` is a **weak solution** of `∂ₜ W = P W`: continuous, and
-`∂ₜ ⟪W, ψ⟫ = ⟪W, Pᵗ ψ⟫` for every test field `ψ ∈ C_c^∞(Ω; ℝ^ι)` (no boundary condition). -/
-structure IsWeakSolution (β : ι → ι → E) (Ω : Set E) (T : ℝ) (W : ℝ → L2F ℝ Ω ι) : Prop where
-  cont : ContinuousOn W (Icc 0 T)
-  deriv : ∀ t ∈ Icc 0 T, ∀ (ψ : ι → E → ℝ) (hψ : IsTestField Ω ψ),
-    HasDerivWithinAt (fun s => ⟪W s, testField hψ⟫_ℝ)
-      ⟪W t, testField ((hypOp β).formalAdj.isTestField_apply hψ)⟫_ℝ (Icc 0 T) t
-
 /-- Bumps with radii `2/(n+2) → 0`. -/
 def bumpSeq (n : ℕ) : ContDiffBump (0 : E) where
   rIn := 1 / (n + 2)
@@ -696,6 +678,157 @@ theorem IsWeakSolution.ae_eq_zero_of_ball {β : ι → ι → E} {c : ℝ} (hβ 
   rwa [indicator_of_mem (hS hyS)] at this
 
 end Weak
+
+/-! ## Transport along a measure-preserving linear isomorphism
+
+`ℝⁿ = Fin n → ℝ` carries the sup norm, so its balls are cubes. Weak solutions on an open subset of
+a normed space `F` are transported to the Euclidean space `E` along a measure-preserving linear
+isomorphism `e : F ≃ E` (e.g. `WithLp.toLp 2`), where finite speed of propagation holds on
+Euclidean balls; the conclusion holds on the preimages `e⁻¹ B(e x, R)` of Euclidean balls. -/
+
+section Transport
+
+variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] [MeasureSpace F] [BorelSpace F]
+  [IsFiniteMeasureOnCompacts (volume : Measure F)] {ι : Type*} [Fintype ι]
+  [MeasureSpace E] [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)]
+  (e : F ≃L[ℝ] E) {Ω : Set F}
+
+omit [MeasureSpace F] [BorelSpace F] [IsFiniteMeasureOnCompacts (volume : Measure F)]
+  [MeasureSpace E] [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)] in
+theorem _root_.Feec.Domain.IsTest.comp_continuousLinearEquiv {ψ : E → ℝ}
+    (hψ : IsTest (e.symm ⁻¹' Ω) ψ) : IsTest Ω (ψ ∘ e) := by
+  refine ⟨hψ.contDiff.comp e.contDiff, hψ.hasCompactSupport.comp_homeomorph e.toHomeomorph, ?_⟩
+  refine (tsupport_comp_subset_preimage ψ e.continuous).trans fun y hy => ?_
+  have := hψ.tsupport_subset hy
+  simpa using this
+
+omit [MeasureSpace F] [BorelSpace F] [IsFiniteMeasureOnCompacts (volume : Measure F)]
+  [MeasureSpace E] [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)] [Fintype ι] in
+theorem _root_.Feec.Domain.IsTestField.comp_continuousLinearEquiv {ψ : ι → E → ℝ}
+    (hψ : IsTestField (e.symm ⁻¹' Ω) ψ) : IsTestField Ω (fun i => ψ i ∘ e) :=
+  fun i => (hψ i).comp_continuousLinearEquiv e
+
+omit [MeasureSpace F] [BorelSpace F] [MeasureSpace E] [BorelSpace E]
+  [IsFiniteMeasureOnCompacts (volume : Measure F)] [IsFiniteMeasureOnCompacts (volume : Measure E)] in
+/-- `Pᵗ` commutes with the change of variables: `(P_{eβ}ᵗ ψ) ∘ e = P_βᵗ (ψ ∘ e)`. -/
+theorem hypOp_formalAdj_apply_comp (β : ι → ι → F) (ψ : ι → E → ℝ) (i : ι) (y : F) :
+    (hypOp fun j i => e (β j i)).formalAdj.apply ψ i (e y) =
+      (hypOp β).formalAdj.apply (fun j => ψ j ∘ e) i y := by
+  rw [hypOp_formalAdj_apply, hypOp_formalAdj_apply]
+  congr 1
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [e.comp_right_fderiv]
+  rfl
+
+variable (he' : MeasurePreserving e.symm volume volume)
+
+/-- `u ↦ u ∘ e⁻¹ : L²(Ω) → L²(e Ω)`. -/
+def transportL2 (hΩ : MeasurableSet Ω) : L2 ℝ Ω →ₗᵢ[ℝ] L2 ℝ (e.symm ⁻¹' Ω) :=
+  Lp.compMeasurePreservingₗᵢ ℝ e.symm (he'.restrict_preimage hΩ)
+
+/-- Componentwise `u ↦ u ∘ e⁻¹ : L²(Ω; ℝ^ι) → L²(e Ω; ℝ^ι)`. -/
+def transportL2F (hΩ : MeasurableSet Ω) (u : L2F ℝ Ω ι) : L2F ℝ (e.symm ⁻¹' Ω) ι :=
+  WithLp.toLp 2 fun i => transportL2 e he' hΩ (u i)
+
+omit [BorelSpace F] [IsFiniteMeasureOnCompacts (volume : Measure F)] [Fintype ι] [BorelSpace E]
+  [IsFiniteMeasureOnCompacts (volume : Measure E)] in
+theorem continuous_transportL2F (hΩ : MeasurableSet Ω) :
+    Continuous (transportL2F (ι := ι) e he' hΩ) :=
+  (PiLp.continuous_toLp 2 _).comp (continuous_pi fun i =>
+    (transportL2 e he' hΩ).continuous.comp (PiLp.continuous_apply 2 _ i))
+
+omit [BorelSpace F] [IsFiniteMeasureOnCompacts (volume : Measure F)] [Fintype ι] [BorelSpace E]
+  [IsFiniteMeasureOnCompacts (volume : Measure E)] in
+theorem coeFn_transportL2F (hΩ : MeasurableSet Ω) (u : L2F ℝ Ω ι) (i : ι) :
+    (transportL2F e he' hΩ u i : E → ℝ) =ᵐ[volume.restrict (e.symm ⁻¹' Ω)] (u i) ∘ e.symm :=
+  Lp.coeFn_compMeasurePreserving _ _
+
+/-- **Change of variables for the test pairing**: `⟪u ∘ e⁻¹, ψ⟫_{e Ω} = ⟪u, ψ ∘ e⟫_Ω`. -/
+theorem inner_transportL2F_testField (hΩ : MeasurableSet Ω) (u : L2F ℝ Ω ι) {ψ : ι → E → ℝ}
+    (hψ : IsTestField (e.symm ⁻¹' Ω) ψ) :
+    ⟪transportL2F e he' hΩ u, testField hψ⟫_ℝ =
+      ⟪u, testField (hψ.comp_continuousLinearEquiv e)⟫_ℝ := by
+  rw [L2F.inner_def, L2F.inner_def]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [testField_apply, testField_apply, inner_toL2, inner_toL2]
+  have hmp := he'.restrict_preimage (μa := volume) (μb := volume) hΩ
+  rw [integral_congr_ae ((coeFn_transportL2F e he' hΩ u i).mono fun x hx => by
+    simp only; rw [hx])]
+  have := hmp.integral_comp e.symm.toHomeomorph.measurableEmbedding
+    (fun y => (starRingEnd ℝ) ((u i : F → ℝ) y) * ψ i (e y))
+  simpa [Function.comp] using this
+
+/-- **Weak solutions transport**: if `W` solves `∂ₜ W = P_β W` weakly on `Ω`, then `W ∘ e⁻¹` solves
+`∂ₜ W' = P_{eβ} W'` weakly on `e Ω`. -/
+theorem IsWeakSolution.transport {β : ι → ι → F} {T : ℝ} {W : ℝ → L2F ℝ Ω ι}
+    (hW : IsWeakSolution β Ω T W) (hΩ : MeasurableSet Ω) :
+    IsWeakSolution (fun j i => e (β j i)) (e.symm ⁻¹' Ω) T
+      (fun s => transportL2F e he' hΩ (W s)) := by
+  refine ⟨(continuous_transportL2F e he' hΩ).comp_continuousOn hW.cont, fun t ht ψ hψ => ?_⟩
+  have hd := hW.deriv t ht _ (hψ.comp_continuousLinearEquiv e)
+  simp only [inner_transportL2F_testField e he' hΩ _ hψ]
+  convert hd using 1
+  rw [inner_transportL2F_testField e he' hΩ]
+  congr 2
+  funext i y
+  exact hypOp_formalAdj_apply_comp e β ψ i y
+
+end Transport
+
+section TransportBall
+
+variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] [MeasureSpace F] [BorelSpace F]
+  [IsFiniteMeasureOnCompacts (volume : Measure F)] {ι : Type*} [Fintype ι] [DecidableEq ι]
+  [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure]
+  [(volume : Measure E).IsNegInvariant] (e : F ≃L[ℝ] E) {Ω : Set F}
+
+/-- **Finite speed of propagation on preimages of Euclidean balls** for weak solutions on an
+open subset of a normed space `F` (such as `ℝⁿ` with the sup norm): if `e⁻¹ B(e x, R) ⊆ Ω` and
+`W(0) = 0` a.e. there, then `W(t) = 0` a.e. on `e⁻¹ B(e x, R - c t)`, for the speed `c` of the
+transported system. -/
+theorem IsWeakSolution.ae_eq_zero_of_preimage_ball (he : MeasurePreserving e volume volume)
+    (he' : MeasurePreserving e.symm volume volume)
+    {β : ι → ι → F} {c : ℝ} (hβ : IsSymmHyperbolic (fun j i => e (β j i)) c) {T : ℝ}
+    {W : ℝ → L2F ℝ Ω ι} (hW : IsWeakSolution β Ω T W) (hΩ : IsOpen Ω) {x : F} {R : ℝ}
+    (hball : e ⁻¹' Metric.ball (e x) R ⊆ Ω)
+    (h0 : ∀ i, ∀ᵐ y ∂volume.restrict (e ⁻¹' Metric.ball (e x) R), W 0 i y = 0)
+    {t : ℝ} (ht : t ∈ Icc 0 T) (i : ι) :
+    ∀ᵐ y ∂volume.restrict (e ⁻¹' Metric.ball (e x) (R - c * t)), W t i y = 0 := by
+  have hm := hΩ.measurableSet
+  have hW' := hW.transport e he' hm
+  have hΩ' : IsOpen (e.symm ⁻¹' Ω) := hΩ.preimage e.symm.continuous
+  have hball' : Metric.ball (e x) R ⊆ e.symm ⁻¹' Ω := fun z hz =>
+    hball (show e (e.symm z) ∈ Metric.ball (e x) R by simpa using hz)
+  -- initial data on the Euclidean side
+  have h0' : ∀ j, ∀ᵐ z ∂volume.restrict (Metric.ball (e x) R),
+      transportL2F e he' hm (W 0) j z = 0 := by
+    intro j
+    have hB : MeasurableSet (Metric.ball (e x) R) := measurableSet_ball
+    have h1 : ∀ᵐ z ∂volume.restrict (Metric.ball (e x) R),
+        (transportL2F e he' hm (W 0) j : E → ℝ) z = (W 0 j : F → ℝ) (e.symm z) :=
+      ae_restrict_of_ae_restrict_of_subset hball' (coeFn_transportL2F e he' hm (W 0) j)
+    have hmp : MeasurePreserving e.symm (volume.restrict (Metric.ball (e x) R))
+        (volume.restrict (e ⁻¹' Metric.ball (e x) R)) := by
+      have := he'.restrict_preimage (μa := volume) (μb := volume) (hB.preimage e.continuous.measurable)
+      simpa [Set.preimage_preimage] using this
+    have h2 := hmp.quasiMeasurePreserving.ae (h0 j)
+    filter_upwards [h1, h2] with z hz1 hz2
+    rw [hz1, hz2]
+  have hv := hW'.ae_eq_zero_of_ball hβ hΩ' hball' h0' ht i
+  -- back to `F`
+  have hB : MeasurableSet (Metric.ball (e x) (R - c * t)) := measurableSet_ball
+  have hsub : Metric.ball (e x) (R - c * t) ⊆ e.symm ⁻¹' Ω :=
+    (Metric.ball_subset_ball (by nlinarith [hβ.nonneg, ht.1])).trans hball'
+  have h1 : ∀ᵐ z ∂volume.restrict (Metric.ball (e x) (R - c * t)), (W t i : F → ℝ) (e.symm z) = 0 := by
+    filter_upwards [hv, ae_restrict_of_ae_restrict_of_subset hsub
+      (coeFn_transportL2F e he' hm (W t) i)] with z hz1 hz2
+    rw [← hz1, hz2]; rfl
+  have hmp : MeasurePreserving e (volume.restrict (e ⁻¹' Metric.ball (e x) (R - c * t)))
+      (volume.restrict (Metric.ball (e x) (R - c * t))) := he.restrict_preimage hB
+  filter_upwards [hmp.quasiMeasurePreserving.ae h1] with y hy
+  simpa using hy
+
+end TransportBall
 
 end FiniteSpeed
 

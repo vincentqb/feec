@@ -1,6 +1,6 @@
 module
 
-public import Feec.Models.BoundedDomain.Density
+public import Feec.Models.BoundedDomain.Interior
 
 /-!
 # Bounded domains: TSD constraints for the grad–curl complex (thesis Prop 4.17 refuted)
@@ -898,6 +898,87 @@ theorem invariantCore_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne :
     constField_diagA_ne_zero hΩ hb hne, betaL2_mem_tsd hΩ hb,
     betaL2_not_mem_invariantCore₂ hΩ hb hne (gradCurl ℝ hΩ) le_rfl (tsd Ω),
     fun U₀ hU₀ hK T => ShortHilbertComplex.existsUnique_mem_coreSub hU₀ hK 0 T⟩
+
+/-! ### The violation lives in the boundary layer -/
+
+/-- For every strong solution of the Hodge wave equation of the grad–curl complex from TSD data
+`(0, 0, B₀)` that is TSD a.e. on `depDomain Ω t` and on the layer `Ω \ depDomain Ω t`, the
+electric field `E(t)` lies in `L²(TSD)`. -/
+theorem mem_tsd_of_ae_layer (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
+    (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U) (h0 : winσ (U 0) = 0)
+    (hE₀ : winE (U 0) ∈ tsd Ω) (hB₀ : winB (U 0) ∈ tsd Ω) {t : ℝ} (ht : t ∈ Icc 0 T)
+    (hlayer : ∀ᵐ y ∂volume.restrict (Ω \ depDomain Ω t),
+      SymTF (winE (U t)) y ∧ SymTF (winB (U t)) y) : winE (U t) ∈ tsd Ω := by
+  have hdep := tsd_depDomain hΩ hU h0 hE₀ hB₀ ht
+  have hall : ∀ᵐ y ∂volume.restrict Ω, SymTF (winE (U t)) y ∧ SymTF (winB (U t)) y := by
+    have := (ae_restrict_union_iff _ _ _).2 ⟨hdep, hlayer⟩
+    rwa [union_sdiff_cancel (depDomain_subset ht.1)] at this
+  obtain ⟨-, hdE, -, -⟩ := tsd_cone hΩ hU h0 hE₀ hB₀ (x := 0) (r := 0)
+    (fun z hz => absurd hz (not_lt.2 dist_nonneg)) ht
+  exact mem_tsd_of_ae_symTF (hall.mono fun y hy => hy.1) (weakDiv_eq_zero_of_mem_ker hΩ hdE)
+
+/-- **The boundary obstruction of the explicit datum `(0, 0, β)` lives in the boundary layer.**
+On every nonempty bounded open `Ω ⊆ ℝ³`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD, `(0, 0, β) ∈ D(L)`, and
+for every `T > 0` the Hodge wave equation of the grad–curl complex has a strong solution on
+`[0, T]` (the wave group orbit), unique among strong solutions; it is TSD a.e. on
+`depDomain Ω t` for every `t ∈ [0, T]`, but for some `t ∈ [0, T]` it is not a.e. symmetric and
+trace-free on the boundary layer `Ω \ depDomain Ω t`. Thesis: Prop 4.17 -/
+theorem beta_violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) :
+    betaL2 hΩ hb ∈ tsd Ω ∧
+      ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ (betaL2 hΩ hb) ∈ (gradCurl ℝ hΩ).wave.domain ∧
+      ∀ T > 0, ∃ U : ℝ → Win Ω, U 0 = ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ (betaL2 hΩ hb) ∧
+        Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U ∧
+        (∀ V : ℝ → Win Ω, V 0 = ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ (betaL2 hΩ hb) →
+          Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 V → EqOn V U (Icc 0 T)) ∧
+        (∀ t ∈ Icc 0 T, ∀ᵐ y ∂volume.restrict (depDomain Ω t),
+          SymTF (winE (U t)) y ∧ SymTF (winB (U t)) y) ∧
+        ∃ t ∈ Icc 0 T, ¬ ∀ᵐ y ∂volume.restrict (Ω \ depDomain Ω t),
+          SymTF (winE (U t)) y ∧ SymTF (winB (U t)) y := by
+  set U₀ := ShortHilbertComplex.inj₂ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)
+    (betaL2 hΩ hb)
+  obtain ⟨hβ, -⟩ := betaL2_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl
+  have hD : U₀ ∈ (gradCurl ℝ hΩ).wave.domain :=
+    ShortHilbertComplex.inj₂_mem_wave_domain (S := gradCurl ℝ hΩ) hβ
+  have h0 : winσ U₀ = 0 := rfl
+  have hE : winE U₀ ∈ tsd Ω := Submodule.zero_mem _
+  have hB : winB U₀ ∈ tsd Ω := betaL2_mem_tsd hΩ hb
+  refine ⟨betaL2_mem_tsd hΩ hb, hD, fun T hT => ?_⟩
+  obtain ⟨hS, huniq, hdep⟩ := existsUnique_tsd_depDomain hΩ hD h0 hE hB T
+  set U := fun t => (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t U₀
+  have hU0 : U 0 = U₀ := by simp [U]
+  refine ⟨U, hU0, hS, fun V hV0 hV t ht => huniq V hV0 hV t ht, hdep, ?_⟩
+  obtain ⟨t, ht, hnot⟩ := betaL2_not_propagates hΩ hb hne (gradCurl ℝ hΩ) le_rfl hT hS
+    (by rw [hU0]; rfl) (by rw [hU0]; rfl)
+  exact ⟨t, ht, fun hlayer => hnot (mem_tsd_of_ae_layer hΩ hS (by rw [hU0]; exact h0) (by rw [hU0]; exact hE)
+    (by rw [hU0]; exact hB) ht hlayer)⟩
+
+/-- **The boundary obstruction lives in the boundary layer** (existential-datum form): on every
+nonempty bounded open `Ω` there is TSD data `(0, 0, B₀) ∈ D(L)` such that for every `T > 0` a strong
+solution exists, every strong solution is TSD on `depDomain Ω t` for all `t ∈ [0, T]`, and fails to
+be symmetric and trace-free on a non-null part of `Ω \ depDomain Ω t` for some `t ∈ [0, T]`.
+Thesis: Prop 4.17 -/
+theorem violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    ∃ B₀ ∈ tsd Ω, ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ B₀ ∈ (gradCurl ℝ hΩ).wave.domain ∧
+      ∀ T > 0, (∃ U : ℝ → Win Ω, U 0 = ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ B₀ ∧
+          Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U) ∧
+        ∀ U : ℝ → Win Ω, U 0 = ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ B₀ →
+          Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U →
+            (∀ t ∈ Icc 0 T, ∀ᵐ y ∂volume.restrict (depDomain Ω t),
+              SymTF (winE (U t)) y ∧ SymTF (winB (U t)) y) ∧
+            ∃ t ∈ Icc 0 T, ¬ ∀ᵐ y ∂volume.restrict (Ω \ depDomain Ω t),
+              SymTF (winE (U t)) y ∧ SymTF (winB (U t)) y := by
+  obtain ⟨hβ, hD, hall⟩ := beta_violation_boundary_layer hΩ hb hne
+  refine ⟨_, hβ, hD, fun T hT => ?_⟩
+  obtain ⟨U, hU0, hU, huniq, -, -⟩ := hall T hT
+  refine ⟨⟨U, hU0, hU⟩, fun V hV0 hV => ?_⟩
+  have h0 : winσ (V 0) = 0 := by rw [hV0]; rfl
+  have hE : winE (V 0) ∈ tsd Ω := by rw [hV0]; exact Submodule.zero_mem _
+  have hB : winB (V 0) ∈ tsd Ω := by rw [hV0]; exact hβ
+  refine ⟨fun t ht => tsd_depDomain hΩ hV h0 hE hB ht, ?_⟩
+  obtain ⟨t, ht, hnot⟩ := betaL2_not_propagates hΩ hb hne (gradCurl ℝ hΩ) le_rfl hT hV h0
+    (by rw [hV0]; rfl)
+  exact ⟨t, ht, fun hlayer => hnot (mem_tsd_of_ae_layer hΩ hV h0 hE hB ht hlayer)⟩
 
 end Feec.Counterexamples.BoundedDomainTSD
 

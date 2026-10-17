@@ -25,6 +25,7 @@ public import Feec.Counterexamples.PolynomialForms
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
+public import Feec.Domain.Cutoff
 public import Feec.Domain.FiniteSpeed
 public import Feec.Domain.L2Field
 public import Feec.Domain.Mollify
@@ -159,6 +160,7 @@ public import Feec.Legacy.Whole.Weak
 public import Feec.Models.BoundedDomain.DeRham
 public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
+public import Feec.Models.BoundedDomain.Interior
 public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Models.Cube.Bridge
 public import Feec.Models.Cube.Ident

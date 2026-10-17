@@ -25,7 +25,8 @@ wave operator are not stationary for the wave group.
 
 ## References
 
-* [QuennevilleBelair2015], §4.10
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10
 -/
 
 open scoped InnerProductSpace ComplexConjugate

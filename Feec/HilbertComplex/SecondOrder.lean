@@ -39,9 +39,16 @@ membership proof; `u' t` is the derivative of `t ↦ w t` in `W₀`.
 
 ## References
 
-* [QuennevilleBelair2015], §4.8 (scalar wave), §4.9 ((4.12), elimination of `ρ`)
-* [Geveci1988], [GilletteHolstZhu2017] (mixed formulation of the wave equation)
-* [Baker1976], [Dupont1973] (second-order Galerkin formulation)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.8 (scalar wave), §4.9 ((4.12), elimination of `ρ`)
+* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
+  (mixed formulation of the wave equation)
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+  (mixed formulation of the wave equation)
+* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
+  (second-order Galerkin formulation)
+* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
+  (second-order Galerkin formulation)
 -/
 
 open scoped InnerProductSpace

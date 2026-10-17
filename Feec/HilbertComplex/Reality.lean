@@ -25,7 +25,8 @@ equation has real solutions for real data (`Conj.conj_eq`, `Conj.totalConj_waveG
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (real fields on `ℝ³` from the Fourier side)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (real fields on `ℝ³` from the Fourier side)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

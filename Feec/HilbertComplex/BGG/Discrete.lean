@@ -41,12 +41,26 @@ The DOF argument for (5.4) (thesis Prop 5.7) is `Feec.FiniteElement.comp_eq_of_m
 
 ## References
 
-* [QuennevilleBelair2015], §5.2 (Props 5.3, 5.4, 5.6, Thm 5.5), §5.3 (Prop 5.7)
-* [AFW2010], Thm 3.6 (discrete Poincaré inequality via bounded cochain projections);
-  [AFW2006], [Arnold2018] (cochain projections)
-* [ArnoldHu2021] (BGG construction); [AFW2007] (weakly imposed symmetry)
-* [Brezzi1974], [Babuska1971], [BoffiBrezziFortin2013] (saddle-point problems)
-* [HiptmairXu2007], §3, [Hiptmair2002], Lemma 2.4 (regular decomposition)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.2 (Props 5.3, 5.4, 5.6, Thm 5.5), §5.3 (Prop 5.7)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  Thm 3.6 (discrete Poincaré inequality via bounded cochain projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (cochain projections)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (cochain projections)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG construction)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+  (weakly imposed symmetry)
+* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
+  (saddle-point problems)
+* [I. Babuška, *Error-bounds for finite element method*][Babuska1971] (saddle-point problems)
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
+  (saddle-point problems)
+* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
+  §3
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+  (regular decomposition)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
 -/
 
 open scoped RealInnerProductSpace
@@ -122,7 +136,7 @@ surjectivity of `S₀,h`).
 Thesis gap: the "discrete Hodge decomposition" without harmonic part, i.e. exactness of (5.5)
 at `Ṽ_h¹`, is used but never derived from those assumptions; it is `exists_of_exact_rows`.
 See [QuennevilleBelair2015], Prop 5.4; cf. [AFW2007] for the analogous weak-symmetry
-elasticity argument. Thesis: Prop 5.4 -/
+elasticity argument. [QuennevilleBelair2015], Prop 5.4 -/
 theorem eq_zero_of_mixed_homogeneous
     (dX0 : X0 →ₗ[ℝ] X1) (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
     (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2)
@@ -239,8 +253,7 @@ theorem mixedForm_bijective (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1)
 /-- **Thesis Prop 5.4 (invertibility), minimal hypotheses.** For every right-hand side `F`
 the discrete system (5.6) has exactly one solution.
 See [QuennevilleBelair2015], Prop 5.4; cf. discrete well-posedness of saddle-point systems,
-[Brezzi1974], [BoffiBrezziFortin2013], and of the discrete mixed Hodge Laplacian, [AFW2010]. Thesis:
-Prop 5.4 -/
+[Brezzi1974], [BoffiBrezziFortin2013], and of the discrete mixed Hodge Laplacian, [AFW2010]. -/
 theorem existsUnique_isMixedSolution
     [FiniteDimensional ℝ X0] [FiniteDimensional ℝ X1] [FiniteDimensional ℝ Y0]
     [FiniteDimensional ℝ Y1]
@@ -269,7 +282,7 @@ solution, and `(τ, ψ, v)` discrete test functions.
 Correction: the thesis needs `λ ∈ W¹` for `(λ, (S - S_h)ψ)` to make sense; only `λ ∈ W̌¹` is
 available from Prop 5.2. We take `ℓ` an arbitrary linear functional (its `W`-boundedness, i.e.
 `λ ∈ W¹`, enters only in Thm 5.5). The hypothesis "Prop 5.3 holds" is unnecessary.
-See [QuennevilleBelair2015], Prop 5.6. Thesis: Prop 5.6 (corrected) -/
+See [QuennevilleBelair2015], Prop 5.6. [QuennevilleBelair2015], Prop 5.6 (corrected) -/
 theorem mixed_error_eq
     (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
     (S0 S0h : Y0 →ₗ[ℝ] X1) (S1 S1h : Y1 →ₗ[ℝ] X2) (ℓ : X1 →ₗ[ℝ] ℝ) (F : Y1 →ₗ[ℝ] ℝ)
@@ -610,7 +623,7 @@ bound. The thesis hypothesis "`S₀,h` uniformly bounded" is *replaced* by the g
 `Π¹` over all of `V¹` (`Bounded.P1`) together with `boundS0`; this is stronger than the thesis
 hypothesis, which the thesis checks (Prop 5.8) for canonical projections only.
 See [QuennevilleBelair2015], Prop 5.3; cf. the discrete Poincaré inequality
-[AFW2010], Thm 3.6. Thesis: Prop 5.3(a) (corrected) -/
+[AFW2010], Thm 3.6. [QuennevilleBelair2015], Prop 5.3(a) (corrected) -/
 theorem poincare_Γh {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     {σ : V0} {φ : Vt0} (h : D.d0 σ = Q.S0h φ) :
     graphSq D.d0 σ ≤ Ca Cp CS CP ^ 2 * ‖D.dt0 φ‖ ^ 2 := by
@@ -713,8 +726,7 @@ The constant `C_b` is *derived* (AFW-type argument) from the continuous constant
 `C_p, C_R, C_S` and the projection bound `C_Π` only.
 Thesis gaps filled: the min-norm step (from a bounded preimage to the bound for `u_h ⊥ Z_h`) is
 missing in the thesis; see `preimage_bound` for the others.
-See [QuennevilleBelair2015], Prop 5.3; cf. [AFW2010], Thm 3.6, [Arnold2018]. Thesis: Prop 5.3(b)
-(corrected) -/
+See [QuennevilleBelair2015], Prop 5.3(b) (corrected); cf. [AFW2010], Thm 3.6, [Arnold2018]. -/
 theorem poincare_Zh {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     (h54 : Q.Compatible) {u : Vt1} (hu : u ∈ Q.Vt1h) (horth : u ∈ Q.Zhᗮ) :
     ‖u‖ ≤ Cb Cp CR CS CP * (‖Q.S1h u‖ + ‖D.dt1 u‖) := by
@@ -727,7 +739,7 @@ the discrete system (5.6) has exactly one solution `(σ_h, φ_h, u_h, λ_h)` for
 All hypotheses of `existsUnique_isMixedSolution` are *derived*: discrete anticommutation,
 injectivity of
 `d` on `Ṽ_h⁰`, discrete exactness at `Ṽ_h¹` and `V_h¹`, and `V_h¹ = dV_h⁰ + S₀,hṼ_h⁰`.
-No uniform-in-`h` bound is used. See [QuennevilleBelair2015], Prop 5.4. Thesis: Prop 5.4 -/
+No uniform-in-`h` bound is used. See [QuennevilleBelair2015], Prop 5.4. [QuennevilleBelair2015], Prop 5.4 -/
 theorem existsUnique_mixed_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible)
     [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.Vt0h]
     [FiniteDimensional ℝ Q.Vt1h] (F : Vt1 →ₗ[ℝ] ℝ) :
@@ -983,7 +995,7 @@ Thesis gaps / corrections:
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.6; cf. the quasi-optimal a priori estimates
 for the discrete mixed Hodge Laplacian in [AFW2010], [Arnold2018], the weak-symmetry
 elasticity estimates of [AFW2007], and the Babuška–Brezzi theory [Babuska1971], [Brezzi1974],
-[BoffiBrezziFortin2013]. Thesis: Thm 5.5 (corrected) -/
+[BoffiBrezziFortin2013]. [QuennevilleBelair2015], Thm 5.5 (corrected) -/
 theorem error_estimate {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     (h54 : Q.Compatible)
     [FiniteDimensional ℝ Q.Vt1h]

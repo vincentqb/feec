@@ -30,8 +30,12 @@ the Hodge decomposition of `domainComplex` is the `V`-level Hodge decomposition.
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (the domain complex, Thms 4.1–4.2)
-* [AFW2010], §3.1.2 (domain complex); [BruningLesch1992], §2; [Arnold2018], §4.1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (the domain complex, Thms 4.1–4.2)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1.2 (domain complex)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.1
 -/
 
 open scoped InnerProductSpace
@@ -71,7 +75,7 @@ theorem domain_next_le (i j : ι) : (H.d i (c.next i)).domain ≤ (H.d i j).doma
   · subst hj; exact le_rfl
   · rw [H.d_eq_zero_of_ne_next hj]; exact le_top
 
-/-- The domain space `Vⁱ = D(d i (c.next i))` with the graph inner product. Thesis: §4.2 -/
+/-- The domain space `Vⁱ = D(d i (c.next i))` with the graph inner product. [QuennevilleBelair2015], §4.2 -/
 abbrev domainSpace (i : ι) : Type _ := (H.d i (c.next i)).GraphSpace
 
 instance (i : ι) : CompleteSpace (H.domainSpace i) := (H.closed _ _).completeSpace_graphSpace
@@ -168,7 +172,7 @@ theorem domainD_comp_domainD (i j k : ι) (v : H.domainSpace i) :
     rw [domainIncl_domainD, d_domainCoord_domainD, _root_.map_zero])
 
 /-- **The domain complex**: the spaces `Vⁱ` with the bounded differentials `domainD`, as a
-Hilbert complex on the same shape. Thesis: §4.2 -/
+Hilbert complex on the same shape. [QuennevilleBelair2015], §4.2 -/
 def domainComplex : HilbertComplex 𝕜 c H.domainSpace where
   d i j := (H.domainD i j : H.domainSpace i →ₗ[𝕜] H.domainSpace j).toPMap ⊤
   shape i j h := by rw [H.domainD_eq_zero_of_not_rel h]; rfl
@@ -280,7 +284,7 @@ theorem mem_domainComplex_boundaries_iff {j : ι} {v : H.domainSpace j}
     exact this ▸ hu
 
 /-- **Closed in `V` ⇔ closed in `W`**: the boundaries of the domain complex are closed iff
-those of `H` are. Thesis: §4.2 -/
+those of `H` are. [QuennevilleBelair2015], §4.2 -/
 theorem domainComplex_closedRangeAt_iff (j : ι) :
     H.domainComplex.ClosedRangeAt j ↔ H.ClosedRangeAt j := by
   have hZ := H.domainComplex.isClosed_cycles j
@@ -311,7 +315,7 @@ theorem domainComplex_closedRangeAt_iff (j : ι) :
 /-! ### Harmonic forms and the `V`-level Hodge decomposition -/
 
 /-- `ι` maps the harmonic forms of `V` (cycles `V`-orthogonal to the boundaries) onto those of
-`W`. Thesis: §4.2 -/
+`W`. [QuennevilleBelair2015], §4.2 -/
 theorem map_domainIncl_harmonic (i : ι) :
     (H.domainComplex.harmonic i).map (H.domainIncl i : H.domainSpace i →ₗ[𝕜] W i) =
       H.harmonic i := by
@@ -343,7 +347,7 @@ def domainHarmonicEquiv (i : ι) : H.domainComplex.harmonic i ≃ₗ[𝕜] H.har
 /-- **Hodge decomposition of `V`** (`V`-level, Thesis Thm 4.1): under closed range,
 `Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (𝔷ⁱ)^{⊥V}`, pairwise orthogonal in the graph inner product. Here the summands are
 those of the domain complex: `ℌⁱ(V)` corresponds to `ℌⁱ` under `domainHarmonicEquiv`.
-Thesis: Thm 4.1 -/
+[QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge_domainComplex {i : ι} (hi : H.ClosedRangeAt i) :
     H.domainComplex.boundaries i ⊔ H.domainComplex.harmonic i ⊔
         (H.domainComplex.cycles i)ᗮ = ⊤ ∧

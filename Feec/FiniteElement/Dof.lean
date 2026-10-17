@@ -32,8 +32,14 @@ Everything is algebraic: modules over a commutative ring `R`, any index types.
 
 ## References
 
-* [QuennevilleBelair2015], Prop 5.7 (§5.3)
-* [AFW2006], [Arnold2013], [Arnold2018], Ch. 5 (degrees of freedom, canonical projections)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Prop 5.7 (§5.3)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (degrees of freedom, canonical projections)
+* [D. N. Arnold, *Spaces of finite element differential forms*][Arnold2013] (degrees of freedom,
+  canonical projections)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (degrees of freedom,
+  canonical projections)
 -/
 
 @[expose] public noncomputable section
@@ -105,7 +111,7 @@ theorem incl_interp_idem (incl : P →ₗ[R] Y) (hm : ∀ i, m i ∘ₗ incl = �
 /-- **Commuting interpolant.** Let `Π : Y → P`, `Π' : Y' → P'` be canonical interpolants
 (`incl`, `incl'` embed the shape functions), `d : Y → Y'` and `d_h : P → P'` with
 `d ∘ incl = incl' ∘ d_h`. If each DOF `m' k ∘ d` lies in the span of the DOFs `m i`, then
-`Π' (d y) = d_h (Π y)`. Thesis: Prop 5.7 (abstract form)
+`Π' (d y) = d_h (Π y)`. [QuennevilleBelair2015], Prop 5.7 (abstract form)
 
 See [QuennevilleBelair2015], Prop 5.7; cf. [AFW2006], [Arnold2013]. -/
 theorem interp_comp_eq {P' Y' κ : Type*} [AddCommGroup P'] [Module R P'] [AddCommGroup Y']
@@ -138,7 +144,7 @@ variable {Y X ι κ : Type*} [AddCommGroup Y] [Module R Y] [AddCommGroup X] [Mod
 /-- **Abstract core of thesis Prop 5.7** ((5.4) for canonical projections): `Π¹` depends only
 on the DOFs `ℓ_k`, `Π̃⁰` preserves the DOFs `m_i`, and every `ℓ_k ∘ S₀` vanishes on the joint
 kernel of the `m_i`. Then `Π¹S₀Π̃⁰ = Π¹S₀` (no density argument).
-Thesis: Prop 5.7 (abstract form)
+[QuennevilleBelair2015], Prop 5.7 (abstract form)
 
 See [QuennevilleBelair2015], Prop 5.7 (§5.3); cf. [AFW2006], [Arnold2013]. -/
 theorem comp_eq_of_dof (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ[R] R) (S0 : Y →ₗ[R] X)

@@ -29,8 +29,10 @@ Duhamel's formula and mild solutions are in `Feec.Evolution.Duhamel`.
 
 ## References
 
-* [Pazy1983], §1.2 (Thm 2.4: generators)
-* [EngelNagel2000], §II.1
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.2 (Thm 2.4: generators)
+* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
+  §II.1
 -/
 
 open Set Filter Topology MeasureTheory

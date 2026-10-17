@@ -8,14 +8,15 @@
 #    `deleted-helper`; kind ∈ rename, generalize, corollary, dedup, counterexample,
 #    deleted-helper).
 # 2. Generates scripts/MapCheck.lean with `#check @X` for every `new` of map.tsv and every
-#    backticked name in a `- named:/- tagged:/- cited:` item of docs/THESIS_MAP.md, and runs it
+#    backticked name in a `- named:/- cited:` item of docs/THESIS_MAP.md, and runs it
 #    (requires an up-to-date `lake build Feec`); every #check must elaborate.
 # 3. Reports coverage: rows of docs/migration/old_theorems.tsv whose name appears as `old` in
 #    map.tsv; `main` rows may not be `deleted-helper`.
-# 4. Every `Thesis:` docstring tag under Feec/ must name ids that have a section in THESIS_MAP.md.
+# 4. Every thesis result cited under Feec/ as `[QuennevilleBelair2015], Prop 4.17` (the citation
+#    convention; the location may start on the next line) must have a section in THESIS_MAP.md.
 #
 # Exit status: nonzero on a failing #check, a malformed row, a `main` row mapped to
-# `deleted-helper`, or a `Thesis:` tag missing from THESIS_MAP.md. With --strict, also nonzero
+# `deleted-helper`, or a thesis citation missing from THESIS_MAP.md. With --strict, also nonzero
 # while some row of old_theorems.tsv is not covered by map.tsv (the end-of-migration gate).
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -42,7 +43,7 @@ for k, line in enumerate(open('docs/migration/map.tsv', encoding='utf-8')):
     if len(f) == 3 and f[1] not in ('', '-'):
         add(f[1], 'map.tsv')
 for line in open('docs/THESIS_MAP.md', encoding='utf-8'):
-    if re.match(r'- (named|tagged|cited):', line):
+    if re.match(r'- (named|cited):', line):
         for n in re.findall(r'`([^`]+)`', line):
             add(n, 'THESIS_MAP.md')
 def esc(n):
@@ -96,21 +97,23 @@ tot = len(old); cov = sum(1 for o in old if o in mapped)
 mtot = sum(old.values()); mcov = sum(1 for o, m in old.items() if m and o in mapped)
 print(f'coverage: {cov}/{tot} old declarations mapped ({tot - cov} missing); '
       f'main {mcov}/{mtot}; map.tsv rows {len(rows) - 1}')
-# Thesis: tags
+# thesis citations `[QuennevilleBelair2015], <ids>`
 RES = re.compile(r'\b(Theorem|Thm|Proposition|Prop|Corollary|Cor|Lemma|Remark|Definition|Def)s?\.?\s+(\d+\.\d+)')
 KIND = {'theorem': 'Thm', 'thm': 'Thm', 'proposition': 'Prop', 'prop': 'Prop', 'corollary': 'Cor',
         'cor': 'Cor', 'lemma': 'Lemma', 'remark': 'Remark', 'definition': 'Def', 'def': 'Def'}
 heads = set(re.findall(r'^### (.+)$', open('docs/THESIS_MAP.md', encoding='utf-8').read(), re.M))
-ntag = 0
+CITE = re.compile(r'\[QuennevilleBelair2015\](?![\[(])(?:,\s*)?((?:[^\n;`\[]|\[(?![A-Z][A-Za-z\-]*\d{4}[a-z]?\]))*)')
+ncite = 0
 for p in sorted(pathlib.Path('Feec').rglob('*.lean')):
-    for k, line in enumerate(p.read_text(encoding='utf-8').splitlines(), start=1):
-        for t in re.findall(r'\bThesis:\s*((?:[^;\n.]|\.(?= ?\d))*)', line):
-            for m in RES.finditer(t):
-                ntag += 1
-                i = f'{KIND[m.group(1).lower()]} {m.group(2)}'
-                if i not in heads:
-                    errors.append(f'{p}:{k}: Thesis tag {i} has no section in THESIS_MAP.md')
-print(f'Thesis: tags checked: {ntag}')
+    src = p.read_text(encoding='utf-8')
+    for c in CITE.finditer(src):
+        for m in RES.finditer(c.group(1)):
+            ncite += 1
+            i = f'{KIND[m.group(1).lower()]} {m.group(2)}'
+            if i not in heads:
+                k = src.count('\n', 0, c.start()) + 1
+                errors.append(f'{p}:{k}: thesis citation {i} has no section in THESIS_MAP.md')
+print(f'thesis citations checked: {ncite}')
 for e in errors:
     print('  ERROR ' + e)
 bad = bool(errors) or check_fail > 0 or (strict and cov < tot)

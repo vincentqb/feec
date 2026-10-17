@@ -34,7 +34,8 @@ On a bounded open `Ω ⊆ ℝ³` let `Z = L²(TSD) ∩ H̊(curl, M)`.
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17, the density gap)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17, the density gap)
 -/
 
 @[expose] public noncomputable section
@@ -49,7 +50,7 @@ variable {Ω : Set R3}
 /-! ## Generalized zero mean -/
 
 /-- **`B n = 0` weakly on `∂Ω`** for `B ∈ L²(TSD) ∩ H̊(curl)` (`Ω` bounded open): for every
-`C¹` field `φ` on `ℝ³`, `Σ_{jk} ∫_Ω B_{jk} ∂_k φ_j = 0`. Thesis: Prop 4.17 -/
+`C¹` field `φ` on `ℝ³`, `Σ_{jk} ∫_Ω B_{jk} ∂_k φ_j = 0`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem sum_integral_mul_pd_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hB : (B : L2F ℝ Ω Ix) ∈ tsd Ω)
     {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, ContDiff ℝ 1 (φ i)) :
@@ -96,7 +97,7 @@ theorem inner_gradL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : Fin 3
 
 variable (Ω) in
 /-- `L²(TSD₀)`: TSD fields orthogonal to every gradient `∇φ`, `φ ∈ C¹(ℝ³; ℝ³)` (weakly
-`B n = 0` on `∂Ω`). Thesis: Prop 4.17 -/
+`B n = 0` on `∂Ω`). [QuennevilleBelair2015], Prop 4.17 -/
 def tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : Submodule ℝ (L2F ℝ Ω Ix) :=
   tsd Ω ⊓ ⨅ (φ : Fin 3 → R3 → ℝ) (hφ : ∀ i, ContDiff ℝ 1 (φ i)), (ℝ ∙ gradL2 hΩ hb hφ)ᗮ
 
@@ -324,7 +325,7 @@ theorem testField_mem_of_tsdOp_eq_zero (hΩ : IsOpen Ω) {φ : Ix → R3 → ℝ
         ((hφ (i, j)).fderiv_apply _).hasCompactSupport.mul_right |>.restrict
 
 /-- **Density of smooth TSD fields in `L²(TSD₀)`** on a bounded open `Ω` star-shaped with respect
-to a ball. Thesis: Prop 4.17 -/
+to a ball. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd₀_le_closure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : R3} {s : ℝ}
     (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     tsd₀ Ω hΩ hb ≤
@@ -338,7 +339,7 @@ theorem tsd₀_le_closure (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ 
 
 /-- **`cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀)`** on a bounded open `Ω` star-shaped with respect to a
 ball: the density inferred in the proof of thesis Prop 4.17 fails exactly by `L²(TSD₀)`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem closure_eq_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : R3} {s : ℝ}
     (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure =
@@ -681,7 +682,7 @@ theorem not_finiteDimensional_inf_orthogonal_tsd₀ (hΩ : IsOpen Ω) (hb : Born
 
 /-- **The obstruction of `L²(TSD)` for `H̊(curl)` is infinite-dimensional** on every nonempty
 bounded open `Ω ⊆ ℝ³`: it contains the independent Hessians `∇²(e^{-n x₁} cos(n x₂))`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem not_finiteDimensional_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : ¬ FiniteDimensional ℝ
       (obstruction ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain (tsd Ω)) := fun _ =>
@@ -690,7 +691,7 @@ theorem not_finiteDimensional_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBo
 
 /-- **No finite-dimensional correction restores density**: for every finite-dimensional
 subspace `F`, `L²(TSD) ⊄ cl (L²(TSD) ∩ H̊(curl)) + F`, on every nonempty bounded open `Ω`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem not_tsd_le_closure_sup_finiteDimensional (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (F : Submodule ℝ (L2F ℝ Ω Ix)) [FiniteDimensional ℝ F] :
     ¬ tsd Ω ≤
@@ -852,7 +853,7 @@ theorem tsd_le_closure_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
 /-- **`cl (L²(TSD) ∩ H(curl)) = L²(TSD)`** on a bounded open `Ω` star-shaped with respect to a
 ball: without the boundary condition the density inferred in the proof of Prop 4.17 holds.
 Compare `closure_eq_tsd₀`: with `H̊(curl)` the closure is the proper subspace `L²(TSD₀)`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem closure_tsd_inf_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : R3}
     {s : ℝ} (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     (tsd Ω ⊓

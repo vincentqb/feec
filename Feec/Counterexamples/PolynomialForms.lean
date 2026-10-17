@@ -22,8 +22,11 @@ The three-dimensional function form for `r = 1` (lowest-order Nédélec fields `
 
 ## References
 
-* [QuennevilleBelair2015], §4.10
-* [AFW2006], §3; [Arnold2018], Ch. 7
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 
 open Finset MvPolynomial
@@ -53,7 +56,7 @@ theorem koszul_mem_polyForm_of_mem_polyFormMinus {r : ℕ} (hr : 1 ≤ r) {v : P
   rwa [Nat.sub_add_cancel hr] at this
 
 /-- **`d ω ∉ P_r⁻Λ¹`** for every nonzero homogeneous `0`-form `ω` of degree `s ≥ r + 1`
-(`r ≥ 1`), in every dimension. Thesis: §4.10 (refuted) -/
+(`r ≥ 1`), in every dimension. [QuennevilleBelair2015], §4.10 (refuted) -/
 theorem extDeriv_not_mem_polyFormMinus [CharZero K] {r s : ℕ} (hr : 1 ≤ r) (hs : r + 1 ≤ s)
     {ω : PolyForm K d} (hω : ω ∈ homForm K d s 0) (hne : ω ≠ 0) :
     extDeriv ω ∉ polyFormMinus K d r 1 := by
@@ -102,7 +105,7 @@ theorem monomialForm_ne_zero (j : d) (s : ℕ) : monomialForm (K := K) j s ≠ 0
   simp [monomialForm] at this
 
 /-- **`d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹`** in every dimension `≥ 1` (`r ≥ 1`): the pairs
-`P_{r+1}Λ⁰ × P_r⁻Λ¹` listed in thesis §4.10 are not subcomplexes. Thesis: §4.10 (refuted) -/
+`P_{r+1}Λ⁰ × P_r⁻Λ¹` listed in thesis §4.10 are not subcomplexes. [QuennevilleBelair2015], §4.10 (refuted) -/
 theorem not_map_extDeriv_polyForm_le_polyFormMinus [CharZero K] [Nonempty d] {r : ℕ} (hr : 1 ≤ r) :
     ¬ (polyForm K d (r + 1) 0).map (extDerivₗ K d) ≤ polyFormMinus K d r 1 := fun h => by
   obtain ⟨j⟩ := ‹Nonempty d›
@@ -111,7 +114,7 @@ theorem not_map_extDeriv_polyForm_le_polyFormMinus [CharZero K] [Nonempty d] {r 
     (h ⟨_, homForm_le_polyForm _ _ (monomialForm_mem j (r + 1)), rfl⟩)
 
 /-- The `r = 1` instance in function form (lowest-order Nédélec fields `a + b × x` on `ℝ³`):
-`grad x₀² = (2x₀, 0, 0)` is not of this form. Thesis: §4.10 (refuted) -/
+`grad x₀² = (2x₀, 0, 0)` is not of this form. [QuennevilleBelair2015], §4.10 (refuted) -/
 theorem grad_sq_not_whitney :
     ¬ ∃ a b : Fin 3 → ℝ, ∀ x : Fin 3 → ℝ, 2 * x 0 = a 0 + (b 1 * x 2 - b 2 * x 1) := by
   rintro ⟨a, b, h⟩
@@ -123,7 +126,7 @@ theorem grad_sq_not_whitney :
 /-- **The printed (4.14) discretizations with `P_r⁻Λ¹` are not subcomplexes** (thesis §4.10,
 p. 66), in every dimension `≥ 1` and for every number of rows: for `r ≥ 1` and every `V₂`,
 `P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × V₂ ⊗ V` is not a subcomplex. The corrected list is
-`Feec.Koszul.isTensorSubcomplex_corrected`. Thesis: §4.10 (refuted) -/
+`Feec.Koszul.isTensorSubcomplex_corrected`. [QuennevilleBelair2015], §4.10 (refuted) -/
 theorem not_isTensorSubcomplex_printed [CharZero K] [Nonempty d] (ι : Type*) [Nonempty ι]
     {r : ℕ} (hr : 1 ≤ r) (V₂ : Submodule K (PolyForm K d)) :
     ¬ IsTensorSubcomplex ι (polyForm K d (r + 1) 0) (polyFormMinus K d r 1) V₂ := fun h =>

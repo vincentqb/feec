@@ -45,12 +45,28 @@ differential-algebraic system (6.3), and their error equations. Real scalars.
 
 ## References
 
-* [QuennevilleBelair2015], Ch. 6 (§6.1 (6.1)/(6.2), Prop 6.1; §6.2 (6.3), Prop 6.2, (6.4),
-  Prop 6.3); Ch. 5 (§5.1 the complex (5.1) and `|||λ|||`)
-* [Arnold2018], [AFW2010], [AFW2006] (Hilbert complexes and their approximation)
-* [ArnoldHu2021] (the BGG construction); [Pazy1983], §1.1, Ch. 4 (variation of constants)
-* [GilletteHolstZhu2017] (FEEC for evolution problems); [Geveci1988]; [Baker1976], [Dupont1973]
-* [Brezzi1974], [BoffiBrezziFortin2013] (Lagrange multipliers)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 6 (§6.1 (6.1)/(6.2), Prop 6.1; §6.2 (6.3), Prop 6.2, (6.4), Prop 6.3); Ch. 5 (§5.1 the
+  complex (5.1) and `|||λ|||`)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (Hilbert complexes and their
+  approximation)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (Hilbert complexes and their approximation)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (Hilbert complexes and their approximation)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the BGG construction)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.1, Ch. 4 (variation of constants)
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+  (FEEC for evolution problems)
+* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
+* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
+* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
+* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
+  (Lagrange multipliers)
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
+  (Lagrange multipliers)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
 -/
 
 open scoped RealInnerProductSpace
@@ -312,7 +328,7 @@ with the same data.
 
 Correction: the thesis prescribes `λ(0) = λ₀` and silently uses `M₀ = 0`; neither is needed
 (the multiplier has no time derivative and `M₀ ∈ W²` is arbitrary).
-See [QuennevilleBelair2015], Prop 6.1. Thesis: Prop 6.1 -/
+See [QuennevilleBelair2015], Prop 6.1. [QuennevilleBelair2015], Prop 6.1 -/
 def MultiplierSolution.toSolution {T : ℝ} {f : ℝ → Wt1}
     (s : D.MultiplierSolution T f) : D.Solution T f where
   toTrajectory := s.toTrajectory
@@ -340,7 +356,7 @@ Thesis gap: the thesis sets `λ := (S*)⁻¹ d* u ∈ W¹`, which needs `d* u �
 general; in EB it needs `u ∈ H(div)`), assumes `M ≡ 0`, and prescribes an arbitrary `λ₀`.
 Here `Λ(t)` is produced from the annihilator characterisation `mem_Wcheck_of_vanish`
 (Riesz + `(ker B)ᗮ = closure (range B*)`), with no extra hypothesis, `M` arbitrary and no `λ₀`.
-See [QuennevilleBelair2015], Prop 6.1. Thesis: Prop 6.1 (corrected) -/
+See [QuennevilleBelair2015], Prop 6.1. [QuennevilleBelair2015], Prop 6.1 (corrected) -/
 theorem Solution.exists_multiplierSolution {T : ℝ} {f : ℝ → Wt1} (s : D.Solution T f) :
     ∃ s' : D.MultiplierSolution T f, s'.toTrajectory = s.toTrajectory ∧
       ∀ s'' : D.MultiplierSolution T f, s''.toTrajectory = s.toTrajectory → ∀ t ∈ Ico 0 T, s''.Λ t = s'.Λ t := by
@@ -667,8 +683,7 @@ theorem not_exists_discreteSolution_phi_of_ker {T : ℝ} (hT : 0 < T) {ψ : Pt0}
 /-- **Corrected Prop 6.2, necessity.** Every solution satisfies (C1) `dσ₀ = S₀,ₕφ₀`,
 (C2) `(u₀, dψ) = 0` and (C3) `(dφ₀, dψ) = (f(0), dψ)` for all `ψ ∈ ker S₀,ₕ`.
 (C3) comes from differentiating (C2) and testing (6.3b) with `v = dψ`, using
-`S₁,ₕ dψ = −d S₀,ₕ ψ = 0`. Corrects [QuennevilleBelair2015], Prop 6.2. Thesis: Prop 6.2 (corrected)
--/
+`S₁,ₕ dψ = −d S₀,ₕ ψ = 0`. Corrects [QuennevilleBelair2015], Prop 6.2. -/
 theorem DiscreteSolution.compatible {T : ℝ} (hT : 0 < T) {f : ℝ → Pt1}
     (s : DiscreteSolution D T f) :
     D.d0 (s.σ 0) = D.S0 (s.φ 0) ∧
@@ -1093,7 +1108,7 @@ theorem exists_discreteSolution (hdinj : Function.Injective D.dt0) (hS : Functio
 `S₀,ₕ` surjective and `f` continuous, (6.3) has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff
 (C1) `dσ₀ = S₀,ₕφ₀`, (C2) `u₀ ⊥ d(ker S₀,ₕ)` and (C3) `(dφ₀ − f(0), dψ) = 0` on `ker S₀,ₕ`.
 The solution is unique (`DiscreteSolution.unique`). Corrects [QuennevilleBelair2015], Prop 6.2.
-Thesis: Prop 6.2 (corrected) -/
+[QuennevilleBelair2015], Prop 6.2 (corrected) -/
 theorem exists_discreteSolution_iff {T : ℝ} (hT : 0 < T) (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {f : ℝ → Pt1} (hf : Continuous f) (σ₀ : P0) (φ₀ : Pt0)
     (u₀ : Pt1) (M₀ : P2) (ρ₀ : Pt2) :
@@ -1150,7 +1165,7 @@ variable {W0 W1 W2 Wt1 Wt2 : Type*}
 and insert `Πₕσ̇`, `Π̃ₕu`. Here `Sψ = S₀ψ`, `Shψ = S₀,ₕψ`; `σd, σdh` are `σ̇, σ̇ₕ`.
 Correction: the thesis writes `Πₕσ̇ₕ − σ̇ₕ` on the left; it must be `Πₕσ̇ − σ̇ₕ`. The term
 `(λ, (S − Sₕ)ψ)` needs `λ ∈ W¹` (only `λ ∈ W̌¹` is automatic, `Solution.exists_multiplierSolution`).
-See [QuennevilleBelair2015], Prop 6.3; cf. [QuennevilleBelair2015], Prop 5.6. Thesis: Prop 6.3 -/
+See [QuennevilleBelair2015], Prop 6.3; cf. [QuennevilleBelair2015], Prop 5.6. [QuennevilleBelair2015], Prop 6.3 -/
 theorem errorEq_a (σd σdh Pσ τ : W0) (u uh Pu dψ : Wt1) (lam lamh dτ Sψ Shψ : W1)
     (hc : ⟪σd, τ⟫ - ⟪u, dψ⟫ - ⟪lam, dτ - Sψ⟫ = 0)
     (hd : ⟪σdh, τ⟫ - ⟪uh, dψ⟫ - ⟪lamh, dτ - Shψ⟫ = 0) :
@@ -1205,8 +1220,7 @@ theorem errorEq_d {U : Type*} [AddCommGroup U] [Module ℝ U] (d1 : U →ₗ[ℝ
   linarith
 
 /-- **Prop 6.3, fifth (constraint) error equation**, missing from the thesis although
-`ζ ∈ Vₕ¹` is listed (from (6.2e) − (6.3e)). Completes [QuennevilleBelair2015], Prop 6.3. Thesis:
-Prop 6.3 (added) -/
+`ζ ∈ Vₕ¹` is listed (from (6.2e) − (6.3e)). Completes [QuennevilleBelair2015], Prop 6.3 (added). -/
 theorem errorEq_e {V Φ : Type*} [AddCommGroup V] [Module ℝ V] [AddCommGroup Φ] [Module ℝ Φ]
     (d0 : V →ₗ[ℝ] W1) (S Sh : Φ →ₗ[ℝ] W1) (σ σh Pσ : V) (φ φh Pφ : Φ) (ζ : W1)
     (hc : ⟪d0 σ - S φ, ζ⟫ = 0) (hd : ⟪d0 σh - Sh φh, ζ⟫ = 0) :
@@ -1467,7 +1481,7 @@ necessary (`not_exists_discreteSolution_of_ker`), and `φ₀,ₕ` is not free
 (`DiscreteSolution.phi_zero`).
 Repair: once `φₕ(0) := Φ(σ₀, f(0))` (forced), (C1) and (C3) hold automatically
 (`S0_phiMap`, `inner_phiMap`) and (C2) is the only condition. Corrects
-[QuennevilleBelair2015], Prop 6.2. Thesis: Prop 6.2 (corrected) -/
+[QuennevilleBelair2015], Prop 6.2. [QuennevilleBelair2015], Prop 6.2 (corrected) -/
 theorem exists_discreteSolution_iff_compatible_u {T : ℝ} (hT : 0 < T)
     (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {f : ℝ → Pt1} (hf : ContinuousOn f (Icc 0 T))
@@ -1491,7 +1505,7 @@ with data
 same dynamic data agrees with it (`σₕ, uₕ, Mₕ, ρₕ, λₕ` on `[0,T]`, `φₕ` on `[0,T)`; the value
 `φₕ(T)` is not constrained by (6.3)). This is the thesis' Prop 6.2 with the free datum
 `φ₀,ₕ` replaced by the forced one and "arbitrary `u₀,ₕ`" replaced by (C2). Corrects
-[QuennevilleBelair2015], Prop 6.2. Thesis: Prop 6.2 (corrected) -/
+[QuennevilleBelair2015], Prop 6.2. [QuennevilleBelair2015], Prop 6.2 (corrected) -/
 theorem exists_discreteSolution_unique {T : ℝ} (hT : 0 < T) (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {f : ℝ → Pt1} (hf : ContinuousOn f (Icc 0 T))
     (σ₀ : P0) (u₀ : Pt1)

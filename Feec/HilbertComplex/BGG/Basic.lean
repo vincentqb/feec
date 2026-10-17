@@ -35,8 +35,10 @@ ring `R`, any complex shape, any length.
 
 ## References
 
-* [QuennevilleBelair2015], §5.1 (BGG data, complex (5.1), Prop 5.1)
-* [ArnoldHu2021] (complexes from complexes: the BGG construction)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.1 (BGG data, complex (5.1), Prop 5.1)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes from complexes: the BGG
+  construction)
 -/
 
 @[expose] public noncomputable section
@@ -49,7 +51,7 @@ namespace Feec.BGG
 
 /-- **BGG data on one segment**: the top complex `V⁰ → V¹ → V²` and the bottom complex
 `Ṽ⁰ → Ṽ¹ → Ṽ²`, linked by `S₀ : Ṽ⁰ → V¹` and `S₁ : Ṽ¹ → V²` with `d¹S₀ = -S₁d̃⁰`. Algebraic
-core only; analytic hypotheses are added per theorem. Thesis: §5.1
+core only; analytic hypotheses are added per theorem. [QuennevilleBelair2015], §5.1
 
 See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
 structure Segment (R : Type*) [Ring R] (V0 V1 V2 Vt0 Vt1 Vt2 : Type*)
@@ -108,7 +110,7 @@ lemma S1_dt0_of_mem {x : V0 × Vt0} (hx : x ∈ D.Γ) : D.S1 (D.dt0 x.2) = 0 := 
 lemma S1_dt0_eq_zero {ψ : Vt0} (hψ : D.S0 ψ = 0) : D.S1 (D.dt0 ψ) = 0 := by
   have := D.anticomm ψ; rw [hψ, map_zero] at this; exact neg_eq_zero.mp this.symm
 
-/-- **(5.1) is a complex**: `(S₁, d̃¹) ∘ (0 d̃) = 0`. Thesis: Prop 5.1
+/-- **(5.1) is a complex**: `(S₁, d̃¹) ∘ (0 d̃) = 0`. [QuennevilleBelair2015], Prop 5.1
 
 See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
 theorem D1_D0 (x : D.Γ) : D.D1 (D.D0 x) = 0 := by
@@ -118,7 +120,7 @@ theorem D1_D0 (x : D.Γ) : D.D1 (D.D0 x) = 0 := by
   simp [D0, D1, neg_eq_zero.mp h, D.dt1_dt0]
 
 /-- **Range of `(0 d̃)`**: `R(0 d̃) = R(d̃⁰) ∩ N(S₁)`, using exactness of the top complex at `V¹`.
-Thesis: Prop 5.1 (closed range of `(0 d)`, algebraic part)
+[QuennevilleBelair2015], Prop 5.1 (closed range of `(0 d)`, algebraic part)
 
 See [QuennevilleBelair2015], Prop 5.1. -/
 theorem range_D0 (hT : D.ExactTop) :
@@ -135,7 +137,7 @@ theorem range_D0 (hT : D.ExactTop) :
     exact ⟨⟨(σ, φ), D.mem_Γ.2 hσ⟩, rfl⟩
 
 /-- **Exactness of (5.1) at `Ṽ¹`** (missing in the thesis): `N(S₁) ∩ N(d̃¹) = R(0 d̃)` when the
-top complex is exact at `V¹` and the bottom complex at `Ṽ¹`. Thesis: Prop 5.1 (exactness, added)
+top complex is exact at `V¹` and the bottom complex at `Ṽ¹`. [QuennevilleBelair2015], Prop 5.1 (exactness, added)
 
 Cf. [QuennevilleBelair2015], §5.1, (5.1); cf. [ArnoldHu2021]. -/
 theorem ker_D1_eq_range_D0 (hT : D.ExactTop) (hB : D.ExactBot) :
@@ -157,7 +159,7 @@ theorem D0_injective (hd0 : Function.Injective D.d0) (hdt0 : Function.Injective 
   rfl
 
 /-- **Range of `(S₁, d̃¹)`** under the regularity hypothesis `d¹V¹ ⊆ d¹S₀Ṽ⁰`:
-`R(S₁, d̃¹) = {(ρ, μ) | ∃ w, d̃¹w = μ, ρ - S₁w ∈ R(d¹)}`. Thesis: Prop 5.1 (proof) -/
+`R(S₁, d̃¹) = {(ρ, μ) | ∃ w, d̃¹w = μ, ρ - S₁w ∈ R(d¹)}`. [QuennevilleBelair2015], Prop 5.1 (proof) -/
 theorem range_D1 (hreg : LinearMap.range D.d1 ≤ LinearMap.range (D.d1 ∘ₗ D.S0)) :
     (LinearMap.range D.D1 : Set (V2 × Vt2)) =
       {p | ∃ w, D.dt1 w = p.2 ∧ p.1 - D.S1 w ∈ LinearMap.range D.d1} := by

@@ -11,10 +11,10 @@ hand, rerun after renaming. A declaration is listed under a thesis id when
 - **named**: it is a current home (`docs/migration/map.tsv`) of a pre-refactor declaration whose
   name encoded the id (`prop_4_17`, `prop417_density_gap`, `ch6_corrected`, `Sol61`); those old
   names are listed, unchecked, under **old**;
-- **tagged**: its docstring has a `Thesis: Prop 4.17 (corrected)` tag (the convention for new
-  declarations);
-- **cited**: its docstring cites the id, as `[QuennevilleBelair2015], Prop. 4.17` or inside
-  `[QuennevilleBelair2015, ...]`.
+- **cited**: its docstring cites the id, as `[QuennevilleBelair2015], Prop. 4.17 (corrected)`
+  (the citation convention of `docs/REFACTOR_PLAN.md`);
+- **modules**: the module cites the id anywhere in its source (module docstring,
+  `## References`, comments).
 
 Every backticked name in a list item below is checked by `scripts/MapCheck.sh`
 (`#check @name` must elaborate).
@@ -27,33 +27,31 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.CurvatureTensor.interchange_of_bianchi`, `Feec.CurvatureTensor.lower_riemComp_isAlgCurv`, `Feec.CurvatureTensor.riemField_isAlgCurv`
 - old: Feec.Curvature.prop_2_1, Feec.Curvature.prop_2_1_jet
-- tagged: `Feec.CurvatureTensor.Bianchi1`, `Feec.CurvatureTensor.PairSkew`, `Feec.CurvatureTensor.lower_riemComp_isAlgCurv`, `Feec.CurvatureTensor.lower_riemComp_skew`, `Feec.CurvatureTensor.riemComp_bianchi`, `Feec.CurvatureTensor.riemComp_skew`, `Feec.CurvatureTensor.riemField_isAlgCurv`
-- cited: `Feec.DoubleForm.bianchi_iff_altPart`
+- cited: `Feec.CurvatureTensor.Bianchi1`, `Feec.CurvatureTensor.PairSkew`, `Feec.CurvatureTensor.lower_riemComp_isAlgCurv`, `Feec.CurvatureTensor.lower_riemComp_skew`, `Feec.CurvatureTensor.riemComp_bianchi`, `Feec.CurvatureTensor.riemComp_skew`, `Feec.CurvatureTensor.riemField_isAlgCurv`, `Feec.DoubleForm.bianchi_iff_altPart`
 - modules: Feec.Geometry.AlgebraicCurvature, Feec.Geometry.Bivector, Feec.Geometry.Connection
 
 ### Thm 2.3
 
-- tagged: `Feec.LinearizedGravity.HbarJet`, `Feec.LinearizedGravity.Hfun`, `Feec.LinearizedGravity.Hfun_eq_bar`, `Feec.LinearizedGravity.Hjet`, `Feec.LinearizedGravity.Hjet_eq_bar`, `Feec.LinearizedGravity.Hjet_eq_div`, `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.Hsym_eq`
+- cited: `Feec.LinearizedGravity.HbarJet`, `Feec.LinearizedGravity.Hfun`, `Feec.LinearizedGravity.Hfun_eq_bar`, `Feec.LinearizedGravity.Hjet`, `Feec.LinearizedGravity.Hjet_eq_bar`, `Feec.LinearizedGravity.Hjet_eq_div`, `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.Hsym_eq`
 - modules: Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge
 
 ### Prop 2.4
 
 - named: `Feec.Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ`
 - old: Feec.Linearized.thesis_prop_2_4b_false
-- tagged: `Feec.Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ`, `Feec.LinearizedGravity.Hfun_lorentz`, `Feec.LinearizedGravity.Hjet_lorentz`, `Feec.LinearizedGravity.Hsym_lorentz`, `Feec.LinearizedGravity.LorentzJet`, `Feec.LinearizedGravity.exists_lorentz_gauge`
+- cited: `Feec.Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ`, `Feec.LinearizedGravity.Hfun_lorentz`, `Feec.LinearizedGravity.Hjet_lorentz`, `Feec.LinearizedGravity.Hsym_lorentz`, `Feec.LinearizedGravity.LorentzJet`, `Feec.LinearizedGravity.exists_lorentz_gauge`
 - modules: Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Prop 2.5
 
-- tagged: `Feec.LinearizedGravity.plane_wave`
+- cited: `Feec.LinearizedGravity.plane_wave`
 - modules: Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Prop 2.6
 
 - named: `Feec.LinearizedGravity.exists_ttGauge`, `Feec.LinearizedGravity.trRev_sub_gauge_eq_ttAmp`
 - old: Feec.Repair.C2.prop_2_6, Feec.Repair.C2.prop_2_6_metric
-- tagged: `Feec.LinearizedGravity.exists_ttGauge`, `Feec.LinearizedGravity.trRev_sub_gauge_eq_ttAmp`, `Feec.LinearizedGravity.tt_gauge_fun`
-- cited: `Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed`, `Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed_contra`, `Feec.LinearizedGravity.tt_gauge`
+- cited: `Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed`, `Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed_contra`, `Feec.LinearizedGravity.exists_ttGauge`, `Feec.LinearizedGravity.trRev_sub_gauge_eq_ttAmp`, `Feec.LinearizedGravity.tt_gauge`, `Feec.LinearizedGravity.tt_gauge_fun`
 - modules: Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Prop 3.1
@@ -82,171 +80,152 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Lemma 3.5
 
-- tagged: `Feec.Fourier.GradCurl.curl_mem_tsd`, `Feec.Fourier.GradCurl.isFibreReducing`, `Feec.Fourier.SymCurl.curl_mem_trSub`, `Feec.Fourier.SymCurl.isFibreReducing`, `Feec.MatrixSymbol.axial_curl`, `Feec.MatrixSymbol.curl`, `Feec.MatrixSymbol.curlSymbol_mem_ttSub`, `Feec.MatrixSymbol.curl_isTSD`, `Feec.MatrixSymbol.div`, `Feec.MatrixSymbol.div_curl`, `Feec.MatrixSymbol.div_sub_transpose`, `Feec.MatrixSymbol.trace_curl`, `Feec.MatrixSymbol.trace_curl_eq_vskw`, `Feec.MatrixSymbol.trace_curl_of_transpose_eq`, `Feec.MatrixSymbol.transpose_curl_eq`, `Feec.MatrixSymbol.two_smul_vskw_curl`, `Feec.MatrixSymbol.vskw`, `Feec.Models.BoundedDomain.curl_symm_of_mem_tsd`
-- cited: `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_d₁_mem_tsdT`, `Feec.EinsteinBianchi.curl_TSD_field`, `Feec.EinsteinBianchi.div_curl_field`, `Feec.Models.BoundedDomain.adjoint_hessCurl_d₁_mem_tsdS`, `Feec.Models.BoundedDomain.hessCurl_d₁_mem_tsdT`, `Feec.Models.BoundedDomain.minimal_curl_mem_tsd`, `Feec.Models.BoundedDomain.symm_of_weakCurl_tsd`, `Feec.Models.BoundedDomain.trace_minimal_curl_eq_zero`
-- modules: Feec.Algebra.MatrixSymbol, Feec.Counterexamples.BoundedDomainTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.BGGSymbol, Feec.Fourier.GradCurlSymbol, Feec.Fourier.SymCurlSymbol, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.InvariantCore, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.EinsteinBianchi.System
+- cited: `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_d₁_mem_tsdT`, `Feec.EinsteinBianchi.curl_TSD_field`, `Feec.EinsteinBianchi.div_curl_field`, `Feec.Fourier.GradCurl.curl_mem_tsd`, `Feec.Fourier.GradCurl.isFibreReducing`, `Feec.Fourier.SymCurl.curl_mem_trSub`, `Feec.Fourier.SymCurl.isFibreReducing`, `Feec.MatrixSymbol.axial_curl`, `Feec.MatrixSymbol.curl`, `Feec.MatrixSymbol.curlSymbol_mem_ttSub`, `Feec.MatrixSymbol.curl_isTSD`, `Feec.MatrixSymbol.div`, `Feec.MatrixSymbol.div_curl`, `Feec.MatrixSymbol.div_sub_transpose`, `Feec.MatrixSymbol.trace_curl`, `Feec.MatrixSymbol.trace_curl_eq_vskw`, `Feec.MatrixSymbol.trace_curl_of_transpose_eq`, `Feec.MatrixSymbol.transpose_curl_eq`, `Feec.MatrixSymbol.two_smul_vskw_curl`, `Feec.MatrixSymbol.vskw`, `Feec.Models.BoundedDomain.adjoint_hessCurl_d₁_mem_tsdS`, `Feec.Models.BoundedDomain.curl_symm_of_mem_tsd`, `Feec.Models.BoundedDomain.hessCurl_d₁_mem_tsdT`, `Feec.Models.BoundedDomain.minimal_curl_mem_tsd`, `Feec.Models.BoundedDomain.symm_of_weakCurl_tsd`, `Feec.Models.BoundedDomain.trace_minimal_curl_eq_zero`
+- modules: Feec.Algebra.MatrixSymbol, Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedDomainTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.BGGSymbol, Feec.Fourier.GradCurlSymbol, Feec.Fourier.SymCurlSymbol, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.InvariantCore, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.EinsteinBianchi.System
 
 ### Prop 3.6
 
 - named: `Feec.EinsteinBianchi.propagation_hyps_nonvacuous`, `Feec.EinsteinBianchi.tsd_propagates`
 - old: Feec.EB.prop_3_6, Feec.EB.prop_3_6_hyps_nonvacuous
-- tagged: `Feec.Domain.FiniteSpeed.IsWeakSolution.ae_eq_zero_of_ball`, `Feec.EinsteinBianchi.tsd_propagates_classical`
-- cited: `Feec.EinsteinBianchi.curl_TSD_field`, `Feec.EinsteinBianchi.div_propagation`, `Feec.EinsteinBianchi.energy_flux`, `Feec.EinsteinBianchi.tsd_propagates`, `Feec.EinsteinBianchi.violation_evolution`
+- cited: `Feec.Domain.FiniteSpeed.IsWeakSolution.ae_eq_zero_of_ball`, `Feec.EinsteinBianchi.curl_TSD_field`, `Feec.EinsteinBianchi.div_propagation`, `Feec.EinsteinBianchi.energy_flux`, `Feec.EinsteinBianchi.tsd_propagates`, `Feec.EinsteinBianchi.tsd_propagates_classical`, `Feec.EinsteinBianchi.violation_evolution`
 - modules: Feec.Domain.FiniteSpeed, Feec.Models.BoundedDomain.Interior, Feec.Physics.EinsteinBianchi.Constraints, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.EinsteinBianchi.Propagation, Feec.Physics.EinsteinBianchi.System
 
 ### Thm 4.1
 
-- tagged: `Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`, `Feec.HilbertComplex.hodge`, `Feec.HilbertComplex.hodge_domain`, `Feec.HilbertComplex.hodge_domainComplex`, `Feec.HilbertComplex.hodge_domain_of_closedRangeAt`, `Feec.HilbertComplex.hodge_of_closedRangeAt`
-- cited: `Feec.BGG.Hilb.hodge_Vt1`
+- cited: `Feec.BGG.Hilb.hodge_Vt1`, `Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`, `Feec.HilbertComplex.hodge`, `Feec.HilbertComplex.hodge_domain`, `Feec.HilbertComplex.hodge_domainComplex`, `Feec.HilbertComplex.hodge_domain_of_closedRangeAt`, `Feec.HilbertComplex.hodge_of_closedRangeAt`
 - modules: Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.Compactness, Feec.HilbertComplex.DomainComplex, Feec.HilbertComplex.Hodge
 
 ### Thm 4.2
 
-- tagged: `Feec.Counterexamples.not_poincare_curl`, `Feec.Counterexamples.not_poincare_grad`, `Feec.HilbertComplex.closedRangeAt_iff_poincare`, `Feec.HilbertComplex.closedRangeAt_iff_poincare_adjoint`, `Feec.HilbertComplex.closedRangeAt_iff_poincare_of_rel`, `LinearPMap.exists_norm_le_of_isClosed_range`, `LinearPMap.isClosed_range_iff_exists_norm_le`
-- cited: `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`
+- cited: `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.Counterexamples.not_poincare_curl`, `Feec.Counterexamples.not_poincare_grad`, `Feec.HilbertComplex.closedRangeAt_iff_poincare`, `Feec.HilbertComplex.closedRangeAt_iff_poincare_adjoint`, `Feec.HilbertComplex.closedRangeAt_iff_poincare_of_rel`, `LinearPMap.exists_norm_le_of_isClosed_range`, `LinearPMap.isClosed_range_iff_exists_norm_le`
 - modules: Feec.Counterexamples.NonClosedRangeEuclidean, Feec.ForMathlib.LinearPMap.ClosedRange, Feec.Fourier.ClosedRange, Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.DomainComplex, Feec.HilbertComplex.Hodge
 
 ### Thm 4.3
 
 - named: `Feec.C0Semigroup.existsUnique_classicalSolution`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.isSkewAdjoint_wave`, `LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution`
 - old: Feec.HilbertComplex2.thm_4_3_hodgeWave, Feec.HilbertComplex2.thm_4_3_hodgeWave_thm43, Feec.IsSkewAdjoint.wellPosedClassical_thm43, Feec.IsSkewAdjoint.wellPosedClassical_thm43Full, Feec.IsSkewAdjoint.wellPosedExistence_thm43, Feec.IsSkewAdjoint.wellPosedExistence_thm43Full, Feec.Torus.thm_4_3_torus, Feec.UnitaryGroupGenerator.wellPosedClassical_thm43, Feec.UnitaryGroupGenerator.wellPosedClassical_thm43Full, Feec.thm_4_3_full, Feec.thm_4_3_of_isSkewAdjoint, Feec.thm_4_3_unconditional
-- tagged: `Feec.C0Semigroup.isClassicalSolution_mild`, `Feec.Evolution.IsStrongSolution.norm_sub_le`, `Feec.Evolution.IsStrongSolution.unique`, `Feec.Examples.bounded_standing_hypotheses`, `Feec.Examples.rotGen_standing_hypotheses`, `Feec.Maxwell.gauss_existsUnique`, `LinearPMap.isSkewAdjoint_iff_existsUnique_isometricGroup`
-- cited: `Feec.Evolution.ForcingClass.admissible`, `Feec.Evolution.IsClassicalSolution`, `Feec.ForcingClass.admissible`, `Feec.ForcingThm43Full`
+- cited: `Feec.C0Semigroup.isClassicalSolution_mild`, `Feec.Evolution.ForcingClass.admissible`, `Feec.Evolution.IsClassicalSolution`, `Feec.Evolution.IsStrongSolution.norm_sub_le`, `Feec.Evolution.IsStrongSolution.unique`, `Feec.Examples.bounded_standing_hypotheses`, `Feec.Examples.rotGen_standing_hypotheses`, `Feec.ForcingClass.admissible`, `Feec.ForcingThm43Full`, `Feec.Maxwell.gauss_existsUnique`, `LinearPMap.isSkewAdjoint_iff_existsUnique_isometricGroup`
 - modules: Feec.Evolution.Duhamel, Feec.Evolution.Forcing, Feec.Evolution.Solution, Feec.Evolution.WellPosed, Feec.Examples.NonVacuity, Feec.Physics.Maxwell.Constraints, Feec.Semigroup.Stone
 
 ### Thm 4.4
 
 - named: `LinearPMap.IsSkewAdjoint.restrict`
 - old: Feec.thm_4_4
-- tagged: `Feec.Evolution.IsStrongSolution.mem_of_isReducing`, `LinearPMap.IsSkewAdjoint.restrict`
+- cited: `Feec.Evolution.IsStrongSolution.mem_of_isReducing`, `LinearPMap.IsSkewAdjoint.restrict`
 - modules: Feec.Evolution.Constrained, Feec.ForMathlib.LinearPMap.Reducing, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.Reducing
 
 ### Cor 4.5
 
 - named: `Feec.Evolution.IsStrongSolution.mem_of_isReducing`, `Feec.Examples.ker_standing_hypotheses`, `LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution`, `LinearPMap.IsSkewAdjoint.restrict`
 - old: Feec.cor_4_5, Feec.cor_4_5_ambient, Feec.cor_4_5_ambient_unconditional, Feec.cor_4_5_classical, Feec.cor_4_5_classical_unconditional, Feec.cor_4_5_hypotheses_bddOp_ker, Feec.cor_4_5_of_isSkewAdjoint, Feec.cor_4_5_unconditional
-- tagged: `Feec.Evolution.IsStrongSolution.mem_of_isReducing`, `Feec.Examples.ker_standing_hypotheses`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`
-- cited: `Feec.EinsteinBianchi.div_propagation`, `Feec.EinsteinBianchi.energy_flux`, `Feec.EinsteinBianchi.tsd_propagates`, `Feec.EinsteinBianchi.violation_evolution`
+- cited: `Feec.EinsteinBianchi.div_propagation`, `Feec.EinsteinBianchi.energy_flux`, `Feec.EinsteinBianchi.tsd_propagates`, `Feec.EinsteinBianchi.violation_evolution`, `Feec.Evolution.IsStrongSolution.mem_of_isReducing`, `Feec.Examples.ker_standing_hypotheses`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`
 - modules: Feec.Evolution.Constrained, Feec.Examples.NonVacuity, Feec.HilbertComplex.Reducing, Feec.Physics.EinsteinBianchi.Propagation, Feec.Physics.EinsteinBianchi.System
 
 ### Thm 4.6
 
 - named: `Feec.HilbertComplex.HodgeWave.existsUnique`, `Feec.HilbertComplex.HodgeWave.existsUnique_hom`, `Feec.HodgeWave.existsUnique`, `Feec.HodgeWave.existsUnique_hom`
 - old: Feec.HilbertComplex2.thm_4_6, Feec.HilbertComplex2.thm_4_6_classical, Feec.HilbertComplex2.thm_4_6_classical_of_unitaryGroupGenerator, Feec.HilbertComplex2.thm_4_6_of_unitaryGroupGenerator, Feec.HilbertComplex2.thm_4_6_strong_unconditional, Feec.HilbertComplex2.thm_4_6_unconditional
-- tagged: `Feec.Evolution.IsStrongSolution.unique`, `Feec.Examples.idComplex_nonvacuous`, `Feec.HilbertComplex.HodgeWave.existsUnique`, `Feec.HilbertComplex.HodgeWave.existsUnique_hom`, `Feec.HilbertComplex.isSkewAdjoint_wave`, `Feec.HodgeWave.existsUnique`, `Feec.HodgeWave.existsUnique_hom`, `Feec.HodgeWave.norm_eq`, `Feec.ShortHilbertComplex.isSkewAdjoint_wave`
-- cited: `Feec.BGG.WaveData.Solution.hasDerivWithinAt_energy`, `Feec.HodgeWave.eqOn_waveGroup_of_isWeakSolution`, `Feec.HodgeWave.exists_isClassicalWeakSolution_tendstoUniformlyOn`, `Feec.HodgeWave.waveGroup`
+- cited: `Feec.BGG.WaveData.Solution.hasDerivWithinAt_energy`, `Feec.Evolution.IsStrongSolution.unique`, `Feec.Examples.idComplex_nonvacuous`, `Feec.HilbertComplex.HodgeWave.existsUnique`, `Feec.HilbertComplex.HodgeWave.existsUnique_hom`, `Feec.HilbertComplex.isSkewAdjoint_wave`, `Feec.HodgeWave.eqOn_waveGroup_of_isWeakSolution`, `Feec.HodgeWave.existsUnique`, `Feec.HodgeWave.existsUnique_hom`, `Feec.HodgeWave.exists_isClassicalWeakSolution_tendstoUniformlyOn`, `Feec.HodgeWave.norm_eq`, `Feec.HodgeWave.waveGroup`, `Feec.ShortHilbertComplex.isSkewAdjoint_wave`
 - modules: Feec.Counterexamples.ClassicalRegularity, Feec.Evolution.Solution, Feec.Examples.NonVacuity, Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.Dirac, Feec.HilbertComplex.HodgeWave, Feec.HilbertComplex.ReducedSystem, Feec.HilbertComplex.Short
 
 ### Thm 4.7
 
 - named: `Feec.HilbertComplex.HodgeWave.classicalWeak_iff_classical`, `Feec.HilbertComplex.HodgeWave.weak_iff_strong`, `Feec.HodgeWave.classicalWeak_iff_classical`, `Feec.HodgeWave.weak_iff_strong`
 - old: Feec.HilbertComplex2.thm_4_7, Feec.HilbertComplex2.thm_4_7_classical, Feec.HilbertComplex2.thm_4_7_classical_unconditional, Feec.HilbertComplex2.thm_4_7_unconditional
-- tagged: `Feec.Examples.idComplex_nonvacuous`, `Feec.HilbertComplex.HodgeWave.classicalWeak_iff_classical`, `Feec.HilbertComplex.HodgeWave.weak_iff_strong`, `Feec.HodgeWave.IsWeakSolution.isClassicalSolution`, `Feec.HodgeWave.classicalWeak_iff_classical`, `Feec.HodgeWave.isClassicalWeakSolution_of_isClassicalSolution`, `Feec.HodgeWave.isWeakSolution_of_isStrongSolution`, `Feec.HodgeWave.weak_iff_strong`
-- cited: `Feec.BGG.WaveData.Solution.exists_multiplierSolution_of_dense`, `Feec.HodgeWave.eqOn_waveGroup_of_isWeakSolution`, `Feec.HodgeWave.exists_isClassicalWeakSolution_tendstoUniformlyOn`
+- cited: `Feec.BGG.WaveData.Solution.exists_multiplierSolution_of_dense`, `Feec.Examples.idComplex_nonvacuous`, `Feec.HilbertComplex.HodgeWave.classicalWeak_iff_classical`, `Feec.HilbertComplex.HodgeWave.weak_iff_strong`, `Feec.HodgeWave.IsWeakSolution.isClassicalSolution`, `Feec.HodgeWave.classicalWeak_iff_classical`, `Feec.HodgeWave.eqOn_waveGroup_of_isWeakSolution`, `Feec.HodgeWave.exists_isClassicalWeakSolution_tendstoUniformlyOn`, `Feec.HodgeWave.isClassicalWeakSolution_of_isClassicalSolution`, `Feec.HodgeWave.isWeakSolution_of_isStrongSolution`, `Feec.HodgeWave.weak_iff_strong`
 - modules: Feec.Examples.NonVacuity, Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.HodgeWave
 
 ### Thm 4.8
 
-- tagged: `Feec.Variational.existsUnique_of_coercive`, `Feec.Variational.infSup_of_coercive`
+- cited: `Feec.Variational.existsUnique_of_coercive`, `Feec.Variational.infSup_of_coercive`
 - modules: Feec.Variational.BabuskaNecas
 
 ### Thm 4.9
 
-- tagged: `Feec.Counterexamples.surjective_not_infSup`, `Feec.Variational.InfSup.surjective`, `Feec.Variational.babuskaNecas_iff`, `Feec.Variational.babuskaNecas_iff_inner`, `Feec.Variational.existsUnique_apply_eq`, `Feec.Variational.existsUnique_inner`, `Feec.Variational.exists_infSup_of_bijective`, `Feec.Variational.infSup_iff_mul_norm_symm_le`
+- cited: `Feec.Counterexamples.surjective_not_infSup`, `Feec.Variational.InfSup.surjective`, `Feec.Variational.babuskaNecas_iff`, `Feec.Variational.babuskaNecas_iff_inner`, `Feec.Variational.existsUnique_apply_eq`, `Feec.Variational.existsUnique_inner`, `Feec.Variational.exists_infSup_of_bijective`, `Feec.Variational.infSup_iff_mul_norm_symm_le`
 - modules: Feec.Counterexamples.Ell2, Feec.Variational.BabuskaNecas
 
 ### Thm 4.10
 
 - named: `Feec.Variational.InfSup.norm_sub_le_infDist`, `Feec.Variational.InfSup.norm_sub_le_infDist_sharp`
 - old: Feec.Galerkin.thm_4_10
-- tagged: `Feec.Variational.InfSup.norm_le_of_restrict_eq`, `Feec.Variational.InfSup.norm_sub_le_infDist`, `Feec.Variational.InfSup.norm_sub_le_infDist_sharp`, `Feec.Variational.InfSup.norm_sub_le_of_orthogonal`, `Feec.Variational.InfSup.norm_sub_le_of_orthogonal_sharp`, `Feec.Variational.existsUnique_galerkin`, `Feec.Variational.existsUnique_galerkin_sesq`
+- cited: `Feec.Variational.InfSup.norm_le_of_restrict_eq`, `Feec.Variational.InfSup.norm_sub_le_infDist`, `Feec.Variational.InfSup.norm_sub_le_infDist_sharp`, `Feec.Variational.InfSup.norm_sub_le_of_orthogonal`, `Feec.Variational.InfSup.norm_sub_le_of_orthogonal_sharp`, `Feec.Variational.existsUnique_galerkin`, `Feec.Variational.existsUnique_galerkin_sesq`
 - modules: Feec.Variational.BabuskaNecas, Feec.Variational.Galerkin
 
 ### Thm 4.11
 
 - named: `Feec.Variational.existsUnique_isSaddleSolution`, `Feec.Variational.isSaddleSolution_rieszOp_iff`
 - old: Feec.Galerkin.thm_4_11
-- tagged: `Feec.BGG.brezzi_wellPosed_real`, `Feec.Variational.IsSaddleSolution`, `Feec.Variational.IsSaddleSolution.norm_fst_le`, `Feec.Variational.IsSaddleSolution.norm_snd_le`, `Feec.Variational.IsSaddleSolution.unique`, `Feec.Variational.brezzi_iff`, `Feec.Variational.existsUnique_discrete_isSaddleSolution`, `Feec.Variational.existsUnique_isSaddleSolution`, `Feec.Variational.exists_lift`
-- cited: `Feec.BGG.Hilb.existsUnique_isSaddle`, `Feec.BGG.Hilb.infSup_a`, `Feec.BGG.Hilb.infSup_b`, `Feec.BGG.Hilb.saddle_wellPosed`, `Feec.BGG.brezzi_wellPosed_real`
+- cited: `Feec.BGG.Hilb.existsUnique_isSaddle`, `Feec.BGG.Hilb.infSup_a`, `Feec.BGG.Hilb.infSup_b`, `Feec.BGG.Hilb.saddle_wellPosed`, `Feec.BGG.brezzi_wellPosed_real`, `Feec.Variational.IsSaddleSolution`, `Feec.Variational.IsSaddleSolution.norm_fst_le`, `Feec.Variational.IsSaddleSolution.norm_snd_le`, `Feec.Variational.IsSaddleSolution.unique`, `Feec.Variational.brezzi_iff`, `Feec.Variational.existsUnique_discrete_isSaddleSolution`, `Feec.Variational.existsUnique_isSaddleSolution`, `Feec.Variational.exists_lift`
 - modules: Feec.HilbertComplex.BGG.WeakSymmetry, Feec.Variational.Fortin, Feec.Variational.SaddlePoint
 
 ### Lemma 4.12
 
 - named: `Feec.Evolution.Energy.norm_le_of_re_inner_deriv_le`, `le_add_half_integral_of_sq_deriv_le_mul`, `le_add_half_integral_of_sq_deriv_le_mul_sharp`, `le_add_half_sub_of_sq_deriv_le_mul`
 - old: Feec.lemma_4_12, Feec.lemma_4_12_integral, Feec.lemma_4_12_sharp
-- tagged: `Feec.Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le`, `Feec.Evolution.Energy.norm_le_of_re_inner_deriv_le`, `le_add_half_integral_of_sq_deriv_le_mul`, `le_add_half_integral_of_sq_deriv_le_mul_sharp`, `le_add_half_sub_of_sq_deriv_le_mul`, `norm_le_add_integral_of_re_inner_deriv_le`, `norm_le_of_re_inner_deriv_le`
-- cited: `Feec.BGG.norm_sub_le_of_ellipticProjection`
+- cited: `Feec.BGG.norm_sub_le_of_ellipticProjection`, `Feec.Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le`, `Feec.Evolution.Energy.norm_le_of_re_inner_deriv_le`, `le_add_half_integral_of_sq_deriv_le_mul`, `le_add_half_integral_of_sq_deriv_le_mul_sharp`, `le_add_half_sub_of_sq_deriv_le_mul`, `norm_le_add_integral_of_re_inner_deriv_le`, `norm_le_of_re_inner_deriv_le`
 - modules: Feec.Evolution.Energy, Feec.ForMathlib.Analysis.Gronwall, Feec.HilbertComplex.BGG.TimeDependent
 
 ### Prop 4.13
 
 - named: `Feec.Variational.InfSup.of_testMap`
 - old: Feec.Complex3.prop_4_13, Feec.Complex3.prop_4_13_V, Feec.Complex3.prop_4_13_infSup, Feec.Complex3.prop_4_13_lower, Feec.Complex3.prop_4_13_test_norm
-- tagged: `Feec.Variational.InfSup.of_testMap`, `Feec.Variational.InfSup.restrict_of_testMap`
-- cited: `Feec.HodgeWave.infSup_shiftedForm`, `Feec.HodgeWave.norm_ellipticProjection_le`
+- cited: `Feec.HodgeWave.infSup_shiftedForm`, `Feec.HodgeWave.norm_ellipticProjection_le`, `Feec.Variational.InfSup.of_testMap`, `Feec.Variational.InfSup.restrict_of_testMap`
 - modules: Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.Mixed, Feec.Variational.InfSup
 
 ### Thm 4.14
 
 - named: `Feec.HodgeWave.norm_sub_le_of_semidiscrete`, `Feec.Variational.GalerkinEvolution.error_bound_refined`
 - old: Feec.Complex3.thm_4_14, Feec.Complex3.thm_4_14_pointwise
-- tagged: `Feec.Counterexamples.ClassicalRegularity.exists_datum_not_C1`, `Feec.Counterexamples.ClassicalRegularity.not_C1_graphSpace`, `Feec.HodgeWave.norm_sub_le_of_semidiscrete`, `Feec.Variational.GalerkinEvolution.error_bound`, `Feec.Variational.GalerkinEvolution.error_bound_refined`, `Feec.Variational.norm_sub_le_of_projected_error`, `Feec.Variational.norm_sub_le_of_projected_error_decay`
-- cited: `Feec.BGG.DiscreteSolution.norm_sub_le_of_ellipticProjection`, `Feec.BGG.exists_discreteSolution_norm_sub_le`, `Feec.BGG.norm_sub_le_mul_of_ellipticProjection`, `Feec.BGG.norm_sub_le_of_ellipticProjection`, `Feec.Counterexamples.ClassicalRegularity.tendstoUniformlyOn_truncSub_datum`, `Feec.HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection`, `Feec.HodgeWave.IsGraphSolution`, `Feec.HodgeWave.IsGraphSolution.norm_sub_le`, `Feec.HodgeWave.exists_isClassicalWeakSolution_tendstoUniformlyOn`, `Feec.HodgeWave.exists_isGraphSolution`, `Feec.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection`, `Feec.HodgeWave.exists_tendstoUniformlyOn_of_tendsto`, `Feec.HodgeWave.norm_sub_le_of_comparison`, `Feec.HodgeWave.tendstoUniformlyOn_ellipticProjection`, `Feec.HodgeWave.tendstoUniformlyOn_of_isGraphSolution`, `Feec.HodgeWave.tendstoUniformlyOn_of_isWeakSolution`, `Feec.HodgeWave.tendstoUniformlyOn_of_tendsto`, `Feec.HodgeWave.tendstoUniformlyOn_semidiscrete`
+- cited: `Feec.BGG.DiscreteSolution.norm_sub_le_of_ellipticProjection`, `Feec.BGG.exists_discreteSolution_norm_sub_le`, `Feec.BGG.norm_sub_le_mul_of_ellipticProjection`, `Feec.BGG.norm_sub_le_of_ellipticProjection`, `Feec.Counterexamples.ClassicalRegularity.exists_datum_not_C1`, `Feec.Counterexamples.ClassicalRegularity.not_C1_graphSpace`, `Feec.Counterexamples.ClassicalRegularity.tendstoUniformlyOn_truncSub_datum`, `Feec.HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection`, `Feec.HodgeWave.IsGraphSolution`, `Feec.HodgeWave.IsGraphSolution.norm_sub_le`, `Feec.HodgeWave.exists_isClassicalWeakSolution_tendstoUniformlyOn`, `Feec.HodgeWave.exists_isGraphSolution`, `Feec.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection`, `Feec.HodgeWave.exists_tendstoUniformlyOn_of_tendsto`, `Feec.HodgeWave.norm_sub_le_of_comparison`, `Feec.HodgeWave.norm_sub_le_of_semidiscrete`, `Feec.HodgeWave.tendstoUniformlyOn_ellipticProjection`, `Feec.HodgeWave.tendstoUniformlyOn_of_isGraphSolution`, `Feec.HodgeWave.tendstoUniformlyOn_of_isWeakSolution`, `Feec.HodgeWave.tendstoUniformlyOn_of_tendsto`, `Feec.HodgeWave.tendstoUniformlyOn_semidiscrete`, `Feec.Variational.GalerkinEvolution.error_bound`, `Feec.Variational.GalerkinEvolution.error_bound_refined`, `Feec.Variational.norm_sub_le_of_projected_error`, `Feec.Variational.norm_sub_le_of_projected_error_decay`
 - modules: Feec.Counterexamples.ClassicalRegularity, Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.Approximation.SemidiscreteWave, Feec.HilbertComplex.BGG.TimeDependent, Feec.Variational.GalerkinEvolution
 
 ### Prop 4.16
 
 - named: `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_divFree_propagates`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.HilbertComplex.ReducingSubcomplex.propagates_neg`, `Feec.Models.BoundedDomain.bggComplex_divFree_propagates`, `Feec.Models.BoundedDomain.hessCurl_divFree_propagates`, `Feec.ShortHilbertComplex.divFree_propagates`, `Feec.ShortHilbertComplex.divFree_propagates_neg`
 - old: Feec.BoundedSym.symComplexB_prop_4_16, Feec.BoundedSym.symComplexD_prop_4_16, Feec.Ch6.Bounded.bggComplex_prop_4_16, Feec.Constraints.prop_4_16, Feec.Constraints.prop_4_16', Feec.Constraints.prop_4_16_classical_unconditional, Feec.Constraints.prop_4_16_exists, Feec.Constraints.prop_4_16_exists_unconditional
-- tagged: `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.Maxwell.euclidean_gauss_propagates`, `Feec.Maxwell.gauss_existsUnique`, `Feec.Maxwell.gauss_propagates`, `Feec.Maxwell.pec_gauss_propagates`, `Feec.Maxwell.pmc_gauss_propagates`, `Feec.Maxwell.torus_gauss_propagates`, `Feec.Maxwell.waveGroup_mem`, `Feec.ShortHilbertComplex.divFreeSub`, `Feec.ShortHilbertComplex.divFree_propagates`, `Feec.ShortHilbertComplex.divFree_propagates_neg`, `Feec.ShortHilbertComplex.reducingSubcomplex_divFreeSub`
-- cited: `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_divFree_propagates`, `Feec.Models.BoundedDomain.bggComplex_divFree_propagates`, `Feec.Models.BoundedDomain.hessCurl_divFree_propagates`
+- cited: `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_divFree_propagates`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.Maxwell.euclidean_gauss_propagates`, `Feec.Maxwell.gauss_existsUnique`, `Feec.Maxwell.gauss_propagates`, `Feec.Maxwell.pec_gauss_propagates`, `Feec.Maxwell.pmc_gauss_propagates`, `Feec.Maxwell.torus_gauss_propagates`, `Feec.Maxwell.waveGroup_mem`, `Feec.Models.BoundedDomain.bggComplex_divFree_propagates`, `Feec.Models.BoundedDomain.hessCurl_divFree_propagates`, `Feec.ShortHilbertComplex.divFreeSub`, `Feec.ShortHilbertComplex.divFree_propagates`, `Feec.ShortHilbertComplex.divFree_propagates_neg`, `Feec.ShortHilbertComplex.reducingSubcomplex_divFreeSub`
 - modules: Feec.Counterexamples.BoundedSymTSD, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.Reducing, Feec.Models.BoundedDomain.BGG, Feec.Models.BoundedDomain.SymCurl, Feec.Physics.Maxwell.Constraints
 
 ### Prop 4.17
 
 - named: `Feec.C0Group.IsIsometric.isReducing_of_forward_invariant`, `Feec.Counterexamples.BoundedBGG.bggComplex_invariantCore_propagates`, `Feec.Counterexamples.BoundedDomainTSD.density_gap`, `Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates_neg`, `Feec.HilbertComplex.ReducingSubcomplex.waveGroup_mem`, `Feec.HilbertComplex.ScaledEmbedding.reducingSubcomplex_comap`, `Feec.HilbertComplex.isReducing_iff_forall_isStrongSolution`, `Feec.HilbertComplex.isReducing_iff_waveGroup_invariant`, `Feec.HilbertComplex.isReducing_invariantCore_waveGroup`, `Feec.HilbertComplex.le_invariantCore_waveGroup`, `Feec.Models.Cube.Mirror.existsUnique_mem`, `Feec.Models.Cube.Mirror.existsUnique_memCube`, `Feec.Models.Cube.Mirror.existsUnique_memQ`, `Feec.Models.Cube.Mirror.propagates`, `Feec.Models.Cube.Mirror.propagatesCube`, `Feec.Models.Euclidean.BGG.tsd_propagates_neg`, `Feec.Models.Euclidean.GradCurl.real_tsd_existsUnique`, `Feec.Models.Euclidean.GradCurl.real_tsd_propagates`, `Feec.Models.Euclidean.GradCurl.tsd_existsUnique`, `Feec.Models.Euclidean.GradCurl.tsd_propagates_neg`, `Feec.Models.Euclidean.GradCurl.waveGroup_mem`, `Feec.Models.Torus.GradCurl.tsd_existsUnique`, `Feec.Models.Torus.GradCurl.tsd_propagates_neg`, `Feec.Models.Torus.GradCurl.waveGroup_mem`
 - old: Feec.BoundedDomain.prop417_density_gap, Feec.BoundedDomain.thesisComplex_prop_4_17_max, Feec.Box.mirror_prop_4_17, Feec.Box.mirror_prop_4_17_exists, Feec.Box.prop_4_17_hyps_res, Feec.Box.prop_4_17_res, Feec.Box.prop_4_17_res_exists, Feec.Ch6.Bounded.bggComplex_prop_4_17_max, Feec.Ch6.Whole.prop_4_17_bggWhole, Feec.Constraints.le_max_of_prop_4_17_hyps, Feec.Constraints.prop_4_17, Feec.Constraints.prop_4_17_exists_unconditional, Feec.Constraints.prop_4_17_group_all_unconditional, Feec.Constraints.prop_4_17_group_unconditional, Feec.Constraints.prop_4_17_iff, Feec.Constraints.prop_4_17_iff_unconditional, Feec.Constraints.prop_4_17_max, Feec.Constraints.prop_4_17_max_unconditional, Feec.Constraints.prop_4_17_necessary, Feec.Constraints.prop_4_17_necessary_unconditional, Feec.Repair.C417.mirrorCxCube_prop_4_17_exists, Feec.Repair.C417.mirrorCxQ_prop_4_17_exists, Feec.Repair.C417.piCube_mirror_prop_4_17_exists, Feec.Repair.C417.prop_4_17_compr_exists, Feec.Repair.C417.prop_4_17_corrected, Feec.Repair.C417.prop_4_17_corrected_cube, Feec.Repair.C417.prop_4_17_hyps_compr, Feec.Repair.C417.prop_4_17_hyps_scale, Feec.Repair.C417.prop_4_17_hyps_scale2, Feec.Repair.C417.unitCube_mirror_prop_4_17_exists, Feec.Torus.prop_4_17_torus, Feec.Torus.prop_4_17_torus_backward, Feec.Torus.prop_4_17_torus_classical, Feec.Torus.prop_4_17_torus_exists, Feec.Torus.prop_4_17_torus_exists_of_Hcurl, Feec.Torus.prop_4_17_torus_group, Feec.Torus.prop_4_17_torus_group_all, Feec.Torus.prop_4_17_torus_group_periodic, Feec.Whole.prop_4_17_whole, Feec.Whole.prop_4_17_whole_exists, Feec.Whole.prop_4_17_whole_group, Feec.WholeReal.real_prop_4_17_whole, Feec.WholeReal.real_prop_4_17_whole_exists
-- tagged: `Feec.Counterexamples.BoundedDomainTSD.betaL2_not_propagates`, `Feec.Counterexamples.BoundedDomainTSD.beta_violation_boundary_layer`, `Feec.Counterexamples.BoundedDomainTSD.density_dichotomy`, `Feec.Counterexamples.BoundedDomainTSD.density_gap`, `Feec.Counterexamples.BoundedDomainTSD.exists_isStrongSolution_tsd_not_propagates`, `Feec.Counterexamples.BoundedDomainTSD.exists_projTSD_not_mem_domain`, `Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`, `Feec.Counterexamples.BoundedDomainTSD.not_isReducing_tsd`, `Feec.Counterexamples.BoundedDomainTSD.not_mem_closure_wave_domain_inter`, `Feec.Counterexamples.BoundedDomainTSD.not_projection_magnetic`, `Feec.Counterexamples.BoundedDomainTSD.not_starProjection_mem_adjoint_domain`, `Feec.Counterexamples.BoundedDomainTSD.not_starProjection_mem_curl_maximal`, `Feec.Counterexamples.BoundedDomainTSD.not_starProjection_mem_curl_maximal_bochner`, `Feec.Counterexamples.BoundedDomainTSD.obstruction_ne_bot`, `Feec.Counterexamples.BoundedDomainTSD.projection_unbounded`, `Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`, `Feec.Counterexamples.BoundedDomainTSD.violation_boundary_layer`, `Feec.Counterexamples.CubeStationary.forward_iff_stationary`, `Feec.Counterexamples.CubeStationary.mem_invariantCore_tsd_iff`, `Feec.Counterexamples.CubeStationary.tsd_not_propagates`, `Feec.EinsteinBianchi.cube_tsd_existsUnique`, `Feec.EinsteinBianchi.cube_tsd_propagates`, `Feec.EinsteinBianchi.euclidean_tsd_propagates`, `Feec.EinsteinBianchi.torus_tsd_propagates`, `Feec.Fourier.FibreReducing.existsUnique_mem`, `Feec.Fourier.FibreReducing.propagates`, `Feec.Fourier.GradCurl.isFibreReducing`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.HilbertComplex.ScaledEmbedding.reducingSubcomplex_comap`, `Feec.HilbertComplex.isReducing_iff_forall_isStrongSolution`, `Feec.HilbertComplex.isReducing_iff_waveGroup_invariant`, `Feec.HilbertComplex.mem_closure_domain_inter_ker_adjoint`, `Feec.Models.BoundedDomain.WeakEB.mem_tsd_univ`, `Feec.Models.BoundedDomain.closure_eq_tsd₀`, `Feec.Models.BoundedDomain.closure_tsd_inf_curl_maximal`, `Feec.Models.BoundedDomain.dense_curl_inter_divFree`, `Feec.Models.BoundedDomain.dense_curl_maximal_inter_divFree`, `Feec.Models.BoundedDomain.integral_eq_zero_of_mem_tsd`, `Feec.Models.BoundedDomain.not_finiteDimensional_obstruction`, `Feec.Models.BoundedDomain.not_tsd_le_closure_sup_finiteDimensional`, `Feec.Models.BoundedDomain.sum_integral_mul_pd_eq_zero`, `Feec.Models.BoundedDomain.tsd`, `Feec.Models.BoundedDomain.tsd_cone`, `Feec.Models.BoundedDomain.tsd_depDomain`, `Feec.Models.BoundedDomain.tsd₀`, `Feec.Models.BoundedDomain.tsd₀_le_closure`, `Feec.Models.Euclidean.GradCurl.real_tsd_existsUnique`, `Feec.Models.Euclidean.GradCurl.real_tsd_propagates`, `Feec.Models.Euclidean.GradCurl.reducingSubcomplex`, `Feec.Models.Euclidean.GradCurl.tsd_existsUnique`, `Feec.Models.Euclidean.GradCurl.tsd_propagates`, `Feec.Models.Euclidean.GradCurl.tsd_propagates_neg`, `Feec.Models.Euclidean.GradCurl.waveGroup_mem`, `Feec.Models.Torus.GradCurl.real_tsd_existsUnique`, `Feec.Models.Torus.GradCurl.real_tsd_propagates`, `Feec.Models.Torus.GradCurl.reducingSubcomplex`, `Feec.Models.Torus.GradCurl.tsd_existsUnique`, `Feec.Models.Torus.GradCurl.tsd_propagates`, `Feec.Models.Torus.GradCurl.tsd_propagates_neg`, `Feec.Models.Torus.GradCurl.waveGroup_mem`, `Feec.ShortHilbertComplex.mem_closure_domain_inter_ker_adjoint`
-- cited: `Feec.Counterexamples.BoundedBGG.bggComplex_invariantCore_propagates`, `Feec.Models.BoundedDomain.eq_zero_of_symm_of_trace_of_cross`, `Feec.Models.Cube.Ident.forward_iff`, `Feec.Models.Cube.Ident.forward_iff_pi`, `Feec.Models.Cube.Ident.mem_invariantCore_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff_pi`, `Feec.Models.Cube.Mirror.existsUnique_mem`, `Feec.Models.Cube.Mirror.existsUnique_memCube`, `Feec.Models.Cube.Mirror.existsUnique_memCube_pi`, `Feec.Models.Cube.Mirror.existsUnique_memCube_unit`, `Feec.Models.Cube.Mirror.existsUnique_memQ`, `Feec.Models.Cube.Mirror.exists_nonstationary`, `Feec.Models.Cube.Mirror.exists_nonstationaryCube`, `Feec.Models.Cube.Mirror.exists_nonstationaryQ`, `Feec.Models.Cube.Mirror.invariantCore_eq`, `Feec.Models.Cube.Mirror.invariantCore_eqCube`, `Feec.Models.Cube.Mirror.invariantCore_eqQ`, `Feec.Models.Cube.Mirror.propagates`, `Feec.Models.Cube.Mirror.propagatesCube`, `Feec.Models.Cube.Mirror.propagatesQ`, `Feec.Models.Cube.Mirror.reducingSubcomplex`, `Feec.Models.Cube.Mirror.reducingSubcomplexCube`, `Feec.Models.Cube.Mirror.reducingSubcomplexQ`, `Feec.Models.Cube.Parity.exists_linearIndependent_invariantCore`, `Feec.Models.Cube.Parity.forward_iff`, `Feec.Models.Cube.Parity.forward_torus_iff`, `Feec.Models.Cube.Parity.forward_tsd_iff`, `Feec.Models.Cube.Parity.invariantCore_ne_bot`, `Feec.Models.Cube.Parity.mem_invariantCore_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_torus_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Parity.not_finiteDimensional_invariantCore`, `Feec.Models.Cube.RowWise.forward_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_tsd_iff`, `Feec.Models.Euclidean.GradCurl.fourier_mem_constraint_iff`
+- cited: `Feec.Counterexamples.BoundedBGG.bggComplex_invariantCore_propagates`, `Feec.Counterexamples.BoundedDomainTSD.betaL2_not_propagates`, `Feec.Counterexamples.BoundedDomainTSD.beta_violation_boundary_layer`, `Feec.Counterexamples.BoundedDomainTSD.density_dichotomy`, `Feec.Counterexamples.BoundedDomainTSD.density_gap`, `Feec.Counterexamples.BoundedDomainTSD.exists_isStrongSolution_tsd_not_propagates`, `Feec.Counterexamples.BoundedDomainTSD.exists_projTSD_not_mem_domain`, `Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`, `Feec.Counterexamples.BoundedDomainTSD.not_isReducing_tsd`, `Feec.Counterexamples.BoundedDomainTSD.not_mem_closure_wave_domain_inter`, `Feec.Counterexamples.BoundedDomainTSD.not_projection_magnetic`, `Feec.Counterexamples.BoundedDomainTSD.not_starProjection_mem_adjoint_domain`, `Feec.Counterexamples.BoundedDomainTSD.not_starProjection_mem_curl_maximal`, `Feec.Counterexamples.BoundedDomainTSD.not_starProjection_mem_curl_maximal_bochner`, `Feec.Counterexamples.BoundedDomainTSD.obstruction_ne_bot`, `Feec.Counterexamples.BoundedDomainTSD.projection_unbounded`, `Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`, `Feec.Counterexamples.BoundedDomainTSD.violation_boundary_layer`, `Feec.Counterexamples.CubeStationary.forward_iff_stationary`, `Feec.Counterexamples.CubeStationary.mem_invariantCore_tsd_iff`, `Feec.Counterexamples.CubeStationary.tsd_not_propagates`, `Feec.EinsteinBianchi.cube_tsd_existsUnique`, `Feec.EinsteinBianchi.cube_tsd_propagates`, `Feec.EinsteinBianchi.euclidean_tsd_propagates`, `Feec.EinsteinBianchi.torus_tsd_propagates`, `Feec.Fourier.FibreReducing.existsUnique_mem`, `Feec.Fourier.FibreReducing.propagates`, `Feec.Fourier.GradCurl.isFibreReducing`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.HilbertComplex.ScaledEmbedding.reducingSubcomplex_comap`, `Feec.HilbertComplex.isReducing_iff_forall_isStrongSolution`, `Feec.HilbertComplex.isReducing_iff_waveGroup_invariant`, `Feec.HilbertComplex.mem_closure_domain_inter_ker_adjoint`, `Feec.Models.BoundedDomain.WeakEB.mem_tsd_univ`, `Feec.Models.BoundedDomain.closure_eq_tsd₀`, `Feec.Models.BoundedDomain.closure_tsd_inf_curl_maximal`, `Feec.Models.BoundedDomain.dense_curl_inter_divFree`, `Feec.Models.BoundedDomain.dense_curl_maximal_inter_divFree`, `Feec.Models.BoundedDomain.eq_zero_of_symm_of_trace_of_cross`, `Feec.Models.BoundedDomain.integral_eq_zero_of_mem_tsd`, `Feec.Models.BoundedDomain.not_finiteDimensional_obstruction`, `Feec.Models.BoundedDomain.not_tsd_le_closure_sup_finiteDimensional`, `Feec.Models.BoundedDomain.sum_integral_mul_pd_eq_zero`, `Feec.Models.BoundedDomain.tsd`, `Feec.Models.BoundedDomain.tsd_cone`, `Feec.Models.BoundedDomain.tsd_depDomain`, `Feec.Models.BoundedDomain.tsd₀`, `Feec.Models.BoundedDomain.tsd₀_le_closure`, `Feec.Models.Cube.Ident.forward_iff`, `Feec.Models.Cube.Ident.forward_iff_pi`, `Feec.Models.Cube.Ident.mem_invariantCore_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff_pi`, `Feec.Models.Cube.Mirror.existsUnique_mem`, `Feec.Models.Cube.Mirror.existsUnique_memCube`, `Feec.Models.Cube.Mirror.existsUnique_memCube_pi`, `Feec.Models.Cube.Mirror.existsUnique_memCube_unit`, `Feec.Models.Cube.Mirror.existsUnique_memQ`, `Feec.Models.Cube.Mirror.exists_nonstationary`, `Feec.Models.Cube.Mirror.exists_nonstationaryCube`, `Feec.Models.Cube.Mirror.exists_nonstationaryQ`, `Feec.Models.Cube.Mirror.invariantCore_eq`, `Feec.Models.Cube.Mirror.invariantCore_eqCube`, `Feec.Models.Cube.Mirror.invariantCore_eqQ`, `Feec.Models.Cube.Mirror.propagates`, `Feec.Models.Cube.Mirror.propagatesCube`, `Feec.Models.Cube.Mirror.propagatesQ`, `Feec.Models.Cube.Mirror.reducingSubcomplex`, `Feec.Models.Cube.Mirror.reducingSubcomplexCube`, `Feec.Models.Cube.Mirror.reducingSubcomplexQ`, `Feec.Models.Cube.Parity.exists_linearIndependent_invariantCore`, `Feec.Models.Cube.Parity.forward_iff`, `Feec.Models.Cube.Parity.forward_torus_iff`, `Feec.Models.Cube.Parity.forward_tsd_iff`, `Feec.Models.Cube.Parity.invariantCore_ne_bot`, `Feec.Models.Cube.Parity.mem_invariantCore_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_torus_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Parity.not_finiteDimensional_invariantCore`, `Feec.Models.Cube.RowWise.forward_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_tsd_iff`, `Feec.Models.Euclidean.GradCurl.fourier_mem_constraint_iff`, `Feec.Models.Euclidean.GradCurl.real_tsd_existsUnique`, `Feec.Models.Euclidean.GradCurl.real_tsd_propagates`, `Feec.Models.Euclidean.GradCurl.reducingSubcomplex`, `Feec.Models.Euclidean.GradCurl.tsd_existsUnique`, `Feec.Models.Euclidean.GradCurl.tsd_propagates`, `Feec.Models.Euclidean.GradCurl.tsd_propagates_neg`, `Feec.Models.Euclidean.GradCurl.waveGroup_mem`, `Feec.Models.Torus.GradCurl.real_tsd_existsUnique`, `Feec.Models.Torus.GradCurl.real_tsd_propagates`, `Feec.Models.Torus.GradCurl.reducingSubcomplex`, `Feec.Models.Torus.GradCurl.tsd_existsUnique`, `Feec.Models.Torus.GradCurl.tsd_propagates`, `Feec.Models.Torus.GradCurl.tsd_propagates_neg`, `Feec.Models.Torus.GradCurl.waveGroup_mem`, `Feec.ShortHilbertComplex.mem_closure_domain_inter_ker_adjoint`
 - modules: Feec.Algebra.MatrixSymbol, Feec.Counterexamples.BoundedBGG, Feec.Counterexamples.BoundedDomainTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Counterexamples.CubeStationary, Feec.Domain.Mollify, Feec.Domain.Obstruction, Feec.Fourier.Euclidean, Feec.Fourier.FibreReducing, Feec.Fourier.GradCurlSymbol, Feec.Fourier.Reality, Feec.Fourier.TorusSpectral, Feec.Fourier.Weak, Feec.HilbertComplex.Density, Feec.HilbertComplex.Equivariant, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.Reducing, Feec.HilbertComplex.Transport, Feec.Models.BoundedDomain.Density, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.InvariantCore, Feec.Models.Cube.Basic, Feec.Models.Cube.Ident, Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorDirichlet, Feec.Models.Cube.Parity, Feec.Models.Cube.Reflection, Feec.Models.Cube.RowWiseIdent, Feec.Models.Cube.Static, Feec.Models.Euclidean.GradCurl, Feec.Models.Torus.GradCurl, Feec.Physics.EinsteinBianchi.Constraints, Feec.Semigroup.Spectral
 
 ### Prop 4.18
 
 - named: `Feec.Models.BoundedDomain.hessCurl_existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.divFree_propagates_neg`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`
 - old: Feec.BoundedSym.symComplexB_prop_4_18, Feec.Constraints.prop_4_18, Feec.Constraints.prop_4_18_i, Feec.Constraints.prop_4_18_ii, Feec.Constraints.prop_4_18_unconditional
-- tagged: `Feec.TimeStepping.IsCNStep.mem_of_isReducing`, `Feec.TimeStepping.mem_of_forall_isCNStep`
-- cited: `Feec.Models.BoundedDomain.hessCurl_existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isReducedSolution_of_isStrongSolution`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`, `Feec.TimeStepping.IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`, `Feec.TimeStepping.IsReducedCNStep.isFullCNStep_zero`
-- modules: Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.ReducedSystem, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.SymCurl, Feec.TimeStepping.Cayley
+- cited: `Feec.Models.BoundedDomain.hessCurl_existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isReducedSolution_of_isStrongSolution`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`, `Feec.TimeStepping.IsCNStep.mem_of_isReducing`, `Feec.TimeStepping.IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`, `Feec.TimeStepping.IsReducedCNStep.isFullCNStep_zero`, `Feec.TimeStepping.mem_of_forall_isCNStep`
+- modules: Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.ReducedSystem, Feec.HilbertComplex.Reducing, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.SymCurl, Feec.TimeStepping.Cayley
 
 ### Prop 4.19
 
 - named: `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsd`, `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsdSKer`, `Feec.HilbertComplex.isReducing_iff_forall_isStrongSolution`, `Feec.Models.Cube.MirrorSym.existsUnique_mem`, `Feec.Models.Cube.MirrorSym.existsUnique_memCube`, `Feec.Models.Cube.MirrorSym.existsUnique_memQ`, `Feec.Models.Cube.MirrorSym.propagates`, `Feec.Models.Cube.MirrorSym.propagatesCube`, `Feec.Models.Euclidean.SymCurl.tsd_existsUnique`, `Feec.Models.Euclidean.SymCurl.tsd_propagates_neg`, `Feec.Models.Euclidean.SymCurl.waveGroup_mem`, `Feec.Models.Torus.SymCurl.real_tsd_existsUnique`, `Feec.Models.Torus.SymCurl.tsd_existsUnique`, `Feec.Models.Torus.SymCurl.tsd_propagates_neg`, `Feec.Models.Torus.SymCurl.waveGroup_mem`
 - old: Feec.BoundedSym.symComplexB_prop_4_19_max, Feec.BoundedSym.symComplexD_prop_4_19_max, Feec.Box.mirror_prop_4_19, Feec.Box.mirror_prop_4_19_exists, Feec.Repair.C417.mirrorSymCxCube_prop_4_19_exists, Feec.Repair.C417.mirrorSymCxQ_prop_4_19_exists, Feec.Repair.C417.prop_4_19_corrected, Feec.Repair.C417.prop_4_19_corrected_cube, Feec.TorusSym.prop_4_19_torus, Feec.TorusSym.prop_4_19_torus_exists, Feec.TorusSym.prop_4_19_torus_exists_real, Feec.TorusSym.prop_4_19_torus_group, Feec.TorusSym.prop_4_19_torus_iff, Feec.TorusSym.prop_4_19_torus_real_space, Feec.TorusSym.prop_4_19_torus_symGroup, Feec.WholeSym.prop_4_19_whole, Feec.WholeSym.prop_4_19_whole_exists, Feec.WholeSym.prop_4_19_whole_group
-- tagged: `Feec.Counterexamples.BoundedSymTSD.exists_projTSD_not_mem_domain`, `Feec.Counterexamples.BoundedSymTSD.not_dense_tsdS_inter`, `Feec.Counterexamples.BoundedSymTSD.not_isReducing_tsd`, `Feec.Counterexamples.BoundedSymTSD.tsd_not_propagates`, `Feec.Fourier.FibreReducing.existsUnique_mem`, `Feec.Fourier.FibreReducing.propagates`, `Feec.Fourier.SymCurl.isFibreReducing`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.Models.BoundedDomain.hessCurl`, `Feec.Models.Euclidean.SymCurl.real_tsd_existsUnique`, `Feec.Models.Euclidean.SymCurl.real_tsd_propagates`, `Feec.Models.Euclidean.SymCurl.reducingSubcomplex`, `Feec.Models.Euclidean.SymCurl.tsd_existsUnique`, `Feec.Models.Euclidean.SymCurl.tsd_propagates`, `Feec.Models.Euclidean.SymCurl.tsd_propagates_neg`, `Feec.Models.Euclidean.SymCurl.waveGroup_mem`, `Feec.Models.Torus.SymCurl.real_tsd_existsUnique`, `Feec.Models.Torus.SymCurl.real_tsd_propagates`, `Feec.Models.Torus.SymCurl.reducingSubcomplex`, `Feec.Models.Torus.SymCurl.tsd_existsUnique`, `Feec.Models.Torus.SymCurl.tsd_propagates`, `Feec.Models.Torus.SymCurl.tsd_propagates_neg`, `Feec.Models.Torus.SymCurl.waveGroup_mem`
-- cited: `Feec.Counterexamples.BallSymTSD.not_propagates`, `Feec.Counterexamples.BallSymTSD.tsd_not_propagates`, `Feec.Counterexamples.BoundedSymTSD.diagnosis`, `Feec.Counterexamples.BoundedSymTSD.diagnosis_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_d₁_mem_tsdT`, `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsd`, `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsdSKer`, `Feec.Counterexamples.BoundedSymTSD.not_dense_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.not_finiteDimensional_obstruction`, `Feec.Counterexamples.BoundedSymTSD.not_projection_magnetic`, `Feec.Counterexamples.BoundedSymTSD.not_starProjection_mem_adjoint_domain`, `Feec.Counterexamples.BoundedSymTSD.not_starProjection_mem_wave_domain_hessCurlMax`, `Feec.Models.BoundedDomain.adjoint_hessCurl_d₁_mem_tsdS`, `Feec.Models.BoundedDomain.hessCurlMax`, `Feec.Models.BoundedDomain.hessCurl_d₁_mem_tsdT`, `Feec.Models.Cube.MirrorSym.existsUnique_mem`, `Feec.Models.Cube.MirrorSym.existsUnique_memCube`, `Feec.Models.Cube.MirrorSym.existsUnique_memQ`, `Feec.Models.Cube.MirrorSym.exists_nonstationary`, `Feec.Models.Cube.MirrorSym.exists_nonstationaryCube`, `Feec.Models.Cube.MirrorSym.exists_nonstationaryQ`, `Feec.Models.Cube.MirrorSym.invariantCore_eq`, `Feec.Models.Cube.MirrorSym.invariantCore_eqCube`, `Feec.Models.Cube.MirrorSym.invariantCore_eqQ`, `Feec.Models.Cube.MirrorSym.propagates`, `Feec.Models.Cube.MirrorSym.propagatesCube`, `Feec.Models.Cube.MirrorSym.propagatesQ`, `Feec.Models.Cube.MirrorSym.reducingSubcomplex`, `Feec.Models.Cube.MirrorSym.reducingSubcomplexCube`, `Feec.Models.Cube.MirrorSym.reducingSubcomplexQ`, `Feec.Models.Torus.SymCurl.tsd_propagates`
+- cited: `Feec.Counterexamples.BallSymTSD.not_propagates`, `Feec.Counterexamples.BallSymTSD.tsd_not_propagates`, `Feec.Counterexamples.BoundedSymTSD.diagnosis`, `Feec.Counterexamples.BoundedSymTSD.diagnosis_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.exists_projTSD_not_mem_domain`, `Feec.Counterexamples.BoundedSymTSD.hessCurlMax_d₁_mem_tsdT`, `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsd`, `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsdSKer`, `Feec.Counterexamples.BoundedSymTSD.not_dense_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.not_dense_tsdS_inter`, `Feec.Counterexamples.BoundedSymTSD.not_finiteDimensional_obstruction`, `Feec.Counterexamples.BoundedSymTSD.not_isReducing_tsd`, `Feec.Counterexamples.BoundedSymTSD.not_projection_magnetic`, `Feec.Counterexamples.BoundedSymTSD.not_starProjection_mem_adjoint_domain`, `Feec.Counterexamples.BoundedSymTSD.not_starProjection_mem_wave_domain_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.tsd_not_propagates`, `Feec.Fourier.FibreReducing.existsUnique_mem`, `Feec.Fourier.FibreReducing.propagates`, `Feec.Fourier.SymCurl.isFibreReducing`, `Feec.HilbertComplex.ReducingSubcomplex.existsUnique_mem`, `Feec.HilbertComplex.ReducingSubcomplex.propagates`, `Feec.Models.BoundedDomain.adjoint_hessCurl_d₁_mem_tsdS`, `Feec.Models.BoundedDomain.hessCurl`, `Feec.Models.BoundedDomain.hessCurlMax`, `Feec.Models.BoundedDomain.hessCurl_d₁_mem_tsdT`, `Feec.Models.Cube.MirrorSym.existsUnique_mem`, `Feec.Models.Cube.MirrorSym.existsUnique_memCube`, `Feec.Models.Cube.MirrorSym.existsUnique_memQ`, `Feec.Models.Cube.MirrorSym.exists_nonstationary`, `Feec.Models.Cube.MirrorSym.exists_nonstationaryCube`, `Feec.Models.Cube.MirrorSym.exists_nonstationaryQ`, `Feec.Models.Cube.MirrorSym.invariantCore_eq`, `Feec.Models.Cube.MirrorSym.invariantCore_eqCube`, `Feec.Models.Cube.MirrorSym.invariantCore_eqQ`, `Feec.Models.Cube.MirrorSym.propagates`, `Feec.Models.Cube.MirrorSym.propagatesCube`, `Feec.Models.Cube.MirrorSym.propagatesQ`, `Feec.Models.Cube.MirrorSym.reducingSubcomplex`, `Feec.Models.Cube.MirrorSym.reducingSubcomplexCube`, `Feec.Models.Cube.MirrorSym.reducingSubcomplexQ`, `Feec.Models.Euclidean.SymCurl.real_tsd_existsUnique`, `Feec.Models.Euclidean.SymCurl.real_tsd_propagates`, `Feec.Models.Euclidean.SymCurl.reducingSubcomplex`, `Feec.Models.Euclidean.SymCurl.tsd_existsUnique`, `Feec.Models.Euclidean.SymCurl.tsd_propagates`, `Feec.Models.Euclidean.SymCurl.tsd_propagates_neg`, `Feec.Models.Euclidean.SymCurl.waveGroup_mem`, `Feec.Models.Torus.SymCurl.real_tsd_existsUnique`, `Feec.Models.Torus.SymCurl.real_tsd_propagates`, `Feec.Models.Torus.SymCurl.reducingSubcomplex`, `Feec.Models.Torus.SymCurl.tsd_existsUnique`, `Feec.Models.Torus.SymCurl.tsd_propagates`, `Feec.Models.Torus.SymCurl.tsd_propagates_neg`, `Feec.Models.Torus.SymCurl.waveGroup_mem`
 - modules: Feec.Algebra.MatrixSymbol, Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.Euclidean, Feec.Fourier.FibreReducing, Feec.Fourier.SymCurlSymbol, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.Reducing, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
 
 ### Prop 5.1
 
 - named: `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_one`, `Feec.BGG.Hilb.toHilbertComplex_cycles_one`, `Feec.BGG.Hilb.toShort_closedRange_exact`
 - old: Feec.Ch5.BGG.BGGHilb.prop_5_1
-- tagged: `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_one`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_two`, `Feec.BGG.Hilb.toHilbertComplex_cycles_one`, `Feec.BGG.Hilb.toHilbertComplex_cycles_zero`, `Feec.BGG.Hilb.toShort`, `Feec.BGG.Hilb.toShort_closedRange_exact`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.range_D0`, `Feec.BGG.Segment.range_D1`, `Feec.BGG.isClosed_range_prod`
-- cited: `Feec.BGG.Hilb.D0op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed_range`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.exact_D0op_D1op`, `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.isClosed_range_T`, `Feec.BGG.Hilb.isClosed_Γ`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toShort`, `Feec.BGG.Hilb.toShort_closedRange_exact`, `Feec.BGG.Segment.range_D0`, `Feec.BGG.Stability`, `Feec.BGG.isClosed_range_prod`
+- cited: `Feec.BGG.Hilb.D0op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed_range`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.exact_D0op_D1op`, `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.isClosed_range_T`, `Feec.BGG.Hilb.isClosed_Γ`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_one`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_two`, `Feec.BGG.Hilb.toHilbertComplex_cycles_one`, `Feec.BGG.Hilb.toHilbertComplex_cycles_zero`, `Feec.BGG.Hilb.toShort`, `Feec.BGG.Hilb.toShort_closedRange_exact`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.range_D0`, `Feec.BGG.Segment.range_D1`, `Feec.BGG.Stability`, `Feec.BGG.isClosed_range_prod`
 - modules: Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.ToComplex
 
 ### Prop 5.2
 
 - named: `Feec.BGG.Hilb.existsUnique_isSaddle`, `Feec.BGG.Hilb.saddle_wellPosed`
 - old: Feec.Ch5.BGG.BGGHilb.prop_5_2, Feec.Ch5.BGG.BGGHilb.prop_5_2_wellPosed
-- tagged: `Feec.BGG.Hilb.existsUnique_isReduced`, `Feec.BGG.Hilb.existsUnique_isSaddle`, `Feec.BGG.Hilb.infSup_a`, `Feec.BGG.Hilb.nondeg_a`, `Feec.BGG.Hilb.saddle_wellPosed`
-- cited: `Feec.BGG.Hilb.Wcheck`, `Feec.BGG.Hilb.existsUnique_isSaddle`, `Feec.BGG.Hilb.hodge_Vt1`, `Feec.BGG.Hilb.infSup_a`, `Feec.BGG.Hilb.infSup_b`, `Feec.BGG.Hilb.jW_spec`, `Feec.BGG.Hilb.nondeg_a`, `Feec.BGG.Hilb.saddle_wellPosed`, `Feec.BGG.Hilb.tripleNorm_definite`, `Feec.BGG.Hilb.tripleNorm_spec`
+- cited: `Feec.BGG.Hilb.Wcheck`, `Feec.BGG.Hilb.existsUnique_isReduced`, `Feec.BGG.Hilb.existsUnique_isSaddle`, `Feec.BGG.Hilb.hodge_Vt1`, `Feec.BGG.Hilb.infSup_a`, `Feec.BGG.Hilb.infSup_b`, `Feec.BGG.Hilb.jW_spec`, `Feec.BGG.Hilb.nondeg_a`, `Feec.BGG.Hilb.saddle_wellPosed`, `Feec.BGG.Hilb.tripleNorm_definite`, `Feec.BGG.Hilb.tripleNorm_spec`
 - modules: Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.BGG.WeakSymmetry
 
 ### Prop 5.3
 
 - named: `Feec.BGG.Discrete.poincare_Zh`, `Feec.BGG.Discrete.poincare_Γh`
 - old: Feec.Ch5.Discrete.Disc.prop_5_3_a, Feec.Ch5.Discrete.Disc.prop_5_3_b
-- tagged: `Feec.BGG.Discrete.poincare_Zh`, `Feec.BGG.Discrete.poincare_Γh`
 - cited: `Feec.BGG.Discrete.exact_bot_h`, `Feec.BGG.Discrete.exact_top_h`, `Feec.BGG.Discrete.exists_nonvacuous`, `Feec.BGG.Discrete.poincare_Zh`, `Feec.BGG.Discrete.poincare_Γh`, `Feec.BGG.Discrete.preimage_bound`, `Feec.BGG.Stability`, `Feec.Counterexamples.DiscreteBGG.mixed_not_unique_of_not_exactTop`
 - modules: Feec.Counterexamples.DiscreteBGG, Feec.HilbertComplex.BGG.Discrete
 
@@ -254,7 +233,6 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.BGG.Discrete.existsUnique_mixed_h`, `Feec.BGG.eq_zero_of_mixed_homogeneous`, `Feec.BGG.existsUnique_isMixedSolution`, `Feec.BGG.exists_mixed_homogeneous_of_perp`, `Feec.Counterexamples.DiscreteBGG.mixed_not_unique_of_not_exactTop`
 - old: Feec.Ch5.Discrete.Disc.prop_5_4, Feec.Ch5.Discrete.prop54_counterexample_noTopExact, Feec.Ch5.Discrete.prop54_existsUnique, Feec.Ch5.Discrete.prop54_hB_necessary, Feec.Ch5.Discrete.prop54_unique
-- tagged: `Feec.BGG.Discrete.existsUnique_mixed_h`, `Feec.BGG.eq_zero_of_mixed_homogeneous`, `Feec.BGG.existsUnique_isMixedSolution`
 - cited: `Feec.BGG.Discrete.existsUnique_mixed_h`, `Feec.BGG.Discrete.exists_nonvacuous`, `Feec.BGG.Discrete.exists_sub_S0h_eq`, `Feec.BGG.Discrete.hodge_h`, `Feec.BGG.eq_zero_of_mixed_homogeneous`, `Feec.BGG.existsUnique_isMixedSolution`, `Feec.BGG.exists_mixed_homogeneous_of_perp`, `Feec.Counterexamples.DiscreteBGG.mixed_not_unique_of_not_exactTop`
 - modules: Feec.Counterexamples.DiscreteBGG, Feec.HilbertComplex.BGG.Discrete
 
@@ -262,7 +240,6 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.BGG.Discrete.errorEstimate_absorb`, `Feec.BGG.Discrete.errorEstimate_final`, `Feec.BGG.Discrete.error_estimate`, `Feec.BGG.mixed_coercivity_eq`
 - old: Feec.Ch5.Discrete.Disc.thm55_absorb_real, Feec.Ch5.Discrete.Disc.thm55_final_real, Feec.Ch5.Discrete.Disc.thm_5_5, Feec.Ch5.Discrete.thm55_lhs_identity
-- tagged: `Feec.BGG.Discrete.error_estimate`
 - cited: `Feec.BGG.Discrete.errorConst`, `Feec.BGG.Discrete.error_estimate`, `Feec.BGG.Discrete.exists_nonvacuous`, `Feec.BGG.Discrete.hodge_h`, `Feec.BGG.mixed_coercivity_eq`, `Feec.BGG.norm_sub_le_mul_of_ellipticProjection`
 - modules: Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent
 
@@ -270,13 +247,11 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.BGG.mixed_error_eq`
 - old: Feec.Ch5.Discrete.prop_5_6
-- tagged: `Feec.BGG.mixed_error_eq`
 - cited: `Feec.BGG.Discrete.error_estimate`, `Feec.BGG.errorEq_a`, `Feec.BGG.mixed_error_eq`
 - modules: Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent
 
 ### Prop 5.7
 
-- tagged: `Feec.FiniteElement.comp_eq_of_dof`, `Feec.FiniteElement.interp_comp_eq`
 - cited: `Feec.BGG.Discrete.Compatible`, `Feec.FiniteElement.comp_eq_of_dof`, `Feec.FiniteElement.comp_eq_of_mem_span`, `Feec.FiniteElement.dof_vanish_of_mem_span`, `Feec.FiniteElement.interp_comp_eq`
 - modules: Feec.FiniteElement.Dof, Feec.HilbertComplex.BGG.Discrete
 
@@ -284,7 +259,6 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.BGG.WaveData.Solution.exists_multiplierSolution`, `Feec.BGG.WaveData.Solution.exists_multiplierSolution_of_dense`, `Feec.BGG.WaveData.Solution.exists_multiplierSolution_of_isClosed_range`
 - old: Feec.Ch6.ContData.prop_6_1_i, Feec.Ch6.ContData.prop_6_1_i_closedRange, Feec.Ch6.ContData.prop_6_1_ii
-- tagged: `Feec.BGG.WaveData.MultiplierSolution.toSolution`, `Feec.BGG.WaveData.Solution.exists_multiplierSolution`
 - cited: `Feec.BGG.WaveData.MultiplierSolution.toSolution`, `Feec.BGG.WaveData.Solution.exists_multiplierSolution`, `Feec.BGG.WaveData.Solution.exists_multiplierSolution_of_dense`, `Feec.BGG.WaveData.mem_Wcheck_of_vanish`
 - modules: Feec.HilbertComplex.BGG.TimeDependent
 
@@ -292,7 +266,6 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.BGG.DiscreteSolution.compatible`, `Feec.BGG.exists_discreteSolution`, `Feec.BGG.exists_discreteSolution_iff`, `Feec.BGG.exists_discreteSolution_iff_compatible_u`, `Feec.BGG.exists_discreteSolution_of_continuousOn`, `Feec.BGG.exists_discreteSolution_regular`, `Feec.BGG.exists_discreteSolution_unique`, `Feec.Counterexamples.ConstrainedEvolution.not_forall_exists_discreteSolution`
 - old: Feec.Ch6.prop_6_2, Feec.Ch6.prop_6_2_exists, Feec.Ch6.prop_6_2_exists_of_continuousOn, Feec.Ch6.prop_6_2_exists_regular, Feec.Ch6.prop_6_2_false, Feec.Ch6.prop_6_2_necessary, Feec.Repair.C67.prop_6_2_dynamic, Feec.Repair.C67.prop_6_2_wellposed
-- tagged: `Feec.BGG.DiscreteSolution.compatible`, `Feec.BGG.exists_discreteSolution_iff`, `Feec.BGG.exists_discreteSolution_iff_compatible_u`, `Feec.BGG.exists_discreteSolution_unique`, `Feec.Counterexamples.ConstrainedEvolution.not_forall_exists_discreteSolution`
 - cited: `Feec.BGG.DiscreteSolution.compatible`, `Feec.BGG.DiscreteSolution.eq_zero_of_initial_eq_zero`, `Feec.BGG.DiscreteSolution.phi_eq`, `Feec.BGG.DiscreteSolution.phi_zero`, `Feec.BGG.DiscreteSolution.unique`, `Feec.BGG.exists_discreteSolution`, `Feec.BGG.exists_discreteSolution_iff`, `Feec.BGG.exists_discreteSolution_iff_compatible_u`, `Feec.BGG.exists_discreteSolution_norm_sub_le`, `Feec.BGG.exists_discreteSolution_regular`, `Feec.BGG.exists_discreteSolution_unique`, `Feec.BGG.not_exists_discreteSolution_of_ker`, `Feec.BGG.not_exists_discreteSolution_phi_of_ker`, `Feec.Counterexamples.ConstrainedEvolution.not_forall_exists_discreteSolution`
 - modules: Feec.Counterexamples.ConstrainedEvolution, Feec.HilbertComplex.BGG.TimeDependent
 
@@ -300,7 +273,6 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 - named: `Feec.BGG.errorEq_a`, `Feec.BGG.errorEq_b`, `Feec.BGG.errorEq_c`, `Feec.BGG.errorEq_c_split`, `Feec.BGG.errorEq_d`, `Feec.BGG.errorEq_e`
 - old: Feec.Ch6.prop_6_3_a, Feec.Ch6.prop_6_3_b, Feec.Ch6.prop_6_3_c, Feec.Ch6.prop_6_3_c_split, Feec.Ch6.prop_6_3_d, Feec.Ch6.prop_6_3_e
-- tagged: `Feec.BGG.errorEq_a`, `Feec.BGG.errorEq_e`
 - cited: `Feec.BGG.errorEq_a`, `Feec.BGG.errorEq_b`, `Feec.BGG.errorEq_c`, `Feec.BGG.errorEq_c_split`, `Feec.BGG.errorEq_d`, `Feec.BGG.errorEq_e`
 - modules: Feec.HilbertComplex.BGG.TimeDependent
 
@@ -308,12 +280,12 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (2.2)
 
-- tagged: `Feec.CurvatureTensor.riemComp`, `Feec.CurvatureTensor.riemField`
+- cited: `Feec.CurvatureTensor.riemComp`, `Feec.CurvatureTensor.riemField`
 - modules: Feec.Geometry.AlgebraicCurvature, Feec.Geometry.Connection
 
 ### Eq (2.3)
 
-- tagged: `Feec.CurvatureTensor.deviation`, `Feec.CurvatureTensor.deviationForm`, `Feec.CurvatureTensor.deviation_eq_zero_iff`, `Feec.CurvatureTensor.eq_zero_of_deviationForm`, `Feec.CurvatureTensor.eq_zero_of_symm_bd`
+- cited: `Feec.CurvatureTensor.deviation`, `Feec.CurvatureTensor.deviationForm`, `Feec.CurvatureTensor.deviation_eq_zero_iff`, `Feec.CurvatureTensor.eq_zero_of_deviationForm`, `Feec.CurvatureTensor.eq_zero_of_symm_bd`
 - modules: Feec.Geometry.AlgebraicCurvature
 
 ### Eq (2.4)
@@ -322,22 +294,22 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (2.5)
 
-- tagged: `Feec.LinearizedGravity.trRev_sub_gauge_eq_ttAmp`, `Feec.Metric.eq_trRev_sub`, `Feec.Metric.trRev`, `Feec.Metric.trRev_add_sym`, `Feec.Metric.trRev_trRev`, `Feec.Metric.trace_trRev`
+- cited: `Feec.LinearizedGravity.trRev_sub_gauge_eq_ttAmp`, `Feec.Metric.eq_trRev_sub`, `Feec.Metric.trRev`, `Feec.Metric.trRev_add_sym`, `Feec.Metric.trRev_trRev`, `Feec.Metric.trace_trRev`
 - modules: Feec.Algebra.Metric, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Eq (2.6)
 
-- tagged: `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.Rjet`, `Feec.LinearizedGravity.Rjet_bianchi1`, `Feec.LinearizedGravity.Rjet_pairSkew`
+- cited: `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.Rjet`, `Feec.LinearizedGravity.Rjet_bianchi1`, `Feec.LinearizedGravity.Rjet_pairSkew`
 - modules: Feec.Physics.LinearizedGravity.Einstein
 
 ### Eq (2.7)
 
-- tagged: `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.RicJ`
+- cited: `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.RicJ`
 - modules: Feec.Physics.LinearizedGravity.Einstein
 
 ### Eq (2.8)
 
-- tagged: `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.scalJ`
+- cited: `Feec.LinearizedGravity.Hjet_eq_einstein`, `Feec.LinearizedGravity.scalJ`
 - modules: Feec.Physics.LinearizedGravity.Einstein
 
 ### Eq (2.9)
@@ -350,13 +322,12 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (2.11)
 
-- tagged: `Feec.LinearizedGravity.Hfun_lorentz_eq_iff`, `Feec.LinearizedGravity.Hjet_lorentz_eq_iff`
+- cited: `Feec.LinearizedGravity.Hfun_lorentz_eq_iff`, `Feec.LinearizedGravity.Hjet_lorentz_eq_iff`
 - modules: Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge
 
 ### Eq (2.12)
 
-- tagged: `Feec.TT.ttSub`
-- cited: `Feec.LinearizedGravity.IsTT`, `Feec.LinearizedGravity.isTT_iff`, `Feec.LinearizedGravity.mem_ttSpace_iff`
+- cited: `Feec.LinearizedGravity.IsTT`, `Feec.LinearizedGravity.isTT_iff`, `Feec.LinearizedGravity.mem_ttSpace_iff`, `Feec.TT.ttSub`
 - modules: Feec.Algebra.TransverseTraceless, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Eq (2.13)
@@ -370,8 +341,7 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (2.15)
 
-- tagged: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.LinearizedGravity.tt_accel_fun`
-- cited: `Feec.LinearizedGravity.Rjet_tt`, `Feec.LinearizedGravity.Rjet_ttWave`, `Feec.LinearizedGravity.Rjet_tt_support`, `Feec.LinearizedGravity.tt_accel`
+- cited: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.LinearizedGravity.Rjet_tt`, `Feec.LinearizedGravity.Rjet_ttWave`, `Feec.LinearizedGravity.Rjet_tt_support`, `Feec.LinearizedGravity.tt_accel`, `Feec.LinearizedGravity.tt_accel_fun`
 - modules: Feec.Counterexamples.LinearizedGravity, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Eq (3.2)
@@ -381,8 +351,7 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (4.1)
 
-- tagged: `Feec.HilbertComplex.orthogonal_boundaries`, `Feec.HilbertComplex.orthogonal_cycles`
-- cited: `LinearPMap.orthogonal_range_eq_ker_adjoint`
+- cited: `Feec.HilbertComplex.orthogonal_boundaries`, `Feec.HilbertComplex.orthogonal_cycles`, `LinearPMap.orthogonal_range_eq_ker_adjoint`
 - modules: Feec.ForMathlib.LinearPMap.ClosedRange, Feec.HilbertComplex.Hodge
 
 ### Eq (4.2)
@@ -396,7 +365,7 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (4.5)
 
-- tagged: `Feec.HilbertComplex.wave`, `Feec.ShortHilbertComplex.wave`
+- cited: `Feec.HilbertComplex.wave`, `Feec.ShortHilbertComplex.wave`
 - modules: Feec.HilbertComplex.Dirac, Feec.HilbertComplex.HodgeWave, Feec.HilbertComplex.Short
 
 ### Eq (4.6)
@@ -405,13 +374,12 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (4.7)
 
-- tagged: `Feec.HilbertComplex.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.IsWeakSolution`
-- modules: Feec.HilbertComplex.HodgeWave
+- cited: `Feec.HilbertComplex.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.IsWeakSolution`
+- modules: Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.HodgeWave
 
 ### Eq (4.8)
 
-- tagged: `Feec.HilbertComplex.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.IsWeakSolution.unique`
-- cited: `Feec.HodgeWave.IsGraphSolution`
+- cited: `Feec.HilbertComplex.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.IsGraphSolution`, `Feec.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.IsWeakSolution.unique`
 - modules: Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.HodgeWave
 
 ### Eq (4.10)
@@ -421,8 +389,7 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Eq (4.11)
 
-- tagged: `Feec.HodgeWave.ellipticProjection`, `Feec.HodgeWave.shiftedForm_ellipticProjection`
-- cited: `Feec.HodgeWave.norm_ellipticProjection_le`
+- cited: `Feec.HodgeWave.ellipticProjection`, `Feec.HodgeWave.norm_ellipticProjection_le`, `Feec.HodgeWave.shiftedForm_ellipticProjection`
 - modules: Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.Approximation.SemidiscreteWave
 
 ### Eq (4.12)
@@ -443,23 +410,22 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 ### Eq (4.16)
 
 - cited: `Feec.Models.Torus.SymCurl.closedRangeAt`, `Feec.Models.Torus.SymCurl.complex`
-- modules: Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.SymCurlSymbol, Feec.Fourier.Torus, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
+- modules: Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.SymCurlSymbol, Feec.Fourier.Torus, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
 
 ### Eq (4.17)
 
 - cited: `Feec.Models.BoundedDomain.symCurlDivDiv`, `Feec.Models.Torus.SymCurl.adjoint_d`, `Feec.Models.Torus.SymCurl.closedRangeAt`, `Feec.Models.Torus.SymCurl.dual_closedRangeAt`
-- modules: Feec.Fourier.SymCurlSymbol, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
+- modules: Feec.Counterexamples.BallSymTSD, Feec.Fourier.SymCurlSymbol, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
 
 ### Eq (4.18)
 
 - cited: `Feec.Counterexamples.BoundedBGG.symComplexB_B_not_symm`, `Feec.Models.Torus.SymCurl.closedRangeAt`, `Feec.Models.Torus.SymCurl.tsd_propagates`
-- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.SymCurlSymbol, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
+- modules: Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedBGG, Feec.Fourier.SymCurlSymbol, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
 
 ### Eq (5.1)
 
-- tagged: `Feec.BGG.Hilb.toHilbertComplex`
 - cited: `Feec.BGG.Hilb.D0op`, `Feec.BGG.Hilb.D1op`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Segment.D0`, `Feec.BGG.Segment.D1`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.Γ`, `Feec.Models.BoundedDomain.bggComplex`
-- modules: Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.ToComplex, Feec.Models.BoundedDomain.BGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.ToComplex, Feec.Models.BoundedDomain.BGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
 
 ### Eq (5.2)
 
@@ -494,7 +460,7 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 ### Eq (6.1)
 
 - cited: `Feec.BGG.WaveData.Solution`, `Feec.ShortHilbertComplex.weakEqs_of_isStrongSolution`
-- modules: Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.ShortDual
+- modules: Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.ShortDual, Feec.Models.BoundedDomain.BGG
 
 ### Eq (6.2)
 
@@ -513,34 +479,32 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §2.2
 
-- tagged: `Feec.LinearizedGravity.η4`, `Feec.Metric.minkowski`, `Feec.Metric.minkowski4`, `Feec.Metric.minkowskiMatrix`
+- cited: `Feec.LinearizedGravity.η4`, `Feec.Metric.minkowski`, `Feec.Metric.minkowski4`, `Feec.Metric.minkowskiMatrix`
 - modules: Feec.Algebra.Metric, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §2.3
 
-- tagged: `Feec.CurvatureTensor.Interchange`, `Feec.CurvatureTensor.algCurvEquiv`, `Feec.CurvatureTensor.bianchi_iff`, `Feec.CurvatureTensor.deviation_eq_zero_iff`, `Feec.CurvatureTensor.einstein`, `Feec.CurvatureTensor.einstein_isSymm`, `Feec.CurvatureTensor.eq_zero_of_deviationForm`, `Feec.CurvatureTensor.finrank_algCurv_four`, `Feec.CurvatureTensor.interchange_of_bianchi`, `Feec.CurvatureTensor.ricci`, `Feec.CurvatureTensor.ricci_isSymm`, `Feec.CurvatureTensor.ricci_isSymm_of_inv`, `Feec.CurvatureTensor.ricci_riemField_isSymm`
+- cited: `Feec.CurvatureTensor.Interchange`, `Feec.CurvatureTensor.algCurvEquiv`, `Feec.CurvatureTensor.bianchi_iff`, `Feec.CurvatureTensor.deviation_eq_zero_iff`, `Feec.CurvatureTensor.einstein`, `Feec.CurvatureTensor.einstein_isSymm`, `Feec.CurvatureTensor.eq_zero_of_deviationForm`, `Feec.CurvatureTensor.finrank_algCurv_four`, `Feec.CurvatureTensor.interchange_of_bianchi`, `Feec.CurvatureTensor.ricci`, `Feec.CurvatureTensor.ricci_isSymm`, `Feec.CurvatureTensor.ricci_isSymm_of_inv`, `Feec.CurvatureTensor.ricci_riemField_isSymm`
 - modules: Feec.Geometry.AlgebraicCurvature, Feec.Geometry.Connection
 
 ### Sec §2.4
 
-- tagged: `Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two`, `Feec.CurvatureTensor.einstein_eq_zero_iff`, `Feec.LinearizedGravity.einstein_const_bounds`
+- cited: `Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two`, `Feec.CurvatureTensor.einstein_eq_zero_iff`, `Feec.LinearizedGravity.einstein_const_bounds`
 - modules: Feec.Counterexamples.Curvature, Feec.Geometry.AlgebraicCurvature, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §2.7
 
-- tagged: `Feec.LinearizedGravity.Hfun_bianchi`, `Feec.LinearizedGravity.Hfun_gauge`, `Feec.LinearizedGravity.Hjet_bianchi`, `Feec.LinearizedGravity.Hjet_gauge`, `Feec.LinearizedGravity.Hsym_div`, `Feec.LinearizedGravity.Hsym_gauge`, `Feec.LinearizedGravity.jet2_isSymJet2`, `Feec.Metric.trRev`, `Feec.Metric.trace`
+- cited: `Feec.LinearizedGravity.Hfun_bianchi`, `Feec.LinearizedGravity.Hfun_gauge`, `Feec.LinearizedGravity.Hjet_bianchi`, `Feec.LinearizedGravity.Hjet_gauge`, `Feec.LinearizedGravity.Hsym_div`, `Feec.LinearizedGravity.Hsym_gauge`, `Feec.LinearizedGravity.jet2_isSymJet2`, `Feec.Metric.trRev`, `Feec.Metric.trace`
 - modules: Feec.Algebra.Metric, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge
 
 ### Sec §2.8
 
-- tagged: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`
-- cited: `Feec.EinsteinBianchi.planeWave_EB`, `Feec.EinsteinBianchi.planeWave_weyl`, `Feec.LinearizedGravity.IsTT`, `Feec.LinearizedGravity.isTT_iff`, `Feec.LinearizedGravity.tt_accel`
+- cited: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.EinsteinBianchi.planeWave_EB`, `Feec.EinsteinBianchi.planeWave_weyl`, `Feec.LinearizedGravity.IsTT`, `Feec.LinearizedGravity.isTT_iff`, `Feec.LinearizedGravity.tt_accel`, `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`
 - modules: Feec.Algebra.TransverseTraceless, Feec.Counterexamples.LinearizedGravity, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §3.1
 
-- tagged: `Feec.leviCivita`, `Feec.leviCivita3`, `Feec.leviCivita4`
-- cited: `Feec.DoubleForm.hodge2_hodge2`
+- cited: `Feec.DoubleForm.hodge2_hodge2`, `Feec.leviCivita`, `Feec.leviCivita3`, `Feec.leviCivita4`
 - modules: Feec.Algebra.LeviCivita, Feec.Geometry.Hodge2
 
 ### Sec §3.2
@@ -554,9 +518,8 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §3.4
 
-- tagged: `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`, `Feec.TT.ttSub`
-- cited: `Feec.EinsteinBianchi.EBJet`, `Feec.EinsteinBianchi.EBJetSym_surjective`, `Feec.EinsteinBianchi.linBianchi_iff_sym`, `Feec.Models.BoundedDomain.minimal_curl_mem_tsd`, `Feec.Models.BoundedDomain.symm_of_weakCurl_tsd`, `Feec.Models.BoundedDomain.trace_minimal_curl_eq_zero`, `Feec.Models.Euclidean.GradCurl.fourier_mem_constraint_iff`
-- modules: Feec.Algebra.MatrixSymbol, Feec.Algebra.TransverseTraceless, Feec.Counterexamples.BoundedDomainTSD, Feec.Fourier.BGGSymbol, Feec.Fourier.GradCurlSymbol, Feec.Fourier.SymCurlSymbol, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Euclidean.GradCurl, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.EinsteinBianchi.System
+- cited: `Feec.EinsteinBianchi.EBJet`, `Feec.EinsteinBianchi.EBJetSym_surjective`, `Feec.EinsteinBianchi.linBianchi_iff_sym`, `Feec.Models.BoundedDomain.minimal_curl_mem_tsd`, `Feec.Models.BoundedDomain.symm_of_weakCurl_tsd`, `Feec.Models.BoundedDomain.trace_minimal_curl_eq_zero`, `Feec.Models.Euclidean.GradCurl.fourier_mem_constraint_iff`, `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`, `Feec.TT.ttSub`
+- modules: Feec.Algebra.MatrixSymbol, Feec.Algebra.TransverseTraceless, Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedDomainTSD, Feec.Fourier.BGGSymbol, Feec.Fourier.GradCurlSymbol, Feec.Fourier.SymCurlSymbol, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Euclidean.GradCurl, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.EinsteinBianchi.System
 
 ### Sec §3.5
 
@@ -570,35 +533,32 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §4.2
 
-- tagged: `Feec.Counterexamples.deRham_not_closedRange`, `Feec.Counterexamples.euclidean_not_closedRange`, `Feec.Counterexamples.fredholm_not_closedRange`, `Feec.Counterexamples.hasCompactProperty_infiniteDimensional`, `Feec.Counterexamples.not_forall_closedRangeAt_of_finiteDimensional_harmonic`, `Feec.Counterexamples.periodic_not_closedRange`, `Feec.HilbertComplex`, `Feec.HilbertComplex.ClosedRangeAt`, `Feec.HilbertComplex.HasCompactProperty`, `Feec.HilbertComplex.HasCompactProperty.isCompactOperator_resolvent_wave`, `Feec.HilbertComplex.HasCompactPropertyAt`, `Feec.HilbertComplex.HasCompactPropertyAt.closedRangeAt`, `Feec.HilbertComplex.HasCompactPropertyAt.closedRangeAt_of_rel`, `Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`, `Feec.HilbertComplex.HasCompactPropertyAt.finiteDimensional_harmonic`, `Feec.HilbertComplex.HasCompactPropertyAt.isClosed_range`, `Feec.HilbertComplex.boundaries`, `Feec.HilbertComplex.boundaries_sup_harmonic`, `Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`, `Feec.HilbertComplex.closure_boundaries_sup_harmonic`, `Feec.HilbertComplex.cohomology`, `Feec.HilbertComplex.cohomologyEquivHarmonic`, `Feec.HilbertComplex.cycles`, `Feec.HilbertComplex.domainComplex`, `Feec.HilbertComplex.domainComplex_closedRangeAt_iff`, `Feec.HilbertComplex.domainSpace`, `Feec.HilbertComplex.dual`, `Feec.HilbertComplex.dual_closedRangeAt_iff`, `Feec.HilbertComplex.exact_iff_harmonic_eq_bot`, `Feec.HilbertComplex.harmonic`, `Feec.HilbertComplex.harmonicToCohomology_surjective_iff`, `Feec.HilbertComplex.harmonic_eq`, `Feec.HilbertComplex.map_domainIncl_harmonic`
-- cited: `Feec.ShortHilbertComplex.dual`, `Feec.ShortHilbertComplex.ofBounded`
+- cited: `Feec.Counterexamples.deRham_not_closedRange`, `Feec.Counterexamples.euclidean_not_closedRange`, `Feec.Counterexamples.fredholm_not_closedRange`, `Feec.Counterexamples.hasCompactProperty_infiniteDimensional`, `Feec.Counterexamples.not_forall_closedRangeAt_of_finiteDimensional_harmonic`, `Feec.Counterexamples.periodic_not_closedRange`, `Feec.HilbertComplex`, `Feec.HilbertComplex.ClosedRangeAt`, `Feec.HilbertComplex.HasCompactProperty`, `Feec.HilbertComplex.HasCompactProperty.isCompactOperator_resolvent_wave`, `Feec.HilbertComplex.HasCompactPropertyAt`, `Feec.HilbertComplex.HasCompactPropertyAt.closedRangeAt`, `Feec.HilbertComplex.HasCompactPropertyAt.closedRangeAt_of_rel`, `Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`, `Feec.HilbertComplex.HasCompactPropertyAt.finiteDimensional_harmonic`, `Feec.HilbertComplex.HasCompactPropertyAt.isClosed_range`, `Feec.HilbertComplex.boundaries`, `Feec.HilbertComplex.boundaries_sup_harmonic`, `Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`, `Feec.HilbertComplex.closure_boundaries_sup_harmonic`, `Feec.HilbertComplex.cohomology`, `Feec.HilbertComplex.cohomologyEquivHarmonic`, `Feec.HilbertComplex.cycles`, `Feec.HilbertComplex.domainComplex`, `Feec.HilbertComplex.domainComplex_closedRangeAt_iff`, `Feec.HilbertComplex.domainSpace`, `Feec.HilbertComplex.dual`, `Feec.HilbertComplex.dual_closedRangeAt_iff`, `Feec.HilbertComplex.exact_iff_harmonic_eq_bot`, `Feec.HilbertComplex.harmonic`, `Feec.HilbertComplex.harmonicToCohomology_surjective_iff`, `Feec.HilbertComplex.harmonic_eq`, `Feec.HilbertComplex.map_domainIncl_harmonic`, `Feec.ShortHilbertComplex.dual`, `Feec.ShortHilbertComplex.ofBounded`
 - modules: Feec.Counterexamples.Fredholm, Feec.Counterexamples.NonClosedRangeEuclidean, Feec.Fourier.ClosedRange, Feec.Fourier.ExteriorSymbol, Feec.HilbertComplex.Basic, Feec.HilbertComplex.Compactness, Feec.HilbertComplex.DomainComplex, Feec.HilbertComplex.Dual, Feec.HilbertComplex.Hodge, Feec.HilbertComplex.Short, Feec.HilbertComplex.ShortDual, Feec.Models.Euclidean.DeRham, Feec.Models.Torus.DeRham, Feec.Operator.Adjoint
 
 ### Sec §4.3
 
-- tagged: `Feec.Counterexamples.exists_dense_not_isClosed_ker`, `Feec.Counterexamples.not_forall_isClosed_ker`
+- cited: `Feec.Counterexamples.exists_dense_not_isClosed_ker`, `Feec.Counterexamples.not_forall_isClosed_ker`
 - modules: Feec.Counterexamples.Ell2, Feec.Evolution.Constrained, Feec.Evolution.Duhamel, Feec.Evolution.Forcing, Feec.Evolution.Solution, Feec.Evolution.WellPosed, Feec.Examples.NonVacuity, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.Reducing
 
 ### Sec §4.4
 
-- tagged: `Feec.HodgeWave.IsClassicalWeakSolution`, `Feec.HodgeWave.IsWeakSolution.unique`, `Feec.ShortHilbertComplex`
-- cited: `Feec.BGG.WaveData.Solution`, `Feec.BGG.WaveData.Solution.hasDerivWithinAt_energy`, `Feec.Evolution.IsStrongSolution`
-- modules: Feec.Counterexamples.ClassicalRegularity, Feec.Evolution.Solution, Feec.Examples.NonVacuity, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.Dirac, Feec.HilbertComplex.HodgeWave, Feec.HilbertComplex.Short, Feec.HilbertComplex.Window
+- cited: `Feec.BGG.WaveData.Solution`, `Feec.BGG.WaveData.Solution.hasDerivWithinAt_energy`, `Feec.Evolution.IsStrongSolution`, `Feec.HodgeWave.IsClassicalWeakSolution`, `Feec.HodgeWave.IsWeakSolution.unique`, `Feec.ShortHilbertComplex`
+- modules: Feec.Counterexamples.ClassicalRegularity, Feec.Evolution.Solution, Feec.Examples.NonVacuity, Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.Dirac, Feec.HilbertComplex.HodgeWave, Feec.HilbertComplex.Short, Feec.HilbertComplex.Window
 
 ### Sec §4.5
 
-- tagged: `Feec.Variational.InfSup`, `Feec.Variational.SeparatingRight`, `Feec.Variational.infSup_iff_forall_exists_norm_le_one`
+- cited: `Feec.Variational.InfSup`, `Feec.Variational.SeparatingRight`, `Feec.Variational.infSup_iff_forall_exists_norm_le_one`
 - modules: Feec.Variational.BabuskaNecas, Feec.Variational.InfSup
 
 ### Sec §4.6
 
-- tagged: `Feec.HilbertComplex.Subcomplex`, `Feec.HilbertComplex.Subcomplex.toHilbertComplex`, `Feec.Koszul.IsSubcomplex`
-- cited: `Feec.HilbertComplex.Subcomplex.graphSub`, `Feec.HodgeWave.IsApproximating`, `Feec.HodgeWave.IsSemidiscreteSolution`, `Feec.HodgeWave.IsSemidiscreteSolution.norm_sub_le`, `Feec.HodgeWave.exists_isSemidiscreteSolution`
+- cited: `Feec.HilbertComplex.Subcomplex`, `Feec.HilbertComplex.Subcomplex.graphSub`, `Feec.HilbertComplex.Subcomplex.toHilbertComplex`, `Feec.HodgeWave.IsApproximating`, `Feec.HodgeWave.IsSemidiscreteSolution`, `Feec.HodgeWave.IsSemidiscreteSolution.norm_sub_le`, `Feec.HodgeWave.exists_isSemidiscreteSolution`, `Feec.Koszul.IsSubcomplex`
 - modules: Feec.Algebra.PolynomialForm, Feec.Counterexamples.ClassicalRegularity, Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.Approximation.SemidiscreteWave, Feec.HilbertComplex.Approximation.Subcomplex
 
 ### Sec §4.7
 
-- tagged: `Feec.Koszul.eq_koszul_add_extDeriv`, `Feec.Koszul.eq_zero_of_eq_koszul_of_eq_extDeriv`, `Feec.Koszul.exists_extDeriv_eq_of_extDeriv_eq_zero`, `Feec.Koszul.exists_koszul_eq_of_koszul_eq_zero`, `Feec.Koszul.extDeriv`, `Feec.Koszul.extDeriv_extDeriv`, `Feec.Koszul.extDeriv_koszul_add_koszul_extDeriv`, `Feec.Koszul.extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous`, `Feec.Koszul.extDeriv_mem_homForm`, `Feec.Koszul.extDeriv_mem_polyForm`, `Feec.Koszul.extDeriv_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyForm_of_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus`, `Feec.Koszul.homForm`, `Feec.Koszul.homForm_le_sup`, `Feec.Koszul.koszul`, `Feec.Koszul.koszul_koszul`, `Feec.Koszul.koszul_mem_homForm`, `Feec.Koszul.koszul_mem_polyForm`, `Feec.Koszul.polyForm`, `Feec.Koszul.polyFormMinus`, `Feec.Koszul.polyFormMinus_le_polyForm`
+- cited: `Feec.Koszul.eq_koszul_add_extDeriv`, `Feec.Koszul.eq_zero_of_eq_koszul_of_eq_extDeriv`, `Feec.Koszul.exists_extDeriv_eq_of_extDeriv_eq_zero`, `Feec.Koszul.exists_koszul_eq_of_koszul_eq_zero`, `Feec.Koszul.extDeriv`, `Feec.Koszul.extDeriv_extDeriv`, `Feec.Koszul.extDeriv_koszul_add_koszul_extDeriv`, `Feec.Koszul.extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous`, `Feec.Koszul.extDeriv_mem_homForm`, `Feec.Koszul.extDeriv_mem_polyForm`, `Feec.Koszul.extDeriv_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyForm_of_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus`, `Feec.Koszul.homForm`, `Feec.Koszul.homForm_le_sup`, `Feec.Koszul.koszul`, `Feec.Koszul.koszul_koszul`, `Feec.Koszul.koszul_mem_homForm`, `Feec.Koszul.koszul_mem_polyForm`, `Feec.Koszul.polyForm`, `Feec.Koszul.polyFormMinus`, `Feec.Koszul.polyFormMinus_le_polyForm`
 - modules: Feec.Algebra.Koszul, Feec.Algebra.PolynomialForm, Feec.Algebra.Proxy3
 
 ### Sec §4.8
@@ -613,14 +573,13 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §4.10
 
-- tagged: `Feec.Counterexamples.PolynomialForms.extDeriv_not_mem_polyFormMinus`, `Feec.Counterexamples.PolynomialForms.grad_sq_not_whitney`, `Feec.Counterexamples.PolynomialForms.not_isTensorSubcomplex_printed`, `Feec.Counterexamples.PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus`, `Feec.Koszul.IsSubcomplex`, `Feec.Koszul.Proxy3.koszul_empty`, `Feec.Koszul.Proxy3.vec1_extDeriv`, `Feec.Koszul.Proxy3.vec1_koszul`, `Feec.Koszul.Proxy3.vec2_extDeriv`, `Feec.Koszul.Proxy3.vec2_koszul`, `Feec.Koszul.Proxy3.vol_extDeriv`, `Feec.Koszul.extDeriv_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyForm`, `Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus`, `Feec.Koszul.extDeriv_not_mem_polyFormMinus_of_koszul_eq_zero`, `Feec.Koszul.polyFormMinus`
-- cited: `Feec.Koszul.extDeriv_mem_tensorForm_reduced`, `Feec.Koszul.isSubcomplex_corrected`, `Feec.Koszul.isTensorSubcomplex_alt`, `Feec.Koszul.isTensorSubcomplex_corrected`, `Feec.Koszul.map_extDeriv_polyForm_le_polyFormMinus_iff`, `Feec.Koszul.map_extDeriv_polyForm_le_polyForm_iff`, `Feec.Koszul.polyFormMinus_lt_polyForm_one`, `Feec.Koszul.polyForm_lt_polyFormMinus`, `Feec.Koszul.tensorForm_reduced_iff`, `Feec.Models.BoundedDomain.eq_zero_of_symm_of_trace_of_cross`, `Feec.Models.Cube.Ident.forward_iff`, `Feec.Models.Cube.Ident.forward_iff_pi`, `Feec.Models.Cube.Ident.mem_invariantCore_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff_pi`, `Feec.Models.Cube.Mirror.existsUnique_mem`, `Feec.Models.Cube.Mirror.existsUnique_memCube`, `Feec.Models.Cube.Mirror.existsUnique_memCube_pi`, `Feec.Models.Cube.Mirror.existsUnique_memCube_unit`, `Feec.Models.Cube.Mirror.existsUnique_memQ`, `Feec.Models.Cube.Mirror.exists_nonstationary`, `Feec.Models.Cube.Mirror.exists_nonstationaryCube`, `Feec.Models.Cube.Mirror.exists_nonstationaryQ`, `Feec.Models.Cube.Mirror.invariantCore_eq`, `Feec.Models.Cube.Mirror.invariantCore_eqCube`, `Feec.Models.Cube.Mirror.invariantCore_eqQ`, `Feec.Models.Cube.Mirror.propagates`, `Feec.Models.Cube.Mirror.propagatesCube`, `Feec.Models.Cube.Mirror.propagatesQ`, `Feec.Models.Cube.Mirror.reducingSubcomplex`, `Feec.Models.Cube.Mirror.reducingSubcomplexCube`, `Feec.Models.Cube.Mirror.reducingSubcomplexQ`, `Feec.Models.Cube.Parity.complex`, `Feec.Models.Cube.Parity.exists_linearIndependent_invariantCore`, `Feec.Models.Cube.Parity.forward_iff`, `Feec.Models.Cube.Parity.forward_torus_iff`, `Feec.Models.Cube.Parity.forward_tsd_iff`, `Feec.Models.Cube.Parity.invariantCore_ne_bot`, `Feec.Models.Cube.Parity.mem_invariantCore_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_torus_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Parity.not_finiteDimensional_invariantCore`, `Feec.Models.Cube.RowWise.forward_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_tsd_iff`, `Feec.Models.Euclidean.GradCurl.fourier_mem_constraint_iff`, `Feec.Models.Torus.BGG.verdict`, `Feec.ShortHilbertComplex.IsReducedSolution`, `Feec.ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isReducedSolution_of_isStrongSolution`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`
-- modules: Feec.Algebra.MatrixSymbol, Feec.Algebra.PolynomialForm, Feec.Algebra.Proxy3, Feec.Counterexamples.BoundedDomainTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Counterexamples.CubeStationary, Feec.Counterexamples.NonClosedRangeEuclidean, Feec.Counterexamples.PolynomialForms, Feec.Domain.Affine, Feec.Domain.ConstCoeffOp, Feec.Domain.FiniteSpeed, Feec.Domain.Mollify, Feec.Domain.Obstruction, Feec.Fourier.Euclidean, Feec.Fourier.FibreReducing, Feec.Fourier.GradCurlSymbol, Feec.Fourier.Reality, Feec.Fourier.SymbolComplex, Feec.Fourier.Torus, Feec.Fourier.TorusSpectral, Feec.Fourier.TorusWeak, Feec.Fourier.Weak, Feec.HilbertComplex.Density, Feec.HilbertComplex.Equivariant, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.Reality, Feec.HilbertComplex.ReducedSystem, Feec.HilbertComplex.Reducing, Feec.HilbertComplex.RestrictScalars, Feec.HilbertComplex.Transport, Feec.Models.BoundedDomain.Density, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.InvariantCore, Feec.Models.Cube.Basic, Feec.Models.Cube.Ident, Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorBase, Feec.Models.Cube.MirrorDirichlet, Feec.Models.Cube.MirrorExt, Feec.Models.Cube.Parity, Feec.Models.Cube.Reflection, Feec.Models.Cube.RowWiseIdent, Feec.Models.Cube.Static, Feec.Models.Euclidean.GradCurl, Feec.Models.Torus.BGG, Feec.Models.Torus.GradCurl, Feec.Physics.EinsteinBianchi.Constraints, Feec.Semigroup.Spectral
+- cited: `Feec.Counterexamples.PolynomialForms.extDeriv_not_mem_polyFormMinus`, `Feec.Counterexamples.PolynomialForms.grad_sq_not_whitney`, `Feec.Counterexamples.PolynomialForms.not_isTensorSubcomplex_printed`, `Feec.Counterexamples.PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus`, `Feec.Koszul.IsSubcomplex`, `Feec.Koszul.Proxy3.koszul_empty`, `Feec.Koszul.Proxy3.vec1_extDeriv`, `Feec.Koszul.Proxy3.vec1_koszul`, `Feec.Koszul.Proxy3.vec2_extDeriv`, `Feec.Koszul.Proxy3.vec2_koszul`, `Feec.Koszul.Proxy3.vol_extDeriv`, `Feec.Koszul.extDeriv_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyForm`, `Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus`, `Feec.Koszul.extDeriv_mem_tensorForm_reduced`, `Feec.Koszul.extDeriv_not_mem_polyFormMinus_of_koszul_eq_zero`, `Feec.Koszul.isSubcomplex_corrected`, `Feec.Koszul.isTensorSubcomplex_alt`, `Feec.Koszul.isTensorSubcomplex_corrected`, `Feec.Koszul.map_extDeriv_polyForm_le_polyFormMinus_iff`, `Feec.Koszul.map_extDeriv_polyForm_le_polyForm_iff`, `Feec.Koszul.polyFormMinus`, `Feec.Koszul.polyFormMinus_lt_polyForm_one`, `Feec.Koszul.polyForm_lt_polyFormMinus`, `Feec.Koszul.tensorForm_reduced_iff`, `Feec.Models.BoundedDomain.eq_zero_of_symm_of_trace_of_cross`, `Feec.Models.Cube.Ident.forward_iff`, `Feec.Models.Cube.Ident.forward_iff_pi`, `Feec.Models.Cube.Ident.mem_invariantCore_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff_pi`, `Feec.Models.Cube.Mirror.existsUnique_mem`, `Feec.Models.Cube.Mirror.existsUnique_memCube`, `Feec.Models.Cube.Mirror.existsUnique_memCube_pi`, `Feec.Models.Cube.Mirror.existsUnique_memCube_unit`, `Feec.Models.Cube.Mirror.existsUnique_memQ`, `Feec.Models.Cube.Mirror.exists_nonstationary`, `Feec.Models.Cube.Mirror.exists_nonstationaryCube`, `Feec.Models.Cube.Mirror.exists_nonstationaryQ`, `Feec.Models.Cube.Mirror.invariantCore_eq`, `Feec.Models.Cube.Mirror.invariantCore_eqCube`, `Feec.Models.Cube.Mirror.invariantCore_eqQ`, `Feec.Models.Cube.Mirror.propagates`, `Feec.Models.Cube.Mirror.propagatesCube`, `Feec.Models.Cube.Mirror.propagatesQ`, `Feec.Models.Cube.Mirror.reducingSubcomplex`, `Feec.Models.Cube.Mirror.reducingSubcomplexCube`, `Feec.Models.Cube.Mirror.reducingSubcomplexQ`, `Feec.Models.Cube.Parity.complex`, `Feec.Models.Cube.Parity.exists_linearIndependent_invariantCore`, `Feec.Models.Cube.Parity.forward_iff`, `Feec.Models.Cube.Parity.forward_torus_iff`, `Feec.Models.Cube.Parity.forward_tsd_iff`, `Feec.Models.Cube.Parity.invariantCore_ne_bot`, `Feec.Models.Cube.Parity.mem_invariantCore_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_torus_iff`, `Feec.Models.Cube.Parity.mem_invariantCore_tsd_iff`, `Feec.Models.Cube.Parity.not_finiteDimensional_invariantCore`, `Feec.Models.Cube.RowWise.forward_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_iff`, `Feec.Models.Cube.RowWise.mem_invariantCore_tsd_iff`, `Feec.Models.Euclidean.GradCurl.fourier_mem_constraint_iff`, `Feec.Models.Torus.BGG.verdict`, `Feec.ShortHilbertComplex.IsReducedSolution`, `Feec.ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isReducedSolution_of_isStrongSolution`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`
+- modules: Feec.Algebra.MatrixSymbol, Feec.Algebra.PolynomialForm, Feec.Algebra.Proxy3, Feec.Counterexamples.BoundedBGG, Feec.Counterexamples.BoundedDomainTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Counterexamples.CubeStationary, Feec.Counterexamples.NonClosedRangeEuclidean, Feec.Counterexamples.PolynomialForms, Feec.Domain.Affine, Feec.Domain.ConstCoeffOp, Feec.Domain.FiniteSpeed, Feec.Domain.Mollify, Feec.Domain.Obstruction, Feec.Fourier.Euclidean, Feec.Fourier.FibreReducing, Feec.Fourier.GradCurlSymbol, Feec.Fourier.Reality, Feec.Fourier.SymbolComplex, Feec.Fourier.Torus, Feec.Fourier.TorusSpectral, Feec.Fourier.TorusWeak, Feec.Fourier.Weak, Feec.HilbertComplex.Density, Feec.HilbertComplex.Equivariant, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.Reality, Feec.HilbertComplex.ReducedSystem, Feec.HilbertComplex.Reducing, Feec.HilbertComplex.RestrictScalars, Feec.HilbertComplex.Transport, Feec.Models.BoundedDomain.Density, Feec.Models.BoundedDomain.GradCurl, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.InvariantCore, Feec.Models.Cube.Basic, Feec.Models.Cube.Ident, Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorBase, Feec.Models.Cube.MirrorDirichlet, Feec.Models.Cube.MirrorExt, Feec.Models.Cube.Parity, Feec.Models.Cube.Reflection, Feec.Models.Cube.RowWiseIdent, Feec.Models.Cube.Static, Feec.Models.Euclidean.GradCurl, Feec.Models.Torus.BGG, Feec.Models.Torus.GradCurl, Feec.Physics.EinsteinBianchi.Constraints, Feec.Semigroup.Spectral
 
 ### Sec §4.11
 
 - cited: `Feec.Counterexamples.BallSymTSD.not_propagates`, `Feec.Counterexamples.BallSymTSD.tsd_not_propagates`, `Feec.Counterexamples.BoundedSymTSD.diagnosis`, `Feec.Counterexamples.BoundedSymTSD.diagnosis_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.not_dense_hessCurlMax`, `Feec.Counterexamples.BoundedSymTSD.not_finiteDimensional_obstruction`, `Feec.Counterexamples.BoundedSymTSD.not_projection_magnetic`, `Feec.Counterexamples.BoundedSymTSD.not_starProjection_mem_adjoint_domain`, `Feec.Counterexamples.BoundedSymTSD.not_starProjection_mem_wave_domain_hessCurlMax`, `Feec.Models.BoundedDomain.hessCurlMax`, `Feec.Models.Cube.MirrorSym.existsUnique_mem`, `Feec.Models.Cube.MirrorSym.existsUnique_memCube`, `Feec.Models.Cube.MirrorSym.existsUnique_memQ`, `Feec.Models.Cube.MirrorSym.exists_nonstationary`, `Feec.Models.Cube.MirrorSym.exists_nonstationaryCube`, `Feec.Models.Cube.MirrorSym.exists_nonstationaryQ`, `Feec.Models.Cube.MirrorSym.invariantCore_eq`, `Feec.Models.Cube.MirrorSym.invariantCore_eqCube`, `Feec.Models.Cube.MirrorSym.invariantCore_eqQ`, `Feec.Models.Cube.MirrorSym.propagates`, `Feec.Models.Cube.MirrorSym.propagatesCube`, `Feec.Models.Cube.MirrorSym.propagatesQ`, `Feec.Models.Cube.MirrorSym.reducingSubcomplex`, `Feec.Models.Cube.MirrorSym.reducingSubcomplexCube`, `Feec.Models.Cube.MirrorSym.reducingSubcomplexQ`, `Feec.Models.Torus.SymCurl.adjoint_d`, `Feec.Models.Torus.SymCurl.closedRangeAt`, `Feec.Models.Torus.SymCurl.complex`, `Feec.Models.Torus.SymCurl.dual_closedRangeAt`, `Feec.Models.Torus.SymCurl.tsd_propagates`
-- modules: Feec.Algebra.MatrixSymbol, Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.Euclidean, Feec.Fourier.FibreReducing, Feec.Fourier.SymCurlSymbol, Feec.Fourier.SymbolComplex, Feec.Fourier.Torus, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
+- modules: Feec.Algebra.MatrixSymbol, Feec.Counterexamples.BallSymTSD, Feec.Counterexamples.BoundedBGG, Feec.Counterexamples.BoundedSymTSD, Feec.Fourier.Euclidean, Feec.Fourier.FibreReducing, Feec.Fourier.SymCurlSymbol, Feec.Fourier.SymbolComplex, Feec.Fourier.Torus, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.Reducing, Feec.Models.BoundedDomain.SymCurl, Feec.Models.Cube.MirrorSym, Feec.Models.Euclidean.SymCurl, Feec.Models.Torus.SymCurl
 
 ### Sec §4.12
 
@@ -632,9 +591,8 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §5.1
 
-- tagged: `Feec.BGG.HilbertData.twistComplex`, `Feec.BGG.Segment`, `Feec.BGG.Segment.D1_D0`
 - cited: `Feec.BGG.Data`, `Feec.BGG.Hilb`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.Wcheck`, `Feec.BGG.Hilb.existsUnique_isReduced`, `Feec.BGG.Hilb.isSaddle_iff_isReduced`, `Feec.BGG.Hilb.jW_spec`, `Feec.BGG.Hilb.mem_Z1_iff`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.tripleNorm_definite`, `Feec.BGG.Hilb.tripleNorm_spec`, `Feec.BGG.HilbertData`, `Feec.BGG.HilbertData.twistComplex`, `Feec.BGG.Segment`, `Feec.BGG.Segment.D0`, `Feec.BGG.Segment.D1`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ExactBot`, `Feec.BGG.Segment.ExactTop`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.Γ`, `Feec.BGG.Stability`, `Feec.BGG.WaveData.Wcheck`
-- modules: Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.BGG.Twisted, Feec.HilbertComplex.BGG.WeakSymmetry, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.BGG.Twisted, Feec.HilbertComplex.BGG.WeakSymmetry, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
 
 ### Sec §5.2
 
@@ -643,14 +601,13 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §5.3
 
-- tagged: `Feec.FiniteElement.comp_eq_of_dof`
 - cited: `Feec.FiniteElement.comp_eq_of_dof`
 - modules: Feec.FiniteElement.Dof, Feec.HilbertComplex.BGG.Discrete
 
 ### Sec §6.1
 
 - cited: `Feec.BGG.WaveData.MultiplierSolution`, `Feec.BGG.WaveData.MultiplierSolution.unique`, `Feec.BGG.WaveData.Solution`, `Feec.BGG.WaveData.Solution.hasDerivWithinAt_energy`, `Feec.BGG.WaveData.Solution.unique`, `Feec.BGG.WaveData.Wcheck`, `Feec.Counterexamples.BoundedBGG.bggComplex_verdict`, `Feec.Models.BoundedDomain.bggComplex_eq61`
-- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.TimeDependent, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.ShortDual, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
 
 ### Sec §6.2
 
@@ -659,15 +616,14 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Sec §6.3
 
-- tagged: `Feec.Models.Euclidean.BGG.reducingSubcomplex`, `Feec.Models.Euclidean.BGG.tsd_existsUnique`, `Feec.Models.Euclidean.BGG.tsd_propagates`, `Feec.Models.Euclidean.BGG.tsd_propagates_neg`, `Feec.Models.Euclidean.BGG.waveGroup_mem`, `Feec.Models.Torus.BGG.closedRangeAt`, `Feec.Models.Torus.BGG.hodge`, `Feec.Models.Torus.BGG.reducingSubcomplex`, `Feec.Models.Torus.BGG.tsd_existsUnique`, `Feec.Models.Torus.BGG.tsd_propagates`, `Feec.Models.Torus.BGG.tsd_propagates_neg`, `Feec.Models.Torus.BGG.waveGroup_mem`
-- cited: `Feec.Counterexamples.BoundedBGG.bggComplex_B_not_symm`, `Feec.Counterexamples.BoundedBGG.bggComplex_not_propagate`, `Feec.Counterexamples.BoundedBGG.bggComplex_verdict`, `Feec.Models.BoundedDomain.bggComplex`, `Feec.Models.BoundedDomain.bggComplex_divFree_propagates`, `Feec.Models.Torus.BGG.verdict`
-- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
+- cited: `Feec.Counterexamples.BoundedBGG.bggComplex_B_not_symm`, `Feec.Counterexamples.BoundedBGG.bggComplex_not_propagate`, `Feec.Counterexamples.BoundedBGG.bggComplex_verdict`, `Feec.Models.BoundedDomain.bggComplex`, `Feec.Models.BoundedDomain.bggComplex_divFree_propagates`, `Feec.Models.Euclidean.BGG.reducingSubcomplex`, `Feec.Models.Euclidean.BGG.tsd_existsUnique`, `Feec.Models.Euclidean.BGG.tsd_propagates`, `Feec.Models.Euclidean.BGG.tsd_propagates_neg`, `Feec.Models.Euclidean.BGG.waveGroup_mem`, `Feec.Models.Torus.BGG.closedRangeAt`, `Feec.Models.Torus.BGG.hodge`, `Feec.Models.Torus.BGG.reducingSubcomplex`, `Feec.Models.Torus.BGG.tsd_existsUnique`, `Feec.Models.Torus.BGG.tsd_propagates`, `Feec.Models.Torus.BGG.tsd_propagates_neg`, `Feec.Models.Torus.BGG.verdict`, `Feec.Models.Torus.BGG.waveGroup_mem`
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.Models.BoundedDomain.BGG, Feec.Models.BoundedDomain.Hessian, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
 
 ### Ch 5
 
 - named: `Feec.BGG.Discrete.Compatible`, `Feec.BGG.Discrete.errorConst`, `Feec.BGG.IsMixedSolution`
 - old: Feec.Ch5.Discrete.Disc.C55, Feec.Ch5.Discrete.Disc.Hyp54, Feec.Ch5.Discrete.Sys56
-- modules: Feec.Fourier.BGGSymbol, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG
 
 ### Ch 6
 
@@ -678,6 +634,5 @@ Counts at generation: 39 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 73 eq
 
 ### Ch 7
 
-- tagged: `Feec.Numerics.CrankNicolson.amplitudeB`, `Feec.Numerics.CrankNicolson.amplitudeE`, `Feec.Numerics.CrankNicolson.cellCount_table`, `Feec.Numerics.CrankNicolson.dt`, `Feec.Numerics.CrankNicolson.finalTime_table`, `Feec.Numerics.CrankNicolson.planeWave_amplitudes`, `Feec.Numerics.CrankNicolson.planeWave_solves`, `Feec.Numerics.CrankNicolson.stepCount_table`, `Feec.TimeStepping.IsCNStep`, `Feec.TimeStepping.IsCNStep.norm_eq`, `Feec.TimeStepping.IsCNStep.unique`, `Feec.TimeStepping.IsCNStep.unique_of_isSkewSymmetric`, `Feec.TimeStepping.isCNStep_cayley`, `Feec.TimeStepping.isSymm_diagonal_mul_add_smul`, `Feec.TimeStepping.mulVec_diagonal_mul_iff`, `Feec.TimeStepping.norm_cayley_apply`, `Feec.TimeStepping.norm_cayley_pow_apply`, `Feec.TimeStepping.norm_eq_of_forall_isCNStep`, `LinearPMap.IsSkewAdjoint.isCNStep_cayley`
-- cited: `Feec.Counterexamples.BoundedBGG.thesisComplex_B_not_symm`, `Feec.Counterexamples.BoundedBGG.thesisComplex_reduced_B_not_symm`, `Feec.Models.Cube.Mirror.existsUnique_memCube_unit`, `Feec.TimeStepping.IsFullCNStep`, `Feec.TimeStepping.IsFullCNStep.apply_eq_of_comp_eq_zero`, `Feec.TimeStepping.IsFullCNStep.norm_sq_add`, `Feec.TimeStepping.IsFullCNStep.unique`, `Feec.TimeStepping.IsReducedCNStep`, `Feec.TimeStepping.IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`, `Feec.TimeStepping.IsReducedCNStep.isFullCNStep_zero`, `Feec.TimeStepping.bijective_cnLHS`, `Feec.TimeStepping.blockMass_add_smul_mulVec_eq_iff_schur`, `Feec.TimeStepping.blockSign_mul_mulVec_iff_fullCNStep`, `Feec.TimeStepping.blockSign_mul_mulVec_iff_reducedCNStep`, `Feec.TimeStepping.det_add_smul_ne_zero`, `Feec.TimeStepping.dotProduct_mulVec_eq_of_cn`, `Feec.TimeStepping.existsUnique_blockSign_mul_mulVec`, `Feec.TimeStepping.existsUnique_isFullCNStep`, `Feec.TimeStepping.existsUnique_isReducedCNStep`, `Feec.TimeStepping.isFullCNStep_iff_mulVec`, `Feec.TimeStepping.isReducedCNStep_iff_mulVec`, `Feec.TimeStepping.isSymm_blockSign_mul`, `Feec.TimeStepping.isSymm_isUnit_indefinite_blockSign_mul`, `Feec.TimeStepping.isUnit_blockMass_add_smul`, `Feec.TimeStepping.not_isSymm_assembled`, `Feec.TimeStepping.not_isSymm_blockMass_add_smul`, `Feec.TimeStepping.posDef_schurComplement`
+- cited: `Feec.Counterexamples.BoundedBGG.thesisComplex_B_not_symm`, `Feec.Counterexamples.BoundedBGG.thesisComplex_reduced_B_not_symm`, `Feec.Models.Cube.Mirror.existsUnique_memCube_unit`, `Feec.Numerics.CrankNicolson.amplitudeB`, `Feec.Numerics.CrankNicolson.amplitudeE`, `Feec.Numerics.CrankNicolson.cellCount_table`, `Feec.Numerics.CrankNicolson.dt`, `Feec.Numerics.CrankNicolson.finalTime_table`, `Feec.Numerics.CrankNicolson.planeWave_amplitudes`, `Feec.Numerics.CrankNicolson.planeWave_solves`, `Feec.Numerics.CrankNicolson.stepCount_table`, `Feec.TimeStepping.IsCNStep`, `Feec.TimeStepping.IsCNStep.norm_eq`, `Feec.TimeStepping.IsCNStep.unique`, `Feec.TimeStepping.IsCNStep.unique_of_isSkewSymmetric`, `Feec.TimeStepping.IsFullCNStep`, `Feec.TimeStepping.IsFullCNStep.apply_eq_of_comp_eq_zero`, `Feec.TimeStepping.IsFullCNStep.norm_sq_add`, `Feec.TimeStepping.IsFullCNStep.unique`, `Feec.TimeStepping.IsReducedCNStep`, `Feec.TimeStepping.IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`, `Feec.TimeStepping.IsReducedCNStep.isFullCNStep_zero`, `Feec.TimeStepping.bijective_cnLHS`, `Feec.TimeStepping.blockMass_add_smul_mulVec_eq_iff_schur`, `Feec.TimeStepping.blockSign_mul_mulVec_iff_fullCNStep`, `Feec.TimeStepping.blockSign_mul_mulVec_iff_reducedCNStep`, `Feec.TimeStepping.det_add_smul_ne_zero`, `Feec.TimeStepping.dotProduct_mulVec_eq_of_cn`, `Feec.TimeStepping.existsUnique_blockSign_mul_mulVec`, `Feec.TimeStepping.existsUnique_isFullCNStep`, `Feec.TimeStepping.existsUnique_isReducedCNStep`, `Feec.TimeStepping.isCNStep_cayley`, `Feec.TimeStepping.isFullCNStep_iff_mulVec`, `Feec.TimeStepping.isReducedCNStep_iff_mulVec`, `Feec.TimeStepping.isSymm_blockSign_mul`, `Feec.TimeStepping.isSymm_diagonal_mul_add_smul`, `Feec.TimeStepping.isSymm_isUnit_indefinite_blockSign_mul`, `Feec.TimeStepping.isUnit_blockMass_add_smul`, `Feec.TimeStepping.mulVec_diagonal_mul_iff`, `Feec.TimeStepping.norm_cayley_apply`, `Feec.TimeStepping.norm_cayley_pow_apply`, `Feec.TimeStepping.norm_eq_of_forall_isCNStep`, `Feec.TimeStepping.not_isSymm_assembled`, `Feec.TimeStepping.not_isSymm_blockMass_add_smul`, `Feec.TimeStepping.posDef_schurComplement`, `LinearPMap.IsSkewAdjoint.isCNStep_cayley`
 - modules: Feec.Counterexamples.BoundedBGG, Feec.Models.Cube.Mirror, Feec.Numerics.CrankNicolsonTable, Feec.TimeStepping.BlockMatrix, Feec.TimeStepping.Cayley

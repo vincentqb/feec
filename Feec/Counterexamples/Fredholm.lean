@@ -31,9 +31,13 @@ The compactness property itself holds on infinite-dimensional spaces:
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (the refuted sentence and the compactness property)
-* [BruningLesch1992] (Fredholm complexes: finite-dimensional cohomology)
-* [AFW2010], §3; [Arnold2018], Ch. 4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (the refuted sentence and the compactness property)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (Fredholm complexes:
+  finite-dimensional cohomology)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
 open scoped InnerProductSpace ComplexConjugate
@@ -495,7 +499,7 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 `ℓ² --A--> ℓ² → 0`, `A = diag(1/(n+1))` on `ℓ²(ℕ, 𝕜)`, of closed densely defined (indeed
 bounded) operators has `ℌⁱ = 0` at every index, so it is Fredholm in the thesis' sense, but
 `𝔅¹ = R(A)` is not closed; hence `𝔅¹ ≠ 𝔷¹` although `ℌ¹ = 0`, and the compactness property fails
-at `0` and `1`. Thesis: §4.2 (refuted) -/
+at `0` and `1`. [QuennevilleBelair2015], §4.2 (refuted) -/
 theorem fredholm_not_closedRange :
     (∀ i, (complex 𝕜).harmonic i = ⊥) ∧ (∀ i, FiniteDimensional 𝕜 ((complex 𝕜).harmonic i)) ∧
       ¬ (complex 𝕜).ClosedRangeAt 1 ∧ (complex 𝕜).boundaries 1 ≠ (complex 𝕜).cycles 1 ∧
@@ -507,7 +511,7 @@ theorem fredholm_not_closedRange :
     fun h => not_closedRangeAt_one h.closedRangeAt⟩
 
 /-- "Every Fredholm Hilbert complex has closed range" is false, already for short complexes on
-`ℓ²(ℕ, 𝕜)`. Thesis: §4.2 (refuted) -/
+`ℓ²(ℕ, 𝕜)`. [QuennevilleBelair2015], §4.2 (refuted) -/
 theorem not_forall_closedRangeAt_of_finiteDimensional_harmonic :
     ¬ ∀ H : HilbertComplex 𝕜 ComplexShape.fin3 (ShortHilbertComplex.W3 (L2 𝕜) (L2 𝕜) PUnit),
       (∀ i, FiniteDimensional 𝕜 (H.harmonic i)) → ∀ i, H.ClosedRangeAt i :=
@@ -515,7 +519,7 @@ theorem not_forall_closedRangeAt_of_finiteDimensional_harmonic :
 
 /-- **Periodic form**: `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℕ` has `ℌᵏ = 0`
 for every `k`, but `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`, so the complex is not exact
-there. Thesis: §4.2 (refuted) -/
+there. [QuennevilleBelair2015], §4.2 (refuted) -/
 theorem periodic_not_closedRange :
     (∀ k, (periodic 𝕜).harmonic k = ⊥) ∧
       ∀ k, Even k → ¬ (periodic 𝕜).ClosedRangeAt (k + 1) ∧
@@ -526,7 +530,7 @@ theorem periodic_not_closedRange :
 /-- **The compactness property on an infinite-dimensional space.** On `ℓ²(ℕ, 𝕜)`, which is
 infinite-dimensional, the short complex `ℓ² --A⁻¹--> ℓ² → 0` with `A⁻¹ = diag(n+1)` (compact
 resolvent: the model of `d` on a compact manifold) has the compactness property at every index.
-Thesis: §4.2 -/
+[QuennevilleBelair2015], §4.2 -/
 theorem hasCompactProperty_infiniteDimensional :
     ¬ FiniteDimensional 𝕜 (L2 𝕜) ∧ (invComplex 𝕜).HasCompactProperty :=
   ⟨not_finiteDimensional_L2, invComplex_hasCompactProperty⟩

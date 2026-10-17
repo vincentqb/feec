@@ -48,7 +48,10 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > Every declaration of the pre-refactor tree has a row in
 > `docs/migration/map.tsv` pointing at a current name or marked `deleted-helper` (non-main rows
 > only); `scripts/MapCheck.sh --strict` passes (5131/5131 old declarations, main 269/269).
-> `scripts/CheckCitations.sh` implements the citation gate above and passes. The verification gate
+> `scripts/CheckCitations.sh` implements the citation gate above and passes: every `[Key]` is in
+> `references.bib`, no `[Key, …]` form, no `Thesis:` tag (all 431 rewritten to
+> `[QuennevilleBelair2015], …`), and every module's `## References` lists each key it cites as
+> `* [Author(s), *Title*][Key]` (authors and title as in `references.bib`), then the location. The verification gate
 > is: `lake build` (no errors, no warnings), `lake env lean scripts/AxiomAudit.lean`,
 > `scripts/MapCheck.sh --strict`, `scripts/CheckCitations.sh`, `scripts/ThesisMap.sh` (regenerate
 > `docs/THESIS_MAP.md`), and the naming greps of §5. W7 (§6) is open.
@@ -59,7 +62,7 @@ Design 2 is the base: all three judges picked it. The grafts below come from Des
 
 | Question | Decision | Why |
 |---|---|---|
-| Where thesis numbering lives | **No thesis layer in Lean.** Traceability goes in `docs/THESIS_MAP.md` plus a `Thesis: Prop 4.17 (corrected)` tag in docstrings. | You asked not to call things "chapter 4"; that overrides Designs 0 and 1, which kept a `Feec/Thesis` layer. |
+| Where thesis numbering lives | **No thesis layer in Lean.** Traceability goes in `docs/THESIS_MAP.md` plus a `Thesis: Prop 4.17 (corrected)` tag in docstrings (superseded 2026-10-17 by the citation `[QuennevilleBelair2015], Prop 4.17 (corrected)`; see the citation convention above). | You asked not to call things "chapter 4"; that overrides Designs 0 and 1, which kept a `Feec/Thesis` layer. |
 | Indexing | `HilbertComplex (c : ComplexShape ι) W` with `d i j` and a `shape` field. Concrete complexes use `ComplexShape.up ℤ` or a finite window. | Checked in Lean: the dual is `c.symm` with the same spaces, so it needs no casts. |
 | Short complexes | `ShortHilbertComplex` (the old `HilbertComplex2`) embeds as a window on `ComplexShape.fin3`. | Checked: `ComplexShape.up (Fin 3)` is wrong because it wraps 2 → 0. The `match`-defined `W3` family resolves its instances and `W3 … 1 = W₁` holds by `rfl`. |
 | Total space for Dirac and wave operators | `PiLp 2` over a finite window, not `lp` over all of ℤ. Zero padding uses `PUnit`. | Checked: `InnerProductSpace` and `CompleteSpace` are found for the window. `PUnit` has an `InnerProductSpace` instance (`InnerProductSpace/Defs.lean:609`). |
@@ -394,7 +397,7 @@ Each task owns the files listed and nothing else. Tasks inside a wave are indepe
 1. `lake build` is clean from scratch, with no `sorry` and no new warnings.
 2. `AxiomAudit` reports only `propext`, `Classical.choice` and `Quot.sound` for every `Feec.*` declaration.
 3. **Strangler shim.** While an old module still exists, each of its main theorems is re-proved *with its old statement* as a thin theorem calling the new result. This is the semantic proof that the new theorem subsumes the old one. Shims are deleted only in W6.
-4. **Coverage.** A script checks that every row of `old_theorems.tsv` appears in `map.tsv`. Theorems that are thesis-numbered or named in `OVERVIEW.md` (the "main" set, roughly 400) may not be `deleted-helper`. Every `new` name and every `THESIS_MAP.md` entry goes into a generated `scripts/MapCheck.lean` as `#check @Feec.X`, which must elaborate. Every `Thesis:` docstring tag must also appear in `THESIS_MAP.md`.
+4. **Coverage.** A script checks that every row of `old_theorems.tsv` appears in `map.tsv`. Theorems that are thesis-numbered or named in `OVERVIEW.md` (the "main" set, roughly 400) may not be `deleted-helper`. Every `new` name and every `THESIS_MAP.md` entry goes into a generated `scripts/MapCheck.lean` as `#check @Feec.X`, which must elaborate. Every thesis result cited as `[QuennevilleBelair2015], Prop 4.17` must also appear in `THESIS_MAP.md` (the `Thesis:` tags of the original plan are retired).
 5. A CI grep finds no `prop_[0-9]`, `thm_[0-9]`, `Ch[0-9]`, `_unconditional`, `Repair` or `Thesis` identifiers under `Feec/`, and no import from `Models/` in lower layers.
 
 ## 6. FEEC-book coverage newly in reach, ranked by value/cost

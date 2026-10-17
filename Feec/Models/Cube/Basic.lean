@@ -47,8 +47,10 @@ and does not depend on either.
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17 on the cube)
-* [Brezis2011], §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17 on the cube)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (extension by reflection)
 -/
 
 open scoped InnerProductSpace ENNReal Topology

@@ -32,9 +32,16 @@ same equation for test functions in `K`.
 
 ## References
 
-* [QuennevilleBelair2015], §4.6 ((4.10), (4.11), Thm 4.14)
-* [Dupont1973], [Baker1976] (energy-method error estimates); [Geveci1988] (mixed methods for the
-  wave equation); [GilletteHolstZhu2017] (FEEC for evolution problems)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.6 ((4.10), (4.11), Thm 4.14)
+* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
+  (energy-method error estimates)
+* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
+  (energy-method error estimates)
+* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
+  (mixed methods for the wave equation)
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+  (FEEC for evolution problems)
 -/
 
 open scoped InnerProductSpace
@@ -132,7 +139,7 @@ def shiftedFormRestrict : T.GraphSpace →L[𝕜] (K →L⋆[𝕜] 𝕜) :=
       exact (shiftedForm T).le_opNorm₂ ζ ψ
 
 /-- The **elliptic projection** onto a finite-dimensional `K ⊆ Γ(T)`:
-`P ζ ∈ K` with `A(P ζ, ψ) = A(ζ, ψ)` for `ψ ∈ K`. Thesis: (4.11) -/
+`P ζ ∈ K` with `A(P ζ, ψ) = A(ζ, ψ)` for `ψ ∈ K`. [QuennevilleBelair2015], (4.11) -/
 def ellipticProjection : T.GraphSpace →L[𝕜] T.GraphSpace :=
   K.subtypeL.comp (((shiftedFormEquiv K).symm : (K →L⋆[𝕜] 𝕜) →L[𝕜] K).comp
     (shiftedFormRestrict K))
@@ -140,7 +147,7 @@ def ellipticProjection : T.GraphSpace →L[𝕜] T.GraphSpace :=
 theorem ellipticProjection_mem (ζ : T.GraphSpace) : ellipticProjection K ζ ∈ K :=
   ((shiftedFormEquiv K).symm (shiftedFormRestrict K ζ)).2
 
-/-- `A(P ζ, ψ) = A(ζ, ψ)` for `ψ ∈ K`. Thesis: (4.11) -/
+/-- `A(P ζ, ψ) = A(ζ, ψ)` for `ψ ∈ K`. [QuennevilleBelair2015], (4.11) -/
 theorem shiftedForm_ellipticProjection (ζ : T.GraphSpace) {ψ : T.GraphSpace} (hψ : ψ ∈ K) :
     shiftedForm T (ellipticProjection K ζ) ψ = shiftedForm T ζ ψ := by
   have h := (shiftedFormEquiv K).apply_symm_apply (shiftedFormRestrict K ζ)
@@ -188,7 +195,7 @@ solution of `⟪ψ, ξ'⟫ + a(ξ, ψ) = 0` for `ψ ∈ K` (in particular any we
 wave equation in `C¹(Γ(T))`), and `ξₕ ∈ K` the semi-discrete solution. Then, with
 `e = P ξ - ξ` measured in `E`,
 `‖ξ(t) - ξₕ(t)‖ ≤ ‖P ξ(t₀) - ξₕ(t₀)‖ + ‖e(t)‖ + (t - t₀) ‖e(t₀)‖ + (1 + (t - t₀)) ∫ ‖e'‖`.
-Thesis: Thm 4.14 -/
+[QuennevilleBelair2015], Thm 4.14 -/
 theorem norm_sub_le_of_semidiscrete (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
     {ξ ξ' ξh ξh' : ℝ → T.GraphSpace} {t₀ t₁ : ℝ}
     (hξc : ContinuousOn ξ (Icc t₀ t₁)) (hξ'c : ContinuousOn ξ' (Icc t₀ t₁))

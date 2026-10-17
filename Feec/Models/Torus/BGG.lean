@@ -26,7 +26,8 @@ constraint; on the torus it does.
 
 ## References
 
-* [QuennevilleBelair2015], Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3), §3.4 (Lemma 3.5)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3), §3.4 (Lemma 3.5)
 -/
 
 @[expose] public noncomputable section
@@ -59,12 +60,12 @@ instance (i : Fin 3) : (constraint i).HasOrthogonalProjection :=
   fibreReducing.hasOrthogonalProjection i
 
 /-- **`K` is a reducing subcomplex** (the projection hypothesis, proved).
-Thesis: §6.3 -/
+[QuennevilleBelair2015], §6.3 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
 /-- **TSD propagation for the BGG system on `𝕋³`**: strong solutions of `U' = L U + F` with data and forcing in
-`K` stay in `K`. Thesis: §6.3 -/
+`K` stay in `K`. [QuennevilleBelair2015], §6.3 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -72,7 +73,7 @@ theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates hU h0 hF
 
-/-- TSD propagation for the sign convention `U' = -L U + F` of Thesis (4.4). Thesis: §6.3 -/
+/-- TSD propagation for the sign convention `U' = -L U + F` of Thesis (4.4). [QuennevilleBelair2015], §6.3 -/
 theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution (-complex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -82,7 +83,7 @@ theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
 
 /-- **TSD propagation on `𝕋³` with existence**: for `U₀ ∈ D(L) ∩ K` and admissible forcing in `K`, the
 Hodge wave equation has a classical solution, unique among strong solutions, staying in `K`.
-Thesis: §6.3 -/
+[QuennevilleBelair2015], §6.3 -/
 theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 Space} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -94,7 +95,7 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
   fibreReducing.existsUnique_mem hU₀ hU₀K hF hFK
 
 /-- The wave group of the periodic complex preserves `K` for all times (forward and backward).
-Thesis: §6.3 -/
+[QuennevilleBelair2015], §6.3 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
@@ -109,7 +110,7 @@ theorem freq_cases (k : Fin 3 → ℤ) :
 
 /-- **The periodic BGG complex has closed range** at every index (Poincaré constant `4`): at
 `ξ = 0` the zeroth-order part `S₁` is still present, and controls the skew part
-(`Feec.Fourier.BGG.bggFamily_gap`). Thesis: §6.3 -/
+(`Feec.Fourier.BGG.bggFamily_gap`). [QuennevilleBelair2015], §6.3 -/
 theorem closedRangeAt (i : Fin 3) : complex.ClosedRangeAt i :=
   (Fourier.Torus.symbolComplex bggFamily).closedRangeAt_of_gap (C := 4)
     (Filter.Eventually.of_forall fun k => bggFamily_gap _ _ (freq_cases k))
@@ -138,7 +139,7 @@ theorem dual_closedRangeAt' (i : Fin 3) : complex.dual.ClosedRangeAt i := by
   · exact dual_closedRangeAt_two
 
 /-- **Hodge decomposition without closures** for the periodic BGG complex at every index,
-pairwise orthogonal. Thesis: §6.3 -/
+pairwise orthogonal. [QuennevilleBelair2015], §6.3 -/
 theorem hodge (i : Fin 3) :
     complex.boundaries i ⊔ complex.harmonic i ⊔ complex.dual.boundaries i = ⊤ ∧
       complex.boundaries i ⟂ complex.harmonic i ∧

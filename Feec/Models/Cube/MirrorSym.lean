@@ -38,8 +38,9 @@ every bounded domain (`Feec.Counterexamples.BoundedSymTSD`).
 
 ## References
 
-* [QuennevilleBelair2015], §4.11 (Prop 4.19, (4.16)–(4.18))
-* [ArnoldHu2021] (the complex (4.16))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.11 (Prop 4.19, (4.16)–(4.18))
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the complex (4.16))
 -/
 
 open scoped InnerProductSpace

@@ -23,9 +23,11 @@ For `T : E →ₗ.[𝕜] F` between Hilbert spaces over `𝕜` (`RCLike`):
 
 ## References
 
-* [QuennevilleBelair2015], §4.1 ((4.1a–d)), Thm 4.2 (Poincaré inequality)
-* [Kato1995], §IV.5.2 (closed range theorem)
-* [AFW2010], §3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.1 ((4.1a–d)), Thm 4.2 (Poincaré inequality)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §IV.5.2 (closed range theorem)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3
 -/
 
 open scoped InnerProductSpace
@@ -168,7 +170,7 @@ theorem exists_rightInverse_of_isClosed_range (T : E →ₗ.[𝕜] F) (hc : T.Is
   exact ⟨⟨g₀, g₀.continuous_of_isClosed_graph hgraph⟩, hg₀⟩
 
 /-- **Poincaré inequality** for a closed operator with closed range:
-`‖x‖ ≤ c ‖T x‖` on `D(T) ∩ N(T)ᗮ`. Thesis: Thm 4.2. -/
+`‖x‖ ≤ c ‖T x‖` on `D(T) ∩ N(T)ᗮ`. [QuennevilleBelair2015], Thm 4.2. -/
 theorem exists_norm_le_of_isClosed_range {T : E →ₗ.[𝕜] F} (hc : T.IsClosed)
     (hR : _root_.IsClosed (LinearMap.range T.toFun : Set F)) :
     ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ := by
@@ -215,7 +217,7 @@ theorem isClosed_range_of_norm_le {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) {c :
   exact (π.antilipschitz_of_bound hbound).isClosed_range π.uniformContinuous
 
 /-- A closed operator has closed range iff it satisfies a Poincaré inequality on
-`D(T) ∩ N(T)ᗮ`. Thesis: Thm 4.2 (with converse). -/
+`D(T) ∩ N(T)ᗮ`. [QuennevilleBelair2015], Thm 4.2 (with converse). -/
 theorem isClosed_range_iff_exists_norm_le {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) :
     _root_.IsClosed (LinearMap.range T.toFun : Set F) ↔
       ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ :=

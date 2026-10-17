@@ -27,9 +27,11 @@ exterior derivative and the Koszul differential are
 
 ## References
 
-* [QuennevilleBelair2015], §4.7 (the Koszul complex and the homotopy formula, stated there
-  without proof)
-* [AFW2006], §3 (the Koszul complex, (3.9)); [Arnold2018], Ch. 7
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.7 (the Koszul complex and the homotopy formula, stated there without proof)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3 (the Koszul complex, (3.9))
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 
 open Finset MvPolynomial
@@ -46,12 +48,12 @@ variable (R d) in
 /-- Polynomial differential forms on `R^d`, as coefficient functions in the basis `dx_s`. -/
 abbrev PolyForm := Finset d → MvPolynomial d R
 
-/-- The exterior derivative `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. Thesis: §4.7 -/
+/-- The exterior derivative `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. [QuennevilleBelair2015], §4.7 -/
 def extDeriv (ω : PolyForm R d) : PolyForm R d :=
   fun s => ∑ j ∈ s, sgn j s * pderiv j (ω (s.erase j))
 
 /-- The Koszul differential `κ = Σⱼ x_j ι_{e_j}`, `(κω)_s = Σ_{j ∉ s} ε(j, s) x_j ω_{s ∪ j}`.
-Thesis: §4.7 -/
+[QuennevilleBelair2015], §4.7 -/
 def koszul (ω : PolyForm R d) : PolyForm R d := interior (fun j => X j) ω
 
 omit [Fintype d] in
@@ -87,7 +89,7 @@ theorem koszul_add (ω η : PolyForm R d) : koszul (ω + η) = koszul ω + koszu
   interior_add _ ω η
 
 omit [Fintype d] in
-/-- **`d² = 0`** for polynomial forms in any dimension. Thesis: §4.7 -/
+/-- **`d² = 0`** for polynomial forms in any dimension. [QuennevilleBelair2015], §4.7 -/
 theorem extDeriv_extDeriv (ω : PolyForm R d) : extDeriv (extDeriv ω) = 0 := by
   funext s
   simp only [extDeriv_apply, Pi.zero_apply, map_sum, pderiv_sgn_mul, mul_sum]
@@ -98,12 +100,12 @@ theorem extDeriv_extDeriv (ω : PolyForm R d) : extDeriv (extDeriv ω) = 0 := by
   have := ite_lt_add_ite_lt (R := MvPolynomial d R) hjl
   linear_combination (sgn j s * sgn l s * pderiv j (pderiv l (ω ((s.erase j).erase l)))) * this
 
-/-- **`κ² = 0`** for polynomial forms in any dimension. Thesis: §4.7 -/
+/-- **`κ² = 0`** for polynomial forms in any dimension. [QuennevilleBelair2015], §4.7 -/
 theorem koszul_koszul (ω : PolyForm R d) : koszul (koszul ω) = 0 :=
   interior_interior_self _ ω
 
 /-- **The homotopy formula** (thesis §4.7, AFW (3.9)), in any dimension:
-`(dκ + κd) ω = |s| ω_s + Σⱼ x_j ∂_j ω_s` (form degree plus Euler operator). Thesis: §4.7 -/
+`(dκ + κd) ω = |s| ω_s + Σⱼ x_j ∂_j ω_s` (form degree plus Euler operator). [QuennevilleBelair2015], §4.7 -/
 theorem extDeriv_koszul_add_koszul_extDeriv (ω : PolyForm R d) (s : Finset d) :
     extDeriv (koszul ω) s + koszul (extDeriv ω) s =
       (#s : MvPolynomial d R) * ω s + ∑ j, X j * pderiv j (ω s) := by
@@ -155,7 +157,7 @@ theorem extDeriv_koszul_add_koszul_extDeriv (ω : PolyForm R d) (s : Finset d) :
 def IsHomogeneousForm (r : ℕ) (ω : PolyForm R d) : Prop := ∀ s, (ω s).IsHomogeneous r
 
 /-- **The homotopy formula on homogeneous forms**: for a `k`-form with homogeneous coefficients
-of degree `r`, `(dκ + κd) ω = (r + k) ω`. Thesis: §4.7 -/
+of degree `r`, `(dκ + κd) ω = (r + k) ω`. [QuennevilleBelair2015], §4.7 -/
 theorem extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous {r k : ℕ} {ω : PolyForm R d}
     (hr : IsHomogeneousForm r ω) (hk : IsDeg k ω) :
     extDeriv (koszul ω) + koszul (extDeriv ω) = ((r + k : ℕ) : MvPolynomial d R) • ω := by

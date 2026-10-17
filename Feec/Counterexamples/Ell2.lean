@@ -28,8 +28,9 @@ Two thesis claims about operators and bounded forms are refuted on the sequence 
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (closed kernels), Thm 4.9 (Babuška–Nečas)
-* [Babuska1971]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (closed kernels), Thm 4.9 (Babuška–Nečas)
+* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
 -/
 
 open scoped InnerProductSpace
@@ -165,7 +166,7 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 non-closed subspace of finitely supported sequences in `ℓ²(ℕ, 𝕜)` is densely defined (and
 bounded on its domain, hence closable), but its kernel, its whole domain, is not closed. The
 kernel of a closed operator is closed (`Feec.HilbertComplex.isClosed_ker`).
-Thesis: §4.3 (refuted) -/
+[QuennevilleBelair2015], §4.3 (refuted) -/
 theorem exists_dense_not_isClosed_ker :
     ∃ T : L2 𝕜 →ₗ.[𝕜] L2 𝕜, Dense (T.domain : Set (L2 𝕜)) ∧ (∀ x : T.domain, T x = 0) ∧
       ¬ IsClosed (T.ker : Set (L2 𝕜)) := by
@@ -177,7 +178,7 @@ theorem exists_dense_not_isClosed_ker :
   rw [hker]
   exact not_isClosed_finSupp
 
-/-- The kernel of a densely defined operator need not be closed. Thesis: §4.3 (refuted) -/
+/-- The kernel of a densely defined operator need not be closed. [QuennevilleBelair2015], §4.3 (refuted) -/
 theorem not_forall_isClosed_ker :
     ¬ ∀ T : L2 𝕜 →ₗ.[𝕜] L2 𝕜, Dense (T.domain : Set (L2 𝕜)) → IsClosed (T.ker : Set (L2 𝕜)) :=
   fun h => by
@@ -219,7 +220,7 @@ end Ell2
 `ℓ²(ℕ, 𝕜)`, the bounded sesquilinear form `B u v = ⟪v, S u⟫` (`Ell2.shiftForm`) is solvable for
 every right-hand side (`S` is onto) and separating on the second slot, yet it satisfies no
 inf-sup condition and is not injective (`S e₀ = 0`). So "for every `f` there exists `u`" in the
-converse of thesis Thm 4.9 must read "there exists a unique `u`". Thesis: Thm 4.9 (corrected) -/
+converse of thesis Thm 4.9 must read "there exists a unique `u`". [QuennevilleBelair2015], Thm 4.9 (corrected) -/
 theorem surjective_not_infSup :
     ∃ B : L2 𝕜 →L[𝕜] L2 𝕜 →L⋆[𝕜] 𝕜, (∀ f : L2 𝕜, ∃ u, ∀ v, B u v = ⟪v, f⟫_𝕜) ∧
       Variational.SeparatingRight B ∧ (∀ γ, ¬ Variational.InfSup B γ) ∧

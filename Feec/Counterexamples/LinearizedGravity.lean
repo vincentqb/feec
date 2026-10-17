@@ -19,8 +19,9 @@ statements):
 
 ## References
 
-* [QuennevilleBelair2015], §2.8 (Props 2.4, 2.6, (2.15))
-* [Wald1984], §4.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.8 (Props 2.4, 2.6, (2.15))
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4
 -/
 
 open Finset Matrix
@@ -67,7 +68,7 @@ theorem not_isTT_gaugeAmp_printed_contra :
 
 /-- The thesis' accelerations `a¹ = -(κ²/2)(A₊v¹ + Aₓv²) f(k·x)` (after (2.15)) are wrong:
 for `f(t) = t²`, `κ = A₊ = v¹ = 1`, `Aₓ = 0` at `x = 0` the true value is `1`, not `0`.
-Thesis: §2.8, after (2.15) -/
+[QuennevilleBelair2015], §2.8, after (2.15) -/
 theorem not_accel_printed :
     ¬ ∀ (κ Ap Ax : ℝ) (f : ℝ → ℝ), ContDiff ℝ 2 f → ∀ (v : Fin 4 → ℝ) (x : Fin 4 → ℝ),
       accelJ (jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x)
@@ -81,7 +82,7 @@ theorem not_accel_printed :
   simp [hd] at h1
 
 /-- The thesis' Prop 2.4(b), `H = -□h̄` in Lorentz gauge, is false: a symmetric jet in
-Lorentz gauge with `H₁₁ ≠ -□h̄₁₁`. Thesis: Prop 2.4 -/
+Lorentz gauge with `H₁₁ ≠ -□h̄₁₁`. [QuennevilleBelair2015], Prop 2.4 -/
 theorem not_Hjet_eq_neg_boxJ :
     ∃ D : Jet2 (Fin 4) ℝ, IsSymJet2 D ∧ LorentzJet η4 η4 D ∧
       Hjet η4 η4 D 1 1 ≠ -boxJ η4 (barJ η4 η4 D) 1 1 := by

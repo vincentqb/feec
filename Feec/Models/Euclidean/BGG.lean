@@ -19,7 +19,8 @@ thesis' boundary conditions this fails, which locates the failure at the boundar
 
 ## References
 
-* [QuennevilleBelair2015], Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3)
 -/
 
 @[expose] public noncomputable section
@@ -50,12 +51,12 @@ theorem fibreReducing : FibreReducing (Fourier.Euclidean.symbolComplex bggFamily
 instance (i : Fin 3) : (constraint i).HasOrthogonalProjection :=
   fibreReducing.hasOrthogonalProjection i
 
-/-- **`K` is a reducing subcomplex** on `ℝ³`. Thesis: §6.3 -/
+/-- **`K` is a reducing subcomplex** on `ℝ³`. [QuennevilleBelair2015], §6.3 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
 /-- **TSD propagation for the BGG system on `ℝ³`**: strong solutions of `U' = L U + F` with data and forcing in `K`
-stay in `K`. Thesis: §6.3 -/
+stay in `K`. [QuennevilleBelair2015], §6.3 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -63,7 +64,7 @@ theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates hU h0 hF
 
-/-- TSD propagation on `ℝ³` for `U' = -L U + F`. Thesis: §6.3 -/
+/-- TSD propagation on `ℝ³` for `U' = -L U + F`. [QuennevilleBelair2015], §6.3 -/
 theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution (-complex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -71,7 +72,7 @@ theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates_neg hU h0 hF
 
-/-- **TSD propagation on `ℝ³` with existence and uniqueness.** Thesis: §6.3 -/
+/-- **TSD propagation on `ℝ³` with existence and uniqueness.** [QuennevilleBelair2015], §6.3 -/
 theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 Space} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -82,7 +83,7 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
         EqOn V U (Icc a b) :=
   fibreReducing.existsUnique_mem hU₀ hU₀K hF hFK
 
-/-- The wave group preserves `K` for all times. Thesis: §6.3 -/
+/-- The wave group preserves `K` for all times. [QuennevilleBelair2015], §6.3 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx

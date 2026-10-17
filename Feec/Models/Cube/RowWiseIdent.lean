@@ -61,8 +61,10 @@ the data `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = 0` (`RowWis
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
-* [Brezis2011], §9.2 (extension by reflection), §9.4 (`W₀^{1,p}`, cut-off arguments)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (extension by reflection), §9.4 (`W₀^{1,p}`, cut-off arguments)
 -/
 
 open scoped InnerProductSpace ComplexConjugate ENNReal Topology

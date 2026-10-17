@@ -26,8 +26,9 @@ For `T : E →ₗ.[𝕜] F` and closed subspaces `K ⊆ E`, `L ⊆ F` with ortho
 
 ## References
 
-* [QuennevilleBelair2015], Thm 4.4 (the operator `L̃`)
-* [Kato1995], §III.5.6 (reduction of operators)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.4 (the operator `L̃`)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reduction of operators)
 -/
 
 open scoped InnerProductSpace
@@ -246,7 +247,7 @@ theorem IsSkewAdjoint.isReducing_iff (hA : A.IsSkewAdjoint) :
 
 /-- **Skew-adjoint restriction.** If `A` is skew-adjoint and `K` reduces `A`, the part
 `Ã = A|_{D(A) ∩ K} : K → K` is skew-adjoint. No density of `D(A) ∩ K` in `K` is assumed: it
-follows (`dense_restrict_domain`). Thesis: Thm 4.4 (corrected). -/
+follows (`dense_restrict_domain`). [QuennevilleBelair2015], Thm 4.4 (corrected). -/
 theorem IsSkewAdjoint.restrict (hA : A.IsSkewAdjoint) [CompleteSpace K] (hK : A.IsReducing K) :
     (A.restrict K hK.mapsTo).IsSkewAdjoint := by
   set At := A.restrict K hK.mapsTo with hAt

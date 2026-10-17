@@ -53,7 +53,7 @@ theorem hasDerivWithinAt_norm_sq {e : ℝ → E} {e' : E} {s : Set ℝ} {t : ℝ
 
 omit [IsScalarTower ℝ 𝕜 E] in
 /-- **Energy estimate** (`_root_.norm_le_add_integral_of_re_inner_deriv_le`).
-Thesis: Lemma 4.12 (corrected). -/
+[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b : ℝ}
     (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (hgc : ContinuousOn g (Icc a b)) (hg0 : ∀ t ∈ Ico a b, 0 ≤ g t)
@@ -62,7 +62,7 @@ theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ �
   _root_.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := 𝕜) hec he hgc hg0 hle
 
 /-- **Energy estimate with decay rate `λ`** (`_root_.norm_le_of_re_inner_deriv_le`).
-Thesis: Lemma 4.12 (corrected). -/
+[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b lam : ℝ}
     (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (hgc : ContinuousOn g (Icc a b)) (hg0 : ∀ t ∈ Ico a b, 0 ≤ g t)

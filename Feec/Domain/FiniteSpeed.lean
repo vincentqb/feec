@@ -28,8 +28,10 @@ of components, and `β : ι → ι → E` symmetric (`β j i = β i j`). The con
 
 ## References
 
-* [Evans2010], §7.3.2 (symmetric hyperbolic systems, domain of dependence)
-* [QuennevilleBelair2015], §3.5 (Prop 3.6), §4.10 (interior propagation)
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (symmetric hyperbolic systems,
+  domain of dependence)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.5 (Prop 3.6), §4.10 (interior propagation)
 -/
 
 @[expose] public noncomputable section
@@ -645,7 +647,7 @@ theorem IsWeakSolution.molli_eq_zero {β : ι → ι → E} {c : ℝ} (hβ : IsS
 hyperbolic system with speed `c` (Maxwell, acoustics, elastodynamics, the Einstein–Bianchi
 violation system): if `B(x, R) ⊆ Ω` and `W(0) = 0` a.e. on `B(x, R)`, then `W(t) = 0` a.e. on
 `B(x, R - c t)` for every `t ∈ [0, T]`. No boundary condition and no boundedness of `Ω` enter.
-Thesis: Prop 3.6 -/
+[QuennevilleBelair2015], Prop 3.6 -/
 theorem IsWeakSolution.ae_eq_zero_of_ball {β : ι → ι → E} {c : ℝ} (hβ : IsSymmHyperbolic β c)
     {T : ℝ} {W : ℝ → L2F ℝ Ω ι} (hW : IsWeakSolution β Ω T W) (hΩ : IsOpen Ω) {x : E} {R : ℝ}
     (hball : Metric.ball x R ⊆ Ω) (h0 : ∀ i, ∀ᵐ y ∂volume.restrict (Metric.ball x R), W 0 i y = 0)

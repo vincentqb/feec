@@ -48,9 +48,12 @@ For an isometric group `G` with generator `A` on a Hilbert space over `𝕜 = �
 
 ## References
 
-* [Pazy1983], §1.10
-* [ReedSimon1980], Thm VI.16 (Hilbert–Schmidt theorem), §VII.3 (mean ergodic theorem)
-* [QuennevilleBelair2015], §4.10 (Prop 4.17)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10
+* [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
+  Thm VI.16 (Hilbert–Schmidt theorem), §VII.3 (mean ergodic theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17)
 -/
 
 open Set Filter Topology LinearPMap Feec.Operator

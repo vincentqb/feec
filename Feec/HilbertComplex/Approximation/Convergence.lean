@@ -33,10 +33,15 @@ finite-dimensional `K ⊆ Γ(T)` (e.g. the total space of a finite element subco
 
 ## References
 
-* [QuennevilleBelair2015], §4.6 ((4.10), (4.11), Prop 4.13, Thm 4.14 and the convergence
-  remark after it), §4.4 (Thm 4.6, (4.7)–(4.8))
-* [Pazy1983], §1.2 (Thm 2.4, density of `D(A²)`), §1.10
-* [Dupont1973], [Baker1976], [Geveci1988], [GilletteHolstZhu2017]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.6 ((4.10), (4.11), Prop 4.13, Thm 4.14 and the convergence remark after it), §4.4 (Thm 4.6,
+  (4.7)–(4.8))
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.2 (Thm 2.4, density of `D(A²)`), §1.10
+* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
+* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
+* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 -/
 
 open scoped InnerProductSpace Topology

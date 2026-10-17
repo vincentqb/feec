@@ -34,8 +34,9 @@ lower indices; contractions use `gi`.
 
 ## References
 
-* [QuennevilleBelair2015], §2.2 (signature (−+++)), §2.7 ((2.5), trace reversal)
-* [Wald1984], §4.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.2 (signature (−+++)), §2.7 ((2.5), trace reversal)
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4
 -/
 
 open Matrix
@@ -67,11 +68,11 @@ theorem mul_eq_one_comm' [DecidableEq ι] {g gi : Matrix ι ι R} : gi * g = 1 �
 
 variable (R) in
 /-- The Minkowski signature `(-1, 1, …, 1)` on `Fin (n + 1)` (time index `0`).
-Thesis: §2.2 -/
+[QuennevilleBelair2015], §2.2 -/
 def minkowski (n : ℕ) : Fin (n + 1) → R := Fin.cons (-1) fun _ => 1
 
 variable (R) in
-/-- The Minkowski metric `η = diag(-1, 1, …, 1)`. Thesis: §2.2 -/
+/-- The Minkowski metric `η = diag(-1, 1, …, 1)`. [QuennevilleBelair2015], §2.2 -/
 def minkowskiMatrix (n : ℕ) : Matrix (Fin (n + 1)) (Fin (n + 1)) R := diagonal (minkowski R n)
 
 @[simp] theorem minkowski_zero (n : ℕ) : minkowski R n 0 = -1 := rfl
@@ -84,7 +85,7 @@ theorem minkowski_three : minkowski R 3 = ![-1, 1, 1, 1] := by
 
 variable (R) in
 /-- The four-dimensional Minkowski signature `(-1, 1, 1, 1)` indexed by `Fin 4` (thesis
-convention; `= minkowski R 3`). Thesis: §2.2 -/
+convention; `= minkowski R 3`). [QuennevilleBelair2015], §2.2 -/
 def minkowski4 : Fin 4 → R := ![-1, 1, 1, 1]
 
 theorem minkowski4_eq_minkowski : minkowski4 R = minkowski R 3 := minkowski_three.symm
@@ -105,7 +106,7 @@ theorem minkowskiMatrix_isSymm (n : ℕ) : (minkowskiMatrix R n).IsSymm := by
 
 /-! ### Traces and trace reversal -/
 
-/-- The metric trace `gi^{ab} h_ab`. Thesis: §2.7 -/
+/-- The metric trace `gi^{ab} h_ab`. [QuennevilleBelair2015], §2.7 -/
 def trace (gi h : Matrix ι ι R) : R := ∑ a, ∑ b, gi a b * h a b
 
 theorem trace_eq_trace_mul (gi h : Matrix ι ι R) (hh : hᵀ = h) :
@@ -130,14 +131,14 @@ theorem trace_metric [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (h
 
 variable [Invertible (2 : R)]
 
-/-- The trace reversal `h̄ = h - ½ (tr h) g`. Thesis: §2.7, (2.5) -/
+/-- The trace reversal `h̄ = h - ½ (tr h) g`. [QuennevilleBelair2015], §2.7, (2.5) -/
 def trRev (g gi h : Matrix ι ι R) : Matrix ι ι R := h - (⅟2 * trace gi h) • g
 
 theorem trRev_apply (g gi h : Matrix ι ι R) (a b : ι) :
     trRev g gi h a b = h a b - ⅟2 * trace gi h * g a b := by
   simp [trRev, mul_assoc]
 
-/-- `tr h̄ = (1 - n/2) tr h`, in every dimension `n`. Thesis: (2.5) -/
+/-- `tr h̄ = (1 - n/2) tr h`, in every dimension `n`. [QuennevilleBelair2015], (2.5) -/
 theorem trace_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1)
     (h : Matrix ι ι R) :
     trace gi (trRev g gi h) = (1 - ⅟2 * Fintype.card ι) * trace gi h := by
@@ -167,7 +168,7 @@ theorem trRev_trRev_eq [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) 
   linear_combination (trace gi h) * h2
 
 /-- **(2.5)**: trace reversal is an involution in dimension four, `h = h̄ - ½ (tr h̄) g`.
-Thesis: (2.5) -/
+[QuennevilleBelair2015], (2.5) -/
 theorem trRev_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1)
     (hn : Fintype.card ι = 4) (h : Matrix ι ι R) : trRev g gi (trRev g gi h) = h := by
   rw [trRev_trRev_eq hg hinv, hn]
@@ -177,7 +178,7 @@ theorem trRev_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hi
   rw [this, zero_mul, zero_smul, sub_zero]
 
 /-- The gauge law (2.5): if `h ↦ h + P + Pᵀ` (`P_ab = ∂_a ξ_b`), then
-`h̄ ↦ h̄ + P + Pᵀ - (gi^{ab} P_ab) g`. Thesis: (2.5) -/
+`h̄ ↦ h̄ + P + Pᵀ - (gi^{ab} P_ab) g`. [QuennevilleBelair2015], (2.5) -/
 theorem trRev_add_sym {g gi : Matrix ι ι R} (hgi : gi.IsSymm) (h P : Matrix ι ι R) :
     trRev g gi (h + P + Pᵀ) = trRev g gi h + P + Pᵀ - (trace gi P) • g := by
   have hT : trace gi Pᵀ = trace gi P := by
@@ -198,7 +199,7 @@ section Field
 variable {ι : Type*} [Fintype ι] [DecidableEq ι] {K : Type*} [Field K] [Invertible (2 : K)]
 
 /-- In every dimension `n ≠ 2`, the trace reversal is invertible:
-`h = h̄ - (n - 2)⁻¹ (tr h̄) g`. Thesis: (2.5) (the thesis uses `n = 4` silently). -/
+`h = h̄ - (n - 2)⁻¹ (tr h̄) g`. [QuennevilleBelair2015], (2.5) (the thesis uses `n = 4` silently). -/
 theorem eq_trRev_sub {g gi : Matrix ι ι K} (hg : g.IsSymm) (hinv : gi * g = 1)
     (hn : (Fintype.card ι : K) ≠ 2) (h : Matrix ι ι K) :
     h = trRev g gi h - (((Fintype.card ι : K) - 2)⁻¹ * trace gi (trRev g gi h)) • g := by

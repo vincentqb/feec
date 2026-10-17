@@ -24,7 +24,7 @@ with the compatibility `⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ` as a hypothesis (Mat
 
 ## References
 
-* [Kato1995], §V.3 (adjoints)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §V.3 (adjoints)
 -/
 
 @[expose] public noncomputable section

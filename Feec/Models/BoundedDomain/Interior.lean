@@ -43,9 +43,11 @@ point whose Euclidean distance to `ℝ³ \ Ω` exceeds `t`.
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Lemma 3.5, Prop 3.6), §4.10 (Props 4.17, 4.18, (4.14))
-* [Evans2010], §7.3.2 (domain of dependence)
-* [ACBY1997] (the Einstein–Bianchi system)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Lemma 3.5, Prop 3.6), §4.10 (Props 4.17, 4.18, (4.14))
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (domain of dependence)
+* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+  (the Einstein–Bianchi system)
 -/
 
 @[expose] public noncomputable section
@@ -682,7 +684,7 @@ theorem depDomain_univ (t : ℝ) : depDomain (univ : Set R3) t = univ :=
 /-- **TSD propagation on `ℝ³`**: if `E, B` satisfy the weak equations `WeakEB` on `Ω = ℝ³` and
 `E(0), B(0) ∈ L²(TSD)`, then `E(t), B(t) ∈ L²(TSD)` for all `t ∈ [0, T]`: divergence-freeness is
 conserved, symmetry and trace-freeness propagate by finite speed (the domain of dependence of
-`ℝ³` is `ℝ³`). The solution is assumed, not constructed. Thesis: Prop 4.17 -/
+`ℝ³` is `ℝ³`). The solution is assumed, not constructed. [QuennevilleBelair2015], Prop 4.17 -/
 theorem WeakEB.mem_tsd_univ {E B : ℝ → L2F ℝ (univ : Set R3) Ix} (h : WeakEB univ T E B)
     (hE₀ : E 0 ∈ tsd univ) (hB₀ : B 0 ∈ tsd univ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     E t ∈ tsd univ ∧ B t ∈ tsd univ := by
@@ -824,7 +826,7 @@ theorem weakEB_of_isStrongSolution (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win 
 complex** on an open `Ω ⊆ ℝ³` (bounded or not): for a strong solution from TSD data
 `(0, E₀, B₀)` and every Euclidean ball `{|z - x| < r} ⊆ Ω`, at time `t ∈ [0, T]`: `σ(t) = 0`,
 `E(t)`, `B(t)` are weakly divergence-free in `Ω`, and symmetric and trace-free a.e. on
-`{|y - x| < r - t}`. Thesis: Prop 4.17 -/
+`{|y - x| < r - t}`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_cone (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
     (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U)
     (h0 : winσ (U 0) = 0)
@@ -856,7 +858,7 @@ theorem tsd_cone (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
 grad–curl complex on an open `Ω ⊆ ℝ³` (bounded or not) with TSD data `(0, E₀, B₀)`, at every
 `t ∈ [0, T]`, `E(t)` and `B(t)` are symmetric and trace-free a.e. on `depDomain Ω t`, the points
 at Euclidean distance `> t` from `ℝ³ \ Ω`: the boundary violation travels inward at most at unit
-speed. Thesis: Prop 4.17 -/
+speed. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_depDomain (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
     (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U) (h0 : winσ (U 0) = 0)
     (hE₀ : winE (U 0) ∈ tsd Ω) (hB₀ : winB (U 0) ∈ tsd Ω) {t : ℝ} (ht : t ∈ Icc 0 T) :

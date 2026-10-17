@@ -57,9 +57,11 @@ flipping along the arrows, e.g. `i` odd on a window), forward invariance suffice
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (Thm 4.4, Cor 4.5), §4.9 (Prop 4.16), §4.10 (Props 4.17,
-  4.18), §4.11 (Prop 4.19)
-* [Kato1995], §III.5.6 (reducing subspaces); [Pazy1983], §1.10
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.4, Cor 4.5), §4.9 (Prop 4.16), §4.10 (Props 4.17, 4.18), §4.11 (Prop 4.19)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reducing subspaces)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10
 -/
 
 open scoped InnerProductSpace
@@ -381,7 +383,7 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 /-- **Constraint propagation for the Hodge wave equation**: if `S` is a reducing subcomplex, every
 strong solution of `U' = L U + F` on `[a, b]` with `U a ∈ ∏ S i` and `F` valued in `∏ S i` stays
 in `∏ S i`. Any length, any shape, any `S₀`; no density or closed range.
-Thesis: Prop 4.16, Prop 4.17, Prop 4.19, Cor 4.5 -/
+[QuennevilleBelair2015], Prop 4.16, Prop 4.17, Prop 4.19, Cor 4.5 -/
 theorem propagates (h : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → PiLp 2 W}
     (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : U a ∈ totalSub S)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub S) : ∀ t ∈ Icc a b, U t ∈ totalSub S :=
@@ -403,7 +405,7 @@ theorem propagates_orthogonal (h : H.ReducingSubcomplex S) {a b : ℝ} {F U : �
 /-- **Constraint propagation with existence and uniqueness**: for `U₀ ∈ D(L) ∩ ∏ S i` and
 admissible forcing valued in `∏ S i`, `U' = L U + F`, `U a = U₀` has a classical solution on
 `[a, b]`, unique among strong solutions, and it stays in `∏ S i`.
-Thesis: Prop 4.16, Prop 4.17, Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.16, Prop 4.17, Prop 4.19 -/
 theorem existsUnique_mem (h : H.ReducingSubcomplex S) {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain)
     (hU₀S : U₀ ∈ totalSub S) {F : ℝ → PiLp 2 W} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible H.wave a b F) (hFS : ∀ t ∈ Icc a b, F t ∈ totalSub S) :
@@ -432,7 +434,7 @@ theorem isIsometric_waveGroup : H.waveGroup.IsIsometric := H.isSkewAdjoint_wave.
 
 /-- **Reducing subspaces of the wave operator are the invariant subspaces of the wave group**:
 a closed `K ⊆ PiLp 2 W` reduces `L` iff `e^{tL} K ⊆ K` for every `t ∈ ℝ`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem isReducing_iff_waveGroup_invariant (K : Submodule 𝕜 (PiLp 2 W))
     [K.HasOrthogonalProjection] :
     H.wave.IsReducing K ↔ ∀ t, K.map (H.waveGroup.S t : PiLp 2 W →ₗ[𝕜] PiLp 2 W) ≤ K := by
@@ -571,7 +573,7 @@ theorem isReducing_iff_forall_nonneg {p : ι → Bool} (hp : ∀ i j, c.Rel i j 
 and sufficiency, general `S₀`): for a graded complex, a closed `R`-invariant `K` with
 `D(L) ∩ K` dense in `K` reduces `L` iff every strong solution of `U' = L U` on `[0, T]` with
 `U 0 ∈ K` stays in `K`. By `LinearPMap.IsSkewAdjoint.isReducing_iff`, reducing means
-`P_K D(L) ⊆ D(L)` and `L (D(L) ∩ K) ⊆ K`. Thesis: Prop 4.17 -/
+`P_K D(L) ⊆ D(L)` and `L (D(L) ∩ K) ⊆ K`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem isReducing_iff_forall_isStrongSolution {p : ι → Bool}
     (hp : ∀ i j, c.Rel i j → p j ≠ p i) (K : Submodule 𝕜 (PiLp 2 W)) [K.HasOrthogonalProjection]
     (hRK : ∀ x ∈ K, reversal 𝕜 p x ∈ K)
@@ -621,7 +623,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂) (Y : Submodule 𝕜 W₂) [Y.HasOrthogonalProjection]
 
 /-- The constraint family `{0} × N(d₀†) × Y` of Thesis Prop 4.16 ("`σ = 0`, `div u = 0`,
-`ρ ∈ Y`"). Thesis: Prop 4.16 -/
+`ρ ∈ Y`"). [QuennevilleBelair2015], Prop 4.16 -/
 def divFreeSub : ∀ i : Fin 3, Submodule 𝕜 (W3 W₀ W₁ W₂ i)
   | 0 => (⊥ : Submodule 𝕜 W₀)
   | 1 => ((S.d₀†).ker : Submodule 𝕜 W₁)
@@ -637,7 +639,7 @@ instance instHasOrthogonalProjectionDivFreeSub :
 /-- **`{0} × N(d₀†) × Y` is a reducing subcomplex** of every short complex, for every closed
 `Y ⊇ R(d₁)`: `(⊥, N(d₀†))` reduces `d₀` because `R(d₀) ⊥ N(d₀†)`, and `(N(d₀†), Y)` reduces
 `d₁` because `N(d₀†)ᗮ ⊆ N(d₁)` and `R(d₁) ⊆ Y`. No closed range, density or exactness.
-Thesis: Prop 4.16 -/
+[QuennevilleBelair2015], Prop 4.16 -/
 theorem reducingSubcomplex_divFreeSub (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) :
     S.toHilbertComplex.ReducingSubcomplex (S.divFreeSub Y) := by
   have := hasOrthogonalProjection_ker S.d₀† (adjoint_isClosed S.dense₀)
@@ -671,7 +673,7 @@ instance instIsScalarTowerRealW3 : ∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W
 /-- **Thesis Prop 4.16** (both boundary conditions, no density conjectures): strong solutions of
 the Hodge wave equation `x' = L x + F` of a short complex with data and forcing in
 `{0} × N(d₀†) × Y`, `Y ⊇ R(d₁)` closed, stay there: `x₀ ≡ 0`, `x₁` stays divergence-free and
-`x₂` stays in `Y`. Thesis: Prop 4.16 -/
+`x₂` stays in `Y`. [QuennevilleBelair2015], Prop 4.16 -/
 theorem divFree_propagates (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {a b : ℝ}
     {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} (hU : Evolution.IsStrongSolution S.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub (S.divFreeSub Y))
@@ -679,7 +681,7 @@ theorem divFree_propagates (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {a b : �
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub (S.divFreeSub Y) :=
   (S.reducingSubcomplex_divFreeSub Y hY).propagates hU h0 hF
 
-/-- Prop 4.16 for the sign convention `ξ' = -L ξ` of Thesis (4.4). Thesis: Prop 4.16 -/
+/-- Prop 4.16 for the sign convention `ξ' = -L ξ` of Thesis (4.4). [QuennevilleBelair2015], Prop 4.16 -/
 theorem divFree_propagates_neg (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {a b : ℝ}
     {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} (hU : Evolution.IsStrongSolution (-S.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub (S.divFreeSub Y))

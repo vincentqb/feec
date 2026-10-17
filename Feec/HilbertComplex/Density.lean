@@ -19,7 +19,8 @@ What fails is the inference drawn from it in the thesis: that `H̊(curl) ∩ L²
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (proof of Prop 4.17)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (proof of Prop 4.17)
 -/
 
 open scoped InnerProductSpace
@@ -47,7 +48,7 @@ theorem starProjection_ker_adjoint_mem_domain (i j k : ι) {u : W j}
   exact (H.d j k).domain.sub_mem hu h2
 
 /-- **The literal density hypothesis holds in every Hilbert complex**: `D(d j k) ∩ N((d i j)†)`
-is dense in `N((d i j)†)`. Thesis: Prop 4.17 -/
+is dense in `N((d i j)†)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem mem_closure_domain_inter_ker_adjoint (i j k : ι) {v : W j} (hv : v ∈ ((H.d i j)†).ker) :
     v ∈ closure (((H.d j k).domain : Set (W j)) ∩ ((H.d i j)†).ker) := by
   have := hasOrthogonalProjection_ker _ (adjoint_isClosed (H.dense i j))
@@ -78,7 +79,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
 
 /-- **The literal density hypothesis of Prop 4.17** for a short complex: `D(d₁) ∩ N(d₀†)` is
-dense in `N(d₀†)`. Thesis: Prop 4.17 -/
+dense in `N(d₀†)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem mem_closure_domain_inter_ker_adjoint {v : W₁} (hv : v ∈ (S.d₀†).ker) :
     v ∈ closure ((S.d₁.domain : Set W₁) ∩ (S.d₀†).ker) :=
   S.toHilbertComplex.mem_closure_domain_inter_ker_adjoint 0 1 2 hv

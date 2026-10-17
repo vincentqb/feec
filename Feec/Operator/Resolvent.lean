@@ -30,8 +30,10 @@ resolvent off the imaginary axis.
 
 ## References
 
-* [Kato1995] (resolvents and the resolvent identity for closed operators)
-* [Pazy1983], §1.10 (resolvents of skew-adjoint generators)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995] (resolvents and the resolvent
+  identity for closed operators)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10 (resolvents of skew-adjoint generators)
 -/
 
 open LinearPMap Filter Topology

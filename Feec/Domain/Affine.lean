@@ -27,8 +27,10 @@ cube).
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (the cube complexes under dilations and translations)
-* [Brezis2011], §9.2 (change of variables in Sobolev spaces)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (the cube complexes under dilations and translations)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (change of variables in Sobolev spaces)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

@@ -25,8 +25,9 @@ with coordinate derivatives `partialDeriv`. The jet identities of
 
 ## References
 
-* [QuennevilleBelair2015], §2.7 (Thm 2.3, (2.5), (2.10)–(2.11)), §2.8 (Prop 2.4)
-* [Wald1984], §4.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.7 (Thm 2.3, (2.5), (2.10)–(2.11)), §2.8 (Prop 2.4)
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4
 -/
 
 open Finset Matrix
@@ -46,7 +47,7 @@ def jet2 (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : Jet2 ι ℝ 
 
 variable (g gi : Matrix ι ι ℝ)
 
-/-- The linearized Einstein tensor `H(h)(x)` (Thm 2.3) of a `C²` field. Thesis: Thm 2.3 -/
+/-- The linearized Einstein tensor `H(h)(x)` (Thm 2.3) of a `C²` field. [QuennevilleBelair2015], Thm 2.3 -/
 def Hfun (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) (b d : ι) : ℝ := Hjet g gi (jet2 h x) b d
 
 /-- d'Alembertian `□u = gi^{ij} ∂_i ∂_j u`. -/
@@ -58,7 +59,7 @@ def divF (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) (b : ι) : ℝ
 
 variable {g gi}
 
-/-- Schwarz: the 2-jet of a `C²` symmetric field satisfies `IsSymJet2`. Thesis: §2.7 -/
+/-- Schwarz: the 2-jet of a `C²` symmetric field satisfies `IsSymJet2`. [QuennevilleBelair2015], §2.7 -/
 theorem jet2_isSymJet2 {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ) : IsSymJet2 (jet2 h x) where
   deriv_symm i j a b := partialDeriv_comm (hC a b) i j x
@@ -109,7 +110,7 @@ theorem jet2_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDi
     (fun a' b' => by simpa using (hC a' b').differentiable_partialDeriv le_rfl j x) i a b
 
 /-- **Thm 2.3** for a genuine `C²` symmetric field, any constant metric, any dimension: both
-forms of `H` agree, with the genuine 2-jet of `h̄`. Thesis: Thm 2.3 -/
+forms of `H` agree, with the genuine 2-jet of `h̄`. [QuennevilleBelair2015], Thm 2.3 -/
 theorem Hfun_eq_bar (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ)
     (b d : ι) :
@@ -127,7 +128,7 @@ theorem contDiff_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} {k : WithTop ℕ�
 
 /-- **Prop 2.4(b), corrected**, for a genuine `C²` symmetric field (any constant metric, any
 dimension): if `h̄ = trRev h` is in Lorentz gauge everywhere, then `H(h) = -½ □h̄`.
-(The thesis states `H = -□h̄`.) Thesis: Prop 2.4 (corrected) -/
+(The thesis states `H = -□h̄`.) [QuennevilleBelair2015], Prop 2.4 (corrected) -/
 theorem Hfun_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a)
     (hL : ∀ y b, divF gi (fun z => Metric.trRev g gi (h z)) y b = 0) (x : ι → ℝ) (b d : ι) :
@@ -156,7 +157,7 @@ theorem Hfun_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → M
   rfl
 
 /-- **(2.11)** for genuine fields: in Lorentz gauge, `H(h) = c T ⟺ □h̄ = -2 c T` (the thesis
-has `c = 8π`). Thesis: (2.11) -/
+has `c = 8π`). [QuennevilleBelair2015], (2.11) -/
 theorem Hfun_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a)
     (hL : ∀ y b, divF gi (fun z => Metric.trRev g gi (h z)) y b = 0) (c : ℝ)
@@ -169,7 +170,7 @@ theorem Hfun_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ
 /-! ### Gauge invariance for fields -/
 
 /-- **Gauge invariance** for genuine fields: `H(h + 2∂_(a ξ_b)) = H(h)` for `h ∈ C²`,
-`ξ ∈ C³`, any constant metric, any dimension. Thesis: §2.7 -/
+`ξ ∈ C³`, any constant metric, any dimension. [QuennevilleBelair2015], §2.7 -/
 theorem Hfun_gauge (hgi : gi.IsSymm) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) {ξ : ι → (ι → ℝ) → ℝ}
     (hξ : ∀ a, ContDiff ℝ 3 (ξ a)) (x : ι → ℝ) (b d : ι) :
@@ -220,7 +221,7 @@ def evalJet (i j a b : ι) : (ι → ι → ι → ι → ℝ) →L[ℝ] ℝ :=
       map_smul' := fun _ _ => rfl }
 
 /-- **Linearized Bianchi identity** for genuine fields: `∂^b H_bd(h) = 0` for every `C³`
-symmetric `h`, any constant metric, any dimension. Not stated in the thesis. Thesis: §2.7 -/
+symmetric `h`, any constant metric, any dimension. Not stated in the thesis. [QuennevilleBelair2015], §2.7 -/
 theorem Hfun_bianchi (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1)
     {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDiff ℝ 3 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ) (d : ι) :
@@ -314,7 +315,7 @@ theorem divF_gaugeTR (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) {ξ :
 `WaveSolvable`, every smooth `h̄` is gauge-equivalent to one in Lorentz gauge: there is a
 smooth `ξ` with `∂^a (h̄ - (2∂_(a ξ_b) - g_ab ∂·ξ))_ab = 0`. By (2.5) the new `h̄` is the trace
 reversal of `h - 2∂_(a ξ_b)`. The thesis uses the solver without citation, and produces only the
-infinitesimal gauge vector `ξ` (not a diffeomorphism). Thesis: Prop 2.4 -/
+infinitesimal gauge vector `ξ` (not a diffeomorphism). [QuennevilleBelair2015], Prop 2.4 -/
 theorem exists_lorentz_gauge (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1)
     (hW : WaveSolvable gi) {hb : (ι → ℝ) → Matrix ι ι ℝ}
     (hsm : ∀ a b, ContDiff ℝ ∞ fun y => hb y a b) :

@@ -30,8 +30,10 @@ they are two-sided.
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (Thm 4.3), §4.4 (strong solutions, uniqueness by energy)
-* [Pazy1983], §4.1 (classical and strong solutions of the inhomogeneous problem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.3), §4.4 (strong solutions, uniqueness by energy)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §4.1 (classical and strong solutions of the inhomogeneous problem)
 -/
 
 open Set Filter Topology
@@ -198,7 +200,7 @@ namespace IsStrongSolution
 /-- **Stability for a dissipative generator**: two strong solutions of `U' = A U + F` on
 `[a,b]` with the same forcing satisfy `‖U t - V t‖ ≤ ‖U a - V a‖`. Energy method; no density,
 closedness, skew-adjointness or semigroup is needed.
-Thesis: Thm 4.3 (uniqueness half). Cf. [Pazy1983], §1.4. -/
+[QuennevilleBelair2015], Thm 4.3 (uniqueness half). Cf. [Pazy1983], §1.4. -/
 theorem norm_sub_le (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A (Icc a b) F U)
     (hV : IsStrongSolution A (Icc a b) F V) : ∀ t ∈ Icc a b, ‖U t - V t‖ ≤ ‖U a - V a‖ := by
   have hW := hU.sub hV
@@ -216,7 +218,7 @@ theorem norm_sub_le (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A 
 
 /-- **Uniqueness for a dissipative generator**: strong solutions of `U' = A U + F` on `[a,b]`
 with the same value at `a` agree on `[a,b]`. Every other uniqueness statement of the library is
-a corollary. Thesis: Thm 4.3, Thm 4.6 (uniqueness). -/
+a corollary. [QuennevilleBelair2015], Thm 4.3, Thm 4.6 (uniqueness). -/
 theorem unique (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A (Icc a b) F U)
     (hV : IsStrongSolution A (Icc a b) F V) (h0 : U a = V a) : EqOn U V (Icc a b) := fun t ht => by
   have := hU.norm_sub_le hA hV t ht

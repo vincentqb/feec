@@ -28,8 +28,11 @@ Applied to the wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, `
 
 ## References
 
-* [AFW2010], §3.2 (the abstract Hodge Laplacian); [Arnold2018], Ch. 4
-* [BruningLesch1992] (the Laplacian `D²` of a Hilbert complex)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.2 (the abstract Hodge Laplacian)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (the Laplacian `D²` of a Hilbert
+  complex)
 -/
 
 open scoped InnerProductSpace

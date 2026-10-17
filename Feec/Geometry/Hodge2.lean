@@ -20,8 +20,9 @@ public import Feec.Geometry.Bivector
 
 ## References
 
-* [QuennevilleBelair2015], §3.1–3.2 (Prop 3.2)
-* [Wald1984]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.1–3.2 (Prop 3.2)
+* [R. M. Wald, *General Relativity*][Wald1984]
 -/
 
 @[expose] public section

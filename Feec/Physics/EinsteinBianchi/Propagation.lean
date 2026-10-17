@@ -19,7 +19,8 @@ data are satisfiable by nonzero fields.
 
 ## References
 
-* [QuennevilleBelair2015], Prop 3.6 (the thesis' route via Cor 4.5 is replaced)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Prop 3.6 (the thesis' route via Cor 4.5 is replaced)
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm

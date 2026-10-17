@@ -29,8 +29,10 @@ hypotheses (`Feec.EinsteinBianchi.propagation_hyps_nonvacuous`).
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (Thm 4.3, Cor 4.5), §4.4 (Thms 4.6, 4.7)
-* [Pazy1983], Ch. 1 (uniformly continuous groups)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.3, Cor 4.5), §4.4 (Thms 4.6, 4.7)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  Ch. 1 (uniformly continuous groups)
 -/
 
 open scoped InnerProductSpace LinearPMap
@@ -68,7 +70,7 @@ variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 /-- **The standing hypotheses of Thm 4.3 are satisfiable**: for every bounded `B` with
 `⟪B x, y⟫ = -⟪x, B y⟫`, the operator `B` (domain `E`) is densely defined and skew-adjoint, and
 for every `U₀ ∈ E` and every continuous forcing `F` the problem `U' = B U + F`, `U a = U₀` has a
-classical solution on `[a, b]`, unique among strong solutions. Thesis: Thm 4.3 -/
+classical solution on `[a, b]`, unique among strong solutions. [QuennevilleBelair2015], Thm 4.3 -/
 theorem bounded_standing_hypotheses (B : E →L[𝕜] E) (hB : ∀ x y, ⟪B x, y⟫_𝕜 = -⟪x, B y⟫_𝕜) :
     Dense (((B : E →ₗ[𝕜] E).toPMap ⊤).domain : Set E) ∧
       ((B : E →ₗ[𝕜] E).toPMap ⊤).IsSkewAdjoint ∧
@@ -83,7 +85,7 @@ theorem bounded_standing_hypotheses (B : E →L[𝕜] E) (hB : ∀ x y, ⟪B x, 
 /-- **The hypotheses of Cor 4.5 are satisfiable**: for a bounded skew `A` and a bounded `B`
 commuting with `A`, the constraint space `K = ker B` reduces `A`, so for `U₀ ∈ K` and continuous
 `K`-valued forcing the classical solution of `U' = A U + F` stays in `K`. `K` is nontrivial
-whenever `B` is neither `0` nor injective. Thesis: Cor 4.5 -/
+whenever `B` is neither `0` nor injective. [QuennevilleBelair2015], Cor 4.5 -/
 theorem ker_standing_hypotheses (A B : E →L[𝕜] E) (hA : ∀ x y, ⟪A x, y⟫_𝕜 = -⟪x, A y⟫_𝕜)
     (hAB : A.comp B = B.comp A) :
     ∃ _ : (LinearMap.ker (B : E →ₗ[𝕜] E)).HasOrthogonalProjection,
@@ -136,7 +138,7 @@ theorem rotGen_ne_zero : rotGen 𝕜 ≠ 0 := by
   simp [rotGen_apply] at this
 
 /-- **A concrete nonzero witness** for the standing hypotheses of Thm 4.3: the rotation
-generator `J ≠ 0` on `𝕜²`. Thesis: Thm 4.3 -/
+generator `J ≠ 0` on `𝕜²`. [QuennevilleBelair2015], Thm 4.3 -/
 theorem rotGen_standing_hypotheses :
     rotGen 𝕜 ≠ 0 ∧ ((rotGen 𝕜 : EuclideanSpace 𝕜 (Fin 2) →ₗ[𝕜] _).toPMap ⊤).IsSkewAdjoint ∧
       ∀ (U₀ : EuclideanSpace 𝕜 (Fin 2)) (a b : ℝ) (F : ℝ → EuclideanSpace 𝕜 (Fin 2)),
@@ -172,7 +174,7 @@ theorem idDatum_mem : (idDatum : PiLp 2 (ShortHilbertComplex.W3 𝕜 𝕜 PUnit)
 
 /-- **The hypotheses of Thms 4.6/4.7 hold with a nonzero Hodge wave operator**: for
 `𝕜 --id--> 𝕜 → 0`, `L (1, 0, 0) ≠ 0`, and for every datum in `D(L)` the Hodge wave equation has a
-classical solution, unique among strong and weak solutions. Thesis: Thm 4.6, Thm 4.7 -/
+classical solution, unique among strong and weak solutions. [QuennevilleBelair2015], Thm 4.6, Thm 4.7 -/
 theorem idComplex_nonvacuous :
     (∃ x : (idComplex 𝕜).wave.domain, (idComplex 𝕜).wave x ≠ 0) ∧
       ∀ U₀ ∈ (idComplex 𝕜).wave.domain, ∀ a b : ℝ,

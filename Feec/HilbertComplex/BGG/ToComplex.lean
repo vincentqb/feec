@@ -37,9 +37,15 @@ symmetries (5.1), `Γ̄ ⊃ Γ --(0 d̃)--> W̃¹ ⊃ Ṽ¹ --(S₁, d̃)--> W²
 
 ## References
 
-* [QuennevilleBelair2015], §5.1 (Prop 5.1, (5.1))
-* [ArnoldHu2021] (the BGG construction); [AFW2007] (weakly imposed symmetry)
-* [BruningLesch1992], [AFW2010], [Arnold2018] (closed Hilbert complexes)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.1 (Prop 5.1, (5.1))
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the BGG construction)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+  (weakly imposed symmetry)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (closed Hilbert complexes)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (closed Hilbert complexes)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (closed Hilbert complexes)
 -/
 
 open scoped InnerProductSpace
@@ -68,7 +74,7 @@ exactness of the bottom complex at `Ṽ¹`, closed ranges of `d¹`, `d̃¹` and 
 Thesis gap: the thesis' proof goes through a Hodge decomposition of `Ṽ¹`; here only the open
 mapping theorem on `R(d̃¹)` is used (typos `Z̃ = N(d⁰)` and "`W¹`" for `W²` corrected).
 
-Thesis: Prop 5.1 (proof)
+[QuennevilleBelair2015], Prop 5.1 (proof)
 
 See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem isClosed_range_prod {V1 W2 Vt0 Vt1 Wt2 : Type*}
@@ -590,7 +596,7 @@ theorem exact_D0op_D1op (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 
 /-- **The complex with weak symmetries (5.1) is a closed, exact Hilbert complex**:
 `Γ̄ ⊃ Γ --(0 d)--> W̃¹ ⊃ Ṽ¹ --(S, d)--> W² × W̃²` (thesis Prop 5.1).
-Thesis: Prop 5.1 (corrected)
+[QuennevilleBelair2015], Prop 5.1 (corrected)
 
 The complex
 `Γ̄ ⊃ Γ --(0 d)--> W̃¹ ⊃ Ṽ¹ --(S, d)--> W² × W̃²`, is a closed Hilbert complex: both operators are
@@ -783,7 +789,7 @@ lemma range_D1L : (LinearMap.range D.D1L.toFun : Set (WithLp 2 (W2 × Wt2))) =
   · rintro ⟨_, ⟨v, rfl⟩, rfl⟩; exact ⟨_, ⟨v, rfl⟩, rfl⟩
 
 /-- **(5.1) on `Γ̄` is a short Hilbert complex**: `Γ̄ --(0 d̃)--> W̃¹ --(S₁, d̃¹)--> W² × W̃²`,
-both operators closed and densely defined, `(S₁, d̃¹)(0 d̃) = 0`. Thesis: Prop 5.1
+both operators closed and densely defined, `(S₁, d̃¹)(0 d̃) = 0`. [QuennevilleBelair2015], Prop 5.1
 
 See [QuennevilleBelair2015], Prop 5.1. -/
 def toShort (h : D.Hyps) (hS0 : Function.Injective D.S0) :
@@ -799,7 +805,7 @@ def toShort (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 
 /-- **(5.1) has closed ranges and is exact**, as a short Hilbert complex on `Γ̄`:
 `R(0 d̃)` and `R(S₁, d̃¹)` are closed, `N(S₁, d̃¹) = R(0 d̃)` and `N(0 d̃) = 0`.
-Thesis: Prop 5.1 (corrected)
+[QuennevilleBelair2015], Prop 5.1 (corrected)
 
 See [QuennevilleBelair2015], Prop 5.1. -/
 theorem toShort_closedRange_exact (h : D.Hyps) (hS0 : Function.Injective D.S0) :
@@ -925,33 +931,33 @@ variable {W0 W1 Wt0 Wt1 W2 Wt2 V0 V1 Vt0 Vt1 : Type u}
 namespace Hilb
 
 /-- **The BGG complex (5.1) as a Hilbert complex** on `ComplexShape.fin3`:
-`Γ̄ → W̃¹ → W² × W̃²`. Thesis: Prop 5.1
+`Γ̄ → W̃¹ → W² × W̃²`. [QuennevilleBelair2015], Prop 5.1
 
 See [QuennevilleBelair2015], Prop 5.1, (5.1); cf. [ArnoldHu2021]. -/
 def toHilbertComplex : HilbertComplex 𝕜 ComplexShape.fin3
     (ShortHilbertComplex.W3 D.Γbar Wt1 (WithLp 2 (W2 × Wt2))) :=
   (D.toShort h hS0).toHilbertComplex
 
-/-- (5.1) has closed range at `W̃¹`. Thesis: Prop 5.1 -/
+/-- (5.1) has closed range at `W̃¹`. [QuennevilleBelair2015], Prop 5.1 -/
 theorem toHilbertComplex_closedRangeAt_one : (D.toHilbertComplex h hS0).ClosedRangeAt 1 := by
   rw [HilbertComplex.ClosedRangeAt,
     HilbertComplex.boundaries_eq _ (show ComplexShape.fin3.Rel 0 1 from rfl)]
   exact (D.toShort_closedRange_exact h hS0).1
 
-/-- (5.1) has closed range at `W² × W̃²`. Thesis: Prop 5.1 -/
+/-- (5.1) has closed range at `W² × W̃²`. [QuennevilleBelair2015], Prop 5.1 -/
 theorem toHilbertComplex_closedRangeAt_two : (D.toHilbertComplex h hS0).ClosedRangeAt 2 := by
   rw [HilbertComplex.ClosedRangeAt,
     HilbertComplex.boundaries_eq _ (show ComplexShape.fin3.Rel 1 2 from rfl)]
   exact (D.toShort_closedRange_exact h hS0).2.1
 
-/-- (5.1) is exact at `W̃¹`: cycles are boundaries. Thesis: Prop 5.1 (exactness, added) -/
+/-- (5.1) is exact at `W̃¹`: cycles are boundaries. [QuennevilleBelair2015], Prop 5.1 (exactness, added) -/
 theorem toHilbertComplex_cycles_one :
     (D.toHilbertComplex h hS0).cycles 1 = (D.toHilbertComplex h hS0).boundaries 1 := by
   rw [HilbertComplex.cycles_eq _ (show ComplexShape.fin3.Rel 1 2 from rfl),
     HilbertComplex.boundaries_eq _ (show ComplexShape.fin3.Rel 0 1 from rfl)]
   exact (D.toShort_closedRange_exact h hS0).2.2.1
 
-/-- (5.1) is exact at `Γ̄`. Thesis: Prop 5.1 (exactness, added) -/
+/-- (5.1) is exact at `Γ̄`. [QuennevilleBelair2015], Prop 5.1 (exactness, added) -/
 theorem toHilbertComplex_cycles_zero : (D.toHilbertComplex h hS0).cycles 0 = ⊥ := by
   rw [HilbertComplex.cycles_eq _ (show ComplexShape.fin3.Rel 0 1 from rfl)]
   exact (D.toShort_closedRange_exact h hS0).2.2.2

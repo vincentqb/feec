@@ -16,7 +16,7 @@ value and forcing in `K` stays in `K`. For a dissipative generator this holds as
   `d/dt ‖V‖² = 2 re ⟪A V, V⟫ ≤ 0`. No density, closedness, skew-adjointness or semigroup is
   needed.
 * `IsStrongSolution.mem_of_isReducing`: the same for a reducing subspace `K`
-  (`LinearPMap.IsReducing`). Thesis: Thm 4.4, Cor 4.5 (generalized from skew-adjoint to
+  (`LinearPMap.IsReducing`). [QuennevilleBelair2015], Thm 4.4, Cor 4.5 (generalized from skew-adjoint to
   dissipative `A`, with no density hypothesis).
 * `IsStrongSolution.mem_of_isReducing_of_ordConnected`: the same forward in time on any interval.
 * `IsStrongSolution.mem_orthogonal_of_isReducing`: for skew-symmetric `A` the orthogonal
@@ -24,7 +24,8 @@ value and forcing in `K` stays in `K`. For a dissipative generator this holds as
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (Thm 4.4, Cor 4.5)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.4, Cor 4.5)
 -/
 
 open Set Filter
@@ -88,7 +89,7 @@ theorem mem_of_invariant (hA : A.IsDissipative) {K : Submodule 𝕜 E} [K.HasOrt
 
 /-- **Constraint propagation through a reducing subspace**: if `K` reduces the dissipative
 generator `A`, every strong solution of `U' = A U + F` on `[a,b]` with `U a ∈ K` and `K`-valued
-forcing stays in `K`. Thesis: Thm 4.4 and Cor 4.5 (generalized from skew-adjoint to dissipative
+forcing stays in `K`. [QuennevilleBelair2015], Thm 4.4 and Cor 4.5 (generalized from skew-adjoint to dissipative
 `A`, with no density hypothesis). -/
 theorem mem_of_isReducing (hA : A.IsDissipative) {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (hK : A.IsReducing K) (hU : IsStrongSolution A (Icc a b) F U) (h0 : U a ∈ K)

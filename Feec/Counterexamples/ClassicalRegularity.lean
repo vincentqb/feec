@@ -30,8 +30,10 @@ the graph space `Γ(𝐝)` of the total differential, i.e. `ξ ∈ C¹([0,T]; V)
 
 ## References
 
-* [QuennevilleBelair2015], §4.4 (Thm 4.6), §4.6 (Thm 4.14 and the remark after it)
-* [Pazy1983], §1.2 (regularity of orbits)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.4 (Thm 4.6), §4.6 (Thm 4.14 and the remark after it)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.2 (regularity of orbits)
 -/
 
 open scoped InnerProductSpace LinearPMap
@@ -135,7 +137,7 @@ theorem wave_datum_not_mem :
 `ℓ² --A⁻¹--> ℓ² → 0`, for every `T > 0` and every strong solution `U` of `U' = L U` on `[0, T]`
 with `U(0) = U₀`, no lift `ξ` of `U` to `Γ(𝐝)` is right-differentiable at `0`. Hence the
 regularity hypothesis of the semi-discrete error estimate fails for this datum.
-Thesis: Thm 4.14 (refuted for `D(L)` data) -/
+[QuennevilleBelair2015], Thm 4.14 (refuted for `D(L)` data) -/
 theorem not_C1_graphSpace {T : ℝ} (hT : 0 < T) {U : ℝ → PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)}
     (hU0 : U 0 = datum 𝕜) (hU : Evolution.IsStrongSolution (invShort 𝕜).wave (Icc 0 T) 0 U) :
     ¬ ∃ (ξ : ℝ → (invComplex 𝕜).totalD.GraphSpace) (ξ' : (invComplex 𝕜).totalD.GraphSpace),
@@ -157,7 +159,7 @@ theorem datum_not_mem_domain_sq :
 /-- **Thm 4.14's regularity hypothesis fails for some `D(L)` data** (headline): on
 `ℓ² --A⁻¹--> ℓ² → 0` there is `U₀ ∈ D(L) \ D(L²)` whose Hodge wave equation has a classical
 solution on every `[0, T]` (Thm 4.6), while no strong solution from `U₀` on `[0, T]`, `T > 0`,
-lifts to a map into `Γ(𝐝)` that is right-differentiable at `0`. Thesis: Thm 4.14 (refuted for
+lifts to a map into `Γ(𝐝)` that is right-differentiable at `0`. [QuennevilleBelair2015], Thm 4.14 (refuted for
 `D(L)` data) -/
 theorem exists_datum_not_C1 :
     ∃ (U₀ : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) (h : U₀ ∈ (invShort 𝕜).wave.domain),

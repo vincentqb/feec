@@ -46,8 +46,9 @@ Propagation holds instead on `ℝ³`, on the torus and on cubes with mirror boun
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
-* [Arnold2018], §6.2
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
 -/
 
 @[expose] public noncomputable section
@@ -159,7 +160,7 @@ theorem constField_diagA_ne_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   linarith
 
 /-- **The density claimed in the proof of Prop 4.17 fails on every nonempty bounded open `Ω`:**
-`H̊(curl) ∩ L²(TSD)` is not dense in `L²(TSD)`; the obstruction is nonzero. Thesis: Prop 4.17 -/
+`H̊(curl) ∩ L²(TSD)` is not dense in `L²(TSD)`; the obstruction is nonzero. [QuennevilleBelair2015], Prop 4.17 -/
 theorem obstruction_ne_bot (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     obstruction ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain (tsd Ω) ≠ ⊥ := by
   intro h
@@ -187,7 +188,7 @@ theorem exists_isTest_integral_pos (hΩ : IsOpen Ω) (hne : Ω.Nonempty) :
 
 /-- **The projection hypothesis of Prop 4.17 fails** on every nonempty bounded open `Ω`: for
 `E = g · diag(1, -1, 0) ∈ C_c^∞(Ω; ℝ³ˣ³)` (any bump `g ≥ 0`, `g ≠ 0`),
-`P_{L²(TSD)} E ∉ H̊(curl)`. Thesis: Prop 4.17 -/
+`P_{L²(TSD)} E ∉ H̊(curl)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem exists_projTSD_not_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : ∃ (Φ : Ix → R3 → ℝ) (hΦ : IsTestField Ω Φ),
       (tsd Ω).starProjection (testField hΦ) ∉
@@ -220,7 +221,7 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 /-- **`K = {0} × L²(TSD) × S₂` does not reduce the wave operator** (the projection hypothesis
 `P_K D(L) ⊆ D(L)` of Prop 4.17 fails) for every short complex with `D(d₁) ⊆ H̊(curl)` containing
-the test fields in `D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. Thesis: Prop 4.17 -/
+the test fields in `D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
@@ -250,7 +251,7 @@ theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
 /-- **`D(L) ∩ K` is not dense in `K`** for `K = {0} × L²(TSD) × S₂` and every short complex with
 `D(d₁) ⊆ H̊(curl)`: the datum `(0, diag(1, -1, 0), 0) ∈ K` is orthogonal to the middle
 components of `D(L) ∩ K`, so it is not in the closure (the density hypothesis of Prop 4.17
-fails). Thesis: Prop 4.17 -/
+fails). [QuennevilleBelair2015], Prop 4.17 -/
 theorem not_mem_closure_wave_domain_inter (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
     [CompleteSpace W₀] [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
@@ -379,7 +380,7 @@ bounded open `Ω ⊆ ℝ³`): for every short complex `W₀ → L²(Ω; ℝ³ˣ�
 `U' = L U` on `[0, T]` from it leaves `K`. Proof: the `Ė(0)` obstruction
 (`ShortHilbertComplex.not_propagates_of_inner_ne_zero`) with `G = diag(1, -1, 0)`, orthogonal
 to `L²(TSD) ∩ H̊(curl)` by the zero-mean theorem, and `⟪G, d₁† β⟫ = -2 |Ω| ≠ 0`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
@@ -468,7 +469,7 @@ theorem curl_betaL2_not_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
 `d₁ ⊆ curl_min`, every `E₀` and every `T > 0`, every strong solution of `U' = L U` on `[0, T]` from
 `(0, E₀, β)` has its electric field outside `L²(TSD)` at some `t ∈ [0, T]`, because
 `d₁† β = curl β ∉ L²(TSD₀)` (`Feec.Models.BoundedDomain.adjoint_mem_tsd₀_of_propagates`).
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem betaL2_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
@@ -493,7 +494,7 @@ theorem betaL2_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h
 /-- **TSD data do not propagate, with existence**: for every short complex with
 `d₁ ⊆ curl_min` the TSD datum `(0, 0, β) ∈ D(L) ∩ K` has, on every `[0, T]`, `T > 0`, a strong
 solution (the wave group orbit, Stone's theorem), and every strong solution from it leaves
-`K = {0} × L²(TSD) × L²(TSD)`. Thesis: Prop 4.17 -/
+`K = {0} × L²(TSD) × L²(TSD)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem exists_isStrongSolution_tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
     [CompleteSpace W₀] (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
@@ -644,7 +645,7 @@ theorem norm_sq_curlSymFld (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : 
 /-- **The magnetic projection hypothesis of Prop 4.17 fails** on every nonempty bounded open `Ω`,
 for every short complex with `d₁ ⊆ curl_min`: `P_{L²(TSD)}` does not map `D(d₁†)` into itself.
 Otherwise `E ↦ d₁† P E` would be bounded on the graph of `d₁†` (closed graph theorem), but the
-curl-free `E_t` have `P E_t = B_t`, `‖d₁† B_t‖ = (t/√2) ‖E_t‖`. Thesis: Prop 4.17 -/
+curl-free `E_t` have `P E_t = B_t`, `‖d₁† B_t‖ = (t/√2) ‖E_t‖`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem not_starProjection_mem_adjoint_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) {W₀ : Type*} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀]
     [CompleteSpace W₀] (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
@@ -713,7 +714,7 @@ theorem not_starProjection_mem_adjoint_domain (hΩ : IsOpen Ω) (hb : Bornology.
   nlinarith
 
 /-- **`P_{L²(TSD)} H(curl) ⊄ H(curl)`** on every nonempty bounded open `Ω ⊆ ℝ³`, with
-`H(curl) = D(curl_max)` (no boundary condition). Thesis: Prop 4.17 -/
+`H(curl) = D(curl_max)` (no boundary condition). [QuennevilleBelair2015], Prop 4.17 -/
 theorem not_starProjection_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     ¬ ∀ B ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain,
@@ -726,7 +727,7 @@ theorem not_starProjection_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.Is
 /-- **Both parts of the magnetic projection hypothesis fail**, for every short complex with
 `d₁ ⊆ curl_min` and every closed `S₁`: `P_{L²(TSD)} D(d₁†) ⊄ D(d₁†)`, and
 `P_K D(L) ⊄ D(L)` for `K = {0} × S₁ × L²(TSD)`. Independent of the electric failure
-(`exists_projTSD_not_mem_domain`). Thesis: Prop 4.17 -/
+(`exists_projTSD_not_mem_domain`). [QuennevilleBelair2015], Prop 4.17 -/
 theorem not_projection_magnetic (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
@@ -744,7 +745,7 @@ theorem not_projection_magnetic (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) 
 
 /-- **`P_{L²(TSD)}` is unbounded for the `H(curl)` graph norm**, explicitly: for every `C` there is
 `t` with `E_t` smooth and curl-free in `H(curl)`, `P E_t = B_t ∈ H(curl)`, and
-`‖curl B_t‖ > C ‖E_t‖ = C ‖E_t‖_{H(curl)}`. Thesis: Prop 4.17 -/
+`‖curl B_t‖ > C ‖E_t‖ = C ‖E_t‖_{H(curl)}`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem projection_unbounded (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     (C : ℝ) : ∃ t : ℝ, curlM (gradFld t) = 0 ∧
       gradFldL2 hΩ hb t ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain ∧
@@ -772,7 +773,7 @@ theorem projection_unbounded (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hn
 
 /-- **Bochner form**: on the Bochner space `L²(Ω; ℝ³ˣ³)` (Frobenius norm), with `L²(TSD)` and
 `H(curl)` transported through `Feec.Domain.piL2Equiv`, `P_{L²(TSD)} H(curl) ⊄ H(curl)`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem not_starProjection_mem_curl_maximal_bochner (hΩ : IsOpen Ω)
     (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ¬ ∀ F : Lp (EuclideanSpace ℝ Ix) 2 (volume.restrict Ω),
@@ -792,7 +793,7 @@ theorem not_starProjection_mem_curl_maximal_bochner (hΩ : IsOpen Ω)
 
 /-- **The two inferred `L²(TSD)` densities of Prop 4.17, decided** on every nonempty bounded open
 `Ω` star-shaped with respect to a ball: `cl (L²(TSD) ∩ H(curl)) = L²(TSD)` holds, while
-`cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀) ≠ L²(TSD)` fails. Thesis: Prop 4.17 -/
+`cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀) ≠ L²(TSD)` fails. [QuennevilleBelair2015], Prop 4.17 -/
 theorem density_dichotomy (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {x₀ : R3} {s : ℝ} (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     (tsd Ω ⊓
@@ -809,7 +810,7 @@ theorem density_dichotomy (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne :
 star-shaped with respect to a ball: the two literal density conjectures (`H̊(curl) ∩ H(div, 0)`
 and `H(curl) ∩ H(div, 0)` dense in `H(div, 0)`) hold, and so does the inferred `H(curl)` density
 in `L²(TSD)`; the inferred `H̊(curl)` density does not, its closure being `L²(TSD₀)`. So the step
-"so that `H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`" is an invalid inference. Thesis: Prop 4.17 -/
+"so that `H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`" is an invalid inference. [QuennevilleBelair2015], Prop 4.17 -/
 theorem density_gap (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {x₀ : R3} {s : ℝ} (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     (∀ B ∈ (gradCurl ℝ hΩ).d₀†.ker, B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal
@@ -874,7 +875,7 @@ under the wave group (`Feec.ShortHilbertComplex.coreSub`):
 4. every `U₀ ∈ D(L) ∩ K*` has on every `[0, T]` a classical solution of `U' = L U`, unique among
    strong solutions, staying in `K* ⊆ K`.
 The only elements of `K*` exhibited are stationary; whether `K*` contains non-stationary data on
-a general bounded domain is open. Thesis: Prop 4.17 -/
+a general bounded domain is open. [QuennevilleBelair2015], Prop 4.17 -/
 theorem invariantCore_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) = HilbertComplex.totalSub
         (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3)))
@@ -938,7 +939,7 @@ On every nonempty bounded open `Ω ⊆ ℝ³`, `β = x₃ (e₁ e₂ᵀ + e₂ e
 for every `T > 0` the Hodge wave equation of the grad–curl complex has a strong solution on
 `[0, T]` (the wave group orbit), unique among strong solutions; it is TSD a.e. on
 `depDomain Ω t` for every `t ∈ [0, T]`, but for some `t ∈ [0, T]` it is not a.e. symmetric and
-trace-free on the boundary layer `Ω \ depDomain Ω t`. Thesis: Prop 4.17 -/
+trace-free on the boundary layer `Ω \ depDomain Ω t`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem beta_violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) :
     betaL2 hΩ hb ∈ tsd Ω ∧
@@ -973,7 +974,7 @@ theorem beta_violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
 nonempty bounded open `Ω` there is TSD data `(0, 0, B₀) ∈ D(L)` such that for every `T > 0` a strong
 solution exists, every strong solution is TSD on `depDomain Ω t` for all `t ∈ [0, T]`, and fails to
 be symmetric and trace-free on a non-null part of `Ω \ depDomain Ω t` for some `t ∈ [0, T]`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem violation_boundary_layer (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ∃ B₀ ∈ tsd Ω, ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ B₀ ∈ (gradCurl ℝ hΩ).wave.domain ∧
       ∀ T > 0, (∃ U : ℝ → Win Ω, U 0 = ShortHilbertComplex.inj₂ (𝕜 := ℝ) _ _ _ B₀ ∧

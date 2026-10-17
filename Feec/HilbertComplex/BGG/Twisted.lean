@@ -31,8 +31,10 @@ a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
 
 ## References
 
-* [QuennevilleBelair2015], §5.1 (the connecting maps `S` and the complex (5.1))
-* [ArnoldHu2021] (complexes from complexes: the BGG construction)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.1 (the connecting maps `S` and the complex (5.1))
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes from complexes: the BGG
+  construction)
 -/
 
 open scoped InnerProductSpace
@@ -225,7 +227,7 @@ theorem twistD_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.twistD i j = 0 := by
 /-- **The twisted Hilbert complex** of analytic BGG data of any length:
 `(σ, φ) ↦ (dσ - Sφ, d̃φ)` on `Wⁱ ⊕ W̃ⁱ`, with domains `D(d) × D(d̃)`. Closedness comes from
 `d ⊕ d̃` closed and `S` bounded; `dd = 0` from `d d = 0`, `d̃ d̃ = 0` and `d S = -S d̃`.
-Thesis: §5.1
+[QuennevilleBelair2015], §5.1
 
 See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
 def twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i)) where

@@ -31,7 +31,8 @@ for the symmetric complex (`Action.propagates`).
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17 on the cube)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17 on the cube)
 -/
 
 open scoped InnerProductSpace

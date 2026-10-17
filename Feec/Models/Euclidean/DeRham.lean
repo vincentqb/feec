@@ -28,8 +28,12 @@ In contrast with the torus (`Feec.Models.Torus.DeRham`):
 
 ## References
 
-* [AFW2010], [Arnold2018] (Hilbert complexes; closed range and Poincaré inequalities)
-* [QuennevilleBelair2015], §4.2
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (Hilbert complexes; closed range and Poincaré inequalities)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (Hilbert complexes; closed range
+  and Poincaré inequalities)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2
 -/
 
 @[expose] public noncomputable section

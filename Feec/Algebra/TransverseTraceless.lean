@@ -34,8 +34,9 @@ divergence-free (TSD) matrix fields, and in linearized gravity the TT gauge ampl
 
 ## References
 
-* [QuennevilleBelair2015], §2.8 ((2.12)–(2.13), the TT gauge), §3.4 (TSD fields)
-* [Wald1984], §4.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.8 ((2.12)–(2.13), the TT gauge), §3.4 (TSD fields)
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4
 -/
 
 open Matrix
@@ -51,7 +52,7 @@ section CommRing
 variable {R : Type*} [CommRing R]
 
 /-- The transverse–traceless matrices at `ξ`: symmetric, trace-free and `A ξ = 0`.
-Thesis: (2.12), §3.4 -/
+[QuennevilleBelair2015], (2.12), §3.4 -/
 def ttSub (ξ : ι → R) : Submodule R (Matrix ι ι R) where
   carrier := {A | Aᵀ = A ∧ A.trace = 0 ∧ A *ᵥ ξ = 0}
   zero_mem' := by simp
@@ -151,7 +152,7 @@ theorem mul_transverseProj_of_mem {A : Matrix ι ι K} (hA : A ∈ ttSub ξ) :
   rwa [transpose_mul, transverseProj_transpose, hA.1] at h
 
 /-- The TT projection `ttProj ξ A = P A P - (n - 1)⁻¹ tr(P A P) P`, `n = card ι`.
-Thesis: §2.8, §3.4 -/
+[QuennevilleBelair2015], §2.8, §3.4 -/
 def ttProj (ξ : ι → K) (A : Matrix ι ι K) : Matrix ι ι K :=
   transverseProj ξ * A * transverseProj ξ -
     (((Fintype.card ι : K) - 1)⁻¹ * (transverseProj ξ * A * transverseProj ξ).trace) •
@@ -170,7 +171,7 @@ def ttProjₗ (ξ : ι → K) : Matrix ι ι K →ₗ[K] Matrix ι ι K where
 @[simp] theorem ttProjₗ_apply (A : Matrix ι ι K) : ttProjₗ ξ A = ttProj ξ A := rfl
 
 /-- **TT projection**: for symmetric `A`, `ttProj ξ A` is TT at `ξ` (if `ξ·ξ ≠ 0` and
-`n - 1 ≠ 0`). Thesis: §2.8, §3.4 -/
+`n - 1 ≠ 0`). [QuennevilleBelair2015], §2.8, §3.4 -/
 theorem ttProj_mem (hq : ξ ⬝ᵥ ξ ≠ 0) (hn : (Fintype.card ι : K) - 1 ≠ 0) {A : Matrix ι ι K}
     (hA : Aᵀ = A) : ttProj ξ A ∈ ttSub ξ := by
   refine ⟨?_, ?_, ?_⟩

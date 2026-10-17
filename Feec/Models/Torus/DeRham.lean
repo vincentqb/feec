@@ -31,8 +31,12 @@ constraint propagation) applies to it.
 
 ## References
 
-* [AFW2010], [Arnold2018] (the de Rham complex as a Hilbert complex)
-* [QuennevilleBelair2015], §4.2
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (the de Rham complex as a Hilbert complex)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (the de Rham complex as a Hilbert
+  complex)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2
 -/
 
 @[expose] public noncomputable section

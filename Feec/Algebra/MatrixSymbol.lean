@@ -28,7 +28,8 @@ Fourier symbols (`∂_c ↦ ξ_c`), over any commutative ring. Conventions (thes
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Lemma 3.5), §4.10–4.11 (its use in Props 4.17 and 4.19)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Lemma 3.5), §4.10–4.11 (its use in Props 4.17 and 4.19)
 -/
 
 open Matrix
@@ -41,18 +42,18 @@ variable {R : Type*} [CommRing R]
 
 /-! ### Definitions -/
 
-/-- Row-wise curl of a first jet, `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`. Thesis: Lemma 3.5 -/
+/-- Row-wise curl of a first jet, `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`. [QuennevilleBelair2015], Lemma 3.5 -/
 def curl (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) : Matrix (Fin 3) (Fin 3) R :=
   Matrix.of fun a b => ∑ c, ∑ d, leviCivita3 R b c d * dA c a d
 
-/-- Row-wise divergence of a first jet, `(div A)_a = ∂_b A_{ab}`. Thesis: Lemma 3.5 -/
+/-- Row-wise divergence of a first jet, `(div A)_a = ∂_b A_{ab}`. [QuennevilleBelair2015], Lemma 3.5 -/
 def div (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) : Fin 3 → R := fun a => ∑ b, dA b a b
 
 /-- The axial vector `(ε_{abc} A_{bc})_a = 2 vskw A`. -/
 def axial (A : Matrix (Fin 3) (Fin 3) R) : Fin 3 → R :=
   fun a => ∑ b, ∑ c, leviCivita3 R a b c * A b c
 
-/-- `vskw A = ½ ε_{abc} A_{bc}`, the axial vector of the skew part. Thesis: Lemma 3.5 -/
+/-- `vskw A = ½ ε_{abc} A_{bc}`, the axial vector of the skew part. [QuennevilleBelair2015], Lemma 3.5 -/
 def vskw [Invertible (2 : R)] (A : Matrix (Fin 3) (Fin 3) R) : Fin 3 → R := (⅟(2 : R)) • axial A
 
 /-- The skew matrix `(mskw v)_{ab} = ε_{abc} v_c`, inverse to `vskw` on skew matrices. -/
@@ -158,13 +159,13 @@ theorem transpose_eq_iff_axial_eq_zero (A : Matrix (Fin 3) (Fin 3) R) :
 
 /-! ### Lemma 3.5 on jets -/
 
-/-- **Lemma 3.5 (2)**: `tr curl A = -div axial A` (i.e. `-2 div vskw A`). Thesis: Lemma 3.5 -/
+/-- **Lemma 3.5 (2)**: `tr curl A = -div axial A` (i.e. `-2 div vskw A`). [QuennevilleBelair2015], Lemma 3.5 -/
 theorem trace_curl (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     (curl dA).trace = -vdiv (fun c => axial (dA c)) := by
   simp [trace, curl, vdiv, axial, leviCivita3_apply, Fin.sum_univ_three]; ring
 
 /-- **Lemma 3.5 (3)**: `axial curl A = grad tr A - div Aᵀ` (i.e. `2 vskw curl A = …`).
-Thesis: Lemma 3.5 -/
+[QuennevilleBelair2015], Lemma 3.5 -/
 theorem axial_curl (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     axial (curl dA) = traceJet dA - div (transposeJet dA) := by
   ext a
@@ -172,7 +173,7 @@ theorem axial_curl (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     simp [curl, axial, traceJet, div, transposeJet, trace, leviCivita3_apply,
       Fin.sum_univ_three] <;> ring
 
-/-- `div (A - Aᵀ) = curl axial A` (i.e. `div skw A = curl vskw A`). Thesis: Lemma 3.5 -/
+/-- `div (A - Aᵀ) = curl axial A` (i.e. `div skw A = curl vskw A`). [QuennevilleBelair2015], Lemma 3.5 -/
 theorem div_sub_transpose (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     div (dA - transposeJet dA) = vcurl (fun c => axial (dA c)) := by
   ext a
@@ -180,7 +181,7 @@ theorem div_sub_transpose (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     simp [div, transposeJet, vcurl, axial, leviCivita3_apply, Fin.sum_univ_three] <;> ring
 
 /-- **Lemma 3.5 (1)**: `div curl A = 0` for a second jet `d2A b c = ∂_b ∂_c A` symmetric in
-`(b, c)`. Thesis: Lemma 3.5 -/
+`(b, c)`. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem div_curl (d2A : Fin 3 → Fin 3 → Matrix (Fin 3) (Fin 3) R)
     (hsym : ∀ b c, d2A b c = d2A c b) : div (fun b => curl (d2A b)) = 0 := by
   ext a
@@ -188,7 +189,7 @@ theorem div_curl (d2A : Fin 3 → Fin 3 → Matrix (Fin 3) (Fin 3) R)
     simp [div, curl, leviCivita3_apply, Fin.sum_univ_three, hsym 1 0, hsym 2 0, hsym 2 1] <;> ring
 
 /-- Lemma 3.5, consequence: the curl of a symmetric matrix field is trace-free.
-Thesis: Lemma 3.5 -/
+[QuennevilleBelair2015], Lemma 3.5 -/
 theorem trace_curl_of_transpose_eq {dA : Fin 3 → Matrix (Fin 3) (Fin 3) R}
     (hsym : ∀ c, (dA c)ᵀ = dA c) : (curl dA).trace = 0 := by
   rw [trace_curl]
@@ -196,7 +197,7 @@ theorem trace_curl_of_transpose_eq {dA : Fin 3 → Matrix (Fin 3) (Fin 3) R}
   simp [vdiv, this]
 
 /-- Lemma 3.5, consequence (sharpened): if `A` is symmetric with `div A = 0` and
-`grad tr A = 0`, then `curl A` is symmetric. Thesis: Lemma 3.5 -/
+`grad tr A = 0`, then `curl A` is symmetric. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem transpose_curl_eq {dA : Fin 3 → Matrix (Fin 3) (Fin 3) R}
     (hsym : ∀ c, (dA c)ᵀ = dA c) (htr : traceJet dA = 0) (hdiv : div dA = 0) :
     (curl dA)ᵀ = curl dA := by
@@ -205,7 +206,7 @@ theorem transpose_curl_eq {dA : Fin 3 → Matrix (Fin 3) (Fin 3) R}
 
 /-- **Lemma 3.5, conclusion** (first-jet part): `A` symmetric, trace-free and divergence-free
 implies `curl A` symmetric and trace-free (its divergence vanishes by `div_curl`).
-Thesis: Lemma 3.5 -/
+[QuennevilleBelair2015], Lemma 3.5 -/
 theorem curl_isTSD {dA : Fin 3 → Matrix (Fin 3) (Fin 3) R} (hsym : ∀ c, (dA c)ᵀ = dA c)
     (htr : ∀ c, (dA c).trace = 0) (hdiv : div dA = 0) :
     (curl dA)ᵀ = curl dA ∧ (curl dA).trace = 0 :=
@@ -223,14 +224,14 @@ theorem vskw_apply (A : Matrix (Fin 3) (Fin 3) R) (a : Fin 3) :
 theorem two_smul_vskw (A : Matrix (Fin 3) (Fin 3) R) : (2 : R) • vskw A = axial A := by
   rw [vskw, smul_smul, mul_invOf_self, one_smul]
 
-/-- **Lemma 3.5 (2)**: `tr curl A = -2 div vskw A`. Thesis: Lemma 3.5 -/
+/-- **Lemma 3.5 (2)**: `tr curl A = -2 div vskw A`. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem trace_curl_eq_vskw (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     (curl dA).trace = -2 * vdiv (fun c => vskw (dA c)) := by
   rw [trace_curl]
   simp only [vdiv, ← two_smul_vskw, Pi.smul_apply, smul_eq_mul, ← Finset.mul_sum]
   ring
 
-/-- **Lemma 3.5 (3)**: `2 vskw curl A = grad tr A - div Aᵀ`. Thesis: Lemma 3.5 -/
+/-- **Lemma 3.5 (3)**: `2 vskw curl A = grad tr A - div Aᵀ`. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem two_smul_vskw_curl (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     (2 : R) • vskw (curl dA) = traceJet dA - div (transposeJet dA) := by
   rw [two_smul_vskw, axial_curl]
@@ -261,7 +262,7 @@ theorem curlSymbol_mulVec_self (ξ : Fin 3 → R) (A : Matrix (Fin 3) (Fin 3) R)
   rwa [e, div_symbolJet] at h
 
 /-- **Lemma 3.5 on the symbol**: the curl symbol maps the TSD fibre (symmetric, trace-free,
-`A ξ = 0`) at `ξ` to itself. Thesis: Lemma 3.5 -/
+`A ξ = 0`) at `ξ` to itself. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem curlSymbol_mem_ttSub {ξ : Fin 3 → R} {A : Matrix (Fin 3) (Fin 3) R}
     (hA : A ∈ TT.ttSub ξ) : curlSymbol ξ A ∈ TT.ttSub ξ := by
   obtain ⟨h1, h2, h3⟩ := hA

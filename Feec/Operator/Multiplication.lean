@@ -42,8 +42,8 @@ family of operators `m : α → E →L[𝕜] F` (a *fibre-matrix symbol*), the m
 
 ## References
 
-* [Kato1995] (closed operators and their adjoints; multiplication operators are the standard
-  example)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995] (closed operators and their
+  adjoints; multiplication operators are the standard example)
 -/
 
 @[expose] public noncomputable section

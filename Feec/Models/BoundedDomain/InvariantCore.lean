@@ -27,7 +27,8 @@ for any `Ω`. Whether such eigenfields exist is not decided here.
 
 ## References
 
-* [QuennevilleBelair2015], Lemma 3.5, §4.10 (Prop 4.17)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Lemma 3.5, §4.10 (Prop 4.17)
 -/
 
 @[expose] public noncomputable section

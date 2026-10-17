@@ -25,8 +25,11 @@ degenerate at low frequency, and then the range is not closed (`not_isClosed_ran
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (closed range and the Poincaré inequality, Thm 4.2)
-* [AFW2010], §3.1; [BruningLesch1992]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (closed range and the Poincaré inequality, Thm 4.2)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
 -/
 
 @[expose] public noncomputable section

@@ -15,8 +15,10 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 ## References
 
-* [Kato1995], §V.4.1 (bounded perturbations of self-adjoint operators)
-* [Pazy1983], §3.1 (bounded perturbations of generators)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §V.4.1 (bounded perturbations of
+  self-adjoint operators)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §3.1 (bounded perturbations of generators)
 -/
 
 open scoped InnerProductSpace

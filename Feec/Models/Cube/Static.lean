@@ -36,8 +36,10 @@ stationary data in `K` (`Feec.Models.Cube.Parity.mem_invariantCore_iff`). This f
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17)
-* [ReedSimon1980], §VII.3 (mean ergodic theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17)
+* [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
+  §VII.3 (mean ergodic theorem)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

@@ -35,8 +35,10 @@ The comparison of the mirror complex on `Q` with the minimal and maximal realiza
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17)
-* [Brezis2011], §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (extension by reflection)
 -/
 
 open scoped InnerProductSpace

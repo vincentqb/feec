@@ -12,8 +12,9 @@ public import Feec.Geometry.AlgebraicCurvature
 
 ## References
 
-* [QuennevilleBelair2015], §2.4
-* [Wald1984], §4.3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.4
+* [R. M. Wald, *General Relativity*][Wald1984], §4.3
 -/
 
 open Finset Matrix
@@ -25,7 +26,7 @@ namespace Feec.Counterexamples.Curvature
 open Feec.CurvatureTensor
 
 /-- In dimension `2` the equivalence `G = 0 ⇔ Ric = 0` fails (`g = gi = Ric = 1`).
-Thesis: §2.4 -/
+[QuennevilleBelair2015], §2.4 -/
 theorem exists_einstein_eq_zero_ne_zero_two {K : Type*} [Field K] [Invertible (2 : K)] :
     ∃ g gi Ric : Matrix (Fin 2) (Fin 2) K, gi * g = 1 ∧ einstein g gi Ric = 0 ∧ Ric ≠ 0 := by
   refine ⟨1, 1, 1, by simp, ?_, one_ne_zero⟩

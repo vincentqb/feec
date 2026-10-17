@@ -49,7 +49,10 @@ The measure on `𝕋ᵈ` is the normalized Haar measure of `Feec.Fourier.Torus.f
 
 ## References
 
-* [Brezis2011], §9.1 (weak derivatives); [QuennevilleBelair2015], §4.10 (the periodic complex)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.1 (weak derivatives)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (the periodic complex)
 * Mathlib, `Mathlib.Analysis.Fourier.AddCircleMulti`
 -/
 

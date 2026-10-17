@@ -26,18 +26,22 @@ For a short complex `W₀ → W₁ → W₂` the test space `D(𝐝) = V₀ × V
 
 * `HodgeWave.existsUnique`: for `U₀ ∈ D(T − T†)` and admissible forcing, a classical solution
   exists, it is unique among strong solutions, and it is the unique weak solution; for `F = 0`
-  it conserves energy. Thesis: Thm 4.6 (no closed range; any length).
+  it conserves energy. [QuennevilleBelair2015], Thm 4.6 (no closed range; any length).
 * `HodgeWave.isWeakSolution_of_isStrongSolution`, `HodgeWave.IsWeakSolution.unique`,
   `HodgeWave.weak_iff_strong`, `HodgeWave.IsWeakSolution.isClassicalSolution`,
-  `HodgeWave.classicalWeak_iff_classical`. Thesis: Thm 4.7.
+  `HodgeWave.classicalWeak_iff_classical`. [QuennevilleBelair2015], Thm 4.7.
 * `HilbertComplex.HodgeWave.existsUnique`, `HilbertComplex.HodgeWave.weak_iff_strong`, ...:
   the same for the wave operator of every finite Hilbert complex, in particular every window
   `H.window a n` of a complex on `ℤ`.
 
 ## References
 
-* [QuennevilleBelair2015], §4.4 ((4.4)–(4.8), Thm 4.6, Thm 4.7)
-* [Pazy1983], §1.10 (Stone's theorem); [CazenaveHaraux1998], Prop 4.1.6
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.4 ((4.4)–(4.8), Thm 4.6, Thm 4.7)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10 (Stone's theorem)
+* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
+  Prop 4.1.6
 -/
 
 open scoped InnerProductSpace
@@ -52,14 +56,14 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 /-- `U` is a **weak solution** of the Hodge wave equation `U' = (T − T†) U + F` on `I`:
 `U t ∈ D(T)` and `⟪U' t, ψ⟫ = ⟪T U t, ψ⟫ − ⟪U t, T ψ⟫ + ⟪F t, ψ⟫` for every test `ψ ∈ D(T)`
-(derivatives within `I`). Thesis: (4.7), (4.8) -/
+(derivatives within `I`). [QuennevilleBelair2015], (4.7), (4.8) -/
 structure IsWeakSolution (T : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop where
   mem : ∀ t ∈ I, U t ∈ T.domain
   deriv : ∀ t (ht : t ∈ I), ∃ U' : E, HasDerivWithinAt U U' I t ∧ ∀ ψ : T.domain,
     ⟪U', (ψ : E)⟫_𝕜 = ⟪T ⟨U t, mem t ht⟩, (ψ : E)⟫_𝕜 - ⟪U t, T ψ⟫_𝕜 + ⟪F t, (ψ : E)⟫_𝕜
 
 /-- A weak solution in the class `C⁰(I; D(T)) ∩ C¹(I; E)`: additionally `t ↦ T U t` and `U'` are
-continuous on `I`. Thesis: §4.4 -/
+continuous on `I`. [QuennevilleBelair2015], §4.4 -/
 structure IsClassicalWeakSolution (T : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop
     extends IsWeakSolution T I F U where
   contD : ∃ G : ℝ → E, ContinuousOn G I ∧ ∀ t (ht : t ∈ I), T ⟨U t, mem t ht⟩ = G t
@@ -74,7 +78,7 @@ theorem _root_.Feec.Evolution.ForcingClass.admissible_zero (A : E →ₗ.[𝕜] 
 theorem IsWeakSolution.continuousOn (h : IsWeakSolution T I F U) : ContinuousOn U I :=
   fun t ht => (h.deriv t ht).choose_spec.1.continuousWithinAt
 
-/-- **Strong solutions are weak solutions.** Thesis: Thm 4.7 -/
+/-- **Strong solutions are weak solutions.** [QuennevilleBelair2015], Thm 4.7 -/
 theorem isWeakSolution_of_isStrongSolution [CompleteSpace E] (hT : Dense (T.domain : Set E))
     (hU : Evolution.IsStrongSolution (T - T†) I F U) : IsWeakSolution T I F U where
   mem t ht := (Submodule.mem_inf.1 (hU.mem_domain ht)).1
@@ -86,7 +90,7 @@ theorem isWeakSolution_of_isStrongSolution [CompleteSpace E] (hT : Dense (T.doma
     rw [inner_add_left, inner_sub_left, hadj]
 
 /-- **Uniqueness of weak solutions** (energy argument with the test function `ψ = U − V`; no
-hypothesis on `T`). Thesis: §4.4 (after (4.8)) -/
+hypothesis on `T`). [QuennevilleBelair2015], §4.4 (after (4.8)) -/
 theorem IsWeakSolution.unique {a b : ℝ} (hU : IsWeakSolution T (Icc a b) F U)
     (hV : IsWeakSolution T (Icc a b) F V) (h0 : U a = V a) : EqOn U V (Icc a b) := by
   classical
@@ -118,7 +122,7 @@ theorem IsWeakSolution.unique {a b : ℝ} (hU : IsWeakSolution T (Icc a b) F U)
 
 variable [CompleteSpace E]
 
-/-- **Energy conservation** for the homogeneous Hodge wave equation. Thesis: Thm 4.6 -/
+/-- **Energy conservation** for the homogeneous Hodge wave equation. [QuennevilleBelair2015], Thm 4.6 -/
 theorem norm_eq {a b : ℝ} (hskew : (T - T†).IsSkewAdjoint)
     (hU : Evolution.IsStrongSolution (T - T†) (Icc a b) 0 U) : ∀ t ∈ Icc a b, ‖U t‖ = ‖U a‖ :=
   hU.norm_eq hskew.isSkewSymmetric
@@ -134,7 +138,7 @@ include hT hc hcomp
 /-- **Well-posedness of the Hodge wave equation** `U' = (T − T†) U + F`: for `U₀ ∈ D(T − T†)`
 and admissible forcing `F ∈ C([a,b]) ∩ (W^{1,1} ∪ L¹(D))`, there is a classical solution with
 `U a = U₀`; it is unique among strong solutions and among weak solutions.
-Thesis: Thm 4.6 (closed range not needed) -/
+[QuennevilleBelair2015], Thm 4.6 (closed range not needed) -/
 theorem existsUnique {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (T - T†) a b F) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution (T - T†) (Icc a b) F U ∧
@@ -147,7 +151,7 @@ theorem existsUnique {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) {a b : ℝ}
 
 /-- **The homogeneous Hodge wave equation** (Thesis Thm 4.6): for `U₀ ∈ D(T − T†)`,
 `U' = (T − T†) U`, `U a = U₀` has a classical solution on `[a, b]`, unique among strong and weak
-solutions, and it conserves energy, `‖U t‖ = ‖U₀‖`. Thesis: Thm 4.6 -/
+solutions, and it conserves energy, `‖U t‖ = ‖U₀‖`. [QuennevilleBelair2015], Thm 4.6 -/
 theorem existsUnique_hom {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) (a b : ℝ) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution (T - T†) (Icc a b) 0 U ∧
       (∀ V, V a = U₀ → Evolution.IsStrongSolution (T - T†) (Icc a b) 0 V → EqOn V U (Icc a b)) ∧
@@ -159,7 +163,7 @@ theorem existsUnique_hom {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) (a b : 
     hU.toIsStrongSolution t ht).trans (by rw [hU0])⟩
 
 /-- **Weak solutions are classical**: a weak solution with `U a ∈ D(T − T†)` and admissible
-forcing is the classical solution. Thesis: Thm 4.7 -/
+forcing is the classical solution. [QuennevilleBelair2015], Thm 4.7 -/
 theorem IsWeakSolution.isClassicalSolution {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (T - T†) a b F) (hU : IsWeakSolution T (Icc a b) F U)
     (hU0 : U a = U₀) : Evolution.IsClassicalSolution (T - T†) (Icc a b) F U := by
@@ -170,7 +174,7 @@ theorem IsWeakSolution.isClassicalSolution {U₀ : E} (hU₀ : U₀ ∈ (T - T�
     fun t ht => (h ht) ▸ hG t ht⟩
 
 /-- **Weak and strong solutions coincide** for data in `D(T − T†)` and admissible forcing.
-Thesis: Thm 4.7 -/
+[QuennevilleBelair2015], Thm 4.7 -/
 theorem weak_iff_strong {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (T - T†) a b F) (hU0 : U a = U₀) :
     IsWeakSolution T (Icc a b) F U ↔ Evolution.IsStrongSolution (T - T†) (Icc a b) F U :=
@@ -185,7 +189,7 @@ theorem inner_apply_adjoint_apply (x : T.domain) (y : T†.domain) : ⟪T x, T�
 
 omit hc [IsScalarTower ℝ 𝕜 E] in
 /-- **Classical solutions are classical weak solutions**: `T U` is the projection of
-`(T − T†) U` onto `cl R(T)`, so it is continuous. Thesis: Thm 4.7 -/
+`(T − T†) U` onto `cl R(T)`, so it is continuous. [QuennevilleBelair2015], Thm 4.7 -/
 theorem isClassicalWeakSolution_of_isClassicalSolution (hF : ContinuousOn F I)
     (hU : Evolution.IsClassicalSolution (T - T†) I F U) : IsClassicalWeakSolution T I F U := by
   obtain ⟨G, hGc, hG⟩ := hU.deriv_cont
@@ -208,7 +212,7 @@ theorem isClassicalWeakSolution_of_isClassicalSolution (hF : ContinuousOn F I)
   rw [_root_.map_sub, (K.starProjection_eq_self_iff).2 h1, h2, sub_zero]
 
 /-- **Classical weak and classical solutions coincide** (Thesis Thm 4.7 with the thesis'
-regularity classes `C⁰(D(T)) ∩ C¹(E)` and `C⁰(D(T − T†)) ∩ C¹(E)`). Thesis: Thm 4.7 -/
+regularity classes `C⁰(D(T)) ∩ C¹(E)` and `C⁰(D(T − T†)) ∩ C¹(E)`). [QuennevilleBelair2015], Thm 4.7 -/
 theorem classicalWeak_iff_classical {U₀ : E} (hU₀ : U₀ ∈ (T - T†).domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (T - T†) a b F) (hU0 : U a = U₀) :
     IsClassicalWeakSolution T (Icc a b) F U ↔
@@ -231,7 +235,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
 
 /-- A weak solution of the Hodge wave equation `U' = L U + F` of a finite Hilbert complex:
 `U t ∈ D(𝐝)` and `⟪U', ψ⟫ = ⟪𝐝 U, ψ⟫ − ⟪U, 𝐝 ψ⟫ + ⟪F, ψ⟫` for all `ψ ∈ D(𝐝)`. For a short
-complex, `D(𝐝) = V₀ × V₁ × W₂`. Thesis: (4.7), (4.8) -/
+complex, `D(𝐝) = V₀ × V₁ × W₂`. [QuennevilleBelair2015], (4.7), (4.8) -/
 abbrev IsWeakSolution (I : Set ℝ) (F U : ℝ → PiLp 2 W) : Prop :=
   Feec.HodgeWave.IsWeakSolution H.totalD I F U
 
@@ -241,7 +245,7 @@ abbrev IsClassicalWeakSolution (I : Set ℝ) (F U : ℝ → PiLp 2 W) : Prop :=
 
 /-- **Thm 4.6 for every finite Hilbert complex**: for `U₀ ∈ D(L)` and admissible forcing,
 `U' = L U + F`, `U a = U₀` has a classical solution on `[a, b]`, unique among strong and among
-weak solutions. Applies to every window `H.window a n` of a complex on `ℤ`. Thesis: Thm 4.6 -/
+weak solutions. Applies to every window `H.window a n` of a complex on `ℤ`. [QuennevilleBelair2015], Thm 4.6 -/
 theorem existsUnique {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible H.wave a b F) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution H.wave (Icc a b) F U ∧
@@ -258,7 +262,7 @@ theorem norm_eq {a b : ℝ} (hU : Evolution.IsStrongSolution H.wave (Icc a b) 0 
   hU.norm_eq H.isSkewAdjoint_wave.isSkewSymmetric
 
 /-- **The homogeneous Hodge wave equation of a finite Hilbert complex**: a classical solution,
-unique among strong and weak solutions, conserving energy. Thesis: Thm 4.6 -/
+unique among strong and weak solutions, conserving energy. [QuennevilleBelair2015], Thm 4.6 -/
 theorem existsUnique_hom {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain) (a b : ℝ) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution H.wave (Icc a b) 0 U ∧
       (∀ V, V a = U₀ → Evolution.IsStrongSolution H.wave (Icc a b) 0 V → EqOn V U (Icc a b)) ∧
@@ -269,7 +273,7 @@ theorem existsUnique_hom {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain) (a b
     H.totalD_comp_totalD hU₀ a b
 
 /-- **Thm 4.7 for every finite Hilbert complex**: strong and weak solutions coincide for data in
-`D(L)` and admissible forcing. Thesis: Thm 4.7 -/
+`D(L)` and admissible forcing. [QuennevilleBelair2015], Thm 4.7 -/
 theorem weak_iff_strong {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible H.wave a b F) (hU0 : U a = U₀) :
     IsWeakSolution H (Icc a b) F U ↔ Evolution.IsStrongSolution H.wave (Icc a b) F U := by
@@ -277,7 +281,7 @@ theorem weak_iff_strong {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain) {a b 
   exact Feec.HodgeWave.weak_iff_strong H.dense_totalDomain H.isClosed_totalD H.totalD_mapsTo
     H.totalD_comp_totalD hU₀ hF hU0
 
-/-- Thm 4.7 with the thesis' regularity classes. Thesis: Thm 4.7 -/
+/-- Thm 4.7 with the thesis' regularity classes. [QuennevilleBelair2015], Thm 4.7 -/
 theorem classicalWeak_iff_classical {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain) {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible H.wave a b F) (hU0 : U a = U₀) :
     IsClassicalWeakSolution H (Icc a b) F U ↔

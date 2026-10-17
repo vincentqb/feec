@@ -15,7 +15,7 @@ problem `U' = A U + F` on `[a,b]`, `U a = U₀`, has a classical solution, Duham
 ## Main results
 
 * `C0Semigroup.existsUnique_classicalSolution`: existence of a classical solution, uniqueness
-  among strong solutions. Thesis: Thm 4.3 (for every semigroup generator; the thesis states it for
+  among strong solutions. [QuennevilleBelair2015], Thm 4.3 (for every semigroup generator; the thesis states it for
   skew-adjoint generators, i.e. unitary groups).
 * `C0Semigroup.isStrongSolution_unique`: uniqueness for any semigroup generator (no
   dissipativity), from `Evolution.IsStrongSolution.eq_mild`.
@@ -25,13 +25,16 @@ problem `U' = A U + F` on `[a,b]`, `U a = U₀`, has a classical solution, Duham
   `C¹([a,b]; E)`.
 * `C0Group.existsUnique_classicalSolution`: the same for groups.
 * `LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution`: for a skew-adjoint generator on a
-  Hilbert space (Stone's group `LinearPMap.IsSkewAdjoint.group`). Thesis: Thm 4.3 as stated.
+  Hilbert space (Stone's group `LinearPMap.IsSkewAdjoint.group`). [QuennevilleBelair2015], Thm 4.3 as stated.
 
 ## References
 
-* [Pazy1983], §4.1–4.2
-* [CazenaveHaraux1998], Prop 4.1.6
-* [QuennevilleBelair2015], §4.3 (Thm 4.3)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §4.1–4.2
+* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
+  Prop 4.1.6
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.3)
 -/
 
 open Set Filter

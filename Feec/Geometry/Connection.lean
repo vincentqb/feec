@@ -23,8 +23,9 @@ connection fields on `ℝ^ι`.
 
 ## References
 
-* [QuennevilleBelair2015], §2.3 (Prop 2.1, (2.2))
-* [Wald1984], §3.2, §3.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.3 (Prop 2.1, (2.2))
+* [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.4
 -/
 
 open Finset Matrix
@@ -38,7 +39,7 @@ section Jet
 variable {ι : Type*} [Fintype ι] {R : Type*} [CommRing R]
 
 /-- The coordinate formula (2.2) for `R^a_{bcd}` from the values of `Γ^a_{bc} = Γ a b c` and
-`∂_e Γ^a_{bc} = dΓ e a b c` at a point. Thesis: (2.2) -/
+`∂_e Γ^a_{bc} = dΓ e a b c` at a point. [QuennevilleBelair2015], (2.2) -/
 def riemComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) : ι → ι → ι → ι → R :=
   fun a b c d => dΓ c a b d - dΓ d a b c + ∑ e, (Γ a e c * Γ e b d - Γ a e d * Γ e b c)
 
@@ -46,7 +47,7 @@ def riemComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
 def lower (g : Matrix ι ι R) (C : ι → ι → ι → ι → R) : ι → ι → ι → ι → R :=
   fun a b c d => ∑ e, g a e * C e b c d
 
-/-- Skew-symmetry in the second pair, for any connection. Thesis: Prop 2.1 -/
+/-- Skew-symmetry in the second pair, for any connection. [QuennevilleBelair2015], Prop 2.1 -/
 theorem riemComp_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (a b c d : ι) :
     riemComp Γ dΓ a b c d = -riemComp Γ dΓ a b d c := by
   simp only [riemComp]
@@ -57,7 +58,7 @@ theorem riemComp_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → 
 
 /-- **First Bianchi identity** `R^a_{[bcd]} = 0` for a torsion-free connection.
 Correction: the thesis concludes with a four-index antisymmetrisation, which is not the Bianchi
-identity. Thesis: Prop 2.1 (corrected) -/
+identity. [QuennevilleBelair2015], Prop 2.1 (corrected) -/
 theorem riemComp_bianchi (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (hΓ : ∀ a b c, Γ a b c = Γ a c b) (hdΓ : ∀ e a b c, dΓ e a b c = dΓ e a c b) :
     Bianchi1 (riemComp Γ dΓ) := by
@@ -79,7 +80,7 @@ private theorem sum_sum_sub_swap (A : ι → ι → R) : ∑ r, ∑ s, (A r s - 
 and a torsion-free connection compatible with `g` to first order (`hcomp`:
 `∂_e g_ab = g_rb Γ^r_ea + g_ar Γ^r_eb`) and second order (`hcomp'`, the product rule applied to
 `hcomp`), with symmetric second derivatives of `g` (`hddg`). This is the thesis' argument
-`0 = [∇_c, ∇_d] g_ab`, proved from (2.2) directly. Thesis: Prop 2.1 -/
+`0 = [∇_c, ∇_d] g_ab`, proved from (2.2) directly. [QuennevilleBelair2015], Prop 2.1 -/
 theorem lower_riemComp_skew [DecidableEq ι] (g : Matrix ι ι R) (hg : g.IsSymm)
     (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (dg : ι → ι → ι → R)
     (ddg : ι → ι → ι → ι → R)
@@ -123,7 +124,7 @@ theorem lower_riemComp_skew [DecidableEq ι] (g : Matrix ι ι R) (hg : g.IsSymm
 
 /-- **Prop 2.1 (corrected), jet level**: for a torsion-free metric-compatible connection, the
 lowered Riemann tensor (2.2) is skew in each pair and satisfies the first Bianchi identity;
-with `2` invertible it also has the interchange symmetry. Thesis: Prop 2.1 (corrected) -/
+with `2` invertible it also has the interchange symmetry. [QuennevilleBelair2015], Prop 2.1 (corrected) -/
 theorem lower_riemComp_isAlgCurv [DecidableEq ι] (g : Matrix ι ι R) (hg : g.IsSymm)
     (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (dg : ι → ι → ι → R)
     (ddg : ι → ι → ι → ι → R)
@@ -155,14 +156,14 @@ connection), with coordinate partial derivatives `partialDeriv`. -/
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
 /-- The Riemann tensor field `R^a_bcd(x)` of a connection field `Γ`, by formula (2.2).
-Thesis: (2.2) -/
+[QuennevilleBelair2015], (2.2) -/
 def riemField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι → ι → ι → ι → ℝ :=
   riemComp (Γ x) (fun e a b c => partialDeriv e (fun y => Γ y a b c) x)
 
 /-- **Prop 2.1 (corrected)** for fields: for a `C²` symmetric metric field `g` on `ℝ^ι` and a
 differentiable torsion-free connection `Γ` compatible with `g` (the Levi-Civita connection),
 the lowered Riemann tensor `R_abcd = g_ae R^e_bcd` of (2.2) is skew in each pair and satisfies
-the first Bianchi identity and the interchange symmetry. Thesis: Prop 2.1 (corrected) -/
+the first Bianchi identity and the interchange symmetry. [QuennevilleBelair2015], Prop 2.1 (corrected) -/
 theorem riemField_isAlgCurv (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ)
     (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
     (hΓd : ∀ a b c, Differentiable ℝ fun x => Γ x a b c)
@@ -197,7 +198,7 @@ theorem riemField_isAlgCurv (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι �
   exact ⟨hs, hb, interchange_of_bianchi hs hb⟩
 
 /-- **The Ricci tensor is symmetric** (§2.3) for the curvature (2.2) of the Levi-Civita
-connection of a `C²` metric field, given an inverse `gi` of `g x`. Thesis: §2.3 -/
+connection of a `C²` metric field, given an inverse `gi` of `g x`. [QuennevilleBelair2015], §2.3 -/
 theorem ricci_riemField_isSymm (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ)
     (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
     (hΓd : ∀ a b c, Differentiable ℝ fun x => Γ x a b c)

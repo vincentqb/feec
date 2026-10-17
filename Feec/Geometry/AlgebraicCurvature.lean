@@ -38,8 +38,9 @@ ring, their symmetries, and the algebraic facts behind the curvature results of 
 
 ## References
 
-* [QuennevilleBelair2015], §2.3 (Prop 2.1, (2.2)–(2.4)), §2.4 (Einstein's equations)
-* [Wald1984], §3.2, §3.3, §4.3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.3 (Prop 2.1, (2.2)–(2.4)), §2.4 (Einstein's equations)
+* [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.3, §4.3
 -/
 
 open Finset Matrix
@@ -52,14 +53,14 @@ variable {ι : Type*} {R : Type*} [CommRing R]
 
 /-! ### Symmetries -/
 
-/-- Skew-symmetry in each of the two index pairs. Thesis: Prop 2.1 -/
+/-- Skew-symmetry in each of the two index pairs. [QuennevilleBelair2015], Prop 2.1 -/
 def PairSkew (C : ι → ι → ι → ι → R) : Prop :=
   ∀ a b c d, C a b c d = -C b a c d ∧ C a b c d = -C a b d c
 
-/-- The first (algebraic) Bianchi identity `C_{a[bcd]} = 0`. Thesis: Prop 2.1 -/
+/-- The first (algebraic) Bianchi identity `C_{a[bcd]} = 0`. [QuennevilleBelair2015], Prop 2.1 -/
 def Bianchi1 (C : ι → ι → ι → ι → R) : Prop := ∀ a b c d, C a b c d + C a c d b + C a d b c = 0
 
-/-- The interchange (pair) symmetry `C_{abcd} = C_{cdab}`. Thesis: §2.3 -/
+/-- The interchange (pair) symmetry `C_{abcd} = C_{cdab}`. [QuennevilleBelair2015], §2.3 -/
 def Interchange (C : ι → ι → ι → ι → R) : Prop := ∀ a b c d, C a b c d = C c d a b
 
 /-- Total antisymmetrisation in the four slots, unnormalised: `alt4 C a b c d = 24 C_[abcd]`. -/
@@ -76,7 +77,7 @@ theorem eq_of_two_mul_eq [Invertible (2 : R)] {x y : R} (h : 2 * x = 2 * y) : x 
 
 /-- Pair skew and the first Bianchi identity imply the interchange symmetry `C_abcd = C_cdab`
 (sum the Bianchi identities at `(a,b,c,d)`, `(b,a,d,c)`, `(c,a,b,d)`, `(d,a,b,c)`).
-Thesis: §2.3 (cited from [10]) -/
+[QuennevilleBelair2015], §2.3 (cited from [10]) -/
 theorem interchange_of_bianchi [Invertible (2 : R)] {C : ι → ι → ι → ι → R} (hs : PairSkew C)
     (hb : Bianchi1 C) : Interchange C := by
   intro a b c d
@@ -95,7 +96,7 @@ theorem alt4_eq_zero_of_bianchi {C : ι → ι → ι → ι → R} (hs : PairSk
     (hs c d b a).1 - 2 * hb d a b c
 
 /-- For `C` skew in each pair, the first Bianchi identity holds iff `C` has the interchange
-symmetry and vanishing totally antisymmetric part. Thesis: §2.3 (cited from [10]) -/
+symmetry and vanishing totally antisymmetric part. [QuennevilleBelair2015], §2.3 (cited from [10]) -/
 theorem bianchi_iff [Invertible (2 : R)] {C : ι → ι → ι → ι → R} (hs : PairSkew C) :
     Bianchi1 C ↔ Interchange C ∧ ∀ a b c d, alt4 C a b c d = 0 := by
   refine ⟨fun hb => ⟨interchange_of_bianchi hs hb, alt4_eq_zero_of_bianchi hs hb⟩, ?_⟩
@@ -115,7 +116,7 @@ theorem bianchi_iff [Invertible (2 : R)] {C : ι → ι → ι → ι → R} (hs
 /-! ### Geodesic deviation (2.3) -/
 
 /-- An algebraic curvature tensor that is skew under the swap `b ↔ d` vanishes.
-Thesis: (2.3) -/
+[QuennevilleBelair2015], (2.3) -/
 theorem eq_zero_of_symm_bd [Invertible (3 : R)] {C : ι → ι → ι → ι → R} (hs : PairSkew C)
     (hb : Bianchi1 C) (h : ∀ a b c d, C a b c d + C a d c b = 0) : C = 0 := by
   have key : ∀ a b c d, 2 * C a b c d = C a c b d := fun a b c d => by
@@ -128,12 +129,12 @@ theorem eq_zero_of_symm_bd [Invertible (3 : R)] {C : ι → ι → ι → ι →
 
 variable [Fintype ι]
 
-/-- The scalar deviation form `C(Y, T, X, T) = C_abcd Y^a T^b X^c T^d`. Thesis: (2.3) -/
+/-- The scalar deviation form `C(Y, T, X, T) = C_abcd Y^a T^b X^c T^d`. [QuennevilleBelair2015], (2.3) -/
 def deviationForm (C : ι → ι → ι → ι → R) (Y T X : ι → R) : R :=
   ∑ a, ∑ b, ∑ c, ∑ d, C a b c d * Y a * T b * X c * T d
 
 /-- An algebraic curvature tensor with vanishing deviation forms `C(Y, T, X, T)` vanishes
-(polarize in `T`, then `eq_zero_of_symm_bd`). Thesis: §2.3, after (2.3) -/
+(polarize in `T`, then `eq_zero_of_symm_bd`). [QuennevilleBelair2015], §2.3, after (2.3) -/
 theorem eq_zero_of_deviationForm [DecidableEq ι] [Invertible (3 : R)]
     {C : ι → ι → ι → ι → R} (hs : PairSkew C) (hb : Bianchi1 C)
     (h : ∀ Y T X : ι → R, deviationForm C Y T X = 0) : C = 0 := by
@@ -159,12 +160,12 @@ theorem eq_zero_of_deviationForm [DecidableEq ι] [Invertible (3 : R)]
   linear_combination -this
 
 /-- Raise the first index with `gi` and form the deviation (2.3), `a^a = -R^a_cbd X^b T^c T^d`.
-Thesis: (2.3) -/
+[QuennevilleBelair2015], (2.3) -/
 def deviation (gi : Matrix ι ι R) (C : ι → ι → ι → ι → R) (X T : ι → R) : ι → R :=
   fun a => -∑ e, gi a e * ∑ c, ∑ b, ∑ d, C e c b d * X b * T c * T d
 
 /-- **Geodesic deviation (2.3), algebraic core**: for an algebraic curvature tensor and an
-invertible `gi`, all deviations vanish iff `C = 0`. Thesis: §2.3, after (2.3) -/
+invertible `gi`, all deviations vanish iff `C = 0`. [QuennevilleBelair2015], §2.3, after (2.3) -/
 theorem deviation_eq_zero_iff [DecidableEq ι] [Invertible (3 : R)] {C : ι → ι → ι → ι → R}
     (hs : PairSkew C) (hb : Bianchi1 C) (g gi : Matrix ι ι R) (hinv : g * gi = 1) :
     (∀ X T : ι → R, deviation gi C X T = 0) ↔ C = 0 := by
@@ -201,12 +202,12 @@ theorem deviation_eq_zero_iff [DecidableEq ι] [Invertible (3 : R)] {C : ι → 
 
 /-! ### Ricci and Einstein tensors -/
 
-/-- The Ricci contraction `R_ab = g^{ce} C_eacb`. Thesis: §2.3 -/
+/-- The Ricci contraction `R_ab = g^{ce} C_eacb`. [QuennevilleBelair2015], §2.3 -/
 def ricci (gi : Matrix ι ι R) (C : ι → ι → ι → ι → R) : Matrix ι ι R :=
   Matrix.of fun a b => ∑ c, ∑ e, gi c e * C e a c b
 
 /-- The Ricci contraction of a tensor with the interchange symmetry is symmetric, for a
-symmetric `gi`. Thesis: §2.3 -/
+symmetric `gi`. [QuennevilleBelair2015], §2.3 -/
 theorem ricci_isSymm {gi : Matrix ι ι R} (hgi : gi.IsSymm) {C : ι → ι → ι → ι → R}
     (hi : Interchange C) : (ricci gi C).IsSymm := by
   ext a b
@@ -215,17 +216,17 @@ theorem ricci_isSymm {gi : Matrix ι ι R} (hgi : gi.IsSymm) {C : ι → ι → 
   refine Finset.sum_congr rfl fun e _ => Finset.sum_congr rfl fun c _ => ?_
   rw [hi e b c a, hgi.apply e c]
 
-/-- The Ricci tensor is symmetric for the inverse `gi` of a symmetric metric. Thesis: §2.3 -/
+/-- The Ricci tensor is symmetric for the inverse `gi` of a symmetric metric. [QuennevilleBelair2015], §2.3 -/
 theorem ricci_isSymm_of_inv [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm)
     (hinv : gi * g = 1) {C : ι → ι → ι → ι → R} (hi : Interchange C) : (ricci gi C).IsSymm :=
   ricci_isSymm (Metric.isSymm_of_mul_eq_one hg hinv) hi
 
 /-- The Einstein tensor `G = Ric - ½ (tr_g Ric) g`, `tr_g Ric = tr(gi Ric)`.
-(Thesis §2.3 writes `G_ab = R_ac − ½ g_ac R`, an index typo.) Thesis: §2.3 -/
+(Thesis §2.3 writes `G_ab = R_ac − ½ g_ac R`, an index typo.) [QuennevilleBelair2015], §2.3 -/
 def einstein [Invertible (2 : R)] (g gi Ric : Matrix ι ι R) : Matrix ι ι R :=
   Ric - (⅟2 * (gi * Ric).trace) • g
 
-/-- The Einstein tensor inherits symmetry from the Ricci tensor and `g`. Thesis: §2.3 -/
+/-- The Einstein tensor inherits symmetry from the Ricci tensor and `g`. [QuennevilleBelair2015], §2.3 -/
 theorem einstein_isSymm [Invertible (2 : R)] {g gi Ric : Matrix ι ι R} (hg : g.IsSymm)
     (hRic : Ric.IsSymm) : (einstein g gi Ric).IsSymm :=
   hRic.sub (hg.smul _)
@@ -235,7 +236,7 @@ section Field
 variable {K : Type*} [Field K] [Invertible (2 : K)] [DecidableEq ι]
 
 /-- **Vacuum Einstein equations, §2.4**: `G = 0 ⇔ Ric = 0` in every dimension `n ≠ 2` (as an
-element of `K`), not only the thesis' `n = 4`. Proof: `tr_g G = (1 - n/2) R`. Thesis: §2.4 -/
+element of `K`), not only the thesis' `n = 4`. Proof: `tr_g G = (1 - n/2) R`. [QuennevilleBelair2015], §2.4 -/
 theorem einstein_eq_zero_iff (hn : (Fintype.card ι : K) ≠ 2) (g gi Ric : Matrix ι ι K)
     (hinv : gi * g = 1) : einstein g gi Ric = 0 ↔ Ric = 0 := by
   unfold einstein
@@ -434,7 +435,7 @@ theorem recon_parMat_mem (p : Fin 20 → ℝ) : recon (parMat p) ∈ algCurv (Fi
   linarith
 
 /-- The algebraic curvature tensors in four dimensions form a space isomorphic to `ℝ²⁰`.
-Thesis: §2.3 -/
+[QuennevilleBelair2015], §2.3 -/
 def algCurvEquiv : algCurv (Fin 4) ℝ ≃ₗ[ℝ] (Fin 20 → ℝ) where
   toFun C := fun k => bivMat C (parIdx k).1 (parIdx k).2
   map_add' C D := rfl
@@ -460,7 +461,7 @@ def algCurvEquiv : algCurv (Fin 4) ℝ ≃ₗ[ℝ] (Fin 20 → ℝ) where
 
 /-- **The Riemann tensor has `n²(n²−1)/12 = 20` independent components in four dimensions**:
 the algebraic curvature tensors (the symmetries of Prop 2.1) form a space of dimension 20.
-Thesis: §2.3 -/
+[QuennevilleBelair2015], §2.3 -/
 theorem finrank_algCurv_four : Module.finrank ℝ (algCurv (Fin 4) ℝ) = 20 := by
   rw [algCurvEquiv.finrank_eq]; simp
 

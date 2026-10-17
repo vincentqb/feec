@@ -28,8 +28,8 @@ hypothesis left to check: the projection hypothesis `P_K D(d) ⊆ D(d)` and the 
 
 ## References
 
-* [QuennevilleBelair2015], §4.10–4.11 (Props 4.17, 4.19: the fibrewise commutation of `P_TSD`
-  with the curl symbol)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10–4.11 (Props 4.17, 4.19: the fibrewise commutation of `P_TSD` with the curl symbol)
 -/
 
 @[expose] public noncomputable section
@@ -153,7 +153,7 @@ variable [Fintype ι] [∀ i, (Operator.fibreSub μ (K i)).HasOrthogonalProjecti
 
 /-- **Constraint propagation for a symbol complex**: every strong solution of the Hodge wave
 equation `U' = L U + F` with data and forcing in the fibrewise constraint `∏ L²(K i)` stays in it.
-Thesis: Prop 4.17, Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.17, Prop 4.19 -/
 theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
     (hU : Evolution.IsStrongSolution S.toHilbertComplex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i))
@@ -172,7 +172,7 @@ theorem propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
 /-- **Existence, uniqueness and constraint propagation** for a symbol complex: for
 `U₀ ∈ D(L) ∩ ∏ L²(K i)` and admissible forcing valued in `∏ L²(K i)`, the Hodge wave equation has
 a classical solution, unique among strong solutions, and it stays in `∏ L²(K i)`.
-Thesis: Prop 4.17, Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.17, Prop 4.19 -/
 theorem existsUnique_mem {U₀ : PiLp 2 fun i => Lp (E i) 2 μ}
     (hU₀ : U₀ ∈ S.toHilbertComplex.wave.domain)
     (hU₀S : U₀ ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i))

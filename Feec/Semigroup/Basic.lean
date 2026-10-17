@@ -44,8 +44,10 @@ compatible with `𝕜` (`[IsScalarTower ℝ 𝕜 E]`).
 
 ## References
 
-* [Pazy1983], §1.1–1.2 (uniformly and strongly continuous semigroups), §1.10 (groups)
-* [EngelNagel2000], §II.1
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.1–1.2 (uniformly and strongly continuous semigroups), §1.10 (groups)
+* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
+  §II.1
 -/
 
 open Set Filter Topology NormedSpace LinearPMap

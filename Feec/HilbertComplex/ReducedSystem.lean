@@ -44,8 +44,10 @@ the solution of the full system.
 
 ## References
 
-* [QuennevilleBelair2015], Prop. 4.18 (§4.10, (4.14), (4.15)), Thm 4.6
-* [Pazy1983], §1.10 (Stone's theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Prop. 4.18 (§4.10, (4.14), (4.15)), Thm 4.6
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10 (Stone's theorem)
 -/
 
 open scoped InnerProductSpace

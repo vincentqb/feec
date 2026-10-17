@@ -6,11 +6,14 @@
 # Requires an up-to-date `lake build Feec`. Sources, per declaration of a Feec.* module:
 #   * its name: a last component containing thm_N_M / prop_N_M / cor_N_M / lemma_N_M (or the
 #     compact forms prop417, thm43), ch6_*, Sol61, Hyp54, Sys56, C55;
-#   * module sources: any `[QuennevilleBelair2015, ...]` citation lists the module;
-#   * its docstring: a `Thesis: Prop 4.17 (corrected), Thm 4.3` tag, and every result, equation,
-#     section or chapter cited inside `[QuennevilleBelair2015, ...]`.
+#   * its docstring: every result, equation, section or chapter cited as
+#     `[QuennevilleBelair2015], Prop 4.17 (corrected), Thm 4.3` (the citation convention of
+#     docs/REFACTOR_PLAN.md; the location runs to the end of the line, or to the next `;`, `[Key]`
+#     or backtick, and may start on the line after `[QuennevilleBelair2015],`);
+#   * module sources: the same citations anywhere in a module (module docstring, its
+#     `## References` entry, comments) list the module.
 # Rerun after renames: entries follow the declarations as long as the new declarations carry a
-# `Thesis:` tag or a `[QuennevilleBelair2015, ...]` citation in their docstring.
+# `[QuennevilleBelair2015], ...` citation in their docstring.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:-docs/THESIS_MAP.md}"
@@ -36,10 +39,9 @@ RES = re.compile(r'\b(Theorem|Thm|Proposition|Prop|Corollary|Cor|Lemma|Remark|De
 EQ = re.compile(r'\((\d+\.\d+)([a-z](?:–[a-z])?)?\)(?:\s*–\s*\((\d+\.\d+)\))?')
 SEC = re.compile(r'§\s*(\d+\.\d+)(?:\s*–\s*(\d+\.\d+))?')
 CH = re.compile(r'\bCh\.\s*(\d+)\b')
-CITE = re.compile(r'\[QuennevilleBelair2015,([^\]]*)\]')
-# doc-gen4 form (docs/REFACTOR_PLAN.md, citation convention): `[QuennevilleBelair2015], Prop. 4.17 (§4.10)`
-CITE2 = re.compile(r'\[QuennevilleBelair2015\](?![\[(])((?:[^\n;`\[]|\[(?!QuennevilleBelair2015))*)')
-TAG = re.compile(r'\bThesis:\s*((?:[^;\n.]|\.(?= ?\d))*)')
+# doc-gen4 form (docs/REFACTOR_PLAN.md, citation convention): `[QuennevilleBelair2015], Prop. 4.17 (§4.10)`;
+# a `,` right after the key may be followed by a line break before the location.
+CITE = re.compile(r'\[QuennevilleBelair2015\](?![\[(])(?:,\s*)?((?:[^\n;`\[]|\[(?![A-Z][A-Za-z\-]*\d{4}[a-z]?\]))*)')
 NAMED = re.compile(r'(?:^|_)(thm|prop|cor|lemma)_(\d+)_(\d+)|(?:^|_)(thm|prop|cor|lemma)(\d)(\d+)(?![\d])')
 CHN = re.compile(r'(?:^|_)ch(\d+)_')
 OTHER = re.compile(r'^(Sol|Hyp|Sys|C)(\d)(\d+)$')
@@ -91,7 +93,6 @@ def cited(text):
     return ids
 
 named = defaultdict(set)   # id -> names (numbered names)
-tagged = defaultdict(set)  # id -> names (Thesis: tag)
 cites = defaultdict(set)   # id -> names (docstring citation)
 mods = defaultdict(set)    # id -> modules
 for line in open(docs, encoding='utf-8'):
@@ -99,20 +100,18 @@ for line in open(docs, encoding='utf-8'):
     if not line:
         continue
     name, mod, doc = line.split('\t', 2)
-    for c in CITE.findall(doc) + CITE2.findall(doc):
+    for c in CITE.findall(doc):
         for i in cited(c):
             cites[i].add(name); mods[i].add(mod)
-    for t in TAG.findall(doc):
-        for i in cited(t):
-            tagged[i].add(name); mods[i].add(mod)
 
 # modules whose source (module docstrings, comments) cites an id
 import pathlib
 for f in sorted(pathlib.Path('Feec').rglob('*.lean')):
     mod = '.'.join(f.with_suffix('').parts)
-    src = f.read_text(encoding='utf-8')
-    for c in CITE.findall(src) + CITE2.findall(src):
-        for i in cited(' '.join(c.split())):
+    # indented continuation lines (list items such as `## References` entries) join their item
+    src = re.sub(r'\n {2,}(?=\S)', ' ', f.read_text(encoding='utf-8'))
+    for c in CITE.findall(src):
+        for i in cited(c):
             mods[i].add(mod)
 
 # numbered names: the thesis-numbered names of the pre-refactor snapshot, listed through
@@ -143,7 +142,7 @@ for line in open('docs/migration/old_theorems.tsv', encoding='utf-8'):
 def fmt(names):
     return ', '.join(f'`{n}`' for n in sorted(names))
 
-ids = sorted(set(named) | set(oldnamed) | set(tagged) | set(cites) | set(mods), key=key)
+ids = sorted(set(named) | set(oldnamed) | set(cites) | set(mods), key=key)
 res = [i for i in ids if ORDER.get(i.split(' ')[0], 9) == 0]
 L = []
 L.append('# Thesis map')
@@ -159,16 +158,16 @@ L.append('')
 L.append('- **named**: it is a current home (`docs/migration/map.tsv`) of a pre-refactor declaration whose')
 L.append('  name encoded the id (`prop_4_17`, `prop417_density_gap`, `ch6_corrected`, `Sol61`); those old')
 L.append('  names are listed, unchecked, under **old**;')
-L.append('- **tagged**: its docstring has a `Thesis: Prop 4.17 (corrected)` tag (the convention for new')
-L.append('  declarations);')
-L.append('- **cited**: its docstring cites the id, as `[QuennevilleBelair2015], Prop. 4.17` or inside')
-L.append('  `[QuennevilleBelair2015, ...]`.')
+L.append('- **cited**: its docstring cites the id, as `[QuennevilleBelair2015], Prop. 4.17 (corrected)`')
+L.append('  (the citation convention of `docs/REFACTOR_PLAN.md`);')
+L.append('- **modules**: the module cites the id anywhere in its source (module docstring,')
+L.append('  `## References`, comments).')
 L.append('')
 L.append('Every backticked name in a list item below is checked by `scripts/MapCheck.sh`')
 L.append('(`#check @name` must elaborate).')
 L.append('')
 n_named = len(set().union(*named.values())) if named else 0
-n_all = len(set().union(*named.values(), *tagged.values(), *cites.values()))
+n_all = len(set().union(*named.values(), *cites.values()))
 L.append(f'Counts at generation: {len(res)} numbered results (Thm/Prop/Cor/Lemma/Remark/Def), '
          f'{len(ids) - len(res)} equations/sections/chapters, {n_all} distinct declarations '
          f'({n_named} current homes of thesis-numbered old names).')
@@ -180,7 +179,6 @@ def section(i):
     L.append('')
     if named[i]:  L.append(f'- named: {fmt(named[i])}')
     if oldnamed[i]: L.append(f'- old: {", ".join(sorted(oldnamed[i]))}')
-    if tagged[i]: L.append(f'- tagged: {fmt(tagged[i])}')
     if cites[i]:  L.append(f'- cited: {fmt(cites[i])}')
     if mods[i]: L.append(f'- modules: {", ".join(sorted(mods[i]))}')
     L.append('')

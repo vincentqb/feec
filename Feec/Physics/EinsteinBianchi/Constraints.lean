@@ -28,8 +28,10 @@ model complexes of `Feec.Models.*`; the proofs are one-line references.
 
 ## References
 
-* [QuennevilleBelair2015], Prop 3.6, §4.10 (Prop 4.17)
-* [ACBY1997], [Friedrich1996]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Prop 3.6, §4.10 (Prop 4.17)
+* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+* [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
 -/
 
 open Set
@@ -39,7 +41,7 @@ open Set
 namespace Feec.EinsteinBianchi
 
 /-- **Prop 3.6 on `ℝ³`, classical form**: `C²` solutions of the linearized EB system with
-compact spatial support and TSD data stay TSD (`tsd_propagates`). Thesis: Prop 3.6 (corrected) -/
+compact spatial support and TSD data stay TSD (`tsd_propagates`). [QuennevilleBelair2015], Prop 3.6 (corrected) -/
 theorem tsd_propagates_classical {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j) (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
     (hsupp : ∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧
@@ -52,7 +54,7 @@ theorem tsd_propagates_classical {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 
   tsd_propagates hEc hBc hsupp hEeq hBeq h0 t ht x
 
 /-- **EB constraints propagate on `ℝ³`** (`L²` strong solutions, with forcing).
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem euclidean_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Euclidean.GradCurl.Space}
     (hU : Evolution.IsStrongSolution Models.Euclidean.GradCurl.complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub Models.Euclidean.GradCurl.constraint)
@@ -60,7 +62,7 @@ theorem euclidean_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Euclid
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub Models.Euclidean.GradCurl.constraint :=
   Models.Euclidean.GradCurl.tsd_propagates hU h0 hF
 
-/-- **EB constraints propagate on the torus `𝕋³`**. Thesis: Prop 4.17 -/
+/-- **EB constraints propagate on the torus `𝕋³`**. [QuennevilleBelair2015], Prop 4.17 -/
 theorem torus_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Torus.GradCurl.Space}
     (hU : Evolution.IsStrongSolution Models.Torus.GradCurl.complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint)
@@ -72,7 +74,7 @@ theorem torus_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Torus.Grad
 conditions** (the thesis' row-wise conditions only propagate stationary data,
 `Feec.Counterexamples.CubeStationary`): strong solutions of the Hodge wave equation of the mirror
 complex `Feec.Models.Cube.Mirror.complexCube` with data and forcing in the constraint
-`Feec.Models.Cube.Mirror.tsdCube` stay there. Thesis: Prop 4.17 (corrected) -/
+`Feec.Models.Cube.Mirror.tsdCube` stay there. [QuennevilleBelair2015], Prop 4.17 (corrected) -/
 theorem cube_tsd_propagates {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s) {a c : ℝ}
     {F U : ℝ → PiLp 2 (Models.Cube.Mirror.SpaceCube b s)}
     (hU : Evolution.IsStrongSolution (Models.Cube.Mirror.complexCube b s hs).wave (Icc a c) F U)
@@ -84,7 +86,7 @@ theorem cube_tsd_propagates {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s)
 /-- **The EB system on every open cube with mirror boundary conditions, with existence and
 uniqueness**: for TSD data in `D(L)` and admissible TSD forcing, the Hodge wave equation has a
 classical solution, unique among strong solutions, which stays TSD.
-Thesis: Prop 4.17 (corrected) -/
+[QuennevilleBelair2015], Prop 4.17 (corrected) -/
 theorem cube_tsd_existsUnique {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s)
     {U₀ : PiLp 2 (Models.Cube.Mirror.SpaceCube b s)}
     (hU₀ : U₀ ∈ (Models.Cube.Mirror.complexCube b s hs).wave.domain)

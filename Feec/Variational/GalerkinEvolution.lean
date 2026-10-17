@@ -20,7 +20,7 @@ equation with `ε` (the spatial form being accretive, or skew, on the discrete s
   a semi-discrete Galerkin scheme `⟪J ψ, J ξ'⟫ + a(ξ, ψ) = 0` with an accretive form `a` on the
   discrete space and an elliptic projection `P` for `⟪J ·, J ·⟫ + a`, over `ℝ` and `ℂ`.
 
-Thesis: Thm 4.14.
+[QuennevilleBelair2015], Thm 4.14.
 
 ## References
 
@@ -43,7 +43,7 @@ discrete one and `p` a projection of `u`. If the projected error `ε = p − u�
 `[a,b]` with right derivative `ε'` on `[a,b)`, and the error equation tested with `ε` gives
 `re ⟪ε', ε⟫ ≤ -λ ‖ε‖² + g ‖ε‖` for a continuous `g ≥ 0`, then on `[a,b]`
 `‖u t − uₕ t‖ ≤ ‖u t − p t‖ + e^{-λ(t-a)} ‖p a − uₕ a‖ + ∫ₐᵗ e^{-λ(t-s)} g s`.
-Thesis: Thm 4.14. -/
+[QuennevilleBelair2015], Thm 4.14. -/
 theorem norm_sub_le_of_projected_error_decay {u p uh ε' : ℝ → E} {g : ℝ → ℝ} {a b lam : ℝ}
     (hεc : ContinuousOn (fun t => p t - uh t) (Icc a b))
     (hε : ∀ t ∈ Ico a b, HasDerivWithinAt (fun t => p t - uh t) (ε' t) (Ici t) t)
@@ -61,7 +61,7 @@ theorem norm_sub_le_of_projected_error_decay {u p uh ε' : ℝ → E} {g : ℝ �
 /-- **Galerkin error bound.** With the notation of `norm_sub_le_of_projected_error_decay`, if
 `re ⟪ε', ε⟫ ≤ g ‖ε‖` (the spatial form is accretive on the discrete space) then
 `‖u t − uₕ t‖ ≤ ‖u t − p t‖ + ‖p a − uₕ a‖ + ∫ₐᵗ g` on `[a,b]`.
-Thesis: Thm 4.14. -/
+[QuennevilleBelair2015], Thm 4.14. -/
 theorem norm_sub_le_of_projected_error {u p uh ε' : ℝ → E} {g : ℝ → ℝ} {a b : ℝ}
     (hεc : ContinuousOn (fun t => p t - uh t) (Icc a b))
     (hε : ∀ t ∈ Ico a b, HasDerivWithinAt (fun t => p t - uh t) (ε' t) (Ici t) t)
@@ -115,7 +115,7 @@ and `ξₕ ∈ K` satisfy `⟪J ψ, J ξ'⟫ + a ξ ψ = 0` for `ψ ∈ K`, then
 `e = J (P ξ - ξ)`,
 `‖J (ξ t - ξₕ t)‖ ≤ ‖e t‖ + ‖J (P ξ(a) - ξₕ(a))‖ + ∫ₐᵗ (‖e'‖ + ‖e‖)`.
 This covers the semi-discrete Hodge wave equation (`a` skew) and dissipative
-perturbations of it, over `ℝ` and `ℂ`. Thesis: Thm 4.14 -/
+perturbations of it, over `ℝ` and `ℂ`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem error_bound (J : V →L[𝕜] E) (a : V → V → 𝕜)
     (ha_sub : ∀ x y ψ, a (x - y) ψ = a x ψ - a y ψ) (K : Submodule 𝕜 V)
     (ha : ∀ ψ ∈ K, 0 ≤ RCLike.re (a ψ ψ)) (P : V →L[𝕜] V) (hPK : ∀ ζ, P ζ ∈ K)
@@ -178,7 +178,7 @@ theorem error_bound (J : V →L[𝕜] E) (a : V → V → 𝕜)
 
 /-- **Error bound, refined form**: under the hypotheses of `error_bound`,
 `‖J (ξ t - ξₕ t)‖ ≤ ‖J (Pξ(a) - ξₕ(a))‖ + ‖e t‖ + (t - a) ‖e a‖ + (1 + (t - a)) ∫ₐᵗ ‖e'‖`,
-`e = J (P ξ - ξ)`. Thesis: Thm 4.14 -/
+`e = J (P ξ - ξ)`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem error_bound_refined (J : V →L[𝕜] E) (a : V → V → 𝕜)
     (ha_sub : ∀ x y ψ, a (x - y) ψ = a x ψ - a y ψ) (K : Submodule 𝕜 V)
     (ha : ∀ ψ ∈ K, 0 ≤ RCLike.re (a ψ ψ)) (P : V →L[𝕜] V) (hPK : ∀ ζ, P ζ ∈ K)

@@ -28,7 +28,8 @@ For `v : Fin n → Fin n` and a commutative ring `R`, the Levi-Civita symbol
 
 ## References
 
-* [QuennevilleBelair2015], §3.1 (Levi-Civita symbol, volume form)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.1 (Levi-Civita symbol, volume form)
 -/
 
 open Matrix Equiv
@@ -40,7 +41,7 @@ namespace Feec
 variable (R : Type*) [CommRing R]
 
 /-- The Levi-Civita symbol `ε_{v 0 ⋯ v (n-1)}`: the determinant of the matrix with rows
-`e_{v 0}, …, e_{v (n-1)}`. Thesis: §3.1 -/
+`e_{v 0}, …, e_{v (n-1)}`. [QuennevilleBelair2015], §3.1 -/
 def leviCivita {n : ℕ} (v : Fin n → Fin n) : R :=
   ((1 : Matrix (Fin n) (Fin n) R).submatrix v id).det
 
@@ -98,10 +99,10 @@ theorem map_leviCivita {S : Type*} [CommRing S] (f : R →+* S) {n : ℕ} (v : F
 
 variable (R)
 
-/-- `ε_{ijk}` in three dimensions. Thesis: §3.1 -/
+/-- `ε_{ijk}` in three dimensions. [QuennevilleBelair2015], §3.1 -/
 def leviCivita3 (i j k : Fin 3) : R := leviCivita R ![i, j, k]
 
-/-- `ε_{abcd}` in four dimensions. Thesis: §3.1 -/
+/-- `ε_{abcd}` in four dimensions. [QuennevilleBelair2015], §3.1 -/
 def leviCivita4 (a b c d : Fin 4) : R := leviCivita R ![a, b, c, d]
 
 variable {R}

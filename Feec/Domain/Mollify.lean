@@ -33,8 +33,10 @@ Let `E` be a finite-dimensional real normed space with an additive Haar measure 
 
 ## References
 
-* [Brezis2011], Ch. 4 (convolution, mollifiers, density of `C_c` in `L^p`)
-* [QuennevilleBelair2015], §4.10 (Prop 4.17 and its proof)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  Ch. 4 (convolution, mollifiers, density of `C_c` in `L^p`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17 and its proof)
 -/
 
 @[expose] public noncomputable section

@@ -30,7 +30,8 @@ its Hodge wave equation is (4.18).
 
 ## References
 
-* [QuennevilleBelair2015], §4.11 (Prop 4.19, (4.16)–(4.18))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.11 (Prop 4.19, (4.16)–(4.18))
 -/
 
 @[expose] public noncomputable section
@@ -65,13 +66,13 @@ instance (i : Fin 3) : (constraint i).HasOrthogonalProjection :=
   fibreReducing.hasOrthogonalProjection i
 
 /-- **`K` is a reducing subcomplex** (the projection hypothesis of Prop 4.19, proved).
-Thesis: Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.19 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
 /-- **Thesis Prop 4.19 on `𝕋³`**: strong solutions of the Hodge wave system (4.18),
 `U' = L U + F`, with data and forcing in `K` stay in `K`.
-See [QuennevilleBelair2015], Eq. (4.18) (§4.11). Thesis: Prop 4.19 -/
+See [QuennevilleBelair2015], Eq. (4.18) (§4.11). [QuennevilleBelair2015], Prop 4.19 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -79,7 +80,7 @@ theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates hU h0 hF
 
-/-- Prop 4.19 for the sign convention `U' = -L U + F` of Thesis (4.4). Thesis: Prop 4.19 -/
+/-- Prop 4.19 for the sign convention `U' = -L U + F` of Thesis (4.4). [QuennevilleBelair2015], Prop 4.19 -/
 theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution (-complex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -89,7 +90,7 @@ theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
 
 /-- **Prop 4.19 on `𝕋³` with existence**: for `U₀ ∈ D(L) ∩ K` and admissible forcing in `K`, the
 Hodge wave equation has a classical solution, unique among strong solutions, staying in `K`.
-Thesis: Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.19 -/
 theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 Space} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -101,7 +102,7 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
   fibreReducing.existsUnique_mem hU₀ hU₀K hF hFK
 
 /-- The wave group of the periodic complex preserves `K` for all times (forward and backward).
-Thesis: Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.19 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
@@ -173,7 +174,7 @@ def realStructure : (Fourier.Torus.symbolComplex symCurl).RealStructure Reflecti
 abbrev realConj : PiLp 2 Space →L[ℝ] PiLp 2 Space := realStructure.toConj.totalConj
 
 /-- **Thesis Prop 4.19 for real fields**: real TSD data and forcing give a strong solution that
-stays real and TSD. Thesis: Prop 4.19 -/
+stays real and TSD. [QuennevilleBelair2015], Prop 4.19 -/
 theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint) (h0r : realConj (U a) = U a)
@@ -182,7 +183,7 @@ theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
   fun t ht => ⟨tsd_propagates hU h0 hF t ht, realStructure.conj_eq hU h0r hFr t ht⟩
 
-/-- **Prop 4.19 for real fields, with existence and uniqueness.** Thesis: Prop 4.19 -/
+/-- **Prop 4.19 for real fields, with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.19 -/
 theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) (hU₀r : realConj U₀ = U₀)
     {F : ℝ → PiLp 2 Space} {a b : ℝ}

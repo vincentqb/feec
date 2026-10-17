@@ -21,7 +21,9 @@ Schwarz (`fderiv_fderiv_comm`).
 
 ## References
 
-* [Arnold2018], §6.2; [AFW2010], §2
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §2
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate

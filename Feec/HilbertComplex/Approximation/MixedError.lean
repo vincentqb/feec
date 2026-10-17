@@ -25,8 +25,10 @@ stability on which the quasi-optimal error analysis of mixed finite element meth
 
 ## References
 
-* [AFW2010], §3.4 (Thm 3.8: discrete stability; the quasi-optimal estimate Thm 3.9 also needs the
-  harmonic gap, `CochainProjection.norm_sub_starProjection_harmonicW_le`); [Arnold2018], Ch. 5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.4 (Thm 3.8: discrete stability; the quasi-optimal estimate Thm 3.9 also needs the harmonic
+  gap, `CochainProjection.norm_sub_starProjection_harmonicW_le`)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 -/
 
 open scoped InnerProductSpace

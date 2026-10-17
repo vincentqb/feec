@@ -35,8 +35,11 @@ of Thesis §6.3 it fails on every bounded domain (`Feec.Counterexamples.BoundedB
 
 ## References
 
-* [QuennevilleBelair2015], Ch. 5 (§5.1), Ch. 6 (§6.1, §6.3)
-* [ArnoldHu2021] (BGG), [AFW2007] (weak symmetry)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 5 (§5.1), Ch. 6 (§6.1, §6.3)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+  (weak symmetry)
 -/
 
 open scoped InnerProductSpace

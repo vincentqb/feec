@@ -47,7 +47,7 @@ open Set
 /-- **Square-root Gronwall inequality**, primitive form. If `Q ≥ 0` is continuous on `[a,b]`,
 `Q²` has right derivative `q'` on `[a,b)`, `G` is continuous on `[a,b]` with right derivative
 `F ≥ 0` on `[a,b)`, and `q' ≤ F Q`, then `Q t ≤ Q a + (G t − G a)/2` on `[a,b]`.
-Thesis: Lemma 4.12 (corrected). -/
+[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem le_add_half_sub_of_sq_deriv_le_mul {Q q' F G : ℝ → ℝ} {a b : ℝ}
     (hQc : ContinuousOn Q (Icc a b)) (hQ0 : ∀ t ∈ Icc a b, 0 ≤ Q t)
     (hq : ∀ t ∈ Ico a b, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
@@ -130,7 +130,7 @@ theorem ContinuousOn.intervalIntegral_primitive_Icc {F : ℝ → ℝ} {a b : ℝ
 
 /-- **Square-root Gronwall inequality**, integral form: `Q t ≤ Q a + ½ ∫ₐᵗ F` for `F ≥ 0`
 continuous on `[a,b]` and `d/dt Q² ≤ F Q` on `[a,b)`.
-Thesis: Lemma 4.12 (corrected). -/
+[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem le_add_half_integral_of_sq_deriv_le_mul {Q q' F : ℝ → ℝ} {a b : ℝ}
     (hQc : ContinuousOn Q (Icc a b)) (hQ0 : ∀ t ∈ Icc a b, 0 ≤ Q t)
     (hq : ∀ t ∈ Ico a b, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
@@ -145,7 +145,7 @@ theorem le_add_half_integral_of_sq_deriv_le_mul {Q q' F : ℝ → ℝ} {a b : �
 
 /-- **The constant `½` is sharp**: `Q t = t - a` and `F = 2` satisfy the hypotheses of
 `le_add_half_integral_of_sq_deriv_le_mul` (`d/dt Q² = 2 (t - a) = F Q`), and the resulting bound
-`Q t ≤ Q a + ½ ∫ₐᵗ F` is an equality for every `t`. Thesis: Lemma 4.12 (the remark after it). -/
+`Q t ≤ Q a + ½ ∫ₐᵗ F` is an equality for every `t`. [QuennevilleBelair2015], Lemma 4.12 (the remark after it). -/
 theorem le_add_half_integral_of_sq_deriv_le_mul_sharp {a b : ℝ} :
     (∀ t ∈ Icc a b, t - a ≤ (a - a) + (1 / 2) * ∫ _ in a..t, (2 : ℝ)) ∧
       ∀ t : ℝ, t - a = (a - a) + (1 / 2) * ∫ _ in a..t, (2 : ℝ) := by
@@ -185,7 +185,7 @@ theorem HasDerivWithinAt.norm_sq_re_inner {e : ℝ → E} {e' : E} {s : Set ℝ}
 omit [IsScalarTower ℝ 𝕜 E] in
 /-- **Energy estimate.** If `e` is continuous on `[a,b]` with right derivative `e'` on `[a,b)`
 and `re ⟪e', e⟫ ≤ g ‖e‖` for some continuous `g ≥ 0`, then `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ g` on `[a,b]`.
-Thesis: Lemma 4.12 (corrected). -/
+[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b : ℝ}
     (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (hgc : ContinuousOn g (Icc a b)) (hg0 : ∀ t ∈ Ico a b, 0 ≤ g t)
@@ -204,7 +204,7 @@ theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ �
 derivative `e'` on `[a,b)` and `re ⟪e', e⟫ ≤ -λ ‖e‖² + g ‖e‖` for some continuous `g ≥ 0`, then
 `‖e t‖ ≤ e^{-λ(t-a)} ‖e a‖ + ∫ₐᵗ e^{-λ(t-s)} g s` on `[a,b]`. Any `λ ∈ ℝ` is allowed;
 `λ = 0` is `norm_le_add_integral_of_re_inner_deriv_le`.
-Thesis: Lemma 4.12 (corrected). -/
+[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b lam : ℝ}
     (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (hgc : ContinuousOn g (Icc a b)) (hg0 : ∀ t ∈ Ico a b, 0 ≤ g t)

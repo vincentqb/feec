@@ -24,8 +24,12 @@ range (`Feec.Models.Euclidean.GradCurl.tsd_propagates` and its siblings).
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (closed Hilbert complexes, Thm 4.2), §4.10
-* [AFW2010], [BruningLesch1992] (closed range and Poincaré inequalities)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (closed Hilbert complexes, Thm 4.2), §4.10
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (closed range and Poincaré inequalities)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (closed range and Poincaré
+  inequalities)
 -/
 
 @[expose] public noncomputable section
@@ -35,7 +39,7 @@ namespace Feec.Counterexamples
 open Models.Euclidean
 
 /-- **The `L²` de Rham complex of `ℝᵈ` has no closed range** in the degrees `1 ≤ k ≤ d`: it has
-no harmonic forms, yet the boundaries are dense in, but not equal to, the cycles. Thesis: §4.2 -/
+no harmonic forms, yet the boundaries are dense in, but not equal to, the cycles. [QuennevilleBelair2015], §4.2 -/
 theorem deRham_not_closedRange (d : Type*) [Fintype d] [LinearOrder d] [Nonempty d] :
     (∀ k, (DeRham.complex d).harmonic k = ⊥) ∧
       ∀ k, k < Fintype.card d → ¬ (DeRham.complex d).ClosedRangeAt (k + 1) ∧
@@ -44,7 +48,7 @@ theorem deRham_not_closedRange (d : Type*) [Fintype d] [LinearOrder d] [Nonempty
     ⟨DeRham.not_closedRangeAt hk, DeRham.boundaries_ne_cycles hk⟩⟩
 
 /-- **No differential of the grad–curl, Hessian–curl or BGG Hessian complexes of `ℝ³` has
-closed range.** Thesis: §4.2 -/
+closed range.** [QuennevilleBelair2015], §4.2 -/
 theorem euclidean_not_closedRange :
     ¬ GradCurl.complex.ClosedRangeAt 1 ∧ ¬ GradCurl.complex.ClosedRangeAt 2 ∧
       ¬ SymCurl.complex.ClosedRangeAt 1 ∧ ¬ SymCurl.complex.ClosedRangeAt 2 ∧
@@ -53,7 +57,7 @@ theorem euclidean_not_closedRange :
     SymCurl.not_closedRangeAt_two, BGG.not_closedRangeAt_one⟩
 
 /-- **No Poincaré inequality for the gradient on `ℝ³`**: there is no `C` with `‖u‖ ≤ C ‖∇u‖`
-for `u ∈ H¹ ∩ (ker ∇)ᗮ`. Thesis: Thm 4.2 -/
+for `u ∈ H¹ ∩ (ker ∇)ᗮ`. [QuennevilleBelair2015], Thm 4.2 -/
 theorem not_poincare_grad :
     ¬ ∃ C : ℝ, ∀ x : (GradCurl.complex.d 0 1).domain,
       (x : GradCurl.Space 0) ∈ (GradCurl.complex.cycles 0)ᗮ →
@@ -63,7 +67,7 @@ theorem not_poincare_grad :
   exact GradCurl.not_closedRangeAt_one
 
 /-- **No Poincaré inequality for the curl on `ℝ³`**: there is no `C` with
-`‖u‖ ≤ C ‖curl u‖` for `u ∈ H(curl) ∩ (ker curl)ᗮ`. Thesis: Thm 4.2 -/
+`‖u‖ ≤ C ‖curl u‖` for `u ∈ H(curl) ∩ (ker curl)ᗮ`. [QuennevilleBelair2015], Thm 4.2 -/
 theorem not_poincare_curl :
     ¬ ∃ C : ℝ, ∀ x : (GradCurl.complex.d 1 2).domain,
       (x : GradCurl.Space 1) ∈ (GradCurl.complex.cycles 1)ᗮ →

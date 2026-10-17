@@ -38,9 +38,11 @@ measure on `ℤⁿ` for `𝕋ⁿ`, Lebesgue measure on `ℝⁿ`), any index shap
 
 ## References
 
-* [QuennevilleBelair2015], §4.10–4.11 (the Fourier models of the periodic and whole-space
-  complexes)
-* [AFW2010], [Arnold2018] (Hilbert complexes)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10–4.11 (the Fourier models of the periodic and whole-space complexes)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (Hilbert complexes)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (Hilbert complexes)
 -/
 
 @[expose] public noncomputable section

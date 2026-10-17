@@ -44,8 +44,11 @@ For a short complex and `K = {0} × S₁ × S₂` (`Feec.ShortHilbertComplex.cor
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (Thm 4.4), §4.10 (Props 4.16–4.18), §4.11 (Prop 4.19)
-* [Kato1995], §III.5.6 (reducing subspaces); [Pazy1983], §1.10 (groups of isometries)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.4), §4.10 (Props 4.16–4.18), §4.11 (Prop 4.19)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reducing subspaces)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10 (groups of isometries)
 -/
 
 open scoped InnerProductSpace

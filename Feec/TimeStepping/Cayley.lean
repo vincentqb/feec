@@ -44,9 +44,11 @@ is `IsFullCNStep`, that of the reduced system (4.15) `Ė = -d₁* B`, `Ḃ = d�
 
 ## References
 
-* [QuennevilleBelair2015], Ch. 7 (Crank–Nicolson for the EB system), Prop 4.18 (constraint
-  propagation, here at the discrete level)
-* [Arnold2018], Ch. 8 (time discretization of Hodge evolution problems)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 7 (Crank–Nicolson for the EB system), Prop 4.18 (constraint propagation, here at the
+  discrete level)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (time discretization of
+  Hodge evolution problems)
 -/
 
 open scoped InnerProductSpace
@@ -62,7 +64,7 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 /-- `u'` is a **Crank–Nicolson step** from `u` for `u' = A u` with half time step `s`:
-`u' + u ∈ D(A)` and `u' - u = s A (u' + u)`. Thesis: Ch. 7 -/
+`u' + u ∈ D(A)` and `u' - u = s A (u' + u)`. [QuennevilleBelair2015], Ch. 7 -/
 def IsCNStep (A : E →ₗ.[𝕜] E) (s : ℝ) (u u' : E) : Prop :=
   ∃ h : u' + u ∈ A.domain, u' - u = (s : 𝕜) • A ⟨u' + u, h⟩
 
@@ -71,7 +73,7 @@ def cayley (A : E →ₗ.[𝕜] E) (s : ℝ) : E →L[𝕜] E :=
   (2 * (s : 𝕜)⁻¹) • resolvent A ((s : 𝕜)⁻¹) - 1
 
 /-- The Cayley transform performs a CN step whenever `R(s⁻¹) = (s⁻¹ - A)⁻¹` exists.
-Thesis: Ch. 7 -/
+[QuennevilleBelair2015], Ch. 7 -/
 theorem isCNStep_cayley {R : E →L[𝕜] E} (hR : IsResolvent A ((s : 𝕜)⁻¹) R) (hs : s ≠ 0)
     (u : E) : IsCNStep A s u (cayley A s u) := by
   have hs' : (s : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hs
@@ -88,7 +90,7 @@ theorem isCNStep_cayley {R : E →L[𝕜] E} (hR : IsResolvent A ((s : 𝕜)⁻�
   module
 
 /-- For skew-adjoint `A`, the Cayley transform performs a CN step for every `s ≠ 0`.
-Thesis: Ch. 7 -/
+[QuennevilleBelair2015], Ch. 7 -/
 theorem _root_.LinearPMap.IsSkewAdjoint.isCNStep_cayley [CompleteSpace E] (hA : A.IsSkewAdjoint)
     (hs : s ≠ 0) (u : E) : IsCNStep A s u (cayley A s u) :=
   Feec.TimeStepping.isCNStep_cayley (Operator.isResolvent_resolvent hA (by
@@ -106,7 +108,7 @@ private theorem exists_sub_eq {u₁ u₂ : E} (h₁ : IsCNStep A s u u₁) (h₂
     rw [← A.map_sub]; congr 1; exact Subtype.ext hd
   rw [this, smul_sub, ← e₁, ← e₂]; abel
 
-/-- **Uniqueness of CN steps** for dissipative `A` and `s ≥ 0`. Thesis: Ch. 7 -/
+/-- **Uniqueness of CN steps** for dissipative `A` and `s ≥ 0`. [QuennevilleBelair2015], Ch. 7 -/
 theorem IsCNStep.unique (hA : A.IsDissipative) (hs : 0 ≤ s) {u₁ u₂ : E}
     (h₁ : IsCNStep A s u u₁) (h₂ : IsCNStep A s u u₂) : u₁ = u₂ := by
   obtain ⟨hm, he⟩ := exists_sub_eq h₁ h₂
@@ -119,7 +121,7 @@ theorem IsCNStep.unique (hA : A.IsDissipative) (hs : 0 ≤ s) {u₁ u₂ : E}
   have : ‖e‖ ^ 2 ≤ 0 := by rw [key]; exact mul_nonpos_of_nonneg_of_nonpos hs h
   exact sub_eq_zero.1 (norm_eq_zero.1 (by nlinarith [norm_nonneg e]))
 
-/-- **Uniqueness of CN steps** for skew-symmetric `A` and every `s`. Thesis: Ch. 7 -/
+/-- **Uniqueness of CN steps** for skew-symmetric `A` and every `s`. [QuennevilleBelair2015], Ch. 7 -/
 theorem IsCNStep.unique_of_isSkewSymmetric (hA : A.IsSkewSymmetric) {u₁ u₂ : E}
     (h₁ : IsCNStep A s u u₁) (h₂ : IsCNStep A s u u₂) : u₁ = u₂ := by
   rcases le_total 0 s with hs | hs
@@ -144,7 +146,7 @@ private theorem norm_sq_sub_norm_sq (h : IsCNStep A s u u') :
   rw [← h1, e, inner_smul_left, RCLike.conj_ofReal, RCLike.re_ofReal_mul]
 
 /-- **Energy conservation**: a CN step of a skew-symmetric operator preserves the norm.
-Thesis: Ch. 7 -/
+[QuennevilleBelair2015], Ch. 7 -/
 theorem IsCNStep.norm_eq (hA : A.IsSkewSymmetric) (h : IsCNStep A s u u') : ‖u'‖ = ‖u‖ := by
   have := norm_sq_sub_norm_sq h
   rw [hA.re_inner_self, mul_zero, sub_eq_zero] at this
@@ -159,21 +161,21 @@ theorem IsCNStep.norm_le (hA : A.IsDissipative) (hs : 0 ≤ s) (h : IsCNStep A s
     mul_nonpos_of_nonneg_of_nonpos hs (hA ⟨u' + u, h.1⟩)
   exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 (by linarith)
 
-/-- The Cayley transform of a skew-adjoint operator is an isometry. Thesis: Ch. 7 -/
+/-- The Cayley transform of a skew-adjoint operator is an isometry. [QuennevilleBelair2015], Ch. 7 -/
 theorem norm_cayley_apply [CompleteSpace E] (hA : A.IsSkewAdjoint) (s : ℝ) (u : E) :
     ‖cayley A s u‖ = ‖u‖ := by
   rcases eq_or_ne s 0 with rfl | hs
   · simp [cayley]
   · exact (hA.isCNStep_cayley hs u).norm_eq hA.isSkewSymmetric
 
-/-- **Energy conservation of the CN iterates** `uⁿ = cayleyⁿ u⁰`. Thesis: Ch. 7 -/
+/-- **Energy conservation of the CN iterates** `uⁿ = cayleyⁿ u⁰`. [QuennevilleBelair2015], Ch. 7 -/
 theorem norm_cayley_pow_apply [CompleteSpace E] (hA : A.IsSkewAdjoint) (s : ℝ) (n : ℕ)
     (u : E) : ‖(cayley A s ^ n) u‖ = ‖u‖ := by
   induction n with
   | zero => simp
   | succ n ih => rw [pow_succ']; exact (norm_cayley_apply hA s _).trans ih
 
-/-- A CN sequence of a skew-symmetric operator has constant norm. Thesis: Ch. 7 -/
+/-- A CN sequence of a skew-symmetric operator has constant norm. [QuennevilleBelair2015], Ch. 7 -/
 theorem norm_eq_of_forall_isCNStep (hA : A.IsSkewSymmetric) {U : ℕ → E}
     (hU : ∀ n, IsCNStep A s (U n) (U (n + 1))) (n : ℕ) : ‖U n‖ = ‖U 0‖ := by
   induction n with
@@ -193,7 +195,7 @@ theorem eq_cayley_pow_of_forall_isCNStep [CompleteSpace E] (hA : A.IsSkewAdjoint
     exact (hU n).unique_of_isSkewSymmetric hA.isSkewSymmetric (hA.isCNStep_cayley hs (U n))
 
 /-- **Discrete constraint propagation**: if `K` reduces a dissipative `A` and `s ≥ 0`, a CN step
-from `u ∈ K` stays in `K`. Thesis: Prop 4.18 -/
+from `u ∈ K` stays in `K`. [QuennevilleBelair2015], Prop 4.18 -/
 theorem IsCNStep.mem_of_isReducing (hA : A.IsDissipative) (hs : 0 ≤ s) {K : Submodule 𝕜 E}
     [K.HasOrthogonalProjection] (hK : A.IsReducing K) (hu : u ∈ K) (h : IsCNStep A s u u') :
     u' ∈ K := by
@@ -213,7 +215,7 @@ theorem IsCNStep.mem_of_isReducing (hA : A.IsDissipative) (hs : 0 ≤ s) {K : Su
   rw [← this]
   exact K.starProjection_apply_mem _
 
-/-- **Discrete constraint propagation along CN sequences.** Thesis: Prop 4.18 -/
+/-- **Discrete constraint propagation along CN sequences.** [QuennevilleBelair2015], Prop 4.18 -/
 theorem mem_of_forall_isCNStep (hA : A.IsDissipative) (hs : 0 ≤ s) {K : Submodule 𝕜 E}
     [K.HasOrthogonalProjection] (hK : A.IsReducing K) {U : ℕ → E}
     (hU : ∀ n, IsCNStep A s (U n) (U (n + 1))) (h0 : U 0 ∈ K) (n : ℕ) : U n ∈ K := by

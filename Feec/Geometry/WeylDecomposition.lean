@@ -26,8 +26,13 @@ In a four-dimensional Minkowski orthonormal frame.
 
 ## References
 
-* [QuennevilleBelair2015], §3.2–3.3 (Props 3.1, 3.3, (3.2))
-* [Bel1958], [Alcubierre2008], [Friedrich1996], [ACBY1997], [Wald1984]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.2–3.3 (Props 3.1, 3.3, (3.2))
+* [L. Bel, *Définition d'une densité d'énergie et d'un état de radiation totale généralisée*][Bel1958]
+* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008]
+* [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
+* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+* [R. M. Wald, *General Relativity*][Wald1984]
 -/
 
 @[expose] public section

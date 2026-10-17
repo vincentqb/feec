@@ -33,8 +33,9 @@ space is `tsdSKer = tsdS ∩ ker (grad grad)†`, and the invariant core of
 
 ## References
 
-* [QuennevilleBelair2015], §4.10–4.11 (Prop. 4.16, Prop. 4.17, Prop. 4.19, complex (4.16))
-* [Arnold2018], §8 (Hessian and div-div complexes)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10–4.11 (Prop. 4.16, Prop. 4.17, Prop. 4.19, complex (4.16))
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §8 (Hessian and div-div complexes)
 -/
 
 @[expose] public noncomputable section
@@ -73,7 +74,7 @@ theorem inner_constS_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {z 
 
 /-- **The projection hypothesis of Prop 4.19 fails** on every nonempty bounded open `Ω`: for the
 symmetric test field `Φ = g · diag(1, -1, 0)` (any bump `g ≥ 0`, `g ≠ 0`), the projection of `Φ`
-onto `L²(TSD) ∩ L²(S)` is not in `H̊(curl, S)`. Thesis: Prop 4.19 -/
+onto `L²(TSD) ∩ L²(S)` is not in `H̊(curl, S)`. [QuennevilleBelair2015], Prop 4.19 -/
 theorem exists_projTSD_not_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : ∃ (Φ : Ix → R3 → ℝ) (hΦ : IsTestField Ω Φ)
       (hs : ∀ i j, Φ (i, j) = Φ (j, i)),
@@ -102,7 +103,7 @@ theorem exists_projTSD_not_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
   linarith
 
 /-- **`L²(TSD) ∩ H̊(curl, S)` is not dense in `L²(TSD) ∩ L²(S)`** (the density hypothesis of
-Prop 4.19 fails): `diag(1, -1, 0)` is orthogonal to it. Thesis: Prop 4.19 -/
+Prop 4.19 fails): `diag(1, -1, 0)` is orthogonal to it. [QuennevilleBelair2015], Prop 4.19 -/
 theorem not_dense_tsdS_inter (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     constS hΩ hb ∈ tsdS Ω ∧ constS hΩ hb ∉
       closure ((tsdS Ω : Set (symSub ℝ Ω)) ∩ (hessCurl ℝ hΩ).d₁.domain) := by
@@ -119,7 +120,7 @@ theorem not_dense_tsdS_inter (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hn
 /-- **`K = {0} × (L²(TSD) ∩ L²(S)) × S₂` does not reduce the wave operator** (the projection
 hypothesis `P_K D(L) ⊆ D(L)` of Prop 4.19 fails) for every short complex
 `W₀ → L²(S) → W₂` with `D(d₁) ⊆ H̊(curl, S)` containing the symmetric test fields in
-`D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. Thesis: Prop 4.19 -/
+`D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. [QuennevilleBelair2015], Prop 4.19 -/
 theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
@@ -193,7 +194,7 @@ set_option maxHeartbeats 800000 in
 fails on every nonempty bounded open `Ω ⊆ ℝ³`): for every short complex
 `W₀ → L²(Ω; S) → L²(Ω; T)` with `d₁ ⊆ curl` on `H̊(curl, S)`, the TSD datum `(0, 0, β)` lies in
 `D(L) ∩ K`, `K = {0} × L²(TSD) × L²(TSD)`, and every strong solution from it leaves `K` at once.
-Thesis: Prop 4.19 -/
+[QuennevilleBelair2015], Prop 4.19 -/
 theorem tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     (S : ShortHilbertComplex ℝ W₀ (symSub ℝ Ω) (trSub ℝ Ω))

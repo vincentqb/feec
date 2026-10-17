@@ -21,8 +21,11 @@ the opposite shape `c.symm`, on the same spaces: no index transport is needed. B
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (dual complex, `V*_k`)
-* [AFW2010], §3.1.2 (dual complex); [BruningLesch1992], Lemma 2.1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (dual complex, `V*_k`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1.2 (dual complex)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1
 -/
 
 open scoped InnerProductSpace
@@ -61,7 +64,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- The dual complex on `c.symm`: `d* i j = (d j i)†`. Thesis: §4.2 -/
+/-- The dual complex on `c.symm`: `d* i j = (d j i)†`. [QuennevilleBelair2015], §4.2 -/
 def dual : HilbertComplex 𝕜 c.symm W where
   d i j := (H.d j i)†
   shape i j h := by

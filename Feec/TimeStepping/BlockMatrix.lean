@@ -45,8 +45,10 @@ With block mass matrix `M = diag(M₀, M₁, M₂)` (`blockMass`) and stiffness
 
 ## References
 
-* [QuennevilleBelair2015], Ch. 7 (MINRES for the Crank–Nicolson systems)
-* [PaigeSaunders1975] (MINRES for symmetric indefinite systems)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 7 (MINRES for the Crank–Nicolson systems)
+* [C. C. Paige, M. A. Saunders, *Solution of sparse indefinite systems of linear equations*][PaigeSaunders1975]
+  (MINRES for symmetric indefinite systems)
 -/
 
 open Matrix
@@ -59,7 +61,7 @@ variable {n R : Type*} [Fintype n] [DecidableEq n] [CommRing R]
 
 /-- **Signed symmetrization**: if `M` is symmetric and couples only unknowns with equal signs,
 and `K` is skew and couples only unknowns with opposite signs, then `diag(ε) (M + s K)` is
-symmetric. Thesis: Ch. 7 -/
+symmetric. [QuennevilleBelair2015], Ch. 7 -/
 theorem isSymm_diagonal_mul_add_smul (ε : n → R) {M K : Matrix n n R} (hM : M.IsSymm)
     (hK : Kᵀ = -K) (hMε : ∀ i j, M i j ≠ 0 → ε i = ε j) (hKε : ∀ i j, K i j ≠ 0 → ε i = -ε j)
     (s : R) : (diagonal ε * (M + s • K)).IsSymm := by
@@ -79,7 +81,7 @@ theorem isSymm_diagonal_mul_add_smul (ε : n → R) {M K : Matrix n n R} (hM : M
   linear_combination e1 + e2
 
 /-- The signed system `diag(ε) A x = diag(ε) b` has the solutions of `A x = b` when
-`ε i² = 1`. Thesis: Ch. 7 -/
+`ε i² = 1`. [QuennevilleBelair2015], Ch. 7 -/
 theorem mulVec_diagonal_mul_iff (ε : n → R) (hε : ∀ i, ε i * ε i = 1) (A : Matrix n n R)
     (x b : n → R) : (diagonal ε * A) *ᵥ x = diagonal ε *ᵥ b ↔ A *ᵥ x = b := by
   have hεε : diagonal ε * diagonal ε = 1 := by

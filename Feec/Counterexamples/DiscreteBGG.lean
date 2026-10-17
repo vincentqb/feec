@@ -15,7 +15,8 @@ derived from the continuous one (`Feec.BGG.Discrete.exact_top_h`).
 
 ## References
 
-* [QuennevilleBelair2015], §5.2 (Props 5.3–5.4)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.2 (Props 5.3–5.4)
 -/
 
 open scoped RealInnerProductSpace

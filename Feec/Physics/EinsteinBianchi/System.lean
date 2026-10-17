@@ -26,8 +26,11 @@ matrix calculus (`curl`, `div`, `vskw`, Lemma 3.5) is `Feec.Algebra.MatrixSymbol
 
 ## References
 
-* [QuennevilleBelair2015], §3.3–3.4 (Prop 3.4, Lemma 3.5, Prop 3.6)
-* [Bel1958], [Friedrich1996], [ACBY1997]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.3–3.4 (Prop 3.4, Lemma 3.5, Prop 3.6)
+* [L. Bel, *Définition d'une densité d'énergie et d'un état de radiation totale généralisée*][Bel1958]
+* [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
+* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm

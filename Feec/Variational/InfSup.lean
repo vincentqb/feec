@@ -31,8 +31,14 @@ inf-sup condition with constant `γ > 0` is `γ ‖x‖ ≤ ‖B x‖ = sup_{y �
 
 ## References
 
-* [QuennevilleBelair2015], §4.5 (inf-sup condition), Prop 4.13 (inf-sup by a test function)
-* [Babuska1971]; [BoffiBrezziFortin2013], Ch. 4; [AFW2010], §3.2; [Arnold2018], Ch. 4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.5 (inf-sup condition), Prop 4.13 (inf-sup by a test function)
+* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
+  Ch. 4
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.2
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
 @[expose] public noncomputable section
@@ -43,13 +49,13 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜] {σ : 𝕜 →+* 𝕜} [RingHomIsometr
   [NormedAddCommGroup X] [NormedSpace 𝕜 X] [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
 
 /-- The **inf-sup condition** with constant `γ > 0`: `γ ‖x‖ ≤ ‖B x‖` for every `x`, where
-`‖B x‖ = sup_{y ≠ 0} |B x y| / ‖y‖`. Thesis: §4.5 -/
+`‖B x‖ = sup_{y ≠ 0} |B x y| / ‖y‖`. [QuennevilleBelair2015], §4.5 -/
 structure InfSup (B : X →L[𝕜] Y →SL[σ] 𝕜) (γ : ℝ) : Prop where
   pos : 0 < γ
   le : ∀ x, γ * ‖x‖ ≤ ‖B x‖
 
 /-- The **separation condition** on the second slot: `B x y = 0` for all `x` forces `y = 0`
-(the "dense range" condition of Babuška–Nečas). Thesis: §4.5 -/
+(the "dense range" condition of Babuška–Nečas). [QuennevilleBelair2015], §4.5 -/
 def SeparatingRight (B : X →L[𝕜] Y →SL[σ] 𝕜) : Prop := ∀ y, (∀ x, B x y = 0) → y = 0
 
 /-- The restriction of `B` to a trial subspace `K` and a test subspace `L`. -/
@@ -127,7 +133,7 @@ theorem of_forall_exists_norm_le_one (hγ : 0 < γ)
 
 /-- **Inf-sup by a test map.** If `T` satisfies `‖T x‖ ≤ M ‖x‖` and `c ‖x‖² ≤ re B x (T x)`,
 then `B` satisfies the inf-sup condition with constant `c / M`. `T` need not be linear.
-Thesis: Prop 4.13 -/
+[QuennevilleBelair2015], Prop 4.13 -/
 theorem of_testMap (T : X → Y) {c M : ℝ} (hc : 0 < c) (hM : 0 < M)
     (hTM : ∀ x, ‖T x‖ ≤ M * ‖x‖) (hT : ∀ x, c * ‖x‖ ^ 2 ≤ RCLike.re (B x (T x))) :
     InfSup B (c / M) := by
@@ -146,7 +152,7 @@ theorem of_testMap (T : X → Y) {c M : ℝ} (hc : 0 < c) (hM : 0 < M)
 space `L`, `‖T x‖ ≤ M ‖x‖` and `c ‖x‖² ≤ re B x (T x)` on `K`, then the restriction of `B` to
 `K × L` satisfies the inf-sup condition with constant `c / M`. With `K = L = V` this is the
 continuous inf-sup condition, with `K = L = Vₕ` a subcomplex its discrete counterpart with the
-same constant. Thesis: Prop 4.13 -/
+same constant. [QuennevilleBelair2015], Prop 4.13 -/
 theorem restrict_of_testMap (K : Submodule 𝕜 X) (L : Submodule 𝕜 Y) (T : X → Y)
     (hTK : ∀ x ∈ K, T x ∈ L) {c M : ℝ} (hc : 0 < c) (hM : 0 < M)
     (hTM : ∀ x ∈ K, ‖T x‖ ≤ M * ‖x‖) (hT : ∀ x ∈ K, c * ‖x‖ ^ 2 ≤ RCLike.re (B x (T x))) :

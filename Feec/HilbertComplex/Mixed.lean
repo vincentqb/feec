@@ -34,8 +34,11 @@ condition of the Hodge wave form (`Feec.Variational.InfSup.of_testMap`).
 
 ## References
 
-* [AFW2010], §3.2, Thm 3.1 (well-posedness of the mixed Hodge Laplacian); [Arnold2018], Thm 4.9
-* [QuennevilleBelair2015], Prop 4.13 (the same test-function argument for the Hodge wave form)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.2, Thm 3.1 (well-posedness of the mixed Hodge Laplacian)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.9
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Prop 4.13 (the same test-function argument for the Hodge wave form)
 -/
 
 open scoped InnerProductSpace

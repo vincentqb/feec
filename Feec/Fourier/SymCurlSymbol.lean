@@ -22,7 +22,8 @@ trace-free (Lemma 3.5). Its adjoint complex (4.17) is `div div ← sym curl`.
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Lemma 3.5), §4.11 (Prop 4.19, (4.16)–(4.18))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Lemma 3.5), §4.11 (Prop 4.19, (4.16)–(4.18))
 -/
 
 @[expose] public noncomputable section
@@ -137,7 +138,7 @@ def hess (ξ : Freq) : ℂ →L[ℂ] Sym := (hessM ξ).codRestrict symSub (hessM
 
 @[simp] theorem coe_hess (ξ : Freq) (c : ℂ) : (hess ξ c : Mat) = hessM ξ c := rfl
 
-/-- The curl symbol maps symmetric matrices to trace-free ones. Thesis: Lemma 3.5 -/
+/-- The curl symbol maps symmetric matrices to trace-free ones. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem curl_mem_trSub (ξ : Freq) {M : Mat} (hM : M ∈ symSub) : curl ξ M ∈ trSub := by
   have hs : ∀ c, (MatrixSymbol.symbolJet (cfreq ξ) (toMatrix M) c)ᵀ =
       MatrixSymbol.symbolJet (cfreq ξ) (toMatrix M) c := fun c => by
@@ -279,7 +280,7 @@ instance (i : Fin 3) (ξ : Freq) : (tsdK i ξ).HasOrthogonalProjection := by
   fin_cases i <;> infer_instance
 
 /-- **`({0}, tsdS ξ, tsdT ξ)` reduces the strong-symmetry fibre complex at every frequency.**
-Thesis: Lemma 3.5, Prop 4.19 -/
+[QuennevilleBelair2015], Lemma 3.5, Prop 4.19 -/
 theorem isFibreReducing : symCurl.IsFibreReducing tsdK := by
   refine FibreComplex.IsFibreReducing.of_orthogonal (fun i j ξ => ?_) (fun i j ξ => ?_)
   · fin_cases i <;> fin_cases j

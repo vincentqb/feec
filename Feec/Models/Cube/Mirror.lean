@@ -61,8 +61,10 @@ dynamical content in every realization (`Mirror.exists_nonstationary`, `_Q`, `_C
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17, (4.14), (4.15)); Ch. 7 (the unit cube)
-* [Brezis2011], §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17, (4.14), (4.15)); Ch. 7 (the unit cube)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (extension by reflection)
 -/
 
 open scoped InnerProductSpace

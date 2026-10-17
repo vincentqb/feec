@@ -28,8 +28,12 @@ given antilinear `F`, `G`, find `(u, p) ∈ X × Y` with
 
 ## References
 
-* [QuennevilleBelair2015], Thm 4.11 (Brezzi, corrected: the inf-sup of `b` is over `q`)
-* [Brezzi1974]; [BoffiBrezziFortin2013], Ch. 4; [Arnold2018], Ch. 4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.11 (Brezzi, corrected: the inf-sup of `b` is over `q`)
+* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
+  Ch. 4
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
 open ContinuousLinearMap (adjoint)
@@ -45,7 +49,7 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 /-- `(u, p)` solves the saddle point problem `a u v + ⟪v, B† p⟫ = F v`, `⟪q, B u⟫ = G q`.
-Thesis: Thm 4.11 -/
+[QuennevilleBelair2015], Thm 4.11 -/
 structure IsSaddleSolution (a : X →L[𝕜] X →L⋆[𝕜] 𝕜) (B : X →L[𝕜] Y) (F : X →L⋆[𝕜] 𝕜)
     (G : Y →L⋆[𝕜] 𝕜) (u : X) (p : Y) : Prop where
   fst : ∀ v, a u v + ⟪v, adjoint B p⟫ = F v
@@ -62,7 +66,7 @@ theorem inner_adjoint_eq_zero_of_mem_ker {z : X} (hz : z ∈ B.ker) (p : Y) :
   rw [ContinuousLinearMap.adjoint_inner_right, show B z = 0 from hz, inner_zero_left]
 
 /-- **Lifting.** If `β ‖q‖ ≤ ‖B† q‖`, every antilinear `G` on `Y` is `q ↦ ⟪q, B u_G⟫` with
-`u_G = B† w ∈ R(B†)` and `β ‖u_G‖ ≤ ‖G‖`. Thesis: Thm 4.11 -/
+`u_G = B† w ∈ R(B†)` and `β ‖u_G‖ ≤ ‖G‖`. [QuennevilleBelair2015], Thm 4.11 -/
 theorem exists_lift (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) (G : Y →L⋆[𝕜] 𝕜) :
     ∃ w : Y, (∀ q, ⟪q, B (adjoint B w)⟫ = G q) ∧ β * ‖adjoint B w‖ ≤ ‖G‖ := by
   set c : Y →L[𝕜] Y →L⋆[𝕜] 𝕜 := (innerSLFlip 𝕜).comp (B.comp (adjoint B))
@@ -111,7 +115,7 @@ private theorem norm_residual_le (F : X →L⋆[𝕜] 𝕜) (u : X) :
   (norm_sub_le _ _).trans (by gcongr; exact a.le_opNorm u)
 
 /-- **Brezzi**, uniqueness: the inf-sup condition of `a` on `ker B` and of `b` force uniqueness.
-Thesis: Thm 4.11 -/
+[QuennevilleBelair2015], Thm 4.11 -/
 theorem IsSaddleSolution.unique (hZ : InfSup (restrict a B.ker B.ker) γ)
     (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {u u' : X} {p p' : Y}
     (h : IsSaddleSolution a B F G u p) (h' : IsSaddleSolution a B F G u' p') :
@@ -142,7 +146,7 @@ theorem IsSaddleSolution.unique (hZ : InfSup (restrict a B.ker B.ker) γ)
 /-- **Brezzi's theorem** (Thm 4.11, corrected): if `a` restricted to `Z = ker B` has the inf-sup
 property and separates, and `β ‖q‖ ≤ ‖B† q‖`, the saddle point problem has a unique solution for
 all antilinear `F`, `G`. The thesis' inf-sup condition on `b` (inf over the first argument) is
-unsatisfiable when `Z ≠ 0`; the inf is over `q`. Thesis: Thm 4.11 (corrected) -/
+unsatisfiable when `Z ≠ 0`; the inf is over `q`. [QuennevilleBelair2015], Thm 4.11 (corrected) -/
 theorem existsUnique_isSaddleSolution (hZ : InfSup (restrict a B.ker B.ker) γ)
     (hZs : SeparatingRight (restrict a B.ker B.ker)) (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) (F : X →L⋆[𝕜] 𝕜) (G : Y →L⋆[𝕜] 𝕜) :
@@ -176,7 +180,7 @@ theorem existsUnique_isSaddleSolution (hZ : InfSup (restrict a B.ker B.ker) γ)
   obtain ⟨e1, e2⟩ := IsSaddleSolution.unique hZ hβ hb hup hsol
   exact Prod.ext e1 e2
 
-/-- **Brezzi**, stability of `u`: `‖u‖ ≤ γ⁻¹ ‖F‖ + β⁻¹ (1 + ‖a‖/γ) ‖G‖`. Thesis: Thm 4.11 -/
+/-- **Brezzi**, stability of `u`: `‖u‖ ≤ γ⁻¹ ‖F‖ + β⁻¹ (1 + ‖a‖/γ) ‖G‖`. [QuennevilleBelair2015], Thm 4.11 -/
 theorem IsSaddleSolution.norm_fst_le (hZ : InfSup (restrict a B.ker B.ker) γ) (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {u : X} {p : Y} (h : IsSaddleSolution a B F G u p) :
     ‖u‖ ≤ γ⁻¹ * ‖F‖ + β⁻¹ * (1 + ‖a‖ / γ) * ‖G‖ := by
@@ -207,7 +211,7 @@ theorem IsSaddleSolution.norm_fst_le (hZ : InfSup (restrict a B.ker B.ker) γ) (
     _ ≤ γ⁻¹ * ‖F‖ + (1 + ‖a‖ / γ) * (β⁻¹ * ‖G‖) := by gcongr
     _ = _ := by ring
 
-/-- **Brezzi**, stability of `p`: `‖p‖ ≤ β⁻¹ (‖F‖ + ‖a‖ ‖u‖)`. Thesis: Thm 4.11 -/
+/-- **Brezzi**, stability of `p`: `‖p‖ ≤ β⁻¹ (‖F‖ + ‖a‖ ‖u‖)`. [QuennevilleBelair2015], Thm 4.11 -/
 theorem IsSaddleSolution.norm_snd_le (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {u : X}
     {p : Y} (h : IsSaddleSolution a B F G u p) : ‖p‖ ≤ β⁻¹ * (‖F‖ + ‖a‖ * ‖u‖) := by
   set t := adjoint B p
@@ -228,7 +232,7 @@ theorem IsSaddleSolution.norm_snd_le (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ �
 
 /-- **Brezzi, equivalence**: the saddle point problem is uniquely solvable for all antilinear
 `F`, `G` iff `a` has the inf-sup property and separates on `Z = ker B` and `b` has the inf-sup
-property (inf over `q`). Thesis: Thm 4.11 (corrected) -/
+property (inf over `q`). [QuennevilleBelair2015], Thm 4.11 (corrected) -/
 theorem brezzi_iff :
     ((∃ γ, InfSup (restrict a B.ker B.ker) γ) ∧ SeparatingRight (restrict a B.ker B.ker) ∧
       ∃ β, 0 < β ∧ ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) ↔

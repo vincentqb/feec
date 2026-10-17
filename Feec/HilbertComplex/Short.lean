@@ -28,7 +28,8 @@ wave operators of `Feec.HilbertComplex.Dirac` apply to it. Zero padding uses `PU
 
 ## References
 
-* [QuennevilleBelair2015], §4.4, (4.5) and Thm 4.6
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.4, (4.5) and Thm 4.6
 -/
 
 open scoped InnerProductSpace
@@ -41,7 +42,7 @@ universe u
 namespace Feec
 
 /-- A short Hilbert complex `W₀ --d₀--> W₁ --d₁--> W₂` of closed densely defined operators.
-Closed range is not assumed. Thesis: §4.4 -/
+Closed range is not assumed. [QuennevilleBelair2015], §4.4 -/
 structure ShortHilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W₀ W₁ W₂ : Type*)
     [NormedAddCommGroup W₀] [InnerProductSpace 𝕜 W₀] [CompleteSpace W₀]
     [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [CompleteSpace W₁]
@@ -119,11 +120,11 @@ def toHilbertComplex : HilbertComplex 𝕜 ComplexShape.fin3 (W3 W₀ W₁ W₂)
 abbrev dirac : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) := S.toHilbertComplex.dirac
 
 /-- The wave operator `d − d†` of a short complex: `(x₀, x₁, x₂) ↦ (−d₀† x₁, d₀ x₀ − d₁† x₂,
-d₁ x₁)` on `D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`. Thesis: (4.5) -/
+d₁ x₁)` on `D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`. [QuennevilleBelair2015], (4.5) -/
 abbrev wave : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) := S.toHilbertComplex.wave
 
 /-- The wave operator of a short complex is skew-adjoint (no closed range needed).
-Thesis: Thm 4.6 -/
+[QuennevilleBelair2015], Thm 4.6 -/
 theorem isSkewAdjoint_wave : S.wave.IsSkewAdjoint := S.toHilbertComplex.isSkewAdjoint_wave
 
 theorem isSelfAdjoint_dirac : IsSelfAdjoint S.dirac := S.toHilbertComplex.isSelfAdjoint_dirac

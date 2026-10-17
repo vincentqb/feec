@@ -18,7 +18,8 @@ and each is the dual of the other through the formal adjoints `gradᵗ = -div`, 
 
 ## References
 
-* [Arnold2018], §6.2 (the `L²` de Rham complex and its two boundary-condition families)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (the `L²` de Rham complex and
+  its two boundary-condition families)
 -/
 
 @[expose] public noncomputable section

@@ -27,9 +27,16 @@ with the discrete inf-sup condition `InfSup (restrict B K L) γ`. A Galerkin app
 
 ## References
 
-* [QuennevilleBelair2015], Thm 4.10 (quasi-optimality with constant `1 + ‖B‖/γ`)
-* [Babuska1971]; [XuZikatanov2003] (the sharp constant `‖B‖/γ`); [Kato1960] (`‖1 - P‖ = ‖P‖`)
-* [AFW2010], §3; [Arnold2018], Ch. 4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.10 (quasi-optimality with constant `1 + ‖B‖/γ`)
+* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
+* [J. Xu, L. Zikatanov, *Some observations on Babuška and Brezzi theories*][XuZikatanov2003] (the
+  sharp constant `‖B‖/γ`)
+* [T. Kato, *Estimation of iterated matrices, with application to the von Neumann condition*][Kato1960]
+  (`‖1 - P‖ = ‖P‖`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
 open Module
@@ -53,7 +60,7 @@ theorem norm_restrict_le : ‖restrict B K L‖ ≤ ‖B‖ :=
 namespace InfSup
 
 /-- **Discrete stability.** If `p ∈ K` and `B p = B z` on the test space `L`, then
-`‖p‖ ≤ (‖B‖/γ) ‖z‖`. Thesis: Thm 4.10 -/
+`‖p‖ ≤ (‖B‖/γ) ‖z‖`. [QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_le_of_restrict_eq (h : InfSup (restrict B K L) γ) {p : X} (hp : p ∈ K) {z : X}
     (hpz : ∀ v ∈ L, B p v = B z v) : ‖p‖ ≤ ‖B‖ / γ * ‖z‖ := by
   have h1 := (h.le ⟨p, hp⟩).trans (norm_restrict_apply_le_of_eq K L ⟨p, hp⟩ hpz)
@@ -68,7 +75,7 @@ theorem le_opNorm_of_ne_bot (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥) : 
 
 /-- **Quasi-optimality** (Babuška): under the discrete inf-sup condition, Galerkin orthogonality
 `B (u - uₕ) = 0` on `L` gives `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) ‖u - w‖` for every `w ∈ K`. No
-completeness or finite dimension is needed. Thesis: Thm 4.10 -/
+completeness or finite dimension is needed. [QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_sub_le_of_orthogonal (h : InfSup (restrict B K L) γ) {u uh : X} (huh : uh ∈ K)
     (horth : ∀ v ∈ L, B (u - uh) v = 0) {w : X} (hw : w ∈ K) :
     ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * ‖u - w‖ := by
@@ -82,7 +89,7 @@ theorem norm_sub_le_of_orthogonal (h : InfSup (restrict B K L) γ) {u uh : X} (h
     _ ≤ _ := by linarith
 
 /-- **Quasi-optimality**, best-approximation form: `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) dist(u, K)`.
-Thesis: Thm 4.10 -/
+[QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_sub_le_infDist (h : InfSup (restrict B K L) γ) {u uh : X} (huh : uh ∈ K)
     (horth : ∀ v ∈ L, B (u - uh) v = 0) :
     ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * Metric.infDist u K := by
@@ -121,7 +128,7 @@ namespace InfSup
 
 /-- **Sharp quasi-optimality** (Xu–Zikatanov): in an inner product space `X`, under the discrete
 inf-sup condition on `K ≠ 0`, Galerkin orthogonality gives `‖u - uₕ‖ ≤ (‖B‖/γ) ‖u - w‖` for every
-`w ∈ K`. This improves Babuška's `1 + ‖B‖/γ` and is optimal in general. Thesis: Thm 4.10 -/
+`w ∈ K`. This improves Babuška's `1 + ‖B‖/γ` and is optimal in general. [QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_sub_le_of_orthogonal_sharp (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥)
     {u uh : X} (huh : uh ∈ K) (horth : ∀ v ∈ L, B (u - uh) v = 0) {w : X} (hw : w ∈ K) :
     ‖u - uh‖ ≤ ‖B‖ / γ * ‖u - w‖ := by
@@ -147,7 +154,7 @@ theorem norm_sub_le_of_orthogonal_sharp (h : InfSup (restrict B K L) γ) (hK : K
   exact le_of_mul_le_mul_right this (by positivity)
 
 /-- **Sharp quasi-optimality**, best-approximation form: `‖u - uₕ‖ ≤ (‖B‖/γ) dist(u, K)`.
-Thesis: Thm 4.10 -/
+[QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_sub_le_infDist_sharp (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥) {u uh : X}
     (huh : uh ∈ K) (horth : ∀ v ∈ L, B (u - uh) v = 0) :
     ‖u - uh‖ ≤ ‖B‖ / γ * Metric.infDist u K := by
@@ -169,7 +176,7 @@ variable [NormedAddCommGroup X] [NormedSpace 𝕜 X]
 /-- **Discrete well-posedness.** For a bounded bilinear form with the discrete inf-sup condition
 on finite-dimensional `K`, `L` of equal dimension, the Galerkin problem `uₕ ∈ K`,
 `B uₕ v = F v` (`v ∈ L`) has a unique solution for every bounded functional `F`.
-Thesis: Thm 4.10 -/
+[QuennevilleBelair2015], Thm 4.10 -/
 theorem existsUnique_galerkin [FiniteDimensional 𝕜 K] [FiniteDimensional 𝕜 L]
     (hdim : finrank 𝕜 K = finrank 𝕜 L) {B : X →L[𝕜] Y →L[𝕜] 𝕜}
     (h : InfSup (restrict B K L) γ) (F : Y →L[𝕜] 𝕜) :

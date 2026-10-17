@@ -28,7 +28,10 @@ and for any finite-dimensional fibres:
 
 ## References
 
-* [Brezis2011], §9.1 (weak derivatives); [QuennevilleBelair2015], §4.10 (the spaces of Prop 4.17)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.1 (weak derivatives)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (the spaces of Prop 4.17)
 * Mathlib, `Mathlib.Analysis.Fourier.LpSpace` (Plancherel),
   `Mathlib.Analysis.Distribution.SchwartzSpace.Fourier`,
   `Mathlib.Analysis.Distribution.AEEqOfIntegralContDiff`

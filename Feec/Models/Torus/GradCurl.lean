@@ -40,8 +40,10 @@ Hodge wave equation is the matrix system (4.14) of the Einstein–Bianchi formul
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17, (4.14), (4.15))
-* [ACBY1997] (the Einstein–Bianchi system)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17, (4.14), (4.15))
+* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+  (the Einstein–Bianchi system)
 -/
 
 @[expose] public noncomputable section
@@ -72,12 +74,12 @@ instance (i : Fin 3) : (constraint i).HasOrthogonalProjection :=
   fibreReducing.hasOrthogonalProjection i
 
 /-- **`K` is a reducing subcomplex** (the projection hypothesis of Prop 4.17, proved).
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
 /-- **Thesis Prop 4.17 on `𝕋³`**: strong solutions of `U' = L U + F` with data and forcing in
-`K = {0} × L²(TSD) × L²(TSD)` stay in `K`. Thesis: Prop 4.17 -/
+`K = {0} × L²(TSD) × L²(TSD)` stay in `K`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -85,7 +87,7 @@ theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates hU h0 hF
 
-/-- Prop 4.17 for the sign convention `U' = -L U + F` of Thesis (4.4). Thesis: Prop 4.17 -/
+/-- Prop 4.17 for the sign convention `U' = -L U + F` of Thesis (4.4). [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution (-complex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -95,7 +97,7 @@ theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
 
 /-- **Prop 4.17 on `𝕋³` with existence**: for `U₀ ∈ D(L) ∩ K` and admissible forcing in `K`, the
 Hodge wave equation has a classical solution, unique among strong solutions, staying in `K`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 Space} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -107,7 +109,7 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
   fibreReducing.existsUnique_mem hU₀ hU₀K hF hFK
 
 /-- The wave group of the periodic complex preserves `K` for all times (forward and backward).
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
@@ -128,7 +130,7 @@ def realStructure : (Fourier.Torus.symbolComplex gradCurl).RealStructure Reflect
 abbrev realConj : PiLp 2 Space →L[ℝ] PiLp 2 Space := realStructure.toConj.totalConj
 
 /-- **Thesis Prop 4.17 for real fields**: real TSD data and forcing give a strong solution that
-stays real and TSD. Thesis: Prop 4.17 -/
+stays real and TSD. [QuennevilleBelair2015], Prop 4.17 -/
 theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint) (h0r : realConj (U a) = U a)
@@ -137,7 +139,7 @@ theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
   fun t ht => ⟨tsd_propagates hU h0 hF t ht, realStructure.conj_eq hU h0r hFr t ht⟩
 
-/-- **Prop 4.17 for real fields, with existence and uniqueness.** Thesis: Prop 4.17 -/
+/-- **Prop 4.17 for real fields, with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.17 -/
 theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) (hU₀r : realConj U₀ = U₀)
     {F : ℝ → PiLp 2 Space} {a b : ℝ}

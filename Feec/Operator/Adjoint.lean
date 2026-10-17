@@ -26,8 +26,10 @@ This module also re-exports the `LinearPMap` API of `Feec.ForMathlib.LinearPMap.
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (dual complex)
-* [AFW2010], §3.1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (dual complex)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1
 -/
 
 open scoped InnerProductSpace

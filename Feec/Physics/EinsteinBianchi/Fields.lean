@@ -13,8 +13,9 @@ system (`planeWave_weyl`, `planeWave_EB`).
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Prop 3.4, Lemma 3.5), §3.5; §2.8 (TT plane waves)
-* [Wald1984], §4.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Prop 3.4, Lemma 3.5), §3.5; §2.8 (TT plane waves)
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm

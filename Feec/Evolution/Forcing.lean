@@ -32,9 +32,12 @@ The real, `[0,T]` predicates `Feec.ForcingClass.* A T F` and the older names `Fo
 
 ## References
 
-* [QuennevilleBelair2015], §4.3 (Thm 4.3)
-* [CazenaveHaraux1998], Ch. 1 (`W^{1,p}` in time), Prop 4.1.6
-* [Pazy1983], §4.2 (forcing in `W^{1,1}` or in `L¹(0,T; D(A))`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.3)
+* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
+  Ch. 1 (`W^{1,p}` in time), Prop 4.1.6
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §4.2 (forcing in `W^{1,1}` or in `L¹(0,T; D(A))`)
 -/
 
 open Set Filter MeasureTheory

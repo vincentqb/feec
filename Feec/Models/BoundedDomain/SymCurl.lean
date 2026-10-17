@@ -42,8 +42,9 @@ refutation of thesis Prop 4.19).
 
 ## References
 
-* [QuennevilleBelair2015], Lemma 3.5, Prop. 4.16, Prop. 4.18, §4.11 (Prop. 4.19, complex (4.16))
-* [Arnold2018], §8 (Hessian and div-div complexes)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Lemma 3.5, Prop. 4.16, Prop. 4.18, §4.11 (Prop. 4.19, complex (4.16))
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §8 (Hessian and div-div complexes)
 -/
 
 @[expose] public noncomputable section
@@ -301,7 +302,7 @@ theorem curl_mapsTo (hΩ : IsOpen Ω) (Φ : Ix → R3 → 𝕜) (hΦ : IsTestFie
 variable (𝕜) in
 /-- **The thesis' complex (4.16)** `H̊²(Ω) --grad grad--> H̊(curl, Ω; S) --curl--> L²(Ω; T)`:
 the realizations of the Hessian and of the curl along the scalar and the symmetric/trace-free
-embeddings. Thesis: Prop 4.19 -/
+embeddings. [QuennevilleBelair2015], Prop 4.19 -/
 def hessCurl (hΩ : IsOpen Ω) : ShortHilbertComplex 𝕜 (L2 𝕜 Ω) (symSub 𝕜 Ω) (trSub 𝕜 Ω) where
   d₀ := (hessOp 3).minimalVia (L2.toL2F 𝕜 Ω) (symSub 𝕜 Ω).subtypeₗᵢ
   d₁ := (curlOp 3).minimalVia (symSub 𝕜 Ω).subtypeₗᵢ (trSub 𝕜 Ω).subtypeₗᵢ

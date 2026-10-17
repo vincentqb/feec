@@ -41,8 +41,10 @@ eigenvalue `-ω²` is, at every frequency, an eigenvector of `W(a)²`
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17 on the cube: only stationary data propagate)
-* [ReedSimon1980], §VII.3 (mean ergodic theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17 on the cube: only stationary data propagate)
+* [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
+  §VII.3 (mean ergodic theorem)
 -/
 
 @[expose] public noncomputable section

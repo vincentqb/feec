@@ -34,9 +34,13 @@ index, `𝕜 = ℝ` or `ℂ`), at every index `i`:
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (Thm 4.1 Hodge decomposition, Thm 4.2 Poincaré inequality)
-* [BruningLesch1992], Lemma 2.1 (weak and strong Hodge decomposition), Thm 2.4
-* [AFW2010], §3.1.2–§3.1.3; [Arnold2018], Ch. 4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (Thm 4.1 Hodge decomposition, Thm 4.2 Poincaré inequality)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1 (weak and strong Hodge
+  decomposition), Thm 2.4
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1.2–§3.1.3
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
 open scoped InnerProductSpace
@@ -168,11 +172,11 @@ instance (i : ι) : (H.harmonic i).HasOrthogonalProjection := by
 
 /-! ### Orthogonal complements of cycles and boundaries -/
 
-/-- `(𝔅ⁱ)ᗮ = N((d (c.prev i) i)†)`, the cycles of the dual complex. Thesis: (4.1a) -/
+/-- `(𝔅ⁱ)ᗮ = N((d (c.prev i) i)†)`, the cycles of the dual complex. [QuennevilleBelair2015], (4.1a) -/
 theorem orthogonal_boundaries (i : ι) : (H.boundaries i)ᗮ = H.dual.cycles i := by
   rw [cycles_dual, boundaries, orthogonal_range_eq_ker_adjoint _ (H.dense _ _)]
 
-/-- `(𝔷ⁱ)ᗮ = cl 𝔅*ᵢ`, the closure of the boundaries of the dual complex. Thesis: (4.1b) -/
+/-- `(𝔷ⁱ)ᗮ = cl 𝔅*ᵢ`, the closure of the boundaries of the dual complex. [QuennevilleBelair2015], (4.1b) -/
 theorem orthogonal_cycles (i : ι) :
     (H.cycles i)ᗮ = (H.dual.boundaries i).topologicalClosure := by
   rw [boundaries_dual, cycles, orthogonal_ker _ (H.dense _ _) (H.closed _ _)]
@@ -193,7 +197,7 @@ theorem closure_boundaries_eq (i : ι) :
 
 /-! ### Harmonic forms -/
 
-/-- `ℌⁱ = 𝔷ⁱ ∩ (𝔅ⁱ)ᗮ`. Thesis: §4.2 -/
+/-- `ℌⁱ = 𝔷ⁱ ∩ (𝔅ⁱ)ᗮ`. [QuennevilleBelair2015], §4.2 -/
 theorem harmonic_eq (i : ι) : H.harmonic i = H.cycles i ⊓ (H.boundaries i)ᗮ := by
   rw [orthogonal_boundaries, cycles_dual]; rfl
 
@@ -226,7 +230,7 @@ theorem harmonic_eq_dual_cycles_of_not_rel {i : ι} (hi : ∀ j, ¬ c.Rel i j) :
   rw [← harmonic_dual]
   exact H.dual.harmonic_eq_cycles_of_not_rel fun h => hi h
 
-/-- **`𝔷ⁱ = cl 𝔅ⁱ ⊕ ℌⁱ`** (orthogonal; no closed range). Thesis: §4.2 -/
+/-- **`𝔷ⁱ = cl 𝔅ⁱ ⊕ ℌⁱ`** (orthogonal; no closed range). [QuennevilleBelair2015], §4.2 -/
 theorem closure_boundaries_sup_harmonic (i : ι) :
     (H.boundaries i).topologicalClosure ⊔ H.harmonic i = H.cycles i := by
   rw [harmonic_eq, inf_comm, ← orthogonal_closure_boundaries]
@@ -253,7 +257,7 @@ theorem isOrtho_closure_boundaries_closure_dual_boundaries (i : ι) :
 /-! ### The Hodge decomposition -/
 
 /-- **Hodge decomposition** (weak form, no closed range): `Wⁱ = cl 𝔅ⁱ ⊕ ℌⁱ ⊕ cl 𝔅*ᵢ`, with the
-three summands pairwise orthogonal, at every index of every complex. Thesis: Thm 4.1 -/
+three summands pairwise orthogonal, at every index of every complex. [QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge (i : ι) :
     (H.boundaries i).topologicalClosure ⊔ H.harmonic i ⊔
         (H.dual.boundaries i).topologicalClosure = ⊤ ∧
@@ -266,7 +270,7 @@ theorem hodge (i : ι) :
   rw [closure_boundaries_sup_harmonic, ← orthogonal_cycles]
   exact Submodule.sup_orthogonal_of_hasOrthogonalProjection
 
-/-- Under closed range, `𝔷ⁱ = 𝔅ⁱ ⊕ ℌⁱ`. Thesis: §4.2 -/
+/-- Under closed range, `𝔷ⁱ = 𝔅ⁱ ⊕ ℌⁱ`. [QuennevilleBelair2015], §4.2 -/
 theorem boundaries_sup_harmonic {i : ι} (hi : H.ClosedRangeAt i) :
     H.boundaries i ⊔ H.harmonic i = H.cycles i := by
   have h := H.closure_boundaries_sup_harmonic i
@@ -274,7 +278,7 @@ theorem boundaries_sup_harmonic {i : ι} (hi : H.ClosedRangeAt i) :
 
 /-- **Hodge decomposition** (strong form): if `𝔅ⁱ` and `𝔅*ᵢ` are closed, then
 `Wⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ 𝔅*ᵢ`, pairwise orthogonal. By `dual_closedRangeAt_iff`, closedness of `𝔅*ᵢ` is
-closedness of the next boundaries. Thesis: Thm 4.1 -/
+closedness of the next boundaries. [QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge_of_closedRangeAt {i : ι} (hi : H.ClosedRangeAt i) (hi' : H.dual.ClosedRangeAt i) :
     H.boundaries i ⊔ H.harmonic i ⊔ H.dual.boundaries i = ⊤ ∧
       H.boundaries i ⟂ H.harmonic i ∧ H.harmonic i ⟂ H.dual.boundaries i ∧
@@ -324,14 +328,14 @@ theorem domain_eq_cycles_sup (i : ι) :
 /-- **Hodge decomposition of the domain** (`V`-level, no closed range):
 `Vⁱ = cl 𝔅ⁱ ⊕ ℌⁱ ⊕ (Vⁱ ∩ cl 𝔅*ᵢ)`, pairwise orthogonal in `Wⁱ`; since the first two summands
 are cycles, they are also orthogonal in the graph inner product
-(`inner_graph_eq_of_mem_cycles`). Thesis: Thm 4.1 -/
+(`inner_graph_eq_of_mem_cycles`). [QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge_domain (i : ι) :
     (H.d i (c.next i)).domain = (H.boundaries i).topologicalClosure ⊔ H.harmonic i ⊔
       (H.dual.boundaries i).topologicalClosure ⊓ (H.d i (c.next i)).domain := by
   rw [closure_boundaries_sup_harmonic, ← orthogonal_cycles]
   exact H.domain_eq_cycles_sup i
 
-/-- Under closed range, `Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (Vⁱ ∩ (𝔷ⁱ)ᗮ)`. Thesis: Thm 4.1 -/
+/-- Under closed range, `Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (Vⁱ ∩ (𝔷ⁱ)ᗮ)`. [QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge_domain_of_closedRangeAt {i : ι} (hi : H.ClosedRangeAt i) :
     (H.d i (c.next i)).domain =
       H.boundaries i ⊔ H.harmonic i ⊔ (H.cycles i)ᗮ ⊓ (H.d i (c.next i)).domain := by
@@ -348,7 +352,7 @@ theorem inner_graph_eq_of_mem_cycles {i : ι} (x y : (H.d i (c.next i)).domain)
 /-! ### Closed range: Poincaré inequality and duality -/
 
 /-- **Poincaré inequality ⇔ closed range**, at every index: `𝔅ʲ` is closed iff
-`‖x‖ ≤ C ‖d x‖` for `x ∈ D(d (c.prev j) j) ∩ N(d (c.prev j) j)ᗮ`. Thesis: Thm 4.2 -/
+`‖x‖ ≤ C ‖d x‖` for `x ∈ D(d (c.prev j) j) ∩ N(d (c.prev j) j)ᗮ`. [QuennevilleBelair2015], Thm 4.2 -/
 theorem closedRangeAt_iff_poincare (j : ι) :
     H.ClosedRangeAt j ↔ ∃ C : ℝ, ∀ x : (H.d (c.prev j) j).domain,
       (x : W (c.prev j)) ∈ (H.d (c.prev j) j).kerᗮ → ‖(x : W (c.prev j))‖ ≤ C * ‖H.d _ j x‖ :=
@@ -356,7 +360,7 @@ theorem closedRangeAt_iff_poincare (j : ι) :
 
 /-- **Poincaré inequality ⇔ closed range** at a related pair `i → j`, on the orthogonal
 complement of the cycles: `𝔅ʲ` is closed iff `‖x‖ ≤ C ‖d x‖` for `x ∈ Vⁱ ∩ (𝔷ⁱ)ᗮ`.
-Thesis: Thm 4.2 -/
+[QuennevilleBelair2015], Thm 4.2 -/
 theorem closedRangeAt_iff_poincare_of_rel {i j : ι} (h : c.Rel i j) :
     H.ClosedRangeAt j ↔ ∃ C : ℝ, ∀ x : (H.d i j).domain,
       (x : W i) ∈ (H.cycles i)ᗮ → ‖(x : W i)‖ ≤ C * ‖H.d i j x‖ := by
@@ -364,7 +368,7 @@ theorem closedRangeAt_iff_poincare_of_rel {i j : ι} (h : c.Rel i j) :
   exact isClosed_range_iff_exists_norm_le (H.closed _ _)
 
 /-- **Poincaré inequality for the adjoint ⇔ closed range** at a related pair `i → j`:
-`𝔅ʲ` is closed iff `‖y‖ ≤ C ‖d† y‖` for `y ∈ D((d i j)†) ∩ cl 𝔅ʲ`. Thesis: Thm 4.2 -/
+`𝔅ʲ` is closed iff `‖y‖ ≤ C ‖d† y‖` for `y ∈ D((d i j)†) ∩ cl 𝔅ʲ`. [QuennevilleBelair2015], Thm 4.2 -/
 theorem closedRangeAt_iff_poincare_adjoint {i j : ι} (h : c.Rel i j) :
     H.ClosedRangeAt j ↔ ∃ C : ℝ, ∀ y : ((H.d i j)†).domain,
       (y : W j) ∈ (H.boundaries j).topologicalClosure → ‖(y : W j)‖ ≤ C * ‖(H.d i j)† y‖ := by
@@ -373,7 +377,7 @@ theorem closedRangeAt_iff_poincare_adjoint {i j : ι} (h : c.Rel i j) :
   exact isClosed_range_iff_exists_norm_le (adjoint_isClosed (H.dense i j))
 
 /-- Closed range transfers to the dual complex: at a related pair `i → j`, the dual boundaries
-`𝔅*ᵢ = R((d i j)†)` are closed iff `𝔅ʲ` is (closed range theorem). Thesis: §4.2 -/
+`𝔅*ᵢ = R((d i j)†)` are closed iff `𝔅ʲ` is (closed range theorem). [QuennevilleBelair2015], §4.2 -/
 theorem dual_closedRangeAt_iff {i j : ι} (h : c.Rel i j) :
     H.dual.ClosedRangeAt i ↔ H.ClosedRangeAt j := by
   obtain rfl := c.next_eq' h
@@ -387,7 +391,7 @@ theorem boundaries_eq_orthogonal {j : ι} (hj : H.ClosedRangeAt j) :
 
 /-! ### Cohomology -/
 
-/-- The (algebraic) cohomology `𝔷ⁱ / 𝔅ⁱ`. Thesis: §4.2 -/
+/-- The (algebraic) cohomology `𝔷ⁱ / 𝔅ⁱ`. [QuennevilleBelair2015], §4.2 -/
 abbrev cohomology (i : ι) := H.cycles i ⧸ (H.boundaries i).comap (H.cycles i).subtype
 
 /-- The class map `ℌⁱ → 𝔷ⁱ / 𝔅ⁱ`, `h ↦ [h]`. -/
@@ -415,7 +419,7 @@ theorem harmonicToCohomology_injective (i : ι) : Function.Injective (H.harmonic
   rw [boundaries_inf_harmonic, Submodule.mem_bot] at this
   exact (Submodule.mem_bot 𝕜).2 (Subtype.ext this)
 
-/-- Harmonic forms represent all of cohomology **iff** `𝔅ⁱ` is closed. Thesis: §4.2 -/
+/-- Harmonic forms represent all of cohomology **iff** `𝔅ⁱ` is closed. [QuennevilleBelair2015], §4.2 -/
 theorem harmonicToCohomology_surjective_iff (i : ι) :
     Function.Surjective (H.harmonicToCohomology i) ↔ H.ClosedRangeAt i := by
   constructor
@@ -449,7 +453,7 @@ theorem harmonicToCohomology_surjective_iff (i : ι) :
     exact neg_mem hb
 
 /-- **Harmonic forms represent cohomology**: under closed range, `𝔷ⁱ / 𝔅ⁱ ≃ ℌⁱ`.
-Thesis: §4.2 -/
+[QuennevilleBelair2015], §4.2 -/
 def cohomologyEquivHarmonic {i : ι} (hi : H.ClosedRangeAt i) : H.cohomology i ≃ₗ[𝕜] H.harmonic i :=
   (LinearEquiv.ofBijective _
     ⟨H.harmonicToCohomology_injective i, (H.harmonicToCohomology_surjective_iff i).2 hi⟩).symm
@@ -460,7 +464,7 @@ def cohomologyEquivHarmonic {i : ι} (hi : H.ClosedRangeAt i) : H.cohomology i �
 
 /-- **Brüning–Lesch: finite-dimensional cohomology ⇒ closed range.** If `𝔷ⁱ / 𝔅ⁱ` is
 finite-dimensional, `𝔅ⁱ` is closed. (With "Fredholm" read as finite-dimensional *harmonic*
-forms the implication fails; see `Counterexamples`.) Thesis: §4.2 (corrected) -/
+forms the implication fails; see `Counterexamples`.) [QuennevilleBelair2015], §4.2 (corrected) -/
 theorem closedRangeAt_of_finiteDimensional_cohomology (i : ι)
     [FiniteDimensional 𝕜 (H.cohomology i)] : H.ClosedRangeAt i :=
   have : FiniteDimensional 𝕜 (H.cycles i ⧸
@@ -497,7 +501,7 @@ theorem harmonic_eq_bot_iff (i : ι) :
   · intro h
     rw [harmonic_eq, ← h, ← orthogonal_closure_boundaries, Submodule.inf_orthogonal_eq_bot]
 
-/-- Under closed range, the complex is exact at `i` iff `ℌⁱ = 0`. Thesis: §4.2 -/
+/-- Under closed range, the complex is exact at `i` iff `ℌⁱ = 0`. [QuennevilleBelair2015], §4.2 -/
 theorem exact_iff_harmonic_eq_bot {i : ι} (hi : H.ClosedRangeAt i) :
     H.boundaries i = H.cycles i ↔ H.harmonic i = ⊥ := by
   rw [harmonic_eq_bot_iff, IsClosed.submodule_topologicalClosure_eq hi]

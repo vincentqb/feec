@@ -27,8 +27,11 @@ cycles, boundaries and harmonic forms, the discrete Hodge decomposition and disc
 
 ## References
 
-* [AFW2010], §3.3 (subcomplexes and the discrete Hodge decomposition); [Arnold2018], Ch. 5
-* [QuennevilleBelair2015], §4.6 (subcomplexes `Vₕ`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3 (subcomplexes and the discrete Hodge decomposition)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.6 (subcomplexes `Vₕ`)
 -/
 
 open scoped InnerProductSpace
@@ -42,7 +45,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- A **subcomplex** of `H`: subspaces `Vₕⁱ ⊆ D(d i j)` with `d (Vₕⁱ) ⊆ Vₕʲ`. Thesis: §4.6 -/
+/-- A **subcomplex** of `H`: subspaces `Vₕⁱ ⊆ D(d i j)` with `d (Vₕⁱ) ⊆ Vₕʲ`. [QuennevilleBelair2015], §4.6 -/
 structure Subcomplex where
   /-- the discrete spaces -/
   V : ∀ i, Submodule 𝕜 (W i)
@@ -137,7 +140,7 @@ def dh (i j : ι) : S.V i →L[𝕜] S.V j :=
     (S.dh i j x : W j) = H.d i j (S.toDomain i j x) := rfl
 
 /-- **The discrete complex**: a finite-dimensional subcomplex is a Hilbert complex with the
-restricted (bounded) differentials. Thesis: §4.6 -/
+restricted (bounded) differentials. [QuennevilleBelair2015], §4.6 -/
 def toHilbertComplex : HilbertComplex 𝕜 c (fun i => S.V i) where
   d i j := (S.dh i j : S.V i →ₗ[𝕜] S.V j).toPMap ⊤
   shape i j h := by

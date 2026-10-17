@@ -30,8 +30,10 @@ by its bivector matrix in the basis `(t∧x, t∧y, t∧z | y∧z, z∧x, x∧y)
 
 ## References
 
-* [QuennevilleBelair2015], §3.2–3.3 (Prop 3.3)
-* [Wald1984]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.2–3.3 (Prop 3.3)
+* [R. M. Wald, *General Relativity*][Wald1984]
+* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 -/
 
 @[expose] public section

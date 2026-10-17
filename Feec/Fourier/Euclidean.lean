@@ -28,7 +28,8 @@ for any finite index type `d`, `𝕜 = ℝ, ℂ`, and any complex shape, and pro
 
 ## References
 
-* [QuennevilleBelair2015], §4.10–4.11 (Props 4.17, 4.19 on `ℝ³`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10–4.11 (Props 4.17, 4.19 on `ℝ³`)
 * Mathlib, `Mathlib.Analysis.Fourier.LpSpace` (the `L²` Fourier transform, Plancherel)
 -/
 

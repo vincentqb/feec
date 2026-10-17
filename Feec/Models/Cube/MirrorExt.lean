@@ -38,8 +38,10 @@ and takes Fourier coefficients (`Feec.Fourier.Torus.fieldFourier`): a scaled iso
 
 ## References
 
-* [QuennevilleBelair2015], §4.10
-* [Brezis2011], §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (extension by reflection)
 -/
 
 open scoped InnerProductSpace ENNReal

@@ -13,8 +13,10 @@ public import Mathlib.Topology.Algebra.Module.LinearPMap
 
 ## References
 
-* [Pazy1983], §1.2
-* [EngelNagel2000], §II.1
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.2
+* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
+  §II.1
 -/
 
 open Set MeasureTheory

@@ -32,8 +32,12 @@ is a corollary of Babuška–Nečas over `RCLike`.
 
 ## References
 
-* [QuennevilleBelair2015], Thm 4.8 (Lax–Milgram), Thm 4.9 (Babuška–Nečas)
-* [Babuska1971]; [BoffiBrezziFortin2013], Ch. 4; [Arnold2018], Ch. 4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.8 (Lax–Milgram), Thm 4.9 (Babuška–Nečas)
+* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
+  Ch. 4
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 -/
 
 open Module
@@ -110,7 +114,7 @@ theorem isClosed_range_rieszOp (h : InfSup B γ) :
   exact this.isClosed_range (rieszOp B).uniformContinuous
 
 /-- **Babuška–Nečas**, existence: inf-sup and separation make `B` onto the antidual.
-Thesis: Thm 4.9 -/
+[QuennevilleBelair2015], Thm 4.9 -/
 theorem surjective (h : InfSup B γ) (hs : SeparatingRight B) : Function.Surjective B := by
   have hc := h.isClosed_range_rieszOp
   have : CompleteSpace (LinearMap.range (rieszOp B : X →ₗ[𝕜] Y)) := hc.completeSpace_coe
@@ -128,14 +132,14 @@ theorem surjective (h : InfSup B γ) (hs : SeparatingRight B) : Function.Surject
 end InfSup
 
 /-- **Babuška–Nečas** (Thm 4.9): under inf-sup and separation, `B x = f` has a unique solution
-for every bounded antilinear `f`, and `‖x‖ ≤ γ⁻¹ ‖f‖`. Thesis: Thm 4.9 -/
+for every bounded antilinear `f`, and `‖x‖ ≤ γ⁻¹ ‖f‖`. [QuennevilleBelair2015], Thm 4.9 -/
 theorem existsUnique_apply_eq (h : InfSup B γ) (hs : SeparatingRight B) (f : Y →L⋆[𝕜] 𝕜) :
     ∃! x, B x = f := by
   obtain ⟨x, hx⟩ := h.surjective hs f
   exact ⟨x, hx, fun x' hx' => h.injective (hx'.trans hx.symm)⟩
 
 /-- **Babuška–Nečas**, Riesz-representative form: `B x y = ⟪y, g⟫` for all `y` has a unique
-solution. Thesis: Thm 4.9 -/
+solution. [QuennevilleBelair2015], Thm 4.9 -/
 theorem existsUnique_inner (h : InfSup B γ) (hs : SeparatingRight B) (g : Y) :
     ∃! x, ∀ y, B x y = ⟪y, g⟫ := by
   obtain ⟨x, hx, hu⟩ := existsUnique_apply_eq h hs (innerSLFlip 𝕜 g)
@@ -152,7 +156,7 @@ def equivOfInfSup (h : InfSup B γ) (hs : SeparatingRight B) : X ≃L[𝕜] (Y �
 
 omit [CompleteSpace Y] in
 /-- The converse of Babuška–Nečas: a bijective `B` satisfies the inf-sup condition (bounded
-inverse theorem). Thesis: Thm 4.9 -/
+inverse theorem). [QuennevilleBelair2015], Thm 4.9 -/
 theorem exists_infSup_of_bijective (hB : Function.Bijective B) : ∃ γ, InfSup B γ := by
   let e := ContinuousLinearEquiv.ofBijective B (LinearMap.ker_eq_bot.2 hB.1)
     (LinearMap.range_eq_top.2 hB.2)
@@ -167,7 +171,7 @@ theorem exists_infSup_of_bijective (hB : Function.Bijective B) : ∃ γ, InfSup 
 
 /-- **Babuška–Nečas, equivalence** (Thm 4.9, corrected): `B` has the inf-sup property and
 separates the second slot iff `B x = f` is uniquely solvable for every antilinear `f`.
-The thesis' converse with "there exists" alone is false. Thesis: Thm 4.9 (corrected) -/
+The thesis' converse with "there exists" alone is false. [QuennevilleBelair2015], Thm 4.9 (corrected) -/
 theorem babuskaNecas_iff :
     ((∃ γ, InfSup B γ) ∧ SeparatingRight B) ↔ ∀ f : Y →L⋆[𝕜] 𝕜, ∃! x, B x = f := by
   refine ⟨fun ⟨⟨γ, h⟩, hs⟩ => existsUnique_apply_eq h hs, fun H => ⟨?_, fun y hy => ?_⟩⟩
@@ -179,7 +183,7 @@ theorem babuskaNecas_iff :
     rw [hx, innerSLFlip_apply_apply] at this
     exact inner_self_eq_zero.1 this
 
-/-- **Babuška–Nečas, equivalence**, Riesz-representative form. Thesis: Thm 4.9 (corrected) -/
+/-- **Babuška–Nečas, equivalence**, Riesz-representative form. [QuennevilleBelair2015], Thm 4.9 (corrected) -/
 theorem babuskaNecas_iff_inner :
     ((∃ γ, InfSup B γ) ∧ SeparatingRight B) ↔ ∀ g : Y, ∃! x, ∀ y, B x y = ⟪y, g⟫ := by
   rw [babuskaNecas_iff]
@@ -200,7 +204,7 @@ variable {B : X →L[𝕜] X →L⋆[𝕜] 𝕜} {α : ℝ}
 
 omit [CompleteSpace X] in
 /-- A coercive form, `α ‖x‖² ≤ re B x x`, satisfies the inf-sup condition with constant `α`.
-Thesis: Thm 4.8 -/
+[QuennevilleBelair2015], Thm 4.8 -/
 theorem infSup_of_coercive (hα : 0 < α) (hB : ∀ x, α * ‖x‖ ^ 2 ≤ RCLike.re (B x x)) :
     InfSup B α := by
   simpa using InfSup.of_testMap (B := B) id hα one_pos (fun x => by simp) hB
@@ -216,7 +220,7 @@ theorem separatingRight_of_coercive (hα : 0 < α)
   exact norm_eq_zero.1 (by nlinarith [norm_nonneg y])
 
 /-- **Lax–Milgram** over `ℝ` and `ℂ`: a bounded coercive sesquilinear form gives a unique
-solution of `B x = f` for every antilinear `f`, with `‖x‖ ≤ α⁻¹ ‖f‖`. Thesis: Thm 4.8 -/
+solution of `B x = f` for every antilinear `f`, with `‖x‖ ≤ α⁻¹ ‖f‖`. [QuennevilleBelair2015], Thm 4.8 -/
 theorem existsUnique_of_coercive (hα : 0 < α) (hB : ∀ x, α * ‖x‖ ^ 2 ≤ RCLike.re (B x x))
     (f : X →L⋆[𝕜] 𝕜) : ∃! x, B x = f :=
   existsUnique_apply_eq (infSup_of_coercive hα hB) (separatingRight_of_coercive hα hB) f
@@ -228,7 +232,7 @@ end Coercive
 omit [CompleteSpace X] [CompleteSpace Y] in
 /-- **Discrete well-posedness** (sesquilinear forms): with the discrete inf-sup condition on
 finite-dimensional `K`, `L` of equal dimension, the Galerkin problem `uₕ ∈ K`, `B uₕ v = F v`
-(`v ∈ L`) has a unique solution for every bounded antilinear `F`. Thesis: Thm 4.10 -/
+(`v ∈ L`) has a unique solution for every bounded antilinear `F`. [QuennevilleBelair2015], Thm 4.10 -/
 theorem existsUnique_galerkin_sesq {K : Submodule 𝕜 X} {L : Submodule 𝕜 Y}
     [FiniteDimensional 𝕜 K] [FiniteDimensional 𝕜 L] (hdim : finrank 𝕜 K = finrank 𝕜 L)
     (h : InfSup (restrict B K L) γ) (F : Y →L⋆[𝕜] 𝕜) :
@@ -312,7 +316,7 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
   {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
 
 /-- **The best inf-sup constant** is `‖B⁻¹‖⁻¹`: under inf-sup and separation, `γ' ≥ 0` is an
-admissible constant iff `γ' ‖B⁻¹‖ ≤ 1`. Thesis: Thm 4.9 -/
+admissible constant iff `γ' ‖B⁻¹‖ ≤ 1`. [QuennevilleBelair2015], Thm 4.9 -/
 theorem infSup_iff_mul_norm_symm_le (h : InfSup B γ) (hs : SeparatingRight B) {γ' : ℝ}
     (hγ' : 0 ≤ γ') :
     (∀ x, γ' * ‖x‖ ≤ ‖B x‖) ↔
@@ -356,7 +360,7 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
   {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
 
 /-- In Hilbert spaces the supremum of the inf-sup condition is attained, with the same constant:
-`InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. Thesis: §4.5 -/
+`InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. [QuennevilleBelair2015], §4.5 -/
 theorem infSup_iff_forall_exists_norm_le_one (hγ : 0 < γ) :
     InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ * ‖x‖ ≤ ‖B x y‖ := by
   refine ⟨fun h x => ?_, InfSup.of_forall_exists_norm_le_one hγ⟩

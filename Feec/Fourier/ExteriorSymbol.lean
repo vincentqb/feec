@@ -28,8 +28,12 @@ and its adjoint is the contraction `(ι_ξ ω)_s = Σ_{j ∉ s} ε(j, s) ξ_j ω
 
 ## References
 
-* [AFW2006], [Arnold2018], Ch. 6 (the Koszul complex and differential forms)
-* [QuennevilleBelair2015], §4.2 (the de Rham complex as a Hilbert complex)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (the Koszul complex and differential forms)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (the Koszul complex and
+  differential forms)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (the de Rham complex as a Hilbert complex)
 -/
 
 @[expose] public noncomputable section

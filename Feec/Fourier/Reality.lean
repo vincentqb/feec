@@ -32,7 +32,8 @@ both properties hold for the same solution.
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (real-valued fields in Prop 4.17)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (real-valued fields in Prop 4.17)
 -/
 
 @[expose] public noncomputable section

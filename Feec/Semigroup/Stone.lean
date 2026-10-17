@@ -33,9 +33,13 @@ approximating group is isometric.
 
 ## References
 
-* [Pazy1983], §1.10 (Stone's theorem)
-* [Brezis2011], Ch. 7 (Hille–Yosida; the skew-adjoint case)
-* [QuennevilleBelair2015], Thm 4.3 (the existence input, cited there from [CazenaveHaraux1998])
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10 (Stone's theorem)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  Ch. 7 (Hille–Yosida; the skew-adjoint case)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.3 (the existence input, cited there from [CazenaveHaraux1998])
+* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998]
 -/
 
 open Set Filter Topology NormedSpace LinearPMap Feec.Operator
@@ -602,7 +606,7 @@ open Feec
 
 /-- **Stone's theorem**: `A` is skew-adjoint iff it generates a strongly continuous group of
 isometries, and that group is unique. The thesis cites this existence input for Thm 4.3.
-Thesis: Thm 4.3. -/
+[QuennevilleBelair2015], Thm 4.3. -/
 theorem isSkewAdjoint_iff_existsUnique_isometricGroup :
     A.IsSkewAdjoint ↔ ∃! G : C0Group 𝕜 E, G.IsIsometric ∧ G.generator = A := by
   constructor

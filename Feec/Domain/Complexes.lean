@@ -34,8 +34,12 @@ bounded-domain models of the thesis are minimal complexes
 
 ## References
 
-* [Arnold2018], §6.2 (the two boundary-condition families and their duality); [AFW2010], §3.1
-* [BruningLesch1992] (minimal and maximal ideal boundary conditions)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (the two boundary-condition
+  families and their duality)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (minimal and maximal ideal boundary
+  conditions)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

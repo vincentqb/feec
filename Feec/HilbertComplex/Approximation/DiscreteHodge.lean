@@ -24,7 +24,9 @@ gap between `ℌ` and `ℌₕ`.
 
 ## References
 
-* [AFW2010], §3.3–3.4 (discrete Hodge decomposition, Thm 3.5 gap estimate); [Arnold2018], Ch. 5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3–3.4 (discrete Hodge decomposition, Thm 3.5 gap estimate)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 -/
 
 open scoped InnerProductSpace

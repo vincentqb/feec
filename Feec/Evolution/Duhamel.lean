@@ -31,9 +31,12 @@ Duhamel's formula:
 
 ## References
 
-* [Pazy1983], §1.2 (Thm 2.4: generators), §4.2 (Thm 2.4, Cor 2.5: classical solutions)
-* [EngelNagel2000], §II.1, §VI.7
-* [QuennevilleBelair2015], §4.3 (Thm 4.3)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.2 (Thm 2.4: generators), §4.2 (Thm 2.4, Cor 2.5: classical solutions)
+* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
+  §II.1, §VI.7
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.3 (Thm 4.3)
 -/
 
 open Set Filter Topology MeasureTheory
@@ -229,7 +232,7 @@ theorem integral_conv_mem_graph {F : ℝ → E} {a t : ℝ} (hat : a ≤ t)
 /-- **Duhamel's formula gives a classical solution**: for `U₀ ∈ D(A)` and admissible forcing
 `F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`, the mild solution
 `t ↦ S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds` is a classical solution of `U' = A U + F` on `[a,b]`.
-Thesis: Thm 4.3 (existence). Cf. [Pazy1983], Thm 4.2.4, Cor 4.2.5. -/
+[QuennevilleBelair2015], Thm 4.3 (existence). Cf. [Pazy1983], Thm 4.2.4, Cor 4.2.5. -/
 theorem isClassicalSolution_mild {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain) {F : ℝ → E} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     Evolution.IsClassicalSolution G.generator (Icc a b) F (Evolution.mild G.S a U₀ F) := by

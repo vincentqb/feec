@@ -16,7 +16,8 @@ solutions with `u̇(a) = -d* ρ₀` weakly are exactly the `u` of mixed solution
 
 ## References
 
-* [QuennevilleBelair2015], §4.8
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.8
 -/
 
 open scoped InnerProductSpace

@@ -34,8 +34,10 @@ and reflects domains (`J x ∈ D(d') → x ∈ D(d)`). One structure covers:
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17 on the cube, by compression of the torus)
-* [Kato1995], §III.5.6 (parts of operators in reducing subspaces)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17 on the cube, by compression of the torus)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (parts of operators in
+  reducing subspaces)
 -/
 
 open scoped InnerProductSpace
@@ -308,7 +310,7 @@ theorem starProjection_comap {i : ι} (S' : Submodule 𝕜 (W' i)) [S'.HasOrthog
 /-- **Reducing subcomplexes pull back along scaled embeddings**: if `S'` is a reducing subcomplex
 of `H'` whose projections preserve the ranges of `J`, then `J⁻¹ S'` is a reducing subcomplex of
 `H`. This transfers constraint propagation from a model complex (the torus, `ℝⁿ`) to its
-compressions, restrictions and rescalings. Thesis: Prop 4.17 -/
+compressions, restrictions and rescalings. [QuennevilleBelair2015], Prop 4.17 -/
 theorem reducingSubcomplex_comap {S' : ∀ i, Submodule 𝕜 (W' i)}
     [∀ i, (S' i).HasOrthogonalProjection] (hS' : H'.ReducingSubcomplex S')
     (hS : ∀ i x, ∃ y, E.J i y = (S' i).starProjection (E.J i x)) :

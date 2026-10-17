@@ -29,8 +29,10 @@ freedom, the gauge change to TT (Prop 2.6, corrected), and the geodesic deviatio
 
 ## References
 
-* [QuennevilleBelair2015], §2.4 (coupling constant), §2.8 (Props 2.4–2.6, (2.12)–(2.15))
-* [Wald1984], §4.4; [Alcubierre2008], pp. 44–45
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §2.4 (coupling constant), §2.8 (Props 2.4–2.6, (2.12)–(2.15))
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4
+* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], pp. 44–45
 -/
 
 open Finset Matrix
@@ -42,7 +44,7 @@ namespace Feec.LinearizedGravity
 
 /-! ### The Minkowski metric matrix -/
 
-/-- The Minkowski metric matrix `η = diag(-1, 1, 1, 1)` (its own inverse). Thesis: §2.2 -/
+/-- The Minkowski metric matrix `η = diag(-1, 1, 1, 1)` (its own inverse). [QuennevilleBelair2015], §2.2 -/
 abbrev η4 : Matrix (Fin 4) (Fin 4) ℝ := Matrix.diagonal (Metric.minkowski4 ℝ)
 
 theorem η4_apply (a b : Fin 4) : η4 a b = if a = b then Metric.minkowski4 ℝ a else 0 :=
@@ -339,7 +341,7 @@ theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
 
 /-- **Thesis §2.4 constant, corrected**: with `G = 6.67430·10⁻¹¹` and `c = 299792458` (SI),
 `8πG/c⁴ ∈ (2.07, 2.09)·10⁻⁴³ s²/(m·kg)`, whereas the thesis' value `≈ 5·10⁻⁴⁴` is
-`2πG/c⁴ ∈ (5.1, 5.3)·10⁻⁴⁴`. Thesis: §2.4 (corrected) -/
+`2πG/c⁴ ∈ (5.1, 5.3)·10⁻⁴⁴`. [QuennevilleBelair2015], §2.4 (corrected) -/
 theorem einstein_const_bounds :
     let G : ℝ := 6.67430e-11
     let c : ℝ := 299792458
@@ -394,7 +396,7 @@ theorem jet2_wave {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (M : Matrix (Fin 4) 
 `h̄_ab = A_ab f(k·x)` satisfies `□h̄ = 0` and the Lorentz gauge `∂^a h̄_ab = 0`, and the
 perturbation `h` with trace reversal `h̄` (`h = trRev h̄`, `Metric.trRev_trRev`) solves the
 vacuum linearized equations `H(h) = 0`. (`k` is covariant, `k·k = η^{ij} k_i k_j`, and the
-phase is `k_c x^c`.) Thesis: Prop 2.5 -/
+phase is `k_c x^c`.) [QuennevilleBelair2015], Prop 2.5 -/
 theorem plane_wave {k : Fin 4 → ℝ} (hk : dot η4 k k = 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ a b, A a b = A b a) (hker : ∀ a, ∑ b, A a b * raise k b = 0) {f : ℝ → ℝ}
     (hf : ContDiff ℝ 2 f) :
@@ -439,7 +441,7 @@ theorem plane_wave {k : Fin 4 → ℝ} (hk : dot η4 k k = 0) {A : Matrix (Fin 4
 /-- **Thesis Prop 2.6, corrected** (field level): with `ξ_b = B_b g(k·x)`, `g' = f`,
 `B = Bcorr κ A`, the gauge-transformed field `h̄ - (2∂_(a ξ_b) - η_ab ∂·ξ)` is the TT plane
 wave `ttAmp ((A₁₁ - A₂₂)/2) A₁₂ · f(k·x)`. Only `g` differentiable with `deriv g = f` is needed
-(the thesis takes `g ∈ C³`); `κ ≠ 0` is explicit. Thesis: Prop 2.6 (corrected) -/
+(the thesis takes `g ∈ C³`); `κ ≠ 0` is explicit. [QuennevilleBelair2015], Prop 2.6 (corrected) -/
 theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ i j, A i j = A j i) (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f g : ℝ → ℝ}
     (hg : Differentiable ℝ g) (hgf : deriv g = f) (y : Fin 4 → ℝ) :
@@ -458,7 +460,7 @@ theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ
 
 /-- **Thesis (2.15), corrected** (field level): for the TT plane wave
 `h_ab = ttAmp A₊ Aₓ · f(k·x)` with `f ∈ C²`, `a¹ = (κ²/2)(A₊v¹ + Aₓv²) f''(k·x)` and
-`a² = (κ²/2)(Aₓv¹ - A₊v²) f''(k·x)`. Thesis: (2.15) (corrected) -/
+`a² = (κ²/2)(Aₓv¹ - A₊v²) f''(k·x)`. [QuennevilleBelair2015], (2.15) (corrected) -/
 theorem tt_accel_fun (κ Ap Ax : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (v : Fin 4 → ℝ)
     (x : Fin 4 → ℝ) :
     let D := jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x
@@ -528,7 +530,7 @@ theorem box_ttGaugeVec (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) {f : ℝ → 
 (explicitly `ttGaugeVec κ A f`, with minus the printed `B`) and an amplitude
 `A' = ttAmp ((A₁₁ - A₂₂)/2) A₁₂` satisfying the TT conditions (2.12) such that
 `h̄ - (2∂_(a ξ_b) - η_ab ∂^c ξ_c) = A' f(k·x)`; the new field is a plane-wave solution of
-Prop 2.5 (`□h̄' = 0`, `∂^a h̄'_ab = 0`, `H(trRev h̄') = 0`). Thesis: Prop 2.6 (corrected) -/
+Prop 2.5 (`□h̄' = 0`, `∂^a h̄'_ab = 0`, `H(trRev h̄') = 0`). [QuennevilleBelair2015], Prop 2.6 (corrected) -/
 theorem exists_ttGauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ i j, A i j = A j i) (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f : ℝ → ℝ}
     (hf : ContDiff ℝ 2 f) :
@@ -550,7 +552,7 @@ theorem exists_ttGauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) �
 /-- **Thesis Prop 2.6, repaired**, on the metric perturbation `h = trRev h̄` (the gauge freedom
 `h ↦ h - 2∂_(a ξ_b)` of (2.5)): with the gauge vector of `exists_ttGauge`, the trace reversal
 of `h - ∂_a ξ_b - ∂_b ξ_a` is the TT plane wave `ttAmp ((A₁₁ - A₂₂)/2) A₁₂ · f(k·x)`.
-Thesis: Prop 2.6 (corrected), (2.5) -/
+[QuennevilleBelair2015], Prop 2.6 (corrected), (2.5) -/
 theorem trRev_sub_gauge_eq_ttAmp {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ i j, A i j = A j i) (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f : ℝ → ℝ}
     (hf : ContDiff ℝ 2 f) (y : Fin 4 → ℝ) :

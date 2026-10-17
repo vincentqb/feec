@@ -13,7 +13,8 @@ public import Mathlib.MeasureTheory.Integral.Prod
 
 ## References
 
-* [Brezis2011], §4.1 (Fubini's theorem)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §4.1 (Fubini's theorem)
 -/
 
 open Set MeasureTheory

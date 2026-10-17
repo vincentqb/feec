@@ -25,8 +25,10 @@ For `A : E →ₗ.[𝕜] E` on an inner product space over `𝕜` (`RCLike`):
 
 ## References
 
-* [QuennevilleBelair2015], §4.1
-* [Pazy1983], §1.4 (dissipative operators), §1.10 (Stone's theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.1
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.4 (dissipative operators), §1.10 (Stone's theorem)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

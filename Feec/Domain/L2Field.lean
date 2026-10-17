@@ -28,7 +28,8 @@ instance `ℝⁿ = Fin n → ℝ` or `EuclideanSpace ℝ (Fin n)`), `Ω ⊆ E` o
 
 ## References
 
-* [Brezis2011], §4.4 (density of `C_c^∞`), §9.1
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §4.4 (density of `C_c^∞`), §9.1
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate

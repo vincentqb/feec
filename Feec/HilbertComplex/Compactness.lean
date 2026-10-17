@@ -29,9 +29,12 @@ inclusion (a compact subspace is `0`); density is never needed.
 
 ## References
 
-* [QuennevilleBelair2015], §4.2 (compactness property; "compactness ⇒ Fredholm ⇒ closed")
-* [AFW2010], §3.1.3 (compactness property); [BruningLesch1992], §2
-* [Arnold2018], §4.2
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.2 (compactness property; "compactness ⇒ Fredholm ⇒ closed")
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1.3 (compactness property)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
 -/
 
 open scoped InnerProductSpace Topology
@@ -197,13 +200,13 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   (H : HilbertComplex 𝕜 c W)
 
 /-- **The compactness property at `i`**: the unit ball of `Vⁱ ∩ V*ᵢ`, in the norm
-`max (‖x‖, ‖d x‖, ‖d† x‖)`, lies in a compact subset of `Wⁱ`. Thesis: §4.2 (corrected) -/
+`max (‖x‖, ‖d x‖, ‖d† x‖)`, lies in a compact subset of `Wⁱ`. [QuennevilleBelair2015], §4.2 (corrected) -/
 def HasCompactPropertyAt (i : ι) : Prop :=
   ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain)
     (hx' : x ∈ ((H.d (c.prev i) i)†).domain), ‖x‖ ≤ 1 → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ 1 →
       ‖(H.d (c.prev i) i)† ⟨x, hx'⟩‖ ≤ 1 → x ∈ K
 
-/-- The compactness property at every index. Thesis: §4.2 (corrected) -/
+/-- The compactness property at every index. [QuennevilleBelair2015], §4.2 (corrected) -/
 def HasCompactProperty : Prop := ∀ i, H.HasCompactPropertyAt i
 
 variable {H}
@@ -326,21 +329,21 @@ theorem HasCompactProperty.dual (h : H.HasCompactProperty) : H.dual.HasCompactPr
 /-! ### Compactness ⇒ closed range and finite-dimensional harmonic forms -/
 
 /-- **Compactness ⇒ closed range** of the outgoing differential `d i (c.next i)`.
-Thesis: §4.2 (corrected) -/
+[QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.isClosed_range {i : ι} (h : H.HasCompactPropertyAt i) :
     IsClosed (LinearMap.range (H.d i (c.next i)).toFun : Set (W (c.next i))) :=
   Operator.HasCompactPair.isClosed_range_right h (H.dense _ _) (H.closed _ _) (H.mapsTo _ _ _)
     (H.d_comp_d _ _ _)
 
 /-- **Compactness ⇒ closed range** at the next index: `𝔅ʲ` is closed for `i → j`.
-Thesis: §4.2 (corrected) -/
+[QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.closedRangeAt_of_rel {i j : ι} (h : H.HasCompactPropertyAt i)
     (hij : c.Rel i j) : H.ClosedRangeAt j := by
   obtain rfl := c.next_eq' hij
   rw [ClosedRangeAt, H.boundaries_eq hij]
   exact h.isClosed_range
 
-/-- **Compactness ⇒ closed range** at `i`: `𝔅ⁱ` is closed. Thesis: §4.2 (corrected) -/
+/-- **Compactness ⇒ closed range** at `i`: `𝔅ⁱ` is closed. [QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.closedRangeAt {i : ι} (h : H.HasCompactPropertyAt i) :
     H.ClosedRangeAt i :=
   Operator.HasCompactPair.isClosed_range_left h (H.dense _ _) (H.closed _ _) (H.closed _ _)
@@ -351,7 +354,7 @@ theorem HasCompactPropertyAt.dual_closedRangeAt {i : ι} (h : H.HasCompactProper
     H.dual.ClosedRangeAt i :=
   h.dual.closedRangeAt
 
-/-- **Compactness ⇒ finite-dimensional harmonic forms.** Thesis: §4.2 (corrected) -/
+/-- **Compactness ⇒ finite-dimensional harmonic forms.** [QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.finiteDimensional_harmonic {i : ι} (h : H.HasCompactPropertyAt i) :
     FiniteDimensional 𝕜 (H.harmonic i) :=
   Operator.HasCompactPair.finiteDimensional h (H.dense _ _) (H.closed _ _)
@@ -359,7 +362,7 @@ theorem HasCompactPropertyAt.finiteDimensional_harmonic {i : ι} (h : H.HasCompa
 /-- **Compactness ⇒ closed and Fredholm** at `i`: `𝔅ⁱ` and `𝔅*ᵢ` are closed, the harmonic
 forms and the cohomology are finite-dimensional, and the Hodge decomposition
 `Wⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ 𝔅*ᵢ` holds without closures. This corrects the thesis' chain
-"compactness ⇒ Fredholm ⇒ closed". Thesis: §4.2 (corrected), Thm 4.1 -/
+"compactness ⇒ Fredholm ⇒ closed". [QuennevilleBelair2015], §4.2 (corrected), Thm 4.1 -/
 theorem HasCompactPropertyAt.closed_and_fredholm {i : ι} (h : H.HasCompactPropertyAt i) :
     H.ClosedRangeAt i ∧ H.dual.ClosedRangeAt i ∧ FiniteDimensional 𝕜 (H.harmonic i) ∧
       FiniteDimensional 𝕜 (H.cohomology i) ∧
@@ -400,7 +403,7 @@ theorem norm_wave_sq (x : H.wave.domain) :
   rw [hw, @norm_sub_sq 𝕜, h0, _root_.map_zero, mul_zero, sub_zero]
 
 /-- **Compact resolvent**: a finite complex with the compactness property at every index has
-`(1 − (d − d†))⁻¹` compact. Thesis: §4.2 (corrected) -/
+`(1 − (d − d†))⁻¹` compact. [QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactProperty.isCompactOperator_resolvent_wave (h : H.HasCompactProperty) :
     IsCompactOperator (Operator.resolvent H.wave 1) := by
   choose K hK hsub using fun i => (h i).exists_isCompact 2

@@ -21,7 +21,9 @@ stable.
 
 ## References
 
-* [AFW2010], §3.3, Thm 3.6 (discrete Poincaré inequality); [Arnold2018], Thm 5.3
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3, Thm 3.6 (discrete Poincaré inequality)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 5.3
 -/
 
 open scoped InnerProductSpace

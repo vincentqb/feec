@@ -19,8 +19,10 @@ formula, it is the only such semigroup:
 
 ## References
 
-* [Pazy1983], §3.1 (Thm 3.1.1)
-* [EngelNagel2000], §III.1 (Thm III.1.3)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §3.1 (Thm 3.1.1)
+* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
+  §III.1 (Thm III.1.3)
 -/
 
 open Set Filter Topology MeasureTheory LinearPMap

@@ -26,10 +26,12 @@ Applied to the total differential `𝐝` of a Hilbert complex on a finite index 
 
 ## References
 
-* [QuennevilleBelair2015], §4.4, (4.5) and Thm 4.6 (the Hodge wave operator is skew-adjoint;
-  there with closed range, here without)
-* [BruningLesch1992], Lemma 2.1 and §2 (`d + d*` of a Hilbert complex is self-adjoint)
-* [Arnold2018], §4.2
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.4, (4.5) and Thm 4.6 (the Hodge wave operator is skew-adjoint; there with closed range, here
+  without)
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1 and §2 (`d + d*` of a
+  Hilbert complex is self-adjoint)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
 -/
 
 open scoped InnerProductSpace
@@ -196,7 +198,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 def dirac : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := H.totalD + H.dual.totalD
 
 /-- The wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, on `PiLp 2 W`: the generator of
-the abstract Hodge wave equation `x' = L x`. Thesis: (4.5) -/
+the abstract Hodge wave equation `x' = L x`. [QuennevilleBelair2015], (4.5) -/
 def wave : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := H.totalD - H.dual.totalD
 
 theorem dirac_eq : H.dirac = H.totalD + H.totalD† := by rw [adjoint_totalD]; rfl
@@ -230,7 +232,7 @@ theorem dense_wave_domain : Dense (H.wave.domain : Set (PiLp 2 W)) := by
 
 /-- **The wave operator of every finite Hilbert complex is skew-adjoint**, `L† = -L`, with no
 closed-range hypothesis. For a window of a longer complex this is the wave operator of the
-truncated complex. Thesis: Thm 4.6 -/
+truncated complex. [QuennevilleBelair2015], Thm 4.6 -/
 theorem isSkewAdjoint_wave : H.wave.IsSkewAdjoint := by
   rw [wave_eq]
   exact isSkewAdjoint_sub_adjoint H.dense_totalDomain H.isClosed_totalD H.totalD_mapsTo

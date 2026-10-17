@@ -26,7 +26,8 @@ frequency `ξ ∈ ℝ³` the symbols `grad_ξ u = i u ξᵀ` and `curl_ξ A = i 
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Lemma 3.5), §4.10 (Prop 4.17, (4.14))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Lemma 3.5), §4.10 (Prop 4.17, (4.14))
 -/
 
 @[expose] public noncomputable section
@@ -167,7 +168,7 @@ theorem adjoint_curl (ξ : Freq) : ContinuousLinearMap.adjoint (curl ξ) = curl 
 theorem toMatrix_curl (ξ : Freq) (M : Mat) :
     toMatrix (curl ξ M) = Complex.I • MatrixSymbol.curlSymbol (cfreq ξ) (toMatrix M) := rfl
 
-/-- **Lemma 3.5 on the symbol**: `curl_ξ` maps `tsd ξ` to itself. Thesis: Lemma 3.5 -/
+/-- **Lemma 3.5 on the symbol**: `curl_ξ` maps `tsd ξ` to itself. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem curl_mem_tsd {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) : curl ξ M ∈ tsd ξ := by
   change toMatrix (curl ξ M) ∈ TT.ttSub (cfreq ξ)
   rw [toMatrix_curl]
@@ -384,7 +385,7 @@ instance (i : Fin 3) (ξ : Freq) : (tsdK i ξ).HasOrthogonalProjection := by
   fin_cases i <;> infer_instance
 
 /-- **`({0}, tsd ξ, tsd ξ)` reduces the grad–curl fibre complex at every frequency.**
-Thesis: Lemma 3.5, Prop 4.17 -/
+[QuennevilleBelair2015], Lemma 3.5, Prop 4.17 -/
 theorem isFibreReducing : gradCurl.IsFibreReducing tsdK := by
   refine FibreComplex.IsFibreReducing.of_orthogonal (fun i j ξ => ?_) (fun i j ξ => ?_)
   · fin_cases i <;> fin_cases j

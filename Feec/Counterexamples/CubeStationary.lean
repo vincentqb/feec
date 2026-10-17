@@ -24,7 +24,8 @@ With tensorial mirror boundary conditions instead, TSD data do propagate on ever
 
 ## References
 
-* [QuennevilleBelair2015], §4.10 (Prop 4.17)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.10 (Prop 4.17)
 -/
 
 open scoped InnerProductSpace LinearPMap
@@ -51,7 +52,7 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 /-- **On every open cube with the thesis' boundary conditions, TSD data do not propagate**: the
 TSD datum `(0, 0, β)` lies in `D(L) ∩ K`, `K = {0} × L²(TSD) × L²(TSD)`, and for every `T > 0`
-every strong solution of `U' = L U` from it leaves `K`. Thesis: Prop 4.17 (refuted) -/
+every strong solution of `U' = L U` from it leaves `K`. [QuennevilleBelair2015], Prop 4.17 (refuted) -/
 theorem tsd_not_propagates (hs : 0 < s) :
     ∃ U₀ ∈ (gradCurl ℝ (isOpen_openCube b s)).wave.domain,
       U₀ ∈ totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (openCube b s) (Fin 3)))
@@ -66,7 +67,7 @@ theorem tsd_not_propagates (hs : 0 < s) :
     (nonempty_openCube hs) _ le_rfl
 
 /-- **On every open cube with the thesis' boundary conditions, forward invariance forces
-stationarity**, for every `S₁, S₂ ⊆ L²(TSD)`. Thesis: Prop 4.17 (refuted) -/
+stationarity**, for every `S₁, S₂ ⊆ L²(TSD)`. [QuennevilleBelair2015], Prop 4.17 (refuted) -/
 theorem forward_iff_stationary (hs : 0 < s) {S1 S2 : Submodule ℝ (L2F ℝ (openCube b s) Ix)}
     (h1 : S1 ≤ tsd (openCube b s)) (h2 : S2 ≤ tsd (openCube b s)) (y : PiLp 2 (WC b s)) :
     (∀ t, 0 ≤ t → (complexCube b s).waveGroup.S t y ∈
@@ -76,7 +77,7 @@ theorem forward_iff_stationary (hs : 0 < s) {S1 S2 : Submodule ℝ (L2F ℝ (ope
   Models.Cube.Ident.forward_iff hs h1 h2 y
 
 /-- **The largest invariant subspace of the thesis' constraint on a cube** consists of the
-stationary data `(0, 0, B₀)`, `B₀ ∈ L²(TSD)`, `curl B₀ = 0`. Thesis: Prop 4.17 (refuted) -/
+stationary data `(0, 0, B₀)`, `B₀ ∈ L²(TSD)`, `curl B₀ = 0`. [QuennevilleBelair2015], Prop 4.17 (refuted) -/
 theorem mem_invariantCore_tsd_iff (hs : 0 < s) (y : PiLp 2 (WC b s)) :
     y ∈ (complexCube b s).waveGroup.invariantCore
         (totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (openCube b s) (Fin 3)))

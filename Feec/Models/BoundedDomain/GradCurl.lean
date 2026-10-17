@@ -33,8 +33,9 @@ divergence-free in `Ω`, with **no** boundary condition. On every bounded open `
 
 ## References
 
-* [QuennevilleBelair2015], §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
-* [Arnold2018], §6.2
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
 -/
 
 @[expose] public noncomputable section
@@ -249,7 +250,7 @@ theorem L2_ext_of_integral (hΩ : IsOpen Ω) {f f' : L2 ℝ Ω}
 variable (Ω) in
 /-- `L²(TSD)`: symmetric, trace-free matrix fields whose (row-wise) divergence vanishes weakly in
 `Ω`, with **no** boundary condition: `∫ Σ_{ij} B_{ij} ∂_j φ_i = 0` for all `φ ∈ C_c^∞(Ω; ℝ³)`.
-Thesis: Prop 4.17 -/
+[QuennevilleBelair2015], Prop 4.17 -/
 def tsd : Submodule ℝ (L2F ℝ Ω Ix) where
   carrier := {B | (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 ∧
     ∀ φ : Fin 3 → R3 → ℝ, ∀ hφ : IsTestField Ω φ,
@@ -429,7 +430,7 @@ theorem minimal_curl_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   simpa only [← curlM_eq_formalAdj_apply] using this
 
 /-- **Lemma 3.5 (symmetry part), distributional form on `H̊(curl)`.** If `B ∈ L²(TSD)` lies in
-`D(curl_min)`, then `curl B` is symmetric. Thesis: Lemma 3.5 -/
+`D(curl_min)`, then `curl B` is symmetric. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem curl_symm_of_mem_tsd (hΩ : IsOpen Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hB : (B : L2F ℝ Ω Ix) ∈ tsd Ω)
     (j k : Fin 3) :
@@ -462,7 +463,7 @@ theorem curl_symm_of_mem_tsd (hΩ : IsOpen Ω)
 /-- **Zero mean.** On a bounded open `Ω ⊆ ℝ³`, every `B ∈ L²(TSD) ∩ H̊(curl)` has
 `∫_Ω B_{ab} = 0`: formally `∫_Ω B : ∇v = ∫_{∂Ω} (B n)·v = 0`. Proof: `C = curl B` is symmetric;
 Green's formula for `curl_min` against the linear skew field `skewOf (x_a e_b)` (no boundary
-condition) gives `0 = ∫ C : Ψ = ∫ B : curl Ψ = δ_{ab} ∫ tr B - ∫ B_{ab}`. Thesis: Prop 4.17 -/
+condition) gives `0 = ∫ C : Ψ = ∫ B : curl Ψ = δ_{ab} ∫ tr B - ∫ B_{ab}`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem integral_eq_zero_of_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hB : (B : L2F ℝ Ω Ix) ∈ tsd Ω)
     (a b : Fin 3) : ∫ x, (B : L2F ℝ Ω Ix) (a, b) x ∂volume.restrict Ω = 0 := by
@@ -799,7 +800,7 @@ theorem starProjection_gradW (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {w 
 /-- **`H̊(curl) ∩ H(div, 0)` is dense in `H(div, 0)`** on every open `Ω ⊆ ℝ³` (bounded or not,
 any `𝕜`): the literal density conjecture in the proof of Prop 4.17 is true, an instance of
 `Feec.HilbertComplex.mem_closure_domain_inter_ker_adjoint`. What fails is the inference that
-`H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`. Thesis: Prop 4.17 -/
+`H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem dense_curl_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω) {B : L2F 𝕜 Ω Ix}
     (hB : B ∈ (gradCurl 𝕜 hΩ).d₀†.ker) :
     B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).minimal Ω).domain : Set (L2F 𝕜 Ω Ix)) ∩
@@ -807,7 +808,7 @@ theorem dense_curl_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω) 
   (gradCurl 𝕜 hΩ).mem_closure_domain_inter_ker_adjoint hB
 
 /-- **`H(curl) ∩ H(div, 0)` is dense in `H(div, 0)`** (the second literal conjecture of
-Prop 4.17): `H̊(curl) ⊆ H(curl)`. Thesis: Prop 4.17 -/
+Prop 4.17): `H̊(curl) ⊆ H(curl)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem dense_curl_maximal_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω)
     {B : L2F 𝕜 Ω Ix} (hB : B ∈ (gradCurl 𝕜 hΩ).d₀†.ker) :
     B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).maximal Ω).domain : Set (L2F 𝕜 Ω Ix)) ∩

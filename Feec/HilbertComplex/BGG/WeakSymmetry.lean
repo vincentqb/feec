@@ -35,9 +35,19 @@ bilinear form of `Feec.Variational.existsUnique_isSaddleSolution` with its stabi
 
 ## References
 
-* [QuennevilleBelair2015], §5.1 (Prop 5.2, (5.2)–(5.3)); §4.5 (Brezzi's theorem, Thm 4.11)
-* [AFW2007] (weakly imposed symmetry); [DuranLiberman1992], [Falk2008] (the norm `|||·|||`)
-* [Brezzi1974], [BoffiBrezziFortin2013] (saddle point problems)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.1 (Prop 5.2, (5.2)–(5.3)); §4.5 (Brezzi's theorem, Thm 4.11)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+  (weakly imposed symmetry)
+* [R. Durán, E. Liberman, *On mixed finite element methods for the Reissner–Mindlin plate model*][DuranLiberman1992]
+  (the norm `|||·|||`)
+* [R. S. Falk, *Finite elements for the Reissner–Mindlin plate*][Falk2008] (the norm `|||·|||`)
+* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
+  (saddle point problems)
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
+  (saddle point problems)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 -/
 
 open scoped RealInnerProductSpace
@@ -127,7 +137,7 @@ lemma norm_innerSLFlip_le (x : X) : ‖innerSLFlip ℝ x‖ ≤ ‖x‖ :=
 /-- **Brezzi's theorem for a real bilinear form** `a` and constraint `B`: inf-sup of `a` on
 `ker B` (attained form), its transposed condition, and inf-sup of `B` give unique solvability
 of `a(u, v) + ⟪Bv, p⟫ = ⟪F, v⟫`, `⟪Bu, q⟫ = ⟪G, q⟫` with `‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)`.
-Thesis: Thm 4.11
+[QuennevilleBelair2015], Thm 4.11
 
 See [QuennevilleBelair2015], Thm 4.11; [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem brezzi_wellPosed_real [CompleteSpace X] [CompleteSpace Y] (a : X →L[ℝ] X →L[ℝ] ℝ)
@@ -455,8 +465,7 @@ exactness of (5.1) at `Ṽ¹` (`hodge_Vt1`); the final step `a ≥ C ‖x‖ ‖
 `‖x‖², ‖y - x‖² ≤ 2c² Q`, written out below.
 
 See [QuennevilleBelair2015], proof of Prop 5.2; the inf-sup condition on the kernel of Brezzi's
-theorem [QuennevilleBelair2015], Thm 4.11, [Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2
-(proof) -/
+theorem [QuennevilleBelair2015], Thm 4.11, [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem infSup_a (h : D.Hyps) :
     ∃ γ > 0, ∀ z ∈ D.Bs.ker, ∃ z' ∈ D.Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ D.aForm z z' := by
   obtain ⟨C1, hC1, hP1⟩ := D.poincare_Γ h
@@ -604,7 +613,7 @@ condition, which the thesis never checks. Proof: `a(y, y) = ‖τ‖² + ‖S₁
 with `(ρ, χ, 0)`, `d̃χ = v`, gives `v = 0`. (Injectivity of `S₀` is not needed.)
 
 Cf. [QuennevilleBelair2015], proof of Prop 5.2; Brezzi's theorem for non-symmetric `a`:
-[Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2 (proof) -/
+[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (proof) -/
 theorem nondeg_a (h : D.Hyps) :
     ∀ z' ∈ D.Bs.ker, (∀ z ∈ D.Bs.ker, D.aForm z z' = 0) → z' = 0 := by
   intro z' hz' hall
@@ -655,7 +664,7 @@ Correction: neither density of `S₀Ṽ⁰` nor injectivity of `S₀` is needed 
 `X × W̌¹`; density only serves to embed `W¹` into `W̌¹` (`jW_spec`).
 
 See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
-[Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2 (corrected) -/
+[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected) -/
 theorem saddle_wellPosed (h : D.Hyps) :
     (∀ (F : Xsp V0 Vt0 Vt1) (G : D.Wcheck), ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck,
       (∀ y, D.aForm xl.1 y + D.bForm y xl.2 = ⟪F, y⟫) ∧ ∀ μ, D.bForm xl.1 μ = ⟪G, μ⟫) ∧
@@ -680,7 +689,7 @@ Corrections: `λ ∈ W̌¹`, not `W¹` as (5.3) says; the density hypothesis of 
 needed here (it is used in `jW_spec`); the transposed Brezzi condition is added and proved.
 
 See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
-[Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2 (corrected) -/
+[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected) -/
 theorem existsUnique_isSaddle (h : D.Hyps) :
     (∀ f : Wt1, ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck, D.IsSaddle f xl.1 xl.2) ∧
     ∃ C, ∀ (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck), D.IsSaddle f x l →
@@ -758,7 +767,7 @@ theorem isReduced_of_isSaddle {f : Wt1} {x : Xsp V0 Vt0 Vt1} {l : D.Wcheck}
 from (5.3).
 
 See [QuennevilleBelair2015], §5.1, (5.2); cf. well-posedness of the mixed Hodge Laplacian
-[AFW2010], [Arnold2018]. Thesis: Prop 5.2 -/
+[AFW2010], [Arnold2018]. [QuennevilleBelair2015], Prop 5.2 -/
 theorem existsUnique_isReduced (h : D.Hyps) (f : Wt1) : ∃! x, D.IsReduced f x := by
   obtain ⟨⟨xl, hxl, -⟩, -⟩ := (D.existsUnique_isSaddle h).1 f, ()
   refine ⟨xl.1, D.isReduced_of_isSaddle hxl, fun x' hx' => ?_⟩

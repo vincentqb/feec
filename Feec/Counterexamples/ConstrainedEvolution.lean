@@ -23,7 +23,8 @@ The `Feec.BGG.Counterexample.*` names of wave 5 are deprecated aliases.
 
 ## References
 
-* [QuennevilleBelair2015], §6.2 ((6.3), Prop 6.2)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §6.2 ((6.3), Prop 6.2)
 -/
 
 open scoped RealInnerProductSpace
@@ -81,7 +82,7 @@ hypotheses of Prop 6.2 (exact rows, `d` injective on `Ṽₕ⁰`, `S₀,ₕ` sur
 (b) even the compatible data `σ₀ = 0`, `φ₀ = e₁` (so `dσ₀ = S₀,ₕφ₀`), `u₀ = 0`, `f = 0` admit no
 solution, so `φ₀` cannot be prescribed freely. This makes `not_exists_discreteSolution_of_ker` and
 `not_exists_discreteSolution_phi_of_ker` non-vacuous. Refutes [QuennevilleBelair2015], Prop 6.2.
-Thesis: Prop 6.2 (refuted as stated) -/
+[QuennevilleBelair2015], Prop 6.2 (refuted as stated) -/
 theorem not_forall_exists_discreteSolution {T : ℝ} (hT : 0 < T) :
     (∀ f : ℝ → EuclideanSpace ℝ (Fin 2),
       ¬ ∃ s : DiscreteSolution incompatibleSegment T f, s.u 0 = kerVector) ∧

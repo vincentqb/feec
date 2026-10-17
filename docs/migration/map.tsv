@@ -4626,10 +4626,10 @@ Feec.Repair.C410.PLambda1	Feec.Koszul.polyForm	generalize
 Feec.Repair.C410.PLambda1Sub	Feec.Koszul.polyForm	generalize
 Feec.Repair.C410.PLambda2	Feec.Koszul.polyForm	generalize
 Feec.Repair.C410.PLambda2Sub	Feec.Koszul.polyForm	generalize
-Feec.Repair.C410.PLambda2_ssubset_PminusLambda2	Feec.Koszul.polyForm_le_polyFormMinus	generalize
+Feec.Repair.C410.PLambda2_ssubset_PminusLambda2	Feec.Koszul.polyForm_lt_polyFormMinus	generalize
 Feec.Repair.C410.PLambda2_sub_PminusLambda2	Feec.Koszul.polyForm_le_polyFormMinus	generalize
 Feec.Repair.C410.PminusLambda1Sub	Feec.Koszul.polyFormMinus	generalize
-Feec.Repair.C410.PminusLambda1_ssubset_PLambda1	Feec.Counterexamples.PolynomialForms.extDeriv_not_mem_polyFormMinus	generalize
+Feec.Repair.C410.PminusLambda1_ssubset_PLambda1	Feec.Koszul.polyFormMinus_lt_polyForm_one	generalize
 Feec.Repair.C410.PminusLambda1_sub_PLambda1	Feec.Koszul.polyFormMinus_le_polyForm	generalize
 Feec.Repair.C410.PminusLambda2	Feec.Koszul.polyFormMinus	generalize
 Feec.Repair.C410.PminusLambda2Sub	Feec.Koszul.polyFormMinus	generalize

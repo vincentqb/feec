@@ -510,6 +510,65 @@ theorem tensorForm_reduced_iff (ι : Type*) [Nonempty ι] [Nonempty d] {r : ℕ}
   rw [row, row]
   exact ⟨map_extDeriv_polyForm_le_polyForm_iff, map_extDeriv_polyForm_le_polyFormMinus_iff hr⟩
 
+/-- **`P_r⁻Λ¹ ⊊ P_rΛ¹`** (`r ≥ 1`), in every dimension `≥ 1`: `d x_j^{r+1}` lies in `P_rΛ¹` but
+not in `P_r⁻Λ¹`. See [QuennevilleBelair2015], §4.10. -/
+theorem polyFormMinus_lt_polyForm_one [Nonempty d] {r : ℕ} (hr : 1 ≤ r) :
+    polyFormMinus K d r 1 < polyForm K d r 1 := by
+  refine lt_of_le_of_ne (polyFormMinus_le_polyForm hr 1) fun h => ?_
+  obtain ⟨j⟩ := ‹Nonempty d›
+  have hm := single_pow_mem_homForm (K := K) j (r + 1)
+  have h1 : extDeriv (Pi.single ∅ (X j ^ (r + 1)) : PolyForm K d) ∈ polyForm K d r 1 := by
+    simpa using extDeriv_mem_polyForm (homForm_le_polyForm _ _ hm)
+  refine extDeriv_not_mem_polyFormMinus_of_koszul_eq_zero (k := 0) hr le_rfl hm
+    (IsDeg.koszul_eq_zero hm.1) (fun h0 => ?_) (h ▸ h1)
+  have := congrFun h0 ∅
+  rw [Pi.single_eq_same, Pi.zero_apply] at this
+  exact pow_ne_zero _ (X_ne_zero j) this
+
+omit [CharZero K] in
+/-- **`P_{r-1}Λᵏ ⊊ P_r⁻Λᵏ`** (`r ≥ 1`, `k < dim`): `κ (x_j^{r-1} dx_s)`, `j ∈ s`, `|s| = k + 1`,
+has a coefficient `± x_j^r` of degree `r`. (In `ℝ³` with `k = 2`: `x₀^{r-1} x ∈ P_r⁻Λ²`.)
+See [QuennevilleBelair2015], §4.10. -/
+theorem polyForm_lt_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k + 1 ≤ Fintype.card d) : polyForm K d (r - 1) k < polyFormMinus K d r k := by
+  refine lt_of_le_of_ne (polyForm_le_polyFormMinus r k) fun h => ?_
+  have hd : 0 < Fintype.card d := by omega
+  obtain ⟨j⟩ : Nonempty d := Fintype.card_pos_iff.1 hd
+  obtain ⟨t, ht, htk⟩ := Finset.exists_subset_card_eq (s := (Finset.univ : Finset d).erase j)
+    (n := k) (by rw [Finset.card_erase_of_mem (Finset.mem_univ j), Finset.card_univ]; omega)
+  have hjt : j ∉ t := fun hj => (Finset.notMem_erase j _) (ht hj)
+  set η : PolyForm K d := Pi.single (insert j t) (X j ^ (r - 1))
+  have hη : η ∈ homForm K d (r - 1) (k + 1) := by
+    refine ⟨fun u hu => Pi.single_eq_of_ne (by
+      rintro rfl; exact hu (by rw [Finset.card_insert_of_notMem hjt, htk])) _, fun u => ?_⟩
+    by_cases hu : u = insert j t
+    · subst hu; simp only [η, Pi.single_eq_same]; exact isHomogeneous_X_pow j (r - 1)
+    · simp only [η, Pi.single_eq_of_ne hu]; exact isHomogeneous_zero _ _ _
+  have hmem : koszul η ∈ polyFormMinus K d r k :=
+    Submodule.mem_sup_right ⟨η, hη, rfl⟩
+  rw [← h] at hmem
+  have hcoef : koszul η t = sgn j t * X j ^ r := by
+    rw [koszul_apply, Finset.sum_eq_single j]
+    · simp only [η, Pi.single_eq_same]
+      rw [mul_assoc, ← pow_succ', Nat.sub_add_cancel hr]
+    · intro i _ hij
+      have : insert i t ≠ insert j t := fun e => by
+        have hi : i ∈ insert j t := e ▸ Finset.mem_insert_self i t
+        rcases Finset.mem_insert.1 hi with hi | hi
+        · exact hij hi
+        · exact (Finset.mem_compl.1 ‹i ∈ tᶜ›) hi
+      simp [η, Pi.single_eq_of_ne this]
+    · intro hj; exact absurd (Finset.mem_compl.2 hjt) hj
+  have hdeg := hmem.2 t
+  rw [hcoef] at hdeg
+  have hs : (sgn j t : MvPolynomial d K) * X j ^ r =
+      monomial (Finsupp.single j r) ((-1 : K) ^ #({l ∈ t | l < j})) := by
+    rw [sgn, show ((-1 : MvPolynomial d K)) ^ #({l ∈ t | l < j}) =
+      C ((-1 : K) ^ #({l ∈ t | l < j})) by simp, C_mul_X_pow_eq_monomial]
+  have h0 : ((-1 : K) ^ #({l ∈ t | l < j})) ≠ 0 := pow_ne_zero _ (neg_ne_zero.2 one_ne_zero)
+  rw [hs, totalDegree_monomial _ h0, Finsupp.sum_single_index rfl] at hdeg
+  omega
+
 end Field
 
 end Feec.Koszul

@@ -19,6 +19,10 @@ constraint; on the torus it does.
   stay TSD, the multiplier `M` stays `0`, and `B` stays TSD, with existence and uniqueness.
 * **`closedRangeAt`**, `dual_closedRangeAt'`, **`hodge`**: closed range at every index (Poincaré
   constant `4`) and the Hodge decomposition without closures.
+* **`verdict`**: for TSD data `(0, E₀, (0, B₀))` in `D(L)` the Hodge wave equation of (5.1) has a
+  unique classical solution, with `σ ≡ 0`, `u(t)` TSD, `(M, B)(t) = (0, B(t))` with `B(t)` TSD
+  (`mem_constraint_two_iff`), and `(u, (M, B))` solves the reduced system (4.15),
+  `u' = -(S₁, curl)* (M, B)`, `(M, B)' = (S₁, curl) u`.
 
 ## References
 
@@ -141,5 +145,142 @@ theorem hodge (i : Fin 3) :
       complex.harmonic i ⟂ complex.dual.boundaries i ∧
       complex.boundaries i ⟂ complex.dual.boundaries i :=
   complex.hodge_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i)
+
+/-! ### The verdict: the BGG system propagates TSD on `𝕋³` -/
+
+/-- `(L x)₀ = -d₀† x₁`. -/
+theorem wave_apply_zero (x : complex.wave.domain) :
+    (complex.wave x) 0 = -(complex.d 0 1)† ⟨(x : PiLp 2 Space) 1, x.2.2 1 0⟩ := by
+  rw [HilbertComplex.wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
+    complex.apply_eq_zero_of_not_rel (i := 0) (j := 0) (by simp),
+    complex.apply_eq_zero_of_not_rel (i := 1) (j := 0) (by simp),
+    complex.apply_eq_zero_of_not_rel (i := 2) (j := 0) (by simp),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 0 0 (by simp)),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 0 2 (by simp))]
+  simp
+
+/-- `(L x)₁ = d₀ x₀ - d₁† x₂`. -/
+theorem wave_apply_one (x : complex.wave.domain) :
+    (complex.wave x) 1 = complex.d 0 1 ⟨(x : PiLp 2 Space) 0, x.2.1 0 1⟩ -
+      (complex.d 1 2)† ⟨(x : PiLp 2 Space) 2, x.2.2 2 1⟩ := by
+  rw [HilbertComplex.wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
+    complex.apply_eq_zero_of_not_rel (i := 1) (j := 1) (by simp),
+    complex.apply_eq_zero_of_not_rel (i := 2) (j := 1) (by simp),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 1 0 (by simp)),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 1 1 (by simp))]
+  simp
+
+/-- `(L x)₂ = d₁ x₁`. -/
+theorem wave_apply_two (x : complex.wave.domain) :
+    (complex.wave x) 2 = complex.d 1 2 ⟨(x : PiLp 2 Space) 1, x.2.1 1 2⟩ := by
+  rw [HilbertComplex.wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
+    complex.apply_eq_zero_of_not_rel (i := 0) (j := 2) (by simp),
+    complex.apply_eq_zero_of_not_rel (i := 2) (j := 2) (by simp),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 2 0 (by simp)),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 2 1 (by simp)),
+    adjoint_apply_eq_zero_of_eq_zero (complex.shape 2 2 (by simp))]
+  simp
+
+/-- The scalar slot of the constraint is `{0}`. -/
+theorem mem_constraint_zero_iff {u : Space 0} : u ∈ constraint 0 ↔ u = 0 := by
+  refine ⟨fun h => Lp.ext_count fun k => ?_, fun h => h ▸ Submodule.zero_mem _⟩
+  rw [Measure.ae_count_iff.1 (Lp.coeFn_zero (W3 ℂ Mat VM 0) 2 Measure.count) k]
+  exact (Submodule.mem_bot ℂ).1 (Measure.ae_count_iff.1 (Operator.mem_fibreSub.1 h) k)
+
+/-- **The third slot of the constraint**: `(M, B) ∈ L²({0} × TSD)` iff `M ≡ 0` and `B` is TSD
+(fibrewise: `M̂(k) = 0`, `B̂(k) ∈ tsd (2πk)`). -/
+theorem mem_constraint_two_iff {ρ : Space 2} : ρ ∈ constraint 2 ↔
+    ∀ k, (WithLp.ofLp ((ρ : (Fin 3 → ℤ) → VM) k)).1 = 0 ∧
+      (WithLp.ofLp ((ρ : (Fin 3 → ℤ) → VM) k)).2 ∈ tsd (Fourier.Torus.freq k) := by
+  rw [Operator.mem_fibreSub, Measure.ae_count_iff]
+  exact forall_congr' fun k => mem_tsdB
+
+/-- **TSD fields are divergence-free**: `L²(TSD) ⊆ ker (grad grad)† = ker div div`. -/
+theorem constraint_le_ker_adjoint : constraint 1 ≤ ((complex.d 0 1)†).ker := by
+  intro u hu
+  change u ∈ ((Fourier.Torus.symbolComplex bggFamily).toHilbertComplex.d 0 1)†.ker
+  rw [(Fourier.Torus.symbolComplex bggFamily).adjoint_d 0 1]
+  refine Operator.mem_ker_mulOp.2 ?_
+  filter_upwards [Operator.mem_fibreSub.1 hu] with k hk
+  exact (Submodule.mem_bot ℂ).1 (fibreReducing.map_adj 0 1 k ⟨_, hk, rfl⟩)
+
+theorem mem_domain_adjoint_of_mem_constraint {u : Space 1} (hu : u ∈ constraint 1) :
+    u ∈ ((complex.d 0 1)†).domain :=
+  LinearPMap.ker_le_domain (constraint_le_ker_adjoint hu)
+
+/-- **TSD data with `E₀ ∈ H(curl)` and `(0, B₀) ∈ D((S₁, curl)†)` lie in `D(L)`.** -/
+theorem mem_wave_domain_of {U₀ : PiLp 2 Space} (h0 : U₀ 0 = 0) (hE₀ : U₀ 1 ∈ constraint 1)
+    (hE : U₀ 1 ∈ (complex.d 1 2).domain) (hB : U₀ 2 ∈ ((complex.d 1 2)†).domain) :
+    U₀ ∈ complex.wave.domain := by
+  have htop : ∀ {i j : Fin 3}, ¬ ComplexShape.fin3.Rel i j → ∀ v, v ∈ (complex.d i j).domain :=
+    fun h v => complex.domain_eq_top_of_not_rel h ▸ Submodule.mem_top
+  have htop' : ∀ {i j : Fin 3}, ¬ ComplexShape.fin3.Rel i j → ∀ v, v ∈ ((complex.d i j)†).domain :=
+    fun h v => by rw [complex.shape _ _ h, adjoint_zero]; exact Submodule.mem_top
+  refine complex.mem_wave_domain.2 ⟨fun i j => ?_, fun i j => ?_⟩
+  · fin_cases i <;> fin_cases j
+    · exact htop (by simp) _
+    · change U₀ 0 ∈ (complex.d 0 1).domain; rw [h0]; exact Submodule.zero_mem _
+    · exact htop (by simp) _
+    · exact htop (by simp) _
+    · exact htop (by simp) _
+    · exact hE
+    · exact htop (by simp) _
+    · exact htop (by simp) _
+    · exact htop (by simp) _
+  · fin_cases i <;> fin_cases j
+    · exact htop' (by simp) _
+    · exact mem_domain_adjoint_of_mem_constraint hE₀
+    · exact htop' (by simp) _
+    · exact htop' (by simp) _
+    · exact htop' (by simp) _
+    · exact hB
+    · exact htop' (by simp) _
+    · exact htop' (by simp) _
+    · exact htop' (by simp) _
+
+/-- **The BGG system propagates TSD on `𝕋³`.** For data `U₀ = (0, E₀, (0, B₀))` in `D(L)` with
+`E₀`, `B₀` TSD, the Hodge wave equation `U' = L U` of the complex (5.1) has a classical solution
+on `[a, b]` (Stone), unique among strong solutions, and for every `t`:
+`σ(t) = 0`, `u(t) = E(t)` is TSD (the weakly imposed symmetry holds strongly), the multiplier
+`M(t)` vanishes and `B(t)` is TSD (`mem_constraint_two_iff`), and `(E, (M, B))` solves the
+reduced system (4.15): `E' = -(S₁, curl)* (M, B)`, `(M, B)' = (S₁, curl) E`. Periodic counterpart
+of the whole-space verdict.
+See [QuennevilleBelair2015], §6.3, Eq. (4.15) (§4.10). -/
+theorem verdict {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain) (h0 : U₀ 0 = 0)
+    (hE₀ : U₀ 1 ∈ constraint 1) (hB₀ : U₀ 2 ∈ constraint 2) (a b : ℝ) :
+    ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution complex.wave (Icc a b) 0 U ∧
+      (∀ V, V a = U₀ → Evolution.IsStrongSolution complex.wave (Icc a b) 0 V →
+        EqOn V U (Icc a b)) ∧
+      ∀ t ∈ Icc a b, U t 0 = 0 ∧ U t 1 ∈ constraint 1 ∧ U t 2 ∈ constraint 2 ∧
+        ∃ (hE : U t 1 ∈ (complex.d 1 2).domain) (hB : U t 2 ∈ ((complex.d 1 2)†).domain),
+          HasDerivWithinAt (fun s => U s 1) (-(complex.d 1 2)† ⟨U t 2, hB⟩) (Icc a b) t ∧
+          HasDerivWithinAt (fun s => U s 2) (complex.d 1 2 ⟨U t 1, hE⟩) (Icc a b) t := by
+  have hK : U₀ ∈ HilbertComplex.totalSub constraint := by
+    intro i
+    fin_cases i
+    · exact mem_constraint_zero_iff.2 h0
+    · exact hE₀
+    · exact hB₀
+  have hF : Evolution.ForcingClass.admissible complex.wave a b 0 :=
+    Evolution.ForcingClass.admissible_of_C1 (F' := 0) continuous_zero.continuousOn
+      continuous_zero.continuousOn fun t _ => hasDerivAt_const t (0 : PiLp 2 Space)
+  obtain ⟨U, hU0, hU, hUK, huniq⟩ :=
+    reducingSubcomplex.existsUnique_mem hU₀ hK hF fun _ _ => Submodule.zero_mem _
+  refine ⟨U, hU0, hU, huniq, fun t ht => ?_⟩
+  have hσ : U t 0 = 0 := mem_constraint_zero_iff.1 (hUK t ht 0)
+  have hdom := hU.toIsStrongSolution.mem_domain ht
+  have hd := hU.toIsStrongSolution.hasDerivWithinAt ht
+  refine ⟨hσ, hUK t ht 1, hUK t ht 2, hdom.1 1 2, hdom.2 2 1, ?_, ?_⟩
+  · have h1 : HasDerivWithinAt (fun s => U s 1)
+        ((complex.wave ⟨U t, hdom⟩ + (0 : ℝ → PiLp 2 Space) t) 1) (Icc a b) t :=
+      (PiLp.proj (𝕜 := ℝ) 2 Space 1).hasFDerivAt.comp_hasDerivWithinAt t hd
+    refine h1.congr_deriv ?_
+    rw [Pi.zero_apply, add_zero, wave_apply_one,
+      LinearPMap.apply_mk_eq_zero _ _ hσ, zero_sub]
+  · have h2 : HasDerivWithinAt (fun s => U s 2)
+        ((complex.wave ⟨U t, hdom⟩ + (0 : ℝ → PiLp 2 Space) t) 2) (Icc a b) t :=
+      (PiLp.proj (𝕜 := ℝ) 2 Space 2).hasFDerivAt.comp_hasDerivWithinAt t hd
+    refine h2.congr_deriv ?_
+    rw [Pi.zero_apply, add_zero, wave_apply_two]
 
 end Feec.Models.Torus.BGG

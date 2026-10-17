@@ -1,6 +1,7 @@
 module
 
-public import Feec.Models.Cube.Static
+public import Feec.Models.Cube.Bridge
+public import Feec.Models.Cube.Reflection
 public import Feec.Legacy.MirrorCube.Pi
 
 /-!
@@ -71,22 +72,6 @@ open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraint
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
-
-/-! ### Reflections preserving a subspace -/
-
-theorem reflAct_mem {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W] (G : Refl3 W)
-    {K : Submodule ℝ W} (hK : ∀ k, ∀ x ∈ K, G.R k x ∈ K) (g : ReflGroup) {x : W} (hx : x ∈ K) :
-    reflAct G g x ∈ K := by
-  have hp : ∀ k n, ∀ y ∈ K, (reflEquiv G k ^ n) y ∈ K := by
-    intro k n
-    induction n with
-    | zero => intro y hy; exact hy
-    | succ n ih =>
-      intro y hy
-      rw [pow_succ, LinearIsometryEquiv.coe_mul, Function.comp_apply]
-      exact ih _ (hK k y hy)
-  simp only [reflAct, LinearIsometryEquiv.coe_mul, Function.comp_apply]
-  exact hp _ _ _ (hp _ _ _ (hp _ _ _ hx))
 
 /-! ### Compressions and rescalings of short complexes as scaled embeddings -/
 

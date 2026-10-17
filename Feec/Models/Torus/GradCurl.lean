@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.Torus
 public import Feec.Fourier.GradCurlSymbol
+public import Feec.Fourier.TorusWeak
 
 /-!
 # The matrix grad–curl complex on `𝕋³`: TSD constraints propagate (Thesis Prop 4.17)
@@ -24,6 +25,10 @@ Hodge wave equation is the matrix system (4.14) of the Einstein–Bianchi formul
   `waveGroup_mem`: the wave group preserves `K` for all times.
 * `closedRangeAt`, `dual_closedRangeAt`: closed range at every index, with the Poincaré constant
   `(2π)⁻¹` (`norm_le_of_mem_orthogonal`).
+* **`mem_domain_grad_iff_weak`**, **`mem_domain_curl_iff_weak`**,
+  **`mem_domain_adjoint_grad_iff_weak`**: `H¹(𝕋³; ℂ³)`, `H(curl; 𝕋³)` and `H(div; 𝕋³)` of the Fourier
+  model are the weak-derivative spaces of `L²(𝕋³)` fields tested against all smooth functions
+  (`Feec.Fourier.TorusWeak`); `curl_star_eq_self`: the weak curl of a real field is real.
 * `starProjection_eq_zero_of_mem_orthogonal`: fields whose Fourier coefficients are orthogonal
   to the TSD fibres (e.g. `A = c ξᵀ`, gradients) have zero TSD part, though `dev sym A ≠ 0` (the
   answer to the blueprint review's claimed counterexample: `P_TSD` is not pointwise).
@@ -210,5 +215,57 @@ theorem starProjection_eq_zero_of_mem_orthogonal {i : Fin 3} {A : Space i}
   rw [Measure.ae_count_iff.1 h k, Measure.ae_count_iff.1 (Lp.coeFn_zero (W3 Vec Mat Mat i) 2
     Measure.count) k]
   exact (Submodule.starProjection_apply_eq_zero_iff _).2 (hA k)
+
+/-! ### Weak derivatives on `𝕋³` -/
+
+theorem grad_isLinear : Weak.IsLinear (gradCurl.m 0 1) := grad_eq_sum
+
+theorem curl_isLinear : Weak.IsLinear (gradCurl.m 1 2) := curl_eq_sum
+
+/-- The divergence symbol `grad_ξ* = div_ξ` is linear in the frequency. -/
+theorem adjoint_grad_isLinear :
+    Weak.IsLinear fun ξ => ContinuousLinearMap.adjoint (gradCurl.m 0 1 ξ) := fun ξ => by
+  change ContinuousLinearMap.adjoint (grad ξ) = ∑ k, _ • ContinuousLinearMap.adjoint (grad _)
+  rw [grad_eq_sum ξ, map_sum]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [LinearIsometryEquiv.map_smulₛₗ, Complex.conj_ofReal]
+
+/-- **`H¹(𝕋³; ℂ³)` is the weak `H¹`**: the Fourier coefficients of `u` lie in `D(grad)` with
+`grad û = Ĝ` iff `G = ∇u` weakly (`G_{ab} = ∂_b u_a`, tested against all smooth functions on
+`𝕋³`). -/
+theorem mem_domain_grad_iff_weak (u : TorusWeak.Field (Fin 3) (Fin 3))
+    (G : TorusWeak.Field (Fin 3) (Fin 3 × Fin 3)) :
+    (∃ h : Fourier.Torus.fieldFourier _ _ u ∈ (complex.d 0 1).domain,
+        complex.d 0 1 ⟨_, h⟩ = Fourier.Torus.fieldFourier _ _ G) ↔
+      TorusWeak.IsWeak (P := Fin 3) (Q := Fin 3 × Fin 3) (gradCurl.m 0 1) u G :=
+  TorusWeak.mem_graph_iff_isWeak (P := Fin 3) (Q := Fin 3 × Fin 3) grad_isLinear u G
+
+/-- **`H(curl; 𝕋³)` is the weak `H(curl)`**: the row-wise curl of the Fourier model is the weak
+row-wise curl `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`. -/
+theorem mem_domain_curl_iff_weak (A C : TorusWeak.Field (Fin 3) (Fin 3 × Fin 3)) :
+    (∃ h : Fourier.Torus.fieldFourier _ _ A ∈ (complex.d 1 2).domain,
+        complex.d 1 2 ⟨_, h⟩ = Fourier.Torus.fieldFourier _ _ C) ↔
+      TorusWeak.IsWeak (P := Fin 3 × Fin 3) (Q := Fin 3 × Fin 3) (gradCurl.m 1 2) A C :=
+  TorusWeak.mem_graph_iff_isWeak (P := Fin 3 × Fin 3) (Q := Fin 3 × Fin 3) curl_isLinear A C
+
+/-- **`H(div; 𝕋³) = D(grad†)` is the weak `H(div)`**: `grad† = div` (the symbol `div_ξ`) is the
+weak row-wise divergence. -/
+theorem mem_domain_adjoint_grad_iff_weak (A : TorusWeak.Field (Fin 3) (Fin 3 × Fin 3))
+    (D : TorusWeak.Field (Fin 3) (Fin 3)) :
+    (∃ h : Fourier.Torus.fieldFourier _ _ A ∈ ((complex.d 0 1)†).domain,
+        (complex.d 0 1)† ⟨_, h⟩ = Fourier.Torus.fieldFourier _ _ D) ↔
+      TorusWeak.IsWeak (P := Fin 3 × Fin 3) (Q := Fin 3)
+        (fun ξ => ContinuousLinearMap.adjoint (gradCurl.m 0 1 ξ)) A D := by
+  have e := (Fourier.Torus.symbolComplex gradCurl).adjoint_d 0 1
+  change (∃ h : _ ∈ ((Fourier.Torus.symbolComplex gradCurl).toHilbertComplex.d 0 1)†.domain,
+    ((Fourier.Torus.symbolComplex gradCurl).toHilbertComplex.d 0 1)† ⟨_, h⟩ = _) ↔ _
+  rw [e]
+  exact TorusWeak.mem_graph_iff_isWeak (P := Fin 3 × Fin 3) (Q := Fin 3) adjoint_grad_isLinear A D
+
+/-- **The weak curl of a real field is real.** -/
+theorem curl_star_eq_self {A C : TorusWeak.Field (Fin 3) (Fin 3 × Fin 3)}
+    (h : TorusWeak.IsWeak (P := Fin 3 × Fin 3) (Q := Fin 3 × Fin 3) (gradCurl.m 1 2) A C)
+    (hA : ∀ p, star (A p) = A p) : ∀ p, star (C p) = C p :=
+  h.star_eq_self curl_isLinear curl_neg_entryConj hA
 
 end Feec.Models.Torus.GradCurl

@@ -1,7 +1,7 @@
 module
 
-public import Feec.Models.Cube.Mirror
-public import Feec.Legacy.MirrorCube.CubeDense
+public import Feec.Models.Cube.Static
+public import Feec.Legacy.Box.Ident
 
 /-!
 # The cube complexes and the bounded-domain realizations
@@ -19,9 +19,8 @@ results on the bounded-domain complexes in the language of window complexes:
   thesis' constraint these are the data `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `curl B₀ = 0`
   (`Ident.mem_invariantCore_tsd_iff`). The forward statement goes through the spectral argument of
   `Feec.Models.Cube.Static` (pure point spectrum on the torus); no Cesàro means are used.
-* the mirror complex on `Q` lies between the minimal and the maximal realizations
-  (`Ident.minimal_le_mirror`, `Ident.mirror_domain_le_maximal`): `H̊(curl, Q) ⊆ D(d₁) ⊆ H(curl, Q)`
-  and `H̊¹(Q) ⊆ D(d₀)`, with `d` the weak derivative.
+The comparison of the mirror complex on `Q` with the minimal and maximal realizations is in
+`Feec.Models.Cube.MirrorDirichlet`.
 
 ## References
 
@@ -113,26 +112,6 @@ theorem mem_invariantCore_tsd_iff (hs : 0 < s) (y : PiLp 2 (W3 (V b s) (M b s) (
   rw [← map_Kc, ← mem_Kmax_iff (cxCube b s) (cxCube b s).waveGroup, ← Feec.Legacy.Constraints.mem_Kmax,
     Feec.Legacy.BoxIdent.openCube_mem_Kmax_iff' hs]
   simp only [totEquiv.injective.eq_iff]
-
-/-- The minimal realization `H̊¹(Q) → H̊(curl, Q)` is a restriction of the mirror complex on `Q`:
-`d^{min} ≤ d^{mirror}` for both differentials. -/
-theorem minimal_le_mirror :
-    cxQ.d0 ≤ Feec.Legacy.MirrorCube.mirrorCxQ.d0 ∧ cxQ.d1 ≤ Feec.Legacy.MirrorCube.mirrorCxQ.d1 := by
-  refine ⟨⟨fun u hu => (Feec.Legacy.MirrorCube.gradClosure_le_mirror ⟨u, hu⟩).1, fun x y hxy => ?_⟩,
-    ⟨fun u hu => (Feec.Legacy.MirrorCube.curlClosure_le_mirror ⟨u, hu⟩).1, fun x y hxy => ?_⟩⟩
-  · obtain ⟨h, e⟩ := Feec.Legacy.MirrorCube.gradClosure_le_mirror x
-    rw [← e]; exact apply_congr' _ _ _ hxy
-  · obtain ⟨h, e⟩ := Feec.Legacy.MirrorCube.curlClosure_le_mirror x
-    rw [← e]; exact apply_congr' _ _ _ hxy
-
-/-- The mirror curl on `Q` lies between the minimal and the maximal curl:
-`H̊(curl, Q) ⊆ D(d₁) ⊆ H(curl, Q)`. -/
-theorem mirror_domain_le_maximal :
-    Feec.Legacy.BoundedDomain.HcurlZero Qr ⊆
-        (Feec.Legacy.MirrorCube.mirrorCxQ.d1.domain : Set Feec.Legacy.MirrorCube.MQ) ∧
-      (Feec.Legacy.MirrorCube.mirrorCxQ.d1.domain : Set Feec.Legacy.MirrorCube.MQ) ⊆
-        Feec.Legacy.BoundedDomain.HcurlM Qr :=
-  Feec.Legacy.MirrorCube.HcurlZero_le_d1_le_HcurlM
 
 end Ident
 

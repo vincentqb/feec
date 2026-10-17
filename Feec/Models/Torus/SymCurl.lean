@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.Torus
 public import Feec.Fourier.SymCurlSymbol
+public import Feec.Fourier.Reality
 
 /-!
 # The strong-symmetry complex on `𝕋³`: TSD constraints propagate (Thesis Prop 4.19)
@@ -23,6 +24,9 @@ its Hodge wave equation is (4.18).
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
   real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
+* **`hodge_real`**, `exists_real_hess_preimage`, `exists_real_symCurl_preimage`: the Hodge pieces
+  of a real field are real, with real potentials (`L²(𝕋³; S) = R(grad grad) ⊕ ℌ ⊕ R(sym curl)`
+  over the real fields).
 
 ## References
 
@@ -41,7 +45,9 @@ namespace Feec.Models.Torus.SymCurl
 abbrev Space (i : Fin 3) : Type :=
   Lp (W3 ℂ Sym Tr i) 2 (Measure.count : Measure (Fin 3 → ℤ))
 
-/-- **The periodic strong-symmetry complex** (4.16) (Fourier side). -/
+/-- **The periodic strong-symmetry complex** (4.16) (Fourier side): `grad grad`, then the
+row-wise `curl` from symmetric to trace-free matrices.
+See [QuennevilleBelair2015], Eq. (4.16) (§4.11). -/
 abbrev complex : HilbertComplex ℂ ComplexShape.fin3 Space :=
   Fourier.Torus.complex symCurl
 
@@ -63,8 +69,9 @@ Thesis: Prop 4.19 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
-/-- **Thesis Prop 4.19 on `𝕋³`**: strong solutions of `U' = L U + F` with data and forcing in
-`K` stay in `K`. Thesis: Prop 4.19 -/
+/-- **Thesis Prop 4.19 on `𝕋³`**: strong solutions of the Hodge wave system (4.18),
+`U' = L U + F`, with data and forcing in `K` stay in `K`.
+See [QuennevilleBelair2015], Eq. (4.18) (§4.11). Thesis: Prop 4.19 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -102,11 +109,23 @@ theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.to
 /-! ### Closed range and the Hodge decomposition -/
 
 /-- **The periodic strong-symmetry complex has closed range** at every index (the thesis defers
-this to its next chapter). The incoming gap of `curl` uses `|A ξ| ≤ ‖curl_ξ A‖` for symmetric `A`
+this to its next chapter), so the ranges of the adjoint complex (4.17) are closed too and the
+Hodge wave system (4.18) has a Hodge decomposition without closures.
+See [QuennevilleBelair2015], Eqs. (4.16)–(4.18) (§4.11). The incoming gap of `curl` uses `|A ξ| ≤ ‖curl_ξ A‖` for symmetric `A`
 with `ξᵀ A ξ = 0` (`Feec.Fourier.SymCurl.norm_div_le_norm_curl`). -/
 theorem closedRangeAt (i : Fin 3) : complex.ClosedRangeAt i :=
   Fourier.Torus.closedRangeAt_of_gap (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
 
+/-- **The adjoint complex (4.17)**, `div div ← sym curl`, is the complex of the adjoint symbols:
+`(d i j)†` is the multiplier by `m_{ij}(ξ)*`.
+See [QuennevilleBelair2015], Eq. (4.17) (§4.11). -/
+theorem adjoint_d (i j : Fin 3) :
+    (complex.d i j)† = Operator.mulOp Measure.count fun k =>
+      ContinuousLinearMap.adjoint (symCurl.m i j (Fourier.Torus.freq k)) :=
+  (Fourier.Torus.symbolComplex symCurl).adjoint_d i j
+
+/-- Closed range of the adjoint complex (4.17).
+See [QuennevilleBelair2015], Eq. (4.17) (§4.11). -/
 theorem dual_closedRangeAt {i j : Fin 3} (hij : ComplexShape.fin3.Rel i j) :
     complex.dual.ClosedRangeAt i :=
   Fourier.Torus.dual_closedRangeAt_of_gap hij (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
@@ -182,5 +201,29 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
 theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
     realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
   realStructure.waveGroup_conj t x
+
+/-! ### Real Hodge decomposition -/
+
+/-- **Real Hodge decomposition on `𝕋³`**: a real field (`C x = x`, i.e. `x̂(-ξ) = conj x̂(ξ)`) is
+`x = b + h + a` with `b ∈ R(d)`, `h` harmonic, `a ∈ R(d†)`, all three real. For `i = 1`:
+`A = grad grad u + h + sym curl ρ` in `L²(𝕋³; S)`. -/
+theorem hodge_real {i : Fin 3} {x : Space i} (hx : realStructure.toConj.C i x = x) :
+    ∃ b ∈ complex.boundaries i, ∃ h ∈ complex.harmonic i, ∃ a ∈ complex.dual.boundaries i,
+      x = b + h + a ∧ realStructure.toConj.C i b = b ∧ realStructure.toConj.C i h = h ∧
+        realStructure.toConj.C i a = a :=
+  realStructure.toConj.hodge_real_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i) hx
+
+/-- A real field in `R(grad grad)` is `grad grad u` for a real `u ∈ H²(𝕋³)`. -/
+theorem exists_real_hess_preimage {A : Space 1}
+    (hA : A ∈ LinearMap.range (complex.d 0 1).toFun) (hAr : realStructure.toConj.C 1 A = A) :
+    ∃ u : (complex.d 0 1).domain, realStructure.toConj.C 0 u = u ∧ complex.d 0 1 u = A :=
+  realStructure.toConj.exists_real_preimage hA hAr
+
+/-- A real field in `R(sym curl)` (the range of `curl†`) is `sym curl ρ` for a real
+`ρ ∈ H(sym curl; 𝕋³, T)`. -/
+theorem exists_real_symCurl_preimage {A : Space 1}
+    (hA : A ∈ LinearMap.range ((complex.d 1 2)†).toFun) (hAr : realStructure.toConj.C 1 A = A) :
+    ∃ ρ : ((complex.d 1 2)†).domain, realStructure.toConj.C 2 ρ = ρ ∧ (complex.d 1 2)† ρ = A :=
+  realStructure.toConj.exists_real_preimage_adjoint hA hAr
 
 end Feec.Models.Torus.SymCurl

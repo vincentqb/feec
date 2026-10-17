@@ -126,6 +126,27 @@ theorem mem_graph_iff_weak {m : EuclideanSpace ℝ d → E →L[ℂ] F} (hm : Co
     filter_upwards [Operator.coeFn_mulOp volume m ⟨Fu, hmem⟩, hae] with x h1 h2
     rw [h1, ← h2]
 
+/-- **Weak identification of Fourier multiplier kernels**: `𝓕 f ∈ ker m` iff `⟪f, D φ⟫ = 0`
+for every Schwartz `φ`, when `𝓕 (D φ) = m* 𝓕 φ`. -/
+theorem mem_ker_iff_weak {m : EuclideanSpace ℝ d → E →L[ℂ] F} (hm : Continuous m)
+    (D : 𝓢(EuclideanSpace ℝ d, F) → 𝓢(EuclideanSpace ℝ d, E))
+    (hD : ∀ φ x, 𝓕 (D φ) x = ContinuousLinearMap.adjoint (m x) (𝓕 φ x))
+    (f : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))) :
+    𝓕 f ∈ (Operator.mulOp volume m).ker ↔
+      ∀ φ : 𝓢(EuclideanSpace ℝ d, F), ⟪f, (D φ).toLp 2⟫_ℂ = 0 := by
+  have h := mem_graph_iff_weak hm D hD f 0
+  simp only [inner_zero_left] at h
+  rw [← h, LinearPMap.mem_ker_iff]
+  constructor
+  · rintro ⟨y, hy, hy0⟩
+    refine ⟨hy ▸ y.2, ?_⟩
+    rw [show (𝓕 (0 : Lp F 2 (volume : Measure (EuclideanSpace ℝ d)))) = 0 from
+      (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) F).map_zero, ← hy0]
+    exact LinearPMap.apply_congr' _ _ _ hy
+  · rintro ⟨h, hc⟩
+    refine ⟨⟨_, h⟩, rfl, hc.trans ?_⟩
+    exact (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) F).map_zero
+
 /-! ### First-order operators on Schwartz fields -/
 
 variable [DecidableEq d]
@@ -144,6 +165,57 @@ theorem fourier_postcomp (L : E →L[ℂ] F) (ψ : 𝓢(EuclideanSpace ℝ d, E)
   rw [this, Real.fourier_eq, Real.fourier_eq, ← L.integral_comp_comm]
   · congr 1; funext v; rw [Circle.smul_def, Circle.smul_def, map_smul]
   · exact (Real.fourierIntegral_convergent_iff x).2 ψ.integrable
+
+/-! ### Pointwise linear maps -/
+
+omit [FiniteDimensional ℂ E] [FiniteDimensional ℂ F] [DecidableEq d] in
+/-- **The `L²` Fourier transform commutes with pointwise complex-linear maps**:
+`𝓕 (L ∘ f) = L ∘ 𝓕 f` (Schwartz fields, then density). -/
+theorem fourier_compLp (L : E →L[ℂ] F) (f : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))) :
+    𝓕 (L.compLp f) = L.compLp (𝓕 f) := by
+  have hc1 : Continuous fun f : Lp E 2 (volume : Measure (EuclideanSpace ℝ d)) =>
+      𝓕 (L.compLp f) :=
+    (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) F).continuous.comp (L.compLpL 2 volume).continuous
+  have hc2 : Continuous fun f : Lp E 2 (volume : Measure (EuclideanSpace ℝ d)) =>
+      L.compLp (𝓕 f) :=
+    (L.compLpL 2 volume).continuous.comp (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) E).continuous
+  refine DenseRange.induction_on
+    (SchwartzMap.denseRange_toLpCLM (F := E) (μ := (volume : Measure (EuclideanSpace ℝ d)))
+      (p := 2) ENNReal.ofNat_ne_top) f (isClosed_eq hc1 hc2) ?_
+  intro φ
+  simp only [SchwartzMap.toLpCLM_apply]
+  have h1 : L.compLp (φ.toLp 2 : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))) =
+      (SchwartzMap.postcompCLM L φ).toLp 2 := by
+    refine Lp.ext ?_
+    filter_upwards [L.coeFn_compLp (φ.toLp 2 : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))),
+      φ.coeFn_toLp 2 volume, (SchwartzMap.postcompCLM L φ).coeFn_toLp 2 volume] with x h1 h2 h3
+    rw [h1, h2, h3, SchwartzMap.postcompCLM_apply]
+  rw [h1, SchwartzMap.toLp_fourier_eq, SchwartzMap.toLp_fourier_eq]
+  refine Lp.ext ?_
+  filter_upwards [(𝓕 (SchwartzMap.postcompCLM L φ)).coeFn_toLp 2 volume,
+    L.coeFn_compLp ((𝓕 φ).toLp 2 : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))),
+    (𝓕 φ).coeFn_toLp 2 volume] with x h1 h2 h3
+  rw [h1, h2, h3, fourier_postcomp]
+
+omit [FiniteDimensional ℂ E] [FiniteDimensional ℂ F] [DecidableEq d] in
+/-- **Pointwise linear conditions transfer to the Fourier side**: `L (f x) = 0` a.e. iff
+`L (𝓕 f ξ) = 0` a.e. (e.g. symmetry and trace of a matrix field). -/
+theorem ae_map_eq_zero_iff_fourier (L : E →L[ℂ] F)
+    (f : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))) :
+    (∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ d)), L (f x) = 0) ↔
+      ∀ᵐ ξ ∂(volume : Measure (EuclideanSpace ℝ d)), L (𝓕 f ξ) = 0 := by
+  have e : ∀ g : Lp E 2 (volume : Measure (EuclideanSpace ℝ d)),
+      (∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ d)), L (g x) = 0) ↔ L.compLp g = 0 := fun g => by
+    rw [Lp.eq_zero_iff_ae_eq_zero]
+    constructor
+    · intro h
+      filter_upwards [h, L.coeFn_compLp g] with x h1 h2
+      rw [h2, h1, Pi.zero_apply]
+    · intro h
+      filter_upwards [h, L.coeFn_compLp g] with x h1 h2
+      rw [← h2, h1, Pi.zero_apply]
+  rw [e, e, ← fourier_compLp]
+  exact (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) F).map_eq_zero_iff.symm
 
 omit [FiniteDimensional ℂ E] [FiniteDimensional ℂ F] in
 /-- **The symbol of a first-order operator**: `𝓕 (Σ A_k ∂_k φ)(x) = Σ_k 2πi x_k A_k 𝓕 φ (x)`. -/

@@ -544,4 +544,309 @@ def ScaledEmbedding.ofSmul (hκ : ∀ i j, κ i j ≠ 0) : ScaledEmbedding H (H.
 
 end Transport
 
+/-! ### Adjoints of transported complexes -/
+
+section TransportAdjoint
+
+open scoped ComplexConjugate
+
+variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
+  [∀ i, CompleteSpace (W' i)]
+
+/-- Two Hilbert complexes with the same differentials are equal. -/
+theorem ext_d {H₁ H₂ : HilbertComplex 𝕜 c W} (h : H₁.d = H₂.d) : H₁ = H₂ := by
+  cases H₁; cases H₂; subst h; rfl
+
+variable {e : ∀ i, W i ≃L[𝕜] W' i} {κ : ι → ι → 𝕜} {s : ℝ}
+
+/-- **Adjoints of transported differentials** along uniformly scaled isometries
+(`⟪e x, e y⟫ = s ⟪x, y⟫` for all spaces): `(κ e d e⁻¹)† = conj κ · e d† e⁻¹`. -/
+theorem adjoint_transportD (hs : 0 < s)
+    (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {i j : ι} (hκ : κ i j ≠ 0) :
+    (transportD H e κ i j)† = transportD H.dual e (fun a b => conj (κ b a)) j i := by
+  have hs' : (s : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hs.ne'
+  have hfa := adjoint_isFormalAdjoint (H.dense i j)
+  have hle : transportD H.dual e (fun a b => conj (κ b a)) j i ≤ (transportD H e κ i j)† := by
+    refine IsFormalAdjoint.le_adjoint (dense_transportD_domain i j) fun x y => ?_
+    rw [transportD_apply, transportD_apply]
+    have hy : (y : W' j) = e j ((e j).symm y) := ((e j).apply_symm_apply _).symm
+    have hx : (x : W' i) = e i ((e i).symm x) := ((e i).apply_symm_apply _).symm
+    have h1 := hfa ⟨(e j).symm y, y.2⟩ ⟨(e i).symm x, x.2⟩
+    conv_lhs => rw [hy]
+    conv_rhs => rw [hx]
+    rw [inner_smul_left, he, inner_smul_right, he]
+    change conj (κ i j) * ((s : 𝕜) * ⟪H.d i j _, (e j).symm y⟫_𝕜) =
+      conj (κ i j) * ((s : 𝕜) * ⟪(e i).symm x, (H.d i j)† _⟫_𝕜)
+    rw [← inner_conj_symm, ← h1, inner_conj_symm]
+    rfl
+  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  change (e j).symm y ∈ ((H.d i j)†).domain
+  set z := (transportD H e κ i j)† ⟨y, hy⟩
+  refine mem_adjoint_domain_of_exists _ ⟨conj (κ i j)⁻¹ • (e i).symm z, fun x => ?_⟩
+  have hx : (e i).symm (e i x) ∈ (H.d i j).domain := by
+    rw [ContinuousLinearEquiv.symm_apply_apply]; exact x.2
+  have h2 := adjoint_isFormalAdjoint (dense_transportD_domain (H := H) (e := e) (κ := κ) i j)
+    ⟨y, hy⟩ ⟨e i x, hx⟩
+  rw [transportD_apply, apply_congr' (H.d i j) hx x.2 ((e i).symm_apply_apply x)] at h2
+  change ⟪z, e i x⟫_𝕜 = ⟪y, κ i j • e j (H.d i j x)⟫_𝕜 at h2
+  rw [inner_smul_right, show (y : W' j) = e j ((e j).symm y) from ((e j).apply_symm_apply _).symm,
+    he, show z = e i ((e i).symm z) from ((e i).apply_symm_apply _).symm, he] at h2
+  rw [inner_smul_left, RCLike.conj_conj]
+  have h3 : ⟪(e i).symm z, (x : W i)⟫_𝕜 = κ i j * ⟪(e j).symm y, H.d i j x⟫_𝕜 :=
+    mul_left_cancel₀ hs' (h2.trans (by ring))
+  rw [h3, ← mul_assoc, inv_mul_cancel₀ hκ, one_mul]
+
+/-- **The dual of a transported complex is the transport of the dual**, for uniformly scaled
+isometries, with conjugated chain-rule factors. -/
+theorem transport_dual (hs : 0 < s)
+    (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (hκ : ∀ i j, κ i j ≠ 0) :
+    (H.transport e κ hκ).dual =
+      H.dual.transport e (fun a b => conj (κ b a)) fun a b => by simpa using hκ b a :=
+  ext_d (funext fun i => funext fun j => adjoint_transportD hs he (hκ j i))
+
+variable [Fintype ι]
+
+/-- The componentwise map `∏ W i → ∏ W' i`. -/
+def totalMap (e : ∀ i, W i ≃L[𝕜] W' i) : PiLp 2 W →L[𝕜] PiLp 2 W' :=
+  ((PiLp.continuousLinearEquiv 2 𝕜 W').symm : (∀ i, W' i) →L[𝕜] PiLp 2 W').comp
+    ((ContinuousLinearMap.pi fun i => ((e i : W i →L[𝕜] W' i)).comp (ContinuousLinearMap.proj i)).comp
+      (PiLp.continuousLinearEquiv 2 𝕜 W : PiLp 2 W →L[𝕜] ∀ i, W i))
+
+omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] [Fintype ι] in
+theorem totalMap_apply (e : ∀ i, W i ≃L[𝕜] W' i) (x : PiLp 2 W) (i : ι) :
+    totalMap e x i = e i (x i) := rfl
+
+/-- **Transport along uniformly scaled isometries intertwines the wave operators**
+(`κ = 1`): `L' (e x) = e (L x)`. -/
+theorem wave_transport (hs : 0 < s)
+    (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) :
+    Intertwines (totalMap e) H.wave (H.transport e (fun _ _ => 1) fun _ _ => one_ne_zero).wave := by
+  have hadj : ∀ i j, ((H.transport e (fun _ _ => (1 : 𝕜)) fun _ _ => one_ne_zero).d i j)† =
+      transportD H.dual e (fun _ _ => (1 : 𝕜)) j i := fun i j => by
+    have := adjoint_transportD (H := H) (e := e) (κ := fun _ _ => (1 : 𝕜)) hs he
+      (i := i) (j := j) one_ne_zero
+    simpa using this
+  have hmem : ∀ x : H.wave.domain, totalMap e (x : PiLp 2 W) ∈
+      (H.transport e (fun _ _ => 1) fun _ _ => one_ne_zero).wave.domain := fun x =>
+    (mem_wave_domain _).2 ⟨fun i j => by
+      change (e i).symm (e i ((x : PiLp 2 W) i)) ∈ (H.d i j).domain
+      rw [ContinuousLinearEquiv.symm_apply_apply]; exact x.2.1 i j,
+    fun i j => by
+      rw [hadj]
+      change (e j).symm (e j ((x : PiLp 2 W) j)) ∈ ((H.d i j)†).domain
+      rw [ContinuousLinearEquiv.symm_apply_apply]; exact x.2.2 j i⟩
+  refine ⟨hmem, fun x => PiLp.ext fun j => ?_⟩
+  rw [wave_apply, totalMap_apply, wave_apply, _root_.map_sub, map_sum, map_sum]
+  refine congrArg₂ (· - ·) (Finset.sum_congr rfl fun i _ => ?_)
+    (Finset.sum_congr rfl fun k _ => ?_)
+  · change (1 : 𝕜) • e j (H.d i j ⟨(e i).symm (e i ((x : PiLp 2 W) i)), _⟩) = _
+    rw [one_smul]
+    exact congrArg (e j) (apply_congr' _ _ _ ((e i).symm_apply_apply _))
+  · rw [apply_eq_of_eq (hadj j k) _ ⟨_, by
+      change (e k).symm (e k ((x : PiLp 2 W) k)) ∈ ((H.d j k)†).domain
+      rw [ContinuousLinearEquiv.symm_apply_apply]; exact x.2.2 k j⟩ rfl]
+    change (1 : 𝕜) • e j ((H.d j k)† ⟨(e k).symm (e k ((x : PiLp 2 W) k)), _⟩) = _
+    rw [one_smul]
+    exact congrArg (e j) (apply_congr' _ _ _ ((e k).symm_apply_apply _))
+
+end TransportAdjoint
+
+/-! ### Compression along scaled isometric embeddings -/
+
+section Compression
+
+variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
+  [∀ i, CompleteSpace (W' i)] {J : ∀ i, W' i →L[𝕜] W i} {s : ℝ}
+
+omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] in
+/-- A scaled isometry multiplies norms by `√s`. -/
+theorem norm_apply_of_inner (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (i : ι) (x : W' i) : ‖J i x‖ = Real.sqrt s * ‖x‖ := by
+  have h := hJ i x x
+  rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h
+  have h' : ‖J i x‖ ^ 2 = s * ‖x‖ ^ 2 := by exact_mod_cast h
+  rw [← Real.sqrt_sq (norm_nonneg (J i x)), h', Real.sqrt_mul hs.le, Real.sqrt_sq (norm_nonneg x)]
+
+omit [∀ i, CompleteSpace (W i)] in
+/-- The range of a scaled isometry is closed. -/
+theorem isClosed_range_of_inner (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (i : ι) :
+    IsClosed ((LinearMap.range (J i : W' i →ₗ[𝕜] W i) : Submodule 𝕜 (W i)) : Set (W i)) := by
+  have hb : ∀ x, ‖x‖ ≤ (Real.toNNReal (Real.sqrt s)⁻¹ : ℝ) * ‖J i x‖ := fun x => by
+    rw [norm_apply_of_inner hs hJ, Real.coe_toNNReal _ (by positivity), ← mul_assoc,
+      inv_mul_cancel₀ (Real.sqrt_pos.2 hs).ne', one_mul]
+  have := ((J i).antilipschitz_of_bound hb).isClosed_range (J i).uniformContinuous
+  rw [LinearMap.coe_range, ContinuousLinearMap.coe_coe]
+  exact this
+
+/-- The scaled isometry onto its range, `x ↦ J x`, as a continuous linear equivalence. -/
+def rangeEquiv (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (i : ι) : W' i ≃L[𝕜] LinearMap.range (J i : W' i →ₗ[𝕜] W i) :=
+  have hinj : Function.Injective (J i) := fun x y h => by
+    have := norm_apply_of_inner hs hJ i (x - y)
+    rw [_root_.map_sub, h, sub_self, norm_zero, eq_comm, mul_eq_zero] at this
+    rcases this with h0 | h0
+    · exact absurd h0 (Real.sqrt_pos.2 hs).ne'
+    · exact sub_eq_zero.1 (norm_eq_zero.1 h0)
+  (LinearEquiv.ofInjective (J i : W' i →ₗ[𝕜] W i) hinj).toContinuousLinearEquivOfBounds
+    (Real.sqrt s) (Real.sqrt s)⁻¹ (fun x => by
+      change ‖J i x‖ ≤ _; rw [norm_apply_of_inner hs hJ])
+    fun y => by
+      obtain ⟨x, hx⟩ := y.2
+      have e : (LinearEquiv.ofInjective (J i : W' i →ₗ[𝕜] W i) hinj).symm y = x := by
+        rw [LinearEquiv.symm_apply_eq]; exact Subtype.ext hx.symm
+      rw [e, ← Submodule.norm_coe, ← hx, ContinuousLinearMap.coe_coe, norm_apply_of_inner hs hJ,
+        ← mul_assoc, inv_mul_cancel₀ (Real.sqrt_pos.2 hs).ne', one_mul]
+
+omit [∀ (i : ι), CompleteSpace (W i)] [∀ (i : ι), CompleteSpace (W' i)] in
+@[simp] theorem coe_rangeEquiv (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (i : ι) (x : W' i) :
+    (rangeEquiv hs hJ i x : W i) = J i x := rfl
+
+omit [∀ (i : ι), CompleteSpace (W i)] [∀ (i : ι), CompleteSpace (W' i)] in
+theorem J_rangeEquiv_symm (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (i : ι)
+    (y : LinearMap.range (J i : W' i →ₗ[𝕜] W i)) : J i ((rangeEquiv hs hJ i).symm y) = y := by
+  rw [← coe_rangeEquiv hs hJ, ContinuousLinearEquiv.apply_symm_apply]
+
+omit [∀ (i : ι), CompleteSpace (W i)] [∀ (i : ι), CompleteSpace (W' i)] in
+/-- The inverse of `rangeEquiv` scales inner products by `s⁻¹`. -/
+theorem inner_rangeEquiv_symm (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (i : ι)
+    (a b : LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :
+    ⟪(rangeEquiv hs hJ i).symm a, (rangeEquiv hs hJ i).symm b⟫_𝕜 = ((s⁻¹ : ℝ) : 𝕜) * ⟪a, b⟫_𝕜 := by
+  have hs' : (s : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hs.ne'
+  rw [Submodule.coe_inner, ← J_rangeEquiv_symm hs hJ i a, ← J_rangeEquiv_symm hs hJ i b, hJ,
+    RCLike.ofReal_inv, ← mul_assoc, inv_mul_cancel₀ hs', one_mul]
+
+variable [∀ i, (LinearMap.range (J i : W' i →ₗ[𝕜] W i)).HasOrthogonalProjection]
+
+instance (i : ι) : CompleteSpace (LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :=
+  Submodule.completeSpace_of_hasOrthogonalProjection _
+
+variable (H J)
+
+/-- **The compression of `H` along scaled isometric embeddings** `J i : W' i → W i`
+(`⟪J x, J y⟫ = s ⟪x, y⟫`) whose ranges form a reducing subcomplex: the reducing subcomplex
+`R(J)` transported to `W'`, so that `d' = J⁻¹ d J` on `{x | J x ∈ D(d)}`. -/
+def compress (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) : HilbertComplex 𝕜 c W' :=
+  hR.toHilbertComplex.transport (fun i => (rangeEquiv hs hJ i).symm) (fun _ _ => 1)
+    fun _ _ => one_ne_zero
+
+variable {H J}
+
+theorem mem_compress_domain_iff (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i j : ι} {x : W' i} :
+    x ∈ ((H.compress J hs hJ hR).d i j).domain ↔ J i x ∈ (H.d i j).domain := by
+  change (rangeEquiv hs hJ i).symm.symm x ∈ ((hR.reduces i j).part).domain ↔ _
+  rw [ContinuousLinearEquiv.symm_symm, LinearPMap.IsReducingPair.mem_part_domain]
+  rfl
+
+/-- **`J d' = d J`**: the compressed differentials are `J⁻¹ d J`. -/
+theorem J_compress_d (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i j : ι}
+    (x : ((H.compress J hs hJ hR).d i j).domain) :
+    J j ((H.compress J hs hJ hR).d i j x) =
+      H.d i j ⟨J i x, (mem_compress_domain_iff hs hJ hR).1 x.2⟩ := by
+  change J j ((1 : 𝕜) • (rangeEquiv hs hJ j).symm ((hR.reduces i j).part
+    ⟨(rangeEquiv hs hJ i).symm.symm x, _⟩)) = _
+  rw [one_smul, J_rangeEquiv_symm, LinearPMap.IsReducingPair.part_apply]
+  rfl
+
+/-- **The adjoints of the compressed complex are the compressions of the adjoints.** -/
+theorem adjoint_compress_d (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) (i j : ι) :
+    ((H.compress J hs hJ hR).d i j)† = (H.dual.compress J hs hJ hR.dual).d j i := by
+  have he := inner_rangeEquiv_symm hs hJ
+  change (transportD hR.toHilbertComplex (fun i => (rangeEquiv hs hJ i).symm)
+    (fun _ _ => (1 : 𝕜)) i j)† = transportD hR.dual.toHilbertComplex
+      (fun i => (rangeEquiv hs hJ i).symm) (fun _ _ => (1 : 𝕜)) j i
+  rw [adjoint_transportD (inv_pos.2 hs) he one_ne_zero]
+  have hK : hR.toHilbertComplex.dual = hR.dual.toHilbertComplex :=
+    ext_d (funext fun a => funext fun b => hR.dual_toHilbertComplex_d a b)
+  have hκ : (fun a b : ι => (starRingEnd 𝕜) ((fun _ _ : ι => (1 : 𝕜)) b a)) = fun _ _ => 1 := by
+    funext a b; simp
+  rw [hK, hκ]
+
+theorem mem_adjoint_compress_iff (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i j : ι} {y : W' j} :
+    y ∈ (((H.compress J hs hJ hR).d i j)†).domain ↔ J j y ∈ ((H.d i j)†).domain := by
+  rw [adjoint_compress_d]
+  exact mem_compress_domain_iff hs hJ hR.dual
+
+/-- **`J d'† = d† J`.** -/
+theorem J_adjoint_compress_d (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i j : ι}
+    (y : (((H.compress J hs hJ hR).d i j)†).domain) :
+    J i (((H.compress J hs hJ hR).d i j)† y) =
+      (H.d i j)† ⟨J j y, (mem_adjoint_compress_iff hs hJ hR).1 y.2⟩ := by
+  have hy : (y : W' j) ∈ ((H.dual.compress J hs hJ hR.dual).d j i).domain := by
+    rw [← adjoint_compress_d]; exact y.2
+  rw [apply_eq_of_eq (adjoint_compress_d hs hJ hR i j) y ⟨_, hy⟩ rfl]
+  exact J_compress_d hs hJ hR.dual ⟨_, hy⟩
+
+/-- **A compression is a scaled embedding** into the original complex (scale `s`, chain-rule
+factors `1`). -/
+def ScaledEmbedding.ofCompress (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :
+    ScaledEmbedding (H.compress J hs hJ hR) H where
+  J := J
+  scale _ := s
+  scale_pos _ := hs
+  inner_J := hJ
+  dScale _ _ := 1
+  dScale_ne_zero _ _ := one_ne_zero
+  mapsTo i j x := (mem_compress_domain_iff hs hJ hR).1 x.2
+  comm i j x := by rw [one_smul, J_compress_d]
+  mem_domain_of_map i j x h := (mem_compress_domain_iff hs hJ hR).2 h
+
+variable [Fintype ι]
+
+/-- The componentwise map `∏ W' i → ∏ W i`. -/
+def totalJ (J : ∀ i, W' i →L[𝕜] W i) : PiLp 2 W' →L[𝕜] PiLp 2 W :=
+  ((PiLp.continuousLinearEquiv 2 𝕜 W).symm : (∀ i, W i) →L[𝕜] PiLp 2 W).comp
+    ((ContinuousLinearMap.pi fun i => (J i).comp (ContinuousLinearMap.proj i)).comp
+      (PiLp.continuousLinearEquiv 2 𝕜 W' : PiLp 2 W' →L[𝕜] ∀ i, W' i))
+
+omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)]
+  [∀ i, (LinearMap.range (J i : W' i →ₗ[𝕜] W i)).HasOrthogonalProjection] [Fintype ι] in
+theorem totalJ_apply (x : PiLp 2 W') (i : ι) : totalJ J x i = J i (x i) := rfl
+
+/-- **The compression intertwines the wave operators**: `J L' = L J`. -/
+theorem wave_compress (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :
+    Intertwines (totalJ J) (H.compress J hs hJ hR).wave H.wave := by
+  have hmem : ∀ x : (H.compress J hs hJ hR).wave.domain, totalJ J (x : PiLp 2 W') ∈ H.wave.domain :=
+    fun x => (mem_wave_domain _).2 ⟨fun i j => (mem_compress_domain_iff hs hJ hR).1 (x.2.1 i j),
+      fun i j => (mem_adjoint_compress_iff hs hJ hR).1 (x.2.2 j i)⟩
+  refine ⟨hmem, fun x => PiLp.ext fun j => ?_⟩
+  rw [wave_apply, totalJ_apply, wave_apply, _root_.map_sub, map_sum, map_sum]
+  refine congrArg₂ (· - ·) (Finset.sum_congr rfl fun i _ => ?_)
+    (Finset.sum_congr rfl fun k _ => ?_)
+  · exact (J_compress_d hs hJ hR ⟨_, x.2.1 i j⟩).symm
+  · exact (J_adjoint_compress_d hs hJ hR ⟨_, x.2.2 k j⟩).symm
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  [∀ i, NormedSpace ℝ (W' i)] [∀ i, IsScalarTower ℝ 𝕜 (W' i)]
+
+/-- **The wave group of a compression is the restriction of the wave group**:
+`J e^{tL'} = e^{tL} J`. -/
+theorem waveGroup_compress (hs : 0 < s)
+    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
+    (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) (t : ℝ) (x : PiLp 2 W') :
+    totalJ J ((H.compress J hs hJ hR).waveGroup.S t x) = H.waveGroup.S t (totalJ J x) := by
+  have h := wave_compress hs hJ hR
+  rw [← generator_waveGroup, ← generator_waveGroup] at h
+  exact H.isIsometric_waveGroup.intertwines_S _ h t x
+
+end Compression
+
 end Feec.HilbertComplex

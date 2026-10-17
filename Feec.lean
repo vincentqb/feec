@@ -156,12 +156,15 @@ public import Feec.Models.BoundedDomain.DeRham
 public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.SymCurl
+public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.Bridge
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
+public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.Parity
+public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.Static
 public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham

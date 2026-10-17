@@ -65,11 +65,13 @@ def IsSymmetric (A : E →ₗ.[𝕜] E) : Prop :=
   ∀ x y : A.domain, ⟪A x, (y : E)⟫_𝕜 = ⟪(x : E), A y⟫_𝕜
 
 /-- Skew-symmetry on the domain: `⟪A x, y⟫ = -⟪x, A y⟫`. Weaker than skew-adjointness, and enough
-for every energy, uniqueness and constraint-propagation argument. -/
+for every energy, uniqueness and constraint-propagation argument.
+See [QuennevilleBelair2015], §4.1. -/
 def IsSkewSymmetric (A : E →ₗ.[𝕜] E) : Prop :=
   ∀ x y : A.domain, ⟪A x, (y : E)⟫_𝕜 = -⟪(x : E), A y⟫_𝕜
 
-/-- Skew-adjoint (possibly unbounded) operator: `A† = -A`, with equal domains. -/
+/-- Skew-adjoint (possibly unbounded) operator: `A† = -A`, with equal domains.
+See [QuennevilleBelair2015], §4.1. -/
 def IsSkewAdjoint [CompleteSpace E] (A : E →ₗ.[𝕜] E) : Prop := A† = -A
 
 /-- Dissipative operator: `re ⟪A x, x⟫ ≤ 0` on `D(A)`. -/
@@ -158,7 +160,7 @@ theorem IsSkewAdjoint.dense_domain (hA : A.IsSkewAdjoint) : Dense (A.domain : Se
     rw [hA] at hy; exact hy
   exact h (by rw [htop]; simp [dense_univ])
 
-/-- Skew-adjoint ⇒ skew-symmetric. -/
+/-- Skew-adjoint ⇒ skew-symmetric. See [QuennevilleBelair2015], §4.1. -/
 theorem IsSkewAdjoint.isSkewSymmetric (hA : A.IsSkewAdjoint) : A.IsSkewSymmetric := by
   intro x y
   have hle : -A ≤ A† := hA ▸ le_rfl
@@ -220,7 +222,8 @@ theorem isSkewAdjoint_iff_neg_le_adjoint :
   · rintro ⟨hle, hdom⟩
     exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
 
-/-- `A` is skew-adjoint iff it is densely defined, skew-symmetric and `D(A†) ⊆ D(A)`. -/
+/-- `A` is skew-adjoint iff it is densely defined, skew-symmetric and `D(A†) ⊆ D(A)`.
+See [QuennevilleBelair2015], §4.1. -/
 theorem isSkewAdjoint_iff (hD : Dense (A.domain : Set E)) :
     A.IsSkewAdjoint ↔ A.IsSkewSymmetric ∧ A†.domain ≤ A.domain := by
   rw [isSkewAdjoint_iff_neg_le_adjoint, isSkewSymmetric_iff_neg_le_adjoint hD]

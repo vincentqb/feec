@@ -499,7 +499,8 @@ variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
   (hT : Dense (T.domain : Set E)) (hc : T.IsClosed)
   (hmaps : ∀ x : T.domain, (T x : E) ∈ T.domain) (hcomp : ∀ x : T.domain, T ⟨T x, hmaps x⟩ = 0)
 
-/-- The **Hodge wave group** `e^{tL}`, `L = T - T†` (Stone). -/
+/-- The **Hodge wave group** `e^{tL}`, `L = T - T†` (Stone): the solution operator of the Hodge
+wave equation. See [QuennevilleBelair2015], (4.4), Thm 4.6. -/
 def waveGroup : C0Group 𝕜 E := (isSkewAdjoint_sub_adjoint hT hc hmaps hcomp).group
 
 theorem generator_waveGroup : (waveGroup hT hc hmaps hcomp).generator = T - T† :=

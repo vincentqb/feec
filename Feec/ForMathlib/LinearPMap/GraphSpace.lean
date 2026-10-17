@@ -49,7 +49,8 @@ theorem ker_eq_preimage_graph (T : E →ₗ.[R] F) :
 
 variable [TopologicalSpace E] [TopologicalSpace F]
 
-/-- The kernel of a **closed** unbounded operator is closed. -/
+/-- The kernel of a **closed** unbounded operator is closed (closedness is needed; the thesis
+asserts it for every unbounded operator). See [QuennevilleBelair2015], §4.1. -/
 theorem isClosed_ker {T : E →ₗ.[R] F} (hc : T.IsClosed) : _root_.IsClosed (T.ker : Set E) := by
   rw [ker_eq_preimage_graph]
   exact hc.preimage (continuous_id.prodMk continuous_const)
@@ -157,7 +158,8 @@ theorem graph_eq_orthogonal (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set 
   rw [← closure_graph T hT, (isClosed_graphL2 hc).submodule_topologicalClosure_eq]
 
 /-- Weak characterization of the graph of a closed densely defined operator:
-`(x, y) ∈ Γ(T)` iff `⟪T† w, x⟫ = ⟪w, y⟫` for all `w ∈ D(T†)`. -/
+`(x, y) ∈ Γ(T)` iff `⟪T† w, x⟫ = ⟪w, y⟫` for all `w ∈ D(T†)`.
+See [QuennevilleBelair2015], §4.1. -/
 theorem mem_graph_iff_of_isClosed {T : E →ₗ.[𝕜] F} (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) {x : E} {y : F} :
     (x, y) ∈ T.graph ↔ ∀ w : T†.domain, ⟪T† w, x⟫_𝕜 = ⟪(w : F), y⟫_𝕜 := by
@@ -180,7 +182,8 @@ theorem mem_graph_iff_of_isClosed {T : E →ₗ.[𝕜] F} (hT : Dense (T.domain 
     rw [hu1, ← hw, inner_neg_left, H w]
     ring
 
-/-- The adjoint of a closed densely defined operator is densely defined. -/
+/-- The adjoint of a closed densely defined operator is densely defined.
+See [QuennevilleBelair2015], §4.1. -/
 theorem dense_adjoint_domain (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) : Dense (T†.domain : Set F) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
@@ -193,7 +196,7 @@ theorem dense_adjoint_domain (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set
     exact (inner_eq_zero_symm.1 ((Submodule.mem_orthogonal' _ _).1 hy _ w.2)).symm
   exact T.graph_fst_eq_zero_snd hg rfl
 
-/-- von Neumann: `T†† = T` for closed densely defined `T`. -/
+/-- von Neumann: `T†† = T` for closed densely defined `T`. See [QuennevilleBelair2015], §4.1. -/
 theorem adjoint_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) : T†† = T := by
   apply LinearPMap.eq_of_eq_graph

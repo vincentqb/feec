@@ -139,6 +139,23 @@ theorem le_add_half_integral_of_sq_deriv_le_mul {Q q' F : ℝ → ℝ} {a b : �
   simp only [intervalIntegral.integral_same, sub_zero] at this
   linarith
 
+/-- **The constant `½` is sharp**: `Q t = t - a` and `F = 2` satisfy the hypotheses of
+`le_add_half_integral_of_sq_deriv_le_mul` (`d/dt Q² = 2 (t - a) = F Q`), and the resulting bound
+`Q t ≤ Q a + ½ ∫ₐᵗ F` is an equality for every `t`. Thesis: Lemma 4.12 (the remark after it). -/
+theorem le_add_half_integral_of_sq_deriv_le_mul_sharp {a b : ℝ} :
+    (∀ t ∈ Icc a b, t - a ≤ (a - a) + (1 / 2) * ∫ _ in a..t, (2 : ℝ)) ∧
+      ∀ t : ℝ, t - a = (a - a) + (1 / 2) * ∫ _ in a..t, (2 : ℝ) := by
+  refine ⟨le_add_half_integral_of_sq_deriv_le_mul (Q := fun t => t - a)
+    (q' := fun t => 2 * (t - a)) (F := fun _ => (2 : ℝ)) (continuousOn_id.sub continuousOn_const)
+    (fun t ht => sub_nonneg.2 ht.1)
+    (fun t _ => by
+      have h : HasDerivAt (fun s : ℝ => (s - a) ^ 2) (2 * (t - a)) t := by
+        have := (hasDerivAt_pow 2 (t - a)).comp t ((hasDerivAt_id t).sub_const a)
+        simpa [Function.comp_def] using this
+      exact h.hasDerivWithinAt)
+    continuousOn_const (fun _ _ => zero_le_two) (fun _ _ => le_rfl), fun t => ?_⟩
+  simp; ring
+
 /-! ### Energy estimates for curves in inner product spaces -/
 
 section Energy

@@ -41,7 +41,8 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
 
 /-! ### (4.1a–d) -/
 
-/-- (4.1a) `R(T)ᗮ = N(T†)` for densely defined `T` (no closedness needed). -/
+/-- (4.1a) `R(T)ᗮ = N(T†)` for densely defined `T` (no closedness needed).
+See [QuennevilleBelair2015], §4.1, (4.1). -/
 theorem orthogonal_range_eq_ker_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) :
     (LinearMap.range T.toFun)ᗮ = T†.ker := by
   ext y

@@ -18,7 +18,7 @@ wave operators of `Feec.HilbertComplex.Dirac` apply to it. Zero padding uses `PU
 * `ShortHilbertComplex.toHilbertComplex`: the complex on `ComplexShape.fin3`;
   `HilbertComplex.toShort`: the converse.
 * `ShortHilbertComplex.wave`: the wave operator `(x₀, x₁, x₂) ↦ (−d₀† x₁, d₀ x₀ − d₁† x₂, d₁ x₁)`
-  on `PiLp 2 (W3 W₀ W₁ W₂)`; `ShortHilbertComplex.ofOp`.
+  on `PiLp 2 (W3 W₀ W₁ W₂)`; `ShortHilbertComplex.ofOp`, `ShortHilbertComplex.ofBounded`.
 
 ## Main results
 
@@ -234,6 +234,27 @@ def ofOp (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClose
   closed₁ := LinearPMap.isClosed_zero
   mapsTo _ := Submodule.mem_top
   comp _ := rfl
+
+variable {G : Type*} [NormedAddCommGroup G] [InnerProductSpace 𝕜 G] [CompleteSpace G]
+
+/-- A bounded complex `E --A--> F --B--> G` (`B A = 0`) as a short Hilbert complex of
+everywhere-defined operators. See [QuennevilleBelair2015], §4.2. -/
+def ofBounded (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 0) :
+    ShortHilbertComplex 𝕜 E F G where
+  d₀ := (A : E →ₗ[𝕜] F).toPMap ⊤
+  d₁ := (B : F →ₗ[𝕜] G).toPMap ⊤
+  dense₀ := by simp [dense_univ]
+  dense₁ := by simp [dense_univ]
+  closed₀ := A.isClosed_toPMap_top
+  closed₁ := B.isClosed_toPMap_top
+  mapsTo _ := Submodule.mem_top
+  comp x := hBA x
+
+@[simp] theorem ofBounded_d₀ (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 0) :
+    (ofBounded A B hBA).d₀ = (A : E →ₗ[𝕜] F).toPMap ⊤ := rfl
+
+@[simp] theorem ofBounded_d₁ (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 0) :
+    (ofBounded A B hBA).d₁ = (B : F →ₗ[𝕜] G).toPMap ⊤ := rfl
 
 end ShortHilbertComplex
 

@@ -13,6 +13,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 
 **Inventory today:** 77 files, 59,669 lines, about 3,660 `theorem`/`lemma`, 1,098 definitions/structures, and 164 thesis-numbered theorems (`thm_*`, `prop_*`, `cor_*`, `lemma_*`, `ch6_*`).
 
+
+> **Docstring citations (user decision, 2026-10-17).** Thesis numbering is banned only in Lean
+> *identifiers* (declaration, module and namespace names). Docstrings should keep, and may add,
+> references to the corresponding thesis chapter, section, theorem, proposition, equation and
+> page, e.g. `Thesis: Prop 4.17 (§4.10, p. 66), corrected` or `[QuennevilleBelair2015, Thm 4.6]`.
+> Naming greps (`prop_[0-9]`, `Ch[0-9]`, …) apply to identifiers only, never to comments or
+> docstrings; do not strip thesis references from documentation.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

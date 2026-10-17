@@ -33,6 +33,8 @@ inf-sup condition with constant `γ > 0` is `γ ‖x‖ ≤ ‖B x‖ = sup_{y �
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.5 (inf-sup condition), Prop 4.13 (inf-sup by a test function)
+* [D. N. Arnold, *Lecture notes on Numerical Analysis of Partial Differential Equations*][ArnoldNotes2011]
+  (the inf-sup and dense range conditions, as followed in §4.5 of the thesis)
 * [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
 * [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
   Ch. 4
@@ -49,13 +51,15 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜] {σ : 𝕜 →+* 𝕜} [RingHomIsometr
   [NormedAddCommGroup X] [NormedSpace 𝕜 X] [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
 
 /-- The **inf-sup condition** with constant `γ > 0`: `γ ‖x‖ ≤ ‖B x‖` for every `x`, where
-`‖B x‖ = sup_{y ≠ 0} |B x y| / ‖y‖`. [QuennevilleBelair2015], §4.5 -/
+`‖B x‖ = sup_{y ≠ 0} |B x y| / ‖y‖`. [QuennevilleBelair2015], §4.5, which follows
+[ArnoldNotes2011] for this definition. -/
 structure InfSup (B : X →L[𝕜] Y →SL[σ] 𝕜) (γ : ℝ) : Prop where
   pos : 0 < γ
   le : ∀ x, γ * ‖x‖ ≤ ‖B x‖
 
 /-- The **separation condition** on the second slot: `B x y = 0` for all `x` forces `y = 0`
-(the "dense range" condition of Babuška–Nečas). [QuennevilleBelair2015], §4.5 -/
+(the "dense range" condition of Babuška–Nečas). [QuennevilleBelair2015], §4.5, which follows
+[ArnoldNotes2011] for this definition. -/
 def SeparatingRight (B : X →L[𝕜] Y →SL[σ] 𝕜) : Prop := ∀ y, (∀ x, B x y = 0) → y = 0
 
 /-- The restriction of `B` to a trial subspace `K` and a test subspace `L`. -/

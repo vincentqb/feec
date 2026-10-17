@@ -23,6 +23,8 @@ discrete one with constant `β / C`.
 * [M. Fortin, *An analysis of the convergence of mixed finite element methods*][Fortin1977]
 * [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
   §5.4
+* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
+  (approximation of saddle point problems)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
@@ -78,7 +80,8 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
 discrete constraint operator of `b` (`b vₕ qₕ = ⟪qₕ, Bₕ vₕ⟫`). If `b` has the continuous inf-sup
 property (inf over `q`), a Fortin operator with bound `C` exists, and `a` has the inf-sup property
 and separates on the discrete kernel `ker Bₕ`, then the discrete saddle point problem is uniquely
-solvable for all discrete data. [QuennevilleBelair2015], Thm 4.11 -/
+solvable for all discrete data. [QuennevilleBelair2015], Thm 4.11 (discrete form); the discrete
+conditions go back to [Brezzi1974]. -/
 theorem existsUnique_discrete_isSaddleSolution [CompleteSpace Xh] [CompleteSpace Yh]
     (hP : IsFortinOperator b Xh Yh P C) (hC : 0 < C) (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖b.flip q‖)

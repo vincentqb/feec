@@ -29,6 +29,8 @@ with the discrete inf-sup condition `InfSup (restrict B K L) γ`. A Galerkin app
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.10 (quasi-optimality with constant `1 + ‖B‖/γ`)
+* [D. N. Arnold, *Lecture notes on Numerical Analysis of Partial Differential Equations*][ArnoldNotes2011]
+  (source of Thm 4.10 of the thesis)
 * [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
 * [J. Xu, L. Zikatanov, *Some observations on Babuška and Brezzi theories*][XuZikatanov2003] (the
   sharp constant `‖B‖/γ`)
@@ -89,7 +91,8 @@ theorem norm_sub_le_of_orthogonal (h : InfSup (restrict B K L) γ) {u uh : X} (h
     _ ≤ _ := by linarith
 
 /-- **Quasi-optimality**, best-approximation form: `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) dist(u, K)`.
-[QuennevilleBelair2015], Thm 4.10 -/
+[QuennevilleBelair2015], Thm 4.10, taken from [ArnoldNotes2011]. The thesis' proof goes through the
+orthogonal projection onto `K`; this one does not, so `K` need not be closed or complete. -/
 theorem norm_sub_le_infDist (h : InfSup (restrict B K L) γ) {u uh : X} (huh : uh ∈ K)
     (horth : ∀ v ∈ L, B (u - uh) v = 0) :
     ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * Metric.infDist u K := by
@@ -154,7 +157,8 @@ theorem norm_sub_le_of_orthogonal_sharp (h : InfSup (restrict B K L) γ) (hK : K
   exact le_of_mul_le_mul_right this (by positivity)
 
 /-- **Sharp quasi-optimality**, best-approximation form: `‖u - uₕ‖ ≤ (‖B‖/γ) dist(u, K)`.
-[QuennevilleBelair2015], Thm 4.10 -/
+[QuennevilleBelair2015], Thm 4.10 (from [ArnoldNotes2011], with constant `1 + ‖B‖/γ`), sharpened
+as in [XuZikatanov2003]. -/
 theorem norm_sub_le_infDist_sharp (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥) {u uh : X}
     (huh : uh ∈ K) (horth : ∀ v ∈ L, B (u - uh) v = 0) :
     ‖u - uh‖ ≤ ‖B‖ / γ * Metric.infDist u K := by
@@ -176,7 +180,7 @@ variable [NormedAddCommGroup X] [NormedSpace 𝕜 X]
 /-- **Discrete well-posedness.** For a bounded bilinear form with the discrete inf-sup condition
 on finite-dimensional `K`, `L` of equal dimension, the Galerkin problem `uₕ ∈ K`,
 `B uₕ v = F v` (`v ∈ L`) has a unique solution for every bounded functional `F`.
-[QuennevilleBelair2015], Thm 4.10 -/
+[QuennevilleBelair2015], Thm 4.10, after [ArnoldNotes2011]. -/
 theorem existsUnique_galerkin [FiniteDimensional 𝕜 K] [FiniteDimensional 𝕜 L]
     (hdim : finrank 𝕜 K = finrank 𝕜 L) {B : X →L[𝕜] Y →L[𝕜] 𝕜}
     (h : InfSup (restrict B K L) γ) (F : Y →L[𝕜] 𝕜) :

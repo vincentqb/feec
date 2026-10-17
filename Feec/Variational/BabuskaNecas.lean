@@ -34,6 +34,8 @@ is a corollary of Babuška–Nečas over `RCLike`.
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.8 (Lax–Milgram), Thm 4.9 (Babuška–Nečas)
+* [D. N. Arnold, *Lecture notes on Numerical Analysis of Partial Differential Equations*][ArnoldNotes2011]
+  (source of Thm 4.9 of the thesis, including `‖L⁻¹‖⁻¹` as the best inf-sup constant)
 * [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
 * [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
   Ch. 4
@@ -171,7 +173,8 @@ theorem exists_infSup_of_bijective (hB : Function.Bijective B) : ∃ γ, InfSup 
 
 /-- **Babuška–Nečas, equivalence** (Thm 4.9, corrected): `B` has the inf-sup property and
 separates the second slot iff `B x = f` is uniquely solvable for every antilinear `f`.
-The thesis' converse with "there exists" alone is false. [QuennevilleBelair2015], Thm 4.9 (corrected) -/
+The thesis' converse with "there exists" alone is false. [QuennevilleBelair2015], Thm 4.9 (corrected);
+the thesis takes the statement from [ArnoldNotes2011]. -/
 theorem babuskaNecas_iff :
     ((∃ γ, InfSup B γ) ∧ SeparatingRight B) ↔ ∀ f : Y →L⋆[𝕜] 𝕜, ∃! x, B x = f := by
   refine ⟨fun ⟨⟨γ, h⟩, hs⟩ => existsUnique_apply_eq h hs, fun H => ⟨?_, fun y hy => ?_⟩⟩
@@ -316,7 +319,7 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
   {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
 
 /-- **The best inf-sup constant** is `‖B⁻¹‖⁻¹`: under inf-sup and separation, `γ' ≥ 0` is an
-admissible constant iff `γ' ‖B⁻¹‖ ≤ 1`. [QuennevilleBelair2015], Thm 4.9 -/
+admissible constant iff `γ' ‖B⁻¹‖ ≤ 1`. [QuennevilleBelair2015], Thm 4.9, after [ArnoldNotes2011]. -/
 theorem infSup_iff_mul_norm_symm_le (h : InfSup B γ) (hs : SeparatingRight B) {γ' : ℝ}
     (hγ' : 0 ≤ γ') :
     (∀ x, γ' * ‖x‖ ≤ ‖B x‖) ↔
@@ -360,7 +363,8 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
   {B : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {γ : ℝ}
 
 /-- In Hilbert spaces the supremum of the inf-sup condition is attained, with the same constant:
-`InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. [QuennevilleBelair2015], §4.5 -/
+`InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. This is the "equivalent" form of the inf-sup
+condition in [QuennevilleBelair2015], §4.5, which follows [ArnoldNotes2011]. -/
 theorem infSup_iff_forall_exists_norm_le_one (hγ : 0 < γ) :
     InfSup B γ ↔ ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ * ‖x‖ ≤ ‖B x y‖ := by
   refine ⟨fun h x => ?_, InfSup.of_forall_exists_norm_le_one hγ⟩

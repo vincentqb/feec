@@ -14,10 +14,17 @@ constants), `u(t) = (t - a) z` with `0 ≠ z ∈ ker d` solves the second-order 
 The correct statement is `Feec.HodgeWave.IsSecondOrderWeak.exists_isMixedWeak`: second-order
 solutions with `u̇(a) = -d* ρ₀` weakly are exactly the `u` of mixed solutions.
 
+The second-order form is the standard non-mixed (Lagrange `P_r Λ⁰`) formulation, which the thesis
+attributes to [Baker1976] and [Dupont1973] ([QuennevilleBelair2015], §4.8); those works treat the
+second-order form on its own, and the failing claim is only the thesis' equivalence with the
+mixed form.
+
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.8
+* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
+* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
 -/
 
 open scoped InnerProductSpace
@@ -35,7 +42,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ : Type*} [NormedAddCommGroup W�
 
 /-- **The §4.8 equivalence fails under natural boundary conditions**: for every `0 ≠ z ∈ ker d`
 and every interval `[a, b]`, `u(t) = (t - a) z` solves the second-order weak form but is not the
-`u` of any mixed weak solution. See [QuennevilleBelair2015], §4.8 (refuted). -/
+`u` of any mixed weak solution. See [QuennevilleBelair2015], §4.8 (refuted); the second-order
+form is the standard one of [Baker1976] and [Dupont1973], which is not at fault. -/
 theorem not_isMixedWeak {d : W₀ →ₗ.[𝕜] W₁} {a b : ℝ} (hab : a ≤ b) (z : d.domain) (hz : d z = 0)
     (hz0 : (z : W₀) ≠ 0) :
     IsSecondOrderWeak d (Icc a b) (fun t => ((t - a : ℝ) : 𝕜) • z) (fun _ => (z : W₀)) ∧

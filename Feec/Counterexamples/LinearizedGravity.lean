@@ -15,13 +15,16 @@ statements):
   Prop 2.6 (covariant and contravariant readings) does not reach TT gauge (corrected:
   `Feec.LinearizedGravity.tt_gauge`);
 * `not_accel_printed`: the accelerations printed after (2.15) are wrong (corrected:
-  `Feec.LinearizedGravity.tt_accel`).
+  `Feec.LinearizedGravity.tt_accel`). The thesis obtains them from geodesic deviation, as done in
+  [Alcubierre2008], p. 44 (its Fig 2.1, the ring of particles, is taken from [Alcubierre2008],
+  p. 45); the method is sound, the error is in the thesis' evaluation of (2.15).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.8 (Props 2.4, 2.6, (2.15))
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
+* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], pp. 44–45
 -/
 
 open Finset Matrix
@@ -68,7 +71,9 @@ theorem not_isTT_gaugeAmp_printed_contra :
 
 /-- The thesis' accelerations `a¹ = -(κ²/2)(A₊v¹ + Aₓv²) f(k·x)` (after (2.15)) are wrong:
 for `f(t) = t²`, `κ = A₊ = v¹ = 1`, `Aₓ = 0` at `x = 0` the true value is `1`, not `0`.
-[QuennevilleBelair2015], §2.8, after (2.15) -/
+[QuennevilleBelair2015], §2.8, after (2.15). The thesis derives them by geodesic deviation
+`aᵘ ≈ -Rᵘ₀ᵥ₀ vᵛ`, as done in [Alcubierre2008], p. 44; the error is the thesis' own, not that
+method's. -/
 theorem not_accel_printed :
     ¬ ∀ (κ Ap Ax : ℝ) (f : ℝ → ℝ), ContDiff ℝ 2 f → ∀ (v : Fin 4 → ℝ) (x : Fin 4 → ℝ),
       accelJ (jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x)

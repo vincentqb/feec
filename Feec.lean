@@ -22,6 +22,7 @@ public import Feec.Counterexamples.LinearizedGravity
 public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
+public import Feec.Domain.Affine
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
@@ -50,6 +51,7 @@ public import Feec.ForMathlib.LinearPMap.CompPartial
 public import Feec.ForMathlib.LinearPMap.GraphSpace
 public import Feec.ForMathlib.LinearPMap.Intertwines
 public import Feec.ForMathlib.LinearPMap.Reducing
+public import Feec.ForMathlib.LinearPMap.RestrictScalars
 public import Feec.ForMathlib.LinearPMap.Skew
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
@@ -64,6 +66,7 @@ public import Feec.Fourier.SpectralGalerkin
 public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
+public import Feec.Fourier.TorusWeak
 public import Feec.Fourier.Weak
 public import Feec.Geometry.AlgebraicCurvature
 public import Feec.Geometry.Bivector
@@ -98,6 +101,7 @@ public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.ReducedSystem
 public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.SecondOrder
+public import Feec.HilbertComplex.RestrictScalars
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
@@ -143,12 +147,15 @@ public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.Interior
 public import Feec.Models.BoundedDomain.SymCurl
+public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.Bridge
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
+public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.Parity
+public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.Static
 public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham

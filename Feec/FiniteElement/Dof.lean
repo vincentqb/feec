@@ -13,7 +13,13 @@ A finite element is a space `P` of shape functions with degrees of freedom (DOFs
 interpolant `Π : Y → P` is defined by `ℓ i (Π y) = m i y`. It commutes with a differential
 `d : Y → Y'` as soon as each DOF of `d y` is a linear combination of DOFs of `y`.
 
-Everything is algebraic: modules over a commutative ring `R`, any index types.
+Everything is algebraic: modules over a commutative ring `R`, any index types. The unisolvent
+DOFs `ω ↦ ∫_f tr_f ω ∧ μ` of `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)` and their canonical cochain projections
+([QuennevilleBelair2015], §4.7, after [Arnold2013]) are the motivating instances; the integrals,
+simplices and triangulations themselves are not formalized here. The thesis then combines these
+projections with smoothers as in [AFW2010] to get bounded cochain projections `π_hᵏ : L²Λᵏ → Λ_hᵏ`
+([QuennevilleBelair2015], Thm 4.15); that smoothing construction is out of scope, and only its
+abstract consequences are formalized (`Feec.HilbertComplex.Subcomplex.CochainProjection`).
 
 ## Main definitions
 
@@ -33,11 +39,13 @@ Everything is algebraic: modules over a commutative ring `R`, any index types.
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 5.7 (§5.3)
+  §4.7, Prop 5.7 (§5.3)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (degrees of freedom, canonical projections)
 * [D. N. Arnold, *Spaces of finite element differential forms*][Arnold2013] (degrees of freedom,
   canonical projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+  (bounded cochain projections from canonical projections and smoothers)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (degrees of freedom,
   canonical projections)
 -/
@@ -53,10 +61,13 @@ section Unisolvence
 variable {P ι : Type*} [AddCommGroup P] [Module R P]
 
 /-- The DOFs `ℓ` are **unisolvent** on `P`: every vector of values `(cᵢ)` is taken by exactly one
-shape function. -/
+shape function. Abstracts the unisolvent DOF sets of `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)` of
+[QuennevilleBelair2015], §4.7; see [Arnold2013]. -/
 def IsUnisolvent (ℓ : ι → P →ₗ[R] R) : Prop := Function.Bijective (LinearMap.pi ℓ)
 
-/-- Over a field, with as many DOFs as the dimension, unisolvence is the vanishing criterion. -/
+/-- Over a field, with as many DOFs as the dimension, unisolvence is the vanishing criterion (the
+usual way unisolvence of the DOFs of [QuennevilleBelair2015], §4.7 is checked; see
+[Arnold2013]). -/
 theorem isUnisolvent_iff_forall_eq_zero {K : Type*} [Field K] {P : Type*} [AddCommGroup P]
     [Module K P] [FiniteDimensional K P] [Fintype ι] (ℓ : ι → P →ₗ[K] K)
     (hdim : Module.finrank K P = Fintype.card ι) :
@@ -91,7 +102,8 @@ section Interpolant
 variable {P Y ι : Type*} [AddCommGroup P] [Module R P] [AddCommGroup Y] [Module R Y]
   {ℓ : ι → P →ₗ[R] R} (hℓ : IsUnisolvent ℓ) (m : ι → Y →ₗ[R] R)
 
-/-- The **canonical interpolant** `Π : Y → P`, `ℓ i (Π y) = m i y`. -/
+/-- The **canonical interpolant** `Π : Y → P`, `ℓ i (Π y) = m i y`: the canonical projection
+defined by the DOFs, [QuennevilleBelair2015], §4.7; see [Arnold2013]. -/
 def interp : Y →ₗ[R] P := hℓ.equiv.symm.toLinearMap ∘ₗ LinearMap.pi m
 
 /-- `Π` reproduces the DOFs. -/
@@ -113,7 +125,11 @@ theorem incl_interp_idem (incl : P →ₗ[R] Y) (hm : ∀ i, m i ∘ₗ incl = �
 `d ∘ incl = incl' ∘ d_h`. If each DOF `m' k ∘ d` lies in the span of the DOFs `m i`, then
 `Π' (d y) = d_h (Π y)`. [QuennevilleBelair2015], Prop 5.7 (abstract form)
 
-See [QuennevilleBelair2015], Prop 5.7; cf. [AFW2006], [Arnold2013]. -/
+See [QuennevilleBelair2015], Prop 5.7; cf. [AFW2006], [Arnold2013]. This is the commuting
+property of the canonical cochain projections of [QuennevilleBelair2015], §4.7. The thesis
+combines them with smoothers as in [AFW2010] to obtain bounded cochain projections; the
+smoothing is not formalized, only the bounded-cochain-projection consequences
+(`Feec.HilbertComplex.Subcomplex.CochainProjection`). -/
 theorem interp_comp_eq {P' Y' κ : Type*} [AddCommGroup P'] [Module R P'] [AddCommGroup Y']
     [Module R Y'] {ℓ' : κ → P' →ₗ[R] R} (hℓ' : IsUnisolvent ℓ') (m' : κ → Y' →ₗ[R] R)
     (incl : P →ₗ[R] Y) (incl' : P' →ₗ[R] Y') (hm : ∀ i, m i ∘ₗ incl = ℓ i)
@@ -146,7 +162,8 @@ on the DOFs `ℓ_k`, `Π̃⁰` preserves the DOFs `m_i`, and every `ℓ_k ∘ S�
 kernel of the `m_i`. Then `Π¹S₀Π̃⁰ = Π¹S₀` (no density argument).
 [QuennevilleBelair2015], Prop 5.7 (abstract form)
 
-See [QuennevilleBelair2015], Prop 5.7 (§5.3); cf. [AFW2006], [Arnold2013]. -/
+See [QuennevilleBelair2015], Prop 5.7 (§5.3), with the DOFs of §4.7; cf. [AFW2006],
+[Arnold2013]. -/
 theorem comp_eq_of_dof (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ[R] R) (S0 : Y →ₗ[R] X)
     (Pt0 : Y →ₗ[R] Y) (P1 : X →ₗ[R] X)
     (hP1 : ∀ x y, (∀ k, ℓ k x = ℓ k y) → P1 x = P1 y)

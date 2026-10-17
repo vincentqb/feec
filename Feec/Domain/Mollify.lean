@@ -334,6 +334,8 @@ theorem contDiff_dil (x₀ : E) (c : ℝ) {f : E → ℝ} (hf : ContDiff ℝ ∞
 
 /-! ## Geometry -/
 
+variable {Ω : Set E}
+
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
 /-- **Dilation towards the center of a ball of star-shapedness.** If `Ω` is star-shaped with
 respect to every point of `B(x₀, s)`, `c > 1` and `r < s (c - 1) / 2`, then
@@ -572,8 +574,6 @@ end ConstCoeffOp
 
 
 /-! ## Dilated mollifications of zero extensions are test functions -/
-
-variable {Ω : Set E}
 
 /-- The support of the dilated mollification of a function vanishing off `Ω` lies in the image
 of `cl Ω × B̄(0, r)` under `(q, v) ↦ x₀ + c⁻¹ (q + v - x₀)`. -/

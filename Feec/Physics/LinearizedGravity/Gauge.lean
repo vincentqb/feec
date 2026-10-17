@@ -27,7 +27,11 @@ with coordinate derivatives `partialDeriv`. The jet identities of
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.7 (Thm 2.3, (2.5), (2.10)–(2.11)), §2.8 (Prop 2.4)
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4
+* [R. M. Wald, *General Relativity*][Wald1984], §4.4; pp. 75, 183, 441
+* [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004],
+  p. 277
+* [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 24
+* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], p. 39
 -/
 
 open Finset Matrix
@@ -47,7 +51,8 @@ def jet2 (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : Jet2 ι ℝ 
 
 variable (g gi : Matrix ι ι ℝ)
 
-/-- The linearized Einstein tensor `H(h)(x)` (Thm 2.3) of a `C²` field. [QuennevilleBelair2015], Thm 2.3 -/
+/-- The linearized Einstein tensor `H(h)(x)` (Thm 2.3) of a `C²` field. [QuennevilleBelair2015], Thm 2.3; the
+linearization follows [Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
 def Hfun (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) (b d : ι) : ℝ := Hjet g gi (jet2 h x) b d
 
 /-- d'Alembertian `□u = gi^{ij} ∂_i ∂_j u`. -/
@@ -110,7 +115,8 @@ theorem jet2_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDi
     (fun a' b' => by simpa using (hC a' b').differentiable_partialDeriv le_rfl j x) i a b
 
 /-- **Thm 2.3** for a genuine `C²` symmetric field, any constant metric, any dimension: both
-forms of `H` agree, with the genuine 2-jet of `h̄`. [QuennevilleBelair2015], Thm 2.3 -/
+forms of `H` agree, with the genuine 2-jet of `h̄`. [QuennevilleBelair2015], Thm 2.3, whose proof
+follows [Alcubierre2008], p. 39. -/
 theorem Hfun_eq_bar (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ)
     (b d : ι) :
@@ -170,7 +176,8 @@ theorem Hfun_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ
 /-! ### Gauge invariance for fields -/
 
 /-- **Gauge invariance** for genuine fields: `H(h + 2∂_(a ξ_b)) = H(h)` for `h ∈ C²`,
-`ξ ∈ C³`, any constant metric, any dimension. [QuennevilleBelair2015], §2.7 -/
+`ξ ∈ C³`, any constant metric, any dimension. [QuennevilleBelair2015], §2.7; see
+[Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
 theorem Hfun_gauge (hgi : gi.IsSymm) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) {ξ : ι → (ι → ℝ) → ℝ}
     (hξ : ∀ a, ContDiff ℝ 3 (ξ a)) (x : ι → ℝ) (b d : ι) :

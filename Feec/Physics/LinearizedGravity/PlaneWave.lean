@@ -33,6 +33,7 @@ freedom, the gauge change to TT (Prop 2.6, corrected), and the geodesic deviatio
   §2.4 (coupling constant), §2.8 (Props 2.4–2.6, (2.12)–(2.15))
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
 * [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], pp. 44–45
+  (geodesic deviation of a TT wave; Fig 2.1 of the thesis, a ring of particles, is p. 45)
 -/
 
 open Finset Matrix
@@ -280,7 +281,8 @@ lemma IsTTJet.support {D : Jet2 (Fin 4) ℝ} (hD : IsTTJet D) {i j a b : Fin 4} 
 `R_{αiβj} = −½ ∂_α ∂_β h_ij` (exactly, at the jet level). The thesis restricts to
 `α, β ∈ {0, 3}`; for other `α, β` both sides vanish.
 
-See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008]. -/
+See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008], p. 44 (geodesic deviation of a TT
+wave, followed by the thesis). -/
 theorem Rjet_tt {D : Jet2 (Fin 4) ℝ} (hD : IsSymJet2 D) (hT : IsTTJet D) {α β i j : Fin 4}
     (hi : ¬ IsLong i) (hj : ¬ IsLong j) :
     Rjet D α i β j = -(1/2) * D α β i j := by
@@ -293,7 +295,7 @@ theorem Rjet_tt {D : Jet2 (Fin 4) ℝ} (hD : IsSymJet2 D) (hT : IsTTJet D) {α �
 of the pairs `(a, b)` and `(c, d)` has exactly one longitudinal index. With pair-skewness
 (`Rjet_pairSkew`) every non-zero component is thus `±R_{αiβj}`, given by `Rjet_tt`.
 
-See [QuennevilleBelair2015], (2.15a–c). -/
+See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008], p. 44. -/
 theorem Rjet_tt_support {D : Jet2 (Fin 4) ℝ} (hT : IsTTJet D) {a b c d : Fin 4}
     (h : Rjet D a b c d ≠ 0) : (IsLong a ↔ ¬ IsLong b) ∧ (IsLong c ↔ ¬ IsLong d) := by
   by_contra hm
@@ -323,7 +325,7 @@ lemma ttWaveJet_props (κ Ap Ax s : ℝ) :
 `R_{α1β1} = −½ k_α k_β A₊ s`, `R_{α2β2} = ½ k_α k_β A₊ s`, `R_{α1β2} = −½ k_α k_β Aₓ s`,
 with `s = f''(k·x)` (valid for all `α, β`; both sides vanish unless `α, β ∈ {0, 3}`).
 
-See [QuennevilleBelair2015], (2.15a–c). -/
+See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008], p. 44. -/
 theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
     let D : Jet2 (Fin 4) ℝ := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
     Rjet D α 1 β 1 = -(1/2) * kTT κ α * kTT κ β * Ap * s ∧
@@ -460,7 +462,9 @@ theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ
 
 /-- **Thesis (2.15), corrected** (field level): for the TT plane wave
 `h_ab = ttAmp A₊ Aₓ · f(k·x)` with `f ∈ C²`, `a¹ = (κ²/2)(A₊v¹ + Aₓv²) f''(k·x)` and
-`a² = (κ²/2)(Aₓv¹ - A₊v²) f''(k·x)`. [QuennevilleBelair2015], (2.15) (corrected) -/
+`a² = (κ²/2)(Aₓv¹ - A₊v²) f''(k·x)`. [QuennevilleBelair2015], (2.15) (corrected); cf.
+[Alcubierre2008], pp. 44–45 (the computation the thesis follows, and its Fig 2.1 on a ring of
+particles; the correction concerns the thesis' printed accelerations). -/
 theorem tt_accel_fun (κ Ap Ax : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (v : Fin 4 → ℝ)
     (x : Fin 4 → ℝ) :
     let D := jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x

@@ -4,6 +4,7 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.LinearAlgebra.Dual.Lemmas
 public import Feec.Variational.SaddlePoint
+public import Feec.Counterexamples.Ell2
 
 /-!
 # Galerkin theory: Lax–Milgram, Babuška–Nečas, quasi-optimality, Brezzi (thesis §4.5)
@@ -317,80 +318,53 @@ theorem lax_milgram_bound {α : ℝ} (hα : 0 < α) (hc : ∀ u, α * ‖u‖ * 
 
 end InfSup
 
-/-! ## Counterexample to the converse of Thm 4.9 as stated -/
+/-! ## Counterexample to the converse of Thm 4.9 as stated
+
+Moved to `Feec.Counterexamples.Ell2` (over any `RCLike 𝕜`, sesquilinear forms); the old names
+are shims. -/
 
 section BackwardShift
 
 /-- The real sequence space `ℓ²(ℕ)`. -/
-abbrev L2 := lp (fun _ : ℕ => ℝ) 2
+abbrev L2 := Counterexamples.Ell2.L2 ℝ
 
-private lemma two_toReal_pos : 0 < (2 : ENNReal).toReal := by norm_num
-
-lemma memℓp_shift (x : L2) : Memℓp (fun n => x (n + 1)) 2 := by
-  have hx := (memℓp_gen_iff two_toReal_pos).1 (lp.memℓp x)
-  exact (memℓp_gen_iff two_toReal_pos).2 ((summable_nat_add_iff 1).2 hx)
+lemma memℓp_shift (x : L2) : Memℓp (fun n => x (n + 1)) 2 := Counterexamples.Ell2.memℓp_shift x
 
 /-- The backward shift `(Sx)ₙ = xₙ₊₁` as a linear map on `ℓ²`. -/
-def shiftₗ : L2 →ₗ[ℝ] L2 where
-  toFun x := ⟨fun n => x (n + 1), memℓp_shift x⟩
-  map_add' x y := by ext n; rfl
-  map_smul' c x := by ext n; rfl
+abbrev shiftₗ : L2 →ₗ[ℝ] L2 := Counterexamples.Ell2.shiftₗ ℝ
 
-/-- Componentwise formula for the backward shift. -/
-@[simp] lemma shiftₗ_apply (x : L2) (n : ℕ) : shiftₗ x n = x (n + 1) := rfl
+lemma shiftₗ_apply (x : L2) (n : ℕ) : shiftₗ x n = x (n + 1) := rfl
 
-/-- The backward shift is a contraction on `ℓ²`. -/
-lemma norm_shiftₗ_le (x : L2) : ‖shiftₗ x‖ ≤ ‖x‖ := by
-  refine lp.norm_le_of_forall_sum_le two_toReal_pos (norm_nonneg _) fun s => ?_
-  have hs := ((lp.memℓp x).summable two_toReal_pos)
-  calc ∑ i ∈ s, ‖shiftₗ x i‖ ^ (2 : ENNReal).toReal
-      = ∑ j ∈ s.map ⟨Nat.succ, Nat.succ_injective⟩, ‖x j‖ ^ (2 : ENNReal).toReal := by
-        rw [Finset.sum_map]; rfl
-    _ ≤ ∑' j, ‖x j‖ ^ (2 : ENNReal).toReal :=
-        hs.sum_le_tsum _ fun i _ => by positivity
-    _ = ‖x‖ ^ (2 : ENNReal).toReal := (lp.norm_rpow_eq_tsum two_toReal_pos x).symm
+lemma norm_shiftₗ_le (x : L2) : ‖shiftₗ x‖ ≤ ‖x‖ := Counterexamples.Ell2.norm_shiftₗ_le x
 
 /-- The backward shift on `ℓ²` as a bounded operator. -/
-def shift : L2 →L[ℝ] L2 := shiftₗ.mkContinuous 1 fun x => by simpa using norm_shiftₗ_le x
+abbrev shift : L2 →L[ℝ] L2 := Counterexamples.Ell2.shift ℝ
 
-/-- Componentwise formula for the bounded backward shift. -/
-@[simp] lemma shift_apply (x : L2) (n : ℕ) : shift x n = x (n + 1) := rfl
+lemma shift_apply (x : L2) (n : ℕ) : shift x n = x (n + 1) := rfl
 
-private lemma memℓp_unshift (f : L2) :
-    Memℓp (fun n => Nat.casesOn (motive := fun _ => ℝ) n 0 fun m => f m) 2 := by
-  have hf := (memℓp_gen_iff two_toReal_pos).1 (lp.memℓp f)
-  exact (memℓp_gen_iff two_toReal_pos).2 ((summable_nat_add_iff 1).1 hf)
+lemma shift_surjective : Function.Surjective shift := Counterexamples.Ell2.shift_surjective
 
-/-- The backward shift is onto (right inverse: the forward shift). -/
-lemma shift_surjective : Function.Surjective shift := fun f =>
-  ⟨⟨_, memℓp_unshift f⟩, by ext n; rfl⟩
+lemma shift_single : shift (lp.single 2 0 (1 : ℝ)) = 0 := Counterexamples.Ell2.shift_single
 
-/-- The backward shift kills `e₀`, so it is not injective. -/
-lemma shift_single : shift (lp.single 2 0 (1 : ℝ)) = 0 := by
-  ext n
-  simp
-
-/-- **Correction to Thesis Thm 4.9** (converse): the bounded bilinear form
-`B u v = ⟪S u, v⟫` on `ℓ²`, with `S` the backward shift, satisfies the dense range condition
-and is solvable for every right-hand side, yet violates the inf-sup condition (`S e₀ = 0`).
-Hence "there exists `u`" in the thesis' converse must be "there exists a unique `u`".
+/-- **Correction to Thesis Thm 4.9** (converse), real bilinear form: shim over
+`Feec.Counterexamples.surjective_not_infSup` (`B u v = ⟪S u, v⟫`, `S` the backward shift).
 
 Concerns [QuennevilleBelair2015, Thm 4.9]. -/
 theorem surjective_not_infSup :
     ∃ B : L2 →L[ℝ] L2 →L[ℝ] ℝ, (∀ f, ∃ u, ∀ v, B u v = ⟪f, v⟫) ∧ DenseRangeCond B ∧
       ¬ InfSupCond B := by
-  refine ⟨(innerSL ℝ).comp shift, fun f => ?_, fun v hv => ?_, ?_⟩
-  · obtain ⟨u, hu⟩ := shift_surjective f
-    exact ⟨u, fun v => by simp [hu]⟩
-  · obtain ⟨u, hu⟩ := shift_surjective v
-    have := hv u
-    simp only [ContinuousLinearMap.comp_apply, innerSL_apply_apply, hu] at this
-    exact inner_self_eq_zero.mp this
-  · rintro ⟨γ, hγ, h⟩
-    have := h (lp.single 2 0 (1 : ℝ))
-    rw [ContinuousLinearMap.comp_apply, shift_single, map_zero, norm_zero,
-      lp.norm_single (by norm_num), norm_one, mul_one] at this
-    linarith
+  set B : L2 →L[ℝ] L2 →L[ℝ] ℝ := (innerSL ℝ).comp shift
+  have hB : Variational.toSesq B = Counterexamples.Ell2.shiftForm ℝ :=
+    ContinuousLinearMap.ext fun u => ContinuousLinearMap.ext fun v => by
+      simp [B, real_inner_comm]
+  refine ⟨B, fun f => ?_, ?_, ?_⟩
+  · obtain ⟨u, hu⟩ := Counterexamples.Ell2.exists_shiftForm_eq f
+    refine ⟨u, fun v => ?_⟩
+    rw [← Variational.toSesq_apply, hB, hu, real_inner_comm]
+  · rw [denseRangeCond_iff_separatingRight, hB]
+    exact Counterexamples.Ell2.separatingRight_shiftForm
+  · rw [infSupCond_iff_exists_infSup, hB]
+    exact fun ⟨γ, h⟩ => Counterexamples.Ell2.not_infSup_shiftForm γ h
 
 end BackwardShift
 

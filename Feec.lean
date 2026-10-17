@@ -5,6 +5,8 @@ public import Feec.Algebra.ExteriorFibre
 public import Feec.Algebra.Koszul
 public import Feec.Algebra.PolynomialForm
 public import Feec.Algebra.Proxy3
+public import Feec.Counterexamples.Ell2
+public import Feec.Counterexamples.Fredholm
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained

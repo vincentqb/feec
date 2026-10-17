@@ -4,6 +4,7 @@ public import Feec.Foundation.Complex
 public import Feec.Foundation.Operators
 public import Feec.Operator.Adjoint
 public import Mathlib.Analysis.Normed.Lp.lpSpace
+public import Feec.Counterexamples.Ell2
 
 /-!
 # Unbounded operators: adjoints, graph relations, closed range (Thesis §4.1–4.2)
@@ -297,87 +298,41 @@ theorem isSkewAdjoint_iff_neg_le_adjoint (L : E →ₗ.[ℝ] E) :
 
 end Skew
 
-/-! ### Counterexample: kernels of non-closed operators -/
+/-! ### Counterexample: kernels of non-closed operators
+
+Moved to `Feec.Counterexamples.Ell2` (over any `RCLike 𝕜`); the old names are shims. -/
 
 section KerCounterexample
 
 /-- `ℓ²(ℕ, ℝ)`. -/
 local notation "ℓ2" => lp (fun _ : ℕ => ℝ) 2
 
-/-! Auxiliary objects for the counterexample, namespaced to avoid clashes. -/
 namespace KerCE
 
-/-- Finitely supported sequences: the span of the `lp.single` vectors. -/
-def finSupp : Submodule ℝ ℓ2 :=
-  Submodule.span ℝ (Set.range fun p : ℕ × ℝ => lp.single 2 p.1 p.2)
+/-- Finitely supported sequences (`Feec.Counterexamples.Ell2.finSupp`). -/
+abbrev finSupp : Submodule ℝ ℓ2 := Counterexamples.Ell2.finSupp ℝ
 
-/-- Finitely supported sequences vanish eventually (auxiliary for `exists_not_isClosed_ker`). -/
-theorem finSupp_eventually_zero {f : ℓ2} (hf : f ∈ finSupp) : ∃ N, ∀ n ≥ N, f n = 0 := by
-  induction hf using Submodule.span_induction with
-  | mem x hx =>
-    obtain ⟨⟨i, a⟩, rfl⟩ := hx
-    exact ⟨i + 1, fun n hn => by
-      simp only; exact lp.single_apply_ne (E := fun _ : ℕ => ℝ) 2 i a (show n ≠ i by omega)⟩
-  | zero => exact ⟨0, fun n _ => rfl⟩
-  | add x y _ _ hx hy =>
-    obtain ⟨N, hN⟩ := hx
-    obtain ⟨M, hM⟩ := hy
-    refine ⟨max N M, fun n hn => ?_⟩
-    rw [lp.coeFn_add, Pi.add_apply, hN n (le_of_max_le_left hn), hM n (le_of_max_le_right hn),
-      add_zero]
-  | smul a x _ hx =>
-    obtain ⟨N, hN⟩ := hx
-    exact ⟨N, fun n hn => by rw [lp.coeFn_smul, Pi.smul_apply, hN n hn, smul_zero]⟩
+theorem finSupp_eventually_zero {f : ℓ2} (hf : f ∈ finSupp) : ∃ N, ∀ n ≥ N, f n = 0 :=
+  Counterexamples.Ell2.finSupp_eventually_zero hf
 
-/-- Finitely supported sequences are dense in `ℓ²` (auxiliary for `exists_not_isClosed_ker`). -/
-theorem dense_finSupp : Dense (finSupp : Set ℓ2) := by
-  intro f
-  refine mem_closure_of_tendsto (lp.hasSum_single ENNReal.ofNat_ne_top f) ?_
-  refine Filter.Eventually.of_forall fun s => ?_
-  exact Submodule.sum_mem _ fun i _ => Submodule.subset_span ⟨(i, f i), rfl⟩
+theorem dense_finSupp : Dense (finSupp : Set ℓ2) := Counterexamples.Ell2.dense_finSupp
 
-/-- The geometric sequence `(1/2)ⁿ`, an element of `ℓ²` that is not finitely supported. -/
-def geom : ℓ2 :=
-  ⟨fun n => (1 / 2 : ℝ) ^ n, memℓp_gen <| by
-    have h : ∀ n : ℕ, ‖(1 / 2 : ℝ) ^ n‖ ^ (2 : ENNReal).toReal = (1 / 4 : ℝ) ^ n := by
-      intro n
-      rw [ENNReal.toReal_ofNat, Real.norm_of_nonneg (by positivity), Real.rpow_two, ← pow_mul,
-        mul_comm, pow_mul]
-      norm_num
-    simp_rw [h]
-    exact summable_geometric_of_lt_one (by norm_num) (by norm_num)⟩
+/-- The geometric sequence `(1/2)ⁿ` (`Feec.Counterexamples.Ell2.geom`). -/
+abbrev geom : ℓ2 := Counterexamples.Ell2.geom ℝ
 
-/-- Finitely supported sequences are not closed in `ℓ²`: `geom` is in the closure but not in
-the subspace (auxiliary for `exists_not_isClosed_ker`). -/
-theorem not_isClosed_finSupp : ¬ IsClosed (finSupp : Set ℓ2) := by
-  intro h
-  have hg : geom ∈ finSupp := by
-    have := dense_finSupp.closure_eq ▸ (Set.mem_univ geom)
-    rwa [h.closure_eq] at this
-  obtain ⟨N, hN⟩ := finSupp_eventually_zero hg
-  have := hN N le_rfl
-  change (1 / 2 : ℝ) ^ N = 0 at this
-  exact pow_ne_zero N (by norm_num) this
+theorem not_isClosed_finSupp : ¬ IsClosed (finSupp : Set ℓ2) :=
+  Counterexamples.Ell2.not_isClosed_finSupp
 
 end KerCE
 
-open KerCE in
 /-- Refutation of the thesis claim (§4.3) "the kernel of a (not-necessarily-bounded) linear
-operator is closed": the zero operator on the dense, non-closed subspace of finitely supported
-sequences in `ℓ²` is densely defined (and bounded on its domain, hence closable), but its
-kernel — its whole domain — is not closed. Compare `isClosed_ker`, which needs `T` closed.
+operator is closed"; shim over `Feec.Counterexamples.exists_dense_not_isClosed_ker`.
 
 Refutes the claim in [QuennevilleBelair2015, §4.3]. -/
 theorem exists_not_isClosed_ker :
     ∃ T : ℓ2 →ₗ.[ℝ] ℓ2, Dense (T.domain : Set ℓ2) ∧ (∀ x : T.domain, T x = 0) ∧
-      ¬ IsClosed (T.ker : Set ℓ2) := by
-  refine ⟨⟨finSupp, 0⟩, dense_finSupp, fun _ => rfl, ?_⟩
-  have hker : (⟨finSupp, 0⟩ : ℓ2 →ₗ.[ℝ] ℓ2).ker = finSupp := by
-    ext x
-    rw [LinearPMap.mem_ker_iff]
-    exact ⟨fun ⟨y, hy, _⟩ => hy ▸ y.2, fun hx => ⟨⟨x, hx⟩, rfl, rfl⟩⟩
-  rw [hker]
-  exact not_isClosed_finSupp
+      ¬ IsClosed (T.ker : Set ℓ2) :=
+  Counterexamples.exists_dense_not_isClosed_ker
 
 end KerCounterexample
 

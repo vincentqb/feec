@@ -62,6 +62,7 @@ public import Feec.Fourier.SpectralGalerkin
 public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
+public import Feec.Fourier.TorusWeak
 public import Feec.Fourier.Weak
 public import Feec.Geometry.AlgebraicCurvature
 public import Feec.Geometry.Bivector

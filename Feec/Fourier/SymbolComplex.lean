@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.Hodge
+public import Feec.HilbertComplex.Window
 public import Feec.Operator.Multiplication
 public import Mathlib.Analysis.Normed.Lp.MeasurableSpace
 
@@ -281,6 +282,20 @@ theorem mem_boundaries_iff {i : ι} {y : Lp (E i) 2 μ} :
     y ∈ S.toHilbertComplex.boundaries i ↔
       ∃ v : Lp (E (c.prev i)) 2 μ, ∀ᵐ a ∂μ, S.m (c.prev i) i a (v a) = y a :=
   Operator.mem_range_mulOp
+
+/-- Pull a symbol complex back along an index map reflecting the relation (e.g. a window). -/
+def restrict {ι' : Type*} {c' : ComplexShape ι'} (f : ι' → ι)
+    (hf : ∀ i j, c.Rel (f i) (f j) → c'.Rel i j) : SymbolComplex 𝕜 μ c' fun i => E (f i) where
+  m i j := S.m (f i) (f j)
+  shape i j h := S.shape _ _ fun h' => h (hf i j h')
+  comp _ _ _ a := S.comp _ _ _ a
+  meas _ _ := S.meas _ _
+
+/-- The Hilbert complex of a restricted symbol complex is the restricted Hilbert complex. -/
+theorem toHilbertComplex_restrict {ι' : Type*} {c' : ComplexShape ι'} (f : ι' → ι)
+    (hf : ∀ i j, c.Rel (f i) (f j) → c'.Rel i j) :
+    (S.restrict f hf).toHilbertComplex = S.toHilbertComplex.restrict f hf :=
+  HilbertComplex.ext' rfl
 
 end SymbolComplex
 

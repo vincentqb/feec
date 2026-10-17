@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.Torus
 public import Feec.Fourier.ExteriorSymbol
+public import Feec.Fourier.SpectralGalerkin
 
 /-!
 # The `L²` de Rham complex of the torus `𝕋ᵈ`, in every dimension and degree
@@ -21,6 +22,10 @@ constraint propagation) applies to it.
 * **`mem_harmonic_iff`**: the harmonic `k`-forms are the constant forms (only the zero mode);
   `harmonicEquiv : ℌᵏ ≃ₗ Λᵏ`, and **`cohomologyEquiv : Hᵏ(𝕋ᵈ) ≃ₗ Λᵏ`** with
   `finrank_cohomology : dim Hᵏ(𝕋ᵈ) = (d choose k)` (the Betti numbers of the torus).
+* `window d`: the full complex `Λ⁰ → ⋯ → Λᵈ` on `Fin (d + 1)`; **`window_hasCompactProperty`**
+  (Rellich on `𝕋ᵈ`, from the fibre Cartan identity `window_cartan`) and **`window_eigenDense`**:
+  the Hodge wave group of the torus de Rham complex has a dense set of eigenvectors (discrete
+  spectrum).
 
 ## References
 
@@ -155,5 +160,118 @@ def cohomologyEquiv (k : ℕ) : (complex d).cohomology k ≃ₗ[ℂ] Form ℂ d 
 theorem finrank_cohomology (k : ℕ) :
     Module.finrank ℂ ((complex d).cohomology k) = (Fintype.card d).choose k := by
   rw [(cohomologyEquiv k).finrank_eq, finrank_euclideanSpace, Fintype.card_finset_len]
+
+/-! ### The full de Rham window: compactness and eigenbasis -/
+
+variable (d) in
+/-- The full window `Λ⁰ → Λ¹ → ⋯ → Λᵈ` of the torus de Rham symbol complex. -/
+def windowSymbol : SymbolComplex ℂ (Measure.count : Measure (d → ℤ))
+    (ComplexShape.window (Fintype.card d + 1)) fun i : Fin (Fintype.card d + 1) => Form ℂ d i :=
+  (Fourier.Torus.symbolComplex (deRham d)).restrict (fun i : Fin (Fintype.card d + 1) => (i : ℕ))
+    fun _ _ h => h
+
+variable (d) in
+/-- **The full `L²` de Rham complex of `𝕋ᵈ`** on the window `Fin (d + 1)`, whose total space
+carries the Dirac and Hodge wave operators. -/
+abbrev window : HilbertComplex ℂ (ComplexShape.window (Fintype.card d + 1))
+    fun i : Fin (Fintype.card d + 1) => Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ)) :=
+  (windowSymbol d).toHilbertComplex
+
+omit [LinearOrder d] in
+theorem eq_zero_of_card_lt {k : ℕ} (hk : Fintype.card d < k) (v : Form ℂ d k) : v = 0 := by
+  ext ⟨s, hs⟩
+  have := Finset.card_le_univ s
+  omega
+
+/-- The fibre Cartan identity on the window: `‖d_ξ v‖² + ‖d_ξ* v‖² = |ξ|² ‖v‖²`. -/
+theorem window_cartan (i : Fin (Fintype.card d + 1)) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d i) :
+    ‖(deRham d).m i ((ComplexShape.window (Fintype.card d + 1)).next i) ξ v‖ ^ 2 +
+      ‖ContinuousLinearMap.adjoint
+        ((deRham d).m ((ComplexShape.window (Fintype.card d + 1)).prev i) i ξ) v‖ ^ 2 =
+      ‖ξ‖ ^ 2 * ‖v‖ ^ 2 := by
+  have hcartan := norm_koszulDeg_sq_add (𝕜 := ℂ) (i : ℕ) ξ v
+  -- the outgoing arrow
+  have hnext : ‖(deRham d).m i ((ComplexShape.window (Fintype.card d + 1)).next i) ξ v‖ =
+      ‖koszulDeg (𝕜 := ℂ) (i : ℕ) ξ v‖ := by
+    by_cases h : (i : ℕ) + 1 < Fintype.card d + 1
+    · have hn : (ComplexShape.window (Fintype.card d + 1)).next i = ⟨i + 1, h⟩ :=
+        ComplexShape.next_eq' _ rfl
+      rw [hn]
+      exact norm_deRham_apply (i : ℕ) ξ v
+    · have hn : (ComplexShape.window (Fintype.card d + 1)).next i = i :=
+        ComplexShape.next_eq_self' _ _ fun k hk => by
+          have := k.isLt; simp only [ComplexShape.window_rel] at hk; omega
+      rw [hn, (deRham d).shape (i : ℕ) (i : ℕ) fun h' => by
+        change (i : ℕ) + 1 = i at h'; omega]
+      rw [eq_zero_of_card_lt (by omega) (koszulDeg (i : ℕ) ξ v)]
+      simp
+  -- the incoming arrow
+  have hprev : ‖ContinuousLinearMap.adjoint
+      ((deRham d).m ((ComplexShape.window (Fintype.card d + 1)).prev i) i ξ) v‖ =
+      ‖contr ξ (ext (i : ℕ) v)‖ := by
+    rcases Nat.eq_zero_or_pos (i : ℕ) with h0 | hpos
+    · have hp : (ComplexShape.window (Fintype.card d + 1)).prev i = i :=
+        ComplexShape.prev_eq_self' _ _ fun k hk => by
+          simp only [ComplexShape.window_rel] at hk; omega
+      rw [hp, (deRham d).shape (i : ℕ) (i : ℕ) fun h' => by
+        change (i : ℕ) + 1 = i at h'; omega]
+      have : contr ξ (ext (i : ℕ) v) = 0 := by
+        ext s; exact contr_ext_eq_zero ξ _ v (by omega)
+      rw [this]; simp
+    · obtain ⟨k, hk⟩ : ∃ k, (i : ℕ) = k + 1 := ⟨(i : ℕ) - 1, by omega⟩
+      have hp : (ComplexShape.window (Fintype.card d + 1)).prev i = ⟨k, by omega⟩ :=
+        ComplexShape.prev_eq' _ (by simp only [ComplexShape.window_rel]; omega)
+      rw [hp]
+      have key : ∀ (j : ℕ) (hj : j = k + 1) (w : Form ℂ d j),
+          ‖ContinuousLinearMap.adjoint ((deRham d).m k j ξ) w‖ = ‖contr ξ (ext j w)‖ := by
+        intro j hj w
+        subst hj
+        rw [adjoint_deRham, _root_.smul_apply, norm_smul, norm_neg, Complex.norm_I, one_mul,
+          ← ext_contrDeg, LinearIsometry.norm_map]
+      exact key _ hk v
+  rw [hnext, hprev, hcartan]
+
+omit [LinearOrder d] in
+/-- The frequencies with `|2πk|² ≤ R` are finitely many. -/
+theorem finite_norm_freq_sq_le (R : ℝ) :
+    {k : d → ℤ | ‖Fourier.Torus.freq k‖ ^ 2 ≤ R}.Finite := by
+  refine (Fourier.Torus.finite_bandN (d := d) ⌈R⌉₊).subset fun k hk j => ?_
+  have hk' : ‖Fourier.Torus.freq k‖ ^ 2 ≤ R := hk
+  have h1 : ((k j : ℝ)) ^ 2 ≤ ‖Fourier.Torus.freq k‖ ^ 2 := by
+    rw [Fourier.Torus.norm_freq_sq]
+    have hs : ((k j : ℝ)) ^ 2 ≤ ∑ l, ((k l : ℝ)) ^ 2 :=
+      Finset.single_le_sum (f := fun l => ((k l : ℝ)) ^ 2) (fun _ _ => sq_nonneg _)
+        (Finset.mem_univ j)
+    have h2pi : (1 : ℝ) ≤ (2 * Real.pi) ^ 2 := by nlinarith [Real.two_le_pi]
+    nlinarith [sq_nonneg ((k j : ℝ))]
+  have h2 : (|k j| : ℝ) ≤ ((k j : ℝ)) ^ 2 := by
+    have : (|k j| : ℤ) ≤ k j ^ 2 := by
+      rcases eq_or_ne (k j) 0 with h | h
+      · simp [h]
+      · have : 1 ≤ |k j| := Int.one_le_abs h
+        nlinarith [abs_mul_abs_self (k j), sq_abs (k j)]
+    exact_mod_cast this
+  have h3 : R ≤ (⌈R⌉₊ : ℝ) := Nat.le_ceil R
+  have : (|k j| : ℝ) ≤ (⌈R⌉₊ : ℝ) := by linarith
+  exact_mod_cast this
+
+/-- **The compactness property of the de Rham complex of `𝕋ᵈ`** at every degree (Rellich on the
+torus): `‖d_ξ v‖² + ‖d_ξ* v‖² = |ξ|² ‖v‖²` with `|2πk| → ∞`. -/
+theorem window_coercive (i : Fin (Fintype.card d + 1)) (k : d → ℤ) (v : Form ℂ d i) :
+    ‖Fourier.Torus.freq k‖ ^ 2 * ‖v‖ ^ 2 ≤
+      ‖(windowSymbol d).m i ((ComplexShape.window (Fintype.card d + 1)).next i) k v‖ ^ 2 +
+        ‖ContinuousLinearMap.adjoint
+          ((windowSymbol d).m ((ComplexShape.window (Fintype.card d + 1)).prev i) i k) v‖ ^ 2 :=
+  (window_cartan i (Fourier.Torus.freq k) v).ge
+
+theorem window_hasCompactProperty : (window d).HasCompactProperty := fun i =>
+  hasCompactPropertyAt_of_coercive (windowSymbol d) i (fun k => ‖Fourier.Torus.freq k‖ ^ 2)
+    (window_coercive i) finite_norm_freq_sq_le
+
+set_option maxHeartbeats 1000000 in
+/-- **The Hodge wave group of the de Rham complex of `𝕋ᵈ` has a dense set of eigenvectors**
+(discrete spectrum, from the compact resolvent of the wave operator). -/
+theorem window_eigenDense : (window d).isSkewAdjoint_wave.group.EigenDense :=
+  window_hasCompactProperty.eigenDense_wave
 
 end Feec.Models.Torus.DeRham

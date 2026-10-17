@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.Euclidean
 public import Feec.Fourier.ExteriorSymbol
+public import Feec.Fourier.Weak
 
 /-!
 # The `L²` de Rham complex of `ℝᵈ`, in every dimension and degree
@@ -17,7 +18,11 @@ In contrast with the torus (`Feec.Models.Torus.DeRham`):
 * **no `L²` harmonic forms** in any degree, for `d ≥ 1` (`harmonic_eq_bot`): the fibre harmonic spaces vanish
   off `ξ = 0`, a null set;
 * hence the complex is not exact although `ℌᵏ = 0` (`boundaries_ne_cycles`): the cycles are the
-  closure of the boundaries.
+  closure of the boundaries;
+* **the Fourier domain of `d` is the weak domain** (`mem_domain_d_iff_weak`): `d (𝓕 f) = 𝓕 g` iff
+  `⟪f, δ φ⟫ = ⟪g, φ⟫` for every Schwartz `(k+1)`-form `φ`, with the codifferential
+  `δ = codiff k` (the formal adjoint of `d`); on Schwartz forms `d` is the classical exterior
+  derivative `extDeriv k` (`mulOp_fourier_extDeriv`).
 
 ## References
 
@@ -28,6 +33,7 @@ In contrast with the torus (`Feec.Models.Torus.DeRham`):
 @[expose] public noncomputable section
 
 open scoped InnerProductSpace
+open scoped FourierTransform SchwartzMap
 open MeasureTheory LinearPMap Set Feec.Fourier Feec.Fourier.Exterior
 
 namespace Feec.Models.Euclidean.DeRham
@@ -101,5 +107,35 @@ harmonic forms: the boundaries are dense in, but not equal to, the cycles. -/
 theorem boundaries_ne_cycles {k : ℕ} (hk : k < Fintype.card d) :
     (complex d).boundaries (k + 1) ≠ (complex d).cycles (k + 1) :=
   (complex d).boundaries_ne_cycles_of_not_closedRangeAt (not_closedRangeAt hk)
+
+/-! ### Weak exterior derivatives -/
+
+/-- The exterior derivative of Schwartz `k`-forms, `d ψ = Σ_j dx_j ∧ ∂_j ψ`. -/
+def extDeriv (k : ℕ) :
+    𝓢(EuclideanSpace ℝ d, Form ℂ d k) → 𝓢(EuclideanSpace ℝ d, Form ℂ d (k + 1)) :=
+  Weak.symbolOp ((deRham d).m k (k + 1))
+
+/-- The codifferential of Schwartz `(k+1)`-forms, the formal adjoint of `d`. -/
+def codiff (k : ℕ) :
+    𝓢(EuclideanSpace ℝ d, Form ℂ d (k + 1)) → 𝓢(EuclideanSpace ℝ d, Form ℂ d k) :=
+  Weak.formalAdjointOp ((deRham d).m k (k + 1))
+
+theorem deRham_isLinear (k : ℕ) : Weak.IsLinear ((deRham d).m k (k + 1)) :=
+  deRham_eq_sum k
+
+/-- **The `L²` de Rham complex of `ℝᵈ` is the weak de Rham complex.** For `L²` forms `f, g`
+(physical side), `𝓕 f ∈ D(d)` with `d 𝓕 f = 𝓕 g` iff `⟪f, δ φ⟫ = ⟪g, φ⟫` for every Schwartz
+`(k+1)`-form `φ`. -/
+theorem mem_domain_d_iff_weak (k : ℕ) (f : L2Form d k) (g : L2Form d (k + 1)) :
+    (∃ h : 𝓕 f ∈ ((complex d).d k (k + 1)).domain, (complex d).d k (k + 1) ⟨𝓕 f, h⟩ = 𝓕 g) ↔
+      ∀ φ : 𝓢(EuclideanSpace ℝ d, Form ℂ d (k + 1)),
+        ⟪f, (codiff k φ).toLp 2⟫_ℂ = ⟪g, φ.toLp 2⟫_ℂ :=
+  Weak.mem_graph_iff_weak_of_isLinear (deRham_isLinear k) ((deRham d).cont k (k + 1)) f g
+
+/-- On Schwartz forms, the Fourier-model `d` is the classical exterior derivative. -/
+theorem mulOp_fourier_extDeriv (k : ℕ) (ψ : 𝓢(EuclideanSpace ℝ d, Form ℂ d k)) :
+    ∃ h : 𝓕 (ψ.toLp 2 : L2Form d k) ∈ ((complex d).d k (k + 1)).domain,
+      (complex d).d k (k + 1) ⟨_, h⟩ = 𝓕 ((extDeriv k ψ).toLp 2 : L2Form d (k + 1)) :=
+  Weak.mulOp_fourier_toLp (deRham_isLinear k) ψ
 
 end Feec.Models.Euclidean.DeRham

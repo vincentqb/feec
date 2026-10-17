@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.Euclidean
 public import Feec.Fourier.GradCurlSymbol
+public import Feec.Fourier.Weak
 
 /-!
 # The matrix grad–curl complex on `ℝ³`: TSD constraints propagate (Thesis Prop 4.17)
@@ -22,6 +23,9 @@ isolated source.
   Poincaré inequality at low frequencies), which Prop 4.17 does not need.
 * `starProjection_mem_H1`: the TSD projection maps `H(curl)` into `H¹`, with
   `‖|ξ| P_TSD A‖ ≤ ‖curl A‖`.
+* **`mem_domain_grad_iff_weak`**, **`mem_domain_curl_iff_weak`**: `H¹` and `H(curl)` of the
+  Fourier model are the weak-derivative spaces tested against all Schwartz fields (formal
+  adjoints `-div` and the row-wise `curl`).
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
   real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
@@ -34,6 +38,7 @@ isolated source.
 @[expose] public noncomputable section
 
 open scoped InnerProductSpace
+open scoped FourierTransform SchwartzMap
 open MeasureTheory LinearPMap Set Feec.Fourier Feec.Fourier.GradCurl Feec.ShortHilbertComplex
 
 namespace Feec.Models.Euclidean.GradCurl
@@ -155,6 +160,34 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
 theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
     realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
   realStructure.waveGroup_conj t x
+
+/-! ### Weak derivatives -/
+
+theorem grad_isLinear : Weak.IsLinear (gradCurl.m 0 1) := grad_eq_sum
+
+theorem curl_isLinear : Weak.IsLinear (gradCurl.m 1 2) := curl_eq_sum
+
+/-- **The Fourier `H¹` is the weak `H¹`**: `𝓕 u ∈ D(grad)` with `grad 𝓕 u = 𝓕 G` iff
+`⟪u, grad* A⟫ = ⟪G, A⟫` for every Schwartz matrix field `A`, with `grad* = -div` the formal
+adjoint. -/
+theorem mem_domain_grad_iff_weak
+    (u : Lp (W3 Vec Mat Mat 0) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3))))
+    (G : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
+    (∃ h : 𝓕 u ∈ (complex.d 0 1).domain, complex.d 0 1 ⟨𝓕 u, h⟩ = 𝓕 G) ↔
+      ∀ A : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 1),
+        ⟪u, (Weak.formalAdjointOp (gradCurl.m 0 1) A).toLp 2⟫_ℂ = ⟪G, A.toLp 2⟫_ℂ :=
+  Weak.mem_graph_iff_weak_of_isLinear grad_isLinear (gradCurl.cont 0 1) u G
+
+/-- **The Fourier `H(curl)` is the weak `H(curl)`**: `𝓕 A ∈ D(curl)` with `curl 𝓕 A = 𝓕 B` iff
+`⟪A, curl* φ⟫ = ⟪B, φ⟫` for every Schwartz matrix field `φ` (the row-wise curl is formally
+self-adjoint). -/
+theorem mem_domain_curl_iff_weak
+    (A : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3))))
+    (B : Lp (W3 Vec Mat Mat 2) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
+    (∃ h : 𝓕 A ∈ (complex.d 1 2).domain, complex.d 1 2 ⟨𝓕 A, h⟩ = 𝓕 B) ↔
+      ∀ φ : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 2),
+        ⟪A, (Weak.formalAdjointOp (gradCurl.m 1 2) φ).toLp 2⟫_ℂ = ⟪B, φ.toLp 2⟫_ℂ :=
+  Weak.mem_graph_iff_weak_of_isLinear curl_isLinear (gradCurl.cont 1 2) A B
 
 /-! ### No closed range -/
 

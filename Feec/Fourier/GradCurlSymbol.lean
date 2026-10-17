@@ -277,6 +277,25 @@ theorem curl_smul (t : ℝ) (ξ : Freq) : curl (t • ξ) = (t : ℂ) • curl �
     mul_sum]
   refine sum_congr rfl fun c _ => sum_congr rfl fun d _ => by ring
 
+/-- The gradient symbol is linear in the frequency. -/
+theorem grad_eq_sum (ξ : Freq) :
+    grad ξ = ∑ j, ((ξ j : ℝ) : ℂ) • grad (EuclideanSpace.single j (1 : ℝ)) := by
+  refine ContinuousLinearMap.ext fun u => ?_
+  ext ⟨a, b⟩
+  simp only [_root_.sum_apply, _root_.smul_apply, WithLp.ofLp_sum, Finset.sum_apply,
+    PiLp.smul_apply, grad_apply, smul_eq_mul]
+  rw [Finset.sum_eq_single b]
+  · simp; ring
+  · intro j _ hj; simp [Ne.symm hj]
+  · intro h; exact absurd (Finset.mem_univ b) h
+
+/-- The curl symbol is linear in the frequency. -/
+theorem curl_eq_sum (ξ : Freq) :
+    curl ξ = ∑ j, ((ξ j : ℝ) : ℂ) • curl (EuclideanSpace.single j (1 : ℝ)) := by
+  refine ContinuousLinearMap.ext fun M => ?_
+  ext ⟨a, b⟩
+  fin_cases b <;> simp [curl_apply, Fin.sum_univ_three, leviCivita3_apply] <;> ring
+
 theorem continuous_grad : Continuous grad := by
   refine continuous_clm_apply.2 fun u => ?_
   refine (PiLp.continuous_toLp 2 _).comp (continuous_pi fun p => ?_)

@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Torus.GradCurl
+public import Feec.HilbertComplex.RestrictScalars
 public import Feec.Legacy.Box.Mirror
 
 /-!
@@ -25,11 +26,20 @@ reflection actions shared by the row-wise models (`Feec.Models.Cube.Parity`) and
 * `Feec.Models.Cube.torus`, `Feec.Models.Cube.torusSym`: the torus complexes `grad → curl` and
   `hess → curl` (Fourier side) as window complexes.
 
+* `Feec.Models.Cube.MirrorTorus.action`, `MirrorTorus.complex`: the tensorial reflections of the
+  Fourier-side torus complex `Feec.Models.Torus.GradCurl.complex` (frequencies `n ↦ flip_k n`,
+  fibres `v ↦ D_k v`, `M ↦ ±D_k M D_k`) and the mirror cube complex they fix.
+* `Feec.Models.Cube.RealTorus.gradCurl`: the torus complex over `ℝ`
+  (`Feec.HilbertComplex.restrictScalars`).
+
 ## Main results
 
 * `mem_fixed_reflAction_zero` (and `_one`, `_two`): the fixed vectors are the vectors fixed by
   each reflection; `reflAct_mem`: subspaces invariant under the reflections are invariant under
   the action.
+* **`MirrorTorus.reducingSubcomplex`**, `MirrorTorus.propagates`, `MirrorTorus.existsUnique_mem`:
+  the TSD constraint reduces the mirror cube complex (no Legacy input).
+* `RealTorus.wave_gradCurl`, `RealTorus.dual_gradCurl`, **`RealTorus.reducingSubcomplex`**.
 
 ## References
 
@@ -488,3 +498,59 @@ theorem mem_fixed_iff {i : Fin 3} {x : Models.Torus.GradCurl.Space i} :
   symmetries.mem_fixed_toAction
 
 end Feec.Models.Cube.MirrorTorus
+
+/-! ### The torus grad–curl complex over `ℝ`
+
+The Fourier-side torus complex is a complex Hilbert complex; with the real parts of its inner
+products it is a real one (`Feec.HilbertComplex.restrictScalars`), with the same domains, the
+same wave operator and the same reducing subcomplexes. This is the form in which it meets the
+real-valued cube and bounded-domain complexes. -/
+
+namespace Feec.Models.Cube.RealTorus
+
+open scoped InnerProductSpace
+open MeasureTheory Feec.Fourier Feec.Fourier.GradCurl Feec.ShortHilbertComplex
+open Feec.Models.Torus.GradCurl (Space)
+
+/-- The real structure of the torus spaces (`L²` of `ℂⁿ`-valued sequences with the real inner
+product `re ⟪·, ·⟫`) is compatible with the complex one. -/
+theorem isScalarTower (i : Fin 3) : @IsScalarTower ℝ ℂ (Space i) _ _
+    (L2.innerProductSpace : InnerProductSpace ℝ (Space i)).toNormedSpace.toModule.toDistribMulAction.toMulAction.toSMul := by
+  fin_cases i
+  · exact inferInstanceAs (IsScalarTower ℝ ℂ (Lp Vec 2 (Measure.count : Measure (Fin 3 → ℤ))))
+  · exact inferInstanceAs (IsScalarTower ℝ ℂ (Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))))
+  · exact inferInstanceAs (IsScalarTower ℝ ℂ (Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))))
+
+attribute [local instance] isScalarTower
+
+/-- The real inner products are the real parts of the complex ones. -/
+theorem real_inner_eq_re (i : Fin 3) (x y : Space i) : ⟪x, y⟫_ℝ = RCLike.re ⟪x, y⟫_ℂ := by
+  fin_cases i
+  · exact L2.real_inner_eq_re_inner (E := Vec) EuclideanSpace.real_inner_eq_re_inner x y
+  · exact L2.real_inner_eq_re_inner (E := Mat) EuclideanSpace.real_inner_eq_re_inner x y
+  · exact L2.real_inner_eq_re_inner (E := Mat) EuclideanSpace.real_inner_eq_re_inner x y
+
+/-- **The torus grad–curl complex over `ℝ`.** -/
+abbrev gradCurl : HilbertComplex ℝ ComplexShape.fin3 Space :=
+  Models.Torus.GradCurl.complex.restrictScalars
+
+/-- The real wave operator is the complex one. -/
+theorem wave_gradCurl : gradCurl.wave = Models.Torus.GradCurl.complex.wave.restrictScalars :=
+  HilbertComplex.wave_restrictScalars real_inner_eq_re
+
+/-- The real dual complex is the complex dual. -/
+theorem dual_gradCurl : gradCurl.dual = Models.Torus.GradCurl.complex.dual.restrictScalars :=
+  HilbertComplex.dual_restrictScalars real_inner_eq_re
+
+/-- The TSD constraint `{0} × L²(TSD) × L²(TSD)` as a real subspace. -/
+abbrev constraint (i : Fin 3) :
+    @Submodule ℝ (Space i) _ _ (L2.innerProductSpace : InnerProductSpace ℝ (Space i)).toModule :=
+  @Submodule.restrictScalars ℝ ℂ (Space i) _ _ _
+    (L2.innerProductSpace : InnerProductSpace ℝ (Space i)).toModule _ _ (isScalarTower i)
+    (Models.Torus.GradCurl.constraint i)
+
+/-- **The TSD constraint reduces the real torus complex.** -/
+theorem reducingSubcomplex : gradCurl.ReducingSubcomplex constraint :=
+  Models.Torus.GradCurl.reducingSubcomplex.restrictScalars real_inner_eq_re
+
+end Feec.Models.Cube.RealTorus

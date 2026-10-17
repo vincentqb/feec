@@ -48,6 +48,7 @@ public import Feec.ForMathlib.LinearPMap.CompPartial
 public import Feec.ForMathlib.LinearPMap.GraphSpace
 public import Feec.ForMathlib.LinearPMap.Intertwines
 public import Feec.ForMathlib.LinearPMap.Reducing
+public import Feec.ForMathlib.LinearPMap.RestrictScalars
 public import Feec.ForMathlib.LinearPMap.Skew
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
@@ -92,6 +93,7 @@ public import Feec.HilbertComplex.HodgeWave
 public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.Reducing
+public import Feec.HilbertComplex.RestrictScalars
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window

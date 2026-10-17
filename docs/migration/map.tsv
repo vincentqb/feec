@@ -2683,3 +2683,6 @@ Feec.BoundedDomain.exists_abs_mol_le	Feec.Domain.FiniteSpeed.abs_indicator_convo
 Feec.BoundedDomain.ae_eq_zero_of_mol_eventually	Feec.Domain.FiniteSpeed.IsWeakSolution.ae_eq_zero_of_ball	generalize
 Feec.BoundedDomain.WeakEB.ae_viol_eq_zero	Feec.Domain.FiniteSpeed.IsWeakSolution.ae_eq_zero_of_ball	generalize
 Feec.BoundedDomain.WeakEB.ae_viol_eq_zero_depDomain	Feec.Domain.FiniteSpeed.IsWeakSolution.ae_eq_zero_of_ball	generalize
+Feec.WholeReal.fourier_mem_fix_iff	Feec.Fourier.Weak.fourier_fixed_iff	generalize
+Feec.WholeReal.fieldFourierW_conj	Feec.Fourier.Weak.fourier_conjLp	generalize
+Feec.WholeReal.fourier_conj	Feec.Fourier.Weak.fourier_entryConj	generalize

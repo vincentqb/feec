@@ -1,7 +1,7 @@
 module
 
 public import Feec.Domain.ConstCoeffOp
-public import Feec.HilbertComplex.Short
+public import Feec.HilbertComplex.Reducing
 public import Feec.Evolution.Tangent
 
 /-!
@@ -215,6 +215,18 @@ omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
 omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
 @[simp] theorem family3_two (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
     family3 K₀ K₁ K₂ 2 = K₂ := rfl
+
+omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
+/-- A single nonzero component in the constraint family. -/
+theorem single_two_mem_totalSub_family3 (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁)
+    (K₂ : Submodule 𝕜 W₂) {v : W₂} (hv : v ∈ K₂) :
+    WithLp.toLp 2 (Pi.single (M := W3 W₀ W₁ W₂) 2 v) ∈
+      HilbertComplex.totalSub (family3 K₀ K₁ K₂) := by
+  intro i
+  match i with
+  | 0 => exact K₀.zero_mem
+  | 1 => exact K₁.zero_mem
+  | 2 => exact hv
 
 /-- **The tangent condition at every time**: if a strong solution of `U' = L U` on `[0, T]`,
 `T > 0`, keeps its middle component in `K₁`, then

@@ -1,6 +1,14 @@
 module
 
 public import Feec.Foundation
+public import Feec.Domain.Complexes
+public import Feec.Domain.ConstCoeffOp
+public import Feec.Domain.Constrained
+public import Feec.Domain.L2Field
+public import Feec.Domain.Obstruction
+public import Feec.Domain.Operators
+public import Feec.Models.BoundedDomain.GradCurl
+public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Evolution.Constrained
 public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy

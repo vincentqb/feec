@@ -72,6 +72,51 @@ theorem adjEntry_ite (p : Prop) [Decidable p] (P Q : List (List E × 𝕜)) :
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
 @[simp] theorem adjEntry_nil : adjEntry ([] : List (List E × 𝕜)) = [] := rfl
 
+/-! ### Post-composition with a constant matrix -/
+
+variable {ι κ κ' : Type*} [Fintype κ]
+
+/-- `M ∘ A` for a constant matrix `M : 𝕜^κ → 𝕜^{κ'}` (e.g. the symmetric part of a matrix). -/
+def postComp (M : κ' → κ → 𝕜) (A : ConstCoeffOp E 𝕜 ι κ) : ConstCoeffOp E 𝕜 ι κ' where
+  coeff j' i := Finset.univ.toList.flatMap fun j => (A.coeff j i).map fun t => (t.1, M j' j * t.2)
+
+theorem applyEntry_append (P Q : List (List E × 𝕜)) (f : E → 𝕜) (x : E) :
+    applyEntry (P ++ Q) f x = applyEntry P f x + applyEntry Q f x := by
+  simp [applyEntry, List.map_append, List.sum_append]
+
+theorem applyEntry_map_smul (c : 𝕜) (P : List (List E × 𝕜)) (f : E → 𝕜) (x : E) :
+    applyEntry (P.map fun t => (t.1, c * t.2)) f x = c * applyEntry P f x := by
+  induction P with
+  | nil => simp [applyEntry]
+  | cons t P ih =>
+    simp only [List.map_cons] at ih ⊢
+    rw [applyEntry_cons, applyEntry_cons]
+    simp only at ih ⊢
+    rw [ih]
+    ring
+
+theorem applyEntry_flatMap {α : Type*} (l : List α) (P : α → List (List E × 𝕜)) (f : E → 𝕜)
+    (x : E) : applyEntry (l.flatMap P) f x = (l.map fun a => applyEntry (P a) f x).sum := by
+  induction l with
+  | nil => simp [applyEntry]
+  | cons a l ih => simp [List.flatMap_cons, applyEntry_append, ih]
+
+theorem postComp_apply [Fintype ι] (M : κ' → κ → 𝕜) (A : ConstCoeffOp E 𝕜 ι κ)
+    (f : ι → E → 𝕜) (j' : κ') (x : E) :
+    (postComp M A).apply f j' x = ∑ j, M j' j * A.apply f j x := by
+  simp only [apply, postComp, applyEntry_flatMap, applyEntry_map_smul, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [← Finset.sum_map_toList]
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+theorem IsOrderLE.postComp {A : ConstCoeffOp E 𝕜 ι κ} {N : ℕ} (h : A.IsOrderLE N)
+    (M : κ' → κ → 𝕜) : (A.postComp M).IsOrderLE N := by
+  intro j' i t ht
+  simp only [ConstCoeffOp.postComp, List.mem_flatMap, List.mem_map] at ht
+  obtain ⟨j, -, t', ht', rfl⟩ := ht
+  exact h j i t' ht'
+
 end ConstCoeffOp
 
 open ConstCoeffOp
@@ -161,6 +206,33 @@ theorem hessOp_apply (h : Unit → (Fin n → ℝ) → 𝕜) (ij : Fin n × Fin 
       fderiv ℝ (fun y => fderiv ℝ (h ()) y (coordDir ij.1)) x (coordDir ij.2) := by
   simp [ConstCoeffOp.apply, hessOp, iterDeriv_cons]
 
+/-! ## Double divergence and the symmetric curl -/
+
+/-- The double divergence `div div B = Σ_{ij} ∂_i ∂_j B_{ij}` (values indexed by `Unit`). -/
+def divdivOp (n : ℕ) : ConstCoeffOp (Fin n → ℝ) 𝕜 (Fin n × Fin n) Unit where
+  coeff _ ij := [([coordDir ij.1, coordDir ij.2], 1)]
+
+theorem divdivOp_apply (B : Fin n × Fin n → (Fin n → ℝ) → 𝕜) (u : Unit) (x : Fin n → ℝ) :
+    (divdivOp n).apply B u x =
+      ∑ ij : Fin n × Fin n, fderiv ℝ (fun y => fderiv ℝ (B ij) y (coordDir ij.2)) x (coordDir ij.1) := by
+  simp [ConstCoeffOp.apply, divdivOp, iterDeriv_cons]
+
+/-- The symmetric part `sym M = (M + Mᵀ)/2` as a constant matrix on `𝕜^{n×n}`. -/
+def symMat (n : ℕ) : Fin n × Fin n → Fin n × Fin n → 𝕜 := fun ij kl =>
+  ((if kl = ij then 1 else 0) + (if kl = (ij.2, ij.1) then 1 else 0)) / 2
+
+/-- The symmetric curl `sym curl` on `ℝ³` (row-wise). -/
+def symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) (Fin 3 × Fin 3) :=
+  (curlOp 3).postComp (symMat 3)
+
+theorem symCurlOp_apply (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (ij : Fin 3 × Fin 3)
+    (x : Fin 3 → ℝ) :
+    (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply Φ ij x =
+      ((curlOp 3).apply Φ ij x + (curlOp 3).apply Φ (ij.2, ij.1) x) / 2 := by
+  rw [symCurlOp, postComp_apply]
+  simp only [symMat, add_div, add_mul, Finset.sum_add_distrib, div_mul_eq_mul_div, ite_mul,
+    one_mul, zero_mul, ite_div, zero_div, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
+
 /-! ## Orders -/
 
 theorem gradOp_isOrderLE : (gradOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).IsOrderLE 1 := by
@@ -183,6 +255,15 @@ theorem hessOp_isOrderLE : (hessOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).Is
   simp only [hessOp, List.mem_singleton] at ht
   subst ht
   simp
+
+theorem divdivOp_isOrderLE : (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).IsOrderLE 2 := by
+  intro j i t ht
+  simp only [divdivOp, List.mem_singleton] at ht
+  subst ht
+  simp
+
+theorem symCurlOp_isOrderLE : (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsOrderLE 1 :=
+  curlOp_isOrderLE.postComp _
 
 /-! ## Complex identities -/
 

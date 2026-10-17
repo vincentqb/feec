@@ -217,6 +217,9 @@ section Half
 
 variable [Invertible (2 : R)]
 
+theorem vskw_apply (A : Matrix (Fin 3) (Fin 3) R) (a : Fin 3) :
+    vskw A a = ⅟2 * ∑ b, ∑ c, leviCivita3 R a b c * A b c := rfl
+
 theorem two_smul_vskw (A : Matrix (Fin 3) (Fin 3) R) : (2 : R) • vskw A = axial A := by
   rw [vskw, smul_smul, mul_invOf_self, one_smul]
 

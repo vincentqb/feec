@@ -4452,6 +4452,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Legacy».«Torus».«projKc_mem_domL» -- THESIS_MAP.md
 #check @«Feec».«Legacy».«Whole».«projKc_mem_domL» -- THESIS_MAP.md
 #check @«Feec».«Legacy».«Whole».«whole_Kc_propagates» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«MirrorTorus».«existsUnique_mem» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«MirrorTorus».«propagates» -- THESIS_MAP.md
 #check @«Feec».«TimeStepping».«IsCNStep».«mem_of_isReducing» -- THESIS_MAP.md
 #check @«Feec».«Legacy».«Constraints».«reducedSolution_divFree» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«BoundedSymTSD».«exists_projTSD_not_mem_domain» -- THESIS_MAP.md
@@ -4491,6 +4493,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Legacy».«TorusSym».«symComplex» -- THESIS_MAP.md
 #check @«Feec».«Legacy».«TorusSym».«adjoint_curlS» -- THESIS_MAP.md
 #check @«Feec».«Legacy».«TorusSym».«adjoint_hessS» -- THESIS_MAP.md
+#check @«Feec».«Models».«Torus».«SymCurl».«adjoint_d» -- THESIS_MAP.md
+#check @«Feec».«Models».«Torus».«SymCurl».«dual_closedRangeAt» -- THESIS_MAP.md
 #check @«Feec».«Legacy».«TorusSym».«symComplex_closedRange» -- THESIS_MAP.md
 #check @«Feec».«Metric».«minkowskiMatrix» -- THESIS_MAP.md
 #check @«Feec».«CurvatureTensor».«ricci» -- THESIS_MAP.md

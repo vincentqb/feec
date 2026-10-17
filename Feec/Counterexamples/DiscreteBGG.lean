@@ -31,7 +31,7 @@ All spaces `ℝ`,
 `dX0 = dX1 = dY1 = S1 = 0`, `dY0 = S0 = id`. Every other hypothesis of
 `eq_zero_of_mixed_homogeneous` holds
 (even `S₀,h` is onto), exactness at `V_h¹` fails, and `(σ,φ,u,λ) = (0,0,1,1)` solves the
-homogeneous system. See [QuennevilleBelair2015, Props 5.3–5.4]. -/
+homogeneous system. See [QuennevilleBelair2015], Props 5.3–5.4. -/
 theorem mixed_not_unique_of_not_exactTop :
     let dX0 : ℝ →ₗ[ℝ] ℝ := 0
     let dX1 : ℝ →ₗ[ℝ] ℝ := 0

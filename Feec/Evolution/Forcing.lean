@@ -17,11 +17,11 @@ particular `ℝ` and `ℂ`), with the inclusions between them.
   off a countable set, with an integrable derivative (contains `C¹([a,b]; X)` and
   piecewise-`C¹` forcing).
 * `ForcingClass.w11 a b F`: `F ∈ W^{1,1}(a,b; X)`, i.e. `F = x₀ + ∫ₐ^· g` a.e. on `(a,b)` with
-  `g ∈ L¹(a,b; X)` ([CazenaveHaraux1998, Ch. 1]; `g` is the weak derivative).
+  `g ∈ L¹(a,b; X)` ([CazenaveHaraux1998], Ch. 1; `g` is the weak derivative).
 * `ForcingClass.l1Domain A a b F`: `F ∈ L¹(a,b; D(A))`: `F(t) ∈ D(A)` a.e. with `A F` a.e. equal
   to an integrable function.
 * `ForcingClass.admissible A a b F := ContinuousOn F [a,b] ∧ (w11 a b F ∨ l1Domain A a b F)`: the
-  class of [QuennevilleBelair2015, Thm 4.3], `C([a,b]; X) ∩ (W^{1,1}(a,b; X) ∪ L¹(a,b; D(A)))`.
+  class of [QuennevilleBelair2015], Thm 4.3, `C([a,b]; X) ∩ (W^{1,1}(a,b; X) ∪ L¹(a,b; D(A)))`.
 
 Inclusions: `contDomain.admissible`, `derivOffCountable.admissible`, `admissible_of_C1`, and
 `ForcingClass.w11_iff` (for continuous `F`, the a.e. identity holds pointwise with `x₀ = F a`).
@@ -63,7 +63,7 @@ def derivOffCountable (a b : ℝ) (F : ℝ → E) : Prop :=
 /-- `F ∈ W^{1,1}(a,b; X)`: `F = x₀ + ∫ₐ^· g` a.e. on `(a,b)`, for some `x₀ ∈ X` and some `g`
 Bochner integrable on `(a,b)`; `g` is then the weak derivative. Equivalence with absolute
 continuity plus an integrable a.e. derivative needs the Radon–Nikodým property of `X` (true for
-Hilbert spaces) and is not proved here. See [CazenaveHaraux1998, Ch. 1]. -/
+Hilbert spaces) and is not proved here. See [CazenaveHaraux1998], Ch. 1. -/
 def w11 (a b : ℝ) (F : ℝ → E) : Prop :=
   ∃ (x₀ : E) (g : ℝ → E), IntegrableOn g (Ioc a b) ∧
     F =ᵐ[volume.restrict (Ioo a b)] fun t => x₀ + ∫ s in a..t, g s
@@ -75,7 +75,7 @@ def l1Domain (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
   ∃ H : ℝ → E, IntegrableOn H (Ioc a b) ∧
     ∀ᵐ t ∂(volume.restrict (Ioo a b)), ∃ h : F t ∈ A.domain, A ⟨F t, h⟩ = H t
 
-/-- The forcing class of [QuennevilleBelair2015, Thm 4.3] on `[a,b]`:
+/-- The forcing class of [QuennevilleBelair2015], Thm 4.3 on `[a,b]`:
 `F ∈ C([a,b], X)` and `F ∈ W^{1,1}(a,b; X) ∪ L¹(a,b; D(A))`. -/
 def admissible (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
   ContinuousOn F (Icc a b) ∧ (w11 a b F ∨ l1Domain A a b F)
@@ -193,7 +193,7 @@ abbrev w11 (T : ℝ) (F : ℝ → E) : Prop := Evolution.ForcingClass.w11 0 T F
 abbrev l1Domain (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   Evolution.ForcingClass.l1Domain A 0 T F
 
-/-- The forcing class of [QuennevilleBelair2015, Thm 4.3] on `[0,T]`; see
+/-- The forcing class of [QuennevilleBelair2015], Thm 4.3 on `[0,T]`; see
 `Evolution.ForcingClass.admissible`. -/
 abbrev admissible (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   Evolution.ForcingClass.admissible A 0 T F
@@ -229,7 +229,7 @@ theorem admissible_of_C1 [CompleteSpace E] {A : E →ₗ.[ℝ] E} {T : ℝ} {F F
 
 end ForcingClass
 
-/-! ### Legacy names -/
+/-! ### Short names -/
 
 /-- The forcing class `C([0,T]; D(A))`; see `ForcingClass.contDomain`. -/
 abbrev ForcingDL (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.contDomain A T F
@@ -250,7 +250,7 @@ abbrev IsW11 (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.w11 T F
 /-- `F ∈ L¹(0,T; D(A))`; see `ForcingClass.l1Domain`. -/
 abbrev IsL1D (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.l1Domain A T F
 
-/-- The forcing class of [QuennevilleBelair2015, Thm 4.3]; see `ForcingClass.admissible`. -/
+/-- The forcing class of [QuennevilleBelair2015], Thm 4.3; see `ForcingClass.admissible`. -/
 abbrev ForcingThm43Full (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   ForcingClass.admissible A T F
 

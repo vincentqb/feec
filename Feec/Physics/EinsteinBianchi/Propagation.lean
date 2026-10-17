@@ -335,7 +335,7 @@ compact spatial support and prove it directly, by (1) `∂_t div E = -div curl B
 `½ ∂_t e = div F` (`energy_flux`), so `∫ e(t) dx` is constant, and `e(0) = 0`, `e ≥ 0` give
 `e(t) ≡ 0` (`energy_eq_zero_iff`). Also: "Similarly, `curl E` is TSD" should read `curl B`.
 
-See [QuennevilleBelair2015, Prop 3.6] (thesis proof via [QuennevilleBelair2015, Cor 4.5]). -/
+See [QuennevilleBelair2015], Prop 3.6 (thesis proof via [QuennevilleBelair2015], Cor 4.5). -/
 theorem tsd_propagates (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
     (hsupp : ∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧

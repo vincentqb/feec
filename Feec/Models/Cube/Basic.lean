@@ -192,8 +192,7 @@ end Box
 
 /-! ### The cube `Q = (0, ½)ᵈ ⊂ ℝᵈ`, open cubes, and the covering map
 
-In the namespace `Feec.Models.Cube.Geometry`, to keep these names apart from the pre-refactor
-cube machinery (`Feec.Legacy.BoxIdent.openCube`, …) still opened by the cube models. -/
+In the namespace `Feec.Models.Cube.Geometry`, apart from the Fourier-side cube models. -/
 
 namespace Geometry
 

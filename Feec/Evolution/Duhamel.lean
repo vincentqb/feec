@@ -496,7 +496,7 @@ theorem conv_primitive {g : ℝ → E} {a t : ℝ} (hat : a ≤ t) (hg : Integra
 (`F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`), `∫ₐᵗ S(t - s) F(s) ds ∈ D(A)` for
 `t ∈ [a,b]`, with an `A`-image continuous on `[a,b]`. Explicitly the image is
 `∫ₐᵗ S(t - s) A F(s) ds` in the `L¹(D(A))` case and `S(t - a) F(a) - F(t) + ∫ₐᵗ S(t - s) g(s) ds`
-in the `W^{1,1}` case (`g` the weak derivative). Cf. [Pazy1983, Thm 4.2.4, Cor 4.2.5]. -/
+in the `W^{1,1}` case (`g` the weak derivative). Cf. [Pazy1983], Thm 4.2.4, Cor 4.2.5. -/
 theorem integral_mem_graph {F : ℝ → E} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     ∃ V : ℝ → E, ContinuousOn V (Icc a b) ∧
@@ -704,7 +704,7 @@ theorem integral_conv_mem_graph {F : ℝ → E} {a t : ℝ} (hat : a ≤ t)
 /-- **Duhamel's formula gives a classical solution**: for `U₀ ∈ D(A)` and admissible forcing
 `F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`, the mild solution
 `t ↦ S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds` is a classical solution of `U' = A U + F` on `[a,b]`.
-Thesis: Thm 4.3 (existence). Cf. [Pazy1983, Thm 4.2.4, Cor 4.2.5]. -/
+Thesis: Thm 4.3 (existence). Cf. [Pazy1983], Thm 4.2.4, Cor 4.2.5. -/
 theorem isClassicalSolution_mild {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain) {F : ℝ → E} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     Evolution.IsClassicalSolution G.generator (Icc a b) F (Evolution.mild G.S a U₀ F) := by
@@ -760,7 +760,7 @@ theorem isClassicalSolution_mild {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain
 /-- **Every strong solution is the mild solution**: if `U` is a strong solution of
 `U' = A U + F` on `[a,b]` with `F` continuous, then `U t = S(t - a) U(a) + ∫ₐᵗ S(t - s) F(s) ds`
 on `[a,b]`. Proof: `s ↦ S(t - s) U(s)` has derivative `S(t - s) F(s)` on `(a,t)`.
-Cf. [Pazy1983, Thm 4.1.3]. -/
+Cf. [Pazy1983], Thm 4.1.3. -/
 theorem _root_.Feec.Evolution.IsStrongSolution.eq_mild {G : C0Semigroup 𝕜 E} {F U : ℝ → E}
     {a b : ℝ} (hU : Evolution.IsStrongSolution G.generator (Icc a b) F U)
     (hF : ContinuousOn F (Icc a b)) : ∀ t ∈ Icc a b, U t = Evolution.mild G.S a (U a) F t := by

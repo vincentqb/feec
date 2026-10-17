@@ -54,7 +54,7 @@ def curlF (A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 3 → �
 
 Thesis gap: the thesis uses symmetry of second derivatives without stating any regularity;
 here `A ∈ C²` (distributional version for `A ∈ H(curl)` not formalized).
-See [QuennevilleBelair2015, Lemma 3.5]. -/
+See [QuennevilleBelair2015], Lemma 3.5. -/
 theorem div_curl_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hA : ∀ a b, ContDiff ℝ 2 fun y => A y a b) (x : Fin 3 → ℝ) :
     div (jet3 (curlF A) x) = 0 := by
@@ -75,7 +75,7 @@ theorem div_curl_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
 
 /-- **Thesis Lemma 3.5, conclusion** for fields: if a `C²` matrix field `A` on `ℝ³` is TSD
 (symmetric, trace-free and divergence-free everywhere), then so is `curl A`.
-See [QuennevilleBelair2015, Lemma 3.5 and proof of Prop 3.6]. -/
+See [QuennevilleBelair2015], Lemma 3.5 and proof of Prop 3.6. -/
 theorem curl_TSD_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hA : ∀ a b, ContDiff ℝ 2 fun y => A y a b) (hsym : ∀ y, (A y)ᵀ = A y)
     (htr : ∀ y, (A y).trace = 0) (hdiv : ∀ y, div (jet3 A y) = 0) (x : Fin 3 → ℝ) :
@@ -134,7 +134,7 @@ theorem pd_weyl {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} {p : (Fin
 Thesis gap: the equivalence is pointwise and only needs `C ∈ C¹` (differentiability at the
 point suffices); see `linBianchi_iff` for the remaining corrections.
 
-See [QuennevilleBelair2015, Prop 3.4]. -/
+See [QuennevilleBelair2015], Prop 3.4. -/
 theorem linBianchi_field_iff {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} (p : (Fin 4 → ℝ))
     (hEs : ∀ y, (E y)ᵀ = E y) (hBs : ∀ y, (B y)ᵀ = B y)
     (hE : ∀ i j, DifferentiableAt ℝ (fun y => E y i j) p)
@@ -162,7 +162,7 @@ Correction: the thesis writes the amplitudes `A₊` and `A₋`; the second is `A
 "non-zero components" is complete only up to the Riemann symmetries; here the full tensor is
 identified.
 
-See [QuennevilleBelair2015, §3.5] (TT plane waves: §2.8); cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], §3.5 (TT plane waves: §2.8); cf. [Wald1984], §4.4. -/
 theorem planeWave_weyl (κ Ap Ax s : ℝ) :
     Rjet (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) =
       ofBlocks ((κ ^ 2 / 2 * s) • ampE Ap Ax) ((κ ^ 2 / 2 * s) • ampB Ap Ax)
@@ -206,7 +206,7 @@ are symmetric, trace-free and solve the linearized EB system (3.3)–(3.4) at ev
 Remark: the thesis assumes `f ∈ C²` so that `h` solves the wave equation, and then `f ∈ C³`
 for the EB equations (which involve `f'''`); we assume `f ∈ C³`, as the thesis does here.
 
-See [QuennevilleBelair2015, §3.5] (TT plane waves: §2.8); cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], §3.5 (TT plane waves: §2.8); cf. [Wald1984], §4.4. -/
 theorem planeWave_EB {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ Ap Ax : ℝ) (p : (Fin 4 → ℝ)) :
     Rjet (jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) p) =
       ofBlocks (waveE κ Ap Ax f p) (waveB κ Ap Ax f p) (waveB κ Ap Ax f p) (-waveE κ Ap Ax f p) ∧

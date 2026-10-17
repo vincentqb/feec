@@ -80,7 +80,7 @@ hypotheses of Prop 6.2 (exact rows, `d` injective on `Ṽₕ⁰`, `S₀,ₕ` sur
 (a) the initial value `u₀ = e₁` admits no solution, for any source `f` and any `σ₀, φ₀, M₀, ρ₀`;
 (b) even the compatible data `σ₀ = 0`, `φ₀ = e₁` (so `dσ₀ = S₀,ₕφ₀`), `u₀ = 0`, `f = 0` admit no
 solution, so `φ₀` cannot be prescribed freely. This makes `not_exists_discreteSolution_of_ker` and
-`not_exists_discreteSolution_phi_of_ker` non-vacuous. Refutes [QuennevilleBelair2015, Prop 6.2].
+`not_exists_discreteSolution_phi_of_ker` non-vacuous. Refutes [QuennevilleBelair2015], Prop 6.2.
 Thesis: Prop 6.2 (refuted as stated) -/
 theorem not_forall_exists_discreteSolution {T : ℝ} (hT : 0 < T) :
     (∀ f : ℝ → EuclideanSpace ℝ (Fin 2),
@@ -144,7 +144,7 @@ So `φₕ(0) = Q(0)` is not admissible in general, and `projected_compatible_phi
 improved to an
 unconditional statement. This instance only checks the abstract hypotheses: `ℓ` is a free
 functional there, and the instance uses that freedom. It is not built from the FE spaces of
-§6.3. Repair of [QuennevilleBelair2015, §6.2] (initial data for (6.3)). -/
+§6.3. Repair of [QuennevilleBelair2015], §6.2 (initial data for (6.3)). -/
 theorem not_projected_compatible_phi {T : ℝ} (hT : 0 < T) :
     Function.Injective projSegment.dt0 ∧ Function.Surjective projSegment.S0 ∧
     (∀ a b, ⟪projι a, projι b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ +

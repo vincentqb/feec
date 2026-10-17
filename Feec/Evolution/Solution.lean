@@ -53,14 +53,14 @@ variable {𝕜 E : Type*} [Ring 𝕜] [NormedAddCommGroup E] [Module 𝕜 E] [No
 /-- `U` is a **strong solution** of `U' = A U + F` on the time set `I`: `U` is continuous on `I`
 and at every `t ∈ I` the pair `(U t, v)` lies in the graph of `A` for some `v` with
 `U' t = v + F t` (derivative within `I`).
-See [QuennevilleBelair2015, §4.4]; cf. [Pazy1983, §4.1]. -/
+See [QuennevilleBelair2015], §4.4; cf. [Pazy1983], §4.1. -/
 structure IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop where
   continuousOn : ContinuousOn U I
   deriv : ∀ t ∈ I, ∃ v, (U t, v) ∈ A.graph ∧ HasDerivWithinAt U (v + F t) I t
 
 /-- `U` is a **classical solution** of `U' = A U + F` on `I`: a strong solution such that
 `t ↦ A (U t)` is continuous on `I` (i.e. `U ∈ C(I; D(A)) ∩ C¹(I; E)` when `F` is continuous).
-See [QuennevilleBelair2015, Thm 4.3]; cf. [Pazy1983, §4.1]. -/
+See [QuennevilleBelair2015], Thm 4.3; cf. [Pazy1983], §4.1. -/
 structure IsClassicalSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop
     extends IsStrongSolution A I F U where
   deriv_cont : ∃ V : ℝ → E, ContinuousOn V I ∧ ∀ t ∈ I, (U t, V t) ∈ A.graph
@@ -204,7 +204,7 @@ namespace IsStrongSolution
 /-- **Stability for a dissipative generator**: two strong solutions of `U' = A U + F` on
 `[a,b]` with the same forcing satisfy `‖U t - V t‖ ≤ ‖U a - V a‖`. Energy method; no density,
 closedness, skew-adjointness or semigroup is needed.
-Thesis: Thm 4.3 (uniqueness half). Cf. [Pazy1983, §1.4]. -/
+Thesis: Thm 4.3 (uniqueness half). Cf. [Pazy1983], §1.4. -/
 theorem norm_sub_le (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A (Icc a b) F U)
     (hV : IsStrongSolution A (Icc a b) F V) : ∀ t ∈ Icc a b, ‖U t - V t‖ ≤ ‖U a - V a‖ := by
   have hW := hU.sub hV

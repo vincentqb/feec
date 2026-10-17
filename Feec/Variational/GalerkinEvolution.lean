@@ -21,6 +21,10 @@ equation with `ε` (the spatial form being accretive, or skew, on the discrete s
   discrete space and an elliptic projection `P` for `⟪J ·, J ·⟫ + a`, over `ℝ` and `ℂ`.
 
 Thesis: Thm 4.14.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open Set

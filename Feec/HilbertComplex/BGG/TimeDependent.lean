@@ -145,7 +145,7 @@ lemma J_apply (μ : W1) (x : X V0 Vt0) : D.J μ x = ⟪μ, D.B x⟫ := by
 completion of `(W¹, |||·|||)` itself exactly when `J` is injective, i.e. when `range B` is dense
 in `W¹` (the thesis assumes `S Ṽ⁰` dense in `W¹`; `WaveData` does not). An element `Λ ∈ W̌¹`
 pairs with `(τ, ψ)` as `Λ(τ, ψ)`, extending `(λ, dτ − Sψ)`.
-See [QuennevilleBelair2015, §6.1] (`W̌¹`) and [QuennevilleBelair2015, §5.1] (`|||λ|||`). -/
+See [QuennevilleBelair2015], §6.1 (`W̌¹`) and [QuennevilleBelair2015], §5.1 (`|||λ|||`). -/
 def Wcheck : Submodule ℝ (StrongDual ℝ (X V0 Vt0)) := D.J.range.topologicalClosure
 
 /-- `W¹ ⊆ W̌¹` via `J`. -/
@@ -164,7 +164,7 @@ theorem Wcheck_vanish {Λ : StrongDual ℝ (X V0 Vt0)} (hΛ : Λ ∈ D.Wcheck) {
 
 /-- **Annihilator characterisation of `W̌¹`** (the content of Prop 6.1(i)): a bounded
 functional on `V⁰ × Ṽ⁰` vanishing on `Γ` lies in `W̌¹`. Proof: Riesz, then
-`(ker B)ᗮ = closure (range B*)`. See [QuennevilleBelair2015, Prop 6.1]; cf. the closed-range
+`(ker B)ᗮ = closure (range B*)`. See [QuennevilleBelair2015], Prop 6.1; cf. the closed-range
 theory of Hilbert complexes in [BruningLesch1992] and [AFW2010]. -/
 theorem mem_Wcheck_of_vanish (ℓ : StrongDual ℝ (X V0 Vt0)) (hℓ : ∀ x, D.B x = 0 → ℓ x = 0) :
     ℓ ∈ D.Wcheck := by
@@ -283,15 +283,15 @@ structure Trajectory (T : ℝ) (f : ℝ → Wt1) where
   ed : ∀ t ∈ Ico 0 T, ∀ μ, ⟪ρ' t, μ⟫ - ⟪D.dt1 (u t), μ⟫ = 0
 
 /-- A solution of the Hodge wave problem (6.1) for the closed complex (5.1):
-`(σ, φ) ∈ Γ` and (6.1a) tested on `Γ`. See [QuennevilleBelair2015, §6.1, (6.1)]; the abstract
-Hodge wave problem is [QuennevilleBelair2015, §4.4]. -/
+`(σ, φ) ∈ Γ` and (6.1a) tested on `Γ`. See [QuennevilleBelair2015], §6.1, (6.1); the abstract
+Hodge wave problem is [QuennevilleBelair2015], §4.4. -/
 structure Solution (T : ℝ) (f : ℝ → Wt1) extends D.Trajectory T f where
   mem : ∀ t ∈ Icc 0 T, D.d0 (σ t) = D.S0 (φ t)
   ea : ∀ t ∈ Ico 0 T, ∀ τ ψ, D.d0 τ = D.S0 ψ → ⟪σ' t, D.i0 τ⟫ - ⟪D.it1 (u t), D.dt0 ψ⟫ = 0
 
 /-- A solution of the multiplier problem (6.2), with multiplier `Λ(t) ∈ W̌¹`
 (Correction: `λ ∈ C⁰(W¹)` is not available in general, and no `λ(0)` is prescribed).
-See [QuennevilleBelair2015, §6.1, (6.2)]. -/
+See [QuennevilleBelair2015], §6.1, (6.2). -/
 structure MultiplierSolution (T : ℝ) (f : ℝ → Wt1) extends D.Trajectory T f where
   Λ : ℝ → D.Wcheck
   ea : ∀ t ∈ Ico 0 T, ∀ τ ψ,
@@ -312,7 +312,7 @@ with the same data.
 
 Correction: the thesis prescribes `λ(0) = λ₀` and silently uses `M₀ = 0`; neither is needed
 (the multiplier has no time derivative and `M₀ ∈ W²` is arbitrary).
-See [QuennevilleBelair2015, Prop 6.1]. Thesis: Prop 6.1 -/
+See [QuennevilleBelair2015], Prop 6.1. Thesis: Prop 6.1 -/
 def MultiplierSolution.toSolution {T : ℝ} {f : ℝ → Wt1}
     (s : D.MultiplierSolution T f) : D.Solution T f where
   toTrajectory := s.toTrajectory
@@ -340,7 +340,7 @@ Thesis gap: the thesis sets `λ := (S*)⁻¹ d* u ∈ W¹`, which needs `d* u �
 general; in EB it needs `u ∈ H(div)`), assumes `M ≡ 0`, and prescribes an arbitrary `λ₀`.
 Here `Λ(t)` is produced from the annihilator characterisation `mem_Wcheck_of_vanish`
 (Riesz + `(ker B)ᗮ = closure (range B*)`), with no extra hypothesis, `M` arbitrary and no `λ₀`.
-See [QuennevilleBelair2015, Prop 6.1]. Thesis: Prop 6.1 (corrected) -/
+See [QuennevilleBelair2015], Prop 6.1. Thesis: Prop 6.1 (corrected) -/
 theorem Solution.exists_multiplierSolution {T : ℝ} {f : ℝ → Wt1} (s : D.Solution T f) :
     ∃ s' : D.MultiplierSolution T f, s'.toTrajectory = s.toTrajectory ∧
       ∀ s'' : D.MultiplierSolution T f, s''.toTrajectory = s.toTrajectory → ∀ t ∈ Ico 0 T, s''.Λ t = s'.Λ t := by
@@ -393,8 +393,8 @@ Assume (R): `(λ(t), Sψ) = (u(t), dψ)` for all `ψ`, i.e. `S* λ = d* u`, and
 
 Thesis gap: the proof computes `d S⁻¹ dτ`, undefined for general `τ ∈ V⁰` (in EB it needs
 `τ ∈ H²`); density (D) replaces it. In EB, (D) holds since `H̊²` is dense in `H̊¹`, and (R)
-means `u(t) ∈ H(div, M)` with `λ = −div u`. See [QuennevilleBelair2015, Prop 6.1] (whose proof
-uses [QuennevilleBelair2015, Thm 4.7]). -/
+means `u(t) ∈ H(div, M)` with `λ = −div u`. See [QuennevilleBelair2015], Prop 6.1 (whose proof
+uses [QuennevilleBelair2015], Thm 4.7). -/
 theorem Solution.exists_multiplierSolution_of_dense {T : ℝ} {f : ℝ → Wt1} (s : D.Solution T f)
     (lam : ℝ → W1)
     (hR : ∀ t ∈ Ico 0 T, ∀ ψ, ⟪lam t, D.S0 ψ⟫ = ⟪D.it1 (s.u t), D.dt0 ψ⟫)
@@ -426,8 +426,8 @@ def Trajectory.energy {T : ℝ} {f : ℝ → Wt1} (s : D.Trajectory T f) (t : �
 /-- **Energy identity (§6.1, "uniqueness by an energy argument", written out).**
 `d/dt (‖σ‖² + ‖u‖² + ‖M‖² + ‖ρ‖²) = 2 (f, u)`.
 Key step (missing in the thesis): test (6.1a) with `(σ, φ) ∈ Γ`; for (6.2) the multiplier term
-vanishes by (6.2e), for `λ` in `W̌¹` as well. See [QuennevilleBelair2015, §6.1]; cf. the energy
-argument for the abstract Hodge wave equation [QuennevilleBelair2015, §4.4, Thm 4.6]. -/
+vanishes by (6.2e), for `λ` in `W̌¹` as well. See [QuennevilleBelair2015], §6.1; cf. the energy
+argument for the abstract Hodge wave equation [QuennevilleBelair2015], §4.4, Thm 4.6. -/
 theorem Solution.hasDerivWithinAt_energy {T : ℝ} {f : ℝ → Wt1} (s : D.Solution T f) {t : ℝ}
     (ht : t ∈ Ico 0 T) :
     HasDerivWithinAt s.energy (2 * ⟪f t, D.it1 (s.u t)⟫) (Ici t) t := by
@@ -499,7 +499,7 @@ def Solution.sub {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f) : D.So
 
 /-- **Uniqueness for (6.1)** (energy argument): two solutions with the same source and the same
 data `(σ, u, M, ρ)(0)` coincide on `[0,T]`; `φ` too when `S₀` is injective (thesis
-hypothesis of §5.1). See [QuennevilleBelair2015, §6.1] ("uniqueness is shown using an energy
+hypothesis of §5.1). See [QuennevilleBelair2015], §6.1 ("uniqueness is shown using an energy
 argument"). -/
 theorem Solution.unique {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f)
     (h0 : s₁.σ 0 = s₂.σ 0 ∧ s₁.u 0 = s₂.u 0 ∧ s₁.M 0 = s₂.M 0 ∧ s₁.ρ 0 = s₂.ρ 0) :
@@ -525,7 +525,7 @@ theorem Solution.unique {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f)
 /-- **Uniqueness for (6.2)**, including the multiplier: with the same source and data, the
 trajectories agree on `[0,T]` (`φ` if `S₀` is injective) and the multipliers `Λ(t) ∈ W̌¹`
 agree on `[0,T)`. Thesis gap: uniqueness of `φ` and `λ` is not addressed in the thesis.
-See [QuennevilleBelair2015, §6.1]. -/
+See [QuennevilleBelair2015], §6.1. -/
 theorem MultiplierSolution.unique {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.MultiplierSolution T f)
     (h0 : s₁.σ 0 = s₂.σ 0 ∧ s₁.u 0 = s₂.u 0 ∧ s₁.M 0 = s₂.M 0 ∧ s₁.ρ 0 = s₂.ρ 0) :
     (∀ t ∈ Icc 0 T, s₁.σ t = s₂.σ t ∧ s₁.u t = s₂.u t ∧ s₁.M t = s₂.M t ∧ s₁.ρ t = s₂.ρ t ∧
@@ -540,8 +540,8 @@ theorem MultiplierSolution.unique {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Mul
 end WaveData
 
 /-- Existence for a linear ODE `x' = A x + F(t)` with bounded `A` and continuous `F`
-(variation of constants with `NormedSpace.exp`). Proved, not assumed. Classical: [Pazy1983, §1.1]
-(uniformly continuous semigroups) and [Pazy1983, Ch. 4] (inhomogeneous Cauchy problem). -/
+(variation of constants with `NormedSpace.exp`). Proved, not assumed. Classical: [Pazy1983], §1.1
+(uniformly continuous semigroups) and [Pazy1983], Ch. 4 (inhomogeneous Cauchy problem). -/
 theorem exists_hasDerivAt_linearODE {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
     [CompleteSpace X]
     (A : X →L[ℝ] X) {F : ℝ → X} (hF : Continuous F) (x₀ : X) :
@@ -587,7 +587,7 @@ their `L²` inner products; `D.S0, D.S1` are `S₀,ₕ = Π¹ₕS₀`, `S₁,ₕ
 discrete anticommutation `d S₀,ₕ = −S₁,ₕ d` (essential, unstated in the thesis; it follows from
 commuting projections). The source is given by its representer `f(t) ∈ Ṽₕ¹`.
 Derivatives are right derivatives on `[0,T)`; the trajectories are continuous on `[0,T]`.
-See [QuennevilleBelair2015, §6.2, (6.3)]; commuting projections as in [Arnold2018], [AFW2010]. -/
+See [QuennevilleBelair2015], §6.2, (6.3); commuting projections as in [Arnold2018], [AFW2010]. -/
 structure DiscreteSolution (T : ℝ) (f : ℝ → Pt1) where
   σ : ℝ → P0
   φ : ℝ → Pt0
@@ -636,7 +636,7 @@ theorem DiscreteSolution.hidden_constraint {T : ℝ} {f : ℝ → Pt1} (s : Disc
 /-- **Thesis Prop 6.2 is false as stated.** Initial data `u₀ = dψ` with `ψ ∈ ker S₀,ₕ`,
 `dψ ≠ 0` admit no solution (whatever `σ₀, φ₀, M₀, ρ₀, f`). In EB, `dim ker S₀,ₕ = 3V_int + 2E_int`.
 Thesis gap: (6.3) is a differential-algebraic system, so "square ⇒ uniqueness implies existence"
-does not apply. Refutes [QuennevilleBelair2015, Prop 6.2]. -/
+does not apply. Refutes [QuennevilleBelair2015], Prop 6.2. -/
 theorem not_exists_discreteSolution_of_ker {T : ℝ} (hT : 0 ≤ T) {f : ℝ → Pt1} {ψ : Pt0}
     (hψ : D.S0 ψ = 0) (hdψ : D.dt0 ψ ≠ 0) :
     ¬ ∃ s : DiscreteSolution D T f, s.u 0 = D.dt0 ψ := by
@@ -647,7 +647,7 @@ theorem not_exists_discreteSolution_of_ker {T : ℝ} (hT : 0 ≤ T) {f : ℝ →
 
 /-- Prop 6.2 also fails for compatible `u₀`: `φ₀` is not free. With `f = 0`, data
 `(σ₀, φ₀) = (0, ψ)`, `ψ ∈ ker S₀,ₕ`, `dψ ≠ 0` (so `(σ₀, φ₀) ∈ Γₕ`), admit no solution. Refutes
-[QuennevilleBelair2015, Prop 6.2]. -/
+[QuennevilleBelair2015], Prop 6.2. -/
 theorem not_exists_discreteSolution_phi_of_ker {T : ℝ} (hT : 0 < T) {ψ : Pt0}
     (hψ : D.S0 ψ = 0) (hdψ : D.dt0 ψ ≠ 0) :
     ¬ ∃ s : DiscreteSolution D T 0, s.φ 0 = ψ := by
@@ -667,7 +667,7 @@ theorem not_exists_discreteSolution_phi_of_ker {T : ℝ} (hT : 0 < T) {ψ : Pt0}
 /-- **Corrected Prop 6.2, necessity.** Every solution satisfies (C1) `dσ₀ = S₀,ₕφ₀`,
 (C2) `(u₀, dψ) = 0` and (C3) `(dφ₀, dψ) = (f(0), dψ)` for all `ψ ∈ ker S₀,ₕ`.
 (C3) comes from differentiating (C2) and testing (6.3b) with `v = dψ`, using
-`S₁,ₕ dψ = −d S₀,ₕ ψ = 0`. Corrects [QuennevilleBelair2015, Prop 6.2]. Thesis: Prop 6.2 (corrected)
+`S₁,ₕ dψ = −d S₀,ₕ ψ = 0`. Corrects [QuennevilleBelair2015], Prop 6.2. Thesis: Prop 6.2 (corrected)
 -/
 theorem DiscreteSolution.compatible {T : ℝ} (hT : 0 < T) {f : ℝ → Pt1}
     (s : DiscreteSolution D T f) :
@@ -720,7 +720,7 @@ theorem DiscreteSolution.energy_const {T : ℝ} (s : DiscreteSolution D T 0) :
 /-- **Corrected Prop 6.2, uniqueness core:** zero data and `f = 0` give the zero solution,
 including `φₕ` (needs `d` injective on `Ṽₕ⁰`) and `λₕ` (needs `S₀,ₕ` surjective).
 Thesis gap: the thesis never shows `φₕ = 0` (`S₀,ₕ` is not injective).
-See [QuennevilleBelair2015, Prop 6.2, proof]. -/
+See [QuennevilleBelair2015], Prop 6.2, proof. -/
 theorem DiscreteSolution.eq_zero_of_initial_eq_zero {T : ℝ} (s : DiscreteSolution D T 0)
     (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0)
@@ -793,7 +793,7 @@ def DiscreteSolution.sub {T : ℝ} {f : ℝ → Pt1}
 
 /-- **Corrected Prop 6.2, uniqueness.** Two solutions of (6.3) with the same source and the same
 data `(σ, u, M, ρ)(0)` agree: `σₕ, uₕ, Mₕ, ρₕ, λₕ` on `[0,T]`, `φₕ` on `[0,T)`.
-See [QuennevilleBelair2015, Prop 6.2]. -/
+See [QuennevilleBelair2015], Prop 6.2. -/
 theorem DiscreteSolution.unique {T : ℝ} {f : ℝ → Pt1} (s₁ s₂ : DiscreteSolution D T f)
     (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
     (h0 : s₁.σ 0 = s₂.σ 0 ∧ s₁.u 0 = s₂.u 0 ∧ s₁.M 0 = s₂.M 0 ∧ s₁.ρ 0 = s₂.ρ 0) :
@@ -949,8 +949,8 @@ here:
 eliminate `φₕ = Φ(σₕ, f)` and `λₕ = (S₀,ₕ*)⁻¹ d* uₕ`, solve the resulting linear ODE by
 variation of constants (`exists_hasDerivAt_linearODE`), and show the hidden constraint (C2)
 propagates.
-See [QuennevilleBelair2015, Prop 6.2] and hypothesis (5.4) [QuennevilleBelair2015, §5.2];
-cf. [Pazy1983, Ch. 4]. -/
+See [QuennevilleBelair2015], Prop 6.2 and hypothesis (5.4) [QuennevilleBelair2015], §5.2;
+cf. [Pazy1983], Ch. 4. -/
 theorem exists_discreteSolution_regular (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0)
     {f : ℝ → Pt1} (hf : Continuous f) (T : ℝ) {σ₀ : P0} {φ₀ : Pt0} {u₀ : Pt1} {M₀ : P2}
@@ -1078,8 +1078,8 @@ theorem exists_discreteSolution_regular (hdinj : Function.Injective D.dt0)
 
 /-- **Corrected Prop 6.2, existence** (data form of `exists_discreteSolution_regular`). Assume
 finite-dimensional FE spaces, `d : Ṽₕ⁰ → Ṽₕ¹` injective, `S₀,ₕ` surjective and `f` continuous.
-Data satisfying (C1)–(C3) admit a solution of (6.3) on `[0,T]`. See [QuennevilleBelair2015,
-Prop 6.2]. -/
+Data satisfying (C1)–(C3) admit a solution of (6.3) on `[0,T]`. See
+[QuennevilleBelair2015], Prop 6.2. -/
 theorem exists_discreteSolution (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
     {f : ℝ → Pt1} (hf : Continuous f) (T : ℝ) {σ₀ : P0} {φ₀ : Pt0} {u₀ : Pt1} {M₀ : P2}
     {ρ₀ : Pt2} (hC1 : D.d0 σ₀ = D.S0 φ₀) (hC2 : ∀ ψ, D.S0 ψ = 0 → ⟪u₀, D.dt0 ψ⟫ = 0)
@@ -1092,7 +1092,7 @@ theorem exists_discreteSolution (hdinj : Function.Injective D.dt0) (hS : Functio
 /-- **Corrected Prop 6.2 (existence ⇔ compatibility).** For `T > 0`, `d` injective on `Ṽₕ⁰`,
 `S₀,ₕ` surjective and `f` continuous, (6.3) has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff
 (C1) `dσ₀ = S₀,ₕφ₀`, (C2) `u₀ ⊥ d(ker S₀,ₕ)` and (C3) `(dφ₀ − f(0), dψ) = 0` on `ker S₀,ₕ`.
-The solution is unique (`DiscreteSolution.unique`). Corrects [QuennevilleBelair2015, Prop 6.2].
+The solution is unique (`DiscreteSolution.unique`). Corrects [QuennevilleBelair2015], Prop 6.2.
 Thesis: Prop 6.2 (corrected) -/
 theorem exists_discreteSolution_iff {T : ℝ} (hT : 0 < T) (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {f : ℝ → Pt1} (hf : Continuous f) (σ₀ : P0) (φ₀ : Pt0)
@@ -1150,7 +1150,7 @@ variable {W0 W1 W2 Wt1 Wt2 : Type*}
 and insert `Πₕσ̇`, `Π̃ₕu`. Here `Sψ = S₀ψ`, `Shψ = S₀,ₕψ`; `σd, σdh` are `σ̇, σ̇ₕ`.
 Correction: the thesis writes `Πₕσ̇ₕ − σ̇ₕ` on the left; it must be `Πₕσ̇ − σ̇ₕ`. The term
 `(λ, (S − Sₕ)ψ)` needs `λ ∈ W¹` (only `λ ∈ W̌¹` is automatic, `Solution.exists_multiplierSolution`).
-See [QuennevilleBelair2015, Prop 6.3]; cf. [QuennevilleBelair2015, Prop 5.6]. Thesis: Prop 6.3 -/
+See [QuennevilleBelair2015], Prop 6.3; cf. [QuennevilleBelair2015], Prop 5.6. Thesis: Prop 6.3 -/
 theorem errorEq_a (σd σdh Pσ τ : W0) (u uh Pu dψ : Wt1) (lam lamh dτ Sψ Shψ : W1)
     (hc : ⟪σd, τ⟫ - ⟪u, dψ⟫ - ⟪lam, dτ - Sψ⟫ = 0)
     (hd : ⟪σdh, τ⟫ - ⟪uh, dψ⟫ - ⟪lamh, dτ - Shψ⟫ = 0) :
@@ -1161,7 +1161,7 @@ theorem errorEq_a (σd σdh Pσ τ : W0) (u uh Pu dψ : Wt1) (lam lamh dτ Sψ S
 
 /-- **Thesis Prop 6.3, second error equation** (from (6.2b) − (6.3b)); `S, Sh : Ṽ¹ → W²`,
 `d : Ṽ⁰ → Ṽ¹` and `d : Ṽ¹ → W̃²` are linear, so `d(Π̃φ − φₕ) = dΠ̃φ − dφₕ`.
-See [QuennevilleBelair2015, Prop 6.3]. -/
+See [QuennevilleBelair2015], Prop 6.3. -/
 theorem errorEq_b {U Φ : Type*} [AddCommGroup U] [Module ℝ U] [AddCommGroup Φ] [Module ℝ Φ]
     (ι : U →ₗ[ℝ] Wt1) (d0 : Φ →ₗ[ℝ] Wt1) (S Sh : U →ₗ[ℝ] W2) (d1 : U →ₗ[ℝ] Wt2)
     (ud udh Pud : Wt1) (fv : ℝ) (φ φh Pφ : Φ) (M Mh PM : W2) (ρ ρh Pρ : Wt2) (v : U)
@@ -1174,7 +1174,7 @@ theorem errorEq_b {U Φ : Type*} [AddCommGroup U] [Module ℝ U] [AddCommGroup �
   linarith
 
 /-- **Thesis Prop 6.3, third error equation** (from (6.2c) − (6.3c)), with `Sₕ` defined on the
-whole space `U` (e.g. `Π²ₕ` bounded on `L²`). See [QuennevilleBelair2015, Prop 6.3]. -/
+whole space `U` (e.g. `Π²ₕ` bounded on `L²`). See [QuennevilleBelair2015], Prop 6.3. -/
 theorem errorEq_c {U : Type*} [AddCommGroup U] [Module ℝ U] (S Sh : U →ₗ[ℝ] W2)
     (Md Mdh PMd N : W2) (u uh Pu : U)
     (hc : ⟪Md, N⟫ - ⟪S u, N⟫ = 0) (hd : ⟪Mdh, N⟫ - ⟪Sh uh, N⟫ = 0) :
@@ -1186,7 +1186,7 @@ theorem errorEq_c {U : Type*} [AddCommGroup U] [Module ℝ U] (S Sh : U →ₗ[�
 /-- **Prop 6.3(c), corrected.** Thesis gap: `Sₕu = Π²ₕS₁u` applies the canonical `Π²ₕ` to
 `S₁u ∈ L²`, where it is undefined. Splitting `Su − Sₕuₕ = S(u − Π̃u) + (S − Sₕ)Π̃u + Sₕ(Π̃u − uₕ)`
 only applies `Sₕ` to discrete functions (`Uh` the discrete subspace).
-Corrects [QuennevilleBelair2015, Prop 6.3]. -/
+Corrects [QuennevilleBelair2015], Prop 6.3. -/
 theorem errorEq_c_split {U : Type*} [AddCommGroup U] [Module ℝ U] {Uh : Submodule ℝ U}
     (S : U →ₗ[ℝ] W2) (Sh : Uh →ₗ[ℝ] W2) (Md Mdh PMd N : W2) (u : U) (uh Pu : Uh)
     (hc : ⟪Md, N⟫ - ⟪S u, N⟫ = 0) (hd : ⟪Mdh, N⟫ - ⟪Sh uh, N⟫ = 0) :
@@ -1196,7 +1196,7 @@ theorem errorEq_c_split {U : Type*} [AddCommGroup U] [Module ℝ U] {Uh : Submod
   linarith
 
 /-- **Thesis Prop 6.3, fourth error equation** (from (6.2d) − (6.3d)).
-See [QuennevilleBelair2015, Prop 6.3]. -/
+See [QuennevilleBelair2015], Prop 6.3. -/
 theorem errorEq_d {U : Type*} [AddCommGroup U] [Module ℝ U] (d1 : U →ₗ[ℝ] Wt2)
     (ρd ρdh Pρd μ : Wt2) (u uh Pu : U)
     (hc : ⟪ρd, μ⟫ - ⟪d1 u, μ⟫ = 0) (hd : ⟪ρdh, μ⟫ - ⟪d1 uh, μ⟫ = 0) :
@@ -1205,7 +1205,7 @@ theorem errorEq_d {U : Type*} [AddCommGroup U] [Module ℝ U] (d1 : U →ₗ[ℝ
   linarith
 
 /-- **Prop 6.3, fifth (constraint) error equation**, missing from the thesis although
-`ζ ∈ Vₕ¹` is listed (from (6.2e) − (6.3e)). Completes [QuennevilleBelair2015, Prop 6.3]. Thesis:
+`ζ ∈ Vₕ¹` is listed (from (6.2e) − (6.3e)). Completes [QuennevilleBelair2015], Prop 6.3. Thesis:
 Prop 6.3 (added) -/
 theorem errorEq_e {V Φ : Type*} [AddCommGroup V] [Module ℝ V] [AddCommGroup Φ] [Module ℝ Φ]
     (d0 : V →ₗ[ℝ] W1) (S Sh : Φ →ₗ[ℝ] W1) (σ σh Pσ : V) (φ φh Pφ : Φ) (ζ : W1)
@@ -1234,8 +1234,8 @@ discrete skew spatial forms; `Bh` the discrete constraint `(dσ − Sₕφ, ·)`
   thesis' (6.4) is garbled and its well-posedness is open; it enters as a hypothesis);
 * `hskew`: `Ah` is skew on `Xh`.
 Then `‖ξ(t) − ξₕ(t)‖ ≤ ‖(I − P)ξ(t)‖ + ‖Pξ(0) − ξₕ(0)‖ + ∫₀ᵗ ‖(P − I)ξ̇‖`.
-Analogue for (6.3) of [QuennevilleBelair2015, Thm 4.14] (via Lemma 4.12), with the elliptic
-projection (6.4) of [QuennevilleBelair2015, §6.2]; cf. the classical energy/elliptic-projection
+Analogue for (6.3) of [QuennevilleBelair2015], Thm 4.14 (via Lemma 4.12), with the elliptic
+projection (6.4) of [QuennevilleBelair2015], §6.2; cf. the classical energy/elliptic-projection
 estimates [Baker1976], [Dupont1973], [Geveci1988] and, in FEEC, [GilletteHolstZhu2017]. -/
 theorem norm_sub_le_of_ellipticProjection {X Z Y : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X]
@@ -1297,7 +1297,7 @@ theorem norm_sub_le_of_ellipticProjection {X Z Y : Type*} [NormedAddCommGroup X]
 /-- Rate form of `norm_sub_le_of_ellipticProjection`: if the projection errors and the initial
 discrete error are
 `≤ ε` (e.g. `ε = C hʳ` from Thm 5.5-type approximation estimates, which are hypotheses here),
-then `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + t)`. Cf. [QuennevilleBelair2015, Thm 5.5, Thm 4.14]. -/
+then `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + t)`. Cf. [QuennevilleBelair2015], Thm 5.5, Thm 4.14. -/
 theorem norm_sub_le_mul_of_ellipticProjection {X : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X]
     {ξ ξ' ξh : ℝ → X} {P : X →L[ℝ] X} {T ε : ℝ} (hξ'c : ContinuousOn ξ' (Icc 0 T))
@@ -1333,7 +1333,7 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
 variable (D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2) in
 /-- The discrete skew form of (6.3): for `x = ((σ, u, M, ρ), φ)` and `y = ((τ, v, N, μ), ψ)`,
 `aₕ(x, y) = −(u, dψ) + (dφ, v) + (M, S₁,ₕ v) + (ρ, dv) − (S₁,ₕ u, N) − (du, μ)`, so that (6.3a–d)
-summed read `(ξ̇ₕ, η) + aₕ(ξₕ, η) − (λₕ, dτ − S₀,ₕψ) = (f, v)`. See [QuennevilleBelair2015, §6.2]
+summed read `(ξ̇ₕ, η) + aₕ(ξₕ, η) − (λₕ, dτ − S₀,ₕψ) = (f, v)`. See [QuennevilleBelair2015], §6.2
 (the form `a` before (6.4)). -/
 def discreteSkewForm (x y : (P0 × Pt1 × P2 × Pt2) × Pt0) : ℝ :=
   -⟪x.1.2.1, D.dt0 y.2⟫ + ⟪D.dt0 x.2, y.1.2.1⟫ + ⟪x.1.2.2.1, D.S1 y.1.2.1⟫ +
@@ -1355,8 +1355,8 @@ energy space `X` by `ι`, which preserves the (`L²`-sum) inner product (`hι`),
 algebraic space `Z` by `j`; `Xh = range (ι × j)`. The continuous forms `Ah`, `Bh` restrict to the
 discrete ones (`hAh`, `hBh`), and `f(t)` represents `F(t)` on `ι(Ṽₕ¹)` (`hF`). The remaining
 hypotheses (the continuous equation tested on `Xh` and the elliptic projection) are those of
-`norm_sub_le_of_ellipticProjection`. See [QuennevilleBelair2015, §6.2]; cf. [QuennevilleBelair2015,
-Thm 4.14]. -/
+`norm_sub_le_of_ellipticProjection`. See [QuennevilleBelair2015], §6.2; cf.
+[QuennevilleBelair2015], Thm 4.14. -/
 theorem DiscreteSolution.norm_sub_le_of_ellipticProjection {X Z : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X]
     [AddCommGroup Z] [Module ℝ Z] {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
@@ -1435,7 +1435,7 @@ theorem DiscreteSolution.inner_dt0_phi_eq {T : ℝ} {f : ℝ → Pt1} (s : Discr
 
 /-- **Prop 6.2 repair: `φₕ` is determined.** For every solution of (6.3) and `t ∈ [0,T)`,
 `φₕ(t) = Φ(σₕ(t), f(t))` with `Φ = phiMap`, the unique `φ` with `S₀,ₕ φ = dσ` and
-`(dφ, dψ) = (f, dψ)` on `ker S₀,ₕ`. Corrects [QuennevilleBelair2015, Prop 6.2]
+`(dφ, dψ) = (f, dψ)` on `ker S₀,ₕ`. Corrects [QuennevilleBelair2015], Prop 6.2
 (`φ₀,ₕ` is not free data). -/
 theorem DiscreteSolution.phi_eq [FiniteDimensional ℝ P1] [FiniteDimensional ℝ Pt0]
     [FiniteDimensional ℝ Pt1]
@@ -1446,7 +1446,7 @@ theorem DiscreteSolution.phi_eq [FiniteDimensional ℝ P1] [FiniteDimensional �
     fun _ hψ => DiscreteSolution.inner_dt0_phi_eq s ht hψ).symm
 
 /-- The initial algebraic datum is determined: `φₕ(0) = Φ(σₕ(0), f(0))` (for `T > 0`).
-Corrects [QuennevilleBelair2015, Prop 6.2]. -/
+Corrects [QuennevilleBelair2015], Prop 6.2. -/
 theorem DiscreteSolution.phi_zero [FiniteDimensional ℝ P1] [FiniteDimensional ℝ Pt0]
     [FiniteDimensional ℝ Pt1] (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {T : ℝ} (hT : 0 < T) {f : ℝ → Pt1}
@@ -1467,7 +1467,7 @@ necessary (`not_exists_discreteSolution_of_ker`), and `φ₀,ₕ` is not free
 (`DiscreteSolution.phi_zero`).
 Repair: once `φₕ(0) := Φ(σ₀, f(0))` (forced), (C1) and (C3) hold automatically
 (`S0_phiMap`, `inner_phiMap`) and (C2) is the only condition. Corrects
-[QuennevilleBelair2015, Prop 6.2]. Thesis: Prop 6.2 (corrected) -/
+[QuennevilleBelair2015], Prop 6.2. Thesis: Prop 6.2 (corrected) -/
 theorem exists_discreteSolution_iff_compatible_u {T : ℝ} (hT : 0 < T)
     (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {f : ℝ → Pt1} (hf : ContinuousOn f (Icc 0 T))
@@ -1491,7 +1491,7 @@ with data
 same dynamic data agrees with it (`σₕ, uₕ, Mₕ, ρₕ, λₕ` on `[0,T]`, `φₕ` on `[0,T)`; the value
 `φₕ(T)` is not constrained by (6.3)). This is the thesis' Prop 6.2 with the free datum
 `φ₀,ₕ` replaced by the forced one and "arbitrary `u₀,ₕ`" replaced by (C2). Corrects
-[QuennevilleBelair2015, Prop 6.2]. Thesis: Prop 6.2 (corrected) -/
+[QuennevilleBelair2015], Prop 6.2. Thesis: Prop 6.2 (corrected) -/
 theorem exists_discreteSolution_unique {T : ℝ} (hT : 0 < T) (hdinj : Function.Injective D.dt0)
     (hS : Function.Surjective D.S0) {f : ℝ → Pt1} (hf : ContinuousOn f (Icc 0 T))
     (σ₀ : P0) (u₀ : Pt1)
@@ -1528,7 +1528,7 @@ elliptic projection `hproj`, discrete forms `hAh`, `hBh`) and `T > 0`: if
 `(ι a, j q) = (Pξ(0), Q(0))`, then the `u`-component of `a` is orthogonal to `d(ker S₀,ₕ)`.
 Proof: test with `η = (ι 0, j ψ)`, `ψ ∈ ker S₀,ₕ`; then `Bh η = −S₀,ₕψ = 0` and
 `Ah((ι a, j q), η) = −(a_u, dψ)`, while `hcont` makes the right side of `hproj` vanish.
-Supplies the compatibility condition missing from [QuennevilleBelair2015, §6.2] for the
+Supplies the compatibility condition missing from [QuennevilleBelair2015], §6.2 for the
 natural initial data. -/
 theorem projected_compatible_u {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (j : Pt0 →ₗ[ℝ] Z)
@@ -1563,7 +1563,7 @@ satisfies (C3) `(dq, dψ) = (f(0), dψ)` on `ker S₀,ₕ` iff `(ξ̇(0), ι(0, 
 So `φₕ(0) = Q(0)` is admissible only under a consistency condition on the exact solution
 (a component of `(I − P)u̇(0)` in general); the admissible choice is `Φ(σₕ(0), f(0))`
 (`exists_discreteSolution_norm_sub_le`). The condition can fail: `not_projected_compatible_phi`.
-Repair of [QuennevilleBelair2015, §6.2] (initial data for (6.3)). -/
+Repair of [QuennevilleBelair2015], §6.2 (initial data for (6.3)). -/
 theorem projected_compatible_phi_iff {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (j : Pt0 →ₗ[ℝ] Z)
     (A Ah : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ) (Bh : (X × Z) →ₗ[ℝ] P1)
@@ -1611,7 +1611,7 @@ The thesis (§6.2–6.3) states no convergence theorem and does not address whet
 initial data are admissible for (6.3); this closes that gap for the projected data
 (`projected_compatible_u`), avoiding `φₕ(0) = Q(0)`, which is admissible only under a consistency
 condition (`projected_compatible_phi_iff`) that can fail (`not_projected_compatible_phi`).
-See [QuennevilleBelair2015, §6.2, Prop 6.2, (6.4)]; cf. [QuennevilleBelair2015, Thm 4.14]. -/
+See [QuennevilleBelair2015], §6.2, Prop 6.2, (6.4); cf. [QuennevilleBelair2015], Thm 4.14. -/
 theorem exists_discreteSolution_norm_sub_le [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P1]
     [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1]
     [FiniteDimensional ℝ Pt2] {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}

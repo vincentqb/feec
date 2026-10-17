@@ -51,7 +51,7 @@ namespace Feec.BGG
 `Ṽ⁰ → Ṽ¹ → Ṽ²`, linked by `S₀ : Ṽ⁰ → V¹` and `S₁ : Ṽ¹ → V²` with `d¹S₀ = -S₁d̃⁰`. Algebraic
 core only; analytic hypotheses are added per theorem. Thesis: §5.1
 
-See [QuennevilleBelair2015, §5.1]; cf. [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
 structure Segment (R : Type*) [Ring R] (V0 V1 V2 Vt0 Vt1 Vt2 : Type*)
     [AddCommGroup V0] [Module R V0] [AddCommGroup V1] [Module R V1]
     [AddCommGroup V2] [Module R V2] [AddCommGroup Vt0] [Module R Vt0]
@@ -74,13 +74,13 @@ variable {R : Type*} [Ring R] {V0 V1 V2 Vt0 Vt1 Vt2 : Type*}
   [AddCommGroup Vt1] [Module R Vt1] [AddCommGroup Vt2] [Module R Vt2]
   (D : Segment R V0 V1 V2 Vt0 Vt1 Vt2)
 
-/-- Exactness of the top complex at `V¹`. See [QuennevilleBelair2015, §5.1]. -/
+/-- Exactness of the top complex at `V¹`. See [QuennevilleBelair2015], §5.1. -/
 def ExactTop : Prop := LinearMap.ker D.d1 = LinearMap.range D.d0
 
-/-- Exactness of the bottom complex at `Ṽ¹`. See [QuennevilleBelair2015, §5.1]. -/
+/-- Exactness of the bottom complex at `Ṽ¹`. See [QuennevilleBelair2015], §5.1. -/
 def ExactBot : Prop := LinearMap.ker D.dt1 = LinearMap.range D.dt0
 
-/-- `Γ = {(σ, φ) | d⁰σ = S₀φ}`. See [QuennevilleBelair2015, §5.1, (5.1)]. -/
+/-- `Γ = {(σ, φ) | d⁰σ = S₀φ}`. See [QuennevilleBelair2015], §5.1, (5.1). -/
 def Γ : Submodule R (V0 × Vt0) :=
   LinearMap.ker (D.d0.comp (LinearMap.fst R V0 Vt0) - D.S0.comp (LinearMap.snd R V0 Vt0))
 
@@ -88,11 +88,11 @@ theorem mem_Γ {x : V0 × Vt0} : x ∈ D.Γ ↔ D.d0 x.1 = D.S0 x.2 := by
   simp [Γ, sub_eq_zero]
 
 /-- The first operator `(0 d̃) : Γ → Ṽ¹` of the complex (5.1).
-See [QuennevilleBelair2015, §5.1, (5.1)]. -/
+See [QuennevilleBelair2015], §5.1, (5.1). -/
 def D0 : D.Γ →ₗ[R] Vt1 := D.dt0.comp ((LinearMap.snd R V0 Vt0).comp D.Γ.subtype)
 
 /-- The second operator `(S₁, d̃¹) : Ṽ¹ → V² × Ṽ²` of the complex (5.1).
-See [QuennevilleBelair2015, §5.1, (5.1)]. -/
+See [QuennevilleBelair2015], §5.1, (5.1). -/
 def D1 : Vt1 →ₗ[R] V2 × Vt2 := D.S1.prod D.dt1
 
 @[simp] lemma D0_apply (x : D.Γ) : D.D0 x = D.dt0 (x : V0 × Vt0).2 := rfl
@@ -110,7 +110,7 @@ lemma S1_dt0_eq_zero {ψ : Vt0} (hψ : D.S0 ψ = 0) : D.S1 (D.dt0 ψ) = 0 := by
 
 /-- **(5.1) is a complex**: `(S₁, d̃¹) ∘ (0 d̃) = 0`. Thesis: Prop 5.1
 
-See [QuennevilleBelair2015, §5.1]; cf. [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
 theorem D1_D0 (x : D.Γ) : D.D1 (D.D0 x) = 0 := by
   obtain ⟨⟨σ, φ⟩, hx⟩ := x
   have h := D.d1_d0 σ
@@ -120,7 +120,7 @@ theorem D1_D0 (x : D.Γ) : D.D1 (D.D0 x) = 0 := by
 /-- **Range of `(0 d̃)`**: `R(0 d̃) = R(d̃⁰) ∩ N(S₁)`, using exactness of the top complex at `V¹`.
 Thesis: Prop 5.1 (closed range of `(0 d)`, algebraic part)
 
-See [QuennevilleBelair2015, Prop 5.1]. -/
+See [QuennevilleBelair2015], Prop 5.1. -/
 theorem range_D0 (hT : D.ExactTop) :
     LinearMap.range D.D0 = LinearMap.range D.dt0 ⊓ LinearMap.ker D.S1 := by
   ext y
@@ -137,7 +137,7 @@ theorem range_D0 (hT : D.ExactTop) :
 /-- **Exactness of (5.1) at `Ṽ¹`** (missing in the thesis): `N(S₁) ∩ N(d̃¹) = R(0 d̃)` when the
 top complex is exact at `V¹` and the bottom complex at `Ṽ¹`. Thesis: Prop 5.1 (exactness, added)
 
-Cf. [QuennevilleBelair2015, §5.1, (5.1)]; cf. [ArnoldHu2021]. -/
+Cf. [QuennevilleBelair2015], §5.1, (5.1); cf. [ArnoldHu2021]. -/
 theorem ker_D1_eq_range_D0 (hT : D.ExactTop) (hB : D.ExactBot) :
     LinearMap.ker D.D1 = LinearMap.range D.D0 := by
   rw [range_D0 D hT, ← hB]
@@ -202,7 +202,7 @@ end Segment
 maps `S i j : Ṽⁱ → Vʲ`, all zero off the relation of `c`, with `d d = 0`, `d̃ d̃ = 0` and
 `d S = -S d̃`. Any length: `c = ComplexShape.up ℤ`, a finite window, etc.
 
-See [QuennevilleBelair2015, §5.1] (the case of one segment); [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], §5.1 (the case of one segment); [ArnoldHu2021]. -/
 structure Data (R : Type*) [Ring R] {ι : Type*} (c : ComplexShape ι) (V Vt : ι → Type*)
     [∀ i, AddCommGroup (V i)] [∀ i, Module R (V i)] [∀ i, AddCommGroup (Vt i)]
     [∀ i, Module R (Vt i)] where

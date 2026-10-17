@@ -11,6 +11,10 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 * `exists_adjoint_apply_of_conj`: adjoints under conjugation by scaled unitaries. If
   `U V = id`, `U' V' = id`, `U`, `U'` multiply inner products by `λ`, and `V' d = a d' V` on
   `D(d)`, then `U' D(d'†) ⊆ D(d†)` with `d† U' = conj a • U d'†`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open scoped InnerProductSpace ComplexConjugate

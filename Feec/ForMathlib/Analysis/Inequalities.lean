@@ -11,6 +11,10 @@ public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 * `norm_add_sq_le_two_mul`, `norm_sub_sq_le_two_mul`, `norm_add₃_sq_le_three_mul`: squared
   triangle inequalities;
 * `Submodule.norm_le_of_mem_orthogonal_of_sub_mem`: minimum-norm principle.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 @[expose] public noncomputable section

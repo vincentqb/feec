@@ -23,6 +23,10 @@ in `K` has `A U + F ∈ K`.
 
 The subspace may be a submodule over any scalar ring `R` acting compatibly with `ℝ`, e.g. `ℝ`,
 `ℂ` or `RCLike 𝕜`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open Set Filter Topology

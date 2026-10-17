@@ -68,7 +68,7 @@ theorem ldual_ofMat (M : Matrix Ix Ix ℝ) : ldual (ofMat M) = ofMat (Sᵀ * M) 
   rw [ldual_eq, swapPairs_ofMat, rdual_ofMat, swapPairs_ofMat, transpose_mul, transpose_transpose]
 
 /-- **Thesis Prop 3.2 (right dual).** `C ↦ C*` acts on blocks as `[[E,B],[H,D]] ↦ [[B,-E],[D,-H]]`.
-See [QuennevilleBelair2015, Prop 3.2].
+See [QuennevilleBelair2015], Prop 3.2.
 
 Correction: the thesis' formula `C*_{abcd} v^c w^d = C_{abef} (ε^{ef}{}_{cd} v^c w^d)` and
 `B_{ab} = C_{0aef} ε^{ef}{}_{0b}` miss the factor `½` (without it `t∧x ↦ 2 y∧z`); `rdual`
@@ -78,13 +78,13 @@ theorem rdual_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
   rw [ofBlocks, rdual_ofMat, S, fromBlocks_multiply, ofBlocks]; simp
 
 /-- **Thesis Prop 3.2 (left dual).** `C ↦ *C` acts as `[[E,B],[H,D]] ↦ [[H,D],[-E,-B]]`.
-See [QuennevilleBelair2015, Prop 3.2]. -/
+See [QuennevilleBelair2015], Prop 3.2. -/
 theorem ldual_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     ldual (ofBlocks E B H D) = ofBlocks H D (-E) (-B) := by
   rw [ofBlocks, ldual_ofMat, S, fromBlocks_transpose, fromBlocks_multiply, ofBlocks]; simp
 
 /-- **Thesis Prop 3.2 (double dual).** `C ↦ *C*` acts as `[[E,B],[H,D]] ↦ [[D,-H],[-B,E]]`.
-See [QuennevilleBelair2015, Prop 3.2]. -/
+See [QuennevilleBelair2015], Prop 3.2. -/
 theorem ldual_rdual_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     ldual (rdual (ofBlocks E B H D)) = ofBlocks D (-H) (-B) E := by
   rw [rdual_ofBlocks, ldual_ofBlocks, neg_neg]
@@ -93,7 +93,7 @@ theorem ldual_rdual_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
 /-- **Thesis Prop 3.2.** For a double 2-form `C` (skew in each pair) set, as in the thesis,
 `E_{ab} = C_{0a0b}`, `B_{ab} = C*_{0a0b}`, `H_{ab} = *C_{0a0b}`, `D_{ab} = *C*_{0a0b}`.
 Then `C` has bivector block matrix `[[E,B],[H,D]]`, and the three duals act as stated.
-See [QuennevilleBelair2015, Prop 3.2] (block layout following thesis ref. [10], Frauendiener,
+See [QuennevilleBelair2015], Prop 3.2 (block layout following thesis ref. [10], Frauendiener,
 not in `references.bib`).
 
 Correction: `B, H, D` carry the factor `½` built into `rdual`/`ldual` (missing in the thesis'
@@ -121,7 +121,7 @@ theorem blocks_eq_and_duals {C : Tensor4} (hC : PairSkew C) :
   · exact ldual_rdual_ofBlocks _ _ _ _
 
 /-- Thesis §3.2: `(W*)* = -W` for every double 2-form (`** = -1` on 2-forms, signature
-`(-+++)`). See [QuennevilleBelair2015, §3.2]. -/
+`(-+++)`). See [QuennevilleBelair2015], §3.2. -/
 theorem rdual_rdual {C : Tensor4} (hC : PairSkew C) : rdual (rdual C) = -C := by
   rw [eq_ofBlocks_blocks hC, rdual_ofBlocks, rdual_ofBlocks, ofBlocks_neg]
 
@@ -135,7 +135,7 @@ theorem ldual_rdual_comm {C : Tensor4} (hC : PairSkew C) :
   rw [eq_ofBlocks_blocks hC, rdual_ofBlocks, ldual_ofBlocks, ldual_ofBlocks, rdual_ofBlocks]
 
 /-- Thesis §3.2: for `W` with the interchange symmetry, `*W_{abcd} = W*_{cdab}`.
-See [QuennevilleBelair2015, §3.2]. -/
+See [QuennevilleBelair2015], §3.2. -/
 theorem ldual_eq_rdual_swap {C : Tensor4} (hC : Interchange C) (a b c d : Fin 4) :
     ldual C a b c d = rdual C c d a b := by
   rw [ldual_eq]; simp only [swapPairs, rdual]
@@ -159,7 +159,7 @@ theorem rdual_prod (u w : Fin 4 → Fin 4 → ℝ) :
   ring
 
 /-- Thesis §3.1, `** = (-1)^{kl+t}` for `k = l = 2`, `t = 1`: `** = -1` on 2-forms in
-signature `(-+++)`. See [QuennevilleBelair2015, §3.1]; cf. [Wald1984]. -/
+signature `(-+++)`. See [QuennevilleBelair2015], §3.1; cf. [Wald1984]. -/
 theorem hodge2_hodge2 (w : Fin 4 → Fin 4 → ℝ) (hw : ∀ a b, w a b = -w b a) :
     hodge2 (hodge2 w) = -w := by
   have hβ : ∀ a b, β (.inl 0) a b = -β (.inl 0) b a := fun a b => by

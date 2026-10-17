@@ -37,7 +37,7 @@ admissible symmetric `A` with `A k = 0`, the transformed amplitude is not transv
 `BPrinted` uses the covariant reading of the printed `B`; `not_isTT_gaugeAmp_printed_contra` covers
 the contravariant reading.
 
-See [QuennevilleBelair2015, Prop 2.6]. -/
+See [QuennevilleBelair2015], Prop 2.6. -/
 theorem not_isTT_gaugeAmp_printed :
     ∃ κ : ℝ, ∃ A : Matrix (Fin 4) (Fin 4) ℝ, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧ ¬ IsTT κ (gaugeAmp (kTT κ) A (BPrinted κ A)) := by
@@ -52,7 +52,7 @@ theorem not_isTT_gaugeAmp_printed :
 /-- The thesis' gauge vector read as **contravariant** components `B^a` (lowered to
 `B_a = η_aa B^a`) also fails to reach TT gauge, on the same witness.
 
-See [QuennevilleBelair2015, Prop 2.6]. -/
+See [QuennevilleBelair2015], Prop 2.6. -/
 theorem not_isTT_gaugeAmp_printed_contra :
     ∃ κ : ℝ, ∃ A : Matrix (Fin 4) (Fin 4) ℝ, κ ≠ 0 ∧ (∀ i j, A i j = A j i) ∧
       (∀ a, ∑ b, A a b * raise (kTT κ) b = 0) ∧

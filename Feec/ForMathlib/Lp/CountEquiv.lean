@@ -21,6 +21,10 @@ integral is the sum over `α`.
 For `p = 2` the equivalence is unitary, so it transports inner products, adjoints and
 orthogonal projections. It is how the `ℓ²(ℤⁿ)` Fourier-coefficient spaces of the torus become an
 instance of the multiplication-operator theory on `L²(μ; E)` (`Feec.Operator.mulOp`).
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open scoped ENNReal NNReal

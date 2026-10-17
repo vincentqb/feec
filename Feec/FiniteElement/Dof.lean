@@ -107,7 +107,7 @@ theorem incl_interp_idem (incl : P →ₗ[R] Y) (hm : ∀ i, m i ∘ₗ incl = �
 `d ∘ incl = incl' ∘ d_h`. If each DOF `m' k ∘ d` lies in the span of the DOFs `m i`, then
 `Π' (d y) = d_h (Π y)`. Thesis: Prop 5.7 (abstract form)
 
-See [QuennevilleBelair2015, Prop 5.7]; cf. [AFW2006], [Arnold2013]. -/
+See [QuennevilleBelair2015], Prop 5.7; cf. [AFW2006], [Arnold2013]. -/
 theorem interp_comp_eq {P' Y' κ : Type*} [AddCommGroup P'] [Module R P'] [AddCommGroup Y']
     [Module R Y'] {ℓ' : κ → P' →ₗ[R] R} (hℓ' : IsUnisolvent ℓ') (m' : κ → Y' →ₗ[R] R)
     (incl : P →ₗ[R] Y) (incl' : P' →ₗ[R] Y') (hm : ∀ i, m i ∘ₗ incl = ℓ i)
@@ -140,7 +140,7 @@ on the DOFs `ℓ_k`, `Π̃⁰` preserves the DOFs `m_i`, and every `ℓ_k ∘ S�
 kernel of the `m_i`. Then `Π¹S₀Π̃⁰ = Π¹S₀` (no density argument).
 Thesis: Prop 5.7 (abstract form)
 
-See [QuennevilleBelair2015, Prop 5.7 (§5.3)]; cf. [AFW2006], [Arnold2013]. -/
+See [QuennevilleBelair2015], Prop 5.7 (§5.3); cf. [AFW2006], [Arnold2013]. -/
 theorem comp_eq_of_dof (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ[R] R) (S0 : Y →ₗ[R] X)
     (Pt0 : Y →ₗ[R] Y) (P1 : X →ₗ[R] X)
     (hP1 : ∀ x y, (∀ k, ℓ k x = ℓ k y) → P1 x = P1 y)
@@ -152,7 +152,7 @@ theorem comp_eq_of_dof (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ[R] R) (
   rwa [map_sub, map_sub, sub_eq_zero] at this
 
 /-- The usual sufficient condition for `comp_eq_of_dof`: every `ℓ_k ∘ S₀` is a linear
-combination of the `m_i`. See [QuennevilleBelair2015, Prop 5.7, (5.8)]. -/
+combination of the `m_i`. See [QuennevilleBelair2015], Prop 5.7, (5.8). -/
 theorem dof_vanish_of_mem_span (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ[R] R) (S0 : Y →ₗ[R] X)
     (hspan : ∀ k, ℓ k ∘ₗ S0 ∈ Submodule.span R (Set.range m)) :
     ∀ ω, (∀ i, m i ω = 0) → ∀ k, ℓ k (S0 ω) = 0 := by
@@ -167,7 +167,7 @@ theorem dof_vanish_of_mem_span (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ
   exact key _ (hspan k)
 
 /-- **Thesis Prop 5.7 (abstract form)**: (5.4) `Π¹S₀Π̃⁰ = Π¹S₀` from DOFs.
-See [QuennevilleBelair2015, Prop 5.7]. -/
+See [QuennevilleBelair2015], Prop 5.7. -/
 theorem comp_eq_of_mem_span (m : ι → Y →ₗ[R] R) (ℓ : κ → X →ₗ[R] R) (S0 : Y →ₗ[R] X)
     (Pt0 : Y →ₗ[R] Y) (P1 : X →ₗ[R] X)
     (hP1 : ∀ x y, (∀ k, ℓ k x = ℓ k y) → P1 x = P1 y)

@@ -13,7 +13,7 @@ differential is `x ·`, `· × x`, `· x`:
 * `vec1_extDeriv` (`d = grad`), `vec2_extDeriv` (`d = curl`), `vol_extDeriv` (`d = div`);
 * `koszul_empty` (`κ v = x · v`), `vec1_koszul` (`κ u = u × x`), `vec2_koszul` (`κ g = g x`).
 
-These are the 3D formulas of [AFW2006, §3] used for the Nédélec spaces `P_r⁻Λ¹`, `P_r⁻Λ²` in
+These are the 3D formulas of [AFW2006], §3 used for the Nédélec spaces `P_r⁻Λ¹`, `P_r⁻Λ²` in
 thesis §4.10 (`P_r⁻Λ¹ = P_{r-1}³ ⊕ H_{r-1}³ × x`).
 
 ## References

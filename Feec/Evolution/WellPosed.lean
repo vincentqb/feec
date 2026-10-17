@@ -58,8 +58,8 @@ generator): for `U₀ ∈ D(A)` and admissible forcing
 `F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))` there is a classical solution
 `U ∈ C([a,b]; D(A)) ∩ C¹([a,b]; E)` of `U' = A U + F`, `U a = U₀` (Duhamel's formula
 `Evolution.mild G.S a U₀ F`), and every strong solution with the same initial value agrees with
-it on `[a,b]`. Cf. [Pazy1983, Thm 4.1.3, Thm 4.2.4, Cor 4.2.5],
-[CazenaveHaraux1998, Prop 4.1.6]. -/
+it on `[a,b]`. Cf. [Pazy1983], Thm 4.1.3, Thm 4.2.4, Cor 4.2.5,
+[CazenaveHaraux1998], Prop 4.1.6. -/
 theorem existsUnique_classicalSolution {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain) {F : ℝ → E}
     {a b : ℝ} (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution G.generator (Icc a b) F U ∧

@@ -26,6 +26,10 @@ non-positive case `norm_le_of_re_inner_deriv_nonpos`, and specializes them to st
 * `IsStrongSolution.norm_le_add_integral`, `IsStrongSolution.norm_le`: the a priori bounds
   `‖U t‖ ≤ ‖U a‖ + ∫ₐᵗ ‖F‖`, and `‖U t‖ ≤ ‖U a‖` without forcing;
 * `IsStrongSolution.norm_eq`: energy conservation `‖U t‖ = ‖U a‖` for skew-symmetric `A`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open Set

@@ -199,7 +199,7 @@ theorem interchange_ofMat_iff (M : Matrix Ix Ix ℝ) : Interchange (ofMat M) ↔
   rw [interchange_iff_swapPairs, swapPairs_ofMat, ofMat_injective.eq_iff]
 
 /-- **Thesis Prop 3.3(i).** The interchange symmetry `C_{abcd} = C_{cdab}` is equivalent to
-`E, D` symmetric and `H = Bᵀ`. See [QuennevilleBelair2015, Prop 3.3]; cf. [ACBY1997] for the
+`E, D` symmetric and `H = Bᵀ`. See [QuennevilleBelair2015], Prop 3.3; cf. [ACBY1997] for the
 nonlinear analogue. -/
 theorem interchange_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     Interchange (ofBlocks E B H D) ↔ Eᵀ = E ∧ Dᵀ = D ∧ H = Bᵀ := by
@@ -291,7 +291,7 @@ theorem altPart_0123 {C : Tensor4} (hC : PairSkew C) : altPart C 0 1 2 3 =
     s1 1 2 3 0, s1 0 2 3 1]
 
 /-- **Thesis Prop 3.3(ii).** `C_{[abcd]} = 0` is equivalent to `tr B + tr H = 0`.
-See [QuennevilleBelair2015, Prop 3.3]. -/
+See [QuennevilleBelair2015], Prop 3.3. -/
 theorem altPart_ofBlocks_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (∀ a b c d, altPart (ofBlocks E B H D) a b c d = 0) ↔ trace B + trace H = 0 := by
   have h6 : altPart (ofBlocks E B H D) 0 1 2 3 = (1 / 6) * (trace B + trace H) := by
@@ -312,7 +312,7 @@ plus `C_{[abcd]} = 0` (thesis: "the 16 conditions ... break into 15 + 1", cited 
 
 Thesis gap: the thesis cites this without proof; it is a corollary of
 `Feec.CurvatureTensor.bianchi_iff` (any commutative ring with `2` invertible). See
-[QuennevilleBelair2015, §2 (after Prop 2.1) and proof of Prop 3.3]; the source cited there is
+[QuennevilleBelair2015], §2 (after Prop 2.1) and proof of Prop 3.3; the source cited there is
 thesis ref. [10] (Frauendiener), not in `references.bib`. -/
 theorem bianchi_iff_altPart {C : Tensor4} (hC : PairSkew C) :
     Bianchi1 C ↔ Interchange C ∧ ∀ a b c d, altPart C a b c d = 0 := by
@@ -321,7 +321,7 @@ theorem bianchi_iff_altPart {C : Tensor4} (hC : PairSkew C) :
     false_or]
 
 /-- Thesis Prop 3.3, Bianchi part: for `C = [[E,B],[H,D]]`, first Bianchi holds iff
-`E, D` are symmetric, `H = Bᵀ` and `tr B + tr H = 0`. See [QuennevilleBelair2015, Prop 3.3]. -/
+`E, D` are symmetric, `H = Bᵀ` and `tr B + tr H = 0`. See [QuennevilleBelair2015], Prop 3.3. -/
 theorem bianchi_ofBlocks_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     Bianchi1 (ofBlocks E B H D) ↔ (Eᵀ = E ∧ Dᵀ = D ∧ H = Bᵀ) ∧ trace B + trace H = 0 := by
   rw [bianchi_iff_altPart (C := ofBlocks E B H D) (pairSkew_ofMat _), interchange_iff,
@@ -347,7 +347,7 @@ theorem mtr_ofBlocks (E B H D : Matrix (Fin 3) (Fin 3) ℝ) (b c : Fin 4) : mtr 
 
 Thesis gap: the final step `D = -Eᵀ + δ tr E/2` uses `tr E = 0` (from the singleton
 condition) and the summed diagonal equations `tr D = tr E / 2`; both are made explicit.
-See [QuennevilleBelair2015, Prop 3.3]. -/
+See [QuennevilleBelair2015], Prop 3.3. -/
 theorem tracefree_iff (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (∀ b c, mtr (ofBlocks E B H D) b c = 0) ↔ trace E = 0 ∧ Bᵀ = B ∧ Hᵀ = H ∧ D = -Eᵀ := by
   simp only [mtr_ofBlocks]

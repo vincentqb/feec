@@ -20,6 +20,10 @@ Space-time `𝕜¹⁺ⁿ = Fin (n + 1) → 𝕜` splits as time `𝕜` times spa
 * `spatialProj` (`(t, x) ↦ x`), with `partialDeriv_succ_comp_spatialProj` and
   `partialDeriv_zero_comp_spatialProj`: a time-independent field `f(x)` has
   `∂_{c+1} = ∂_c f` and `∂₀ = 0`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open Set Filter Topology

@@ -34,6 +34,10 @@ on `[a,b]` with right derivative `e'` on `[a,b)`:
 * `norm_le_add_integral_norm_deriv`: `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ ‖e'‖`.
 
 They follow from the square-root Gronwall inequality applied to `Q = ‖e‖`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open Set

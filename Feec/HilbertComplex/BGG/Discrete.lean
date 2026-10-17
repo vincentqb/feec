@@ -70,7 +70,7 @@ variable {X0 X1 X2 Y0 Y1 Y2 : Type*}
 /-- **Min-norm step of Prop 5.3(b)** (missing in the thesis): a uniform preimage bound for `T`
 gives the bound for every `x ⊥ ker T`.
 This is the min-norm step of the classical proof of the discrete Poincaré inequality,
-[AFW2010, Thm 3.6]; cf. [Arnold2018]. -/
+[AFW2010], Thm 3.6; cf. [Arnold2018]. -/
 theorem norm_le_of_mem_orthogonal_ker {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] (T : E →ₗ[ℝ] F) (C : ℝ)
     (hpre : ∀ x : E, ∃ x' : E, T x' = T x ∧ ‖x'‖ ≤ C * ‖T x‖)
@@ -80,7 +80,7 @@ theorem norm_le_of_mem_orthogonal_ker {E F : Type*} [NormedAddCommGroup E] [Inne
 
 /-- Thesis §5.2 (line 3304, unlabeled): `d S₀,h = -S₁,h d` for `S₀,h = Π¹S₀`, `S₁,h = Π²S₁`.
 Thesis gap: the commuting property `dΠ¹ = Π²d` is used but not stated.
-See [QuennevilleBelair2015, §5.2]; cochain projections as in [AFW2010], [Arnold2018]. -/
+See [QuennevilleBelair2015], §5.2; cochain projections as in [AFW2010], [Arnold2018]. -/
 theorem anticomm_of_comm_proj (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1)
     (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2) (P1 : X1 →ₗ[ℝ] X1) (P2 : X2 →ₗ[ℝ] X2)
     (hcomm : ∀ x, dX1 (P1 x) = P2 (dX1 x)) (hanti : ∀ ψ, dX1 (S0 ψ) = -S1 (dY0 ψ)) (ψ : Y0) :
@@ -90,7 +90,7 @@ theorem anticomm_of_comm_proj (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1
 /-- Thesis §5.2 (lines 3305–3314): (5.4) makes `S₀,h` onto `V_h¹`.
 Thesis gap: the needed surjectivity of `Π¹S₀` is asserted, not proved; here it is a hypothesis.
 (In the discretization below we instead *derive* the weaker condition `dV_h⁰ + S₀,hṼ_h⁰ = V_h¹`,
-see `Discrete.hB`.) See [QuennevilleBelair2015, §5.2, (5.4)]. -/
+see `Discrete.hB`.) See [QuennevilleBelair2015], §5.2, (5.4). -/
 theorem surjective_of_comp_eq {Dm X1h Y0h : Type*} [AddCommGroup Dm] [Module ℝ Dm]
     [AddCommGroup X1h]
     [Module ℝ X1h] [AddCommGroup Y0h] [Module ℝ Y0h]
@@ -103,7 +103,7 @@ harmonic part).
 Thesis gap: the proofs of Prop 5.4 and Thm 5.5 use this exactness without deriving it. It
 follows from the exactness of the two discrete complexes assumed in Prop 5.3, at `Ṽ_h¹` *and*
 at `V_h¹`, plus `dS₀ = -S₁d`.
-See [QuennevilleBelair2015, §5.2, (5.5)]; cf. the BGG diagram chase in [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], §5.2, (5.5); cf. the BGG diagram chase in [ArnoldHu2021]. -/
 theorem exists_of_exact_rows (dX0 : X0 →ₗ[ℝ] X1) (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1)
     (dY1 : Y1 →ₗ[ℝ] Y2) (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2)
     (hanti : ∀ ψ, dX1 (S0 ψ) = -S1 (dY0 ψ))
@@ -121,7 +121,7 @@ Correction: none of the uniform-in-`h` bounds of Prop 5.3 are needed. What is us
 surjectivity of `S₀,h`).
 Thesis gap: the "discrete Hodge decomposition" without harmonic part, i.e. exactness of (5.5)
 at `Ṽ_h¹`, is used but never derived from those assumptions; it is `exists_of_exact_rows`.
-See [QuennevilleBelair2015, Prop 5.4]; cf. [AFW2007] for the analogous weak-symmetry
+See [QuennevilleBelair2015], Prop 5.4; cf. [AFW2007] for the analogous weak-symmetry
 elasticity argument. Thesis: Prop 5.4 -/
 theorem eq_zero_of_mixed_homogeneous
     (dX0 : X0 →ₗ[ℝ] X1) (dX1 : X1 →ₗ[ℝ] X2) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
@@ -165,7 +165,7 @@ theorem eq_zero_of_mixed_homogeneous
 
 /-- Thesis Prop 5.4: necessity of `dV_h⁰ + S₀,hṼ_h⁰ = V_h¹`. If some `l ≠ 0` is orthogonal to
 `dX0 τ - S0 ψ` for all `τ, ψ`, then `(0,0,0,l)` is a nonzero homogeneous solution.
-See [QuennevilleBelair2015, Prop 5.4]. -/
+See [QuennevilleBelair2015], Prop 5.4. -/
 theorem exists_mixed_homogeneous_of_perp
     (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
     (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2) {l : X1} (hl : l ≠ 0)
@@ -177,7 +177,7 @@ theorem exists_mixed_homogeneous_of_perp
   ⟨0, 0, 0, l, hl, fun τ ψ => by simp [hperp], fun v => by simp, fun μ => by simp⟩
 
 /-- The discrete system (5.6) with right-hand side `F`, unknown `x = (σ, φ, u, λ)`.
-See [QuennevilleBelair2015, §5.2, (5.6)]. -/
+See [QuennevilleBelair2015], §5.2, (5.6). -/
 def IsMixedSolution (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
     (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2) (F : Y1 →ₗ[ℝ] ℝ) (x : X0 × Y0 × Y1 × X1) : Prop :=
   (∀ τ ψ, ⟪x.1, τ⟫ - ⟪x.2.2.1, dY0 ψ⟫ - ⟪x.2.2.2, dX0 τ - S0 ψ⟫ = 0) ∧
@@ -224,7 +224,7 @@ theorem isMixedSolution_iff (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1) 
     · simpa using key (0, 0, 0, μ)
 
 /-- Thesis §5.2 ("the system is square"): the system operator `E_h → E_h^*` is injective iff
-bijective, since `dim E_h^* = dim E_h`. See [QuennevilleBelair2015, §5.2]. -/
+bijective, since `dim E_h^* = dim E_h`. See [QuennevilleBelair2015], §5.2. -/
 theorem mixedForm_bijective (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1)
     (dY1 : Y1 →ₗ[ℝ] Y2) (S0 : Y0 →ₗ[ℝ] X1) (S1 : Y1 →ₗ[ℝ] X2)
     [FiniteDimensional ℝ X0] [FiniteDimensional ℝ X1] [FiniteDimensional ℝ Y0]
@@ -238,7 +238,7 @@ theorem mixedForm_bijective (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1)
 
 /-- **Thesis Prop 5.4 (invertibility), minimal hypotheses.** For every right-hand side `F`
 the discrete system (5.6) has exactly one solution.
-See [QuennevilleBelair2015, Prop 5.4]; cf. discrete well-posedness of saddle-point systems,
+See [QuennevilleBelair2015], Prop 5.4; cf. discrete well-posedness of saddle-point systems,
 [Brezzi1974], [BoffiBrezziFortin2013], and of the discrete mixed Hodge Laplacian, [AFW2010]. Thesis:
 Prop 5.4 -/
 theorem existsUnique_isMixedSolution
@@ -269,7 +269,7 @@ solution, and `(τ, ψ, v)` discrete test functions.
 Correction: the thesis needs `λ ∈ W¹` for `(λ, (S - S_h)ψ)` to make sense; only `λ ∈ W̌¹` is
 available from Prop 5.2. We take `ℓ` an arbitrary linear functional (its `W`-boundedness, i.e.
 `λ ∈ W¹`, enters only in Thm 5.5). The hypothesis "Prop 5.3 holds" is unnecessary.
-See [QuennevilleBelair2015, Prop 5.6]. Thesis: Prop 5.6 (corrected) -/
+See [QuennevilleBelair2015], Prop 5.6. Thesis: Prop 5.6 (corrected) -/
 theorem mixed_error_eq
     (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
     (S0 S0h : Y0 →ₗ[ℝ] X1) (S1 S1h : Y1 →ₗ[ℝ] X2) (ℓ : X1 →ₗ[ℝ] ℝ) (F : Y1 →ₗ[ℝ] ℝ)
@@ -290,7 +290,7 @@ theorem mixed_error_eq
 `τ = e_σ - ε ρ`, `ψ = e_φ - ε χ`, `v = d e_φ + d χ + ω`, where `e_u = dχ + ω`.
 Thesis gap: the `ε`'s (lost in the text) can be placed consistently only on `τ` and `ψ`;
 `S_h v = S_h ω` needs `(e_σ, e_φ) ∈ Γ_h`, never stated.
-See [QuennevilleBelair2015, Thm 5.5, proof]; the test-function choice is the standard
+See [QuennevilleBelair2015], Thm 5.5, proof; the test-function choice is the standard
 inf-sup argument for the mixed Hodge Laplacian, cf. [AFW2010], [Arnold2018]. -/
 theorem mixed_coercivity_eq
     (dX0 : X0 →ₗ[ℝ] X1) (dY0 : Y0 →ₗ[ℝ] Y1) (dY1 : Y1 →ₗ[ℝ] Y2)
@@ -353,8 +353,8 @@ complexes (5.1) only:
   (Banach's theorem for `dS₀ : Ṽ⁰ → dV¹`; thesis gap: the constant is used, never derived);
 * `boundS0`, `boundS1`: boundedness of `S₀ : Ṽ⁰ → V¹` and `S₁ : Ṽ¹ → W²` in graph norms.
 
-See [QuennevilleBelair2015, §5.1 (Prop 5.1), Prop 5.3]; for the concrete regular decomposition
-the thesis cites [HiptmairXu2007, §3] and [Hiptmair2002, Lemma 2.4]. Poincaré inequalities and
+See [QuennevilleBelair2015], §5.1 (Prop 5.1), Prop 5.3; for the concrete regular decomposition
+the thesis cites [HiptmairXu2007], §3 and [Hiptmair2002], Lemma 2.4. Poincaré inequalities and
 Hodge decompositions of closed Hilbert complexes: [AFW2010], [Arnold2018], [BruningLesch1992]. -/
 structure Stability (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (Cp CR CS : ℝ) : Prop where
   Cp_nonneg : 0 ≤ Cp
@@ -390,7 +390,7 @@ Correction: the thesis takes *canonical* projections, yet applies them (and (5.4
 elements of `Ṽ⁰, Ṽ¹` produced by continuous decompositions. Here the projections are total
 linear maps (bounded cochain projections, e.g. smoothed projections), idempotent on the
 discrete spaces and commuting with `d`. See the caveat at `Compatible`.
-See [QuennevilleBelair2015, §5.2]; subcomplexes with (bounded, smoothed) cochain projections as
+See [QuennevilleBelair2015], §5.2; subcomplexes with (bounded, smoothed) cochain projections as
 in [AFW2006], [AFW2010], [Arnold2018]. -/
 structure Discrete (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) where
   V0h : Submodule ℝ V0
@@ -455,14 +455,14 @@ def gnSq (w : Vt1) : ℝ := ‖w‖ ^ 2 + ‖Q.S1h w‖ ^ 2 + ‖D.dt1 w‖ ^ 2
 Caveat: the thesis checks (5.4) only for canonical projections (Prop 5.7), which do not satisfy
 `Bounded`; no projection is known to us satisfying `Discrete + Bounded + Compatible` in the
 elasticity / Einstein–Bianchi application (cf. `exists_nonvacuous` for an abstract instance).
-See [QuennevilleBelair2015, §5.2, (5.4), and Prop 5.7]; cf. the analogous condition in the
+See [QuennevilleBelair2015], §5.2, (5.4), and Prop 5.7; cf. the analogous condition in the
 weak-symmetry elasticity elements of [AFW2007]. -/
 def Compatible : Prop := ∀ ψ, Q.P1 (D.S0 (Q.Pt0 ψ)) = Q.P1 (D.S0 ψ)
 
 /-- **Uniform (in `h`) bounds on the projections** (thesis gap: assumed implicitly in the proof
 of Prop 5.3, absent from its hypotheses). Only those that are used are listed.
 Uniform boundedness of the cochain projections is the key hypothesis of the FEEC stability
-theory, [AFW2010, Thm 3.6], [Arnold2018]. -/
+theory, [AFW2010], Thm 3.6, [Arnold2018]. -/
 structure Bounded (CP : ℝ) : Prop where
   CP_nonneg : 0 ≤ CP
   P1 : ∀ x, graphSq D.d1 (Q.P1 x) ≤ CP ^ 2 * graphSq D.d1 x
@@ -486,7 +486,7 @@ variable {Q}
 
 /-- Discrete exactness at `Ṽ_h¹`, derived from continuous exactness and the cochain projections
 (thesis gap: Prop 5.3 simply assumes "two exact complexes"). See
-[QuennevilleBelair2015, Prop 5.3]; cf. [AFW2010], [Arnold2018] (cochain projections preserve
+[QuennevilleBelair2015], Prop 5.3; cf. [AFW2010], [Arnold2018] (cochain projections preserve
 cohomology). -/
 theorem exact_bot_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) {u : Vt1} (hu : u ∈ Q.Vt1h)
     (hd : D.dt1 u = 0) : ∃ χ ∈ Q.Vt0h, D.dt0 χ = u := by
@@ -502,7 +502,7 @@ theorem exact_bot_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) {u : Vt1} (hu : 
 (Prop 5.3 assumes it as part of "two exact complexes"; the thesis' proof of Prop 5.4 never
 invokes it, yet Prop 5.4 fails without it:
 `Feec.Counterexamples.DiscreteBGG.mixed_not_unique_of_not_exactTop`). See
-[QuennevilleBelair2015, Prop 5.3]; cf. [AFW2010], [Arnold2018]. -/
+[QuennevilleBelair2015], Prop 5.3; cf. [AFW2010], [Arnold2018]. -/
 theorem exact_top_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) {μ : V1} (hμ : μ ∈ Q.V1h)
     (hd : D.d1 μ = 0) : ∃ ρ ∈ Q.V0h, D.d0 ρ = μ := by
   obtain ⟨ρ, hρ⟩ := H.exact1 μ hd
@@ -517,7 +517,7 @@ theorem dt0_injective {Cp CR CS : ℝ} (H : Stability D Cp CR CS) : Function.Inj
   exact norm_le_zero_iff.1 this
 
 /-- **Exactness of the discrete complex (5.5) at `Ṽ_h¹`**: every `u ∈ Z_h` is `dχ` with
-`(ρ, χ) ∈ Γ_h`. See [QuennevilleBelair2015, §5.2, (5.5)]. -/
+`(ρ, χ) ∈ Γ_h`. See [QuennevilleBelair2015], §5.2, (5.5). -/
 theorem exact_mid_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) {u : Vt1} (hu : u ∈ Q.Zh) :
     ∃ ρ ∈ Q.V0h, ∃ χ ∈ Q.Vt0h, D.d0 ρ = Q.S0h χ ∧ D.dt0 χ = u := by
   obtain ⟨hu1, hu2, hu3⟩ := hu
@@ -558,7 +558,7 @@ theorem Zh_eq_map {Cp CR CS : ℝ} (H : Stability D Cp CR CS) :
 /-- **Discrete Hodge decomposition without harmonic part** (thesis §5.2, used in Prop 5.4 and
 Thm 5.5): `Ṽ_h¹ = d(pr₂ Γ_h) ⊕ (Z_hᗮ ∩ Ṽ_h¹)`, orthogonally, with unique `d`-component.
 Thesis gap: used without proof; it rests on exactness of (5.5) (`exact_mid_h`).
-See [QuennevilleBelair2015, proofs of Prop 5.4 and Thm 5.5]; cf. the discrete Hodge
+See [QuennevilleBelair2015], proofs of Prop 5.4 and Thm 5.5; cf. the discrete Hodge
 decomposition in [AFW2010], [Arnold2018]. -/
 theorem hodge_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) [FiniteDimensional ℝ Q.Vt1h]
     {w : Vt1} (hw : w ∈ Q.Vt1h) :
@@ -589,7 +589,7 @@ theorem hodge_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) [FiniteDimensional �
 /-- `V_h¹ = dV_h⁰ + S₀,hṼ_h⁰`, the exact condition of Prop 5.4, **derived** from (5.4), the
 regular decomposition and exactness at `V¹`.
 Thesis gap: the thesis derives the stronger "S₀,h onto" from an unproved surjectivity of
-`Π¹S₀`. See [QuennevilleBelair2015, §5.2 and Prop 5.4]. -/
+`Π¹S₀`. See [QuennevilleBelair2015], §5.2 and Prop 5.4. -/
 theorem exists_sub_S0h_eq {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible) {μ : V1}
     (hμ : μ ∈ Q.V1h) :
     ∃ τ ∈ Q.V0h, ∃ ψ ∈ Q.Vt0h, D.d0 τ - Q.S0h ψ = μ := by
@@ -609,8 +609,8 @@ form. The constant is derived from the continuous Poincaré constant, `‖S₀�
 bound. The thesis hypothesis "`S₀,h` uniformly bounded" is *replaced* by the graph-norm bound on
 `Π¹` over all of `V¹` (`Bounded.P1`) together with `boundS0`; this is stronger than the thesis
 hypothesis, which the thesis checks (Prop 5.8) for canonical projections only.
-See [QuennevilleBelair2015, Prop 5.3]; cf. the discrete Poincaré inequality
-[AFW2010, Thm 3.6]. Thesis: Prop 5.3(a) (corrected) -/
+See [QuennevilleBelair2015], Prop 5.3; cf. the discrete Poincaré inequality
+[AFW2010], Thm 3.6. Thesis: Prop 5.3(a) (corrected) -/
 theorem poincare_Γh {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     {σ : V0} {φ : Vt0} (h : D.d0 σ = Q.S0h φ) :
     graphSq D.d0 σ ≤ Ca Cp CS CP ^ 2 * ‖D.dt0 φ‖ ^ 2 := by
@@ -641,8 +641,8 @@ Prop 5.3(b), lines 3365–3402).
 Thesis gaps filled: the regular decomposition is used with an explicit open-mapping constant;
 `Π²η' = η'` needs `η' ∈ V_h²`; the final bound is `‖u'‖ ≤ C(‖w‖_V + ‖dφ‖)`, not
 `‖u'‖ = ‖dφ‖ + ‖w‖`.
-See [QuennevilleBelair2015, Prop 5.3, proof]; the argument follows the proof of
-[AFW2010, Thm 3.6]. -/
+See [QuennevilleBelair2015], Prop 5.3, proof; the argument follows the proof of
+[AFW2010], Thm 3.6. -/
 theorem preimage_bound {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     (h54 : Q.Compatible) {v : Vt1} (hv : v ∈ Q.Vt1h) :
     ∃ u' ∈ Q.Vt1h, Q.S1h u' = Q.S1h v ∧ D.dt1 u' = D.dt1 v ∧
@@ -713,7 +713,7 @@ The constant `C_b` is *derived* (AFW-type argument) from the continuous constant
 `C_p, C_R, C_S` and the projection bound `C_Π` only.
 Thesis gaps filled: the min-norm step (from a bounded preimage to the bound for `u_h ⊥ Z_h`) is
 missing in the thesis; see `preimage_bound` for the others.
-See [QuennevilleBelair2015, Prop 5.3]; cf. [AFW2010, Thm 3.6], [Arnold2018]. Thesis: Prop 5.3(b)
+See [QuennevilleBelair2015], Prop 5.3; cf. [AFW2010], Thm 3.6, [Arnold2018]. Thesis: Prop 5.3(b)
 (corrected) -/
 theorem poincare_Zh {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     (h54 : Q.Compatible) {u : Vt1} (hu : u ∈ Q.Vt1h) (horth : u ∈ Q.Zhᗮ) :
@@ -727,7 +727,7 @@ the discrete system (5.6) has exactly one solution `(σ_h, φ_h, u_h, λ_h)` for
 All hypotheses of `existsUnique_isMixedSolution` are *derived*: discrete anticommutation,
 injectivity of
 `d` on `Ṽ_h⁰`, discrete exactness at `Ṽ_h¹` and `V_h¹`, and `V_h¹ = dV_h⁰ + S₀,hṼ_h⁰`.
-No uniform-in-`h` bound is used. See [QuennevilleBelair2015, Prop 5.4]. Thesis: Prop 5.4 -/
+No uniform-in-`h` bound is used. See [QuennevilleBelair2015], Prop 5.4. Thesis: Prop 5.4 -/
 theorem existsUnique_mixed_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible)
     [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.Vt0h]
     [FiniteDimensional ℝ Q.Vt1h] (F : Vt1 →ₗ[ℝ] ℝ) :
@@ -777,7 +777,7 @@ def KL (Cp CR CS CP : ℝ) : ℝ := 8 * (1 + Cp ^ 2) * (1 + Cb Cp CR CS CP ^ 2)
 
 /-- **The constant of Thm 5.5**, explicit in the `h`-independent constants only:
 `C_p, C_R, C_S` (continuous complex), `C_Π` (projections), `C_app` (consistency).
-See [QuennevilleBelair2015, Thm 5.5] (where the constant is not made explicit). -/
+See [QuennevilleBelair2015], Thm 5.5 (where the constant is not made explicit). -/
 def errorConst (Cp CR CS CP Capp : ℝ) : ℝ :=
   2 + (2 * Ca1 Cp CS CP ^ 2 + 2 * Cp ^ 2 + 8 * Cb Cp CR CS CP ^ 2 + 8) *
     (36 * KL Cp CR CS CP * Ca1 Cp CS CP ^ 4) * (1 + Capp ^ 2)
@@ -980,7 +980,7 @@ Thesis gaps / corrections:
 * Caveat (inherited from the thesis): `B` and `h54` are imposed on the same projections; see
   `Compatible`.
 
-See [QuennevilleBelair2015, Thm 5.5 and Prop 5.6]; cf. the quasi-optimal a priori estimates
+See [QuennevilleBelair2015], Thm 5.5 and Prop 5.6; cf. the quasi-optimal a priori estimates
 for the discrete mixed Hodge Laplacian in [AFW2010], [Arnold2018], the weak-symmetry
 elasticity estimates of [AFW2007], and the Babuška–Brezzi theory [Babuska1971], [Brezzi1974],
 [BoffiBrezziFortin2013]. Thesis: Thm 5.5 (corrected) -/
@@ -1223,7 +1223,7 @@ def Discrete.exampleSegment : Segment ℝ (EuclideanSpace ℝ (Fin 0)) ℝ ℝ �
 `Discrete.Bounded` and `Discrete.Compatible` are simultaneously satisfiable with nonzero discrete
 spaces
 and `S₁ ≠ 0` (identity discretization of `exampleSegment`, all constants `1`).
-Sanity check for the hypotheses of [QuennevilleBelair2015, Props 5.3–5.4, Thm 5.5]. -/
+Sanity check for the hypotheses of [QuennevilleBelair2015], Props 5.3–5.4, Thm 5.5. -/
 theorem Discrete.exists_nonvacuous :
     ∃ (D : Segment ℝ (EuclideanSpace ℝ (Fin 0)) ℝ ℝ ℝ ℝ ℝ) (Q : Discrete D),
       Stability D 1 1 1 ∧ Q.Bounded 1 ∧ Q.Compatible ∧ D.S1 ≠ 0 ∧ D.S0 ≠ 0 ∧

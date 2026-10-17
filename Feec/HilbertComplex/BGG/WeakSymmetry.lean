@@ -129,7 +129,7 @@ lemma norm_innerSLFlip_le (x : X) : ‖innerSLFlip ℝ x‖ ≤ ‖x‖ :=
 of `a(u, v) + ⟪Bv, p⟫ = ⟪F, v⟫`, `⟪Bu, q⟫ = ⟪G, q⟫` with `‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)`.
 Thesis: Thm 4.11
 
-See [QuennevilleBelair2015, Thm 4.11]; [Brezzi1974], [BoffiBrezziFortin2013]. -/
+See [QuennevilleBelair2015], Thm 4.11; [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem brezzi_wellPosed_real [CompleteSpace X] [CompleteSpace Y] (a : X →L[ℝ] X →L[ℝ] ℝ)
     (Bs : X →L[ℝ] Y)
     (hZ : ∃ γ > 0, ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z')
@@ -222,7 +222,7 @@ variable {W0 W1 Wt0 Wt1 W2 Wt2 V0 V1 Vt0 Vt1 : Type*}
 /-- The bilinear form `a` of (5.3):
 `a(σ,φ,u; τ,ψ,v) = (σ,τ) - (u, d̃ψ) + (d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v)` (all `W`-inner products).
 
-See [QuennevilleBelair2015, (5.3)]; symmetry imposed weakly as in [AFW2007]. -/
+See [QuennevilleBelair2015], (5.3); symmetry imposed weakly as in [AFW2007]. -/
 def aForm : Xsp V0 Vt0 Vt1 →L[ℝ] Xsp V0 Vt0 Vt1 →L[ℝ] ℝ :=
   ip (D.ι0 ∘L pσ V0 Vt0 Vt1) (D.ι0 ∘L pσ V0 Vt0 Vt1)
     - ip (D.ιt1 ∘L pu V0 Vt0 Vt1) (D.ιt1 ∘L D.dt0 ∘L pφ V0 Vt0 Vt1)
@@ -259,7 +259,7 @@ local notation "adj" => ContinuousLinearMap.adjoint
 `|||λ||| = sup_{(τ,ψ)} (λ, dτ - Sψ)/‖(τ,ψ)‖`, realised as the closure of `R(B*)` in `V⁰ × Ṽ⁰`
 (`|||λ||| = ‖B*λ‖`, see `tripleNorm_spec`, `jW`).
 
-See [QuennevilleBelair2015, §5.1, before Prop 5.2]; analogous to the multiplier norm in the
+See [QuennevilleBelair2015], §5.1, before Prop 5.2; analogous to the multiplier norm in the
 limiting case `t = 0` of the Reissner–Mindlin plate [Falk2008], cf. [DuranLiberman1992]. -/
 def Wcheck : Submodule ℝ (Psp V0 Vt0) := (adj D.Bop).range.topologicalClosure
 
@@ -273,7 +273,7 @@ def tripleNorm (l : W1) : ℝ := ‖adj D.Bop l‖
 `(λ, dτ - Sψ) ≤ |||λ||| ‖(τ,ψ)‖`, with equality attained
 on the unit ball.
 
-See [QuennevilleBelair2015, §5.1, before Prop 5.2]. -/
+See [QuennevilleBelair2015], §5.1, before Prop 5.2. -/
 theorem tripleNorm_spec (l : W1) :
     (∀ q, ⟪l, D.Bop q⟫ ≤ D.tripleNorm l * ‖q‖) ∧
       ∃ q, ‖q‖ ≤ 1 ∧ ⟪l, D.Bop q⟫ = D.tripleNorm l := by
@@ -297,7 +297,7 @@ theorem tripleNorm_le (l : W1) : D.tripleNorm l ≤ ‖D.Bop‖ * ‖l‖ := by
 /-- **`|||·|||` is a norm** (thesis: "is actually a norm", no proof), under the corrected density
 hypothesis `d⁰V⁰ + S₀Ṽ⁰` dense in `W¹`.
 
-See [QuennevilleBelair2015, §5.1, before Prop 5.2]. -/
+See [QuennevilleBelair2015], §5.1, before Prop 5.2. -/
 theorem tripleNorm_definite
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1))
@@ -333,7 +333,7 @@ def jW : W1 →L[ℝ] D.Wcheck :=
 `|||·|||`, has dense
 range, and is injective under the density hypothesis.
 
-See [QuennevilleBelair2015, §5.1, Prop 5.2]. -/
+See [QuennevilleBelair2015], §5.1, Prop 5.2. -/
 theorem jW_spec
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1)) :
@@ -389,8 +389,8 @@ lemma mkX_mem_ker {σ : V0} {φ : Vt0} (u : Vt1) (h : (σ, φ) ∈ D.Γ) : mkX �
 
 /-- Inf-sup of `b` with constant `1` (thesis: "holds by definition of the norm on `W̌¹`").
 
-See [QuennevilleBelair2015, proof of Prop 5.2]; the inf-sup condition on `b` of Brezzi's theorem
-[QuennevilleBelair2015, Thm 4.11], [Brezzi1974], [BoffiBrezziFortin2013]. -/
+See [QuennevilleBelair2015], proof of Prop 5.2; the inf-sup condition on `b` of Brezzi's theorem
+[QuennevilleBelair2015], Thm 4.11, [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem infSup_b : ∀ μ : D.Wcheck, 1 * ‖μ‖ ≤ ‖adj D.Bs μ‖ := by
   intro μ
   rw [one_mul]
@@ -454,8 +454,8 @@ Thesis gaps: the ε's are lost in the text; the decomposition without harmonic p
 exactness of (5.1) at `Ṽ¹` (`hodge_Vt1`); the final step `a ≥ C ‖x‖ ‖y‖` needs the bounds
 `‖x‖², ‖y - x‖² ≤ 2c² Q`, written out below.
 
-See [QuennevilleBelair2015, proof of Prop 5.2]; the inf-sup condition on the kernel of Brezzi's
-theorem [QuennevilleBelair2015, Thm 4.11], [Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2
+See [QuennevilleBelair2015], proof of Prop 5.2; the inf-sup condition on the kernel of Brezzi's
+theorem [QuennevilleBelair2015], Thm 4.11, [Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2
 (proof) -/
 theorem infSup_a (h : D.Hyps) :
     ∃ γ > 0, ∀ z ∈ D.Bs.ker, ∃ z' ∈ D.Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ D.aForm z z' := by
@@ -603,7 +603,7 @@ condition, which the thesis never checks. Proof: `a(y, y) = ‖τ‖² + ‖S₁
 `(0, 0, d̃ψ)` gives `ψ = 0`; then `v ∈ N(S₁) ∩ N(d̃¹) = R(0 d)` by exactness at `Ṽ¹`, and testing
 with `(ρ, χ, 0)`, `d̃χ = v`, gives `v = 0`. (Injectivity of `S₀` is not needed.)
 
-Cf. [QuennevilleBelair2015, proof of Prop 5.2]; Brezzi's theorem for non-symmetric `a`:
+Cf. [QuennevilleBelair2015], proof of Prop 5.2; Brezzi's theorem for non-symmetric `a`:
 [Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2 (proof) -/
 theorem nondeg_a (h : D.Hyps) :
     ∀ z' ∈ D.Bs.ker, (∀ z ∈ D.Bs.ker, D.aForm z z' = 0) → z' = 0 := by
@@ -654,7 +654,7 @@ Proof by Brezzi (`brezzi_wellPosed_real`): inf-sup of `b` (`infSup_b`), inf-sup 
 Correction: neither density of `S₀Ṽ⁰` nor injectivity of `S₀` is needed for well-posedness on
 `X × W̌¹`; density only serves to embed `W¹` into `W̌¹` (`jW_spec`).
 
-See [QuennevilleBelair2015, Prop 5.2], via Brezzi's theorem [QuennevilleBelair2015, Thm 4.11],
+See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
 [Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2 (corrected) -/
 theorem saddle_wellPosed (h : D.Hyps) :
     (∀ (F : Xsp V0 Vt0 Vt1) (G : D.Wcheck), ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck,
@@ -679,7 +679,7 @@ is a unique solution, and `‖(σ,φ,u)‖_V + |||λ||| ≤ C ‖f‖`.
 Corrections: `λ ∈ W̌¹`, not `W¹` as (5.3) says; the density hypothesis of the thesis is not
 needed here (it is used in `jW_spec`); the transposed Brezzi condition is added and proved.
 
-See [QuennevilleBelair2015, Prop 5.2], via Brezzi's theorem [QuennevilleBelair2015, Thm 4.11],
+See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
 [Brezzi1974], [BoffiBrezziFortin2013]. Thesis: Prop 5.2 (corrected) -/
 theorem existsUnique_isSaddle (h : D.Hyps) :
     (∀ f : Wt1, ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck, D.IsSaddle f xl.1 xl.2) ∧
@@ -710,7 +710,7 @@ theorem existsUnique_isSaddle (h : D.Hyps) :
 /-- The reduced Hodge Laplacian (5.2): `(σ, φ) ∈ Γ`, `(σ, τ) - (u, d̃ψ) = 0` for `(τ, ψ) ∈ Γ`, and
 `(d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v) = (f, v)` for `v ∈ Ṽ¹`.
 
-See [QuennevilleBelair2015, (5.2)]; the mixed Hodge Laplacian of a closed Hilbert complex as in
+See [QuennevilleBelair2015], (5.2); the mixed Hodge Laplacian of a closed Hilbert complex as in
 [AFW2010], [Arnold2018]. -/
 def IsReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) : Prop :=
   (pσ V0 Vt0 Vt1 x, pφ V0 Vt0 Vt1 x) ∈ D.Γ ∧
@@ -757,7 +757,7 @@ theorem isReduced_of_isSaddle {f : Wt1} {x : Xsp V0 Vt0 Vt1} {l : D.Wcheck}
 `f ∈ W̃¹` it has exactly one solution. Uniqueness is the inf-sup of `a` on `Z`; existence comes
 from (5.3).
 
-See [QuennevilleBelair2015, §5.1, (5.2)]; cf. well-posedness of the mixed Hodge Laplacian
+See [QuennevilleBelair2015], §5.1, (5.2); cf. well-posedness of the mixed Hodge Laplacian
 [AFW2010], [Arnold2018]. Thesis: Prop 5.2 -/
 theorem existsUnique_isReduced (h : D.Hyps) (f : Wt1) : ∃! x, D.IsReduced f x := by
   obtain ⟨⟨xl, hxl, -⟩, -⟩ := (D.existsUnique_isSaddle h).1 f, ()
@@ -795,7 +795,7 @@ theorem existsUnique_multiplier (h : D.Hyps) {f : Wt1} {x : Xsp V0 Vt0 Vt1}
 and `λ` is
 the (unique, `existsUnique_multiplier`) multiplier.
 
-See [QuennevilleBelair2015, §5.1, (5.2)–(5.3)]. -/
+See [QuennevilleBelair2015], §5.1, (5.2)–(5.3). -/
 theorem isSaddle_iff_isReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
     D.IsSaddle f x l ↔ D.IsReduced f x ∧
       ∀ y, D.bForm y l = ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫ - D.aForm x y := by
@@ -807,7 +807,7 @@ theorem isSaddle_iff_isReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
 
 /-- The system (5.3) *as written in the thesis*, with `λ, μ ∈ W¹`.
 
-See [QuennevilleBelair2015, (5.3)]. -/
+See [QuennevilleBelair2015], (5.3). -/
 def IsSaddleW1 (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : W1) : Prop :=
   (∀ y, D.aForm x y - ⟪l, D.ι1 (D.d0 (pσ V0 Vt0 Vt1 y) - D.S0 (pφ V0 Vt0 Vt1 y))⟫ =
     ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫) ∧

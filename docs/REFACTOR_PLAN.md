@@ -37,6 +37,17 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 >   `scripts/CheckCitations.sh` (every `[Key]` in `Feec/` exists in `references.bib`; no
 >   `[Key, …]` forms; every module has a `## References` section) to the verification gate.
 
+> **Status (2026-10-17): waves W0–W6 are done.** `Feec/Legacy` (57 modules) and
+> `Feec/Models/Cube/Bridge.lean` are deleted; the cube models are built on `Feec.Models.Torus`,
+> `Feec.Fourier` and `Feec.Models.BoundedDomain` alone, and every module of `Feec/` is imported by
+> `Feec.lean`. Every declaration of the pre-refactor tree has a row in
+> `docs/migration/map.tsv` pointing at a current name or marked `deleted-helper` (non-main rows
+> only); `scripts/MapCheck.sh --strict` passes (5131/5131 old declarations, main 269/269).
+> `scripts/CheckCitations.sh` implements the citation gate above and passes. The verification gate
+> is: `lake build` (no errors, no warnings), `lake env lean scripts/AxiomAudit.lean`,
+> `scripts/MapCheck.sh --strict`, `scripts/CheckCitations.sh`, `scripts/ThesisMap.sh` (regenerate
+> `docs/THESIS_MAP.md`), and the naming greps of §5. W7 (§6) is open.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

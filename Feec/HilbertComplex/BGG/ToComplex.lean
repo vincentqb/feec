@@ -70,7 +70,7 @@ mapping theorem on `R(d̃¹)` is used (typos `Z̃ = N(d⁰)` and "`W¹`" for `W�
 
 Thesis: Prop 5.1 (proof)
 
-See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
+See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem isClosed_range_prod {V1 W2 Vt0 Vt1 Wt2 : Type*}
     [NormedAddCommGroup V1] [NormedSpace 𝕜 V1]
     [NormedAddCommGroup W2] [NormedSpace 𝕜 W2]
@@ -143,7 +143,7 @@ boundedness `S₀ : Ṽ⁰ → V¹`, `S₁ : Ṽ¹ → W²` in graph norms is us
 regularity and injectivity of `S₀` are *not* fields: they are the explicit hypotheses
 `Hilb.Hyps` (and `Function.Injective D.S0`) of the theorems that use them.
 
-See [QuennevilleBelair2015, §5.1]; Hilbert complexes and graph-norm domains as in
+See [QuennevilleBelair2015], §5.1; Hilbert complexes and graph-norm domains as in
 [BruningLesch1992], [AFW2010], [Arnold2018]. -/
 structure Hilb (𝕜 : Type*) [RCLike 𝕜] (W0 W1 Wt0 Wt1 W2 Wt2 V0 V1 Vt0 Vt1 : Type*)
     [NormedAddCommGroup W0] [InnerProductSpace 𝕜 W0] [CompleteSpace W0]
@@ -233,7 +233,7 @@ lemma mem_Z1 {u : Vt1} : u ∈ D.Z1 ↔ D.S1 u = 0 ∧ D.dt1 u = 0 := by
 `V¹`, `Ṽ¹`, closed ranges of `d¹, d̃¹`, and the regularity hypothesis, of which only the
 direction `d¹V¹ ⊆ d¹S₀Ṽ⁰` has content. Ranges are closed in the `W`-spaces, as in the thesis.
 
-See [QuennevilleBelair2015, §5.1, hypotheses of Prop 5.1]. -/
+See [QuennevilleBelair2015], §5.1, hypotheses of Prop 5.1. -/
 structure Hyps : Prop where
   d0_injective : Function.Injective D.d0
   dt0_injective : Function.Injective D.dt0
@@ -276,7 +276,7 @@ lemma exists_poincare {E F : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E] 
 /-- `Γ` is closed in `V⁰ × Ṽ⁰` (thesis Prop 5.1, corrected: the thesis' `(σ, φ) ∈ Γ̄` is
 meaningless for limit points of the completion; closedness of `Γ` is the usable statement).
 
-See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
+See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem isClosed_Γ : IsClosed (D.Γ : Set (V0 × Vt0)) := by
   have : (D.Γ : Set (V0 × Vt0)) = {x | D.d0 x.1 = D.S0 x.2} := by
     ext x; exact D.mem_Γ
@@ -291,8 +291,8 @@ Thesis gap: the thesis derives `‖σ‖ ≤ C_p‖dφ‖` from "the closed Hilb
 controls the part orthogonal to the kernel; the direct proof chains the Poincaré inequalities of
 `d⁰`, `d̃⁰` (injective, closed range) with `‖S₀‖`. The bound here is in the stronger `V`-norms.
 
-See [QuennevilleBelair2015, §5.1, after Prop 5.1]; cf. the Poincaré inequality for closed
-Hilbert complexes [QuennevilleBelair2015, Thm 4.2], [AFW2010], [Arnold2018]. -/
+See [QuennevilleBelair2015], §5.1, after Prop 5.1; cf. the Poincaré inequality for closed
+Hilbert complexes [QuennevilleBelair2015], Thm 4.2, [AFW2010], [Arnold2018]. -/
 theorem poincare_Γ (h : D.Hyps) :
     ∃ C, 0 ≤ C ∧ ∀ x ∈ D.Γ, ‖x.1‖ ≤ C * ‖D.ιt1 (D.dt0 x.2)‖ ∧
       ‖x.2‖ ≤ C * ‖D.ιt1 (D.dt0 x.2)‖ := by
@@ -323,7 +323,7 @@ lemma exactt1' (h : D.Hyps) (z : Vt1) (hz : D.dt1 z = 0) : ∃ φ, D.dt0 φ = z 
 
 /-- **Thesis Prop 5.1** (closed range of `(S, d)`).
 
-See [QuennevilleBelair2015, Prop 5.1]. -/
+See [QuennevilleBelair2015], Prop 5.1. -/
 theorem isClosed_range_T (h : D.Hyps) : IsClosed (Set.range D.T) :=
   isClosed_range_prod D.d1 D.dt0 D.dt1 D.S0 D.S1 D.anticomm D.dt1_dt0 (D.exactt1' h)
     h.d1_closed h.dt1_closed h.reg
@@ -336,7 +336,7 @@ instance : CompleteSpace D.Z1 := D.isClosed_Z1.completeSpace_coe
 form used
 below: `N(S₁) ∩ N(d̃¹) = d̃(π₂ Γ)`.
 
-Cf. [QuennevilleBelair2015, §5.1]. -/
+Cf. [QuennevilleBelair2015], §5.1. -/
 theorem mem_Z1_iff (h : D.Hyps) {u : Vt1} : u ∈ D.Z1 ↔ ∃ x ∈ D.Γ, D.dt0 x.2 = u := by
   have e := D.toSegment.ker_D1_eq_range_D0 h.exact1 h.exactt1
   have h1 : u ∈ D.Z1 ↔ u ∈ LinearMap.ker D.toSegment.D1 := by
@@ -353,8 +353,8 @@ lemma dt0_mem_Z1 {x : V0 × Vt0} (hx : x ∈ D.Γ) : D.dt0 x.2 ∈ D.Z1 :=
 `‖u‖_{Ṽ¹} ≤ C ‖(S₁u, d̃¹u)‖` for `u ⊥ N(S₁) ∩ N(d̃¹)` (orthogonality in the graph inner product,
 which agrees with `W̃¹`-orthogonality against `N(d̃¹)`).
 
-See [QuennevilleBelair2015, §5.1, after Prop 5.1]; cf. the Poincaré inequality for closed
-Hilbert complexes [QuennevilleBelair2015, Thm 4.2], [AFW2010], [Arnold2018]. -/
+See [QuennevilleBelair2015], §5.1, after Prop 5.1; cf. the Poincaré inequality for closed
+Hilbert complexes [QuennevilleBelair2015], Thm 4.2, [AFW2010], [Arnold2018]. -/
 theorem poincare_T (h : D.Hyps) : ∃ C, 0 ≤ C ∧ ∀ w ∈ D.Z1ᗮ, ‖w‖ ≤ C * ‖D.T w‖ := by
   let f : D.Z1ᗮ →L[𝕜] W2 × Wt2 := D.T ∘L D.Z1ᗮ.subtypeL
   have hf : Function.Injective f := by
@@ -379,8 +379,8 @@ Prop 5.2): `u = d̃χ + w` with `(ρ, χ) ∈ Γ` and `w ⊥ N(S₁) ∩ N(d̃¹
 Thesis gap: the absence of a harmonic part is exactness of (5.1) at `Ṽ¹`
 (`Segment.ker_D1_eq_range_D0`).
 
-See [QuennevilleBelair2015, proof of Prop 5.2]; cf. the Hodge decomposition of closed Hilbert
-complexes [QuennevilleBelair2015, Thm 4.1], [BruningLesch1992], [AFW2010], [Arnold2018]. -/
+See [QuennevilleBelair2015], proof of Prop 5.2; cf. the Hodge decomposition of closed Hilbert
+complexes [QuennevilleBelair2015], Thm 4.1, [BruningLesch1992], [AFW2010], [Arnold2018]. -/
 theorem hodge_Vt1 (h : D.Hyps) (u : Vt1) : ∃ x ∈ D.Γ, ∃ w ∈ D.Z1ᗮ, u = D.dt0 x.2 + w := by
   obtain ⟨x, hx, hxu⟩ := (D.mem_Z1_iff h).1 (D.Z1.starProjection_apply_mem u)
   exact ⟨x, hx, _, D.Z1.sub_starProjection_mem_orthogonal u, by rw [hxu]; abel⟩
@@ -402,13 +402,13 @@ graph `{(σ, d̃φ) | (σ, φ) ∈ Γ}` (its domain lies in, and is dense in, `�
 It is a well-defined operator when `S₀` is injective (`D0op_graph`); this is where injectivity
 of `S₀` is used, as the thesis says.
 
-See [QuennevilleBelair2015, (5.1)]. -/
+See [QuennevilleBelair2015], (5.1). -/
 def D0op : W0 →ₗ.[𝕜] Wt1 := (D.Γ.map (D.LΓ : V0 × Vt0 →ₗ[𝕜] W0 × Wt1)).toLinearPMap
 
 /-- The second operator `(S, d) : W̃¹ ⊃ Ṽ¹ → W² × W̃²` of (5.1), with graph
 `{(u, S₁u, d̃¹u) | u ∈ Ṽ¹}`.
 
-See [QuennevilleBelair2015, (5.1)]. -/
+See [QuennevilleBelair2015], (5.1). -/
 def D1op : Wt1 →ₗ.[𝕜] W2 × Wt2 :=
   (LinearMap.range ((D.ιt1.prod D.T : Vt1 →L[𝕜] Wt1 × (W2 × Wt2)) :
     Vt1 →ₗ[𝕜] Wt1 × (W2 × Wt2))).toLinearPMap
@@ -460,7 +460,7 @@ lemma exists_bound_Γ (h : D.Hyps) : ∃ C : NNReal, ∀ x : D.Γ,
 
 /-- **Thesis Prop 5.1**, closedness of `(0 d)`.
 
-See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
+See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem D0op_isClosed (h : D.Hyps) (hS0 : Function.Injective D.S0) : D.D0op.IsClosed := by
   obtain ⟨C, hC⟩ := D.exists_bound_Γ h
   let g : D.Γ →L[𝕜] W0 × Wt1 := D.LΓ ∘L D.Γ.subtypeL
@@ -496,7 +496,7 @@ theorem D0op_isClosed_range (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 /-- **Thesis Prop 5.1**, closedness of `(S, d)` ("clearly closed": the graph norm controls the
 `Ṽ¹`-norm).
 
-See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
+See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem D1op_isClosed : D.D1op.IsClosed := by
   let g : Vt1 →L[𝕜] Wt1 × (W2 × Wt2) := D.ιt1.prod D.T
   have hb : ∀ v, ‖v‖ ≤ (2 : NNReal) * ‖g v‖ := by
@@ -514,7 +514,7 @@ theorem D1op_isClosed : D.D1op.IsClosed := by
 
 /-- **Thesis Prop 5.1**, closed range of `(S, d)` (in `W² × W̃²`).
 
-See [QuennevilleBelair2015, Prop 5.1 (proof)]. -/
+See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem D1op_isClosed_range (h : D.Hyps) :
     IsClosed (LinearMap.range D.D1op.toFun : Set (W2 × Wt2)) := by
   have hset : (LinearMap.range D.D1op.toFun : Set (W2 × Wt2)) = Set.range D.T := by
@@ -562,7 +562,7 @@ theorem range_D0op_le_ker_D1op (hS0 : Function.Injective D.S0) :
 /-- **Exactness of (5.1)** (missing in the thesis), for the unbounded operators:
 `N(S, d) = R(0 d)` at `W̃¹`, and `(0 d)` is injective.
 
-Cf. [QuennevilleBelair2015, Prop 5.1]; cf. [ArnoldHu2021]. -/
+Cf. [QuennevilleBelair2015], Prop 5.1; cf. [ArnoldHu2021]. -/
 theorem exact_D0op_D1op (h : D.Hyps) (hS0 : Function.Injective D.S0) :
     D.D1op.ker = LinearMap.range D.D0op.toFun ∧ D.D0op.ker = ⊥ := by
   constructor
@@ -603,7 +603,7 @@ as in `Γ̄ × W̃¹`, `Γ̄` being closed); the Poincaré inequalities used imp
 (`poincare_Γ`, `poincare_T`); typos `Z̃ = N(d⁰)`, `W¹`/`W²` corrected; exactness at `Ṽ¹`
 (`Segment.ker_D1_eq_range_D0`) is proved. `W² × W̃²` carries the (equivalent) sup norm.
 
-See [QuennevilleBelair2015, Prop 5.1]. Closed Hilbert complexes as in [BruningLesch1992], [AFW2010],
+See [QuennevilleBelair2015], Prop 5.1. Closed Hilbert complexes as in [BruningLesch1992], [AFW2010],
 [Arnold2018];
 the general construction of complexes from complexes is [ArnoldHu2021]; the weak-symmetry
 mechanism is that of [AFW2007]. -/
@@ -785,7 +785,7 @@ lemma range_D1L : (LinearMap.range D.D1L.toFun : Set (WithLp 2 (W2 × Wt2))) =
 /-- **(5.1) on `Γ̄` is a short Hilbert complex**: `Γ̄ --(0 d̃)--> W̃¹ --(S₁, d̃¹)--> W² × W̃²`,
 both operators closed and densely defined, `(S₁, d̃¹)(0 d̃) = 0`. Thesis: Prop 5.1
 
-See [QuennevilleBelair2015, Prop 5.1]. -/
+See [QuennevilleBelair2015], Prop 5.1. -/
 def toShort (h : D.Hyps) (hS0 : Function.Injective D.S0) :
     ShortHilbertComplex 𝕜 D.Γbar Wt1 (WithLp 2 (W2 × Wt2)) where
   d₀ := D.D0Γ
@@ -801,7 +801,7 @@ def toShort (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 `R(0 d̃)` and `R(S₁, d̃¹)` are closed, `N(S₁, d̃¹) = R(0 d̃)` and `N(0 d̃) = 0`.
 Thesis: Prop 5.1 (corrected)
 
-See [QuennevilleBelair2015, Prop 5.1]. -/
+See [QuennevilleBelair2015], Prop 5.1. -/
 theorem toShort_closedRange_exact (h : D.Hyps) (hS0 : Function.Injective D.S0) :
     IsClosed (LinearMap.range (D.toShort h hS0).d₀.toFun : Set Wt1) ∧
     IsClosed (LinearMap.range (D.toShort h hS0).d₁.toFun : Set (WithLp 2 (W2 × Wt2))) ∧
@@ -927,7 +927,7 @@ namespace Hilb
 /-- **The BGG complex (5.1) as a Hilbert complex** on `ComplexShape.fin3`:
 `Γ̄ → W̃¹ → W² × W̃²`. Thesis: Prop 5.1
 
-See [QuennevilleBelair2015, Prop 5.1, (5.1)]; cf. [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], Prop 5.1, (5.1); cf. [ArnoldHu2021]. -/
 def toHilbertComplex : HilbertComplex 𝕜 ComplexShape.fin3
     (ShortHilbertComplex.W3 D.Γbar Wt1 (WithLp 2 (W2 × Wt2))) :=
   (D.toShort h hS0).toHilbertComplex

@@ -30,6 +30,10 @@ on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
 * **Schwarz**: `partialDeriv_comm` (partial derivatives of a `C²` function commute);
 * **Integration by parts**: `integral_partialDeriv_mul_eq_neg` (`∫ ∂ᵢ f · g = -∫ f · ∂ᵢ g` for
   `C¹` functions with `f` compactly supported).
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open Set Filter Topology MeasureTheory

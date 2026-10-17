@@ -157,7 +157,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W Wt :
 connecting maps `S i j : W̃ⁱ → Wʲ`, zero off the relation, mapping `D(d̃ i j)` into `D(d j k)`
 and anticommuting with the differentials there.
 
-See [QuennevilleBelair2015, §5.1] (one segment, `S₀ : W̃⁰ → W¹` bounded with `S₀Ṽ⁰ ⊆ V¹`);
+See [QuennevilleBelair2015], §5.1 (one segment, `S₀ : W̃⁰ → W¹` bounded with `S₀Ṽ⁰ ⊆ V¹`);
 [ArnoldHu2021]. -/
 structure HilbertData (𝕜 : Type*) [RCLike 𝕜] {ι : Type*} (c : ComplexShape ι)
     (W Wt : ι → Type*) [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
@@ -227,7 +227,7 @@ theorem twistD_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.twistD i j = 0 := by
 `d ⊕ d̃` closed and `S` bounded; `dd = 0` from `d d = 0`, `d̃ d̃ = 0` and `d S = -S d̃`.
 Thesis: §5.1
 
-See [QuennevilleBelair2015, §5.1]; cf. [ArnoldHu2021]. -/
+See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
 def twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i)) where
   d := D.twistD
   shape i j h := D.twistD_eq_zero h

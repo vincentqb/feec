@@ -41,7 +41,7 @@ namespace Feec.DoubleForm
 /-! ### Algebraic Weyl tensors: the block form -/
 
 /-- An algebraic Weyl tensor in a Minkowski orthonormal frame: skew in each pair, first
-Bianchi identity, and `η`-trace-free. See [QuennevilleBelair2015, §3.2]; cf. [Wald1984]. -/
+Bianchi identity, and `η`-trace-free. See [QuennevilleBelair2015], §3.2; cf. [Wald1984]. -/
 structure IsWeyl (C : Tensor4) : Prop where
   pairSkew : PairSkew C
   bianchi : Bianchi1 C
@@ -52,7 +52,7 @@ structure IsWeyl (C : Tensor4) : Prop where
 
 Thesis gap: `tr B = 0` needs Prop 3.3(ii) together with `H = Bᵀ = B`; the thesis does not say
 so. Correction: the thesis introduces this matrix form with "Proposition 3.2 thus leads to";
-it follows from Prop 3.3. See [QuennevilleBelair2015, Prop 3.3 and the display after it];
+it follows from Prop 3.3. See [QuennevilleBelair2015], Prop 3.3 and the display after it;
 cf. [ACBY1997] for the nonlinear case. -/
 theorem weyl_iff (C : Tensor4) :
     IsWeyl C ↔ ∃ E B : Matrix (Fin 3) (Fin 3) ℝ, Eᵀ = E ∧ trace E = 0 ∧ Bᵀ = B ∧
@@ -75,7 +75,7 @@ theorem weyl_iff (C : Tensor4) :
 
 /-- **Thesis §3.2 (omitted classical fact).** For an algebraic Weyl tensor the left and right
 duals coincide, `*W = W*`; both have block matrix `[[B, -E], [-E, -B]]`.
-See [QuennevilleBelair2015, §3.2]. -/
+See [QuennevilleBelair2015], §3.2. -/
 theorem ldual_eq_rdual {W : Tensor4} (hW : IsWeyl W) : ldual W = rdual W := by
   obtain ⟨E, B, -, -, -, -, rfl⟩ := (weyl_iff W).1 hW
   rw [ldual_ofBlocks, rdual_ofBlocks]
@@ -148,7 +148,7 @@ uses orthogonality before proving it. Here the proof instead goes through the bl
 is the electric part of `W*` and inherits its properties. Stated in a Minkowski orthonormal
 frame; `n` need not be unit timelike for these algebraic conclusions.
 
-See [QuennevilleBelair2015, Prop 3.1]; the decomposition is due to [Bel1958]; cf.
+See [QuennevilleBelair2015], Prop 3.1; the decomposition is due to [Bel1958]; cf.
 [Alcubierre2008] and [Friedrich1996]. -/
 theorem electric_magnetic_props {W : Tensor4} (hW : IsWeyl W) (n : Fin 4 → ℝ) :
     let E : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * W c a d b
@@ -271,7 +271,7 @@ Thesis gap: "a straightforward calculation" in the thesis; here it is checked on
 bivector components. The sign of the `B`-terms requires the spatial volume form
 `ω_{bcd} = ω_{abcd} n^a` (as stated after (3.2)); the `n^d` convention used in the proof of
 Prop 3.1 has the opposite sign. The general unit timelike `n` is `weyl_reconstruct_unit`.
-See [QuennevilleBelair2015, eq. (3.2)]; cf. [Bel1958]. -/
+See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958]. -/
 theorem weyl_reconstruct {W : Tensor4} (hW : IsWeyl W) :
     W = recon (fun a b => W 0 a 0 b) (fun a b => rdual W 0 a 0 b) := by
   obtain ⟨E, B, hE, htrE, hB, -, rfl⟩ := (weyl_iff W).1 hW
@@ -462,7 +462,7 @@ theorem eq_stf {E : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htr : trace E =
 
 Thesis gap: the thesis states (3.2) for a general `n` as "a straightforward calculation". Here it is
 proved without any frame change: `recon_hom` is the homogenised polynomial identity, valid for all
-`n`, and `η(n,n) = -1` specialises it. See [QuennevilleBelair2015, eq. (3.2)]; cf. [Bel1958]. -/
+`n`, and `η(n,n) = -1` specialises it. See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958]. -/
 theorem weyl_reconstruct_unit {W : Tensor4} (hW : IsWeyl W) {n : Fin 4 → ℝ}
     (hn : nsq n = -1) : W = reconN n (elec n W) (elec n (rdual W)) := by
   obtain ⟨E, B, hE, htrE, hB, htrB, rfl⟩ := (weyl_iff W).1 hW
@@ -590,7 +590,7 @@ components (here: the space of algebraic Weyl tensors w.r.t. `η` has dimension 
 
 Thesis gap: stated without proof ("it can be shown"); proved here for `n = 4` via the block
 form `[[E, B], [B, -E]]` with `E, B` symmetric trace-free (5 + 5).
-See [QuennevilleBelair2015, §3.2] (which cites [Alcubierre2008, p. 288] and [Friedrich1996] for
+See [QuennevilleBelair2015], §3.2 (which cites [Alcubierre2008], p. 288 and [Friedrich1996] for
 the Riemann/Weyl splitting). -/
 theorem finrank_weylSpace : Module.finrank ℝ weylSpace = 10 := by
   rw [LinearEquiv.finrank_eq weylEquiv, Module.finrank_prod, finrank_STF]

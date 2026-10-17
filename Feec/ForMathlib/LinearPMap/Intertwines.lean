@@ -16,6 +16,10 @@ inclusion of a reducing subspace, and compression.
 * `Intertwines.adjoint`: if `e⁻¹ B = A e⁻¹` for a unitary `e`, then `e` intertwines `A†`
   with `B†`.
 * `Intertwines.isSkewAdjoint_iff`: skew-adjointness is invariant under unitary equivalence.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open scoped InnerProductSpace

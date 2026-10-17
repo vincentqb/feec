@@ -21,6 +21,10 @@ are), and the identities behind the isometries `eLpNorm_piLp_rpow`, `eLpNorm_wit
 
 For `p = 2` these are unitary. They identify the total space `L²(μ; W₀ ⊕ W₁ ⊕ …)` of a
 multiplication-operator complex with the orthogonal sum of the `L²(μ; Wᵢ)`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/
 
 open scoped ENNReal NNReal

@@ -65,7 +65,7 @@ abbrev Jet4 := Fin 4 → Matrix (Fin 3) (Fin 3) ℝ
 def sp (dX : Jet4) : SpaceJet := fun c => dX c.succ
 
 /-- The jet `∂_μ C` of the Weyl field `C = [[E, B], [B, -E]]` (block form of Prop 3.3).
-See [QuennevilleBelair2015, Prop 3.3]; the decomposition goes back to [Bel1958]. -/
+See [QuennevilleBelair2015], Prop 3.3; the decomposition goes back to [Bel1958]. -/
 def dWeyl (dE dB : Jet4) (μ : Fin 4) : DoubleForm.Tensor4 := ofBlocks (dE μ) (dB μ) (dB μ) (-dE μ)
 
 /-- The linearized second Bianchi expression `∂_α C_{βγδθ} + ∂_β C_{γαδθ} + ∂_γ C_{αβδθ}`. -/
@@ -74,7 +74,7 @@ def bianchi2 (dE dB : Jet4) (α β γ δ θ : Fin 4) : ℝ :=
 
 /-- The linearized EB system (Thesis (3.3)–(3.4)) on jets:
 `div E = 0`, `div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`.
-See [QuennevilleBelair2015, §3.4, Prop 3.4]; cf. the nonlinear EB system of [Friedrich1996]
+See [QuennevilleBelair2015], §3.4, Prop 3.4; cf. the nonlinear EB system of [Friedrich1996]
 and [ACBY1997]. -/
 def EBJet (dE dB : Jet4) : Prop :=
   div (sp dE) = 0 ∧ div (sp dB) = 0 ∧ dE 0 + curl (sp dB) = 0 ∧ dB 0 - curl (sp dE) = 0
@@ -240,7 +240,7 @@ it is needed for the count of 16 (`linBianchi_iff_sym`,
 `EBJetSym_surjective`). This module starts from the linearized identity
 `∂_[α C_βγ]δθ = 0` (the thesis' `0 = ε∂_[α C_βγ]δθ + O(ε²)` at first order).
 
-See [QuennevilleBelair2015, Prop 3.4]; the nonlinear analogue is in [Friedrich1996]
+See [QuennevilleBelair2015], Prop 3.4; the nonlinear analogue is in [Friedrich1996]
 (cf. [ACBY1997]). -/
 theorem linBianchi_iff (dE dB : Jet4) (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJet dE dB := by
@@ -310,7 +310,7 @@ evolution equations are `0 = 0` (`trace_curl_of_transpose_eq`) and the skew part
 equation is valued in symmetric trace-free matrices, a 5-dimensional space); see
 `EBJetSym_surjective` for the independence of these 16 equations.
 
-See [QuennevilleBelair2015, §3.4, Prop 3.4]. -/
+See [QuennevilleBelair2015], §3.4, Prop 3.4. -/
 theorem linBianchi_iff_sym (dE dB : Jet4) (hE : IsSymTF dE) (hB : IsSymTF dB) :
     (∀ α β γ δ θ, bianchi2 dE dB α β γ δ θ = 0) ↔ EBJetSym dE dB := by
   rw [linBianchi_iff dE dB (fun μ => (hE μ).1) (fun μ => (hB μ).1)]
@@ -356,7 +356,7 @@ plus 10 evolution equations.
 Refinement: the thesis counts "6 constraints + 18 evolution equations" (at most 24
 conditions) without determining how many are independent; the answer is 16.
 
-See [QuennevilleBelair2015, §3.4, Prop 3.4]. -/
+See [QuennevilleBelair2015], §3.4, Prop 3.4. -/
 theorem EBJetSym_surjective (v w : Fin 3 → ℝ) (P Q : Matrix (Fin 3) (Fin 3) ℝ)
     (hP : Pᵀ = P ∧ P.trace = 0) (hQ : Qᵀ = Q ∧ Q.trace = 0) :
     ∃ dE dB : Jet4, IsSymTF dE ∧ IsSymTF dB ∧ div (sp dE) = v ∧ div (sp dB) = w ∧
@@ -390,7 +390,7 @@ theorem EBJetSym_surjective (v w : Fin 3 → ℝ) (P Q : Matrix (Fin 3) (Fin 3) 
 Thesis gap: the thesis proves Prop 3.6 only by a forward reference to Cor 4.5 (cited as
 "Theorem 4.5"), whose hypotheses it never verifies; this step is missing.
 
-See [QuennevilleBelair2015, Prop 3.6, Cor 4.5]. -/
+See [QuennevilleBelair2015], Prop 3.6, Cor 4.5. -/
 theorem div_propagation (d2E d2B : Fin 4 → Fin 4 → Matrix (Fin 3) (Fin 3) ℝ)
     (hsE : ∀ μ ν, d2E μ ν = d2E ν μ) (hsB : ∀ μ ν, d2B μ ν = d2B ν μ)
     (hE : ∀ c : Fin 3, d2E c.succ 0 = -curl (sp (d2B c.succ)))
@@ -417,7 +417,7 @@ theorem div_propagation (d2E d2B : Fin 4 → Fin 4 → Matrix (Fin 3) (Fin 3) �
 With `div E = div B = 0` (step 1), `(a, α, b, β)` solves a closed homogeneous first-order system.
 
 Thesis gap: not in the thesis (it relies on Cor 4.5 instead).
-Cf. [QuennevilleBelair2015, Prop 3.6, Cor 4.5]. -/
+Cf. [QuennevilleBelair2015], Prop 3.6, Cor 4.5. -/
 theorem violation_evolution (dE dB : Jet4) (hE : dE 0 = -curl (sp dB))
     (hB : dB 0 = curl (sp dE)) :
     (dE 0).trace = 2 * vdiv (vskwJ (sp dB)) ∧
@@ -493,7 +493,7 @@ and `F = flux E B` (both differentiated by the product rule: `energyD`, `fluxD`)
 
 Thesis gap: not in the thesis; this replaces the unverified appeal to Cor 4.5 (energy proof on
 `ℝ³`; field version `prop_3_6`).
-Cf. [QuennevilleBelair2015, Prop 3.6, Cor 4.5]. -/
+Cf. [QuennevilleBelair2015], Prop 3.6, Cor 4.5. -/
 theorem energy_flux (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (hE : dE 0 = -curl (sp dB)) (hB : dB 0 = curl (sp dE)) (hdE : div (sp dE) = 0)
     (hdB : div (sp dB) = 0) :

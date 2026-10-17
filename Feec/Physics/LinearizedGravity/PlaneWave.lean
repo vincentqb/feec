@@ -83,7 +83,7 @@ def uObs : Fin 4 → ℝ := ![1, 0, 0, 0]
 /-- The TT conditions (2.12) on a constant amplitude: symmetric, `A_ab k^b = 0`,
 `A_ab u^b = 0`, `η^{ab} A_ab = 0`.
 
-See [QuennevilleBelair2015, §2.8, (2.12)]; cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], §2.8, (2.12); cf. [Wald1984], §4.4. -/
 structure IsTT (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) : Prop where
   symm : ∀ a b, A a b = A b a
   lorentz : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0
@@ -106,7 +106,7 @@ form, with `A₊ = A₁₁`, `Aₓ = A₁₂`.
 Thesis gap: `κ ≠ 0` is needed; it is only implicit in the thesis (`k^a = k(1,0,0,1)`, later
 divided by `k`).
 
-See [QuennevilleBelair2015, §2.8, (2.12)–(2.13)]; cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], §2.8, (2.12)–(2.13); cf. [Wald1984], §4.4. -/
 theorem isTT_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Matrix (Fin 4) (Fin 4) ℝ) : IsTT κ A ↔ A = ttAmp (A 1 1) (A 1 2) := by
   refine ⟨fun h => ?_, fun h => h ▸ ttAmp_isTT κ _ _⟩
   have hu : ∀ a, A a 0 = 0 := fun a => by
@@ -141,7 +141,7 @@ def ttSpace : Submodule ℝ (Matrix (Fin 4) (Fin 4) ℝ) := LinearMap.range ttLi
 
 /-- **Thesis (2.12)–(2.13)**: for `κ ≠ 0`, `ttSpace` is exactly the set of TT amplitudes.
 
-See [QuennevilleBelair2015, (2.12)–(2.13)]. -/
+See [QuennevilleBelair2015], (2.12)–(2.13). -/
 theorem mem_ttSpace_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Matrix (Fin 4) (Fin 4) ℝ) : A ∈ ttSpace ↔ IsTT κ A := by
   constructor
   · rintro ⟨p, rfl⟩; exact ttAmp_isTT κ _ _
@@ -150,7 +150,7 @@ theorem mem_ttSpace_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Matrix (Fin 4) (Fin 4) 
 /-- **Thesis (2.13)**, "only two degrees of freedom": the TT amplitudes form a
 2-dimensional space.
 
-See [QuennevilleBelair2015, (2.13)]; cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], (2.13); cf. [Wald1984], §4.4. -/
 theorem finrank_ttSpace : Module.finrank ℝ ttSpace = 2 := by
   have hinj : Function.Injective ttLin := by
     intro p q h
@@ -178,7 +178,7 @@ def ttSub (κ : ℝ) : Submodule ℝ (Matrix (Fin 4) (Fin 4) ℝ) where
 /-- **Thesis (2.13)**, "only two degrees of freedom", stated directly: for `κ ≠ 0` the space
 `{A | A satisfies (2.12)}` has dimension `2`.
 
-See [QuennevilleBelair2015, (2.13)]; cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], (2.13); cf. [Wald1984], §4.4. -/
 theorem finrank_ttSub {κ : ℝ} (hκ : κ ≠ 0) : Module.finrank ℝ (ttSub κ) = 2 := by
   have : ttSub κ = ttSpace := by
     ext A; exact (mem_ttSpace_iff hκ A).symm
@@ -212,7 +212,7 @@ Correction: the thesis' derivation uses `η₀₀ = +1`, `k₀ = +κ`, contradic
 (`Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed`). The resulting amplitudes
 `A'₊ = (A₁₁ − A₂₂)/2`, `A'ₓ = A₁₂` are not recorded in the thesis.
 
-See [QuennevilleBelair2015, Prop 2.6]; cf. [Wald1984, §4.4]. -/
+See [QuennevilleBelair2015], Prop 2.6; cf. [Wald1984], §4.4. -/
 theorem tt_gauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ} (hA : ∀ i j, A i j = A j i)
     (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) :
     gaugeAmp (kTT κ) A (Bcorr κ A) = ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2) ∧
@@ -243,7 +243,7 @@ def accelJ (D : Jet2 (Fin 4) ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ := -∑ 
 
 Correction: the thesis gives `−(κ²/2)(…) f(k·x)` (sign, and `f` for `f''`).
 
-See [QuennevilleBelair2015, §2.8, (2.15)]; cf. [Alcubierre2008, pp. 44–45]
+See [QuennevilleBelair2015], §2.8, (2.15); cf. [Alcubierre2008], pp. 44–45
 (followed by the thesis). -/
 theorem tt_accel (κ Ap Ax s : ℝ) (v : Fin 4 → ℝ) :
     let D : Jet2 (Fin 4) ℝ := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
@@ -278,7 +278,7 @@ lemma IsTTJet.support {D : Jet2 (Fin 4) ℝ} (hD : IsTTJet D) {i j a b : Fin 4} 
 `R_{αiβj} = −½ ∂_α ∂_β h_ij` (exactly, at the jet level). The thesis restricts to
 `α, β ∈ {0, 3}`; for other `α, β` both sides vanish.
 
-See [QuennevilleBelair2015, (2.15a–c)]; cf. [Alcubierre2008]. -/
+See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008]. -/
 theorem Rjet_tt {D : Jet2 (Fin 4) ℝ} (hD : IsSymJet2 D) (hT : IsTTJet D) {α β i j : Fin 4}
     (hi : ¬ IsLong i) (hj : ¬ IsLong j) :
     Rjet D α i β j = -(1/2) * D α β i j := by
@@ -291,7 +291,7 @@ theorem Rjet_tt {D : Jet2 (Fin 4) ℝ} (hD : IsSymJet2 D) (hT : IsTTJet D) {α �
 of the pairs `(a, b)` and `(c, d)` has exactly one longitudinal index. With pair-skewness
 (`Rjet_pairSkew`) every non-zero component is thus `±R_{αiβj}`, given by `Rjet_tt`.
 
-See [QuennevilleBelair2015, (2.15a–c)]. -/
+See [QuennevilleBelair2015], (2.15a–c). -/
 theorem Rjet_tt_support {D : Jet2 (Fin 4) ℝ} (hT : IsTTJet D) {a b c d : Fin 4}
     (h : Rjet D a b c d ≠ 0) : (IsLong a ↔ ¬ IsLong b) ∧ (IsLong c ↔ ¬ IsLong d) := by
   by_contra hm
@@ -321,7 +321,7 @@ lemma ttWaveJet_props (κ Ap Ax s : ℝ) :
 `R_{α1β1} = −½ k_α k_β A₊ s`, `R_{α2β2} = ½ k_α k_β A₊ s`, `R_{α1β2} = −½ k_α k_β Aₓ s`,
 with `s = f''(k·x)` (valid for all `α, β`; both sides vanish unless `α, β ∈ {0, 3}`).
 
-See [QuennevilleBelair2015, (2.15a–c)]. -/
+See [QuennevilleBelair2015], (2.15a–c). -/
 theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
     let D : Jet2 (Fin 4) ℝ := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
     Rjet D α 1 β 1 = -(1/2) * kTT κ α * kTT κ β * Ap * s ∧

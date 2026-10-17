@@ -4655,11 +4655,11 @@ Feec.Repair.C410.pgrad_PLambda0_sub_PLambda1_iff	Feec.Koszul.map_extDeriv_polyFo
 Feec.Repair.C410.pgrad_PLambda0_sub_PminusLambda1_iff	Feec.Koszul.map_extDeriv_polyForm_le_polyFormMinus_iff	generalize
 Feec.Repair.C410.pgrad_mem_PLambda1	Feec.Koszul.extDeriv_mem_polyForm	generalize
 Feec.Repair.C410.sec410_alt	Feec.Koszul.isTensorSubcomplex_alt	generalize
-Feec.Repair.C410.sec410_corrected	Feec.Koszul.isTensorSubcomplex_corrected	generalize
+Feec.Repair.C410.sec410_corrected	Feec.Koszul.isTensorSubcomplex_polyForm	generalize
 Feec.Repair.C410.sec410_printed_fail	Feec.Counterexamples.PolynomialForms.not_isTensorSubcomplex_printed	counterexample
 Feec.Repair.C410.sec410_reduced	Feec.Koszul.extDeriv_mem_tensorForm_reduced	generalize
 Feec.Repair.C410.sec410_reduced_V0	Feec.Koszul.tensorForm_reduced_iff	generalize
-Feec.Repair.C410.sec49_vector_wave	Feec.Koszul.isSubcomplex_corrected	generalize
+Feec.Repair.C410.sec49_vector_wave	Feec.Koszul.isSubcomplex_polyForm	generalize
 Feec.Repair.C410.tensV	Feec.Koszul.tensorForm	generalize
 Feec.Repair.C410.tensV0	Feec.Koszul.tensorForm	generalize
 Feec.Repair.C410.tensVSub	Feec.Koszul.tensorForm	generalize

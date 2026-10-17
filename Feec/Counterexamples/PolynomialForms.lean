@@ -126,7 +126,7 @@ theorem grad_sq_not_whitney :
 /-- **The printed (4.14) discretizations with `P_r⁻Λ¹` are not subcomplexes** (thesis §4.10,
 p. 66), in every dimension `≥ 1` and for every number of rows: for `r ≥ 1` and every `V₂`,
 `P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × V₂ ⊗ V` is not a subcomplex. The corrected list is
-`Feec.Koszul.isTensorSubcomplex_corrected`. [QuennevilleBelair2015], §4.10 (refuted) -/
+`Feec.Koszul.isTensorSubcomplex_polyForm`. [QuennevilleBelair2015], §4.10 (refuted) -/
 theorem not_isTensorSubcomplex_printed [CharZero K] [Nonempty d] (ι : Type*) [Nonempty ι]
     {r : ℕ} (hr : 1 ≤ r) (V₂ : Submodule K (PolyForm K d)) :
     ¬ IsTensorSubcomplex ι (polyForm K d (r + 1) 0) (polyFormMinus K d r 1) V₂ := fun h =>

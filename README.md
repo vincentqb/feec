@@ -33,6 +33,8 @@ The library is organized by mathematics, not by thesis chapter
   on domains, polynomial forms, curvature tensors.
 - `Feec.Models`, `Feec.Physics`, `Feec.Counterexamples`: the concrete complexes (torus, `ℝⁿ`,
   bounded domains, cubes), linearized gravity and Einstein–Bianchi, and the refutations.
+- `Feec.FiniteElement`, `Feec.Examples`, `Feec.Numerics`: degrees of freedom and commuting
+  interpolants, non-vacuity witnesses, the Crank–Nicolson table of Ch. 7.
 
 `docs/THESIS_MAP.md` maps every thesis result to its Lean declarations.
 

@@ -301,7 +301,7 @@ wave equation, and §4.10, p. 66 for (4.14), corrected), in every dimension and 
 `P_rΛᵏ × P_r⁻Λ^{k+1} × {P_{r-1}Λ^{k+2}, P_r⁻Λ^{k+2}}` are subcomplexes. No hypothesis on `r`.
 The thesis' `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not (`Feec.Counterexamples.PolynomialForms`).
 See [QuennevilleBelair2015], §4.10. -/
-theorem isSubcomplex_corrected (r k : ℕ) :
+theorem isSubcomplex_polyForm (r k : ℕ) :
     IsSubcomplex (polyForm R d (r + 1) k) (polyForm R d r (k + 1)) (polyForm R d (r - 1) (k + 2)) ∧
     IsSubcomplex (polyForm R d (r + 1) k) (polyForm R d r (k + 1)) (polyFormMinus R d r (k + 2)) ∧
     IsSubcomplex (polyForm R d r k) (polyFormMinus R d r (k + 1)) (polyForm R d (r - 1) (k + 2)) ∧
@@ -319,7 +319,7 @@ theorem isSubcomplex_corrected (r k : ℕ) :
 
 /-- **The corrected list, `⊗ V`** (row-wise, the matrix wave equation (4.14) for `ι = Fin 3`,
 `k = 0`). See [QuennevilleBelair2015], §4.10. -/
-theorem isTensorSubcomplex_corrected (ι : Type*) (r k : ℕ) :
+theorem isTensorSubcomplex_polyForm (ι : Type*) (r k : ℕ) :
     IsTensorSubcomplex ι (polyForm R d (r + 1) k) (polyForm R d r (k + 1))
       (polyForm R d (r - 1) (k + 2)) ∧
     IsTensorSubcomplex ι (polyForm R d (r + 1) k) (polyForm R d r (k + 1))
@@ -328,7 +328,7 @@ theorem isTensorSubcomplex_corrected (ι : Type*) (r k : ℕ) :
       (polyForm R d (r - 1) (k + 2)) ∧
     IsTensorSubcomplex ι (polyForm R d r k) (polyFormMinus R d r (k + 1))
       (polyFormMinus R d r (k + 2)) :=
-  have h := isSubcomplex_corrected (R := R) (d := d) r k
+  have h := isSubcomplex_polyForm (R := R) (d := d) r k
   ⟨h.1.tensor, h.2.1.tensor, h.2.2.1.tensor, h.2.2.2.tensor⟩
 
 /-- **The alternative repair** of thesis §4.10: keep `P_{r+1}Λᵏ` and raise the trimmed index,
@@ -339,8 +339,8 @@ theorem isTensorSubcomplex_alt (ι : Type*) (r k : ℕ) :
       (polyForm R d r (k + 2)) ∧
     IsTensorSubcomplex ι (polyForm R d (r + 1) k) (polyFormMinus R d (r + 1) (k + 1))
       (polyFormMinus R d (r + 1) (k + 2)) :=
-  ⟨(isTensorSubcomplex_corrected ι (r + 1) k).2.2.1,
-    (isTensorSubcomplex_corrected ι (r + 1) k).2.2.2⟩
+  ⟨(isTensorSubcomplex_polyForm ι (r + 1) k).2.2.1,
+    (isTensorSubcomplex_polyForm ι (r + 1) k).2.2.2⟩
 
 /-- **The discretizations of the reduced system (4.15)** (thesis §4.10, after Prop 4.18):
 `d` maps each of `P_rΛ^{k+1} ⊗ V`, `P_r⁻Λ^{k+1} ⊗ V` into each of `P_{r-1}Λ^{k+2} ⊗ V`,
@@ -354,7 +354,7 @@ theorem extDeriv_mem_tensorForm_reduced (ι : Type*) (r k : ℕ) :
       (fun a => extDeriv (A a)) ∈ tensorForm R d ι (polyForm R d (r - 1) (k + 2))) ∧
     (∀ A ∈ tensorForm R d ι (polyFormMinus R d r (k + 1)),
       (fun a => extDeriv (A a)) ∈ tensorForm R d ι (polyFormMinus R d r (k + 2))) :=
-  have h := isTensorSubcomplex_corrected (R := R) (d := d) ι r k
+  have h := isTensorSubcomplex_polyForm (R := R) (d := d) ι r k
   ⟨h.1.extDeriv_mem₁, h.2.1.extDeriv_mem₁, h.2.2.1.extDeriv_mem₁, h.2.2.2.extDeriv_mem₁⟩
 
 /-! ### Exactness and the Koszul decomposition (characteristic zero) -/

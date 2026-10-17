@@ -3008,11 +3008,11 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Koszul».«map_extDeriv_polyForm_le_polyForm_iff» -- map.tsv
 #check @«Feec».«Koszul».«map_extDeriv_polyForm_le_polyFormMinus_iff» -- map.tsv
 #check @«Feec».«Koszul».«isTensorSubcomplex_alt» -- map.tsv
-#check @«Feec».«Koszul».«isTensorSubcomplex_corrected» -- map.tsv
+#check @«Feec».«Koszul».«isTensorSubcomplex_polyForm» -- map.tsv
 #check @«Feec».«Counterexamples».«PolynomialForms».«not_isTensorSubcomplex_printed» -- map.tsv
 #check @«Feec».«Koszul».«extDeriv_mem_tensorForm_reduced» -- map.tsv
 #check @«Feec».«Koszul».«tensorForm_reduced_iff» -- map.tsv
-#check @«Feec».«Koszul».«isSubcomplex_corrected» -- map.tsv
+#check @«Feec».«Koszul».«isSubcomplex_polyForm» -- map.tsv
 #check @«Feec».«Koszul».«tensorForm» -- map.tsv
 #check @«Feec».«Koszul».«koszul_add» -- map.tsv
 #check @«Feec».«Koszul».«koszul_mem_homForm» -- map.tsv

@@ -27,8 +27,10 @@ condition of the Hodge wave form (`Feec.Variational.InfSup.of_testMap`).
   flip `S`, hence separation.
 * `existsUnique_mixed`, `norm_le_of_mixed`: **well-posedness** with `‖x‖ ≤ 16 c_P² ‖f‖`, over
   `ℝ` and `ℂ`, for every complex and every pair of consecutive arrows.
-* `IsMixedSolution.harmonic_eq`, `IsMixedSolution.mem_adjoint_domain`: `p = P_ℌ f`, and
-  `u ∈ D(d†)` with `d† u = σ`.
+* `IsMixedSolution.harmonic_eq`, `IsMixedSolution.mem_adjoint_domain`,
+  `IsMixedSolution.mem_adjoint_domain_d`: `p = P_ℌ f`, `u ∈ D(d†)` with `d† u = σ`, and
+  `d u ∈ D(d†)` with `d† d u = f - p - d σ`; so `u` solves the Hodge Laplacian
+  `(d d† + d† d) u = f - P_ℌ f`, `u ⊥ ℌ`: the mixed problem defines its solution operator.
 
 ## References
 
@@ -614,6 +616,25 @@ theorem IsMixedSolution.mem_adjoint_domain (hij : c.Rel i j) {f : W j} {σ : H.d
     rw [← inner_conj_symm, e, inner_conj_symm]
   have hmem := mem_adjoint_domain_of_exists _ ⟨_, key⟩
   exact ⟨hmem, adjoint_apply_eq (H.dense i j) ⟨_, hmem⟩ key⟩
+
+/-- The second equation says `d u ∈ D(d†)` with `d† d u = f - p - d σ` (here `d = d j k`); with
+`IsMixedSolution.mem_adjoint_domain` this is the strong form `(d d† + d† d) u = f - P_ℌ f` of the
+Hodge Laplacian. -/
+theorem IsMixedSolution.mem_adjoint_domain_d (hjk : c.Rel j k) {f : W j} {σ : H.domainSpace i}
+    {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
+    ∃ h : H.d j k (H.domainCoord j k u) ∈ (H.d j k)†.domain,
+      (H.d j k)† ⟨_, h⟩ = f - (p : W j) - H.d i j (H.domainCoord i j σ) := by
+  have key : ∀ x : (H.d j k).domain,
+      ⟪f - (p : W j) - H.d i j (H.domainCoord i j σ), (x : W j)⟫ =
+        ⟪H.d j k (H.domainCoord j k u), H.d j k x⟫ := fun x => by
+    have e := hs.snd (H.toDomainSpace hjk x)
+    rw [domainIncl_toDomainSpace, d_domainCoord_toDomainSpace] at e
+    rw [← inner_conj_symm, ← inner_conj_symm (H.d j k (H.domainCoord j k u)), inner_sub_right,
+      inner_sub_right]
+    congr 1
+    linear_combination -e
+  have hmem := mem_adjoint_domain_of_exists _ ⟨_, key⟩
+  exact ⟨hmem, adjoint_apply_eq (H.dense j k) ⟨_, hmem⟩ key⟩
 
 /-- Poincaré constants `≥ 1` from closed range at a related pair. -/
 theorem exists_poincare_of_closedRangeAt {i j : ι} (hij : c.Rel i j) (hj : H.ClosedRangeAt j) :

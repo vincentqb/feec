@@ -1,6 +1,10 @@
 module
 
 public import Feec.Foundation
+public import Feec.Algebra.ExteriorFibre
+public import Feec.Algebra.Koszul
+public import Feec.Algebra.PolynomialForm
+public import Feec.Algebra.Proxy3
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
@@ -75,6 +79,8 @@ public import Feec.Models.Torus.GradCurl
 public import Feec.Models.Torus.SymCurl
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
+public import Feec.Physics.EinsteinBianchi.Constraints
+public import Feec.Physics.Maxwell.Constraints
 public import Feec.Semigroup.Basic
 public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.Perturbation

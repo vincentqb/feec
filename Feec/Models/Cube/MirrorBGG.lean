@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.Cube.MirrorSym
-public import Feec.Repair.C417BggCube
+public import Feec.Legacy.MirrorCube.BggCube
 
 /-!
 # The BGG complex (5.1) on the cube with mirror boundary conditions
@@ -12,12 +12,12 @@ through a multiplier `M`. On the torus the constraint `{0} × L²(TSD) × ({0} �
 multiplier, `B` TSD) reduces the complex (`reducingSubcomplex_tsd_torusBGG`). On the cube
 `Q = (0, ½)³` with mirror boundary conditions (`u` even, `E` with the tensor parities, the
 multiplier with the pseudo-vector parities `M(R_i x) = -D_i M(x)`, `B` with the pseudo-tensor
-parities) the complex of genuine fields (`MirrorBGG.complexQ`, `Feec.Repair.C417.bggCxQ`) is a
+parities) the complex of genuine fields (`MirrorBGG.complexQ`, `Feec.Legacy.MirrorCube.bggCxQ`) is a
 compression of the torus complex, and the constraint pulls back
 (`MirrorBGG.reducingSubcomplexQ`): TSD data give solutions with `σ ≡ 0`, `u` TSD (the weakly
 imposed symmetry holds strongly), `M ≡ 0` and `B` TSD, in particular symmetric
 (`MirrorBGG.mem_tsdQ_iff`). This is the repair of the Ch. 6 claim; with the boundary conditions of
-Thesis §6.3 it fails on every bounded domain (`Feec.Ch6.Bounded.bggComplex_verdict`).
+Thesis §6.3 it fails on every bounded domain (`Feec.Legacy.BoundedBGG.bggComplex_verdict`).
 
 ## Main results
 
@@ -31,6 +31,8 @@ Thesis §6.3 it fails on every bounded domain (`Feec.Ch6.Bounded.bggComplex_verd
 * [ArnoldHu2021] (BGG), [AFW2007] (weak symmetry)
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -38,14 +40,14 @@ open Set LinearPMap
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints Feec.Torus Feec.Box
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints Feec.Legacy.Torus Feec.Legacy.Box
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
-open Feec.Repair.C417
+open Feec.Legacy.MirrorCube
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 /-- The torus BGG complex (5.1) `L²(𝕋³; ℂ) → L²(𝕋³; ℂ³ˣ³) → L²(𝕋³; ℂ³ × ℂ³ˣ³)`
-(`Feec.Repair.C417.bggTorus`) as a window complex. -/
+(`Feec.Legacy.MirrorCube.bggTorus`) as a window complex. -/
 abbrev torusBGG := bggTorus.toShort.toHilbertComplex
 
 theorem isReducingPair_hess_bgg :
@@ -60,11 +62,11 @@ theorem isReducingPair_hess_bgg :
 
 /-- On the fibres, `(S₁, curl) P_TSD = P_{0 × TSD} (S₁, curl)`. -/
 theorem bggSym_starProjection (ζ : Freq) (M : Mat3) :
-    Feec.Ch6.Whole.bggSym ζ ((tsd ζ).starProjection M) =
-      (Feec.Ch6.Whole.tsdB ζ).starProjection (Feec.Ch6.Whole.bggSym ζ M) := by
+    Feec.Legacy.WholeBGG.bggSym ζ ((tsd ζ).starProjection M) =
+      (Feec.Legacy.WholeBGG.tsdB ζ).starProjection (Feec.Legacy.WholeBGG.bggSym ζ M) := by
   have hP := Submodule.starProjection_apply_mem (tsd ζ) M
-  rw [Feec.Ch6.Whole.bggSym_apply, Feec.Ch6.Whole.skwSym_eq_zero_of_symm hP.1, ← proj_curlSym,
-    Feec.Ch6.Whole.starProjection_tsdB, Feec.Ch6.Whole.bggSym_apply, WithLp.ofLp_toLp]
+  rw [Feec.Legacy.WholeBGG.bggSym_apply, Feec.Legacy.WholeBGG.skwSym_eq_zero_of_symm hP.1, ← proj_curlSym,
+    Feec.Legacy.WholeBGG.starProjection_tsdB, Feec.Legacy.WholeBGG.bggSym_apply, WithLp.ofLp_toLp]
   rfl
 
 theorem isReducingPair_bgg_tsd : bggTorus.d1.IsReducingPair L2TSD L2TSDBT := by
@@ -72,7 +74,7 @@ theorem isReducingPair_bgg_tsd : bggTorus.d1.IsReducingPair L2TSD L2TSDBT := by
   · have hx : (x : L2M) ∈ Hcurl := bggT_domain_iff.1 x.2
     exact bggT_domain_iff.2 (projTSD_mem_Hcurl hx)
   · refine lp.ext (funext fun k => ?_)
-    change Feec.Ch6.Whole.bggSym (freq k) (L2TSD.starProjection x k) =
+    change Feec.Legacy.WholeBGG.bggSym (freq k) (L2TSD.starProjection x k) =
       L2TSDBT.starProjection (bggT x) k
     rw [projTSD_apply, projTSDBT_apply, bggSym_starProjection]
     rfl
@@ -86,7 +88,7 @@ theorem reducingSubcomplex_tsd_torusBGG :
 namespace MirrorBGG
 
 /-- **The BGG complex (5.1) of genuine fields on `Q` with mirror boundary conditions**
-(`Feec.Repair.C417.bggCxQ`). -/
+(`Feec.Legacy.MirrorCube.bggCxQ`). -/
 abbrev complexQ := bggCxQ.toShort.toHilbertComplex
 
 /-- The mirror extensions embed the BGG complex on `Q` in the torus BGG complex. -/

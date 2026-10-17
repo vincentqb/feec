@@ -19,13 +19,32 @@ lake exe cache get   # fetch prebuilt Mathlib
 lake build
 ```
 
+## Contents
+
+The library is organized by mathematics, not by thesis chapter
+([`docs/OVERVIEW.md`](docs/OVERVIEW.md#module-map)):
+
+- `Feec.ForMathlib`, `Feec.Operator`, `Feec.Semigroup`, `Feec.Evolution`: unbounded operators,
+  `C₀`-groups and semigroups, Stone's theorem, evolution equations, over `ℝ` and `ℂ`.
+- `Feec.Variational`, `Feec.TimeStepping`: inf-sup theory, Galerkin methods, Crank–Nicolson.
+- `Feec.HilbertComplex`: Hilbert complexes of any length, Hodge theory, the Hodge wave equation,
+  constraint propagation, approximation, BGG complexes.
+- `Feec.Fourier`, `Feec.Domain`, `Feec.Algebra`, `Feec.Geometry`: symbol complexes, `L²` fields
+  on domains, polynomial forms, curvature tensors.
+- `Feec.Models`, `Feec.Physics`, `Feec.Counterexamples`: the concrete complexes (torus, `ℝⁿ`,
+  bounded domains, cubes), linearized gravity and Einstein–Bianchi, and the refutations.
+- `Feec.Legacy`: the real-scalar development the cube models still build on, and the results not
+  yet re-derived in the general layers.
+
+`docs/THESIS_MAP.md` maps every thesis result to its Lean declarations.
+
 ## Highlights
 
-- Stone's theorem on real Hilbert spaces (`Feec.stoneGroup`), which discharges the existence hypotheses of Ch. 4.
-- The abstract Hodge wave equation (Thms 4.6–4.7), Brezzi theory, the semi-discrete error estimate (Thm 4.14), and the BGG weak-symmetry construction (Ch. 5–6).
-- Props 4.17/4.19: proved on 𝕋³ and ℝ³; on every bounded domain their hypotheses and conclusions fail, and they hold on the largest invariant constraint space, which for Prop 4.17 on every cube contains only stationary data. With tensorial mirror boundary conditions they hold on every open cube. The Ch. 6 method inherits the bounded-domain failure.
-- Eighteen corrections to the thesis, each pinned to a Lean declaration, e.g. Prop 2.4(b) is off by a factor ½, "Fredholm ⇒ closed" is false, Prop 6.2 needs compatibility conditions.
-- Every correction comes with a proved repaired statement (`Feec.Repair.*` and the table in [`docs/OVERVIEW.md`](docs/OVERVIEW.md#repaired-statements)). For Props 4.17/4.19 and Ch. 6 the repair covers domains without boundary and cubes, not curved domains.
+- Stone's theorem over `ℝ` and `ℂ` (`LinearPMap.isSkewAdjoint_iff_existsUnique_isometricGroup`): the Hodge wave equation of every Hilbert complex is well posed, with the thesis's full forcing class (Thms 4.3, 4.6–4.7).
+- Constraint propagation (Props 4.16–4.19) for every Hilbert complex: a constraint propagates iff it is a reducing subcomplex. Props 4.17/4.19 hold on 𝕋³ and ℝ³; on every bounded domain their hypotheses and conclusions fail, and on cubes with the thesis's boundary conditions only stationary data propagate. With tensorial mirror boundary conditions they hold on every open cube. The Ch. 6 method inherits the bounded-domain failure.
+- Brezzi theory and Babuška–Nečas over `ℝ` and `ℂ`, the semi-discrete error estimate (Thm 4.14), and the BGG weak-symmetry construction (Ch. 5–6).
+- Eighteen corrections to the thesis, each pinned to a Lean declaration (most in `Feec.Counterexamples`), e.g. Prop 2.4(b) is off by a factor ½, "Fredholm ⇒ closed" is false, Prop 6.2 needs compatibility conditions.
+- Every correction comes with a proved repaired statement (the table in [`docs/OVERVIEW.md`](docs/OVERVIEW.md#repaired-statements)). For Props 4.17/4.19 and Ch. 6 the repair covers domains without boundary and cubes, not curved domains.
 
 See [`docs/OVERVIEW.md`](docs/OVERVIEW.md) for the module map, the full list of corrections, the repaired statements and the
 scope (what enters as hypotheses), and [`docs/references.bib`](docs/references.bib) for the

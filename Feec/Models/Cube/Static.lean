@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.Cube.Parity
-public import Feec.Ch4.BoundedKstar
+public import Feec.Legacy.BoundedDomain.Kstar
 
 /-!
 # Only static data propagate on the cube with the thesis' boundary conditions
@@ -37,6 +37,8 @@ the largest invariant subspace of `K = {0} × S₁ × S₂` consists of the stat
 * [ReedSimon1980], §VII.3 (mean ergodic theorem)
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -44,7 +46,7 @@ open Set LinearPMap
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints Feec.Torus Feec.Box
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints Feec.Legacy.Torus Feec.Legacy.Box
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 

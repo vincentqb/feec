@@ -415,60 +415,8 @@ end Feec.Counterexamples.BoundedDomainTSD
 
 namespace Feec.Models.BoundedDomain
 
-@[deprecated (since := "2026-10-17")] alias constField :=
-  Counterexamples.BoundedDomainTSD.constField
-@[deprecated (since := "2026-10-17")] alias coeFn_constField :=
-  Counterexamples.BoundedDomainTSD.coeFn_constField
-@[deprecated (since := "2026-10-17")] alias inner_constField :=
-  Counterexamples.BoundedDomainTSD.inner_constField
-@[deprecated (since := "2026-10-17")] alias integral_constField :=
-  Counterexamples.BoundedDomainTSD.integral_constField
-@[deprecated (since := "2026-10-17")] alias constField_mem_tsd :=
-  Counterexamples.BoundedDomainTSD.constField_mem_tsd
-@[deprecated (since := "2026-10-17")] alias diagA :=
-  Counterexamples.BoundedDomainTSD.diagA
-@[deprecated (since := "2026-10-17")] alias diagA_transpose :=
-  Counterexamples.BoundedDomainTSD.diagA_transpose
-@[deprecated (since := "2026-10-17")] alias diagA_trace :=
-  Counterexamples.BoundedDomainTSD.diagA_trace
-@[deprecated (since := "2026-10-17")] alias inner_constField_eq_zero :=
-  Counterexamples.BoundedDomainTSD.inner_constField_eq_zero
-@[deprecated (since := "2026-10-17")] alias constField_mem_obstruction :=
-  Counterexamples.BoundedDomainTSD.constField_mem_obstruction
-@[deprecated (since := "2026-10-17")] alias volume_real_pos :=
-  Counterexamples.BoundedDomainTSD.volume_real_pos
-@[deprecated (since := "2026-10-17")] alias constField_diagA_ne_zero :=
-  Counterexamples.BoundedDomainTSD.constField_diagA_ne_zero
-@[deprecated (since := "2026-10-17")] alias obstruction_ne_bot :=
-  Counterexamples.BoundedDomainTSD.obstruction_ne_bot
-@[deprecated (since := "2026-10-17")] alias not_dense_tsd_inter :=
-  Counterexamples.BoundedDomainTSD.not_dense_tsd_inter
-@[deprecated (since := "2026-10-17")] alias exists_isTest_integral_pos :=
-  Counterexamples.BoundedDomainTSD.exists_isTest_integral_pos
-@[deprecated (since := "2026-10-17")] alias exists_projTSD_not_mem_domain :=
-  Counterexamples.BoundedDomainTSD.exists_projTSD_not_mem_domain
-@[deprecated (since := "2026-10-17")] alias not_isReducing_wave_tsd :=
-  Counterexamples.BoundedDomainTSD.not_isReducing_tsd
-@[deprecated (since := "2026-10-17")] alias betaField :=
-  Counterexamples.BoundedDomainTSD.betaField
-@[deprecated (since := "2026-10-17")] alias contDiff_betaField :=
-  Counterexamples.BoundedDomainTSD.contDiff_betaField
-@[deprecated (since := "2026-10-17")] alias curlM_betaField :=
-  Counterexamples.BoundedDomainTSD.curlM_betaField
-@[deprecated (since := "2026-10-17")] alias betaL2 :=
-  Counterexamples.BoundedDomainTSD.betaL2
-@[deprecated (since := "2026-10-17")] alias betaL2_mem_tsd :=
-  Counterexamples.BoundedDomainTSD.betaL2_mem_tsd
-@[deprecated (since := "2026-10-17")] alias betaL2_mem_adjoint :=
-  Counterexamples.BoundedDomainTSD.betaL2_mem_adjoint
-@[deprecated (since := "2026-10-17")] alias not_propagates :=
-  Counterexamples.BoundedDomainTSD.tsd_not_propagates
-
 end Feec.Models.BoundedDomain
 
 namespace Feec.EinsteinBianchi
-
-@[deprecated (since := "2026-10-17")] alias boundedDomain_tsd_not_propagates :=
-  Counterexamples.BoundedDomainTSD.tsd_not_propagates
 
 end Feec.EinsteinBianchi

@@ -107,13 +107,4 @@ end Feec.Counterexamples.LinearizedGravity
 
 namespace Feec.LinearizedGravity
 
-@[deprecated (since := "2026-10-17")] alias not_isTT_gaugeAmp_printed :=
-  Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed
-@[deprecated (since := "2026-10-17")] alias not_isTT_gaugeAmp_printed_contra :=
-  Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed_contra
-@[deprecated (since := "2026-10-17")] alias not_accel_printed :=
-  Counterexamples.LinearizedGravity.not_accel_printed
-@[deprecated (since := "2026-10-17")] alias not_Hjet_eq_neg_boxJ :=
-  Counterexamples.LinearizedGravity.not_Hjet_eq_neg_boxJ
-
 end Feec.LinearizedGravity

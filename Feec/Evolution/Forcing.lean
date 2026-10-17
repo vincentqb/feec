@@ -259,16 +259,4 @@ theorem ForcingThm43.admissible [CompleteSpace E] {A : E →ₗ.[ℝ] E} {T : �
     (hF : ForcingThm43 A T F) : ForcingClass.admissible A T F :=
   hF.elim ForcingClass.contDomain.admissible ForcingClass.derivOffCountable.admissible
 
-@[deprecated (since := "2026-10-16")] alias continuousOn_primitive_Icc_of_integrableOn :=
-  ForcingClass.continuousOn_primitive
-
-@[deprecated (since := "2026-10-16")] alias isW11_iff := ForcingClass.w11_iff
-
-@[deprecated (since := "2026-10-16")] alias isW11_of_hasDerivAt := ForcingClass.w11_of_hasDerivAt
-
-@[deprecated (since := "2026-10-16")] alias forcingThm43Full_of_C1 := ForcingClass.admissible_of_C1
-
-@[deprecated (since := "2026-10-16")] alias forcingThm43Full_of_forcingThm43 :=
-  ForcingThm43.admissible
-
 end Feec

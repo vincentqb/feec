@@ -1,16 +1,16 @@
 module
 
 public import Feec.Models.Cube.Mirror
-public import Feec.Repair.C417CubeDense
+public import Feec.Legacy.MirrorCube.CubeDense
 
 /-!
 # The cube complexes and the bounded-domain realizations
 
 The parity model of `Feec.Models.Cube.Parity` (thesis boundary conditions) is identified, through
 the reflection extensions, with the bounded-domain complex `H̊¹(Q) → H̊(curl, Q) → L²(Q)` of
-`Feec.BoundedDomain.thesisComplex` (the **minimal** realizations of `grad` and `curl`,
-`Feec.BoxIdent.bijOn_resB_HcurlZero`, `Feec.BoxIdent.iota_waveOp`), and transported to every open
-cube `∏ (bᵢ, bᵢ + s)` by `x ↦ a x + b` (`Feec.BoxIdent.pullX_waveOp`). This file states the
+`Feec.Legacy.BoundedDomain.thesisComplex` (the **minimal** realizations of `grad` and `curl`,
+`Feec.Legacy.BoxIdent.bijOn_resB_HcurlZero`, `Feec.Legacy.BoxIdent.iota_waveOp`), and transported to every open
+cube `∏ (bᵢ, bᵢ + s)` by `x ↦ a x + b` (`Feec.Legacy.BoxIdent.pullX_waveOp`). This file states the
 results on the bounded-domain complexes in the language of window complexes:
 
 * on every open cube, for every closed `S₁`, `S₂` inside `L²(TSD)`, forward invariance of
@@ -29,6 +29,8 @@ results on the bounded-domain complexes in the language of window complexes:
 * [Brezis2011], §9.2 (extension by reflection)
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -36,10 +38,10 @@ open Set LinearPMap
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints Feec.Torus Feec.Box
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints Feec.Legacy.Torus Feec.Legacy.Box
 open Feec.HilbertComplex (totalSub)
-open Feec.BoxIdent (openCube mem_Qr_iff_openCube cxCube cxQ Qr)
-open Feec.BoundedDomain (R3)
+open Feec.Legacy.BoxIdent (openCube mem_Qr_iff_openCube cxCube cxQ Qr)
+open Feec.Legacy.BoundedDomain (R3)
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
@@ -48,21 +50,21 @@ namespace Ident
 variable {b : R3} {s : ℝ}
 
 /-- **The thesis' complex on the open cube** `∏ (bᵢ, bᵢ + s)`: `H̊¹ → H̊(curl) → L²`, the minimal
-realizations of `grad` and `curl` (`Feec.BoundedDomain.thesisComplex`), as a window complex. -/
+realizations of `grad` and `curl` (`Feec.Legacy.BoundedDomain.thesisComplex`), as a window complex. -/
 abbrev complexCube (b : R3) (s : ℝ) := (cxCube b s).toShort.toHilbertComplex
 
 /-- The spaces of `complexCube`. -/
-abbrev V (b : R3) (s : ℝ) := Feec.BoundedDomain.L2V (openCube b s)
+abbrev V (b : R3) (s : ℝ) := Feec.Legacy.BoundedDomain.L2V (openCube b s)
 /-- The spaces of `complexCube`. -/
-abbrev M (b : R3) (s : ℝ) := Feec.BoundedDomain.L2M (openCube b s)
+abbrev M (b : R3) (s : ℝ) := Feec.Legacy.BoundedDomain.L2M (openCube b s)
 
 /-- **On every open cube with the thesis' boundary conditions, forward invariance forces
 stationarity**: for closed `S₁, S₂ ⊆ L²(TSD)`, the forward orbit of `y` under the wave group stays
 in `{0} × S₁ × S₂` iff `y` lies there and is stationary.
 Thesis: Prop 4.17 (corrected) -/
 theorem forward_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (M b s)}
-    (h1 : S1 ≤ Feec.BoundedDomain.TSD (openCube b s))
-    (h2 : S2 ≤ Feec.BoundedDomain.TSD (openCube b s))
+    (h1 : S1 ≤ Feec.Legacy.BoundedDomain.TSD (openCube b s))
+    (h2 : S2 ≤ Feec.Legacy.BoundedDomain.TSD (openCube b s))
     (y : PiLp 2 (W3 (V b s) (M b s) (M b s))) :
     (∀ t, 0 ≤ t → (complexCube b s).waveGroup.S t y ∈
         totalSub (sub3 (⊥ : Submodule ℝ (V b s)) S1 S2)) ↔
@@ -74,7 +76,7 @@ theorem forward_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (M b s)}
     constructor
     · intro h
       have hx : x ∈ Kc (V b s) S1 S2 := by simpa [G.map_zero] using h 0 le_rfl
-      refine ⟨hx, ((Feec.BoxIdent.openCube_forward_iff hs G x).1 fun t ht => ?_).2⟩
+      refine ⟨hx, ((Feec.Legacy.BoxIdent.openCube_forward_iff hs G x).1 fun t ht => ?_).2⟩
       have := h t ht
       rw [mem_Kc] at this ⊢
       exact ⟨this.1, h1 this.2.1, h2 this.2.2⟩
@@ -88,8 +90,8 @@ theorem forward_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (M b s)}
 in `K`**, for every closed `S₁, S₂ ⊆ L²(TSD)`.
 Thesis: Prop 4.17 (corrected) -/
 theorem mem_invariantCore_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (M b s)}
-    (h1 : S1 ≤ Feec.BoundedDomain.TSD (openCube b s))
-    (h2 : S2 ≤ Feec.BoundedDomain.TSD (openCube b s))
+    (h1 : S1 ≤ Feec.Legacy.BoundedDomain.TSD (openCube b s))
+    (h2 : S2 ≤ Feec.Legacy.BoundedDomain.TSD (openCube b s))
     (y : PiLp 2 (W3 (V b s) (M b s) (M b s))) :
     y ∈ (complexCube b s).waveGroup.invariantCore
         (totalSub (sub3 (⊥ : Submodule ℝ (V b s)) S1 S2)) ↔
@@ -104,33 +106,33 @@ theorem mem_invariantCore_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (M b s)}
 Thesis: Prop 4.17 (corrected) -/
 theorem mem_invariantCore_tsd_iff (hs : 0 < s) (y : PiLp 2 (W3 (V b s) (M b s) (M b s))) :
     y ∈ (complexCube b s).waveGroup.invariantCore (totalSub (sub3 (⊥ : Submodule ℝ (V b s))
-        (Feec.BoundedDomain.TSD (openCube b s)) (Feec.BoundedDomain.TSD (openCube b s)))) ↔
-      ∃ B ∈ Feec.BoundedDomain.TSD (openCube b s), ∃ h : B ∈ (cxCube b s).d1†.domain,
+        (Feec.Legacy.BoundedDomain.TSD (openCube b s)) (Feec.Legacy.BoundedDomain.TSD (openCube b s)))) ↔
+      ∃ B ∈ Feec.Legacy.BoundedDomain.TSD (openCube b s), ∃ h : B ∈ (cxCube b s).d1†.domain,
         (cxCube b s).d1† ⟨B, h⟩ = 0 ∧ y = totEquiv (ini (V b s) 0 B) := by
   obtain ⟨x, rfl⟩ := totEquiv.surjective y
   rw [← map_Kc, ← mem_Kmax_iff (cxCube b s) (cxCube b s).waveGroup,
-    Feec.BoxIdent.openCube_mem_Kmax_iff' hs]
+    Feec.Legacy.BoxIdent.openCube_mem_Kmax_iff' hs]
   simp only [totEquiv.injective.eq_iff]
 
 /-- The minimal realization `H̊¹(Q) → H̊(curl, Q)` is a restriction of the mirror complex on `Q`:
 `d^{min} ≤ d^{mirror}` for both differentials. -/
 theorem minimal_le_mirror :
-    cxQ.d0 ≤ Feec.Repair.C417.mirrorCxQ.d0 ∧ cxQ.d1 ≤ Feec.Repair.C417.mirrorCxQ.d1 := by
-  refine ⟨⟨fun u hu => (Feec.Repair.C417.gradClosure_le_mirror ⟨u, hu⟩).1, fun x y hxy => ?_⟩,
-    ⟨fun u hu => (Feec.Repair.C417.curlClosure_le_mirror ⟨u, hu⟩).1, fun x y hxy => ?_⟩⟩
-  · obtain ⟨h, e⟩ := Feec.Repair.C417.gradClosure_le_mirror x
+    cxQ.d0 ≤ Feec.Legacy.MirrorCube.mirrorCxQ.d0 ∧ cxQ.d1 ≤ Feec.Legacy.MirrorCube.mirrorCxQ.d1 := by
+  refine ⟨⟨fun u hu => (Feec.Legacy.MirrorCube.gradClosure_le_mirror ⟨u, hu⟩).1, fun x y hxy => ?_⟩,
+    ⟨fun u hu => (Feec.Legacy.MirrorCube.curlClosure_le_mirror ⟨u, hu⟩).1, fun x y hxy => ?_⟩⟩
+  · obtain ⟨h, e⟩ := Feec.Legacy.MirrorCube.gradClosure_le_mirror x
     rw [← e]; exact apply_congr' _ _ _ hxy
-  · obtain ⟨h, e⟩ := Feec.Repair.C417.curlClosure_le_mirror x
+  · obtain ⟨h, e⟩ := Feec.Legacy.MirrorCube.curlClosure_le_mirror x
     rw [← e]; exact apply_congr' _ _ _ hxy
 
 /-- The mirror curl on `Q` lies between the minimal and the maximal curl:
 `H̊(curl, Q) ⊆ D(d₁) ⊆ H(curl, Q)`. -/
 theorem mirror_domain_le_maximal :
-    Feec.BoundedDomain.HcurlZero Qr ⊆
-        (Feec.Repair.C417.mirrorCxQ.d1.domain : Set Feec.Repair.C417.MQ) ∧
-      (Feec.Repair.C417.mirrorCxQ.d1.domain : Set Feec.Repair.C417.MQ) ⊆
-        Feec.BoundedDomain.HcurlM Qr :=
-  Feec.Repair.C417.HcurlZero_le_d1_le_HcurlM
+    Feec.Legacy.BoundedDomain.HcurlZero Qr ⊆
+        (Feec.Legacy.MirrorCube.mirrorCxQ.d1.domain : Set Feec.Legacy.MirrorCube.MQ) ∧
+      (Feec.Legacy.MirrorCube.mirrorCxQ.d1.domain : Set Feec.Legacy.MirrorCube.MQ) ⊆
+        Feec.Legacy.BoundedDomain.HcurlM Qr :=
+  Feec.Legacy.MirrorCube.HcurlZero_le_d1_le_HcurlM
 
 end Ident
 

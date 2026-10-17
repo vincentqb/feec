@@ -61,7 +61,4 @@ end Feec.Counterexamples.DiscreteBGG
 
 namespace Feec.BGG
 
-@[deprecated (since := "2026-10-17")] alias mixed_not_unique_of_not_exactTop :=
-  Counterexamples.DiscreteBGG.mixed_not_unique_of_not_exactTop
-
 end Feec.BGG

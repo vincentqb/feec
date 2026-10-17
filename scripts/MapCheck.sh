@@ -104,7 +104,7 @@ heads = set(re.findall(r'^### (.+)$', open('docs/THESIS_MAP.md', encoding='utf-8
 ntag = 0
 for p in sorted(pathlib.Path('Feec').rglob('*.lean')):
     for k, line in enumerate(p.read_text(encoding='utf-8').splitlines(), start=1):
-        for t in re.findall(r'\bThesis:\s*((?:[^;\n.]|\.(?=\d))*)', line):
+        for t in re.findall(r'\bThesis:\s*((?:[^;\n.]|\.(?= ?\d))*)', line):
             for m in RES.finditer(t):
                 ntag += 1
                 i = f'{KIND[m.group(1).lower()]} {m.group(2)}'

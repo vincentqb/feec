@@ -37,7 +37,9 @@ EQ = re.compile(r'\((\d+\.\d+)([a-z](?:–[a-z])?)?\)(?:\s*–\s*\((\d+\.\d+)\))
 SEC = re.compile(r'§\s*(\d+\.\d+)(?:\s*–\s*(\d+\.\d+))?')
 CH = re.compile(r'\bCh\.\s*(\d+)\b')
 CITE = re.compile(r'\[QuennevilleBelair2015,([^\]]*)\]')
-TAG = re.compile(r'\bThesis:\s*((?:[^;\n.]|\.(?=\d))*)')
+# doc-gen4 form (docs/REFACTOR_PLAN.md, citation convention): `[QuennevilleBelair2015], Prop. 4.17 (§4.10)`
+CITE2 = re.compile(r'\[QuennevilleBelair2015\](?![\[(])((?:[^\n;`\[]|\[(?!QuennevilleBelair2015))*)')
+TAG = re.compile(r'\bThesis:\s*((?:[^;\n.]|\.(?= ?\d))*)')
 NAMED = re.compile(r'(?:^|_)(thm|prop|cor|lemma)_(\d+)_(\d+)|(?:^|_)(thm|prop|cor|lemma)(\d)(\d+)(?![\d])')
 CHN = re.compile(r'(?:^|_)ch(\d+)_')
 OTHER = re.compile(r'^(Sol|Hyp|Sys|C)(\d)(\d+)$')
@@ -97,7 +99,7 @@ for line in open(docs, encoding='utf-8'):
     if not line:
         continue
     name, mod, doc = line.split('\t', 2)
-    for c in CITE.findall(doc):
+    for c in CITE.findall(doc) + CITE2.findall(doc):
         for i in cited(c):
             cites[i].add(name); mods[i].add(mod)
     for t in TAG.findall(doc):
@@ -108,11 +110,19 @@ for line in open(docs, encoding='utf-8'):
 import pathlib
 for f in sorted(pathlib.Path('Feec').rglob('*.lean')):
     mod = '.'.join(f.with_suffix('').parts)
-    for c in CITE.findall(f.read_text(encoding='utf-8')):
+    src = f.read_text(encoding='utf-8')
+    for c in CITE.findall(src) + CITE2.findall(src):
         for i in cited(' '.join(c.split())):
             mods[i].add(mod)
 
-# numbered names: every Feec declaration, with or without a docstring
+# numbered names: the thesis-numbered names of the pre-refactor snapshot, listed through
+# docs/migration/map.tsv under their current names (`named`), the old names under `old`
+newnames = defaultdict(set)
+for k, line in enumerate(open('docs/migration/map.tsv', encoding='utf-8')):
+    f = line.rstrip('\n').split('\t')
+    if k and len(f) == 3 and f[2] != 'deleted-helper':
+        newnames[f[0]].add(f[1])
+oldnamed = defaultdict(set)
 for line in open('docs/migration/old_theorems.tsv', encoding='utf-8'):
     name = line.split('\t', 1)[0]
     last = name.split('.')[-1]
@@ -121,17 +131,19 @@ for line in open('docs/migration/old_theorems.tsv', encoding='utf-8'):
             i = f'{KIND[m.group(1)]} {m.group(2)}.{m.group(3)}'
         else:
             i = f'{KIND[m.group(4)]} {m.group(5)}.{m.group(6)}'
-        named[i].add(name)
+        oldnamed[i].add(name); named[i].update(newnames[name])
     for m in CHN.finditer(last):
-        named[f'Ch {m.group(1)}'].add(name)
+        i = f'Ch {m.group(1)}'
+        oldnamed[i].add(name); named[i].update(newnames[name])
     m = OTHER.match(last)
     if m:
-        named[f'Ch {m.group(2)}'].add(name)
+        i = f'Ch {m.group(2)}'
+        oldnamed[i].add(name); named[i].update(newnames[name])
 
 def fmt(names):
     return ', '.join(f'`{n}`' for n in sorted(names))
 
-ids = sorted(set(named) | set(tagged) | set(cites) | set(mods), key=key)
+ids = sorted(set(named) | set(oldnamed) | set(tagged) | set(cites) | set(mods), key=key)
 res = [i for i in ids if ORDER.get(i.split(' ')[0], 9) == 0]
 L = []
 L.append('# Thesis map')
@@ -144,11 +156,13 @@ L.append('')
 L.append('**Generated** by `scripts/ThesisMap.sh` from declaration names and docstrings; do not edit by')
 L.append('hand, rerun after renaming. A declaration is listed under a thesis id when')
 L.append('')
-L.append('- **named**: its name encodes the id (`prop_4_17`, `prop417_density_gap`, `ch6_corrected`,')
-L.append('  `Sol61`; old names only, banned after the refactor);')
+L.append('- **named**: it is a current home (`docs/migration/map.tsv`) of a pre-refactor declaration whose')
+L.append('  name encoded the id (`prop_4_17`, `prop417_density_gap`, `ch6_corrected`, `Sol61`); those old')
+L.append('  names are listed, unchecked, under **old**;')
 L.append('- **tagged**: its docstring has a `Thesis: Prop 4.17 (corrected)` tag (the convention for new')
 L.append('  declarations);')
-L.append('- **cited**: its docstring cites the id inside `[QuennevilleBelair2015, ...]`.')
+L.append('- **cited**: its docstring cites the id, as `[QuennevilleBelair2015], Prop. 4.17` or inside')
+L.append('  `[QuennevilleBelair2015, ...]`.')
 L.append('')
 L.append('Every backticked name in a list item below is checked by `scripts/MapCheck.sh`')
 L.append('(`#check @name` must elaborate).')
@@ -157,7 +171,7 @@ n_named = len(set().union(*named.values())) if named else 0
 n_all = len(set().union(*named.values(), *tagged.values(), *cites.values()))
 L.append(f'Counts at generation: {len(res)} numbered results (Thm/Prop/Cor/Lemma/Remark/Def), '
          f'{len(ids) - len(res)} equations/sections/chapters, {n_all} distinct declarations '
-         f'({n_named} with a thesis-numbered name).')
+         f'({n_named} current homes of thesis-numbered old names).')
 L.append('')
 L.append('## Results')
 L.append('')
@@ -165,6 +179,7 @@ def section(i):
     L.append(f'### {i}')
     L.append('')
     if named[i]:  L.append(f'- named: {fmt(named[i])}')
+    if oldnamed[i]: L.append(f'- old: {", ".join(sorted(oldnamed[i]))}')
     if tagged[i]: L.append(f'- tagged: {fmt(tagged[i])}')
     if cites[i]:  L.append(f'- cited: {fmt(cites[i])}')
     if mods[i]: L.append(f'- modules: {", ".join(sorted(mods[i]))}')

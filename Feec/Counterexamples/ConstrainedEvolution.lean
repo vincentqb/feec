@@ -221,24 +221,4 @@ end Feec.Counterexamples.ConstrainedEvolution
 
 namespace Feec.BGG.Counterexample
 
-@[deprecated (since := "2026-10-17")] alias kerVector :=
-  Counterexamples.ConstrainedEvolution.kerVector
-@[deprecated (since := "2026-10-17")] alias incompatibleSegment :=
-  Counterexamples.ConstrainedEvolution.incompatibleSegment
-@[deprecated (since := "2026-10-17")] alias incompatibleSegment_hyps :=
-  Counterexamples.ConstrainedEvolution.incompatibleSegment_hyps
-@[deprecated (since := "2026-10-17")] alias not_forall_exists_discreteSolution :=
-  Counterexamples.ConstrainedEvolution.not_forall_exists_discreteSolution
-@[deprecated (since := "2026-10-17")] alias E0 := Counterexamples.ConstrainedEvolution.E0
-@[deprecated (since := "2026-10-17")] alias E0_eq_zero :=
-  Counterexamples.ConstrainedEvolution.E0_eq_zero
-@[deprecated (since := "2026-10-17")] alias projSegment :=
-  Counterexamples.ConstrainedEvolution.projSegment
-@[deprecated (since := "2026-10-17")] alias projι := Counterexamples.ConstrainedEvolution.projι
-@[deprecated (since := "2026-10-17")] alias projAh := Counterexamples.ConstrainedEvolution.projAh
-@[deprecated (since := "2026-10-17")] alias not_projected_compatible_phi :=
-  Counterexamples.ConstrainedEvolution.not_projected_compatible_phi
-@[deprecated (since := "2026-10-17")] alias exists_discreteSolution_projected_ne :=
-  Counterexamples.ConstrainedEvolution.exists_discreteSolution_projected_ne
-
 end Feec.BGG.Counterexample

@@ -233,11 +233,4 @@ end Feec.Counterexamples.BoundedSymTSD
 
 namespace Feec.Models.BoundedDomain
 
-@[deprecated (since := "2026-10-17")] alias inner_betaL2_curl :=
-  Counterexamples.BoundedSymTSD.inner_betaL2_curl
-@[deprecated (since := "2026-10-17")] alias betaT_mem_adjoint :=
-  Counterexamples.BoundedSymTSD.betaT_mem_adjoint
-@[deprecated (since := "2026-10-17")] alias not_propagates_sym :=
-  Counterexamples.BoundedSymTSD.tsd_not_propagates
-
 end Feec.Models.BoundedDomain

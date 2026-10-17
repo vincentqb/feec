@@ -1,10 +1,13 @@
 module
 
-public import Feec.Foundation
 public import Feec.Algebra.ExteriorFibre
 public import Feec.Algebra.Koszul
+public import Feec.Algebra.LeviCivita
+public import Feec.Algebra.MatrixSymbol
+public import Feec.Algebra.Metric
 public import Feec.Algebra.PolynomialForm
 public import Feec.Algebra.Proxy3
+public import Feec.Algebra.TransverseTraceless
 public import Feec.Counterexamples.BallSymTSD
 public import Feec.Counterexamples.BoundedDomainTSD
 public import Feec.Counterexamples.BoundedSymTSD
@@ -18,8 +21,6 @@ public import Feec.Counterexamples.Fredholm
 public import Feec.Counterexamples.LinearizedGravity
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
-public import Feec.Examples.NonVacuity
-public import Feec.Numerics.CrankNicolsonTable
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
@@ -28,12 +29,6 @@ public import Feec.Domain.L2Field
 public import Feec.Domain.Mollify
 public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
-public import Feec.Fourier.SpectralGalerkin
-public import Feec.Fourier.Weak
-public import Feec.Models.BoundedDomain.Density
-public import Feec.Models.BoundedDomain.DeRham
-public import Feec.Models.BoundedDomain.GradCurl
-public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Evolution.Constrained
 public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy
@@ -41,11 +36,19 @@ public import Feec.Evolution.Forcing
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
+public import Feec.Examples.NonVacuity
 public import Feec.FiniteElement.Dof
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
+public import Feec.ForMathlib.LinearPMap.Bounded
+public import Feec.ForMathlib.LinearPMap.ClosedRange
+public import Feec.ForMathlib.LinearPMap.CompPartial
+public import Feec.ForMathlib.LinearPMap.GraphSpace
+public import Feec.ForMathlib.LinearPMap.Intertwines
+public import Feec.ForMathlib.LinearPMap.Reducing
+public import Feec.ForMathlib.LinearPMap.Skew
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
 public import Feec.Fourier.BGGSymbol
@@ -55,21 +58,28 @@ public import Feec.Fourier.ExteriorSymbol
 public import Feec.Fourier.FibreReducing
 public import Feec.Fourier.GradCurlSymbol
 public import Feec.Fourier.Reality
+public import Feec.Fourier.SpectralGalerkin
 public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
+public import Feec.Fourier.Weak
+public import Feec.Geometry.AlgebraicCurvature
+public import Feec.Geometry.Bivector
+public import Feec.Geometry.Connection
+public import Feec.Geometry.Hodge2
+public import Feec.Geometry.WeylDecomposition
 public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.Subcomplex
-public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Discrete
 public import Feec.HilbertComplex.BGG.TimeDependent
 public import Feec.HilbertComplex.BGG.ToComplex
 public import Feec.HilbertComplex.BGG.Twisted
 public import Feec.HilbertComplex.BGG.WeakSymmetry
+public import Feec.HilbertComplex.Basic
 public import Feec.HilbertComplex.Compactness
 public import Feec.HilbertComplex.Dirac
 public import Feec.HilbertComplex.DomainComplex
@@ -84,6 +94,74 @@ public import Feec.HilbertComplex.Reducing
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
+public import Feec.Legacy.Adjoint
+public import Feec.Legacy.BoundedDomain.BGG
+public import Feec.Legacy.BoundedDomain.Basic
+public import Feec.Legacy.BoundedDomain.Density
+public import Feec.Legacy.BoundedDomain.Ext
+public import Feec.Legacy.BoundedDomain.Interior
+public import Feec.Legacy.BoundedDomain.Kstar
+public import Feec.Legacy.BoundedDomain.Salvage
+public import Feec.Legacy.BoundedDomain.SalvageDim
+public import Feec.Legacy.BoundedDomain.SalvageMax
+public import Feec.Legacy.BoundedDomain.Sym
+public import Feec.Legacy.BoundedDomain.SymExt
+public import Feec.Legacy.Box.Basic
+public import Feec.Legacy.Box.Forward
+public import Feec.Legacy.Box.Ident
+public import Feec.Legacy.Box.Mirror
+public import Feec.Legacy.Box.Reduce
+public import Feec.Legacy.Box.Restrict
+public import Feec.Legacy.Box.RowWise
+public import Feec.Legacy.Box.Static
+public import Feec.Legacy.Constraints
+public import Feec.Legacy.CrankNicolson
+public import Feec.Legacy.ErrorEstimate
+public import Feec.Legacy.ErrorEstimateDomain
+public import Feec.Legacy.Evolution
+public import Feec.Legacy.Existence
+public import Feec.Legacy.Galerkin
+public import Feec.Legacy.Hodge
+public import Feec.Legacy.HodgeW
+public import Feec.Legacy.HodgeWave
+public import Feec.Legacy.Minres
+public import Feec.Legacy.MirrorCube.BggCube
+public import Feec.Legacy.MirrorCube.BggTorus
+public import Feec.Legacy.MirrorCube.Compress
+public import Feec.Legacy.MirrorCube.Cube
+public import Feec.Legacy.MirrorCube.CubeDense
+public import Feec.Legacy.MirrorCube.Ext
+public import Feec.Legacy.MirrorCube.Pi
+public import Feec.Legacy.MirrorCube.SymCube
+public import Feec.Legacy.MirrorCube.SymPi
+public import Feec.Legacy.Operators
+public import Feec.Legacy.PolynomialSubcomplex
+public import Feec.Legacy.Restriction
+public import Feec.Legacy.ShortComplex
+public import Feec.Legacy.Stone
+public import Feec.Legacy.Tensor
+public import Feec.Legacy.Torus.Basic
+public import Feec.Legacy.Torus.Group
+public import Feec.Legacy.Torus.Sym
+public import Feec.Legacy.Torus.Weak
+public import Feec.Legacy.WaveGroup
+public import Feec.Legacy.WeakSolution
+public import Feec.Legacy.Whole.BGG
+public import Feec.Legacy.Whole.Basic
+public import Feec.Legacy.Whole.Ident
+public import Feec.Legacy.Whole.Mul
+public import Feec.Legacy.Whole.Weak
+public import Feec.Models.BoundedDomain.DeRham
+public import Feec.Models.BoundedDomain.Density
+public import Feec.Models.BoundedDomain.GradCurl
+public import Feec.Models.BoundedDomain.SymCurl
+public import Feec.Models.Cube.Bridge
+public import Feec.Models.Cube.Ident
+public import Feec.Models.Cube.Mirror
+public import Feec.Models.Cube.MirrorBGG
+public import Feec.Models.Cube.MirrorSym
+public import Feec.Models.Cube.Parity
+public import Feec.Models.Cube.Static
 public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
@@ -92,9 +170,17 @@ public import Feec.Models.Torus.BGG
 public import Feec.Models.Torus.DeRham
 public import Feec.Models.Torus.GradCurl
 public import Feec.Models.Torus.SymCurl
+public import Feec.Numerics.CrankNicolsonTable
+public import Feec.Operator.Adjoint
 public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
 public import Feec.Physics.EinsteinBianchi.Constraints
+public import Feec.Physics.EinsteinBianchi.Fields
+public import Feec.Physics.EinsteinBianchi.Propagation
+public import Feec.Physics.EinsteinBianchi.System
+public import Feec.Physics.LinearizedGravity.Einstein
+public import Feec.Physics.LinearizedGravity.Gauge
+public import Feec.Physics.LinearizedGravity.PlaneWave
 public import Feec.Physics.Maxwell.Constraints
 public import Feec.Semigroup.Basic
 public import Feec.Semigroup.Invariance
@@ -109,90 +195,20 @@ public import Feec.Variational.Galerkin
 public import Feec.Variational.GalerkinEvolution
 public import Feec.Variational.InfSup
 public import Feec.Variational.SaddlePoint
-public import Feec.Ch2.Curvature
-public import Feec.Ch2.Linearized
-public import Feec.Ch3.Bivector
-public import Feec.Ch3.EB
-public import Feec.Ch4.Adjoint
-public import Feec.Ch4.BoundedDensity
-public import Feec.Ch4.BoundedDomain
-public import Feec.Ch4.BoundedDomainExt
-public import Feec.Ch4.BoundedInterior
-public import Feec.Ch4.BoundedKstar
-public import Feec.Ch4.BoundedSalvage
-public import Feec.Ch4.BoundedSalvageDim
-public import Feec.Ch4.BoundedSalvageMax
-public import Feec.Ch4.BoundedSym
-public import Feec.Ch4.BoundedSymDual
-public import Feec.Ch4.BoundedSymExt
-public import Feec.Ch4.Box
-public import Feec.Ch4.BoxForward
-public import Feec.Ch4.BoxIdent
-public import Feec.Ch4.BoxMirror
-public import Feec.Ch4.BoxReduce
-public import Feec.Ch4.BoxRestrict
-public import Feec.Ch4.BoxStatic
-public import Feec.Ch4.BoxThesis
-public import Feec.Ch4.Constraints
-public import Feec.Ch4.Duhamel
-public import Feec.Ch4.ErrorEstimate
-public import Feec.Ch4.ErrorEstimateDL
-public import Feec.Ch4.Existence
-public import Feec.Ch4.Galerkin
-public import Feec.Ch4.Hodge
-public import Feec.Ch4.HodgeW
-public import Feec.Ch4.HodgeWave
-public import Feec.Ch4.Restriction
-public import Feec.Ch4.Stone
-public import Feec.Ch4.StoneApplications
-public import Feec.Ch4.StoneDuhamel
-public import Feec.Ch4.StoneForcing
-public import Feec.Ch4.Torus
-public import Feec.Ch4.TorusGroup
-public import Feec.Ch4.TorusSym
-public import Feec.Ch4.TorusWeak
-public import Feec.Ch4.Unconditional
-public import Feec.Ch4.Whole
-public import Feec.Ch4.WholeIdent
-public import Feec.Ch4.WholeMul
-public import Feec.Ch4.WholeRange
-public import Feec.Ch4.WholeReal
-public import Feec.Ch4.WholeSym
-public import Feec.Ch4.WholeWeak
-public import Feec.Ch5.BGG
-public import Feec.Ch5.Discrete
-public import Feec.Ch6.Bounded
-public import Feec.Ch6.TimeDependent
-public import Feec.Ch6.Whole
-public import Feec.Ch7.CrankNicolson
-public import Feec.Repair.C2
-public import Feec.Repair.C410
-public import Feec.Repair.C417
-public import Feec.Repair.C417BggCube
-public import Feec.Repair.C417BggTorus
-public import Feec.Repair.C417Compress
-public import Feec.Repair.C417Cube
-public import Feec.Repair.C417CubeDense
-public import Feec.Repair.C417Ext
-public import Feec.Repair.C417Pi
-public import Feec.Repair.C419Cube
-public import Feec.Repair.C419Pi
-public import Feec.Repair.C67
-public import Feec.Repair.C67Minres
-public import Feec.Repair.C67Prop62
 
 /-!
 # Feec
 
 Formalization of the abstract framework of
 V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*,
-PhD thesis, University of Minnesota, 2015.
+PhD thesis, University of Minnesota, 2015, organized by mathematics (see `docs/OVERVIEW.md`).
 
-This root module publicly imports every module of the library. `Feec.Foundation` re-exports
-its parts `Feec.Foundation.{Operators, Evolution, Complex, BGG, Tensor}`. The modules
-`Feec.Repair.*` prove corrected versions of the thesis results listed in `docs/OVERVIEW.md`.
+This root module publicly imports every module of the library. `Feec.Legacy.*` holds the
+real-scalar short-complex development (`Feec.Legacy.HilbertComplex2` and its ℝ³ models on the
+torus, on bounded domains, on boxes and on mirror cubes) that the cube models still build on and
+that has not been re-derived from the general layers yet.
 
 ## References
 
-* [QuennevilleBelair2015]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 -/

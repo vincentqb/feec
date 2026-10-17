@@ -17,7 +17,7 @@ For `T : E →ₗ.[𝕜] F` between Hilbert spaces over `𝕜` (`RCLike`):
 * `LinearPMap.dense_adjoint_domain` and `LinearPMap.adjoint_adjoint` (`T†† = T`) for closed,
   densely defined `T`.
 * `LinearPMap.isClosed_ker`: the kernel of a closed operator is closed (closedness is needed:
-  see `Feec.exists_not_isClosed_ker`).
+  see `Feec.Counterexamples.exists_dense_not_isClosed_ker`).
 
 ## References
 

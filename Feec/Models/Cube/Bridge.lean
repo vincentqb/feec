@@ -1,6 +1,6 @@
 module
 
-public import Feec.Ch4.BoundedSalvageMax
+public import Feec.Legacy.BoundedDomain.SalvageMax
 public import Feec.HilbertComplex.Equivariant
 public import Feec.Semigroup.Spectral
 
@@ -8,7 +8,7 @@ public import Feec.Semigroup.Spectral
 # From the product total space to the window total space
 
 The cube models of `Feec.Models.Cube` are built from the length-two complexes of the
-pre-refactor layer (`Feec.HilbertComplex2`, whose Hodge wave operator `L` of Thesis (4.5) acts on
+pre-refactor layer (`Feec.Legacy.HilbertComplex2`, whose Hodge wave operator `L` of Thesis (4.5) acts on
 `Tot W0 W1 W2 = W0 × W1 × W2`), and their theorems are stated for the window complex
 `H.toShort.toHilbertComplex` on `ComplexShape.fin3`, whose wave operator `d − d†` acts on
 `PiLp 2 (W3 W0 W1 W2)`. This file is the dictionary between the two.
@@ -36,6 +36,8 @@ spaces `{0} × S₁ × S₂` correspond to the product subspaces `totalSub (sub3
 * [QuennevilleBelair2015], §4.4, (4.5)
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -45,7 +47,7 @@ universe u
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints
 
 /- Over `ℝ`, the real structure of `W3` is the one of its inner product space; the instance
 `instNormedSpaceRealW3` (meant for `𝕜 = ℂ`) would be a second, non-reducibly-equal one. -/

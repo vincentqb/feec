@@ -31,6 +31,9 @@ model complexes of `Feec.Models.*`; the proofs are one-line references.
 * [ACBY1997], [Friedrich1996]
 -/
 
+
+open Feec.Legacy
+
 open Set
 
 @[expose] public noncomputable section

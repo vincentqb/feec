@@ -27,6 +27,9 @@ With tensorial mirror boundary conditions instead, TSD data do propagate on ever
 * [QuennevilleBelair2015], §4.10 (Prop 4.17)
 -/
 
+
+open Feec.Legacy
+
 open scoped InnerProductSpace LinearPMap
 open Set
 
@@ -66,8 +69,8 @@ theorem tsd_not_propagates (hs : 0 < s) :
 /-- **On every open cube with the thesis' boundary conditions, forward invariance forces
 stationarity**, for every closed `S₁, S₂ ⊆ L²(TSD)`. Thesis: Prop 4.17 (refuted) -/
 theorem forward_iff_stationary (hs : 0 < s) {S1 S2 : Submodule ℝ (Models.Cube.Ident.M b s)}
-    (h1 : S1 ≤ Feec.BoundedDomain.TSD (BoxIdent.openCube b s))
-    (h2 : S2 ≤ Feec.BoundedDomain.TSD (BoxIdent.openCube b s))
+    (h1 : S1 ≤ Feec.Legacy.BoundedDomain.TSD (BoxIdent.openCube b s))
+    (h2 : S2 ≤ Feec.Legacy.BoundedDomain.TSD (BoxIdent.openCube b s))
     (y : PiLp 2 (W3 (Models.Cube.Ident.V b s) (Models.Cube.Ident.M b s)
       (Models.Cube.Ident.M b s))) :
     (∀ t, 0 ≤ t → (Models.Cube.Ident.complexCube b s).waveGroup.S t y ∈
@@ -83,9 +86,9 @@ theorem mem_invariantCore_tsd_iff (hs : 0 < s)
       (Models.Cube.Ident.M b s))) :
     y ∈ (Models.Cube.Ident.complexCube b s).waveGroup.invariantCore
         (totalSub (Models.Cube.sub3 (⊥ : Submodule ℝ (Models.Cube.Ident.V b s))
-          (Feec.BoundedDomain.TSD (BoxIdent.openCube b s))
-          (Feec.BoundedDomain.TSD (BoxIdent.openCube b s)))) ↔
-      ∃ B ∈ Feec.BoundedDomain.TSD (BoxIdent.openCube b s),
+          (Feec.Legacy.BoundedDomain.TSD (BoxIdent.openCube b s))
+          (Feec.Legacy.BoundedDomain.TSD (BoxIdent.openCube b s)))) ↔
+      ∃ B ∈ Feec.Legacy.BoundedDomain.TSD (BoxIdent.openCube b s),
         ∃ h : B ∈ (BoxIdent.cxCube b s).d1†.domain,
           (BoxIdent.cxCube b s).d1† ⟨B, h⟩ = 0 ∧
             y = Models.Cube.totEquiv (Constraints.ini (Models.Cube.Ident.V b s) 0 B) :=

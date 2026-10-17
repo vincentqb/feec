@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.Cube.Bridge
-public import Feec.Ch4.BoxThesis
+public import Feec.Legacy.Box.RowWise
 
 /-!
 # The cube by the method of images: reflection actions and the thesis' boundary conditions
@@ -47,6 +47,8 @@ data are in `Feec.Models.Cube.Static`.
 * [Brezis2011], §9.2 (extension by reflection)
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -56,7 +58,7 @@ universe u
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints Feec.Torus Feec.Box
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints Feec.Legacy.Torus Feec.Legacy.Box
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
@@ -159,7 +161,7 @@ theorem IsComm.pow {J : W ≃ₗᵢ[ℝ] W} {J' : V ≃ₗᵢ[ℝ] V} (h : IsCom
   | succ n ih => rw [pow_succ, pow_succ]; exact ih.mul h
 
 /-- An operator commuting with the reflections commutes with the whole action. -/
-theorem isComm_reflAct {G : Refl3 W} {G' : Refl3 V} (hT : Feec.Box.Intertwines G G' T)
+theorem isComm_reflAct {G : Refl3 W} {G' : Refl3 V} (hT : Feec.Legacy.Box.Intertwines G G' T)
     (g : ReflGroup) : IsComm T (reflAct G g) (reflAct G' g) := by
   have h : ∀ k, IsComm T (reflEquiv G k) (reflEquiv G' k) := fun k x => hT k x
   exact (((h 0).pow _).mul ((h 1).pow _)).mul ((h 2).pow _)
@@ -187,8 +189,8 @@ def reflActFam (g : ReflGroup) : ∀ i : Fin 3, W3 W0 W1 W2 i ≃ₗᵢ[ℝ] W3 
 
 variable {G0 G1 G2} (S : ShortHilbertComplex ℝ W0 W1 W2)
 
-theorem isComm_reflActFam (h0 : Feec.Box.Intertwines G0 G1 S.d₀)
-    (h1 : Feec.Box.Intertwines G1 G2 S.d₁)
+theorem isComm_reflActFam (h0 : Feec.Legacy.Box.Intertwines G0 G1 S.d₀)
+    (h1 : Feec.Legacy.Box.Intertwines G1 G2 S.d₁)
     (g : ReflGroup) (i j : Fin 3) :
     IsComm (S.toHilbertComplex.d i j) (reflActFam G0 G1 G2 g i) (reflActFam G0 G1 G2 g j) := by
   fin_cases i <;> fin_cases j
@@ -204,7 +206,7 @@ theorem isComm_reflActFam (h0 : Feec.Box.Intertwines G0 G1 S.d₀)
 
 /-- **The reflection action of `(ℤ/2)³` on a short complex** whose differentials commute with
 the reflections (`d₀ R_i = R'_i d₀`, `d₁ R'_i = R''_i d₁`). -/
-def reflAction (h0 : Feec.Box.Intertwines G0 G1 S.d₀) (h1 : Feec.Box.Intertwines G1 G2 S.d₁) :
+def reflAction (h0 : Feec.Legacy.Box.Intertwines G0 G1 S.d₀) (h1 : Feec.Legacy.Box.Intertwines G1 G2 S.d₁) :
     S.toHilbertComplex.Action ReflGroup where
   act := reflActFam G0 G1 G2
   act_one i x := by
@@ -220,7 +222,7 @@ def reflAction (h0 : Feec.Box.Intertwines G0 G1 S.d₀) (h1 : Feec.Box.Intertwin
   mapsTo g i j x := (isComm_reflActFam S h0 h1 g i j x).fst
   comm g i j x := (isComm_reflActFam S h0 h1 g i j x).snd
 
-variable (h0 : Feec.Box.Intertwines G0 G1 S.d₀) (h1 : Feec.Box.Intertwines G1 G2 S.d₁)
+variable (h0 : Feec.Legacy.Box.Intertwines G0 G1 S.d₀) (h1 : Feec.Legacy.Box.Intertwines G1 G2 S.d₁)
 
 theorem mem_fixed_reflAction_zero {x : W0} : x ∈ (reflAction S h0 h1).fixed 0 ↔ x ∈ G0.fix :=
   forall_reflAct_eq_iff G0
@@ -236,15 +238,15 @@ end Action
 /-! ### The torus complexes -/
 
 /-- The torus complex `L²(𝕋³; ℂ³) → L²(𝕋³; ℂ³ˣ³) → L²(𝕋³; ℂ³ˣ³)`, `grad` then `curl` (row-wise),
-on the Fourier side (`Feec.Torus.periodicComplex`). -/
+on the Fourier side (`Feec.Legacy.Torus.periodicComplex`). -/
 abbrev torus : HilbertComplex ℝ ComplexShape.fin3 (W3 L2V L2M L2M) :=
   periodicComplex.toShort.toHilbertComplex
 
 /-- The torus complex of (4.16), `hess` then `curl` on symmetric matrices
-(`Feec.TorusSym.symComplex`). -/
+(`Feec.Legacy.TorusSym.symComplex`). -/
 abbrev torusSym :
-    HilbertComplex ℝ ComplexShape.fin3 (W3 Feec.TorusSym.L2R Feec.TorusSym.L2S Feec.TorusSym.L2T) :=
-  Feec.TorusSym.symComplex.toShort.toHilbertComplex
+    HilbertComplex ℝ ComplexShape.fin3 (W3 Feec.Legacy.TorusSym.L2R Feec.Legacy.TorusSym.L2S Feec.Legacy.TorusSym.L2T) :=
+  Feec.Legacy.TorusSym.symComplex.toShort.toHilbertComplex
 
 /-! ### The thesis' boundary conditions -/
 
@@ -276,7 +278,7 @@ theorem mem_invariantCore_torus_iff {S1 S2 : Submodule ℝ L2M} [S1.HasOrthogona
     y ∈ torus.waveGroup.invariantCore (HilbertComplex.totalSub (constraint S1 S2)) ↔
       y ∈ HilbertComplex.totalSub (constraint S1 S2) ∧ y ∈ torus.waveGroup.stationary := by
   obtain ⟨x, rfl⟩ := totEquiv.surjective y
-  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, Feec.Box.mem_Kmax_iff hS1 hS2,
+  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, Feec.Legacy.Box.mem_Kmax_iff hS1 hS2,
     mem_Kc_iff, mem_stationary_iff periodicComplex periodicGroup, map_Kc]
 
 /-- **`K*` on the cube with the thesis' boundary conditions**: for the cube complex and closed
@@ -304,7 +306,7 @@ theorem mem_invariantCore_tsd_iff (y : PiLp 2 (W3 L2V L2M L2M)) :
       (y 0 : L2V) = 0 ∧ (y 1 : L2M) = 0 ∧ (y 2 : L2M) ∈ boxTSD (-1) ∧
         ∀ k, curlSym (freq k) (slot2 y k) = 0 := by
   obtain ⟨x, rfl⟩ := totEquiv.surjective y
-  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, Feec.Box.mem_Kmax_boxTSD_iff,
+  rw [← map_Kc, ← mem_Kmax_iff periodicComplex periodicGroup, Feec.Legacy.Box.mem_Kmax_boxTSD_iff,
     totEquiv_apply_one, totEquiv_apply_two]
   have h0 : ((totEquiv x : PiLp 2 (W3 L2V L2M L2M)) 0 : L2V) = 0 ↔ (tot L2V L2M L2M x).1 = 0 := by
     change -((tot L2V L2M L2M x).1) = 0 ↔ _

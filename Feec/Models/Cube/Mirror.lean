@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.Cube.Static
-public import Feec.Repair.C417Pi
+public import Feec.Legacy.MirrorCube.Pi
 
 /-!
 # The cube with tensorial mirror boundary conditions: TSD data propagate
@@ -22,8 +22,8 @@ Three realizations are treated:
   action (the method of images);
 * the **cube `Q = (0, ½)³`** `Mirror.complexQ`: genuine real fields on `Q`
   (`L²(Q; ℝ³) → L²(Q; ℝ³ˣ³) → L²(Q; ℝ³ˣ³)` with `σ · n = 0`, `E_{nτ} = 0`; its differentials are
-  the weak gradient and curl on `Q`, `Feec.Repair.C417.mirrorCxQ_d0_weakGrad`,
-  `Feec.Repair.C417.mirrorCxQ_d1_eq`), embedded in the torus complex by the mirror extensions
+  the weak gradient and curl on `Q`, `Feec.Legacy.MirrorCube.mirrorCxQ_d0_weakGrad`,
+  `Feec.Legacy.MirrorCube.mirrorCxQ_d1_eq`), embedded in the torus complex by the mirror extensions
   (`Mirror.embeddingQ`, a scaled embedding with scale `8`);
 * **every open cube** `∏ (bᵢ, bᵢ + s)` (`Mirror.complexCube`), embedded in `complexQ` by the
   pull-back along `x ↦ 2 s x + b` (`Mirror.embeddingCube`).
@@ -31,7 +31,7 @@ Three realizations are treated:
 In each case the constraint is the pull-back of the torus TSD constraint, and propagation is one
 application of `Feec.HilbertComplex.ScaledEmbedding.reducingSubcomplex_comap`. The constraint
 spaces on `Q` are TSD fields with the wall conditions `E_{τn} = 0`, `B_{nn} = 0`
-(`Feec.Repair.C417.TSDmE_le_TSD`). A non-stationary TSD datum, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`,
+(`Feec.Legacy.MirrorCube.TSDmE_le_TSD`). A non-stationary TSD datum, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`,
 shows that the constraint has dynamical content in every realization.
 
 ## Main definitions
@@ -56,6 +56,8 @@ shows that the constraint has dynamical content in every realization.
 * [Brezis2011], §9.2 (extension by reflection)
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -65,7 +67,7 @@ universe u
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints Feec.Torus Feec.Box
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints Feec.Legacy.Torus Feec.Legacy.Box
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
@@ -90,7 +92,7 @@ theorem reflAct_mem {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
 
 section Embeddings
 
-open Feec.Repair.C417
+open Feec.Legacy.MirrorCube
 
 variable {c : ℝ} {W0 W1 W2 W0' W1' W2' : Type u}
   [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
@@ -258,7 +260,7 @@ namespace Mirror
 /-- **The mirror action of `(ℤ/2)³` on the torus complex**: `σ(R_i x) = D_i σ(x)`,
 `E(R_i x) = D_i E(x) D_i`, `B(R_i x) = -D_i B(x) D_i`. -/
 def action : torus.Action ReflGroup :=
-  reflAction periodicComplex.toShort Feec.Box.intertwines_grad Feec.Box.intertwines_curl
+  reflAction periodicComplex.toShort Feec.Legacy.Box.intertwines_grad Feec.Legacy.Box.intertwines_curl
 
 /-- **The cube complex with tensorial mirror boundary conditions** (`σ · n = 0`, `E_{nτ} = 0`),
 as the subcomplex of the torus complex fixed by the mirror action.
@@ -375,10 +377,10 @@ theorem exists_nonstationary :
 
 /-! ### The cube `Q = (0, ½)³` -/
 
-open Feec.Repair.C417
+open Feec.Legacy.MirrorCube
 
 /-- **The mirror complex of genuine fields on `Q`**: `L²(Q; ℝ³) → L²(Q; ℝ³ˣ³) → L²(Q; ℝ³ˣ³)`,
-`grad` and `curl` with `σ · n = 0`, `E_{nτ} = 0` (`Feec.Repair.C417.mirrorCxQ`). -/
+`grad` and `curl` with `σ · n = 0`, `E_{nτ} = 0` (`Feec.Legacy.MirrorCube.mirrorCxQ`). -/
 abbrev complexQ := mirrorCxQ.toShort.toHilbertComplex
 
 /-- The mirror extensions embed the cube complex in the torus complex (scale `8`). -/
@@ -432,12 +434,12 @@ theorem exists_nonstationaryQ :
 
 /-! ### Every open cube -/
 
-open Feec.BoundedDomain (R3)
-open Feec.BoxIdent (openCube mem_Qr_iff_openCube)
+open Feec.Legacy.BoundedDomain (R3)
+open Feec.Legacy.BoxIdent (openCube mem_Qr_iff_openCube)
 
 variable {b : R3} {s : ℝ} (hs : 0 < s)
 
-/-- **The mirror complex on the open cube** `∏ (bᵢ, bᵢ + s)` (`Feec.Repair.C417.mirrorCxCube`). -/
+/-- **The mirror complex on the open cube** `∏ (bᵢ, bᵢ + s)` (`Feec.Legacy.MirrorCube.mirrorCxCube`). -/
 abbrev complexCube (b : R3) (s : ℝ) (hs : 0 < s) := (mirrorCxCube b s hs).toShort.toHilbertComplex
 
 /-- The pull-back along `x ↦ 2 s x + b` embeds the cube complex in the complex on `Q` (with
@@ -454,8 +456,8 @@ def embeddingCube : ScaledEmbedding (complexCube b s hs) complexQ :=
 /-- The constraint on the cube: the pull-back of `{0} × TSDmE × TSDmB` along the cube
 embedding (`{0} × TSDmECube × TSDmBCube`). -/
 abbrev tsdCube (b : R3) (s : ℝ) (hs : 0 < s) :
-    ∀ i : Fin 3, Submodule ℝ (W3 (Feec.BoundedDomain.L2V (openCube b s))
-      (Feec.BoundedDomain.L2M (openCube b s)) (Feec.BoundedDomain.L2M (openCube b s)) i) :=
+    ∀ i : Fin 3, Submodule ℝ (W3 (Feec.Legacy.BoundedDomain.L2V (openCube b s))
+      (Feec.Legacy.BoundedDomain.L2M (openCube b s)) (Feec.Legacy.BoundedDomain.L2M (openCube b s)) i) :=
   fun i => (tsdQ i).comap ((embeddingCube (b := b) hs).J i : _ →ₗ[ℝ] _)
 
 /-- **TSD reduces the mirror complex on every open cube.**
@@ -470,8 +472,8 @@ theorem reducingSubcomplexCube : (complexCube b s hs).ReducingSubcomplex (tsdCub
 /-- **Prop 4.17 on every open cube with mirror boundary conditions**, in particular on `(0, π)³`
 and on the unit cube `(0, 1)³`.
 Thesis: Prop 4.17 (corrected) -/
-theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (W3 (Feec.BoundedDomain.L2V (openCube b s))
-      (Feec.BoundedDomain.L2M (openCube b s)) (Feec.BoundedDomain.L2M (openCube b s)))}
+theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (W3 (Feec.Legacy.BoundedDomain.L2V (openCube b s))
+      (Feec.Legacy.BoundedDomain.L2M (openCube b s)) (Feec.Legacy.BoundedDomain.L2M (openCube b s)))}
     (hU : Evolution.IsStrongSolution (complexCube b s hs).wave (Icc a c) F U)
     (h0 : U a ∈ totalSub (tsdCube b s hs)) (hF : ∀ t ∈ Icc a c, F t ∈ totalSub (tsdCube b s hs)) :
     ∀ t ∈ Icc a c, U t ∈ totalSub (tsdCube b s hs) :=
@@ -479,12 +481,12 @@ theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (W3 (Feec.BoundedDomain
 
 /-- Prop 4.17 on every open cube, with existence and uniqueness.
 Thesis: Prop 4.17 (corrected) -/
-theorem existsUnique_memCube {U₀ : PiLp 2 (W3 (Feec.BoundedDomain.L2V (openCube b s))
-      (Feec.BoundedDomain.L2M (openCube b s)) (Feec.BoundedDomain.L2M (openCube b s)))}
+theorem existsUnique_memCube {U₀ : PiLp 2 (W3 (Feec.Legacy.BoundedDomain.L2V (openCube b s))
+      (Feec.Legacy.BoundedDomain.L2M (openCube b s)) (Feec.Legacy.BoundedDomain.L2M (openCube b s)))}
     (hU₀ : U₀ ∈ (complexCube b s hs).wave.domain) (hU₀S : U₀ ∈ totalSub (tsdCube b s hs))
-    {F : ℝ → PiLp 2 (W3 (Feec.BoundedDomain.L2V (openCube b s))
-      (Feec.BoundedDomain.L2M (openCube b s))
-      (Feec.BoundedDomain.L2M (openCube b s)))} {a c : ℝ}
+    {F : ℝ → PiLp 2 (W3 (Feec.Legacy.BoundedDomain.L2V (openCube b s))
+      (Feec.Legacy.BoundedDomain.L2M (openCube b s))
+      (Feec.Legacy.BoundedDomain.L2M (openCube b s)))} {a c : ℝ}
     (hF : Evolution.ForcingClass.admissible (complexCube b s hs).wave a c F)
     (hFS : ∀ t ∈ Icc a c, F t ∈ totalSub (tsdCube b s hs)) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution (complexCube b s hs).wave (Icc a c) F U ∧

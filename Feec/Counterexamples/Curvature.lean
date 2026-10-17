@@ -39,7 +39,4 @@ end Feec.Counterexamples.Curvature
 
 namespace Feec.CurvatureTensor
 
-@[deprecated (since := "2026-10-17")] alias exists_einstein_eq_zero_ne_zero_two :=
-  Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two
-
 end Feec.CurvatureTensor

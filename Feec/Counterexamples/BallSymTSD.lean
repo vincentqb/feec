@@ -1,7 +1,7 @@
 module
 
-public import Feec.Ch4.BoundedSymExt
-public import Feec.Ch4.BoundedInterior
+public import Feec.Legacy.BoundedDomain.SymExt
+public import Feec.Legacy.BoundedDomain.Interior
 public import Mathlib.MeasureTheory.Constructions.HaarToSphere
 public import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
@@ -9,11 +9,11 @@ public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 /-!
 # Prop 4.19 with the boundary conditions as printed fails on the unit ball
 
-Moved from `Feec.Ch4.BoundedSymDual` (whose names are deprecated aliases); the headline results
+Moved from `Feec.Counterexamples.BallSymTSD` (whose names are deprecated aliases); the headline results
 are `tsd_not_propagates`, `not_propagates` and `tsdSk_not_propagates`. The construction still
-uses the complex `Feec.BoundedSym.symComplexD` of `Feec.Ch4.BoundedSymExt`.
+uses the complex `Feec.Legacy.BoundedSym.symComplexD` of `Feec.Legacy.BoundedDomain.SymExt`.
 
-`Feec.Ch4.BoundedSymExt` builds the complex (4.16) with the boundary conditions of the data space
+`Feec.Legacy.BoundedDomain.SymExt` builds the complex (4.16) with the boundary conditions of the data space
 printed in Prop 4.19 ([QuennevilleBelair2015, §4.11]), `symComplexD`:
 `H²(Ω) --grad grad--> H(curl, S) --curl--> L²(T)` (no boundary conditions), whose adjoints are
 `div div` on `H̊(div div, S)` and `sym curl` on `H̊(sym curl, T)`, so
@@ -55,12 +55,12 @@ carries the sup norm, so `B` is not `Metric.ball 0 1`) **TSD does not propagate*
   `tsdSk_not_propagates`: the
   TSD datum `x₀ ∈ D(L) ∩ K` has, on every `[0, T]`, `T > 0`, a unique strong solution (Stone's
   theorem), and it leaves `K = {0} × L²(TSD) × L²(TSD)`; `x₀` also lies in the variant
-  `{0} × (L²(TSD) ∩ ker d0*) × L²(TSD)` of `Feec.Ch4.BoundedSymExt`.
+  `{0} × (L²(TSD) ∩ ker d0*) × L²(TSD)` of `Feec.Legacy.BoundedDomain.SymExt`.
 * `negL_x0_not_mem_closure`: `-L x₀ ∉ closure (D(L) ∩ K)`. `L` maps `D(L) ∩ K` into `K`, but not
   into the closure of `D(L) ∩ K`; the defect is in the magnetic slot:
 * `curlE0_not_mem_closure`: `curl E₀ = diag(-1, -1, 2) ∈ L²(TSD)` is not in the closure of
   `L²(TSD) ∩ H̊(sym curl, T)`, so that intersection is not dense in `L²(TSD)` on `B`.
-* `x0_not_mem_Kmax`: `x₀ ∉ K*`, so the maximal form `symComplexD_prop_4_19_max` is a strict
+* `x0_not_mem_Kmax`: `x₀ ∉ K*`, so the maximal form `symComplexD_Kmax_eq` is a strict
   restriction of the data of Prop 4.19 on `B`.
 
 ## Correction
@@ -68,10 +68,10 @@ carries the sup norm, so `B` is not `Metric.ball 0 1`) **TSD does not propagate*
 [QuennevilleBelair2015, §4.11, Prop 4.19], read with its printed data space
 `H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)` and `K = {0} × L²(TSD) × L²(TSD)`: the
 conclusion is false on the unit ball of `ℝ³`. With the placement of the boundary conditions used
-in the proof (`symComplexB`) it is false on every bounded domain (`Feec.Ch4.BoundedSym`), so on the
+in the proof (`symComplexB`) it is false on every bounded domain (`Feec.Legacy.BoundedDomain.Sym`), so on the
 unit ball the conclusion of Prop 4.19 fails with either placement. Prop 4.19 itself is an
 implication whose projection and density hypotheses already fail on bounded domains
-(`Feec.Ch4.BoundedSymExt`), so what is refuted here is its conclusion (TSD propagation for every
+(`Feec.Legacy.BoundedDomain.SymExt`), so what is refuted here is its conclusion (TSD propagation for every
 TSD datum of the printed data space), not the implication.
 
 ## Scope
@@ -83,16 +83,18 @@ TSD datum of the printed data space), not the implication.
   `E₀`. Whether the conclusion fails on every bounded domain is not decided.
 * Not decided either: whether `K* ≠ {0}` on `B`, and whether the constant magnetic field
   `(0, 0, diag(1, -1, 0))` is orthogonal to `D(L) ∩ K` (the open sub-questions of
-  `Feec.Ch4.BoundedSymExt`); here the obstruction is `curl Q`, not a constant.
-* The box parity model of `Feec.Ch4.Box*` is not used.
+  `Feec.Legacy.BoundedDomain.SymExt`); here the obstruction is `curl Q`, not a constant.
+* The box parity model of `Feec.Legacy.Box.Basic*` is not used.
 
 ## References
 
 * [QuennevilleBelair2015], §3.4 (Lemma 3.5), §4.11 ((4.16)–(4.18), Prop 4.19)
 * [ArnoldHu2021] (the `grad grad`–`curl`–`div` complex)
 * [Brezis2011] (weak derivatives, `H̊¹`)
-* [Pazy1983], §1.10 (Stone's theorem, behind `Feec.HilbertComplex2.waveGroup`)
+* [Pazy1983], §1.10 (Stone's theorem, behind `Feec.Legacy.HilbertComplex2.waveGroup`)
 -/
+
+open Feec.Legacy
 
 @[expose] public noncomputable section
 
@@ -101,7 +103,7 @@ open MeasureTheory Set Filter Topology
 
 namespace Feec.Counterexamples.BallSymTSD
 
-open Feec.BoundedDomain Feec.BoundedSym Feec.HilbertComplex2 Feec.Constraints
+open Feec.Legacy.BoundedDomain Feec.Legacy.BoundedSym Feec.Legacy.HilbertComplex2 Feec.Legacy.Constraints
 
 /-! ## The unit ball and the radial cutoffs -/
 
@@ -527,7 +529,7 @@ theorem E0_mem_adjoint_d0 : E0 ∈ (symComplexD isOpen_ball3 isBounded_ball3).d0
 def x0 : Tot (L2 ball3) (L2S ball3) (L2T ball3) := ini (L2 ball3) E0 0
 
 theorem x0_mem_domL : x0 ∈ (symComplexD isOpen_ball3 isBounded_ball3).domL := by
-  rw [Feec.Constraints.mem_domL, x0, tot_ini]
+  rw [Feec.Legacy.Constraints.mem_domL, x0, tot_ini]
   exact ⟨Submodule.zero_mem _, Submodule.mem_inf.2 ⟨E0_mem_d1.1, E0_mem_adjoint_d0⟩,
     Submodule.zero_mem _⟩
 
@@ -828,7 +830,7 @@ theorem inner_negL_ini (H : HilbertComplex2 W0 W1 W2) {E : W1}
   have hp0 : H.pr0 ⟨ini W0 E 0, hx⟩ = 0 := Subtype.ext (by simp)
   have hp2 : H.prV2s ⟨ini W0 E 0, hx⟩ = 0 := Subtype.ext (by simp)
   have hp1 : H.prV1 ⟨ini W0 E 0, hx⟩ = ⟨E, hE⟩ := Subtype.ext (by simp)
-  rw [inner_tot, LinearPMap.neg_apply, _root_.map_neg, Feec.Constraints.tot_waveOp, tot_ini]
+  rw [inner_tot, LinearPMap.neg_apply, _root_.map_neg, Feec.Legacy.Constraints.tot_waveOp, tot_ini]
   simp only
   rw [hp0, hp2, hp1]
   simp
@@ -864,7 +866,7 @@ theorem inner_Qs_eq_zero {C : L2S ball3} (hC : C ∈ TSDS ball3) : ⟪C, Qs⟫ =
 theorem inner_Nvec_eq_zero (y : Tot (L2 ball3) (L2S ball3) (L2T ball3))
     (hy : y ∈ (symComplexD isOpen_ball3 isBounded_ball3).domL)
     (hyK : y ∈ Kc (L2 ball3) (TSDS ball3) (TSDT ball3)) : ⟪y, Nvec⟫ = 0 := by
-  have hD := (Feec.Constraints.mem_domL _).1 hy
+  have hD := (Feec.Legacy.Constraints.mem_domL _).1 hy
   obtain ⟨-, -, hB⟩ := (mem_Kc).1 hyK
   rw [inner_tot, Nvec, tot_ini, inner_zero_right, inner_zero_right, zero_add, zero_add]
   have e := LinearPMap.adjoint_isFormalAdjoint (symComplexD isOpen_ball3 isBounded_ball3).dense1
@@ -955,7 +957,7 @@ theorem tsd_not_propagates :
 
 /-- **Unconditional form**: on every `[0, T]`, `T > 0`, the Hodge wave equation (4.18) for
 `symComplexD` on the unit ball has a strong solution from `x₀ = (0, E₀, 0)` (Stone's theorem,
-`Feec.HilbertComplex2.waveGroup`), it is unique, and it leaves `K = {0} × L²(TSD) × L²(TSD)`;
+`Feec.Legacy.HilbertComplex2.waveGroup`), it is unique, and it leaves `K = {0} × L²(TSD) × L²(TSD)`;
 the same holds for the variant `K = {0} × (L²(TSD) ∩ ker d0*) × L²(TSD)`, which has the same data
 in `D(L)` (`symComplexD_mem_Kc_iff`).
 
@@ -996,7 +998,7 @@ theorem tsdSk_not_propagates :
 
 /-- **`K*` does not contain `D(L) ∩ K`** on the unit ball: `x₀ ∈ D(L) ∩ K` but `x₀ ∉ K*`, for
 `K = {0} × (L²(TSD) ∩ ker d0*) × L²(TSD)` and the Hodge wave group of `symComplexD`. So the
-maximal form `symComplexD_prop_4_19_max` is a strict restriction of the data of Prop 4.19. -/
+maximal form `symComplexD_Kmax_eq` is a strict restriction of the data of Prop 4.19. -/
 theorem x0_not_mem_Kmax :
     x0 ∉ Kmax (symComplexD isOpen_ball3 isBounded_ball3).waveGroup
       (Kc (L2 ball3) (TSDSk ball3 isOpen_ball3 isBounded_ball3) (TSDT ball3)) := by

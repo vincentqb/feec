@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.Cube.Mirror
-public import Feec.Repair.C419Pi
+public import Feec.Legacy.MirrorCube.SymPi
 
 /-!
 # The strong-symmetry complex (4.16) on the cube with mirror boundary conditions
@@ -33,6 +33,8 @@ conditions, by the same general mechanism as `Feec.Models.Cube.Mirror`.
 * [ArnoldHu2021] (the complex (4.16))
 -/
 
+open Feec.Legacy
+
 open scoped RealInnerProductSpace
 open Set LinearPMap
 
@@ -42,7 +44,7 @@ universe u
 
 namespace Feec.Models.Cube
 
-open Feec.HilbertComplex2 Feec.ShortHilbertComplex Feec.Constraints Feec.Torus Feec.Box
+open Feec.Legacy.HilbertComplex2 Feec.ShortHilbertComplex Feec.Legacy.Constraints Feec.Legacy.Torus Feec.Legacy.Box
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
@@ -51,7 +53,7 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 section Scale2
 
-open Feec.Repair.C417
+open Feec.Legacy.MirrorCube
 
 variable {W0 W1 W2 : Type u}
   [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
@@ -98,7 +100,7 @@ end Scale2
 
 /-! ### The torus constraint -/
 
-open Feec.TorusSym in
+open Feec.Legacy.TorusSym in
 theorem isReducingPair_hess_tsd :
     symComplex.d0.IsReducingPair (⊥ : Submodule ℝ L2R) L2TSDS := by
   refine isReducingPair_of_le_ker bot_le fun x => ?_
@@ -109,7 +111,7 @@ theorem isReducingPair_hess_tsd :
   rw [hz0, inner_zero_left] at h
   rw [hz]; exact h.symm
 
-open Feec.TorusSym in
+open Feec.Legacy.TorusSym in
 theorem isReducingPair_curlS_tsd : symComplex.d1.IsReducingPair L2TSDS L2TSDT :=
   ⟨fun x => projS_mem_HcurlS x.2, fun x => lp.ext (funext fun k => by
     change curlS (freq k) (L2TSDS.starProjection x k) = L2TSDT.starProjection (curlST x) k
@@ -120,7 +122,7 @@ theorem isReducingPair_curlS_tsd : symComplex.d1.IsReducingPair L2TSDS L2TSDT :=
 Thesis: Prop 4.19 -/
 theorem reducingSubcomplex_tsd_torusSym :
     torusSym.ReducingSubcomplex
-      (sub3 (⊥ : Submodule ℝ Feec.TorusSym.L2R) Feec.TorusSym.L2TSDS Feec.TorusSym.L2TSDT) :=
+      (sub3 (⊥ : Submodule ℝ Feec.Legacy.TorusSym.L2R) Feec.Legacy.TorusSym.L2TSDS Feec.Legacy.TorusSym.L2TSDT) :=
   reducingSubcomplex_sub3 _ isReducingPair_hess_tsd isReducingPair_curlS_tsd
 
 namespace MirrorSym
@@ -130,7 +132,7 @@ namespace MirrorSym
 /-- **The mirror action on the complex (4.16)**: `u` even, `S` even (`D_i S D_i`), `T` odd
 (`-D_i T D_i`). -/
 def action : torusSym.Action ReflGroup :=
-  reflAction Feec.TorusSym.symComplex.toShort Feec.Box.intertwines_hess Feec.Box.intertwines_curlS
+  reflAction Feec.Legacy.TorusSym.symComplex.toShort Feec.Legacy.Box.intertwines_hess Feec.Legacy.Box.intertwines_curlS
 
 /-- **The complex (4.16) on the cube with mirror boundary conditions** (`∂_n u = 0`,
 `S_{nτ} = 0`), as the fixed subcomplex.
@@ -139,15 +141,15 @@ abbrev complex := action.fixedComplex
 
 /-- The torus constraint `{0} × L²(TSD) × L²(TSD)` of (4.16). -/
 abbrev tsd :
-    ∀ i : Fin 3, Submodule ℝ (W3 Feec.TorusSym.L2R Feec.TorusSym.L2S Feec.TorusSym.L2T i) :=
-  sub3 (⊥ : Submodule ℝ Feec.TorusSym.L2R) Feec.TorusSym.L2TSDS Feec.TorusSym.L2TSDT
+    ∀ i : Fin 3, Submodule ℝ (W3 Feec.Legacy.TorusSym.L2R Feec.Legacy.TorusSym.L2S Feec.Legacy.TorusSym.L2T i) :=
+  sub3 (⊥ : Submodule ℝ Feec.Legacy.TorusSym.L2R) Feec.Legacy.TorusSym.L2TSDS Feec.Legacy.TorusSym.L2TSDT
 
 theorem act_mem_tsd (g : ReflGroup) (i : Fin 3)
-    (x : W3 Feec.TorusSym.L2R Feec.TorusSym.L2S Feec.TorusSym.L2T i)
+    (x : W3 Feec.Legacy.TorusSym.L2R Feec.Legacy.TorusSym.L2S Feec.Legacy.TorusSym.L2T i)
     (hx : x ∈ tsd i) : action.act g i x ∈ tsd i := by
   fin_cases i
-  · have hx' : x = (0 : Feec.TorusSym.L2R) := (Submodule.mem_bot ℝ).1 hx
-    change reflAct mirrorR g x ∈ (⊥ : Submodule ℝ Feec.TorusSym.L2R)
+  · have hx' : x = (0 : Feec.Legacy.TorusSym.L2R) := (Submodule.mem_bot ℝ).1 hx
+    change reflAct mirrorR g x ∈ (⊥ : Submodule ℝ Feec.Legacy.TorusSym.L2R)
     rw [hx', _root_.map_zero]; exact Submodule.zero_mem _
   · exact reflAct_mem mirrorS (fun k A hA => mirrorS_mem_L2TSDS k hA) g hx
   · exact reflAct_mem mirrorT (fun k A hA => mirrorT_mem_L2TSDT k hA) g hx
@@ -186,15 +188,15 @@ theorem invariantCore_eq :
 
 /-! ### The cube `Q = (0, ½)³` -/
 
-open Feec.Repair.C417
+open Feec.Legacy.MirrorCube
 
 /-- **The complex (4.16) of genuine fields on `Q` with mirror boundary conditions**
-(`Feec.Repair.C417.mirrorSymCxQ`). -/
+(`Feec.Legacy.MirrorCube.mirrorSymCxQ`). -/
 abbrev complexQ := mirrorSymCxQ.toShort.toHilbertComplex
 
 /-- The mirror extensions embed the complex on `Q` in the torus complex (4.16). -/
 def embeddingQ : ScaledEmbedding complexQ torusSym :=
-  comprEmbedding Feec.TorusSym.symComplex comprR comprS comprT comprComm_hess comprComm_curlS
+  comprEmbedding Feec.Legacy.TorusSym.symComplex comprR comprS comprT comprComm_hess comprComm_curlS
     eight_pos
 
 /-- The constraint on `Q`: `{0} × TSDSm × TSDTm`. -/
@@ -203,7 +205,7 @@ abbrev tsdQ : ∀ i : Fin 3, Submodule ℝ (W3 RQ SQ TQ i) := sub3 (⊥ : Submod
 /-- **TSD reduces the complex (4.16) on `Q`.**
 Thesis: Prop 4.19 (corrected) -/
 theorem reducingSubcomplexQ : complexQ.ReducingSubcomplex tsdQ :=
-  reducingSubcomplex_compr Feec.TorusSym.symComplex comprR comprS comprT comprComm_hess
+  reducingSubcomplex_compr Feec.Legacy.TorusSym.symComplex comprR comprS comprT comprComm_hess
     comprComm_curlS
     eight_pos reducingSubcomplex_tsd_torusSym starProjection_comprS starProjection_comprT
 
@@ -240,13 +242,13 @@ theorem exists_nonstationaryQ :
 
 /-! ### Every open cube -/
 
-open Feec.BoundedDomain (R3)
-open Feec.BoxIdent (openCube mem_Qr_iff_openCube)
+open Feec.Legacy.BoundedDomain (R3)
+open Feec.Legacy.BoxIdent (openCube mem_Qr_iff_openCube)
 
 variable {b : R3} {s : ℝ} (hs : 0 < s)
 
 /-- **The complex (4.16) with mirror boundary conditions on the open cube** `∏ (bᵢ, bᵢ + s)`
-(`Feec.Repair.C417.mirrorSymCxCube`). -/
+(`Feec.Legacy.MirrorCube.mirrorSymCxCube`). -/
 abbrev complexCube (b : R3) (s : ℝ) (hs : 0 < s) :=
   (mirrorSymCxCube b s hs).toShort.toHilbertComplex
 
@@ -265,8 +267,8 @@ def embeddingCube : ScaledEmbedding (complexCube b s hs) complexQ :=
 /-- The constraint on the cube: the pull-back of `{0} × TSDSm × TSDTm`
 (`{0} × TSDSmCube × TSDTmCube`). -/
 abbrev tsdCube (b : R3) (s : ℝ) (hs : 0 < s) :
-    ∀ i : Fin 3, Submodule ℝ (W3 (Feec.BoundedDomain.L2 (openCube b s))
-      (Feec.BoundedSym.L2S (openCube b s)) (Feec.BoundedSym.L2T (openCube b s)) i) :=
+    ∀ i : Fin 3, Submodule ℝ (W3 (Feec.Legacy.BoundedDomain.L2 (openCube b s))
+      (Feec.Legacy.BoundedSym.L2S (openCube b s)) (Feec.Legacy.BoundedSym.L2T (openCube b s)) i) :=
   fun i => (tsdQ i).comap ((embeddingCube (b := b) hs).J i : _ →ₗ[ℝ] _)
 
 /-- **TSD reduces the complex (4.16) on every open cube.**
@@ -280,8 +282,8 @@ theorem reducingSubcomplexCube : (complexCube b s hs).ReducingSubcomplex (tsdCub
 
 /-- **Prop 4.19 on every open cube with mirror boundary conditions.**
 Thesis: Prop 4.19 (corrected) -/
-theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (W3 (Feec.BoundedDomain.L2 (openCube b s))
-      (Feec.BoundedSym.L2S (openCube b s)) (Feec.BoundedSym.L2T (openCube b s)))}
+theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (W3 (Feec.Legacy.BoundedDomain.L2 (openCube b s))
+      (Feec.Legacy.BoundedSym.L2S (openCube b s)) (Feec.Legacy.BoundedSym.L2T (openCube b s)))}
     (hU : Evolution.IsStrongSolution (complexCube b s hs).wave (Icc a c) F U)
     (h0 : U a ∈ totalSub (tsdCube b s hs)) (hF : ∀ t ∈ Icc a c, F t ∈ totalSub (tsdCube b s hs)) :
     ∀ t ∈ Icc a c, U t ∈ totalSub (tsdCube b s hs) :=
@@ -289,11 +291,11 @@ theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (W3 (Feec.BoundedDomain
 
 /-- Prop 4.19 on every open cube, with existence and uniqueness.
 Thesis: Prop 4.19 (corrected) -/
-theorem existsUnique_memCube {U₀ : PiLp 2 (W3 (Feec.BoundedDomain.L2 (openCube b s))
-      (Feec.BoundedSym.L2S (openCube b s)) (Feec.BoundedSym.L2T (openCube b s)))}
+theorem existsUnique_memCube {U₀ : PiLp 2 (W3 (Feec.Legacy.BoundedDomain.L2 (openCube b s))
+      (Feec.Legacy.BoundedSym.L2S (openCube b s)) (Feec.Legacy.BoundedSym.L2T (openCube b s)))}
     (hU₀ : U₀ ∈ (complexCube b s hs).wave.domain) (hU₀S : U₀ ∈ totalSub (tsdCube b s hs))
-    {F : ℝ → PiLp 2 (W3 (Feec.BoundedDomain.L2 (openCube b s)) (Feec.BoundedSym.L2S (openCube b s))
-      (Feec.BoundedSym.L2T (openCube b s)))} {a c : ℝ}
+    {F : ℝ → PiLp 2 (W3 (Feec.Legacy.BoundedDomain.L2 (openCube b s)) (Feec.Legacy.BoundedSym.L2S (openCube b s))
+      (Feec.Legacy.BoundedSym.L2T (openCube b s)))} {a c : ℝ}
     (hF : Evolution.ForcingClass.admissible (complexCube b s hs).wave a c F)
     (hFS : ∀ t ∈ Icc a c, F t ∈ totalSub (tsdCube b s hs)) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution (complexCube b s hs).wave (Icc a c) F U ∧

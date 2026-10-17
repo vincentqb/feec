@@ -183,7 +183,7 @@ theorem hd_flux (hm : ∀ i j, HasDerivAt (fun r => m r i j) (m' i j) s)
 
 end Calculus
 
-section Prop36
+section FiniteSpeed
 
 
 /-- The point `(t, x) ∈ ℝ⁴`. -/
@@ -548,6 +548,6 @@ theorem propagation_hyps_nonvacuous :
     rw [bump3.one_of_mem_closedBall (Metric.mem_closedBall_self zero_le_one)] at this
     exact one_ne_zero this
 
-end Prop36
+end FiniteSpeed
 
 end Feec.EinsteinBianchi

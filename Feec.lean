@@ -108,32 +108,6 @@ public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.ShortDual
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
-public import Feec.Legacy.BoundedDomain.Basic
-public import Feec.Legacy.BoundedDomain.Density
-public import Feec.Legacy.BoundedDomain.Ext
-public import Feec.Legacy.BoundedDomain.Interior
-public import Feec.Legacy.BoundedDomain.Kstar
-public import Feec.Legacy.BoundedDomain.Salvage
-public import Feec.Legacy.BoundedDomain.SalvageDim
-public import Feec.Legacy.BoundedDomain.SalvageMax
-public import Feec.Legacy.Box.Basic
-public import Feec.Legacy.Box.Forward
-public import Feec.Legacy.Box.Ident
-public import Feec.Legacy.Box.Reduce
-public import Feec.Legacy.Box.Restrict
-public import Feec.Legacy.Box.RowWise
-public import Feec.Legacy.Box.Static
-public import Feec.Legacy.MirrorCube.BggTorus
-public import Feec.Legacy.MirrorCube.Compress
-public import Feec.Legacy.Torus.Basic
-public import Feec.Legacy.Torus.Group
-public import Feec.Legacy.Torus.Sym
-public import Feec.Legacy.Torus.Weak
-public import Feec.Legacy.Whole.Basic
-public import Feec.Legacy.Whole.BGG
-public import Feec.Legacy.Whole.Ident
-public import Feec.Legacy.Whole.Mul
-public import Feec.Legacy.Whole.Weak
 public import Feec.Models.BoundedDomain.BGG
 public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.DeRham
@@ -142,7 +116,6 @@ public import Feec.Models.BoundedDomain.Hessian
 public import Feec.Models.BoundedDomain.Interior
 public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Models.Cube.Basic
-public import Feec.Models.Cube.Bridge
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBase
@@ -151,7 +124,6 @@ public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.Parity
-public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Models.Cube.Static
 public import Feec.Models.Euclidean.BGG
@@ -195,10 +167,7 @@ Formalization of the abstract framework of
 V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*,
 PhD thesis, University of Minnesota, 2015, organized by mathematics (see `docs/OVERVIEW.md`).
 
-This root module publicly imports every module of the library. `Feec.Legacy.*` holds the
-real-scalar short-complex development (`Feec.Legacy.HilbertComplex2` and its ℝ³ models on the
-torus, on bounded domains, on boxes and on mirror cubes) that the cube models still build on and
-that has not been re-derived from the general layers yet.
+This root module publicly imports every module of the library.
 
 ## References
 

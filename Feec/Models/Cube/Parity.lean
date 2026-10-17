@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.Reflection
 public import Feec.Fourier.TorusSpectral
+public import Feec.Domain.Operators
 
 /-!
 # The cube with the thesis' boundary conditions: the row-wise parity model

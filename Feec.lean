@@ -8,6 +8,7 @@ public import Feec.Evolution.Forcing
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
+public import Feec.FiniteElement.Dof
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Calculus.Partial
@@ -21,6 +22,12 @@ public import Feec.Fourier.FibreReducing
 public import Feec.Fourier.SymbolComplex
 public import Feec.Fourier.Torus
 public import Feec.HilbertComplex.Basic
+public import Feec.HilbertComplex.BGG.Basic
+public import Feec.HilbertComplex.BGG.Discrete
+public import Feec.HilbertComplex.BGG.TimeDependent
+public import Feec.HilbertComplex.BGG.ToComplex
+public import Feec.HilbertComplex.BGG.Twisted
+public import Feec.HilbertComplex.BGG.WeakSymmetry
 public import Feec.HilbertComplex.Compactness
 public import Feec.HilbertComplex.Dirac
 public import Feec.HilbertComplex.DomainComplex

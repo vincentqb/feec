@@ -3331,6 +3331,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«HodgeWave».«exists_tendstoUniformlyOn_ellipticProjection» -- THESIS_MAP.md
 #check @«Feec».«HodgeWave».«IsGraphSolution».«norm_sub_le» -- THESIS_MAP.md
 #check @«Feec».«Variational».«norm_sub_le_of_projected_error_decay» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«Subcomplex».«CochainProjection» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«euclidean_gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«pec_gauss_propagates» -- THESIS_MAP.md
@@ -3393,7 +3394,12 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«dual_closedRangeAt_iff» -- THESIS_MAP.md
 #check @«Feec».«ShortHilbertComplex».«dual» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«not_forall_isClosed_ker» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«Subcomplex».«CochainProjection».«infSup_mixedForm» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«Subcomplex».«toHilbertComplex» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«infSup_mixedForm» -- THESIS_MAP.md
+#check @«Feec».«FiniteElement».«IsUnisolvent» -- THESIS_MAP.md
+#check @«Feec».«FiniteElement».«interp» -- THESIS_MAP.md
+#check @«Feec».«FiniteElement».«isUnisolvent_iff_forall_eq_zero» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«exists_extDeriv_eq_of_extDeriv_eq_zero» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«exists_koszul_eq_of_koszul_eq_zero» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous» -- THESIS_MAP.md

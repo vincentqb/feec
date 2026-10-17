@@ -382,7 +382,8 @@ theorem periodic_harmonic_eq_bot (k : ℕ) : (periodic 𝕜).harmonic k = ⊥ :=
     exact h
 
 /-- `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`. -/
-theorem periodic_not_closedRangeAt {k : ℕ} (hk : Even k) : ¬ (periodic 𝕜).ClosedRangeAt (k + 1) := by
+theorem periodic_not_closedRangeAt {k : ℕ} (hk : Even k) :
+    ¬ (periodic 𝕜).ClosedRangeAt (k + 1) := by
   rw [HilbertComplex.ClosedRangeAt, periodic_boundaries_of_even hk]
   exact not_isClosed_range_diag
 
@@ -501,7 +502,8 @@ theorem fredholm_not_closedRange :
       ¬ (complex 𝕜).HasCompactPropertyAt 0 ∧ ¬ (complex 𝕜).HasCompactPropertyAt 1 :=
   ⟨harmonic_eq_bot, finiteDimensional_harmonic, not_closedRangeAt_one,
     (complex 𝕜).boundaries_ne_cycles_of_not_closedRangeAt not_closedRangeAt_one,
-    fun h => not_closedRangeAt_one (h.closedRangeAt_of_rel (show ComplexShape.fin3.Rel 0 1 from rfl)),
+    fun h => not_closedRangeAt_one
+      (h.closedRangeAt_of_rel (show ComplexShape.fin3.Rel 0 1 from rfl)),
     fun h => not_closedRangeAt_one h.closedRangeAt⟩
 
 /-- "Every Fredholm Hilbert complex has closed range" is false, already for short complexes on

@@ -5,8 +5,12 @@ public import Feec.Algebra.ExteriorFibre
 public import Feec.Algebra.Koszul
 public import Feec.Algebra.PolynomialForm
 public import Feec.Algebra.Proxy3
+public import Feec.Counterexamples.BoundedDomainTSD
+public import Feec.Counterexamples.BoundedSymTSD
+public import Feec.Counterexamples.CubeStationary
 public import Feec.Counterexamples.Ell2
 public import Feec.Counterexamples.Fredholm
+public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Examples.NonVacuity
 public import Feec.Numerics.CrankNicolsonTable
 public import Feec.Domain.Complexes

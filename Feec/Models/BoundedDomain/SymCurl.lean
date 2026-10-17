@@ -20,8 +20,9 @@ curl of a symmetric field is trace-free (`trace_curl_eq_zero_of_symm`).
 
 `H̊(curl, S) ⊆ H̊(curl, M)` with the same curl (`Feec.Domain.ConstCoeffOp.minimalVia_graph_map`),
 so the zero-mean theorem of `Feec.Models.BoundedDomain.GradCurl` applies to symmetric TSD fields,
-and **TSD propagation fails for (4.16)** on every nonempty bounded open `Ω` (`not_propagates_sym`,
-the bounded-domain refutation of thesis Prop 4.19).
+and **TSD propagation fails for (4.16)** on every nonempty bounded open `Ω` for the constraint
+spaces `tsdS`, `tsdT` (`Feec.Counterexamples.BoundedSymTSD.tsd_not_propagates`, the bounded-domain
+refutation of thesis Prop 4.19).
 
 ## References
 
@@ -319,10 +320,7 @@ theorem mem_adjoint_hessCurl_d₀_domain_iff (hΩ : IsOpen Ω) {v : symSub 𝕜 
         (symSub 𝕜 Ω).subtypeₗᵢ, ⟪w, p.1⟫_𝕜 = ⟪v, p.2⟫_𝕜 :=
   (hessOp 3).mem_adjoint_minimalVia_domain_iff _ _ (denseVia_symSub hΩ) (hessCurl 𝕜 hΩ).dense₀
 
-/-! ## Failure of TSD propagation for (4.16): Prop 4.19 on bounded domains -/
-
-attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
-  ShortHilbertComplex.instIsScalarTowerRealW3
+/-! ## The constraint spaces of (4.16) -/
 
 variable (Ω) in
 /-- `L²(TSD)` inside `L²(S)`. -/
@@ -341,94 +339,5 @@ instance : (tsdT Ω).HasOrthogonalProjection := by
   have : CompleteSpace (tsdT Ω) :=
     (isClosed_tsd.preimage continuous_subtype_val).completeSpace_coe
   infer_instance
-
-/-- `⟪-diag(1, -1, 0), Φ⟫ = ⟪β, curl Φ⟫` for every test field `Φ`: `curl β = -diag(1, -1, 0)`
-weakly. -/
-theorem inner_betaL2_curl (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Φ : Ix → R3 → ℝ}
-    (hΦ : IsTestField Ω Φ) :
-    ⟪-constField hΩ hb diagA, testField hΦ⟫_ℝ =
-      ⟪betaL2 hΩ hb, testField ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hΦ)⟫_ℝ := by
-  obtain ⟨hβM, hβv⟩ := betaL2_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl
-  have h := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).adjoint_minimal_inner_testField hΩ ⟨_, hβM⟩ hΦ
-  rw [← hβv]
-  exact h
-
-/-- `β ∈ D(d₁†)` for every complex with `d₁ ⊆ curl` on `H̊(curl, S)`, with
-`d₁† β = -diag(1, -1, 0)`. -/
-theorem betaT_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {W₀ : Type*}
-    [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
-    (S : ShortHilbertComplex ℝ W₀ (symSub ℝ Ω) (trSub ℝ Ω)) (hd₁ : S.d₁ ≤ (hessCurl ℝ hΩ).d₁) :
-    ∃ h : (⟨_, (betaL2_mem_tsd hΩ hb).2.1⟩ : trSub ℝ Ω) ∈ S.d₁†.domain,
-      S.d₁† ⟨_, h⟩ = -(⟨_, (constField_mem_tsd hΩ hb diagA_transpose diagA_trace).1⟩ :
-        symSub ℝ Ω) := by
-  set β : trSub ℝ Ω := ⟨_, (betaL2_mem_tsd hΩ hb).2.1⟩
-  set G : symSub ℝ Ω := ⟨_, (constField_mem_tsd hΩ hb diagA_transpose diagA_trace).1⟩
-  have key : ∀ p ∈ (curlOp 3 : ConstCoeffOp R3 ℝ _ _).testGraphVia (symSub ℝ Ω).subtypeₗᵢ
-      (trSub ℝ Ω).subtypeₗᵢ, ⟪-G, p.1⟫_ℝ = ⟪β, p.2⟫_ℝ := by
-    rintro ⟨x, y⟩ ⟨Φ, hΦ, h1, h2⟩
-    have e1 : ((x : symSub ℝ Ω) : L2F ℝ Ω Ix) = testField hΦ := h1
-    have e2 : ((y : trSub ℝ Ω) : L2F ℝ Ω Ix) = testField
-        ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hΦ) := h2
-    change ⟪((-G : symSub ℝ Ω) : L2F ℝ Ω Ix), (x : L2F ℝ Ω Ix)⟫_ℝ =
-      ⟪((β : trSub ℝ Ω) : L2F ℝ Ω Ix), (y : L2F ℝ Ω Ix)⟫_ℝ
-    rw [e1, e2, Submodule.coe_neg]
-    exact inner_betaL2_curl hΩ hb hΦ
-  have hβ1 : β ∈ (hessCurl ℝ hΩ).d₁†.domain := (mem_adjoint_hessCurl_d₁_domain_iff hΩ).2 ⟨-G, key⟩
-  have hle := LinearPMap.adjoint_le_adjoint_of_le S.dense₁ hd₁
-  refine ⟨hle.1 hβ1, ?_⟩
-  rw [← hle.2 (x := ⟨β, hβ1⟩) (y := ⟨β, hle.1 hβ1⟩) rfl]
-  exact (curlOp 3).adjoint_minimalVia_apply_eq _ _ (denseVia_trSub hΩ) (hessCurl ℝ hΩ).dense₁
-    ⟨β, hβ1⟩ key
-
-set_option maxHeartbeats 800000 in
-/-- **TSD data do not propagate for the complex (4.16)** (the conclusion of thesis Prop 4.19
-fails on every nonempty bounded open `Ω ⊆ ℝ³`): for every short complex
-`W₀ → L²(Ω; S) → L²(Ω; T)` with `d₁ ⊆ curl` on `H̊(curl, S)`, the TSD datum `(0, 0, β)` lies in
-`D(L) ∩ K`, `K = {0} × L²(TSD) × L²(TSD)`, and every strong solution from it leaves `K` at once.
-Thesis: Prop 4.19 -/
-theorem not_propagates_sym (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
-    {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
-    (S : ShortHilbertComplex ℝ W₀ (symSub ℝ Ω) (trSub ℝ Ω))
-    (hd₁ : S.d₁ ≤ (hessCurl ℝ hΩ).d₁) :
-    ∃ U₀ ∈ S.wave.domain,
-      U₀ ∈ HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω)
-        (tsdT Ω)) ∧
-      ∀ T > 0, ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) (trSub ℝ Ω)), U 0 = U₀ →
-        Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
-          ∃ t ∈ Icc 0 T, U t ∉ HilbertComplex.totalSub
-            (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) (tsdT Ω)) := by
-  obtain ⟨hβS, hβSv⟩ := betaT_mem_adjoint hΩ hb S hd₁
-  let β : trSub ℝ Ω := ⟨_, (betaL2_mem_tsd hΩ hb).2.1⟩
-  let G : symSub ℝ Ω := ⟨_, (constField_mem_tsd hΩ hb diagA_transpose diagA_trace).1⟩
-  let U₀ : PiLp 2 (ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) (trSub ℝ Ω)) :=
-    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) (trSub ℝ Ω)) 2 β)
-  have h0 : (U₀ 0 : W₀) = 0 := rfl
-  have h1 : (U₀ 1 : symSub ℝ Ω) = 0 := by
-    simp only [U₀]
-    rfl
-  have h2 : (U₀ 2 : trSub ℝ Ω) = β := rfl
-  have hD : U₀ ∈ S.wave.domain := by
-    rw [S.mem_wave_domain, h0, h1, h2]
-    exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, Submodule.zero_mem _, hβS⟩
-  have hK : U₀ ∈ HilbertComplex.totalSub
-      (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) (tsdT Ω)) :=
-    ShortHilbertComplex.single_two_mem_totalSub_family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) (tsdT Ω)
-      (v := β) (Submodule.mem_comap.2 (betaL2_mem_tsd hΩ hb))
-  refine ⟨U₀, hD, hK, fun T hT U hU0 hU => ?_⟩
-  have hG : G ∈ (tsdS Ω ⊓ S.d₁.domain)ᗮ := by
-    rw [Submodule.mem_orthogonal]
-    rintro z ⟨hzK, hzD⟩
-    have hzM := hessCurl_d₁_graph_map hΩ ⟨z, hd₁.1 hzD⟩
-    rw [Submodule.coe_inner]
-    exact inner_constField_eq_zero hΩ hb diagA ⟨hzK, LinearPMap.mem_domain_of_mem_graph hzM⟩
-  have hne0 : ⟪G, S.d₁† ⟨β, hβS⟩⟫_ℝ ≠ 0 := by
-    rw [hβSv, inner_neg_right, Submodule.coe_inner, real_inner_comm, inner_constField]
-    simp only [integral_constField, Fintype.sum_prod_type, Fin.sum_univ_three]
-    have hpos := volume_real_pos hΩ hb hne
-    simp [diagA]
-    positivity
-  obtain ⟨t, ht, hnot⟩ := S.not_propagates_of_inner_ne_zero hG ⟨β, hβS⟩ hne0 hT hU
-    (by rw [hU0]; exact h0) (by rw [hU0]; exact h2)
-  exact ⟨t, ht, fun hmem => hnot (hmem 1)⟩
 
 end Feec.Models.BoundedDomain

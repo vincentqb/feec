@@ -4,7 +4,6 @@ public import Feec.Physics.EinsteinBianchi.Propagation
 public import Feec.Models.Torus.GradCurl
 public import Feec.Models.Euclidean.GradCurl
 public import Feec.Models.Cube.Mirror
-public import Feec.Models.BoundedDomain.GradCurl
 
 /-!
 # Constraint propagation for the linearized Einstein–Bianchi system: headline statements
@@ -21,7 +20,7 @@ constraints propagate depends on the domain and the boundary conditions:
 * **on every open cube with tensorial mirror boundary conditions**: `cube_tsd_propagates`;
 * **on bounded domains with the thesis' boundary conditions** (`H̊(curl)` for the curl, i.e.
   any complex with `d₁ ≤ curl_min`) the constraints do **not** propagate:
-  `boundedDomain_tsd_not_propagates`.
+  `Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`.
 
 These are the physical readings of `Feec.HilbertComplex.ReducingSubcomplex.propagates` for the
 model complexes of `Feec.Models.*`; the proofs are one-line references.
@@ -72,12 +71,5 @@ theorem torus_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Torus.Grad
 conditions** (the thesis' row-wise conditions only propagate stationary data); this is
 `Feec.Models.Cube.Mirror.propagatesCube`. Thesis: Prop 4.17 (corrected) -/
 alias cube_tsd_propagates := Models.Cube.Mirror.propagatesCube
-
-/-- **EB constraints fail to propagate on bounded domains** with the thesis' boundary
-conditions: on every bounded nonempty open `Ω ⊆ ℝ³` and for every short complex whose second
-differential is a restriction of `curl_min` (the `H̊(curl)` condition), there are TSD data in the
-domain of the wave operator from which every strong solution leaves the TSD constraint; this is
-`Feec.Models.BoundedDomain.not_propagates`. Thesis: Prop 4.17 (refuted on bounded domains) -/
-alias boundedDomain_tsd_not_propagates := Models.BoundedDomain.not_propagates
 
 end Feec.EinsteinBianchi

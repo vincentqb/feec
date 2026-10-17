@@ -1,0 +1,94 @@
+module
+
+public import Feec.Counterexamples.BoundedDomainTSD
+public import Feec.Models.Cube.Ident
+
+/-!
+# Cubes with the thesis' boundary conditions: only stationary data propagate
+
+On an open cube `∏ (bᵢ, bᵢ + s)` with the thesis' boundary conditions (the minimal grad–curl
+complex `H̊¹ → H̊(curl) → L²`), thesis Prop 4.17 fails in two ways:
+
+* **forward invariance forces stationarity**: the forward orbit of a datum under the wave group
+  stays in `{0} × S₁ × S₂` (closed `S₁, S₂ ⊆ L²(TSD)`) iff the datum lies there and is
+  stationary (`forward_iff_stationary`); the largest invariant subspace of the thesis' constraint
+  consists of the data `(0, 0, B₀)` with `B₀ ∈ L²(TSD)`, `curl B₀ = 0`
+  (`mem_invariantCore_tsd_iff`). These are the cube results of `Feec.Models.Cube.Ident`
+  (spectral argument on the torus);
+* **TSD data do not propagate**: the cube is a nonempty bounded open set, so the datum
+  `(0, 0, β)` of `Feec.Counterexamples.BoundedDomainTSD` leaves the constraint at once
+  (`tsd_not_propagates`).
+
+With tensorial mirror boundary conditions instead, TSD data do propagate on every cube
+(`Feec.Models.Cube.Mirror.propagatesCube`).
+
+## References
+
+* [QuennevilleBelair2015], §4.10 (Prop 4.17)
+-/
+
+open scoped InnerProductSpace LinearPMap
+open Set
+
+@[expose] public noncomputable section
+
+namespace Feec.Counterexamples.CubeStationary
+
+open Models.BoundedDomain (R3 Ix gradCurl tsd)
+open Domain (L2F)
+open HilbertComplex (totalSub)
+open ShortHilbertComplex (W3 family3)
+
+variable {b : R3} {s : ℝ}
+
+theorem nonempty_openCube (hs : 0 < s) : (BoxIdent.openCube b s).Nonempty :=
+  ⟨fun i => b i + s / 2, fun i _ => ⟨by linarith, by linarith⟩⟩
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+/-- **On every open cube with the thesis' boundary conditions, TSD data do not propagate**: the
+TSD datum `(0, 0, β)` lies in `D(L) ∩ K`, `K = {0} × L²(TSD) × L²(TSD)`, and for every `T > 0`
+every strong solution of `U' = L U` from it leaves `K`. Thesis: Prop 4.17 (refuted) -/
+theorem tsd_not_propagates (hs : 0 < s) :
+    ∃ U₀ ∈ (gradCurl ℝ (BoxIdent.isOpen_openCube b s)).wave.domain,
+      U₀ ∈ totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (BoxIdent.openCube b s) (Fin 3)))
+        (tsd (BoxIdent.openCube b s)) (tsd (BoxIdent.openCube b s))) ∧
+      ∀ T > 0, ∀ U : ℝ → PiLp 2 (W3 (L2F ℝ (BoxIdent.openCube b s) (Fin 3))
+          (L2F ℝ (BoxIdent.openCube b s) Ix) (L2F ℝ (BoxIdent.openCube b s) Ix)), U 0 = U₀ →
+        Evolution.IsStrongSolution (gradCurl ℝ (BoxIdent.isOpen_openCube b s)).wave (Icc 0 T) 0 U →
+          ∃ t ∈ Icc 0 T, U t ∉ totalSub (family3
+            (⊥ : Submodule ℝ (L2F ℝ (BoxIdent.openCube b s) (Fin 3)))
+            (tsd (BoxIdent.openCube b s)) (tsd (BoxIdent.openCube b s))) :=
+  BoundedDomainTSD.tsd_not_propagates (BoxIdent.isOpen_openCube b s)
+    (BoxIdent.isBounded_openCube b s) (nonempty_openCube hs) _ le_rfl
+
+/-- **On every open cube with the thesis' boundary conditions, forward invariance forces
+stationarity**, for every closed `S₁, S₂ ⊆ L²(TSD)`. Thesis: Prop 4.17 (refuted) -/
+theorem forward_iff_stationary (hs : 0 < s) {S1 S2 : Submodule ℝ (Models.Cube.Ident.M b s)}
+    (h1 : S1 ≤ Feec.BoundedDomain.TSD (BoxIdent.openCube b s))
+    (h2 : S2 ≤ Feec.BoundedDomain.TSD (BoxIdent.openCube b s))
+    (y : PiLp 2 (W3 (Models.Cube.Ident.V b s) (Models.Cube.Ident.M b s)
+      (Models.Cube.Ident.M b s))) :
+    (∀ t, 0 ≤ t → (Models.Cube.Ident.complexCube b s).waveGroup.S t y ∈
+        totalSub (Models.Cube.sub3 (⊥ : Submodule ℝ (Models.Cube.Ident.V b s)) S1 S2)) ↔
+      y ∈ totalSub (Models.Cube.sub3 (⊥ : Submodule ℝ (Models.Cube.Ident.V b s)) S1 S2) ∧
+        y ∈ (Models.Cube.Ident.complexCube b s).waveGroup.stationary :=
+  Models.Cube.Ident.forward_iff hs h1 h2 y
+
+/-- **The largest invariant subspace of the thesis' constraint on a cube** consists of the
+stationary data `(0, 0, B₀)`, `B₀ ∈ L²(TSD)`, `curl B₀ = 0`. Thesis: Prop 4.17 (refuted) -/
+theorem mem_invariantCore_tsd_iff (hs : 0 < s)
+    (y : PiLp 2 (W3 (Models.Cube.Ident.V b s) (Models.Cube.Ident.M b s)
+      (Models.Cube.Ident.M b s))) :
+    y ∈ (Models.Cube.Ident.complexCube b s).waveGroup.invariantCore
+        (totalSub (Models.Cube.sub3 (⊥ : Submodule ℝ (Models.Cube.Ident.V b s))
+          (Feec.BoundedDomain.TSD (BoxIdent.openCube b s))
+          (Feec.BoundedDomain.TSD (BoxIdent.openCube b s)))) ↔
+      ∃ B ∈ Feec.BoundedDomain.TSD (BoxIdent.openCube b s),
+        ∃ h : B ∈ (BoxIdent.cxCube b s).d1†.domain,
+          (BoxIdent.cxCube b s).d1† ⟨B, h⟩ = 0 ∧
+            y = Models.Cube.totEquiv (Constraints.ini (Models.Cube.Ident.V b s) 0 B) :=
+  Models.Cube.Ident.mem_invariantCore_tsd_iff hs y
+
+end Feec.Counterexamples.CubeStationary

@@ -5,7 +5,36 @@ public import Feec.Models.Cube.PolyFiniteElementConvergence
 /-!
 # Rates of convergence of the higher-order finite element methods on the cube
 
-DOCSTRING
+For an admissible sequence `S` reproducing polynomial forms of degree `s` in every form degree
+(`FEM.PolyOrder n S s`: `P_sΛᵏ ⊆ P(T)ᵏ`; e.g. `s + 1 ≤ r_k` in every degree,
+`polyOrder_of_le_deg`, or `s ≤ r_k` where the full family is used, `polyOrder_of_full`; every
+sequence has order `0`, `polyOrder_zero`; `P_r⁻Λ` has order `r - 1`, `polyOrder_trimmed`), the
+canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of order `h^{s+1}` for
+`C^{s+2}` forms (`FEM.exists_mem_poly_le`), and the rate passes to the finite element methods:
+
+* `FEM.IsCsForm s j L x` (resp. `FEM.IsCsFormMin`, vanishing outside `Q`): `x` is a `C^{s+2}`
+  `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`
+  (satisfiable: `exists_isCsForm`, `exists_isCsFormMin`).
+* **Degreewise**: `‖x - v‖, ‖d(x - v)‖ ≤ B_j L h_N^{s+1}` for some `v ∈ Vₕʲ`
+  (`IsCsForm.exists_mem_poly_le`, `IsCsFormMin.exists_mem_polyMin_le`), and the graph-norm
+  distances (`IsCsForm.infDist_domainSub_poly_le`).
+* **Mixed Hodge–Laplace problem** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): error
+  `≤ K L h_N^{s+1}` for solutions with `IsCsForm s` components (`mixed_rate_poly`,
+  `mixed_rate_polyMin`, unconditionally; `mixed_rate_poly_C2`: `O(h)` for `C²` data and every
+  sequence).
+* **Semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14) on every window:
+  `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}`
+  (`norm_sub_le_window_poly_smooth`, `norm_sub_le_windowMin_poly_smooth`; no smoothed projection
+  is needed).
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  Thm 3.9 (quasi-optimality of the mixed method)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
+  estimates, rates for smooth solutions)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
 -/
 
 @[expose] public noncomputable section

@@ -7,7 +7,64 @@ public import Feec.FiniteElement.PolyComplex
 /-!
 # Smoothed-projection estimates for the higher-order families on the cube
 
-DOCSTRING
+For every admissible sequence `S` (`Feec.FiniteElement.PolySeq`: `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in
+degree `k`) and the level-`(N + 1)` Freudenthal meshes `FEM.mesh n N` of `Q = (0, ½)ⁿ`
+(`h_N = 1 / (2 (N + 1))`), the smoothed canonical interpolants `Q_N = Π_h R_N` of the complexes
+`FEM.poly n S N ⊆ HΛ(Q)` and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs) satisfy the
+estimates of [AFW2010], §5.4 and [ChristiansenWinther2008], **for every `γ ∈ (0, γ₀]`**, `γ₀`
+depending only on `n` and `S` (`FEM.polySmoothingEstimates_pMax`,
+`FEM.polySmoothingEstimatesMin_pMin`): the parameters `pMax γ` (dilation factor `1 - γ h_N`) and
+`pMin γ` (factor `1 + γ h_N`) of `Feec.Models.Cube.SmoothingEstimates` give uniformly
+`L²`-bounded `Q_N` with `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ` (`FEM.PolySmoothingEstimates`,
+`FEM.PolySmoothingEstimatesMin`). The same "for all small `γ`" form holds for the Whitney family
+(`FEM.smoothingEstimates_pMax_forall`, `FEM.smoothingEstimatesMin_pMin_forall`, from the Whitney
+lemmas of `Feec.Models.Cube.SmoothingEstimates`), so that one smoother serves finitely many
+families at once (`FEM.exists_common_gamma`).
+
+The geometry of `Feec.Models.Cube.SmoothingEstimates` (Kuhn homotheties `h_N (m + K_σ)`, lattice
+separation, faces through nearby points, bounded overlap, boundary layers, the sampling argument
+of the minimal family, `IsAdm`) is reused; the Whitney-specific local estimates are replaced by
+the polynomial ones of `Feec.FiniteElement.PolyInverseEstimate` and
+`Feec.FiniteElement.PolyInterpolation`:
+
+* **Degrees of freedom as integrals of the values** (`PolySeq.dof_eq_integral`): the moment DOF
+  `ℓ_{g,i}(ω) = ∫_{T̂_m} F_q^* ω_k ∧ ηᵢ` (`q` the lexicographic parametrization of the face `g`) is
+  `∫_{T̂_m} Σₛ ω(F_q ξ)ₛ cₛ(ξ) dξ` with a coefficient vector `c = dofCoeff` of size `O(h_Nᵏ)` on the
+  mesh (`Poly.CoeffBound`, from `sum_abs_dofCoeff_le`: `k × k` minors of the edge matrix and the
+  test forms), which only sees the trace on `g` (`sum_mul_dofCoeff_eq_of_pullback_eq`). Hence
+  `|ℓ_{g,i}(ω)| ≤ D h_Nᵏ sup_T |ω|` (`Poly.abs_dof_le`).
+* **Trace determination on every face** (`PolySeq.affinePullback_lexEnum_eq_of_dof_eq`, the
+  facet case being `PolySeq.tangentialTraceEq_of_dof_eq`): fields of the global space have the
+  same trace on every common face of two simplices (`Poly.pullback_eq_of_mem_globalSpace`).
+* **Uniform constants** on the Kuhn simplices: the DOF bound `h_Nᵏ ‖z‖ ≤ B Σ |ℓ(z)|`
+  (`Poly.DofBound`) and the inverse estimates `h_N^{n/2} ‖z‖ ≲ ‖z‖_{L²(T)}`,
+  `h_N^{n/2} h_N Lip_T(z) ≲ ‖z‖_{L²(T)}` (`Poly.InvBound`).
+* **Uniform `L²` bound** (`Poly.exists_norm_smoothedInterp_le`): as for the Whitney forms, through
+  the DOF stability, the DOF bound and Jensen's inequality for the mollifier.
+* **Closeness on `Vₕ`** (`Poly.sqrt_mul_abs_integrand_le`, `Poly.sqrt_mul_abs_dof_err_le`,
+  `Poly.norm_sq_sub_smoothedInterp_le`): at points of a face `g` with barycentric weights `≥ γ`,
+  every simplex sampled by the smoother contains `g` (`Poly.subset_vertexSet_of_near_lex`), where
+  the traces agree; the error integrand is `O(γ)` there, and the boundary layer of `g` has measure
+  `O(γ)`. Samples outside `Q` are controlled by `Poly.SampleOK`, vacuous for the maximal family
+  (`Poly.sampleOK_pMax`) and the vanishing of the boundary DOFs for the minimal family
+  (`Poly.sampleOK_pMin`). Since the bound `‖v - Q_N v‖² ≲ γ² ‖v‖²` is monotone in `γ`, every
+  `γ ≤ γ₀` works (`Poly.exists_gamma₀`, `Poly.exists_gamma₀_whitney`).
+
+## Main definitions
+
+* `FEM.poly n S N`, `FEM.polyMin n S N`: the complexes of `S` on the cube.
+* `FEM.polySmoothed`, `FEM.polySmoothedMin`: the smoothed interpolants as commuting maps.
+* `FEM.PolySmoothingEstimates`, `FEM.PolySmoothingEstimatesMin`.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (smoothed projections: the estimates for `ε ≈ h`)
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §4.5–4.6 (the moment degrees of freedom)
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
 -/
 
 @[expose] public noncomputable section

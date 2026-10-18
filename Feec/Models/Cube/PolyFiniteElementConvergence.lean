@@ -6,7 +6,52 @@ public import Feec.Models.Cube.FiniteElementConvergence
 /-!
 # Convergence of the higher-order finite element methods on the cube, with no hypotheses
 
-DOCSTRING
+For every admissible sequence `S` of `P_rΛᵏ` / `P_r⁻Λᵏ` families (`Feec.FiniteElement.PolySeq`) on
+the level-`(N + 1)` Freudenthal meshes of `Q = (0, ½)ⁿ`, with the complexes `FEM.poly n S N ⊆ HΛ(Q)`
+and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module proves the analogues of
+`Feec.Models.Cube.FiniteElementMethod`, `Feec.Models.Cube.WhitneyApprox` and
+`Feec.Models.Cube.FiniteElementConvergence`, with no hypothesis beyond the data:
+
+* **Interpolation error of order `h^{s+1}`** ([Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4):
+  pointwise on each simplex by the Bramble–Hilbert argument with the DOF bound and the DOF
+  stability of `Feec.Models.Cube.PolySmoothingEstimates` (`Poly.abs_sub_globalInterp_le`: the
+  degree-`k` part of a Taylor polynomial lies in `P_sΛᵏ ⊆ P(T)ᵏ`, `Poly.exists_polySpace_near`), and
+  in `L²` and in the graph norm on the cube (`exists_mem_poly_le`, `exists_mem_polyMin_le`, with
+  `d Π_h = Π_h d`).
+* **Density** of the higher-order spaces in `HΛ(Q)`, `H̊Λ(Q)` and in the graph spaces of every
+  window (`eventually_exists_poly_graph`, `dense_window_poly`, and `Min` versions), so the
+  semi-discrete Hodge wave equation converges on every window for `D(L)` data
+  (`exists_tendstoUniformlyOn_window_poly`, `exists_tendstoUniformlyOn_windowMin_poly`;
+  [QuennevilleBelair2015], Thm 4.14).
+* Under the smoothing estimates (proved for all small `γ` in
+  `Feec.Models.Cube.PolySmoothingEstimates`), with the Poincaré constant `(2π)⁻¹` of
+  `Feec.Models.Cube.DeRhamIdentFEM`: **uniformly bounded cochain projections** `π_N = J_N⁻¹ Q_N`
+  with `‖π_N‖ ≤ 2C` in `L²` and every graph norm (`PolySmoothingEstimates.proj`), the **uniform
+  discrete Poincaré inequality** ([AFW2010], Thm 3.6), **uniform well-posedness and stability** of
+  the discrete mixed Hodge Laplacian ([AFW2010], Thm 3.8), **quasi-optimality** ([AFW2010],
+  Thm 3.9) and convergence at the approximation rate (`norm_sub_le_of_infDist_le`), and the
+  **vanishing harmonic gap** (`PolySmoothingEstimates.tendsto_harmonicGap`).
+* **Unconditional statements**: `polySmoothedProjection_uniform`, `discretePoincare_poly`,
+  `mixed_wellPosed_poly`, `mixed_quasiOptimal_poly`, `exists_uniform_cochainProjection_poly` and
+  their `Min` versions.
+* **The rows of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3) on `(0, ½)³` with
+  vanishing boundary DOFs, the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (`PolySeq.lowestOrder`, and the
+  Whitney complex) and the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (`PolySeq.lagrangeP2`), **share
+  one smoother** (`tableRows_common_smoother`) and carry uniformly bounded cochain projections built
+  from the same smoothed fields (`tableRows_uniform_cochainProjection`).
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3 (discrete Poincaré inequality, Thm 3.6), Thm 3.8 (stability), Thm 3.9
+  (quasi-optimality), §5.4 (smoothed projections)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
+  estimates, density)
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
+  (interpolation error)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.14 (convergence of the semi-discrete Hodge wave equation); §5.3, Table 5.1; §6.3,
+  Table 6.1
 -/
 
 @[expose] public noncomputable section
@@ -1143,5 +1188,62 @@ theorem mixed_quasiOptimal_polyMin (S : PolySeq) :
   exact ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C),
     fun j N => (hE.proj N).harmonicGap j, fun j => hE.tendsto_harmonicGap j,
     fun hij hjk _ _ _ _ hs N => hE.norm_sub_le_infDist hij hjk hs N⟩
+
+/-! ### The rows of Tables 5.1 and 6.1 with one smoother -/
+
+theorem PolySmoothingEstimatesMin.mono {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C C' : ℝ} (hE : PolySmoothingEstimatesMin n S p C) (hC : C ≤ C') :
+    PolySmoothingEstimatesMin n S p C' where
+  isMinimal := hE.isMinimal
+  half_le := hE.half_le.trans hC
+  bound N i x := (hE.bound N i x).trans (mul_le_mul_of_nonneg_right hC (norm_nonneg _))
+  close := hE.close
+
+theorem PolySmoothingEstimates.mono {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C C' : ℝ} (hE : PolySmoothingEstimates n S p C) (hC : C ≤ C') :
+    PolySmoothingEstimates n S p C' where
+  isMaximal := hE.isMaximal
+  half_le := hE.half_le.trans hC
+  bound N i x := (hE.bound N i x).trans (mul_le_mul_of_nonneg_right hC (norm_nonneg _))
+  close := hE.close
+
+/-- **The two rows of Tables 5.1 and 6.1 of [QuennevilleBelair2015] (§5.3, §6.3), with vanishing
+boundary DOFs on the cube `(0, ½)³`, share one smoother**: there is `γ₀ > 0` such that for
+every `γ ∈ (0, γ₀]` the same minimal-family parameters `pMin γ` satisfy the smoothing estimates of
+the Whitney complex (the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²`), of the lowest-order sequence
+`PolySeq.lowestOrder` (the same row) and of the bottom row `PolySeq.lagrangeP2`
+(`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`). -/
+theorem tableRows_common_smoother :
+    ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ), γ ≤ γ₀ →
+      (∃ C, SmoothingEstimatesMin 3 (pMin γ hγ) C) ∧
+      (∃ C, PolySmoothingEstimatesMin 3 PolySeq.lowestOrder (pMin γ hγ) C) ∧
+      (∃ C, PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 (pMin γ hγ) C) := by
+  obtain ⟨γ₀, hγ₀, hγ₀2, h⟩ := exists_common_gamma (n := 3)
+    (fun b : Bool => if b then PolySeq.lagrangeP2 else PolySeq.lowestOrder)
+  refine ⟨γ₀, hγ₀, hγ₀2, fun γ hγ hγγ₀ => ?_⟩
+  obtain ⟨-, hW, hS⟩ := h γ hγ (by linarith) hγγ₀
+  exact ⟨hW, (hS false).2, (hS true).2⟩
+
+/-- **Uniformly bounded smoothed cochain projections for both rows of Tables 5.1/6.1 from one
+smoother** (vanishing boundary DOFs, `(0, ½)³`): there are minimal-family parameters `p` and a
+constant `C` such that the projections `π̊_N` of the top row (`PolySeq.lowestOrder`) and of the
+bottom row (`PolySeq.lagrangeP2`), both built from the same smoothed fields `R_N u`, are bounded
+by `2C` in `L²` and in every graph norm, uniformly in `N`, with vanishing harmonic gaps. -/
+theorem tableRows_uniform_cochainProjection :
+    ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
+      (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+      (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C),
+      (∀ N i x, ‖(hT.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
+      (∀ N i j, (hT.proj N).IsGraphBounded i j (2 * C)) ∧
+      (∀ N i x, ‖(hB.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
+      (∀ N i j, (hB.proj N).IsGraphBounded i j (2 * C)) ∧
+      (∀ j, Tendsto (fun N => (hT.proj N).harmonicGap j) atTop (𝓝 0)) ∧
+      ∀ j, Tendsto (fun N => (hB.proj N).harmonicGap j) atTop (𝓝 0) := by
+  obtain ⟨γ₀, hγ₀, -, h⟩ := tableRows_common_smoother
+  obtain ⟨-, ⟨C₁, h₁⟩, ⟨C₂, h₂⟩⟩ := h γ₀ hγ₀ le_rfl
+  have hT := h₁.mono (le_max_left C₁ C₂)
+  have hB := h₂.mono (le_max_right C₁ C₂)
+  exact ⟨_, max C₁ C₂, hT, hB, hT.norm_proj_le, hT.isGraphBounded_proj, hB.norm_proj_le,
+    hB.isGraphBounded_proj, hT.tendsto_harmonicGap, hB.tendsto_harmonicGap⟩
 
 end Feec.Models.Cube.FEM

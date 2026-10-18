@@ -52,13 +52,19 @@ the elementwise inverse estimates behind it are not formalized), every consequen
   magnetic conductor, `n = 3`, window `HΛ⁰ → HΛ¹ → L²Λ²`) are the instance
   `FEM.maxwell_exists_tendstoUniformlyOn`.
 
-**Remaining hypotheses.** (1) `FEM.SmoothingEstimates` (the analytic core of [AFW2010], §5.4:
-inverse estimates and the interpolation error of `Π_h` on smoothed fields with `ε ≈ h`);
-(2) the Poincaré inequality of `HΛ(Q)` (proved in the parity model `Feec.Models.Cube.DeRham`, whose
-identification with `HΛ(Q)` is not formalized); (3) approximation properties of the Whitney spaces
-(interpolation error for smooth forms; [Arnold2018], Ch. 7; `Feec.FiniteElement.InterpolationError`
-gives it for reference interpolants satisfying `IsRefInterpolant`, which is not instantiated for
-Whitney forms). For the Einstein–Bianchi (BGG) system, `Feec.BGG.Discrete` needs subcomplexes of
+**Remaining hypotheses.** None for the cube: the three hypotheses of this module are theorems
+elsewhere, and `Feec.Models.Cube.FiniteElementConvergence` states the results without them.
+(1) `FEM.SmoothingEstimates` and `FEM.SmoothingEstimatesMin` hold for explicit parameters
+(`FEM.smoothingEstimates_pMax`, `FEM.smoothingEstimatesMin_pMin` in
+`Feec.Models.Cube.SmoothingEstimates`, from the inverse estimates of
+`Feec.FiniteElement.InverseEstimate`); (2) the Poincaré inequalities of `HΛ(Q)` and `H̊Λ(Q)` hold
+with `c_P = (2π)⁻¹` (`FEM.norm_le_of_mem_orthogonal_cycles`, `_min` in
+`Feec.Models.Cube.DeRhamIdentFEM`, from the identification of `HΛ(Q)`, `H̊Λ(Q)` with the parity
+classes of the torus complex, `Feec.Models.Cube.DeRhamIdent`); (3) the Whitney spaces approximate
+at rate `h` for `C²` forms and are dense (`Feec.Models.Cube.WhitneyApprox`,
+`Feec.Models.Cube.WhitneyRate`, from `Feec.FiniteElement.WhitneyInterpolation`). The statements of
+this module keep these as hypotheses so that they apply to any parameters and constants. For the
+Einstein–Bianchi (BGG) system, `Feec.BGG.Discrete` needs subcomplexes of
 both rows with cochain projections satisfying `Π S = S_h Π'`; vector-valued Whitney forms and such
 a pair of projections are not constructed, so that structure remains an explicit hypothesis of
 `Feec.HilbertComplex.BGG.Discrete`.

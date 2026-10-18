@@ -42,7 +42,7 @@ facet (`IsFaceNormal F ν`); the proof uses the cofactor normal `faceNormal q` o
   `𝕜ⁿ`-valued fields, any vertex order.
 * `setIntegral_divergence_eq_sum_faces`: the same with the face terms indexed by the facets
   `F ⊆ vert T` and the canonical enumerations `faceEnum F`.
-* `orient_mul_orient_neg`: two `n`-simplices sharing an interior facet induce opposite
+* `orient_eq_neg`: two `n`-simplices sharing an interior facet induce opposite
   orientations on it.
 * `sum_setIntegral_divergence_eq_zero`: **the divergence theorem on a mesh**.
 

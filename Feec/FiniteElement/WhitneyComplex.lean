@@ -19,7 +19,8 @@ boundary DOFs it is a subcomplex of `H̊Λ(Ω)` for strictly star-shaped (e.g. c
 
 The key algebraic facts are that every Whitney form is a trimmed linear form
 `x ↦ α + ι_x β` (`whitneySpace_le_p1MinusForms`), that affine pullbacks preserve these
-(`affinePullback_mem_p1MinusForms`, from `ι_{Bv} ∘ B^* = B^* ∘ ι_v`, `pullback_interior`), and
+(`affinePullback_mem_p1MinusForms`, from `B^* (ι_{B v} β) = ι_v (B^* β)`,
+`Feec.ExteriorFibre.pullback_interior_mulVec`), and
 that on the reference simplex they are exactly the Whitney forms
 (`p1MinusForms_le_whitneySpace_refVertex`). The tangential trace of a Whitney form on a facet is
 therefore a Whitney form of the facet, determined by the DOFs of the faces of the facet

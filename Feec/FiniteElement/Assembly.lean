@@ -29,7 +29,7 @@ Then
 * `Λ_hᵏ(M) ⊆ {piecewise fields with continuous tangential traces}`
   (`tangentialTraceEq_of_mem_globalSpace`), with equality when the faces of `M` have facet-connected
   stars (`mem_globalSpace_iff`); the hypothesis is needed (two triangles sharing only a vertex);
-* `d Λ_hᵏ ⊆ Λ_hᵏ⁺¹` (`extDeriv_mem_globalSpace`), so the glued `L²` spaces form a
+* `d Λ_hᵏ ⊆ Λ_hᵏ⁺¹` (`dPiecewise_mem_globalSpace`), so the glued `L²` spaces form a
   `Feec.HilbertComplex.Subcomplex` of the maximal de Rham complex `HΛ(Ω)`
   (`LocalElement.subcomplex`), and the global spaces with vanishing boundary DOFs form a subcomplex
   of the minimal complex `H̊Λ(Ω)` (`LocalElement.subcomplexMin`, `Ω` strictly star-shaped);

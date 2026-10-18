@@ -20,7 +20,7 @@ polynomial `p = T_{r+1} f` of degree `≤ r` at a point `x₀ ∈ K`,
 `‖D^j (f - p)(x)‖ ≤ d^{r+1-j} sup_K ‖D^{r+1} f‖` on `K` for all `0 ≤ j ≤ r + 1`, where
 `d = sup_{y ∈ K} ‖y - x₀‖` (`norm_iteratedFDeriv_sub_taylorPoly_le`). This is the classical
 (`C^{r+1}`, sup-norm) form of the Bramble–Hilbert lemma ([BrambleHilbert1970];
-[Ciarlet2002], Thm 3.1.4 and §3.1; [Arnold2018], Ch. 7): polynomials of degree `≤ r`
+[Ciarlet2002], Thm 3.1.1 and §3.1; [Arnold2018], Ch. 7): polynomials of degree `≤ r`
 approximate `f` up to `|f|_{r+1}`. Sobolev spaces do not appear; all seminorms are suprema of
 iterated Fréchet derivatives.
 
@@ -50,8 +50,16 @@ additive on `C^{r+1}` functions, reproduces `P_r` on `T̂`, and is stable,
 (`IsRefInterpolant.lintegral_sub_le`, `IsRefInterpolant.eLpNorm_sub_le`). The Taylor
 polynomial at the barycenter is such an interpolant (`isRefInterpolant_taylorPoly`; its
 reproduction of `P_r` uses `D^{r+1} p = 0` for `p ∈ P_r`, proved from `D P_{r+1} ⊆ P_r`).
+The reference error estimate in higher seminorms,
+`sup_{T̂} ‖D^j (f - I f)‖ ≤ K sup_{T̂} ‖D^{r+1} f‖`, is the hypothesis `HasRefDerivEstimate`;
+it holds for `j = 0` for every `IsRefInterpolant` (`IsRefInterpolant.hasRefDerivEstimate_zero`)
+and for all `j ≤ r + 1` for the Taylor interpolant (`hasRefDerivEstimate_taylorPoly`). A
+degree-of-freedom instance of `IsRefInterpolant` is `P₁` Lagrange interpolation at the vertices,
+`I g = ∑ᵢ λᵢ g(vᵢ)` (`lagrangeP1`, `isRefInterpolant_lagrangeP1`: `r = 1`, `m = 0`, `C = 1`).
 Suprema are written as bounds: a hypothesis `∀ y ∈ T̂, ‖D^{r+1} f y‖ ≤ M` stands for
-`sup_{T̂} ‖D^{r+1} f‖ ≤ M`.
+`sup_{T̂} ‖D^{r+1} f‖ ≤ M`. The Taylor estimate passes from `f` to `D f`, so its domain and
+codomain live in one universe; from the reference simplex on, the value space `G` is in `Type`
+(this covers `ℝ`, `ℝⁿ` and the alternating forms on `ℝⁿ`).
 
 ## Main definitions
 
@@ -59,6 +67,9 @@ Suprema are written as bounds: a hypothesis `∀ y ∈ T̂, ‖D^{r+1} f y‖ �
 * `Feec.FiniteElement.polyFunctions n r G`: `P_r(ℝⁿ; G)`.
 * `Feec.FiniteElement.refBarycenter n`: the barycenter of `T̂`.
 * `Feec.FiniteElement.IsRefInterpolant n r m G I C`: hypotheses on a reference interpolant.
+* `Feec.FiniteElement.HasRefDerivEstimate n r j G I K`: the order-`j` reference error
+  estimate.
+* `Feec.FiniteElement.lagrangeP1`: `P₁` Lagrange interpolation on `T̂`.
 
 ## Main results
 
@@ -75,12 +86,16 @@ Suprema are written as bounds: a hypothesis `∀ y ∈ T̂, ‖D^{r+1} f y‖ �
   and `D^{r+1} p = 0` on `P_r`; `taylorPoly_eq_of_mem_polyFunctions`: `T_{r+1} p = p`.
 * `isRefInterpolant_taylorPoly`: the Taylor polynomial at the barycenter satisfies
   `IsRefInterpolant` with `m = r`, `C = 1`, so the hypotheses are consistent.
+* `IsRefInterpolant.hasRefDerivEstimate_zero`, `hasRefDerivEstimate_taylorPoly`: reference
+  estimates of order `j` (`HasRefDerivEstimate`).
+* `isRefInterpolant_lagrangeP1`: `P₁` Lagrange interpolation satisfies `IsRefInterpolant`
+  with `r = 1`, `m = 0`, `C = 1`.
 
 ## References
 
 * [J. H. Bramble, S. R. Hilbert, *Estimation of Linear Functionals on Sobolev Spaces with Application to Fourier Transforms and Spline Interpolation*][BrambleHilbert1970]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
-  (abstract error estimate for `P_r`-invariant interpolants), §3.1
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.1
+  (polynomial approximation), Thm 3.1.4 (error estimate for `P_r`-invariant interpolants), §3.1
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates)
 -/
@@ -682,6 +697,97 @@ theorem isRefInterpolant_taylorPoly (n r : ℕ) (G : Type) [NormedAddCommGroup G
           exact mul_le_mul_of_nonneg_left (mul_le_mul hB' hprod (by positivity)
             ((norm_nonneg _).trans hB')) zero_le_one
       _ = B i := by ring
+
+/-! ### Derivative estimates for reference interpolants -/
+
+/-- `I` satisfies the **reference error estimate of order `j`** with constant `K`: for every `f`
+of class `C^{r+1}` on an open neighbourhood of `T̂`,
+`sup_{T̂} ‖D^j (f - I f)‖ ≤ K sup_{T̂} ‖D^{r+1} f‖` ([Ciarlet2002], Thm 3.1.4, `W^{j,∞}`
+seminorm in its classical form). This is the hypothesis transported to the physical simplex for
+the derivative estimates (`Feec.FiniteElement.norm_iteratedFDeriv_sub_transportInterp_le`). -/
+def HasRefDerivEstimate (n r j : ℕ) (G : Type*) [NormedAddCommGroup G] [NormedSpace ℝ G]
+    (I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G) (K : ℝ) : Prop :=
+  ∀ (V : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → G) (M : ℝ), IsOpen V →
+    (refSimplex n).closedInterior ⊆ V → ContDiffOn ℝ (r + 1) f V →
+    (∀ y ∈ (refSimplex n).closedInterior, ‖iteratedFDeriv ℝ (r + 1) f y‖ ≤ M) →
+    ∀ y ∈ (refSimplex n).closedInterior, ‖iteratedFDeriv ℝ j (fun z => f z - I f z) y‖ ≤ K * M
+
+/-- An interpolant satisfying `IsRefInterpolant` has the order-`0` estimate with constant
+`1 + C (m + 1)`. -/
+theorem IsRefInterpolant.hasRefDerivEstimate_zero {r m : ℕ}
+    {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G} {C : ℝ} (hI : IsRefInterpolant n r m G I C) :
+    HasRefDerivEstimate n r 0 G I (1 + C * (m + 1)) := fun _ _ _ hV hTV hf hM _ hy => by
+  rw [norm_iteratedFDeriv_zero]
+  exact hI.norm_sub_le hV hTV hf hM hy
+
+/-- The Taylor polynomial at the barycenter has the reference estimate of every order
+`j ≤ r + 1` with constant `1` (`norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le`). -/
+theorem hasRefDerivEstimate_taylorPoly (n r : ℕ) (G : Type) [NormedAddCommGroup G]
+    [NormedSpace ℝ G] {j : ℕ} (hj : j ≤ r + 1) :
+    HasRefDerivEstimate n r j G (fun g => taylorPoly g (refBarycenter n) (r + 1)) 1 :=
+  fun _ _ _ hV hTV hf hM _ hy => by
+    rw [one_mul]
+    exact norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le hV hTV hf hM hy hj
+
+/-! ### A degree-of-freedom interpolant: `P₁` Lagrange interpolation -/
+
+/-- Elements of `P₁` are affine: `p y = p 0 + ℓ y` with `ℓ` linear. -/
+theorem exists_eq_add_of_mem_polyFunctions_one {p : (Fin n → ℝ) → G}
+    (hp : p ∈ polyFunctions n 1 G) :
+    ∃ ℓ : (Fin n → ℝ) →L[ℝ] G, ∀ y, p y = p 0 + ℓ y := by
+  refine ⟨continuousMultilinearCurryFin1 ℝ (Fin n → ℝ) G (iteratedFDeriv ℝ 1 p 0), fun y => ?_⟩
+  rw [← taylorPoly_eq_of_mem_polyFunctions hp 0 y, taylorPoly, Finset.sum_range_succ,
+    Finset.sum_range_one, continuousMultilinearCurryFin1_apply]
+  simp
+
+/-- The barycentric coordinates `(1 - ∑ xᵢ, x₀, …, x_{n-1})` of `x` with respect to the vertices
+`0, e₀, …, e_{n-1}` of `T̂`. -/
+def refBaryCoord (x : Fin n → ℝ) : Fin (n + 1) → ℝ := Fin.cons (1 - ∑ i, x i) x
+
+theorem sum_refBaryCoord (x : Fin n → ℝ) : ∑ i, refBaryCoord x i = 1 := by
+  simp [refBaryCoord, Fin.sum_univ_succ]
+
+theorem sum_refBaryCoord_smul (x : Fin n → ℝ) : ∑ i, refBaryCoord x i • refPoints n i = x := by
+  rw [sum_smul_refPoints]; rfl
+
+theorem refBaryCoord_nonneg {x : Fin n → ℝ} (hx : x ∈ (refSimplex n).closedInterior)
+    (i : Fin (n + 1)) : 0 ≤ refBaryCoord x i := by
+  rw [mem_closedInterior_refSimplex] at hx
+  refine Fin.cases ?_ (fun i => ?_) i
+  · simp [refBaryCoord]; linarith [hx.2]
+  · simpa [refBaryCoord] using hx.1 i
+
+/-- The `P₁` **Lagrange interpolant** on `T̂`, determined by the vertex values (its degrees of
+freedom): `I g (x) = ∑ᵢ λᵢ(x) g(vᵢ)`. -/
+def lagrangeP1 (g : (Fin n → ℝ) → G) (x : Fin n → ℝ) : G :=
+  ∑ i, refBaryCoord x i • g (refPoints n i)
+
+/-- `P₁` Lagrange interpolation is a reference interpolant of order `r = 1` with stability order
+`m = 0` and constant `C = 1` (`sup_{T̂} ‖I g‖ ≤ sup_{T̂} ‖g‖`): a degree-of-freedom instance of
+`IsRefInterpolant`, giving the `O(h²)` estimate for `C²` functions. -/
+theorem isRefInterpolant_lagrangeP1 (n : ℕ) (G : Type) [NormedAddCommGroup G]
+    [NormedSpace ℝ G] : IsRefInterpolant n 1 0 G lagrangeP1 1 where
+  le_succ := Nat.zero_le _
+  map_sub _ _ _ f g _ _ x _ := by
+    simp only [lagrangeP1, Pi.sub_apply, smul_sub, Finset.sum_sub_distrib]
+  apply_eq p hp x _ := by
+    obtain ⟨ℓ, hℓ⟩ := exists_eq_add_of_mem_polyFunctions_one hp
+    have hs : ∑ i, refBaryCoord x i • ℓ (refPoints n i) = ℓ x := by
+      rw [← sum_refBaryCoord_smul x, map_sum]
+      simp only [map_smul]
+      rw [sum_refBaryCoord_smul]
+    rw [lagrangeP1, hℓ x, Finset.sum_congr rfl fun i _ => by rw [hℓ (refPoints n i), smul_add],
+      Finset.sum_add_distrib, ← Finset.sum_smul, sum_refBaryCoord, one_smul, hs]
+  norm_le _ _ _ g _ B hB x hx := by
+    rw [one_mul, Finset.sum_range_one, lagrangeP1]
+    calc ‖∑ i, refBaryCoord x i • g (refPoints n i)‖
+        ≤ ∑ i, refBaryCoord x i * B 0 := by
+          refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun i _ => ?_)
+          rw [norm_smul, Real.norm_of_nonneg (refBaryCoord_nonneg hx i)]
+          gcongr
+          · exact refBaryCoord_nonneg hx i
+          · simpa using hB 0 le_rfl _ ((refSimplex n).point_mem_closedInterior i)
+      _ = B 0 := by rw [← Finset.sum_mul, sum_refBaryCoord, one_mul]
 
 end RefSimplex
 

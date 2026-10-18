@@ -32,7 +32,8 @@ skew-adjoint. This gives:
 * `Maxwell.Medium`: the factors `e`, `m`; `Medium.ε`, `Medium.μ`; `Medium.state`: the change of
   variables `(σ, E, H) ↦ (σ, e E, m H)`.
 * `Medium.maxwell S`: the Maxwell operator of the medium on `W₀ × W₁ × W₂`, with domain and
-  action `mem_maxwell_domain`, `maxwell_apply_zero`, `ε_maxwell_apply_one`, `μ_maxwell_apply_two`.
+  action `mem_maxwell_domain`, `gauge_maxwell_apply`, `ε_electric_maxwell_apply`,
+  `μ_magnetic_maxwell_apply`.
 * `Medium.energy`: `½ (‖σ‖² + ⟪ε E, E⟫ + ⟪μ H, H⟫)`; `Medium.gauss S Y`: the weighted Gauss
   laws `σ = 0`, `d₀† (ε E) = 0` (`div (ε E) = 0`), `μ H ∈ Y` (`div (μ H) = 0` for `Y = N(d₂)`).
 

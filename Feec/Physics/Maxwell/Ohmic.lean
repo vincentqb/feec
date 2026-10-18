@@ -42,7 +42,7 @@ with `re ⟪Σ x, x⟫ ≥ 0`.
 * `Medium.hasDerivWithinAt_energy`, `Medium.energy_le_ohmic`: **energy decay**,
   `d/dt ½ (⟪ε E, E⟫ + ⟪μ H, H⟫) = −re ⟪σ E, E⟫ ≤ 0`.
 * `Medium.ohmic_magnetic_gauss_propagates`: the magnetic Gauss law `μ H ∈ Y`
-  (`div (μ H) = 0`) propagates.
+  (`div (μ H) = 0`) propagates, for every bounded `σ` (no sign condition).
 * `Medium.charge_relaxation`, `Medium.charge_relaxation_adjoint`: **charge relaxation** for
   a conductivity proportional to the permittivity, `σ = s ε` (e.g. scalar constants, `s = σ/ε`):
   the charge `d₀† (ε E)` (`= −div (ε E)`), tested against any `φ ∈ D(d₀)`, satisfies
@@ -54,6 +54,8 @@ with `re ⟪Σ x, x⟫ ≥ 0`.
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (evolution problems)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §3.1 (bounded perturbations), §1.4 (dissipative operators and contraction semigroups)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.3 (classical solutions of semigroup evolution equations)
 -/
 
 open scoped InnerProductSpace
@@ -265,8 +267,8 @@ theorem ohmic_equations {I : Set ℝ} {F U : ℝ → PiLp 2 (W3 PUnit.{u + 1} W�
     rw [_root_.map_add, μ_magnetic_ohmic_apply]
 
 /-- **Existence and uniqueness of classical solutions** of the Ohmic Maxwell equations, for
-data in the domain and admissible forcing (the perturbed semigroup, Thesis Thm 4.3 for
-semigroup generators). -/
+data in the domain and admissible forcing (the perturbed semigroup; [QuennevilleBelair2015], Thm 4.3
+for semigroup generators). -/
 theorem ohmic_existsUnique {U₀ : PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)}
     (hU₀ : U₀ ∈ (M.ohmic S σ).domain) {F : ℝ → PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (M.ohmic S σ) a b F) :
@@ -324,46 +326,35 @@ theorem energy_le_ohmic (hσ : ∀ x, 0 ≤ RCLike.re ⟪σ x, x⟫_𝕜) {a b :
 
 variable {σ}
 
-/-- **The magnetic Gauss law propagates** under Ohmic loss: for closed `Y ⊇ R(d₁)` (e.g.
-`Y = N(d₂)`, `div (μ H) = 0`), strong solutions with `μ H(t₀) ∈ Y` and forcing with
-`μ F_H ∈ Y` keep `μ H(t) ∈ Y`. -/
-theorem ohmic_magnetic_gauss_propagates (hσ : ∀ x, 0 ≤ RCLike.re ⟪σ x, x⟫_𝕜)
+/-- **The magnetic Gauss law propagates** under Ohmic loss, for every bounded `σ` (no sign
+condition): for closed `Y ⊇ R(d₁)` (e.g. `Y = N(d₂)`, `div (μ H) = 0`), strong solutions with
+`μ H(t₀) ∈ Y` and forcing with `μ F_H ∈ Y` keep `μ H(t) ∈ Y`. Indeed `(μ H)' = d₁ E + μ F_H ∈ Y`,
+so `⟪w, μ H⟫` is constant for every `w ∈ Yᗮ`. -/
+theorem ohmic_magnetic_gauss_propagates
     {Y : Submodule 𝕜 W₂} [Y.HasOrthogonalProjection] (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y)
     {t₀ t₁ : ℝ} {F U : ℝ → PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)}
     (hU : Evolution.IsStrongSolution (M.ohmic S σ) (Icc t₀ t₁) F U)
     (h0 : M.μ (magnetic (U t₀)) ∈ Y) (hF : ∀ t ∈ Icc t₀ t₁, M.μ (magnetic (F t)) ∈ Y) :
     ∀ t ∈ Icc t₀ t₁, M.μ (magnetic (U t)) ∈ Y := by
-  have hK : ∀ V, V ∈ M.gauss (fields S) Y ↔ M.μ (magnetic V) ∈ Y := fun V => by
-    rw [mem_gauss_iff]
-    constructor
-    · exact fun h => h.2.2
-    · intro h
-      refine ⟨Subsingleton.elim _ _, ?_, h⟩
-      change M.ε (electric V) ∈ ((0 : PUnit.{u + 1} →ₗ.[𝕜] W₁)†).ker
-      rw [adjoint_zero, LinearPMap.mem_ker_iff]
-      exact ⟨⟨_, Submodule.mem_top⟩, rfl, rfl⟩
-  set Y' := Y.map (M.m.adjoint.symm : W₂ →ₗ[𝕜] W₂)
-  set K := totalSub ((M.complex (fields S)).divFreeSub Y')
-  have hred := (M.complex (fields S)).reducingSubcomplex_divFreeSub Y'
-    (M.complex_d₁_mem (fields S) hY)
-  have hLK := hred.isReducing_wave
-  have hdiss := M.isDissipative_ohmicGen S σ hσ
-  have hsol := (M.isStrongSolution_ohmic_iff S σ).1 hU
-  have hloss : ∀ x ∈ K, M.loss σ x ∈ K := fun x _ => by
-    intro i
-    fin_cases i
-    · exact Subsingleton.elim _ _
-    · change electric (M.loss σ x) ∈ ((M.complex (fields S)).d₀†).ker
-      rw [show (M.complex (fields S)).d₀ = 0 from conj_eq_zero rfl, adjoint_zero,
-        LinearPMap.mem_ker_iff]
-      exact ⟨⟨_, Submodule.mem_top⟩, rfl, rfl⟩
-    · change magnetic (M.loss σ x) ∈ Y'
-      rw [magnetic_loss]
-      exact Y'.zero_mem
-  have key := hsol.mem_of_invariant hdiss (K := K) (fun x => hLK.proj_mem ⟨x, x.2⟩)
-    (fun x hx => K.add_mem (K.neg_mem (hloss x hx)) (hLK.mapsTo ⟨x, x.2⟩ hx))
-    ((hK _).2 h0) (fun t ht => (hK _).2 (hF t ht))
-  exact fun t ht => (hK _).1 (key t ht)
+  intro t ht
+  rw [← Submodule.orthogonal_orthogonal Y, Submodule.mem_orthogonal]
+  intro w hw
+  -- `q(s) = ⟪w, μ H(s)⟫` has derivative `⟪w, d₁ E + μ F_H⟫ = 0`
+  set q : ℝ → 𝕜 := fun s => ⟪w, M.μ (magnetic (U s))⟫_𝕜
+  have hq : ∀ s ∈ Icc t₀ t₁, HasDerivWithinAt q 0 (Icc t₀ t₁) s := fun s hs => by
+    have h2 := (M.ohmic_equations S σ hU s hs).2
+    have := ((innerSL 𝕜 w).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt s h2
+    refine HasDerivWithinAt.congr_deriv (f := q) this ?_
+    change ⟪w, _⟫_𝕜 = 0
+    rw [inner_eq_zero_symm]
+    exact Submodule.inner_right_of_mem_orthogonal (Y.add_mem (hY _) (hF s hs)) hw
+  have hqc : ContinuousOn q (Icc t₀ t₁) := fun s hs => (hq s hs).continuousWithinAt
+  have hconst := constant_of_has_deriv_right_zero hqc fun s hs =>
+    ((hq s (Ico_subset_Icc_self hs)).mono_of_mem_nhdsWithin (Icc_mem_nhdsGE_of_mem hs))
+  have h1 : q t = q t₀ := hconst t ht
+  change q t = 0
+  rw [h1, inner_eq_zero_symm]
+  exact Submodule.inner_right_of_mem_orthogonal h0 hw
 
 /-! ### Charge relaxation -/
 

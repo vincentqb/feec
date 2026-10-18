@@ -993,3 +993,70 @@ theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
   have hΩ' := Koszul.mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero hr hΩ hd
   refine eq_zero_of_coordTrace_of_integral hΩ' hbub.eval_eq_zero fun hnr H hH => ?_
   exact hint (by omega) H (by rwa [show r - 1 + k - (N + 1) = r + k - (N + 1) - 1 by omega] at hH)
+
+/-! ### Bubble spaces in terms of form fields -/
+
+theorem simplexIntegral_wedgeField_evalForm (Ω H : Koszul.PolyForm ℝ (Fin n)) :
+    simplexIntegral (refVertex n) (wedgeField (evalForm n Ω) (evalForm n H)) =
+      ∫ x in refSimplex n, eval x (wedgeForm Ω H univ) := by
+  rw [simplexIntegral_refVertex, ← evalForm_wedgeForm']
+  rfl
+
+/-- **The bubbles of `P_rΛᵏ(T̂)` are detected by `P⁻_{r+k-n}Λ^{n-k}(T̂)`** ([AFW2006], Lemma 4.7):
+a form in `P̊_rΛᵏ(T̂)` with `∫_{T̂} ω ∧ η = 0` for all `η ∈ P⁻_{r+k-n}Λ^{n-k}` vanishes; and
+`P̊_rΛᵏ(T̂) = 0` when `r + k ≤ n`. -/
+theorem eq_zero_of_mem_bubbleSpace_polySpace {r k : ℕ} (hr : 1 ≤ r) {ω : FormField n}
+    (hω : ω ∈ bubbleSpace (refVertex n) (polySpace n r k))
+    (hint : n < r + k → ∀ η ∈ polyMinusSpace n (r + k - n) (n - k),
+      simplexIntegral (refVertex n) (wedgeField ω η) = 0) : ω = 0 := by
+  obtain ⟨⟨Ω, hΩ, rfl⟩, hbub⟩ := hω
+  rw [eq_zero_of_isBubble_of_mem_polyForm hr hΩ hbub fun h H hH => by
+    rw [← simplexIntegral_wedgeField_evalForm]; exact hint h _ ⟨H, hH, rfl⟩, map_zero]
+
+/-- **The bubbles of `P_r⁻Λᵏ(T̂)` are detected by `P_{r+k-n-1}Λ^{n-k}(T̂)`** ([AFW2006],
+Lemma 4.11); `P̊_r⁻Λᵏ(T̂) = 0` when `r + k ≤ n`. -/
+theorem eq_zero_of_mem_bubbleSpace_polyMinusSpace {r k : ℕ} (hr : 1 ≤ r) {ω : FormField n}
+    (hω : ω ∈ bubbleSpace (refVertex n) (polyMinusSpace n r k))
+    (hint : n < r + k → ∀ η ∈ polySpace n (r + k - n - 1) (n - k),
+      simplexIntegral (refVertex n) (wedgeField ω η) = 0) : ω = 0 := by
+  obtain ⟨⟨Ω, hΩ, rfl⟩, hbub⟩ := hω
+  rw [eq_zero_of_isBubble_of_mem_polyFormMinus hr hΩ hbub fun h H hH => by
+    rw [← simplexIntegral_wedgeField_evalForm]; exact hint h _ ⟨H, hH, rfl⟩, map_zero]
+
+/-- `P̊_rΛᵏ(T̂) = 0` if `r + k ≤ n`. -/
+theorem bubbleSpace_polySpace_eq_bot {r k : ℕ} (hr : 1 ≤ r) (h : r + k ≤ n) :
+    bubbleSpace (refVertex n) (polySpace n r k) = ⊥ :=
+  (Submodule.eq_bot_iff _).2 fun ω hω =>
+    eq_zero_of_mem_bubbleSpace_polySpace hr hω fun h' => absurd h' (by omega)
+
+/-- `P̊_r⁻Λᵏ(T̂) = 0` if `r + k ≤ n`. -/
+theorem bubbleSpace_polyMinusSpace_eq_bot {r k : ℕ} (hr : 1 ≤ r) (h : r + k ≤ n) :
+    bubbleSpace (refVertex n) (polyMinusSpace n r k) = ⊥ :=
+  (Submodule.eq_bot_iff _).2 fun ω hω =>
+    eq_zero_of_mem_bubbleSpace_polyMinusSpace hr hω fun h' => absurd h' (by omega)
+
+/-! ### Mathlib simplices -/
+
+/-- For a Mathlib `n`-simplex `T` in `ℝⁿ`: `P_rΛᵏ(T) = P_rΛᵏ(ℝⁿ)`. -/
+theorem localPolySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) (r k : ℕ) :
+    localPolySpace T.points r k = polySpace n r k :=
+  localPolySpace_eq (isUnit_det_edgeMatrix T) r k
+
+/-- For a Mathlib `n`-simplex `T` in `ℝⁿ`: `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)`. -/
+theorem localPolyMinusSpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) (r k : ℕ) :
+    localPolyMinusSpace T.points r k = polyMinusSpace n r k :=
+  localPolyMinusSpace_eq (isUnit_det_edgeMatrix T) r k
+
+/-- For a Mathlib `n`-simplex `T`: `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)` on every face `f = T ∘ e`. -/
+theorem map_faceTrace_localPolySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+    {e : Fin (m + 1) → Fin (n + 1)} (he : Function.Injective e) (r k : ℕ) :
+    (localPolySpace T.points r k).map (faceTrace T.points e) = polySpace m r k := by
+  rw [localPolySpace_simplex, map_faceTrace_polySpace (isUnit_det_edgeMatrix T) he]
+
+/-- For a Mathlib `n`-simplex `T`: `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)`. -/
+theorem map_faceTrace_localPolyMinusSpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+    {e : Fin (m + 1) → Fin (n + 1)} (he : Function.Injective e) (r k : ℕ) :
+    (localPolyMinusSpace T.points r k).map (faceTrace T.points e) = polyMinusSpace m r k := by
+  rw [localPolyMinusSpace_simplex, map_faceTrace_polyMinusSpace (isUnit_det_edgeMatrix T) he]
+
+end Feec.FiniteElement

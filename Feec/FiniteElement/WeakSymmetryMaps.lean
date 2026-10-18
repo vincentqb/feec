@@ -1231,8 +1231,8 @@ theorem abs_wsCoeff {k : ℤ} (t : formIdx n (k + 1)) (p : Fin n × formIdx n k)
   · simp
 
 /-- Each `t` sees `#t = k + 1` coefficients of absolute value one. -/
-theorem sum_abs_wsCoeff_left (k : ℕ) (t : formIdx n ((k : ℤ) + 1)) :
-    ∑ p : Fin n × formIdx n k, |wsCoeff k t p| = k + 1 := by
+theorem sum_abs_wsCoeff_left (k : ℤ) (t : formIdx n (k + 1)) :
+    ∑ p : Fin n × formIdx n k, |wsCoeff k t p| = (k : ℝ) + 1 := by
   simp only [abs_wsCoeff]
   rw [Fintype.sum_prod_type]
   have : ∀ a : Fin n, (∑ r : formIdx n k,
@@ -1249,7 +1249,7 @@ theorem sum_abs_wsCoeff_left (k : ℕ) (t : formIdx n ((k : ℤ) + 1)) :
     · simp [ha]
   simp only [this, Finset.sum_boole, Finset.filter_mem_eq_inter, Finset.univ_inter]
   have h := t.2
-  have : ((#t.1 : ℕ) : ℝ) = (k : ℝ) + 1 := by exact_mod_cast (by omega : #t.1 = k + 1)
+  have : ((#t.1 : ℕ) : ℝ) = (k : ℝ) + 1 := by exact_mod_cast h
   exact this
 
 /-- Each `(a, r)` occurs for at most one `t` (namely `r ∪ {a}`). -/
@@ -1266,11 +1266,11 @@ theorem sum_abs_wsCoeff_right {k : ℤ} (p : Fin n × formIdx n k) :
 /-- **The bound of `S`**: `‖S v‖² ≤ (k + 1) ‖v‖²` (each `(a, r)` occurs in at most one
 `t = r ∪ {a}`, and `#t = k + 1`). For `k = 0` (`S⁰`) the constant is `1`, for `k = 1` (`S¹`)
 it is `2`. -/
-theorem norm_wsL2_sq_le (k : ℕ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :
-    ‖wsL2 k v‖ ^ 2 ≤ (k + 1) * ‖v‖ ^ 2 := by
+theorem norm_wsL2_sq_le (k : ℤ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :
+    ‖wsL2 k v‖ ^ 2 ≤ ((k : ℝ) + 1) * ‖v‖ ^ 2 := by
   set c := wsCoeff (n := n) k
   set x : Fin n × formIdx n k → ℝ := fun p => ‖v p.1 p.2‖
-  have hpt : ∀ t, ‖wsL2 k v t‖ ^ 2 ≤ (k + 1) * ∑ p, |c t p| * x p ^ 2 := by
+  have hpt : ∀ t, ‖wsL2 k v t‖ ^ 2 ≤ ((k : ℝ) + 1) * ∑ p, |c t p| * x p ^ 2 := by
     intro t
     have h1 : ‖wsL2 k v t‖ ≤ ∑ p, |c t p| * x p := by
       rw [wsL2_apply]
@@ -1283,14 +1283,22 @@ theorem norm_wsL2_sq_le (k : ℕ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (form
     rw [sum_abs_wsCoeff_left] at h2
     exact (pow_le_pow_left₀ (norm_nonneg _) h1 2).trans h2
   calc ‖wsL2 k v‖ ^ 2 = ∑ t, ‖wsL2 k v t‖ ^ 2 := PiLp.norm_sq_eq_of_L2 _ _
-    _ ≤ ∑ t, (k + 1) * ∑ p, |c t p| * x p ^ 2 := Finset.sum_le_sum fun t _ => hpt t
-    _ = (k + 1) * ∑ p, (∑ t, |c t p|) * x p ^ 2 := by
+    _ ≤ ∑ t, ((k : ℝ) + 1) * ∑ p, |c t p| * x p ^ 2 := Finset.sum_le_sum fun t _ => hpt t
+    _ = ((k : ℝ) + 1) * ∑ p, (∑ t, |c t p|) * x p ^ 2 := by
         rw [← Finset.mul_sum, Finset.sum_comm]
         simp only [Finset.sum_mul]
-    _ ≤ (k + 1) * ∑ p, x p ^ 2 := by
-        gcongr with p
-        exact mul_le_of_le_one_left (sq_nonneg _) (sum_abs_wsCoeff_right p)
-    _ = (k + 1) * ‖v‖ ^ 2 := by
+    _ ≤ ((k : ℝ) + 1) * ∑ p, x p ^ 2 := by
+        by_cases hk : (0 : ℝ) ≤ (k : ℝ) + 1
+        · gcongr with p
+          exact mul_le_of_le_one_left (sq_nonneg _) (sum_abs_wsCoeff_right p)
+        · have : IsEmpty (formIdx n k) := ⟨fun r => by
+            have h1 := r.2
+            have h2 : (0 : ℤ) ≤ #r.1 := Int.natCast_nonneg _
+            have : (k : ℝ) + 1 < 0 := lt_of_not_ge hk
+            have : k + 1 < 0 := by exact_mod_cast this
+            omega⟩
+          simp
+    _ = ((k : ℝ) + 1) * ‖v‖ ^ 2 := by
         congr 1
         rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
         refine Finset.sum_congr rfl fun a _ => ?_

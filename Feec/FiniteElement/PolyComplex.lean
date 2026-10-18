@@ -30,8 +30,12 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
   forms (`finrank_whitney_V₀_freudenthalMesh_pos`), and for `k = 0` when `r₀ ≥ 2`
   (`PolySeq.finrank_V₀_freudenthalMesh_pos_zero`), on every level `N ≥ 1`. In particular the
   interior spaces of the second row of Tables 5.1/6.1 on the level-`(N+1)` Freudenthal mesh of
-  `(0, ½)³` are nonzero in every degree (`PolySeq.lagrangeP2_V₀_ne_bot`). (For Whitney forms with
-  `k = 0` an interior vertex is needed, i.e. level `N ≥ 2`; not treated.)
+  `(0, ½)³` are nonzero in every degree (`PolySeq.lagrangeP2_V₀_ne_bot`). For `k = 0` and
+  `r₀ = 1` an interior vertex is needed: on every level `N ≥ 2` the lattice point
+  `b + (s/N)(1, …, 1)` is one (`exists_vertex_freudenthalMesh`), so `V̊ₕᵏ ≠ 0` in every degree
+  for every admissible sequence (`PolySeq.finrank_V₀_freudenthalMesh_pos_of_two_le`), for the
+  Whitney forms (`finrank_whitney_V₀_freudenthalMesh_pos_zero`), and for the first row of
+  Tables 5.1/6.1 on the level-`(N+2)` mesh of `(0, ½)³` (`PolySeq.lowestOrder_V₀_ne_bot`).
 
 ## References
 
@@ -474,7 +478,9 @@ theorem finrank_V₀_freudenthalMesh_pos_zero [NeZero n] {b : Fin n → ℝ} {s 
 
 /-- **The interior spaces of the second row of Tables 5.1/6.1 are nonzero**: on the
 level-`(N+1)` Freudenthal mesh of `(0, ½)³`, the spaces `P₂Λ⁰`, `P₂⁻Λ¹`, `P₁Λ²`, `P₀Λ³` with
-vanishing boundary degrees of freedom are nonzero, for every `N`. -/
+vanishing boundary degrees of freedom are nonzero, for every `N`. (These are the boundary
+conditions of Ch. 5, imposed in every degree; for the Ch. 6 pattern `V̊ₕ⁰, V̊ₕ¹, Vₕ²` see
+`PolySeq.lagrangeP2_VPartial_bcFacets_ne_bot` in `Feec.FiniteElement.PolyElementMixed`.) -/
 theorem lagrangeP2_V₀_ne_bot (N k : ℕ) (hk : k ≤ 3) :
     (polyElement 3 lagrangeP2).V₀ (freudenthalMesh 0 (1 / 2) (by norm_num) (N + 1)) k ≠ ⊥ := by
   intro h
@@ -495,12 +501,86 @@ end PolySeq
 
 /-- **The interior Whitney spaces are nonzero in the degrees `1 ≤ k ≤ n`** on every Freudenthal
 mesh of a box: the `k`-faces through the interior are not contained in boundary facets. (For
-`k = 0`, `V̊ₕ⁰ ≠ 0` needs an interior vertex, i.e. level `N ≥ 2`.) -/
+`k = 0`, `V̊ₕ⁰ ≠ 0` needs an interior vertex, i.e. level `N ≥ 2`:
+`finrank_whitney_V₀_freudenthalMesh_pos_zero`.) -/
 theorem finrank_whitney_V₀_freudenthalMesh_pos [NeZero n] {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
     {N : ℕ} [NeZero N] {k : ℕ} (hk1 : 1 ≤ k) (hkn : k ≤ n) :
     0 < Module.finrank ℝ ((whitneyElement n).V₀ (freudenthalMesh b s hs N) k) := by
   obtain ⟨g, hg, hgc, x, hx, hxΩ⟩ := exists_meshFace_freudenthalMesh (b := b) hs (N := N) hk1 hkn
   exact (whitneyElement n).finrank_V₀_pos _ (isOpen_freudenthalMesh_domain b s hs N) hg
     (⟨(), hgc⟩ : WhitneyDofIdx g k) hx hxΩ
+
+/-- **An interior vertex of the Freudenthal mesh**: for `N ≥ 2`, the lattice point
+`b + (s/N)(1, …, 1)` (the first vertex of `b + (s/N)((1, …, 1) + K_id)`) is a vertex of the
+level-`N` Freudenthal mesh of `∏ (bᵢ, bᵢ + s)` lying in the open box. -/
+theorem exists_vertex_freudenthalMesh {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s) {N : ℕ} [NeZero N]
+    (hN : 2 ≤ N) :
+    ∃ g ∈ LocalElement.meshFaces (freudenthalMesh b s hs N), #g = 0 + 1 ∧
+      ∃ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)), x ∈ (freudenthalMesh b s hs N).domain := by
+  classical
+  set m : Fin n → Fin N := fun _ => ⟨1, by omega⟩
+  set T₁ := mapEquiv (boxMap b (s / N) (freudenthalScale_ne_zero hs N))
+    (freudenthalSimplex (finLattice m) 1)
+  have hT₁ : T₁ ∈ (freudenthalMesh b s hs N).simplices :=
+    mem_freudenthalMesh_simplices.2 ⟨m, 1, rfl⟩
+  have hpt : T₁.points 0 = b + (s / N) • (1 : Fin n → ℝ) := by
+    have : latticePoint (finLattice m) = 1 := by
+      funext i; simp [finLattice, m]
+    simp [T₁, this]
+  have hN' : (2 : ℝ) ≤ N := by exact_mod_cast hN
+  have hh : 0 < s / N := div_pos hs (by linarith)
+  have hhs : s / N < s := div_lt_self hs (by linarith)
+  refine ⟨{T₁.points 0}, (LocalElement.mem_meshFaces _).2 ⟨T₁, hT₁, fun x hx => ?_⟩,
+    card_singleton _, T₁.points 0, subset_convexHull ℝ _ (by simp), ?_⟩
+  · rw [mem_singleton.1 hx]
+    exact points_mem_vertexSet T₁ 0
+  · rw [freudenthalMesh_domain, hpt]
+    intro i _
+    simp only [Pi.add_apply, Pi.smul_apply, Pi.one_apply, smul_eq_mul, mul_one, Set.mem_Ioo]
+    constructor <;> linarith
+
+namespace PolySeq
+
+/-- **`V̊ₕ⁰ ≠ 0` on Freudenthal meshes of level `N ≥ 2`** for every admissible sequence (in
+particular for `r₀ = 1`): the interior vertex carries a degree of freedom. -/
+theorem finrank_V₀_freudenthalMesh_pos_zero_of_two_le (S : PolySeq) [NeZero n] {b : Fin n → ℝ}
+    {s : ℝ} (hs : 0 < s) {N : ℕ} [NeZero N] (hN : 2 ≤ N) :
+    0 < Module.finrank ℝ ((polyElement n S).V₀ (freudenthalMesh b s hs N) 0) := by
+  obtain ⟨g, hg, hgc, x, hx, hxΩ⟩ := exists_vertex_freudenthalMesh (b := b) hs hN
+  have hdim : 0 < Module.finrank ℝ (S.test 0 (#g - 1)) := by
+    rw [hgc, finrank_test]; exact PolyKind.testDim_self_pos _ (S.one_le_deg 0) 0
+  exact (polyElement n S).finrank_V₀_pos _ (isOpen_freudenthalMesh_domain b s hs N) hg
+    (⟨⟨0, hdim⟩, card_pos.1 (by omega)⟩ : S.DofIdx g 0) hx hxΩ
+
+/-- **`V̊ₕᵏ ≠ 0` in every degree `k ≤ n`** on the Freudenthal meshes of level `N ≥ 2`, for every
+admissible sequence. -/
+theorem finrank_V₀_freudenthalMesh_pos_of_two_le (S : PolySeq) [NeZero n] {b : Fin n → ℝ}
+    {s : ℝ} (hs : 0 < s) {N : ℕ} [NeZero N] (hN : 2 ≤ N) {k : ℕ} (hkn : k ≤ n) :
+    0 < Module.finrank ℝ ((polyElement n S).V₀ (freudenthalMesh b s hs N) k) := by
+  rcases Nat.eq_zero_or_pos k with rfl | hk1
+  · exact S.finrank_V₀_freudenthalMesh_pos_zero_of_two_le hs hN
+  · exact S.finrank_V₀_freudenthalMesh_pos_of_one_le hs hk1 hkn
+
+/-- **The interior spaces of the first row of Tables 5.1/6.1 are nonzero**: on the
+level-`(N+2)` Freudenthal mesh of `(0, ½)³`, the Whitney spaces `P₁Λ⁰`, `P₁⁻Λ¹`, `P₁⁻Λ²`,
+`P₁⁻Λ³` with vanishing boundary degrees of freedom are nonzero, for every `N`. (On the level-1
+mesh there is no interior vertex and `V̊ₕ⁰ = 0`.) -/
+theorem lowestOrder_V₀_ne_bot (N k : ℕ) (hk : k ≤ 3) :
+    (polyElement 3 lowestOrder).V₀ (freudenthalMesh 0 (1 / 2) (by norm_num) (N + 2)) k ≠ ⊥ := by
+  intro h
+  have hpos := lowestOrder.finrank_V₀_freudenthalMesh_pos_of_two_le (b := 0) (s := 1 / 2)
+    (by norm_num) (N := N + 2) (by omega) hk
+  rw [h, finrank_bot] at hpos
+  exact lt_irrefl 0 hpos
+
+end PolySeq
+
+/-- **The interior Whitney `0`-forms are nonzero** on the Freudenthal meshes of level `N ≥ 2`. -/
+theorem finrank_whitney_V₀_freudenthalMesh_pos_zero [NeZero n] {b : Fin n → ℝ} {s : ℝ}
+    (hs : 0 < s) {N : ℕ} [NeZero N] (hN : 2 ≤ N) :
+    0 < Module.finrank ℝ ((whitneyElement n).V₀ (freudenthalMesh b s hs N) 0) := by
+  obtain ⟨g, hg, hgc, x, hx, hxΩ⟩ := exists_vertex_freudenthalMesh (b := b) hs hN
+  exact (whitneyElement n).finrank_V₀_pos _ (isOpen_freudenthalMesh_domain b s hs N) hg
+    (⟨(), hgc⟩ : WhitneyDofIdx g 0) hx hxΩ
 
 end Feec.FiniteElement

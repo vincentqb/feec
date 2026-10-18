@@ -223,6 +223,57 @@ theorem mem_of_forall_isCNStep (hA : A.IsDissipative) (hs : 0 ≤ s) {K : Submod
   | zero => exact h0
   | succ n ih => exact (hU n).mem_of_isReducing hA hs hK ih
 
+/-! ### Linearity of CN steps and eigenvectors -/
+
+/-- CN steps are linear: the sum of two steps is a step. -/
+theorem IsCNStep.add {u₁ u₁' u₂ u₂' : E} (h₁ : IsCNStep A s u₁ u₁') (h₂ : IsCNStep A s u₂ u₂') :
+    IsCNStep A s (u₁ + u₂) (u₁' + u₂') := by
+  obtain ⟨hd₁, e₁⟩ := h₁
+  obtain ⟨hd₂, e₂⟩ := h₂
+  have hd : u₁' + u₂' + (u₁ + u₂) = (u₁' + u₁) + (u₂' + u₂) := by abel
+  refine ⟨hd ▸ A.domain.add_mem hd₁ hd₂, ?_⟩
+  have hv : (⟨u₁' + u₂' + (u₁ + u₂), hd ▸ A.domain.add_mem hd₁ hd₂⟩ : A.domain) =
+      ⟨u₁' + u₁, hd₁⟩ + ⟨u₂' + u₂, hd₂⟩ := Subtype.ext hd
+  rw [hv, LinearPMap.map_add, smul_add, ← e₁, ← e₂]
+  abel
+
+/-- CN steps are linear: a multiple of a step is a step. -/
+theorem IsCNStep.smul (c : 𝕜) (h : IsCNStep A s u u') : IsCNStep A s (c • u) (c • u') := by
+  obtain ⟨hd, e⟩ := h
+  have hd' : c • u' + c • u = c • (u' + u) := (smul_add c u' u).symm
+  refine ⟨hd' ▸ A.domain.smul_mem c hd, ?_⟩
+  have hv : (⟨c • u' + c • u, hd' ▸ A.domain.smul_mem c hd⟩ : A.domain) = c • ⟨u' + u, hd⟩ :=
+    Subtype.ext hd'
+  rw [hv, LinearPMap.map_smul, smul_comm, ← e, smul_sub]
+
+/-- **CN on an eigenvector**: if `A u = μ u` and `1 − s μ ≠ 0`, the CN step from `u` is
+`λ u` with the amplification factor `λ = (1 + s μ) / (1 − s μ)`. -/
+theorem isCNStep_of_eigen {μ : 𝕜} (hu : u ∈ A.domain) (hAu : A ⟨u, hu⟩ = μ • u)
+    (hμ : 1 - (s : 𝕜) * μ ≠ 0) :
+    IsCNStep A s u (((1 + (s : 𝕜) * μ) / (1 - (s : 𝕜) * μ)) • u) := by
+  set l : 𝕜 := (1 + (s : 𝕜) * μ) / (1 - (s : 𝕜) * μ)
+  have hd : l • u + u = (l + 1) • u := by rw [add_smul, one_smul]
+  refine ⟨hd ▸ A.domain.smul_mem (l + 1) hu, ?_⟩
+  have hv : (⟨l • u + u, hd ▸ A.domain.smul_mem (l + 1) hu⟩ : A.domain) = (l + 1) • ⟨u, hu⟩ :=
+    Subtype.ext hd
+  rw [hv, LinearPMap.map_smul, hAu, smul_smul, smul_smul]
+  conv_lhs => rw [← one_smul 𝕜 u, smul_smul, mul_one, ← sub_smul]
+  congr 1
+  have hl : l * (1 - (s : 𝕜) * μ) = 1 + (s : 𝕜) * μ := div_mul_cancel₀ _ hμ
+  linear_combination hl
+
+omit [InnerProductSpace 𝕜 E] in
+/-- For a purely imaginary eigenvalue `μ = i θ` the amplification factor has modulus one. -/
+theorem norm_amplification_eq_one (s θ : ℝ) :
+    ‖(1 + (s : ℂ) * (Complex.I * θ)) / (1 - (s : ℂ) * (Complex.I * θ))‖ = 1 := by
+  have h1 : (1 + (s : ℂ) * (Complex.I * θ)) = ⟨1, s * θ⟩ := by apply Complex.ext <;> simp
+  have h2 : (1 - (s : ℂ) * (Complex.I * θ)) = ⟨1, -(s * θ)⟩ := by apply Complex.ext <;> simp
+  have hne : (⟨1, -(s * θ)⟩ : ℂ) ≠ 0 := fun h => by simpa using congrArg Complex.re h
+  rw [h1, h2, norm_div, div_eq_one_iff_eq (norm_ne_zero_iff.2 hne), Complex.norm_def,
+    Complex.norm_def]
+  congr 1
+  simp [Complex.normSq_apply]
+
 /-! ### Three-field schemes for the full and reduced systems (thesis Ch. 7) -/
 
 section ThreeField

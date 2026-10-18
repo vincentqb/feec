@@ -3,6 +3,8 @@ module
 public import Feec.Models.Cube.Inhomogeneous
 public import Feec.Numerics.CrankNicolsonTable
 public import Feec.Counterexamples.BoundedDomainTSD
+public import Feec.Models.Torus.GradCurl
+public import Feec.TimeStepping.Cayley
 
 /-!
 # The Ch. 7 plane-wave run on the unit cube, as implemented
@@ -42,7 +44,7 @@ below holds for all `A₊, Aₓ, ω`.
 
 @[expose] public noncomputable section
 
-open scoped InnerProductSpace ContDiff
+open scoped InnerProductSpace ContDiff LinearPMap
 open MeasureTheory Set Filter Real Feec.Domain Feec.Models.BoundedDomain
   Feec.Models.Cube.Inhomogeneous Feec.Numerics.CrankNicolson
 
@@ -192,5 +194,458 @@ theorem exists_not_propagates (W : WholeSpaceTSD) {Ω : Set R3} (hΩ : IsOpen Ω
     obtain ⟨t, ht, hnot⟩ := hall T hT (U - W.restrict hΩ hb) (by simp [hU0]) hW
     refine ⟨t, ht, fun hmem => hnot ?_⟩
     exact Submodule.sub_mem _ hmem (W.restrict_mem hΩ hb t)
+
+
+/-! ## The periodic run on `𝕋³` (Fourier side) -/
+
+section Modes
+
+open Feec.Fourier
+
+variable {d : Type*} [Fintype d]
+
+/-- The single-frequency field `δ_k v` on the Fourier side: the coefficients of `v e^{2πi k·x}`. -/
+def mode {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] (k : d → ℤ) (v : E) :
+    Lp E 2 (Measure.count : Measure (d → ℤ)) :=
+  (lp.memLp_count (d → ℤ) E 2 (lp.single 2 k v)).toLp _
+
+variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [NormedAddCommGroup F]
+  [InnerProductSpace ℂ F]
+
+theorem coeFn_mode (k : d → ℤ) (v : E) : ⇑(mode k v) = Pi.single k v :=
+  MemLp.coeFn_toLp_count _
+
+theorem mode_add (k : d → ℤ) (v w : E) : mode k (v + w) = mode k v + mode k w :=
+  Lp.ext_count fun a => by
+    rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_add _ _)]
+    simp only [coeFn_mode, Pi.add_apply, Pi.single_add]
+
+theorem mode_smul (k : d → ℤ) (c : ℂ) (v : E) : mode k (c • v) = c • mode k v :=
+  Lp.ext_count fun a => by
+    rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul _ _)]
+    simp only [coeFn_mode, Pi.smul_apply, Pi.single_smul]
+
+theorem mode_zero (k : d → ℤ) : mode k (0 : E) = 0 :=
+  Lp.ext_count fun a => by
+    rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_zero _ _ _)]
+    simp [coeFn_mode]
+
+theorem mode_neg (k : d → ℤ) (v : E) : mode k (-v) = -mode k v := by
+  rw [← neg_one_smul ℂ v, mode_smul, neg_one_smul]
+
+theorem mode_sub (k : d → ℤ) (v w : E) : mode k (v - w) = mode k v - mode k w := by
+  rw [sub_eq_add_neg, mode_add, mode_neg, ← sub_eq_add_neg]
+
+theorem mode_sum {ι : Type*} (s : Finset ι) (k : d → ℤ) (v : ι → E) :
+    mode k (∑ i ∈ s, v i) = ∑ i ∈ s, mode k (v i) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp [mode_zero]
+  | insert a s ha ih => rw [Finset.sum_insert ha, Finset.sum_insert ha, mode_add, ih]
+
+/-- Modes lie in the domain of every multiplier. -/
+theorem mode_mem_mulDomain (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E) :
+    mode k v ∈ Operator.mulDomain (Measure.count : Measure (d → ℤ)) m := by
+  rw [Operator.mem_mulDomain, coeFn_mode]
+  have : (fun a => m a ((Pi.single k v : (d → ℤ) → E) a)) =
+      ⇑(lp.single 2 k (m k v) : lp (fun _ => F) 2) := by
+    funext a
+    rw [lp.coeFn_single]
+    by_cases h : a = k
+    · subst h; simp
+    · simp [h]
+  rw [this]
+  exact lp.memLp_count (d → ℤ) F 2 _
+
+/-- A multiplier acts on a mode by its value at the frequency: `m (δ_k v) = δ_k (m k v)`. -/
+theorem mulOp_mode (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E)
+    (h : mode k v ∈ (Operator.mulOp (Measure.count : Measure (d → ℤ)) m).domain) :
+    Operator.mulOp (Measure.count : Measure (d → ℤ)) m ⟨mode k v, h⟩ = mode k (m k v) := by
+  refine Lp.ext_count fun a => ?_
+  have h1 := Lp.coeFn_eq_count_iff.1 (Operator.coeFn_mulOp _ m ⟨mode k v, h⟩)
+  rw [h1]
+  change m a (mode k v a) = mode k (m k v) a
+  rw [coeFn_mode, coeFn_mode]
+  by_cases hak : a = k
+  · subst hak; simp
+  · simp [hak]
+
+/-- Rewriting the operator in an application. -/
+theorem _root_.LinearPMap.apply_of_eq' {G H : Type*} [AddCommGroup G] [Module ℂ G]
+    [AddCommGroup H] [Module ℂ H] {f g : G →ₗ.[ℂ] H} (h : f = g) (x : G) (hx : x ∈ f.domain) :
+    f ⟨x, hx⟩ = g ⟨x, h ▸ hx⟩ := by
+  subst h; rfl
+
+end Modes
+
+section TorusModes
+
+open Feec.Fourier
+
+variable {d : Type*} [Fintype d] {ι : Type*} [Fintype ι] {c : ComplexShape ι}
+  {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)]
+  [∀ i, FiniteDimensional ℂ (E i)] [∀ i, CompleteSpace (E i)]
+  (S : FibreComplex ℂ (EuclideanSpace ℝ d) c E)
+
+/-- The point `(δ_k vᵢ)ᵢ` of the total space of the torus complex. -/
+def modeVec (k : d → ℤ) (v : ∀ i, E i) :
+    PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (d → ℤ)) :=
+  WithLp.toLp 2 fun i => mode k (v i)
+
+/-- The fibre wave operator `(L_ξ v)_j = Σᵢ m i j ξ vᵢ − Σₗ (m j l ξ)* vₗ`. -/
+def fibreWave (ξ : EuclideanSpace ℝ d) (v : ∀ i, E i) : ∀ j, E j := fun j =>
+  ∑ i, S.m i j ξ (v i) - ∑ l, ContinuousLinearMap.adjoint (S.m j l ξ) (v l)
+
+theorem modeVec_mem_wave_domain (k : d → ℤ) (v : ∀ i, E i) :
+    modeVec k v ∈ (Torus.complex S).wave.domain := by
+  rw [HilbertComplex.mem_wave_domain]
+  refine ⟨fun i j => mode_mem_mulDomain _ k (v i), fun i j => ?_⟩
+  have e := (Torus.symbolComplex S).adjoint_d i j
+  change modeVec k v j ∈ ((Torus.symbolComplex S).toHilbertComplex.d i j)†.domain
+  rw [e]
+  exact mode_mem_mulDomain _ k (v j)
+
+/-- **Modes are mapped to modes**: `L (δ_k v) = δ_k (L_{2πk} v)` for the wave operator of the
+torus complex. -/
+theorem wave_modeVec (k : d → ℤ) (v : ∀ i, E i) :
+    (Torus.complex S).wave ⟨modeVec k v, modeVec_mem_wave_domain S k v⟩ =
+      modeVec k (fibreWave S (Torus.freq k) v) := by
+  refine PiLp.ext fun j => ?_
+  rw [HilbertComplex.wave_apply]
+  simp only [modeVec, fibreWave, mode_sub, mode_sum]
+  congr 1
+  · refine Finset.sum_congr rfl fun i _ => ?_
+    exact mulOp_mode _ k (v i) _
+  · refine Finset.sum_congr rfl fun l _ => ?_
+    have e : ((Torus.complex S).d j l)† = Operator.mulOp (Measure.count : Measure (d → ℤ))
+        fun a => ContinuousLinearMap.adjoint (S.m j l (Torus.freq a)) :=
+      (Torus.symbolComplex S).adjoint_d j l
+    rw [LinearPMap.apply_of_eq' e]
+    exact mulOp_mode _ k (v l) _
+
+end TorusModes
+
+
+section PeriodicRun
+
+open Feec.Fourier Feec.Fourier.GradCurl ShortHilbertComplex
+
+/-- A real amplitude as a complex matrix. -/
+def cAmp (P : Matrix (Fin 3) (Fin 3) ℝ) : Mat := ofMatrix (P.map fun r : ℝ => (r : ℂ))
+
+@[simp] theorem cAmp_apply (P : Matrix (Fin 3) (Fin 3) ℝ) (ab : Fin 3 × Fin 3) :
+    cAmp P ab = (P ab.1 ab.2 : ℂ) := rfl
+
+/-- The fibre vector `(0, E₀, B₀)` of the plane wave. -/
+def pwVec (Ap Ax : ℝ) : ∀ i : Fin 3, W3 Vec Mat Mat i
+  | 0 => (0 : Vec)
+  | 1 => cAmp (amplitudeE Ap Ax)
+  | 2 => cAmp (amplitudeB Ap Ax)
+
+/-- The wave vector `(0, 0, n) ∈ ℤ³`: the mode `e^{2πi n z}`. -/
+def kz (n : ℤ) : Fin 3 → ℤ := Pi.single 2 n
+
+theorem freq_kz (n : ℤ) (j : Fin 3) :
+    Torus.freq (kz n) j = if j = 2 then 2 * Real.pi * n else 0 := by
+  fin_cases j <;> simp [kz, Torus.freq_apply]
+
+/-- `curl_ξ (P) = i ω curl_z P` at `ξ = 2πn e_z`, `ω = 2πn`. -/
+theorem curl_kz (n : ℤ) (P : Matrix (Fin 3) (Fin 3) ℝ) :
+    curl (Torus.freq (kz n)) (cAmp P) =
+      (Complex.I * (2 * Real.pi * n : ℝ)) • cAmp (curlZ P) := by
+  ext ⟨a, b⟩
+  rw [curl_apply]
+  simp only [freq_kz, Fin.sum_univ_three, leviCivita3_apply, PiLp.smul_apply, smul_eq_mul,
+    cAmp_apply]
+  fin_cases b <;> simp [curlZ] <;> ring
+
+/-- `div_ξ P = 0` at `ξ = 2πn e_z` for an amplitude with vanishing third column. -/
+theorem div_kz_eq_zero (n : ℤ) (P : Matrix (Fin 3) (Fin 3) ℝ) (hP : ∀ a, P a 2 = 0) :
+    div (Torus.freq (kz n)) (cAmp P) = 0 := by
+  ext a
+  rw [div_apply]
+  simp [kz, Pi.single_apply, Fin.sum_univ_three, hP]
+
+theorem fibreWave_zero (ξ : Freq) (v : ∀ i : Fin 3, W3 Vec Mat Mat i) :
+    fibreWave Fourier.GradCurl.gradCurl ξ v 0 = -div ξ (v 1) := by
+  unfold fibreWave
+  rw [Fin.sum_univ_three, Fin.sum_univ_three]
+  have h0 : Fourier.GradCurl.gradCurl.m 0 0 ξ = 0 := rfl
+  have h1 : Fourier.GradCurl.gradCurl.m 1 0 ξ = 0 := rfl
+  have h2 : Fourier.GradCurl.gradCurl.m 2 0 ξ = 0 := rfl
+  have h4 : Fourier.GradCurl.gradCurl.m 0 2 ξ = 0 := rfl
+  have h5 : ContinuousLinearMap.adjoint (Fourier.GradCurl.gradCurl.m 0 1 ξ) = div ξ :=
+    adjoint_grad ξ
+  rw [h0, h1, h2, h4, h5]
+  simp; rfl
+
+theorem fibreWave_one (ξ : Freq) (v : ∀ i : Fin 3, W3 Vec Mat Mat i) :
+    fibreWave Fourier.GradCurl.gradCurl ξ v 1 = grad ξ (v 0) - curl ξ (v 2) := by
+  unfold fibreWave
+  rw [Fin.sum_univ_three, Fin.sum_univ_three]
+  have h0 : Fourier.GradCurl.gradCurl.m 0 1 ξ = grad ξ := rfl
+  have h1 : Fourier.GradCurl.gradCurl.m 1 1 ξ = 0 := rfl
+  have h2 : Fourier.GradCurl.gradCurl.m 2 1 ξ = 0 := rfl
+  have h3 : Fourier.GradCurl.gradCurl.m 1 0 ξ = 0 := rfl
+  have h5 : ContinuousLinearMap.adjoint (Fourier.GradCurl.gradCurl.m 1 2 ξ) = curl ξ :=
+    adjoint_curl ξ
+  rw [h0, h1, h2, h3, h5]
+  simp; rfl
+
+theorem fibreWave_two (ξ : Freq) (v : ∀ i : Fin 3, W3 Vec Mat Mat i) :
+    fibreWave Fourier.GradCurl.gradCurl ξ v 2 = curl ξ (v 1) := by
+  unfold fibreWave
+  rw [Fin.sum_univ_three, Fin.sum_univ_three]
+  have h0 : Fourier.GradCurl.gradCurl.m 0 2 ξ = 0 := rfl
+  have h1 : Fourier.GradCurl.gradCurl.m 1 2 ξ = curl ξ := rfl
+  have h2 : Fourier.GradCurl.gradCurl.m 2 2 ξ = 0 := rfl
+  have h3 : Fourier.GradCurl.gradCurl.m 2 0 ξ = 0 := rfl
+  have h4 : Fourier.GradCurl.gradCurl.m 2 1 ξ = 0 := rfl
+  rw [h0, h1, h2, h3, h4]
+  simp; rfl
+
+theorem cAmp_neg (P : Matrix (Fin 3) (Fin 3) ℝ) : cAmp (-P) = -cAmp P := by
+  ext ab; simp
+
+/-- **The plane-wave mode is an eigenvector of the fibre wave operator**:
+`L_ξ (0, E₀, B₀) = −i ω (0, E₀, B₀)` at `ξ = 2πn e_z`, `ω = 2πn`. -/
+theorem fibreWave_pwVec (Ap Ax : ℝ) (n : ℤ) :
+    fibreWave Fourier.GradCurl.gradCurl (Torus.freq (kz n)) (pwVec Ap Ax) =
+      (-(Complex.I * (2 * Real.pi * n : ℝ))) • pwVec Ap Ax := by
+  obtain ⟨hB, hE, -, -, -, -, cE, -⟩ := planeWave_amplitudes Ap Ax
+  funext j
+  match j with
+  | 0 =>
+    rw [fibreWave_zero]
+    change -div (Torus.freq (kz n)) (cAmp (amplitudeE Ap Ax)) =
+      (-(Complex.I * (2 * Real.pi * n : ℝ))) • (0 : Vec)
+    rw [div_kz_eq_zero n _ cE, neg_zero, smul_zero]
+  | 1 =>
+    rw [fibreWave_one]
+    change grad (Torus.freq (kz n)) (0 : Vec) - curl (Torus.freq (kz n)) (cAmp (amplitudeB Ap Ax)) =
+      (-(Complex.I * (2 * Real.pi * n : ℝ))) • cAmp (amplitudeE Ap Ax)
+    rw [map_zero, zero_sub, curl_kz, hB, neg_smul]
+  | 2 =>
+    rw [fibreWave_two]
+    change curl (Torus.freq (kz n)) (cAmp (amplitudeE Ap Ax)) =
+      (-(Complex.I * (2 * Real.pi * n : ℝ))) • cAmp (amplitudeB Ap Ax)
+    rw [curl_kz, hE, cAmp_neg, smul_neg, neg_smul]
+
+end PeriodicRun
+
+
+section PeriodicSolution
+
+open Feec.Fourier Feec.Fourier.GradCurl ShortHilbertComplex Models.Torus.GradCurl
+
+theorem modeVec_smul {d : Type*} [Fintype d] {ι : Type*} {E : ι → Type*}
+    [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)] (k : d → ℤ) (c : ℂ)
+    (v : ∀ i, E i) : modeVec k (c • v) = c • modeVec k v :=
+  PiLp.ext fun i => mode_smul k c (v i)
+
+/-- The coefficients of `(0, E₀, B₀) e^{2πi n z}` (positive frequency). -/
+abbrev uPlus (Ap Ax : ℝ) (n : ℤ) : PiLp 2 Space := modeVec (kz n) (pwVec Ap Ax)
+
+/-- The coefficients of `(0, E₀, B₀) e^{-2πi n z}` (negative frequency). -/
+abbrev uMinus (Ap Ax : ℝ) (n : ℤ) : PiLp 2 Space := modeVec (kz (-n)) (pwVec Ap Ax)
+
+theorem mem_domain_modeVec (Ap Ax : ℝ) (n : ℤ) :
+    modeVec (kz n) (pwVec Ap Ax) ∈ complex.wave.domain :=
+  modeVec_mem_wave_domain Fourier.GradCurl.gradCurl (kz n) (pwVec Ap Ax)
+
+/-- **`L u₊ = −i ω u₊`** with `ω = 2πn`. -/
+theorem wave_modeVec_kz (Ap Ax : ℝ) (n : ℤ) :
+    complex.wave ⟨_, mem_domain_modeVec Ap Ax n⟩ =
+      (-(Complex.I * (2 * Real.pi * n : ℝ))) • modeVec (kz n) (pwVec Ap Ax) := by
+  exact (wave_modeVec Fourier.GradCurl.gradCurl (kz n) (pwVec Ap Ax)).trans
+    (by rw [fibreWave_pwVec, modeVec_smul])
+
+/-- The plane wave modes are TSD: `δ_k (0, E₀, B₀) ∈ K = {0} × L²(TSD) × L²(TSD)`. -/
+theorem modeVec_kz_mem (Ap Ax : ℝ) (n : ℤ) :
+    modeVec (kz n) (pwVec Ap Ax) ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint := by
+  obtain ⟨-, -, sE, sB, tE, tB, cE, cB⟩ := planeWave_amplitudes Ap Ax
+  intro i
+  refine Operator.mem_fibreSub.2 (ae_of_all _ fun a => ?_)
+  change mode (kz n) (pwVec Ap Ax i) a ∈ tsdK i (Torus.freq a)
+  rw [coeFn_mode]
+  by_cases ha : a = kz n
+  · subst ha
+    rw [Pi.single_eq_same]
+    have hmem : ∀ P : Matrix (Fin 3) (Fin 3) ℝ, P.IsSymm → P.trace = 0 → (∀ i, P i 2 = 0) →
+        cAmp P ∈ tsd (Torus.freq (kz n)) := fun P hs ht hc => by
+      refine mem_tsd.2 ⟨?_, ?_, ?_⟩
+      · ext a b
+        simp only [Matrix.transpose_apply, toMatrix_apply, cAmp_apply]
+        rw [show P b a = P a b from by simpa using congrFun (congrFun hs a) b]
+      · simp only [Matrix.trace, Matrix.diag, toMatrix_apply, cAmp_apply]
+        have := ht
+        simp only [Matrix.trace, Matrix.diag] at this
+        exact_mod_cast this
+      · ext a
+        simp [Matrix.mulVec, dotProduct, cfreq, kz, Pi.single_apply, Fin.sum_univ_three, hc]
+    match i with
+    | 0 => exact Submodule.zero_mem _
+    | 1 => exact hmem _ sE tE cE
+    | 2 => exact hmem _ sB tB cB
+  · rw [Pi.single_eq_of_ne ha]
+    exact Submodule.zero_mem _
+
+/-- **The periodic plane wave on `𝕋³`** (`ω = 2πn`, `n ∈ ℤ`; `fem4gr` runs `ω = 6π`), on the
+Fourier side: the coefficients of `(0, E₀, B₀) sin ω(z − t)` are
+`U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`. -/
+def torusPlaneWave (Ap Ax : ℝ) (n : ℤ) (t : ℝ) : PiLp 2 Space :=
+  (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * (2 * Real.pi * n : ℝ)) * t) • uPlus Ap Ax n -
+    Complex.exp (Complex.I * (2 * Real.pi * n : ℝ) * t) • uMinus Ap Ax n)
+
+end PeriodicSolution
+
+
+section PeriodicTheorems
+
+open Feec.Fourier Feec.Fourier.GradCurl ShortHilbertComplex Models.Torus.GradCurl
+
+variable (Ap Ax : ℝ) (n : ℤ)
+
+/-- The frequency `ω = 2πn` as a complex number. -/
+abbrev omegaC : ℂ := ((2 * Real.pi * n : ℝ) : ℂ)
+
+theorem wave_uPlus :
+    complex.wave ⟨uPlus Ap Ax n, mem_domain_modeVec Ap Ax n⟩ =
+      (-(Complex.I * omegaC n)) • uPlus Ap Ax n :=
+  wave_modeVec_kz Ap Ax n
+
+theorem wave_uMinus :
+    complex.wave ⟨uMinus Ap Ax n, mem_domain_modeVec Ap Ax (-n)⟩ =
+      (Complex.I * omegaC n) • uMinus Ap Ax n := by
+  rw [wave_modeVec_kz]
+  congr 1
+  push_cast
+  ring
+
+theorem mem_graph_uPlus :
+    (uPlus Ap Ax n, (-(Complex.I * omegaC n)) • uPlus Ap Ax n) ∈ complex.wave.graph := by
+  rw [← wave_uPlus]; exact complex.wave.mem_graph ⟨uPlus Ap Ax n, mem_domain_modeVec Ap Ax n⟩
+
+theorem mem_graph_uMinus :
+    (uMinus Ap Ax n, (Complex.I * omegaC n) • uMinus Ap Ax n) ∈ complex.wave.graph := by
+  rw [← wave_uMinus]
+  exact complex.wave.mem_graph ⟨uMinus Ap Ax n, mem_domain_modeVec Ap Ax (-n)⟩
+
+theorem hasDerivAt_cexp_mul (a : ℂ) (t : ℝ) :
+    HasDerivAt (fun t : ℝ => Complex.exp (a * t)) (a * Complex.exp (a * t)) t := by
+  have h := ((hasDerivAt_id t).ofReal_comp.const_mul a).cexp
+  convert h using 1
+  · simp
+  · simp [mul_comm]
+
+/-- **The periodic plane wave is an exact solution on `𝕋³`**: `U(t)` (the Fourier coefficients of
+`(0, E₀, B₀) sin ω(z − t)`, `ω = 2πn`) is a strong solution of the Hodge wave equation
+`U' = L U` of the periodic grad–curl complex on every time set. -/
+theorem isStrongSolution_torusPlaneWave (I : Set ℝ) :
+    Evolution.IsStrongSolution complex.wave I 0 (torusPlaneWave Ap Ax n) := by
+  refine Evolution.IsStrongSolution.of_deriv fun t _ => ?_
+  refine ⟨(2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
+      ((-(Complex.I * omegaC n)) • uPlus Ap Ax n) -
+      Complex.exp (Complex.I * omegaC n * t) • ((Complex.I * omegaC n) • uMinus Ap Ax n)), ?_, ?_⟩
+  · have := complex.wave.graph.smul_mem (2 * Complex.I)⁻¹ (complex.wave.graph.sub_mem
+      (complex.wave.graph.smul_mem (Complex.exp (-(Complex.I * omegaC n) * t))
+        (mem_graph_uPlus Ap Ax n))
+      (complex.wave.graph.smul_mem (Complex.exp (Complex.I * omegaC n * t))
+        (mem_graph_uMinus Ap Ax n)))
+    rw [Prod.smul_mk, Prod.smul_mk, Prod.mk_sub_mk, Prod.smul_mk] at this
+    exact this
+  · rw [Pi.zero_apply, add_zero]
+    have h1 := (hasDerivAt_cexp_mul (-(Complex.I * omegaC n)) t).smul_const (uPlus Ap Ax n)
+    have h2 := (hasDerivAt_cexp_mul (Complex.I * omegaC n) t).smul_const (uMinus Ap Ax n)
+    have := ((h1.sub h2).const_smul (2 * Complex.I)⁻¹).hasDerivWithinAt (s := I)
+    convert this using 1
+    · funext y; rfl
+    · rw [smul_smul, smul_smul, mul_comm (Complex.exp _), mul_comm (Complex.exp _)]
+
+/-- **TSD at every time**: `U(t) ∈ K = {0} × L²(TSD) × L²(TSD)`. -/
+theorem torusPlaneWave_mem (t : ℝ) :
+    torusPlaneWave Ap Ax n t ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint :=
+  Submodule.smul_mem _ _ (Submodule.sub_mem _ (Submodule.smul_mem _ _ (modeVec_kz_mem Ap Ax n))
+    (Submodule.smul_mem _ _ (modeVec_kz_mem Ap Ax (-n))))
+
+/-- **Uniqueness and TSD propagation for the periodic run**: every strong solution on `[a, b]`
+with the initial value of the plane wave is the plane wave, hence TSD at every time (this also
+follows from `Feec.Models.Torus.GradCurl.tsd_existsUnique`). -/
+theorem torusPlaneWave_unique {a b : ℝ} {V : ℝ → PiLp 2 Space}
+    (hV : Evolution.IsStrongSolution complex.wave (Icc a b) 0 V)
+    (h0 : V a = torusPlaneWave Ap Ax n a) :
+    EqOn V (torusPlaneWave Ap Ax n) (Icc a b) ∧
+      ∀ t ∈ Icc a b, V t ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint := by
+  have he := hV.unique complex.isSkewAdjoint_wave.isDissipative
+    (isStrongSolution_torusPlaneWave Ap Ax n _) h0
+  exact ⟨he, fun t ht => (he ht).symm ▸ torusPlaneWave_mem Ap Ax n t⟩
+
+/-! ### Crank–Nicolson for the periodic run -/
+
+/-- The CN amplification factor `λ(μ) = (1 + s μ) / (1 − s μ)` at the eigenvalue `μ`. -/
+abbrev amp (s : ℝ) (μ : ℂ) : ℂ := (1 + (s : ℂ) * μ) / (1 - (s : ℂ) * μ)
+
+theorem one_sub_ne_zero (s : ℝ) {μ : ℂ} (hμ : μ.re = 0) : 1 - (s : ℂ) * μ ≠ 0 := fun h => by
+  have := congrArg Complex.re h
+  simp [hμ] at this
+
+/-- **The Crank–Nicolson solution of the periodic run, in closed form**:
+`Uₖ = (2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)`, `λ± = (1 ∓ i s ω) / (1 ± i s ω)`, `s = Δt / 2`. -/
+def cnTorusPlaneWave (s : ℝ) (k : ℕ) : PiLp 2 Space :=
+  (2 * Complex.I)⁻¹ • (amp s (-(Complex.I * omegaC n)) ^ k • uPlus Ap Ax n -
+    amp s (Complex.I * omegaC n) ^ k • uMinus Ap Ax n)
+
+theorem cnTorusPlaneWave_zero (s : ℝ) :
+    cnTorusPlaneWave Ap Ax n s 0 = torusPlaneWave Ap Ax n 0 := by
+  simp [cnTorusPlaneWave, torusPlaneWave]
+
+/-- Each `Uₖ ↦ Uₖ₊₁` is a Crank–Nicolson step of the periodic Hodge wave operator. -/
+theorem isCNStep_cnTorusPlaneWave (s : ℝ) (k : ℕ) :
+    TimeStepping.IsCNStep complex.wave s (cnTorusPlaneWave Ap Ax n s k)
+      (cnTorusPlaneWave Ap Ax n s (k + 1)) := by
+  have hp := TimeStepping.isCNStep_of_eigen (mem_domain_modeVec Ap Ax n) (wave_uPlus Ap Ax n)
+    (s := s) (one_sub_ne_zero s (by simp))
+  have hm := TimeStepping.isCNStep_of_eigen (mem_domain_modeVec Ap Ax (-n)) (wave_uMinus Ap Ax n)
+    (s := s) (one_sub_ne_zero s (by simp))
+  have := ((hp.smul (amp s (-(Complex.I * omegaC n)) ^ k)).add
+    ((hm.smul (amp s (Complex.I * omegaC n) ^ k)).smul (-1))).smul (2 * Complex.I)⁻¹
+  convert this using 1
+  · simp only [cnTorusPlaneWave]
+    module
+  · simp only [cnTorusPlaneWave, amp, pow_succ]
+    module
+
+/-- **Discrete energy identity and constraint preservation for the periodic run**: the CN
+iterates conserve the `L²` energy exactly, `‖Uₖ‖ = ‖U₀‖`, stay TSD, and the amplification factors
+have modulus one (`TimeStepping.norm_amplification_eq_one`): CN has a pure phase error,
+`λ₊ = e^{-iθ}`, `θ = 2 arctan(s ω) ≠ 2 s ω`. Every CN sequence from `U₀` is this one. -/
+theorem cnTorusPlaneWave_props (s : ℝ) :
+    (∀ k, ‖cnTorusPlaneWave Ap Ax n s k‖ = ‖torusPlaneWave Ap Ax n 0‖) ∧
+    (∀ k, cnTorusPlaneWave Ap Ax n s k ∈
+      HilbertComplex.totalSub Models.Torus.GradCurl.constraint) ∧
+    ‖amp s (-(Complex.I * omegaC n))‖ = 1 ∧ ‖amp s (Complex.I * omegaC n)‖ = 1 ∧
+    ∀ V : ℕ → PiLp 2 Space, V 0 = torusPlaneWave Ap Ax n 0 →
+      (∀ k, TimeStepping.IsCNStep complex.wave s (V k) (V (k + 1))) →
+        ∀ k, V k = cnTorusPlaneWave Ap Ax n s k := by
+  refine ⟨fun k => ?_, fun k => ?_, ?_, ?_, fun V hV0 hV k => ?_⟩
+  · rw [TimeStepping.norm_eq_of_forall_isCNStep complex.isSkewAdjoint_wave.isSkewSymmetric
+      (isCNStep_cnTorusPlaneWave Ap Ax n s) k, cnTorusPlaneWave_zero]
+  · exact Submodule.smul_mem _ _ (Submodule.sub_mem _
+      (Submodule.smul_mem _ _ (modeVec_kz_mem Ap Ax n))
+      (Submodule.smul_mem _ _ (modeVec_kz_mem Ap Ax (-n))))
+  · have e : -(Complex.I * omegaC n) = Complex.I * ((-(2 * Real.pi * n) : ℝ) : ℂ) := by
+      rw [Complex.ofReal_neg]; ring
+    rw [e]
+    exact TimeStepping.norm_amplification_eq_one s _
+  · exact TimeStepping.norm_amplification_eq_one s _
+  · induction k with
+    | zero => rw [hV0, cnTorusPlaneWave_zero]
+    | succ k ih =>
+      have h1 := hV k
+      rw [ih] at h1
+      exact h1.unique_of_isSkewSymmetric complex.isSkewAdjoint_wave.isSkewSymmetric
+        (isCNStep_cnTorusPlaneWave Ap Ax n s k)
+
+end PeriodicTheorems
 
 end Feec.Numerics.PlaneWaveCube

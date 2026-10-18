@@ -609,9 +609,8 @@ theorem norm_lpS_sub_le (hA : A.IsMDissipative) (x : A.domain) (t s : ℝ) :
   · rw [norm_sub_rev]
     refine (norm_lpS_sub_le_of_le hA x (le_max_right t 0) h).trans ?_
     gcongr
-    rw [abs_sub_comm] at hab
-    exact (le_abs_self _).trans (by rw [abs_sub_comm]; exact (abs_sub_comm (max s 0) (max t 0) ▸
-      abs_max_sub_max_le_abs t s 0))
+    rw [abs_sub_comm (max t 0)] at hab
+    exact (le_abs_self _).trans hab
 
 theorem continuous_lpS_apply (hA : A.IsMDissipative) (x : E) :
     Continuous fun t => lpS hA t x := by

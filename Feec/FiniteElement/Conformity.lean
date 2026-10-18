@@ -10,32 +10,55 @@ public import Mathlib.MeasureTheory.Function.UniformIntegrable
 # Conformity of piecewise smooth fields on simplicial meshes
 
 Let `M` be a conforming simplicial mesh of an open set `Ω ⊆ ℝⁿ` (`n ≥ 1`) and `A` a first-order
-constant-coefficient operator (`Feec.Domain.ConstCoeffOp`) with principal symbol
-`σ_A(ν)` (`ConstCoeffOp.symbol`; `(σ_A(ν) w)ⱼ = Σᵢ Σ_{([v], c) ∈ Aⱼᵢ} c (v · ν) wᵢ`). A field `u`
-given on each closed element `T` by a `C¹` field `u_T` (classical traces only) whose
-**`A`-traces** `σ_A(ν_F) u_T` agree from both sides of every interior facet `F` lies in the
-domain of the maximal realization `A_max(Ω)`, and `A_max u` is the elementwise `A u_T`
-(`ConstCoeffOp.pieceL2_mem_maximal_domain`). If moreover the `A`-traces vanish on the boundary
-facets, the extension of `u` by zero lies in `D(A_max(ℝⁿ)) = D(A_min(ℝⁿ))`
-(`ConstCoeffOp.pieceL2_univ_mem_maximal_domain`), and when `Ω` is strictly star-shaped (e.g.
-convex, in particular a cube), `u ∈ D(A_min(Ω))` (`ConstCoeffOp.pieceL2_mem_minimal_domain`).
+constant-coefficient operator (`Feec.Domain.ConstCoeffOp`, `A.IsOrderLE 1`) with principal symbol
+`σ_A(ν)` (`ConstCoeffOp.symbol`; `(σ_A(ν) w)ⱼ = Σᵢ Σ_{([v], c) ∈ Aⱼᵢ} c (v · ν) wᵢ`, no factor `i`).
+A field `u` given on each closed element `T` by a field `u_T` that is `C¹` up to the boundary
+(modelled by `C¹` fields on `ℝⁿ`; a `C¹` field on a neighbourhood of `T` extends by a cut-off)
+whose **`A`-traces** `σ_A(ν) u_T` agree from both sides of every interior facet (for the normals
+`ν` of the facet, `IsFaceNormal`) lies in the domain of the maximal realization `A_max(Ω)`, and
+`A_max u` is the elementwise `A u_T`. If moreover the `A`-traces vanish on the boundary facets,
+the extension of `u` by zero lies in `D(A_max(ℝⁿ)) = D(A_min(ℝⁿ))`, and, when `Ω` is strictly
+star-shaped (e.g. convex, in particular a cube), `u ∈ D(A_min(Ω))`.
 
-The proof is elementwise integration by parts: for a test field `φ`,
-`Σⱼ conj (A u)ⱼ φⱼ - Σᵢ conj uᵢ (Aᵗ φ)ᵢ = div G` with `G · ν = Σⱼ φⱼ conj (σ_A(ν) u)ⱼ`
-(`ConstCoeffOp.conj_apply_mul_sub_eq_sum_partialDeriv`), and the divergence theorem on the mesh
-(`Feec.FiniteElement.sum_setIntegral_divergence_eq_zero`): the face terms cancel across interior
-facets by the trace condition and vanish on boundary facets, where `φ = 0`.
-
-Instances: the gradient (continuity), the curl (continuity of `ν × u`, the tangential trace) and
-the divergence (continuity of `ν · u`, the normal trace), and the exterior derivative on
-`k`-forms (continuity of `ν ∧ u`; for real forms, equivalently of the pullback to the facets,
-`Feec.FiniteElement.extDerivOp_conforming`).
+The proof of the first statement is elementwise integration by parts: for a test field `φ`,
+`Σⱼ conj (A u)ⱼ φⱼ - Σᵢ conj uᵢ (Aᵗ φ)ᵢ = div G` with `G · ν = Σⱼ φⱼ conj (σ_A(ν) u)ⱼ`, and the
+divergence theorem on the mesh (`Feec.FiniteElement.sum_setIntegral_divergence_eq_zero`): the face
+terms cancel across interior facets by the trace condition and vanish on boundary facets, where
+`φ = 0`, then `Feec.Domain.ConstCoeffOp.mem_maximal_domain_iff`. For the minimal domain, the
+dilates `x ↦ u(x₀ + s (x - x₀))` (`s > 1`) of the extension by zero lie in `D(A_max(ℝⁿ))` with
+compact support in `Ω`, hence in `D(A_min(Ω))` (`Feec.Domain.ConstCoeffOp.mem_minimal_of_support_subset`),
+and converge to `u` in the graph norm as `s → 1`; `A_min` is closed.
 
 ## Main definitions
 
 * `ConstCoeffOp.symbol A ν`, `ConstCoeffOp.symbolApply A ν w`: the principal symbol.
+* `ConstCoeffOp.greenField A u φ`: the vector field of the elementwise integration by parts.
 * `Feec.FiniteElement.pieceFun M v`: the piecewise function `Σ_T 𝟙_{int T} v_T`, and
   `Feec.FiniteElement.pieceL2 M S u`: the piecewise field as an element of `L²(S; 𝕜^ι)`.
+* `Feec.FiniteElement.TangentialTraceEq F k α β`: `α` and `β` agree on `k`-tuples of vectors
+  tangent to `F`.
+* `ConstCoeffOp.scale A s`, `Feec.FiniteElement.dilL2`: the operator and the fields under the
+  homothety `x ↦ x₀ + s (x - x₀)`.
+
+## Main results
+
+* `ConstCoeffOp.conj_apply_mul_sub_eq_sum_partialDeriv`, `sum_mul_greenField`: pointwise
+  integration by parts and the normal component of `G`.
+* `sum_integral_conj_apply_mul_eq`: integration by parts on a mesh.
+* `pieceL2_mem_maximal_domain`: **conformity**, `u ∈ D(A_max(Ω))`, `A_max u = (A u_T)_T`.
+* `pieceL2_univ_mem_maximal_domain`: vanishing boundary `A`-traces, extension by zero.
+* `pieceL2_mem_minimal_domain`, `pieceL2_mem_minimal_domain_of_convex`: `u ∈ D(A_min(Ω))` for
+  strictly star-shaped, in particular convex, `Ω`.
+* Instances: `gradOp_pieceL2_mem_maximal_domain` (continuity), `curlOp_pieceL2_mem_maximal_domain`
+  (`ν × u` continuous: tangential trace, `ℝ³`), `divOp_pieceL2_mem_maximal_domain`
+  (`ν · u` continuous: normal trace), `extDerivOp_pieceL2_mem_maximal_domain` (`ν ∧ u`
+  continuous), from `symbolApply_gradOp`, `symbolApply_curlOp`, `symbolApply_divOp`,
+  `symbolApply_extDerivOp` (`σ_d(ν) = ν ∧ ·`).
+* Real `k`-forms: `extDeriv_pieceL2_mem_maximal_domain` and `extDeriv_pieceL2_mem_minimal_domain`
+  (continuous resp. vanishing tangential traces), with `d_max` the elementwise classical exterior
+  derivative `Feec.FiniteElement.extDeriv` (`extDerivOp_apply_formComp`), via
+  `wedge_eq_of_tangentialTraceEq` (equal tangential traces give `ν ∧ α = ν ∧ β`) and
+  `Feec.ExteriorFibre.wedge_eq_zero_of_pullback_eq_zero`.
 
 ## References
 

@@ -328,13 +328,13 @@ theorem _root_.AffineMap.mul_neg_of_sOppSide {V P : Type*} [AddCommGroup V] [Mod
   · nlinarith
   · nlinarith [mul_pos htp hb', mul_nonneg (sub_nonneg.2 ht1) ha'.le]
 
-theorem sign_mul_of_sq_eq_one {ε x : ℝ} (hε : ε = 1 ∨ ε = -1) :
+theorem sign_mul_of_eq_one_or {ε x : ℝ} (hε : ε = 1 ∨ ε = -1) :
     (SignType.sign (ε * x) : ℝ) = ε * SignType.sign x := by
   rcases hε with rfl | rfl
   · simp
   · rw [neg_one_mul, Left.sign_neg]; simp
 
-theorem intCast_units_eq (u : ℤˣ) : ((u : ℤ) : ℝ) = 1 ∨ ((u : ℤ) : ℝ) = -1 := by
+theorem intCast_units_eq_one_or (u : ℤˣ) : ((u : ℤ) : ℝ) = 1 ∨ ((u : ℤ) : ℝ) = -1 := by
   rcases Int.units_eq_one_or u with h | h <;> simp [h]
 
 /-! ### Canonical enumerations of facets -/
@@ -428,12 +428,12 @@ theorem neg_one_pow_mul_faceFlux_eq_orient (T : Affine.Simplex ℝ (Fin (m + 1) 
   set D := (edgeMatrix (Fin.cons (T.points i) (faceEnum F (m + 1)) :
     Fin (m + 2) → Fin (m + 1) → ℝ)).det
   set ε : ℝ := ((Equiv.Perm.sign π : ℤ) : ℝ)
-  have hε := intCast_units_eq (Equiv.Perm.sign π)
+  have hε := intCast_units_eq_one_or (Equiv.Perm.sign π)
   have hεε : ε * ε = 1 := by rcases hε with h | h <;> simp [ε, h]
   have hD : D = ε * ((-1) ^ (i : ℕ) * (edgeMatrix T.points).det) := by
     rw [← key, ← mul_assoc, hεε, one_mul]
   have hs : (SignType.sign D : ℝ) = ε * ((-1) ^ (i : ℕ) * SignType.sign (edgeMatrix T.points).det) := by
-    rw [hD, sign_mul_of_sq_eq_one hε, sign_mul_of_sq_eq_one (neg_one_pow_eq_or ℝ _)]
+    rw [hD, sign_mul_of_eq_one_or hε, sign_mul_of_eq_one_or (neg_one_pow_eq_or ℝ _)]
   rw [hs]
   push_cast
   ring

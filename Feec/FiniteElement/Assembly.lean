@@ -24,7 +24,8 @@ consists of the piecewise fields `u = (u_T)_T`, `u_T ∈ P(T)ᵏ`, whose DOFs ag
 Then
 
 * `Λ_hᵏ(M)` is finite-dimensional of dimension `Σ_g #DOF(g)` (`finrank_globalSpace`), the global
-  DOFs being a linear isomorphism (`globalDofEquiv`);
+  DOFs being a linear isomorphism (`globalDofEquiv`); the gluing into `L²(Ω; Λᵏ)` is injective
+  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension (`finrank_V`);
 * `Λ_hᵏ(M) ⊆ {piecewise fields with continuous tangential traces}`
   (`tangentialTraceEq_of_mem_globalSpace`), with equality when the faces of `M` have facet-connected
   stars (`mem_globalSpace_iff`); the hypothesis is needed (two triangles sharing only a vertex);

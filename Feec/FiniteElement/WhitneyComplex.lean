@@ -23,7 +23,7 @@ The key algebraic facts are that every Whitney form is a trimmed linear form
 that on the reference simplex they are exactly the Whitney forms
 (`p1MinusForms_le_whitneySpace_refVertex`). The tangential trace of a Whitney form on a facet is
 therefore a Whitney form of the facet, determined by the DOFs of the faces of the facet
-(`whitney_trace`).
+(`tangentialTraceEq_of_whitneyFaceDof_eq`).
 
 ## Main definitions
 
@@ -201,7 +201,7 @@ theorem exists_sign_simplexIntegral_eq {k : ℕ} {q q' : Fin (k + 1) → Fin n �
     (hq : Function.Injective q) (hq' : Function.Injective q') (h : Set.range q = Set.range q') :
     ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧ ∀ w, simplexIntegral q w = ε * simplexIntegral q' w := by
   obtain ⟨π, rfl⟩ := exists_perm_comp_eq hq hq' h
-  exact ⟨_, intCast_units_eq _, fun w => simplexIntegral_comp_perm q' π w⟩
+  exact ⟨_, intCast_units_eq_one_or _, fun w => simplexIntegral_comp_perm q' π w⟩
 
 /-- The face integral `w ↦ ∫_g w` over the face `g` enumerated by `faceEnum g`. -/
 def whitneyFaceDof (g : Finset (Fin n → ℝ)) (k : ℕ) : contForms n →ₗ[ℝ] ℝ where
@@ -327,7 +327,7 @@ theorem tangentialTraceEq_of_pullback_eq {m : ℕ} {F : Finset (Fin (m + 1) → 
 
 /-- **Trace determination for Whitney forms**: on a common facet `F` of `T` and `T'`, Whitney
 forms with the same integrals over the faces of `F` have the same tangential trace on `F`. -/
-theorem whitney_trace {k : ℕ} {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
+theorem tangentialTraceEq_of_whitneyFaceDof_eq {k : ℕ} {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
     {F : Finset (Fin n → ℝ)} (hT : F ⊆ vertexSet T) (hT' : F ⊆ vertexSet T') (hc : F.card = n)
     {w η : FormField n} (hw : w ∈ whitneySpace T.points k) (hη : η ∈ whitneySpace T'.points k)
     (hdof : ∀ g ⊆ F, ∀ _i : WhitneyDofIdx g k,
@@ -393,7 +393,7 @@ open ExteriorFibre Feec.Mesh
 variable {n : ℕ}
 
 /-- The face integral over `g` only sees the tangential trace on `g`. -/
-theorem whitney_dof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : WhitneyDofIdx g k)
+theorem whitneyFaceDof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : WhitneyDofIdx g k)
     {w η : contForms n}
     (h : ∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)),
       TangentialTraceEq g k ((w : FormField n) x) ((η : FormField n) x)) :
@@ -412,7 +412,7 @@ theorem whitney_dof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : WhitneyDof
     exact vsub_mem_vectorSpan ℝ (Finset.mem_coe.2 (hqg _)) (Finset.mem_coe.2 (hqg 0))
 
 /-- **Stokes compatibility of the face integrals**: `∫_g dw = Σᵢ ± ∫_{g ∖ gᵢ} w`. -/
-theorem whitney_dof_extDeriv (g : Finset (Fin n → ℝ)) (k : ℕ) (i : WhitneyDofIdx g (k + 1)) :
+theorem whitneyFaceDof_comp_extDerivC1_mem_span (g : Finset (Fin n → ℝ)) (k : ℕ) (i : WhitneyDofIdx g (k + 1)) :
     whitneyFaceDof g (k + 1) ∘ₗ extDerivC1 ∈
       Submodule.span ℝ (Set.range fun p : Σ g' : g.powerset,
         WhitneyDofIdx (g' : Finset (Fin n → ℝ)) k =>
@@ -464,9 +464,9 @@ def whitneyElement (n : ℕ) : LocalElement n where
   dofIdxFintype _ _ := inferInstance
   dof g k _ := whitneyFaceDof g k
   unisolvent T k := isUnisolvent_whitneyFaceDof T k
-  trace := fun hT hT' hc hw hη h => whitney_trace hT hT' hc hw hη h
-  dof_congr := whitney_dof_congr
-  dof_extDeriv := fun g k i => whitney_dof_extDeriv g k i
+  trace := fun hT hT' hc hw hη h => tangentialTraceEq_of_whitneyFaceDof_eq hT hT' hc hw hη h
+  dof_congr := whitneyFaceDof_congr
+  dof_extDeriv := fun g k i => whitneyFaceDof_comp_extDerivC1_mem_span g k i
 
 end Feec.FiniteElement
 
@@ -538,7 +538,7 @@ instance [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (x₀ : Fin n
   inferInstanceAs (FiniteDimensional ℝ ((whitneyElement n).V₀ M k))
 
 /-- A convex open set is strictly star-shaped with respect to each of its points. -/
-theorem star_of_convex {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (hconv : Convex ℝ Ω) {x₀ : Fin n → ℝ}
+theorem add_smul_sub_mem_of_convex {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (hconv : Convex ℝ Ω) {x₀ : Fin n → ℝ}
     (hx₀ : x₀ ∈ Ω) : ∀ x ∈ closure Ω, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ Ω := by
   intro x hx t ht0 ht1
   have h := hconv.combo_interior_closure_mem_interior (hΩ.interior_eq.symm ▸ hx₀) hx
@@ -585,7 +585,7 @@ def freudenthalWhitneySubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs
     [NeZero N] :
     ((deRham ℝ n).minimalComplex (isOpen_freudenthalMesh_domain b s hs N)).Subcomplex :=
   whitneySubcomplexMin (freudenthalMesh b s hs N) (isOpen_freudenthalMesh_domain b s hs N) _
-    (star_of_convex (isOpen_freudenthalMesh_domain b s hs N)
+    (add_smul_sub_mem_of_convex (isOpen_freudenthalMesh_domain b s hs N)
       (convex_freudenthalMesh_domain b s hs N) (center_mem_freudenthalMesh_domain b s hs N))
 
 end Feec.FiniteElement

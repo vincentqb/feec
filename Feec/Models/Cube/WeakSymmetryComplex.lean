@@ -23,7 +23,8 @@ inner products (`LinearPMap.GraphSpace` of the minimal realizations `d_min`), `d
 **The hypotheses (H1)–(H3), (H6) of §5.1** (`Feec.BGG.Hilb.Hyps`), and the continuous constants
 `Feec.BGG.Stability` of Prop 5.3, hold on the cube from the identification of `H̊Λ(Q)` with the
 parity classes of the torus de Rham complex (`Feec.Models.Cube.DeRhamIdentFEM`: closed range and
-`ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ 3`): injectivity of `d⁰` (`d0_injective`), closed ranges, exactness at
+`ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ 3`): injectivity of `d⁰` (`D0_eq_zero`, `bggD0_injective`), closed
+ranges, exactness at
 `H̊Λ¹` (`exact1`) and the Hodge decomposition with Poincaré constant `(2π)⁻¹` (`hodge_one`), in
 both rows; `‖S⁰ψ‖ ≤ ‖ψ‖`, `‖S¹v‖² ≤ 2 ‖v‖²` (`Feec.FiniteElement.norm_wsL2_sq_le`).
 
@@ -48,8 +49,13 @@ from the open mapping theorem (`CurlPotential.exists_bound`). With it, `bggHyps`
 
 ## Main results
 
-* `d0_injective`, `exact1`, `isClosed_range_d0`, `isClosed_range_d1`, `poincare0`, `hodge_one`;
-* **`bggHyps`** (`CurlPotential → bggHilb.Hyps`), **`bggStability`**;
+* `D0_eq_zero`, `cycles_zero_eq_bot` (`ℌ⁰(H̊Λ(Q)) = 0`), `bggD0_injective`, `exact1`,
+  `exists_D0_eq`, `isClosed_range_D0`, `isClosed_range_D1`, `isClosed_range_bggD0`,
+  `isClosed_range_bggD1`, `poincare0`, `poincare1`, `hodge_one`, `bggS0_injective`;
+* **`bggHyps`** (`CurlPotential → bggHilb.Hyps`), **`bggStability`** (constants `(2π)⁻¹`, `C_R`,
+  `√2` of Prop 5.3);
+* **Prop 5.1** (`bggShort_closedRange_exact`) and **Prop 5.2** (`bgg_existsUnique_isSaddle`) on
+  the cube, under `CurlPotential`;
 * `range_d1_subset_closure`, `curlPotential_iff_isClosed`, `CurlPotential.exists_bound`.
 
 ## References

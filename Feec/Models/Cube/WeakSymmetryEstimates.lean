@@ -16,24 +16,33 @@ independent of `N`:
   `‖S₁,ₕv‖ ≤ C ‖v‖` in `L²(Q)`. The thesis' proof uses global `ℓ¹` sums of DOFs, which are not
   uniformly equivalent to the `L²` norm (`docs/audit.json`); the proof here is local: on each
   simplex `S_h = Π' S`, and `Π'` is `L²`-bounded on polynomial fields uniformly on the homothetic
-  copies `t + h K_σ` of the Kuhn simplices (`exists_local_bound`).
+  copies `t + h K_σ` of the Kuhn simplices (`exists_formL2Sq_localInterp_le`).
 * **Prop 5.9(1)** (`norm_sub_glue_bggS0h_le`): `‖(I − Π¹) S⁰ψ‖ ≤ C h ‖∇ψ‖` on `P₂Λ⁰ ⊗ ℝ³`
   (the kernel lemma `Feec.FiniteElement.exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`).
-* **Strong approximation** (`norm_sub_globalInterp_coordWedge_le`): `‖(I − Π) S u‖ ≤ C h sup ‖Du‖`
-  for `C¹` vector fields `u`, for `S⁰` and `S¹`.
-* **Prop 5.9(2) is false** (`exists_counterexample_prop59_two`): there is `c > 0` such that on
-  every mesh there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`, `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}`; so the
-  hypothesis `happ1` of `Feec.BGG.Discrete.error_estimate` (an `O(h)` bound) fails for these
-  elements. The field is `v = grad φ` row-wise, `φ = (0, 0, Π̃⁰ f_N)` with `f_N` a bump at the mesh
-  scale, quadratic on one simplex `T₀`: `curl v = 0`, while on `T₀` the field `S¹ v = −d(f_N dx₃)`
-  is affine and not a Raviart–Thomas field.
+* **Strong approximation** (`norm_sub_glue_globalInterp_coordWedge_le`):
+  `‖(I − Π) S u‖ ≤ C h sup ‖Du‖` for vectors `u` of `C¹` `k`-forms (`S⁰` and `S¹`).
+* **Prop 5.9(2) is false** (`exists_counterexample_prop59_two`, `not_exists_prop59_two_bound`):
+  there is `c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`
+  (vanishing boundary DOFs), `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}`; hence no bound
+  `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds, and the hypothesis `happ1` of
+  `Feec.BGG.Discrete.error_estimate` (an `O(h)` bound) fails for these elements. The field is
+  `v_N = (0, 0, grad Π̃⁰ f_N)` (`vN`), `f_N(x) = F(h⁻¹(x − t_N))` with `F = χ y₀²/2` a smooth
+  bump profile, quadratic on one simplex `T₀ = t_N + h K_id`: `curl v_N = 0` (`dPiecewise_vN`),
+  `‖v_N‖² ≤ C h` (`exists_sum_formL2Sq_vN_le`: `L∞`-stability of `Π̃¹`, bounded overlap), while
+  on `T₀` the field `S¹ v_N` pulls back to `h Ẑ`, `Ẑ = S¹(0, 0, y₀ dy₀)` not a Raviart–Thomas
+  field (`refZ_notMem`), so `‖(I − Π²) S¹ v_N‖²_{L²(T₀)} = h c₀`, `c₀ > 0` (`formL2Sq_simplex₀`,
+  `refGap_pos`).
+* **`S` and the smoothing** (`smoothForm_wsL2`): `R S u = c S R̃ u` for the smoothing operators of
+  `Feec.Models.Cube.FEM.smoothForm` (extension by zero, mollification, dilation by `c`).
+* **`grad` is injective on `P₂Λ̊⁰ ⊗ ℝ³`** (`eq_zero_of_dPiecewise_tensor_eq_zero`; any family,
+  `eq_zero_of_dPiecewise_eq_zero`), from `ℌ⁰(H̊Λ(Q)) = 0`.
 
 **The canonical interpolants.** The interpolants of the global trimmed families on a mesh simplex
 `T` are the interpolants `Feec.FiniteElement.polyMinusInterp` of `LocalDof` for the lexicographic
 vertex order (`Feec.FiniteElement.PolySeq.localInterp_eq_polyMinusInterp`); the mesh simplices
-are `t + h_N K_σ` with `K_σ` the Kuhn simplices with lexicographically ordered vertices
-(`lexSimplex`, `mesh_simplex_eq_lex`), so the local estimates of
-`Feec.FiniteElement.PolyInterpolation` hold with constants uniform over the `3!` simplices `K_σ`.
+are `t + h_N K_σ` with `K_σ` the Kuhn simplices (`exists_mesh_simplex_eq`), reordered
+lexicographically (`lexSimplex`, `kuhnLex`, `localInterp_lowestOrder_eq`), so the local estimates
+of `Feec.FiniteElement.PolyInterpolation` hold with constants uniform over the `3!` simplices.
 
 ## References
 

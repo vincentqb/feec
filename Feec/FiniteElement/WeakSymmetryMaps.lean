@@ -33,6 +33,26 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
   (`tangentialTraceEq_coordWedgeSum`: the trace of `dxᵢ ∧ vᵢ` only involves the tangential traces
   of `vᵢ`).
 * **Analysis.** `extDeriv_coordWedgeField` (`d S = −S d` pointwise), `contDiff_coordWedgeField`.
+* **`L²` realization.** `wsL2 k : L²(Ω; Λᵏ)ⁿ → L²(Ω; Λᵏ⁺¹)` (bounded, `norm_wsL2_sq_le`:
+  `‖S v‖² ≤ (k + 1) ‖v‖²`, adjoint `wsL2Adj`) maps `D(d_min)ⁿ` into `D(d_min)` and `D(d_max)ⁿ`
+  into `D(d_max)` with `d S = −S d` (`wsL2_mem_minimal`, `wsL2_mem_maximal`); since `S` is a
+  constant-coefficient map, it commutes with mollification (the smoothing form
+  `Feec.Models.Cube.WeakSymmetry.smoothForm_wsL2` lives in `Models`).
+* **Finite element level.** For a polynomial family `S` whose degree-`k` test spaces on
+  `(k + 1)`-faces contain the constant `1`-forms (`PolySeq.ConstOneTest`), the DOFs of the lowest-order family of `S v`
+  are combinations of the DOFs of `v` (`PolySeq.dof_comp_coordWedgeC_mem_span`); this gives
+  `S_h = Π' S` on `Vₕ ⊗ ℝⁿ` (`PolySeq.wsPiecewise`, `PolySeq.wsGlobal`, `PolySeq.wsGlobal₀`:
+  vanishing boundary DOFs are preserved), **Prop 5.7 corrected** `Π' S Π̃ = Π' S`
+  (`PolySeq.localInterp_coordWedgeC_localInterp`, `PolySeq.wsGlobal_tensorInterp`), the
+  **discrete anticommutation** `d S_h = −S_h d` (`PolySeq.dPiecewise_wsPiecewise`), and
+  **`S₀,ₕ` onto `P₁⁻Λ̊¹`** (`PolySeq.wsGlobal₀_surjective`). The interpolants coincide with the
+  `Feec.FiniteElement.LocalDof` interpolants (`PolySeq.localInterp_eq_polyMinusInterp`).
+* **Table 5.1.** `PolySeq.bggS0h`, `PolySeq.bggS1h` (`P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`, `P₂⁻Λ¹ ⊗ ℝⁿ → P₁⁻Λ²`),
+  `PolySeq.bggS0h₀_surjective`, `PolySeq.bggS0h_tensorInterp`, `PolySeq.bggS1h_tensorInterp`,
+  `PolySeq.dGlobal_bggS0h`.
+* **Smoothed pairs.** `Feec.HilbertComplex.Subcomplex.CommutingMap.toCochainProjection_comp_toCochainProjection`:
+  if `Q 𝒮 = c A Q̃` (from `R 𝒮 = c 𝒮 R̃` and Prop 5.7), the smoothed projections satisfy
+  `π 𝒮 π̃ = π 𝒮`, the compatibility `Feec.BGG.Discrete.Compatible`.
 
 ## References
 

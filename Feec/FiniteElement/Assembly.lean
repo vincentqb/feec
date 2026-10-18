@@ -15,7 +15,7 @@ only on `g`, such that
 * the DOFs of the faces of `T` are unisolvent on `P(T)ᵏ`;
 * **trace determination**: on a common facet `F` of `T` and `T'`, forms of `P(T)ᵏ` and `P(T')ᵏ`
   with the same DOFs on the faces of `F` have the same tangential trace on `F`;
-* the DOFs only see tangential traces (`dof_congr`);
+* the DOFs of a face only see the tangential traces on the face (`dof_congr`);
 * **Stokes compatibility**: `ℓ_{g,i} ∘ d` is a combination of the DOFs of the faces of `g`
   (for Whitney forms, Stokes' theorem).
 
@@ -84,10 +84,10 @@ structure LocalElement (n : ℕ) where
       (∀ g ⊆ F, ∀ i, dof g k i ⟨w, (contDiff_of_mem hw).continuous⟩ =
         dof g k i ⟨η, (contDiff_of_mem hη).continuous⟩) →
       ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TangentialTraceEq F k (w x) (η x)
-  /-- the DOFs of the faces of a facet `F` only see tangential traces on `F` -/
-  dof_congr : ∀ {g F : Finset (Fin n → ℝ)} {k} (i : DofIdx g k) {w η : contForms n}, g ⊆ F →
-    (∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)),
-      TangentialTraceEq F k ((w : FormField n) x) ((η : FormField n) x)) →
+  /-- the DOFs of a face `g` only see the tangential traces on `g` -/
+  dof_congr : ∀ {g : Finset (Fin n → ℝ)} {k} (i : DofIdx g k) {w η : contForms n},
+    (∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)),
+      TangentialTraceEq g k ((w : FormField n) x) ((η : FormField n) x)) →
       dof g k i w = dof g k i η
   /-- **Stokes compatibility**: `ℓ_{g,i} ∘ d` is a combination of the DOFs of the faces of `g` -/
   dof_extDeriv : ∀ (g : Finset (Fin n → ℝ)) (k : ℕ) (i : DofIdx g (k + 1)), dof g (k + 1) i ∘ₗ extDerivC1 ∈
@@ -132,6 +132,11 @@ theorem pieceL2_smul (c : 𝕜) {v : Affine.Simplex ℝ (Fin n → ℝ) n → ι
   by_cases hx : x ∈ interior T.closedInterior <;> simp [hx]
 
 end PieceL2
+
+/-- Tangential traces on a facet determine those on its faces. -/
+theorem TangentialTraceEq.mono {g F : Finset (Fin n → ℝ)} {k : ℕ} {α β : Finset (Fin n) → ℝ}
+    (h : TangentialTraceEq F k α β) (hgF : g ⊆ F) : TangentialTraceEq g k α β :=
+  fun V hV => h V fun l => vectorSpan_mono ℝ (Finset.coe_subset.2 hgF) (hV l)
 
 namespace LocalElement
 
@@ -321,7 +326,8 @@ theorem mem_globalSpace_iff (hM : FacetConnected M) {k : ℕ} {u : E.Piecewise M
   | refl => rfl
   | tail _ hstep ih =>
     obtain ⟨F, hF, hgF, h1, h2⟩ := hstep
-    exact (ih (hgF.trans h1)).trans (E.dof_congr i hgF (h F hF _ _ h1 h2))
+    exact (ih (hgF.trans h1)).trans (E.dof_congr i fun x hx =>
+      (h F hF _ _ h1 h2 x (convexHull_mono (Finset.coe_subset.2 hgF) hx)).mono hgF)
 
 /-! ### `d Λ_hᵏ ⊆ Λ_hᵏ⁺¹` -/
 
@@ -655,6 +661,75 @@ instance [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
     (k : ℤ) : FiniteDimensional ℝ ((E.subcomplexMin M hΩ x₀ hstar).V k) :=
   inferInstanceAs (FiniteDimensional ℝ (E.V₀ M k))
+
+/-! ### Injectivity of the gluing and the dimensions of `Vₕᵏ` -/
+
+/-- A local field vanishing on `T` is zero (its DOFs only see traces on the faces of `T`). -/
+theorem localSpace_eq_zero_of_eqOn (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ)
+    (u : E.space T k) (h : ∀ x ∈ T.closedInterior, (u : FormField n) x = 0) : u = 0 :=
+  E.localSpace_ext T k fun g hg i => by
+    rw [map_zero, localDof_apply]
+    have : E.dof g k i ⟨u, E.le_contForms T k u.2⟩ = E.dof g k i 0 :=
+      E.dof_congr i fun x hx V _ => by
+        have hxT : x ∈ T.closedInterior := by
+          rw [← convexHull_vertexSet]
+          exact convexHull_mono (Finset.coe_subset.2 hg) hx
+        simp [h x hxT]
+    rw [this, map_zero]
+
+theorem glue_injective (hΩ : IsOpen M.domain) (k : ℕ) :
+    Function.Injective (E.glue M (k : ℤ)) := by
+  rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+  intro u hu
+  funext T
+  refine E.localSpace_eq_zero_of_eqOn T k (u T) fun x hx => ?_
+  funext s
+  by_cases hs : #s = k
+  swap
+  · exact E.isDeg_of_mem (u T).2 x s hs
+  set s' : formIdx n (k : ℤ) := ⟨s, by rw [hs]⟩
+  set f : (Fin n → ℝ) → ℝ := fun y => ((u T : E.space T k) : FormField n) y s
+  have hf : Continuous f := (continuous_apply s).comp (E.contDiff_of_mem (u T).2).continuous
+  set U := interior (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ∩ M.domain
+  have hU : IsOpen U := isOpen_interior.inter hΩ
+  have hcomp := coeFn_pieceL2 M M.domain (fun T' => formComp (k := (k : ℤ)) (E.extendPW M u T'))
+    (fun T' hT' s => continuous_formComp (E.contDiff_extendPW M u hT').continuous s) s'
+  have h0 : (E.glue M (k : ℤ) u) s' = 0 := by rw [hu]; rfl
+  have hae : f =ᵐ[volume.restrict U] 0 := by
+    have h1 : (fun y => pieceFun M (fun T' => formComp (k := (k : ℤ)) (E.extendPW M u T') s') y)
+        =ᵐ[volume.restrict M.domain] 0 := by
+      refine hcomp.symm.trans ?_
+      have := Lp.coeFn_zero ℝ 2 (volume.restrict M.domain)
+      change ((E.glue M (k : ℤ) u) s' : (Fin n → ℝ) → ℝ) =ᵐ[_] 0
+      rw [h0]
+      exact this
+    have h2 := ae_restrict_of_ae_restrict_of_subset (s := U) Set.inter_subset_right h1
+    filter_upwards [h2, ae_restrict_mem hU.measurableSet] with y hy hyU
+    rw [← hy, pieceFun_of_mem_interior M _ T.2 hyU.1, E.extendPW_of_mem M u T.2]
+    rfl
+  have hEq := Measure.eqOn_open_of_ae_eq hae hU hf.continuousOn continuousOn_const
+  have hcl : T.1.closedInterior ⊆ closure U := by
+    rw [← SimplicialMesh.closure_interior_closedInterior]
+    refine closure_minimal (fun y hy => ?_) isClosed_closure
+    rw [mem_closure_iff]
+    intro V hV hyV
+    have hy' : y ∈ closure M.domain :=
+      M.closedInterior_subset_closure T.2 (interior_subset hy)
+    obtain ⟨z, hz, hzΩ⟩ := mem_closure_iff.1 hy' (V ∩ interior T.1.closedInterior)
+      (hV.inter isOpen_interior) ⟨hyV, hy⟩
+    exact ⟨z, hz.1, hz.2, hzΩ⟩
+  have hclosed : IsClosed {y | f y = 0} := isClosed_eq hf continuous_const
+  exact closure_minimal (fun y hy => hEq hy) hclosed (hcl hx)
+
+/-- **`dim Vₕᵏ = dim Λ_hᵏ(M) = Σ_g #DOF(g)`**: the gluing is injective. -/
+theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
+    Module.finrank ℝ (E.V M k) = Fintype.card (E.GlobalDofIdx M k) := by
+  have hinj : Function.Injective
+      (E.glue M (k : ℤ) ∘ₗ (E.globalSpace M ((k : ℤ).toNat)).subtype) := by
+    rw [LinearMap.coe_comp]
+    exact (E.glue_injective M hΩ k).comp Subtype.val_injective
+  rw [V, LinearMap.finrank_range_of_inj hinj]
+  exact finrank_globalSpace E M k
 
 end LocalElement
 

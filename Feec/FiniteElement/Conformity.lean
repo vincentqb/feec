@@ -54,6 +54,9 @@ and converge to `u` in the graph norm as `s → 1`; `A_min` is closed.
   (`ν · u` continuous: normal trace), `extDerivOp_pieceL2_mem_maximal_domain` (`ν ∧ u`
   continuous), from `symbolApply_gradOp`, `symbolApply_curlOp`, `symbolApply_divOp`,
   `symbolApply_extDerivOp` (`σ_d(ν) = ν ∧ ·`).
+* Vanishing boundary traces: `gradOp_pieceL2_mem_minimal_domain` (`H¹₀`),
+  `divOp_pieceL2_mem_minimal_domain` (`H₀(div)`), `curlOp_pieceL2_mem_minimal_domain`
+  (`H₀(curl)`, `ℝ³`), for strictly star-shaped `Ω`.
 * Real `k`-forms: `extDeriv_pieceL2_mem_maximal_domain` and `extDeriv_pieceL2_mem_minimal_domain`
   (continuous resp. vanishing tangential traces), with `d_max` the elementwise classical exterior
   derivative `Feec.FiniteElement.extDeriv` (`extDerivOp_apply_formComp`), via
@@ -1401,6 +1404,86 @@ theorem pieceL2_mem_minimal_domain_of_convex [NeZero n] [Fintype κ]
   rw [hΩ.interior_eq] at h
   convert h using 1
   rw [smul_sub, sub_smul, one_smul]; abel
+
+/-! ### Instances with vanishing boundary traces: `H¹₀`, `H₀(div)`, `H₀(curl)` -/
+
+/-- **`H¹₀`-conformity** (Lagrange elements with zero boundary values, `Ω` strictly
+star-shaped): piecewise `C¹` fields continuous across the interior facets and vanishing on the
+boundary facets lie in `D(grad_min(Ω))`, with the elementwise gradient. -/
+theorem gradOp_pieceL2_mem_minimal_domain [NeZero n] {m : ℕ} (M : SimplicialMesh n)
+    (hΩ : IsOpen M.domain) {u : Affine.Simplex ℝ (Fin n → ℝ) n → Fin m → (Fin n → ℝ) → 𝕜}
+    (hu : ∀ T ∈ M.simplices, ∀ i, ContDiff ℝ 1 (u T i))
+    (hcont : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F,
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), ∀ i, u T i x = u T' i x)
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F,
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), ∀ i, u T i x = 0)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    ∃ h : pieceL2 M M.domain u (fun T hT i => (hu T hT i).continuous) ∈
+        ((gradOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).minimal M.domain).domain,
+      (gradOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).minimal M.domain ⟨_, h⟩ =
+        pieceL2 M M.domain (fun T => (gradOp n m).apply (u T))
+          (fun T hT j => (gradOp n m).continuous_apply gradOp_isOrderLE (hu T hT) j) :=
+  pieceL2_mem_minimal_domain _ gradOp_isOrderLE M hΩ hu
+    (fun F hF T hT T' hT' _ _ x hx => funext fun ij => by
+      rw [symbolApply_gradOp, symbolApply_gradOp, hcont F hF T hT T' hT' x hx])
+    (fun F hF T hT _ _ x hx => funext fun ij => by
+      rw [symbolApply_gradOp, hbd F hF T hT x hx, mul_zero]; rfl)
+    x₀ hstar
+
+/-- **`H₀(div)`-conformity** (Raviart–Thomas elements with zero boundary flux, `Ω` strictly
+star-shaped): piecewise `C¹` (row-wise) vector fields whose normal components agree across the
+interior facets and vanish on the boundary facets lie in `D(div_min(Ω))`. -/
+theorem divOp_pieceL2_mem_minimal_domain [NeZero n] {m : ℕ} (M : SimplicialMesh n)
+    (hΩ : IsOpen M.domain)
+    {u : Affine.Simplex ℝ (Fin n → ℝ) n → Fin m × Fin n → (Fin n → ℝ) → 𝕜}
+    (hu : ∀ T ∈ M.simplices, ∀ i, ContDiff ℝ 1 (u T i))
+    (hnormal : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F, ∀ ν,
+      IsFaceNormal F ν → ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), ∀ i,
+        ∑ j, (ν j : 𝕜) * u T (i, j) x = ∑ j, (ν j : 𝕜) * u T' (i, j) x)
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F, ∀ ν, IsFaceNormal F ν →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), ∀ i, ∑ j, (ν j : 𝕜) * u T (i, j) x = 0)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    ∃ h : pieceL2 M M.domain u (fun T hT i => (hu T hT i).continuous) ∈
+        ((divOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).minimal M.domain).domain,
+      (divOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).minimal M.domain ⟨_, h⟩ =
+        pieceL2 M M.domain (fun T => (divOp n m).apply (u T))
+          (fun T hT j => (divOp n m).continuous_apply divOp_isOrderLE (hu T hT) j) :=
+  pieceL2_mem_minimal_domain _ divOp_isOrderLE M hΩ hu
+    (fun F hF T hT T' hT' ν hν x hx => funext fun i => by
+      rw [symbolApply_divOp, symbolApply_divOp, hnormal F hF T hT T' hT' ν hν x hx])
+    (fun F hF T hT ν hν x hx => funext fun i => by
+      rw [symbolApply_divOp, hbd F hF T hT ν hν x hx i]; rfl)
+    x₀ hstar
+
+/-- **`H₀(curl)`-conformity** (Nédélec elements with zero boundary tangential trace, `ℝ³`, `Ω`
+strictly star-shaped): piecewise `C¹` (row-wise) vector fields whose tangential traces `ν × u`
+agree across the interior facets and vanish on the boundary facets lie in `D(curl_min(Ω))`. -/
+theorem curlOp_pieceL2_mem_minimal_domain {m : ℕ} (M : SimplicialMesh 3)
+    (hΩ : IsOpen M.domain)
+    {u : Affine.Simplex ℝ (Fin 3 → ℝ) 3 → Fin m × Fin 3 → (Fin 3 → ℝ) → 𝕜}
+    (hu : ∀ T ∈ M.simplices, ∀ i, ContDiff ℝ 1 (u T i))
+    (htan : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F, ∀ ν,
+      IsFaceNormal F ν → ∀ x ∈ convexHull ℝ (F : Set (Fin 3 → ℝ)), ∀ i,
+        (fun l => (ν l : 𝕜)) ⨯₃ (fun l => u T (i, l) x) =
+          (fun l => (ν l : 𝕜)) ⨯₃ (fun l => u T' (i, l) x))
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F, ∀ ν, IsFaceNormal F ν →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin 3 → ℝ)), ∀ i,
+        (fun l => (ν l : 𝕜)) ⨯₃ (fun l => u T (i, l) x) = 0)
+    (x₀ : Fin 3 → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    ∃ h : pieceL2 M M.domain u (fun T hT i => (hu T hT i).continuous) ∈
+        ((curlOp m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimal M.domain).domain,
+      (curlOp m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimal M.domain ⟨_, h⟩ =
+        pieceL2 M M.domain (fun T => (curlOp m).apply (u T))
+          (fun T hT j => (curlOp m).continuous_apply curlOp_isOrderLE (hu T hT) j) :=
+  pieceL2_mem_minimal_domain _ curlOp_isOrderLE M hΩ hu
+    (fun F hF T hT T' hT' ν hν x hx => funext fun ik => by
+      rw [symbolApply_curlOp, symbolApply_curlOp, htan F hF T hT T' hT' ν hν x hx])
+    (fun F hF T hT ν hν x hx => funext fun ik => by
+      rw [symbolApply_curlOp, hbd F hF T hT ν hν x hx ik.1]; rfl)
+    x₀ hstar
 
 end Feec.FiniteElement
 

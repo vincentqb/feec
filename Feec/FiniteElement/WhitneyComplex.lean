@@ -45,6 +45,9 @@ therefore a Whitney form of the facet, determined by the DOFs of the faces of th
   family.
 * `finrank_whitney_globalSpace`, `finrank_whitney_V`, `finrank_whitneySubcomplex_V`,
   `finrank_freudenthalWhitneySubcomplex_V`: **`dim = #{k-faces}`**.
+* `finrank_whitney_globalSpace₀`, `finrank_whitney_V₀`, `finrank_whitneySubcomplexMin_V`,
+  `finrank_freudenthalWhitneySubcomplexMin_V`: with vanishing boundary DOFs,
+  **`dim = #{k-faces not contained in a boundary facet}`**.
 * `mem_whitney_globalSpace_iff`: the global space is the space of piecewise Whitney forms with
   continuous tangential traces (facet-connected stars).
 * `whitney_globalSpace_zero_continuous` (`k = 0`, Lagrange: continuity) and
@@ -524,6 +527,30 @@ theorem finrank_whitney_V (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : �
     Module.finrank ℝ ((whitneyElement n).V M k) = (M.faces k).ncard := by
   rw [LocalElement.finrank_V _ M hΩ, card_globalDofIdx_whitneyElement]
 
+theorem card_interiorDofIdx_whitneyElement (M : SimplicialMesh n) (k : ℕ) :
+    Fintype.card ((whitneyElement n).InteriorDofIdx M k) =
+      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard := by
+  rw [← Nat.card_eq_fintype_card, ← Nat.card_coe_set_eq]
+  refine Nat.card_congr
+    { toFun := fun p => ⟨p.1.1.1, ⟨p.1.2.2, (LocalElement.mem_meshFaces M).1 p.1.1.2⟩, p.2⟩
+      invFun := fun g => ⟨⟨⟨g.1, (LocalElement.mem_meshFaces M).2 g.2.1.2⟩, ⟨(), g.2.1.1⟩⟩,
+        g.2.2⟩
+      left_inv := fun _ => rfl
+      right_inv := fun _ => rfl }
+
+/-- **`dim Λ̊_hᵏ(M) = #{k-faces of M not contained in a boundary facet}`** for the Whitney
+complex with vanishing boundary DOFs. -/
+theorem finrank_whitney_globalSpace₀ (M : SimplicialMesh n) (k : ℕ) :
+    Module.finrank ℝ ((whitneyElement n).globalSpace₀ M k) =
+      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard := by
+  rw [LocalElement.finrank_globalSpace₀, card_interiorDofIdx_whitneyElement]
+
+/-- **`dim V̊ₕᵏ = #{k-faces of M not contained in a boundary facet}`**. -/
+theorem finrank_whitney_V₀ (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℕ) :
+    Module.finrank ℝ ((whitneyElement n).V₀ M k) =
+      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard := by
+  rw [LocalElement.finrank_V₀ _ M hΩ, card_interiorDofIdx_whitneyElement]
+
 instance (k : ℕ) : IsEmpty (WhitneyDofIdx (∅ : Finset (Fin n → ℝ)) k) :=
   ⟨fun i => by have := i.2; simp at this⟩
 
@@ -593,6 +620,13 @@ instance [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (x₀ : Fin n
     (k : ℤ) : FiniteDimensional ℝ ((whitneySubcomplexMin M hΩ x₀ hstar).V k) :=
   inferInstanceAs (FiniteDimensional ℝ ((whitneyElement n).V₀ M k))
 
+theorem finrank_whitneySubcomplexMin_V [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
+    (k : ℕ) : Module.finrank ℝ ((whitneySubcomplexMin M hΩ x₀ hstar).V k) =
+      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard :=
+  finrank_whitney_V₀ M hΩ k
+
 /-- A convex open set is strictly star-shaped with respect to each of its points. -/
 theorem add_smul_sub_mem_of_convex {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (hconv : Convex ℝ Ω) {x₀ : Fin n → ℝ}
     (hx₀ : x₀ ∈ Ω) : ∀ x ∈ closure Ω, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ Ω := by
@@ -643,5 +677,12 @@ def freudenthalWhitneySubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs
   whitneySubcomplexMin (freudenthalMesh b s hs N) (isOpen_freudenthalMesh_domain b s hs N) _
     (add_smul_sub_mem_of_convex (isOpen_freudenthalMesh_domain b s hs N)
       (convex_freudenthalMesh_domain b s hs N) (center_mem_freudenthalMesh_domain b s hs N))
+
+theorem finrank_freudenthalWhitneySubcomplexMin_V [NeZero n] (b : Fin n → ℝ) (s : ℝ)
+    (hs : 0 < s) (N : ℕ) [NeZero N] (k : ℕ) :
+    Module.finrank ℝ ((freudenthalWhitneySubcomplexMin b s hs N).V k) =
+      {g | g ∈ (freudenthalMesh b s hs N).faces k ∧
+        ¬ ∃ F, (freudenthalMesh b s hs N).IsBoundaryFacet F ∧ g ⊆ F}.ncard :=
+  finrank_whitneySubcomplexMin_V _ _ _ _ k
 
 end Feec.FiniteElement

@@ -25,7 +25,9 @@ Then
 
 * `Λ_hᵏ(M)` is finite-dimensional of dimension `Σ_g #DOF(g)` (`finrank_globalSpace`), the global
   DOFs being a linear isomorphism (`globalDofEquiv`); the gluing into `L²(Ω; Λᵏ)` is injective
-  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension (`finrank_V`);
+  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension (`finrank_V`); with
+  vanishing boundary DOFs, the dimension is the number of interior DOFs, those of the faces not
+  contained in a boundary facet (`interiorDofEquiv`, `finrank_globalSpace₀`, `finrank_V₀`);
 * `Λ_hᵏ(M) ⊆ {piecewise fields with continuous tangential traces}`
   (`tangentialTraceEq_of_mem_globalSpace`), with equality when the faces of `M` have facet-connected
   stars (`mem_globalSpace_iff`); the hypothesis is needed (two triangles sharing only a vertex);
@@ -34,7 +36,8 @@ Then
   (`LocalElement.subcomplex`), and the global spaces with vanishing boundary DOFs form a subcomplex
   of the minimal complex `H̊Λ(Ω)` (`LocalElement.subcomplexMin`, `Ω` strictly star-shaped);
 * the local and global canonical interpolants `Π_T`, `Π_h` (`localInterp`, `globalInterp`) are
-  projections commuting with `d` on `C¹` forms (`localInterp_extDeriv`, `globalInterp_extDeriv`);
+  projections (`localInterp_inclusion`, `globalInterp_eq_of_eqOn`) commuting with `d` on `C¹`
+  forms (`localInterp_extDeriv`, `globalInterp_extDeriv`);
 * the cases `k = 0` (continuity across facets, `tangentialTraceEq_zero_iff`) and `k = n` (no
   interface condition, `tangentialTraceEq_top`).
 
@@ -450,13 +453,28 @@ theorem localDof_globalInterp (k : ℕ) (w : contForms n) (T : M.simplices) (g :
   (E.unisolvent (T : Affine.Simplex ℝ (Fin n → ℝ) n) k).dof_equiv_symm
     (fun p => E.dof p.1 k p.2 w) ⟨⟨g, mem_powerset.2 hg⟩, i⟩
 
-/-- **`Π_h` is a projection onto `Λ_hᵏ(M)`.** -/
+/-- **`Π_h` is determined by the DOFs**: `Π_h w = u` when the DOFs of `w` are those of `u`
+(see `globalInterp_eq_of_eqOn` for the projection property). -/
 theorem globalInterp_piecewise (k : ℕ) (u : E.globalSpace M k) (w : contForms n)
     (hw : ∀ T : M.simplices, ∀ g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n), ∀ i,
       E.dof g k i w = E.localDof T k g i ((u : E.Piecewise M k) T)) :
     E.globalInterp M k w = u :=
   Subtype.ext (funext fun T => E.localSpace_ext T k fun g hg i => by
     rw [localDof_globalInterp _ _ _ _ _ _ hg, hw T g hg i])
+
+/-- **`Π_h` is a projection onto `Λ_hᵏ(M)`**: if a continuous form `w` coincides with `u_T` on
+every closed element `T` (e.g. a continuous piecewise field for `k = 0`), then `Π_h w = u`. -/
+theorem globalInterp_eq_of_eqOn (k : ℕ) (u : E.globalSpace M k) (w : contForms n)
+    (hw : ∀ T : M.simplices, ∀ x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+      (w : FormField n) x = (((u : E.Piecewise M k) T : E.space T k) : FormField n) x) :
+    E.globalInterp M k w = u :=
+  E.globalInterp_piecewise M k u w fun T g hg i => by
+    rw [localDof_apply]
+    refine E.dof_congr i fun x hx V _ => ?_
+    have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior := by
+      rw [← convexHull_vertexSet]
+      exact convexHull_mono (Finset.coe_subset.2 hg) hx
+    rw [hw T x hxT]
 
 /-- **The global canonical interpolant commutes with `d`** on `C¹` forms:
 `Π_h (dw) = d (Π_h w)`. -/
@@ -764,6 +782,76 @@ theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
     exact (E.glue_injective M hΩ k).comp Subtype.val_injective
   rw [V, LinearMap.finrank_range_of_inj hinj]
   exact finrank_globalSpace E M k
+
+/-! ### The dimension of the spaces with vanishing boundary DOFs -/
+
+/-- A global DOF is a **boundary DOF** if its face lies in a boundary facet. -/
+def IsBoundaryDof {k : ℕ} (p : E.GlobalDofIdx M k) : Prop :=
+  ∃ F, M.IsBoundaryFacet F ∧ (p.1 : Finset (Fin n → ℝ)) ⊆ F
+
+/-- The **interior DOFs**: the global DOFs of the faces not contained in a boundary facet. -/
+abbrev InteriorDofIdx (k : ℕ) := {p : E.GlobalDofIdx M k // ¬ E.IsBoundaryDof M p}
+
+instance (k : ℕ) : Fintype (E.InteriorDofIdx M k) := Fintype.ofFinite _
+
+/-- `u ∈ Λ̊_hᵏ(M)` iff the boundary global DOFs of `u` vanish. -/
+theorem mem_globalSpace₀_iff {k : ℕ} (u : E.globalSpace M k) :
+    (u : E.Piecewise M k) ∈ E.globalSpace₀ M k ↔
+      ∀ p, E.IsBoundaryDof M p → E.globalDof M k u p = 0 := by
+  constructor
+  · rintro hu p ⟨F, hF, hpF⟩
+    obtain ⟨T, hT, hFT⟩ := hF.1.2
+    rw [E.globalDof_apply M k u p ⟨T, hT⟩ (hpF.trans hFT)]
+    exact hu.2 ⟨T, hT⟩ F hF hFT _ hpF p.2
+  · intro hu
+    refine ⟨u.2, fun T F hF hFT g hg i => ?_⟩
+    rw [← E.globalDof_apply M k u ⟨⟨g, (mem_meshFaces M).2 ⟨T, T.2, hg.trans hFT⟩⟩, i⟩ T
+      (hg.trans hFT)]
+    exact hu _ ⟨F, hF, hg⟩
+
+/-- The interior global DOFs on `Λ̊_hᵏ(M)`. -/
+def interiorDof (k : ℕ) : E.globalSpace₀ M k →ₗ[ℝ] (E.InteriorDofIdx M k → ℝ) :=
+  LinearMap.funLeft ℝ ℝ Subtype.val ∘ₗ E.globalDof M k ∘ₗ
+    Submodule.inclusion (E.globalSpace₀_le M k)
+
+/-- **The interior global DOFs are a linear isomorphism** `Λ̊_hᵏ(M) ≃ ℝ^{interior DOFs}`. -/
+def interiorDofEquiv (k : ℕ) : E.globalSpace₀ M k ≃ₗ[ℝ] (E.InteriorDofIdx M k → ℝ) := by
+  classical
+  refine LinearEquiv.ofBijective (E.interiorDof M k) ⟨fun u v huv => ?_, fun c => ?_⟩
+  · set u' := Submodule.inclusion (E.globalSpace₀_le M k) u
+    set v' := Submodule.inclusion (E.globalSpace₀_le M k) v
+    have hu := (E.mem_globalSpace₀_iff M u').1 u.2
+    have hv := (E.mem_globalSpace₀_iff M v').1 v.2
+    have : E.globalDof M k u' = E.globalDof M k v' := funext fun p => by
+      by_cases hp : E.IsBoundaryDof M p
+      · rw [hu p hp, hv p hp]
+      · exact congr_fun huv ⟨p, hp⟩
+    exact Submodule.inclusion_injective _ ((E.globalDofEquiv M k).injective this)
+  · set c' : E.GlobalDofIdx M k → ℝ := fun p => if hp : E.IsBoundaryDof M p then 0 else c ⟨p, hp⟩
+    have hc' : ∀ p, E.globalDof M k ⟨_, E.ofGlobalDof_mem M k c'⟩ p = c' p := fun p => by
+      rw [E.globalDof_apply M k _ p (faceSimplex M p.1) (subset_faceSimplex M p.1)]
+      exact localDof_ofGlobalDof _ _ _ _ _ _ (subset_faceSimplex M p.1) _
+    have hmem : E.ofGlobalDof M k c' ∈ E.globalSpace₀ M k :=
+      (E.mem_globalSpace₀_iff M ⟨_, E.ofGlobalDof_mem M k c'⟩).2 fun p hp => by
+        rw [hc']; simp [c', hp]
+    refine ⟨⟨_, hmem⟩, funext fun p => ?_⟩
+    change E.globalDof M k ⟨_, E.ofGlobalDof_mem M k c'⟩ p.1 = c p
+    rw [hc']; simp [c', p.2]
+
+/-- **`dim Λ̊_hᵏ(M) = #{interior DOFs}`**. -/
+theorem finrank_globalSpace₀ (k : ℕ) :
+    Module.finrank ℝ (E.globalSpace₀ M k) = Fintype.card (E.InteriorDofIdx M k) := by
+  rw [(E.interiorDofEquiv M k).finrank_eq, Module.finrank_fintype_fun_eq_card]
+
+/-- **`dim V̊ₕᵏ = dim Λ̊_hᵏ(M) = #{interior DOFs}`**. -/
+theorem finrank_V₀ (hΩ : IsOpen M.domain) (k : ℕ) :
+    Module.finrank ℝ (E.V₀ M k) = Fintype.card (E.InteriorDofIdx M k) := by
+  have hinj : Function.Injective
+      (E.glue M (k : ℤ) ∘ₗ (E.globalSpace₀ M ((k : ℤ).toNat)).subtype) := by
+    rw [LinearMap.coe_comp]
+    exact (E.glue_injective M hΩ k).comp Subtype.val_injective
+  rw [V₀, LinearMap.finrank_range_of_inj hinj]
+  exact finrank_globalSpace₀ E M k
 
 end LocalElement
 

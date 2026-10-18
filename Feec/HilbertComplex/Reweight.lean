@@ -389,7 +389,14 @@ variable {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection
 
 /-- **Reducing subcomplexes transport to the conjugated complex**: if `S` is a reducing
 subcomplex of `H` and the weights map `S i` into `S' i` and `(S i)ᗮ` into `(S' i)ᗮ`, then `S'`
-is a reducing subcomplex of `H.conj a`. -/
+is a reducing subcomplex of `H.conj a`.
+
+Since `a i` is bijective and `W i = S i ⊕ (S i)ᗮ`, the hypotheses force `a i (S i) = S' i` and
+`a i (S i)ᗮ = (S' i)ᗮ`: the weights must carry the orthogonal splitting to an orthogonal
+splitting (e.g. unitary weights, or weights commuting with the projections). For general weights
+`a i S i` is only invariant along the oblique splitting `a i S i ⊕ a i (S i)ᗮ`; the weighted Gauss
+laws of a medium (`Maxwell.Medium.gauss`) are therefore obtained from the `divFreeSub` of the
+conjugated complex itself rather than from this lemma. -/
 theorem conj (h : H.ReducingSubcomplex S) (hS : ∀ i, (S i).map (a i : W i →ₗ[𝕜] W' i) ≤ S' i)
     (hSo : ∀ i, (S i)ᗮ.map (a i : W i →ₗ[𝕜] W' i) ≤ (S' i)ᗮ) :
     (H.conj a).ReducingSubcomplex S' := by

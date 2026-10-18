@@ -8,7 +8,8 @@ public import Feec.Physics.Maxwell.Constraints
 
 A linear, possibly anisotropic and inhomogeneous medium has a permittivity `ε` and a permeability
 `μ`: bounded, self-adjoint, uniformly positive operators on the electric and magnetic `L²`
-spaces (e.g. multiplication by measurable matrix fields with `λ ≤ ε(x), μ(x) ≤ Λ`). Maxwell's
+spaces (e.g. multiplication by measurable scalar or Hermitian matrix fields with
+`λ ≤ ε(x), μ(x) ≤ Λ`, `Feec.Physics.Maxwell.Coefficients`). Maxwell's
 equations in the medium read
 
   `ε E' = ε dσ − d† H`,  `μ H' = d E`,  `σ' = −d† (ε E)`
@@ -470,8 +471,8 @@ end Medium
 /-! ### Every medium has weights (over `ℂ`) -/
 
 /-- **Every linear medium is a `Maxwell.Medium`** (over `ℂ`): bounded, self-adjoint, uniformly
-positive `ε`, `μ` (e.g. multiplication by measurable matrix fields with
-`λ ≤ ε(x), μ(x) ≤ Λ`) have the factors `e = ε^{1/2}`, `m = μ^{1/2}`. -/
+positive `ε`, `μ` (e.g. multiplication by measurable Hermitian matrix fields with
+`λ ≤ ε(x), μ(x) ≤ Λ`, `Maxwell.Medium.exists_anisotropic`) have the factors `e = ε^{1/2}`, `m = μ^{1/2}`. -/
 theorem Medium.exists_eq {W₁ W₂ : Type*} [NormedAddCommGroup W₁] [InnerProductSpace ℂ W₁]
     [CompleteSpace W₁] [NormedAddCommGroup W₂] [InnerProductSpace ℂ W₂] [CompleteSpace W₂]
     {ε : W₁ →L[ℂ] W₁} {μ : W₂ →L[ℂ] W₂} (hε : IsSelfAdjoint ε) (hμ : IsSelfAdjoint μ)

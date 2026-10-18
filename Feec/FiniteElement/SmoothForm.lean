@@ -649,6 +649,20 @@ theorem extDeriv_smul_const_apply (c : ℝ) {ω : FormField n} {x : Fin n → �
   simp only [smul_eq_mul] at this
   rw [this]; ring
 
+theorem extDeriv_sum_apply {β : Type*} (u : Finset β) {ω : β → FormField n} {x : Fin n → ℝ}
+    (hω : ∀ b ∈ u, DifferentiableAt ℝ (ω b) x) :
+    extDeriv (∑ b ∈ u, ω b) x = ∑ b ∈ u, extDeriv (ω b) x := by
+  classical
+  induction u using Finset.induction_on with
+  | empty =>
+    simp only [Finset.sum_empty]
+    exact congrFun (extDeriv_const 0) x
+  | insert a u ha ih =>
+    rw [Finset.sum_insert ha, Finset.sum_insert ha,
+      extDeriv_add_apply (hω a (Finset.mem_insert_self a u))
+        (DifferentiableAt.sum fun b hb => hω b (Finset.mem_insert_of_mem hb)),
+      ih fun b hb => hω b (Finset.mem_insert_of_mem hb)]
+
 /-- **`d ∘ d = 0`** at every point where the form is `C²`. -/
 theorem extDeriv_extDeriv_apply {ω : FormField n} {x : Fin n → ℝ} (hω : ContDiffAt ℝ 2 ω x) :
     extDeriv (extDeriv ω) x = 0 := by

@@ -63,10 +63,6 @@ theorem transposeMat_conj {n : ℕ} :
   simp only [transposeMat, apply_ite (starRingEnd 𝕜), map_one, map_zero]
   exact if_congr ⟨fun h => by rw [h], fun h => by rw [h]⟩ rfl rfl
 
-theorem symMat_conj {n : ℕ} : (fun j j' => conj (symMat n j' j : 𝕜)) = symMat n := by
-  funext ij kl
-  exact ((isProjMat_symMat (𝕜 := 𝕜) (n := n)).selfAdj kl ij).symm
-
 /-! ## The operators -/
 
 /-- The symmetric gradient `𝕜³ → 𝕜^{3×3}`, `ε(u) = sym grad u`. -/
@@ -113,7 +109,8 @@ theorem incOp_apply_eq {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hf : �
       fderiv ℝ (fun y => fderiv ℝ (f (l + 2, j + 2)) y (coordDir (j + 1))) x (coordDir (l + 1)) -
       fderiv ℝ (fun y => fderiv ℝ (f (l + 2, j + 1)) y (coordDir (j + 2))) x (coordDir (l + 1)) -
       fderiv ℝ (fun y => fderiv ℝ (f (l + 1, j + 2)) y (coordDir (j + 1))) x (coordDir (l + 2)) +
-      fderiv ℝ (fun y => fderiv ℝ (f (l + 1, j + 1)) y (coordDir (j + 2))) x (coordDir (l + 2)) := by
+      fderiv ℝ (fun y => fderiv ℝ (f (l + 1, j + 1)) y (coordDir (j + 2))) x
+        (coordDir (l + 2)) := by
   have hc : ∀ ik : Fin 3 × Fin 3, (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f ik =
       fun y => fderiv ℝ (f (ik.1, ik.2 + 2)) y (coordDir (ik.2 + 1)) -
         fderiv ℝ (f (ik.1, ik.2 + 1)) y (coordDir (ik.2 + 2)) :=
@@ -191,7 +188,7 @@ theorem isComplexPair_inc_divSym :
 theorem symGradOp_formalAdj :
     (symGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj =
       (gradOp 3 3).formalAdj.preComp (symMat 3) := by
-  rw [symGradOp, formalAdj_postComp, symMat_conj (𝕜 := 𝕜)]
+  rw [symGradOp, formalAdj_postComp, symMat_conjTranspose (𝕜 := 𝕜)]
 
 /-- `(sym grad)ᵗ = -div ∘ sym`. -/
 theorem symGradOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
@@ -224,10 +221,7 @@ theorem incOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
 theorem divSymOp_formalAdj :
     (divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj =
       (divOp 3 3).formalAdj.postComp (symMat 3) := by
-  rw [divSymOp, formalAdj_preComp]
-  congr 1
-  funext ij kl
-  exact ((isProjMat_symMat (𝕜 := 𝕜) (n := 3)).selfAdj kl ij).symm
+  rw [divSymOp, formalAdj_preComp, symMat_conjTranspose (𝕜 := 𝕜)]
 
 /-- **`divᵗ = -sym grad`.** -/
 theorem divSymOp_formalAdj_apply (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
@@ -396,16 +390,6 @@ variable {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω)
 
 /-! ### The realizations -/
 
-/-- The embedding `L²(Ω; Sym) ↪ L²(Ω; 𝕜^{3×3})`. -/
-abbrev symEmb (𝕜 : Type*) [RCLike 𝕜] (Ω : Set (Fin 3 → ℝ)) :
-    L2F.symSubmodule 𝕜 Ω 3 →ₗᵢ[𝕜] L2F 𝕜 Ω (Fin 3 × Fin 3) :=
-  (L2F.symSubmodule 𝕜 Ω 3).subtypeₗᵢ
-
-/-- The (unconstrained) embedding `L2F.matSubmodule 1 = L²(Ω; 𝕜^ι) ↪ L²(Ω; 𝕜^ι)`. -/
-abbrev freeEmb (𝕜 : Type*) [RCLike 𝕜] (Ω : Set (Fin 3 → ℝ)) (ι : Type) [Fintype ι]
-    [DecidableEq ι] : L2F.matSubmodule 𝕜 Ω (idMat ι) →ₗᵢ[𝕜] L2F 𝕜 Ω ι :=
-  (L2F.matSubmodule 𝕜 Ω (idMat ι)).subtypeₗᵢ
-
 theorem elasticityComplex_V_one : (elasticityComplex 𝕜 hΩ).V 1 = L2F.symSubmodule 𝕜 Ω 3 := rfl
 
 theorem elasticityComplex_V_two : (elasticityComplex 𝕜 hΩ).V 2 = L2F.symSubmodule 𝕜 Ω 3 := rfl
@@ -419,25 +403,26 @@ theorem elasticityComplex_V_three : (elasticityComplex 𝕜 hΩ).V 3 = ⊤ :=
 /-- `d₀ = (sym grad)_min`: `H̊¹(Ω; 𝕜³) → L²(Ω; Sym)`. -/
 theorem elasticity_minimalComplex_d₀ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.d 0 1 =
-      symGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω) :=
+      symGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) :=
   (elasticityComplex 𝕜 hΩ).minimalComplex_d 0
 
 /-- `d₁ = inc_min` on symmetric fields: `H̊(inc, Sym) → L²(Ω; Sym)`. -/
 theorem elasticity_minimalComplex_d₁ :
-    (elasticityComplex 𝕜 hΩ).minimalComplex.d 1 2 = incOp.minimalVia (symEmb 𝕜 Ω) (symEmb 𝕜 Ω) :=
+    (elasticityComplex 𝕜 hΩ).minimalComplex.d 1 2 =
+      incOp.minimalVia (symEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3) :=
   (elasticityComplex 𝕜 hΩ).minimalComplex_d 1
 
 theorem elasticity_minimalComplex_d₂ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.d 2 3 =
-      divSymOp.minimalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) :=
+      divSymOp.minimalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) :=
   (elasticityComplex 𝕜 hΩ).minimalComplex_d 2
 
 include hΩ in
 /-- On symmetric fields `div ∘ sym` and `div` have the same realization: `d₂ = div_min`,
 `H̊(div, Sym) → L²(Ω; 𝕜³)`. -/
 theorem divSymOp_minimalVia :
-    (divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) =
-      (divOp 3 3).minimalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) := by
+    (divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) =
+      (divOp 3 3).minimalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
   refine minimalVia_congr _ _ _ fun φ hφ x hx => ?_
   have hmem : testField hφ ∈ L2F.symSubmodule 𝕜 Ω 3 := by rw [← hx]; exact x.2
   rw [(divOp 3 3).testField_apply_congr hΩ hφ (hφ.matMulField (symMat 3))
@@ -446,52 +431,45 @@ theorem divSymOp_minimalVia :
 
 theorem elasticity_maximalComplex_d₀ :
     ((elasticityComplex 𝕜 hΩ).maximalComplex hΩ).d 0 1 =
-      symGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω) :=
+      symGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) :=
   (elasticityComplex 𝕜 hΩ).maximalComplex_d hΩ 0
 
 theorem elasticity_maximalComplex_d₁ :
     ((elasticityComplex 𝕜 hΩ).maximalComplex hΩ).d 1 2 =
-      incOp.maximalVia (symEmb 𝕜 Ω) (symEmb 𝕜 Ω) :=
+      incOp.maximalVia (symEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3) :=
   (elasticityComplex 𝕜 hΩ).maximalComplex_d hΩ 1
 
 theorem elasticity_maximalComplex_d₂ :
     ((elasticityComplex 𝕜 hΩ).maximalComplex hΩ).d 2 3 =
-      divSymOp.maximalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) :=
+      divSymOp.maximalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) :=
   (elasticityComplex 𝕜 hΩ).maximalComplex_d hΩ 2
 
 /-! ### Self-duality -/
 
 include hΩ in
-theorem denseVia_symEmb : DenseVia (symEmb 𝕜 Ω) := L2F.denseVia_matSubmodule hΩ isProjMat_symMat
-
-include hΩ in
-theorem denseVia_freeEmb (ι : Type) [Fintype ι] [DecidableEq ι] : DenseVia (freeEmb 𝕜 Ω ι) :=
-  L2F.denseVia_matSubmodule hΩ isProjMat_idMat
-
-include hΩ in
 theorem adjoint_symGradOp_minimalVia :
     ((symGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (freeEmb 𝕜 Ω (Fin 3))
-      (symEmb 𝕜 Ω))† = -divSymOp.maximalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) := by
+      (symEmb 𝕜 Ω 3))† = -divSymOp.maximalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
   rw [adjoint_minimalVia]
-  refine divSymOp.maximalVia_eq_neg _ _ (denseVia_symEmb hΩ) (denseVia_freeEmb hΩ _)
+  refine divSymOp.maximalVia_eq_neg _ _ (denseVia_symEmb hΩ 3) (denseVia_freeEmb hΩ _)
     (divSymOp_formalAdj_matMapsTo.mapsToVia hΩ) fun ψ hψ _ _ => ?_
   rw [testField_congr _ _ (congrArg (fun A => ConstCoeffOp.apply A ψ)
     (formalAdj_formalAdj (symGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _))),
     testField_apply_eq_neg hψ (divSymOp_formalAdj_apply ψ), neg_neg]
 
 theorem adjoint_incOp_minimalVia :
-    ((incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω) (symEmb 𝕜 Ω))† =
-      incOp.maximalVia (symEmb 𝕜 Ω) (symEmb 𝕜 Ω) := by
+    ((incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3))† =
+      incOp.maximalVia (symEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3) := by
   rw [adjoint_minimalVia]
   refine incOp.maximalVia_congr _ _ fun ψ hψ _ _ => testField_congr _ _ ?_
   rw [formalAdj_formalAdj, incOp_formalAdj_apply fun i => (hψ i).contDiff]
 
 include hΩ in
 theorem adjoint_divSymOp_minimalVia :
-    ((divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω)
-      (freeEmb 𝕜 Ω (Fin 3)))† = -symGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω) := by
+    ((divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω 3)
+      (freeEmb 𝕜 Ω (Fin 3)))† = -symGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) := by
   rw [adjoint_minimalVia]
-  refine symGradOp.maximalVia_eq_neg _ _ (denseVia_freeEmb hΩ _) (denseVia_symEmb hΩ)
+  refine symGradOp.maximalVia_eq_neg _ _ (denseVia_freeEmb hΩ _) (denseVia_symEmb hΩ 3)
     ((matMapsTo_idMat (κ := Fin 3) _ _).mapsToVia hΩ) fun ψ hψ _ _ => ?_
   rw [testField_congr _ _ (congrArg (fun A => ConstCoeffOp.apply A ψ)
     (formalAdj_formalAdj (divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _))),
@@ -500,28 +478,28 @@ theorem adjoint_divSymOp_minimalVia :
 include hΩ in
 theorem adjoint_symGradOp_maximalVia :
     ((symGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (freeEmb 𝕜 Ω (Fin 3))
-      (symEmb 𝕜 Ω))† = -divSymOp.minimalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) := by
-  rw [adjoint_maximalVia _ _ _ (denseVia_freeEmb hΩ _) (denseVia_symEmb hΩ)
+      (symEmb 𝕜 Ω 3))† = -divSymOp.minimalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
+  rw [adjoint_maximalVia _ _ _ (denseVia_freeEmb hΩ _) (denseVia_symEmb hΩ 3)
     ((matMapsTo_idMat (κ := Fin 3) _ _).mapsToVia hΩ)]
   exact divSymOp.minimalVia_eq_neg _ _ (denseVia_freeEmb hΩ _) fun φ hφ _ _ =>
     testField_apply_eq_neg hφ (symGradOp_formalAdj_apply fun i => (hφ i).contDiff)
 
 include hΩ in
 theorem adjoint_incOp_maximalVia :
-    ((incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (symEmb 𝕜 Ω) (symEmb 𝕜 Ω))† =
-      incOp.minimalVia (symEmb 𝕜 Ω) (symEmb 𝕜 Ω) := by
-  rw [adjoint_maximalVia _ _ _ (denseVia_symEmb hΩ) (denseVia_symEmb hΩ)
+    ((incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (symEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3))† =
+      incOp.minimalVia (symEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3) := by
+  rw [adjoint_maximalVia _ _ _ (denseVia_symEmb hΩ 3) (denseVia_symEmb hΩ 3)
     (incOp_formalAdj_matMapsTo.mapsToVia hΩ)]
   exact incOp.minimalVia_congr _ _ fun φ hφ _ _ =>
     testField_congr _ _ (incOp_formalAdj_apply fun i => (hφ i).contDiff)
 
 include hΩ in
 theorem adjoint_divSymOp_maximalVia :
-    ((divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (symEmb 𝕜 Ω)
-      (freeEmb 𝕜 Ω (Fin 3)))† = -symGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω) := by
-  rw [adjoint_maximalVia _ _ _ (denseVia_symEmb hΩ) (denseVia_freeEmb hΩ _)
+    ((divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (symEmb 𝕜 Ω 3)
+      (freeEmb 𝕜 Ω (Fin 3)))† = -symGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) := by
+  rw [adjoint_maximalVia _ _ _ (denseVia_symEmb hΩ 3) (denseVia_freeEmb hΩ _)
     (divSymOp_formalAdj_matMapsTo.mapsToVia hΩ)]
-  exact symGradOp.minimalVia_eq_neg _ _ (denseVia_symEmb hΩ) fun φ hφ _ _ =>
+  exact symGradOp.minimalVia_eq_neg _ _ (denseVia_symEmb hΩ 3) fun φ hφ _ _ =>
     testField_apply_eq_neg hφ (divSymOp_formalAdj_apply φ)
 
 theorem symGradOp_formalAdj_formalAdj_apply_eq (ψ : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
@@ -558,7 +536,7 @@ statements below into the forms `(d_min)† = -d_max` of `adjoint_symGradOp_mini
 realization of `-div` on symmetric fields. -/
 theorem elasticity_dual_minimalComplex_d₀ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.dual.d 1 0 =
-      divSymOp.negOp.maximalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) := by
+      divSymOp.negOp.maximalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
   exact ((elasticityComplex 𝕜 hΩ).dual_minimalComplex_d 0).trans
     (maximalVia_congr _ _ _ fun ψ _ _ _ =>
       testField_congr _ _ (symGradOp_formalAdj_formalAdj_apply_eq ψ))
@@ -576,7 +554,7 @@ theorem elasticity_dual_minimalComplex_d₁ :
 `-sym grad`. -/
 theorem elasticity_dual_minimalComplex_d₂ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.dual.d 3 2 =
-      symGradOp.negOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω) := by
+      symGradOp.negOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) := by
   exact ((elasticityComplex 𝕜 hΩ).dual_minimalComplex_d 2).trans
     (maximalVia_congr _ _ _ fun _ hψ _ _ => testField_congr _ _
       (divSymOp_formalAdj_formalAdj_apply_eq fun i => (hψ i).contDiff))
@@ -585,7 +563,7 @@ theorem elasticity_dual_minimalComplex_d₂ :
 realization of `-div` on symmetric fields. -/
 theorem elasticity_dual_maximalComplex_d₀ :
     ((elasticityComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 1 0 =
-      divSymOp.negOp.minimalVia (symEmb 𝕜 Ω) (freeEmb 𝕜 Ω (Fin 3)) := by
+      divSymOp.negOp.minimalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
   exact ((elasticityComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 0).trans
     (minimalVia_congr _ _ _ fun _ hφ _ _ => testField_congr _ _
       (symGradOp_formalAdj_apply_eq_negOp fun i => (hφ i).contDiff))
@@ -603,7 +581,7 @@ theorem elasticity_dual_maximalComplex_d₁ :
 minimal realization of `-sym grad`. -/
 theorem elasticity_dual_maximalComplex_d₂ :
     ((elasticityComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 3 2 =
-      symGradOp.negOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω) := by
+      symGradOp.negOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) := by
   exact ((elasticityComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 2).trans
     (minimalVia_congr _ _ _ fun φ _ _ _ =>
       testField_congr _ _ (divSymOp_formalAdj_apply_eq_negOp φ))

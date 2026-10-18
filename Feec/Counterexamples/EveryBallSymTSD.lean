@@ -272,7 +272,9 @@ theorem tsd_not_propagates (c : R3) {R : ℝ} (hR : 0 < R) :
   ⟨(witness_ballE c hR).mem_tsd, (witness_ballE c hR).mem_domain, (witness_ballE c hR).mem_K,
     (witness_ballE c hR).not_propagates⟩
 
-/-- **The density hypothesis of Prop 4.19 fails on every ball**: on `{|x - c| < R}` the field
+/-- **The density hypothesis of Prop 4.19 fails on every ball**, read with the boundary condition
+of the printed data space `H̊(sym curl, T)` (as in `BoundedSymTSD.not_dense_hessCurlMax`; the
+printed hypothesis names `H(sym curl, T) ∩ L²(TSD)`): on `{|x - c| < R}` the field
 `curl (E₀ ∘ T) ∈ L²(TSD)` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`, so that
 intersection is not dense in `L²(TSD)`. -/
 theorem not_dense_tsdT (c : R3) {R : ℝ} (hR : 0 < R) :

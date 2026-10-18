@@ -334,6 +334,31 @@ def pull : L2 𝕜 Ω' →L[𝕜] L2 𝕜 Ω :=
 
 theorem pull_apply (f : L2 𝕜 Ω') : pull ha b hΩ' hT f = pullₗ ha b hΩ' hT f := rfl
 
+/-- **Change of variables in pairings with the pull-back**: for `T = aff a b` mapping `Ω` onto
+`Ω'`, `∫_Ω (f ∘ T) (h ∘ T) = |a|^{-n} ∫_{Ω'} f h`. -/
+theorem setIntegral_pull_mul (f : L2 𝕜 Ω') (h : E → 𝕜) :
+    ∫ x in Ω, (pull ha b hΩ' hT f : E → 𝕜) x * h (aff a b x) =
+      (((jac (E := E) a)⁻¹ : ℝ) : 𝕜) * ∫ y in Ω', (f : E → 𝕜) y * h y := by
+  have e1 : ∫ x in Ω, (pull ha b hΩ' hT f : E → 𝕜) x * h (aff a b x) =
+      ∫ x in Ω, (f : E → 𝕜) (aff a b x) * h (aff a b x) := by
+    refine integral_congr_ae ?_
+    filter_upwards [coeFn_pullₗ ha b hΩ' hT f] with x h1
+    rw [pull_apply, h1]
+  rw [e1]
+  subst hT
+  have hmp := measurePreserving_aff_restrict ha b hΩ' (E := E)
+  have e2 := hmp.integral_comp' (f := MeasurableEquiv.mk ⟨aff a b, aff a⁻¹ (-(a⁻¹ • b)),
+    aff_inv ha b, aff_inv' ha b⟩ (continuous_aff a b).measurable (continuous_aff _ _).measurable)
+    (fun y => (f : E → 𝕜) y * h y)
+  rw [integral_smul_measure] at e2
+  have hj : ((ENNReal.ofReal (jac (E := E) a)).toReal) = jac (E := E) a :=
+    ENNReal.toReal_ofReal (jac_pos ha).le
+  rw [hj] at e2
+  have hjne : (jac (E := E) a : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 (jac_pos ha).ne'
+  rw [← e2, RCLike.real_smul_eq_coe_smul (K := 𝕜), smul_eq_mul, RCLike.ofReal_inv, ← mul_assoc,
+    inv_mul_cancel₀ hjne, one_mul]
+  rfl
+
 end Pull
 
 /-- Pulling back along `T` and then along a right inverse `T'` of `T` is the identity. -/

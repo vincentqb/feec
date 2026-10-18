@@ -224,17 +224,18 @@ end Pohozaev
 
 section CurlCurl
 
-theorem pd_fun_sub {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
-    (x : R3) : pd k (fun y => f y - g y) x = pd k f x - pd k g x :=
+private theorem pd_fun_sub {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g)
+    (k : Fin 3) (x : R3) : pd k (fun y => f y - g y) x = pd k f x - pd k g x :=
   pd_sub hf hg k x
 
-theorem sum_fin3_rot (k : Fin 3) (f : Fin 3 → ℝ) : ∑ l, f l = f k + f (k + 1) + f (k + 2) := by
+private theorem sum_fin3_rot (k : Fin 3) (f : Fin 3 → ℝ) :
+    ∑ l, f l = f k + f (k + 1) + f (k + 2) := by
   fin_cases k <;> simp [Fin.sum_univ_three] <;> ring
 
-theorem fin3_add_two_add_one (k : Fin 3) : k + 2 + 1 = k := by fin_cases k <;> rfl
-theorem fin3_add_two_add_two (k : Fin 3) : k + 2 + 2 = k + 1 := by fin_cases k <;> rfl
-theorem fin3_add_one_add_one (k : Fin 3) : k + 1 + 1 = k + 2 := by fin_cases k <;> rfl
-theorem fin3_add_one_add_two (k : Fin 3) : k + 1 + 2 = k := by fin_cases k <;> rfl
+private theorem fin3_add_two_add_one (k : Fin 3) : k + 2 + 1 = k := by fin_cases k <;> rfl
+private theorem fin3_add_two_add_two (k : Fin 3) : k + 2 + 2 = k + 1 := by fin_cases k <;> rfl
+private theorem fin3_add_one_add_one (k : Fin 3) : k + 1 + 1 = k + 2 := by fin_cases k <;> rfl
+private theorem fin3_add_one_add_two (k : Fin 3) : k + 1 + 2 = k := by fin_cases k <;> rfl
 
 variable {V : Ix → R3 → ℝ}
 
@@ -330,7 +331,7 @@ theorem extendL2F_smul {ι : Type*} [Fintype ι] (hΩ : MeasurableSet Ω) (c : �
   · rw [indicator_of_notMem hx, indicator_of_notMem hx, smul_zero]
 
 /-- The kernel convolution commutes with multiplication by a constant. -/
-theorem kconv_const_mul (k : R3 → ℝ) (c : ℝ) (f : R3 → ℝ) :
+private theorem kconv_const_mul (k : R3 → ℝ) (c : ℝ) (f : R3 → ℝ) :
     kconv k (fun x => c * f x) = fun x => c * kconv k f x := by
   funext x
   simp only [kconv_apply]
@@ -467,9 +468,9 @@ variable {Ω : Set R3}
 bounded open `Ω ⊆ ℝ³`, for the thesis' complex `H̊¹ → H̊(curl) → L²` and
 `K = {0} × L²(TSD) × L²(TSD)`, under a complete set of eigenvectors of `L²` (`hD`), `K*`
 contains a non-stationary datum iff there are `ξ > 0` and a nonzero
-`u ∈ L²(TSD) ∩ H̊(curl)` with `curl† curl u = ξ² u` and `curl u ∉ H̊(curl)`; the datum
-`(0, u, 0)` then moves, with magnetic field `(sin ξt / ξ) curl u`. Every TSD eigenfield of
-`gradCurl_coreSub_spectral` has `curl u ∉ H̊(curl)` (`eq_zero_of_isEigenfield_of_mem_minimal`). -/
+`u ∈ L²(TSD) ∩ H̊(curl)` with `curl† curl u = ξ² u` and `curl u ∉ H̊(curl)`. This refines the
+spectral reduction `gradCurl_coreSub_spectral` (whose TSD eigenfields give the non-stationary
+data): every such eigenfield has `curl u ∉ H̊(curl)` (`eq_zero_of_isEigenfield_of_mem_minimal`). -/
 theorem not_coreSub_le_stationary_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hD : (gradCurl ℝ hΩ).EigenDense) :
     ¬ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) ≤ (gradCurl ℝ hΩ).stationary ↔

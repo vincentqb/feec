@@ -23,7 +23,8 @@ equation of the thesis' complex `H̊¹ → H̊(curl) → L²` (`Feec.Models.Boun
 For a finite Hilbert complex `H` (the boundary conditions, e.g. the minimal realization) and a
 complex `H'` with `d ≤ d'` (no boundary conditions, e.g. the maximal realization), the operator
 without boundary conditions is `L_max = 𝐝' − 𝐝†` (`waveMax H H'`), and `L = 𝐝 − 𝐝† ≤ L_max`
-(`wave_le_waveMax`). The boundary values are prescribed by a lifting through
+(`wave_le_waveMax`); existence and uniqueness with a lifting: `existsUnique_hodgeWave`. The
+boundary values are prescribed by a lifting through
 `Feec.Evolution.IsBoundarySolution L_max L`: the essential conditions are those of `𝐝`, while
 `𝐝†` carries none. For the thesis' complex, `L_max (σ, E, B) = (div E, grad σ − curl B, curl E)`
 on `H¹ × (H(curl) ∩ H(div)) × H(curl)`, and `U(t) − G(t) ∈ D(L)` says that `σ` and the tangential
@@ -136,6 +137,26 @@ theorem waveMax_apply {H H' : HilbertComplex 𝕜 c W} (x : (waveMax H H').domai
     (waveMax H H' x) j = ∑ i, H'.d i j ⟨(x : PiLp 2 W) i, x.2.1 i j⟩ -
       ∑ k, (H.d j k)† ⟨(x : PiLp 2 W) k, x.2.2 k j⟩ :=
   congrArg₂ (fun a b => a - b) (H'.totalD_apply ⟨x, x.2.1⟩ j) (H.dual.totalD_apply ⟨x, x.2.2⟩ j)
+
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+
+/-- **The Hodge wave equation with inhomogeneous essential boundary data** (any finite Hilbert
+complex `H` with boundary conditions and `H'` without, `d ≤ d'`): for a lifting `G` (with
+`G' = DG`, `L_max G = AG`), an initial value with `U₀ − G(a) ∈ D(L)` and admissible
+`F − G' + L_max G`, the problem `U' = L_max U + F`, `U − G ∈ D(L)`, `U(a) = U₀` has a solution,
+`U − G` is a classical solution of the homogeneous Hodge wave equation with forcing
+`F − (G' − L_max G)`, and the solution is unique. -/
+theorem existsUnique_hodgeWave {H H' : HilbertComplex 𝕜 c W} (h : ∀ i j, H.d i j ≤ H'.d i j)
+    {F G DG AG : ℝ → PiLp 2 W} {a b : ℝ}
+    (hG : Evolution.IsLifting (waveMax H H') (Set.Icc a b) G DG AG) {U₀ : PiLp 2 W}
+    (hU₀ : U₀ - G a ∈ H.wave.domain)
+    (hF : Evolution.ForcingClass.admissible H.wave a b (F - DG + AG)) :
+    ∃ U, U a = U₀ ∧ Evolution.IsBoundarySolution (waveMax H H') H.wave (Set.Icc a b) F G U ∧
+      Evolution.IsClassicalSolution H.wave (Set.Icc a b) (F - DG + AG) (U - G) ∧
+      ∀ V, V a = U₀ → Evolution.IsBoundarySolution (waveMax H H') H.wave (Set.Icc a b) F G V →
+        Set.EqOn V U (Set.Icc a b) :=
+  Evolution.existsUnique_isBoundarySolution H.isSkewAdjoint_wave (wave_le_waveMax h) hG hU₀ hF
 
 end WaveMax
 

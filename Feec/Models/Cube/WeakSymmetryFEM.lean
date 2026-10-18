@@ -13,7 +13,8 @@ elements of Table 5.1 of [QuennevilleBelair2015], §5.3, on the level-`(N + 1)` 
 with the thesis' boundary conditions (vanishing boundary DOFs in every row):
 
 * top row `P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²` (`FEM.polyMin 3 PolySeq.lowestOrder N`),
-* bottom row `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³` (componentwise `FEM.polyMin 3 PolySeq.lagrangeP2 N`),
+* bottom row `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³`
+  (componentwise `FEM.polyMin 3 PolySeq.lagrangeP2 N`),
 
 as a `Feec.BGG.Discrete bggSegment` (`cubeFEM`), with **the smoothed cochain projections**
 `π = J⁻¹ Π_h R` ([AFW2010], §5.4; [ChristiansenWinther2008]) of **one common smoother** for both
@@ -42,14 +43,20 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
   `S¹u ∈ D(d¹*)` as a functional bound (in the `W`-normed model `V¹ = H̊Λ¹(Q)` is not complete, so
   `d¹*S¹u ∈ L²` has no representative in `V¹`).
 * `cubeFEM_rate`, `cubeFEM_rate_C2`: **Thm 5.5 on the cube with the elements of Table 5.1**,
-  `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u, λ, S¹u`
-  `C²` and vanishing outside `Q` (bound `L` on the first derivatives), `K` independent of `N`;
+  `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u, S¹u`
+  `C²` and vanishing outside `Q` (bound `L` on the first derivatives) and `‖λ‖ ≤ L`, `K`
+  independent of `N`;
   `IsCsFormMin.norm_le` (flatness and the mean value theorem) and `IsCsFormMin.abs_inner_D1_le`
-  (Green's formula on `D(d_min)`) supply `‖λ‖, ‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`.
+  (Green's formula on `D(d_min)`) supply `‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`.
+* `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle`: the solution of Prop 5.2
+  (`bggHilb.IsSaddle`, graph spaces) with multiplier in `L²Λ¹(Q)` solves the domain form of (5.3),
+  so the rate applies to it.
 * `cubeFEM_existsUnique`: unique discrete solvability (thesis Prop 5.4).
 * `cubeFEM_ne_bot`: the discrete spaces are nonzero for all large `N`;
   `exists_manufactured_solution`, `manufacturedU_ne_zero`: a nontrivial smooth exact solution
-  (`u` = first row `dᵗ(f dx₀ ∧ dx₁)`, `f` a bump in `Q`, `σ = φ = λ = 0`).
+  (`u` = first row `dᵗ(f dx₀ ∧ dx₁)`, `f` a bump in `Q`, `σ = φ = λ = 0`);
+  `exists_coupled_manufactured_solution`: a smooth exact solution with all four unknowns nonzero
+  (`λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ`, `uₐ = −g dxₐ`, `g` the bump).
 
 The regularity hypothesis (`CurlPotential`, the regular decomposition of [Hiptmair2002],
 Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`).
@@ -641,8 +648,8 @@ def rp : Vt0 →ₗ[ℝ] Wv U0 := piMap graphDomₗ
 
 theorem incl0_rp (ψ : Vt0) : incl0 (rp ψ) = ιt0 ψ := PiLp.ext fun _ => rfl
 
-/-- **The regular potentials** `y = (yₐ)ₐ ∈ (H̊Λ⁰(Q)³)³ ↦ (S⁰ yₐ)ₐ ∈ H̊Λ¹(Q)³`: the matrix fields with
-rows in `H̊¹(Q; ℝ³)`. -/
+/-- **The regular potentials** `y = (yₐ)ₐ ∈ (H̊Λ⁰(Q)³)³ ↦ (S⁰ yₐ)ₐ ∈ H̊Λ¹(Q)³`: the matrix fields
+with rows in `H̊¹(Q; ℝ³)`. -/
 def regR : Wv Vt0 →ₗ[ℝ] Wv U1 := piMap (segS0 ∘ₗ rp)
 
 theorem coe_regR (y : Wv Vt0) (a : Fin 3) : ((regR y a : U1) : W1) = wsZero (ιt0 (y a)) := by
@@ -887,7 +894,8 @@ theorem norm_eq_zero_of_neg {j : ℤ} (hj : j < 0) (x : L2F ℝ (cubeDomain 3) (
   exact FEM.norm_eq_zero_negSucc k x
 
 /-- **`L²` bound of a `C²` form vanishing outside `Q`**: `‖x‖ ≤ #(formIdx) L`. -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.norm_le {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)}
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.norm_le {j : ℤ} {L : ℝ}
+    {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)}
     (hx : IsCsFormMin 0 j L x) (hL0 : 0 ≤ L) : ‖x‖ ≤ Fintype.card (formIdx 3 j) * L := by
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, -, rfl⟩
   · rw [norm_eq_zero_of_neg hj]; positivity
@@ -913,7 +921,8 @@ theorem abs_sgn (j : Fin 3) (s : Finset (Fin 3)) : |(ExteriorFibre.sgn j s : ℝ
 /-- **`S¹u ∈ D(d¹*)` for `C²` fields**: if `x ∈ L²(Q; Λ²)` is the class of a `C²` `2`-form with
 `‖Dw‖ ≤ L` on `cl Q` (no boundary condition is needed), then
 `|⟪x, d w⟫| ≤ 9 L ‖w‖` for `w ∈ H̊Λ¹(Q)` (Green's formula on `D(d_min)`). -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W2} (hx : IsCsFormMin 0 2 L x) (hL0 : 0 ≤ L)
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W2}
+    (hx : IsCsFormMin 0 2 L x) (hL0 : 0 ≤ L)
     (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ := by
   rcases hx with hj | ⟨k, hk, w2, hw2, -, -, hL, -, rfl⟩
   · norm_num at hj
@@ -988,7 +997,8 @@ def manufacturedBump : ContDiffBump manufacturedCenter where
   rIn_pos := by norm_num
   rIn_lt_rOut := by norm_num
 
-theorem closedBall_manufacturedCenter_subset : Metric.closedBall manufacturedCenter (1 / 8) ⊆ cubeDomain 3 := by
+theorem closedBall_manufacturedCenter_subset :
+    Metric.closedBall manufacturedCenter (1 / 8) ⊆ cubeDomain 3 := by
   intro x hx i _
   rw [Metric.mem_closedBall, dist_pi_le_iff (by norm_num)] at hx
   have := hx i
@@ -1013,19 +1023,23 @@ theorem exists_fderiv_manufacturedBump_ne_zero : ∃ y ∈ cubeDomain 3,
       (manufacturedCenter + t • (coordDir 0 : Fin 3 → ℝ)) (coordDir 0)) t := fun t => by
     have h1 : HasDerivAt (fun t : ℝ => manufacturedCenter + t • (coordDir 0 : Fin 3 → ℝ))
         (coordDir 0 : Fin 3 → ℝ) t := by
-      simpa using ((hasDerivAt_id t).smul_const (coordDir 0 : Fin 3 → ℝ)).const_add manufacturedCenter
+      simpa using
+        ((hasDerivAt_id t).smul_const (coordDir 0 : Fin 3 → ℝ)).const_add manufacturedCenter
     exact (hdiff _).hasFDerivAt.comp_hasDerivAt t h1
   have hg0 : g 0 = 1 := by
     simp only [g, zero_smul, add_zero]
-    exact manufacturedBump.one_of_mem_closedBall (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)
+    exact manufacturedBump.one_of_mem_closedBall
+      (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)
   have hg1 : g (1 / 8) = 0 := by
     refine manufacturedBump.zero_of_le_dist (le_of_eq ?_)
-    change (1 / 8 : ℝ) = dist (manufacturedCenter + (1 / 8 : ℝ) • (coordDir 0 : Fin 3 → ℝ)) manufacturedCenter
+    change (1 / 8 : ℝ) =
+      dist (manufacturedCenter + (1 / 8 : ℝ) • (coordDir 0 : Fin 3 → ℝ)) manufacturedCenter
     rw [dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num)]
     rw [norm_coordDir, mul_one]
   obtain ⟨t, ht, hdt⟩ := exists_hasDerivAt_eq_slope g _ (by norm_num : (0 : ℝ) < 1 / 8)
     (fun t _ => (hg t).continuousAt.continuousWithinAt) (fun t _ => hg t)
-  refine ⟨manufacturedCenter + t • (coordDir 0 : Fin 3 → ℝ), closedBall_manufacturedCenter_subset ?_, ?_⟩
+  refine ⟨manufacturedCenter + t • (coordDir 0 : Fin 3 → ℝ),
+    closedBall_manufacturedCenter_subset ?_, ?_⟩
   · rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
       abs_of_pos ht.1]
     rw [norm_coordDir, mul_one]; exact ht.2.le
@@ -1042,7 +1056,8 @@ theorem isTestField_manufacturedβ : IsTestField (cubeDomain 3) manufacturedβ :
   · exact IsTest.zero
 
 /-- The divergence-free `1`-form `χ = dᵗβ` (minus the codifferential of `β`). -/
-def manufacturedχ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ := (extDerivOp ℝ 3 1).formalAdj.apply manufacturedβ
+def manufacturedχ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ :=
+  (extDerivOp ℝ 3 1).formalAdj.apply manufacturedβ
 
 theorem isTestField_manufacturedχ : IsTestField (cubeDomain 3) manufacturedχ :=
   (extDerivOp ℝ 3 1).formalAdj.isTestField_apply isTestField_manufacturedβ
@@ -1053,7 +1068,8 @@ theorem formalAdj_apply_manufacturedχ : (extDerivOp ℝ 3 0).formalAdj.apply ma
 
 /-- `χ_{1} = −∂₀ f`. -/
 theorem manufacturedχ_one (y : Fin 3 → ℝ) :
-    manufacturedχ ⟨{1}, by simp⟩ y = -fderiv ℝ (manufacturedBump : (Fin 3 → ℝ) → ℝ) y (coordDir 0) := by
+    manufacturedχ ⟨{1}, by simp⟩ y =
+      -fderiv ℝ (manufacturedBump : (Fin 3 → ℝ) → ℝ) y (coordDir 0) := by
   rw [manufacturedχ, formalAdj_extDerivOp_apply, extDAdj]
   have hc : ({1} : Finset (Fin 3))ᶜ = {0, 2} := by decide
   rw [hc, Finset.sum_pair (by decide)]
@@ -1142,7 +1158,8 @@ theorem manufacturedU_ne_zero : manufacturedU ≠ 0 := by
 
 /-- `⟪χ, d ψ⟫ = 0` for `ψ ∈ H̊Λ⁰(Q)` (`dᵗχ = 0`, Green's formula on `D(d_min)`). -/
 theorem inner_manufacturedχ_D0 (x : U0) : ⟪testField isTestField_manufacturedχ, D0 x⟫ = 0 := by
-  have hψs : ∀ r, ContDiff ℝ 1 (manufacturedχ r) := fun r => contDiff_infty.1 (isTestField_manufacturedχ r).contDiff 1
+  have hψs : ∀ r, ContDiff ℝ 1 (manufacturedχ r) := fun r =>
+    contDiff_infty.1 (isTestField_manufacturedχ r).contDiff 1
   have hψ : ∀ r, MemLp (manufacturedχ r) 2 (volume.restrict (cubeDomain 3)) := fun r =>
     (isTestField_manufacturedχ r).memLp
   have hAψ : ∀ r, MemLp ((extDerivOp ℝ 3 0).formalAdj.apply manufacturedχ r) 2
@@ -1179,7 +1196,8 @@ theorem isTestField_manufacturedφ (a : Fin 3) : IsTestField (cubeDomain 3) (man
   · subst ha; simpa [manufacturedφ] using isTestField_manufacturedχ
   · rw [manufacturedφ, Pi.single_eq_of_ne ha]; exact IsTestField.zero
 
-theorem incl1_manufacturedU : incl1 manufacturedU = WithLp.toLp 2 fun a => testField (isTestField_manufacturedφ a) := by
+theorem incl1_manufacturedU :
+    incl1 manufacturedU = WithLp.toLp 2 fun a => testField (isTestField_manufacturedφ a) := by
   refine PiLp.ext fun a => ?_
   by_cases ha : a = 0
   · subst ha
@@ -1192,7 +1210,8 @@ theorem incl1_manufacturedU : incl1 manufacturedU = WithLp.toLp 2 fun a => testF
     rw [manufacturedφ, Pi.single_eq_of_ne ha]
 
 /-- `S¹ manufacturedU` is a test field. -/
-theorem segS1_manufacturedU : bggSegment.S1 manufacturedU = testField (isTestField_wsFields isTestField_manufacturedφ) := by
+theorem segS1_manufacturedU :
+    bggSegment.S1 manufacturedU = testField (isTestField_wsFields isTestField_manufacturedφ) := by
   change wsL2 (Ω := cubeDomain 3) 1 (incl1 manufacturedU) = _
   rw [incl1_manufacturedU, wsL2_testField]
 
@@ -1205,14 +1224,16 @@ theorem isCsFormMin_zero {k : ℕ} : ∃ L, 0 ≤ L ∧
 
 /-- The datum of the manufactured solution, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`. -/
 def manufacturedDatum : Wv U1 →ₗ[ℝ] ℝ :=
-  (innerₛₗ ℝ (bggSegment.S1 manufacturedU)) ∘ₗ bggSegment.S1 + (innerₛₗ ℝ (bggSegment.dt1 manufacturedU)) ∘ₗ bggSegment.dt1
+  (innerₛₗ ℝ (bggSegment.S1 manufacturedU)) ∘ₗ bggSegment.S1 +
+    (innerₛₗ ℝ (bggSegment.dt1 manufacturedU)) ∘ₗ bggSegment.dt1
 
 theorem manufactured_c1 (τ : U0) (ψ : Wv U0) : ⟪(0 : U0), τ⟫ - ⟪manufacturedU, bggSegment.dt0 ψ⟫ -
     ⟪(0 : W1), ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0 := by
   rw [inner_manufacturedU_dt0, inner_zero_left, inner_zero_left, sub_zero, sub_zero]
 
 theorem manufactured_c2 (v : Wv U1) : ⟪bggSegment.dt0 (0 : Wv U0), v⟫ +
-    ⟪bggSegment.S1 manufacturedU, bggSegment.S1 v⟫ + ⟪bggSegment.dt1 manufacturedU, bggSegment.dt1 v⟫ = manufacturedDatum v := by
+    ⟪bggSegment.S1 manufacturedU, bggSegment.S1 v⟫ +
+      ⟪bggSegment.dt1 manufacturedU, bggSegment.dt1 v⟫ = manufacturedDatum v := by
   have hz : bggSegment.dt0 (0 : Wv U0) = 0 := map_zero _
   rw [hz, inner_zero_left, zero_add]
   rfl
@@ -1221,11 +1242,13 @@ theorem manufactured_c3 : bggSegment.d0 (0 : U0) = bggSegment.S0 (0 : Wv U0) := 
   rw [map_zero, map_zero]
 
 theorem manufactured_u (a : Fin 3) {L Lu L1 : ℝ}
-    (hu : IsCsFormMin 0 1 Lu (testField isTestField_manufacturedχ)) (h1 : IsCsFormMin 0 1 L1 (0 : W1))
+    (hu : IsCsFormMin 0 1 Lu (testField isTestField_manufacturedχ))
+    (h1 : IsCsFormMin 0 1 L1 (0 : W1))
     (hLu : Lu ≤ L) (hL1 : L1 ≤ L) : IsCsFormMin 0 1 L ((manufacturedU a : U1) : W1) := by
   by_cases ha : a = 0
   · subst ha
-    have e : ((manufacturedU 0 : U1) : W1) = testField isTestField_manufacturedχ := by simp [manufacturedU, manufacturedU0]
+    have e : ((manufacturedU 0 : U1) : W1) = testField isTestField_manufacturedχ := by
+      simp [manufacturedU, manufacturedU0]
     rw [e]; exact hu.mono hLu
   · have e : ((manufacturedU a : U1) : W1) = 0 := by
       have : (manufacturedU a : U1) = 0 := by
@@ -1235,8 +1258,9 @@ theorem manufactured_u (a : Fin 3) {L Lu L1 : ℝ}
     rw [e]; exact h1.mono hL1
 
 /-- **A nontrivial smooth solution of (5.3) on the cube (manufactured data)**: `σ = 0`, `φ = 0`,
-`λ = 0` and `u = manufacturedU ≠ 0` (row-wise divergence free, smooth, compactly supported in `Q`), with the
-datum `F = manufacturedDatum`, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`, satisfy the continuous system and the `C²`
+`λ = 0` and `u = manufacturedU ≠ 0` (row-wise divergence free, smooth, compactly supported in
+`Q`), with the datum `F = manufacturedDatum`, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`, satisfy the
+continuous system and the `C²`
 hypotheses of `cubeFEM_rate_C2` for some `L`. -/
 theorem exists_manufactured_solution : ∃ L, 0 ≤ L ∧
     IsCsFormMin 0 0 L ((0 : U0) : W0) ∧ (∀ a, IsCsFormMin 0 0 L (((0 : Wv U0) a : U0) : W0)) ∧
@@ -1676,9 +1700,9 @@ theorem cubeFEM_err_S1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
 
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate**: under the regularity
-hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every solution
-`(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` and vanish
-outside `Q` (`IsCsFormMin 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`
+hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every
+solution `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` and
+vanish outside `Q` (`IsCsFormMin 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`
 (`S¹u ∈ D(d¹*)`), every discrete solution of the method (5.6), i.e. (5.7) with `S_h = πS` in place
 of the canonical `Π¹_h S⁰`, `Π²_h S¹`, satisfies
 `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`. -/
@@ -1756,7 +1780,8 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     hSun hz σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
   have := cubeFEM_fdt1 hT hB N
   have hh : 0 ≤ meshSize N := (meshSize_pos N).le
-  have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by rw [hCp]; exact bggStability_of hCR0 hCR
+  have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
+    rw [hCp]; exact bggStability_of hCR0 hCR
   have Bd := cubeFEM_bounded hT hB N
   have h54 := cubeFEM_compatible hT hB N
   have happ : ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
@@ -1785,9 +1810,11 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     unfold Feec.BGG.Discrete.weakConsistencyConst
     have := norm_nonneg (bggSegment.S1 u)
     positivity
-  have hD5 : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L ≤
+  have hD5 :
+      Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L ≤
       (wa + wb) * L := by
-    have e : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L =
+    have e :
+        Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L =
         L * wa + ‖bggSegment.S1 u‖ * wb := by
       rw [hwa, hwb]; unfold Feec.BGG.Discrete.weakConsistencyConst; ring
     rw [e]
@@ -1806,7 +1833,8 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) +
       (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) + meshSize N ^ 2 * L ^ 2 +
       meshSize N ^ 2 *
-        Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L ^ 2 +
+        Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR
+          ‖bggSegment.S1 u‖ L ^ 2 +
       ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤ Kd * (L * meshSize N) ^ 2 := by
     rw [hKd]
     linear_combination hD1 + hD2 + hD3 + hD5' + hD6
@@ -1819,11 +1847,12 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
 
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions**:
-the form of `cubeFEM_rate` where every hypothesis on the exact solution is `C²` regularity: if
-`σ`, `φ`, `u`, `λ` and `S¹u` are `C²` forms vanishing outside `Q` with first derivatives
-bounded by `L` (`IsCsFormMin 0`), then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`;
-the `L²` bounds of `λ`, `S¹u` and the regularity `S¹u ∈ D(d¹*)` are derived
-(`IsCsFormMin.norm_le`, `IsCsFormMin.abs_inner_D1_le`). -/
+the form of `cubeFEM_rate` where the hypotheses on `σ, φ, u, S¹u` are `C²` regularity: if
+`σ`, `φ`, `u` and `S¹u` are `C²` forms vanishing outside `Q` with first derivatives bounded by `L`
+(`IsCsFormMin 0`) and the multiplier `λ ∈ L²` (no boundary condition, no smoothness) has
+`‖λ‖ ≤ L`, then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`; the `L²` bound of `S¹u`
+and the regularity `S¹u ∈ D(d¹*)` are derived (`IsCsFormMin.norm_le`,
+`IsCsFormMin.abs_inner_D1_le`). -/
 theorem cubeFEM_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1902,7 +1931,8 @@ theorem cubeFEM_rate_isSaddle {CR : ℝ} (hCR0 : 0 ≤ CR)
   exact hK N hL0 e.1 e.2.1 e.2.2 hσ hφ hu hlam hSu hσh hφh huh h1 h2 h3
 
 /-- **Thesis Prop 5.4 for Table 5.1**: for every `N` and every datum `F` the discrete system
-(5.6) (thesis (5.7) with `S_h = πS`) has exactly one solution (under the regularity hypothesis, through its constant `C_R`). -/
+(5.6) (thesis (5.7) with `S_h = πS`) has exactly one solution (under the regularity hypothesis,
+through its constant `C_R`). -/
 theorem cubeFEM_existsUnique {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) (N : ℕ)
     (F : Wv U1 →ₗ[ℝ] ℝ) :
@@ -1953,12 +1983,14 @@ theorem coeffForm_testField_mem {k : ℕ} {χ : formIdx 3 k → (Fin 3 → ℝ) 
 
 /-- The scalar bump as a test `0`-form. -/
 theorem isTestField_bump0 : IsTestField (cubeDomain 3)
-    (fun _ : formIdx 3 0 => (manufacturedBump : (Fin 3 → ℝ) → ℝ)) := fun _ => isTest_manufacturedBump
+    (fun _ : formIdx 3 0 => (manufacturedBump : (Fin 3 → ℝ) → ℝ)) := fun _ =>
+  isTest_manufacturedBump
 
 theorem bump0_ne_zero : testField isTestField_bump0 ≠ 0 :=
   testField_ne_zero isTestField_bump0 (i := ⟨∅, by simp⟩) (y := manufacturedCenter)
     (closedBall_manufacturedCenter_subset (Metric.mem_closedBall_self (by norm_num)))
-    (by rw [manufacturedBump.one_of_mem_closedBall (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)]; norm_num)
+    (by rw [manufacturedBump.one_of_mem_closedBall
+      (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)]; norm_num)
 
 /-- **The discrete spaces of Table 5.1 are nonzero** for all large `N` (unconditionally): the
 smoothed projections of fixed nonzero test fields are nonzero for `h_N` small, by the `H̊¹`
@@ -1968,9 +2000,11 @@ theorem cubeFEM_ne_bot : ∀ᶠ N in atTop, (cubeFEM hT hB N).V0h ≠ ⊥ ∧ (c
   set x0 := testField isTestField_bump0
   set x1 := testField isTestField_manufacturedχ
   have aT0 := fun N => hT.norm_sub_proj_le_grad N 0 x0 (coeffForm_testField_mem isTestField_bump0)
-  have aT1 := fun N => hT.norm_sub_proj_le_grad N 1 x1 (coeffForm_testField_mem isTestField_manufacturedχ)
+  have aT1 := fun N =>
+    hT.norm_sub_proj_le_grad N 1 x1 (coeffForm_testField_mem isTestField_manufacturedχ)
   have aB0 := fun N => hB.norm_sub_proj_le_grad N 0 x0 (coeffForm_testField_mem isTestField_bump0)
-  have aB1 := fun N => hB.norm_sub_proj_le_grad N 1 x1 (coeffForm_testField_mem isTestField_manufacturedχ)
+  have aB1 := fun N =>
+    hB.norm_sub_proj_le_grad N 1 x1 (coeffForm_testField_mem isTestField_manufacturedχ)
   have e1 := eventually_ne_zero_of_le bump0_ne_zero aT0
   have e2 := eventually_ne_zero_of_le manufacturedχ_ne_zero_L2 aT1
   have e3 := eventually_ne_zero_of_le bump0_ne_zero aB0
@@ -1990,5 +2024,246 @@ theorem cubeFEM_ne_bot : ∀ᶠ N in atTop, (cubeFEM hT hB N).V0h ≠ ⊥ ∧ (c
       wv_single_ne_zero fun h => h4 (congrArg Subtype.val (h : projU1 (hB.proj N) ⟨x1, m1⟩ = 0))⟩⟩
 
 end CubeFEM
+
+/-! ### A coupled manufactured solution
+
+`g` the bump, `λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ`, `uₐ = −g dxₐ`: every unknown of (5.3) is nonzero, so
+the multiplier and the constraint `dσ = S⁰φ` are exercised
+(`exists_coupled_manufactured_solution`). -/
+
+section CoupledManufactured
+
+/-- The bump as a `0`-form coefficient field `g`. -/
+abbrev coupledG : formIdx 3 0 → (Fin 3 → ℝ) → ℝ := fun _ => (manufacturedBump : (Fin 3 → ℝ) → ℝ)
+
+/-- `λ = d g`. -/
+def coupledLam : formIdx 3 1 → (Fin 3 → ℝ) → ℝ := (extDerivOp ℝ 3 0).apply coupledG
+
+/-- The rows `uₐ = −g dxₐ`. -/
+def coupledU (a : Fin 3) : formIdx 3 1 → (Fin 3 → ℝ) → ℝ :=
+  fun t => if t.1 = {a} then fun y => -(manufacturedBump : (Fin 3 → ℝ) → ℝ) y else 0
+
+theorem isTestField_coupledU (a : Fin 3) : IsTestField (cubeDomain 3) (coupledU a) := fun t => by
+  unfold coupledU
+  split_ifs
+  · exact isTest_manufacturedBump.neg
+  · exact IsTest.zero
+
+theorem coupledLam_apply (a : Fin 3) (y : Fin 3 → ℝ) :
+    coupledLam ⟨{a}, by simp⟩ y = fderiv ℝ (manufacturedBump : (Fin 3 → ℝ) → ℝ) y (coordDir a) := by
+  rw [coupledLam, extDerivOp_apply, extD, Finset.sum_singleton, Finset.erase_singleton,
+    formExt_of_card coupledG (by simp)]
+  simp [ExteriorFibre.sgn, Finset.filter_singleton]
+
+/-- `dᵗuₐ = ∂ₐ g = λₐ`. -/
+theorem formalAdj_coupledU (a : Fin 3) (r : formIdx 3 0) (y : Fin 3 → ℝ) :
+    (extDerivOp ℝ 3 0).formalAdj.apply (coupledU a) r y = coupledLam ⟨{a}, by simp⟩ y := by
+  have hr : r.1 = ∅ := Finset.card_eq_zero.1 (by exact_mod_cast r.2)
+  rw [formalAdj_extDerivOp_apply, extDAdj, hr, coupledLam_apply, Finset.compl_empty,
+    Finset.sum_eq_single a]
+  · have h1 : formExt (coupledU a) (insert a ∅) =
+        fun y => -(manufacturedBump : (Fin 3 → ℝ) → ℝ) y := by
+      rw [formExt_of_card (coupledU a) (by simp)]
+      simp [coupledU]
+    rw [h1, fderiv_fun_neg]
+    simp [ExteriorFibre.sgn]
+  · intro j _ hj
+    have h1 : formExt (coupledU a) (insert j ∅) = 0 := by
+      rw [formExt_of_card (coupledU a) (by simp)]
+      simp [coupledU, hj]
+    rw [h1]
+    simp
+  · simp
+
+theorem isTestField_coupledLam : IsTestField (cubeDomain 3) coupledLam :=
+  (extDerivOp ℝ 3 0).isTestField_apply isTestField_bump0
+
+/-- `σ = dᵗλ = dᵗ d g`. -/
+def coupledSigFn : formIdx 3 0 → (Fin 3 → ℝ) → ℝ := (extDerivOp ℝ 3 0).formalAdj.apply coupledLam
+
+theorem isTestField_coupledSigFn : IsTestField (cubeDomain 3) coupledSigFn :=
+  (extDerivOp ℝ 3 0).formalAdj.isTestField_apply isTestField_coupledLam
+
+/-- The rows `φₐ = ∂ₐ σ` (so that `S⁰φ = dσ`). -/
+def coupledPhiFn (a : Fin 3) : formIdx 3 0 → (Fin 3 → ℝ) → ℝ :=
+  fun _ => (extDerivOp ℝ 3 0).apply coupledSigFn ⟨{a}, by simp⟩
+
+theorem isTestField_coupledPhiFn (a : Fin 3) : IsTestField (cubeDomain 3) (coupledPhiFn a) :=
+  fun _ =>
+  (extDerivOp ℝ 3 0).isTestField_apply isTestField_coupledSigFn _
+
+/-- The `0`-form `λₐ` (`dᵗuₐ = λₐ`). -/
+theorem isTestField_coupledLamRow (a : Fin 3) : IsTestField (cubeDomain 3)
+    (fun _ : formIdx 3 0 => coupledLam ⟨{a}, by simp⟩) := fun _ => isTestField_coupledLam _
+
+theorem testField_formalAdj_coupledU (a : Fin 3) :
+    testField ((extDerivOp ℝ 3 0).formalAdj.isTestField_apply (isTestField_coupledU a)) =
+      testField (isTestField_coupledLamRow a) :=
+  testField_congr _ _ (funext fun r => funext fun y => formalAdj_coupledU a r y)
+
+theorem mem_D0_testField {φ : formIdx 3 0 → (Fin 3 → ℝ) → ℝ} (hφ : IsTestField (cubeDomain 3) φ) :
+    testField hφ ∈ D0.domain :=
+  (extDerivOp ℝ 3 0).testField_mem_minimal_domain (isOpen_cubeDomain 3) hφ
+
+theorem mem_D1_testField {φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ} (hφ : IsTestField (cubeDomain 3) φ) :
+    testField hφ ∈ D1.domain :=
+  (extDerivOp ℝ 3 1).testField_mem_minimal_domain (isOpen_cubeDomain 3) hφ
+
+/-- **Green's formula on `D(d⁰_min)`** against a test `1`-form. -/
+theorem inner_D0_testField (x : U0) {ψ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ}
+    (hψ : IsTestField (cubeDomain 3) ψ) :
+    ⟪D0 x, testField hψ⟫ =
+      ⟪(x : W0), testField ((extDerivOp ℝ 3 0).formalAdj.isTestField_apply hψ)⟫ :=
+  (extDerivOp ℝ 3 0).minimal_green (isOpen_cubeDomain 3) (extDerivOp_isOrderLE 0) x
+    (fun r => contDiff_infty.1 (hψ r).contDiff 1) (fun r => (hψ r).memLp)
+    (fun r => ((extDerivOp ℝ 3 0).formalAdj.isTestField_apply hψ r).memLp)
+
+/-- `g` in `H̊Λ⁰(Q)`. -/
+def coupledGU : U0 := ⟨testField isTestField_bump0, mem_D0_testField isTestField_bump0⟩
+/-- The manufactured `σ = dᵗ d g`. -/
+def coupledσ : U0 := ⟨testField isTestField_coupledSigFn, mem_D0_testField isTestField_coupledSigFn⟩
+/-- The manufactured `φ`, `φₐ = ∂ₐσ`. -/
+def coupledφ : Wv U0 := WithLp.toLp 2 fun a =>
+  ⟨testField (isTestField_coupledPhiFn a), mem_D0_testField (isTestField_coupledPhiFn a)⟩
+/-- The manufactured `u`, `uₐ = −g dxₐ`. -/
+def coupledu : Wv U1 := WithLp.toLp 2 fun a =>
+  ⟨testField (isTestField_coupledU a), mem_D1_testField (isTestField_coupledU a)⟩
+/-- The manufactured multiplier `λ = d g`. -/
+def coupledMult : W1 := testField isTestField_coupledLam
+
+theorem D0_coupledGU : D0 coupledGU = coupledMult :=
+  (extDerivOp ℝ 3 0).minimal_testField (isOpen_cubeDomain 3) isTestField_bump0
+
+theorem D0_coupledσ : D0 coupledσ =
+    testField ((extDerivOp ℝ 3 0).isTestField_apply isTestField_coupledSigFn) :=
+  (extDerivOp ℝ 3 0).minimal_testField (isOpen_cubeDomain 3) isTestField_coupledSigFn
+
+theorem formIdx_zero_eq (r : formIdx 3 0) : r = ⟨∅, by simp⟩ :=
+  Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast r.2))
+
+theorem inner_W0_eq (x y : W0) : ⟪x, y⟫ = ⟪x ⟨∅, by simp⟩, y ⟨∅, by simp⟩⟫ := by
+  rw [L2F.inner_def, Fintype.sum_eq_single ⟨∅, by simp⟩ fun r hr => absurd (formIdx_zero_eq r) hr]
+
+/-- `⟪λ, S⁰ψ⟫ = Σₐ ⟪λₐ, ψₐ⟫`. -/
+theorem inner_coupledMult_S0 (ψ : Wv U0) :
+    ⟪coupledMult, wsL2 (Ω := cubeDomain 3) 0 (incl0 ψ)⟫ =
+      ∑ a, ⟪coupledMult ⟨{a}, by simp⟩, (incl0 ψ) a ⟨∅, by simp⟩⟫ := by
+  rw [L2F.inner_def, ← (singletonEquiv 3).sum_comp]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  change ⟪coupledMult ⟨{a}, _⟩, wsL2 (Ω := cubeDomain 3) 0 (incl0 ψ) ⟨{a}, _⟩⟫ = _
+  rw [wsL2_zero_apply]
+
+theorem inner_coupledu_dt0 (ψ : Wv U0) :
+    ⟪coupledu, bggSegment.dt0 ψ⟫ = ⟪coupledMult, wsL2 (Ω := cubeDomain 3) 0 (incl0 ψ)⟫ := by
+  rw [inner_coupledMult_S0, inner_Vt]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  change ⟪testField (isTestField_coupledU a), D0 (ψ a)⟫ = _
+  rw [real_inner_comm, inner_D0_testField, testField_formalAdj_coupledU, inner_W0_eq,
+    real_inner_comm]
+  rfl
+
+/-- `⟪σ, τ⟫ = ⟪λ, dτ⟫` (`σ = dᵗλ`, Green's formula). -/
+theorem inner_coupledσ (τ : U0) : ⟪coupledσ, τ⟫ = ⟪coupledMult, D0 τ⟫ := by
+  rw [Submodule.coe_inner, real_inner_comm (D0 τ) coupledMult]
+  unfold coupledMult
+  rw [inner_D0_testField]
+  exact real_inner_comm _ _
+
+theorem coupled_c1 (τ : U0) (ψ : Wv U0) : ⟪coupledσ, τ⟫ - ⟪coupledu, bggSegment.dt0 ψ⟫ -
+    ⟪coupledMult, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0 := by
+  have e1 : ((bggSegment.d0 τ : U1) : W1) = D0 τ := rfl
+  have e2 : ((bggSegment.S0 ψ : U1) : W1) = wsL2 (Ω := cubeDomain 3) 0 (incl0 ψ) := coe_segS0 ψ
+  rw [Submodule.coe_sub, inner_sub_right, e1, e2, inner_coupledσ, inner_coupledu_dt0]
+  ring
+
+/-- The datum of the coupled manufactured solution, `F v = ⟪dφ, v⟫ + ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`. -/
+def coupledDatum : Wv U1 →ₗ[ℝ] ℝ :=
+  innerₛₗ ℝ (bggSegment.dt0 coupledφ) + (innerₛₗ ℝ (bggSegment.S1 coupledu)) ∘ₗ bggSegment.S1 +
+    (innerₛₗ ℝ (bggSegment.dt1 coupledu)) ∘ₗ bggSegment.dt1
+
+theorem coupled_c2 (v : Wv U1) :
+    ⟪bggSegment.dt0 coupledφ, v⟫ + ⟪bggSegment.S1 coupledu, bggSegment.S1 v⟫ +
+    ⟪bggSegment.dt1 coupledu, bggSegment.dt1 v⟫ = coupledDatum v := rfl
+
+theorem coupled_c3 : bggSegment.d0 coupledσ = bggSegment.S0 coupledφ := by
+  refine Subtype.ext ?_
+  change D0 coupledσ = wsL2 (Ω := cubeDomain 3) 0 (incl0 coupledφ)
+  rw [D0_coupledσ]
+  refine PiLp.ext fun t => ?_
+  obtain ⟨j, rfl⟩ := (singletonEquiv 3).surjective t
+  change _ = wsL2 (Ω := cubeDomain 3) 0 (incl0 coupledφ) ⟨{j}, _⟩
+  rw [wsL2_zero_apply]
+  rfl
+
+theorem incl1_coupledu :
+    incl1 coupledu = WithLp.toLp 2 fun a => testField (isTestField_coupledU a) :=
+  PiLp.ext fun _ => rfl
+
+theorem segS1_coupledu :
+    bggSegment.S1 coupledu = testField (isTestField_wsFields isTestField_coupledU) := by
+  change wsL2 (Ω := cubeDomain 3) 1 (incl1 coupledu) = _
+  rw [incl1_coupledu, wsL2_testField]
+
+theorem coupledMult_ne_zero : coupledMult ≠ 0 := by
+  intro h
+  rw [← D0_coupledGU] at h
+  exact bump0_ne_zero (D0_eq_zero h)
+
+theorem coupledσ_ne_zero : coupledσ ≠ 0 := by
+  intro h
+  have e := inner_coupledσ coupledGU
+  rw [h, inner_zero_left, D0_coupledGU, real_inner_self_eq_norm_sq] at e
+  exact coupledMult_ne_zero (norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 e.symm))
+
+theorem coupledφ_ne_zero : coupledφ ≠ 0 := by
+  intro h
+  have e := coupled_c3
+  rw [h, map_zero] at e
+  have e2 : D0 coupledσ = 0 := congrArg Subtype.val e
+  exact coupledσ_ne_zero (Subtype.ext (D0_eq_zero e2))
+
+theorem coupledu_ne_zero : coupledu ≠ 0 := by
+  intro h
+  have h0 := congrArg (fun z : Wv U1 => ((z 0 : U1) : W1)) h
+  change testField (isTestField_coupledU 0) = 0 at h0
+  refine testField_ne_zero (isTestField_coupledU 0) (i := ⟨{0}, by simp⟩) (y := manufacturedCenter)
+    (closedBall_manufacturedCenter_subset (Metric.mem_closedBall_self (by norm_num))) ?_ h0
+  simp only [coupledU, ite_true]
+  rw [manufacturedBump.one_of_mem_closedBall
+    (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)]
+  norm_num
+
+/-- **A coupled nontrivial smooth solution of (5.3) on the cube (manufactured data)**:
+`g` the bump, `λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ` and `uₐ = −g dxₐ`, all nonzero, compactly supported
+in `Q`, satisfy the continuous system with the datum `F = coupledDatum` and the hypotheses of
+`cubeFEM_rate_C2` for some `L`. -/
+theorem exists_coupled_manufactured_solution : ∃ L, 0 ≤ L ∧
+    coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledu ≠ 0 ∧ coupledMult ≠ 0 ∧
+    (∀ τ ψ, ⟪coupledσ, τ⟫ - ⟪coupledu, bggSegment.dt0 ψ⟫ -
+      ⟪coupledMult, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
+    (∀ v, ⟪bggSegment.dt0 coupledφ, v⟫ + ⟪bggSegment.S1 coupledu, bggSegment.S1 v⟫ +
+      ⟪bggSegment.dt1 coupledu, bggSegment.dt1 v⟫ = coupledDatum v) ∧
+    bggSegment.d0 coupledσ = bggSegment.S0 coupledφ ∧
+    IsCsFormMin 0 0 L (coupledσ : W0) ∧ (∀ a, IsCsFormMin 0 0 L (coupledφ a : W0)) ∧
+    (∀ a, IsCsFormMin 0 1 L (coupledu a : W1)) ∧ ‖coupledMult‖ ≤ L ∧
+    IsCsFormMin 0 2 L (bggSegment.S1 coupledu) := by
+  obtain ⟨Ls, hLs0, hLs⟩ := exists_isCsFormMin_testField isTestField_coupledSigFn
+  choose Lp hLp0 hLp using fun a => exists_isCsFormMin_testField (isTestField_coupledPhiFn a)
+  choose Lu hLu0 hLu using fun a => exists_isCsFormMin_testField (isTestField_coupledU a)
+  obtain ⟨LS, hLS0, hLS⟩ := exists_isCsFormMin_testField (isTestField_wsFields isTestField_coupledU)
+  have hp : ∀ a ∈ Finset.univ, 0 ≤ Lp a := fun a _ => hLp0 a
+  have hu : ∀ a ∈ Finset.univ, 0 ≤ Lu a := fun a _ => hLu0 a
+  have sp := Finset.sum_nonneg hp
+  have su := Finset.sum_nonneg hu
+  have hM := norm_nonneg coupledMult
+  refine ⟨Ls + ∑ a, Lp a + ∑ a, Lu a + LS + ‖coupledMult‖, by positivity, coupledσ_ne_zero,
+    coupledφ_ne_zero, coupledu_ne_zero, coupledMult_ne_zero, coupled_c1, coupled_c2, coupled_c3,
+    hLs.mono (by linarith),
+    fun a => (hLp a).mono ?_, fun a => (hLu a).mono ?_, by linarith, ?_⟩
+  · have := Finset.single_le_sum hp (Finset.mem_univ a); linarith
+  · have := Finset.single_le_sum hu (Finset.mem_univ a); linarith
+  · rw [segS1_coupledu]; exact hLS.mono (by linarith)
+
+end CoupledManufactured
 
 end Feec.Models.Cube.WeakSymmetry

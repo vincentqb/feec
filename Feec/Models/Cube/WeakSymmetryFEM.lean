@@ -10,7 +10,7 @@ public import Feec.HilbertComplex.BGG.WeakConsistency
 WIP
 -/
 
-open scoped InnerProductSpace RealInnerProductSpace
+open scoped InnerProductSpace RealInnerProductSpace ContDiff
 open MeasureTheory Set Filter
 
 @[expose] public noncomputable section
@@ -808,6 +808,282 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W
   exact mul_le_mul_of_nonneg_right hnorm (norm_nonneg _)
 
 end SmoothBounds
+
+/-! ### A manufactured solution -/
+
+section Manufactured
+
+/-- The centre `(¼, ¼, ¼)` of the cube. -/
+abbrev mCenter : Fin 3 → ℝ := fun _ => 1 / 4
+
+/-- A smooth bump supported in `B̄_∞(mCenter, ⅛) ⊆ Q`. -/
+def mBump : ContDiffBump mCenter where
+  rIn := 1 / 16
+  rOut := 1 / 8
+  rIn_pos := by norm_num
+  rIn_lt_rOut := by norm_num
+
+theorem closedBall_mCenter_subset : Metric.closedBall mCenter (1 / 8) ⊆ cubeDomain 3 := by
+  intro x hx i _
+  rw [Metric.mem_closedBall, dist_pi_le_iff (by norm_num)] at hx
+  have := hx i
+  rw [Real.dist_eq, abs_le] at this
+  constructor <;> linarith [this.1, this.2]
+
+theorem norm_coordDir (j : Fin 3) : ‖(coordDir j : Fin 3 → ℝ)‖ = 1 := by
+  rw [coordDir, Pi.norm_single, norm_one]
+
+theorem isTest_mBump : IsTest (cubeDomain 3) (mBump : (Fin 3 → ℝ) → ℝ) :=
+  ⟨mBump.contDiff, mBump.hasCompactSupport, by
+    rw [mBump.tsupport_eq]; exact closedBall_mCenter_subset⟩
+
+/-- **The bump has a nonzero partial derivative `∂₀` at some point of `Q`** (mean value theorem
+on the segment from the centre, where it is `1`, to a point where it vanishes). -/
+theorem exists_fderiv_mBump_ne_zero : ∃ y ∈ cubeDomain 3,
+    fderiv ℝ (mBump : (Fin 3 → ℝ) → ℝ) y (coordDir 0) ≠ 0 := by
+  set g : ℝ → ℝ := fun t => mBump (mCenter + t • (coordDir 0 : Fin 3 → ℝ))
+  have hdiff : Differentiable ℝ (mBump : (Fin 3 → ℝ) → ℝ) :=
+    (mBump.contDiff (n := 1)).differentiable (by norm_num)
+  have hg : ∀ t, HasDerivAt g (fderiv ℝ (mBump : (Fin 3 → ℝ) → ℝ)
+      (mCenter + t • (coordDir 0 : Fin 3 → ℝ)) (coordDir 0)) t := fun t => by
+    have h1 : HasDerivAt (fun t : ℝ => mCenter + t • (coordDir 0 : Fin 3 → ℝ))
+        (coordDir 0 : Fin 3 → ℝ) t := by
+      simpa using ((hasDerivAt_id t).smul_const (coordDir 0 : Fin 3 → ℝ)).const_add mCenter
+    exact (hdiff _).hasFDerivAt.comp_hasDerivAt t h1
+  have hg0 : g 0 = 1 := by
+    simp only [g, zero_smul, add_zero]
+    exact mBump.one_of_mem_closedBall (Metric.mem_closedBall_self mBump.rIn_pos.le)
+  have hg1 : g (1 / 8) = 0 := by
+    refine mBump.zero_of_le_dist (le_of_eq ?_)
+    change (1 / 8 : ℝ) = dist (mCenter + (1 / 8 : ℝ) • (coordDir 0 : Fin 3 → ℝ)) mCenter
+    rw [dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs, abs_of_pos (by norm_num)]
+    rw [norm_coordDir, mul_one]
+  obtain ⟨t, ht, hdt⟩ := exists_hasDerivAt_eq_slope g _ (by norm_num : (0 : ℝ) < 1 / 8)
+    (fun t _ => (hg t).continuousAt.continuousWithinAt) (fun t _ => hg t)
+  refine ⟨mCenter + t • (coordDir 0 : Fin 3 → ℝ), closedBall_mCenter_subset ?_, ?_⟩
+  · rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
+      abs_of_pos ht.1]
+    rw [norm_coordDir, mul_one]; exact ht.2.le
+  · rw [hdt, hg0, hg1]; norm_num
+
+/-- The `2`-form `β = f dx₀ ∧ dx₁` (`f` the bump). -/
+def mβ : formIdx 3 2 → (Fin 3 → ℝ) → ℝ :=
+  fun t => if t.1 = {0, 1} then (mBump : (Fin 3 → ℝ) → ℝ) else 0
+
+theorem isTestField_mβ : IsTestField (cubeDomain 3) mβ := fun t => by
+  unfold mβ
+  split_ifs
+  · exact isTest_mBump
+  · exact IsTest.zero
+
+/-- The divergence-free `1`-form `χ = dᵗβ` (minus the codifferential of `β`). -/
+def mχ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ := (extDerivOp ℝ 3 1).formalAdj.apply mβ
+
+theorem isTestField_mχ : IsTestField (cubeDomain 3) mχ :=
+  (extDerivOp ℝ 3 1).formalAdj.isTestField_apply isTestField_mβ
+
+/-- `dᵗχ = dᵗdᵗβ = 0`: `χ` is divergence free. -/
+theorem formalAdj_apply_mχ : (extDerivOp ℝ 3 0).formalAdj.apply mχ = 0 :=
+  isComplexPair_formalAdj_extDerivOp 0 mβ fun t => (isTestField_mβ t).contDiff
+
+/-- `χ_{1} = −∂₀ f`. -/
+theorem mχ_one (y : Fin 3 → ℝ) :
+    mχ ⟨{1}, by simp⟩ y = -fderiv ℝ (mBump : (Fin 3 → ℝ) → ℝ) y (coordDir 0) := by
+  rw [mχ, formalAdj_extDerivOp_apply, extDAdj]
+  have hc : ({1} : Finset (Fin 3))ᶜ = {0, 2} := by decide
+  rw [hc, Finset.sum_pair (by decide)]
+  have h0 : formExt mβ (insert 0 {1}) = (mBump : (Fin 3 → ℝ) → ℝ) := by
+    rw [formExt_of_card mβ (by decide)]
+    exact ite_eq_left (by decide)
+  have h2 : formExt mβ (insert 2 {1}) = 0 := by
+    rw [formExt_of_card mβ (by decide)]
+    exact ite_eq_right (by decide)
+  rw [h0, h2]
+  have hs : (ExteriorFibre.sgn (0 : Fin 3) ({1} : Finset (Fin 3)) : ℝ) = 1 := by
+    simp [ExteriorFibre.sgn]
+  simp [hs]
+
+theorem mχ_ne_zero : ∃ y ∈ cubeDomain 3, mχ ⟨{1}, by simp⟩ y ≠ 0 := by
+  obtain ⟨y, hy, hne⟩ := exists_fderiv_mBump_ne_zero
+  exact ⟨y, hy, by rw [mχ_one]; exact neg_ne_zero.2 hne⟩
+
+/-- **A test field is a `C²` form vanishing outside `Q`** (`IsCsFormMin 0`, for some bound). -/
+theorem exists_isCsFormMin_testField {k : ℕ} {χ : formIdx 3 k → (Fin 3 → ℝ) → ℝ}
+    (hχ : IsTestField (cubeDomain 3) χ) : ∃ L, 0 ≤ L ∧ IsCsFormMin 0 k L (testField hχ) := by
+  have hw : ContDiff ℝ ∞ (toFormField χ) := contDiff_toFormField fun r => (hχ r).contDiff
+  have hw2 : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) (toFormField χ) := contDiff_infty.1 hw _
+  have hsupp : ∀ y ∉ cubeDomain 3, toFormField χ y = 0 := fun y hy => by
+    funext t
+    simp only [toFormField, formExt, Pi.zero_apply]
+    split_ifs with h
+    · exact image_eq_zero_of_notMem_tsupport fun h' => hy ((hχ _).tsupport_subset h')
+    · rfl
+  have ex := exists_isCsFormMin 0 hw2 (isDeg_toFormField χ) hsupp
+  obtain ⟨L, hLL⟩ := ex
+  have hL0 := hLL.1
+  have hL := hLL.2
+  refine ⟨L, hL0, ?_⟩
+  have e : formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
+      ⟨toFormField χ, hw2.continuous⟩ = testField hχ := by
+    refine eq_testField hχ fun r => ?_
+    filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
+      ⟨toFormField χ, hw2.continuous⟩ r] with y hy
+    rw [hy]
+    change formExt (fun r => χ r y) r.1 = χ r y
+    rw [formExt_val]
+  rwa [e] at hL
+
+/-- The divergence-free field `χ`, as a point of `H̊Λ¹(Q)`. -/
+def mu0 : U1 :=
+  ⟨testField isTestField_mχ,
+    (extDerivOp ℝ 3 1).testField_mem_minimal_domain (isOpen_cubeDomain 3) isTestField_mχ⟩
+
+/-- **The manufactured `u`**: the matrix field with first row `χ = dᵗ(f dx₀ ∧ dx₁)` and the other
+rows zero (row-wise divergence free, smooth, compactly supported in `Q`). -/
+def mU : Wv U1 := WithLp.toLp 2 (Pi.single 0 mu0)
+
+theorem mχ_ne_zero_L2 : testField isTestField_mχ ≠ 0 := by
+  intro h
+  obtain ⟨y, hy, hne⟩ := mχ_ne_zero
+  have h1 := coeFn_testField isTestField_mχ ⟨{1}, by simp⟩
+  rw [h] at h1
+  have h0 : (fun _ => (0 : ℝ)) =ᵐ[volume.restrict (cubeDomain 3)] mχ ⟨{1}, by simp⟩ :=
+    (Lp.coeFn_zero ℝ 2 (volume.restrict (cubeDomain 3))).symm.trans h1
+  have heq := MeasureTheory.Measure.eqOn_of_ae_eq h0 continuousOn_const
+    (isTestField_mχ ⟨{1}, by simp⟩).contDiff.continuous.continuousOn
+    (by rw [(isOpen_cubeDomain 3).interior_eq]; exact subset_closure)
+  exact hne (heq hy).symm
+
+theorem mU_ne_zero : mU ≠ 0 := by
+  intro h
+  have := congrArg (fun z : Wv U1 => ((z 0 : U1) : W1)) h
+  simp only [mU, PiLp.zero_apply, ZeroMemClass.coe_zero] at this
+  rw [Pi.single_eq_same] at this
+  exact mχ_ne_zero_L2 this
+
+/-- `⟪χ, d ψ⟫ = 0` for `ψ ∈ H̊Λ⁰(Q)` (`dᵗχ = 0`, Green's formula on `D(d_min)`). -/
+theorem inner_mχ_D0 (x : U0) : ⟪testField isTestField_mχ, D0 x⟫ = 0 := by
+  have hψs : ∀ r, ContDiff ℝ 1 (mχ r) := fun r => contDiff_infty.1 (isTestField_mχ r).contDiff 1
+  have hψ : ∀ r, MemLp (mχ r) 2 (volume.restrict (cubeDomain 3)) := fun r =>
+    (isTestField_mχ r).memLp
+  have hAψ : ∀ r, MemLp ((extDerivOp ℝ 3 0).formalAdj.apply mχ r) 2
+      (volume.restrict (cubeDomain 3)) := fun r => by
+    rw [formalAdj_apply_mχ]; exact MemLp.zero
+  have key := (extDerivOp ℝ 3 0).minimal_green (isOpen_cubeDomain 3) (extDerivOp_isOrderLE 0) x
+    hψs hψ hAψ
+  have h0 : toL2F hAψ = 0 := by
+    refine PiLp.ext fun r => ?_
+    rw [PiLp.zero_apply]
+    refine Lp.ext ?_
+    filter_upwards [(hAψ r).coeFn_toLp, Lp.coeFn_zero ℝ 2 (volume.restrict (cubeDomain 3))]
+      with y h1 h2
+    change ((hAψ r).toLp _ : L2 ℝ (cubeDomain 3)) y = _
+    rw [h1, h2, formalAdj_apply_mχ]
+    rfl
+  change ⟪toL2F hψ, D0 x⟫ = 0
+  rw [real_inner_comm, key, h0, inner_zero_right]
+
+theorem inner_mU_dt0 (ψ : Wv U0) : ⟪mU, bggSegment.dt0 ψ⟫ = 0 := by
+  rw [inner_Vt, Fin.sum_univ_three]
+  have h1 : (mU 1 : U1) = 0 := by simp [mU]
+  have h2 : (mU 2 : U1) = 0 := by simp [mU]
+  rw [h1, h2, inner_zero_left, inner_zero_left, add_zero, add_zero]
+  have h0 : (mU 0 : U1) = mu0 := by simp [mU]
+  rw [h0]
+  exact inner_mχ_D0 (ψ 0)
+
+/-- The rows of `mU` as coefficient fields. -/
+def mφ : Fin 3 → formIdx 3 1 → (Fin 3 → ℝ) → ℝ := Pi.single 0 mχ
+
+theorem isTestField_mφ (a : Fin 3) : IsTestField (cubeDomain 3) (mφ a) := by
+  by_cases ha : a = 0
+  · subst ha; simpa [mφ] using isTestField_mχ
+  · rw [mφ, Pi.single_eq_of_ne ha]; exact IsTestField.zero
+
+theorem incl1_mU : incl1 mU = WithLp.toLp 2 fun a => testField (isTestField_mφ a) := by
+  refine PiLp.ext fun a => ?_
+  by_cases ha : a = 0
+  · subst ha
+    change ((mU 0 : U1) : W1) = _
+    simp only [mU, Pi.single_eq_same]
+    exact testField_congr _ _ (by simp [mφ])
+  · change ((mU a : U1) : W1) = _
+    simp only [mU, Pi.single_eq_of_ne ha, ZeroMemClass.coe_zero]
+    refine (testField_zero (ι := formIdx 3 1)).symm.trans (testField_congr _ _ ?_)
+    rw [mφ, Pi.single_eq_of_ne ha]
+
+/-- `S¹ mU` is a test field. -/
+theorem segS1_mU : bggSegment.S1 mU = testField (isTestField_wsFields isTestField_mφ) := by
+  change wsL2 (Ω := cubeDomain 3) 1 (incl1 mU) = _
+  rw [incl1_mU, wsL2_testField]
+
+theorem isCsFormMin_zero {k : ℕ} : ∃ L, 0 ≤ L ∧
+    IsCsFormMin 0 k L (0 : L2F ℝ (cubeDomain 3) (formIdx 3 k)) := by
+  have e := exists_isCsFormMin_testField (k := k)
+    (IsTestField.zero : IsTestField (cubeDomain 3) (0 : formIdx 3 k → (Fin 3 → ℝ) → ℝ))
+  rw [testField_zero] at e
+  exact e
+
+/-- The datum of the manufactured solution, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`. -/
+def mF : Wv U1 →ₗ[ℝ] ℝ :=
+  (innerₛₗ ℝ (bggSegment.S1 mU)) ∘ₗ bggSegment.S1 + (innerₛₗ ℝ (bggSegment.dt1 mU)) ∘ₗ bggSegment.dt1
+
+theorem manufactured_c1 (τ : U0) (ψ : Wv U0) : ⟪(0 : U0), τ⟫ - ⟪mU, bggSegment.dt0 ψ⟫ -
+    ⟪(0 : W1), ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0 := by
+  rw [inner_mU_dt0, inner_zero_left, inner_zero_left, sub_zero, sub_zero]
+
+theorem manufactured_c2 (v : Wv U1) : ⟪bggSegment.dt0 (0 : Wv U0), v⟫ +
+    ⟪bggSegment.S1 mU, bggSegment.S1 v⟫ + ⟪bggSegment.dt1 mU, bggSegment.dt1 v⟫ = mF v := by
+  have hz : bggSegment.dt0 (0 : Wv U0) = 0 := map_zero _
+  rw [hz, inner_zero_left, zero_add]
+  rfl
+
+theorem manufactured_c3 : bggSegment.d0 (0 : U0) = bggSegment.S0 (0 : Wv U0) := by
+  rw [map_zero, map_zero]
+
+theorem manufactured_u (a : Fin 3) {L Lu L1 : ℝ}
+    (hu : IsCsFormMin 0 1 Lu (testField isTestField_mχ)) (h1 : IsCsFormMin 0 1 L1 (0 : W1))
+    (hLu : Lu ≤ L) (hL1 : L1 ≤ L) : IsCsFormMin 0 1 L ((mU a : U1) : W1) := by
+  by_cases ha : a = 0
+  · subst ha
+    have e : ((mU 0 : U1) : W1) = testField isTestField_mχ := by simp [mU, mu0]
+    rw [e]; exact hu.mono hLu
+  · have e : ((mU a : U1) : W1) = 0 := by
+      have : (mU a : U1) = 0 := by
+        change (Pi.single (0 : Fin 3) mu0 : Fin 3 → U1) a = 0
+        exact Pi.single_eq_of_ne ha _
+      rw [this, ZeroMemClass.coe_zero]
+    rw [e]; exact h1.mono hL1
+
+/-- **A nontrivial smooth solution of (5.3) on the cube (manufactured data)**: `σ = 0`, `φ = 0`,
+`λ = 0` and `u = mU ≠ 0` (row-wise divergence free, smooth, compactly supported in `Q`), with the
+datum `F = mF`, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`, satisfy the continuous system and the `C²`
+hypotheses of `table51_rate_C2` for some `L`. -/
+theorem exists_manufactured_solution : ∃ L, 0 ≤ L ∧
+    IsCsFormMin 0 0 L ((0 : U0) : W0) ∧ (∀ a, IsCsFormMin 0 0 L (((0 : Wv U0) a : U0) : W0)) ∧
+    (∀ a, IsCsFormMin 0 1 L ((mU a : U1) : W1)) ∧ IsCsFormMin 0 1 L (0 : W1) ∧
+    IsCsFormMin 0 2 L (bggSegment.S1 mU) := by
+  have e0 := isCsFormMin_zero (k := 0)
+  have e1 := isCsFormMin_zero (k := 1)
+  have eu := exists_isCsFormMin_testField (k := 1) isTestField_mχ
+  have eS := exists_isCsFormMin_testField (k := 2) (isTestField_wsFields isTestField_mφ)
+  obtain ⟨L0, p0⟩ := e0
+  obtain ⟨L1, p1⟩ := e1
+  obtain ⟨Lu, pu⟩ := eu
+  obtain ⟨LS, pS⟩ := eS
+  have hL0 : L0 ≤ max (max L0 L1) (max Lu LS) := le_max_of_le_left (le_max_left _ _)
+  have hL1 : L1 ≤ max (max L0 L1) (max Lu LS) := le_max_of_le_left (le_max_right _ _)
+  have hLu : Lu ≤ max (max L0 L1) (max Lu LS) := le_max_of_le_right (le_max_left _ _)
+  have hLS : LS ≤ max (max L0 L1) (max Lu LS) := le_max_of_le_right (le_max_right _ _)
+  have hz0 : ((0 : U0) : W0) = 0 := rfl
+  have hz0' : ∀ a, (((0 : Wv U0) a : U0) : W0) = 0 := fun _ => rfl
+  refine ⟨max (max L0 L1) (max Lu LS), p0.1.trans hL0, ?_, fun a => ?_,
+    fun a => manufactured_u a pu.2 p1.2 hLu hL1, p1.2.mono hL1, ?_⟩
+  · rw [hz0]; exact p0.2.mono hL0
+  · rw [hz0' a]; exact p0.2.mono hL0
+  · rw [segS1_mU]; exact pS.2.mono hLS
+
+end Manufactured
 
 /-! ### Projection errors of smooth fields -/
 

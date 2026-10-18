@@ -150,7 +150,7 @@ theorem exists_norm_le_mul_norm_of_ker_le {V E F : Type*} [AddCommGroup V] [Modu
     simp only [L', LinearMap.comp_apply, LinearEquiv.coe_coe, e, Submodule.liftQ_apply]
   have hc : Continuous L' := LinearMap.continuous_of_finiteDimensional L'
   set Lc : LinearMap.range D →L[ℝ] F := ⟨L', hc⟩
-  refine ⟨‖Lc‖, norm_nonneg _, fun v => ?_⟩
+  refine ⟨‖Lc‖, norm_nonneg Lc, fun v => ?_⟩
   rw [← hL']
   exact Lc.le_opNorm _
 

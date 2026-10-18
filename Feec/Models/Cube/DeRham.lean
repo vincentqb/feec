@@ -44,11 +44,13 @@ dimension and degree:
   (`hodgeStar_mem_harmonic_iff`, `harmonicHodgeStar`, `finrank_harmonic_eq_rev`).
 
 **Scope of the model.** The two classes are *defined* as fixed complexes of the parity action on
-the Fourier coefficients of the torus complex; the identification with the boundary-condition
-spaces `H̊Λ(Q)` and `H*̊Λ(Q)` of `Feec.Domain.DeRham` (restriction of the periodic extension to
-`Q`) is described in prose only and is not formalized here. Under that identification the norm
-of the fixed space is a constant multiple of the `L²(Q)` norm, so ratios such as the Poincaré
-constant are unaffected. The coefficients are complex (the Fourier side of the torus complex).
+the Fourier coefficients of the torus complex, with complex coefficients (the Fourier side of the
+torus complex). Their identification with the boundary-condition spaces `H̊Λ(Q)` (relative class)
+and `HΛ(Q)` (absolute class) of `Feec.Domain.DeRham` is proved in `Feec.Models.Cube.DeRhamIdent`
+(`HQmin_eq_compress`, `HQmax_eq_compress`: the parity extension is a scaled isometry, inner
+products times `2ⁿ`, and the parity classes are the complexifications of the forms on `Q`,
+`mem_parity_fixed_iff`); the Poincaré inequality, compactness and harmonic forms of `HΛ(Q)` and
+`H̊Λ(Q)` themselves follow in `Feec.Models.Cube.DeRhamIdentPoincare`.
 The intertwining `⋆ d = ± d† ⋆` of the Hodge star with the differentials is not formalized; only
 the unitary exchange of the spaces and of the harmonic forms is.
 

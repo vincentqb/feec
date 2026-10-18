@@ -15,11 +15,14 @@ interpolant `Π : Y → P` is defined by `ℓ i (Π y) = m i y`. It commutes wit
 
 Everything is algebraic: modules over a commutative ring `R`, any index types. The unisolvent
 DOFs `ω ↦ ∫_f tr_f ω ∧ μ` of `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)` and their canonical cochain projections
-([QuennevilleBelair2015], §4.7, after [Arnold2013]) are the motivating instances; the integrals,
-simplices and triangulations themselves are not formalized here. The thesis then combines these
-projections with smoothers as in [AFW2010] to get bounded cochain projections `π_hᵏ : L²Λᵏ → Λ_hᵏ`
-([QuennevilleBelair2015], Thm 4.15); that smoothing construction is out of scope, and only its
-abstract consequences are formalized (`Feec.HilbertComplex.Subcomplex.CochainProjection`).
+([QuennevilleBelair2015], §4.7, after [Arnold2013]) are the motivating instances; the integrals
+over simplices, the local DOFs and the meshes are in `Feec.FiniteElement.SimplexIntegral`,
+`Feec.FiniteElement.LocalDof` and `Feec.Mesh`. The thesis then
+combines these projections with smoothers as in [AFW2010] to get bounded cochain projections
+`π_hᵏ : L²Λᵏ → Λ_hᵏ` ([QuennevilleBelair2015], Thm 4.15); the abstract construction is
+`Feec.HilbertComplex.Subcomplex.CochainProjection` and `Feec.FiniteElement.SmoothedProjection`,
+and its estimates are proved for the Whitney complexes of the cube in
+`Feec.Models.Cube.SmoothingEstimates`.
 
 ## Main definitions
 
@@ -127,9 +130,9 @@ theorem incl_interp_idem (incl : P →ₗ[R] Y) (hm : ∀ i, m i ∘ₗ incl = �
 
 See [QuennevilleBelair2015], Prop 5.7; cf. [AFW2006], [Arnold2013]. This is the commuting
 property of the canonical cochain projections of [QuennevilleBelair2015], §4.7. The thesis
-combines them with smoothers as in [AFW2010] to obtain bounded cochain projections; the
-smoothing is not formalized, only the bounded-cochain-projection consequences
-(`Feec.HilbertComplex.Subcomplex.CochainProjection`). -/
+combines them with smoothers as in [AFW2010] to obtain bounded cochain projections
+(`Feec.FiniteElement.SmoothedProjection`; for the Whitney complexes of the cube,
+`Feec.Models.Cube.SmoothingEstimates`). -/
 theorem interp_comp_eq {P' Y' κ : Type*} [AddCommGroup P'] [Module R P'] [AddCommGroup Y']
     [Module R Y'] {ℓ' : κ → P' →ₗ[R] R} (hℓ' : IsUnisolvent ℓ') (m' : κ → Y' →ₗ[R] R)
     (incl : P →ₗ[R] Y) (incl' : P' →ₗ[R] Y') (hm : ∀ i, m i ∘ₗ incl = ℓ i)

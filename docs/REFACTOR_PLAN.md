@@ -82,6 +82,18 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > (with `nonlinearEB_iff_extrinsicEB`, `vacuum_extrinsicEB`, `minkowski_extrinsicEB`) for the
 > naming grep.
 
+> **Status (2026-10-18): finite element hypotheses gated.** 16 new modules discharge the three
+> hypotheses of `Feec.Models.Cube.FiniteElementMethod` on the Freudenthal meshes of `(0, ½)ⁿ`:
+> the smoothed-projection estimates (`Feec.FiniteElement.InverseEstimate`,
+> `Feec.Models.Cube.SmoothingEstimates`), the Poincaré inequalities of `HΛ` and `H̊Λ` through the
+> identification of the parity model with `Feec.Domain.DeRham` on the cube
+> (`Feec.Models.Cube.DeRhamIdent` and
+> `Feec.Models.Cube.DeRhamIdent{Ext,Cutoff,Forms,Trunc,Poincare,FEM,Rate}`), and the Whitney
+> interpolation error (`Feec.FiniteElement.WhitneyInterpolation`,
+> `Feec.HilbertComplex.Approximation.GraphApprox`, `Feec.Models.Cube.{WhitneyApprox,WhitneyRate}`).
+> `Feec.Models.Cube.FiniteElementConvergence` and `Feec.Physics.Maxwell.CubeFEM` state the
+> results with no hypothesis. All are imported by `Feec.lean` and the full gate passes.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.
@@ -127,7 +139,8 @@ Feec/
 ├── Geometry/{AlgebraicCurvature,Bivector,Hodge2,WeylDecomposition}.lean
 ├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)
 ├── FiniteElement/{Dof,SmoothForm,SimplexIntegral,Stokes,MeshDivergence,LocalSpace,LocalDof,Whitney,
-│                  Assembly,Conformity,WhitneyComplex,BrambleHilbert,InterpolationError,SmoothedProjection}.lean
+│                  Assembly,Conformity,WhitneyComplex,BrambleHilbert,InterpolationError,SmoothedProjection,
+│                  WhitneyInterpolation,InverseEstimate}.lean
 ├── Models/                           -- INSTANCES ONLY; nothing generic may import Models
 │   ├── Torus/{DeRham,GradCurl,SymCurl,BGG}.lean     Euclidean/{DeRham,GradCurl,SymCurl,BGG}.lean
 │   ├── Cube/{Parity,Mirror,MirrorSym,MirrorBGG,Static}.lean        -- equivariant compressions of the torus
@@ -464,10 +477,13 @@ open `Ω ⊆ ℝⁿ`). Rank 8: done for the complexes and their dualities on eve
 range on bounded domains is not. Rank 10, second half (vacuum linearized gravity ⇒ EB for every
 solution): no new work in W7/W8. Rank 12: Lumer–Phillips and the Hodge heat equation done; impedance boundary conditions not. Rank 13: the estimates are proved for the defined `η, δ, μ`; that they tend to
 zero is shown for no concrete family. Rank 15 (formerly F): meshes, global Whitney spaces,
-conformity, Stokes and smoothed projections are built; the inverse estimates behind the smoothed
-projection bounds (`Feec.Models.Cube.FEM.SmoothingEstimates`), Sobolev traces and Rellich/Gaffney
-on Lipschitz domains remain out of reach; compactness and eigenbases are proved on cubes
-(parity model) instead.
+conformity, Stokes and smoothed projections are built; on the Freudenthal meshes of `(0, ½)ⁿ` the
+inverse estimates and the smoothed-projection bounds (`Feec.Models.Cube.FEM.smoothingEstimates_pMax`,
+`Feec.Models.Cube.FEM.smoothingEstimatesMin_pMin`) are proved, and with the identification of
+`HΛ`, `H̊Λ` on the cube with the parity model and the Whitney interpolation error, the finite
+element method converges with no hypothesis (`Feec.Models.Cube.FiniteElementConvergence`).
+Sobolev traces and Rellich/Gaffney on Lipschitz domains remain out of reach; compactness and
+eigenbases are proved on cubes instead.
 
 **Main risks:**
 - The RCLike conversion of about 60k lines of real-only proofs is the largest mechanical cost. Do it in W2, before anything is built on top.

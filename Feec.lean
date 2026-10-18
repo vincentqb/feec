@@ -58,6 +58,7 @@ public import Feec.FiniteElement.BrambleHilbert
 public import Feec.FiniteElement.Conformity
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.InterpolationError
+public import Feec.FiniteElement.InverseEstimate
 public import Feec.FiniteElement.LocalDof
 public import Feec.FiniteElement.LocalSpace
 public import Feec.FiniteElement.MeshDivergence
@@ -67,6 +68,7 @@ public import Feec.FiniteElement.SmoothedProjection
 public import Feec.FiniteElement.Stokes
 public import Feec.FiniteElement.Whitney
 public import Feec.FiniteElement.WhitneyComplex
+public import Feec.FiniteElement.WhitneyInterpolation
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Calculus.IntervalIntegral
@@ -106,6 +108,7 @@ public import Feec.Geometry.WeylDecomposition
 public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
+public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
@@ -159,7 +162,16 @@ public import Feec.Models.BoundedDomain.SymCurl
 public import Feec.Models.BoundedDomain.SymDualGeneral
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.DeRham
+public import Feec.Models.Cube.DeRhamIdent
+public import Feec.Models.Cube.DeRhamIdentCutoff
+public import Feec.Models.Cube.DeRhamIdentExt
+public import Feec.Models.Cube.DeRhamIdentFEM
+public import Feec.Models.Cube.DeRhamIdentForms
+public import Feec.Models.Cube.DeRhamIdentPoincare
+public import Feec.Models.Cube.DeRhamIdentRate
+public import Feec.Models.Cube.DeRhamIdentTrunc
 public import Feec.Models.Cube.EigenDense
+public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.Models.Cube.FiniteElementMethod
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Inhomogeneous
@@ -174,7 +186,10 @@ public import Feec.Models.Cube.Parity
 public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Models.Cube.Smoothing
+public import Feec.Models.Cube.SmoothingEstimates
 public import Feec.Models.Cube.Static
+public import Feec.Models.Cube.WhitneyApprox
+public import Feec.Models.Cube.WhitneyRate
 public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
@@ -199,6 +214,7 @@ public import Feec.Physics.LinearizedGravity.Gauge
 public import Feec.Physics.LinearizedGravity.PlaneWave
 public import Feec.Physics.Maxwell.Coefficients
 public import Feec.Physics.Maxwell.Constraints
+public import Feec.Physics.Maxwell.CubeFEM
 public import Feec.Physics.Maxwell.Forms
 public import Feec.Physics.Maxwell.Media
 public import Feec.Physics.Maxwell.Ohmic

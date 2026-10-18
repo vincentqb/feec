@@ -29,8 +29,9 @@ bump radius `< s₀ (1 - c) / 4`, `Feec.Domain.SmoothingParam.IsMaximal`):
 Nédélec, Raviart–Thomas, piecewise constants; transported to one Hilbert complex
 `FEM.complex = HΛ(Q)`) carry the concrete smoothed interpolants `FEM.smoothed N p`. Under the
 **estimates of [AFW2010], §5.4 and [ChristiansenWinther2008]** for these maps (uniform `L²`
-bound `C` and `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`; `FEM.SmoothingEstimates`, an explicit hypothesis:
-the elementwise inverse estimates behind it are not formalized), every consequence is proved:
+bound `C` and `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`; the structure `FEM.SmoothingEstimates`, taken as a
+hypothesis here and proved for explicit parameters in `Feec.Models.Cube.SmoothingEstimates`),
+every consequence is proved:
 
 * uniformly bounded cochain projections `π_N` with `‖π_N‖ ≤ 2C` in `L²` and in the graph norm
   (`SmoothingEstimates.proj`, `norm_proj_le`, `isGraphBounded_proj`);
@@ -653,8 +654,10 @@ variable (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
 `Q_N = Π_h R` of the Whitney complexes are bounded in `L²` uniformly in `N`, and close to the
 identity on `Vₕ`: `‖v - Q_N v‖ ≤ ½ ‖v‖`. In the references these are obtained with the scaling
 factor `1 - δ h_N`, bump radius `≈ δ h_N` and `δ` small, from elementwise inverse estimates for
-polynomials and the interpolation error of `Π_h` on smoothed fields; they are not
-formalized here and are the hypotheses of this section. The maps `Q_N` themselves are the
+polynomials and the interpolation error of `Π_h` on smoothed fields. They are the hypotheses of
+this section, so that its results apply to any parameters; for the parameters `FEM.pMax γ` they
+are proved in `Feec.Models.Cube.SmoothingEstimates` (`FEM.smoothingEstimates_pMax`,
+`FEM.smoothingEstimates_exists`). The maps `Q_N` themselves are the
 concrete smoothed interpolants `smoothed n N (p N)`, and their commutation with `d` is proved
 (`Feec.FiniteElement.LocalElement.smoothedCommutingMap`). The constant is normalized by
 `½ ≤ C` (any bound can be enlarged). -/
@@ -878,9 +881,10 @@ def smoothedMin (N : ℕ) (p : SmoothingParam (Fin n → ℝ)) (hp : p.IsMinimal
       (strictStar_mesh n N))
 
 /-- **The estimates of the smoothed interpolants with vanishing boundary DOFs** ([AFW2010],
-§5.4, [ChristiansenWinther2008]; explicit hypothesis, as `SmoothingEstimates`): for
-minimal-family parameters `p N`, uniform `L²` bounds of `Q̊_N` and `‖v - Q̊_N v‖ ≤ ½ ‖v‖` on
-`V̊ₕ`; normalized by `½ ≤ C`. -/
+§5.4, [ChristiansenWinther2008]; a hypothesis of the results below, as `SmoothingEstimates`,
+proved for the parameters `FEM.pMin γ` in `Feec.Models.Cube.SmoothingEstimates`,
+`FEM.smoothingEstimatesMin_pMin`): for minimal-family parameters `p N`, uniform `L²` bounds of
+`Q̊_N` and `‖v - Q̊_N v‖ ≤ ½ ‖v‖` on `V̊ₕ`; normalized by `½ ≤ C`. -/
 structure SmoothingEstimatesMin (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) : Prop where
   isMinimal : ∀ N, (p N).IsMinimal (center n) (1 / 4)
   half_le : 1 / 2 ≤ C

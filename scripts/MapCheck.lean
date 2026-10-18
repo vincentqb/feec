@@ -3336,8 +3336,16 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«HodgeWave».«exists_tendstoUniformlyOn_ellipticProjection» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«Subcomplex».«norm_sub_le_of_approx» -- THESIS_MAP.md
 #check @«Feec».«HodgeWave».«IsGraphSolution».«norm_sub_le» -- THESIS_MAP.md
+#check @«Feec».«Maxwell».«CubeFEM».«pec_norm_sub_le_meshSize» -- THESIS_MAP.md
+#check @«Feec».«Maxwell».«CubeFEM».«pec_tendstoUniformlyOn» -- THESIS_MAP.md
+#check @«Feec».«Maxwell».«CubeFEM».«pmc_norm_sub_le_meshSize» -- THESIS_MAP.md
+#check @«Feec».«Maxwell».«CubeFEM».«pmc_tendstoUniformlyOn» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«FEM».«exists_tendstoUniformlyOn_window» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«FEM».«exists_tendstoUniformlyOn_windowMin_whitney» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«FEM».«exists_tendstoUniformlyOn_window_whitney» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«FEM».«norm_sub_le_meshSize_window» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«FEM».«norm_sub_le_meshSize_windowMin_smooth» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«FEM».«norm_sub_le_meshSize_window_smooth» -- THESIS_MAP.md
 #check @«Feec».«Variational».«norm_sub_le_of_projected_error_decay» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«Subcomplex».«CochainProjection» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«euclidean_gauss_propagates» -- THESIS_MAP.md

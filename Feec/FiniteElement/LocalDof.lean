@@ -532,4 +532,118 @@ theorem isUnisolvent_localDofMinus (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} 
     (localPolyMinusSpace_le_contForms p r k ω.2) (fun i => hω ⟨Face.ofEmb e, i⟩) hη
   rwa [Face.emb_ofEmb] at this
 
+/-! ### The degrees of freedom on a face determine the trace -/
+
+/-- The face of `T` spanned by a face `e'` of the reference face of `f`. -/
+theorem Face.ofEmb_trans_subset (f : Face n) {m : ℕ} (e' : Fin (m + 1) ↪o Fin (f.dim + 1)) :
+    (Face.ofEmb (e'.trans f.emb)).2.1 ⊆ f.2.1 := by
+  intro x hx
+  simp only [Face.ofEmb, mem_map, mem_univ, true_and, RelEmbedding.coe_toEmbedding,
+    RelEmbedding.coe_trans, Function.comp_apply] at hx
+  obtain ⟨y, rfl⟩ := hx
+  exact orderEmbOfFin_mem _ _ _
+
+/-- **Trace determination for `P_rΛᵏ(T)`**: the degrees of freedom attached to a face `f` and to
+its subfaces determine the trace `tr_f ω`. This is what makes the assembled space conforming
+([AFW2006], §5.1; [AFW2010], §5.2). -/
+theorem faceTrace_eq_of_localDof_eq (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (f : Face n) {ω ω' : localPolySpace p r k}
+    (h : ∀ g : Face n, g.2.1 ⊆ f.2.1 → ∀ i, localDof p r k ⟨g, i⟩ ω = localDof p r k ⟨g, i⟩ ω') :
+    faceTrace p f.emb ω = faceTrace p f.emb ω' := by
+  have hc : ∀ ψ : localPolySpace p r k, Continuous (ψ : FormField n) := fun ψ =>
+    localPolySpace_le_contForms p r k ψ.2
+  have hmem : faceTrace p f.emb ((ω : FormField n) - ω') ∈ polySpace f.dim r k := by
+    change affinePullback (simplexMatrix (p ∘ f.emb)) (p (f.emb 0)) ((ω : FormField n) - ω') ∈ _
+    refine affinePullback_mem_polySpace _ _ ?_
+    rw [← localPolySpace_eq hp r k]
+    exact Submodule.sub_mem _ ω.2 ω'.2
+  have h0 := eq_zero_of_faceMoment_eq_zero hr k f.dim hmem fun m e' η hη => by
+    rw [faceMoment, faceTrace_faceTrace]
+    refine faceMoment_eq_zero_of_basis p (e'.trans f.emb) (testBasis r k m)
+      (fun η h => (contDiff_of_mem_testSpace h).continuous) ((hc ω).sub (hc ω')) (fun i => ?_) hη
+    have := h _ (f.ofEmb_trans_subset e') i
+    rw [localDof_apply, localDof_apply, Face.emb_ofEmb] at this
+    rw [faceMoment_sub_left _ _ (contDiff_of_mem_testSpace (testBasis r k m i).2).continuous
+      (hc ω) (hc ω')]
+    exact sub_eq_zero.2 this
+  rw [map_sub, sub_eq_zero] at h0
+  exact h0
+
+/-- **Trace determination for `P_r⁻Λᵏ(T)`**. -/
+theorem faceTrace_eq_of_localDofMinus_eq (hp : IsUnit (edgeMatrix p).det) {r k : ℕ}
+    (hr : 1 ≤ r) (f : Face n) {ω ω' : localPolyMinusSpace p r k}
+    (h : ∀ g : Face n, g.2.1 ⊆ f.2.1 → ∀ i,
+      localDofMinus p r k ⟨g, i⟩ ω = localDofMinus p r k ⟨g, i⟩ ω') :
+    faceTrace p f.emb ω = faceTrace p f.emb ω' := by
+  have hc : ∀ ψ : localPolyMinusSpace p r k, Continuous (ψ : FormField n) := fun ψ =>
+    localPolyMinusSpace_le_contForms p r k ψ.2
+  have hmem : faceTrace p f.emb ((ω : FormField n) - ω') ∈ polyMinusSpace f.dim r k := by
+    change affinePullback (simplexMatrix (p ∘ f.emb)) (p (f.emb 0)) ((ω : FormField n) - ω') ∈ _
+    refine affinePullback_mem_polyMinusSpace _ _ ?_
+    rw [← localPolyMinusSpace_eq hp r k]
+    exact Submodule.sub_mem _ ω.2 ω'.2
+  have h0 := eq_zero_of_faceMoment_eq_zero_minus hr k f.dim hmem fun m e' η hη => by
+    rw [faceMoment, faceTrace_faceTrace]
+    refine faceMoment_eq_zero_of_basis p (e'.trans f.emb) (testBasisMinus r k m)
+      (fun η h => (contDiff_of_mem_testSpaceMinus h).continuous) ((hc ω).sub (hc ω'))
+      (fun i => ?_) hη
+    have := h _ (f.ofEmb_trans_subset e') i
+    rw [localDofMinus_apply, localDofMinus_apply, Face.emb_ofEmb] at this
+    rw [faceMoment_sub_left _ _
+      (contDiff_of_mem_testSpaceMinus (testBasisMinus r k m i).2).continuous (hc ω) (hc ω')]
+    exact sub_eq_zero.2 this
+  rw [map_sub, sub_eq_zero] at h0
+  exact h0
+
+/-! ### Local finite elements -/
+
+/-- A **local finite element** on the simplex `p`: a space of shape functions (form fields on
+`ℝⁿ`), degrees of freedom attached to the faces of `p`, unisolvent, and such that the degrees of
+freedom attached to a face and its subfaces determine the trace on that face (the
+trace-determination property used for the conformity of the assembled space). -/
+structure LocalElement (p : Fin (n + 1) → Fin n → ℝ) where
+  /-- The shape functions. -/
+  space : Submodule ℝ (FormField n)
+  /-- The degrees of freedom attached to each face. -/
+  dofIndex : Face n → Type
+  [fintype : ∀ f, Fintype (dofIndex f)]
+  /-- The degrees of freedom. -/
+  dof : (f : Face n) → dofIndex f → space →ₗ[ℝ] ℝ
+  /-- Unisolvence. -/
+  isUnisolvent : IsUnisolvent fun i : Σ f, dofIndex f => dof i.1 i.2
+  /-- The degrees of freedom on a face and its subfaces determine the trace on the face. -/
+  faceTrace_eq : ∀ (f : Face n) (ω ω' : space),
+    (∀ g : Face n, g.2.1 ⊆ f.2.1 → ∀ i, dof g i ω = dof g i ω') →
+      faceTrace p f.emb ω = faceTrace p f.emb ω'
+
+/-- **The finite element `P_rΛᵏ(T)`** ([AFW2006], §4.5; [AFW2010], §5.2). -/
+def polyLocalElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    LocalElement p where
+  space := localPolySpace p r k
+  dofIndex := DofIndex r k
+  dof f i := localDof p r k ⟨f, i⟩
+  isUnisolvent := isUnisolvent_localDof hp hr hk
+  faceTrace_eq f _ _ h := faceTrace_eq_of_localDof_eq hp hr f h
+
+/-- **The finite element `P_r⁻Λᵏ(T)`** ([AFW2006], §4.6; [AFW2010], §5.2). -/
+def polyMinusLocalElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) : LocalElement p where
+  space := localPolyMinusSpace p r k
+  dofIndex := DofIndexMinus r k
+  dof f i := localDofMinus p r k ⟨f, i⟩
+  isUnisolvent := isUnisolvent_localDofMinus hp hr hk
+  faceTrace_eq f _ _ h := faceTrace_eq_of_localDofMinus_eq hp hr f h
+
+/-! ### Mathlib simplices -/
+
+/-- Unisolvence of the degrees of freedom of `P_rΛᵏ(T)` on a Mathlib `n`-simplex `T`. -/
+theorem isUnisolvent_localDof_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r k : ℕ}
+    (hr : 1 ≤ r) (hk : k ≤ n) : IsUnisolvent (localDof T.points r k) :=
+  isUnisolvent_localDof (isUnit_det_edgeMatrix T) hr hk
+
+/-- Unisolvence of the degrees of freedom of `P_r⁻Λᵏ(T)` on a Mathlib `n`-simplex `T`. -/
+theorem isUnisolvent_localDofMinus_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r k : ℕ}
+    (hr : 1 ≤ r) (hk : k ≤ n) : IsUnisolvent (localDofMinus T.points r k) :=
+  isUnisolvent_localDofMinus (isUnit_det_edgeMatrix T) hr hk
+
 end Feec.FiniteElement

@@ -119,6 +119,13 @@ theorem adjoint_symm_adjoint_apply (a : E ≃L[𝕜] F) (x : F) : a.adjoint.symm
     a.adjoint (a.adjoint.symm x) = x :=
   a.adjoint.apply_symm_apply x
 
+/-- A **unitary** equivalence (`⟪a x, a y⟫ = ⟪x, y⟫`) satisfies `(a⁻¹)† = a`. -/
+theorem adjoint_symm_eq_of_inner_map_map {a : E ≃L[𝕜] F}
+    (ha : ∀ x y, ⟪a x, a y⟫_𝕜 = ⟪x, y⟫_𝕜) : a.adjoint.symm = a := by
+  ext x
+  refine ext_inner_right 𝕜 fun y => ?_
+  rw [inner_adjoint_symm_apply, ← ha, ContinuousLinearEquiv.apply_symm_apply]
+
 end ContinuousLinearEquiv
 
 namespace Submodule

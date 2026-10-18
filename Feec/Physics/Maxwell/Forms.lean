@@ -340,6 +340,22 @@ theorem testField_relabelField (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j,
     rw [testField_apply, relabelL2F_apply, testField_apply]
     exact toL2_smul (c j) (hφ (π j))
 
+/-- Signed relabellings are **unitary**: `⟪U u, U v⟫ = ⟪u, v⟫` (the signs satisfy `c² = 1`, so
+`c = ±1`). -/
+theorem inner_relabelL2F (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1)
+    (u v : L2F 𝕜 Ω' ι) :
+    ⟪relabelL2F Ω' π hc u, relabelL2F Ω' π hc v⟫_𝕜 = ⟪u, v⟫_𝕜 := by
+  simp only [PiLp.inner_apply, relabelL2F_apply, inner_smul_left, inner_smul_right]
+  have h : ∀ j, c j * (starRingEnd 𝕜) (c j) = 1 := fun j => by
+    rcases mul_self_eq_one_iff.1 (hc j) with h | h <;> simp [h]
+  simp_rw [← mul_assoc, h, one_mul]
+  exact Equiv.sum_comp π (fun i => ⟪u i, v i⟫_𝕜)
+
+/-- For a signed relabelling, `(U⁻¹)† = U`. -/
+theorem relabelL2F_adjoint_symm (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1) :
+    (relabelL2F Ω' π hc).adjoint.symm = relabelL2F Ω' π hc :=
+  ContinuousLinearEquiv.adjoint_symm_eq_of_inner_map_map (inner_relabelL2F π hc)
+
 variable {κ κ' : Type} [Fintype κ] [Fintype κ']
 
 /-- **Minimal realizations commute with relabelling**: if `A' R_ι = R_κ A` on test fields, then
@@ -382,6 +398,20 @@ theorem minimal_eq_conj_relabel (hΩ' : IsOpen Ω') {A : ConstCoeffOp (Fin m →
   rw [Submodule.topologicalClosure_coe, Submodule.topologicalClosure_coe, hg, ← h.image_closure,
     h.image_eq_preimage_symm]
   rfl
+
+/-- **Maximal realizations commute with relabelling**: if the formal adjoints satisfy
+`A'ᵗ R_κ = R_ι Aᵗ` on test fields, then `A'_max = U_κ A_max U_ι⁻¹` (`A_max = (Aᵗ_min)†`, and
+the relabellings are unitary). -/
+theorem maximal_eq_conj_relabel (hΩ' : IsOpen Ω') {A : ConstCoeffOp (Fin m → ℝ) 𝕜 ι κ}
+    {A' : ConstCoeffOp (Fin m → ℝ) 𝕜 ι' κ'} (πι : ι' ≃ ι) {cι : ι' → 𝕜}
+    (hcι : ∀ j, cι j * cι j = 1) (πκ : κ' ≃ κ) {cκ : κ' → 𝕜} (hcκ : ∀ j, cκ j * cκ j = 1)
+    (hAt : ∀ ψ : κ → (Fin m → ℝ) → 𝕜, IsTestField Ω' ψ →
+      A'.formalAdj.apply (relabelField πκ cκ ψ) = relabelField πι cι (A.formalAdj.apply ψ)) :
+    A'.maximal Ω' = (A.maximal Ω').conj (relabelL2F Ω' πι hcι) (relabelL2F Ω' πκ hcκ) := by
+  have h := minimal_eq_conj_relabel hΩ' (A := A.formalAdj) (A' := A'.formalAdj) πκ hcκ πι hcι hAt
+  change (A'.formalAdj.minimal Ω')† = ((A.formalAdj.minimal Ω')†).conj _ _
+  rw [h, LinearPMap.adjoint_conj _ _ (A.formalAdj.dense_minimal_domain hΩ'),
+    relabelL2F_adjoint_symm, relabelL2F_adjoint_symm]
 
 end Relabel
 
@@ -448,6 +478,75 @@ theorem curlOp_relabel (ψ : formIdx 3 1 → (Fin 3 → ℝ) → 𝕜) :
     rw [show (sign₂ ((0 : Fin 1), (2 : Fin 3)) : 𝕜) = 1 by simp [sign₂], one_smul]
     rfl
 
+/-- In degree `0`, the formal adjoint `dᵗ` is `gradᵗ = −div` through the proxies. -/
+theorem gradOp_formalAdj_relabel (ψ : formIdx 3 1 → (Fin 3 → ℝ) → 𝕜) :
+    (gradOp 3 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply
+        (relabelField proxy₁ (fun _ => 1) ψ) =
+      relabelField proxy₀ (fun _ => 1) ((extDerivOp 𝕜 3 0).formalAdj.apply ψ) := by
+  funext i x
+  rw [gradOp_formalAdj_apply]
+  simp only [relabelField, one_smul]
+  rw [formalAdj_extDerivOp_apply]
+  change _ = -∑ j ∈ (∅ : Finset (Fin 3))ᶜ, ExteriorFibre.sgn j ∅ *
+    fderiv ℝ (formExt ψ (insert j ∅)) x (coordDir j)
+  rw [Finset.compl_empty]
+  refine congrArg Neg.neg (Finset.sum_congr rfl fun j _ => ?_)
+  rw [formExt_of_card ψ (by simp)]
+  simp [ExteriorFibre.sgn]
+  rfl
+
+theorem sgn_singleton {n : ℕ} (i j : Fin n) :
+    (ExteriorFibre.sgn j {i} : 𝕜) = if i < j then -1 else 1 := by
+  unfold ExteriorFibre.sgn
+  rw [Finset.filter_singleton]
+  split_ifs <;> simp
+
+/-- In degree `1`, the formal adjoint `dᵗ` is `curlᵗ = curl` through the proxies. -/
+theorem curlOp_formalAdj_relabel (ψ : formIdx 3 2 → (Fin 3 → ℝ) → 𝕜) :
+    (curlOp 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply (relabelField proxy₂ sign₂ ψ) =
+      relabelField proxy₁ (fun _ => 1) ((extDerivOp 𝕜 3 1).formalAdj.apply ψ) := by
+  funext p x
+  obtain ⟨i, k⟩ := p
+  obtain rfl : i = 0 := Subsingleton.elim _ _
+  rw [curlOp_formalAdj_apply, curlOp_apply]
+  simp only [relabelField, one_smul]
+  rw [formalAdj_extDerivOp_apply]
+  simp only [extDAdj]
+  fin_cases k
+  · change fderiv ℝ (sign₂ ((0 : Fin 1), (2 : Fin 3)) • ψ (proxy₂ (0, 2))) x (coordDir 1) -
+        fderiv ℝ (sign₂ ((0 : Fin 1), (1 : Fin 3)) • ψ (proxy₂ (0, 1))) x (coordDir 2) =
+      -∑ j ∈ ({0} : Finset (Fin 3))ᶜ, ExteriorFibre.sgn j {0} *
+        fderiv ℝ (formExt ψ (insert j {0})) x (coordDir j)
+    rw [show ({0} : Finset (Fin 3))ᶜ = {1, 2} by decide, Finset.sum_pair (by decide),
+      formExt_of_card ψ (s := insert 1 {0}) (by decide),
+      formExt_of_card ψ (s := insert 2 {0}) (by decide),
+      show proxy₂ (0, 2) = ⟨insert 1 {0}, by decide⟩ from Subtype.ext (by decide),
+      show proxy₂ (0, 1) = ⟨insert 2 {0}, by decide⟩ from Subtype.ext (by decide)]
+    simp [sign₂, sgn_singleton, fderiv_neg]
+    ring
+  · change fderiv ℝ (sign₂ ((0 : Fin 1), (0 : Fin 3)) • ψ (proxy₂ (0, 0))) x (coordDir 2) -
+        fderiv ℝ (sign₂ ((0 : Fin 1), (2 : Fin 3)) • ψ (proxy₂ (0, 2))) x (coordDir 0) =
+      -∑ j ∈ ({1} : Finset (Fin 3))ᶜ, ExteriorFibre.sgn j {1} *
+        fderiv ℝ (formExt ψ (insert j {1})) x (coordDir j)
+    rw [show ({1} : Finset (Fin 3))ᶜ = {0, 2} by decide, Finset.sum_pair (by decide),
+      formExt_of_card ψ (s := insert 0 {1}) (by decide),
+      formExt_of_card ψ (s := insert 2 {1}) (by decide),
+      show proxy₂ (0, 2) = ⟨insert 0 {1}, by decide⟩ from Subtype.ext (by decide),
+      show proxy₂ (0, 0) = ⟨insert 2 {1}, by decide⟩ from Subtype.ext (by decide)]
+    simp [sign₂, sgn_singleton]
+    ring
+  · change fderiv ℝ (sign₂ ((0 : Fin 1), (1 : Fin 3)) • ψ (proxy₂ (0, 1))) x (coordDir 0) -
+        fderiv ℝ (sign₂ ((0 : Fin 1), (0 : Fin 3)) • ψ (proxy₂ (0, 0))) x (coordDir 1) =
+      -∑ j ∈ ({2} : Finset (Fin 3))ᶜ, ExteriorFibre.sgn j {2} *
+        fderiv ℝ (formExt ψ (insert j {2})) x (coordDir j)
+    rw [show ({2} : Finset (Fin 3))ᶜ = {0, 1} by decide, Finset.sum_pair (by decide),
+      formExt_of_card ψ (s := insert 0 {2}) (by decide),
+      formExt_of_card ψ (s := insert 1 {2}) (by decide),
+      show proxy₂ (0, 1) = ⟨insert 0 {2}, by decide⟩ from Subtype.ext (by decide),
+      show proxy₂ (0, 0) = ⟨insert 1 {2}, by decide⟩ from Subtype.ext (by decide)]
+    simp [sign₂, sgn_singleton, fderiv_neg]
+    ring
+
 /-- Short complexes with the same differentials are equal. -/
 theorem shortComplex_ext {W₀ W₁ W₂ : Type*} [NormedAddCommGroup W₀]
     [InnerProductSpace 𝕜 W₀] [CompleteSpace W₀] [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁]
@@ -468,6 +567,20 @@ theorem pecForms_conj_eq_pec {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
       (fun _ => one_mul (1 : 𝕜)) fun φ _ => gradOp_relabel φ).symm
   · exact (minimal_eq_conj_relabel hΩ proxy₁ (fun _ => one_mul (1 : 𝕜)) proxy₂ sign₂_mul_self
       fun ψ _ => curlOp_relabel ψ).symm
+
+/-- **Consistency with `Maxwell.pmc`**: for `n = 3`, `k = 0` the PMC complex of forms
+`HΛ⁰ → HΛ¹ → L²Λ²`, transported through the vector proxies, is the `grad`–`curl` complex
+`H¹ → H(curl) → L²` of `Maxwell.pmc` (via `Maxwell.maximal_eq_conj_relabel`: the formal
+adjoints `dᵗ` correspond to `gradᵗ = −div` and `curlᵗ = curl`). -/
+theorem pmcForms_conj_eq_pmc {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
+    (pmcForms 𝕜 hΩ 0).conj (relabelL2F Ω proxy₀ fun _ => one_mul (1 : 𝕜))
+      (relabelL2F Ω proxy₁ fun _ => one_mul (1 : 𝕜)) (relabelL2F Ω proxy₂ sign₂_mul_self) =
+      pmc 𝕜 hΩ := by
+  refine shortComplex_ext ?_ ?_
+  · exact (maximal_eq_conj_relabel hΩ proxy₀ (fun _ => one_mul (1 : 𝕜)) proxy₁
+      (fun _ => one_mul (1 : 𝕜)) fun ψ _ => gradOp_formalAdj_relabel ψ).symm
+  · exact (maximal_eq_conj_relabel hΩ proxy₁ (fun _ => one_mul (1 : 𝕜)) proxy₂ sign₂_mul_self
+      fun ψ _ => curlOp_formalAdj_relabel ψ).symm
 
 end Proxy
 

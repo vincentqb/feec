@@ -40,7 +40,7 @@ In characteristic zero:
   `H_{r+1}Λ⁰ = κ H_rΛ¹`;
 * `finrank_map_koszul_homForm`, `finrank_map_extDeriv_homForm'`:
   `dim κ H_rΛ^{k+1} = dim d H_{r+1}Λᵏ = (n + r choose r + k + 1) (r + k choose k)`
-  ([AFW2010], Thm 5.3);
+  ([AFW2006], Thm 3.3; [AFW2010], Thm 5.3);
 * `polyFormMinus_sup_map_extDeriv`, `disjoint_polyFormMinus_map_extDeriv`:
   `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ` (`r ≥ 1`), and `polyFormMinus_zero`:
   `P_r⁻Λ⁰ = P_rΛ⁰`;
@@ -52,7 +52,7 @@ In characteristic zero:
   `polyFormMinus_inf_ker_extDeriv_zero` (the closed `0`-forms are the constants `P_0Λ⁰`, of
   dimension one by `finrank_polyForm_zero_zero`);
 * `mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero`: a closed form of `P_r⁻Λᵏ` lies in
-  `P_{r-1}Λᵏ` ([AFW2010], Thm 5.4).
+  `P_{r-1}Λᵏ` ([AFW2006], Thm 3.4; [AFW2010], Thm 5.4).
 
 The edge case `r + k = 0` is excluded exactly where it fails: `H_0Λ⁰` (the constants) is not
 `κ(·) + d(·)`, and the closed `0`-forms are the constants rather than `0`.
@@ -67,7 +67,7 @@ avoid truncated subtraction: e.g. `H_{r+1}Λ^{k+1} = κ H_rΛ^{k+2} ⊕ d H_{r+2
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (the Koszul complex, `P_rΛᵏ`, `P_r⁻Λᵏ`, their dimensions)
+  §3 (the Koszul complex, `P_rΛᵏ`, `P_r⁻Λᵏ`, their dimensions; Thms 3.3, 3.4)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.1 (Thms 5.1–5.4, the resolutions (71), (72))
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
@@ -266,7 +266,8 @@ theorem homForm_eq_coeffForm (r k : ℕ) :
 theorem polyForm_eq_coeffForm (r k : ℕ) :
     polyForm R d r k = coeffForm R k (restrictTotalDegree d R r) := by
   ext ω
-  exact and_congr_right fun _ => forall_congr' fun s => (mem_restrictTotalDegree d (m := r) (ω s)).symm
+  exact and_congr_right fun _ => forall_congr' fun s =>
+    (mem_restrictTotalDegree d (m := r) (ω s)).symm
 
 /-! ### Direct sums -/
 
@@ -454,7 +455,8 @@ theorem mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero {r k : ℕ} (hr : 
   have hdκ : extDeriv (koszul c) = 0 := by
     have h1 := congrArg (homComp (r - 1)) hd
     rw [extDeriv_add, homComp_add, homComp_extDeriv, homComp_extDeriv, Nat.sub_add_cancel hr,
-      homComp_eq_zero_of_mem_polyForm ha (Nat.sub_lt hr Nat.one_pos), homComp_of_mem_homForm hκc] at h1
+      homComp_eq_zero_of_mem_polyForm ha (Nat.sub_lt hr Nat.one_pos),
+      homComp_of_mem_homForm hκc] at h1
     simpa using h1
   have hzero : koszul c = 0 := by
     have := extDeriv_koszul_add_koszul_extDeriv_of_mem hκc
@@ -684,7 +686,8 @@ theorem choose_identity_koszul (n s j : ℕ) :
   have hP' := choose_mul_add_choose n (s + 1) (j + 1)
   have h1 : (n + (s + 1)).choose (s + 1) = (n + s).choose s + (n + s).choose (s + 1) :=
     Nat.choose_succ_succ' (n + s) s
-  have h2 : (s + 1 + (j + 1)).choose (j + 1) = (s + j + 1).choose j + (s + j + 1).choose (j + 1) := by
+  have h2 : (s + 1 + (j + 1)).choose (j + 1) =
+      (s + j + 1).choose j + (s + j + 1).choose (j + 1) := by
     rw [show s + 1 + (j + 1) = s + j + 1 + 1 by omega]; exact Nat.choose_succ_succ' _ _
   have h3 : (s + 1 + n).choose (s + 1 + (j + 1)) =
       (n + s).choose (s + j + 1) + (n + s).choose (s + j + 2) := by
@@ -709,7 +712,8 @@ theorem finrank_map_koszul_homForm (r k : ℕ) :
     simp [show Fintype.card d + (r + 1) - 1 = Fintype.card d + r by omega]
   | succ k ih =>
     have h := finrank_homForm_eq_add (K := K) (d := d) r k
-    rw [ih (r + 1), finrank_homForm, show Fintype.card d + (r + 1) - 1 = Fintype.card d + r by omega,
+    rw [ih (r + 1), finrank_homForm,
+      show Fintype.card d + (r + 1) - 1 = Fintype.card d + r by omega,
       choose_identity_koszul] at h
     rw [show r + (k + 1) + 1 = r + k + 2 by omega, show r + (k + 1) = r + k + 1 by omega,
       show k + 1 + 1 = k + 2 from rfl]
@@ -717,7 +721,8 @@ theorem finrank_map_koszul_homForm (r k : ℕ) :
       show Fintype.card d + (r + 1) = Fintype.card d + r + 1 by omega] at h
     omega
 
-/-- **`dim d H_{r+1}Λᵏ(ℝⁿ) = (n + r choose r + k + 1) (r + k choose k)`**. [AFW2010], §5.1, Thm 5.3 -/
+/-- **`dim d H_{r+1}Λᵏ(ℝⁿ) = (n + r choose r + k + 1) (r + k choose k)`**.
+[AFW2010], §5.1, Thm 5.3 -/
 theorem finrank_map_extDeriv_homForm' (r k : ℕ) :
     Module.finrank K ((homForm K d (r + 1) k).map (extDerivₗ K d)) =
       (Fintype.card d + r).choose (r + k + 1) * (r + k).choose k := by

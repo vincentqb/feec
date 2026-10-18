@@ -5,9 +5,59 @@ public import Mathlib.Data.Nat.Choose.Vandermonde
 public import Mathlib.Data.Nat.Choose.Sum
 
 /-!
-# Degrees of freedom of `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)`
+# Degrees of freedom of `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)`: unisolvence and commuting interpolants
 
-TODO
+For an `n`-simplex `T` in `ℝⁿ` (vertices `p`, invertible edge matrix) the degrees of freedom of
+the FEEC spaces are the moments
+
+  `ω ↦ ∫_f tr_f ω ∧ η`,
+
+over the faces `f` of `T` of dimension `m ≥ k`, with `η` in a basis of the test space
+`P⁻_{r+k-m}Λ^{m-k}(f)` for `P_rΛᵏ(T)` and `P_{r+k-m-1}Λ^{m-k}(f)` for `P_r⁻Λᵏ(T)` (zero unless
+`m < r + k`). Here `f = p ∘ e` with its vertices in increasing order, `tr_f` is the pullback
+along the parametrization `F_f : T̂_m → f`, and `∫_f` is the integral over `T̂_m`
+([AFW2006], §4.5–4.6, §4.9; [AFW2010], §5.2; [Arnold2018], Ch. 7).
+
+## Main definitions
+
+* `Feec.FiniteElement.Face n`: faces of an `n`-simplex (dimension and vertex set);
+* `Feec.FiniteElement.testSpace r k m`, `testSpaceMinus r k m`: the test forms on `m`-faces;
+* `Feec.FiniteElement.faceMoment p e η ω = ∫_{T̂_m} tr_{p ∘ e} ω ∧ η`;
+* `Feec.FiniteElement.localDof p r k`, `localDofMinus p r k`: the degrees of freedom of
+  `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)`;
+* `Feec.FiniteElement.LocalElement p`: a local finite element (shape functions, degrees of
+  freedom attached to faces, unisolvence, trace determination), and its instances
+  `polyLocalElement`, `polyMinusLocalElement`;
+* `Feec.FiniteElement.polyInterp`, `polyMinusInterp`: the canonical interpolants on continuous
+  `k`-forms.
+
+## Main results
+
+* `card_dofIndex`, `card_dofIndexMinus`: **the number of degrees of freedom is the dimension**
+  ([AFW2006], Thms 4.9, 4.13), via `sum_choose_mul_choose_eq` (Vandermonde);
+* `eq_zero_of_faceMoment_eq_zero`, `eq_zero_of_faceMoment_eq_zero_minus`: vanishing degrees of
+  freedom force `ω = 0` on `T̂` ([AFW2006], Thms 4.8, 4.12; induction on the dimension of the
+  faces, with [AFW2006], Lemmas 4.7, 4.11 for the bubbles), and their versions on `T`;
+* `isUnisolvent_localDof`, `isUnisolvent_localDofMinus`: **unisolvence for all `r ≥ 1`,
+  `0 ≤ k ≤ n`** ([AFW2006], Thms 4.10, 4.14; [AFW2010], Thm 5.5);
+* `faceTrace_eq_of_localDof_eq`, `faceTrace_eq_of_localDofMinus_eq`: **the degrees of freedom on
+  a face and its subfaces determine the trace on that face**;
+* `finrank_bubbleSpace_polySpace`, `finrank_bubbleSpace_polyMinusSpace`: `dim P̊_rΛᵏ(T̂)` and
+  `dim P̊_r⁻Λᵏ(T̂)` are the dimensions of the top-face test spaces ([AFW2010], Lemma 5.6);
+* `faceMoment_extDeriv`: Stokes' formula for moments, from the Leibniz rule
+  `extDeriv_wedgeField_apply` and `Feec.FiniteElement.setIntegral_refSimplex_extDeriv`;
+* `polyInterp_extDeriv`, `polyMinusInterp_extDeriv`: **the commuting property**
+  `Π_T dω = d Π_T ω` for `C¹` `k`-forms, `P_{r+1}Λᵏ(T) → P_rΛ^{k+1}(T)` and
+  `P_r⁻Λᵏ(T) → P_r⁻Λ^{k+1}(T)` ([AFW2006], §4.9, Lemma 4.24), from
+  `Feec.FiniteElement.interp_comp_eq`.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §4.5–4.6 (Thms 4.8–4.14), §4.9 (Lemma 4.24)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.2 (Thm 5.5, Lemma 5.6)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 
 open Finset MeasureTheory MvPolynomial

@@ -10,7 +10,70 @@ public import Mathlib.Algebra.MvPolynomial.NoZeroDivisors
 /-!
 # The local spaces `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)`
 
-TODO
+Let `T` be an `n`-simplex in `ℝⁿ` with vertices `p₀, …, pₙ` (affinely independent, e.g. the
+points of a Mathlib `Affine.Simplex ℝ (Fin n → ℝ) n`) and `F_T(x̂) = p₀ + B x̂` its affine
+parametrization by the reference simplex `T̂ₙ`. The shape functions of the two FEEC families
+are the polynomial form fields
+
+  `P_rΛᵏ(T) = (F_T⁻¹)^* P_rΛᵏ(ℝⁿ)`, `P_r⁻Λᵏ(T) = (F_T⁻¹)^* P_r⁻Λᵏ(ℝⁿ)`,
+
+pullbacks of the algebraic spaces `Feec.Koszul.polyForm`, `Feec.Koszul.polyFormMinus`
+(evaluated as form fields by `Feec.FiniteElement.evalForm`). The trace on a face `f = p ∘ e`
+(`e : Fin (m + 1) → Fin (n + 1)` listing its vertices) is the pullback along its
+parametrization `F_f : ℝᵐ → ℝⁿ`, and a form has vanishing trace on `∂T` (it is a *bubble*) when
+its traces on all proper faces vanish ([AFW2006], §3–4; [AFW2010], §5.1–5.2; [Arnold2018], Ch. 7).
+
+## Main definitions
+
+* `Feec.FiniteElement.polySubst B b`, `polyPullback B b`: affine substitution in polynomials and
+  the pullback of polynomial forms along `x̂ ↦ B x̂ + b`;
+* `Feec.FiniteElement.polySpace n r k`, `polyMinusSpace n r k`: `P_rΛᵏ(ℝⁿ)`, `P_r⁻Λᵏ(ℝⁿ)` as
+  spaces of form fields;
+* `Feec.FiniteElement.localPolySpace p r k`, `localPolyMinusSpace p r k`: `P_rΛᵏ(T)`,
+  `P_r⁻Λᵏ(T)`;
+* `Feec.FiniteElement.faceTrace p e`: the trace on the face `p ∘ e`;
+* `Feec.FiniteElement.IsBubble p ω`, `bubbleSpace p V`: vanishing trace on `∂T`, `V̊`;
+* `Feec.FiniteElement.wedgeField ω η`: the pointwise exterior product.
+
+## Main results
+
+* fibre identities: `Feec.ExteriorFibre.pullback_interior` (`B^*(ι_{Bx} α) = ι_x B^* α`),
+  `Feec.ExteriorFibre.pullback_wedgeForm` (`B^*(α ∧ β) = B^*α ∧ B^*β`),
+  `Feec.ExteriorFibre.interior_wedgeProd` (contraction is an antiderivation);
+* polynomial calculus: `partialDeriv_eval`, `extDeriv_evalForm` (`d` of an evaluated polynomial
+  form), `evalForm_injective`, `evalForm_wedgeForm`;
+* **affine invariance**: `polyPullback_mem_polyForm`, `polyPullback_mem_polyFormMinus`
+  (`F^* P_rΛᵏ(ℝⁿ) ⊆ P_rΛᵏ(ℝᵐ)`, `F^* P_r⁻Λᵏ(ℝⁿ) ⊆ P_r⁻Λᵏ(ℝᵐ)` for every affine `F : ℝᵐ → ℝⁿ`,
+  via `F^*(κω) = κ(F^*ω) + F^*(ι_b ω)`), hence `localPolySpace_eq`, `localPolyMinusSpace_eq`:
+  `P_rΛᵏ(T) = P_rΛᵏ(ℝⁿ)` and `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)` for every simplex;
+* **traces**: `map_faceTrace_polySpace`, `map_faceTrace_polyMinusSpace`:
+  `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)`, `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)` (the inclusion by affine invariance,
+  the equality by the barycentric retraction of `T` onto `f`); traces are multiplicative
+  (`faceTrace_wedgeField`) and commute with `d` (`faceTrace_extDeriv`);
+* **bubbles** ([AFW2006], Lemmas 4.5–4.7, 4.11): `eq_zero_of_coordTrace_of_integral` (a form whose
+  traces vanish on the faces through `0` and which is orthogonal to `P_{r+k-n}Λ^{n-k}` vanishes),
+  `eq_zero_of_isBubble_of_mem_polyForm` (a bubble of `P_rΛᵏ` orthogonal to
+  `P⁻_{r+k-n}Λ^{n-k}` vanishes), `eq_zero_of_isBubble_of_mem_polyFormMinus` (a bubble of
+  `P_r⁻Λᵏ` orthogonal to `P_{r+k-n-1}Λ^{n-k}` vanishes), and `bubbleSpace_polySpace_eq_bot`,
+  `bubbleSpace_polyMinusSpace_eq_bot` (no bubbles if `r + k ≤ n`); the dimensions of the bubble
+  spaces are in `Feec.FiniteElement.LocalDof`;
+* `integral_extDeriv_wedge_of_isBubble`: Stokes' theorem for a bubble,
+  `∫_{T̂} dω ∧ μ = -(-1)^k ∫_{T̂} ω ∧ dμ`.
+
+## Implementation notes
+
+Form fields are defined on all of `ℝⁿ`, so the traces of polynomial forms are polynomial form
+fields on all of `ℝᵐ`, and "vanishing trace" means that this polynomial form vanishes (for
+polynomials, equivalently on the face). The orthogonality hypotheses use the integral
+`∫_{T̂} (ω ∧ η)_{univ}` of the reference simplex (`Feec.FiniteElement.simplexIntegral`).
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3 (affine invariance), §4.5–4.6 (Lemmas 4.5–4.7, 4.11)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.1–5.2 (the spaces on simplices and their traces)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 
 open Finset MeasureTheory
@@ -112,7 +175,8 @@ variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
 
 /-- `κ P_{r-1}Λ^{k+1} ⊆ P_r⁻Λᵏ` (the second form of the definition of `P_r⁻Λᵏ`, [AFW2010],
 §5.1.3). -/
-theorem koszul_mem_polyFormMinus {r k : ℕ} {ω : PolyForm K d} (h : ω ∈ polyForm K d (r - 1) (k + 1)) :
+theorem koszul_mem_polyFormMinus {r k : ℕ} {ω : PolyForm K d}
+    (h : ω ∈ polyForm K d (r - 1) (k + 1)) :
     koszul ω ∈ polyFormMinus K d r k := by
   rw [← sum_homComp h, ← koszulₗ_apply, map_sum]
   refine Submodule.sum_mem _ fun j hj => ?_

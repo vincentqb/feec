@@ -183,7 +183,8 @@ theorem wedgeForm_sum_right {ι : Type*} (u : Finset ι) (ω : Finset d → R) (
   funext u
   rw [wedgeForm_apply, sum_eq_single u (fun s hs hsu => ?_) (by simp)]
   · simp
-  · have : u \ s ≠ ∅ := fun h => hsu (le_antisymm (mem_powerset.1 hs) (sdiff_eq_empty_iff_subset.1 h))
+  · have : u \ s ≠ ∅ := fun h =>
+      hsu (le_antisymm (mem_powerset.1 hs) (sdiff_eq_empty_iff_subset.1 h))
     simp [this]
 
 /-- Degrees add: the exterior product of a `k`-form and an `l`-form is a `(k + l)`-form. -/

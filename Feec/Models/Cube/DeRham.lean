@@ -33,7 +33,8 @@ dimension and degree:
   kill every constant coefficient except `dx_1 ∧ ⋯ ∧ dx_n` (relative) or `1` (absolute):
   `relative_harmonic_eq_bot` (degrees `< n`), `finrank_relative_harmonic_top` (`= 1` in degree
   `n`), `absolute_harmonic_eq_bot` (degrees `> 0`), `finrank_absolute_harmonic_zero` (`= 1` in
-  degree `0`: the constants);
+  degree `0`: the constants), and their duality `k ↔ n - k`
+  (`finrank_relative_harmonic_eq_absolute`);
 * **a complete set of eigenvectors** for the Hodge wave group (`eigenDense`), from the compact
   resolvent.
 
@@ -51,7 +52,8 @@ classes under the Hodge star is not formalized here.
 * **`hasCompactProperty`**, `closedRangeAt`, `dual_closedRangeAt`, **`norm_le_of_mem_orthogonal`**,
   **`eigenDense`**.
 * **`relative_harmonic_eq_bot`**, **`finrank_relative_harmonic_top`**,
-  **`absolute_harmonic_eq_bot`**, **`finrank_absolute_harmonic_zero`**.
+  **`absolute_harmonic_eq_bot`**, **`finrank_absolute_harmonic_zero`**,
+  `finrank_relative_harmonic_eq_absolute`, `finrank_relative_harmonic_eq_absolute_rev`.
 
 ## References
 
@@ -471,5 +473,25 @@ theorem finrank_absolute_harmonic_zero : Module.finrank ℂ ((absolute d).harmon
   refine finrank_harmonic_eq_one ⟨∅, Finset.card_empty⟩
     (fun t => Subtype.ext (Finset.card_eq_zero.1 t.2)) fun j => ?_
   simp [parSign, reflSign]
+
+/-- **Duality of the harmonic forms** (Poincaré–Lefschetz, numerically): the relative harmonic
+`k`-forms and the absolute harmonic `k'`-forms, `k + k' = n`, have the same dimension. -/
+theorem finrank_relative_harmonic_eq_absolute {k k' : Fin (Fintype.card d + 1)}
+    (hkk : (k : ℕ) + k' = Fintype.card d) :
+    Module.finrank ℂ ((relative d).harmonic k) = Module.finrank ℂ ((absolute d).harmonic k') := by
+  by_cases hk : (k : ℕ) = Fintype.card d
+  · obtain rfl : k = Fin.last _ := Fin.ext hk
+    obtain rfl : k' = 0 := Fin.ext (by simp at hkk ⊢; omega)
+    exact finrank_relative_harmonic_top.trans finrank_absolute_harmonic_zero.symm
+  · have h1 : Module.finrank ℂ ((relative d).harmonic k) = 0 := by
+      rw [relative_harmonic_eq_bot hk]; exact finrank_bot ℂ _
+    have h2 : Module.finrank ℂ ((absolute d).harmonic k') = 0 := by
+      rw [absolute_harmonic_eq_bot (by omega)]; exact finrank_bot ℂ _
+    rw [h1, h2]
+
+/-- Duality of the harmonic forms, `k ↔ n - k` (`Fin.rev`). -/
+theorem finrank_relative_harmonic_eq_absolute_rev (k : Fin (Fintype.card d + 1)) :
+    Module.finrank ℂ ((relative d).harmonic k) = Module.finrank ℂ ((absolute d).harmonic k.rev) :=
+  finrank_relative_harmonic_eq_absolute (by rw [Fin.val_rev]; have := k.isLt; omega)
 
 end Feec.Models.Cube.DeRham

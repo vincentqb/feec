@@ -45,7 +45,9 @@ the unit ball.
 * `CommutingMap.norm_le_of_restrictV`: `‖v‖ ≤ (1 - θ)⁻¹ ‖J v‖`.
 * **`CommutingMap.toCochainProjection`**, `CommutingMap.toCochainProjection_π`,
   **`CommutingMap.norm_toCochainProjection_le`**,
-  **`CommutingMap.isGraphBounded_toCochainProjection`**.
+  **`CommutingMap.isGraphBounded_toCochainProjection`**,
+  `CommutingMap.isGraphBounded_toCochainProjection_of_norm_le` (graph bound from `W`-bounds,
+  since `d Q = Q d`).
 * **`SmoothedInterpolant.norm_toCochainProjection_le_half`**: `‖π‖ ≤ 2 C_Π C_R`;
   `SmoothedInterpolant.norm_le_of_forall_inner_eq_zero_half`: the discrete Poincaré inequality
   `‖x‖ ≤ 2 C_Π C_R c_P ‖d x‖` on `Vₕ ⊥ 𝔷ₕ`.
@@ -233,6 +235,26 @@ theorem isGraphBounded_toCochainProjection {θ : ℝ} (hθ : θ < 1)
     _ ≤ (1 - θ)⁻¹ ^ 2 * (C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)) :=
         mul_le_mul_of_nonneg_left this (by positivity)
     _ = _ := by ring
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+/-- A commuting map bounded by `C` in `W` at both ends of `i → j` is bounded by `C` in the graph
+norm: `d Q x = Q d x`. -/
+theorem graph_le_of_norm_le {i j : ι} {C : ℝ} (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖)
+    (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) (x : (H.d i j).domain) :
+    ‖Q.Q i x‖ ^ 2 + ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2 ≤
+      C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2) := by
+  rw [Q.comm]
+  have h1 := pow_le_pow_left₀ (norm_nonneg _) (hi x) 2
+  have h2 := pow_le_pow_left₀ (norm_nonneg _) (hj (H.d i j x)) 2
+  nlinarith
+
+/-- **Graph bound of the smoothed projection from `W`-bounds**: `‖Q‖ ≤ C` at `i` and `j` gives
+`π` graph-bounded by `(1 - θ)⁻¹ C` at `i → j`. -/
+theorem isGraphBounded_toCochainProjection_of_norm_le {θ : ℝ} (hθ : θ < 1)
+    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} {C : ℝ}
+    (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) :
+    (Q.toCochainProjection hθ hQ).IsGraphBounded i j ((1 - θ)⁻¹ * C) :=
+  Q.isGraphBounded_toCochainProjection hθ hQ (Q.graph_le_of_norm_le hi hj)
 
 end CommutingMap
 

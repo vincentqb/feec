@@ -72,6 +72,16 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > hypothesis, is the table "FEEC book coverage" of `docs/OVERVIEW.md`; §6 below records the
 > status per rank.
 
+> **Status (2026-10-18): thesis-rest gated.** 9 new modules (`Feec.Geometry.Bianchi`,
+> `Feec.Physics.EinsteinBianchi.Nonlinear`: the second Bianchi identity and the nonlinear EB
+> system of §3.4; `Feec.Evolution.BoundaryLifting`, `Feec.Models.Cube.Inhomogeneous`,
+> `Feec.Numerics.PlaneWaveCube`: the Ch. 7 runs with inhomogeneous data; `Feec.Models.Cube.MirrorTrace`,
+> `Feec.Models.BoundedDomain.{MovingTSD, SymDualGeneral}`, `Feec.Counterexamples.EveryBallSymTSD`:
+> Props 4.17/4.19 with trace conditions on cubes, on every ball and on general bounded domains)
+> are imported by `Feec.lean`, and the full gate passes. `ThesisEB` was renamed `ExtrinsicEB`
+> (with `nonlinearEB_iff_extrinsicEB`, `vacuum_extrinsicEB`, `minkowski_extrinsicEB`) for the
+> naming grep.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

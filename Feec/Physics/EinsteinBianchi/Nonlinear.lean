@@ -24,8 +24,8 @@ derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection c
 * Jet level (pointwise algebra): `frameBianchi_eq` (the frame Bianchi expression is the
   linearized one `bianchi2` of `Feec.Physics.EinsteinBianchi.System` plus `lowerOrder`, bilinear
   in `(γ, W)`); `frameBianchi_iff` (the identity ⇔ `NonlinearEB`); the linearization results; the
-  comparison with the thesis' form `nonlinearEB_iff_thesisEB`.
-* Fields: `vacuum_nonlinearEB`, `vacuum_thesisEB` (every vacuum metric satisfies the system), via
+  comparison with the thesis' form `nonlinearEB_iff_extrinsicEB`.
+* Fields: `vacuum_nonlinearEB`, `vacuum_extrinsicEB` (every vacuum metric satisfies the system), via
   `Feec.CurvatureTensor.frameRiemField_cyclic` (tensoriality of `∇` and the coordinate second
   Bianchi identity) and `frameRiemField_isWeyl` (vacuum and orthonormality).
 
@@ -39,7 +39,7 @@ derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection c
   **the linearization at Minkowski space is exactly the linearized EB system** `EBJet` of
   `Feec.Physics.EinsteinBianchi.System` (equivalently, by `linBianchi_iff`, the linearized Bianchi
   identity of Prop 3.4).
-* `nonlinearEB_iff_thesisEB`, `vacuum_thesisEB`: for a hypersurface-orthogonal normal (symmetric
+* `nonlinearEB_iff_extrinsicEB`, `vacuum_extrinsicEB`: for a hypersurface-orthogonal normal (symmetric
   `K`) the system is the thesis' one, with spatial covariant derivatives `D`, the Lie derivative
   `L_n`, `K_ij = g(∇_{e_i} n, e_j)` and `a = ∇_n n`:
   `div E − B ×· K = 0`, `div B + E ×· K = 0`, `L_n E + sym curl B + L¹ = 0`,
@@ -49,8 +49,8 @@ derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection c
   triad have no `e_0` component (involutivity of `n^⊥`, the frame form of
   hypersurface-orthogonality; the Frobenius theorem itself is not formalized).
 * `isLeviCivita_minkowski`, `isOrthonormalFrame_minkowski`, `ricField_minkowski`,
-  `minkowski_thesisEB`: Minkowski space in its Cartesian frame satisfies every hypothesis of
-  `vacuum_thesisEB` (a non-vacuity check; it has `E = B = 0`).
+  `minkowski_extrinsicEB`: Minkowski space in its Cartesian frame satisfies every hypothesis of
+  `vacuum_extrinsicEB` (a non-vacuity check; it has `E = B = 0`).
 
 **Corrections to the thesis display** (in the conventions of its Props 3.3–3.4, reading `Ē, B̄`
 as `E, B` and the time derivative as `L_n`): the `B`-constraint has `+ E ×· K`, the
@@ -835,7 +835,7 @@ theorem evolB_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)�
 spatial covariant derivatives `D`, the Lie derivative `L_n` along the unit normal, the extrinsic
 curvature `K` and the acceleration `a`, and with the signs of the `B`-constraint and of the
 `B`-evolution equation corrected. -/
-def ThesisEB (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) : Prop :=
+def ExtrinsicEB (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) : Prop :=
   div (covSp γ E dE) - crossDot B (extrinsic γ) = 0 ∧
     div (covSp γ B dB) + crossDot E (extrinsic γ) = 0 ∧
     lieN γ E dE + symPart (curl (covSp γ B dB)) + thesisL1 γ E B = 0 ∧
@@ -843,12 +843,12 @@ def ThesisEB (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) 
 
 /-- **The frame EB system is the thesis' system**: for metric-compatible frame connection
 coefficients with symmetric extrinsic curvature (by `extrinsic_symm_iff_bracket`, `n^⊥` is
-involutive, i.e. `n = e_0` is hypersurface orthogonal) and symmetric trace-free `E, B` and jets, `NonlinearEB ↔ ThesisEB`. The
+involutive, i.e. `n = e_0` is hypersurface orthogonal) and symmetric trace-free `E, B` and jets, `NonlinearEB ↔ ExtrinsicEB`. The
 antisymmetric parts of the evolution equations are the constraints. -/
-theorem nonlinearEB_iff_thesisEB {γ : FrameConn} (hγ : IsMetricConn γ)
+theorem nonlinearEB_iff_extrinsicEB {γ : FrameConn} (hγ : IsMetricConn γ)
     (hK : (extrinsic γ)ᵀ = extrinsic γ) {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E)
     (htE : E.trace = 0) (hB : Bᵀ = B) (htB : B.trace = 0) {dE dB : Jet4} (hdE : IsSymTF dE)
-    (hdB : IsSymTF dB) : NonlinearEB γ E B dE dB ↔ ThesisEB γ E B dE dB := by
+    (hdB : IsSymTF dB) : NonlinearEB γ E B dE dB ↔ ExtrinsicEB γ E B dE dB := by
   have r1 := conE_eq hγ hK hE htE hB htB dE
   have r2 := conB_eq hγ hK hE htE hB htB dB
   have r3 := evolE_eq hγ hK hE htE hB htB dE dB hdB
@@ -892,12 +892,12 @@ theorem frameDeriv_isSymTF {e : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
 
 /-- **Every vacuum metric satisfies the thesis' nonlinear EB system** (corrected signs), in an
 orthonormal frame whose normal `e_0` has symmetric extrinsic curvature. -/
-theorem vacuum_thesisEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
+theorem vacuum_extrinsicEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ} (h : IsLeviCivita g Γ)
     {e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ} (hF : IsOrthonormalFrame g e θ)
     (hvac : ∀ y, ricField Γ y = 0) (x : Fin 4 → ℝ)
     (hK : (extrinsic (frameConnField Γ e θ x))ᵀ = extrinsic (frameConnField Γ e θ x)) :
-    ThesisEB (frameConnField Γ e θ x) (elecField g Γ e x) (magField g Γ e x)
+    ExtrinsicEB (frameConnField Γ e θ x) (elecField g Γ e x) (magField g Γ e x)
       (frameDeriv e (elecField g Γ e) x) (frameDeriv e (magField g Γ e) x) := by
   have hR := differentiable_riemField h.contDiff_chr
   have hg : ∀ a b, Differentiable ℝ fun y => g y a b := fun a b =>
@@ -910,7 +910,7 @@ theorem vacuum_thesisEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
       (differentiable_slot4 he hR4)))
   have hWE := fun y => frameRiemField_eq_weylOf h hF hvac y
   obtain ⟨-, hE, htE, hB, htB⟩ := hWE x
-  exact (nonlinearEB_iff_thesisEB (isMetricConn_frameConnField h hF x) hK hE htE hB htB
+  exact (nonlinearEB_iff_extrinsicEB (isMetricConn_frameConnField h hF x) hK hE htE hB htB
     (frameDeriv_isSymTF (fun y => (hWE y).2.1) (fun y => (hWE y).2.2.1)
       fun i j => (hW _ _ _ _) x)
     (frameDeriv_isSymTF (fun y => (hWE y).2.2.2.1) (fun y => (hWE y).2.2.2.2)
@@ -971,15 +971,15 @@ theorem frameConnField_minkowski (x : Fin 4 → ℝ) :
   funext l κ ν
   simp [frameConnField, frameConn, mixedConnField]
 
-/-- **The hypotheses of `vacuum_thesisEB` are jointly satisfiable**: Minkowski space in its
+/-- **The hypotheses of `vacuum_extrinsicEB` are jointly satisfiable**: Minkowski space in its
 Cartesian frame satisfies them (with `γ = 0`, `E = B = 0`). -/
-theorem minkowski_thesisEB (x : Fin 4 → ℝ) :
-    ThesisEB (frameConnField (fun _ _ _ _ => 0) (fun _ => 1) (fun _ => 1) x)
+theorem minkowski_extrinsicEB (x : Fin 4 → ℝ) :
+    ExtrinsicEB (frameConnField (fun _ _ _ _ => 0) (fun _ => 1) (fun _ => 1) x)
       (elecField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1) x)
       (magField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1) x)
       (frameDeriv (fun _ => 1) (elecField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1)) x)
       (frameDeriv (fun _ => 1) (magField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1)) x) :=
-  vacuum_thesisEB isLeviCivita_minkowski isOrthonormalFrame_minkowski ricField_minkowski x
+  vacuum_extrinsicEB isLeviCivita_minkowski isOrthonormalFrame_minkowski ricField_minkowski x
     (by rw [frameConnField_minkowski]; ext i j; simp [extrinsic])
 
 end Feec.EinsteinBianchi

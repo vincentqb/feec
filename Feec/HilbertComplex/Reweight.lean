@@ -38,6 +38,10 @@ that adjoints pick up the adjoint weights: `(d')† = (a i)⁻† ∘ d† ∘ (
   subcomplex `S'` of `H.conj a` whenever `a S ⊆ S'` and `a Sᗮ ⊆ S'ᗮ` (e.g. `S' = S` when the
   weights commute with the projections), with `ReducingSubcomplex.invariantCore_conj`: then
   `∏ S'` is its own invariant core under the wave group of `H.conj a`.
+* `ShortHilbertComplex.conj`: the same for short complexes.
+* `Evolution.isStrongSolution_conj_symm_iff`, `Evolution.isClassicalSolution_conj_symm_iff`,
+  `Evolution.ForcingClass.admissible.conjEquiv`, `Evolution.existsUnique_conj_symm`: evolution
+  equations `U' = Φ⁻¹ A Φ U + F` are similar to `V' = A V + Φ F`, and well-posedness transfers.
 * `ContinuousLinearMap.exists_selfAdjoint_equiv_adjoint_comp_eq`: over `ℂ` every bounded,
   self-adjoint, uniformly positive `ε` is `e† e` for a self-adjoint isomorphism `e` (`e = ε^{1/2}`,
   the continuous functional calculus square root), so the weights of every medium exist.

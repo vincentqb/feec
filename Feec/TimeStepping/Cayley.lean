@@ -28,6 +28,20 @@ For the evolution `u' = A u` with `A : E →ₗ.[𝕜] E` on a Hilbert space and
 These hold in any Hilbert space, so they cover finite element spaces (bounded `A`) and the
 continuous problem (unbounded skew-adjoint `A`) at once.
 
+* `IsCNStep.add`, `IsCNStep.smul`: CN steps are linear; `isCNStep_of_eigen`: on an eigenvector
+  `A u = μ u` the step is `λ u`, `λ = (1 + s μ)/(1 − s μ)`, of modulus one for imaginary `μ`
+  (`norm_amplification_eq_one`).
+
+## Inhomogeneous Dirichlet degrees of freedom (`fem4gr`)
+
+`IsDirichletCNStep V₀ A s f g' u u'`: the CN step on a finite-dimensional space `V` with the
+boundary DOFs of `g'` prescribed (`u' − g' ∈ V₀`) and the equations tested against `V₀`, as
+`DirichletBC.apply` does. `existsUnique_isDirichletCNStep`: well posed whenever `s ⟪A w, w⟫ ≤ 0` on
+`V₀`; `IsDirichletCNStep.norm_sub_le`, `norm_sub_le_sum_of_isDirichletCNStep`: the error against
+comparison fields with the same boundary DOFs is at most the initial error plus the sum of the
+consistency errors; `norm_residual_le_of_isDirichletCNStep`: the same bound for every linear
+constraint residual; `IsDirichletCNStep.norm_eq_of_top`: energy conservation without boundary.
+
 ## Three-field schemes (thesis Ch. 7)
 
 For finite-dimensional spaces `V₀ --d₀--> V₁ --d₁--> V₂` (finite element spaces with their `L²`

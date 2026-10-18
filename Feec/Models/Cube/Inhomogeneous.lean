@@ -5,6 +5,8 @@ public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.HilbertComplex.InvariantCore
 public import Feec.HilbertComplex.ReducedSystem
 public import Feec.Models.Cube.Basic
+public import Feec.Models.Cube.FiniteElementMethod
+public import Feec.TimeStepping.Cayley
 
 /-!
 # The thesis' experiments with inhomogeneous boundary data
@@ -47,8 +49,27 @@ one (`Feec.Numerics.PlaneWaveCube`). On every bounded open `Ω`:
   the invariant core `K*` of the homogeneous problem (`WholeSpaceTSD.mem_of_mem_coreSub`).
 
 The homogeneous refutation (`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`) then
-transfers to these data: TSD propagation fails for `U₀ = R(0) + (0, 0, β)`
-(`Feec.Numerics.PlaneWaveCube.not_propagates_perturbed`).
+transfers to these data: TSD propagation fails for a TSD perturbation `R(0) + W₀` of the initial
+value (`Feec.Numerics.PlaneWaveCube.exists_not_propagates`).
+
+The condition `B · n = h` imposed by `fem4gr` is not part of the continuous problem; for an exact
+lifting it is propagated (`B − B_R` evolves in the range of `curl_min`) and is not formalized here.
+
+## The fully discrete scheme
+
+For a finite element subcomplex `Vₕ` (all DOFs) with the subspaces `V̊ₕⁱ` of vanishing boundary
+DOFs, `discreteWave S = 𝐝ₕ − 𝐝ₕ*` is the matrix of `fem4gr`'s bilinear form, skew on all of `Vₕ`
+(`inner_discreteWave_self`), and the Crank–Nicolson step with prescribed boundary DOFs
+(`Feec.TimeStepping.IsDirichletCNStep`) is well posed for every time step
+(`existsUnique_isDirichletCNStep`); the constraint residuals of its solution are bounded by the
+consistency error (`norm_residual_le`). On the Whitney spaces of the Freudenthal meshes of the cube
+(`whitneyRow N`: Lagrange `P₁`, Nédélec, Raviart–Thomas, with `V̊ₕ ⊆ Vₕ` by
+`whitneyMin_le_whitney`): `whitney_existsUnique_cnStep`. The meshes are those of `(0, ½)³`
+(`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation, not formalized. One
+row of (4.14) is the scalar de Rham window; the three rows decouple (row-wise `grad`, `curl`), and
+the cross-row residuals (skew and trace parts) are covered by `norm_residual_le` on any space.
+What is **not** proved: any bound of the consistency error `τₙ` in terms of `h` and `Δt` (it needs
+interpolation estimates for the Whitney spaces).
 
 ## References
 
@@ -613,5 +634,119 @@ theorem mem_of_mem_coreSub {T : ℝ} {U : ℝ → State Ω}
 
 end WholeSpaceTSD
 
+
+
+/-! ## The fully discrete scheme with inhomogeneous Dirichlet DOFs on a subcomplex -/
+
+section DiscreteCN
+
+open HilbertComplex
+open scoped RealInnerProductSpace
+
+variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex ℝ c W} (S : H.Subcomplex) [∀ i, FiniteDimensional ℝ (S.V i)]
+
+/-- The discrete total space `Vₕ = ∏ Vₕⁱ` of a finite element subcomplex (all DOFs). -/
+abbrev DState := PiLp 2 fun i => S.V i
+
+/-- The discrete total differential `𝐝ₕ` on `Vₕ` (no boundary condition: `Vₕ ⊆ D(𝐝)`). -/
+def discreteD : DState S →ₗ[ℝ] DState S where
+  toFun x := WithLp.toLp 2 fun j => ∑ i, S.dLin i j (x i)
+  map_add' x y := PiLp.ext fun j => by
+    simp [map_add, Finset.sum_add_distrib]
+  map_smul' a x := PiLp.ext fun j => by
+    simp [map_smul, Finset.smul_sum]
+
+/-- **The matrix `A` of the scheme**, `A = 𝐝ₕ − 𝐝ₕ*` on all of `Vₕ`: its bilinear form is
+`⟪A u, v⟫ = ⟪𝐝ₕ u, v⟫ − ⟪u, 𝐝ₕ v⟫`, for (4.14)
+`(grad σ, C) − (E, grad τ) + (curl E, D) − (B, curl C)` (`fem4gr`: `A = A0 + A1 − A2`). -/
+def discreteWave : DState S →ₗ[ℝ] DState S :=
+  discreteD S - LinearMap.adjoint (discreteD S)
+
+theorem inner_discreteWave (u v : DState S) :
+    ⟪discreteWave S u, v⟫ = ⟪discreteD S u, v⟫ - ⟪u, discreteD S v⟫ := by
+  rw [discreteWave, LinearMap.sub_apply, inner_sub_left, LinearMap.adjoint_inner_left]
+
+/-- `A` is skew on all of `Vₕ`. -/
+theorem inner_discreteWave_self (u : DState S) : ⟪discreteWave S u, u⟫ = 0 := by
+  rw [inner_discreteWave, real_inner_comm u, sub_self]
+
+/-- The fields with **vanishing boundary DOFs**: `u i ∈ V̊ₕⁱ` for every `i`. -/
+def interior (V₀ : ∀ i, Submodule ℝ (W i)) : Submodule ℝ (DState S) where
+  carrier := {u | ∀ i, ((u i : S.V i) : W i) ∈ V₀ i}
+  zero_mem' i := (V₀ i).zero_mem
+  add_mem' hu hv i := (V₀ i).add_mem (hu i) (hv i)
+  smul_mem' a _ hu i := (V₀ i).smul_mem a (hu i)
+
+/-- **Well-posedness of the scheme with inhomogeneous Dirichlet DOFs on a finite element
+subcomplex**, for every time step: from every `uₙ ∈ Vₕ`, boundary data `gₙ₊₁ ∈ Vₕ` and load `f`
+there is exactly one `uₙ₊₁` with the boundary DOFs of `gₙ₊₁` solving the CN equations tested
+against `V̊ₕ`. -/
+theorem existsUnique_isDirichletCNStep (V₀ : ∀ i, Submodule ℝ (W i)) (s : ℝ)
+    (f g' u : DState S) :
+    ∃! u', TimeStepping.IsDirichletCNStep (interior S V₀) (discreteWave S) s f g' u u' :=
+  TimeStepping.existsUnique_isDirichletCNStep
+    (fun w _ => by rw [inner_discreteWave_self, mul_zero]) f g' u
+
+/-- **Constraint residuals of the discrete solution are bounded by the consistency error**, on a
+finite element subcomplex: for the CN iterates `uₙ` with boundary data `gₙ`, comparison fields
+`ũₙ` (e.g. interpolants of the exact solution) with the same boundary DOFs and consistency
+errors `τₙ`, and any linear residual map `c` with `‖c x‖ ≤ C ‖x‖`,
+`‖c u_N‖ ≤ ‖c ũ_N‖ + C (‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖)`. -/
+theorem norm_residual_le (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {X : Type*}
+    [SeminormedAddCommGroup X] [NormedSpace ℝ X] (cmap : DState S →ₗ[ℝ] X) {C : ℝ}
+    (hc : ∀ x, ‖cmap x‖ ≤ C * ‖x‖) (hC : 0 ≤ C) {f g u ũ τ : ℕ → DState S}
+    (h : ∀ n, TimeStepping.IsDirichletCNStep (interior S V₀) (discreteWave S) s (f n) (g (n + 1))
+      (u n) (u (n + 1)))
+    (hũ : ∀ n, ũ (n + 1) - g (n + 1) ∈ interior S V₀) (h0 : u 0 - ũ 0 ∈ interior S V₀)
+    (hτ : ∀ n, ∀ v ∈ interior S V₀, ⟪ũ (n + 1) - ũ n, v⟫ =
+      s * ⟪discreteWave S (ũ (n + 1) + ũ n), v⟫ + ⟪f n, v⟫ + ⟪τ n, v⟫) (N : ℕ) :
+    ‖cmap (u N)‖ ≤ ‖cmap (ũ N)‖ + C * (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range N, ‖τ n‖) :=
+  TimeStepping.norm_residual_le_of_isDirichletCNStep cmap hc hC
+    (fun w _ => by rw [inner_discreteWave_self, mul_zero]) h hũ h0 hτ N
+
+end DiscreteCN
+
+/-! ## The Whitney spaces of the cube meshes -/
+
+section Whitney
+
+open Feec.FiniteElement Feec.Models.Cube.FEM
+
+theorem _root_.Feec.FiniteElement.LocalElement.V₀_le_V {n : ℕ} (E : LocalElement n)
+    (M : Mesh.SimplicialMesh n) (k : ℤ) : E.V₀ M k ≤ E.V M k := by
+  rintro _ ⟨u, rfl⟩
+  exact ⟨⟨u, E.globalSpace₀_le M _ u.2⟩, rfl⟩
+
+theorem _root_.Feec.Domain.ConstCoeffComplex.minimalSubcomplexOfEq_le {n : ℕ}
+    (C : ConstCoeffComplex (Fin n → ℝ) ℝ) {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩ' : IsOpen Ω') (S : (C.maximalComplex hΩ).Subcomplex) (S' : (C.minimalComplex hΩ).Subcomplex)
+    (hle : ∀ k, S'.V k ≤ S.V k) (k : ℤ) :
+    (C.minimalSubcomplexOfEq h hΩ hΩ' S').V k ≤ (C.maximalSubcomplexOfEq h hΩ hΩ' S).V k := by
+  subst h; exact hle k
+
+/-- **The Whitney spaces with vanishing boundary DOFs lie in the Whitney spaces**:
+`V̊ₕᵏ ⊆ Vₕᵏ` on the Freudenthal meshes of the cube. -/
+theorem whitneyMin_le_whitney (N : ℕ) (k : ℤ) :
+    (whitneyMin 3 N).V k ≤ (whitney 3 N).V k :=
+  (deRham ℝ 3).minimalSubcomplexOfEq_le (mesh_domain 3 N) (isOpen_mesh_domain 3 N)
+    (isOpen_cubeDomain 3) _ _ (fun k => (whitneyElement 3).V₀_le_V (mesh 3 N) k) k
+
+/-- The Whitney window `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (Lagrange, Nédélec, Raviart–Thomas) of the
+level-`(N + 1)` Freudenthal mesh of the cube: one row of the `fem4gr` spaces
+`(CG₁)³ × (N1curl)³ × (RT)³` of (4.14) (the row-wise operators decouple the three rows). -/
+abbrev whitneyRow (N : ℕ) := (whitney 3 N).window 0 3
+
+/-- **The `fem4gr` scheme on the actual Whitney spaces of the cube meshes is well-posed**: for
+every time step and every data, the Crank–Nicolson step with prescribed boundary DOFs (those of
+`V̊ₕ = ` the Whitney spaces with vanishing boundary DOFs) exists and is unique. -/
+theorem whitney_existsUnique_cnStep (N : ℕ) (s : ℝ) (f g' u : DState (whitneyRow N)) :
+    ∃! u', TimeStepping.IsDirichletCNStep
+      (interior (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ)))
+      (discreteWave (whitneyRow N)) s f g' u u' :=
+  existsUnique_isDirichletCNStep _ _ s f g' u
+
+end Whitney
 
 end Feec.Models.Cube.Inhomogeneous

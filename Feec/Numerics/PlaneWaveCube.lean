@@ -36,6 +36,27 @@ below holds for all `A₊, Aₓ, ω`.
   `Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD.mem_iff` propagation for such data holds exactly
   when it holds for the homogeneous problem from `U(0) − R(0)`.
 
+## The periodic run on `𝕋³`
+
+`fem4gr`'s example `'periodic z-direction plane wave'` runs `ω = 6π`, `A₊ = 1`, `Aₓ = 0` on the
+flat torus. On the Fourier side of `Feec.Models.Torus.GradCurl` (coefficients in `ℓ²(ℤ³)`):
+
+* `wave_modeVec`: for every fibre complex, single-frequency fields `δ_k v` lie in `D(L)` and
+  `L (δ_k v) = δ_k (L_{2πk} v)`; `fibreWave_pwVec`: `(0, E₀, B₀)` is an eigenvector of the fibre
+  wave operator at `2πn e_z` with eigenvalue `−2πi n`.
+* `torusPlaneWave`: `U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`, `ω = 2πn`, the coefficients of
+  `(0, E₀, B₀) sin ω(z − t)`; **`isStrongSolution_torusPlaneWave`** (exact solution),
+  `torusPlaneWave_mem` (TSD at every time), `torusPlaneWave_unique`.
+* **`cnTorusPlaneWave_props`**: the Crank–Nicolson iterates (time-discrete, space-continuous) from
+  `U(0)` are `(2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)` with `|λ±| = 1`: exact energy conservation
+  `‖Uₖ‖ = ‖U₀‖`, TSD at every step, and a pure phase error.
+
+Only `ω ∈ 2πℤ` is periodic on the unit torus. Two observations on the `fem4gr` source (read, not
+formalized): its periodicity check `near(omega/pi, int(omega/pi + .5))` accepts odd multiples of `π`,
+which are not `1`-periodic; and its periodic initial datum has `E0[1][1] = −A₊ sin ωz` instead of
+`+A₊ sin ωz`, so `E0` is neither `E_ex(0)` nor trace-free (`tr E0 = −2A₊ sin ωz`). The spatial
+discretization of the periodic run (periodic Whitney spaces) is not formalized.
+
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],

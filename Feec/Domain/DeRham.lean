@@ -18,17 +18,22 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
 * `d ∘ d = 0` and `dᵗ ∘ dᵗ = 0` on smooth forms (Schwarz; `isComplexPair_extDerivOp`,
   `isComplexPair_formalAdj_extDerivOp`);
 * the complex `Feec.Domain.deRham n` of constant-coefficient operators indexed by `ℤ`, whose
-  minimal realization on any open `Ω` is `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯` (vanishing tangential trace,
-  the closure of `C_c^∞`), whose maximal realization is `HΛ⁰(Ω) → HΛ¹(Ω) → ⋯` (no boundary
+  minimal realization on any open `Ω` is `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯` (the closure of `d` on
+  `C_c^∞(Ω)`; for Lipschitz `Ω` these are the forms with vanishing tangential trace), whose maximal realization is `HΛ⁰(Ω) → HΛ¹(Ω) → ⋯` (no boundary
   condition), and each is the dual of the other through the codifferentials
   (`deRham_dual_minimalComplex_d`, `deRham_dual_maximalComplex_d`).
-* In degree `0`, `d` is the gradient (`extDerivOp_zero_apply`).
+* the components in low degree: `(d f)_{j} = ∂_j f` (`extDerivOp_zero_apply`),
+  `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (`extDerivOp_one_apply_pair`) and
+  `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l`
+  (`extDerivOp_two_apply_triple`).
 
 ## Implementation notes
 
-The identification of `deRham 3` with `Feec.Models.BoundedDomain.deRham3` (grad, curl, div
-through the vector proxies) cannot be stated here: `Feec.Models` is a higher layer. The degree-`0`
-identification with the gradient is `extDerivOp_zero_apply`.
+In `ℝ³`, with the vector proxies of `Feec.Algebra.Proxy3` (`v = (w_0, w_1, w_2)` for a 1-form,
+`v = (w_{12}, -w_{02}, w_{01})` for a 2-form), the last three lemmas say that `d` is grad, curl
+and div componentwise. The identification of `deRham 3` with
+`Feec.Models.BoundedDomain.deRham3` as complexes cannot be stated here (`Feec.Models` is a higher
+layer); it follows from these component formulas.
 
 ## References
 
@@ -290,6 +295,71 @@ theorem extDerivOp_zero_apply (f : formIdx n 0 → (Fin n → ℝ) → 𝕜) (j 
     rintro ⟨rfl, h⟩; exact lt_irrefl _ h
   simp [sgn, this]
 
+/-- **`d` on 1-forms**: `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (in `ℝ³`, the curl of the
+proxy `(w_0, w_1, w_2)`). -/
+theorem extDerivOp_one_apply_pair (w : formIdx n 1 → (Fin n → ℝ) → 𝕜) {j l : Fin n}
+    (hjl : j < l) (x : Fin n → ℝ) :
+    (extDerivOp 𝕜 n 1).apply w ⟨{j, l}, by rw [card_pair hjl.ne]; norm_num⟩ x =
+      fderiv ℝ (w ⟨{l}, by simp⟩) x (coordDir j) - fderiv ℝ (w ⟨{j}, by simp⟩) x (coordDir l) := by
+  rw [extDerivOp_apply]
+  have hj : j ∉ ({l} : Finset (Fin n)) := by simpa using hjl.ne
+  simp only [extD, sum_insert hj, sum_singleton, erase_insert hj,
+    erase_insert_of_ne hjl.ne, erase_singleton, Finset.insert_empty]
+  rw [formExt_of_card w (by simp), formExt_of_card w (by simp)]
+  have h1 : ({m ∈ ({j, l} : Finset (Fin n)) | m < j}) = ∅ := by
+    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton, Finset.notMem_empty, iff_false]
+    rintro ⟨rfl | rfl, h⟩ <;> order
+  have h2 : ({m ∈ ({j, l} : Finset (Fin n)) | m < l}) = {j} := by
+    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton]
+    constructor
+    · rintro ⟨rfl | rfl, h⟩
+      · rfl
+      · exact absurd h (lt_irrefl _)
+    · rintro rfl; exact ⟨Or.inl rfl, hjl⟩
+  simp [sgn, h1, h2]
+  ring
+
+/-- **`d` on 2-forms**: `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l` (in
+`ℝ³`, the divergence of the proxy `(w_{12}, -w_{02}, w_{01})`). -/
+theorem extDerivOp_two_apply_triple (w : formIdx n 2 → (Fin n → ℝ) → 𝕜) {i j l : Fin n}
+    (hij : i < j) (hjl : j < l) (x : Fin n → ℝ) :
+    (extDerivOp 𝕜 n 2).apply w ⟨{i, j, l}, by
+        rw [card_insert_of_notMem (by simp [hij.ne, (hij.trans hjl).ne]), card_pair hjl.ne]
+        norm_num⟩ x =
+      fderiv ℝ (w ⟨{j, l}, by rw [card_pair hjl.ne]; norm_num⟩) x (coordDir i) -
+        fderiv ℝ (w ⟨{i, l}, by rw [card_pair (hij.trans hjl).ne]; norm_num⟩) x (coordDir j) +
+        fderiv ℝ (w ⟨{i, j}, by rw [card_pair hij.ne]; norm_num⟩) x (coordDir l) := by
+  rw [extDerivOp_apply]
+  have hil := hij.trans hjl
+  have hi : i ∉ ({j, l} : Finset (Fin n)) := by simp [hij.ne, hil.ne]
+  have hj : j ∉ ({l} : Finset (Fin n)) := by simpa using hjl.ne
+  simp only [extD, sum_insert hi, sum_insert hj, sum_singleton, erase_insert hi,
+    erase_insert_of_ne hij.ne, erase_insert_of_ne hil.ne, erase_insert hj,
+    erase_insert_of_ne hjl.ne, erase_singleton, Finset.insert_empty]
+  rw [formExt_of_card w (by rw [card_pair hjl.ne]; norm_num),
+    formExt_of_card w (by rw [card_pair hil.ne]; norm_num),
+    formExt_of_card w (by rw [card_pair hij.ne]; norm_num)]
+  have h1 : ({m ∈ ({i, j, l} : Finset (Fin n)) | m < i}) = ∅ := by
+    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton, Finset.notMem_empty, iff_false]
+    rintro ⟨rfl | rfl | rfl, h⟩ <;> order
+  have h2 : ({m ∈ ({i, j, l} : Finset (Fin n)) | m < j}) = {i} := by
+    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton]
+    constructor
+    · rintro ⟨rfl | rfl | rfl, h⟩ <;> first | rfl | order
+    · rintro rfl; exact ⟨Or.inl rfl, hij⟩
+  have h3 : ({m ∈ ({i, j, l} : Finset (Fin n)) | m < l}) = {i, j} := by
+    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton]
+    constructor
+    · rintro ⟨rfl | rfl | rfl, h⟩
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+      · order
+    · rintro (rfl | rfl)
+      · exact ⟨Or.inl rfl, hil⟩
+      · exact ⟨Or.inr (Or.inl rfl), hjl⟩
+  simp [sgn, h1, h2, h3, card_pair hij.ne]
+  ring
+
 /-! ## The de Rham complex and its two boundary-condition families -/
 
 variable (𝕜 n) in
@@ -306,8 +376,8 @@ def deRham : ConstCoeffComplex (Fin n → ℝ) 𝕜 where
 
 variable {Ω : Set (Fin n → ℝ)}
 
-/-- The minimal complex `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯`: `d` with vanishing tangential trace (the closure
-of `d` on `C_c^∞(Ω)`). -/
+/-- The minimal complex `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯`: the closure of `d` on `C_c^∞(Ω)` (for Lipschitz
+`Ω`, `d` with vanishing tangential trace). -/
 theorem deRham_minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     ((deRham 𝕜 n).minimalComplex hΩ).d k (k + 1) = (extDerivOp 𝕜 n k).minimal Ω :=
   (deRham 𝕜 n).minimalComplex_d hΩ k

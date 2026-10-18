@@ -176,6 +176,16 @@ theorem smoothExt_smul (a : ℝ) (f : E → ℝ) :
     funext x; by_cases hx : x ∈ Ω <;> simp [hx]
   rw [smoothExt, h, molli, smul_convolution]; rfl
 
+theorem smoothExt_coe_add (hΩ : MeasurableSet Ω) (u v : L2 ℝ Ω) :
+    smoothExt Ω p ((u + v : L2 ℝ Ω) : E → ℝ) = smoothExt Ω p u + smoothExt Ω p v := by
+  rw [smoothExt_congr_ae hΩ (Lp.coeFn_add u v),
+    smoothExt_add ((memLp_indicator hΩ u).locallyIntegrable (by norm_num))
+      ((memLp_indicator hΩ v).locallyIntegrable (by norm_num))]
+
+theorem smoothExt_coe_smul (hΩ : MeasurableSet Ω) (a : ℝ) (u : L2 ℝ Ω) :
+    smoothExt Ω p ((a • u : L2 ℝ Ω) : E → ℝ) = a • smoothExt Ω p u := by
+  rw [smoothExt_congr_ae hΩ (Lp.coeFn_smul a u), smoothExt_smul]
+
 theorem norm_toLp_smoothExt_le (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     ‖(memLp_smoothExt_restrict (p := p) hΩ u).toLp _‖ ≤ 2 ^ Module.finrank ℝ E * ‖u‖ := by
   rw [Lp.norm_toLp, ← eLpNorm_indicator_eq_norm hΩ u]
@@ -193,13 +203,11 @@ def smoothL2 (p : SmoothingParam E) (hΩ : MeasurableSet Ω) : L2 ℝ Ω →L[�
       map_add' := fun u v => by
         rw [← MemLp.toLp_add]
         refine MemLp.toLp_congr _ _ (Eventually.of_forall fun x => ?_)
-        rw [smoothExt_congr_ae hΩ (Lp.coeFn_add u v),
-          smoothExt_add ((memLp_indicator hΩ u).locallyIntegrable (by norm_num))
-            ((memLp_indicator hΩ v).locallyIntegrable (by norm_num))]
+        rw [smoothExt_coe_add hΩ]
       map_smul' := fun a u => by
         rw [RingHom.id_apply, ← MemLp.toLp_const_smul]
         refine MemLp.toLp_congr _ _ (Eventually.of_forall fun x => ?_)
-        rw [smoothExt_congr_ae hΩ (Lp.coeFn_smul a u), smoothExt_smul] }
+        rw [smoothExt_coe_smul hΩ] }
     (2 ^ Module.finrank ℝ E) fun u => norm_toLp_smoothExt_le hΩ u
 
 theorem smoothL2_apply (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :

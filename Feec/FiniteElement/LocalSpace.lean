@@ -815,3 +815,181 @@ theorem apply_eq_zero_of_faceTrace_eq_zero {N : ℕ} {i : Fin (N + 1)} {ω : For
     (σ.preimage i.succAbove Fin.succAbove_right_injective.injOn)
   rw [faceTrace_refVertex_succAbove_succ, hpt, ExteriorFibre.restrict, ← hσ'] at this
   exact this
+
+theorem IsBubble.faceTrace_succAbove {N : ℕ} {p : Fin (N + 2) → Fin (N + 1) → ℝ}
+    {ω : FormField (N + 1)} (h : IsBubble p ω) (i : Fin (N + 2)) :
+    faceTrace p (Fin.succAbove i) ω = 0 := by
+  have := h N (Fin.succAboveOrderEmb i) (Nat.lt_succ_self N)
+  rwa [Fin.coe_succAboveOrderEmb] at this
+
+/-- A bubble's coefficients vanish on the coordinate hyperplanes `xᵢ = 0`, `i ∉ σ`. -/
+theorem IsBubble.eval_eq_zero {Ω : Koszul.PolyForm ℝ (Fin n)}
+    (h : IsBubble (refVertex n) (evalForm n Ω)) (σ : Finset (Fin n)) (i : Fin n) (hi : i ∉ σ)
+    (x : Fin n → ℝ) (hx : x i = 0) : eval x (Ω σ) = 0 := by
+  cases n with
+  | zero => exact i.elim0
+  | succ N =>
+    have := apply_eq_zero_of_faceTrace_eq_zero (h.faceTrace_succAbove i.succ) hi hx
+    rwa [evalForm_apply] at this
+
+/-- `d` of a polynomial form with constant coefficients vanishes. -/
+theorem extDeriv_eq_zero_of_mem_polyForm_zero {k : ℕ} {Ω : Koszul.PolyForm ℝ (Fin n)}
+    (h : Ω ∈ Koszul.polyForm ℝ (Fin n) 0 k) : Koszul.extDeriv Ω = 0 := by
+  rw [← Koszul.sum_homComp h, Finset.sum_range_one]
+  exact Koszul.extDeriv_homComp_zero Ω
+
+/-- **Stokes' theorem for a bubble**: if `ω` has vanishing trace on `∂T̂`, then
+`∫_{T̂} dω ∧ μ = -(-1)^k ∫_{T̂} ω ∧ dμ` for polynomial forms `ω` (of degree `k`) and `μ`. -/
+theorem integral_extDeriv_wedge_of_isBubble {N k : ℕ} {Ω M : Koszul.PolyForm ℝ (Fin (N + 1))}
+    (hΩ : IsDeg k Ω) (hbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) Ω)) :
+    ∫ x in refSimplex (N + 1), eval x (wedgeForm (Koszul.extDeriv Ω) M univ) =
+      -((-1) ^ k * ∫ x in refSimplex (N + 1), eval x (wedgeForm Ω (Koszul.extDeriv M) univ)) := by
+  set η := evalForm (N + 1) (wedgeForm Ω M)
+  have hS := setIntegral_refSimplex_extDeriv (m := N) (η := η) isOpen_univ (Set.subset_univ _)
+    (contDiff_evalForm _).contDiffOn
+  have hface : ∀ i : Fin (N + 2), simplexIntegral (refVertex (N + 1) ∘ i.succAbove) η = 0 := by
+    intro i
+    have h0 : faceTrace (refVertex (N + 1)) (Fin.succAbove i) η = 0 := by
+      change faceTrace _ _ (evalForm (N + 1) (wedgeForm Ω M)) = 0
+      rw [evalForm_wedgeForm', faceTrace_wedgeField, hbub.faceTrace_succAbove i]
+      funext x; simp [wedgeField]
+    have : simplexIntegral (refVertex (N + 1) ∘ i.succAbove) η =
+        ∫ x in refSimplex N, faceTrace (refVertex (N + 1)) (Fin.succAbove i) η x univ := rfl
+    rw [this, h0]; simp
+  simp only [hface, mul_zero, sum_const_zero] at hS
+  rw [extDeriv_evalForm, Koszul.extDeriv_wedgeForm hΩ] at hS
+  have hc : ∀ Ψ : Koszul.PolyForm ℝ (Fin (N + 1)),
+      IntegrableOn (fun x => eval x (Ψ univ)) (refSimplex (N + 1)) := fun Ψ =>
+    (contDiff_eval _ (r := 0)).continuous.continuousOn.integrableOn_compact
+      (isCompact_refSimplex _)
+  have hsplit : (fun x => evalForm (N + 1) (wedgeForm (Koszul.extDeriv Ω) M +
+      (-1 : MvPolynomial (Fin (N + 1)) ℝ) ^ k • wedgeForm Ω (Koszul.extDeriv M)) x univ) =
+      fun x => eval x (wedgeForm (Koszul.extDeriv Ω) M univ) +
+        (-1) ^ k * eval x (wedgeForm Ω (Koszul.extDeriv M) univ) := by
+    funext x
+    simp [evalForm_apply]
+  rw [hsplit, integral_add (hc _) ((hc _).const_mul _), integral_const_mul] at hS
+  linarith
+
+/-- If `ω` is a closed bubble, `∫_{T̂} ω ∧ dμ = 0`. -/
+theorem integral_wedge_extDeriv_eq_zero_of_isBubble {N k : ℕ}
+    {Ω M : Koszul.PolyForm ℝ (Fin (N + 1))} (hΩ : IsDeg k Ω)
+    (hbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) Ω)) (hd : Koszul.extDeriv Ω = 0) :
+    ∫ x in refSimplex (N + 1), eval x (wedgeForm Ω (Koszul.extDeriv M) univ) = 0 := by
+  have h := integral_extDeriv_wedge_of_isBubble (M := M) hΩ hbub
+  rw [hd] at h
+  simp only [wedgeForm_zero_left, Pi.zero_apply, map_zero, integral_zero] at h
+  have h1 : ((-1 : ℝ) ^ k) ≠ 0 := pow_ne_zero _ (by norm_num)
+  have : (-1 : ℝ) ^ k * ∫ x in refSimplex (N + 1),
+      eval x (wedgeForm Ω (Koszul.extDeriv M) univ) = 0 := by linarith
+  exact (mul_eq_zero.1 this).resolve_left h1
+
+theorem integral_wedge_add {Ω H H' : Koszul.PolyForm ℝ (Fin n)} :
+    ∫ x in refSimplex n, eval x (wedgeForm Ω (H + H') univ) =
+      (∫ x in refSimplex n, eval x (wedgeForm Ω H univ)) +
+        ∫ x in refSimplex n, eval x (wedgeForm Ω H' univ) := by
+  have hc : ∀ Ψ : Koszul.PolyForm ℝ (Fin n),
+      IntegrableOn (fun x => eval x (Ψ univ)) (refSimplex n) := fun Ψ =>
+    (contDiff_eval _ (r := 0)).continuous.continuousOn.integrableOn_compact
+      (isCompact_refSimplex _)
+  rw [← integral_add (hc (wedgeForm Ω H)) (hc (wedgeForm Ω H'))]
+  congr 1
+  funext x
+  rw [wedgeForm_add_right, Pi.add_apply, map_add]
+
+/-- `P_r⁻Λⁿ(ℝⁿ) = P_{r-1}Λⁿ(ℝⁿ)` (`κ` of an `(n+1)`-form vanishes). -/
+theorem polyFormMinus_top_le (r : ℕ) :
+    Koszul.polyFormMinus ℝ (Fin n) r n ≤ Koszul.polyForm ℝ (Fin n) (r - 1) n := by
+  refine sup_le le_rfl ?_
+  rintro _ ⟨c, hc, rfl⟩
+  have : c = 0 := funext fun s => hc.1 s fun h => by
+    have := card_le_univ s; simp at this; omega
+  rw [this, map_zero]
+  exact Submodule.zero_mem _
+
+/-- **[AFW2006], Lemma 4.7** (bubbles of `P_rΛᵏ`): if `ω ∈ P_rΛᵏ(T̂)` (`r ≥ 1`) has vanishing
+trace on `∂T̂` and `∫_{T̂} ω ∧ η = 0` for all `η ∈ P⁻_{r+k-n}Λ^{n-k}` (a condition only when
+`r + k > n`; otherwise this test space is `0`), then `ω = 0`. -/
+theorem eq_zero_of_isBubble_of_mem_polyForm {r k : ℕ} (hr : 1 ≤ r)
+    {Ω : Koszul.PolyForm ℝ (Fin n)} (hΩ : Ω ∈ Koszul.polyForm ℝ (Fin n) r k)
+    (hbub : IsBubble (refVertex n) (evalForm n Ω))
+    (hint : n < r + k → ∀ H ∈ Koszul.polyFormMinus ℝ (Fin n) (r + k - n) (n - k),
+      ∫ x in refSimplex n, eval x (wedgeForm Ω H univ) = 0) : Ω = 0 := by
+  by_cases hkn : n ≤ k
+  · refine eq_zero_of_coordTrace_of_integral hΩ hbub.eval_eq_zero fun hnr H hH => ?_
+    refine hint (by omega) H ?_
+    rw [show n - k = 0 by omega, Koszul.polyFormMinus_zero (by omega)]
+    rwa [show n - k = 0 by omega] at hH
+  obtain ⟨N, rfl⟩ : ∃ N, n = N + 1 := ⟨n - 1, by omega⟩
+  have hdmem := Koszul.extDeriv_mem_polyForm hΩ
+  have hdbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) (Koszul.extDeriv Ω)) := by
+    rw [← extDeriv_evalForm]
+    exact hbub.extDeriv ((contDiff_evalForm Ω (r := 1)).differentiable one_ne_zero)
+  -- `dω = 0`
+  have hd : Koszul.extDeriv Ω = 0 := by
+    refine eq_zero_of_coordTrace_of_integral hdmem hdbub.eval_eq_zero fun hnr M hM => ?_
+    rw [integral_extDeriv_wedge_of_isBubble hΩ.1 hbub]
+    have hdM : Koszul.extDeriv M ∈ Koszul.polyForm ℝ (Fin (N + 1)) (r + k - (N + 1) - 1)
+        (N + 1 - k) := by
+      have := Koszul.extDeriv_mem_polyForm hM
+      rwa [show r - 1 + (k + 1) - (N + 1) = r + k - (N + 1) by omega,
+        show N + 1 - (k + 1) + 1 = N + 1 - k by omega] at this
+    rcases Nat.lt_or_ge (N + 1) (r + k) with hlt | hge
+    · rw [hint hlt _ (Koszul.polyForm_le_polyFormMinus _ _ hdM)]; ring
+    · have hM0 : Koszul.extDeriv M = 0 := extDeriv_eq_zero_of_mem_polyForm_zero
+        (by rwa [show r - 1 + (k + 1) - (N + 1) = 0 by omega] at hM)
+      rw [hM0]; simp
+  -- `ω ⊥ P_{r+k-n}Λ^{n-k}`
+  refine eq_zero_of_coordTrace_of_integral hΩ hbub.eval_eq_zero fun hnr H hH => ?_
+  obtain ⟨j, hj⟩ : ∃ j, N + 1 - k = j + 1 := ⟨N - k, by omega⟩
+  rw [hj] at hH
+  rcases Nat.eq_zero_or_pos (r + k - (N + 1)) with hs | hs
+  · rw [hs] at hH
+    obtain ⟨c, -, rfl⟩ := Koszul.exists_extDeriv_eq_of_mem_polyForm hH
+      (extDeriv_eq_zero_of_mem_polyForm_zero hH)
+    exact integral_wedge_extDeriv_eq_zero_of_isBubble hΩ.1 hbub hd
+  · rw [← Koszul.polyFormMinus_sup_map_extDeriv hs] at hH
+    obtain ⟨a, ha, b, ⟨c, -, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hH
+    rw [integral_wedge_add, hint (by omega) a (by rwa [hj]),
+      show (Koszul.extDerivₗ ℝ (Fin (N + 1))) c = Koszul.extDeriv c from rfl,
+      integral_wedge_extDeriv_eq_zero_of_isBubble hΩ.1 hbub hd, add_zero]
+
+/-- **[AFW2006], Lemma 4.11** (bubbles of `P_r⁻Λᵏ`): if `ω ∈ P_r⁻Λᵏ(T̂)` (`r ≥ 1`) has vanishing
+trace on `∂T̂` and `∫_{T̂} ω ∧ η = 0` for all `η ∈ P_{r+k-n-1}Λ^{n-k}` (a condition only when
+`r + k > n`), then `ω = 0`. -/
+theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
+    {Ω : Koszul.PolyForm ℝ (Fin n)} (hΩ : Ω ∈ Koszul.polyFormMinus ℝ (Fin n) r k)
+    (hbub : IsBubble (refVertex n) (evalForm n Ω))
+    (hint : n < r + k → ∀ H ∈ Koszul.polyForm ℝ (Fin n) (r + k - n - 1) (n - k),
+      ∫ x in refSimplex n, eval x (wedgeForm Ω H univ) = 0) : Ω = 0 := by
+  by_cases hkn : n ≤ k
+  · by_cases hkn' : k = n
+    · subst hkn'
+      have hΩ' := polyFormMinus_top_le r hΩ
+      refine eq_zero_of_coordTrace_of_integral hΩ' hbub.eval_eq_zero fun hnr H hH => ?_
+      refine hint (by omega) H ?_
+      rwa [show r - 1 + k - k = r + k - k - 1 by omega] at hH
+    · have hdeg : IsDeg k Ω := (Koszul.polyFormMinus_le_polyForm_succ r k hΩ).1
+      exact funext fun s => hdeg s fun h => by have := card_le_univ s; simp at this; omega
+  obtain ⟨N, rfl⟩ : ∃ N, n = N + 1 := ⟨n - 1, by omega⟩
+  have hdmem := Koszul.extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus hΩ
+  have hdeg : IsDeg k Ω := (Koszul.polyFormMinus_le_polyForm_succ r k hΩ).1
+  have hdbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) (Koszul.extDeriv Ω)) := by
+    rw [← extDeriv_evalForm]
+    exact hbub.extDeriv ((contDiff_evalForm Ω (r := 1)).differentiable one_ne_zero)
+  have hd : Koszul.extDeriv Ω = 0 := by
+    refine eq_zero_of_coordTrace_of_integral hdmem hdbub.eval_eq_zero fun hnr M hM => ?_
+    rw [integral_extDeriv_wedge_of_isBubble hdeg hbub]
+    have hdM : Koszul.extDeriv M ∈ Koszul.polyForm ℝ (Fin (N + 1)) (r + k - (N + 1) - 1)
+        (N + 1 - k) := by
+      have := Koszul.extDeriv_mem_polyForm hM
+      rwa [show r - 1 + (k + 1) - (N + 1) = r + k - (N + 1) by omega,
+        show N + 1 - (k + 1) + 1 = N + 1 - k by omega] at this
+    rcases Nat.lt_or_ge (N + 1) (r + k) with hlt | hge
+    · rw [hint hlt _ hdM]; ring
+    · have hM0 : Koszul.extDeriv M = 0 := extDeriv_eq_zero_of_mem_polyForm_zero
+        (by rwa [show r - 1 + (k + 1) - (N + 1) = 0 by omega] at hM)
+      rw [hM0]; simp
+  have hΩ' := Koszul.mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero hr hΩ hd
+  refine eq_zero_of_coordTrace_of_integral hΩ' hbub.eval_eq_zero fun hnr H hH => ?_
+  exact hint (by omega) H (by rwa [show r - 1 + k - (N + 1) = r + k - (N + 1) - 1 by omega] at hH)

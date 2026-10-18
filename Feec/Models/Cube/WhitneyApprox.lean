@@ -1,0 +1,856 @@
+module
+
+public import Feec.Models.Cube.FiniteElementMethod
+public import Feec.FiniteElement.WhitneyInterpolation
+
+/-!
+# Approximation by the Whitney complexes of the Freudenthal meshes of the cube
+
+On `Q = (0, ½)ⁿ` with the Freudenthal meshes `FEM.mesh n N` (mesh size `h_N`), this module proves
+the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)` and
+`FEM.whitneyMin N ⊆ H̊Λ(Q)` that `Feec.Models.Cube.FiniteElementMethod` takes as hypotheses.
+
+* **Uniform shape regularity**: every simplex of the level-`(N + 1)` mesh has diameter `h_N` and
+  `h_N ‖B_T⁻¹‖ ≤ 2` (`mesh_shape`).
+* **Interpolation error, `O(h)` for `C²` data** ([Arnold2018], Ch. 7): for a `C²` form `w` with
+  `‖Dw‖ ≤ L`, `‖D dw‖ ≤ L'` on `cl Q`, the canonical interpolant `v ∈ Vₕᵏ` satisfies
+  `‖w - v‖ ≤ A_k h_N L` and `‖dw - dv‖ ≤ A_{k+1} h_N L'` (`exists_mem_whitney_le`, with
+  `A_k = interpConst n k` independent of `N`; `Feec.FiniteElement.norm_formL2_sub_glue_le`); for
+  `w` vanishing outside `Q` the interpolant has vanishing boundary DOFs
+  (`exists_mem_whitneyMin_le`). In the graph norm of `HΛᵏ(Q)`:
+  `dist(σ, Vₕᵏ) ≤ (A_k L + A_{k+1} L') h_N` for `σ` a `C²` `k`-form
+  (`infDist_domainSub_whitney_le`), the hypotheses `hσ`, `hu`, `hB` of
+  `FEM.SmoothingEstimates.norm_sub_le_meshSize` for smooth solutions.
+* **Smooth forms are dense in the graph norms** of `HΛ(Q)` and `H̊Λ(Q)` (`exists_smooth_near`,
+  `exists_smooth_near_min`): the smoothed forms `Feec.FiniteElement.smoothForm` of [AFW2010],
+  §5.4, with dilation factor `c → 1` and bump radius `→ 0`, are the field smoothers
+  `R_{cᵏ} u` (`formL2_smoothForm`), which converge strongly
+  (`Feec.Domain.exists_norm_smoothField_sub_lt`) and commute with `d`.
+* **Density of the Whitney complexes**: every `x ∈ D(d)` is a graph-norm limit of the Whitney
+  spaces (`eventually_exists_whitney_graph`, `eventually_exists_whitneyMin_graph`), every
+  `x ∈ L²` an `L²` limit (`eventually_exists_whitney_lt`, `eventually_exists_whitneyMin_lt`).
+
+**Consequences, with no remaining approximation hypothesis**: the Whitney windows are dense in the
+graph space of the total differential of every window (`dense_window`, `dense_windowMin`, from the
+abstract `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`), hence approximating
+(`isApproximating_window_whitney`), and the semi-discrete Hodge wave equation converges for every
+window and `D(L)` data ([QuennevilleBelair2015], Thm 4.14;
+`exists_tendstoUniformlyOn_window_whitney`), in particular for Maxwell's equations
+(`maxwell_exists_tendstoUniformlyOn_whitney`); the harmonic forms are approximated
+(`tendsto_infDist_whitney`, `tendsto_infDist_whitneyMin`), so under the smoothing estimates the
+harmonic gap tends to zero (`SmoothingEstimates.tendsto_harmonicGap_whitney`,
+`SmoothingEstimatesMin.tendsto_harmonicGap_whitney`).
+
+The subcomplexes `FEM.whitney N` are transported from the mesh domain to `Q` along
+`FEM.mesh_domain`; statements about them are proved on the mesh domain and transported by
+`ConstCoeffComplex.maximalSubcomplexOfEq_induction` (and its minimal analogue).
+
+## References
+
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
+  estimates, density of the finite element spaces)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (smoothing by dilation and mollification)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.6, Thm 4.14 (approximating subcomplexes, convergence of the semi-discrete Hodge wave
+  equation)
+-/
+
+@[expose] public noncomputable section
+
+open MeasureTheory Set Filter Topology Finset
+open scoped ContDiff
+
+/-! ## Transport along an equality of domains -/
+
+namespace Feec.Domain.ConstCoeffComplex
+
+variable {n : ℕ} (C : ConstCoeffComplex (Fin n → ℝ) ℝ)
+
+/-- Any property of subcomplexes of maximal complexes is transported by
+`maximalSubcomplexOfEq`. -/
+theorem maximalSubcomplexOfEq_induction {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩ' : IsOpen Ω') (S : (C.maximalComplex hΩ).Subcomplex)
+    (P : ∀ Θ : Set (Fin n → ℝ), ∀ hΘ : IsOpen Θ, (C.maximalComplex hΘ).Subcomplex → Prop)
+    (hP : P Ω hΩ S) : P Ω' hΩ' (C.maximalSubcomplexOfEq h hΩ hΩ' S) := by
+  subst h; exact hP
+
+/-- Any property of subcomplexes of minimal complexes is transported by
+`minimalSubcomplexOfEq`. -/
+theorem minimalSubcomplexOfEq_induction {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex)
+    (P : ∀ Θ : Set (Fin n → ℝ), ∀ hΘ : IsOpen Θ, (C.minimalComplex hΘ).Subcomplex → Prop)
+    (hP : P Ω hΩ S) : P Ω' hΩ' (C.minimalSubcomplexOfEq h hΩ hΩ' S) := by
+  subst h; exact hP
+
+end Feec.Domain.ConstCoeffComplex
+
+/-! ## Graph-norm approximation in a finite Hilbert complex -/
+
+namespace LinearPMap
+
+variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+
+theorem toGraphSpace_sub (T : E →ₗ.[𝕜] F) (x y : T.domain) :
+    T.toGraphSpace (x - y) = T.toGraphSpace x - T.toGraphSpace y := by
+  refine Subtype.ext ?_
+  change WithLp.toLp 2 (((x - y : T.domain) : E), T (x - y)) =
+    WithLp.toLp 2 ((x : E), T x) - WithLp.toLp 2 ((y : E), T y)
+  rw [LinearPMap.map_sub, ← WithLp.toLp_sub]
+  rfl
+
+/-- The graph norm is at most `‖x‖ + ‖T x‖`. -/
+theorem norm_toGraphSpace_le (T : E →ₗ.[𝕜] F) (x : T.domain) :
+    ‖T.toGraphSpace x‖ ≤ ‖(x : E)‖ + ‖T x‖ := by
+  have h := WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 ((x : E), T x))
+  have e : ‖T.toGraphSpace x‖ = ‖WithLp.toLp 2 ((x : E), T x)‖ := rfl
+  rw [e]
+  refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
+  rw [h]
+  simp only [WithLp.toLp_fst, WithLp.toLp_snd]
+  nlinarith [norm_nonneg (x : E), norm_nonneg (T x)]
+
+end LinearPMap
+
+namespace PiLp
+
+/-- `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`. -/
+theorem norm_le_sum_norm {ι : Type*} [Fintype ι] {β : ι → Type*}
+    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
+  refine (abs_le_of_sq_le_sq' ?_ (Finset.sum_nonneg fun _ _ => norm_nonneg _)).2
+  rw [PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_sq_le_sq_sum_of_nonneg fun _ _ => norm_nonneg _
+
+end PiLp
+
+namespace Feec.HilbertComplex.Subcomplex
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex 𝕜 c W}
+
+/-- **Degreewise graph-norm approximation gives approximation in the graph space of the total
+differential**: if every `x ∈ Wⁱ` is eventually within `ε` of `Vₕⁱ`, with `‖d (x - v)‖ < ε`
+whenever `x ∈ D(d)`, then the total spaces `graphSub` of the subcomplexes approximate every point
+of `Γ(𝐝)`. This is the hypothesis of `Feec.HilbertComplex.Subcomplex.isApproximating`. -/
+theorem eventually_exists_graphSub_lt {κ : Type*} {l : Filter κ} (S : κ → H.Subcomplex)
+    (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε → ∀ᶠ h in l, ∃ v, ∃ hv : v ∈ (S h).V i,
+      ‖x - v‖ < ε ∧ ∀ j (hx : x ∈ (H.d i j).domain),
+        ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((S h).le_domain i j hv)⟩‖ < ε)
+    (ζ : H.totalD.GraphSpace) {δ : ℝ} (hδ : 0 < δ) :
+    ∀ᶠ h in l, ∃ w ∈ (S h).graphSub, ‖ζ - w‖ < δ := by
+  classical
+  obtain ⟨x, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ζ
+  set m : ℝ := (Fintype.card ι : ℝ)
+  have hm : 0 ≤ m := Nat.cast_nonneg _
+  set ε := δ / (m + m * m + 1)
+  have hε : 0 < ε := div_pos hδ (by positivity)
+  have hev := Filter.eventually_all.2 fun i => hdeg i ((x : PiLp 2 W) i) ε hε
+  filter_upwards [hev] with h hh
+  choose v hv hv1 hv2 using hh
+  set y : PiLp 2 W := WithLp.toLp 2 fun i => v i
+  have hy : y ∈ H.totalD.domain := fun i j => (S h).le_domain i j (hv i)
+  refine ⟨H.totalD.toGraphSpace ⟨y, hy⟩, fun i => hv i, ?_⟩
+  rw [← LinearPMap.toGraphSpace_sub]
+  refine (LinearPMap.norm_toGraphSpace_le _ _).trans_lt ?_
+  have h1 : ‖((x - ⟨y, hy⟩ : H.totalD.domain) : PiLp 2 W)‖ ≤ m * ε := by
+    refine (PiLp.norm_le_sum_norm _).trans ?_
+    calc ∑ i, ‖((x - ⟨y, hy⟩ : H.totalD.domain) : PiLp 2 W) i‖ ≤ ∑ _i : ι, ε :=
+          Finset.sum_le_sum fun i _ => (hv1 i).le
+      _ = m * ε := by simp [m]
+  have h2 : ‖H.totalD (x - ⟨y, hy⟩)‖ ≤ m * (m * ε) := by
+    refine (PiLp.norm_le_sum_norm _).trans ?_
+    calc ∑ j, ‖H.totalD (x - ⟨y, hy⟩) j‖ ≤ ∑ _j : ι, m * ε := by
+          refine Finset.sum_le_sum fun j _ => ?_
+          rw [totalD_apply]
+          refine (norm_sum_le _ _).trans ?_
+          calc ∑ i, ‖H.d i j ⟨((x - ⟨y, hy⟩ : H.totalD.domain) : PiLp 2 W) i,
+                (x - ⟨y, hy⟩ : H.totalD.domain).2 i j⟩‖ ≤ ∑ _i : ι, ε :=
+                Finset.sum_le_sum fun i _ => (hv2 i j (x.2 i j)).le
+            _ = m * ε := by simp [m]
+      _ = m * (m * ε) := by simp [m]
+  have hlt : m * ε + m * (m * ε) < δ := by
+    have e : m * ε + m * (m * ε) = (m + m * m) / (m + m * m + 1) * δ := by
+      simp only [ε]; field_simp
+    rw [e]
+    have : (m + m * m) / (m + m * m + 1) < 1 := by
+      rw [div_lt_one (by positivity)]; linarith
+    nlinarith
+  linarith
+
+end Feec.HilbertComplex.Subcomplex
+
+namespace Feec.HilbertComplex.Subcomplex
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
+
+/-- **Distance to the discrete domain space**: for `v ∈ Vₕⁱ`, the graph-norm distance of `σ` to
+`Vₕⁱ` is at most `‖σ - v‖ + ‖d σ - d v‖` (the quantity bounded by interpolation estimates;
+`domainSub` enters `CochainProjection.norm_sub_le_infDist`). -/
+theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) {v : W i}
+    (hv : v ∈ S.V i) :
+    Metric.infDist σ (S.domainSub i) ≤ ‖H.domainIncl i σ - v‖ +
+      ‖H.d i j (H.domainCoord i j σ) - H.d i j ⟨v, S.le_domain i j hv⟩‖ := by
+  obtain rfl := c.next_eq' hij
+  obtain ⟨x, rfl, -, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq σ
+  have hmem : (H.d i (c.next i)).toGraphSpace ⟨v, S.le_domain i _ hv⟩ ∈ S.domainSub i :=
+    ⟨(S.toHilbertComplex.d i (c.next i)).toGraphSpace ⟨⟨v, hv⟩, Submodule.mem_top⟩, rfl⟩
+  refine (Metric.infDist_le_dist_of_mem hmem).trans ?_
+  rw [dist_eq_norm, ← LinearPMap.toGraphSpace_sub]
+  refine (LinearPMap.norm_toGraphSpace_le _ _).trans (le_of_eq ?_)
+  rw [LinearPMap.map_sub]
+  rfl
+
+end Feec.HilbertComplex.Subcomplex
+
+namespace Feec.Models.Cube.FEM
+
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.ExteriorFibre
+
+variable (n : ℕ)
+
+/-- A point of the `j`-th space of the de Rham complex, as an `L²` field of `j`-forms (the
+identity; it fixes the type for the elaborator). -/
+abbrev asForm {Θ : Set (Fin n → ℝ)} {j : ℤ} (x : L2F ℝ Θ ((deRham ℝ n).ι j)) :
+    L2F ℝ Θ (formIdx n j) := x
+
+/-! ## The Freudenthal meshes of the cube are uniformly shape regular -/
+
+/-- **Shape constants of the cube meshes**: every simplex of `FEM.mesh n N` has diameter `h_N`
+and `h_N ‖B_T⁻¹‖ ≤ 2` (`Feec.Mesh.norm_linearEquiv_symm_le_freudenthal`). -/
+theorem mesh_shape [NeZero n] (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) :
+    diam T * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ≤ 2 ∧
+      diam T = meshSize N := by
+  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
+  have hh : (0 : ℝ) < 1 / 2 / ((N + 1 : ℕ) : ℝ) := by positivity
+  have h2 := norm_linearEquiv_symm_le_freudenthal (0 : Fin n → ℝ) hh (finLattice m) σ
+  have hd := diam_freudenthalMesh_simplex (0 : Fin n → ℝ) hh (finLattice m) σ
+  have hms : meshSize N = 1 / 2 / ((N + 1 : ℕ) : ℝ) := by
+    rw [meshSize]; push_cast; ring
+  refine ⟨?_, hd.trans hms.symm⟩
+  rw [hd]
+  calc 1 / 2 / ((N + 1 : ℕ) : ℝ) * _ ≤ 1 / 2 / ((N + 1 : ℕ) : ℝ) *
+        (2 / (1 / 2 / ((N + 1 : ℕ) : ℝ))) := mul_le_mul_of_nonneg_left h2 hh.le
+    _ = 2 := by field_simp
+
+/-! ## Interpolation of smooth forms on the cube meshes -/
+
+/-- The constant of the `L²` interpolation estimate of degree `k` on the cube meshes:
+`#Λᵏ |Q|^{1/2} C_{n,k} 2^k`. -/
+def interpConst (k : ℕ) : ℝ :=
+  Fintype.card (formIdx n k) * (volume.real (cubeDomain n) ^ (1 / 2 : ℝ) *
+    (whitneyConst n k * 2 ^ k))
+
+theorem interpConst_nonneg (k : ℕ) : 0 ≤ interpConst n k := by
+  unfold interpConst; have := whitneyConst_nonneg n k; positivity
+
+theorem isBounded_closure_cubeDomain : Bornology.IsBounded (closure (cubeDomain n)) :=
+  (isBounded_cubeDomain n).closure
+
+theorem isCompact_closure_cubeDomain : IsCompact (closure (cubeDomain n)) :=
+  Metric.isCompact_of_isClosed_isBounded isClosed_closure (isBounded_closure_cubeDomain n)
+
+variable {n}
+
+/-- **Interpolation error on the cube meshes** ([Arnold2018], Ch. 7, classical form): for a
+`C²` form `w` with `‖Dw‖ ≤ L` and `‖D(dw)‖ ≤ L'` on `cl Q`, the canonical interpolant
+`v = Π_N w ∈ Vₕᵏ` of the Whitney complex of `FEM.mesh n N` satisfies
+`‖w - v‖_{L²} ≤ A_k h_N L` and `‖dw - d v‖_{L²} ≤ A_{k+1} h_N L'`
+(`interpConst`, independent of `N`). -/
+theorem exists_mem_whitney_le [NeZero n] (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2 w)
+    {L L' : ℝ} (hL0 : 0 ≤ L) (hL'0 : 0 ≤ L')
+    (hL : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L)
+    (hL' : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L') :
+    ∃ v ∈ (whitney n N).V k,
+      ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩ - v‖ ≤ interpConst n k * (meshSize N * L) ∧
+      ∃ hv : v ∈ ((complex n).d k (k + 1)).domain,
+        ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by norm_num))⟩ -
+          (complex n).d k (k + 1) ⟨v, hv⟩‖ ≤ interpConst n (k + 1) * (meshSize N * L') := by
+  have hw1 : ContDiff ℝ 1 w := hw.of_le (by norm_num)
+  have hdw : ContDiff ℝ 1 (extDeriv w) := contDiff_extDeriv (m := 1) hw
+  refine (deRham ℝ n).maximalSubcomplexOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
+    (isOpen_cubeDomain n) (whitneySubcomplex (mesh n N) (isOpen_mesh_domain n N))
+    (fun Θ hΘ S => ∀ hb : Bornology.IsBounded Θ, ∀ hvol : volume.real Θ = volume.real (cubeDomain n),
+      ∃ v ∈ S.V k,
+        ‖formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - asForm n v‖ ≤
+          interpConst n k * (meshSize N * L) ∧
+        ∃ hv : v ∈ (((deRham ℝ n).maximalComplex hΘ).d k (k + 1)).domain,
+          ‖formL2 hΘ.measurableSet hb ((k : ℤ) + 1)
+              ⟨extDeriv w, continuous_extDeriv (hw.of_le (by norm_num))⟩ -
+            asForm n (((deRham ℝ n).maximalComplex hΘ).d k (k + 1) ⟨v, hv⟩)‖ ≤
+            interpConst n (k + 1) * (meshSize N * L')) ?_ (isBounded_cubeDomain n) rfl
+  intro hb hvol
+  set M := mesh n N
+  have hΩo := isOpen_mesh_domain n N
+  have hcl : closure M.domain = closure (cubeDomain n) := by rw [mesh_domain]
+  have hshape := fun T hT => mesh_shape n N (T := T) hT
+  set u := (whitneyElement n).globalInterp M k (Submodule.inclusion c1Forms_le_contForms
+    (⟨w, hw1⟩ : c1Forms n))
+  obtain ⟨hmem, hval⟩ := glue_globalInterp_mem_maximal M hΩo k ⟨w, hw1⟩
+  refine ⟨(whitneyElement n).glue M k (u : (whitneyElement n).Piecewise M k), ⟨u, rfl⟩, ?_, ?_⟩
+  · have h := norm_formL2_sub_glue_le M hΩo.measurableSet k hw1 (C₀ := 2) (h := meshSize N)
+      (by norm_num) (meshSize_pos N).le hL0 (fun y hy => hL y (hcl ▸ hy))
+      (fun T hT => (hshape T hT).1) (fun T hT => (hshape T hT).2.le)
+    refine h.trans (le_of_eq ?_)
+    rw [hvol, interpConst]; ring
+  · refine ⟨by rw [deRham_maximalComplex_d]; exact hmem, ?_⟩
+    rw [LinearPMap.apply_eq_of_eq' (deRham_maximalComplex_d hΩo (k : ℤ))]
+    have h := norm_formL2_sub_glue_le M hΩo.measurableSet (k + 1) hdw (C₀ := 2) (h := meshSize N)
+      (by norm_num) (meshSize_pos N).le hL'0 (fun y hy => hL' y (hcl ▸ hy))
+      (fun T hT => (hshape T hT).1) (fun T hT => (hshape T hT).2.le)
+    have e : (extDerivOp ℝ n k).maximal M.domain
+        ⟨(whitneyElement n).glue M k (u : (whitneyElement n).Piecewise M k), hmem⟩ =
+        (whitneyElement n).glue M ((k + 1 : ℕ) : ℤ) ((whitneyElement n).globalInterp M (k + 1)
+          ⟨extDeriv w, hdw.continuous⟩ : (whitneyElement n).Piecewise M (k + 1)) := hval
+    erw [e]
+    refine h.trans (le_of_eq ?_)
+    rw [hvol, interpConst]; push_cast; ring
+
+/-! ## Smooth forms are dense in the graph norm -/
+
+theorem exists_abs_pow_sub_one_lt (k : ℕ) {η : ℝ} (hη : 0 < η) :
+    ∃ δ > 0, ∀ c : ℝ, |c - 1| < δ → |c ^ k - 1| < η := by
+  have h := Metric.continuousAt_iff.1 ((continuous_pow k).continuousAt (x := (1 : ℝ))) η hη
+  simpa [Real.dist_eq] using h
+
+/-- The smoothed form is `C^∞`. -/
+theorem contDiff_smoothForm {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
+    (hΩ : MeasurableSet Ω) (k : ℤ) (u : L2F ℝ Ω (formIdx n k)) :
+    ContDiff ℝ ∞ (smoothForm p hΩ k u : FormField n) :=
+  contDiff_pi.2 fun t => contDiff_formExt (contDiff_smoothCoeff p hΩ k u) t
+
+/-- **The smoothed form is the field smoother** `R_{cᵏ} u` in `L²(Ω; Λᵏ)`. -/
+theorem formL2_smoothForm {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
+    (hb : Bornology.IsBounded Ω) (p : SmoothingParam (Fin n → ℝ)) (k : ℤ)
+    (u : L2F ℝ Ω (formIdx n k)) :
+    formL2 hΩ hb k (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ k u)) =
+      smoothField p hΩ (fun _ => p.factor ^ k) u := by
+  refine PiLp.ext fun s => Lp.ext ?_
+  filter_upwards [coeFn_formL2 hΩ hb k (Submodule.inclusion c1Forms_le_contForms
+      (smoothForm p hΩ k u)) s, Lp.coeFn_smul (p.factor ^ k) (smoothL2 p hΩ (u s)),
+    coeFn_smoothL2 (p := p) hΩ (u s)] with x h1 h2 h3
+  rw [h1, smoothField_apply, h2, Pi.smul_apply, h3]
+  change (smoothForm p hΩ k u : FormField n) x s.1 = _
+  rw [smoothForm_apply, formExt_val]
+  rfl
+
+/-- **Smooth forms are dense in `HΛᵏ(Q)`** ([AFW2010], §5.4: the smoother `R` with dilation
+factor `c → 1` and bump radius `→ 0`): for `u ∈ D(d_max)` and `ε > 0` there is a `C^∞` `k`-form
+`w` on `ℝⁿ` with `‖u - w‖ < ε` and `‖d u - d w‖ < ε` in `L²(Q)`. -/
+theorem exists_smooth_near (k : ℕ) (u : ((complex n).d k (k + 1)).domain) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∃ w : FormField n, ∃ hw : ContDiff ℝ ∞ w, (∀ x, IsDeg k (w x)) ∧
+      ‖(u : L2F ℝ (cubeDomain n) (formIdx n k)) -
+          formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+            ⟨w, hw.continuous⟩‖ < ε ∧
+      ‖(complex n).d k (k + 1) u -
+          formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩‖ < ε := by
+  set Ω := cubeDomain n
+  have hΩ := isOpen_cubeDomain n
+  have hd := deRham_maximalComplex_d (𝕜 := ℝ) (n := n) hΩ (k : ℤ)
+  set u' : ((extDerivOp ℝ n k).maximal Ω).domain := ⟨u, hd ▸ u.2⟩
+  have hu' : (complex n).d k (k + 1) u = (extDerivOp ℝ n k).maximal Ω u' :=
+    LinearPMap.apply_eq_of_eq' hd u
+  obtain ⟨η₁, hη₁, hP₁⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet (center n)
+    (u : L2F ℝ Ω (formIdx n k)) hε
+  obtain ⟨η₂, hη₂, hP₂⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet (center n)
+    ((extDerivOp ℝ n k).maximal Ω u') hε
+  obtain ⟨δ₁, hδ₁, hc₁⟩ := exists_abs_pow_sub_one_lt k hη₁
+  obtain ⟨δ₂, hδ₂, hc₂⟩ := exists_abs_pow_sub_one_lt (k + 1) hη₂
+  obtain ⟨p, hp, hc, hr⟩ := SmoothingParam.exists_isMaximal (center n) (s := 1 / 4)
+    (by norm_num) (η := min (min η₁ η₂) (min δ₁ δ₂)) (by positivity)
+  have hcη₁ : |p.factor - 1| < η₁ := hc.trans_le ((min_le_left _ _).trans (min_le_left _ _))
+  have hcη₂ : |p.factor - 1| < η₂ := hc.trans_le ((min_le_left _ _).trans (min_le_right _ _))
+  have hcδ₁ : |p.factor - 1| < δ₁ := hc.trans_le ((min_le_right _ _).trans (min_le_left _ _))
+  have hcδ₂ : |p.factor - 1| < δ₂ := hc.trans_le ((min_le_right _ _).trans (min_le_right _ _))
+  have hrη₁ : p.bump.rOut < η₁ := hr.trans_le ((min_le_left _ _).trans (min_le_left _ _))
+  have hrη₂ : p.bump.rOut < η₂ := hr.trans_le ((min_le_left _ _).trans (min_le_right _ _))
+  set w : FormField n := (smoothForm p hΩ.measurableSet k (u : L2F ℝ Ω (formIdx n k)) :
+    FormField n)
+  have hw : ContDiff ℝ ∞ w := contDiff_smoothForm p hΩ.measurableSet k _
+  refine ⟨w, hw, isDeg_smoothForm p hΩ.measurableSet k _, ?_, ?_⟩
+  · have e := formL2_smoothForm hΩ.measurableSet (isBounded_cubeDomain n) p (k : ℤ)
+      (u : L2F ℝ Ω (formIdx n k))
+    change ‖(u : L2F ℝ Ω (formIdx n k)) - formL2 hΩ.measurableSet (isBounded_cubeDomain n) k
+      (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet k
+        (u : L2F ℝ Ω (formIdx n k))))‖ < ε
+    rw [e, norm_sub_rev]
+    refine hP₁ p hp.center_eq hcη₁ hrη₁ _ ?_
+    rw [zpow_natCast]; exact hc₁ _ hcδ₁
+  · have e1 : formL2 hΩ.measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+          ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ =
+        formL2 hΩ.measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+          (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet ((k : ℤ) + 1)
+            ((extDerivOp ℝ n k).maximal Ω u'))) :=
+      formL2_congr _ _ _ fun x hx =>
+        extDeriv_smoothForm_of_maximal p hΩ.measurableSet hΩ (starBall n) hp k u'
+          (subset_closure hx)
+    rw [e1, formL2_smoothForm, hu', norm_sub_rev]
+    refine hP₂ p hp.center_eq hcη₂ hrη₂ _ ?_
+    rw [show ((k : ℤ) + 1) = ((k + 1 : ℕ) : ℤ) by push_cast; ring, zpow_natCast]
+    exact hc₂ _ hcδ₂
+
+/-! ## Density of the Whitney complexes in `HΛ(Q)` -/
+
+/-- A `C¹` form has a bounded derivative on the compact `cl Q`. -/
+theorem exists_bound_fderiv {w : FormField n} (hw : ContDiff ℝ 1 w) :
+    ∃ L, 0 ≤ L ∧ ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L := by
+  obtain ⟨L, hL⟩ := (isCompact_closure_cubeDomain n).exists_bound_of_continuousOn
+    (hw.continuous_fderiv one_ne_zero).continuousOn
+  exact ⟨max L 0, le_max_right _ _, fun y hy => (hL y hy).trans (le_max_left _ _)⟩
+
+variable [NeZero n]
+
+/-- **Graph-norm density of the Whitney spaces in `HΛᵏ(Q)`**: every `x ∈ D(d)` is the limit, in
+the graph norm, of points of the Whitney spaces `Vₕᵏ` of the Freudenthal meshes. Smooth forms
+are dense (`exists_smooth_near`) and their canonical interpolants converge at rate `h_N`
+(`exists_mem_whitney_le`). -/
+theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
+    (hx : x ∈ ((complex n).d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitney n N).V k, ‖x - v‖ < ε ∧
+      ‖(complex n).d k (k + 1)
+        ⟨x - v, Submodule.sub_mem _ hx ((whitney n N).le_domain k (k + 1) hv)⟩‖ < ε := by
+  rcases k with k | k
+  swap
+  · have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
+    refine Eventually.of_forall fun N => ⟨0, Submodule.zero_mem _, ?_, ?_⟩
+    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
+    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
+  change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitney n N).V (k : ℤ), ‖x - v‖ < ε ∧
+      ‖(complex n).d k (k + 1)
+        ⟨x - v, Submodule.sub_mem _ hx ((whitney n N).le_domain k (k + 1) hv)⟩‖ < ε
+  obtain ⟨w, hw, -, h1, h2⟩ := exists_smooth_near k ⟨x, hx⟩ (half_pos hε)
+  have hw2 : ContDiff ℝ 2 w := hw.of_le (WithTop.coe_le_coe.2 le_top)
+  obtain ⟨L, hL0, hL⟩ := exists_bound_fderiv (hw.of_le (by exact_mod_cast le_top))
+  obtain ⟨L', hL'0, hL'⟩ := exists_bound_fderiv (contDiff_extDeriv (m := 1) hw2)
+  have ht : Tendsto (fun N => interpConst n k * (meshSize N * L) +
+      interpConst n (k + 1) * (meshSize N * L')) atTop (𝓝 0) := by
+    have := ((tendsto_meshSize.mul_const L).const_mul (interpConst n k)).add
+      ((tendsto_meshSize.mul_const L').const_mul (interpConst n (k + 1)))
+    simpa using this
+  filter_upwards [ht.eventually (gt_mem_nhds (half_pos hε))] with N hN
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_whitney_le N k hw2 hL0 hL'0 hL hL'
+  have hb1 := mul_nonneg (interpConst_nonneg n (k + 1)) (mul_nonneg (meshSize_pos N).le hL'0)
+  have hb0 := mul_nonneg (interpConst_nonneg n k) (mul_nonneg (meshSize_pos N).le hL0)
+  refine ⟨v, hv, ?_, ?_⟩
+  · calc ‖x - v‖ ≤ ‖x - formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩‖ + ‖formL2 (isOpen_cubeDomain n).measurableSet
+            (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩ - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1 (hv1.trans (by linarith))
+      _ = ε := add_halves ε
+  · have e : (complex n).d k (k + 1)
+        ⟨x - v, Submodule.sub_mem _ hx ((whitney n N).le_domain k (k + 1) hv)⟩ =
+        (complex n).d k (k + 1) ⟨x, hx⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩ := by
+      rw [← LinearPMap.map_sub]; rfl
+    rw [e]
+    calc ‖(complex n).d k (k + 1) ⟨x, hx⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩‖
+        ≤ ‖(complex n).d k (k + 1) ⟨x, hx⟩ - formL2 (isOpen_cubeDomain n).measurableSet
+            (isBounded_cubeDomain n) ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv
+              (hw.of_le (by exact_mod_cast le_top))⟩‖ +
+          ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ -
+            (complex n).d k (k + 1) ⟨v, hdv⟩‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2 (hv2.trans (by linarith))
+      _ = ε := add_halves ε
+
+/-- **`L²` density of the Whitney spaces** `Vₕᵏ` in `L²(Q; Λᵏ)`. -/
+theorem eventually_exists_whitney_lt (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k)) {ε : ℝ}
+    (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (whitney n N).V k, ‖x - v‖ < ε := by
+  obtain ⟨y, hy, hxy⟩ := ((complex n).dense k (k + 1)).exists_dist_lt x (half_pos hε)
+  filter_upwards [eventually_exists_whitney_graph k y hy (half_pos hε)] with N hN
+  obtain ⟨v, hv, h1, -⟩ := hN
+  refine ⟨v, hv, ?_⟩
+  rw [dist_eq_norm] at hxy
+  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
+    _ = ε := add_halves ε
+
+/-- **Degreewise approximation in every graph norm** (the hypothesis of
+`Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`): every `x ∈ L²(Q; Λᵏ)` is
+eventually within `ε` of `Vₕᵏ`, with `‖d (x - v)‖ < ε` whenever `x ∈ D(d)`. -/
+theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i))
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitney n N).V i, ‖x - v‖ < ε ∧
+      ∀ j (hx : x ∈ ((complex n).d i j).domain),
+        ‖(complex n).d i j ⟨x - v, Submodule.sub_mem _ hx ((whitney n N).le_domain i j hv)⟩‖ <
+          ε := by
+  by_cases hx : x ∈ ((complex n).d i (i + 1)).domain
+  · filter_upwards [eventually_exists_whitney_graph i x hx hε] with N hN
+    obtain ⟨v, hv, h1, h2⟩ := hN
+    refine ⟨v, hv, h1, fun j hxj => ?_⟩
+    by_cases hj : i + 1 = j
+    · subst hj; exact h2
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+  · filter_upwards [eventually_exists_whitney_lt i x hε] with N hN
+    obtain ⟨v, hv, h1⟩ := hN
+    refine ⟨v, hv, h1, fun j hxj => ?_⟩
+    by_cases hj : i + 1 = j
+    · subst hj; exact absurd hxj hx
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+
+/-- **Smooth `k`-forms lie in `HΛᵏ(Q)`**, with `d (w|_Q) = (dw)|_Q`. -/
+theorem formL2_mem_domain (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
+    (hdeg : ∀ x, IsDeg k (w x)) :
+    ∃ h : formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+        ⟨w, hw.continuous⟩ ∈ ((complex n).d k (k + 1)).domain,
+      (complex n).d k (k + 1) ⟨_, h⟩ =
+        formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+          ⟨extDeriv w, continuous_extDeriv hw⟩ := by
+  have key : ∀ (Θ : Set (Fin n → ℝ)) (e : Θ = cubeDomain n) (hΘ : MeasurableSet Θ)
+      (hb : Bornology.IsBounded Θ),
+      (∃ h : formL2 hΘ hb k ⟨w, hw.continuous⟩ ∈ ((extDerivOp ℝ n k).maximal Θ).domain,
+        (extDerivOp ℝ n k).maximal Θ ⟨_, h⟩ =
+          formL2 hΘ hb ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv hw⟩) →
+      ∃ h : formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩ ∈ ((extDerivOp ℝ n k).maximal (cubeDomain n)).domain,
+        (extDerivOp ℝ n k).maximal (cubeDomain n) ⟨_, h⟩ =
+          formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv hw⟩ := by
+    rintro Θ rfl _ _ h; exact h
+  obtain ⟨h, hval⟩ := key _ (mesh_domain n 0) _ _
+    (formL2_mem_maximal (mesh n 0) (isOpen_mesh_domain n 0) k hw hdeg)
+  have hd := deRham_maximalComplex_d (𝕜 := ℝ) (n := n) (isOpen_cubeDomain n) (k : ℤ)
+  exact ⟨hd ▸ h, (LinearPMap.apply_eq_of_eq' hd _).trans hval⟩
+
+/-- **`O(h)` approximation of smooth forms in the graph norm** ([Arnold2018], Ch. 7): if the
+point `σ` of the domain space `HΛᵏ(Q)` is a `C²` `k`-form `w` with `‖Dw‖ ≤ L` and `‖D dw‖ ≤ L'`
+on `cl Q`, then its graph-norm distance to the Whitney space is
+`≤ (A_k L + A_{k+1} L') h_N`: the hypotheses `hσ`, `hu`, `hB` of
+`SmoothingEstimates.norm_sub_le_meshSize` for smooth `σ`, `u`, `P_𝔅 u`. -/
+theorem infDist_domainSub_whitney_le (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2 w)
+    (hdeg : ∀ x, IsDeg k (w x)) {L L' : ℝ} (hL0 : 0 ≤ L) (hL'0 : 0 ≤ L')
+    (hL : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L)
+    (hL' : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L')
+    (σ : (complex n).domainSpace k)
+    (hσ : (complex n).domainIncl k σ =
+      formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩) :
+    Metric.infDist σ ((whitney n N).domainSub k) ≤
+      (interpConst n k * L + interpConst n (k + 1) * L') * meshSize N := by
+  have hw1 : ContDiff ℝ 1 w := hw.of_le (by norm_num)
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_whitney_le N k hw hL0 hL'0 hL hL'
+  obtain ⟨hdom, hval⟩ := formL2_mem_domain k hw1 hdeg
+  have hrel : (ComplexShape.up ℤ).Rel (k : ℤ) ((k : ℤ) + 1) := rfl
+  refine ((whitney n N).infDist_domainSub_le hrel σ hv).trans ?_
+  have hc : (complex n).domainCoord k (k + 1) σ = ⟨_, hdom⟩ := Subtype.ext hσ
+  rw [hc, hval, hσ]
+  calc _ ≤ interpConst n k * (meshSize N * L) + interpConst n (k + 1) * (meshSize N * L') :=
+        add_le_add hv1 hv2
+    _ = _ := by ring
+
+/-- **The harmonic forms are approximated by the Whitney spaces**: `dist(q, Vₕʲ) → 0` for every
+`q ∈ L²(Q; Λʲ)`, the hypothesis of `SmoothingEstimates.tendsto_harmonicGap`. -/
+theorem tendsto_infDist_whitney (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
+    Tendsto (fun N => Metric.infDist q ((whitney n N).V j :
+      Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) := by
+  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
+    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
+  filter_upwards [eventually_exists_whitney_lt j q ha] with N hN
+  obtain ⟨v, hv, h⟩ := hN
+  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+
+/-- **The harmonic gap of the smoothed projections tends to zero**, under the smoothing estimates
+alone: the approximation hypothesis of `SmoothingEstimates.tendsto_harmonicGap` holds
+(`tendsto_infDist_whitney`). -/
+theorem SmoothingEstimates.tendsto_harmonicGap_whitney {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimates n p C) {j : ℤ}
+    [FiniteDimensional ℝ ((complex n).harmonic j)] :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  hE.tendsto_harmonicGap fun q _ => tendsto_infDist_whitney j q
+
+/-- **The Whitney windows approximate every point of the graph space** of the total
+differential of the window `HΛᵃ(Q) → ⋯ → HΛ^{a+m-1}(Q)`: the density hypothesis of
+`FEM.isApproximating_window`, `FEM.exists_tendstoUniformlyOn_window` and
+`FEM.maxwell_exists_tendstoUniformlyOn`. -/
+theorem dense_window (a : ℤ) (m : ℕ) :
+    ∀ ζ : ((complex n).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
+      ∃ w ∈ ((whitney n N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
+  Subcomplex.eventually_exists_graphSub_lt (fun N => (whitney n N).window a m)
+    (fun i x _ hε => (eventually_exists_whitney_near (a + i) x hε).mono fun _ hN => by
+      obtain ⟨v, hv, h1, h2⟩ := hN
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
+
+/-- **The Whitney windows are approximating** for the semi-discrete Hodge wave equation of every
+window of `HΛ(Q)`, unconditionally. -/
+theorem isApproximating_window_whitney (a : ℤ) (m : ℕ) :
+    HodgeWave.IsApproximating atTop fun N => ((whitney n N).window a m).graphSub :=
+  isApproximating_window n a m (dense_window a m)
+
+/-- **Convergence of the semi-discrete Hodge wave equation on the cube meshes**, for every window
+and `D(L)` data, with no remaining hypothesis ([QuennevilleBelair2015], Thm 4.14). -/
+theorem exists_tendstoUniformlyOn_window_whitney (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
+    (x : ((complex n).window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → ((complex n).window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((whitney n N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((whitney n N).window a m).graphSub)
+        (((complex n).window a m).totalD.toGraphSpace
+          ⟨x, (((complex n).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => ((complex n).window a m).totalD.graphFst (ξh N t))
+        (fun t => ((complex n).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
+  exists_tendstoUniformlyOn_window n a m (dense_window a m) t₀ t₁ x
+
+/-! ## Density of the Whitney complexes with vanishing traces in `H̊Λ(Q)` -/
+
+/-- **Interpolation error with vanishing boundary DOFs**: for a `C²` form `w` vanishing outside
+`Q`, the canonical interpolant `v = Π_N w` lies in `V̊ₕᵏ ⊆ H̊Λᵏ(Q)` and satisfies the estimates of
+`exists_mem_whitney_le`. -/
+theorem exists_mem_whitneyMin_le (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2 w)
+    (hsupp : ∀ x ∉ cubeDomain n, w x = 0) {L L' : ℝ} (hL0 : 0 ≤ L) (hL'0 : 0 ≤ L')
+    (hL : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L)
+    (hL' : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L') :
+    ∃ v ∈ (whitneyMin n N).V k,
+      ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩ - v‖ ≤ interpConst n k * (meshSize N * L) ∧
+      ∃ hv : v ∈ ((complexMin n).d k (k + 1)).domain,
+        ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by norm_num))⟩ -
+          (complexMin n).d k (k + 1) ⟨v, hv⟩‖ ≤ interpConst n (k + 1) * (meshSize N * L') := by
+  have hw1 : ContDiff ℝ 1 w := hw.of_le (by norm_num)
+  have hdw : ContDiff ℝ 1 (extDeriv w) := contDiff_extDeriv (m := 1) hw
+  refine (deRham ℝ n).minimalSubcomplexOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
+    (isOpen_cubeDomain n)
+    (whitneySubcomplexMin (mesh n N) (isOpen_mesh_domain n N) (center n) (strictStar_mesh n N))
+    (fun Θ hΘ S => ∀ hb : Bornology.IsBounded Θ, ∀ hvol : volume.real Θ = volume.real (cubeDomain n),
+      ∃ v ∈ S.V k,
+        ‖formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - asForm n v‖ ≤
+          interpConst n k * (meshSize N * L) ∧
+        ∃ hv : v ∈ (((deRham ℝ n).minimalComplex hΘ).d k (k + 1)).domain,
+          ‖formL2 hΘ.measurableSet hb ((k : ℤ) + 1)
+              ⟨extDeriv w, continuous_extDeriv (hw.of_le (by norm_num))⟩ -
+            asForm n (((deRham ℝ n).minimalComplex hΘ).d k (k + 1) ⟨v, hv⟩)‖ ≤
+            interpConst n (k + 1) * (meshSize N * L')) ?_ (isBounded_cubeDomain n) rfl
+  intro hb hvol
+  set M := mesh n N
+  have hΩo := isOpen_mesh_domain n N
+  have hcl : closure M.domain = closure (cubeDomain n) := by rw [mesh_domain]
+  have hshape := fun T hT => mesh_shape n N (T := T) hT
+  set w' : c1Forms n := ⟨w, hw1⟩
+  set u := (whitneyElement n).globalInterp M k (Submodule.inclusion c1Forms_le_contForms w')
+  have hu₀ : (u : (whitneyElement n).Piecewise M k) ∈ (whitneyElement n).globalSpace₀ M k :=
+    LocalElement.globalInterp_mem_globalSpace₀ _ M k fun x hx => hsupp x (by
+      rw [← mesh_domain n N]; exact M.notMem_domain_of_mem_frontier hΩo hx)
+  obtain ⟨hmem, hval⟩ := (whitneyElement n).glue_mem_minimal M hΩo (center n)
+    (strictStar_mesh n N) k ⟨_, hu₀⟩
+  refine ⟨(whitneyElement n).glue M k (u : (whitneyElement n).Piecewise M k),
+    ⟨⟨_, hu₀⟩, rfl⟩, ?_, ?_⟩
+  · have h := norm_formL2_sub_glue_le M hΩo.measurableSet k hw1 (C₀ := 2) (h := meshSize N)
+      (by norm_num) (meshSize_pos N).le hL0 (fun y hy => hL y (hcl ▸ hy))
+      (fun T hT => (hshape T hT).1) (fun T hT => (hshape T hT).2.le)
+    refine h.trans (le_of_eq ?_)
+    rw [hvol, interpConst]; ring
+  · refine ⟨by rw [deRham_minimalComplex_d]; exact hmem, ?_⟩
+    rw [LinearPMap.apply_eq_of_eq' (deRham_minimalComplex_d hΩo (k : ℤ))]
+    have h := norm_formL2_sub_glue_le M hΩo.measurableSet (k + 1) hdw (C₀ := 2) (h := meshSize N)
+      (by norm_num) (meshSize_pos N).le hL'0 (fun y hy => hL' y (hcl ▸ hy))
+      (fun T hT => (hshape T hT).1) (fun T hT => (hshape T hT).2.le)
+    have h1 : (whitneyElement n).dPiecewise M k (u : (whitneyElement n).Piecewise M k) =
+        ((whitneyElement n).dGlobal M k u : (whitneyElement n).Piecewise M (k + 1)) := rfl
+    have e : (extDerivOp ℝ n k).minimal M.domain
+        ⟨(whitneyElement n).glue M k (u : (whitneyElement n).Piecewise M k), hmem⟩ =
+        (whitneyElement n).glue M ((k + 1 : ℕ) : ℤ) ((whitneyElement n).globalInterp M (k + 1)
+          ⟨extDeriv w, hdw.continuous⟩ : (whitneyElement n).Piecewise M (k + 1)) := by
+      rw [hval]
+      change (whitneyElement n).glue M ((k : ℤ) + 1)
+        ((whitneyElement n).dPiecewise M k (u : (whitneyElement n).Piecewise M k)) = _
+      rw [h1, ← LocalElement.globalInterp_extDeriv]
+      rfl
+    erw [e]
+    refine h.trans (le_of_eq ?_)
+    rw [hvol, interpConst]; push_cast; ring
+
+omit [NeZero n] in
+/-- **Smooth forms with compact support in `Q` are dense in `H̊Λᵏ(Q)`** (the smoother with
+dilation towards the centre, `c > 1`, [AFW2010], §5.4). -/
+theorem exists_smooth_near_min (k : ℕ) (u : ((complexMin n).d k (k + 1)).domain) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∃ w : FormField n, ∃ hw : ContDiff ℝ ∞ w, (∀ x ∉ cubeDomain n, w x = 0) ∧
+      ‖(u : L2F ℝ (cubeDomain n) (formIdx n k)) -
+          formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+            ⟨w, hw.continuous⟩‖ < ε ∧
+      ‖(complexMin n).d k (k + 1) u -
+          formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩‖ < ε := by
+  set Ω := cubeDomain n
+  have hΩ := isOpen_cubeDomain n
+  have hd := deRham_minimalComplex_d (𝕜 := ℝ) (n := n) hΩ (k : ℤ)
+  set u' : ((extDerivOp ℝ n k).minimal Ω).domain := ⟨u, hd ▸ u.2⟩
+  have hu' : (complexMin n).d k (k + 1) u = (extDerivOp ℝ n k).minimal Ω u' :=
+    LinearPMap.apply_eq_of_eq' hd u
+  obtain ⟨η₁, hη₁, hP₁⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet (center n)
+    (u : L2F ℝ Ω (formIdx n k)) hε
+  obtain ⟨η₂, hη₂, hP₂⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet (center n)
+    ((extDerivOp ℝ n k).minimal Ω u') hε
+  obtain ⟨δ₁, hδ₁, hc₁⟩ := exists_abs_pow_sub_one_lt k hη₁
+  obtain ⟨δ₂, hδ₂, hc₂⟩ := exists_abs_pow_sub_one_lt (k + 1) hη₂
+  obtain ⟨p, hp, hc, hr⟩ := SmoothingParam.exists_isMinimal (center n) (s := 1 / 4)
+    (by norm_num) (η := min (min η₁ η₂) (min δ₁ δ₂)) (by positivity)
+  have hcη₁ : |p.factor - 1| < η₁ := hc.trans_le ((min_le_left _ _).trans (min_le_left _ _))
+  have hcη₂ : |p.factor - 1| < η₂ := hc.trans_le ((min_le_left _ _).trans (min_le_right _ _))
+  have hcδ₁ : |p.factor - 1| < δ₁ := hc.trans_le ((min_le_right _ _).trans (min_le_left _ _))
+  have hcδ₂ : |p.factor - 1| < δ₂ := hc.trans_le ((min_le_right _ _).trans (min_le_right _ _))
+  have hrη₁ : p.bump.rOut < η₁ := hr.trans_le ((min_le_left _ _).trans (min_le_left _ _))
+  have hrη₂ : p.bump.rOut < η₂ := hr.trans_le ((min_le_left _ _).trans (min_le_right _ _))
+  set w : FormField n := (smoothForm p hΩ.measurableSet k (u : L2F ℝ Ω (formIdx n k)) :
+    FormField n)
+  have hw : ContDiff ℝ ∞ w := contDiff_smoothForm p hΩ.measurableSet k _
+  refine ⟨w, hw, fun x hx => smoothForm_eq_zero_of_minimal p hΩ (isBounded_cubeDomain n)
+    (starBall n) hp k _ hx, ?_, ?_⟩
+  · have e := formL2_smoothForm hΩ.measurableSet (isBounded_cubeDomain n) p (k : ℤ)
+      (u : L2F ℝ Ω (formIdx n k))
+    change ‖(u : L2F ℝ Ω (formIdx n k)) - formL2 hΩ.measurableSet (isBounded_cubeDomain n) k
+      (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet k
+        (u : L2F ℝ Ω (formIdx n k))))‖ < ε
+    rw [e, norm_sub_rev]
+    refine hP₁ p hp.center_eq hcη₁ hrη₁ _ ?_
+    rw [zpow_natCast]; exact hc₁ _ hcδ₁
+  · have e1 : formL2 hΩ.measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+          ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ =
+        formL2 hΩ.measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+          (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet ((k : ℤ) + 1)
+            ((extDerivOp ℝ n k).minimal Ω u'))) :=
+      formL2_congr _ _ _ fun x _ =>
+        extDeriv_smoothForm_of_minimal p hΩ.measurableSet hΩ k u' x
+    rw [e1, formL2_smoothForm, hu', norm_sub_rev]
+    refine hP₂ p hp.center_eq hcη₂ hrη₂ _ ?_
+    rw [show ((k : ℤ) + 1) = ((k + 1 : ℕ) : ℤ) by push_cast; ring, zpow_natCast]
+    exact hc₂ _ hcδ₂
+
+/-- **Graph-norm density of the Whitney spaces with vanishing boundary DOFs in `H̊Λᵏ(Q)`**. -/
+theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
+    (hx : x ∈ ((complexMin n).d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitneyMin n N).V k, ‖x - v‖ < ε ∧
+      ‖(complexMin n).d k (k + 1)
+        ⟨x - v, Submodule.sub_mem _ hx ((whitneyMin n N).le_domain k (k + 1) hv)⟩‖ < ε := by
+  rcases k with k | k
+  swap
+  · have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
+    refine Eventually.of_forall fun N => ⟨0, Submodule.zero_mem _, ?_, ?_⟩
+    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
+    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
+  change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitneyMin n N).V (k : ℤ), ‖x - v‖ < ε ∧
+      ‖(complexMin n).d k (k + 1)
+        ⟨x - v, Submodule.sub_mem _ hx ((whitneyMin n N).le_domain k (k + 1) hv)⟩‖ < ε
+  obtain ⟨w, hw, hsupp, h1, h2⟩ := exists_smooth_near_min k ⟨x, hx⟩ (half_pos hε)
+  have hw2 : ContDiff ℝ 2 w := hw.of_le (WithTop.coe_le_coe.2 le_top)
+  obtain ⟨L, hL0, hL⟩ := exists_bound_fderiv (hw.of_le (by exact_mod_cast le_top))
+  obtain ⟨L', hL'0, hL'⟩ := exists_bound_fderiv (contDiff_extDeriv (m := 1) hw2)
+  have ht : Tendsto (fun N => interpConst n k * (meshSize N * L) +
+      interpConst n (k + 1) * (meshSize N * L')) atTop (𝓝 0) := by
+    have := ((tendsto_meshSize.mul_const L).const_mul (interpConst n k)).add
+      ((tendsto_meshSize.mul_const L').const_mul (interpConst n (k + 1)))
+    simpa using this
+  filter_upwards [ht.eventually (gt_mem_nhds (half_pos hε))] with N hN
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_whitneyMin_le N k hw2 hsupp hL0 hL'0 hL hL'
+  have hb1 := mul_nonneg (interpConst_nonneg n (k + 1)) (mul_nonneg (meshSize_pos N).le hL'0)
+  have hb0 := mul_nonneg (interpConst_nonneg n k) (mul_nonneg (meshSize_pos N).le hL0)
+  refine ⟨v, hv, ?_, ?_⟩
+  · calc ‖x - v‖ ≤ ‖x - formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩‖ + ‖formL2 (isOpen_cubeDomain n).measurableSet
+            (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩ - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1 (hv1.trans (by linarith))
+      _ = ε := add_halves ε
+  · have e : (complexMin n).d k (k + 1)
+        ⟨x - v, Submodule.sub_mem _ hx ((whitneyMin n N).le_domain k (k + 1) hv)⟩ =
+        (complexMin n).d k (k + 1) ⟨x, hx⟩ - (complexMin n).d k (k + 1) ⟨v, hdv⟩ := by
+      rw [← LinearPMap.map_sub]; rfl
+    rw [e]
+    calc ‖(complexMin n).d k (k + 1) ⟨x, hx⟩ - (complexMin n).d k (k + 1) ⟨v, hdv⟩‖
+        ≤ ‖(complexMin n).d k (k + 1) ⟨x, hx⟩ - formL2 (isOpen_cubeDomain n).measurableSet
+            (isBounded_cubeDomain n) ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv
+              (hw.of_le (by exact_mod_cast le_top))⟩‖ +
+          ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ -
+            (complexMin n).d k (k + 1) ⟨v, hdv⟩‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2 (hv2.trans (by linarith))
+      _ = ε := add_halves ε
+
+/-- **`L²` density of the Whitney spaces with vanishing boundary DOFs** in `L²(Q; Λᵏ)`. -/
+theorem eventually_exists_whitneyMin_lt (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
+    {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (whitneyMin n N).V k, ‖x - v‖ < ε := by
+  obtain ⟨y, hy, hxy⟩ := ((complexMin n).dense k (k + 1)).exists_dist_lt x (half_pos hε)
+  filter_upwards [eventually_exists_whitneyMin_graph k y hy (half_pos hε)] with N hN
+  obtain ⟨v, hv, h1, -⟩ := hN
+  refine ⟨v, hv, ?_⟩
+  rw [dist_eq_norm] at hxy
+  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
+    _ = ε := add_halves ε
+
+/-- Degreewise approximation in every graph norm of `H̊Λ(Q)`. -/
+theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i))
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitneyMin n N).V i, ‖x - v‖ < ε ∧
+      ∀ j (hx : x ∈ ((complexMin n).d i j).domain),
+        ‖(complexMin n).d i j
+          ⟨x - v, Submodule.sub_mem _ hx ((whitneyMin n N).le_domain i j hv)⟩‖ < ε := by
+  by_cases hx : x ∈ ((complexMin n).d i (i + 1)).domain
+  · filter_upwards [eventually_exists_whitneyMin_graph i x hx hε] with N hN
+    obtain ⟨v, hv, h1, h2⟩ := hN
+    refine ⟨v, hv, h1, fun j hxj => ?_⟩
+    by_cases hj : i + 1 = j
+    · subst hj; exact h2
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+  · filter_upwards [eventually_exists_whitneyMin_lt i x hε] with N hN
+    obtain ⟨v, hv, h1⟩ := hN
+    refine ⟨v, hv, h1, fun j hxj => ?_⟩
+    by_cases hj : i + 1 = j
+    · subst hj; exact absurd hxj hx
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+
+/-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)`, the hypothesis of
+`SmoothingEstimatesMin.tendsto_harmonicGap`. -/
+theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
+    Tendsto (fun N => Metric.infDist q ((whitneyMin n N).V j :
+      Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) := by
+  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
+    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
+  filter_upwards [eventually_exists_whitneyMin_lt j q ha] with N hN
+  obtain ⟨v, hv, h⟩ := hN
+  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+
+/-- **The harmonic gap of `H̊Λ(Q)` tends to zero** under the smoothing estimates alone. -/
+theorem SmoothingEstimatesMin.tendsto_harmonicGap_whitney {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {j : ℤ}
+    [FiniteDimensional ℝ ((complexMin n).harmonic j)] :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  hE.tendsto_harmonicGap fun q _ => tendsto_infDist_whitneyMin j q
+
+/-- **The windows of the Whitney complexes with vanishing traces approximate every point of the
+graph space** of the total differential of every window of `H̊Λ(Q)`. -/
+theorem dense_windowMin (a : ℤ) (m : ℕ) :
+    ∀ ζ : ((complexMin n).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
+      ∃ w ∈ ((whitneyMin n N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
+  Subcomplex.eventually_exists_graphSub_lt (fun N => (whitneyMin n N).window a m)
+    (fun i x _ hε => (eventually_exists_whitneyMin_near (a + i) x hε).mono fun _ hN => by
+      obtain ⟨v, hv, h1, h2⟩ := hN
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
+
+end Feec.Models.Cube.FEM
+
+namespace Feec.Models.Cube.FEM
+
+open Feec.HilbertComplex
+
+/-- **Maxwell's equations on the cube meshes** (perfect magnetic conductor, `n = 3`): the
+semi-discrete Lagrange–Nédélec–Raviart–Thomas solutions converge for `D(L)` data, with no
+remaining hypothesis. -/
+theorem maxwell_exists_tendstoUniformlyOn_whitney (t₀ t₁ : ℝ)
+    (x : ((complex 3).window 0 3).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → ((complex 3).window 0 3).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((whitney 3 N).window 0 3).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((whitney 3 N).window 0 3).graphSub)
+        (((complex 3).window 0 3).totalD.toGraphSpace
+          ⟨x, (((complex 3).window 0 3).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => ((complex 3).window 0 3).totalD.graphFst (ξh N t))
+        (fun t => ((complex 3).window 0 3).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
+  maxwell_exists_tendstoUniformlyOn (dense_window 0 3) t₀ t₁ x
+
+end Feec.Models.Cube.FEM

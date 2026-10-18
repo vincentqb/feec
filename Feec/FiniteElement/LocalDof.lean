@@ -646,4 +646,173 @@ theorem isUnisolvent_localDofMinus_simplex (T : Affine.Simplex ℝ (Fin n → �
     (hr : 1 ≤ r) (hk : k ≤ n) : IsUnisolvent (localDofMinus T.points r k) :=
   isUnisolvent_localDofMinus (isUnit_det_edgeMatrix T) hr hk
 
+/-! ### The Leibniz rule and Stokes' theorem for moments -/
+
+/-- The coefficientwise partial derivative of the exterior product. -/
+theorem partialDerivForm_wedgeField {m : ℕ} (j : Fin m) {ω η : FormField m} {x : Fin m → ℝ}
+    (hω : DifferentiableAt ℝ ω x) (hη : DifferentiableAt ℝ η x) :
+    partialDerivForm j (wedgeField ω η) x =
+      wedgeForm (partialDerivForm j ω x) (η x) + wedgeForm (ω x) (partialDerivForm j η x) := by
+  funext u
+  simp only [partialDerivForm, wedgeField, wedgeForm_apply, Pi.add_apply, ← sum_add_distrib]
+  have hω' : ∀ s, DifferentiableAt ℝ (fun y => ω y s) x := fun s => differentiableAt_pi.1 hω s
+  have hη' : ∀ s, DifferentiableAt ℝ (fun y => η y s) x := fun s => differentiableAt_pi.1 hη s
+  rw [partialDeriv_sum (f := fun s y => shuffleSgn s (u \ s) * ω y s * η y (u \ s)) _
+    fun s _ => ((hω' s).const_mul _).mul (hη' _)]
+  refine sum_congr rfl fun s _ => ?_
+  rw [partialDeriv_mul ((hω' s).const_mul _) (hη' _),
+    show (fun y => shuffleSgn s (u \ s) * ω y s) = fun y => (shuffleSgn s (u \ s) : ℝ) • ω y s
+      from rfl, partialDeriv_const_smul (hω' s)]
+  simp only [smul_eq_mul]
+
+/-- **The Leibniz rule for smooth forms**: `d (ω ∧ η) = dω ∧ η + (-1)^k ω ∧ dη` for a
+`k`-form `ω`, at every point where `ω` and `η` are differentiable. -/
+theorem extDeriv_wedgeField_apply {m k : ℕ} {ω η : FormField m} {x : Fin m → ℝ}
+    (hk : ∀ y, IsDeg k (ω y)) (hω : DifferentiableAt ℝ ω x) (hη : DifferentiableAt ℝ η x) :
+    extDeriv (wedgeField ω η) x =
+      wedgeField (extDeriv ω) η x + (-1 : ℝ) ^ k • wedgeField ω (extDeriv η) x := by
+  simp only [wedgeField, extDeriv_eq_sum_wedge, partialDerivForm_wedgeField _ hω hη,
+    wedgeForm_sum_left, wedgeForm_sum_right, Finset.smul_sum, ← sum_add_distrib]
+  refine sum_congr rfl fun j _ => ?_
+  rw [wedge_add, wedge_wedgeForm, wedge_wedgeForm_right _ (hk x)]
+
+theorem contDiff_wedgeField {m : ℕ} {r : WithTop ℕ∞} {ω η : FormField m} (hω : ContDiff ℝ r ω)
+    (hη : ContDiff ℝ r η) : ContDiff ℝ r (wedgeField ω η) := by
+  refine contDiff_pi.2 fun u => ?_
+  simp only [wedgeField, wedgeForm_apply]
+  refine ContDiff.sum fun s _ => ?_
+  exact (contDiff_const.mul (contDiff_pi.1 hω s)).mul (contDiff_pi.1 hη _)
+
+theorem contDiff_faceTrace (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ} {r : WithTop ℕ∞}
+    (e : Fin (m + 1) → Fin (n + 1)) {ω : FormField n} (hω : ContDiff ℝ r ω) :
+    ContDiff ℝ r (faceTrace p e ω) :=
+  contDiff_affinePullback _ _ hω
+
+theorem IsDeg.faceTrace (p : Fin (n + 1) → Fin n → ℝ) {m k : ℕ} (e : Fin (m + 1) → Fin (n + 1))
+    {ω : FormField n} (hk : ∀ y, IsDeg k (ω y)) (y : Fin m → ℝ) :
+    IsDeg k (FiniteElement.faceTrace p e ω y) :=
+  IsDeg.affinePullback hk _ _ y
+
+/-- **Stokes' formula for moments**: for a `C¹` `k`-form `ω`, a face `p ∘ e` of dimension
+`M + 1` and a smooth test form `η` on it,
+`∫_f tr_f dω ∧ η = Σᵢ (-1)ⁱ ∫_{∂ᵢ f} tr ω ∧ tr η - (-1)^k ∫_f tr_f ω ∧ dη`. -/
+theorem faceMoment_extDeriv (p : Fin (n + 1) → Fin n → ℝ) {M k : ℕ}
+    (e : Fin (M + 2) → Fin (n + 1)) {η : FormField (M + 1)} (hη : ContDiff ℝ ⊤ η)
+    {ω : FormField n} (hω : ContDiff ℝ 1 ω) (hk : ∀ y, IsDeg k (ω y)) :
+    faceMoment p e η (extDeriv ω) =
+      ∑ i : Fin (M + 2), (-1) ^ (i : ℕ) * faceMoment p (e ∘ i.succAbove)
+        (faceTrace (refVertex (M + 1)) i.succAbove η) ω -
+      (-1) ^ k * faceMoment p e (extDeriv η) ω := by
+  set ψ := wedgeField (faceTrace p e ω) η
+  have hψ : ContDiff ℝ 1 ψ := contDiff_wedgeField (contDiff_faceTrace p e hω) (hη.of_le le_top)
+  have hS := setIntegral_refSimplex_extDeriv (m := M) (η := ψ) isOpen_univ (Set.subset_univ _)
+    hψ.contDiffOn
+  have hface : ∀ i : Fin (M + 2), simplexIntegral (refVertex (M + 1) ∘ i.succAbove) ψ =
+      faceMoment p (e ∘ i.succAbove) (faceTrace (refVertex (M + 1)) i.succAbove η) ω := by
+    intro i
+    have : simplexIntegral (refVertex (M + 1) ∘ i.succAbove) ψ =
+        simplexIntegral (refVertex M) (faceTrace (refVertex (M + 1)) i.succAbove ψ) := by
+      rw [simplexIntegral_refVertex]; rfl
+    rw [this, faceTrace_wedgeField, faceTrace_faceTrace]
+    rfl
+  simp only [hface] at hS
+  have hdiff : ∀ x, extDeriv ψ x univ = wedgeField (faceTrace p e (extDeriv ω)) η x univ +
+      (-1) ^ k * wedgeField (faceTrace p e ω) (extDeriv η) x univ := by
+    intro x
+    rw [extDeriv_wedgeField_apply (IsDeg.faceTrace p e hk)
+      ((contDiff_faceTrace p e hω).differentiable one_ne_zero x)
+      ((hη.of_le le_top : ContDiff ℝ 1 η).differentiable one_ne_zero x),
+      faceTrace_extDeriv p e (hω.differentiable one_ne_zero)]
+    rfl
+  simp only [hdiff] at hS
+  have hc1 : Continuous (faceTrace p e (extDeriv ω)) :=
+    continuous_faceTrace p e (continuous_extDeriv hω)
+  have hc2 : Continuous (extDeriv η) := continuous_extDeriv (hη.of_le le_top)
+  rw [integral_add (integrableOn_wedgeField hc1 hη.continuous)
+    ((integrableOn_wedgeField (continuous_faceTrace p e hω.continuous) hc2).const_mul _),
+    integral_const_mul] at hS
+  rw [faceMoment_eq_integral, faceMoment_eq_integral p e (extDeriv η)]
+  linarith
+
+/-! ### Test forms under traces and `d` -/
+
+theorem extDeriv_mem_polySpace {m s j : ℕ} {η : FormField m} (h : η ∈ polySpace m s j) :
+    extDeriv η ∈ polySpace m (s - 1) (j + 1) := by
+  obtain ⟨H, hH, rfl⟩ := h
+  exact ⟨_, Koszul.extDeriv_mem_polyForm hH, (extDeriv_evalForm H).symm⟩
+
+theorem extDeriv_mem_polyMinusSpace {m s j : ℕ} {η : FormField m}
+    (h : η ∈ polyMinusSpace m s j) : extDeriv η ∈ polyMinusSpace m s (j + 1) := by
+  obtain ⟨H, hH, rfl⟩ := h
+  exact ⟨_, Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus hH,
+    (extDeriv_evalForm H).symm⟩
+
+theorem polyMinusSpace_mono {m s : ℕ} (hs : 1 ≤ s) (j : ℕ) :
+    polyMinusSpace m s j ≤ polyMinusSpace m (s + 1) j :=
+  Submodule.map_mono ((Koszul.polyFormMinus_le_polyForm hs j).trans
+    (Koszul.polyForm_le_polyFormMinus (s + 1) j))
+
+theorem extDeriv_zero_field {m : ℕ} : extDeriv (0 : FormField m) = 0 := by
+  funext x s; simp [FiniteElement.extDeriv_apply]
+
+/-- Traces of the test forms of `P_rΛ^{k+1}` on an `(M+1)`-face are test forms of
+`P_{r+1}Λᵏ` on its facets. -/
+theorem faceTrace_mem_testSpace {r k M : ℕ} {η : FormField (M + 1)}
+    (h : η ∈ testSpace r (k + 1) (M + 1)) (i : Fin (M + 2)) :
+    faceTrace (refVertex (M + 1)) i.succAbove η ∈ testSpace (r + 1) k M := by
+  by_cases hc : k + 1 ≤ M + 1 ∧ M + 1 < r + (k + 1)
+  · rw [testSpace_eq hc] at h
+    rw [testSpace_eq (by omega)]
+    have := affinePullback_mem_polyMinusSpace (simplexMatrix (refVertex (M + 1) ∘ i.succAbove))
+      (refVertex (M + 1) (i.succAbove 0)) h
+    rw [show r + 1 + k - M = r + (k + 1) - (M + 1) + 1 by omega,
+      show M - k = M + 1 - (k + 1) by omega]
+    exact polyMinusSpace_mono (by omega) _ this
+  · rw [testSpace_eq_bot hc, Submodule.mem_bot] at h
+    rw [h, map_zero]; exact Submodule.zero_mem _
+
+/-- `d` maps the test forms of `P_rΛ^{k+1}` on an `(M+1)`-face into those of `P_{r+1}Λᵏ`. -/
+theorem extDeriv_mem_testSpace {r k M : ℕ} {η : FormField (M + 1)}
+    (h : η ∈ testSpace r (k + 1) (M + 1)) : extDeriv η ∈ testSpace (r + 1) k (M + 1) := by
+  by_cases hc : k + 1 ≤ M + 1 ∧ M + 1 < r + (k + 1)
+  · rw [testSpace_eq hc] at h
+    rw [testSpace_eq (by omega)]
+    have := extDeriv_mem_polyMinusSpace h
+    rwa [show r + 1 + k - (M + 1) = r + (k + 1) - (M + 1) by omega,
+      show M + 1 - k = M + 1 - (k + 1) + 1 by omega]
+  · rw [testSpace_eq_bot hc, Submodule.mem_bot] at h
+    rw [h, extDeriv_zero_field]; exact Submodule.zero_mem _
+
+/-- Traces of the test forms of `P_r⁻Λ^{k+1}` on an `(M+1)`-face are test forms of `P_r⁻Λᵏ` on
+its facets. -/
+theorem faceTrace_mem_testSpaceMinus {r k M : ℕ} {η : FormField (M + 1)}
+    (h : η ∈ testSpaceMinus r (k + 1) (M + 1)) (i : Fin (M + 2)) :
+    faceTrace (refVertex (M + 1)) i.succAbove η ∈ testSpaceMinus r k M := by
+  by_cases hc : k + 1 ≤ M + 1 ∧ M + 1 < r + (k + 1)
+  · rw [testSpaceMinus_eq hc] at h
+    rw [testSpaceMinus_eq (by omega)]
+    have := affinePullback_mem_polySpace (simplexMatrix (refVertex (M + 1) ∘ i.succAbove))
+      (refVertex (M + 1) (i.succAbove 0)) h
+    rwa [show r + k - M - 1 = r + (k + 1) - (M + 1) - 1 by omega,
+      show M - k = M + 1 - (k + 1) by omega]
+  · rw [testSpaceMinus_eq_bot hc, Submodule.mem_bot] at h
+    rw [h, map_zero]; exact Submodule.zero_mem _
+
+/-- `d` maps the test forms of `P_r⁻Λ^{k+1}` on an `(M+1)`-face into those of `P_r⁻Λᵏ`. -/
+theorem extDeriv_mem_testSpaceMinus {r k M : ℕ} {η : FormField (M + 1)}
+    (h : η ∈ testSpaceMinus r (k + 1) (M + 1)) : extDeriv η ∈ testSpaceMinus r k (M + 1) := by
+  by_cases hc : k + 1 ≤ M + 1 ∧ M + 1 < r + (k + 1)
+  · rw [testSpaceMinus_eq hc] at h
+    by_cases hc' : M + 1 < r + k
+    · rw [testSpaceMinus_eq (by omega)]
+      have := extDeriv_mem_polySpace h
+      rwa [show r + (k + 1) - (M + 1) - 1 - 1 = r + k - (M + 1) - 1 by omega,
+        show M + 1 - (k + 1) + 1 = M + 1 - k by omega] at this
+    · obtain ⟨H, hH, rfl⟩ := h
+      rw [show r + (k + 1) - (M + 1) - 1 = 0 by omega] at hH
+      rw [extDeriv_evalForm, extDeriv_eq_zero_of_mem_polyForm_zero hH, map_zero]
+      exact Submodule.zero_mem _
+  · rw [testSpaceMinus_eq_bot hc, Submodule.mem_bot] at h
+    rw [h, extDeriv_zero_field]; exact Submodule.zero_mem _
+
 end Feec.FiniteElement

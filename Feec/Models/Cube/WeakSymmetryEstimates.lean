@@ -23,9 +23,14 @@ independent of `N`:
   `‖(I − Π) S u‖ ≤ C h sup ‖Du‖` for vectors `u` of `C¹` `k`-forms (`S⁰` and `S¹`).
 * **Prop 5.9(2) is false** (`exists_counterexample_prop59_two`, `not_exists_prop59_two_bound`):
   there is `c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`
-  (vanishing boundary DOFs), `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}`; hence no bound
-  `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds, and the hypothesis `happ1` of
-  `Feec.BGG.Discrete.error_estimate` (an `O(h)` bound) fails for these elements. The field is
+  (vanishing boundary DOFs), `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}` for the canonical
+  interpolant `Π²`; hence no bound `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds. **Projection
+  independence** (`exists_counterexample_prop59_two_bestApprox`, `not_exists_bestApprox_bound`):
+  the same `v_N` satisfies `‖S¹ v_N − w‖ ≥ c' ‖v_N‖_{H(curl)}` for *every* piecewise `P₁⁻Λ²`
+  field `w`, because `δ₀ = dist_{L²(K₁)}(Ẑ, P₁⁻Λ²) > 0` (`refDist_pos`); so the hypothesis
+  `happ1` of `Feec.BGG.Discrete.error_estimate` fails for every projection `P²` onto the
+  Raviart–Thomas spaces of Table 5.1 (canonical or smoothed). `v_N` is also piecewise linear,
+  `v_N ∈ P₁Λ¹ ⊗ ℝ³` (`vN_mem_polySpace`), the space of the thesis' statement. The field is
   `v_N = (0, 0, grad Π̃⁰ f_N)` (`vN`), `f_N(x) = F(h⁻¹(x − t_N))` with `F = χ y₀²/2` a smooth
   bump profile, quadratic on one simplex `T₀ = t_N + h K_id`: `curl v_N = 0` (`dPiecewise_vN`),
   `‖v_N‖² ≤ C h` (`exists_sum_formL2Sq_vN_le`: `L∞`-stability of `Π̃¹`, bounded overlap), while
@@ -1351,6 +1356,84 @@ theorem formL2Sq_sub_localInterp_of_pullback {h : ℝ} (hh : 0 < h) (t : Fin 3 �
   ring
 
 
+/-! #### Projection independence: the `L²` distance of `Ẑ` to `P₁⁻Λ²` -/
+
+/-- The `L²(K₁)` map of `P₁Λ²`. -/
+abbrev refEmb : polySpace 3 1 2 →ₗ[ℝ] Domain.L2F ℝ refK.closedInterior (Finset (Fin 3)) :=
+  l2EmbedOf (polySpace 3 1 2) (polySpace_le_contForms 1 2) refK.isCompact_closedInterior
+
+/-- The image of `P₁⁻Λ² ⊆ P₁Λ²` in `L²(K₁)` (finite-dimensional, hence closed). -/
+def refMinusL2 : Submodule ℝ (Domain.L2F ℝ refK.closedInterior (Finset (Fin 3))) :=
+  ((polyMinusSpace 3 1 2).comap (polySpace 3 1 2).subtype).map refEmb
+
+/-- `δ₀ = dist_{L²(K₁)}(Ẑ, P₁⁻Λ²)`: the distance of `Ẑ` to the whole lowest-order
+Raviart–Thomas space, not only to its canonical interpolant (compare `refGap`). -/
+def refDist : ℝ := Metric.infDist (refEmb ⟨refZ, refZ_mem⟩) (refMinusL2 : Set _)
+
+theorem refDist_pos : 0 < refDist := by
+  have : FiniteDimensional ℝ ((polyMinusSpace 3 1 2).comap (polySpace 3 1 2).subtype) :=
+    inferInstance
+  have : FiniteDimensional ℝ refMinusL2 := Module.Finite.map _ _
+  have hc : IsClosed (refMinusL2 : Set (Domain.L2F ℝ refK.closedInterior (Finset (Fin 3)))) :=
+    Submodule.closed_of_finiteDimensional _
+  refine (hc.notMem_iff_infDist_pos ⟨0, refMinusL2.zero_mem⟩).1 fun h => ?_
+  obtain ⟨p, hp, hpe⟩ := Submodule.mem_map.1 h
+  have hinj := l2EmbedOf_injective_of_le_polySpace (le_refl (polySpace 3 1 2))
+    refK.isCompact_closedInterior (interior_closedInterior_nonempty refK)
+  have : p = ⟨refZ, refZ_mem⟩ := hinj hpe
+  subst this
+  exact refZ_notMem (polyMinusSpace_one_le hp)
+
+/-- `‖Ẑ − p‖²_{L²(K₁)} ≥ δ₀²` for every `p ∈ P₁⁻Λ²`. -/
+theorem refDist_sq_le {p : FormField 3} (hp : p ∈ polyMinusSpace 3 1 2) :
+    refDist ^ 2 ≤ formL2Sq refK.closedInterior (refZ - p) := by
+  have hpp : p ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace le_rfl hp
+  have hmem : refEmb ⟨p, hpp⟩ ∈ refMinusL2 := Submodule.mem_map_of_mem (by exact hp)
+  have h1 := Metric.infDist_le_dist_of_mem (x := refEmb ⟨refZ, refZ_mem⟩) hmem
+  rw [dist_eq_norm, ← map_sub] at h1
+  have hn := norm_sq_l2EmbedOf (polySpace 3 1 2) (polySpace_le_contForms 1 2)
+    refK.isCompact_closedInterior ⟨refZ - p, Submodule.sub_mem _ refZ_mem hpp⟩
+  have e : (⟨refZ, refZ_mem⟩ - ⟨p, hpp⟩ : polySpace 3 1 2) =
+      ⟨refZ - p, Submodule.sub_mem _ refZ_mem hpp⟩ := rfl
+  rw [e] at h1
+  rw [← hn]
+  exact pow_le_pow_left₀ Metric.infDist_nonneg h1 2
+
+/-- **The local best-approximation gap on a scaled simplex**: if `H^* Z = h Ẑ` for
+`T = t + h K_id`, then `‖Z − w‖²_{L²(T)} ≥ h δ₀²` for every `w ∈ P₁⁻Λ²`. -/
+theorem mul_refDist_sq_le_formL2Sq {h : ℝ} (hh : 0 < h) (t : Fin 3 → ℝ)
+    {Z : FormField 3} (hZ : Z ∈ polySpace 3 1 2)
+    (hpull : affinePullback (scalarMat 3 h) t Z = h • refZ)
+    {w : FormField 3} (hw : w ∈ polyMinusSpace 3 1 2) :
+    h * refDist ^ 2 ≤ formL2Sq
+      (mapEquiv (boxMap t h hh.ne') (kuhnSimplex (1 : Equiv.Perm (Fin 3)))).closedInterior
+        (Z - w) := by
+  rw [← closedInterior_mapEquiv_lexSimplex _ t hh.ne']
+  have hwp : w ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace le_rfl hw
+  have hdeg : ∀ x, IsDeg 2 ((Z - w) x) := fun x s hs => by
+    simp only [Pi.sub_apply]
+    rw [isDeg_of_mem_polySpace hZ x s hs, isDeg_of_mem_polySpace hwp x s hs, sub_zero]
+  have key := formL2Sq_affinePullback_scalarMat refK hh t hdeg
+  have hp : h⁻¹ • affinePullback (scalarMat 3 h) t w ∈ polyMinusSpace 3 1 2 :=
+    Submodule.smul_mem _ _ (affinePullback_mem_polyMinusSpace_scalarMat h t hw)
+  have hsub : affinePullback (scalarMat 3 h) t (Z - w) =
+      h • (refZ - h⁻¹ • affinePullback (scalarMat 3 h) t w) := by
+    have e := (affinePullbackₗ (scalarMat 3 h) t).map_sub Z w
+    simp only [affinePullbackₗ_apply] at e
+    rw [e, hpull, smul_sub, smul_inv_smul₀ hh.ne']
+  rw [hsub, formL2Sq_smul] at key
+  have hd := refDist_sq_le hp
+  have h4 : 0 < (h ^ 2) ^ 2 := by positivity
+  refine le_of_mul_le_mul_left ?_ h4
+  rw [← key]
+  have e1 : (h ^ 2) ^ 2 * (h * refDist ^ 2) = h ^ 5 * refDist ^ 2 := by ring
+  have e2 : h ^ 3 * (h ^ 2 * formL2Sq refK.closedInterior
+      (refZ - h⁻¹ • affinePullback (scalarMat 3 h) t w)) =
+      h ^ 5 * formL2Sq refK.closedInterior (refZ - h⁻¹ • affinePullback (scalarMat 3 h) t w) := by
+    ring
+  rw [e1, e2]
+  exact mul_le_mul_of_nonneg_left hd (by positivity)
+
 /-- The centre `p₀ = (½, ½, ½)` of the reference cube `[0, 1]³`. -/
 abbrev refCenter : Fin 3 → ℝ := fun _ => 1 / 2
 
@@ -1932,9 +2015,10 @@ theorem exists_counterexample_prop59_two : ∃ c, 0 < c ∧ ∀ N : ℕ,
             _ ≤ _ := hL
       _ = L := Real.sqrt_sq hL0
 
-/-- **No `O(h)` bound for `(I − Π²) S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³`**: the estimate
-`‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` of [QuennevilleBelair2015], Prop 5.9(2) (the hypothesis
-`happ1` of `Feec.BGG.Discrete.error_estimate` for the elements of Table 5.1) fails for every `C`. -/
+/-- **No `O(h)` bound for `(I − Π²) S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³`**, `Π²` the canonical interpolant: the
+estimate `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` of [QuennevilleBelair2015], Prop 5.9(2) fails for
+every `C`. For an arbitrary projection onto the Raviart–Thomas space (the hypothesis `happ1` of
+`Feec.BGG.Discrete.error_estimate`) see `not_exists_bestApprox_bound`. -/
 theorem not_exists_prop59_two_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
     (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1) ∈
@@ -1963,6 +2047,165 @@ theorem not_exists_prop59_two_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
             (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2)
   have hY : 0 < Y := Real.sqrt_pos.2 (by positivity)
   have h1 : c * Y ≤ C * hN (N + 2) * Y := hlow.trans hup
+  have h2 : c ≤ C * hN (N + 2) := le_of_mul_le_mul_right (by linarith) hY
+  have hh : hN (N + 2) = 1 / 2 / ((N + 3 : ℕ) : ℝ) := rfl
+  rw [hh] at h2
+  have hN3 : (0 : ℝ) < ((N + 3 : ℕ) : ℝ) := by positivity
+  rw [div_lt_iff₀ hc] at hN'
+  have : C * (1 / 2 / ((N + 3 : ℕ) : ℝ)) * ((N + 3 : ℕ) : ℝ) = C / 2 := by field_simp
+  have h3 : c * ((N + 3 : ℕ) : ℝ) ≤ C / 2 := by
+    rw [← this]; exact mul_le_mul_of_nonneg_right h2 hN3.le
+  push_cast at h3
+  nlinarith
+
+/-! #### Projection independence: no `O(h)` approximation of `S¹ v_N` by `P₁⁻Λ²` fields -/
+
+/-- `v_N` is also a piecewise linear field: `v_N ∈ P₁Λ¹ ⊗ ℝ³` (piecewise `grad` of `P₂`), the space
+over which [QuennevilleBelair2015], Prop 5.9(2) literally quantifies. -/
+theorem vN_mem_polySpace (N : ℕ) (a : Fin 3) (T : (mesh 3 (N + 2)).simplices) :
+    (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
+      (polyElement 3 PolySeq.lagrangeP2).space _ 1) : FormField 3) ∈ polySpace 3 1 1 := by
+  by_cases ha : a = 2
+  · subst ha
+    rw [vN, Pi.single_eq_same]
+    have h0 : ((((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0) T :
+        (polyElement 3 PolySeq.lagrangeP2).space _ 0) : FormField 3)) ∈ polySpace 3 2 0 :=
+      ((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0) T).2
+    change extDeriv (((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+      (mesh 3 (N + 2)) 0) T : (polyElement 3 PolySeq.lagrangeP2).space _ 0) : FormField 3) ∈ _
+    simpa using extDeriv_mem_polySpace h0
+  · rw [vN_ne_two ha]
+    exact Submodule.zero_mem _
+
+/-- `‖S¹(glue v_N) − glue w‖² ≥ h δ₀²` for **every** piecewise `P₁⁻Λ²` field `w` (in particular
+every element of the global Raviart–Thomas space, whatever projection produced it). -/
+theorem le_norm_sq_wsL2_vN_sub_glue (N : ℕ)
+    (w : (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2) :
+    hN (N + 2) * refDist ^ 2 ≤
+      ‖wsL2 (Ω := (mesh 3 (N + 2)).domain) ((1 : ℕ) : ℤ)
+          ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+            fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) -
+        (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 (N + 2)) (((1 : ℕ) : ℤ) + 1) w‖ ^ 2 := by
+  refine le_of_le_of_eq ?_ (norm_sq_wsL2_sub_glue_eq (n := 3) (N := N + 2) (k := 1)
+    (polyElement 3 PolySeq.lagrangeP2) (polyElement 3 PolySeq.lowestOrder)
+    (fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) w).symm
+  have h1 := Finset.single_le_sum (f := fun T : (mesh 3 (N + 2)).simplices =>
+    formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+      (coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+        (mesh 3 (N + 2)) 1) T : (polyElement 3 PolySeq.lagrangeP2).space _ 1) : FormField 3)) -
+        ((w T : (polyElement 3 PolySeq.lowestOrder).space _ 2) : FormField 3)))
+    (fun T _ => formL2Sq_nonneg
+      (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).isCompact_closedInterior.measurableSet _)
+    (Finset.mem_univ (simplex₀' N))
+  refine le_trans ?_ h1
+  change hN (N + 2) * refDist ^ 2 ≤ formL2Sq (simplex₀ N).closedInterior
+    (coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+      (mesh 3 (N + 2)) 1) (simplex₀' N) : (polyElement 3 PolySeq.lagrangeP2).space _ 1) :
+        FormField 3)) - ((w (simplex₀' N) : (polyElement 3 PolySeq.lowestOrder).space _ 2) :
+          FormField 3))
+  rw [coordWedgeField_vN_simplex₀, simplex₀_eq]
+  exact mul_refDist_sq_le_formL2Sq (hN_pos (N + 2)) (corner N) (ZN_mem N) (pullback_ZN N)
+    (by exact (w (simplex₀' N)).2)
+
+/-- **[QuennevilleBelair2015], Prop 5.9(2) is false, independently of the projection.** There is
+`c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³` (vanishing boundary
+DOFs), which is also in `P₁Λ¹ ⊗ ℝ³` (piecewise linear), `v ≠ 0`, with
+`‖S¹ v − w‖_{L²(Q)} ≥ c ‖v‖_{H(curl)}` for **every** piecewise `P₁⁻Λ²` field `w`. Hence
+`inf_{w_h ∈ P₁⁻Λ²_h} ‖S¹ v − w_h‖` is not `O(h) ‖v‖_{H(curl)}`: no map `P²` with values in the
+Raviart–Thomas space (canonical, smoothed, or `L²` projection) satisfies the bound
+`‖(I − P²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` on `P₂⁻Λ̊¹ ⊗ ℝ³`. The field is `v_N` (`vN`). -/
+theorem exists_counterexample_prop59_two_bestApprox : ∃ c, 0 < c ∧ ∀ N : ℕ,
+    ∃ v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1,
+      (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
+        (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 (N + 2)) 1) ∧
+      (∀ a T, (((v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
+        (polyElement 3 PolySeq.lagrangeP2).space _ 1) : FormField 3) ∈ polySpace 3 1 1) ∧
+      0 < ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+        (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ∧
+      ∀ w : (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2,
+        c * √(‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+            (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2 +
+          ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 + 1 : ℕ) : ℤ)
+            (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+              (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2) ≤
+        ‖wsL2 (Ω := (mesh 3 (N + 2)).domain) ((1 : ℕ) : ℤ)
+            ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+              fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) -
+          (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 (N + 2)) (((1 : ℕ) : ℤ) + 1) w‖ := by
+  obtain ⟨C, hC0, hC⟩ := exists_sum_formL2Sq_vN_le
+  have hC1 : 0 < C + 1 := by linarith
+  have hg : 0 < refDist ^ 2 := pow_pos refDist_pos 2
+  refine ⟨√(refDist ^ 2 / (C + 1)), Real.sqrt_pos.2 (div_pos hg hC1), fun N =>
+    ⟨vN N, vN_mem₀ N, vN_mem_polySpace N, ?_, fun w => ?_⟩⟩
+  · have hh := hN_pos (N + 2)
+    have hL := le_norm_sq_wsL2_vN_sub_glue N 0
+    rw [map_zero, sub_zero] at hL
+    refine lt_of_le_of_ne (norm_nonneg _) fun h0 => ?_
+    rw [(norm_eq_zero.1 h0.symm), map_zero, norm_zero] at hL
+    nlinarith
+  · have hL := le_norm_sq_wsL2_vN_sub_glue N w
+    set L := ‖wsL2 (Ω := (mesh 3 (N + 2)).domain) ((1 : ℕ) : ℤ)
+            ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+              fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) -
+          (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 (N + 2)) (((1 : ℕ) : ℤ) + 1) w‖
+      with hLdef
+    set X := ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+      (fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖
+      with hXdef
+    have hX : X ^ 2 ≤ (C + 1) * hN (N + 2) := by
+      rw [hXdef, norm_sq_tensorGlue_vN]
+      exact (hC N).trans (by nlinarith [hN_pos (N + 2)])
+    have hd : (polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 + 1 : ℕ) : ℤ)
+        (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+          (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) = 0 := by
+      rw [dPiecewise_vN N]; exact map_zero _
+    rw [hd, norm_zero]
+    have e : X ^ 2 + 0 ^ 2 = X ^ 2 := by ring
+    rw [e, Real.sqrt_sq (norm_nonneg _)]
+    have hX0 : 0 ≤ X := norm_nonneg _
+    have hL0 : 0 ≤ L := norm_nonneg _
+    calc √(refDist ^ 2 / (C + 1)) * X = √(refDist ^ 2 / (C + 1) * X ^ 2) := by
+          rw [Real.sqrt_mul (div_pos hg hC1).le, Real.sqrt_sq hX0]
+      _ ≤ √(L ^ 2) := by
+          refine Real.sqrt_le_sqrt ?_
+          calc refDist ^ 2 / (C + 1) * X ^ 2 ≤ refDist ^ 2 / (C + 1) * ((C + 1) * hN (N + 2)) :=
+                mul_le_mul_of_nonneg_left hX (div_pos hg hC1).le
+            _ = hN (N + 2) * refDist ^ 2 := by field_simp
+            _ ≤ _ := hL
+      _ = L := Real.sqrt_sq hL0
+
+/-- **No `O(h)` best approximation of `S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³` by `P₁⁻Λ²`**: there is no `C` with
+`inf_{w} ‖S¹ v − w‖ ≤ C h ‖v‖_{H(curl)}` (`w` over piecewise `P₁⁻Λ²` fields) for all meshes and all
+`v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`. Consequently the hypothesis
+`happ1 : ‖S¹ v − P² S¹ v‖ ≤ C_app h ‖v‖_{H(curl)}` of `Feec.BGG.Discrete.error_estimate` cannot hold,
+with `N`-independent `C_app`, for any choice of `P²` with values in the Raviart–Thomas spaces of
+Table 5.1 ([QuennevilleBelair2015], Prop 5.9(2)). -/
+theorem not_exists_bestApprox_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
+    (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
+    (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1) ∈
+      (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 N) 1) →
+    ∃ w : (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 N) 2,
+    ‖wsL2 (Ω := (mesh 3 N).domain) ((1 : ℕ) : ℤ)
+          ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((1 : ℕ) : ℤ)
+            fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1)) -
+        (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 N) (((1 : ℕ) : ℤ) + 1) w‖ ≤
+      C * hN N * √(‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((1 : ℕ) : ℤ)
+          (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1))‖ ^ 2 +
+        ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((1 + 1 : ℕ) : ℤ)
+          (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 1
+            (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1))‖ ^ 2) := by
+  rintro ⟨C, hC⟩
+  obtain ⟨c, hc, hex⟩ := exists_counterexample_prop59_two_bestApprox
+  obtain ⟨N, hN'⟩ := exists_nat_gt (C / c)
+  obtain ⟨v, hv0, -, hpos, hlow⟩ := hex N
+  obtain ⟨w, hup⟩ := hC (N + 2) v hv0
+  set Y := √(‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+          (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2 +
+        ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 + 1 : ℕ) : ℤ)
+          (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+            (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2)
+  have hY : 0 < Y := Real.sqrt_pos.2 (by positivity)
+  have h1 : c * Y ≤ C * hN (N + 2) * Y := (hlow w).trans hup
   have h2 : c ≤ C * hN (N + 2) := le_of_mul_le_mul_right (by linarith) hY
   have hh : hN (N + 2) = 1 / 2 / ((N + 3 : ℕ) : ℝ) := rfl
   rw [hh] at h2

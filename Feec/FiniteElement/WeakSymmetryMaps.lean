@@ -1424,7 +1424,10 @@ theorem lagrangeP2_constOneTest_one : lagrangeP2.ConstOneTest 1 :=
 
 variable (M : SimplicialMesh n)
 
-/-- **`S₀,ₕ = Π¹S⁰ : P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`** ([QuennevilleBelair2015], §5.3, (5.7)). -/
+/-- **`S₀,ₕ = Π¹S⁰ : P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`** ([QuennevilleBelair2015], §5.3, (5.7)), with `Π¹` the
+canonical interpolant. In a `Feec.BGG.Discrete` instance built from smoothed projections,
+`Discrete.S0h = π¹ ∘ S⁰` is a different map; results about `bggS0h` (surjectivity, Props 5.8,
+5.9(1)) do not transfer to it automatically. -/
 def bggS0h : (Fin n → (polyElement n lagrangeP2).globalSpace M 0) →ₗ[ℝ]
     (polyElement n lowestOrder).globalSpace M 1 :=
   lagrangeP2.wsGlobal (M := M) lagrangeP2_constOneTest_zero
@@ -1480,7 +1483,9 @@ with `Q 𝒮 y = c Π' 𝒮 (Q̃ y)` (from `R 𝒮 = c 𝒮 R̃`, the dilation f
 `Π 𝒮 Π̃ = Π 𝒮` on smooth fields, the corrected Prop 5.7; `A` is `Π 𝒮` on the discrete fields).
 Then the smoothed projections `π = J⁻¹ Q`, `π̃ = J̃⁻¹ Q̃` satisfy `π 𝒮 π̃ = π 𝒮`: since
 `Q̃ π̃ = Q̃`, `Q 𝒮 π̃ x = c A (Q̃ π̃ x) = c A (Q̃ x) = Q 𝒮 x`. This is `Feec.BGG.Discrete.Compatible`
-(`P1 = π`, `Pt0 = π̃`, `S0 = 𝒮`) for smoothed projections. -/
+(`P1 = π`, `Pt0 = π̃`, `S0 = 𝒮`) for smoothed projections. The hypothesis `hA` is not discharged
+here for the cube smoothing (it combines `Feec.Models.Cube.WeakSymmetry.smoothForm_wsL2` with
+`PolySeq.wsGlobal_tensorInterp`); this lemma is the abstract step only. -/
 theorem toCochainProjection_comp_toCochainProjection (Q : S.CommutingMap) (Q' : S'.CommutingMap)
     {θ θ' : ℝ} (hθ : θ < 1) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) (hθ' : θ' < 1)
     (hQ' : ∀ i, ∀ v ∈ S'.V i, ‖v - Q'.Q i v‖ ≤ θ' * ‖v‖) {i : ι'} {j : ι}

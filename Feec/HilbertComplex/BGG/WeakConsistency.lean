@@ -7,11 +7,16 @@ public import Feec.HilbertComplex.BGG.Discrete
 
 The a priori estimate `Feec.BGG.Discrete.error_estimate` (thesis Thm 5.5) assumes the strong
 consistency bound `‖(S₁ − S₁,ₕ)v‖ ≤ C_app h ‖v‖_V` on all of `Ṽₕ¹`. This is false for the
-Table 5.1 elements: thesis Prop 5.9(2) fails for the gradient of an edge bubble (ratio `√(2/3)`,
-independent of `h`). The proof only uses the bound inside the single term
-`⟪S₁u, (S₁ − S₁,ₕ)v⟫` against the *exact* solution `u`. This file replaces it by the
+Table 5.1 elements: per the audit (`docs/audit.json`, a symbolic computation not formalized here,
+since `HilbertComplex` cannot import `FiniteElement`), thesis Prop 5.9(2) fails for the gradient of
+an edge bubble (ratio `√(2/3)`, independent of `h`). The proof only uses the bound inside the
+single term `⟪S₁u, (S₁ − S₁,ₕ)v⟫` against the *exact* solution `u`. This file replaces it by the
 corresponding weak consistency bound and shows how a discrete Hodge decomposition yields that
-bound from hypotheses that hold for these elements.
+bound from hypotheses that do not include the false Prop 5.9(2). Whether `Bounded`, `Compatible`
+and `RegularPotential` hold for the Table 5.1 elements is open (see the caveat on
+`Discrete.Compatible`). `Compatible` is thesis (5.4) in the form `Π¹S₀Π̃⁰ = Π¹S₀` for the total
+projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further assumption
+(`Discrete.surjective_of_comp_eq`).
 
 ## Main definitions
 
@@ -64,12 +69,14 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
 /-! ## Thm 5.5 with weak consistency -/
 
 /-- **Thesis Thm 5.5, corrected: weak consistency.** The a priori estimate of `error_estimate`,
-with the strong consistency hypothesis `happ1` on `S₁,ₕ` (false for the Table 5.1 elements,
-thesis Prop 5.9(2)) replaced by weak consistency against the exact solution:
+with the strong consistency hypothesis `happ1` on `S₁,ₕ` (false for the Table 5.1 elements
+per the audit, thesis Prop 5.9(2)) replaced by weak consistency against the exact solution:
 `|⟪S₁u, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V` for `v ∈ Ṽₕ¹`, `K ≥ 0` a data constant. The bound has
 `h²K²` in place of `h²‖S₁u‖²`; the constant `errorConst` is unchanged.
 `weakConsistency_of_approx` shows that `happ1` implies the hypothesis with `K = ‖S₁u‖`;
-`weakConsistency_of_regularPotential` derives it from hypotheses that do hold for these elements.
+`weakConsistency_of_regularPotential` derives it from hypotheses (`Stability`, `Bounded`,
+regular potentials, Prop 5.9(1), `S₁u ∈ D(d¹*)`) that do not include Prop 5.9(2); whether they hold
+for the Table 5.1 elements is open.
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
 theorem error_estimate_of_weakConsistency {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
     (B : Q.Bounded CP) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.Vt1h]
@@ -303,7 +310,7 @@ structure RegularPotential (Q : Discrete D) (Xr : Type*) [NormedAddCommGroup Xr]
 `dS₀ = −S₁d` and its discrete version `dS₀,ₕ = −S₁,ₕd` (commuting projections). So on gradients
 the consistency error of `S₁,ₕ` is the `d` of the consistency error of `S₀,ₕ`, which is `O(h)`
 (thesis Prop 5.9(1)), but only after integration by parts against `z ∈ D(d*)`: in `L²` it is not
-small (the counterexample to thesis Prop 5.9(2) is such a gradient). -/
+small (per the audit, the counterexample to thesis Prop 5.9(2) is such a gradient). -/
 theorem S1_sub_S1h_dt0 (ψ : Vt0) : (D.S1 - Q.S1h) (D.dt0 ψ) = D.d1 (Q.S0h ψ - D.S0 ψ) := by
   have h1 := D.anticomm ψ
   have h2 := Q.anticomm_h ψ
@@ -313,9 +320,11 @@ theorem S1_sub_S1h_dt0 (ψ : Vt0) : (D.S1 - Q.S1h) (D.dt0 ψ) = D.d1 (Q.S0h ψ -
 def weakConsistencyConst (Cp CS CP Cinc Creg nz nz' : ℝ) : ℝ :=
   nz' * √(1 + Cp ^ 2) * (1 + CP * (1 + Cinc * Creg)) + nz * (1 + (1 + CP) * CS) * Creg
 
-/-- **Weak consistency from a discrete Hodge decomposition** (the mechanism behind the
-corrected Thm 5.5 on the Table 5.1 elements). Let `z ∈ D(d¹*)`, i.e. `⟪z, dw⟫ = ⟪z', w⟫` for all
-`w ∈ V¹`. Assume the consistency of `S₀,ₕ` (`happ0`, thesis Prop 5.9(1), which holds) and regular
+/-- **Weak consistency from a discrete Hodge decomposition** (the mechanism intended
+for the corrected Thm 5.5 on cube meshes; the hypotheses are not proved for any concrete element
+here). Let `z ∈ D(d¹*)`, i.e. `⟪z, dw⟫ = ⟪z', w⟫` for all
+`w ∈ V¹`. Assume `Stability`, `Bounded`, the consistency of `S₀,ₕ` (`happ0`, thesis
+Prop 5.9(1), true per the audit) and regular
 potentials (`RegularPotential`). Then for `v ∈ Ṽₕ¹`
 `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V`, `K = weakConsistencyConst … ‖z‖ ‖z'‖`.
 
@@ -426,10 +435,12 @@ theorem weakConsistency_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D
         exact hψg.trans (mul_le_mul_of_nonneg_left hdψ (Real.sqrt_nonneg _))
     _ = _ := by unfold weakConsistencyConst; ring
 
-/-- **Thesis Thm 5.5 under hypotheses that hold for the Table 5.1 elements.** The a priori
-estimate with the strong consistency of `S₁,ₕ` (false, thesis Prop 5.9(2)) replaced by:
-regular potentials (`RegularPotential`) and `S₁u ∈ D(d¹*)` (regularity of the exact solution,
+/-- **Thesis Thm 5.5 without Prop 5.9(2).** The a priori estimate with the strong consistency of
+`S₁,ₕ` (false per the audit, thesis Prop 5.9(2)) replaced by: regular potentials
+(`RegularPotential`) and `S₁u ∈ D(d¹*)` (regularity of the exact solution,
 `⟪S₁u, dw⟫ = ⟪z', w⟫`). The data constant is `K = weakConsistencyConst … ‖S₁u‖ ‖z'‖`.
+`Stability`, `Bounded` and `Compatible` remain hypotheses; whether `Bounded` + `Compatible` +
+`RegularPotential` hold for the Table 5.1 elements is open (see `Discrete.Compatible`).
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
 theorem error_estimate_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
     (B : Q.Bounded CP) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.Vt1h]

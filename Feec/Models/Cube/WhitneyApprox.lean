@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.FiniteElementMethod
 public import Feec.FiniteElement.WhitneyInterpolation
+public import Feec.HilbertComplex.Approximation.GraphApprox
 
 /-!
 # Approximation by the Whitney complexes of the Freudenthal meshes of the cube
@@ -20,7 +21,9 @@ the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)`
   (`exists_mem_whitneyMin_le`). In the graph norm of `HΛᵏ(Q)`:
   `dist(σ, Vₕᵏ) ≤ (A_k L + A_{k+1} L') h_N` for `σ` a `C²` `k`-form
   (`infDist_domainSub_whitney_le`), the hypotheses `hσ`, `hu`, `hB` of
-  `FEM.SmoothingEstimates.norm_sub_le_meshSize` for smooth solutions.
+  `FEM.SmoothingEstimates.norm_sub_le_meshSize` for smooth solutions. The packaged rates (all
+  four hypotheses of `norm_sub_le_meshSize`, and `happ` of `norm_sub_le_meshSize_window`, for `C²`
+  solutions) are in `Feec.Models.Cube.WhitneyRate`.
 * **Smooth forms are dense in the graph norms** of `HΛ(Q)` and `H̊Λ(Q)` (`exists_smooth_near`,
   `exists_smooth_near_min`): the smoothed forms `Feec.FiniteElement.smoothForm` of [AFW2010],
   §5.4, with dilation factor `c → 1` and bump radius `→ 0`, are the field smoothers
@@ -32,7 +35,8 @@ the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)`
 
 **Consequences, with no remaining approximation hypothesis**: the Whitney windows are dense in the
 graph space of the total differential of every window (`dense_window`, `dense_windowMin`, from the
-abstract `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`), hence approximating
+abstract `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt` of
+`Feec.HilbertComplex.Approximation.GraphApprox`), hence approximating
 (`isApproximating_window_whitney`), and the semi-discrete Hodge wave equation converges for every
 window and `D(L)` data ([QuennevilleBelair2015], Thm 4.14;
 `exists_tendstoUniformlyOn_window_whitney`), in particular for Maxwell's equations
@@ -84,127 +88,6 @@ theorem minimalSubcomplexOfEq_induction {Ω Ω' : Set (Fin n → ℝ)} (h : Ω =
   subst h; exact hP
 
 end Feec.Domain.ConstCoeffComplex
-
-/-! ## Graph-norm approximation in a finite Hilbert complex -/
-
-namespace LinearPMap
-
-variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-  [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-theorem toGraphSpace_sub (T : E →ₗ.[𝕜] F) (x y : T.domain) :
-    T.toGraphSpace (x - y) = T.toGraphSpace x - T.toGraphSpace y := by
-  refine Subtype.ext ?_
-  change WithLp.toLp 2 (((x - y : T.domain) : E), T (x - y)) =
-    WithLp.toLp 2 ((x : E), T x) - WithLp.toLp 2 ((y : E), T y)
-  rw [LinearPMap.map_sub, ← WithLp.toLp_sub]
-  rfl
-
-/-- The graph norm is at most `‖x‖ + ‖T x‖`. -/
-theorem norm_toGraphSpace_le (T : E →ₗ.[𝕜] F) (x : T.domain) :
-    ‖T.toGraphSpace x‖ ≤ ‖(x : E)‖ + ‖T x‖ := by
-  have h := WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 ((x : E), T x))
-  have e : ‖T.toGraphSpace x‖ = ‖WithLp.toLp 2 ((x : E), T x)‖ := rfl
-  rw [e]
-  refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
-  rw [h]
-  simp only [WithLp.toLp_fst, WithLp.toLp_snd]
-  nlinarith [norm_nonneg (x : E), norm_nonneg (T x)]
-
-end LinearPMap
-
-namespace PiLp
-
-/-- `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`. -/
-theorem norm_le_sum_norm {ι : Type*} [Fintype ι] {β : ι → Type*}
-    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
-  refine (abs_le_of_sq_le_sq' ?_ (Finset.sum_nonneg fun _ _ => norm_nonneg _)).2
-  rw [PiLp.norm_sq_eq_of_L2]
-  exact Finset.sum_sq_le_sq_sum_of_nonneg fun _ _ => norm_nonneg _
-
-end PiLp
-
-namespace Feec.HilbertComplex.Subcomplex
-
-variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
-  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
-  {H : HilbertComplex 𝕜 c W}
-
-/-- **Degreewise graph-norm approximation gives approximation in the graph space of the total
-differential**: if every `x ∈ Wⁱ` is eventually within `ε` of `Vₕⁱ`, with `‖d (x - v)‖ < ε`
-whenever `x ∈ D(d)`, then the total spaces `graphSub` of the subcomplexes approximate every point
-of `Γ(𝐝)`. This is the hypothesis of `Feec.HilbertComplex.Subcomplex.isApproximating`. -/
-theorem eventually_exists_graphSub_lt {κ : Type*} {l : Filter κ} (S : κ → H.Subcomplex)
-    (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε → ∀ᶠ h in l, ∃ v, ∃ hv : v ∈ (S h).V i,
-      ‖x - v‖ < ε ∧ ∀ j (hx : x ∈ (H.d i j).domain),
-        ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((S h).le_domain i j hv)⟩‖ < ε)
-    (ζ : H.totalD.GraphSpace) {δ : ℝ} (hδ : 0 < δ) :
-    ∀ᶠ h in l, ∃ w ∈ (S h).graphSub, ‖ζ - w‖ < δ := by
-  classical
-  obtain ⟨x, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ζ
-  set m : ℝ := (Fintype.card ι : ℝ)
-  have hm : 0 ≤ m := Nat.cast_nonneg _
-  set ε := δ / (m + m * m + 1)
-  have hε : 0 < ε := div_pos hδ (by positivity)
-  have hev := Filter.eventually_all.2 fun i => hdeg i ((x : PiLp 2 W) i) ε hε
-  filter_upwards [hev] with h hh
-  choose v hv hv1 hv2 using hh
-  set y : PiLp 2 W := WithLp.toLp 2 fun i => v i
-  have hy : y ∈ H.totalD.domain := fun i j => (S h).le_domain i j (hv i)
-  refine ⟨H.totalD.toGraphSpace ⟨y, hy⟩, fun i => hv i, ?_⟩
-  rw [← LinearPMap.toGraphSpace_sub]
-  refine (LinearPMap.norm_toGraphSpace_le _ _).trans_lt ?_
-  have h1 : ‖((x - ⟨y, hy⟩ : H.totalD.domain) : PiLp 2 W)‖ ≤ m * ε := by
-    refine (PiLp.norm_le_sum_norm _).trans ?_
-    calc ∑ i, ‖((x - ⟨y, hy⟩ : H.totalD.domain) : PiLp 2 W) i‖ ≤ ∑ _i : ι, ε :=
-          Finset.sum_le_sum fun i _ => (hv1 i).le
-      _ = m * ε := by simp [m]
-  have h2 : ‖H.totalD (x - ⟨y, hy⟩)‖ ≤ m * (m * ε) := by
-    refine (PiLp.norm_le_sum_norm _).trans ?_
-    calc ∑ j, ‖H.totalD (x - ⟨y, hy⟩) j‖ ≤ ∑ _j : ι, m * ε := by
-          refine Finset.sum_le_sum fun j _ => ?_
-          rw [totalD_apply]
-          refine (norm_sum_le _ _).trans ?_
-          calc ∑ i, ‖H.d i j ⟨((x - ⟨y, hy⟩ : H.totalD.domain) : PiLp 2 W) i,
-                (x - ⟨y, hy⟩ : H.totalD.domain).2 i j⟩‖ ≤ ∑ _i : ι, ε :=
-                Finset.sum_le_sum fun i _ => (hv2 i j (x.2 i j)).le
-            _ = m * ε := by simp [m]
-      _ = m * (m * ε) := by simp [m]
-  have hlt : m * ε + m * (m * ε) < δ := by
-    have e : m * ε + m * (m * ε) = (m + m * m) / (m + m * m + 1) * δ := by
-      simp only [ε]; field_simp
-    rw [e]
-    have : (m + m * m) / (m + m * m + 1) < 1 := by
-      rw [div_lt_one (by positivity)]; linarith
-    nlinarith
-  linarith
-
-end Feec.HilbertComplex.Subcomplex
-
-namespace Feec.HilbertComplex.Subcomplex
-
-variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
-  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
-  {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
-
-/-- **Distance to the discrete domain space**: for `v ∈ Vₕⁱ`, the graph-norm distance of `σ` to
-`Vₕⁱ` is at most `‖σ - v‖ + ‖d σ - d v‖` (the quantity bounded by interpolation estimates;
-`domainSub` enters `CochainProjection.norm_sub_le_infDist`). -/
-theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) {v : W i}
-    (hv : v ∈ S.V i) :
-    Metric.infDist σ (S.domainSub i) ≤ ‖H.domainIncl i σ - v‖ +
-      ‖H.d i j (H.domainCoord i j σ) - H.d i j ⟨v, S.le_domain i j hv⟩‖ := by
-  obtain rfl := c.next_eq' hij
-  obtain ⟨x, rfl, -, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq σ
-  have hmem : (H.d i (c.next i)).toGraphSpace ⟨v, S.le_domain i _ hv⟩ ∈ S.domainSub i :=
-    ⟨(S.toHilbertComplex.d i (c.next i)).toGraphSpace ⟨⟨v, hv⟩, Submodule.mem_top⟩, rfl⟩
-  refine (Metric.infDist_le_dist_of_mem hmem).trans ?_
-  rw [dist_eq_norm, ← LinearPMap.toGraphSpace_sub]
-  refine (LinearPMap.norm_toGraphSpace_le _ _).trans (le_of_eq ?_)
-  rw [LinearPMap.map_sub]
-  rfl
-
-end Feec.HilbertComplex.Subcomplex
 
 namespace Feec.Models.Cube.FEM
 

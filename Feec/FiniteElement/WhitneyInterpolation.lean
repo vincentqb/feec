@@ -27,7 +27,10 @@ once, `whitneyRefInterp g = Σ_k Σ_{k-faces f} (∫_f g) φ_f` (equal to `Π_T�
 `whitneyRefInterp_apply_eq_whitneyInterp`), satisfies `Feec.FiniteElement.IsRefInterpolant` with
 `r = 0`, `m = 0` (`isRefInterpolant_whitney`): it reproduces the constant forms
 (`whitneyRefInterp_const`) and is stable in `C⁰(T̂)`; hence
-`sup_{T̂} ‖f - I f‖ ≤ (1 + C) sup_{T̂} ‖Df‖` (`norm_sub_whitneyRefInterp_le`).
+`sup_{T̂} ‖f - I f‖ ≤ (1 + C) sup_{T̂} ‖Df‖` (`norm_sub_whitneyRefInterp_le`). This instance is a
+side result: it is stated for coefficient fields `T̂ → (Finset (Fin n) → ℝ)`, while the transport
+`Feec.FiniteElement.norm_sub_transportInterp_formPullback_le` is stated for alternating-map
+fields, and the mesh estimates below do not use it.
 
 **On a mesh.** The global canonical interpolant of the Whitney element family is `Π_T` on every
 simplex (`whitney_globalInterp_apply`). With `formL2` the degree-`k` coefficients of a continuous
@@ -35,10 +38,12 @@ form as an element of `L²(Ω; Λᵏ)`, on a mesh with `h_T ‖B_T⁻¹‖ ≤ C
 `‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h sup_{cl Ω} ‖Dw‖`
 (`norm_formL2_sub_glue_le`). Since `Π_h` commutes with `d` (`glue_globalInterp_mem_maximal`),
 the same bound for `dw` (with `sup ‖D dw‖`, so `w ∈ C²`) gives the graph-norm error. Smooth
-`k`-forms are in `D(d_max)` with the classical `d` (`formL2_mem_maximal`). The shape-regularity
-bound used is the one of `Feec.Mesh.IsShapeRegular`; the estimate is proved directly on each
-simplex, not by transport from `T̂` (`Feec.FiniteElement.norm_sub_transportInterp_le` would need
-the naturality of `Π_T` under affine maps).
+`k`-forms are in `D(d_max)` with the classical `d` (`formL2_mem_maximal`). The estimate takes
+the raw shape bound `h_T ‖B_T⁻¹‖ ≤ C₀`, which follows from the second condition of
+`Feec.Mesh.IsShapeRegular` (`diam_mul_norm_symm_le_of_isShapeRegular`,
+`norm_formL2_sub_glue_le_of_isShapeRegular`). It is proved directly on each simplex, not by
+transport from `T̂` (`Feec.FiniteElement.norm_sub_transportInterp_le` would need the naturality
+of `Π_T` under affine maps).
 
 ## Main definitions
 
@@ -52,7 +57,8 @@ the naturality of `Π_T` under affine maps).
 * `abs_sub_whitneyInterp_le`: the local interpolation error.
 * `isRefInterpolant_whitney`, `norm_sub_whitneyRefInterp_le`: the Whitney interpolant as a
   reference interpolant.
-* `whitney_globalInterp_apply`, `norm_formL2_sub_glue_le`: the global `L²` error.
+* `whitney_globalInterp_apply`, `norm_formL2_sub_glue_le`,
+  `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error.
 * `glue_globalInterp_mem_maximal`, `formL2_mem_maximal`, `contDiff_extDeriv`: `d` on smooth and
   interpolated forms.
 
@@ -704,6 +710,35 @@ theorem norm_formL2_sub_glue_le (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1
     exact hpt T hT x hxT s.1 hs
   · rw [measureUnivNNReal, Measure.restrict_apply_univ, ENNReal.toReal_ofNat, one_div]
     rfl
+
+/-- On a shape regular mesh (`Feec.Mesh.IsShapeRegular` with constants `C₀, c`), the shape bound
+`h_T ‖B_T⁻¹‖ ≤ C₀` holds for every simplex. -/
+theorem diam_mul_norm_symm_le_of_isShapeRegular {C₀ c : ℝ} (hC₀ : 0 ≤ C₀)
+    (hreg : IsShapeRegular (↑M.simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) C₀ c)
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ M.simplices) :
+    diam T * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ≤ C₀ := by
+  have h := (hreg T hT).2.1
+  rcases (diam_nonneg T).eq_or_lt with h0 | h0
+  · rw [← h0, zero_mul]; exact hC₀
+  · calc _ ≤ diam T * (C₀ / diam T) := mul_le_mul_of_nonneg_left h h0.le
+      _ = C₀ := by field_simp
+
+/-- **Global `L²` interpolation error on a shape regular mesh** ([Arnold2018], Ch. 7): with the
+constants `C₀, c` of `Feec.Mesh.IsShapeRegular` and `h_T ≤ h`,
+`‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h sup_{cl Ω} ‖Dw‖`. -/
+theorem norm_formL2_sub_glue_le_of_isShapeRegular (k : ℕ) {w : FormField n}
+    (hw : ContDiff ℝ 1 w) {L C₀ c h : ℝ} (hC₀ : 0 ≤ C₀) (hh0 : 0 ≤ h) (hL0 : 0 ≤ L)
+    (hL : ∀ y ∈ closure M.domain, ‖fderiv ℝ w y‖ ≤ L)
+    (hreg : IsShapeRegular (↑M.simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) C₀ c)
+    (hh : ∀ T ∈ M.simplices, diam T ≤ h) :
+    ‖formL2 hΩ M.isBounded_domain k ⟨w, hw.continuous⟩ -
+        (whitneyElement n).glue M k ((whitneyElement n).globalInterp M k ⟨w, hw.continuous⟩ :
+          (whitneyElement n).Piecewise M k)‖ ≤
+      Fintype.card (formIdx n k) * (volume.real M.domain ^ (1 / 2 : ℝ) *
+        (whitneyConst n k * C₀ ^ k * (h * L))) :=
+  norm_formL2_sub_glue_le M hΩ k hw hC₀ hh0 hL0 hL
+    (fun _ hT => diam_mul_norm_symm_le_of_isShapeRegular M hC₀ hreg hT) hh
 
 /-- `d` of a `C^{m+1}` form is `C^m`. -/
 theorem contDiff_extDeriv {m : WithTop ℕ∞} {ω : FormField n} (hω : ContDiff ℝ (m + 1) ω) :

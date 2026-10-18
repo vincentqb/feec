@@ -28,8 +28,10 @@ For `n = 3`, `k = 0` the window is `H̊Λ⁰ → H̊Λ¹ → L²Λ²`: in degree
 is the gradient (`Feec.Domain.extDerivOp_zero_apply`), and in degree `1` it is
 `(dE)_{ij} = ∂ᵢEⱼ − ∂ⱼEᵢ` (`Maxwell.extDerivOp_one_apply`), the curl in the `2`-form
 coordinates `B₁₂, B₁₃, B₂₃`; this is the classical system of `Maxwell.pec` in form coordinates
-(`Maxwell.pecForms_three_gauss_propagates`). The identification of the two realizations through
-the vector proxies (`E ↦ (E₁, E₂, E₃)`, `B ↦ (B₂₃, −B₁₃, B₁₂)`) is not formalized here.
+(`Maxwell.pecForms_three_gauss_propagates`). Through the vector proxies (`E ↦ (E₁, E₂, E₃)`,
+`B ↦ (B₂₃, −B₁₃, B₁₂)`, `Maxwell.relabelL2F`) the PEC complex of forms *is* the complex of
+`Maxwell.pec` (`Maxwell.pecForms_conj_eq_pec`, via `Maxwell.minimal_eq_conj_relabel`: minimal
+realizations commute with signed relabellings of the components).
 
 ## Main results
 
@@ -37,6 +39,9 @@ the vector proxies (`E ↦ (E₁, E₂, E₃)`, `B ↦ (B₂₃, −B₁₃, B�
   `Maxwell.pecForms_gauss_existsUnique`, `Maxwell.pmcForms_gauss_existsUnique`.
 * `Maxwell.pecForms_medium_gauss_propagates`, `Maxwell.pmcForms_medium_gauss_propagates`: in a
   linear medium, `div (ε E) = 0` and `d (μ H) = 0` propagate.
+* `Maxwell.extDerivOp_one_apply`: `(dE)_{ij} = ∂ᵢEⱼ − ∂ⱼEᵢ`.
+* `Maxwell.minimal_eq_conj_relabel`, `Maxwell.pecForms_conj_eq_pec`: for `n = 3`, `k = 0`,
+  `(pecForms 0).conj U₀ U₁ U₂ = Maxwell.pec` for the proxy isomorphisms `Uᵢ`.
 
 ## References
 
@@ -271,5 +276,199 @@ theorem pecForms_three_gauss_propagates {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen
   pecForms_gauss_propagates hΩ 0 hU h0 hF
 
 end Propagation
+
+/-! ### Relabelling the components of a field -/
+
+section Relabel
+
+variable {m : ℕ} {Ω' : Set (Fin m → ℝ)} {ι ι' : Type} [Fintype ι] [Fintype ι']
+
+/-- Relabel the components of a field by `π : ι' ≃ ι` with signs `c`: `(R φ)_j = c_j φ_{π j}`. -/
+def relabelField (π : ι' ≃ ι) (c : ι' → 𝕜) (φ : ι → (Fin m → ℝ) → 𝕜) :
+    ι' → (Fin m → ℝ) → 𝕜 :=
+  fun j => c j • φ (π j)
+
+omit [Fintype ι] [Fintype ι'] in
+theorem isTestField_relabelField (π : ι' ≃ ι) (c : ι' → 𝕜) {φ : ι → (Fin m → ℝ) → 𝕜}
+    (hφ : IsTestField Ω' φ) : IsTestField Ω' (relabelField π c φ) :=
+  fun j => (hφ (π j)).smul (c j)
+
+omit [Fintype ι] [Fintype ι'] in
+/-- Relabelling back: `R_{π, c} R_{π⁻¹, c ∘ π⁻¹} = 1` for signs `c² = 1`. -/
+theorem relabelField_relabelField_symm (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1)
+    (ψ : ι' → (Fin m → ℝ) → 𝕜) :
+    relabelField π c (relabelField π.symm (fun i => c (π.symm i)) ψ) = ψ := by
+  funext j x
+  simp only [relabelField, Pi.smul_apply, Equiv.symm_apply_apply, smul_eq_mul, ← mul_assoc,
+    hc, one_mul]
+
+variable (Ω') in
+/-- The diagonal sign operator `u ↦ (c_j u_j)_j` on `L²(Ω; 𝕜^ι')`. -/
+def signL2F (c : ι' → 𝕜) : L2F 𝕜 Ω' ι' →L[𝕜] L2F 𝕜 Ω' ι' :=
+  ((PiLp.continuousLinearEquiv 2 𝕜 (fun _ : ι' => L2 𝕜 Ω')).symm :
+      (ι' → L2 𝕜 Ω') →L[𝕜] L2F 𝕜 Ω' ι').comp
+    ((ContinuousLinearMap.pi fun j => c j • ContinuousLinearMap.proj j).comp
+      (PiLp.continuousLinearEquiv 2 𝕜 (fun _ : ι' => L2 𝕜 Ω') : L2F 𝕜 Ω' ι' →L[𝕜] ι' → L2 𝕜 Ω'))
+
+omit [Fintype ι'] in
+theorem signL2F_apply (c : ι' → 𝕜) (u : L2F 𝕜 Ω' ι') (j : ι') :
+    signL2F Ω' c u j = c j • u j := rfl
+
+omit [Fintype ι'] in
+theorem signL2F_signL2F {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1) (u : L2F 𝕜 Ω' ι') :
+    signL2F Ω' c (signL2F Ω' c u) = u :=
+  PiLp.ext fun j => by rw [signL2F_apply, signL2F_apply, smul_smul, hc, one_smul]
+
+variable (Ω') in
+/-- The **relabelling isomorphism** `L²(Ω; 𝕜^ι) ≃ L²(Ω; 𝕜^ι')`, `(U u)_j = c_j u_{π j}`. -/
+def relabelL2F (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1) :
+    L2F 𝕜 Ω' ι ≃L[𝕜] L2F 𝕜 Ω' ι' :=
+  (LinearIsometryEquiv.piLpCongrLeft 2 𝕜 (L2 𝕜 Ω') π.symm).toContinuousLinearEquiv.trans
+    (ContinuousLinearEquiv.equivOfInverse (signL2F Ω' c) (signL2F Ω' c) (signL2F_signL2F hc)
+      (signL2F_signL2F hc))
+
+theorem relabelL2F_apply (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1)
+    (u : L2F 𝕜 Ω' ι) (j : ι') : relabelL2F Ω' π hc u j = c j • u (π j) := by
+  change signL2F Ω' c (LinearIsometryEquiv.piLpCongrLeft 2 𝕜 (L2 𝕜 Ω') π.symm u) j = _
+  rw [signL2F_apply, LinearIsometryEquiv.piLpCongrLeft_apply, Equiv.piCongrLeft'_apply,
+    Equiv.symm_symm]
+
+theorem testField_relabelField (π : ι' ≃ ι) {c : ι' → 𝕜} (hc : ∀ j, c j * c j = 1)
+    {φ : ι → (Fin m → ℝ) → 𝕜} (hφ : IsTestField Ω' φ) :
+    testField (isTestField_relabelField π c hφ) = relabelL2F Ω' π hc (testField hφ) :=
+  PiLp.ext fun j => by
+    rw [testField_apply, relabelL2F_apply, testField_apply]
+    exact toL2_smul (c j) (hφ (π j))
+
+variable {κ κ' : Type} [Fintype κ] [Fintype κ']
+
+/-- **Minimal realizations commute with relabelling**: if `A' R_ι = R_κ A` on test fields, then
+`A'_min = U_κ A_min U_ι⁻¹`. -/
+theorem minimal_eq_conj_relabel (hΩ' : IsOpen Ω') {A : ConstCoeffOp (Fin m → ℝ) 𝕜 ι κ}
+    {A' : ConstCoeffOp (Fin m → ℝ) 𝕜 ι' κ'} (πι : ι' ≃ ι) {cι : ι' → 𝕜}
+    (hcι : ∀ j, cι j * cι j = 1) (πκ : κ' ≃ κ) {cκ : κ' → 𝕜} (hcκ : ∀ j, cκ j * cκ j = 1)
+    (hA : ∀ φ : ι → (Fin m → ℝ) → 𝕜, IsTestField Ω' φ →
+      A'.apply (relabelField πι cι φ) = relabelField πκ cκ (A.apply φ)) :
+    A'.minimal Ω' = (A.minimal Ω').conj (relabelL2F Ω' πι hcι) (relabelL2F Ω' πκ hcκ) := by
+  set Uι := relabelL2F Ω' πι hcι
+  set Uκ := relabelL2F Ω' πκ hcκ
+  set h : L2F 𝕜 Ω' ι × L2F 𝕜 Ω' κ ≃ₜ L2F 𝕜 Ω' ι' × L2F 𝕜 Ω' κ' :=
+    Uι.toHomeomorph.prodCongr Uκ.toHomeomorph
+  -- the test graphs correspond
+  have hg : (A'.testGraph Ω' : Set (L2F 𝕜 Ω' ι' × L2F 𝕜 Ω' κ')) = h '' (A.testGraph Ω') := by
+    ext p
+    constructor
+    · rintro ⟨ψ, hψ, rfl⟩
+      set φ := relabelField πι.symm (fun i => cι (πι.symm i)) ψ
+      have hφ : IsTestField Ω' φ := isTestField_relabelField _ _ hψ
+      have e : relabelField πι cι φ = ψ := relabelField_relabelField_symm πι hcι ψ
+      refine ⟨(testField hφ, testField (A.isTestField_apply hφ)), ⟨φ, hφ, rfl⟩, ?_⟩
+      change (Uι (testField hφ), Uκ (testField (A.isTestField_apply hφ))) = _
+      rw [← testField_relabelField πι hcι hφ, ← testField_relabelField πκ hcκ
+        (A.isTestField_apply hφ)]
+      refine Prod.ext (testField_congr _ _ e) (testField_congr _ _ ?_)
+      rw [← hA φ hφ, e]
+    · rintro ⟨_, ⟨φ, hφ, rfl⟩, rfl⟩
+      refine ⟨relabelField πι cι φ, isTestField_relabelField πι cι hφ, ?_⟩
+      change (Uι (testField hφ), Uκ (testField (A.isTestField_apply hφ))) = _
+      rw [← testField_relabelField πι hcι hφ, ← testField_relabelField πκ hcκ
+        (A.isTestField_apply hφ)]
+      exact Prod.ext rfl (testField_congr _ _ (hA φ hφ).symm)
+  refine LinearPMap.eq_of_eq_graph ?_
+  ext p
+  rw [A'.minimal_graph hΩ', mem_conj_graph_iff, A.minimal_graph hΩ']
+  change p ∈ ((A'.testGraph Ω').topologicalClosure : Set _) ↔
+    (Uι.symm p.1, Uκ.symm p.2) ∈ ((A.testGraph Ω').topologicalClosure : Set _)
+  rw [Submodule.topologicalClosure_coe, Submodule.topologicalClosure_coe, hg, ← h.image_closure,
+    h.image_eq_preimage_symm]
+  rfl
+
+end Relabel
+
+/-! ### The classical case `n = 3`, `k = 0`: the vector proxies -/
+
+section Proxy
+
+/-- The proxy of `0`-forms on `ℝ³`: the scalar component. -/
+def proxy₀ : Fin 1 ≃ formIdx 3 0 :=
+  Equiv.ofBijective (fun _ => ⟨∅, by simp⟩) (by decide)
+
+/-- The proxy of `1`-forms on `ℝ³`: `E = (E₁, E₂, E₃)`, `E_i = E_{{i}}`. -/
+def proxy₁ : Fin 1 × Fin 3 ≃ formIdx 3 1 :=
+  Equiv.ofBijective (fun p => ⟨{p.2}, by simp⟩) (by decide)
+
+/-- The proxy of `2`-forms on `ℝ³` (the Hodge star): `B_k = ± B_{univ ∖ {k}}`. -/
+def proxy₂ : Fin 1 × Fin 3 ≃ formIdx 3 2 :=
+  Equiv.ofBijective (fun p => ⟨Finset.univ.erase p.2, by
+    rw [Finset.card_erase_of_mem (Finset.mem_univ _)]; simp⟩) (by decide)
+
+/-- The signs of the Hodge star in degree `2`: `B = (B₂₃, −B₁₃, B₁₂)`. -/
+def sign₂ : Fin 1 × Fin 3 → 𝕜 := fun p => if p.2 = 1 then -1 else 1
+
+theorem sign₂_mul_self (p : Fin 1 × Fin 3) : (sign₂ p : 𝕜) * sign₂ p = 1 := by
+  unfold sign₂; split_ifs <;> simp
+
+/-- In degree `0`, `d` is the gradient through the proxies. -/
+theorem gradOp_relabel (φ : formIdx 3 0 → (Fin 3 → ℝ) → 𝕜) :
+    (gradOp 3 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (relabelField proxy₀ (fun _ => 1) φ) =
+      relabelField proxy₁ (fun _ => 1) ((extDerivOp 𝕜 3 0).apply φ) := by
+  funext p x
+  obtain ⟨i, j⟩ := p
+  rw [gradOp_apply]
+  simp only [relabelField, one_smul]
+  exact (extDerivOp_zero_apply φ j x).symm
+
+/-- In degree `1`, `d` is the curl through the proxies. -/
+theorem curlOp_relabel (ψ : formIdx 3 1 → (Fin 3 → ℝ) → 𝕜) :
+    (curlOp 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (relabelField proxy₁ (fun _ => 1) ψ) =
+      relabelField proxy₂ sign₂ ((extDerivOp 𝕜 3 1).apply ψ) := by
+  funext p x
+  obtain ⟨i, k⟩ := p
+  obtain rfl : i = 0 := Subsingleton.elim _ _
+  rw [curlOp_apply]
+  simp only [relabelField, one_smul, Pi.smul_apply]
+  fin_cases k
+  · change fderiv ℝ (ψ (proxy₁ (0, 2))) x (coordDir 1) - fderiv ℝ (ψ (proxy₁ (0, 1))) x
+        (coordDir 2) = sign₂ (0, 0) • (extDerivOp 𝕜 3 1).apply ψ (proxy₂ (0, 0)) x
+    rw [show proxy₂ (0, 0) = ⟨{1, 2}, by decide⟩ from Subtype.ext (by decide),
+      extDerivOp_one_apply ψ (by decide : (1 : Fin 3) < 2)]
+    rw [show (sign₂ ((0 : Fin 1), (0 : Fin 3)) : 𝕜) = 1 by simp [sign₂], one_smul]
+    rfl
+  · change fderiv ℝ (ψ (proxy₁ (0, 0))) x (coordDir 2) - fderiv ℝ (ψ (proxy₁ (0, 2))) x
+        (coordDir 0) = sign₂ (0, 1) • (extDerivOp 𝕜 3 1).apply ψ (proxy₂ (0, 1)) x
+    rw [show proxy₂ (0, 1) = ⟨{0, 2}, by decide⟩ from Subtype.ext (by decide),
+      extDerivOp_one_apply ψ (by decide : (0 : Fin 3) < 2)]
+    rw [show (sign₂ ((0 : Fin 1), (1 : Fin 3)) : 𝕜) = -1 by simp [sign₂], neg_smul, one_smul,
+      neg_sub]
+    rfl
+  · change fderiv ℝ (ψ (proxy₁ (0, 1))) x (coordDir 0) - fderiv ℝ (ψ (proxy₁ (0, 0))) x
+        (coordDir 1) = sign₂ (0, 2) • (extDerivOp 𝕜 3 1).apply ψ (proxy₂ (0, 2)) x
+    rw [show proxy₂ (0, 2) = ⟨{0, 1}, by decide⟩ from Subtype.ext (by decide),
+      extDerivOp_one_apply ψ (by decide : (0 : Fin 3) < 1)]
+    rw [show (sign₂ ((0 : Fin 1), (2 : Fin 3)) : 𝕜) = 1 by simp [sign₂], one_smul]
+    rfl
+
+/-- Short complexes with the same differentials are equal. -/
+theorem shortComplex_ext {W₀ W₁ W₂ : Type*} [NormedAddCommGroup W₀]
+    [InnerProductSpace 𝕜 W₀] [CompleteSpace W₀] [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁]
+    [CompleteSpace W₁] [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
+    {S S' : ShortHilbertComplex 𝕜 W₀ W₁ W₂} (h₀ : S.d₀ = S'.d₀) (h₁ : S.d₁ = S'.d₁) : S = S' := by
+  cases S; cases S'; cases h₀; cases h₁; rfl
+
+/-- **Consistency with `Maxwell.pec`**: for `n = 3`, `k = 0` the PEC complex of forms
+`H̊Λ⁰ → H̊Λ¹ → L²Λ²`, transported through the vector proxies (`f ↦ f`, `E ↦ (E₁, E₂, E₃)`,
+`B ↦ (B₂₃, −B₁₃, B₁₂)`), is the `grad`–`curl` complex `H̊¹ → H̊(curl) → L²` of
+`Maxwell.pec`. -/
+theorem pecForms_conj_eq_pec {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
+    (pecForms 𝕜 hΩ 0).conj (relabelL2F Ω proxy₀ fun _ => one_mul (1 : 𝕜))
+      (relabelL2F Ω proxy₁ fun _ => one_mul (1 : 𝕜)) (relabelL2F Ω proxy₂ sign₂_mul_self) =
+      pec 𝕜 hΩ := by
+  refine shortComplex_ext ?_ ?_
+  · exact (minimal_eq_conj_relabel hΩ proxy₀ (fun _ => one_mul (1 : 𝕜)) proxy₁
+      (fun _ => one_mul (1 : 𝕜)) fun φ _ => gradOp_relabel φ).symm
+  · exact (minimal_eq_conj_relabel hΩ proxy₁ (fun _ => one_mul (1 : 𝕜)) proxy₂ sign₂_mul_self
+      fun ψ _ => curlOp_relabel ψ).symm
+
+end Proxy
 
 end Feec.Maxwell

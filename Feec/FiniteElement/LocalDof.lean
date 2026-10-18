@@ -338,4 +338,198 @@ theorem eq_zero_of_faceMoment_eq_zero_minus {r : ℕ} (hr : 1 ≤ r) (k n : ℕ)
   rw [faceMoment] at this
   simpa [faceTrace_refVertex_id] using this
 
+/-! ### Moments against a basis of the test space -/
+
+/-- A moment against a combination of test forms is the combination of the moments. -/
+theorem faceMoment_sum_smul_right (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ}
+    (e : Fin (m + 1) → Fin (n + 1)) {ι : Type*} (u : Finset ι) (c : ι → ℝ)
+    {η : ι → FormField m} (hη : ∀ i, Continuous (η i)) {ω : FormField n} (hω : Continuous ω) :
+    faceMoment p e (∑ i ∈ u, c i • η i) ω = ∑ i ∈ u, c i * faceMoment p e (η i) ω := by
+  classical
+  induction u using Finset.induction_on with
+  | empty =>
+    simp [faceMoment_eq_integral, wedgeField]
+  | insert a u ha ih =>
+    have hs : Continuous (∑ i ∈ u, c i • η i) := by
+      rw [Finset.sum_fn]; exact continuous_finsetSum _ fun i _ => (hη i).const_smul (c i)
+    rw [sum_insert ha, sum_insert ha, faceMoment_add_right p e ((hη a).const_smul (c a)) hs hω,
+      faceMoment_smul_right, ih, smul_eq_mul]
+
+/-- If the moments against a basis of a space of continuous test forms vanish, all moments
+against the space vanish. -/
+theorem faceMoment_eq_zero_of_basis (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ}
+    (e : Fin (m + 1) → Fin (n + 1)) {V : Submodule ℝ (FormField m)} {ι : Type*} [Fintype ι]
+    (b : Module.Basis ι ℝ V) (hV : ∀ η ∈ V, Continuous η) {ω : FormField n} (hω : Continuous ω)
+    (h : ∀ i, faceMoment p e (b i : FormField m) ω = 0) {η : FormField m} (hη : η ∈ V) :
+    faceMoment p e η ω = 0 := by
+  have hsum : η = ∑ i, b.repr ⟨η, hη⟩ i • (b i : FormField m) := by
+    have := b.sum_repr ⟨η, hη⟩
+    rw [Subtype.ext_iff, Submodule.coe_sum] at this
+    simp only [Submodule.coe_smul] at this
+    exact this.symm
+  rw [hsum, faceMoment_sum_smul_right p e _ _ (fun i => hV _ (b i).2) hω]
+  simp [h]
+
+/-! ### The degrees of freedom of `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)` -/
+
+/-- A basis of the test forms on `m`-faces. -/
+def testBasis (r k m : ℕ) : Module.Basis (Fin (Module.finrank ℝ (testSpace r k m))) ℝ
+    (testSpace r k m) := Module.finBasis ℝ _
+
+/-- A basis of the test forms of `P_r⁻Λᵏ` on `m`-faces. -/
+def testBasisMinus (r k m : ℕ) : Module.Basis (Fin (Module.finrank ℝ (testSpaceMinus r k m))) ℝ
+    (testSpaceMinus r k m) := Module.finBasis ℝ _
+
+/-- The degrees of freedom of `P_rΛᵏ(T)` attached to the face `f`: the moments against a basis
+of `P⁻_{r+k-dim f}Λ^{dim f-k}(f)`. -/
+abbrev DofIndex (r k : ℕ) (f : Face n) := Fin (Module.finrank ℝ (testSpace r k f.dim))
+
+/-- The degrees of freedom of `P_r⁻Λᵏ(T)` attached to the face `f`. -/
+abbrev DofIndexMinus (r k : ℕ) (f : Face n) := Fin (Module.finrank ℝ (testSpaceMinus r k f.dim))
+
+/-- The degree of freedom `ω ↦ ∫_f tr_f ω ∧ ηᵢ` of `P_rΛᵏ(T)`, on continuous forms. -/
+def polyDof (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) (f : Face n) (i : DofIndex r k f) :
+    contForms n →ₗ[ℝ] ℝ :=
+  faceMomentₗ p f.emb (testBasis r k f.dim i : FormField f.dim)
+    (contDiff_of_mem_testSpace (testBasis r k f.dim i).2).continuous
+
+/-- The degree of freedom `ω ↦ ∫_f tr_f ω ∧ ηᵢ` of `P_r⁻Λᵏ(T)`, on continuous forms. -/
+def polyMinusDof (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) (f : Face n)
+    (i : DofIndexMinus r k f) : contForms n →ₗ[ℝ] ℝ :=
+  faceMomentₗ p f.emb (testBasisMinus r k f.dim i : FormField f.dim)
+    (contDiff_of_mem_testSpaceMinus (testBasisMinus r k f.dim i).2).continuous
+
+theorem localPolySpace_le_contForms (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) :
+    localPolySpace p r k ≤ contForms n := by
+  rintro _ ⟨ω, hω, rfl⟩
+  exact continuous_affinePullback _ _ (polySpace_le_c1 hω).continuous
+
+theorem localPolyMinusSpace_le_contForms (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) :
+    localPolyMinusSpace p r k ≤ contForms n := by
+  rintro _ ⟨ω, hω, rfl⟩
+  exact continuous_affinePullback _ _ (contDiff_of_mem_polyMinusSpace hω).continuous
+
+/-- The degrees of freedom of `P_rΛᵏ(T)`, indexed by the faces `f` and a basis of the test
+forms on `f`. -/
+def localDof (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) (i : Σ f : Face n, DofIndex r k f) :
+    localPolySpace p r k →ₗ[ℝ] ℝ :=
+  polyDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (localPolySpace_le_contForms p r k)
+
+/-- The degrees of freedom of `P_r⁻Λᵏ(T)`. -/
+def localDofMinus (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ)
+    (i : Σ f : Face n, DofIndexMinus r k f) : localPolyMinusSpace p r k →ₗ[ℝ] ℝ :=
+  polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (localPolyMinusSpace_le_contForms p r k)
+
+theorem localDof_apply (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ)
+    (i : Σ f : Face n, DofIndex r k f) (ω : localPolySpace p r k) :
+    localDof p r k i ω =
+      faceMoment p i.1.emb (testBasis r k i.1.dim i.2 : FormField i.1.dim) ω := rfl
+
+theorem localDofMinus_apply (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ)
+    (i : Σ f : Face n, DofIndexMinus r k f) (ω : localPolyMinusSpace p r k) :
+    localDofMinus p r k i ω =
+      faceMoment p i.1.emb (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim) ω := rfl
+
+/-! ### Counting the degrees of freedom ([AFW2006], Thms 4.9, 4.13) -/
+
+/-- **`#DOF = dim P_rΛᵏ(T)`** ([AFW2006], Thm 4.9). -/
+theorem card_dofIndex {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    Fintype.card (Σ f : Face n, DofIndex r k f) =
+      (r + n).choose (r + k) * (r + k).choose k := by
+  rw [Fintype.card_sigma]
+  simp only [Fintype.card_fin, finrank_testSpace]
+  rw [sum_face_eq (fun m => (r + k).choose r * if k ≤ m ∧ m < r + k then
+    (r - 1).choose (m - k) else 0)]
+  simp only [smul_eq_mul, mul_left_comm _ ((r + k).choose r)]
+  rw [← mul_sum, sum_choose_mul_choose_eq hk hr, ← @Nat.choose_symm_add r k,
+    Nat.choose_symm_of_eq_add (show n + r = (n - k) + (r + k) by omega), add_comm n r, mul_comm]
+
+/-- **`#DOF = dim P_r⁻Λᵏ(T)`** ([AFW2006], Thm 4.13). -/
+theorem card_dofIndexMinus {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    Fintype.card (Σ f : Face n, DofIndexMinus r k f) =
+      (r + n).choose (r + k) * (r + k - 1).choose k := by
+  rw [Fintype.card_sigma]
+  simp only [Fintype.card_fin, finrank_testSpaceMinus hr]
+  rw [sum_face_eq (fun m => (r + k - 1).choose (r - 1) * if k ≤ m ∧ m < r + k then
+    (r - 1).choose (m - k) else 0)]
+  simp only [smul_eq_mul, mul_left_comm _ ((r + k - 1).choose (r - 1))]
+  rw [← mul_sum, sum_choose_mul_choose_eq hk hr,
+    Nat.choose_symm_of_eq_add (show r + k - 1 = (r - 1) + k by omega),
+    Nat.choose_symm_of_eq_add (show n + r = (n - k) + (r + k) by omega), add_comm n r, mul_comm]
+
+/-! ### Unisolvence ([AFW2006], Thms 4.10, 4.14) -/
+
+instance (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : FiniteDimensional ℝ (localPolySpace p r k) := by
+  unfold localPolySpace; infer_instance
+
+instance (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) :
+    FiniteDimensional ℝ (localPolyMinusSpace p r k) := by
+  unfold localPolyMinusSpace; infer_instance
+
+variable {p : Fin (n + 1) → Fin n → ℝ}
+
+theorem faceMoment_sub_left (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ}
+    (e : Fin (m + 1) → Fin (n + 1)) {η : FormField m} (hη : Continuous η) {ω ω' : FormField n}
+    (hω : Continuous ω) (hω' : Continuous ω') :
+    faceMoment p e η (ω - ω') = faceMoment p e η ω - faceMoment p e η ω' := by
+  rw [sub_eq_add_neg, faceMoment_add_left p e hη hω hω'.neg, ← neg_one_smul ℝ ω',
+    faceMoment_smul_left]
+  simp [sub_eq_add_neg]
+
+/-- `F_T^*` is injective. -/
+theorem eq_zero_of_affinePullback_eq_zero (hp : IsUnit (edgeMatrix p).det) {ω : FormField n}
+    (h : affinePullback (simplexMatrix p) (p 0) ω = 0) : ω = 0 := by
+  rw [← affinePullback_affinePullback_of_comp_eq_id (simplexMatrix p) (p 0) (invMatrix p)
+    (invOffset p) (simplexMap_affine_inv hp) ω, h]
+  funext x; simp [affinePullback_apply]
+
+/-- **Vanishing of the degrees of freedom on a simplex `T`**: if all the moments
+`∫_f tr_f ω ∧ η`, `η ∈ P⁻_{r+k-dim f}Λ^{dim f-k}(f)`, of `ω ∈ P_rΛᵏ(T)` vanish, then `ω = 0`. -/
+theorem eq_zero_of_faceMoment_eq_zero_simplex (hp : IsUnit (edgeMatrix p).det) {r : ℕ}
+    (hr : 1 ≤ r) (k : ℕ) {ω : FormField n} (hω : ω ∈ polySpace n r k)
+    (hdof : ∀ (m : ℕ) (e : Fin (m + 1) ↪o Fin (n + 1)), ∀ η ∈ testSpace r k m,
+      faceMoment p e η ω = 0) : ω = 0 :=
+  eq_zero_of_affinePullback_eq_zero hp (eq_zero_of_faceMoment_eq_zero hr k n
+    (affinePullback_mem_polySpace _ _ hω) fun m e η hη => by
+      rw [← faceMoment_eq_faceMoment_refVertex]; exact hdof m e η hη)
+
+/-- **Vanishing of the degrees of freedom on a simplex `T`**, for `P_r⁻Λᵏ(T)`. -/
+theorem eq_zero_of_faceMoment_eq_zero_minus_simplex (hp : IsUnit (edgeMatrix p).det) {r : ℕ}
+    (hr : 1 ≤ r) (k : ℕ) {ω : FormField n} (hω : ω ∈ polyMinusSpace n r k)
+    (hdof : ∀ (m : ℕ) (e : Fin (m + 1) ↪o Fin (n + 1)), ∀ η ∈ testSpaceMinus r k m,
+      faceMoment p e η ω = 0) : ω = 0 :=
+  eq_zero_of_affinePullback_eq_zero hp (eq_zero_of_faceMoment_eq_zero_minus hr k n
+    (affinePullback_mem_polyMinusSpace _ _ hω) fun m e η hη => by
+      rw [← faceMoment_eq_faceMoment_refVertex]; exact hdof m e η hη)
+
+/-- **Unisolvence of the degrees of freedom of `P_rΛᵏ(T)`** for every `r ≥ 1`, `0 ≤ k ≤ n`:
+the moments `ω ↦ ∫_f tr_f ω ∧ η`, `η ∈ P⁻_{r+k-dim f}Λ^{dim f-k}(f)`, over all faces `f` of `T`.
+[AFW2006], Thm 4.10; [AFW2010], Thm 5.5 -/
+theorem isUnisolvent_localDof (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) : IsUnisolvent (localDof p r k) := by
+  rw [isUnisolvent_iff_forall_eq_zero _ (by
+    rw [localPolySpace_eq hp, finrank_polySpace, card_dofIndex hr hk])]
+  intro ω hω
+  refine Subtype.ext (eq_zero_of_faceMoment_eq_zero_simplex hp hr k
+    (localPolySpace_eq hp r k ▸ ω.2) fun m e η hη => ?_)
+  have := faceMoment_eq_zero_of_basis p (Face.ofEmb e).emb (testBasis r k m)
+    (fun η h => (contDiff_of_mem_testSpace h).continuous)
+    (localPolySpace_le_contForms p r k ω.2) (fun i => hω ⟨Face.ofEmb e, i⟩) hη
+  rwa [Face.emb_ofEmb] at this
+
+/-- **Unisolvence of the degrees of freedom of `P_r⁻Λᵏ(T)`** for every `r ≥ 1`, `0 ≤ k ≤ n`:
+the moments `ω ↦ ∫_f tr_f ω ∧ η`, `η ∈ P_{r+k-dim f-1}Λ^{dim f-k}(f)`. [AFW2006], Thm 4.14;
+[AFW2010], Thm 5.5 -/
+theorem isUnisolvent_localDofMinus (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) : IsUnisolvent (localDofMinus p r k) := by
+  rw [isUnisolvent_iff_forall_eq_zero _ (by
+    rw [localPolyMinusSpace_eq hp, finrank_polyMinusSpace n hr, card_dofIndexMinus hr hk])]
+  intro ω hω
+  refine Subtype.ext (eq_zero_of_faceMoment_eq_zero_minus_simplex hp hr k
+    (localPolyMinusSpace_eq hp r k ▸ ω.2) fun m e η hη => ?_)
+  have := faceMoment_eq_zero_of_basis p (Face.ofEmb e).emb (testBasisMinus r k m)
+    (fun η h => (contDiff_of_mem_testSpaceMinus h).continuous)
+    (localPolyMinusSpace_le_contForms p r k ω.2) (fun i => hω ⟨Face.ofEmb e, i⟩) hη
+  rwa [Face.emb_ofEmb] at this
+
 end Feec.FiniteElement

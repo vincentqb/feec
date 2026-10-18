@@ -46,6 +46,8 @@ convex hull of their common vertices ([Arnold2018], Ch. 7; [Ciarlet2002], Ch. 2)
 * `SimplicialMesh.card_cofaces_le_two`, `isInteriorFacet_or_isBoundaryFacet`: every facet lies
   in one or two `n`-simplices; `isInteriorFacet_iff`, `isBoundaryFacet_iff`: with two it is an
   interior facet, with one its closed hull lies in the topological boundary of `closure Ω`.
+* `SimplicialMesh.Refines.biUnion_eq`: if `M₁` refines `M₂` and both mesh the same closed set,
+  every simplex of `M₂` is the union of the simplices of `M₁` it contains.
 
 ## References
 
@@ -383,6 +385,45 @@ theorem meshSize_eq {h : ℝ} (hne : M.simplices.Nonempty) (hT : ∀ T ∈ M.sim
 def Refines (M₁ M₂ : SimplicialMesh n) : Prop :=
   ∀ T ∈ M₁.simplices, ∃ T' ∈ M₂.simplices, T.closedInterior ⊆ T'.closedInterior
 
+/-- An `n`-simplex of `ℝⁿ` is the closure of its interior. -/
+theorem closure_interior_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    closure (interior T.closedInterior) = T.closedInterior := by
+  rw [(convex_closedInterior T).closure_interior_eq_closure_of_nonempty_interior
+    (interior_closedInterior_nonempty T), T.isClosed_closedInterior.closure_eq]
+
+/-- **Nested refinement.** If `M₁` refines `M₂` and both mesh the same closed set, every simplex
+`T'` of `M₂` is the union of the simplices of `M₁` it contains. -/
+theorem Refines.biUnion_eq {M₁ M₂ : SimplicialMesh n} (h : M₁.Refines M₂)
+    (hcl : closure M₁.domain = closure M₂.domain) {T' : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT' : T' ∈ M₂.simplices) :
+    ⋃ T ∈ {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior}, T.closedInterior =
+      T'.closedInterior := by
+  refine subset_antisymm (Set.iUnion₂_subset fun T hT => hT.2) ?_
+  have hfin : {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior}.Finite :=
+    M₁.simplices.finite_toSet.subset fun _ hT => hT.1
+  have hS : IsClosed (⋃ T ∈ {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior},
+      T.closedInterior) :=
+    hfin.isClosed_biUnion fun T _ => T.isClosed_closedInterior
+  have hint : interior T'.closedInterior ⊆
+      ⋃ T ∈ {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior}, T.closedInterior := by
+    intro x hx
+    have hxcl : x ∈ closure M₁.domain :=
+      hcl ▸ M₂.closedInterior_subset_closure hT' (interior_subset hx)
+    rw [← M₁.biUnion_closedInterior] at hxcl
+    obtain ⟨T, hT, hxT⟩ := Set.mem_iUnion₂.1 hxcl
+    obtain ⟨T'', hT'', hsub⟩ := h T hT
+    by_cases he : T'' = T'
+    · subst he
+      exact Set.mem_biUnion (x := T) ⟨hT, hsub⟩ hxT
+    · exfalso
+      have hx'' : x ∈ closure (interior T''.closedInterior) := by
+        rw [closure_interior_closedInterior]; exact hsub hxT
+      obtain ⟨y, hy', hy''⟩ := mem_closure_iff.1 hx'' _ isOpen_interior hx
+      exact Set.disjoint_left.1 (M₂.pairwise_disjoint_interior hT'' hT' he) hy'' hy'
+  calc T'.closedInterior = closure (interior T'.closedInterior) :=
+        (closure_interior_closedInterior T').symm
+    _ ⊆ _ := closure_minimal hint hS
+
 /-! ### Faces -/
 
 /-- The vertex sets of the `k`-faces of the mesh. -/
@@ -552,6 +593,18 @@ theorem mem_map_simplices {e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)}
 
 @[simp] theorem map_domain (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
     (M.map e).domain = e '' M.domain := rfl
+
+/-- An affine equivalence maps distinct simplices to distinct simplices. -/
+theorem _root_.Feec.Mesh.mapEquiv_injective (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
+    Function.Injective (mapEquiv (k := k) e) := fun T T' h =>
+  Affine.Simplex.ext fun i => e.injective (by
+    rw [← mapEquiv_points, ← mapEquiv_points, h])
+
+theorem card_map_simplices (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
+    (M.map e).simplices.card = M.simplices.card := by
+  classical
+  simp only [map, ofConforming]
+  exact Finset.card_image_of_injective _ (mapEquiv_injective e)
 
 end SimplicialMesh
 

@@ -37,7 +37,8 @@ of every translate containing `x`.
 * `freudenthalSimplex_eq_of_closedInterior_eq`: distinct `(m, σ)` give distinct simplices.
 * `volume_kuhnSet`, `volume_closedInterior_kuhnSimplex`: `vol K_σ = 1 / n!` (the `n!` simplices
   are permutations of each other and overlap only on the null hyperplanes `xᵢ = xⱼ`).
-* `kuhnMesh`: the Kuhn simplices form a `SimplicialMesh` of the unit cube.
+* `kuhnMesh`: the Kuhn simplices form a `SimplicialMesh` of the unit cube, with `n!` simplices
+  (`card_kuhnMesh_simplices`).
 
 ## References
 
@@ -588,6 +589,16 @@ theorem mem_kuhnMesh_simplices {T : Affine.Simplex ℝ (Fin n → ℝ) n} :
 
 @[simp] theorem kuhnMesh_domain :
     (kuhnMesh n).domain = Set.univ.pi fun _ => Set.Ioo 0 1 := rfl
+
+theorem kuhnSimplex_injective : Function.Injective (kuhnSimplex (n := n)) := fun _ _ h =>
+  kuhnSimplex_eq_of_closedInterior_eq (congrArg Affine.Simplex.closedInterior h)
+
+/-- The Kuhn triangulation of the unit cube has `n!` simplices. -/
+theorem card_kuhnMesh_simplices : (kuhnMesh n).simplices.card = n.factorial := by
+  classical
+  simp only [kuhnMesh, SimplicialMesh.ofConforming]
+  rw [Finset.card_image_of_injective _ kuhnSimplex_injective, Finset.card_univ,
+    Fintype.card_perm, Fintype.card_fin]
 
 /-! ### Volume -/
 

@@ -31,6 +31,10 @@ triangulation of `(0, N)ⁿ` by the cells `m + K_σ`, `m ∈ {0, …, N-1}ⁿ`, 
 * `smul_mem_freudenthalSet`: `M⁻¹ (m + K_σ) ⊆ m' + K_σ'` with `m' = ⌊c / M⌋` for the interior
   point `c = m + g_σ`; hence `freudenthalMesh_refines`: **the level-`N M` mesh refines the level-`N`
   mesh**.
+* `freudenthalMesh_biUnion_eq`: nested refinement, every level-`N` simplex is the union of the
+  level-`N M` simplices it contains (`SimplicialMesh.Refines.biUnion_eq`).
+* `card_latticeMesh_simplices`, `card_freudenthalMesh_simplices`: `Nⁿ n!` simplices;
+  `sum_volume_freudenthalMesh`: their volumes add up to `sⁿ`.
 * `diam_of_mem_freudenthalMesh`, `meshSize_freudenthalMesh`: `h_T = h = s / N` (sup norm).
 * `volume_freudenthalMesh_simplex`: each simplex of the level-`N` mesh has volume
   `(s / N)ⁿ / n!`.
@@ -308,6 +312,18 @@ theorem mem_latticeMesh_simplices {N : ℕ} [NeZero N] {T : Affine.Simplex ℝ (
 @[simp] theorem latticeMesh_domain (N : ℕ) [NeZero N] :
     (latticeMesh n N).domain = Set.univ.pi fun _ => Set.Ioo (0 : ℝ) N := rfl
 
+/-- The level-`N` lattice mesh has `Nⁿ n!` simplices. -/
+theorem card_latticeMesh_simplices (N : ℕ) [NeZero N] :
+    (latticeMesh n N).simplices.card = N ^ n * n.factorial := by
+  classical
+  simp only [latticeMesh, SimplicialMesh.ofConforming]
+  rw [Finset.card_image_of_injective, Finset.card_univ, Fintype.card_prod, Fintype.card_fun,
+    Fintype.card_fin, Fintype.card_fin, Fintype.card_perm, Fintype.card_fin]
+  rintro ⟨m, σ⟩ ⟨m', σ'⟩ h
+  obtain ⟨h1, h2⟩ := freudenthalSimplex_eq_of_closedInterior_eq
+    (congrArg Affine.Simplex.closedInterior h)
+  exact Prod.ext (finLattice_injective h1) h2
+
 /-! ### The Freudenthal mesh of a box -/
 
 /-- The affine map `x ↦ b + h x`. -/
@@ -375,6 +391,11 @@ theorem closedInterior_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh
       (fun x => b + h • x) '' freudenthalSet m σ := by
   rw [closedInterior_mapEquiv, closedInterior_freudenthalSimplex]
   congr 1
+
+/-- The level-`N` Freudenthal mesh of a box has `Nⁿ n!` simplices. -/
+theorem card_freudenthalMesh_simplices (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
+    [NeZero N] : (freudenthalMesh b s hs N).simplices.card = N ^ n * n.factorial := by
+  rw [freudenthalMesh, SimplicialMesh.card_map_simplices, card_latticeMesh_simplices]
 
 /-- **Uniform refinement.** The level-`N M` Freudenthal mesh of a box refines the level-`N`
 mesh. -/
@@ -490,6 +511,37 @@ theorem volume_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh : 0 < h
     rw [← Set.image_smul, ← Set.image_vadd, Set.image_image]; rfl
   rw [e, measure_vadd, Measure.addHaar_smul, measure_vadd, volume_kuhnSet, Module.finrank_fin_fun,
     abs_of_pos (pow_pos hh n), mul_one_div]
+
+open MeasureTheory in
+/-- Volume consistency: the `Nⁿ n!` simplices of the level-`N` mesh of `∏ (bᵢ, bᵢ + s)`, each of
+volume `(s / N)ⁿ / n!`, have total volume `sⁿ`. -/
+theorem sum_volume_freudenthalMesh (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ) [NeZero N] :
+    ∑ T ∈ (freudenthalMesh b s hs N).simplices, volume T.closedInterior =
+      ENNReal.ofReal (s ^ n) := by
+  have hN : (0 : ℝ) < N := by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne N)
+  have hh : 0 < s / N := div_pos hs hN
+  rw [Finset.sum_congr rfl (g := fun _ => ENNReal.ofReal ((s / N) ^ n) / n.factorial),
+    Finset.sum_const, card_freudenthalMesh_simplices, nsmul_eq_mul]
+  · have hf : (0 : ℝ) < n.factorial := by exact_mod_cast Nat.factorial_pos n
+    rw [← ENNReal.ofReal_natCast, ← ENNReal.ofReal_natCast (n.factorial),
+      ← ENNReal.ofReal_div_of_pos hf, ← ENNReal.ofReal_mul (by positivity)]
+    congr 1
+    push_cast
+    field_simp
+    rw [← mul_pow, mul_div_cancel₀ s hN.ne']
+  · intro T hT
+    obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
+    exact volume_freudenthalMesh_simplex b hh _ σ
+
+/-- **Nested uniform refinement.** Every simplex of the level-`N` Freudenthal mesh of a box is the
+union of the simplices of the level-`N M` mesh it contains. -/
+theorem freudenthalMesh_biUnion_eq (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N M : ℕ) [NeZero N]
+    [NeZero M] {T' : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT' : T' ∈ (freudenthalMesh b s hs N).simplices) :
+    ⋃ T ∈ {T | T ∈ (freudenthalMesh b s hs (N * M)).simplices ∧
+        T.closedInterior ⊆ T'.closedInterior}, T.closedInterior = T'.closedInterior :=
+  (freudenthalMesh_refines b s hs N M).biUnion_eq
+    (by rw [freudenthalMesh_domain, freudenthalMesh_domain]) hT'
 
 /-! ### Symmetries -/
 

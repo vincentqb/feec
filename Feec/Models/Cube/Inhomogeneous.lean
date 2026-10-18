@@ -13,8 +13,9 @@ public import Feec.TimeStepping.Cayley
 
 The Crank–Nicolson runs of [QuennevilleBelair2015], Ch. 7, as implemented in `fem4gr`
 (<https://github.com/vincentqb/fem4gr>, `ebsystem3d_mixed_crank_triplet.py`), solve the
-Einstein–Bianchi system (4.14) `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E` on the unit
-cube with **inhomogeneous** essential boundary data taken from the exact plane wave: `σ = 0`,
+Einstein–Bianchi system `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E` on the unit cube (the
+printed (4.14) `σ̇ = −div E`, `Ė = −grad σ − curl B`, `Ḃ = curl E` up to `σ ↦ −σ`, as assembled in
+`fem4gr`; the two are equivalent, and `σ = 0` in all data of Ch. 7) with **inhomogeneous** essential boundary data taken from the exact plane wave: `σ = 0`,
 `E × n = E_ex × n`, `B · n = B_ex · n` on `∂Ω`. The homogeneous problem is the Hodge wave
 equation of the thesis' complex `H̊¹ → H̊(curl) → L²` (`Feec.Models.BoundedDomain.gradCurl`).
 
@@ -53,8 +54,9 @@ The homogeneous refutation (`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propa
 transfers to these data: TSD propagation fails for a TSD perturbation `R(0) + W₀` of the initial
 value (`Feec.Numerics.PlaneWaveCube.exists_not_propagates`).
 
-The condition `B · n = h` imposed by `fem4gr` is not part of the continuous problem; for an exact
-lifting it is propagated (`B − B_R` evolves in the range of `curl_min`) and is not formalized here.
+The condition `B · n = h` imposed by `fem4gr` is not part of the continuous problem. *Remark (not
+formalized):* for an exact lifting it is propagated, since `B − B_R` evolves in the range of
+`curl_min`, which lies in the kernel of the normal trace.
 
 ## The fully discrete scheme
 
@@ -66,11 +68,20 @@ DOFs, `discreteWave S = 𝐝ₕ − 𝐝ₕ*` is the matrix of `fem4gr`'s biline
 consistency error (`norm_residual_le`). On the Whitney spaces of the Freudenthal meshes of the cube
 (`whitneyRow N`: Lagrange `P₁`, Nédélec, Raviart–Thomas, with `V̊ₕ ⊆ Vₕ` by
 `whitneyMin_le_whitney`): `whitney_existsUnique_cnStep`. The meshes are those of `(0, ½)³`
-(`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation, not formalized. One
-row of (4.14) is the scalar de Rham window; the three rows decouple (row-wise `grad`, `curl`), and
-the cross-row residuals (skew and trace parts) are covered by `norm_residual_le` on any space.
+(`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation, not formalized.
+One row of (4.14) is the scalar de Rham window. The `fem4gr` spaces are the three-row space
+`DState3 (whitneyRow N)` (row `r` holds `(σ_r, E_r, B_r)`), on which the row-wise scheme
+`discreteWave3` decouples into the three rows (`isDirichletCNStep3_iff`) and is well posed
+(`whitney_existsUnique_cnStep3`). The constraint monitors of `fem4gr` couple the rows: the skew parts
+`½ (E − Eᵀ)`, `½ (B − Bᵀ)` (`skewPart`), the traces `tr E / √3`, `tr B / √3` (`tracePart`), with
+`E_{rj}` the `dx_j` component of row `r` (`entryE`) and `B_{rj}` the Hodge-star vector proxy of the
+`2`-form of row `r` (`entryB`), and `σ` (`sigmaPart`); each has norm at most `1`, and each residual
+of the discrete solution is at most that of the comparison fields plus the initial error and the
+summed consistency errors (`whitney_norm_residuals_le`).
 What is **not** proved: any bound of the consistency error `τₙ` in terms of `h` and `Δt` (it needs
-interpolation estimates for the Whitney spaces).
+interpolation estimates for the Whitney spaces), the discrete divergence monitor (its constant
+depends on the mesh; covered abstractly by `norm_residual_le3`), and that the interior spaces
+`V̊ₕ` are nonzero.
 
 ## References
 
@@ -395,7 +406,7 @@ abbrev State (Ω : Set R3) : Type :=
 abbrev constraint (Ω : Set R3) :=
   HilbertComplex.totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3))) (tsd Ω) (tsd Ω))
 
-/-- **The operator of (4.14) without boundary conditions**,
+/-- **The operator of (4.14) without boundary conditions** (up to `σ ↦ −σ`, as in `fem4gr`),
 `L_max (σ, E, B) = (div E, grad σ − curl B, curl E)` on `H¹ × (H(curl) ∩ H(div)) × H(curl)`:
 `L_max = 𝐝_max − 𝐝_min†` for the thesis' complex `H̊¹ → H̊(curl) → L²`. -/
 abbrev thesisWaveMax (hΩ : IsOpen Ω) :=
@@ -680,7 +691,7 @@ def discreteD : DState S →ₗ[ℝ] DState S where
     simp [map_smul, Finset.smul_sum]
 
 /-- **The matrix `A` of the scheme**, `A = 𝐝ₕ − 𝐝ₕ*` on all of `Vₕ`: its bilinear form is
-`⟪A u, v⟫ = ⟪𝐝ₕ u, v⟫ − ⟪u, 𝐝ₕ v⟫`, for (4.14)
+`⟪A u, v⟫ = ⟪𝐝ₕ u, v⟫ − ⟪u, 𝐝ₕ v⟫`, for (4.14) up to `σ ↦ −σ`
 `(grad σ, C) − (E, grad τ) + (curl E, D) − (B, curl C)` (`fem4gr`: `A = A0 + A1 − A2`). -/
 def discreteWave : DState S →ₗ[ℝ] DState S :=
   discreteD S - LinearMap.adjoint (discreteD S)
@@ -727,13 +738,164 @@ theorem norm_residual_le (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {X : Type
   TimeStepping.norm_residual_le_of_isDirichletCNStep cmap hc hC
     (fun w _ => by rw [inner_discreteWave_self, mul_zero]) h hũ h0 hτ N
 
+/-! ### The three rows of the `fem4gr` spaces -/
+
+/-- **The three-row space** `Vₕ × Vₕ × Vₕ`: row `r` holds `(σ_r, E_r, B_r)`, the `r`-th rows of the
+vector field `σ` and of the matrix fields `E`, `B` (for the de Rham window, `fem4gr`'s
+`(CG₁)³ × (N1curl)³ × (RT)³`, up to the ordering of the components). -/
+abbrev DState3 := PiLp 2 fun _ : Fin 3 => DState S
+
+/-- The row-wise matrix of the scheme: the operators `grad`, `curl` of (4.14) act on each row. -/
+def discreteWave3 : DState3 S →ₗ[ℝ] DState3 S where
+  toFun u := WithLp.toLp 2 fun r => discreteWave S (u r)
+  map_add' u v := PiLp.ext fun r => by simp
+  map_smul' a u := PiLp.ext fun r => by simp
+
+/-- The row-wise matrix is skew on the three-row space. -/
+theorem inner_discreteWave3_self (u : DState3 S) : ⟪discreteWave3 S u, u⟫ = 0 := by
+  rw [PiLp.inner_apply (discreteWave3 S u) u]
+  exact Finset.sum_eq_zero fun r _ => inner_discreteWave_self S (u r)
+
+/-- The three-row fields with vanishing boundary DOFs (row-wise). -/
+def interior3 (V₀ : ∀ i, Submodule ℝ (W i)) : Submodule ℝ (DState3 S) where
+  carrier := {u | ∀ r, u r ∈ interior S V₀}
+  zero_mem' r := by simp
+  add_mem' hu hv r := by simpa using (interior S V₀).add_mem (hu r) (hv r)
+  smul_mem' a _ hu r := by simpa using (interior S V₀).smul_mem a (hu r)
+
+/-- **The three rows decouple**: a Crank–Nicolson step with prescribed boundary DOFs on the
+three-row space is exactly a step in each row. -/
+theorem isDirichletCNStep3_iff (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {f g' u u' : DState3 S} :
+    TimeStepping.IsDirichletCNStep (interior3 S V₀) (discreteWave3 S) s f g' u u' ↔
+      ∀ r, TimeStepping.IsDirichletCNStep (interior S V₀) (discreteWave S) s (f r) (g' r) (u r)
+        (u' r) := by
+  constructor
+  · rintro ⟨h1, h2⟩ r
+    refine ⟨by simpa using h1 r, fun v hv => ?_⟩
+    set w : DState3 S := WithLp.toLp 2 (Pi.single r v)
+    have hw : w ∈ interior3 S V₀ := fun q => by
+      by_cases hq : q = r
+      · subst hq; simpa [w] using hv
+      · simp [w, hq]
+    have key : ∀ x : DState3 S, ⟪x, w⟫ = ⟪x r, v⟫ := fun x => by
+      rw [PiLp.inner_apply x w, Finset.sum_eq_single r (fun q _ hq => by simp [w, hq])
+        (by simp)]
+      simp [w]
+    have := h2 w hw
+    rw [key, key, key] at this
+    simpa [discreteWave3] using this
+  · intro h
+    refine ⟨fun r => by simpa using (h r).1, fun v hv => ?_⟩
+    rw [PiLp.inner_apply (u' - u) v, PiLp.inner_apply (discreteWave3 S (u' + u)) v,
+      PiLp.inner_apply f v, Finset.mul_sum, ← Finset.sum_add_distrib]
+    exact Finset.sum_congr rfl fun r _ => by simpa [discreteWave3] using (h r).2 (v r) (hv r)
+
+/-- **Well-posedness on the three-row space**, for every time step. -/
+theorem existsUnique_isDirichletCNStep3 (V₀ : ∀ i, Submodule ℝ (W i)) (s : ℝ)
+    (f g' u : DState3 S) :
+    ∃! u', TimeStepping.IsDirichletCNStep (interior3 S V₀) (discreteWave3 S) s f g' u u' :=
+  TimeStepping.existsUnique_isDirichletCNStep
+    (fun w _ => by rw [inner_discreteWave3_self, mul_zero]) f g' u
+
+/-- **Constraint residuals on the three-row space are bounded by the consistency error**
+(`norm_residual_le` for the row-wise scheme): this covers the residuals that couple the rows, such
+as the skew and trace parts of `E` and `B`. -/
+theorem norm_residual_le3 (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {X : Type*}
+    [SeminormedAddCommGroup X] [NormedSpace ℝ X] (cmap : DState3 S →ₗ[ℝ] X) {C : ℝ}
+    (hc : ∀ x, ‖cmap x‖ ≤ C * ‖x‖) (hC : 0 ≤ C) {f g u ũ τ : ℕ → DState3 S}
+    (h : ∀ n, TimeStepping.IsDirichletCNStep (interior3 S V₀) (discreteWave3 S) s (f n)
+      (g (n + 1)) (u n) (u (n + 1)))
+    (hũ : ∀ n, ũ (n + 1) - g (n + 1) ∈ interior3 S V₀) (h0 : u 0 - ũ 0 ∈ interior3 S V₀)
+    (hτ : ∀ n, ∀ v ∈ interior3 S V₀, ⟪ũ (n + 1) - ũ n, v⟫ =
+      s * ⟪discreteWave3 S (ũ (n + 1) + ũ n), v⟫ + ⟪f n, v⟫ + ⟪τ n, v⟫) (N : ℕ) :
+    ‖cmap (u N)‖ ≤ ‖cmap (ũ N)‖ + C * (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range N, ‖τ n‖) :=
+  TimeStepping.norm_residual_le_of_isDirichletCNStep cmap hc hC
+    (fun w _ => by rw [inner_discreteWave3_self, mul_zero]) h hũ h0 hτ N
+
 end DiscreteCN
+
+/-! ## Skew and trace residuals of a matrix of components -/
+
+section MatrixResidual
+
+variable {V X : Type*} [SeminormedAddCommGroup V] [NormedSpace ℝ V] [SeminormedAddCommGroup X]
+  [NormedSpace ℝ X]
+
+/-- The **skew part** `½ (M − Mᵀ)` of a matrix field given by its entries `M_{rj} = ent r j u`. -/
+def skewPart (ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X) : V →ₗ[ℝ] PiLp 2 fun _ : Fin 3 × Fin 3 => X where
+  toFun u := WithLp.toLp 2 fun p => (1 / 2 : ℝ) • (ent p.1 p.2 u - ent p.2 p.1 u)
+  map_add' u v := PiLp.ext fun p => by simp only [map_add, PiLp.add_apply]; module
+  map_smul' a u := PiLp.ext fun p => by
+    simp only [map_smul, PiLp.smul_apply, RingHom.id_apply]; module
+
+/-- The normalized **trace** `(tr M) / √3` of a matrix field (the norm of the trace part
+`(tr M / 3) I` of `M`). -/
+def tracePart (ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X) : V →ₗ[ℝ] X :=
+  (Real.sqrt 3)⁻¹ • ∑ r, ent r r
+
+theorem norm_skewPart_le {ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X}
+    (h : ∀ u, ∑ r, ∑ j, ‖ent r j u‖ ^ 2 ≤ ‖u‖ ^ 2) (u : V) : ‖skewPart ent u‖ ≤ ‖u‖ := by
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+  rw [PiLp.norm_sq_eq_of_L2]
+  have hp : ∀ p : Fin 3 × Fin 3, ‖(skewPart ent u) p‖ ^ 2 ≤
+      ‖ent p.1 p.2 u‖ ^ 2 / 2 + ‖ent p.2 p.1 u‖ ^ 2 / 2 := fun p => by
+    simp only [skewPart, LinearMap.coe_mk, AddHom.coe_mk, norm_smul, Real.norm_eq_abs]
+    have h1 := norm_sub_le (ent p.1 p.2 u) (ent p.2 p.1 u)
+    have h2 := norm_nonneg (ent p.1 p.2 u - ent p.2 p.1 u)
+    have h3 := norm_nonneg (ent p.1 p.2 u)
+    have h4 := norm_nonneg (ent p.2 p.1 u)
+    rw [abs_of_pos (by norm_num : (0 : ℝ) < 1 / 2)]
+    nlinarith [sq_nonneg (‖ent p.1 p.2 u‖ - ‖ent p.2 p.1 u‖)]
+  calc ∑ p, ‖(skewPart ent u) p‖ ^ 2
+      ≤ ∑ p : Fin 3 × Fin 3, (‖ent p.1 p.2 u‖ ^ 2 / 2 + ‖ent p.2 p.1 u‖ ^ 2 / 2) :=
+        Finset.sum_le_sum fun p _ => hp p
+    _ = ∑ r, ∑ j, ‖ent r j u‖ ^ 2 := by
+        rw [Fintype.sum_prod_type]
+        simp only [Finset.sum_add_distrib]
+        rw [Finset.sum_comm (f := fun x y => ‖ent y x u‖ ^ 2 / 2), ← Finset.sum_add_distrib]
+        refine Finset.sum_congr rfl fun r _ => ?_
+        rw [← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun j _ => by ring
+    _ ≤ ‖u‖ ^ 2 := h u
+
+theorem norm_tracePart_le {ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X}
+    (h : ∀ u, ∑ r, ∑ j, ‖ent r j u‖ ^ 2 ≤ ‖u‖ ^ 2) (u : V) : ‖tracePart ent u‖ ≤ ‖u‖ := by
+  have hdiag : ∑ r, ‖ent r r u‖ ^ 2 ≤ ‖u‖ ^ 2 :=
+    (Finset.sum_le_sum fun r _ => Finset.single_le_sum (f := fun j => ‖ent r j u‖ ^ 2)
+      (fun _ _ => sq_nonneg _) (Finset.mem_univ r)).trans (h u)
+  have h3 : (0 : ℝ) < Real.sqrt 3 := by positivity
+  have hs3 : Real.sqrt 3 ^ 2 = 3 := Real.sq_sqrt (by norm_num)
+  have hn : ‖tracePart ent u‖ ≤ (Real.sqrt 3)⁻¹ * ∑ r, ‖ent r r u‖ := by
+    simp only [tracePart, LinearMap.smul_apply, LinearMap.sum_apply, norm_smul,
+      Real.norm_eq_abs, abs_inv, abs_of_pos h3]
+    exact mul_le_mul_of_nonneg_left (norm_sum_le _ _) (by positivity)
+  refine hn.trans ((pow_le_pow_iff_left₀ (by positivity) (norm_nonneg _) two_ne_zero).1 ?_)
+  rw [mul_pow, inv_pow, hs3]
+  simp only [Fin.sum_univ_three] at hdiag ⊢
+  have := norm_nonneg (ent 0 0 u)
+  have := norm_nonneg (ent 1 1 u)
+  have := norm_nonneg (ent 2 2 u)
+  nlinarith [sq_nonneg (‖ent 0 0 u‖ - ‖ent 1 1 u‖), sq_nonneg (‖ent 1 1 u‖ - ‖ent 2 2 u‖),
+    sq_nonneg (‖ent 0 0 u‖ - ‖ent 2 2 u‖)]
+
+/-- Squared norms of components along an injective index map are at most the squared norm. -/
+theorem _root_.PiLp.sum_norm_sq_comp_le {κ ι : Type*} [Fintype κ] [Fintype ι] {β : ι → Type*}
+    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) {f : κ → ι} (hf : Function.Injective f) :
+    ∑ k, ‖x (f k)‖ ^ 2 ≤ ‖x‖ ^ 2 := by
+  classical
+  have e : ∑ k, ‖x (f k)‖ ^ 2 = ∑ i ∈ Finset.univ.image f, ‖x i‖ ^ 2 :=
+    (Finset.sum_image (f := fun i => ‖x i‖ ^ 2) (g := f) fun a _ b _ h => hf h).symm
+  rw [PiLp.norm_sq_eq_of_L2, e]
+  exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _) fun _ _ _ => sq_nonneg _
+
+end MatrixResidual
 
 /-! ## The Whitney spaces of the cube meshes -/
 
 section Whitney
 
 open Feec.FiniteElement Feec.Models.Cube.FEM
+open scoped RealInnerProductSpace
 
 theorem _root_.Feec.FiniteElement.LocalElement.V₀_le_V {n : ℕ} (E : LocalElement n)
     (M : Mesh.SimplicialMesh n) (k : ℤ) : E.V₀ M k ≤ E.V M k := by
@@ -759,14 +921,139 @@ level-`(N + 1)` Freudenthal mesh of the cube: one row of the `fem4gr` spaces
 `(CG₁)³ × (N1curl)³ × (RT)³` of (4.14) (the row-wise operators decouple the three rows). -/
 abbrev whitneyRow (N : ℕ) := (whitney 3 N).window 0 3
 
-/-- **The `fem4gr` scheme on the actual Whitney spaces of the cube meshes is well-posed**: for
-every time step and every data, the Crank–Nicolson step with prescribed boundary DOFs (those of
-`V̊ₕ = ` the Whitney spaces with vanishing boundary DOFs) exists and is unique. -/
+/-- **The scheme on one row of the Whitney spaces of the cube meshes is well-posed**: for every
+time step and every data, the Crank–Nicolson step with prescribed boundary DOFs (those of `V̊ₕ`,
+the Whitney spaces with vanishing boundary DOFs) exists and is unique. This is the abstract
+skew-form result (`existsUnique_isDirichletCNStep`) on these spaces; it does not assert that `V̊ₕ`
+is nonzero. -/
 theorem whitney_existsUnique_cnStep (N : ℕ) (s : ℝ) (f g' u : DState (whitneyRow N)) :
     ∃! u', TimeStepping.IsDirichletCNStep
       (interior (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ)))
       (discreteWave (whitneyRow N)) s f g' u u' :=
   existsUnique_isDirichletCNStep _ _ s f g' u
+
+/-! ### The three-row Whitney space and the `fem4gr` constraint monitors -/
+
+/-- The three-row fields with vanishing boundary DOFs on the Freudenthal Whitney spaces. -/
+abbrev whitneyInterior3 (N : ℕ) :=
+  interior3 (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ))
+
+/-- **Well-posedness of the three-row `fem4gr` scheme** `(P₁)³ × (P₁⁻Λ¹)³ × (P₁⁻Λ²)³` with
+prescribed boundary DOFs, for every time step. -/
+theorem whitney_existsUnique_cnStep3 (N : ℕ) (s : ℝ) (f g' u : DState3 (whitneyRow N)) :
+    ∃! u', TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s f
+      g' u u' :=
+  existsUnique_isDirichletCNStep3 _ _ s f g' u
+
+/-- The edge index `{j}` of the `1`-form component `E_j` (`E = Σ_j E_j dx_j`). -/
+def edgeIdx (j : Fin 3) : formIdx 3 ((0 : ℤ) + ((1 : Fin 3) : ℤ)) := ⟨{j}, by simp⟩
+
+/-- The face index `{j}ᶜ` of the `2`-form component dual to the vector component `B_j`. -/
+def faceIdx (j : Fin 3) : formIdx 3 ((0 : ℤ) + ((2 : Fin 3) : ℤ)) :=
+  ⟨{j}ᶜ, by rw [Finset.card_compl]; simp⟩
+
+theorem edgeIdx_injective : Function.Injective edgeIdx := fun i j h => by
+  simpa [edgeIdx] using congrArg Subtype.val h
+
+theorem faceIdx_injective : Function.Injective faceIdx := fun i j h => by
+  simpa [faceIdx] using congrArg Subtype.val h
+
+/-- The Hodge-star sign `(−1)^j` of the vector proxy of a `2`-form on `ℝ³`: `B_j = (−1)^j ω_{{j}ᶜ}`
+(`ω = B₀ dx₁ ∧ dx₂ − B₁ dx₀ ∧ dx₂ + B₂ dx₀ ∧ dx₁`; with this proxy `d` on `1`-forms is `curl`, by
+`(dω)_{kl} = ∂_k ω_l − ∂_l ω_k` for `k < l`, `extDerivOp`). -/
+def faceSign (j : Fin 3) : ℝ := (-1) ^ (j : ℕ)
+
+/-- The entry `E_{rj}` of the matrix field `E`: component `dx_j` of the `1`-form of row `r`. -/
+def entryE (N : ℕ) (r j : Fin 3) : DState3 (whitneyRow N) →ₗ[ℝ] L2 ℝ (cubeDomain 3) where
+  toFun u := ((u r 1 : (whitneyRow N).V 1) : L2F ℝ (cubeDomain 3) _) (edgeIdx j)
+  map_add' u v := by simp
+  map_smul' a u := by simp
+
+/-- The entry `B_{rj}` of the matrix field `B`: the vector proxy `(−1)^j ω_{{j}ᶜ}` of the `2`-form
+of row `r`. -/
+def entryB (N : ℕ) (r j : Fin 3) : DState3 (whitneyRow N) →ₗ[ℝ] L2 ℝ (cubeDomain 3) where
+  toFun u := faceSign j • ((u r 2 : (whitneyRow N).V 2) : L2F ℝ (cubeDomain 3) _) (faceIdx j)
+  map_add' u v := by simp
+  map_smul' a u := by simp [smul_comm a]
+
+/-- The field `σ` (its three rows). -/
+def sigmaPart (N : ℕ) :
+    DState3 (whitneyRow N) →ₗ[ℝ] PiLp 2 fun _ : Fin 3 => (whitneyRow N).V 0 where
+  toFun u := WithLp.toLp 2 fun r => u r 0
+  map_add' u v := PiLp.ext fun r => by simp
+  map_smul' a u := PiLp.ext fun r => by simp
+
+theorem sum_norm_entryE_sq_le (N : ℕ) (u : DState3 (whitneyRow N)) :
+    ∑ r, ∑ j, ‖entryE N r j u‖ ^ 2 ≤ ‖u‖ ^ 2 := by
+  rw [PiLp.norm_sq_eq_of_L2]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have h1 := PiLp.sum_norm_sq_comp_le
+    ((u r 1 : (whitneyRow N).V 1) : L2F ℝ (cubeDomain 3) _) edgeIdx_injective
+  have h2 := pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (u r) 1) 2
+  exact h1.trans (by simpa using h2)
+
+theorem sum_norm_entryB_sq_le (N : ℕ) (u : DState3 (whitneyRow N)) :
+    ∑ r, ∑ j, ‖entryB N r j u‖ ^ 2 ≤ ‖u‖ ^ 2 := by
+  rw [PiLp.norm_sq_eq_of_L2]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have h1 := PiLp.sum_norm_sq_comp_le
+    ((u r 2 : (whitneyRow N).V 2) : L2F ℝ (cubeDomain 3) _) faceIdx_injective
+  have h2 := pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (u r) 2) 2
+  have hs : ∀ j, ‖entryB N r j u‖ =
+      ‖((u r 2 : (whitneyRow N).V 2) : L2F ℝ (cubeDomain 3) _) (faceIdx j)‖ := fun j => by
+    simp [entryB, faceSign, norm_smul]
+  simp only [hs]
+  exact h1.trans (by simpa using h2)
+
+theorem norm_sigmaPart_le (N : ℕ) (u : DState3 (whitneyRow N)) : ‖sigmaPart N u‖ ≤ ‖u‖ := by
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_le_sum fun r _ =>
+    pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (u r) 0) 2
+
+/-- `norm_residual_le3` on the three-row Whitney space for a residual map of norm at most `1`. -/
+theorem whitney_norm_residual_le (N : ℕ) {X : Type*} [SeminormedAddCommGroup X] [NormedSpace ℝ X]
+    (c : DState3 (whitneyRow N) →ₗ[ℝ] X) (hc : ∀ x, ‖c x‖ ≤ ‖x‖) {s : ℝ}
+    {f g u ũ τ : ℕ → DState3 (whitneyRow N)}
+    (h : ∀ n, TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s
+      (f n) (g (n + 1)) (u n) (u (n + 1)))
+    (hũ : ∀ n, ũ (n + 1) - g (n + 1) ∈ whitneyInterior3 N) (h0 : u 0 - ũ 0 ∈ whitneyInterior3 N)
+    (hτ : ∀ n, ∀ v ∈ whitneyInterior3 N, ⟪ũ (n + 1) - ũ n, v⟫ =
+      s * ⟪discreteWave3 (whitneyRow N) (ũ (n + 1) + ũ n), v⟫ + ⟪f n, v⟫ + ⟪τ n, v⟫) (M : ℕ) :
+    ‖c (u M)‖ ≤ ‖c (ũ M)‖ + (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range M, ‖τ n‖) := by
+  have := norm_residual_le3 (whitneyRow N) (fun i => (whitneyMin 3 N).V (0 + (i : ℤ))) c
+    (C := 1) (fun x => by rw [one_mul]; exact hc x) zero_le_one h hũ h0 hτ M
+  rwa [one_mul] at this
+
+/-- **The `fem4gr` constraint monitors of the discrete solution are bounded by the consistency
+error**, on the three-row Whitney space of the cube: for the Crank–Nicolson iterates `uₙ` with
+prescribed boundary DOFs `gₙ` and comparison fields `ũₙ` (e.g. interpolants of the exact
+solution) with the same boundary DOFs and consistency errors `τₙ`, each of the monitored
+residuals `c` — the skew parts `½ (E − Eᵀ)`, `½ (B − Bᵀ)` ("Skew of E/B"), the normalized traces
+`tr E / √3`, `tr B / √3` ("Trace of E/B") and `σ` ("Sigma Zero") — satisfies
+`‖c u_N‖ ≤ ‖c ũ_N‖ + ‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖` (all with constant `1`). Not covered: the discrete
+divergence (its constant depends on the mesh, `norm_residual_le3`) and any bound of `τₙ` in `h`
+and `Δt`. -/
+theorem whitney_norm_residuals_le (N : ℕ) {s : ℝ} {f g u ũ τ : ℕ → DState3 (whitneyRow N)}
+    (h : ∀ n, TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s
+      (f n) (g (n + 1)) (u n) (u (n + 1)))
+    (hũ : ∀ n, ũ (n + 1) - g (n + 1) ∈ whitneyInterior3 N) (h0 : u 0 - ũ 0 ∈ whitneyInterior3 N)
+    (hτ : ∀ n, ∀ v ∈ whitneyInterior3 N, ⟪ũ (n + 1) - ũ n, v⟫ =
+      s * ⟪discreteWave3 (whitneyRow N) (ũ (n + 1) + ũ n), v⟫ + ⟪f n, v⟫ + ⟪τ n, v⟫) (M : ℕ) :
+    ‖skewPart (entryE N) (u M)‖ ≤ ‖skewPart (entryE N) (ũ M)‖ +
+        (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range M, ‖τ n‖) ∧
+      ‖skewPart (entryB N) (u M)‖ ≤ ‖skewPart (entryB N) (ũ M)‖ +
+        (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range M, ‖τ n‖) ∧
+      ‖tracePart (entryE N) (u M)‖ ≤ ‖tracePart (entryE N) (ũ M)‖ +
+        (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range M, ‖τ n‖) ∧
+      ‖tracePart (entryB N) (u M)‖ ≤ ‖tracePart (entryB N) (ũ M)‖ +
+        (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range M, ‖τ n‖) ∧
+      ‖sigmaPart N (u M)‖ ≤ ‖sigmaPart N (ũ M)‖ + (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range M, ‖τ n‖) := by
+  exact ⟨whitney_norm_residual_le N _ (norm_skewPart_le (sum_norm_entryE_sq_le N)) h hũ h0 hτ M,
+    whitney_norm_residual_le N _ (norm_skewPart_le (sum_norm_entryB_sq_le N)) h hũ h0 hτ M,
+    whitney_norm_residual_le N _ (norm_tracePart_le (sum_norm_entryE_sq_le N)) h hũ h0 hτ M,
+    whitney_norm_residual_le N _ (norm_tracePart_le (sum_norm_entryB_sq_le N)) h hũ h0 hτ M,
+    whitney_norm_residual_le N _ (norm_sigmaPart_le N) h hũ h0 hτ M⟩
 
 end Whitney
 

@@ -3,6 +3,7 @@ module
 public import Feec.Operator.Resolvent
 public import Feec.ForMathlib.LinearPMap.Reducing
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
 
 /-!
 # Crank–Nicolson as a Cayley transform
@@ -30,7 +31,9 @@ continuous problem (unbounded skew-adjoint `A`) at once.
 
 * `IsCNStep.add`, `IsCNStep.smul`: CN steps are linear; `isCNStep_of_eigen`: on an eigenvector
   `A u = μ u` the step is `λ u`, `λ = (1 + s μ)/(1 − s μ)`, of modulus one for imaginary `μ`
-  (`norm_amplification_eq_one`).
+  (`norm_amplification_eq_one`): for `μ = i θ`, `λ = e^{2 i arctan(s θ)}` (`amplification_eq_exp`),
+  so CN advances the phase by `2 arctan(s θ)` instead of the exact `2 s θ`
+  (`two_mul_arctan_ne_two_mul`, for `s θ ≠ 0`): a pure phase error.
 
 ## Inhomogeneous Dirichlet degrees of freedom (`fem4gr`)
 
@@ -288,6 +291,43 @@ theorem norm_amplification_eq_one (s θ : ℝ) :
   congr 1
   simp [Complex.normSq_apply]
 
+omit [InnerProductSpace 𝕜 E] in
+/-- **The CN phase**: for a purely imaginary eigenvalue `μ = i θ` the amplification factor is
+`(1 + i s θ) / (1 − i s θ) = e^{i · 2 arctan(s θ)}`, while the exact flow over the time step
+`Δt = 2 s` is `e^{i · 2 s θ}`. -/
+theorem amplification_eq_exp (s θ : ℝ) :
+    (1 + (s : ℂ) * (Complex.I * θ)) / (1 - (s : ℂ) * (Complex.I * θ)) =
+      Complex.exp (((2 * Real.arctan (s * θ) : ℝ) : ℂ) * Complex.I) := by
+  set x := s * θ with hx
+  set a := Real.arctan x
+  have hc : Real.cos a ^ 2 * (1 + x ^ 2) = 1 := by
+    rw [Real.cos_arctan, div_pow, Real.sq_sqrt (by positivity), one_pow]
+    field_simp
+  have hs : Real.sin a = x * Real.cos a := by
+    rw [Real.sin_arctan, Real.cos_arctan]; ring
+  have hne : (1 - (s : ℂ) * (Complex.I * θ)) ≠ 0 := by
+    intro h
+    simpa using congrArg Complex.re h
+  have he : Complex.exp (((2 * a : ℝ) : ℂ) * Complex.I) =
+      ((Real.cos a : ℂ) + (Real.sin a : ℂ) * Complex.I) ^ 2 := by
+    rw [Complex.ofReal_cos, Complex.ofReal_sin, ← Complex.exp_mul_I, ← Complex.exp_nat_mul]
+    congr 1; push_cast; ring
+  rw [div_eq_iff hne, he, hs]
+  have hc' : (Real.cos a : ℂ) ^ 2 * (1 + (x : ℂ) ^ 2) = 1 := by exact_mod_cast hc
+  rw [hx] at hc'
+  push_cast at hc' ⊢
+  rw [hx]; push_cast
+  linear_combination (-(1 + (s : ℂ) * (Complex.I * θ))) * hc' +
+    (1 + (s : ℂ) * (Complex.I * θ)) * Complex.cos a ^ 2 * ((s : ℂ) * θ) ^ 2 * Complex.I_sq
+
+/-- **CN has a phase error for every nonzero `s θ`**: `2 arctan(s θ) ≠ 2 s θ`. -/
+theorem two_mul_arctan_ne_two_mul {x : ℝ} (hx : x ≠ 0) : 2 * Real.arctan x ≠ 2 * x := by
+  intro h
+  have h' : Real.arctan x = x := by linarith
+  rcases hx.lt_or_gt with hlt | hlt
+  · exact (Real.self_lt_arctan hlt).ne' h'
+  · exact (Real.arctan_lt_self hlt).ne h'
+
 /-! ### Three-field schemes for the full and reduced systems (thesis Ch. 7) -/
 
 section ThreeField
@@ -541,8 +581,8 @@ finite element space `V` with the subspace `V₀` of fields with vanishing bound
 `u ↦ u'` with boundary values `g'` (any field with the prescribed boundary DOFs, e.g. an
 interpolant of the exact solution) and load `f` is
 `u' − g' ∈ V₀` and `⟪u' − u, v⟫ = s ⟪A (u' + u), v⟫ + ⟪f, v⟫` for all `v ∈ V₀`, with `s = Δt / 2`
-and `⟪A u, v⟫` the bilinear form of the scheme (for (4.14):
-`(grad σ, C) − (E, grad τ) + (curl E, D) − (B, curl C)`, skew on all of `V`). -/
+and `⟪A u, v⟫` the bilinear form of the scheme (for (4.14) up to `σ ↦ −σ`, as assembled in
+`fem4gr`: `(grad σ, C) − (E, grad τ) + (curl E, D) − (B, curl C)`, skew on all of `V`). -/
 def IsDirichletCNStep (V₀ : Submodule ℝ V) (A : V →ₗ[ℝ] V) (s : ℝ) (f g' u u' : V) : Prop :=
   u' - g' ∈ V₀ ∧ ∀ v ∈ V₀, ⟪u' - u, v⟫ = s * ⟪A (u' + u), v⟫ + ⟪f, v⟫
 

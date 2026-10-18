@@ -11,7 +11,7 @@ public import Feec.TimeStepping.Cayley
 
 The experiment of [QuennevilleBelair2015], Ch. 7, in its `fem4gr` implementation
 (<https://github.com/vincentqb/fem4gr>, example `'z-direction plane wave'`): the Einstein–Bianchi
-system (4.14) on the unit cube `(0, 1)³`, Crank–Nicolson in time, with the essential boundary data
+system (4.14) (up to `σ ↦ −σ`, as assembled in `fem4gr`) on the unit cube `(0, 1)³`, Crank–Nicolson in time, with the essential boundary data
 `σ = 0`, `E × n = E_ex × n`, `B · n = B_ex · n` and the initial value of the exact solution
 
 `E_ex = [[-A₊, -Aₓ, 0], [-Aₓ, A₊, 0], [0, 0, 0]] sin ω(z − t)`,
@@ -642,7 +642,8 @@ theorem isCNStep_cnTorusPlaneWave (s : ℝ) (k : ℕ) :
 /-- **Discrete energy identity and constraint preservation for the periodic run**: the CN
 iterates conserve the `L²` energy exactly, `‖Uₖ‖ = ‖U₀‖`, stay TSD, and the amplification factors
 have modulus one (`TimeStepping.norm_amplification_eq_one`): CN has a pure phase error,
-`λ₊ = e^{-iθ}`, `θ = 2 arctan(s ω) ≠ 2 s ω`. Every CN sequence from `U₀` is this one. -/
+`λ₊ = e^{-iθ}`, `θ = 2 arctan(s ω) ≠ 2 s ω` (`amp_eq_exp_phase`). Every CN sequence from `U₀` is
+this one. -/
 theorem cnTorusPlaneWave_props (s : ℝ) :
     (∀ k, ‖cnTorusPlaneWave Ap Ax n s k‖ = ‖torusPlaneWave Ap Ax n 0‖) ∧
     (∀ k, cnTorusPlaneWave Ap Ax n s k ∈
@@ -669,6 +670,22 @@ theorem cnTorusPlaneWave_props (s : ℝ) :
       rw [ih] at h1
       exact h1.unique_of_isSkewSymmetric complex.isSkewAdjoint_wave.isSkewSymmetric
         (isCNStep_cnTorusPlaneWave Ap Ax n s k)
+
+/-- **The phase error of the periodic run**: the CN amplification factor of the mode `e^{-iω(z−t)}`
+is `e^{-iθ}` with `θ = 2 arctan(s ω)`, while the exact flow over `Δt = 2 s` is `e^{-2isω}`; for
+`s ≠ 0` and `n ≠ 0` the phases differ (`θ < 2 s ω` for `s ω > 0`). -/
+theorem amp_eq_exp_phase (s : ℝ) :
+    amp s (-(Complex.I * omegaC n)) =
+      Complex.exp (-(((2 * Real.arctan (s * (2 * Real.pi * n)) : ℝ) : ℂ) * Complex.I)) ∧
+    (s ≠ 0 → n ≠ 0 → 2 * Real.arctan (s * (2 * Real.pi * n)) ≠ 2 * (s * (2 * Real.pi * n))) := by
+  refine ⟨?_, fun hs hn => TimeStepping.two_mul_arctan_ne_two_mul ?_⟩
+  · have e : -(Complex.I * omegaC n) = Complex.I * ((-(2 * Real.pi * n) : ℝ) : ℂ) := by
+      rw [Complex.ofReal_neg]; ring
+    rw [amp, e, TimeStepping.amplification_eq_exp, mul_neg, Real.arctan_neg]
+    congr 1; push_cast; ring
+  · have : (n : ℝ) ≠ 0 := by exact_mod_cast hn
+    have := Real.pi_pos
+    positivity
 
 end PeriodicTheorems
 

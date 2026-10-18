@@ -200,7 +200,8 @@ theorem isDeg_wedgeProd (θ : ι → d → R) (s : Finset ι) : IsDeg #s (wedgeP
     rw [wedgeProd_insert_of_lt _ ha, card_insert_of_notMem has]
     exact ih.wedge _
 
-/-- The products of the coordinate covectors are the basis forms: `dx_{s₁} ∧ ⋯ ∧ dx_{s_k} = dx_s`. -/
+/-- The products of the coordinate covectors are the basis forms:
+`dx_{s₁} ∧ ⋯ ∧ dx_{s_k} = dx_s`. -/
 theorem wedgeProd_single (s : Finset d) :
     wedgeProd (fun j => (Pi.single j 1 : d → R)) s = Pi.single s 1 := by
   induction s using Finset.induction_on_min with
@@ -431,7 +432,8 @@ theorem pullback_pullback [Fintype κ] {μ : Type*} [LinearOrder μ] (B : ι →
   simp only [pullback_smul, pullback_wedgeProd]
   rfl
 
-theorem pullback_id (α : Finset ι → R) : pullback (fun i j => if i = j then (1 : R) else 0) α = α := by
+theorem pullback_id (α : Finset ι → R) :
+    pullback (fun i j => if i = j then (1 : R) else 0) α = α := by
   have h1 : ∀ s, wedgeProd (fun i j => if i = j then (1 : R) else 0) s =
       (Pi.single s (1 : R) : Finset ι → R) := by
     intro s

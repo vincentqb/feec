@@ -4,6 +4,7 @@ public import Feec.FiniteElement.Stokes
 public import Feec.FiniteElement.Dof
 public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 public import Mathlib.Data.Fintype.Powerset
+public import Feec.Algebra.PolynomialForm
 
 /-!
 # Whitney forms and the lowest-order finite element spaces `P₁⁻Λᵏ(T)`
@@ -24,8 +25,12 @@ of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-faces `g` of `T`
   form;
 * `Feec.FiniteElement.baryCoord p`, `baryGrad p`: barycentric coordinates and their gradients;
 * `Feec.FiniteElement.whitneyForm p f`, `Feec.FiniteElement.whitneySpace p k = P₁⁻Λᵏ(T)`;
-* `Feec.FiniteElement.faceDof p g`: the degree of freedom `ω ↦ ∫_g ω` on continuous forms;
-* `Feec.FiniteElement.whitneyInterp p k`: the canonical interpolant `Π_T`.
+* `Feec.FiniteElement.contForms n`, `c1Forms n`: continuous and `C¹` form fields, and
+  `extDerivC1 : C¹ → C⁰`, `extDerivWhitney : P₁⁻Λᵏ(T) → P₁⁻Λ^{k+1}(T)`;
+* `Feec.FiniteElement.faceDof p k g`: the degree of freedom `ω ↦ ∫_g ω` on continuous forms,
+  `whitneyDof p k g` its restriction to `P₁⁻Λᵏ(T)`;
+* `Feec.FiniteElement.whitneyInterp hp k`: the canonical interpolant `Π_T`;
+* `Feec.FiniteElement.evalForm n`: polynomial forms (`Feec.Koszul.PolyForm`) as form fields.
 
 ## Main results
 
@@ -38,13 +43,15 @@ of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-faces `g` of `T`
   `dim P₁⁻Λᵏ(T) = (n+1 choose k+1)`;
 * `isUnisolvent_faceDof`: the face integrals are unisolvent on `P₁⁻Λᵏ(T)`;
 * `whitneyInterp_extDeriv`: **the commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` forms,
-  from the abstract `Feec.FiniteElement.interp_comp_eq` and Stokes' theorem.
+  from the abstract `Feec.FiniteElement.interp_comp_eq` and Stokes' theorem;
+* `whitneySpace_refVertex_eq_map_polyFormMinus`: on the reference simplex,
+  `P₁⁻Λᵏ(T̂) = P₀Λᵏ + κ H₀Λ^{k+1}` is `Feec.Koszul.polyFormMinus 1 k`.
 
 ## References
 
 * [H. Whitney, *Geometric Integration Theory*][Whitney1957]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3–4 (Whitney forms, `P_r⁻Λᵏ`, degrees of freedom)
+  §3–4 (Whitney forms, `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}`, degrees of freedom)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 
@@ -130,6 +137,75 @@ theorem isDeg_whitneyFibre (c : ι → R) (θ : ι → d → R) {k : ℕ} {g : F
   refine sum_eq_zero fun i hi => ?_
   rw [isDeg_wedgeProd θ (g.erase i) t (by rw [card_erase_of_mem hi, hg]; simpa using ht),
     mul_zero]
+
+/-- Splitting off a minimal vertex: `W_{a ∪ g} = c_a θ_g^∧ - θ_a ∧ W_g` for `a < g`. -/
+theorem whitneyFibre_insert_of_lt (c : ι → R) (θ : ι → d → R) {a : ι} {g : Finset ι}
+    (h : ∀ i ∈ g, a < i) :
+    whitneyFibre c θ (insert a g) = c a • wedgeProd θ g - wedge (θ a) (whitneyFibre c θ g) := by
+  have hag : a ∉ g := fun h' => lt_irrefl a (h a h')
+  have hsa : (sgn a (insert a g) : R) = 1 := by
+    rw [sgn, filter_eq_empty_iff.2 fun x hx => ?_]
+    · simp
+    · rcases mem_insert.1 hx with rfl | hx
+      · exact lt_irrefl _
+      · exact not_lt.2 (h x hx).le
+  rw [whitneyFibre, sum_insert hag, hsa, one_mul, erase_insert hag, whitneyFibre, wedge_sum,
+    sub_eq_add_neg, ← sum_neg_distrib]
+  congr 1
+  refine sum_congr rfl fun i hi => ?_
+  rw [sgn_insert hag, ite_eq_left_of_eq_true _ _ (eq_true (h i hi)),
+    erase_insert_of_ne (ne_of_lt (h i hi)),
+    wedgeProd_insert_of_lt θ fun x hx => h x (mem_of_mem_erase hx), wedge_smul, ← neg_smul]
+  congr 1
+  ring
+
+/-- With the coordinate covectors, the Whitney form is the contraction `W_g = ι_c dx_g`. -/
+theorem whitneyFibre_single_eq_interior [Fintype d] (x : d → R) (g : Finset d) :
+    whitneyFibre x (fun j => Pi.single j 1) g = interior x (Pi.single g 1) := by
+  funext s
+  set F : d → R := fun i => sgn i g * x i * (Pi.single (g.erase i) (1 : R) : Finset d → R) s
+  set G : d → R := fun j => sgn j s * x j * (Pi.single g (1 : R) : Finset d → R) (insert j s)
+  have hL : whitneyFibre x (fun j => Pi.single j 1) g s = ∑ i, if i ∈ g then F i else 0 := by
+    rw [sum_ite_mem, univ_inter]
+    simp only [whitneyFibre, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, wedgeProd_single, F]
+  have hR : interior x (Pi.single g 1) s = ∑ j, if j ∈ sᶜ then G j else 0 := by
+    rw [sum_ite_mem, univ_inter]
+    rfl
+  rw [hL, hR]
+  refine sum_congr rfl fun j _ => ?_
+  simp only [F, G, Pi.single_apply, mem_compl]
+  by_cases hj : j ∈ g ∧ s = g.erase j
+  · obtain ⟨hjg, rfl⟩ := hj
+    simp [hjg, insert_erase hjg, sgn_erase_self]
+  · have hjs : ¬(j ∉ s ∧ insert j s = g) := by
+      rintro ⟨hjs, rfl⟩
+      exact hj ⟨mem_insert_self _ _, (erase_insert hjs).symm⟩
+    by_cases h1 : j ∈ g
+    · have h2 : s ≠ g.erase j := fun h => hj ⟨h1, h⟩
+      by_cases h3 : j ∈ s
+      · simp [h1, h2, h3]
+      · have h4 : insert j s ≠ g := fun h => hjs ⟨h3, h⟩
+        simp [h1, h2, h3, h4]
+    · by_cases h3 : j ∈ s
+      · simp [h1, h3]
+      · have h4 : insert j s ≠ g := fun h => hjs ⟨h3, h⟩
+        simp [h1, h3, h4]
+
+theorem interior_eq_sum_single [Fintype d] (x : d → R) (β : Finset d → R) :
+    interior x β = ∑ t, β t • interior x (Pi.single t 1) := by
+  funext s
+  simp only [interior_apply, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, mul_sum]
+  rw [sum_comm]
+  refine sum_congr rfl fun j _ => ?_
+  rw [sum_eq_single (insert j s) (fun t _ ht => by simp [Ne.symm ht])
+    (by simp)]
+  simp only [Pi.single_eq_same, mul_one]
+  ring
+
+theorem isDeg_single {k : ℕ} {g : Finset d} (hg : #g = k) : IsDeg k (Pi.single g (1 : R)) := by
+  intro s hs
+  have : s ≠ g := fun h => hs (h ▸ hg)
+  simp [this]
 
 end Feec.ExteriorFibre
 
@@ -401,7 +477,8 @@ theorem simplexIntegral_whitneyForm (hp : IsUnit (edgeMatrix p).det) {f g : Fins
           if e 0 = a then 1 else 0) ∘ e = refGrad k := by
         funext m l
         simp only [Function.comp_apply, e.injective.eq_iff, refGrad, eq_comm]
-      rw [hc, hθ, Pi.smul_apply, whitneyFibre_refBary_univ, hfe, hf, Nat.add_sub_cancel, smul_eq_mul,
+      rw [hc, hθ, Pi.smul_apply, whitneyFibre_refBary_univ, hfe, hf, Nat.add_sub_cancel,
+        smul_eq_mul,
         mul_one]
     simp only [hval]
     rw [setIntegral_const, volume_real_refSimplex, smul_eq_mul, one_div,
@@ -687,5 +764,232 @@ theorem finrank_whitneySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) 
 theorem isUnisolvent_whitneyDof_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     IsUnisolvent (whitneyDof T.points k) :=
   isUnisolvent_whitneyDof (isUnit_det_edgeMatrix T) k
+
+/-! ### The reference simplex: `P₁⁻Λᵏ(T̂) = P₀Λᵏ + κ H₀Λ^{k+1}` -/
+
+theorem edgeMatrix_refVertex : edgeMatrix (refVertex n) = 1 := by
+  ext i j
+  simp [edgeMatrix, simplexMatrix_refVertex, Matrix.one_apply]
+
+theorem baryCoord_refVertex (x : Fin n → ℝ) : baryCoord (refVertex n) x = refBary x := by
+  simp [baryCoord, edgeMatrix_refVertex]
+
+theorem baryGrad_refVertex : baryGrad (refVertex n) = refGrad n := by
+  funext m l
+  refine Fin.cases ?_ (fun m => ?_) m
+  · simp [baryGrad, edgeMatrix_refVertex, refGrad, Matrix.one_apply, Fin.succ_ne_zero]
+  · simp [baryGrad, edgeMatrix_refVertex, refGrad, Matrix.one_apply, eq_comm]
+
+theorem refBary_comp_succ (x : Fin n → ℝ) : refBary x ∘ Fin.succAboveOrderEmb 0 = x := by
+  funext l; simp
+
+theorem refGrad_comp_succ : refGrad n ∘ Fin.succAboveOrderEmb 0 = fun l => Pi.single l 1 := by
+  funext l; simp [refGrad_succ]
+
+/-- On `T̂`, the Whitney form of a face not containing `v̂₀` is `k! ι_x dx_g`. -/
+theorem whitneyForm_refVertex_map_succ (g : Finset (Fin n)) (x : Fin n → ℝ) :
+    whitneyForm (refVertex n) (g.map (Fin.succAboveOrderEmb 0).toEmbedding) x =
+      ((#g - 1).factorial : ℝ) • interior x (Pi.single g 1) := by
+  rw [whitneyForm, card_map, baryCoord_refVertex, baryGrad_refVertex, whitneyFibre_map,
+    refBary_comp_succ, refGrad_comp_succ, whitneyFibre_single_eq_interior]
+
+/-- On `T̂`, the Whitney form of a face containing `v̂₀` is `k! (dx_g - ι_x (Σⱼ dxⱼ ∧ dx_g))`. -/
+theorem whitneyForm_refVertex_insert_zero (g : Finset (Fin n)) (x : Fin n → ℝ) :
+    whitneyForm (refVertex n) (insert 0 (g.map (Fin.succAboveOrderEmb 0).toEmbedding)) x =
+      ((#g).factorial : ℝ) •
+        (Pi.single g 1 - interior x (wedge (fun _ => 1) (Pi.single g 1))) := by
+  have h0 : (0 : Fin (n + 1)) ∉ g.map (Fin.succAboveOrderEmb 0).toEmbedding := by
+    simp [Fin.succ_ne_zero]
+  have hlt : ∀ i ∈ g.map (Fin.succAboveOrderEmb 0).toEmbedding, (0 : Fin (n + 1)) < i := by
+    intro i hi
+    exact lt_of_le_of_ne (Fin.zero_le i) (fun h => h0 (h ▸ hi))
+  rw [whitneyForm, card_insert_of_notMem h0, card_map, Nat.add_sub_cancel, baryCoord_refVertex,
+    baryGrad_refVertex, whitneyFibre_insert_of_lt _ _ hlt, whitneyFibre_map, refBary_comp_succ,
+    refGrad_comp_succ, whitneyFibre_single_eq_interior, wedgeProd_map, refGrad_comp_succ,
+    wedgeProd_single]
+  congr 1
+  have hθ0 : refGrad n 0 = -(fun _ => 1) := by
+    funext l; simp [refGrad, Fin.succ_ne_zero]
+  rw [hθ0, wedge_neg_left]
+  have hc := wedge_interior_add_interior_wedge (fun _ => (1 : ℝ)) x (Pi.single g 1)
+  funext s
+  have hs := congrFun hc s
+  simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, one_mul] at hs
+  simp only [Pi.sub_apply, Pi.smul_apply, Pi.neg_apply, smul_eq_mul, refBary_zero]
+  linarith
+
+/-- The contraction `x ↦ ι_x dx_t` (`#t = k + 1`) lies in `P₁⁻Λᵏ(T̂)`. -/
+theorem interior_single_mem_whitneySpace {t : Finset (Fin n)} (ht : #t = k + 1) :
+    (fun x => interior x (Pi.single t (1 : ℝ))) ∈ whitneySpace (refVertex n) k := by
+  have h := whitneyForm_mem_whitneySpace (refVertex n)
+    ⟨t.map (Fin.succAboveOrderEmb 0).toEmbedding, by rw [card_map, ht]⟩
+  have : (fun x => interior x (Pi.single t (1 : ℝ))) = ((k.factorial : ℝ)⁻¹) •
+      whitneyForm (refVertex n) (t.map (Fin.succAboveOrderEmb 0).toEmbedding) := by
+    funext x
+    rw [Pi.smul_apply, whitneyForm_refVertex_map_succ, ht, Nat.add_sub_cancel, smul_smul,
+      inv_mul_cancel₀ (by positivity), one_smul]
+  rw [this]
+  exact Submodule.smul_mem _ _ h
+
+/-- `x ↦ ι_x β` lies in `P₁⁻Λᵏ(T̂)` for every constant `(k+1)`-form `β`. -/
+theorem interior_mem_whitneySpace {β : Finset (Fin n) → ℝ} (hβ : IsDeg (k + 1) β) :
+    (fun x => interior x β) ∈ whitneySpace (refVertex n) k := by
+  have : (fun x => interior x β) = ∑ t, β t • fun x => interior x (Pi.single t (1 : ℝ)) := by
+    funext x
+    rw [interior_eq_sum_single]
+    simp [Finset.sum_apply]
+  rw [this]
+  refine Submodule.sum_mem _ fun t _ => ?_
+  by_cases ht : #t = k + 1
+  · exact Submodule.smul_mem _ _ (interior_single_mem_whitneySpace ht)
+  · rw [hβ t ht, zero_smul]; exact Submodule.zero_mem _
+
+/-- The constant form `dx_g` (`#g = k`) lies in `P₁⁻Λᵏ(T̂)`. -/
+theorem const_single_mem_whitneySpace {g : Finset (Fin n)} (hg : #g = k) :
+    (fun _ => Pi.single g (1 : ℝ)) ∈ whitneySpace (refVertex n) k := by
+  have h0 : (0 : Fin (n + 1)) ∉ g.map (Fin.succAboveOrderEmb 0).toEmbedding := by
+    simp [Fin.succ_ne_zero]
+  have h := whitneyForm_mem_whitneySpace (refVertex n)
+    ⟨insert 0 (g.map (Fin.succAboveOrderEmb 0).toEmbedding),
+      by rw [card_insert_of_notMem h0, card_map, hg]⟩
+  have h2 := interior_mem_whitneySpace (k := k)
+    (((isDeg_single (R := ℝ) hg).wedge (fun _ : Fin n => (1 : ℝ))))
+  have : (fun _ => Pi.single g (1 : ℝ)) = ((k.factorial : ℝ)⁻¹) •
+      whitneyForm (refVertex n) (insert 0 (g.map (Fin.succAboveOrderEmb 0).toEmbedding)) +
+        fun x => interior x (wedge (fun _ => 1) (Pi.single g 1)) := by
+    funext x
+    rw [Pi.add_apply, Pi.smul_apply, whitneyForm_refVertex_insert_zero, hg, smul_smul,
+      inv_mul_cancel₀ (by positivity), one_smul, sub_add_cancel]
+  rw [this]
+  exact Submodule.add_mem _ (Submodule.smul_mem _ _ h) h2
+
+/-- Constant `k`-forms lie in `P₁⁻Λᵏ(T̂)`. -/
+theorem const_mem_whitneySpace {α : Finset (Fin n) → ℝ} (hα : IsDeg k α) :
+    (fun _ => α) ∈ whitneySpace (refVertex n) k := by
+  have : (fun _ : Fin n → ℝ => α) = ∑ g, α g • fun _ => Pi.single g (1 : ℝ) := by
+    funext x s
+    simp [Finset.sum_apply, Pi.single_apply]
+  rw [this]
+  refine Submodule.sum_mem _ fun g _ => ?_
+  by_cases hg : #g = k
+  · exact Submodule.smul_mem _ _ (const_single_mem_whitneySpace hg)
+  · rw [hα g hg, zero_smul]; exact Submodule.zero_mem _
+
+variable (n) in
+/-- Evaluation of polynomial forms as form fields. -/
+def evalForm : Koszul.PolyForm ℝ (Fin n) →ₗ[ℝ] FormField n where
+  toFun ω := fun x s => MvPolynomial.eval x (ω s)
+  map_add' ω η := by funext x s; simp
+  map_smul' c ω := by funext x s; simp [MvPolynomial.smul_eval]
+
+theorem evalForm_apply (ω : Koszul.PolyForm ℝ (Fin n)) (x : Fin n → ℝ) (s : Finset (Fin n)) :
+    evalForm n ω x s = MvPolynomial.eval x (ω s) := rfl
+
+theorem evalForm_koszul (ω : Koszul.PolyForm ℝ (Fin n)) (x : Fin n → ℝ) :
+    evalForm n (Koszul.koszul ω) x = interior x (evalForm n ω x) := by
+  funext s
+  simp [evalForm_apply, Koszul.koszul_apply, interior_apply, sgn]
+
+theorem evalForm_C (α : Finset (Fin n) → ℝ) :
+    evalForm n (fun s => MvPolynomial.C (α s)) = fun _ => α := by
+  funext x s; simp [evalForm_apply]
+
+/-- A polynomial form with constant coefficients is the constant form of its constant terms. -/
+theorem eq_C_of_totalDegree_eq_zero {ω : Koszul.PolyForm ℝ (Fin n)}
+    (h : ∀ s, (ω s).totalDegree = 0) :
+    ω = fun s => MvPolynomial.C ((ω s).coeff 0) :=
+  funext fun s => MvPolynomial.totalDegree_eq_zero_iff_eq_C.1 (h s)
+
+/-- **`P₁⁻Λᵏ(T̂) = P₀Λᵏ + κ H₀Λ^{k+1}`**: on the reference simplex the Whitney space is the
+space of trimmed linear polynomial forms `Feec.Koszul.polyFormMinus 1 k` (evaluated as form
+fields), [AFW2006], §3.3–3.4. -/
+theorem whitneySpace_refVertex_eq_map_polyFormMinus (k : ℕ) :
+    whitneySpace (refVertex n) k = (Koszul.polyFormMinus ℝ (Fin n) 1 k).map (evalForm n) := by
+  refine le_antisymm (Submodule.span_le.2 (Set.range_subset_iff.2 fun f => ?_)) ?_
+  · set g : Finset (Fin n) := univ.filter fun l => l.succ ∈ f.1
+    have hmap : ∀ i, i ∈ g.map (Fin.succAboveOrderEmb 0).toEmbedding ↔ i ≠ 0 ∧ i ∈ f.1 := by
+      intro i
+      rcases Fin.eq_zero_or_eq_succ i with rfl | ⟨i, rfl⟩
+      · simp [Fin.succ_ne_zero]
+      · simp [g, Fin.succ_ne_zero]
+    by_cases h0 : (0 : Fin (n + 1)) ∈ f.1
+    · -- `f = {0} ∪ succ(g)`, `#g = k`
+      have hf : f.1 = insert 0 (g.map (Fin.succAboveOrderEmb 0).toEmbedding) := by
+        ext i
+        rw [mem_insert, hmap]
+        by_cases hi : i = 0
+        · simp [hi, h0]
+        · simp [hi]
+      have hg : #g = k := by
+        have := f.2
+        rw [hf, card_insert_of_notMem (by rw [hmap]; simp), card_map] at this
+        omega
+      refine ⟨(fun s => MvPolynomial.C ((k.factorial : ℝ) *
+          (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s)) +
+        Koszul.koszulₗ ℝ (Fin n) (fun s => MvPolynomial.C (-(k.factorial : ℝ) *
+          wedge (fun _ => 1) (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s)), ?_, ?_⟩
+      · refine Submodule.add_mem _ (Submodule.mem_sup_left
+          (show _ ∈ Koszul.polyForm ℝ (Fin n) 0 k from
+            ⟨fun s hs => ?_, fun s => (MvPolynomial.totalDegree_C _).le⟩))
+          (Submodule.mem_sup_right (Submodule.mem_map_of_mem (f := Koszul.koszulₗ ℝ (Fin n))
+            (show _ ∈ Koszul.homForm ℝ (Fin n) 0 (k + 1) from ⟨fun s hs => ?_, fun s =>
+              MvPolynomial.isHomogeneous_C _ _⟩)))
+        · simp [isDeg_single (R := ℝ) hg s hs]
+        · simp [((isDeg_single (R := ℝ) hg).wedge (fun _ => (1 : ℝ))) s hs]
+      · funext x
+        rw [map_add, Pi.add_apply, Koszul.koszulₗ_apply, evalForm_koszul, evalForm_C, evalForm_C,
+          hf,
+          whitneyForm_refVertex_insert_zero, hg]
+        have : (fun s => -(k.factorial : ℝ) *
+            wedge (fun _ => 1) (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s) =
+            (-(k.factorial : ℝ)) • wedge (fun _ => 1) (Pi.single g 1) := rfl
+        rw [this, ExteriorFibre.interior_smul]
+        funext s
+        simp only [Pi.add_apply, Pi.smul_apply, Pi.sub_apply, smul_eq_mul]
+        ring
+    · -- `f = succ(g)`, `#g = k + 1`
+      have hf : f.1 = g.map (Fin.succAboveOrderEmb 0).toEmbedding := by
+        ext i
+        rw [hmap]
+        by_cases hi : i = 0
+        · simp [hi, h0]
+        · simp [hi]
+      have hg : #g = k + 1 := by
+        have := f.2
+        rwa [hf, card_map] at this
+      refine ⟨Koszul.koszulₗ ℝ (Fin n) (fun s => MvPolynomial.C ((k.factorial : ℝ) *
+          (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s)),
+        Submodule.mem_sup_right (Submodule.mem_map_of_mem (f := Koszul.koszulₗ ℝ (Fin n))
+          (show _ ∈ Koszul.homForm ℝ (Fin n) 0 (k + 1) from ⟨fun s hs => ?_, fun s =>
+            MvPolynomial.isHomogeneous_C _ _⟩)), ?_⟩
+      · simp [isDeg_single (R := ℝ) hg s hs]
+      · funext x
+        rw [Koszul.koszulₗ_apply, evalForm_koszul, evalForm_C, hf, whitneyForm_refVertex_map_succ,
+          hg,
+          Nat.add_sub_cancel]
+        have : (fun s => (k.factorial : ℝ) * (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s) =
+            (k.factorial : ℝ) • (Pi.single g 1 : Finset (Fin n) → ℝ) := rfl
+        rw [this, ExteriorFibre.interior_smul]
+  · rw [Submodule.map_le_iff_le_comap]
+    intro ω hω
+    obtain ⟨a, ha, y, hy, rfl⟩ := Submodule.mem_sup.1 hω
+    obtain ⟨b, hb, rfl⟩ := Submodule.mem_map.1 hy
+    rw [Submodule.mem_comap, map_add]
+    refine Submodule.add_mem _ ?_ ?_
+    · have ha0 : ∀ s, (a s).totalDegree = 0 := fun s => Nat.le_zero.1 (ha.2 s)
+      rw [eq_C_of_totalDegree_eq_zero ha0, evalForm_C]
+      refine const_mem_whitneySpace fun s hs => ?_
+      change (a s).coeff 0 = 0
+      rw [ha.1 s hs]; simp
+    · have hb0 : ∀ s, (b s).totalDegree = 0 := fun s => Nat.le_zero.1 ((hb.2 s).totalDegree_le)
+      have : evalForm n (Koszul.koszulₗ ℝ (Fin n) b) =
+          fun x => interior x (fun s => (b s).coeff 0) := by
+        funext x
+        rw [Koszul.koszulₗ_apply, evalForm_koszul, eq_C_of_totalDegree_eq_zero hb0, evalForm_C]
+        simp
+      rw [this]
+      refine interior_mem_whitneySpace fun s hs => ?_
+      change (b s).coeff 0 = 0
+      rw [hb.1 s hs]; simp
 
 end Feec.FiniteElement

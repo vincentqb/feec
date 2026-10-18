@@ -23,7 +23,8 @@ neighbourhood of an oriented affine `(k+1)`-simplex `p` in `ℝⁿ`,
 
 ## Main results
 
-* `setIntegral_refSimplex_partialDeriv`: `∫_{T̂} ∂ⱼ h = ∫_{T̂_m} h ∘ λ̂ - ∫_{T̂_m} h(· with 0 at j)`;
+* `setIntegral_refSimplex_partialDeriv`:
+  `∫_{T̂} ∂ⱼ h = ∫_{T̂_m} h ∘ λ̂ - ∫_{T̂_m} h(· with 0 at j)`;
 * `setIntegral_refSimplex_divergence`: **the divergence theorem on the reference simplex**;
 * `setIntegral_refSimplex_extDeriv`: Stokes' theorem on the reference simplex;
 * `simplexIntegral_extDeriv`: **Stokes' theorem on an affine simplex**, and

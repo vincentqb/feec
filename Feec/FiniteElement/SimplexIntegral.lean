@@ -79,7 +79,8 @@ theorem mem_refSimplex_iff {x : Fin k → ℝ} :
   simp only [Fin.forall_fin_succ, refBary_zero, refBary_succ, sub_nonneg]
   tauto
 
-theorem continuous_refBary_apply (i : Fin (k + 1)) : Continuous fun x : Fin k → ℝ => refBary x i := by
+theorem continuous_refBary_apply (i : Fin (k + 1)) :
+    Continuous fun x : Fin k → ℝ => refBary x i := by
   refine Fin.cases ?_ (fun j => ?_) i
   · simp only [refBary_zero]; fun_prop
   · simp only [refBary_succ]; fun_prop

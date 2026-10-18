@@ -30,7 +30,12 @@ multiplier** `ρ̂` (`EvenMultiplier`):
   explicitly, `∑_q |2πq|^m ‖(R_K u)(q)‖ ≤ (2K + 1)^{n/2} (2π √n K)^m ‖u‖`
   (`sum_norm_freq_pow_mul_le`). This sum bounds `sup_x ‖D^m (R_K u)(x)‖` for the trigonometric
   polynomial `Σ_q (R_K u)(q) e^{2πi q·x}`, giving the bound `C ε^{-m-n/2} ‖u‖`, `ε = 1/K`; only
-  the coefficient form is stated here (the parity model works on the Fourier side).
+  the coefficient form is stated here (the parity model works on the Fourier side). The bound
+  holds over the box for every even multiplier (`sum_norm_freq_pow_mul_smoothOp_le`);
+* the **Fejér multipliers** `fejerMultiplier K` (`ρ̂(q) = ∏ₐ (1 - |qₐ|/(K + 1))₊`, the product
+  Fejér kernel): `0 ≤ ρ̂ ≤ 1`, supported in the box, `→ 1` pointwise, hence the same strong
+  convergence and derivative bounds (`tendsto_smoothOp_fejerMultiplier`,
+  `smoothOp_fejerMultiplier_eq_zero`, `sum_norm_freq_pow_mul_fejer_le`).
 
 **Scope.** The identification of the parity complexes with the domain complexes
 `H̊Λ(Q)`, `HΛ(Q)` of `Feec.Domain.deRham` (restriction of the periodic extension) is not
@@ -63,7 +68,10 @@ variable {d : Type*} [Fintype d] [LinearOrder d]
 
 variable (d) in
 /-- An **even multiplier**: a real symbol `ρ̂ : ℤⁿ → ℝ` with `|ρ̂| ≤ 1`, invariant under every
-frequency reflection (the Fourier coefficients of a real, even probability kernel). -/
+frequency reflection. The Fourier coefficients of a real, even kernel of total variation `≤ 1`
+(e.g. an even probability density) are such a symbol; only these two properties are used. The
+instances below are the box multiplier (`boxMultiplier`, the signed Dirichlet kernel) and the
+Fejér multiplier (`fejerMultiplier`, `ρ̂ ≥ 0`). -/
 structure EvenMultiplier where
   /-- the symbol -/
   ρ : (d → ℤ) → ℝ
@@ -330,24 +338,25 @@ theorem norm_freq_le_of_mem_box {K : ℕ} {q : d → ℤ} (hq : q ∈ box d K) :
           Real.sqrt_sq (by positivity)]
         ring
 
-/-- **Derivative bounds of the low-pass smoothers**: the `m`-th derivative coefficient sum of
-`R_K u` satisfies `∑_q |2πq|^m ‖(R_K u)(q)‖ ≤ (2K + 1)^{n/2} (2π √n K)^m ‖u‖`; this sum bounds
-`sup ‖D^m (R_K u)‖` of the trigonometric polynomial `R_K u`, i.e. `C ε^{-m-n/2} ‖u‖` with
-`ε = 1/K` (Cauchy–Schwarz over the `(2K + 1)ⁿ` frequencies of the box). -/
-theorem sum_norm_freq_pow_mul_le (K k m : ℕ)
+/-- **Derivative bounds over the frequency box** for any even multiplier: the `m`-th derivative
+coefficient sum of `R u` over `‖q‖_∞ ≤ K` satisfies
+`∑_{q ∈ box K} |2πq|^m ‖(R u)(q)‖ ≤ (2K + 1)^{n/2} (2π √n K)^m ‖u‖` (Cauchy–Schwarz over the
+`(2K + 1)ⁿ` frequencies of the box). For multipliers supported in the box (`boxMultiplier`,
+`fejerMultiplier`) this is the full coefficient sum of the trigonometric polynomial `R u`. -/
+theorem sum_norm_freq_pow_mul_smoothOp_le (ρ : EvenMultiplier d) (K k m : ℕ)
     (u : Lp (Form ℂ d k) 2 (Measure.count : Measure (d → ℤ))) :
-    ∑ q ∈ box d K, ‖Fourier.Torus.freq q‖ ^ m * ‖smoothOp (boxMultiplier d K) k u q‖ ≤
+    ∑ q ∈ box d K, ‖Fourier.Torus.freq q‖ ^ m * ‖smoothOp ρ k u q‖ ≤
       √((2 * K + 1 : ℝ) ^ Fintype.card d) * (2 * Real.pi * √(Fintype.card d) * K) ^ m * ‖u‖ := by
   set B : ℝ := 2 * Real.pi * √(Fintype.card d) * K
   have hB : 0 ≤ B := by positivity
-  have hR : ∀ q ∈ box d K, ‖smoothOp (boxMultiplier d K) k u q‖ = ‖u q‖ := fun q hq => by
-    rw [smoothOp_apply, boxMultiplier_ρ_of_mem hq]; simp
-  have h1 : ∑ q ∈ box d K, ‖Fourier.Torus.freq q‖ ^ m * ‖smoothOp (boxMultiplier d K) k u q‖ ≤
+  have hR : ∀ q, ‖smoothOp ρ k u q‖ ≤ ‖u q‖ := fun q => by
+    rw [smoothOp_apply, norm_smul, Complex.norm_real, Real.norm_eq_abs]
+    exact mul_le_of_le_one_left (norm_nonneg _) (ρ.abs_le_one q)
+  have h1 : ∑ q ∈ box d K, ‖Fourier.Torus.freq q‖ ^ m * ‖smoothOp ρ k u q‖ ≤
       ∑ q ∈ box d K, B ^ m * ‖u q‖ := by
     refine Finset.sum_le_sum fun q hq => ?_
-    rw [hR q hq]
-    exact mul_le_mul_of_nonneg_right
-      (pow_le_pow_left₀ (norm_nonneg _) (norm_freq_le_of_mem_box hq) m) (norm_nonneg _)
+    exact mul_le_mul (pow_le_pow_left₀ (norm_nonneg _) (norm_freq_le_of_mem_box hq) m) (hR q)
+      (norm_nonneg _) (by positivity)
   -- Cauchy–Schwarz: `∑_box ‖u q‖ ≤ √#box · (∑ ‖u q‖²)^{1/2} ≤ √#box ‖u‖`
   have hcs : (∑ q ∈ box d K, ‖u q‖) ^ 2 ≤ ((box d K).card : ℝ) * ∑ q ∈ box d K, ‖u q‖ ^ 2 := by
     have := sq_sum_le_card_mul_sum_sq (s := box d K) (f := fun q => ‖u q‖)
@@ -367,5 +376,103 @@ theorem sum_norm_freq_pow_mul_le (K k m : ℕ)
     _ ≤ B ^ m * (√((2 * K + 1 : ℝ) ^ Fintype.card d) * ‖u‖) :=
         mul_le_mul_of_nonneg_left h2 (by positivity)
     _ = _ := by ring
+
+/-- **Derivative bounds of the low-pass smoothers**: the `m`-th derivative coefficient sum of
+`R_K u` satisfies `∑_q |2πq|^m ‖(R_K u)(q)‖ ≤ (2K + 1)^{n/2} (2π √n K)^m ‖u‖`; this sum bounds
+`sup ‖D^m (R_K u)‖` of the trigonometric polynomial `R_K u`, i.e. `C ε^{-m-n/2} ‖u‖` with
+`ε = 1/K` (Cauchy–Schwarz over the `(2K + 1)ⁿ` frequencies of the box). -/
+theorem sum_norm_freq_pow_mul_le (K k m : ℕ)
+    (u : Lp (Form ℂ d k) 2 (Measure.count : Measure (d → ℤ))) :
+    ∑ q ∈ box d K, ‖Fourier.Torus.freq q‖ ^ m * ‖smoothOp (boxMultiplier d K) k u q‖ ≤
+      √((2 * K + 1 : ℝ) ^ Fintype.card d) * (2 * Real.pi * √(Fintype.card d) * K) ^ m * ‖u‖ :=
+  sum_norm_freq_pow_mul_smoothOp_le _ K k m u
+
+/-! ### The Fejér multipliers -/
+
+/-- The one-dimensional Fejér weight `(1 - |z| / (K + 1))₊`. -/
+def fejerWeight (K : ℕ) (z : ℤ) : ℝ := max 0 (1 - |(z : ℝ)| / (K + 1))
+
+theorem fejerWeight_nonneg (K : ℕ) (z : ℤ) : 0 ≤ fejerWeight K z := le_max_left _ _
+
+theorem fejerWeight_le_one (K : ℕ) (z : ℤ) : fejerWeight K z ≤ 1 :=
+  max_le zero_le_one (sub_le_self _ (by positivity))
+
+theorem fejerWeight_eq_zero {K : ℕ} {z : ℤ} (hz : (K : ℤ) < |z|) : fejerWeight K z = 0 := by
+  refine max_eq_left ?_
+  have h : (K : ℝ) + 1 ≤ |(z : ℝ)| := by
+    have : (K : ℤ) + 1 ≤ |z| := hz
+    exact_mod_cast this
+  rw [sub_nonpos, one_le_div (by positivity)]
+  exact h
+
+theorem tendsto_fejerWeight (z : ℤ) : Tendsto (fun K => fejerWeight K z) atTop (𝓝 1) := by
+  have h : Tendsto (fun K : ℕ => |(z : ℝ)| / ((K : ℝ) + 1)) atTop (𝓝 0) :=
+    tendsto_const_nhds.div_atTop
+      (tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop)
+  have h2 := ((tendsto_const_nhds (x := (1 : ℝ))).sub h).max (tendsto_const_nhds (x := (0 : ℝ)))
+  simp only [sub_zero, max_eq_left zero_le_one] at h2
+  refine h2.congr fun K => ?_
+  rw [fejerWeight, max_comm]
+
+variable (d) in
+/-- **The Fejér multiplier** of order `K`: `ρ̂(q) = ∏ₐ (1 - |qₐ| / (K + 1))₊`, the Fourier
+coefficients of the product Fejér kernel (Cesàro means of the box multipliers), with
+`0 ≤ ρ̂ ≤ 1` and `ρ̂ = 0` off the box `‖q‖_∞ ≤ K`. -/
+def fejerMultiplier (K : ℕ) : EvenMultiplier d where
+  ρ q := ∏ a, fejerWeight K (q a)
+  abs_le_one q := by
+    rw [abs_of_nonneg (Finset.prod_nonneg fun a _ => fejerWeight_nonneg K _)]
+    exact Finset.prod_le_one₀ (fun a _ => fejerWeight_nonneg K _) fun a _ => fejerWeight_le_one K _
+  flipAt_invariant j q := by
+    refine Finset.prod_congr rfl fun a _ => ?_
+    simp only [flipAt]
+    split_ifs
+    · simp [fejerWeight, abs_neg]
+    · rfl
+
+theorem fejerMultiplier_ρ (K : ℕ) (q : d → ℤ) :
+    (fejerMultiplier d K).ρ q = ∏ a, fejerWeight K (q a) := rfl
+
+theorem fejerMultiplier_ρ_nonneg (K : ℕ) (q : d → ℤ) : 0 ≤ (fejerMultiplier d K).ρ q := by
+  rw [fejerMultiplier_ρ]
+  exact Finset.prod_nonneg fun a _ => fejerWeight_nonneg K _
+
+theorem fejerMultiplier_ρ_of_notMem {K : ℕ} {q : d → ℤ} (hq : q ∉ box d K) :
+    (fejerMultiplier d K).ρ q = 0 := by
+  rw [mem_box] at hq
+  push Not at hq
+  obtain ⟨a, ha⟩ := hq
+  rw [fejerMultiplier_ρ]
+  exact Finset.prod_eq_zero (Finset.mem_univ a) (fejerWeight_eq_zero ha)
+
+/-- `fejerMultiplier K → 1` pointwise as `K → ∞`. -/
+theorem tendsto_fejerMultiplier (q : d → ℤ) :
+    Tendsto (fun K => (fejerMultiplier d K).ρ q) atTop (𝓝 1) := by
+  have h := tendsto_finsetProd (Finset.univ : Finset d) fun a _ => tendsto_fejerWeight (q a)
+  simp only [Finset.prod_const_one] at h
+  simpa only [fejerMultiplier_ρ] using h
+
+/-- **Strong convergence of the Fejér smoothers**: `R_K u → u` in `L²` as `K → ∞`. -/
+theorem tendsto_smoothOp_fejerMultiplier (k : ℕ)
+    (u : Lp (Form ℂ d k) 2 (Measure.count : Measure (d → ℤ))) :
+    Tendsto (fun K => smoothOp (fejerMultiplier d K) k u) atTop (𝓝 u) :=
+  tendsto_smoothOp _ tendsto_fejerMultiplier k u
+
+/-- **The Fejér-smoothed field is a trigonometric polynomial**: its coefficients vanish off the
+box. -/
+theorem smoothOp_fejerMultiplier_eq_zero {K k : ℕ}
+    (u : Lp (Form ℂ d k) 2 (Measure.count : Measure (d → ℤ))) {q : d → ℤ} (hq : q ∉ box d K) :
+    smoothOp (fejerMultiplier d K) k u q = 0 := by
+  rw [smoothOp_apply, fejerMultiplier_ρ_of_notMem hq]
+  simp
+
+/-- **Derivative bounds of the Fejér smoothers**:
+`∑_q |2πq|^m ‖(R_K u)(q)‖ ≤ (2K + 1)^{n/2} (2π √n K)^m ‖u‖`, the sum running over the whole
+support of the coefficients of `R_K u` (`smoothOp_fejerMultiplier_eq_zero`). -/
+theorem sum_norm_freq_pow_mul_fejer_le (K k m : ℕ)
+    (u : Lp (Form ℂ d k) 2 (Measure.count : Measure (d → ℤ))) :
+    ∑ q ∈ box d K, ‖Fourier.Torus.freq q‖ ^ m * ‖smoothOp (fejerMultiplier d K) k u q‖ ≤
+      √((2 * K + 1 : ℝ) ^ Fintype.card d) * (2 * Real.pi * √(Fintype.card d) * K) ^ m * ‖u‖ :=
+  sum_norm_freq_pow_mul_smoothOp_le _ K k m u
 
 end Feec.Models.Cube.DeRham

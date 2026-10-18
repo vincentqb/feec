@@ -33,7 +33,9 @@ transported is the obstruction, which only involves the individual operators:
 
 ## Main results
 
-* `Witness`, `Witness.not_propagates`, `Witness.pull`, `witness_ball3`.
+* `Witness`, `Witness.not_propagates`, `Witness.curl_not_mem_closure`, `Witness.pull`,
+  `witness_ball3`.
+* **`not_dense_tsdT`**: on every ball, `L²(TSD) ∩ H̊(sym curl, T)` is not dense in `L²(TSD)`.
 * **`tsd_not_propagates`**: on every ball `{|x - c| < R}`, `R > 0`, the TSD datum
   `x₀ = (0, E₀ ∘ T, 0)` lies in `D(L) ∩ K`, the Hodge wave equation of `hessCurlMax` has a unique
   strong solution from it on every `[0, T]`, and it leaves `K`.
@@ -134,6 +136,21 @@ theorem Witness.not_propagates (h : Witness hΩ E C) :
     (fun y hy hK => h.inner_eq_zero y hy hK) hx ?_ T hT U hU0 hU'
   rw [inner_negL_ini _ hx h.mem_d₁]
   exact h.pair
+
+/-- **A witness refutes the density hypothesis in the magnetic slot**: `curl E ∈ L²(TSD)`
+(Lemma 3.5) but `curl E` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`, which `C` annihilates
+while `⟪curl E, C⟫ ≠ 0`. -/
+theorem Witness.curl_not_mem_closure (h : Witness hΩ E C) :
+    (hessCurlMax ℝ hΩ).d₁ ⟨E, h.mem_d₁⟩ ∈ tsdT Ω ∧
+      (hessCurlMax ℝ hΩ).d₁ ⟨E, h.mem_d₁⟩ ∉
+        closure ((tsdT Ω : Set (trSub ℝ Ω)) ∩ (hessCurlMax ℝ hΩ).d₁†.domain) := by
+  refine ⟨hessCurlMax_d₁_mem_tsdT hΩ _ h.mem_tsd, fun hmem => h.pair ?_⟩
+  have hsub : (tsdT Ω : Set (trSub ℝ Ω)) ∩ (hessCurlMax ℝ hΩ).d₁†.domain ⊆
+      (fun B => ⟪B, C⟫_ℝ) ⁻¹' {0} := by
+    rintro B ⟨hB, hD⟩
+    exact h.orth ⟨B, hD⟩ hB
+  exact closure_minimal hsub (isClosed_singleton.preimage (continuous_id.inner continuous_const))
+    hmem
 
 /-! ### Witnesses pull back along affine maps -/
 
@@ -254,5 +271,15 @@ theorem tsd_not_propagates (c : R3) {R : ℝ} (hR : 0 < R) :
               (⊥ : Submodule ℝ (L2 ℝ (ballE c R))) (tsdS (ballE c R)) (tsdT (ballE c R))))) :=
   ⟨(witness_ballE c hR).mem_tsd, (witness_ballE c hR).mem_domain, (witness_ballE c hR).mem_K,
     (witness_ballE c hR).not_propagates⟩
+
+/-- **The density hypothesis of Prop 4.19 fails on every ball**: on `{|x - c| < R}` the field
+`curl (E₀ ∘ T) ∈ L²(TSD)` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`, so that
+intersection is not dense in `L²(TSD)`. -/
+theorem not_dense_tsdT (c : R3) {R : ℝ} (hR : 0 < R) :
+    closure ((tsdT (ballE c R) : Set (trSub ℝ (ballE c R))) ∩
+      (hessCurlMax ℝ (isOpen_ballE c hR)).d₁†.domain) ≠ (tsdT (ballE c R) : Set _) := by
+  intro he
+  obtain ⟨h1, h2⟩ := (witness_ballE c hR).curl_not_mem_closure
+  exact h2 (by rw [he]; exact h1)
 
 end Feec.Counterexamples.EveryBallSymTSD

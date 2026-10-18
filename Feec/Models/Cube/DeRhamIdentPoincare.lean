@@ -588,4 +588,239 @@ theorem Hmin_hasCompactProperty : (Hmin n).HasCompactProperty :=
   Feec.HilbertComplex.hasCompactProperty_of_window (Hmin n) ι_rel (hlow _) (hhigh _)
     HQmin_hasCompactProperty
 
+/-! ### Constant forms and the harmonic forms -/
+
+/-- The coefficients of the constant form `dx_{s₀}`. -/
+def constFun {k : ℤ} (s₀ : formIdx n k) : formIdx n k → (Fin n → ℝ) → ℝ :=
+  fun s _ => if s = s₀ then 1 else 0
+
+theorem memLp_constFun {Ω : Set (Fin n → ℝ)} (hΩm : MeasurableSet Ω) (hb : Bornology.IsBounded Ω)
+    {k : ℤ} (s₀ : formIdx n k) (s : formIdx n k) : MemLp (constFun s₀ s) 2 (volume.restrict Ω) :=
+  Feec.Domain.memLp_of_continuous hΩm hb continuous_const
+
+/-- The constant form `dx_{s₀}` on a bounded measurable `Ω`. -/
+def constForm {Ω : Set (Fin n → ℝ)} (hΩm : MeasurableSet Ω) (hb : Bornology.IsBounded Ω) {k : ℤ}
+    (s₀ : formIdx n k) : L2F ℝ Ω (formIdx n k) :=
+  toL2F (memLp_constFun hΩm hb s₀)
+
+theorem constForm_ne_zero {Ω : Set (Fin n → ℝ)} (hΩm : MeasurableSet Ω)
+    (hb : Bornology.IsBounded Ω) (hpos : volume Ω ≠ 0) {k : ℤ} (s₀ : formIdx n k) :
+    constForm hΩm hb s₀ ≠ 0 := by
+  intro h
+  have h1 := congrArg (fun v : L2F ℝ Ω (formIdx n k) => (v s₀ : (Fin n → ℝ) → ℝ)) h
+  have hae : (fun _ : Fin n → ℝ => (1 : ℝ)) =ᵐ[volume.restrict Ω] 0 := by
+    have e1 := MemLp.coeFn_toLp (memLp_constFun hΩm hb s₀ s₀)
+    have e2 := Lp.coeFn_zero ℝ 2 (volume.restrict Ω)
+    simp only [PiLp.zero_apply] at h1
+    change ((memLp_constFun hΩm hb s₀ s₀).toLp _ : (Fin n → ℝ) → ℝ) = _ at h1
+    filter_upwards [e1, e2] with y hy1 hy2
+    have := congrFun h1 y
+    rw [hy1] at this
+    simp only [constFun, ite_true] at this
+    rw [this, hy2]
+  rw [Filter.EventuallyEq, ae_iff] at hae
+  simp only [Pi.zero_apply, one_ne_zero, not_false_eq_true, ofPred_true] at hae
+  rw [Measure.restrict_apply_univ] at hae
+  exact hpos hae
+
+theorem volume_Q_ne_zero : volume (Q (Fin n)) ≠ 0 :=
+  (isOpen_Q.measure_pos volume ⟨fun _ => 1 / 4, mem_Q.2 fun _ => by norm_num⟩).ne'
+
+theorem formExt_const_eq {k : ℤ} (s₀ : formIdx n k) (r : Finset (Fin n)) :
+    Feec.Domain.formExt (constFun s₀) r =
+      fun _ => Feec.Domain.formExt (fun s => if s = s₀ then (1 : ℝ) else 0) r := by
+  unfold Feec.Domain.formExt constFun
+  split_ifs <;> first | rfl | simp_all
+
+theorem extDerivOp_apply_const {k : ℤ} (s₀ : formIdx n k) (t : formIdx n (k + 1))
+    (y : Fin n → ℝ) :
+    (extDerivOp ℝ n k).apply (constFun s₀) t y = 0 := by
+  rw [Feec.Domain.extDerivOp_apply, Feec.Domain.extD]
+  refine Finset.sum_eq_zero fun j _ => ?_
+  rw [formExt_const_eq, fderiv_const_apply, _root_.zero_apply, mul_zero]
+
+theorem formalAdj_apply_const {k : ℤ} (s₀ : formIdx n (k + 1)) (r : formIdx n k)
+    (y : Fin n → ℝ) :
+    (extDerivOp ℝ n k).formalAdj.apply (constFun s₀) r y = 0 := by
+  rw [Feec.Domain.formalAdj_extDerivOp_apply, Feec.Domain.extDAdj, neg_eq_zero]
+  refine Finset.sum_eq_zero fun j _ => ?_
+  rw [formExt_const_eq, fderiv_const_apply, _root_.zero_apply, mul_zero]
+
+theorem toL2F_eq_zero {Ω : Set (Fin n → ℝ)} {ι : Type} [Fintype ι] {ψ : ι → (Fin n → ℝ) → ℝ}
+    (h0 : ∀ i y, ψ i y = 0) (hψ : ∀ i, MemLp (ψ i) 2 (volume.restrict Ω)) : toL2F hψ = 0 := by
+  refine PiLp.ext fun i => ?_
+  rw [PiLp.zero_apply]
+  refine Lp.ext ?_
+  filter_upwards [MemLp.coeFn_toLp (hψ i), Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with y h1 h2
+  change ((hψ i).toLp (ψ i) : (Fin n → ℝ) → ℝ) y = _
+  rw [h1, h2, h0]; rfl
+
+/-- The adjoint of an operator out of a zero space has full domain and vanishes. -/
+theorem mem_ker_adjoint_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace ℝ E] [CompleteSpace E] [Subsingleton E] [NormedAddCommGroup F]
+    [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (y : F) : y ∈ (T†).ker :=
+  mem_ker_iff.2 ⟨⟨y, mem_adjoint_domain_of_exists _ ⟨0, fun x => by
+    rw [Subsingleton.elim (x : E) 0, inner_zero_right, show T x = 0 by
+      rw [show x = 0 from Subsingleton.elim _ _, T.map_zero], inner_zero_right]⟩⟩,
+    rfl, Subsingleton.elim _ _⟩
+
+/-- **Operators into a zero space have full minimal domain**: test fields are dense. -/
+theorem minimal_domain_eq_top_of_isEmpty {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) {ι κ : Type}
+    [Fintype ι] [Fintype κ] [IsEmpty κ] (A : Feec.Domain.ConstCoeffOp (Fin n → ℝ) ℝ ι κ) :
+    (A.minimal Ω).domain = ⊤ := by
+  have : Subsingleton (L2F ℝ Ω κ) := subsingleton_L2F
+  refine eq_top_iff.2 fun u _ => ?_
+  set f : L2F ℝ Ω ι → L2F ℝ Ω ι × L2F ℝ Ω κ := fun v => (v, 0)
+  have hf : Continuous f := continuous_id.prodMk continuous_const
+  have hsub : f '' (Feec.Domain.testFieldSub ℝ Ω ι : Set (L2F ℝ Ω ι)) ⊆
+      (A.testGraph Ω : Set (L2F ℝ Ω ι × L2F ℝ Ω κ)) := by
+    rintro _ ⟨_, ⟨φ, hφ, rfl⟩, rfl⟩
+    exact ⟨φ, hφ, by simp only [f]; congr 1; exact Subsingleton.elim _ _⟩
+  have hu : f u ∈ closure (A.testGraph Ω : Set (L2F ℝ Ω ι × L2F ℝ Ω κ)) := by
+    refine closure_mono hsub (image_closure_subset_closure_image hf ⟨u, ?_, rfl⟩)
+    rw [(Feec.Domain.dense_testFieldSub hΩ ι).closure_eq]; exact mem_univ u
+  rw [← Submodule.topologicalClosure_coe, SetLike.mem_coe, ← A.minimal_graph hΩ] at hu
+  exact LinearPMap.mem_domain_of_mem_graph hu
+
+variable (n) in
+/-- The constant function `1`, a `0`-form on `Q`. -/
+abbrev oneQ : L2F ℝ (Q (Fin n)) (formIdx n 0) :=
+  constForm measurableSet_Q (isBounded_openCube _ _) ⟨∅, by simp⟩
+
+theorem oneQ_mem_harmonic : oneQ n ∈ (Hmax n).harmonic 0 := by
+  refine Submodule.mem_inf.2 ⟨?_, ?_⟩
+  · rw [(Hmax n).cycles_eq (show (ComplexShape.up ℤ).Rel (0 : ℤ) (0 + 1) from rfl),
+      Feec.Domain.deRham_maximalComplex_d isOpen_Q 0]
+    obtain ⟨h, e⟩ := Feec.Domain.extDerivOp_smooth_mem_maximal_domain (Ω := Q (Fin n)) isOpen_Q
+      (k := 0) (w := constFun (⟨∅, by simp⟩ : formIdx n 0))
+      (fun _ => contDiff_const) (memLp_constFun measurableSet_Q (isBounded_openCube _ _) _)
+      (fun t => Feec.Domain.memLp_of_continuous measurableSet_Q (isBounded_openCube _ _)
+        ((extDerivOp ℝ n 0).continuous_apply (Feec.Domain.extDerivOp_isOrderLE 0)
+          (fun _ => contDiff_const) t))
+    refine mem_ker_iff.2 ⟨⟨_, h⟩, rfl, ?_⟩
+    rw [e]
+    exact toL2F_eq_zero (fun t y => extDerivOp_apply_const _ t y) _
+  · rw [Feec.HilbertComplex.mem_ker_adjoint_prev_iff (Hmax n)
+      (show (ComplexShape.up ℤ).Rel (-1 : ℤ) 0 from rfl)]
+    have : Subsingleton (L2F ℝ (Q (Fin n)) (formIdx n (-1))) := hlow _ (-1) (by norm_num)
+    exact mem_ker_adjoint_of_subsingleton _ _
+
+/-- The constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` on `Q`, in a degree `idx = n` given by its index
+set. -/
+abbrev volQ {idx : ℤ} (h : ((#(Finset.univ : Finset (Fin n)) : ℕ) : ℤ) = idx) :
+    L2F ℝ (Q (Fin n)) (formIdx n idx) :=
+  constForm measurableSet_Q (isBounded_openCube _ _) ⟨Finset.univ, h⟩
+
+theorem volQ_mem_harmonic {idx : ℤ} (h : ((#(Finset.univ : Finset (Fin n)) : ℕ) : ℤ) = idx) :
+    volQ h ∈ (Hmin n).harmonic idx := by
+  obtain ⟨k, rfl⟩ : ∃ k, idx = k + 1 := ⟨idx - 1, by ring⟩
+  refine Submodule.mem_inf.2 ⟨?_, ?_⟩
+  · have hE : IsEmpty (formIdx n (k + 1 + 1)) := isEmpty_formIdx_of_gt (by
+      rw [← Finset.card_univ]; omega)
+    have hS : Subsingleton (L2F ℝ (Q (Fin n)) (formIdx n (k + 1 + 1))) := subsingleton_L2F
+    rw [(Hmin n).cycles_eq (show (ComplexShape.up ℤ).Rel (k + 1) (k + 1 + 1) from rfl),
+      Feec.Domain.deRham_minimalComplex_d isOpen_Q (k + 1)]
+    have hd : volQ h ∈ ((extDerivOp ℝ n (k + 1)).minimal (Q (Fin n))).domain := by
+      rw [minimal_domain_eq_top_of_isEmpty isOpen_Q]; exact Submodule.mem_top
+    exact mem_ker_iff.2 ⟨⟨_, hd⟩, rfl, Subsingleton.elim _ _⟩
+  · rw [Feec.HilbertComplex.mem_ker_adjoint_prev_iff (Hmin n)
+      (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl)]
+    have e1 := Feec.Domain.deRham_minimalComplex_d (𝕜 := ℝ) (n := n) isOpen_Q k
+    have e2 : ((Hmin n).d k (k + 1))† = (extDerivOp ℝ n k).formalAdj.maximal (Q (Fin n)) := by
+      rw [e1]; exact Feec.Domain.ConstCoeffOp.adjoint_minimal _
+    obtain ⟨hm, e⟩ := (extDerivOp ℝ n k).formalAdj.smooth_mem_maximal_domain (Ω := Q (Fin n))
+      isOpen_Q (Feec.Domain.formalAdj_extDerivOp_isOrderLE k)
+      (ψ := constFun (⟨Finset.univ, h⟩ : formIdx n (k + 1)))
+      (fun _ => contDiff_const) (memLp_constFun measurableSet_Q (isBounded_openCube _ _) _)
+      (fun r => Feec.Domain.memLp_of_continuous measurableSet_Q (isBounded_openCube _ _)
+        ((extDerivOp ℝ n k).formalAdj.continuous_apply
+          (Feec.Domain.formalAdj_extDerivOp_isOrderLE k) (fun _ => contDiff_const) r))
+    have hm' : volQ h ∈ (((Hmin n).d k (k + 1))†).domain := by rw [e2]; exact hm
+    refine mem_ker_iff.2 ⟨⟨_, hm'⟩, rfl, ?_⟩
+    rw [apply_eq_of_eq e2 ⟨_, hm'⟩ ⟨_, hm⟩ rfl, e]
+    exact toL2F_eq_zero (fun r y => formalAdj_apply_const _ r y) _
+
+theorem harmonic_eq_bot_of_window {H : HilbertComplex ℝ (ComplexShape.up ℤ)
+      fun k => L2F ℝ (Q (Fin n)) (formIdx n k)}
+    (hf : ∀ a b : Fin (Fintype.card (Fin n) + 1),
+      (ComplexShape.up ℤ).Rel ((a : ℕ) : ℤ) ((b : ℕ) : ℤ) →
+        (ComplexShape.window (Fintype.card (Fin n) + 1)).Rel a b)
+    {k : ℤ} (hW : ∀ (m : ℕ) (hm : m < Fintype.card (Fin n) + 1), (m : ℤ) = k →
+      (H.restrict (fun a : Fin (Fintype.card (Fin n) + 1) => ((a : ℕ) : ℤ)) hf).harmonic
+        ⟨m, hm⟩ = ⊥) : H.harmonic k = ⊥ := by
+  by_cases hout : k < 0 ∨ ((Fintype.card (Fin n) : ℕ) : ℤ) < k
+  · have : Subsingleton (L2F ℝ (Q (Fin n)) (formIdx n k)) :=
+      hout.elim (hlow _ k) (hhigh _ k)
+    exact Submodule.eq_bot_of_subsingleton
+  push Not at hout
+  obtain ⟨m, rfl⟩ := Int.eq_ofNat_of_zero_le hout.1
+  have hm : m < Fintype.card (Fin n) + 1 := by omega
+  rw [eq_bot_iff, ← hW m hm rfl]
+  exact Feec.HilbertComplex.harmonic_le_window H hf ⟨m, hm⟩
+
+/-- **No harmonic forms of `HΛ(Q)` in degrees `≠ 0`.** -/
+theorem Hmax_harmonic_eq_bot {k : ℤ} (hk : k ≠ 0) : (Hmax n).harmonic k = ⊥ :=
+  harmonic_eq_bot_of_window ι_rel fun m hm e =>
+    HQmax_harmonic_eq_bot (a := ⟨m, hm⟩) (by change m ≠ 0; omega)
+
+/-- **No harmonic forms of `H̊Λ(Q)` in degrees `≠ n`.** -/
+theorem Hmin_harmonic_eq_bot {k : ℤ} (hk : k ≠ n) : (Hmin n).harmonic k = ⊥ :=
+  harmonic_eq_bot_of_window ι_rel fun m hm e =>
+    HQmin_harmonic_eq_bot (a := ⟨m, hm⟩) (by
+      change m ≠ Fintype.card (Fin n)
+      rw [Fintype.card_fin]; omega)
+
+theorem Hmax_harmonic_zero_spec :
+    FiniteDimensional ℝ ((Hmax n).harmonic 0) ∧ Module.finrank ℝ ((Hmax n).harmonic 0) ≤ 1 := by
+  set a : Fin (Fintype.card (Fin n) + 1) := ⟨0, by omega⟩
+  have key : FiniteDimensional ℝ ((Hmax n).harmonic ((a : ℕ) : ℤ)) ∧
+      Module.finrank ℝ ((Hmax n).harmonic ((a : ℕ) : ℤ)) ≤ 1 := by
+    have hS : ∀ x ∈ (Hmax n).harmonic ((a : ℕ) : ℤ), ∀ m, m ≠ 0 →
+        (Jf false (a : ℕ) x : (Fin n → ℤ) → Form ℂ (Fin n) a) m = 0 := fun x hx =>
+      mem_HQmax_harmonic_iff.1 (Feec.HilbertComplex.harmonic_le_window (Hmax n) ι_rel a hx)
+    have h₀ : ∀ t : {s : Finset (Fin n) // #s = (a : ℕ)}, t = ⟨∅, by simp [a]⟩ := fun t =>
+      Subtype.ext (Finset.card_eq_zero.1 t.2)
+    exact ⟨finiteDimensional_of_zeroCoeff _ h₀ _ hS, finrank_le_one_of_zeroCoeff _ h₀ _ hS⟩
+  have e : ((a : ℕ) : ℤ) = 0 := rfl
+  rw [e] at key
+  exact key
+
+/-- **The harmonic `0`-forms of `HΛ(Q)` are the constants.** -/
+theorem Hmax_harmonic_zero : (Hmax n).harmonic 0 = ℝ ∙ oneQ n := by
+  obtain ⟨hfin, hle⟩ := Hmax_harmonic_zero_spec (n := n)
+  have hne : oneQ n ≠ 0 := constForm_ne_zero _ _ volume_Q_ne_zero _
+  have hpos : Module.finrank ℝ ((Hmax n).harmonic 0) ≠ 0 := fun h0 => by
+    have := (Submodule.finrank_eq_zero (S := (Hmax n).harmonic 0)).1 h0
+    exact hne (by simpa [this] using oneQ_mem_harmonic (n := n))
+  exact eq_span_singleton_of_mem_of_finrank_eq_one (by omega) oneQ_mem_harmonic hne
+
+theorem card_univ_eq (n : ℕ) : ((#(Finset.univ : Finset (Fin n)) : ℕ) : ℤ) = n := by
+  simp
+
+theorem Hmin_harmonic_top_spec :
+    FiniteDimensional ℝ ((Hmin n).harmonic n) ∧ Module.finrank ℝ ((Hmin n).harmonic n) ≤ 1 := by
+  set a : Fin (Fintype.card (Fin n) + 1) := ⟨Fintype.card (Fin n), by omega⟩
+  have key : FiniteDimensional ℝ ((Hmin n).harmonic ((a : ℕ) : ℤ)) ∧
+      Module.finrank ℝ ((Hmin n).harmonic ((a : ℕ) : ℤ)) ≤ 1 := by
+    have hS : ∀ x ∈ (Hmin n).harmonic ((a : ℕ) : ℤ), ∀ m, m ≠ 0 →
+        (Jf true (a : ℕ) x : (Fin n → ℤ) → Form ℂ (Fin n) a) m = 0 := fun x hx =>
+      mem_HQmin_harmonic_iff.1 (Feec.HilbertComplex.harmonic_le_window (Hmin n) ι_rel a hx)
+    have h₀ : ∀ t : {s : Finset (Fin n) // #s = (a : ℕ)},
+        t = ⟨Finset.univ, by simp [a]⟩ := fun t =>
+      Subtype.ext (Finset.eq_univ_of_card _ t.2)
+    exact ⟨finiteDimensional_of_zeroCoeff _ h₀ _ hS, finrank_le_one_of_zeroCoeff _ h₀ _ hS⟩
+  have e : ((a : ℕ) : ℤ) = (n : ℤ) := by simp [a]
+  rw [e] at key
+  exact key
+
+/-- **The harmonic `n`-forms of `H̊Λ(Q)` are the constant volume forms.** -/
+theorem Hmin_harmonic_top : (Hmin n).harmonic n = ℝ ∙ volQ (card_univ_eq n) := by
+  obtain ⟨hfin, hle⟩ := Hmin_harmonic_top_spec (n := n)
+  have hne : volQ (card_univ_eq n) ≠ 0 := constForm_ne_zero _ _ volume_Q_ne_zero _
+  have hmem := volQ_mem_harmonic (card_univ_eq n)
+  have hpos : Module.finrank ℝ ((Hmin n).harmonic n) ≠ 0 := fun h0 => by
+    have := (Submodule.finrank_eq_zero (S := (Hmin n).harmonic n)).1 h0
+    exact hne (by simpa [this] using hmem)
+  exact eq_span_singleton_of_mem_of_finrank_eq_one (by omega) hmem hne
+
 end Feec.Models.Cube.DeRhamIdent

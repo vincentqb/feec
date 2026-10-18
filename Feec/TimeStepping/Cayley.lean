@@ -460,4 +460,202 @@ theorem IsReducedCNStep.apply_eq_of_comp_eq_zero {d₁ : V₁ →ₗ[ℝ] V₂} 
 
 end ThreeField
 
+
+/-! ### Crank–Nicolson with inhomogeneous Dirichlet degrees of freedom (thesis Ch. 7, `fem4gr`) -/
+
+section DirichletCN
+
+open scoped RealInnerProductSpace
+
+variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
+  {V₀ : Submodule ℝ V} {A : V →ₗ[ℝ] V} {s : ℝ}
+
+/-- One **Crank–Nicolson step with prescribed boundary degrees of freedom**, as in `fem4gr`
+(`DirichletBC(...).apply` on the system `(M − ½ k A) u' = (M + ½ k A) u + ½ k (f' + f)`): on a
+finite element space `V` with the subspace `V₀` of fields with vanishing boundary DOFs, a step
+`u ↦ u'` with boundary values `g'` (any field with the prescribed boundary DOFs, e.g. an
+interpolant of the exact solution) and load `f` is
+`u' − g' ∈ V₀` and `⟪u' − u, v⟫ = s ⟪A (u' + u), v⟫ + ⟪f, v⟫` for all `v ∈ V₀`, with `s = Δt / 2`
+and `⟪A u, v⟫` the bilinear form of the scheme (for (4.14):
+`(grad σ, C) − (E, grad τ) + (curl E, D) − (B, curl C)`, skew on all of `V`). -/
+def IsDirichletCNStep (V₀ : Submodule ℝ V) (A : V →ₗ[ℝ] V) (s : ℝ) (f g' u u' : V) : Prop :=
+  u' - g' ∈ V₀ ∧ ∀ v ∈ V₀, ⟪u' - u, v⟫ = s * ⟪A (u' + u), v⟫ + ⟪f, v⟫
+
+omit [FiniteDimensional ℝ V] in
+/-- The coercivity behind well-posedness: if `s ⟪A w, w⟫ ≤ 0` on `V₀` (`A` skew on `V₀`, any `s`;
+or `A` dissipative on `V₀`, `s ≥ 0`), a `w ∈ V₀` with `⟪w, v⟫ = s ⟪A w, v⟫` for all `v ∈ V₀`
+vanishes. -/
+theorem eq_zero_of_forall_inner_eq (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤ 0) {w : V} (hw : w ∈ V₀)
+    (h : ∀ v ∈ V₀, ⟪w, v⟫ = s * ⟪A w, v⟫) : w = 0 := by
+  have h1 := h w hw
+  have h2 := hA w hw
+  exact real_inner_self_nonpos.1 (h1 ▸ h2)
+
+omit [FiniteDimensional ℝ V] in
+/-- **Uniqueness of the step**: two Dirichlet CN steps from `u` with the same boundary data and
+load agree. -/
+theorem IsDirichletCNStep.unique (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤ 0) {f g' u u₁ u₂ : V}
+    (h₁ : IsDirichletCNStep V₀ A s f g' u u₁) (h₂ : IsDirichletCNStep V₀ A s f g' u u₂) :
+    u₁ = u₂ := by
+  have hw : u₁ - u₂ ∈ V₀ := by
+    have := V₀.sub_mem h₁.1 h₂.1
+    rwa [sub_sub_sub_cancel_right] at this
+  have := eq_zero_of_forall_inner_eq hA hw fun v hv => by
+    have e1 := h₁.2 v hv
+    have e2 := h₂.2 v hv
+    have i1 : ⟪u₁ - u₂, v⟫ = ⟪u₁ - u, v⟫ - ⟪u₂ - u, v⟫ := by
+      rw [← inner_sub_left]; congr 1; abel
+    have i2 : A (u₁ - u₂) = A (u₁ + u) - A (u₂ + u) := by
+      rw [← map_sub]; congr 1; abel
+    rw [i1, i2, e1, e2, inner_sub_left]
+    ring
+  exact sub_eq_zero.1 this
+
+/-- **Well-posedness of the Crank–Nicolson scheme with inhomogeneous Dirichlet DOFs**: for every
+`u`, boundary data `g'` and load `f` there is exactly one step `u'`, provided `s ⟪A w, w⟫ ≤ 0` on
+`V₀` (in particular for the skew form of (4.14) and every time step). The linear system for the
+interior DOFs is `P₀ (1 − s A) w = P₀ r` on `V₀`, injective by `eq_zero_of_forall_inner_eq`, hence
+bijective. -/
+theorem existsUnique_isDirichletCNStep (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤ 0) (f g' u : V) :
+    ∃! u', IsDirichletCNStep V₀ A s f g' u u' := by
+  set Φ : V₀ →ₗ[ℝ] V₀ := V₀.orthogonalProjectionOnto.toLinearMap ∘ₗ
+    (LinearMap.id - s • A) ∘ₗ V₀.subtype
+  have hinj : Function.Injective Φ := by
+    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+    intro w hw
+    have hw0 : (w : V) = 0 := eq_zero_of_forall_inner_eq hA w.2 fun v hv => by
+      have := congrArg (fun z : V₀ => ⟪(z : V), v⟫) hw
+      simp only [Φ, LinearMap.comp_apply, ContinuousLinearMap.coe_coe, Submodule.coe_subtype,
+        LinearMap.sub_apply, LinearMap.id_apply, LinearMap.smul_apply, ZeroMemClass.coe_zero,
+        inner_zero_left] at this
+      have e := Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right (K := V₀) ⟨v, hv⟩
+        ((w : V) - s • A w)
+      rw [Submodule.coe_inner] at e
+      simp only at e
+      rw [e, inner_sub_left, real_inner_smul_left] at this
+      linarith
+    exact Subtype.ext hw0
+  have hsurj : Function.Surjective Φ := LinearMap.injective_iff_surjective.1 hinj
+  set r : V := u - g' + s • A (g' + u) + f
+  obtain ⟨w, hw⟩ := hsurj (V₀.orthogonalProjectionOnto r)
+  refine ⟨g' + w, ⟨by simp, fun v hv => ?_⟩, fun u'' h => h.unique hA ⟨by simp, fun v hv => ?_⟩⟩
+  · have := congrArg (fun z : V₀ => ⟪(z : V), v⟫) hw
+    simp only [Φ, LinearMap.comp_apply, ContinuousLinearMap.coe_coe, Submodule.coe_subtype,
+      LinearMap.sub_apply, LinearMap.id_apply, LinearMap.smul_apply] at this
+    have e1 := Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right (K := V₀) ⟨v, hv⟩
+      ((w : V) - s • A w)
+    have e2 := Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right (K := V₀) ⟨v, hv⟩ r
+    rw [Submodule.coe_inner] at e1 e2
+    simp only at e1 e2
+    rw [e1, e2] at this
+    simp only [r, inner_sub_left, inner_add_left, real_inner_smul_left, map_add] at this ⊢
+    linarith
+  · -- `g' + w` is itself a step, so `h.unique` applies
+    have := congrArg (fun z : V₀ => ⟪(z : V), v⟫) hw
+    simp only [Φ, LinearMap.comp_apply, ContinuousLinearMap.coe_coe, Submodule.coe_subtype,
+      LinearMap.sub_apply, LinearMap.id_apply, LinearMap.smul_apply] at this
+    have e1 := Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right (K := V₀) ⟨v, hv⟩
+      ((w : V) - s • A w)
+    have e2 := Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right (K := V₀) ⟨v, hv⟩ r
+    rw [Submodule.coe_inner] at e1 e2
+    simp only at e1 e2
+    rw [e1, e2] at this
+    simp only [r, inner_sub_left, inner_add_left, real_inner_smul_left, map_add] at this ⊢
+    linarith
+
+omit [FiniteDimensional ℝ V] in
+/-- **One-step error estimate against the consistency error**: let `u'` be a Dirichlet CN step
+from `u`, and let `ũ, ũ'` (e.g. interpolants of the exact solution at `tₙ, tₙ₊₁`) have the same
+boundary DOFs (`u − ũ, u' − ũ' ∈ V₀`) and satisfy the scheme up to the **consistency error** `τ`:
+`⟪ũ' − ũ, v⟫ = s ⟪A (ũ' + ũ), v⟫ + ⟪f, v⟫ + ⟪τ, v⟫` on `V₀`. Then
+`‖u' − ũ'‖ ≤ ‖u − ũ‖ + ‖τ‖`. -/
+theorem IsDirichletCNStep.norm_sub_le (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤ 0) {f g' u u' ũ ũ' τ : V}
+    (h : IsDirichletCNStep V₀ A s f g' u u') (hũ' : ũ' - g' ∈ V₀) (hu : u - ũ ∈ V₀)
+    (hτ : ∀ v ∈ V₀, ⟪ũ' - ũ, v⟫ = s * ⟪A (ũ' + ũ), v⟫ + ⟪f, v⟫ + ⟪τ, v⟫) :
+    ‖u' - ũ'‖ ≤ ‖u - ũ‖ + ‖τ‖ := by
+  set e := u - ũ
+  set e' := u' - ũ'
+  have he' : e' ∈ V₀ := by
+    have := V₀.sub_mem h.1 hũ'
+    rwa [sub_sub_sub_cancel_right] at this
+  have hw : e' + e ∈ V₀ := V₀.add_mem he' hu
+  have key : ⟪e' - e, e' + e⟫ = s * ⟪A (e' + e), e' + e⟫ - ⟪τ, e' + e⟫ := by
+    have e1 := h.2 _ hw
+    have e2 := hτ _ hw
+    have : e' - e = (u' - u) - (ũ' - ũ) := by simp only [e, e']; abel
+    rw [this, inner_sub_left, e1, e2, show e' + e = (u' + u) - (ũ' + ũ) by simp only [e, e']; abel,
+      map_sub, inner_sub_left]
+    ring
+  have hsq : ⟪e' - e, e' + e⟫ = ‖e'‖ ^ 2 - ‖e‖ ^ 2 := by
+    rw [inner_sub_left, inner_add_right, inner_add_right, real_inner_self_eq_norm_sq,
+      real_inner_self_eq_norm_sq, real_inner_comm e e']
+    ring
+  have hτb : -⟪τ, e' + e⟫ ≤ ‖τ‖ * (‖e'‖ + ‖e‖) := by
+    have := abs_real_inner_le_norm τ (e' + e)
+    have := norm_add_le e' e
+    nlinarith [abs_le.1 (abs_real_inner_le_norm τ (e' + e)), norm_nonneg τ]
+  have h1 : ‖e'‖ ^ 2 - ‖e‖ ^ 2 ≤ ‖τ‖ * (‖e'‖ + ‖e‖) := by
+    have := hA _ hw
+    linarith
+  have ha := norm_nonneg e'
+  have hb := norm_nonneg e
+  have hc := norm_nonneg τ
+  nlinarith
+
+omit [FiniteDimensional ℝ V] in
+/-- **Error estimate over `N` steps**: for Dirichlet CN iterates `uₙ` with boundary data `gₙ` and
+loads `fₙ`, and comparison fields `ũₙ` with the same boundary DOFs satisfying the scheme up to
+`τₙ`, `‖u_N − ũ_N‖ ≤ ‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖`. -/
+theorem norm_sub_le_sum_of_isDirichletCNStep (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤ 0)
+    {f g u ũ τ : ℕ → V} (h : ∀ n, IsDirichletCNStep V₀ A s (f n) (g (n + 1)) (u n) (u (n + 1)))
+    (hũ : ∀ n, ũ (n + 1) - g (n + 1) ∈ V₀) (h0 : u 0 - ũ 0 ∈ V₀)
+    (hτ : ∀ n, ∀ v ∈ V₀, ⟪ũ (n + 1) - ũ n, v⟫ =
+      s * ⟪A (ũ (n + 1) + ũ n), v⟫ + ⟪f n, v⟫ + ⟪τ n, v⟫) (N : ℕ) :
+    ‖u N - ũ N‖ ≤ ‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range N, ‖τ n‖ := by
+  have hmem : ∀ n, u n - ũ n ∈ V₀ := fun n => by
+    cases n with
+    | zero => exact h0
+    | succ n =>
+      have := V₀.sub_mem (h n).1 (hũ n)
+      rwa [sub_sub_sub_cancel_right] at this
+  induction N with
+  | zero => simp
+  | succ N ih =>
+    rw [Finset.sum_range_succ]
+    have := (h N).norm_sub_le hA (hũ N) (hmem N) (hτ N)
+    linarith
+
+omit [FiniteDimensional ℝ V] in
+/-- **Constraint residuals are bounded by the consistency error**: for any linear residual map
+`c` with `‖c x‖ ≤ C ‖x‖` (e.g. the skew and trace parts, `C = 1`, or a discrete divergence, whose
+`C` depends on the mesh), `‖c u_N‖ ≤ ‖c ũ_N‖ + C (‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖)`; if the comparison
+fields satisfy the constraint (`c ũ_N = 0`), the residual of the discrete solution is at most
+`C (‖u₀ − ũ₀‖ + Σ ‖τₙ‖)`. -/
+theorem norm_residual_le_of_isDirichletCNStep {W : Type*} [SeminormedAddCommGroup W]
+    [NormedSpace ℝ W] (c : V →ₗ[ℝ] W) {C : ℝ} (hc : ∀ x, ‖c x‖ ≤ C * ‖x‖) (hC : 0 ≤ C)
+    (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤ 0)
+    {f g u ũ τ : ℕ → V} (h : ∀ n, IsDirichletCNStep V₀ A s (f n) (g (n + 1)) (u n) (u (n + 1)))
+    (hũ : ∀ n, ũ (n + 1) - g (n + 1) ∈ V₀) (h0 : u 0 - ũ 0 ∈ V₀)
+    (hτ : ∀ n, ∀ v ∈ V₀, ⟪ũ (n + 1) - ũ n, v⟫ =
+      s * ⟪A (ũ (n + 1) + ũ n), v⟫ + ⟪f n, v⟫ + ⟪τ n, v⟫) (N : ℕ) :
+    ‖c (u N)‖ ≤ ‖c (ũ N)‖ + C * (‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range N, ‖τ n‖) := by
+  have e : c (u N) = c (ũ N) + c (u N - ũ N) := by rw [map_sub]; abel
+  rw [e]
+  have h1 := (hc (u N - ũ N)).trans (mul_le_mul_of_nonneg_left
+    (norm_sub_le_sum_of_isDirichletCNStep hA h hũ h0 hτ N) hC)
+  linarith [norm_add_le (c (ũ N)) (c (u N - ũ N))]
+
+omit [FiniteDimensional ℝ V] in
+/-- **Discrete energy identity** without boundary (`V₀ = V`, e.g. the periodic run) and without
+load: for `A` skew, `‖u'‖ = ‖u‖`. -/
+theorem IsDirichletCNStep.norm_eq_of_top (hA : ∀ w, ⟪A w, w⟫ = 0) {g' u u' : V}
+    (h : IsDirichletCNStep ⊤ A s 0 g' u u') : ‖u'‖ = ‖u‖ := by
+  have e := h.2 (u' + u) Submodule.mem_top
+  rw [hA, mul_zero, inner_zero_left, add_zero, inner_sub_left, inner_add_right, inner_add_right,
+    real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq, real_inner_comm u u'] at e
+  have h2 : ‖u'‖ ^ 2 = ‖u‖ ^ 2 := by linarith
+  exact (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 h2
+
+end DirichletCN
+
 end Feec.TimeStepping

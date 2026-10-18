@@ -45,8 +45,10 @@ the elementwise inverse estimates behind it are not formalized), every consequen
   finite-dimensional and approximated by the Whitney spaces;
 * for the Hodge wave equation of any window, the Whitney windows are approximating as soon as they
   are dense (`FEM.isApproximating_window`), hence convergence of the semi-discrete solutions
-  (`FEM.exists_tendstoUniformlyOn_window`), with the error bound of
-  `Feec.HodgeWave.norm_sub_le_of_semidiscrete` for each `N`; **Maxwell's equations** (perfect
+  (`FEM.exists_tendstoUniformlyOn_window`), and the rate `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + t - t₀)² K h_N`
+  when the solution and its time derivative are approximable at rate `h`
+  (`FEM.norm_sub_le_meshSize_window`, from `Feec.HodgeWave.norm_sub_le_of_semidiscrete`, which needs
+  no smoothed projection); **Maxwell's equations** (perfect
   magnetic conductor, `n = 3`, window `HΛ⁰ → HΛ¹ → L²Λ²`) are the instance
   `FEM.maxwell_exists_tendstoUniformlyOn`.
 
@@ -326,6 +328,74 @@ instance (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)] (a : ℤ) (m
 
 end Feec.HilbertComplex.Subcomplex
 
+/-! ## Rate of the semi-discrete Hodge wave equation on a subcomplex -/
+
+namespace Feec.HilbertComplex.Subcomplex
+
+open _root_.Feec.HodgeWave
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  {H : HilbertComplex 𝕜 c W}
+
+/-- **Rate of the semi-discrete Hodge wave equation on a finite-dimensional subcomplex**
+([QuennevilleBelair2015], Thm 4.14): if `ξ` is a weak solution in `C¹([t₀, t₁]; Γ(𝐝))`, `ξₕ` the
+semi-discrete solution in `S` started at the elliptic projection `Pₕ ξ(t₀)`, and `ξ(s)`, `ξ'(s)`
+are within `η` of `S` in the graph norm on `[t₀, t₁]`, then
+`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² η` with `A = 1 + √12 ‖a + m‖` independent of `S`
+(`Feec.HodgeWave.norm_sub_ellipticProjection_le`, `Feec.HodgeWave.IsGraphSolution.norm_sub_le`). -/
+theorem norm_sub_le_of_approx (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
+    {t₀ t₁ : ℝ} {ξ ξ' ξh ξh' : ℝ → H.totalD.GraphSpace}
+    (hξ : IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
+    (hξh : IsSemidiscreteSolution S.graphSub (Set.Icc t₀ t₁) ξh ξh')
+    (h0 : ξh t₀ = ellipticProjection S.graphSub (ξ t₀)) {η : ℝ}
+    (happ : ∀ s ∈ Set.Icc t₀ t₁, (∃ w ∈ S.graphSub, ‖ξ s - w‖ ≤ η) ∧
+      (∃ w ∈ S.graphSub, ‖ξ' s - w‖ ≤ η))
+    {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
+    ‖H.totalD.graphFst (ξ t - ξh t)‖ ≤
+      (1 + ‖shiftedForm H.totalD‖ / ((1 / 2) / √3)) * (1 + (t - t₀)) ^ 2 * η := by
+  set A : ℝ := 1 + ‖shiftedForm H.totalD‖ / ((1 / 2) / √3) with hAdef
+  have hA : 0 ≤ A := by positivity
+  have hP : ∀ ζ : H.totalD.GraphSpace, (∃ w ∈ S.graphSub, ‖ζ - w‖ ≤ η) →
+      ‖H.totalD.graphFst (ellipticProjection S.graphSub ζ - ζ)‖ ≤ A * η := by
+    rintro ζ ⟨w, hw, hζw⟩
+    refine (norm_graphFst_le _).trans ?_
+    rw [norm_sub_rev]
+    exact (norm_sub_ellipticProjection_le H.totalD_mapsTo H.totalD_comp_totalD
+      S.graphSub (fun _ hv => S.graphD_mem_graphSub hv) ζ hw).trans
+      (mul_le_mul_of_nonneg_left hζw hA)
+  have hb := hξ.norm_sub_le hξh t ht
+  have hz : ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ t₀) - ξh t₀)‖ = 0 := by
+    rw [h0, sub_self (ellipticProjection S.graphSub (ξ t₀) : H.totalD.GraphSpace)]
+    exact norm_eq_zero.2 (H.totalD.graphFst.map_zero)
+  rw [hz, zero_add] at hb
+  have ht₀ : t₀ ∈ Set.Icc t₀ t₁ := ⟨le_rfl, ht.1.trans ht.2⟩
+  have e1 := hP _ (happ t ht).1
+  have e0 := hP _ (happ t₀ ht₀).1
+  have hτ : 0 ≤ t - t₀ := sub_nonneg.2 ht.1
+  have hint : ∫ s in t₀..t, ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ' s) - ξ' s)‖ ≤
+      (t - t₀) * (A * η) := by
+    have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := t₀) (b := t)
+      (C := A * η)
+      (f := fun s => ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ' s) - ξ' s)‖)
+      fun s hs => by
+        rw [Set.uIoc_of_le ht.1] at hs
+        rw [norm_norm]
+        exact hP _ (happ s ⟨hs.1.le, hs.2.trans ht.2⟩).2
+    rw [abs_of_nonneg hτ, mul_comm] at h
+    exact (le_abs_self _).trans h
+  have i1 : (t - t₀) * ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ t₀) - ξ t₀)‖ ≤
+      (t - t₀) * (A * η) := mul_le_mul_of_nonneg_left e0 hτ
+  have i2 : (1 + (t - t₀)) *
+      ∫ s in t₀..t, ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ' s) - ξ' s)‖ ≤
+      (1 + (t - t₀)) * ((t - t₀) * (A * η)) := mul_le_mul_of_nonneg_left hint (by linarith)
+  calc _ ≤ _ := hb
+    _ ≤ A * η + (t - t₀) * (A * η) + (1 + (t - t₀)) * ((t - t₀) * (A * η)) := by linarith
+    _ = A * (1 + (t - t₀)) ^ 2 * η := by ring
+
+end Feec.HilbertComplex.Subcomplex
+
 /-! ## Freudenthal meshes of the cube `(0, ½)ⁿ` -/
 
 namespace Feec.Models.Cube.FEM
@@ -410,11 +480,12 @@ def smoothed (N : ℕ) (p : SmoothingParam (Fin n → ℝ)) (hp : p.IsMaximal (c
 variable (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
 
 /-- **The estimates of the smoothed canonical interpolants** ([AFW2010], §5.4;
-[ChristiansenWinther2008]): for maximal-family smoothing parameters `p N` (factor `1 - δ h_N`,
-bump radius `≈ δ h_N`), the smoothed interpolants `Q_N = Π_h R` of the Whitney complexes are
-bounded in `L²` uniformly in `N`, and close to the identity on `Vₕ`:
-`‖v - Q_N v‖ ≤ ½ ‖v‖`. In the references these follow, for `δ` small, from elementwise inverse
-estimates for polynomials and the interpolation error of `Π_h` on smoothed fields; they are not
+[ChristiansenWinther2008]): for maximal-family smoothing parameters `p N` (any
+`IsMaximal` parameters; the structure imposes no scaling), the smoothed interpolants
+`Q_N = Π_h R` of the Whitney complexes are bounded in `L²` uniformly in `N`, and close to the
+identity on `Vₕ`: `‖v - Q_N v‖ ≤ ½ ‖v‖`. In the references these are obtained with the scaling
+factor `1 - δ h_N`, bump radius `≈ δ h_N` and `δ` small, from elementwise inverse estimates for
+polynomials and the interpolation error of `Π_h` on smoothed fields; they are not
 formalized here and are the hypotheses of this section. The maps `Q_N` themselves are the
 concrete smoothed interpolants `smoothed n N (p N)`, and their commutation with `d` is proved
 (`Feec.FiniteElement.LocalElement.smoothedCommutingMap`). The constant is normalized by
@@ -634,6 +705,30 @@ theorem exists_tendstoUniformlyOn_window (a : ℤ) (m : ℕ)
         (fun t => ((complex n).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
   HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
     (isApproximating_window n a m hd) t₀ t₁ x
+
+/-- **`O(h)` error of the semi-discrete Hodge wave equation on the cube meshes**
+([QuennevilleBelair2015], Thm 4.14; rate as in [Arnold2018], Ch. 7): for a weak solution `ξ` in
+`C¹([t₀, t₁]; Γ(𝐝))` of the Hodge wave equation of the window and the semi-discrete Whitney
+solutions `ξₕ` started at `Pₕ ξ(t₀)`, if `ξ(s)` and `ξ'(s)` are approximated in the graph norm by
+the Whitney window to order `K h_N` on `[t₀, t₁]` (for smooth solutions, the interpolation error
+of the Whitney interpolant), then `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² K h_N` with `A` independent
+of `N` (`Feec.HilbertComplex.Subcomplex.norm_sub_le_of_approx`). -/
+theorem norm_sub_le_meshSize_window (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
+    {ξ ξ' : ℝ → ((complex n).window a m).totalD.GraphSpace}
+    (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
+    {ξh ξh' : ℕ → ℝ → ((complex n).window a m).totalD.GraphSpace}
+    (hξh : ∀ N, HodgeWave.IsSemidiscreteSolution (((whitney n N).window a m).graphSub)
+      (Set.Icc t₀ t₁) (ξh N) (ξh' N))
+    (h0 : ∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((whitney n N).window a m).graphSub) (ξ t₀))
+    {K : ℝ}
+    (happ : ∀ N, ∀ s ∈ Set.Icc t₀ t₁,
+      (∃ w ∈ ((whitney n N).window a m).graphSub, ‖ξ s - w‖ ≤ K * meshSize N) ∧
+      (∃ w ∈ ((whitney n N).window a m).graphSub, ‖ξ' s - w‖ ≤ K * meshSize N))
+    (N : ℕ) {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
+    ‖((complex n).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
+      (1 + ‖HodgeWave.shiftedForm ((complex n).window a m).totalD‖ / ((1 / 2) / √3)) *
+        (1 + (t - t₀)) ^ 2 * (K * meshSize N) :=
+  ((whitney n N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (happ N) ht
 
 /-- **Maxwell's equations on cube meshes** (perfect magnetic conductor): for `n = 3` the window
 `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` is the PMC Maxwell complex `H¹ → H(curl) → L²` in form coordinates

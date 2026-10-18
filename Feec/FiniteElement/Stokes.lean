@@ -366,4 +366,101 @@ theorem simplexIntegral_extDeriv_faceOpposite (σ : Affine.Simplex ℝ (Fin n �
     rfl
   rw [this]
 
+/-! ### The divergence theorem on an affine `n`-simplex -/
+
+/-- The flux form `ι_F vol = Σⱼ (-1)ʲ Fⱼ dx₀ ∧ ⋯ ∧ dxⱼ^ ∧ ⋯ ∧ dxₘ` of a vector field `F` on
+`ℝ^{m+1}`: its integral over an oriented face is the flux of `F` through the face. -/
+def fluxForm (F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ) : FormField (m + 1) :=
+  fun x s => ∑ j, if s = univ.erase j then (-1) ^ (j : ℕ) * F j x else 0
+
+theorem fluxForm_apply_erase (F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ) (x : Fin (m + 1) → ℝ)
+    (j : Fin (m + 1)) : fluxForm F x (univ.erase j) = (-1) ^ (j : ℕ) * F j x := by
+  rw [fluxForm, sum_eq_single j (fun j' _ hj' => ?_) (by simp)]
+  · simp
+  · have : univ.erase j ≠ univ.erase j' := by
+      intro h
+      have h' : j' ∈ univ.erase j := mem_erase.2 ⟨hj', mem_univ _⟩
+      rw [h] at h'
+      simp at h'
+    simp [this]
+
+theorem contDiffOn_fluxForm {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ} {U : Set (Fin (m + 1) → ℝ)}
+    {r : WithTop ℕ∞} (hF : ∀ j, ContDiffOn ℝ r (F j) U) : ContDiffOn ℝ r (fluxForm F) U := by
+  rw [contDiffOn_pi]
+  intro s
+  refine ContDiffOn.sum fun j _ => ?_
+  split_ifs
+  · exact contDiffOn_const.mul (hF j)
+  · exact contDiffOn_const
+
+/-- `d (ι_F vol) = div F vol`. -/
+theorem extDeriv_fluxForm_apply_univ {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ}
+    {x : Fin (m + 1) → ℝ} (hF : ∀ j, DifferentiableAt ℝ (F j) x) :
+    extDeriv (fluxForm F) x univ = ∑ j, partialDeriv j (F j) x := by
+  rw [extDeriv_apply]
+  refine sum_congr rfl fun j _ => ?_
+  have : (fun y => fluxForm F y (univ.erase j)) = fun y => (-1 : ℝ) ^ (j : ℕ) • F j y := by
+    funext y; rw [fluxForm_apply_erase, smul_eq_mul]
+  rw [this, partialDeriv_const_smul (hF j), sgn_univ, smul_eq_mul, ← mul_assoc, ← pow_add,
+    ← two_mul, pow_mul]
+  simp
+
+/-- **The divergence theorem on an affine `n`-simplex** `T = F_p(T̂)` of `ℝⁿ` (`n = m + 1`): for a
+vector field `F` of class `C¹` on a neighbourhood of `T`,
+`det B_p · ∫_T div F = |det B_p| · Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ι_F vol`. For a positively oriented simplex
+(`det B_p > 0`, see `setIntegral_image_simplexMap_divergence_of_pos`) this is
+`∫_T div F = Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ι_F vol`. -/
+theorem setIntegral_image_simplexMap_divergence (p : Fin (m + 2) → Fin (m + 1) → ℝ)
+    (hp : (Matrix.of (simplexMatrix p)).det ≠ 0) {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ}
+    {U : Set (Fin (m + 1) → ℝ)} (hU : IsOpen U) (hpU : simplexMap p '' refSimplex (m + 1) ⊆ U)
+    (hF : ∀ j, ContDiffOn ℝ 1 (F j) U) :
+    (Matrix.of (simplexMatrix p)).det *
+        ∫ x in simplexMap p '' refSimplex (m + 1), ∑ j, partialDeriv j (F j) x =
+      |(Matrix.of (simplexMatrix p)).det| *
+        ∑ i : Fin (m + 2), (-1) ^ (i : ℕ) * simplexIntegral (p ∘ i.succAbove) (fluxForm F) := by
+  set B := simplexMatrix p
+  set L := (Matrix.toLin' (Matrix.of B)).toContinuousLinearMap
+  have hTU : refSimplex (m + 1) ⊆ simplexMap p ⁻¹' U := fun x hx => hpU ⟨x, hx, rfl⟩
+  -- the change of variables `x = F_p(x̂)`
+  have hinj : Set.InjOn (simplexMap p) (refSimplex (m + 1)) := by
+    intro x _ y _ hxy
+    have h1 : Matrix.mulVec (Matrix.of B) x = Matrix.mulVec (Matrix.of B) y := by
+      funext i
+      have hi := congrFun hxy i
+      simp only [simplexMap, affine_apply, add_left_inj] at hi
+      simpa [Matrix.mulVec, dotProduct] using hi
+    exact Matrix.mulVec_injective_iff_isUnit.2 ((Matrix.isUnit_iff_isUnit_det _).2 hp.isUnit) h1
+  have hderiv : ∀ x ∈ refSimplex (m + 1), HasFDerivWithinAt (simplexMap p) L
+      (refSimplex (m + 1)) x := fun x _ => (hasFDerivAt_affine B (p 0) x).hasFDerivWithinAt
+  have hdetL : L.det = (Matrix.of B).det := by
+    rw [ContinuousLinearMap.det, LinearMap.coe_toContinuousLinearMap, LinearMap.det_toLin']
+  have hcov := integral_image_eq_integral_abs_det_fderiv_smul volume
+    (measurableSet_refSimplex _) hderiv hinj (fun x => ∑ j, partialDeriv j (F j) x)
+  simp only [hdetL, smul_eq_mul] at hcov
+  -- the integral of `d (ι_F vol)` over `p`
+  have hstokes := simplexIntegral_extDeriv p hU hpU (contDiffOn_fluxForm hF)
+  have hleft : simplexIntegral p (extDeriv (fluxForm F)) = (Matrix.of B).det *
+      ∫ x in refSimplex (m + 1), ∑ j, partialDeriv j (F j) (simplexMap p x) := by
+    rw [simplexIntegral, ← integral_const_mul]
+    refine setIntegral_congr_fun (measurableSet_refSimplex _) fun x hx => ?_
+    rw [affinePullback_apply, pullback_apply_univ]
+    congr 1
+    refine extDeriv_fluxForm_apply_univ fun j => ?_
+    exact ((hF j).differentiableOn one_ne_zero _ (hTU hx)).differentiableAt
+      (hU.mem_nhds (hTU hx))
+  rw [hcov, integral_const_mul, ← hstokes, hleft]
+  ring
+
+/-- **The divergence theorem on a positively oriented affine `n`-simplex**:
+`∫_T div F = Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ι_F vol`. -/
+theorem setIntegral_image_simplexMap_divergence_of_pos (p : Fin (m + 2) → Fin (m + 1) → ℝ)
+    (hp : 0 < (Matrix.of (simplexMatrix p)).det) {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ}
+    {U : Set (Fin (m + 1) → ℝ)} (hU : IsOpen U) (hpU : simplexMap p '' refSimplex (m + 1) ⊆ U)
+    (hF : ∀ j, ContDiffOn ℝ 1 (F j) U) :
+    ∫ x in simplexMap p '' refSimplex (m + 1), ∑ j, partialDeriv j (F j) x =
+      ∑ i : Fin (m + 2), (-1) ^ (i : ℕ) * simplexIntegral (p ∘ i.succAbove) (fluxForm F) := by
+  have h := setIntegral_image_simplexMap_divergence p hp.ne' hU hpU hF
+  rw [abs_of_pos hp] at h
+  exact mul_left_cancel₀ hp.ne' h
+
 end Feec.FiniteElement

@@ -32,7 +32,7 @@ abbrev Face.dim (f : Face n) : ℕ := f.1
 def Face.emb (f : Face n) : Fin (f.dim + 1) ↪o Fin (n + 1) := f.2.1.orderEmbOfFin f.2.2
 
 /-- The face spanned by the vertices `e(0) < ⋯ < e(m)`. -/
-def Face.ofEmb {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) : Face n :=
+abbrev Face.ofEmb {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) : Face n :=
   ⟨⟨m, by have := Fintype.card_le_of_injective e e.injective; simp at this; omega⟩,
     ⟨univ.map e.toEmbedding, by simp⟩⟩
 
@@ -41,7 +41,7 @@ def Face.ofEmb {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) : Face n :=
 
 theorem Face.emb_ofEmb {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) : (Face.ofEmb e).emb = e := by
   refine DFunLike.ext' (orderEmbOfFin_unique _ (fun x => ?_) e.strictMono).symm
-  simp [Face.ofEmb]
+  simp
 
 /-- `Σ_f g(dim f) = Σ_m (n+1 choose m+1) g(m)`. -/
 theorem sum_face_eq {M : Type*} [AddCommMonoid M] (g : ℕ → M) :
@@ -538,7 +538,7 @@ theorem isUnisolvent_localDofMinus (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} 
 theorem Face.ofEmb_trans_subset (f : Face n) {m : ℕ} (e' : Fin (m + 1) ↪o Fin (f.dim + 1)) :
     (Face.ofEmb (e'.trans f.emb)).2.1 ⊆ f.2.1 := by
   intro x hx
-  simp only [Face.ofEmb, mem_map, mem_univ, true_and, RelEmbedding.coe_toEmbedding,
+  simp only [mem_map, mem_univ, true_and, RelEmbedding.coe_toEmbedding,
     RelEmbedding.coe_trans, Function.comp_apply] at hx
   obtain ⟨y, rfl⟩ := hx
   exact orderEmbOfFin_mem _ _ _
@@ -814,5 +814,214 @@ theorem extDeriv_mem_testSpaceMinus {r k M : ℕ} {η : FormField (M + 1)}
       exact Submodule.zero_mem _
   · rw [testSpaceMinus_eq_bot hc, Submodule.mem_bot] at h
     rw [h, extDeriv_zero_field]; exact Submodule.zero_mem _
+
+/-! ### The canonical interpolants and the commuting property -/
+
+variable (n) in
+/-- Form fields of form degree `k`. -/
+def degForms (k : ℕ) : Submodule ℝ (FormField n) where
+  carrier := {ω | ∀ x, IsDeg k (ω x)}
+  zero_mem' x s _ := rfl
+  add_mem' ha hb x s hs := by simp [ha x s hs, hb x s hs]
+  smul_mem' c ω h x s hs := by simp [h x s hs]
+
+variable (n) in
+/-- Continuous `k`-forms. -/
+def contDegForms (k : ℕ) : Submodule ℝ (FormField n) := contForms n ⊓ degForms n k
+
+variable (n) in
+/-- `C¹` `k`-forms. -/
+def c1DegForms (k : ℕ) : Submodule ℝ (FormField n) := c1Forms n ⊓ degForms n k
+
+theorem c1DegForms_le_contDegForms (k : ℕ) : c1DegForms n k ≤ contDegForms n k :=
+  inf_le_inf_right _ c1Forms_le_contForms
+
+/-- The exterior derivative `d : C¹Λᵏ → C⁰Λ^{k+1}`. -/
+def extDerivC1Deg (k : ℕ) : c1DegForms n k →ₗ[ℝ] contDegForms n (k + 1) where
+  toFun ω := ⟨extDeriv ω, continuous_extDeriv (mem_c1Forms.1 ω.2.1),
+    fun x => IsDeg.extDeriv ω.2.2 x⟩
+  map_add' ω η := Subtype.ext (funext fun x => extDeriv_add_apply
+    ((ContDiff.differentiable (mem_c1Forms.1 ω.2.1) one_ne_zero) x)
+    ((ContDiff.differentiable (mem_c1Forms.1 η.2.1) one_ne_zero) x))
+  map_smul' c ω := Subtype.ext (funext fun x => extDeriv_smul_const_apply c
+    ((ContDiff.differentiable (mem_c1Forms.1 ω.2.1) one_ne_zero) x))
+
+theorem polySpace_le_c1DegForms (r k : ℕ) : polySpace n r k ≤ c1DegForms n k := by
+  rintro _ ⟨Ω, hΩ, rfl⟩
+  exact ⟨mem_c1Forms.2 ((contDiff_evalForm Ω (r := 1))), fun x s hs => by
+    rw [evalForm_apply, hΩ.1 s hs, map_zero]⟩
+
+theorem polyMinusSpace_le_c1DegForms (r k : ℕ) : polyMinusSpace n r k ≤ c1DegForms n k := by
+  rintro _ ⟨Ω, hΩ, rfl⟩
+  exact ⟨mem_c1Forms.2 ((contDiff_evalForm Ω (r := 1))), fun x s hs => by
+    rw [evalForm_apply, (Koszul.polyFormMinus_le_polyForm_succ r k hΩ).1 s hs, map_zero]⟩
+
+theorem localPolySpace_le_c1DegForms (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
+    localPolySpace p r k ≤ c1DegForms n k := by
+  rw [localPolySpace_eq hp]; exact polySpace_le_c1DegForms r k
+
+theorem localPolyMinusSpace_le_c1DegForms (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
+    localPolyMinusSpace p r k ≤ c1DegForms n k := by
+  rw [localPolyMinusSpace_eq hp]; exact polyMinusSpace_le_c1DegForms r k
+
+theorem localPolySpace_le_contDegForms (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
+    localPolySpace p r k ≤ contDegForms n k :=
+  (localPolySpace_le_c1DegForms hp r k).trans (c1DegForms_le_contDegForms k)
+
+theorem localPolyMinusSpace_le_contDegForms (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
+    localPolyMinusSpace p r k ≤ contDegForms n k :=
+  (localPolyMinusSpace_le_c1DegForms hp r k).trans (c1DegForms_le_contDegForms k)
+
+theorem differentiable_of_mem_c1DegForms {k : ℕ} {ω : FormField n} (h : ω ∈ c1DegForms n k) :
+    Differentiable ℝ ω :=
+  ContDiff.differentiable (mem_c1Forms.1 h.1) one_ne_zero
+
+/-- `d : P_{r+1}Λᵏ(T) → P_rΛ^{k+1}(T)`. -/
+def extDerivLocal (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
+    localPolySpace p (r + 1) k →ₗ[ℝ] localPolySpace p r (k + 1) where
+  toFun ω := ⟨extDeriv ω, by
+    have hω : (ω : FormField n) ∈ polySpace n (r + 1) k := by
+      rw [← localPolySpace_eq hp]; exact ω.2
+    rw [localPolySpace_eq hp]
+    simpa using extDeriv_mem_polySpace hω⟩
+  map_add' ω η := Subtype.ext (funext fun x => extDeriv_add_apply
+    (differentiable_of_mem_c1DegForms (localPolySpace_le_c1DegForms hp _ k ω.2) x)
+    (differentiable_of_mem_c1DegForms (localPolySpace_le_c1DegForms hp _ k η.2) x))
+  map_smul' c ω := Subtype.ext (funext fun x => extDeriv_smul_const_apply c
+    (differentiable_of_mem_c1DegForms (localPolySpace_le_c1DegForms hp _ k ω.2) x))
+
+/-- `d : P_r⁻Λᵏ(T) → P_r⁻Λ^{k+1}(T)`. -/
+def extDerivLocalMinus (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
+    localPolyMinusSpace p r k →ₗ[ℝ] localPolyMinusSpace p r (k + 1) where
+  toFun ω := ⟨extDeriv ω, by
+    have hω : (ω : FormField n) ∈ polyMinusSpace n r k := by
+      rw [← localPolyMinusSpace_eq hp]; exact ω.2
+    rw [localPolyMinusSpace_eq hp]
+    exact extDeriv_mem_polyMinusSpace hω⟩
+  map_add' ω η := Subtype.ext (funext fun x => extDeriv_add_apply
+    (differentiable_of_mem_c1DegForms (localPolyMinusSpace_le_c1DegForms hp _ k ω.2) x)
+    (differentiable_of_mem_c1DegForms (localPolyMinusSpace_le_c1DegForms hp _ k η.2) x))
+  map_smul' c ω := Subtype.ext (funext fun x => extDeriv_smul_const_apply c
+    (differentiable_of_mem_c1DegForms (localPolyMinusSpace_le_c1DegForms hp _ k ω.2) x))
+
+theorem contDegForms_le_contForms (k : ℕ) : contDegForms n k ≤ contForms n := inf_le_left
+
+theorem c1DegForms_le_contForms (k : ℕ) : c1DegForms n k ≤ contForms n :=
+  (c1DegForms_le_contDegForms k).trans (contDegForms_le_contForms k)
+
+/-- **The canonical interpolant** `Π_T : C⁰Λᵏ → P_rΛᵏ(T)`, defined by the degrees of freedom:
+`∫_f tr_f (Π_T ω) ∧ η = ∫_f tr_f ω ∧ η`. [AFW2010], §5.2 -/
+def polyInterp (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    contDegForms n k →ₗ[ℝ] localPolySpace p r k :=
+  interp (isUnisolvent_localDof hp hr hk) fun i =>
+    polyDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (contDegForms_le_contForms k)
+
+/-- **The canonical interpolant** `Π_T : C⁰Λᵏ → P_r⁻Λᵏ(T)`. [AFW2010], §5.2 -/
+def polyMinusInterp (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    contDegForms n k →ₗ[ℝ] localPolyMinusSpace p r k :=
+  interp (isUnisolvent_localDofMinus hp hr hk) fun i =>
+    polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (contDegForms_le_contForms k)
+
+/-- `Π_T` preserves the degrees of freedom. -/
+theorem localDof_polyInterp (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) (ω : contDegForms n k) (i : Σ f : Face n, DofIndex r k f) :
+    localDof p r k i (polyInterp hp hr hk ω) = polyDof p r k i.1 i.2
+      (Submodule.inclusion (contDegForms_le_contForms k) ω) :=
+  dof_interp _ _ ω i
+
+/-- `Π_T` is a projection onto `P_rΛᵏ(T)`. -/
+theorem polyInterp_inclusion (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) (ω : localPolySpace p r k) :
+    polyInterp hp hr hk (Submodule.inclusion (localPolySpace_le_contDegForms hp r k) ω) = ω :=
+  interp_incl (isUnisolvent_localDof hp hr hk) (fun i =>
+    polyDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (contDegForms_le_contForms k))
+    (Submodule.inclusion (localPolySpace_le_contDegForms hp r k)) (fun _ => LinearMap.ext
+      fun _ => rfl) ω
+
+/-- `Π_T` is a projection onto `P_r⁻Λᵏ(T)`. -/
+theorem polyMinusInterp_inclusion (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) (ω : localPolyMinusSpace p r k) :
+    polyMinusInterp hp hr hk
+      (Submodule.inclusion (localPolyMinusSpace_le_contDegForms hp r k) ω) = ω :=
+  interp_incl (isUnisolvent_localDofMinus hp hr hk) (fun i =>
+    polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (contDegForms_le_contForms k))
+    (Submodule.inclusion (localPolyMinusSpace_le_contDegForms hp r k)) (fun _ => LinearMap.ext
+      fun _ => rfl) ω
+
+theorem polyDof_ofEmb {r k m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1))
+    (l : DofIndex r k (Face.ofEmb e)) (ω : contForms n) :
+    polyDof p r k (Face.ofEmb e) l ω = faceMoment p e (testBasis r k m l : FormField m) ω := by
+  change faceMoment p (Face.ofEmb e).emb _ ω = _
+  rw [Face.emb_ofEmb]
+
+theorem polyMinusDof_ofEmb {r k m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1))
+    (l : DofIndexMinus r k (Face.ofEmb e)) (ω : contForms n) :
+    polyMinusDof p r k (Face.ofEmb e) l ω =
+      faceMoment p e (testBasisMinus r k m l : FormField m) ω := by
+  change faceMoment p (Face.ofEmb e).emb _ ω = _
+  rw [Face.emb_ofEmb]
+
+theorem eq_sum_repr_basis {m : ℕ} {V : Submodule ℝ (FormField m)} {ι : Type*} [Fintype ι]
+    (b : Module.Basis ι ℝ V) {ζ : FormField m} (hζ : ζ ∈ V) :
+    ζ = ∑ l, b.repr ⟨ζ, hζ⟩ l • (b l : FormField m) := by
+  have := b.sum_repr ⟨ζ, hζ⟩
+  rw [Subtype.ext_iff, Submodule.coe_sum] at this
+  simp only [Submodule.coe_smul] at this
+  exact this.symm
+
+/-- A moment against a test form is a combination of the degrees of freedom (on `C¹`
+`k`-forms). -/
+theorem faceMoment_mem_span {r k m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) {ζ : FormField m}
+    (hζ : ζ ∈ testSpace r k m) :
+    faceMomentₗ p e ζ (contDiff_of_mem_testSpace hζ).continuous ∘ₗ
+        Submodule.inclusion (c1DegForms_le_contForms k) ∈
+      Submodule.span ℝ (Set.range fun i : Σ f : Face n, DofIndex r k f =>
+        polyDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (c1DegForms_le_contForms k)) := by
+  set b := testBasis r k m
+  have heq : faceMomentₗ p e ζ (contDiff_of_mem_testSpace hζ).continuous ∘ₗ
+      Submodule.inclusion (c1DegForms_le_contForms k) = ∑ l, b.repr ⟨ζ, hζ⟩ l •
+        (polyDof p r k (Face.ofEmb e) l ∘ₗ Submodule.inclusion (c1DegForms_le_contForms k)) := by
+    refine LinearMap.ext fun ω => ?_
+    rw [LinearMap.sum_apply]
+    have h1 : ∀ l, (b.repr ⟨ζ, hζ⟩ l • (polyDof p r k (Face.ofEmb e) l ∘ₗ
+        Submodule.inclusion (c1DegForms_le_contForms k))) ω =
+        b.repr ⟨ζ, hζ⟩ l * faceMoment p e (b l : FormField m) ω := fun l => by
+      rw [LinearMap.smul_apply, LinearMap.comp_apply, polyDof_ofEmb, smul_eq_mul]; rfl
+    rw [sum_congr rfl fun l _ => h1 l]
+    have h := faceMoment_sum_smul_right p e univ (fun l => b.repr ⟨ζ, hζ⟩ l)
+      (fun l => (contDiff_of_mem_testSpace (b l).2).continuous) (c1DegForms_le_contForms k ω.2)
+    rw [← eq_sum_repr_basis b hζ] at h
+    exact h
+  rw [heq]
+  exact Submodule.sum_mem _ fun l _ => Submodule.smul_mem _ _
+    (Submodule.subset_span ⟨⟨Face.ofEmb e, l⟩, rfl⟩)
+
+/-- A moment against a test form of `P_r⁻` is a combination of the degrees of freedom. -/
+theorem faceMoment_mem_span_minus {r k m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1))
+    {ζ : FormField m} (hζ : ζ ∈ testSpaceMinus r k m) :
+    faceMomentₗ p e ζ (contDiff_of_mem_testSpaceMinus hζ).continuous ∘ₗ
+        Submodule.inclusion (c1DegForms_le_contForms k) ∈
+      Submodule.span ℝ (Set.range fun i : Σ f : Face n, DofIndexMinus r k f =>
+        polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (c1DegForms_le_contForms k)) := by
+  set b := testBasisMinus r k m
+  have heq : faceMomentₗ p e ζ (contDiff_of_mem_testSpaceMinus hζ).continuous ∘ₗ
+      Submodule.inclusion (c1DegForms_le_contForms k) = ∑ l, b.repr ⟨ζ, hζ⟩ l •
+        (polyMinusDof p r k (Face.ofEmb e) l ∘ₗ
+          Submodule.inclusion (c1DegForms_le_contForms k)) := by
+    refine LinearMap.ext fun ω => ?_
+    rw [LinearMap.sum_apply]
+    have h1 : ∀ l, (b.repr ⟨ζ, hζ⟩ l • (polyMinusDof p r k (Face.ofEmb e) l ∘ₗ
+        Submodule.inclusion (c1DegForms_le_contForms k))) ω =
+        b.repr ⟨ζ, hζ⟩ l * faceMoment p e (b l : FormField m) ω := fun l => by
+      rw [LinearMap.smul_apply, LinearMap.comp_apply, polyMinusDof_ofEmb, smul_eq_mul]; rfl
+    rw [sum_congr rfl fun l _ => h1 l]
+    have h := faceMoment_sum_smul_right p e univ (fun l => b.repr ⟨ζ, hζ⟩ l)
+      (fun l => (contDiff_of_mem_testSpaceMinus (b l).2).continuous)
+      (c1DegForms_le_contForms k ω.2)
+    rw [← eq_sum_repr_basis b hζ] at h
+    exact h
+  rw [heq]
+  exact Submodule.sum_mem _ fun l _ => Submodule.smul_mem _ _
+    (Submodule.subset_span ⟨⟨Face.ofEmb e, l⟩, rfl⟩)
 
 end Feec.FiniteElement

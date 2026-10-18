@@ -7,9 +7,9 @@ public import Mathlib.LinearAlgebra.Matrix.AbsoluteValue
 # Inverse estimates for Whitney forms on homothetic simplices
 
 The lowest-order Whitney forms of every nondegenerate `n`-simplex are the **trimmed linear forms**
-`P₁⁻Λᵏ = {x ↦ α + ι_x β}` (`whitneySpace_eq_p1MinusForms`), a fixed finite-dimensional space of
-**affine** form fields, `u(y) = u(0) + Σⱼ yⱼ (u(eⱼ) - u(0))` (`isAffineField_of_mem_p1MinusForms`),
-whose traces on `k`-faces are constant (`affinePullback_univ_eq_of_mem_p1MinusForms`: the
+`P₁⁻Λᵏ = {x ↦ α + ι_x β}` (`whitneySpace_eq_p1MinusForms_of_isUnit`), a fixed
+finite-dimensional space of **affine** form fields, `u(y) = u(0) + Σⱼ yⱼ (u(eⱼ) - u(0))`
+(`isAffineField_of_mem_p1MinusForms`), whose traces on `k`-faces are constant (`affinePullback_univ_eq_of_mem_p1MinusForms`: the
 pulled-back integrand of `∫_g u` is `k! ∫_g u`). The size of such a field is measured by its
 **affine size** `affSize u = Σₛ (|u(0)ₛ| + Σⱼ |u(eⱼ)ₛ - u(0)ₛ|)`, which bounds it pointwise and
 its Lipschitz constant (`IsAffineField.abs_le`, `IsAffineField.abs_sub_le`).
@@ -166,7 +166,7 @@ theorem eq_const_of_mem_p1MinusForms_self {k : ℕ} {w : FormField k}
 
 /-- **The Whitney forms of a nondegenerate simplex are the trimmed linear forms**:
 `P₁⁻Λᵏ(T) = P₀Λᵏ + κ H₀Λ^{k+1}`, independently of `T`. -/
-theorem whitneySpace_eq_p1MinusForms {p : Fin (n + 1) → Fin n → ℝ}
+theorem whitneySpace_eq_p1MinusForms_of_isUnit {p : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (k : ℕ) : whitneySpace p k = p1MinusForms n k := by
   have hle := whitneySpace_le_p1MinusForms p k
   have hle' := p1MinusForms_le_whitneySpace_refVertex (n := n) k
@@ -181,7 +181,7 @@ theorem whitneySpace_eq_p1MinusForms {p : Fin (n + 1) → Fin n → ℝ}
 
 theorem whitneySpace_simplex_eq_p1MinusForms (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     whitneySpace T.points k = p1MinusForms n k :=
-  whitneySpace_eq_p1MinusForms (isUnit_det_edgeMatrix T) k
+  whitneySpace_eq_p1MinusForms_of_isUnit (isUnit_det_edgeMatrix T) k
 
 /-! ### Finite-dimensional norm comparison -/
 

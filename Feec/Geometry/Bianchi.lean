@@ -8,8 +8,9 @@ public import Feec.Geometry.Connection
 The differential Bianchi identity (thesis (2.4), `∇_[e R_cd]ab = 0`), its contracted forms
 (`∇_a R^a_bcd = ∇_c R_bd - ∇_d R_bc`, `∇^a G_ab = 0`, and `∇^a C_abcd = 0` in vacuum), and its
 frame form, in coordinate components as in `Feec.Geometry.Connection`: Lorentzian geometry is not
-in Mathlib, so a metric is a matrix field `g : ℝ^ι → Matrix ι ι ℝ` on a coordinate patch, of any
-dimension and any signature (symmetric, nondegenerate).
+in Mathlib, so a metric is a matrix field `g : ℝ^ι → Matrix ι ι ℝ` of any dimension and any
+signature (symmetric, nondegenerate). The field theorems assume their hypotheses on all of `ℝ^ι`
+(a global chart); local versions on an open set are not stated.
 
 ## Conventions
 
@@ -55,6 +56,7 @@ dimension and any signature (symmetric, nondegenerate).
   components, the starting point of the nonlinear EB system
   (`Feec.Physics.EinsteinBianchi.Nonlinear`).
 * `isLeviCivita_christoffel`: the Christoffel symbols of a `C³` metric of any signature.
+* `frameConnField_sub_swap`: torsion-freeness in a frame, `γ^λ_{κν} - γ^λ_{νκ} = θ^λ([e_κ, e_ν])`.
 
 ## References
 
@@ -1391,6 +1393,37 @@ theorem isFrameConn_field (Γ : (ι → ℝ) → ι → ι → ι → ℝ) {e θ
         rw [← hc b, sum_mul]
         exact sum_congr rfl fun l _ => by ring
     _ = _ := by simp [Matrix.one_apply]
+
+/-- The frame components `c^λ_{κν} = θ^λ_a [e_κ, e_ν]^a` of the Lie bracket of two frame vector
+fields, `[e_κ, e_ν]^a = e^h_κ ∂_h e^a_ν - e^h_ν ∂_h e^a_κ`. -/
+def frameBracket (e θ : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : ι → ι → ι → ℝ := fun l κ ν =>
+  ∑ a, θ x l a * ∑ h, (e x h κ * partialDeriv h (fun y => e y a ν) x
+    - e x h ν * partialDeriv h (fun y => e y a κ) x)
+
+/-- **Torsion-freeness in a frame**: `γ^λ_{κν} - γ^λ_{νκ} = c^λ_{κν}`, i.e.
+`∇_{e_κ} e_ν - ∇_{e_ν} e_κ = [e_κ, e_ν]` for a torsion-free connection. [Wald1984], §3.1 -/
+theorem frameConnField_sub_swap {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
+    (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b) (e θ : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ)
+    (l κ ν : ι) :
+    frameConnField Γ e θ x l κ ν - frameConnField Γ e θ x l ν κ = frameBracket e θ x l κ ν := by
+  simp only [frameConnField, frameConn, mixedConnField, frameBracket]
+  have hΓsum : ∑ h, e x h κ * ∑ b, θ x l b * ∑ c, Γ x b h c * e x c ν
+      = ∑ h, e x h ν * ∑ b, θ x l b * ∑ c, Γ x b h c * e x c κ := by
+    simp only [mul_sum]
+    exact sum3_congr_perm perm13 fun y => by
+      simp only [perm13, Equiv.coe_fn_mk]; rw [hΓ x y.2.1 y.1 y.2.2]; ring
+  have hsplit : ∀ μ ν', ∑ h, e x h μ * ∑ b, θ x l b *
+      (partialDeriv h (fun y => e y b ν') x + ∑ c, Γ x b h c * e x c ν')
+      = ∑ b, θ x l b * ∑ h, e x h μ * partialDeriv h (fun y => e y b ν') x
+        + ∑ h, e x h μ * ∑ b, θ x l b * ∑ c, Γ x b h c * e x c ν' := by
+    intro μ ν'
+    simp only [mul_add, sum_add_distrib, mul_sum]
+    congr 1
+    rw [Finset.sum_comm]
+    exact sum_congr rfl fun b _ => sum_congr rfl fun h _ => by ring
+  rw [hsplit, hsplit, hΓsum]
+  simp only [mul_sub, sum_sub_distrib]
+  ring
 
 /-- The frame components `R_μνρσ` of the Riemann tensor field. -/
 def frameRiemField (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ)

@@ -45,6 +45,12 @@ derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection c
   `div E − B ×· K = 0`, `div B + E ×· K = 0`, `L_n E + sym curl B + L¹ = 0`,
   `L_n B − sym curl E + L² = 0`, with `L¹` exactly as printed and
   `L² = −3 sym(K·B) + B tr K − B ×× K − 2 sym(a × E)`.
+* `extrinsic_symm_iff_bracket`: `K` is symmetric iff the brackets `[e_i, e_j]` of the spatial
+  triad have no `e_0` component (involutivity of `n^⊥`, the frame form of
+  hypersurface-orthogonality; the Frobenius theorem itself is not formalized).
+* `isLeviCivita_minkowski`, `isOrthonormalFrame_minkowski`, `ricField_minkowski`,
+  `minkowski_thesisEB`: Minkowski space in its Cartesian frame satisfies every hypothesis of
+  `vacuum_thesisEB` (a non-vacuity check; it has `E = B = 0`).
 
 **Corrections to the thesis display** (in the conventions of its Props 3.3–3.4, reading `Ē, B̄`
 as `E, B` and the time derivative as `L_n`): the `B`-constraint has `+ E ×· K`, the
@@ -58,6 +64,12 @@ as `E, B` and the time derivative as `L_n`): the `B`-constraint has `+ E ×· K`
 * Existence of solutions, or of orthonormal frames, lapse/shift coordinates and the time function
   of the `3 + 1` split: the frame and its connection coefficients are given data.
 * The non-vacuum system of [ACBY1997].
+* Local versions (metric, frame and vacuum on an open set only): every field theorem assumes its
+  hypotheses on all of `ℝ⁴`, so charts that do not cover `ℝ⁴` (e.g. Schwarzschild) are not
+  covered as stated.
+* The linearization is taken in the unknowns `(γ, E, B, e_κ E, e_κ B)` of the system, not along a
+  family of metrics `g_ε → η`.
+* A worked vacuum example with `E, B ≠ 0` (e.g. a pp-wave).
 
 ## References
 
@@ -830,8 +842,8 @@ def ThesisEB (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) 
     lieN γ B dB - symPart (curl (covSp γ E dE)) + thesisL2 γ E B = 0
 
 /-- **The frame EB system is the thesis' system**: for metric-compatible frame connection
-coefficients with symmetric extrinsic curvature (the normal `n = e_0` is hypersurface
-orthogonal) and symmetric trace-free `E, B` and jets, `NonlinearEB ↔ ThesisEB`. The
+coefficients with symmetric extrinsic curvature (by `extrinsic_symm_iff_bracket`, `n^⊥` is
+involutive, i.e. `n = e_0` is hypersurface orthogonal) and symmetric trace-free `E, B` and jets, `NonlinearEB ↔ ThesisEB`. The
 antisymmetric parts of the evolution equations are the constraints. -/
 theorem nonlinearEB_iff_thesisEB {γ : FrameConn} (hγ : IsMetricConn γ)
     (hK : (extrinsic γ)ᵀ = extrinsic γ) {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E)
@@ -903,5 +915,71 @@ theorem vacuum_thesisEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
       fun i j => (hW _ _ _ _) x)
     (frameDeriv_isSymTF (fun y => (hWE y).2.2.2.1) (fun y => (hWE y).2.2.2.2)
       fun i j => (hW _ _ _ _) x)).1 (vacuum_nonlinearEB h hF hvac x)
+
+/-! ### Symmetry of `K` and hypersurface-orthogonality -/
+
+/-- **Symmetric extrinsic curvature in frame form.** For a torsion-free connection, the extrinsic
+curvature `K_ij = γ^0_{ij}` of `n = e_0` is symmetric iff the brackets `[e_i, e_j]` of the
+spatial triad have no `e_0` component, i.e. the spatial distribution `n^⊥` is involutive (by
+the Frobenius theorem, which is not formalized here, this means `n` is hypersurface-orthogonal).
+[Wald1984], §B.3 -/
+theorem extrinsic_symm_iff_bracket {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ}
+    (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b) (e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ)
+    (x : Fin 4 → ℝ) :
+    (extrinsic (frameConnField Γ e θ x))ᵀ = extrinsic (frameConnField Γ e θ x) ↔
+      ∀ i j : Fin 3, frameBracket e θ x 0 i.succ j.succ = 0 := by
+  constructor
+  · intro hK i j
+    have := congrFun (congrFun hK j) i
+    simp only [extrinsic, Matrix.transpose_apply, Matrix.of_apply] at this
+    rw [← frameConnField_sub_swap hΓ, this, sub_self]
+  · intro hc
+    ext i j
+    simp only [extrinsic, Matrix.transpose_apply, Matrix.of_apply]
+    have := frameConnField_sub_swap hΓ e θ x 0 j.succ i.succ
+    rw [hc] at this
+    linarith
+
+/-! ### A model: Minkowski space in a Cartesian frame -/
+
+/-- Minkowski space with the Cartesian connection `Γ = 0` is a Levi-Civita pair. -/
+theorem isLeviCivita_minkowski :
+    IsLeviCivita (fun _ => ηM) (fun _ _ _ _ => (0 : ℝ)) where
+  symm _ := by
+    rw [Matrix.IsSymm, ηM, Matrix.diagonal_transpose]
+  contDiff_metric _ _ := contDiff_const
+  contDiff_chr _ _ _ := contDiff_const
+  torsionFree _ _ _ _ := rfl
+  compat _ _ _ _ := by simp
+
+/-- The Cartesian frame `e = θ = 1` is an orthonormal frame of Minkowski space. -/
+theorem isOrthonormalFrame_minkowski :
+    IsOrthonormalFrame (fun _ => ηM) (fun _ => 1) (fun _ => 1) where
+  differentiable _ _ := differentiable_const _
+  coframe _ := Matrix.mul_one 1
+  orthonormal _ := by simp
+
+/-- Minkowski space is a vacuum solution. -/
+theorem ricField_minkowski (y : Fin 4 → ℝ) : ricField (fun _ _ _ _ => (0 : ℝ)) y = 0 := by
+  funext b d
+  simp [ricField, riemField, riemComp]
+
+/-- The Cartesian frame of Minkowski space has vanishing connection coefficients. -/
+theorem frameConnField_minkowski (x : Fin 4 → ℝ) :
+    frameConnField (fun _ _ _ _ => (0 : ℝ)) (fun _ => (1 : Matrix (Fin 4) (Fin 4) ℝ))
+      (fun _ => 1) x = 0 := by
+  funext l κ ν
+  simp [frameConnField, frameConn, mixedConnField]
+
+/-- **The hypotheses of `vacuum_thesisEB` are jointly satisfiable**: Minkowski space in its
+Cartesian frame satisfies them (with `γ = 0`, `E = B = 0`). -/
+theorem minkowski_thesisEB (x : Fin 4 → ℝ) :
+    ThesisEB (frameConnField (fun _ _ _ _ => 0) (fun _ => 1) (fun _ => 1) x)
+      (elecField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1) x)
+      (magField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1) x)
+      (frameDeriv (fun _ => 1) (elecField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1)) x)
+      (frameDeriv (fun _ => 1) (magField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1)) x) :=
+  vacuum_thesisEB isLeviCivita_minkowski isOrthonormalFrame_minkowski ricField_minkowski x
+    (by rw [frameConnField_minkowski]; ext i j; simp [extrinsic])
 
 end Feec.EinsteinBianchi

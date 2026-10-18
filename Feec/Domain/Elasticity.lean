@@ -18,9 +18,11 @@ symmetric fields, `div` on `Sym`), and as a complex of constrained realizations 
 * the formal adjoints `(sym grad)ᵗ = -div` on symmetric fields
   (`symGradOp_formalAdj_apply_of_symm`), `incᵗ = inc` (`incOp_formalAdj_apply`) and
   `divᵗ = -sym grad` (`divSymOp_formalAdj_apply`);
-* the minimal complex `H̊¹ → H̊(inc, Sym) → H̊(div, Sym) → L²` and the maximal complex
-  `H¹ → H(inc, Sym) → H(div, Sym) → L²` (`elasticityComplex.minimalComplex`,
-  `elasticityComplex.maximalComplex`), whose differentials are the realizations of
+* the minimal complex `H̊(sym grad) → H̊(inc, Sym) → H̊(div, Sym) → L²` and the maximal complex
+  `H(sym grad) → H(inc, Sym) → H(div, Sym) → L²`, where `H(sym grad) = {u ∈ L² : ε(u) ∈ L²}`
+  (weakly) and `H̊(sym grad)` is the closure of the test fields in its graph norm (these are
+  `H̊¹` and, for regular `Ω`, `H¹` by Korn's inequalities, which are not proved here)
+  (`elasticityComplex.minimalComplex`, `elasticityComplex.maximalComplex`), whose differentials are the realizations of
   `sym grad`, `inc`, `div` (`elasticity_minimalComplex_d₀`, …);
 * **self-duality**: the dual of the minimal complex is the maximal complex read backwards with
   the signs `-div, inc, -sym grad`, and vice versa (`elasticity_dual_minimalComplex_d₀`, …).
@@ -31,7 +33,6 @@ No closed-range statement is made (it needs the regularity of `Ω`).
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §11 (the elasticity complex)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the elasticity complex from the
   BGG construction)
 -/
@@ -400,7 +401,7 @@ theorem elasticityComplex_V_zero : (elasticityComplex 𝕜 hΩ).V 0 = ⊤ :=
 theorem elasticityComplex_V_three : (elasticityComplex 𝕜 hΩ).V 3 = ⊤ :=
   L2F.matSubmodule_idMat (ι := Fin 3)
 
-/-- `d₀ = (sym grad)_min`: `H̊¹(Ω; 𝕜³) → L²(Ω; Sym)`. -/
+/-- `d₀ = (sym grad)_min`: `H̊(sym grad, Ω; 𝕜³) → L²(Ω; Sym)`. -/
 theorem elasticity_minimalComplex_d₀ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.d 0 1 =
       symGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) :=

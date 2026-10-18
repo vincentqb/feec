@@ -29,7 +29,7 @@ minimal operators are restrictions of the maximal ones (`minimalComplex_d_le_max
 
 The constraints of the elasticity, Hessian and div-div complexes are ranges of pointwise
 self-adjoint projections `M` (`L2F.matSubmodule`, with density `L2F.denseVia_matSubmodule`): the
-symmetric part `symMat` (`L2F.symSubmodule`), the deviatoric part `devMat`
+symmetric part `symMat` (`L2F.symSubmodule`), the deviatoric part `deviatoricMat`
 (`L2F.traceFreeSubmodule`) and the identity (`⊤`). The operators of these complexes are built
 from those of `Feec.Domain.Operators` by composition (`ConstCoeffOp.comp`) and by pre- and
 post-composition with constant matrices (`ConstCoeffOp.preComp`, `ConstCoeffOp.postComp`), with

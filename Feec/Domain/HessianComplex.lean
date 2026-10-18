@@ -20,8 +20,10 @@ adjoints are `div div`, `sym curl` and `-dev grad`, the operators of the div-div
 * the formal adjoints `hessᵗ = div div` (`Feec.Domain.hessOp_formalAdj`),
   `(curl ∘ sym)ᵗ = sym curl` (`curlSymOp_formalAdj_apply`), `(div ∘ dev)ᵗ = -dev grad`
   (`divDevOp_formalAdj_apply`);
-* the minimal complex `H̊²(Ω) → H̊(curl, Ω; Sym) → H̊(div, Ω; T) → L²(Ω; 𝕜³)` and the maximal
-  complex `H²(Ω) → H(curl, Ω; Sym) → H(div, Ω; T) → L²(Ω; 𝕜³)`
+* the minimal complex `H̊(grad grad, Ω) → H̊(curl, Ω; Sym) → H̊(div, Ω; T) → L²(Ω; 𝕜³)` and the
+  maximal complex `H(grad grad, Ω) → H(curl, Ω; Sym) → H(div, Ω; T) → L²(Ω; 𝕜³)`, where
+  `H(grad grad) = {u ∈ L² : ∇²u ∈ L²}` (weakly) and `H̊(grad grad)` is the closure of the test
+  functions in its graph norm (these are `H̊²` and, for regular `Ω`, `H²`; not proved here)
   (`hessianComplex.minimalComplex`, `hessianComplex.maximalComplex`), whose differentials are
   the realizations of `hess`, `curl`, `div` (`hessian_minimalComplex_d₀`, …).
 
@@ -33,7 +35,6 @@ is made (it needs the regularity of `Ω`).
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the Hessian complex)
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the Hessian and div-div complexes on general domains and their duality)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap
@@ -321,7 +322,7 @@ theorem hessianComplex_V_zero : (hessianComplex 𝕜 hΩ).V 0 = ⊤ :=
 theorem hessianComplex_V_three : (hessianComplex 𝕜 hΩ).V 3 = ⊤ :=
   L2F.matSubmodule_idMat (ι := Fin 3)
 
-/-- `d₀ = hess_min`: `H̊²(Ω) → L²(Ω; Sym)`. -/
+/-- `d₀ = hess_min`: `H̊(grad grad, Ω) → L²(Ω; Sym)`. -/
 theorem hessian_minimalComplex_d₀ :
     (hessianComplex 𝕜 hΩ).minimalComplex.d 0 1 =
       (hessOp 3).minimalVia (freeEmb 𝕜 Ω Unit) (symEmb 𝕜 Ω 3) :=

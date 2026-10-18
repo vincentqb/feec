@@ -18,8 +18,8 @@ vanishes on the faces `y_j ∈ {0, ½}` when `c_j = -1` (`fold_eq_zero_of_face`)
 
 For real fields `L²(Q; ℝᴾ)` with parity vectors `c p`, `JR c` is the real-linear parity extension
 on the Fourier side, a scaled isometry (`⟪JR u, JR v⟫ = 2ᵈ ⟪u, v⟫`, `inner_JR`) onto the
-coefficient sequences with the parities `c` and real entries (`w(-n) = conj w(n)`, `JR_mem`,
-`JR_Jinv`), inverted by `Jinv` (`Jinv_JR`).
+coefficient sequences with the parities `c` and real entries (`w(-n) = conj w(n)`,
+`JR_mem_fieldParity`, `JR_isReal`, `JR_Jinv`), inverted by `Jinv` (`Jinv_JR`).
 
 ## Main results
 

@@ -9,32 +9,28 @@ compactness
 From the identification of the de Rham complexes of `Q = (0, ½)ⁿ` with the parity classes of the
 torus de Rham complex (`Feec.Models.Cube.DeRhamIdent.HQmin_eq_compress`,
 `Feec.Models.Cube.DeRhamIdent.HQmax_eq_compress`) this file proves, for the `ℤ`-indexed complexes
-`Feec.Models.Cube.FEM.complex n = HΛ(Q)` and `Feec.Models.Cube.FEM.complexMin n = H̊Λ(Q)` of the
-finite element method, in every dimension `n` and degree:
+`Hmax n = HΛ(Q)` and `Hmin n = H̊Λ(Q)` (`Feec.Domain.DeRham` on `Q`), in every dimension `n` and
+degree:
 
-* **the Poincaré inequality** `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`
-  (`FEM.norm_le_of_mem_orthogonal_cycles`, `FEM.norm_le_of_mem_orthogonal_cycles_min`), in exactly
-  the form of the hypotheses `hP` of `Feec.Models.Cube.FEM.SmoothingEstimates`;
-* **closed range** in every degree (`FEM.closedRangeAt`, `FEM.closedRangeAt_min`);
+* **the Poincaré inequality** `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ` (`Hmax_norm_le`,
+  `Hmin_norm_le`);
+* **the compactness property** (`Hmax_hasCompactProperty`, `Hmin_hasCompactProperty`; Rellich and
+  Gaffney on the cube);
 * **the harmonic forms**: `ℌᵏ(HΛ(Q)) = 0` for `k ≠ 0` and `ℌ⁰(HΛ(Q))` is the line of the constants
-  (`FEM.harmonic_eq_bot`, `FEM.harmonic_zero_eq_span`); `ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ n` and
-  `ℌⁿ(H̊Λ(Q))` is the line of the constant volume form `dx₁ ∧ ⋯ ∧ dxₙ`
-  (`FEM.harmonic_eq_bot_min`, `FEM.harmonic_top_eq_span_min`); hence the cohomology is
-  `ℝ` in degree `0` (resp. `n`) and `0` otherwise (`FEM.finrank_cohomology`,
-  `FEM.finrank_cohomology_min`);
-* **the compactness property** in every degree (`FEM.hasCompactProperty`,
-  `FEM.hasCompactProperty_min`; Rellich and Gaffney on the cube).
+  (`Hmax_harmonic_eq_bot`, `Hmax_harmonic_zero`); `ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ n` and `ℌⁿ(H̊Λ(Q))` is
+  the line of the constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` (`Hmin_harmonic_eq_bot`,
+  `Hmin_harmonic_top`).
 
 The constant is the sharp one of the torus, `(2π)⁻¹` (the first nonzero frequency `2π` of `𝕋ⁿ`;
 `cos 2πx` on `(0, ½)` is a Neumann eigenfunction). The transfer from the torus uses two abstract
 facts on compressions along scaled isometries: the Poincaré inequality passes with the same
 constant (`Feec.HilbertComplex.norm_le_of_mem_orthogonal_compress`) and the harmonic forms are
 those whose image is harmonic (`Feec.HilbertComplex.mem_harmonic_compress_iff`); the windows
-`Λ⁰ → ⋯ → Λⁿ` pass to the `ℤ`-indexed complexes since the spaces outside `0 ≤ k ≤ n` are zero.
-
-As a consequence, the Poincaré hypotheses of the finite element method on the cube are discharged:
-`FEM.SmoothingEstimates.discrete_poincare`, `FEM.SmoothingEstimates.existsUnique_mixed'`,
-`FEM.SmoothingEstimates.tendsto_harmonicGap'` and their vanishing-trace versions.
+`Λ⁰ → ⋯ → Λⁿ` pass to the `ℤ`-indexed complexes since the spaces outside `0 ≤ k ≤ n` are zero
+(`Feec.HilbertComplex.norm_le_of_mem_orthogonal_cycles_of_window`,
+`Feec.HilbertComplex.hasCompactProperty_of_window`, `Feec.HilbertComplex.harmonic_le_window`).
+The statements on `Feec.Models.Cube.FEM.complex` and `Feec.Models.Cube.FEM.complexMin`, in the form
+consumed by the finite element method, are in `Feec.Models.Cube.DeRhamIdentFEM`.
 
 ## References
 

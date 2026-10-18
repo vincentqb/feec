@@ -9,19 +9,19 @@ A smooth field on `ℝᵈ` (bounded, with bounded first derivatives) restricts t
 minimal domain of a first-order constant-coefficient operator `A` on `Q = (0, ½)ᵈ` as soon as the
 cut-offs `χ_m ψ` (`χ_m = ∏ᵢ η_m(yᵢ)`, equal to `1` at distance `≥ 1/m` from the faces) have
 uniformly bounded `A (χ_m ψ)` on `Q` (`mem_closure_testGraph_of_cutoff`): `χ_m ψ → ψ` and
-`A (χ_m ψ) → A ψ` pointwise on `Q`, dominated. For the exterior derivative the commutator
-`dχ_m ∧ ψ` stays bounded when the **tangential** components vanish on the faces
-(`mem_closure_extDerivOp_of_tangential`: `ψ_s = 0` on `{y_j ∈ {0, ½}}` for `j ∉ s`); for its
-formal adjoint (minus the codifferential) when the **normal** components vanish
-(`mem_closure_formalAdj_of_normal`: `ψ_s = 0` on `{y_j ∈ {0, ½}}` for `j ∈ s`), since a function
-vanishing on two opposite faces is `O(dist)` (`abs_le_of_faces`).
+`A (χ_m ψ) → A ψ` pointwise on `Q`, dominated. The bound comes from the commutator estimate
+`|∂_c χ_m · f| ≤ 4 M₀ L` for `f` vanishing on the faces `{y_c ∈ {0, ½}}` (`abs_fderiv_chi_mul_le`;
+a function vanishing on two opposite faces is `O(dist)`, `abs_le_of_faces`). For the exterior
+derivative this applies when the **tangential** components vanish on the faces
+(`Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`), for its formal adjoint
+(minus the codifferential) when the **normal** components vanish
+(`Feec.Models.Cube.DeRhamIdent.mem_closure_formalAdj_single1`).
 
 ## Main results
 
 * `chi`, `isTest_chi_mul`, `eventually_chi_eq_one`, `abs_fderiv_chi_le`; `abs_le_of_faces`,
-  `tendsto_toLp_of_bdd`.
-* `ConstCoeffOp.apply_congr_of_eventuallyEq`; **`mem_closure_testGraph_of_cutoff`**.
-* **`mem_closure_extDerivOp_of_tangential`**, **`mem_closure_formalAdj_of_normal`**.
+  `abs_fderiv_chi_mul_le`, `tendsto_toLp_of_bdd`.
+* `apply_congr_of_eventuallyEq`; **`mem_closure_testGraph_of_cutoff`**.
 
 ## References
 

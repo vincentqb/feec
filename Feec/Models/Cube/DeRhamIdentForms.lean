@@ -35,8 +35,10 @@ in the neighbouring parity class. Green's identity holds
 ## Main results
 
 * **`inner_Jf`**, `Jinvf_Jf`, `Jf_realPar`, **`Jf_Jinvf`**, `injective_Jf`.
-* `deRham_m_apply`, `extForm_Jf`, **`coeff_d_of_greenFor`**.
-* **`greenFor_minimal`**, **`greenFor_maximal`**; `coeff_d_minimal`, `coeff_d_maximal`.
+* `deRham_m_apply`, `ext_Jf`, `formalAdj_single1_apply`, `greenFor_of_inner`,
+  **`coeff_d_of_greenFor`**.
+* **`greenFor_minimal`**, `mem_closure_formalAdj_single1`, **`greenFor_maximal`**;
+  `coeff_d_minimal`, `coeff_d_maximal`.
 
 ## References
 

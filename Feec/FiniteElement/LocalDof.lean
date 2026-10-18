@@ -79,7 +79,8 @@ theorem sum_choose_mul_choose_eq {n r k : ℕ} (hk : k ≤ n) (hr : 1 ≤ r) :
 
 theorem finrank_polySpace (m s j : ℕ) :
     Module.finrank ℝ (polySpace m s j) = (s + m).choose (s + j) * (s + j).choose j := by
-  rw [polySpace, Koszul.finrank_map_of_injOn _ _ fun x _ hx => evalForm_injective (by rw [hx, map_zero]),
+  rw [polySpace, Koszul.finrank_map_of_injOn _ _ fun x _ hx =>
+      evalForm_injective (by rw [hx, map_zero]),
     Koszul.finrank_polyForm, Fintype.card_fin]
 
 theorem finrank_polyMinusSpace (m : ℕ) {s : ℕ} (hs : 1 ≤ s) (j : ℕ) :
@@ -313,7 +314,8 @@ theorem eq_zero_of_faceMoment_eq_zero {r : ℕ} (hr : 1 ≤ r) (k n : ℕ) {ω :
     rw [faceMoment, faceTrace_faceTrace]
     exact this
   refine eq_zero_of_mem_bubbleSpace_polySpace hr ⟨hω, hbub⟩ fun h η hη => ?_
-  have := hdof n (OrderEmbedding.ofStrictMono id strictMono_id) η (by rw [testSpace_eq ⟨by omega, h⟩]; exact hη)
+  have := hdof n (OrderEmbedding.ofStrictMono id strictMono_id) η
+    (by rw [testSpace_eq ⟨by omega, h⟩]; exact hη)
   rw [faceMoment] at this
   simpa [faceTrace_refVertex_id] using this
 
@@ -334,7 +336,8 @@ theorem eq_zero_of_faceMoment_eq_zero_minus {r : ℕ} (hr : 1 ≤ r) (k n : ℕ)
     rw [faceMoment, faceTrace_faceTrace]
     exact this
   refine eq_zero_of_mem_bubbleSpace_polyMinusSpace hr ⟨hω, hbub⟩ fun h η hη => ?_
-  have := hdof n (OrderEmbedding.ofStrictMono id strictMono_id) η (by rw [testSpaceMinus_eq ⟨by omega, h⟩]; exact hη)
+  have := hdof n (OrderEmbedding.ofStrictMono id strictMono_id) η
+    (by rw [testSpaceMinus_eq ⟨by omega, h⟩]; exact hη)
   rw [faceMoment] at this
   simpa [faceTrace_refVertex_id] using this
 
@@ -1137,7 +1140,8 @@ family `P_r⁻Λᵏ(T) → P_r⁻Λ^{k+1}(T)` (`r ≥ 1`). [AFW2010], §5.2; [AF
 theorem polyMinusInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
     (hk : k + 1 ≤ n) (ω : c1DegForms n k) :
     polyMinusInterp hp hr hk (extDerivC1Deg k ω) = extDerivLocalMinus hp r k
-      (polyMinusInterp hp hr (by omega) (Submodule.inclusion (c1DegForms_le_contDegForms k) ω)) := by
+      (polyMinusInterp hp hr (by omega)
+        (Submodule.inclusion (c1DegForms_le_contDegForms k) ω)) := by
   set hℓ := isUnisolvent_localDofMinus hp (r := r) (k := k) hr (by omega)
   set mY : (Σ f : Face n, DofIndexMinus r k f) → c1DegForms n k →ₗ[ℝ] ℝ := fun i =>
     polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (c1DegForms_le_contForms k)
@@ -1153,5 +1157,118 @@ theorem polyMinusInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (h
     (fun _ => LinearMap.ext fun _ => rfl) (fun _ => LinearMap.ext fun _ => rfl)
     (extDerivC1Deg k) (extDerivLocalMinus hp r k) (LinearMap.ext fun _ => rfl)
     polyMinusDof_extDeriv_mem_span ω
+
+/-! ### Dimensions of the bubble spaces ([AFW2006], §4.5–4.6) -/
+
+theorem isUnit_det_edgeMatrix_refVertex : IsUnit (edgeMatrix (refVertex n)).det := by
+  rw [edgeMatrix_refVertex, Matrix.det_one]; exact isUnit_one
+
+/-- The simplex itself, as its top-dimensional face. -/
+def Face.top (n : ℕ) : Face n := ⟨⟨n, Nat.lt_succ_self n⟩, ⟨univ, by simp⟩⟩
+
+theorem Face.coe_emb_top : ((Face.top n).emb : Fin (n + 1) → Fin (n + 1)) = id :=
+  (orderEmbOfFin_unique (Face.top n).2.2 (fun x => mem_univ x) strictMono_id).symm
+
+theorem Face.dim_lt_of_subset {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) (hm : m < n) {g : Face n}
+    (hg : g.2.1 ⊆ (Face.ofEmb e).2.1) : g.dim < n := by
+  have h1 := card_le_card hg
+  rw [g.2.2, (Face.ofEmb e).2.2] at h1
+  change g.dim + 1 ≤ m + 1 at h1
+  omega
+
+/-- **`P̊_rΛᵏ(T̂)` is dual to `P⁻_{r+k-n}Λ^{n-k}(T̂)`** ([AFW2006], §4.5; [AFW2010], Lemma 5.6):
+the moments `ω ↦ ∫_{T̂} ω ∧ η` against a basis of `P⁻_{r+k-n}Λ^{n-k}` are a bijection from the
+bubbles onto the coefficient vectors, so `dim P̊_rΛᵏ(T̂) = dim P⁻_{r+k-n}Λ^{n-k}(ℝⁿ)`. -/
+theorem finrank_bubbleSpace_polySpace {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    Module.finrank ℝ (bubbleSpace (refVertex n) (polySpace n r k)) =
+      Module.finrank ℝ (testSpace r k n) := by
+  have hp := isUnit_det_edgeMatrix_refVertex (n := n)
+  set b := testBasis r k n
+  have hcont : bubbleSpace (refVertex n) (polySpace n r k) ≤ contForms n := fun ω h =>
+    (polySpace_le_c1 h.1).continuous
+  set Φ : bubbleSpace (refVertex n) (polySpace n r k) →ₗ[ℝ]
+      (Fin (Module.finrank ℝ (testSpace r k n)) → ℝ) :=
+    LinearMap.pi fun j => faceMomentₗ (refVertex n) (Face.top n).emb (b j : FormField n)
+      (contDiff_of_mem_testSpace (b j).2).continuous ∘ₗ Submodule.inclusion hcont
+  have hinj : Function.Injective Φ := by
+    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+    intro ω hω
+    have hj : ∀ j, faceMoment (refVertex n) (Face.top n).emb (b j : FormField n) ω = 0 :=
+      fun j => congrFun hω j
+    refine Subtype.ext (eq_zero_of_mem_bubbleSpace_polySpace hr ω.2 fun h η hη => ?_)
+    have := faceMoment_eq_zero_of_basis (refVertex n) (Face.top n).emb b
+      (fun η h => (contDiff_of_mem_testSpace h).continuous) (hcont ω.2) hj
+      (by rw [testSpace_eq ⟨hk, h⟩]; exact hη)
+    simp only [faceMoment, Face.coe_emb_top] at this
+    change simplexIntegral (refVertex n)
+      (wedgeField (faceTrace (refVertex n) id (ω : FormField n)) η) = 0 at this
+    rwa [faceTrace_refVertex_id] at this
+  have hsurj : Function.Surjective Φ := by
+    intro c
+    set hℓ := isUnisolvent_localDof hp hr hk
+    set c' : (Σ f : Face n, DofIndex r k f) → ℝ := fun i =>
+      if h : i.1.dim = n then c ⟨i.2.val, lt_of_lt_of_eq i.2.isLt (by rw [h])⟩ else 0
+    set ω := hℓ.equiv.symm c'
+    have hω : (ω : FormField n) ∈ polySpace n r k := localPolySpace_eq hp r k ▸ ω.2
+    have hbub : IsBubble (refVertex n) ω := by
+      intro m e hm
+      have h := faceTrace_eq_of_localDof_eq hp hr (Face.ofEmb e) (ω := ω) (ω' := 0)
+        fun g hg i => by
+          rw [map_zero, hℓ.dof_equiv_symm]
+          simp only [c', (Face.dim_lt_of_subset e hm hg).ne, ↓reduceDIte]
+      rw [Face.emb_ofEmb] at h
+      rw [h]; simp
+    refine ⟨⟨ω, hω, hbub⟩, funext fun j => ?_⟩
+    have := hℓ.dof_equiv_symm c' ⟨Face.top n, j⟩
+    simp only [c', Face.top, ↓reduceDIte] at this
+    exact this
+  rw [(LinearEquiv.ofBijective Φ ⟨hinj, hsurj⟩).finrank_eq, Module.finrank_fin_fun]
+
+/-- **`P̊_r⁻Λᵏ(T̂)` is dual to `P_{r+k-n-1}Λ^{n-k}(T̂)`** ([AFW2006], §4.6; [AFW2010], Lemma 5.6):
+`dim P̊_r⁻Λᵏ(T̂) = dim P_{r+k-n-1}Λ^{n-k}(ℝⁿ)`. -/
+theorem finrank_bubbleSpace_polyMinusSpace {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    Module.finrank ℝ (bubbleSpace (refVertex n) (polyMinusSpace n r k)) =
+      Module.finrank ℝ (testSpaceMinus r k n) := by
+  have hp := isUnit_det_edgeMatrix_refVertex (n := n)
+  set b := testBasisMinus r k n
+  have hcont : bubbleSpace (refVertex n) (polyMinusSpace n r k) ≤ contForms n := fun ω h =>
+    (contDiff_of_mem_polyMinusSpace h.1).continuous
+  set Φ : bubbleSpace (refVertex n) (polyMinusSpace n r k) →ₗ[ℝ]
+      (Fin (Module.finrank ℝ (testSpaceMinus r k n)) → ℝ) :=
+    LinearMap.pi fun j => faceMomentₗ (refVertex n) (Face.top n).emb (b j : FormField n)
+      (contDiff_of_mem_testSpaceMinus (b j).2).continuous ∘ₗ Submodule.inclusion hcont
+  have hinj : Function.Injective Φ := by
+    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+    intro ω hω
+    have hj : ∀ j, faceMoment (refVertex n) (Face.top n).emb (b j : FormField n) ω = 0 :=
+      fun j => congrFun hω j
+    refine Subtype.ext (eq_zero_of_mem_bubbleSpace_polyMinusSpace hr ω.2 fun h η hη => ?_)
+    have := faceMoment_eq_zero_of_basis (refVertex n) (Face.top n).emb b
+      (fun η h => (contDiff_of_mem_testSpaceMinus h).continuous) (hcont ω.2) hj
+      (by rw [testSpaceMinus_eq ⟨hk, h⟩]; exact hη)
+    simp only [faceMoment, Face.coe_emb_top] at this
+    change simplexIntegral (refVertex n)
+      (wedgeField (faceTrace (refVertex n) id (ω : FormField n)) η) = 0 at this
+    rwa [faceTrace_refVertex_id] at this
+  have hsurj : Function.Surjective Φ := by
+    intro c
+    set hℓ := isUnisolvent_localDofMinus hp hr hk
+    set c' : (Σ f : Face n, DofIndexMinus r k f) → ℝ := fun i =>
+      if h : i.1.dim = n then c ⟨i.2.val, lt_of_lt_of_eq i.2.isLt (by rw [h])⟩ else 0
+    set ω := hℓ.equiv.symm c'
+    have hω : (ω : FormField n) ∈ polyMinusSpace n r k := localPolyMinusSpace_eq hp r k ▸ ω.2
+    have hbub : IsBubble (refVertex n) ω := by
+      intro m e hm
+      have h := faceTrace_eq_of_localDofMinus_eq hp hr (Face.ofEmb e) (ω := ω) (ω' := 0)
+        fun g hg i => by
+          rw [map_zero, hℓ.dof_equiv_symm]
+          simp only [c', (Face.dim_lt_of_subset e hm hg).ne, ↓reduceDIte]
+      rw [Face.emb_ofEmb] at h
+      rw [h]; simp
+    refine ⟨⟨ω, hω, hbub⟩, funext fun j => ?_⟩
+    have := hℓ.dof_equiv_symm c' ⟨Face.top n, j⟩
+    simp only [c', Face.top, ↓reduceDIte] at this
+    exact this
+  rw [(LinearEquiv.ofBijective Φ ⟨hinj, hsurj⟩).finrank_eq, Module.finrank_fin_fun]
 
 end Feec.FiniteElement

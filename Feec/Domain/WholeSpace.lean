@@ -12,7 +12,8 @@ constant-coefficient operator of any order (`Feec.Domain.ConstCoeffOp`). Then
   `A_min(E) = A_max(E)` (`ConstCoeffOp.minimal_univ_eq_maximal_univ`):
 
 `C_c^∞(E)` is dense in the graph norm of the weak (maximal) realization (weak = strong for
-constant coefficients on `ℝⁿ`, as observed by Hörmander); on `ℝⁿ` there is no boundary, so
+constant coefficients on `ℝⁿ`, in the sense of Friedrichs' identity of weak and strong
+extensions; cf. [Brezis2011], §9.1); on `ℝⁿ` there is no boundary, so
 `H̊ = H`. In particular the minimal and maximal realizations of every complex of
 constant-coefficient operators on `E` coincide
 (`ConstCoeffComplex.minimalComplex_univ_eq_maximalComplex_univ`), e.g. the de Rham complex,
@@ -20,6 +21,10 @@ constant-coefficient operators on `E` coincide
 
 Moreover (`ConstCoeffOp.mem_minimal_of_support_subset`): if `u ∈ D(A_max(E))` vanishes a.e.
 outside a compact subset of an open `Ω`, then `u|_Ω ∈ D(A_min(Ω))` and `A_min(u|_Ω) = (A u)|_Ω`.
+The same holds starting from `Ω` (`ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`): an
+element of `D(A_max(Ω))` vanishing a.e. outside a compact subset of `Ω` lies in `D(A_min(Ω))`
+(its extension by zero, `extendL2F`, lies in `D(A_max(E))`). Restriction maps `D(A_max(E))` into
+`D(A_max(Ω))` (`ConstCoeffOp.restrictL2F_mem_maximal`).
 
 ## Proof
 
@@ -1082,6 +1087,152 @@ theorem mem_minimal_of_support_subset (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set 
       (hmem.mono fun m hm => Submodule.le_topologicalClosure _ hm)
   exact ⟨LinearPMap.mem_domain_of_mem_graph hgr,
     ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph hgr)).2 hgr).symm⟩
+
+omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
+  [(volume : Measure E).IsAddHaarMeasure] [Fintype κ] in
+/-- `A f` at `x` only depends on the germ of `f` at `x`. -/
+theorem apply_congr_nhds (A : ConstCoeffOp E 𝕜 ι κ) {f g : ι → E → 𝕜} {x : E}
+    (h : ∀ i, f i =ᶠ[𝓝 x] g i) (j : κ) : A.apply f j x = A.apply g j x := by
+  simp only [apply, applyEntry]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  congr 1
+  refine List.map_congr_left fun t _ => ?_
+  rw [(iterDeriv_eventuallyEq (h i) t.1).eq_of_nhds]
+
+omit [FiniteDimensional ℝ E] in
+/-- Against a test field of `Ω`, the inner product of a restriction is the inner product on `E`. -/
+theorem inner_restrictL2F_testField {Ω : Set E} (v : L2F 𝕜 (univ : Set E) ι)
+    {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hφ' : IsTestField (univ : Set E) φ) :
+    ⟪restrictL2F Ω v, testField hφ⟫_𝕜 = ⟪v, testField hφ'⟫_𝕜 := by
+  rw [inner_testField, inner_testField]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [setIntegral_univ, ← integral_restrict_of_eq_zero (Ω := Ω) fun x hx => by
+    rw [(hφ i).eq_zero_of_notMem hx, mul_zero]]
+  refine integral_congr_ae ?_
+  filter_upwards [coeFn_restrictL2F Ω v i] with x hx
+  rw [hx]
+
+/-- **Restriction maps `D(A_max(E))` into `D(A_max(Ω))`**, and `A_max(u|_Ω) = (A_max u)|_Ω`. -/
+theorem restrictL2F_mem_maximal (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set E} (hΩ : IsOpen Ω)
+    (u : (A.maximal univ).domain) :
+    ∃ h : restrictL2F Ω (u : L2F 𝕜 univ ι) ∈ (A.maximal Ω).domain,
+      A.maximal Ω ⟨_, h⟩ = restrictL2F Ω (A.maximal univ u) := by
+  have key : ∀ φ : κ → E → 𝕜, ∀ hφ : IsTestField Ω φ,
+      ⟪restrictL2F Ω (A.maximal univ u), testField hφ⟫_𝕜 =
+        ⟪restrictL2F Ω (u : L2F 𝕜 univ ι), testField (A.formalAdj.isTestField_apply hφ)⟫_𝕜 := by
+    intro φ hφ
+    have hφ' : IsTestField (univ : Set E) φ := fun j => (hφ j).mono (subset_univ Ω)
+    rw [inner_restrictL2F_testField _ hφ hφ', inner_restrictL2F_testField _
+      (A.formalAdj.isTestField_apply hφ) (A.formalAdj.isTestField_apply hφ')]
+    exact A.maximal_inner_testField isOpen_univ u hφ'
+  have hmem := (A.mem_maximal_domain_iff hΩ).2 ⟨_, key⟩
+  exact ⟨hmem, A.maximal_apply_eq hΩ ⟨_, hmem⟩ key⟩
+
+/-- The extension by zero to `E` of an `L²(Ω)` field. -/
+def extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι) : L2F 𝕜 (univ : Set E) ι :=
+  toL2F (ψ := fun i => Ω.indicator (v i : E → 𝕜)) fun i =>
+    memLp_univ_iff.2 ((memLp_indicator_iff_restrict hΩ.nullMeasurableSet).2 (Lp.memLp (v i)))
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
+  [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] in
+theorem coeFn_extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι) (i : ι) :
+    (extendL2F hΩ v i : E → 𝕜) =ᵐ[volume] Ω.indicator (v i : E → 𝕜) := by
+  have h := (memLp_univ_iff.2 ((memLp_indicator_iff_restrict hΩ.nullMeasurableSet).2
+    (Lp.memLp (v i)))).coeFn_toLp
+  filter_upwards [(ae_restrict_iff' MeasurableSet.univ).1 h] with x hx using hx (mem_univ x)
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
+  [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] in
+/-- Restricting the extension by zero gives back the field. -/
+theorem restrictL2F_extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι) :
+    restrictL2F Ω (extendL2F hΩ v) = v := by
+  refine PiLp.ext fun i => Lp.ext ?_
+  filter_upwards [coeFn_restrictL2F Ω (extendL2F hΩ v) i,
+    ae_restrict_of_ae (coeFn_extendL2F hΩ v i), ae_restrict_mem hΩ] with x h1 h2 h3
+  rw [h1, h2, indicator_of_mem h3]
+
+omit [FiniteDimensional ℝ E] in
+/-- `⟪ũ, φ⟫_{L²(E)} = Σᵢ ∫_Ω conj uᵢ φᵢ` for the extension by zero `ũ`. -/
+theorem inner_extendL2F_testField {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι)
+    {φ : ι → E → 𝕜} (hφ : IsTestField (univ : Set E) φ) :
+    ⟪extendL2F hΩ v, testField hφ⟫_𝕜 = ∑ i, ∫ x, conj (v i x) * φ i x ∂volume.restrict Ω := by
+  rw [inner_testField]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [setIntegral_univ, ← integral_indicator hΩ]
+  refine integral_congr_ae ?_
+  filter_upwards [coeFn_extendL2F hΩ v i] with x hx
+  rw [hx]
+  by_cases h : x ∈ Ω <;> simp [h]
+
+/-- **Compactly supported elements of `D(A_max(Ω))` lie in `D(A_min(Ω))`**: if `u ∈ D(A_max(Ω))`
+vanishes a.e. outside a compact `K ⊆ Ω` (`Ω` open), then `u ∈ D(A_min(Ω))` (and `A_min u = A_max u`).
+With a cut-off `χ ∈ C_c^∞(Ω)` equal to `1` near `K`, the extension by zero `ũ` satisfies
+`A_max(E) ũ = (χ A_max u)~` (test against `χ ψ`), so `mem_minimal_of_support_subset` applies. -/
+theorem mem_minimal_of_maximal_of_support_subset (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set E}
+    (hΩ : IsOpen Ω) {K : Set E} (hK : IsCompact K) (hKΩ : K ⊆ Ω) (u : (A.maximal Ω).domain)
+    (hu : ∀ i, ∀ᵐ x ∂volume.restrict Ω, x ∉ K → (u : L2F 𝕜 Ω ι) i x = 0) :
+    ∃ h : (u : L2F 𝕜 Ω ι) ∈ (A.minimal Ω).domain, A.minimal Ω ⟨_, h⟩ = A.maximal Ω u := by
+  classical
+  have : ProperSpace E := FiniteDimensional.proper_real E
+  have hΩm := hΩ.measurableSet
+  obtain ⟨δ, hδ, hδΩ⟩ := hK.exists_cthickening_subset_open hΩ hKΩ
+  obtain ⟨χ, hχs, hχr, hχsupp, hχ1⟩ := exists_contDiff_support_eq_eq_one_iff (n := ⊤)
+    (Metric.isOpen_thickening (δ := δ) (E := K)) (Metric.isClosed_cthickening (δ := δ / 2) (E := K))
+    (Metric.cthickening_subset_thickening' hδ (by linarith) K)
+  have hχts : tsupport χ ⊆ Metric.cthickening δ K := by
+    rw [tsupport, hχsupp]; exact Metric.closure_thickening_subset_cthickening δ K
+  have hχT : IsTest Ω (fun x => (χ x : 𝕜)) :=
+    IsTest.ofReal ⟨hχs, hK.cthickening.of_isClosed_subset (isClosed_tsupport _) hχts,
+      hχts.trans hδΩ⟩
+  have hχle : ∀ x, ‖(χ x : 𝕜)‖ ≤ 1 := fun x => by
+    have := hχr (mem_range_self x)
+    rw [RCLike.norm_ofReal, abs_of_nonneg this.1]; exact this.2
+  -- the cut-off of a test field of `E` is a test field of `Ω`
+  have hcut : ∀ {φ : κ → E → 𝕜}, IsTestField (univ : Set E) φ →
+      IsTestField Ω (fun j x => (χ x : 𝕜) * φ j x) := fun hφ j =>
+    ⟨hχT.contDiff.mul (hφ j).contDiff, hχT.hasCompactSupport.mul_right,
+      tsupport_mul_subset_left.trans hχT.tsupport_subset⟩
+  set w : L2F 𝕜 Ω κ := A.maximal Ω u
+  have hχw : ∀ j, MemLp (fun x => (χ x : 𝕜) * w j x) 2 (volume.restrict Ω) := fun j =>
+    (Lp.memLp (w j)).of_le (hχT.continuous.aestronglyMeasurable.mul (Lp.aestronglyMeasurable _))
+      (Eventually.of_forall fun x => by
+        rw [norm_mul]; exact mul_le_of_le_one_left (norm_nonneg _) (hχle x))
+  set U := extendL2F hΩm (u : L2F 𝕜 Ω ι)
+  set W := extendL2F hΩm (toL2F hχw)
+  have key : ∀ ψ : κ → E → 𝕜, ∀ hψ : IsTestField (univ : Set E) ψ,
+      ⟪W, testField hψ⟫_𝕜 = ⟪U, testField (A.formalAdj.isTestField_apply hψ)⟫_𝕜 := by
+    intro ψ hψ
+    have e1 : ⟪W, testField hψ⟫_𝕜 = ⟪w, testField (hcut hψ)⟫_𝕜 := by
+      rw [inner_extendL2F_testField, inner_testField]
+      refine Finset.sum_congr rfl fun j _ => integral_congr_ae ?_
+      filter_upwards [(hχw j).coeFn_toLp] with x hx
+      simp only [toL2F] at hx ⊢
+      rw [hx, map_mul, RCLike.conj_ofReal]; ring
+    have e2 : ⟪(u : L2F 𝕜 Ω ι), testField (A.formalAdj.isTestField_apply (hcut hψ))⟫_𝕜 =
+        ⟪U, testField (A.formalAdj.isTestField_apply hψ)⟫_𝕜 := by
+      rw [inner_extendL2F_testField, inner_testField]
+      refine Finset.sum_congr rfl fun i _ => integral_congr_ae ?_
+      filter_upwards [hu i] with x hx
+      by_cases hxK : x ∈ K
+      · congr 1
+        refine A.formalAdj.apply_congr_nhds (fun j => ?_) i
+        filter_upwards [Metric.isOpen_thickening.mem_nhds
+          (Metric.self_subset_thickening (half_pos hδ) K hxK)] with y hy
+        rw [(hχ1 y).1 (Metric.thickening_subset_cthickening _ _ hy), RCLike.ofReal_one, one_mul]
+      · rw [hx hxK, map_zero, zero_mul, zero_mul]
+    rw [e1, A.maximal_inner_testField hΩ u (hcut hψ), e2]
+  have hU := (A.mem_maximal_domain_iff isOpen_univ).2 ⟨W, key⟩
+  have hsupp : ∀ i, ∀ᵐ x, x ∉ K → (U : L2F 𝕜 univ ι) i x = 0 := fun i => by
+    filter_upwards [coeFn_extendL2F hΩm (u : L2F 𝕜 Ω ι) i, (ae_restrict_iff' hΩm).1 (hu i)]
+      with x h1 h2 hxK
+    rw [h1]
+    by_cases hxΩ : x ∈ Ω
+    · rw [indicator_of_mem hxΩ, h2 hxΩ hxK]
+    · rw [indicator_of_notMem hxΩ]
+  obtain ⟨h, -⟩ := A.mem_minimal_of_support_subset hΩ hK hKΩ ⟨U, hU⟩ hsupp
+  have h' : (u : L2F 𝕜 Ω ι) ∈ (A.minimal Ω).domain := by
+    simpa only [U, restrictL2F_extendL2F] using h
+  exact ⟨h', (A.minimal_le_maximal hΩ).2 rfl⟩
 
 end ConstCoeffOp
 

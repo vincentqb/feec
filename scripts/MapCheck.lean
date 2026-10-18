@@ -3306,9 +3306,6 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«MatrixSymbol».«div» -- map.tsv
 #check @«le_add_half_integral_of_sq_deriv_le_mul_sharp» -- map.tsv
 #check @«Feec».«MatrixSymbol».«vskw» -- map.tsv
-#check @«Feec».«CurvatureTensor».«riemLowField_bianchi1» -- THESIS_MAP.md
-#check @«Feec».«CurvatureTensor».«riemLowField_interchange» -- THESIS_MAP.md
-#check @«Feec».«CurvatureTensor».«riemLowField_pairSkew» -- THESIS_MAP.md
 #check @«Feec».«Fourier».«GradCurl».«isFibreReducing» -- THESIS_MAP.md
 #check @«Feec».«Fourier».«SymCurl».«isFibreReducing» -- THESIS_MAP.md
 #check @«Feec».«MatrixSymbol».«axial_curl» -- THESIS_MAP.md
@@ -3320,7 +3317,6 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Counterexamples».«not_poincare_grad» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«closedRangeAt_iff_poincare_adjoint» -- THESIS_MAP.md
 #check @«LinearPMap».«isClosed_range_iff_exists_norm_le» -- THESIS_MAP.md
-#check @«Feec».«Evolution».«existsUnique_isBoundarySolution» -- THESIS_MAP.md
 #check @«Feec».«ForcingThm43Full» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«Medium».«ohmic_existsUnique» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«gauss_existsUnique» -- THESIS_MAP.md
@@ -3366,11 +3362,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Fourier».«FibreReducing».«propagates» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«mem_closure_domain_inter_ker_adjoint» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«Ident».«forward_iff_pi» -- THESIS_MAP.md
-#check @«Feec».«Models».«Cube».«Inhomogeneous».«constraint» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«Mirror».«existsUnique_memCube_pi» -- THESIS_MAP.md
-#check @«Feec».«Models».«Cube».«Mirror».«existsUnique_memCube_trace» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«Mirror».«existsUnique_memCube_unit» -- THESIS_MAP.md
-#check @«Feec».«Models».«Cube».«Mirror».«existsUnique_memQ_trace» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«Mirror».«propagatesQ» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«Parity».«not_finiteDimensional_invariantCore» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«RowWise».«forward_iff» -- THESIS_MAP.md
@@ -3382,7 +3375,6 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«ShortHilbertComplex».«isReducedSolution_of_isStrongSolution» -- THESIS_MAP.md
 #check @«Feec».«TimeStepping».«IsCNStep».«mem_of_isReducing» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«BoundedSymTSD».«exists_projTSD_not_mem_domain» -- THESIS_MAP.md
-#check @«Feec».«Counterexamples».«EveryBallSymTSD».«tsd_not_propagates» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorSym».«exists_nonstationary» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorSym».«invariantCore_eq» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorSym».«propagatesQ» -- THESIS_MAP.md
@@ -3394,7 +3386,6 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«BGG».«Hilb».«toHilbertComplex_closedRangeAt_two» -- THESIS_MAP.md
 #check @«Feec».«BGG».«Hilb».«toHilbertComplex_cycles_zero» -- THESIS_MAP.md
 #check @«Feec».«BGG».«Hilb».«toShort» -- THESIS_MAP.md
-#check @«Feec».«CurvatureTensor».«cov13_riem_cyclic» -- THESIS_MAP.md
 #check @«Feec».«Metric».«eq_trRev_sub» -- THESIS_MAP.md
 #check @«Feec».«TT».«ttSub» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«orthogonal_boundaries» -- THESIS_MAP.md
@@ -3407,8 +3398,6 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«TT».«ttProj» -- THESIS_MAP.md
 #check @«Feec».«TT».«ttProj_mem» -- THESIS_MAP.md
 #check @«Feec».«leviCivita» -- THESIS_MAP.md
-#check @«Feec».«EinsteinBianchi».«crossCross» -- THESIS_MAP.md
-#check @«Feec».«EinsteinBianchi».«crossDot» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«deRham_not_closedRange» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«euclidean_not_closedRange» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«not_forall_closedRangeAt_of_finiteDimensional_harmonic» -- THESIS_MAP.md
@@ -3454,7 +3443,6 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Models».«Cube».«MirrorBGG».«invariantCore_eq» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorBGG».«propagates» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorBGG».«reducingSubcomplex» -- THESIS_MAP.md
-#check @«Feec».«Models».«Cube».«Inhomogeneous».«WholeSpaceTSD» -- THESIS_MAP.md
 #check @«Feec».«TimeStepping».«IsCNStep» -- THESIS_MAP.md
 #check @«Feec».«TimeStepping».«IsCNStep».«unique» -- THESIS_MAP.md
 #check @«Feec».«TimeStepping».«IsFullCNStep».«norm_sq_add» -- THESIS_MAP.md

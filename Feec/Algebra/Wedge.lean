@@ -27,6 +27,7 @@ graded derivation.
 
 * bilinearity, units (`wedgeForm_one_left`, `wedgeForm_one_right`) and degrees
   (`IsDeg.wedgeForm`);
+* `wedgeForm_assoc`: **associativity** `(ω ∧ η) ∧ ζ = ω ∧ (η ∧ ζ)`;
 * `wedgeForm_comm`: **graded commutativity** `η ∧ ω = (-1)^{kl} ω ∧ η`;
 * `wedge_wedgeForm`, `wedge_wedgeForm_right`: associativity with a covector,
   `ξ ∧ (ω ∧ η) = (ξ ∧ ω) ∧ η = (-1)^k ω ∧ (ξ ∧ η)`;
@@ -325,6 +326,61 @@ theorem wedge_wedgeForm_right (ξ : d → R) {k : ℕ} {ω : Finset d → R} (h�
     linear_combination (-(sgn j s * sgn j (u.erase j \ s) * ξ j *
       (shuffleSgn s (u.erase j \ s) * ω s * η (u.erase j \ s)))) * h1
   · rw [hω s hk]; ring
+
+/-! ### Associativity -/
+
+theorem shuffleSgn_union_left {s t : Finset d} (h : Disjoint s t) (v : Finset d) :
+    (shuffleSgn (s ∪ t) v : R) = shuffleSgn s v * shuffleSgn t v := by
+  rw [shuffleSgn, prod_union h]; rfl
+
+theorem shuffleSgn_union_right (s : Finset d) {t v : Finset d} (h : Disjoint t v) :
+    (shuffleSgn s (t ∪ v) : R) = shuffleSgn s t * shuffleSgn s v := by
+  rw [shuffleSgn, shuffleSgn, shuffleSgn, ← prod_mul_distrib]
+  exact prod_congr rfl fun a _ => sgn_union h
+
+/-- Reindexing pairs `s ⊆ a ⊆ u` as `s ⊆ u`, `t ⊆ u ∖ s` (with `a = s ∪ t`). -/
+theorem sum_powerset_sum_powerset {M : Type*} [AddCommMonoid M] (u : Finset d)
+    (F : Finset d → Finset d → M) :
+    ∑ a ∈ u.powerset, ∑ s ∈ a.powerset, F a s =
+      ∑ s ∈ u.powerset, ∑ t ∈ (u \ s).powerset, F (s ∪ t) s := by
+  rw [sum_comm' (t' := u.powerset) (s' := fun s => u.powerset.filter (s ⊆ ·))]
+  · refine sum_congr rfl fun s hs => ?_
+    refine sum_nbij' (fun a => a \ s) (fun t => s ∪ t) ?_ ?_ ?_ ?_ ?_
+    · intro a ha
+      simp only [mem_filter, mem_powerset] at ha
+      simpa using sdiff_subset_sdiff ha.1 (subset_refl s)
+    · intro t ht
+      simp only [mem_powerset, subset_sdiff] at ht
+      simp only [mem_filter, mem_powerset]
+      exact ⟨union_subset (mem_powerset.1 hs) ht.1, subset_union_left⟩
+    · intro a ha
+      exact union_sdiff_of_subset (mem_filter.1 ha).2
+    · intro t ht
+      exact union_sdiff_cancel_left (subset_sdiff.1 (mem_powerset.1 ht)).2.symm
+    · intro a ha
+      rw [union_sdiff_of_subset (mem_filter.1 ha).2]
+  · intro a s
+    simp only [mem_powerset, mem_filter]
+    exact ⟨fun h => ⟨⟨h.1, h.2⟩, h.2.trans h.1⟩, fun h => ⟨h.1.1, h.1.2⟩⟩
+
+/-- **Associativity** of the exterior product, `(ω ∧ η) ∧ ζ = ω ∧ (η ∧ ζ)`. -/
+theorem wedgeForm_assoc (ω η ζ : Finset d → R) :
+    wedgeForm (wedgeForm ω η) ζ = wedgeForm ω (wedgeForm η ζ) := by
+  funext u
+  simp only [wedgeForm_apply, mul_sum, sum_mul]
+  rw [sum_powerset_sum_powerset u (fun a s => shuffleSgn a (u \ a) *
+    (shuffleSgn s (a \ s) * ω s * η (a \ s)) * ζ (u \ a))]
+  refine sum_congr rfl fun s hs => sum_congr rfl fun t ht => ?_
+  have hsu : s ⊆ u := mem_powerset.1 hs
+  have hts : Disjoint s t := (subset_sdiff.1 (mem_powerset.1 ht)).2.symm
+  have htu : t ⊆ u \ s := mem_powerset.1 ht
+  have h1 : (s ∪ t) \ s = t := union_sdiff_cancel_left hts
+  have h2 : u \ (s ∪ t) = (u \ s) \ t := by
+    ext x; simp only [mem_sdiff, mem_union, not_or]; tauto
+  have hv : Disjoint t ((u \ s) \ t) := disjoint_sdiff
+  have h3 : u \ s = t ∪ ((u \ s) \ t) := (union_sdiff_of_subset htu).symm
+  rw [h1, h2, shuffleSgn_union_left hts, h3, shuffleSgn_union_right s hv, ← h3]
+  ring
 
 /-- A covector `ξ` as the `1`-form `Σⱼ ξⱼ dxⱼ = ξ ∧ 1`. -/
 def oneForm (ξ : d → R) : Finset d → R := wedge ξ (Pi.single ∅ 1)

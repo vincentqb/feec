@@ -387,7 +387,11 @@ def polySpace (r k : ℕ) : Submodule ℝ (FormField n) :=
   (Koszul.polyForm ℝ (Fin n) r k).map (evalForm n)
 
 variable (n) in
-/-- `P_r⁻Λᵏ(ℝⁿ)` as a space of form fields. -/
+/-- `P_r⁻Λᵏ(ℝⁿ)` as a space of form fields.
+
+Warning: this is meaningful only for `1 ≤ r`. At `r = 0` the underlying
+`Feec.Koszul.polyFormMinus` uses the truncated `r - 1 = 0`, so it is `P_0Λᵏ + κH_0Λ^{k+1}` rather
+than the classical `P_0⁻Λᵏ = 0`; every result here about the trimmed family assumes `1 ≤ r`. -/
 def polyMinusSpace (r k : ℕ) : Submodule ℝ (FormField n) :=
   (Koszul.polyFormMinus ℝ (Fin n) r k).map (evalForm n)
 
@@ -490,7 +494,8 @@ along `F_T⁻¹`. -/
 def localPolySpace (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : Submodule ℝ (FormField n) :=
   (polySpace n r k).map (affinePullbackₗ (invMatrix p) (invOffset p))
 
-/-- **The local space** `P_r⁻Λᵏ(T)`: the pullback of `P_r⁻Λᵏ(ℝⁿ)` along `F_T⁻¹`. -/
+/-- **The local space** `P_r⁻Λᵏ(T)`: the pullback of `P_r⁻Λᵏ(ℝⁿ)` along `F_T⁻¹`
+(meaningful for `1 ≤ r`; see `polyMinusSpace`). -/
 def localPolyMinusSpace (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : Submodule ℝ (FormField n) :=
   (polyMinusSpace n r k).map (affinePullbackₗ (invMatrix p) (invOffset p))
 

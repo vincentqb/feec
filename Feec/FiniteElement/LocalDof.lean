@@ -247,13 +247,14 @@ theorem continuous_wedgeField {ω η : FormField n} (hω : Continuous ω) (hη :
 
 /-! ### Moments -/
 
-/-- The **moment** `ω ↦ ∫_f tr_f ω ∧ η` on the face `f` of `p`, with the test form `η` on the
-reference face `T̂_{dim f}` (the face is oriented by its vertex order). -/
+/-- The face trace of a continuous form field is continuous. -/
 theorem continuous_faceTrace (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ}
     (e : Fin (m + 1) → Fin (n + 1)) {ω : FormField n} (hω : Continuous ω) :
     Continuous (faceTrace p e ω) :=
   continuous_affinePullback _ _ hω
 
+/-- The **moment** `ω ↦ ∫_f tr_f ω ∧ η` on the face `f` of `p`, with the test form `η` on the
+reference face `T̂_{dim f}` (the face is oriented by its vertex order). -/
 def faceMoment (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ} (e : Fin (m + 1) → Fin (n + 1))
     (η : FormField m) (ω : FormField n) : ℝ :=
   simplexIntegral (refVertex m) (wedgeField (faceTrace p e ω) η)
@@ -1121,7 +1122,7 @@ theorem polyDof_extDeriv_mem_span {r k : ℕ} (i : Σ f : Face n, DofIndex r (k 
 /-- **The commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` `k`-forms, for the `P` family
 `P_{r+1}Λᵏ(T) → P_rΛ^{k+1}(T)` (`r ≥ 1`): the canonical interpolants form a cochain map. Proved
 from the abstract `Feec.FiniteElement.interp_comp_eq` and Stokes' theorem on the faces.
-[AFW2010], §5.2; [AFW2006], Thm 5.2 -/
+[AFW2010], §5.2; [AFW2006], Lemma 4.24 (the local statement behind Thm 5.2) -/
 theorem polyInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
     (hk : k + 1 ≤ n) (ω : c1DegForms n k) :
     polyInterp hp hr hk (extDerivC1Deg k ω) = extDerivLocal hp r k
@@ -1186,7 +1187,7 @@ theorem polyMinusDof_extDeriv_mem_span {r k : ℕ} (i : Σ f : Face n, DofIndexM
       (faceTrace_mem_testSpaceMinus hη i)
 
 /-- **The commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` `k`-forms, for the trimmed
-family `P_r⁻Λᵏ(T) → P_r⁻Λ^{k+1}(T)` (`r ≥ 1`). [AFW2010], §5.2; [AFW2006], Thm 5.2 -/
+family `P_r⁻Λᵏ(T) → P_r⁻Λ^{k+1}(T)` (`r ≥ 1`). [AFW2010], §5.2; [AFW2006], Lemma 4.24 (the local statement behind Thm 5.2) -/
 theorem polyMinusInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
     (hk : k + 1 ≤ n) (ω : c1DegForms n k) :
     polyMinusInterp hp hr hk (extDerivC1Deg k ω) = extDerivLocalMinus hp r k

@@ -634,6 +634,181 @@ theorem segS1_regR_mem_H1c (y : Wv Vt0) (t : formIdx 3 2) :
 
 end H1Coeff
 
+/-! ### Bounds for smooth fields vanishing outside `Q` -/
+
+section SmoothBounds
+
+instance : IsFiniteMeasure (volume.restrict (cubeDomain 3)) :=
+  ⟨by rw [Measure.restrict_apply_univ]; exact (isBounded_cubeDomain 3).measure_lt_top⟩
+
+theorem measureUnivNNReal_cube_le : measureUnivNNReal (volume.restrict (cubeDomain 3)) ≤ 1 := by
+  have h : volume (cubeDomain 3) ≤ 1 := by
+    calc volume (cubeDomain 3) ≤ volume (Set.Icc (0 : Fin 3 → ℝ) 1) := measure_mono fun x hx =>
+          ⟨fun i => (hx i (Set.mem_univ i)).1.le,
+            fun i => (hx i (Set.mem_univ i)).2.le.trans (by norm_num)⟩
+      _ = 1 := by rw [Real.volume_Icc_pi]; simp
+  unfold measureUnivNNReal
+  rw [Measure.restrict_apply_univ]
+  simpa using ENNReal.toNNReal_mono ENNReal.one_ne_top h
+
+/-- An `L²(Q)` function bounded by `B` a.e. has norm `≤ B` (`|Q| ≤ 1`). -/
+theorem norm_L2_le_of_bound {f : L2 ℝ (cubeDomain 3)} {B : ℝ} (hB : 0 ≤ B)
+    (h : ∀ᵐ x ∂(volume.restrict (cubeDomain 3)), ‖f x‖ ≤ B) : ‖f‖ ≤ B := by
+  refine (Lp.norm_le_of_ae_bound hB h).trans ?_
+  have h1 : ((measureUnivNNReal (volume.restrict (cubeDomain 3)) : NNReal) : ℝ) ^
+      (ENNReal.toReal 2)⁻¹ ≤ 1 :=
+    Real.rpow_le_one (NNReal.coe_nonneg _) (by exact_mod_cast measureUnivNNReal_cube_le)
+      (by norm_num)
+  calc _ ≤ 1 * B := by
+        refine mul_le_mul_of_nonneg_right ?_ hB
+        exact_mod_cast h1
+    _ = B := one_mul B
+
+/-- A field in `L²(Q; ℝ^ι)` with components bounded by `B` a.e. has norm `≤ #ι B`. -/
+theorem norm_L2F_le_of_bound {ι : Type*} [Fintype ι] (z : L2F ℝ (cubeDomain 3) ι) {B : ℝ}
+    (hB : 0 ≤ B) (h : ∀ s, ∀ᵐ x ∂(volume.restrict (cubeDomain 3)), ‖z s x‖ ≤ B) :
+    ‖z‖ ≤ Fintype.card ι * B := by
+  refine (FEM.L2F.norm_le_sum_norm z).trans ?_
+  calc ∑ s, ‖z s‖ ≤ ∑ _s : ι, B := Finset.sum_le_sum fun s _ => norm_L2_le_of_bound hB (h s)
+    _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+
+theorem mem_closure_cube_update {y : Fin 3 → ℝ} (hy : y ∈ cubeDomain 3) :
+    Function.update y 0 (1 / 2) ∈ closure (cubeDomain 3) := by
+  rw [cubeDomain, closure_pi_set]
+  intro i _
+  rw [closure_Ioo (by norm_num)]
+  by_cases hi : i = 0
+  · subst hi; simp
+  · rw [Function.update_of_ne hi]
+    exact ⟨(hy i (Set.mem_univ i)).1.le, (hy i (Set.mem_univ i)).2.le⟩
+
+/-- **A `C¹` field vanishing outside `Q`, with `‖Dw‖ ≤ L` on `cl Q`, is bounded by `L / 2` on `Q`**
+(mean value theorem along a segment to a point of `∂Q`). -/
+theorem norm_le_of_flat {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    {w : (Fin 3 → ℝ) → E} (hw : Differentiable ℝ w)
+    (hsupp : ∀ y ∉ cubeDomain 3, w y = 0) {L : ℝ}
+    (hL : ∀ y ∈ closure (cubeDomain 3), ‖fderiv ℝ w y‖ ≤ L) {y : Fin 3 → ℝ}
+    (hy : y ∈ cubeDomain 3) : ‖w y‖ ≤ L * (1 / 2) := by
+  set y' := Function.update y 0 (1 / 2)
+  have hy' : y' ∉ cubeDomain 3 := fun h => by
+    have := (h 0 (Set.mem_univ 0)).2
+    simp [y'] at this
+  have hmvt := (convex_cubeDomain 3).closure.norm_image_sub_le_of_norm_fderiv_le
+    (fun x _ => hw x) hL (subset_closure hy) (mem_closure_cube_update hy)
+  rw [hsupp y' hy', zero_sub, norm_neg] at hmvt
+  have hd : ‖y' - y‖ ≤ 1 / 2 := by
+    refine (pi_norm_le_iff_of_nonneg (by norm_num)).2 fun i => ?_
+    by_cases hi : i = 0
+    · subst hi
+      have h0 := hy 0 (Set.mem_univ 0)
+      simp only [y', Pi.sub_apply, Function.update_self, Real.norm_eq_abs]
+      rw [abs_of_nonneg (by linarith [h0.2])]
+      linarith [h0.1]
+    · simp [y', Function.update_of_ne hi]
+  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hL y (subset_closure hy))
+  exact hmvt.trans (mul_le_mul_of_nonneg_left hd hL0)
+
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.mono {n : ℕ} {s : ℕ} {j : ℤ} {L L' : ℝ}
+    {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsFormMin s j L x) (hLL' : L ≤ L') :
+    IsCsFormMin s j L' x := by
+  rcases hx with hj | ⟨k, hk, w, hw, hdeg, hsupp, hL, hL', he⟩
+  · exact Or.inl hj
+  · exact Or.inr ⟨k, hk, w, hw, hdeg, hsupp, fun y hy => (hL y hy).trans hLL',
+      fun y hy => (hL' y hy).trans hLL', he⟩
+
+theorem norm_eq_zero_of_neg {j : ℤ} (hj : j < 0) (x : L2F ℝ (cubeDomain 3) (formIdx 3 j)) :
+    ‖x‖ = 0 := by
+  obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
+  exact FEM.norm_eq_zero_negSucc k x
+
+/-- **`L²` bound of a `C²` form vanishing outside `Q`**: `‖x‖ ≤ #(formIdx) L`. -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.norm_le {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)}
+    (hx : IsCsFormMin 0 j L x) (hL0 : 0 ≤ L) : ‖x‖ ≤ Fintype.card (formIdx 3 j) * L := by
+  rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, -, rfl⟩
+  · rw [norm_eq_zero_of_neg hj]; positivity
+  refine norm_L2F_le_of_bound _ hL0 fun s => ?_
+  filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
+    ⟨w, hw.continuous⟩ s, ae_restrict_mem (isOpen_cubeDomain 3).measurableSet] with y h1 hy
+  rw [h1]
+  have hb := norm_le_of_flat (hw.differentiable (by norm_num)) hsupp
+    (fun z hz => by simpa [norm_iteratedFDeriv_one] using hL z hz) hy
+  calc ‖(w y) s.1‖ ≤ ‖w y‖ := norm_le_pi_norm (w y) s.1
+    _ ≤ L * (1 / 2) := hb
+    _ ≤ L := by linarith
+
+theorem norm_coordDir_le (j : Fin 3) : ‖(coordDir j : Fin 3 → ℝ)‖ ≤ 1 := by
+  refine (pi_norm_le_iff_of_nonneg zero_le_one).2 fun i => ?_
+  by_cases h : i = j
+  · subst h; simp
+  · simp [coordDir, h]
+
+theorem abs_sgn (j : Fin 3) (s : Finset (Fin 3)) : |(ExteriorFibre.sgn j s : ℝ)| = 1 := by
+  simp [ExteriorFibre.sgn]
+
+/-- **`S¹u ∈ D(d¹*)` for `C²` fields**: if `x ∈ L²(Q; Λ²)` is the class of a `C²` `2`-form with
+`‖Dw‖ ≤ L` on `cl Q` (no boundary condition is needed), then
+`|⟪x, d w⟫| ≤ 9 L ‖w‖` for `w ∈ H̊Λ¹(Q)` (Green's formula on `D(d_min)`). -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W2} (hx : IsCsFormMin 0 2 L x) (hL0 : 0 ≤ L)
+    (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ := by
+  rcases hx with hj | ⟨k, hk, w2, hw2, -, -, hL, -, rfl⟩
+  · norm_num at hj
+  obtain rfl : k = 2 := by omega
+  set ψ : formIdx 3 2 → (Fin 3 → ℝ) → ℝ := fun s y => w2 y s.1 with hψ_def
+  have hψs : ∀ s, ContDiff ℝ 1 (ψ s) := fun s => (contDiff_pi.1 hw2 s.1).of_le (by norm_num)
+  have hψ : ∀ s, MemLp (ψ s) 2 (volume.restrict (cubeDomain 3)) := fun s =>
+    memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
+      (hψs s).continuous
+  have hAψ : ∀ r, MemLp ((extDerivOp ℝ 3 1).formalAdj.apply ψ r) 2
+      (volume.restrict (cubeDomain 3)) := fun r =>
+    memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
+      (ConstCoeffOp.continuous_apply _ (formalAdj_extDerivOp_isOrderLE 1) hψs r)
+  have key := (extDerivOp ℝ 3 1).minimal_green (isOpen_cubeDomain 3) (extDerivOp_isOrderLE 1) w
+    hψs hψ hAψ
+  have hpt : ∀ r : formIdx 3 1, ∀ y ∈ cubeDomain 3,
+      ‖(extDerivOp ℝ 3 1).formalAdj.apply ψ r y‖ ≤ 3 * L := by
+    intro r y hy
+    rw [formalAdj_extDerivOp_apply, extDAdj, norm_neg]
+    have hterm : ∀ j ∈ r.1ᶜ, ‖(ExteriorFibre.sgn j r.1 : ℝ) *
+        fderiv ℝ (formExt ψ (insert j r.1)) y (coordDir j)‖ ≤ L := by
+      intro j hj
+      have hj' : j ∉ r.1 := Finset.mem_compl.1 hj
+      rw [formExt_of_card ψ (card_insert_of_formIdx r hj'), norm_mul, Real.norm_eq_abs,
+        abs_sgn, one_mul]
+      have hd : HasFDerivAt w2 (fderiv ℝ w2 y) y :=
+        ((hw2.differentiable (by norm_num)) y).hasFDerivAt
+      have hd' := (hasFDerivAt_pi'.1 hd (insert j r.1)).fderiv
+      change ‖fderiv ℝ (fun z => w2 z (insert j r.1)) y (coordDir j)‖ ≤ L
+      rw [hd']
+      change ‖(fderiv ℝ w2 y (coordDir j)) (insert j r.1)‖ ≤ L
+      have hfd : ‖fderiv ℝ w2 y‖ ≤ L := by
+        simpa [norm_iteratedFDeriv_one] using hL y (subset_closure hy)
+      calc _ ≤ ‖fderiv ℝ w2 y (coordDir j)‖ := norm_le_pi_norm _ _
+        _ ≤ ‖fderiv ℝ w2 y‖ * ‖(coordDir j : Fin 3 → ℝ)‖ := ContinuousLinearMap.le_opNorm _ _
+        _ ≤ L * 1 := mul_le_mul hfd (norm_coordDir_le j) (norm_nonneg _) hL0
+        _ = L := mul_one L
+    calc _ ≤ ∑ j ∈ r.1ᶜ, ‖(ExteriorFibre.sgn j r.1 : ℝ) *
+          fderiv ℝ (formExt ψ (insert j r.1)) y (coordDir j)‖ := norm_sum_le _ _
+      _ ≤ ∑ _j ∈ r.1ᶜ, L := Finset.sum_le_sum hterm
+      _ = (r.1ᶜ.card : ℝ) * L := by rw [Finset.sum_const, nsmul_eq_mul]
+      _ ≤ 3 * L := by
+          refine mul_le_mul_of_nonneg_right ?_ hL0
+          have : r.1ᶜ.card ≤ 3 := (Finset.card_le_univ _).trans (by simp)
+          exact_mod_cast this
+  have hnorm : ‖toL2F hAψ‖ ≤ Fintype.card (formIdx 3 1) * (3 * L) := by
+    refine norm_L2F_le_of_bound _ (by positivity) fun r => ?_
+    filter_upwards [(hAψ r).coeFn_toLp, ae_restrict_mem (isOpen_cubeDomain 3).measurableSet]
+      with y h1 hy
+    change ‖((hAψ r).toLp _ : L2 ℝ (cubeDomain 3)) y‖ ≤ _
+    rw [h1]
+    exact hpt r y hy
+  change |⟪toL2F hψ, D1 w⟫| ≤ _
+  rw [real_inner_comm, key]
+  refine (abs_real_inner_le_norm _ _).trans ?_
+  rw [mul_comm]
+  exact mul_le_mul_of_nonneg_right hnorm (norm_nonneg _)
+
+end SmoothBounds
+
 /-! ### Projection errors of smooth fields -/
 
 section ProjError
@@ -1185,6 +1360,58 @@ theorem table51_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
         rw [show (√(E * Kd) * L * meshSize N) ^ 2 = √(E * Kd) ^ 2 * (L * meshSize N) ^ 2 by ring,
           Real.sq_sqrt (mul_nonneg hE0 hKd0)]
         ring
+
+set_option maxHeartbeats 1000000 in
+/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions**:
+the form of `table51_rate` where every hypothesis on the exact solution is `C²` regularity: if
+`σ`, `φ`, `u`, `λ` and `S¹u` are `C²` forms vanishing outside `Q` with first derivatives
+bounded by `L` (`IsCsFormMin 0`), then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`;
+the `L²` bounds of `λ`, `S¹u` and the regularity `S¹u ∈ D(d¹*)` are derived
+(`IsCsFormMin.norm_le`, `IsCsFormMin.abs_inner_D1_le`). -/
+theorem table51_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
+      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
+        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
+      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
+      bggSegment.d0 σ = bggSegment.S0 φ →
+      IsCsFormMin 0 0 L (σ : W0) → (∀ a, IsCsFormMin 0 0 L (φ a : W0)) →
+      (∀ a, IsCsFormMin 0 1 L (u a : W1)) → IsCsFormMin 0 1 L lam →
+      IsCsFormMin 0 2 L (bggSegment.S1 u) →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (table51 hT hB N).V0h → φh ∈ (table51 hT hB N).Vt0h →
+      uh ∈ (table51 hT hB N).Vt1h →
+      (∀ τ ∈ (table51 hT hB N).V0h, ∀ ψ ∈ (table51 hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (table51 hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (table51 hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(table51 hT hB N).S1h uh, (table51 hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
+      (∀ μ ∈ (table51 hT hB N).V1h, ⟪bggSegment.d0 σh - (table51 hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
+        (table51 hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+  have hex := table51_rate hT hB hCR0 hCR
+  obtain ⟨K, hK⟩ := hex
+  have hK0 := hK.1
+  have hrate := hK.2
+  have hc1 : (0 : ℝ) ≤ Fintype.card (formIdx 3 1) := Nat.cast_nonneg _
+  have hc2 : (0 : ℝ) ≤ Fintype.card (formIdx 3 2) := Nat.cast_nonneg _
+  refine ⟨K * (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)), by positivity,
+    fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hlam hSu σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
+  set c : ℝ := 1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2) with hc
+  have hcL : L ≤ c * L := le_mul_of_one_le_left hL0 (by rw [hc]; linarith)
+  have hcL0 : 0 ≤ c * L := by positivity
+  have hb := hrate N (L := c * L) hcL0 c1 c2 c3 (hσ.mono hcL) (fun a => (hφ a).mono hcL)
+    (fun a => (hu a).mono hcL) (hSu.mono hcL)
+    ((hlam.norm_le hL0).trans (by rw [hc]; nlinarith))
+    ((hSu.norm_le hL0).trans (by rw [hc]; nlinarith))
+    (fun w => (hSu.abs_inner_D1_le hL0 w).trans
+      (mul_le_mul_of_nonneg_right (by rw [hc]; nlinarith) (norm_nonneg _)))
+    hσh hφh huh h1 h2 h3
+  refine hb.trans (le_of_eq ?_)
+  ring
 
 end Table51
 

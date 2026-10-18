@@ -632,4 +632,284 @@ theorem norm_glue_bggS1h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
 
 end Prop58
 
+/-! ### `S` on glued fields -/
+
+section GluedS
+
+theorem pieceFun_sum_mul (M : SimplicialMesh n) {β : Type*} (u : Finset β) (c : β → ℝ)
+    (v : β → Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
+    ∑ b ∈ u, c b * pieceFun M (v b) x = pieceFun M (fun T y => ∑ b ∈ u, c b * v b T y) x := by
+  simp only [pieceFun, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun T _ => ?_
+  by_cases hx : x ∈ interior T.closedInterior
+  · simp [Set.indicator_of_mem hx]
+  · simp [Set.indicator_of_notMem hx]
+
+/-- **`S` of a glued field is the glued field of the local `S`**: `S(glue ψ) = glue(T ↦ S ψ_T)`. -/
+theorem wsL2_tensorGlue (E : LocalElement n) (M : SimplicialMesh n) {k : ℕ}
+    (ψ : Fin n → E.Piecewise M k) :
+    wsL2 (Ω := M.domain) k (E.tensorGlue M n k ψ) =
+      pieceL2 M M.domain (fun T => formComp (k := (k : ℤ) + 1)
+        (coordWedgeField fun a => E.extendPW M (ψ a) T))
+        (fun _ hT s => continuous_formComp (continuous_coordWedgeField fun a =>
+          (E.contDiff_extendPW M (ψ a) hT).continuous) s) := by
+  refine PiLp.ext fun t => Lp.ext ?_
+  rw [wsL2_apply]
+  have h1 := Lp.coeFn_finsetSum Finset.univ fun p : Fin n × formIdx n k =>
+    wsCoeff k t p • (E.tensorGlue M n k ψ) p.1 p.2
+  have h2 : ∀ p : Fin n × formIdx n k,
+      (((wsCoeff k t p • (E.tensorGlue M n k ψ) p.1 p.2 : L2 ℝ M.domain)) : (Fin n → ℝ) → ℝ) =ᵐ[
+        volume.restrict M.domain] fun x => wsCoeff k t p *
+          pieceFun M (fun T => formComp (k := (k : ℤ)) (E.extendPW M (ψ p.1) T) p.2) x := by
+    intro p
+    filter_upwards [Lp.coeFn_smul (wsCoeff k t p) ((E.tensorGlue M n k ψ) p.1 p.2),
+      coeFn_pieceL2 M M.domain (fun T => formComp (k := (k : ℤ)) (E.extendPW M (ψ p.1) T))
+        (fun T hT s => continuous_formComp (E.contDiff_extendPW M (ψ p.1) hT).continuous s) p.2]
+      with x hx1 hx2
+    rw [hx1, Pi.smul_apply, smul_eq_mul]
+    congr 1
+  have h2' := ae_all_iff.2 h2
+  filter_upwards [h1, h2', coeFn_pieceL2 M M.domain _ (fun T hT s => continuous_formComp
+    (continuous_coordWedgeField fun a => (E.contDiff_extendPW M (ψ a) hT).continuous) s) t]
+    with x hx1 hx2 hx3
+  rw [hx1, Finset.sum_apply, hx3]
+  simp only [hx2]
+  rw [pieceFun_sum_mul]
+  simp only [pieceFun]
+  refine Finset.sum_congr rfl fun T hT => ?_
+  by_cases hxT : x ∈ interior T.closedInterior
+  · rw [Set.indicator_of_mem hxT, Set.indicator_of_mem hxT]
+    simp only [formComp]
+    rw [coordWedgeField_apply, coordWedgeSum_eq_sum_wsCoeff (fun a => E.isDeg_extendPW M (ψ a) hT x)]
+  · rw [Set.indicator_of_notMem hxT, Set.indicator_of_notMem hxT]
+
+end GluedS
+
+/-! ### Prop 5.9(1) -/
+
+section Prop59
+
+theorem isDeg_zero_partialDerivForm {u : FormField n} (hu : ∀ x, IsDeg 0 (u x)) (j : Fin n)
+    (x : Fin n → ℝ) : IsDeg 0 (partialDerivForm j u x) := fun s hs => by
+  have : (fun y => u y s) = fun _ => 0 := funext fun y => hu y s hs
+  simp only [partialDerivForm, this, partialDeriv_const]
+
+/-- `‖D S⁰ψ‖²_{L²(S)} = Σₐ ‖Dψₐ‖²_{L²(S)}` for polynomial `ψ`. -/
+theorem formGradL2Sq_coordWedgeField_zero {S : Set (Fin n → ℝ)} (hS : IsCompact S) {r : ℕ}
+    {v : Fin n → FormField n} (hv : ∀ a, v a ∈ polySpace n r 0) :
+    formGradL2Sq S (coordWedgeField v) = ∑ a, formGradL2Sq S (v a) := by
+  have hd : ∀ a x, DifferentiableAt ℝ (v a) x := fun a x =>
+    differentiableAt_pi.2 fun s => (differentiable_coeff_of_mem_polySpace (hv a) s) x
+  have hcont : ∀ a j s, Continuous fun x => (partialDerivForm j (v a) x s) ^ 2 := fun a j s =>
+    (continuous_partialDeriv_coeff_of_mem_polySpace (hv a) j s).pow 2
+  unfold formGradL2Sq
+  conv_rhs => rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  have e1 : ∀ s, ∫ x in S, (partialDeriv j (fun y => coordWedgeField v y s) x) ^ 2 =
+      ∫ x in S, (coordWedgeSum (fun a => partialDerivForm j (v a) x) s) ^ 2 := fun s =>
+    setIntegral_congr_fun hS.measurableSet fun x _ => by
+      rw [← partialDerivForm_coordWedgeField (fun a => hd a x) j]; rfl
+  simp_rw [e1]
+  have hp : coordWedgeField v ∈ polySpace n r (0 + 1) := coordWedgeField_mem_polySpace hv
+  have hint : ∀ s, IntegrableOn
+      (fun x => (coordWedgeSum (fun a => partialDerivForm j (v a) x) s) ^ 2) S := fun s => by
+    have : (fun x => (coordWedgeSum (fun a => partialDerivForm j (v a) x) s) ^ 2) =
+        fun x => (partialDeriv j (fun y => coordWedgeField v y s) x) ^ 2 := by
+      funext x
+      rw [← partialDerivForm_coordWedgeField (fun a => hd a x) j]; rfl
+    rw [this]
+    exact ((continuous_partialDeriv_coeff_of_mem_polySpace hp j s).pow 2).continuousOn
+      |>.integrableOn_compact hS
+  rw [← integral_finsetSum _ fun s _ => hint s]
+  have e2 : ∀ a, ∑ s, ∫ x in S, (partialDeriv j (fun y => v a y s) x) ^ 2 =
+      ∫ x in S, ∑ s, (partialDerivForm j (v a) x s) ^ 2 := fun a =>
+    (integral_finsetSum _ fun s _ => (hcont a j s).continuousOn.integrableOn_compact hS).symm
+  simp_rw [e2]
+  rw [← integral_finsetSum _ fun a _ => (continuous_finsetSum _ fun s _ =>
+    hcont a j s).continuousOn.integrableOn_compact hS]
+  refine setIntegral_congr_fun hS.measurableSet fun x _ => ?_
+  exact sum_sq_coordWedgeSum_zero fun a =>
+    isDeg_zero_partialDerivForm (isDeg_of_mem_polySpace (hv a)) j x
+
+/-- For `0`-forms, `‖Du‖_{L²(S)} = ‖du‖_{L²(S)}` (`du = Σⱼ ∂ⱼu dxⱼ`). -/
+theorem formGradL2Sq_eq_formL2Sq_extDeriv {S : Set (Fin n → ℝ)} {u : FormField n}
+    (hu : ∀ x, IsDeg 0 (u x)) : formGradL2Sq S u = formL2Sq S (extDeriv u) := by
+  have hdeg : ∀ x, IsDeg 1 (extDeriv u x) := IsDeg.extDeriv hu
+  unfold formGradL2Sq formL2Sq
+  have h1 : ∀ j, ∑ s, ∫ x in S, (partialDeriv j (fun y => u y s) x) ^ 2 =
+      ∫ x in S, (partialDeriv j (fun y => u y ∅) x) ^ 2 := fun j => by
+    rw [Finset.sum_eq_single ∅ (fun s _ hs => by
+      have : (fun y => u y s) = fun _ => 0 := funext fun y =>
+        hu y s (by rwa [Ne, Finset.card_eq_zero])
+      simp [this]) (by simp)]
+  simp_rw [h1]
+  rw [sum_eq_sum_formIdx (k := 1) (f := fun s => ∫ x in S, (extDeriv u x s) ^ 2) fun s hs => by
+    have : ∀ x, (extDeriv u x s) ^ 2 = 0 := fun x => by rw [hdeg x s hs]; ring
+    simp_rw [this]; simp]
+  have hb : Function.Bijective fun j : Fin n => (⟨{j}, by simp⟩ : formIdx n ((1 : ℕ) : ℤ)) := by
+    refine ⟨fun i j hij => Finset.singleton_injective (congrArg Subtype.val hij), fun t => ?_⟩
+    obtain ⟨a, ha⟩ := Finset.card_eq_one.1 (by exact_mod_cast t.2 : #t.1 = 1)
+    exact ⟨a, Subtype.ext ha.symm⟩
+  refine Fintype.sum_bijective _ hb _ _ fun j => ?_
+  congr 1
+  funext x
+  simp [extDeriv_apply, ExteriorFibre.sgn, Finset.filter_singleton]
+
+/-- The kernel lemma on every mesh simplex, with a constant independent of the mesh:
+`‖w − Π'_T w‖²_{L²(T)} ≤ C h² ‖Dw‖²_{L²(T)}` for `w ∈ P_rΛᵏ⁺¹`. -/
+theorem exists_formL2Sq_sub_localInterp_le {k r : ℕ} (hk : k + 1 ≤ n) (hr : 1 ≤ r) :
+    ∃ C, 0 ≤ C ∧ ∀ (N : ℕ) (T : (mesh n N).simplices) {w : FormField n}
+      (hw : w ∈ polySpace n r (k + 1)),
+      formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
+        (w - (((polyElement n PolySeq.lowestOrder).localInterp T (k + 1)
+          ⟨w, (polySpace_le_contDegForms r (k + 1) hw).1⟩ :
+            (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n)) ≤
+        C * hN N ^ 2 * formGradL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior w := by
+  obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_sub_polyMinusInterp_le_uniform (n := n)
+    (fun σ : Equiv.Perm (Fin n) => kuhnLex σ) (r := r) (k := k + 1) le_rfl hk hr
+  refine ⟨C ^ 2, sq_nonneg C, fun N T w hw => ?_⟩
+  obtain ⟨σ, t, hT⟩ := exists_mesh_simplex_eq T.2
+  have hh := hN_pos N
+  set wc : contDegForms n (k + 1) := ⟨w, polySpace_le_contDegForms r (k + 1) hw⟩
+  have hid := localInterp_lowestOrder_eq (kuhnSimplex σ) t hh hk wc
+  have hS := closedInterior_mapEquiv_lexSimplex (kuhnSimplex σ) t hh.ne'
+  have h1 := hC σ hh t hw
+  rw [hS] at h1
+  have e1 : (((polyElement n PolySeq.lowestOrder).localInterp T (k + 1) ⟨w, wc.2.1⟩ :
+      (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n) =
+      (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t (hN N) hh.ne') (kuhnLex σ)))
+        (PolySeq.lowestOrder.one_le_deg (k + 1)) hk wc : FormField n) := by
+    rw [← hid]
+    exact PolySeq.localInterp_congr _ _ (by rw [hT]) _
+  change formL2Sq _ (w - (((polyElement n PolySeq.lowestOrder).localInterp T (k + 1) ⟨w, wc.2.1⟩ :
+      (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n)) ≤ _
+  rw [e1, hT]
+  have hm := (mapEquiv (boxMap t (hN N) hh.ne') (kuhnSimplex σ)).isCompact_closedInterior.measurableSet
+  have h2 := pow_le_pow_left₀ (Real.sqrt_nonneg _) h1 2
+  rw [Real.sq_sqrt (formL2Sq_nonneg hm _), mul_pow, mul_pow,
+    Real.sq_sqrt (formGradL2Sq_nonneg hm _)] at h2
+  exact h2
+
+theorem pieceL2_sub (M : SimplicialMesh n) (S : Set (Fin n → ℝ)) {ι : Type*} [Fintype ι]
+    {v w : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → ℝ}
+    (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i))
+    (hw : ∀ T ∈ M.simplices, ∀ i, Continuous (w T i)) :
+    pieceL2 M S v hv - pieceL2 M S w hw =
+      pieceL2 M S (fun T i x => v T i x - w T i x)
+        (fun T hT i => (hv T hT i).sub (hw T hT i)) := by
+  refine PiLp.ext fun i => Lp.ext ?_
+  filter_upwards [Lp.coeFn_sub (pieceL2 M S v hv i) (pieceL2 M S w hw i),
+    coeFn_pieceL2 M S v hv i, coeFn_pieceL2 M S w hw i,
+    coeFn_pieceL2 M S (fun T i x => v T i x - w T i x)
+      (fun T hT i => (hv T hT i).sub (hw T hT i)) i] with x h1 h2 h3 h4
+  rw [PiLp.sub_apply, h1, Pi.sub_apply, h2, h3, h4]
+  simp only [pieceFun, ← Finset.sum_sub_distrib]
+  refine Finset.sum_congr rfl fun T _ => ?_
+  by_cases hx : x ∈ interior T.closedInterior
+  · simp [Set.indicator_of_mem hx]
+  · simp [Set.indicator_of_notMem hx]
+
+/-- `‖S(glue ψ) − glue u‖² ≤ Σ_T ‖S ψ_T − u_T‖²_{L²(T)}` on the cube meshes (`ψ` a vector of
+`k`-forms, `u` a `(k+1)`-form). -/
+theorem norm_sq_wsL2_sub_glue_le {N k : ℕ} (E E' : LocalElement n)
+    (ψ : Fin n → E.Piecewise (mesh n N) k) (u : E'.Piecewise (mesh n N) (k + 1)) :
+    ‖wsL2 (Ω := (mesh n N).domain) (k : ℤ) (E.tensorGlue (mesh n N) n (k : ℤ) ψ) -
+        E'.glue (mesh n N) ((k : ℤ) + 1) u‖ ^ 2 ≤
+      ∑ T : (mesh n N).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
+        (coordWedgeField (fun a => ((ψ a T : E.space T k) : FormField n)) -
+          ((u T : E'.space T (k + 1)) : FormField n)) := by
+  rw [wsL2_tensorGlue]
+  have hg : E'.glue (mesh n N) ((k : ℤ) + 1) u = pieceL2 (mesh n N) (mesh n N).domain
+      (fun T => formComp (k := (k : ℤ) + 1) (E'.extendPW (mesh n N) u T))
+      (fun T hT s => continuous_formComp (E'.contDiff_extendPW (mesh n N) u hT).continuous s) :=
+    rfl
+  rw [hg, pieceL2_sub]
+  refine (norm_sq_pieceL2_le _ _ _ _).trans_eq ?_
+  rw [← Finset.sum_coe_sort]
+  refine Finset.sum_congr rfl fun T _ => ?_
+  have hdeg : ∀ x, IsDeg (k + 1) ((coordWedgeField (fun a => ((ψ a T : E.space T k) : FormField n)) -
+      ((u T : E'.space T (k + 1)) : FormField n)) x) := fun x s hs => by
+    simp only [Pi.sub_apply]
+    rw [isDeg_coordWedgeField (fun a x => E.isDeg_of_mem (ψ a T).2 x) x s hs,
+      E'.isDeg_of_mem (u T).2 x s hs, sub_zero]
+  refine Eq.trans ?_ (sum_formIdx_integral_eq_formL2Sq hdeg)
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp only [formComp, E.extendPW_of_mem _ _ T.2, E'.extendPW_of_mem _ _ T.2,
+    coordWedgeField_apply, Pi.sub_apply]
+
+/-- The local form of Prop 5.9(1): `‖(I − Π¹)S⁰ψ‖²_{L²(T)} ≤ C h² Σₐ ‖dψₐ‖²_{L²(T)}`. -/
+theorem exists_formL2Sq_sub_wsPiecewise_zero_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
+    (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0)
+    (T : (mesh 3 N).simplices),
+    formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+      (coordWedgeField (fun a => ((ψ a T : (polyElement 3 PolySeq.lagrangeP2).space T 0) :
+          FormField 3)) -
+        ((PolySeq.lagrangeP2.wsPiecewise (mesh 3 N) 0 ψ T :
+          (polyElement 3 PolySeq.lowestOrder).space T 1) : FormField 3)) ≤
+      C * hN N ^ 2 * ∑ a, formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+        (extDeriv ((ψ a T : (polyElement 3 PolySeq.lagrangeP2).space T 0) : FormField 3)) := by
+  obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_sub_localInterp_le (n := 3) (k := 0) (r := 2)
+    (by norm_num) (by norm_num)
+  refine ⟨C, hC0, fun N ψ T => ?_⟩
+  have hw : coordWedgeField (fun a => ((ψ a T : (polyElement 3 PolySeq.lagrangeP2).space T 0) :
+      FormField 3)) ∈ polySpace 3 2 (0 + 1) :=
+    coordWedgeField_mem_polySpace fun a => mem_polySpace_of_space _ (ψ a T)
+  have h1 := hC N T hw
+  rw [wsPiecewise_apply_eq _ _ _ hw]
+  refine h1.trans_eq ?_
+  rw [formGradL2Sq_coordWedgeField_zero (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).isCompact_closedInterior
+    (r := 2) fun a => mem_polySpace_of_space _ (ψ a T)]
+  congr 1
+  refine Finset.sum_congr rfl fun a _ => ?_
+  exact formGradL2Sq_eq_formL2Sq_extDeriv ((polyElement 3 PolySeq.lagrangeP2).isDeg_of_mem (ψ a T).2)
+
+theorem norm_sq_tensorGlue_dPiecewise {N : ℕ} (E : LocalElement n) {m : ℕ}
+    (ψ : Fin m → E.Piecewise (mesh n N) 0) :
+    ‖E.tensorGlue (mesh n N) m ((0 + 1 : ℕ) : ℤ) (fun a => E.dPiecewise (mesh n N) 0 (ψ a))‖ ^ 2 =
+      ∑ a, ∑ T : (mesh n N).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
+        (extDeriv ((ψ a T : E.space T 0) : FormField n)) := by
+  rw [norm_sq_tensorGlue]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [norm_sq_glue_eq_int _ (by norm_num)]
+  rfl
+
+/-- **[QuennevilleBelair2015], Prop 5.9(1)**: `‖(I − Π¹) S⁰ψ‖_{L²(Q)} ≤ C h ‖∇ψ‖_{L²(Q)}` on
+`P₂Λ⁰ ⊗ ℝ³`, `C` independent of the mesh (`S⁰ψ` is the `L²` field `wsL2 0`, `(I − Π¹) S⁰ψ` its
+difference with `S₀,ₕψ = Π¹S⁰ψ`, and `∇ψ` the glued `dψ`). -/
+theorem norm_sub_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
+    (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 0),
+    ‖wsL2 (Ω := (mesh 3 N).domain) ((0 : ℕ) : ℤ) ((polyElement 3 PolySeq.lagrangeP2).tensorGlue
+        (mesh 3 N) 3 ((0 : ℕ) : ℤ) fun a =>
+          ((ψ a : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 0) :
+            (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0)) -
+      (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 N) (((0 : ℕ) : ℤ) + 1)
+        ((PolySeq.bggS0h (mesh 3 N) ψ :
+          (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 N) 1) :
+            (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 N) 1)‖ ≤
+      C * hN N * ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((0 + 1 : ℕ) : ℤ)
+        fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 0
+          ((ψ a : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 0) :
+            (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0)‖ := by
+  obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_sub_wsPiecewise_zero_le
+  refine ⟨√C, Real.sqrt_nonneg _, fun N ψ => ?_⟩
+  have hL := norm_sq_wsL2_sub_glue_le (N := N) (k := 0) (polyElement 3 PolySeq.lagrangeP2)
+    (polyElement 3 PolySeq.lowestOrder) (fun a => (ψ a : _))
+    ((PolySeq.bggS0h (mesh 3 N) ψ : (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 N) 1) :
+      (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 N) 1)
+  have hR := norm_sq_tensorGlue_dPiecewise (N := N) (polyElement 3 PolySeq.lagrangeP2)
+    (fun a => (ψ a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0))
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (mul_nonneg (mul_nonneg (Real.sqrt_nonneg _)
+    (hN_pos N).le) (norm_nonneg _)) two_ne_zero).1 ?_
+  rw [mul_pow, mul_pow, Real.sq_sqrt hC0, hR]
+  refine hL.trans ?_
+  calc _ ≤ ∑ T : (mesh 3 N).simplices, C * hN N ^ 2 * ∑ a, formL2Sq
+        (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+          (extDeriv (((ψ a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0) T :
+            (polyElement 3 PolySeq.lagrangeP2).space T 0) : FormField 3)) :=
+        Finset.sum_le_sum fun T _ => hC N _ T
+    _ = _ := by rw [← Finset.mul_sum, Finset.sum_comm]
+
+end Prop59
+
 end Feec.Models.Cube.WeakSymmetry

@@ -1,6 +1,7 @@
 module
 
 public import Feec.Domain.Complexes
+public import Feec.Domain.Constrained
 public import Feec.HilbertComplex.Transport
 
 /-!
@@ -24,6 +25,11 @@ of the one on `Ω'` (`minimalComplex_pull`, `maximalComplex_pull`), and the pull
 `|a|^{-n}` and chain-rule factors `a^{r_k}`. This transports every reducing subcomplex, hence
 constraint propagation, from one domain to its affine images (e.g. from `(0, ½)³` to every open
 cube).
+
+The same holds for the constrained realizations `A_via` of `Feec.Domain.Constrained` (values in
+closed subspaces such as symmetric or trace-free matrices), given isomorphisms of the subspaces
+compatible with the pull-back (`ConstCoeffOp.minimalVia_pull`); the kernel of a scaled
+conjugation is the image of the kernel (`LinearPMap.mem_ker_conjScaled`).
 
 ## References
 
@@ -80,6 +86,23 @@ theorem mem_graph_conjScaled (hκ : κ ≠ 0) {p : E₂ × F₂} :
       exact apply_congr' _ _ _ hx1'.symm
     change κ • e₂ (T ⟨e₁.symm p.1, hp⟩) = p.2
     rw [e2, _root_.map_smul, ContinuousLinearEquiv.apply_symm_apply, smul_inv_smul₀ hκ]
+
+/-- The kernel of a scaled conjugation is the image of the kernel. -/
+theorem mem_ker_conjScaled (hκ : κ ≠ 0) {y : E₂} :
+    y ∈ (T.conjScaled e₁ e₂ κ).ker ↔ e₁.symm y ∈ T.ker := by
+  rw [LinearPMap.mem_ker_iff, LinearPMap.mem_ker_iff]
+  constructor
+  · rintro ⟨z, rfl, hz⟩
+    refine ⟨⟨e₁.symm z, z.2⟩, rfl, ?_⟩
+    rw [conjScaled_apply, smul_eq_zero] at hz
+    exact e₂.map_eq_zero_iff.1 (hz.resolve_left hκ)
+  · rintro ⟨w, hw, h0⟩
+    have hy : y ∈ (T.conjScaled e₁ e₂ κ).domain := show e₁.symm y ∈ T.domain from hw ▸ w.2
+    refine ⟨⟨y, hy⟩, rfl, ?_⟩
+    rw [conjScaled_apply]
+    have e : T ⟨e₁.symm y, hw ▸ w.2⟩ = T w := apply_congr' T _ w.2 hw
+    change κ • e₂ (T ⟨e₁.symm y, hw ▸ w.2⟩) = 0
+    rw [e, h0, _root_.map_zero, smul_zero]
 
 theorem dense_conjScaled_domain (hd : Dense (T.domain : Set E₁)) :
     Dense ((T.conjScaled e₁ e₂ κ).domain : Set E₂) :=
@@ -649,5 +672,89 @@ def scaledEmbeddingMaximal :
     (fun _ => inv_pos.2 (jac_pos ha)) fun k => inner_pullF ha b hΩ'.measurableSet hT
 
 end ConstCoeffComplex
+
+/-! ### Constrained realizations under affine maps -/
+
+namespace ConstCoeffOp
+
+section Via
+
+variable {ι κ : Type*} [Fintype ι] [Fintype κ] {A : ConstCoeffOp E 𝕜 ι κ} {r : ℕ}
+  {a : ℝ} {b : E} {Ω Ω' : Set E}
+  {X Y X' Y' : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [NormedAddCommGroup Y]
+  [InnerProductSpace 𝕜 Y] [NormedAddCommGroup X'] [InnerProductSpace 𝕜 X']
+  [NormedAddCommGroup Y'] [InnerProductSpace 𝕜 Y']
+  {Jx : X →ₗᵢ[𝕜] L2F 𝕜 Ω ι} {Jy : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ}
+  {Jx' : X' →ₗᵢ[𝕜] L2F 𝕜 Ω' ι} {Jy' : Y' →ₗᵢ[𝕜] L2F 𝕜 Ω' κ}
+  {eX : X' ≃L[𝕜] X} {eY : Y' ≃L[𝕜] Y}
+
+/-- **Constrained test graphs correspond** under the pull-back `P u = u ∘ T`, for isomorphisms
+`eX : X' ≃ X`, `eY : Y' ≃ Y` of the constrained spaces compatible with `P`
+(`Jx (eX x) = P (Jx' x)`): `(x, y)` is a constrained test pair on `Ω = T⁻¹ Ω'` iff
+`(eX⁻¹ x, a^{-r} eY⁻¹ y)` is one on `Ω'`. -/
+theorem mem_testGraphVia_pull_iff (hA : A.IsHomogeneous r) (ha : a ≠ 0)
+    (hΩ' : MeasurableSet Ω') (hT : aff a b ⁻¹' Ω' = Ω)
+    (hX : ∀ x, Jx (eX x) = pullF ha b hΩ' hT ι (Jx' x))
+    (hY : ∀ y, Jy (eY y) = pullF ha b hΩ' hT κ (Jy' y)) {p : X × Y} :
+    p ∈ A.testGraphVia Jx Jy ↔
+      (eX.symm p.1, (((a ^ r : ℝ) : 𝕜))⁻¹ • eY.symm p.2) ∈ A.testGraphVia Jx' Jy' := by
+  have hκ : ((a ^ r : ℝ) : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 (pow_ne_zero r ha)
+  have hPx : ∀ x, Jx x = pullF ha b hΩ' hT ι (Jx' (eX.symm x)) := fun x => by
+    rw [← hX, ContinuousLinearEquiv.apply_symm_apply]
+  have hPy : ∀ y, Jy y = pullF ha b hΩ' hT κ (Jy' (eY.symm y)) := fun y => by
+    rw [← hY, ContinuousLinearEquiv.apply_symm_apply]
+  constructor
+  · rintro ⟨φ, hφ, h1, h2⟩
+    have hT' := preimage_inv_of_aff ha b hT
+    have hψ : IsTestField Ω' (fun i x => φ i (aff a⁻¹ (-(a⁻¹ • b)) x)) :=
+      hφ.comp_aff (inv_ne_zero ha) (-(a⁻¹ • b)) hT'
+    have hcomp : (fun i x => (fun i x => φ i (aff a⁻¹ (-(a⁻¹ • b)) x)) i (aff a b x)) = φ :=
+      funext fun i => funext fun x => by simp only [aff_inv ha b]
+    refine ⟨_, hψ, (pullF ha b hΩ' hT ι).injective ?_, (pullF ha b hΩ' hT κ).injective ?_⟩
+    · rw [← hPx, h1, pullF_testField]
+      exact testField_congr _ _ hcomp.symm
+    · have hA' := apply_comp_aff hA (fun i => (hψ i).contDiff) a b
+      rw [hcomp] at hA'
+      rw [map_smul, _root_.map_smul, ← hPy, h2, pullF_testField]
+      have hc : (fun j x => A.apply (fun i x => φ i (aff a⁻¹ (-(a⁻¹ • b)) x)) j (aff a b x)) =
+          (((a ^ r : ℝ) : 𝕜))⁻¹ • A.apply φ := by
+        rw [hA']
+        funext j x
+        simp only [Pi.smul_apply, smul_eq_mul, ← mul_assoc, inv_mul_cancel₀ hκ, one_mul]
+      rw [testField_congr _ ((A.isTestField_apply hφ).smul _) hc, testField_smul]
+  · rintro ⟨ψ, hψ, h1, h2⟩
+    have h2' : Jy' (eY.symm p.2) = ((a ^ r : ℝ) : 𝕜) • testField (A.isTestField_apply hψ) := by
+      rw [← h2, map_smul, smul_inv_smul₀ hκ]
+    refine ⟨_, hψ.comp_aff ha b hT, ?_, ?_⟩
+    · rw [hPx, h1, pullF_testField]
+    · rw [hPy, h2', _root_.map_smul, pullF_testField, ← testField_smul]
+      refine testField_congr _ _ ?_
+      rw [apply_comp_aff hA (fun i => (hψ i).contDiff) a b]
+      rfl
+
+/-- **The constrained minimal realization under an affine change of variables**:
+`A_via,Ω = a^r · eY A_via,Ω' eX⁻¹` for isomorphisms of the constrained spaces compatible with
+the pull-back. -/
+theorem minimalVia_pull (hA : A.IsHomogeneous r) (ha : a ≠ 0)
+    (hΩ' : MeasurableSet Ω') (hT : aff a b ⁻¹' Ω' = Ω)
+    (hX : ∀ x, Jx (eX x) = pullF ha b hΩ' hT ι (Jx' x))
+    (hY : ∀ y, Jy (eY y) = pullF ha b hΩ' hT κ (Jy' y))
+    (hYd : DenseVia Jy) (hYd' : DenseVia Jy') :
+    A.minimalVia Jx Jy = (A.minimalVia Jx' Jy').conjScaled eX eY ((a ^ r : ℝ) : 𝕜) := by
+  have hκ : ((a ^ r : ℝ) : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 (pow_ne_zero r ha)
+  let G : X × Y ≃ₜ X' × Y' := eX.symm.toHomeomorph.prodCongr
+    (eY.symm.toHomeomorph.trans (Homeomorph.smulOfNeZero (((a ^ r : ℝ) : 𝕜))⁻¹ (inv_ne_zero hκ)))
+  have hset : (A.testGraphVia Jx Jy : Set (X × Y)) = G ⁻¹' (A.testGraphVia Jx' Jy' : Set _) :=
+    Set.ext fun p => mem_testGraphVia_pull_iff hA ha hΩ' hT hX hY
+  refine LinearPMap.eq_of_eq_graph (Submodule.ext fun p => ?_)
+  rw [LinearPMap.mem_graph_conjScaled hκ, A.minimalVia_graph Jx Jy hYd,
+    A.minimalVia_graph Jx' Jy' hYd', ← SetLike.mem_coe, ← SetLike.mem_coe,
+    Submodule.topologicalClosure_coe, Submodule.topologicalClosure_coe, hset,
+    ← Homeomorph.preimage_closure]
+  rfl
+
+end Via
+
+end ConstCoeffOp
 
 end Feec.Domain

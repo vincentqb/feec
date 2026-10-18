@@ -165,7 +165,10 @@ theorem eq_const_of_mem_p1MinusForms_self {k : ℕ} {w : FormField k}
 
 
 /-- **The Whitney forms of a nondegenerate simplex are the trimmed linear forms**:
-`P₁⁻Λᵏ(T) = P₀Λᵏ + κ H₀Λ^{k+1}`, independently of `T`. -/
+`P₁⁻Λᵏ(T) = P₀Λᵏ + κ H₀Λ^{k+1}`, independently of `T`. Stated for vertex families `p` with
+invertible edge matrix; for an `Affine.Simplex` this is
+`Feec.FiniteElement.whitneySpace_eq_p1MinusForms` of `Feec.FiniteElement.WhitneyInterpolation`,
+which this module does not import (it would pull in the interpolation-error theory). -/
 theorem whitneySpace_eq_p1MinusForms_of_isUnit {p : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (k : ℕ) : whitneySpace p k = p1MinusForms n k := by
   have hle := whitneySpace_le_p1MinusForms p k
@@ -178,10 +181,6 @@ theorem whitneySpace_eq_p1MinusForms_of_isUnit {p : Fin (n + 1) → Fin n → �
       ≤ Module.finrank ℝ (whitneySpace (refVertex n) k) := Submodule.finrank_mono hle'
     _ = _ := by
         rw [finrank_whitneySpace (by rw [edgeMatrix_refVertex, Matrix.det_one]; exact isUnit_one)]
-
-theorem whitneySpace_simplex_eq_p1MinusForms (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
-    whitneySpace T.points k = p1MinusForms n k :=
-  whitneySpace_eq_p1MinusForms_of_isUnit (isUnit_det_edgeMatrix T) k
 
 /-! ### Finite-dimensional norm comparison -/
 
@@ -456,7 +455,7 @@ theorem exists_affSize_le_sum_dof (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k 
   obtain ⟨B, hB0, hB⟩ := exists_affSize_le ι hι
   refine ⟨B, hB0, fun v hv => ?_⟩
   have hv' : v ∈ whitneySpace K.points k := by
-    rwa [whitneySpace_simplex_eq_p1MinusForms]
+    rwa [whitneySpace_eq_p1MinusForms_of_isUnit (isUnit_det_edgeMatrix _)]
   refine (hB ⟨v, hv'⟩).trans (mul_le_mul_of_nonneg_left ?_ hB0)
   refine (pi_norm_le_iff_of_nonneg (Finset.sum_nonneg fun _ _ => abs_nonneg _)).2 fun p => ?_
   rw [Real.norm_eq_abs]

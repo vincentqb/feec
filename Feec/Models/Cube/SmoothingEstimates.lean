@@ -7,7 +7,8 @@ public import Feec.Models.Cube.FiniteElementMethod
 # The smoothed-projection estimates on the Freudenthal meshes of the cube
 
 **The estimates `FEM.SmoothingEstimates` and `FEM.SmoothingEstimatesMin` hold**
-(`FEM.smoothingEstimates_exists`, `FEM.smoothingEstimatesMin_exists`): for the parameters
+(`FEM.smoothingEstimates_pMax`, `FEM.smoothingEstimatesMin_pMin`; as bare existence statements
+`FEM.smoothingEstimates_exists`, `FEM.smoothingEstimatesMin_exists`): for the parameters
 `pMax γ` (dilation factor `1 - γ h_N` about the centre of `Q = (0, ½)ⁿ`) and `pMin γ` (factor
 `1 + γ h_N`), with bump radii `γ h_N / 64 < γ h_N / 32`, `h_N = 1 / (2 (N + 1))` and `γ` small
 depending only on `n`, the smoothed canonical interpolants `Q_N = Π_h R_N` of the Whitney
@@ -37,8 +38,10 @@ families are treated at once through the admissible parameters `IsAdm` (centre o
   simplex `T'` met by the smoother contains `g` (`subset_vertexSet_of_near`, through the
   separation of the lattice points `isSep_latticePoint_add_sum`,
   `mem_freudenthalSet_of_isSep`, and the face-to-face property); there the traces of `v_T` and
-  `v_{T'}` agree (`sum_mul_minor_eq`, `simplexIntegral_eq_of_mem_globalSpace`), and the error is
-  `O(γ)` by the inverse estimates. The remaining boundary layer of `g` has measure `O(γ)`
+  `v_{T'}` agree (`sum_mul_minor_eq`, `simplexIntegral_eq_of_mem_globalSpace`). The error
+  there, normalized by `h^{n/2} / hᵏ`, is `O(γ)`: the dilation defect `1 - cᵏ = O(γ h)` is of lower
+  order, and the dominant term is the displacement `O(γ h)` of the sample points against the
+  Lipschitz inverse estimate `Lip(v_T) ≲ h⁻¹ h^{-n/2} ‖v_T‖`. The remaining boundary layer of `g` has measure `O(γ)`
   (`volume_real_nearBdry_le`). Hence `h^{n/2} |∫_g (v_T - R v)| ≲ γ hᵏ m_T(v)^{1/2}`
   (`sqrt_mul_abs_dof_err_le`) and `‖v - Q_N v‖² ≲ γ² ‖v‖²` (`norm_sq_sub_smoothedInterp_le`).
   Samples of the smoother outside `Q` are controlled by the condition `SampleOK`: vacuous for
@@ -769,7 +772,7 @@ theorem mem_p1MinusForms_of_space {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k 
     (z : (whitneyElement n).space T k) : (z : FormField n) ∈ p1MinusForms n k := by
   have := z.2
   change (z : FormField n) ∈ whitneySpace T.points k at this
-  rwa [whitneySpace_simplex_eq_p1MinusForms] at this
+  rwa [whitneySpace_eq_p1MinusForms_of_isUnit (isUnit_det_edgeMatrix _)] at this
 
 /-- The local DOF estimate with a uniform bound on the face integrals. -/
 theorem exists_local_dof_bound_of_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
@@ -2453,12 +2456,12 @@ variable [NeZero n]
 `1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`) with `γ` small depending only on
 `n`, the smoothed interpolants `Q_N = Π_h R_N` are bounded in `L²` uniformly in `N`, and
 `‖v - Q_N v‖ ≤ ½ ‖v‖` on the Whitney spaces. -/
-theorem smoothingEstimates_exists :
-    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ), SmoothingEstimates n p C := by
+theorem smoothingEstimates_pMax :
+    ∃ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1) (C : ℝ), SmoothingEstimates n (pMax γ hγ hγ1) C := by
   obtain ⟨γ, hγ, hγ2, hclose⟩ := exists_gamma n
   have hγ1 : γ ≤ 1 := by linarith
   obtain ⟨C, hC0, hbound⟩ := exists_norm_smoothedInterp_le (n := n) hγ hγ1
-  refine ⟨pMax γ hγ hγ1, max C (1 / 2), ?_⟩
+  refine ⟨γ, hγ, hγ1, max C (1 / 2), ?_⟩
   have hest : ∀ N, (∀ i x, ‖(smoothed n N (pMax γ hγ hγ1 N) (pMax_isMaximal N)).Q i x‖ ≤
       max C (1 / 2) * ‖x‖) ∧ (∀ i, ∀ v ∈ (whitney n N).V i,
         ‖v - (smoothed n N (pMax γ hγ hγ1 N) (pMax_isMaximal N)).Q i v‖ ≤ 1 / 2 * ‖v‖) := by
@@ -2484,6 +2487,14 @@ theorem smoothingEstimates_exists :
   exact ⟨fun N => pMax_isMaximal N, le_max_right _ _, fun N => (hest N).1,
     fun N => (hest N).2⟩
 
+/-- **The smoothed-projection estimates hold on the Freudenthal meshes of the cube**, as an
+existence statement over the parameters (`smoothingEstimates_pMax` with the parameters `pMax γ`
+made explicit). -/
+theorem smoothingEstimates_exists :
+    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ), SmoothingEstimates n p C := by
+  obtain ⟨γ, hγ, hγ1, C, h⟩ := smoothingEstimates_pMax (n := n)
+  exact ⟨_, C, h⟩
+
 
 /-- **The smoothed-projection estimates with vanishing boundary DOFs hold on the Freudenthal
 meshes of the cube** ([AFW2010], §5.4; [ChristiansenWinther2008]): for the parameters `pMin γ`
@@ -2492,12 +2503,12 @@ small depending only on `n`, the smoothed interpolants `Q̊_N = Π_h R_N` of the
 with vanishing boundary DOFs are bounded in `L²` uniformly in `N`, and `‖v - Q̊_N v‖ ≤ ½ ‖v‖`
 on `V̊ₕ`. The samples of the smoother outside `Q` only meet faces lying in boundary facets, where
 the DOFs of `V̊ₕ` vanish (`sampleOK_pMin`). -/
-theorem smoothingEstimatesMin_exists :
-    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ), SmoothingEstimatesMin n p C := by
+theorem smoothingEstimatesMin_pMin :
+    ∃ (γ : ℝ) (hγ : 0 < γ) (C : ℝ), SmoothingEstimatesMin n (pMin γ hγ) C := by
   obtain ⟨γ, hγ, hγ2, hclose⟩ := exists_gamma n
   have hγ1 : γ ≤ 1 := by linarith
   obtain ⟨C, hC0, hbound⟩ := exists_norm_smoothedInterp_le (n := n) hγ hγ1
-  refine ⟨pMin γ hγ, max C (1 / 2), ?_⟩
+  refine ⟨γ, hγ, max C (1 / 2), ?_⟩
   have hest : ∀ N, (∀ i x, ‖(smoothedMin n N (pMin γ hγ N) (pMin_isMinimal N)).Q i x‖ ≤
       max C (1 / 2) * ‖x‖) ∧ (∀ i, ∀ v ∈ (whitneyMin n N).V i,
         ‖v - (smoothedMin n N (pMin γ hγ N) (pMin_isMinimal N)).Q i v‖ ≤ 1 / 2 * ‖v‖) := by
@@ -2523,6 +2534,14 @@ theorem smoothingEstimatesMin_exists :
         exact (h0 _).le.trans (by positivity)
   exact ⟨fun N => pMin_isMinimal N, le_max_right _ _, fun N => (hest N).1,
     fun N => (hest N).2⟩
+
+/-- **The smoothed-projection estimates with vanishing boundary DOFs hold on the Freudenthal
+meshes of the cube**, as an existence statement over the parameters
+(`smoothingEstimatesMin_pMin` with the parameters `pMin γ` made explicit). -/
+theorem smoothingEstimatesMin_exists :
+    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ), SmoothingEstimatesMin n p C := by
+  obtain ⟨γ, hγ, C, h⟩ := smoothingEstimatesMin_pMin (n := n)
+  exact ⟨_, C, h⟩
 
 
 /-- **Uniformly bounded cochain projections onto the Whitney complexes of the cube**

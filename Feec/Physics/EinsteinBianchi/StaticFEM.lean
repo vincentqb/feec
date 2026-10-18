@@ -19,10 +19,12 @@ Table 5.1 on the level-`(N + 1)` Freudenthal meshes (`h_N = 1 / (2 (N + 1))`):
 **Main theorem** (`staticFEM`, under the regularity hypothesis `CurlPotential`, see below):
 the continuous problem (5.3) is well posed for every `f` (thesis Prop 5.2); for every `N` the
 discretization satisfies the surjectivity hypothesis (5.4) and uniform projection bounds; the
-discrete problem (5.7) has a unique solution for every datum (thesis Prop 5.4); and for exact
-solutions with `σ, φ, u, λ, S¹u` of class `C²`, vanishing outside `Q`, with first derivatives
-bounded by `L`, `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`
-(thesis Thm 5.5, corrected).
+discrete problem (5.6), i.e. the thesis' (5.7) with `S_h = πS` in place of `Π_h S`, has a unique
+solution for every datum (thesis Prop 5.4); and for exact solutions with `σ, φ, u, S¹u` of class
+`C²`, vanishing outside `Q`, with first derivatives bounded by `L`, and `‖λ‖ ≤ L`,
+`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`
+(thesis Thm 5.5, corrected). The same rate holds for the solution of Prop 5.2 itself whenever its
+multiplier lies in `L²Λ¹(Q)` (`l = jW λ`), through `isSaddle_jW_domain_eqs`.
 
 **Non-vacuity** (`staticFEM_nonvacuous`): the discrete spaces are nonzero for all large `N`
 (unconditionally), and there is a nontrivial smooth exact solution (manufactured data:
@@ -56,7 +58,7 @@ of `curl S⁰ H̊¹(Q; ℝ³)`, true on test fields).
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, (5.3), (5.7), Table 5.1, Props 5.2, 5.4, 5.7–5.9, Thm 5.5
+  §5.3, (5.3), (5.6), (5.7), Table 5.1, Props 5.2, 5.4, 5.7–5.9, Thm 5.5
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.4 (smoothed projections)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
@@ -75,6 +77,7 @@ namespace Feec.EinsteinBianchi.StaticFEM
 open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
+set_option maxHeartbeats 1000000 in
 /-- **The time-independent Einstein–Bianchi system with weak symmetries on the cube: well-posedness
 and convergence of the finite element method of Table 5.1** ([QuennevilleBelair2015], §5.3,
 Props 5.2, 5.4, Thm 5.5), under the regularity hypothesis `CurlPotential`. There are smoothing
@@ -82,11 +85,15 @@ parameters `p` (one smoother for both rows) and a constant `C` such that:
 1. (5.3) is well posed for every `f` (`bggHilb.IsSaddle`, with a stability bound);
 2. for every `N` the discretization `cubeFEM hT hB N` satisfies (5.4) (`Compatible`) and the
    projection bounds `Bounded (2C)`, `C` independent of `N`;
-3. for every `N` and every datum `F` the discrete problem (5.7) has exactly one solution;
+3. for every `N` and every datum `F` the discrete problem (5.6) (thesis (5.7) with `S_h = πS`)
+   has exactly one solution;
 4. there is `K`, independent of `N` and of the solution, such that for every exact solution
-   `(σ, φ, u, λ)` of (5.3) (with `λ ∈ L²`) whose components, `λ` and `S¹u` are `C²` forms vanishing
-   outside `Q` with first derivatives bounded by `L`, and every discrete solution,
-   `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`. -/
+   `(σ, φ, u, λ)` of (5.3) with `λ ∈ L²`, `‖λ‖ ≤ L`, whose components and `S¹u` are `C²` forms
+   vanishing outside `Q` with first derivatives bounded by `L`, and every discrete solution,
+   `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`;
+5. the same for the solution `(x, l)` of item 1 (right-hand side `f`, discrete datum
+   `F v = ⟪f, v⟫`) whenever its multiplier lies in `L²Λ¹(Q)`, `l = jW λ`: the graph-space
+   components of `x`, read in the domains, are the exact solution of item 4. -/
 theorem staticFEM (hR : CurlPotential) :
     ((∀ f : Wv W1, ∃! xl : Feec.BGG.Xsp V0 Vt0 Vt1 × bggHilb.Wcheck,
         bggHilb.IsSaddle f xl.1 xl.2) ∧
@@ -107,7 +114,7 @@ theorem staticFEM (hR : CurlPotential) :
               ⟪bggSegment.dt1 x.2.2.1, bggSegment.dt1 v⟫ = F v) ∧
           (∀ μ ∈ (cubeFEM hT hB N).V1h,
             ⟪bggSegment.d0 x.1 - (cubeFEM hT hB N).S0h x.2.1, μ⟫ = 0)) ∧
-      ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      (∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
         {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
         (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
           ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
@@ -129,21 +136,42 @@ theorem staticFEM (hR : CurlPotential) :
         (∀ μ ∈ (cubeFEM hT hB N).V1h,
           ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
         Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
-          (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+          (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2) ∧
+      ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
+        0 ≤ L → bggHilb.IsSaddle f x (bggHilb.jW lam) →
+        IsCsFormMin 0 0 L ((graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) : U0) : W0) →
+        (∀ a, IsCsFormMin 0 0 L ((rp (Feec.BGG.pφ V0 Vt0 Vt1 x) a : U0) : W0)) →
+        (∀ a, IsCsFormMin 0 1 L ((rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) a : U1) : W1)) → ‖lam‖ ≤ L →
+        IsCsFormMin 0 2 L (bggSegment.S1 (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x))) →
+        ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+        σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+        uh ∈ (cubeFEM hT hB N).Vt1h →
+        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+          ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+          ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+            ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = ((innerSL ℝ f).toLinearMap ∘ₗ incl1) v) →
+        (∀ μ ∈ (cubeFEM hT hB N).V1h,
+          ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+        Feec.BGG.graphSq bggSegment.d0 (graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) - σh) +
+          Feec.BGG.graphSq bggSegment.dt0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x) - φh) +
+          (cubeFEM hT hB N).gnSq (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) - uh) ≤
+            (K * L * meshSize N) ^ 2 := by
   have hCRex := hR.exists_bound
   obtain ⟨CR, hCR⟩ := hCRex
   have hrows := tableRows_uniform_cochainProjection
   obtain ⟨p, C, hT, hB, -⟩ := hrows
   exact ⟨bgg_existsUnique_isSaddle hR, p, C, hT, hB, cubeFEM_compatible hT hB,
     cubeFEM_bounded hT hB, cubeFEM_existsUnique hT hB hCR.1 hCR.2,
-    cubeFEM_rate_C2 hT hB hCR.1 hCR.2⟩
+    cubeFEM_rate_C2 hT hB hCR.1 hCR.2, cubeFEM_rate_isSaddle hT hB hCR.1 hCR.2⟩
 
 /-- **Non-vacuity of `staticFEM`** (for any common smoother `p` of the two rows):
 1. the discrete spaces `Vₕ⁰, Vₕ¹, Ṽₕ⁰, Ṽₕ¹` are nonzero for all large `N` (unconditionally);
 2. the manufactured field `manufacturedU` (first row `dᵗ(f dx₀ ∧ dx₁)`, `f` a bump in `Q`) is nonzero, and
    `(σ, φ, u, λ) = (0, 0, manufacturedU, 0)` with the datum `manufacturedDatum` solves (5.3) with all the `C²` hypotheses of
    the error estimate;
-3. under the regularity hypothesis, the discrete solutions `uₕ` of (5.7) with datum `manufacturedDatum` converge
+3. under the regularity hypothesis, the discrete solutions `uₕ` of (5.6) with datum `manufacturedDatum` converge
    to `manufacturedU` at rate `h_N` in `‖·‖_{Γₕ}` and are nonzero for all large `N`. -/
 theorem staticFEM_nonvacuous {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)

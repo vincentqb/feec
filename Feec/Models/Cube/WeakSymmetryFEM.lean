@@ -691,6 +691,114 @@ theorem segS1_regR_mem_H1c (y : Wv Vt0) (t : formIdx 3 2) :
 
 end H1Coeff
 
+/-! ### The solution of Prop 5.2 in the domain model -/
+
+section SaddleDomain
+
+/-- `H̊Λ¹(Q)` with the graph norm, mapped to the domain. -/
+def graphDom1ₗ : V1 →ₗ[ℝ] U1 where
+  toFun := graphDom D1
+  map_add' := graphDom_add D1
+  map_smul' := graphDom_smul D1
+
+/-- `H̊Λ¹(Q)³` with the graph norm, mapped to the domains. -/
+def rp1 : Vt1 →ₗ[ℝ] Wv U1 := piMap (𝕜' := ℝ) (V := V1) (V' := U1) (α := Fin 3) graphDom1ₗ
+
+theorem incl1_rp1 (u : Vt1) : incl1 (rp1 u) = ιt1 u := PiLp.ext fun _ => rfl
+
+theorem inner_wv_U1 (u v : Wv U1) : ⟪u, v⟫ = ⟪incl1 u, incl1 v⟫ := by
+  rw [PiLp.inner_apply, PiLp.inner_apply]; rfl
+
+/-- The graph-space point of an `ℝ³`-valued `H̊Λ⁰(Q)` field. -/
+def toGraphVec0 (ψ : Wv U0) : Vt0 := WithLp.toLp 2 fun a => D0.toGraphSpace (ψ a)
+/-- The graph-space point of an `ℝ³`-valued `H̊Λ¹(Q)` field. -/
+def toGraphVec1 (v : Wv U1) : Vt1 := WithLp.toLp 2 fun a => D1.toGraphSpace (v a)
+
+theorem ιt0_toGraphVec0 (ψ : Wv U0) : ιt0 (toGraphVec0 ψ) = incl0 ψ := PiLp.ext fun _ => rfl
+theorem ιt1_toGraphVec1 (v : Wv U1) : ιt1 (toGraphVec1 v) = incl1 v := PiLp.ext fun _ => rfl
+theorem ιt1_bggDt0_toGraphVec0 (ψ : Wv U0) :
+    ιt1 (bggDt0 (toGraphVec0 ψ)) = incl1 (bggSegment.dt0 ψ) := PiLp.ext fun _ => rfl
+theorem ιt1_bggDt0 (φ : Vt0) : ιt1 (bggDt0 φ) = incl1 (bggSegment.dt0 (rp φ)) :=
+  PiLp.ext fun a => (graphFst_bggD0 (φ a)).trans (apply_graphDom D0 (φ a)).symm
+theorem bggS1_eq (u : Vt1) : bggS1 u = bggSegment.S1 (rp1 u) := rfl
+theorem bggS1_toGraphVec1 (v : Wv U1) : bggS1 (toGraphVec1 v) = bggSegment.S1 v := rfl
+theorem bggDt1_eq (u : Vt1) : bggDt1 u = bggSegment.dt1 (rp1 u) :=
+  PiLp.ext fun a => (apply_graphDom D1 (u a)).symm
+theorem bggDt1_toGraphVec1 (v : Wv U1) : bggDt1 (toGraphVec1 v) = bggSegment.dt1 v := rfl
+
+/-! The fields of `bggHilb` (stated once, to rewrite with them instead of unfolding). -/
+
+theorem bggHilb_ι1 : bggHilb.ι1 = D1.graphFst := rfl
+theorem bggHilb_ι0 : bggHilb.ι0 = D0.graphFst := rfl
+theorem bggHilb_ιt1 : bggHilb.ιt1 = ιt1 := rfl
+theorem bggHilb_d0 : bggHilb.d0 = bggD0 := rfl
+theorem bggHilb_S0 : bggHilb.S0 = bggS0 := rfl
+theorem bggHilb_dt0 : bggHilb.dt0 = bggDt0 := rfl
+theorem bggHilb_S1 : bggHilb.S1 = bggS1 := rfl
+theorem bggHilb_dt1 : bggHilb.dt1 = bggDt1 := rfl
+
+set_option maxHeartbeats 4000000 in
+/-- The first equation of (5.3) in the domain model, from `IsSaddle` with multiplier `jW λ`. -/
+theorem isSaddle_jW_first_eq {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {l : W1}
+    (hs : bggHilb.IsSaddle f x (bggHilb.jW l)) (τ : U0) (ψ : Wv U0) :
+    ⟪graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x), τ⟫ - ⟪rp1 (Feec.BGG.pu V0 Vt0 Vt1 x),
+        bggSegment.dt0 ψ⟫ - ⟪l, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0 := by
+  have h := hs.1 (Feec.BGG.mkX (D0.toGraphSpace τ) (toGraphVec0 ψ) 0)
+  rw [Feec.BGG.Hilb.bForm_jW] at h
+  simp only [Feec.BGG.Hilb.aForm_apply] at h
+  simp only [Feec.BGG.pσ_mkX, Feec.BGG.pφ_mkX, Feec.BGG.pu_mkX] at h
+  simp only [ContinuousLinearMap.map_zero, inner_zero_right, add_zero] at h
+  have e1 : bggHilb.ι1 (bggHilb.d0 (D0.toGraphSpace τ) - bggHilb.S0 (toGraphVec0 ψ)) =
+      ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1) := by
+    rw [bggHilb_ι1, bggHilb_d0, bggHilb_S0, ContinuousLinearMap.map_sub, graphFst_bggD0,
+      graphFst_bggS0, ιt0_toGraphVec0, LinearPMap.graphSnd_toGraphSpace, Submodule.coe_sub]
+    rfl
+  have e2 : ⟪bggHilb.ιt1 (Feec.BGG.pu V0 Vt0 Vt1 x), bggHilb.ιt1 (bggHilb.dt0 (toGraphVec0 ψ))⟫ =
+      ⟪rp1 (Feec.BGG.pu V0 Vt0 Vt1 x), bggSegment.dt0 ψ⟫ := by
+    rw [inner_wv_U1, bggHilb_ιt1, bggHilb_dt0, ιt1_bggDt0_toGraphVec0, incl1_rp1]
+  have e3 : ⟪bggHilb.ι0 (Feec.BGG.pσ V0 Vt0 Vt1 x), bggHilb.ι0 (D0.toGraphSpace τ)⟫ =
+      ⟪graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x), τ⟫ := by
+    rw [Submodule.coe_inner, bggHilb_ι0, LinearPMap.graphFst_toGraphSpace]
+    rfl
+  rw [e1, e2, e3] at h
+  linarith
+
+set_option maxHeartbeats 4000000 in
+/-- **The solution of Prop 5.2 solves the domain form of (5.3)** whenever its multiplier lies in
+`W¹ = L²Λ¹(Q)` (`l = jW λ`; Prop 5.2 itself only gives `l ∈ W̌¹`): the components `σ`, `φ`, `u`
+of the graph-space solution, as points of the domains `H̊Λ⁰(Q)`, `H̊Λ⁰(Q)³`, `H̊Λ¹(Q)³`, satisfy the
+three equations of (5.3) in the form used by `Feec.BGG.Discrete.error_estimate_of_weakConsistency`
+(and `cubeFEM_rate`), with `λ` and the datum `F v = ⟪f, v⟫`. -/
+theorem isSaddle_jW_domain_eqs {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {l : W1}
+    (hs : bggHilb.IsSaddle f x (bggHilb.jW l)) :
+    (∀ τ ψ, ⟪graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x), τ⟫ - ⟪rp1 (Feec.BGG.pu V0 Vt0 Vt1 x),
+        bggSegment.dt0 ψ⟫ - ⟪l, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
+    (∀ v, ⟪bggSegment.dt0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x)), v⟫ +
+        ⟪bggSegment.S1 (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x)), bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x)), bggSegment.dt1 v⟫ =
+          ((innerSL ℝ f).toLinearMap ∘ₗ incl1) v) ∧
+    bggSegment.d0 (graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x)) =
+      bggSegment.S0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x)) := by
+  refine ⟨fun τ ψ => ?_, fun v => ?_, ?_⟩
+  · exact isSaddle_jW_first_eq hs τ ψ
+  · have h := hs.1 (Feec.BGG.mkX 0 0 (toGraphVec1 v))
+    rw [Feec.BGG.Hilb.bForm_jW, Feec.BGG.Hilb.aForm_apply] at h
+    simp only [Feec.BGG.pσ_mkX, Feec.BGG.pφ_mkX, Feec.BGG.pu_mkX] at h
+    simp only [ContinuousLinearMap.map_zero, inner_zero_right, neg_zero, zero_add, add_zero,
+      sub_self] at h
+    rw [bggHilb_ιt1, bggHilb_dt0, bggHilb_S1, bggHilb_dt1, ιt1_bggDt0, ιt1_toGraphVec1, bggS1_eq,
+      bggS1_toGraphVec1, bggDt1_eq, bggDt1_toGraphVec1, ← inner_wv_U1] at h
+    exact h
+  · have h := (bggHilb.forall_bForm_eq_zero_iff x).1 hs.2
+    have h2 := congrArg D1.graphFst (bggHilb.mem_Γ.1 h)
+    rw [bggHilb_d0, bggHilb_S0] at h2
+    rw [graphFst_bggD0, graphFst_bggS0, ← incl0_rp] at h2
+    refine Subtype.ext ?_
+    rw [← apply_graphDom] at h2
+    exact h2
+
+end SaddleDomain
+
 /-! ### Bounds for smooth fields vanishing outside `Q` -/
 
 section SmoothBounds
@@ -1571,7 +1679,8 @@ set_option maxHeartbeats 1000000 in
 hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every solution
 `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` and vanish
 outside `Q` (`IsCsFormMin 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`
-(`S¹u ∈ D(d¹*)`), the discrete solution of (5.6) satisfies
+(`S¹u ∈ D(d¹*)`), every discrete solution of the method (5.6), i.e. (5.7) with `S_h = πS` in place
+of the canonical `Π¹_h S⁰`, `Π²_h S¹`, satisfies
 `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`. -/
 theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
@@ -1760,8 +1869,40 @@ theorem cubeFEM_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
   refine hb.trans (le_of_eq ?_)
   ring
 
+/-- **The rate for the solution of Prop 5.2** (`bggHilb.IsSaddle`, `bgg_existsUnique_isSaddle`):
+`cubeFEM_rate_C2` applied to the graph-space solution `(x, jW λ)` of (5.3) with right-hand side `f`
+and multiplier in `W¹` (`λ ∈ L²Λ¹(Q)`), through `isSaddle_jW_domain_eqs`; the discrete datum is
+`F v = ⟪f, v⟫`. -/
+theorem cubeFEM_rate_isSaddle {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
+      0 ≤ L → bggHilb.IsSaddle f x (bggHilb.jW lam) →
+      IsCsFormMin 0 0 L ((graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) : U0) : W0) →
+      (∀ a, IsCsFormMin 0 0 L ((rp (Feec.BGG.pφ V0 Vt0 Vt1 x) a : U0) : W0)) →
+      (∀ a, IsCsFormMin 0 1 L ((rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) a : U1) : W1)) → ‖lam‖ ≤ L →
+      IsCsFormMin 0 2 L (bggSegment.S1 (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x))) →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = ((innerSL ℝ f).toLinearMap ∘ₗ incl1) v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) - σh) +
+        Feec.BGG.graphSq bggSegment.dt0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x) - φh) +
+        (cubeFEM hT hB N).gnSq (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) - uh) ≤
+          (K * L * meshSize N) ^ 2 := by
+  have hex := cubeFEM_rate_C2 hT hB hCR0 hCR
+  obtain ⟨K, hK0, hK⟩ := hex
+  refine ⟨K, hK0, fun N f x lam L hL0 hs hσ hφ hu hlam hSu σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
+  have e := isSaddle_jW_domain_eqs hs
+  exact hK N hL0 e.1 e.2.1 e.2.2 hσ hφ hu hlam hSu hσh hφh huh h1 h2 h3
+
 /-- **Thesis Prop 5.4 for Table 5.1**: for every `N` and every datum `F` the discrete system
-(5.6) has exactly one solution (under the regularity hypothesis, through its constant `C_R`). -/
+(5.6) (thesis (5.7) with `S_h = πS`) has exactly one solution (under the regularity hypothesis, through its constant `C_R`). -/
 theorem cubeFEM_existsUnique {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) (N : ℕ)
     (F : Wv U1 →ₗ[ℝ] ℝ) :

@@ -45,7 +45,10 @@ flat torus. On the Fourier side of `Feec.Models.Torus.GradCurl` (coefficients in
   `L (δ_k v) = δ_k (L_{2πk} v)`; `fibreWave_pwVec`: `(0, E₀, B₀)` is an eigenvector of the fibre
   wave operator at `2πn e_z` with eigenvalue `−2πi n`.
 * `torusPlaneWave`: `U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`, `ω = 2πn`, the coefficients of
-  `(0, E₀, B₀) sin ω(z − t)`; **`isStrongSolution_torusPlaneWave`** (exact solution),
+  `(0, E₀, B₀) sin ω(z − t)`: `physField P n t` has components `P_{ab} sin 2πn(z − t)`
+  (`sinWave_proj`) and `fieldFourier_physField`, `fieldFourier_physField_B` identify its Fourier
+  coefficients with the `E`- and `B`-components of `U(t)`; **`isStrongSolution_torusPlaneWave`**
+  (exact solution),
   `torusPlaneWave_mem` (TSD at every time), `torusPlaneWave_unique`.
 * **`cnTorusPlaneWave_props`**: the Crank–Nicolson iterates (time-discrete, space-continuous) from
   `U(0)` are `(2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)` with `|λ±| = 1`: exact energy conservation
@@ -668,5 +671,130 @@ theorem cnTorusPlaneWave_props (s : ℝ) :
         (isCNStep_cnTorusPlaneWave Ap Ax n s k)
 
 end PeriodicTheorems
+
+
+section PeriodicPhysical
+
+open UnitAddTorus Feec.Fourier Feec.Fourier.GradCurl
+
+noncomputable local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
+
+local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
+  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
+
+/-- The continuous function `(2i)⁻¹ (e^{-iωt} e_{n e_z} − e^{iωt} e_{−n e_z})` on `𝕋³`,
+`ω = 2πn`: `sin 2πn(z − t)` (`sinWave_proj`). -/
+def sinWave (n : ℤ) (t : ℝ) : C(UnitAddTorus (Fin 3), ℂ) :=
+  (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) • mFourier (kz n) -
+    Complex.exp (Complex.I * omegaC n * t) • mFourier (kz (-n)))
+
+theorem sinWave_proj (n : ℤ) (t : ℝ) (y : Fin 3 → ℝ) :
+    sinWave n t (TorusWeak.proj y) = (Real.sin (2 * Real.pi * n * (y 2 - t)) : ℂ) := by
+  simp only [sinWave, ContinuousMap.smul_apply, ContinuousMap.sub_apply, TorusWeak.mFourier_proj,
+    kz, Fin.sum_univ_three, smul_eq_mul]
+  simp only [Pi.single_apply, Fin.reduceEq, ite_false, ite_true, Int.cast_zero, zero_mul, zero_add,
+    add_zero, Int.cast_neg]
+  rw [Complex.ofReal_sin, Complex.sin, ← Complex.exp_add, ← Complex.exp_add]
+  have e1 : -(Complex.I * omegaC n) * t + 2 * Real.pi * Complex.I * (n * y 2) =
+      (2 * Real.pi * n * (y 2 - t) : ℝ) * Complex.I := by push_cast; ring
+  have e2 : Complex.I * omegaC n * t + 2 * Real.pi * Complex.I * (-(n : ℂ) * y 2) =
+      -((2 * Real.pi * n * (y 2 - t) : ℝ) * Complex.I) := by push_cast; ring
+  rw [e1, e2]
+  field_simp
+  ring_nf
+  rw [Complex.I_sq]
+  ring
+
+/-- **The physical plane-wave field on `𝕋³`**: components `P_{ab} sin 2πn(z − t)` (by
+`sinWave_proj`), as an element of `L²(𝕋³; ℂ³ˣ³)`. -/
+def physField (P : Matrix (Fin 3) (Fin 3) ℝ) (n : ℤ) (t : ℝ) :
+    PiLp 2 (fun _ : Fin 3 × Fin 3 => Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin 3)))) :=
+  WithLp.toLp 2 fun ab => (P ab.1 ab.2 : ℂ) • (sinWave n t).toLp 2 volume ℂ
+
+theorem toLp_sinWave (n : ℤ) (t : ℝ) : (sinWave n t).toLp 2 volume ℂ =
+    (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) • mFourierLp 2 (kz n) -
+      Complex.exp (Complex.I * omegaC n * t) • mFourierLp 2 (kz (-n))) := by
+  simp only [sinWave, map_smul, map_sub]
+
+theorem mFourierCoeff_mFourierLp (m k : Fin 3 → ℤ) :
+    mFourierCoeff (mFourierLp 2 m) k = if k = m then 1 else 0 := by
+  rw [← mFourierBasis_repr, ← coe_mFourierBasis, HilbertBasis.repr_self, lp.single_apply,
+    Pi.single_apply]
+
+/-- **The Fourier coefficients of the physical electric field are the `E`-component of
+`torusPlaneWave`** (`Feec.Fourier.Torus.fieldFourier`, Parseval's isometry). -/
+theorem fieldFourier_physField (Ap Ax : ℝ) (n : ℤ) (t : ℝ) :
+    Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeE Ap Ax) n t) =
+      (torusPlaneWave Ap Ax n t 1 : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) := by
+  refine Lp.ext_count fun k => ?_
+  have hsmul : ∀ (c : ℂ) (x : Models.Torus.GradCurl.Space 1), ⇑(c • x) = c • ⇑x :=
+    fun c x => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul c x)
+  have hsub : ∀ (x y : Models.Torus.GradCurl.Space 1), ⇑(x - y) = ⇑x - ⇑y :=
+    fun x y => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_sub x y)
+  have hR : ((torusPlaneWave Ap Ax n t 1 : Models.Torus.GradCurl.Space 1) :
+      (Fin 3 → ℤ) → ShortHilbertComplex.W3 Vec Mat Mat 1) k =
+      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
+        ((Pi.single (kz n) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
+        Complex.exp (Complex.I * omegaC n * t) •
+          ((Pi.single (kz (-n)) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k)) := by
+    simp only [torusPlaneWave, PiLp.smul_apply, PiLp.sub_apply]
+    rw [hsmul, Pi.smul_apply, hsub, Pi.sub_apply, hsmul, hsmul, Pi.smul_apply, Pi.smul_apply]
+    simp only [modeVec]
+    rw [coeFn_mode, coeFn_mode]
+    rfl
+  refine (?_ : ((Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeE Ap Ax) n t) :
+      Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → Mat) k =
+      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
+        ((Pi.single (kz n) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
+        Complex.exp (Complex.I * omegaC n * t) •
+          ((Pi.single (kz (-n)) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k))).trans hR.symm
+  ext p
+  rw [Torus.fieldFourier_apply]
+  change mFourierCoeff ((amplitudeE Ap Ax p.1 p.2 : ℂ) • (sinWave n t).toLp 2 volume ℂ) k = _
+  rw [toLp_sinWave, ← mFourierBasis_repr, ← coe_mFourierBasis, map_smul, map_smul, map_sub,
+    map_smul, map_smul, HilbertBasis.repr_self, HilbertBasis.repr_self]
+  simp only [lp.coeFn_smul, lp.coeFn_sub, Pi.smul_apply, Pi.sub_apply, lp.single_apply,
+    smul_eq_mul, PiLp.smul_apply, PiLp.sub_apply]
+  simp only [Pi.single_apply]
+  split_ifs <;> simp <;> ring
+
+/-- **The Fourier coefficients of the physical magnetic field are the `B`-component of
+`torusPlaneWave`** (`Feec.Fourier.Torus.fieldFourier`, Parseval's isometry). -/
+theorem fieldFourier_physField_B (Ap Ax : ℝ) (n : ℤ) (t : ℝ) :
+    Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeB Ap Ax) n t) =
+      (torusPlaneWave Ap Ax n t 2 : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) := by
+  refine Lp.ext_count fun k => ?_
+  have hsmul : ∀ (c : ℂ) (x : Models.Torus.GradCurl.Space 2), ⇑(c • x) = c • ⇑x :=
+    fun c x => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul c x)
+  have hsub : ∀ (x y : Models.Torus.GradCurl.Space 2), ⇑(x - y) = ⇑x - ⇑y :=
+    fun x y => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_sub x y)
+  have hR : ((torusPlaneWave Ap Ax n t 2 : Models.Torus.GradCurl.Space 2) :
+      (Fin 3 → ℤ) → ShortHilbertComplex.W3 Vec Mat Mat 2) k =
+      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
+        ((Pi.single (kz n) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
+        Complex.exp (Complex.I * omegaC n * t) •
+          ((Pi.single (kz (-n)) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k)) := by
+    simp only [torusPlaneWave, PiLp.smul_apply, PiLp.sub_apply]
+    rw [hsmul, Pi.smul_apply, hsub, Pi.sub_apply, hsmul, hsmul, Pi.smul_apply, Pi.smul_apply]
+    simp only [modeVec]
+    rw [coeFn_mode, coeFn_mode]
+    rfl
+  refine (?_ : ((Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeB Ap Ax) n t) :
+      Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → Mat) k =
+      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
+        ((Pi.single (kz n) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
+        Complex.exp (Complex.I * omegaC n * t) •
+          ((Pi.single (kz (-n)) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k))).trans hR.symm
+  ext p
+  rw [Torus.fieldFourier_apply]
+  change mFourierCoeff ((amplitudeB Ap Ax p.1 p.2 : ℂ) • (sinWave n t).toLp 2 volume ℂ) k = _
+  rw [toLp_sinWave, ← mFourierBasis_repr, ← coe_mFourierBasis, map_smul, map_smul, map_sub,
+    map_smul, map_smul, HilbertBasis.repr_self, HilbertBasis.repr_self]
+  simp only [lp.coeFn_smul, lp.coeFn_sub, Pi.smul_apply, Pi.sub_apply, lp.single_apply,
+    smul_eq_mul, PiLp.smul_apply, PiLp.sub_apply]
+  simp only [Pi.single_apply]
+  split_ifs <;> simp <;> ring
+
+end PeriodicPhysical
 
 end Feec.Numerics.PlaneWaveCube

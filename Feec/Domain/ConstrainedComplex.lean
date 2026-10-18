@@ -134,6 +134,20 @@ theorem formalAdj_preComp [Fintype ι] (M : ι → ι' → 𝕜) (A : ConstCoeff
     (A.preComp M).formalAdj = A.formalAdj.postComp fun i l => conj (M l i) := by
   simp only [formalAdj, postComp, preComp, adjEntry_flatMap, adjEntry_map_mul]
 
+/-- The negative `-A` of a constant-coefficient operator. -/
+def negOp (A : ConstCoeffOp E 𝕜 ι κ) : ConstCoeffOp E 𝕜 ι κ where
+  coeff j i := (A.coeff j i).map fun t => (t.1, (-1) * t.2)
+
+theorem negOp_apply [Fintype ι] (A : ConstCoeffOp E 𝕜 ι κ) (f : ι → E → 𝕜) :
+    A.negOp.apply f = -A.apply f := by
+  funext j x
+  simp only [apply, negOp, applyEntry_map_smul, Pi.neg_apply, ← Finset.sum_neg_distrib]
+  simp
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+theorem formalAdj_negOp (A : ConstCoeffOp E 𝕜 ι κ) : A.negOp.formalAdj = A.formalAdj.negOp := by
+  simp only [formalAdj, negOp, adjEntry_map_mul, map_neg, map_one]
+
 /-- The composition `B ∘ A` of constant-coefficient operators. -/
 def comp [Fintype κ] (B : ConstCoeffOp E 𝕜 κ μ) (A : ConstCoeffOp E 𝕜 ι κ) :
     ConstCoeffOp E 𝕜 ι μ where
@@ -427,6 +441,19 @@ theorem maximalVia_eq_neg (hX : DenseVia Jx) (hY : DenseVia Jy)
   rw [maximalVia, maximalVia, A.formalAdj.minimalVia_eq_neg Jy Jx hX h,
     LinearPMap.adjoint_neg _ (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA)]
 
+omit [CompleteSpace X] [CompleteSpace Y] in
+theorem minimalVia_negOp (hY : DenseVia Jy) : A.negOp.minimalVia Jx Jy = -A.minimalVia Jx Jy :=
+  A.minimalVia_eq_neg Jx Jy hY fun φ hφ _ _ => by
+    rw [testField_congr _ ((A.isTestField_apply hφ).smul (-1 : 𝕜))
+      (by rw [negOp_apply]; funext j x; simp), testField_smul, neg_one_smul]
+
+omit [CompleteSpace X] in
+theorem maximalVia_negOp (hX : DenseVia Jx) (hY : DenseVia Jy)
+    (hA : A.formalAdj.MapsToVia Jy Jx) : A.negOp.maximalVia Jx Jy = -A.maximalVia Jx Jy :=
+  A.maximalVia_eq_neg Jx Jy hX hY hA fun ψ hψ _ _ => by
+    rw [testField_congr _ ((A.formalAdj.isTestField_apply hψ).smul (-1 : 𝕜))
+      (by rw [formalAdj_negOp, negOp_apply]; funext j x; simp), testField_smul, neg_one_smul]
+
 end Realization
 
 /-! ## The zero operator and empty components -/
@@ -607,6 +634,30 @@ theorem ConstCoeffOp.matMapsTo_postComp (A : ConstCoeffOp E 𝕜 ι κ) (M : ι 
     {N : κ → κ → 𝕜} (hN : IsProjMat N) : (A.postComp N).MatMapsTo M N := fun φ _ => by
   rw [ConstCoeffOp.postComp_apply_eq_matMulField, hN.matMulField_matMulField]
 
+omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
+theorem ConstCoeffOp.matMapsTo_of_isEmpty_left [IsEmpty ι] (A : ConstCoeffOp E 𝕜 ι κ)
+    (M : ι → ι → 𝕜) (N : κ → κ → 𝕜) : A.MatMapsTo M N := fun φ _ => by
+  rw [A.apply_of_isEmpty]
+  funext j x
+  simp [matMulField]
+
+omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
+theorem ConstCoeffOp.matMapsTo_of_isEmpty_right [IsEmpty κ] (A : ConstCoeffOp E 𝕜 ι κ)
+    (M : ι → ι → 𝕜) (N : κ → κ → 𝕜) : A.MatMapsTo M N := fun _ _ =>
+  funext fun j => isEmptyElim j
+
+omit [Fintype ι] in
+theorem testField_neg {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hφ' : IsTestField Ω (-φ)) :
+    testField hφ' = -testField hφ := by
+  rw [testField_congr hφ' (hφ.smul (-1 : 𝕜)) (by funext i x; simp), testField_smul, neg_one_smul]
+
+omit [Fintype κ] in
+theorem ConstCoeffOp.testField_apply_eq_neg {A A' : ConstCoeffOp E 𝕜 ι κ} {φ : ι → E → 𝕜}
+    (hφ : IsTestField Ω φ) (h : A'.apply φ = -A.apply φ) :
+    testField (A'.isTestField_apply hφ) = -testField (A.isTestField_apply hφ) := by
+  have h' : IsTestField Ω (-A.apply φ) := h ▸ A'.isTestField_apply hφ
+  rw [testField_congr _ h' h, testField_neg]
+
 /-- Equal test fields have equal images. -/
 theorem ConstCoeffOp.testField_apply_congr [FiniteDimensional ℝ E] (hΩ : IsOpen Ω)
     (A : ConstCoeffOp E 𝕜 ι κ) {φ ψ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hψ : IsTestField Ω ψ)
@@ -677,6 +728,21 @@ theorem isProjMat_symMat : IsProjMat (symMat n : _ → _ → 𝕜) where
     congr 2
     · exact if_congr eq_comm rfl rfl
     · exact if_congr ⟨fun h => by rw [h], fun h => by rw [h]⟩ rfl rfl
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+/-- `sym φ = ½ (φ + φᵀ)`. -/
+theorem matMulField_symMat_eq (φ : Fin n × Fin n → E → 𝕜) :
+    matMulField (symMat n) φ = (1 / 2 : 𝕜) • (φ + fun ij => φ (ij.2, ij.1)) := by
+  funext ij x
+  rw [matMulField_symMat]
+  simp only [Pi.smul_apply, Pi.add_apply, smul_eq_mul]
+  ring
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+theorem matMulField_neg (M : ι → ι → 𝕜) (φ : ι → E → 𝕜) :
+    matMulField M (-φ) = -matMulField M φ := by
+  funext i x
+  simp [matMulField, Finset.sum_neg_distrib]
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
 theorem matMulField_symMat_of_symm {φ : Fin n × Fin n → E → 𝕜}
@@ -819,7 +885,19 @@ theorem mem_traceFreeSubmodule [NeZero n] {u : L2F 𝕜 Ω (Fin n × Fin n)} :
     change u ij - _ = u ij
     rw [h, smul_zero, ite_self, sub_zero]
 
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E]
+  [(volume : Measure E).IsAddHaarMeasure] in
+/-- No constraint: `matSubmodule 1 = ⊤`. -/
+theorem matSubmodule_idMat {ι : Type*} [Fintype ι] [DecidableEq ι] :
+    matSubmodule 𝕜 Ω (idMat ι) = ⊤ := by
+  refine eq_top_iff.2 fun u _ => mem_matSubmodule.2 ((WithLp.ext_iff 2).2 (funext fun i => ?_))
+  simp [matCLM_apply, idMat]
+
 end L2F
+
+omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
+theorem ConstCoeffOp.matMapsTo_idMat [DecidableEq κ] (A : ConstCoeffOp E 𝕜 ι κ)
+    (M : ι → ι → 𝕜) : A.MatMapsTo M (idMat κ) := fun _ _ => matMulField_idMat _
 
 end Matrix
 

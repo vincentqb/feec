@@ -1084,6 +1084,85 @@ theorem norm_sub_glue_globalInterp_coordWedge_le {k : ℕ} (hk : k + 1 ≤ n) :
 
 end Strong
 
+/-! ### `S` and the smoothing; injectivity of `grad` -/
+
+section SmoothingInjective
+
+/-- `u ↦ R̃ u` (extension by zero, mollification, dilation) as a linear map on `L²(Ω)`. -/
+def smoothExtₗ {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ)) (hΩ : MeasurableSet Ω) :
+    L2 ℝ Ω →ₗ[ℝ] (Fin n → ℝ) → ℝ where
+  toFun u := smoothExt Ω p (u : (Fin n → ℝ) → ℝ)
+  map_add' u v := smoothExt_coe_add hΩ u v
+  map_smul' a u := smoothExt_coe_smul hΩ a u
+
+theorem isDeg_smoothForm {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
+    (hΩ : MeasurableSet Ω) (k : ℕ) (u : L2F ℝ Ω (formIdx n k)) (x : Fin n → ℝ) :
+    IsDeg k ((smoothForm p hΩ (k : ℤ) u : FormField n) x) := fun s hs => by
+  change formExt (smoothCoeff p (k : ℤ) u) s x = 0
+  have : ¬ ((s.card : ℤ) = (k : ℤ)) := by exact_mod_cast hs
+  simp [formExt, this]
+
+/-- **`S` commutes with the smoothing up to the dilation factor**: `R S u = c S R̃ u`, with
+`R`, `R̃` the smoothing of `L²` forms of degrees `k + 1`, `k` (`smoothForm`: extension by zero,
+mollification, pullback by the dilation `x ↦ c (x − x₀) + x₀`) — the mollification commutes
+with the constant-coefficient map `S`, and the dilation contributes the factor `c` of
+`affinePullback_scalarMat_coordWedgeField`. -/
+theorem smoothForm_wsL2 {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
+    (hΩ : MeasurableSet Ω) (k : ℕ) (u : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :
+    (smoothForm p hΩ ((k : ℤ) + 1) (wsL2 (Ω := Ω) (k : ℤ) u) : FormField n) =
+      p.factor • coordWedgeField (fun a => (smoothForm p hΩ (k : ℤ) (u a) : FormField n)) := by
+  have hc : p.factor ≠ 0 := by linarith [p.half_le_factor]
+  funext x t
+  change formExt (smoothCoeff p ((k : ℤ) + 1) (wsL2 (Ω := Ω) (k : ℤ) u)) t x = _
+  rw [Pi.smul_apply, coordWedgeField_apply, Pi.smul_apply, smul_eq_mul]
+  by_cases ht : (t.card : ℤ) = (k : ℤ) + 1
+  · rw [formExt, dite_eq_left_of_eq_true (eq_true ht)]
+    set t' : formIdx n ((k : ℤ) + 1) := ⟨t, ht⟩
+    rw [coordWedgeSum_eq_sum_wsCoeff (fun a => isDeg_smoothForm p hΩ k (u a) x) t']
+    change p.factor ^ ((k : ℤ) + 1) * smoothExtₗ p hΩ (wsL2 (Ω := Ω) (k : ℤ) u t') x = _
+    rw [wsL2_apply, map_sum, Finset.sum_apply, Finset.mul_sum, Finset.mul_sum,
+      zpow_add_one₀ hc]
+    refine Finset.sum_congr rfl fun q _ => ?_
+    rw [map_smul, Pi.smul_apply, smul_eq_mul]
+    change _ = p.factor * (wsCoeff (k : ℤ) t' q *
+      formExt (smoothCoeff p (k : ℤ) (u q.1)) q.2.1 x)
+    rw [formExt_val]
+    simp only [smoothCoeff, smoothExtₗ, LinearMap.coe_mk, AddHom.coe_mk]
+    ring
+  · have h0 : ¬ (t.card = k + 1) := fun h => ht (by exact_mod_cast h)
+    rw [formExt, dite_eq_right_of_eq_false (eq_false ht),
+      isDeg_coordWedgeSum (fun a => isDeg_smoothForm p hΩ k (u a) x) t h0, mul_zero]
+    rfl
+
+theorem eq_zero_of_minimal_eq_zero_of_eq {Ω : Set (Fin 3 → ℝ)} (hΩ : Ω = cubeDomain 3)
+    {x : ((extDerivOp ℝ 3 (0 : ℤ)).minimal Ω).domain}
+    (hx : (extDerivOp ℝ 3 (0 : ℤ)).minimal Ω x = 0) : (x : L2F ℝ Ω (formIdx 3 (0 : ℤ))) = 0 := by
+  subst hΩ
+  exact D0_eq_zero hx
+
+/-- **`d` is injective on `Λ̊_h⁰`** (any element family on the cube meshes): `ℌ⁰(H̊Λ(Q)) = 0`
+and the glued fields of `Λ̊_h⁰` lie in `D(d_min)`. -/
+theorem eq_zero_of_dPiecewise_eq_zero (E : LocalElement 3) (N : ℕ) (u : E.globalSpace₀ (mesh 3 N) 0)
+    (hu : E.dPiecewise (mesh 3 N) 0 (u : E.Piecewise (mesh 3 N) 0) = 0) : u = 0 := by
+  obtain ⟨h, hval⟩ := E.glue_mem_minimal (mesh 3 N) (isOpen_mesh_domain 3 N) (center 3)
+    (strictStar_mesh 3 N) 0 u
+  rw [hu, map_zero] at hval
+  have h0 := eq_zero_of_minimal_eq_zero_of_eq (mesh_domain 3 N) hval
+  have := E.glue_injective (mesh 3 N) (isOpen_mesh_domain 3 N) 0
+    ((show E.glue (mesh 3 N) ((0 : ℕ) : ℤ) (u : E.Piecewise (mesh 3 N) 0) = 0 from h0).trans
+      (map_zero _).symm)
+  exact Subtype.ext this
+
+/-- **`grad` is injective on `P₂Λ̊⁰ ⊗ ℝ³`** (row-wise; the injectivity used in the BGG
+construction of [QuennevilleBelair2015], §5.3). -/
+theorem eq_zero_of_dPiecewise_tensor_eq_zero (N : ℕ)
+    (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 N) 0)
+    (hψ : ∀ a, (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 0
+      (ψ a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0) = 0) : ψ = 0 :=
+  funext fun a => eq_zero_of_dPiecewise_eq_zero _ N (ψ a) (hψ a)
+
+end SmoothingInjective
+
 /-! ### Prop 5.9(2) is false -/
 
 section Prop59Two

@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.WeakSymmetryComplex
 public import Feec.Models.Cube.SmoothingEstimates
+public import Feec.Models.Cube.PolySmoothingEstimates
 
 /-!
 # The weak-symmetry maps on the Freudenthal meshes of the cube: Props 5.8 and 5.9
@@ -1082,5 +1083,809 @@ theorem norm_sub_glue_globalInterp_coordWedge_le {k : ℕ} (hk : k + 1 ≤ n) :
   ring
 
 end Strong
+
+/-! ### Prop 5.9(2) is false -/
+
+section Prop59Two
+
+/-! #### The reference field `Ẑ = S¹(0, 0, d(y₀²/2))` -/
+
+/-- The polynomial `0`-form `y₀²/2`. -/
+def refΩ : Koszul.PolyForm ℝ (Fin 3) :=
+  fun s => if s = ∅ then MvPolynomial.C (1 / 2 : ℝ) * MvPolynomial.X 0 * MvPolynomial.X 0 else 0
+
+def refQ : FormField 3 := evalForm 3 refΩ
+
+theorem refQ_mem : refQ ∈ polySpace 3 2 0 := by
+  refine ⟨refΩ, ⟨fun s hs => ?_, fun s => ?_⟩, rfl⟩
+  · simp [refΩ]; intro h; subst h; simp at hs
+  · simp only [refΩ]
+    split_ifs
+    · refine (MvPolynomial.totalDegree_mul _ _).trans ?_
+      refine (add_le_add (MvPolynomial.totalDegree_mul _ _) le_rfl).trans ?_
+      simp
+    · simp
+
+theorem extDeriv_refQ_zero (y : Fin 3 → ℝ) : extDeriv refQ y {0} = y 0 := by
+  rw [extDeriv_apply, Finset.sum_singleton, Finset.erase_singleton]
+  simp only [ExteriorFibre.sgn, Finset.filter_singleton]
+  have : partialDeriv 0 (fun z => refQ z ∅) y = y 0 := by
+    change partialDeriv 0 (fun z => MvPolynomial.eval z (refΩ ∅)) y = y 0
+    rw [partialDeriv_eval]
+    simp [refΩ]
+    ring
+  simp [this]
+
+
+theorem extDeriv_refQ_two (y : Fin 3 → ℝ) : extDeriv refQ y {2} = 0 := by
+  rw [extDeriv_apply, Finset.sum_singleton, Finset.erase_singleton]
+  simp only [ExteriorFibre.sgn, Finset.filter_singleton]
+  have : partialDeriv 2 (fun z => refQ z ∅) y = 0 := by
+    change partialDeriv 2 (fun z => MvPolynomial.eval z (refΩ ∅)) y = 0
+    rw [partialDeriv_eval]
+    simp [refΩ]
+  simp [this]
+
+/-- The reference field `Ẑ = S¹(0, 0, dQ)`, `Q(y) = y₀²/2`. -/
+def refZ : FormField 3 := coordWedgeField (Pi.single (2 : Fin 3) (extDeriv refQ))
+
+theorem refZ_apply (y : Fin 3 → ℝ) : refZ y {0, 2} = -(y 0) := by
+  rw [refZ, coordWedgeField_apply, coordWedgeSum_pair (by decide : (0 : Fin 3) < 2)]
+  simp [extDeriv_refQ_zero]
+
+theorem refZ_mem : refZ ∈ polySpace 3 1 2 := by
+  refine coordWedgeField_mem_polySpace (k := 1) fun a => ?_
+  by_cases ha : a = 2
+  · subst ha
+    simpa using extDeriv_mem_polySpace refQ_mem
+  · simp [ha]
+
+/-- The coefficient of `dy₀ ∧ dy₂` of a trimmed linear `2`-form does not depend on `y₀`. -/
+theorem apply_single_eq_of_mem_p1MinusForms {u : FormField 3} (hu : u ∈ p1MinusForms 3 2) :
+    u (Pi.single 0 1) {0, 2} = u 0 {0, 2} := by
+  induction hu using Submodule.span_induction with
+  | mem w hw =>
+    rcases hw with ⟨α, -, rfl⟩ | ⟨β, -, rfl⟩
+    · rfl
+    · change interior (Pi.single 0 1) β {0, 2} = interior 0 β {0, 2}
+      rw [interior_apply, interior_apply]
+      refine (Finset.sum_eq_zero fun j hj => ?_).trans (Finset.sum_eq_zero fun j _ => by simp).symm
+      have hj0 : j ≠ 0 := by rintro rfl; simp at hj
+      simp [hj0]
+  | zero => rfl
+  | add w w' _ _ hw hw' => simp [hw, hw']
+  | smul c w _ hw => simp [hw]
+
+theorem refZ_notMem : refZ ∉ p1MinusForms 3 2 := fun h => by
+  have := apply_single_eq_of_mem_p1MinusForms h
+  rw [refZ_apply, refZ_apply] at this
+  simp at this
+
+theorem polyMinusSpace_one_le : polyMinusSpace 3 1 2 ≤ p1MinusForms 3 2 := by
+  rw [polyMinusSpace, ← whitneySpace_refVertex_eq_map_polyFormMinus]
+  exact whitneySpace_le_p1MinusForms _ _
+
+
+/-- The reference simplex `K₁ = lex(Kuhn(id))`. -/
+abbrev refK : Affine.Simplex ℝ (Fin 3 → ℝ) 3 := kuhnLex (1 : Equiv.Perm (Fin 3))
+
+theorem refZ_mem_contDegForms : refZ ∈ contDegForms 3 2 := polySpace_le_contDegForms 1 2 refZ_mem
+
+/-- `c₀ = ‖Ẑ − Π Ẑ‖²_{L²(K₁)}`, `Π` the interpolant of `P₁⁻Λ²(K₁)`. -/
+def refGap : ℝ :=
+  formL2Sq refK.closedInterior (refZ - (polyMinusInterp (isUnit_det_edgeMatrix refK) (r := 1)
+    le_rfl (by norm_num : 2 ≤ 3) ⟨refZ, refZ_mem_contDegForms⟩ : FormField 3))
+
+theorem refGap_pos : 0 < refGap := by
+  set P := (polyMinusInterp (isUnit_det_edgeMatrix refK) (r := 1)
+    le_rfl (by norm_num : 2 ≤ 3) ⟨refZ, refZ_mem_contDegForms⟩ : FormField 3)
+  have hPm : P ∈ polyMinusSpace 3 1 2 := mem_polyMinusSpace_of_mem_localPolyMinusSpace
+    (isUnit_det_edgeMatrix refK) (polyMinusInterp (isUnit_det_edgeMatrix refK) (r := 1)
+      le_rfl (by norm_num : 2 ≤ 3) ⟨refZ, refZ_mem_contDegForms⟩).2
+  have hu : refZ - P ∈ polySpace 3 1 2 :=
+    Submodule.sub_mem _ refZ_mem (polyMinusSpace_le_polySpace le_rfl hPm)
+  have hK := refK.isCompact_closedInterior
+  refine lt_of_le_of_ne (formL2Sq_nonneg hK.measurableSet _) fun h0 => ?_
+  have hinj := l2EmbedOf_injective_of_le_polySpace (le_refl (polySpace 3 1 2)) hK
+    (interior_closedInterior_nonempty refK)
+  have hn := norm_sq_l2EmbedOf (polySpace 3 1 2) (polySpace_le_contForms 1 2) hK ⟨_, hu⟩
+  have h1 : l2EmbedOf (polySpace 3 1 2) (polySpace_le_contForms 1 2) hK ⟨_, hu⟩ = 0 := by
+    rw [← norm_eq_zero, ← sq_eq_zero_iff, hn]
+    exact h0.symm
+  have h2 : (⟨_, hu⟩ : polySpace 3 1 2) = 0 := hinj (h1.trans (map_zero _).symm)
+  have h3 : refZ = P := sub_eq_zero.1 (congrArg Subtype.val h2)
+  exact refZ_notMem (polyMinusSpace_one_le (h3 ▸ hPm))
+
+
+theorem affinePullback_scalarMat_inv {h : ℝ} (hh : h ≠ 0) (t : Fin 3 → ℝ) (w : FormField 3) :
+    affinePullback (scalarMat 3 h) t (affinePullback (scalarMat 3 h⁻¹) (-(h⁻¹ • t)) w) = w := by
+  rw [affinePullback_affinePullback]
+  have e1 : (fun j l => ∑ i, scalarMat 3 h⁻¹ j i * scalarMat 3 h i l) =
+      fun i j : Fin 3 => if i = j then (1 : ℝ) else 0 := by
+    funext j l
+    simp only [scalarMat, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+    split_ifs <;> simp [inv_mul_cancel₀ hh]
+  have e2 : affine (scalarMat 3 h⁻¹) (-(h⁻¹ • t)) t = 0 := by
+    rw [affine_scalarMat]; simp
+  rw [e1, e2, affinePullback_id]
+
+theorem formL2Sq_smul (S : Set (Fin 3 → ℝ)) (c : ℝ) (u : FormField 3) :
+    formL2Sq S (c • u) = c ^ 2 * formL2Sq S u := by
+  simp only [formL2Sq, Pi.smul_apply, smul_eq_mul, mul_pow, integral_const_mul, Finset.mul_sum]
+
+/-- **The local gap on a scaled simplex**: if `H^* Z = h Ẑ` for `T = t + h K_id`, then
+`‖Z − Π_T Z‖²_{L²(T)} = h c₀`. -/
+theorem formL2Sq_sub_localInterp_of_pullback {h : ℝ} (hh : 0 < h) (t : Fin 3 → ℝ)
+    {T : Affine.Simplex ℝ (Fin 3 → ℝ) 3}
+    (hT : T = mapEquiv (boxMap t h hh.ne') (kuhnSimplex (1 : Equiv.Perm (Fin 3))))
+    {Z : FormField 3} (hZ : Z ∈ polySpace 3 1 2)
+    (hpull : affinePullback (scalarMat 3 h) t Z = h • refZ) :
+    formL2Sq T.closedInterior
+      (Z - (((polyElement 3 PolySeq.lowestOrder).localInterp T (1 + 1)
+          ⟨Z, (polySpace_le_contDegForms 1 2 hZ).1⟩ :
+          (polyElement 3 PolySeq.lowestOrder).space _ (1 + 1)) : FormField 3)) = h * refGap := by
+  subst hT
+  set K := kuhnSimplex (1 : Equiv.Perm (Fin 3))
+  have hZc : Z ∈ contDegForms 3 2 := polySpace_le_contDegForms 1 2 hZ
+  have hid := localInterp_lowestOrder_eq K t hh (k := 1) (by norm_num) ⟨Z, hZc⟩
+  rw [hid, ← closedInterior_mapEquiv_lexSimplex K t hh.ne']
+  set q := mapEquiv (boxMap t h hh.ne') (lexSimplex K)
+  set P := (polyMinusInterp (isUnit_det_edgeMatrix q) (PolySeq.lowestOrder.one_le_deg (1 + 1))
+    (by norm_num : 1 + 1 ≤ 3) ⟨Z, hZc⟩ : FormField 3)
+  have hnat : affinePullback (scalarMat 3 h) t P =
+      (polyMinusInterp (isUnit_det_edgeMatrix refK) (PolySeq.lowestOrder.one_le_deg (1 + 1))
+        (by norm_num : 1 + 1 ≤ 3) ⟨affinePullback (scalarMat 3 h) t Z,
+          affinePullback_mem_contDegForms _ _ hZc⟩ : FormField 3) :=
+    affinePullback_polyMinusInterp (isUnit_det_edgeMatrix refK) (isUnit_det_edgeMatrix q)
+      (scalarMat 3 h) t (points_mapEquiv_boxMap refK t hh.ne') _ _ ⟨Z, hZc⟩
+  have hsm : (⟨affinePullback (scalarMat 3 h) t Z, affinePullback_mem_contDegForms _ _ hZc⟩ :
+      contDegForms 3 (1 + 1)) = h • ⟨refZ, refZ_mem_contDegForms⟩ := Subtype.ext hpull
+  have hsub : affinePullback (scalarMat 3 h) t (Z - P) =
+      h • (refZ - (polyMinusInterp (isUnit_det_edgeMatrix refK) (r := 1)
+        le_rfl (by norm_num : 2 ≤ 3) ⟨refZ, refZ_mem_contDegForms⟩ : FormField 3)) := by
+    have e := (affinePullbackₗ (scalarMat 3 h) t).map_sub Z P
+    simp only [affinePullbackₗ_apply] at e
+    rw [e, hnat, hsm, map_smul, hpull, smul_sub]
+    rfl
+  have hPdeg : ∀ x, IsDeg 2 (P x) := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace
+    (r := 1) le_rfl (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix q)
+      (polyMinusInterp (isUnit_det_edgeMatrix q) (PolySeq.lowestOrder.one_le_deg (1 + 1))
+        (by norm_num : 1 + 1 ≤ 3) ⟨Z, hZc⟩).2))
+  have hdeg : ∀ x, IsDeg 2 ((Z - P) x) := fun x s hs => by
+    simp only [Pi.sub_apply]
+    rw [isDeg_of_mem_polySpace hZ x s hs, hPdeg x s hs, sub_zero]
+  have key := formL2Sq_affinePullback_scalarMat refK hh t hdeg
+  rw [hsub, formL2Sq_smul] at key
+  change h ^ 3 * (h ^ 2 * refGap) = (h ^ 2) ^ 2 * formL2Sq q.closedInterior (Z - P) at key
+  have h4 : 0 < (h ^ 2) ^ 2 := by positivity
+  refine (mul_left_cancel₀ h4.ne' ?_)
+  rw [← key]
+  ring
+
+
+/-- The centre `p₀ = (½, ½, ½)` of the reference cube `[0, 1]³`. -/
+abbrev refCenter : Fin 3 → ℝ := fun _ => 1 / 2
+
+/-- A smooth bump, `= 1` on `[0, 1]³ = B̄_∞(p₀, ½)` and supported in `B_∞(p₀, 1)`. -/
+def refBump : ContDiffBump refCenter where
+  rIn := 1 / 2
+  rOut := 1
+  rIn_pos := by norm_num
+  rIn_lt_rOut := by norm_num
+
+/-- The reference profile `F = χ Q`. -/
+def refF : FormField 3 := fun y => refBump y • refQ y
+
+theorem contDiff_refQ {r : WithTop ℕ∞} : ContDiff ℝ r refQ := contDiff_evalForm refΩ
+
+theorem contDiff_refF {r : ℕ∞} : ContDiff ℝ r refF :=
+  contDiff_pi.2 fun s => (refBump.contDiff (n := r)).mul (contDiff_pi.1 contDiff_refQ s)
+
+theorem isDeg_refQ (y : Fin 3 → ℝ) : IsDeg 0 (refQ y) := isDeg_of_mem_polySpace refQ_mem y
+
+theorem isDeg_refF (y : Fin 3 → ℝ) : IsDeg 0 (refF y) := fun s hs => by
+  simp [refF, isDeg_refQ y s hs]
+
+theorem refF_eq_refQ {y : Fin 3 → ℝ} (hy : y ∈ Metric.closedBall refCenter (1 / 2)) :
+    refF y = refQ y := by
+  simp [refF, refBump.one_of_mem_closedBall hy]
+
+theorem extDeriv_refF_eq_zero {y : Fin 3 → ℝ} (hy : y ∉ Metric.closedBall refCenter 1) :
+    extDeriv refF y = 0 := by
+  funext s
+  rw [extDeriv_apply]
+  refine Finset.sum_eq_zero fun j _ => ?_
+  have hts : y ∉ tsupport fun z => refF z (s.erase j) := fun h => hy (by
+    have := tsupport_mul_subset_left (f := fun z => refBump z) (g := fun z => refQ z (s.erase j)) h
+    rwa [refBump.tsupport_eq] at this)
+  rw [partialDeriv_eq_zero_of_notMem_tsupport hts]
+  simp
+
+theorem exists_bound_extDeriv_refF : ∃ G, 0 ≤ G ∧ ∀ y, ‖extDeriv refF y‖ ≤ G := by
+  have hc : Continuous (extDeriv refF) := continuous_extDeriv (contDiff_refF (r := 1))
+  obtain ⟨G, hG⟩ := (isCompact_closedBall refCenter (1 : ℝ)).exists_bound_of_continuousOn
+    hc.continuousOn
+  refine ⟨max G 0, le_max_right _ _, fun y => ?_⟩
+  by_cases hy : y ∈ Metric.closedBall refCenter 1
+  · exact (hG y hy).trans (le_max_left _ _)
+  · rw [extDeriv_refF_eq_zero hy, norm_zero]; exact le_max_right _ _
+
+
+/-! #### The counterexample fields on the level-`(N + 3)` meshes -/
+
+/-- The lattice index `(1, 1, 1)`. -/
+def cornerIdx (N : ℕ) : Fin 3 → Fin (N + 2 + 1) := fun _ => ⟨1, by omega⟩
+
+/-- The corner `t_N = h (1, 1, 1)` of the simplex `T₀ = t_N + h K_id`. -/
+def corner (N : ℕ) : Fin 3 → ℝ := hN (N + 2) • latticePoint (finLattice (cornerIdx N))
+
+theorem corner_apply (N : ℕ) (i : Fin 3) : corner N i = hN (N + 2) := by
+  simp [corner, latticePoint_apply, finLattice, cornerIdx]
+
+/-- The simplex `T₀ = t_N + h_N K_id`. -/
+abbrev simplex₀ (N : ℕ) : Affine.Simplex ℝ (Fin 3 → ℝ) 3 :=
+  cubeSimplex (N + 2) (cornerIdx N) 1
+
+theorem simplex₀_eq (N : ℕ) : simplex₀ N =
+    mapEquiv (boxMap (corner N) (hN (N + 2)) (hN_pos (N + 2)).ne') (kuhnSimplex 1) :=
+  cubeSimplex_eq _ _ _
+
+/-- The rescaled coordinates `y = h⁻¹ (x − t_N)`. -/
+def resc (N : ℕ) (x : Fin 3 → ℝ) : Fin 3 → ℝ :=
+  (hN (N + 2))⁻¹ • x + -((hN (N + 2))⁻¹ • corner N)
+
+theorem resc_apply (N : ℕ) (x : Fin 3 → ℝ) (i : Fin 3) :
+    resc N x i = x i / hN (N + 2) - 1 := by
+  have h := (hN_pos (N + 2)).ne'
+  simp only [resc, Pi.add_apply, Pi.smul_apply, Pi.neg_apply, smul_eq_mul, corner_apply]
+  field_simp
+  ring
+
+/-- The pullback of a field to the mesh scale: `x ↦ G(h⁻¹ (x − t_N))`. -/
+def scaled (N : ℕ) (G : FormField 3) : FormField 3 :=
+  affinePullback (scalarMat 3 (hN (N + 2))⁻¹) (-((hN (N + 2))⁻¹ • corner N)) G
+
+theorem scaled_apply_of_isDeg_zero (N : ℕ) {G : FormField 3} (hG : ∀ y, IsDeg 0 (G y))
+    (x : Fin 3 → ℝ) : scaled N G x = G (resc N x) := by
+  rw [scaled, affinePullback_scalarMat _ _ hG, pow_zero, one_smul]
+  rfl
+
+theorem extDeriv_scaled (N : ℕ) {G : FormField 3} (hG : Differentiable ℝ G)
+    (hG0 : ∀ y, IsDeg 0 (G y)) (x : Fin 3 → ℝ) :
+    extDeriv (scaled N G) x = (hN (N + 2))⁻¹ • extDeriv G (resc N x) := by
+  rw [scaled, extDeriv_affinePullback_apply _ _ (hG _),
+    affinePullback_scalarMat _ _ (fun y => IsDeg.extDeriv hG0 y), pow_one]
+  rfl
+
+theorem pullback_scaled (N : ℕ) (G : FormField 3) :
+    affinePullback (scalarMat 3 (hN (N + 2))) (corner N) (scaled N G) = G :=
+  affinePullback_scalarMat_inv (hN_pos (N + 2)).ne' _ G
+
+theorem resc_mem_closedBall {N : ℕ} {x : Fin 3 → ℝ} (hx : x ∈ (simplex₀ N).closedInterior) :
+    resc N x ∈ Metric.closedBall refCenter (1 / 2) := by
+  rw [mem_closedInterior_cubeSimplex] at hx
+  rw [Metric.mem_closedBall, dist_pi_le_iff (by norm_num)]
+  intro i
+  have h01 := hx.1 i
+  have hh := hN_pos (N + 2)
+  simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul, latticePoint_apply, finLattice,
+    cornerIdx] at h01
+  rw [Real.dist_eq, resc_apply, abs_le]
+  have e : (hN (N + 2))⁻¹ * x i = x i / hN (N + 2) := by rw [inv_mul_eq_div]
+  rw [e] at h01
+  push_cast at h01
+  constructor <;> linarith [h01.1, h01.2]
+
+/-- The profile at the mesh scale, `f_N(x) = F(h⁻¹(x − t_N))`. -/
+def fN (N : ℕ) : FormField 3 := scaled N refF
+
+/-- The quadratic `q_N(x) = Q(h⁻¹(x − t_N))`. -/
+def qN (N : ℕ) : FormField 3 := scaled N refQ
+
+theorem fN_eq_qN {N : ℕ} {x : Fin 3 → ℝ} (hx : x ∈ (simplex₀ N).closedInterior) :
+    fN N x = qN N x := by
+  rw [fN, qN, scaled_apply_of_isDeg_zero _ isDeg_refF, scaled_apply_of_isDeg_zero _ isDeg_refQ,
+    refF_eq_refQ (resc_mem_closedBall hx)]
+
+theorem fN_eq_zero_of_notMem {N : ℕ} {x : Fin 3 → ℝ} (hx : x ∉ cubeDomain 3) : fN N x = 0 := by
+  rw [fN, scaled_apply_of_isDeg_zero _ isDeg_refF]
+  have hy : resc N x ∉ Metric.ball refCenter 1 := by
+    simp only [cubeDomain, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo, not_forall,
+      not_and_or, not_lt] at hx
+    obtain ⟨i, hi⟩ := hx
+    rw [Metric.mem_ball, not_lt]
+    refine le_trans ?_ (dist_le_pi_dist _ _ i)
+    rw [Real.dist_eq, resc_apply]
+    have hh := hN_pos (N + 2)
+    have hinv : 1 / 2 / hN (N + 2) = ((N + 2 + 1 : ℕ) : ℝ) := by
+      unfold hN; field_simp
+    rcases hi with hi | hi
+    · have : x i / hN (N + 2) ≤ 0 := div_nonpos_of_nonpos_of_nonneg hi hh.le
+      rw [abs_of_neg (by linarith)]; linarith
+    · have : 1 / 2 / hN (N + 2) ≤ x i / hN (N + 2) := div_le_div_of_nonneg_right hi hh.le
+      rw [hinv] at this
+      push_cast at this
+      rw [abs_of_pos (by linarith)]; linarith
+  have : refBump (resc N x) = 0 := by
+    by_contra h
+    exact hy (refBump.support_eq ▸ h)
+  simp [refF, this]
+
+
+theorem extDeriv_fN (N : ℕ) (x : Fin 3 → ℝ) :
+    extDeriv (fN N) x = (hN (N + 2))⁻¹ • extDeriv refF (resc N x) :=
+  extDeriv_scaled N (contDiff_refF (r := 1)).differentiable_one isDeg_refF x
+
+/-- The centre `c_N = t_N + h_N p₀` of the cube of `T₀`. -/
+def centerN (N : ℕ) : Fin 3 → ℝ := corner N + hN (N + 2) • refCenter
+
+theorem norm_extDeriv_fN_le {G : ℝ} (hG : ∀ y, ‖extDeriv refF y‖ ≤ G) (N : ℕ)
+    (x : Fin 3 → ℝ) : ‖extDeriv (fN N) x‖ ≤ (hN (N + 2))⁻¹ * G := by
+  rw [extDeriv_fN, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 (hN_pos _).le)]
+  exact mul_le_mul_of_nonneg_left (hG _) (inv_nonneg.2 (hN_pos _).le)
+
+theorem extDeriv_fN_eq_zero {N : ℕ} {x : Fin 3 → ℝ} (hx : 2 * hN (N + 2) < dist x (centerN N)) :
+    extDeriv (fN N) x = 0 := by
+  rw [extDeriv_fN, extDeriv_refF_eq_zero, smul_zero]
+  have hh := hN_pos (N + 2)
+  have e : resc N x - refCenter = (hN (N + 2))⁻¹ • (x - centerN N) := by
+    funext i
+    simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul, centerN, Pi.add_apply, resc_apply,
+      corner_apply]
+    field_simp
+    ring
+  rw [Metric.mem_closedBall, not_le, dist_eq_norm, e, norm_smul,
+    Real.norm_of_nonneg (inv_nonneg.2 hh.le), ← dist_eq_norm]
+  rw [lt_inv_mul_iff₀ hh]
+  linarith
+
+/-- **`L∞`-stability of the canonical interpolant** of a global family on the cube meshes:
+`|(Π_h w)_T| ≤ A sup_T |w|` on every simplex, `A` independent of the mesh. -/
+theorem exists_abs_globalInterp_le (S : PolySeq) (k : ℕ) :
+    ∃ A, 0 ≤ A ∧ ∀ (N : ℕ) (T : (mesh n N).simplices) (w : contForms n) {β : ℝ}, 0 ≤ β →
+      (∀ x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,
+        |(w : FormField n) x s| ≤ β) →
+      ∀ x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,
+        |((((polyElement n S).globalInterp (mesh n N) k w : (polyElement n S).Piecewise
+          (mesh n N) k) T : (polyElement n S).space T k) : FormField n) x s| ≤ A * β := by
+  obtain ⟨B, hB0, hB⟩ := Poly.exists_dofBound (n := n) S k
+  obtain ⟨D, hD0, hD⟩ := Poly.exists_coeffBound (n := n) S k
+  refine ⟨B * Module.finrank ℝ (S.space n k) * D, by positivity, fun N T w β hβ hw x hx s => ?_⟩
+  set Iw : (polyElement n S).space T k := (((polyElement n S).globalInterp (mesh n N) k w :
+    (polyElement n S).Piecewise (mesh n N) k) T)
+  have hIw : (Iw : FormField n) ∈ S.space n k := Iw.2
+  have hdof : ∀ g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n), ∀ i : S.DofIdx g k,
+      |S.dof g k i ⟨Iw, S.space_le_contForms n k hIw⟩| ≤ hN N ^ k * (D * β) := by
+    intro g hgT i
+    have e1 : S.dof g k i ⟨(Iw : FormField n), S.space_le_contForms n k hIw⟩ = S.dof g k i w :=
+      (polyElement n S).localDof_globalInterp (mesh n N) k w T g hgT i
+    rw [e1]
+    refine (Poly.abs_dof_le S hD T.2 hgT i w hβ hw).trans (le_of_eq (by ring))
+  have := Poly.abs_le_of_abs_dof_le S hB hB0 T.2 hIw hdof hx s
+  rw [← mul_assoc] at this
+  exact this
+
+
+theorem qN_mem (N : ℕ) : qN N ∈ polySpace 3 2 0 := affinePullback_mem_polySpace _ _ refQ_mem
+
+theorem contDiff_fN (N : ℕ) : ContDiff ℝ 1 (fN N) :=
+  contDiff_affinePullback _ _ (contDiff_refF (r := 1))
+
+/-- `f_N` as a `C¹` form. -/
+def fN1 (N : ℕ) : c1Forms 3 := ⟨fN N, contDiff_fN N⟩
+
+/-- `φ_N = Π̃⁰ f_N ∈ P₂Λ̊⁰`. -/
+def phiN (N : ℕ) : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 0 :=
+  (polyElement 3 PolySeq.lagrangeP2).globalInterp (mesh 3 (N + 2)) 0
+    (Submodule.inclusion c1Forms_le_contForms (fN1 N))
+
+/-- **The counterexample** `v_N = (0, 0, grad φ_N) ∈ P₂⁻Λ¹ ⊗ ℝ³`. -/
+def vN (N : ℕ) : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1 :=
+  Pi.single 2 ((polyElement 3 PolySeq.lagrangeP2).dGlobal (mesh 3 (N + 2)) 0 (phiN N))
+
+theorem vN_two (N : ℕ) : vN N 2 = (polyElement 3 PolySeq.lagrangeP2).globalInterp (mesh 3 (N + 2)) 1
+    (extDerivC1 (fN1 N)) := by
+  rw [vN, Pi.single_eq_same, phiN, LocalElement.globalInterp_extDeriv]
+
+theorem vN_ne_two {N : ℕ} {a : Fin 3} (ha : a ≠ 2) : vN N a = 0 := by
+  rw [vN, Pi.single_eq_of_ne ha]
+
+/-- `T₀` as a mesh simplex. -/
+def simplex₀' (N : ℕ) : (mesh 3 (N + 2)).simplices :=
+  ⟨simplex₀ N, cubeSimplex_mem _ _ _⟩
+
+theorem phiN_simplex₀ (N : ℕ) :
+    ((((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0) (simplex₀' N)) :
+      (polyElement 3 PolySeq.lagrangeP2).space _ 0) : FormField 3) = qN N := by
+  have hq : qN N ∈ (polyElement 3 PolySeq.lagrangeP2).space (simplex₀ N) 0 := qN_mem N
+  have : ((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0) (simplex₀' N)) =
+      ⟨qN N, hq⟩ := by
+    refine (polyElement 3 PolySeq.lagrangeP2).localSpace_ext _ 0 fun g hg i => ?_
+    rw [phiN, LocalElement.localDof_globalInterp _ _ _ _ _ _ hg, LocalElement.localDof_apply]
+    refine (polyElement 3 PolySeq.lagrangeP2).dof_congr i fun x hx V _ => ?_
+    have hxT : x ∈ (simplex₀ N).closedInterior := by
+      rw [← convexHull_vertexSet]
+      exact convexHull_mono (Finset.coe_subset.2 hg) hx
+    change pullback V (fN N x) Finset.univ = pullback V (qN N x) Finset.univ
+    rw [fN_eq_qN hxT]
+  rw [this]
+
+
+/-- `Z_N = S¹(0, 0, d q_N)`. -/
+def ZN (N : ℕ) : FormField 3 := coordWedgeField (Pi.single (2 : Fin 3) (extDeriv (qN N)))
+
+theorem vN_simplex₀ (N : ℕ) (a : Fin 3) :
+    (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) (simplex₀' N) :
+      (polyElement 3 PolySeq.lagrangeP2).space _ 1) : FormField 3) =
+      (Pi.single (2 : Fin 3) (extDeriv (qN N)) : Fin 3 → FormField 3) a := by
+  by_cases ha : a = 2
+  · subst ha
+    rw [Pi.single_eq_same, vN, Pi.single_eq_same]
+    change extDeriv (((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0)
+      (simplex₀' N) : (polyElement 3 PolySeq.lagrangeP2).space _ 0) : FormField 3) = _
+    rw [phiN_simplex₀]
+  · rw [vN_ne_two ha, Pi.single_eq_of_ne ha]
+    rfl
+
+theorem coordWedgeField_vN_simplex₀ (N : ℕ) :
+    coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+      (mesh 3 (N + 2)) 1) (simplex₀' N) : (polyElement 3 PolySeq.lagrangeP2).space _ 1) :
+        FormField 3)) = ZN N :=
+  congrArg coordWedgeField (funext (vN_simplex₀ N))
+
+theorem ZN_mem (N : ℕ) : ZN N ∈ polySpace 3 1 2 := by
+  refine coordWedgeField_mem_polySpace (k := 1) fun a => ?_
+  by_cases ha : a = 2
+  · subst ha
+    simpa using extDeriv_mem_polySpace (qN_mem N)
+  · simp [ha]
+
+theorem affinePullback_zero {m : ℕ} (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) :
+    affinePullback B b (0 : FormField n) = 0 := by
+  simpa using affinePullback_smul B b 0 (0 : FormField n)
+
+theorem pullback_ZN (N : ℕ) :
+    affinePullback (scalarMat 3 (hN (N + 2))) (corner N) (ZN N) = hN (N + 2) • refZ := by
+  rw [ZN, affinePullback_scalarMat_coordWedgeField, refZ]
+  congr 1
+  congr 1
+  funext i
+  by_cases hi : i = 2
+  · subst hi
+    rw [Pi.single_eq_same, Pi.single_eq_same]
+    funext x
+    have hdiff : DifferentiableAt ℝ (qN N)
+        (affine (scalarMat 3 (hN (N + 2))) (corner N) x) :=
+      (contDiff_affinePullback _ _ (contDiff_refQ (r := 1))).differentiable_one _
+    rw [← extDeriv_affinePullback_apply _ _ hdiff]
+    change extDeriv (affinePullback (scalarMat 3 (hN (N + 2))) (corner N) (scaled N refQ)) x = _
+    rw [pullback_scaled]
+  · rw [Pi.single_eq_of_ne hi, Pi.single_eq_of_ne hi, affinePullback_zero]
+
+/-- **The lower bound on `T₀`**: `‖(I − Π²) S¹ v_N‖²_{L²(T₀)} = h_N c₀`. -/
+theorem formL2Sq_simplex₀ (N : ℕ) :
+    formL2Sq (simplex₀ N).closedInterior
+      (coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+        (mesh 3 (N + 2)) 1) (simplex₀' N) : (polyElement 3 PolySeq.lagrangeP2).space _ 1) :
+          FormField 3)) -
+        ((((PolySeq.bggS1h (mesh 3 (N + 2)) (vN N) :
+          (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 (N + 2)) 2) :
+            (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2) (simplex₀' N) :
+              (polyElement 3 PolySeq.lowestOrder).space _ 2) : FormField 3)) =
+      hN (N + 2) * refGap := by
+  have hw : coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+      (mesh 3 (N + 2)) 1) (simplex₀' N) : (polyElement 3 PolySeq.lagrangeP2).space _ 1) :
+        FormField 3)) ∈ polySpace 3 1 (1 + 1) := by
+    rw [coordWedgeField_vN_simplex₀]; exact ZN_mem N
+  have e := wsPiecewise_apply_eq PolySeq.lagrangeP2 (fun a => (vN N a :
+    (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) (simplex₀' N) hw
+  change formL2Sq _ (_ - ((PolySeq.lagrangeP2.wsPiecewise (mesh 3 (N + 2)) 1 (fun a => (vN N a :
+    (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) (simplex₀' N) :
+      (polyElement 3 PolySeq.lowestOrder).space _ (1 + 1)) : FormField 3)) = _
+  rw [e]
+  refine formL2Sq_sub_localInterp_of_pullback (hN_pos (N + 2)) (corner N) (simplex₀_eq N) hw ?_
+  rw [coordWedgeField_vN_simplex₀]
+  exact pullback_ZN N
+
+
+open Classical in
+/-- The pointwise bound on `d f_N`, localized at `c_N`. -/
+theorem abs_extDeriv_fN_le {G : ℝ} (hG : ∀ y, ‖extDeriv refF y‖ ≤ G) (N : ℕ)
+    (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3) :
+    ∀ x ∈ T.closedInterior, ∀ s, |extDeriv (fN N) x s| ≤
+      (if centerN N ∈ Metric.cthickening (2 * hN (N + 2)) T.closedInterior then
+        (hN (N + 2))⁻¹ * G else 0) := by
+  intro x hx s
+  split_ifs with hc
+  · refine le_trans ?_ (norm_extDeriv_fN_le hG N x)
+    simpa [Real.norm_eq_abs] using norm_le_pi_norm (extDeriv (fN N) x) s
+  · have hd : 2 * hN (N + 2) < dist x (centerN N) := by
+      by_contra! hd
+      exact hc (Metric.mem_cthickening_of_dist_le _ x _ _ hx (by rwa [dist_comm]))
+    rw [extDeriv_fN_eq_zero hd]
+    simp
+
+/-- **The upper bound** `‖v_N‖²_{L²(Q)} ≤ C h_N`. -/
+theorem exists_sum_formL2Sq_vN_le : ∃ C, 0 ≤ C ∧ ∀ N : ℕ,
+    ∑ T : (mesh 3 (N + 2)).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+      ((((vN N 2 : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1) :
+        (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
+          (polyElement 3 PolySeq.lagrangeP2).space T 1) : FormField 3) ≤ C * hN (N + 2) := by
+  classical
+  obtain ⟨G, hG0, hG⟩ := exists_bound_extDeriv_refF
+  obtain ⟨A, hA0, hA⟩ := exists_abs_globalInterp_le (n := 3) PolySeq.lagrangeP2 1
+  set V₀ : ℝ := ∑ σ : Equiv.Perm (Fin 3), volume.real (kuhnSimplex σ).closedInterior
+  have hV₀ : 0 ≤ V₀ := Finset.sum_nonneg fun _ _ => measureReal_nonneg
+  set c8 : ℝ := ((Fintype.card (Finset (Fin 3)) : ℕ) : ℝ)
+  refine ⟨c8 * V₀ * A ^ 2 * G ^ 2 * ((6 ^ 3 * Nat.factorial 3 : ℕ) : ℝ), by positivity,
+    fun N => ?_⟩
+  set h := hN (N + 2)
+  have hh : 0 < h := hN_pos (N + 2)
+  set P : Affine.Simplex ℝ (Fin 3 → ℝ) 3 → Prop := fun T =>
+    centerN N ∈ Metric.cthickening (2 * h) T.closedInterior
+  have hloc : ∀ T : (mesh 3 (N + 2)).simplices,
+      formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+        ((((vN N 2 : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1) :
+          (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
+            (polyElement 3 PolySeq.lagrangeP2).space T 1) : FormField 3) ≤
+        (if P T then c8 * V₀ * A ^ 2 * G ^ 2 * h else 0) := by
+    intro T
+    obtain ⟨σ, t, hT⟩ := exists_mesh_simplex_eq T.2
+    set β := if P T then h⁻¹ * G else 0
+    have hβ0 : 0 ≤ β := by
+      simp only [β]; split_ifs <;> positivity
+    have hpt := hA (N + 2) T (extDerivC1 (fN1 N)) hβ0 (abs_extDeriv_fN_le hG N T)
+    have hnorm : ∀ x ∈ (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior,
+        ‖((((vN N 2 : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1) :
+          (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
+            (polyElement 3 PolySeq.lagrangeP2).space T 1) : FormField 3) x‖ ≤ A * β := by
+      intro x hx
+      refine (pi_norm_le_iff_of_nonneg (by positivity)).2 fun s => ?_
+      rw [Real.norm_eq_abs, vN_two]
+      exact hpt x hx s
+    have hvol : volume.real (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior ≤ h ^ 3 * V₀ := by
+      rw [hT, measureReal_closedInterior_mapEquiv_boxMap _ _ hh]
+      exact mul_le_mul_of_nonneg_left (Finset.single_le_sum (f := fun σ : Equiv.Perm (Fin 3) =>
+        volume.real (kuhnSimplex σ).closedInterior) (fun _ _ => measureReal_nonneg)
+          (Finset.mem_univ σ)) (by positivity)
+    refine (formL2Sq_le_of_norm_le (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).isCompact_closedInterior.measure_lt_top
+      hnorm).trans ?_
+    simp only [β]
+    split_ifs with hP
+    · calc c8 * volume.real (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior *
+            (A * (h⁻¹ * G)) ^ 2
+          ≤ c8 * (h ^ 3 * V₀) * (A * (h⁻¹ * G)) ^ 2 := by gcongr
+        _ = c8 * V₀ * A ^ 2 * G ^ 2 * h := by field_simp
+    · simp
+  calc _ ≤ ∑ T : (mesh 3 (N + 2)).simplices,
+        (if P T then c8 * V₀ * A ^ 2 * G ^ 2 * h else 0) := Finset.sum_le_sum fun T _ => hloc T
+    _ = ∑ T ∈ (mesh 3 (N + 2)).simplices, (if P T then c8 * V₀ * A ^ 2 * G ^ 2 * h else 0) :=
+        Finset.sum_coe_sort _ (fun T => if P T then c8 * V₀ * A ^ 2 * G ^ 2 * h else 0)
+    _ = ((mesh 3 (N + 2)).simplices.filter P).card * (c8 * V₀ * A ^ 2 * G ^ 2 * h) := by
+        rw [Finset.sum_ite, Finset.sum_const_zero, add_zero, Finset.sum_const, nsmul_eq_mul]
+    _ ≤ ((6 ^ 3 * Nat.factorial 3 : ℕ) : ℝ) * (c8 * V₀ * A ^ 2 * G ^ 2 * h) := by
+        gcongr
+        exact_mod_cast card_filter_mem_cthickening_le (N + 2) (centerN N)
+    _ = _ := by ring
+
+
+/-- `‖S(glue ψ) − glue u‖² = Σ_T ‖S ψ_T − u_T‖²_{L²(T)}` on the cube meshes. -/
+theorem norm_sq_wsL2_sub_glue_eq {n N k : ℕ} (E E' : LocalElement n)
+    (ψ : Fin n → E.Piecewise (mesh n N) k) (u : E'.Piecewise (mesh n N) (k + 1)) :
+    ‖wsL2 (Ω := (mesh n N).domain) (k : ℤ) (E.tensorGlue (mesh n N) n (k : ℤ) ψ) -
+        E'.glue (mesh n N) ((k : ℤ) + 1) u‖ ^ 2 =
+      ∑ T : (mesh n N).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
+        (coordWedgeField (fun a => ((ψ a T : E.space T k) : FormField n)) -
+          ((u T : E'.space T (k + 1)) : FormField n)) := by
+  rw [wsL2_tensorGlue]
+  have hg : E'.glue (mesh n N) ((k : ℤ) + 1) u = pieceL2 (mesh n N) (mesh n N).domain
+      (fun T => formComp (k := (k : ℤ) + 1) (E'.extendPW (mesh n N) u T))
+      (fun T hT s => continuous_formComp (E'.contDiff_extendPW (mesh n N) u hT).continuous s) :=
+    rfl
+  rw [hg, pieceL2_sub, norm_sq_pieceL2_eq _ interior_subset_mesh_domain, ← Finset.sum_coe_sort]
+  refine Finset.sum_congr rfl fun T _ => ?_
+  have hdeg : ∀ x, IsDeg (k + 1) ((coordWedgeField (fun a => ((ψ a T : E.space T k) : FormField n)) -
+      ((u T : E'.space T (k + 1)) : FormField n)) x) := fun x s hs => by
+    simp only [Pi.sub_apply]
+    rw [isDeg_coordWedgeField (fun a x => E.isDeg_of_mem (ψ a T).2 x) x s hs,
+      E'.isDeg_of_mem (u T).2 x s hs, sub_zero]
+  refine Eq.trans ?_ (sum_formIdx_integral_eq_formL2Sq hdeg)
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp only [formComp, E.extendPW_of_mem _ _ T.2, E'.extendPW_of_mem _ _ T.2,
+    coordWedgeField_apply, Pi.sub_apply]
+
+
+theorem phiN_mem₀ (N : ℕ) : (phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0) ∈
+    (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 (N + 2)) 0 :=
+  LocalElement.globalInterp_mem_globalSpace₀ _ _ 0 fun x hx => fN_eq_zero_of_notMem (by
+    have := (mesh 3 (N + 2)).notMem_domain_of_mem_frontier (isOpen_mesh_domain 3 (N + 2)) hx
+    rwa [mesh_domain] at this)
+
+theorem vN_mem₀ (N : ℕ) (a : Fin 3) :
+    (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
+      (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 (N + 2)) 1 := by
+  by_cases ha : a = 2
+  · subst ha
+    rw [vN, Pi.single_eq_same]
+    exact (polyElement 3 PolySeq.lagrangeP2).dPiecewise_mem_globalSpace₀ _ (phiN_mem₀ N)
+  · rw [vN_ne_two ha]
+    exact Submodule.zero_mem _
+
+/-- `curl v_N = 0`: `v_N` is a row-wise gradient. -/
+theorem dPiecewise_vN (N : ℕ) :
+    (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+      (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) = 0 := by
+  funext a
+  by_cases ha : a = 2
+  · subst ha
+    funext T
+    refine Subtype.ext ?_
+    rw [vN, Pi.single_eq_same]
+    change extDeriv (extDeriv (((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+      (mesh 3 (N + 2)) 0) T : (polyElement 3 PolySeq.lagrangeP2).space _ 0) : FormField 3)) = 0
+    exact extDeriv_extDeriv ((PolyKind.contDiff_of_mem_space
+      (((phiN N : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 0) T).2)).of_le
+        le_top)
+  · rw [vN_ne_two ha]
+    simp
+
+theorem norm_sq_tensorGlue_vN (N : ℕ) :
+    ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+        (fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2 =
+      ∑ T : (mesh 3 (N + 2)).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+        ((((vN N 2 : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1) :
+          (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
+            (polyElement 3 PolySeq.lagrangeP2).space T 1) : FormField 3) := by
+  rw [norm_sq_tensorGlue, Fin.sum_univ_three, vN_ne_two (by decide : (0 : Fin 3) ≠ 2),
+    vN_ne_two (by decide : (1 : Fin 3) ≠ 2)]
+  simp only [ZeroMemClass.coe_zero, map_zero, norm_zero, ne_eq, OfNat.ofNat_ne_zero,
+    not_false_eq_true, zero_pow, zero_add]
+  exact norm_sq_glue_eq _ _
+
+theorem le_norm_sq_wsL2_sub_glue_vN (N : ℕ) :
+    hN (N + 2) * refGap ≤
+      ‖wsL2 (Ω := (mesh 3 (N + 2)).domain) ((1 : ℕ) : ℤ)
+          ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+            fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) -
+        (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 (N + 2)) (((1 : ℕ) : ℤ) + 1)
+          ((PolySeq.bggS1h (mesh 3 (N + 2)) (vN N) :
+            (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 (N + 2)) 2) :
+              (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2)‖ ^ 2 := by
+  refine le_of_le_of_eq ?_ (norm_sq_wsL2_sub_glue_eq (n := 3) (N := N + 2) (k := 1)
+    (polyElement 3 PolySeq.lagrangeP2) (polyElement 3 PolySeq.lowestOrder)
+    (fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))
+    ((PolySeq.bggS1h (mesh 3 (N + 2)) (vN N) :
+      (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 (N + 2)) 2) :
+        (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2)).symm
+  have h1 := Finset.single_le_sum (f := fun T : (mesh 3 (N + 2)).simplices =>
+    formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
+      (coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
+        (mesh 3 (N + 2)) 1) T : (polyElement 3 PolySeq.lagrangeP2).space _ 1) : FormField 3)) -
+        ((((PolySeq.bggS1h (mesh 3 (N + 2)) (vN N) :
+          (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 (N + 2)) 2) :
+            (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2) T :
+              (polyElement 3 PolySeq.lowestOrder).space _ 2) : FormField 3)))
+    (fun T _ => formL2Sq_nonneg
+      (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).isCompact_closedInterior.measurableSet _)
+    (Finset.mem_univ (simplex₀' N))
+  exact (formL2Sq_simplex₀ N).symm.le.trans h1
+
+
+/-- **[QuennevilleBelair2015], Prop 5.9(2) is false.** There is `c > 0` such that on every mesh
+`(mesh 3 (N + 2))` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³` (vanishing boundary DOFs), `v ≠ 0`, with
+`‖(I − Π²) S¹ v‖_{L²(Q)} ≥ c ‖v‖_{H(curl)}`, where `S¹ v` is the `L²` field `wsL2 1`,
+`Π² S¹ v = S₁,ₕ v` and `‖v‖²_{H(curl)} = ‖v‖² + ‖curl v‖²` (row-wise). The field is
+`v_N = (0, 0, grad Π̃⁰ f_N)` (`vN`); `curl v_N = 0` (`dPiecewise_vN`). -/
+theorem exists_counterexample_prop59_two : ∃ c, 0 < c ∧ ∀ N : ℕ,
+    ∃ v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1,
+      (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
+        (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 (N + 2)) 1) ∧
+      0 < ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+        (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ∧
+      c * √(‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+          (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2 +
+        ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 + 1 : ℕ) : ℤ)
+          (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+            (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2) ≤
+      ‖wsL2 (Ω := (mesh 3 (N + 2)).domain) ((1 : ℕ) : ℤ)
+          ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+            fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) -
+        (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 (N + 2)) (((1 : ℕ) : ℤ) + 1)
+          ((PolySeq.bggS1h (mesh 3 (N + 2)) v :
+            (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 (N + 2)) 2) :
+              (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2)‖ := by
+  obtain ⟨C, hC0, hC⟩ := exists_sum_formL2Sq_vN_le
+  have hC1 : 0 < C + 1 := by linarith
+  have hg := refGap_pos
+  refine ⟨√(refGap / (C + 1)), Real.sqrt_pos.2 (div_pos hg hC1), fun N => ⟨vN N, vN_mem₀ N, ?_⟩⟩
+  have hh := hN_pos (N + 2)
+  have hL := le_norm_sq_wsL2_sub_glue_vN N
+  set L := ‖wsL2 (Ω := (mesh 3 (N + 2)).domain) ((1 : ℕ) : ℤ)
+          ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+            fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) -
+        (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 (N + 2)) (((1 : ℕ) : ℤ) + 1)
+          ((PolySeq.bggS1h (mesh 3 (N + 2)) (vN N) :
+            (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 (N + 2)) 2) :
+              (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2)‖ with hLdef
+  set X := ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+    (fun a => (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖
+    with hXdef
+  have hX : X ^ 2 ≤ (C + 1) * hN (N + 2) := by
+    rw [hXdef, norm_sq_tensorGlue_vN]
+    exact (hC N).trans (by nlinarith)
+  have hd : (polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 + 1 : ℕ) : ℤ)
+      (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+        (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) = 0 := by
+    rw [dPiecewise_vN N]; exact map_zero _
+  refine ⟨?_, ?_⟩
+  · refine lt_of_le_of_ne (norm_nonneg _) fun h0 => ?_
+    have h0' := (norm_eq_zero.1 h0.symm)
+    have hv : ∀ a, (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) = 0 :=
+      fun a => (polyElement 3 PolySeq.lagrangeP2).glue_injective _ (isOpen_mesh_domain 3 (N + 2)) 1
+        ((congrArg (fun w => w a) h0').trans (map_zero _).symm)
+    have hv' : vN N = 0 := funext fun a => Subtype.ext (hv a)
+    have : L = 0 := by
+      rw [hLdef, h0', hv', map_zero]
+      simp
+    rw [this] at hL
+    nlinarith
+  · rw [hd, norm_zero]
+    have e : X ^ 2 + 0 ^ 2 = X ^ 2 := by ring
+    rw [e, Real.sqrt_sq (norm_nonneg _)]
+    have hX0 : 0 ≤ X := norm_nonneg _
+    have hL0 : 0 ≤ L := norm_nonneg _
+    calc √(refGap / (C + 1)) * X = √(refGap / (C + 1) * X ^ 2) := by
+          rw [Real.sqrt_mul (div_pos hg hC1).le, Real.sqrt_sq hX0]
+      _ ≤ √(L ^ 2) := by
+          refine Real.sqrt_le_sqrt ?_
+          calc refGap / (C + 1) * X ^ 2 ≤ refGap / (C + 1) * ((C + 1) * hN (N + 2)) :=
+                mul_le_mul_of_nonneg_left hX (div_pos hg hC1).le
+            _ = hN (N + 2) * refGap := by field_simp
+            _ ≤ _ := hL
+      _ = L := Real.sqrt_sq hL0
+
+/-- **No `O(h)` bound for `(I − Π²) S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³`**: the estimate
+`‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` of [QuennevilleBelair2015], Prop 5.9(2) (the hypothesis
+`happ1` of `Feec.BGG.Discrete.error_estimate` for the elements of Table 5.1) fails for every `C`. -/
+theorem not_exists_prop59_two_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
+    (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
+    (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1) ∈
+      (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 N) 1) →
+    ‖wsL2 (Ω := (mesh 3 N).domain) ((1 : ℕ) : ℤ)
+          ((polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((1 : ℕ) : ℤ)
+            fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1)) -
+        (polyElement 3 PolySeq.lowestOrder).glue (mesh 3 N) (((1 : ℕ) : ℤ) + 1)
+          ((PolySeq.bggS1h (mesh 3 N) v :
+            (polyElement 3 PolySeq.lowestOrder).globalSpace (mesh 3 N) 2) :
+              (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 N) 2)‖ ≤
+      C * hN N * √(‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((1 : ℕ) : ℤ)
+          (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1))‖ ^ 2 +
+        ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 N) 3 ((1 + 1 : ℕ) : ℤ)
+          (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 1
+            (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1))‖ ^ 2) := by
+  rintro ⟨C, hC⟩
+  obtain ⟨c, hc, hex⟩ := exists_counterexample_prop59_two
+  obtain ⟨N, hN'⟩ := exists_nat_gt (C / c)
+  obtain ⟨v, hv0, hpos, hlow⟩ := hex N
+  have hup := hC (N + 2) v hv0
+  set Y := √(‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 : ℕ) : ℤ)
+          (fun a => (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2 +
+        ‖(polyElement 3 PolySeq.lagrangeP2).tensorGlue (mesh 3 (N + 2)) 3 ((1 + 1 : ℕ) : ℤ)
+          (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
+            (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1))‖ ^ 2)
+  have hY : 0 < Y := Real.sqrt_pos.2 (by positivity)
+  have h1 : c * Y ≤ C * hN (N + 2) * Y := hlow.trans hup
+  have h2 : c ≤ C * hN (N + 2) := le_of_mul_le_mul_right (by linarith) hY
+  have hh : hN (N + 2) = 1 / 2 / ((N + 3 : ℕ) : ℝ) := rfl
+  rw [hh] at h2
+  have hN3 : (0 : ℝ) < ((N + 3 : ℕ) : ℝ) := by positivity
+  rw [div_lt_iff₀ hc] at hN'
+  have : C * (1 / 2 / ((N + 3 : ℕ) : ℝ)) * ((N + 3 : ℕ) : ℝ) = C / 2 := by field_simp
+  have h3 : c * ((N + 3 : ℕ) : ℝ) ≤ C / 2 := by
+    rw [← this]; exact mul_le_mul_of_nonneg_right h2 hN3.le
+  push_cast at h3
+  nlinarith
+
+end Prop59Two
 
 end Feec.Models.Cube.WeakSymmetry

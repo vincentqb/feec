@@ -4,6 +4,7 @@ public import Feec.FiniteElement.MeshDivergence
 public import Feec.Domain.DeRham
 public import Feec.Domain.WholeSpace
 public import Mathlib.LinearAlgebra.CrossProduct
+public import Mathlib.MeasureTheory.Function.UniformIntegrable
 
 /-!
 # Conformity of piecewise smooth fields on simplicial meshes
@@ -827,6 +828,605 @@ theorem extDeriv_pieceL2_mem_maximal_domain [NeZero n] (k : ℕ) (M : Simplicial
       exact wedge_eq_of_tangentialTraceEq (M.mem_cofaces.1 hT).2 hc
         (hdeg T (M.mem_cofaces.1 hT).1 x) (hdeg T' (M.mem_cofaces.1 hT').1 x)
         (htr F hF T hT T' hT' x hx) hν
+  refine ⟨h, hval.trans (pieceL2_congr M _ _ _ fun T hT => ?_)⟩
+  funext t x
+  exact extDerivOp_apply_formComp (hdeg T hT) t x
+
+end Feec.FiniteElement
+
+namespace Feec.Domain.ConstCoeffOp
+
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*}
+
+/-! ### Dilations and the minimal domain -/
+
+/-- `A_s`: the operator with each `k`-th order coefficient multiplied by `sᵏ`, so that
+`A_s (f ∘ h) = (A f) ∘ h` for the homothety `h(y) = x₀ + s⁻¹ (y - x₀)`. -/
+def scale (A : ConstCoeffOp E 𝕜 ι κ) (s : ℝ) : ConstCoeffOp E 𝕜 ι κ where
+  coeff j i := (A.coeff j i).map fun t => (t.1, (s : 𝕜) ^ t.1.length * t.2)
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+theorem IsOrderLE.scale {A : ConstCoeffOp E 𝕜 ι κ} {N : ℕ} (h : A.IsOrderLE N) (s : ℝ) :
+    (A.scale s).IsOrderLE N := by
+  intro j i t ht
+  simp only [ConstCoeffOp.scale, List.mem_map] at ht
+  obtain ⟨t', ht', rfl⟩ := ht
+  exact h j i t' ht'
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+theorem formalAdj_scale (A : ConstCoeffOp E 𝕜 ι κ) (s : ℝ) :
+    (A.scale s).formalAdj = A.formalAdj.scale s := by
+  simp only [ConstCoeffOp.scale, ConstCoeffOp.formalAdj, adjEntry, List.map_map]
+  congr 1
+  funext i j
+  refine List.map_congr_left fun t _ => ?_
+  simp only [Function.comp_apply, List.length_reverse, map_mul, map_pow, RCLike.conj_ofReal,
+    Prod.mk.injEq, true_and]
+  ring
+
+theorem applyEntry_map_scale (P : List (List E × 𝕜)) (s : ℝ) (f : E → 𝕜) (x : E) :
+    applyEntry (P.map fun t => (t.1, (s : 𝕜) ^ t.1.length * t.2)) f x =
+      (P.map fun t => (s : 𝕜) ^ t.1.length * t.2 * iterDeriv t.1 f x).sum := by
+  simp [applyEntry, List.map_map, Function.comp_def]
+
+/-- Chain rule for the homothety `h(y) = x₀ + r (y - x₀)`. -/
+theorem iterDeriv_comp_homothety {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    {f : E → F} (hf : ContDiff ℝ ∞ f) (x₀ : E) (r : ℝ) (vs : List E) (y : E) :
+    iterDeriv vs (fun y => f (x₀ + r • (y - x₀))) y =
+      r ^ vs.length • iterDeriv vs f (x₀ + r • (y - x₀)) := by
+  induction vs generalizing y with
+  | nil => simp
+  | cons v vs ih =>
+    have hfun : iterDeriv vs (fun y => f (x₀ + r • (y - x₀))) =
+        fun y => r ^ vs.length • iterDeriv vs f (x₀ + r • (y - x₀)) := funext ih
+    rw [iterDeriv_cons, hfun]
+    have hh : HasFDerivAt (fun y : E => x₀ + r • (y - x₀)) (r • ContinuousLinearMap.id ℝ E) y := by
+      have := (((hasFDerivAt_id (𝕜 := ℝ) y).sub_const x₀).const_smul r).const_add x₀
+      simpa using this
+    have hd : DifferentiableAt ℝ (iterDeriv vs f) (x₀ + r • (y - x₀)) :=
+      (contDiff_iterDeriv hf vs).differentiable (by simp) _
+    have h3 : HasFDerivAt (fun y => r ^ vs.length • iterDeriv vs f (x₀ + r • (y - x₀)))
+        (r ^ vs.length • (fderiv ℝ (iterDeriv vs f) (x₀ + r • (y - x₀))).comp
+          (r • ContinuousLinearMap.id ℝ E)) y :=
+      (hd.hasFDerivAt.comp y hh).const_smul (r ^ vs.length)
+    show fderiv ℝ (fun y => r ^ vs.length • iterDeriv vs f (x₀ + r • (y - x₀))) y v = _
+    rw [h3.fderiv]
+    simp [iterDeriv_cons, List.length_cons, pow_succ, smul_smul, mul_comm]
+
+end Feec.Domain.ConstCoeffOp
+
+namespace Feec.Domain.ConstCoeffOp
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*} {n : ℕ}
+
+theorem apply_scale_comp_homothety [Fintype ι] (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) {s : ℝ}
+    (hs : s ≠ 0) (x₀ : Fin n → ℝ) {f : ι → (Fin n → ℝ) → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i))
+    (j : κ) (y : Fin n → ℝ) :
+    (A.scale s).apply (fun i y => f i (x₀ + s⁻¹ • (y - x₀))) j y =
+      A.apply f j (x₀ + s⁻¹ • (y - x₀)) := by
+  simp only [ConstCoeffOp.apply, ConstCoeffOp.scale, applyEntry_map_scale]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp only [applyEntry]
+  congr 1
+  refine List.map_congr_left fun t _ => ?_
+  rw [iterDeriv_comp_homothety (hf i), RCLike.real_smul_eq_coe_mul]
+  push_cast
+  have h0 : ((s : 𝕜) ^ t.1.length) ≠ 0 := pow_ne_zero _ (RCLike.ofReal_ne_zero.2 hs)
+  rw [inv_pow]
+  field_simp
+
+theorem symbolEntry_map_scale (P : List (List (Fin n → ℝ) × 𝕜)) (s : ℝ) (ν : Fin n → ℝ) :
+    symbolEntry (P.map fun t => (t.1, (s : 𝕜) ^ t.1.length * t.2)) ν =
+      (s : 𝕜) * symbolEntry P ν := by
+  induction P with
+  | nil => simp
+  | cons t P ih =>
+    rw [List.map_cons, symbolEntry_cons, symbolEntry_cons, ih, mul_add]
+    congr 1
+    obtain ⟨vs, c⟩ := t
+    match vs with
+    | [] => simp [dirPair]
+    | [v] => simp; ring
+    | _ :: _ :: _ => simp [dirPair]
+
+theorem symbolApply_scale [Fintype ι] (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (s : ℝ)
+    (ν : Fin n → ℝ) (w : ι → 𝕜) (j : κ) :
+    (A.scale s).symbolApply ν w j = (s : 𝕜) * A.symbolApply ν w j := by
+  simp only [symbolApply, symbol, ConstCoeffOp.scale, symbolEntry_map_scale, Finset.mul_sum,
+    mul_assoc]
+
+end Feec.Domain.ConstCoeffOp
+
+namespace Feec.FiniteElement
+
+open Feec.Domain Feec.Mesh ConstCoeffOp
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*} {n : ℕ}
+
+end Feec.FiniteElement
+
+namespace Feec.FiniteElement
+
+open Feec.Domain Feec.Mesh ConstCoeffOp
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*} {n : ℕ}
+
+/-- The homothety `x ↦ x₀ + s (x - x₀)`. -/
+def homothety (x₀ : Fin n → ℝ) (s : ℝ) (x : Fin n → ℝ) : Fin n → ℝ := x₀ + s • (x - x₀)
+
+/-- Change of variables under a homothety: `∫ F(x₀ + s (x - x₀)) dx = |sⁿ|⁻¹ ∫ F`. -/
+theorem integral_comp_homothety {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    (f : (Fin n → ℝ) → F) (x₀ : Fin n → ℝ) (s : ℝ) :
+    ∫ x, f (homothety x₀ s x) = |(s ^ n)⁻¹| • ∫ x, f x := by
+  have e : (fun x => f (homothety x₀ s x)) =
+      fun x => (fun z => f (z + (x₀ - s • x₀))) (s • x) := by
+    funext x; unfold homothety; congr 1; rw [smul_sub]; abel
+  have h := Measure.integral_comp_smul (volume : Measure (Fin n → ℝ))
+    (fun z => f (z + (x₀ - s • x₀))) s
+  rw [e, h, integral_add_right_eq_self, Module.finrank_fin_fun]
+
+theorem continuous_homothety (x₀ : Fin n → ℝ) (s : ℝ) : Continuous (homothety x₀ s) := by
+  unfold homothety; fun_prop
+
+theorem homothety_inv_homothety (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0) (x : Fin n → ℝ) :
+    homothety x₀ s⁻¹ (homothety x₀ s x) = x := by
+  simp [homothety, smul_smul, inv_mul_cancel₀ hs]
+
+theorem homothety_homothety_inv (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0) (x : Fin n → ℝ) :
+    homothety x₀ s (homothety x₀ s⁻¹ x) = x := by
+  simp [homothety, smul_smul, mul_inv_cancel₀ hs]
+
+theorem memLp_pieceFun_comp_homothety (M : SimplicialMesh n)
+    {v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → 𝕜}
+    (hv : ∀ T ∈ M.simplices, Continuous (v T)) (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0)
+    (S : Set (Fin n → ℝ)) :
+    MemLp (fun x => pieceFun M v (homothety x₀ s x)) 2 (volume.restrict S) := by
+  have hg := continuous_homothety x₀ s
+  have : MemLp (fun x => pieceFun M v (homothety x₀ s x)) 2 volume := by
+    have h := memLp_finsetSum' (μ := volume) (p := 2) M.simplices (f := fun T x =>
+      (homothety x₀ s ⁻¹' interior T.closedInterior).indicator (fun x => v T (homothety x₀ s x)) x)
+      fun T hT => (memLp_indicator_iff_restrict
+        (isOpen_interior.preimage hg).measurableSet.nullMeasurableSet).2
+        (memLp_of_continuous (isOpen_interior.preimage hg).measurableSet
+          (((T.isCompact_closedInterior.image (continuous_homothety x₀ s⁻¹)).isBounded).subset
+            fun x hx => ⟨_, interior_subset hx, homothety_inv_homothety x₀ hs x⟩)
+          ((hv T hT).comp hg))
+    convert h using 1
+    funext x
+    simp only [pieceFun, Finset.sum_apply]
+    refine Finset.sum_congr rfl fun T _ => ?_
+    by_cases hx : homothety x₀ s x ∈ interior T.closedInterior
+    · rw [Set.indicator_of_mem hx,
+        Set.indicator_of_mem (s := homothety x₀ s ⁻¹' interior T.closedInterior) hx]
+    · rw [Set.indicator_of_notMem hx,
+        Set.indicator_of_notMem (s := homothety x₀ s ⁻¹' interior T.closedInterior) hx]
+  exact this.restrict S
+
+variable [Fintype ι]
+
+/-- The dilate `x ↦ u(x₀ + s (x - x₀))` of a piecewise field, in `L²(S; 𝕜^ι)`. -/
+def dilL2 (M : SimplicialMesh n) (S : Set (Fin n → ℝ))
+    (v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜)
+    (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i)) (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0) :
+    L2F 𝕜 S ι :=
+  toL2F fun i => memLp_pieceFun_comp_homothety M (v := fun T => v T i) (fun T hT => hv T hT i)
+    x₀ hs S
+
+omit [Fintype ι] in
+theorem coeFn_dilL2 (M : SimplicialMesh n) (S : Set (Fin n → ℝ))
+    (v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜)
+    (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i)) (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0)
+    (i : ι) :
+    (dilL2 M S v hv x₀ hs i : (Fin n → ℝ) → 𝕜) =ᵐ[volume.restrict S]
+      fun x => pieceFun M (fun T => v T i) (homothety x₀ s x) :=
+  (memLp_pieceFun_comp_homothety M (v := fun T => v T i) (fun T hT => hv T hT i) x₀ hs S).coeFn_toLp
+
+theorem inner_dilL2_testField_univ (M : SimplicialMesh n)
+    {v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
+    (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i)) (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0)
+    {φ : ι → (Fin n → ℝ) → 𝕜} (hφ : IsTestField univ φ) :
+    ⟪dilL2 M univ v hv x₀ hs, testField hφ⟫_𝕜 =
+      ∑ i, ∫ x, conj (pieceFun M (fun T => v T i) (homothety x₀ s x)) * φ i x := by
+  rw [inner_testField]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [setIntegral_univ]
+  refine integral_congr_ae ?_
+  have := (ae_restrict_iff' MeasurableSet.univ).1 (coeFn_dilL2 M univ v hv x₀ hs i)
+  filter_upwards [this] with x hx
+  rw [hx (mem_univ x)]
+
+theorem inner_pieceL2_testField_univ (M : SimplicialMesh n)
+    {v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
+    (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i))
+    {φ : ι → (Fin n → ℝ) → 𝕜} (hφ : IsTestField univ φ) :
+    ⟪pieceL2 M univ v hv, testField hφ⟫_𝕜 =
+      ∑ i, ∫ x, conj (pieceFun M (fun T => v T i) x) * φ i x := by
+  rw [inner_testField]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [setIntegral_univ]
+  refine integral_congr_ae ?_
+  have := (ae_restrict_iff' MeasurableSet.univ).1 (coeFn_pieceL2 M univ v hv i)
+  filter_upwards [this] with x hx
+  rw [hx (mem_univ x)]
+
+theorem _root_.Feec.Domain.IsTest.comp_homothety {f : (Fin n → ℝ) → 𝕜} (hf : IsTest univ f) (x₀ : Fin n → ℝ)
+    {s : ℝ} (hs : s ≠ 0) : IsTest univ (fun y => f (homothety x₀ s y)) := by
+  refine ⟨hf.contDiff.comp (by unfold homothety; fun_prop), ?_, subset_univ _⟩
+  have hK := hf.hasCompactSupport.isCompact.image (continuous_homothety x₀ s⁻¹)
+  refine HasCompactSupport.of_support_subset_isCompact hK ?_
+  intro y hy
+  exact ⟨homothety x₀ s y, subset_tsupport _ hy, homothety_inv_homothety x₀ hs y⟩
+
+/-- **Dilates of zero extensions.** Under the hypotheses of the zero-extension theorem, the
+dilate `x ↦ u(x₀ + s (x - x₀))` lies in `D(A_max(ℝⁿ))`, with `A_max` the dilate of the
+elementwise `A_s u_T` (`A_s` with first-order coefficients multiplied by `s`). -/
+theorem dilL2_mem_maximal_univ {m : ℕ} [Fintype κ]
+    (A : ConstCoeffOp (Fin (m + 1) → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh (m + 1))
+    {u : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1) → ι → (Fin (m + 1) → ℝ) → 𝕜}
+    (hu : ∀ T ∈ M.simplices, ∀ i, ContDiff ℝ 1 (u T i))
+    (htr : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F, ∀ ν,
+      IsFaceNormal F ν → ∀ x ∈ convexHull ℝ (F : Set (Fin (m + 1) → ℝ)),
+        A.symbolApply ν (fun i => u T i x) = A.symbolApply ν (fun i => u T' i x))
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F, ∀ ν, IsFaceNormal F ν →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin (m + 1) → ℝ)), A.symbolApply ν (fun i => u T i x) = 0)
+    (x₀ : Fin (m + 1) → ℝ) {s : ℝ} (hs : 0 < s) :
+    ∃ h : dilL2 M univ u (fun T hT i => (hu T hT i).continuous) x₀ hs.ne' ∈
+        (A.maximal univ).domain,
+      A.maximal univ ⟨_, h⟩ = dilL2 M univ (fun T => (A.scale s).apply (u T))
+        (fun T hT j => (A.scale s).continuous_apply (hA.scale s) (hu T hT) j) x₀ hs.ne' := by
+  obtain ⟨h1, h2⟩ := pieceL2_univ_mem_maximal_domain (A.scale s) (hA.scale s) M hu
+    (fun F hF T hT T' hT' ν hν x hx => funext fun j => by
+      rw [symbolApply_scale, symbolApply_scale, htr F hF T hT T' hT' ν hν x hx])
+    (fun F hF T hT ν hν x hx => funext fun j => by
+      rw [symbolApply_scale, hbd F hF T hT ν hν x hx, Pi.zero_apply, mul_zero])
+  set c : ℝ := |(s ^ (m + 1))⁻¹|
+  have key : ∀ φ : κ → (Fin (m + 1) → ℝ) → 𝕜, ∀ hφ : IsTestField univ φ,
+      ⟪dilL2 M univ (fun T => (A.scale s).apply (u T))
+          (fun T hT j => (A.scale s).continuous_apply (hA.scale s) (hu T hT) j) x₀ hs.ne',
+        testField hφ⟫_𝕜 =
+      ⟪dilL2 M univ u (fun T hT i => (hu T hT i).continuous) x₀ hs.ne',
+        testField (A.formalAdj.isTestField_apply hφ)⟫_𝕜 := by
+    intro φ hφ
+    have hψ : IsTestField univ (fun j y => φ j (homothety x₀ s⁻¹ y)) := fun j =>
+      (hφ j).comp_homothety x₀ (inv_ne_zero hs.ne')
+    have hX := (A.scale s).maximal_inner_testField isOpen_univ ⟨_, h1⟩ hψ
+    rw [h2, inner_pieceL2_testField_univ, inner_pieceL2_testField_univ] at hX
+    rw [inner_dilL2_testField_univ, inner_dilL2_testField_univ]
+    have hL : ∀ j, ∫ x, conj (pieceFun M (fun T => (A.scale s).apply (u T) j) (homothety x₀ s x)) *
+        φ j x = (c : 𝕜) * ∫ y, conj (pieceFun M (fun T => (A.scale s).apply (u T) j) y) *
+          φ j (homothety x₀ s⁻¹ y) := by
+      intro j
+      have := integral_comp_homothety (fun y => conj (pieceFun M (fun T => (A.scale s).apply
+        (u T) j) y) * φ j (homothety x₀ s⁻¹ y)) x₀ s
+      simp only [homothety_inv_homothety x₀ hs.ne'] at this
+      rw [this, RCLike.real_smul_eq_coe_mul]
+    have hR : ∀ i, ∫ x, conj (pieceFun M (fun T => u T i) (homothety x₀ s x)) *
+        A.formalAdj.apply φ i x = (c : 𝕜) * ∫ y, conj (pieceFun M (fun T => u T i) y) *
+          (A.scale s).formalAdj.apply (fun j y => φ j (homothety x₀ s⁻¹ y)) i y := by
+      intro i
+      have := integral_comp_homothety (fun y => conj (pieceFun M (fun T => u T i) y) *
+        A.formalAdj.apply φ i (homothety x₀ s⁻¹ y)) x₀ s
+      simp only [homothety_inv_homothety x₀ hs.ne'] at this
+      rw [this, RCLike.real_smul_eq_coe_mul]
+      congr 2
+      funext y
+      rw [formalAdj_scale]
+      congr 1
+      exact (apply_scale_comp_homothety A.formalAdj hs.ne' x₀ (fun j => (hφ j).contDiff) i y).symm
+    simp only [hL, hR, ← Finset.mul_sum]
+    rw [hX]
+  have hmem := (A.mem_maximal_domain_iff isOpen_univ).2 ⟨_, key⟩
+  exact ⟨hmem, A.maximal_apply_eq isOpen_univ ⟨_, hmem⟩ key⟩
+
+end Feec.FiniteElement
+
+namespace Feec.FiniteElement
+
+open Feec.Domain Feec.Mesh ConstCoeffOp Filter Topology
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*} {n : ℕ}
+
+theorem isCompact_closure_domain (M : SimplicialMesh n) : IsCompact (closure M.domain) := by
+  rw [← M.biUnion_closedInterior]
+  exact M.simplices.finite_toSet.isCompact_biUnion fun T _ => T.isCompact_closedInterior
+
+theorem measurable_pieceFun (M : SimplicialMesh n)
+    {v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → 𝕜}
+    (hv : ∀ T ∈ M.simplices, Continuous (v T)) : Measurable (pieceFun M v) := by
+  unfold pieceFun
+  exact Finset.measurable_sum _ fun T hT =>
+    (hv T hT).measurable.indicator isOpen_interior.measurableSet
+
+/-- Almost every point of `Ω` lies in the interior of an element. -/
+theorem ae_mem_interior (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain) :
+    ∀ᵐ x ∂volume.restrict M.domain, ∃ T ∈ M.simplices, x ∈ interior T.closedInterior := by
+  have hnull : volume (⋃ T ∈ M.simplices, frontier T.closedInterior) = 0 :=
+    (measure_biUnion_null_iff M.simplices.countable_toSet).2 fun T _ =>
+      Convex.addHaar_frontier volume (Feec.Mesh.convex_closedInterior T)
+  have h := measure_eq_zero_iff_ae_notMem.1 hnull
+  filter_upwards [ae_restrict_mem hΩ, ae_restrict_of_ae h] with x hxΩ hx
+  have hx' : x ∈ ⋃ T ∈ M.simplices, T.closedInterior := by
+    rw [M.biUnion_closedInterior]; exact subset_closure hxΩ
+  obtain ⟨T, hT, hxT⟩ := Set.mem_iUnion₂.1 hx'
+  refine ⟨T, hT, ?_⟩
+  by_contra hint
+  exact hx (Set.mem_iUnion₂.2 ⟨T, hT, ⟨T.isClosed_closedInterior.closure_eq.symm ▸ hxT, hint⟩⟩)
+
+
+theorem norm_pieceFun_le (M : SimplicialMesh n)
+    {v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → 𝕜} {C : Affine.Simplex ℝ (Fin n → ℝ) n → ℝ}
+    (hC : ∀ T ∈ M.simplices, ∀ y ∈ T.closedInterior, ‖v T y‖ ≤ C T)
+    (hC0 : ∀ T ∈ M.simplices, 0 ≤ C T) (y : Fin n → ℝ) :
+    ‖pieceFun M v y‖ ≤ ∑ T ∈ M.simplices, C T := by
+  unfold pieceFun
+  refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun T hT => ?_)
+  by_cases hy : y ∈ interior T.closedInterior
+  · rw [Set.indicator_of_mem hy]; exact hC T hT y (interior_subset hy)
+  · rw [Set.indicator_of_notMem hy, norm_zero]; exact hC0 T hT
+
+/-- **Continuity of dilations on piecewise fields**: for a family `v_s` of piecewise fields
+depending continuously on `s`, the dilates `x ↦ v_{s_k}(x₀ + s_k (x - x₀))` converge in
+`L²(Ω)` to `v₁` as `s_k → 1`. -/
+theorem tendsto_eLpNorm_pieceFun_homothety (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain)
+    {v : ℝ → Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → 𝕜}
+    (hv : ∀ T ∈ M.simplices, Continuous fun p : ℝ × (Fin n → ℝ) => v p.1 T p.2)
+    (x₀ : Fin n → ℝ) {s : ℕ → ℝ} (hs : Tendsto s atTop (𝓝 1))
+    (hs12 : ∀ k, s k ∈ Set.Icc (1 : ℝ) 2) :
+    Tendsto (fun k => eLpNorm ((fun x => pieceFun M (v (s k)) (homothety x₀ (s k) x)) -
+      pieceFun M (v 1)) 2 (volume.restrict M.domain)) atTop (𝓝 0) := by
+  classical
+  have : IsFiniteMeasure (volume.restrict M.domain) := isFiniteMeasure_restrict.2
+    ((isCompact_closure_domain M).isBounded.subset subset_closure).measure_lt_top.ne
+  have hvc : ∀ T ∈ M.simplices, ∀ r, Continuous (v r T) := fun T hT r =>
+    (hv T hT).comp (continuous_const.prodMk continuous_id)
+  have hb : ∀ T ∈ M.simplices, ∃ C, 0 ≤ C ∧
+      ∀ p ∈ Set.Icc (1 : ℝ) 2 ×ˢ T.closedInterior, ‖v p.1 T p.2‖ ≤ C := fun T hT => by
+    obtain ⟨C, hC⟩ := (isCompact_Icc.prod T.isCompact_closedInterior).exists_bound_of_continuousOn
+      (hv T hT).continuousOn
+    exact ⟨max C 0, le_max_right _ _, fun p hp => (hC p hp).trans (le_max_left _ _)⟩
+  choose! C hC0 hC using hb
+  have hbound : ∀ k x, ‖pieceFun M (v (s k)) (homothety x₀ (s k) x)‖ ≤ ∑ T ∈ M.simplices, C T :=
+    fun k x => norm_pieceFun_le M (fun T hT y hy => hC T hT (s k, y) ⟨hs12 k, hy⟩) hC0 _
+  have hmeas : ∀ k, AEStronglyMeasurable (fun x => pieceFun M (v (s k)) (homothety x₀ (s k) x))
+      (volume.restrict M.domain) := fun k =>
+    ((measurable_pieceFun M fun T hT => hvc T hT (s k)).comp
+      (continuous_homothety x₀ (s k)).measurable).aestronglyMeasurable
+  refine tendsto_Lp_finite_of_tendsto_ae (by norm_num) (by norm_num) hmeas
+    (memLp_pieceFun M (fun T hT => hvc T hT 1) _) ?_ ?_
+  · refine unifIntegrable_of (by norm_num) (by norm_num) hmeas fun ε _ =>
+      ⟨Real.toNNReal ((∑ T ∈ M.simplices, C T) + 1), fun k => ?_⟩
+    have : ({x | Real.toNNReal ((∑ T ∈ M.simplices, C T) + 1) ≤
+        ‖pieceFun M (v (s k)) (homothety x₀ (s k) x)‖₊}.indicator
+        fun x => pieceFun M (v (s k)) (homothety x₀ (s k) x)) = 0 := by
+      funext x
+      refine Set.indicator_of_notMem (fun hx => ?_) _
+      have hx' : (∑ T ∈ M.simplices, C T) + 1 ≤ ‖pieceFun M (v (s k)) (homothety x₀ (s k) x)‖ := by
+        have := (Real.toNNReal_le_iff_le_coe).1 hx
+        simpa using this
+      linarith [hbound k x]
+    rw [this, eLpNorm_zero]
+    exact zero_le
+  · filter_upwards [ae_mem_interior M hΩ] with x ⟨T, hT, hx⟩
+    have hg : Tendsto (fun k => homothety x₀ (s k) x) atTop (𝓝 x) := by
+      have hc : Continuous fun r : ℝ => homothety x₀ r x := by unfold homothety; fun_prop
+      have := (hc.tendsto 1).comp hs
+      simp only [homothety, one_smul, add_sub_cancel] at this
+      exact this
+    have hlim : Tendsto (fun k => v (s k) T (homothety x₀ (s k) x)) atTop (𝓝 (v 1 T x)) :=
+      ((hv T hT).tendsto (1, x)).comp (hs.prodMk_nhds hg)
+    rw [pieceFun_of_mem_interior M _ hT hx]
+    refine hlim.congr' ?_
+    filter_upwards [hg.eventually (isOpen_interior.mem_nhds hx)] with k hk
+    rw [pieceFun_of_mem_interior M _ hT hk]
+
+
+theorem _root_.Feec.Domain.ConstCoeffOp.scale_one {E : Type*} (A : ConstCoeffOp E 𝕜 ι κ) :
+    A.scale 1 = A := by
+  cases A
+  simp only [ConstCoeffOp.scale, RCLike.ofReal_one, one_pow, one_mul]
+  congr 1
+  funext j i
+  exact List.map_id' _
+
+theorem _root_.Feec.Domain.ConstCoeffOp.continuous_scale_apply [Fintype ι]
+    (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) {f : ι → (Fin n → ℝ) → 𝕜}
+    (hf : ∀ i, ContDiff ℝ 1 (f i)) (j : κ) :
+    Continuous fun p : ℝ × (Fin n → ℝ) => (A.scale p.1).apply f j p.2 := by
+  simp only [ConstCoeffOp.apply, ConstCoeffOp.scale, applyEntry_map_scale]
+  refine continuous_finsetSum _ fun i _ => ?_
+  refine continuous_list_sum _ fun t ht => ?_
+  have h1 := contDiff_iterDeriv_of_le (hf i) t.1 (M := 0) (by simpa using hA j i t ht)
+  exact (((RCLike.continuous_ofReal.comp continuous_fst).pow _).mul continuous_const).mul
+    (h1.continuous.comp continuous_snd)
+
+theorem pieceFun_eq_zero_of_forall_notMem {F : Type*} [AddCommMonoid F] (M : SimplicialMesh n)
+    (v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → F) {y : Fin n → ℝ}
+    (hy : ∀ T ∈ M.simplices, y ∉ interior T.closedInterior) : pieceFun M v y = 0 :=
+  Finset.sum_eq_zero fun T hT => Set.indicator_of_notMem (hy T hT) _
+
+theorem restrictL2F_dilL2 (M : SimplicialMesh n) (S : Set (Fin n → ℝ))
+    (v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜)
+    (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i)) (x₀ : Fin n → ℝ) {s : ℝ} (hs : s ≠ 0) :
+    restrictL2F S (dilL2 M univ v hv x₀ hs) = dilL2 M S v hv x₀ hs := by
+  refine PiLp.ext fun i => Lp.ext ?_
+  have h1 := (ae_restrict_iff' MeasurableSet.univ).1 (coeFn_dilL2 M univ v hv x₀ hs i)
+  filter_upwards [coeFn_restrictL2F S (dilL2 M univ v hv x₀ hs) i, ae_restrict_of_ae h1,
+    coeFn_dilL2 M S v hv x₀ hs i] with x ha hb hc
+  rw [ha, hb (mem_univ x), hc]
+
+variable [Fintype ι]
+
+/-- **Vanishing `A`-traces give the minimal domain** (`Ω` strictly star-shaped). Under the
+hypotheses of `pieceL2_mem_maximal_domain`, if moreover the `A`-traces vanish on the boundary
+facets and `Ω` is strictly star-shaped with respect to `x₀`
+(`x₀ + t (x - x₀) ∈ Ω` for `x ∈ closure Ω`, `0 ≤ t < 1`; e.g. `Ω` convex, or star-shaped with
+respect to a ball), then `u ∈ D(A_min(Ω))`. Proof: the dilates of the extension by zero lie in
+`D(A_max(ℝⁿ))` and are supported in compact subsets of `Ω`, hence in `D(A_min(Ω))`
+(`Feec.Domain.ConstCoeffOp.mem_minimal_of_support_subset`); they converge to `u` in the graph
+norm, and `A_min` is closed. -/
+theorem pieceL2_mem_minimal_domain [NeZero n] [Fintype κ]
+    (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh n)
+    (hΩ : IsOpen M.domain) {u : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
+    (hu : ∀ T ∈ M.simplices, ∀ i, ContDiff ℝ 1 (u T i))
+    (htr : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F, ∀ ν,
+      IsFaceNormal F ν → ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)),
+        A.symbolApply ν (fun i => u T i x) = A.symbolApply ν (fun i => u T' i x))
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F, ∀ ν, IsFaceNormal F ν →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), A.symbolApply ν (fun i => u T i x) = 0)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    ∃ h : pieceL2 M M.domain u (fun T hT i => (hu T hT i).continuous) ∈
+        (A.minimal M.domain).domain,
+      A.minimal M.domain ⟨_, h⟩ = pieceL2 M M.domain (fun T => A.apply (u T))
+        (fun T hT j => A.continuous_apply hA (hu T hT) j) := by
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by have := NeZero.ne n; omega⟩
+  set Ω := M.domain
+  set s : ℕ → ℝ := fun k => 1 + 1 / ((k : ℝ) + 1)
+  have hspos : ∀ k, 0 < s k := fun k => by positivity
+  have hs1 : ∀ k, 1 < s k := fun k => by
+    have : (0 : ℝ) < 1 / ((k : ℝ) + 1) := by positivity
+    simp only [s]; linarith
+  have hs12 : ∀ k, s k ∈ Set.Icc (1 : ℝ) 2 := fun k => ⟨(hs1 k).le, by
+    simp only [s]
+    have : 1 / ((k : ℝ) + 1) ≤ 1 := by
+      rw [div_le_one (by positivity)]; linarith [k.cast_nonneg (α := ℝ)]
+    linarith⟩
+  have hslim : Tendsto s atTop (𝓝 1) := by
+    have := (tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)).const_add 1
+    simpa [s] using this
+  have hcu : ∀ T ∈ M.simplices, ∀ i, Continuous (u T i) := fun T hT i => (hu T hT i).continuous
+  have hcA : ∀ r, ∀ T ∈ M.simplices, ∀ j, Continuous ((A.scale r).apply (u T) j) :=
+    fun r T hT j => (A.scale r).continuous_apply (hA.scale r) (hu T hT) j
+  -- the dilates lie in the graph of `A_min(Ω)`
+  have hgraph : ∀ k, (dilL2 M Ω u hcu x₀ (hspos k).ne',
+      dilL2 M Ω (fun T => (A.scale (s k)).apply (u T)) (hcA (s k)) x₀ (hspos k).ne') ∈
+        (A.minimal Ω).graph := by
+    intro k
+    obtain ⟨hD, hW⟩ := dilL2_mem_maximal_univ A hA M hu htr hbd x₀ (hspos k)
+    set K := homothety x₀ (s k)⁻¹ '' closure Ω
+    have hK : IsCompact K := (isCompact_closure_domain M).image (continuous_homothety x₀ _)
+    have hKΩ : K ⊆ Ω := by
+      rintro _ ⟨x, hx, rfl⟩
+      exact hstar x hx _ (inv_nonneg.2 (hspos k).le) (inv_lt_one_of_one_lt₀ (hs1 k))
+    have hsupp : ∀ i, ∀ᵐ x, x ∉ K →
+        (dilL2 M univ u hcu x₀ (hspos k).ne' : L2F 𝕜 univ ι) i x = 0 := by
+      intro i
+      have h1 := (ae_restrict_iff' MeasurableSet.univ).1 (coeFn_dilL2 M univ u hcu x₀
+        (hspos k).ne' i)
+      filter_upwards [h1] with x hx hxK
+      rw [hx (mem_univ x)]
+      refine pieceFun_eq_zero_of_forall_notMem M _ fun T hT hint => hxK ?_
+      refine ⟨homothety x₀ (s k) x, ?_, homothety_inv_homothety x₀ (hspos k).ne' x⟩
+      rw [← M.biUnion_closedInterior]
+      exact Set.mem_iUnion₂.2 ⟨T, hT, interior_subset hint⟩
+    obtain ⟨hmin, hval⟩ := A.mem_minimal_of_support_subset hΩ hK hKΩ ⟨_, hD⟩ hsupp
+    rw [LinearPMap.mem_graph_iff]
+    refine ⟨⟨_, hmin⟩, restrictL2F_dilL2 M Ω u hcu x₀ (hspos k).ne', ?_⟩
+    rw [hval]
+    change restrictL2F Ω (A.maximal univ ⟨_, hD⟩) = _
+    rw [hW, restrictL2F_dilL2]
+  -- the dilates converge in the graph norm
+  have hlim1 : Tendsto (fun k => dilL2 M Ω u hcu x₀ (hspos k).ne') atTop
+      (𝓝 (pieceL2 M Ω u hcu)) := by
+    refine tendsto_toL2F _ _ fun i => ?_
+    have h := tendsto_eLpNorm_pieceFun_homothety M hΩ.measurableSet
+      (v := fun _ T => u T i) (fun T hT => (hcu T hT i).comp continuous_snd) x₀ hslim hs12
+    refine h.congr fun k => eLpNorm_congr_ae ?_
+    filter_upwards [coeFn_pieceL2 M Ω u hcu i] with x hx
+    simp [hx]
+  have hlim2 : Tendsto (fun k => dilL2 M Ω (fun T => (A.scale (s k)).apply (u T)) (hcA (s k)) x₀
+      (hspos k).ne') atTop (𝓝 (pieceL2 M Ω (fun T => A.apply (u T))
+        (fun T hT j => A.continuous_apply hA (hu T hT) j))) := by
+    refine tendsto_toL2F _ _ fun j => ?_
+    have h := tendsto_eLpNorm_pieceFun_homothety M hΩ.measurableSet
+      (v := fun r T => (A.scale r).apply (u T) j)
+      (fun T hT => A.continuous_scale_apply hA (hu T hT) j) x₀ hslim hs12
+    simp only [ConstCoeffOp.scale_one] at h
+    refine h.congr fun k => eLpNorm_congr_ae ?_
+    filter_upwards [coeFn_pieceL2 M Ω (fun T => A.apply (u T))
+      (fun T hT j => A.continuous_apply hA (hu T hT) j) j] with x hx
+    simp [hx]
+  have hmem := (A.isClosed_minimal hΩ).mem_of_tendsto (hlim1.prodMk_nhds hlim2)
+    (Eventually.of_forall hgraph)
+  rw [SetLike.mem_coe, LinearPMap.mem_graph_iff] at hmem
+  obtain ⟨y, hy1, hy2⟩ := hmem
+  simp only at hy1 hy2
+  refine ⟨hy1 ▸ y.2, ?_⟩
+  rw [← hy2]
+  congr 1
+  exact Subtype.ext hy1.symm
+
+/-- The minimal-domain theorem for **convex** `Ω` (e.g. a cube). -/
+theorem pieceL2_mem_minimal_domain_of_convex [NeZero n] [Fintype κ]
+    (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh n)
+    (hΩ : IsOpen M.domain) (hconv : Convex ℝ M.domain) (hne : M.domain.Nonempty)
+    {u : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
+    (hu : ∀ T ∈ M.simplices, ∀ i, ContDiff ℝ 1 (u T i))
+    (htr : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F, ∀ ν,
+      IsFaceNormal F ν → ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)),
+        A.symbolApply ν (fun i => u T i x) = A.symbolApply ν (fun i => u T' i x))
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F, ∀ ν, IsFaceNormal F ν →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), A.symbolApply ν (fun i => u T i x) = 0) :
+    ∃ h : pieceL2 M M.domain u (fun T hT i => (hu T hT i).continuous) ∈
+        (A.minimal M.domain).domain,
+      A.minimal M.domain ⟨_, h⟩ = pieceL2 M M.domain (fun T => A.apply (u T))
+        (fun T hT j => A.continuous_apply hA (hu T hT) j) := by
+  obtain ⟨x₀, hx₀⟩ := hne
+  refine pieceL2_mem_minimal_domain A hA M hΩ hu htr hbd x₀ fun x hx t ht0 ht1 => ?_
+  have h := hconv.combo_interior_closure_mem_interior (hΩ.interior_eq.symm ▸ hx₀) hx
+    (a := 1 - t) (b := t) (by linarith) ht0 (by ring)
+  rw [hΩ.interior_eq] at h
+  convert h using 1
+  rw [smul_sub, sub_smul, one_smul]; abel
+
+end Feec.FiniteElement
+
+namespace Feec.FiniteElement
+
+open Feec.Domain Feec.Mesh ConstCoeffOp ExteriorFibre
+
+variable {n : ℕ}
+
+/-- **`H̊Λᵏ`-conformity of piecewise smooth real `k`-forms** (`Ω` strictly star-shaped): if the
+tangential traces agree on the interior facets and vanish on the boundary facets, then
+`ω ∈ H̊Λᵏ(Ω) = D(d_min)`, and `d_min ω` is the elementwise exterior derivative. -/
+theorem extDeriv_pieceL2_mem_minimal_domain [NeZero n] (k : ℕ) (M : SimplicialMesh n)
+    (hΩ : IsOpen M.domain) {η : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n}
+    (hη : ∀ T ∈ M.simplices, ContDiff ℝ 1 (η T)) (hdeg : ∀ T ∈ M.simplices, ∀ x, IsDeg k (η T x))
+    (htr : ∀ F, M.IsInteriorFacet F → ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F,
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TangentialTraceEq F k (η T x) (η T' x))
+    (hbd : ∀ F, M.IsBoundaryFacet F → ∀ T ∈ M.cofaces F,
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TangentialTraceEq F k (η T x) 0)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    ∃ h : pieceL2 M M.domain (fun T => formComp (k := k) (η T))
+        (fun T hT s => continuous_formComp (hη T hT).continuous s) ∈
+        ((extDerivOp ℝ n k).minimal M.domain).domain,
+      (extDerivOp ℝ n k).minimal M.domain ⟨_, h⟩ =
+        pieceL2 M M.domain (fun T => formComp (k := (k : ℤ) + 1) (extDeriv (η T)))
+          (fun T hT t => continuous_formComp (continuous_extDeriv (hη T hT)) t) := by
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by have := NeZero.ne n; omega⟩
+  have hu : ∀ T ∈ M.simplices, ∀ s : formIdx (m + 1) k, ContDiff ℝ 1 (formComp (η T) s) :=
+    fun T hT s => contDiff_pi.1 (hη T hT) s.1
+  have hwedge : ∀ T ∈ M.simplices, ∀ x ν,
+      (extDerivOp ℝ (m + 1) k).symbolApply ν (fun s => formComp (η T) s x) =
+        fun t => wedge ν (η T x) t.1 := fun T hT x ν => funext fun t => by
+    rw [symbolApply_extDerivOp, formExt_formComp (hdeg T hT x)]
+    rfl
+  obtain ⟨h, hval⟩ := pieceL2_mem_minimal_domain (extDerivOp ℝ (m + 1) k)
+    (extDerivOp_isOrderLE k) M hΩ hu
+    (fun F hF T hT T' hT' ν hν x hx => by
+      rw [hwedge T (M.mem_cofaces.1 hT).1, hwedge T' (M.mem_cofaces.1 hT').1,
+        wedge_eq_of_tangentialTraceEq (M.mem_cofaces.1 hT).2 hF.1.1
+          (hdeg T (M.mem_cofaces.1 hT).1 x) (hdeg T' (M.mem_cofaces.1 hT').1 x)
+          (htr F hF T hT T' hT' x hx) hν])
+    (fun F hF T hT ν hν x hx => by
+      rw [hwedge T (M.mem_cofaces.1 hT).1,
+        wedge_eq_of_tangentialTraceEq (M.mem_cofaces.1 hT).2 hF.1.1
+          (hdeg T (M.mem_cofaces.1 hT).1 x) (fun _ _ => rfl) (hbd F hF T hT x hx) hν]
+      funext t
+      simp [wedge_apply])
+    x₀ hstar
   refine ⟨h, hval.trans (pieceL2_congr M _ _ _ fun T hT => ?_)⟩
   funext t x
   exact extDerivOp_apply_formComp (hdeg T hT) t x

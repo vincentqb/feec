@@ -33,8 +33,8 @@ Then
   `Feec.HilbertComplex.Subcomplex` of the maximal de Rham complex `HΛ(Ω)`
   (`LocalElement.subcomplex`), and the global spaces with vanishing boundary DOFs form a subcomplex
   of the minimal complex `H̊Λ(Ω)` (`LocalElement.subcomplexMin`, `Ω` strictly star-shaped);
-* the global canonical interpolant `Π_h` (`globalInterp`) commutes with `d` on `C¹` forms
-  (`globalInterp_extDeriv`);
+* the local and global canonical interpolants `Π_T`, `Π_h` (`localInterp`, `globalInterp`) are
+  projections commuting with `d` on `C¹` forms (`localInterp_extDeriv`, `globalInterp_extDeriv`);
 * the cases `k = 0` (continuity across facets, `tangentialTraceEq_zero_iff`) and `k = n` (no
   interface condition, `tangentialTraceEq_top`).
 
@@ -393,6 +393,36 @@ theorem tangentialTraceEq_zero_of_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise 
     rw [this]
     exact (map_zero _).symm
   simpa using h
+
+/-! ### The local canonical interpolant -/
+
+/-- **The local canonical interpolant** `Π_T : C⁰Λᵏ → P(T)ᵏ`: the local field with the DOFs of `w`
+on the faces of `T`. -/
+def localInterp (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) : contForms n →ₗ[ℝ] E.space T k :=
+  interp (E.unisolvent T k) fun p => E.dof p.1 k p.2
+
+theorem localDof_localInterp (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (w : contForms n)
+    (g : Finset (Fin n → ℝ)) (hg : g ⊆ vertexSet T) (i : E.DofIdx g k) :
+    E.localDof T k g i (E.localInterp T k w) = E.dof g k i w :=
+  dof_interp (E.unisolvent T k) (fun p => E.dof p.1 k p.2) w ⟨⟨g, mem_powerset.2 hg⟩, i⟩
+
+/-- `Π_T` is a projection onto `P(T)ᵏ`. -/
+theorem localInterp_inclusion (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (u : E.space T k) :
+    E.localInterp T k (Submodule.inclusion (E.le_contForms T k) u) = u :=
+  E.localSpace_ext T k fun g hg i => E.localDof_localInterp T k _ g hg i
+
+/-- **The local canonical interpolant commutes with `d`** on `C¹` forms:
+`Π_T (dw) = d (Π_T w)`. -/
+theorem localInterp_extDeriv (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (w : c1Forms n) :
+    E.localInterp T (k + 1) (extDerivC1 w) =
+      E.localD T k (E.localInterp T k (Submodule.inclusion c1Forms_le_contForms w)) := by
+  refine E.localSpace_ext T (k + 1) fun g hg i => ?_
+  rw [localDof_localInterp _ _ _ _ _ hg, localDof_localD]
+  refine E.dof_congr_of_mem_span (E.dof_extDeriv g k i) fun g' hg' j => ?_
+  have := E.localDof_localInterp T k (Submodule.inclusion c1Forms_le_contForms w) g'
+    (hg'.trans hg) j
+  rw [localDof_apply] at this
+  exact this.symm
 
 /-! ### The global canonical interpolant -/
 

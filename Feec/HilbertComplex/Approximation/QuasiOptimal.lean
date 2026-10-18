@@ -7,7 +7,7 @@ public import Feec.HilbertComplex.HodgeSolution
 # Quasi-optimal error estimates for the mixed Hodge Laplacian
 
 Let `Vₕ` be a finite-dimensional subcomplex of a Hilbert complex `H` with a cochain projection `π`
-bounded by `C` in the graph norm, and let `c_P ≥ 1` be a Poincaré constant of `H` at the arrows
+bounded by `C ≥ 1` in the graph norm, and let `c_P` be a Poincaré constant of `H` at the arrows
 `i → j → k`. The discrete mixed problem (the mixed problem of the discrete complex
 `S.toHilbertComplex`, with data the `W`-projection of `f`) is uniformly stable, and its solution
 `(σₕ, uₕ, pₕ)` is quasi-optimal ([AFW2010], Thm 3.9):
@@ -16,9 +16,10 @@ bounded by `C` in the graph norm, and let `c_P ≥ 1` be a Poincaré constant of
 
 with `μ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - π q‖` (`harmonicGap`) and the explicit constant
 `C' = (1 + 144 (C √(1 + c_P²))²) (1 + C)`. The infima are over `Vₕⁱ`, `Vₕʲ` (graph norm), `ℌₕʲ`
-(`W` norm) and `Vₕʲ` (graph norm). [AFW2010], Thm 3.9 takes the infimum for `p` over `Vₕʲ` in
-the `W` norm, which needs `π` bounded in `W`; with a projection bounded only in the graph norm the
-natural quantity is the distance to `ℌₕʲ` used here.
+(`W` norm) and `Vₕʲ` (graph norm). The `ℌₕʲ` term is at least as sharp as the graph-norm distance
+of `p` to `Vₕʲ` used in [AFW2010], Thm 3.9: `dist(p, ℌₕ) ≤ (1 + C) dist_V(p, Vₕ)`
+(`infDist_harmonicW_le`), which gives the estimate in the exact form of AFW
+(`norm_sub_le_infDist_domainSub`).
 
 The discrete harmonic forms are in general not harmonic (`ℌₕ ⊄ ℌ`): the discrete problem is not
 a Galerkin restriction of the continuous one. As in [AFW2010], §3.4 this *variational crime* is
@@ -49,7 +50,8 @@ and the second half of the gap estimate, `norm_sub_starProjection_harmonic_le`).
 * **`CochainProjection.norm_sub_le_quasiOptimal`** (`∀`-form),
   **`CochainProjection.norm_sub_le_infDist`** (`infDist` form) and
   `CochainProjection.norm_sub_le_infDist_harmonicGap` (`μ = harmonicGap`): the quasi-optimal
-  estimate.
+  estimate; `CochainProjection.norm_sub_le_infDist_domainSub`: the same in the form of
+  [AFW2010], Thm 3.9, via `CochainProjection.infDist_harmonicW_le`.
 
 ## References
 
@@ -526,7 +528,7 @@ private theorem quasiOptimal_arith {E₁ E₂ E₃ a b g e θ ω μ C K : ℝ} (
     mul_nonneg hμ hω, mul_nonneg hK hs]
 
 /-- **Quasi-optimality of the mixed finite element method** (`∀` form): with a cochain projection
-bounded by `C ≥ 1` in the graph norm and a Poincaré constant `c_P ≥ 1`, the discrete solution
+bounded by `C ≥ 1` in the graph norm and a Poincaré constant `c_P`, the discrete solution
 `(σₕ, uₕ, pₕ)` of the mixed problem of the subcomplex (data `fₕ`, the `W`-projection of `f`)
 satisfies, for every `τ ∈ Vₕⁱ`, `v, w ∈ Vₕʲ`, `q ∈ ℌₕʲ`,
 
@@ -702,6 +704,52 @@ theorem norm_sub_le_infDist {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     have := h3 w
     simp only [LinearIsometry.coe_toLinearMap]
     rw [dist_eq_norm]; linarith
+  linarith
+
+/-- **The harmonic term in the graph norm**: for `q ∈ ℌʲ`,
+`dist(q, ℌₕʲ) ≤ (1 + C) dist_V(q, Vₕʲ)` (`‖q - P_{ℌₕ} q‖ ≤ ‖(I - π) q‖`, [AFW2010], Thm 3.5). -/
+theorem infDist_harmonicW_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j k C) {q : W j} (hq : q ∈ H.harmonic j) :
+    Metric.infDist q (S.harmonicW j) ≤
+      (1 + C) * Metric.infDist (cyclesToDomainSpace (H.harmonic_le_cycles j hq)) (S.domainSub j) := by
+  have h := le_add_mul_infDist (A := Metric.infDist q (S.harmonicW j)) (B := 0)
+    (x := cyclesToDomainSpace (H.harmonic_le_cycles j hq)) ⟨0, zero_mem (S.domainSub j)⟩
+    (by linarith : (0 : ℝ) ≤ 1 + C) fun y hy => by
+      obtain ⟨w, rfl⟩ := hy
+      simp only [LinearIsometry.coe_toLinearMap]
+      rw [zero_add, dist_eq_norm, ← Submodule.dist_starProjection_eq_infDist, dist_eq_norm]
+      exact (P.norm_sub_starProjection_harmonicW_le hq).trans
+        (P.norm_sub_π_le_of_mem_cycles hjk hC hπ _ w)
+  rwa [zero_add] at h
+
+/-- **Quasi-optimality in the form of [AFW2010], Thm 3.9**: the harmonic term measured by the
+graph-norm distance of `p` to `Vₕʲ`,
+
+`‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ C' (E_V(σ) + E_V(u) + (1 + C) E_V(p) + μ E_V(P_𝔅 u))`.
+
+This follows from `norm_sub_le_infDist` and `infDist_harmonicW_le`; the `infDist`-to-`ℌₕ` form
+of `norm_sub_le_infDist` is the sharper one. -/
+theorem norm_sub_le_infDist_domainSub {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
+    {cP C μ : ℝ} (hC : 1 ≤ C) (hμ0 : 0 ≤ μ)
+    (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
+    (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+    (hπi : P.IsGraphBounded i j C) (hπj : P.IsGraphBounded j k C)
+    (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖)
+    {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j}
+    (hs : H.IsMixedSolution i j k f σ u p) :
+    ‖σ - S.embD i (discreteMixedSolution S hij hjk f).fst‖ +
+        ‖u - S.embD j (discreteMixedSolution S hij hjk f).snd.fst‖ +
+        ‖(p : W j) - (((discreteMixedSolution S hij hjk f).snd.snd : S.V j) : W j)‖ ≤
+      (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C) *
+        (Metric.infDist σ (S.domainSub i) + Metric.infDist u (S.domainSub j) +
+          (1 + C) * Metric.infDist (cyclesToDomainSpace (H.harmonic_le_cycles j p.2))
+            (S.domainSub j) +
+          μ * Metric.infDist (H.boundaryPart j (H.domainIncl j u)) (S.domainSub j)) := by
+  have hK : 0 ≤ (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C) := by
+    have := zero_le_one.trans hC; positivity
+  refine (P.norm_sub_le_infDist hij hjk hC hμ0 hPi hPj hπi hπj hμ hs).trans
+    (mul_le_mul_of_nonneg_left ?_ hK)
+  have := P.infDist_harmonicW_le hjk (zero_le_one.trans hC) hπj p.2
   linarith
 
 /-- **Quasi-optimality with the harmonic gap** `μ = harmonicGap`: the same estimate with `μ` the

@@ -10,9 +10,9 @@ With a cochain projection `π` onto a finite-dimensional subcomplex `Vₕ` that 
 approximation errors `E(w) = dist(w, Vₕ)` of the components of the solution and of the three
 quantities ([AFW2010], §3.5)
 
-* `η = max (‖(I - π) d K‖, ‖(I - π) d† K‖)` over the two neighbouring degrees,
-* `δ = ‖(I - π) K‖`,
-* `μ = ‖(I - π) P_ℌ‖`,
+* `η = max (‖(I - π) d K‖, ‖(I - π) d† K‖)` over the two neighbouring degrees (`improvedEta`),
+* `δ = ‖(I - π) K‖` (`improvedDelta`),
+* `μ = ‖(I - π) P_ℌ‖` (`harmonicGap`),
 
 where `K` is the solution operator of the Hodge Laplacian (`Feec.HilbertComplex.solutionOp`).
 The result is [AFW2010], Thm 3.11 ([Arnold2018], Thm 5.6), with explicit constants
@@ -24,22 +24,29 @@ The result is [AFW2010], Thm 3.11 ([Arnold2018], Thm 5.6), with explicit constan
 * `‖d(u - uₕ)‖ ≤ 2A (E(du) + η [E(dσ) + E(p)])`,
 * `‖u - uₕ‖ ≤ 4A² (E(u) + η [E(du) + E(σ)] + (η² + δ) [E(dσ) + E(p)] + μ E(P_𝔅 u))`.
 
-These are unconditional abstract theorems: `η`, `δ`, `μ` enter only through the bounds they
-denote (the hypotheses `hη…`, `hδ`, `hμ` below say that `η`, `δ`, `μ` dominate the corresponding
-operator norms). Regularity enters only when `η`, `δ`, `μ` are estimated for concrete spaces
-(e.g. `η = O(h)`, `δ = O(h²)` on convex domains, by elliptic regularity); the compactness property
-assumed in [AFW2010] serves only to make `η, δ, μ → 0` and is not needed here.
+These are unconditional abstract theorems. They are proved first for any numbers `η`, `δ`, `μ`
+dominating the corresponding operators (hypotheses `hη₁ … hη₄`, `hδ`, `hμ`), then for the defined
+quantities, which are finite (`improvedEta_le`: `η ≤ (1 + C_W) c_P`; `improvedDelta_le`:
+`δ ≤ (1 + C_W) c_P²`) as soon as `π` is `W`-bounded and Poincaré constants exist. Regularity
+enters only when `η`, `δ`, `μ` are shown to be small for concrete spaces (e.g. `η = O(h)`,
+`δ = O(h²)` on convex domains, by elliptic regularity); the compactness property assumed in
+[AFW2010] serves only to make `η, δ, μ → 0` and is not needed here.
 
-The operator `(I - π) d K` on `W^{j-1}` is used in the form `(I - π) K d` on `D(d)`
-(`K d = d K`, `Feec.HilbertComplex.d_solutionOp`), and `(I - π) d† K` on `W^{j+1}` in the form
-`(I - π) P_{𝔅*}` on `D(d)` relative to `‖d ·‖` (`d† K d = P_{𝔅*}`); both are equivalent to the
-operator-norm bounds of [AFW2010] and avoid solution operators at other indices.
+The norm of `(I - π) d K` on `W^{j-1}` is taken in the form `(I - π) K d` on `D(d)` relative to
+the `W` norm (`etaDK`; `K d = d K`, `Feec.HilbertComplex.d_solutionOp`), and that of
+`(I - π) d† K` on `W^{j+1}` in the form `(I - π) P_{𝔷ᗮ}` on `D(d)` relative to `‖d ·‖`
+(`etaCycles`; `d† K d = P_{𝔷ᗮ}`). These agree with the operator norms of [AFW2010] (by density
+of `D(d)` and boundedness of `K d`, resp. because `d† K g` depends only on `P_𝔅 g`; this
+identification is not formalized here), and they avoid solution operators at other indices.
 
 ## Main definitions
 
 * `ContinuousSolution`, `Subcomplex.DiscreteSolution`: the solutions of the continuous and
   discrete mixed problems, in terms of their components in `W`.
 * `Subcomplex.bestApprox`: `E(w) = dist(w, Vₕ)`.
+* `relNorm T L = sup_{‖L x‖ ≤ 1} ‖T x‖`, the norm of `T` relative to `L`.
+* `CochainProjection.etaDK`, `etaSigma`, `etaD`, `etaCycles`, `improvedEta` (`η`) and
+  `improvedDelta` (`δ`).
 
 ## Main results
 
@@ -49,6 +56,9 @@ operator-norm bounds of [AFW2010] and avoid solution operators at other indices.
 * `CochainProjection.norm_d_sub_le`, `norm_sub_sigma_le`, `norm_sub_harmonic_le`,
   `norm_d_sub_u_le`, `norm_sub_u_le`: the five estimates (35)–(39) of [AFW2010], Thm 3.11;
   `norm_starProjection_boundariesW_le'`: (40).
+* `CochainProjection.norm_sub_sigma_le_improvedEta`, `norm_sub_harmonic_le_harmonicGap`,
+  `norm_d_sub_u_le_improvedEta`, **`norm_sub_u_le_improved`**: (36)–(39) with the defined `η`,
+  `δ`, `μ`; `improvedEta_le`, `improvedDelta_le`: their finiteness.
 * The intermediate lemmas of [AFW2010], Lemmas 3.12–3.16: `norm_sub_starProjection_cycles_le`
   (3.12), `norm_starProjection_boundariesW_le` (3.13), `norm_starProjection_harmonicW_le` (3.14,
   (34)), `norm_d_vh_le` (3.15), `norm_vh_le` (3.16), and the decomposition
@@ -81,6 +91,53 @@ theorem _root_.Submodule.norm_sub_starProjection_le_of_mem {E : Type*} [NormedAd
     (hy : y ∈ K) : ‖x - K.starProjection x‖ ≤ ‖x - y‖ := by
   rw [← dist_eq_norm, ← dist_eq_norm, Submodule.dist_starProjection_eq_infDist]
   exact Metric.infDist_le_dist_of_mem hy
+
+/-! ### Relative operator norms -/
+
+section RelNorm
+
+variable {E F G : Type*} [AddCommGroup E] [Module 𝕜 E] [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+  [NormedAddCommGroup G] [NormedSpace 𝕜 G] (T : E →ₗ[𝕜] F) (L : E →ₗ[𝕜] G)
+
+/-- **The norm of `T` relative to `L`**, `sup_{‖L x‖ ≤ 1} ‖T x‖`: the smallest `η` with
+`‖T x‖ ≤ η ‖L x‖` for all `x`, when some such `η` exists (`norm_le_relNorm_mul`, `relNorm_le`).
+For `L = id` it is the operator norm of `T`. -/
+def relNorm : ℝ := ⨆ x : {x : E // ‖L x‖ ≤ 1}, ‖T x‖
+
+theorem relNorm_nonneg : 0 ≤ relNorm T L := Real.iSup_nonneg fun _ => norm_nonneg _
+
+variable {T L}
+
+private theorem bddAbove_relNorm {η : ℝ} (h : ∀ x, ‖T x‖ ≤ η * ‖L x‖) :
+    BddAbove (Set.range fun x : {x : E // ‖L x‖ ≤ 1} => ‖T x‖) := by
+  refine ⟨max η 0, ?_⟩
+  rintro _ ⟨x, rfl⟩
+  refine (h _).trans ?_
+  rcases le_total 0 η with hη | hη
+  · exact (mul_le_of_le_one_right hη x.2).trans (le_max_left _ _)
+  · exact (mul_nonpos_of_nonpos_of_nonneg hη (norm_nonneg _)).trans (le_max_right _ _)
+
+/-- `‖T x‖ ≤ relNorm T L * ‖L x‖`, provided some bound of this form holds. -/
+theorem norm_le_relNorm_mul {η : ℝ} (h : ∀ x, ‖T x‖ ≤ η * ‖L x‖) (x : E) :
+    ‖T x‖ ≤ relNorm T L * ‖L x‖ := by
+  rcases (norm_nonneg (L x)).eq_or_lt with h0 | h0
+  · have hx := h x
+    rw [← h0, mul_zero] at hx ⊢
+    exact hx
+  · set a : 𝕜 := ((‖L x‖⁻¹ : ℝ) : 𝕜)
+    have hna : ‖L (a • x)‖ = 1 := by
+      rw [_root_.map_smul, norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm,
+        inv_mul_cancel₀ h0.ne']
+    have hle := le_ciSup (bddAbove_relNorm h) (⟨a • x, hna.le⟩ : {x : E // ‖L x‖ ≤ 1})
+    simp only at hle
+    rw [_root_.map_smul, norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm] at hle
+    rw [← div_le_iff₀ h0, div_eq_inv_mul]
+    exact hle
+
+theorem relNorm_le {η : ℝ} (hη0 : 0 ≤ η) (h : ∀ x, ‖T x‖ ≤ η * ‖L x‖) : relNorm T L ≤ η :=
+  Real.iSup_le (fun x => (h x).trans (mul_le_of_le_one_right hη0 x.2)) hη0
+
+end RelNorm
 
 variable (H : HilbertComplex 𝕜 c W)
 
@@ -1035,6 +1092,247 @@ theorem norm_sub_u_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt 
   exact improved_arith (by linarith) hη0 hδ0 hμ0 (S.bestApprox_nonneg _) (S.bestApprox_nonneg _)
     (S.bestApprox_nonneg _) (S.bestApprox_nonneg _) (S.bestApprox_nonneg _)
     (S.bestApprox_nonneg _) h0 hU (by linarith) hσ hP hv hD1 (by linarith)
+
+/-! ### The quantities `η` and `δ` as relative operator norms -/
+
+section Quantities
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+/-- `‖(I - π) y‖ ≤ (1 + C_W) ‖y‖`. -/
+theorem norm_sub_π_le {l : ι} {Cw : ℝ} (hπ : ∀ x, ‖P.π l x‖ ≤ Cw * ‖x‖) (y : W l) :
+    ‖y - P.π l y‖ ≤ (1 + Cw) * ‖y‖ := by
+  have := hπ y
+  calc _ ≤ ‖y‖ + ‖P.π l y‖ := norm_sub_le _ _
+    _ ≤ _ := by linarith
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+/-- With `π` bounded in `W`, `‖q - π q‖ ≤ μ ‖q‖` on `ℌʲ` for `μ = harmonicGap`. -/
+theorem norm_sub_π_harmonic_le_harmonicGap {Cw : ℝ} (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) {q : W j}
+    (hq : q ∈ H.harmonic j) : ‖q - P.π j q‖ ≤ P.harmonicGap j * ‖q‖ :=
+  P.norm_sub_le_harmonicGap_mul (fun q _ => P.norm_sub_π_le hπj q) hq
+
+/-- `(I - π) P_{𝔷ᗮ}` on `D(d j k)`. -/
+def etaCyclesOp (j k : ι) : (H.d j k).domain →ₗ[𝕜] W j :=
+  (LinearMap.id - P.π j) ∘ₗ
+    ((LinearMap.id - (((H.cycles j).starProjection : W j →L[𝕜] W j) : W j →ₗ[𝕜] W j)) ∘ₗ
+      (H.d j k).domain.subtype)
+
+/-- `(I - π) P_{𝔷ᗮ}` on `D(d j k)` relative to `‖d ·‖`, i.e. the norm of `(I - π) d† K` on `Wᵏ`
+(`d† K d = P_{𝔷ᗮ}`). -/
+def etaCycles (j k : ι) : ℝ := relNorm (P.etaCyclesOp j k) (H.d j k).toFun
+
+variable (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k)
+
+/-- `(I - π) K d` on `D(d i j)`. -/
+def etaDKOp : (H.d i j).domain →ₗ[𝕜] W j :=
+  (LinearMap.id - P.π j) ∘ₗ
+    ((H.solutionOp hij hjk hj hk : W j →L[𝕜] W j) : W j →ₗ[𝕜] W j) ∘ₗ (H.d i j).toFun
+
+/-- `(I - π) K d` on `D(d i j)` relative to `‖·‖_W`, i.e. the norm of `(I - π) d K` on `Wⁱ`
+(`K d = d K`). -/
+def etaDK : ℝ := relNorm (P.etaDKOp hij hjk hj hk) (H.d i j).domain.subtype
+
+/-- `(I - π) d† K` on `Wʲ`. -/
+def etaSigmaOp : W j →ₗ[𝕜] W i :=
+  (LinearMap.id - P.π i) ∘ₗ ((H.solutionSigma hij hjk hj hk : W j →L[𝕜] W i) : W j →ₗ[𝕜] W i)
+
+/-- `‖(I - π) d† K‖` on `Wʲ`. -/
+def etaSigma : ℝ := relNorm (P.etaSigmaOp hij hjk hj hk) LinearMap.id
+
+/-- `(I - π) d K` on `Wʲ`. -/
+def etaDOp : W j →ₗ[𝕜] W k :=
+  (LinearMap.id - P.π k) ∘ₗ
+    (((H.domainIncl k).comp ((H.domainD j k).comp (H.solutionOpV hij hjk hj hk)) :
+      W j →L[𝕜] W k) : W j →ₗ[𝕜] W k)
+
+/-- `‖(I - π) d K‖` on `Wʲ`. -/
+def etaD : ℝ := relNorm (P.etaDOp hij hjk hj hk) LinearMap.id
+
+/-- **`η`** of [AFW2010], §3.5: the maximum of the four norms `etaDK`, `etaSigma`, `etaD`,
+`etaCycles` of `(I - π) d K` and `(I - π) d† K` at the two neighbouring degrees. -/
+def improvedEta : ℝ :=
+  max (max (P.etaDK hij hjk hj hk) (P.etaSigma hij hjk hj hk))
+    (max (P.etaD hij hjk hj hk) (P.etaCycles j k))
+
+/-- `(I - π) K` on `Wʲ`. -/
+def deltaOp : W j →ₗ[𝕜] W j :=
+  (LinearMap.id - P.π j) ∘ₗ ((H.solutionOp hij hjk hj hk : W j →L[𝕜] W j) : W j →ₗ[𝕜] W j)
+
+/-- **`δ = ‖(I - π) K‖`** on `Wʲ` ([AFW2010], §3.5). -/
+def improvedDelta : ℝ := relNorm (P.deltaOp hij hjk hj hk) LinearMap.id
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+theorem improvedEta_nonneg : 0 ≤ P.improvedEta hij hjk hj hk :=
+  (relNorm_nonneg _ _).trans ((le_max_left _ _).trans (le_max_left _ _))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+theorem improvedDelta_nonneg : 0 ≤ P.improvedDelta hij hjk hj hk := relNorm_nonneg _ _
+
+variable {Cw cP : ℝ} (hCw : 0 ≤ Cw) (hcP : 0 ≤ cP)
+  (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
+  (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+private theorem bound_etaDK (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (τ : (H.d i j).domain) :
+    ‖P.etaDKOp hij hjk hj hk τ‖ ≤ ((1 + Cw) * cP) * ‖(H.d i j).domain.subtype τ‖ := by
+  rw [mul_assoc]
+  exact (P.norm_sub_π_le hπj _).trans (mul_le_mul_of_nonneg_left
+    (H.norm_solutionOp_d_le hij hjk hj hk hcP hPi hPj τ) (by linarith))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+private theorem bound_etaSigma (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖) (g : W j) :
+    ‖P.etaSigmaOp hij hjk hj hk g‖ ≤ ((1 + Cw) * cP) * ‖(LinearMap.id : W j →ₗ[𝕜] W j) g‖ := by
+  rw [mul_assoc]
+  exact (P.norm_sub_π_le hπi _).trans (mul_le_mul_of_nonneg_left
+    (H.norm_solutionSigma_le hij hjk hj hk hcP hPi hPj g) (by linarith))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+private theorem bound_etaD (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖) (g : W j) :
+    ‖P.etaDOp hij hjk hj hk g‖ ≤ ((1 + Cw) * cP) * ‖(LinearMap.id : W j →ₗ[𝕜] W j) g‖ := by
+  rw [mul_assoc]
+  exact (P.norm_sub_π_le hπk _).trans (mul_le_mul_of_nonneg_left
+    (H.norm_d_solutionOp_le hij hjk hj hk hcP hPi hPj g) (by linarith))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hPj in
+private theorem bound_etaCycles (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (x : (H.d j k).domain) :
+    ‖P.etaCyclesOp j k x‖ ≤ ((1 + Cw) * cP) * ‖(H.d j k).toFun x‖ := by
+  have hPz : (H.cycles j).starProjection (x : W j) ∈ (H.d j k).domain :=
+    H.domain_next_le j k (H.cycles_le_domain j (Submodule.starProjection_apply_mem _ _))
+  have hD : (x : W j) - (H.cycles j).starProjection x ∈ (H.d j k).domain := sub_mem x.2 hPz
+  have hd : H.d j k ⟨_, hD⟩ = H.d j k x := by
+    rw [d_sub hD x.2 hPz, H.d_eq_zero_of_mem_cycles (Submodule.starProjection_apply_mem _ _),
+      sub_zero]
+  have hP := hPj ⟨_, hD⟩ (Submodule.sub_starProjection_mem_orthogonal _)
+  rw [hd] at hP
+  rw [mul_assoc]
+  exact (P.norm_sub_π_le hπj _).trans (mul_le_mul_of_nonneg_left hP (by linarith))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+private theorem bound_delta (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (g : W j) :
+    ‖P.deltaOp hij hjk hj hk g‖ ≤ ((1 + Cw) * cP ^ 2) * ‖(LinearMap.id : W j →ₗ[𝕜] W j) g‖ := by
+  rw [mul_assoc]
+  exact (P.norm_sub_π_le hπj _).trans (mul_le_mul_of_nonneg_left
+    (H.norm_solutionOp_le hij hjk hj hk hcP hPi hPj g) (by linarith))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+/-- **`η` is finite**: `η ≤ (1 + C_W) c_P` ([AFW2010], §3.5). -/
+theorem improvedEta_le (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖)
+    (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖) : P.improvedEta hij hjk hj hk ≤ (1 + Cw) * cP := by
+  have h0 : 0 ≤ (1 + Cw) * cP := by positivity
+  refine max_le (max_le ?_ ?_) (max_le ?_ ?_)
+  · exact relNorm_le h0 (P.bound_etaDK hij hjk hj hk hCw hcP hPi hPj hπj)
+  · exact relNorm_le h0 (P.bound_etaSigma hij hjk hj hk hCw hcP hPi hPj hπi)
+  · exact relNorm_le h0 (P.bound_etaD hij hjk hj hk hCw hcP hPi hPj hπk)
+  · exact relNorm_le h0 (P.bound_etaCycles hCw hPj hπj)
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+/-- **`δ` is finite**: `δ ≤ (1 + C_W) c_P²`. -/
+theorem improvedDelta_le (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) :
+    P.improvedDelta hij hjk hj hk ≤ (1 + Cw) * cP ^ 2 :=
+  relNorm_le (by positivity) (P.bound_delta hij hjk hj hk hCw hcP hPi hPj hπj)
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+theorem norm_sub_π_solutionOp_d_le (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (τ : (H.d i j).domain) :
+    ‖H.solutionOp hij hjk hj hk (H.d i j τ) - P.π j (H.solutionOp hij hjk hj hk (H.d i j τ))‖ ≤
+      P.improvedEta hij hjk hj hk * ‖(τ : W i)‖ :=
+  (norm_le_relNorm_mul (P.bound_etaDK hij hjk hj hk hCw hcP hPi hPj hπj) τ).trans
+    (mul_le_mul_of_nonneg_right ((le_max_left _ _).trans (le_max_left _ _)) (norm_nonneg _))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+theorem norm_sub_π_solutionSigma_le (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖) (g : W j) :
+    ‖H.solutionSigma hij hjk hj hk g - P.π i (H.solutionSigma hij hjk hj hk g)‖ ≤
+      P.improvedEta hij hjk hj hk * ‖g‖ :=
+  (norm_le_relNorm_mul (P.bound_etaSigma hij hjk hj hk hCw hcP hPi hPj hπi) g).trans
+    (mul_le_mul_of_nonneg_right ((le_max_right _ _).trans (le_max_left _ _)) (norm_nonneg _))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+theorem norm_sub_π_d_solutionOp_le (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖) (g : W j) :
+    ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk g)) -
+      P.π k (H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk g)))‖ ≤
+      P.improvedEta hij hjk hj hk * ‖g‖ :=
+  (norm_le_relNorm_mul (P.bound_etaD hij hjk hj hk hCw hcP hPi hPj hπk) g).trans
+    (mul_le_mul_of_nonneg_right ((le_max_left _ _).trans (le_max_right _ _)) (norm_nonneg _))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hPj in
+theorem norm_sub_π_sub_starProjection_cycles_le (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖)
+    (x : (H.d j k).domain) :
+    ‖((x : W j) - (H.cycles j).starProjection x) -
+      P.π j ((x : W j) - (H.cycles j).starProjection x)‖ ≤
+      P.improvedEta hij hjk hj hk * ‖H.d j k x‖ :=
+  (norm_le_relNorm_mul (P.bound_etaCycles hCw hPj hπj) x).trans
+    (mul_le_mul_of_nonneg_right ((le_max_right _ _).trans (le_max_right _ _)) (norm_nonneg _))
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+include hCw hcP hPi hPj in
+theorem norm_sub_π_solutionOp_le (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (g : W j) :
+    ‖H.solutionOp hij hjk hj hk g - P.π j (H.solutionOp hij hjk hj hk g)‖ ≤
+      P.improvedDelta hij hjk hj hk * ‖g‖ :=
+  norm_le_relNorm_mul (P.bound_delta hij hjk hj hk hCw hcP hPi hPj hπj) g
+
+/-! #### The improved estimates with `η`, `δ`, `μ` the defined quantities -/
+
+include hCw hcP hPi hPj in
+/-- **[AFW2010], Thm 3.11, (36)** with `η = improvedEta`. -/
+theorem norm_sub_sigma_le_improvedEta (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖)
+    (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (X : H.ContinuousSolution i j k f)
+    (Y : S.DiscreteSolution i j k f) :
+    ‖(X.σ : W i) - Y.σ‖ ≤ (1 + Cw) ^ 2 * (S.bestApprox (X.σ : W i) +
+      P.improvedEta hij hjk hj hk * S.bestApprox X.dσ) :=
+  P.norm_sub_sigma_le X Y hij hjk hj hk hCw hπi hπj (P.improvedEta_nonneg hij hjk hj hk)
+    (P.norm_sub_π_solutionOp_d_le hij hjk hj hk hCw hcP hPi hPj hπj)
+
+include hij hj in
+/-- **[AFW2010], Thm 3.11, (37)** with `μ = harmonicGap`. -/
+theorem norm_sub_harmonic_le_harmonicGap (hCw : 0 ≤ Cw) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖)
+    (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f) :
+    ‖X.p - Y.p‖ ≤ (1 + Cw) * (S.bestApprox X.p + P.harmonicGap j * S.bestApprox X.dσ) :=
+  P.norm_sub_harmonic_le X Y hij hj hCw hπj (P.harmonicGap_nonneg j)
+    (fun _ hq => P.norm_sub_π_harmonic_le_harmonicGap hπj hq)
+
+include hCw hPj in
+/-- **[AFW2010], Thm 3.11, (38)** with `η = improvedEta`. -/
+theorem norm_d_sub_u_le_improvedEta (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖)
+    (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖) (X : H.ContinuousSolution i j k f)
+    (Y : S.DiscreteSolution i j k f) :
+    ‖X.du - Y.du‖ ≤ 2 * (1 + Cw) * (S.bestApprox X.du +
+      P.improvedEta hij hjk hj hk * (S.bestApprox X.dσ + S.bestApprox X.p)) :=
+  P.norm_d_sub_u_le X Y hij hjk hj hCw hπj hπk (P.improvedEta_nonneg hij hjk hj hk)
+    (P.norm_sub_π_sub_starProjection_cycles_le hij hjk hj hk hCw hPj hπj)
+
+include hCw hcP hPi hPj in
+/-- **[AFW2010], Thm 3.11, (39)** with `η = improvedEta`, `δ = improvedDelta` and
+`μ = harmonicGap`: all three quantities are defined (and finite, `improvedEta_le`,
+`improvedDelta_le`), and the estimate needs only the `W`-bound of `π` and Poincaré constants. -/
+theorem norm_sub_u_le_improved (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖)
+    (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖)
+    (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f) :
+    ‖(X.u : W j) - Y.u‖ ≤ 4 * (1 + Cw) ^ 2 * (S.bestApprox (X.u : W j) +
+      P.improvedEta hij hjk hj hk * (S.bestApprox X.du + S.bestApprox (X.σ : W i)) +
+      (P.improvedEta hij hjk hj hk ^ 2 + P.improvedDelta hij hjk hj hk) *
+        (S.bestApprox X.dσ + S.bestApprox X.p) +
+      P.harmonicGap j *
+        S.bestApprox ((H.boundaries j).topologicalClosure.starProjection (X.u : W j))) :=
+  P.norm_sub_u_le X Y hij hjk hj hk hCw hπi hπj hπk (P.improvedEta_nonneg hij hjk hj hk)
+    (P.improvedDelta_nonneg hij hjk hj hk) (P.harmonicGap_nonneg j)
+    (P.norm_sub_π_solutionOp_d_le hij hjk hj hk hCw hcP hPi hPj hπj)
+    (P.norm_sub_π_solutionSigma_le hij hjk hj hk hCw hcP hPi hPj hπi)
+    (P.norm_sub_π_d_solutionOp_le hij hjk hj hk hCw hcP hPi hPj hπk)
+    (P.norm_sub_π_sub_starProjection_cycles_le hij hjk hj hk hCw hPj hπj)
+    (P.norm_sub_π_solutionOp_le hij hjk hj hk hCw hcP hPi hPj hπj)
+    (fun _ hq => P.norm_sub_π_harmonic_le_harmonicGap hπj hq)
+
+end Quantities
 
 end CochainProjection
 

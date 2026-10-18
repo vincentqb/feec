@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Mixed
 public import Feec.HilbertComplex.Compactness
+public import Feec.HilbertComplex.HodgeLaplacian
 public import Mathlib.Analysis.InnerProductSpace.Positive
 
 /-!
@@ -17,11 +18,14 @@ orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
 * `K f ∈ D(d) ∩ D(d†)`, `d K f ∈ D(d†)`, `d† K f ∈ D(d)` and `(d d† + d† d) K f = f - P_ℌ f`;
   `K f` is the unique such element orthogonal to `ℌʲ` (`eq_solutionOp`);
 * `K` is self-adjoint and positive, `⟪K f, g⟫ = ⟪d† K f, d† K g⟫ + ⟪d K f, d K g⟫`;
-* with Poincaré constant `c_P ≥ 1`: `‖K f‖ ≤ c_P² ‖f‖`, `‖d K f‖² + ‖d† K f‖² ≤ c_P² ‖f‖²`, and
+* for any Poincaré constant `c_P ≥ 0` of `d i j` and `d j k`: `‖K f‖ ≤ c_P² ‖f‖`,
+  `‖d K f‖² + ‖d† K f‖² ≤ c_P² ‖f‖²`, and
   `‖d d† K f‖² + ‖d† d K f‖² ≤ ‖f‖²` (so each is `≤ ‖f‖`);
 * `K` commutes with `d` and `d†`: `d K f = K (d f)` on `D(d)` and `d† K f = K (d† f)` on
   `D(d†)`, with the solution operators at the neighbouring indices;
-* `K` is compact under the compactness property at `j`.
+* `K` is compact under the compactness property at `j`;
+* on a finite window, `(Δ x) j = (d d† + d† d) (x j)` for `x ∈ D(Δ)`, and
+  `x = Pi.single j (K f) ∈ D(Δ)` has `(Δ x) j = f - P_ℌ f`.
 
 ## Main definitions
 
@@ -43,6 +47,9 @@ orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
   `norm_sq_eq_re_inner_solutionOp_d`: `K` on `𝔅` and `𝔷ᗮ` (used by the duality arguments of
   [AFW2010], §3.5).
 * `isCompactOperator_solutionOp`.
+* `hodgeLaplacian_apply_of_rel`, `single_mem_hodgeLaplacian_domain`,
+  `hodgeLaplacian_apply_of_apply_eq_solutionOp`, `hodgeLaplacian_single_solutionOp`: `K` and the
+  window Hodge Laplacian `Δ = -L²` of `Feec.HilbertComplex.HodgeLaplacian`.
 
 ## References
 
@@ -485,6 +492,28 @@ theorem norm_d_solutionOp_le (f : W j) :
     rw [mul_pow]; nlinarith [sq_nonneg ‖H.solutionSigma hij hjk hj hk f‖]
   exact (abs_le_of_sq_le_sq' this (mul_nonneg hcP (norm_nonneg f))).2
 
+/-- **`‖K (d τ)‖ ≤ c_P ‖τ‖`** on `D(d i j)`: `⟪K d τ, g⟫ = ⟪τ, d† K g⟫` (so `K d` extends to a
+bounded operator `Wⁱ → Wʲ`, the operator `d K` at `i` of [AFW2010], §3.5). -/
+theorem norm_solutionOp_d_le (τ : (H.d i j).domain) :
+    ‖H.solutionOp hij hjk hj hk (H.d i j τ)‖ ≤ cP * ‖(τ : W i)‖ := by
+  set v := H.solutionOp hij hjk hj hk (H.d i j τ)
+  have h₂ := H.solutionOp_mem_adjoint_domain hij hjk hj hk v
+  have e2 := adjoint_isFormalAdjoint (H.dense i j) ⟨_, h₂⟩ τ
+  rw [H.adjoint_solutionOp hij hjk hj hk _ h₂] at e2
+  have e2' : ⟪H.solutionSigma hij hjk hj hk v, (τ : W i)⟫ =
+      ⟪H.solutionOp hij hjk hj hk v, (H.d i j τ : W j)⟫ := e2
+  have e : ⟪v, v⟫ = ⟪(H.d i j τ : W j), H.solutionOp hij hjk hj hk v⟫ :=
+    H.isSymmetric_solutionOp hij hjk hj hk _ _
+  have hσ := H.norm_solutionSigma_le hij hjk hj hk hcP hPi hPj v
+  have hsq : ‖v‖ ^ 2 ≤ ‖(τ : W i)‖ * (cP * ‖v‖) := by
+    rw [← @inner_self_eq_norm_sq 𝕜, e, ← inner_conj_symm, RCLike.conj_re, ← e2']
+    refine (RCLike.re_le_norm _).trans ((norm_inner_le_norm _ _).trans ?_)
+    rw [mul_comm]
+    exact mul_le_mul_of_nonneg_left hσ (norm_nonneg _)
+  rcases (norm_nonneg v).eq_or_lt with h0 | h0
+  · rw [← h0]; positivity
+  · nlinarith [norm_nonneg (τ : W i)]
+
 end Poincare
 
 /-! ### Commuting with `d` and `d†` -/
@@ -766,5 +795,141 @@ theorem isCompactOperator_solutionOp (hcp : H.HasCompactPropertyAt j) :
   · rw [H.adjoint_solutionOp hij hjk hj hk f h₂]
     nlinarith
 
+/-! ### The Hodge Laplacian of a finite window -/
+
+section Window
+
+variable [Fintype ι]
+
+omit [∀ i, CompleteSpace (W i)] in
+private theorem apply_mk_sub {E F : Type*} [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F]
+    [Module 𝕜 F] (T : E →ₗ.[𝕜] F) {a b : E} (ha : a ∈ T.domain) (hb : b ∈ T.domain)
+    (h : a - b ∈ T.domain) : T ⟨a - b, h⟩ = T ⟨a, ha⟩ - T ⟨b, hb⟩ := by
+  rw [← T.map_sub]; rfl
+
+include hij hjk in
+/-- **The `j`-th component of the window Hodge Laplacian** `Δ = -L²` is the Hodge Laplacian
+`d d† + d† d` at `j`: for `x ∈ D(Δ)`, `x j ∈ D(d) ∩ D(d†)`, `d x j ∈ D(d†)`, `d† x j ∈ D(d)` and
+`(Δ x) j = d (d† x j) + d† (d x j)`. No closed range is needed. See [AFW2010], §3.2. -/
+theorem hodgeLaplacian_apply_of_rel (x : H.hodgeLaplacian.domain) :
+    ∃ (h₁ : (x : PiLp 2 W) j ∈ (H.d j k).domain) (h₂ : (x : PiLp 2 W) j ∈ ((H.d i j)†).domain)
+      (h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain)
+      (h₄ : ((H.d i j)† ⟨_, h₂⟩ : W i) ∈ (H.d i j).domain),
+      (H.hodgeLaplacian x) j = H.d i j ⟨_, h₄⟩ + (H.d j k)† ⟨_, h₃⟩ := by
+  rcases x with ⟨x, hw, hLx⟩
+  set X1 : H.totalD.domain := ⟨x, hw.1⟩
+  set X2 : H.dual.totalD.domain := ⟨x, hw.2⟩
+  have hL : (H.wave ⟨x, hw⟩ : PiLp 2 W) = H.totalD X1 - H.dual.totalD X2 := rfl
+  have hd1 : (H.totalD X1 : PiLp 2 W) ∈ H.totalD.domain := H.totalD_mapsTo X1
+  have hd2 : (H.dual.totalD X2 : PiLp 2 W) ∈ H.dual.totalD.domain := H.dual.totalD_mapsTo X2
+  have hd1' : (H.totalD X1 : PiLp 2 W) ∈ H.dual.totalD.domain := by
+    have e : (H.totalD X1 : PiLp 2 W) = H.wave ⟨x, hw⟩ + H.dual.totalD X2 := by rw [hL]; abel
+    rw [e]; exact add_mem hLx.2 hd2
+  have hd2' : (H.dual.totalD X2 : PiLp 2 W) ∈ H.totalD.domain := by
+    have e : (H.dual.totalD X2 : PiLp 2 W) = H.totalD X1 - H.wave ⟨x, hw⟩ := by rw [hL]; abel
+    rw [e]; exact sub_mem hd1 hLx.1
+  have hΔ : H.hodgeLaplacian ⟨x, hw, hLx⟩ = H.totalD ⟨_, hd2'⟩ + H.dual.totalD ⟨_, hd1'⟩ := by
+    have e1 : H.totalD ⟨_, hLx.1⟩ = H.totalD ⟨_, hd1⟩ - H.totalD ⟨_, hd2'⟩ := by
+      rw [← apply_mk_sub _ hd1 hd2' (by rw [← hL]; exact hLx.1)]
+      exact congrArg _ (Subtype.ext hL)
+    have e2 : H.dual.totalD ⟨_, hLx.2⟩ = H.dual.totalD ⟨_, hd1'⟩ - H.dual.totalD ⟨_, hd2⟩ := by
+      rw [← apply_mk_sub _ hd1' hd2 (by rw [← hL]; exact hLx.2)]
+      exact congrArg _ (Subtype.ext hL)
+    have z1 : H.totalD ⟨_, hd1⟩ = 0 := H.totalD_comp_totalD X1
+    have z2 : H.dual.totalD ⟨_, hd2⟩ = 0 := H.dual.totalD_comp_totalD X2
+    change -(H.totalD ⟨_, hLx.1⟩ - H.dual.totalD ⟨_, hLx.2⟩) = _
+    rw [e1, e2, z1, z2]; abel
+  have h₁ : x j ∈ (H.d j k).domain := hw.1 j k
+  have h₂ : x j ∈ ((H.d i j)†).domain := hw.2 j i
+  have ci : (H.dual.totalD X2 : PiLp 2 W) i = (H.d i j)† ⟨x j, h₂⟩ :=
+    H.dual.totalD_apply_of_rel X2 (show c.symm.Rel j i from hij)
+  have ck : (H.totalD X1 : PiLp 2 W) k = H.d j k ⟨x j, h₁⟩ := H.totalD_apply_of_rel X1 hjk
+  have h₄ : ((H.d i j)† ⟨x j, h₂⟩ : W i) ∈ (H.d i j).domain := ci ▸ hd2' i j
+  have h₃ : H.d j k ⟨x j, h₁⟩ ∈ ((H.d j k)†).domain := ck ▸ hd1' k j
+  refine ⟨h₁, h₂, h₃, h₄, ?_⟩
+  rw [hΔ, PiLp.add_apply, H.totalD_apply_of_rel _ hij,
+    H.dual.totalD_apply_of_rel _ (show c.symm.Rel k j from hjk)]
+  exact congrArg₂ (· + ·) (congrArg (H.d i j) (Subtype.ext ci))
+    (congrArg ((H.d j k)†) (Subtype.ext ck))
+
+include hij hjk in
+/-- **`K` inverts the window Hodge Laplacian at `j`**: if `x ∈ D(Δ)` has `j`-th component `K f`,
+then `(Δ x) j = f - P_ℌ f`. See [AFW2010], §3.2. -/
+theorem hodgeLaplacian_apply_of_apply_eq_solutionOp {f : W j} (x : H.hodgeLaplacian.domain)
+    (hx : (x : PiLp 2 W) j = H.solutionOp hij hjk hj hk f) :
+    (H.hodgeLaplacian x) j = f - (H.harmonic j).starProjection f := by
+  obtain ⟨h₁, h₂, h₃, h₄, e⟩ := H.hodgeLaplacian_apply_of_rel hij hjk x
+  obtain ⟨h₁', h₂', h₃', h₄', e'⟩ := H.hodgeLaplacian_solutionOp hij hjk hj hk f
+  rw [e, ← e']
+  revert h₁ h₂ h₃ h₄
+  rw [hx]
+  intro _ _ _ _ _
+  rfl
+
+include hij hjk in
+/-- `Pi.single j u ∈ D(Δ)` as soon as `u` is in the domain of the Hodge Laplacian at `j`. -/
+theorem single_mem_hodgeLaplacian_domain [DecidableEq ι] {u : W j} (h₁ : u ∈ (H.d j k).domain)
+    (h₂ : u ∈ ((H.d i j)†).domain) (h₃ : H.d j k ⟨u, h₁⟩ ∈ ((H.d j k)†).domain)
+    (h₄ : ((H.d i j)† ⟨u, h₂⟩ : W i) ∈ (H.d i j).domain) :
+    PiLp.single 2 j u ∈ H.hodgeLaplacian.domain := by
+  obtain rfl := c.next_eq' hjk
+  obtain rfl := c.prev_eq' hij
+  have hx1 : PiLp.single 2 j u ∈ H.totalD.domain := H.single_mem_totalDomain j h₁
+  have hx2 : PiLp.single 2 j u ∈ H.dual.totalD.domain := H.dual.single_mem_totalDomain j h₂
+  -- the components of `𝐝 x` and `𝐝* x`
+  have c1 : ∀ a, (H.totalD ⟨_, hx1⟩ : PiLp 2 W) a =
+      H.d j a ⟨u, H.domain_next_le j a h₁⟩ := by
+    intro a
+    rw [totalD_apply]
+    refine (Finset.sum_eq_single j (fun b _ hb => ?_) (fun h => absurd (Finset.mem_univ j) h)).trans
+      ?_
+    · exact LinearPMap.apply_mk_eq_zero _ _ (PiLp.single_eq_of_ne (p := 2) hb _)
+    · congr 1; exact Subtype.ext (PiLp.single_eq_same (p := 2) _ _)
+  have c2 : ∀ a, (H.dual.totalD ⟨_, hx2⟩ : PiLp 2 W) a =
+      H.dual.d j a ⟨u, H.dual.domain_next_le j a h₂⟩ := by
+    intro a
+    rw [totalD_apply]
+    refine (Finset.sum_eq_single j (fun b _ hb => ?_) (fun h => absurd (Finset.mem_univ j) h)).trans
+      ?_
+    · exact LinearPMap.apply_mk_eq_zero _ _ (PiLp.single_eq_of_ne (p := 2) hb _)
+    · congr 1; exact Subtype.ext (PiLp.single_eq_same (p := 2) _ _)
+  have hy1 : (H.totalD ⟨_, hx1⟩ : PiLp 2 W) ∈ H.dual.totalD.domain := by
+    intro a b
+    rw [c1 a]
+    by_cases hba : c.Rel b a
+    · by_cases ha : c.Rel j a
+      · obtain rfl := c.prev_eq hba ha
+        obtain rfl := c.next_eq' ha
+        exact h₃
+      · rw [apply_eq_zero_of_not_rel _ ha]; exact Submodule.zero_mem _
+    · rw [H.dual.domain_eq_top_of_not_rel (show ¬ c.symm.Rel a b from hba)]
+      exact Submodule.mem_top
+  have hy2 : (H.dual.totalD ⟨_, hx2⟩ : PiLp 2 W) ∈ H.totalD.domain := by
+    intro a b
+    rw [c2 a]
+    by_cases hab : c.Rel a b
+    · by_cases ha : c.symm.Rel j a
+      · obtain rfl := c.next_eq hab ha
+        obtain rfl := c.prev_eq' ha
+        exact h₄
+      · rw [H.dual.apply_eq_zero_of_not_rel ha]; exact Submodule.zero_mem _
+    · rw [H.domain_eq_top_of_not_rel hab]; exact Submodule.mem_top
+  have hw : PiLp.single 2 j u ∈ H.wave.domain := ⟨hx1, hx2⟩
+  refine ⟨hw, ?_⟩
+  change (H.totalD ⟨_, hx1⟩ - H.dual.totalD ⟨_, hx2⟩ : PiLp 2 W) ∈ H.wave.domain
+  exact sub_mem ⟨H.totalD_mapsTo _, hy1⟩ ⟨hy2, H.dual.totalD_mapsTo _⟩
+
+include hij hjk in
+/-- **`K = Δ⁻¹` on the window, componentwise**: `x = Pi.single j (K f) ∈ D(Δ)` and
+`(Δ x) j = f - P_ℌ f`. See [AFW2010], §3.2; [Arnold2018], Thm 4.10. -/
+theorem hodgeLaplacian_single_solutionOp [DecidableEq ι] (f : W j) :
+    ∃ hx : PiLp.single 2 j (H.solutionOp hij hjk hj hk f) ∈ H.hodgeLaplacian.domain,
+      (H.hodgeLaplacian ⟨_, hx⟩) j = f - (H.harmonic j).starProjection f := by
+  obtain ⟨h₁, h₂, h₃, h₄, -⟩ := H.hodgeLaplacian_solutionOp hij hjk hj hk f
+  have hx := H.single_mem_hodgeLaplacian_domain hij hjk h₁ h₂ h₃ h₄
+  exact ⟨hx, H.hodgeLaplacian_apply_of_apply_eq_solutionOp hij hjk hj hk ⟨_, hx⟩
+    (PiLp.single_eq_same (p := 2) _ _)⟩
+
+end Window
 
 end Feec.HilbertComplex

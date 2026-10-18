@@ -942,6 +942,20 @@ def mu0 : U1 :=
 rows zero (row-wise divergence free, smooth, compactly supported in `Q`). -/
 def mU : Wv U1 := WithLp.toLp 2 (Pi.single 0 mu0)
 
+/-- A test field with a component nonzero at a point of `Q` is nonzero in `L²`. -/
+theorem testField_ne_zero {ι : Type*} {φ : ι → (Fin 3 → ℝ) → ℝ}
+    (hφ : IsTestField (cubeDomain 3) φ) {i : ι} {y : Fin 3 → ℝ} (hy : y ∈ cubeDomain 3)
+    (hne : φ i y ≠ 0) : testField hφ ≠ 0 := by
+  intro h
+  have h1 := coeFn_testField hφ i
+  rw [h] at h1
+  have h0 : (fun _ => (0 : ℝ)) =ᵐ[volume.restrict (cubeDomain 3)] φ i :=
+    (Lp.coeFn_zero ℝ 2 (volume.restrict (cubeDomain 3))).symm.trans h1
+  have heq := MeasureTheory.Measure.eqOn_of_ae_eq h0 continuousOn_const
+    (hφ i).contDiff.continuous.continuousOn
+    (by rw [(isOpen_cubeDomain 3).interior_eq]; exact subset_closure)
+  exact hne (heq hy).symm
+
 theorem mχ_ne_zero_L2 : testField isTestField_mχ ≠ 0 := by
   intro h
   obtain ⟨y, hy, hne⟩ := mχ_ne_zero
@@ -1688,6 +1702,94 @@ theorem table51_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
     hσh hφh huh h1 h2 h3
   refine hb.trans (le_of_eq ?_)
   ring
+
+/-- **Thesis Prop 5.4 for Table 5.1**: for every `N` and every datum `F` the discrete system
+(5.6) has exactly one solution (under the regularity hypothesis, through its constant `C_R`). -/
+theorem table51_existsUnique {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) (N : ℕ)
+    (F : Wv U1 →ₗ[ℝ] ℝ) :
+    ∃! x : (table51 hT hB N).V0h × (table51 hT hB N).Vt0h × (table51 hT hB N).Vt1h ×
+        (table51 hT hB N).V1h,
+      (∀ τ ∈ (table51 hT hB N).V0h, ∀ ψ ∈ (table51 hT hB N).Vt0h,
+        ⟪(x.1 : U0), τ⟫ - ⟪(x.2.2.1 : Wv U1), bggSegment.dt0 ψ⟫
+          - ⟪(x.2.2.2 : U1), bggSegment.d0 τ - (table51 hT hB N).S0h ψ⟫ = 0) ∧
+      (∀ v ∈ (table51 hT hB N).Vt1h, ⟪bggSegment.dt0 x.2.1, v⟫ +
+        ⟪(table51 hT hB N).S1h x.2.2.1, (table51 hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 x.2.2.1, bggSegment.dt1 v⟫ = F v) ∧
+      (∀ μ ∈ (table51 hT hB N).V1h, ⟪bggSegment.d0 x.1 - (table51 hT hB N).S0h x.2.1, μ⟫ = 0) :=
+  haveI := table51_fd0 hT hB N
+  haveI := table51_fd1 hT hB N
+  haveI := table51_fdt0 hT hB N
+  haveI := table51_fdt1 hT hB N
+  Feec.BGG.Discrete.existsUnique_mixed_h (bggStability_of hCR0 hCR) (table51_compatible hT hB N) F
+
+theorem wv_single_ne_zero {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] {v : V}
+    (hv : v ≠ 0) : (WithLp.toLp 2 (Pi.single (0 : Fin 3) v) : Wv V) ≠ 0 := fun h => hv (by
+  have := congrArg (fun z : Wv V => z 0) h
+  simpa using this)
+
+theorem mem_tsub_single {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
+    {P : Submodule ℝ V} {v : V} (hv : v ∈ P) :
+    (WithLp.toLp 2 (Pi.single (0 : Fin 3) v) : Wv V) ∈ tsub P := fun a => by
+  by_cases ha : a = 0
+  · subst ha; simpa using hv
+  · simp [Pi.single_eq_of_ne ha]
+
+/-- If `‖x − y_N‖ ≤ K h_N` and `x ≠ 0`, then `y_N ≠ 0` for large `N`. -/
+theorem eventually_ne_zero_of_le {E : Type*} [NormedAddCommGroup E] {x : E} (hx : x ≠ 0)
+    {y : ℕ → E} {A B : ℝ} (h : ∀ N, ‖x - y N‖ ≤ A * meshSize N * B) :
+    ∀ᶠ N in atTop, y N ≠ 0 := by
+  have ht : Tendsto (fun N => A * meshSize N * B) atTop (nhds 0) := by
+    simpa using (tendsto_meshSize.const_mul A).mul_const B
+  filter_upwards [ht.eventually (gt_mem_nhds (norm_pos_iff.2 hx))] with N hN hy
+  have := h N
+  rw [hy, sub_zero] at this
+  linarith
+
+/-- The `H̊¹` approximation of the smoothed projections for test fields. -/
+theorem coeffForm_testField_mem {k : ℕ} {χ : formIdx 3 k → (Fin 3 → ℝ) → ℝ}
+    (hχ : IsTestField (cubeDomain 3) χ) (s : formIdx 3 k) :
+    coeffForm (testField hχ s) ∈ ((complexMin 3).d 0 1).domain :=
+  mem_dom01 ((extDerivOp ℝ 3 0).testField_mem_minimal_domain (isOpen_cubeDomain 3)
+    (φ := fun _ : formIdx 3 0 => χ s) fun _ => hχ s)
+
+/-- The scalar bump as a test `0`-form. -/
+theorem isTestField_bump0 : IsTestField (cubeDomain 3)
+    (fun _ : formIdx 3 0 => (mBump : (Fin 3 → ℝ) → ℝ)) := fun _ => isTest_mBump
+
+theorem bump0_ne_zero : testField isTestField_bump0 ≠ 0 :=
+  testField_ne_zero isTestField_bump0 (i := ⟨∅, by simp⟩) (y := mCenter)
+    (closedBall_mCenter_subset (Metric.mem_closedBall_self (by norm_num)))
+    (by rw [mBump.one_of_mem_closedBall (Metric.mem_closedBall_self mBump.rIn_pos.le)]; norm_num)
+
+/-- **The discrete spaces of Table 5.1 are nonzero** for all large `N` (unconditionally): the
+smoothed projections of fixed nonzero test fields are nonzero for `h_N` small, by the `H̊¹`
+approximation. -/
+theorem table51_ne_bot : ∀ᶠ N in atTop, (table51 hT hB N).V0h ≠ ⊥ ∧ (table51 hT hB N).V1h ≠ ⊥ ∧
+    (table51 hT hB N).Vt0h ≠ ⊥ ∧ (table51 hT hB N).Vt1h ≠ ⊥ := by
+  set x0 := testField isTestField_bump0
+  set x1 := testField isTestField_mχ
+  have aT0 := fun N => hT.norm_sub_proj_le_grad N 0 x0 (coeffForm_testField_mem isTestField_bump0)
+  have aT1 := fun N => hT.norm_sub_proj_le_grad N 1 x1 (coeffForm_testField_mem isTestField_mχ)
+  have aB0 := fun N => hB.norm_sub_proj_le_grad N 0 x0 (coeffForm_testField_mem isTestField_bump0)
+  have aB1 := fun N => hB.norm_sub_proj_le_grad N 1 x1 (coeffForm_testField_mem isTestField_mχ)
+  have e1 := eventually_ne_zero_of_le bump0_ne_zero aT0
+  have e2 := eventually_ne_zero_of_le mχ_ne_zero_L2 aT1
+  have e3 := eventually_ne_zero_of_le bump0_ne_zero aB0
+  have e4 := eventually_ne_zero_of_le mχ_ne_zero_L2 aB1
+  filter_upwards [e1, e2, e3, e4] with N h1 h2 h3 h4
+  have m0 : x0 ∈ D0.domain :=
+    (extDerivOp ℝ 3 0).testField_mem_minimal_domain (isOpen_cubeDomain 3) isTestField_bump0
+  have m1 : x1 ∈ D1.domain :=
+    (extDerivOp ℝ 3 1).testField_mem_minimal_domain (isOpen_cubeDomain 3) isTestField_mχ
+  refine ⟨(Submodule.ne_bot_iff _).2 ⟨projU0 (hT.proj N) ⟨x0, m0⟩, (hT.proj N).mem 0 _,
+      fun h => h1 (congrArg Subtype.val h)⟩,
+    (Submodule.ne_bot_iff _).2 ⟨projU1 (hT.proj N) ⟨x1, m1⟩, (hT.proj N).mem 1 _,
+      fun h => h2 (congrArg Subtype.val h)⟩,
+    (Submodule.ne_bot_iff _).2 ⟨_, mem_tsub_single ((hB.proj N).mem 0 x0),
+      wv_single_ne_zero fun h => h3 (congrArg Subtype.val (h : projU0 (hB.proj N) ⟨x0, m0⟩ = 0))⟩,
+    (Submodule.ne_bot_iff _).2 ⟨_, mem_tsub_single ((hB.proj N).mem 1 x1),
+      wv_single_ne_zero fun h => h4 (congrArg Subtype.val (h : projU1 (hB.proj N) ⟨x1, m1⟩ = 0))⟩⟩
 
 end Table51
 

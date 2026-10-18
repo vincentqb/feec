@@ -32,8 +32,9 @@ the discrete mixed Hodge Laplacian (`SmoothingEstimates.existsUnique_mixed'`,
 vanishing-trace versions (`SmoothingEstimatesMin.norm_le_of_forall_inner_eq_zero'`,
 `SmoothingEstimatesMin.existsUnique_mixed'`, `SmoothingEstimatesMin.norm_le_of_mixed'`); the
 finite-dimensionality of `ℌ` needed by `SmoothingEstimates.tendsto_harmonicGap` is an instance.
-The remaining hypotheses of the finite element method are `FEM.SmoothingEstimates` (resp.
-`FEM.SmoothingEstimatesMin`) and the approximation properties of the Whitney spaces.
+These results keep `FEM.SmoothingEstimates` (resp. `FEM.SmoothingEstimatesMin`) as a hypothesis;
+the `O(h)` rates for `C²` solutions of `Feec.Models.Cube.WhitneyRate` with the Poincaré
+hypotheses discharged are in `Feec.Models.Cube.DeRhamIdentRate`.
 
 ## References
 

@@ -21,8 +21,8 @@ degree:
   the line of the constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` (`Hmin_harmonic_eq_bot`,
   `Hmin_harmonic_top`).
 
-The constant is the sharp one of the torus, `(2π)⁻¹` (the first nonzero frequency `2π` of `𝕋ⁿ`;
-`cos 2πx` on `(0, ½)` is a Neumann eigenfunction). The transfer from the torus uses two abstract
+The constant is the one of the torus, `(2π)⁻¹` (the first nonzero frequency `2π` of `𝕋ⁿ`); it is
+sharp, since `cos 2πx` on `(0, ½)` is a Neumann eigenfunction, but sharpness is not formalized. The transfer from the torus uses two abstract
 facts on compressions along scaled isometries: the Poincaré inequality passes with the same
 constant (`Feec.HilbertComplex.norm_le_of_mem_orthogonal_compress`) and the harmonic forms are
 those whose image is harmonic (`Feec.HilbertComplex.mem_harmonic_compress_iff`); the windows

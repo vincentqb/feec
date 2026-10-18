@@ -26,12 +26,13 @@ these are instances of `ShortHilbertComplex.divFree_propagates` and
 
 For `n = 3`, `k = 0` the window is `H̊Λ⁰ → H̊Λ¹ → L²Λ²`: in degree `0` the exterior derivative
 is the gradient (`Feec.Domain.extDerivOp_zero_apply`), and in degree `1` it is
-`(dE)_{ij} = ∂ᵢEⱼ − ∂ⱼEᵢ` (`Maxwell.extDerivOp_one_apply`), the curl in the `2`-form
+`(dE)_{ij} = ∂ᵢEⱼ − ∂ⱼEᵢ` (`Feec.Domain.extDerivOp_one_apply_pair`), the curl in the `2`-form
 coordinates `B₁₂, B₁₃, B₂₃`; this is the classical system of `Maxwell.pec` in form coordinates
 (`Maxwell.pecForms_three_gauss_propagates`). Through the vector proxies (`E ↦ (E₁, E₂, E₃)`,
-`B ↦ (B₂₃, −B₁₃, B₁₂)`, `Maxwell.relabelL2F`) the PEC complex of forms *is* the complex of
-`Maxwell.pec` (`Maxwell.pecForms_conj_eq_pec`, via `Maxwell.minimal_eq_conj_relabel`: minimal
-realizations commute with signed relabellings of the components).
+`B ↦ (B₂₃, −B₁₃, B₁₂)`, `Maxwell.relabelL2F`) the PEC and PMC complexes of forms *are* the
+complexes `Maxwell.pec`, `Maxwell.pmc` (`Maxwell.pecForms_conj_eq_pec`,
+`Maxwell.pmcForms_conj_eq_pmc`), and the Gauss subspaces correspond (`Maxwell.magneticPEC_eq_map`,
+`Maxwell.magneticPMC_eq_map`, `Maxwell.ker_adjoint_pec_d₀`, `Maxwell.ker_adjoint_pmc_d₀`).
 
 ## Main results
 
@@ -39,9 +40,14 @@ realizations commute with signed relabellings of the components).
   `Maxwell.pecForms_gauss_existsUnique`, `Maxwell.pmcForms_gauss_existsUnique`.
 * `Maxwell.pecForms_medium_gauss_propagates`, `Maxwell.pmcForms_medium_gauss_propagates`: in a
   linear medium, `div (ε E) = 0` and `d (μ H) = 0` propagate.
-* `Maxwell.extDerivOp_one_apply`: `(dE)_{ij} = ∂ᵢEⱼ − ∂ⱼEᵢ`.
-* `Maxwell.minimal_eq_conj_relabel`, `Maxwell.pecForms_conj_eq_pec`: for `n = 3`, `k = 0`,
-  `(pecForms 0).conj U₀ U₁ U₂ = Maxwell.pec` for the proxy isomorphisms `Uᵢ`.
+* `Maxwell.minimal_eq_conj_relabel`, `Maxwell.maximal_eq_conj_relabel`: minimal and maximal
+  realizations commute with signed (unitary) relabellings of the components.
+* `Maxwell.pecForms_conj_eq_pec`, `Maxwell.pmcForms_conj_eq_pmc`: for `n = 3`, `k = 0`,
+  `(pecForms 0).conj U₀ U₁ U₂ = Maxwell.pec` and `(pmcForms 0).conj U₀ U₁ U₂ = Maxwell.pmc` for
+  the proxy isomorphisms `Uᵢ`.
+* `Maxwell.ker_adjoint_pec_d₀`, `Maxwell.ker_adjoint_pmc_d₀`, `Maxwell.magneticPEC_eq_map`,
+  `Maxwell.magneticPMC_eq_map`: the Gauss subspaces correspond through the proxies
+  (`div E = 0` is `δ E = 0`, `div B = 0` is `d B = 0`, with the matching boundary conditions).
 
 ## References
 
@@ -146,38 +152,6 @@ theorem d_mem_magneticPMCForms (x : (pmcForms 𝕜 hΩ k).d₁.domain) :
     ⟨⟨_, ConstCoeffOp.maximal_mapsTo hΩ (isComplexPair_extDerivOp (k + 1)) x⟩, rfl,
       ConstCoeffOp.maximal_comp hΩ (isComplexPair_extDerivOp (k + 1)) x⟩
 
-/-- **In degree `1`, `d` is the curl in `2`-form coordinates**: `(dE)_{ij} = ∂ᵢ Eⱼ − ∂ⱼ Eᵢ`
-for `i < j` (any `n`). -/
-theorem extDerivOp_one_apply (w : formIdx n 1 → (Fin n → ℝ) → 𝕜) {i j : Fin n} (hij : i < j)
-    (x : Fin n → ℝ) :
-    (extDerivOp 𝕜 n 1).apply w ⟨{i, j}, by rw [Finset.card_pair hij.ne]; norm_num⟩ x =
-      fderiv ℝ (w ⟨{j}, by simp⟩) x (coordDir i) - fderiv ℝ (w ⟨{i}, by simp⟩) x (coordDir j) := by
-  rw [extDerivOp_apply]
-  simp only [extD]
-  rw [Finset.sum_pair hij.ne]
-  have e1 : ({i, j} : Finset (Fin n)).erase i = {j} := by
-    rw [Finset.erase_insert (by simp [hij.ne])]
-  have e2 : ({i, j} : Finset (Fin n)).erase j = {i} := by
-    rw [Finset.erase_insert_of_ne hij.ne, Finset.erase_singleton, insert_empty_eq]
-  have s1 : ({l ∈ ({i, j} : Finset (Fin n)) | l < i}) = ∅ := by
-    ext l
-    simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton, Finset.notMem_empty,
-      iff_false, not_and, not_lt]
-    rintro (rfl | rfl)
-    · exact le_rfl
-    · exact hij.le
-  have s2 : ({l ∈ ({i, j} : Finset (Fin n)) | l < j}) = {i} := by
-    ext l
-    simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton]
-    constructor
-    · rintro ⟨rfl | rfl, h⟩
-      · rfl
-      · exact absurd h (lt_irrefl _)
-    · rintro rfl
-      exact ⟨Or.inl rfl, hij⟩
-  rw [e1, e2, formExt_of_card w (by simp), formExt_of_card w (by simp)]
-  simp [ExteriorFibre.sgn, s1, s2, sub_eq_add_neg]
-
 /-! ### The Gauss laws propagate, every `n`, every `k` -/
 
 section Propagation
@@ -263,9 +237,10 @@ theorem pmcForms_medium_gauss_propagates
   M.gauss_propagates _ (d_mem_magneticPMCForms hΩ k) hU h0 hF
 
 /-- **The classical case** `n = 3`, `k = 0` (`E` a `1`-form, `B` a `2`-form,
-`H̊Λ⁰ --grad--> H̊Λ¹ --curl--> L²Λ²`): the Gauss laws `σ = 0`, `div E = 0`, `div B = 0`
-(`B · n = 0`) propagate for a perfect electric conductor on any open `Ω ⊆ ℝ³`, as for
-`Maxwell.pec` (`Maxwell.pec_gauss_propagates`). -/
+`H̊Λ⁰ --d--> H̊Λ¹ --d--> L²Λ²`): the Gauss laws `σ = 0`, `δ E = 0`, `d_min B = 0` propagate for
+a perfect electric conductor on any open `Ω ⊆ ℝ³`. Through the vector proxies these are the
+laws `σ = 0`, `div E = 0`, `div B = 0` with `B · n = 0` of `Maxwell.pec`
+(`Maxwell.pecForms_conj_eq_pec`, `Maxwell.ker_adjoint_pec_d₀`, `Maxwell.magneticPEC_eq_map`). -/
 theorem pecForms_three_gauss_propagates {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) [Fact (IsOpen Ω)]
     {t₀ t₁ : ℝ} {F U : ℝ → FormSpace 𝕜 Ω 0}
     (hU : Evolution.IsStrongSolution (pecForms 𝕜 hΩ 0).wave (Icc t₀ t₁) F U)
@@ -461,20 +436,20 @@ theorem curlOp_relabel (ψ : formIdx 3 1 → (Fin 3 → ℝ) → 𝕜) :
   · change fderiv ℝ (ψ (proxy₁ (0, 2))) x (coordDir 1) - fderiv ℝ (ψ (proxy₁ (0, 1))) x
         (coordDir 2) = sign₂ (0, 0) • (extDerivOp 𝕜 3 1).apply ψ (proxy₂ (0, 0)) x
     rw [show proxy₂ (0, 0) = ⟨{1, 2}, by decide⟩ from Subtype.ext (by decide),
-      extDerivOp_one_apply ψ (by decide : (1 : Fin 3) < 2)]
+      extDerivOp_one_apply_pair ψ (by decide : (1 : Fin 3) < 2)]
     rw [show (sign₂ ((0 : Fin 1), (0 : Fin 3)) : 𝕜) = 1 by simp [sign₂], one_smul]
     rfl
   · change fderiv ℝ (ψ (proxy₁ (0, 0))) x (coordDir 2) - fderiv ℝ (ψ (proxy₁ (0, 2))) x
         (coordDir 0) = sign₂ (0, 1) • (extDerivOp 𝕜 3 1).apply ψ (proxy₂ (0, 1)) x
     rw [show proxy₂ (0, 1) = ⟨{0, 2}, by decide⟩ from Subtype.ext (by decide),
-      extDerivOp_one_apply ψ (by decide : (0 : Fin 3) < 2)]
+      extDerivOp_one_apply_pair ψ (by decide : (0 : Fin 3) < 2)]
     rw [show (sign₂ ((0 : Fin 1), (1 : Fin 3)) : 𝕜) = -1 by simp [sign₂], neg_smul, one_smul,
       neg_sub]
     rfl
   · change fderiv ℝ (ψ (proxy₁ (0, 1))) x (coordDir 0) - fderiv ℝ (ψ (proxy₁ (0, 0))) x
         (coordDir 1) = sign₂ (0, 2) • (extDerivOp 𝕜 3 1).apply ψ (proxy₂ (0, 2)) x
     rw [show proxy₂ (0, 2) = ⟨{0, 1}, by decide⟩ from Subtype.ext (by decide),
-      extDerivOp_one_apply ψ (by decide : (0 : Fin 3) < 1)]
+      extDerivOp_one_apply_pair ψ (by decide : (0 : Fin 3) < 1)]
     rw [show (sign₂ ((0 : Fin 1), (2 : Fin 3)) : 𝕜) = 1 by simp [sign₂], one_smul]
     rfl
 
@@ -581,6 +556,94 @@ theorem pmcForms_conj_eq_pmc {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
       (fun _ => one_mul (1 : 𝕜)) fun ψ _ => gradOp_formalAdj_relabel ψ).symm
   · exact (maximal_eq_conj_relabel hΩ proxy₁ (fun _ => one_mul (1 : 𝕜)) proxy₂ sign₂_mul_self
       fun ψ _ => curlOp_formalAdj_relabel ψ).symm
+
+/-! ### The Gauss subspaces through the proxies (`n = 3`, `k = 0`) -/
+
+/-- The proxy of `3`-forms on `ℝ³`: the single component `ρ = ρ_{012}`. -/
+def proxy₃ : Fin 1 ≃ formIdx 3 3 :=
+  Equiv.ofBijective (fun _ => ⟨Finset.univ, by simp⟩) (by decide)
+
+/-- In degree `2`, `d` is the divergence through the proxies `B = (B₁₂, −B₀₂, B₀₁)`. -/
+theorem divOp_relabel (ψ : formIdx 3 2 → (Fin 3 → ℝ) → 𝕜) :
+    (divOp 3 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (relabelField proxy₂ sign₂ ψ) =
+      relabelField proxy₃ (fun _ => 1) ((extDerivOp 𝕜 3 2).apply ψ) := by
+  funext i x
+  obtain rfl : i = 0 := Subsingleton.elim _ _
+  rw [divOp_apply]
+  simp only [relabelField, one_smul]
+  rw [show proxy₃ 0 = ⟨{0, 1, 2}, by decide⟩ from Subtype.ext (by decide),
+    extDerivOp_two_apply_triple ψ (by decide : (0 : Fin 3) < 1) (by decide : (1 : Fin 3) < 2),
+    Fin.sum_univ_three,
+    show proxy₂ (0, 0) = ⟨{1, 2}, by decide⟩ from Subtype.ext (by decide),
+    show proxy₂ (0, 1) = ⟨{0, 2}, by decide⟩ from Subtype.ext (by decide),
+    show proxy₂ (0, 2) = ⟨{0, 1}, by decide⟩ from Subtype.ext (by decide)]
+  simp [sign₂, Pi.neg_def]
+  ring
+
+/-- The Hodge-star signs in degree `2` are the signs `ε(k, {0,1,2} ∖ {k})`. -/
+theorem sign₂_mul_sgn (k : Fin 3) :
+    (sign₂ ((0 : Fin 1), k) : 𝕜) * ExteriorFibre.sgn k (Finset.univ.erase k) = 1 := by
+  have h : ∀ k : Fin 3, ((Finset.univ.erase k).filter (· < k)).card = 0 ∧ k = 0 ∨
+      ((Finset.univ.erase k).filter (· < k)).card = 1 ∧ k = 1 ∨
+      ((Finset.univ.erase k).filter (· < k)).card = 2 ∧ k = 2 := by decide
+  rcases h k with ⟨h1, rfl⟩ | ⟨h1, rfl⟩ | ⟨h1, rfl⟩ <;> rw [ExteriorFibre.sgn, h1] <;>
+    simp [sign₂]
+
+/-- In degree `2`, the formal adjoint `dᵗ` is `divᵗ = −grad` through the proxies. -/
+theorem divOp_formalAdj_relabel (ψ : formIdx 3 3 → (Fin 3 → ℝ) → 𝕜) :
+    (divOp 3 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply
+        (relabelField proxy₃ (fun _ => 1) ψ) =
+      relabelField proxy₂ sign₂ ((extDerivOp 𝕜 3 2).formalAdj.apply ψ) := by
+  funext p x
+  obtain ⟨i, k⟩ := p
+  obtain rfl : i = 0 := Subsingleton.elim _ _
+  rw [divOp_formalAdj_apply]
+  simp only [relabelField, one_smul, Pi.smul_apply]
+  rw [formalAdj_extDerivOp_apply]
+  simp only [extDAdj]
+  have hu : ∀ k : Fin 3, insert k (Finset.univ.erase k) = Finset.univ := fun k =>
+    Finset.insert_erase (Finset.mem_univ k)
+  change -fderiv ℝ (ψ (proxy₃ 0)) x (coordDir k) = sign₂ ((0 : Fin 1), k) •
+    -∑ j ∈ (Finset.univ.erase k)ᶜ, ExteriorFibre.sgn j (Finset.univ.erase k) *
+      fderiv ℝ (formExt ψ (insert j (Finset.univ.erase k))) x (coordDir j)
+  rw [show (Finset.univ.erase k)ᶜ = {k} by ext; simp, Finset.sum_singleton, hu,
+    formExt_of_card ψ (s := Finset.univ) (by simp)]
+  change _ = _ • -(_ * fderiv ℝ (ψ (proxy₃ 0)) x (coordDir k))
+  rw [smul_eq_mul, mul_neg, ← mul_assoc, sign₂_mul_sgn, one_mul]
+
+/-- **The electric Gauss law through the proxies** (any short complex conjugated by unitary
+`U₀`, `U₁`): `N((pec).d₀†) = U₁ N((pecForms 0).d₀†)`, i.e. `div E = 0` is `δ E = 0`. -/
+theorem ker_adjoint_pec_d₀ {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
+    ((pec 𝕜 hΩ).d₀†).ker = (((pecForms 𝕜 hΩ 0).d₀†).ker).map
+      (relabelL2F Ω proxy₁ fun _ => one_mul (1 : 𝕜)).toLinearEquiv.toLinearMap := by
+  rw [← pecForms_conj_eq_pec hΩ, ShortHilbertComplex.conj_d₀,
+    LinearPMap.adjoint_conj _ _ (pecForms 𝕜 hΩ 0).dense₀, relabelL2F_adjoint_symm,
+    relabelL2F_adjoint_symm, LinearPMap.ker_conj]
+
+/-- **The electric Gauss law through the proxies**, PMC: `N((pmc).d₀†) = U₁ N((pmcForms 0).d₀†)`. -/
+theorem ker_adjoint_pmc_d₀ {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
+    ((pmc 𝕜 hΩ).d₀†).ker = (((pmcForms 𝕜 hΩ 0).d₀†).ker).map
+      (relabelL2F Ω proxy₁ fun _ => one_mul (1 : 𝕜)).toLinearEquiv.toLinearMap := by
+  rw [← pmcForms_conj_eq_pmc hΩ, ShortHilbertComplex.conj_d₀,
+    LinearPMap.adjoint_conj _ _ (pmcForms 𝕜 hΩ 0).dense₀, relabelL2F_adjoint_symm,
+    relabelL2F_adjoint_symm, LinearPMap.ker_conj]
+
+/-- **The magnetic Gauss law through the proxies**, PEC: `div_min B = 0` is `d_min B = 0` on
+`2`-forms, `magneticPEC = U₂ (magneticPECForms 0)`. -/
+theorem magneticPEC_eq_map {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
+    magneticPEC 𝕜 Ω = (magneticPECForms 𝕜 Ω 0).map
+      (relabelL2F (𝕜 := 𝕜) Ω proxy₂ sign₂_mul_self).toLinearEquiv.toLinearMap := by
+  rw [magneticPEC, minimal_eq_conj_relabel hΩ proxy₂ sign₂_mul_self proxy₃
+    (fun _ => one_mul (1 : 𝕜)) fun ψ _ => divOp_relabel ψ, LinearPMap.ker_conj]
+  rfl
+
+/-- **The magnetic Gauss law through the proxies**, PMC: `magneticPMC = U₂ (magneticPMCForms 0)`. -/
+theorem magneticPMC_eq_map {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
+    magneticPMC 𝕜 Ω = (magneticPMCForms 𝕜 Ω 0).map
+      (relabelL2F (𝕜 := 𝕜) Ω proxy₂ sign₂_mul_self).toLinearEquiv.toLinearMap := by
+  rw [magneticPMC, maximal_eq_conj_relabel hΩ proxy₂ sign₂_mul_self proxy₃
+    (fun _ => one_mul (1 : 𝕜)) fun ψ _ => divOp_formalAdj_relabel ψ, LinearPMap.ker_conj]
+  rfl
 
 end Proxy
 

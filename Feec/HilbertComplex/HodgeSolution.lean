@@ -1,0 +1,607 @@
+module
+
+public import Feec.HilbertComplex.Mixed
+public import Feec.HilbertComplex.Compactness
+public import Mathlib.Analysis.InnerProductSpace.Positive
+
+/-!
+# The solution operator of the Hodge Laplacian
+
+Let `H` be a Hilbert complex and `i → j → k` two consecutive arrows with closed range at `j` and
+`k`. The mixed Hodge Laplacian at `j` is well posed (`Feec.HilbertComplex.existsUnique_mixed`);
+its solution `(σ, u, p)` depends linearly and boundedly on the data `f ∈ Wʲ`. The **solution
+operator** `K = solutionOp : Wʲ → Wʲ`, `f ↦ u`, is the inverse of the Hodge Laplacian on the
+orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
+
+* `K f ⊥ ℌʲ`, `K = 0` on `ℌʲ`;
+* `K f ∈ D(d) ∩ D(d†)`, `d K f ∈ D(d†)`, `d† K f ∈ D(d)` and `(d d† + d† d) K f = f - P_ℌ f`;
+  `K f` is the unique such element orthogonal to `ℌʲ` (`eq_solutionOp`);
+* `K` is self-adjoint and positive, `⟪K f, g⟫ = ⟪d† K f, d† K g⟫ + ⟪d K f, d K g⟫`;
+* with Poincaré constant `c_P ≥ 1`: `‖K f‖ ≤ c_P² ‖f‖`, `‖d K f‖² + ‖d† K f‖² ≤ c_P² ‖f‖²`, and
+  `‖d d† K f‖² + ‖d† d K f‖² ≤ ‖f‖²` (so each is `≤ ‖f‖`);
+* `K` commutes with `d` and `d†`: `d K f = K (d f)` on `D(d)` and `d† K f = K (d† f)` on
+  `D(d†)`, with the solution operators at the neighbouring indices;
+* `K` is compact under the compactness property at `j`.
+
+## Main definitions
+
+* `HilbertComplex.mixedSolution`: the solution map `f ↦ (σ, u, p)` of the mixed problem.
+* `HilbertComplex.solutionOp`: the solution operator `K`; `HilbertComplex.solutionSigma = d† K`.
+
+## Main results
+
+* `solutionOp_mem_orthogonal_harmonic`, `solutionOp_apply_harmonic`, `solutionOp_sub_starProjection`.
+* `hodgeLaplacian_solutionOp`, `eq_solutionOp`: the strong form and uniqueness.
+* `isSelfAdjoint_solutionOp`, `isPositive_solutionOp`, `inner_solutionOp_left`.
+* `norm_solutionOp_le`, `norm_sq_solutionSigma_add_norm_sq_d_le`, `norm_solutionSigma_le`,
+  `norm_d_solutionOp_le`, `norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le`,
+  `norm_d_solutionSigma_add_norm_adjoint_d_le`: the a priori bounds of [AFW2010], §3.2.
+* `d_solutionOp`, `solutionSigma_eq_solutionOp`: `d K = K d` and `d† K = K d†`.
+* `isCompactOperator_solutionOp`.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.2 (the Hodge Laplacian, its solution operator `K` and the bounds (3.11))
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.9, Thm 4.10 (well-posedness
+  of the Hodge Laplacian and the solution operator)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+  (the Hodge Laplacian in mixed form)
+-/
+
+open scoped InnerProductSpace Topology
+open LinearPMap Feec.Variational
+
+@[expose] public noncomputable section
+
+namespace Feec.HilbertComplex
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  (H : HilbertComplex 𝕜 c W)
+
+local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
+
+/-! ### The solution map -/
+
+/-- The data map `f ↦ F_f = ⟪·, f⟫`, as a bounded linear map into the antidual. -/
+def mixedRHSL (i j : ι) : W j →L[𝕜] (H.MixedSpace i j →L⋆[𝕜] 𝕜) :=
+  LinearMap.mkContinuous
+    { toFun := H.mixedRHS i j
+      map_add' := fun f g => ContinuousLinearMap.ext fun y => by
+        simp only [mixedRHS_apply, _root_.add_apply, inner_add_right]
+      map_smul' := fun a f => ContinuousLinearMap.ext fun y => by
+        simp only [mixedRHS_apply, _root_.smul_apply, inner_smul_right,
+          RingHom.id_apply, smul_eq_mul] }
+    1 fun f => by rw [one_mul]; exact H.norm_mixedRHS_le f
+
+@[simp] theorem mixedRHSL_apply (i j : ι) (f : W j) : H.mixedRHSL i j f = H.mixedRHS i j f := rfl
+
+variable {i j k : ι}
+
+/-- A common Poincaré constant `c_P ≥ 1` for `d i j` and `d j k`, from closed range at `j`, `k`. -/
+theorem exists_poincare_pair (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
+    (hk : H.ClosedRangeAt k) :
+    ∃ cP : ℝ, 1 ≤ cP ∧
+      (∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖) ∧
+      (∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖) := by
+  obtain ⟨c₁, hc₁, h₁⟩ := H.exists_poincare_of_closedRangeAt hij hj
+  obtain ⟨c₂, -, h₂⟩ := H.exists_poincare_of_closedRangeAt hjk hk
+  refine ⟨max c₁ c₂, hc₁.trans (le_max_left _ _), fun z hz => (h₁ z hz).trans ?_,
+    fun z hz => (h₂ z hz).trans ?_⟩
+  · exact mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)
+  · exact mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _)
+
+/-- The mixed form is an isomorphism onto the antidual (closed range at `j` and `k`). -/
+def mixedFormEquiv (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
+    (hk : H.ClosedRangeAt k) : H.MixedSpace i j ≃L[𝕜] (H.MixedSpace i j →L⋆[𝕜] 𝕜) :=
+  have h := H.exists_poincare_pair hij hjk hj hk
+  equivOfInfSup (H.infSup_mixedForm hij hjk h.choose_spec.1 h.choose_spec.2.1 h.choose_spec.2.2)
+    (H.separatingRight_mixedForm hij hjk h.choose_spec.1 h.choose_spec.2.1 h.choose_spec.2.2)
+
+@[simp] theorem mixedFormEquiv_apply (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
+    (hk : H.ClosedRangeAt k) (x : H.MixedSpace i j) :
+    H.mixedFormEquiv hij hjk hj hk x = H.mixedForm i j k x := rfl
+
+/-- **The solution map of the mixed Hodge Laplacian**, `f ↦ (σ, u, p)`. -/
+def mixedSolution (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
+    (hk : H.ClosedRangeAt k) : W j →L[𝕜] H.MixedSpace i j :=
+  ((H.mixedFormEquiv hij hjk hj hk).symm : (H.MixedSpace i j →L⋆[𝕜] 𝕜) →L[𝕜] H.MixedSpace i j).comp
+    (H.mixedRHSL i j)
+
+variable (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k)
+
+theorem mixedForm_mixedSolution (f : W j) :
+    H.mixedForm i j k (H.mixedSolution hij hjk hj hk f) = H.mixedRHS i j f := by
+  rw [← mixedFormEquiv_apply H hij hjk hj hk]
+  exact (H.mixedFormEquiv hij hjk hj hk).apply_symm_apply _
+
+theorem isMixedSolution_mixedSolution (f : W j) :
+    H.IsMixedSolution i j k f (H.mixedSolution hij hjk hj hk f).fst
+      (H.mixedSolution hij hjk hj hk f).snd.fst (H.mixedSolution hij hjk hj hk f).snd.snd :=
+  mixedForm_eq_mixedRHS_iff.1 (by
+    rw [MixedSpace.eta]; exact H.mixedForm_mixedSolution hij hjk hj hk f)
+
+/-- Every solution of the mixed problem is the value of the solution map. -/
+theorem mixedSolution_eq {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j}
+    {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
+    H.mixedSolution hij hjk hj hk f = MixedSpace.mk σ u p :=
+  (H.mixedFormEquiv hij hjk hj hk).injective (by
+    rw [mixedFormEquiv_apply, mixedFormEquiv_apply, H.mixedForm_mixedSolution hij hjk hj hk,
+      mixedForm_eq_mixedRHS_iff.2 hs])
+
+/-! ### The solution operator -/
+
+/-- The solution operator as a map into the domain space `Vʲ`. -/
+def solutionOpV : W j →L[𝕜] H.domainSpace j :=
+  (WithLp.fstL 2 𝕜 _ _).comp ((WithLp.sndL 2 𝕜 _ _).comp (H.mixedSolution hij hjk hj hk))
+
+/-- **The solution operator `K` of the Hodge Laplacian** at `j`: `K f = u`, where `(σ, u, p)`
+solves the mixed problem with data `f`. See [AFW2010], §3.2; [Arnold2018], Thm 4.10. -/
+def solutionOp : W j →L[𝕜] W j := (H.domainIncl j).comp (H.solutionOpV hij hjk hj hk)
+
+/-- `d† K`, the `σ` component of the mixed solution, as a map into `Vⁱ`. -/
+def solutionSigmaV : W j →L[𝕜] H.domainSpace i :=
+  (WithLp.fstL 2 𝕜 _ _).comp (H.mixedSolution hij hjk hj hk)
+
+/-- `σ = d† K f`, as a map into `Wⁱ`. -/
+def solutionSigma : W j →L[𝕜] W i := (H.domainIncl i).comp (H.solutionSigmaV hij hjk hj hk)
+
+theorem solutionOpV_apply (f : W j) :
+    H.solutionOpV hij hjk hj hk f = (H.mixedSolution hij hjk hj hk f).snd.fst := rfl
+
+theorem solutionOp_apply (f : W j) :
+    H.solutionOp hij hjk hj hk f = H.domainIncl j (H.solutionOpV hij hjk hj hk f) := rfl
+
+theorem solutionSigmaV_apply (f : W j) :
+    H.solutionSigmaV hij hjk hj hk f = (H.mixedSolution hij hjk hj hk f).fst := rfl
+
+theorem solutionSigma_apply (f : W j) :
+    H.solutionSigma hij hjk hj hk f = H.domainIncl i (H.solutionSigmaV hij hjk hj hk f) := rfl
+
+/-- The mixed solution is `(d† K f, K f, P_ℌ f)`. -/
+theorem harmonic_mixedSolution (f : W j) :
+    ((H.mixedSolution hij hjk hj hk f).snd.snd : W j) = (H.harmonic j).starProjection f :=
+  ((H.isMixedSolution_mixedSolution hij hjk hj hk f).harmonic_eq hij).symm
+
+theorem isMixedSolution_solutionOp (f : W j) :
+    H.IsMixedSolution i j k f (H.solutionSigmaV hij hjk hj hk f) (H.solutionOpV hij hjk hj hk f)
+      (H.mixedSolution hij hjk hj hk f).snd.snd :=
+  H.isMixedSolution_mixedSolution hij hjk hj hk f
+
+/-- **`K f ⊥ ℌʲ`.** -/
+theorem inner_harmonic_solutionOp (f : W j) {q : W j} (hq : q ∈ H.harmonic j) :
+    ⟪q, H.solutionOp hij hjk hj hk f⟫ = 0 :=
+  (H.isMixedSolution_solutionOp hij hjk hj hk f).harm q hq
+
+theorem solutionOp_mem_orthogonal_harmonic (f : W j) :
+    H.solutionOp hij hjk hj hk f ∈ (H.harmonic j)ᗮ :=
+  (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_solutionOp hij hjk hj hk f hq
+
+/-- **`K = 0` on the harmonic forms.** -/
+theorem solutionOp_apply_harmonic {f : W j} (hf : f ∈ H.harmonic j) :
+    H.solutionOp hij hjk hj hk f = 0 := by
+  have hs : H.IsMixedSolution i j k f 0 0 ⟨f, hf⟩ := by
+    exact ⟨fun _ => by simp, fun _ => by simp, fun _ _ => by simp⟩
+  rw [solutionOp_apply, solutionOpV_apply, H.mixedSolution_eq hij hjk hj hk hs]
+  simp
+
+/-- `K (P_ℌ f) = 0`. -/
+theorem solutionOp_starProjection (f : W j) :
+    H.solutionOp hij hjk hj hk ((H.harmonic j).starProjection f) = 0 :=
+  H.solutionOp_apply_harmonic hij hjk hj hk (Submodule.starProjection_apply_mem _ _)
+
+/-- `K f = K (f - P_ℌ f)`. -/
+theorem solutionOp_sub_starProjection (f : W j) :
+    H.solutionOp hij hjk hj hk (f - (H.harmonic j).starProjection f) =
+      H.solutionOp hij hjk hj hk f := by
+  rw [_root_.map_sub, H.solutionOp_starProjection, sub_zero]
+
+/-! ### Domains and the strong form -/
+
+/-- `K f ∈ D(d j k)`. -/
+theorem solutionOp_mem_domain (f : W j) : H.solutionOp hij hjk hj hk f ∈ (H.d j k).domain :=
+  H.domain_next_le j k (H.domainIncl_mem j _)
+
+/-- `d† K f = σ ∈ D(d i j)`. -/
+theorem solutionSigma_mem_domain (f : W j) :
+    H.solutionSigma hij hjk hj hk f ∈ (H.d i j).domain :=
+  H.domain_next_le i j (H.domainIncl_mem i _)
+
+/-- `K f ∈ D((d i j)†)`. -/
+theorem solutionOp_mem_adjoint_domain (f : W j) :
+    H.solutionOp hij hjk hj hk f ∈ ((H.d i j)†).domain :=
+  ((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain hij).1
+
+/-- **`d† K f = σ`**: the first unknown of the mixed problem is `d† u`. -/
+theorem adjoint_solutionOp (f : W j) (h : H.solutionOp hij hjk hj hk f ∈ ((H.d i j)†).domain) :
+    (H.d i j)† ⟨_, h⟩ = H.solutionSigma hij hjk hj hk f :=
+  ((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain hij).2
+
+/-- `d K f ∈ D((d j k)†)`. -/
+theorem d_solutionOp_mem_adjoint_domain (f : W j) :
+    H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain :=
+  ((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain_d hjk).1
+
+/-- **`d† d K f = f - P_ℌ f - d σ`.** -/
+theorem adjoint_d_solutionOp (f : W j)
+    (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
+    (H.d j k)† ⟨_, h⟩ = f - (H.harmonic j).starProjection f -
+      H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f)) := by
+  rw [((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain_d hjk).2,
+    H.harmonic_mixedSolution]
+
+/-- **The strong form**: `K f ∈ D(d) ∩ D(d†)`, `d K f ∈ D(d†)`, `d† K f ∈ D(d)` and
+`(d d† + d† d) K f = f - P_ℌ f`. See [AFW2010], §3.2; [Arnold2018], Thm 4.10. -/
+theorem hodgeLaplacian_solutionOp (f : W j) :
+    ∃ (h₁ : H.solutionOp hij hjk hj hk f ∈ (H.d j k).domain)
+      (h₂ : H.solutionOp hij hjk hj hk f ∈ ((H.d i j)†).domain)
+      (h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain)
+      (h₄ : ((H.d i j)† ⟨_, h₂⟩ : W i) ∈ (H.d i j).domain),
+      H.d i j ⟨_, h₄⟩ + (H.d j k)† ⟨_, h₃⟩ = f - (H.harmonic j).starProjection f := by
+  have h₂ := H.solutionOp_mem_adjoint_domain hij hjk hj hk f
+  have e := H.adjoint_solutionOp hij hjk hj hk f h₂
+  have h₄ : ((H.d i j)† ⟨_, h₂⟩ : W i) ∈ (H.d i j).domain := by
+    rw [e]; exact H.solutionSigma_mem_domain hij hjk hj hk f
+  have h₁ := H.solutionOp_mem_domain hij hjk hj hk f
+  have h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain :=
+    H.d_solutionOp_mem_adjoint_domain hij hjk hj hk f
+  refine ⟨h₁, h₂, h₃, h₄, ?_⟩
+  have e'' : (H.d j k)† ⟨H.d j k ⟨_, h₁⟩, h₃⟩ = f - (H.harmonic j).starProjection f -
+      H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f)) :=
+    H.adjoint_d_solutionOp hij hjk hj hk f h₃
+  have e' : H.d i j ⟨_, h₄⟩ = H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f)) :=
+    congrArg (H.d i j) (Subtype.ext e)
+  rw [e', e'']
+  abel
+
+/-- **Uniqueness**: `K f` is the only `u ⊥ ℌʲ` in `D(d) ∩ D(d†)` with `d u ∈ D(d†)`,
+`d† u ∈ D(d)` and `(d d† + d† d) u = f - P_ℌ f`. -/
+theorem eq_solutionOp {f u : W j} (hu : u ∈ (H.harmonic j)ᗮ) (h₁ : u ∈ (H.d j k).domain)
+    (h₂ : u ∈ ((H.d i j)†).domain) (h₃ : H.d j k ⟨u, h₁⟩ ∈ ((H.d j k)†).domain)
+    (h₄ : ((H.d i j)† ⟨u, h₂⟩ : W i) ∈ (H.d i j).domain)
+    (heq : H.d i j ⟨_, h₄⟩ + (H.d j k)† ⟨_, h₃⟩ = f - (H.harmonic j).starProjection f) :
+    u = H.solutionOp hij hjk hj hk f := by
+  set σ := H.toDomainSpace hij ⟨_, h₄⟩
+  set uV := H.toDomainSpace hjk ⟨u, h₁⟩
+  set p : H.harmonic j := ⟨_, Submodule.starProjection_apply_mem (H.harmonic j) f⟩
+  have hs : H.IsMixedSolution i j k f σ uV p := by
+    refine ⟨fun τ => ?_, fun v => ?_, fun q hq => ?_⟩
+    · have e := adjoint_isFormalAdjoint (H.dense i j) ⟨u, h₂⟩ (H.domainCoord i j τ)
+      rw [domainIncl_toDomainSpace, sub_eq_zero, ← inner_conj_symm]
+      change starRingEnd 𝕜 ⟪(H.d i j)† ⟨u, h₂⟩, H.domainIncl i τ⟫ = _
+      rw [show H.domainIncl i τ = (H.domainCoord i j τ : W i) from rfl, e, inner_conj_symm]
+      rfl
+    · have e := adjoint_isFormalAdjoint (H.dense j k) ⟨_, h₃⟩ (H.domainCoord j k v)
+      have e2 : ⟪H.d j k (H.domainCoord j k v), H.d j k (H.domainCoord j k uV)⟫ =
+          ⟪H.domainIncl j v, (H.d j k)† ⟨_, h₃⟩⟫ := by
+        rw [← inner_conj_symm, ← inner_conj_symm (H.domainIncl j v),
+          show H.domainIncl j v = (H.domainCoord j k v : W j) from rfl, e]
+        rfl
+      rw [d_domainCoord_toDomainSpace, e2, ← inner_add_right, ← inner_add_right, heq,
+        sub_add_cancel]
+    · exact Submodule.inner_right_of_mem_orthogonal hq hu
+  have := congrArg (fun x : H.MixedSpace i j => H.domainIncl j x.snd.fst)
+    (H.mixedSolution_eq hij hjk hj hk hs)
+  exact this.symm
+
+/-! ### Self-adjointness and positivity -/
+
+/-- **The energy identity** `⟪K f, g⟫ = ⟪d† K f, d† K g⟫ + ⟪d K f, d K g⟫`. -/
+theorem inner_solutionOp_left (f g : W j) :
+    ⟪H.solutionOp hij hjk hj hk f, g⟫ =
+      ⟪H.solutionSigma hij hjk hj hk f, H.solutionSigma hij hjk hj hk g⟫ +
+        ⟪H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)),
+          H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk g))⟫ := by
+  have sf := H.isMixedSolution_solutionOp hij hjk hj hk f
+  have sg := H.isMixedSolution_solutionOp hij hjk hj hk g
+  have e2 := sg.snd (H.solutionOpV hij hjk hj hk f)
+  have e1 := sub_eq_zero.1 (sf.fst (H.solutionSigmaV hij hjk hj hk g))
+  have e3 := sf.harm _ (H.mixedSolution hij hjk hj hk g).snd.snd.2
+  have e1' : ⟪H.domainIncl j (H.solutionOpV hij hjk hj hk f),
+      H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk g))⟫ =
+      ⟪H.solutionSigma hij hjk hj hk f, H.solutionSigma hij hjk hj hk g⟫ := by
+    rw [← inner_conj_symm, ← e1, inner_conj_symm]; rfl
+  have e3' : ⟪H.domainIncl j (H.solutionOpV hij hjk hj hk f),
+      ((H.mixedSolution hij hjk hj hk g).snd.snd : W j)⟫ = 0 := by
+    rw [← inner_conj_symm, e3, _root_.map_zero]
+  rw [e1', e3', add_zero] at e2
+  rw [solutionOp_apply, ← e2]
+
+/-- **`K` is self-adjoint.** -/
+theorem isSymmetric_solutionOp :
+    (H.solutionOp hij hjk hj hk : W j →ₗ[𝕜] W j).IsSymmetric := fun f g => by
+  change ⟪H.solutionOp hij hjk hj hk f, g⟫ = ⟪f, H.solutionOp hij hjk hj hk g⟫
+  rw [← inner_conj_symm f, H.inner_solutionOp_left, H.inner_solutionOp_left, _root_.map_add,
+    inner_conj_symm, inner_conj_symm]
+
+theorem isSelfAdjoint_solutionOp : IsSelfAdjoint (H.solutionOp hij hjk hj hk) :=
+  ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.2 (H.isSymmetric_solutionOp hij hjk hj hk)
+
+/-- `re ⟪K f, f⟫ = ‖d† K f‖² + ‖d K f‖²`. -/
+theorem re_inner_solutionOp_self (f : W j) :
+    RCLike.re ⟪H.solutionOp hij hjk hj hk f, f⟫ =
+      ‖H.solutionSigma hij hjk hj hk f‖ ^ 2 +
+        ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ^ 2 := by
+  rw [H.inner_solutionOp_left, _root_.map_add, inner_self_eq_norm_sq, inner_self_eq_norm_sq]
+
+/-- **`K` is positive** (self-adjoint and `re ⟪K f, f⟫ ≥ 0`). -/
+theorem isPositive_solutionOp : (H.solutionOp hij hjk hj hk).IsPositive :=
+  ⟨H.isSymmetric_solutionOp hij hjk hj hk, fun f => by
+    change 0 ≤ RCLike.re ⟪H.solutionOp hij hjk hj hk f, f⟫
+    rw [H.re_inner_solutionOp_self]; positivity⟩
+
+/-! ### The a priori bounds -/
+
+omit [∀ i, CompleteSpace (W i)] in
+private theorem norm_sub_starProjection_le' {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (f : E) :
+    ‖f - K.starProjection f‖ ≤ ‖f‖ := by
+  have h := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := 𝕜) (f - K.starProjection f)
+    (K.starProjection f) (Submodule.starProjection_inner_eq_zero f _
+      (Submodule.starProjection_apply_mem K f))
+  rw [sub_add_cancel] at h
+  nlinarith [norm_nonneg f, norm_nonneg (f - K.starProjection f),
+    norm_nonneg (K.starProjection f)]
+
+/-- **`‖d d† K f‖² + ‖d† d K f‖² ≤ ‖f‖²`** (no Poincaré constant): `d σ` and `d† d u` are the
+orthogonal `𝔅` and `𝔅*` parts of `f - P_ℌ f`. -/
+theorem norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le (f : W j)
+    (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
+    ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖ ^ 2 +
+      ‖(H.d j k)† ⟨_, h⟩‖ ^ 2 ≤ ‖f‖ ^ 2 := by
+  rw [H.adjoint_d_solutionOp hij hjk hj hk f h]
+  set s := H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))
+  set P := (H.harmonic j).starProjection f
+  have hs := H.isMixedSolution_solutionOp hij hjk hj hk f
+  have e := hs.snd (H.domainD i j (H.solutionSigmaV hij hjk hj hk f))
+  rw [domainIncl_domainD, d_domainCoord_domainD, inner_zero_left, add_zero,
+    H.harmonic_mixedSolution] at e
+  have hsB : s ∈ H.boundaries j := by rw [H.boundaries_eq hij]; exact ⟨_, rfl⟩
+  have hsP : ⟪s, P⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hsB
+    (H.mem_harmonic_iff.1 (Submodule.starProjection_apply_mem _ f)).2
+  rw [hsP, add_zero] at e
+  have horth : ⟪s, f - P - s⟫ = 0 := by
+    rw [inner_sub_right, inner_sub_right, hsP, ← e, sub_zero, sub_self]
+  have hpy := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := 𝕜) s (f - P - s) horth
+  rw [add_sub_cancel] at hpy
+  have hle := norm_sub_starProjection_le' (H.harmonic j) f
+  nlinarith [norm_nonneg (f - P), norm_nonneg f]
+
+theorem norm_d_solutionSigma_le (f : W j) :
+    ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖ ≤ ‖f‖ := by
+  have := H.norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le hij hjk hj hk f
+    (H.d_solutionOp_mem_adjoint_domain hij hjk hj hk f)
+  nlinarith [norm_nonneg f, norm_nonneg (H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))),
+    sq_nonneg ‖(H.d j k)† ⟨_, H.d_solutionOp_mem_adjoint_domain hij hjk hj hk f⟩‖]
+
+theorem norm_adjoint_d_solutionOp_le (f : W j)
+    (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
+    ‖(H.d j k)† ⟨_, h⟩‖ ≤ ‖f‖ := by
+  have := H.norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le hij hjk hj hk f h
+  nlinarith [norm_nonneg f, norm_nonneg ((H.d j k)† ⟨_, h⟩),
+    sq_nonneg ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖]
+
+/-- `‖d d† K f‖ + ‖d† d K f‖ ≤ 2 ‖f‖`. See [AFW2010], (3.11). -/
+theorem norm_d_solutionSigma_add_norm_adjoint_d_le (f : W j)
+    (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
+    ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖ + ‖(H.d j k)† ⟨_, h⟩‖ ≤
+      2 * ‖f‖ := by
+  linarith [H.norm_d_solutionSigma_le hij hjk hj hk f,
+    H.norm_adjoint_d_solutionOp_le hij hjk hj hk f h]
+
+section Poincare
+
+variable {cP : ℝ} (hcP : 0 ≤ cP)
+  (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
+  (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+include hcP hPi hPj
+
+/-- **`‖K f‖ ≤ c_P² ‖f‖`**, with `c_P` a Poincaré constant for `d i j` and `d j k`.
+See [AFW2010], §3.2, (3.11). -/
+theorem norm_solutionOp_le (f : W j) : ‖H.solutionOp hij hjk hj hk f‖ ≤ cP ^ 2 * ‖f‖ := by
+  set u := H.solutionOp hij hjk hj hk f
+  set σ := H.solutionSigma hij hjk hj hk f
+  set du := H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))
+  have hs := H.isMixedSolution_solutionOp hij hjk hj hk f
+  obtain ⟨b, h, w, hb, hh, hw, hu⟩ := H.exists_hodge_split hj u
+  have hbz : b ∈ H.cycles j := H.boundaries_le_cycles j hb
+  have hhz : h ∈ H.cycles j := H.harmonic_le_cycles j hh
+  have hbw : ⟪b, w⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hbz hw
+  have hhw : ⟪h, w⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hhz hw
+  have hhb : ⟪h, b⟫ = 0 := Submodule.inner_left_of_mem_orthogonal hb (H.mem_harmonic_iff.1 hh).2
+  have hhu : ⟪h, u⟫ = 0 := hs.harm h hh
+  have h0 : h = 0 := by
+    rw [hu, inner_add_right, inner_add_right, hhb, hhw, zero_add, add_zero] at hhu
+    exact inner_self_eq_zero.1 hhu
+  rw [h0, add_zero] at hu
+  -- the `𝔷ᗮ` part
+  have hu1 : u ∈ (H.d j k).domain := H.solutionOp_mem_domain hij hjk hj hk f
+  have hb1 : b ∈ (H.d j k).domain := H.domain_next_le j k (H.cycles_le_domain j hbz)
+  set wd : (H.d j k).domain := ⟨u, hu1⟩ - ⟨b, hb1⟩
+  have hwd : (wd : W j) = w := by
+    change u - b = w; rw [hu, add_sub_cancel_left]
+  have hdw : H.d j k wd = du := by
+    rw [LinearPMap.map_sub, H.d_eq_zero_of_mem_cycles hbz, sub_zero]; rfl
+  have hw' := hPj wd (hwd ▸ hw)
+  rw [hwd, hdw] at hw'
+  -- the `𝔅` part
+  obtain ⟨ρ, -, hρ, hρn⟩ := H.exists_poincare_preimage hij hPi hb
+  have e := sub_eq_zero.1 (hs.fst (H.toDomainSpace hij ρ))
+  rw [domainIncl_toDomainSpace, d_domainCoord_toDomainSpace, hρ] at e
+  have hbu : ⟪b, u⟫ = (‖b‖ : 𝕜) ^ 2 := by
+    rw [hu, inner_add_right, hbw, add_zero, inner_self_eq_norm_sq_to_K]
+  have hb2 : ‖b‖ ^ 2 ≤ cP * ‖b‖ * ‖σ‖ := by
+    have h1 : ‖⟪b, u⟫‖ ≤ ‖(ρ : W i)‖ * ‖σ‖ := by
+      rw [show ⟪b, u⟫ = ⟪(ρ : W i), σ⟫ from e.symm]; exact norm_inner_le_norm _ _
+    rw [hbu, norm_pow, RCLike.norm_ofReal, abs_norm] at h1
+    calc ‖b‖ ^ 2 ≤ ‖(ρ : W i)‖ * ‖σ‖ := h1
+      _ ≤ cP * ‖b‖ * ‖σ‖ := mul_le_mul_of_nonneg_right hρn (norm_nonneg _)
+  have hbσ : ‖b‖ ≤ cP * ‖σ‖ := by
+    nlinarith [norm_nonneg b, norm_nonneg σ, mul_nonneg hcP (norm_nonneg σ)]
+  -- assemble
+  have hpy := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := 𝕜) b w hbw
+  rw [← hu] at hpy
+  have hen := H.re_inner_solutionOp_self hij hjk hj hk f
+  have hre : RCLike.re ⟪u, f⟫ ≤ ‖u‖ * ‖f‖ := re_inner_le_norm u f
+  have hu2 : ‖u‖ ^ 2 ≤ cP ^ 2 * ‖u‖ * ‖f‖ := by
+    have hw2 : ‖w‖ ^ 2 ≤ cP ^ 2 * ‖du‖ ^ 2 := by
+      have := norm_nonneg w; rw [← mul_pow]; exact pow_le_pow_left₀ this hw' 2
+    have hb2' : ‖b‖ ^ 2 ≤ cP ^ 2 * ‖σ‖ ^ 2 := by
+      have := norm_nonneg b; rw [← mul_pow]; exact pow_le_pow_left₀ this hbσ 2
+    have : ‖u‖ ^ 2 ≤ cP ^ 2 * RCLike.re ⟪u, f⟫ := by
+      change ‖u‖ ^ 2 ≤ cP ^ 2 * RCLike.re ⟪H.solutionOp hij hjk hj hk f, f⟫
+      rw [hen]; nlinarith
+    nlinarith [sq_nonneg cP]
+  nlinarith [norm_nonneg u, norm_nonneg f, sq_nonneg cP, mul_nonneg (sq_nonneg cP) (norm_nonneg f)]
+
+/-- **`‖d† K f‖² + ‖d K f‖² ≤ c_P² ‖f‖²`.** See [AFW2010], §3.2, (3.11). -/
+theorem norm_sq_solutionSigma_add_norm_sq_d_le (f : W j) :
+    ‖H.solutionSigma hij hjk hj hk f‖ ^ 2 +
+        ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ^ 2 ≤ cP ^ 2 * ‖f‖ ^ 2 := by
+  rw [← H.re_inner_solutionOp_self]
+  have h1 := re_inner_le_norm (𝕜 := 𝕜) (H.solutionOp hij hjk hj hk f) f
+  have h2 := H.norm_solutionOp_le hij hjk hj hk hcP hPi hPj f
+  nlinarith [norm_nonneg f]
+
+/-- `‖d† K f‖ ≤ c_P ‖f‖`. -/
+theorem norm_solutionSigma_le (f : W j) :
+    ‖H.solutionSigma hij hjk hj hk f‖ ≤ cP * ‖f‖ := by
+  have h := H.norm_sq_solutionSigma_add_norm_sq_d_le hij hjk hj hk hcP hPi hPj f
+  have : ‖H.solutionSigma hij hjk hj hk f‖ ^ 2 ≤ (cP * ‖f‖) ^ 2 := by
+    rw [mul_pow]; nlinarith [sq_nonneg ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖]
+  exact (abs_le_of_sq_le_sq' this (mul_nonneg hcP (norm_nonneg f))).2
+
+/-- `‖d K f‖ ≤ c_P ‖f‖`. -/
+theorem norm_d_solutionOp_le (f : W j) :
+    ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ≤ cP * ‖f‖ := by
+  have h := H.norm_sq_solutionSigma_add_norm_sq_d_le hij hjk hj hk hcP hPi hPj f
+  have : ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ^ 2 ≤ (cP * ‖f‖) ^ 2 := by
+    rw [mul_pow]; nlinarith [sq_nonneg ‖H.solutionSigma hij hjk hj hk f‖]
+  exact (abs_le_of_sq_le_sq' this (mul_nonneg hcP (norm_nonneg f))).2
+
+end Poincare
+
+/-! ### Commuting with `d` and `d†` -/
+
+/-- Boundaries are orthogonal to harmonic forms: `P_ℌ b = 0` and `⟪q, b⟫ = 0`. -/
+theorem inner_harmonic_eq_zero_of_mem_boundaries {l : ι} {q b : W l} (hq : q ∈ H.harmonic l)
+    (hb : b ∈ H.boundaries l) : ⟪q, b⟫ = 0 :=
+  Submodule.inner_left_of_mem_orthogonal hb (H.mem_harmonic_iff.1 hq).2
+
+theorem mem_orthogonal_harmonic_of_mem_boundaries {l : ι} {b : W l} (hb : b ∈ H.boundaries l) :
+    b ∈ (H.harmonic l)ᗮ :=
+  (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_eq_zero_of_mem_boundaries hq hb
+
+/-- **`K` commutes with `d`**: `d K f = K (d f)` for `f ∈ D(d j k)`, where the second `K` is the
+solution operator at `k` (arrows `j → k → l`). See [AFW2010], §3.2. -/
+theorem d_solutionOp {l : ι} (hkl : c.Rel k l) (hl : H.ClosedRangeAt l) {f : W j}
+    (hf : f ∈ (H.d j k).domain) :
+    H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) =
+      H.solutionOp hjk hkl hk hl (H.d j k ⟨f, hf⟩) := by
+  set u := H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))
+  have huB : u ∈ H.boundaries k := by rw [H.boundaries_eq hjk]; exact ⟨_, rfl⟩
+  have h₁ : u ∈ (H.d k l).domain := H.mapsTo j k l _
+  have h₂ : u ∈ ((H.d j k)†).domain := H.d_solutionOp_mem_adjoint_domain hij hjk hj hk f
+  have h₃ : H.d k l ⟨u, h₁⟩ ∈ ((H.d k l)†).domain := by
+    rw [H.d_comp_d j k l]; exact Submodule.zero_mem _
+  have eA := H.adjoint_d_solutionOp hij hjk hj hk f h₂
+  set P := (H.harmonic j).starProjection f
+  set s := H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))
+  have hP : P ∈ (H.d j k).domain := H.domain_next_le j k
+    (H.cycles_le_domain j (H.harmonic_le_cycles j (Submodule.starProjection_apply_mem _ f)))
+  have hs : s ∈ (H.d j k).domain := H.mapsTo i j k _
+  have h₄ : ((H.d j k)† ⟨u, h₂⟩ : W j) ∈ (H.d j k).domain := by
+    rw [eA]; exact Submodule.sub_mem _ (Submodule.sub_mem _ hf hP) hs
+  refine H.eq_solutionOp hjk hkl hk hl (H.mem_orthogonal_harmonic_of_mem_boundaries huB) h₁ h₂ h₃
+    h₄ ?_
+  have e1 : (⟨_, h₄⟩ : (H.d j k).domain) = ⟨f, hf⟩ - ⟨P, hP⟩ - ⟨s, hs⟩ := Subtype.ext eA
+  have e2 : (⟨_, h₃⟩ : ((H.d k l)†).domain) = 0 := Subtype.ext (H.d_comp_d j k l _)
+  have hdB : H.d j k ⟨f, hf⟩ ∈ H.boundaries k := by rw [H.boundaries_eq hjk]; exact ⟨_, rfl⟩
+  have hP0 : (H.harmonic k).starProjection (H.d j k ⟨f, hf⟩) = 0 :=
+    (Submodule.starProjection_apply_eq_zero_iff _).2
+      (H.mem_orthogonal_harmonic_of_mem_boundaries hdB)
+  rw [e1, e2, LinearPMap.map_zero, LinearPMap.map_sub, LinearPMap.map_sub, hP0,
+    H.d_eq_zero_of_mem_cycles (H.harmonic_le_cycles j (Submodule.starProjection_apply_mem _ f)),
+    show H.d j k ⟨s, hs⟩ = 0 from H.d_comp_d i j k _]
+  simp
+
+/-- **`K` commutes with `d†`**: `d† K f = K (d† f)` for `f ∈ D((d i j)†)`, where the second `K`
+is the solution operator at `i` (arrows `h → i → j`). See [AFW2010], §3.2. -/
+theorem solutionSigma_eq_solutionOp {h : ι} (hhi : c.Rel h i) (hi : H.ClosedRangeAt i) {f : W j}
+    (hf : f ∈ ((H.d i j)†).domain) :
+    H.solutionSigma hij hjk hj hk f = H.solutionOp hhi hij hi hj ((H.d i j)† ⟨f, hf⟩) := by
+  have hK := H.solutionOp_mem_adjoint_domain hij hjk hj hk f
+  have eσ := H.adjoint_solutionOp hij hjk hj hk f hK
+  set σ := H.solutionSigma hij hjk hj hk f
+  -- range of `(d i j)†` is orthogonal to `ℌⁱ`
+  have horth : ∀ (y : ((H.d i j)†).domain), (H.d i j)† y ∈ (H.harmonic i)ᗮ := fun y =>
+    (Submodule.mem_orthogonal _ _).2 fun q hq => by
+      have hqd : q ∈ (H.d i j).domain := H.domain_next_le i j
+        (H.cycles_le_domain i (H.harmonic_le_cycles i hq))
+      have e := adjoint_isFormalAdjoint (H.dense i j) y ⟨q, hqd⟩
+      rw [H.d_eq_zero_of_mem_cycles (H.harmonic_le_cycles i hq), inner_zero_right] at e
+      rw [← inner_conj_symm, e, _root_.map_zero]
+  have hu : σ ∈ (H.harmonic i)ᗮ := eσ ▸ horth _
+  have h₁ : σ ∈ (H.d i j).domain := H.solutionSigma_mem_domain hij hjk hj hk f
+  have h₂ : σ ∈ ((H.d h i)†).domain := eσ ▸ H.adjoint_mapsTo h i j ⟨_, hK⟩
+  have hz : (H.d h i)† ⟨σ, h₂⟩ = 0 := by
+    have := H.adjoint_comp_eq_zero h i j ⟨_, hK⟩
+    rw [← this]; exact congrArg _ (Subtype.ext eσ.symm)
+  have h₄ : ((H.d h i)† ⟨σ, h₂⟩ : W h) ∈ (H.d h i).domain := by
+    rw [hz]; exact Submodule.zero_mem _
+  -- `d σ = f - P_ℌ f - d† d u`
+  have hdK := H.d_solutionOp_mem_adjoint_domain hij hjk hj hk f
+  have eA := H.adjoint_d_solutionOp hij hjk hj hk f hdK
+  set P := (H.harmonic j).starProjection f
+  set t := (H.d j k)† ⟨_, hdK⟩
+  have hdσ : H.d i j ⟨σ, h₁⟩ = f - P - t := by
+    change H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f)) = _
+    rw [eA]; abel
+  obtain rfl := c.prev_eq' hij
+  have hPmem := (Submodule.starProjection_apply_mem (H.harmonic j) f).2
+  obtain ⟨Pd, hPd, hP0⟩ := mem_ker_iff.1 hPmem
+  have hP : P ∈ ((H.d (c.prev j) j)†).domain := by
+    rw [show P = (Pd : W j) from hPd]; exact Pd.2
+  have ht : t ∈ ((H.d (c.prev j) j)†).domain := H.adjoint_mapsTo (c.prev j) j k ⟨_, hdK⟩
+  have h₃ : H.d (c.prev j) j ⟨σ, h₁⟩ ∈ ((H.d (c.prev j) j)†).domain := by
+    rw [hdσ]; exact Submodule.sub_mem _ (Submodule.sub_mem _ hf hP) ht
+  refine H.eq_solutionOp hhi hij hi hj hu h₁ h₂ h₃ h₄ ?_
+  have e1 : (⟨_, h₃⟩ : ((H.d (c.prev j) j)†).domain) = ⟨f, hf⟩ - ⟨P, hP⟩ - ⟨t, ht⟩ :=
+    Subtype.ext hdσ
+  have e2 : (⟨_, h₄⟩ : (H.d h (c.prev j)).domain) = 0 := Subtype.ext hz
+  have hP0' : (H.d (c.prev j) j)† ⟨P, hP⟩ = 0 := by
+    rw [← hP0]; exact congrArg _ (Subtype.ext hPd)
+  have ht0 : (H.d (c.prev j) j)† ⟨t, ht⟩ = 0 := H.adjoint_comp_eq_zero (c.prev j) j k ⟨_, hdK⟩
+  have hPi0 : (H.harmonic (c.prev j)).starProjection ((H.d (c.prev j) j)† ⟨f, hf⟩) = 0 :=
+    (Submodule.starProjection_apply_eq_zero_iff _).2 (horth _)
+  rw [e1, e2, LinearPMap.map_zero, LinearPMap.map_sub, LinearPMap.map_sub, hP0', ht0, hPi0]
+  simp
+
+/-! ### Compactness -/
+
+/-- **`K` is compact** under the compactness property at `j` (e.g. Rellich). See [AFW2010],
+§3.1.3 and §3.2; [Arnold2018], Thm 4.10. -/
+theorem isCompactOperator_solutionOp (hcp : H.HasCompactPropertyAt j) :
+    IsCompactOperator (H.solutionOp hij hjk hj hk) := by
+  obtain ⟨cP, hcP, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj hk
+  have hcP0 : 0 ≤ cP := zero_le_one.trans hcP
+  have hc : cP ≤ cP ^ 2 := by nlinarith
+  obtain ⟨Kc, hKc, hsub⟩ := hcp.exists_isCompact (cP ^ 2)
+  refine ⟨Kc, hKc, Filter.mem_of_superset (Metric.ball_mem_nhds 0 one_pos) fun f hf => ?_⟩
+  have hf1 : ‖f‖ ≤ 1 := (mem_ball_zero_iff.1 hf).le
+  have b1 := H.norm_solutionOp_le hij hjk hj hk hcP0 hPi hPj f
+  have b2 := H.norm_d_solutionOp_le hij hjk hj hk hcP0 hPi hPj f
+  have b3 := H.norm_solutionSigma_le hij hjk hj hk hcP0 hPi hPj f
+  obtain rfl := c.next_eq' hjk
+  obtain rfl := c.prev_eq' hij
+  have h₂ := H.solutionOp_mem_adjoint_domain hij hjk hj hk f
+  refine hsub _ (H.domainIncl_mem j _) h₂ ?_ ?_ ?_
+  · nlinarith [sq_nonneg cP]
+  · change ‖H.d j (c.next j) (H.domainCoord j (c.next j) (H.solutionOpV hij hjk hj hk f))‖ ≤ _
+    nlinarith
+  · rw [H.adjoint_solutionOp hij hjk hj hk f h₂]
+    nlinarith
+
+
+end Feec.HilbertComplex

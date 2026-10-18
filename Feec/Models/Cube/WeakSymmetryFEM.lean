@@ -5,9 +5,66 @@ public import Feec.Models.Cube.PolyRate
 public import Feec.HilbertComplex.BGG.WeakConsistency
 
 /-!
-# The finite element method for the BGG complex with weak symmetries on the cube
+# The finite element method of Table 5.1 for the BGG complex with weak symmetries on the cube
 
-WIP
+The discretization of the BGG data (4.16) on `Q = (0, ½)³` (the segment
+`Feec.Models.Cube.WeakSymmetry.bggSegment` of `Feec.Models.Cube.WeakSymmetryComplex`) by the
+elements of Table 5.1 of [QuennevilleBelair2015], §5.3, on the level-`(N + 1)` Freudenthal meshes,
+with the thesis' boundary conditions (vanishing boundary DOFs in every row):
+
+* top row `P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²` (`FEM.polyMin 3 PolySeq.lowestOrder N`),
+* bottom row `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³` (componentwise `FEM.polyMin 3 PolySeq.lagrangeP2 N`),
+
+as a `Feec.BGG.Discrete bggSegment` (`table51`), with **the smoothed cochain projections**
+`π = J⁻¹ Π_h R` ([AFW2010], §5.4; [ChristiansenWinther2008]) of **one common smoother** for both
+rows (`FEM.tableRows_uniform_cochainProjection`). The method uses `S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹`:
+the canonical projections of the thesis are not bounded on `L²`, so `Discrete.Bounded` fails for
+them; on the discrete spaces both choices are defined, and Props 5.7–5.9 for the canonical maps
+are in `Feec.Models.Cube.WeakSymmetryEstimates`.
+
+## Main results
+
+* `table51_compatible`: **the surjectivity hypothesis (5.4)** `π¹S⁰π̃⁰ = π¹S⁰`
+  (`Feec.BGG.Discrete.Compatible`), from `R S⁰ = c S⁰ R̃` (`smoothForm_wsL2`) and the corrected
+  Prop 5.7 `Π¹S⁰Π̃⁰ = Π¹S⁰` on smooth fields (`PolySeq.bggS0h_tensorInterp`): the top-row
+  smoothed interpolant of `S⁰y` only sees the bottom-row smoothed interpolants of `y`
+  (`smoothedInterp_wsL2_zero_eq`). This discharges the hypothesis `hA` of
+  `Subcomplex.CommutingMap.toCochainProjection_comp_toCochainProjection` on the cube.
+* `table51_bounded`: `Discrete.Bounded (2C)` with `C` independent of `N`.
+* `table51_happ0`: **Prop 5.9(1) for `π¹`**: `‖(I − π¹)S⁰ψ‖ ≤ C_app h ‖ψ‖_V` on `Ṽₕ⁰`, from
+  `(I − π¹)S⁰ψ = (I − π¹)(I − Π¹)S⁰ψ` and Prop 5.9(1) for the canonical `Π¹`
+  (`norm_sub_glue_bggS0h_le`, transported to vanishing boundary DOFs, `exists_sub_wsL2_le_mesh`).
+* `table51Reg`: **regular potentials** (`Feec.BGG.Discrete.RegularPotential`) with
+  `X_reg = (H̊Λ⁰(Q)³)³` (row-wise `H̊¹` potentials, from the regularity hypothesis with its constant
+  `C_R`) and the `H̊¹` approximation of the smoothed projections
+  (`FEM.PolySmoothingEstimatesMin.norm_sub_proj_le_grad`).
+* `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`: the weak-consistency lemma with
+  `S¹u ∈ D(d¹*)` as a functional bound (in the `W`-normed model `V¹ = H̊Λ¹(Q)` is not complete, so
+  `d¹*S¹u ∈ L²` has no representative in `V¹`).
+* `table51_rate`, `table51_rate_C2`: **Thm 5.5 on the cube with the elements of Table 5.1**,
+  `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u, λ, S¹u`
+  `C²` and vanishing outside `Q` (bound `L` on the first derivatives), `K` independent of `N`;
+  `IsCsFormMin.norm_le` (flatness and the mean value theorem) and `IsCsFormMin.abs_inner_D1_le`
+  (Green's formula on `D(d_min)`) supply `‖λ‖, ‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`.
+* `table51_existsUnique`: unique discrete solvability (thesis Prop 5.4).
+* `table51_ne_bot`: the discrete spaces are nonzero for all large `N`;
+  `exists_manufactured_solution`, `mU_ne_zero`: a nontrivial smooth exact solution
+  (`u` = first row `dᵗ(f dx₀ ∧ dx₁)`, `f` a bump in `Q`, `σ = φ = λ = 0`).
+
+The regularity hypothesis (`CurlPotential`, the regular decomposition of [Hiptmair2002],
+Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`).
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.3, (5.4), (5.7), Table 5.1, Props 5.4, 5.7–5.9, Thm 5.5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (smoothed projections)
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+  (regular decomposition)
+* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
+  §3 (regular decomposition)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace ContDiff
@@ -1746,7 +1803,7 @@ theorem eventually_ne_zero_of_le {E : Type*} [NormedAddCommGroup E] {x : E} (hx 
   rw [hy, sub_zero] at this
   linarith
 
-/-- The `H̊¹` approximation of the smoothed projections for test fields. -/
+/-- The coefficients of a test field lie in `H̊¹(Q)`. -/
 theorem coeffForm_testField_mem {k : ℕ} {χ : formIdx 3 k → (Fin 3 → ℝ) → ℝ}
     (hχ : IsTestField (cubeDomain 3) χ) (s : formIdx 3 k) :
     coeffForm (testField hχ s) ∈ ((complexMin 3).d 0 1).domain :=

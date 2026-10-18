@@ -521,3 +521,71 @@ theorem harmonic_le_window (a : Fin (N + 1)) :
     · exact adjoint_mem_ker_of_eq_zero (window_d_prev_zero H hf a (by omega)) x
 
 end Feec.HilbertComplex
+
+/-! ### The complexes on `ℤ`: `HΛ(Q)` and `H̊Λ(Q)` on `Q = (0, ½)ⁿ` -/
+
+namespace Feec.Models.Cube.DeRhamIdent
+
+open Geometry
+open Feec.Domain (formIdx extDerivOp L2F L2 toL2F)
+open Feec.Fourier.Exterior (Form)
+
+variable {n : ℕ}
+
+theorem isEmpty_formIdx_of_neg {i : ℤ} (hi : i < 0) : IsEmpty (formIdx n i) :=
+  ⟨fun s => by have := s.2; omega⟩
+
+theorem isEmpty_formIdx_of_gt {i : ℤ} (hi : (Fintype.card (Fin n) : ℤ) < i) :
+    IsEmpty (formIdx n i) :=
+  ⟨fun s => by
+    have h1 := s.2
+    have h2 : #s.1 ≤ Fintype.card (Fin n) := Finset.card_le_univ s.1
+    omega⟩
+
+theorem subsingleton_L2F {Ω : Set (Fin n → ℝ)} {ι : Type} [Fintype ι] [IsEmpty ι] :
+    Subsingleton (L2F ℝ Ω ι) :=
+  ⟨fun _ _ => PiLp.ext fun i => isEmptyElim i⟩
+
+theorem hlow (Ω : Set (Fin n → ℝ)) (i : ℤ) (hi : i < 0) :
+    Subsingleton (L2F ℝ Ω (formIdx n i)) :=
+  have := isEmpty_formIdx_of_neg (n := n) hi
+  subsingleton_L2F
+
+theorem hhigh (Ω : Set (Fin n → ℝ)) (i : ℤ) (hi : ((Fintype.card (Fin n) : ℕ) : ℤ) < i) :
+    Subsingleton (L2F ℝ Ω (formIdx n i)) :=
+  have := isEmpty_formIdx_of_gt (n := n) hi
+  subsingleton_L2F
+
+variable (n) in
+/-- `HΛ(Q)` on `ℤ`. -/
+abbrev Hmax : HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ (Q (Fin n)) (formIdx n k) :=
+  (Feec.Domain.deRham ℝ n).maximalComplex (isOpen_Q (d := Fin n))
+
+variable (n) in
+/-- `H̊Λ(Q)` on `ℤ`. -/
+abbrev Hmin : HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ (Q (Fin n)) (formIdx n k) :=
+  (Feec.Domain.deRham ℝ n).minimalComplex (isOpen_Q (d := Fin n))
+
+/-- **The Poincaré inequality of `HΛ(Q)`**, `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`. -/
+theorem Hmax_norm_le {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (z : ((Hmax n).d i j).domain)
+    (hz : (z : L2F ℝ (Q (Fin n)) (formIdx n i)) ∈ ((Hmax n).cycles i)ᗮ) :
+    ‖(z : L2F ℝ (Q (Fin n)) (formIdx n i))‖ ≤ (2 * Real.pi)⁻¹ * ‖(Hmax n).d i j z‖ :=
+  Feec.HilbertComplex.norm_le_of_mem_orthogonal_cycles_of_window (Hmax n) ι_rel (by positivity)
+    (hlow _) (hhigh _) (fun a b u hu => HQmax_norm_le a b u hu) hij z hz
+
+/-- **The Poincaré inequality of `H̊Λ(Q)`**, `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`. -/
+theorem Hmin_norm_le {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (z : ((Hmin n).d i j).domain)
+    (hz : (z : L2F ℝ (Q (Fin n)) (formIdx n i)) ∈ ((Hmin n).cycles i)ᗮ) :
+    ‖(z : L2F ℝ (Q (Fin n)) (formIdx n i))‖ ≤ (2 * Real.pi)⁻¹ * ‖(Hmin n).d i j z‖ :=
+  Feec.HilbertComplex.norm_le_of_mem_orthogonal_cycles_of_window (Hmin n) ι_rel (by positivity)
+    (hlow _) (hhigh _) (fun a b u hu => HQmin_norm_le a b u hu) hij z hz
+
+theorem Hmax_hasCompactProperty : (Hmax n).HasCompactProperty :=
+  Feec.HilbertComplex.hasCompactProperty_of_window (Hmax n) ι_rel (hlow _) (hhigh _)
+    HQmax_hasCompactProperty
+
+theorem Hmin_hasCompactProperty : (Hmin n).HasCompactProperty :=
+  Feec.HilbertComplex.hasCompactProperty_of_window (Hmin n) ι_rel (hlow _) (hhigh _)
+    HQmin_hasCompactProperty
+
+end Feec.Models.Cube.DeRhamIdent

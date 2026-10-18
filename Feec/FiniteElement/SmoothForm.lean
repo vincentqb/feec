@@ -463,7 +463,77 @@ theorem pullback_apply_univ (B : ι → ι → R) (α : Finset ι → R) :
   intro h
   exact hs (eq_univ_of_card s (by rw [← h, card_univ]))
 
+/-- Pulling back along a coordinate embedding `e : R^κ → R^ι` (`B_{il} = [i = e(l)]`) restricts
+to the coordinates `e(κ)`. -/
+theorem pullback_eq_restrict [Fintype κ] (e : κ ↪o ι) {B : ι → κ → R}
+    (hB : ∀ i l, (i = e l → B i l = 1) ∧ (i ≠ e l → B i l = 0)) (α : Finset ι → R) :
+    pullback B α = restrict e α := by
+  classical
+  have hmap : ∀ t : Finset κ, wedgeProd B (t.map e.toEmbedding) = Pi.single t 1 := by
+    intro t
+    rw [wedgeProd_map, ← wedgeProd_single t]
+    refine wedgeProd_congr fun l _ => ?_
+    funext l'
+    by_cases h : l = l'
+    · subst h; simp [(hB _ _).1 rfl]
+    · rw [Function.comp_apply, (hB _ _).2 (fun h' => h (e.injective h'))]
+      simp [Ne.symm h]
+  funext t
+  rw [pullback_apply, sum_eq_single (t.map e.toEmbedding), hmap, restrict]
+  · simp
+  · intro s _ hs
+    by_cases hall : ∀ i ∈ s, ∃ l, e l = i
+    · have hs' : s = (univ.filter fun l => e l ∈ s).map e.toEmbedding := by
+        ext i
+        simp only [mem_map, mem_filter, mem_univ, true_and, RelEmbedding.coe_toEmbedding]
+        constructor
+        · intro hi
+          obtain ⟨l, rfl⟩ := hall i hi
+          exact ⟨l, hi, rfl⟩
+        · rintro ⟨l, hl, rfl⟩; exact hl
+      have hne : t ≠ univ.filter fun l => e l ∈ s := fun h => hs (by rw [hs', ← h])
+      rw [hs', hmap]
+      simp [hne]
+    · simp only [not_forall, not_exists] at hall
+      obtain ⟨i, hi, hne⟩ := hall
+      have hB0 : B i = 0 := by
+        funext l
+        exact (hB i l).2 fun h => hne l h.symm
+      rw [wedgeProd_eq_zero_of_mem hi hB0, Pi.zero_apply, mul_zero]
+  · simp
+
 end Pullback
+
+/-- A function of the subsets of `Fin (m + 1)` supported on the `m`-subsets is summed over the
+complements of points: `Σ_s F s = Σ_j F (univ ∖ j)`. -/
+theorem sum_eq_sum_erase_of_card {M : Type*} [AddCommMonoid M] {m : ℕ}
+    (F : Finset (Fin (m + 1)) → M) (hF : ∀ s, #s ≠ m → F s = 0) :
+    ∑ s, F s = ∑ j, F (univ.erase j) := by
+  have hinj : Set.InjOn (fun j : Fin (m + 1) => univ.erase j) ↑(univ : Finset (Fin (m + 1))) := by
+    intro i _ j _ h
+    by_contra hij
+    have : i ∈ univ.erase j := mem_erase.2 ⟨hij, mem_univ i⟩
+    simp only at h
+    rw [← h] at this
+    simp at this
+  rw [← sum_image hinj]
+  refine (sum_subset (subset_univ _) fun s _ hs => hF s fun hcard => hs ?_).symm
+  have : sᶜ.Nonempty := by
+    rw [nonempty_iff_ne_empty]
+    intro h
+    have := congrArg card (compl_eq_empty_iff s |>.1 h)
+    simp [hcard] at this
+  obtain ⟨j, hj⟩ := this
+  refine mem_image.2 ⟨j, mem_univ j, ?_⟩
+  refine (eq_of_subset_of_card_le (fun x hx => ?_) ?_).symm
+  · exact mem_erase.2 ⟨fun h => (mem_compl.1 hj) (h ▸ hx), mem_univ x⟩
+  · rw [hcard, card_erase_of_mem (mem_univ j), card_univ, Fintype.card_fin]; simp
+
+/-- `ε(j, univ) = (-1)^j` on `Fin m`. -/
+theorem sgn_univ {m : ℕ} (j : Fin m) : (sgn j (univ : Finset (Fin m)) : R) = (-1) ^ (j : ℕ) := by
+  rw [sgn]
+  congr 1
+  rw [show (univ.filter fun l => l < j) = Iio j by ext; simp, Fin.card_Iio]
 
 end Feec.ExteriorFibre
 
@@ -720,19 +790,31 @@ theorem differentiableAt_affinePullback {ω : FormField n} (B : Fin n → Fin m 
   refine DifferentiableAt.fun_sum fun s _ => ?_
   exact ((differentiableAt_pi.1 hω s).comp x (differentiable_affine B b x)).mul_const _
 
+theorem contDiff_affine {r : WithTop ℕ∞} (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) :
+    ContDiff ℝ r (affine B b) := by
+  have : affine B b = fun y => (Matrix.toLin' (Matrix.of B)).toContinuousLinearMap y + b := by
+    funext y i
+    simp [affine_apply, Matrix.mulVec, dotProduct]
+  rw [this]
+  exact (ContinuousLinearMap.contDiff _).add contDiff_const
+
 theorem contDiff_affinePullback {r : WithTop ℕ∞} {ω : FormField n} (B : Fin n → Fin m → ℝ)
     (b : Fin n → ℝ) (hω : ContDiff ℝ r ω) : ContDiff ℝ r (affinePullback B b ω) := by
   rw [contDiff_pi]
   intro t
   simp only [affinePullback_apply, ExteriorFibre.pullback_apply]
   refine ContDiff.sum fun s _ => ?_
-  have hA : ContDiff ℝ r (affine B b) := by
-    have : affine B b = fun y => (Matrix.toLin' (Matrix.of B)).toContinuousLinearMap y + b := by
-      funext y i
-      simp [affine_apply, Matrix.mulVec, dotProduct]
-    rw [this]
-    exact (ContinuousLinearMap.contDiff _).add contDiff_const
-  exact ((contDiff_pi.1 hω s).comp hA).mul contDiff_const
+  exact ((contDiff_pi.1 hω s).comp (contDiff_affine B b)).mul contDiff_const
+
+theorem contDiffOn_affinePullback {r : WithTop ℕ∞} {ω : FormField n} {U : Set (Fin n → ℝ)}
+    (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (hω : ContDiffOn ℝ r ω U) :
+    ContDiffOn ℝ r (affinePullback B b ω) (affine B b ⁻¹' U) := by
+  rw [contDiffOn_pi]
+  intro t
+  simp only [affinePullback_apply, ExteriorFibre.pullback_apply]
+  refine ContDiffOn.sum fun s _ => ?_
+  exact ((contDiffOn_pi.1 hω s).comp (contDiff_affine B b).contDiffOn
+    (Set.mapsTo_preimage _ _)).mul contDiffOn_const
 
 /-- **The pullback commutes with the exterior derivative**: `d (F^* ω) = F^* (d ω)` for an affine
 map `F`, at every point where `ω` is differentiable. -/

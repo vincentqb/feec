@@ -1306,6 +1306,90 @@ theorem norm_wsL2_sq_le (k : ℤ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (form
 
 end L2
 
+/-! ### Comparison with the interpolants of `Feec.FiniteElement.LocalDof` -/
+
+namespace PolySeq
+
+/-- The local interpolant of a polynomial family only depends on the vertex set of `T`. -/
+theorem localInterp_congr (S : PolySeq) (k : ℕ) {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (h : vertexSet T = vertexSet T') (w : contForms n) :
+    (((polyElement n S).localInterp T k w : (polyElement n S).space T k) : FormField n) =
+      (((polyElement n S).localInterp T' k w : (polyElement n S).space T' k) : FormField n) := by
+  have e := (polyElement n S).localSpace_ext T k (u := (polyElement n S).localInterp T k w)
+    (v := ⟨((polyElement n S).localInterp T' k w : FormField n),
+      ((polyElement n S).localInterp T' k w).2⟩) fun g hg i => by
+      rw [LocalElement.localDof_localInterp _ _ _ _ _ hg]
+      have hg' : g ⊆ vertexSet T' := h ▸ hg
+      have := (polyElement n S).localDof_localInterp T' k w g hg' i
+      rw [LocalElement.localDof_apply] at this ⊢
+      exact this.symm
+  exact congrArg Subtype.val e
+
+/-- **The global trimmed families have the interpolants of `LocalDof`**: on an `n`-simplex `T`
+whose vertices, in lexicographic order, are `q`, the canonical interpolant of a trimmed degree
+`k` of an admissible sequence is `polyMinusInterp` for the vertex order `q` (the face moments of
+`q ∘ e` are the DOFs of the faces `q(e(·))`, `lexEnum_image_comp`). -/
+theorem localInterp_eq_polyMinusInterp (S : PolySeq) {k : ℕ} (hκ : S.kind k = .trimmed)
+    (hk : k ≤ n) (T : Affine.Simplex ℝ (Fin n → ℝ) n) {q : Fin (n + 1) → Fin n → ℝ}
+    (hq : StrictMono fun i => toLex (q i)) (hqT : ∀ x ∈ vertexSet T, ∃ i, q i = x)
+    (hp : IsUnit (edgeMatrix q).det) (w : contDegForms n k) :
+    (((polyElement n S).localInterp T k ⟨w, w.2.1⟩ : (polyElement n S).space T k) :
+        FormField n) =
+      (polyMinusInterp hp (S.one_le_deg k) hk w : FormField n) := by
+  set PI := polyMinusInterp hp (S.one_le_deg k) hk
+  have hmem : (PI w : FormField n) ∈ S.space n k := by
+    have h := (localPolyMinusSpace_eq hp (S.deg k) k).le (PI w).2
+    change _ ∈ (S.kind k).space n (S.deg k) k
+    rw [hκ]
+    exact h
+  have hdegP : ∀ x, IsDeg k ((PI w : FormField n) x) := PolyKind.isDeg_of_mem_space hmem
+  have hdegw : ∀ x, IsDeg k ((w : FormField n) x) := w.2.2
+  have hPc : Continuous (PI w : FormField n) := (PolyKind.contDiff_of_mem_space hmem).continuous
+  -- the moments of `PI w` and `w` against all test forms agree on the faces `q ∘ e`
+  have key : ∀ {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1)) {η : FormField m},
+      η ∈ testSpaceMinus (S.deg k) k m →
+        faceMoment q e η (PI w : FormField n) = faceMoment q e η (w : FormField n) := by
+    intro m e η hη
+    set B := testBasisMinus (S.deg k) k m
+    have hηe : η = ∑ j, B.repr ⟨η, hη⟩ j • (B j : FormField m) := by
+      have := congrArg (Subtype.val : testSpaceMinus (S.deg k) k m → FormField m)
+        (B.sum_repr ⟨η, hη⟩)
+      rw [Submodule.coe_sum] at this
+      simp only [Submodule.coe_smul] at this
+      exact this.symm
+    have hB : ∀ j, Continuous (B j : FormField m) := fun j =>
+      (contDiff_of_mem_testSpaceMinus (B j).2).continuous
+    rw [faceMoment_eq_vertexMoment, faceMoment_eq_vertexMoment, hηe,
+      vertexMoment_sum_smul_right _ _ _ hB hPc,
+      vertexMoment_sum_smul_right _ _ _ hB w.2.1]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    congr 1
+    have h := dof_interp (isUnisolvent_localDofMinus hp (S.one_le_deg k) hk)
+      (fun i => polyMinusDof q (S.deg k) k i.1 i.2 ∘ₗ
+        Submodule.inclusion (contDegForms_le_contForms k)) w ⟨Face.ofEmb e, j⟩
+    simp only [localDofMinus, polyMinusDof, LinearMap.comp_apply, Face.emb_ofEmb] at h
+    exact h
+  have e := (polyElement n S).localSpace_ext T k (u := (polyElement n S).localInterp T k ⟨w, w.2.1⟩)
+    (v := ⟨(PI w : FormField n), hmem⟩) fun g hg i => by
+      rw [LocalElement.localDof_localInterp _ _ _ _ _ hg, LocalElement.localDof_apply]
+      have hne : g.Nonempty := i.2
+      have hgc : #g = #g - 1 + 1 := by have := card_pos.2 hne; omega
+      obtain ⟨e, he⟩ := exists_orderEmb_comp_eq_lexEnum hq hgc fun x hx => hqT x (hg hx)
+      change vertexMoment (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
+          (degField k (w : FormField n)) =
+        vertexMoment (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
+          (degField k (PI w : FormField n))
+      rw [degField_eq_self hdegw, degField_eq_self hdegP, ← he]
+      have hb : (S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) ∈
+          testSpaceMinus (S.deg k) k (#g - 1) := by
+        have := (S.testBasis k (#g - 1) i.1).2
+        change _ ∈ (S.kind k).test (S.deg k) k (#g - 1) at this
+        rwa [hκ] at this
+      exact (key e hb).symm
+  exact congrArg Subtype.val e
+
+end PolySeq
+
 /-! ### The thesis' elements (Table 5.1) -/
 
 namespace PolySeq

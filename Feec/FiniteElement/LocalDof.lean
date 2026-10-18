@@ -1090,4 +1090,68 @@ theorem polyInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1
     (extDerivC1Deg k) (extDerivLocal hp r k) (LinearMap.ext fun _ => rfl)
     polyDof_extDeriv_mem_span ω
 
+/-- The degrees of freedom of `dω` are combinations of those of `ω` (Stokes), for the trimmed
+family `P_r⁻Λᵏ → P_r⁻Λ^{k+1}`. -/
+theorem polyMinusDof_extDeriv_mem_span {r k : ℕ} (i : Σ f : Face n, DofIndexMinus r (k + 1) f) :
+    (polyMinusDof p r (k + 1) i.1 i.2 ∘ₗ
+        Submodule.inclusion (contDegForms_le_contForms (k + 1))) ∘ₗ extDerivC1Deg k ∈
+      Submodule.span ℝ (Set.range fun i : Σ f : Face n, DofIndexMinus r k f =>
+        polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (c1DegForms_le_contForms k)) := by
+  obtain ⟨⟨⟨d, hd⟩, g⟩, j⟩ := i
+  cases d with
+  | zero =>
+    exfalso
+    have h0 : Module.finrank ℝ (testSpaceMinus r (k + 1) 0) = 0 := by
+      rw [testSpaceMinus_eq_bot (by omega)]; simp
+    have := j.isLt
+    change j.val < Module.finrank ℝ (testSpaceMinus r (k + 1) 0) at this
+    omega
+  | succ M =>
+    change (polyMinusDof p r (k + 1) ⟨⟨M + 1, hd⟩, g⟩ j ∘ₗ
+      Submodule.inclusion (contDegForms_le_contForms (k + 1))) ∘ₗ extDerivC1Deg k ∈ _
+    have hη : (testBasisMinus r (k + 1) (M + 1) j : FormField (M + 1)) ∈
+        testSpaceMinus r (k + 1) (M + 1) := (testBasisMinus r (k + 1) (M + 1) j).2
+    have heq : (polyMinusDof p r (k + 1) ⟨⟨M + 1, hd⟩, g⟩ j ∘ₗ
+        Submodule.inclusion (contDegForms_le_contForms (k + 1))) ∘ₗ extDerivC1Deg k =
+        ∑ i : Fin (M + 2), ((-1 : ℝ) ^ (i : ℕ)) • (faceMomentₗ p
+          ((Fin.succAboveOrderEmb i).trans (Face.emb ⟨⟨M + 1, hd⟩, g⟩)) _
+            (contDiff_of_mem_testSpaceMinus (faceTrace_mem_testSpaceMinus hη i)).continuous ∘ₗ
+          Submodule.inclusion (c1DegForms_le_contForms k)) -
+        ((-1 : ℝ) ^ k) • (faceMomentₗ p (Face.emb ⟨⟨M + 1, hd⟩, g⟩) _
+          (contDiff_of_mem_testSpaceMinus (extDeriv_mem_testSpaceMinus hη)).continuous ∘ₗ
+          Submodule.inclusion (c1DegForms_le_contForms k)) := by
+      refine LinearMap.ext fun ω => ?_
+      rw [LinearMap.sub_apply, LinearMap.sum_apply, LinearMap.smul_apply]
+      simp only [LinearMap.smul_apply, LinearMap.comp_apply, smul_eq_mul]
+      exact faceMoment_extDeriv p (Face.emb ⟨⟨M + 1, hd⟩, g⟩)
+        (contDiff_of_mem_testSpaceMinus hη) (mem_c1Forms.1 ω.2.1) ω.2.2
+    rw [heq]
+    refine Submodule.sub_mem _ (Submodule.sum_mem _ fun i _ => Submodule.smul_mem _ _ ?_)
+      (Submodule.smul_mem _ _ (faceMoment_mem_span_minus _ (extDeriv_mem_testSpaceMinus hη)))
+    exact faceMoment_mem_span_minus
+      ((Fin.succAboveOrderEmb i).trans (Face.emb ⟨⟨M + 1, hd⟩, g⟩))
+      (faceTrace_mem_testSpaceMinus hη i)
+
+/-- **The commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` `k`-forms, for the trimmed
+family `P_r⁻Λᵏ(T) → P_r⁻Λ^{k+1}(T)` (`r ≥ 1`). [AFW2010], §5.2; [AFW2006], Thm 5.2 -/
+theorem polyMinusInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k + 1 ≤ n) (ω : c1DegForms n k) :
+    polyMinusInterp hp hr hk (extDerivC1Deg k ω) = extDerivLocalMinus hp r k
+      (polyMinusInterp hp hr (by omega) (Submodule.inclusion (c1DegForms_le_contDegForms k) ω)) := by
+  set hℓ := isUnisolvent_localDofMinus hp (r := r) (k := k) hr (by omega)
+  set mY : (Σ f : Face n, DofIndexMinus r k f) → c1DegForms n k →ₗ[ℝ] ℝ := fun i =>
+    polyMinusDof p r k i.1 i.2 ∘ₗ Submodule.inclusion (c1DegForms_le_contForms k)
+  have h1 : polyMinusInterp hp hr (by omega)
+      (Submodule.inclusion (c1DegForms_le_contDegForms k) ω) = interp hℓ mY ω :=
+    hℓ.ext fun i => by rw [polyMinusInterp, dof_interp, dof_interp]; rfl
+  rw [h1]
+  exact interp_comp_eq hℓ mY (isUnisolvent_localDofMinus hp hr hk)
+    (fun i => polyMinusDof p r (k + 1) i.1 i.2 ∘ₗ
+      Submodule.inclusion (contDegForms_le_contForms (k + 1)))
+    (Submodule.inclusion (localPolyMinusSpace_le_c1DegForms hp r k))
+    (Submodule.inclusion (localPolyMinusSpace_le_contDegForms hp r (k + 1)))
+    (fun _ => LinearMap.ext fun _ => rfl) (fun _ => LinearMap.ext fun _ => rfl)
+    (extDerivC1Deg k) (extDerivLocalMinus hp r k) (LinearMap.ext fun _ => rfl)
+    polyMinusDof_extDeriv_mem_span ω
+
 end Feec.FiniteElement

@@ -25,9 +25,9 @@ along the parametrization `F_f : T̂_m → f`, and `∫_f` is the integral over 
 * `Feec.FiniteElement.faceMoment p e η ω = ∫_{T̂_m} tr_{p ∘ e} ω ∧ η`;
 * `Feec.FiniteElement.localDof p r k`, `localDofMinus p r k`: the degrees of freedom of
   `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)`;
-* `Feec.FiniteElement.LocalElement p`: a local finite element (shape functions, degrees of
+* `Feec.FiniteElement.SimplexElement p`: a local finite element (shape functions, degrees of
   freedom attached to faces, unisolvence, trace determination), and its instances
-  `polyLocalElement`, `polyMinusLocalElement`;
+  `polySimplexElement`, `polyMinusSimplexElement`;
 * `Feec.FiniteElement.polyInterp`, `polyMinusInterp`: the canonical interpolants on continuous
   `k`-forms.
 
@@ -654,7 +654,7 @@ theorem faceTrace_eq_of_localDofMinus_eq (hp : IsUnit (edgeMatrix p).det) {r k :
 `ℝⁿ`), degrees of freedom attached to the faces of `p`, unisolvent, and such that the degrees of
 freedom attached to a face and its subfaces determine the trace on that face (the
 trace-determination property used for the conformity of the assembled space). -/
-structure LocalElement (p : Fin (n + 1) → Fin n → ℝ) where
+structure SimplexElement (p : Fin (n + 1) → Fin n → ℝ) where
   /-- The shape functions. -/
   space : Submodule ℝ (FormField n)
   /-- The degrees of freedom attached to each face. -/
@@ -670,8 +670,8 @@ structure LocalElement (p : Fin (n + 1) → Fin n → ℝ) where
       faceTrace p f.emb ω = faceTrace p f.emb ω'
 
 /-- **The finite element `P_rΛᵏ(T)`** ([AFW2006], §4.5; [AFW2010], §5.2). -/
-def polyLocalElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
-    LocalElement p where
+def polySimplexElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r) (hk : k ≤ n) :
+    SimplexElement p where
   space := localPolySpace p r k
   dofIndex := DofIndex r k
   dof f i := localDof p r k ⟨f, i⟩
@@ -679,8 +679,8 @@ def polyLocalElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
   faceTrace_eq f _ _ h := faceTrace_eq_of_localDof_eq hp hr f h
 
 /-- **The finite element `P_r⁻Λᵏ(T)`** ([AFW2006], §4.6; [AFW2010], §5.2). -/
-def polyMinusLocalElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
-    (hk : k ≤ n) : LocalElement p where
+def polyMinusSimplexElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1 ≤ r)
+    (hk : k ≤ n) : SimplexElement p where
   space := localPolyMinusSpace p r k
   dofIndex := DofIndexMinus r k
   dof f i := localDofMinus p r k ⟨f, i⟩

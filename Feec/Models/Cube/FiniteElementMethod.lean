@@ -61,8 +61,17 @@ gives it for reference interpolants satisfying `IsRefInterpolant`, which is not 
 Whitney forms). For the Einstein–Bianchi (BGG) system, `Feec.BGG.Discrete` needs subcomplexes of
 both rows with cochain projections satisfying `Π S = S_h Π'`; vector-valued Whitney forms and such
 a pair of projections are not constructed, so that structure remains an explicit hypothesis of
-`Feec.HilbertComplex.BGG.Discrete`. The vanishing-trace family `H̊Λ(Q)` (minimal smoother of
-`Feec.Domain.StarShapedSmoothing` with zero boundary DOFs) is not treated here.
+`Feec.HilbertComplex.BGG.Discrete`.
+
+**The vanishing-trace family.** For minimal-family parameters (`c > 1`, dilation towards the
+centre) the smoothed form is a test form on `Ω` (`smoothForm_eq_zero_of_minimal`), so its
+canonical interpolant has vanishing boundary DOFs (`LocalElement.globalInterp_mem_globalSpace₀`),
+and `d` of it is the smoothed form of `d_min u` everywhere (`extDeriv_smoothForm_of_minimal`):
+`LocalElement.smoothedCommutingMapMin` is a commuting map into `V̊ₕ ⊆ H̊Λ(Ω)`. On the cube this
+gives `FEM.whitneyMin`, `FEM.smoothedMin` and, under the analogous explicit estimates
+`FEM.SmoothingEstimatesMin`, uniformly bounded cochain projections onto `V̊ₕ`, the uniform discrete
+Poincaré inequality, uniform well-posedness of the discrete mixed problem with vanishing traces and
+the vanishing of the harmonic gap.
 
 ## References
 
@@ -167,6 +176,43 @@ theorem extDeriv_smoothForm_of_maximal (hΩ : MeasurableSet Ω) (hΩo : IsOpen �
       (fun h => ht (by exact_mod_cast h))
     rw [h0, smoothForm_apply]
     simp [formExt, ht]
+
+/-- **`d` of the smoothed form is the smoothed form of `d_min u`** everywhere on `ℝⁿ` (any
+parameters): the zero extension of `u ∈ D(d_min)` has distributional `d` equal to the zero
+extension of `d_min u` (`Feec.Domain.apply_smoothExt_of_minimal`). -/
+theorem extDeriv_smoothForm_of_minimal (hΩ : MeasurableSet Ω) (hΩo : IsOpen Ω) (k : ℕ)
+    (u : ((extDerivOp ℝ n k).minimal Ω).domain) (x : Fin n → ℝ) :
+    extDeriv (smoothForm p hΩ k u : FormField n) x =
+      (smoothForm p hΩ ((k : ℤ) + 1) ((extDerivOp ℝ n k).minimal Ω u) : FormField n) x := by
+  funext t
+  by_cases ht : (#t : ℤ) = (k : ℤ) + 1
+  · have h1 := extDerivOp_apply_formComp (isDeg_smoothForm p hΩ k (u : L2F ℝ Ω (formIdx n k)))
+      ⟨t, ht⟩ x
+    rw [formComp_smoothForm] at h1
+    rw [← h1, apply_smoothExt_of_minimal (p := p) hΩo (extDerivOp_isRowHomogeneous k) u _ _ x,
+      smoothForm_apply, formExt_of_card _ ht]
+    change _ = p.factor ^ ((k : ℤ) + 1) * _
+    rw [pow_one, zpow_add_one₀ p.factor_pos.ne']
+  · have h0 := IsDeg.extDeriv (isDeg_smoothForm p hΩ k (u : L2F ℝ Ω (formIdx n k))) x t
+      (fun h => ht (by exact_mod_cast h))
+    rw [h0, smoothForm_apply]
+    simp [formExt, ht]
+
+/-- **Minimal family: the smoothed form vanishes outside `Ω`** (it is a test form on `Ω`,
+`Feec.Domain.isTest_smoothExt`). -/
+theorem smoothForm_eq_zero_of_minimal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    {x₀ : Fin n → ℝ} {s₀ : ℝ} (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω)
+    (hp : p.IsMinimal x₀ s₀) (k : ℤ) (u : L2F ℝ Ω (formIdx n k)) {x : Fin n → ℝ} (hx : x ∉ Ω) :
+    (smoothForm p hΩ.measurableSet k u : FormField n) x = 0 := by
+  funext t
+  rw [smoothForm_apply]
+  unfold formExt
+  split_ifs with h
+  · change p.factor ^ k * smoothExt Ω p ((u ⟨t, h⟩ : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) x = 0
+    rw [image_eq_zero_of_notMem_tsupport fun hx' => hx ((isTest_smoothExt hb hstar hp
+      ((memLp_indicator hΩ.measurableSet _).locallyIntegrable (by norm_num))).tsupport_subset hx'),
+      mul_zero]
+  · rfl
 
 end SmoothForm
 
@@ -277,6 +323,103 @@ def smoothedCommutingMap [NeZero n] (hΩo : IsOpen M.domain) {x₀ : Fin n → �
     (E.smoothedCommutingMap M p hΩo hstar hp).Q i = E.smoothedInterp M p hΩo.measurableSet i :=
   rfl
 
+/-! ### The vanishing-trace family -/
+
+/-- A point of the boundary `∂(cl Ω)` is not in the open set `Ω`. -/
+theorem _root_.Feec.Mesh.SimplicialMesh.notMem_domain_of_mem_frontier (hΩo : IsOpen M.domain)
+    {x : Fin n → ℝ} (hx : x ∈ frontier (closure M.domain)) : x ∉ M.domain := fun hxΩ =>
+  hx.2 (interior_maximal subset_closure hΩo hxΩ)
+
+/-- **`Π_h` of a form vanishing on `∂(cl Ω)` has vanishing boundary DOFs**: the DOFs of a face
+in a boundary facet see only the traces there (`dof_congr`). -/
+theorem globalInterp_mem_globalSpace₀ (k : ℕ) {w : contForms n}
+    (h : ∀ x ∈ frontier (closure M.domain), (w : FormField n) x = 0) :
+    (E.globalInterp M k w : E.Piecewise M k) ∈ E.globalSpace₀ M k := by
+  refine ⟨(E.globalInterp M k w).2, fun T F hF hFT g hg i => ?_⟩
+  rw [localDof_globalInterp _ _ _ _ _ _ (hg.trans hFT)]
+  have h0 : E.dof g k i w = E.dof g k i 0 := E.dof_congr i fun x hx V _ => by
+    rw [h x (hF.2.2 (convexHull_mono (Finset.coe_subset.2 hg) hx))]
+    rfl
+  rw [h0, map_zero]
+
+/-- **Minimal family: `Q = Π_h R` has vanishing boundary DOFs**, `Q u ∈ V̊ₕ`. -/
+theorem smoothedInterp_mem_V₀ (hΩo : IsOpen M.domain) (hb : Bornology.IsBounded M.domain)
+    {x₀ : Fin n → ℝ} {s₀ : ℝ}
+    (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
+    (hp : p.IsMinimal x₀ s₀) (k : ℤ) (u : L2F ℝ M.domain (formIdx n k)) :
+    E.smoothedInterp M p hΩo.measurableSet k u ∈ E.V₀ M k := by
+  rcases k with k | k
+  · exact ⟨⟨_, E.globalInterp_mem_globalSpace₀ M k fun x hx =>
+      smoothForm_eq_zero_of_minimal p hΩo hb hstar hp k u (M.notMem_domain_of_mem_frontier hΩo hx)⟩,
+      rfl⟩
+  · exact Submodule.zero_mem _
+
+/-- **`d_min Q u = Q d_min u`** (minimal family): as `maximal_smoothedInterp`, with the smoother
+commuting with `d_min` everywhere (`extDeriv_smoothForm_of_minimal`) and `Q u ∈ V̊ₕ ⊆ D(d_min)`. -/
+theorem minimal_smoothedInterp [NeZero n] (hΩo : IsOpen M.domain)
+    (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
+    (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
+    (hp : p.IsMinimal x₀ s₀) (y₀ : Fin n → ℝ)
+    (hstar' : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → y₀ + t • (x - y₀) ∈ M.domain)
+    (k : ℕ) (u : ((extDerivOp ℝ n k).minimal M.domain).domain) :
+    ∃ h : E.smoothedInterp M p hΩo.measurableSet k u ∈
+        ((extDerivOp ℝ n k).minimal M.domain).domain,
+      (extDerivOp ℝ n k).minimal M.domain ⟨_, h⟩ =
+        E.smoothedInterp M p hΩo.measurableSet ((k : ℤ) + 1)
+          ((extDerivOp ℝ n k).minimal M.domain u) := by
+  set w := smoothForm p hΩo.measurableSet k (u : L2F ℝ M.domain (formIdx n k))
+  have hw : (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms w) : E.Piecewise M k) ∈
+      E.globalSpace₀ M k := E.globalInterp_mem_globalSpace₀ M k fun x hx =>
+    smoothForm_eq_zero_of_minimal p hΩo hb hstar hp k _ (M.notMem_domain_of_mem_frontier hΩo hx)
+  obtain ⟨h, hval⟩ := E.glue_mem_minimal M hΩo y₀ hstar' k ⟨_, hw⟩
+  refine ⟨h, hval.trans ?_⟩
+  have h1 : E.dPiecewise M k
+      (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms w) : E.Piecewise M k) =
+      (E.dGlobal M k (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms w)) :
+        E.Piecewise M (k + 1)) := rfl
+  change E.glue M ((k : ℤ) + 1) (E.dPiecewise M k
+    (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms w) : E.Piecewise M k)) = _
+  rw [h1, ← globalInterp_extDeriv]
+  have h2 : E.globalInterp M (k + 1) (extDerivC1 w) = E.globalInterp M (k + 1)
+      (Submodule.inclusion c1Forms_le_contForms
+        (smoothForm p hΩo.measurableSet ((k + 1 : ℕ) : ℤ)
+          ((extDerivOp ℝ n k).minimal M.domain u))) :=
+    E.globalInterp_congr M (k + 1) fun x _ =>
+      extDeriv_smoothForm_of_minimal p hΩo.measurableSet hΩo k u x
+  rw [h2]
+  rfl
+
+/-- **The smoothed canonical interpolant as a commuting map** into the finite element subcomplex
+with vanishing boundary DOFs `V̊ₕ ⊆ H̊Λ(Ω)` (minimal family, `Ω` bounded, star-shaped with respect
+to `B(x₀, s₀)` and strictly star-shaped with respect to `y₀`): `d Q = Q d` in every degree. -/
+def smoothedCommutingMapMin [NeZero n] (hΩo : IsOpen M.domain)
+    (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
+    (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
+    (hp : p.IsMinimal x₀ s₀) (y₀ : Fin n → ℝ)
+    (hstar' : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → y₀ + t • (x - y₀) ∈ M.domain) :
+    (E.subcomplexMin M hΩo y₀ hstar').CommutingMap where
+  Q := E.smoothedInterp M p hΩo.measurableSet
+  mem i x := E.smoothedInterp_mem_V₀ M p hΩo hb hstar hp i x
+  comm i j x := by
+    by_cases hij : i + 1 = j
+    · subst hij
+      have hd := deRham_minimalComplex_d (𝕜 := ℝ) (n := n) hΩo i
+      rcases i with k | k
+      · rw [LinearPMap.apply_eq_of_eq' hd, LinearPMap.apply_eq_of_eq' hd x]
+        obtain ⟨h, hv⟩ := E.minimal_smoothedInterp M p hΩo hb hstar hp y₀ hstar' k
+          ⟨x.1, hd ▸ x.2⟩
+        exact hv
+      · have h0 : ∀ y : (((deRham ℝ n).minimalComplex hΩo).d (Int.negSucc k)
+            (Int.negSucc k + 1)).domain, ((deRham ℝ n).minimalComplex hΩo).d _ _ y = 0 := by
+          intro y
+          have : y = 0 := Subtype.ext ((subsingleton_L2F_negSucc M.domain k).elim _ _)
+          rw [this, LinearPMap.map_zero]
+        rw [h0, h0]
+        exact (E.smoothedInterp M p hΩo.measurableSet _).map_zero.symm
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hij),
+        HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hij)]
+      exact (E.smoothedInterp M p hΩo.measurableSet j).map_zero.symm
+
 end LocalElement
 
 end Feec.FiniteElement
@@ -304,6 +447,25 @@ theorem finiteDimensional_maximalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (
 def commutingMapOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω')
     {S : (C.maximalComplex hΩ).Subcomplex} (Q : S.CommutingMap) :
     (C.maximalSubcomplexOfEq h hΩ hΩ' S).CommutingMap := by
+  subst h; exact Q
+
+/-- A subcomplex of the minimal complex on `Ω`, as a subcomplex of the minimal complex on
+`Ω' = Ω`. -/
+def minimalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex) :
+    (C.minimalComplex hΩ').Subcomplex := by
+  subst h; exact S
+
+theorem finiteDimensional_minimalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
+    (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex)
+    [hS : ∀ k, FiniteDimensional ℝ (S.V k)] (k : ℤ) :
+    FiniteDimensional ℝ ((C.minimalSubcomplexOfEq h hΩ hΩ' S).V k) := by
+  subst h; exact hS k
+
+/-- A commuting map into a subcomplex of the minimal complex, transported along `Ω = Ω'`. -/
+def commutingMapOfEqMin {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω')
+    {S : (C.minimalComplex hΩ).Subcomplex} (Q : S.CommutingMap) :
+    (C.minimalSubcomplexOfEq h hΩ hΩ' S).CommutingMap := by
   subst h; exact Q
 
 end Feec.Domain.ConstCoeffComplex
@@ -666,6 +828,149 @@ theorem tendsto_harmonicGap {j : ℤ} [FiniteDimensional ℝ ((complex n).harmon
     (fun N x => hE.norm_proj_le N j x) happrox
 
 end SmoothingEstimates
+
+/-! ## The vanishing-trace family `H̊Λ(Q)` -/
+
+/-- The minimal `L²` de Rham complex `H̊Λ(Q)` of the cube (vanishing tangential traces). -/
+abbrev complexMin : HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ (cubeDomain n) (formIdx n k) :=
+  (deRham ℝ n).minimalComplex (isOpen_cubeDomain n)
+
+omit [NeZero n] in
+theorem isBounded_cubeDomain : Bornology.IsBounded (cubeDomain n) :=
+  Bornology.IsBounded.pi fun _ => Metric.isBounded_Ioo _ _
+
+omit [NeZero n] in
+theorem center_mem_cubeDomain : center n ∈ cubeDomain n := fun i _ => by
+  simp only [center, Set.mem_Ioo]; norm_num
+
+omit [NeZero n] in
+theorem strictStar_mesh (N : ℕ) : ∀ x ∈ closure (mesh n N).domain, ∀ t : ℝ, 0 ≤ t → t < 1 →
+    center n + t • (x - center n) ∈ (mesh n N).domain := by
+  rw [mesh_domain]
+  exact add_smul_sub_mem_of_convex (isOpen_cubeDomain n) (convex_cubeDomain n)
+    (center_mem_cubeDomain n)
+
+/-- **The Whitney complex with vanishing boundary DOFs** of the level-`(N + 1)` Freudenthal mesh,
+as a subcomplex of `H̊Λ(Q)`. -/
+def whitneyMin (N : ℕ) : (complexMin n).Subcomplex :=
+  (deRham ℝ n).minimalSubcomplexOfEq (mesh_domain n N) (isOpen_mesh_domain n N)
+    (isOpen_cubeDomain n)
+    (whitneySubcomplexMin (mesh n N) (isOpen_mesh_domain n N) (center n) (strictStar_mesh n N))
+
+instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((whitneyMin n N).V k) :=
+  (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
+
+/-- **The smoothed canonical interpolant with vanishing boundary DOFs** `Q̊_N = Π_h R` on the
+Freudenthal Whitney complex of `H̊Λ(Q)`, for minimal-family smoothing parameters (dilation
+towards the centre, `c > 1`): `R u` is a test form on `Q`, so `Q̊_N u ∈ V̊ₕ`, and `d Q̊_N = Q̊_N d`. -/
+def smoothedMin (N : ℕ) (p : SmoothingParam (Fin n → ℝ)) (hp : p.IsMinimal (center n) (1 / 4)) :
+    (whitneyMin n N).CommutingMap :=
+  (deRham ℝ n).commutingMapOfEqMin (mesh_domain n N) (isOpen_mesh_domain n N)
+    (isOpen_cubeDomain n)
+    ((whitneyElement n).smoothedCommutingMapMin (mesh n N) p (isOpen_mesh_domain n N)
+      (mesh_domain n N ▸ isBounded_cubeDomain n) (starBall_mesh n N) hp (center n)
+      (strictStar_mesh n N))
+
+/-- **The estimates of the smoothed interpolants with vanishing boundary DOFs** ([AFW2010],
+§5.4, [ChristiansenWinther2008]; explicit hypothesis, as `SmoothingEstimates`): for
+minimal-family parameters `p N`, uniform `L²` bounds of `Q̊_N` and `‖v - Q̊_N v‖ ≤ ½ ‖v‖` on
+`V̊ₕ`; normalized by `½ ≤ C`. -/
+structure SmoothingEstimatesMin (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) : Prop where
+  isMinimal : ∀ N, (p N).IsMinimal (center n) (1 / 4)
+  half_le : 1 / 2 ≤ C
+  bound : ∀ N i x, ‖(smoothedMin n N (p N) (isMinimal N)).Q i x‖ ≤ C * ‖x‖
+  close : ∀ N i, ∀ v ∈ (whitneyMin n N).V i,
+    ‖v - (smoothedMin n N (p N) (isMinimal N)).Q i v‖ ≤ 1 / 2 * ‖v‖
+
+namespace SmoothingEstimatesMin
+
+variable {n} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
+
+/-- **The smoothed projection** `π̊_N = J_N⁻¹ Q̊_N` onto the Whitney complex of `H̊Λ(Q)`. -/
+def proj (hE : SmoothingEstimatesMin n p C) (N : ℕ) : (whitneyMin n N).CochainProjection :=
+  (smoothedMin n N (p N) (hE.isMinimal N)).toCochainProjection (θ := 1 / 2) (by norm_num)
+    (hE.close N)
+
+theorem two_mul_nonneg (hE : SmoothingEstimatesMin n p C) : 0 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+theorem one_le_two_mul (hE : SmoothingEstimatesMin n p C) : 1 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+variable (hE : SmoothingEstimatesMin n p C)
+include hE
+
+/-- **Uniform `L²` bound** `‖π̊_N x‖ ≤ 2 C ‖x‖`. -/
+theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
+    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ := by
+  have h := (smoothedMin n N (p N) (hE.isMinimal N)).norm_toCochainProjection_le (θ := 1 / 2)
+    (by norm_num) (hE.close N) (hE.bound N i) x
+  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
+  rwa [e] at h
+
+/-- **Uniform graph-norm bound** of `π̊_N` by `2 C`. -/
+theorem isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) := by
+  have h := (smoothedMin n N (p N) (hE.isMinimal N)).isGraphBounded_toCochainProjection_of_norm_le
+    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) (hE.bound N j)
+  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
+  rwa [e] at h
+
+/-- **Uniform discrete Poincaré inequality** for the Whitney spaces with vanishing boundary DOFs:
+if `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ` in `H̊Λ(Q)`, then `‖x‖ ≤ 2 C c_P ‖d x‖` for `x ∈ V̊ₕⁱ ⊥ 𝔷̊ₕⁱ`. -/
+theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
+    (hP : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitneyMin n N).V i)
+    (hxo : ∀ y ∈ (whitneyMin n N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * cP * ‖(complexMin n).d i j ⟨x, (whitneyMin n N).le_domain i j hx⟩‖ :=
+  (hE.proj N).norm_le_of_forall_inner_eq_zero hij hP hE.two_mul_nonneg (hE.norm_proj_le N i) hx
+    hxo
+
+/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian with vanishing traces**
+([AFW2010], Thm 3.8) on the cube meshes. -/
+theorem existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complexMin n).d j k z‖)
+    (N : ℕ) (f : (whitneyMin n N).V j) :
+    ∃! x, (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f :=
+  (hE.proj N).existsUnique_mixed hij hjk hcP hE.one_le_two_mul hPi hPj (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) f
+
+/-- **Uniform stability**: `‖xₕ‖ ≤ 16 (2 C c_P)² ‖fₕ‖` for the discrete mixed problem with
+vanishing traces, independently of `N`. -/
+theorem norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complexMin n).d j k z‖)
+    (N : ℕ) {f : (whitneyMin n N).V j} {x : (whitneyMin n N).toHilbertComplex.MixedSpace i j}
+    (hx : (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * cP) ^ 2 * ‖f‖ :=
+  (hE.proj N).norm_le_of_mixed hij hjk hcP hE.one_le_two_mul hPi hPj (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) hx
+
+/-- **The harmonic gap of `H̊Λ(Q)` tends to zero** under the approximation hypotheses of
+`SmoothingEstimates.tendsto_harmonicGap`. -/
+theorem tendsto_harmonicGap {j : ℤ} [FiniteDimensional ℝ ((complexMin n).harmonic j)]
+    (happrox : ∀ q ∈ (complexMin n).harmonic j,
+      Tendsto (fun N => Metric.infDist q ((whitneyMin n N).V j :
+        Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0)) :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
+    (fun N x => hE.norm_proj_le N j x) happrox
+
+end SmoothingEstimatesMin
 
 /-! ## The Hodge wave equation and Maxwell's equations on the cube meshes -/
 

@@ -31,6 +31,23 @@ therefore a Whitney form of the facet, determined by the DOFs of the faces of th
 * `Feec.FiniteElement.whitneyFaceDof g k`: the face integral over the face `g`, enumerated by
   `faceEnum g`.
 * `Feec.FiniteElement.whitneyElement n`: the Whitney element family.
+* `Feec.FiniteElement.whitneySubcomplex M hΩ`, `whitneySubcomplexMin M hΩ x₀ hstar`,
+  `freudenthalWhitneySubcomplex`, `freudenthalWhitneySubcomplexMin`: the Whitney subcomplexes.
+
+## Main results
+
+* `whitneySpace_le_p1MinusForms`, `affinePullback_mem_p1MinusForms`,
+  `p1MinusForms_le_whitneySpace_refVertex`: Whitney forms are trimmed linear forms, stable
+  under affine pullback.
+* `isUnisolvent_whitneyFaceDof`, `tangentialTraceEq_of_whitneyFaceDof_eq`,
+  `whitneyFaceDof_congr`, `whitneyFaceDof_comp_extDerivC1_mem_span`: the axioms of an element
+  family.
+* `finrank_whitney_globalSpace`, `finrank_whitney_V`, `finrank_whitneySubcomplex_V`,
+  `finrank_freudenthalWhitneySubcomplex_V`: **`dim = #{k-faces}`**.
+* `mem_whitney_globalSpace_iff`: the global space is the space of piecewise Whitney forms with
+  continuous tangential traces (facet-connected stars).
+* `whitney_globalSpace_zero_continuous` (`k = 0`, Lagrange: continuity) and
+  `whitney_globalSpace_top` (`k = n`, piecewise constants: no interface condition).
 
 ## References
 
@@ -505,6 +522,44 @@ theorem finrank_whitney_globalSpace (M : SimplicialMesh n) (k : ℕ) :
 theorem finrank_whitney_V (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℕ) :
     Module.finrank ℝ ((whitneyElement n).V M k) = (M.faces k).ncard := by
   rw [LocalElement.finrank_V _ M hΩ, card_globalDofIdx_whitneyElement]
+
+instance (k : ℕ) : IsEmpty (WhitneyDofIdx (∅ : Finset (Fin n → ℝ)) k) :=
+  ⟨fun i => by have := i.2; simp at this⟩
+
+/-- **The global Whitney space is the space of piecewise Whitney forms with continuous tangential
+traces** (for meshes with facet-connected face stars). -/
+theorem mem_whitney_globalSpace_iff (M : SimplicialMesh n) (hM : LocalElement.FacetConnected M)
+    {k : ℕ} {u : (whitneyElement n).Piecewise M k} :
+    u ∈ (whitneyElement n).globalSpace M k ↔ ∀ F ∈ M.facets, ∀ T T' : M.simplices,
+      F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
+        F ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) →
+          ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)),
+            TangentialTraceEq F k ((u T : FormField n) x) ((u T' : FormField n) x) :=
+  (whitneyElement n).mem_globalSpace_iff M hM (inferInstanceAs (IsEmpty (WhitneyDofIdx ∅ k)))
+
+/-- **`k = 0`: Lagrange `P₁`**: global Whitney `0`-forms are continuous across the facets. -/
+theorem whitney_globalSpace_zero_continuous (M : SimplicialMesh n)
+    {u : (whitneyElement n).Piecewise M 0} (hu : u ∈ (whitneyElement n).globalSpace M 0)
+    {F : Finset (Fin n → ℝ)} (hF : F ∈ M.facets) (T T' : M.simplices)
+    (hT : F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n))
+    (hT' : F ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n))
+    {x : Fin n → ℝ} (hx : x ∈ convexHull ℝ (F : Set (Fin n → ℝ))) :
+    (u T : FormField n) x ∅ = (u T' : FormField n) x ∅ :=
+  (tangentialTraceEq_zero_iff F _ _).1
+    ((whitneyElement n).tangentialTraceEq_of_mem_globalSpace M hu hF T T' hT hT' x hx)
+
+/-- **`k = n`: discontinuous piecewise constants**: every piecewise Whitney `n`-form is global
+(there is no interface condition). -/
+theorem whitney_globalSpace_top (M : SimplicialMesh n) :
+    (whitneyElement n).globalSpace M n = ⊤ := by
+  refine eq_top_iff.2 fun u _ T T' g hg hg' i => ?_
+  have hgT : g = vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) :=
+    Finset.eq_of_subset_of_card_le hg (by rw [card_vertexSet, i.2])
+  have hgT' : g = vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
+    Finset.eq_of_subset_of_card_le hg' (by rw [card_vertexSet, i.2])
+  have : T = T' := Subtype.ext (M.vertexSet_injOn T.2 T'.2 (hgT.symm.trans hgT'))
+  subst this
+  rfl
 
 /-- **The lowest-order Whitney complex** `P₁⁻Λ⁰(M) → P₁⁻Λ¹(M) → ⋯ → P₁⁻Λⁿ(M)` on a conforming mesh
 of an open `Ω ⊆ ℝⁿ`, as a subcomplex of the maximal `L²` de Rham complex `HΛ(Ω)` (in `ℝ³`:

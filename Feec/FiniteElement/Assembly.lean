@@ -301,11 +301,11 @@ theorem tangentialTraceEq_of_mem_globalSpace {k : ℕ} {u : E.Piecewise M k}
   E.trace hT hT' hF.1 (u T).2 (u T').2 fun g hg i =>
     hu T T' g (hg.trans hT) (hg.trans hT') i
 
-/-- The stars of the faces of `M` are **facet-connected**: two `n`-simplices containing a face `g`
-are joined by a chain of `n`-simplices containing `g`, consecutive ones sharing a facet that
-contains `g`. (Fails for two triangles meeting only at a vertex.) -/
+/-- The stars of the (nonempty) faces of `M` are **facet-connected**: two `n`-simplices
+containing a face `g` are joined by a chain of `n`-simplices containing `g`, consecutive ones
+sharing a facet that contains `g`. (Fails for two triangles meeting only at a vertex.) -/
 def FacetConnected : Prop :=
-  ∀ g : Finset (Fin n → ℝ), ∀ T T' : M.simplices,
+  ∀ g : Finset (Fin n → ℝ), g.Nonempty → ∀ T T' : M.simplices,
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
       g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) →
         Relation.ReflTransGen (fun T₁ T₂ : M.simplices => ∃ F ∈ M.facets, g ⊆ F ∧
@@ -313,9 +313,10 @@ def FacetConnected : Prop :=
             F ⊆ vertexSet (T₂ : Affine.Simplex ℝ (Fin n → ℝ) n)) T T'
 
 /-- **`Λ_hᵏ(M)` is the space of piecewise fields with continuous tangential traces** (for meshes
-with facet-connected face stars): DOF agreement on shared faces is equivalent to the agreement
-of the tangential traces on the facets. -/
-theorem mem_globalSpace_iff (hM : FacetConnected M) {k : ℕ} {u : E.Piecewise M k} :
+with facet-connected face stars, and no DOF on the empty face): DOF agreement on shared faces is
+equivalent to the agreement of the tangential traces on the facets. -/
+theorem mem_globalSpace_iff (hM : FacetConnected M) {k : ℕ} (hempty : IsEmpty (E.DofIdx ∅ k))
+    {u : E.Piecewise M k} :
     u ∈ E.globalSpace M k ↔ ∀ F ∈ M.facets, ∀ T T' : M.simplices,
       F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
         F ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) →
@@ -323,7 +324,9 @@ theorem mem_globalSpace_iff (hM : FacetConnected M) {k : ℕ} {u : E.Piecewise M
             TangentialTraceEq F k ((u T : FormField n) x) ((u T' : FormField n) x) := by
   refine ⟨fun hu F hF T T' hT hT' => E.tangentialTraceEq_of_mem_globalSpace M hu hF T T' hT hT',
     fun h T T' g hg hg' i => ?_⟩
-  induction hM g T T' hg hg' with
+  rcases g.eq_empty_or_nonempty with rfl | hne
+  · exact (hempty.false i).elim
+  induction hM g hne T T' hg hg' with
   | refl => rfl
   | tail _ hstep ih =>
     obtain ⟨F, hF, hgF, h1, h2⟩ := hstep

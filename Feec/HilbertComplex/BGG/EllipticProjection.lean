@@ -8,18 +8,32 @@ public import Feec.HilbertComplex.BGG.TimeDependent
 
 The thesis defines (§6.2, (6.4)) an elliptic projection of the exact solution of (6.2) onto the
 finite element spaces of (6.3): the shifted form "mass + skew form `a` + multiplier `b`",
-including the `L²` (mass) term, tested on the discrete spaces. The thesis' formula is garbled
-and the projection is never shown to exist or to approximate. This file defines it for
-finite-dimensional discrete BGG data (`Feec.BGG.Segment` on the FE spaces, as in
-`Feec.BGG.DiscreteSolution`), proves unique solvability, Galerkin orthogonality and, for
-discretizations `Feec.BGG.Discrete` of a continuous complex, uniform stability and a Strang
-bound.
+including the `L²` (mass) term, tested on the discrete spaces. The thesis states (6.4) as a
+single error equation in which the discrete forms `a`, `b` (built with `Sₕ`) are applied to
+`Π − I`, and never shows the projection to exist or to approximate. This file defines a
+corrected version for finite-dimensional discrete BGG data (`Feec.BGG.Segment` on the FE spaces,
+as in `Feec.BGG.DiscreteSolution`), proves unique solvability, Galerkin orthogonality and, for
+discretizations `Feec.BGG.Discrete` of a continuous complex, a uniform (in `h`) inf-sup
+condition on the constrained space `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²` and a Strang bound. The multiplier
+block has no uniform inf-sup here, and the discrete multiplier `λₕ` is not estimated.
 
-Correction: (6.4b) as printed, `b(Π − I; ζ) = 0`, prescribes `dΠσ − Sₕ Π̃φ = P_{Vₕ¹}(S − Sₕ)φ`,
-which is nonzero in general, so the projected pair would not lie in `Γₕ`. The energy argument of
-the convergence proof (`Feec.BGG.norm_sub_le_of_ellipticProjection_L2`) needs it in `Γₕ`; we
-impose the homogeneous constraint `dΠσ = Sₕ Π̃φ` (`IsEllipticProjection` allows any right-hand
-side `g`).
+Corrections to the thesis' (6.4):
+
+1. *Homogeneous constraint.* (6.4b) as printed, `b(Π − I; ζ) = 0`, prescribes
+   `dΠσ − Sₕ Π̃φ = P_{Vₕ¹}(S − Sₕ)φ`, which is nonzero in general, so the projected pair would
+   not lie in `Γₕ`. The energy argument of the convergence proof
+   (`Feec.BGG.norm_sub_le_of_ellipticProjection_L2`) needs it in `Γₕ`; we impose the
+   homogeneous constraint `dΠσ = Sₕ Π̃φ` (`IsEllipticProjection` allows any right-hand side
+   `g`).
+2. *Continuous forms on the exact solution.* (6.4a) applies the discrete skew form `a` (with
+   `S₁,ₕ`) and the discrete multiplier term `(λ, dτ − S₀,ₕψ)` to the exact state as well. Our
+   data functionals `ellipticData` / `Discrete.ellipticDataH` instead evaluate the exact state
+   in the *continuous* forms: `A` (with `S₁`) and `ℓ(dτ − S₀ψ)` (with `S₀`). The two
+   projections differ by the consistency functionals `⟪M, (S₁ − S₁,ₕ)v⟫`,
+   `⟪(S₁ − S₁,ₕ)u, N⟫` and `ℓ((S₀ − S₀,ₕ)ψ)`. This choice is what gives Galerkin
+   orthogonality against the exact equation (`IsEllipticProjection.galerkin`, the hypothesis
+   `hproj` of the Ch. 6 convergence theorems); the consistency functionals reappear in the
+   Strang bound (`Discrete.strangData`).
 
 ## Main definitions
 
@@ -46,9 +60,10 @@ side `g`).
   discrete shifted form on `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²`, constant `(1/2)/√3`, via the test map
   `x ↦ x + (0, 0, dφ, −Sₕu, −du)`; `Discrete.graphNormSq_le_shiftedNormSq`: it controls the full
   graph norms of `σ, φ`.
-* `Feec.BGG.Discrete.strang_shiftedForm_h`, `Feec.BGG.Discrete.strang_ellipticProjection`:
-  the Strang bound `‖e‖² ≤ C (interpolation errors + consistency functionals)`, `C` depending on
-  the Poincaré constant only; `Discrete.norm_sub_ellipticProjection_le_rate`: the `O(h)` rate.
+* `Feec.BGG.Discrete.strang_shiftedForm_h`, `Feec.BGG.Discrete.strang_energy`,
+  `Feec.BGG.Discrete.strang_of_isEllipticProjection`: the Strang bound
+  `‖e‖² ≤ C (interpolation errors + consistency functionals)`, `C` depending on the Poincaré
+  constant only; `Feec.BGG.Discrete.strang_energy_rate`: the `O(h)` rate.
 
 ## References
 
@@ -108,8 +123,13 @@ variable (D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2)
 /-- **The elliptic projection (6.4)**, corrected: `x = ((σ, u, M, ρ), φ, λ)` solves
 `(ξₓ, η) + aₕ(x, y) − (λ, dτ − S₀,ₕψ) = G(y)` for all `y = ((τ, v, N, μ), ψ)`, and
 `dσ − S₀,ₕφ = g`. For the projection of an exact solution, `G` is `ellipticData` and `g = 0`.
-Correction: the thesis' (6.4) is garbled; its constraint (6.4b) gives a nonzero `g`, which takes
-`(σ, φ)` out of `Γₕ` (see the module docstring). See [QuennevilleBelair2015], §6.2, (6.4). -/
+Two corrections to the thesis' (6.4) (see the module docstring): (i) its constraint (6.4b)
+gives a nonzero `g`, which takes `(σ, φ)` out of `Γₕ`, so we take `g = 0`; (ii) its (6.4a)
+evaluates the exact state in the discrete forms (with `S₁,ₕ` and `(λ, dτ − S₀,ₕψ)`), whereas the
+data `ellipticData` use the continuous forms (with `S₁` and `ℓ(dτ − S₀ψ)`), so the two
+projections differ by the consistency functionals `⟪M, (S₁ − S₁,ₕ)v⟫`, `⟪(S₁ − S₁,ₕ)u, N⟫`,
+`ℓ((S₀ − S₀,ₕ)ψ)`; this is what makes Galerkin orthogonality hold against the exact equation.
+See [QuennevilleBelair2015], §6.2, (6.4). -/
 def IsEllipticProjection (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1)
     (x : ((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) : Prop :=
   (∀ y, energyInner x.1.1 y.1 + discreteSkewForm D x.1 y - ⟪x.2, D.d0 y.1.1 - D.S0 y.2⟫ = G y) ∧
@@ -317,7 +337,8 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
 /-- **The data functional of the elliptic projection of an exact state** `(ξ, χ)` with
 multiplier functional `ℓ`: `G(b, ψ) = ⟪ξ, ι b⟫ + A(ξ, χ)(ι b, j ψ) − ℓ(ι b, j ψ)`, i.e. the
 continuous shifted form (mass + skew + multiplier) tested on discrete functions, in the setting
-of `DiscreteSolution.norm_sub_le_of_ellipticProjection`. -/
+of `DiscreteSolution.norm_sub_le_of_ellipticProjection`. This differs from the thesis' (6.4a),
+which uses the discrete forms on the exact state (correction (2) of the module docstring). -/
 def ellipticData (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (j : Pt0 →ₗ[ℝ] Z)
     (A : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ) (ξ : X) (χ : Z) (ℓ : (X × Z) →ₗ[ℝ] ℝ) :
     Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0) :=
@@ -359,7 +380,7 @@ theorem IsEllipticProjection.galerkin {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
 
 end Galerkin
 
-/-! ## Uniform stability and a Strang bound for discretizations `Q : Discrete D` -/
+/-! ## Uniform inf-sup on `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²` and a Strang bound for `Q : Discrete D` -/
 
 namespace Discrete
 
@@ -786,8 +807,9 @@ theorem energyInner_add_discreteSkewForm_toSegmentH
   ring
 
 /-- The data functional of the elliptic projection (6.4) of an exact state `(σ, φ, u, M, ρ)`
-with multiplier functional `ℓ`: the continuous shifted form `A(x, y) − ℓ(dτ − S₀ψ)` tested on
-discrete `y`. -/
+with multiplier functional `ℓ`: the continuous shifted form `A(x, y) − ℓ(dτ − S₀ψ)` (with
+`S₁`, `S₀`, not `S₁,ₕ`, `S₀,ₕ` as in the thesis' (6.4a); correction (2) of the module
+docstring) tested on discrete `y`. -/
 def ellipticDataH (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (ℓ : V1 →ₗ[ℝ] ℝ) :
     Module.Dual ℝ ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) where
   toFun y := shiftedFormC D σ φ u M ρ y.1.1 y.2 y.1.2.1 y.1.2.2.1 y.1.2.2.2

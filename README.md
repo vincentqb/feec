@@ -33,8 +33,9 @@ The library is organized by mathematics, not by thesis chapter
   on domains, polynomial forms, curvature tensors.
 - `Feec.Models`, `Feec.Physics`, `Feec.Counterexamples`: the concrete complexes (torus, `ℝⁿ`,
   bounded domains, cubes), linearized gravity and Einstein–Bianchi, and the refutations.
-- `Feec.FiniteElement`, `Feec.Examples`, `Feec.Numerics`: degrees of freedom and commuting
-  interpolants, non-vacuity witnesses, the Crank–Nicolson table of Ch. 7.
+- `Feec.Mesh`, `Feec.FiniteElement`: simplicial and Freudenthal meshes, `P_rΛᵏ` and `P_r⁻Λᵏ`
+  elements, Whitney complexes, Stokes on simplices, interpolation error, smoothed projections.
+- `Feec.Examples`, `Feec.Numerics`: non-vacuity witnesses, the Crank–Nicolson table of Ch. 7.
 
 `docs/THESIS_MAP.md` maps every thesis result to its Lean declarations.
 
@@ -43,6 +44,7 @@ The library is organized by mathematics, not by thesis chapter
 - Stone's theorem over `ℝ` and `ℂ` (`LinearPMap.isSkewAdjoint_iff_existsUnique_isometricGroup`): the Hodge wave equation of every Hilbert complex is well posed, with the thesis's full forcing class (Thms 4.3, 4.6–4.7).
 - Constraint propagation (Props 4.16–4.19) for every Hilbert complex: a constraint propagates iff it is a reducing subcomplex. Props 4.17/4.19 hold on 𝕋³ and ℝ³; on every bounded domain their hypotheses and conclusions fail, and on cubes with the thesis's boundary conditions only stationary data propagate. With tensorial mirror boundary conditions they hold on every open cube. The Ch. 6 method inherits the bounded-domain failure.
 - Brezzi theory and Babuška–Nečas over `ℝ` and `ℂ`, the semi-discrete error estimate (Thm 4.14), and the BGG weak-symmetry construction (Ch. 5–6).
+- FEEC beyond the thesis: Lumer–Phillips and the Hodge heat equation, the Hodge solution operator and the quasi-optimal error estimate of the mixed method (AFW 2010, Thm 3.9), unisolvent `P_rΛᵏ`/`P_r⁻Λᵏ` elements in any dimension, and Whitney complexes on Freudenthal meshes of cubes with the finite element method's stability and convergence proved from the smoothed-projection estimates, which remain an explicit hypothesis ([coverage table](docs/OVERVIEW.md#feec-book-coverage)).
 - Eighteen corrections to the thesis, each pinned to a Lean declaration (most in `Feec.Counterexamples`), e.g. Prop 2.4(b) is off by a factor ½, "Fredholm ⇒ closed" is false, Prop 6.2 needs compatibility conditions.
 - Every correction comes with a proved repaired statement (the table in [`docs/OVERVIEW.md`](docs/OVERVIEW.md#repaired-statements)). For Props 4.17/4.19 and Ch. 6 the repair covers domains without boundary and cubes, not curved domains.
 

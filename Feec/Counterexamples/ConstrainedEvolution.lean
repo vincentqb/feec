@@ -19,8 +19,6 @@ This is false, and so is the natural repair with projected algebraic data:
   (C3), so `φₕ(0) = Q(0)` is not admissible in general; `exists_discreteSolution_projected_ne`
   exhibits the solution with the admissible datum `φₕ(0) = Φ(σₕ(0), f(0)) ≠ Q(0)`.
 
-The `Feec.BGG.Counterexample.*` names of wave 5 are deprecated aliases.
-
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -217,9 +215,3 @@ theorem exists_discreteSolution_projected_ne {T : ℝ} (hT : 0 < T) :
 end Counterexample
 
 end Feec.Counterexamples.ConstrainedEvolution
-
-/-! ### Deprecated names -/
-
-namespace Feec.BGG.Counterexample
-
-end Feec.BGG.Counterexample

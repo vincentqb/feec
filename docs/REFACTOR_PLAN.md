@@ -56,6 +56,22 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > `scripts/MapCheck.sh --strict`, `scripts/CheckCitations.sh`, `scripts/ThesisMap.sh` (regenerate
 > `docs/THESIS_MAP.md`), and the naming greps of §5. W7 (§6) is open.
 
+> **Status (2026-10-18): W7 and W8 gated.** 42 new modules (Lumer–Phillips and the Hodge heat
+> equation; the solution operator `K`, the quasi-optimal and improved estimates of the mixed
+> method; reweighting, Maxwell media, Ohmic loss and `k`-form Maxwell; the `L²` de Rham complex
+> of `k`-forms on any open `Ω ⊆ ℝⁿ`, Hessian, div-div and elasticity complexes, minimal = maximal
+> on `ℝⁿ`; dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and the wedge product; the new layer `Feec.Mesh`
+> (simplicial, Kuhn and Freudenthal meshes, shape regularity); in `Feec.FiniteElement` Stokes on
+> simplices, the local spaces with unisolvent DOFs and commuting interpolants, Whitney forms,
+> assembly, conformity, Bramble–Hilbert, interpolation error and smoothed projections; on cubes
+> the de Rham parity model, eigenbases on every open cube, even Fourier smoothers and the finite
+> element method on Freudenthal meshes) are imported by `Feec.lean`, and the full gate passes
+> (clean build with no warnings, AxiomAudit, `MapCheck.sh --strict`, `CheckCitations.sh`,
+> `ThesisMap.sh`, naming and layering greps). `Feec.Mesh` imports only Mathlib and sits beside
+> `Algebra`/`Geometry`, below `FiniteElement`. What each book topic proves, and what is still a
+> hypothesis, is the table "FEEC book coverage" of `docs/OVERVIEW.md`; §6 below records the
+> status per rank.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.
@@ -99,7 +115,9 @@ Feec/
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3}.lean
 ├── Geometry/{AlgebraicCurvature,Bivector,Hodge2,WeylDecomposition}.lean
-├── FiniteElement/Dof.lean            -- abstract DOFs, unisolvence, commuting interpolant (Whitney.lean: stretch goal)
+├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)
+├── FiniteElement/{Dof,SmoothForm,SimplexIntegral,Stokes,MeshDivergence,LocalSpace,LocalDof,Whitney,
+│                  Assembly,Conformity,WhitneyComplex,BrambleHilbert,InterpolationError,SmoothedProjection}.lean
 ├── Models/                           -- INSTANCES ONLY; nothing generic may import Models
 │   ├── Torus/{DeRham,GradCurl,SymCurl,BGG}.lean     Euclidean/{DeRham,GradCurl,SymCurl,BGG}.lean
 │   ├── Cube/{Parity,Mirror,MirrorSym,MirrorBGG,Static}.lean        -- equivariant compressions of the torus
@@ -177,7 +195,10 @@ theorem LinearPMap.isSkewAdjoint_iff_existsUnique_isometricGroup :
   A.IsSkewAdjoint ↔ ∃! G : C0Group 𝕜 E, G.IsIsometric ∧ G.generator = A            -- Stone
 noncomputable def LinearPMap.IsSkewAdjoint.group (hA : A.IsSkewAdjoint) : C0Group 𝕜 E
 theorem C0Semigroup.perturb (G) (B : E →L[𝕜] E) : ∃! G', G'.generator = G.generator + B.toPMap
-theorem LinearPMap.IsMDissipative.existsUnique_contraction : ∃! G : C0Semigroup 𝕜 E, G.IsContraction ∧ G.generator = A
+theorem LinearPMap.IsMDissipative.existsUnique_contraction  -- as built: unique on `Ici 0`, since
+  -- `C0Semigroup.S` is unconstrained for t < 0 (the literal `∃!` is false); the normalized `∃!`
+  -- is `existsUnique_normalized_contraction`
+  : ∃ G : C0Semigroup 𝕜 E, G.IsContraction ∧ G.generator = A ∧ ∀ G', … → EqOn G'.S G.S (Ici 0)
 theorem C0Group.isReducing_iff_invariant (hG : G.IsIsometric) : G.generator.IsReducing K ↔ ∀ t, K.map (G.S t) ≤ K
 theorem eigenDense_of_compactResolvent (hA : A.IsSkewAdjoint) (hK : IsCompactOperator (resolvent A 1)) : EigenDense hA.group
 
@@ -424,6 +445,19 @@ I could not check the book's chapter numbers: `references.bib` has only the cita
 | 13 | Improved (duality) error estimates | R | medium, under an explicit regularity hypothesis |
 | 14 | Abstract DOFs and unisolvence; Whitney `P₁⁻Λᵏ` on one simplex | C/R | low / stretch goal |
 | 15 | Triangulations, global FE spaces, smoothed projections, Sobolev traces, Rellich/Gaffney on Lipschitz domains | F | no simplicial complexes or traces in Mathlib |
+
+**Status after the W7/W8 gate (2026-10-18).** Ranks 1–4, 6, 9, 10 (finite speed), 11, 14:
+done as planned (14 well beyond: all `P_rΛᵏ`, `P_r⁻Λᵏ` local elements, not only Whitney `P₁⁻Λᵏ`). Rank 5: done, including quasi-optimality ([AFW2010], Thm 3.9) and a
+non-vacuous instance (spectral Galerkin on `𝕋ⁿ`, `C = 1`, `μ = 0`). Rank 7: done (isotropic
+and anisotropic media, Ohmic loss with the magnetic Gauss law for every `σ`, `k`-form Maxwell on
+open `Ω ⊆ ℝⁿ`). Rank 8: done for the complexes and their dualities on every open set; closed
+range on bounded domains is not. Rank 10, second half (vacuum linearized gravity ⇒ EB for every
+solution): no new work in W7/W8. Rank 12: Lumer–Phillips and the Hodge heat equation done; impedance boundary conditions not. Rank 13: the estimates are proved for the defined `η, δ, μ`; that they tend to
+zero is shown for no concrete family. Rank 15 (formerly F): meshes, global Whitney spaces,
+conformity, Stokes and smoothed projections are built; the inverse estimates behind the smoothed
+projection bounds (`Feec.Models.Cube.FEM.SmoothingEstimates`), Sobolev traces and Rellich/Gaffney
+on Lipschitz domains remain out of reach; compactness and eigenbases are proved on cubes
+(parity model) instead.
 
 **Main risks:**
 - The RCLike conversion of about 60k lines of real-only proofs is the largest mechanical cost. Do it in W2, before anything is built on top.

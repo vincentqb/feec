@@ -74,18 +74,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-! ### Cycles orthogonal to the harmonic forms are boundaries -/
-
-/-- Under closed range, a cycle orthogonal to `ℌ` is a boundary. -/
-theorem mem_boundaries_of_mem_cycles {j : ι} (hj : H.ClosedRangeAt j) {z : W j}
-    (hz : z ∈ H.cycles j) (ho : z ∈ (H.harmonic j)ᗮ) : z ∈ H.boundaries j := by
-  rw [← H.boundaries_sup_harmonic hj] at hz
-  obtain ⟨b, hb, h, hh, rfl⟩ := Submodule.mem_sup.1 hz
-  have h1 : ⟪h, b + h⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hh ho
-  rw [inner_add_right, Submodule.inner_left_of_mem_orthogonal hb (H.mem_harmonic_iff.1 hh).2,
-    zero_add] at h1
-  rw [inner_self_eq_zero.1 h1, add_zero]
-  exact hb
+/-! ### Cycles as points of the domain space -/
 
 /-- The domain-space element of a cycle. -/
 def cyclesToDomainSpace {j : ι} {z : W j} (hz : z ∈ H.cycles j) : H.domainSpace j :=
@@ -196,7 +185,7 @@ theorem norm_sub_starProjection_harmonic_le {j : ι} (hj : H.ClosedRangeAt j) {q
   have hrH : r ∈ H.harmonic j := Submodule.starProjection_apply_mem _ _
   have hqz : q ∈ H.cycles j := S.cyclesW_le_cycles j (S.harmonicW_le_cyclesW j hq)
   have hqrB : q - r ∈ H.boundaries j :=
-    mem_boundaries_of_mem_cycles hj (sub_mem hqz (H.harmonic_le_cycles j hrH))
+    H.mem_boundaries_of_mem_cycles hj (sub_mem hqz (H.harmonic_le_cycles j hrH))
       (Submodule.sub_starProjection_mem_orthogonal q)
   have hBh : q - P.π j r ∈ S.boundariesW j := by
     have := P.mem_boundariesW hqrB

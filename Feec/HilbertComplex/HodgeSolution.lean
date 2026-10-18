@@ -37,6 +37,11 @@ orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
   `norm_d_solutionOp_le`, `norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le`,
   `norm_d_solutionSigma_add_norm_adjoint_d_le`: the a priori bounds of [AFW2010], §3.2.
 * `d_solutionOp`, `solutionSigma_eq_solutionOp`: `d K = K d` and `d† K = K d†`.
+* `d_solutionSigma` (`d d† K f = P_𝔅 f`), `solutionSigma_mem_orthogonal_cycles`,
+  `eq_solutionSigma_of_d_eq` (`d† K` inverts `d` from `𝔷ᗮ` onto `𝔅`), `solutionOp_mem_boundaries`,
+  `solutionOp_mem_orthogonal_cycles`, `adjoint_d_solutionOp_of_mem_orthogonal`,
+  `norm_sq_eq_re_inner_solutionOp_d`: `K` on `𝔅` and `𝔷ᗮ` (used by the duality arguments of
+  [AFW2010], §3.5).
 * `isCompactOperator_solutionOp`.
 
 ## References
@@ -577,6 +582,164 @@ theorem solutionSigma_eq_solutionOp {h : ι} (hhi : c.Rel h i) (hi : H.ClosedRan
     (Submodule.starProjection_apply_eq_zero_iff _).2 (horth _)
   rw [e1, e2, LinearPMap.map_zero, LinearPMap.map_sub, LinearPMap.map_sub, hP0', ht0, hPi0]
   simp
+
+/-! ### `K` on boundaries and on `𝔷ᗮ` -/
+
+/-- Under closed range, a cycle orthogonal to `ℌ` is a boundary. -/
+theorem mem_boundaries_of_mem_cycles {l : ι} (hl : H.ClosedRangeAt l) {z : W l}
+    (hz : z ∈ H.cycles l) (ho : z ∈ (H.harmonic l)ᗮ) : z ∈ H.boundaries l := by
+  rw [← H.boundaries_sup_harmonic hl] at hz
+  obtain ⟨b, hb, h, hh, rfl⟩ := Submodule.mem_sup.1 hz
+  have h1 : ⟪h, b + h⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hh ho
+  rw [inner_add_right, Submodule.inner_left_of_mem_orthogonal hb (H.mem_harmonic_iff.1 hh).2,
+    zero_add] at h1
+  rw [inner_self_eq_zero.1 h1, add_zero]
+  exact hb
+
+/-- Under closed range, `𝔅ᗮ ∩ ℌᗮ = 𝔷ᗮ`. -/
+theorem mem_orthogonal_cycles_of {l : ι} (hl : H.ClosedRangeAt l) {x : W l}
+    (hB : x ∈ (H.boundaries l)ᗮ) (hH : x ∈ (H.harmonic l)ᗮ) : x ∈ (H.cycles l)ᗮ := by
+  rw [← H.boundaries_sup_harmonic hl]
+  refine (Submodule.mem_orthogonal _ _).2 fun z hz => ?_
+  obtain ⟨b, hb, h, hh, rfl⟩ := Submodule.mem_sup.1 hz
+  rw [inner_add_left, Submodule.inner_right_of_mem_orthogonal hb hB,
+    Submodule.inner_right_of_mem_orthogonal hh hH, add_zero]
+
+/-- **The `𝔷ᗮ`-preimage under `d` is unique.** -/
+theorem eq_of_mem_orthogonal_cycles {l m : ι} (hlm : c.Rel l m) {φ ψ : (H.d l m).domain}
+    (hφ : (φ : W l) ∈ (H.cycles l)ᗮ) (hψ : (ψ : W l) ∈ (H.cycles l)ᗮ)
+    (hd : H.d l m φ = H.d l m ψ) : (φ : W l) = ψ := by
+  have hz : ((φ - ψ : (H.d l m).domain) : W l) ∈ H.cycles l := by
+    rw [H.cycles_eq hlm]
+    exact mem_ker_iff.2 ⟨φ - ψ, rfl, by rw [LinearPMap.map_sub, hd, sub_self]⟩
+  have ho : ((φ - ψ : (H.d l m).domain) : W l) ∈ (H.cycles l)ᗮ := sub_mem hφ hψ
+  have h0 := Submodule.inner_right_of_mem_orthogonal hz ho
+  rw [inner_self_eq_zero] at h0
+  exact sub_eq_zero.1 h0
+
+/-- **`d σ = P_𝔅 f`**: `d d† K f` is the projection of `f` onto the (closed) boundaries. -/
+theorem d_solutionSigma (f : W j) :
+    H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f)) =
+      (H.boundaries j).topologicalClosure.starProjection f := by
+  have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
+    IsClosed.submodule_topologicalClosure_eq hj
+  symm
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero ?_ fun w hw => ?_
+  · rw [hBc, H.boundaries_eq hij]; exact ⟨_, rfl⟩
+  · rw [hBc, H.boundaries_eq hij] at hw
+    obtain ⟨τ, rfl⟩ := hw
+    have hs := H.isMixedSolution_solutionOp hij hjk hj hk f
+    have e := hs.snd (H.domainD i j (H.toDomainSpace hij τ))
+    rw [domainIncl_domainD, d_domainCoord_domainD, inner_zero_left, add_zero,
+      d_domainCoord_toDomainSpace] at e
+    have hp : ⟪H.d i j τ, ((H.mixedSolution hij hjk hj hk f).snd.snd : W j)⟫ = 0 :=
+      Submodule.inner_right_of_mem_orthogonal (by rw [H.boundaries_eq hij]; exact ⟨_, rfl⟩)
+        (H.mem_harmonic_iff.1 (H.mixedSolution hij hjk hj hk f).snd.snd.2).2
+    rw [hp, add_zero] at e
+    rw [← inner_conj_symm]
+    change starRingEnd 𝕜 ⟪H.d i j τ, f - _⟫ = 0
+    rw [inner_sub_right, ← e, sub_self, _root_.map_zero]
+
+/-- **`σ = d† K f ⊥ 𝔷ⁱ`.** -/
+theorem solutionSigma_mem_orthogonal_cycles (f : W j) :
+    H.solutionSigma hij hjk hj hk f ∈ (H.cycles i)ᗮ := by
+  refine (Submodule.mem_orthogonal _ _).2 fun z hz => ?_
+  have hzd : z ∈ (H.d i j).domain := H.domain_next_le i j (H.cycles_le_domain i hz)
+  have e := (H.isMixedSolution_solutionOp hij hjk hj hk f).fst (H.toDomainSpace hij ⟨z, hzd⟩)
+  rw [domainIncl_toDomainSpace, d_domainCoord_toDomainSpace,
+    H.d_eq_zero_of_mem_cycles hz, inner_zero_left, sub_zero] at e
+  exact e
+
+/-- For `g ∈ 𝔅ʲ`, `d† K g` is the `𝔷ᗮ`-preimage of `g`: every `φ ⊥ 𝔷ⁱ` with `d φ = g` equals it. -/
+theorem eq_solutionSigma_of_d_eq {g : W j} (hg : g ∈ H.boundaries j) {φ : (H.d i j).domain}
+    (hφ : (φ : W i) ∈ (H.cycles i)ᗮ) (hd : H.d i j φ = g) :
+    (φ : W i) = H.solutionSigma hij hjk hj hk g := by
+  have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
+    IsClosed.submodule_topologicalClosure_eq hj
+  refine H.eq_of_mem_orthogonal_cycles hij (ψ := H.domainCoord i j (H.solutionSigmaV hij hjk hj hk g))
+    hφ (H.solutionSigma_mem_orthogonal_cycles hij hjk hj hk g) ?_
+  rw [hd, H.d_solutionSigma hij hjk hj hk, Submodule.starProjection_eq_self_iff.2]
+  rw [hBc]; exact hg
+
+/-- **`K` preserves the boundaries.** -/
+theorem solutionOp_mem_boundaries {g : W j} (hg : g ∈ H.boundaries j) :
+    H.solutionOp hij hjk hj hk g ∈ H.boundaries j := by
+  have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
+    IsClosed.submodule_topologicalClosure_eq hj
+  have hdK := H.d_solutionOp_mem_adjoint_domain hij hjk hj hk g
+  have e := H.adjoint_d_solutionOp hij hjk hj hk g hdK
+  have hP : (H.boundaries j).topologicalClosure.starProjection g = g :=
+    Submodule.starProjection_eq_self_iff.2 (by rw [hBc]; exact hg)
+  rw [H.d_solutionSigma hij hjk hj hk, hP,
+    (Submodule.starProjection_apply_eq_zero_iff _).2
+      (H.mem_orthogonal_harmonic_of_mem_boundaries hg), sub_zero, sub_self] at e
+  have h0 : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk g)) = 0 := by
+    have := adjoint_isFormalAdjoint (H.dense j k) ⟨_, hdK⟩
+      (H.domainCoord j k (H.solutionOpV hij hjk hj hk g))
+    rw [e, inner_zero_left] at this
+    exact inner_self_eq_zero.1 this.symm
+  refine H.mem_boundaries_of_mem_cycles hj ?_ (H.solutionOp_mem_orthogonal_harmonic hij hjk hj hk g)
+  rw [H.cycles_eq hjk]
+  exact mem_ker_iff.2 ⟨_, rfl, h0⟩
+
+/-- **`d† d K v = v` for `v ⊥ 𝔷ʲ`.** -/
+theorem adjoint_d_solutionOp_of_mem_orthogonal {v : W j} (hv : v ∈ (H.cycles j)ᗮ)
+    (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk v)) ∈ ((H.d j k)†).domain) :
+    (H.d j k)† ⟨_, h⟩ = v := by
+  have hB : v ∈ ((H.boundaries j).topologicalClosure)ᗮ := by
+    rw [IsClosed.submodule_topologicalClosure_eq hj]
+    exact Submodule.orthogonal_le (H.boundaries_le_cycles j) hv
+  have hH : v ∈ (H.harmonic j)ᗮ := Submodule.orthogonal_le (H.harmonic_le_cycles j) hv
+  rw [H.adjoint_d_solutionOp hij hjk hj hk v h, H.d_solutionSigma hij hjk hj hk,
+    (Submodule.starProjection_apply_eq_zero_iff _).2 hB,
+    (Submodule.starProjection_apply_eq_zero_iff _).2 hH, sub_zero, sub_zero]
+
+/-- `⟪v, x⟫ = ⟪d K v, d x⟫` for `v ⊥ 𝔷ʲ` and `x ∈ D(d)`. -/
+theorem inner_eq_inner_d_solutionOp {v : W j} (hv : v ∈ (H.cycles j)ᗮ) (x : (H.d j k).domain) :
+    ⟪v, (x : W j)⟫ = ⟪H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk v)), H.d j k x⟫ := by
+  have h := H.d_solutionOp_mem_adjoint_domain hij hjk hj hk v
+  have e := adjoint_isFormalAdjoint (H.dense j k) ⟨_, h⟩ x
+  rw [H.adjoint_d_solutionOp_of_mem_orthogonal hij hjk hj hk hv h] at e
+  exact e
+
+/-- **`K` preserves `𝔷ᗮ`.** -/
+theorem solutionOp_mem_orthogonal_cycles {v : W j} (hv : v ∈ (H.cycles j)ᗮ) :
+    H.solutionOp hij hjk hj hk v ∈ (H.cycles j)ᗮ := by
+  have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
+    IsClosed.submodule_topologicalClosure_eq hj
+  -- `σ_v = 0`
+  have hσ : H.solutionSigma hij hjk hj hk v = 0 := by
+    have hB : v ∈ ((H.boundaries j).topologicalClosure)ᗮ := by
+      rw [hBc]; exact Submodule.orthogonal_le (H.boundaries_le_cycles j) hv
+    have hd := H.d_solutionSigma hij hjk hj hk v
+    rw [(Submodule.starProjection_apply_eq_zero_iff _).2 hB] at hd
+    have hz : H.solutionSigma hij hjk hj hk v ∈ H.cycles i := by
+      rw [H.cycles_eq hij]; exact mem_ker_iff.2 ⟨_, rfl, hd⟩
+    have := Submodule.inner_right_of_mem_orthogonal hz
+      (H.solutionSigma_mem_orthogonal_cycles hij hjk hj hk v)
+    exact inner_self_eq_zero.1 this
+  have h₂ := H.solutionOp_mem_adjoint_domain hij hjk hj hk v
+  have e := H.adjoint_solutionOp hij hjk hj hk v h₂
+  rw [hσ] at e
+  refine H.mem_orthogonal_cycles_of hj ?_ (H.solutionOp_mem_orthogonal_harmonic hij hjk hj hk v)
+  refine (Submodule.mem_orthogonal _ _).2 fun b hb => ?_
+  rw [H.boundaries_eq hij] at hb
+  obtain ⟨τ, rfl⟩ := hb
+  have := adjoint_isFormalAdjoint (H.dense i j) ⟨_, h₂⟩ τ
+  rw [e, inner_zero_left] at this
+  have h0 : ⟪H.solutionOp hij hjk hj hk v, H.d i j τ⟫ = 0 := this.symm
+  rw [← inner_conj_symm]
+  exact (congrArg _ h0).trans (_root_.map_zero _)
+
+/-- **`‖φ‖² = re ⟪K (d φ), d φ⟫` for `φ ⊥ 𝔷ⁱ`** (`φ = d† K d φ`). -/
+theorem norm_sq_eq_re_inner_solutionOp_d {φ : (H.d i j).domain} (hφ : (φ : W i) ∈ (H.cycles i)ᗮ) :
+    ‖(φ : W i)‖ ^ 2 = RCLike.re ⟪H.solutionOp hij hjk hj hk (H.d i j φ), H.d i j φ⟫ := by
+  have hg : H.d i j φ ∈ H.boundaries j := by rw [H.boundaries_eq hij]; exact ⟨_, rfl⟩
+  have e := H.eq_solutionSigma_of_d_eq hij hjk hj hk hg hφ rfl
+  have h₂ := H.solutionOp_mem_adjoint_domain hij hjk hj hk (H.d i j φ)
+  have e2 := adjoint_isFormalAdjoint (H.dense i j) ⟨_, h₂⟩ φ
+  rw [H.adjoint_solutionOp hij hjk hj hk _ h₂, ← e] at e2
+  rw [← @inner_self_eq_norm_sq 𝕜, e2]
 
 /-! ### Compactness -/
 

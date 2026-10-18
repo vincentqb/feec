@@ -15,8 +15,8 @@ Let `T` be an `n`-simplex in `ℝⁿ` with vertices `p₀, …, pₙ` and baryce
 
   `φ_f = k! Σᵢ (-1)ⁱ λ_{fᵢ} dλ_{f₀} ∧ ⋯ ∧ dλ_{fᵢ}^ ∧ ⋯ ∧ dλ_{f_k}`,
 
-and `P₁⁻Λᵏ(T)` is their span ([Whitney1957], [AFW2006], §3–4, [Arnold2018], Ch. 7). The degrees
-of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-faces `g` of `T`
+and `P₁⁻Λᵏ(T)` is their span ([Whitney1957], Ch. IV, §27, [AFW2006], §3–4, [Arnold2018], Ch. 7).
+The degrees of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-faces `g` of `T`
 (`Feec.FiniteElement.simplexIntegral` over the face oriented by increasing vertex order).
 
 ## Main definitions
@@ -37,19 +37,24 @@ of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-faces `g` of `T`
 * `Feec.ExteriorFibre.wedgeProd_eq_sum_whitneyFibre`: `θ_f^∧ = Σ_{j ∉ f} ε(j, f) W_{f ∪ j}` when
   `Σ c = 1` and `Σ θ = 0`;
 * `simplexIntegral_whitneyForm`: **the Kronecker property** `∫_g φ_f = δ_{fg}`;
-* `extDeriv_whitneyForm`: `dφ_f = (k+1)! dλ_{f₀} ∧ ⋯ ∧ dλ_{f_k}`, and
-  `extDeriv_whitneyForm_mem`: `dφ_f ∈ P₁⁻Λ^{k+1}(T)`;
+* `extDeriv_whitneyForm`: `dφ_f = (k+1)! dλ_{f₀} ∧ ⋯ ∧ dλ_{f_k}`,
+  `extDeriv_whitneyForm_eq_sum`: `dφ_f = Σ_{j ∉ f} ε(j, f) φ_{f ∪ j}`, and
+  `extDeriv_mem_whitneySpace`: `d` maps `P₁⁻Λᵏ(T)` into `P₁⁻Λ^{k+1}(T)`;
 * `linearIndependent_whitneyForm`, `finrank_whitneySpace`:
   `dim P₁⁻Λᵏ(T) = (n+1 choose k+1)`;
-* `isUnisolvent_faceDof`: the face integrals are unisolvent on `P₁⁻Λᵏ(T)`;
+* `isUnisolvent_whitneyDof`: the face integrals are unisolvent on `P₁⁻Λᵏ(T)`;
+* `whitneyInterp_eq_sum`: `Π_T ω = Σ_g (∫_g ω) φ_g`, and `abs_whitneyInterp_apply_le`: the
+  pointwise bound `|Π_T ω| ≤ C(T) sup_T |ω|`;
 * `whitneyInterp_extDeriv`: **the commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` forms,
   from the abstract `Feec.FiniteElement.interp_comp_eq` and Stokes' theorem;
 * `whitneySpace_refVertex_eq_map_polyFormMinus`: on the reference simplex,
-  `P₁⁻Λᵏ(T̂) = P₀Λᵏ + κ H₀Λ^{k+1}` is `Feec.Koszul.polyFormMinus 1 k`.
+  `P₁⁻Λᵏ(T̂) = P₀Λᵏ + κ H₀Λ^{k+1}` is `Feec.Koszul.polyFormMinus 1 k`;
+* `affinePullback_whitneyForm_face`: the trace of `φ_f` on a face is the Whitney form of the face
+  (or zero if `f` is not a face of it).
 
 ## References
 
-* [H. Whitney, *Geometric Integration Theory*][Whitney1957]
+* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV, §27 (Whitney forms)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3–4 (Whitney forms, `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}`, degrees of freedom)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
@@ -697,6 +702,40 @@ theorem whitneyInterp_inclusion (hp : IsUnit (edgeMatrix p).det) (φ : whitneySp
     whitneyInterp hp k (Submodule.inclusion (whitneySpace_le_contForms p k) φ) = φ :=
   interp_incl (isUnisolvent_whitneyDof hp k) (faceDof p k) _ (fun _ => rfl) φ
 
+/-- **`Π_T ω = Σ_g (∫_g ω) φ_g`**: the interpolant in the Whitney basis. -/
+theorem whitneyInterp_eq_sum (hp : IsUnit (edgeMatrix p).det) (ω : contForms n) :
+    (whitneyInterp hp k ω : FormField n) = ∑ g : Faces n k,
+      simplexIntegral (faceVertices p g.1 g.2) (ω : FormField n) • whitneyForm p g.1 := by
+  set c : Faces n k → ℝ := fun g => simplexIntegral (faceVertices p g.1 g.2) (ω : FormField n)
+  have hmem : ∑ g : Faces n k, c g • whitneyForm p g.1 ∈ whitneySpace p k :=
+    Submodule.sum_mem _ fun g _ => Submodule.smul_mem _ _ (whitneyForm_mem_whitneySpace p g)
+  have h : whitneyInterp hp k ω = ⟨_, hmem⟩ := (isUnisolvent_whitneyDof hp k).ext fun g => by
+    change simplexIntegral (faceVertices p g.1 g.2) (whitneyInterp hp k ω : FormField n) =
+      simplexIntegral (faceVertices p g.1 g.2) (∑ g : Faces n k, c g • whitneyForm p g.1)
+    rw [simplexIntegral_whitneyInterp, simplexIntegral_sum_smul_whitneyForm hp]
+  rw [h]
+
+/-- **Boundedness of the canonical interpolant**: if `|ω| ≤ M` on `T`, then
+`|(Π_T ω)(x)_s| ≤ C_s(x) M` with the explicit constant
+`C_s(x) = Σ_g (Σ_t |minor_t(B_g)|) / k! · |φ_g(x)_s|` depending only on `T`, `x` and `s`. -/
+theorem abs_whitneyInterp_apply_le (hp : IsUnit (edgeMatrix p).det) (ω : contForms n) {M : ℝ}
+    (hM : ∀ y ∈ convexHull ℝ (Set.range p), ∀ t, |(ω : FormField n) y t| ≤ M)
+    (x : Fin n → ℝ) (s : Finset (Fin n)) :
+    |(whitneyInterp hp k ω : FormField n) x s| ≤
+      (∑ g : Faces n k, (∑ t, |wedgeProd (simplexMatrix (faceVertices p g.1 g.2)) t univ|) /
+        k.factorial * |whitneyForm p g.1 x s|) * M := by
+  rw [whitneyInterp_eq_sum, sum_mul]
+  simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
+  refine (abs_sum_le_sum_abs _ _).trans (sum_le_sum fun g _ => ?_)
+  have hg := abs_simplexIntegral_le (p := faceVertices p g.1 g.2) (ω := (ω : FormField n))
+    (M := M) fun y hy t => hM _ (convexHull_mono (Set.range_comp_subset_range _ _)
+      (simplexMap_mem_convexHull _ hy)) t
+  rw [abs_mul]
+  calc |simplexIntegral (faceVertices p g.1 g.2) (ω : FormField n)| * |whitneyForm p g.1 x s|
+      ≤ (∑ t, |wedgeProd (simplexMatrix (faceVertices p g.1 g.2)) t univ|) * M / k.factorial *
+          |whitneyForm p g.1 x s| := mul_le_mul_of_nonneg_right hg (abs_nonneg _)
+    _ = _ := by ring
+
 /-- The faces of a face: removing the `i`-th vertex of `g` is the face `g ∖ gᵢ`. -/
 theorem faceVertices_comp_succAbove (p : Fin (n + 1) → Fin n → ℝ) (g : Faces n (k + 1))
     (i : Fin (k + 2)) :
@@ -991,5 +1030,55 @@ theorem whitneySpace_refVertex_eq_map_polyFormMinus (k : ℕ) :
       refine interior_mem_whitneySpace fun s hs => ?_
       change (b s).coeff 0 = 0
       rw [hb.1 s hs]; simp
+
+/-! ### Traces of Whitney forms on faces -/
+
+/-- **Traces of Whitney forms**: pulled back to the face `p ∘ e` of `p` (parametrized by `T̂_m`),
+the Whitney form `φ_f` is the Whitney form of the face `e⁻¹(f)` of the reference simplex if the
+vertices of `f` are vertices of the face, and vanishes otherwise. This is the face compatibility
+underlying the conformity of `P₁⁻Λᵏ` on simplicial meshes ([AFW2006], §4). -/
+theorem affinePullback_whitneyForm_face (hp : IsUnit (edgeMatrix p).det) {m : ℕ}
+    (e : Fin (m + 1) ↪o Fin (n + 1)) (f : Finset (Fin (n + 1))) :
+    affinePullback (simplexMatrix (p ∘ e)) (p (e 0)) (whitneyForm p f) =
+      if f ⊆ univ.map e.toEmbedding then
+        whitneyForm (refVertex m) (f.preimage e e.injective.injOn) else 0 := by
+  have hpull : ∀ y, affinePullback (simplexMatrix (p ∘ e)) (p (e 0)) (whitneyForm p f) y =
+      ((#f - 1).factorial : ℝ) •
+        whitneyFibre (fun a => ∑ j, refBary y j * if e j = a then 1 else 0)
+          (fun a l => (if e l.succ = a then 1 else 0) - if e 0 = a then 1 else 0) f := by
+    intro y
+    rw [affinePullback_apply, whitneyForm, pullback_smul, pullback_whitneyFibre]
+    congr 2
+    · funext a
+      exact baryCoord_simplexMap_comp hp e y a
+    · funext a
+      exact covPullback_baryGrad hp e a
+  funext y
+  rw [hpull]
+  split_ifs with hf
+  · obtain ⟨g, -, rfl⟩ := Finset.subset_map_iff.1 hf
+    have hpre : (g.map e.toEmbedding).preimage e e.injective.injOn = g := by
+      ext j; simp
+    rw [hpre, whitneyForm, baryCoord_refVertex, baryGrad_refVertex, card_map,
+      whitneyFibre_map]
+    have hc : (fun a => ∑ j, refBary y j * if e j = a then 1 else 0) ∘ e = refBary y := by
+      funext j
+      simp only [Function.comp_apply, e.injective.eq_iff]
+      rw [sum_eq_single j (fun j' _ hj' => by simp [hj']) (by simp)]
+      simp
+    have hθ : (fun a (l : Fin m) => (if e l.succ = a then (1 : ℝ) else 0) -
+        if e 0 = a then 1 else 0) ∘ e = refGrad m := by
+      funext j l
+      simp only [Function.comp_apply, e.injective.eq_iff, refGrad, eq_comm]
+    rw [hc, hθ]
+  · obtain ⟨a, haf, hae⟩ := not_subset.1 hf
+    have hne : ∀ j, e j ≠ a := fun j h => hae (h ▸ mem_map_of_mem _ (mem_univ j))
+    rw [Pi.zero_apply, whitneyFibre]
+    convert smul_zero _
+    refine sum_eq_zero fun i hi => ?_
+    by_cases hia : i = a
+    · subst hia; simp [hne]
+    · rw [wedgeProd_eq_zero_of_mem (mem_erase.2 ⟨Ne.symm hia, haf⟩) (by funext l; simp [hne]),
+        smul_zero]
 
 end Feec.FiniteElement

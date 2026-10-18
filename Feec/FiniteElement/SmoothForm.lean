@@ -29,7 +29,7 @@ multiplication by the determinant (`pullback_apply_univ`).
 
 * `Feec.ExteriorFibre.wedgeProd θ s`, `Feec.ExteriorFibre.pullback B α`;
 * `Feec.FiniteElement.FormField n`, `Feec.FiniteElement.extDeriv`,
-  `Feec.FiniteElement.FormField.pullback B b`, `Feec.FiniteElement.grad`.
+  `Feec.FiniteElement.affinePullback B b`, `Feec.FiniteElement.grad`.
 
 ## Main results
 
@@ -41,8 +41,9 @@ multiplication by the determinant (`pullback_apply_univ`).
   `d ∘ d = 0` for `C²` forms;
 * `Feec.FiniteElement.extDeriv_smul_apply`: the Leibniz rule `d (f ω) = df ∧ ω + f dω`, and
   `Feec.FiniteElement.extDeriv_affine_smul`: `d (λ α) = dλ ∧ α` for affine `λ` and constant `α`;
-* `Feec.FiniteElement.extDeriv_pullback_apply`: `d (F^* ω) = F^* (d ω)` for affine `F`;
-* `Feec.FiniteElement.IsDeg.extDeriv`, `Feec.FiniteElement.IsDeg.pullback`: degrees.
+* `Feec.FiniteElement.extDeriv_affinePullback_apply`: `d (F^* ω) = F^* (d ω)` for affine `F`;
+* `Feec.FiniteElement.IsDeg.extDeriv`, `Feec.ExteriorFibre.IsDeg.pullback`,
+  `Feec.FiniteElement.IsDeg.affinePullback`: degrees.
 
 ## References
 

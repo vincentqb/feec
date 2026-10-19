@@ -94,6 +94,24 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > `Feec.Models.Cube.FiniteElementConvergence` and `Feec.Physics.Maxwell.CubeFEM` state the
 > results with no hypothesis. All are imported by `Feec.lean` and the full gate passes.
 
+> **Status (2026-10-19): thesis-fem gated.** 19 new modules give the higher-order and the BGG
+> finite elements on the Freudenthal meshes of `(0, ½)³` and the Ch. 5–6 finite element claims:
+> the global families `P_rΛᵏ`, `P_r⁻Λᵏ` of every admissible sequence with their inverse and
+> interpolation estimates and partial boundary conditions
+> (`Feec.FiniteElement.{PolyElement,PolyComplex,PolyElementMixed,PolyInverseEstimate,PolyInterpolation}`),
+> vector-valued spaces and the weak-symmetry maps (`Feec.FiniteElement.{TensorElement,WeakSymmetryMaps}`),
+> their smoothed projections, convergence and rates (`Feec.Models.Cube.{PolySmoothingEstimates,
+> PolyFiniteElementConvergence,PolyRate}`), the BGG data (4.16) on the cube and Props 5.7–5.9
+> (`Feec.Models.Cube.{WeakSymmetryComplex,WeakSymmetryEstimates}`), Thm 5.5 with weak consistency
+> (`Feec.HilbertComplex.BGG.WeakConsistency`, `Feec.Models.Cube.WeakSymmetryFEM`,
+> `Feec.Physics.EinsteinBianchi.StaticFEM`), the elliptic projection (6.4) and the convergence of
+> (6.3) (`Feec.HilbertComplex.BGG.{EllipticProjection,DiscreteWave}`), and the scheme (6.5) of
+> Table 6.1: well posed ⇔ (C2), energy-stable, `O(h)` convergent (`Feec.Models.Cube.WeakSymmetryWave`,
+> `Feec.Physics.EinsteinBianchi.WaveFEM`). The rates keep the regular decomposition
+> `Feec.Models.Cube.WeakSymmetry.CurlPotential` as the one hypothesis. Not built: the BGG elements
+> with mirror conditions, the identification `Γ ≅ H̊²(Q)` with the matrix model of
+> `Feec.Models.BoundedDomain.bggComplex`. All are imported by `Feec.lean` and the full gate passes.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.
@@ -483,7 +501,9 @@ inverse estimates and the smoothed-projection bounds (`Feec.Models.Cube.FEM.smoo
 `HΛ`, `H̊Λ` on the cube with the parity model and the Whitney interpolation error, the finite
 element method converges with no hypothesis (`Feec.Models.Cube.FiniteElementConvergence`).
 Sobolev traces and Rellich/Gaffney on Lipschitz domains remain out of reach; compactness and
-eigenbases are proved on cubes instead.
+eigenbases are proved on cubes instead. After the thesis-fem gate (2026-10-19) the higher-order global
+families, their smoothed projections and rates, and the BGG elements of Tables 5.1/6.1 on the
+cube are built as well (status note above).
 
 **Main risks:**
 - The RCLike conversion of about 60k lines of real-only proofs is the largest mechanical cost. Do it in W2, before anything is built on top.

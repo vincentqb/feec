@@ -192,6 +192,7 @@ public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.MirrorTrace
+public import Feec.Models.Cube.MirrorWeakSymmetryFEM
 public import Feec.Models.Cube.Parity
 public import Feec.Models.Cube.PolyFiniteElementConvergence
 public import Feec.Models.Cube.PolyRate

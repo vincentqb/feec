@@ -108,9 +108,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > (6.3) (`Feec.HilbertComplex.BGG.{EllipticProjection,DiscreteWave}`), and the scheme (6.5) of
 > Table 6.1: well posed ⇔ (C2), energy-stable, `O(h)` convergent (`Feec.Models.Cube.WeakSymmetryWave`,
 > `Feec.Physics.EinsteinBianchi.WaveFEM`). The rates keep the regular decomposition
-> `Feec.Models.Cube.WeakSymmetry.CurlPotential` as the one hypothesis. Not built: the BGG elements
-> with mirror conditions, the identification `Γ ≅ H̊²(Q)` with the matrix model of
-> `Feec.Models.BoundedDomain.bggComplex`. All are imported by `Feec.lean` and the full gate passes.
+> `Feec.Models.Cube.WeakSymmetry.CurlPotential` as the one hypothesis. `Γ ≅ H̊²(Q)` with the first
+> space of the matrix model `Feec.Models.BoundedDomain.bggComplex`
+> (`Feec.EinsteinBianchi.WaveFEM.gamma_equiv_hessMin`). The mirror scheme
+> (`Feec.Models.Cube.MirrorWeakSymmetryFEM`): BGG elements with the mirror parities, `S₀,ₕ` onto,
+> `grad` injective, well posed ⇔ (C2), energy-stable, constant mode decoupled. Not built: the
+> convergence of the mirror scheme (continuous complexes with boundary conditions on part of `∂Q`,
+> partial-boundary conformity, mixed smoothed projections) and the identification of the second
+> space with the matrix model. All are imported by `Feec.lean` and the full gate passes.
 
 ## 0. Decisions
 

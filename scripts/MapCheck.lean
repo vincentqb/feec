@@ -3500,6 +3500,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Models».«Cube».«FEM».«tableRows_common_smoother» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«CurlPotential» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«eq_zero_of_dPiecewise_tensor_eq_zero» -- THESIS_MAP.md
+#check @«Feec».«EinsteinBianchi».«WaveFEM».«gamma_equiv_hessMin» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«not_isClosed_range_B» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«waveFEM» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«LocalElement».«dPiecewise_mem_globalSpacePartial_bcFacets» -- THESIS_MAP.md

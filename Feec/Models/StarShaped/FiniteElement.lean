@@ -65,7 +65,11 @@ parallelepiped (`Feec.Models.Parallelepiped.poincare`). The finite-dimensionalit
 forms is used only for the harmonic gap (`smoothedProjection_uniform`, `mixed_quasiOptimal`).
 **Non-vacuity**: the cube with its Freudenthal meshes is a `StarDomain` with a `MeshFamily`
 satisfying all these hypotheses (`CubeWitness.starDomain`, `CubeWitness.meshFamily`,
-`CubeWitness.nonvacuous`). The higher-order families `P_rΛᵏ`, `P_r⁻Λᵏ` on star-shaped domains
+`CubeWitness.nonvacuous`), and so is every parallelepiped `A · Q + b` (every box) with its image
+Freudenthal meshes (`ParallelepipedWitness.nonvacuous`, via the affine images
+`StarDomain.map`, `MeshFamily.map`: shape regularity, quasi-uniformity and star-shapedness with
+respect to a ball are preserved by affine equivalences, `isShapeRegular_image`,
+`MeshData.map`). The higher-order families `P_rΛᵏ`, `P_r⁻Λᵏ` on star-shaped domains
 (whose inverse and DOF estimates on shape-regular simplices are
 `Feec.FiniteElement.exists_inverse_bound_polySpace` and
 `Feec.FiniteElement.exists_dof_bound_of_le_polySpace`) are not treated here.
@@ -2385,6 +2389,13 @@ def HasPoincare {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, In
   ∀ i j, (ComplexShape.up ℤ).Rel i j → ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ →
     ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖
 
+/-- A larger constant also works. -/
+theorem HasPoincare.mono {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+    {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} {cP cP' : ℝ} (h : HasPoincare H cP)
+    (hle : cP ≤ cP') : HasPoincare H cP' := fun i j hij z hz =>
+  (h i j hij z hz).trans (mul_le_mul_of_nonneg_right hle (norm_nonneg _))
+
 namespace MeshFamily
 
 variable {D : StarDomain n} (F : MeshFamily D) [NeZero n]
@@ -2420,7 +2431,7 @@ theorem discretePoincare {cP : ℝ} (hP : HasPoincare D.complex cP) :
 
 /-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian**
 ([AFW2010], Thm 3.8), under the Poincaré inequality of `HΛ(Ω)`. -/
-theorem mixed_wellPosed {cP : ℝ} (hcP : 1 ≤ cP) (hP : HasPoincare D.complex cP) :
+theorem mixed_wellPosed {cP : ℝ} (hP : HasPoincare D.complex cP) :
     ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
       ∀ (N : ℕ) (f : (F.whitney N).V j),
       (∃! x, (F.whitney N).toHilbertComplex.mixedForm i j k x =
@@ -2429,10 +2440,12 @@ theorem mixed_wellPosed {cP : ℝ} (hcP : 1 ≤ cP) (hP : HasPoincare D.complex 
         (F.whitney N).toHilbertComplex.mixedForm i j k x =
           (F.whitney N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
   refine F.exists_uniform_proj.elim fun K hK => ?_
-  refine ⟨16 * (K * cP) ^ 2, fun {i j k} hij hjk N f =>
+  have hcP : 1 ≤ max 1 cP := le_max_left _ _
+  have hP' := hP.mono (le_max_right 1 cP)
+  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
     (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
-  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP i j hij) (hP j k hjk) (hπ.1 i) (hπ.1 j) f
-  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP i j hij) (hP j k hjk) (hπ.1 i) (hπ.1 j) hx
+  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
+  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
 
 /-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) with weights `μ_j(N) → 0`,
 under the Poincaré inequality and the finite-dimensionality of the harmonic forms of `HΛ(Ω)`. -/
@@ -2530,7 +2543,7 @@ theorem discretePoincareMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
 
 /-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian**
 ([AFW2010], Thm 3.8), under the Poincaré inequality of `H̊Λ(Ω)`. -/
-theorem mixed_wellPosedMin {cP : ℝ} (hcP : 1 ≤ cP) (hP : HasPoincare D.complexMin cP) :
+theorem mixed_wellPosedMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
     ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
       ∀ (N : ℕ) (f : (F.whitneyMin N).V j),
       (∃! x, (F.whitneyMin N).toHilbertComplex.mixedForm i j k x =
@@ -2539,10 +2552,12 @@ theorem mixed_wellPosedMin {cP : ℝ} (hcP : 1 ≤ cP) (hP : HasPoincare D.compl
         (F.whitneyMin N).toHilbertComplex.mixedForm i j k x =
           (F.whitneyMin N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
   refine F.exists_uniform_projMin.elim fun K hK => ?_
-  refine ⟨16 * (K * cP) ^ 2, fun {i j k} hij hjk N f =>
+  have hcP : 1 ≤ max 1 cP := le_max_left _ _
+  have hP' := hP.mono (le_max_right 1 cP)
+  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
     (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
-  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP i j hij) (hP j k hjk) (hπ.1 i) (hπ.1 j) f
-  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP i j hij) (hP j k hjk) (hπ.1 i) (hπ.1 j) hx
+  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
+  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
 
 /-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) with weights `μ_j(N) → 0`,
 under the Poincaré inequality and the finite-dimensionality of the harmonic forms of `H̊Λ(Ω)`. -/
@@ -2619,12 +2634,6 @@ theorem exists_tendstoUniformlyOn_windowMin (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ
 
 end MeshFamily
 
-theorem HasPoincare.mono {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
-    [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
-    {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} {cP cP' : ℝ} (h : HasPoincare H cP)
-    (hle : cP ≤ cP') : HasPoincare H cP' := fun i j hij z hz =>
-  (h i j hij z hz).trans (mul_le_mul_of_nonneg_right hle (norm_nonneg _))
-
 /-! ### Non-vacuity: the cube and its Freudenthal meshes -/
 
 namespace CubeWitness
@@ -2700,5 +2709,334 @@ theorem nonvacuous : ∃ (D : StarDomain n) (_ : MeshFamily D),
     fun j => inferInstance, fun j => inferInstance⟩
 
 end CubeWitness
+
+/-! ### Images under affine equivalences; non-vacuity on parallelepipeds -/
+
+section AffineImage
+
+variable (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
+
+/-- The linear part of the affine equivalence `e`, as a continuous linear equivalence. -/
+def linCLE : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ) := e.linear.toContinuousLinearEquiv
+
+/-- A Lipschitz constant `‖e⃗‖ + 1 > 0` of `e`. -/
+def lipConst : ℝ := ‖(linCLE e : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ + 1
+
+/-- A Lipschitz constant `‖e⃗⁻¹‖ + 1 > 0` of `e⁻¹`. -/
+def lipConstInv : ℝ := ‖((linCLE e).symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ + 1
+
+/-- The Jacobian `|det e⃗|` of `e`. -/
+def jacAbs : ℝ := |LinearMap.det (e.linear : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ))|
+
+theorem lipConst_pos : 0 < lipConst e := by unfold lipConst; positivity
+
+theorem lipConstInv_pos : 0 < lipConstInv e := by unfold lipConstInv; positivity
+
+theorem jacAbs_pos : 0 < jacAbs e :=
+  abs_pos.2 (LinearEquiv.isUnit_det' e.linear).ne_zero
+
+theorem linCLE_apply (x : Fin n → ℝ) : linCLE e x = e.linear x := rfl
+
+theorem sub_eq_linCLE (x y : Fin n → ℝ) : e x - e y = linCLE e (x - y) := by
+  rw [linCLE_apply, ← vsub_eq_sub, ← vsub_eq_sub]
+  exact (e.toAffineMap.linear_apply_vsub x y).symm
+
+theorem symm_sub_eq_linCLE_symm (x y : Fin n → ℝ) :
+    e.symm x - e.symm y = (linCLE e).symm (x - y) := by
+  apply (linCLE e).injective
+  rw [← sub_eq_linCLE, ContinuousLinearEquiv.apply_symm_apply, e.apply_symm_apply,
+    e.apply_symm_apply]
+
+theorem norm_linCLE_le : ‖(linCLE e : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ lipConst e := by
+  unfold lipConst; linarith
+
+theorem norm_linCLE_symm_le :
+    ‖((linCLE e).symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ lipConstInv e := by
+  unfold lipConstInv; linarith
+
+theorem dist_apply_le (x y : Fin n → ℝ) : dist (e x) (e y) ≤ lipConst e * dist x y := by
+  rw [dist_eq_norm, dist_eq_norm, sub_eq_linCLE]
+  exact ((linCLE e : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm _).trans
+    (mul_le_mul_of_nonneg_right (norm_linCLE_le e) (norm_nonneg _))
+
+theorem dist_symm_apply_le (x y : Fin n → ℝ) :
+    dist (e.symm x) (e.symm y) ≤ lipConstInv e * dist x y := by
+  rw [dist_eq_norm, dist_eq_norm, symm_sub_eq_linCLE_symm]
+  exact (((linCLE e).symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm _).trans
+    (mul_le_mul_of_nonneg_right (norm_linCLE_symm_le e) (norm_nonneg _))
+
+/-- `h_{e(K)} ≤ (‖e⃗‖ + 1) h_K`. -/
+theorem diam_mapEquiv_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    diam (mapEquiv e K) ≤ lipConst e * diam K := by
+  rw [diam, closedInterior_mapEquiv]
+  refine Metric.diam_le_of_forall_dist_le (mul_nonneg (lipConst_pos e).le (diam_nonneg K)) ?_
+  rintro _ ⟨x, hx, rfl⟩ _ ⟨y, hy, rfl⟩
+  exact (dist_apply_le e x y).trans (mul_le_mul_of_nonneg_left
+    (Metric.dist_le_diam_of_mem K.isCompact_closedInterior.isBounded hx hy) (lipConst_pos e).le)
+
+/-- `h_K ≤ (‖e⃗⁻¹‖ + 1) h_{e(K)}`. -/
+theorem diam_le_diam_mapEquiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    diam K ≤ lipConstInv e * diam (mapEquiv e K) := by
+  refine Metric.diam_le_of_forall_dist_le
+    (mul_nonneg (lipConstInv_pos e).le (diam_nonneg _)) fun x hx y hy => ?_
+  have hb := (mapEquiv e K).isCompact_closedInterior.isBounded
+  have hx' : e x ∈ (mapEquiv e K).closedInterior := by
+    rw [closedInterior_mapEquiv]; exact ⟨x, hx, rfl⟩
+  have hy' : e y ∈ (mapEquiv e K).closedInterior := by
+    rw [closedInterior_mapEquiv]; exact ⟨y, hy, rfl⟩
+  have h := dist_symm_apply_le e (e x) (e y)
+  rw [e.symm_apply_apply, e.symm_apply_apply] at h
+  exact h.trans (mul_le_mul_of_nonneg_left (Metric.dist_le_diam_of_mem hb hx' hy')
+    (lipConstInv_pos e).le)
+
+theorem linearPart_mapEquiv_apply (K : Affine.Simplex ℝ (Fin n → ℝ) n) (x : Fin n → ℝ) :
+    (mapEquiv e K).linearPart x = linCLE e (K.linearPart x) := by
+  simp only [Affine.Simplex.linearPart_apply, mapEquiv_points, map_sum, map_smul]
+  exact Finset.sum_congr rfl fun i _ => by rw [sub_eq_linCLE]
+
+/-- `B_{e(K)} = e⃗ B_K`. -/
+theorem linearPart_mapEquiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    (mapEquiv e K).linearPart = (e.linear : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ)) ∘ₗ K.linearPart :=
+  LinearMap.ext fun x => linearPart_mapEquiv_apply e K x
+
+theorem norm_linearEquiv_mapEquiv_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    ‖((mapEquiv e K).linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤
+      lipConst e * ‖(K.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ := by
+  refine ContinuousLinearMap.opNorm_le_bound _
+    (mul_nonneg (lipConst_pos e).le (norm_nonneg _)) fun x => ?_
+  rw [ContinuousLinearEquiv.coe_coe, Affine.Simplex.linearEquiv_apply,
+    linearPart_mapEquiv_apply, mul_assoc]
+  refine ((linCLE e : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm _).trans
+    (mul_le_mul (norm_linCLE_le e) ?_ (norm_nonneg _) (lipConst_pos e).le)
+  exact (K.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm x
+
+theorem norm_linearEquiv_symm_mapEquiv_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    ‖((mapEquiv e K).linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤
+      ‖(K.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ * lipConstInv e := by
+  refine ContinuousLinearMap.opNorm_le_bound _
+    (mul_nonneg (norm_nonneg _) (lipConstInv_pos e).le) fun x => ?_
+  have hx : (mapEquiv e K).linearEquiv.symm x = K.linearEquiv.symm ((linCLE e).symm x) := by
+    apply (mapEquiv e K).linearEquiv.injective
+    rw [ContinuousLinearEquiv.apply_symm_apply, Affine.Simplex.linearEquiv_apply,
+      linearPart_mapEquiv_apply, ← Affine.Simplex.linearEquiv_apply,
+      ContinuousLinearEquiv.apply_symm_apply, ContinuousLinearEquiv.apply_symm_apply]
+  rw [ContinuousLinearEquiv.coe_coe, hx, mul_assoc]
+  refine ((K.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm _).trans
+    (mul_le_mul_of_nonneg_left ?_ (norm_nonneg _))
+  exact (((linCLE e).symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm x).trans
+    (mul_le_mul_of_nonneg_right (norm_linCLE_symm_le e) (norm_nonneg _))
+
+theorem abs_det_linearPart_mapEquiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    |LinearMap.det (mapEquiv e K).linearPart| = jacAbs e * |LinearMap.det K.linearPart| := by
+  rw [linearPart_mapEquiv, LinearMap.det_comp, abs_mul, jacAbs]
+
+/-- **Shape regularity is preserved by affine equivalences**: the images of a shape-regular set
+of simplices with constants `C, c` are shape regular with constants `L L' C` and
+`|det e⃗| c / Lⁿ`, `L = ‖e⃗‖ + 1`, `L' = ‖e⃗⁻¹‖ + 1` ([Ciarlet2002], §3.1). -/
+theorem isShapeRegular_image {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C c : ℝ}
+    (hC : 0 ≤ C) (hc : 0 ≤ c) (hS : IsShapeRegular S C c) :
+    IsShapeRegular (mapEquiv e '' S) (lipConst e * lipConstInv e * C)
+      (jacAbs e * c / lipConst e ^ n) := by
+  rintro _ ⟨K, hK, rfl⟩
+  obtain ⟨h1, h2, h3⟩ := hS K hK
+  have hL := lipConst_pos e
+  have hL' := lipConstInv_pos e
+  have hdT := diam_mapEquiv_le e K
+  have hdK := diam_le_diam_mapEquiv e K
+  have hK0 := diam_nonneg K
+  have hT0 := diam_nonneg (mapEquiv e K)
+  refine ⟨?_, ?_, ?_⟩
+  · refine (norm_linearEquiv_mapEquiv_le e K).trans ?_
+    calc lipConst e * ‖(K.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖
+        ≤ lipConst e * (C * (lipConstInv e * diam (mapEquiv e K))) :=
+          mul_le_mul_of_nonneg_left (h1.trans (mul_le_mul_of_nonneg_left hdK hC)) hL.le
+      _ = _ := by ring
+  · refine (norm_linearEquiv_symm_mapEquiv_le e K).trans ?_
+    rcases hT0.eq_or_lt with h0 | h0
+    · have hK' : diam K = 0 := le_antisymm (by rw [← h0, mul_zero] at hdK; exact hdK) hK0
+      rw [hK', div_zero] at h2
+      rw [← h0, div_zero]
+      exact (mul_le_mul_of_nonneg_right h2 hL'.le).trans (by rw [zero_mul])
+    · have hKpos : 0 < diam K := by
+        by_contra hne
+        have : diam K = 0 := le_antisymm (not_lt.1 hne) hK0
+        rw [this, mul_zero] at hdT
+        linarith
+      calc ‖(K.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ * lipConstInv e
+          ≤ C / diam K * lipConstInv e := mul_le_mul_of_nonneg_right h2 hL'.le
+        _ ≤ lipConst e * lipConstInv e * C / diam (mapEquiv e K) := by
+          rw [div_mul_eq_mul_div, div_le_div_iff₀ hKpos h0]
+          have := mul_le_mul_of_nonneg_left hdT (mul_nonneg hC hL'.le)
+          nlinarith
+  · rw [abs_det_linearPart_mapEquiv]
+    have hpow : (diam (mapEquiv e K) / lipConst e) ^ n ≤ diam K ^ n :=
+      pow_le_pow_left₀ (div_nonneg hT0 hL.le) ((div_le_iff₀ hL).2 (by linarith)) n
+    calc jacAbs e * c / lipConst e ^ n * diam (mapEquiv e K) ^ n
+        = jacAbs e * (c * (diam (mapEquiv e K) / lipConst e) ^ n) := by
+          rw [div_pow]; field_simp
+      _ ≤ jacAbs e * (c * diam K ^ n) :=
+          mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left hpow hc) (jacAbs_pos e).le
+      _ ≤ jacAbs e * |LinearMap.det K.linearPart| :=
+          mul_le_mul_of_nonneg_left h3 (jacAbs_pos e).le
+
+theorem meshSize_nonneg' (M : SimplicialMesh n) : 0 ≤ M.meshSize :=
+  Real.iSup_nonneg fun _ => diam_nonneg _
+
+theorem meshSize_map_le (M : SimplicialMesh n) :
+    (M.map e).meshSize ≤ lipConst e * M.meshSize := by
+  refine SimplicialMesh.meshSize_le _ (mul_nonneg (lipConst_pos e).le (meshSize_nonneg' M))
+    fun T hT => ?_
+  obtain ⟨K, hK, rfl⟩ := M.mem_map_simplices.1 hT
+  exact (diam_mapEquiv_le e K).trans
+    (mul_le_mul_of_nonneg_left (M.diam_le_meshSize hK) (lipConst_pos e).le)
+
+theorem meshSize_le_meshSize_map (M : SimplicialMesh n) :
+    M.meshSize ≤ lipConstInv e * (M.map e).meshSize := by
+  refine SimplicialMesh.meshSize_le _
+    (mul_nonneg (lipConstInv_pos e).le (meshSize_nonneg' _)) fun K hK => ?_
+  exact (diam_le_diam_mapEquiv e K).trans (mul_le_mul_of_nonneg_left
+    ((M.map e).diam_le_meshSize (M.mem_map_simplices.2 ⟨K, hK, rfl⟩)) (lipConstInv_pos e).le)
+
+theorem simplices_map_eq (M : SimplicialMesh n) :
+    ((M.map e).simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) =
+      mapEquiv e '' (M.simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) := by
+  ext T
+  simp only [Finset.mem_coe, M.mem_map_simplices, Set.mem_image]
+
+/-- **Mesh data are preserved by affine equivalences**, with constants depending only on
+`C, c, q` and `‖e⃗‖, ‖e⃗⁻¹‖, |det e⃗|`. -/
+theorem MeshData.map {M : SimplicialMesh n} {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 ≤ c) (hq : 0 < q)
+    (h : MeshData M C c q) :
+    MeshData (M.map e) (lipConst e * lipConstInv e * C) (jacAbs e * c / lipConst e ^ n)
+      (q / (lipConst e * lipConstInv e)) := by
+  have hL := lipConst_pos e
+  have hL' := lipConstInv_pos e
+  refine ⟨?_, fun T hT => ?_, ?_⟩
+  · rw [simplices_map_eq]; exact isShapeRegular_image e hC hc h.shape
+  · obtain ⟨K, hK, rfl⟩ := M.mem_map_simplices.1 hT
+    have hq1 := h.quasi K hK
+    have hm := meshSize_map_le e M
+    have hd := diam_le_diam_mapEquiv e K
+    calc q / (lipConst e * lipConstInv e) * (M.map e).meshSize
+        ≤ q / (lipConst e * lipConstInv e) * (lipConst e * M.meshSize) :=
+          mul_le_mul_of_nonneg_left hm (by positivity)
+      _ = q * M.meshSize / lipConstInv e := by field_simp
+      _ ≤ diam K / lipConstInv e := div_le_div_of_nonneg_right hq1 hL'.le
+      _ ≤ diam (mapEquiv e K) := (div_le_iff₀ hL').2 (by linarith)
+  · have := meshSize_le_meshSize_map e M
+    have h0 := h.meshSize_pos
+    by_contra hne
+    have : (M.map e).meshSize ≤ 0 := not_lt.1 hne
+    nlinarith
+
+end AffineImage
+
+namespace StarDomain
+
+variable (D : StarDomain n) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
+
+/-- **The image of a star-shaped domain under an affine equivalence** `e`, given as any set
+`Ω' = e(Ω)`: it is star-shaped with respect to `B(e x₀, s₀ / (‖e⃗⁻¹‖ + 1))`, with
+`cl Ω' ⊆ B̄(e x₀, (‖e⃗‖ + 1) R)`. -/
+def map (Ω' : Set (Fin n → ℝ)) (hΩ' : Ω' = e '' D.Ω) : StarDomain n where
+  Ω := Ω'
+  isOpen := hΩ' ▸ (AffineEquiv.toContinuousAffineEquiv e).toHomeomorph.isOpenMap _ D.isOpen
+  x₀ := e D.x₀
+  s₀ := D.s₀ / lipConstInv e
+  R := lipConst e * D.R
+  s₀_pos := div_pos D.s₀_pos (lipConstInv_pos e)
+  R_pos := mul_pos (lipConst_pos e) D.R_pos
+  starBall := by
+    subst hΩ'
+    rintro _ ⟨y, hy, rfl⟩ z hz
+    have hz' : e.symm z ∈ Metric.ball D.x₀ D.s₀ := by
+      rw [Metric.mem_ball] at hz ⊢
+      have h := dist_symm_apply_le e z (e D.x₀)
+      rw [e.symm_apply_apply] at h
+      have hL' := lipConstInv_pos e
+      calc dist (e.symm z) D.x₀ ≤ lipConstInv e * dist z (e D.x₀) := h
+        _ < lipConstInv e * (D.s₀ / lipConstInv e) := mul_lt_mul_of_pos_left hz hL'
+        _ = D.s₀ := by field_simp
+    have hseg := image_segment ℝ e.toAffineMap (e.symm z) y
+    rw [AffineEquiv.coe_toAffineMap, e.apply_symm_apply] at hseg
+    rw [← hseg]
+    exact Set.image_mono (D.starBall y hy _ hz')
+  norm_sub_le := by
+    subst hΩ'
+    have hcl : closure (e '' D.Ω) = e '' closure D.Ω :=
+      ((AffineEquiv.toContinuousAffineEquiv e).toHomeomorph.image_closure D.Ω).symm
+    rw [hcl]
+    rintro _ ⟨y, hy, rfl⟩
+    rw [← dist_eq_norm]
+    exact (dist_apply_le e y D.x₀).trans
+      (mul_le_mul_of_nonneg_left (by rw [dist_eq_norm]; exact D.norm_sub_le y hy)
+        (lipConst_pos e).le)
+
+end StarDomain
+
+namespace MeshFamily
+
+variable {D : StarDomain n} (F : MeshFamily D) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
+
+/-- **The image of a mesh family under an affine equivalence** `e`: the meshes `e(M_N)` of
+`e(Ω)` are again uniformly shape regular and quasi-uniform with `h_N → 0`. -/
+def map (Ω' : Set (Fin n → ℝ)) (hΩ' : Ω' = e '' D.Ω) : MeshFamily (D.map e Ω' hΩ') where
+  mesh N := (F.mesh N).map e
+  C := lipConst e * lipConstInv e * F.C
+  c := jacAbs e * F.c / lipConst e ^ n
+  q := F.q / (lipConst e * lipConstInv e)
+  C_nonneg := mul_nonneg (mul_pos (lipConst_pos e) (lipConstInv_pos e)).le F.C_nonneg
+  c_pos := div_pos (mul_pos (jacAbs_pos e) F.c_pos) (pow_pos (lipConst_pos e) n)
+  q_pos := div_pos F.q_pos (mul_pos (lipConst_pos e) (lipConstInv_pos e))
+  domain_eq N := by
+    change e '' (F.mesh N).domain = Ω'
+    rw [F.domain_eq N, hΩ']
+  data N := (F.data N).map e F.C_nonneg F.c_pos.le F.q_pos
+  tendsto_meshSize := by
+    have h := F.tendsto_meshSize.const_mul (lipConst e)
+    rw [mul_zero] at h
+    exact squeeze_zero (fun N => meshSize_nonneg' _) (fun N => meshSize_map_le e (F.mesh N)) h
+
+end MeshFamily
+
+namespace ParallelepipedWitness
+
+variable (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
+
+/-- The parallelepiped `Ω = A · (0, ½)ⁿ + b` as a star-shaped domain: the image of the cube
+(`CubeWitness.starDomain`) under `T x = A x + b`. -/
+def starDomain : StarDomain n :=
+  (CubeWitness.starDomain n).map (Parallelepiped.affEquiv A hA b) (Parallelepiped.domain A b)
+    (Parallelepiped.domain_eq_image A hA b)
+
+theorem starDomain_Ω : (starDomain A hA b).Ω = Parallelepiped.domain A b := rfl
+
+variable [NeZero n]
+
+/-- The image Freudenthal meshes `T(M_N)` of the parallelepiped as a mesh family. -/
+def meshFamily : MeshFamily (starDomain A hA b) :=
+  (CubeWitness.meshFamily n).map (Parallelepiped.affEquiv A hA b) _ _
+
+theorem meshFamily_mesh (N : ℕ) :
+    (meshFamily A hA b).mesh N = Parallelepiped.mesh A hA b N := rfl
+
+/-- **Non-vacuity beyond the reference cube**: every parallelepiped `A · Q + b` (in particular
+every box), with its image Freudenthal meshes, is a star-shaped domain with a quasi-uniform
+shape-regular mesh family whose complexes satisfy the Poincaré inequality with
+`c_P(A) = Parallelepiped.poincareConst A` (`Parallelepiped.poincare`, `poincare_min`) and have
+finite-dimensional harmonic forms. -/
+theorem nonvacuous : ∃ (D : StarDomain n) (F : MeshFamily D),
+    D.Ω = Parallelepiped.domain A b ∧ (∀ N, F.mesh N = Parallelepiped.mesh A hA b N) ∧
+    HasPoincare D.complex (Parallelepiped.poincareConst A) ∧
+    HasPoincare D.complexMin (Parallelepiped.poincareConst A) ∧
+    (∀ j, FiniteDimensional ℝ (D.complex.harmonic j)) ∧
+    (∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)) :=
+  ⟨starDomain A hA b, meshFamily A hA b, rfl, fun _ => rfl,
+    fun i j hij z hz => Parallelepiped.poincare A hA b i j hij z hz,
+    fun i j hij z hz => Parallelepiped.poincare_min A hA b i j hij z hz,
+    Parallelepiped.finiteDimensional_harmonic A hA b,
+    Parallelepiped.finiteDimensional_harmonic_min A hA b⟩
+
+end ParallelepipedWitness
 
 end Feec.Models.StarShaped

@@ -9,7 +9,7 @@ public import Feec.HilbertComplex.Transport
 Let `T x = A x + b` be an affine map of `ℝⁿ` with `A` invertible, `Ω' ⊆ ℝⁿ` open and
 `Ω = T⁻¹(Ω')`. The composition `f ↦ f ∘ T` is a bounded isomorphism `L²(Ω') ≃ L²(Ω)`:
 `T` is measure preserving from `|det A| · volume` to `volume` (`measurePreserving_affMap`), so
-`‖f ∘ T‖ = |det A|^{-1/2} ‖f‖` (`norm_pull`). A field pullback with a constant fibre matrix
+`‖f ∘ T‖ = |det A|^{-1/2} ‖f‖` (`norm_affPull`). A field pullback with a constant fibre matrix
 `C`, `(T^* u)_s = Σ_t C_{st} u_t ∘ T` (`fieldPull`), is then a bounded operator
 `L²(Ω'; ℝ^ι) → L²(Ω; ℝ^κ)` with `‖T^* u‖ ≤ |det A|^{-1/2} (Σ_{s,t} |C_{st}|) ‖u‖`
 (`norm_fieldPull_le`), invertible with inverse the field pullback along `T⁻¹` when the fibre
@@ -190,7 +190,7 @@ theorem ae_comp_affMap (hΩ' : MeasurableSet Ω') {p : (Fin n → ℝ) → Prop}
   exact (Measure.ae_ennreal_smul_measure_iff (ENNReal.ofReal_pos.2 (abs_det_pos hA)).ne').1 this
 
 /-- The pullback `f ↦ f ∘ T` as a linear map `L²(Ω') → L²(Ω)`, `Ω = T⁻¹ Ω'`. -/
-def pullₗ : L2 ℝ Ω' →ₗ[ℝ] L2 ℝ Ω where
+def affPullₗ : L2 ℝ Ω' →ₗ[ℝ] L2 ℝ Ω where
   toFun f := (memLp_comp_affMap hA b hΩ' hT f).toLp _
   map_add' f g := by
     refine Lp.ext ?_
@@ -208,8 +208,8 @@ def pullₗ : L2 ℝ Ω' →ₗ[ℝ] L2 ℝ Ω where
       ae_comp_affMap hA b hT hΩ' (Lp.coeFn_smul c f)] with x h1 h2 h3 h4
     rw [RingHom.id_apply, h3, Pi.smul_apply, h1, h2, h4, Pi.smul_apply]
 
-theorem coeFn_pullₗ (f : L2 ℝ Ω') :
-    (pullₗ hA b hΩ' hT f : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]
+theorem coeFn_affPullₗ (f : L2 ℝ Ω') :
+    (affPullₗ hA b hΩ' hT f : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]
       fun x => (f : (Fin n → ℝ) → ℝ) (affMap A b x) :=
   (memLp_comp_affMap hA b hΩ' hT f).coeFn_toLp
 
@@ -224,50 +224,50 @@ theorem setIntegral_comp_affMap (g : (Fin n → ℝ) → ℝ) :
   rfl
 
 /-- **The pullback scales inner products by `|det A|⁻¹`.** -/
-theorem inner_pullₗ (f g : L2 ℝ Ω') :
-    ⟪pullₗ hA b hΩ' hT f, pullₗ hA b hΩ' hT g⟫_ℝ = |A.det|⁻¹ * ⟪f, g⟫_ℝ := by
+theorem inner_affPullₗ (f g : L2 ℝ Ω') :
+    ⟪affPullₗ hA b hΩ' hT f, affPullₗ hA b hΩ' hT g⟫_ℝ = |A.det|⁻¹ * ⟪f, g⟫_ℝ := by
   rw [L2.inner_def, L2.inner_def]
-  have e1 : ∫ x, ⟪(pullₗ hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x,
-      (pullₗ hA b hΩ' hT g : (Fin n → ℝ) → ℝ) x⟫_ℝ ∂volume.restrict Ω =
+  have e1 : ∫ x, ⟪(affPullₗ hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x,
+      (affPullₗ hA b hΩ' hT g : (Fin n → ℝ) → ℝ) x⟫_ℝ ∂volume.restrict Ω =
       ∫ x in Ω, (fun y => ⟪(f : (Fin n → ℝ) → ℝ) y, (g : (Fin n → ℝ) → ℝ) y⟫_ℝ)
         (affMap A b x) := by
     refine integral_congr_ae ?_
-    filter_upwards [coeFn_pullₗ hA b hΩ' hT f, coeFn_pullₗ hA b hΩ' hT g] with x h1 h2
+    filter_upwards [coeFn_affPullₗ hA b hΩ' hT f, coeFn_affPullₗ hA b hΩ' hT g] with x h1 h2
     rw [h1, h2]
   rw [e1]
   exact setIntegral_comp_affMap hA b hΩ' hT
     (fun y => ⟪(f : (Fin n → ℝ) → ℝ) y, (g : (Fin n → ℝ) → ℝ) y⟫_ℝ)
 
-theorem norm_pullₗ (f : L2 ℝ Ω') :
-    ‖pullₗ hA b hΩ' hT f‖ = Real.sqrt |A.det|⁻¹ * ‖f‖ := by
-  have h := inner_pullₗ hA b hΩ' hT f f
+theorem norm_affPullₗ (f : L2 ℝ Ω') :
+    ‖affPullₗ hA b hΩ' hT f‖ = Real.sqrt |A.det|⁻¹ * ‖f‖ := by
+  have h := inner_affPullₗ hA b hΩ' hT f f
   rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq] at h
-  rw [← Real.sqrt_sq (norm_nonneg (pullₗ hA b hΩ' hT f)), h,
+  rw [← Real.sqrt_sq (norm_nonneg (affPullₗ hA b hΩ' hT f)), h,
     Real.sqrt_mul (inv_nonneg.2 (abs_nonneg _)), Real.sqrt_sq (norm_nonneg f)]
 
 /-- The pullback `f ↦ f ∘ T` as a continuous linear map `L²(Ω') → L²(Ω)`. -/
-def pull : L2 ℝ Ω' →L[ℝ] L2 ℝ Ω :=
-  (pullₗ hA b hΩ' hT).mkContinuous (Real.sqrt |A.det|⁻¹) fun f =>
-    (norm_pullₗ hA b hΩ' hT f).le
+def affPull : L2 ℝ Ω' →L[ℝ] L2 ℝ Ω :=
+  (affPullₗ hA b hΩ' hT).mkContinuous (Real.sqrt |A.det|⁻¹) fun f =>
+    (norm_affPullₗ hA b hΩ' hT f).le
 
-theorem pull_apply (f : L2 ℝ Ω') : pull hA b hΩ' hT f = pullₗ hA b hΩ' hT f := rfl
+theorem affPull_apply (f : L2 ℝ Ω') : affPull hA b hΩ' hT f = affPullₗ hA b hΩ' hT f := rfl
 
-theorem coeFn_pull (f : L2 ℝ Ω') :
-    (pull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]
+theorem coeFn_affPull (f : L2 ℝ Ω') :
+    (affPull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]
       fun x => (f : (Fin n → ℝ) → ℝ) (affMap A b x) :=
-  coeFn_pullₗ hA b hΩ' hT f
+  coeFn_affPullₗ hA b hΩ' hT f
 
-theorem norm_pull (f : L2 ℝ Ω') : ‖pull hA b hΩ' hT f‖ = Real.sqrt |A.det|⁻¹ * ‖f‖ :=
-  norm_pullₗ hA b hΩ' hT f
+theorem norm_affPull (f : L2 ℝ Ω') : ‖affPull hA b hΩ' hT f‖ = Real.sqrt |A.det|⁻¹ * ‖f‖ :=
+  norm_affPullₗ hA b hΩ' hT f
 
 /-- **Change of variables in pairings**: `∫_Ω (f ∘ T) (h ∘ T) = |det A|⁻¹ ∫_{Ω'} f h`. -/
-theorem setIntegral_pull_mul (f : L2 ℝ Ω') (h : (Fin n → ℝ) → ℝ) :
-    ∫ x in Ω, (pull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x * h (affMap A b x) =
+theorem setIntegral_affPull_mul (f : L2 ℝ Ω') (h : (Fin n → ℝ) → ℝ) :
+    ∫ x in Ω, (affPull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x * h (affMap A b x) =
       |A.det|⁻¹ * ∫ y in Ω', (f : (Fin n → ℝ) → ℝ) y * h y := by
-  have e1 : ∫ x in Ω, (pull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x * h (affMap A b x) =
+  have e1 : ∫ x in Ω, (affPull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x * h (affMap A b x) =
       ∫ x in Ω, (fun y => (f : (Fin n → ℝ) → ℝ) y * h y) (affMap A b x) := by
     refine integral_congr_ae ?_
-    filter_upwards [coeFn_pull hA b hΩ' hT f] with x h1
+    filter_upwards [coeFn_affPull hA b hΩ' hT f] with x h1
     rw [h1]
   rw [e1]
   exact setIntegral_comp_affMap hA b hΩ' hT (fun y => (f : (Fin n → ℝ) → ℝ) y * h y)
@@ -283,28 +283,28 @@ theorem preimage_inv_of_affMap {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.d
     affMap A⁻¹ (affInvShift A b) ⁻¹' Ω = Ω' := hT ▸ preimage_inv_preimage b hA Ω'
 
 /-- Pulling back along `T` and then along `T⁻¹` is the identity. -/
-theorem pull_pull_inv {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ)
+theorem affPull_affPull_inv {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ)
     {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSet Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
     (f : L2 ℝ Ω) :
-    pull hA b hΩ' hT (pull (isUnit_det_inv hA) (affInvShift A b) (measurableSet_of_affMap b hΩ' hT)
+    affPull hA b hΩ' hT (affPull (isUnit_det_inv hA) (affInvShift A b) (measurableSet_of_affMap b hΩ' hT)
       (preimage_inv_of_affMap hA b hT) f) = f := by
   refine Lp.ext ?_
-  filter_upwards [coeFn_pull hA b hΩ' hT _,
-    ae_comp_affMap hA b hT hΩ' (coeFn_pull (isUnit_det_inv hA) (affInvShift A b)
+  filter_upwards [coeFn_affPull hA b hΩ' hT _,
+    ae_comp_affMap hA b hT hΩ' (coeFn_affPull (isUnit_det_inv hA) (affInvShift A b)
       (measurableSet_of_affMap b hΩ' hT) (preimage_inv_of_affMap hA b hT) f)] with x h1 h2
   rw [h1, h2, affMap_inv_affMap b hA]
 
 /-- Pulling back along `T⁻¹` and then along `T` is the identity. -/
-theorem pull_inv_pull {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ)
+theorem affPull_inv_affPull {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ)
     {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSet Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
     (f : L2 ℝ Ω') :
-    pull (isUnit_det_inv hA) (affInvShift A b) (measurableSet_of_affMap b hΩ' hT)
-      (preimage_inv_of_affMap hA b hT) (pull hA b hΩ' hT f) = f := by
+    affPull (isUnit_det_inv hA) (affInvShift A b) (measurableSet_of_affMap b hΩ' hT)
+      (preimage_inv_of_affMap hA b hT) (affPull hA b hΩ' hT f) = f := by
   refine Lp.ext ?_
-  filter_upwards [coeFn_pull (isUnit_det_inv hA) (affInvShift A b)
+  filter_upwards [coeFn_affPull (isUnit_det_inv hA) (affInvShift A b)
       (measurableSet_of_affMap b hΩ' hT) (preimage_inv_of_affMap hA b hT) _,
     ae_comp_affMap (isUnit_det_inv hA) (affInvShift A b) (preimage_inv_of_affMap hA b hT)
-      (measurableSet_of_affMap b hΩ' hT) (coeFn_pull hA b hΩ' hT f)] with y h1 h2
+      (measurableSet_of_affMap b hΩ' hT) (coeFn_affPull hA b hΩ' hT f)] with y h1 h2
   rw [h1, h2, affMap_affMap_inv b hA]
 
 /-! ### Field pullbacks with constant fibre matrices -/
@@ -320,12 +320,12 @@ constant fibre matrix `C`. For `k`-forms with `C` the matrix of `k × k` minors 
 pullback of forms (`Feec.FiniteElement.affinePullback` pointwise). -/
 def fieldPull (C : κ → ι → ℝ) : L2F ℝ Ω' ι →L[ℝ] L2F ℝ Ω κ :=
   (PiLp.continuousLinearEquiv 2 ℝ (fun _ : κ => L2 ℝ Ω)).symm.toContinuousLinearMap.comp
-    (ContinuousLinearMap.pi fun s => ∑ t, C s t • (pull hA b hΩ' hT).comp
+    (ContinuousLinearMap.pi fun s => ∑ t, C s t • (affPull hA b hΩ' hT).comp
       (PiLp.proj (𝕜 := ℝ) 2 (fun _ : ι => L2 ℝ Ω') t))
 
 omit [Fintype κ] in
 theorem fieldPull_apply (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) (s : κ) :
-    fieldPull hA b hΩ' hT C u s = ∑ t, C s t • pull hA b hΩ' hT (u t) := by
+    fieldPull hA b hΩ' hT C u s = ∑ t, C s t • affPull hA b hΩ' hT (u t) := by
   simp [fieldPull]
 
 omit [Fintype κ] in
@@ -334,12 +334,12 @@ theorem coeFn_fieldPull (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) (s : κ) :
     (fieldPull hA b hΩ' hT C u s : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]
       fun x => ∑ t, C s t * (u t : (Fin n → ℝ) → ℝ) (affMap A b x) := by
   rw [fieldPull_apply]
-  have hs : ∀ t, ((C s t • pull hA b hΩ' hT (u t) : L2 ℝ Ω) : (Fin n → ℝ) → ℝ)
+  have hs : ∀ t, ((C s t • affPull hA b hΩ' hT (u t) : L2 ℝ Ω) : (Fin n → ℝ) → ℝ)
       =ᵐ[volume.restrict Ω] fun x => C s t * (u t : (Fin n → ℝ) → ℝ) (affMap A b x) := fun t => by
-    filter_upwards [Lp.coeFn_smul (C s t) (pull hA b hΩ' hT (u t)),
-      coeFn_pull hA b hΩ' hT (u t)] with x h1 h2
+    filter_upwards [Lp.coeFn_smul (C s t) (affPull hA b hΩ' hT (u t)),
+      coeFn_affPull hA b hΩ' hT (u t)] with x h1 h2
     rw [h1, Pi.smul_apply, h2, smul_eq_mul]
-  filter_upwards [Lp.coeFn_finsetSum Finset.univ fun t => C s t • pull hA b hΩ' hT (u t),
+  filter_upwards [Lp.coeFn_finsetSum Finset.univ fun t => C s t • affPull hA b hΩ' hT (u t),
     ae_all_iff.2 hs] with x h1 h2
   rw [h1, Finset.sum_apply]
   exact Finset.sum_congr rfl fun t _ => h2 t
@@ -361,7 +361,7 @@ theorem norm_fieldPull_le (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) :
       ∑ t, |C s t| * (Real.sqrt |A.det|⁻¹ * ‖u‖) := fun s => by
     rw [fieldPull_apply]
     refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun t _ => ?_)
-    rw [norm_smul, norm_pull, Real.norm_eq_abs]
+    rw [norm_smul, norm_affPull, Real.norm_eq_abs]
     have := PiLp.norm_apply_le u t
     gcongr
   refine (L2F.norm_le_sum_norm' _).trans ((Finset.sum_le_sum fun s _ => hs s).trans_eq ?_)
@@ -380,7 +380,7 @@ theorem fieldPullInv_fieldPull [DecidableEq ι] {C : κ → ι → ℝ} {C' : ι
   refine (WithLp.ext_iff 2).2 (funext fun s => ?_)
   change fieldPull _ _ _ _ C' (fieldPull hA b hΩ' hT C u) s = u s
   simp only [fieldPull_apply, map_sum, map_smul, Finset.smul_sum, smul_smul,
-    pull_inv_pull hA b hΩ' hT]
+    affPull_inv_affPull hA b hΩ' hT]
   rw [Finset.sum_comm]
   simp_rw [← Finset.sum_smul, h, ite_smul, one_smul, zero_smul, Finset.sum_ite_eq,
     Finset.mem_univ, ite_true]
@@ -391,7 +391,7 @@ theorem fieldPull_fieldPullInv [DecidableEq ι] {C : ι → κ → ℝ} {C' : κ
   refine (WithLp.ext_iff 2).2 (funext fun s => ?_)
   change fieldPull hA b hΩ' hT C (fieldPull _ _ _ _ C' u) s = u s
   simp only [fieldPull_apply, map_sum, map_smul, Finset.smul_sum, smul_smul,
-    pull_pull_inv hA b hΩ' hT]
+    affPull_affPull_inv hA b hΩ' hT]
   rw [Finset.sum_comm]
   simp_rw [← Finset.sum_smul, h, ite_smul, one_smul, zero_smul, Finset.sum_ite_eq,
     Finset.mem_univ, ite_true]
@@ -466,13 +466,13 @@ theorem fieldPull_testField (C : κ → ι → ℝ) {φ : ι → (Fin n → ℝ)
     fieldPull hA b hΩ' hT C (testField hφ) = testField (hφ.pullFun b hA hT C) := by
   refine eq_testField _ fun s => ?_
   rw [fieldPull_apply]
-  have hs : ∀ t, ((C s t • pull hA b hΩ' hT (testField hφ t) : L2 ℝ Ω) : (Fin n → ℝ) → ℝ)
+  have hs : ∀ t, ((C s t • affPull hA b hΩ' hT (testField hφ t) : L2 ℝ Ω) : (Fin n → ℝ) → ℝ)
       =ᵐ[volume.restrict Ω] fun x => C s t * φ t (affMap A b x) := fun t => by
-    filter_upwards [Lp.coeFn_smul (C s t) (pull hA b hΩ' hT (testField hφ t)),
-      coeFn_pull hA b hΩ' hT (testField hφ t),
+    filter_upwards [Lp.coeFn_smul (C s t) (affPull hA b hΩ' hT (testField hφ t)),
+      coeFn_affPull hA b hΩ' hT (testField hφ t),
       ae_comp_affMap hA b hT hΩ' (coeFn_testField hφ t)] with x h1 h2 h3
     rw [h1, Pi.smul_apply, h2, h3, smul_eq_mul]
-  filter_upwards [Lp.coeFn_finsetSum Finset.univ fun t => C s t • pull hA b hΩ' hT
+  filter_upwards [Lp.coeFn_finsetSum Finset.univ fun t => C s t • affPull hA b hΩ' hT
     (testField hφ t), ae_all_iff.2 hs] with x h1 h2
   rw [h1, Finset.sum_apply]
   exact Finset.sum_congr rfl fun t _ => h2 t
@@ -487,17 +487,17 @@ theorem inner_fieldPull_testField (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι)
   have hψ' : ∀ s, IsTest Ω' fun y => ψ s (affMap A⁻¹ c y) := fun s =>
     (preimage_inv_of_affMap hA b hT) ▸ (hψ s).comp_affMap c (isUnit_det_inv hA)
   -- each term: `⟪u_t ∘ T, ψ_s⟫ = |det A|⁻¹ ∫_{Ω'} u_t (ψ_s ∘ T⁻¹)`
-  have key : ∀ t s, ⟪pull hA b hΩ' hT (u t), toL2 (hψ s)⟫_ℝ =
+  have key : ∀ t s, ⟪affPull hA b hΩ' hT (u t), toL2 (hψ s)⟫_ℝ =
       |A.det|⁻¹ * ∫ y in Ω', (u t : (Fin n → ℝ) → ℝ) y * ψ s (affMap A⁻¹ c y) := by
     intro t s
     rw [inner_toL2]
     simp only [conj_trivial]
-    have e : ∫ x in Ω, (pull hA b hΩ' hT (u t) : (Fin n → ℝ) → ℝ) x * ψ s x =
-        ∫ x in Ω, (pull hA b hΩ' hT (u t) : (Fin n → ℝ) → ℝ) x *
+    have e : ∫ x in Ω, (affPull hA b hΩ' hT (u t) : (Fin n → ℝ) → ℝ) x * ψ s x =
+        ∫ x in Ω, (affPull hA b hΩ' hT (u t) : (Fin n → ℝ) → ℝ) x *
           (fun y => ψ s (affMap A⁻¹ c y)) (affMap A b x) := by
       simp only [c, affMap_inv_affMap b hA]
     rw [e]
-    exact setIntegral_pull_mul hA b hΩ' hT (u t) (fun y => ψ s (affMap A⁻¹ c y))
+    exact setIntegral_affPull_mul hA b hΩ' hT (u t) (fun y => ψ s (affMap A⁻¹ c y))
   rw [L2F.inner_def, L2F.inner_def]
   simp only [testField_apply, fieldPull_apply, sum_inner, real_inner_smul_left, key]
   rw [Finset.sum_comm]

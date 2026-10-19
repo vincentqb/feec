@@ -35,8 +35,8 @@ class `IsCsFormTr s 2 L` and no classical solution of the rate class starts from
 (`Feec.EinsteinBianchi.BoundedFailure.not_isCsFormTr_rhoBeta`, `not_isRateClass_of_rho`).
 Moreover `u'(0) = diag(1, −1, 0)` violates the
 boundary condition `u(t) ∈ H̊Λ¹(Q)³`, so the solution is not expected to be `C²` up to `∂Q` for
-`t > 0` (not formalized). Its convergence without rate is the subject of
-`Feec.Physics.EinsteinBianchi.BoundedFailure`.
+`t > 0` (not formalized). Its convergence without rate, with no hypothesis, is
+`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`.
 
 ## References
 

@@ -9,7 +9,8 @@ public import Feec.Models.Cube.WeakSymmetryConvergence
 [QuennevilleBelair2015], §6.3: the semi-discrete scheme (6.5) on `Q = (0, ½)³` with the elements
 of Table 6.1 and the thesis' boundary conditions (`Feec.Models.Cube.WeakSymmetry.cubeWave`).
 This file removes the hypothesis `IsRateApproximable` of
-`Feec.EinsteinBianchi.BoundedFailure.tendsto_of_isRateApproximable`.
+`Feec.EinsteinBianchi.BoundedFailure.tendsto_of_isRateApproximable` and
+`Feec.EinsteinBianchi.BoundedFailure.waveFEM_converges_to_non_tsd_of_isRateApproximable`.
 
 **Strong solutions with `U(0) ∈ D(L²)` are classical solutions of (6.2).** If `V` and `L V` are
 strong solutions of the forms-model Hodge wave equation (and `L² V` is continuous), then `V` is a
@@ -53,11 +54,11 @@ open Set Filter Topology MeasureTheory
 
 @[expose] public noncomputable section
 
-namespace Feec.EinsteinBianchi.BoundedFailure
+namespace Feec.EinsteinBianchi.BoundedConvergence
 
 open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry Feec.Models.BoundedDomain Feec.EinsteinBianchi.WaveFEM
-  Feec.EinsteinBianchi.MatrixModel
+  Feec.EinsteinBianchi.MatrixModel Feec.EinsteinBianchi.BoundedFailure
 
 /-! ### Calculus through isometric embeddings -/
 
@@ -606,4 +607,124 @@ theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
 
 end Converge
 
-end Feec.EinsteinBianchi.BoundedFailure
+/-! ### Every datum in `D(L)`, and the TSD datum -/
+
+section Beta
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+open Feec.Counterexamples.BoundedBGG Feec.Counterexamples.BoundedDomainTSD
+
+variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+  (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+  (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
+
+set_option maxHeartbeats 4000000 in
+/-- **Convergence of (6.5) for every datum in `D(L)`** ([QuennevilleBelair2015], §6.3, (6.5),
+Table 6.1, thesis' boundary conditions; no hypothesis): for every `U₀` in the domain of the
+forms-model Hodge wave operator, the Hodge wave equation has a classical solution `V` on `[0,T]`
+(Stone, `Feec.EinsteinBianchi.WaveFEM.bgg_wave_existsUnique` with `curlPotential`), which solves
+(6.1) (`solutionOfStrong`) with initial energy vector `(−σ₀, u₀, M₀, ρ₀)`, and every family of
+solutions of (6.5) (source `0`) whose initial states converge to it converges to it uniformly on
+`[0,T]` (`tendsto_of_isStrongSolution`). -/
+theorem tendsto_of_mem_wave_domain {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
+    (hU₀ : U₀ ∈ formsShort.wave.domain) :
+    ∃ (V : ℝ → WS) (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V), V 0 = U₀ ∧
+      (solutionOfStrong hV).vec 0 = Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)
+        (-((comp0 U₀ : bggHilb.Γbar) : W0), comp1 U₀, compML U₀, compρL U₀) ∧
+      ∀ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+        Tendsto (fun N => ‖(solutionOfStrong hV).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖) atTop
+          (𝓝 0) →
+        ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+          ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε := by
+  obtain ⟨V, hV0, hV, -⟩ := bgg_wave_existsUnique curlPotential hU₀ (a := 0) (b := T)
+    (Evolution.ForcingClass.admissible_zero _ 0 T)
+  have hVs : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V := hV.toIsStrongSolution
+  refine ⟨V, hVs, hV0, ?_, fun sh hsh0 => tendsto_of_isStrongSolution hT hB hT0 hVs sh hsh0⟩
+  rw [solutionOfStrong_vec hVs ⟨le_rfl, hT0.le⟩, hV0]
+
+set_option maxHeartbeats 4000000 in
+/-- **The method converges to the wrong physics** ([QuennevilleBelair2015], §6.3, (6.5) with
+Table 6.1 and the thesis' boundary conditions; no hypothesis: the regularity hypothesis is
+discharged by `curlPotential` and convergence is `tendsto_of_isStrongSolution`). For the TSD
+datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of
+`Feec.Counterexamples.BoundedBGG.bggComplex_verdict` on `Q`:
+1. the matrix-model Hodge wave equation has a unique strong solution `U = betaU` on `[0,T]`, with
+   `σ ≡ 0`, and `U` **leaves TSD**: `E(t) ∉ L²(TSD)` for some `t` and `B(t)` is not symmetric for
+   some `t`;
+2. read in the forms model (`Feec.EinsteinBianchi.MatrixModel`), `U` is a solution `w = betaW` of
+   (6.1) with initial energy vector `(0, 0, 0, ρ(0))`, `ρ(0) = ⋆β` row by row;
+3. the scheme (6.5) has solutions from the projected data `(0, 0, 0, P ρ(0))`, and their initial
+   states converge to `w(0)`;
+4. every family of solutions of (6.5) whose initial states converge to `w(0)` converges to `w`
+   uniformly on `[0,T]` (in energy, hence `E_h(t) → E(t)` and `B_h(t) → B(t)` uniformly for the
+   matrix proxies `E_h = rowsEquiv uₕ`, `B_h = rows2Equiv ρₕ`), and the discrete fields
+   themselves leave TSD: at the times of item 1, for all large `N`, `E_h(t) ∉ L²(TSD)` and
+   `B_h(t)` is not symmetric. -/
+theorem waveFEM_converges_to_non_tsd {T : ℝ} (hT0 : 0 < T) :
+    (betaU hT0 0 = betaDatum ∧
+      Evolution.IsStrongSolution matrixComplex.wave (Icc 0 T) 0 (betaU hT0) ∧
+      (∀ V, V 0 = betaDatum → Evolution.IsStrongSolution matrixComplex.wave (Icc 0 T) 0 V →
+        EqOn V (betaU hT0) (Icc 0 T)) ∧
+      (∀ t ∈ Icc 0 T, (betaU hT0 t 0 : L2 ℝ (cubeDomain 3)) = 0) ∧
+      (∃ t ∈ Icc 0 T, betaE hT0 t ∉ tsd (cubeDomain 3)) ∧
+      ∃ t ∈ Icc 0 T, betaB hT0 t ∉ symSub ℝ (cubeDomain 3)) ∧
+    (betaW hT0).vec 0 = Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2) (0, 0, 0, rhoBeta) ∧
+    (∃ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+      (∀ N, (sh N).σ 0 = 0 ∧ (sh N).u 0 = 0 ∧ (sh N).M 0 = 0 ∧ (sh N).ρ 0 = rhoBetaH hT hB N) ∧
+      Tendsto (fun N => ‖(betaW hT0).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖) atTop (𝓝 0)) ∧
+    ∀ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+      Tendsto (fun N => ‖(betaW hT0).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖) atTop (𝓝 0) →
+      (∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+        ‖(betaW hT0).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε) ∧
+      (∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+        ‖betaE hT0 t - rowsEquiv (incl1 (((sh N).u t : (cubeFEM hT hB N).Vt1h) : Wv U1))‖ < ε ∧
+        ‖betaB hT0 t - rows2Equiv (((sh N).ρ t : (cubeFEM hT hB N).Wt2h) : Wv W2)‖ < ε) ∧
+      (∃ t ∈ Icc 0 T, ∀ᶠ N in atTop,
+        rowsEquiv (incl1 (((sh N).u t : (cubeFEM hT hB N).Vt1h) : Wv U1)) ∉
+          tsd (cubeDomain 3)) ∧
+      ∃ t ∈ Icc 0 T, ∀ᶠ N in atTop,
+        rows2Equiv (((sh N).ρ t : (cubeFEM hT hB N).Wt2h) : Wv W2) ∉
+          symSub ℝ (cubeDomain 3) := by
+  obtain ⟨h1, h2, h3, -⟩ := waveFEM_converges_to_non_tsd_of_isRateApproximable hT hB hT0
+  have h1c := h1
+  obtain ⟨-, -, -, -, ⟨t₁, ht₁, hE⟩, ⟨t₂, ht₂, hBt⟩⟩ := h1c
+  refine ⟨h1, h2, h3, fun sh hsh0 => ?_⟩
+  have hconv := tendsto_of_isStrongSolution hT hB hT0
+    (isStrongSolution_forms (betaU_spec hT0).2.1) sh hsh0
+  have hEB : ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+      ‖betaE hT0 t - rowsEquiv (incl1 (((sh N).u t : (cubeFEM hT hB N).Vt1h) : Wv U1))‖ < ε ∧
+      ‖betaB hT0 t - rows2Equiv (((sh N).ρ t : (cubeFEM hT hB N).Wt2h) : Wv W2)‖ < ε :=
+    fun ε hε => (hconv ε hε).mono fun N hN t ht =>
+      ⟨(norm_rowsEquiv_sub_le hT hB hT0 ht (sh N)).trans_lt (hN t ht),
+        (norm_rows2Equiv_sub_le hT hB hT0 ht (sh N)).trans_lt (hN t ht)⟩
+  refine ⟨hconv, hEB, ⟨t₁, ht₁, ?_⟩, ⟨t₂, ht₂, ?_⟩⟩
+  · exact eventually_not_mem_of_tendsto isClosed_tsd hE fun ε hε =>
+      (hEB ε hε).mono fun N hN => (hN t₁ ht₁).1
+  · exact eventually_not_mem_of_tendsto isClosed_symSub hBt fun ε hε =>
+      (hEB ε hε).mono fun N hN => (hN t₂ ht₂).2
+
+set_option maxHeartbeats 4000000 in
+/-- **The discrete solutions from the projected TSD datum leave TSD** (the conclusion of
+`waveFEM_converges_to_non_tsd` for the family of its item 3): there are solutions of (6.5) with
+data `(0, 0, 0, P ρ(0))` that converge uniformly on `[0,T]` to the continuous solution, and at
+some `t₁`, `t₂ ∈ [0,T]`, for all large `N`, `E_h(t₁) ∉ L²(TSD)` and `B_h(t₂)` is not symmetric. -/
+theorem exists_betaDiscrete_not_tsd {T : ℝ} (hT0 : 0 < T) :
+    ∃ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+      (∀ N, (sh N).σ 0 = 0 ∧ (sh N).u 0 = 0 ∧ (sh N).M 0 = 0 ∧ (sh N).ρ 0 = rhoBetaH hT hB N) ∧
+      (∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+        ‖(betaW hT0).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε) ∧
+      (∃ t ∈ Icc 0 T, ∀ᶠ N in atTop,
+        rowsEquiv (incl1 (((sh N).u t : (cubeFEM hT hB N).Vt1h) : Wv U1)) ∉
+          tsd (cubeDomain 3)) ∧
+      ∃ t ∈ Icc 0 T, ∀ᶠ N in atTop,
+        rows2Equiv (((sh N).ρ t : (cubeFEM hT hB N).Wt2h) : Wv W2) ∉
+          symSub ℝ (cubeDomain 3) := by
+  obtain ⟨-, -, ⟨sh, hsh, hsh0⟩, h4⟩ := waveFEM_converges_to_non_tsd hT hB hT0
+  obtain ⟨hc, -, hE, hBt⟩ := h4 sh hsh0
+  exact ⟨sh, hsh, hc, hE, hBt⟩
+
+end Beta
+
+end Feec.EinsteinBianchi.BoundedConvergence

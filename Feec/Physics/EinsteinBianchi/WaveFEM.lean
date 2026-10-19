@@ -52,11 +52,11 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
   `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` (whose solution leaves `L²(TSD)`) is
   transported to this model in `Feec.EinsteinBianchi.BoundedFailure`. The rate theorem does not
   apply to it (its magnetic datum `β = x₃(e₁e₂ᵀ + e₂e₁ᵀ)` does not vanish on `∂Q`);
-  `Feec.EinsteinBianchi.BoundedFailure.waveFEM_converges_to_non_tsd` proves the convergence of
-  (6.5) to it without rate under the hypothesis that it is approximable by the rate class
-  (`IsRateApproximable`), which is open: a rate-free analysis needs the elliptic-projection error
-  for non-smooth data (uniform in time) and an `L²` multiplier, which that solution need not
-  have.
+  `Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd` proves, with no
+  hypothesis, that (6.5) converges to it without rate and that the discrete fields leave TSD
+  (convergence for every datum in `D(L)`: `BoundedConvergence.tendsto_of_mem_wave_domain`, from
+  the rate-free `Feec.Models.Cube.WeakSymmetry.cubeWave_converges` for multipliers represented by
+  `L²` data and the density of `D(L²)`).
 * The mirror variant of the scheme is discretized and well posed in
   `Feec.Models.Cube.MirrorWeakSymmetryFEM`; its convergence is open (see there).
 

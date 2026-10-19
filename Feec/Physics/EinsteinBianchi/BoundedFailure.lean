@@ -14,7 +14,9 @@ system does not propagate TSD: from the TSD datum `(σ, u, (M, B))(0) = (0, 0, (
 `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, the solution has `u(t) ∉ L²(TSD)` and `B(t)` non-symmetric for some
 `t` (`Feec.Counterexamples.BoundedBGG.bggComplex_verdict`, matrix model). This file carries that
 solution to the forms model of the scheme (`Feec.EinsteinBianchi.MatrixModel`), proves a
-convergence theorem without rate for (6.5), and states the resulting failure.
+convergence theorem without rate for (6.5) for data approximable by the `O(h)` rate class, and
+states the resulting failure under that hypothesis; the unconditional versions are in
+`Feec.EinsteinBianchi.BoundedConvergence`.
 
 ## Main results
 
@@ -32,33 +34,35 @@ convergence theorem without rate for (6.5), and states the resulting failure.
   then every family of solutions of (6.5) whose initial states converge to `w(0)` converges to
   `w` uniformly on `[0,T]` (consistency: the `O(h)` rate on the class; stability: the energy
   estimates). Non-vacuity: `isRateApproximable_waveTangential`.
-* `tendsto_of_mem_wave_domain`: the same for the solution of every datum in `D(L)` (Stone).
+* `tendsto_of_mem_wave_domain_of_isRateApproximable`: the same for the solution of every datum in
+  `D(L)` (Stone), under `IsRateApproximable`.
 * `exists_betaSolution`, `betaU`, `betaW`, `isStrongSolution_forms`: the TSD solution in the
   matrix and forms models; `exists_betaDiscrete`, `tendsto_infDist_rhoBeta`: discrete solutions of
   (6.5) from `(0, 0, 0, P ρ(0))`, whose initial states converge.
 * `not_isCsFormTr_rhoBeta`, `not_isRateClass_of_rho`: the datum is not in the rate class (the
   first magnetic row has the tangential component `−y₂` on `{y₁ = 0}`).
-* **`waveFEM_converges_to_non_tsd`**: items 1–3 below unconditionally, item 4 under
-  `IsRateApproximable betaW`: (1) the continuous solution leaves TSD; (2) it is the solution
-  `betaW` of (6.1); (3) the scheme has solutions from the projected datum, converging at `t = 0`;
-  (4) every such family converges to it uniformly on `[0,T]`, the matrix proxies
+* `waveFEM_converges_to_non_tsd_of_isRateApproximable`: items 1–3 below unconditionally, item 4
+  under `IsRateApproximable betaW`: (1) the continuous solution leaves TSD; (2) it is the
+  solution `betaW` of (6.1); (3) the scheme has solutions from the projected datum, converging at
+  `t = 0`; (4) every such family converges to it uniformly on `[0,T]`, the matrix proxies
   `E_h = rowsEquiv uₕ`, `B_h = rows2Equiv ρₕ` converge to `E`, `B`, and for all large `N` the
-  discrete fields leave TSD at the times where `E`, `B` do (`E_h(t) ∉ L²(TSD)`, `B_h(t)` not
-  symmetric): the method converges to the wrong physics.
+  discrete fields leave TSD at the times where `E`, `B` do.
 
-## What is not proved
+**The hypothesis `IsRateApproximable` is removed in `Feec.EinsteinBianchi.BoundedConvergence`**:
+`tendsto_of_mem_wave_domain` and `waveFEM_converges_to_non_tsd` there are unconditional (density
+of `D(L²)` and a rate-free analysis of (6.4) with multipliers represented by `L²` data). The
+results of this file remain as the route through the `O(h)` rate class.
 
-Convergence of (6.5) for every datum in `D(L)`: the rate theorems need classical solutions that
-are `C²` up to `∂Q` with vanishing tangential traces (including `M`, `ρ`), and convergence
-without rate follows here only for data whose solutions are approximable by such solutions with
-small residual (`IsRateApproximable`). For the TSD datum this is open: `ρ(0)` has nonzero
-tangential traces (so the solution is not in the class itself, `not_isRateClass_of_rho`), and
-`u'(0) = diag(1, −1, 0)` violates the boundary condition of `u`, so the solution is not expected
-to be `C²` up to `∂Q` for `t > 0` (not formalized). A proof would need
-regularity of (6.1) on the cube (density of smooth solutions with the boundary conditions of the
-rate class), or a rate-free analysis of the elliptic projection (6.4) (consistency of `S₀,ₕ`
-against a non-`L²` multiplier); neither is formalized. The regularity hypothesis `CurlPotential`
-is discharged (`curlPotential`).
+## What is not proved here
+
+The convergence statements of this file assume `IsRateApproximable`: the rate theorems need
+classical solutions that are `C²` up to `∂Q` with vanishing tangential traces (including `M`,
+`ρ`). For the TSD datum this class is not reached: `ρ(0)` has nonzero tangential traces
+(`not_isRateClass_of_rho`), and `u'(0) = diag(1, −1, 0)` violates the boundary condition of `u`
+(not formalized). Whether the TSD solution is approximable by the rate class with small residual
+(a regularity question for (6.1) on the cube) is not decided here; it is not needed, see
+`Feec.EinsteinBianchi.BoundedConvergence`. The regularity hypothesis `CurlPotential` is
+discharged (`curlPotential`).
 
 ## References
 
@@ -1186,9 +1190,10 @@ theorem eventually_not_mem_of_tendsto {E : Type*} [SeminormedAddCommGroup E] {S 
   exact hball (by rw [Metric.mem_ball, dist_eq_norm, norm_sub_rev]; exact hN)
 
 set_option maxHeartbeats 4000000 in
-/-- **The method converges to the wrong physics** ([QuennevilleBelair2015], §6.3, (6.5) with
-Table 6.1 and the thesis' boundary conditions; the regularity hypothesis is discharged by
-`curlPotential`). For the TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`,
+/-- **The method converges to the wrong physics, through the rate class**
+([QuennevilleBelair2015], §6.3, (6.5) with Table 6.1 and the thesis' boundary conditions; the
+regularity hypothesis is discharged by `curlPotential`). For the TSD datum
+`(σ, u, (M, B))(0) = (0, 0, (0, β))`,
 `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` on `Q`:
 1. the matrix-model Hodge wave equation has a unique strong solution `U = betaU` on `[0,T]`, with
    `σ ≡ 0`, and `U` **leaves TSD**: `E(t) ∉ L²(TSD)` for some `t` and `B(t)` is not symmetric for
@@ -1203,12 +1208,12 @@ Table 6.1 and the thesis' boundary conditions; the regularity hypothesis is disc
    proxies `E_h = rowsEquiv uₕ`, `B_h = rows2Equiv ρₕ`), and the discrete fields themselves
    leave TSD: at the times of item 1, for all large `N`, `E_h(t) ∉ L²(TSD)` and `B_h(t)` is not
    symmetric.
-Items 1–3 are unconditional. The hypothesis of item 4 is not proved: the solution from this
-datum is not in the rate class (`not_isRateClass_of_rho`: `ρ(0)` has nonzero tangential traces;
-moreover `u'(0)` does not satisfy the boundary condition of `u`), and approximating it by
-classical solutions of the rate class with small residual is a regularity question for (6.1) on
-the cube that is open here. -/
-theorem waveFEM_converges_to_non_tsd {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+Items 1–3 are unconditional. The solution from this datum is not in the rate class
+(`not_isRateClass_of_rho`: `ρ(0)` has nonzero tangential traces), and whether it is approximable
+by the rate class is not decided here; item 4 holds without the hypothesis
+(`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`). -/
+theorem waveFEM_converges_to_non_tsd_of_isRateApproximable
+    {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T) :
     (betaU hT0 0 = betaDatum ∧
@@ -1282,13 +1287,15 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 4000000 in
-/-- **(6.5) for a datum in `D(L)`**: for every `U₀` in the domain of the forms-model Hodge wave
+/-- **(6.5) for a datum in `D(L)`, through the rate class**: for every `U₀` in the domain of the
+forms-model Hodge wave
 operator, the Hodge wave equation has a classical solution `V` on `[0,T]` (Stone,
 `Feec.EinsteinBianchi.WaveFEM.bgg_wave_existsUnique` with `curlPotential`), which solves (6.1)
 (`solutionOfStrong`) with initial energy vector `(−σ₀, u₀, M₀, ρ₀)`; if it is approximable by
 the rate class, every family of solutions of (6.5) (source `0`) whose initial states converge to
-it converges to it uniformly on `[0,T]`. -/
-theorem tendsto_of_mem_wave_domain {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
+it converges to it uniformly on `[0,T]`. The unconditional version is
+`Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_mem_wave_domain`. -/
+theorem tendsto_of_mem_wave_domain_of_isRateApproximable {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
     (hU₀ : U₀ ∈ formsShort.wave.domain) :
     ∃ (V : ℝ → WS) (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V), V 0 = U₀ ∧
       (solutionOfStrong hV).vec 0 = Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)

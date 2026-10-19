@@ -25,8 +25,8 @@ tends to `0` uniformly on compact families of data (`Feec.BGG.abs_K0_le_of_appro
 **The other constants.** `K₁ → 0` by density of `D(d¹*)` and the regular potentials of
 `cubeFEMReg` (`eventually_cubeFEM_K1`), and the smoothed projections converge strongly, hence
 uniformly on compact trajectories (`PolySmoothingEstimatesMin.tendsto_norm_sub_proj`,
-`eventually_cubeClose`). With the end-to-end theorem `Feec.BGG.ExactWave.exists_discreteSolution_rate`
-this gives `cubeWave_converges`.
+`eventually_cubeClose`). With the end-to-end theorem
+`Feec.BGG.ExactWave.exists_discreteSolution_rate` this gives `cubeWave_converges`.
 
 ## Main results
 
@@ -557,8 +557,8 @@ theorem cubeFEM_K1_rest (N : ℕ) (z : W2) (v : Wv U1) :
         mul_le_mul_of_nonneg_left h4 (norm_nonneg _)
     _ = _ := by ring
 
-/-- **`K₁ → 0` uniformly on a compact set of multipliers** (no regularity): split `z = z' + (z − z')`
-with `z' ∈ D(d¹*)` close to `z` (`exists_adjoint_approx_D1`). -/
+/-- **`K₁ → 0` uniformly on a compact set of multipliers** (no regularity): split
+`z = z' + (z − z')` with `z' ∈ D(d¹*)` close to `z` (`exists_adjoint_approx_D1`). -/
 theorem eventually_cubeFEM_K1 {K : Set W2} (hK : IsCompact K) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∀ z ∈ K, ∀ v ∈ (cubeFEM hT hB N).Vt1h,
       |⟪z, (bggSegment.S1 - (cubeFEM hT hB N).S1h) v⟫| ≤

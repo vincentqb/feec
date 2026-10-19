@@ -34,9 +34,12 @@ equation ([QuennevilleBelair2015], Thm 4.14).
 * **Mixed Hodge–Laplace problem**: **`mixed_rate_sobolevQ`** (`HΛ(Q)`) and
   **`mixed_rate_sobolevPar`** (`HΛ_J(Q)`, in particular `H̊Λ(Q)` for `J = univ`):
   `‖σ - σₕ‖ + ‖u - uₕ‖ + ‖q - qₕ‖ ≤ K L h_N^s` when `σ, dσ, u, du, P_𝔅 u, d P_𝔅 u, q` have
-  Sobolev norms `≤ L`, for every admissible sequence (both rows of Tables 5.1/6.1 included).
-* **Semi-discrete Hodge wave equation** on every window, for solutions with
-  `C⁰([t₀, t₁]; Hˢ)` bounds `L` on the values and time derivatives (and their differentials):
+  Sobolev norms `≤ L`, for every admissible sequence `S` (de Rham Hodge–Laplace rates for any
+  element family, including those of the rows of Tables 5.1/6.1; the BGG elasticity/TSD rates of
+  those tables are not restated here).
+* **Semi-discrete Hodge wave equation** on every window, for solutions with uniform-in-time
+  `Hˢ` bounds `L` on `[t₀, t₁]` (`L^∞([t₀, t₁]; Hˢ)`, e.g. `C⁰([t₀, t₁]; Hˢ)` solutions) on the
+  values and time derivatives (and their differentials):
   **`PolySmoothingEstimates.norm_sub_le_window_sobolevQ`**,
   **`ParitySmoothingEstimates.norm_sub_le_window_sobolevPar`**,
   `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (1 + 2C) K L h_N^s`
@@ -625,7 +628,7 @@ theorem mixed_rate_sobolevQ (S : PolySeq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤
   refine (hE.norm_sub_le_of_infDist_le hij rfl hs N hσ' hu' hq' hB').trans (le_of_eq ?_)
   ring
 
-/-! ### The semi-discrete Hodge wave equation with `C⁰([t₀, t₁]; Hˢ(Q))` solutions -/
+/-! ### The semi-discrete Hodge wave equation with uniformly `Hˢ(Q)`-bounded solutions -/
 
 variable (n) in
 /-- **A component with `Hˢ(Q)` data in the graph norm**: `x ∈ Hˢ(Q)` and, if `x ∈ D(d)`,
@@ -692,9 +695,9 @@ theorem PolySmoothingEstimates.exists_mem_window_le_sob {S : PolySeq}
   refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
   rw [Fintype.card_fin]
 
-/-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation for
-`C⁰([t₀, t₁]; Hˢ(Q))` solutions, `0 ≤ s ≤ 1`** ([QuennevilleBelair2015], Thm 4.14), on every
-window of `HΛ(Q)`: if the values and time derivatives of the weak solution have `Hˢ(Q)` components
+/-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation for solutions bounded
+in `Hˢ(Q)` uniformly on `[t₀, t₁]` (e.g. `C⁰([t₀, t₁]; Hˢ(Q))`), `0 ≤ s ≤ 1`**
+([QuennevilleBelair2015], Thm 4.14), on every window of `HΛ(Q)`: if the values and time derivatives of the weak solution have `Hˢ(Q)` components
 (and differentials) with bound `L` on `[t₀, t₁]`, then
 `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (1 + 2C) K L h_N^s`. -/
 theorem PolySmoothingEstimates.norm_sub_le_window_sobolevQ {S : PolySeq}
@@ -971,7 +974,8 @@ theorem ParitySmoothingEstimates.exists_mem_window_le_sobPar {S : PolySeq}
 
 variable {J} in
 /-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation in `HΛ_J(Q)` for
-`C⁰([t₀, t₁]; Hˢ_J(Q))` solutions, `0 ≤ s ≤ 1`**, on every window, for every class `J`. -/
+solutions bounded in `Hˢ_J(Q)` uniformly on `[t₀, t₁]`, `0 ≤ s ≤ 1`**, on every window, for
+every class `J`. -/
 theorem ParitySmoothingEstimates.norm_sub_le_window_sobolevPar {S : PolySeq}
     {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
     {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}

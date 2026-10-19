@@ -279,6 +279,17 @@ theorem exists_pieceMap_mem_Q {x : Fin n → ℝ} (hU : x ∈ bigCube n)
   choose p hp using hq
   exact ⟨p, (pieceMap_mem_Q_iff p x).2 hp⟩
 
+/-- **Almost every point of `U` lies in the interior of one copy**, and a property holding a.e. on
+`Q` holds at its image there. -/
+theorem ae_exists_pieceMap {P : (Fin n → ℝ) → Prop} (h : ∀ᵐ z ∂volume, z ∈ Q (Fin n) → P z) :
+    ∀ᵐ t ∂volume, t ∈ bigCube n →
+      ∃ p : Fin n → Fin 3, pieceMap p t ∈ Q (Fin n) ∧ P (pieceMap p t) := by
+  have hp : ∀ p : Fin n → Fin 3, ∀ᵐ t ∂volume, pieceMap p t ∈ Q (Fin n) → P (pieceMap p t) :=
+    fun p => (measurePreserving_pieceMap p).quasiMeasurePreserving.ae h
+  filter_upwards [ae_all_iff.2 hp, ae_coord_ne] with t ht ht0 htU
+  obtain ⟨p, hpt⟩ := exists_pieceMap_mem_Q htU ht0
+  exact ⟨p, hpt, ht p hpt⟩
+
 /-! ### The parity extension -/
 
 /-- A **parity vector**: `c j = ± 1` for every direction. -/
@@ -313,6 +324,12 @@ theorem parExt_pieceMap {z : Fin n → ℝ} (hz : z ∈ Q (Fin n)) (c : Fin n �
     (f : (Fin n → ℝ) → ℝ) (p : Fin n → Fin 3) :
     parExt c f (pieceMap p z) = pieceSign c p * f z := by
   rw [parExt, foldPt_pieceMap hz, extSgn_pieceMap hz]
+
+theorem parExt_eq_of_pieceMap_mem {t : Fin n → ℝ} {p : Fin n → Fin 3}
+    (ht : pieceMap p t ∈ Q (Fin n)) (c : Fin n → ℝ) (f : (Fin n → ℝ) → ℝ) :
+    parExt c f t = pieceSign c p * f (pieceMap p t) := by
+  have h := parExt_pieceMap ht c f p
+  rwa [pieceMap_pieceMap] at h
 
 theorem parExt_of_mem_Q {z : Fin n → ℝ} (hz : z ∈ Q (Fin n)) (c : Fin n → ℝ)
     (f : (Fin n → ℝ) → ℝ) : parExt c f z = f z := by
@@ -921,6 +938,36 @@ theorem sq_smoothFun_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → �
   rw [e, e1, e2, integral_const_mul, integral_const_mul, ha, ρ.integral_comp_sub] at hvar
   change a ^ 2 ≤ ∫ t, g t ^ 2 * ρ (y - t)
   nlinarith
+
+/-- **The pointwise bound of the smoothed extension by the local mass**: for `y ∈ cl Q` and
+`ρ ≤ M`, `(ρ ⋆ ext_c f)(y)² ≤ 3ⁿ M ∫_{B̄(y, r)} |f̄|²` (`f̄` the extension by zero). -/
+theorem sq_smoothFun_le_ball {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}
+    (hf : IntegrableOn f (Q (Fin n))) (hf2 : IntegrableOn (fun z => f z ^ 2) (Q (Fin n)))
+    {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) {M : ℝ} (hM : ∀ x, ρ x ≤ M) :
+    smoothFun ρ c f y ^ 2 ≤
+      3 ^ n * M * ∫ x in Metric.closedBall y ρ.radius, (Q (Fin n)).indicator f x ^ 2 := by
+  set B := Metric.closedBall y ρ.radius
+  have hB : MeasurableSet B := Metric.isClosed_closedBall.measurableSet
+  obtain ⟨hgB, hgBle⟩ := integral_sq_parExt_le hc hf2 hy ρ.radius_lt
+  obtain ⟨hi2, h1⟩ := sq_smoothFun_le ρ hc hf hf2 hy
+  have hM0 : 0 ≤ M := (ρ.nonneg 0).trans (hM 0)
+  refine h1.trans ?_
+  have h2 : ∫ t, parExt c f t ^ 2 * ρ (y - t) = ∫ t in B, parExt c f t ^ 2 * ρ (y - t) := by
+    rw [← integral_indicator hB]
+    refine integral_congr_ae (ae_of_all _ fun t => ?_)
+    by_cases ht : t ∈ B
+    · rw [Set.indicator_of_mem ht]
+    · rw [Set.indicator_of_notMem ht]
+      change parExt c f t ^ 2 * ρ (y - t) = 0
+      rw [eq_zero_of_notMem_closedBall ρ ht, mul_zero]
+  rw [h2]
+  calc ∫ t in B, parExt c f t ^ 2 * ρ (y - t) ≤ ∫ t in B, parExt c f t ^ 2 * M :=
+        setIntegral_mono_on hi2.integrableOn (hgB.mul_const M) hB fun t _ =>
+          mul_le_mul_of_nonneg_left (hM _) (sq_nonneg _)
+    _ = M * ∫ t in B, parExt c f t ^ 2 := by rw [integral_mul_const]; ring
+    _ ≤ M * (3 ^ n * ∫ x in B, (Q (Fin n)).indicator f x ^ 2) :=
+        mul_le_mul_of_nonneg_left hgBle hM0
+    _ = _ := by ring
 
 /-- **The `L²(Q)` bound of the smoothed extension**: `‖ρ ⋆ ext_c f‖²_{L²(Q)} ≤ 3ⁿ ‖f‖²_{L²(Q)}`. -/
 theorem integral_sq_smoothFun_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}

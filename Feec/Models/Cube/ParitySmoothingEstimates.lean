@@ -263,3 +263,1204 @@ def paritySmoothedCommutingMap [NeZero n] (hM : M.domain = Geometry.Q (Fin n)) :
       exact (E.paritySmoothedInterp M ρ J hM j).map_zero.symm
 
 end Feec.FiniteElement.LocalElement
+
+namespace Feec.Models.Cube.FEM
+
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
+open Feec.Models.Cube.ParitySmoother
+open Feec.Models.Cube.DeRhamIdent (dPart HQpartZ)
+
+variable {n : ℕ}
+
+/-! ### The parity mollifier at the mesh scale -/
+
+theorem parRadius_pos {γ : ℝ} (hγ : 0 < γ) (N : ℕ) : 0 < γ * hN N / 32 := by
+  have := hN_pos N; positivity
+
+theorem parRadius_lt {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) : γ * hN N / 32 < 1 / 2 := by
+  have h1 := hN_le N
+  have h0 := hN_pos N
+  nlinarith
+
+variable (n) in
+/-- **The parity mollifier on the level-`(N + 1)` mesh**: the product kernel of radius
+`ε_N = γ h_N / 32`. -/
+def parKernel (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) : ReflKernel n :=
+  prodKernel (γ * hN N / 32) (parRadius_pos hγ N) (parRadius_lt hγ hγ1 N)
+
+theorem parKernel_radius {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) :
+    (parKernel n γ hγ hγ1 N).radius = γ * hN N / 32 := rfl
+
+theorem parKernel_le {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) (x : Fin n → ℝ) :
+    parKernel n γ hγ hγ1 N x ≤ (32 / (γ * hN N)) ^ n := by
+  refine (prodKernel_le _ _ _ x).trans (le_of_eq ?_)
+  congr 1; field_simp
+
+/-! ### The uniform `L²` bound -/
+
+namespace Poly
+
+variable (S : PolySeq)
+
+/-- **The local `L²` bound of the canonical interpolant** of a continuous form bounded by `A` on a
+mesh simplex: `‖Π_h w‖²_{L²(T)} ≤ 2ⁿ h_Nⁿ (B dim(P) D A)²`. -/
+theorem sum_integral_sq_globalInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBound S n k B)
+    (hB0 : 0 ≤ B) (hD : CoeffBound S n k D) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) {w : contForms n} {A : ℝ} (hA0 : 0 ≤ A)
+    (hw : ∀ y ∈ T.closedInterior, ∀ s, |(w : FormField n) y s| ≤ A) :
+    ∑ s : formIdx n k, ∫ y in T.closedInterior,
+      (((((polyElement n S).globalInterp (mesh n N) k w :
+        (polyElement n S).Piecewise (mesh n N) k) ⟨T, hT⟩ : (polyElement n S).space T k) :
+          FormField n) y s.1) ^ 2 ≤
+      2 ^ n * hN N ^ n * (B * Module.finrank ℝ (S.space n k) * (D * A)) ^ 2 := by
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  set z : FormField n := ((((polyElement n S).globalInterp (mesh n N) k w :
+    (polyElement n S).Piecewise (mesh n N) k) ⟨T, hT⟩ : (polyElement n S).space T k) :
+      FormField n)
+  have hz : z ∈ S.space n k := (((polyElement n S).globalInterp (mesh n N) k w :
+      (polyElement n S).Piecewise (mesh n N) k) ⟨T, hT⟩).2
+  have hdof : ∀ g ⊆ vertexSet T, ∀ i : S.DofIdx g k,
+      |S.dof g k i ⟨z, S.space_le_contForms n k hz⟩| ≤ h ^ k * (D * A) := by
+    intro g hgT i
+    have e : S.dof g k i ⟨z, S.space_le_contForms n k hz⟩ = S.dof g k i w :=
+      (polyElement n S).localDof_globalInterp (mesh n N) k w ⟨T, hT⟩ g hgT i
+    rw [e]
+    refine (abs_dof_le S hD hT hgT i _ hA0 hw).trans (le_of_eq ?_)
+    ring
+  have hzb : ∀ y ∈ T.closedInterior, ∀ s,
+      |z y s| ≤ B * Module.finrank ℝ (S.space n k) * (D * A) :=
+    fun y hy s => abs_le_of_abs_dof_le S hB hB0 hT hz hdof hy s
+  have hzc : Continuous z := (PolyKind.contDiff_of_mem_space hz).continuous
+  obtain ⟨m, σ, hmσ⟩ := mem_mesh_simplices.1 hT
+  set P := (Module.finrank ℝ (S.space n k) : ℝ)
+  have hloc : ∀ s : formIdx n k, ∫ y in T.closedInterior, (z y s.1) ^ 2 ≤
+      h ^ n * (B * P * (D * A)) ^ 2 := by
+    intro s
+    rw [← hmσ]
+    refine integral_cubeSimplex_le m σ (f := fun y => (z y s.1) ^ 2)
+      (((continuous_apply s.1).comp hzc).pow 2) (fun y hy => ?_) (fun y => sq_nonneg _)
+    rw [hmσ] at hy
+    have := hzb y hy s.1
+    rw [← sq_abs]
+    exact pow_le_pow_left₀ (abs_nonneg _) this 2
+  calc ∑ s : formIdx n k, ∫ y in T.closedInterior, (z y s.1) ^ 2
+      ≤ ∑ _s : formIdx n k, h ^ n * (B * P * (D * A)) ^ 2 := Finset.sum_le_sum fun s _ => hloc s
+    _ = Fintype.card (formIdx n k) * (h ^ n * (B * P * (D * A)) ^ 2) := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+    _ ≤ 2 ^ n * (h ^ n * (B * P * (D * A)) ^ 2) :=
+        mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
+    _ = 2 ^ n * h ^ n * (B * P * (D * A)) ^ 2 := by ring
+
+end Poly
+
+theorem integrableOn_sq_Q_of_eq {Ω : Set (Fin n → ℝ)} (hΩ : Ω = Geometry.Q (Fin n))
+    (f : L2 ℝ Ω) :
+    IntegrableOn (fun z => (f : (Fin n → ℝ) → ℝ) z ^ 2) (Geometry.Q (Fin n)) := by
+  subst hΩ; exact integrableOn_sq_L2 f
+
+/-- **The pointwise bound of the parity-smoothed field by the local mass** on a mesh simplex:
+`|R x (y)ₛ|² ≤ 3ⁿ (32 / (γ h_N))ⁿ m_T(x)`. -/
+theorem abs_paritySmoothForm_le (J : Finset (Fin n)) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
+    {N : ℕ} {k : ℤ} (x : L2F ℝ (mesh n N).domain (formIdx n k))
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {y : Fin n → ℝ}
+    (hy : y ∈ T.closedInterior) (s : Finset (Fin n)) :
+    |(paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k x : FormField n) y s| ≤
+      √(3 ^ n * (32 / (γ * hN N)) ^ n * locMass x T) := by
+  have hD : (mesh n N).domain = Geometry.Q (Fin n) := mesh_domain_eq_Q N
+  have hyc : y ∈ closure (Geometry.Q (Fin n)) := by
+    rw [← hD]; exact (mesh n N).closedInterior_subset_closure hT hy
+  have hyI := coord_mem_Icc_of_mem_closure hyc
+  rw [paritySmoothForm_apply]
+  unfold formExt
+  split_ifs with hs
+  · set s' : formIdx n k := ⟨s, hs⟩
+    set f := ((x s' : L2 ℝ (mesh n N).domain) : (Fin n → ℝ) → ℝ)
+    have h1 := sq_smoothFun_le_ball (parKernel n γ hγ hγ1 N) (isParity_pvec J s)
+      (integrableOn_Q_of_eq hD (x s')) (integrableOn_sq_Q_of_eq hD (x s')) hyI
+      (parKernel_le hγ hγ1 N)
+    have h2 : ∫ t in Metric.closedBall y (parKernel n γ hγ hγ1 N).radius,
+        (Geometry.Q (Fin n)).indicator f t ^ 2 ≤ locMass x T := by
+      have hsub : Metric.closedBall y (parKernel n γ hγ hγ1 N).radius ⊆
+          Metric.cthickening (2 * hN N) T.closedInterior := by
+        refine (Metric.closedBall_subset_cthickening hy _).trans
+          (Metric.cthickening_mono ?_ _)
+        rw [parKernel_radius]
+        have := hN_pos N
+        nlinarith
+      have e : (Geometry.Q (Fin n)).indicator f = (mesh n N).domain.indicator f := by rw [hD]
+      rw [e]
+      refine (setIntegral_mono_set (integrable_sq_indicator _).integrableOn
+        (Eventually.of_forall fun _ => sq_nonneg _) (Eventually.of_forall hsub)).trans ?_
+      exact Finset.single_le_sum (f := fun s'' : formIdx n k =>
+        ∫ t in Metric.cthickening (2 * hN N) T.closedInterior,
+          ((mesh n N).domain.indicator ((x s'' : L2 ℝ (mesh n N).domain) :
+            (Fin n → ℝ) → ℝ) t) ^ 2)
+        (fun s'' _ => setIntegral_nonneg Metric.isClosed_cthickening.measurableSet
+          fun _ _ => sq_nonneg _) (Finset.mem_univ s')
+    rw [← Real.sqrt_sq_eq_abs]
+    refine Real.sqrt_le_sqrt (h1.trans ?_)
+    have := hN_pos N
+    exact mul_le_mul_of_nonneg_left h2 (by positivity)
+  · simp only [Pi.zero_apply, abs_zero]; exact Real.sqrt_nonneg _
+
+/-- **The uniform `L²` bound of the parity-smoothed interpolants** `Q_N = Π_h R_N` of an
+admissible sequence, every class `J`: `‖Q_N x‖ ≤ C ‖x‖` for all `N`, all degrees and all `x`,
+with `C` depending only on `n`, `S` and `γ`. -/
+theorem exists_norm_paritySmoothedInterp_le (S : PolySeq) (J : Finset (Fin n)) {γ : ℝ}
+    (hγ : 0 < γ) (hγ1 : γ ≤ 1) :
+    ∃ C, 0 ≤ C ∧ ∀ (N k : ℕ) (x : L2F ℝ (mesh n N).domain (formIdx n k)),
+      ‖(polyElement n S).paritySmoothedInterp (mesh n N) (parKernel n γ hγ hγ1 N) J
+        (mesh_domain_eq_Q N) k x‖ ≤ C * ‖x‖ := by
+  classical
+  choose B hB0 hB using fun k : ℕ => Poly.exists_dofBound (n := n) S k
+  choose D hD0 hD using fun k : ℕ => Poly.exists_coeffBound (n := n) S k
+  set Cov : ℝ := ((6 ^ n * n.factorial : ℕ) : ℝ)
+  set K : ℕ → ℝ := fun k => 2 ^ n * (B k * Module.finrank ℝ (S.space n k) * D k) ^ 2 *
+    (3 ^ n * (32 / γ) ^ n) * Cov
+  have hK : ∀ k, 0 ≤ K k := fun k => by have := hB0 k; have := hD0 k; positivity
+  refine ⟨√(∑ k ∈ Finset.range (n + 1), K k), Real.sqrt_nonneg _, fun N k x => ?_⟩
+  by_cases hk : n < k
+  · have := subsingleton_L2F_of_lt (Ω := (mesh n N).domain) hk
+    rw [Subsingleton.elim x 0]
+    simp
+  push Not at hk
+  set ρ := parKernel n γ hγ hγ1 N
+  have hQ := (polyElement n S).paritySmoothedInterp_natCast (mesh n N) ρ J
+    (mesh_domain_eq_Q N) k x
+  set u := (polyElement n S).globalInterp (mesh n N) k (Submodule.inclusion c1Forms_le_contForms
+    (paritySmoothForm ρ J (mesh_domain_eq_Q N) k x))
+  have h1 := norm_sq_pieceL2_le (mesh n N) (mesh n N).domain (fun T => formComp (k := (k : ℤ))
+    ((polyElement n S).extendPW (mesh n N) (u : (polyElement n S).Piecewise (mesh n N) k) T))
+    (fun T hT s => continuous_formComp ((polyElement n S).contDiff_extendPW (mesh n N) _
+      hT).continuous s)
+  have hh := hN_pos N
+  have h2 : ∑ T ∈ (mesh n N).simplices, ∑ s : formIdx n k, ∫ y in T.closedInterior,
+      (formComp (k := (k : ℤ)) ((polyElement n S).extendPW (mesh n N)
+        (u : (polyElement n S).Piecewise (mesh n N) k) T) s y) ^ 2 ≤
+      ∑ T ∈ (mesh n N).simplices,
+        2 ^ n * (B k * Module.finrank ℝ (S.space n k) * D k) ^ 2 * (3 ^ n * (32 / γ) ^ n) *
+          locMass x T := by
+    refine Finset.sum_le_sum fun T hT => ?_
+    have e : ∀ s : formIdx n k, ∀ y, formComp (k := (k : ℤ))
+        ((polyElement n S).extendPW (mesh n N) (u : (polyElement n S).Piecewise (mesh n N) k) T)
+          s y = (((u : (polyElement n S).Piecewise (mesh n N) k) ⟨T, hT⟩ :
+            (polyElement n S).space T k) : FormField n) y s.1 := fun s y => by
+      change (polyElement n S).extendPW (mesh n N) _ T y s.1 = _
+      rw [(polyElement n S).extendPW_of_mem (mesh n N) _ hT]
+    simp_rw [e]
+    set L := locMass x T
+    have hL := locMass_nonneg x T
+    set A := √(3 ^ n * (32 / (γ * hN N)) ^ n * L)
+    refine (Poly.sum_integral_sq_globalInterp_le S (hB k) (hB0 k) (hD k) hT
+      (Real.sqrt_nonneg _) (A := A) fun y hy s =>
+        abs_paritySmoothForm_le J hγ hγ1 x hT hy s).trans (le_of_eq ?_)
+    have hA2 : A ^ 2 = 3 ^ n * (32 / (γ * hN N)) ^ n * L := Real.sq_sqrt (by positivity)
+    rw [show B k * Module.finrank ℝ (S.space n k) * (D k * A) =
+      (B k * Module.finrank ℝ (S.space n k) * D k) * A by ring, mul_pow _ A, hA2]
+    have e2 : hN N ^ n * (32 / (γ * hN N)) ^ n = (32 / γ) ^ n := by
+      rw [← mul_pow]; congr 1; field_simp
+    calc 2 ^ n * hN N ^ n * ((B k * Module.finrank ℝ (S.space n k) * D k) ^ 2 *
+          (3 ^ n * (32 / (γ * hN N)) ^ n * L))
+        = 2 ^ n * (B k * Module.finrank ℝ (S.space n k) * D k) ^ 2 * 3 ^ n *
+            (hN N ^ n * (32 / (γ * hN N)) ^ n) * L := by ring
+      _ = _ := by rw [e2]; ring
+  have h3 := sum_locMass_le N x
+  have hsq : ‖(polyElement n S).paritySmoothedInterp (mesh n N) ρ J (mesh_domain_eq_Q N) k x‖ ^ 2 ≤
+      (√(∑ k ∈ Finset.range (n + 1), K k) * ‖x‖) ^ 2 := by
+    rw [hQ, mul_pow, Real.sq_sqrt (Finset.sum_nonneg fun k _ => hK k)]
+    refine h1.trans (h2.trans ?_)
+    rw [← Finset.mul_sum]
+    calc 2 ^ n * (B k * Module.finrank ℝ (S.space n k) * D k) ^ 2 * (3 ^ n * (32 / γ) ^ n) *
+          ∑ T ∈ (mesh n N).simplices, locMass x T
+        ≤ 2 ^ n * (B k * Module.finrank ℝ (S.space n k) * D k) ^ 2 * (3 ^ n * (32 / γ) ^ n) *
+            (Cov * ‖x‖ ^ 2) := mul_le_mul_of_nonneg_left h3 (by positivity)
+      _ = K k * ‖x‖ ^ 2 := by ring
+      _ ≤ _ := mul_le_mul_of_nonneg_right (Finset.single_le_sum (fun k _ => hK k)
+          (Finset.mem_range.2 (by omega))) (sq_nonneg _)
+  exact le_of_pow_le_pow_left₀ two_ne_zero (mul_nonneg (Real.sqrt_nonneg _) (norm_nonneg _)) hsq
+
+
+/-! ### Faces of the mesh near the faces of the cube -/
+
+/-- **A good point of a face near `{y_i = 0}`**: if a point of a face `g` of a mesh simplex with
+barycentric weights `≥ γ` has `i`-th coordinate `< γ h_N / 2`, then the whole face lies in
+`{y_i = 0}` (lattice separation, `Poly.isSep_inv_smul_of_face_lex`). -/
+theorem face_coord_eq_zero {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ}
+    (hg : #g = m + 1) {γ : ℝ} (hγ : 0 < γ) (hγ2 : γ ≤ 1 / 2) {ξ : Fin m → ℝ}
+    (hμ : ∀ a, γ ≤ refBary ξ a) {i : Fin n}
+    (hx : simplexMap (lexEnum g m) ξ i < γ * hN N / 2) : ∀ v ∈ g, v i = 0 := by
+  classical
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  set q := lexEnum g m
+  set x := simplexMap q ξ
+  have hxe : x = ∑ a, refBary ξ a • q a := simplexMap_eq_sum q ξ
+  have hsep := Poly.isSep_inv_smul_of_face_lex hT hgT hg hγ hγ2 hμ (sum_refBary ξ)
+  rw [← hxe] at hsep
+  have hqT : ∀ a, q a ∈ vertexSet T := fun a => hgT (lexEnum_mem hg a)
+  have hμp : ∀ a, 0 < refBary ξ a := fun a => hγ.trans_le (hμ a)
+  have hx0' : 0 ≤ x i := by
+    rw [hxe, Finset.sum_apply]
+    exact Finset.sum_nonneg fun a _ => by
+      simp only [Pi.smul_apply, smul_eq_mul]
+      exact mul_nonneg (hμp a).le (apply_mem_Icc_of_mem_vertexSet hT (hqT a) i).1
+  have hXi : ((hN N)⁻¹ • x) i = x i / h := by simp [div_eq_inv_mul, h]
+  have hx0 : x i = 0 := by
+    rcases hsep.1 i 0 with e | e
+    · rw [hXi] at e; push_cast at e
+      rcases div_eq_zero_iff.1 e with e' | e'
+      · exact e'
+      · exact absurd e' hh.ne'
+    · exfalso
+      rw [hXi] at e; push_cast at e
+      rw [sub_zero, abs_of_nonneg (div_nonneg hx0' hh.le), le_div_iff₀ hh] at e
+      nlinarith
+  intro v hv
+  obtain ⟨a, rfl⟩ : v ∈ Set.range q := by rw [range_lexEnum hg]; exact hv
+  refine eq_of_sum_smul_apply_eq hμp (sum_refBary ξ) (fun b => ?_) (by rw [← hxe]; exact hx0) a
+  have := (apply_mem_Icc_of_mem_vertexSet hT (hqT b) i).1; linarith
+
+/-- **A good point of a face near `{y_i = ½}`**: the upper analogue of `face_coord_eq_zero`. -/
+theorem face_coord_eq_half {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ}
+    (hg : #g = m + 1) {γ : ℝ} (hγ : 0 < γ) (hγ2 : γ ≤ 1 / 2) {ξ : Fin m → ℝ}
+    (hμ : ∀ a, γ ≤ refBary ξ a) {i : Fin n}
+    (hx : 1 / 2 - γ * hN N / 2 < simplexMap (lexEnum g m) ξ i) : ∀ v ∈ g, v i = 1 / 2 := by
+  classical
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  set q := lexEnum g m
+  set x := simplexMap q ξ
+  have hxe : x = ∑ a, refBary ξ a • q a := simplexMap_eq_sum q ξ
+  have hsep := Poly.isSep_inv_smul_of_face_lex hT hgT hg hγ hγ2 hμ (sum_refBary ξ)
+  rw [← hxe] at hsep
+  have hqT : ∀ a, q a ∈ vertexSet T := fun a => hgT (lexEnum_mem hg a)
+  have hμp : ∀ a, 0 < refBary ξ a := fun a => hγ.trans_le (hμ a)
+  have hx2 : x i ≤ 1 / 2 := by
+    have e : x i = ∑ a, refBary ξ a * q a i := by rw [hxe]; simp [Finset.sum_apply]
+    have : ∑ a, refBary ξ a * q a i ≤ ∑ a, refBary ξ a * (1 / 2) :=
+      Finset.sum_le_sum fun a _ => mul_le_mul_of_nonneg_left
+        (apply_mem_Icc_of_mem_vertexSet hT (hqT a) i).2 (hμp a).le
+    rw [← Finset.sum_mul, sum_refBary, one_mul] at this
+    linarith
+  have hXi : ((hN N)⁻¹ • x) i = x i / h := by simp [div_eq_inv_mul, h]
+  have hhN : h * ((N : ℝ) + 1) = 1 / 2 := by
+    simp only [h]; unfold hN; push_cast; field_simp
+  have hx1 : x i = 1 / 2 := by
+    rcases hsep.1 i (N + 1) with e | e
+    · rw [hXi] at e; push_cast at e
+      rw [div_eq_iff hh.ne'] at e; rw [e, mul_comm]; exact hhN
+    · exfalso
+      rw [hXi] at e; push_cast at e
+      have hle : x i / h ≤ N + 1 := by
+        rw [div_le_iff₀ hh]; linarith [hhN, mul_comm h ((N : ℝ) + 1)]
+      have hgt : (N : ℝ) + 1 - γ / 2 < x i / h := by
+        rw [lt_div_iff₀ hh]
+        nlinarith [hhN, mul_comm h ((N : ℝ) + 1)]
+      rw [abs_of_nonpos (by linarith)] at e
+      linarith
+  intro v hv
+  obtain ⟨a, rfl⟩ : v ∈ Set.range q := by rw [range_lexEnum hg]; exact hv
+  have h1 := eq_of_sum_smul_apply_eq (q := fun a => -q a) (i := i) (c := -(1 / 2)) hμp
+    (sum_refBary ξ)
+    (fun b => by have := (apply_mem_Icc_of_mem_vertexSet hT (hqT b) i).2; simp; linarith)
+    (by
+      have : (∑ a, refBary ξ a • -q a) = -(∑ a, refBary ξ a • q a) := by
+        simp [Finset.sum_neg_distrib]
+      rw [this, ← hxe, Pi.neg_apply, hx1]) a
+  simp only [Pi.neg_apply, neg_inj] at h1
+  exact h1
+
+/-- A pullback only sees the components whose rows are nonzero. -/
+theorem pullback_congr_of_rows {ι κ : Type*} [LinearOrder ι] [Fintype ι] [LinearOrder κ]
+    (B : ι → κ → ℝ) {α β : Finset ι → ℝ} (h : ∀ s, α s = β s ∨ ∃ i ∈ s, B i = 0) :
+    pullback B α = pullback B β := by
+  unfold pullback
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rcases h s with h | ⟨i, hi, hB⟩
+  · rw [h]
+  · rw [wedgeProd_eq_zero_of_mem hi hB, smul_zero, smul_zero]
+
+/-! ### The integrand of the DOF error -/
+
+section Integrand
+
+variable {Ω : Set (Fin n → ℝ)} (ρ : ReflKernel n) (J : Finset (Fin n))
+
+/-- The parity extensions of the components of an `L²` `k`-form at a point, indexed by all
+subsets. -/
+def parField {k : ℤ} (v : L2F ℝ Ω (formIdx n k)) (t : Fin n → ℝ) : Finset (Fin n) → ℝ :=
+  formExt fun r : formIdx n k => parExt (pvec J r.1) ((v r : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) t
+
+/-- **The DOF integrand of `v - R v` as a mollified average**:
+`Σₛ (α - R v (x))ₛ cₛ = ∫ ρ(x - t) Σₛ (α - ext v (t))ₛ cₛ dt`. -/
+theorem sum_sub_paritySmoothForm_mul_eq (hΩ : Ω = Geometry.Q (Fin n)) {k : ℕ}
+    (v : L2F ℝ Ω (formIdx n k)) (α c : Finset (Fin n) → ℝ) (x : Fin n → ℝ) :
+    ∑ s, (α s - (paritySmoothForm ρ J hΩ k v : FormField n) x s) * c s =
+      ∫ t, ρ (x - t) * ∑ s, (α s - parField J v t s) * c s := by
+  classical
+  have hR : ∀ s, (paritySmoothForm ρ J hΩ k v : FormField n) x s =
+      ∫ t, parField J v t s * ρ (x - t) := by
+    intro s
+    rw [paritySmoothForm_apply]
+    unfold formExt parField
+    split_ifs with h
+    · rw [parCoeff, smoothFun_apply]
+      refine integral_congr_ae (ae_of_all _ fun t => ?_)
+      simp only [formExt, h, dite_true]
+    · simp only [formExt, h, dite_false, zero_mul, integral_zero, Pi.zero_apply]
+  have hI : ∀ s, Integrable fun t => parField J v t s * ρ (x - t) := by
+    intro s
+    unfold parField formExt
+    split_ifs with h
+    · exact integrable_parExt_mul_comp_sub ρ _ (integrableOn_Q_of_eq hΩ _) x
+    · simp
+  have hρ := ρ.integrable_comp_sub x
+  have hρ1 := ρ.integral_comp_sub x
+  have hterm : ∀ s, Integrable fun t => ρ (x - t) * ((α s - parField J v t s) * c s) := by
+    intro s
+    refine ((hρ.const_mul (α s * c s)).sub ((hI s).const_mul (c s))).congr
+      (ae_of_all _ fun t => ?_)
+    simp only [Pi.sub_apply]; ring
+  calc ∑ s, (α s - (paritySmoothForm ρ J hΩ k v : FormField n) x s) * c s
+      = ∑ s, ∫ t, ρ (x - t) * ((α s - parField J v t s) * c s) := by
+        refine Finset.sum_congr rfl fun s _ => ?_
+        rw [hR s]
+        have e : (fun t => ρ (x - t) * ((α s - parField J v t s) * c s)) =
+            fun t => (α s * c s) * ρ (x - t) - c s * (parField J v t s * ρ (x - t)) := by
+          funext t; ring
+        rw [e, integral_sub (hρ.const_mul _) ((hI s).const_mul _), integral_const_mul,
+          integral_const_mul, hρ1]
+        ring
+    _ = ∫ t, ∑ s, ρ (x - t) * ((α s - parField J v t s) * c s) :=
+        (integral_finsetSum _ fun s _ => hterm s).symm
+    _ = _ := by simp_rw [Finset.mul_sum]
+
+theorem integrable_comp_sub_mul_parField (hΩ : Ω = Geometry.Q (Fin n)) {k : ℕ}
+    (v : L2F ℝ Ω (formIdx n k)) (α c : Finset (Fin n) → ℝ) (x : Fin n → ℝ) :
+    Integrable fun t => ρ (x - t) * ∑ s, (α s - parField J v t s) * c s := by
+  classical
+  have hI : ∀ s, Integrable fun t => parField J v t s * ρ (x - t) := by
+    intro s
+    unfold parField formExt
+    split_ifs with h
+    · exact integrable_parExt_mul_comp_sub ρ _ (integrableOn_Q_of_eq hΩ _) x
+    · simp
+  have hρ := ρ.integrable_comp_sub x
+  refine (integrable_finsetSum Finset.univ fun s _ =>
+    (hρ.const_mul (α s * c s)).sub ((hI s).const_mul (c s))).congr (ae_of_all _ fun t => ?_)
+  simp only [Pi.sub_apply, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun s _ => ?_
+  ring
+
+end Integrand
+
+
+theorem pieceSign_pvec_eq {J s : Finset (Fin n)} {p : Fin n → Fin 3} (hs : ∀ i ∈ s, p i = 1) :
+    pieceSign (pvec J s) p = pieceSign (pvec J ∅) p := by
+  unfold pieceSign
+  refine Finset.prod_congr rfl fun i _ => ?_
+  by_cases hi : p i = 1
+  · simp [pieceSgn, hi]
+  · have : i ∉ s := fun h => hi (hs i h)
+    simp [pieceSgn, hi, pvec, this]
+
+theorem exists_mem_of_pieceSign_ne_one {J : Finset (Fin n)} {p : Fin n → Fin 3}
+    (h : pieceSign (pvec J ∅) p ≠ 1) : ∃ i, p i ≠ 1 ∧ i ∈ J := by
+  by_contra hcon
+  push Not at hcon
+  apply h
+  unfold pieceSign
+  refine Finset.prod_eq_one fun i _ => ?_
+  by_cases hi : p i = 1
+  · simp [pieceSgn, hi]
+  · simp [pieceSgn, hi, pvec, hcon i hi]
+
+theorem simplexMatrix_row_eq_zero {m : ℕ} {g : Finset (Fin n → ℝ)} (hg : #g = m + 1) {i : Fin n}
+    {c : ℝ} (hgc : ∀ v ∈ g, v i = c) : simplexMatrix (lexEnum g m) i = 0 :=
+  funext fun l => by simp [simplexMatrix, hgc _ (lexEnum_mem hg _)]
+
+theorem coord_mem_pieceIoo_of_pieceMap {t : Fin n → ℝ} {p : Fin n → Fin 3}
+    (ht : pieceMap p t ∈ Geometry.Q (Fin n)) (i : Fin n) : t i ∈ pieceIoo (p i) :=
+  (pieceMap_mem_Q_iff p t).1 ht i
+
+/-! ### The closeness estimate on `V_{h,Γ_J}` -/
+
+namespace Poly
+
+variable (S : PolySeq) (J : Finset (Fin n))
+
+open Classical in
+/-- **The pointwise estimate of the DOF integrand of `v - Q_N v`** (`v ∈ V_{h,Γ_J}`) for the
+parity smoother: at a point `x = F_q(ξ)` of a face `g` of `T` and for any coefficient vector `c`
+that only sees the trace on `g`,
+`h^{n/2} |Σₛ (v_T - R v)(x)ₛ cₛ| ≤ (Σₛ |cₛ|) A m_T(v)^{1/2} · (2 or γ)`, with the factor `γ`
+when all barycentric coordinates of `ξ` are `≥ γ`. A sample `t` of the smoother at `x` is
+folded onto `z = fold t ∈ Q` (`‖x - z‖ ≤ ‖x - t‖`), which lies in a simplex `T'` containing
+`g`; on the reflected coordinates `g` lies in a face of the cube (`face_coord_eq_zero`,
+`face_coord_eq_half`), so the trace on `g` only sees the components unchanged up to a common
+sign `σ`; if `σ = -1` the face is normal to `J`, where the traces of `v` vanish. There is no
+dilation defect. -/
+theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : InvBound S n k A)
+    {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
+    {u : (polyElement n S).Piecewise (mesh n N) k}
+    (hu : u ∈ (polyElement n S).globalSpacePartial (mesh n N) (partialFaces n J) k)
+    (T : (mesh n N).simplices)
+    {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n)) {m : ℕ}
+    (hg : #g = m + 1) {ξ : Fin m → ℝ} (hξ : ξ ∈ FiniteElement.refSimplex m)
+    (c : Finset (Fin n) → ℝ)
+    (hc : ∀ α β : Finset (Fin n) → ℝ, IsDeg k α → IsDeg k β →
+      pullback (simplexMatrix (lexEnum g m)) α = pullback (simplexMatrix (lexEnum g m)) β →
+        ∑ s, α s * c s = ∑ s, β s * c s) :
+    √(hN N) ^ n * |∑ s, (((u T : (polyElement n S).space T k) : FormField n)
+        (simplexMap (lexEnum g m) ξ) s -
+      (paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+        ((polyElement n S).glue (mesh n N) k u) : FormField n)
+        (simplexMap (lexEnum g m) ξ) s) * c s| ≤
+      (∑ s, |c s|) * A *
+        √(locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)) *
+        (if ξ ∈ nearBdry m γ then 2 else γ) := by
+  classical
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  set ρ := parKernel n γ hγ hγ1 N
+  have hD : (mesh n N).domain = Geometry.Q (Fin n) := mesh_domain_eq_Q N
+  set v := (polyElement n S).glue (mesh n N) k u
+  set q := lexEnum g m
+  set x := simplexMap q ξ
+  set uT : FormField n := ((u T : (polyElement n S).space T k) : FormField n)
+  have huT : uT ∈ S.space n k := (u T).2
+  set L := locMass v (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+  have hL0 : 0 ≤ L := locMass_nonneg _ _
+  set R := (∑ s, |c s|) * A * √L * (if ξ ∈ nearBdry m γ then 2 else γ)
+  have hsq : 0 < √h ^ n := pow_pos (Real.sqrt_pos.2 hh) n
+  have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
+    simplexMap_lexEnum_mem hgT hg hξ
+  have hxQc : x ∈ closure (Geometry.Q (Fin n)) := by
+    rw [← hD]; exact (mesh n N).closedInterior_subset_closure T.2 hxT
+  have hxI := coord_mem_Icc_of_mem_closure hxQc
+  have hTinv := hA N T.2 uT huT
+  have hLT : formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior uT ≤ L :=
+    sum_integral_sq_le_locMass (polyElement n S) u T (self_subset_cthickening _ (by positivity))
+  have hsqLT : √(formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior uT) ≤ √L :=
+    Real.sqrt_le_sqrt hLT
+  have hTs : ∀ y ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,
+      √h ^ n * |uT y s| ≤ A * √L := fun y hy s => by
+    have h1 : |uT y s| ≤ ‖uT y‖ := by
+      have := norm_le_pi_norm (uT y) s; rwa [Real.norm_eq_abs] at this
+    exact (mul_le_mul_of_nonneg_left h1 hsq.le).trans ((hTinv.1 y hy).trans
+      (mul_le_mul_of_nonneg_left hsqLT hA0))
+  -- the integrand as a mollified average
+  rw [sum_sub_paritySmoothForm_mul_eq ρ J hD v (uT x) c x]
+  set G : (Fin n → ℝ) → ℝ := fun t => ∑ s, (uT x s - parField J v t s) * c s
+  have hρ0 : ∀ t, 0 ≤ ρ (x - t) := fun t => ρ.nonneg _
+  have hρi := ρ.integrable_comp_sub x
+  have hρ1 := ρ.integral_comp_sub x
+  have hρG : Integrable fun t => ρ (x - t) * G t :=
+    integrable_comp_sub_mul_parField ρ J hD v (uT x) c x
+  -- a.e. sample: the folded point lies in the interior of a simplex
+  have hae := ae_glue_eq_local (polyElement n S) u (isOpen_mesh_domain n N).measurableSet
+  have hae2 : ∀ᵐ t ∂volume, t ∈ Geometry.Q (Fin n) → ∃ T' : (mesh n N).simplices,
+      t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ∧
+        ∀ s : formIdx n k, (Geometry.Q (Fin n)).indicator
+          ((v s : L2 ℝ (mesh n N).domain) : (Fin n → ℝ) → ℝ) t =
+          ((u T' : (polyElement n S).space T' k) : FormField n) t s.1 := by
+    filter_upwards [hae] with t ht htQ
+    obtain ⟨T', h1, h2⟩ := ht (hD ▸ htQ)
+    refine ⟨T', h1, fun s => ?_⟩
+    set F := ((v s : L2 ℝ (mesh n N).domain) : (Fin n → ℝ) → ℝ)
+    have e := congrArg (fun S' : Set (Fin n → ℝ) => S'.indicator F t) hD
+    rw [← e]
+    exact h2 s
+  have hae' := ae_exists_pieceMap hae2
+  have hb : ∀ᵐ t ∂volume, ρ (x - t) ≠ 0 → |G t| ≤ R / √h ^ n := by
+    filter_upwards [hae'] with t ht hρt
+    have hdist : ‖x - t‖ < ρ.radius := by
+      by_contra hcon; push Not at hcon
+      exact hρt (ρ.eq_zero_of_le _ hcon)
+    have htU : t ∈ bigCube n := closedBall_subset_bigCube hxI ρ.radius_lt
+      (by rw [Metric.mem_closedBall, dist_comm, dist_eq_norm]; exact hdist.le)
+    obtain ⟨p, hpt, T', hzT', hval⟩ := ht htU
+    set z := pieceMap p t
+    have hzx : ‖x - z‖ < γ * h / 32 := by
+      have h1 := norm_sub_le_norm_pieceMap_sub hxI hpt p
+      rw [pieceMap_pieceMap] at h1
+      rw [norm_sub_rev]
+      calc ‖z - x‖ ≤ ‖t - x‖ := h1
+        _ = ‖x - t‖ := norm_sub_rev _ _
+        _ < ρ.radius := hdist
+        _ = γ * h / 32 := parKernel_radius hγ hγ1 N
+    rw [le_div_iff₀ hsq, mul_comm]
+    set u' : FormField n := ((u T' : (polyElement n S).space T' k) : FormField n)
+    have hu' : u' ∈ S.space n k := (u T').2
+    set β : Finset (Fin n) → ℝ := fun s => pieceSign (pvec J s) p * u' z s
+    have hGt : G t = ∑ s, (uT x s - β s) * c s := by
+      refine Finset.sum_congr rfl fun s _ => ?_
+      congr 2
+      by_cases hs' : (#s : ℤ) = (k : ℤ)
+      · simp only [parField, formExt_of_card _ hs', β]
+        rw [parExt_eq_of_pieceMap_mem hpt, ← hval ⟨s, hs'⟩, Set.indicator_of_mem hpt]
+      · have h0 : parField J v t s = 0 := by simp [parField, formExt, hs']
+        rw [h0]
+        simp only [β, PolyKind.isDeg_of_mem_space hu' z s (fun h' => hs' (by rw [h'])),
+          mul_zero]
+    have hzT'c : z ∈ (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior := interior_subset hzT'
+    have hT'sub : (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ⊆
+        Metric.cthickening (2 * h) (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior := by
+      intro y hy
+      obtain ⟨m', σ', hmσ'⟩ := mem_mesh_simplices.1 T'.2
+      have hdy : ‖y - z‖ ≤ h := by
+        rw [← hmσ'] at hy hzT'c; exact norm_sub_le_of_mem_cubeSimplex hy hzT'c
+      refine Metric.mem_cthickening_of_dist_le y x _ _ hxT ?_
+      rw [dist_eq_norm]
+      calc ‖y - x‖ = ‖(y - z) + (z - x)‖ := by congr 1; abel
+        _ ≤ ‖y - z‖ + ‖z - x‖ := norm_add_le _ _
+        _ ≤ h + γ * h / 32 := by rw [norm_sub_rev z x]; exact add_le_add hdy hzx.le
+        _ ≤ 2 * h := by nlinarith
+    have hL' : formL2Sq (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior u' ≤ L :=
+      sum_integral_sq_le_locMass (polyElement n S) u T' hT'sub
+    have hT'inv := hA N T'.2 u' hu'
+    have hsqL' : √(formL2Sq (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior u') ≤ √L :=
+      Real.sqrt_le_sqrt hL'
+    have hT's : ∀ y ∈ (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,
+        √h ^ n * |u' y s| ≤ A * √L := fun y hy s => by
+      have h1 : |u' y s| ≤ ‖u' y‖ := by
+        have := norm_le_pi_norm (u' y) s; rwa [Real.norm_eq_abs] at this
+      exact (mul_le_mul_of_nonneg_left h1 hsq.le).trans ((hT'inv.1 y hy).trans
+        (mul_le_mul_of_nonneg_left hsqL' hA0))
+    rw [hGt]
+    by_cases hbad : ξ ∈ nearBdry m γ
+    · -- near the boundary of the face: inverse estimates only
+      have hR : R = (∑ s, |c s|) * A * √L * 2 := by simp only [R, hbad, ite_true]
+      rw [hR]
+      calc √h ^ n * |∑ s, (uT x s - β s) * c s|
+          ≤ √h ^ n * ∑ s, (|uT x s| + |u' z s|) * |c s| := by
+            refine mul_le_mul_of_nonneg_left ((Finset.abs_sum_le_sum_abs _ _).trans
+              (Finset.sum_le_sum fun s _ => ?_)) hsq.le
+            rw [abs_mul]
+            refine mul_le_mul_of_nonneg_right ((abs_sub _ _).trans (le_of_eq ?_)) (abs_nonneg _)
+            simp only [β, abs_mul, abs_pieceSign (isParity_pvec J s), one_mul]
+        _ = ∑ s, (√h ^ n * |uT x s| + √h ^ n * |u' z s|) * |c s| := by
+            rw [Finset.mul_sum]; refine Finset.sum_congr rfl fun s _ => by ring
+        _ ≤ ∑ s, (A * √L + A * √L) * |c s| :=
+            Finset.sum_le_sum fun s _ => mul_le_mul_of_nonneg_right
+              (add_le_add (hTs x hxT s) (hT's z hzT'c s)) (abs_nonneg _)
+        _ = (∑ s, |c s|) * A * √L * 2 := by
+            rw [Finset.sum_mul, Finset.sum_mul, Finset.sum_mul]
+            refine Finset.sum_congr rfl fun s _ => by ring
+    · -- away from the boundary of the face
+      have hR : R = (∑ s, |c s|) * A * √L * γ := by simp only [R, hbad, ite_false]
+      rw [hR]
+      have hμ : ∀ a, γ ≤ refBary ξ a := by
+        intro a; by_contra hlt; push Not at hlt; exact hbad ⟨a, hlt⟩
+      have hx : x = ∑ a, refBary ξ a • q a := simplexMap_eq_sum q ξ
+      have hgT' : g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
+        subset_vertexSet_of_near_lex T.2 T'.2 hgT hg hγ hγ2 hμ (sum_refBary ξ) hzT'c
+          (by rw [← hx]; nlinarith [norm_nonneg (x - z)])
+      have hxT' : x ∈ (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
+        simplexMap_lexEnum_mem hgT' hg hξ
+      -- the reflected coordinates: the face lies in a face of the cube
+      have hface : ∀ i, p i ≠ 1 → (∀ w ∈ g, w i = 0) ∨ ∀ w ∈ g, w i = 1 / 2 := by
+        intro i hi
+        have hti := coord_mem_pieceIoo_of_pieceMap hpt i
+        have hxti : |x i - t i| < γ * h / 32 := by
+          have := norm_le_pi_norm (x - t) i
+          rw [Real.norm_eq_abs, Pi.sub_apply] at this
+          have h2 : ρ.radius = γ * h / 32 := parKernel_radius hγ hγ1 N
+          linarith
+        rw [abs_lt] at hxti
+        have hpi : p i = 0 ∨ p i = 2 := by
+          rcases (show p i = 0 ∨ p i = 1 ∨ p i = 2 by omega) with h' | h' | h'
+          · exact Or.inl h'
+          · exact absurd h' hi
+          · exact Or.inr h'
+        rcases hpi with h' | h'
+        · left
+          rw [h'] at hti
+          simp only [pieceIoo, Set.mem_Ioo] at hti
+          exact face_coord_eq_zero T.2 hgT hg hγ hγ2 hμ (by nlinarith [hti.2])
+        · right
+          rw [h'] at hti
+          simp only [pieceIoo, Set.mem_Ioo] at hti
+          exact face_coord_eq_half T.2 hgT hg hγ hγ2 hμ (by nlinarith [hti.1])
+      set σ := pieceSign (pvec J ∅) p
+      have hσ : σ = 1 ∨ σ = -1 := by
+        have := abs_pieceSign (isParity_pvec J ∅) p
+        rcases abs_eq (zero_le_one) |>.1 this with h' | h'
+        · exact Or.inl h'
+        · exact Or.inr h'
+      have hβσ : pullback (simplexMatrix q) β = pullback (simplexMatrix q) (σ • u' z) := by
+        refine pullback_congr_of_rows _ fun s => ?_
+        by_cases hs : ∀ i ∈ s, p i = 1
+        · left
+          simp only [β, Pi.smul_apply, smul_eq_mul, pieceSign_pvec_eq hs, σ]
+        · right
+          push Not at hs
+          obtain ⟨i, his, hpi⟩ := hs
+          rcases hface i hpi with h' | h'
+          · exact ⟨i, his, simplexMatrix_row_eq_zero hg h'⟩
+          · exact ⟨i, his, simplexMatrix_row_eq_zero hg h'⟩
+      have hdegz := PolyKind.isDeg_of_mem_space hu' z
+      have hβdeg : IsDeg k β := fun s hs => by simp only [β, hdegz s hs, mul_zero]
+      have hσdeg : IsDeg k (σ • u' z) := fun s hs => by simp [hdegz s hs]
+      have hcβ : ∑ s, β s * c s = σ * ∑ s, u' z s * c s := by
+        rw [hc _ _ hβdeg hσdeg hβσ, Finset.mul_sum]
+        refine Finset.sum_congr rfl fun s _ => ?_
+        simp only [Pi.smul_apply, smul_eq_mul]; ring
+      -- the difference of the folded sample and the value at `x`, on `T'`
+      have hkey : |∑ s, (uT x s - β s) * c s| = |∑ s, (u' x s - u' z s) * c s| := by
+        have e1 : ∑ s, (uT x s - β s) * c s = ∑ s, uT x s * c s - ∑ s, β s * c s := by
+          rw [← Finset.sum_sub_distrib]; refine Finset.sum_congr rfl fun s _ => by ring
+        have e2 : ∑ s, (u' x s - u' z s) * c s = ∑ s, u' x s * c s - ∑ s, u' z s * c s := by
+          rw [← Finset.sum_sub_distrib]; refine Finset.sum_congr rfl fun s _ => by ring
+        rw [e1, e2, hcβ]
+        rcases hσ with h1 | h1
+        · have htr : ∑ s, uT x s * c s = ∑ s, u' x s * c s :=
+            hc _ _ (PolyKind.isDeg_of_mem_space huT x) (PolyKind.isDeg_of_mem_space hu' x)
+              (pullback_eq_of_mem_globalSpace hu.1 T T' hgT hgT' hg ξ)
+          rw [htr, h1, one_mul]
+        · -- `σ = -1`: the face is normal to `J`, where the traces vanish
+          obtain ⟨i, hpi, hiJ⟩ := exists_mem_of_pieceSign_ne_one (J := J) (p := p)
+            (by rw [show pieceSign (pvec J ∅) p = σ from rfl, h1]; norm_num)
+          have hgΓ : ∃ F ∈ partialFaces n J, g ⊆ F := ⟨g, ⟨i, hiJ, hface i hpi⟩, subset_rfl⟩
+          have hzero : ∀ (T'' : (mesh n N).simplices),
+              g ⊆ vertexSet (T'' : Affine.Simplex ℝ (Fin n → ℝ) n) →
+              ∑ s, ((u T'' : (polyElement n S).space T'' k) : FormField n) x s * c s = 0 := by
+            intro T'' hgT''
+            have hpb := S.pullback_eq_of_dof_eq hgT'' hg (u T'').2 (Submodule.zero_mem _)
+              (fun g' hg' j => by
+                rw [show (⟨(0 : FormField n), S.space_le_contForms n k (Submodule.zero_mem _)⟩ :
+                  contForms n) = 0 from rfl, map_zero]
+                obtain ⟨F, hF, hgF⟩ := hgΓ
+                exact hu.2 T'' g' (hg'.trans hgT'') ⟨F, hF, hg'.trans hgF⟩ j) ξ
+            have h00 := hc _ _ (PolyKind.isDeg_of_mem_space (u T'').2 x) (fun s _ => rfl) hpb
+            rw [h00]; simp
+          rw [hzero T hgT, hzero T' hgT', h1]
+          rw [show (0 : ℝ) - -1 * ∑ s, u' z s * c s = -(0 - ∑ s, u' z s * c s) by ring, abs_neg]
+      rw [hkey]
+      have hLip : ∀ s, √h ^ n * h * |u' x s - u' z s| ≤ A * ‖x - z‖ * √L := fun s => by
+        have h1 : |u' x s - u' z s| ≤ ‖u' x - u' z‖ := by
+          have := norm_le_pi_norm (u' x - u' z) s; rwa [Real.norm_eq_abs, Pi.sub_apply] at this
+        refine (mul_le_mul_of_nonneg_left h1 (by positivity)).trans ((hT'inv.2 x hxT' z hzT'c).trans
+          (mul_le_mul_of_nonneg_left hsqL' (by positivity)))
+      calc √h ^ n * |∑ s, (u' x s - u' z s) * c s|
+          ≤ √h ^ n * ∑ s, |u' x s - u' z s| * |c s| := by
+            refine mul_le_mul_of_nonneg_left ((Finset.abs_sum_le_sum_abs _ _).trans
+              (le_of_eq (Finset.sum_congr rfl fun s _ => abs_mul _ _))) hsq.le
+        _ = ∑ s, ((√h ^ n * h * |u' x s - u' z s|) / h) * |c s| := by
+            rw [Finset.mul_sum]; refine Finset.sum_congr rfl fun s _ => by field_simp
+        _ ≤ ∑ s, ((A * (γ * h) * √L) / h) * |c s| := by
+            refine Finset.sum_le_sum fun s _ => mul_le_mul_of_nonneg_right
+              (div_le_div_of_nonneg_right ((hLip s).trans ?_) hh.le) (abs_nonneg _)
+            refine mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left ?_ hA0)
+              (Real.sqrt_nonneg _)
+            nlinarith
+        _ = (∑ s, |c s|) * A * √L * γ := by
+            rw [Finset.sum_mul, Finset.sum_mul, Finset.sum_mul]
+            refine Finset.sum_congr rfl fun s _ => by field_simp
+  have hmain := abs_integral_mul_le_of_ae hρ0 hρi hρ1 hρG hb
+  rw [le_div_iff₀ hsq, mul_comm] at hmain
+  exact hmain
+
+
+/-- **The DOF error of `Q_N` on `V_{h,Γ_J}`** for the parity smoother: for `v ∈ V_{h,Γ_J}`, a face
+`g` of `T` and a degree of freedom `i` of `g`,
+`h^{n/2} |ℓ_{g,i}(v_T - R v)| ≤ 3 (n + 1) D A γ hᵏ m_T(v)^{1/2}`. -/
+theorem sqrt_mul_abs_dof_err_par {N k : ℕ} {A D : ℝ} (hA0 : 0 ≤ A) (hA : InvBound S n k A)
+    (hD : CoeffBound S n k D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
+    {u : (polyElement n S).Piecewise (mesh n N) k}
+    (hu : u ∈ (polyElement n S).globalSpacePartial (mesh n N) (partialFaces n J) k)
+    (T : (mesh n N).simplices)
+    {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n))
+    (i : S.DofIdx g k) :
+    √(hN N) ^ n * |S.dof g k i ⟨((u T : (polyElement n S).space T k) : FormField n),
+        S.space_le_contForms n k (u T).2⟩ -
+      S.dof g k i (Submodule.inclusion c1Forms_le_contForms
+        (paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+          ((polyElement n S).glue (mesh n N) k u)))| ≤
+      3 * (n + 1) * D * A * γ * hN N ^ k *
+        √(locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)) := by
+  classical
+  have hne := i.2
+  set m := #g - 1
+  have hg : #g = m + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
+  have hkm : k ≤ m := by have := card_le_of_dofIdx S i; omega
+  have hmn : m ≤ n := by
+    have := Finset.card_le_card hgT
+    rw [card_vertexSet] at this; omega
+  set q := lexEnum g m
+  set η := (S.testBasis k m i.1 : FormField m)
+  set uT : FormField n := ((u T : (polyElement n S).space T k) : FormField n)
+  have huT : uT ∈ S.space n k := (u T).2
+  set w : c1Forms n := paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+    ((polyElement n S).glue (mesh n N) k u)
+  set L := locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+  have huc : Continuous uT := (PolyKind.contDiff_of_mem_space huT).continuous
+  have hwc : Continuous (w : FormField n) := (mem_c1Forms.1 w.2).continuous
+  set F : (Fin m → ℝ) → ℝ := fun ξ =>
+    ∑ s, (uT (simplexMap q ξ) s - (w : FormField n) (simplexMap q ξ) s) * dofCoeff q η k ξ s
+  have hdc : Continuous fun ξ : Fin m → ℝ => η ξ := S.continuous_testBasis k m i.1
+  have hcoef : ∀ s, Continuous fun ξ => dofCoeff q η k ξ s := fun s => by
+    simp only [dofCoeff]
+    split_ifs
+    · simp only [wedgeForm_apply]
+      exact continuous_finsetSum _ fun a _ => continuous_const.mul
+        ((continuous_apply _).comp hdc)
+    · exact continuous_const
+  have hFc : Continuous F := continuous_finsetSum _ fun s _ =>
+    ((((continuous_apply s).comp (huc.comp (continuous_simplexMap q))).sub
+      ((continuous_apply s).comp (hwc.comp (continuous_simplexMap q)))).mul (hcoef s))
+  have herr : S.dof g k i ⟨uT, S.space_le_contForms n k huT⟩ -
+      S.dof g k i (Submodule.inclusion c1Forms_le_contForms w) =
+        ∫ ξ in FiniteElement.refSimplex m, F ξ := by
+    rw [← map_sub, S.dof_eq_integral]
+    refine setIntegral_congr_fun (measurableSet_refSimplex _) fun ξ _ => ?_
+    refine Finset.sum_congr rfl fun s _ => ?_
+    rfl
+  have hsq : 0 ≤ √(hN N) ^ n := pow_nonneg (Real.sqrt_nonneg _) n
+  set Mc := D * hN N ^ k
+  have hMc : ∀ ξ ∈ FiniteElement.refSimplex m, ∑ s, |dofCoeff q η k ξ s| ≤ Mc :=
+    fun ξ hξ => hD N T.2 hgT i ξ hξ
+  have hMc0 : 0 ≤ Mc := by
+    have h0 : (0 : Fin m → ℝ) ∈ FiniteElement.refSimplex m := fun a => by
+      refine Fin.cases ?_ (fun l => ?_) a
+      · simp
+      · simp [refBary]
+    exact (Finset.sum_nonneg fun s _ => abs_nonneg _).trans (hMc 0 h0)
+  set β : (Fin m → ℝ) → ℝ := fun ξ =>
+    Mc * A * √L * (γ + 2 * (nearBdry m γ).indicator 1 ξ)
+  have hpt : ∀ ξ ∈ FiniteElement.refSimplex m, √(hN N) ^ n * |F ξ| ≤ β ξ := by
+    intro ξ hξ
+    refine (sqrt_mul_abs_integrand_par S J hA0 hA hγ hγ1 hγ2 hu T hgT hg hξ (dofCoeff q η k ξ)
+      (fun α β hα hβ hαβ => sum_mul_dofCoeff_eq_of_pullback_eq q η ξ hα hβ hαβ)).trans ?_
+    have h0 : 0 ≤ A * √L := by positivity
+    have h1 : (∑ s, |dofCoeff q η k ξ s|) * A * √L ≤ Mc * A * √L := by
+      have := mul_le_mul_of_nonneg_right (hMc ξ hξ) h0
+      linarith [show (∑ s, |dofCoeff q η k ξ s|) * A * √L =
+        (∑ s, |dofCoeff q η k ξ s|) * (A * √L) by ring,
+        show Mc * A * √L = Mc * (A * √L) by ring]
+    have hfac : 0 ≤ (if ξ ∈ nearBdry m γ then 2 else γ : ℝ) := by
+      split_ifs <;> positivity
+    refine (mul_le_mul_of_nonneg_right h1 hfac).trans ?_
+    have h0' : 0 ≤ Mc * A * √L := by positivity
+    refine mul_le_mul_of_nonneg_left ?_ h0'
+    by_cases hb : ξ ∈ nearBdry m γ
+    · rw [Set.indicator_of_mem hb, Pi.one_apply]; simp only [hb, ↓reduceIte]; linarith
+    · rw [Set.indicator_of_notMem hb]; simp [hb]
+  have hS : MeasurableSet (FiniteElement.refSimplex m) := measurableSet_refSimplex m
+  have hfin : volume (FiniteElement.refSimplex m) ≠ ⊤ := (volume_refSimplex_lt_top m).ne
+  set c := Mc * A * √L
+  have hβ' : ∀ ξ, β ξ = c * γ + (c * 2) * (nearBdry m γ).indicator 1 ξ := fun ξ => by
+    simp only [β, c]; ring
+  have hind : IntegrableOn (fun ξ => (nearBdry m γ).indicator (1 : (Fin m → ℝ) → ℝ) ξ)
+      (FiniteElement.refSimplex m) :=
+    (integrableOn_const hfin).indicator (isOpen_nearBdry m γ).measurableSet
+  have hβi : IntegrableOn β (FiniteElement.refSimplex m) := by
+    have : IntegrableOn (fun ξ => c * γ + (c * 2) * (nearBdry m γ).indicator 1 ξ)
+        (FiniteElement.refSimplex m) := (integrableOn_const hfin).add (hind.const_mul _)
+    exact this.congr_fun (fun ξ _ => (hβ' ξ).symm) hS
+  have hint : ∫ ξ in FiniteElement.refSimplex m, β ξ =
+      c * (γ * volume.real (FiniteElement.refSimplex m) +
+        2 * volume.real (FiniteElement.refSimplex m ∩ nearBdry m γ)) := by
+    simp_rw [hβ']
+    rw [integral_add (integrableOn_const hfin) (hind.const_mul _), setIntegral_const, smul_eq_mul,
+      integral_const_mul (c * 2), integral_indicator_one (isOpen_nearBdry m γ).measurableSet,
+      Measure.real, Measure.real, Measure.restrict_apply (isOpen_nearBdry m γ).measurableSet,
+      Set.inter_comm]
+    simp only [Measure.real]
+    ring
+  have hvol := volume_real_refSimplex_le_one m
+  have hbad := volume_real_nearBdry_le (k := m) hγ.le hγ1
+  rw [herr]
+  have hc0 : 0 ≤ c := by positivity
+  calc √(hN N) ^ n * |∫ ξ in FiniteElement.refSimplex m, F ξ|
+      ≤ √(hN N) ^ n * ∫ ξ in FiniteElement.refSimplex m, |F ξ| :=
+        mul_le_mul_of_nonneg_left (abs_integral_le_integral_abs) hsq
+    _ = ∫ ξ in FiniteElement.refSimplex m, √(hN N) ^ n * |F ξ| := (integral_const_mul _ _).symm
+    _ ≤ ∫ ξ in FiniteElement.refSimplex m, β ξ :=
+        setIntegral_mono_on ((hFc.abs.continuousOn.integrableOn_compact
+          (isCompact_refSimplex m)).const_mul _) hβi hS hpt
+    _ = c * (γ * volume.real (FiniteElement.refSimplex m) +
+        2 * volume.real (FiniteElement.refSimplex m ∩ nearBdry m γ)) := hint
+    _ ≤ c * (γ * 1 + 2 * ((m + 1) * γ)) := by
+        refine mul_le_mul_of_nonneg_left ?_ hc0
+        nlinarith
+    _ ≤ c * (3 * (n + 1) * γ) := by
+        refine mul_le_mul_of_nonneg_left ?_ hc0
+        have hm' : (m : ℝ) ≤ n := by exact_mod_cast hmn
+        nlinarith
+    _ = 3 * (n + 1) * D * A * γ * hN N ^ k * √L := by simp only [c, Mc]; ring
+
+/-- **The local `L²` error of `Q_N` on `V_{h,Γ_J}`** for the parity smoother:
+`‖v - Q_N v‖²_{L²(T)} ≲ γ² m_T(v)`. -/
+theorem sum_integral_sq_sub_interp_par {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
+    (hA : InvBound S n k A) (hB0 : 0 ≤ B) (hB : DofBound S n k B) (hD0 : 0 ≤ D)
+    (hD : CoeffBound S n k D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
+    {u : (polyElement n S).Piecewise (mesh n N) k}
+    (hu : u ∈ (polyElement n S).globalSpacePartial (mesh n N) (partialFaces n J) k)
+    (T : (mesh n N).simplices) :
+    ∑ s : formIdx n k, ∫ y in (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+      ((((u T : (polyElement n S).space T k) : FormField n) -
+        ((((polyElement n S).globalInterp (mesh n N) k
+          (Submodule.inclusion c1Forms_le_contForms
+            (paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+              ((polyElement n S).glue (mesh n N) k u))) :
+            (polyElement n S).Piecewise (mesh n N) k) T : (polyElement n S).space T k) :
+              FormField n)) y s.1) ^ 2 ≤
+      2 ^ n * (B * Module.finrank ℝ (S.space n k) * (3 * (n + 1) * D * A) * γ) ^ 2 *
+        locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n) := by
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  set w := paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+    ((polyElement n S).glue (mesh n N) k u)
+  set Pw : (polyElement n S).space T k := (((polyElement n S).globalInterp (mesh n N) k
+    (Submodule.inclusion c1Forms_le_contForms w) : (polyElement n S).Piecewise (mesh n N) k) T)
+  set uT : FormField n := ((u T : (polyElement n S).space T k) : FormField n)
+  have huT : uT ∈ S.space n k := (u T).2
+  have hPw : (Pw : FormField n) ∈ S.space n k := Pw.2
+  set z : FormField n := uT - (Pw : FormField n)
+  have hz : z ∈ S.space n k := Submodule.sub_mem _ huT hPw
+  set L := locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+  have hL0 : 0 ≤ L := locMass_nonneg _ _
+  set C₁ := 3 * (n + 1) * D * A
+  have hC₁ : 0 ≤ C₁ := by positivity
+  have hsq : 0 < √h ^ n := pow_pos (Real.sqrt_pos.2 hh) n
+  set D' := C₁ * γ * √L / √h ^ n
+  have hD'0 : 0 ≤ D' := by positivity
+  have hdof : ∀ g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n), ∀ i : S.DofIdx g k,
+      |S.dof g k i ⟨z, S.space_le_contForms n k hz⟩| ≤ h ^ k * D' := by
+    intro g hgT i
+    have e1 : S.dof g k i ⟨(Pw : FormField n), S.space_le_contForms n k hPw⟩ =
+        S.dof g k i (Submodule.inclusion c1Forms_le_contForms w) :=
+      (polyElement n S).localDof_globalInterp (mesh n N) k
+        (Submodule.inclusion c1Forms_le_contForms w) T g hgT i
+    have e : S.dof g k i ⟨z, S.space_le_contForms n k hz⟩ =
+        S.dof g k i ⟨uT, S.space_le_contForms n k huT⟩ -
+          S.dof g k i (Submodule.inclusion c1Forms_le_contForms w) := by
+      rw [← e1, ← map_sub]; rfl
+    rw [e]
+    have h1 := sqrt_mul_abs_dof_err_par S J hA0 hA hD hγ hγ1 hγ2 hu T hgT i
+    have e2 : h ^ k * D' = C₁ * γ * h ^ k * √L / √h ^ n := by
+      simp only [D']; ring
+    rw [e2, le_div_iff₀ hsq, mul_comm]
+    calc √h ^ n * |S.dof g k i ⟨uT, S.space_le_contForms n k huT⟩ -
+          S.dof g k i (Submodule.inclusion c1Forms_le_contForms w)|
+        ≤ 3 * (n + 1) * D * A * γ * hN N ^ k * √L := h1
+      _ = C₁ * γ * h ^ k * √L := by simp only [C₁, h]
+  have hzb : ∀ y ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,
+      |z y s| ≤ B * Module.finrank ℝ (S.space n k) * D' :=
+    fun y hy s => abs_le_of_abs_dof_le S hB hB0 T.2 hz hdof hy s
+  have hzc : Continuous z := (PolyKind.contDiff_of_mem_space hz).continuous
+  obtain ⟨m, σ, hmσ⟩ := mem_mesh_simplices.1 T.2
+  set P := (Module.finrank ℝ (S.space n k) : ℝ)
+  have hloc : ∀ s : formIdx n k, ∫ y in (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+      (z y s.1) ^ 2 ≤ h ^ n * (B * P * D') ^ 2 := by
+    intro s
+    rw [← hmσ]
+    refine integral_cubeSimplex_le m σ (f := fun y => (z y s.1) ^ 2)
+      (((continuous_apply s.1).comp hzc).pow 2) (fun y hy => ?_) (fun y => sq_nonneg _)
+    rw [hmσ] at hy
+    have := hzb y hy s.1
+    rw [← sq_abs]
+    exact pow_le_pow_left₀ (abs_nonneg _) this 2
+  have hhn : h ^ n = (√h ^ n) ^ 2 := by rw [← pow_mul, mul_comm, pow_mul, Real.sq_sqrt hh.le]
+  calc ∑ s : formIdx n k, ∫ y in (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+        (z y s.1) ^ 2
+      ≤ ∑ _s : formIdx n k, h ^ n * (B * P * D') ^ 2 :=
+        Finset.sum_le_sum fun s _ => hloc s
+    _ = Fintype.card (formIdx n k) * (h ^ n * (B * P * D') ^ 2) := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+    _ ≤ 2 ^ n * (h ^ n * (B * P * D') ^ 2) :=
+        mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
+    _ = 2 ^ n * (B * P * C₁ * γ) ^ 2 * (√L) ^ 2 := by
+        rw [hhn]; simp only [D']; field_simp
+    _ = 2 ^ n * (B * P * C₁ * γ) ^ 2 * L := by rw [Real.sq_sqrt hL0]
+
+/-- **`Q_N` is close to the identity on `V_{h,Γ_J}`** for the parity smoother:
+`‖v - Q_N v‖² ≤ 2ⁿ (B dim(P) C₁ γ)² 6ⁿ n! ‖v‖²`, `C₁ = 3 (n + 1) D A`. -/
+theorem norm_sq_sub_paritySmoothedInterp_le {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
+    (hA : InvBound S n k A) (hB0 : 0 ≤ B) (hB : DofBound S n k B) (hD0 : 0 ≤ D)
+    (hD : CoeffBound S n k D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
+    {u : (polyElement n S).Piecewise (mesh n N) k}
+    (hu : u ∈ (polyElement n S).globalSpacePartial (mesh n N) (partialFaces n J) k) :
+    ‖(polyElement n S).glue (mesh n N) k u - (polyElement n S).paritySmoothedInterp (mesh n N)
+        (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+        ((polyElement n S).glue (mesh n N) k u)‖ ^ 2 ≤
+      2 ^ n * (B * Module.finrank ℝ (S.space n k) * (3 * (n + 1) * D * A) * γ) ^ 2 *
+        ((6 ^ n * n.factorial : ℕ) * ‖(polyElement n S).glue (mesh n N) k u‖ ^ 2) := by
+  set v := (polyElement n S).glue (mesh n N) k u
+  have hQ := (polyElement n S).paritySmoothedInterp_natCast (mesh n N) (parKernel n γ hγ hγ1 N)
+    J (mesh_domain_eq_Q N) k v
+  set Pw := (polyElement n S).globalInterp (mesh n N) k (Submodule.inclusion c1Forms_le_contForms
+    (paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k v))
+  set d : (polyElement n S).Piecewise (mesh n N) k :=
+    u - (Pw : (polyElement n S).Piecewise (mesh n N) k)
+  have hsub : v - (polyElement n S).paritySmoothedInterp (mesh n N) (parKernel n γ hγ hγ1 N) J
+      (mesh_domain_eq_Q N) k v = (polyElement n S).glue (mesh n N) k d := by
+    rw [hQ, map_sub]
+  have hglue : (polyElement n S).glue (mesh n N) k d = pieceL2 (mesh n N) (mesh n N).domain
+      (fun T => formComp (k := (k : ℤ)) ((polyElement n S).extendPW (mesh n N) d T))
+      (fun T hT s => continuous_formComp ((polyElement n S).contDiff_extendPW (mesh n N) _
+        hT).continuous s) := rfl
+  have h1 := norm_sq_pieceL2_le (mesh n N) (mesh n N).domain (fun T => formComp (k := (k : ℤ))
+    ((polyElement n S).extendPW (mesh n N) d T))
+    (fun T hT s => continuous_formComp ((polyElement n S).contDiff_extendPW (mesh n N) _
+      hT).continuous s)
+  set C := 2 ^ n * (B * Module.finrank ℝ (S.space n k) * (3 * (n + 1) * D * A) * γ) ^ 2
+  have h2 : ∑ T ∈ (mesh n N).simplices, ∑ s : formIdx n k, ∫ y in T.closedInterior,
+      (formComp (k := (k : ℤ)) ((polyElement n S).extendPW (mesh n N) d T) s y) ^ 2 ≤
+      ∑ T ∈ (mesh n N).simplices, C * locMass v T := by
+    refine Finset.sum_le_sum fun T hT => ?_
+    have e : ∀ s : formIdx n k, ∀ y, formComp (k := (k : ℤ))
+        ((polyElement n S).extendPW (mesh n N) d T) s y =
+        ((((u ⟨T, hT⟩ : (polyElement n S).space T k) : FormField n) -
+          (((Pw : (polyElement n S).Piecewise (mesh n N) k) ⟨T, hT⟩ :
+            (polyElement n S).space T k) : FormField n)) y s.1) := fun s y => by
+      change (polyElement n S).extendPW (mesh n N) d T y s.1 = _
+      rw [(polyElement n S).extendPW_of_mem (mesh n N) _ hT]
+      rfl
+    simp_rw [e]
+    exact sum_integral_sq_sub_interp_par S J hA0 hA hB0 hB hD0 hD hγ hγ1 hγ2 hu ⟨T, hT⟩
+  have h3 := sum_locMass_le N v
+  rw [hsub, hglue]
+  refine h1.trans (h2.trans ?_)
+  rw [← Finset.mul_sum]
+  exact mul_le_mul_of_nonneg_left h3 (by positivity)
+
+variable (n) in
+/-- **The parity smoothing scale, for all small `γ`**: there is `γ₀ ∈ (0, ½]`, depending only on
+`n` and the sequence `S`, such that for every `γ ∈ (0, γ₀]`, every class `J` and every global
+field of `Λ_{h,Γ_J}`, `‖v - Q_N v‖ ≤ ½ ‖v‖`. -/
+theorem exists_gamma₀_par :
+    ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ γ : ℝ, ∀ (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
+      ∀ (J : Finset (Fin n)) (N k : ℕ) (u : (polyElement n S).Piecewise (mesh n N) k),
+      u ∈ (polyElement n S).globalSpacePartial (mesh n N) (partialFaces n J) k →
+        ‖(polyElement n S).glue (mesh n N) k u - (polyElement n S).paritySmoothedInterp
+          (mesh n N) (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
+          ((polyElement n S).glue (mesh n N) k u)‖ ≤
+          1 / 2 * ‖(polyElement n S).glue (mesh n N) k u‖ := by
+  classical
+  choose A hA0 hA using fun k : ℕ => exists_invBound (n := n) S k
+  choose B hB0 hB using fun k : ℕ => exists_dofBound (n := n) S k
+  choose D hD0 hD using fun k : ℕ => exists_coeffBound (n := n) S k
+  set x : ℕ → ℝ := fun k => B k * Module.finrank ℝ (S.space n k) * (3 * (n + 1) * D k * A k)
+  have hx0 : ∀ k, 0 ≤ x k := fun k => by
+    have := hA0 k; have := hB0 k; have := hD0 k; positivity
+  set Sx := ∑ k ∈ Finset.range (n + 1), x k
+  have hS : 0 ≤ Sx := Finset.sum_nonneg fun k _ => hx0 k
+  set K : ℝ := 2 ^ n * ((6 ^ n * n.factorial : ℕ) : ℝ)
+  have hK : 1 ≤ K := one_le_cov
+  set γ₀ := 1 / (2 * (1 + Sx * K))
+  have hpos : 0 < 1 + Sx * K := by nlinarith
+  have hγ₀ : 0 < γ₀ := by positivity
+  have hγ₀2 : γ₀ ≤ 1 / 2 := by
+    rw [div_le_div_iff₀ (by positivity) (by norm_num)]; nlinarith
+  refine ⟨γ₀, hγ₀, hγ₀2, fun γ hγ hγ1 hγγ₀ J N k u hu => ?_⟩
+  have hγ2 : γ ≤ 1 / 2 := hγγ₀.trans hγ₀2
+  by_cases hk : n < k
+  · have := subsingleton_L2F_of_lt (Ω := (mesh n N).domain) hk
+    rw [Subsingleton.elim ((polyElement n S).glue (mesh n N) k u) 0]; simp
+  push Not at hk
+  have hxk : x k ≤ Sx := Finset.single_le_sum (fun k _ => hx0 k) (Finset.mem_range.2 (by omega))
+  have h := norm_sq_sub_paritySmoothedInterp_le S J (hA0 k) (hA k) (hB0 k) (hB k) (hD0 k)
+    (hD k) hγ hγ1 hγ2 hu
+  have hq := sq_le_quarter_of_le hS hK (hx0 k) hxk hγ.le hγγ₀
+  refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) (h.trans ?_)
+  calc 2 ^ n * (B k * Module.finrank ℝ (S.space n k) * (3 * (n + 1) * D k * A k) * γ) ^ 2 *
+        (((6 ^ n * n.factorial : ℕ) : ℝ) * ‖(polyElement n S).glue (mesh n N) k u‖ ^ 2)
+      = K * (x k * γ) ^ 2 * ‖(polyElement n S).glue (mesh n N) k u‖ ^ 2 := by
+        simp only [K, x]; ring
+    _ ≤ 1 / 4 * ‖(polyElement n S).glue (mesh n N) k u‖ ^ 2 :=
+        mul_le_mul_of_nonneg_right hq (sq_nonneg _)
+    _ = (1 / 2 * ‖(polyElement n S).glue (mesh n N) k u‖) ^ 2 := by ring
+
+end Poly
+
+
+/-! ### The parity smoothing estimates on the cube -/
+
+/-- A commuting map into a subcomplex of `HΛ_J(Ω)`, transported along `Ω = Ω'`. -/
+def commutingMapOfEqPart {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω') (hΩQ' : Ω' ⊆ Geometry.Q (Fin n))
+    (J : Finset (Fin n)) {S : (HQpartZ hΩ hΩQ J).Subcomplex} (Q : S.CommutingMap) :
+    (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).CommutingMap := by
+  subst h; exact Q
+
+/-- Estimates of a commuting map transport along an equality of domains. -/
+theorem commutingMapOfEqPart_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω') (hΩQ' : Ω' ⊆ Geometry.Q (Fin n))
+    (J : Finset (Fin n)) {S : (HQpartZ hΩ hΩQ J).Subcomplex} (Q : S.CommutingMap)
+    {C θ : ℝ} (hb : ∀ i x, ‖Q.Q i x‖ ≤ C * ‖x‖)
+    (hc : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) :
+    (∀ i x, ‖(commutingMapOfEqPart h hΩ hΩQ hΩ' hΩQ' J Q).Q i x‖ ≤ C * ‖x‖) ∧
+    (∀ i, ∀ v ∈ (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V i,
+      ‖v - (commutingMapOfEqPart h hΩ hΩQ hΩ' hΩQ' J Q).Q i v‖ ≤ θ * ‖v‖) := by
+  subst h; exact ⟨hb, hc⟩
+
+variable [NeZero n]
+
+variable (n) in
+/-- **The parity-smoothed interpolant** `Q_N = Π_h R^J` of the complex `polyPartial n S N J`, as a
+commuting map. -/
+def paritySmoothed (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (ρ : ReflKernel n) :
+    (polyPartial n S N J).CommutingMap :=
+  commutingMapOfEqPart (mesh_domain n N) _ _ (isOpen_cubeDomain n) (cubeDomain_subset_Q n) J
+    ((polyElement n S).paritySmoothedCommutingMap (mesh n N) ρ J (mesh_domain_eq_Q N))
+
+variable (n) in
+/-- **The parity smoothing estimates** ([AFW2010], §5.4; [ChristiansenWinther2008]) for the class
+`J` and the admissible sequence `S`: for the kernels `ρ N`, the parity-smoothed interpolants
+`Q_N = Π_h R^J_{ρ N}` of `V_{h,Γ_J} = polyPartial n S N J` are bounded in `L²` uniformly in `N`, and
+`‖v - Q_N v‖ ≤ ½ ‖v‖` on `V_{h,Γ_J}`. -/
+structure ParitySmoothingEstimates (J : Finset (Fin n)) (S : PolySeq) (ρ : ℕ → ReflKernel n)
+    (C : ℝ) : Prop where
+  half_le : 1 / 2 ≤ C
+  bound : ∀ N i x, ‖(paritySmoothed n S N J (ρ N)).Q i x‖ ≤ C * ‖x‖
+  close : ∀ N i, ∀ v ∈ (polyPartial n S N J).V i,
+    ‖v - (paritySmoothed n S N J (ρ N)).Q i v‖ ≤ 1 / 2 * ‖v‖
+
+omit [NeZero n] in
+theorem norm_eq_zero_negSucc' {Ω : Set (Fin n → ℝ)} (k : ℕ)
+    (y : L2F ℝ Ω (formIdx n (Int.negSucc k))) : ‖y‖ = 0 := by
+  have := LocalElement.subsingleton_L2F_negSucc Ω (n := n) k
+  rw [Subsingleton.elim y 0, norm_zero]
+
+/-- **The parity smoothing estimates hold on the Freudenthal meshes of the cube, for every class
+`J` and every admissible sequence `S`**: for every `γ ∈ (0, γ₀]` (`γ₀` depending only on `n`
+and `S`) and the product kernels of radius `γ h_N / 32` (`parKernel`). -/
+theorem paritySmoothingEstimates_parKernel (S : PolySeq) :
+    ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
+      ∀ J : Finset (Fin n), ∃ C, ParitySmoothingEstimates n J S (parKernel n γ hγ hγ1) C := by
+  obtain ⟨γ₀, hγ₀, hγ₀2, hclose⟩ := Poly.exists_gamma₀_par n S
+  refine ⟨γ₀, hγ₀, hγ₀2, fun γ hγ hγ1 hγγ₀ J => ?_⟩
+  obtain ⟨C, hC0, hbound⟩ := exists_norm_paritySmoothedInterp_le S J hγ hγ1
+  refine ⟨max C (1 / 2), ?_⟩
+  have hest : ∀ N, (∀ i x, ‖(paritySmoothed n S N J (parKernel n γ hγ hγ1 N)).Q i x‖ ≤
+      max C (1 / 2) * ‖x‖) ∧ (∀ i, ∀ v ∈ (polyPartial n S N J).V i,
+        ‖v - (paritySmoothed n S N J (parKernel n γ hγ hγ1 N)).Q i v‖ ≤ 1 / 2 * ‖v‖) := by
+    intro N
+    refine commutingMapOfEqPart_estimates (mesh_domain n N) _ _ (isOpen_cubeDomain n)
+      (cubeDomain_subset_Q n) J _ (fun i x => ?_) (fun i v hv => ?_)
+    · change ‖(polyElement n S).paritySmoothedInterp (mesh n N) (parKernel n γ hγ hγ1 N) J
+        (mesh_domain_eq_Q N) i x‖ ≤ _
+      rcases i with k | k
+      · exact (hbound N k x).trans
+          (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
+      · exact (norm_eq_zero_negSucc' k _).le.trans (by positivity)
+    · change ‖v - (polyElement n S).paritySmoothedInterp (mesh n N) (parKernel n γ hγ hγ1 N) J
+        (mesh_domain_eq_Q N) i v‖ ≤ _
+      rcases i with k | k
+      · obtain ⟨u, rfl⟩ := hv
+        exact hclose γ hγ hγ1 hγγ₀ J N k u.1 u.2
+      · exact (norm_eq_zero_negSucc' k _).le.trans (by positivity)
+  exact ⟨le_max_right _ _, fun N => (hest N).1, fun N => (hest N).2⟩
+
+/-- **The parity smoothing estimates hold** for every class `J` and every admissible sequence `S`,
+as a bare existence statement over the kernels. -/
+theorem paritySmoothing_exists (J : Finset (Fin n)) (S : PolySeq) :
+    ∃ (ρ : ℕ → ReflKernel n) (C : ℝ), ParitySmoothingEstimates n J S ρ C := by
+  obtain ⟨γ₀, hγ₀, hγ₀2, h⟩ := paritySmoothingEstimates_parKernel (n := n) S
+  obtain ⟨C, hC⟩ := h γ₀ hγ₀ (by linarith) le_rfl J
+  exact ⟨_, C, hC⟩
+
+namespace ParitySmoothingEstimates
+
+variable {J : Finset (Fin n)} {S : PolySeq} {ρ : ℕ → ReflKernel n} {C : ℝ}
+
+/-- **The smoothed projection** `π_N = J_N⁻¹ Q_N` onto `V_{h,Γ_J}`. -/
+def proj (hE : ParitySmoothingEstimates n J S ρ C) (N : ℕ) :
+    (polyPartial n S N J).CochainProjection :=
+  (paritySmoothed n S N J (ρ N)).toCochainProjection (θ := 1 / 2) (by norm_num) (hE.close N)
+
+theorem two_mul_nonneg (hE : ParitySmoothingEstimates n J S ρ C) : 0 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+variable (hE : ParitySmoothingEstimates n J S ρ C)
+include hE
+
+/-- **Uniform `L²` bound**: `‖π_N x‖ ≤ 2 C ‖x‖` for every `N`. -/
+theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
+    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ := by
+  have h := (paritySmoothed n S N J (ρ N)).norm_toCochainProjection_le (θ := 1 / 2)
+    (by norm_num) (hE.close N) (hE.bound N i) x
+  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
+  rwa [e] at h
+
+/-- **Uniform graph-norm bound**: `π_N` is bounded by `2 C` in the graph norm of every `d_J`. -/
+theorem isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) := by
+  have h := (paritySmoothed n S N J (ρ N)).isGraphBounded_toCochainProjection_of_norm_le
+    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) (hE.bound N j)
+  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
+  rwa [e] at h
+
+/-- **Uniform discrete Poincaré inequality** on `V_{h,Γ_J}`: `‖x‖ ≤ 2 C (2π)⁻¹ ‖d_J x‖` for
+`x ∈ V_{h,Γ_J}ⁱ ⊥ 𝔷ₕⁱ` ([AFW2010], Thm 3.6, with the Poincaré inequality of `HΛ_J(Q)`). -/
+theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (polyPartial n S N J).V i)
+    (hxo : ∀ y ∈ (polyPartial n S N J).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
+      ‖(complexPart n J).d i j ⟨x, (polyPartial n S N J).le_domain i j hx⟩‖ :=
+  (hE.proj N).norm_le_of_forall_inner_eq_zero hij
+    (norm_le_of_mem_orthogonal_cycles_part J hij) hE.two_mul_nonneg (hE.norm_proj_le N i) hx hxo
+
+end ParitySmoothingEstimates
+
+/-- **Uniformly bounded cochain projections onto `V_{h,Γ_J}`** (unconditionally, every class `J`,
+every admissible sequence): one constant bounds all of them in `L²` and in the graph norms of
+`HΛ_J(Q)`. -/
+theorem exists_uniform_cochainProjection_part (S : PolySeq) (J : Finset (Fin n)) :
+    ∃ C : ℝ, ∀ N, ∃ π : (polyPartial n S N J).CochainProjection,
+      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
+  obtain ⟨ρ, C, hE⟩ := paritySmoothing_exists J S
+  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, hE.isGraphBounded_proj N⟩⟩
+
+/-! ### The homogeneous classes `J = ∅` and `J = univ` -/
+
+/-- Cochain projections transport along equal complexes and equal discrete spaces. -/
+theorem exists_cochainProjection_of_eq {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+    [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+    {H₁ H₂ : HilbertComplex ℝ c W} (h : H₁ = H₂) (S₁ : H₁.Subcomplex) (S₂ : H₂.Subcomplex)
+    (hV : ∀ i, S₁.V i = S₂.V i) (π₁ : S₁.CochainProjection) :
+    ∃ π₂ : S₂.CochainProjection, (∀ i x, π₂.π i x = π₁.π i x) ∧
+      ∀ i j C, π₁.IsGraphBounded i j C → π₂.IsGraphBounded i j C := by
+  subst h
+  have hS : S₁ = S₂ := by
+    cases S₁; cases S₂
+    congr
+    funext i; exact hV i
+  subst hS
+  exact ⟨π₁, fun _ _ => rfl, fun _ _ _ h => h⟩
+
+/-- **`J = ∅`: the parity smoother gives uniformly bounded cochain projections onto the complexes
+`FEM.poly n S N ⊆ HΛ(Q)`** without any dilation, an alternative to the maximal-family smoothers
+`pMax` (`FEM.polySmoothingEstimates_pMax`, and for the Whitney forms
+`FEM.smoothingEstimates_pMax`): `HΛ_∅(Q) = HΛ(Q)` (`complexPart_empty`) and
+`V_{h,Γ_∅} = Vₕ` (`polyPartial_empty_V`). -/
+theorem exists_uniform_cochainProjection_poly_parity (S : PolySeq) :
+    ∃ C : ℝ, ∀ N, ∃ π : (poly n S N).CochainProjection,
+      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
+  obtain ⟨C, hC⟩ := exists_uniform_cochainProjection_part S (∅ : Finset (Fin n))
+  refine ⟨C, fun N => ?_⟩
+  obtain ⟨π₁, hb, hg⟩ := hC N
+  obtain ⟨π₂, he, hg'⟩ := exists_cochainProjection_of_eq complexPart_empty
+    (polyPartial n S N ∅) (poly n S N) (polyPartial_empty_V S N) π₁
+  exact ⟨π₂, fun i x => by rw [he]; exact hb i x, fun i j => hg' i j C (hg i j)⟩
+
+/-- **`J = univ`: the parity smoother gives uniformly bounded cochain projections onto the
+complexes `FEM.polyMin n S N ⊆ H̊Λ(Q)`** (vanishing boundary DOFs) without any dilation, an
+alternative to the minimal-family smoothers `pMin` (`FEM.polySmoothingEstimatesMin_pMin`,
+`FEM.smoothingEstimatesMin_pMin`): `HΛ_univ(Q) = H̊Λ(Q)` (`complexPart_univ`) and
+`V_{h,Γ_univ} = V̊ₕ` (`polyPartial_univ_V`). -/
+theorem exists_uniform_cochainProjection_polyMin_parity (S : PolySeq) :
+    ∃ C : ℝ, ∀ N, ∃ π : (polyMin n S N).CochainProjection,
+      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
+  obtain ⟨C, hC⟩ := exists_uniform_cochainProjection_part S (Finset.univ : Finset (Fin n))
+  refine ⟨C, fun N => ?_⟩
+  obtain ⟨π₁, hb, hg⟩ := hC N
+  obtain ⟨π₂, he, hg'⟩ := exists_cochainProjection_of_eq complexPart_univ
+    (polyPartial n S N Finset.univ) (polyMin n S N) (polyPartial_univ_V S N) π₁
+  exact ⟨π₂, fun i x => by rw [he]; exact hb i x, fun i j => hg' i j C (hg i j)⟩
+
+end Feec.Models.Cube.FEM

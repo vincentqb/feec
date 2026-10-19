@@ -32,6 +32,7 @@ convergence theorem without rate for (6.5), and states the resulting failure.
   then every family of solutions of (6.5) whose initial states converge to `w(0)` converges to
   `w` uniformly on `[0,T]` (consistency: the `O(h)` rate on the class; stability: the energy
   estimates). Non-vacuity: `isRateApproximable_waveTangential`.
+* `tendsto_of_mem_wave_domain`: the same for the solution of every datum in `D(L)` (Stone).
 * `exists_betaSolution`, `betaU`, `betaW`, `isStrongSolution_forms`: the TSD solution in the
   matrix and forms models; `exists_betaDiscrete`, `tendsto_infDist_rhoBeta`: discrete solutions of
   (6.5) from `(0, 0, 0, P ρ(0))`, whose initial states converge.
@@ -1264,5 +1265,43 @@ end Main
 end BetaDiscrete
 
 end Beta
+
+/-! ### Every datum in `D(L)` -/
+
+section DomainData
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+  (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+  (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
+
+set_option maxHeartbeats 4000000 in
+/-- **(6.5) for a datum in `D(L)`**: for every `U₀` in the domain of the forms-model Hodge wave
+operator, the Hodge wave equation has a classical solution `V` on `[0,T]` (Stone,
+`Feec.EinsteinBianchi.WaveFEM.bgg_wave_existsUnique` with `curlPotential`), which solves (6.1)
+(`solutionOfStrong`) with initial energy vector `(−σ₀, u₀, M₀, ρ₀)`; if it is approximable by
+the rate class, every family of solutions of (6.5) (source `0`) whose initial states converge to
+it converges to it uniformly on `[0,T]`. -/
+theorem tendsto_of_mem_wave_domain {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
+    (hU₀ : U₀ ∈ formsShort.wave.domain) :
+    ∃ (V : ℝ → WS) (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V), V 0 = U₀ ∧
+      (solutionOfStrong hV).vec 0 = Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)
+        (-((comp0 U₀ : bggHilb.Γbar) : W0), comp1 U₀, compML U₀, compρL U₀) ∧
+      (IsRateApproximable (solutionOfStrong hV) →
+        ∀ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+          Tendsto (fun N => ‖(solutionOfStrong hV).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖) atTop
+            (𝓝 0) →
+          ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+            ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε) := by
+  obtain ⟨V, hV0, hV, -⟩ := bgg_wave_existsUnique curlPotential hU₀ (a := 0) (b := T)
+    (Evolution.ForcingClass.admissible_zero _ 0 T)
+  have hVs : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V := hV.toIsStrongSolution
+  refine ⟨V, hVs, hV0, ?_, fun hw sh hsh0 =>
+    tendsto_of_isRateApproximable hT hB hT0 continuousOn_const _ hw sh hsh0⟩
+  rw [solutionOfStrong_vec hVs ⟨le_rfl, hT0.le⟩, hV0]
+
+end DomainData
 
 end Feec.EinsteinBianchi.BoundedFailure

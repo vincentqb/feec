@@ -57,7 +57,10 @@ nonzero for large `N`.
 **The remaining hypothesis.** `CurlPotential` (`curl H̊(curl) = curl S⁰ H̊¹(Q; ℝ³)`, the regular
 decomposition of [Hiptmair2002], Lemma 2.4, [HiptmairXu2007], §3) is the one explicit hypothesis;
 it is not in Mathlib (`Feec.Models.Cube.WeakSymmetry.CurlPotential`: equivalent to the closedness
-of `curl S⁰ H̊¹(Q; ℝ³)`, true on test fields).
+of `curl S⁰ H̊¹(Q; ℝ³)`, true on test fields). It is now proved
+(`Feec.Models.Cube.WeakSymmetry.curlPotential` in `Feec.Models.Cube.RegularDecomposition`), and the
+theorems of this file with it discharged are `staticFEM_cube`, `staticFEM_nonvacuous_cube` and
+`staticFEM_nonvacuous_coupled_cube` in `Feec.Physics.EinsteinBianchi.Unconditional`.
 
 ## References
 

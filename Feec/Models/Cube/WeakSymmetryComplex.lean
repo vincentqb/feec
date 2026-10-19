@@ -38,7 +38,11 @@ potential must vanish on `∂Q` in every component, a parity class different fro
 (`range_d1_subset_closure`: on test fields `u = S⁰ (proxy u)`), so the hypothesis is non-vacuous
 in the sense that it holds on the dense subspace of test fields, and its constant `C_R` follows
 from the open mapping theorem (`CurlPotential.exists_bound`). With it, `bggHyps` and
-`bggStability` hold.
+`bggStability` hold. The hypothesis is now a theorem,
+`Feec.Models.Cube.WeakSymmetry.curlPotential` in `Feec.Models.Cube.RegularDecomposition` (a
+Helmholtz decomposition on a larger cell and a Hestenes extension from the shell around `Q`), and
+the unconditional forms of `bggHyps`, `bggStability`, Props 5.1 and 5.2 are `bggHilb_hyps`,
+`bggStability'`, `bggShort_closedRange_exact'` and `bgg_existsUnique_isSaddle'` there.
 
 ## Main definitions
 
@@ -500,7 +504,8 @@ regular decomposition `H̊(curl) = H̊¹(V) + grad H̊¹` ([Hiptmair2002], Lemma
 [HiptmairXu2007], §3), which is not in Mathlib; it is the field `reg` of `Feec.BGG.Hilb.Hyps`.
 It holds on the dense subspace of test fields (`range_d1_subset_closure`), is equivalent to the
 closedness of `curl S⁰ H̊¹(Q; ℝ³)` (`curlPotential_iff_isClosed`), and carries its constant
-(`CurlPotential.exists_bound`). -/
+(`CurlPotential.exists_bound`). It is proved in `Feec.Models.Cube.RegularDecomposition`
+(`Feec.Models.Cube.WeakSymmetry.curlPotential`). -/
 def CurlPotential : Prop := Set.range bggD1 ⊆ Set.range (bggD1 ∘ bggS0)
 
 /-- **The hypotheses (H1)–(H3), (H6) of [QuennevilleBelair2015], §5.1 on the cube**, with the

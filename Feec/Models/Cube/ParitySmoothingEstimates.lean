@@ -32,11 +32,18 @@ of radius `γ h_N / 32` they are bounded uniformly in `N` and close to the ident
   `pMax`, `pMin`.
 * `FEM.ParitySmoothingEstimates.norm_sub_proj_le_grad`: `‖y - π_N y‖ ≤ C h_N Σₛ ‖∇ yₛ‖` when
   `ext_J y` has `H¹` coefficients.
+* `FEM.ParitySmoothingEstimates.norm_sub_proj_le_smooth`: the high-order rate
+  `‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} sup_{cl Q} ‖D^{s+1} w‖` for `C^{s+1}` forms whose tangential
+  components vanish on the faces normal to `J` (`FEM.exists_mem_polyPartial_le_smooth`: the
+  canonical interpolant lies in `V_{h,Γ_J}`), up to the polynomial order;
+  `FEM.ParitySmoothingEstimates.exists_norm_sub_proj_trigForm_le`: a non-zero instance.
+  The `L²`-based form `‖y - π_N y‖ ≲ h_N^m ‖Dᵐ ext_J y‖_{L²}` for `m ≥ 2` is not formalized.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.4
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 -/
 
 @[expose] public noncomputable section
@@ -1800,5 +1807,164 @@ theorem ParitySmoothingEstimates.norm_sub_proj_le_grad {J : Finset (Fin n)} {S :
     _ = _ := by ring
 
 end H1
+
+/-! ### High-order rates for smooth data -/
+
+section HighOrder
+
+omit [NeZero n] in
+/-- **Interpolants of forms with vanishing tangential components on the faces normal to `J`** have
+vanishing DOFs there (any element family): `Π_h w ∈ Λ_{h,Γ_J}ᵏ`. -/
+theorem globalInterp_mem_globalSpacePartial_of_face (E : LocalElement n) (M : SimplicialMesh n)
+    (J : Finset (Fin n)) (k : ℕ) (w : contForms n)
+    (hw : ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
+      (w : FormField n) x t = 0) :
+    (E.globalInterp M k w : E.Piecewise M k) ∈ E.globalSpacePartial M (partialFaces n J) k := by
+  refine ⟨(E.globalInterp M k _).2, fun T g hg ⟨F, ⟨j, hjJ, hF⟩, hgF⟩ i => ?_⟩
+  rw [LocalElement.localDof_globalInterp _ _ _ _ _ _ hg]
+  have hc : ∃ c : ℝ, (c = 0 ∨ c = 1 / 2) ∧ ∀ v ∈ g, v j = c := by
+    rcases hF with h | h
+    · exact ⟨0, Or.inl rfl, fun v hv => h v (hgF hv)⟩
+    · exact ⟨1 / 2, Or.inr rfl, fun v hv => h v (hgF hv)⟩
+  obtain ⟨c, hc, hgc⟩ := hc
+  have h0 : E.dof g k i w = E.dof g k i 0 :=
+    E.dof_congr i (tangentialTraceEq_zero_of_hyperplane hgc fun x hx t ht =>
+      hw x j hjJ (by rw [hx]; exact hc) t ht)
+  rw [h0, map_zero]
+
+omit [NeZero n] in
+/-- **High-order interpolation in `V_{h,Γ_J}`, on the mesh domain**: for a `C^{s+1}` degree-`k`
+form `w` whose tangential components vanish on the faces normal to `J`, with
+`‖D^{s+1} w‖ ≤ L` on `cl Q` and `P_sΛᵏ ⊆ P(T)ᵏ`, the canonical interpolant
+`v = Π_h w ∈ V_{h,Γ_J}ᵏ` satisfies `‖w - v‖ ≤ A_k h_N^{s+1} L` (`A_k = polyInterpConst`). -/
+theorem exists_mem_VPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k s : ℕ)
+    (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
+    (hdeg : ∀ x, IsDeg k (w x))
+    (hJ : ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
+      w x t = 0)
+    {L : ℝ} (hL : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) :
+    ∃ v ∈ (polyElement n S).VPartial (mesh n N) (partialFaces n J) k,
+      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+          ⟨w, hw.continuous⟩ - v‖ ≤ polyInterpConst n S k * (meshSize N ^ (s + 1) * L) := by
+  set u := (polyElement n S).globalInterp (mesh n N) k ⟨w, hw.continuous⟩
+  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hL _ (subset_closure (center_mem_cubeDomain n)))
+  have hB1 : 0 ≤ (1 + dofConst n S k * Module.finrank ℝ (S.space n k) * coeffConst n S k) *
+      (meshSize N ^ (s + 1) * L) := by
+    have := dofConst_nonneg (n := n) S k; have := coeffConst_nonneg (n := n) S k
+    have := (meshSize_pos N).le; positivity
+  refine ⟨(polyElement n S).glue (mesh n N) k (u : (polyElement n S).Piecewise (mesh n N) k),
+    ⟨⟨_, globalInterp_mem_globalSpacePartial_of_face (polyElement n S) (mesh n N) J k _ hJ⟩,
+      rfl⟩, ?_⟩
+  have h := norm_formL2_sub_glue_le_of_forall (polyElement n S) (mesh n N)
+    (isOpen_mesh_domain n N).measurableSet k ⟨w, hw.continuous⟩
+    (u : (polyElement n S).Piecewise (mesh n N) k) hB1
+    fun T x hx t _ => abs_sub_globalInterp_le_cube S hs hw hdeg hL T (interior_subset hx) t
+  refine h.trans (le_of_eq ?_)
+  rw [polyInterpConst, mesh_domain n N]; ring
+
+/-- **High-order interpolation in `polyPartial`, on the cube**: the estimate of
+`exists_mem_VPartial_le_smooth` with `v ∈ V_{h,Γ_J}ᵏ = (polyPartial n S N J).V k`. -/
+theorem exists_mem_polyPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k s : ℕ)
+    (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
+    (hdeg : ∀ x, IsDeg k (w x))
+    (hJ : ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
+      w x t = 0)
+    {L : ℝ} (hL : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) :
+    ∃ v ∈ (polyPartial n S N J).V k,
+      ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩ - v‖ ≤ polyInterpConst n S k * (meshSize N ^ (s + 1) * L) := by
+  have key : ∀ (Ω' : Set (Fin n → ℝ)) (h : (mesh n N).domain = Ω') (hΩ' : IsOpen Ω')
+      (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (hb : Bornology.IsBounded Ω'),
+      ∃ v ∈ (partialSubcomplexOfEq h (isOpen_of_eq_Q (mesh_domain_eq_Q N))
+          (mesh_domain_eq_Q N).le hΩ' hΩQ' J
+          (subcomplexPart (polyElement n S) (mesh n N) (mesh_domain_eq_Q N) J)).V k,
+        ‖formL2 hΩ'.measurableSet hb k ⟨w, hw.continuous⟩ - v‖ ≤
+          polyInterpConst n S k * (meshSize N ^ (s + 1) * L) := by
+    rintro Ω' rfl hΩ' hΩQ' hb
+    exact exists_mem_VPartial_le_smooth S J N k s hs hw hdeg hJ hL
+  exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n)
+    (isBounded_cubeDomain n)
+
+/-- **The high-order rate of the parity-smoothed projections** ([AFW2010], §5.4; [Arnold2018],
+Ch. 7): under `ParitySmoothingEstimates`, for a `C^{s+1}` degree-`k` form `w` whose tangential
+components vanish on the faces normal to `J` (e.g. coefficients `wₜ` symmetric of the parity
+`c(J, t)` on `ℝⁿ`, `IsSymm.eq_zero_of_face`), with `‖D^{s+1} w‖ ≤ L` on `cl Q` and
+`P_sΛᵏ ⊆ P(T)ᵏ` (e.g. `s + 1 ≤ r_k`, `polySpace_le_space`),
+`‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} L`: the order `m = s + 1` up to the polynomial order. -/
+theorem ParitySmoothingEstimates.norm_sub_proj_le_smooth {J : Finset (Fin n)} {S : PolySeq}
+    {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C) (N k s : ℕ)
+    (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
+    (hdeg : ∀ x, IsDeg k (w x))
+    (hJ : ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
+      w x t = 0)
+    {L : ℝ} (hL : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) :
+    ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩ -
+        (hE.proj N).π k (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩)‖ ≤
+      (1 + 2 * C) * polyInterpConst n S k * meshSize N ^ (s + 1) * L := by
+  obtain ⟨v, hv, hyv⟩ := exists_mem_polyPartial_le_smooth S J N k s hs hw hdeg hJ hL
+  refine (norm_sub_π_le_of_mem (hE.proj N) (hE.norm_proj_le N k) hv).trans ?_
+  have := hE.two_mul_nonneg
+  calc (1 + 2 * C) * ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨w, hw.continuous⟩ - v‖
+      ≤ (1 + 2 * C) * (polyInterpConst n S k * (meshSize N ^ (s + 1) * L)) :=
+        mul_le_mul_of_nonneg_left hyv (by linarith)
+    _ = _ := by ring
+
+/-- **The trigonometric `k`-forms of the class `J`**: `wₜ = trigProd c(J, t)` for `#t = k`, the
+parity extension of a smooth form on `Q` whose tangential components vanish on the faces normal
+to `J` (a non-vacuity witness for the high-order rate). -/
+def trigForm (J : Finset (Fin n)) (k : ℕ) : FormField n := fun x t =>
+  if #t = k then trigProd (pvec J t) x else 0
+
+omit [NeZero n] in
+theorem contDiff_trigForm (J : Finset (Fin n)) (k : ℕ) {m : ℕ∞} :
+    ContDiff ℝ m (trigForm J k) := by
+  refine contDiff_pi.2 fun t => ?_
+  simp only [trigForm]
+  split_ifs
+  · exact contDiff_trigProd _
+  · exact contDiff_const
+
+omit [NeZero n] in
+theorem isDeg_trigForm (J : Finset (Fin n)) (k : ℕ) (x : Fin n → ℝ) :
+    IsDeg k (trigForm J k x) := fun t ht => by simp [trigForm, ht]
+
+omit [NeZero n] in
+theorem trigForm_face (J : Finset (Fin n)) (k : ℕ) :
+    ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
+      trigForm J k x t = 0 := by
+  intro x j hj hx t ht
+  simp only [trigForm]
+  split_ifs
+  · exact (isSymm_trigProd (isParity_pvec J t)).eq_zero_of_face (pvec_of_mem_of_notMem hj ht) hx
+  · rfl
+
+omit [NeZero n] in
+theorem trigForm_ne_zero (J : Finset (Fin n)) {k : ℕ} (hk : k ≤ n) : trigForm J k ≠ 0 := by
+  obtain ⟨t, -, ht⟩ := Finset.exists_subset_card_eq (s := (Finset.univ : Finset (Fin n)))
+    (n := k) (by rw [Finset.card_univ, Fintype.card_fin]; exact hk)
+  intro h
+  have h1 := congrFun (congrFun h fun _ => 1 / 8) t
+  simp only [trigForm, ht, ite_true, Pi.zero_apply] at h1
+  exact trigProd_ne_zero _ h1
+
+/-- **Non-vacuity of the high-order rate**: for every class `J`, degree `k ≤ n` and order `s + 1`
+with `P_sΛᵏ ⊆ P(T)ᵏ`, the non-zero trigonometric form `trigForm J k` satisfies the hypotheses of
+`ParitySmoothingEstimates.norm_sub_proj_le_smooth`, so `‖w - π_N w‖ = O(h_N^{s+1})`. -/
+theorem ParitySmoothingEstimates.exists_norm_sub_proj_trigForm_le {J : Finset (Fin n)}
+    {S : PolySeq} {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
+    (k s : ℕ) (hs : polySpace n s k ≤ S.space n k) :
+    ∃ L, 0 ≤ L ∧ ∀ N, ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+        ⟨trigForm J k, (contDiff_trigForm J k (m := 0)).continuous⟩ -
+        (hE.proj N).π k (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+          ⟨trigForm J k, (contDiff_trigForm J k (m := 0)).continuous⟩)‖ ≤
+      (1 + 2 * C) * polyInterpConst n S k * meshSize N ^ (s + 1) * L := by
+  have hw : ContDiff ℝ (s + 1) (trigForm J k) := contDiff_trigForm J k
+  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv hw
+  exact ⟨L, hL0, fun N => hE.norm_sub_proj_le_smooth N k s hs hw (isDeg_trigForm J k)
+    (trigForm_face J k) hL⟩
+
+end HighOrder
 
 end Feec.Models.Cube.FEM

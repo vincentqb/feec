@@ -8,6 +8,7 @@ public import Feec.Domain.StarShapedSmoothing
 public import Mathlib.MeasureTheory.Integral.Pi
 public import Feec.Models.Cube.PolyRate
 public import Mathlib.Analysis.Calculus.TaylorIntegral
+public import Mathlib.LinearAlgebra.Lagrange
 
 /-!
 # The parity smoother on the cube
@@ -30,7 +31,9 @@ classes and both rows of the BGG complex.
   `prodKernel`: a product of one-dimensional bumps, of any radius `r < ½`.
 * `paritySmooth ρ J k`: the parity smoother on `L²(Q; Λᵏ)`.
 * `MomentKernel n m`: reflection-invariant (signed) kernels with vanishing moments of the orders
-  `1, …, m - 1` (`ReflKernel.toMomentKernel` for `m = 2`).
+  `1, …, m - 1`; `ReflKernel.toMomentKernelOf ρ m`: the Richardson combination of `m` dilates of
+  `ρ` (`ReflKernel.toMomentKernel` for `m = 2`, `ρ` itself).
+* `trigProd c`: symmetric trigonometric products of parity `c` (non-vacuity witnesses).
 
 ## Main results
 
@@ -43,8 +46,12 @@ classes and both rows of the BGG complex.
   `paritySmooth_univ_mem_minimal_and_norm_sub_le`: the case of `H̊Λ(Q)` with vanishing tangential
   traces only.
 * `integral_sq_sub_conv_le_of_moments`: the high-order estimate
-  `‖G - ρ ⋆ G‖²_{L²(Q)} ≤ ‖ρ‖₁² (rᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` for `Cᵐ` functions `G` of
-  parity `c` (the parity extensions of smooth data) and kernels with vanishing moments.
+  `‖G - ρ ⋆ G‖²_{L²(Q)} ≤ ‖ρ‖₁² (rᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` for functions `G` of
+  parity `c` that are `Cᵐ` on `ℝⁿ` (the parity extensions of data on `Q` satisfying the reflection
+  compatibility conditions: for the parity `+1` in the direction `j` the odd-order normal
+  derivatives vanish on the faces normal to `e_j`, for `-1` the even-order ones, the value
+  included) and kernels with vanishing moments; `exists_momentKernel`: such kernels exist for every
+  order `m` and radius `r < ½`; `integral_sq_sub_conv_trigProd_le`: a non-zero instance.
 
 ## References
 
@@ -1677,6 +1684,20 @@ theorem IsSymm.update_one_sub {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} 
     (j : Fin n) (y : Fin n → ℝ) : F (Function.update y j (1 - y j)) = c j * F y := by
   rw [update_one_sub_eq, hF.periodic, hF.refl]
 
+/-- **An odd symmetric function vanishes on the faces**: if `F` is symmetric of parity `c` with
+`c_j = -1`, then `F = 0` on `{x_j = 0}` and on `{x_j = ½}`. -/
+theorem IsSymm.eq_zero_of_face {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
+    {j : Fin n} (hcj : c j = -1) {x : Fin n → ℝ} (hx : x j = 0 ∨ x j = 1 / 2) : F x = 0 := by
+  rcases hx with hx | hx
+  · have h := hF.refl j x
+    rw [coordRefl_of_eq_zero hx, hcj] at h
+    linarith
+  · have h := hF.update_one_sub j x
+    have e : Function.update x j (1 - x j) = x := by
+      rw [hx, show (1 : ℝ) - 1 / 2 = 1 / 2 by norm_num, ← hx, Function.update_eq_self]
+    rw [e, hcj] at h
+    linarith
+
 theorem coordRefl_eq_update (j : Fin n) (y : Fin n → ℝ) :
     coordRefl j y = Function.update y j (-y j) := by
   funext i; rw [coordRefl_apply]
@@ -2269,7 +2290,8 @@ theorem paritySmooth_univ_mem_minimal_and_norm_sub_le (ρ : ReflKernel n) {k : �
 general, `m ≥ 3`): a smooth, compactly supported, reflection-invariant `ρ` with `∫ ρ = 1` and
 `∫ ρ(x) x_{v₁} ⋯ x_{vᵢ} dx = 0` for `1 ≤ i < m`. The moments of odd order vanish for every
 reflection-invariant kernel, so the nonnegative kernels are of this kind for `m = 2`
-(`ReflKernel.toMomentKernel`). -/
+(`ReflKernel.toMomentKernel`); for every `m ≥ 1` the Richardson combination of dilates
+`ReflKernel.toMomentKernelOf` is one (`exists_momentKernel`). -/
 structure MomentKernel (n m : ℕ) where
   /-- the kernel -/
   toFun : (Fin n → ℝ) → ℝ
@@ -2357,6 +2379,160 @@ def ReflKernel.toMomentKernel (ρ : ReflKernel n) : MomentKernel n 2 where
       rw [ρ.refl, coordRefl_apply]; simp
     simp_rw [e, integral_neg] at h
     linarith
+
+/-! ### Kernels with vanishing moments of every order -/
+
+namespace ReflKernel
+
+variable (ρ : ReflKernel n)
+
+/-- **The dilate** `ρ_λ(x) = λ⁻ⁿ ρ(λ⁻¹ x)` of a reflection-invariant mollifier. -/
+def dil (l : ℝ) (x : Fin n → ℝ) : ℝ := (l ^ n)⁻¹ * ρ (l⁻¹ • x)
+
+theorem dil_eq_zero {l : ℝ} (hl : 0 < l) (hl1 : l ≤ 1) {x : Fin n → ℝ}
+    (hx : ρ.radius ≤ ‖x‖) : ρ.dil l x = 0 := by
+  have h : ρ.radius ≤ ‖l⁻¹ • x‖ := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.2 hl)]
+    calc ρ.radius ≤ ‖x‖ := hx
+      _ = 1 * ‖x‖ := (one_mul _).symm
+      _ ≤ l⁻¹ * ‖x‖ := mul_le_mul_of_nonneg_right (one_le_inv₀ hl |>.2 hl1) (norm_nonneg _)
+  rw [dil, ρ.eq_zero_of_le _ h, mul_zero]
+
+theorem contDiff_dil (l : ℝ) : ContDiff ℝ ∞ (ρ.dil l) :=
+  contDiff_const.mul (ρ.isTest.contDiff.comp (contDiff_const_smul _))
+
+theorem hasCompactSupport_dil {l : ℝ} (hl : 0 < l) (hl1 : l ≤ 1) :
+    HasCompactSupport (ρ.dil l) :=
+  HasCompactSupport.intro (isCompact_closedBall (0 : Fin n → ℝ) ρ.radius) fun x hx => by
+    rw [Metric.mem_closedBall, dist_zero_right, not_le] at hx
+    exact ρ.dil_eq_zero hl hl1 hx.le
+
+theorem dil_coordRefl (l : ℝ) (j : Fin n) (x : Fin n → ℝ) :
+    ρ.dil l (coordRefl j x) = ρ.dil l x := by
+  have e : l⁻¹ • coordRefl j x = coordRefl j (l⁻¹ • x) := by
+    funext i; simp only [Pi.smul_apply, smul_eq_mul, coordRefl_apply]; split_ifs <;> ring
+  rw [dil, dil, e, ρ.refl]
+
+/-- **The moments of a dilate**: `∫ ρ_λ(x) x_{v₁} ⋯ x_{vᵢ} dx = λⁱ ∫ ρ(y) y_{v₁} ⋯ y_{vᵢ} dy`. -/
+theorem integral_dil_mul_prod {l : ℝ} (hl : 0 < l) {i : ℕ} (v : Fin i → Fin n) :
+    ∫ x, ρ.dil l x * ∏ t, x (v t) = l ^ i * ∫ y, ρ y * ∏ t, y (v t) := by
+  set g : (Fin n → ℝ) → ℝ := fun y => (l ^ n)⁻¹ * (ρ y * ∏ t, (l • y) (v t))
+  have hg : ∀ x : Fin n → ℝ, g (l⁻¹ • x) = ρ.dil l x * ∏ t, x (v t) := fun x => by
+    simp only [g, dil, smul_smul, mul_inv_cancel₀ hl.ne', one_smul]; ring
+  have h := Measure.integral_comp_inv_smul_of_nonneg volume g hl.le
+  simp_rw [hg] at h
+  rw [h, Module.finrank_fin_fun, smul_eq_mul]
+  simp only [g]
+  rw [integral_const_mul, ← mul_assoc, mul_inv_cancel₀ (pow_ne_zero _ hl.ne'), one_mul,
+    ← integral_const_mul]
+  refine integral_congr_ae (ae_of_all _ fun y => ?_)
+  simp only [Pi.smul_apply, smul_eq_mul, Finset.prod_mul_distrib, Finset.prod_const,
+    Finset.card_univ, Fintype.card_fin]
+  ring
+
+end ReflKernel
+
+/-- The Lagrange nodes `λ_q = 1 / (q + 1)` in `(0, 1]`. -/
+def momentNode {m : ℕ} (q : Fin m) : ℝ := 1 / ((q : ℝ) + 1)
+
+theorem momentNode_pos {m : ℕ} (q : Fin m) : 0 < momentNode q := by
+  unfold momentNode; positivity
+
+theorem momentNode_le_one {m : ℕ} (q : Fin m) : momentNode q ≤ 1 := by
+  unfold momentNode
+  rw [div_le_one (by positivity)]
+  have : (0 : ℝ) ≤ q := Nat.cast_nonneg _
+  linarith
+
+theorem momentNode_injective {m : ℕ} : Function.Injective (momentNode (m := m)) := by
+  intro a b h
+  simp only [momentNode, one_div, inv_inj] at h
+  exact Fin.ext (by exact_mod_cast add_right_cancel h)
+
+/-- The Lagrange weights `a_q = L_q(0)` (`L_q` the Lagrange basis at the nodes `λ`). -/
+def momentWeight {m : ℕ} (q : Fin m) : ℝ :=
+  (Lagrange.basis Finset.univ momentNode q).eval 0
+
+/-- **The discrete moment conditions** `Σ_q a_q λ_qᵈ = 0ᵈ` for `d < m` (exactness of Lagrange
+interpolation at `0` on polynomials of degree `< m`). -/
+theorem sum_momentWeight_mul_pow {m d : ℕ} (hd : d < m) :
+    ∑ q : Fin m, momentWeight q * momentNode q ^ d = (0 : ℝ) ^ d := by
+  have hinj : Set.InjOn (momentNode (m := m)) (Finset.univ : Finset (Fin m)) :=
+    momentNode_injective.injOn
+  have hdeg : (Polynomial.X ^ d : Polynomial ℝ).degree < (Finset.univ : Finset (Fin m)).card := by
+    rw [Polynomial.degree_X_pow, Finset.card_univ, Fintype.card_fin]; exact_mod_cast hd
+  have h := congrArg (Polynomial.eval 0) (Lagrange.eq_interpolate hinj hdeg)
+  rw [Lagrange.interpolate_apply, Polynomial.eval_finsetSum] at h
+  simp only [Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_mul, Polynomial.eval_C] at h
+  rw [h]
+  exact Finset.sum_congr rfl fun q _ => by rw [momentWeight]; ring
+
+namespace ReflKernel
+
+variable (ρ : ReflKernel n)
+
+/-- **The Richardson combination** `K = Σ_q a_q ρ_{λ_q}` of `m` dilates of `ρ`. -/
+def momentFun (m : ℕ) (x : Fin n → ℝ) : ℝ := ∑ q : Fin m, momentWeight q * ρ.dil (momentNode q) x
+
+theorem integral_momentFun_mul_prod (m : ℕ) {i : ℕ} (v : Fin i → Fin n) :
+    ∫ x, ρ.momentFun m x * ∏ t, x (v t) =
+      (∑ q : Fin m, momentWeight q * momentNode q ^ i) * ∫ y, ρ y * ∏ t, y (v t) := by
+  have hpc : Continuous fun x : Fin n → ℝ => ∏ t, x (v t) :=
+    continuous_finsetProd _ fun t _ => continuous_apply _
+  have hint : ∀ q : Fin m, Integrable fun x => momentWeight q * ρ.dil (momentNode q) x *
+      ∏ t, x (v t) := fun q => by
+    have hc : Continuous fun x => momentWeight q * ρ.dil (momentNode q) x * ∏ t, x (v t) :=
+      (continuous_const.mul (ρ.contDiff_dil _).continuous).mul hpc
+    refine hc.integrable_of_hasCompactSupport ?_
+    refine HasCompactSupport.intro (isCompact_closedBall (0 : Fin n → ℝ) ρ.radius)
+      fun x hx => ?_
+    rw [Metric.mem_closedBall, dist_zero_right, not_le] at hx
+    rw [ρ.dil_eq_zero (momentNode_pos q) (momentNode_le_one q) hx.le, mul_zero, zero_mul]
+  simp_rw [momentFun, Finset.sum_mul]
+  rw [integral_finsetSum _ fun q _ => hint q]
+  refine Finset.sum_congr rfl fun q _ => ?_
+  simp_rw [mul_assoc]
+  rw [integral_const_mul, ρ.integral_dil_mul_prod (momentNode_pos q)]
+
+/-- **Reflection-invariant kernels with vanishing moments of every order exist**: the Richardson
+combination `K = Σ_q a_q ρ_{λ_q}` (`q < m`, `λ_q = 1/(q + 1)`, `a_q` the Lagrange weights at `0`)
+of the dilates of any reflection-invariant mollifier `ρ` has `∫ K = 1` and vanishing moments of
+the orders `1, …, m - 1`, with the radius of `ρ` (`m ≥ 1`). -/
+def toMomentKernelOf (m : ℕ) (hm : 1 ≤ m) : MomentKernel n m where
+  toFun := ρ.momentFun m
+  isTest := by
+    refine ⟨ContDiff.sum fun q _ => contDiff_const.mul (ρ.contDiff_dil _), ?_, subset_univ _⟩
+    refine HasCompactSupport.intro (isCompact_closedBall (0 : Fin n → ℝ) ρ.radius) fun x hx => ?_
+    rw [Metric.mem_closedBall, dist_zero_right, not_le] at hx
+    refine Finset.sum_eq_zero fun q _ => ?_
+    rw [ρ.dil_eq_zero (momentNode_pos q) (momentNode_le_one q) hx.le, mul_zero]
+  integral_eq_one := by
+    have h := ρ.integral_momentFun_mul_prod m (i := 0) Fin.elim0
+    simp only [Finset.univ_eq_empty, Finset.prod_empty, mul_one, pow_zero] at h
+    rw [h, ρ.integral_eq_one, mul_one]
+    have := sum_momentWeight_mul_pow (m := m) (d := 0) (by omega)
+    simpa using this
+  radius := ρ.radius
+  radius_pos := ρ.radius_pos
+  radius_lt := ρ.radius_lt
+  eq_zero_of_le x hx := Finset.sum_eq_zero fun q _ => by
+    rw [ρ.dil_eq_zero (momentNode_pos q) (momentNode_le_one q) hx, mul_zero]
+  refl j x := Finset.sum_congr rfl fun q _ => by rw [ρ.dil_coordRefl]
+  moment i hi1 him v := by
+    rw [ρ.integral_momentFun_mul_prod m v, sum_momentWeight_mul_pow him,
+      zero_pow (by omega), zero_mul]
+
+theorem toMomentKernelOf_radius (m : ℕ) (hm : 1 ≤ m) :
+    (ρ.toMomentKernelOf m hm).radius = ρ.radius := rfl
+
+end ReflKernel
+
+/-- **Non-vacuity of `MomentKernel n m`**: for every order `m ≥ 1` and every radius `0 < r < ½`
+there is a reflection-invariant kernel of radius `r` with vanishing moments of the orders
+`1, …, m - 1`. -/
+theorem exists_momentKernel (m : ℕ) (hm : 1 ≤ m) {r : ℝ} (hr : 0 < r) (hr' : r < 1 / 2) :
+    ∃ K : MomentKernel n m, K.radius = r :=
+  ⟨(prodKernel r hr hr').toMomentKernelOf m hm, rfl⟩
 
 /-- **Weighted Cauchy–Schwarz**: `(∫ a b)² ≤ (∫ |a|) (∫ |a| b²)`. -/
 theorem sq_integral_mul_le {a b : (Fin n → ℝ) → ℝ} (ha : Integrable a)
@@ -2732,11 +2908,12 @@ theorem seg_mem_bigCube {r : ℝ} (hr : r < 1 / 2) {x : Fin n → ℝ} (hx : x �
 
 /-- **The high-order estimate of the parity smoother** ([AFW2010], §5.4; [Brezis2011], §9.2): for a
 kernel with vanishing moments of the orders `1, …, m - 1` and the parity extension `G = ext_c u`
-of a function `u` on `Q` which is `Cᵐ` on `ℝⁿ` (`G` symmetric of parity `c`),
+of a function `u` on `Q` which is `Cᵐ` on `ℝⁿ` (`G` symmetric of parity `c`; this requires the
+reflection compatibility conditions of `u` on `∂Q`, e.g. `trigProd c`),
 `‖u - R u‖²_{L²(Q)} ≤ ‖ρ‖₁² (εᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` (`ε` the radius of `ρ`; the
 factor `3ⁿ` is `‖Dᵐ ext_c u‖²_{L²(U)} / ‖Dᵐ G‖²_{L²(Q)}`). Here `R u = (ρ ⋆ ext_c u)|_Q` and
 `ext_c u = G` (`IsSymm.parExt_eq`). For `m ≤ 2` every reflection-invariant mollifier qualifies
-(`ReflKernel.toMomentKernel`). -/
+(`ReflKernel.toMomentKernel`); for every `m` the kernels `ReflKernel.toMomentKernelOf` do. -/
 theorem integral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
     {c : Fin n → ℝ} (hc : IsParity c) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
     (hGs : IsSymm c G) :
@@ -2788,5 +2965,74 @@ theorem integral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm 
   calc ∫ x in Q (Fin n), F x
       ≤ K.l1 ^ 2 * (K.radius ^ m / (m - 1).factorial) ^ 2 * (3 ^ n * ∫ z in Q (Fin n), D z) := hL
     _ = _ := by ring
+
+/-! ### Non-vacuity: symmetric trigonometric products of every parity -/
+
+/-- The one-dimensional factor `cos 2πz` (parity `1`) or `sin 2πz` (parity `-1`). -/
+def trig1 (c z : ℝ) : ℝ := if c = 1 then Real.cos (2 * Real.pi * z) else Real.sin (2 * Real.pi * z)
+
+/-- **A symmetric trigonometric product of parity `c`**: `∏ⱼ trig1 cⱼ xⱼ`. For `c = c(J, s)` it is
+the parity extension of a smooth function on `Q` satisfying every reflection compatibility
+condition (its odd factors `sin 2πxⱼ` vanish on both faces normal to `e_j`). -/
+def trigProd (c : Fin n → ℝ) (x : Fin n → ℝ) : ℝ := ∏ j, trig1 (c j) (x j)
+
+theorem contDiff_trig1 (c : ℝ) : ContDiff ℝ ∞ (trig1 c) := by
+  unfold trig1
+  split_ifs
+  · exact Real.contDiff_cos.comp (contDiff_const.mul contDiff_id)
+  · exact Real.contDiff_sin.comp (contDiff_const.mul contDiff_id)
+
+theorem contDiff_trigProd (c : Fin n → ℝ) {m : ℕ∞} : ContDiff ℝ m (trigProd c) :=
+  (contDiff_prod fun j _ => (contDiff_trig1 (c j)).comp (contDiff_apply ℝ (fun _ : Fin n => ℝ) j)).of_le
+    (by exact_mod_cast le_top)
+
+theorem trig1_neg {c : ℝ} (hc : c = 1 ∨ c = -1) (z : ℝ) : trig1 c (-z) = c * trig1 c z := by
+  unfold trig1
+  rcases hc with rfl | rfl
+  · simp [mul_neg, Real.cos_neg]
+  · simp [mul_neg, Real.sin_neg, show (-1 : ℝ) ≠ 1 by norm_num]
+
+theorem trig1_add_intCast (c z : ℝ) (k : ℤ) : trig1 c (z + k) = trig1 c z := by
+  unfold trig1
+  have e : 2 * Real.pi * (z + k) = 2 * Real.pi * z + (k : ℤ) * (2 * Real.pi) := by ring
+  split_ifs
+  · rw [e, Real.cos_add_int_mul_two_pi]
+  · rw [e, Real.sin_add_int_mul_two_pi]
+
+/-- **`trigProd c` is symmetric of parity `c`.** -/
+theorem isSymm_trigProd {c : Fin n → ℝ} (hc : IsParity c) : IsSymm c (trigProd c) := by
+  classical
+  refine ⟨fun j y => ?_, fun y p => ?_⟩
+  · have e : ∀ i, trig1 (c i) (coordRefl j y i) =
+        (if i = j then c j else 1) * trig1 (c i) (y i) := fun i => by
+      rw [coordRefl_apply]
+      split_ifs with h
+      · subst h; exact trig1_neg (hc i) _
+      · ring
+    simp only [trigProd]
+    rw [Finset.prod_congr rfl fun i _ => e i, Finset.prod_mul_distrib, Finset.prod_ite_eq']
+    simp
+  · simp only [trigProd, Pi.add_apply]
+    exact Finset.prod_congr rfl fun j _ => trig1_add_intCast _ _ _
+
+/-- **`trigProd c` is not identically zero**: its value at `(⅛, …, ⅛)` is `(√2/2)ⁿ`. -/
+theorem trigProd_ne_zero (c : Fin n → ℝ) : trigProd c (fun _ => 1 / 8) ≠ 0 := by
+  refine Finset.prod_ne_zero_iff.2 fun j _ => ?_
+  have e : 2 * Real.pi * (1 / 8) = Real.pi / 4 := by ring
+  unfold trig1
+  split_ifs
+  · rw [e, Real.cos_pi_div_four]; positivity
+  · rw [e, Real.sin_pi_div_four]; positivity
+
+/-- **Non-vacuity of the high-order estimate**: for every parity `c` (e.g. `c = c(J, s)`), every
+order `m ≥ 1` and every kernel with vanishing moments of the orders `< m` (which exist,
+`exists_momentKernel`), `integral_sq_sub_conv_le_of_moments` applies to the non-zero symmetric
+product `trigProd c`. -/
+theorem integral_sq_sub_conv_trigProd_le {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
+    {c : Fin n → ℝ} (hc : IsParity c) :
+    ∫ x in Q (Fin n), (trigProd c x - ∫ t, parExt c (trigProd c) t * K (x - t)) ^ 2 ≤
+      K.l1 ^ 2 * (K.radius ^ m / (m - 1).factorial) ^ 2 * 3 ^ n *
+        ∫ x in Q (Fin n), ‖iteratedFDeriv ℝ m (trigProd c) x‖ ^ 2 :=
+  integral_sq_sub_conv_le_of_moments K hm hc (contDiff_trigProd c) (isSymm_trigProd hc)
 
 end Feec.Models.Cube.ParitySmoother

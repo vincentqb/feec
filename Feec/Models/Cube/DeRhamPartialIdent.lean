@@ -34,16 +34,20 @@ it. Both inclusions:
   (`mem_dPart_of_smooth`, by the `J`-direction cut-off `χ_m ψ` with the commutator bound), so
   closedness gives `u ∈ D(d_J)` (`mem_dPart_of_JfJ`).
 
-**Hodge theory of `HΛ_J(Q)`.** The Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on
-`D(d_J) ∩ N(d_J)ᗮ` (`HQpartZ_norm_le`), the compactness property (`HQpartZ_hasCompactProperty`),
-closed range in every degree (`HQpartZ_closedRangeAt`) and the harmonic forms:
-`ℌᵏ = 0` for `k ≠ |J|` and `ℌ^{|J|} = ℝ · dx_J` (`HQpartZ_harmonic_eq_bot`,
-`HQpartZ_harmonic_card`).
+Conversely Green's identity characterizes `D(d_J)` (`greenForJ_iff`).
+
+**Hodge theory of `HΛ_J(Q)`** (`Hpart n J`, the complex on `ℤ`; `HQpart n J`, its window). The
+Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d_J) ∩ (𝔷ⁱ)ᗮ` (`Hpart_norm_le`), the compactness
+property (`Hpart_hasCompactProperty`), closed range in every degree (`Hpart_closedRangeAt`), the
+harmonic forms `ℌᵏ = 0` for `k ≠ |J|` and `ℌ^{|J|} = ℝ · dx_J` (`Hpart_harmonic_eq_bot`,
+`Hpart_harmonic_card`), and the cohomology `dim Hᵏ = [k = |J|]` (`finrank_Hpart_cohomology`).
+The constant is the one of the torus, `(2π)⁻¹`.
 
 ## Main definitions
 
 * `pcJ`, `JfJ`, `RealParJ`, `reflJ`, `realInvolutionsJ`, `realActionJ`, `JJ`; `GreenForJ`.
-* `chiJ`; `faceNbhd`, `VanishNear`, `coreSub`, `dPart`, `HQpartZ`, `HQpart`; `formJ`.
+* `chiJ`; `faceNbhd`, `VanishNear`, `coreSub`, `dCore`, `dPart`, `HQpartZ`, `HQpart`, `Hpart`;
+  `formJ`.
 
 ## Main results
 
@@ -52,9 +56,10 @@ closed range in every degree (`HQpartZ_closedRangeAt`) and the harmonic forms:
 * **`coeff_d_of_greenForJ`**, **`greenForJ_dPart`**, `coeff_d_dPart`.
 * `isClosed_dPart`, `minimal_le_dPart`, `dPart_le_maximal`, `dPart_empty`, **`maximal_vanishNear`**,
   `mapsTo_dPart`.
-* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**, **`HQpart_eq_compress`**, **`dPart_univ`**.
-* **`HQpartZ_norm_le`**, **`HQpartZ_hasCompactProperty`**, `HQpartZ_closedRangeAt`,
-  **`HQpartZ_harmonic_eq_bot`**, **`HQpartZ_harmonic_card`**.
+* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**, **`greenForJ_iff`**,
+  **`HQpart_eq_compress`**, **`dPart_univ`**, `HQpartZ_empty`, `HQpartZ_univ`.
+* **`Hpart_norm_le`**, **`Hpart_hasCompactProperty`**, `Hpart_closedRangeAt`,
+  **`Hpart_harmonic_eq_bot`**, **`Hpart_harmonic_card`**, `finrank_Hpart_cohomology`.
 
 ## References
 
@@ -1338,6 +1343,21 @@ theorem mem_dPart_of_JfJ {J : Finset (Fin n)} {k : ℕ}
   rw [← coeff_d_dPart J k ⟨u, hu⟩ m]
   exact h m
 
+/-- **The Green characterization of `D(d_J)`**: `u ∈ D(d_J)` with `d_J u = w` iff Green's identity
+`⟪w, φ dx_t⟫ = ⟪u, dᵗ(φ dx_t)⟫` holds against the smooth `φ` (bounded, with bounded first
+derivatives) vanishing on the faces normal to the directions of `t ∖ J`, i.e. against the smooth
+forms whose normal components vanish on the faces not normal to `J`. -/
+theorem greenForJ_iff {J : Finset (Fin n)} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
+    {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))} :
+    GreenForJ J k u w ↔ ∃ h : u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain,
+      dPart (Q (Fin n)) J (k : ℤ) ⟨u, h⟩ = w := by
+  constructor
+  · intro hG
+    obtain ⟨h, e⟩ := mem_dPart_of_JfJ (J := J) (k := k) fun m => coeff_d_of_greenForJ hG m
+    exact ⟨h, injective_JfJ J (k + 1) e⟩
+  · rintro ⟨h, rfl⟩
+    exact greenForJ_dPart J k ⟨u, h⟩
+
 end Converse
 
 /-! ### `HΛ_J(Q)` is the compression of the torus complex along the mixed extension -/
@@ -1576,13 +1596,13 @@ theorem Hpart_hasCompactProperty (J : Finset (Fin n)) : (Hpart n J).HasCompactPr
   Feec.HilbertComplex.hasCompactProperty_of_window (Hpart n J) ι_rel (hlow _) (hhigh _)
     (HQpart_hasCompactProperty J)
 
-theorem rel_pred' (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
+theorem rel_sub_one (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
   change j - 1 + 1 = j; ring
 
 /-- **Closed range of `HΛ_J(Q)` in every degree.** -/
 theorem Hpart_closedRangeAt (J : Finset (Fin n)) (j : ℤ) : (Hpart n J).ClosedRangeAt j :=
-  ((Hpart n J).closedRangeAt_iff_poincare_of_rel (rel_pred' j)).2
-    ⟨_, Hpart_norm_le J (rel_pred' j)⟩
+  ((Hpart n J).closedRangeAt_iff_poincare_of_rel (rel_sub_one j)).2
+    ⟨_, Hpart_norm_le J (rel_sub_one j)⟩
 
 /-- **No harmonic forms of `HΛ_J(Q)` in degrees `k ≠ |J|`.** -/
 theorem Hpart_harmonic_eq_bot {J : Finset (Fin n)} {k : ℤ} (hk : k ≠ (#J : ℤ)) :

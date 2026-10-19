@@ -38,10 +38,11 @@ sequence `S` (`FEM.polyPartial n S N J`) and for the Whitney forms (`FEM.whitney
 
 * `J = ∅`: `polyPartial ∅` and `whitneyPartial ∅` have the spaces of `FEM.poly`, `FEM.whitney`
   (`polyPartial_empty_V`, `whitneyPartial_empty_V`);
-* `J = univ`: their spaces lie in those of `FEM.polyMin`, `FEM.whitneyMin`
-  (`polyPartial_univ_V_le`, `whitneyPartial_univ_V_le`; every boundary facet lies in a face).
-  The reverse inclusion needs every mesh face lying in a face of `Q` to be contained in a
-  boundary facet, a combinatorial property of the Freudenthal meshes that is not formalized.
+* `J = univ`: they have the spaces of `FEM.polyMin`, `FEM.whitneyMin`
+  (`polyPartial_univ_V`, `whitneyPartial_univ_V`): every boundary facet lies in a face of `Q`
+  (`isBoundaryFacet_subset_partialFaces_univ`), and on the Freudenthal meshes every face lying in
+  a face of `Q` lies in a boundary facet (`exists_isBoundaryFacet_of_plane`), so
+  `Λ_{h,Γ_univ} = Λ̊_h` (`globalSpacePartial_univ_eq`).
 * `J = {a}`, `n = 3`: `partialFaces {a}` is `Feec.Models.Cube.MirrorWeakSymmetry.mirrorFaces a`
   (`partialFaces_singleton`), so the bottom-row spaces of the mirror scheme (6.5) are exactly the
   partial spaces `Λ_{h,Γ_{a}}` (`mirror_globalSpacePartial_eq`), conforming in `HΛ_{a}(Q)`
@@ -626,16 +627,66 @@ theorem partialSubcomplexOfEq_V_eq_maximal {Ω Ω' : Set (Fin n → ℝ)} (h : �
       ((deRham ℝ n).maximalSubcomplexOfEq h hΩ hΩ' S').V k := by
   subst h; exact hV k
 
-theorem partialSubcomplexOfEq_V_le_minimal {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
+theorem partialSubcomplexOfEq_V_eq_minimal {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
     (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω')
     (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (J : Finset (Fin n)) (S : (HQpartZ hΩ hΩQ J).Subcomplex)
-    (S' : ((deRham ℝ n).minimalComplex hΩ).Subcomplex) (hV : ∀ k, S.V k ≤ S'.V k) (k : ℤ) :
-    (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k ≤
+    (S' : ((deRham ℝ n).minimalComplex hΩ).Subcomplex) (hV : ∀ k, S.V k = S'.V k) (k : ℤ) :
+    (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k =
       ((deRham ℝ n).minimalSubcomplexOfEq h hΩ hΩ' S').V k := by
   subst h; exact hV k
 
 theorem mesh_domain_eq_Q (N : ℕ) : (mesh n N).domain = Geometry.Q (Fin n) :=
   (mesh_domain n N).trans (cubeDomain_eq_Q n)
+
+
+/-! ### Faces in the boundary of the cube lie in boundary facets (Freudenthal meshes) -/
+
+section BoundaryFaces
+
+variable {n : ℕ}
+
+/-- **On the Freudenthal meshes of the cube, every face lying in a face of the cube is contained
+in a boundary facet** (`FEM.exists_boundaryFacet_of_lower`, `FEM.exists_boundaryFacet_of_upper`;
+the empty face lies in the boundary facets of the corner simplex). -/
+theorem exists_isBoundaryFacet_of_plane [NeZero n] (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hg : g ⊆ vertexSet T)
+    {i : Fin n} (hgc : (∀ v ∈ g, v i = 0) ∨ ∀ v ∈ g, v i = 1 / 2) :
+    ∃ T'' ∈ (mesh n N).simplices, ∃ F, (mesh n N).IsBoundaryFacet F ∧
+      F ⊆ vertexSet T'' ∧ g ⊆ F := by
+  rcases g.eq_empty_or_nonempty with rfl | hne
+  · have hsub : ({(cubeSimplex N 0 1).points 0} : Finset (Fin n → ℝ)) ⊆
+        vertexSet (cubeSimplex N 0 1) :=
+      Finset.singleton_subset_iff.2 (points_mem_vertexSet _ 0)
+    obtain ⟨T'', hT'', F, hF, hFT, -⟩ := exists_boundaryFacet_of_lower 0 1 i hsub
+      (fun v hv => by rw [Finset.mem_singleton.1 hv, cubeSimplex_points_apply]; simp)
+      (Finset.singleton_nonempty _)
+    exact ⟨T'', hT'', F, hF, hFT, Finset.empty_subset _⟩
+  · obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
+    rcases hgc with h | h
+    · exact exists_boundaryFacet_of_lower m σ i hg h hne
+    · exact exists_boundaryFacet_of_upper m σ i hg h hne
+
+/-- **`J = univ` on the Freudenthal meshes: vanishing boundary DOFs are the partial spaces.** -/
+theorem globalSpacePartial_univ_eq [NeZero n] (E : LocalElement n) (N k : ℕ) :
+    E.globalSpacePartial (mesh n N) (partialFaces n Finset.univ) k =
+      E.globalSpace₀ (mesh n N) k := by
+  refine le_antisymm ?_ fun u hu => ⟨hu.1, fun T g hg hgF j => ?_⟩
+  · rw [← E.globalSpacePartial_boundary]
+    exact E.globalSpacePartial_anti _ (isBoundaryFacet_subset_partialFaces_univ
+      (mesh_domain_eq_Q N)) k
+  · obtain ⟨F, ⟨i, _, hFi⟩, hgF⟩ := hgF
+    have hgi : (∀ v ∈ g, v i = 0) ∨ ∀ v ∈ g, v i = 1 / 2 :=
+      hFi.imp (fun h v hv => h v (hgF hv)) fun h v hv => h v (hgF hv)
+    obtain ⟨T'', hT'', F', hF', hF'T'', hgF'⟩ := exists_isBoundaryFacet_of_plane N T.2 hg hgi
+    rw [hu.1 T ⟨T'', hT''⟩ g hg (hgF'.trans hF'T'') j]
+    exact hu.2 ⟨T'', hT''⟩ F' hF' hF'T'' g hgF' j
+
+theorem VPartial_univ_eq [NeZero n] (E : LocalElement n) (N : ℕ) (k : ℤ) :
+    E.VPartial (mesh n N) (partialFaces n Finset.univ) k = E.V₀ (mesh n N) k := by
+  unfold LocalElement.VPartial LocalElement.V₀
+  rw [globalSpacePartial_univ_eq]
+
+end BoundaryFaces
 
 variable [NeZero n]
 
@@ -675,17 +726,18 @@ theorem whitneyPartial_empty_V (N : ℕ) (k : ℤ) :
   partialSubcomplexOfEq_V_eq_maximal _ _ _ _ _ _ _ _
     (fun k => VPartial_empty (whitneyElement n) (mesh n N) k) k
 
-/-- **`J = univ`: the spaces of `polyPartial` lie in those of `FEM.polyMin`.** -/
-theorem polyPartial_univ_V_le (S : PolySeq) (N : ℕ) (k : ℤ) :
-    (polyPartial n S N Finset.univ).V k ≤ (polyMin n S N).V k :=
-  partialSubcomplexOfEq_V_le_minimal _ _ _ _ _ _ _ _
-    (fun k => VPartial_univ_le (polyElement n S) (mesh_domain_eq_Q N) k) k
+/-- **`J = univ`: `polyPartial` has the spaces of `FEM.polyMin`** (vanishing DOFs on every face
+lying in the boundary). -/
+theorem polyPartial_univ_V (S : PolySeq) (N : ℕ) (k : ℤ) :
+    (polyPartial n S N Finset.univ).V k = (polyMin n S N).V k :=
+  partialSubcomplexOfEq_V_eq_minimal _ _ _ _ _ _ _ _
+    (fun k => VPartial_univ_eq (polyElement n S) N k) k
 
-/-- **`J = univ`: the spaces of `whitneyPartial` lie in those of `FEM.whitneyMin`.** -/
-theorem whitneyPartial_univ_V_le (N : ℕ) (k : ℤ) :
-    (whitneyPartial n N Finset.univ).V k ≤ (whitneyMin n N).V k :=
-  partialSubcomplexOfEq_V_le_minimal _ _ _ _ _ _ _ _
-    (fun k => VPartial_univ_le (whitneyElement n) (mesh_domain_eq_Q N) k) k
+/-- **`J = univ`: `whitneyPartial` has the spaces of `FEM.whitneyMin`.** -/
+theorem whitneyPartial_univ_V (N : ℕ) (k : ℤ) :
+    (whitneyPartial n N Finset.univ).V k = (whitneyMin n N).V k :=
+  partialSubcomplexOfEq_V_eq_minimal _ _ _ _ _ _ _ _
+    (fun k => VPartial_univ_eq (whitneyElement n) N k) k
 
 /-! ### The bottom row of the mirror scheme -/
 

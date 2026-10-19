@@ -2118,4 +2118,35 @@ theorem whitney_cn_error_monitors_le (hL0 : 0 ≤ L) (N : ℕ) {Δt : ℝ} (hΔt
 end WholeSpaceTSD.Smooth
 
 end SmoothTSD
+/-! ## The iterates of the scheme -/
+
+section Iterates
+
+/-- One Crank–Nicolson step of the three-row Whitney scheme. -/
+def cnStep (N : ℕ) (s : ℝ) (f g' u : DState3 (whitneyRow N)) : DState3 (whitneyRow N) :=
+  (whitney_existsUnique_cnStep3 N s f g' u).exists.choose
+
+theorem cnStep_spec (N : ℕ) (s : ℝ) (f g' u : DState3 (whitneyRow N)) :
+    TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s f g' u
+      (cnStep N s f g' u) :=
+  (whitney_existsUnique_cnStep3 N s f g' u).exists.choose_spec
+
+/-- The iterates of the scheme with boundary data `gₙ`, no load, from `u₀`. -/
+def cnIterates (N : ℕ) (s : ℝ) (g : ℕ → DState3 (whitneyRow N)) (u₀ : DState3 (whitneyRow N)) :
+    ℕ → DState3 (whitneyRow N)
+  | 0 => u₀
+  | n + 1 => cnStep N s 0 (g (n + 1)) (cnIterates N s g u₀ n)
+
+theorem cnIterates_spec (N : ℕ) (s : ℝ) (g : ℕ → DState3 (whitneyRow N))
+    (u₀ : DState3 (whitneyRow N)) (n : ℕ) :
+    TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s 0
+      (g (n + 1)) (cnIterates N s g u₀ n) (cnIterates N s g u₀ (n + 1)) :=
+  cnStep_spec N s 0 (g (n + 1)) _
+
+theorem sub_self_mem_submodule {V : Type*} [AddCommGroup V] [Module ℝ V] (K : Submodule ℝ V)
+    (x : V) : x - x ∈ K := by
+  rw [sub_self]; exact K.zero_mem
+
+end Iterates
+
 end Feec.Models.Cube.Inhomogeneous

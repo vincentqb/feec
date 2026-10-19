@@ -50,7 +50,7 @@ No hypothesis remains.
 * **`Feec.Models.Cube.WeakSymmetry.curlPotential`**, `exists_curlPotential_bound`,
   `bggHilb_hyps`, `bggStability'`, `bggShort_closedRange_exact'`, `bgg_existsUnique_isSaddle'`;
   `cubeFEM_rate'`, `cubeFEM_rate_C2'`, `cubeFEM_rate_isSaddle'`, `cubeFEM_existsUnique'`,
-  `cubeWave_rate'`.
+  `cubeWave_rate'`; `curlPotentialConst`, `bggStability_curlPotentialConst`, `cubeFEMReg'`.
 
 ## References
 
@@ -736,6 +736,25 @@ theorem exists_curlPotential_bound :
     ∃ CR, 0 ≤ CR ∧ ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖ :=
   curlPotential.exists_bound
 
+/-- **A regularity constant `C_R` of the cube**, chosen from `exists_curlPotential_bound`; it lets
+callers of the constructions parameterized by `C_R` (`cubeFEMReg`, `bggStability_of`) use them
+without threading the constant (`cubeFEMReg'`, `bggStability_curlPotentialConst`). -/
+def curlPotentialConst : ℝ := Classical.choose exists_curlPotential_bound
+
+theorem curlPotentialConst_nonneg : 0 ≤ curlPotentialConst :=
+  (Classical.choose_spec exists_curlPotential_bound).1
+
+/-- Every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` with `‖φ‖ ≤ curlPotentialConst · ‖d u‖`. -/
+theorem exists_curlPotential_le (u : V1) :
+    ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ curlPotentialConst * ‖bggD1 u‖ :=
+  (Classical.choose_spec exists_curlPotential_bound).2 u
+
+/-- **The continuous constants of [QuennevilleBelair2015], Prop 5.3 on the cube** with the
+regularity constant `curlPotentialConst` (`bggStability_of` with `exists_curlPotential_le`). -/
+theorem bggStability_curlPotentialConst :
+    Feec.BGG.Stability bggSegment (2 * Real.pi)⁻¹ curlPotentialConst (Real.sqrt 2) :=
+  bggStability_of curlPotentialConst_nonneg exists_curlPotential_le
+
 /-- **The hypotheses (H1)–(H3), (H6) of [QuennevilleBelair2015], §5.1 on the cube hold**
 (`bggHyps` with `curlPotential`). -/
 theorem bggHilb_hyps : bggHilb.Hyps := bggHyps curlPotential
@@ -887,6 +906,12 @@ theorem cubeWave_rate' :
         ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
           ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N :=
   exists_curlPotential_bound.elim fun _ h => cubeWave_rate hT hB h.1 h.2
+
+/-- **Regular potentials for the discretization of Table 5.1, unconditionally**: `cubeFEMReg`
+with the regularity constant `curlPotentialConst` and the approximation constant `regConst C`. -/
+def cubeFEMReg' (N : ℕ) :
+    (cubeFEM hT hB N).RegularPotential (Wv Vt0) 1 curlPotentialConst (regConst C) (meshSize N) :=
+  cubeFEMReg hT hB N curlPotentialConst_nonneg exists_curlPotential_le le_rfl
 
 
 end Rate

@@ -934,20 +934,20 @@ theorem mirror_exact1 (μ : TU1) (hμ : tD1 μ = 0) : ∃ ρ, tD0 ρ = μ := by
   exact ⟨ρ, Subtype.ext hρ⟩
 
 /-- The constant function `1` on `Q`. -/
-abbrev oneForm : W0 := formPart 3 ∅
+abbrev constOneForm : W0 := formPart 3 ∅
 
-theorem oneForm_mem_harmonic : oneForm ∈ (complexPart 3 ∅).harmonic 0 := by
-  have h : (complexPart 3 ∅).harmonic 0 = ℝ ∙ oneForm := harmonic_card_eq_span_part ∅
+theorem oneForm_mem_harmonic : constOneForm ∈ (complexPart 3 ∅).harmonic 0 := by
+  have h : (complexPart 3 ∅).harmonic 0 = ℝ ∙ constOneForm := harmonic_card_eq_span_part ∅
   rw [h]
   exact Submodule.mem_span_singleton_self _
 
-theorem oneForm_mem : oneForm ∈ TD0.domain := by
+theorem oneForm_mem : constOneForm ∈ TD0.domain := by
   have h := (complexPart 3 ∅).harmonic_le_cycles 0 oneForm_mem_harmonic
   rw [(complexPart 3 ∅).cycles_eq rel_01, complexPart_d01] at h
   exact TD0.ker_le_domain h
 
 /-- The constant mode `1 ∈ HΛ⁰(Q)`. -/
-def oneU : TU0 := ⟨oneForm, oneForm_mem⟩
+def oneU : TU0 := ⟨constOneForm, oneForm_mem⟩
 
 theorem oneU_ne_zero : oneU ≠ 0 := fun h =>
   formPart_ne_zero (n := 3) ∅ (congrArg Subtype.val h)

@@ -47,7 +47,9 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
   `C²` and vanishing outside `Q` (bound `L` on the first derivatives) and `‖λ‖ ≤ L`, `K`
   independent of `N`;
   `IsCsFormMin.norm_le` (flatness and the mean value theorem) and `IsCsFormMin.abs_inner_D1_le`
-  (Green's formula on `D(d_min)`) supply `‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`.
+  (Green's formula on `D(d_min)`) supply `‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`. The rates for
+  solutions that are `C²` up to `∂Q` with vanishing tangential traces (no flatness) are
+  `cubeFEM_rate_tr`, `cubeFEM_rate_isSaddle_tr` in `Feec.Models.Cube.WeakSymmetryTangentialRate`.
 * `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle`: the solution of Prop 5.2
   (`bggHilb.IsSaddle`, graph spaces) with multiplier in `L²Λ¹(Q)` solves the domain form of (5.3),
   so the rate applies to it.

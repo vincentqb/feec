@@ -32,6 +32,11 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
   `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}`
   (`norm_sub_le_window_poly_smooth`, `norm_sub_le_windowMin_poly_smooth`; no smoothed projection
   is needed).
+* The rates in `H̊Λ(Q)` above are stated for the flat class `IsCsFormMin`; their versions for the
+  natural class `FEM.IsCsFormTr` (`C^{s+2}` up to `∂Q` with vanishing tangential traces, no
+  condition on the normal components) are `mixed_rate_polyTr`, `mixed_rate_lagrangeP2Tr`,
+  `norm_sub_le_windowTr_poly_smooth`, `norm_sub_le_windowTr_lagrangeP2` in
+  `Feec.Models.Cube.TangentialRate`.
 * **`H¹` approximation of the smoothed projections** ([AFW2010], §5.4; needed by the BGG
   discretization): for `y ∈ L²(Q; Λᵏ)` whose coefficients `yₛ` (as `0`-forms, `coeffForm`) lie in
   the domain of the maximal gradient (`H¹(Q)`), resp. of the minimal gradient (`H¹₀(Q)`: the
@@ -150,7 +155,9 @@ def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx 
 `IsCsForm`. Since the representative is `C^{s+2}` on `ℝⁿ`, this is flatness of order `s + 2` at
 `∂Q`, stronger than vanishing tangential traces (e.g. `∏ᵢ sin (2π xᵢ)` on `(0, ½)ⁿ` is excluded);
 the rates with vanishing traces below are stated for this class. The general case of `H̊Λ(Q)` is
-covered, without a rate, by the quasi-optimality `mixed_quasiOptimal_polyMin`. -/
+covered, without a rate, by the quasi-optimality `mixed_quasiOptimal_polyMin`. The class with
+vanishing tangential traces only, `FEM.IsCsFormTr` of `Feec.Models.Cube.TangentialRate`, contains
+this one with the same bound (`IsCsFormMin.isCsFormTr`) and carries the same rates. -/
 def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧

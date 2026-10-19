@@ -43,6 +43,9 @@ the spaces of Table 5.1 (`P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²`, `P�
   `IsSmoothState`), with `L²`-bounded multiplier, under the regularity hypothesis (constant `C_R`)
   only.
 * `waveManufactured_hyps`: a nontrivial classical solution meeting all hypotheses.
+* For states `C²` up to `∂Q` with vanishing tangential traces (no flatness), the rate is
+  `cubeWave_rate_tr` (class `IsSmoothStateTr`), with the rate of the elliptic projection (6.4)
+  `cubeFEM_ellipticProjection_rate_tr`, in `Feec.Models.Cube.WeakSymmetryTangentialRate`.
 
 ## References
 
@@ -614,7 +617,8 @@ theorem cubeFEM_err_Pt2 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (ρ : Wv W2)
 
 /-- **Regularity of an exact state** `(σ, φ, u, M, ρ)` for the `O(h)` rate: all components and
 `S¹u` are `C²` forms vanishing outside `Q` (flat at `∂Q`) with first derivatives bounded by `L`
-(`IsCsFormMin 0`). -/
+(`IsCsFormMin 0`). The natural class (vanishing tangential traces only) is `IsSmoothStateTr` of
+`Feec.Models.Cube.WeakSymmetryTangentialRate`. -/
 def IsSmoothState (L : ℝ) (σ : U0) (φ : Wv U0) (u : Wv U1) (M : W2) (ρ : Wv W2) : Prop :=
   IsCsFormMin 0 0 L (σ : W0) ∧ (∀ a, IsCsFormMin 0 0 L (φ a : W0)) ∧
     (∀ a, IsCsFormMin 0 1 L (u a : W1)) ∧ IsCsFormMin 0 2 L (bggSegment.S1 u) ∧

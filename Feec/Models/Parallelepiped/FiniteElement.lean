@@ -708,7 +708,7 @@ theorem exists_isCompact_of_box {V Y : Type*} [NormedAddCommGroup V] [NormedSpac
     exact h2.trans (le_max_left _ _)
   · simp only [smul_smul, mul_inv_cancel₀ hr'.ne', one_smul]
 
-theorem HalfCompactAt.exists (h : H.HalfCompactAt i) (r : ℝ) :
+theorem HalfCompactAt.exists {i : ι} (h : H.HalfCompactAt i) (r : ℝ) :
     ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain),
       x ∈ (H.cycles i)ᗮ → ‖x‖ ≤ r → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ r → x ∈ K := by
   obtain ⟨K, hK, hsub⟩ := h
@@ -717,7 +717,7 @@ theorem HalfCompactAt.exists (h : H.HalfCompactAt i) (r : ℝ) :
     (fun x hP h1 h2 => hsub x x.2 hP h1 h2) r
   exact ⟨K', hK', fun x hx hP h1 h2 => hsub' ⟨x, hx⟩ hP h1 h2⟩
 
-theorem AdjHalfCompactAt.exists (h : H.AdjHalfCompactAt i) (r : ℝ) :
+theorem AdjHalfCompactAt.exists {i : ι} (h : H.AdjHalfCompactAt i) (r : ℝ) :
     ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ ((H.d (c.prev i) i)†).domain),
       x ∈ ((H.d (c.prev i) i)†).kerᗮ → ‖x‖ ≤ r → ‖(H.d (c.prev i) i)† ⟨x, hx⟩‖ ≤ r → x ∈ K := by
   obtain ⟨K, hK, hsub⟩ := h

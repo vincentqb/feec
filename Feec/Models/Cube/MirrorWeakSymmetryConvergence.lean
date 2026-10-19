@@ -1831,4 +1831,516 @@ theorem mirrorStationary_hyps (T c : ℝ) (a : Fin 3) :
 
 end Witness
 
+
+/-! ### Convergence without rate, by density -/
+
+section Converge
+
+open scoped Topology LinearPMap
+
+/-- **Uniform convergence on compact sets**: a family `F N` of functions, Lipschitz in `x` with a
+common constant and tending to `0` pointwise, tends to `0` uniformly on every compact set. -/
+theorem eventually_forall_le_of_isCompact {E : Type*} [PseudoMetricSpace E] {K : Set E}
+    (hK : IsCompact K) {F : ℕ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
+    (hlip : ∀ N x y, F N x ≤ F N y + B * dist x y)
+    (hF : ∀ x, Tendsto (fun N => F N x) atTop (𝓝 0)) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∀ x ∈ K, F N x ≤ ε := by
+  have hδ : 0 < ε / (2 * (B + 1)) := by positivity
+  obtain ⟨t, htK, htf, hcov⟩ := finite_cover_balls_of_compact hK hδ
+  have hev : ∀ᶠ N in atTop, ∀ y ∈ t, F N y < ε / 2 :=
+    (Filter.eventually_all_finite htf).2 fun y _ =>
+      (hF y).eventually (gt_mem_nhds (half_pos hε))
+  filter_upwards [hev] with N hN x hx
+  obtain ⟨y, hy, hxy⟩ := mem_iUnion₂.1 (hcov hx)
+  have h1 := hlip N x y
+  have h2 := hN y hy
+  have h3 : B * dist x y ≤ B * (ε / (2 * (B + 1))) :=
+    mul_le_mul_of_nonneg_left (Metric.mem_ball.1 hxy).le hB
+  have h4 : B * (ε / (2 * (B + 1))) ≤ ε / 2 := by
+    rw [mul_div_assoc', div_le_div_iff₀ (by positivity) (by norm_num)]
+    nlinarith
+  linarith
+
+/-- **The parity-smoothed projections converge strongly**: `‖x − π_N x‖ → 0` for every
+`x ∈ L²Λᵏ(Q)` (`‖x − π_N x‖ ≤ (1 + 2C) dist(x, V̊ₕᵏ)` and `V̊ₕᵏ ⊆ V_{h,Γ_J}ᵏ` is dense). -/
+theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_proj
+    {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
+    {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (k : ℤ)
+    (x : L2F ℝ (cubeDomain 3) (formIdx 3 k)) :
+    Tendsto (fun N => ‖x - (hE.proj N).π k x‖) atTop (𝓝 0) := by
+  have hC := hE.two_mul_nonneg
+  have hlim := (tendsto_infDist_polyMin (n := 3) S k x).const_mul (1 + 2 * C)
+  rw [mul_zero] at hlim
+  refine squeeze_zero (fun _ => norm_nonneg _) (fun N => ?_) hlim
+  refine ((hE.proj N).norm_sub_π_le_infDist hC (hE.norm_proj_le N k) x).trans ?_
+  exact mul_le_mul_of_nonneg_left (Metric.infDist_le_infDist_of_subset
+    (polyMin_V_le_polyPartial_V S N J k) ⟨0, Submodule.zero_mem _⟩) (by linarith)
+
+theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.norm_sub_proj_le_add
+    {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
+    {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (N : ℕ) (k : ℤ)
+    (x y : L2F ℝ (cubeDomain 3) (formIdx 3 k)) :
+    ‖x - (hE.proj N).π k x‖ ≤ ‖y - (hE.proj N).π k y‖ + (1 + 2 * C) * dist x y := by
+  have e : x - (hE.proj N).π k x =
+      (y - (hE.proj N).π k y) + ((x - y) - (hE.proj N).π k (x - y)) := by
+    rw [map_sub]; abel
+  rw [e, dist_eq_norm]
+  refine (norm_add_le _ _).trans (add_le_add_right ?_ _)
+  refine (norm_sub_le _ _).trans ?_
+  have := hE.norm_proj_le N k (x - y)
+  linarith
+
+/-- **Uniform convergence of the projections along a continuous trajectory** on `[0,T]`. -/
+theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.eventually_norm_sub_proj_le
+    {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
+    {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (k : ℤ) {T : ℝ}
+    {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
+    (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε := by
+  have hK := isCompact_Icc.image_of_continuousOn hg
+  have h := eventually_forall_le_of_isCompact hK
+    (F := fun N x => ‖x - (hE.proj N).π k x‖)
+    (by linarith [hE.two_mul_nonneg] : 0 ≤ 1 + 2 * C)
+    (fun N x y => hE.norm_sub_proj_le_add N k x y) (fun x => hE.tendsto_norm_sub_proj k x) hε
+  filter_upwards [h] with N hN t ht
+  exact hN _ (mem_image_of_mem g ht)
+
+/-- **Dense multipliers**: on a compact set of `L²Λ²(Q)`, every point is `δ`-close to a point of
+`D(d_max*)` (here `|⟪z, d w⟫| ≤ c ‖w‖` on `HΛ¹(Q)`), with a common bound `c`. -/
+theorem exists_adjoint_approx {K : Set W2} (hK : IsCompact K) {δ : ℝ} (hδ : 0 < δ) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ y ∈ K, ∃ z : W2, ‖y - z‖ < δ ∧ ‖z‖ ≤ c ∧
+      ∀ w : TU1, |⟪z, tD1 w⟫| ≤ c * ‖w‖ := by
+  have hd : Dense ((TD1.domain : Set W1)) := by
+    have h := (complexPart 3 ∅).dense 1 2
+    rwa [complexPart_d12] at h
+  have hdense : Dense (((TD1)†).domain : Set W2) := by
+    have h := (complexPart 3 ∅).dense_adjoint_domain 1 2
+    rwa [complexPart_d12] at h
+  obtain ⟨t, -, htf, hcov⟩ := finite_cover_balls_of_compact hK (half_pos hδ)
+  have hz : ∀ y : W2, ∃ z ∈ ((TD1)†).domain, dist y z < δ / 2 := fun y =>
+    hdense.exists_dist_lt y (half_pos hδ)
+  choose Z hZ hZd using hz
+  let c : ℝ := ∑ y ∈ htf.toFinset, (‖Z y‖ + ‖(TD1)† ⟨Z y, hZ y⟩‖)
+  have hc : ∀ y ∈ t, ‖Z y‖ + ‖(TD1)† ⟨Z y, hZ y⟩‖ ≤ c := fun y hy =>
+    Finset.single_le_sum (f := fun y => ‖Z y‖ + ‖(TD1)† ⟨Z y, hZ y⟩‖)
+      (fun _ _ => by positivity) (htf.mem_toFinset.2 hy)
+  refine ⟨c, Finset.sum_nonneg fun _ _ => by positivity, fun x hx => ?_⟩
+  obtain ⟨y, hy, hxy⟩ := mem_iUnion₂.1 (hcov hx)
+  have hcy := hc y hy
+  refine ⟨Z y, ?_, ?_, fun w => ?_⟩
+  · have h1 := dist_triangle x y (Z y)
+    have h2 := Metric.mem_ball.1 hxy
+    have h3 := hZd y
+    rw [← dist_eq_norm]
+    linarith
+  · have := norm_nonneg ((TD1)† ⟨Z y, hZ y⟩)
+    linarith
+  · have e : ⟪Z y, tD1 w⟫ = ⟪(TD1)† ⟨Z y, hZ y⟩, (w : W1)⟫ :=
+      (LinearPMap.adjoint_isFormalAdjoint hd ⟨Z y, hZ y⟩ w).symm
+    rw [e]
+    refine (abs_real_inner_le_norm _ _).trans ?_
+    have := norm_nonneg ((TD1)† ⟨Z y, hZ y⟩)
+    have hw : ‖(w : W1)‖ = ‖w‖ := rfl
+    rw [hw]
+    exact mul_le_mul_of_nonneg_right (by linarith [norm_nonneg (Z y)]) (norm_nonneg _)
+
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
+
+/-- **Closeness of a mirror state to its projections** at level `δ`: the `L²` projection errors of
+`σ`, `dφ`, `u`, `du`, `M`, `ρ` and `S¹u` that make up the Strang data of (6.4). -/
+def MirrorClose (N : ℕ) (δ : ℝ) (σ : TU0) (φ : BU0) (u : BU1) (M : W2) (ρ' : Wv W2) : Prop :=
+  ‖(σ : W0) - (hT.proj N).π 0 (σ : W0)‖ ≤ δ ∧
+    (∀ a, ‖BD0 a (φ a) - ((hB a).proj N).π 1 (BD0 a (φ a))‖ ≤ δ) ∧
+    (∀ a, ‖(u a : W1) - ((hB a).proj N).π 1 (u a : W1)‖ ≤ δ) ∧
+    (∀ a, ‖BD1 a (u a) - ((hB a).proj N).π 2 (BD1 a (u a))‖ ≤ δ) ∧
+    ‖M - (hT.proj N).π 2 M‖ ≤ δ ∧
+    (∀ a, ‖ρ' a - ((hB a).proj N).π 2 (ρ' a)‖ ≤ δ) ∧
+    ‖mS1 u - (hT.proj N).π 2 (mS1 u)‖ ≤ δ
+
+/-- The constant of `mirrorFEM_strangData_le_of_close`. -/
+def mirrorCloseConst (C : ℝ) : ℝ := 1 + 3 + (1 + 8 * C ^ 2) * 3 + 3 + 1 + 3 + 1
+
+theorem mirrorCloseConst_nonneg (C : ℝ) : 0 ≤ mirrorCloseConst C := by
+  unfold mirrorCloseConst; positivity
+
+set_option maxHeartbeats 1000000 in
+/-- **The Strang data of (6.4) from the projection errors**: `≤ mirrorCloseConst C · δ² + K₀² + K₁²`
+for a state `δ`-close to its projections (no regularity). -/
+theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : BU0} {u : BU1}
+    {M : W2} {ρ' : Wv W2} (hc : MirrorClose hT hB N δ σ φ u M ρ') (K0 K1 : ℝ) :
+    (mirrorFEM hT hB N).strangData σ φ u M ρ' K0 K1 ≤
+      mirrorCloseConst C * δ ^ 2 + K0 ^ 2 + K1 ^ 2 := by
+  obtain ⟨hσ, hφ, hu, hdu, hM, hρ, hSu⟩ := hc
+  have h1 : ‖(mirrorFEM hT hB N).P0 σ - σ‖ ≤ δ := by rw [norm_sub_rev]; exact hσ
+  have h2 : ‖mirrorBGGSegment.dt0 ((mirrorFEM hT hB N).Pt0 φ - φ)‖ ^ 2 ≤ 3 * δ ^ 2 := by
+    change ‖bD0 (projB0 (fun a => (hB a).proj N) φ - φ)‖ ^ 2 ≤ _
+    rw [norm_sq_bD0]
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    have e : BD0 a ((projB0 (fun a => (hB a).proj N) φ - φ) a) =
+        ((hB a).proj N).π 1 (BD0 a (φ a)) - BD0 a (φ a) := by
+      rw [PiLp.sub_apply, LinearPMap.map_sub]
+      congr 1
+      exact dPart0_π ((hB a).proj N) (φ a)
+    rw [e, norm_sub_rev]
+    exact hφ a
+  have h3a : ‖(mirrorFEM hT hB N).Pt1 u - u‖ ^ 2 ≤ 3 * δ ^ 2 := by
+    change ‖projB1 (fun a => (hB a).proj N) u - u‖ ^ 2 ≤ _
+    rw [norm_sq_BU1]
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    change ‖((hB a).proj N).π 1 (u a : W1) - (u a : W1)‖ ≤ _
+    rw [norm_sub_rev]
+    exact hu a
+  have h3b := mirrorFEM_err_S1h hT hB N ((mirrorFEM hT hB N).Pt1 u - u)
+  have h3c : ‖mirrorBGGSegment.dt1 ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤ 3 * δ ^ 2 := by
+    change ‖bD1 (projB1 (fun a => (hB a).proj N) u - u)‖ ^ 2 ≤ _
+    rw [norm_sq_bD1]
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    have e : BD1 a ((projB1 (fun a => (hB a).proj N) u - u) a) =
+        ((hB a).proj N).π 2 (BD1 a (u a)) - BD1 a (u a) := by
+      rw [PiLp.sub_apply, LinearPMap.map_sub]
+      congr 1
+      exact dPart1_π ((hB a).proj N) (u a)
+    rw [e, norm_sub_rev]
+    exact hdu a
+  have h4 : ‖(mirrorFEM hT hB N).P2 M - M‖ ≤ δ := by rw [norm_sub_rev]; exact hM
+  have h5 : ‖(mirrorFEM hT hB N).Pt2 ρ' - ρ'‖ ^ 2 ≤ 3 * δ ^ 2 := by
+    change ‖projB2 (fun a => (hB a).proj N) ρ' - ρ'‖ ^ 2 ≤ _
+    rw [PiLp.norm_sq_eq_of_L2]
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    change ‖((hB a).proj N).π 2 (ρ' a) - ρ' a‖ ≤ _
+    rw [norm_sub_rev]
+    exact hρ a
+  have h6 : ‖mirrorBGGSegment.S1 u - (mirrorFEM hT hB N).S1h u‖ ≤ δ := hSu
+  have q1 := pow_le_pow_left₀ (norm_nonneg _) h1 2
+  have q4 := pow_le_pow_left₀ (norm_nonneg _) h4 2
+  have q6 := pow_le_pow_left₀ (norm_nonneg _) h6 2
+  have e1 : (mirrorFEM hT hB N).strangData σ φ u M ρ' K0 K1 =
+      ‖(mirrorFEM hT hB N).P0 σ - σ‖ ^ 2 +
+        ‖mirrorBGGSegment.dt0 ((mirrorFEM hT hB N).Pt0 φ - φ)‖ ^ 2 +
+        (‖(mirrorFEM hT hB N).Pt1 u - u‖ ^ 2 +
+          ‖(mirrorFEM hT hB N).S1h ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 +
+          ‖mirrorBGGSegment.dt1 ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2) +
+        ‖(mirrorFEM hT hB N).P2 M - M‖ ^ 2 + ‖(mirrorFEM hT hB N).Pt2 ρ' - ρ'‖ ^ 2 + K0 ^ 2 +
+        K1 ^ 2 + ‖mirrorBGGSegment.S1 u - (mirrorFEM hT hB N).S1h u‖ ^ 2 := rfl
+  have hS1h : ‖(mirrorFEM hT hB N).S1h ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤
+      8 * C ^ 2 * (3 * δ ^ 2) :=
+    h3b.trans (mul_le_mul_of_nonneg_left h3a (by positivity))
+  rw [e1]
+  unfold mirrorCloseConst
+  nlinarith
+
+/-- `K₀` of the Strang bound for an `L²`-bounded multiplier functional: `Λ C_app h_N`. -/
+theorem exists_mirrorFEM_K0 : ∃ Capp : ℝ, 0 ≤ Capp ∧ ∀ (N : ℕ) (L : ℝ), 0 ≤ L →
+    ∀ ℓ : TU1 →ₗ[ℝ] ℝ, (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
+      |ℓ ((mirrorBGGSegment.S0 - (mirrorFEM hT hB N).S0h) ψ)| ≤
+        L * Capp * meshSize N * √(Feec.BGG.graphSq mirrorBGGSegment.dt0 ψ) := by
+  obtain ⟨C0, hC00, hhapp⟩ := mirrorFEM_happ0 hT hB
+  exact ⟨C0, hC00, fun N L hL0 ℓ hℓ => Feec.BGG.Discrete.consistency_S0_of_approx
+    (meshSize_pos N).le hC00 hL0 ℓ hℓ (hhapp N)⟩
+
+set_option maxHeartbeats 1000000 in
+/-- `K₁` of the Strang bound for a multiplier `z ∈ D(d_max*)`: `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ K h_N c ‖v‖`
+when `‖z‖ ≤ c` and `|⟪z, dw⟫| ≤ c ‖w‖` (regular potentials of the bottom row). -/
+theorem exists_mirrorFEM_K1 : ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) (z : W2) (c : ℝ), 0 ≤ c → ‖z‖ ≤ c →
+    (∀ w : TU1, |⟪z, tD1 w⟫| ≤ c * ‖w‖) → ∀ v ∈ (mirrorFEM hT hB N).Vt1h,
+      |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
+        K * meshSize N * c * √((mirrorFEM hT hB N).gnSq v) := by
+  obtain ⟨C0, hh1⟩ := mirrorFEM_happ0 hT hB
+  have hC00 := hh1.1
+  have hhapp := hh1.2
+  have hC := hT.two_mul_nonneg
+  have hreg := mirrorRegConst_nonneg hC
+  have ex1 : ∃ x : ℝ, x = C0 + mirrorRegConst C := ⟨_, rfl⟩
+  obtain ⟨Capp, hCapp_def⟩ := ex1
+  have hCapp0 : 0 ≤ Capp := by rw [hCapp_def]; linarith
+  have ex2 : ∃ x : ℝ, x = (2 * Real.pi)⁻¹ := ⟨_, rfl⟩
+  obtain ⟨Cp, hCp⟩ := ex2
+  have hCp0 : 0 ≤ Cp := by rw [hCp]; positivity
+  have ex3 : ∃ x : ℝ, x = √(1 + (2 * Real.pi)⁻¹ ^ 2) := ⟨_, rfl⟩
+  obtain ⟨Creg, hCreg⟩ := ex3
+  have hCreg0 : 0 ≤ Creg := by rw [hCreg]; positivity
+  have ex4 : ∃ x : ℝ, x = √(1 + Cp ^ 2) * (1 + 2 * C * (1 + 1 * Creg)) := ⟨_, rfl⟩
+  obtain ⟨wa, hwa⟩ := ex4
+  have ex5 : ∃ x : ℝ, x = (1 + (1 + 2 * C) * Real.sqrt 2) * Creg := ⟨_, rfl⟩
+  obtain ⟨wb, hwb⟩ := ex5
+  have hwa0 : 0 ≤ wa := by rw [hwa]; positivity
+  have hwb0 : 0 ≤ wb := by rw [hwb]; positivity
+  refine ⟨Capp * (wa + wb), mul_nonneg hCapp0 (add_nonneg hwa0 hwb0), fun N z c hc0 hzn hzd v hv => ?_⟩
+  have hh : 0 ≤ meshSize N := (meshSize_pos N).le
+  have HS := mirror_harmonicStability
+  rw [← hCp] at HS
+  have Bd := mirrorFEM_bounded hT hB N
+  have happ : ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
+      ‖mirrorBGGSegment.S0 ψ - (mirrorFEM hT hB N).S0h ψ‖ ^ 2 ≤
+        (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq mirrorBGGSegment.dt0 ψ := fun ψ hψ => by
+    refine (hhapp N ψ hψ).trans (mul_le_mul_of_nonneg_right ?_ (Feec.BGG.graphSq_nonneg _ _))
+    exact pow_le_pow_left₀ (by positivity) (mul_le_mul_of_nonneg_right
+      (by rw [hCapp_def]; linarith) hh) 2
+  have Rg := mirrorFEMReg hT hB N (by rw [hCapp_def]; linarith : mirrorRegConst C ≤ Capp)
+  have hw := HS.weakConsistency_of_regularPotential_of_bound (harmBot_le hT hB N) Bd hh
+    hCapp0 Rg happ hc0 hzd v hv
+  have hwc : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
+      √(1 + (2 * Real.pi)⁻¹ ^ 2) (‖z‖) c ≤ (wa + wb) * c := by
+    have e : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
+        √(1 + (2 * Real.pi)⁻¹ ^ 2) (‖z‖) c = c * wa + ‖z‖ * wb := by
+      rw [hwa, hwb, hCreg]; unfold Feec.BGG.Discrete.weakConsistencyConst; ring
+    rw [e]; nlinarith
+  refine hw.trans ?_
+  have hg := Feec.BGG.Discrete.sqrt_graphSq_le_sqrt_gnSq (Q := mirrorFEM hT hB N) v
+  have hm : 0 ≤ Capp * meshSize N := by positivity
+  have h1 := mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hwc hm)
+    (Real.sqrt_nonneg (Feec.BGG.graphSq mirrorBGGSegment.dt1 v))
+  have h2 := mul_le_mul_of_nonneg_left hg
+    (by positivity : 0 ≤ Capp * meshSize N * ((wa + wb) * c))
+  refine (h1.trans h2).trans (le_of_eq ?_)
+  ring
+
+/-- The `L²` part of `K₁`: `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ ‖z‖ (1 + 2C) √2 ‖v‖_{Γₕ}` for every `z`. -/
+theorem mirrorFEM_K1_rest (N : ℕ) (z : W2) (v : BU1) :
+    |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
+      ‖z‖ * ((1 + 2 * C) * √2) * √((mirrorFEM hT hB N).gnSq v) := by
+  have hC := hT.two_mul_nonneg
+  have e : (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v =
+      mS1 v - (hT.proj N).π 2 (mS1 v) := rfl
+  have h1 : ‖mS1 v - (hT.proj N).π 2 (mS1 v)‖ ≤ (1 + 2 * C) * ‖mS1 v‖ := by
+    have := hT.norm_proj_le N 2 (mS1 v)
+    have := norm_sub_le (mS1 v) ((hT.proj N).π 2 (mS1 v))
+    linarith
+  have h2 : ‖mS1 v‖ ≤ √2 * ‖v‖ := by
+    have h := norm_wsL2_sq_le (Ω := cubeDomain 3) 1 (bIncl1 v)
+    have h1 : (((1 : ℤ) : ℝ) + 1) = 2 := by norm_num
+    rw [h1, norm_bIncl1] at h
+    have h' : ‖mS1 v‖ ^ 2 ≤ (√2 * ‖v‖) ^ 2 := by
+      rw [mul_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]; exact h
+    exact le_of_pow_le_pow_left₀ two_ne_zero (by positivity) h'
+  have h3 : ‖v‖ ≤ √((mirrorFEM hT hB N).gnSq v) := by
+    have h := Real.abs_le_sqrt (x := ‖v‖) (y := (mirrorFEM hT hB N).gnSq v) (by
+      unfold Feec.BGG.Discrete.gnSq
+      exact le_add_of_le_of_nonneg (le_add_of_nonneg_right (by positivity)) (by positivity))
+    rwa [abs_norm] at h
+  rw [e]
+  refine (abs_real_inner_le_norm _ _).trans ?_
+  have h4 : ‖mS1 v - (hT.proj N).π 2 (mS1 v)‖ ≤
+      (1 + 2 * C) * √2 * √((mirrorFEM hT hB N).gnSq v) := by
+    refine h1.trans ?_
+    rw [mul_assoc]
+    refine mul_le_mul_of_nonneg_left (h2.trans (mul_le_mul_of_nonneg_left h3 (by positivity)))
+      (by linarith)
+  calc ‖z‖ * ‖mS1 v - (hT.proj N).π 2 (mS1 v)‖ ≤
+      ‖z‖ * ((1 + 2 * C) * √2 * √((mirrorFEM hT hB N).gnSq v)) :=
+        mul_le_mul_of_nonneg_left h4 (norm_nonneg _)
+    _ = _ := by ring
+
+
+/-- **`K₁ → 0` uniformly on a compact set of multipliers**, with no regularity of the multipliers:
+split `z = z' + (z − z')` with `z' ∈ D(d_max*)` close to `z` (`exists_adjoint_approx`). -/
+theorem eventually_mirrorFEM_K1 {K : Set W2} (hK : IsCompact K) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∀ z ∈ K, ∀ v ∈ (mirrorFEM hT hB N).Vt1h,
+      |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
+        ε * √((mirrorFEM hT hB N).gnSq v) := by
+  have hC := hT.two_mul_nonneg
+  have hA : 0 ≤ (1 + 2 * C) * √2 := by positivity
+  have ex : ∃ A : ℝ, A = (1 + 2 * C) * √2 := ⟨_, rfl⟩
+  obtain ⟨A, hAdef⟩ := ex
+  rw [← hAdef] at hA
+  have hδ : 0 < ε / (2 * (A + 1)) := by positivity
+  obtain ⟨c, hc0, hc⟩ := exists_adjoint_approx hK hδ
+  obtain ⟨K1, hK10, hK1⟩ := exists_mirrorFEM_K1 hT hB
+  have hlim : Tendsto (fun N => K1 * meshSize N * c) atTop (𝓝 0) := by
+    have := (tendsto_meshSize.const_mul K1).mul_const c
+    simpa using this
+  have hhalf : ∀ x : ℝ, x < ε / (2 * (A + 1)) → x * A ≤ ε / 2 := fun x hx => by
+    have h4 : x * A ≤ ε / (2 * (A + 1)) * A := mul_le_mul_of_nonneg_right hx.le hA
+    have h5 : ε / (2 * (A + 1)) * A ≤ ε / 2 := by
+      rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) (by norm_num)]
+      nlinarith
+    linarith
+  filter_upwards [hlim.eventually (Iic_mem_nhds (half_pos hε))] with N hN z hz v hv
+  obtain ⟨z', hzz', hz'n, hz'd⟩ := hc z hz
+  have h1 := hK1 N z' c hc0 hz'n hz'd v hv
+  have h2 := mirrorFEM_K1_rest hT hB N (z - z') v
+  rw [← hAdef] at h2
+  have h3 := hhalf _ hzz'
+  have hN' : K1 * meshSize N * c ≤ ε / 2 := hN
+  have ex1 : ∃ X : W2, X = (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v := ⟨_, rfl⟩
+  obtain ⟨X, hX⟩ := ex1
+  have ex2 : ∃ G : ℝ, G = √((mirrorFEM hT hB N).gnSq v) := ⟨_, rfl⟩
+  obtain ⟨G, hG⟩ := ex2
+  rw [← hX, ← hG] at h1 h2 ⊢
+  have hg : 0 ≤ G := by rw [hG]; exact Real.sqrt_nonneg _
+  clear hX hG hz'd hc hK1 hlim hN
+  have e : ⟪z, X⟫ = ⟪z - z', X⟫ + ⟪z', X⟫ := by rw [inner_sub_left]; ring
+  rw [e]
+  refine (abs_add_le _ _).trans ?_
+  have h6 : ‖z - z'‖ * A * G ≤ ε / 2 * G := mul_le_mul_of_nonneg_right h3 hg
+  have h7 : K1 * meshSize N * c * G ≤ ε / 2 * G := mul_le_mul_of_nonneg_right hN' hg
+  linarith
+
+/-- **A continuous mirror trajectory is uniformly close to its projections** for `N` large. -/
+theorem eventually_mirrorClose {T : ℝ} {σ : ℝ → TU0} {φ : ℝ → BU0} {u : ℝ → BU1}
+    {M : ℝ → W2} {ρ' : ℝ → Wv W2} (hσ : ContinuousOn σ (Icc 0 T))
+    (hφ : ContinuousOn (fun t => mirrorBGGSegment.dt0 (φ t)) (Icc 0 T))
+    (hu : ContinuousOn u (Icc 0 T))
+    (hdu : ContinuousOn (fun t => mirrorBGGSegment.dt1 (u t)) (Icc 0 T))
+    (hM : ContinuousOn M (Icc 0 T)) (hρ : ContinuousOn ρ' (Icc 0 T))
+    (hSu : ContinuousOn (fun t => mirrorBGGSegment.S1 (u t)) (Icc 0 T))
+    {δ : ℝ} (hδ : 0 < δ) :
+    ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, MirrorClose hT hB N δ (σ t) (φ t) (u t) (M t) (ρ' t) := by
+  have c1 : ContinuousOn (fun t => (σ t : W0)) (Icc 0 T) :=
+    continuous_subtype_val.comp_continuousOn hσ
+  have c2 : ∀ a : Fin 3, ContinuousOn (fun t => BD0 a (φ t a)) (Icc 0 T) := fun a =>
+    (continuous_subtype_val.comp
+      (PiLp.continuous_apply 2 (fun b : Fin 3 => (BD1 b).domain) a)).comp_continuousOn hφ
+  have c3 : ∀ a : Fin 3, ContinuousOn (fun t => (u t a : W1)) (Icc 0 T) := fun a =>
+    (continuous_subtype_val.comp
+      (PiLp.continuous_apply 2 (fun b : Fin 3 => (BD1 b).domain) a)).comp_continuousOn hu
+  have c4 : ∀ a : Fin 3, ContinuousOn (fun t => BD1 a (u t a)) (Icc 0 T) := fun a =>
+    (PiLp.continuous_apply 2 _ a).comp_continuousOn hdu
+  have c6 : ∀ a : Fin 3, ContinuousOn (fun t => ρ' t a) (Icc 0 T) := fun a =>
+    (PiLp.continuous_apply 2 _ a).comp_continuousOn hρ
+  have e1 := hT.eventually_norm_sub_proj_le 0 c1 hδ
+  have e2 := Filter.eventually_all.2 fun a => (hB a).eventually_norm_sub_proj_le 1 (c2 a) hδ
+  have e3 := Filter.eventually_all.2 fun a => (hB a).eventually_norm_sub_proj_le 1 (c3 a) hδ
+  have e4 := Filter.eventually_all.2 fun a => (hB a).eventually_norm_sub_proj_le 2 (c4 a) hδ
+  have e5 := hT.eventually_norm_sub_proj_le 2 hM hδ
+  have e6 := Filter.eventually_all.2 fun a => (hB a).eventually_norm_sub_proj_le 2 (c6 a) hδ
+  have e7 := hT.eventually_norm_sub_proj_le 2 hSu hδ
+  filter_upwards [e1, e2, e3, e4, e5, e6, e7] with N h1 h2 h3 h4 h5 h6 h7 t ht
+  exact ⟨h1 t ht, fun a => h2 a t ht, fun a => h3 a t ht, fun a => h4 a t ht, h5 t ht,
+    fun a => h6 a t ht, h7 t ht⟩
+
+
+set_option maxHeartbeats 4000000 in
+/-- **Convergence of the mirror scheme (6.5) on the cube for energy-space solutions** (no rate,
+by density): for every `T > 0`, every `L²` source `f` continuous on `[0,T]`, every classical
+solution `s` of (6.2) for the mirror data (`ExactWave mirrorBGGSegment`, whose regularity is the
+continuity of `σ, u, M, ρ, dφ, du, S¹u` in `L²`), with multiplier functionals `L²`-bounded on
+`[0,T]`, and every `ε > 0`: for all `N` large the scheme (6.5) with source `P_{Ṽₕ¹} f` has a
+solution starting from the dynamic part of the elliptic projection (6.4) of the exact initial
+state with `(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ ε` on `[0,T]`.
+No smoothness and no boundary flatness: the projection errors tend to `0` uniformly on the
+compact trajectories (`eventually_mirrorClose`), `K₀ = Λ C_app h_N` (`exists_mirrorFEM_K0`) and
+`K₁ → 0` by density of `D(d_max*)` (`eventually_mirrorFEM_K1`).
+See [QuennevilleBelair2015], §6.3, (6.5), and §6.2, (6.4), Prop 6.2. -/
+theorem mirrorWave_converges {T : ℝ} (hT0 : 0 < T) {f : ℝ → Wv W1}
+    (hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun f))
+    {L : ℝ} (hL0 : 0 ≤ L)
+    (hmult : ∀ t ∈ Icc 0 T, ∀ μ : TU1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop,
+      ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N f),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (mirrorWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((mirrorFEM hT hB N).ellipticDataH (s.σ 0) (s.φ 0) (s.u 0)
+              (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
+          ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ ε := by
+  have HS := mirror_harmonicStability
+  have ex1 : ∃ Ks : ℝ, Ks = √(2 * (Feec.BGG.Discrete.strangConst (2 * Real.pi)⁻¹ + 1)) :=
+    ⟨_, rfl⟩
+  obtain ⟨Ks, hKs⟩ := ex1
+  have hKs0 : 0 ≤ Ks := by rw [hKs]; exact Real.sqrt_nonneg _
+  have ex2 : ∃ η : ℝ, η = ε / (Ks * (2 + 2 * T) + 1) := ⟨_, rfl⟩
+  obtain ⟨η, hη⟩ := ex2
+  have hden : 0 < Ks * (2 + 2 * T) + 1 := by nlinarith
+  have hη0 : 0 < η := by rw [hη]; exact div_pos hε hden
+  have hηε : η * (Ks * (2 + 2 * T) + 1) = ε := by rw [hη]; exact div_mul_cancel₀ _ hden.ne'
+  have hmc := mirrorCloseConst_nonneg C
+  have ex3 : ∃ θ : ℝ, θ = η / (mirrorCloseConst C + 2) := ⟨_, rfl⟩
+  obtain ⟨θ, hθ⟩ := ex3
+  have hθ0 : 0 < θ := by rw [hθ]; positivity
+  have hθη : θ * (mirrorCloseConst C + 2) = η := by
+    rw [hθ]; exact div_mul_cancel₀ _ (by positivity)
+  have hθle : θ ≤ η := by nlinarith
+  have hdat : ∀ x : ℝ, x ≤ mirrorCloseConst C * θ ^ 2 + θ ^ 2 + θ ^ 2 → x ≤ (η * 1) ^ 2 :=
+    fun x hx => by nlinarith
+  have hK0all := exists_mirrorFEM_K0 hT hB
+  obtain ⟨Capp, hK0pair⟩ := hK0all
+  have hK0 := hK0pair.2
+  have hlim : Tendsto (fun N => L * Capp * meshSize N) atTop (𝓝 0) := by
+    have := tendsto_meshSize.const_mul (L * Capp)
+    rwa [mul_zero] at this
+  have hKc : IsCompact ((s.M '' Icc 0 T) ∪ (s.M' '' Icc 0 T)) :=
+    (isCompact_Icc.image_of_continuousOn s.cM).union (isCompact_Icc.image_of_continuousOn s.cM')
+  have ev2 := eventually_mirrorFEM_K1 hT hB hKc hθ0
+  have ev3 := eventually_mirrorClose hT hB (σ := s.σ) (φ := s.φ) (u := s.u) (M := s.M)
+    (ρ' := s.ρ) s.cσ s.cdφ s.cu s.cdu s.cM s.cρ s.cSu hθ0
+  have ev4 := eventually_mirrorClose hT hB (σ := s.σ') (φ := s.φ') (u := s.u') (M := s.M')
+    (ρ' := s.ρ') s.cσ' s.cdφ' s.cu' s.cdu' s.cM' s.cρ' s.cSu' hθ0
+  filter_upwards [hlim.eventually (Iic_mem_nhds hθ0), ev2, ev3, ev4] with N h1 h2 h3 h4
+  have h1' : L * Capp * meshSize N ≤ θ := h1
+  have hK0' : ∀ ℓ : TU1 →ₗ[ℝ] ℝ, (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
+      |ℓ ((mirrorBGGSegment.S0 - (mirrorFEM hT hB N).S0h) ψ)| ≤
+        θ * √(Feec.BGG.graphSq mirrorBGGSegment.dt0 ψ) := fun ℓ hℓ ψ hψ =>
+    (hK0 N L hL0 ℓ hℓ ψ hψ).trans (mul_le_mul_of_nonneg_right h1' (Real.sqrt_nonneg _))
+  have hrate := s.exists_discreteSolution_rate_harm (mirrorFEM hT hB N) HS
+    (mirrorFEM_compatible hT hB N) (K0 := θ) (K1 := θ) (c := η) (h := 1)
+    (mirrorWave_S0_surjective hT hB N) hT0
+    (continuousOn_mirrorSource hT hB N hf) (fun t _ v => (inner_mirrorSource hT hB N f t v).symm)
+    (fun t ht => hK0' (s.ℓ t) fun μ => (hmult t ht μ).1)
+    (fun t ht => hK0' (s.ℓ' t) fun μ => (hmult t ht μ).2)
+    (fun t ht v hv => h2 (s.M t) (Or.inl (mem_image_of_mem _ ht)) v hv)
+    (fun t ht v hv => h2 (s.M' t) (Or.inr (mem_image_of_mem _ ht)) v hv)
+    (fun t ht => hdat _ (mirrorFEM_strangData_le_of_close hT hB N (h3 t ht) θ θ))
+    (fun t ht => hdat _ (mirrorFEM_strangData_le_of_close hT hB N (h4 t ht) θ θ))
+  obtain ⟨sh, h0, hb⟩ := hrate
+  refine ⟨sh, h0, fun t ht => (hb t ht).trans ?_⟩
+  rw [← hKs, abs_of_pos hη0, abs_one, mul_one]
+  have ht2 : 2 + 2 * t ≤ 2 + 2 * T := by linarith [ht.2]
+  have h5 : Ks * η * (2 + 2 * t) ≤ Ks * η * (2 + 2 * T) :=
+    mul_le_mul_of_nonneg_left ht2 (by positivity)
+  nlinarith
+
+
+set_option maxHeartbeats 4000000 in
+/-- **TSD-type solutions** (the class of [QuennevilleBelair2015], Ch. 6: `σ ≡ 0`, `M ≡ 0`): under
+the hypotheses of `mirrorWave_rate`, the discrete `σₕ` and `Mₕ` are `O(h)`, and every bounded
+linear constraint `Φ ρ = 0` satisfied by the exact `ρ = B` on `[0,T]` (for instance the symmetry
+of `B`) holds for `ρₕ` up to `‖Φ‖ K L (1 + t) h_N`. -/
+theorem mirrorWave_rate_tsd :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
+      (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun f))
+      {L : ℝ}, 0 ≤ L →
+      (∀ t ∈ Icc 0 T, IsSmoothStateMirror L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
+        IsSmoothStateMirror L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ μ : TU1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
+      (∀ t ∈ Icc 0 T, s.σ t = 0 ∧ s.M t = 0) →
+      ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N f),
+        ∀ t ∈ Icc 0 T, ‖(sh.σ t : TU0)‖ ≤ K * L * (1 + t) * meshSize N ∧
+          ‖(sh.M t : W2)‖ ≤ K * L * (1 + t) * meshSize N ∧
+          ∀ Φ : Wv W2 →L[ℝ] Wv W2, Φ (s.ρ t) = 0 →
+            ‖Φ (sh.ρ t : Wv W2)‖ ≤ ‖Φ‖ * (K * L * (1 + t) * meshSize N) := by
+  have hrate := mirrorWave_rate hT hB
+  obtain ⟨K, hKp⟩ := hrate
+  refine ⟨K, hKp.1, fun N T hT0 f hf s L hL hsm hmult hz => ?_⟩
+  have h := hKp.2 N hT0 hf s hL hsm hmult
+  obtain ⟨sh, hsh⟩ := h
+  refine ⟨sh, fun t ht => ?_⟩
+  have hb := hsh.2 t ht
+  have ex : ∃ E : ℝ, E = ‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
+      ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2 := ⟨_, rfl⟩
+  obtain ⟨E, hE⟩ := ex
+  rw [← hE] at hb
+  have hcomp : ∀ x : ℝ, 0 ≤ x → x ^ 2 ≤ E → x ≤ K * L * (1 + t) * meshSize N := fun x hx hxE =>
+    ((abs_of_nonneg hx).symm.le.trans (Real.abs_le_sqrt hxE)).trans hb
+  have p1 := sq_nonneg ‖s.σ t - sh.σ t‖
+  have p2 := sq_nonneg ‖s.u t - sh.u t‖
+  have p3 := sq_nonneg ‖s.M t - sh.M t‖
+  have p4 := sq_nonneg ‖s.ρ t - sh.ρ t‖
+  have hσ := hcomp ‖s.σ t - sh.σ t‖ (norm_nonneg _) (by rw [hE]; linarith)
+  have hM := hcomp ‖s.M t - sh.M t‖ (norm_nonneg _) (by rw [hE]; linarith)
+  have hρ := hcomp ‖s.ρ t - sh.ρ t‖ (norm_nonneg _) (by rw [hE]; linarith)
+  rw [(hz t ht).1, zero_sub, norm_neg] at hσ
+  rw [(hz t ht).2, zero_sub, norm_neg] at hM
+  refine ⟨hσ, hM, fun Φ hΦ => ?_⟩
+  have e : Φ (sh.ρ t : Wv W2) = -Φ (s.ρ t - sh.ρ t) := by
+    rw [map_sub, hΦ, zero_sub, neg_neg]
+  rw [e, norm_neg]
+  exact (Φ.le_opNorm _).trans (mul_le_mul_of_nonneg_left hρ (norm_nonneg _))
+
+end Converge
+
 end Feec.Models.Cube.MirrorWeakSymmetry

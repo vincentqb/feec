@@ -742,7 +742,9 @@ theorem norm_srcQ_le [CompleteSpace Q.Vt1h] (f : ℝ → Wv W1) (t : ℝ) :
     rw [norm_incl1]; rfl
   rcases eq_or_lt_of_le (norm_nonneg (srcQ Q f t)) with h0 | h0
   · rw [← h0]; exact norm_nonneg _
-  · nlinarith
+  · have h3 : ‖srcQ Q f t‖ * ‖srcQ Q f t‖ ≤ ‖f t‖ * ‖srcQ Q f t‖ := by
+      rw [← sq, h]; exact h2
+    exact le_of_mul_le_mul_right h3 h0
 
 theorem continuousOn_srcQ [CompleteSpace Q.Vt1h] {f : ℝ → Wv W1} {T : ℝ}
     (hf : ContinuousOn f (Icc 0 T)) :

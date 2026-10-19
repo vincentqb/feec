@@ -36,6 +36,11 @@ below holds for all `A₊, Aₓ, ω`.
   `Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD.mem_iff` propagation for such data holds exactly
   when it holds for the homogeneous problem from `U(0) − R(0)`.
 
+The spatial discretization of this run (the Crank–Nicolson Whitney scheme with Dirichlet DOFs)
+converges at rate `O(h + Δt²)`, with the same rate for the five constraint monitors, on `(0, ½)³`
+and on the unit cube of `fem4gr` (`planeWave_cn_error_le`, `unit_planeWave_cn_error_le` in
+`Feec/Numerics/PlaneWaveCubeError.lean`).
+
 ## The periodic run on `𝕋³`
 
 `fem4gr`'s example `'periodic z-direction plane wave'` runs `ω = 6π`, `A₊ = 1`, `Aₓ = 0` on the

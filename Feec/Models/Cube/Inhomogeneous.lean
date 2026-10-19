@@ -68,7 +68,10 @@ DOFs, `discreteWave S = 𝐝ₕ − 𝐝ₕ*` is the matrix of `fem4gr`'s biline
 consistency error (`norm_residual_le`). On the Whitney spaces of the Freudenthal meshes of the cube
 (`whitneyRow N`: Lagrange `P₁`, Nédélec, Raviart–Thomas, with `V̊ₕ ⊆ Vₕ` by
 `whitneyMin_le_whitney`): `whitney_existsUnique_cnStep`. The meshes are those of `(0, ½)³`
-(`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation, not formalized.
+(`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation: the meshes of
+`(0, 1)³` are their images under `x ↦ 2x`, and the scheme on the dilated Whitney spaces with step
+`Δt` is the scheme on `(0, ½)³` with step `Δt / 2` (`Feec.Numerics.PlaneWaveCube`, file
+`Feec/Numerics/PlaneWaveCubeError.lean`).
 One row of (4.14) is the scalar de Rham window. The `fem4gr` spaces are the three-row space
 `DState3 (whitneyRow N)` (row `r` holds `(σ_r, E_r, B_r)`), on which the row-wise scheme
 `discreteWave3` decouples into the three rows (`isDirichletCNStep3_iff`) and is well posed
@@ -78,10 +81,11 @@ One row of (4.14) is the scalar de Rham window. The `fem4gr` spaces are the thre
 `2`-form of row `r` (`entryB`), and `σ` (`sigmaPart`); each has norm at most `1`, and each residual
 of the discrete solution is at most that of the comparison fields plus the initial error and the
 summed consistency errors (`whitney_norm_residuals_le`).
-What is **not** proved: any bound of the consistency error `τₙ` in terms of `h` and `Δt` (it needs
-interpolation estimates for the Whitney spaces), the discrete divergence monitor (its constant
-depends on the mesh; covered abstractly by `norm_residual_le3`), and that the interior spaces
-`V̊ₕ` are nonzero.
+The bound `‖τₙ‖ = O(Δt (h + Δt²))` of the consistency error for smooth solutions, the resulting
+`O(h + Δt²)` error and monitor bounds, and `V̊ₕ ≠ 0` are in `Feec.Models.Cube.InhomogeneousError`
+(`exists_comparison_consistency`, `whitney_cn_error_le`, `whitney_cn_monitors_le`,
+`whitneyInterior3_ne_bot`). What is **not** proved: the discrete divergence monitor (its constant
+depends on the mesh; covered abstractly by `norm_residual_le3`).
 
 ## References
 
@@ -924,8 +928,8 @@ abbrev whitneyRow (N : ℕ) := (whitney 3 N).window 0 3
 /-- **The scheme on one row of the Whitney spaces of the cube meshes is well-posed**: for every
 time step and every data, the Crank–Nicolson step with prescribed boundary DOFs (those of `V̊ₕ`,
 the Whitney spaces with vanishing boundary DOFs) exists and is unique. This is the abstract
-skew-form result (`existsUnique_isDirichletCNStep`) on these spaces; it does not assert that `V̊ₕ`
-is nonzero. -/
+skew-form result (`existsUnique_isDirichletCNStep`) on these spaces (`V̊ₕ ≠ 0` is
+`whitneyInterior3_ne_bot` of `Feec.Models.Cube.InhomogeneousError`). -/
 theorem whitney_existsUnique_cnStep (N : ℕ) (s : ℝ) (f g' u : DState (whitneyRow N)) :
     ∃! u', TimeStepping.IsDirichletCNStep
       (interior (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ)))
@@ -1032,8 +1036,9 @@ solution) with the same boundary DOFs and consistency errors `τₙ`, each of th
 residuals `c` — the skew parts `½ (E − Eᵀ)`, `½ (B − Bᵀ)` ("Skew of E/B"), the normalized traces
 `tr E / √3`, `tr B / √3` ("Trace of E/B") and `σ` ("Sigma Zero") — satisfies
 `‖c u_N‖ ≤ ‖c ũ_N‖ + ‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖` (all with constant `1`). Not covered: the discrete
-divergence (its constant depends on the mesh, `norm_residual_le3`) and any bound of `τₙ` in `h`
-and `Δt`. -/
+divergence (its constant depends on the mesh, `norm_residual_le3`). The bound of `τₙ` in `h` and
+`Δt` for smooth solutions is `exists_comparison_consistency`
+(`Feec.Models.Cube.InhomogeneousError`). -/
 theorem whitney_norm_residuals_le (N : ℕ) {s : ℝ} {f g u ũ τ : ℕ → DState3 (whitneyRow N)}
     (h : ∀ n, TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s
       (f n) (g (n + 1)) (u n) (u (n + 1)))

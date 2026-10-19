@@ -4,6 +4,80 @@ public import Feec.Models.Cube.Inhomogeneous
 public import Feec.Models.Cube.WhitneyRate
 public import Feec.FiniteElement.PolyComplex
 
+/-!
+# `O(h + Δt²)` error of the Crank–Nicolson Whitney scheme with Dirichlet DOFs
+
+The fully discrete scheme of [QuennevilleBelair2015], Ch. 7 (as run by `fem4gr`) is the
+Crank–Nicolson step with prescribed boundary DOFs `TimeStepping.IsDirichletCNStep` on the
+three-row Whitney space `DState3 (whitneyRow N)` of the level-`(N + 1)` Freudenthal mesh of
+`Q = (0, ½)³` (`Feec.Models.Cube.Inhomogeneous`). This module proves its convergence at rate
+`O(h_N + Δt²)` for smooth solutions, the same rate for the five `fem4gr` constraint monitors
+when the solution is TSD, and `V̊ₕ ≠ 0`.
+
+## The error argument
+
+* **Abstract estimate** (`exists_comparison_consistency`, `norm_cn_error_le`,
+  `norm_cn_error_le_of_eq`): for an isometric embedding `emb : Vₕ → X`, a discrete differential `D`
+  with `D V̊ₕ ⊆ V̊ₕ`, `D D = 0`, the skew matrix `⟪A x, y⟫ = ⟪D x, y⟫ − ⟪x, D y⟫`, a solution
+  `U ∈ C³([0, T]; X)` of the weak form `⟪U', emb v⟫ = ⟪DU, emb v⟫ − ⟪U, emb (D v)⟫` on `V̊ₕ` and
+  approximants `wₙ` of `U(tₙ)` with `‖𝐝 (wₙ − U(tₙ))‖ ≤ a` and
+  `‖(wₙ₊₁ − U(tₙ₊₁)) − (wₙ − U(tₙ))‖ ≤ a Δt`, the comparison fields `ũₙ = wₙ − q (emb wₙ − U(tₙ))`
+  with the **boundary correction** `q = P_{D V̊ₕ}` (the `L²` projection onto the discrete
+  boundaries) keep the boundary DOFs of `wₙ`, do not increase the error, and are orthogonal to
+  `emb (D V̊ₕ)`, so the adjoint terms `⟪U − ũ, D v⟫` of the consistency error vanish: no inverse
+  estimate (which would lose `h⁻¹`) is needed. The canonical interpolant alone gives only
+  `|⟪U − Π U, D v⟫| ≤ ‖U − Π U‖ ‖D v‖`, which is `O(1) ‖v‖` after an inverse estimate; the
+  correction is a partial elliptic projection that only acts on `D V̊ₕ` (`D q = 0`). With the
+  trapezoidal remainder `norm_trapezoid_le`, `‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`, hence
+  `‖u_M − ũ_M‖ ≤ ‖u₀ − w₀‖ + a + T (L₃ Δt² / 2 + 2 a)`.
+* **The setting on a subcomplex** (`dEmb`, `discreteD_mem_interior`, `discreteD_discreteD`,
+  `inner_of_mem_graph_waveMax`, three rows: `dEmb3`, `discreteD3`, `inner3_of_mem_graph_waveMax`):
+  a strong solution of `U' = L_max U = 𝐝 U − 𝐝_min† U` solves the weak form, since
+  `⟪𝐝_min† U, v⟫ = ⟪U, 𝐝_min v⟫` on `V̊ₕ ⊆ D(𝐝_min)`.
+* **The linear canonical interpolant** (`FEMInterp.exists_linearMap_whitney_le`): the glued Whitney
+  interpolant as a linear map with the `O(h)` estimates of `FEM.exists_mem_whitney_le`; linearity
+  gives the estimate for time differences.
+* **Smooth forms** (`formalAdjD`, `complex_d_formL2Q`, `adjoint_complexMin_d_formL2Q`): on `Q`,
+  `d` of a smooth form is the classical one, and the adjoint of `d_min` is the formal adjoint
+  `dᵗ = −δ` (`(d_min)† = (dᵗ)_max`).
+
+## The concrete statements
+
+* `RowSolution T L`: a smooth solution of one row of (4.14) on `[0, T] × cl Q` (Ch. 7 sign
+  convention `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`, as the forms
+  `σ' = −dᵗE`, `E' = dσ − dᵗB`, `B' = dE`): `C²` in space, `C³` in time with jointly continuous
+  time derivatives, `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, these `L`-Lipschitz in time (bounded mixed
+  derivatives `∂ₜ Du`), and `|∂ₜ³ u| ≤ L`. No boundary condition is imposed: the boundary DOFs
+  of the scheme are those of the interpolant of the exact solution.
+* **`whitney_cn_error_le`**: for three rows of such a solution, the iterates from `u₀ = Π_h U(0)`
+  with the boundary DOFs of `Π_h U(tₙ)` satisfy `‖u_M − ũ_M‖ ≤ C L (1 + T) (h_N + Δt²)` and
+  `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)` for `M Δt ≤ T`, `C = cnConst` explicit and
+  independent of `N`, `Δt`, `T`.
+* **`whitney_cn_monitors_le`**: if the solution is TSD at `t_M` (`IsTSDAt`), the monitors
+  `½ (E − Eᵀ)`, `½ (B − Bᵀ)`, `tr E / √3`, `tr B / √3` and `σ` of `u_M` are
+  `≤ C L (1 + T) (h_N + Δt²)` (they vanish for `U`, `monitors_exactField_eq_zero`).
+* **`whitneyInterior3_ne_bot`**: `V̊ₕ ≠ 0` on every mesh (an interior edge function,
+  `whitneyMin_one_ne_bot`; interior hat functions for `N ≥ 1`, `whitneyMin_zero_ne_bot`).
+* **Whole-space TSD solutions** (`WholeSpaceTSD.Smooth`, `WholeSpaceTSD.Smooth.row`,
+  `WholeSpaceTSD.Smooth.isTSDAt`, `WholeSpaceTSD.Smooth.whitney_cn_error_monitors_le`): every
+  whole-space TSD solution with bounded derivatives gives three row solutions
+  `(0, Σⱼ E_{rj} dxⱼ, Σⱼ (−1)ʲ B_{rj} dx_{{j}ᶜ})` (`oneForm`, `twoForm`, with
+  `d oneForm = twoForm curl`, `dᵗ twoForm = oneForm curl`, `dᵗ oneForm = −div`), TSD at every
+  time, so the error and all five monitors are `O(h_N + Δt²)`.
+* `cnStep`, `cnIterates`: the iterates exist for every data (`whitney_existsUnique_cnStep3`).
+
+What the statements assume is only the smoothness of the exact solution (`RowSolution`,
+`WholeSpaceTSD.Smooth`), no theory absent from Mathlib. Not covered: the discrete divergence
+monitor (its constant depends on the mesh), rates for data of finite Sobolev regularity.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 7 (the Crank–Nicolson runs, the constraint monitors), §4.10 ((4.14))
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (interpolation
+  estimates)
+-/
+
 @[expose] public noncomputable section
 
 open scoped InnerProductSpace RealInnerProductSpace LinearPMap
@@ -833,12 +907,14 @@ abbrev rowComplex := (complex 3).window 0 3
 /-- The window `H̊Λ⁰(Q) → H̊Λ¹(Q) → L²Λ²(Q)` of the minimal complex (vanishing traces). -/
 abbrev rowComplexMin := (complexMin 3).window 0 3
 
-theorem complexMin_d_le_complex_d {n : ℕ} (j j' : ℤ) : (complexMin n).d j j' ≤ (complex n).d j j' := by
+theorem complexMin_d_le_complex_d {n : ℕ} (j j' : ℤ) :
+    (complexMin n).d j j' ≤ (complex n).d j j' := by
   by_cases h : j + 1 = j'
   · subst h
     rw [deRham_minimalComplex_d, deRham_maximalComplex_d]
     exact extDerivOp_minimal_le_maximal (isOpen_cubeDomain n) j
-  · rw [HilbertComplex.shape _ j j' (by simpa using h), HilbertComplex.shape _ j j' (by simpa using h)]
+  · rw [HilbertComplex.shape _ j j' (by simpa using h),
+      HilbertComplex.shape _ j j' (by simpa using h)]
 
 theorem rowComplexMin_d_le (i j : Fin 3) : rowComplexMin.d i j ≤ rowComplex.d i j :=
   complexMin_d_le_complex_d _ _
@@ -920,7 +996,9 @@ forms `u t i` of degree `i` (`σ_r`, the `1`-form `E_r`, the `2`-form `B_r`): `C
 in time with jointly continuous time derivatives, solving `σ' = −dᵗE`, `E' = dσ − dᵗB`,
 `B' = dE` pointwise (`dᵗ = −δ`, so `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`), with
 the bounds `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, `L`-Lipschitz dependence of `Du`, `D du` on `t ∈ [0, T]`
-(bounded mixed derivatives `∂ₜ Du`), and `|∂ₜ³ u| ≤ L` on `[0, T] × Q`. -/
+(bounded mixed derivatives `∂ₜ Du`), and `|∂ₜ³ u| ≤ L` on `[0, T] × Q`. The fields and their
+time derivatives are defined for all `t ∈ ℝ` (whole-space solutions restrict to such rows,
+`WholeSpaceTSD.Smooth.row`); the bounds are only required on `[0, T]`. -/
 structure RowSolution (T L : ℝ) where
   /-- the fields and their first three time derivatives -/
   u : ℝ → Fin 3 → FormField 3
@@ -1011,7 +1089,8 @@ theorem norm_piLp_le_sum {κ : Type*} [Fintype κ] {β : κ → Type*}
   rw [PiLp.norm_sq_eq_of_L2]
   exact Finset.sum_sq_le_sq_sum_of_nonneg fun i _ => norm_nonneg _
 
-/-- The canonical Whitney interpolant into `Vₕ^{0 + i}` (`FEMInterp.exists_linearMap_whitney_le`). -/
+/-- The canonical Whitney interpolant into `Vₕ^{0 + i}`
+(`FEMInterp.exists_linearMap_whitney_le`). -/
 def rowInterp (N : ℕ) (i : Fin 3) :
     contForms 3 →ₗ[ℝ] L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) :=
   (FEMInterp.exists_linearMap_whitney_le (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))).choose
@@ -1057,9 +1136,11 @@ theorem rowInterp_bounds (N : ℕ) {g : Fin 3 → FormField 3} (hg : ∀ i, Cont
   set x := dEmb (whitneyRow N) (rowInterpL N fun i => ⟨g i, (hg i).continuous⟩) -
     rowFieldL (fun i => ⟨g i, (hg i).continuous⟩)
   have spec := fun i : Fin 3 =>
-    (FEMInterp.exists_linearMap_whitney_le (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))).choose_spec.choose_spec
+    (FEMInterp.exists_linearMap_whitney_le (n := 3) N
+      ((0 : ℤ) + ((i : ℕ) : ℤ))).choose_spec.choose_spec
       (i : ℕ) (degIdx i) (hg i) (hdeg i) hL0 (fun y hy => (hb i y hy).1) (fun y hy => (hb i y hy).2)
-  have hxi : ∀ i, x i = -(formL2Q _ (g i) (hg i).continuous - rowInterp N i ⟨g i, (hg i).continuous⟩) :=
+  have hxi : ∀ i, x i =
+      -(formL2Q _ (g i) (hg i).continuous - rowInterp N i ⟨g i, (hg i).continuous⟩) :=
     fun i => by simp [x, rowInterpL, rowFieldL, dEmb]
   have hh := (meshSize_pos N).le
   have hle : ∀ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ)) * L * meshSize N ≤
@@ -1116,7 +1197,8 @@ theorem extDeriv_sub_of_contDiff {n : ℕ} {a b : FormField n} (ha : ContDiff �
 
 /-- The constant `Σᵢ #Λ^{0+i} |Q|^{1/2}` of the bound `‖U‖ ≤ (Σᵢ #Λⁱ |Q|^{1/2}) sup |u|`. -/
 def rowL2Const : ℝ := ∑ i : Fin 3,
-  (Fintype.card (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) : ℝ) * volume.real (cubeDomain 3) ^ (1 / 2 : ℝ)
+  (Fintype.card (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) : ℝ) *
+    volume.real (cubeDomain 3) ^ (1 / 2 : ℝ)
 
 theorem rowL2Const_nonneg : 0 ≤ rowL2Const := Finset.sum_nonneg fun _ _ => by positivity
 
@@ -1532,7 +1614,8 @@ theorem monitors_exactField_eq_zero {t : ℝ} (hX : IsTSDAt X t) :
     skewPart entryE' (exactField X t) = 0 ∧ skewPart entryB' (exactField X t) = 0 ∧
       tracePart entryE' (exactField X t) = 0 ∧ tracePart entryB' (exactField X t) = 0 ∧
       sigmaPart' (exactField X t) = 0 := by
-  refine ⟨PiLp.ext fun p => ?_, PiLp.ext fun p => ?_, ?_, ?_, PiLp.ext fun r => PiLp.ext fun s => ?_⟩
+  refine ⟨PiLp.ext fun p => ?_, PiLp.ext fun p => ?_, ?_, ?_,
+    PiLp.ext fun r => PiLp.ext fun s => ?_⟩
   · change (1 / 2 : ℝ) • (entryE' p.1 p.2 (exactField X t) - entryE' p.2 p.1 (exactField X t)) = _
     have hE : entryE' p.1 p.2 (exactField X t) = entryE' p.2 p.1 (exactField X t) := by
       rw [entryE'_exactField, entryE'_exactField]
@@ -1730,7 +1813,8 @@ theorem isDeg_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 → ℝ
 
 theorem isDeg_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 → ℝ) : IsDeg 2 (twoForm v y) :=
   fun s hs => Finset.sum_eq_zero fun j _ => by
-    simp [show ¬ s = {j}ᶜ from fun h => hs (by rw [h, Finset.card_compl, Finset.card_singleton]; rfl)]
+    simp [show ¬ s = {j}ᶜ from fun h => hs (by
+      rw [h, Finset.card_compl, Finset.card_singleton]; rfl)]
 
 theorem contDiff_oneForm {m : WithTop ℕ∞} {v : Fin 3 → (Fin 3 → ℝ) → ℝ}
     (hv : ∀ j, ContDiff ℝ m (v j)) : ContDiff ℝ m (oneForm v) :=

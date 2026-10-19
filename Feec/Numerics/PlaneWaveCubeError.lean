@@ -4,6 +4,55 @@ public import Feec.Numerics.PlaneWaveCube
 public import Feec.Models.Cube.InhomogeneousError
 public import Feec.Domain.Affine
 
+/-!
+# Convergence of the Ch. 7 plane-wave run, on `(0, ½)³` and on the unit cube of `fem4gr`
+
+The plane-wave test of [QuennevilleBelair2015], Ch. 7 (`Feec.Numerics.PlaneWaveCube`) with the
+Crank–Nicolson Whitney scheme with Dirichlet DOFs (`Feec.Models.Cube.InhomogeneousError`), for
+every amplitude `A₊`, `Aₓ` and frequency `ω`.
+
+## On `Q = (0, ½)³`
+
+* `planeWaveSmooth`: the plane wave has bounded derivatives on every `[0, T] × cl Q`, with the
+  bound `pwBound A₊ Aₓ ω = (|A₊| + |Aₓ|) (1 + |ω|)³` (`WholeSpaceTSD.Smooth`).
+* **`planeWave_cn_error_le`**: the iterates from the interpolated plane wave with the interpolated
+  boundary data satisfy `‖u_M − U(t_M)‖ ≤ C (|A₊| + |Aₓ|) (1 + |ω|)³ (1 + T) (h_N + Δt²)`, and so
+  do the five monitors; `planeWave_cnIterates_error_le`: the run exists (`cnIterates`).
+* **Non-vacuity** (`exactField_planeWave_ne_zero`): for `A₊ ≠ 0`, `ω ≠ 0` the exact field is
+  nonzero and TSD at every time.
+
+## Dilation to the unit cube `(0, 1)³`
+
+`fem4gr` runs on `(0, 1)³`. With `dil u = u(·/2)` (`Feec.Domain.pullF` along `x ↦ x/2`):
+
+* `freudenthalMesh_unit_eq_map`: the Freudenthal meshes of `(0, 1)³` are the images of those of
+  `(0, ½)³` under `x ↦ 2x`.
+* `inner_dil`: `⟪dil u, dil v⟫ = 8 ⟪u, v⟫`; `complexU_eq`, `complexUMin_eq`: `HΛ((0, 1)³)` and
+  `H̊Λ((0, 1)³)` are the transports of `HΛ(Q)`, `H̊Λ(Q)` with chain-rule factor `½`
+  (`Feec.Domain.ConstCoeffComplex.maximalComplex_pull`), so `d (dil u) = ½ dil (d u)`.
+* `whitneyU`, `whitneyUMin`: the Whitney spaces of the unit cube, defined as the dilations of
+  those of `Q`, are subcomplexes of `HΛ((0, 1)³)` and `H̊Λ((0, 1)³)`; `unitRow`, `unitInterior3`.
+  That they coincide with the spaces assembled directly on the mesh `freudenthalMesh 0 1`
+  (affine invariance of the Whitney element) is not formalized.
+* **`isDirichletCNStep_dilRow3_iff`**: a Crank–Nicolson step with parameter `s` on the unit cube
+  is a step with parameter `s / 2` on `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt`
+  is the scheme on `Q` with step `Δt / 2` (the system is invariant under `(t, x) ↦ (2t, 2x)`;
+  the time steps of Table 7.1 are `Feec.Numerics.CrankNicolson.dt`).
+* **Transported results**: well-posedness `unit_existsUnique_cnStep3`, the error
+  `unit_cn_error_le` (`‖u_M − U(t_M)‖_{L²(0,1)³} ≤ √8 C L (1 + T) (h_N + (Δt/2)²)` for
+  `U(t, x) = V(t/2, x/2)`) and the monitors `unit_cn_monitors_le`.
+* **The `fem4gr` run**: the unit-cube plane wave with frequency `ω` is the dilation of the plane
+  wave on `Q` with frequency `2ω` (`dilAmb3_exactField_planeWave`), so
+  `unit_planeWave_cn_error_le` gives `‖u_M − U_ω(t_M)‖_{L²(0,1)³}` and the five monitors
+  `≤ √8 C (|A₊| + |Aₓ|) (1 + 2|ω|)³ (1 + T_U / 2) (h_N + (Δt/2)²)` for `M Δt ≤ T_U`;
+  `unit_planeWave_cnIterates_error_le`: the run exists (`unitCnIterates`).
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 7 (the plane-wave test, Table 7.1)
+-/
+
 @[expose] public noncomputable section
 
 open scoped InnerProductSpace RealInnerProductSpace
@@ -419,8 +468,8 @@ theorem transport_d_dil {H : HilbertComplex ℝ (ComplexShape.up ℤ)
       i j).domain ∧
       ∀ h, (H.transport dil κU (ConstCoeffComplex.chainFactor_ne_zero half_ne_zero' _)).d i j
         ⟨dil i x, h⟩ = κU i j • dil j (H.d i j ⟨x, hx⟩) := by
-  have hm : dil i x ∈ ((H.transport dil κU (ConstCoeffComplex.chainFactor_ne_zero half_ne_zero' _)).d
-      i j).domain := by
+  have hm : dil i x ∈ ((H.transport dil κU
+      (ConstCoeffComplex.chainFactor_ne_zero half_ne_zero' _)).d i j).domain := by
     rw [transport_d, mem_transportD_domain, ContinuousLinearEquiv.symm_apply_apply]; exact hx
   refine ⟨hm, fun h => (transportD_apply (H := H) (e := dil) (κ := κU) ⟨dil i x, h⟩).trans ?_⟩
   congr 3
@@ -942,7 +991,8 @@ end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
 
-/-- **The dilation of the `L²` class of a continuous form**: `(w|_{(0,½)³})(·/2) = (w(·/2))|_{(0,1)³}`. -/
+/-- **The dilation of the `L²` class of a continuous form**:
+`(w|_{(0,½)³})(·/2) = (w(·/2))|_{(0,1)³}`. -/
 theorem dil_formL2Q (k : ℤ) {w : FormField 3} (hw : Continuous w) :
     dil k (formL2Q k w hw) = formL2 isOpen_unitCube.measurableSet isBounded_unitCube k
       ⟨fun x => w ((1 / 2 : ℝ) • x), hw.comp (continuous_const_smul _)⟩ := by
@@ -1040,7 +1090,8 @@ theorem unit_planeWave_cn_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt
       ‖tracePart (entryBU N) (u M)‖ ≤
         Real.sqrt 8 * (cnConst * pwBound Ap Ax (2 * w) * (1 + T) * (meshSize N + (Δt / 2) ^ 2)) ∧
       ‖sigmaPartU N (u M)‖ ≤
-        Real.sqrt 8 * (cnConst * pwBound Ap Ax (2 * w) * (1 + T) * (meshSize N + (Δt / 2) ^ 2)) := by
+        Real.sqrt 8 *
+          (cnConst * pwBound Ap Ax (2 * w) * (1 + T) * (meshSize N + (Δt / 2) ^ 2)) := by
   have hM' : (M : ℝ) * (Δt / 2) ≤ T := by linarith
   have herr := unit_cn_error_le (planeWaveRows Ap Ax (2 * w) T) (pwBound_nonneg _ _ _) N hΔt hM'
     hstep hu0
@@ -1067,5 +1118,57 @@ theorem unit_planeWave_cnIterates_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : �
         (fun n => dilRow3 N (exactInterp (planeWaveRows Ap Ax (2 * w) T) N (n * (Δt / 2))))
         (dilRow3 N (exactInterp (planeWaveRows Ap Ax (2 * w) T) N 0)))
     (fun n _ => unitCnIterates_spec N (Δt / 2) _ _ n) rfl).1
+
+end Feec.Numerics.PlaneWaveCube
+
+namespace Feec.Numerics.PlaneWaveCube
+
+open Feec.Mesh
+
+/-- The dilation `x ↦ 2x` of `ℝ³`. -/
+def dilate2 : (Fin 3 → ℝ) ≃ᵃ[ℝ] (Fin 3 → ℝ) := boxMap 0 2 two_ne_zero
+
+theorem mesh_ext' {M M' : SimplicialMesh 3} (h1 : M.simplices = M'.simplices)
+    (h2 : M.domain = M'.domain) : M = M' := by
+  cases M; cases M'; simp only at h1 h2; subst h1; subst h2; rfl
+
+theorem dilate2_boxMap (N : ℕ) (x : Fin 3 → ℝ) :
+    dilate2 (boxMap 0 ((1 / 2 : ℝ) / ((N + 1 : ℕ) : ℝ))
+      (freudenthalScale_ne_zero (by norm_num : (0 : ℝ) < 1 / 2) (N + 1)) x) =
+    boxMap 0 ((1 : ℝ) / ((N + 1 : ℕ) : ℝ)) (freudenthalScale_ne_zero one_pos (N + 1)) x := by
+  simp only [dilate2, boxMap_apply, zero_add, smul_smul]
+  congr 1
+  ring
+
+/-- **The Freudenthal meshes of the unit cube are the images of those of `(0, ½)³` under
+`x ↦ 2x`**: `freudenthalMesh 0 1 (N + 1) = (mesh 3 N).map (x ↦ 2x)`. -/
+theorem freudenthalMesh_unit_eq_map (N : ℕ) :
+    freudenthalMesh (0 : Fin 3 → ℝ) 1 one_pos (N + 1) = (mesh 3 N).map dilate2 := by
+  refine mesh_ext' (Finset.ext fun T => ?_) ?_
+  · rw [mem_freudenthalMesh_simplices, SimplicialMesh.mem_map_simplices]
+    constructor
+    · rintro ⟨m, σ, rfl⟩
+      refine ⟨_, mem_freudenthalMesh_simplices.2 ⟨m, σ, rfl⟩, Affine.Simplex.ext fun i => ?_⟩
+      simp only [mapEquiv_points]
+      exact dilate2_boxMap N _
+    · rintro ⟨T', hT', rfl⟩
+      obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT'
+      refine ⟨m, σ, Affine.Simplex.ext fun i => ?_⟩
+      simp only [mapEquiv_points]
+      exact (dilate2_boxMap N _).symm
+  · rw [SimplicialMesh.map_domain, mesh_domain, freudenthalMesh_domain]
+    ext x
+    simp only [Set.mem_image, cubeDomain, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo,
+      dilate2, boxMap_apply, zero_add, Pi.zero_apply]
+    constructor
+    · intro hx
+      refine ⟨(1 / 2 : ℝ) • x, fun i => ?_, by ext i; simp⟩
+      have := hx i
+      simp only [Pi.smul_apply, smul_eq_mul]
+      constructor <;> linarith [this.1, this.2]
+    · rintro ⟨y, hy, rfl⟩ i
+      have := hy i
+      simp only [Pi.smul_apply, smul_eq_mul]
+      constructor <;> linarith [this.1, this.2]
 
 end Feec.Numerics.PlaneWaveCube

@@ -27,13 +27,14 @@ without it.
 
 The TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of
 `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` (transported to this model in
-`Feec.Physics.EinsteinBianchi.MatrixModel`) is **not covered** by these rates: its magnetic rows
-`ρₐ(0)` (the `2`-forms of the rows of `β`) have nonzero tangential components on `∂Q` (the first
-row of `β` is `x₃ e₂`, whose `2`-form has the `{0, 2}` component `-y₂`, tangential to the faces
-`{y₁ = 0}` and `{y₁ = ½}`), so `ρ(0)` is in no class `IsCsFormTr 0 2 L`. Moreover
-`u'(0) = diag(1, -1, 0)` does not vanish on `∂Q` while `u(t) ∈ H̊Λ¹(Q)³` for all `t`, so the solution
-is not `C²` in space up to `∂Q` uniformly in `t` (the incompatibility of the datum with the boundary
-condition launches a front from `∂Q`). Its convergence without rate is the subject of
+`Feec.Physics.EinsteinBianchi.MatrixModel` and `Feec.Physics.EinsteinBianchi.BoundedFailure`) is
+**not covered** by these rates. Its magnetic rows `ρₐ(0)` (the `2`-forms of the rows of `β`) have
+nonzero tangential components on `∂Q`: the first row of `β` is `x₃ e₂`, whose `2`-form has the
+`{0, 2}` component `-y₂`, tangential to the faces `{y₁ = 0}` and `{y₁ = ½}`; so `ρ(0)` is in no
+class `IsCsFormTr 0 2 L` (a continuous representative agrees with `ρ(0)` on `Q`, hence on its
+closure; this short argument is not formalized). Moreover `u'(0) = diag(1, −1, 0)` violates the
+boundary condition `u(t) ∈ H̊Λ¹(Q)³`, so the solution is not expected to be `C²` up to `∂Q` for
+`t > 0` (not formalized). Its convergence without rate is the subject of
 `Feec.Physics.EinsteinBianchi.BoundedFailure`.
 
 ## References

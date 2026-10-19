@@ -41,17 +41,22 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
 
 ## Gaps
 
-* The identification of (6.1) for `bggHilb` with the system
-  `Feec.Models.BoundedDomain.bggComplex_eq61` (matrix model) is built for the first space only
-  (`gamma_equiv_hessMin`). The rest needs the isometry `H̊Λ¹(Q)³ ≅ H̊(curl, Q; ℝ³ˣ³)`
-  (rows `u_a = Σ_b u_{ab} dx_b`) intertwining `(S¹, d)` with `(skwL, curl)`, which identifies the
-  `2`-forms with vectors (Hodge star, with the sign conventions of `Feec.Domain.formIdx`), and
-  the resulting unitary equivalence of the two Hilbert complexes and of their Hodge wave
-  operators. Consequently the TSD datum of `Feec.Counterexamples.BoundedBGG.bggComplex_verdict`
-  (whose solution leaves `L²(TSD)`) is not transported to this model. Even transported, the rate
-  theorem does not apply to it: its magnetic datum `β = x₃(e₁e₂ᵀ + e₂e₁ᵀ)` does not vanish on
-  `∂Q`, and a rate-free convergence statement needs the elliptic-projection error for non-smooth
-  data (uniform in time) and an `L²` multiplier, which that solution need not have.
+* The identification of (6.1) for `bggHilb` with the matrix model
+  `Feec.Models.BoundedDomain.bggComplex` (`Feec.Models.BoundedDomain.bggComplex_eq61`) is
+  complete: `gamma_equiv_hessMin` here for the first space, and
+  `Feec.EinsteinBianchi.MatrixModel.matrixComplex_eq_map` for the whole complex (the isometry
+  `rowsEquiv : H̊Λ¹(Q)³ ≅ H̊(curl, Q; ℝ³ˣ³)`, rows `u_a = Σ_b u_{ab} dx_b`, intertwining
+  `(S¹, d)` with `(skwL, curl)`, and the Hodge star on `2`-forms), with conjugate Hodge wave
+  operators and groups and corresponding strong and classical solutions
+  (`Feec.EinsteinBianchi.MatrixModel.isStrongSolution_iff`). The TSD datum of
+  `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` (whose solution leaves `L²(TSD)`) is
+  transported to this model in `Feec.EinsteinBianchi.BoundedFailure`. The rate theorem does not
+  apply to it (its magnetic datum `β = x₃(e₁e₂ᵀ + e₂e₁ᵀ)` does not vanish on `∂Q`);
+  `Feec.EinsteinBianchi.BoundedFailure.waveFEM_converges_to_non_tsd` proves the convergence of
+  (6.5) to it without rate under the hypothesis that it is approximable by the rate class
+  (`IsRateApproximable`), which is open: a rate-free analysis needs the elliptic-projection error
+  for non-smooth data (uniform in time) and an `L²` multiplier, which that solution need not
+  have.
 * The mirror variant of the scheme is discretized and well posed in
   `Feec.Models.Cube.MirrorWeakSymmetryFEM`; its convergence is open (see there).
 

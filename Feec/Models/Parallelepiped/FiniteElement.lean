@@ -7,7 +7,75 @@ public import Feec.Models.Cube.PolyRate
 /-!
 # The finite element method on parallelepipeds
 
-PLACEHOLDER
+Let `Ω = A · Q + b` with `Q = (0, ½)ⁿ` and `A` invertible (`Parallelepiped.domain`; every open box
+`∏ᵢ (aᵢ, cᵢ)` is one, `domain_boxMatrix`), `T x = A x + b`. The finite element theory of the cube
+(`Feec.Models.Cube.FiniteElementConvergence`, `Feec.Models.Cube.PolyFiniteElementConvergence`,
+`Feec.Models.Cube.PolyRate`) is carried to `Ω` by **affine transport**, with no hypothesis beyond
+the data and smoothness.
+
+* **The pullback of forms.** The fibre matrices of `T^*` are the `k × k` minors of `A`
+  (`minorMat`; `pullFun_minorMat`: pointwise `T^*` is `Feec.FiniteElement.affinePullback`), they
+  intertwine `d` (`isDIntertwining_minorMat`, from `extDeriv_affinePullback_apply`) and the minors
+  of `A⁻¹` invert them (Cauchy–Binet, `sum_minorMat_mul`). Hence (`Feec.Domain.FormPullback`)
+  `T^* : L²(Ω; Λᵏ) ≃ L²(Q; Λᵏ)` (`pullEquiv`) is a bounded isomorphism with
+  `‖T^*‖ ≤ pullConst A`, `‖(T^*)⁻¹‖ ≤ pullConst A⁻¹` (`pullConst A = |det A|^{-1/2} Σ |minors|`,
+  the minors bounded by `k! ‖A‖_max^k`, `abs_wedgeProd_rows_le`), and `HΛ(Q)`, `H̊Λ(Q)` are the
+  transports of `HΛ(Ω)`, `H̊Λ(Ω)` (`complex_cube_eq_transport`, `complexMin_cube_eq_transport`):
+  an isomorphism of Hilbert complexes (`isChainIso`, `isChainIsoMin`).
+* **Isomorphisms of Hilbert complexes** (`Feec.HilbertComplex.IsChainIso`, not isometric) carry
+  subcomplexes and cochain projections `e⁻¹ π' e` with explicit `L²` and graph bounds
+  (`comapProj`, `norm_comapProj_le`, `isGraphBounded_comapProj`), the Poincaré inequality with
+  `c_P = ‖e⁻¹‖ c_P' ‖e‖` (`IsChainIso.norm_le_of_mem_orthogonal_cycles`), finite-dimensionality
+  and the dimension of the harmonic forms (`finiteDimensional_harmonic`, `finrank_harmonic_eq`:
+  `x ↦ P_{ℌ'} (e x)` is injective) and degreewise approximation (`exists_near_comapSub`,
+  `eventually_near_comapSub`, `tendsto_infDist_comapSub`).
+* **Affine invariance of the finite element spaces.** For an element family natural under `T`
+  (`IsAffineNatural`: local spaces pulled back into local spaces, DOFs of `T^* w` on `g` fixed
+  combinations of the DOFs of `w` on `T g`) the glued spaces of the image mesh `T(M)` pull back
+  into those of `M` (`fieldPull_mem_V`, `fieldPull_mem_V₀`; boundary facets correspond,
+  `isBoundaryFacet_map`). The Whitney family is natural (face integrals change by orientation
+  signs, `isAffineNatural_whitney`) and so is every admissible sequence `P_rΛ`/`P_r⁻Λ`
+  (`isAffineNatural_poly`: `T ∘ lexEnum g = lexEnum (T g) ∘ π`, moments change by `sign π` and test
+  forms by `A_{π⁻¹}^*`, `vertexMoment_comp_perm`). On the image Freudenthal meshes `T(M_N)`
+  (`Parallelepiped.mesh`, shape regular), `v ∈ Vₕ(T(M_N))` iff `T^* v ∈ Vₕ(M_N)`
+  (`mem_whitney_V_iff`, `mem_whitneyMin_V_iff`, `mem_poly_V_iff`, `mem_polyMin_V_iff`).
+* **Hodge theory of `Ω`.** Poincaré with `c_P(A) = pullConst A⁻¹ (2π)⁻¹ pullConst A`
+  (`norm_le_of_mem_orthogonal_cycles`, `_min`), closed range in every degree (`closedRangeAt`,
+  `closedRangeAt_min`), `dim ℌᵏ(HΛ(Ω)) = [k = 0]`, `dim ℌᵏ(H̊Λ(Ω)) = [k = n]` (`finrank_harmonic`,
+  `finrank_harmonic_min`).
+* **The finite element theorems on `Ω`**, Whitney forms and every admissible sequence, both
+  boundary-condition families: uniformly bounded smoothed cochain projections with vanishing
+  harmonic gap (`smoothedProjection_uniform`, `polySmoothedProjection_uniform`, `_min`), the
+  uniform discrete Poincaré inequality (`discretePoincare`, `discretePoincare_poly`), uniform
+  well-posedness and stability of the discrete mixed Hodge Laplacian (`mixed_wellPosed`,
+  `mixed_wellPosed_poly`), quasi-optimality (`mixed_quasiOptimal`, `mixed_quasiOptimal_poly`),
+  `O(h)` rates for `C²` solutions (`mixed_rate_smooth`, `mixed_rate_smooth_min`; the class
+  `IsC2Form` on `cl Ω`, pulled back with `fibConst A = ‖A^*‖ ‖A‖`) and `h^{s+1}` for `C^{s+2}`
+  solutions and sequences of order `s` (`mixed_rate_poly`, `mixed_rate_polyMin`), the semi-discrete
+  Hodge wave equation on every window (`exists_tendstoUniformlyOn_window_whitney`,
+  `exists_tendstoUniformlyOn_window_poly`, `_min`) with the `O(h)` rate for `C²` solutions
+  (`norm_sub_le_meshSize_window_smooth`). The generic forms (`HasUniformProj`,
+  `discretePoincare_of`, `mixed_wellPosed_of`, `mixed_quasiOptimal_of`, `mixed_rate_of`,
+  `exists_tendstoUniformlyOn_window_of`) apply to any family of subcomplexes with uniformly bounded
+  cochain projections.
+
+Not covered here: the compactness property of `HΛ(Ω)` (the box `D(d) ∩ D(d†)` is not mapped to
+the box of `Q` by `T^*`, which is not unitary); the mixed boundary conditions of
+`Feec.Models.Cube.DeRhamPartial`.
+
+## References
+
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+  (affine-equivalent families of finite elements)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3 (Thm 3.6, 3.8, 3.9), §5.4 (smoothed projections)
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §4–5 (pullback of the spaces and degrees of freedom)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
+  solutions)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
 -/
 
 @[expose] public noncomputable section
@@ -792,7 +860,7 @@ by `T ∘ faceEnum g` and `faceEnum (T g)` differ by a permutation). -/
 theorem exists_whitneyFaceDof_affinePullback {g : Finset (Fin n → ℝ)} {k : ℕ}
     (hg : g.card = k + 1) : ∃ ε : ℝ, ∀ w : contForms n,
       whitneyFaceDof g k ⟨affinePullback (rows A) b (w : FormField n),
-        continuous_affinePullback _ _ (mem_contForms.1 w.2)⟩ =
+        mem_contForms.2 (continuous_affinePullback _ _ (mem_contForms.1 w.2))⟩ =
       ε * whitneyFaceDof (g.image (affEquiv A hA b)) k w := by
   set e := affEquiv A hA b
   set q := faceEnum g (k + 1)
@@ -812,71 +880,94 @@ theorem exists_whitneyFaceDof_affinePullback {g : Finset (Fin n → ℝ)} {k : �
   refine ⟨ε, fun w => ?_⟩
   rw [whitneyFaceDof_apply, whitneyFaceDof_apply, ← hε w, simplexIntegral_comp_affine]
 
-variable (M : SimplicialMesh n)
+open Classical in
+/-- **An element family is natural under `T x = A x + b`**: the local spaces of `T(K)` pull back
+into those of `K`, and the DOFs of `T^* w` on a face `g` are fixed linear combinations of the
+DOFs of `w` on `T(g)` (depending only on `g`). -/
+structure IsAffineNatural (E : LocalElement n) : Prop where
+  space : ∀ (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) {w : FormField n},
+    w ∈ E.space (mapEquiv (affEquiv A hA b) T) k → affinePullback (rows A) b w ∈ E.space T k
+  dof : ∀ (g : Finset (Fin n → ℝ)) (k : ℕ) (i : E.DofIdx g k),
+    ∃ c : E.DofIdx (g.image (affEquiv A hA b)) k → ℝ, ∀ w : contForms n,
+      E.dof g k i ⟨affinePullback (rows A) b (w : FormField n),
+        mem_contForms.2 (continuous_affinePullback _ _ (mem_contForms.1 w.2))⟩ =
+        ∑ j, c j * E.dof (g.image (affEquiv A hA b)) k j w
 
-/-- The elementwise pullback of a piecewise Whitney field on `T(M)` to `M`. -/
-def pullPiecewise (k : ℕ) (u : (whitneyElement n).Piecewise (M.map (affEquiv A hA b)) k) :
-    (whitneyElement n).Piecewise M k := fun T =>
-  ⟨affinePullback (rows A) b
-    (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n), by
-    have h1 := (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩).2
-    change _ ∈ whitneySpace _ k at h1
+open Classical in
+/-- **The Whitney element family is natural**: `P₁⁻Λ` is affine invariant and the face integrals
+transform by signs (`exists_whitneyFaceDof_affinePullback`). -/
+theorem isAffineNatural_whitney : IsAffineNatural A hA b (whitneyElement n) where
+  space T k w hw := by
+    change _ ∈ whitneySpace _ k at hw
     change _ ∈ whitneySpace _ k
-    rw [whitneySpace_eq_p1MinusForms] at h1 ⊢
-    exact affinePullback_mem_p1MinusForms _ _ h1⟩
+    rw [whitneySpace_eq_p1MinusForms] at hw ⊢
+    exact affinePullback_mem_p1MinusForms _ _ hw
+  dof g k i := by
+    obtain ⟨ε, hε⟩ := exists_whitneyFaceDof_affinePullback A hA b i.2
+    have hc : (g.image (affEquiv A hA b)).card = k + 1 := by
+      rw [Finset.card_image_of_injective _ (affEquiv A hA b).injective, i.2]
+    refine ⟨fun _ => ε, fun w => (hε w).trans ?_⟩
+    have : Subsingleton ((whitneyElement n).DofIdx (g.image (affEquiv A hA b)) k) :=
+      inferInstanceAs (Subsingleton (WhitneyDofIdx _ k))
+    set j0 : (whitneyElement n).DofIdx (g.image (affEquiv A hA b)) k :=
+      (⟨(), hc⟩ : WhitneyDofIdx (g.image (affEquiv A hA b)) k)
+    symm
+    exact Finset.sum_eq_single j0 (fun j _ hj => absurd (Subsingleton.elim j j0) hj)
+      (fun h => absurd (Finset.mem_univ j0) h)
 
-theorem pullPiecewise_apply (k : ℕ) (u : (whitneyElement n).Piecewise (M.map (affEquiv A hA b)) k)
+variable {A hA b} (E : LocalElement n) (hE : IsAffineNatural A hA b E) (M : SimplicialMesh n)
+
+/-- The elementwise pullback of a piecewise field on `T(M)` to `M`. -/
+def pullPiecewise (k : ℕ) (u : E.Piecewise (M.map (affEquiv A hA b)) k) : E.Piecewise M k :=
+  fun T => ⟨affinePullback (rows A) b
+    (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
+    hE.space T k (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩).2⟩
+
+theorem pullPiecewise_apply (k : ℕ) (u : E.Piecewise (M.map (affEquiv A hA b)) k)
     (T : M.simplices) :
-    (pullPiecewise A hA b M k u T : FormField n) = affinePullback (rows A) b
+    (pullPiecewise E hE M k u T : FormField n) = affinePullback (rows A) b
       (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n) := rfl
 
 open Classical in
-/-- **Global Whitney fields pull back to global Whitney fields**: the DOFs of the faces transform
-by the signs of `exists_whitneyFaceDof_affinePullback`. -/
-theorem pullPiecewise_mem_globalSpace {k : ℕ}
-    {u : (whitneyElement n).Piecewise (M.map (affEquiv A hA b)) k}
-    (hu : u ∈ (whitneyElement n).globalSpace (M.map (affEquiv A hA b)) k) :
-    pullPiecewise A hA b M k u ∈ (whitneyElement n).globalSpace M k := by
+/-- **Global fields pull back to global fields**: the DOFs on a face `g` of `T^* u_{T(K)}` are the
+same combinations of the DOFs of `u` on `T(g)` for all `K ∋ g`. -/
+theorem pullPiecewise_mem_globalSpace {k : ℕ} {u : E.Piecewise (M.map (affEquiv A hA b)) k}
+    (hu : u ∈ E.globalSpace (M.map (affEquiv A hA b)) k) :
+    pullPiecewise E hE M k u ∈ E.globalSpace M k := by
   intro T T' g hg hg' i
-  obtain ⟨ε, hε⟩ := exists_whitneyFaceDof_affinePullback A hA b i.2
-  have hc : (g.image (affEquiv A hA b)).card = k + 1 := by
-    rw [Finset.card_image_of_injective _ (affEquiv A hA b).injective, i.2]
-  have h1 := hε ⟨(u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
-    (whitneyElement n).le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩
-  have h2 := hε ⟨(u ⟨mapEquiv (affEquiv A hA b) T', mapEquiv_mem_map M _ T'.2⟩ : FormField n),
-    (whitneyElement n).le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T'.2⟩).2⟩
-  have h3 : whitneyFaceDof (g.image (affEquiv A hA b)) k
+  obtain ⟨c, hc⟩ := hE.dof g k i
+  have h1 := hc ⟨(u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
+    E.le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩
+  have h2 := hc ⟨(u ⟨mapEquiv (affEquiv A hA b) T', mapEquiv_mem_map M _ T'.2⟩ : FormField n),
+    E.le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T'.2⟩).2⟩
+  have h3 : ∀ j, E.dof (g.image (affEquiv A hA b)) k j
       ⟨(u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
-        (whitneyElement n).le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩ =
-      whitneyFaceDof (g.image (affEquiv A hA b)) k
+        E.le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩ =
+      E.dof (g.image (affEquiv A hA b)) k j
       ⟨(u ⟨mapEquiv (affEquiv A hA b) T', mapEquiv_mem_map M _ T'.2⟩ : FormField n),
-        (whitneyElement n).le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T'.2⟩).2⟩ :=
+        E.le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T'.2⟩).2⟩ := fun j =>
     hu ⟨_, mapEquiv_mem_map M _ T.2⟩ ⟨_, mapEquiv_mem_map M _ T'.2⟩ (g.image (affEquiv A hA b))
-      ((image_subset_vertexSet_mapEquiv_iff _).2 hg) ((image_subset_vertexSet_mapEquiv_iff _).2 hg')
-      ⟨(), hc⟩
-  rw [h3] at h1
+      ((image_subset_vertexSet_mapEquiv_iff _).2 hg) ((image_subset_vertexSet_mapEquiv_iff _).2 hg') j
+  simp only [h3] at h1
   exact h1.trans h2.symm
 
 open Classical in
 /-- **Vanishing boundary DOFs pull back**: boundary facets of `M` are mapped to boundary facets
 of `T(M)` (`isBoundaryFacet_map`). -/
-theorem pullPiecewise_mem_globalSpace₀ {k : ℕ}
-    {u : (whitneyElement n).Piecewise (M.map (affEquiv A hA b)) k}
-    (hu : u ∈ (whitneyElement n).globalSpace₀ (M.map (affEquiv A hA b)) k) :
-    pullPiecewise A hA b M k u ∈ (whitneyElement n).globalSpace₀ M k := by
-  refine ⟨pullPiecewise_mem_globalSpace A hA b M hu.1, fun T F hF hFT g hg i => ?_⟩
-  obtain ⟨ε, hε⟩ := exists_whitneyFaceDof_affinePullback A hA b i.2
-  have hc : (g.image (affEquiv A hA b)).card = k + 1 := by
-    rw [Finset.card_image_of_injective _ (affEquiv A hA b).injective, i.2]
-  have h1 := hε ⟨(u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
-    (whitneyElement n).le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩
-  have h0 : whitneyFaceDof (g.image (affEquiv A hA b)) k
+theorem pullPiecewise_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise (M.map (affEquiv A hA b)) k}
+    (hu : u ∈ E.globalSpace₀ (M.map (affEquiv A hA b)) k) :
+    pullPiecewise E hE M k u ∈ E.globalSpace₀ M k := by
+  refine ⟨pullPiecewise_mem_globalSpace E hE M hu.1, fun T F hF hFT g hg i => ?_⟩
+  obtain ⟨c, hc⟩ := hE.dof g k i
+  have h1 := hc ⟨(u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
+    E.le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩
+  have h0 : ∀ j, E.dof (g.image (affEquiv A hA b)) k j
       ⟨(u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n),
-        (whitneyElement n).le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩ = 0 :=
+        E.le_contForms _ k (u ⟨_, mapEquiv_mem_map M _ T.2⟩).2⟩ = 0 := fun j =>
     hu.2 ⟨_, mapEquiv_mem_map M _ T.2⟩ (F.image (affEquiv A hA b))
       (isBoundaryFacet_map M _ hF) ((image_subset_vertexSet_mapEquiv_iff _).2 hFT)
-      (g.image (affEquiv A hA b)) (Finset.image_subset_image hg) ⟨(), hc⟩
-  rw [h0, mul_zero] at h1
+      (g.image (affEquiv A hA b)) (Finset.image_subset_image hg) j
+  simp only [h0, mul_zero, Finset.sum_const_zero] at h1
   exact h1
 
 /-- The components of a glued field are the piecewise components. -/
@@ -889,16 +980,16 @@ theorem coeFn_glue (E : LocalElement n) (M : SimplicialMesh n) {k : ℕ} (u : E.
 
 /-- **The glued pullback**: `T^* (glue u) = glue (T^* u)`, elementwise on the interiors. -/
 theorem glue_pullPiecewise (hM : IsOpen M.domain) {k : ℕ}
-    (u : (whitneyElement n).Piecewise (M.map (affEquiv A hA b)) k)
+    (u : E.Piecewise (M.map (affEquiv A hA b)) k)
     (hmeas : MeasurableSet (M.map (affEquiv A hA b)).domain)
     (hT : affMap A b ⁻¹' (M.map (affEquiv A hA b)).domain = M.domain) :
-    (whitneyElement n).glue M k (pullPiecewise A hA b M k u) =
-      fieldPull hA b hmeas hT (minorMat A k)
-        ((whitneyElement n).glue (M.map (affEquiv A hA b)) k u) := by
+    E.glue M k (pullPiecewise E hE M k u) =
+      fieldPull hA b hmeas hT (minorMat A k) (E.glue (M.map (affEquiv A hA b)) k u) := by
   refine PiLp.ext fun s => Lp.ext ?_
-  filter_upwards [coeFn_glue (whitneyElement n) M (pullPiecewise A hA b M k u) s,
-    coeFn_fieldPull hA b hmeas hT (minorMat A k) ((whitneyElement n).glue (M.map (affEquiv A hA b)) k u) s,
-    ae_comp_affMap hA b hT hmeas (ae_all_iff.2 fun t => coeFn_glue (whitneyElement n) (M.map (affEquiv A hA b)) u t),
+  filter_upwards [coeFn_glue E M (pullPiecewise E hE M k u) s,
+    coeFn_fieldPull hA b hmeas hT (minorMat A k) (E.glue (M.map (affEquiv A hA b)) k u) s,
+    ae_comp_affMap hA b hT hmeas (ae_all_iff.2 fun t =>
+      coeFn_glue E (M.map (affEquiv A hA b)) u t),
     ae_mem_interior M hM.measurableSet] with x h1 h2 h3 hx
   obtain ⟨T, hT', hxT⟩ := hx
   have hTx : affMap A b x ∈ interior (mapEquiv (affEquiv A hA b) T).closedInterior := by
@@ -906,46 +997,194 @@ theorem glue_pullPiecewise (hM : IsOpen M.domain) {k : ℕ}
   rw [h1, h2]
   simp only [h3]
   rw [pieceFun_of_mem_interior M _ hT' hxT]
-  simp only [pieceFun_of_mem_interior (M.map (affEquiv A hA b)) _ (mapEquiv_mem_map M (affEquiv A hA b) hT') hTx]
-  rw [(whitneyElement n).extendPW_of_mem M _ hT',
-    (whitneyElement n).extendPW_of_mem (M.map (affEquiv A hA b)) _ (mapEquiv_mem_map M (affEquiv A hA b) hT')]
+  simp only [pieceFun_of_mem_interior (M.map (affEquiv A hA b)) _
+    (mapEquiv_mem_map M (affEquiv A hA b) hT') hTx]
+  rw [E.extendPW_of_mem M _ hT',
+    E.extendPW_of_mem (M.map (affEquiv A hA b)) _ (mapEquiv_mem_map M (affEquiv A hA b) hT')]
   simp only [formComp, pullPiecewise_apply, affinePullback_apply, pullback_apply, affine_rows]
-  have hdeg := (whitneyElement n).isDeg_of_mem
+  have hdeg := E.isDeg_of_mem
     (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ hT'⟩).2 (affMap A b x)
   rw [sum_isDeg_mul hdeg]
   refine Finset.sum_congr rfl fun t _ => ?_
   rw [minorMat, mul_comm]
 
-/-- **Affine invariance of the Whitney spaces**: `T^*` maps the Whitney space of `M₂ = T(M₁)`
-into the Whitney space of `M₁`. -/
-theorem fieldPull_mem_whitney_V {M₁ M₂ : SimplicialMesh n}
+include hE in
+/-- **Affine invariance of the global spaces**: `T^*` maps the glued space of `M₂ = T(M₁)` into
+the glued space of `M₁`, for a natural element family. -/
+theorem fieldPull_mem_V {M₁ M₂ : SimplicialMesh n}
     (h : M₂ = M₁.map (affEquiv A hA b)) (hM₁ : IsOpen M₁.domain)
     (hmeas : MeasurableSet M₂.domain) (hT : affMap A b ⁻¹' M₂.domain = M₁.domain) (k : ℤ)
-    {v : L2F ℝ M₂.domain (formIdx n k)} (hv : v ∈ (whitneyElement n).V M₂ k) :
-    fieldPull hA b hmeas hT (minorMat A k) v ∈ (whitneyElement n).V M₁ k := by
+    {v : L2F ℝ M₂.domain (formIdx n k)} (hv : v ∈ E.V M₂ k) :
+    fieldPull hA b hmeas hT (minorMat A k) v ∈ E.V M₁ k := by
   subst h
   rcases k with k | k
   · obtain ⟨⟨u, hu⟩, rfl⟩ := hv
-    exact ⟨⟨pullPiecewise A hA b M₁ k u, pullPiecewise_mem_globalSpace A hA b M₁ hu⟩,
-      glue_pullPiecewise A hA b M₁ hM₁ u hmeas hT⟩
+    exact ⟨⟨pullPiecewise E hE M₁ k u, pullPiecewise_mem_globalSpace E hE M₁ hu⟩,
+      glue_pullPiecewise E hE M₁ hM₁ u hmeas hT⟩
   · have := LocalElement.subsingleton_L2F_negSucc M₁.domain (n := n) k
     rw [Subsingleton.elim (fieldPull hA b hmeas hT (minorMat A _) v) 0]
     exact Submodule.zero_mem _
 
-/-- **Affine invariance of the Whitney spaces with vanishing boundary DOFs.** -/
-theorem fieldPull_mem_whitney_V₀ {M₁ M₂ : SimplicialMesh n}
+include hE in
+/-- **Affine invariance of the global spaces with vanishing boundary DOFs.** -/
+theorem fieldPull_mem_V₀ {M₁ M₂ : SimplicialMesh n}
     (h : M₂ = M₁.map (affEquiv A hA b)) (hM₁ : IsOpen M₁.domain)
     (hmeas : MeasurableSet M₂.domain) (hT : affMap A b ⁻¹' M₂.domain = M₁.domain) (k : ℤ)
-    {v : L2F ℝ M₂.domain (formIdx n k)} (hv : v ∈ (whitneyElement n).V₀ M₂ k) :
-    fieldPull hA b hmeas hT (minorMat A k) v ∈ (whitneyElement n).V₀ M₁ k := by
+    {v : L2F ℝ M₂.domain (formIdx n k)} (hv : v ∈ E.V₀ M₂ k) :
+    fieldPull hA b hmeas hT (minorMat A k) v ∈ E.V₀ M₁ k := by
   subst h
   rcases k with k | k
   · obtain ⟨⟨u, hu⟩, rfl⟩ := hv
-    exact ⟨⟨pullPiecewise A hA b M₁ k u, pullPiecewise_mem_globalSpace₀ A hA b M₁ hu⟩,
-      glue_pullPiecewise A hA b M₁ hM₁ u hmeas hT⟩
+    exact ⟨⟨pullPiecewise E hE M₁ k u, pullPiecewise_mem_globalSpace₀ E hE M₁ hu⟩,
+      glue_pullPiecewise E hE M₁ hM₁ u hmeas hT⟩
   · have := LocalElement.subsingleton_L2F_negSucc M₁.domain (n := n) k
     rw [Subsingleton.elim (fieldPull hA b hmeas hT (minorMat A _) v) 0]
     exact Submodule.zero_mem _
+
+/-! #### Naturality of the higher-order families -/
+
+theorem affinePullback_mem_space_poly (S : PolySeq) {m n' : ℕ} (B : Fin n' → Fin m → ℝ)
+    (b' : Fin n' → ℝ) (k : ℕ) {w : FormField n'} (hw : w ∈ S.space n' k) :
+    affinePullback B b' w ∈ S.space m k := by
+  change _ ∈ (S.kind k).space m (S.deg k) k
+  change w ∈ (S.kind k).space n' (S.deg k) k at hw
+  generalize S.kind k = κ at hw ⊢
+  cases κ
+  · exact affinePullback_mem_polySpace B b' hw
+  · exact affinePullback_mem_polyMinusSpace B b' hw
+
+theorem affinePullback_mem_test (S : PolySeq) {m : ℕ} (B : Fin m → Fin m → ℝ) (b' : Fin m → ℝ)
+    (k : ℕ) {η : FormField m} (hη : η ∈ S.test k m) : affinePullback B b' η ∈ S.test k m := by
+  change _ ∈ (S.kind k).test (S.deg k) k m
+  change η ∈ (S.kind k).test (S.deg k) k m at hη
+  by_cases hc : k ≤ m ∧ m < S.deg k + k
+  · generalize S.kind k = κ at hη ⊢
+    cases κ
+    · change η ∈ testSpace _ k m at hη
+      change _ ∈ testSpace _ k m
+      rw [testSpace_eq hc] at hη ⊢
+      exact affinePullback_mem_polyMinusSpace B b' hη
+    · change η ∈ testSpaceMinus _ k m at hη
+      change _ ∈ testSpaceMinus _ k m
+      rw [testSpaceMinus_eq hc] at hη ⊢
+      exact affinePullback_mem_polySpace B b' hη
+  · rw [PolyKind.test_eq_bot hc, Submodule.mem_bot] at hη ⊢
+    subst hη
+    funext x s
+    simp [affinePullback_apply, pullback_apply]
+
+/-- `degField` commutes with the pullback (the pullback preserves degrees). -/
+theorem degField_affinePullback {m n' : ℕ} (k : ℕ) (B : Fin n' → Fin m → ℝ) (b' : Fin n' → ℝ)
+    (w : FormField n') :
+    degField k (affinePullback B b' w) = affinePullback B b' (degField k w) := by
+  funext x s
+  simp only [degField, affinePullback_apply, pullback_apply]
+  by_cases hs : #s = k
+  · simp only [hs, ite_true]
+    refine Finset.sum_congr rfl fun t _ => ?_
+    by_cases ht : #t = k
+    · simp only [ht, ite_true]
+    · simp only [ht, ite_false, isDeg_wedgeProd B t s (by rw [hs]; exact Ne.symm ht), mul_zero]
+  · simp only [hs, ite_false]
+    refine (Finset.sum_eq_zero fun t _ => ?_).symm
+    by_cases ht : #t = k
+    · rw [isDeg_wedgeProd B t s (by rw [ht]; exact hs), mul_zero]
+    · simp only [ht, ite_false, zero_mul]
+
+/-- **Moments along an affine image**: `∫_{T̂} F_q^* (G^* ω) ∧ η = ∫_{T̂} F_{G ∘ q}^* ω ∧ η`. -/
+theorem vertexMoment_affinePullback {m n' : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
+    (B : Fin n' → Fin n → ℝ) (b' : Fin n' → ℝ) (w : FormField n') :
+    vertexMoment q η (affinePullback B b' w) = vertexMoment (fun i => affine B b' (q i)) η w := by
+  simp only [vertexMoment, affinePullback_affinePullback, simplexMatrix_comp_affine]
+
+/-- `wedgeField` commutes with the pullback. -/
+theorem affinePullback_wedgeField {m : ℕ} (B : Fin m → Fin m → ℝ) (b' : Fin m → ℝ)
+    (α β : FormField m) :
+    affinePullback B b' (wedgeField α β) =
+      wedgeField (affinePullback B b' α) (affinePullback B b' β) := by
+  funext x
+  simp only [affinePullback_apply, wedgeField, pullback_wedgeForm]
+
+/-- The vertex permutation `permMap π` as an affine map. -/
+theorem permMap_eq_affine {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) :
+    permMap π = affine (simplexMatrix (refVertex m ∘ π)) (refVertex m (π 0)) := rfl
+
+/-- `(A_π)^* (A_{π⁻¹})^* η = η`. -/
+theorem affinePullback_permMap_inv {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) :
+    affinePullback (simplexMatrix (refVertex m ∘ π)) (refVertex m (π 0))
+      (affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1))))) (refVertex m ((π⁻¹ : Equiv.Perm (Fin (m + 1))) 0)) η) = η := by
+  rw [affinePullback_affinePullback, ← simplexMatrix_perm_mul (π⁻¹ : Equiv.Perm (Fin (m + 1))) π]
+  have h0 : affine (simplexMatrix (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1))))) (refVertex m ((π⁻¹ : Equiv.Perm (Fin (m + 1))) 0)) (refVertex m (π 0)) =
+      refVertex m 0 := by
+    have := simplexMap_refVertex (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1)))) (π 0)
+    simpa [simplexMap] using this
+  rw [h0, inv_mul_cancel, show refVertex m ∘ (1 : Equiv.Perm (Fin (m + 1))) = refVertex m from rfl,
+    simplexMatrix_refVertex, refVertex_zero]
+  exact affinePullback_id η
+
+/-- **Moments under a reparametrization of the face**: permuting the vertices by `π` multiplies
+the moment by `sign π` and transforms the test form by `A_{π⁻¹}`. -/
+theorem vertexMoment_comp_perm {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ)
+    (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) (w : FormField n) :
+    vertexMoment (q ∘ π) η w = ((Equiv.Perm.sign π : ℤ) : ℝ) *
+      vertexMoment q (affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1))))) (refVertex m ((π⁻¹ : Equiv.Perm (Fin (m + 1))) 0)) η)
+        w := by
+  set P := simplexMatrix (refVertex m ∘ π)
+  set p0 := refVertex m (π 0)
+  set η' := affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1)))))
+    (refVertex m ((π⁻¹ : Equiv.Perm (Fin (m + 1))) 0)) η
+  have hq : q ∘ π = fun i => affine (simplexMatrix q) (q 0) ((refVertex m ∘ π) i) := by
+    funext i; exact (simplexMap_refVertex q (π i)).symm
+  have hF : affinePullback (simplexMatrix (q ∘ π)) ((q ∘ π) 0) w =
+      affinePullback P p0 (affinePullback (simplexMatrix q) (q 0) w) := by
+    rw [affinePullback_affinePullback, hq, simplexMatrix_comp_affine]
+    rfl
+  have hη : η = affinePullback P p0 η' := (affinePullback_permMap_inv π η).symm
+  have hp : (fun i => affine P p0 (refVertex m i)) = refVertex m ∘ π := by
+    funext i; exact simplexMap_refVertex (refVertex m ∘ π) i
+  simp only [vertexMoment]
+  rw [hF]
+  conv_lhs => rw [hη]
+  rw [← affinePullback_wedgeField, ← simplexIntegral_comp_affine, hp, simplexIntegral_comp_perm]
+
+open Classical in
+/-- **The higher-order element families are natural** under `T x = A x + b`: the spaces are affine
+invariant and the moment DOFs on `g` of `T^* w` are combinations of the moment DOFs on `T(g)`:
+`T ∘ lexEnum g = lexEnum (T g) ∘ π`, the moments change by `sign π` and the test forms by
+`A_{π⁻¹}^*`, which preserves the test spaces. -/
+theorem isAffineNatural_poly (S : PolySeq) : IsAffineNatural A hA b (polyElement n S) where
+  space T k w hw := affinePullback_mem_space_poly S (rows A) b k hw
+  dof g k i := by
+    set e := affEquiv A hA b
+    set m := #g - 1
+    have hg : #g = m + 1 := by have := Finset.card_pos.2 i.2; omega
+    have hg' : #(g.image e) = m + 1 := by rw [Finset.card_image_of_injective _ e.injective, hg]
+    set q := lexEnum g m
+    set q' := lexEnum (g.image e) m
+    have hinj : Function.Injective fun l => affine (rows A) b (q l) := fun l l' h => by
+      simp only [affine_rows] at h
+      exact lexEnum_injective hg (e.injective h)
+    have hran : Set.range (fun l => affine (rows A) b (q l)) = Set.range q' := by
+      rw [range_lexEnum hg', Finset.coe_image, ← range_lexEnum hg, ← Set.range_comp]
+      simp only [affine_rows]
+      rfl
+    obtain ⟨π, hπ⟩ := exists_perm_comp_eq hinj (lexEnum_injective hg') hran
+    set η := (S.testBasis k m i.1 : FormField m)
+    have hηt : η ∈ S.test k m := (S.testBasis k m i.1).2
+    set η' := affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1)))))
+      (refVertex m ((π⁻¹ : Equiv.Perm (Fin (m + 1))) 0)) η
+    have hη' : η' ∈ S.test k m := affinePullback_mem_test S _ _ k hηt
+    obtain ⟨c, hc⟩ := S.exists_degMoment_eq_sum hg' hη'
+    refine ⟨fun j => ((Equiv.Perm.sign π : ℤ) : ℝ) * c j, fun w => ?_⟩
+    change vertexMoment q η (degField k (affinePullback (rows A) b (w : FormField n))) =
+      ∑ j, _ * S.dof (g.image e) k j w
+    rw [degField_affinePullback, vertexMoment_affinePullback, hπ, vertexMoment_comp_perm]
+    have h2 := congrArg (fun L => L w) hc
+    simp only [degMoment_apply, LinearMap.sum_apply, LinearMap.smul_apply, smul_eq_mul] at h2
+    change _ * vertexMoment q' η' (degField k (w : FormField n)) = _
+    rw [h2, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    ring
 
 end WhitneyInvariance
 
@@ -1011,7 +1250,7 @@ theorem fieldPull_mem_whitney_cast {M₁ M₂ : SimplicialMesh n}
     fieldPull hA b hΩ₂.measurableSet hT (minorMat A k) v ∈
       ((deRham ℝ n).maximalSubcomplexOfEq h₁ hM₁ hΩ₁ (whitneySubcomplex M₁ hM₁)).V k := by
   subst h₁ h₂
-  exact fieldPull_mem_whitney_V A hA b h hM₁ _ hT k hv
+  exact fieldPull_mem_V (whitneyElement n) (isAffineNatural_whitney A hA b) h hM₁ _ hT k hv
 
 theorem fieldPull_mem_whitneyMin_cast {M₁ M₂ : SimplicialMesh n}
     (h : M₂ = M₁.map (affEquiv A hA b)) {Ω₁ Ω₂ : Set (Fin n → ℝ)} (h₁ : M₁.domain = Ω₁)
@@ -1025,7 +1264,7 @@ theorem fieldPull_mem_whitneyMin_cast {M₁ M₂ : SimplicialMesh n}
     fieldPull hA b hΩ₂.measurableSet hT (minorMat A k) v ∈
       ((deRham ℝ n).minimalSubcomplexOfEq h₁ hM₁ hΩ₁ (whitneySubcomplexMin M₁ hM₁ x₁ hs₁)).V k := by
   subst h₁ h₂
-  exact fieldPull_mem_whitney_V₀ A hA b h hM₁ _ hT k hv
+  exact fieldPull_mem_V₀ (whitneyElement n) (isAffineNatural_whitney A hA b) h hM₁ _ hT k hv
 
 /-- **Affine invariance of the Whitney spaces on `Ω`**: `v ∈ Vₕᵏ(T(M_N))` iff
 `T^* v ∈ Vₕᵏ(M_N)`. -/
@@ -1364,5 +1603,1209 @@ theorem mixed_quasiOptimal_min : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ 
       (poincare_min A hA b i j hij) (poincare_min A hA b j k hjk) (hg N i j) (hg N j k) hs⟩
 
 end WhitneyFEM
+
+/-! ### Smooth forms under the pullback, and `O(h)` rates on `Ω` -/
+
+section Smooth
+
+/-- The fibre pullback `α ↦ A^* α` as a continuous linear map on coefficient vectors. -/
+def fibCLM : (Finset (Fin n) → ℝ) →L[ℝ] (Finset (Fin n) → ℝ) :=
+  LinearMap.toContinuousLinearMap
+    { toFun := ExteriorFibre.pullback (rows A)
+      map_add' := pullback_add (rows A)
+      map_smul' := fun c α => pullback_smul (rows A) c α }
+
+theorem fibCLM_apply (α : Finset (Fin n) → ℝ) : fibCLM A α = ExteriorFibre.pullback (rows A) α :=
+  rfl
+
+/-- The constant `‖A^*‖_{fibre} ‖A‖` of the derivatives of pulled-back forms. -/
+def fibConst : ℝ := ‖fibCLM A‖ * ‖(Matrix.toLin' A).toContinuousLinearMap‖
+
+theorem fibConst_nonneg : 0 ≤ fibConst A := mul_nonneg (norm_nonneg _) (norm_nonneg _)
+
+theorem affinePullback_eq_comp (w : FormField n) :
+    affinePullback (rows A) b w = fun x => fibCLM A (w (affMap A b x)) := by
+  funext x; rw [affinePullback_apply, affine_rows]; rfl
+
+/-- **Derivatives of a pulled-back form**: `‖D(T^* w)(y)‖ ≤ fibConst A ‖Dw(T y)‖`. -/
+theorem norm_fderiv_affinePullback_le {w : FormField n} (hw : Differentiable ℝ w)
+    (y : Fin n → ℝ) :
+    ‖fderiv ℝ (affinePullback (rows A) b w) y‖ ≤ fibConst A * ‖fderiv ℝ w (affMap A b y)‖ := by
+  rw [affinePullback_eq_comp]
+  have h := ((fibCLM A).hasFDerivAt.comp y
+    (((hw (affMap A b y)).hasFDerivAt).comp y (hasFDerivAt_affMap A b y)))
+  rw [show (fun x => fibCLM A (w (affMap A b x))) = ⇑(fibCLM A) ∘ w ∘ affMap A b from rfl,
+    h.fderiv]
+  refine (ContinuousLinearMap.opNorm_comp_le _ _).trans ?_
+  refine (mul_le_mul_of_nonneg_left (ContinuousLinearMap.opNorm_comp_le _ _)
+    (norm_nonneg _)).trans (le_of_eq ?_)
+  simp only [fibConst]; ring
+
+theorem extDeriv_affinePullback {w : FormField n} (hw : Differentiable ℝ w) :
+    extDeriv (affinePullback (rows A) b w) = affinePullback (rows A) b (extDeriv w) :=
+  funext fun _ => extDeriv_affinePullback_apply _ b (hw _)
+
+include hA in
+/-- `T` maps `cl Q` into `cl Ω`. -/
+theorem affMap_mem_closure_domain {y : Fin n → ℝ} (hy : y ∈ closure (FEM.cubeDomain n)) :
+    affMap A b y ∈ closure (domain A b) := by
+  rw [domain_eq_image A hA b]
+  exact image_closure_subset_closure_image (continuous_affMap A b) ⟨y, hy, rfl⟩
+
+/-- **`T^*` of the `L²` class of a continuous `k`-form is the class of its pullback.** -/
+theorem pullEquiv_formL2 {k : ℕ} {w : FormField n} (hw : Continuous w)
+    (hdeg : ∀ y, IsDeg k (w y)) :
+    pullEquiv A hA b k (formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) k
+      ⟨w, hw⟩) =
+      formL2 (FEM.isOpen_cubeDomain n).measurableSet (FEM.isBounded_cubeDomain n) k
+        ⟨affinePullback (rows A) b w, continuous_affinePullback _ _ hw⟩ := by
+  refine PiLp.ext fun s => Lp.ext ?_
+  rw [pullEquiv_apply]
+  filter_upwards [coeFn_fieldPull hA b (isOpen_domain A b).measurableSet (preimage_domain A hA b)
+      (minorMat A k) _ s,
+    ae_comp_affMap hA b (preimage_domain A hA b) (isOpen_domain A b).measurableSet
+      (ae_all_iff.2 fun t => coeFn_formL2 (isOpen_domain A b).measurableSet
+        (isBounded_domain A hA b) k ⟨w, hw⟩ t),
+    coeFn_formL2 (FEM.isOpen_cubeDomain n).measurableSet (FEM.isBounded_cubeDomain n) k
+      ⟨affinePullback (rows A) b w, continuous_affinePullback _ _ hw⟩ s] with x h1 h2 h3
+  rw [h1, h3]
+  simp only [h2]
+  rw [affinePullback_apply, pullback_apply, affine_rows, sum_isDeg_mul (hdeg (affMap A b x))]
+  refine Finset.sum_congr rfl fun t _ => ?_
+  rw [minorMat, mul_comm]
+
+/-- `x ∈ L²(Ω; Λʲ)` is a `C²` form of degree `j` whose derivative and the derivative of its
+exterior derivative are bounded by `L` on `cl Ω`; trivially true in negative degrees. -/
+def IsC2Form (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
+  j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w,
+    (∀ y, IsDeg k (w y)) ∧ (∀ y ∈ closure (domain A b), ‖fderiv ℝ w y‖ ≤ L) ∧
+    (∀ y ∈ closure (domain A b), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
+    x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
+
+/-- `x ∈ L²(Ω; Λʲ)` is a `C²` form of degree `j` vanishing outside `Ω`, with the derivative bounds
+of `IsC2Form`. -/
+def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
+  j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w,
+    (∀ y, IsDeg k (w y)) ∧ (∀ y ∉ domain A b, w y = 0) ∧
+    (∀ y ∈ closure (domain A b), ‖fderiv ℝ w y‖ ≤ L) ∧
+    (∀ y ∈ closure (domain A b), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
+    x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
+
+/-- **Every `C²` form is `IsC2Form`** for some bound (the hypotheses of the rates are
+satisfiable). -/
+theorem exists_isC2Form {k : ℕ} {w : FormField n} (hw : ContDiff ℝ 2 w)
+    (hdeg : ∀ y, IsDeg k (w y)) :
+    ∃ L, 0 ≤ L ∧ IsC2Form A hA b (k : ℤ) L
+      (formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) k ⟨w, hw.continuous⟩) := by
+  have hK : IsCompact (closure (domain A b)) := (isBounded_domain A hA b).isCompact_closure
+  obtain ⟨L, hL⟩ := hK.exists_bound_of_continuousOn
+    ((hw.of_le (by norm_num : (1 : WithTop ℕ∞) ≤ 2)).continuous_fderiv one_ne_zero).continuousOn
+  obtain ⟨L', hL'⟩ := hK.exists_bound_of_continuousOn
+    ((contDiff_extDeriv (m := 1) hw).continuous_fderiv one_ne_zero).continuousOn
+  refine ⟨max (max L L') 0, le_max_right _ _, Or.inr ⟨k, rfl, w, hw, hdeg,
+    fun y hy => (hL y hy).trans ((le_max_left _ _).trans (le_max_left _ _)),
+    fun y hy => (hL' y hy).trans ((le_max_right _ _).trans (le_max_left _ _)), rfl⟩⟩
+
+/-- **`C²` forms on `Ω` pull back to `C²` forms on `Q`**, with bound `fibConst A · L`. -/
+theorem IsC2Form.pullEquiv {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hx : IsC2Form A hA b j L x) : FEM.IsC2Form j (fibConst A * L) (pullEquiv A hA b j x) := by
+  rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
+  · exact Or.inl hj
+  have hd : Differentiable ℝ w := hw.differentiable (by norm_num)
+  have hd' : Differentiable ℝ (extDeriv w) :=
+    (contDiff_extDeriv (m := 1) hw).differentiable (by norm_num)
+  refine Or.inr ⟨k, rfl, affinePullback (rows A) b w, contDiff_affinePullback _ _ hw,
+    fun y => IsDeg.affinePullback hdeg _ b y, fun y hy => ?_, fun y hy => ?_, ?_⟩
+  · refine (norm_fderiv_affinePullback_le A b hd y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL _ (affMap_mem_closure_domain A hA b hy))
+      (fibConst_nonneg A)
+  · rw [extDeriv_affinePullback A b hd]
+    refine (norm_fderiv_affinePullback_le A b hd' y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL' _ (affMap_mem_closure_domain A hA b hy))
+      (fibConst_nonneg A)
+  · exact pullEquiv_formL2 A hA b hw.continuous hdeg
+
+/-- **`C²` forms vanishing outside `Ω` pull back to `C²` forms vanishing outside `Q`.** -/
+theorem IsC2FormMin.pullEquiv {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hx : IsC2FormMin A hA b j L x) :
+    FEM.IsC2FormMin j (fibConst A * L) (pullEquiv A hA b j x) := by
+  rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, hL', rfl⟩
+  · exact Or.inl hj
+  have hd : Differentiable ℝ w := hw.differentiable (by norm_num)
+  have hd' : Differentiable ℝ (extDeriv w) :=
+    (contDiff_extDeriv (m := 1) hw).differentiable (by norm_num)
+  refine Or.inr ⟨k, rfl, affinePullback (rows A) b w, contDiff_affinePullback _ _ hw,
+    fun y => IsDeg.affinePullback hdeg _ b y, fun y hy => ?_, fun y hy => ?_, fun y hy => ?_, ?_⟩
+  · have : affMap A b y ∉ domain A b := fun h => hy (by
+      rw [← preimage_domain A hA b]; exact h)
+    rw [affinePullback_apply, affine_rows, hsupp _ this, pullback_zero]
+  · refine (norm_fderiv_affinePullback_le A b hd y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL _ (affMap_mem_closure_domain A hA b hy))
+      (fibConst_nonneg A)
+  · rw [extDeriv_affinePullback A b hd]
+    refine (norm_fderiv_affinePullback_le A b hd' y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL' _ (affMap_mem_closure_domain A hA b hy))
+      (fibConst_nonneg A)
+  · exact pullEquiv_formL2 A hA b hw.continuous hdeg
+
+end Smooth
+
+/-- **Graph-norm distance from a degreewise approximation**: a `v ∈ Vₕʲ` within `ε` of `σ`, with
+`d (σ - v)` within `ε`, gives `dist_V(σ, Vₕʲ) ≤ 2 ε`. -/
+theorem infDist_domainSub_le_two_mul {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+    {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} (S : H.Subcomplex)
+    [∀ i, FiniteDimensional ℝ (S.V i)] {j : ℤ} (σ : H.domainSpace j) {v : W j} (hv : v ∈ S.V j)
+    {ε : ℝ} (h1 : ‖H.domainIncl j σ - v‖ ≤ ε)
+    (h2 : ∀ j' (hx : H.domainIncl j σ ∈ (H.d j j').domain),
+      ‖H.d j j' ⟨H.domainIncl j σ - v, Submodule.sub_mem _ hx (S.le_domain j j' hv)⟩‖ ≤ ε) :
+    Metric.infDist σ (S.domainSub j) ≤ 2 * ε := by
+  refine (Subcomplex.infDist_domainSub_le (S := S)
+    (rfl : (ComplexShape.up ℤ).Rel j (j + 1)) σ hv).trans ?_
+  have e : H.d j (j + 1) (H.domainCoord j (j + 1) σ) - H.d j (j + 1) ⟨v, S.le_domain j (j + 1) hv⟩ =
+      H.d j (j + 1) ⟨H.domainIncl j σ - v,
+        Submodule.sub_mem _ (H.domainCoord j (j + 1) σ).2 (S.le_domain j (j + 1) hv)⟩ := by
+    rw [← LinearPMap.map_sub]; rfl
+  rw [e, two_mul]
+  exact add_le_add h1 (h2 (j + 1) (H.domainCoord j (j + 1) σ).2)
+
+section Rates
+
+/-- The rate constant `‖(T^*)⁻¹‖ B_j fibConst(A)` of the interpolation error on `Ω`. -/
+def rateBound (j : ℤ) : ℝ := pullConst A⁻¹ * FEM.interpBound n j * fibConst A
+
+theorem rateBound_nonneg (j : ℤ) : 0 ≤ rateBound A j :=
+  mul_nonneg (mul_nonneg (pullConst_nonneg _) (FEM.interpBound_nonneg n j)) (fibConst_nonneg A)
+
+variable [NeZero n]
+
+/-- **Interpolation error of `C²` forms on `Ω`**: some `v ∈ Vₕʲ(T(M_N))` has `‖x - v‖` and
+`‖d (x - v)‖` at most `rateBound A j · L · h_N`. -/
+theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hx : IsC2Form A hA b j L x) (hL0 : 0 ≤ L) (N : ℕ) :
+    ∃ v, ∃ hv : v ∈ (whitney A hA b N).V j, ‖x - v‖ ≤ rateBound A j * L * FEM.meshSize N ∧
+      ∀ j' (hxj : x ∈ ((complex A b).d j j').domain),
+        ‖(complex A b).d j j' ⟨x - v, Submodule.sub_mem _ hxj ((whitney A hA b N).le_domain j j' hv)⟩‖ ≤
+          rateBound A j * L * FEM.meshSize N := by
+  obtain ⟨v', hv', h1, h2⟩ :=
+    (hx.pullEquiv A hA b).exists_mem_whitney_le (mul_nonneg (fibConst_nonneg A) hL0) N
+  obtain ⟨v, hv, hv1, hv2⟩ := (isChainIso A hA b).exists_near_comapSub (whitney A hA b N)
+    (fun i x => mem_whitney_V_iff A hA b N i x) (norm_pullEquiv_symm_le A hA b) hv' h1 h2
+  have e : pullConst A⁻¹ * (FEM.interpBound n j * (fibConst A * L) * FEM.meshSize N) =
+      rateBound A j * L * FEM.meshSize N := by simp only [rateBound]; ring
+  exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
+
+/-- **Interpolation error of `C²` forms vanishing outside `Ω`**, in `V̊ₕ(T(M_N))`. -/
+theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
+    {x : L2F ℝ (domain A b) (formIdx n j)} (hx : IsC2FormMin A hA b j L x) (hL0 : 0 ≤ L)
+    (N : ℕ) :
+    ∃ v, ∃ hv : v ∈ (whitneyMin A hA b N).V j, ‖x - v‖ ≤ rateBound A j * L * FEM.meshSize N ∧
+      ∀ j' (hxj : x ∈ ((complexMin A b).d j j').domain),
+        ‖(complexMin A b).d j j'
+            ⟨x - v, Submodule.sub_mem _ hxj ((whitneyMin A hA b N).le_domain j j' hv)⟩‖ ≤
+          rateBound A j * L * FEM.meshSize N := by
+  obtain ⟨v', hv', h1, h2⟩ :=
+    (hx.pullEquiv A hA b).exists_mem_whitneyMin_le (mul_nonneg (fibConst_nonneg A) hL0) N
+  obtain ⟨v, hv, hv1, hv2⟩ := (isChainIsoMin A hA b).exists_near_comapSub (whitneyMin A hA b N)
+    (fun i x => mem_whitneyMin_V_iff A hA b N i x) (norm_pullEquiv_symm_le A hA b) hv' h1 h2
+  have e : pullConst A⁻¹ * (FEM.interpBound n j * (fibConst A * L) * FEM.meshSize N) =
+      rateBound A j * L * FEM.meshSize N := by simp only [rateBound]; ring
+  exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
+
+/-- **`O(h)` convergence of the Whitney finite element method for the mixed Hodge Laplacian on
+`Ω = A · Q + b`** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), with no hypothesis beyond the data:
+if the solution `(σ, u, q)` with data `f`, the boundary part of `u` and `q` are `C²` with bound
+`L` on `cl Ω`, then the discrete solutions on the meshes `T(M_N)` satisfy
+`‖σ - σₕ‖ + ‖u - uₕ‖ + ‖q - qₕ‖ ≤ K L h_N` with `K` depending only on `A`, `n` and the degrees. -/
+theorem mixed_rate_smooth {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)}
+    {σ : (complex A b).domainSpace i} {u : (complex A b).domainSpace j}
+    {q : (complex A b).harmonic j},
+    (complex A b).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsC2Form A hA b i L ((complex A b).domainIncl i σ) →
+    IsC2Form A hA b j L ((complex A b).domainIncl j u) →
+    IsC2Form A hA b j L ((complex A b).domainIncl j
+      ((complex A b).boundaryPart j ((complex A b).domainIncl j u))) →
+    IsC2Form A hA b j L (q : L2F ℝ (domain A b) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (whitney A hA b N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney A hA b N) hij hjk f).fst‖ +
+        ‖u - (whitney A hA b N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney A hA b N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney A hA b N) hij hjk f).snd.snd :
+            (whitney A hA b N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * L * FEM.meshSize N := by
+  refine (FEM.smoothingEstimates_exists (n := n)).elim fun p hp => hp.elim fun C hE => ?_
+  set C₀ := projConst A C
+  have hC1 : 1 ≤ C₀ := one_le_projConst A C
+  set K₀ := (1 + 144 * (C₀ * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + C₀)
+  have hK₀ : 0 ≤ K₀ := by positivity
+  have hBi := rateBound_nonneg A i
+  have hBj := rateBound_nonneg A j
+  refine ⟨K₀ * (2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀)),
+    fun {f σ u q} hs L hL0 hσ hu hB hq N => ?_⟩
+  have hh := (FEM.meshSize_pos N).le
+  have hg : ∀ i j, (proj A hA b hE N).IsGraphBounded i j C₀ := isGraphBounded_proj A hA b hE N
+  have hmain := (proj A hA b hE N).norm_sub_le_infDist hij hjk hC1 (by linarith : (0 : ℝ) ≤ 1 + C₀)
+    (poincare A hA b i j hij) (poincare A hA b j k hjk) (hg i j) (hg j k)
+    (fun _ hq' => (proj A hA b hE N).norm_sub_π_harmonic_le hjk (by linarith) (hg j k) hq') hs
+  have dist_of : ∀ {l : ℤ} {τ : (complex A b).domainSpace l},
+      IsC2Form A hA b l L ((complex A b).domainIncl l τ) →
+      Metric.infDist τ ((whitney A hA b N).domainSub l) ≤ 2 * (rateBound A l * L * FEM.meshSize N) :=
+    fun {l τ} hτ => by
+      obtain ⟨v, hv, h1, h2⟩ := hτ.exists_mem_whitney_le A hA b hL0 N
+      exact infDist_domainSub_le_two_mul (whitney A hA b N) τ hv h1 h2
+  have d1 := dist_of hσ
+  have d2 := dist_of hu
+  have d3 := dist_of hB
+  have d4 : Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((whitney A hA b N).harmonicW j) ≤
+      (1 + C₀) * (2 * (rateBound A j * L * FEM.meshSize N)) :=
+    ((proj A hA b hE N).infDist_harmonicW_le hjk (by linarith) (hg j k) q.2).trans
+      (mul_le_mul_of_nonneg_left (dist_of (τ := cyclesToDomainSpace
+        ((complex A b).harmonic_le_cycles j q.2)) hq) (by linarith))
+  refine hmain.trans ?_
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hsum : Metric.infDist σ ((whitney A hA b N).domainSub i) +
+      Metric.infDist u ((whitney A hA b N).domainSub j) +
+      Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((whitney A hA b N).harmonicW j) +
+      (1 + C₀) * Metric.infDist ((complex A b).boundaryPart j ((complex A b).domainIncl j u))
+        ((whitney A hA b N).domainSub j) ≤
+      2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀) * L * FEM.meshSize N := by
+    have h3 := mul_le_mul_of_nonneg_left d3 (by linarith : (0 : ℝ) ≤ 1 + C₀)
+    have key : 2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀) * L * FEM.meshSize N =
+        2 * (rateBound A i * L * FEM.meshSize N) + 2 * (rateBound A j * L * FEM.meshSize N) +
+        (1 + C₀) * (2 * (rateBound A j * L * FEM.meshSize N)) +
+        (1 + C₀) * (2 * (rateBound A j * L * FEM.meshSize N)) +
+        2 * (rateBound A i * L * FEM.meshSize N) * (2 + 2 * C₀) := by ring
+    have hp : 0 ≤ 2 * (rateBound A i * L * FEM.meshSize N) * (2 + 2 * C₀) :=
+      mul_nonneg (by linarith) (by linarith)
+    rw [key]
+    linarith
+  calc K₀ * _ ≤ K₀ * (2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀) * L * FEM.meshSize N) :=
+        mul_le_mul_of_nonneg_left hsum hK₀
+    _ = _ := by ring
+
+/-- **`O(h)` convergence of the Whitney method with vanishing traces on `Ω`**, for solutions
+whose components are `C²` forms vanishing outside `Ω` with bound `L`. -/
+theorem mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)}
+    {σ : (complexMin A b).domainSpace i} {u : (complexMin A b).domainSpace j}
+    {q : (complexMin A b).harmonic j},
+    (complexMin A b).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsC2FormMin A hA b i L ((complexMin A b).domainIncl i σ) →
+    IsC2FormMin A hA b j L ((complexMin A b).domainIncl j u) →
+    IsC2FormMin A hA b j L ((complexMin A b).domainIncl j
+      ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))) →
+    IsC2FormMin A hA b j L (q : L2F ℝ (domain A b) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (whitneyMin A hA b N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin A hA b N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin A hA b N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin A hA b N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin A hA b N) hij hjk
+            f).snd.snd : (whitneyMin A hA b N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * L * FEM.meshSize N := by
+  refine (FEM.smoothingEstimatesMin_exists (n := n)).elim fun p hp => hp.elim fun C hE => ?_
+  set C₀ := projConst A C
+  have hC1 : 1 ≤ C₀ := one_le_projConst A C
+  set K₀ := (1 + 144 * (C₀ * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + C₀)
+  have hK₀ : 0 ≤ K₀ := by positivity
+  have hBi := rateBound_nonneg A i
+  have hBj := rateBound_nonneg A j
+  refine ⟨K₀ * (2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀)),
+    fun {f σ u q} hs L hL0 hσ hu hB hq N => ?_⟩
+  have hh := (FEM.meshSize_pos N).le
+  have hg : ∀ i j, (projMin A hA b hE N).IsGraphBounded i j C₀ := isGraphBounded_projMin A hA b hE N
+  have hmain := (projMin A hA b hE N).norm_sub_le_infDist hij hjk hC1
+    (by linarith : (0 : ℝ) ≤ 1 + C₀)
+    (poincare_min A hA b i j hij) (poincare_min A hA b j k hjk) (hg i j) (hg j k)
+    (fun _ hq' => (projMin A hA b hE N).norm_sub_π_harmonic_le hjk (by linarith) (hg j k) hq') hs
+  have dist_of : ∀ {l : ℤ} {τ : (complexMin A b).domainSpace l},
+      IsC2FormMin A hA b l L ((complexMin A b).domainIncl l τ) →
+      Metric.infDist τ ((whitneyMin A hA b N).domainSub l) ≤
+        2 * (rateBound A l * L * FEM.meshSize N) :=
+    fun {l τ} hτ => by
+      obtain ⟨v, hv, h1, h2⟩ := hτ.exists_mem_whitneyMin_le A hA b hL0 N
+      exact infDist_domainSub_le_two_mul (whitneyMin A hA b N) τ hv h1 h2
+  have d1 := dist_of hσ
+  have d2 := dist_of hu
+  have d3 := dist_of hB
+  have d4 : Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j))
+      ((whitneyMin A hA b N).harmonicW j) ≤ (1 + C₀) * (2 * (rateBound A j * L * FEM.meshSize N)) :=
+    ((projMin A hA b hE N).infDist_harmonicW_le hjk (by linarith) (hg j k) q.2).trans
+      (mul_le_mul_of_nonneg_left (dist_of (τ := cyclesToDomainSpace
+        ((complexMin A b).harmonic_le_cycles j q.2)) hq) (by linarith))
+  refine hmain.trans ?_
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hsum : Metric.infDist σ ((whitneyMin A hA b N).domainSub i) +
+      Metric.infDist u ((whitneyMin A hA b N).domainSub j) +
+      Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((whitneyMin A hA b N).harmonicW j) +
+      (1 + C₀) * Metric.infDist ((complexMin A b).boundaryPart j
+        ((complexMin A b).domainIncl j u)) ((whitneyMin A hA b N).domainSub j) ≤
+      2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀) * L * FEM.meshSize N := by
+    have h3 := mul_le_mul_of_nonneg_left d3 (by linarith : (0 : ℝ) ≤ 1 + C₀)
+    have key : 2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀) * L * FEM.meshSize N =
+        2 * (rateBound A i * L * FEM.meshSize N) + 2 * (rateBound A j * L * FEM.meshSize N) +
+        (1 + C₀) * (2 * (rateBound A j * L * FEM.meshSize N)) +
+        (1 + C₀) * (2 * (rateBound A j * L * FEM.meshSize N)) +
+        2 * (rateBound A i * L * FEM.meshSize N) * (2 + 2 * C₀) := by ring
+    have hp : 0 ≤ 2 * (rateBound A i * L * FEM.meshSize N) * (2 + 2 * C₀) :=
+      mul_nonneg (by linarith) (by linarith)
+    rw [key]
+    linarith
+  calc K₀ * _ ≤ K₀ * (2 * (rateBound A i + rateBound A j) * (3 + 2 * C₀) * L * FEM.meshSize N) :=
+        mul_le_mul_of_nonneg_left hsum hK₀
+    _ = _ := by ring
+
+end Rates
+
+/-! ### The semi-discrete Hodge wave equation on `Ω` -/
+
+section Wave
+
+variable [NeZero n]
+
+instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
+    FiniteDimensional ℝ (((whitney A hA b N).window a m).V i) :=
+  inferInstanceAs (FiniteDimensional ℝ ((whitney A hA b N).V (a + i)))
+
+instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
+    FiniteDimensional ℝ (((whitneyMin A hA b N).window a m).V i) :=
+  inferInstanceAs (FiniteDimensional ℝ ((whitneyMin A hA b N).V (a + i)))
+
+/-- **Graph-norm density of the Whitney spaces of `T(M_N)` in `HΛ(Ω)`**, degreewise (from the
+cube by `IsChainIso.eventually_near_comapSub`). -/
+theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ (domain A b) (formIdx n i)) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitney A hA b N).V i, ‖x - v‖ < ε ∧
+      ∀ j (hx : x ∈ ((complex A b).d i j).domain),
+        ‖(complex A b).d i j ⟨x - v, Submodule.sub_mem _ hx ((whitney A hA b N).le_domain i j hv)⟩‖ <
+          ε :=
+  (isChainIso A hA b).eventually_near_comapSub (whitney A hA b)
+    (fun N i x => mem_whitney_V_iff A hA b N i x) (norm_pullEquiv_symm_le A hA b)
+    (fun i x' _ hε => FEM.eventually_exists_whitney_near i x' hε) i x ε hε
+
+theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ (domain A b) (formIdx n i))
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitneyMin A hA b N).V i, ‖x - v‖ < ε ∧
+      ∀ j (hx : x ∈ ((complexMin A b).d i j).domain),
+        ‖(complexMin A b).d i j
+          ⟨x - v, Submodule.sub_mem _ hx ((whitneyMin A hA b N).le_domain i j hv)⟩‖ < ε :=
+  (isChainIsoMin A hA b).eventually_near_comapSub (whitneyMin A hA b)
+    (fun N i x => mem_whitneyMin_V_iff A hA b N i x) (norm_pullEquiv_symm_le A hA b)
+    (fun i x' _ hε => FEM.eventually_exists_whitneyMin_near i x' hε) i x ε hε
+
+/-- **The Whitney windows of `T(M_N)` approximate every point of the graph space** of the total
+differential of every window of `HΛ(Ω)`. -/
+theorem dense_window (a : ℤ) (m : ℕ) :
+    ∀ ζ : ((complex A b).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
+      ∃ w ∈ ((whitney A hA b N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
+  Subcomplex.eventually_exists_graphSub_lt (fun N => (whitney A hA b N).window a m)
+    (fun i x _ hε => (eventually_exists_whitney_near A hA b (a + i) x hε).mono fun _ hN => by
+      obtain ⟨v, hv, h1, h2⟩ := hN
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
+
+theorem dense_windowMin (a : ℤ) (m : ℕ) :
+    ∀ ζ : ((complexMin A b).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
+      ∃ w ∈ ((whitneyMin A hA b N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
+  Subcomplex.eventually_exists_graphSub_lt (fun N => (whitneyMin A hA b N).window a m)
+    (fun i x _ hε => (eventually_exists_whitneyMin_near A hA b (a + i) x hε).mono fun _ hN => by
+      obtain ⟨v, hv, h1, h2⟩ := hN
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
+
+/-- **Convergence of the semi-discrete Hodge wave equation on `Ω`** for every window of `HΛ(Ω)`
+and `D(L)` data, with no remaining hypothesis ([QuennevilleBelair2015], Thm 4.14): the
+semi-discrete Whitney solutions on `T(M_N)` with `ξₕ(t₀) = Pₕ x` converge to `e^{(t - t₀) L} x`
+uniformly on `[t₀, t₁]`. -/
+theorem exists_tendstoUniformlyOn_window_whitney (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
+    (x : ((complex A b).window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → ((complex A b).window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((whitney A hA b N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((whitney A hA b N).window a m).graphSub)
+        (((complex A b).window a m).totalD.toGraphSpace
+          ⟨x, (((complex A b).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => ((complex A b).window a m).totalD.graphFst (ξh N t))
+        (fun t => ((complex A b).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
+  HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
+    (Subcomplex.isApproximating (dense_window A hA b a m)) t₀ t₁ x
+
+/-- **Convergence of the semi-discrete Hodge wave equation with vanishing traces on `Ω`.** -/
+theorem exists_tendstoUniformlyOn_windowMin_whitney (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
+    (x : ((complexMin A b).window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → ((complexMin A b).window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((whitneyMin A hA b N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((whitneyMin A hA b N).window a m).graphSub)
+        (((complexMin A b).window a m).totalD.toGraphSpace
+          ⟨x, (((complexMin A b).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => ((complexMin A b).window a m).totalD.graphFst (ξh N t))
+        (fun t => ((complexMin A b).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
+  HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
+    (Subcomplex.isApproximating (dense_windowMin A hA b a m)) t₀ t₁ x
+
+/-- **`O(h)` rate of the semi-discrete Hodge wave equation on `Ω` for smooth solutions**
+([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7): if every component of `ξ(s)` and
+`ξ'(s)` is a `C²` form with bound `L` on `cl Ω` for `s ∈ [t₀, t₁]`, then
+`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² K L h_N` with `K = (m + m²) Σᵢ 2 rateBound A (a + i)`. -/
+theorem norm_sub_le_meshSize_window_smooth (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
+    {ξ ξ' : ℝ → ((complex A b).window a m).totalD.GraphSpace}
+    (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
+    {ξh ξh' : ℕ → ℝ → ((complex A b).window a m).totalD.GraphSpace}
+    (hξh : ∀ N, HodgeWave.IsSemidiscreteSolution (((whitney A hA b N).window a m).graphSub)
+      (Set.Icc t₀ t₁) (ξh N) (ξh' N))
+    (h0 : ∀ N, ξh N t₀ =
+      HodgeWave.ellipticProjection (((whitney A hA b N).window a m).graphSub) (ξ t₀))
+    {L : ℝ} (hL0 : 0 ≤ L)
+    (hreg : ∀ s ∈ Set.Icc t₀ t₁, ∀ i : Fin m,
+      IsC2Form A hA b (a + i) L (((complex A b).window a m).totalD.graphFst (ξ s) i) ∧
+        IsC2Form A hA b (a + i) L (((complex A b).window a m).totalD.graphFst (ξ' s) i))
+    (N : ℕ) {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
+    ‖((complex A b).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
+      (1 + ‖HodgeWave.shiftedForm ((complex A b).window a m).totalD‖ / ((1 / 2) / √3)) *
+        (1 + (t - t₀)) ^ 2 *
+          (((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N) := by
+  have hh := (FEM.meshSize_pos N).le
+  have hle : ∀ i : Fin m, rateBound A (a + i) * L * FEM.meshSize N ≤
+      (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N := fun i =>
+    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
+      (Finset.single_le_sum (f := fun i : Fin m => rateBound A (a + i))
+        (fun _ _ => rateBound_nonneg A _) (Finset.mem_univ i)) hL0) hh
+  have happ : ∀ ζ : ((complex A b).window a m).totalD.GraphSpace,
+      (∀ i : Fin m, IsC2Form A hA b (a + i) L (((complex A b).window a m).totalD.graphFst ζ i)) →
+      ∃ w ∈ ((whitney A hA b N).window a m).graphSub, ‖ζ - w‖ ≤
+        ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N := by
+    intro ζ hζ
+    obtain ⟨x, rfl, -, -⟩ := ((complex A b).window a m).totalD.exists_toGraphSpace_eq ζ
+    simp only [LinearPMap.graphFst_toGraphSpace] at hζ
+    obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((whitney A hA b N).window a m) x
+      (ε := (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N) fun i => by
+        obtain ⟨v, hv, h1, h2⟩ := (hζ i).exists_mem_whitney_le A hA b hL0 N
+        exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
+    refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
+    rw [Fintype.card_fin]; ring
+  have e : ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N =
+      ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N := rfl
+  exact ((whitney A hA b N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N)
+    (fun s hs => ⟨happ _ fun i => (hreg s hs i).1, happ _ fun i => (hreg s hs i).2⟩) ht
+
+end Wave
+
+/-! ### The higher-order families on `Ω` -/
+
+section PolyΩ
+
+variable [NeZero n]
+
+/-- Affine invariance of the global spaces of a natural element family, transported along the
+domain equalities of the subcomplexes. -/
+theorem fieldPull_mem_cast (E : LocalElement n) (hE : IsAffineNatural A hA b E)
+    {M₁ M₂ : SimplicialMesh n} (h : M₂ = M₁.map (affEquiv A hA b)) {Ω₁ Ω₂ : Set (Fin n → ℝ)}
+    (h₁ : M₁.domain = Ω₁) (h₂ : M₂.domain = Ω₂) (hM₁ : IsOpen M₁.domain) (hM₂ : IsOpen M₂.domain)
+    (hΩ₁ : IsOpen Ω₁) (hΩ₂ : IsOpen Ω₂) (hT : affMap A b ⁻¹' Ω₂ = Ω₁) {k : ℤ}
+    {v : L2F ℝ Ω₂ (formIdx n k)}
+    (hv : v ∈ ((deRham ℝ n).maximalSubcomplexOfEq h₂ hM₂ hΩ₂ (E.subcomplex M₂ hM₂)).V k) :
+    fieldPull hA b hΩ₂.measurableSet hT (minorMat A k) v ∈
+      ((deRham ℝ n).maximalSubcomplexOfEq h₁ hM₁ hΩ₁ (E.subcomplex M₁ hM₁)).V k := by
+  subst h₁ h₂
+  exact fieldPull_mem_V E hE h hM₁ _ hT k hv
+
+theorem fieldPull_mem_castMin (E : LocalElement n) (hE : IsAffineNatural A hA b E)
+    {M₁ M₂ : SimplicialMesh n} (h : M₂ = M₁.map (affEquiv A hA b)) {Ω₁ Ω₂ : Set (Fin n → ℝ)}
+    (h₁ : M₁.domain = Ω₁) (h₂ : M₂.domain = Ω₂) (hM₁ : IsOpen M₁.domain) (hM₂ : IsOpen M₂.domain)
+    (hΩ₁ : IsOpen Ω₁) (hΩ₂ : IsOpen Ω₂) (hT : affMap A b ⁻¹' Ω₂ = Ω₁) {x₁ x₂ : Fin n → ℝ}
+    (hs₁ : ∀ x ∈ closure M₁.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₁ + t • (x - x₁) ∈ M₁.domain)
+    (hs₂ : ∀ x ∈ closure M₂.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₂ + t • (x - x₂) ∈ M₂.domain)
+    {k : ℤ} {v : L2F ℝ Ω₂ (formIdx n k)}
+    (hv : v ∈ ((deRham ℝ n).minimalSubcomplexOfEq h₂ hM₂ hΩ₂
+      (E.subcomplexMin M₂ hM₂ x₂ hs₂)).V k) :
+    fieldPull hA b hΩ₂.measurableSet hT (minorMat A k) v ∈
+      ((deRham ℝ n).minimalSubcomplexOfEq h₁ hM₁ hΩ₁ (E.subcomplexMin M₁ hM₁ x₁ hs₁)).V k := by
+  subst h₁ h₂
+  exact fieldPull_mem_V₀ E hE h hM₁ _ hT k hv
+
+/-- **The complex of the admissible sequence `S` on `T(M_N)`**, a subcomplex of `HΛ(Ω)`. -/
+def poly (S : PolySeq) (N : ℕ) : (complex A b).Subcomplex :=
+  (deRham ℝ n).maximalSubcomplexOfEq (mesh_domain A hA b N) (isOpen_mesh_domain A hA b N)
+    (isOpen_domain A b) (S.subcomplex (mesh A hA b N) (isOpen_mesh_domain A hA b N))
+
+instance (S : PolySeq) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((poly A hA b S N).V k) :=
+  (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
+
+/-- **The complex of `S` on `T(M_N)` with vanishing boundary DOFs**, a subcomplex of `H̊Λ(Ω)`. -/
+def polyMin (S : PolySeq) (N : ℕ) : (complexMin A b).Subcomplex :=
+  (deRham ℝ n).minimalSubcomplexOfEq (mesh_domain A hA b N) (isOpen_mesh_domain A hA b N)
+    (isOpen_domain A b)
+    (S.subcomplexMin (mesh A hA b N) (isOpen_mesh_domain A hA b N) (center A b)
+      (strictStar_mesh A hA b N))
+
+instance (S : PolySeq) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((polyMin A hA b S N).V k) :=
+  (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
+
+/-- **Affine invariance of `P_rΛ`/`P_r⁻Λ` on `Ω`**: `v ∈ Vₕᵏ(T(M_N))` iff `T^* v ∈ Vₕᵏ(M_N)`. -/
+theorem mem_poly_V_iff (S : PolySeq) (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx n k)) :
+    x ∈ (poly A hA b S N).V k ↔ pullEquiv A hA b k x ∈ (FEM.poly n S N).V k := by
+  constructor
+  · intro hx
+    exact fieldPull_mem_cast A hA b (polyElement n S) (isAffineNatural_poly (hA := hA) (b := b) S) rfl
+      (FEM.mesh_domain n N) (mesh_domain A hA b N) (FEM.isOpen_mesh_domain n N)
+      (isOpen_mesh_domain A hA b N) (FEM.isOpen_cubeDomain n) (isOpen_domain A b)
+      (preimage_domain A hA b) hx
+  · intro hx
+    have h := fieldPull_mem_cast A⁻¹ (isUnit_det_inv hA) (affInvShift A b) (polyElement n S)
+      (isAffineNatural_poly (hA := isUnit_det_inv hA) (b := affInvShift A b) S)
+      (mesh_cube_eq_map A hA b N) (mesh_domain A hA b N) (FEM.mesh_domain n N)
+      (isOpen_mesh_domain A hA b N) (FEM.isOpen_mesh_domain n N) (isOpen_domain A b)
+      (FEM.isOpen_cubeDomain n) (preimage_inv_of_affMap hA b (preimage_domain A hA b)) hx
+    have e : fieldPull (isUnit_det_inv hA) (affInvShift A b) (FEM.isOpen_cubeDomain n).measurableSet
+        (preimage_inv_of_affMap hA b (preimage_domain A hA b)) (minorMat A⁻¹ k)
+        (pullEquiv A hA b k x) = x := (pullEquiv A hA b k).symm_apply_apply x
+    rwa [e] at h
+
+/-- **Affine invariance of `P_rΛ`/`P_r⁻Λ` with vanishing boundary DOFs on `Ω`.** -/
+theorem mem_polyMin_V_iff (S : PolySeq) (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx n k)) :
+    x ∈ (polyMin A hA b S N).V k ↔ pullEquiv A hA b k x ∈ (FEM.polyMin n S N).V k := by
+  constructor
+  · intro hx
+    exact fieldPull_mem_castMin A hA b (polyElement n S) (isAffineNatural_poly (hA := hA) (b := b) S) rfl
+      (FEM.mesh_domain n N) (mesh_domain A hA b N) (FEM.isOpen_mesh_domain n N)
+      (isOpen_mesh_domain A hA b N) (FEM.isOpen_cubeDomain n) (isOpen_domain A b)
+      (preimage_domain A hA b) (FEM.strictStar_mesh n N) (strictStar_mesh A hA b N) hx
+  · intro hx
+    have h := fieldPull_mem_castMin A⁻¹ (isUnit_det_inv hA) (affInvShift A b) (polyElement n S)
+      (isAffineNatural_poly (hA := isUnit_det_inv hA) (b := affInvShift A b) S)
+      (mesh_cube_eq_map A hA b N) (mesh_domain A hA b N) (FEM.mesh_domain n N)
+      (isOpen_mesh_domain A hA b N) (FEM.isOpen_mesh_domain n N) (isOpen_domain A b)
+      (FEM.isOpen_cubeDomain n) (preimage_inv_of_affMap hA b (preimage_domain A hA b))
+      (strictStar_mesh A hA b N) (FEM.strictStar_mesh n N) hx
+    have e : fieldPull (isUnit_det_inv hA) (affInvShift A b) (FEM.isOpen_cubeDomain n).measurableSet
+        (preimage_inv_of_affMap hA b (preimage_domain A hA b)) (minorMat A⁻¹ k)
+        (pullEquiv A hA b k x) = x := (pullEquiv A hA b k).symm_apply_apply x
+    rwa [e] at h
+
+end PolyΩ
+
+/-! ### The finite element theorems for any family with uniformly bounded projections -/
+
+section Generic
+
+variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
+  [∀ i, CompleteSpace (W i)] (H : HilbertComplex ℝ (ComplexShape.up ℤ) W)
+
+/-- **Uniformly bounded cochain projections with vanishing harmonic gap** onto a family of
+subcomplexes. -/
+def HasUniformProj (S : ℕ → H.Subcomplex) : Prop :=
+  ∃ (C : ℝ) (π : ∀ N, (S N).CochainProjection), 1 ≤ C ∧ (∀ N i x, ‖(π N).π i x‖ ≤ C * ‖x‖) ∧
+    (∀ N i j, (π N).IsGraphBounded i j C) ∧
+    ∀ j, Tendsto (fun N => (π N).harmonicGap j) atTop (𝓝 0)
+
+variable {H}
+
+/-- **Uniform projections transfer along an isomorphism of complexes** with bounded `e`, `e⁻¹`,
+provided the subcomplexes correspond and the target family approximates `L²`. -/
+theorem hasUniformProj_of_chainIso {W' : ℤ → Type*} [∀ i, NormedAddCommGroup (W' i)]
+    [∀ i, InnerProductSpace ℝ (W' i)] [∀ i, CompleteSpace (W' i)]
+    {H' : HilbertComplex ℝ (ComplexShape.up ℤ) W'} {e : ∀ i, W i ≃L[ℝ] W' i}
+    (hI : IsChainIso H H' e) {M M' : ℝ} (hM : ∀ k, ‖(e k : W k →L[ℝ] W' k)‖ ≤ M)
+    (hM' : ∀ k, ‖((e k).symm : W' k →L[ℝ] W k)‖ ≤ M')
+    (hfin : ∀ j, FiniteDimensional ℝ (H'.harmonic j))
+    {S' : ℕ → H'.Subcomplex} {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)]
+    (hS : ∀ N k x, x ∈ (S N).V k ↔ e k x ∈ (S' N).V k) {C : ℝ} (hC : 0 ≤ C)
+    (P : ∀ N, (S' N).CochainProjection) (hb : ∀ N i x, ‖(P N).π i x‖ ≤ C * ‖x‖)
+    (hg : ∀ N i j, (P N).IsGraphBounded i j C)
+    (happ : ∀ j (x' : W' j), Tendsto (fun N => Metric.infDist x' ((S' N).V j : Set (W' j)))
+      atTop (𝓝 0)) :
+    HasUniformProj H S := by
+  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0)
+  have hM'0 : 0 ≤ M' := (norm_nonneg _).trans (hM' 0)
+  set C₀ := max 1 (M' * C * M)
+  set π : ∀ N, (S N).CochainProjection := fun N => hI.comapProj (S N) (hS N) (P N)
+  have hbπ : ∀ N i x, ‖(π N).π i x‖ ≤ C₀ * ‖x‖ := fun N i x =>
+    (hI.norm_comapProj_le _ _ (P N) hC (hb N i) (hM i) (hM' i) x).trans
+      (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
+  refine ⟨C₀, π, le_max_left _ _, hbπ, fun N i j =>
+    (hI.isGraphBounded_comapProj _ _ (P N) (hg N i j) hM hM').mono'
+      (mul_nonneg (mul_nonneg hM'0 hC) hM0) (le_max_right _ _), fun j => ?_⟩
+  have := hfin j
+  have := hI.finiteDimensional_harmonic j
+  exact Subcomplex.CochainProjection.tendsto_harmonicGap π (zero_le_one.trans (le_max_left _ _))
+    (fun N x => hbπ N j x) fun q _ => IsChainIso.tendsto_infDist_comapSub S hS (happ j) q
+
+variable {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)] {cP : ℝ}
+  (hcP : 1 ≤ cP)
+  (hP : ∀ i j, (ComplexShape.up ℤ).Rel i j → ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ →
+    ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
+include hcP hP
+
+omit [∀ N k, FiniteDimensional ℝ ((S N).V k)] hcP in
+/-- **Uniform discrete Poincaré inequality** ([AFW2010], Thm 3.6). -/
+theorem discretePoincare_of (h : HasUniformProj H S) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : W i} (hx : x ∈ (S N).V i),
+    (∀ y ∈ (S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖H.d i j ⟨x, (S N).le_domain i j hx⟩‖ := by
+  obtain ⟨C, π, hC, hπ, -, -⟩ := h
+  exact ⟨C * cP, fun {i j} hij N x hx hxo =>
+    (π N).norm_le_of_forall_inner_eq_zero hij (hP i j hij) (zero_le_one.trans hC) (hπ N i) hx hxo⟩
+
+/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** ([AFW2010],
+Thm 3.8). -/
+theorem mixed_wellPosed_of (h : HasUniformProj H S) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (S N).V j),
+    (∃! x, (S N).toHilbertComplex.mixedForm i j k x = (S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (S N).toHilbertComplex.MixedSpace i j,
+      (S N).toHilbertComplex.mixedForm i j k x = (S N).toHilbertComplex.mixedRHS i j f →
+        ‖x‖ ≤ C * ‖f‖ := by
+  refine h.elim fun C hC => hC.elim fun π hπ => ?_
+  obtain ⟨hC1, hb, -, -⟩ := hπ
+  refine ⟨16 * (C * cP) ^ 2, fun {i j k} hij hjk N f => ⟨?_, fun x hx => ?_⟩⟩
+  · exact (π N).existsUnique_mixed hij hjk hcP hC1 (hP i j hij) (hP j k hjk) (hb N i) (hb N j) f
+  · exact (π N).norm_le_of_mixed hij hjk hcP hC1 (hP i j hij) (hP j k hjk) (hb N i) (hb N j) hx
+
+omit hcP in
+/-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) with weights `μ_j(N) → 0`. -/
+theorem mixed_quasiOptimal_of (h : HasUniformProj H S) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {q : H.harmonic j},
+    H.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).fst‖ +
+        ‖u - (S N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).snd.fst‖ +
+        ‖(q : W j) - (((Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk
+          f).snd.snd : (S N).V j) : W j)‖ ≤
+      K * (Metric.infDist σ ((S N).domainSub i) + Metric.infDist u ((S N).domainSub j) +
+        Metric.infDist (q : W j) ((S N).harmonicW j) +
+        μ j N * Metric.infDist (H.boundaryPart j (H.domainIncl j u)) ((S N).domainSub j)) := by
+  refine h.elim fun C hC => hC.elim fun π hπ => ?_
+  obtain ⟨hC1, -, hg, hgap⟩ := hπ
+  exact ⟨(1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C), fun j N => (π N).harmonicGap j, hgap,
+    fun {i j k} hij hjk _ _ _ _ hs N => (π N).norm_sub_le_infDist_harmonicGap hij hjk hC1
+      (hP i j hij) (hP j k hjk) (hg N i j) (hg N j k) hs⟩
+
+omit hcP in
+/-- **Convergence at the approximation rate** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): if every
+form with the regularity `Reg` has a `v ∈ Vₕˡ` with `‖x - v‖, ‖d (x - v)‖ ≤ B_l r_N`, and the
+solution `(σ, u, q)`, the boundary part of `u` and `q` are regular, then the error of the discrete
+mixed solutions is `≤ K r_N` with `K` independent of `N`. -/
+theorem mixed_rate_of {C : ℝ} (π : ∀ N, (S N).CochainProjection) (hC1 : 1 ≤ C)
+    (hg : ∀ N i j, (π N).IsGraphBounded i j C) {Reg : ∀ l, W l → Prop} {B : ℤ → ℝ}
+    (hB : ∀ l, 0 ≤ B l) {r : ℕ → ℝ} (hr : ∀ N, 0 ≤ r N)
+    (happ : ∀ N l (x : W l), Reg l x → ∃ v, ∃ hv : v ∈ (S N).V l, ‖x - v‖ ≤ B l * r N ∧
+      ∀ j' (hx : x ∈ (H.d l j').domain),
+        ‖H.d l j' ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain l j' hv)⟩‖ ≤ B l * r N)
+    {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {q : H.harmonic j}
+    (hs : H.IsMixedSolution i j k f σ u q) (hσ : Reg i (H.domainIncl i σ))
+    (hu : Reg j (H.domainIncl j u)) (hb : Reg j (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))))
+    (hq : Reg j (q : W j)) (N : ℕ) :
+    ‖σ - (S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).fst‖ +
+        ‖u - (S N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).snd.fst‖ +
+        ‖(q : W j) - (((Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk
+          f).snd.snd : (S N).V j) : W j)‖ ≤
+      (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C) * (2 * (B i + B j) * (3 + 2 * C)) * r N := by
+  set K₀ := (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C)
+  have hK₀ : 0 ≤ K₀ := by have := zero_le_one.trans hC1; positivity
+  have hmain := (π N).norm_sub_le_infDist hij hjk hC1 (by linarith : (0 : ℝ) ≤ 1 + C)
+    (hP i j hij) (hP j k hjk) (hg N i j) (hg N j k)
+    (fun _ hq' => (π N).norm_sub_π_harmonic_le hjk (by linarith) (hg N j k) hq') hs
+  have dist_of : ∀ {l : ℤ} {τ : H.domainSpace l}, Reg l (H.domainIncl l τ) →
+      Metric.infDist τ ((S N).domainSub l) ≤ 2 * (B l * r N) := fun {l τ} hτ => by
+    obtain ⟨v, hv, h1, h2⟩ := happ N l _ hτ
+    exact infDist_domainSub_le_two_mul (S N) τ hv h1 h2
+  have d1 := dist_of hσ
+  have d2 := dist_of hu
+  have d3 := dist_of hb
+  have d4 : Metric.infDist (q : W j) ((S N).harmonicW j) ≤ (1 + C) * (2 * (B j * r N)) :=
+    ((π N).infDist_harmonicW_le hjk (by linarith) (hg N j k) q.2).trans
+      (mul_le_mul_of_nonneg_left (dist_of (τ := cyclesToDomainSpace (H.harmonic_le_cycles j q.2))
+        hq) (by linarith))
+  refine hmain.trans ?_
+  have hi := mul_nonneg (hB i) (hr N)
+  have hj := mul_nonneg (hB j) (hr N)
+  have h3 := mul_le_mul_of_nonneg_left d3 (by linarith : (0 : ℝ) ≤ 1 + C)
+  have key : 2 * (B i + B j) * (3 + 2 * C) * r N = 2 * (B i * r N) + 2 * (B j * r N) +
+      (1 + C) * (2 * (B j * r N)) + (1 + C) * (2 * (B j * r N)) +
+      2 * (B i * r N) * (2 + 2 * C) := by ring
+  have hp : 0 ≤ 2 * (B i * r N) * (2 + 2 * C) := mul_nonneg (by linarith) (by linarith)
+  have hsum : Metric.infDist σ ((S N).domainSub i) + Metric.infDist u ((S N).domainSub j) +
+      Metric.infDist (q : W j) ((S N).harmonicW j) +
+      (1 + C) * Metric.infDist (H.boundaryPart j (H.domainIncl j u)) ((S N).domainSub j) ≤
+      2 * (B i + B j) * (3 + 2 * C) * r N := by
+    rw [key]; linarith
+  calc K₀ * _ ≤ K₀ * (2 * (B i + B j) * (3 + 2 * C) * r N) := mul_le_mul_of_nonneg_left hsum hK₀
+    _ = _ := by ring
+
+omit hcP hP in
+/-- **Convergence of the semi-discrete Hodge wave equation** on every window, for a family of
+subcomplexes approximating every point degreewise in the graph norm. -/
+theorem exists_tendstoUniformlyOn_window_of (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε →
+      ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V i, ‖x - v‖ < ε ∧
+        ∀ j (hx : x ∈ (H.d i j).domain),
+          ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain i j hv)⟩‖ < ε)
+    (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ) (x : (H.window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → (H.window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((S N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((S N).window a m).graphSub)
+        ((H.window a m).totalD.toGraphSpace ⟨x, ((H.window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => (H.window a m).totalD.graphFst (ξh N t))
+        (fun t => (H.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) := by
+  have : ∀ N (i : Fin m), FiniteDimensional ℝ (((S N).window a m).V i) := fun N i =>
+    inferInstanceAs (FiniteDimensional ℝ ((S N).V (a + i)))
+  refine HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
+    (Subcomplex.isApproximating fun ζ _ hδ => ?_) t₀ t₁ x
+  exact Subcomplex.eventually_exists_graphSub_lt (fun N => (S N).window a m)
+    (fun i x _ hε => (hdeg (a + i) x _ hε).mono fun _ hN => by
+      obtain ⟨v, hv, h1, h2⟩ := hN
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
+
+end Generic
+
+/-! ### The higher-order finite element theorems on `Ω`, with no hypothesis -/
+
+section PolyFEM
+
+variable [NeZero n]
+
+/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap onto the
+complexes of the admissible sequence `S`** on the meshes `T(M_N)` of `Ω`. -/
+theorem polySmoothedProjection_uniform (S : PolySeq) :
+    HasUniformProj (complex A b) (poly A hA b S) := by
+  refine (FEM.polySmoothingEstimates_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
+  exact hasUniformProj_of_chainIso (isChainIso A hA b) (norm_pullEquiv_le A hA b)
+    (norm_pullEquiv_symm_le A hA b) (fun j => inferInstance) (fun N k x => mem_poly_V_iff A hA b S N k x)
+    hE.two_mul_nonneg hE.proj (fun N i x => hE.norm_proj_le N i x)
+    (fun N i j => hE.isGraphBounded_proj N i j) fun j x' => FEM.tendsto_infDist_poly S j x'
+
+/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` with vanishing
+boundary DOFs** on `Ω`. -/
+theorem polySmoothedProjection_uniform_min (S : PolySeq) :
+    HasUniformProj (complexMin A b) (polyMin A hA b S) := by
+  refine (FEM.polySmoothingEstimatesMin_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
+  exact hasUniformProj_of_chainIso (isChainIsoMin A hA b) (norm_pullEquiv_le A hA b)
+    (norm_pullEquiv_symm_le A hA b) (fun j => inferInstance)
+    (fun N k x => mem_polyMin_V_iff A hA b S N k x) hE.two_mul_nonneg hE.proj
+    (fun N i x => hE.norm_proj_le N i x) (fun N i j => hE.isGraphBounded_proj N i j)
+    fun j x' => FEM.tendsto_infDist_polyMin S j x'
+
+/-- **Uniform discrete Poincaré inequality** for the higher-order families on `Ω`. -/
+theorem discretePoincare_poly (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (domain A b) (formIdx n i)}
+    (hx : x ∈ (poly A hA b S N).V i), (∀ y ∈ (poly A hA b S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complex A b).d i j ⟨x, (poly A hA b S N).le_domain i j hx⟩‖ :=
+  discretePoincare_of (poincare A hA b)
+    (polySmoothedProjection_uniform A hA b S)
+
+theorem discretePoincare_polyMin (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (domain A b) (formIdx n i)}
+    (hx : x ∈ (polyMin A hA b S N).V i),
+    (∀ y ∈ (polyMin A hA b S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complexMin A b).d i j ⟨x, (polyMin A hA b S N).le_domain i j hx⟩‖ :=
+  discretePoincare_of (poincare_min A hA b)
+    (polySmoothedProjection_uniform_min A hA b S)
+
+/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** for the
+higher-order families on `Ω`. -/
+theorem mixed_wellPosed_poly (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ)
+    (f : (poly A hA b S N).V j),
+    (∃! x, (poly A hA b S N).toHilbertComplex.mixedForm i j k x =
+      (poly A hA b S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (poly A hA b S N).toHilbertComplex.MixedSpace i j,
+      (poly A hA b S N).toHilbertComplex.mixedForm i j k x =
+        (poly A hA b S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
+  mixed_wellPosed_of (one_le_poincareConst A) (poincare A hA b)
+    (polySmoothedProjection_uniform A hA b S)
+
+theorem mixed_wellPosed_polyMin (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ)
+    (f : (polyMin A hA b S N).V j),
+    (∃! x, (polyMin A hA b S N).toHilbertComplex.mixedForm i j k x =
+      (polyMin A hA b S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (polyMin A hA b S N).toHilbertComplex.MixedSpace i j,
+      (polyMin A hA b S N).toHilbertComplex.mixedForm i j k x =
+        (polyMin A hA b S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
+  mixed_wellPosed_of (one_le_poincareConst A) (poincare_min A hA b)
+    (polySmoothedProjection_uniform_min A hA b S)
+
+/-- **Quasi-optimality of the higher-order mixed method on `Ω`** ([AFW2010], Thm 3.9). -/
+theorem mixed_quasiOptimal_poly (S : PolySeq) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complex A b).domainSpace i}
+    {u : (complex A b).domainSpace j} {q : (complex A b).harmonic j},
+    (complex A b).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (poly A hA b S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly A hA b S N) hij hjk f).fst‖ +
+        ‖u - (poly A hA b S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly A hA b S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly A hA b S N) hij hjk
+            f).snd.snd : (poly A hA b S N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((poly A hA b S N).domainSub i) +
+        Metric.infDist u ((poly A hA b S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((poly A hA b S N).harmonicW j) +
+        μ j N * Metric.infDist ((complex A b).boundaryPart j ((complex A b).domainIncl j u))
+          ((poly A hA b S N).domainSub j)) :=
+  mixed_quasiOptimal_of (poincare A hA b)
+    (polySmoothedProjection_uniform A hA b S)
+
+theorem mixed_quasiOptimal_polyMin (S : PolySeq) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complexMin A b).domainSpace i}
+    {u : (complexMin A b).domainSpace j} {q : (complexMin A b).harmonic j},
+    (complexMin A b).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (polyMin A hA b S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin A hA b S N) hij hjk f).fst‖ +
+        ‖u - (polyMin A hA b S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin A hA b S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin A hA b S N) hij hjk
+            f).snd.snd : (polyMin A hA b S N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((polyMin A hA b S N).domainSub i) +
+        Metric.infDist u ((polyMin A hA b S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j))
+          ((polyMin A hA b S N).harmonicW j) +
+        μ j N * Metric.infDist ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))
+          ((polyMin A hA b S N).domainSub j)) :=
+  mixed_quasiOptimal_of (poincare_min A hA b)
+    (polySmoothedProjection_uniform_min A hA b S)
+
+instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
+    FiniteDimensional ℝ (((poly A hA b S N).window a m).V i) :=
+  inferInstanceAs (FiniteDimensional ℝ ((poly A hA b S N).V (a + i)))
+
+instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
+    FiniteDimensional ℝ (((polyMin A hA b S N).window a m).V i) :=
+  inferInstanceAs (FiniteDimensional ℝ ((polyMin A hA b S N).V (a + i)))
+
+/-- **Convergence of the semi-discrete Hodge wave equation for the higher-order families on
+`Ω`**, every window, `D(L)` data ([QuennevilleBelair2015], Thm 4.14). -/
+theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
+    (x : ((complex A b).window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → ((complex A b).window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((poly A hA b S N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((poly A hA b S N).window a m).graphSub)
+        (((complex A b).window a m).totalD.toGraphSpace
+          ⟨x, (((complex A b).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => ((complex A b).window a m).totalD.graphFst (ξh N t))
+        (fun t => ((complex A b).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
+  exists_tendstoUniformlyOn_window_of ((isChainIso A hA b).eventually_near_comapSub
+    (poly A hA b S) (fun N i x => mem_poly_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b)
+    fun i x' _ hε => FEM.eventually_exists_poly_near S i x' hε) a m t₀ t₁ x
+
+theorem exists_tendstoUniformlyOn_windowMin_poly (S : PolySeq) (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
+    (x : ((complexMin A b).window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → ((complexMin A b).window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((polyMin A hA b S N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((polyMin A hA b S N).window a m).graphSub)
+        (((complexMin A b).window a m).totalD.toGraphSpace
+          ⟨x, (((complexMin A b).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => ((complexMin A b).window a m).totalD.graphFst (ξh N t))
+        (fun t => ((complexMin A b).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
+  exists_tendstoUniformlyOn_window_of ((isChainIsoMin A hA b).eventually_near_comapSub
+    (polyMin A hA b S) (fun N i x => mem_polyMin_V_iff A hA b S N i x)
+    (norm_pullEquiv_symm_le A hA b)
+    fun i x' _ hε => FEM.eventually_exists_polyMin_near S i x' hε) a m t₀ t₁ x
+
+end PolyFEM
+
+/-! ### Rates `h^{s+1}` of the higher-order families on `Ω` -/
+
+section PolyRates
+
+/-- The constant `‖A^*‖_{fibre} ‖A‖^m` of the `m`-th derivatives of pulled-back forms. -/
+def fibConstIter (m : ℕ) : ℝ := ‖fibCLM A‖ * ‖(Matrix.toLin' A).toContinuousLinearMap‖ ^ m
+
+theorem fibConstIter_nonneg (m : ℕ) : 0 ≤ fibConstIter A m :=
+  mul_nonneg (norm_nonneg _) (pow_nonneg (norm_nonneg _) m)
+
+/-- **Iterated derivatives of a pulled-back form**:
+`‖D^m (T^* w)(y)‖ ≤ ‖A^*‖ ‖A‖^m ‖D^m w(T y)‖`. -/
+theorem norm_iteratedFDeriv_affinePullback_le {m : ℕ} {w : FormField n}
+    (hw : ContDiff ℝ m w) (y : Fin n → ℝ) :
+    ‖iteratedFDeriv ℝ m (affinePullback (rows A) b w) y‖ ≤
+      fibConstIter A m * ‖iteratedFDeriv ℝ m w (affMap A b y)‖ := by
+  set L := (Matrix.toLin' A).toContinuousLinearMap
+  have hwb : ContDiff ℝ m (fun z => w (z + b)) := hw.comp (contDiff_id.add contDiff_const)
+  have e1 : affinePullback (rows A) b w = ⇑(fibCLM A) ∘ ((fun z => w (z + b)) ∘ ⇑L) := by
+    rw [affinePullback_eq_comp]
+    funext x
+    simp only [Function.comp_apply, affMap_eq_toLin', L, LinearMap.coe_toContinuousLinearMap']
+  rw [e1]
+  have h1 := (fibCLM A).norm_iteratedFDeriv_comp_left (x := y) (n := m)
+    (hwb.comp L.contDiff).contDiffAt le_rfl
+  refine h1.trans ?_
+  rw [L.iteratedFDeriv_comp_right hwb y le_rfl, iteratedFDeriv_comp_add_right]
+  have h2 := ContinuousMultilinearMap.norm_compContinuousLinearMap_le
+    (iteratedFDeriv ℝ m w (L y + b)) fun _ : Fin m => L
+  rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin] at h2
+  have hLy : L y + b = affMap A b y := by
+    simp only [L, affMap_eq_toLin', LinearMap.coe_toContinuousLinearMap']
+  rw [hLy] at h2
+  calc ‖fibCLM A‖ * ‖(iteratedFDeriv ℝ m w (L y + b)).compContinuousLinearMap fun _ => L‖
+      ≤ ‖fibCLM A‖ * (‖iteratedFDeriv ℝ m w (affMap A b y)‖ * ‖L‖ ^ m) := by
+        rw [hLy]; exact mul_le_mul_of_nonneg_left h2 (norm_nonneg _)
+    _ = _ := by simp only [fibConstIter, L]; ring
+
+/-- `x ∈ L²(Ω; Λʲ)` is a `C^{s+2}` form of degree `j` whose `(s+1)`-st derivative and that of its
+exterior derivative are bounded by `L` on `cl Ω` (trivially true in negative degrees). -/
+def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
+  j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
+    ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
+    (∀ y ∈ closure (domain A b), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
+    (∀ y ∈ closure (domain A b), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
+    x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
+
+/-- **`C^{s+2}` forms on `Ω` pull back to `C^{s+2}` forms on `Q`**, with bound
+`fibConstIter A (s + 1) · L`. -/
+theorem IsCsForm.pullEquiv {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hx : IsCsForm A hA b s j L x) :
+    FEM.IsCsForm s j (fibConstIter A (s + 1) * L) (pullEquiv A hA b j x) := by
+  rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
+  · exact Or.inl hj
+  have hw1 : ContDiff ℝ ((s + 1 : ℕ) : WithTop ℕ∞) w :=
+    hw.of_le (by exact_mod_cast Nat.le_succ (s + 1))
+  have hw' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+  have hdw : ContDiff ℝ ((s + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv hw'
+  have hd : Differentiable ℝ w := hw.differentiable (by norm_cast)
+  refine Or.inr ⟨k, rfl, affinePullback (rows A) b w, contDiff_affinePullback _ _ hw,
+    fun y => IsDeg.affinePullback hdeg _ b y, fun y hy => ?_, fun y hy => ?_, ?_⟩
+  · refine (norm_iteratedFDeriv_affinePullback_le A b hw1 y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL _ (affMap_mem_closure_domain A hA b hy))
+      (fibConstIter_nonneg A _)
+  · rw [extDeriv_affinePullback A b hd]
+    refine (norm_iteratedFDeriv_affinePullback_le A b hdw y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL' _ (affMap_mem_closure_domain A hA b hy))
+      (fibConstIter_nonneg A _)
+  · exact pullEquiv_formL2 A hA b hw.continuous hdeg
+
+/-- The rate constant `‖(T^*)⁻¹‖ B_j ‖A^*‖ ‖A‖^{s+1}` of the higher-order families on `Ω`. -/
+def polyRateBound (S : PolySeq) (s : ℕ) (j : ℤ) : ℝ :=
+  pullConst A⁻¹ * FEM.polyInterpBound n S j * fibConstIter A (s + 1)
+
+theorem polyRateBound_nonneg (S : PolySeq) (s : ℕ) (j : ℤ) : 0 ≤ polyRateBound A S s j :=
+  mul_nonneg (mul_nonneg (pullConst_nonneg _) (FEM.polyInterpBound_nonneg S j))
+    (fibConstIter_nonneg A _)
+
+variable [NeZero n]
+
+/-- **Interpolation error of order `h^{s+1}` on `Ω`** for a sequence of order `s` in degrees `j`,
+`j + 1`. -/
+theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt n S s j)
+    {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)} (hx : IsCsForm A hA b s j L x) (hL0 : 0 ≤ L)
+    (N : ℕ) :
+    ∃ v, ∃ hv : v ∈ (poly A hA b S N).V j,
+      ‖x - v‖ ≤ polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) ∧
+      ∀ j' (hxj : x ∈ ((complex A b).d j j').domain),
+        ‖(complex A b).d j j' ⟨x - v, Submodule.sub_mem _ hxj ((poly A hA b S N).le_domain j j' hv)⟩‖ ≤
+          polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) := by
+  obtain ⟨v', hv', h1, h2⟩ := (hx.pullEquiv A hA b).exists_mem_poly_le hS
+    (mul_nonneg (fibConstIter_nonneg A _) hL0) N
+  obtain ⟨v, hv, hv1, hv2⟩ := (isChainIso A hA b).exists_near_comapSub (poly A hA b S N)
+    (fun i x => mem_poly_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b) hv' h1 h2
+  have e : pullConst A⁻¹ * (FEM.polyInterpBound n S j * (fibConstIter A (s + 1) * L) *
+      FEM.meshSize N ^ (s + 1)) = polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) := by
+    simp only [polyRateBound]; ring
+  exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
+
+/-- `x ∈ L²(Ω; Λʲ)` is a `C^{s+2}` form of degree `j` **vanishing outside `Ω`** with the bounds of
+`IsCsForm`. -/
+def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
+  j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
+    ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
+    (∀ y ∉ domain A b, w y = 0) ∧
+    (∀ y ∈ closure (domain A b), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
+    (∀ y ∈ closure (domain A b), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
+    x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
+
+omit [NeZero n] in
+theorem IsCsFormMin.pullEquiv {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hx : IsCsFormMin A hA b s j L x) :
+    FEM.IsCsFormMin s j (fibConstIter A (s + 1) * L) (pullEquiv A hA b j x) := by
+  rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, hL', rfl⟩
+  · exact Or.inl hj
+  have hw1 : ContDiff ℝ ((s + 1 : ℕ) : WithTop ℕ∞) w :=
+    hw.of_le (by exact_mod_cast Nat.le_succ (s + 1))
+  have hw' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+  have hdw : ContDiff ℝ ((s + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv hw'
+  have hd : Differentiable ℝ w := hw.differentiable (by norm_cast)
+  refine Or.inr ⟨k, rfl, affinePullback (rows A) b w, contDiff_affinePullback _ _ hw,
+    fun y => IsDeg.affinePullback hdeg _ b y, fun y hy => ?_, fun y hy => ?_, fun y hy => ?_, ?_⟩
+  · have : affMap A b y ∉ domain A b := fun h => hy (by
+      rw [← preimage_domain A hA b]; exact h)
+    rw [affinePullback_apply, affine_rows, hsupp _ this, pullback_zero]
+  · refine (norm_iteratedFDeriv_affinePullback_le A b hw1 y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL _ (affMap_mem_closure_domain A hA b hy))
+      (fibConstIter_nonneg A _)
+  · rw [extDeriv_affinePullback A b hd]
+    refine (norm_iteratedFDeriv_affinePullback_le A b hdw y).trans ?_
+    exact mul_le_mul_of_nonneg_left (hL' _ (affMap_mem_closure_domain A hA b hy))
+      (fibConstIter_nonneg A _)
+  · exact pullEquiv_formL2 A hA b hw.continuous hdeg
+
+theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
+    (hS : FEM.PolyOrderAt n S s j) {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hx : IsCsFormMin A hA b s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
+    ∃ v, ∃ hv : v ∈ (polyMin A hA b S N).V j,
+      ‖x - v‖ ≤ polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) ∧
+      ∀ j' (hxj : x ∈ ((complexMin A b).d j j').domain),
+        ‖(complexMin A b).d j j'
+            ⟨x - v, Submodule.sub_mem _ hxj ((polyMin A hA b S N).le_domain j j' hv)⟩‖ ≤
+          polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) := by
+  obtain ⟨v', hv', h1, h2⟩ := (hx.pullEquiv A hA b).exists_mem_polyMin_le hS
+    (mul_nonneg (fibConstIter_nonneg A _) hL0) N
+  obtain ⟨v, hv, hv1, hv2⟩ := (isChainIsoMin A hA b).exists_near_comapSub (polyMin A hA b S N)
+    (fun i x => mem_polyMin_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b) hv' h1 h2
+  have e : pullConst A⁻¹ * (FEM.polyInterpBound n S j * (fibConstIter A (s + 1) * L) *
+      FEM.meshSize N ^ (s + 1)) = polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) := by
+    simp only [polyRateBound]; ring
+  exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
+
+/-- **Convergence of order `h^{s+1}` of the higher-order mixed method on `Ω = A · Q + b`**
+([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), with no hypothesis beyond the data: for a sequence of
+order `s` (`PolyOrder`) and a solution whose components, boundary part and harmonic part are
+`C^{s+2}` with `‖D^{s+1}‖ ≤ L` on `cl Ω`, the error on `T(M_N)` is `≤ K L h_N^{s+1}`. -/
+theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i j k : ℤ}
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
+    ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complex A b).domainSpace i}
+    {u : (complex A b).domainSpace j} {q : (complex A b).harmonic j},
+    (complex A b).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsCsForm A hA b s i L ((complex A b).domainIncl i σ) →
+    IsCsForm A hA b s j L ((complex A b).domainIncl j u) →
+    IsCsForm A hA b s j L ((complex A b).domainIncl j
+      ((complex A b).boundaryPart j ((complex A b).domainIncl j u))) →
+    IsCsForm A hA b s j L (q : L2F ℝ (domain A b) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (poly A hA b S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly A hA b S N) hij hjk f).fst‖ +
+        ‖u - (poly A hA b S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly A hA b S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly A hA b S N) hij hjk
+            f).snd.snd : (poly A hA b S N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * L * FEM.meshSize N ^ (s + 1) := by
+  refine (polySmoothedProjection_uniform A hA b S).elim fun C hC => hC.elim fun π hπ => ?_
+  obtain ⟨hC1, -, hg, -⟩ := hπ
+  refine ⟨(1 + 144 * (C * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + C) *
+    (2 * (polyRateBound A S s i + polyRateBound A S s j) * (3 + 2 * C)),
+    fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
+  have h := mixed_rate_of (poincare A hA b) π hC1 hg (Reg := fun l x => IsCsForm A hA b s l L x)
+    (B := polyRateBound A S s) (polyRateBound_nonneg A S s)
+    (r := fun N => L * FEM.meshSize N ^ (s + 1))
+    (fun N => mul_nonneg hL0 (pow_nonneg (FEM.meshSize_pos N).le _))
+    (fun N l x hx => hx.exists_mem_poly_le A hA b (hS.polyOrderAt l) hL0 N) hij hjk hs hσ hu hb hq N
+  refine h.trans (le_of_eq ?_)
+  ring
+
+/-- **Convergence of order `h^{s+1}` with vanishing traces on `Ω`**, for solutions whose
+components are `C^{s+2}` forms vanishing outside `Ω`. -/
+theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i j k : ℤ}
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
+    ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complexMin A b).domainSpace i}
+    {u : (complexMin A b).domainSpace j} {q : (complexMin A b).harmonic j},
+    (complexMin A b).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsCsFormMin A hA b s i L ((complexMin A b).domainIncl i σ) →
+    IsCsFormMin A hA b s j L ((complexMin A b).domainIncl j u) →
+    IsCsFormMin A hA b s j L ((complexMin A b).domainIncl j
+      ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))) →
+    IsCsFormMin A hA b s j L (q : L2F ℝ (domain A b) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (polyMin A hA b S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin A hA b S N) hij hjk f).fst‖ +
+        ‖u - (polyMin A hA b S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin A hA b S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin A hA b S N) hij hjk
+            f).snd.snd : (polyMin A hA b S N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * L * FEM.meshSize N ^ (s + 1) := by
+  refine (polySmoothedProjection_uniform_min A hA b S).elim fun C hC => hC.elim fun π hπ => ?_
+  obtain ⟨hC1, -, hg, -⟩ := hπ
+  refine ⟨(1 + 144 * (C * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + C) *
+    (2 * (polyRateBound A S s i + polyRateBound A S s j) * (3 + 2 * C)),
+    fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
+  have h := mixed_rate_of (poincare_min A hA b) π hC1 hg
+    (Reg := fun l x => IsCsFormMin A hA b s l L x)
+    (B := polyRateBound A S s) (polyRateBound_nonneg A S s)
+    (r := fun N => L * FEM.meshSize N ^ (s + 1))
+    (fun N => mul_nonneg hL0 (pow_nonneg (FEM.meshSize_pos N).le _))
+    (fun N l x hx => hx.exists_mem_polyMin_le A hA b (hS.polyOrderAt l) hL0 N) hij hjk hs hσ hu
+    hb hq N
+  refine h.trans (le_of_eq ?_)
+  ring
+
+end PolyRates
+
+/-! ### Boxes and non-vacuity -/
+
+section Boxes
+
+/-- The diagonal matrix `diag(2 (cᵢ - aᵢ))` mapping `Q = (0, ½)ⁿ` onto the box `∏ (aᵢ, cᵢ)`. -/
+def boxMatrix (a c : Fin n → ℝ) : Matrix (Fin n) (Fin n) ℝ :=
+  Matrix.diagonal fun i => 2 * (c i - a i)
+
+theorem isUnit_det_boxMatrix {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
+    IsUnit (boxMatrix a c).det := by
+  rw [boxMatrix, Matrix.det_diagonal, isUnit_iff_ne_zero]
+  exact Finset.prod_ne_zero_iff.2 fun i _ => by have := h i; positivity
+
+/-- **Every open box is a parallelepiped**: `∏ᵢ (aᵢ, cᵢ) = diag(2 (c - a)) · Q + a`. -/
+theorem domain_boxMatrix {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
+    domain (boxMatrix a c) a = Set.univ.pi fun i => Set.Ioo (a i) (c i) := by
+  rw [domain_eq_image _ (isUnit_det_boxMatrix h)]
+  ext y
+  simp only [Set.mem_image, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo, FEM.cubeDomain]
+  constructor
+  · rintro ⟨x, hx, rfl⟩ i
+    have hi := hx i
+    have hci := h i
+    simp only [affMap, boxMatrix, Matrix.mulVec_diagonal, Pi.add_apply]
+    constructor <;> nlinarith [hi.1, hi.2]
+  · intro hy
+    refine ⟨fun i => (y i - a i) / (2 * (c i - a i)), fun i => ?_, ?_⟩
+    · have hci : 0 < 2 * (c i - a i) := by have := h i; linarith
+      have hyi := hy i
+      constructor
+      · exact div_pos (by linarith [hyi.1]) hci
+      · rw [div_lt_iff₀ hci]; linarith [hyi.2]
+    · funext i
+      have hci : 2 * (c i - a i) ≠ 0 := by have := h i; intro h0; linarith
+      simp only [affMap, boxMatrix, Matrix.mulVec_diagonal, Pi.add_apply]
+      rw [mul_div_cancel₀ _ hci]
+      ring
+
+/-- **The finite element theorems hold on every open box** `∏ᵢ (aᵢ, cᵢ)` (a non-vacuity witness of
+the parallelepiped setting): e.g. the uniform discrete Poincaré inequality on the image
+Freudenthal meshes. -/
+theorem discretePoincare_box [NeZero n] {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
+    ∃ cP : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+    {x : L2F ℝ (domain (boxMatrix a c) a) (formIdx n i)}
+    (hx : x ∈ (whitney (boxMatrix a c) (isUnit_det_boxMatrix h) a N).V i),
+    (∀ y ∈ (whitney (boxMatrix a c) (isUnit_det_boxMatrix h) a N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ cP * ‖(complex (boxMatrix a c) a).d i j
+        ⟨x, (whitney (boxMatrix a c) (isUnit_det_boxMatrix h) a N).le_domain i j hx⟩‖ :=
+  discretePoincare _ (isUnit_det_boxMatrix h) a
+
+/-- **Every `C^{s+2}` form on `ℝⁿ` is `IsCsForm s` on `Ω`** for some bound (the hypotheses of the
+higher-order rates are satisfiable). -/
+theorem exists_isCsForm (s : ℕ) {k : ℕ} {w : FormField n}
+    (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y)) :
+    ∃ L, 0 ≤ L ∧ IsCsForm A hA b s (k : ℤ) L
+      (formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) k ⟨w, hw.continuous⟩) := by
+  have hK : IsCompact (closure (domain A b)) := (isBounded_domain A hA b).isCompact_closure
+  have hw' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+  obtain ⟨L, hL⟩ := hK.exists_bound_of_continuousOn
+    ((hw.continuous_iteratedFDeriv (m := s + 1) (by exact_mod_cast Nat.le_succ (s + 1)))).continuousOn
+  obtain ⟨L', hL'⟩ := hK.exists_bound_of_continuousOn
+    (((contDiff_extDeriv hw').continuous_iteratedFDeriv (m := s + 1) le_rfl)).continuousOn
+  refine ⟨max (max L L') 0, le_max_right _ _, Or.inr ⟨k, rfl, w, hw, hdeg,
+    fun y hy => (hL y hy).trans ((le_max_left _ _).trans (le_max_left _ _)),
+    fun y hy => (hL' y hy).trans ((le_max_right _ _).trans (le_max_left _ _)), rfl⟩⟩
+
+end Boxes
 
 end Feec.Models.Parallelepiped

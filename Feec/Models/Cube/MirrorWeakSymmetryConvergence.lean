@@ -1194,7 +1194,7 @@ def IsCsFormPart (J : Finset (Fin 3)) (j : ℕ) (L : ℝ) (x : L2F ℝ (cubeDoma
   ∃ w : FormField 3, ∃ hw : ContDiff ℝ 2 w, (∀ y, IsDeg j (w y)) ∧
     (∀ y : Fin 3 → ℝ, ∀ i ∈ J, (y i = 0 ∨ y i = 1 / 2) → ∀ t : Finset (Fin 3), i ∉ t →
       w y t = 0) ∧
-    (∀ y ∈ closure (cubeDomain 3), ‖iteratedFDeriv ℝ 1 w y‖ ≤ L ∧
+    (∀ y ∈ closure (cubeDomain 3), ‖w y‖ ≤ L ∧ ‖iteratedFDeriv ℝ 1 w y‖ ≤ L ∧
       ‖iteratedFDeriv ℝ 1 (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) j ⟨w, hw.continuous⟩
 
@@ -1202,7 +1202,8 @@ theorem IsCsFormPart.mono {J : Finset (Fin 3)} {j : ℕ} {L L' : ℝ}
     {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} (hx : IsCsFormPart J j L x) (h : L ≤ L') :
     IsCsFormPart J j L' x := by
   obtain ⟨w, hw, hdeg, hJ, hL, rfl⟩ := hx
-  exact ⟨w, hw, hdeg, hJ, fun y hy => ⟨(hL y hy).1.trans h, (hL y hy).2.trans h⟩, rfl⟩
+  exact ⟨w, hw, hdeg, hJ, fun y hy => ⟨(hL y hy).1.trans h, (hL y hy).2.1.trans h,
+    (hL y hy).2.2.trans h⟩, rfl⟩
 
 /-- `d_max` on the restrictions of `C¹` forms, on the cube domain. -/
 theorem formL2_maximal_cube (k : ℕ) {w : FormField 3} (hw : ContDiff ℝ 1 w)
@@ -1237,6 +1238,16 @@ theorem dPart_formL2 {J : Finset (Fin 3)} (k : ℕ) {w : FormField 3} (hw : Cont
   rw [DeRhamIdent.dPart_apply_eq (isOpen_cubeDomain 3) J k ⟨_, h⟩]
   exact e
 
+theorem IsCsFormPart.norm_le {J : Finset (Fin 3)} {j : ℕ} {L : ℝ}
+    {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} (hx : IsCsFormPart J j L x) (hL0 : 0 ≤ L) :
+    ‖x‖ ≤ Fintype.card (formIdx 3 j) * L := by
+  obtain ⟨w, hw, -, -, hL, rfl⟩ := hx
+  refine WeakSymmetry.norm_L2F_le_of_bound _ hL0 fun t => ?_
+  filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) j
+    ⟨w, hw.continuous⟩ t, ae_restrict_mem (isOpen_cubeDomain 3).measurableSet] with y h1 hy
+  rw [h1]
+  exact (norm_le_pi_norm (w y) t.1).trans (hL y (subset_closure hy)).1
+
 variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
 
 /-- **The `O(h)` interpolation error of a smooth field by a parity-smoothed projection**. -/
@@ -1246,7 +1257,7 @@ theorem norm_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
     ‖x - (hE.proj N).π k x‖ ≤ (1 + 2 * C) * polyInterpConst 3 S k * meshSize N * L := by
   obtain ⟨w, hw, hdeg, hJ, hL, rfl⟩ := hx
   have h := hE.norm_sub_proj_le_smooth N k 0 hs (hw.of_le (by norm_num)) hdeg hJ
-    (L := L) fun y hy => (hL y hy).1
+    (L := L) fun y hy => (hL y hy).2.1
   simpa using h
 
 /-- **The `O(h)` interpolation error of `d x`** (`d` commutes with the projections). -/
@@ -1269,9 +1280,344 @@ theorem norm_d_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
   have hd2 : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv
     (by exact_mod_cast hw)
   have h1 := hE.norm_sub_proj_le_smooth N (k + 1) 0 hs hd2 (IsDeg.extDeriv hdeg) hJd
-    (L := L) fun y hy => (hL y hy).2
+    (L := L) fun y hy => (hL y hy).2.2
   simpa using h1
 
 end Smooth
+
+
+/-! ### The Strang data of smooth mirror states -/
+
+section StrangData
+
+/-- **Regularity of an exact state of the mirror scheme** for the `O(h)` rate: every field is
+`C²` up to `∂Q` with the mirror tangential conditions (`IsCsFormPart`: none on the top row, on
+the faces normal to `eₐ` in the component `a` of the bottom row), with bound `L`; `S¹u` is `C²`;
+and `M` lies in the domain of the adjoint of `curl` on `HΛ¹(Q)` with `‖curl* M‖ ≤ L`
+(`|⟪M, curl w⟫| ≤ L ‖w‖`, i.e. the normal trace of `M` vanishes; `M ≡ 0` for TSD data). -/
+def IsSmoothStateMirror (L : ℝ) (σ : TU0) (φ : BU0) (u : BU1) (M : W2) (ρ : Wv W2) : Prop :=
+  IsCsFormPart ∅ 0 L (σ : W0) ∧ (∀ a, IsCsFormPart {a} 0 L (φ a : W0)) ∧
+    (∀ a, IsCsFormPart {a} 1 L (u a : W1)) ∧ IsCsFormPart ∅ 2 L (mS1 u) ∧
+    IsCsFormPart ∅ 2 L M ∧ (∀ w : TU1, |⟪M, tD1 w⟫| ≤ L * ‖w‖) ∧
+    ∀ a, IsCsFormPart {a} 2 L (ρ a)
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
+
+theorem hs_lowestOrder (k : ℕ) : polySpace 3 0 k ≤ PolySeq.lowestOrder.space 3 k :=
+  Poly.polySpace_le_space PolySeq.lowestOrder (by simp [PolySeq.lowestOrder])
+
+theorem hs_lagrangeP2 (k : ℕ) : polySpace 3 0 k ≤ PolySeq.lagrangeP2.space 3 k :=
+  Poly.polySpace_le_space PolySeq.lagrangeP2 (PolySeq.lagrangeP2.one_le_deg k)
+
+/-- The interpolation constants of the two rows. -/
+abbrev cT (C : ℝ) (k : ℕ) : ℝ := (1 + 2 * C) * polyInterpConst 3 PolySeq.lowestOrder k
+abbrev cB (C : ℝ) (k : ℕ) : ℝ := (1 + 2 * C) * polyInterpConst 3 PolySeq.lagrangeP2 k
+
+theorem sum_sq_le_three {f : Fin 3 → ℝ} {B : ℝ} (h : ∀ a, f a ^ 2 ≤ B) :
+    ∑ a, f a ^ 2 ≤ 3 * B := by
+  calc ∑ a, f a ^ 2 ≤ ∑ _a : Fin 3, B := Finset.sum_le_sum fun a _ => h a
+    _ = 3 * B := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; norm_num
+
+theorem mirrorFEM_err_P0 (N : ℕ) {L : ℝ} {σ : TU0} (hσ : IsCsFormPart ∅ 0 L (σ : W0)) :
+    ‖(mirrorFEM hT hB N).P0 σ - σ‖ ≤ cT C 0 * meshSize N * L := by
+  have h := norm_sub_proj_le_of_isCsFormPart hT N 0 (hs_lowestOrder 0) hσ
+  rw [norm_sub_rev]
+  exact h
+
+theorem mirrorFEM_err_Pt0 (N : ℕ) {L : ℝ} {φ : BU0} (hφ : ∀ a, IsCsFormPart {a} 0 L (φ a : W0)) :
+    ‖mirrorBGGSegment.dt0 ((mirrorFEM hT hB N).Pt0 φ - φ)‖ ^ 2 ≤
+      3 * (cB C 1 * meshSize N * L) ^ 2 := by
+  change ‖bD0 (projB0 (fun a => (hB a).proj N) φ - φ)‖ ^ 2 ≤ _
+  rw [norm_sq_bD0]
+  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  have h := norm_d_sub_proj_le_of_isCsFormPart (hB a) N 0 (hs_lagrangeP2 1) (hφ a) (φ a).2
+  have e : BD0 a ((projB0 (fun a => (hB a).proj N) φ - φ) a) =
+      ((hB a).proj N).π 1 (BD0 a (φ a)) - BD0 a (φ a) := by
+    rw [PiLp.sub_apply, LinearPMap.map_sub]
+    congr 1
+    exact dPart0_π ((hB a).proj N) (φ a)
+  rw [e, norm_sub_rev]
+  exact h
+
+theorem mirrorFEM_err_Pt1 (N : ℕ) {L : ℝ} {u : BU1} (hu : ∀ a, IsCsFormPart {a} 1 L (u a : W1)) :
+    ‖(mirrorFEM hT hB N).Pt1 u - u‖ ^ 2 ≤ 3 * (cB C 1 * meshSize N * L) ^ 2 := by
+  change ‖projB1 (fun a => (hB a).proj N) u - u‖ ^ 2 ≤ _
+  rw [norm_sq_BU1]
+  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  have h := norm_sub_proj_le_of_isCsFormPart (hB a) N 1 (hs_lagrangeP2 1) (hu a)
+  change ‖((hB a).proj N).π 1 (u a : W1) - (u a : W1)‖ ≤ _
+  rw [norm_sub_rev]
+  exact h
+
+theorem mirrorFEM_err_d1 (N : ℕ) {L : ℝ} {u : BU1} (hu : ∀ a, IsCsFormPart {a} 1 L (u a : W1)) :
+    ‖mirrorBGGSegment.dt1 ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤
+      3 * (cB C 2 * meshSize N * L) ^ 2 := by
+  change ‖bD1 (projB1 (fun a => (hB a).proj N) u - u)‖ ^ 2 ≤ _
+  rw [norm_sq_bD1]
+  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  have h := norm_d_sub_proj_le_of_isCsFormPart (hB a) N 1 (hs_lagrangeP2 2) (hu a) (u a).2
+  have e : BD1 a ((projB1 (fun a => (hB a).proj N) u - u) a) =
+      ((hB a).proj N).π 2 (BD1 a (u a)) - BD1 a (u a) := by
+    rw [PiLp.sub_apply, LinearPMap.map_sub]
+    congr 1
+    exact dPart1_π ((hB a).proj N) (u a)
+  rw [e, norm_sub_rev]
+  exact h
+
+theorem mirrorFEM_err_S1h (N : ℕ) (x : BU1) :
+    ‖(mirrorFEM hT hB N).S1h x‖ ^ 2 ≤ 8 * C ^ 2 * ‖x‖ ^ 2 := by
+  have h1 : ‖(mirrorFEM hT hB N).S1h x‖ ≤ 2 * C * ‖mS1 x‖ := hT.norm_proj_le N 2 _
+  have h2 : ‖mS1 x‖ ^ 2 ≤ 2 * ‖x‖ ^ 2 := by
+    have h := norm_wsL2_sq_le (Ω := cubeDomain 3) 1 (bIncl1 x)
+    have h1 : (((1 : ℤ) : ℝ) + 1) = 2 := by norm_num
+    rwa [h1, norm_bIncl1] at h
+  have hC := hT.two_mul_nonneg
+  have := pow_le_pow_left₀ (norm_nonneg _) h1 2
+  rw [mul_pow] at this
+  nlinarith [sq_nonneg C, sq_nonneg ‖x‖]
+
+theorem mirrorFEM_err_P2 (N : ℕ) {L : ℝ} {M : W2} (hM : IsCsFormPart ∅ 2 L M) :
+    ‖(mirrorFEM hT hB N).P2 M - M‖ ≤ cT C 2 * meshSize N * L := by
+  have h := norm_sub_proj_le_of_isCsFormPart hT N 2 (hs_lowestOrder 2) hM
+  rw [norm_sub_rev]
+  exact h
+
+theorem mirrorFEM_err_Pt2 (N : ℕ) {L : ℝ} {ρ' : Wv W2} (hρ : ∀ a, IsCsFormPart {a} 2 L (ρ' a)) :
+    ‖(mirrorFEM hT hB N).Pt2 ρ' - ρ'‖ ^ 2 ≤ 3 * (cB C 2 * meshSize N * L) ^ 2 := by
+  change ‖projB2 (fun a => (hB a).proj N) ρ' - ρ'‖ ^ 2 ≤ _
+  rw [PiLp.norm_sq_eq_of_L2]
+  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  have h := norm_sub_proj_le_of_isCsFormPart (hB a) N 2 (hs_lagrangeP2 2) (hρ a)
+  change ‖((hB a).proj N).π 2 (ρ' a) - ρ' a‖ ≤ _
+  rw [norm_sub_rev]
+  exact h
+
+theorem mirrorFEM_err_S1 (N : ℕ) {L : ℝ} {u : BU1} (hSu : IsCsFormPart ∅ 2 L (mS1 u)) :
+    ‖mirrorBGGSegment.S1 u - (mirrorFEM hT hB N).S1h u‖ ≤ cT C 2 * meshSize N * L :=
+  norm_sub_proj_le_of_isCsFormPart hT N 2 (hs_lowestOrder 2) hSu
+
+/-- The interpolation constant of the Strang data of the mirror scheme. -/
+def mirrorInterpConst (C : ℝ) : ℝ :=
+  cT C 0 ^ 2 + 3 * cB C 1 ^ 2 + (1 + 8 * C ^ 2) * (3 * cB C 1 ^ 2) + 3 * cB C 2 ^ 2 +
+    cT C 2 ^ 2 + 3 * cB C 2 ^ 2 + cT C 2 ^ 2
+
+theorem mirrorInterpConst_nonneg (C : ℝ) : 0 ≤ mirrorInterpConst C := by
+  unfold mirrorInterpConst; positivity
+
+set_option maxHeartbeats 2000000 in
+/-- **The Strang data of (6.4) for a smooth mirror state**: the interpolation part is
+`≤ mirrorInterpConst C · (L h_N)²`, for every `N`. -/
+theorem mirrorFEM_strangData_le (N : ℕ) {L : ℝ} {σ : TU0} {φ : BU0} {u : BU1}
+    {M : W2} {ρ' : Wv W2} (hs : IsSmoothStateMirror L σ φ u M ρ') (K0 K1 : ℝ) :
+    (mirrorFEM hT hB N).strangData σ φ u M ρ' K0 K1 ≤
+      mirrorInterpConst C * (L * meshSize N) ^ 2 + K0 ^ 2 + K1 ^ 2 := by
+  obtain ⟨hσ, hφ, hu, hSu, hM, -, hρ⟩ := hs
+  have h1 := mirrorFEM_err_P0 hT hB N hσ
+  have h2 := mirrorFEM_err_Pt0 hT hB N hφ
+  have h3a := mirrorFEM_err_Pt1 hT hB N hu
+  have h3b := mirrorFEM_err_S1h hT hB N ((mirrorFEM hT hB N).Pt1 u - u)
+  have h3c := mirrorFEM_err_d1 hT hB N hu
+  have h4 := mirrorFEM_err_P2 hT hB N hM
+  have h5 := mirrorFEM_err_Pt2 hT hB N hρ
+  have h6 := mirrorFEM_err_S1 hT hB N hSu
+  have hm := (meshSize_pos N).le
+  have hC := hT.two_mul_nonneg
+  have q1 := pow_le_pow_left₀ (norm_nonneg _) h1 2
+  have q4 := pow_le_pow_left₀ (norm_nonneg _) h4 2
+  have q6 := pow_le_pow_left₀ (norm_nonneg _) h6 2
+  have e1 : (mirrorFEM hT hB N).strangData σ φ u M ρ' K0 K1 =
+      ‖(mirrorFEM hT hB N).P0 σ - σ‖ ^ 2 +
+        ‖mirrorBGGSegment.dt0 ((mirrorFEM hT hB N).Pt0 φ - φ)‖ ^ 2 +
+        (‖(mirrorFEM hT hB N).Pt1 u - u‖ ^ 2 +
+          ‖(mirrorFEM hT hB N).S1h ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 +
+          ‖mirrorBGGSegment.dt1 ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2) +
+        ‖(mirrorFEM hT hB N).P2 M - M‖ ^ 2 + ‖(mirrorFEM hT hB N).Pt2 ρ' - ρ'‖ ^ 2 + K0 ^ 2 +
+        K1 ^ 2 + ‖mirrorBGGSegment.S1 u - (mirrorFEM hT hB N).S1h u‖ ^ 2 := rfl
+  have e2 : mirrorInterpConst C * (L * meshSize N) ^ 2 =
+      (cT C 0 * meshSize N * L) ^ 2 + 3 * (cB C 1 * meshSize N * L) ^ 2 +
+        (1 + 8 * C ^ 2) * (3 * (cB C 1 * meshSize N * L) ^ 2) +
+        3 * (cB C 2 * meshSize N * L) ^ 2 + (cT C 2 * meshSize N * L) ^ 2 +
+        3 * (cB C 2 * meshSize N * L) ^ 2 + (cT C 2 * meshSize N * L) ^ 2 := by
+    unfold mirrorInterpConst; ring
+  rw [e1, e2]
+  have hS1h : ‖(mirrorFEM hT hB N).S1h ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤
+      8 * C ^ 2 * (3 * (cB C 1 * meshSize N * L) ^ 2) :=
+    h3b.trans (mul_le_mul_of_nonneg_left h3a (by positivity))
+  nlinarith
+
+end StrangData
+
+
+/-! ### The `O(h)` rate of the mirror scheme (6.5) -/
+
+section Rate
+
+/-- The source functional `v ↦ ⟪f, v⟫` on `∏ₐ H_{a}Λ¹(Q)` of an `L²` source `f ∈ (L²Λ¹)³`. -/
+def mirrorSrcFun (f : ℝ → Wv W1) (t : ℝ) : BU1 →ₗ[ℝ] ℝ := (innerSL ℝ (f t)).toLinearMap ∘ₗ bIncl1
+
+theorem mirrorSrcFun_apply (f : ℝ → Wv W1) (t : ℝ) (v : BU1) :
+    mirrorSrcFun f t v = ⟪f t, bIncl1 v⟫ := rfl
+
+/-- The inclusion `∏ₐ H_{a}Λ¹(Q) → (L²Λ¹(Q))³` as a bounded map (an isometry). -/
+def bIncl1CLM : BU1 →L[ℝ] Wv W1 :=
+  LinearMap.mkContinuous bIncl1 1 fun x => by rw [norm_bIncl1, one_mul]
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
+
+instance mirrorWave_completeSpace_t1 (N : ℕ) : CompleteSpace (mirrorFEM hT hB N).Vt1h :=
+  FiniteDimensional.complete ℝ _
+
+/-- **The discrete source of the mirror scheme**: the representer in `∏ₐ P₂⁻Λ¹_{Γₐ}` of
+`v ↦ ⟪f(t), v⟫` (the `L²` projection of `f(t)`). -/
+def mirrorSource (N : ℕ) (f : ℝ → Wv W1) (t : ℝ) : (mirrorFEM hT hB N).Vt1h :=
+  (InnerProductSpace.toDual ℝ (mirrorFEM hT hB N).Vt1h).symm
+    ((innerSL ℝ (f t)).comp (bIncl1CLM.comp (mirrorFEM hT hB N).Vt1h.subtypeL))
+
+theorem inner_mirrorSource (N : ℕ) (f : ℝ → Wv W1) (t : ℝ) (v : (mirrorFEM hT hB N).Vt1h) :
+    ⟪mirrorSource hT hB N f t, v⟫ = ⟪f t, bIncl1 (v : BU1)⟫ := by
+  rw [mirrorSource, InnerProductSpace.toDual_symm_apply]
+  rfl
+
+theorem continuousOn_mirrorSource (N : ℕ) {f : ℝ → Wv W1} {T : ℝ}
+    (hf : ContinuousOn f (Icc 0 T)) : ContinuousOn (mirrorSource hT hB N f) (Icc 0 T) := by
+  have h1 : Continuous fun w : Wv W1 =>
+      (innerSL ℝ w).comp (bIncl1CLM.comp (mirrorFEM hT hB N).Vt1h.subtypeL) :=
+    ((ContinuousLinearMap.compL ℝ (mirrorFEM hT hB N).Vt1h (Wv W1) ℝ).flip
+      (bIncl1CLM.comp (mirrorFEM hT hB N).Vt1h.subtypeL)).continuous.comp (innerSL ℝ).continuous
+  exact (InnerProductSpace.toDual ℝ (mirrorFEM hT hB N).Vt1h).symm.continuous.comp_continuousOn
+    (h1.comp_continuousOn hf)
+
+set_option maxHeartbeats 4000000 in
+/-- **`O(h)` convergence of the mirror scheme (6.5) on the cube**, without hypothesis: there is
+`K`, independent of `N`, `T`, the data and the solution, such that for every `N`, every `T > 0`,
+every `L²` source `f` continuous on `[0,T]` and every classical solution `s` of (6.2) for the
+mirror data (`ExactWave mirrorBGGSegment`) whose states and time derivatives are `C²` up to `∂Q`
+with the mirror tangential conditions and bound `L` (`IsSmoothStateMirror L`), with multiplier
+functionals `L²`-bounded by `L`: the scheme (6.5) with source `P_{Ṽₕ¹} f` (`mirrorSource`) has a
+solution starting from the dynamic part of the elliptic projection (6.4) of the exact initial
+state, and for `t ∈ [0,T]`
+`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N`.
+The hypotheses of `Feec.BGG.ExactWave.exists_discreteSolution_rate_harm` are discharged:
+`HarmonicStability` modulo `𝔥 = span{dxₐ ⊗ eₐ}` (`mirror_harmonicStability`; `Stability` fails),
+(5.4) (`mirrorFEM_compatible`), `S₀,ₕ` onto (`mirrorWave_S0_surjective`), `K₀` from Prop 5.9(1)
+(`mirrorFEM_happ0`), `K₁` from the regular potentials of the bottom row (`mirrorFEMReg`,
+proved, no regularity hypothesis) and `𝔥 ⊆ Ṽₕ¹` (`harmBot_le`), the interpolation errors from
+the parity-smoothed projections (`mirrorFEM_strangData_le`).
+See [QuennevilleBelair2015], §6.3, (6.5), Table 6.1, and §6.2, (6.4), Prop 6.2. -/
+theorem mirrorWave_rate :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
+      (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun f))
+      {L : ℝ}, 0 ≤ L →
+      (∀ t ∈ Icc 0 T, IsSmoothStateMirror L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
+        IsSmoothStateMirror L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ μ : TU1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
+      ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N f),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (mirrorWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((mirrorFEM hT hB N).ellipticDataH (s.σ 0) (s.φ 0) (s.u 0)
+              (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
+          ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N := by
+  have hh0 := mirrorFEM_happ0 hT hB
+  obtain ⟨C0, hh1⟩ := hh0
+  have hC00 := hh1.1
+  have hhapp := hh1.2
+  have hC := hT.two_mul_nonneg
+  have hreg := mirrorRegConst_nonneg hC
+  have ex1 : ∃ x : ℝ, x = C0 + mirrorRegConst C := ⟨_, rfl⟩
+  obtain ⟨Capp, hCapp_def⟩ := ex1
+  have hCapp0 : 0 ≤ Capp := by rw [hCapp_def]; linarith
+  have ex2 : ∃ x : ℝ, x = (2 * Real.pi)⁻¹ := ⟨_, rfl⟩
+  obtain ⟨Cp, hCp⟩ := ex2
+  have hCp0 : 0 ≤ Cp := by rw [hCp]; positivity
+  have ex3 : ∃ x : ℝ, x = √(1 + (2 * Real.pi)⁻¹ ^ 2) := ⟨_, rfl⟩
+  obtain ⟨Creg, hCreg⟩ := ex3
+  have hCreg0 : 0 ≤ Creg := by rw [hCreg]; positivity
+  have ex4 : ∃ x : ℝ, x = √(1 + Cp ^ 2) * (1 + 2 * C * (1 + 1 * Creg)) := ⟨_, rfl⟩
+  obtain ⟨wa, hwa⟩ := ex4
+  have ex5 : ∃ x : ℝ, x = (1 + (1 + 2 * C) * Real.sqrt 2) * Creg := ⟨_, rfl⟩
+  obtain ⟨wb, hwb⟩ := ex5
+  have hwa0 : 0 ≤ wa := by rw [hwa]; positivity
+  have hwb0 : 0 ≤ wb := by rw [hwb]; positivity
+  have ex6 : ∃ x : ℝ, x = 1 + (Fintype.card (formIdx 3 ((2 : ℕ) : ℤ)) : ℝ) := ⟨_, rfl⟩
+  obtain ⟨cM, hcM⟩ := ex6
+  have hcM0 : 0 ≤ cM := by rw [hcM]; positivity
+  have ex7 : ∃ x : ℝ,
+      x = mirrorInterpConst C + Capp ^ 2 + (Capp * ((wa + wb) * cM)) ^ 2 := ⟨_, rfl⟩
+  obtain ⟨Kd, hKd⟩ := ex7
+  have hKd0 : 0 ≤ Kd := by rw [hKd]; have := mirrorInterpConst_nonneg C; positivity
+  have ex8 : ∃ x : ℝ, x = √(2 * (Feec.BGG.Discrete.strangConst Cp + 1)) := ⟨_, rfl⟩
+  obtain ⟨Ks, hKs⟩ := ex8
+  have hKs0 : 0 ≤ Ks := by rw [hKs]; positivity
+  refine ⟨2 * Ks * √Kd, by positivity, fun N T hT0 f hf s L hL0 hsm hmult => ?_⟩
+  have hh : 0 ≤ meshSize N := (meshSize_pos N).le
+  have HS : Feec.BGG.HarmonicStability mirrorBGGSegment harmBot Cp (Real.sqrt 2) := by
+    rw [hCp]; exact mirror_harmonicStability
+  have Bd := mirrorFEM_bounded hT hB N
+  have h54 := mirrorFEM_compatible hT hB N
+  have happ : ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
+      ‖mirrorBGGSegment.S0 ψ - (mirrorFEM hT hB N).S0h ψ‖ ^ 2 ≤
+        (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq mirrorBGGSegment.dt0 ψ := fun ψ hψ => by
+    refine (hhapp N ψ hψ).trans (mul_le_mul_of_nonneg_right ?_ (Feec.BGG.graphSq_nonneg _ _))
+    exact pow_le_pow_left₀ (by positivity) (mul_le_mul_of_nonneg_right
+      (by rw [hCapp_def]; linarith) hh) 2
+  have Rg := mirrorFEMReg hT hB N (by rw [hCapp_def]; linarith : mirrorRegConst C ≤ Capp)
+  have hK0 : ∀ ℓ : TU1 →ₗ[ℝ] ℝ, (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
+      |ℓ ((mirrorBGGSegment.S0 - (mirrorFEM hT hB N).S0h) ψ)| ≤
+        (L * Capp * meshSize N) * √(Feec.BGG.graphSq mirrorBGGSegment.dt0 ψ) := fun ℓ hℓ =>
+    Feec.BGG.Discrete.consistency_S0_of_approx hh hCapp0 hL0 ℓ hℓ happ
+  have hK1 : ∀ z : W2, IsCsFormPart ∅ 2 L z → (∀ w : TU1, |⟪z, tD1 w⟫| ≤ L * ‖w‖) →
+      ∀ v ∈ (mirrorFEM hT hB N).Vt1h,
+      |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
+        (Capp * meshSize N * ((wa + wb) * (cM * L))) * √((mirrorFEM hT hB N).gnSq v) := by
+    intro z hz hzd v hv
+    have hzn : ‖z‖ ≤ cM * L := (hz.norm_le hL0).trans (by rw [hcM]; nlinarith)
+    have hzd' : ∀ w : TU1, |⟪z, mirrorBGGSegment.d1 w⟫| ≤ (cM * L) * ‖w‖ := fun w =>
+      (hzd w).trans (mul_le_mul_of_nonneg_right (by rw [hcM]; nlinarith) (norm_nonneg _))
+    have hw := HS.weakConsistency_of_regularPotential_of_bound (harmBot_le hT hB N) Bd hh
+      hCapp0 Rg happ (by positivity) hzd' v hv
+    have hwc : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
+        √(1 + (2 * Real.pi)⁻¹ ^ 2) (‖z‖) (cM * L) ≤ (wa + wb) * (cM * L) := by
+      have e : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
+          √(1 + (2 * Real.pi)⁻¹ ^ 2) (‖z‖) (cM * L) = (cM * L) * wa + ‖z‖ * wb := by
+        rw [hwa, hwb, hCreg]; unfold Feec.BGG.Discrete.weakConsistencyConst; ring
+      rw [e]; nlinarith
+    refine hw.trans ?_
+    have hg := Feec.BGG.Discrete.sqrt_graphSq_le_sqrt_gnSq (Q := mirrorFEM hT hB N) v
+    have hm : 0 ≤ Capp * meshSize N := by positivity
+    have h1 := mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hwc hm)
+      (Real.sqrt_nonneg (Feec.BGG.graphSq mirrorBGGSegment.dt1 v))
+    have h2 := mul_le_mul_of_nonneg_left hg
+      (by positivity : 0 ≤ Capp * meshSize N * ((wa + wb) * (cM * L)))
+    exact h1.trans h2
+  have hdata : ∀ {σ : TU0} {φ : BU0} {u : BU1} {M : W2} {ρ' : Wv W2},
+      IsSmoothStateMirror L σ φ u M ρ' → (mirrorFEM hT hB N).strangData σ φ u M ρ'
+        (L * Capp * meshSize N) (Capp * meshSize N * ((wa + wb) * (cM * L))) ≤
+          (√Kd * L * meshSize N) ^ 2 := by
+    intro σ φ u M ρ' hs
+    refine (mirrorFEM_strangData_le hT hB N hs _ _).trans (le_of_eq ?_)
+    rw [show (√Kd * L * meshSize N) ^ 2 = √Kd ^ 2 * (L * meshSize N) ^ 2 by ring,
+      Real.sq_sqrt hKd0, hKd]
+    ring
+  have hrate := s.exists_discreteSolution_rate_harm (mirrorFEM hT hB N) HS h54
+    (K0 := L * Capp * meshSize N) (K1 := Capp * meshSize N * ((wa + wb) * (cM * L)))
+    (c := √Kd * L) (h := meshSize N) (mirrorWave_S0_surjective hT hB N) hT0
+    (continuousOn_mirrorSource hT hB N hf) (fun t _ v => (inner_mirrorSource hT hB N f t v).symm)
+    (fun t ht => hK0 (s.ℓ t) fun μ => (hmult t ht μ).1)
+    (fun t ht => hK0 (s.ℓ' t) fun μ => (hmult t ht μ).2)
+    (fun t ht => hK1 (s.M t) (hsm t ht).1.2.2.2.2.1 (hsm t ht).1.2.2.2.2.2.1)
+    (fun t ht => hK1 (s.M' t) (hsm t ht).2.2.2.2.2.1 (hsm t ht).2.2.2.2.2.2.1)
+    (fun t ht => hdata (hsm t ht).1) (fun t ht => hdata (hsm t ht).2)
+  obtain ⟨sh, h0, hb⟩ := hrate
+  refine ⟨sh, h0, fun t ht => (hb t ht).trans (le_of_eq ?_)⟩
+  rw [abs_of_nonneg (by positivity : 0 ≤ √Kd * L), abs_of_nonneg hh, ← hKs]
+  ring
+
+end Rate
 
 end Feec.Models.Cube.MirrorWeakSymmetry

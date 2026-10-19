@@ -47,6 +47,11 @@ sequence `S` (`FEM.polyPartial n S N J`) and for the Whitney forms (`FEM.whitney
   (`partialFaces_singleton`), so the bottom-row spaces of the mirror scheme (6.5) are exactly the
   partial spaces `Λ_{h,Γ_{a}}` (`mirror_globalSpacePartial_eq`), conforming in `HΛ_{a}(Q)`
   (`mirror_glue_mem_dPart`).
+* **Monotonicity and non-vacuity**: the spaces decrease with `J` (`polyPartial_V_anti`,
+  `whitneyPartial_V_anti`), so `V̊_h ⊆ V_{h,Γ_J} ⊆ V_h` (`polyMin_V_le_polyPartial_V`,
+  `polyPartial_V_le_poly_V`, and the Whitney analogues), and on `(0, ½)³` they are nonzero in
+  every degree for every `J` (`lagrangeP2_polyPartial_V_ne_bot`,
+  `lowestOrder_polyPartial_V_ne_bot`).
 
 ## References
 
@@ -768,5 +773,85 @@ theorem mirror_glue_mem_dPart (N k : ℕ) (a : Fin 3)
         Ebot.glue (mesh 3 N) ((k : ℤ) + 1) (Ebot.dPiecewise (mesh 3 N) k u) :=
   glue_mem_dPart Ebot (mesh_domain_eq_Q N) {a} k
     ⟨u, by rw [← mirror_globalSpacePartial_eq]; exact u.2⟩
+
+/-! ### Monotonicity in `J` and non-vacuity -/
+
+omit [NeZero n] in
+theorem partialFaces_mono {J J' : Finset (Fin n)} (h : J ⊆ J') :
+    partialFaces n J ⊆ partialFaces n J' := fun _ ⟨j, hj, hF⟩ => ⟨j, h hj, hF⟩
+
+omit [NeZero n] in
+/-- **`Λ_{h,Γ_J}` decreases with `J`**: more directions with a boundary condition, fewer free
+degrees of freedom. -/
+theorem VPartial_anti (E : LocalElement n) (M : SimplicialMesh n) {J J' : Finset (Fin n)}
+    (h : J ⊆ J') (k : ℤ) :
+    E.VPartial M (partialFaces n J') k ≤ E.VPartial M (partialFaces n J) k := by
+  rintro _ ⟨u, rfl⟩
+  exact ⟨⟨u, E.globalSpacePartial_anti M (partialFaces_mono h) k.toNat u.2⟩, rfl⟩
+
+omit [NeZero n] in
+theorem partialSubcomplexOfEq_V_le {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω') (hΩQ' : Ω' ⊆ Geometry.Q (Fin n))
+    {J J' : Finset (Fin n)} (S : (HQpartZ hΩ hΩQ J).Subcomplex)
+    (S' : (HQpartZ hΩ hΩQ J').Subcomplex) (k : ℤ) (hV : S.V k ≤ S'.V k) :
+    (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k ≤
+      (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J' S').V k := by
+  subst h; exact hV
+
+omit [NeZero n] in
+theorem partialSubcomplexOfEq_V_ne_bot {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
+    (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω') (hΩQ' : Ω' ⊆ Geometry.Q (Fin n))
+    (J : Finset (Fin n)) (S : (HQpartZ hΩ hΩQ J).Subcomplex) (k : ℤ) (hV : S.V k ≠ ⊥) :
+    (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k ≠ ⊥ := by
+  subst h; exact hV
+
+/-- **`polyPartial` decreases with `J`.** -/
+theorem polyPartial_V_anti (S : PolySeq) (N : ℕ) {J J' : Finset (Fin n)} (h : J ⊆ J')
+    (k : ℤ) : (polyPartial n S N J').V k ≤ (polyPartial n S N J).V k :=
+  partialSubcomplexOfEq_V_le _ _ _ _ _ _ _ k (VPartial_anti (polyElement n S) (mesh n N) h k)
+
+/-- **`whitneyPartial` decreases with `J`.** -/
+theorem whitneyPartial_V_anti (N : ℕ) {J J' : Finset (Fin n)} (h : J ⊆ J') (k : ℤ) :
+    (whitneyPartial n N J').V k ≤ (whitneyPartial n N J).V k :=
+  partialSubcomplexOfEq_V_le _ _ _ _ _ _ _ k (VPartial_anti (whitneyElement n) (mesh n N) h k)
+
+/-- **`V̊_h ⊆ V_{h,Γ_J} ⊆ V_h`** for the spaces of an admissible sequence. -/
+theorem polyMin_V_le_polyPartial_V (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
+    (polyMin n S N).V k ≤ (polyPartial n S N J).V k := by
+  rw [← polyPartial_univ_V]; exact polyPartial_V_anti S N (Finset.subset_univ J) k
+
+theorem polyPartial_V_le_poly_V (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
+    (polyPartial n S N J).V k ≤ (poly n S N).V k := by
+  rw [← polyPartial_empty_V]; exact polyPartial_V_anti S N (Finset.empty_subset J) k
+
+theorem whitneyMin_V_le_whitneyPartial_V (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
+    (whitneyMin n N).V k ≤ (whitneyPartial n N J).V k := by
+  rw [← whitneyPartial_univ_V]; exact whitneyPartial_V_anti N (Finset.subset_univ J) k
+
+theorem whitneyPartial_V_le_whitney_V (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
+    (whitneyPartial n N J).V k ≤ (whitney n N).V k := by
+  rw [← whitneyPartial_empty_V]; exact whitneyPartial_V_anti N (Finset.empty_subset J) k
+
+theorem polyPartial_V_ne_bot_of_V₀ (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ)
+    (h : (polyElement n S).V₀ (mesh n N) k ≠ ⊥) : (polyPartial n S N J).V k ≠ ⊥ := by
+  refine partialSubcomplexOfEq_V_ne_bot _ _ _ _ _ J _ k fun hb => h (eq_bot_iff.2 ?_)
+  rw [← hb, subcomplexPart_V, ← VPartial_univ_eq]
+  exact VPartial_anti (polyElement n S) (mesh n N) (Finset.subset_univ J) k
+
+/-- **Non-vacuity of the partial-boundary subcomplexes** (second row of Tables 5.1/6.1, every
+`J`): on every Freudenthal mesh of `(0, ½)³`, the spaces `P₂Λ⁰`, `P₂⁻Λ¹`, `P₁Λ²`, `P₀Λ³` with
+vanishing degrees of freedom on the faces normal to `J` are nonzero; they contain the interior
+spaces (`PolySeq.lagrangeP2_V₀_ne_bot`). -/
+theorem lagrangeP2_polyPartial_V_ne_bot (N k : ℕ) (hk : k ≤ 3) (J : Finset (Fin 3)) :
+    (polyPartial 3 PolySeq.lagrangeP2 N J).V k ≠ ⊥ :=
+  polyPartial_V_ne_bot_of_V₀ _ N J k (PolySeq.lagrangeP2_V₀_ne_bot N k hk)
+
+/-- **Non-vacuity of the Whitney-type partial subcomplexes** (first row of Tables 5.1/6.1, every
+`J`): on the level-`(N + 2)` Freudenthal mesh of `(0, ½)³`, `P₁Λ⁰`, `P₁⁻Λ¹`, `P₁⁻Λ²`, `P₁⁻Λ³`
+with vanishing degrees of freedom on the faces normal to `J` are nonzero
+(`PolySeq.lowestOrder_V₀_ne_bot`). -/
+theorem lowestOrder_polyPartial_V_ne_bot (N k : ℕ) (hk : k ≤ 3) (J : Finset (Fin 3)) :
+    (polyPartial 3 PolySeq.lowestOrder (N + 1) J).V k ≠ ⊥ :=
+  polyPartial_V_ne_bot_of_V₀ _ (N + 1) J k (PolySeq.lowestOrder_V₀_ne_bot N k hk)
 
 end Feec.Models.Cube.FEM

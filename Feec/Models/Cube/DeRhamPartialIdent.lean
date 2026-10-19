@@ -768,7 +768,10 @@ abbrev dCore (J : Finset (Fin n)) (k : ℤ) :
 
 variable (Ω) in
 /-- **The exterior derivative with vanishing tangential traces on the faces normal to `J`**,
-`d_J`: the closure (in the graph norm) of `d_max` on the forms vanishing near those faces. -/
+`d_J`: the closure (in the graph norm) of `d_max` on the forms vanishing near those faces. The
+faces are those of the cube `Q = (0, ½)ⁿ` (`faceNbhd` is in the coordinates of `Q`), so `d_J` has
+its intended meaning for `Ω = Q`; for a general open `Ω ⊆ Q` it imposes the condition only where
+`∂Ω` meets those faces. -/
 def dPart (J : Finset (Fin n)) (k : ℤ) :
     L2F ℝ Ω (formIdx n k) →ₗ.[ℝ] L2F ℝ Ω (formIdx n (k + 1)) :=
   (dCore Ω J k).closure
@@ -1253,6 +1256,25 @@ theorem mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ} {ψ : formIdx n k →
     · refine tendsto_const_nhds.congr' ?_
       filter_upwards [hev y hy] with m hm
       exact (apply_congr_of_eventuallyEq _ hm q).symm
+
+/-- `mem_dPart_of_smooth` without the integrability hypotheses: a smooth form and its exterior
+derivative are square integrable on the bounded cube `Q`, and the form lies in `D(d_J)` with
+`d_J ψ = d ψ`. -/
+theorem exists_mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ}
+    {ψ : formIdx n k → (Fin n → ℝ) → ℝ} (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) {M : ℝ}
+    (hM : ∀ s y, |ψ s y| ≤ M) {L : ℝ} (hL0 : 0 ≤ L)
+    (hL : ∀ s j y, |fderiv ℝ (ψ s) y (Pi.single j 1)| ≤ L)
+    (hV : ∀ s j, j ∈ J → j ∉ s.1 → ∀ y : Fin n → ℝ, (y j = 0 ∨ y j = 1 / 2) → ψ s y = 0) :
+    ∃ (hψL : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))))
+      (hdψL : ∀ t, MemLp ((extDerivOp ℝ n k).apply ψ t) 2 (volume.restrict (Q (Fin n)))),
+      (toL2F hψL, toL2F hdψL) ∈ (dPart (Q (Fin n)) J k).graph := by
+  have hψL : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))) := fun s =>
+    Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn (hψ s).continuous
+  have hdψL : ∀ t, MemLp ((extDerivOp ℝ n k).apply ψ t) 2 (volume.restrict (Q (Fin n))) :=
+    fun t => Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn
+      ((extDerivOp ℝ n k).continuous_apply (Feec.Domain.extDerivOp_isOrderLE k)
+        (fun s => (hψ s).of_le (by exact_mod_cast le_top)) t)
+  exact ⟨hψL, hdψL, mem_dPart_of_smooth hψ hM hL0 hL hV hψL hdψL⟩
 
 end Smooth
 

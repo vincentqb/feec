@@ -1,0 +1,1365 @@
+module
+
+public import Feec.Models.Cube.Inhomogeneous
+public import Feec.Models.Cube.WhitneyRate
+
+@[expose] public noncomputable section
+
+open scoped InnerProductSpace RealInnerProductSpace LinearPMap
+open Set Filter MeasureTheory
+
+namespace Feec.Models.Cube.Inhomogeneous
+
+section Taylor
+
+variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+
+/-- **Trapezoidal (Crank–Nicolson) remainder**: for `f ∈ C³([a, b]; X)` with `‖f'''‖ ≤ L`,
+`‖f(b) − f(a) − (b − a)/2 (f'(b) + f'(a))‖ ≤ L (b − a)³ / 2`. -/
+theorem norm_trapezoid_le {f f₁ f₂ f₃ : ℝ → X} {a b L : ℝ} (hab : a ≤ b)
+    (h1 : ∀ t ∈ Icc a b, HasDerivWithinAt f (f₁ t) (Icc a b) t)
+    (h2 : ∀ t ∈ Icc a b, HasDerivWithinAt f₁ (f₂ t) (Icc a b) t)
+    (h3 : ∀ t ∈ Icc a b, HasDerivWithinAt f₂ (f₃ t) (Icc a b) t)
+    (hL : ∀ t ∈ Icc a b, ‖f₃ t‖ ≤ L) :
+    ‖f b - f a - ((b - a) / 2) • (f₁ b + f₁ a)‖ ≤ L * (b - a) ^ 3 / 2 := by
+  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hL a ⟨le_rfl, hab⟩)
+  set h : ℝ → X := fun t => (1 / 2 : ℝ) • (f₁ t - f₁ a) - ((t - a) / 2) • f₂ t
+  set g : ℝ → X := fun t => f t - f a - ((t - a) / 2) • (f₁ t + f₁ a)
+  have hc : ∀ t, HasDerivAt (fun t : ℝ => (t - a) / 2) (1 / 2) t := fun t => by
+    simpa using ((hasDerivAt_id t).sub_const a).div_const 2
+  have hh : ∀ t ∈ Icc a b, HasDerivWithinAt h (-(((t - a) / 2) • f₃ t)) (Icc a b) t := by
+    intro t ht
+    have e1 := ((h2 t ht).sub_const (f₁ a)).const_smul (1 / 2 : ℝ)
+    have e2 := (hc t).hasDerivWithinAt.smul (h3 t ht)
+    convert e1.sub e2 using 1
+    simp only [one_div]
+    module
+  have hg : ∀ t ∈ Icc a b, HasDerivWithinAt g (h t) (Icc a b) t := by
+    intro t ht
+    have e1 := ((h1 t ht).sub_const (f a))
+    have e2 := (hc t).hasDerivWithinAt.smul ((h2 t ht).add_const (f₁ a))
+    convert e1.sub e2 using 1
+    simp only [h]
+    module
+  have hbh : ∀ t ∈ Ico a b, ‖-(((t - a) / 2) • f₃ t)‖ ≤ (b - a) / 2 * L := by
+    intro t ht
+    rw [norm_neg, norm_smul, Real.norm_eq_abs, abs_of_nonneg (by linarith [ht.1])]
+    exact mul_le_mul (by linarith [ht.2]) (hL t (Ico_subset_Icc_self ht)) (norm_nonneg _)
+      (by linarith)
+  have hha : h a = 0 := by simp [h]
+  have hbg : ∀ t ∈ Ico a b, ‖h t‖ ≤ (b - a) / 2 * L * (b - a) := by
+    intro t ht
+    have := norm_image_sub_le_of_norm_deriv_le_segment' hh hbh t (Ico_subset_Icc_self ht)
+    rw [hha, sub_zero] at this
+    exact this.trans (mul_le_mul_of_nonneg_left (by linarith [ht.2])
+      (mul_nonneg (by linarith) hL0))
+  have := norm_image_sub_le_of_norm_deriv_le_segment' hg hbg b ⟨hab, le_rfl⟩
+  have hga : g a = 0 := by simp [g]
+  rw [hga, sub_zero] at this
+  refine this.trans (le_of_eq ?_)
+  ring
+
+end Taylor
+
+/-! ## The error of the Crank–Nicolson scheme with Dirichlet DOFs, abstractly -/
+
+section Abstract
+
+variable {V X : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
+  [NormedAddCommGroup X] [InnerProductSpace ℝ X]
+
+/-- The **Riesz map** `R : X → V` of a map `emb : V → X` (its adjoint): `⟪R y, x⟫ = ⟪y, emb x⟫`. -/
+def rieszMap (emb : V →ₗ[ℝ] X) : X →ₗ[ℝ] V where
+  toFun y := (InnerProductSpace.toDual ℝ V).symm
+    (LinearMap.toContinuousLinearMap ((innerₛₗ ℝ y).comp emb))
+  map_add' y y' := ext_inner_right ℝ fun x => by
+    rw [inner_add_left, InnerProductSpace.toDual_symm_apply, InnerProductSpace.toDual_symm_apply,
+      InnerProductSpace.toDual_symm_apply]
+    simp
+  map_smul' c y := ext_inner_right ℝ fun x => by
+    rw [RingHom.id_apply, real_inner_smul_left, InnerProductSpace.toDual_symm_apply,
+      InnerProductSpace.toDual_symm_apply]
+    simp
+
+theorem inner_rieszMap (emb : V →ₗ[ℝ] X) (y : X) (x : V) : ⟪rieszMap emb y, x⟫ = ⟪y, emb x⟫ := by
+  change ⟪(InnerProductSpace.toDual ℝ V).symm _, x⟫ = _
+  rw [InnerProductSpace.toDual_symm_apply]
+  rfl
+
+variable (emb : V →ₗ[ℝ] X) (D : V →ₗ[ℝ] V) (V₀ : Submodule ℝ V)
+
+/-- The **discrete boundaries** `D V̊ₕ` (the range of the discrete differential on the fields with
+vanishing boundary DOFs). -/
+def bdrySub : Submodule ℝ V := V₀.map D
+
+/-- The **boundary correction** `q y = P_{D V̊ₕ} R y`: the `L²` projection of `y ∈ X` onto the
+discrete boundaries `D V̊ₕ`, as an element of `V`. -/
+def bdryCorr : X →ₗ[ℝ] V :=
+  ((bdrySub D V₀).starProjection : V →ₗ[ℝ] V) ∘ₗ rieszMap emb
+
+variable {emb D V₀}
+
+theorem bdryCorr_mem (y : X) : bdryCorr emb D V₀ y ∈ bdrySub D V₀ := by
+  simp only [bdryCorr, LinearMap.coe_comp, Function.comp_apply, ContinuousLinearMap.coe_coe]
+  exact Submodule.starProjection_apply_mem _ _
+
+omit [FiniteDimensional ℝ V] in
+theorem bdrySub_le (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) : bdrySub D V₀ ≤ V₀ := by
+  rintro _ ⟨v, hv, rfl⟩
+  exact hD₀ v hv
+
+omit [FiniteDimensional ℝ V] in
+theorem D_eq_zero_of_mem_bdrySub (hDD : ∀ v ∈ V₀, D (D v) = 0) {b : V} (hb : b ∈ bdrySub D V₀) :
+    D b = 0 := by
+  obtain ⟨v, hv, rfl⟩ := hb
+  exact hDD v hv
+
+theorem inner_bdryCorr (y : X) {b : V} (hb : b ∈ bdrySub D V₀) :
+    ⟪bdryCorr emb D V₀ y, b⟫ = ⟪y, emb b⟫ := by
+  simp only [bdryCorr, LinearMap.coe_comp, Function.comp_apply, ContinuousLinearMap.coe_coe]
+  rw [Submodule.inner_starProjection_left_eq_right,
+    Submodule.starProjection_eq_self_iff.2 hb, inner_rieszMap]
+
+omit [FiniteDimensional ℝ V] in
+theorem norm_emb (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (x : V) : ‖emb x‖ = ‖x‖ := by
+  have h := hemb x x
+  rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq] at h
+  exact (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 h
+
+/-- `y − q y ⊥ emb (D V̊ₕ)`. -/
+theorem inner_sub_bdryCorr (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (y : X) {b : V}
+    (hb : b ∈ bdrySub D V₀) : ⟪y - emb (bdryCorr emb D V₀ y), emb b⟫ = 0 := by
+  rw [inner_sub_left, hemb, inner_bdryCorr y hb, sub_self]
+
+/-- **The correction does not increase the error**: `‖y − emb (q y)‖ ≤ ‖y‖` and `‖q y‖ ≤ ‖y‖`. -/
+theorem norm_sub_bdryCorr_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (y : X) :
+    ‖y - emb (bdryCorr emb D V₀ y)‖ ≤ ‖y‖ ∧ ‖bdryCorr emb D V₀ y‖ ≤ ‖y‖ := by
+  set z := emb (bdryCorr emb D V₀ y)
+  have h0 : ⟪y - z, z⟫ = 0 := inner_sub_bdryCorr hemb y (bdryCorr_mem y)
+  have hp : ‖y‖ ^ 2 = ‖y - z‖ ^ 2 + ‖z‖ ^ 2 := by
+    have := norm_add_sq_real (y - z) z
+    rw [sub_add_cancel, h0, mul_zero, add_zero] at this
+    exact this
+  have hz : ‖z‖ = ‖bdryCorr emb D V₀ y‖ := norm_emb hemb _
+  constructor
+  · refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+    nlinarith [sq_nonneg ‖z‖]
+  · rw [← hz]
+    refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+    nlinarith [sq_nonneg ‖y - z‖]
+
+/-- **Comparison fields and consistency errors of the Dirichlet Crank–Nicolson scheme**, abstractly.
+Let `emb : V → X` be an isometric embedding of a finite-dimensional space `V` (the finite element
+space `Vₕ`, all DOFs) into an inner product space `X` (`L²`), `D` the discrete differential with
+`D V̊ₕ ⊆ V̊ₕ` and `D D = 0` on `V̊ₕ`, and `A` the scheme matrix with
+`⟪A x, y⟫ = ⟪D x, y⟫ − ⟪x, D y⟫`. Let `U ∈ C³([0, T]; X)` with `‖U'''‖ ≤ L₃` solve the continuous
+system weakly against `V̊ₕ`, `⟪U', emb v⟫ = ⟪DU, emb v⟫ − ⟪U, emb (D v)⟫`, and let `wₙ ∈ Vₕ` be
+approximants of `U(tₙ)` (`tₙ = n Δt`) with `‖emb (D wₙ) − DU(tₙ)‖ ≤ a` and
+`‖δₙ₊₁ − δₙ‖ ≤ a Δt` for `δₙ = emb wₙ − U(tₙ)` (interpolants of a smooth solution).
+Then the comparison fields `ũₙ = wₙ − q δₙ` (`q` the `L²` projection onto `D V̊ₕ`) have the
+boundary DOFs of `wₙ`, are no farther from `U(tₙ)` than `wₙ`, satisfy
+`⟪U(tₙ) − emb ũₙ, emb (D v)⟫ = 0` for `v ∈ V̊ₕ` (no inverse estimate is needed for the adjoint
+terms), and solve the scheme with step `Δt / 2` up to consistency errors `τₙ ∈ V̊ₕ` with
+`‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`. -/
+theorem exists_comparison_consistency (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
+    (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
+    (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
+    {U U₁ U₂ U₃ DU : ℝ → X}
+    (hU₁ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U (U₁ t) (Icc 0 T) t)
+    (hU₂ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₁ (U₂ t) (Icc 0 T) t)
+    (hU₃ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₂ (U₃ t) (Icc 0 T) t)
+    (hL₃ : ∀ t ∈ Icc 0 T, ‖U₃ t‖ ≤ L₃)
+    (hweak : ∀ t ∈ Icc 0 T, ∀ v ∈ V₀, ⟪U₁ t, emb v⟫ = ⟪DU t, emb v⟫ - ⟪U t, emb (D v)⟫)
+    {w : ℕ → V}
+    (hA2 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (D (w n)) - DU (n * Δt)‖ ≤ a)
+    (hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(emb (w (n + 1)) - U ((n + 1 : ℕ) * Δt)) - (emb (w n) - U (n * Δt))‖ ≤ a * Δt) :
+    ∃ ũ τ : ℕ → V, (∀ n, ũ n - w n ∈ V₀) ∧
+      (∀ n : ℕ, ‖ũ n - w n‖ ≤ ‖emb (w n) - U (n * Δt)‖) ∧
+      (∀ n : ℕ, ‖emb (ũ n) - U (n * Δt)‖ ≤ ‖emb (w n) - U (n * Δt)‖) ∧
+      (∀ n : ℕ, ∀ v ∈ V₀, ⟪U (n * Δt) - emb (ũ n), emb (D v)⟫ = 0) ∧
+      (∀ n, ∀ v ∈ V₀, ⟪ũ (n + 1) - ũ n, v⟫ =
+        Δt / 2 * ⟪A (ũ (n + 1) + ũ n), v⟫ + ⟪(0 : V), v⟫ + ⟪τ n, v⟫) ∧
+      (∀ n, τ n ∈ V₀) ∧
+      (∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T → ‖τ n‖ ≤ Δt * (L₃ * Δt ^ 2 / 2 + 2 * a)) := by
+  set δ : ℕ → X := fun n => emb (w n) - U (n * Δt)
+  set ũ : ℕ → V := fun n => w n - bdryCorr emb D V₀ (δ n)
+  set τ : ℕ → V := fun n =>
+    V₀.starProjection (ũ (n + 1) - ũ n - (Δt / 2) • A (ũ (n + 1) + ũ n))
+  have hqV₀ : ∀ y, bdryCorr emb D V₀ y ∈ V₀ := fun y => bdrySub_le hD₀ (bdryCorr_mem y)
+  have hDũ : ∀ n, D (ũ n) = D (w n) := fun n => by
+    simp only [ũ, map_sub, D_eq_zero_of_mem_bdrySub hDD (bdryCorr_mem _), sub_zero]
+  have hρ : ∀ n : ℕ, emb (ũ n) - U (n * Δt) = δ n - emb (bdryCorr emb D V₀ (δ n)) := fun n => by
+    simp only [ũ, δ, map_sub]; abel
+  have horth : ∀ n : ℕ, ∀ v ∈ V₀, ⟪U (n * Δt) - emb (ũ n), emb (D v)⟫ = 0 := fun n v hv => by
+    have h := inner_sub_bdryCorr (D := D) (V₀ := V₀) hemb (δ n) (Submodule.mem_map_of_mem hv)
+    rw [← neg_sub, inner_neg_left, hρ, h, neg_zero]
+  refine ⟨ũ, τ, fun n => ?_, fun n => ?_, fun n => ?_, horth, fun n v hv => ?_,
+    fun n => Submodule.starProjection_apply_mem _ _, fun n hn => ?_⟩
+  · simp only [ũ, sub_sub_cancel_left]
+    exact V₀.neg_mem (hqV₀ _)
+  · simp only [ũ, sub_sub_cancel_left, norm_neg]
+    exact (norm_sub_bdryCorr_le hemb (δ n)).2
+  · rw [hρ]; exact (norm_sub_bdryCorr_le hemb (δ n)).1
+  · have e : ⟪τ n, v⟫ = ⟪ũ (n + 1) - ũ n - (Δt / 2) • A (ũ (n + 1) + ũ n), v⟫ := by
+      simp only [τ]
+      rw [Submodule.inner_starProjection_left_eq_right, Submodule.starProjection_eq_self_iff.2 hv]
+    rw [e]
+    simp only [inner_sub_left, real_inner_smul_left, inner_zero_left]
+    ring
+  -- the bound on `τₙ`
+  set ε := Δt * (L₃ * Δt ^ 2 / 2 + 2 * a)
+  have hn0 : (0 : ℝ) ≤ n * Δt := mul_nonneg (Nat.cast_nonneg n) hΔt.le
+  have hn1 : (n : ℝ) * Δt ≤ ((n + 1 : ℕ) : ℝ) * Δt := by push_cast; nlinarith
+  have hnT : (n : ℝ) * Δt ≤ T := hn1.trans hn
+  have htn : (n : ℝ) * Δt ∈ Icc 0 T := ⟨hn0, hnT⟩
+  have htn' : ((n + 1 : ℕ) : ℝ) * Δt ∈ Icc 0 T := ⟨hn0.trans hn1, hn⟩
+  have hsub : Icc ((n : ℝ) * Δt) (((n + 1 : ℕ) : ℝ) * Δt) ⊆ Icc 0 T :=
+    Icc_subset_Icc hn0 hn
+  have hTay := norm_trapezoid_le (f := U) (f₁ := U₁) (f₂ := U₂) (f₃ := U₃) hn1
+    (fun t ht => (hU₁ t (hsub ht)).mono hsub) (fun t ht => (hU₂ t (hsub ht)).mono hsub)
+    (fun t ht => (hU₃ t (hsub ht)).mono hsub) (fun t ht => hL₃ t (hsub ht))
+  have hdt : ((n + 1 : ℕ) : ℝ) * Δt - n * Δt = Δt := by push_cast; ring
+  rw [hdt] at hTay
+  -- the key bound: `⟪z, v⟫ ≤ ε ‖v‖` on `V̊ₕ`
+  have key : ∀ v ∈ V₀, ⟪ũ (n + 1) - ũ n - (Δt / 2) • A (ũ (n + 1) + ũ n), v⟫ ≤ ε * ‖v‖ := by
+    intro v hv
+    set Tn := U (((n + 1 : ℕ) : ℝ) * Δt) - U (n * Δt) -
+      (Δt / 2) • (U₁ (((n + 1 : ℕ) : ℝ) * Δt) + U₁ (n * Δt))
+    set ρ : ℕ → X := fun k => δ k - emb (bdryCorr emb D V₀ (δ k))
+    set e : ℕ → X := fun k => emb (D (w k)) - DU (k * Δt)
+    have hρ1 : ρ (n + 1) - ρ n =
+        (δ (n + 1) - δ n) - emb (bdryCorr emb D V₀ (δ (n + 1) - δ n)) := by
+      simp only [ρ, map_sub]; abel
+    have hρb : ‖ρ (n + 1) - ρ n‖ ≤ a * Δt := by
+      rw [hρ1]
+      exact (norm_sub_bdryCorr_le hemb _).1.trans (hA3 n hn)
+    have hw1 := hweak _ htn' v hv
+    have hw0 := hweak _ htn v hv
+    have o1 := horth (n + 1) v hv
+    have o0 := horth n v hv
+    have hA' := hA (ũ (n + 1) + ũ n) v
+    have i1 : ⟪ũ (n + 1) - ũ n, v⟫ = ⟪emb (ũ (n + 1)) - emb (ũ n), emb v⟫ := by
+      rw [← hemb, map_sub]
+    have i2 : ⟪D (ũ (n + 1) + ũ n), v⟫ = ⟪emb (D (w (n + 1))) + emb (D (w n)), emb v⟫ := by
+      rw [map_add, hDũ, hDũ, ← hemb, map_add]
+    have i3 : ⟪ũ (n + 1) + ũ n, D v⟫ = ⟪emb (ũ (n + 1)) + emb (ũ n), emb (D v)⟫ := by
+      rw [← hemb, map_add]
+    have hu1 : emb (ũ (n + 1)) = U (((n + 1 : ℕ) : ℝ) * Δt) + ρ (n + 1) := by
+      simp only [ρ]; rw [← hρ (n + 1)]; abel
+    have hu0 : emb (ũ n) = U (n * Δt) + ρ n := by simp only [ρ]; rw [← hρ n]; abel
+    have hid : ⟪ũ (n + 1) - ũ n - (Δt / 2) • A (ũ (n + 1) + ũ n), v⟫ =
+        ⟪Tn, emb v⟫ + ⟪ρ (n + 1) - ρ n, emb v⟫ - Δt / 2 * ⟪e (n + 1) + e n, emb v⟫ := by
+      rw [inner_sub_left, real_inner_smul_left, hA', i1, i2, i3]
+      simp only [inner_sub_left, hu1, hu0, inner_add_left] at o1 o0
+      have r1 : ⟪ρ (n + 1), emb (D v)⟫ = 0 := by linarith
+      have r0 : ⟪ρ n, emb (D v)⟫ = 0 := by linarith
+      simp only [Tn, e, inner_sub_left, inner_add_left, real_inner_smul_left, hw1, hw0, hu1, hu0,
+        r1, r0]
+      ring
+    rw [hid]
+    have hy : ‖emb v‖ = ‖v‖ := norm_emb hemb v
+    have b1 : ⟪Tn, emb v⟫ ≤ L₃ * Δt ^ 3 / 2 * ‖v‖ := by
+      rw [← hy]
+      exact (real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right hTay (norm_nonneg _))
+    have b2 : ⟪ρ (n + 1) - ρ n, emb v⟫ ≤ a * Δt * ‖v‖ := by
+      rw [← hy]
+      exact (real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right hρb (norm_nonneg _))
+    have he : ‖e (n + 1) + e n‖ ≤ 2 * a := by
+      have h1 := hA2 (n + 1) (by exact_mod_cast hn)
+      have h0 := hA2 n hnT
+      exact (norm_add_le _ _).trans (by simp only [e]; push_cast at h1 ⊢; linarith)
+    have b3 : -(Δt / 2 * ⟪e (n + 1) + e n, emb v⟫) ≤ Δt / 2 * (2 * a) * ‖v‖ := by
+      have h1 := abs_real_inner_le_norm (e (n + 1) + e n) (emb v)
+      have h2 := neg_abs_le ⟪e (n + 1) + e n, emb v⟫
+      have h3 : ‖e (n + 1) + e n‖ * ‖emb v‖ ≤ 2 * a * ‖emb v‖ :=
+        mul_le_mul_of_nonneg_right he (norm_nonneg _)
+      rw [hy] at h3 h1
+      have : 0 ≤ Δt / 2 := by linarith
+      nlinarith
+    have : ε * ‖v‖ = L₃ * Δt ^ 3 / 2 * ‖v‖ + a * Δt * ‖v‖ + Δt / 2 * (2 * a) * ‖v‖ := by
+      simp only [ε]; ring
+    linarith
+  have hτmem : τ n ∈ V₀ := Submodule.starProjection_apply_mem _ _
+  have hττ : ‖τ n‖ ^ 2 =
+      ⟪ũ (n + 1) - ũ n - (Δt / 2) • A (ũ (n + 1) + ũ n), τ n⟫ := by
+    rw [← real_inner_self_eq_norm_sq]
+    conv_lhs => rw [show τ n = V₀.starProjection
+      (ũ (n + 1) - ũ n - (Δt / 2) • A (ũ (n + 1) + ũ n)) from rfl]
+    rw [Submodule.inner_starProjection_left_eq_right, Submodule.starProjection_eq_self_iff.2 hτmem]
+  have hk := key _ hτmem
+  rw [← hττ] at hk
+  rcases (norm_nonneg (τ n)).eq_or_lt with h0 | hpos
+  · rw [← h0]
+    have : 0 ≤ L₃ := (norm_nonneg _).trans (hL₃ _ htn)
+    have ha : 0 ≤ a := (norm_nonneg _).trans (hA2 n hnT)
+    positivity
+  · nlinarith
+
+/-- **Error of the Dirichlet Crank–Nicolson scheme**, abstractly: in the setting of
+`exists_comparison_consistency`, if `uₙ` are the iterates of the scheme with step `Δt / 2`
+(`s = Δt / 2`), no load, boundary DOFs `gₙ₊₁` those of `wₙ₊₁` (`gₙ₊₁ − wₙ₊₁ ∈ V̊ₕ`) and initial
+value with the boundary DOFs of `w₀`, and `‖emb wₙ − U(tₙ)‖ ≤ a`, then for `M Δt ≤ T` there are
+comparison fields `ũₙ` with the boundary DOFs of `wₙ` and `‖emb ũₙ − U(tₙ)‖ ≤ a` such that
+`‖u_M − ũ_M‖ ≤ ‖u₀ − w₀‖ + a + T (L₃ Δt² / 2 + 2 a)` and
+`‖emb u_M − U(t_M)‖ ≤ ‖u₀ − w₀‖ + 2 a + T (L₃ Δt² / 2 + 2 a)`. -/
+theorem norm_cn_error_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
+    (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
+    (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
+    {U U₁ U₂ U₃ DU : ℝ → X}
+    (hU₁ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U (U₁ t) (Icc 0 T) t)
+    (hU₂ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₁ (U₂ t) (Icc 0 T) t)
+    (hU₃ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₂ (U₃ t) (Icc 0 T) t)
+    (hL₃ : ∀ t ∈ Icc 0 T, ‖U₃ t‖ ≤ L₃)
+    (hweak : ∀ t ∈ Icc 0 T, ∀ v ∈ V₀, ⟪U₁ t, emb v⟫ = ⟪DU t, emb v⟫ - ⟪U t, emb (D v)⟫)
+    {w : ℕ → V}
+    (hA1 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (w n) - U (n * Δt)‖ ≤ a)
+    (hA2 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (D (w n)) - DU (n * Δt)‖ ≤ a)
+    (hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(emb (w (n + 1)) - U ((n + 1 : ℕ) * Δt)) - (emb (w n) - U (n * Δt))‖ ≤ a * Δt)
+    {M : ℕ} (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → V}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep V₀ A (Δt / 2) 0 (g (n + 1)) (u n)
+      (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - w (n + 1) ∈ V₀) (hu0 : u 0 - w 0 ∈ V₀) :
+    ∃ ũ : ℕ → V, (∀ n, ũ n - w n ∈ V₀) ∧
+      (∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (ũ n) - U (n * Δt)‖ ≤ a) ∧
+      ‖u M - ũ M‖ ≤ ‖u 0 - w 0‖ + a + T * (L₃ * Δt ^ 2 / 2 + 2 * a) ∧
+      ‖emb (u M) - U (M * Δt)‖ ≤ ‖u 0 - w 0‖ + 2 * a + T * (L₃ * Δt ^ 2 / 2 + 2 * a) := by
+  obtain ⟨ũ, τ, hũw, hũn, hũe, -, hτ, -, hτb⟩ :=
+    exists_comparison_consistency hemb hD₀ hDD hA hΔt hU₁ hU₂ hU₃ hL₃ hweak hA2 hA3
+  have hT0 : 0 ≤ T := (mul_nonneg (Nat.cast_nonneg M) hΔt.le).trans hM
+  have hL0 : 0 ≤ L₃ := (norm_nonneg _).trans (hL₃ 0 ⟨le_rfl, hT0⟩)
+  have ha0 : 0 ≤ a := (norm_nonneg _).trans (hA1 0 (by simpa using hT0))
+  have hAs : ∀ x ∈ V₀, Δt / 2 * ⟪A x, x⟫ ≤ 0 := fun x _ => by
+    rw [hA, real_inner_comm x, sub_self, mul_zero]
+  set c := L₃ * Δt ^ 2 / 2 + 2 * a
+  have hc : 0 ≤ c := by positivity
+  have hind : ∀ m ≤ M, u m - ũ m ∈ V₀ ∧
+      ‖u m - ũ m‖ ≤ ‖u 0 - ũ 0‖ + ∑ n ∈ Finset.range m, ‖τ n‖ := by
+    intro m
+    induction m with
+    | zero =>
+      intro _
+      refine ⟨?_, by simp⟩
+      have := V₀.sub_mem hu0 (hũw 0)
+      rwa [sub_sub_sub_cancel_right] at this
+    | succ m ih =>
+      intro hm
+      obtain ⟨hmem, hle⟩ := ih (by omega)
+      have hst := hstep m (by omega)
+      have hũg : ũ (m + 1) - g (m + 1) ∈ V₀ := by
+        have := V₀.sub_mem (hũw (m + 1)) (hg m (by omega))
+        rwa [sub_sub_sub_cancel_right] at this
+      refine ⟨?_, ?_⟩
+      · have := V₀.sub_mem hst.1 hũg
+        rwa [sub_sub_sub_cancel_right] at this
+      · have h1 := TimeStepping.IsDirichletCNStep.norm_sub_le hAs hst hũg hmem (hτ m)
+        rw [Finset.sum_range_succ]
+        linarith
+  obtain ⟨-, hM'⟩ := hind M le_rfl
+  have hsum : ∑ n ∈ Finset.range M, ‖τ n‖ ≤ T * c := by
+    calc ∑ n ∈ Finset.range M, ‖τ n‖ ≤ ∑ _n ∈ Finset.range M, Δt * c :=
+          Finset.sum_le_sum fun n hn => hτb n (by
+            have : n + 1 ≤ M := Finset.mem_range.1 hn
+            exact (mul_le_mul_of_nonneg_right (by exact_mod_cast this) hΔt.le).trans hM)
+      _ = M * Δt * c := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
+      _ ≤ T * c := mul_le_mul_of_nonneg_right hM hc
+  have h0 : ‖u 0 - ũ 0‖ ≤ ‖u 0 - w 0‖ + a := by
+    have e : u 0 - ũ 0 = (u 0 - w 0) - (ũ 0 - w 0) := by abel
+    rw [e]
+    refine (norm_sub_le _ _).trans ?_
+    have := (hũn 0).trans (hA1 0 (by simpa using hT0))
+    linarith
+  have hfin : ‖u M - ũ M‖ ≤ ‖u 0 - w 0‖ + a + T * c := by linarith
+  refine ⟨ũ, hũw, fun n hn => (hũe n).trans (hA1 n hn), hfin, ?_⟩
+  have e : emb (u M) - U (M * Δt) = emb (u M - ũ M) + (emb (ũ M) - U (M * Δt)) := by
+    rw [map_sub]; abel
+  rw [e]
+  refine (norm_add_le _ _).trans ?_
+  rw [norm_emb hemb]
+  have := (hũe M).trans (hA1 M hM)
+  linarith
+
+/-- `norm_cn_error_le` started from `u₀ = w₀`, in the form `K (1 + T) (h + Δt²)`: if `2 a ≤ K h`
+and `L₃ / 2 ≤ K`, then `‖u_M − ũ_M‖, ‖emb u_M − U(t_M)‖ ≤ K (1 + T) (h + Δt²)`. -/
+theorem norm_cn_error_le_of_eq (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
+    (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
+    (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
+    {U U₁ U₂ U₃ DU : ℝ → X}
+    (hU₁ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U (U₁ t) (Icc 0 T) t)
+    (hU₂ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₁ (U₂ t) (Icc 0 T) t)
+    (hU₃ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₂ (U₃ t) (Icc 0 T) t)
+    (hL₃ : ∀ t ∈ Icc 0 T, ‖U₃ t‖ ≤ L₃)
+    (hweak : ∀ t ∈ Icc 0 T, ∀ v ∈ V₀, ⟪U₁ t, emb v⟫ = ⟪DU t, emb v⟫ - ⟪U t, emb (D v)⟫)
+    {w : ℕ → V}
+    (hA1 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (w n) - U (n * Δt)‖ ≤ a)
+    (hA2 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (D (w n)) - DU (n * Δt)‖ ≤ a)
+    (hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(emb (w (n + 1)) - U ((n + 1 : ℕ) * Δt)) - (emb (w n) - U (n * Δt))‖ ≤ a * Δt)
+    {M : ℕ} (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → V}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep V₀ A (Δt / 2) 0 (g (n + 1)) (u n)
+      (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - w (n + 1) ∈ V₀) (hu0 : u 0 = w 0) {K h : ℝ}
+    (hKa : 2 * a ≤ K * h) (hKL : L₃ / 2 ≤ K) :
+    ∃ ũ : ℕ → V, (∀ n, ũ n - w n ∈ V₀) ∧
+      ‖u M - ũ M‖ ≤ K * (1 + T) * (h + Δt ^ 2) ∧
+      ‖emb (u M) - U (M * Δt)‖ ≤ K * (1 + T) * (h + Δt ^ 2) := by
+  obtain ⟨ũ, hũ, -, hfin, hemb'⟩ := norm_cn_error_le hemb hD₀ hDD hA hΔt hU₁ hU₂ hU₃ hL₃ hweak
+    hA1 hA2 hA3 hM hstep hg (by rw [hu0, sub_self]; exact V₀.zero_mem)
+  rw [hu0, sub_self, norm_zero, zero_add] at hfin hemb'
+  have hT0 : 0 ≤ T := (mul_nonneg (Nat.cast_nonneg M) hΔt.le).trans hM
+  have ha0 : 0 ≤ a := (norm_nonneg _).trans (hA1 0 (by simpa using hT0))
+  have hL0 : 0 ≤ L₃ := (norm_nonneg _).trans (hL₃ 0 ⟨le_rfl, hT0⟩)
+  have hK0 : 0 ≤ K := (by linarith : 0 ≤ L₃ / 2).trans hKL
+  have hd2 : 0 ≤ Δt ^ 2 := sq_nonneg _
+  have key : 2 * a + T * (L₃ * Δt ^ 2 / 2 + 2 * a) ≤ K * (1 + T) * (h + Δt ^ 2) := by
+    have h1 : L₃ * Δt ^ 2 / 2 ≤ K * Δt ^ 2 := by nlinarith
+    have h2 : T * (L₃ * Δt ^ 2 / 2 + 2 * a) ≤ T * (K * Δt ^ 2 + K * h) :=
+      mul_le_mul_of_nonneg_left (by linarith) hT0
+    have h3 : 0 ≤ K * Δt ^ 2 := mul_nonneg hK0 hd2
+    nlinarith
+  exact ⟨ũ, hũ, by linarith, by linarith⟩
+
+end Abstract
+
+/-! ## The scheme on a finite element subcomplex: the setting of the abstract estimate -/
+
+section SubcomplexScheme
+
+open HilbertComplex
+
+variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex ℝ c W} (S : H.Subcomplex)
+
+/-- The inclusion `Vₕ = ∏ Vₕⁱ → ∏ Wⁱ` (an isometry, `inner_dEmb`). -/
+def dEmb : DState S →ₗ[ℝ] PiLp 2 W where
+  toFun x := WithLp.toLp 2 fun i => (x i : W i)
+  map_add' x y := PiLp.ext fun i => by simp
+  map_smul' a x := PiLp.ext fun i => by simp
+
+omit [Fintype ι] in
+@[simp] theorem dEmb_apply (x : DState S) (i : ι) : dEmb S x i = (x i : W i) := rfl
+
+theorem inner_dEmb (x y : DState S) : ⟪dEmb S x, dEmb S y⟫ = ⟪x, y⟫ := by
+  rw [PiLp.inner_apply, PiLp.inner_apply]
+  rfl
+
+omit [Fintype ι] in
+theorem dEmb_mem_totalDomain (x : DState S) : dEmb S x ∈ H.totalDomain := fun i j =>
+  S.le_domain i j (x i).2
+
+/-- `𝐝 (emb x) = emb (𝐝ₕ x)`. -/
+theorem totalD_dEmb (x : DState S) :
+    H.totalD ⟨dEmb S x, dEmb_mem_totalDomain S x⟩ = dEmb S (discreteD S x) := by
+  refine PiLp.ext fun j => ?_
+  rw [totalD_apply]
+  simp only [dEmb_apply, discreteD, LinearMap.coe_mk, AddHom.coe_mk,
+    Submodule.coe_sum, Subcomplex.coe_dLin_apply]
+  rfl
+
+/-- `𝐝ₕ 𝐝ₕ = 0`. -/
+theorem discreteD_discreteD (x : DState S) : discreteD S (discreteD S x) = 0 := by
+  refine PiLp.ext fun k => ?_
+  simp only [discreteD, LinearMap.coe_mk, AddHom.coe_mk, PiLp.toLp_apply, map_sum,
+    PiLp.zero_apply]
+  rw [Finset.sum_comm]
+  exact Finset.sum_eq_zero fun i _ => Finset.sum_eq_zero fun j _ => S.dLin_comp_dLin i j k _
+
+variable {Hmin : HilbertComplex ℝ c W} (hle : ∀ i j, Hmin.d i j ≤ H.d i j) (S₀ : Hmin.Subcomplex)
+
+include hle in
+/-- `𝐝ₕ V̊ₕ ⊆ V̊ₕ` when the fields with vanishing boundary DOFs form a subcomplex of the complex
+with boundary conditions. -/
+theorem discreteD_mem_interior {v : DState S} (hv : v ∈ interior S S₀.V) :
+    discreteD S v ∈ interior S S₀.V := by
+  intro j
+  simp only [discreteD, LinearMap.coe_mk, AddHom.coe_mk, PiLp.toLp_apply, Submodule.coe_sum,
+    Subcomplex.coe_dLin_apply]
+  refine Submodule.sum_mem _ fun i _ => ?_
+  have e : H.d i j (S.toDomain i j (v i)) = Hmin.d i j ⟨(v i : W i), S₀.le_domain i j (hv i)⟩ :=
+    ((hle i j).2 rfl).symm
+  rw [e]
+  exact S₀.mapsTo i j _ (hv i)
+
+omit [Fintype ι] in
+theorem dEmb_mem_totalDomain_min {v : DState S} (hv : v ∈ interior S S₀.V) :
+    dEmb S v ∈ Hmin.totalDomain := fun i j => S₀.le_domain i j (hv i)
+
+include hle in
+/-- On `V̊ₕ` the complex with boundary conditions acts as `𝐝ₕ`. -/
+theorem totalD_min_dEmb {v : DState S} (hv : v ∈ interior S S₀.V) :
+    Hmin.totalD ⟨dEmb S v, dEmb_mem_totalDomain_min S S₀ hv⟩ = dEmb S (discreteD S v) := by
+  rw [← totalD_dEmb]
+  refine PiLp.ext fun j => ?_
+  rw [totalD_apply, totalD_apply]
+  exact Finset.sum_congr rfl fun i _ => (hle i j).2 rfl
+
+include hle in
+/-- **A strong solution of `U' = L_max U` solves the scheme's weak form on `V̊ₕ`**: if
+`(U, U') ∈ graph (𝐝 − 𝐝_min†)` then `⟪U', emb v⟫ = ⟪𝐝 U, emb v⟫ − ⟪U, emb (𝐝ₕ v)⟫` for every
+`v ∈ V̊ₕ` (`⟪𝐝_min† U, v⟫ = ⟪U, 𝐝_min v⟫`). -/
+theorem inner_of_mem_graph_waveMax {U U' : PiLp 2 W}
+    (hU : (U, U') ∈ (waveMax Hmin H).graph) {v : DState S} (hv : v ∈ interior S S₀.V) :
+    ∃ hD : U ∈ H.totalDomain, ⟪U', dEmb S v⟫ =
+      ⟪H.totalD ⟨U, hD⟩, dEmb S v⟫ - ⟪U, dEmb S (discreteD S v)⟫ := by
+  obtain ⟨y, hy1, hy2⟩ := (LinearPMap.mem_graph_iff _).1 hU
+  have hy1' : (y : PiLp 2 W) = U := hy1
+  have hd : U ∈ H.totalDomain := hy1' ▸ y.2.1
+  have hd' : U ∈ Hmin.dual.totalD.domain := hy1' ▸ y.2.2
+  refine ⟨hd, ?_⟩
+  have e : U' = H.totalD ⟨U, hd⟩ - Hmin.dual.totalD ⟨U, hd'⟩ := by
+    have hy2' : waveMax Hmin H y = U' := hy2
+    rw [← hy2']
+    calc waveMax Hmin H y = H.totalD ⟨(y : PiLp 2 W), y.2.1⟩ -
+          Hmin.dual.totalD ⟨(y : PiLp 2 W), y.2.2⟩ := rfl
+      _ = _ := by congr 2 <;> exact Subtype.ext hy1'
+  have hx := dEmb_mem_totalDomain_min S S₀ hv
+  have h2 := Hmin.inner_totalD_dual ⟨dEmb S v, hx⟩ ⟨U, hd'⟩
+  rw [totalD_min_dEmb S hle S₀ hv] at h2
+  rw [e, inner_sub_left]
+  congr 1
+  rw [real_inner_comm, ← h2, real_inner_comm]
+
+/-! ### Three rows -/
+
+/-- The three-row inclusion `Vₕ³ → (∏ Wⁱ)³`. -/
+def dEmb3 : DState3 S →ₗ[ℝ] PiLp 2 fun _ : Fin 3 => PiLp 2 W where
+  toFun u := WithLp.toLp 2 fun r => dEmb S (u r)
+  map_add' u v := PiLp.ext fun r => by simp
+  map_smul' a u := PiLp.ext fun r => by simp
+
+@[simp] theorem dEmb3_apply (u : DState3 S) (r : Fin 3) : dEmb3 S u r = dEmb S (u r) := rfl
+
+theorem inner_dEmb3 (u v : DState3 S) : ⟪dEmb3 S u, dEmb3 S v⟫ = ⟪u, v⟫ := by
+  rw [PiLp.inner_apply, PiLp.inner_apply]
+  exact Finset.sum_congr rfl fun r _ => inner_dEmb S (u r) (v r)
+
+/-- The row-wise discrete differential. -/
+def discreteD3 : DState3 S →ₗ[ℝ] DState3 S where
+  toFun u := WithLp.toLp 2 fun r => discreteD S (u r)
+  map_add' u v := PiLp.ext fun r => by simp
+  map_smul' a u := PiLp.ext fun r => by simp
+
+@[simp] theorem discreteD3_apply (u : DState3 S) (r : Fin 3) :
+    discreteD3 S u r = discreteD S (u r) := rfl
+
+theorem inner_discreteWave3 [∀ i, FiniteDimensional ℝ (S.V i)] (u v : DState3 S) :
+    ⟪discreteWave3 S u, v⟫ = ⟪discreteD3 S u, v⟫ - ⟪u, discreteD3 S v⟫ := by
+  rw [PiLp.inner_apply, PiLp.inner_apply, PiLp.inner_apply, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun r _ => inner_discreteWave S (u r) (v r)
+
+include hle in
+theorem discreteD3_mem_interior3 {v : DState3 S} (hv : v ∈ interior3 S S₀.V) :
+    discreteD3 S v ∈ interior3 S S₀.V := fun r => discreteD_mem_interior S hle S₀ (hv r)
+
+theorem discreteD3_discreteD3 (v : DState3 S) : discreteD3 S (discreteD3 S v) = 0 :=
+  PiLp.ext fun r => by simp [discreteD_discreteD]
+
+include hle in
+/-- The weak form for three rows, each a strong solution of `U' = L_max U`, with
+`DU = (𝐝 U_r)_r`. -/
+theorem inner3_of_mem_graph_waveMax {U U' : PiLp 2 fun _ : Fin 3 => PiLp 2 W}
+    (hU : ∀ r, (U r, U' r) ∈ (waveMax Hmin H).graph) (hd : ∀ r, U r ∈ H.totalDomain)
+    {v : DState3 S} (hv : v ∈ interior3 S S₀.V) :
+    ⟪U', dEmb3 S v⟫ = ⟪(WithLp.toLp 2 fun r => H.totalD ⟨U r, hd r⟩ :
+      PiLp 2 fun _ : Fin 3 => PiLp 2 W), dEmb3 S v⟫ - ⟪U, dEmb3 S (discreteD3 S v)⟫ := by
+  rw [PiLp.inner_apply, PiLp.inner_apply, PiLp.inner_apply, ← Finset.sum_sub_distrib]
+  refine Finset.sum_congr rfl fun r _ => ?_
+  obtain ⟨hD, h⟩ := inner_of_mem_graph_waveMax S hle S₀ (hU r) (hv r)
+  simpa using h
+
+end SubcomplexScheme
+
+/-! ## The canonical Whitney interpolant as a linear map -/
+
+namespace FEMInterp
+
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.ExteriorFibre
+  Feec.Models.Cube.FEM
+
+variable {n : ℕ} [NeZero n]
+
+/-- **The canonical Whitney interpolant is a linear map with the `O(h)` estimates**
+([Arnold2018], Ch. 7): in every degree `j` there is a linear map `Π : C⁰Λ → Vₕʲ` (the glued
+canonical interpolant of the level-`(N + 1)` Freudenthal mesh of `Q = (0, ½)ⁿ`) such that for a
+`C²` form `w` of degree `j` with `‖Dw‖, ‖D dw‖ ≤ L` on `cl Q`,
+`‖w − Π w‖ ≤ B_j L h_N` and `‖d (w − Π w)‖ ≤ B_j L h_N` (`B_j = interpBound n j`). The
+existential `exists_mem_whitney_le` hides the linearity, which the Crank–Nicolson consistency
+argument needs for time differences. -/
+theorem exists_linearMap_whitney_le (N : ℕ) (j : ℤ) :
+    ∃ P : contForms n →ₗ[ℝ] L2F ℝ (cubeDomain n) (formIdx n j),
+      ∃ hP : ∀ w, P w ∈ (whitney n N).V j,
+      ∀ k : ℕ, (k : ℤ) = j → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w), (∀ y, IsDeg k (w y)) →
+        ∀ {L : ℝ}, 0 ≤ L → (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
+        (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) →
+        ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
+            ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩‖ ≤ interpBound n j * L * meshSize N ∧
+        ∀ j' (hx : formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
+            ⟨w, hw.continuous⟩ ∈ ((complex n).d j j').domain),
+          ‖(complex n).d j j' ⟨_ - P ⟨w, hw.continuous⟩,
+            Submodule.sub_mem _ hx ((whitney n N).le_domain j j' (hP _))⟩‖ ≤
+            interpBound n j * L * meshSize N := by
+  rcases lt_or_ge j 0 with hj | hj
+  · refine ⟨0, fun _ => Submodule.zero_mem _, fun k hk => ?_⟩
+    omega
+  obtain ⟨k, rfl⟩ := Int.eq_ofNat_of_zero_le hj
+  refine (deRham ℝ n).maximalSubcomplexOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
+    (isOpen_cubeDomain n) (whitneySubcomplex (mesh n N) (isOpen_mesh_domain n N))
+    (fun Θ hΘ S => ∀ hb : Bornology.IsBounded Θ,
+      ∀ hvol : volume.real Θ = volume.real (cubeDomain n),
+      ∃ P : contForms n →ₗ[ℝ] L2F ℝ Θ (formIdx n k), ∃ hP : ∀ w, P w ∈ S.V k,
+      ∀ k' : ℕ, (k' : ℤ) = k → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w),
+        (∀ y, IsDeg k' (w y)) → ∀ {L : ℝ}, 0 ≤ L →
+        (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
+        (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) →
+        ‖formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩‖ ≤
+            interpBound n k * L * meshSize N ∧
+        ∀ j' (hx : formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ ∈
+            (((deRham ℝ n).maximalComplex hΘ).d k j').domain),
+          ‖((deRham ℝ n).maximalComplex hΘ).d k j'
+            ⟨(formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩ :
+              L2F ℝ Θ (formIdx n k)), Submodule.sub_mem _ hx (S.le_domain k j' (hP _))⟩‖ ≤
+            interpBound n k * L * meshSize N) ?_ (isBounded_cubeDomain n) rfl
+  intro hb hvol
+  set M := mesh n N
+  have hΩo := isOpen_mesh_domain n N
+  have hcl : closure M.domain = closure (cubeDomain n) := by rw [mesh_domain]
+  have hshape := fun T hT => mesh_shape n N (T := T) hT
+  refine ⟨(whitneyElement n).glue M k ∘ₗ ((whitneyElement n).globalSpace M k).subtype ∘ₗ
+      (whitneyElement n).globalInterp M k, fun w => ⟨(whitneyElement n).globalInterp M k w, rfl⟩,
+    fun k' hk' w hw hdeg L hL0 hL hL' => ?_⟩
+  have hk : k' = k := by exact_mod_cast hk'
+  subst hk
+  have hw1 : ContDiff ℝ 1 w := hw.of_le (by norm_num)
+  have hdw : ContDiff ℝ 1 (extDeriv w) := contDiff_extDeriv (m := 1) hw
+  have hh := (meshSize_pos N).le
+  have hA0 := mul_nonneg (interpConst_nonneg n k') (mul_nonneg hh hL0)
+  have hA1 := mul_nonneg (interpConst_nonneg n (k' + 1)) (mul_nonneg hh hL0)
+  have e : interpBound n k' * L * meshSize N =
+      interpConst n k' * (meshSize N * L) + interpConst n (k' + 1) * (meshSize N * L) := by
+    simp only [interpBound, Int.toNat_natCast]; ring
+  refine ⟨?_, fun j' hx => ?_⟩
+  · have h := norm_formL2_sub_glue_le M hΩo.measurableSet k' hw1 (C₀ := 2) (h := meshSize N)
+      (by norm_num) hh hL0 (fun y hy => hL y (hcl ▸ hy))
+      (fun T hT => (hshape T hT).1) (fun T hT => (hshape T hT).2.le)
+    have h' : ‖formL2 hΩo.measurableSet hb k' ⟨w, hw.continuous⟩ -
+        (whitneyElement n).glue M k' ((whitneyElement n).globalInterp M k' ⟨w, hw.continuous⟩ :
+          (whitneyElement n).Piecewise M k')‖ ≤ interpConst n k' * (meshSize N * L) := by
+      refine h.trans (le_of_eq ?_)
+      rw [hvol, interpConst]; ring
+    refine h'.trans ?_
+    rw [e]; linarith
+  by_cases hj' : (k' : ℤ) + 1 = j'
+  · subst hj'
+    obtain ⟨hmem, hval⟩ := glue_globalInterp_mem_maximal M hΩo k' ⟨w, hw1⟩
+    obtain ⟨hmw, hvw⟩ := formL2_mem_maximal M hΩo k' hw1 hdeg
+    have hd := deRham_maximalComplex_d (𝕜 := ℝ) (n := n) hΩo (k' : ℤ)
+    have e1 : ((deRham ℝ n).maximalComplex hΩo).d k' (k' + 1) ⟨_, Submodule.sub_mem _ hx
+        ((whitneySubcomplex M hΩo).le_domain k' (k' + 1)
+          ⟨(whitneyElement n).globalInterp M k' ⟨w, hw.continuous⟩, rfl⟩)⟩ =
+        (extDerivOp ℝ n k').maximal M.domain ⟨_, hmw⟩ -
+          (extDerivOp ℝ n k').maximal M.domain ⟨_, hmem⟩ := by
+      rw [LinearPMap.apply_eq_of_eq' hd, ← LinearPMap.map_sub]
+      rfl
+    have h := norm_formL2_sub_glue_le M hΩo.measurableSet (k' + 1) hdw (C₀ := 2)
+      (h := meshSize N) (by norm_num) hh hL0 (fun y hy => hL' y (hcl ▸ hy))
+      (fun T hT => (hshape T hT).1) (fun T hT => (hshape T hT).2.le)
+    have e2 : (extDerivOp ℝ n k').maximal M.domain ⟨_, hmem⟩ =
+        (whitneyElement n).glue M ((k' + 1 : ℕ) : ℤ) ((whitneyElement n).globalInterp M (k' + 1)
+          ⟨extDeriv w, hdw.continuous⟩ : (whitneyElement n).Piecewise M (k' + 1)) := hval
+    change ‖((deRham ℝ n).maximalComplex hΩo).d k' (k' + 1) ⟨_, Submodule.sub_mem _ hx
+        ((whitneySubcomplex M hΩo).le_domain k' (k' + 1)
+          ⟨(whitneyElement n).globalInterp M k' ⟨w, hw.continuous⟩, rfl⟩)⟩‖ ≤ _
+    rw [e1, hvw]
+    erw [e2]
+    have h' := h.trans (le_of_eq (show _ = interpConst n (k' + 1) * (meshSize N * L) by
+      rw [hvol, interpConst]; push_cast; ring))
+    exact h'.trans (by rw [e]; linarith)
+  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj'), norm_zero]
+    exact mul_nonneg (mul_nonneg (interpBound_nonneg n _) hL0) hh
+
+end FEMInterp
+
+/-! ## Smooth forms on the cube: `d`, its formal adjoint, and `L²` norms -/
+
+section SmoothForms
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre
+
+variable {n : ℕ}
+
+/-- The formal adjoint `dᵗ = −δ` of the exterior derivative on form fields,
+`(dᵗψ)_s = −Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` (`Feec.Domain.extDAdj`). -/
+def formalAdjD (ψ : FormField n) : FormField n := fun x s =>
+  extDAdj (𝕜 := ℝ) (fun s y => ψ y s) s x
+
+theorem continuous_formalAdjD {ψ : FormField n} (hψ : ContDiff ℝ 1 ψ) :
+    Continuous (formalAdjD ψ) := by
+  refine continuous_pi fun s => ?_
+  simp only [formalAdjD, extDAdj]
+  refine (continuous_finsetSum _ fun j _ => continuous_const.mul ?_).neg
+  exact ((contDiff_pi.1 hψ (insert j s)).continuous_fderiv one_ne_zero).clm_apply
+    continuous_const
+
+/-- The `L²(Q)` class of a continuous form, in degree `k`. -/
+abbrev formL2Q (k : ℤ) (w : FormField n) (hw : Continuous w) :
+    L2F ℝ (cubeDomain n) (formIdx n k) :=
+  formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw⟩
+
+theorem formL2Q_sub (k : ℤ) {w w' : FormField n} (hw : Continuous w) (hw' : Continuous w') :
+    formL2Q k w hw - formL2Q k w' hw' = formL2Q k (w - w') (hw.sub hw') := by
+  rw [← map_sub]; rfl
+
+theorem formL2Q_neg (k : ℤ) {w : FormField n} (hw : Continuous w) :
+    -formL2Q k w hw = formL2Q k (-w) hw.neg := by
+  rw [← map_neg]; rfl
+
+theorem formL2Q_congr (k : ℤ) {w w' : FormField n} (hw : Continuous w) (h : w = w') :
+    formL2Q k w hw = formL2Q k w' (h ▸ hw) := by
+  subst h; rfl
+
+theorem formL2Q_zero (k : ℤ) : formL2Q k (0 : FormField n) continuous_const = 0 :=
+  map_zero _
+
+/-- `‖w|_Q‖ ≤ #Λᵏ |Q|^{1/2} B` if `|w| ≤ B` on `Q`. -/
+theorem norm_formL2Q_le (k : ℤ) {w : FormField n} (hw : Continuous w) {B : ℝ} (hB : 0 ≤ B)
+    (h : ∀ x ∈ cubeDomain n, ∀ s, |w x s| ≤ B) :
+    ‖formL2Q k w hw‖ ≤
+      Fintype.card (formIdx n k) * (volume.real (cubeDomain n) ^ (1 / 2 : ℝ) * B) := by
+  have : IsFiniteMeasure (volume.restrict (cubeDomain n)) :=
+    isFiniteMeasure_restrict.2 (isBounded_cubeDomain n).measure_lt_top.ne
+  refine L2F.norm_le_card_mul _ (by positivity) fun s => ?_
+  refine (Lp.norm_le_of_ae_bound hB ?_).trans (le_of_eq ?_)
+  · filter_upwards [coeFn_formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+      ⟨w, hw⟩ s, ae_restrict_mem (isOpen_cubeDomain n).measurableSet] with x h1 hx
+    rw [h1, Real.norm_eq_abs]
+    exact h x hx s.1
+  · rw [measureUnivNNReal, Measure.restrict_apply_univ, ENNReal.toReal_ofNat, one_div]
+    rfl
+
+variable [NeZero n]
+
+/-- **`d` of a smooth form in every pair of degrees**: for a `C¹` form `w` of degree `k = j`,
+`w|_Q ∈ D(d j j')` and `d j j' (w|_Q) = (dw)|_Q` if `j' = j + 1`, `0` otherwise. -/
+theorem complex_d_formL2Q {j : ℤ} (j' : ℤ) {k : ℕ} (hk : (k : ℤ) = j) {w : FormField n}
+    (hw : ContDiff ℝ 1 w) (hdeg : ∀ y, IsDeg k (w y)) :
+    formL2Q j w hw.continuous ∈ ((complex n).d j j').domain ∧
+      ∀ h' : formL2Q j w hw.continuous ∈ ((complex n).d j j').domain,
+        (complex n).d j j' ⟨_, h'⟩ =
+          if j + 1 = j' then formL2Q j' (extDeriv w) (continuous_extDeriv hw) else 0 := by
+  subst hk
+  by_cases hj : (k : ℤ) + 1 = j'
+  · subst hj
+    obtain ⟨h, hval⟩ := formL2_mem_domain k hw hdeg
+    exact ⟨h, fun h' => by simp only [↓reduceIte]; exact hval⟩
+  · have htop := HilbertComplex.domain_eq_top_of_not_rel (complex n) (i := (k : ℤ)) (j := j')
+      (by simpa using hj)
+    refine ⟨htop ▸ Submodule.mem_top, fun h' => ?_⟩
+    simp only [hj, ↓reduceIte]
+    exact HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj) _
+
+omit [NeZero n] in
+/-- `formExt (formComp ψ) = ψ` for a form of the right degree. -/
+theorem formExt_formComp {j : ℤ} {k : ℕ} (hk : (k : ℤ) = j) {ψ : FormField n}
+    (hdeg : ∀ y, IsDeg k (ψ y)) :
+    formExt (formComp (k := j) ψ) = fun s y => ψ y s := by
+  funext s y
+  unfold formExt
+  split_ifs with h
+  · rfl
+  · exact (hdeg y s (fun h' => h (by rw [← hk]; exact_mod_cast h'))).symm
+
+omit [NeZero n] in
+/-- **The adjoint of `d_min` on a smooth form is the formal adjoint** (integration by parts
+against `H̊Λ(Q)`, `(d_min)† = (dᵗ)_max`): for a `C¹` form `ψ` of degree `k = j'`,
+`ψ|_Q ∈ D((d_min j j')†)` and `(d_min j j')† (ψ|_Q) = (dᵗψ)|_Q` if `j' = j + 1`, `0` otherwise. -/
+theorem adjoint_complexMin_d_formL2Q (j : ℤ) {j' : ℤ} {k : ℕ} (hk : (k : ℤ) = j')
+    {ψ : FormField n} (hψ : ContDiff ℝ 1 ψ) (hdeg : ∀ y, IsDeg k (ψ y)) :
+    formL2Q j' ψ hψ.continuous ∈ ((complexMin n).d j j')†.domain ∧
+      ∀ h' : formL2Q j' ψ hψ.continuous ∈ ((complexMin n).d j j')†.domain,
+        ((complexMin n).d j j')† ⟨_, h'⟩ =
+          if j + 1 = j' then formL2Q j (formalAdjD ψ) (continuous_formalAdjD hψ) else 0 := by
+  by_cases hj : j + 1 = j'
+  · subst hj
+    have hd : ((complexMin n).d j (j + 1))† = (extDerivOp ℝ n j).formalAdj.maximal (cubeDomain n) :=
+      deRham_dual_minimalComplex_d (𝕜 := ℝ) (n := n) (isOpen_cubeDomain n) j
+    have hcomp : ∀ t : formIdx n (j + 1), ContDiff ℝ 1 (formComp (k := j + 1) ψ t) :=
+      fun t => contDiff_pi.1 hψ t.1
+    have hmem : ∀ t : formIdx n (j + 1),
+        MemLp (formComp (k := j + 1) ψ t) 2 (volume.restrict (cubeDomain n)) := fun t =>
+      memLp_of_continuous (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n)
+        (hcomp t).continuous
+    have hfa : ∀ r : formIdx n j, (extDerivOp ℝ n j).formalAdj.apply (formComp (k := j + 1) ψ) r =
+        formComp (k := j) (formalAdjD ψ) r := fun r => by
+      funext x
+      rw [formalAdj_extDerivOp_apply, formExt_formComp hk hdeg]
+      rfl
+    have hAψ : ∀ r : formIdx n j, MemLp ((extDerivOp ℝ n j).formalAdj.apply
+        (formComp (k := j + 1) ψ) r) 2 (volume.restrict (cubeDomain n)) := fun r => by
+      rw [hfa]
+      exact memLp_of_continuous (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n)
+        (continuous_formComp (continuous_formalAdjD hψ) r)
+    obtain ⟨hm, hv⟩ := (extDerivOp ℝ n j).formalAdj.smooth_mem_maximal_domain
+      (isOpen_cubeDomain n) (formalAdj_extDerivOp_isOrderLE j) hcomp hmem hAψ
+    refine ⟨hd ▸ hm, fun h' => ?_⟩
+    simp only [↓reduceIte]
+    rw [LinearPMap.apply_eq_of_eq' hd]
+    refine hv.trans (PiLp.ext fun r => ?_)
+    exact MemLp.toLp_congr (hAψ r) (memLp_of_continuous (isOpen_cubeDomain n).measurableSet
+      (isBounded_cubeDomain n) (continuous_formComp (continuous_formalAdjD hψ) r))
+      (Eventually.of_forall fun x => congrFun (hfa r) x)
+  · have h0 : (complexMin n).d j j' = 0 := HilbertComplex.shape _ _ _ (by simpa using hj)
+    refine ⟨(by rw [h0, LinearPMap.adjoint_zero]; exact Submodule.mem_top), fun h' => ?_⟩
+    simp only [hj, ↓reduceIte]
+    exact LinearPMap.adjoint_apply_eq_zero_of_eq_zero h0 _
+
+end SmoothForms
+
+/-! ## One row of (4.14) on the cube: the de Rham window `HΛ⁰ → HΛ¹ → L²Λ²` -/
+
+section Row
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+
+/-- The `L²` space of one row `(σ_r, E_r, B_r)`: `L²Λ⁰(Q) × L²Λ¹(Q) × L²Λ²(Q)`. -/
+abbrev RowSpace : Type :=
+  PiLp 2 fun i : Fin 3 => L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ)))
+
+/-- The window `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` (no boundary conditions). -/
+abbrev rowComplex := (complex 3).window 0 3
+
+/-- The window `H̊Λ⁰(Q) → H̊Λ¹(Q) → L²Λ²(Q)` of the minimal complex (vanishing traces). -/
+abbrev rowComplexMin := (complexMin 3).window 0 3
+
+theorem complexMin_d_le_complex_d {n : ℕ} (j j' : ℤ) : (complexMin n).d j j' ≤ (complex n).d j j' := by
+  by_cases h : j + 1 = j'
+  · subst h
+    rw [deRham_minimalComplex_d, deRham_maximalComplex_d]
+    exact extDerivOp_minimal_le_maximal (isOpen_cubeDomain n) j
+  · rw [HilbertComplex.shape _ j j' (by simpa using h), HilbertComplex.shape _ j j' (by simpa using h)]
+
+theorem rowComplexMin_d_le (i j : Fin 3) : rowComplexMin.d i j ≤ rowComplex.d i j :=
+  complexMin_d_le_complex_d _ _
+
+/-- A row of continuous forms (degrees `0, 1, 2`) as a point of `RowSpace`. -/
+def rowField (f : Fin 3 → FormField 3) (hf : ∀ i, Continuous (f i)) : RowSpace :=
+  WithLp.toLp 2 fun i => formL2Q ((0 : ℤ) + ((i : ℕ) : ℤ)) (f i) (hf i)
+
+@[simp] theorem rowField_apply (f : Fin 3 → FormField 3) (hf : ∀ i, Continuous (f i)) (i : Fin 3) :
+    rowField f hf i = formL2Q ((0 : ℤ) + ((i : ℕ) : ℤ)) (f i) (hf i) := rfl
+
+theorem degIdx (i : Fin 3) : (((i : ℕ) : ℕ) : ℤ) = (0 : ℤ) + ((i : ℕ) : ℤ) := (zero_add _).symm
+
+/-- **A smooth row solving the row of (4.14) pointwise solves `U' = L_max U`**: if the forms
+`f = (σ, E, B)` (degrees `0, 1, 2`, `C¹`) and `f₁` satisfy `f₁₀ = −dᵗf₁`, `f₁₁ = d f₀ − dᵗ f₂`,
+`f₁₂ = d f₁` (Ch. 7 sign convention: `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`), then
+`(f|_Q, f₁|_Q) ∈ graph (𝐝_max − 𝐝_min†)` on the row window. -/
+theorem rowField_mem_graph_waveMax {f f₁ : Fin 3 → FormField 3} (hf : ∀ i, ContDiff ℝ 1 (f i))
+    (hdeg : ∀ (i : Fin 3) y, IsDeg (i : ℕ) (f i y)) (hf₁ : ∀ i, Continuous (f₁ i))
+    (h0 : f₁ 0 = -formalAdjD (f 1)) (h1 : f₁ 1 = extDeriv (f 0) - formalAdjD (f 2))
+    (h2 : f₁ 2 = extDeriv (f 1)) :
+    (rowField f fun i => (hf i).continuous, rowField f₁ hf₁) ∈
+      (waveMax rowComplexMin rowComplex).graph := by
+  have hD : ∀ i j, (rowField f fun i => (hf i).continuous) i ∈ (rowComplex.d i j).domain :=
+    fun i j => (complex_d_formL2Q _ (degIdx i) (hf i) (hdeg i)).1
+  have hA : ∀ i j, (rowField f fun i => (hf i).continuous) j ∈ ((rowComplexMin.d i j)†).domain :=
+    fun i j => (adjoint_complexMin_d_formL2Q _ (degIdx j) (hf j) (hdeg j)).1
+  have hx := mem_waveMax_domain.2 ⟨hD, hA⟩
+  refine (LinearPMap.mem_graph_iff _).2 ⟨⟨_, hx⟩, rfl, PiLp.ext fun j => ?_⟩
+  change _ = rowField f₁ hf₁ j
+  have e1 : ∀ i, rowComplex.d i j ⟨(rowField f fun i => (hf i).continuous) i, hD i j⟩ =
+      if ((0 : ℤ) + ((i : ℕ) : ℤ)) + 1 = (0 : ℤ) + ((j : ℕ) : ℤ) then
+        formL2Q _ (extDeriv (f i)) (continuous_extDeriv (hf i)) else 0 := fun i =>
+    (complex_d_formL2Q _ (degIdx i) (hf i) (hdeg i)).2 _
+  have e2 : ∀ k, (rowComplexMin.d j k)† ⟨(rowField f fun i => (hf i).continuous) k, hA j k⟩ =
+      if ((0 : ℤ) + ((j : ℕ) : ℤ)) + 1 = (0 : ℤ) + ((k : ℕ) : ℤ) then
+        formL2Q _ (formalAdjD (f k)) (continuous_formalAdjD (hf k)) else 0 := fun k =>
+    (adjoint_complexMin_d_formL2Q _ (degIdx k) (hf k) (hdeg k)).2 _
+  have e := waveMax_apply (H := rowComplexMin) (H' := rowComplex) ⟨_, hx⟩ j
+  change _ = ∑ i, rowComplex.d i j ⟨(rowField f fun i => (hf i).continuous) i, hD i j⟩ -
+    ∑ k, (rowComplexMin.d j k)† ⟨(rowField f fun i => (hf i).continuous) k, hA j k⟩ at e
+  rw [e, Finset.sum_congr rfl fun i _ => e1 i, Finset.sum_congr rfl fun k _ => e2 k,
+    rowField_apply]
+  fin_cases j
+  · simp [Fin.sum_univ_three, h0, formL2Q_neg]
+  · simp [Fin.sum_univ_three, h1, formL2Q_sub]
+  · simp [Fin.sum_univ_three, h2]
+
+end Row
+
+/-! ## Smooth solutions of one row and their `L²` time derivatives -/
+
+section RowSolution
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+
+theorem hasDerivAt_toLp {ι : Type*} [Fintype ι] {β : ι → Type*} [∀ i, NormedAddCommGroup (β i)]
+    [∀ i, NormedSpace ℝ (β i)] {F : ℝ → ∀ i, β i} {F' : ∀ i, β i} {t : ℝ}
+    (h : ∀ i, HasDerivAt (fun s => F s i) (F' i) t) :
+    HasDerivAt (fun s => (WithLp.toLp 2 (F s) : PiLp 2 β)) (WithLp.toLp 2 F') t := by
+  have h' : HasDerivAt F F' t := hasDerivAt_pi.2 h
+  have := (PiLp.continuousLinearEquiv 2 ℝ β).symm.hasFDerivAt.comp_hasDerivAt t h'
+  simpa [Function.comp_def] using this
+
+/-- **Classical time derivatives of forms are `L²(Q)` time derivatives**. -/
+theorem hasDerivAt_formL2Q (k : ℤ) {u u₁ : ℝ → FormField 3} (hu : ∀ t, Continuous (u t))
+    (hu₁ : ∀ s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₁ p.1 p.2 s)
+    (hd : ∀ t y s, HasDerivAt (fun τ => u τ y s) (u₁ t y s) t) (t : ℝ) :
+    HasDerivAt (fun τ => formL2Q k (u τ) (hu τ))
+      (formL2Q k (u₁ t) (continuous_pi fun s =>
+        (hu₁ s).comp (continuous_const.prodMk continuous_id))) t :=
+  hasDerivAt_smoothField (isOpen_cubeDomain 3) (isBounded_cubeDomain 3)
+    (f := fun τ (s : formIdx 3 k) y => u τ y s.1) (f' := fun τ (s : formIdx 3 k) y => u₁ τ y s.1)
+    (fun τ s => continuous_formComp (hu τ) s) (fun s => hu₁ s.1)
+    (fun τ s y => hd τ y s.1) t
+
+/-- A **smooth solution of one row of (4.14)** (Ch. 7 sign convention) on `[0, T] × cl Q`, as
+forms `u t i` of degree `i` (`σ_r`, the `1`-form `E_r`, the `2`-form `B_r`): `C²` in space, `C³`
+in time with jointly continuous time derivatives, solving `σ' = −dᵗE`, `E' = dσ − dᵗB`,
+`B' = dE` pointwise (`dᵗ = −δ`, so `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`), with
+the bounds `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, `L`-Lipschitz dependence of `Du`, `D du` on `t ∈ [0, T]`
+(bounded mixed derivatives `∂ₜ Du`), and `|∂ₜ³ u| ≤ L` on `[0, T] × Q`. -/
+structure RowSolution (T L : ℝ) where
+  /-- the fields and their first three time derivatives -/
+  u : ℝ → Fin 3 → FormField 3
+  u₁ : ℝ → Fin 3 → FormField 3
+  u₂ : ℝ → Fin 3 → FormField 3
+  u₃ : ℝ → Fin 3 → FormField 3
+  isDeg : ∀ t (i : Fin 3) y, IsDeg (i : ℕ) (u t i y)
+  contDiff : ∀ t i, ContDiff ℝ 2 (u t i)
+  continuous₁ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₁ p.1 i p.2 s
+  continuous₂ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₂ p.1 i p.2 s
+  continuous₃ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₃ p.1 i p.2 s
+  hasDerivAt₁ : ∀ t i y s, HasDerivAt (fun τ => u τ i y s) (u₁ t i y s) t
+  hasDerivAt₂ : ∀ t i y s, HasDerivAt (fun τ => u₁ τ i y s) (u₂ t i y s) t
+  hasDerivAt₃ : ∀ t i y s, HasDerivAt (fun τ => u₂ τ i y s) (u₃ t i y s) t
+  pde₀ : ∀ t, u₁ t 0 = -formalAdjD (u t 1)
+  pde₁ : ∀ t, u₁ t 1 = extDeriv (u t 0) - formalAdjD (u t 2)
+  pde₂ : ∀ t, u₁ t 2 = extDeriv (u t 1)
+  bound : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cubeDomain 3),
+    ‖fderiv ℝ (u t i) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (u t i)) y‖ ≤ L
+  lipschitz : ∀ t ∈ Icc 0 T, ∀ t' ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cubeDomain 3),
+    ‖fderiv ℝ (u t' i) y - fderiv ℝ (u t i) y‖ ≤ L * |t' - t| ∧
+      ‖fderiv ℝ (extDeriv (u t' i)) y - fderiv ℝ (extDeriv (u t i)) y‖ ≤ L * |t' - t|
+  bound₃ : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ cubeDomain 3, ∀ s, |u₃ t i y s| ≤ L
+
+namespace RowSolution
+
+variable {T L : ℝ} (X : RowSolution T L)
+
+theorem continuous (t : ℝ) (i : Fin 3) : Continuous (X.u t i) := (X.contDiff t i).continuous
+
+theorem continuous_u₁ (t : ℝ) (i : Fin 3) : Continuous (X.u₁ t i) :=
+  continuous_pi fun s => (X.continuous₁ i s).comp (continuous_const.prodMk continuous_id)
+
+theorem continuous_u₂ (t : ℝ) (i : Fin 3) : Continuous (X.u₂ t i) :=
+  continuous_pi fun s => (X.continuous₂ i s).comp (continuous_const.prodMk continuous_id)
+
+theorem continuous_u₃ (t : ℝ) (i : Fin 3) : Continuous (X.u₃ t i) :=
+  continuous_pi fun s => (X.continuous₃ i s).comp (continuous_const.prodMk continuous_id)
+
+/-- The row `U(t) = (σ_r, E_r, B_r)(t)|_Q ∈ L²Λ⁰ × L²Λ¹ × L²Λ²`. -/
+def field (t : ℝ) : RowSpace := rowField (X.u t) (X.continuous t)
+
+/-- `U'(t)`. -/
+def field₁ (t : ℝ) : RowSpace := rowField (X.u₁ t) (X.continuous_u₁ t)
+
+/-- `U''(t)`. -/
+def field₂ (t : ℝ) : RowSpace := rowField (X.u₂ t) (X.continuous_u₂ t)
+
+/-- `U'''(t)`. -/
+def field₃ (t : ℝ) : RowSpace := rowField (X.u₃ t) (X.continuous_u₃ t)
+
+theorem hasDerivAt_field (t : ℝ) : HasDerivAt X.field (X.field₁ t) t :=
+  hasDerivAt_toLp fun i => hasDerivAt_formL2Q _ (fun τ => X.continuous τ i)
+    (fun s => X.continuous₁ i s) (fun τ y s => X.hasDerivAt₁ τ i y s) t
+
+theorem hasDerivAt_field₁ (t : ℝ) : HasDerivAt X.field₁ (X.field₂ t) t :=
+  hasDerivAt_toLp fun i => hasDerivAt_formL2Q _ (fun τ => X.continuous_u₁ τ i)
+    (fun s => X.continuous₂ i s) (fun τ y s => X.hasDerivAt₂ τ i y s) t
+
+theorem hasDerivAt_field₂ (t : ℝ) : HasDerivAt X.field₂ (X.field₃ t) t :=
+  hasDerivAt_toLp fun i => hasDerivAt_formL2Q _ (fun τ => X.continuous_u₂ τ i)
+    (fun s => X.continuous₃ i s) (fun τ y s => X.hasDerivAt₃ τ i y s) t
+
+/-- **The row is a strong solution of `U' = L_max U`** on the window `HΛ⁰ → HΛ¹ → L²Λ²` with
+the adjoint of the window with vanishing traces. -/
+theorem mem_graph_waveMax (t : ℝ) :
+    (X.field t, X.field₁ t) ∈ (waveMax rowComplexMin rowComplex).graph :=
+  rowField_mem_graph_waveMax (fun i => (X.contDiff t i).of_le (by norm_num)) (X.isDeg t)
+    (X.continuous_u₁ t) (X.pde₀ t) (X.pde₁ t) (X.pde₂ t)
+
+theorem field_mem_totalDomain (t : ℝ) : X.field t ∈ rowComplex.totalDomain := fun i j =>
+  (complex_d_formL2Q _ (degIdx i) ((X.contDiff t i).of_le (by norm_num)) (X.isDeg t i)).1
+
+end RowSolution
+
+end RowSolution
+
+/-! ## Row interpolants and their errors -/
+
+section RowInterp
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+
+theorem norm_piLp_le_sum {κ : Type*} [Fintype κ] {β : κ → Type*}
+    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (Finset.sum_nonneg fun _ _ => norm_nonneg _)
+    two_ne_zero).1 ?_
+  rw [PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_sq_le_sq_sum_of_nonneg fun i _ => norm_nonneg _
+
+/-- The canonical Whitney interpolant into `Vₕ^{0 + i}` (`FEMInterp.exists_linearMap_whitney_le`). -/
+def rowInterp (N : ℕ) (i : Fin 3) :
+    contForms 3 →ₗ[ℝ] L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) :=
+  (FEMInterp.exists_linearMap_whitney_le (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))).choose
+
+theorem rowInterp_mem (N : ℕ) (i : Fin 3) (w : contForms 3) :
+    rowInterp N i w ∈ (whitneyRow N).V i :=
+  (FEMInterp.exists_linearMap_whitney_le (n := 3) N _).choose_spec.choose w
+
+/-- The row interpolant `Π_h (σ, E, B)`, a linear map into the Whitney row. -/
+def rowInterpL (N : ℕ) : (Fin 3 → contForms 3) →ₗ[ℝ] DState (whitneyRow N) where
+  toFun g := WithLp.toLp 2 fun i => ⟨rowInterp N i (g i), rowInterp_mem N i (g i)⟩
+  map_add' g g' := PiLp.ext fun i => Subtype.ext (by simp)
+  map_smul' a g := PiLp.ext fun i => Subtype.ext (by simp)
+
+/-- The `L²` class of a row of continuous forms, as a linear map. -/
+def rowFieldL : (Fin 3 → contForms 3) →ₗ[ℝ] RowSpace where
+  toFun g := WithLp.toLp 2 fun i =>
+    formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) _ (g i)
+  map_add' g g' := PiLp.ext fun i => by simp
+  map_smul' a g := PiLp.ext fun i => by simp
+
+theorem rowField_eq_rowFieldL (f : Fin 3 → FormField 3) (hf : ∀ i, Continuous (f i)) :
+    rowField f hf = rowFieldL fun i => ⟨f i, hf i⟩ := rfl
+
+/-- The constant `Σᵢ B_{0+i}` of the row interpolation error. -/
+def rowBound : ℝ := ∑ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ))
+
+theorem rowBound_nonneg : 0 ≤ rowBound :=
+  Finset.sum_nonneg fun _ _ => interpBound_nonneg 3 _
+
+/-- **Row interpolation error** in `L²` and for `𝐝`: for `C²` forms `g` (degrees `0, 1, 2`) with
+`‖Dg‖, ‖D dg‖ ≤ L` on `cl Q`, `‖Π_h g − g‖ ≤ (Σᵢ Bᵢ) L h_N` and
+`‖𝐝 (Π_h g − g)‖ ≤ 3 (Σᵢ Bᵢ) L h_N`. -/
+theorem rowInterp_bounds (N : ℕ) {g : Fin 3 → FormField 3} (hg : ∀ i, ContDiff ℝ 2 (g i))
+    (hdeg : ∀ (i : Fin 3) y, IsDeg (i : ℕ) (g i y)) {L : ℝ} (hL0 : 0 ≤ L)
+    (hb : ∀ i, ∀ y ∈ closure (cubeDomain 3),
+      ‖fderiv ℝ (g i) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (g i)) y‖ ≤ L) :
+    ‖dEmb (whitneyRow N) (rowInterpL N fun i => ⟨g i, (hg i).continuous⟩) -
+        rowFieldL (fun i => ⟨g i, (hg i).continuous⟩)‖ ≤ rowBound * L * meshSize N ∧
+      ∀ hx : dEmb (whitneyRow N) (rowInterpL N fun i => ⟨g i, (hg i).continuous⟩) -
+          rowFieldL (fun i => ⟨g i, (hg i).continuous⟩) ∈ rowComplex.totalDomain,
+        ‖rowComplex.totalD ⟨_, hx⟩‖ ≤ 3 * (rowBound * L * meshSize N) := by
+  set x := dEmb (whitneyRow N) (rowInterpL N fun i => ⟨g i, (hg i).continuous⟩) -
+    rowFieldL (fun i => ⟨g i, (hg i).continuous⟩)
+  have spec := fun i : Fin 3 =>
+    (FEMInterp.exists_linearMap_whitney_le (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))).choose_spec.choose_spec
+      (i : ℕ) (degIdx i) (hg i) (hdeg i) hL0 (fun y hy => (hb i y hy).1) (fun y hy => (hb i y hy).2)
+  have hxi : ∀ i, x i = -(formL2Q _ (g i) (hg i).continuous - rowInterp N i ⟨g i, (hg i).continuous⟩) :=
+    fun i => by simp [x, rowInterpL, rowFieldL, dEmb]
+  have hh := (meshSize_pos N).le
+  have hle : ∀ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ)) * L * meshSize N ≤
+      rowBound * L * meshSize N := fun i =>
+    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
+      (Finset.single_le_sum (f := fun i : Fin 3 => interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ)))
+        (fun _ _ => interpBound_nonneg 3 _) (Finset.mem_univ i)) hL0) hh
+  have hsum : ∑ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ)) * L * meshSize N =
+      rowBound * L * meshSize N := by
+    rw [rowBound, Finset.sum_mul, Finset.sum_mul]
+  refine ⟨(norm_piLp_le_sum x).trans ?_, fun hx => ?_⟩
+  · rw [← hsum]
+    refine Finset.sum_le_sum fun i _ => ?_
+    rw [hxi, norm_neg]
+    exact (spec i).1
+  · have hj : ∀ j, ‖rowComplex.totalD ⟨x, hx⟩ j‖ ≤ rowBound * L * meshSize N := fun j => by
+      rw [totalD_apply]
+      refine (norm_sum_le _ _).trans ?_
+      rw [← hsum]
+      refine Finset.sum_le_sum fun i _ => ?_
+      have hdom := (complex_d_formL2Q ((0 : ℤ) + ((j : ℕ) : ℤ)) (degIdx i)
+        ((hg i).of_le (by norm_num)) (hdeg i)).1
+      have e : rowComplex.d i j ⟨x i, hx i j⟩ = -(complex 3).d ((0 : ℤ) + ((i : ℕ) : ℤ))
+          ((0 : ℤ) + ((j : ℕ) : ℤ)) ⟨formL2Q _ (g i) (hg i).continuous -
+            rowInterp N i ⟨g i, (hg i).continuous⟩, Submodule.sub_mem _ hdom
+              ((whitney 3 N).le_domain _ _ (rowInterp_mem N i _))⟩ := by
+        rw [← LinearPMap.map_neg]
+        congr 1
+        exact Subtype.ext (hxi i)
+      rw [e, norm_neg]
+      exact (spec i).2 _ hdom
+    refine (norm_piLp_le_sum _).trans ?_
+    calc ∑ j : Fin 3, ‖rowComplex.totalD ⟨x, hx⟩ j‖ ≤ ∑ _j : Fin 3, rowBound * L * meshSize N :=
+          Finset.sum_le_sum fun j _ => hj j
+      _ = 3 * (rowBound * L * meshSize N) := by simp
+
+end RowInterp
+
+/-! ## The interpolation estimates for a smooth row solution -/
+
+section RowSolutionBounds
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+
+theorem extDeriv_sub_of_contDiff {n : ℕ} {a b : FormField n} (ha : ContDiff ℝ 1 a)
+    (hb : ContDiff ℝ 1 b) : extDeriv (a - b) = extDeriv a - extDeriv b := by
+  funext x
+  have e : a - b = a + (-1 : ℝ) • b := by funext y; simp [sub_eq_add_neg]
+  have hb' : DifferentiableAt ℝ ((-1 : ℝ) • b) x :=
+    (hb.differentiable one_ne_zero x).const_smul (-1 : ℝ)
+  rw [e, extDeriv_add_apply (η := (-1 : ℝ) • b) (ha.differentiable one_ne_zero x) hb',
+    extDeriv_smul_const_apply _ (hb.differentiable one_ne_zero x)]
+  simp [sub_eq_add_neg]
+
+/-- The constant `Σᵢ #Λ^{0+i} |Q|^{1/2}` of the bound `‖U‖ ≤ (Σᵢ #Λⁱ |Q|^{1/2}) sup |u|`. -/
+def rowL2Const : ℝ := ∑ i : Fin 3,
+  (Fintype.card (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) : ℝ) * volume.real (cubeDomain 3) ^ (1 / 2 : ℝ)
+
+theorem rowL2Const_nonneg : 0 ≤ rowL2Const := Finset.sum_nonneg fun _ _ => by positivity
+
+theorem norm_rowField_le {f : Fin 3 → FormField 3} (hf : ∀ i, Continuous (f i)) {B : ℝ}
+    (hB : 0 ≤ B) (h : ∀ i, ∀ y ∈ cubeDomain 3, ∀ s, |f i y s| ≤ B) :
+    ‖rowField f hf‖ ≤ rowL2Const * B := by
+  refine (norm_piLp_le_sum _).trans ?_
+  rw [rowL2Const, Finset.sum_mul]
+  refine Finset.sum_le_sum fun i _ => ?_
+  rw [rowField_apply]
+  refine (norm_formL2Q_le _ (hf i) hB (h i)).trans (le_of_eq ?_)
+  ring
+
+namespace RowSolution
+
+variable {T L : ℝ} (X : RowSolution T L)
+
+theorem norm_field₃_le {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
+    ‖X.field₃ t‖ ≤ rowL2Const * L :=
+  norm_rowField_le _ hL0 fun i y hy s => X.bound₃ t ht i y hy s
+
+/-- The row interpolant `Π_h U(t)` in the Whitney row of the level-`(N + 1)` mesh. -/
+def interp (N : ℕ) (t : ℝ) : DState (whitneyRow N) :=
+  rowInterpL N fun i => ⟨X.u t i, X.continuous t i⟩
+
+theorem field_eq (t : ℝ) : X.field t = rowFieldL fun i => ⟨X.u t i, X.continuous t i⟩ := rfl
+
+/-- `‖Π_h U(t) − U(t)‖ ≤ (Σᵢ Bᵢ) L h_N` on `[0, T]`. -/
+theorem norm_interp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
+    ‖dEmb (whitneyRow N) (X.interp N t) - X.field t‖ ≤ rowBound * L * meshSize N :=
+  (rowInterp_bounds N (X.contDiff t) (X.isDeg t) hL0 (X.bound t ht)).1
+
+/-- `‖emb (𝐝ₕ Π_h U(t)) − 𝐝 U(t)‖ ≤ 3 (Σᵢ Bᵢ) L h_N` on `[0, T]`. -/
+theorem norm_d_interp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
+    ‖dEmb (whitneyRow N) (discreteD (whitneyRow N) (X.interp N t)) -
+        rowComplex.totalD ⟨X.field t, X.field_mem_totalDomain t⟩‖ ≤
+      3 * (rowBound * L * meshSize N) := by
+  have hx := Submodule.sub_mem _ (dEmb_mem_totalDomain (whitneyRow N) (X.interp N t))
+    (X.field_mem_totalDomain t)
+  have e : dEmb (whitneyRow N) (discreteD (whitneyRow N) (X.interp N t)) -
+      rowComplex.totalD ⟨X.field t, X.field_mem_totalDomain t⟩ =
+      rowComplex.totalD ⟨_, hx⟩ := by
+    rw [← totalD_dEmb, ← LinearPMap.map_sub]
+    rfl
+  rw [e]
+  exact (rowInterp_bounds N (X.contDiff t) (X.isDeg t) hL0 (X.bound t ht)).2 hx
+
+/-- **The interpolation error is `L`-Lipschitz in time, times `h_N`**:
+`‖(Π_h − I)(U(t') − U(t))‖ ≤ (Σᵢ Bᵢ) L |t' − t| h_N` (the interpolant is linear). -/
+theorem norm_interp_sub_sub_le (N : ℕ) {t t' : ℝ} (ht : t ∈ Icc 0 T) (ht' : t' ∈ Icc 0 T)
+    (hL0 : 0 ≤ L) :
+    ‖(dEmb (whitneyRow N) (X.interp N t') - X.field t') -
+        (dEmb (whitneyRow N) (X.interp N t) - X.field t)‖ ≤
+      rowBound * (L * |t' - t|) * meshSize N := by
+  have hg : ∀ i, ContDiff ℝ 2 (X.u t' i - X.u t i) := fun i =>
+    (X.contDiff t' i).sub (X.contDiff t i)
+  have hdeg : ∀ (i : Fin 3) y, IsDeg (i : ℕ) ((X.u t' i - X.u t i) y) := fun i y s hs => by
+    simp [X.isDeg t' i y s hs, X.isDeg t i y s hs]
+  have hb : ∀ i, ∀ y ∈ closure (cubeDomain 3),
+      ‖fderiv ℝ (X.u t' i - X.u t i) y‖ ≤ L * |t' - t| ∧
+        ‖fderiv ℝ (extDeriv (X.u t' i - X.u t i)) y‖ ≤ L * |t' - t| := fun i y hy => by
+    have h1 : ContDiff ℝ 1 (X.u t' i) := (X.contDiff t' i).of_le (by norm_num)
+    have h0 : ContDiff ℝ 1 (X.u t i) := (X.contDiff t i).of_le (by norm_num)
+    rw [extDeriv_sub_of_contDiff h1 h0, fderiv_sub (h1.differentiable one_ne_zero y)
+      (h0.differentiable one_ne_zero y),
+      fderiv_sub ((contDiff_extDeriv (m := 1) (X.contDiff t' i)).differentiable one_ne_zero y)
+        ((contDiff_extDeriv (m := 1) (X.contDiff t i)).differentiable one_ne_zero y)]
+    exact X.lipschitz t ht t' ht' i y hy
+  set g : Fin 3 → FormField 3 := fun i => X.u t' i - X.u t i with hgdef
+  have e : (dEmb (whitneyRow N) (X.interp N t') - X.field t') -
+      (dEmb (whitneyRow N) (X.interp N t) - X.field t) =
+      dEmb (whitneyRow N) (rowInterpL N fun i => ⟨g i, (hg i).continuous⟩) -
+        rowFieldL (fun i => ⟨g i, (hg i).continuous⟩) := by
+    have e1 : (fun i => (⟨g i, (hg i).continuous⟩ : contForms 3)) =
+        (fun i => ⟨X.u t' i, X.continuous t' i⟩) - fun i => ⟨X.u t i, X.continuous t i⟩ := by
+      funext i; exact Subtype.ext rfl
+    rw [e1, map_sub, map_sub, map_sub]
+    change _ = (dEmb (whitneyRow N) (X.interp N t') - dEmb (whitneyRow N) (X.interp N t)) -
+      (X.field t' - X.field t)
+    abel
+  rw [e]
+  exact (rowInterp_bounds N hg hdeg (mul_nonneg hL0 (abs_nonneg _)) hb).1
+
+end RowSolution
+
+end RowSolutionBounds
+
+/-! ## The `O(h + Δt²)` error of the three-row Whitney scheme -/
+
+section WhitneyError
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+
+variable {T L : ℝ}
+
+/-- The exact three-row field `U(t) = (U_r(t))_r` in `(L²Λ⁰ × L²Λ¹ × L²Λ²)³`. -/
+def exactField (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpace :=
+  WithLp.toLp 2 fun r => (X r).field t
+
+/-- The canonical Whitney interpolant `Π_h U(t)` of the three rows. -/
+def exactInterp (X : Fin 3 → RowSolution T L) (N : ℕ) (t : ℝ) : DState3 (whitneyRow N) :=
+  WithLp.toLp 2 fun r => (X r).interp N t
+
+/-- The constant of `whitney_cn_error_le`: `18 Σᵢ Bᵢ + 3 Σᵢ #Λⁱ |Q|^{1/2}`, independent of `N`,
+`Δt`, `T` and the solution. -/
+def cnConst : ℝ := 18 * rowBound + 3 * rowL2Const
+
+theorem cnConst_nonneg : 0 ≤ cnConst := by
+  have := rowBound_nonneg; have := rowL2Const_nonneg; unfold cnConst; positivity
+
+/-- `U'(t)` of the three rows. -/
+def exactField₁ (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpace :=
+  WithLp.toLp 2 fun r => (X r).field₁ t
+
+/-- The second time derivative of the three rows. -/
+def exactField₂ (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpace :=
+  WithLp.toLp 2 fun r => (X r).field₂ t
+
+/-- The third time derivative of the three rows. -/
+def exactField₃ (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpace :=
+  WithLp.toLp 2 fun r => (X r).field₃ t
+
+/-- `𝐝 U(t)` of the three rows (the weak `d` of the window `HΛ⁰ → HΛ¹ → L²Λ²`). -/
+def exactD (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpace :=
+  WithLp.toLp 2 fun r => rowComplex.totalD ⟨(X r).field t, (X r).field_mem_totalDomain t⟩
+
+variable (X : Fin 3 → RowSolution T L)
+
+theorem hasDerivAt_exactField (t : ℝ) : HasDerivAt (exactField X) (exactField₁ X t) t :=
+  hasDerivAt_toLp fun r => (X r).hasDerivAt_field t
+
+theorem hasDerivAt_exactField₁ (t : ℝ) : HasDerivAt (exactField₁ X) (exactField₂ X t) t :=
+  hasDerivAt_toLp fun r => (X r).hasDerivAt_field₁ t
+
+theorem hasDerivAt_exactField₂ (t : ℝ) : HasDerivAt (exactField₂ X) (exactField₃ X t) t :=
+  hasDerivAt_toLp fun r => (X r).hasDerivAt_field₂ t
+
+theorem norm_exactField₃_le {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
+    ‖exactField₃ X t‖ ≤ 3 * (rowL2Const * L) := by
+  refine (norm_piLp_le_sum _).trans ?_
+  calc ∑ r : Fin 3, ‖exactField₃ X t r‖ ≤ ∑ _r : Fin 3, rowL2Const * L :=
+        Finset.sum_le_sum fun r _ => (X r).norm_field₃_le ht hL0
+    _ = 3 * (rowL2Const * L) := by simp
+
+/-- **The exact solution solves the three-row scheme's weak form on `V̊ₕ`** (integration by parts
+against the fields with vanishing boundary DOFs). -/
+theorem inner_exactField₁ (N : ℕ) (t : ℝ) {v : DState3 (whitneyRow N)}
+    (hv : v ∈ whitneyInterior3 N) :
+    ⟪exactField₁ X t, dEmb3 (whitneyRow N) v⟫ = ⟪exactD X t, dEmb3 (whitneyRow N) v⟫ -
+      ⟪exactField X t, dEmb3 (whitneyRow N) (discreteD3 (whitneyRow N) v)⟫ :=
+  inner3_of_mem_graph_waveMax (whitneyRow N) rowComplexMin_d_le ((whitneyMin 3 N).window 0 3)
+    (U := exactField X t) (U' := exactField₁ X t) (fun r => (X r).mem_graph_waveMax t)
+    (fun r => (X r).field_mem_totalDomain t) hv
+
+theorem norm_exactInterp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
+    ‖dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t‖ ≤
+      3 * (rowBound * L * meshSize N) := by
+  refine (norm_piLp_le_sum _).trans ?_
+  calc ∑ r : Fin 3, ‖(dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t) r‖ ≤
+        ∑ _r : Fin 3, rowBound * L * meshSize N :=
+        Finset.sum_le_sum fun r _ => (X r).norm_interp_sub_le N ht hL0
+    _ = 3 * (rowBound * L * meshSize N) := by simp
+
+theorem norm_d_exactInterp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
+    ‖dEmb3 (whitneyRow N) (discreteD3 (whitneyRow N) (exactInterp X N t)) - exactD X t‖ ≤
+      3 * (3 * (rowBound * L * meshSize N)) := by
+  refine (norm_piLp_le_sum _).trans ?_
+  calc ∑ r : Fin 3, ‖(dEmb3 (whitneyRow N) (discreteD3 (whitneyRow N) (exactInterp X N t)) -
+        exactD X t) r‖ ≤ ∑ _r : Fin 3, 3 * (rowBound * L * meshSize N) :=
+        Finset.sum_le_sum fun r _ => (X r).norm_d_interp_sub_le N ht hL0
+    _ = 3 * (3 * (rowBound * L * meshSize N)) := by simp
+
+theorem norm_exactInterp_sub_sub_le (N : ℕ) {t t' : ℝ} (ht : t ∈ Icc 0 T) (ht' : t' ∈ Icc 0 T)
+    (hL0 : 0 ≤ L) :
+    ‖(dEmb3 (whitneyRow N) (exactInterp X N t') - exactField X t') -
+        (dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t)‖ ≤
+      3 * (rowBound * (L * |t' - t|) * meshSize N) := by
+  refine (norm_piLp_le_sum _).trans ?_
+  calc ∑ r : Fin 3, ‖((dEmb3 (whitneyRow N) (exactInterp X N t') - exactField X t') -
+        (dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t)) r‖ ≤
+        ∑ _r : Fin 3, rowBound * (L * |t' - t|) * meshSize N :=
+        Finset.sum_le_sum fun r _ => (X r).norm_interp_sub_sub_le N ht ht' hL0
+    _ = 3 * (rowBound * (L * |t' - t|) * meshSize N) := by simp
+
+/-- **`O(h + Δt²)` convergence of the Crank–Nicolson Whitney scheme with Dirichlet DOFs**
+([QuennevilleBelair2015], Ch. 7): let `U = (U_r)_r` be a smooth solution of (4.14) on
+`[0, T] × cl Q` (three `RowSolution`s with bound `L`, no boundary condition imposed), and let
+`uₙ` be the iterates of the three-row scheme `(P₁)³ × (P₁⁻Λ¹)³ × (P₁⁻Λ²)³` on the level-`(N + 1)`
+Freudenthal mesh with step `Δt` (`s = Δt / 2`), started from the canonical interpolant
+`u₀ = Π_h U(0)` and with the boundary DOFs of `Π_h U(tₙ)` prescribed at every step (any `gₙ` with
+`gₙ − Π_h U(tₙ) ∈ V̊ₕ`). Then for `M Δt ≤ T` the comparison fields `ũₙ` (with the boundary DOFs of
+`Π_h U(tₙ)`, `exists_comparison_consistency`) satisfy
+`‖u_M − ũ_M‖ ≤ C L (1 + T) (h_N + Δt²)` and the discrete solution satisfies
+`‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`, with `C = cnConst` independent of `N`, `Δt`, `T`. -/
+theorem whitney_cn_error_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ L) {M : ℕ}
+    (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → DState3 (whitneyRow N)}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)
+      (discreteWave3 (whitneyRow N)) (Δt / 2) 0 (g (n + 1)) (u n) (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - exactInterp X N ((n + 1 : ℕ) * Δt) ∈ whitneyInterior3 N)
+    (hu0 : u 0 = exactInterp X N 0) :
+    ∃ ũ : ℕ → DState3 (whitneyRow N),
+      (∀ n : ℕ, ũ n - exactInterp X N (n * Δt) ∈ whitneyInterior3 N) ∧
+      ‖u M - ũ M‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖dEmb3 (whitneyRow N) (u M) - exactField X (M * Δt)‖ ≤
+        cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) := by
+  have hh := (meshSize_pos N).le
+  have hB := rowBound_nonneg
+  have hR := rowL2Const_nonneg
+  have hx0 : 0 ≤ rowBound * L * meshSize N := mul_nonneg (mul_nonneg hB hL0) hh
+  have hmem : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → (n : ℝ) * Δt ∈ Icc 0 T := fun n hn =>
+    ⟨mul_nonneg (Nat.cast_nonneg n) hΔt.le, hn⟩
+  have hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(dEmb3 (whitneyRow N) (exactInterp X N ((n + 1 : ℕ) * Δt)) -
+          exactField X ((n + 1 : ℕ) * Δt)) -
+        (dEmb3 (whitneyRow N) (exactInterp X N (n * Δt)) - exactField X (n * Δt))‖ ≤
+        9 * (rowBound * L * meshSize N) * Δt := by
+    intro n hn
+    have hn1 : (n : ℝ) * Δt ≤ ((n + 1 : ℕ) : ℝ) * Δt := by push_cast; nlinarith
+    have hd : |((n + 1 : ℕ) : ℝ) * Δt - n * Δt| = Δt := by
+      rw [show ((n + 1 : ℕ) : ℝ) * Δt - n * Δt = Δt by push_cast; ring, abs_of_pos hΔt]
+    have := norm_exactInterp_sub_sub_le X N (hmem n (hn1.trans hn)) (hmem (n + 1) hn) hL0
+    rw [hd] at this
+    refine this.trans ?_
+    have : 0 ≤ rowBound * L * meshSize N * Δt := mul_nonneg hx0 hΔt.le
+    nlinarith
+  exact norm_cn_error_le_of_eq (emb := dEmb3 (whitneyRow N))
+    (D := discreteD3 (whitneyRow N)) (V₀ := whitneyInterior3 N) (A := discreteWave3 (whitneyRow N))
+    (T := T) (L₃ := 3 * (rowL2Const * L)) (a := 9 * (rowBound * L * meshSize N))
+    (w := fun n => exactInterp X N (n * Δt)) (M := M) (u := u) (g := g) (U := exactField X)
+    (U₁ := exactField₁ X) (U₂ := exactField₂ X) (U₃ := exactField₃ X) (DU := exactD X)
+    (Δt := Δt) (K := cnConst * L) (h := meshSize N) (inner_dEmb3 (whitneyRow N))
+    (fun v hv => discreteD3_mem_interior3 (whitneyRow N) rowComplexMin_d_le
+      ((whitneyMin 3 N).window 0 3) hv)
+    (fun v _ => discreteD3_discreteD3 (whitneyRow N) v) (inner_discreteWave3 (whitneyRow N)) hΔt
+    (fun t _ => (hasDerivAt_exactField X t).hasDerivWithinAt)
+    (fun t _ => (hasDerivAt_exactField₁ X t).hasDerivWithinAt)
+    (fun t _ => (hasDerivAt_exactField₂ X t).hasDerivWithinAt)
+    (fun t ht => norm_exactField₃_le X ht hL0) (fun t _ v hv => inner_exactField₁ X N t hv)
+    (fun n hn => (norm_exactInterp_sub_le X N (hmem n hn) hL0).trans (by linarith))
+    (fun n hn => (norm_d_exactInterp_sub_le X N (hmem n hn) hL0).trans (by linarith))
+    hA3 hM hstep hg (hu0.trans (congrArg (exactInterp X N) (by simp)))
+    (by rw [cnConst]; nlinarith [mul_nonneg (mul_nonneg hR hL0) hh])
+    (by rw [cnConst]; nlinarith [mul_nonneg hR hL0, mul_nonneg hB hL0])
+
+end WhitneyError
+
+end Feec.Models.Cube.Inhomogeneous

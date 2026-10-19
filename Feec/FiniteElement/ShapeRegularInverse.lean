@@ -7,7 +7,45 @@ public import Feec.FiniteElement.WhitneyInterpolation
 /-!
 # Inverse and DOF estimates on shape-regular simplices
 
-draft
+Every `n`-simplex is `T = F_T(T̂)`, `F_T x̂ = B_T x̂ + p₀` (`Affine.Simplex.refMap`). The
+estimates of `Feec.FiniteElement.InverseEstimate` and `Feec.FiniteElement.PolyInverseEstimate` are
+proved on homothetic copies `t + h K` of finitely many reference simplices (Freudenthal–Kuhn
+meshes); here they are transferred through the general affine map `F_T`, so that they hold with
+one constant on every family that is **shape regular** in the sense of `Feec.Mesh.IsShapeRegular`
+(`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T`, `c h_Tⁿ ≤ |det B_T|`; [Ciarlet2002], §3.1–3.2).
+
+* **The reference pullback** `F_T^* u` (`refPull`) of a form field and its inverse:
+  `u(x) = (B_T⁻¹)^* (F_T^* u)(F_T⁻¹ x)` (`apply_eq_pullback_refPull`). Pullbacks of `k`-forms by a
+  matrix with entries `≤ a` are bounded by `2ⁿ (n a)ᵏ` (`norm_pullback_le`); the entries of `B_T`
+  and `B_T⁻¹` are bounded by `‖B_T‖`, `‖B_T⁻¹‖` (`abs_simplexMatrix_le`, `abs_invEdge_le`).
+  Pointwise and Lipschitz bounds (`norm_apply_le_refPull`, `norm_sub_le_refPull`,
+  `norm_refMapInv_sub_le`) and the change of variables `∫_T f = |det B_T| ∫_{T̂} f ∘ F_T`
+  (`integral_closedInterior_eq`, `abs_det_mul_formL2Sq_refPull_le`) follow.
+* **Transfer of reference inverse estimates** (`inverse_bound_of_ref`): if a space `V` of
+  continuous `k`-form fields stable under the reference pullbacks satisfies
+  `sup_{T̂} ‖u‖, Lip_{T̂}(u) ≤ A₀ ‖u‖_{L²(T̂)}`, then on every shape-regular `T`
+  `h_T^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with
+  `A = invConst n k A₀ C c`. Instances: every affine-invariant `V ≤ P_rΛᵏ`
+  (`exists_inverse_bound_of_le_polySpace`), `P_rΛᵏ` (`exists_inverse_bound_polySpace`),
+  `P_r⁻Λᵏ` (`exists_inverse_bound_polyMinusSpace`) and the Whitney forms `P₁⁻Λᵏ`, coefficientwise
+  (`exists_inverse_bound_p1MinusForms`).
+* **DOF estimates** (`dof_bound_of_ref`): `h_Tᵏ sup_T ‖u‖ ≤ 2ⁿ (n C)ᵏ B Σⱼ |ℓⱼ(F_T^* u)|` for any
+  family `ℓ` of functionals with `sup_{T̂} ‖v‖ ≤ B Σⱼ |ℓⱼ(v)|`; for unisolvent DOFs on polynomial
+  spaces `exists_dof_bound_of_le_polySpace` (for moment DOFs `ℓⱼ(F_T^* u)` are the moments of `u`
+  on the faces of `T`, `faceMoment_affine`), and for the Whitney forms in terms of the face
+  integrals of `T` itself, `exists_dof_bound_p1MinusForms` (`∫_{ĝ} F_T^* u = ± ∫_{F_T(ĝ)} u`,
+  `abs_simplexIntegral_refPull`).
+
+These are the local tools of the smoothed-projection estimates on general quasi-uniform
+shape-regular meshes (`Feec.FiniteElement.ShapeRegularSmoothing`,
+`Feec.Models.StarShaped.FiniteElement`).
+
+## References
+
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1 (affine
+  families, shape regularity), §3.2 (inverse inequalities)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (inverse estimates for the smoothed projection)
 -/
 
 @[expose] public noncomputable section

@@ -5,7 +5,52 @@ public import Feec.FiniteElement.ShapeRegularInverse
 /-!
 # Mesh geometry for smoothed projections on shape-regular meshes
 
-draft
+The geometric and measure-theoretic ingredients of the smoothed-projection estimates
+([AFW2010], §5.4; [ChristiansenWinther2008]) on a general conforming simplicial mesh `M` of
+`Ω ⊆ ℝⁿ`, replacing the lattice arguments used for the Freudenthal meshes of the cube
+(`Feec.Models.Cube.SmoothingEstimates`).
+
+* **Barycentric coordinates** `λ_T` (`Affine.Simplex.affineBasis`) are the coordinates
+  `baryCoord` of `Feec.FiniteElement.Whitney` (`coord_eq_baryCoord`), Lipschitz with constant
+  `n (n + 1) ‖B_T⁻¹‖` (`abs_coord_sub_le`); at a point of a face they are the face weights
+  (`coord_face_point`).
+* **The geometric lemma** (`StarGeom`). A *face point* of `g` with threshold `θ` has barycentric
+  coordinates `≥ θ` at the vertices of `g` in every simplex containing `g` (`IsFacePoint`;
+  `isFacePoint_sum_smul`). Near it, a simplex not containing `g` cannot meet one containing `g`
+  (`exists_coord_eq_zero`, `not_mem_starSet_inter_restSet`), so the closed sets `starSet` and
+  `restSet` (the unions of the simplices containing, resp. not containing, `g`) separate every
+  connected subset of `cl Ω` near the point (`subset_starSet_of_isPreconnected`,
+  `mem_starSet_of_segment`). Hence a sample `t` in the interior of `T'`, joined to the face point
+  by two segments in `cl Ω` near it, has `g ⊆ T'` (`subset_vertexSet_of_segments`).
+* **The pseudo-manifold property** (`exists_isBoundaryFacet_of_mem_frontier`): a point `z` of a
+  simplex `T` lying in the topological boundary of `cl Ω` lies on a boundary facet containing every
+  vertex of `T` at which `λ_T(z) > 0`. Proof: from an interior point of `T` near `z`, the segment
+  to a generic point outside `cl Ω` (avoiding the null set `badSet`, `volume_badSet`) leaves
+  `cl Ω` at a point lying on exactly one facet of a simplex through `z`; that facet contains the
+  support of `z` and is not interior, since relative interior points of interior facets are
+  interior points of `cl Ω` (`mem_interior_of_isInteriorFacet`). Consequently a point outside
+  `int cl Ω` near a face point of `g` forces `g` into a boundary facet
+  (`exists_isBoundaryFacet_of_near`, using the first exit point `exists_mem_frontier_lineMap`).
+* **Bounded overlap by volume**: `|T| = |det B_T| / n!` (`volume_real_closedInterior`); simplices
+  of volume `≥ v` inside a ball `B̄(x, r)` number at most `(2r)ⁿ / v`
+  (`card_mul_le_of_subset_closedBall`); on a **quasi-uniform** mesh (`IsQuasiUniform M q`:
+  `q h ≤ h_T`) a point lies in at most `(2 (r + h))ⁿ n! / (c (q h)ⁿ)` of the `r`-neighbourhoods
+  of the simplices (`card_filter_mem_cthickening_le`), and the local masses add up
+  (`sum_integral_le_of_card_le`).
+* **Faces and integrals**: `Σₛ |minorₛ| ≤ 2ⁿ k! h_Tᵏ` on a `k`-face (`sum_abs_minor_face_le'`),
+  `|∫_g ω| ≤ 2ⁿ h_Tᵏ sup_T |ω|` (`abs_simplexIntegral_face_le'`), `∫_T f ≤ (2 h_T)ⁿ sup_T f`
+  (`integral_closedInterior_le`).
+
+The estimates themselves need the smoother of `Feec.Models.Cube.FiniteElementMethod` and are in
+`Feec.Models.StarShaped.FiniteElement`.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (smoothed projections)
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+  (shape-regular and quasi-uniform families)
 -/
 
 @[expose] public noncomputable section

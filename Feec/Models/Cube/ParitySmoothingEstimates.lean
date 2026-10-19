@@ -1463,4 +1463,310 @@ theorem exists_uniform_cochainProjection_polyMin_parity (S : PolySeq) :
     (polyPartial n S N Finset.univ) (polyMin n S N) (polyPartial_univ_V S N) π₁
   exact ⟨π₂, fun i x => by rw [he]; exact hb i x, fun i j => hg' i j C (hg i j)⟩
 
+
+/-! ### The `H¹` approximation of the parity-smoothed projections -/
+
+section H1
+
+omit [NeZero n] in
+/-- The scalar `H¹` estimate on a domain equal to `Q`: if `w` represents `ρ ⋆ ext_{c(J', ∅)} f`
+on `Θ = Q`, then `‖f - w‖ ≤ r √(n 3ⁿ) ‖∇f‖`. -/
+theorem norm_sub_le_grad_of_eq_Q (ρ : ReflKernel n) (J' : Finset (Fin n)) {Θ : Set (Fin n → ℝ)}
+    (hΘ : Θ = Geometry.Q (Fin n)) (f : L2 ℝ Θ)
+    (hf : zeroForm f ∈ (dPart Θ J' ((0 : ℕ) : ℤ)).domain) (w : L2 ℝ Θ)
+    (hw : (w : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Θ]
+      smoothFun ρ (pvec J' ∅) (f : (Fin n → ℝ) → ℝ)) :
+    ‖f - w‖ ≤ ρ.radius * √(n * 3 ^ n) * ‖dPart Θ J' ((0 : ℕ) : ℤ) ⟨zeroForm f, hf⟩‖ := by
+  subst hΘ
+  have hw' : w = scalarSmooth ρ (pvec J' ∅) (isParity_pvec J' ∅) f :=
+    Lp.ext (hw.trans (coeFn_scalarSmooth ρ _ _ f).symm)
+  rw [hw']
+  exact norm_sub_scalarSmooth_le_grad ρ J' ⟨zeroForm f, hf⟩
+
+omit [NeZero n] in
+/-- **The parity smoother commutes with the gradient of the coefficients** at the points of
+`cl Ω`: `∂ⱼ (ρ ⋆ ext_{c(J,s)} yₛ) = ρ ⋆ ext_{c(J ∆ s, {j})} (∂ⱼ yₛ)` for `yₛ ∈ H¹_{J ∆ s}`
+(`extDeriv_paritySmoothForm` for the `0`-form `yₛ` in the class `J ∆ s`). -/
+theorem partialDeriv_parCoeff_eq (ρ : ReflKernel n) (J : Finset (Fin n)) {Ω : Set (Fin n → ℝ)}
+    (hΩ : Ω = Geometry.Q (Fin n)) {k : ℤ} (y : L2F ℝ Ω (formIdx n k)) (s : formIdx n k)
+    (hy : zeroForm (y s) ∈ (dPart Ω (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain)
+    {x : Fin n → ℝ} (hx : x ∈ closure Ω) (j : Fin n) :
+    partialDeriv j (parCoeff ρ J y s) x =
+      (paritySmoothForm ρ (symmDiff J s.1) hΩ (((0 : ℕ) : ℤ) + 1)
+        (dPart Ω (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy⟩) : FormField n) x {j} := by
+  have h := extDeriv_paritySmoothForm ρ (symmDiff J s.1) hΩ 0 ⟨zeroForm (y s), hy⟩ hx
+  have h2 := congrFun h {j}
+  rw [extDeriv_apply_singleton] at h2
+  rw [← h2]
+  congr 1
+  funext z
+  change parCoeff ρ J y s z = formExt (parCoeff ρ (symmDiff J s.1) (zeroForm (y s))) ∅ z
+  rw [formExt_of_card _ (by simp)]
+  simp only [parCoeff, zeroForm_apply]
+  rw [pvec_symmDiff_empty]
+
+namespace Poly
+
+variable (S : PolySeq)
+
+omit [NeZero n] in
+/-- **The interpolation error of the parity-smoothed field in terms of a gradient**: if the
+partial derivatives of the smoothed coefficients are the parity-smoothed fields (of classes
+`Jg s`) of `L²` `1`-forms `g s`, then `‖R y - Π_h R y‖² ≲ h_N² Σₛ ‖g s‖²` (the pointwise
+interpolation error `h_N sup_T ‖D (R y)‖`, the local-mass bound of the smoothed field, bounded
+overlap). -/
+theorem sq_norm_formL2_sub_paritySmoothedInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBound S n k B)
+    (hB0 : 0 ≤ B) (hD : CoeffBound S n k D) (hD0 : 0 ≤ D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
+    (J : Finset (Fin n)) (y : L2F ℝ (mesh n N).domain (formIdx n k))
+    (Jg : formIdx n k → Finset (Fin n))
+    (g : formIdx n k → L2F ℝ (mesh n N).domain (formIdx n (((0 : ℕ) : ℤ) + 1)))
+    (hcomm : ∀ s : formIdx n k, ∀ x ∈ closure (mesh n N).domain, ∀ j : Fin n,
+      partialDeriv j (parCoeff (parKernel n γ hγ hγ1 N) J y s) x =
+        (paritySmoothForm (parKernel n γ hγ hγ1 N) (Jg s) (mesh_domain_eq_Q N)
+          (((0 : ℕ) : ℤ) + 1) (g s) : FormField n) x {j}) :
+    ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        (Submodule.inclusion c1Forms_le_contForms
+          (paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k y)) -
+      (polyElement n S).paritySmoothedInterp (mesh n N) (parKernel n γ hγ hγ1 N) J
+        (mesh_domain_eq_Q N) k y‖ ^ 2
+      ≤ 2 ^ n * (1 + B * Module.finrank ℝ (S.space n k) * D) ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n *
+        (32 / γ) ^ n * ((6 ^ n * n.factorial : ℕ) : ℝ) * hN N ^ 2 * ∑ s, ‖g s‖ ^ 2 := by
+  classical
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  set ρ := parKernel n γ hγ hγ1 N
+  set F : c1Forms n := paritySmoothForm ρ J (mesh_domain_eq_Q N) k y
+  have hFc1 : ContDiff ℝ 1 (F : FormField n) := mem_c1Forms.1 F.2
+  set u := (polyElement n S).globalInterp (mesh n N) k (Submodule.inclusion c1Forms_le_contForms F)
+  have hQ := (polyElement n S).paritySmoothedInterp_natCast (mesh n N) ρ J (mesh_domain_eq_Q N) k y
+  set Mρ : ℝ := (32 / (γ * h)) ^ n
+  have hMρ0 : 0 ≤ Mρ := by positivity
+  set P := (Module.finrank ℝ (S.space n k) : ℝ)
+  set Ci := 1 + B * P * D
+  have hCi : 0 ≤ Ci := by positivity
+  set L : formIdx n k → Affine.Simplex ℝ (Fin n → ℝ) n → ℝ := fun s T => locMass (g s) T
+  have hL0 : ∀ s T, 0 ≤ L s T := fun s T => locMass_nonneg _ _
+  -- the derivative bound on a simplex
+  have hder : ∀ T ∈ (mesh n N).simplices, ∀ x ∈ T.closedInterior,
+      ‖iteratedFDeriv ℝ (0 + 1) (F : FormField n) x‖ ≤
+        n * ∑ s, √(3 ^ n * Mρ * L s T) := by
+    intro T hT x hx
+    have hxc : x ∈ closure (mesh n N).domain := (mesh n N).closedInterior_subset_closure hT hx
+    rw [zero_add, norm_iteratedFDeriv_one]
+    refine (norm_fderiv_le_sum_partialDeriv ((hFc1.differentiable one_ne_zero) x)).trans ?_
+    have hterm : ∀ j : Fin n, ∀ s : formIdx n k,
+        |partialDeriv j (fun z => (F : FormField n) z s.1) x| ≤ √(3 ^ n * Mρ * L s T) := by
+      intro j s
+      have hF : (fun z => (F : FormField n) z s.1) = parCoeff ρ J y s := by
+        funext z
+        change formExt (parCoeff ρ J y) s.1 z = _
+        rw [formExt_val]
+      rw [hF, hcomm s x hxc j]
+      exact abs_paritySmoothForm_le (Jg s) hγ hγ1 (g s) hT hx {j}
+    calc ∑ j, ∑ t, |partialDeriv j (fun z => (F : FormField n) z t) x|
+        = ∑ j, ∑ s : formIdx n k, |partialDeriv j (fun z => (F : FormField n) z s.1) x| := by
+          refine Finset.sum_congr rfl fun j _ => sum_eq_sum_formIdx fun t ht => ?_
+          have : (fun z => (F : FormField n) z t) = fun _ => 0 := by
+            funext z; exact isDeg_paritySmoothForm ρ J (mesh_domain_eq_Q N) k y z t ht
+          rw [this]; simp [partialDeriv]
+      _ ≤ ∑ _j : Fin n, ∑ s : formIdx n k, √(3 ^ n * Mρ * L s T) :=
+          Finset.sum_le_sum fun j _ => Finset.sum_le_sum fun s _ => hterm j s
+      _ = n * ∑ s, √(3 ^ n * Mρ * L s T) := by
+          rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- the local `L²` error on a simplex
+  have hloc : ∀ T ∈ (mesh n N).simplices, ∑ s : formIdx n k, ∫ x in T.closedInterior,
+      ((F : FormField n) x s.1 - (polyElement n S).extendPW (mesh n N)
+        (u : (polyElement n S).Piecewise (mesh n N) k) T x s.1) ^ 2 ≤
+      2 ^ n * Ci ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (32 / γ) ^ n * h ^ 2 * ∑ s, L s T := by
+    intro T hT
+    set MT := n * ∑ s, √(3 ^ n * Mρ * L s T)
+    have hMT0 : 0 ≤ MT := by positivity
+    have hpt : ∀ x ∈ T.closedInterior, ∀ t : Finset (Fin n),
+        |(F : FormField n) x t - (polyElement n S).extendPW (mesh n N)
+          (u : (polyElement n S).Piecewise (mesh n N) k) T x t| ≤ Ci * (h ^ (0 + 1) * MT) := by
+      intro x hx t
+      rw [(polyElement n S).extendPW_of_mem (mesh n N) _ hT]
+      exact abs_sub_globalInterp_le S (polySpace_zero_le_space S k) hB hB0 hD ⟨T, hT⟩
+        (s := 0) (hFc1.of_le le_rfl) (isDeg_paritySmoothForm ρ J (mesh_domain_eq_Q N) k y)
+        (hder T hT) hx t
+    obtain ⟨m, σ, hmσ⟩ := mem_mesh_simplices.1 hT
+    have hcont : ∀ s : formIdx n k, Continuous fun x => ((F : FormField n) x s.1 -
+        (polyElement n S).extendPW (mesh n N) (u : (polyElement n S).Piecewise (mesh n N) k)
+          T x s.1) ^ 2 :=
+      fun s => (((continuous_apply s.1).comp hFc1.continuous).sub ((continuous_apply s.1).comp
+        ((polyElement n S).contDiff_extendPW (mesh n N) _ hT).continuous)).pow 2
+    have hs1 : ∀ s : formIdx n k, ∫ x in T.closedInterior, ((F : FormField n) x s.1 -
+        (polyElement n S).extendPW (mesh n N) (u : (polyElement n S).Piecewise (mesh n N) k)
+          T x s.1) ^ 2 ≤ h ^ n * (Ci * (h ^ (0 + 1) * MT)) ^ 2 := by
+      intro s
+      have := integral_cubeSimplex_le m σ (hcont s) (fun x hx => by
+        rw [hmσ] at hx
+        rw [← sq_abs]
+        exact pow_le_pow_left₀ (abs_nonneg _) (hpt x hx s.1) 2) (fun x => sq_nonneg _)
+      rwa [hmσ] at this
+    have hCS : (∑ s : formIdx n k, √(3 ^ n * Mρ * L s T)) ^ 2 ≤
+        2 ^ n * ∑ s, 3 ^ n * Mρ * L s T := by
+      have := sq_sum_le_card_mul_sum_sq (s := (Finset.univ : Finset (formIdx n k)))
+        (f := fun s => √(3 ^ n * Mρ * L s T))
+      refine this.trans ?_
+      rw [Finset.card_univ]
+      refine mul_le_mul (card_formIdx_le _) (le_of_eq (Finset.sum_congr rfl fun s _ => ?_))
+        (Finset.sum_nonneg fun _ _ => sq_nonneg _) (by positivity)
+      exact Real.sq_sqrt (by have := hL0 s T; positivity)
+    calc ∑ s : formIdx n k, ∫ x in T.closedInterior, ((F : FormField n) x s.1 -
+          (polyElement n S).extendPW (mesh n N) (u : (polyElement n S).Piecewise (mesh n N) k)
+            T x s.1) ^ 2
+        ≤ ∑ _s : formIdx n k, h ^ n * (Ci * (h ^ (0 + 1) * MT)) ^ 2 :=
+          Finset.sum_le_sum fun s _ => hs1 s
+      _ = Fintype.card (formIdx n k) * (h ^ n * (Ci * (h ^ (0 + 1) * MT)) ^ 2) := by
+          rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+      _ ≤ 2 ^ n * (h ^ n * (Ci * (h ^ (0 + 1) * MT)) ^ 2) :=
+          mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
+      _ = 2 ^ n * Ci ^ 2 * n ^ 2 * h ^ 2 * h ^ n *
+            (∑ s : formIdx n k, √(3 ^ n * Mρ * L s T)) ^ 2 := by
+          simp only [MT]; ring
+      _ ≤ 2 ^ n * Ci ^ 2 * n ^ 2 * h ^ 2 * h ^ n * (2 ^ n * ∑ s, 3 ^ n * Mρ * L s T) := by
+          gcongr
+      _ = 2 ^ n * Ci ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (h ^ n * Mρ) * h ^ 2 * ∑ s, L s T := by
+          rw [← Finset.mul_sum]; ring
+      _ = 2 ^ n * Ci ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (32 / γ) ^ n * h ^ 2 * ∑ s, L s T := by
+          rw [show h ^ n * Mρ = (32 / γ) ^ n by
+            simp only [Mρ]; rw [← mul_pow]; congr 1; field_simp]
+  -- assembly over the simplices
+  rw [hQ]
+  refine (norm_sq_formL2_sub_glue_le (polyElement n S) (mesh n N)
+    (isOpen_mesh_domain n N).measurableSet k _ _).trans ?_
+  set K' := 2 ^ n * Ci ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (32 / γ) ^ n * h ^ 2
+  have hK' : 0 ≤ K' := by positivity
+  calc ∑ T ∈ (mesh n N).simplices, ∑ s : formIdx n k, ∫ x in T.closedInterior,
+        (((Submodule.inclusion c1Forms_le_contForms F : contForms n) : FormField n) x s.1 -
+          (polyElement n S).extendPW (mesh n N) (u : (polyElement n S).Piecewise (mesh n N) k)
+            T x s.1) ^ 2
+      ≤ ∑ T ∈ (mesh n N).simplices, K' * ∑ s, L s T := Finset.sum_le_sum fun T hT => hloc T hT
+    _ = K' * ∑ s, ∑ T ∈ (mesh n N).simplices, L s T := by rw [← Finset.mul_sum, Finset.sum_comm]
+    _ ≤ K' * ∑ s, ((6 ^ n * n.factorial : ℕ) : ℝ) * ‖g s‖ ^ 2 :=
+        mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun s _ => sum_locMass_le N (g s)) hK'
+    _ = _ := by rw [← Finset.mul_sum]; simp only [K', Ci, P]; ring
+
+end Poly
+
+
+variable (n) in
+/-- The constant of the `H¹` approximation of degree `k` of the sequence `S` by the parity
+smoother at scale `γ = 1`: `√(n 3ⁿ) / 32 + √K₂` (`Poly.sq_norm_formL2_sub_paritySmoothedInterp_le`). -/
+def h1ConstPar (S : PolySeq) (k : ℕ) : ℝ :=
+  √(n * 3 ^ n) / 32 + √(2 ^ n * (1 + dofConst n S k * Module.finrank ℝ (S.space n k) *
+    coeffConst n S k) ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (32 / 1) ^ n *
+      ((6 ^ n * n.factorial : ℕ) : ℝ))
+
+omit [NeZero n] in
+theorem h1ConstPar_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ h1ConstPar n S k := by
+  unfold h1ConstPar; positivity
+
+omit [NeZero n] in
+/-- **`H¹` approximation by `V_{h,Γ_J}`, on the mesh domain**: for `y ∈ L²(Ω; Λᵏ)` whose
+coefficients `yₛ` lie in `H¹` with vanishing trace on the faces normal to `J ∆ s` (the parity
+extension `ext_J y` has `H¹` coefficients), the parity-smoothed interpolant `v = Π_h R y` satisfies
+`‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`, `K = h1ConstPar` independent of `N`. -/
+theorem exists_mem_VPartial_near_grad (S : PolySeq) (J : Finset (Fin n)) (N k : ℕ)
+    (y : L2F ℝ (mesh n N).domain (formIdx n k))
+    (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
+      (dPart (mesh n N).domain (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain) :
+    ∃ v ∈ (polyElement n S).VPartial (mesh n N) (partialFaces n J) k,
+      ‖y - v‖ ≤ h1ConstPar n S k * hN N * ∑ s : formIdx n k,
+        ‖dPart (mesh n N).domain (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖ := by
+  have hM := mesh_domain_eq_Q (n := n) N
+  set ρ := parKernel n 1 one_pos le_rfl N
+  set g : formIdx n k → L2F ℝ (mesh n N).domain (formIdx n (((0 : ℕ) : ℤ) + 1)) := fun s =>
+    dPart (mesh n N).domain (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩
+  set h := hN N
+  have hh : 0 < h := hN_pos N
+  have hr : ρ.radius = h / 32 := by rw [parKernel_radius]; simp only [one_mul, h]
+  set Fl := formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+    (Submodule.inclusion c1Forms_le_contForms (paritySmoothForm ρ J hM k y))
+  set Qy := (polyElement n S).paritySmoothedInterp (mesh n N) ρ J hM k y
+  -- term A: mollification
+  have hTA : ∀ s, ‖y s - Fl s‖ ≤ h / 32 * √(n * 3 ^ n) * ‖g s‖ := by
+    intro s
+    rw [← hr]
+    refine norm_sub_le_grad_of_eq_Q ρ (symmDiff J s.1) hM (y s) (hy s) (Fl s) ?_
+    filter_upwards [coeFn_formL2 (isOpen_mesh_domain n N).measurableSet
+      (mesh n N).isBounded_domain (k : ℤ) (Submodule.inclusion c1Forms_le_contForms
+        (paritySmoothForm ρ J hM k y)) s] with x hx
+    rw [hx]
+    change formExt (parCoeff ρ J y) s.1 x = _
+    rw [formExt_val, parCoeff, pvec_symmDiff_empty]
+  -- term B: interpolation of the smoothed field
+  have hTB := Poly.sq_norm_formL2_sub_paritySmoothedInterp_le S (dofBound_dofConst S k)
+    (dofConst_nonneg S k) (coeffBound_coeffConst S k) (coeffConst_nonneg S k) one_pos le_rfl J y
+    (fun s => symmDiff J s.1) g fun s x hx j => partialDeriv_parCoeff_eq ρ J hM y s (hy s) hx j
+  set K₂ := 2 ^ n * (1 + dofConst n S k * Module.finrank ℝ (S.space n k) *
+    coeffConst n S k) ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (32 / 1) ^ n *
+      ((6 ^ n * n.factorial : ℕ) : ℝ)
+  have hK₂ : 0 ≤ K₂ := by
+    have := dofConst_nonneg (n := n) S k; have := coeffConst_nonneg (n := n) S k; positivity
+  have hTB' : ‖Fl - Qy‖ ≤ √K₂ * h * ∑ s, ‖g s‖ := by
+    have h1 : ‖Fl - Qy‖ ≤ √(K₂ * h ^ 2 * ∑ s, ‖g s‖ ^ 2) := by
+      rw [← Real.sqrt_sq (norm_nonneg (Fl - Qy))]
+      exact Real.sqrt_le_sqrt (by simpa only [K₂] using hTB)
+    refine h1.trans ?_
+    rw [Real.sqrt_mul (by positivity), Real.sqrt_mul hK₂, Real.sqrt_sq hh.le]
+    gcongr
+    exact sqrt_sum_sq_le_sum _ fun s => norm_nonneg _
+  refine ⟨Qy, (polyElement n S).paritySmoothedInterp_mem (mesh n N) ρ J hM k y, ?_⟩
+  have hA : ‖y - Fl‖ ≤ h / 32 * √(n * 3 ^ n) * ∑ s, ‖g s‖ := by
+    refine (L2F.norm_le_sum_norm _).trans ?_
+    rw [Finset.mul_sum]
+    exact Finset.sum_le_sum fun s _ => by rw [PiLp.sub_apply]; exact hTA s
+  calc ‖y - Qy‖ = ‖(y - Fl) + (Fl - Qy)‖ := by congr 1; abel
+    _ ≤ ‖y - Fl‖ + ‖Fl - Qy‖ := norm_add_le _ _
+    _ ≤ h / 32 * √(n * 3 ^ n) * ∑ s, ‖g s‖ + √K₂ * h * ∑ s, ‖g s‖ := add_le_add hA hTB'
+    _ = h1ConstPar n S k * h * ∑ s, ‖g s‖ := by simp only [h1ConstPar, K₂]; ring
+
+/-- **`H¹` approximation by `polyPartial`, on the cube**: for `y ∈ L²(Q; Λᵏ)` with
+`yₛ ∈ H¹_{J ∆ s}(Q)`, some `v ∈ V_{h,Γ_J}ᵏ` satisfies `‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`. -/
+theorem exists_mem_polyPartial_near_grad (S : PolySeq) (J : Finset (Fin n)) (N k : ℕ)
+    (y : L2F ℝ (cubeDomain n) (formIdx n k))
+    (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
+      (dPart (cubeDomain n) (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain) :
+    ∃ v ∈ (polyPartial n S N J).V k,
+      ‖y - v‖ ≤ h1ConstPar n S k * meshSize N * ∑ s : formIdx n k,
+        ‖dPart (cubeDomain n) (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖ := by
+  rw [← hN_eq_meshSize]
+  have key : ∀ (Ω' : Set (Fin n → ℝ)) (h : (mesh n N).domain = Ω') (hΩ' : IsOpen Ω')
+      (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (y : L2F ℝ Ω' (formIdx n k))
+      (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
+        (dPart Ω' (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain),
+      ∃ v ∈ (partialSubcomplexOfEq h (isOpen_of_eq_Q (mesh_domain_eq_Q N))
+          (mesh_domain_eq_Q N).le hΩ' hΩQ' J
+          (subcomplexPart (polyElement n S) (mesh n N) (mesh_domain_eq_Q N) J)).V k,
+        ‖y - v‖ ≤ h1ConstPar n S k * hN N * ∑ s : formIdx n k,
+          ‖dPart Ω' (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖ := by
+    rintro Ω' rfl hΩ' hΩQ' y hy
+    exact exists_mem_VPartial_near_grad S J N k y hy
+  exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n) y hy
+
+/-- **`H¹` approximation of the parity-smoothed projections** (the estimate needed by the BGG
+discretization, for every class `J`): under `ParitySmoothingEstimates`, for `y ∈ L²(Q; Λᵏ)` whose
+coefficients are `H¹` with vanishing traces on the faces normal to `J ∆ s` (i.e. `ext_J y` has
+`H¹` coefficients), `‖y - π_N y‖ ≤ (1 + 2C) K h_N Σₛ ‖∇ yₛ‖`, `K = h1ConstPar n S k`. -/
+theorem ParitySmoothingEstimates.norm_sub_proj_le_grad {J : Finset (Fin n)} {S : PolySeq}
+    {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C) (N k : ℕ)
+    (y : L2F ℝ (cubeDomain n) (formIdx n k))
+    (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
+      (dPart (cubeDomain n) (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain) :
+    ‖y - (hE.proj N).π k y‖ ≤ (1 + 2 * C) * h1ConstPar n S k * meshSize N *
+      ∑ s : formIdx n k,
+        ‖dPart (cubeDomain n) (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖ := by
+  obtain ⟨v, hv, hyv⟩ := exists_mem_polyPartial_near_grad S J N k y hy
+  refine (norm_sub_π_le_of_mem (hE.proj N) (hE.norm_proj_le N k) hv).trans ?_
+  have := hE.two_mul_nonneg
+  calc (1 + 2 * C) * ‖y - v‖ ≤ (1 + 2 * C) * (h1ConstPar n S k * meshSize N *
+        ∑ s : formIdx n k,
+          ‖dPart (cubeDomain n) (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖) :=
+        mul_le_mul_of_nonneg_left hyv (by linarith)
+    _ = _ := by ring
+
+end H1
+
 end Feec.Models.Cube.FEM

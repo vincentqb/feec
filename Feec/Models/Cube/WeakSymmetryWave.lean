@@ -761,4 +761,203 @@ theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
 
 end Rate
 
+/-! ### A nontrivial classical solution of (6.2) on the cube (manufactured data) -/
+
+section Manufactured
+
+/-- **Scaling of the `C²` class**: `c • x` is `C²`, vanishing outside `Q`, with bound `|c| L`. -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.smul {j : ℤ} {L : ℝ}
+    {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} (hx : IsCsFormMin 0 j L x) (c : ℝ) :
+    IsCsFormMin 0 j (|c| * L) (c • x) := by
+  rcases hx with hj | ⟨k, hk, w, hw, hdeg, hsupp, hL, hL', rfl⟩
+  · exact Or.inl hj
+  · have hw' : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) (c • w) := hw.const_smul c
+    have hdw : extDeriv (c • w) = c • extDeriv w := funext fun y =>
+      extDeriv_smul_const_apply c ((hw.differentiable (by norm_num)) y)
+    have hw1 : ContDiff ℝ (((0 + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+    have hdwc : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv hw1
+    have hc1 : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) w := hw.of_le (by exact_mod_cast Nat.le_succ 1)
+    refine Or.inr ⟨k, hk, c • w, hw', fun y s hs => by simp [hdeg y s hs],
+      fun y hy => by simp [hsupp y hy], fun y hy => ?_, fun y hy => ?_, ?_⟩
+    · rw [iteratedFDeriv_const_smul_apply hc1.contDiffAt, norm_smul,
+        Real.norm_eq_abs]
+      exact mul_le_mul_of_nonneg_left (hL y hy) (abs_nonneg c)
+    · rw [hdw, iteratedFDeriv_const_smul_apply hdwc.contDiffAt, norm_smul, Real.norm_eq_abs]
+      exact mul_le_mul_of_nonneg_left (hL' y hy) (abs_nonneg c)
+    · rw [← map_smul]; rfl
+
+/-- The rows of `curl u` of the coupled manufactured `u` (`uₐ = −g dxₐ`). -/
+def waveCurlU (a : Fin 3) : formIdx 3 2 → (Fin 3 → ℝ) → ℝ :=
+  (extDerivOp ℝ 3 1).apply (coupledU a)
+
+theorem isTestField_waveCurlU (a : Fin 3) : IsTestField (cubeDomain 3) (waveCurlU a) :=
+  (extDerivOp ℝ 3 1).isTestField_apply (isTestField_coupledU a)
+
+/-- **Green's formula on `D(d¹_min)`** against a test `2`-form. -/
+theorem inner_D1_testField (x : U1) {ψ : formIdx 3 2 → (Fin 3 → ℝ) → ℝ}
+    (hψ : IsTestField (cubeDomain 3) ψ) :
+    ⟪D1 x, testField hψ⟫ =
+      ⟪(x : W1), testField ((extDerivOp ℝ 3 1).formalAdj.isTestField_apply hψ)⟫ :=
+  (extDerivOp ℝ 3 1).minimal_green (isOpen_cubeDomain 3) (extDerivOp_isOrderLE 1) x
+    (fun r => contDiff_infty.1 (hψ r).contDiff 1) (fun r => (hψ r).memLp)
+    (fun r => ((extDerivOp ℝ 3 1).formalAdj.isTestField_apply hψ r).memLp)
+
+/-- `curl* curl u` for the coupled manufactured `u`, a test field in `H̊Λ¹(Q)³`. -/
+def waveCurlCurlU : Wv U1 := WithLp.toLp 2 fun a =>
+  ⟨testField ((extDerivOp ℝ 3 1).formalAdj.isTestField_apply (isTestField_waveCurlU a)),
+    mem_D1_testField _⟩
+
+theorem D1_coupledu (a : Fin 3) : D1 (coupledu a) = testField (isTestField_waveCurlU a) :=
+  (extDerivOp ℝ 3 1).minimal_testField (isOpen_cubeDomain 3) (isTestField_coupledU a)
+
+/-- `⟪curl u, curl v⟫ = ⟪curl* curl u, v⟫` for the coupled manufactured `u`. -/
+theorem inner_dt1_coupledu (v : Wv U1) :
+    ⟪bggSegment.dt1 coupledu, bggSegment.dt1 v⟫ = ⟪waveCurlCurlU, v⟫ := by
+  rw [inner_Vt, inner_Vt]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  change ⟪D1 (coupledu a), D1 (v a)⟫ = ⟪((waveCurlCurlU a : U1) : W1), ((v a : U1) : W1)⟫
+  rw [D1_coupledu, real_inner_comm, inner_D1_testField, real_inner_comm]
+  rfl
+
+/-- `S¹u = 0` for the coupled manufactured `u` (`uₐ = −g dxₐ` is symmetric). -/
+theorem segS1_coupledu_eq_zero : bggSegment.S1 coupledu = 0 := by
+  rw [segS1_coupledu]
+  have e : wsFields (n := 3) 1 coupledU = 0 := by
+    funext t y
+    simp only [wsFields, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, Pi.zero_apply]
+    refine Finset.sum_eq_zero fun p _ => ?_
+    rw [wsCoeff_eq]
+    by_cases h : p.1 ∈ t.1 ∧ t.1.erase p.1 = p.2.1
+    · have hne : p.2.1 ≠ {p.1} := by
+        rw [← h.2]; intro h'
+        have : p.1 ∈ t.1.erase p.1 := by rw [h']; exact Finset.mem_singleton_self _
+        simp at this
+      simp [coupledU, hne]
+    · simp [h]
+  rw [testField_congr _ IsTestField.zero e, testField_zero]
+
+/-- **A nontrivial classical solution of (6.2) on the cube** (manufactured data): with `g` the
+bump, `λ = dg`, `σ̄ = dᵗλ`, `φ̄ₐ = ∂ₐσ̄`, `ū = (−g dxₐ)ₐ` (the coupled static solution),
+`σ(t) = t σ̄`, `φ(t) = t φ̄`, `u(t) = ū`, `M ≡ 0` (`S¹ū = 0`), `ρ(t) = t curl ū`, multiplier
+`ℓ(t) = ⟪λ, ·⟫` and source `f(t) = t (grad φ̄ + curl* curl ū)`. -/
+def waveManufactured (T : ℝ) :
+    Feec.BGG.ExactWave bggSegment T (fun t => t • (bggSegment.dt0 coupledφ + waveCurlCurlU)) where
+  σ t := t • coupledσ
+  φ t := t • coupledφ
+  u _ := coupledu
+  M _ := 0
+  ρ t := t • bggSegment.dt1 coupledu
+  ℓ _ := (innerSL ℝ coupledMult).toLinearMap ∘ₗ D1.domain.subtype
+  σ' _ := coupledσ
+  φ' _ := coupledφ
+  u' _ := 0
+  M' _ := 0
+  ρ' _ := bggSegment.dt1 coupledu
+  ℓ' _ := 0
+  cσ := (continuous_id.smul continuous_const).continuousOn
+  cu := continuousOn_const
+  cM := continuousOn_const
+  cρ := (continuous_id.smul continuous_const).continuousOn
+  cdφ := by simp only [map_smul]; exact Continuous.continuousOn (by fun_prop)
+  cSu := continuousOn_const
+  cdu := continuousOn_const
+  cℓ _ := continuousOn_const
+  cσ' := continuousOn_const
+  cu' := continuousOn_const
+  cM' := continuousOn_const
+  cρ' := continuousOn_const
+  cdφ' := continuousOn_const
+  cSu' := continuousOn_const
+  cdu' := continuousOn_const
+  cℓ' _ := continuousOn_const
+  dσ t _ := by simpa using ((hasDerivAt_id t).smul_const coupledσ).hasDerivWithinAt
+  du t _ := hasDerivWithinAt_const _ _ _
+  dM t _ := hasDerivWithinAt_const _ _ _
+  dρ t _ := by
+    simpa using ((hasDerivAt_id t).smul_const (bggSegment.dt1 coupledu)).hasDerivWithinAt
+  ddφ t _ := by
+    simpa using ((hasDerivAt_id t).smul_const (bggSegment.dt0 coupledφ)).hasDerivWithinAt
+  dSu t _ := by simpa using hasDerivWithinAt_const t (Ici t) (bggSegment.S1 coupledu)
+  ddu t _ := by simpa using hasDerivWithinAt_const t (Ici t) (bggSegment.dt1 coupledu)
+  dℓ t _ μ := by simpa using hasDerivWithinAt_const t (Ici t) (⟪coupledMult, (μ : W1)⟫)
+  ea _ _ τ ψ := coupled_c1 τ ψ
+  eb t _ v := by
+    simp only [map_smul, inner_smul_left, inner_add_left, inner_zero_left, zero_add,
+      RCLike.conj_to_real, inner_dt1_coupledu]
+    ring
+  ec _ _ N := by simp [segS1_coupledu_eq_zero]
+  ed _ _ μ := by simp
+  ee t _ := by simp only [map_smul, coupled_c3]
+  ee' _ _ := coupled_c3
+
+theorem waveManufactured_mult (T t : ℝ) (μ : U1) :
+    |(waveManufactured T).ℓ t μ| ≤ ‖coupledMult‖ * ‖μ‖ ∧
+      |(waveManufactured T).ℓ' t μ| ≤ ‖coupledMult‖ * ‖μ‖ := by
+  refine ⟨abs_real_inner_le_norm coupledMult (μ : W1), ?_⟩
+  simp only [waveManufactured, LinearMap.zero_apply, abs_zero]
+  positivity
+
+set_option maxHeartbeats 1000000 in
+/-- **Non-vacuity of `cubeWave_rate`**: for every `T > 0` the manufactured classical solution
+`waveManufactured T` of (6.2) on the cube has `σ(t), φ(t)` nonzero for `t ∈ (0,T]`, `u(t)` and the
+multiplier `λ = dg` nonzero, and satisfies the regularity hypotheses of `cubeWave_rate` with one
+bound `L` on `[0,T]`. -/
+theorem waveManufactured_hyps {T : ℝ} (hT : 0 < T) : ∃ L, 0 ≤ L ∧
+    (∀ t ∈ Icc 0 T, IsSmoothState L ((waveManufactured T).σ t) ((waveManufactured T).φ t)
+        ((waveManufactured T).u t) ((waveManufactured T).M t) ((waveManufactured T).ρ t) ∧
+      IsSmoothState L ((waveManufactured T).σ' t) ((waveManufactured T).φ' t)
+        ((waveManufactured T).u' t) ((waveManufactured T).M' t) ((waveManufactured T).ρ' t)) ∧
+    (∀ t ∈ Icc 0 T, ∀ μ : U1, |(waveManufactured T).ℓ t μ| ≤ L * ‖μ‖ ∧
+      |(waveManufactured T).ℓ' t μ| ≤ L * ‖μ‖) ∧
+    (∀ t ∈ Ioc 0 T, (waveManufactured T).σ t ≠ 0 ∧ (waveManufactured T).φ t ≠ 0) ∧
+    (∀ t, (waveManufactured T).u t ≠ 0) ∧ coupledMult ≠ 0 := by
+  have ex := exists_coupled_manufactured_solution
+  obtain ⟨L0, hL00, -, -, -, -, -, -, -, hσ, hφ, hu, hM, -⟩ := ex
+  choose Lc hLc0 hLc using fun a => exists_isCsFormMin_testField (isTestField_waveCurlU a)
+  obtain ⟨Lz, hLz0, hLz⟩ := isCsFormMin_zero (k := 2)
+  obtain ⟨Lz0, hLz00, hLz0'⟩ := isCsFormMin_zero (k := 0)
+  obtain ⟨Lz1, hLz10, hLz1'⟩ := isCsFormMin_zero (k := 1)
+  have hc : ∀ a ∈ Finset.univ, 0 ≤ Lc a := fun a _ => hLc0 a
+  have sc := Finset.sum_nonneg hc
+  have L1_ex : ∃ x : ℝ, x = L0 + ∑ a, Lc a + Lz + Lz0 + Lz1 := ⟨_, rfl⟩
+  obtain ⟨L1, hL1⟩ := L1_ex
+  have hL10 : 0 ≤ L1 := by rw [hL1]; positivity
+  have hle : ∀ a, Lc a ≤ L1 := fun a => by
+    have := Finset.single_le_sum hc (Finset.mem_univ a); rw [hL1]; linarith
+  have hL0le : L0 ≤ L1 := by rw [hL1]; linarith
+  have hLzle : Lz ≤ L1 := by rw [hL1]; linarith
+  have hLz1le : Lz1 ≤ L1 := by rw [hL1]; linarith
+  have hρc : ∀ a, IsCsFormMin 0 2 L1 ((bggSegment.dt1 coupledu) a) := fun a => by
+    change IsCsFormMin 0 2 L1 (D1 (coupledu a))
+    rw [D1_coupledu]; exact (hLc a).mono (hle a)
+  refine ⟨(1 + T) * L1, by positivity, fun t ht => ?_, fun t ht μ => ?_, fun t ht => ?_,
+    fun _ => coupledu_ne_zero, coupledMult_ne_zero⟩
+  · have hta : |t| ≤ 1 + T := by rw [abs_of_nonneg ht.1]; linarith [ht.2]
+    have hmono : ∀ {j : ℤ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)}, IsCsFormMin 0 j L1 x →
+        IsCsFormMin 0 j ((1 + T) * L1) (t • x) := fun hx =>
+      (hx.smul t).mono (mul_le_mul_of_nonneg_right hta hL10)
+    have hmono1 : ∀ {j : ℤ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)}, IsCsFormMin 0 j L1 x →
+        IsCsFormMin 0 j ((1 + T) * L1) x := fun hx =>
+      hx.mono (le_mul_of_one_le_left hL10 (by linarith))
+    have hS0 : bggSegment.S1 (0 : Wv U1) = 0 := map_zero _
+    refine ⟨⟨hmono (hσ.mono hL0le), fun a => hmono ((hφ a).mono hL0le),
+      fun a => hmono1 ((hu a).mono hL0le), ?_, hmono1 (hLz.mono hLzle),
+      fun a => hmono (hρc a)⟩, ⟨hmono1 (hσ.mono hL0le),
+      fun a => hmono1 ((hφ a).mono hL0le), fun a => ?_, ?_,
+      hmono1 (hLz.mono hLzle), fun a => hmono1 (hρc a)⟩⟩
+    · change IsCsFormMin 0 2 ((1 + T) * L1) (bggSegment.S1 coupledu)
+      rw [segS1_coupledu_eq_zero]; exact hmono1 (hLz.mono hLzle)
+    · change IsCsFormMin 0 1 ((1 + T) * L1) (((0 : Wv U1) a : U1) : W1)
+      exact hmono1 (hLz1'.mono hLz1le)
+    · change IsCsFormMin 0 2 ((1 + T) * L1) (bggSegment.S1 (0 : Wv U1))
+      rw [hS0]; exact hmono1 (hLz.mono hLzle)
+  · obtain ⟨h1, h2⟩ := waveManufactured_mult T t μ
+    have hb : ‖coupledMult‖ ≤ (1 + T) * L1 :=
+      hM.trans (hL0le.trans (le_mul_of_one_le_left hL10 (by linarith)))
+    exact ⟨h1.trans (mul_le_mul_of_nonneg_right hb (norm_nonneg _)),
+      h2.trans (mul_le_mul_of_nonneg_right hb (norm_nonneg _))⟩
+  · exact ⟨smul_ne_zero ht.1.ne' coupledσ_ne_zero, smul_ne_zero ht.1.ne' coupledφ_ne_zero⟩
+
+end Manufactured
+
 end Feec.Models.Cube.WeakSymmetry

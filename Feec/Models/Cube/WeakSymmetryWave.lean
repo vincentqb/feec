@@ -39,8 +39,9 @@ the spaces of Table 5.1 (`P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²`, `P�
   corrected Prop 6.2 for (6.5): existence ⇔ (C1)–(C3), for dynamic data ⇔ (C2), uniqueness.
 * **`cubeWave_rate`**: `O(h)` convergence of (6.5) from the elliptic projection (6.4) of the
   exact initial state, `‖(σ, u, M, ρ)(t) − (σₕ, uₕ, Mₕ, ρₕ)(t)‖ ≤ K L (1 + t) h_N`, for classical
-  solutions with `C²` states and time derivatives and `L²`-bounded multiplier, under the
-  regularity hypothesis (constant `C_R`) only.
+  solutions whose states and time derivatives are `C²` and vanish outside `Q` (flat at `∂Q`,
+  `IsSmoothState`), with `L²`-bounded multiplier, under the regularity hypothesis (constant `C_R`)
+  only.
 * `waveManufactured_hyps`: a nontrivial classical solution meeting all hypotheses.
 
 ## References
@@ -511,7 +512,7 @@ theorem canonical_S0h_surjective (N : ℕ) :
 (6.5) has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff (C1) `grad σ₀ = S₀,ₕφ₀`,
 (C2) `u₀ ⊥ grad (ker S₀,ₕ)` and (C3) `(grad φ₀ − f(0), grad ψ) = 0` on `ker S₀,ₕ`. -/
 theorem cubeWave_exists_iff (N : ℕ) {T : ℝ} (hT0 : 0 < T)
-    {f : ℝ → (cubeFEM hT hB N).Vt1h} (hf : Continuous f) (σ₀ : (cubeFEM hT hB N).V0h)
+    {f : ℝ → (cubeFEM hT hB N).Vt1h} (hf : ContinuousOn f (Icc 0 T)) (σ₀ : (cubeFEM hT hB N).V0h)
     (φ₀ : (cubeFEM hT hB N).Vt0h) (u₀ : (cubeFEM hT hB N).Vt1h) (M₀ : (cubeFEM hT hB N).W2h)
     (ρ₀ : (cubeFEM hT hB N).Wt2h) :
     (∃ s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T f, s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧
@@ -520,9 +521,13 @@ theorem cubeWave_exists_iff (N : ℕ) {T : ℝ} (hT0 : 0 < T)
         (∀ ψ, (cubeWave hT hB N).S0 ψ = 0 → ⟪u₀, (cubeWave hT hB N).dt0 ψ⟫ = 0) ∧
         (∀ ψ, (cubeWave hT hB N).S0 ψ = 0 →
           ⟪(cubeWave hT hB N).dt0 φ₀, (cubeWave hT hB N).dt0 ψ⟫ =
-            ⟪f 0, (cubeWave hT hB N).dt0 ψ⟫) :=
-  Feec.BGG.exists_discreteSolution_iff hT0 (cubeWave_dt0_injective hT hB N)
-    (cubeWave_S0_surjective hT hB N) hf σ₀ φ₀ u₀ M₀ ρ₀
+            ⟪f 0, (cubeWave hT hB N).dt0 ψ⟫) := by
+  constructor
+  · rintro ⟨s, rfl, rfl, rfl, -, -⟩
+    exact Feec.BGG.DiscreteSolution.compatible hT0 s
+  · rintro ⟨h1, h2, h3⟩
+    exact Feec.BGG.exists_discreteSolution_of_continuousOn (cubeWave_dt0_injective hT hB N)
+      (cubeWave_S0_surjective hT hB N) hT0.le hf h1 h2 h3
 
 /-- **Corrected Prop 6.2 for (6.5), dynamic data**: existence ⇔ (C2), with the forced algebraic
 datum `φₕ(0) = Φ(σ₀, f(0))`. -/

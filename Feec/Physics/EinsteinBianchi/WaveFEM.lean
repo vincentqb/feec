@@ -25,7 +25,8 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
   (Stone), under the regularity hypothesis.
 * **`waveFEM`**: under `CurlPotential`, for one smoother: (5.4) and uniform bounds; `grad`
   injective and `S₀,ₕ` onto; corrected Prop 6.2 for (6.5); energy stability; `O(h)` convergence
-  for `C²` classical solutions. **`waveFEM_nonvacuous`**: a nontrivial manufactured solution meets
+  for classical solutions whose states and time derivatives are `C²` and vanish outside `Q`
+  (flat at `∂Q`). **`waveFEM_nonvacuous`**: a nontrivial manufactured solution meets
   all hypotheses and its discrete `σₕ(t)` converge and are nonzero for large `N`.
 
 ## Gaps
@@ -342,8 +343,9 @@ set_option maxHeartbeats 4000000 in
 4. every solution of (6.5) is energy-stable:
    `E(t)^{1/2} ≤ E(0)^{1/2} + ∫₀ᵗ ‖f‖`, `E = ‖σₕ‖² + ‖uₕ‖² + ‖Mₕ‖² + ‖ρₕ‖²`;
 5. (`O(h)` convergence) there is `K` such that for every classical solution of (6.2)
-   (`Feec.BGG.ExactWave`) with `C²` states and time derivatives (bound `L`) and `L²`-bounded
-   multiplier, the solution of (6.5) from the elliptic projection (6.4) of the exact initial
+   (`Feec.BGG.ExactWave`) with `C²` states and time derivatives that vanish outside `Q` (flat at
+   `∂Q`, a class much smaller than the thesis' boundary conditions, which put no condition on
+   `M`, `ρ`; bound `L`) and `L²`-bounded multiplier, the solution of (6.5) from the elliptic projection (6.4) of the exact initial
    state satisfies `‖(σ, u, M, ρ)(t) − (σₕ, uₕ, Mₕ, ρₕ)(t)‖ ≤ K L (1 + t) h_N` on `[0,T]`. -/
 theorem waveFEM (hR : CurlPotential) :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)

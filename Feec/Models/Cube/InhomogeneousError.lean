@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.Inhomogeneous
 public import Feec.Models.Cube.WhitneyRate
+public import Feec.FiniteElement.PolyComplex
 
 @[expose] public noncomputable section
 
@@ -1362,4 +1363,759 @@ theorem whitney_cn_error_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ 
 
 end WhitneyError
 
+/-! ## The interior Whitney spaces are nonzero -/
+
+section NeBot
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Mesh
+
+theorem finrank_whitneyMin_pos_of_mesh (N k : ℕ)
+    (h : 0 < Module.finrank ℝ ((whitneyElement 3).V₀ (mesh 3 N) (k : ℤ))) :
+    0 < Module.finrank ℝ ((whitneyMin 3 N).V (k : ℤ)) :=
+  (deRham ℝ 3).minimalSubcomplexOfEq_induction (mesh_domain 3 N) (isOpen_mesh_domain 3 N)
+    (isOpen_cubeDomain 3)
+    (whitneySubcomplexMin (mesh 3 N) (isOpen_mesh_domain 3 N) (center 3) (strictStar_mesh 3 N))
+    (fun _ _ S => 0 < Module.finrank ℝ (S.V (k : ℤ))) h
+
+/-- **The interior Nédélec spaces are nonzero**: `V̊ₕ¹ ≠ 0` on every Freudenthal mesh of the cube
+(an edge through the interior carries a degree of freedom,
+`Feec.FiniteElement.finrank_whitney_V₀_freudenthalMesh_pos`). -/
+theorem whitneyMin_one_ne_bot (N : ℕ) : (whitneyMin 3 N).V ((1 : ℕ) : ℤ) ≠ ⊥ := by
+  intro h
+  have := finrank_whitneyMin_pos_of_mesh N 1
+    (finrank_whitney_V₀_freudenthalMesh_pos (n := 3) (b := 0) (s := 1 / 2) (by norm_num)
+      (N := N + 1) le_rfl (by norm_num))
+  rw [h, finrank_bot] at this
+  exact lt_irrefl 0 this
+
+/-- **The interior Lagrange spaces are nonzero for `N ≥ 1`**: `V̊ₕ⁰ ≠ 0` (an interior hat function;
+the level-`(N + 1)` mesh has an interior vertex as soon as `N + 1 ≥ 2`). -/
+theorem whitneyMin_zero_ne_bot {N : ℕ} (hN : 1 ≤ N) : (whitneyMin 3 N).V ((0 : ℕ) : ℤ) ≠ ⊥ := by
+  intro h
+  have := finrank_whitneyMin_pos_of_mesh N 0
+    (finrank_whitney_V₀_freudenthalMesh_pos_zero (n := 3) (b := 0) (s := 1 / 2) (by norm_num)
+      (N := N + 1) (by omega))
+  rw [h, finrank_bot] at this
+  exact lt_irrefl 0 this
+
+/-- **`V̊ₕ ≠ 0`** for the three-row Whitney space with vanishing boundary DOFs, on every mesh (a
+row with an interior edge function in its `E`-slot). -/
+theorem whitneyInterior3_ne_bot (N : ℕ) : whitneyInterior3 N ≠ ⊥ := by
+  obtain ⟨v, hv, hv0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot (whitneyMin_one_ne_bot N)
+  have hvV : v ∈ (whitneyRow N).V 1 := whitneyMin_le_whitney N _ hv
+  set x : DState (whitneyRow N) := PiLp.single 2 (1 : Fin 3) ⟨v, hvV⟩
+  set u : DState3 (whitneyRow N) := PiLp.single 2 (0 : Fin 3) x
+  have hu : u ∈ whitneyInterior3 N := by
+    intro r i
+    by_cases hr : r = 0
+    · subst hr
+      by_cases hi : i = 1
+      · subst hi
+        simpa [u, x] using hv
+      · simp [u, x, hi]
+    · simp [u, hr]
+  intro hbot
+  have h0 : u = 0 := by rw [hbot] at hu; exact (Submodule.mem_bot ℝ).1 hu
+  have : (u 0 1 : (whitneyRow N).V 1).1 = v := by simp [u, x]
+  rw [h0] at this
+  exact hv0 (by simpa using this.symm)
+
+end NeBot
+
+/-! ## The constraint monitors of the discrete solution -/
+
+section Monitors
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+
+/-- The entry `E_{rj}` of a three-row field in `(L²Λ⁰ × L²Λ¹ × L²Λ²)³` (the ambient version of
+`entryE`). -/
+def entryE' (r j : Fin 3) : (PiLp 2 fun _ : Fin 3 => RowSpace) →ₗ[ℝ] L2 ℝ (cubeDomain 3) where
+  toFun y := (y r 1 : L2F ℝ (cubeDomain 3) _) (edgeIdx j)
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+/-- The entry `B_{rj}` (vector proxy of the `2`-form of row `r`) of a three-row field. -/
+def entryB' (r j : Fin 3) : (PiLp 2 fun _ : Fin 3 => RowSpace) →ₗ[ℝ] L2 ℝ (cubeDomain 3) where
+  toFun y := faceSign j • (y r 2 : L2F ℝ (cubeDomain 3) _) (faceIdx j)
+  map_add' _ _ := by simp
+  map_smul' a _ := by simp [smul_comm a]
+
+/-- The field `σ` of a three-row field. -/
+def sigmaPart' : (PiLp 2 fun _ : Fin 3 => RowSpace) →ₗ[ℝ]
+    PiLp 2 fun _ : Fin 3 => L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((0 : Fin 3) : ℕ))) where
+  toFun y := WithLp.toLp 2 fun r => y r 0
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+theorem entryE_eq (N : ℕ) (r j : Fin 3) (u : DState3 (whitneyRow N)) :
+    entryE N r j u = entryE' r j (dEmb3 (whitneyRow N) u) := rfl
+
+theorem entryB_eq (N : ℕ) (r j : Fin 3) (u : DState3 (whitneyRow N)) :
+    entryB N r j u = entryB' r j (dEmb3 (whitneyRow N) u) := rfl
+
+theorem norm_sigmaPart_eq (N : ℕ) (u : DState3 (whitneyRow N)) :
+    ‖sigmaPart N u‖ = ‖sigmaPart' (dEmb3 (whitneyRow N) u)‖ := by
+  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
+  rfl
+
+theorem sum_norm_entryE'_sq_le (y : PiLp 2 fun _ : Fin 3 => RowSpace) :
+    ∑ r, ∑ j, ‖entryE' r j y‖ ^ 2 ≤ ‖y‖ ^ 2 := by
+  rw [PiLp.norm_sq_eq_of_L2]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have h1 := PiLp.sum_norm_sq_comp_le (y r 1 : L2F ℝ (cubeDomain 3) _) edgeIdx_injective
+  have h2 := pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (y r) 1) 2
+  exact h1.trans h2
+
+theorem sum_norm_entryB'_sq_le (y : PiLp 2 fun _ : Fin 3 => RowSpace) :
+    ∑ r, ∑ j, ‖entryB' r j y‖ ^ 2 ≤ ‖y‖ ^ 2 := by
+  rw [PiLp.norm_sq_eq_of_L2]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have h1 := PiLp.sum_norm_sq_comp_le (y r 2 : L2F ℝ (cubeDomain 3) _) faceIdx_injective
+  have h2 := pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (y r) 2) 2
+  have hs : ∀ j, ‖entryB' r j y‖ = ‖(y r 2 : L2F ℝ (cubeDomain 3) _) (faceIdx j)‖ := fun j => by
+    simp [entryB', faceSign, norm_smul]
+  simp only [hs]
+  exact h1.trans h2
+
+theorem norm_sigmaPart'_le (y : PiLp 2 fun _ : Fin 3 => RowSpace) : ‖sigmaPart' y‖ ≤ ‖y‖ := by
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_le_sum fun r _ =>
+    pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (y r) 0) 2
+
+variable {T L : ℝ}
+
+/-- **A TSD state of the three-row form model** at time `t`: `σ = 0`, and the matrices
+`E_{rj}` (component `dx_j` of the `1`-form of row `r`) and `B_{rj} = (−1)^j ω_{{j}ᶜ}` (vector
+proxy of the `2`-form of row `r`) are symmetric and trace-free, pointwise. -/
+structure IsTSDAt (X : Fin 3 → RowSolution T L) (t : ℝ) : Prop where
+  sigma : ∀ r y s, (X r).u t 0 y s = 0
+  symm_E : ∀ r j y, (X r).u t 1 y {j} = (X j).u t 1 y {r}
+  trace_E : ∀ y, ∑ r, (X r).u t 1 y {r} = 0
+  symm_B : ∀ r j y, faceSign j * (X r).u t 2 y {j}ᶜ = faceSign r * (X j).u t 2 y {r}ᶜ
+  trace_B : ∀ y, ∑ r, faceSign r * (X r).u t 2 y {r}ᶜ = 0
+
+variable (X : Fin 3 → RowSolution T L)
+
+theorem entryE'_exactField (t : ℝ) (r j : Fin 3) :
+    entryE' r j (exactField X t) =
+      (memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
+        (show Continuous fun y => (X r).u t 1 y {j} from
+          (continuous_apply _).comp ((X r).continuous t 1))).toLp
+        (fun y => (X r).u t 1 y {j}) := rfl
+
+theorem entryB'_exactField (t : ℝ) (r j : Fin 3) :
+    entryB' r j (exactField X t) =
+      (memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
+        (show Continuous fun y => faceSign j * (X r).u t 2 y {j}ᶜ from
+          continuous_const.mul ((continuous_apply _).comp ((X r).continuous t 2)))).toLp
+        (fun y => faceSign j * (X r).u t 2 y {j}ᶜ) := by
+  change faceSign j • (memLp_of_continuous (isOpen_cubeDomain 3).measurableSet
+    (isBounded_cubeDomain 3) (show Continuous fun y => (X r).u t 2 y {j}ᶜ from
+      (continuous_apply _).comp ((X r).continuous t 2))).toLp (fun y => (X r).u t 2 y {j}ᶜ) = _
+  rw [← MemLp.toLp_const_smul]
+  rfl
+
+theorem toLp_sum_three_eq_zero {f : Fin 3 → (Fin 3 → ℝ) → ℝ}
+    (hf : ∀ r, MemLp (f r) 2 (volume.restrict (cubeDomain 3))) (h : ∀ y, ∑ r, f r y = 0) :
+    ∑ r, (hf r).toLp (f r) = 0 := by
+  rw [Fin.sum_univ_three, ← MemLp.toLp_add, ← MemLp.toLp_add]
+  refine (MemLp.toLp_congr _ MemLp.zero (Eventually.of_forall fun y => ?_)).trans
+    (MemLp.toLp_zero _)
+  have := h y
+  rw [Fin.sum_univ_three] at this
+  simpa using this
+
+/-- The five `fem4gr` monitors vanish on a TSD state. -/
+theorem monitors_exactField_eq_zero {t : ℝ} (hX : IsTSDAt X t) :
+    skewPart entryE' (exactField X t) = 0 ∧ skewPart entryB' (exactField X t) = 0 ∧
+      tracePart entryE' (exactField X t) = 0 ∧ tracePart entryB' (exactField X t) = 0 ∧
+      sigmaPart' (exactField X t) = 0 := by
+  refine ⟨PiLp.ext fun p => ?_, PiLp.ext fun p => ?_, ?_, ?_, PiLp.ext fun r => PiLp.ext fun s => ?_⟩
+  · change (1 / 2 : ℝ) • (entryE' p.1 p.2 (exactField X t) - entryE' p.2 p.1 (exactField X t)) = _
+    have hE : entryE' p.1 p.2 (exactField X t) = entryE' p.2 p.1 (exactField X t) := by
+      rw [entryE'_exactField, entryE'_exactField]
+      exact MemLp.toLp_congr _ _ (Eventually.of_forall fun y => hX.symm_E p.1 p.2 y)
+    rw [hE, sub_self, smul_zero]
+    rfl
+  · change (1 / 2 : ℝ) • (entryB' p.1 p.2 (exactField X t) - entryB' p.2 p.1 (exactField X t)) = _
+    have hB : entryB' p.1 p.2 (exactField X t) = entryB' p.2 p.1 (exactField X t) := by
+      rw [entryB'_exactField, entryB'_exactField]
+      exact MemLp.toLp_congr _ _ (Eventually.of_forall fun y => hX.symm_B p.1 p.2 y)
+    rw [hB, sub_self, smul_zero]
+    rfl
+  · simp only [tracePart, LinearMap.smul_apply, LinearMap.sum_apply, entryE'_exactField]
+    rw [toLp_sum_three_eq_zero _ hX.trace_E, smul_zero]
+  · simp only [tracePart, LinearMap.smul_apply, LinearMap.sum_apply, entryB'_exactField]
+    rw [toLp_sum_three_eq_zero _ hX.trace_B, smul_zero]
+  · change formL2Q _ ((X r).u t 0) _ s = 0
+    exact (MemLp.toLp_congr (memLp_of_continuous (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) (continuous_formComp ((X r).continuous t 0) s)) MemLp.zero
+      (Eventually.of_forall fun y => hX.sigma r y s.1)).trans (MemLp.toLp_zero _)
+
+theorem skewPart_entryE_eq (N : ℕ) (u : DState3 (whitneyRow N)) :
+    skewPart (entryE N) u = skewPart entryE' (dEmb3 (whitneyRow N) u) := rfl
+
+theorem skewPart_entryB_eq (N : ℕ) (u : DState3 (whitneyRow N)) :
+    skewPart (entryB N) u = skewPart entryB' (dEmb3 (whitneyRow N) u) := rfl
+
+theorem tracePart_entryE_eq (N : ℕ) (u : DState3 (whitneyRow N)) :
+    tracePart (entryE N) u = tracePart entryE' (dEmb3 (whitneyRow N) u) := by
+  simp only [tracePart, LinearMap.smul_apply, LinearMap.sum_apply]; rfl
+
+theorem tracePart_entryB_eq (N : ℕ) (u : DState3 (whitneyRow N)) :
+    tracePart (entryB N) u = tracePart entryB' (dEmb3 (whitneyRow N) u) := by
+  simp only [tracePart, LinearMap.smul_apply, LinearMap.sum_apply]; rfl
+
+theorem norm_le_of_map_eq_zero {Y Z : Type*} [SeminormedAddCommGroup Y] [NormedSpace ℝ Y]
+    [SeminormedAddCommGroup Z] [NormedSpace ℝ Z] {c : Y →ₗ[ℝ] Z} (hc : ∀ y, ‖c y‖ ≤ ‖y‖)
+    {x U : Y} (hU : c U = 0) : ‖c x‖ ≤ ‖x - U‖ := by
+  have : c x = c (x - U) := by rw [map_sub, hU, sub_zero]
+  rw [this]; exact hc _
+
+/-- Each monitor of a discrete field is at most its distance to a TSD exact state. -/
+theorem norm_monitors_le_of_isTSDAt (N : ℕ) (u : DState3 (whitneyRow N)) {t : ℝ}
+    (hX : IsTSDAt X t) :
+    ‖skewPart (entryE N) u‖ ≤ ‖dEmb3 (whitneyRow N) u - exactField X t‖ ∧
+      ‖skewPart (entryB N) u‖ ≤ ‖dEmb3 (whitneyRow N) u - exactField X t‖ ∧
+      ‖tracePart (entryE N) u‖ ≤ ‖dEmb3 (whitneyRow N) u - exactField X t‖ ∧
+      ‖tracePart (entryB N) u‖ ≤ ‖dEmb3 (whitneyRow N) u - exactField X t‖ ∧
+      ‖sigmaPart N u‖ ≤ ‖dEmb3 (whitneyRow N) u - exactField X t‖ := by
+  obtain ⟨h1, h2, h3, h4, h5⟩ := monitors_exactField_eq_zero X hX
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · rw [skewPart_entryE_eq]
+    exact norm_le_of_map_eq_zero (norm_skewPart_le sum_norm_entryE'_sq_le) h1
+  · rw [skewPart_entryB_eq]
+    exact norm_le_of_map_eq_zero (norm_skewPart_le sum_norm_entryB'_sq_le) h2
+  · rw [tracePart_entryE_eq]
+    exact norm_le_of_map_eq_zero (norm_tracePart_le sum_norm_entryE'_sq_le) h3
+  · rw [tracePart_entryB_eq]
+    exact norm_le_of_map_eq_zero (norm_tracePart_le sum_norm_entryB'_sq_le) h4
+  · rw [norm_sigmaPart_eq]
+    exact norm_le_of_map_eq_zero norm_sigmaPart'_le h5
+
+/-- **The `fem4gr` constraint monitors are `O(h + Δt²)` for TSD exact solutions**
+([QuennevilleBelair2015], Ch. 7): in the setting of `whitney_cn_error_le`, if the exact solution
+is TSD at `t_M` (`σ = 0`, `E`, `B` symmetric and trace-free), then "Skew of E/B" `½ (E − Eᵀ)`,
+`½ (B − Bᵀ)`, "Trace of E/B" `tr E / √3`, `tr B / √3` and "Sigma Zero" `σ` of the discrete
+solution `u_M` are all at most `C L (1 + T) (h_N + Δt²)`. -/
+theorem whitney_cn_monitors_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ L) {M : ℕ}
+    (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → DState3 (whitneyRow N)}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)
+      (discreteWave3 (whitneyRow N)) (Δt / 2) 0 (g (n + 1)) (u n) (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - exactInterp X N ((n + 1 : ℕ) * Δt) ∈ whitneyInterior3 N)
+    (hu0 : u 0 = exactInterp X N 0) (hX : IsTSDAt X (M * Δt)) :
+    ‖skewPart (entryE N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖skewPart (entryB N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖tracePart (entryE N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖tracePart (entryB N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖sigmaPart N (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) := by
+  obtain ⟨-, -, -, herr⟩ := whitney_cn_error_le X N hΔt hL0 hM hstep hg hu0
+  obtain ⟨h1, h2, h3, h4, h5⟩ := norm_monitors_le_of_isTSDAt X N (u M) hX
+  exact ⟨h1.trans herr, h2.trans herr, h3.trans herr, h4.trans herr, h5.trans herr⟩
+
+end Monitors
+
+/-! ## Whole-space TSD solutions as rows of forms -/
+
+section MatrixRows
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+  Feec.Models.BoundedDomain
+
+/-- The `1`-form `Σⱼ vⱼ dxⱼ` of a vector field (row `r` of a matrix field). -/
+def oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) : FormField 3 := fun y s =>
+  ∑ j, if s = {j} then v j y else 0
+/-- The `2`-form with vector proxy `v` (`ω_{{j}ᶜ} = (−1)ʲ vⱼ`, `faceSign`). -/
+def twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) : FormField 3 := fun y s =>
+  ∑ j, if s = {j}ᶜ then faceSign j * v j y else 0
+/-- The curl `(curl v)ₖ = ∂ₖ₊₁ vₖ₊₂ − ∂ₖ₊₂ vₖ₊₁` of a vector field. -/
+def curlV (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (k : Fin 3) (y : Fin 3 → ℝ) : ℝ :=
+  pd (k + 1) (v (k + 2)) y - pd (k + 2) (v (k + 1)) y
+
+theorem finset_fin3_cases (s : Finset (Fin 3)) : s = ∅ ∨ s = {0} ∨ s = {1} ∨ s = {2} ∨
+    s = {0, 1} ∨ s = {0, 2} ∨ s = {1, 2} ∨ s = {0, 1, 2} := by
+  revert s; decide
+
+theorem compl_fin3 : ({0}ᶜ : Finset (Fin 3)) = {1, 2} ∧ ({1}ᶜ : Finset (Fin 3)) = {0, 2} ∧
+    ({2}ᶜ : Finset (Fin 3)) = {0, 1} ∧ ({0, 1}ᶜ : Finset (Fin 3)) = {2} ∧
+    ({0, 2}ᶜ : Finset (Fin 3)) = {1} ∧ ({1, 2}ᶜ : Finset (Fin 3)) = {0} ∧
+    (∅ᶜ : Finset (Fin 3)) = {0, 1, 2} ∧ ({0, 1, 2}ᶜ : Finset (Fin 3)) = ∅ := by decide
+
+theorem extDeriv_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    extDeriv (oneForm v) = twoForm (curlV v) := by
+  funext y s
+  simp only [extDeriv_apply, oneForm, twoForm, curlV]
+  rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, pd] <;>
+    ring_nf
+
+theorem extDeriv_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    extDeriv (twoForm v) = fun y s => if s = Finset.univ then ∑ j, pd j (v j) y else 0 := by
+  funext y s
+  simp only [extDeriv_apply, twoForm]
+  rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, pd]
+  ring_nf
+
+theorem formalAdjD_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    formalAdjD (twoForm v) = oneForm (curlV v) := by
+  funext y s
+  simp only [formalAdjD, extDAdj, oneForm, twoForm, curlV]
+  rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, pd, compl_fin3] <;>
+    ring_nf
+
+theorem formalAdjD_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    formalAdjD (oneForm v) = fun y s => if s = ∅ then -∑ j, pd j (v j) y else 0 := by
+  funext y s
+  simp only [formalAdjD, extDAdj, oneForm]
+  rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, pd, compl_fin3]
+
+/-- The row-wise curl of a vector field is `curlM`. -/
+theorem curlV_eq_curlM (Φ : Ix → (Fin 3 → ℝ) → ℝ) (r k : Fin 3) (y : Fin 3 → ℝ) :
+    curlV (fun j => Φ (r, j)) k y = curlM Φ (r, k) y := rfl
+
+theorem oneForm_neg (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    oneForm (fun j y => -v j y) = -oneForm v := by
+  funext y s
+  simp only [oneForm, Pi.neg_apply, ← Finset.sum_neg_distrib]
+  exact Finset.sum_congr rfl fun j _ => by split_ifs <;> simp
+
+theorem oneForm_sub (v w : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    oneForm (fun j y => v j y - w j y) = oneForm v - oneForm w := by
+  funext y s
+  simp only [oneForm, Pi.sub_apply, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun j _ => by split_ifs <;> simp
+
+theorem twoForm_sub (v w : Fin 3 → (Fin 3 → ℝ) → ℝ) :
+    twoForm (fun j y => v j y - w j y) = twoForm v - twoForm w := by
+  funext y s
+  simp only [twoForm, Pi.sub_apply, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun j _ => by split_ifs <;> simp [mul_sub]
+
+theorem oneForm_apply_singleton (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 → ℝ) (j : Fin 3) :
+    oneForm v y {j} = v j y := by
+  simp [oneForm, Finset.singleton_inj]
+
+theorem twoForm_apply_compl (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 → ℝ) (j : Fin 3) :
+    twoForm v y {j}ᶜ = faceSign j * v j y := by
+  simp [twoForm, Finset.singleton_inj]
+
+theorem abs_faceSign (j : Fin 3) : |faceSign j| = 1 := by simp [faceSign]
+
+/-- The component functions of `oneForm v`: `v j` at `{j}`, `0` elsewhere. -/
+theorem oneForm_comp (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (s : Finset (Fin 3)) :
+    (∃ j, s = {j} ∧ (fun y => oneForm v y s) = v j) ∨ (fun y => oneForm v y s) = 0 := by
+  by_cases h : ∃ j, s = {j}
+  · obtain ⟨j, rfl⟩ := h
+    exact Or.inl ⟨j, rfl, funext fun y => oneForm_apply_singleton v y j⟩
+  · refine Or.inr (funext fun y => Finset.sum_eq_zero fun j _ => ?_)
+    simp [show ¬ s = {j} from fun hs => h ⟨j, hs⟩]
+
+theorem twoForm_comp (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (s : Finset (Fin 3)) :
+    (∃ j, s = {j}ᶜ ∧ (fun y => twoForm v y s) = fun y => faceSign j * v j y) ∨
+      (fun y => twoForm v y s) = 0 := by
+  by_cases h : ∃ j, s = {j}ᶜ
+  · obtain ⟨j, rfl⟩ := h
+    exact Or.inl ⟨j, rfl, funext fun y => twoForm_apply_compl v y j⟩
+  · refine Or.inr (funext fun y => Finset.sum_eq_zero fun j _ => ?_)
+    simp [show ¬ s = {j}ᶜ from fun hs => h ⟨j, hs⟩]
+
+theorem isDeg_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 → ℝ) : IsDeg 1 (oneForm v y) :=
+  fun s hs => Finset.sum_eq_zero fun j _ => by
+    simp [show ¬ s = {j} from fun h => hs (by rw [h, Finset.card_singleton])]
+
+theorem isDeg_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 → ℝ) : IsDeg 2 (twoForm v y) :=
+  fun s hs => Finset.sum_eq_zero fun j _ => by
+    simp [show ¬ s = {j}ᶜ from fun h => hs (by rw [h, Finset.card_compl, Finset.card_singleton]; rfl)]
+
+theorem contDiff_oneForm {m : WithTop ℕ∞} {v : Fin 3 → (Fin 3 → ℝ) → ℝ}
+    (hv : ∀ j, ContDiff ℝ m (v j)) : ContDiff ℝ m (oneForm v) :=
+  contDiff_pi.2 fun s => ContDiff.sum fun j _ => by
+    by_cases h : s = {j}
+    · simpa [h] using hv j
+    · simpa [h] using (contDiff_const : ContDiff ℝ m fun _ : Fin 3 → ℝ => (0 : ℝ))
+
+theorem contDiff_twoForm {m : WithTop ℕ∞} {v : Fin 3 → (Fin 3 → ℝ) → ℝ}
+    (hv : ∀ j, ContDiff ℝ m (v j)) : ContDiff ℝ m (twoForm v) :=
+  contDiff_pi.2 fun s => ContDiff.sum fun j _ => by
+    by_cases h : s = {j}ᶜ
+    · simpa [h] using contDiff_const.mul (hv j)
+    · simpa [h] using (contDiff_const : ContDiff ℝ m fun _ : Fin 3 → ℝ => (0 : ℝ))
+
+/-- `‖D F‖ ≤ L` for a form field whose components have `‖D Fₛ‖ ≤ L`. -/
+theorem norm_fderiv_form_le {F : FormField 3} {y : Fin 3 → ℝ} {L : ℝ} (hL0 : 0 ≤ L)
+    (hd : ∀ s, DifferentiableAt ℝ (fun z => F z s) y)
+    (h : ∀ s, ‖fderiv ℝ (fun z => F z s) y‖ ≤ L) : ‖fderiv ℝ F y‖ ≤ L := by
+  have e : fderiv ℝ F y = ContinuousLinearMap.pi fun s => fderiv ℝ (fun z => F z s) y :=
+    fderiv_pi (φ := fun s z => F z s) hd
+  rw [e]
+  exact ContinuousLinearMap.norm_pi_le_of_le h hL0
+
+theorem norm_fderiv_oneForm_le {v : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} {L : ℝ}
+    (hL0 : 0 ≤ L) (hd : ∀ j, DifferentiableAt ℝ (v j) y) (h : ∀ j, ‖fderiv ℝ (v j) y‖ ≤ L) :
+    ‖fderiv ℝ (oneForm v) y‖ ≤ L := by
+  refine norm_fderiv_form_le hL0 (fun s => ?_) fun s => ?_
+  · rcases oneForm_comp v s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact hd j
+    · rw [h0]; exact differentiableAt_const _
+  · rcases oneForm_comp v s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact h j
+    · rw [h0]
+      simpa using hL0
+
+theorem norm_fderiv_twoForm_le {v : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} {L : ℝ}
+    (hL0 : 0 ≤ L) (hd : ∀ j, DifferentiableAt ℝ (v j) y) (h : ∀ j, ‖fderiv ℝ (v j) y‖ ≤ L) :
+    ‖fderiv ℝ (twoForm v) y‖ ≤ L := by
+  refine norm_fderiv_form_le hL0 (fun s => ?_) fun s => ?_
+  · rcases twoForm_comp v s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact (hd j).const_mul _
+    · rw [h0]; exact differentiableAt_const _
+  · rcases twoForm_comp v s with ⟨j, -, hj⟩ | h0
+    · rw [hj, fderiv_const_mul (hd j), norm_smul, Real.norm_eq_abs, abs_faceSign, one_mul]
+      exact h j
+    · rw [h0]
+      simpa using hL0
+
+end MatrixRows
+
+/-! ## Whole-space TSD solutions with bounded derivatives -/
+
+section SmoothTSD
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+  Feec.Models.BoundedDomain
+
+/-- **Bounded higher derivatives of a whole-space TSD solution on `[0, T] × cl Q`**: `C²` in space,
+`C³` in time (the second and third time derivatives `E₂, E₃, B₂, B₃` jointly continuous), with
+`‖D E‖, ‖D curl E‖, ‖D B‖, ‖D curl B‖ ≤ L` on `cl Q`, these `L`-Lipschitz in `t ∈ [0, T]`, and
+`|∂ₜ³ E|, |∂ₜ³ B| ≤ L` on `Q`. (The plane wave of Ch. 7 has them,
+`Feec.Numerics.PlaneWaveCube`.) -/
+structure WholeSpaceTSD.Smooth (W : WholeSpaceTSD) (T L : ℝ) where
+  /-- the second and third time derivatives -/
+  E₂ : ℝ → Ix → (Fin 3 → ℝ) → ℝ
+  E₃ : ℝ → Ix → (Fin 3 → ℝ) → ℝ
+  B₂ : ℝ → Ix → (Fin 3 → ℝ) → ℝ
+  B₃ : ℝ → Ix → (Fin 3 → ℝ) → ℝ
+  contDiff_E : ∀ t ij, ContDiff ℝ 2 (W.E t ij)
+  contDiff_B : ∀ t ij, ContDiff ℝ 2 (W.B t ij)
+  continuous_E₂ : ∀ ij, Continuous fun p : ℝ × (Fin 3 → ℝ) => E₂ p.1 ij p.2
+  continuous_E₃ : ∀ ij, Continuous fun p : ℝ × (Fin 3 → ℝ) => E₃ p.1 ij p.2
+  continuous_B₂ : ∀ ij, Continuous fun p : ℝ × (Fin 3 → ℝ) => B₂ p.1 ij p.2
+  continuous_B₃ : ∀ ij, Continuous fun p : ℝ × (Fin 3 → ℝ) => B₃ p.1 ij p.2
+  hasDerivAt_E₁ : ∀ t ij x, HasDerivAt (fun s => -curlM (W.B s) ij x) (E₂ t ij x) t
+  hasDerivAt_E₂ : ∀ t ij x, HasDerivAt (fun s => E₂ s ij x) (E₃ t ij x) t
+  hasDerivAt_B₁ : ∀ t ij x, HasDerivAt (fun s => curlM (W.E s) ij x) (B₂ t ij x) t
+  hasDerivAt_B₂ : ∀ t ij x, HasDerivAt (fun s => B₂ s ij x) (B₃ t ij x) t
+  bound : ∀ t ∈ Icc 0 T, ∀ ij, ∀ y ∈ closure (cubeDomain 3),
+    ‖fderiv ℝ (W.E t ij) y‖ ≤ L ∧ ‖fderiv ℝ (curlM (W.E t) ij) y‖ ≤ L ∧
+      ‖fderiv ℝ (W.B t ij) y‖ ≤ L ∧ ‖fderiv ℝ (curlM (W.B t) ij) y‖ ≤ L
+  lipschitz : ∀ t ∈ Icc 0 T, ∀ t' ∈ Icc 0 T, ∀ ij, ∀ y ∈ closure (cubeDomain 3),
+    ‖fderiv ℝ (W.E t' ij) y - fderiv ℝ (W.E t ij) y‖ ≤ L * |t' - t| ∧
+      ‖fderiv ℝ (curlM (W.E t') ij) y - fderiv ℝ (curlM (W.E t) ij) y‖ ≤ L * |t' - t| ∧
+      ‖fderiv ℝ (W.B t' ij) y - fderiv ℝ (W.B t ij) y‖ ≤ L * |t' - t| ∧
+      ‖fderiv ℝ (curlM (W.B t') ij) y - fderiv ℝ (curlM (W.B t) ij) y‖ ≤ L * |t' - t|
+  bound₃ : ∀ t ∈ Icc 0 T, ∀ ij, ∀ y ∈ cubeDomain 3, |E₃ t ij y| ≤ L ∧ |B₃ t ij y| ≤ L
+
+namespace WholeSpaceTSD
+
+variable {W : WholeSpaceTSD} {T L : ℝ}
+
+theorem contDiff_pd {f : (Fin 3 → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) :
+    ContDiff ℝ 1 (pd k f) :=
+  (hf.fderiv_right (m := 1) (by norm_num)).clm_apply contDiff_const
+
+theorem contDiff_curlM {Φ : Ix → (Fin 3 → ℝ) → ℝ} (hΦ : ∀ ij, ContDiff ℝ 2 (Φ ij)) (ij : Ix) :
+    ContDiff ℝ 1 (curlM Φ ij) :=
+  (contDiff_pd (hΦ _) _).sub (contDiff_pd (hΦ _) _)
+
+/-- Row `r` of a whole-space TSD solution as forms `(0, E_r, B_r)`. -/
+def rowForms (E B : Ix → (Fin 3 → ℝ) → ℝ) (r : Fin 3) : Fin 3 → FormField 3 :=
+  ![0, oneForm fun j => E (r, j), twoForm fun j => B (r, j)]
+
+theorem hasDerivAt_oneForm {E E' : ℝ → Ix → (Fin 3 → ℝ) → ℝ} {r : Fin 3} {t : ℝ} {y : Fin 3 → ℝ}
+    (h : ∀ j, HasDerivAt (fun s => E s (r, j) y) (E' t (r, j) y) t) (s : Finset (Fin 3)) :
+    HasDerivAt (fun τ => oneForm (fun j => E τ (r, j)) y s)
+      (oneForm (fun j => E' t (r, j)) y s) t := by
+  simp only [oneForm]
+  refine HasDerivAt.fun_sum fun j _ => ?_
+  by_cases hs : s = {j}
+  · simpa [hs] using h j
+  · simpa [hs] using hasDerivAt_const t (0 : ℝ)
+
+theorem hasDerivAt_twoForm {B B' : ℝ → Ix → (Fin 3 → ℝ) → ℝ} {r : Fin 3} {t : ℝ} {y : Fin 3 → ℝ}
+    (h : ∀ j, HasDerivAt (fun s => B s (r, j) y) (B' t (r, j) y) t) (s : Finset (Fin 3)) :
+    HasDerivAt (fun τ => twoForm (fun j => B τ (r, j)) y s)
+      (twoForm (fun j => B' t (r, j)) y s) t := by
+  simp only [twoForm]
+  refine HasDerivAt.fun_sum fun j _ => ?_
+  by_cases hs : s = {j}ᶜ
+  · simpa [hs] using (h j).const_mul (faceSign j)
+  · simpa [hs] using hasDerivAt_const t (0 : ℝ)
+
+theorem continuous_oneForm_joint {E : ℝ → Ix → (Fin 3 → ℝ) → ℝ} {r : Fin 3}
+    (h : ∀ ij, Continuous fun p : ℝ × (Fin 3 → ℝ) => E p.1 ij p.2) (s : Finset (Fin 3)) :
+    Continuous fun p : ℝ × (Fin 3 → ℝ) => oneForm (fun j => E p.1 (r, j)) p.2 s := by
+  simp only [oneForm]
+  refine continuous_finsetSum _ fun j _ => ?_
+  by_cases hs : s = {j}
+  · simpa [hs] using h (r, j)
+  · simpa [hs] using continuous_const
+
+theorem continuous_twoForm_joint {B : ℝ → Ix → (Fin 3 → ℝ) → ℝ} {r : Fin 3}
+    (h : ∀ ij, Continuous fun p : ℝ × (Fin 3 → ℝ) => B p.1 ij p.2) (s : Finset (Fin 3)) :
+    Continuous fun p : ℝ × (Fin 3 → ℝ) => twoForm (fun j => B p.1 (r, j)) p.2 s := by
+  simp only [twoForm]
+  refine continuous_finsetSum _ fun j _ => ?_
+  by_cases hs : s = {j}ᶜ
+  · simp only [hs, ↓reduceIte]
+    exact continuous_const.mul (h (r, j))
+  · simpa [hs] using continuous_const
+
+end WholeSpaceTSD
+
+
+namespace WholeSpaceTSD.Smooth
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
+  Feec.Models.BoundedDomain
+
+variable {W : WholeSpaceTSD} {T L : ℝ} (S : W.Smooth T L)
+
+theorem extDeriv_zero : extDeriv (0 : FormField 3) = 0 := extDeriv_const (0 : Finset (Fin 3) → ℝ)
+
+theorem fderiv_zero_form (y : Fin 3 → ℝ) : fderiv ℝ (0 : FormField 3) y = 0 :=
+  fderiv_const_apply (0 : Finset (Fin 3) → ℝ)
+
+theorem extDeriv_twoForm_B (t : ℝ) (r : Fin 3) :
+    extDeriv (twoForm fun j => W.B t (r, j)) = 0 := by
+  rw [extDeriv_twoForm]
+  funext y s
+  simp [W.div_B t r y]
+
+theorem norm_fderiv_oneForm_sub_le {v w : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} {L : ℝ}
+    (hL0 : 0 ≤ L) (hv : ∀ j, DifferentiableAt ℝ (v j) y) (hw : ∀ j, DifferentiableAt ℝ (w j) y)
+    (h : ∀ j, ‖fderiv ℝ (v j) y - fderiv ℝ (w j) y‖ ≤ L) :
+    ‖fderiv ℝ (oneForm v) y - fderiv ℝ (oneForm w) y‖ ≤ L := by
+  have hdv : DifferentiableAt ℝ (oneForm v) y := differentiableAt_pi.2 fun s => by
+    rcases oneForm_comp v s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact hv j
+    · rw [h0]; exact differentiableAt_const _
+  have hdw : DifferentiableAt ℝ (oneForm w) y := differentiableAt_pi.2 fun s => by
+    rcases oneForm_comp w s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact hw j
+    · rw [h0]; exact differentiableAt_const _
+  rw [← fderiv_sub hdv hdw, ← oneForm_sub]
+  refine norm_fderiv_oneForm_le hL0 (fun j => (hv j).sub (hw j)) fun j => ?_
+  rw [fderiv_fun_sub (hv j) (hw j)]
+  exact h j
+
+theorem norm_fderiv_twoForm_sub_le {v w : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} {L : ℝ}
+    (hL0 : 0 ≤ L) (hv : ∀ j, DifferentiableAt ℝ (v j) y) (hw : ∀ j, DifferentiableAt ℝ (w j) y)
+    (h : ∀ j, ‖fderiv ℝ (v j) y - fderiv ℝ (w j) y‖ ≤ L) :
+    ‖fderiv ℝ (twoForm v) y - fderiv ℝ (twoForm w) y‖ ≤ L := by
+  have hdv : DifferentiableAt ℝ (twoForm v) y := differentiableAt_pi.2 fun s => by
+    rcases twoForm_comp v s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact (hv j).const_mul _
+    · rw [h0]; exact differentiableAt_const _
+  have hdw : DifferentiableAt ℝ (twoForm w) y := differentiableAt_pi.2 fun s => by
+    rcases twoForm_comp w s with ⟨j, -, hj⟩ | h0
+    · rw [hj]; exact (hw j).const_mul _
+    · rw [h0]; exact differentiableAt_const _
+  rw [← fderiv_sub hdv hdw, ← twoForm_sub]
+  refine norm_fderiv_twoForm_le hL0 (fun j => (hv j).sub (hw j)) fun j => ?_
+  rw [fderiv_fun_sub (hv j) (hw j)]
+  exact h j
+
+theorem abs_oneForm_le {v : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} {L : ℝ} (hL0 : 0 ≤ L)
+    (h : ∀ j, |v j y| ≤ L) (s : Finset (Fin 3)) : |oneForm v y s| ≤ L := by
+  rcases oneForm_comp v s with ⟨j, -, hj⟩ | h0
+  · rw [show oneForm v y s = v j y from congrFun hj y]; exact h j
+  · rw [show oneForm v y s = 0 from congrFun h0 y, abs_zero]; exact hL0
+
+theorem abs_twoForm_le {v : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} {L : ℝ} (hL0 : 0 ≤ L)
+    (h : ∀ j, |v j y| ≤ L) (s : Finset (Fin 3)) : |twoForm v y s| ≤ L := by
+  rcases twoForm_comp v s with ⟨j, -, hj⟩ | h0
+  · rw [show twoForm v y s = faceSign j * v j y from congrFun hj y, abs_mul, abs_faceSign,
+      one_mul]
+    exact h j
+  · rw [show twoForm v y s = 0 from congrFun h0 y, abs_zero]; exact hL0
+
+/-- **Row `r` of a whole-space TSD solution with bounded derivatives is a smooth row solution**
+on `[0, T] × cl Q`: `(σ_r, E_r, B_r) = (0, Σⱼ E_{rj} dxⱼ, Σⱼ (−1)ʲ B_{rj} dx_{{j}ᶜ})`. -/
+def row (hL0 : 0 ≤ L) (r : Fin 3) : RowSolution T L where
+  u t := WholeSpaceTSD.rowForms (W.E t) (W.B t) r
+  u₁ t := WholeSpaceTSD.rowForms (fun ij y => -curlM (W.B t) ij y) (curlM (W.E t)) r
+  u₂ t := WholeSpaceTSD.rowForms (S.E₂ t) (S.B₂ t) r
+  u₃ t := WholeSpaceTSD.rowForms (S.E₃ t) (S.B₃ t) r
+  isDeg t i y := by
+    fin_cases i
+    · intro s _; rfl
+    · exact isDeg_oneForm (fun j => W.E t (r, j)) y
+    · exact isDeg_twoForm (fun j => W.B t (r, j)) y
+  contDiff t i := by
+    fin_cases i
+    · exact contDiff_const
+    · exact contDiff_oneForm fun j => S.contDiff_E t (r, j)
+    · exact contDiff_twoForm fun j => S.contDiff_B t (r, j)
+  continuous₁ i s := by
+    fin_cases i
+    · exact continuous_const
+    · exact WholeSpaceTSD.continuous_oneForm_joint
+        (E := fun t ij y => -curlM (W.B t) ij y) (fun ij => (W.continuous_curl_B ij).neg) s
+    · exact WholeSpaceTSD.continuous_twoForm_joint (B := fun t => curlM (W.E t))
+        W.continuous_curl_E s
+  continuous₂ i s := by
+    fin_cases i
+    · exact continuous_const
+    · exact WholeSpaceTSD.continuous_oneForm_joint S.continuous_E₂ s
+    · exact WholeSpaceTSD.continuous_twoForm_joint S.continuous_B₂ s
+  continuous₃ i s := by
+    fin_cases i
+    · exact continuous_const
+    · exact WholeSpaceTSD.continuous_oneForm_joint S.continuous_E₃ s
+    · exact WholeSpaceTSD.continuous_twoForm_joint S.continuous_B₃ s
+  hasDerivAt₁ t i y s := by
+    fin_cases i
+    · exact hasDerivAt_const t _
+    · exact WholeSpaceTSD.hasDerivAt_oneForm (E' := fun t ij y => -curlM (W.B t) ij y)
+        (fun j => W.hasDerivAt_E t (r, j) y) s
+    · exact WholeSpaceTSD.hasDerivAt_twoForm (B' := fun t => curlM (W.E t))
+        (fun j => W.hasDerivAt_B t (r, j) y) s
+  hasDerivAt₂ t i y s := by
+    fin_cases i
+    · exact hasDerivAt_const t _
+    · exact WholeSpaceTSD.hasDerivAt_oneForm (E := fun t ij y => -curlM (W.B t) ij y)
+        (fun j => S.hasDerivAt_E₁ t (r, j) y) s
+    · exact WholeSpaceTSD.hasDerivAt_twoForm (B := fun t => curlM (W.E t))
+        (fun j => S.hasDerivAt_B₁ t (r, j) y) s
+  hasDerivAt₃ t i y s := by
+    fin_cases i
+    · exact hasDerivAt_const t _
+    · exact WholeSpaceTSD.hasDerivAt_oneForm (fun j => S.hasDerivAt_E₂ t (r, j) y) s
+    · exact WholeSpaceTSD.hasDerivAt_twoForm (fun j => S.hasDerivAt_B₂ t (r, j) y) s
+  pde₀ t := by
+    change (0 : FormField 3) = -formalAdjD (oneForm fun j => W.E t (r, j))
+    rw [formalAdjD_oneForm]
+    funext y s
+    simp [W.div_E t r y]
+  pde₁ t := by
+    change oneForm (fun j y => -curlM (W.B t) (r, j) y) =
+      extDeriv 0 - formalAdjD (twoForm fun j => W.B t (r, j))
+    rw [formalAdjD_twoForm, extDeriv_zero, zero_sub, oneForm_neg]
+    rfl
+  pde₂ t := by
+    change twoForm (fun j => curlM (W.E t) (r, j)) = extDeriv (oneForm fun j => W.E t (r, j))
+    rw [extDeriv_oneForm]
+    rfl
+  bound t ht i y hy := by
+    have hE := fun j => S.bound t ht (r, j) y hy
+    fin_cases i
+    · change ‖fderiv ℝ (0 : FormField 3) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (0 : FormField 3)) y‖ ≤ L
+      rw [extDeriv_zero, fderiv_zero_form, norm_zero]
+      exact ⟨hL0, hL0⟩
+    · change ‖fderiv ℝ (oneForm fun j => W.E t (r, j)) y‖ ≤ L ∧
+        ‖fderiv ℝ (extDeriv (oneForm fun j => W.E t (r, j))) y‖ ≤ L
+      rw [extDeriv_oneForm]
+      exact ⟨norm_fderiv_oneForm_le hL0
+          (fun j => (S.contDiff_E t (r, j)).differentiable (by norm_num) y) fun j => (hE j).1,
+        norm_fderiv_twoForm_le hL0 (fun j => (WholeSpaceTSD.contDiff_curlM (S.contDiff_E t)
+          (r, j)).differentiable one_ne_zero y) fun j => (hE j).2.1⟩
+    · change ‖fderiv ℝ (twoForm fun j => W.B t (r, j)) y‖ ≤ L ∧
+        ‖fderiv ℝ (extDeriv (twoForm fun j => W.B t (r, j))) y‖ ≤ L
+      rw [extDeriv_twoForm_B, fderiv_zero_form, norm_zero]
+      exact ⟨norm_fderiv_twoForm_le hL0
+          (fun j => (S.contDiff_B t (r, j)).differentiable (by norm_num) y)
+          fun j => (hE j).2.2.1, hL0⟩
+  lipschitz t ht t' ht' i y hy := by
+    have hE := fun j => S.lipschitz t ht t' ht' (r, j) y hy
+    have hLt : 0 ≤ L * |t' - t| := mul_nonneg hL0 (abs_nonneg _)
+    fin_cases i
+    · change ‖fderiv ℝ (0 : FormField 3) y - fderiv ℝ (0 : FormField 3) y‖ ≤ L * |t' - t| ∧
+        ‖fderiv ℝ (extDeriv (0 : FormField 3)) y - fderiv ℝ (extDeriv (0 : FormField 3)) y‖ ≤
+          L * |t' - t|
+      simp only [sub_self, norm_zero]
+      exact ⟨hLt, hLt⟩
+    · change ‖fderiv ℝ (oneForm fun j => W.E t' (r, j)) y -
+          fderiv ℝ (oneForm fun j => W.E t (r, j)) y‖ ≤ L * |t' - t| ∧
+        ‖fderiv ℝ (extDeriv (oneForm fun j => W.E t' (r, j))) y -
+          fderiv ℝ (extDeriv (oneForm fun j => W.E t (r, j))) y‖ ≤ L * |t' - t|
+      rw [extDeriv_oneForm, extDeriv_oneForm]
+      exact ⟨norm_fderiv_oneForm_sub_le hLt
+          (fun j => (S.contDiff_E t' (r, j)).differentiable (by norm_num) y)
+          (fun j => (S.contDiff_E t (r, j)).differentiable (by norm_num) y) fun j => (hE j).1,
+        norm_fderiv_twoForm_sub_le hLt
+          (fun j => (WholeSpaceTSD.contDiff_curlM (S.contDiff_E t') (r, j)).differentiable
+            one_ne_zero y)
+          (fun j => (WholeSpaceTSD.contDiff_curlM (S.contDiff_E t) (r, j)).differentiable
+            one_ne_zero y) fun j => (hE j).2.1⟩
+    · change ‖fderiv ℝ (twoForm fun j => W.B t' (r, j)) y -
+          fderiv ℝ (twoForm fun j => W.B t (r, j)) y‖ ≤ L * |t' - t| ∧
+        ‖fderiv ℝ (extDeriv (twoForm fun j => W.B t' (r, j))) y -
+          fderiv ℝ (extDeriv (twoForm fun j => W.B t (r, j))) y‖ ≤ L * |t' - t|
+      rw [extDeriv_twoForm_B, extDeriv_twoForm_B, sub_self, norm_zero]
+      exact ⟨norm_fderiv_twoForm_sub_le hLt
+          (fun j => (S.contDiff_B t' (r, j)).differentiable (by norm_num) y)
+          (fun j => (S.contDiff_B t (r, j)).differentiable (by norm_num) y)
+          fun j => (hE j).2.2.1, hLt⟩
+  bound₃ t ht i y hy s := by
+    fin_cases i
+    · change |(0 : ℝ)| ≤ L
+      rw [abs_zero]; exact hL0
+    · exact abs_oneForm_le hL0 (fun j => (S.bound₃ t ht (r, j) y hy).1) s
+    · exact abs_twoForm_le hL0 (fun j => (S.bound₃ t ht (r, j) y hy).2) s
+
+theorem faceSign_mul_self (j : Fin 3) : faceSign j * faceSign j = 1 := by
+  simp only [faceSign, ← pow_add, ← two_mul, pow_mul]; norm_num
+
+/-- **The rows of a whole-space TSD solution are TSD at every time.** -/
+theorem isTSDAt (hL0 : 0 ≤ L) (t : ℝ) : IsTSDAt (fun r => S.row hL0 r) t where
+  sigma r y s := rfl
+  symm_E r j y := by
+    change oneForm (fun j => W.E t (r, j)) y {j} = oneForm (fun j' => W.E t (j, j')) y {r}
+    rw [oneForm_apply_singleton, oneForm_apply_singleton, W.symm_E]
+  trace_E y := by
+    change ∑ r, oneForm (fun j => W.E t (r, j)) y {r} = 0
+    simp only [oneForm_apply_singleton]
+    exact W.trace_E t y
+  symm_B r j y := by
+    change faceSign j * twoForm (fun j => W.B t (r, j)) y {j}ᶜ =
+      faceSign r * twoForm (fun j' => W.B t (j, j')) y {r}ᶜ
+    rw [twoForm_apply_compl, twoForm_apply_compl, ← mul_assoc, ← mul_assoc, faceSign_mul_self,
+      faceSign_mul_self, W.symm_B]
+  trace_B y := by
+    change ∑ r, faceSign r * twoForm (fun j => W.B t (r, j)) y {r}ᶜ = 0
+    simp only [twoForm_apply_compl, ← mul_assoc, faceSign_mul_self, one_mul]
+    exact W.trace_B t y
+
+/-- **`O(h + Δt²)` convergence and `O(h + Δt²)` monitors for every whole-space TSD solution with
+bounded derivatives** ([QuennevilleBelair2015], Ch. 7): the Crank–Nicolson Whitney scheme on the
+level-`(N + 1)` mesh of `Q`, started from the canonical interpolant of `(0, E, B)(0)` and with the
+boundary DOFs of the interpolants prescribed, satisfies `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`,
+and the five `fem4gr` monitors (skew and trace parts of `E` and `B`, and `σ`) of `u_M` obey the
+same bound (they vanish for the exact solution). -/
+theorem whitney_cn_error_monitors_le (hL0 : 0 ≤ L) (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ}
+    (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → DState3 (whitneyRow N)}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)
+      (discreteWave3 (whitneyRow N)) (Δt / 2) 0 (g (n + 1)) (u n) (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - exactInterp (fun r => S.row hL0 r) N ((n + 1 : ℕ) * Δt) ∈
+      whitneyInterior3 N)
+    (hu0 : u 0 = exactInterp (fun r => S.row hL0 r) N 0) :
+    ‖dEmb3 (whitneyRow N) (u M) - exactField (fun r => S.row hL0 r) (M * Δt)‖ ≤
+        cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖skewPart (entryE N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖skewPart (entryB N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖tracePart (entryE N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖tracePart (entryB N) (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) ∧
+      ‖sigmaPart N (u M)‖ ≤ cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) :=
+  ⟨(whitney_cn_error_le (fun r => S.row hL0 r) N hΔt hL0 hM hstep hg hu0).choose_spec.2.2,
+    whitney_cn_monitors_le (fun r => S.row hL0 r) N hΔt hL0 hM hstep hg hu0
+      (S.isTSDAt hL0 _)⟩
+
+end WholeSpaceTSD.Smooth
+
+end SmoothTSD
 end Feec.Models.Cube.Inhomogeneous

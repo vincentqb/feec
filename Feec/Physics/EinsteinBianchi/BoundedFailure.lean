@@ -36,6 +36,8 @@ convergence theorem without rate for (6.5), and states the resulting failure.
 * `exists_betaSolution`, `betaU`, `betaW`, `isStrongSolution_forms`: the TSD solution in the
   matrix and forms models; `exists_betaDiscrete`, `tendsto_infDist_rhoBeta`: discrete solutions of
   (6.5) from `(0, 0, 0, P ρ(0))`, whose initial states converge.
+* `not_isCsFormTr_rhoBeta`, `not_isRateClass_of_rho`: the datum is not in the rate class (the
+  first magnetic row has the tangential component `−y₂` on `{y₁ = 0}`).
 * **`waveFEM_converges_to_non_tsd`**: items 1–3 below unconditionally, item 4 under
   `IsRateApproximable betaW`: (1) the continuous solution leaves TSD; (2) it is the solution
   `betaW` of (6.1); (3) the scheme has solutions from the projected datum, converging at `t = 0`;
@@ -50,9 +52,9 @@ Convergence of (6.5) for every datum in `D(L)`: the rate theorems need classical
 are `C²` up to `∂Q` with vanishing tangential traces (including `M`, `ρ`), and convergence
 without rate follows here only for data whose solutions are approximable by such solutions with
 small residual (`IsRateApproximable`). For the TSD datum this is open: `ρ(0)` has nonzero
-tangential traces (so the solution is not in the class itself, see
-`Feec.Physics.EinsteinBianchi.WaveFEMTangentialCube`), and `u'(0) = diag(1, −1, 0)` violates the
-boundary condition of `u`, so the solution is not `C²` up to `∂Q` for `t > 0`. A proof would need
+tangential traces (so the solution is not in the class itself, `not_isRateClass_of_rho`), and
+`u'(0) = diag(1, −1, 0)` violates the boundary condition of `u`, so the solution is not expected
+to be `C²` up to `∂Q` for `t > 0` (not formalized). A proof would need
 regularity of (6.1) on the cube (density of smooth solutions with the boundary conditions of the
 rate class), or a rate-free analysis of the elliptic projection (6.4) (consistency of `S₀,ₕ`
 against a non-`L²` multiplier); neither is formalized. The regularity hypothesis `CurlPotential`
@@ -1200,10 +1202,10 @@ Table 6.1 and the thesis' boundary conditions; the regularity hypothesis is disc
    leave TSD: at the times of item 1, for all large `N`, `E_h(t) ∉ L²(TSD)` and `B_h(t)` is not
    symmetric.
 Items 1–3 are unconditional. The hypothesis of item 4 is not proved: the solution from this
-datum is not in the rate class (its datum `ρ(0)` has nonzero tangential traces and `u'(0)` does
-not satisfy the boundary condition of `u`), and approximating it by classical solutions of the
-rate class with small residual is a regularity question for (6.1) on the cube that is open
-here. -/
+datum is not in the rate class (`not_isRateClass_of_rho`: `ρ(0)` has nonzero tangential traces;
+moreover `u'(0)` does not satisfy the boundary condition of `u`), and approximating it by
+classical solutions of the rate class with small residual is a regularity question for (6.1) on
+the cube that is open here. -/
 theorem waveFEM_converges_to_non_tsd {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T) :
@@ -1303,5 +1305,68 @@ theorem tendsto_of_mem_wave_domain {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
   rw [solutionOfStrong_vec hVs ⟨le_rfl, hT0.le⟩, hV0]
 
 end DomainData
+
+/-! ### The TSD datum is not in the rate class -/
+
+section NotRateClass
+
+open Feec.Counterexamples.BoundedDomainTSD
+
+/-- The `{0, 2}`-component of the first magnetic row: `(ρ₀(0))_{{0,2}} = −y₂`. -/
+theorem rhoBeta_zero_idx2_one :
+    ((rhoBeta 0 (idx2 1) : L2 ℝ (cubeDomain 3)) : (Fin 3 → ℝ) → ℝ)
+      =ᵐ[volume.restrict (cubeDomain 3)] fun y => -y 2 := by
+  have e : rhoBeta 0 (idx2 1) = sgn2 1 •
+      betaL2 (isOpen_cubeDomain 3) (isBounded_cubeDomain 3) (0, 1) := by
+    simp [rhoBeta]
+  rw [e]
+  filter_upwards [Lp.coeFn_smul (sgn2 1) (betaL2 (isOpen_cubeDomain 3) (isBounded_cubeDomain 3)
+      (0, 1)),
+    MemLp.coeFn_toLp (memLp_of_continuous (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) (contDiff_betaField (0, 1)).continuous)] with y h1 h2
+  rw [h1, Pi.smul_apply]
+  change sgn2 1 • ((betaL2 (isOpen_cubeDomain 3) (isBounded_cubeDomain 3) (0, 1) :
+    L2 ℝ (cubeDomain 3)) : (Fin 3 → ℝ) → ℝ) y = _
+  rw [show ((betaL2 (isOpen_cubeDomain 3) (isBounded_cubeDomain 3) (0, 1) : L2 ℝ (cubeDomain 3)) :
+    (Fin 3 → ℝ) → ℝ) y = betaField (0, 1) y from h2]
+  simp [sgn2, betaField]
+
+/-- **The TSD datum is not in the rate class**: the first magnetic row `ρ₀(0)` (the `2`-form of
+`x₃ e₂`) is in no class `IsCsFormTr s 2 L`: a continuous representative agrees with it on `Q`,
+hence on `cl Q`, and its `{0, 2}`-component `−y₂` is tangential to the face `{y₁ = 0}` and
+nonzero at `(¼, 0, ¼)`. -/
+theorem not_isCsFormTr_rhoBeta (s : ℕ) (L : ℝ) : ¬ IsCsFormTr s 2 L (rhoBeta 0) := by
+  rintro (hj | ⟨k, hk, w, hw, -, htan, -, he⟩)
+  · norm_num at hj
+  obtain rfl : k = 2 := by exact_mod_cast hk
+  have hae := congrArg (fun z : W2 => (z (idx2 1) : (Fin 3 → ℝ) → ℝ)) he
+  have h2 := coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 2
+    ⟨w, hw.continuous⟩ (idx2 1)
+  have hae' : (fun y : Fin 3 → ℝ => -y 2) =ᵐ[volume.restrict (cubeDomain 3)]
+      fun y => w y (idx2 1).1 :=
+    rhoBeta_zero_idx2_one.symm.trans ((Filter.EventuallyEq.of_eq hae).trans h2)
+  have hc1 : Continuous fun y : Fin 3 → ℝ => -y 2 := (continuous_apply 2).neg
+  have hc2 : Continuous fun y => w y (idx2 1).1 := (continuous_apply _).comp hw.continuous
+  have heq := (MeasureTheory.Measure.eqOn_of_ae_eq hae' hc1.continuousOn hc2.continuousOn
+    (by rw [(isOpen_cubeDomain 3).interior_eq]; exact subset_closure)).closure hc1 hc2
+  set y₀ : Fin 3 → ℝ := ![1 / 4, 0, 1 / 4]
+  have hy₀ : y₀ ∈ closure (cubeDomain 3) := mem_closure_cubeDomain.2 fun i => by
+    fin_cases i <;> simp [y₀] <;> norm_num
+  have h0 : w y₀ (idx2 1).1 = 0 := htan y₀ hy₀ 1 (idx2 1).1 (by decide) (Or.inl (by simp [y₀]))
+  have h1 : -y₀ 2 = w y₀ (idx2 1).1 := heq hy₀
+  rw [h0] at h1
+  simp [y₀] at h1
+
+/-- **No classical solution of the rate class starts from the TSD datum**: if `s.ρ(0) = ρ(0)`,
+then `s` is not in `IsRateClass s L` for any `L` (so `cubeWave_rate_tr'` does not apply to the
+TSD solution, and `waveFEM_converges_to_non_tsd` needs `IsRateApproximable`). -/
+theorem not_isRateClass_of_rho {T : ℝ} (hT0 : 0 ≤ T) {f : ℝ → Wv W1}
+    (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (hρ : s.ρ 0 = rhoBeta) (L : ℝ) :
+    ¬ IsRateClass s L := fun h => by
+  have := ((h.2.1 0 ⟨le_rfl, hT0⟩).1.2.2.2.2 0)
+  rw [hρ] at this
+  exact not_isCsFormTr_rhoBeta 0 L this
+
+end NotRateClass
 
 end Feec.EinsteinBianchi.BoundedFailure

@@ -31,8 +31,9 @@ The TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ +
 **not covered** by these rates. Its magnetic rows `ρₐ(0)` (the `2`-forms of the rows of `β`) have
 nonzero tangential components on `∂Q`: the first row of `β` is `x₃ e₂`, whose `2`-form has the
 `{0, 2}` component `-y₂`, tangential to the faces `{y₁ = 0}` and `{y₁ = ½}`; so `ρ(0)` is in no
-class `IsCsFormTr 0 2 L` (a continuous representative agrees with `ρ(0)` on `Q`, hence on its
-closure; this short argument is not formalized). Moreover `u'(0) = diag(1, −1, 0)` violates the
+class `IsCsFormTr s 2 L` and no classical solution of the rate class starts from it
+(`Feec.EinsteinBianchi.BoundedFailure.not_isCsFormTr_rhoBeta`, `not_isRateClass_of_rho`).
+Moreover `u'(0) = diag(1, −1, 0)` violates the
 boundary condition `u(t) ∈ H̊Λ¹(Q)³`, so the solution is not expected to be `C²` up to `∂Q` for
 `t > 0` (not formalized). Its convergence without rate is the subject of
 `Feec.Physics.EinsteinBianchi.BoundedFailure`.

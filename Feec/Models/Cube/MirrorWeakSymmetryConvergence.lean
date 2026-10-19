@@ -547,4 +547,517 @@ theorem mirrorFEM_happ0 : ∃ Capp, 0 ≤ Capp ∧ ∀ N, ∀ ψ ∈ (mirrorFEM 
 
 end ApproxS0
 
+
+/-! ### Regular potentials of the bottom row -/
+
+section Regular
+
+open Feec.Models.Cube.ParitySmoother (zeroForm zeroForm_apply idx₀ eq_idx₀)
+
+/-- `mem_dPart_of_coeff` on the cube domain. -/
+theorem mem_dPart_of_coeff_cube (J : Finset (Fin 3)) (k : ℕ)
+    (w : L2F ℝ (cubeDomain 3) (formIdx 3 (k : ℤ)))
+    (g : formIdx 3 (k : ℤ) → L2F ℝ (cubeDomain 3) (formIdx 3 (((0 : ℕ) : ℤ) + 1)))
+    (hg : ∀ s : formIdx 3 (k : ℤ), (zeroForm (w s), g s) ∈
+      (dPart (cubeDomain 3) (symmDiff J s.1) ((0 : ℕ) : ℤ)).graph) :
+    ∃ h : w ∈ (dPart (cubeDomain 3) J (k : ℤ)).domain,
+      ‖dPart (cubeDomain 3) J (k : ℤ) ⟨w, h⟩‖ ^ 2 ≤ ∑ s, ‖g s‖ ^ 2 := by
+  have key : ∀ (Ω : Set (Fin 3 → ℝ)) (_ : Ω = Geometry.Q (Fin 3))
+      (w : L2F ℝ Ω (formIdx 3 (k : ℤ)))
+      (g : formIdx 3 (k : ℤ) → L2F ℝ Ω (formIdx 3 (((0 : ℕ) : ℤ) + 1))),
+      (∀ s : formIdx 3 (k : ℤ), (zeroForm (w s), g s) ∈
+        (dPart Ω (symmDiff J s.1) ((0 : ℕ) : ℤ)).graph) →
+      ∃ h : w ∈ (dPart Ω J (k : ℤ)).domain,
+        ‖dPart Ω J (k : ℤ) ⟨w, h⟩‖ ^ 2 ≤ ∑ s, ‖g s‖ ^ 2 := by
+    rintro Ω rfl w g hg
+    exact DeRhamIdent.mem_dPart_of_coeff J k w g hg
+  exact key _ (cubeDomain_eq_Q 3) w g hg
+
+/-- The coefficients of a row of regular potentials: `H¹` in the class `{a} ∆ s`. -/
+abbrev RegCoeff (a : Fin 3) (s : formIdx 3 ((1 : ℕ) : ℤ)) :=
+  (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).GraphSpace
+
+/-- A row of regular potentials. -/
+abbrev RegRow (a : Fin 3) := PiLp 2 fun s : formIdx 3 ((1 : ℕ) : ℤ) => RegCoeff a s
+
+/-- **The regularity space** `X_reg = ∏ₐ ∏_s H¹_{{a} ∆ s}(Q)` (graph norms) of the bottom row:
+`1`-forms in the component `a` whose parity extensions (class `{a}`) have `H¹` coefficients. -/
+abbrev RegSp := PiLp 2 fun a : Fin 3 => RegRow a
+
+instance : Subsingleton (formIdx 3 ((0 : ℕ) : ℤ)) := ⟨fun a b => (eq_idx₀ a).trans (eq_idx₀ b).symm⟩
+
+theorem norm_zeroForm {Ω : Set (Fin 3 → ℝ)} (f : L2 ℝ Ω) : ‖(zeroForm f :
+    L2F ℝ Ω (formIdx 3 ((0 : ℕ) : ℤ)))‖ = ‖f‖ := by
+  refine (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 ?_
+  rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_subsingleton _ idx₀, zeroForm_apply]
+
+/-- `exists_coexact_potential_cube` in degree `1`. -/
+theorem exists_coexact_potential_one (J : Finset (Fin 3))
+    (u : (dPart (cubeDomain 3) J 1).domain) :
+    ∃ w : (dPart (cubeDomain 3) J 1).domain,
+      dPart (cubeDomain 3) J 1 w = dPart (cubeDomain 3) J 1 u ∧
+      ‖(w : W1)‖ ≤ (2 * Real.pi)⁻¹ * ‖dPart (cubeDomain 3) J 1 u‖ ∧
+      ∃ g : formIdx 3 1 → W1,
+        (∀ s : formIdx 3 1, (zeroForm ((w : W1) s), g s) ∈
+          (dPart (cubeDomain 3) (symmDiff J s.1) ((0 : ℕ) : ℤ)).graph) ∧
+        ∑ s, ‖g s‖ ^ 2 = ‖dPart (cubeDomain 3) J 1 u‖ ^ 2 :=
+  exists_coexact_potential_cube J 1 u
+
+/-- `zeroForm` as a linear map. -/
+def zeroFormL {Ω : Set (Fin 3 → ℝ)} : L2 ℝ Ω →ₗ[ℝ] L2F ℝ Ω (formIdx 3 ((0 : ℕ) : ℤ)) where
+  toFun := zeroForm
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+/-- The `1`-form of a row of regular potentials. -/
+def assemble (a : Fin 3) : RegRow a →ₗ[ℝ] W1 where
+  toFun z := WithLp.toLp 2 fun s =>
+    (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphFst (z s) idx₀
+  map_add' _ _ := PiLp.ext fun s => by simp
+  map_smul' _ _ := PiLp.ext fun s => by simp
+
+theorem zeroForm_assemble (a : Fin 3) (z : RegRow a) (s : formIdx 3 ((1 : ℕ) : ℤ)) :
+    zeroForm ((assemble a z : W1) s) =
+      (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphFst (z s) :=
+  PiLp.ext fun r => by rw [eq_idx₀ r]; rfl
+
+theorem graph_mem_assemble (a : Fin 3) (z : RegRow a) (s : formIdx 3 ((1 : ℕ) : ℤ)) :
+    (zeroForm ((assemble a z : W1) s),
+      (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphSnd (z s)) ∈
+        (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graph := by
+  rw [zeroForm_assemble]
+  exact LinearPMap.mem_graphL2.1 (z s).2
+
+theorem assemble_mem (a : Fin 3) (z : RegRow a) : assemble a z ∈ (BD1 a).domain :=
+  (mem_dPart_of_coeff_cube {a} 1 (assemble a z) _ (graph_mem_assemble a z)).1
+
+theorem norm_graphFst_le {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (v : T.GraphSpace) :
+    ‖T.graphFst v‖ ≤ ‖v‖ := by
+  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
+  rw [WeakSymmetry.norm_sq_graphSpace T v]
+  nlinarith [sq_nonneg ‖T.graphSnd v‖]
+
+theorem norm_graphSnd_le {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (v : T.GraphSpace) :
+    ‖T.graphSnd v‖ ≤ ‖v‖ := by
+  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
+  rw [WeakSymmetry.norm_sq_graphSpace T v]
+  nlinarith [sq_nonneg ‖T.graphFst v‖]
+
+theorem norm_assemble_le (a : Fin 3) (z : RegRow a) : ‖assemble a z‖ ≤ ‖z‖ := by
+  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
+  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
+  refine Finset.sum_le_sum fun s _ => ?_
+  have h1 := norm_zeroForm ((assemble a z : W1) s)
+  rw [zeroForm_assemble] at h1
+  rw [← h1]
+  exact pow_le_pow_left₀ (norm_nonneg _) (norm_graphFst_le _ _) 2
+
+/-- **The map `R : X_reg → Ṽ¹`** of the regular potentials. -/
+def regR : RegSp →ₗ[ℝ] BU1 where
+  toFun y := WithLp.toLp 2 fun a => ⟨assemble a (y a), assemble_mem a (y a)⟩
+  map_add' _ _ := PiLp.ext fun a => Subtype.ext (map_add (assemble a) _ _)
+  map_smul' _ _ := PiLp.ext fun a => Subtype.ext (map_smul (assemble a) _ _)
+
+@[simp] theorem coe_regR_apply (y : RegSp) (a : Fin 3) :
+    ((regR y a : (BD1 a).domain) : W1) = assemble a (y a) := rfl
+
+theorem norm_regR_le (y : RegSp) : ‖regR y‖ ≤ 1 * ‖y‖ := by
+  rw [one_mul]
+  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
+  rw [norm_sq_BU1, PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_le_sum fun a _ => pow_le_pow_left₀ (norm_nonneg _) (norm_assemble_le a _) 2
+
+/-- **Every bottom field has a regular potential** with `‖y‖ ≤ √(1 + (2π)⁻²) ‖dv‖`
+(`exists_coexact_potential_cube` in each component). -/
+theorem exists_regR (v : BU1) : ∃ y : RegSp, bD1 (regR y) = bD1 v ∧
+    ‖y‖ ≤ √(1 + (2 * Real.pi)⁻¹ ^ 2) * ‖bD1 v‖ := by
+  choose w hdw hwn g hg hsum using fun a => exists_coexact_potential_one {a} (v a)
+  set y : RegSp := WithLp.toLp 2 fun a => WithLp.toLp 2 fun s =>
+    ⟨WithLp.toLp 2 (zeroForm ((w a : W1) s), g a s), LinearPMap.mem_graphL2.2 (hg a s)⟩
+  have hR : ∀ a, assemble a (y a) = (w a : W1) := fun a => PiLp.ext fun s => rfl
+  refine ⟨y, PiLp.ext fun a => ?_, ?_⟩
+  · change BD1 a (regR y a) = BD1 a (v a)
+    rw [← hdw a]
+    congr 1
+  · refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
+    rw [mul_pow, Real.sq_sqrt (by positivity), norm_sq_bD1, Finset.mul_sum, PiLp.norm_sq_eq_of_L2]
+    refine Finset.sum_le_sum fun a _ => ?_
+    have hya : ‖y a‖ ^ 2 = ‖(w a : W1)‖ ^ 2 + ‖BD1 a (v a)‖ ^ 2 := by
+      rw [PiLp.norm_sq_eq_of_L2, ← hsum a]
+      change ∑ s, ‖(⟨WithLp.toLp 2 (zeroForm ((w a : W1) s), g a s), _⟩ : RegCoeff a s)‖ ^ 2 = _
+      simp only [WeakSymmetry.norm_sq_graphSpace]
+      change ∑ s, (‖zeroForm ((w a : W1) s)‖ ^ 2 + ‖g a s‖ ^ 2) = _
+      rw [Finset.sum_add_distrib, PiLp.norm_sq_eq_of_L2 _ (w a : W1)]
+      simp only [norm_zeroForm]
+    rw [hya]
+    have := pow_le_pow_left₀ (norm_nonneg _) (hwn a) 2
+    rw [mul_pow] at this
+    nlinarith [sq_nonneg ‖BD1 a (v a)‖]
+
+
+theorem graph_mem_of_eq {J₁ J₂ : Finset (Fin 3)} (h : J₁ = J₂)
+    (v : (dPart (cubeDomain 3) J₁ ((0 : ℕ) : ℤ)).GraphSpace) :
+    ((dPart (cubeDomain 3) J₁ ((0 : ℕ) : ℤ)).graphFst v,
+      (dPart (cubeDomain 3) J₁ ((0 : ℕ) : ℤ)).graphSnd v) ∈
+        (dPart (cubeDomain 3) J₂ ((0 : ℕ) : ℤ)).graph := by
+  subst h; exact LinearPMap.mem_graphL2.1 v.2
+
+theorem abs_wsCoeff_le_one {k : ℤ} (t : formIdx 3 (k + 1)) (p : Fin 3 × formIdx 3 k) :
+    |wsCoeff k t p| ≤ 1 := by
+  rw [wsCoeff_eq]
+  split_ifs
+  · rw [WeakSymmetry.abs_sgn]
+  · simp
+
+theorem graphSnd_eq_apply {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (v : T.GraphSpace)
+    (h : T.graphFst v ∈ T.domain) : T ⟨T.graphFst v, h⟩ = T.graphSnd v :=
+  ((LinearPMap.image_iff h).2 (LinearPMap.mem_graphL2.1 v.2)).symm
+
+theorem sum_norm_graphSnd_le (a : Fin 3) (z : RegRow a) :
+    ∑ s : formIdx 3 1, ‖(dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphSnd (z s)‖ ≤
+      (Fintype.card (formIdx 3 1) : ℝ) * ‖z‖ := by
+  calc ∑ s : formIdx 3 1, ‖(dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphSnd (z s)‖
+      ≤ ∑ _s : formIdx 3 1, ‖z‖ :=
+        Finset.sum_le_sum fun s _ => (norm_graphSnd_le _ _).trans (PiLp.norm_apply_le z s)
+    _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+
+theorem norm_sum_wsCoeff_graphSnd_le (y : RegSp) (t : formIdx 3 2) :
+    ‖∑ p : Fin 3 × formIdx 3 1, wsCoeff 1 t p •
+      (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)‖ ≤
+        (∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ)) * ‖y‖ := by
+  have hterm : ∀ p : Fin 3 × formIdx 3 1, ‖wsCoeff 1 t p •
+      (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)‖ ≤
+        ‖y‖ := by
+    intro p
+    have h1 : ‖(dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)‖
+        ≤ ‖y‖ := (norm_graphSnd_le _ _).trans
+          ((PiLp.norm_apply_le (y p.1) p.2).trans (PiLp.norm_apply_le y p.1))
+    refine (norm_smul_le _ _).trans ?_
+    rw [Real.norm_eq_abs, ← one_mul ‖y‖]
+    exact mul_le_mul (abs_wsCoeff_le_one (k := 1) t p) h1 (norm_nonneg _) zero_le_one
+  calc _ ≤ ∑ p : Fin 3 × formIdx 3 1, ‖wsCoeff 1 t p •
+        (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)‖ :=
+        norm_sum_le _ _
+    _ ≤ ∑ _p : Fin 3 × formIdx 3 1, ‖y‖ := Finset.sum_le_sum fun p _ => hterm p
+    _ = (∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ)) * ‖y‖ := by rw [Finset.sum_mul, one_mul]
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
+
+/-- **The `H¹` approximation of the bottom projections on regular fields**:
+`‖Ry − π̃¹Ry‖ ≤ 3 · 3 (1 + 2C) K h ‖y‖`. -/
+theorem norm_regR_sub_Pt1_le (N : ℕ) (y : RegSp) :
+    ‖regR y - (mirrorFEM hT hB N).Pt1 (regR y)‖ ≤
+      ((Fintype.card (Fin 3) : ℝ) * ((1 + 2 * C) * h1ConstPar 3 PolySeq.lagrangeP2 1 *
+        (Fintype.card (formIdx 3 1) : ℝ))) * meshSize N * ‖y‖ := by
+  have hC := (hB 0).two_mul_nonneg
+  have hK := h1ConstPar_nonneg (n := 3) PolySeq.lagrangeP2 1
+  have hm := (meshSize_pos N).le
+  have hcomp : ∀ a, ‖((regR y - (mirrorFEM hT hB N).Pt1 (regR y)) a : W1)‖ ≤
+      (1 + 2 * C) * h1ConstPar 3 PolySeq.lagrangeP2 1 * meshSize N *
+        ((Fintype.card (formIdx 3 1) : ℝ) * ‖y‖) := by
+    intro a
+    have hy : ∀ s : formIdx 3 ((1 : ℕ) : ℤ), zeroForm ((assemble a (y a) : W1) s) ∈
+        (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).domain := fun s =>
+      LinearPMap.mem_domain_of_mem_graph (graph_mem_assemble a (y a) s)
+    have h1 := (hB a).norm_sub_proj_le_grad N 1 (assemble a (y a)) hy
+    have hval : ∀ s : formIdx 3 ((1 : ℕ) : ℤ),
+        dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ) ⟨_, hy s⟩ =
+          (dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphSnd (y a s) := fun s =>
+      ((LinearPMap.image_iff (hy s)).2 (graph_mem_assemble a (y a) s)).symm
+    simp only [hval] at h1
+    change ‖assemble a (y a) - ((hB a).proj N).π 1 (assemble a (y a))‖ ≤ _
+    refine h1.trans ?_
+    refine mul_le_mul_of_nonneg_left ((sum_norm_graphSnd_le a (y a)).trans ?_) (by positivity)
+    exact mul_le_mul_of_nonneg_left (PiLp.norm_apply_le y a) (Nat.cast_nonneg _)
+  refine (PiLp.norm_le_sum_norm _).trans ?_
+  calc ∑ a, ‖(regR y - (mirrorFEM hT hB N).Pt1 (regR y)) a‖ ≤
+      ∑ _a : Fin 3, (1 + 2 * C) * h1ConstPar 3 PolySeq.lagrangeP2 1 * meshSize N *
+        ((Fintype.card (formIdx 3 1) : ℝ) * ‖y‖) := Finset.sum_le_sum fun a _ => hcomp a
+    _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
+
+/-- **The `H¹` approximation of `S₁,ₕ = π²S¹` on regular fields**: the coefficient `t` of `S¹Ry`
+is a combination of the coefficients `(Ry)ₐ_r`, `r = t ∖ a`, which are `H¹` in the class
+`{a} ∆ r = t = ∅ ∆ t` (the compatible classes), so `‖(I − π²)S¹Ry‖ ≲ h ‖y‖`. -/
+theorem norm_S1_sub_S1h_regR_le (N : ℕ) (y : RegSp) :
+    ‖(mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) (regR y)‖ ≤
+      ((1 + 2 * C) * h1ConstPar 3 PolySeq.lowestOrder 2 *
+        (∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ))) * meshSize N * ‖y‖ := by
+  have hC := hT.two_mul_nonneg
+  have hK := h1ConstPar_nonneg (n := 3) PolySeq.lowestOrder 2
+  have hm := (meshSize_pos N).le
+  set z : W2 := wsL2 (Ω := cubeDomain 3) 1 (bIncl1 (regR y))
+  -- the coefficients of `z` and their gradients
+  set G : formIdx 3 2 → L2F ℝ (cubeDomain 3) (formIdx 3 (((0 : ℕ) : ℤ) + 1)) := fun t =>
+    ∑ p : Fin 3 × formIdx 3 1, wsCoeff 1 t p •
+      (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)
+  have hgraph : ∀ t : formIdx 3 ((2 : ℕ) : ℤ), (zeroForm (z t), G t) ∈
+      (dPart (cubeDomain 3) (symmDiff ∅ t.1) ((0 : ℕ) : ℤ)).graph := by
+    intro t
+    have hz : zeroForm (z t) = ∑ p : Fin 3 × formIdx 3 1, wsCoeff 1 t p •
+        (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphFst (y p.1 p.2) := by
+      have hzt : z t = ∑ p : Fin 3 × formIdx 3 1, wsCoeff 1 t p •
+          (assemble p.1 (y p.1) : W1) p.2 := by
+        rw [wsL2_apply]
+        rfl
+      rw [hzt, show zeroForm (∑ p : Fin 3 × formIdx 3 1, wsCoeff 1 t p •
+          (assemble p.1 (y p.1) : W1) p.2) = zeroFormL (∑ p : Fin 3 × formIdx 3 1,
+            wsCoeff 1 t p • (assemble p.1 (y p.1) : W1) p.2) from rfl, map_sum]
+      refine Finset.sum_congr rfl fun p _ => ?_
+      rw [map_smul, show zeroFormL ((assemble p.1 (y p.1) : W1) p.2) =
+        zeroForm ((assemble p.1 (y p.1) : W1) p.2) from rfl, zeroForm_assemble]
+    rw [hz]
+    have hmem : ∀ p : Fin 3 × formIdx 3 1,
+        (wsCoeff 1 t p • (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphFst
+          (y p.1 p.2), wsCoeff 1 t p •
+            (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)) ∈
+          (dPart (cubeDomain 3) (symmDiff ∅ t.1) ((0 : ℕ) : ℤ)).graph := by
+      intro p
+      by_cases hp : wsCoeff 1 t p = 0
+      · rw [hp, zero_smul, zero_smul]; exact Submodule.zero_mem _
+      · have hp' := hp
+        rw [wsCoeff_eq] at hp'
+        split_ifs at hp' with h
+        · obtain ⟨ha, he⟩ := h
+          have hcls : symmDiff ({p.1} : Finset (Fin 3)) p.2.1 = symmDiff ∅ t.1 := by
+            rw [← he]
+            ext x
+            by_cases hx : x = p.1
+            · subst hx; simp [Finset.mem_symmDiff, ha]
+            · simp [Finset.mem_symmDiff, hx]
+          exact Submodule.smul_mem _ _ (graph_mem_of_eq hcls (y p.1 p.2))
+        · exact absurd rfl hp'
+    have := Submodule.sum_mem _ fun p (_ : p ∈ Finset.univ) => hmem p
+    convert this using 1
+    exact Prod.ext (by rw [Prod.fst_sum]) (by rw [Prod.snd_sum])
+  have hzdom : ∀ t : formIdx 3 ((2 : ℕ) : ℤ), zeroForm (z t) ∈
+      (dPart (cubeDomain 3) (symmDiff ∅ t.1) ((0 : ℕ) : ℤ)).domain := fun t =>
+    LinearPMap.mem_domain_of_mem_graph (hgraph t)
+  have h1 := hT.norm_sub_proj_le_grad N 2 z hzdom
+  have hval : ∀ t : formIdx 3 ((2 : ℕ) : ℤ),
+      dPart (cubeDomain 3) (symmDiff ∅ t.1) ((0 : ℕ) : ℤ) ⟨zeroForm (z t), hzdom t⟩ = G t := fun t =>
+    ((LinearPMap.image_iff (hzdom t)).2 (hgraph t)).symm
+  simp only [hval] at h1
+  have hG : ∀ t : formIdx 3 2, ‖G t‖ ≤ (∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ)) * ‖y‖ :=
+    fun t => norm_sum_wsCoeff_graphSnd_le y t
+  change ‖z - (hT.proj N).π 2 z‖ ≤ _
+  refine h1.trans ?_
+  have hsum : ∑ t : formIdx 3 ((2 : ℕ) : ℤ), ‖G t‖ ≤
+      (∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ)) * ‖y‖ := by
+    rw [Finset.sum_mul]
+    exact Finset.sum_le_sum fun t _ => hG t
+  calc (1 + 2 * C) * h1ConstPar 3 PolySeq.lowestOrder 2 * meshSize N * ∑ t, ‖G t‖ ≤
+      (1 + 2 * C) * h1ConstPar 3 PolySeq.lowestOrder 2 * meshSize N *
+        ((∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ)) * ‖y‖) :=
+        mul_le_mul_of_nonneg_left hsum (by positivity)
+    _ = _ := by ring
+
+end Regular
+
+
+/-! ### The discrete harmonic forms, regular potentials and `S₀,ₕ` onto -/
+
+section Discrete
+
+open Feec.Models.Cube.ParitySmoother (zeroForm)
+
+/-- The constant `1`-form `dxₐ` as a form field. -/
+def dxField (a : Fin 3) : FormField 3 := fun _ t => if t = {a} then 1 else 0
+
+theorem contDiff_dxField (a : Fin 3) {m : WithTop ℕ∞} : ContDiff ℝ m (dxField a) :=
+  contDiff_const
+
+theorem formL2_dxField (a : Fin 3) :
+    formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
+      ⟨dxField a, (contDiff_dxField a (m := 0)).continuous⟩ = dxForm a := by
+  refine PiLp.ext fun s => Lp.ext ?_
+  filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
+    ⟨dxField a, (contDiff_dxField a (m := 0)).continuous⟩ s,
+    MemLp.coeFn_toLp (DeRhamIdent.memLp_constFun (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) (⟨{a}, rfl⟩ : formIdx 3 ((#({a} : Finset (Fin 3)) : ℕ) : ℤ)) s)]
+    with y h1 h2
+  refine h1.trans (Eq.trans ?_ h2.symm)
+  simp only [dxField, DeRhamIdent.constFun]
+  congr 1
+  exact propext ⟨fun h => Subtype.ext h, fun h => congrArg Subtype.val h⟩
+
+/-- **The harmonic forms are discrete**: `dxₐ ∈ P₂⁻Λ¹_{Γₐ}` (the constant form has vanishing
+tangential trace on the faces normal to `eₐ`, and the interpolation of degree `0` is exact). -/
+theorem dxForm_mem_polyPartial (N : ℕ) (a : Fin 3) :
+    dxForm a ∈ (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 1 := by
+  have hs : polySpace 3 0 1 ≤ PolySeq.lagrangeP2.space 3 1 :=
+    Poly.polySpace_le_space PolySeq.lagrangeP2 (by decide)
+  obtain ⟨v, hv, hle⟩ := exists_mem_polyPartial_le_smooth (n := 3) PolySeq.lagrangeP2 {a} N 1 0
+    hs (contDiff_dxField a) (fun x t ht => by
+      simp only [dxField]
+      split_ifs with h
+      · exact absurd (by rw [h, Finset.card_singleton]) ht
+      · rfl)
+    (fun x j hj _ t hjt => by
+      rw [Finset.mem_singleton] at hj
+      subst hj
+      simp only [dxField]
+      split_ifs with h
+      · exact absurd (h ▸ Finset.mem_singleton_self j) hjt
+      · rfl)
+    (L := 0) (fun y _ => by
+      rw [show dxField a = fun _ => dxField a 0 from rfl,
+        iteratedFDeriv_const_of_ne (by norm_num)]
+      simp)
+  rw [mul_zero, mul_zero] at hle
+  have he := norm_le_zero_iff.1 hle
+  rw [sub_eq_zero] at he
+  have he' : dxForm a = v := by rw [← formL2_dxField]; exact he
+  rw [he']; exact hv
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
+
+/-- **`𝔥 ⊆ Ṽₕ¹`**: the harmonic forms of the bottom row are discrete. -/
+theorem harmBot_le (N : ℕ) : harmBot ≤ (mirrorFEM hT hB N).Vt1h := fun v hv a => by
+  have h := hv a
+  rw [harmonic_one_part, Submodule.mem_span_singleton] at h
+  obtain ⟨c, hc⟩ := h
+  rw [← hc]
+  exact Submodule.smul_mem _ c (dxForm_mem_polyPartial N a)
+
+variable (C) in
+/-- The approximation constant of the mirror regular potentials. -/
+def mirrorRegConst : ℝ :=
+  (Fintype.card (Fin 3) : ℝ) * ((1 + 2 * C) * h1ConstPar 3 PolySeq.lagrangeP2 1 *
+      (Fintype.card (formIdx 3 1) : ℝ)) +
+    (1 + 2 * C) * h1ConstPar 3 PolySeq.lowestOrder 2 *
+      (∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ))
+
+theorem mirrorRegConst_nonneg (hC : 0 ≤ 2 * C) : 0 ≤ mirrorRegConst C := by
+  have := h1ConstPar_nonneg (n := 3) PolySeq.lagrangeP2 1
+  have := h1ConstPar_nonneg (n := 3) PolySeq.lowestOrder 2
+  have : (0 : ℝ) ≤ ∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ) := by positivity
+  unfold mirrorRegConst; positivity
+
+/-- **Regular potentials of the mirror scheme** (`Feec.BGG.Discrete.RegularPotential`) with
+`X_reg = ∏ₐ ∏_s H¹_{{a} ∆ s}(Q)` (`RegSp`), `C_inc = 1`, `C_reg = √(1 + (2π)⁻²)` (no hypothesis:
+the coexact potentials of `HΛ_{a}(Q)`), and the `H¹` approximation of the parity-smoothed
+projections. -/
+def mirrorFEMReg (N : ℕ) {Capp : ℝ} (hCapp : mirrorRegConst C ≤ Capp) :
+    (mirrorFEM hT hB N).RegularPotential RegSp 1 √(1 + (2 * Real.pi)⁻¹ ^ 2) Capp (meshSize N) where
+  R := regR
+  Cinc_nonneg := zero_le_one
+  Creg_nonneg := Real.sqrt_nonneg _
+  norm_R_le := norm_regR_le
+  exists_potential v _ := exists_regR v
+  approx_Pt1 y := by
+    have hC := (hB 0).two_mul_nonneg
+    have h1 := norm_regR_sub_Pt1_le hT hB N y
+    refine h1.trans (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right ?_
+      (meshSize_pos N).le) (norm_nonneg _))
+    refine le_trans ?_ hCapp
+    unfold mirrorRegConst
+    have := h1ConstPar_nonneg (n := 3) PolySeq.lowestOrder 2
+    have : (0 : ℝ) ≤ ∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ) := by positivity
+    have : 0 ≤ (1 + 2 * C) * h1ConstPar 3 PolySeq.lowestOrder 2 *
+        (∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ)) := by positivity
+    linarith
+  approx_S1 y := by
+    have hC := hT.two_mul_nonneg
+    have h1 := norm_S1_sub_S1h_regR_le hT hB N y
+    refine h1.trans (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right ?_
+      (meshSize_pos N).le) (norm_nonneg _))
+    refine le_trans ?_ hCapp
+    unfold mirrorRegConst
+    have := h1ConstPar_nonneg (n := 3) PolySeq.lagrangeP2 1
+    have : 0 ≤ (Fintype.card (Fin 3) : ℝ) * ((1 + 2 * C) * h1ConstPar 3 PolySeq.lagrangeP2 1 *
+        (Fintype.card (formIdx 3 1) : ℝ)) := by positivity
+    linarith
+
+/-- **The discrete mirror scheme (6.5)** as the discrete BGG data of `mirrorFEM`: `d`,
+`S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹` on the finite element spaces. -/
+abbrev mirrorWave (N : ℕ) := (mirrorFEM hT hB N).toSegmentH
+
+instance mirrorWave_fdt0 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).Vt0h := by
+  let f : (mirrorFEM hT hB N).Vt0h →ₗ[ℝ] (∀ a : Fin 3, (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 0) :=
+    { toFun := fun x a => ⟨((x : BU0) a : W0), x.2 a⟩
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  refine Module.Finite.of_injective f fun x y h => Subtype.ext (PiLp.ext fun a => Subtype.ext ?_)
+  exact congrArg (fun z : (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 0 => (z : W0)) (congrFun h a)
+
+instance mirrorWave_fdt1 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).Vt1h := by
+  let f : (mirrorFEM hT hB N).Vt1h →ₗ[ℝ] (∀ a : Fin 3, (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 1) :=
+    { toFun := fun x a => ⟨((x : BU1) a : W1), x.2 a⟩
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  refine Module.Finite.of_injective f fun x y h => Subtype.ext (PiLp.ext fun a => Subtype.ext ?_)
+  exact congrArg (fun z : (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 1 => (z : W1)) (congrFun h a)
+
+instance mirrorWave_fdt2 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).Wt2h := by
+  let f : (mirrorFEM hT hB N).Wt2h →ₗ[ℝ] (∀ a : Fin 3, (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 2) :=
+    { toFun := fun x a => ⟨(x : Wv W2) a, x.2 a⟩
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  refine Module.Finite.of_injective f fun x y h => Subtype.ext (PiLp.ext fun a => ?_)
+  exact congrArg Subtype.val (congrFun h a)
+
+/-- `grad` is injective on `∏ₐ P₂Λ⁰_{Γₐ}` (Poincaré on the bottom row). -/
+theorem mirrorWave_dt0_injective (N : ℕ) : Function.Injective (mirrorWave hT hB N).dt0 :=
+  mirror_harmonicStability.toSegmentH_dt0_injective
+
+/-- Every test `1`-form on `Q` is `S⁰ψ` for a vector `ψ` of test functions. -/
+theorem exists_mS0_eq_testField {χ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ}
+    (hχ : IsTestField (cubeDomain 3) χ) :
+    ∃ ψ : BU0, ((mS0 ψ : TU1) : W1) = testField hχ := by
+  have hψ : ∀ a, IsTestField (cubeDomain 3) (WeakSymmetry.proxy0 χ a) := fun a r => hχ _
+  refine ⟨WithLp.toLp 2 fun a => ⟨testField (hψ a),
+    (DeRhamIdent.minimal_le_dPart (isOpen_cubeDomain 3) (cubeDomain_subset_Q 3) {a} 0).1
+      (ConstCoeffOp.testField_mem_minimal_domain _ (isOpen_cubeDomain 3) (hψ a))⟩, ?_⟩
+  rw [coe_mS0]
+  exact (wsL2_testField (Ω := cubeDomain 3) (k := 0) hψ).trans
+    (testField_congr _ _ (WeakSymmetry.wsFields_proxy0 χ))
+
+/-- **`π¹S⁰` maps `∏ₐ H_{a}Λ⁰(Q)` onto `P₁⁻Λ¹`** (density of test forms). -/
+theorem exists_mirror_S0h_eq (N : ℕ) {μ : TU1} (hμ : μ ∈ (mirrorFEM hT hB N).V1h) :
+    ∃ ψ, (mirrorFEM hT hB N).S0h ψ = μ := by
+  set π1 : W1 →ₗ[ℝ] W1 := (hT.proj N).π 1
+  set K : Submodule ℝ W1 := LinearMap.range (π1 ∘ₗ TD1.domain.subtype ∘ₗ mS0)
+  have hK : K ≤ (polyPartial 3 PolySeq.lowestOrder N ∅).V 1 := by
+    rintro _ ⟨ψ, rfl⟩; exact (hT.proj N).mem 1 _
+  have : FiniteDimensional ℝ K := Submodule.finiteDimensional_of_le hK
+  have hKc : IsClosed (K : Set W1) := K.closed_of_finiteDimensional
+  have hπc : Continuous π1 :=
+    (LinearMap.mkContinuous π1 (2 * C) (hT.norm_proj_le N 1)).continuous
+  have htest : ∀ x ∈ testFieldSub ℝ (cubeDomain 3) (formIdx 3 1), π1 x ∈ K := by
+    rintro _ ⟨χ, hχ, rfl⟩
+    obtain ⟨ψ, hψ⟩ := exists_mS0_eq_testField hχ
+    refine ⟨ψ, ?_⟩
+    change π1 ((mS0 ψ : TU1) : W1) = π1 (testField hχ)
+    rw [hψ]
+  have hall : ∀ x : W1, π1 x ∈ K := by
+    intro x
+    have hx : x ∈ closure (testFieldSub ℝ (cubeDomain 3) (formIdx 3 1) : Set W1) :=
+      (dense_testFieldSub (isOpen_cubeDomain 3) _) x
+    have := map_mem_closure hπc hx htest
+    rwa [hKc.closure_eq] at this
+  obtain ⟨ψ, hψ⟩ := hall μ
+  refine ⟨ψ, Subtype.ext ?_⟩
+  change π1 ((mS0 ψ : TU1) : W1) = (μ : W1)
+  rw [show π1 ((mS0 ψ : TU1) : W1) = π1 μ from hψ]
+  exact (hT.proj N).proj 1 _ hμ
+
+set_option maxHeartbeats 1000000 in
+/-- **`S₀,ₕ = π¹S⁰` maps `∏ₐ P₂Λ⁰_{Γₐ}` onto `P₁⁻Λ¹`** (`exists_mirror_S0h_eq` and (5.4)). -/
+theorem mirrorWave_S0_surjective (N : ℕ) : Function.Surjective (mirrorWave hT hB N).S0 := by
+  intro μ
+  obtain ⟨ψ, hψ⟩ := exists_mirror_S0h_eq hT hB N (μ := (μ : TU1)) μ.2
+  have hc : (mirrorFEM hT hB N).S0h ((mirrorFEM hT hB N).Pt0 ψ) = (μ : TU1) := by
+    rw [Feec.BGG.Discrete.S0h_apply, mirrorFEM_compatible hT hB N ψ,
+      ← Feec.BGG.Discrete.S0h_apply, hψ]
+  exact ⟨⟨_, (mirrorFEM hT hB N).Pt0_mem ψ⟩, Subtype.ext hc⟩
+
+end Discrete
+
 end Feec.Models.Cube.MirrorWeakSymmetry

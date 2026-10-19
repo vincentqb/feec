@@ -1012,7 +1012,7 @@ open Feec.Models.Cube
 variable {n : ℕ} (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
 
 /-- **The parallelepiped** `Ω = A · Q + b`, `Q = (0, ½)ⁿ`, written as `T⁻¹`-preimage of `Q`
-(`domain_eq_image`); every open box `∏ᵢ (aᵢ, bᵢ)` is one (`domain_diag`). -/
+(`domain_eq_image`); every open box `∏ᵢ (aᵢ, bᵢ)` is one (`domain_boxMatrix`). -/
 def domain : Set (Fin n → ℝ) := affMap A⁻¹ (affInvShift A b) ⁻¹' FEM.cubeDomain n
 
 theorem isOpen_domain : IsOpen (domain A b) :=

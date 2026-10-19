@@ -394,4 +394,216 @@ theorem exactOfStrong_vec {t : ℝ} (ht : t ∈ Icc 0 T) :
 
 end Exact
 
+/-! ### Orbits of Stone's group and the density of `D(L²)` -/
+
+section Group
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
+  {A : E →ₗ.[ℝ] E}
+
+/-- Orbits of domain points are strong solutions of `U' = A U`. -/
+theorem isStrongSolution_of_generator {G : Feec.C0Group ℝ E} (hgen : G.generator = A)
+    {x : E} (hx : x ∈ A.domain) (I : Set ℝ) :
+    Evolution.IsStrongSolution A I 0 fun t => G.S t x := by
+  subst hgen
+  refine Evolution.IsStrongSolution.of_deriv fun t _ =>
+    ⟨G.generator ⟨G.S t x, G.mapsTo_domain ⟨x, hx⟩ t⟩,
+      G.generator.mem_graph ⟨G.S t x, G.mapsTo_domain ⟨x, hx⟩ t⟩, ?_⟩
+  simpa using (G.hasDerivAt_apply' ⟨x, hx⟩ t).hasDerivWithinAt
+
+theorem mem_domain_of_generator {G : Feec.C0Group ℝ E} (hgen : G.generator = A)
+    {x : E} (hx : x ∈ A.domain) (t : ℝ) : G.S t x ∈ A.domain := by
+  subst hgen; exact G.mapsTo_domain ⟨x, hx⟩ t
+
+theorem generator_apply_S_of_eq {G : Feec.C0Group ℝ E} (hgen : G.generator = A)
+    {x : E} (hx : x ∈ A.domain) (t : ℝ) (h : G.S t x ∈ A.domain) :
+    A ⟨G.S t x, h⟩ = G.S t (A ⟨x, hx⟩) := by
+  subst hgen; exact G.generator_apply_S ⟨x, hx⟩ t
+
+/-- **`D(A²)` is dense** for a skew-adjoint `A`: the resolvent means `J_n = c²(c² − A²)⁻¹` of
+Stone's theorem map into `D(A²)` and converge strongly to `1` (`Feec.Stone.tendsto_approxJ`). -/
+theorem exists_mem_domain_sq_lt (hA : A.IsSkewAdjoint) (x : E) {ε : ℝ} (hε : 0 < ε) :
+    ∃ (y : E) (hy : y ∈ A.domain), A ⟨y, hy⟩ ∈ A.domain ∧ ‖x - y‖ < ε := by
+  obtain ⟨n, hn⟩ := ((Stone.tendsto_approxJ hA x).eventually
+    (Metric.ball_mem_nhds x hε)).exists
+  have hn' : ‖x - Stone.approxJ A n x‖ < ε := by
+    rw [← dist_eq_norm, dist_comm]; exact hn
+  set c : ℝ := Stone.scale n
+  have hR1 := Stone.isResolvent_res hA (Stone.scale_ne_zero n)
+  have hR2 := Stone.isResolvent_res hA (Stone.neg_scale_ne_zero n)
+  set R1 := Stone.res A (Stone.scale n)
+  set R2 := Stone.res A (-Stone.scale n)
+  have p1 : R1 x ∈ A.domain := hR1.mem_domain x
+  have p2 : R2 x ∈ A.domain := hR2.mem_domain x
+  have hJ : Stone.approxJ A n x = (c / 2) • (R1 x - R2 x) := rfl
+  have hy : Stone.approxJ A n x ∈ A.domain := by
+    rw [hJ]; exact A.domain.smul_mem _ (A.domain.sub_mem p1 p2)
+  refine ⟨_, hy, ?_, hn'⟩
+  have e0 : (⟨Stone.approxJ A n x, hy⟩ : A.domain) =
+      (c / 2) • ((⟨R1 x, p1⟩ : A.domain) - ⟨R2 x, p2⟩) := Subtype.ext hJ
+  have e1 : A ⟨R1 x, p1⟩ = c • R1 x - x := by
+    have h := hR1.sub_apply x
+    simp only [RCLike.ofReal_real_eq_id, id] at h
+    calc A ⟨R1 x, p1⟩ = c • R1 x - (c • R1 x - A ⟨R1 x, p1⟩) := by abel
+      _ = c • R1 x - x := by rw [h]
+  have e2 : A ⟨R2 x, p2⟩ = (-c) • R2 x - x := by
+    have h := hR2.sub_apply x
+    simp only [RCLike.ofReal_real_eq_id, id] at h
+    calc A ⟨R2 x, p2⟩ = (-c) • R2 x - ((-c) • R2 x - A ⟨R2 x, p2⟩) := by abel
+      _ = (-c) • R2 x - x := by rw [h]
+  rw [e0, LinearPMap.map_smul, LinearPMap.map_sub, e1, e2]
+  have e3 : (c / 2) • (c • R1 x - x - ((-c) • R2 x - x)) = (c / 2) • (c • R1 x + c • R2 x) := by
+    congr 1; module
+  rw [e3]
+  exact A.domain.smul_mem _ (A.domain.add_mem (A.domain.smul_mem _ p1) (A.domain.smul_mem _ p2))
+
+/-- **Orbits of `D(A²)`**: for `y ∈ D(A²)` there is a strong solution `V` of `U' = A U` with
+`V(0) = y` such that `A V` is a strong solution and `A² V` is continuous (the orbit of Stone's
+group). -/
+theorem exists_orbit_sq (hA : A.IsSkewAdjoint) {y : E} (hy : y ∈ A.domain)
+    (hAy : A ⟨y, hy⟩ ∈ A.domain) (I : Set ℝ) :
+    ∃ (V : ℝ → E) (h : ∀ t, V t ∈ A.domain) (h' : ∀ t, A ⟨V t, h t⟩ ∈ A.domain),
+      V 0 = y ∧ Evolution.IsStrongSolution A I 0 V ∧
+      Evolution.IsStrongSolution A I 0 (fun t => A ⟨V t, h t⟩) ∧
+      Continuous fun t => A ⟨A ⟨V t, h t⟩, h' t⟩ := by
+  have hgen := hA.generator_group
+  set G := hA.group
+  have h : ∀ t, G.S t y ∈ A.domain := mem_domain_of_generator hgen hy
+  have hW : ∀ t, A ⟨G.S t y, h t⟩ = G.S t (A ⟨y, hy⟩) := fun t =>
+    generator_apply_S_of_eq hgen hy t (h t)
+  have h' : ∀ t, A ⟨G.S t y, h t⟩ ∈ A.domain := fun t => by
+    rw [hW]; exact mem_domain_of_generator hgen hAy t
+  have hX : ∀ t, A ⟨A ⟨G.S t y, h t⟩, h' t⟩ = G.S t (A ⟨A ⟨y, hy⟩, hAy⟩) := fun t => by
+    have e : (⟨A ⟨G.S t y, h t⟩, h' t⟩ : A.domain) =
+        ⟨G.S t (A ⟨y, hy⟩), mem_domain_of_generator hgen hAy t⟩ := Subtype.ext (hW t)
+    rw [e]; exact generator_apply_S_of_eq hgen hAy t _
+  refine ⟨fun t => G.S t y, h, h', by simp [G.map_zero], isStrongSolution_of_generator hgen hy I,
+    ?_, ?_⟩
+  · exact (isStrongSolution_of_generator hgen hAy I).congr (fun t _ => (hW t).symm)
+      fun _ _ => rfl
+  · exact (G.strongCont _).congr fun t => (hX t).symm
+
+end Group
+
+/-! ### Convergence of (6.5) for every datum in `D(L)` -/
+
+section Converge
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+/-- The energy vector `(−x₀, x₁, M, ρ)` of a point of the total space, a bounded map. -/
+def vecL : WS →L[ℝ] Feec.BGG.EnergySpace W0 (Wv W1) W2 (Wv W2) :=
+  (Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)).comp
+    (negComp0L.prod (comp1L.prod (compML.prod compρL)))
+
+theorem solutionOfStrong_vec_eq {T : ℝ} {V : ℝ → WS}
+    (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    (solutionOfStrong hV).vec t = vecL (V t) :=
+  solutionOfStrong_vec hV ht
+
+variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+  (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+  (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
+
+set_option maxHeartbeats 8000000 in
+/-- **Convergence of (6.5) without rate for every strong solution** of the forms-model Hodge
+wave equation on the cube ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, thesis' boundary
+conditions; no hypothesis): every family of solutions of (6.5) (source `0`) whose initial
+states converge to `V(0)` in the energy norm converges to the solution `solutionOfStrong hV` of
+(6.1) uniformly on `[0,T]`. Lax: approximate `V(0)` by `y ∈ D(L²)` (`exists_mem_domain_sq_lt`);
+the orbit of `y` is a classical solution of (6.2) (`exactOfStrong`) to which (6.5) converges
+from its elliptic projection (`Feec.Models.Cube.WeakSymmetry.cubeWave_converges`); the energy
+estimates of (6.1) (`Feec.BGG.WaveData.Solution.norm_vec_sub_le`) and (6.5) (`norm_dvec_sub_le`)
+transfer the convergence. -/
+theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
+    (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V)
+    (sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0))
+    (h0 : Tendsto (fun N => ‖(solutionOfStrong hV).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖)
+      atTop (𝓝 0)) :
+    ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+      ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε := by
+  intro ε hε
+  obtain ⟨η, hηdef⟩ : ∃ η : ℝ, η = ε / 6 := ⟨_, rfl⟩
+  have hη : 0 < η := by rw [hηdef]; positivity
+  have hA := formsShort.isSkewAdjoint_wave
+  have hδ : 0 < η / (‖vecL‖ + 1) := by positivity
+  obtain ⟨y, hy, hAy, hyd⟩ := exists_mem_domain_sq_lt hA (V 0) hδ
+  obtain ⟨Vy, hd, hd', hVy0, hVy, hWy', hXy'⟩ := exists_orbit_sq hA hy hAy (Icc 0 T)
+  have hWy : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 fun t => waveOf (Vy t) :=
+    hWy'.congr (fun t _ => (waveOf_eq (hd t)).symm) fun _ _ => rfl
+  have hXy : ContinuousOn (fun t => waveOf (waveOf (Vy t))) (Icc 0 T) := by
+    refine hXy'.continuousOn.congr fun t _ => ?_
+    change waveOf (waveOf (Vy t)) = formsShort.wave ⟨formsShort.wave ⟨Vy t, hd t⟩, hd' t⟩
+    rw [waveOf_eq (hd t), waveOf_eq (hd' t)]
+  obtain ⟨sy, hsy⟩ : ∃ s, s = exactOfStrong hVy hWy hXy := ⟨_, rfl⟩
+  have hrep : ∀ t ∈ Icc 0 T, IsMultRep (sy.ℓ t) (aOf (Vy t)) (bOf (Vy t)) := by
+    rw [hsy]; exact exactOfStrong_isMultRep hVy hWy hXy
+  have hrep' : ∀ t ∈ Icc 0 T,
+      IsMultRep (sy.ℓ' t) (aOf (waveOf (Vy t))) (bOf (waveOf (Vy t))) := by
+    rw [hsy]; exact exactOfStrong_isMultRep' hVy hWy hXy
+  have conv := cubeWave_converges hT hB hT0 (f := 0) continuousOn_const sy
+    (a := fun t => aOf (Vy t)) (b := fun t => bOf (Vy t))
+    (a' := fun t => aOf (waveOf (Vy t))) (b' := fun t => bOf (waveOf (Vy t)))
+    (negComp0L.continuous.comp_continuousOn hWy.continuousOn)
+    (comp1L.continuous.comp_continuousOn hVy.continuousOn)
+    (negComp0L.continuous.comp_continuousOn hXy)
+    (comp1L.continuous.comp_continuousOn hWy.continuousOn)
+    hrep hrep' hη
+  filter_upwards [conv, h0.eventually (gt_mem_nhds hη)] with N hN hN0 t ht
+  obtain ⟨shy, -, hshy⟩ := hN
+  have h0T : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT0.le⟩
+  obtain ⟨w, hw⟩ : ∃ w, w = solutionOfStrong hV := ⟨_, rfl⟩
+  obtain ⟨wy, hwy⟩ : ∃ w, w = exactWave_toSolution sy := ⟨_, rfl⟩
+  rw [← hw]
+  rw [← hw] at hN0
+  have hc0 : ContinuousOn ((0 : ℝ → Wv W1) - 0) (Icc 0 T) := by
+    rw [sub_self]; exact continuousOn_const
+  have k1 : ‖w.vec t - wy.vec t‖ ≤ ‖w.vec 0 - wy.vec 0‖ := by
+    have := w.norm_vec_sub_le wy hc0 t ht
+    simpa using this
+  have k0 : ‖w.vec 0 - wy.vec 0‖ < η := by
+    rw [hwy, hsy, exactOfStrong_vec hVy hWy hXy h0T, hw, solutionOfStrong_vec_eq hV h0T,
+      solutionOfStrong_vec_eq hVy h0T, hVy0, ← map_sub]
+    have h1 := vecL.le_opNorm (V 0 - y)
+    have h2 : ‖vecL‖ * ‖V 0 - y‖ ≤ ‖vecL‖ * (η / (‖vecL‖ + 1)) :=
+      mul_le_mul_of_nonneg_left hyd.le (norm_nonneg _)
+    have h3 : ‖vecL‖ * (η / (‖vecL‖ + 1)) < η := by
+      rw [mul_div_assoc', div_lt_iff₀ (by positivity)]
+      nlinarith [norm_nonneg vecL]
+    linarith
+  have k2 : ∀ r ∈ Icc 0 T, ‖wy.vec r - dvec (cubeFEM hT hB N) shy r‖ ≤ η := fun r hr => by
+    rw [hwy, norm_vec_sub_dvec (cubeFEM hT hB N) sy shy r]; exact hshy r hr
+  have hg0 : ContinuousOn (cubeSource hT hB N 0 - cubeSource hT hB N 0) (Icc 0 T) := by
+    rw [sub_self]; exact continuousOn_const
+  have k3 : ‖dvec (cubeFEM hT hB N) shy t - dvec (cubeFEM hT hB N) (sh N) t‖ ≤
+      ‖dvec (cubeFEM hT hB N) shy 0 - dvec (cubeFEM hT hB N) (sh N) 0‖ := by
+    have := norm_dvec_sub_le (cubeFEM hT hB N) shy (sh N) hg0 ht
+    simp only [sub_self, norm_zero, intervalIntegral.integral_zero, add_zero] at this
+    exact this
+  have k4 : ‖dvec (cubeFEM hT hB N) shy 0 - dvec (cubeFEM hT hB N) (sh N) 0‖ ≤
+      ‖wy.vec 0 - dvec (cubeFEM hT hB N) shy 0‖ + ‖w.vec 0 - wy.vec 0‖ +
+        ‖w.vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖ := by
+    have e : dvec (cubeFEM hT hB N) shy 0 - dvec (cubeFEM hT hB N) (sh N) 0 =
+        -(wy.vec 0 - dvec (cubeFEM hT hB N) shy 0) - (w.vec 0 - wy.vec 0) +
+          (w.vec 0 - dvec (cubeFEM hT hB N) (sh N) 0) := by abel
+    rw [e]
+    have n1 := norm_add_le (-(wy.vec 0 - dvec (cubeFEM hT hB N) shy 0) - (w.vec 0 - wy.vec 0))
+      (w.vec 0 - dvec (cubeFEM hT hB N) (sh N) 0)
+    have n2 := norm_sub_le (-(wy.vec 0 - dvec (cubeFEM hT hB N) shy 0)) (w.vec 0 - wy.vec 0)
+    rw [norm_neg] at n2
+    linarith
+  have e : w.vec t - dvec (cubeFEM hT hB N) (sh N) t = (w.vec t - wy.vec t) +
+      (wy.vec t - dvec (cubeFEM hT hB N) shy t) +
+        (dvec (cubeFEM hT hB N) shy t - dvec (cubeFEM hT hB N) (sh N) t) := by abel
+  rw [e]
+  have htri := norm_add₃_le (a := w.vec t - wy.vec t) (b := wy.vec t - dvec (cubeFEM hT hB N) shy t)
+    (c := dvec (cubeFEM hT hB N) shy t - dvec (cubeFEM hT hB N) (sh N) t)
+  have := k2 t ht
+  have := k2 0 h0T
+  have hε6 : ε = 6 * η := by rw [hηdef]; ring
+  linarith
+
+end Converge
+
 end Feec.EinsteinBianchi.BoundedFailure

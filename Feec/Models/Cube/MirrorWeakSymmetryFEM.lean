@@ -74,6 +74,20 @@ needs, for the mirror conditions, three pieces that are not built:
   (`mirror_constantMode`), so the stability constants must be taken on the orthogonal complement
   of `1ₕ`, on which the mode decouples.
 
+**Status.** The analysis is now carried out in `Feec.Models.Cube.MirrorWeakSymmetryComplex` and
+`Feec.Models.Cube.MirrorWeakSymmetryConvergence`, in the forms model with the partial-boundary
+complexes `HΛ_J(Q)` of `Feec.Models.Cube.DeRhamPartialIdent` and the parity-smoothed projections of
+`Feec.Models.Cube.ParitySmoothingEstimates`. The pieces are: the continuous data
+`mirrorBGGSegment`; `Feec.BGG.HarmonicStability` modulo the bottom harmonic forms in place of
+`Stability` (`Feec.HilbertComplex.BGG.Harmonic`), with the top-row constant mode harmless; the
+curl potential (Prop 5.3) with `C_R = 1`; and a `Feec.BGG.Discrete` instance `mirrorFEM` with (5.4),
+Prop 5.9(1) and regular potentials. The resulting theorems are an `O(h)` rate for `C²` states up to
+`∂Q` with the mirror tangential conditions (`mirrorWave_rate`, `mirrorWave_rate_tsd`) and
+convergence without rate for energy-class solutions (`mirrorWave_converges`). Still open: the
+identification of these classical solutions of (6.2) with the Hodge wave solution of
+`MirrorBGG.existsUnique_memQ`, which differs in complex scalars, matrix proxies and the first-order
+system.
+
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],

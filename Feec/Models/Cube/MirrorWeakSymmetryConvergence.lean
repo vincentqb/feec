@@ -7,7 +7,69 @@ public import Feec.Models.Cube.MirrorWeakSymmetryFEM
 /-!
 # Convergence of the mirror scheme (6.5)
 
-DOCSTRING
+The scheme (6.5) of [QuennevilleBelair2015], §6.3, on the cube `Q = (0, ½)³` with the mirror
+boundary conditions (`Feec.Models.Cube.MirrorWeakSymmetryFEM`: top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²`
+without boundary condition, bottom component `a` in `P₂Λ⁰ → P₂⁻Λ¹ → P₂⁻Λ²` with vanishing degrees
+of freedom on the faces normal to `eₐ`) converges to the solution of the continuous problem (6.2)
+for the mirror data `mirrorBGGSegment` of `Feec.Models.Cube.MirrorWeakSymmetryComplex`.
+
+**The abstract theorem modulo harmonic forms.** `Feec.BGG.ExactWave.exists_discreteSolution_rate_harm`
+is the end-to-end `O(h)` theorem of `Feec.Models.Cube.WeakSymmetryWave` with `Feec.BGG.Stability`
+replaced by `Feec.BGG.HarmonicStability` (`Feec.HilbertComplex.BGG.Harmonic`): the mirror rows carry
+the constant mode of `HΛ⁰(Q)` and the harmonic forms `dxₐ ⊗ eₐ` of the bottom row, so `Stability`
+fails, but neither matters (the shifted form has a mass term on the top row, and `𝔥 ⊆ Ṽₕ¹` with
+`S¹𝔥 = 0`).
+
+**The discretization** `mirrorFEM` (a `Feec.BGG.Discrete`) uses the parity-smoothed projections of a
+single family of reflection kernels for the four complexes (`exists_mirror_estimates`): (5.4)
+(`mirrorFEM_compatible`, the parity smoother intertwines `S⁰` on the compatible classes),
+uniform bounds (`mirrorFEM_bounded`), Prop 5.9(1) for `π¹` (`mirrorFEM_happ0`), regular
+potentials of the bottom row with no regularity hypothesis (`mirrorFEMReg`, from the coexact
+potentials of `Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`), `S₀,ₕ` onto
+(`mirrorWave_S0_surjective`) and `grad` injective on the bottom row (`mirrorWave_dt0_injective`).
+
+**Rates.** For classical solutions whose states and time derivatives are `C²` up to `∂Q` with the
+mirror tangential conditions (`IsSmoothStateMirror`; no flatness at `∂Q`), the error is
+`≤ K L (1 + t) h_N` (`mirrorWave_rate`), with a stationary non-vacuity witness
+(`mirrorStationary`, `mirrorStationary_hyps`). For TSD-type solutions (`σ ≡ 0`, `M ≡ 0`), `σₕ` and
+`Mₕ` are `O(h)` and every bounded linear constraint of `B = ρ` (its symmetry) holds for `ρₕ` up to
+`O(h)` (`mirrorWave_rate_tsd`).
+
+**Convergence without rate.** For every classical solution in the energy class of
+`Feec.BGG.ExactWave` (continuity in `L²` of `σ, u, M, ρ, dφ, du, S¹u`) with `L²`-bounded
+multiplier functionals, the error tends to `0` uniformly on `[0,T]` (`mirrorWave_converges`): the
+parity-smoothed projections converge strongly (`tendsto_norm_sub_proj`, by density of the
+finite element spaces), hence uniformly on the compact trajectories (`eventually_mirrorClose`), and
+the consistency constant `K₁` tends to `0` by density of `D(d_max*)` (`eventually_mirrorFEM_K1`).
+
+**Not done here.** The identification of `ExactWave mirrorBGGSegment` with the Hodge wave solution
+of `Feec.Models.Cube.MirrorBGG.existsUnique_memQ` (complex scalars, matrix fields, and the first
+order system in `(σ, u, (M, B))` versus the multiplier system (6.2)). The theorems above are stated
+for every classical solution of (6.2) for the mirror data.
+
+## Main definitions
+
+* `mirrorDiscrete`, **`mirrorFEM`**, `mirrorWave`, `mirrorSource`, `mirrorSrcFun`.
+* `IsCsFormPart`, `IsSmoothStateMirror`, `MirrorClose`, `mirrorStationary`.
+
+## Main results
+
+* **`Feec.BGG.ExactWave.exists_discreteSolution_rate_harm`**.
+* `mirrorFEM_compatible`, `mirrorFEM_bounded`, `mirrorFEM_happ0`, `mirrorFEMReg`, `harmBot_le`,
+  `mirrorWave_S0_surjective`, `mirrorWave_dt0_injective`, `mirrorFEM_strangData_le`.
+* **`mirrorWave_rate`**, **`mirrorWave_rate_tsd`**, `mirrorStationary_hyps`.
+* `Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_proj`,
+  `eventually_mirrorClose`, `exists_adjoint_approx`, `eventually_mirrorFEM_K1`,
+  **`mirrorWave_converges`**, `mirrorStationary_tsd`.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.3 (Prop 5.9), §6.2 ((6.4), Prop 6.2), §6.3 ((6.5), Table 6.1)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (smoothed projections)
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002] (Strang's lemma)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace ContDiff
@@ -2340,6 +2402,19 @@ theorem mirrorWave_rate_tsd :
     rw [map_sub, hΦ, zero_sub, neg_neg]
   rw [e, norm_neg]
   exact (Φ.le_opNorm _).trans (mul_le_mul_of_nonneg_left hρ (norm_nonneg _))
+
+/-- **Non-vacuity of `mirrorWave_rate_tsd` and `mirrorWave_converges`**: the stationary solution
+`mirrorStationary T 0 a` (`σ ≡ 0`, `u ≡ dxₐ ⊗ eₐ ≠ 0`, `M ≡ 0`, `ρ ≡ 0`) is of TSD type and
+satisfies the hypotheses of both theorems with `L = 1` (`mirrorStationary_hyps`). -/
+theorem mirrorStationary_tsd (T : ℝ) (a : Fin 3) :
+    (∀ t ∈ Icc 0 T, (mirrorStationary T 0 a).σ t = 0 ∧ (mirrorStationary T 0 a).M t = 0) ∧
+      (∀ t ∈ Icc 0 T, ∀ μ : TU1, |(mirrorStationary T 0 a).ℓ t μ| ≤ 1 * ‖μ‖ ∧
+        |(mirrorStationary T 0 a).ℓ' t μ| ≤ 1 * ‖μ‖) ∧
+      ∀ t, (mirrorStationary T 0 a).u t ≠ 0 := by
+  have h := mirrorStationary_hyps T 0 a
+  have e : max |(0 : ℝ)| 1 = 1 := by norm_num
+  rw [e] at h
+  exact ⟨fun t _ => ⟨zero_smul ℝ oneU, rfl⟩, h.2.1, h.2.2.1⟩
 
 end Converge
 

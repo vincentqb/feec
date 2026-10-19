@@ -6,7 +6,46 @@ public import Feec.HilbertComplex.HodgeWave
 /-!
 # The Einstein–Bianchi system with weak symmetries: the wave problem on the cube
 
-WIP.
+The linearized EB system with weakly imposed symmetry, [QuennevilleBelair2015], §6.3: the
+multiplier problem (6.2) for the complex (4.16) on `Q = (0, ½)³` with the thesis' boundary
+conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
+
+## Main results
+
+* `cubeWaveData`: the data of (6.1)/(6.2) on `Q` (`Feec.BGG.WaveData`);
+  `exists_multiplierSolution`: every solution of (6.1) has a unique multiplier `Λ(t) ∈ W̌¹`
+  (corrected Prop 6.1); `exactWave_toMultiplierSolution`: the classical solutions with `L²`
+  multiplier of `Feec.Models.Cube.WeakSymmetry.cubeWave_rate` solve (6.2) (and (6.1)).
+* `negNorm_le_tripleNorm`: `|||λ||| = ‖Jλ‖` is equivalent to `‖div λ‖_{H⁻¹} + ‖λ‖_{H⁻¹}`
+  (`W̌¹ = H⁻¹(div, V)` of §6.3); `denseRange_B`, `J_injective`: `B = (d, −S)` has dense range, so
+  `W̌¹` is the completion of `(L²Λ¹(Q), |||·|||)`; `not_isClosed_range_B`: the range of `B` is not
+  closed (it lies in `H̊(curl, Q)`, which misses the constant `1`-forms, `dxZero_not_mem_D1`), so
+  the completion is genuinely needed.
+* `bgg_wave_existsUnique`: existence and uniqueness for the Hodge wave equation of (5.1) on `Q`
+  (Stone), under the regularity hypothesis.
+* **`waveFEM`**: under `CurlPotential`, for one smoother: (5.4) and uniform bounds; `grad`
+  injective and `S₀,ₕ` onto; corrected Prop 6.2 for (6.5); energy stability; `O(h)` convergence
+  for `C²` classical solutions. **`waveFEM_nonvacuous`**: a nontrivial manufactured solution meets
+  all hypotheses and its discrete `σₕ(t)` converge and are nonzero for large `N`.
+
+## Gaps
+
+* The identification of `Γ` with `H̊²(Q)` and of (6.1) for `bggHilb` with the system
+  `Feec.Models.BoundedDomain.bggComplex_eq61` (matrix model) is not built: it needs
+  `{σ ∈ H̊¹ | ∇σ ∈ H̊¹(Q; ℝ³)} = H̊²(Q)` and an isometry `L²Λ¹(Q)³ ≅ L²(Q; ℝ³ˣ³)` intertwining
+  `(S¹, curl)` with `(skwL, curl)`. Consequently the TSD datum of
+  `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` (whose solution leaves `L²(TSD)`) is not
+  transported to this model, and the convergence theorem is not applied to it.
+* The mirror variant of the scheme (`Feec.Models.Cube.MirrorBGG`) is not discretized.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §6.1 ((6.1), (6.2), Prop 6.1), §6.2 (Prop 6.2), §6.3 ((6.5), Table 6.1), Thm 4.6
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+  (regular decomposition)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.10 (Stone's theorem)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace
@@ -139,6 +178,68 @@ theorem J_injective : Function.Injective cubeWaveData.J := by
     denseRange_B.induction_on z (isClosed_eq hc continuous_const) h0
   exact sub_eq_zero.1 (inner_self_eq_zero.1 (this (μ - ν)))
 
+/-- The constant `1`-form `dx₀` on `Q`. -/
+abbrev dxZero : W1 :=
+  Feec.Models.Cube.DeRhamIdent.constForm (isOpen_cubeDomain 3).measurableSet
+    (isBounded_cubeDomain 3) (⟨{0}, by simp⟩ : formIdx 3 1)
+
+theorem dxZero_ne_zero : dxZero ≠ 0 :=
+  Feec.Models.Cube.DeRhamIdent.constForm_ne_zero _ _
+    ((isOpen_cubeDomain 3).measure_pos MeasureTheory.volume
+      ⟨fun _ => 1 / 4, Set.mem_univ_pi.2 fun _ => by norm_num⟩).ne' _
+
+/-- **The constant `1`-form is not in `H̊(curl, Q)`**: if it were, its curl would be its classical
+curl `0` (`d_min ≤ d_max`), so by exactness of `H̊Λ(Q)` it would be `grad τ` with `τ ∈ H̊¹(Q)`,
+and Green's formula `⟪grad τ, dx₀⟫ = ⟪τ, div dx₀⟫ = 0` would give `‖dx₀‖² = 0`. -/
+theorem dxZero_not_mem_D1 : dxZero ∉ D1.domain := by
+  intro hc
+  obtain ⟨hmax, emax⟩ := Feec.Domain.extDerivOp_smooth_mem_maximal_domain (isOpen_cubeDomain 3)
+    (k := 1) (w := Feec.Models.Cube.DeRhamIdent.constFun (⟨{0}, by simp⟩ : formIdx 3 1))
+    (fun _ => contDiff_const)
+    (Feec.Models.Cube.DeRhamIdent.memLp_constFun (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) _)
+    (fun t => Feec.Domain.memLp_of_continuous (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) ((extDerivOp ℝ 3 1).continuous_apply
+        (Feec.Domain.extDerivOp_isOrderLE 1) (fun _ => contDiff_const) t))
+  have hD : D1 ⟨dxZero, hc⟩ = 0 := by
+    have hle := (extDerivOp ℝ 3 1).minimal_le_maximal (isOpen_cubeDomain 3)
+    rw [hle.2 (x := ⟨dxZero, hc⟩) (y := ⟨_, hmax⟩) rfl, emax]
+    exact Feec.Models.Cube.DeRhamIdent.toL2F_eq_zero
+      (fun t y => Feec.Models.Cube.DeRhamIdent.extDerivOp_apply_const _ t y) _
+  obtain ⟨x, hx⟩ := exists_D0_eq hD
+  have hg := (extDerivOp ℝ 3 0).minimal_green (isOpen_cubeDomain 3)
+    (Feec.Domain.extDerivOp_isOrderLE 0) x
+    (ψ := Feec.Models.Cube.DeRhamIdent.constFun (⟨{0}, by simp⟩ : formIdx 3 1))
+    (fun _ => contDiff_const)
+    (Feec.Models.Cube.DeRhamIdent.memLp_constFun (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) _)
+    (fun r => Feec.Domain.memLp_of_continuous (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) ((extDerivOp ℝ 3 0).formalAdj.continuous_apply
+        (Feec.Domain.formalAdj_extDerivOp_isOrderLE 0) (fun _ => contDiff_const) r))
+  rw [Feec.Models.Cube.DeRhamIdent.toL2F_eq_zero
+    (fun r y => Feec.Models.Cube.DeRhamIdent.formalAdj_apply_const _ r y), inner_zero_right] at hg
+  have hx' : D0 x = dxZero := hx
+  change ⟪D0 x, dxZero⟫ = 0 at hg
+  rw [hx', real_inner_self_eq_norm_sq] at hg
+  exact dxZero_ne_zero (norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 hg))
+
+/-- **`B = (d, −S)` does not have closed range** on the cube: its range lies in `H̊(curl, Q)`
+(`grad H̊¹ + S⁰H̊¹(Q; ℝ³)`), which misses the constant `1`-forms, while it is dense
+(`denseRange_B`). This is why the multiplier of (6.2) lives in the completion `W̌¹` (the thesis'
+`H⁻¹(div, V)`, [QuennevilleBelair2015], §6.3) and not in `L²Λ¹(Q)`
+(`Feec.BGG.WaveData.Wcheck_eq_range_of_isClosed` would apply under closed range); by the closed
+range theorem, `|||·|||` is then not equivalent to the `L²` norm (not formalized here). -/
+theorem not_isClosed_range_B : ¬ IsClosed (Set.range cubeWaveData.B) := by
+  intro hcl
+  have huniv : Set.range cubeWaveData.B = Set.univ := by
+    rw [← hcl.closure_eq]; exact denseRange_B.closure_range
+  obtain ⟨x, hx⟩ : dxZero ∈ Set.range cubeWaveData.B := huniv ▸ Set.mem_univ _
+  have hx' : cubeWaveData.B (WithLp.toLp 2 ((WithLp.ofLp x).1, (WithLp.ofLp x).2)) = dxZero := hx
+  rw [Feec.BGG.WaveData.B_toLp] at hx'
+  refine dxZero_not_mem_D1 ?_
+  rw [← hx']
+  exact D1.domain.sub_mem (graphFst_mem_domain D1 _) (graphFst_mem_domain D1 _)
+
 /-! ### Classical solutions of (6.2) with `L²` multiplier are solutions of (6.1)/(6.2) -/
 
 set_option maxHeartbeats 4000000 in
@@ -227,8 +328,8 @@ theorem bgg_wave_existsUnique (hR : CurlPotential)
       ∀ V, V a = U₀ → Evolution.IsStrongSolution
         (bggHilb.toHilbertComplex (bggHyps hR) bggS0_injective).wave (Icc a b) F V →
           EqOn V U (Icc a b) := by
-  exact (bggHilb.toHilbertComplex (bggHyps hR) bggS0_injective).isSkewAdjoint_wave.existsUnique_classicalSolution
-    hU₀ hF
+  exact (bggHilb.toHilbertComplex (bggHyps hR)
+    bggS0_injective).isSkewAdjoint_wave.existsUnique_classicalSolution hU₀ hF
 
 end Stone
 
@@ -306,7 +407,8 @@ theorem waveFEM_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ
         (fun t => (cubeFEM hT hB N).Vt1h.orthogonalProjectionOnto
           (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))),
       (∀ N, ∀ t ∈ Icc 0 T,
-        √(‖(waveManufactured T).σ t - (sh N).σ t‖ ^ 2 + ‖(waveManufactured T).u t - (sh N).u t‖ ^ 2 +
+        √(‖(waveManufactured T).σ t - (sh N).σ t‖ ^ 2 +
+          ‖(waveManufactured T).u t - (sh N).u t‖ ^ 2 +
           ‖(waveManufactured T).M t - (sh N).M t‖ ^ 2 +
           ‖(waveManufactured T).ρ t - (sh N).ρ t‖ ^ 2) ≤ K * (1 + t) * meshSize N) ∧
       ∀ t ∈ Ioc 0 T, ∀ᶠ N in atTop, ((sh N).σ t : U0) ≠ 0 := by

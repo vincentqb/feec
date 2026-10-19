@@ -4,9 +4,54 @@ public import Feec.Models.Cube.WeakSymmetryFEM
 public import Feec.HilbertComplex.BGG.DiscreteWave
 
 /-!
-# The semi-discrete BGG wave system (6.5) on the cube
+# The semi-discrete BGG wave system (6.5) on the cube: well-posedness, stability, `O(h)` rate
 
-WIP.
+The method of [QuennevilleBelair2015], §6.3, (6.5), Table 6.1, for the BGG data (4.16) on
+`Q = (0, ½)³` with the thesis' boundary conditions, on the level-`(N + 1)` Freudenthal meshes:
+the spaces of Table 5.1 (`P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²`, `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³`) with
+`S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹` for the smoothed projections of one common smoother
+(`Feec.Models.Cube.WeakSymmetry.cubeFEM`), as the discrete segment `cubeWave hT hB N` of
+`Feec.BGG.DiscreteSolution`.
+
+## Main definitions
+
+* `Feec.BGG.ExactWave D T f`: a classical solution of the multiplier problem (6.2) (multiplier
+  functional `ℓ(t)` on `V¹`, i.e. an `L²` multiplier), with the time regularity of the energy
+  argument.
+* `Feec.BGG.energyEmb`, `Feec.BGG.skewBil`, `Feec.BGG.Discrete.hSegment`,
+  `Feec.BGG.Discrete.constraintH`, `Feec.BGG.multTerm`: the concrete setting (energy space,
+  continuous and discrete skew forms, constraint, multiplier term) of the abstract Ch. 6
+  convergence theorem.
+* `Feec.Models.Cube.WeakSymmetry.cubeWave`, `IsSmoothState`, `waveManufactured`.
+
+## Main results
+
+* `Feec.BGG.ExactWave.exists_discreteSolution_rate`: the abstract rate theorem
+  `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate` with its setting built and all
+  hypotheses on the exact solution discharged by an `ExactWave`.
+* `Feec.BGG.DiscreteSolution.sqrt_energy_le`: energy stability of (6.3),
+  `E(t)^{1/2} ≤ E(0)^{1/2} + ∫₀ᵗ ‖f‖`.
+* `cubeWave_dt0_injective` (`grad` injective on `P₂Λ̊⁰ ⊗ ℝ³`), `cubeWave_S0_surjective`
+  (`π¹S⁰` onto `P₁⁻Λ̊¹`, from (5.4) and the density of `S⁰H̊¹(Q; ℝ³)` in `L²Λ¹`;
+  `exists_S0h_eq`), `canonical_S0h_surjective` (the canonical `Π¹S⁰`, Prop 5.7).
+* `cubeWave_exists_iff`, `cubeWave_exists_iff_compatible_u`, `cubeWave_exists_unique`: the
+  corrected Prop 6.2 for (6.5): existence ⇔ (C1)–(C3), for dynamic data ⇔ (C2), uniqueness.
+* **`cubeWave_rate`**: `O(h)` convergence of (6.5) from the elliptic projection (6.4) of the
+  exact initial state, `‖(σ, u, M, ρ)(t) − (σₕ, uₕ, Mₕ, ρₕ)(t)‖ ≤ K L (1 + t) h_N`, for classical
+  solutions with `C²` states and time derivatives and `L²`-bounded multiplier, under the
+  regularity hypothesis (constant `C_R`) only.
+* `waveManufactured_hyps`: a nontrivial classical solution meeting all hypotheses.
+
+## References
+
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §6.1 (6.2), §6.2 ((6.3), (6.4), Prop 6.2), §6.3 ((6.5), Table 6.1), §5.3 (Props 5.7, 5.9)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.4 (smoothed projections)
+* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
+  (elliptic projections in evolution problems)
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+  (regular decomposition)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace
@@ -280,11 +325,13 @@ The discrete source is the `L²` projection of `f` onto `Ṽₕ¹`. Hypotheses o
 consistency bounds `K₀`, `K₁` and `strangData ≤ (c h)²` for the state and for its time derivative,
 uniformly on `[0,T]`. Conclusion: the solution of (6.3) starting from the dynamic part of the
 elliptic projection (6.4) of the exact initial state exists and
-`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2} ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`.
+`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2} ≤ √(2(strangConst C_p + 1)) |c| |h|
+(2 + 2t)`.
 See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
-theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
-    (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
-    [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
+theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
+    (H : Stability D Cp CR CS) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h]
+    [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
+    [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
     [FiniteDimensional ℝ Q.Wt2h] [Q.Vt1h.HasOrthogonalProjection]
     (hS : Function.Surjective Q.toSegmentH.S0)
     (hT : 0 < T) (hf : ContinuousOn f (Icc 0 T)) (s : ExactWave D T f) {K0 K1 c h : ℝ}
@@ -623,7 +670,8 @@ theorem cubeFEM_strangData_le (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) {σ : U0} {φ 
 
 /-- `S¹u ∈ D(d¹*)`-type bounds of a `C²` `2`-form vanishing outside `Q`: `‖z‖ ≤ c L` and
 `|⟪z, curl w⟫| ≤ c L ‖w‖` with `c = 1 + 3·#Λ¹ + #Λ²`. -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.bounds_two {L : ℝ} (hL0 : 0 ≤ L) {z : W2} (hz : IsCsFormMin 0 2 L z) :
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.bounds_two {L : ℝ} (hL0 : 0 ≤ L) {z : W2}
+    (hz : IsCsFormMin 0 2 L z) :
     ‖z‖ ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L ∧
       ∀ w : U1, |⟪z, bggSegment.d1 w⟫| ≤
         ((1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L) * ‖w‖ := by

@@ -27,8 +27,10 @@ The unconditional corollaries `RowWise.gradCurl_coreSub_spectral_Q` and
 (`Feec.Models.Cube.Mirror`): the parity model, the cube `Q` and every open cube
 (`Mirror.eigenDense_complex`, `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`).
 
-Nothing is claimed for domains other than cubes (boxes with unequal sides are not covered: their
-pull-back has non-constant chain-rule factors across the coordinates).
+Boxes with unequal sides are not covered by this file (their pull-back to `Q` rescales each
+coordinate by its own factor, so the operator changes instead of being rescaled); they are
+treated by the anisotropic parity model of `Feec.Models.Box.EigenDense`
+(`Feec.Models.Box.eigenDense_gradCurl_box`). Nothing is claimed for other domains.
 
 ## Main results
 

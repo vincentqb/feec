@@ -44,7 +44,15 @@ transverse-traceless tensor on `∂Ω` (symmetric, trace-free, divergence-free, 
 second fundamental form), hence zero when every boundary component is a sphere (no holomorphic
 quadratic differentials in genus `0`), which would make `K*` stationary on such domains; higher
 genus is not decided. None of this is formalized (it needs traces on curved boundaries and the
-Riemann–Roch count), nor is the spectral hypothesis on any domain other than cubes.
+Riemann–Roch count).
+
+The spectral hypothesis (`EigenDense`) is proved on cubes (`Feec.Models.Cube.EigenDense`) and on
+boxes with arbitrary, possibly unequal, sides (`Feec.Models.Box.eigenDense_gradCurl_box`); on both,
+no TSD eigenfield exists and `K*` is stationary (`Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff`,
+`Feec.Models.Box.not_exists_tsd_eigenfield_box`, `Feec.Models.Box.mem_invariantCore_tsd_iff`).
+On a general bounded `Ω` (a ball, a Lipschitz domain) the question is **still open**: neither
+`EigenDense` nor the (non)existence of a TSD eigenfield with `curl u ∉ H̊(curl)` is proved, and
+`not_coreSub_le_stationary_iff` below is the strongest general statement.
 
 ## Main results
 

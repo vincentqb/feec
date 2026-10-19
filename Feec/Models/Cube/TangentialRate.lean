@@ -18,8 +18,11 @@ class by the natural one, `C^{s+2}` forms whose **tangential components vanish o
   (`IsCsFormMin.isCsFormTr`: flatness and the mean value theorem bound the lower derivatives) and
   is strictly larger (`isCsFormTr_normalWitness`, `not_isCsFormMin_normalWitness`: the `1`-form
   `(∏_{j ≠ 0} sin 2πy_j) dx₀` has nonzero normal component on `∂Q`).
+* `IsCsFormTr.add`, `IsCsFormTr.smul` (the class is a cone, bounds add) and `IsCsFormMin.sub`
+  (differences of flat forms are flat).
 * **`IsCsFormTr.mem_domain`**, `IsCsFormTr.d_eq`: `x ∈ D(d_min) = H̊Λʲ(Q)` and
-  `d_min x = (dw)|_Q`, for `C¹` forms with bounded first derivatives (`mem_minimal_of_isTangentialZero`; the cut-off argument of
+  `d_min x = (dw)|_Q`, for `C¹` forms with bounded first derivatives
+  (`mem_minimal_of_isTangentialZero`; the cut-off argument of
   `Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`, which needs `C^∞`, with
   the cut-offs `χ_m w ∈ C¹_c(Q)` placed in `D(d_min)` by
   `Feec.Domain.ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`).
@@ -239,6 +242,73 @@ theorem IsCsFormTr.smul {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain n
       ((hdwc.of_le (by exact_mod_cast hi)).contDiffAt), norm_smul, Real.norm_eq_abs]
     exact mul_le_mul_of_nonneg_left (hL i hi y hy).2 (abs_nonneg c)
   · rw [← map_smul]; rfl
+
+/-- `d` is additive on differentiable form fields. -/
+theorem extDeriv_add_eq {w w' : FormField n} (hw : Differentiable ℝ w)
+    (hw' : Differentiable ℝ w') :
+    FiniteElement.extDeriv (w + w') = FiniteElement.extDeriv w + FiniteElement.extDeriv w' :=
+  funext fun x => extDeriv_add_apply (hw x) (hw' x)
+
+/-- `d` commutes with differences of differentiable form fields. -/
+theorem extDeriv_sub_eq {w w' : FormField n} (hw : Differentiable ℝ w)
+    (hw' : Differentiable ℝ w') :
+    FiniteElement.extDeriv (w - w') = FiniteElement.extDeriv w - FiniteElement.extDeriv w' := by
+  funext x
+  have e : w - w' = w + (-1 : ℝ) • w' := by
+    funext y; simp [sub_eq_add_neg]
+  rw [e, extDeriv_add_apply (hw x) ((hw' x).const_smul (-1 : ℝ)),
+    extDeriv_smul_const_apply _ (hw' x)]
+  simp [sub_eq_add_neg]
+
+/-- **Sums in the class**: `x + y` is `IsCsFormTr` with bound `L + L'`. -/
+theorem IsCsFormTr.add {s : ℕ} {j : ℤ} {L L' : ℝ} {x y : L2F ℝ (cubeDomain n) (formIdx n j)}
+    (hx : IsCsFormTr s j L x) (hy : IsCsFormTr s j L' y) : IsCsFormTr s j (L + L') (x + y) := by
+  rcases hx with hj | ⟨k, hk, w, hw, hdeg, htan, hL, rfl⟩
+  · exact Or.inl hj
+  rcases hy with hj | ⟨k', hk', w', hw', hdeg', htan', hL', rfl⟩
+  · exact Or.inl hj
+  obtain rfl : k' = k := by omega
+  have hd : Differentiable ℝ w := hw.differentiable (by simp)
+  have hd' : Differentiable ℝ w' := hw'.differentiable (by simp)
+  have hw1 : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+  have hw1' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w' := by exact_mod_cast hw'
+  have hdw := contDiff_extDeriv hw1
+  have hdw' := contDiff_extDeriv hw1'
+  refine Or.inr ⟨k', hk, w + w', hw.add hw', fun y t ht => by simp [hdeg y t ht, hdeg' y t ht],
+    fun y hy i t hit hyi => by simp [htan y hy i t hit hyi, htan' y hy i t hit hyi],
+    fun i hi y hy => ⟨?_, ?_⟩, ?_⟩
+  · have hi' : (i : WithTop ℕ∞) ≤ ((s + 2 : ℕ) : WithTop ℕ∞) := by exact_mod_cast (by omega)
+    rw [iteratedFDeriv_add_apply ((hw.of_le hi').contDiffAt) ((hw'.of_le hi').contDiffAt)]
+    exact (norm_add_le _ _).trans (add_le_add (hL i hi y hy).1 (hL' i hi y hy).1)
+  · have hi' : (i : WithTop ℕ∞) ≤ ((s + 1 : ℕ) : WithTop ℕ∞) := by exact_mod_cast hi
+    rw [extDeriv_add_eq hd hd', iteratedFDeriv_add_apply ((hdw.of_le hi').contDiffAt)
+      ((hdw'.of_le hi').contDiffAt)]
+    exact (norm_add_le _ _).trans (add_le_add (hL i hi y hy).2 (hL' i hi y hy).2)
+  · rw [← map_add]; rfl
+
+/-- **Differences in the flat class**: `x − y` is `IsCsFormMin` with bound `L + L'`. -/
+theorem IsCsFormMin.sub {s : ℕ} {j : ℤ} {L L' : ℝ} {x y : L2F ℝ (cubeDomain n) (formIdx n j)}
+    (hx : IsCsFormMin s j L x) (hy : IsCsFormMin s j L' y) : IsCsFormMin s j (L + L') (x - y) := by
+  rcases hx with hj | ⟨k, hk, w, hw, hdeg, hsupp, hL, hdL, rfl⟩
+  · exact Or.inl hj
+  rcases hy with hj | ⟨k', hk', w', hw', hdeg', hsupp', hL', hdL', rfl⟩
+  · exact Or.inl hj
+  obtain rfl : k' = k := by omega
+  have hd : Differentiable ℝ w := hw.differentiable (by simp)
+  have hd' : Differentiable ℝ w' := hw'.differentiable (by simp)
+  have hw1 : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+  have hw1' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w' := by exact_mod_cast hw'
+  have hdw := contDiff_extDeriv hw1
+  have hdw' := contDiff_extDeriv hw1'
+  refine Or.inr ⟨k', hk, w - w', hw.sub hw', fun y t ht => by simp [hdeg y t ht, hdeg' y t ht],
+    fun y hy => by simp [hsupp y hy, hsupp' y hy], fun y hy => ?_, fun y hy => ?_, ?_⟩
+  · have hi' : ((s + 1 : ℕ) : WithTop ℕ∞) ≤ ((s + 2 : ℕ) : WithTop ℕ∞) := by
+      exact_mod_cast (by omega)
+    rw [iteratedFDeriv_sub_apply ((hw.of_le hi').contDiffAt) ((hw'.of_le hi').contDiffAt)]
+    exact (norm_sub_le _ _).trans (add_le_add (hL y hy) (hL' y hy))
+  · rw [extDeriv_sub_eq hd hd', iteratedFDeriv_sub_apply (hdw.contDiffAt) (hdw'.contDiffAt)]
+    exact (norm_sub_le _ _).trans (add_le_add (hdL y hy) (hdL' y hy))
+  · rw [← map_sub]; rfl
 
 /-- A component of `formL2` vanishes if the component of the form vanishes identically. -/
 theorem formL2_apply_eq_zero {j : ℤ} {w : contForms n} {t : formIdx n j}

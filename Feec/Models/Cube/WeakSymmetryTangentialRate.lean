@@ -11,7 +11,13 @@ Thm 5.5 with the elements of Table 5.1) and of `Feec.Models.Cube.WeakSymmetryWav
 (`cubeWave_rate`, the semi-discrete scheme (6.5) of Table 6.1) are stated for `FEM.IsCsFormMin`,
 `C²` fields on `ℝ³` vanishing outside `Q` (flat at `∂Q`). This module restates them on the natural
 class `FEM.IsCsFormTr 0` (`Feec.Models.Cube.TangentialRate`): `C²` fields **up to the boundary**
-whose tangential components vanish on `∂Q`, with no condition on the normal components.
+(restrictions to `Q` of `C²` fields on `ℝ³`; this matches "`C²` on `cl Q`" through an extension
+theorem for the cube, which is not formalized) whose tangential components vanish on `∂Q`, with no
+condition on the normal components.
+
+* **The class of `S¹u` is derived** from that of `u` (`exists_isCsFormTr_segS1`: the tangential
+  trace of `dxₐ ∧ uₐ` vanishes with that of `uₐ`), so `cubeFEM_rate_tr`, `cubeFEM_rate_isSaddle_tr`
+  and `IsSmoothStateTr` put no hypothesis on `S¹u`.
 
 * The `L²` bound of a field is now its sup bound (`IsCsFormTr.norm_le`), and the bound
   `|⟪x, d w⟫| ≤ c L ‖w‖` for `w ∈ H̊Λ¹(Q)` is **Green's formula** `⟪x, d w⟫ = ⟪δx, w⟫` on `D(d_min)`
@@ -27,17 +33,19 @@ whose tangential components vanish on `∂Q`, with no condition on the normal co
   from `FEM.IsCsFormMin.isCsFormTr`).
 * **Non-vacuity beyond flat data**: `tangentialManufactured_solution` is a smooth solution of (5.3)
   (`σ = φ = λ = 0`, `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)`, divergence free with `S¹u = 0`) whose
-  normal component does not vanish on `∂Q` (`tangentialU0_ne_zero_on_boundary`) and which is not
-  flat (`not_isCsFormMin_tangentialU0`); `waveTangential T` is a classical solution of (6.2)
-  built on it (`u(t) = ū`, `ρ(t) = t curl ū`, `M = 0`), meeting the hypotheses of
-  `cubeWave_rate_tr` (`waveTangential_hyps`).
+  normal component does not vanish on `∂Q` (`normalWitness_ne_zero`, the first row being
+  `normalWitness`) and which is not flat (`not_isCsFormMin_tangentialU0`); `waveTangential T` is
+  a classical solution of (6.2) built on it (`u(t) = ū`, `ρ(t) = t curl ū`, `M = 0`), meeting
+  the hypotheses of `cubeWave_rate_tr` (`waveTangential_hyps`). `combinedManufactured_solution` adds the flat
+  coupled solution of `Feec.Models.Cube.WeakSymmetryFEM` to it: `σ, φ, λ ≠ 0` and `u` not flat
+  (`not_isCsFormMin_coupledu_add_tangentialU`, through `IsCsFormMin.sub`).
 
-**Boundary conditions on `S¹u`, `M` and `ρ`.** The discrete fields `Mₕ ∈ P₁⁻Λ̊²` and
+**Boundary conditions on `M` and `ρ`.** The discrete fields `Mₕ ∈ P₁⁻Λ̊²` and
 `ρₕ ∈ P₁Λ̊² ⊗ ℝ³` have vanishing boundary DOFs (Table 6.1 with the thesis' boundary conditions),
 so `‖M − Mₕ‖ ≥ dist_{L²}(M, P₁⁻Λ̊²)`, which is of order `h^{1/2}`, not `h`, for a smooth `M` whose
 tangential trace on `∂Q` (the normal flux of the associated vector field) does not vanish (boundary
-layer of width `h`). The `O(h)` rate therefore requires `M, ρ` (and `S¹u`, which enters through
-`‖S¹u − π²S¹u‖`) in `IsCsFormTr`; along a solution of (6.2), `M(t) − M(0) = ∫ S¹u` and
+layer of width `h`; this lower bound is a standard argument and is **not formalized**). The `O(h)`
+rate therefore requires `M, ρ` in `IsCsFormTr`; along a solution of (6.2), `M(t) − M(0) = ∫ S¹u` and
 `ρ(t) − ρ(0) = ∫ du` have vanishing tangential traces whenever `u` does, so the condition is one on
 the initial data `M(0)`, `ρ(0)`.
 
@@ -146,6 +154,111 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.abs_inner_D1_le {L : ℝ} {x : W2
   hx.isCsForm.abs_inner_D1_le hL0 w
 
 end SmoothBounds
+
+/-! ### Regularity of `S¹u` from that of `u` -/
+
+section S1Regularity
+
+open Feec.ExteriorFibre
+
+/-- The fibre maps `v ↦ dxₐ ∧ v` of `S` (`S v = Σₐ dxₐ ∧ vₐ`) on `ℝ³`. -/
+def coordWedgeCLM (a : Fin 3) : (Finset (Fin 3) → ℝ) →L[ℝ] (Finset (Fin 3) → ℝ) :=
+  LinearMap.toContinuousLinearMap
+    ((coordWedgeSumₗ : (Fin 3 → Finset (Fin 3) → ℝ) →ₗ[ℝ] _) ∘ₗ
+      LinearMap.single ℝ (fun _ : Fin 3 => Finset (Fin 3) → ℝ) a)
+
+/-- `S v = Σₐ dxₐ ∧ vₐ` as a sum of fibre maps. -/
+theorem coordWedgeField_eq_sum (v : Fin 3 → FormField 3) :
+    coordWedgeField v = ∑ a, (coordWedgeCLM a) ∘ v a := by
+  funext x
+  rw [coordWedgeField_apply, Finset.sum_apply]
+  conv_lhs => rw [← Finset.univ_sum_single (fun i => v i x)]
+  rw [coordWedgeSum_sum]
+  refine Finset.sum_congr rfl fun b _ => ?_
+  rfl
+
+/-- Derivative bounds for `S v` from those of the `vₐ`. -/
+theorem norm_iteratedFDeriv_coordWedgeField_le_sum {v : Fin 3 → FormField 3} {m : ℕ}
+    (hv : ∀ a, ContDiff ℝ m (v a)) {L : ℝ} {i : ℕ} (hi : i ≤ m) {y : Fin 3 → ℝ}
+    (h : ∀ a, ‖iteratedFDeriv ℝ i (v a) y‖ ≤ L) :
+    ‖iteratedFDeriv ℝ i (coordWedgeField v) y‖ ≤ (∑ a, ‖coordWedgeCLM a‖) * L := by
+  have hi' : (i : WithTop ℕ∞) ≤ m := by exact_mod_cast hi
+  rw [coordWedgeField_eq_sum, iteratedFDeriv_sum_apply fun a _ =>
+    ((coordWedgeCLM a).contDiff.comp ((hv a).of_le hi')).contDiffAt, Finset.sum_mul]
+  refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun a _ => ?_)
+  exact ((coordWedgeCLM a).norm_iteratedFDeriv_comp_left (hv a).contDiffAt hi').trans
+    (mul_le_mul_of_nonneg_left (h a) (norm_nonneg _))
+
+/-- `S` preserves vanishing tangential traces: for `j ∉ t`, `j ∉ t ∖ {l}`. -/
+theorem isTangentialZero_coordWedgeField {v : Fin 3 → FormField 3}
+    (hv : ∀ a, IsTangentialZero (v a)) : IsTangentialZero (coordWedgeField v) := by
+  intro y hy j t hjt hyj
+  rw [coordWedgeField_apply, coordWedgeSum_apply]
+  refine Finset.sum_eq_zero fun i _ => Finset.sum_eq_zero fun l hl => ?_
+  rw [hv i y hy j (t.erase l) (fun h' => hjt (Finset.mem_of_mem_erase h')) hyj, mul_zero]
+
+/-- **`S¹u` inherits the class of `u`**: if every component `uₐ` is a `C²` `1`-form with vanishing
+tangential traces and bound `L` (`IsCsFormTr 0`), then `S¹u = Σₐ dxₐ ∧ uₐ` is a `C²` `2`-form with
+vanishing tangential traces and bound `c L`, with `c` universal: the tangential trace of
+`dxₐ ∧ uₐ` on a face vanishes with that of `uₐ` (`isTangentialZero_coordWedgeField`),
+`d(S¹u) = −Σₐ dxₐ ∧ duₐ` (`extDeriv_coordWedgeField_eq`), and the derivatives are bounded through
+the fibre maps (`norm_iteratedFDeriv_coordWedgeField_le_sum`). -/
+theorem exists_isCsFormTr_segS1 : ∃ c : ℝ, 1 ≤ c ∧ ∀ (u : Wv U1) {L : ℝ}, 0 ≤ L →
+    (∀ a, IsCsFormTr 0 1 L (u a : W1)) → IsCsFormTr 0 2 (c * L) (bggSegment.S1 u) := by
+  have hc0 : 0 ≤ ∑ a, ‖coordWedgeCLM a‖ := Finset.sum_nonneg fun a _ => norm_nonneg _
+  refine ⟨1 + ∑ a, ‖coordWedgeCLM a‖, by linarith, fun u L hL0 hu => ?_⟩
+  have hex : ∀ a, ∃ w : FormField 3, ∃ hw : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) w,
+      (∀ y, IsDeg 1 (w y)) ∧ IsTangentialZero w ∧
+      (∀ i ≤ 0 + 1, ∀ y ∈ closure (cubeDomain 3),
+        ‖iteratedFDeriv ℝ i w y‖ ≤ L ∧ ‖iteratedFDeriv ℝ i (FiniteElement.extDeriv w) y‖ ≤ L) ∧
+      (u a : W1) = formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
+        ⟨w, hw.continuous⟩ := by
+    intro a
+    rcases hu a with h | ⟨k, hk, w, hw, hdeg, htan, hL, he⟩
+    · exact absurd h (by norm_num)
+    · obtain rfl : k = 1 := by exact_mod_cast hk
+      exact ⟨w, hw, hdeg, htan, hL, he⟩
+  choose w hw hdeg htan hL he using hex
+  have hw2 : ∀ a, ContDiff ℝ 2 (w a) := fun a => by simpa using hw a
+  have hw1 : ∀ a, ContDiff ℝ 1 (w a) := fun a => (hw2 a).of_le (by norm_num)
+  have hdw : ∀ a, ContDiff ℝ 1 (FiniteElement.extDeriv (w a)) := fun a =>
+    contDiff_extDeriv (by simpa [one_add_one_eq_two] using hw2 a)
+  have hW : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) (coordWedgeField w) :=
+    contDiff_coordWedgeField hw
+  have hcL : (∑ a, ‖coordWedgeCLM a‖) * L ≤ (1 + ∑ a, ‖coordWedgeCLM a‖) * L := by nlinarith
+  refine Or.inr ⟨2, rfl, coordWedgeField w, hW, fun y => isDeg_coordWedgeField hdeg y,
+    isTangentialZero_coordWedgeField htan, fun i hi y hy => ⟨?_, ?_⟩, ?_⟩
+  · exact (norm_iteratedFDeriv_coordWedgeField_le_sum hw (by omega)
+      fun a => (hL a i hi y hy).1).trans hcL
+  · rw [extDeriv_coordWedgeField_eq hw1, iteratedFDeriv_neg_apply, norm_neg]
+    exact (norm_iteratedFDeriv_coordWedgeField_le_sum (m := 1) (fun a => by exact_mod_cast hdw a)
+      (by omega)
+      fun a => (hL a i hi y hy).2).trans hcL
+  · change wsL2 (Ω := cubeDomain 3) 1 (incl1 u) = _
+    refine PiLp.ext fun t => Lp.ext ?_
+    rw [wsL2_apply]
+    have h1 := Lp.coeFn_finsetSum Finset.univ fun p : Fin 3 × formIdx 3 1 =>
+      wsCoeff 1 t p • (incl1 u) p.1 p.2
+    have h2 : ∀ p : Fin 3 × formIdx 3 1,
+        (((wsCoeff 1 t p • (incl1 u) p.1 p.2 : L2 ℝ (cubeDomain 3))) : (Fin 3 → ℝ) → ℝ) =ᵐ[
+          volume.restrict (cubeDomain 3)] fun x => wsCoeff 1 t p * w p.1 x p.2.1 := by
+      intro p
+      have e : (incl1 u) p.1 = formL2 (isOpen_cubeDomain 3).measurableSet
+          (isBounded_cubeDomain 3) 1 ⟨w p.1, (hw p.1).continuous⟩ := he p.1
+      rw [e]
+      filter_upwards [Lp.coeFn_smul (wsCoeff 1 t p) (formL2 (isOpen_cubeDomain 3).measurableSet
+          (isBounded_cubeDomain 3) 1 ⟨w p.1, (hw p.1).continuous⟩ p.2),
+        coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
+          ⟨w p.1, (hw p.1).continuous⟩ p.2] with x hx1 hx2
+      rw [hx1, Pi.smul_apply, smul_eq_mul, hx2]
+    filter_upwards [h1, ae_all_iff.2 h2, coeFn_formL2 (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) 2 ⟨coordWedgeField w, hW.continuous⟩ t] with x hx1 hx2 hx3
+    rw [hx1, Finset.sum_apply, hx3]
+    simp only [hx2]
+    rw [coordWedgeField_apply]
+    exact (coordWedgeSum_eq_sum_wsCoeff (k := 1) (fun a => hdeg a x) t).symm
+
+end S1Regularity
 
 /-! ### Projection errors -/
 
@@ -414,11 +527,12 @@ theorem cubeFEM_rate_tr_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions
 with vanishing tangential traces** (thesis' boundary conditions, no flatness): the form of
-`cubeFEM_rate_tr_of_bounds` where the hypotheses on `σ, φ, u, S¹u` are `C²` regularity up to
-`∂Q`: if `σ`, `φ`, `u` and `S¹u` are `C²` forms whose tangential components vanish on `∂Q`, with
+`cubeFEM_rate_tr_of_bounds` where the hypotheses on `σ, φ, u` are `C²` regularity up to
+`∂Q`: if `σ`, `φ` and `u` are `C²` forms whose tangential components vanish on `∂Q`, with
 values and first derivatives bounded by `L` on `cl Q` (`IsCsFormTr 0`), and the multiplier
 `λ ∈ L²` (no boundary condition, no smoothness) has
-`‖λ‖ ≤ L`, then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`; the `L²` bound of `S¹u`
+`‖λ‖ ≤ L`, then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`; the class of `S¹u`
+(`exists_isCsFormTr_segS1`), its `L²` bound
 and the regularity `S¹u ∈ D(d¹*)` are derived (`IsCsFormTr.norm_le`,
 `IsCsFormTr.abs_inner_D1_le`). -/
 theorem cubeFEM_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
@@ -432,7 +546,6 @@ theorem cubeFEM_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
       bggSegment.d0 σ = bggSegment.S0 φ →
       IsCsFormTr 0 0 L (σ : W0) → (∀ a, IsCsFormTr 0 0 L (φ a : W0)) →
       (∀ a, IsCsFormTr 0 1 L (u a : W1)) → ‖lam‖ ≤ L →
-      IsCsFormTr 0 2 L (bggSegment.S1 u) →
       ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
       σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
       uh ∈ (cubeFEM hT hB N).Vt1h →
@@ -449,19 +562,32 @@ theorem cubeFEM_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
   obtain ⟨K, hK⟩ := hex
   have hK0 := hK.1
   have hrate := hK.2
+  obtain ⟨cS, hcS1, hcS⟩ := exists_isCsFormTr_segS1
+  have hcS0 : 0 ≤ cS := by linarith
   have hc1 : (0 : ℝ) ≤ Fintype.card (formIdx 3 1) := Nat.cast_nonneg _
   have hc2 : (0 : ℝ) ≤ Fintype.card (formIdx 3 2) := Nat.cast_nonneg _
-  refine ⟨K * (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)), by positivity,
-    fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hlam hSu σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
-  set c : ℝ := 1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2) with hc
-  have hcL : L ≤ c * L := le_mul_of_one_le_left hL0 (by rw [hc]; linarith)
-  have hcL0 : 0 ≤ c * L := by positivity
-  have hb := hrate N (L := c * L) hcL0 c1 c2 c3 (hσ.mono hcL) (fun a => (hφ a).mono hcL)
-    (fun a => (hu a).mono hcL) (hSu.mono hcL)
-    (hlam.trans hcL)
-    ((hSu.norm_le hL0).trans (by rw [hc]; nlinarith))
-    (fun w => (hSu.abs_inner_D1_le hL0 w).trans
-      (mul_le_mul_of_nonneg_right (by rw [hc]; nlinarith) (norm_nonneg _)))
+  refine ⟨K * (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * cS,
+    mul_nonneg (by positivity) hcS0,
+    fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hlam σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
+  have hSu : IsCsFormTr 0 2 (cS * L) (bggSegment.S1 u) := hcS u hL0 hu
+  have hL' : L ≤ cS * L := le_mul_of_one_le_left hL0 hcS1
+  have hL'0 : 0 ≤ cS * L := mul_nonneg hcS0 hL0
+  have hc1' : (1 : ℝ) ≤ 1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2) := by
+    linarith
+  have hcL : cS * L ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) *
+      (cS * L) := le_mul_of_one_le_left hL'0 hc1'
+  have hcL0 : 0 ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) *
+      (cS * L) := le_trans hL'0 hcL
+  have hLc := hL'.trans hcL
+  have hn : (Fintype.card (formIdx 3 2) : ℝ) * (cS * L) ≤
+      (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * (cS * L) :=
+    mul_le_mul_of_nonneg_right (by linarith) hL'0
+  have hd : (Fintype.card (formIdx 3 1) : ℝ) * (3 * (cS * L)) ≤
+      (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * (cS * L) := by
+    rw [← mul_assoc]; exact mul_le_mul_of_nonneg_right (by linarith) hL'0
+  have hb := hrate N hcL0 c1 c2 c3 (hσ.mono hLc) (fun a => (hφ a).mono hLc)
+    (fun a => (hu a).mono hLc) (hSu.mono hcL) (hlam.trans hLc) ((hSu.norm_le hL'0).trans hn)
+    (fun w => (hSu.abs_inner_D1_le hL'0 w).trans (mul_le_mul_of_nonneg_right hd (norm_nonneg _)))
     hσh hφh huh h1 h2 h3
   refine hb.trans (le_of_eq ?_)
   ring
@@ -477,7 +603,6 @@ theorem cubeFEM_rate_isSaddle_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
       IsCsFormTr 0 0 L ((graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) : U0) : W0) →
       (∀ a, IsCsFormTr 0 0 L ((rp (Feec.BGG.pφ V0 Vt0 Vt1 x) a : U0) : W0)) →
       (∀ a, IsCsFormTr 0 1 L ((rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) a : U1) : W1)) → ‖lam‖ ≤ L →
-      IsCsFormTr 0 2 L (bggSegment.S1 (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x))) →
       ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
       σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
       uh ∈ (cubeFEM hT hB N).Vt1h →
@@ -494,9 +619,9 @@ theorem cubeFEM_rate_isSaddle_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
           (K * L * meshSize N) ^ 2 := by
   have hex := cubeFEM_rate_tr hT hB hCR0 hCR
   obtain ⟨K, hK0, hK⟩ := hex
-  refine ⟨K, hK0, fun N f x lam L hL0 hs hσ hφ hu hlam hSu σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
+  refine ⟨K, hK0, fun N f x lam L hL0 hs hσ hφ hu hlam σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
   have e := isSaddle_jW_domain_eqs hs
-  exact hK N hL0 e.1 e.2.1 e.2.2 hσ hφ hu hlam hSu hσh hφh huh h1 h2 h3
+  exact hK N hL0 e.1 e.2.1 e.2.2 hσ hφ hu hlam hσh hφh huh h1 h2 h3
 
 
 /-- `L²` error of `π²` on a `C²` `2`-form with vanishing tangential traces. -/
@@ -542,34 +667,54 @@ theorem cubeFEM_err_Pt2_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (ρ : Wv W2)
         (L * meshSize N) ^ 2 := Finset.sum_le_sum fun a _ => hc a
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
-/-- **Regularity of an exact state** `(σ, φ, u, M, ρ)` for the `O(h)` rate: all components and
-`S¹u` are `C²` forms up to `∂Q` whose tangential components vanish on `∂Q` (no condition on the
-normal components), with values and first derivatives bounded by `L` on `cl Q` (`IsCsFormTr 0`).
-The condition on `M`, `ρ` is needed for the rate: `Mₕ`, `ρₕ` have vanishing boundary DOFs (see
-the module docstring). -/
+/-- **Regularity of an exact state** `(σ, φ, u, M, ρ)` for the `O(h)` rate: all components are
+`C²` forms (restrictions to `Q` of `C²` fields on `ℝ³`) whose tangential components vanish on
+`∂Q` (no condition on the normal components), with values and first derivatives bounded by `L`
+on `cl Q` (`IsCsFormTr 0`). The class of `S¹u` follows (`exists_isCsFormTr_segS1`). The
+condition on `M`, `ρ` is needed for the rate: `Mₕ`, `ρₕ` have vanishing boundary DOFs (see the
+module docstring). -/
 def IsSmoothStateTr (L : ℝ) (σ : U0) (φ : Wv U0) (u : Wv U1) (M : W2) (ρ : Wv W2) : Prop :=
   IsCsFormTr 0 0 L (σ : W0) ∧ (∀ a, IsCsFormTr 0 0 L (φ a : W0)) ∧
-    (∀ a, IsCsFormTr 0 1 L (u a : W1)) ∧ IsCsFormTr 0 2 L (bggSegment.S1 u) ∧
-    IsCsFormTr 0 2 L M ∧ ∀ a, IsCsFormTr 0 2 L (ρ a)
+    (∀ a, IsCsFormTr 0 1 L (u a : W1)) ∧ IsCsFormTr 0 2 L M ∧ ∀ a, IsCsFormTr 0 2 L (ρ a)
 
 theorem IsSmoothStateTr.isCsFormTr_M {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2}
-    {ρ : Wv W2} (h : IsSmoothStateTr L σ φ u M ρ) : IsCsFormTr 0 2 L M := h.2.2.2.2.1
+    {ρ : Wv W2} (h : IsSmoothStateTr L σ φ u M ρ) : IsCsFormTr 0 2 L M := h.2.2.2.1
+
+theorem IsSmoothStateTr.mono {L L' : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2}
+    {ρ : Wv W2} (h : IsSmoothStateTr L σ φ u M ρ) (hLL' : L ≤ L') :
+    IsSmoothStateTr L' σ φ u M ρ :=
+  ⟨h.1.mono hLL', fun a => (h.2.1 a).mono hLL', fun a => (h.2.2.1 a).mono hLL',
+    h.2.2.2.1.mono hLL', fun a => (h.2.2.2.2 a).mono hLL'⟩
+
+/-- A state of `IsSmoothStateTr` together with the class of `S¹u` at the same bound: the form
+used by the Strang bounds (`cubeFEM_strangData_le_tr`); obtained from `IsSmoothStateTr` with a
+universal factor on the bound (`exists_isSmoothStateTrS1`). -/
+def IsSmoothStateTrS1 (L : ℝ) (σ : U0) (φ : Wv U0) (u : Wv U1) (M : W2) (ρ : Wv W2) : Prop :=
+  IsSmoothStateTr L σ φ u M ρ ∧ IsCsFormTr 0 2 L (bggSegment.S1 u)
+
+/-- **The class of `S¹u` is derived**: `IsSmoothStateTr L` gives `IsSmoothStateTrS1 (c L)` for a
+universal `c ≥ 1` (`exists_isCsFormTr_segS1`). -/
+theorem exists_isSmoothStateTrS1 : ∃ c : ℝ, 1 ≤ c ∧ ∀ {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1}
+    {M : W2} {ρ : Wv W2}, 0 ≤ L → IsSmoothStateTr L σ φ u M ρ →
+      IsSmoothStateTrS1 (c * L) σ φ u M ρ := by
+  obtain ⟨c, hc1, hc⟩ := exists_isCsFormTr_segS1
+  exact ⟨c, hc1, fun hL0 h => ⟨h.mono (le_mul_of_one_le_left hL0 hc1), hc _ hL0 h.2.2.1⟩⟩
 
 /-- **Flat states are states of the new class, with the same bound** (`IsCsFormMin.isCsFormTr`):
 `cubeWave_rate_tr` contains `cubeWave_rate`. -/
 theorem IsSmoothState.isSmoothStateTr {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2}
     {ρ : Wv W2} (h : IsSmoothState L σ φ u M ρ) : IsSmoothStateTr L σ φ u M ρ :=
   ⟨h.1.isCsFormTr, fun a => (h.2.1 a).isCsFormTr, fun a => (h.2.2.1 a).isCsFormTr,
-    h.2.2.2.1.isCsFormTr, h.2.2.2.2.1.isCsFormTr, fun a => (h.2.2.2.2.2 a).isCsFormTr⟩
+    h.2.2.2.2.1.isCsFormTr, fun a => (h.2.2.2.2.2 a).isCsFormTr⟩
 
 set_option maxHeartbeats 2000000 in
 /-- **The data of the Strang bound of (6.4) for a smooth exact state**: the interpolation part
 is `≤ interpConst C · (L h_N)²`, for every `N`. -/
 theorem cubeFEM_strangData_le_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) {σ : U0} {φ : Wv U0} {u : Wv U1}
-    {M : W2} {ρ : Wv W2} (hs : IsSmoothStateTr L σ φ u M ρ) (K0 K1 : ℝ) :
+    {M : W2} {ρ : Wv W2} (hs : IsSmoothStateTrS1 L σ φ u M ρ) (K0 K1 : ℝ) :
     (cubeFEM hT hB N).strangData σ φ u M ρ K0 K1 ≤
       interpConst C * (L * meshSize N) ^ 2 + K0 ^ 2 + K1 ^ 2 := by
-  obtain ⟨hσ, hφ, hu, hSu, hM, hρ⟩ := hs
+  obtain ⟨⟨hσ, hφ, hu, hM, hρ⟩, hSu⟩ := hs
   have h1 := cubeFEM_err_P0_tr hT hB N hL0 σ hσ
   have h2 := cubeFEM_err_Pt0_tr hT hB N hL0 φ hφ
   have h3 := cubeFEM_err_gnSq_tr hT hB N hL0 u hu
@@ -627,11 +772,11 @@ of (6.4) for the discretization of Table 6.1 satisfies
 (the Strang bound `strang_of_isEllipticProjection` with the consistency bounds of
 `consistency_S0_of_approx`, `weakConsistency_of_regularPotential_of_bound` and the interpolation
 errors `cubeFEM_strangData_le_tr`). See [QuennevilleBelair2015], §6.2, (6.4), Prop 5.9. -/
-theorem cubeFEM_ellipticProjection_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
+theorem cubeFEM_ellipticProjection_rate_trS1 {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2}
       (ℓ : U1 →ₗ[ℝ] ℝ) {L : ℝ}, 0 ≤ L → bggSegment.d0 σ = bggSegment.S0 φ →
-      (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → IsSmoothStateTr L σ φ u M ρ →
+      (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → IsSmoothStateTrS1 L σ φ u M ρ →
       ∀ {x : (((cubeFEM hT hB N).V0h × (cubeFEM hT hB N).Vt1h × (cubeFEM hT hB N).W2h ×
           (cubeFEM hT hB N).Wt2h) × (cubeFEM hT hB N).Vt0h) × (cubeFEM hT hB N).V1h},
       Feec.BGG.IsEllipticProjection (cubeFEM hT hB N).toSegmentH
@@ -716,7 +861,7 @@ theorem cubeFEM_ellipticProjection_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
       Real.sq_sqrt hKd0, hKd]
     ring
   have hS := (Feec.BGG.Discrete.strang_of_isEllipticProjection H h54 c3 ℓ (hK0 ℓ hℓ)
-    (hK1 M hs.isCsFormTr_M) hx).2
+    (hK1 M hs.1.isCsFormTr_M) hx).2
   have hC2 : 0 ≤ 2 * (Feec.BGG.Discrete.strangConst Cp + 1) := by
     unfold Feec.BGG.Discrete.strangConst; positivity
   calc √(‖σ - x.1.1.1‖ ^ 2 + ‖u - x.1.1.2.1‖ ^ 2 + ‖M - x.1.1.2.2.1‖ ^ 2 +
@@ -725,6 +870,37 @@ theorem cubeFEM_ellipticProjection_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
         Real.sqrt_le_sqrt (hS.trans (mul_le_mul_of_nonneg_left hdata hC2))
     _ = Ks * √Kd * L * meshSize N := by
         rw [Real.sqrt_mul hC2, Real.sqrt_sq (by positivity), ← hKs]; ring
+
+set_option maxHeartbeats 1000000 in
+/-- **The `O(h)` rate of the elliptic projection (6.4) on the cube** (the cube form of
+`Feec.BGG.Discrete.strang_rate_of_regularPotential`, under the regularity hypothesis `C_R`): for
+every exact state in `IsSmoothStateTr L` (`σ, φ, u, M, ρ` `C²` with vanishing tangential traces;
+the class of `S¹u` is derived, `exists_isSmoothStateTrS1`) with `dσ = S₀φ` and every multiplier
+functional with `|ℓ μ| ≤ L ‖μ‖`, every solution of (6.4) for Table 6.1 satisfies
+`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2} ≤ K L h_N`, `K` independent of `N` and of
+the state (`cubeFEM_ellipticProjection_rate_trS1`). See [QuennevilleBelair2015], §6.2, (6.4). -/
+theorem cubeFEM_ellipticProjection_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2}
+      (ℓ : U1 →ₗ[ℝ] ℝ) {L : ℝ}, 0 ≤ L → bggSegment.d0 σ = bggSegment.S0 φ →
+      (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → IsSmoothStateTr L σ φ u M ρ →
+      ∀ {x : (((cubeFEM hT hB N).V0h × (cubeFEM hT hB N).Vt1h × (cubeFEM hT hB N).W2h ×
+          (cubeFEM hT hB N).Wt2h) × (cubeFEM hT hB N).Vt0h) × (cubeFEM hT hB N).V1h},
+      Feec.BGG.IsEllipticProjection (cubeFEM hT hB N).toSegmentH
+        ((cubeFEM hT hB N).ellipticDataH σ φ u M ρ ℓ) 0 x →
+      √(‖σ - x.1.1.1‖ ^ 2 + ‖u - x.1.1.2.1‖ ^ 2 + ‖M - x.1.1.2.2.1‖ ^ 2 +
+        ‖ρ - x.1.1.2.2.2‖ ^ 2) ≤ K * L * meshSize N := by
+  have hex := cubeFEM_ellipticProjection_rate_trS1 hT hB hCR0 hCR
+  obtain ⟨K, hK⟩ := hex
+  have hK0 := hK.1
+  replace hK := hK.2
+  obtain ⟨c, hc1, hc⟩ := exists_isSmoothStateTrS1
+  refine ⟨K * c, mul_nonneg hK0 (by linarith), fun N σ φ u M ρ ℓ L hL0 c3 hℓ hs x hx => ?_⟩
+  have hcL : L ≤ c * L := le_mul_of_one_le_left hL0 hc1
+  refine (hK N ℓ (L := c * L) (mul_nonneg (by linarith) hL0) c3
+    (fun μ => (hℓ μ).trans (mul_le_mul_of_nonneg_right hcL (norm_nonneg _))) (hc hL0 hs)
+    hx).trans (le_of_eq ?_)
+  ring
 
 set_option maxHeartbeats 4000000 in
 /-- **`O(h)` convergence of the semi-discrete scheme (6.5) on the cube** (Table 6.1; new: the
@@ -763,6 +939,9 @@ theorem cubeWave_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
               (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
         ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
           ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N := by
+  have hcSex := exists_isSmoothStateTrS1
+  obtain ⟨cS, hcS1, hcS⟩ := hcSex
+  have hcS0 : 0 ≤ cS := by linarith
   have hh0 := cubeFEM_happ0 hT hB
   obtain ⟨C0, hh1⟩ := hh0
   have hC00 := hh1.1
@@ -792,7 +971,19 @@ theorem cubeWave_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
   have Ks_ex : ∃ x : ℝ, x = √(2 * (Feec.BGG.Discrete.strangConst Cp + 1)) := ⟨_, rfl⟩
   obtain ⟨Ks, hKs⟩ := Ks_ex
   have hKs0 : 0 ≤ Ks := by rw [hKs]; positivity
-  refine ⟨2 * Ks * √Kd, by positivity, fun N T hT0 f hf s L hL0 hsm hmult => ?_⟩
+  have hKK : 0 ≤ 2 * Ks * √Kd * cS := mul_nonneg (by positivity) hcS0
+  refine ⟨2 * Ks * √Kd * cS, hKK,
+    fun N T hT0 f hf s L0 hL00 hsm0 hmult0 => ?_⟩
+  have hLex : ∃ x : ℝ, x = cS * L0 := ⟨_, rfl⟩
+  obtain ⟨L, hLdef⟩ := hLex
+  have hL0 : 0 ≤ L := by rw [hLdef]; exact mul_nonneg hcS0 hL00
+  have hLL : L0 ≤ L := by rw [hLdef]; exact le_mul_of_one_le_left hL00 hcS1
+  have hsm : ∀ t ∈ Icc 0 T, IsSmoothStateTrS1 L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
+      IsSmoothStateTrS1 L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) := fun t ht => by
+    rw [hLdef]; exact ⟨hcS hL00 (hsm0 t ht).1, hcS hL00 (hsm0 t ht).2⟩
+  have hmult : ∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖ :=
+    fun t ht μ => ⟨(hmult0 t ht μ).1.trans (mul_le_mul_of_nonneg_right hLL (norm_nonneg _)),
+      (hmult0 t ht μ).2.trans (mul_le_mul_of_nonneg_right hLL (norm_nonneg _))⟩
   have hh : 0 ≤ meshSize N := (meshSize_pos N).le
   have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
     rw [hCp]; exact bggStability_of hCR0 hCR
@@ -835,7 +1026,7 @@ theorem cubeWave_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
       (by positivity : 0 ≤ Capp * meshSize N * ((wa + wb) * (cM * L)))
     exact h1.trans h2
   have hdata : ∀ {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2},
-      IsSmoothStateTr L σ φ u M ρ → (cubeFEM hT hB N).strangData σ φ u M ρ (L * Capp * meshSize N)
+      IsSmoothStateTrS1 L σ φ u M ρ → (cubeFEM hT hB N).strangData σ φ u M ρ (L * Capp * meshSize N)
         (Capp * meshSize N * ((wa + wb) * (cM * L))) ≤ (√Kd * L * meshSize N) ^ 2 := by
     intro σ φ u M ρ hs
     refine (cubeFEM_strangData_le_tr hT hB N hL0 hs _ _).trans (le_of_eq ?_)
@@ -848,12 +1039,12 @@ theorem cubeWave_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
     (continuousOn_cubeSource hT hB N hf) (fun t _ v => (inner_cubeSource hT hB N f t v).symm)
     (fun t ht => hK0 (s.ℓ t) fun μ => (hmult t ht μ).1)
     (fun t ht => hK0 (s.ℓ' t) fun μ => (hmult t ht μ).2)
-    (fun t ht => hK1 (s.M t) (hsm t ht).1.isCsFormTr_M)
-    (fun t ht => hK1 (s.M' t) (hsm t ht).2.isCsFormTr_M)
+    (fun t ht => hK1 (s.M t) (hsm t ht).1.1.isCsFormTr_M)
+    (fun t ht => hK1 (s.M' t) (hsm t ht).2.1.isCsFormTr_M)
     (fun t ht => hdata (hsm t ht).1) (fun t ht => hdata (hsm t ht).2)
   obtain ⟨sh, h0, hb⟩ := hrate
   refine ⟨sh, h0, fun t ht => (hb t ht).trans (le_of_eq ?_)⟩
-  rw [abs_of_nonneg (by positivity : 0 ≤ √Kd * L), abs_of_nonneg hh, ← hKs]
+  rw [abs_of_nonneg (by positivity : 0 ≤ √Kd * L), abs_of_nonneg hh, ← hKs, hLdef]
   ring
 
 
@@ -1037,7 +1228,7 @@ theorem tangentialU_ne_zero : tangentialU ≠ 0 := by
 /-- **A smooth solution of (5.3) that is not flat at `∂Q`** (non-vacuity of `cubeFEM_rate_tr`
 beyond the flat class): `σ = 0`, `φ = 0`, `λ = 0`, `u = tangentialU ≠ 0` (first row
 `(sin 2πy₁ sin 2πy₂) dx₀`, divergence free, `S¹u = 0`, normal component nonzero on `{y₀ = 0}`),
-datum `F = tangentialDatum`: the equations hold and `u`, `S¹u` are `IsCsFormTr 0` with one bound. -/
+datum `F = tangentialDatum`: the equations hold and `u` is `IsCsFormTr 0`. -/
 theorem tangentialManufactured_solution :
     (∀ τ ψ, ⟪(0 : U0), τ⟫ - ⟪tangentialU, bggSegment.dt0 ψ⟫ -
       ⟪(0 : W1), ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
@@ -1046,8 +1237,7 @@ theorem tangentialManufactured_solution :
     bggSegment.d0 (0 : U0) = bggSegment.S0 (0 : Wv U0) ∧
     ∃ L, 0 ≤ L ∧ IsCsFormTr 0 0 L ((0 : U0) : W0) ∧
       (∀ a, IsCsFormTr 0 0 L (((0 : Wv U0) a : U0) : W0)) ∧
-      (∀ a, IsCsFormTr 0 1 L ((tangentialU a : U1) : W1)) ∧ ‖(0 : W1)‖ ≤ L ∧
-      IsCsFormTr 0 2 L (bggSegment.S1 tangentialU) := by
+      (∀ a, IsCsFormTr 0 1 L ((tangentialU a : U1) : W1)) ∧ ‖(0 : W1)‖ ≤ L := by
   refine ⟨fun τ ψ => ?_, fun v => ?_, by rw [map_zero, map_zero], ?_⟩
   · rw [inner_tangentialU_dt0, inner_zero_left, inner_zero_left, sub_zero, sub_zero]
   · have hz : bggSegment.dt0 (0 : Wv U0) = 0 := map_zero _
@@ -1055,11 +1245,71 @@ theorem tangentialManufactured_solution :
     rfl
   obtain ⟨L, hL0, hL⟩ := exists_isCsFormTr_tangentialX
   refine ⟨L, hL0, isCsFormTr_zero 0 0 hL0, fun a => isCsFormTr_zero 0 0 hL0, fun a => ?_,
-    by simpa using hL0, ?_⟩
-  · by_cases ha : a = 0
-    · subst ha; rw [tangentialU_apply_zero]; exact hL
-    · rw [tangentialU_apply_of_ne ha]; exact isCsFormTr_zero 0 1 hL0
-  · rw [segS1_tangentialU]; exact isCsFormTr_zero 0 2 hL0
+    by simpa using hL0⟩
+  by_cases ha : a = 0
+  · subst ha; rw [tangentialU_apply_zero]; exact hL
+  · rw [tangentialU_apply_of_ne ha]; exact isCsFormTr_zero 0 1 hL0
+
+/-- **The combined `u` is not flat**: `(coupledu + tangentialU) 0 − coupledu 0 = tangentialU 0`
+and the flat class is closed under differences (`IsCsFormMin.sub`). -/
+theorem not_isCsFormMin_coupledu_add_tangentialU (L : ℝ) :
+    ¬ IsCsFormMin 0 1 L ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1) := by
+  intro h
+  obtain ⟨Lc, -, -, -, -, -, -, -, -, -, -, hu, -⟩ := exists_coupled_manufactured_solution
+  have h' := h.sub (hu 0)
+  have e : ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1) - ((coupledu 0 : U1) : W1) =
+      ((tangentialU 0 : U1) : W1) := by
+    rw [PiLp.add_apply, Submodule.coe_add, add_sub_cancel_left]
+  rw [e] at h'
+  exact not_isCsFormMin_tangentialU0 0 _ h'
+
+set_option maxHeartbeats 2000000 in
+/-- **A smooth solution of (5.3) with `σ, φ, λ ≠ 0` that is not flat at `∂Q`** (non-vacuity of
+`cubeFEM_rate_tr` with every unknown nonzero): the sum of the flat coupled solution
+`exists_coupled_manufactured_solution` (`σ = dᵗd g`, `φ = ∇σ`, `uₐ = −g dxₐ`, `λ = d g`) and of
+`tangentialManufactured_solution` (`σ = φ = λ = 0`, `u = tangentialU`), with datum
+`coupledDatum + tangentialDatum`; `u = coupledu + tangentialU` has a nonzero normal component on
+`∂Q`. (`S¹u = 0` for both summands, so this witness does not exercise `S¹u ≠ 0`.) -/
+theorem combinedManufactured_solution :
+    coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledMult ≠ 0 ∧
+    (∀ L, ¬ IsCsFormMin 0 1 L ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1)) ∧
+    (∀ τ ψ, ⟪coupledσ, τ⟫ - ⟪coupledu + tangentialU, bggSegment.dt0 ψ⟫ -
+      ⟪coupledMult, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
+    (∀ v, ⟪bggSegment.dt0 coupledφ, v⟫ +
+      ⟪bggSegment.S1 (coupledu + tangentialU), bggSegment.S1 v⟫ +
+      ⟪bggSegment.dt1 (coupledu + tangentialU), bggSegment.dt1 v⟫ =
+        (coupledDatum + tangentialDatum) v) ∧
+    bggSegment.d0 coupledσ = bggSegment.S0 coupledφ ∧
+    ∃ L, 0 ≤ L ∧ IsCsFormTr 0 0 L (coupledσ : W0) ∧
+      (∀ a, IsCsFormTr 0 0 L ((coupledφ a : U0) : W0)) ∧
+      (∀ a, IsCsFormTr 0 1 L ((((coupledu + tangentialU : Wv U1)) a : U1) : W1)) ∧
+      ‖coupledMult‖ ≤ L := by
+  obtain ⟨Lc, hLc0, hσ0, hφ0, -, hM0, c1, c2, c3, hσ, hφ, hu, hM, -⟩ :=
+    exists_coupled_manufactured_solution
+  obtain ⟨-, -, -, L2, hL20, -, -, hu2, -⟩ := tangentialManufactured_solution
+  refine ⟨hσ0, hφ0, hM0, not_isCsFormMin_coupledu_add_tangentialU, fun τ ψ => ?_, fun v => ?_,
+    c3, Lc + L2, add_nonneg hLc0 hL20, hσ.isCsFormTr.mono (le_add_of_nonneg_right hL20),
+    fun a => (hφ a).isCsFormTr.mono (le_add_of_nonneg_right hL20), fun a => ?_,
+    hM.trans (le_add_of_nonneg_right hL20)⟩
+  · have e := inner_add_left (𝕜 := ℝ) coupledu tangentialU (bggSegment.dt0 ψ)
+    have h0 := inner_tangentialU_dt0 ψ
+    have h1 := c1 τ ψ
+    linarith
+  · have eS := map_add bggSegment.S1 coupledu tangentialU
+    have ed := map_add bggSegment.dt1 coupledu tangentialU
+    have eS' := (congrArg (fun z : W2 => ⟪z, bggSegment.S1 v⟫) eS).trans
+      (inner_add_left (𝕜 := ℝ) (bggSegment.S1 coupledu) (bggSegment.S1 tangentialU)
+        (bggSegment.S1 v))
+    have ed' := (congrArg (fun z : Wv W2 => ⟪z, bggSegment.dt1 v⟫) ed).trans
+      (inner_add_left (𝕜 := ℝ) (bggSegment.dt1 coupledu) (bggSegment.dt1 tangentialU)
+        (bggSegment.dt1 v))
+    have eD := LinearMap.add_apply coupledDatum tangentialDatum v
+    have eT : tangentialDatum v = ⟪bggSegment.S1 tangentialU, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 tangentialU, bggSegment.dt1 v⟫ := rfl
+    have h2 := c2 v
+    linarith
+  · rw [PiLp.add_apply, Submodule.coe_add]
+    exact (hu a).isCsFormTr.add (hu2 a)
 
 end TangentialManufactured
 
@@ -1237,12 +1487,7 @@ theorem waveTangential_hyps {T : ℝ} (hT : 0 < T) : ∃ L, 0 ≤ L ∧
       by_cases ha : a = 0
       · subst ha; rw [tangentialU_apply_zero]; exact hLu.mono (hLL (le_add_of_nonneg_right hLd0))
       · rw [tangentialU_apply_of_ne ha]; exact hz 1
-    refine ⟨⟨hz 0, fun a => hz 0, hu, ?_, hz 2, hρt⟩, ⟨hz 0, fun a => hz 0, fun a => hz 1, ?_,
-      hz 2, hρ⟩⟩
-    · change IsCsFormTr 0 2 _ (bggSegment.S1 tangentialU)
-      rw [segS1_tangentialU]; exact hz 2
-    · change IsCsFormTr 0 2 _ (bggSegment.S1 (0 : Wv U1))
-      rw [map_zero]; exact hz 2
+    exact ⟨⟨hz 0, fun a => hz 0, hu, hz 2, hρt⟩, ⟨hz 0, fun a => hz 0, fun a => hz 1, hz 2, hρ⟩⟩
   · simp only [waveTangential, LinearMap.zero_apply, abs_zero]
     exact ⟨by positivity, by positivity⟩
 

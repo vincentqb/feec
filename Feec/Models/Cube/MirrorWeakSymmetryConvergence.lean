@@ -15,6 +15,94 @@ open MeasureTheory Set Filter Finset
 
 @[expose] public noncomputable section
 
+namespace Feec.BGG.Discrete
+
+variable {V0 Vt1 W2 Wt2 V1 Vt0 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+  {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D) {T : ℝ} {g : ℝ → Vt1 →ₗ[ℝ] ℝ}
+
+/-- **End-to-end `O(h)` convergence of (6.3) for a classical solution of (6.2), modulo harmonic
+forms**: `Feec.BGG.ExactWave.exists_discreteSolution_rate` with `Stability` replaced by
+`Feec.BGG.HarmonicStability` (no hypothesis on the top row; harmonic forms on the bottom row).
+See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
+theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate_harm {Hh : Submodule ℝ Vt1}
+    {Cp CS : ℝ} (HS : HarmonicStability D Hh Cp CS) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h]
+    [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
+    [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
+    [FiniteDimensional ℝ Q.Wt2h] (hS : Function.Surjective Q.toSegmentH.S0)
+    (hT : 0 < T) (s : ExactWave D T g) {fh : ℝ → Q.Vt1h} (hfh : ContinuousOn fh (Icc 0 T))
+    (hg : ∀ t ∈ Ico 0 T, ∀ v : Q.Vt1h, g t v = ⟪fh t, v⟫) {K0 K1 c h : ℝ}
+    (hK0 : ∀ t ∈ Icc 0 T, ∀ ψ ∈ Q.Vt0h, |s.ℓ t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
+    (hK0' : ∀ t ∈ Icc 0 T, ∀ ψ ∈ Q.Vt0h,
+      |s.ℓ' t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
+    (hK1 : ∀ t ∈ Icc 0 T, ∀ v ∈ Q.Vt1h, |⟪s.M t, (D.S1 - Q.S1h) v⟫| ≤ K1 * √(Q.gnSq v))
+    (hK1' : ∀ t ∈ Icc 0 T, ∀ v ∈ Q.Vt1h, |⟪s.M' t, (D.S1 - Q.S1h) v⟫| ≤ K1 * √(Q.gnSq v))
+    (hdata : ∀ t ∈ Icc 0 T,
+      Q.strangData (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) K0 K1 ≤ (c * h) ^ 2)
+    (hdata' : ∀ t ∈ Icc 0 T,
+      Q.strangData (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) K0 K1 ≤ (c * h) ^ 2) :
+    ∃ sh : DiscreteSolution Q.toSegmentH T fh,
+      (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+        (ellipticProjection Q.toSegmentH HS.toSegmentH_dt0_injective
+          (exists_sub_eq_of_surjective hS) (ellipticRhs (Q.ellipticDataH (s.σ 0) (s.φ 0)
+            (s.u 0) (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
+      ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 + ‖s.M t - sh.M t‖ ^ 2 +
+        ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ √(2 * (strangConst Cp + 1)) * |c| * |h| * (2 + 2 * t) := by
+  have hιc := isEnergyEmbedding_energyEmb (V0 := V0) (Vt1 := Vt1) (W2 := W2) (Wt2 := Wt2)
+  obtain ⟨sh, hinit, hbd⟩ := HS.exists_discreteSolution_norm_sub_le_rate (Q := Q) h54 hS
+    hιc LinearMap.id (skewBil V0 Vt1 W2 Wt2 D) (skewBil V0 Vt1 W2 Wt2 Q.hSegment)
+    Q.constraintH (fun _ _ _ _ => rfl) (fun _ _ _ _ => rfl)
+    (fun a ψ => Subtype.ext (by
+      change Q.P1 (D.d0 (a.1 : V0)) - Q.S0h (ψ : Vt0) = D.d0 (a.1 : V0) - Q.S0h (ψ : Vt0)
+      rw [Q.P1_id _ (Q.d0_mem _ a.1.2)]))
+    hT hfh (fun t => (s.σ t, s.u t, s.M t, s.ρ t)) (fun t => (s.σ' t, s.u' t, s.M' t, s.ρ' t))
+    s.φ s.φ' s.ℓ s.ℓ' (fun t => multTerm D (s.ℓ t)) (fun _ _ _ => rfl)
+    (fun t => energyEmb V0 Vt1 W2 Wt2 (0, (fh t : Vt1), 0, 0))
+    (fun t _ b => by
+      rw [Discrete.embedH_apply, hιc]
+      simp)
+    (s.cσ.prodMk (s.cu.prodMk (s.cM.prodMk s.cρ)))
+    (s.cσ'.prodMk (s.cu'.prodMk (s.cM'.prodMk s.cρ')))
+    (by
+      rintro t ht _ ⟨⟨b, ψ⟩, rfl⟩
+      change ⟪energyEmb V0 Vt1 W2 Wt2 (s.σ' t, s.u' t, s.M' t, s.ρ' t),
+          energyEmb V0 Vt1 W2 Wt2 ((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2))⟫ +
+        discreteSkewForm D ((s.σ t, s.u t, s.M t, s.ρ t), s.φ t)
+          (((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2)), (ψ : Vt0)) -
+        s.ℓ t (D.d0 (b.1 : V0) - D.S0 (ψ : Vt0)) =
+        ⟪energyEmb V0 Vt1 W2 Wt2 (0, (fh t : Vt1), 0, 0),
+          energyEmb V0 Vt1 W2 Wt2 ((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2))⟫
+      rw [hιc, hιc]
+      simp only [discreteSkewForm, inner_zero_left]
+      have ha := s.ea t ht b.1 ψ
+      have hb := s.eb t ht b.2.1
+      have hc := s.ec t ht b.2.2.1
+      have hd := s.ed t ht b.2.2.2
+      have he := hg t ht b.2.1
+      rw [Submodule.coe_inner] at he
+      linarith)
+    (fun y => s.continuousOn_ellipticDataH Q y)
+    (fun t ht y => s.hasDerivWithinAt_ellipticDataH Q ht y)
+    (fun y => s.continuousOn_ellipticDataH' Q y) s.ee s.ee' hK0 hK0' hK1 hK1' hdata hdata'
+  refine ⟨sh, ?_, fun t ht => ?_⟩
+  · have e := energyEmb_injective hinit
+    refine Prod.ext (Subtype.ext ?_) (Prod.ext (Subtype.ext ?_)
+      (Prod.ext (Subtype.ext ?_) (Subtype.ext ?_)))
+    · exact congrArg Prod.fst e
+    · exact congrArg (fun z => z.2.1) e
+    · exact congrArg (fun z => z.2.2.1) e
+    · exact congrArg (fun z => z.2.2.2) e
+  · have hb := hbd t ht
+    rw [Discrete.embedH_apply, norm_sub_of_isEnergyEmbedding hιc] at hb
+    exact hb
+
+end Feec.BGG.Discrete
+
 namespace Feec.Models.Cube.MirrorWeakSymmetry
 
 open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.Models.Cube.FEM
@@ -1059,5 +1147,131 @@ theorem mirrorWave_S0_surjective (N : ℕ) : Function.Surjective (mirrorWave hT 
   exact ⟨⟨_, (mirrorFEM hT hB N).Pt0_mem ψ⟩, Subtype.ext hc⟩
 
 end Discrete
+
+
+/-! ### Smooth states with the mirror boundary conditions and their interpolation errors -/
+
+section Smooth
+
+open ExteriorFibre (IsDeg)
+
+/-- A partial derivative along a hyperplane vanishes on a function vanishing on it. -/
+theorem partialDeriv_eq_zero_of_hyperplane {f : (Fin 3 → ℝ) → ℝ} {x : Fin 3 → ℝ} {i j : Fin 3}
+    (hij : i ≠ j) (hf : ∀ y : Fin 3 → ℝ, y j = x j → f y = 0) :
+    partialDeriv i f x = 0 := by
+  by_cases hd : DifferentiableAt ℝ f x
+  · have hline : HasDerivAt (fun h : ℝ => x + h • (Pi.single i 1 : Fin 3 → ℝ))
+        (Pi.single i 1 : Fin 3 → ℝ) 0 := by
+      simpa using ((hasDerivAt_id (0 : ℝ)).smul_const (Pi.single i 1 : Fin 3 → ℝ)).const_add x
+    have h1 := hd.hasFDerivAt.comp_hasDerivAt_of_eq (0 : ℝ) hline (by simp)
+    have h0 : (f ∘ fun h : ℝ => x + h • (Pi.single i 1 : Fin 3 → ℝ)) = fun _ => 0 := by
+      funext h
+      refine hf _ ?_
+      simp [Ne.symm hij]
+    rw [h0] at h1
+    exact (h1.unique (hasDerivAt_const 0 0)).symm ▸ rfl
+  · rw [partialDeriv_def, fderiv_zero_of_not_differentiableAt hd]; rfl
+
+/-- **`d` preserves the vanishing of the tangential components on a face** `{y_j = c}`. -/
+theorem extDeriv_tangential_zero {w : FormField 3} {j : Fin 3} {c : ℝ}
+    (hw : ∀ y : Fin 3 → ℝ, y j = c → ∀ t, j ∉ t → w y t = 0) :
+    ∀ y : Fin 3 → ℝ, y j = c → ∀ t, j ∉ t → extDeriv w y t = 0 := by
+  intro y hy t ht
+  rw [extDeriv_apply]
+  refine Finset.sum_eq_zero fun i hi => ?_
+  have hij : i ≠ j := fun h => ht (h ▸ hi)
+  rw [partialDeriv_eq_zero_of_hyperplane hij (fun z hz => hw z (hz.trans hy) _
+    (fun h => ht (Finset.mem_of_mem_erase h))), mul_zero]
+
+/-- **`C²` forms up to `∂Q` with vanishing tangential components on the faces normal to `J`**:
+`x ∈ L²(Q; Λʲ)` is the restriction of a `C²` `j`-form `w` on `ℝ³` (the restriction of a `C²` field
+on `cl Q`, through an extension theorem for the cube, not formalized) whose components `w_t`,
+`j' ∉ t`, vanish on `{y_{j'} ∈ {0, ½}}` for `j' ∈ J`, with `‖Dw‖, ‖D dw‖ ≤ L` on `cl Q`. For
+`J = {a}` this is the mirror condition of the component `a` of the bottom row, for `J = ∅` no
+condition (top row). The analogue of `FEM.IsCsFormTr` for partial boundary conditions. -/
+def IsCsFormPart (J : Finset (Fin 3)) (j : ℕ) (L : ℝ) (x : L2F ℝ (cubeDomain 3) (formIdx 3 j)) :
+    Prop :=
+  ∃ w : FormField 3, ∃ hw : ContDiff ℝ 2 w, (∀ y, IsDeg j (w y)) ∧
+    (∀ y : Fin 3 → ℝ, ∀ i ∈ J, (y i = 0 ∨ y i = 1 / 2) → ∀ t : Finset (Fin 3), i ∉ t →
+      w y t = 0) ∧
+    (∀ y ∈ closure (cubeDomain 3), ‖iteratedFDeriv ℝ 1 w y‖ ≤ L ∧
+      ‖iteratedFDeriv ℝ 1 (extDeriv w) y‖ ≤ L) ∧
+    x = formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) j ⟨w, hw.continuous⟩
+
+theorem IsCsFormPart.mono {J : Finset (Fin 3)} {j : ℕ} {L L' : ℝ}
+    {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} (hx : IsCsFormPart J j L x) (h : L ≤ L') :
+    IsCsFormPart J j L' x := by
+  obtain ⟨w, hw, hdeg, hJ, hL, rfl⟩ := hx
+  exact ⟨w, hw, hdeg, hJ, fun y hy => ⟨(hL y hy).1.trans h, (hL y hy).2.trans h⟩, rfl⟩
+
+/-- `d_max` on the restrictions of `C¹` forms, on the cube domain. -/
+theorem formL2_maximal_cube (k : ℕ) {w : FormField 3} (hw : ContDiff ℝ 1 w)
+    (hdeg : ∀ x, IsDeg k (w x)) :
+    ∃ h : formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
+        ⟨w, hw.continuous⟩ ∈ ((extDerivOp ℝ 3 k).maximal (cubeDomain 3)).domain,
+      (extDerivOp ℝ 3 k).maximal (cubeDomain 3) ⟨_, h⟩ =
+        formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) ((k : ℤ) + 1)
+          ⟨extDeriv w, continuous_extDeriv hw⟩ := by
+  have key : ∀ (Θ : Set (Fin 3 → ℝ)) (e : Θ = cubeDomain 3) (hΘ : MeasurableSet Θ)
+      (hb : Bornology.IsBounded Θ),
+      (∃ h : formL2 hΘ hb k ⟨w, hw.continuous⟩ ∈ ((extDerivOp ℝ 3 k).maximal Θ).domain,
+        (extDerivOp ℝ 3 k).maximal Θ ⟨_, h⟩ =
+          formL2 hΘ hb ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv hw⟩) →
+      ∃ h : formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
+          ⟨w, hw.continuous⟩ ∈ ((extDerivOp ℝ 3 k).maximal (cubeDomain 3)).domain,
+        (extDerivOp ℝ 3 k).maximal (cubeDomain 3) ⟨_, h⟩ =
+          formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) ((k : ℤ) + 1)
+            ⟨extDeriv w, continuous_extDeriv hw⟩ := by
+    rintro Θ rfl _ _ h; exact h
+  exact key _ (mesh_domain 3 0) _ _
+    (formL2_mem_maximal (mesh 3 0) (isOpen_mesh_domain 3 0) k hw hdeg)
+
+/-- `d_J` on the restriction of a `C²` form: `d_J x = (dw)|_Q`. -/
+theorem dPart_formL2 {J : Finset (Fin 3)} (k : ℕ) {w : FormField 3} (hw : ContDiff ℝ 2 w)
+    (hdeg : ∀ x, IsDeg k (w x)) (h : formL2 (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) k ⟨w, hw.continuous⟩ ∈ (dPart (cubeDomain 3) J (k : ℤ)).domain) :
+    dPart (cubeDomain 3) J (k : ℤ) ⟨_, h⟩ =
+      formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) ((k : ℤ) + 1)
+        ⟨extDeriv w, continuous_extDeriv (hw.of_le (by norm_num))⟩ := by
+  obtain ⟨h', e⟩ := formL2_maximal_cube k (hw.of_le (by norm_num)) hdeg
+  rw [DeRhamIdent.dPart_apply_eq (isOpen_cubeDomain 3) J k ⟨_, h⟩]
+  exact e
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+
+/-- **The `O(h)` interpolation error of a smooth field by a parity-smoothed projection**. -/
+theorem norm_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
+    (hE : ParitySmoothingEstimates 3 J S ρ C) (N k : ℕ) (hs : polySpace 3 0 k ≤ S.space 3 k)
+    {L : ℝ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hx : IsCsFormPart J k L x) :
+    ‖x - (hE.proj N).π k x‖ ≤ (1 + 2 * C) * polyInterpConst 3 S k * meshSize N * L := by
+  obtain ⟨w, hw, hdeg, hJ, hL, rfl⟩ := hx
+  have h := hE.norm_sub_proj_le_smooth N k 0 hs (hw.of_le (by norm_num)) hdeg hJ
+    (L := L) fun y hy => (hL y hy).1
+  simpa using h
+
+/-- **The `O(h)` interpolation error of `d x`** (`d` commutes with the projections). -/
+theorem norm_d_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
+    (hE : ParitySmoothingEstimates 3 J S ρ C) (N k : ℕ)
+    (hs : polySpace 3 0 (k + 1) ≤ S.space 3 (k + 1))
+    {L : ℝ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hx : IsCsFormPart J k L x)
+    (h : x ∈ (dPart (cubeDomain 3) J (k : ℤ)).domain) :
+    ‖dPart (cubeDomain 3) J (k : ℤ) ⟨x, h⟩ -
+        (hE.proj N).π ((k : ℤ) + 1) (dPart (cubeDomain 3) J (k : ℤ) ⟨x, h⟩)‖ ≤
+      (1 + 2 * C) * polyInterpConst 3 S (k + 1) * meshSize N * L := by
+  obtain ⟨w, hw, hdeg, hJ, hL, rfl⟩ := hx
+  rw [dPart_formL2 k hw hdeg h]
+  have hJd : ∀ y : Fin 3 → ℝ, ∀ i ∈ J, (y i = 0 ∨ y i = 1 / 2) → ∀ t : Finset (Fin 3), i ∉ t →
+      extDeriv w y t = 0 := by
+    intro y i hi hy t ht
+    rcases hy with hy | hy
+    · exact extDeriv_tangential_zero (fun z hz => hJ z i hi (Or.inl hz)) y hy t ht
+    · exact extDeriv_tangential_zero (fun z hz => hJ z i hi (Or.inr hz)) y hy t ht
+  have hd2 : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv
+    (by exact_mod_cast hw)
+  have h1 := hE.norm_sub_proj_le_smooth N (k + 1) 0 hs hd2 (IsDeg.extDeriv hdeg) hJd
+    (L := L) fun y hy => (hL y hy).2
+  simpa using h1
+
+end Smooth
 
 end Feec.Models.Cube.MirrorWeakSymmetry

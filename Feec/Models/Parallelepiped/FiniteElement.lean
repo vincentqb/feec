@@ -27,8 +27,14 @@ the data and smoothness.
   (`comapProj`, `norm_comapProj_le`, `isGraphBounded_comapProj`), the Poincaré inequality with
   `c_P = ‖e⁻¹‖ c_P' ‖e‖` (`IsChainIso.norm_le_of_mem_orthogonal_cycles`), finite-dimensionality
   and the dimension of the harmonic forms (`finiteDimensional_harmonic`, `finrank_harmonic_eq`:
-  `x ↦ P_{ℌ'} (e x)` is injective) and degreewise approximation (`exists_near_comapSub`,
-  `eventually_near_comapSub`, `tendsto_infDist_comapSub`).
+  `x ↦ P_{ℌ'} (e x)` is injective), degreewise approximation (`exists_near_comapSub`,
+  `eventually_near_comapSub`, `tendsto_infDist_comapSub`) and the compactness property
+  (`IsChainIso.hasCompactProperty`). The box `D(d) ∩ D(d†)` is not mapped to the box of the
+  other complex, but the compactness property splits into `dim ℌ < ∞` and two half-compactness
+  properties (`hasCompactPropertyAt_iff_half`: the boxes of `D(d) ∩ 𝔷ᗮ` and `D(d†) ∩ N(d†)ᗮ`),
+  which transfer through `e` and through the adjoints `e*` (`IsChainIso.halfCompactAt`,
+  `IsChainIso.adjHalfCompactAt`; `adjoint_conj_mem_iff`, `adjoint_conj_apply`:
+  `(b T a⁻¹)† = (a*)⁻¹ T† b*`).
 * **Affine invariance of the finite element spaces.** For an element family natural under `T`
   (`IsAffineNatural`: local spaces pulled back into local spaces, DOFs of `T^* w` on `g` fixed
   combinations of the DOFs of `w` on `T g`) the glued spaces of the image mesh `T(M)` pull back
@@ -42,7 +48,8 @@ the data and smoothness.
 * **Hodge theory of `Ω`.** Poincaré with `c_P(A) = pullConst A⁻¹ (2π)⁻¹ pullConst A`
   (`norm_le_of_mem_orthogonal_cycles`, `_min`), closed range in every degree (`closedRangeAt`,
   `closedRangeAt_min`), `dim ℌᵏ(HΛ(Ω)) = [k = 0]`, `dim ℌᵏ(H̊Λ(Ω)) = [k = n]` (`finrank_harmonic`,
-  `finrank_harmonic_min`).
+  `finrank_harmonic_min`), the compactness property of `HΛ(Ω)` and `H̊Λ(Ω)`
+  (`hasCompactProperty`, `hasCompactProperty_min`).
 * **The finite element theorems on `Ω`**, Whitney forms and every admissible sequence, both
   boundary-condition families: uniformly bounded smoothed cochain projections with vanishing
   harmonic gap (`smoothedProjection_uniform`, `polySmoothedProjection_uniform`, `_min`), the
@@ -59,9 +66,7 @@ the data and smoothness.
   `exists_tendstoUniformlyOn_window_of`) apply to any family of subcomplexes with uniformly bounded
   cochain projections.
 
-Not covered here: the compactness property of `HΛ(Ω)` (the box `D(d) ∩ D(d†)` is not mapped to
-the box of `Q` by `T^*`, which is not unitary); the mixed boundary conditions of
-`Feec.Models.Cube.DeRhamPartial`.
+Not covered here: the mixed boundary conditions of `Feec.Models.Cube.DeRhamPartial`.
 
 ## References
 
@@ -607,6 +612,393 @@ theorem finrank_harmonic_eq (j : ι) [FiniteDimensional ℝ (H'.harmonic j)] :
     exact LinearMap.finrank_le_finrank_of_injective hΦ
 
 end IsChainIso
+
+/-! ### The compactness property along isomorphisms of Hilbert complexes -/
+
+section Compact
+
+open scoped LinearPMap Pointwise
+
+/-- **The adjoint of a conjugated operator**: if `a (D(T)) = D(T')` and `T' (a x) = b (T x)`,
+then `y' ∈ D(T'†) ↔ b* y' ∈ D(T†)`. -/
+theorem adjoint_conj_mem_iff {E F E' F' : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace ℝ F] [CompleteSpace F]
+    [NormedAddCommGroup E'] [InnerProductSpace ℝ E'] [CompleteSpace E']
+    [NormedAddCommGroup F'] [InnerProductSpace ℝ F'] [CompleteSpace F']
+    {T : E →ₗ.[ℝ] F} {T' : E' →ₗ.[ℝ] F'} (hT : Dense (T.domain : Set E))
+    (hT' : Dense (T'.domain : Set E')) (a : E ≃L[ℝ] E') (b : F ≃L[ℝ] F')
+    (hdom : ∀ x, a x ∈ T'.domain ↔ x ∈ T.domain)
+    (hcomm : ∀ (x : T.domain) (h : a x ∈ T'.domain), T' ⟨a x, h⟩ = b (T x)) (y' : F') :
+    y' ∈ T'†.domain ↔ ContinuousLinearMap.adjoint (b : F →L[ℝ] F') y' ∈ T†.domain := by
+  constructor
+  · intro hy'
+    refine LinearPMap.mem_adjoint_domain_of_exists _
+      ⟨ContinuousLinearMap.adjoint (a : E →L[ℝ] E') (T'† ⟨y', hy'⟩), fun x => ?_⟩
+    rw [ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.adjoint_inner_left]
+    have hx : a x ∈ T'.domain := (hdom x).2 x.2
+    have h1 := LinearPMap.adjoint_isFormalAdjoint hT' ⟨y', hy'⟩ ⟨a x, hx⟩
+    change inner ℝ (T'† ⟨y', hy'⟩) (a (x : E)) = _
+    rw [h1, hcomm x hx]
+    rfl
+  · intro hy
+    refine LinearPMap.mem_adjoint_domain_of_exists _
+      ⟨ContinuousLinearMap.adjoint (a.symm : E' →L[ℝ] E) (T† ⟨_, hy⟩), fun x' => ?_⟩
+    rw [ContinuousLinearMap.adjoint_inner_left]
+    have hax : a (a.symm x') ∈ T'.domain := by rw [a.apply_symm_apply]; exact x'.2
+    have hx : a.symm x' ∈ T.domain := (hdom _).1 hax
+    have h1 := LinearPMap.adjoint_isFormalAdjoint hT ⟨_, hy⟩ ⟨a.symm x', hx⟩
+    have h2 := hcomm ⟨a.symm x', hx⟩ hax
+    have h3 : T' ⟨a (a.symm x'), hax⟩ = T' x' :=
+      LinearPMap.apply_congr' _ _ _ (a.apply_symm_apply x')
+    change inner ℝ (T† ⟨_, hy⟩) (a.symm (x' : E')) = _
+    rw [h1, ContinuousLinearMap.adjoint_inner_left, ← h3, h2]
+    rfl
+
+/-- The value of the adjoint of a conjugated operator: `T† (b* y') = a* (T'† y')`. -/
+theorem adjoint_conj_apply {E F E' F' : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace ℝ F] [CompleteSpace F]
+    [NormedAddCommGroup E'] [InnerProductSpace ℝ E'] [CompleteSpace E']
+    [NormedAddCommGroup F'] [InnerProductSpace ℝ F'] [CompleteSpace F']
+    {T : E →ₗ.[ℝ] F} {T' : E' →ₗ.[ℝ] F'} (hT : Dense (T.domain : Set E))
+    (hT' : Dense (T'.domain : Set E')) (a : E ≃L[ℝ] E') (b : F ≃L[ℝ] F')
+    (hdom : ∀ x, a x ∈ T'.domain ↔ x ∈ T.domain)
+    (hcomm : ∀ (x : T.domain) (h : a x ∈ T'.domain), T' ⟨a x, h⟩ = b (T x)) {y' : F'}
+    (hy' : y' ∈ T'†.domain) (hy : ContinuousLinearMap.adjoint (b : F →L[ℝ] F') y' ∈ T†.domain) :
+    T† ⟨_, hy⟩ = ContinuousLinearMap.adjoint (a : E →L[ℝ] E') (T'† ⟨y', hy'⟩) := by
+  refine LinearPMap.adjoint_apply_eq hT _ fun x => ?_
+  rw [ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.adjoint_inner_left]
+  have hx : a x ∈ T'.domain := (hdom x).2 x.2
+  have h1 := LinearPMap.adjoint_isFormalAdjoint hT' ⟨y', hy'⟩ ⟨a x, hx⟩
+  change inner ℝ (T'† ⟨y', hy'⟩) (a (x : E)) = _
+  rw [h1, hcomm x hx]
+  rfl
+
+variable (H : HilbertComplex ℝ c W)
+
+/-- **Half-compactness at `i`**: the unit box of `D(d) ∩ 𝔷ⁱᗮ` in the graph norm lies in a compact
+set. -/
+def HalfCompactAt (i : ι) : Prop :=
+  ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain),
+    x ∈ (H.cycles i)ᗮ → ‖x‖ ≤ 1 → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ 1 → x ∈ K
+
+/-- **Adjoint half-compactness at `i`**: the unit box of `D(d†) ∩ N(d†)ᗮ` in the graph norm of
+`d† = (d (c.prev i) i)†` lies in a compact set. -/
+def AdjHalfCompactAt (i : ι) : Prop :=
+  ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ ((H.d (c.prev i) i)†).domain),
+    x ∈ ((H.d (c.prev i) i)†).kerᗮ → ‖x‖ ≤ 1 → ‖(H.d (c.prev i) i)† ⟨x, hx⟩‖ ≤ 1 → x ∈ K
+
+variable {H}
+
+/-- Scaled boxes of a set closed under scalar multiplication: if the unit box `{x ∈ S : ‖x‖ ≤ 1,
+‖A x‖ ≤ 1}` of a linear map `A` on a submodule `S` lies in a compact set, so does every box. -/
+theorem exists_isCompact_of_box {V Y : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+    [NormedAddCommGroup Y] [NormedSpace ℝ Y] {S : Submodule ℝ V} (A : S →ₗ[ℝ] Y)
+    (P : V → Prop) (hP : ∀ (a : ℝ) (x : V), P x → P (a • x)) {K : Set V} (hK : IsCompact K)
+    (hsub : ∀ x : S, P x → ‖(x : V)‖ ≤ 1 → ‖A x‖ ≤ 1 → (x : V) ∈ K) (r : ℝ) :
+    ∃ K' : Set V, IsCompact K' ∧ ∀ x : S, P x → ‖(x : V)‖ ≤ r → ‖A x‖ ≤ r → (x : V) ∈ K' := by
+  set r' := max r 1
+  have hr' : 0 < r' := lt_of_lt_of_le one_pos (le_max_right _ _)
+  refine ⟨(fun y => r' • y) '' K, hK.image (continuous_const_smul r'), fun x hPx h1 h2 => ?_⟩
+  refine ⟨r'⁻¹ • (x : V), hsub (r'⁻¹ • x) (hP _ _ hPx) ?_ ?_, ?_⟩
+  · rw [Submodule.coe_smul, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hr'.le),
+      inv_mul_le_iff₀ hr', mul_one]
+    exact h1.trans (le_max_left _ _)
+  · rw [map_smul, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hr'.le), inv_mul_le_iff₀ hr',
+      mul_one]
+    exact h2.trans (le_max_left _ _)
+  · simp only [smul_smul, mul_inv_cancel₀ hr'.ne', one_smul]
+
+theorem HalfCompactAt.exists (h : H.HalfCompactAt i) (r : ℝ) :
+    ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain),
+      x ∈ (H.cycles i)ᗮ → ‖x‖ ≤ r → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ r → x ∈ K := by
+  obtain ⟨K, hK, hsub⟩ := h
+  obtain ⟨K', hK', hsub'⟩ := exists_isCompact_of_box (H.d i (c.next i)).toFun
+    (fun x => x ∈ (H.cycles i)ᗮ) (fun a x hx => Submodule.smul_mem _ a hx) hK
+    (fun x hP h1 h2 => hsub x x.2 hP h1 h2) r
+  exact ⟨K', hK', fun x hx hP h1 h2 => hsub' ⟨x, hx⟩ hP h1 h2⟩
+
+theorem AdjHalfCompactAt.exists (h : H.AdjHalfCompactAt i) (r : ℝ) :
+    ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ ((H.d (c.prev i) i)†).domain),
+      x ∈ ((H.d (c.prev i) i)†).kerᗮ → ‖x‖ ≤ r → ‖(H.d (c.prev i) i)† ⟨x, hx⟩‖ ≤ r → x ∈ K := by
+  obtain ⟨K, hK, hsub⟩ := h
+  obtain ⟨K', hK', hsub'⟩ := exists_isCompact_of_box ((H.d (c.prev i) i)†).toFun
+    (fun x => x ∈ ((H.d (c.prev i) i)†).kerᗮ) (fun a x hx => Submodule.smul_mem _ a hx) hK
+    (fun x hP h1 h2 => hsub x x.2 hP h1 h2) r
+  exact ⟨K', hK', fun x hx hP h1 h2 => hsub' ⟨x, hx⟩ hP h1 h2⟩
+
+/-- **The compactness property splits** into the finite-dimensionality of the harmonic forms and
+the two half-compactness properties: `x = P_{𝔷ᗮ} x + P_{N(d†)ᗮ} x + P_ℌ x`, with `N(d†)ᗮ ⊆ 𝔷` and
+`𝔷ᗮ ⊆ N(d†)` ([AFW2010], §3.1.3; no closed range needed). -/
+theorem hasCompactPropertyAt_iff_half (i : ι) :
+    H.HasCompactPropertyAt i ↔
+      FiniteDimensional ℝ (H.harmonic i) ∧ H.HalfCompactAt i ∧ H.AdjHalfCompactAt i := by
+  constructor
+  · intro h
+    refine ⟨h.finiteDimensional_harmonic, ?_, ?_⟩
+    · obtain ⟨K, hK, hsub⟩ := h
+      refine ⟨K, hK, fun x hx hxo h1 h2 => ?_⟩
+      have hx' : x ∈ ((H.d (c.prev i) i)†).ker :=
+        H.orthogonal_ker_le_ker_adjoint (c.prev i) i (c.next i) hxo
+      obtain ⟨y, hy, hy0⟩ := (LinearPMap.mem_ker_iff).1 hx'
+      refine hsub x hx (hy ▸ y.2) h1 h2 ?_
+      have : (H.d (c.prev i) i)† ⟨x, hy ▸ y.2⟩ = 0 := by
+        rw [← hy0]; exact LinearPMap.apply_congr' _ _ _ hy
+      rw [this, norm_zero]; exact zero_le_one
+    · obtain ⟨K, hK, hsub⟩ := h
+      refine ⟨K, hK, fun x hx hxo h1 h2 => ?_⟩
+      have hx' : x ∈ (H.d i (c.next i)).ker :=
+        H.orthogonal_ker_adjoint_le_ker (c.prev i) i (c.next i) hxo
+      obtain ⟨y, hy, hy0⟩ := (LinearPMap.mem_ker_iff).1 hx'
+      refine hsub x (hy ▸ y.2) hx h1 ?_ h2
+      have : H.d i (c.next i) ⟨x, hy ▸ y.2⟩ = 0 := by
+        rw [← hy0]; exact LinearPMap.apply_congr' _ _ _ hy
+      rw [this, norm_zero]; exact zero_le_one
+  · rintro ⟨hfin, h₃, h₁⟩
+    set Z := H.cycles i
+    set N := ((H.d (c.prev i) i)†).ker
+    have hZc : IsClosed (Z : Set (W i)) := H.isClosed_cycles i
+    have hNc : IsClosed (N : Set (W i)) :=
+      LinearPMap.isClosed_ker (LinearPMap.adjoint_isClosed (H.dense _ _))
+    have : CompleteSpace Z := hZc.completeSpace_coe
+    have : CompleteSpace N := hNc.completeSpace_coe
+    have : CompleteSpace Zᗮ := (Submodule.isClosed_orthogonal Z).completeSpace_coe
+    have : CompleteSpace Nᗮ := (Submodule.isClosed_orthogonal N).completeSpace_coe
+    obtain ⟨K₃, hK₃, hs₃⟩ := h₃
+    obtain ⟨K₁, hK₁, hs₁⟩ := h₁
+    -- the closed ball of radius `3` of the harmonic forms is compact
+    have hB : IsCompact (((↑) : H.harmonic i → W i) '' Metric.closedBall 0 3) := by
+      have := FiniteDimensional.proper_rclike ℝ (H.harmonic i)
+      exact (isCompact_closedBall 0 3).image continuous_subtype_val
+    refine ⟨K₃ + K₁ + ((↑) : H.harmonic i → W i) '' Metric.closedBall 0 3,
+      (hK₃.add hK₁).add hB, fun x hx hx' h1 h2 h3 => ?_⟩
+    set x₃ := Zᗮ.starProjection x
+    set x₁ := Nᗮ.starProjection x
+    have hx₃ : x₃ ∈ Zᗮ := Zᗮ.starProjection_apply_mem x
+    have hx₁ : x₁ ∈ Nᗮ := Nᗮ.starProjection_apply_mem x
+    -- `x - x₃ ∈ 𝔷`, `x - x₁ ∈ N(d†)`
+    have hxz : x - x₃ ∈ Z := by
+      have := Zᗮ.sub_starProjection_mem_orthogonal x
+      rwa [Submodule.orthogonal_orthogonal] at this
+    have hxn : x - x₁ ∈ N := by
+      have := Nᗮ.sub_starProjection_mem_orthogonal x
+      rwa [Submodule.orthogonal_orthogonal] at this
+    obtain ⟨z, hz, hz0⟩ := (LinearPMap.mem_ker_iff).1 hxz
+    obtain ⟨w, hw, hw0⟩ := (LinearPMap.mem_ker_iff).1 hxn
+    have hd₃ : x₃ ∈ (H.d i (c.next i)).domain := by
+      have : x₃ = x - (x - x₃) := by abel
+      rw [this]; exact Submodule.sub_mem _ hx (hz ▸ z.2)
+    have hd₁ : x₁ ∈ ((H.d (c.prev i) i)†).domain := by
+      have : x₁ = x - (x - x₁) := by abel
+      rw [this]; exact Submodule.sub_mem _ hx' (hw ▸ w.2)
+    have hv₃ : H.d i (c.next i) ⟨x₃, hd₃⟩ = H.d i (c.next i) ⟨x, hx⟩ := by
+      have e1 : (⟨x₃, hd₃⟩ : (H.d i (c.next i)).domain) = ⟨x, hx⟩ - z := by
+        ext1
+        change x₃ = x - (z : W i)
+        rw [← hz]; abel
+      rw [e1, LinearPMap.map_sub, hz0, sub_zero]
+    have hv₁ : (H.d (c.prev i) i)† ⟨x₁, hd₁⟩ = (H.d (c.prev i) i)† ⟨x, hx'⟩ := by
+      have e1 : (⟨x₁, hd₁⟩ : ((H.d (c.prev i) i)†).domain) = ⟨x, hx'⟩ - w := by
+        ext1
+        change x₁ = x - (w : W i)
+        rw [← hw]; abel
+      rw [e1, LinearPMap.map_sub, hw0, sub_zero]
+    have hn₃ : ‖x₃‖ ≤ 1 := (Zᗮ.norm_starProjection_apply_le x).trans h1
+    have hn₁ : ‖x₁‖ ≤ 1 := (Nᗮ.norm_starProjection_apply_le x).trans h1
+    have hK₃x : x₃ ∈ K₃ := hs₃ x₃ hd₃ hx₃ hn₃ (by rw [hv₃]; exact h2)
+    have hK₁x : x₁ ∈ K₁ := hs₁ x₁ hd₁ hx₁ hn₁ (by rw [hv₁]; exact h3)
+    -- the remainder is harmonic
+    set y := x - x₃ - x₁
+    have hyZ : y ∈ Z := by
+      have h₁Z : x₁ ∈ Z := H.orthogonal_ker_adjoint_le_ker (c.prev i) i (c.next i) hx₁
+      exact Submodule.sub_mem _ hxz h₁Z
+    have hyN : y ∈ N := by
+      have h₃N : x₃ ∈ N := H.orthogonal_ker_le_ker_adjoint (c.prev i) i (c.next i) hx₃
+      have : y = (x - x₁) - x₃ := by simp only [y]; abel
+      rw [this]; exact Submodule.sub_mem _ hxn h₃N
+    have hyH : y ∈ H.harmonic i := ⟨hyZ, hyN⟩
+    have hny : ‖y‖ ≤ 3 := by
+      calc ‖y‖ ≤ ‖x - x₃‖ + ‖x₁‖ := norm_sub_le _ _
+        _ ≤ ‖x‖ + ‖x₃‖ + ‖x₁‖ := by linarith [norm_sub_le x x₃]
+        _ ≤ 3 := by linarith
+    refine ⟨x₃ + x₁, Set.add_mem_add hK₃x hK₁x, y, ⟨⟨y, hyH⟩, ?_, rfl⟩, ?_⟩
+    · rw [Metric.mem_closedBall, dist_zero_right]; exact hny
+    · simp only [y]; abel
+
+theorem adjoint_symm_cancel {F F' : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F]
+    [CompleteSpace F] [NormedAddCommGroup F'] [InnerProductSpace ℝ F'] [CompleteSpace F']
+    (b : F ≃L[ℝ] F') (x : F) :
+    ContinuousLinearMap.adjoint (b : F →L[ℝ] F')
+      (ContinuousLinearMap.adjoint (b.symm : F' →L[ℝ] F) x) = x := by
+  refine ext_inner_right ℝ fun v => ?_
+  rw [ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.adjoint_inner_left]
+  simp
+
+namespace IsChainIso
+
+variable {H' : HilbertComplex ℝ c W'} {e : ∀ i, W i ≃L[ℝ] W' i}
+
+/-- **Half-compactness transfers along isomorphisms of Hilbert complexes**:
+`x = P_{𝔷ᗮ} e⁻¹ (P_{𝔷'ᗮ} e x)` for `x ∈ 𝔷ᗮ`. -/
+theorem halfCompactAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.HalfCompactAt i) :
+    H.HalfCompactAt i := by
+  set r := ‖(e i : W i →L[ℝ] W' i)‖ + ‖(e (c.next i) : W (c.next i) →L[ℝ] W' (c.next i))‖
+  obtain ⟨K', hK', hs'⟩ := h'.exists r
+  have : CompleteSpace (H.cycles i) := (H.isClosed_cycles i).completeSpace_coe
+  have : CompleteSpace (H'.cycles i) := (H'.isClosed_cycles i).completeSpace_coe
+  have : CompleteSpace (H.cycles i)ᗮ := (Submodule.isClosed_orthogonal _).completeSpace_coe
+  have : CompleteSpace (H'.cycles i)ᗮ := (Submodule.isClosed_orthogonal _).completeSpace_coe
+  set P := (H.cycles i)ᗮ.starProjection
+  set P' := (H'.cycles i)ᗮ.starProjection
+  refine ⟨(fun y => P ((e i).symm y)) '' K',
+    hK'.image (P.continuous.comp (e i).symm.continuous), fun x hx hxo h1 h2 => ?_⟩
+  set x' := e i x
+  have hx' : x' ∈ (H'.d i (c.next i)).domain := (hI.mem_domain_iff _ _ x).2 hx
+  have hdx' := hI.comm i (c.next i) ⟨x, hx⟩ hx'
+  set p := P' x'
+  have hp : p ∈ (H'.cycles i)ᗮ := (H'.cycles i)ᗮ.starProjection_apply_mem x'
+  have hxp : x' - p ∈ H'.cycles i := by
+    have := (H'.cycles i)ᗮ.sub_starProjection_mem_orthogonal x'
+    rwa [Submodule.orthogonal_orthogonal] at this
+  obtain ⟨z, hz, hz0⟩ := (LinearPMap.mem_ker_iff).1 hxp
+  have hpd : p ∈ (H'.d i (c.next i)).domain := by
+    have : p = x' - (x' - p) := by abel
+    rw [this]; exact Submodule.sub_mem _ hx' (hz ▸ z.2)
+  have hdp : H'.d i (c.next i) ⟨p, hpd⟩ = H'.d i (c.next i) ⟨x', hx'⟩ := by
+    have e1 : (⟨p, hpd⟩ : (H'.d i (c.next i)).domain) = ⟨x', hx'⟩ - z := by
+      ext1
+      change p = x' - (z : W' i)
+      rw [← hz]; abel
+    rw [e1, LinearPMap.map_sub, hz0, sub_zero]
+  have hpK : p ∈ K' := by
+    refine hs' p hpd hp ?_ ?_
+    · refine ((H'.cycles i)ᗮ.norm_starProjection_apply_le x').trans ?_
+      refine ((e i : W i →L[ℝ] W' i).le_opNorm x).trans ?_
+      have := mul_le_mul_of_nonneg_left h1 (norm_nonneg (e i : W i →L[ℝ] W' i))
+      rw [mul_one] at this
+      exact this.trans (le_add_of_nonneg_right (norm_nonneg _))
+    · rw [hdp, hdx']
+      refine ((e (c.next i) : W (c.next i) →L[ℝ] W' (c.next i)).le_opNorm _).trans ?_
+      have := mul_le_mul_of_nonneg_left h2
+        (norm_nonneg (e (c.next i) : W (c.next i) →L[ℝ] W' (c.next i)))
+      rw [mul_one] at this
+      exact this.trans (le_add_of_nonneg_left (norm_nonneg _))
+  refine ⟨p, hpK, ?_⟩
+  -- `e⁻¹ (x' - p) ∈ 𝔷` is killed by `P`
+  have hq : (e i).symm (x' - p) ∈ H.cycles i := by
+    rw [← hI.mem_cycles_iff, ContinuousLinearEquiv.apply_symm_apply]; exact hxp
+  have hq0 : P ((e i).symm (x' - p)) = 0 := by
+    rw [Submodule.starProjection_apply_eq_zero_iff, Submodule.orthogonal_orthogonal]; exact hq
+  have hxx : P x = x := (Submodule.starProjection_eq_self_iff).2 hxo
+  have hsplit : x = (e i).symm p + (e i).symm (x' - p) := by
+    rw [← map_add, add_sub_cancel, ContinuousLinearEquiv.symm_apply_apply]
+  change P ((e i).symm p) = x
+  conv_rhs => rw [← hxx, hsplit, map_add, hq0, add_zero]
+
+/-- **Adjoint half-compactness transfers along isomorphisms of Hilbert complexes**, through the
+adjoints `(e i)*`: `D(d'†) = (e i)*⁻¹ D(d†)` (`adjoint_conj_mem_iff`). -/
+theorem adjHalfCompactAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.AdjHalfCompactAt i) :
+    H.AdjHalfCompactAt i := by
+  set T := H.d (c.prev i) i
+  set T' := H'.d (c.prev i) i
+  set a := e (c.prev i)
+  set b := e i
+  have hdom : ∀ x, a x ∈ T'.domain ↔ x ∈ T.domain := hI.mem_domain_iff (c.prev i) i
+  have hcomm : ∀ (x : T.domain) (h : a x ∈ T'.domain), T' ⟨a x, h⟩ = b (T x) :=
+    hI.comm (c.prev i) i
+  have hT := H.dense (c.prev i) i
+  have hT' := H'.dense (c.prev i) i
+  set bs := ContinuousLinearMap.adjoint (b.symm : W' i →L[ℝ] W i)
+  set as := ContinuousLinearMap.adjoint (a.symm : W' (c.prev i) →L[ℝ] W (c.prev i))
+  set bA := ContinuousLinearMap.adjoint (b : W i →L[ℝ] W' i)
+  set aA := ContinuousLinearMap.adjoint (a : W (c.prev i) →L[ℝ] W' (c.prev i))
+  set r := ‖bs‖ + ‖as‖
+  obtain ⟨K', hK', hs'⟩ := h'.exists r
+  have hNc : IsClosed ((T†).ker : Set (W i)) :=
+    LinearPMap.isClosed_ker (LinearPMap.adjoint_isClosed hT)
+  have hN'c : IsClosed ((T'†).ker : Set (W' i)) :=
+    LinearPMap.isClosed_ker (LinearPMap.adjoint_isClosed hT')
+  have : CompleteSpace (T†).ker := hNc.completeSpace_coe
+  have : CompleteSpace (T'†).ker := hN'c.completeSpace_coe
+  have : CompleteSpace (T†).kerᗮ := (Submodule.isClosed_orthogonal _).completeSpace_coe
+  have : CompleteSpace (T'†).kerᗮ := (Submodule.isClosed_orthogonal _).completeSpace_coe
+  set P := (T†).kerᗮ.starProjection
+  set P' := (T'†).kerᗮ.starProjection
+  refine ⟨(fun y => P (bA y)) '' K', hK'.image (P.continuous.comp bA.continuous),
+    fun x hx hxo h1 h2 => ?_⟩
+  set x' := bs x
+  have hbx : bA x' = x := adjoint_symm_cancel b x
+  have hx' : x' ∈ (T'†).domain := (adjoint_conj_mem_iff hT hT' a b hdom hcomm x').2 (hbx ▸ hx)
+  have hval := adjoint_conj_apply hT hT' a b hdom hcomm hx' (hbx ▸ hx)
+  -- `T'† x' = (a*)⁻¹ T† x`
+  have hTx : T† ⟨x, hx⟩ = aA (T'† ⟨x', hx'⟩) := by
+    rw [← hval]; exact LinearPMap.apply_congr' _ _ _ hbx.symm
+  have hT'x : T'† ⟨x', hx'⟩ = as (T† ⟨x, hx⟩) := by
+    rw [hTx]
+    have h := adjoint_symm_cancel a.symm (T'† ⟨x', hx'⟩)
+    simp only [ContinuousLinearEquiv.symm_symm] at h
+    exact h.symm
+  set p := P' x'
+  have hp : p ∈ (T'†).kerᗮ := (T'†).kerᗮ.starProjection_apply_mem x'
+  have hxp : x' - p ∈ (T'†).ker := by
+    have := (T'†).kerᗮ.sub_starProjection_mem_orthogonal x'
+    rwa [Submodule.orthogonal_orthogonal] at this
+  obtain ⟨z, hz, hz0⟩ := (LinearPMap.mem_ker_iff).1 hxp
+  have hpd : p ∈ (T'†).domain := by
+    have : p = x' - (x' - p) := by abel
+    rw [this]; exact Submodule.sub_mem _ hx' (hz ▸ z.2)
+  have hdp : T'† ⟨p, hpd⟩ = T'† ⟨x', hx'⟩ := by
+    have e1 : (⟨p, hpd⟩ : (T'†).domain) = ⟨x', hx'⟩ - z := by
+      ext1
+      change p = x' - (z : W' i)
+      rw [← hz]; abel
+    rw [e1, LinearPMap.map_sub, hz0, sub_zero]
+  have hpK : p ∈ K' := by
+    refine hs' p hpd hp ?_ ?_
+    · refine ((T'†).kerᗮ.norm_starProjection_apply_le x').trans ?_
+      refine (bs.le_opNorm x).trans ?_
+      have := mul_le_mul_of_nonneg_left h1 (norm_nonneg bs)
+      rw [mul_one] at this
+      exact this.trans (le_add_of_nonneg_right (norm_nonneg _))
+    · rw [hdp, hT'x]
+      refine (as.le_opNorm _).trans ?_
+      have := mul_le_mul_of_nonneg_left h2 (norm_nonneg as)
+      rw [mul_one] at this
+      exact this.trans (le_add_of_nonneg_left (norm_nonneg _))
+  refine ⟨p, hpK, ?_⟩
+  -- `b* (x' - p) ∈ N(T†)` is killed by `P`
+  have hzd : bA (x' - p) ∈ (T†).domain :=
+    (adjoint_conj_mem_iff hT hT' a b hdom hcomm _).1 (hz ▸ z.2)
+  have hzv := adjoint_conj_apply hT hT' a b hdom hcomm (hz ▸ z.2) hzd
+  have hzk : bA (x' - p) ∈ (T†).ker := by
+    refine (LinearPMap.mem_ker_iff).2 ⟨⟨_, hzd⟩, rfl, ?_⟩
+    rw [hzv]
+    have : T'† ⟨x' - p, hz ▸ z.2⟩ = 0 := by
+      rw [← hz0]; exact LinearPMap.apply_congr' _ _ _ hz
+    rw [this, map_zero]
+  have hq0 : P (bA (x' - p)) = 0 := by
+    rw [Submodule.starProjection_apply_eq_zero_iff, Submodule.orthogonal_orthogonal]; exact hzk
+  have hxx : P x = x := (Submodule.starProjection_eq_self_iff).2 hxo
+  have hsplit : x = bA p + bA (x' - p) := by
+    rw [← map_add, add_sub_cancel, hbx]
+  change P (bA p) = x
+  conv_rhs => rw [← hxx, hsplit, map_add, hq0, add_zero]
+
+/-- **The compactness property transfers along isomorphisms of Hilbert complexes** (bounded,
+not necessarily isometric), degreewise: by `hasCompactPropertyAt_iff_half`, it is the
+finite-dimensionality of `ℌ` (`finiteDimensional_harmonic`) and the two half-compactness
+properties (`halfCompactAt`, `adjHalfCompactAt`). -/
+theorem hasCompactPropertyAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.HasCompactPropertyAt i) :
+    H.HasCompactPropertyAt i := by
+  obtain ⟨hf, h3, h1⟩ := (hasCompactPropertyAt_iff_half i).1 h'
+  exact (hasCompactPropertyAt_iff_half i).2
+    ⟨hI.finiteDimensional_harmonic i, hI.halfCompactAt h3, hI.adjHalfCompactAt h1⟩
+
+theorem hasCompactProperty (hI : IsChainIso H H' e) (h' : H'.HasCompactProperty) :
+    H.HasCompactProperty := fun i => hI.hasCompactPropertyAt (h' i)
+
+end IsChainIso
+
+end Compact
 
 end Feec.HilbertComplex
 
@@ -1363,6 +1755,16 @@ theorem finiteDimensional_harmonic_min (k : ℤ) :
 theorem finrank_harmonic_min (k : ℤ) :
     Module.finrank ℝ ((complexMin A b).harmonic k) = if k = n then 1 else 0 := by
   rw [(isChainIsoMin A hA b).finrank_harmonic_eq k, FEM.finrank_harmonic_min]
+
+/-- **The compactness property of `HΛ(Ω)`**, every degree: transferred from the cube
+(`FEM.hasCompactProperty`) along the non-isometric isomorphism `T^*`
+(`IsChainIso.hasCompactProperty`). -/
+theorem hasCompactProperty : (complex A b).HasCompactProperty :=
+  (isChainIso A hA b).hasCompactProperty FEM.hasCompactProperty
+
+/-- **The compactness property of `H̊Λ(Ω)`**, every degree. -/
+theorem hasCompactProperty_min : (complexMin A b).HasCompactProperty :=
+  (isChainIsoMin A hA b).hasCompactProperty FEM.hasCompactProperty_min
 
 end Hodge
 

@@ -58,8 +58,8 @@ Whitney spaces (`MeshFamily.eventually_exists_whitney_near`, `..._whitneyMin_nea
 convergence are proved with no hypothesis. The Poincaré inequality of `HΛ(Ω)`, resp. `H̊Λ(Ω)`
 (`HasPoincare`, equivalently closed range), is a hypothesis of `discretePoincare`,
 `mixed_wellPosed`, `mixed_rate_smooth` and `mixed_quasiOptimal`; it holds on every bounded
-Lipschitz domain (regularized Poincaré and Bogovskiĭ operators, M. Costabel and A. McIntosh,
-Math. Z. 265 (2010)), a theory absent from Mathlib, and is a theorem on the cube with
+Lipschitz domain (regularized Poincaré and Bogovskiĭ operators, [CostabelMcIntosh2010]), a
+theory absent from Mathlib, and is a theorem on the cube with
 `c_P = (2π)⁻¹` (`CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`) and on every
 parallelepiped (`Feec.Models.Parallelepiped.poincare`). The finite-dimensionality of the harmonic
 forms is used only for the harmonic gap (`smoothedProjection_uniform`, `mixed_quasiOptimal`).
@@ -85,6 +85,8 @@ respect to a ball are preserved by affine equivalences, `isShapeRegular_image`,
   solutions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+* [M. Costabel, A. McIntosh, *On Bogovskiĭ and Regularized Poincaré Integral Operators for de Rham Complexes on Lipschitz Domains*][CostabelMcIntosh2010]
+  (the Poincaré inequality on bounded Lipschitz domains)
 -/
 
 @[expose] public noncomputable section

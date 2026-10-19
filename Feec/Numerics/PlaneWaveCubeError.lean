@@ -34,8 +34,7 @@ every amplitude `A₊`, `Aₓ` and frequency `ω`.
   those of `Q`, are subcomplexes of `HΛ((0, 1)³)` and `H̊Λ((0, 1)³)`; `unitRow`, `unitInterior3`.
   That they coincide with the spaces assembled directly on the mesh `freudenthalMesh 0 1` is not
   formalized here: it follows from `freudenthalMesh_unit_eq_map` and the affine invariance of the
-  Whitney element (`Feec.Models.Parallelepiped.fieldPull_mem_whitney_cast`), but that module
-  cannot be imported together with `Feec.Domain.Affine` (both declare `Feec.Domain.pull`).
+  Whitney element (`Feec.Models.Parallelepiped.fieldPull_mem_whitney_cast`).
 * **`isDirichletCNStep_dilRow3_iff`**: a Crank–Nicolson step with parameter `s` on the unit cube
   is a step with parameter `s / 2` on `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt`
   is the scheme on `Q` with step `Δt / 2` (the system is invariant under `(t, x) ↦ (2t, 2x)`;

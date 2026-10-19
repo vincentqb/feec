@@ -21,8 +21,8 @@ unconditionally (`bggHilb_hyps`, `bggStability'`, `bggShort_closedRange_exact'`,
 
 **Proof.** The parity model of the cube alone does not give it: the potential must vanish on
 `∂Q` in every component, a parity class different from that of `H̊Λ¹`. The argument goes
-through a larger cell and an extension from the outside (as in Girault–Raviart,
-*Finite Element Methods for Navier–Stokes Equations* (1986), Ch. I, Thm 3.4):
+through a larger cell and an extension from the outside (as for the vector potentials of
+[GiraultRaviart1986], Ch. I, §3):
 
 1. (`Feec.Models.Cube.TorusHelmholtz.exists_helmholtz`) For a test `1`-form `u` on `Q`, on the
    cell `(-¼, ¾]³ ⊇ Q̄`, `u = ∇q + w` with `q = p + c · x`, `‖q‖, ‖w‖ ≲ ‖u‖`,
@@ -62,6 +62,10 @@ No hypothesis remains.
   §3 (regular decomposition)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.4 (cut-off arguments in `W₀^{1,p}`)
+* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
+  Ch. I, §3 (vector potentials, extension from the outside)
+* [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
+  (the extension of step 2)
 -/
 
 @[expose] public noncomputable section
@@ -705,7 +709,7 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
 /-- **The regularity hypothesis holds on the cube**: `curl H̊(curl, Q) = curl S⁰ H̊¹(Q; ℝ³)`, i.e.
 every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` for some `φ ∈ H̊Λ⁰(Q)³` (the regular decomposition
 `H̊(curl) = H̊¹(Q; ℝ³) + grad H̊¹(Q)` of [Hiptmair2002], Lemma 2.4 and [HiptmairXu2007], §3 at the
-level of `curl`; Girault–Raviart (1986), Ch. I, Thm 3.4 for the extension argument). -/
+level of `curl`; [GiraultRaviart1986], Ch. I, §3 for the extension argument). -/
 theorem curlPotential : CurlPotential := by
   obtain ⟨C, -, hC⟩ := exists_potential_test
   set S : Submodule ℝ V1 :=

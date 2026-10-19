@@ -38,6 +38,9 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
   for classical solutions whose states and time derivatives are `C²` and vanish outside `Q`
   (flat at `∂Q`). **`waveFEM_nonvacuous`**: a nontrivial manufactured solution meets
   all hypotheses and its discrete `σₕ(t)` converge and are nonzero for large `N`.
+  `CurlPotential` is proved: the unconditional versions are `waveFEM_cube`,
+  `waveFEM_nonvacuous_cube` and `bgg_wave_existsUnique_cube`
+  (`Feec.Physics.EinsteinBianchi.Unconditional`).
 
 ## Gaps
 

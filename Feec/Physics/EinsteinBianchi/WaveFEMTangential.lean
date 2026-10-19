@@ -10,7 +10,8 @@ public import Feec.Models.Cube.WeakSymmetryTangentialRate
 The headline theorems `Feec.EinsteinBianchi.StaticFEM.staticFEM` (items 4, 5: thesis Thm 5.5 with
 the elements of Table 5.1) and `Feec.EinsteinBianchi.WaveFEM.waveFEM` (item 5: the `O(h)` rate of
 (6.5)) assume solutions that are `C²` and vanish outside `Q` (flat at `∂Q`). This module restates
-them, under the same regularity hypothesis `CurlPotential` (through its constant), for solutions
+them, under the same regularity hypothesis `CurlPotential` (through its constant; it is proved, and
+`Feec.Physics.EinsteinBianchi.WaveFEMTangentialCube` states the results without it), for solutions
 that are `C²` **up to the boundary** with vanishing tangential traces on `∂Q`
 (`Feec.Models.Cube.FEM.IsCsFormTr`, `Feec.Models.Cube.WeakSymmetry.IsSmoothStateTr`), the boundary
 conditions of the discrete spaces:

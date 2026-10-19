@@ -61,7 +61,8 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
   (`λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ`, `uₐ = −g dxₐ`, `g` the bump).
 
 The regularity hypothesis (`CurlPotential`, the regular decomposition of [Hiptmair2002],
-Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`).
+Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`); it is proved
+(`curlPotential`, `curlPotentialConst`, `cubeFEMReg'` in `Feec.Models.Cube.RegularDecomposition`).
 
 ## References
 

@@ -117,6 +117,33 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > partial-boundary conformity, mixed smoothed projections) and the identification of the second
 > space with the matrix model. All are imported by `Feec.lean` and the full gate passes.
 
+> **Status (2026-10-19): gaps gated.** 35 new modules close or narrow the open items of the
+> thesis-fem status above. (G1) The regular decomposition `CurlPotential` is a theorem
+> (`Feec.Models.Cube.{TorusHelmholtz,ShellExtension,RegularDecomposition}`,
+> `Feec.Physics.EinsteinBianchi.Unconditional`), and the Ch. 5–6 rates hold for solutions `C²` up
+> to `∂Q` with vanishing tangential traces instead of flat ones
+> (`Feec.Models.Cube.{TangentialRate,WeakSymmetryTangentialRate}`,
+> `Feec.Physics.EinsteinBianchi.{WaveFEMTangential,WaveFEMTangentialCube}`). (G2) The de Rham
+> complexes `HΛ_J(Q)` with conditions on part of `∂Q`, their conforming finite elements and parity
+> smoothers (`Feec.Models.Cube.{DeRhamPartial,DeRhamPartialIdent,DeRhamPartialFEM,ParitySmoother,
+> ParitySmoothingEstimates}`), BGG convergence modulo harmonic forms
+> (`Feec.HilbertComplex.BGG.Harmonic`), and the convergence of the mirror scheme (6.5) to the TSD
+> solution (`Feec.Models.Cube.{MirrorWeakSymmetryComplex,MirrorWeakSymmetryConvergence,
+> MirrorWeakSymmetryTSD}`). (G3) Sobolev spaces on the cube and rates `h^{min(s,1)}`
+> (`Feec.Models.Cube.{Sobolev,SobolevRate}`). (G4) The forms model is the matrix model, and (6.5)
+> converges for every datum in `D(L)`, to a solution that leaves TSD
+> (`Feec.Physics.EinsteinBianchi.{MatrixModel,BoundedFailure,BoundedConvergence}`,
+> `Feec.Models.Cube.WeakSymmetryConvergence`). (G5) `O(h + Δt²)` error of the Ch. 7 scheme and its
+> dilation to the unit cube (`Feec.Models.Cube.InhomogeneousError`,
+> `Feec.Numerics.PlaneWaveCubeError`). (G6) Boxes with unequal sides
+> (`Feec.Domain.DiagonalPullback`, `Feec.Models.Box.{RowWise,EigenDense,Mirror}`,
+> `Feec.Counterexamples.BoxStationary`); general bounded domains stay open. (G7) Parallelepipeds and
+> domains star-shaped with respect to a ball (`Feec.Domain.FormPullback`,
+> `Feec.FiniteElement.{ShapeRegularInverse,ShapeRegularSmoothing}`,
+> `Feec.Models.{Parallelepiped,StarShaped}.FiniteElement`; the Poincaré inequality is the one
+> hypothesis on star-shaped domains). What remains is listed in `docs/OVERVIEW.md` (limits of the
+> repairs, FEEC coverage, scope). All are imported by `Feec.lean` and the full gate passes.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

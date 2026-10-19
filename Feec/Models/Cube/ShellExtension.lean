@@ -41,8 +41,7 @@ of such an operator are operators of the same kind with the weights differentiat
 `refl_* vol = |λ|⁻¹ vol` (`map_refl_volume`, `eLpNorm_comp_refl_le`, `eLpNorm_ext1_le`,
 `n2_ext1_le`). Iterating over the coordinates moves the estimate from `Q` to the boxes of the
 shell (`box`, `exists_n2_hest_le`). This is the extension step of the regular decomposition of
-`Feec.Models.Cube.RegularDecomposition`; the two-point reflection is the one of M. R. Hestenes,
-*Extension of the range of a differentiable function*, Duke Math. J. 8 (1941).
+`Feec.Models.Cube.RegularDecomposition`; the two-point reflection is the one of [Hestenes1941].
 
 ## Main definitions
 
@@ -58,6 +57,8 @@ shell (`box`, `exists_n2_hest_le`). This is the extension step of the regular de
 
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension operators by reflection)
+* [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
+  (the reflection `hest`)
 -/
 
 @[expose] public noncomputable section
@@ -314,7 +315,7 @@ def hermR : ℝ[X] := herm.comp (C (1 / 2) - X)
 on the reflections about `½`. -/
 def ωE : Fin 4 → ℝ[X] := ![C (-5) * herm, C 6 * herm, C (-5) * hermR, C 6 * hermR]
 
-/-- **The Hestenes extension** in the coordinate `i` (Hestenes, 1941):
+/-- **The Hestenes extension** in the coordinate `i` ([Hestenes1941]):
 `E_i F (x) = h(xᵢ) (-5 F(-xᵢ/2) + 6 F(-xᵢ/4)) + h(½ - xᵢ) (-5 F(¾ - xᵢ/2) + 6 F(⅝ - xᵢ/4))`
 (the other coordinates fixed). On the faces `xᵢ ∈ {0, ½}` it reproduces the value and the first
 derivatives of `F` (`hest_of_face`, `pd_hest_of_face`); for `xᵢ ∈ (0, ½)` it only samples `F`

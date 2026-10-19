@@ -7,6 +7,7 @@ public import Feec.FiniteElement.InverseEstimate
 public import Feec.Domain.StarShapedSmoothing
 public import Mathlib.MeasureTheory.Integral.Pi
 public import Feec.Models.Cube.PolyRate
+public import Mathlib.Analysis.Calculus.TaylorIntegral
 
 /-!
 # Parity smoother (draft)
@@ -2221,5 +2222,531 @@ theorem paritySmooth_univ_mem_minimal_and_norm_sub_le (ρ : ReflKernel n) {k : �
           ‖DeRhamIdent.dPart (Q (Fin n)) J₂ ((0 : ℕ) : ℤ) ⟨zeroForm (y s), h₂⟩‖ := by
       rintro J₁ J₂ rfl h₁ h₂; rfl
     exact key _ _ (hsd s.1) _ _
+
+/-! ### High-order estimates: kernels with vanishing moments -/
+
+/-- **A reflection-invariant kernel with vanishing moments of the orders `1, …, m - 1`** (signed in
+general, `m ≥ 3`): a smooth, compactly supported, reflection-invariant `ρ` with `∫ ρ = 1` and
+`∫ ρ(x) x_{v₁} ⋯ x_{vᵢ} dx = 0` for `1 ≤ i < m`. The moments of odd order vanish for every
+reflection-invariant kernel, so the nonnegative kernels are of this kind for `m = 2`
+(`ReflKernel.toMomentKernel`). -/
+structure MomentKernel (n m : ℕ) where
+  /-- the kernel -/
+  toFun : (Fin n → ℝ) → ℝ
+  isTest : IsTest (univ : Set (Fin n → ℝ)) toFun
+  integral_eq_one : ∫ x, toFun x = 1
+  /-- the support radius -/
+  radius : ℝ
+  radius_pos : 0 < radius
+  radius_lt : radius < 1 / 2
+  eq_zero_of_le : ∀ x, radius ≤ ‖x‖ → toFun x = 0
+  refl : ∀ j x, toFun (coordRefl j x) = toFun x
+  moment : ∀ i, 1 ≤ i → i < m → ∀ v : Fin i → Fin n, ∫ x, toFun x * ∏ l, x (v l) = 0
+
+namespace MomentKernel
+
+variable {m : ℕ}
+
+instance : CoeFun (MomentKernel n m) fun _ => (Fin n → ℝ) → ℝ := ⟨MomentKernel.toFun⟩
+
+variable (K : MomentKernel n m)
+
+theorem continuous : Continuous K := K.isTest.contDiff.continuous
+
+theorem integrable : Integrable K :=
+  K.continuous.integrable_of_hasCompactSupport K.isTest.hasCompactSupport
+
+/-- The `L¹` norm `∫ |ρ|`. -/
+def l1 : ℝ := ∫ x, |K x|
+
+theorem l1_nonneg : 0 ≤ K.l1 := integral_nonneg fun _ => abs_nonneg _
+
+theorem eq_zero_of_lt {u : Fin n → ℝ} (h : K u ≠ 0) : ‖u‖ < K.radius := by
+  by_contra h'; push Not at h'; exact h (K.eq_zero_of_le u h')
+
+/-- **Moment cancellation**: `∫ ρ(u) L(u, …, u) du = 0` for every multilinear `L` of order
+`1 ≤ i < m`. -/
+theorem integral_mul_multilinear_eq_zero {i : ℕ} (hi1 : 1 ≤ i) (him : i < m)
+    (L : ContinuousMultilinearMap ℝ (fun _ : Fin i => Fin n → ℝ) ℝ) :
+    ∫ u, K u * L (fun _ => u) = 0 := by
+  classical
+  have hexp : ∀ u : Fin n → ℝ, L (fun _ => u) =
+      ∑ v : Fin i → Fin n, (∏ l, u (v l)) * L (fun l => Pi.single (v l) 1) := by
+    intro u
+    have hu : (fun _ : Fin i => u) = fun _ => ∑ j, u j • (Pi.single j 1 : Fin n → ℝ) := by
+      funext _ i'; simp [Finset.sum_apply, Pi.single_apply]
+    rw [hu, L.map_sum]
+    refine Finset.sum_congr rfl fun v _ => ?_
+    rw [L.map_smul_univ, smul_eq_mul]
+  have hint : ∀ v : Fin i → Fin n, Integrable fun u => K u * ∏ l, u (v l) := fun v => by
+    have hc : Continuous fun u : Fin n → ℝ => ∏ l, u (v l) :=
+      continuous_finsetProd _ fun l _ => continuous_apply _
+    exact (integrable_mul_isTest hc.locallyIntegrable K.isTest).congr
+      (ae_of_all _ fun u => by simp only; ring)
+  simp_rw [hexp, Finset.mul_sum]
+  rw [integral_finsetSum _ fun v _ => (hint v).mul_const _ |>.congr
+    (ae_of_all _ fun u => by simp only; ring)]
+  refine Finset.sum_eq_zero fun v _ => ?_
+  have e : (fun u => K u * ((∏ l, u (v l)) * L (fun l => Pi.single (v l) 1))) =
+      fun u => (K u * ∏ l, u (v l)) * L (fun l => Pi.single (v l) 1) := by funext u; ring
+  rw [e, integral_mul_const, K.moment i hi1 him v, zero_mul]
+
+end MomentKernel
+
+/-- A nonnegative reflection-invariant mollifier has vanishing first moments. -/
+def ReflKernel.toMomentKernel (ρ : ReflKernel n) : MomentKernel n 2 where
+  toFun := ρ.toFun
+  isTest := ρ.isTest
+  integral_eq_one := ρ.integral_eq_one
+  radius := ρ.radius
+  radius_pos := ρ.radius_pos
+  radius_lt := ρ.radius_lt
+  eq_zero_of_le := ρ.eq_zero_of_le
+  refl := ρ.refl
+  moment i hi1 hi2 v := by
+    obtain rfl : i = 1 := by omega
+    set j := v 0
+    have hprod : ∀ x : Fin n → ℝ, ∏ l, x (v l) = x j := fun x => by
+      rw [Fin.prod_univ_one]
+    simp_rw [hprod]
+    have hmp := measurePreserving_pieceMap (n := n) (reflIdx j)
+    have h := hmp.integral_comp (measurableEmbedding_pieceMap _) (fun x => ρ.toFun x * x j)
+    have e : ∀ x, ρ.toFun (pieceMap (reflIdx j) x) * pieceMap (reflIdx j) x j =
+        -(ρ.toFun x * x j) := fun x => by
+      change ρ.toFun (coordRefl j x) * coordRefl j x j = _
+      rw [ρ.refl, coordRefl_apply]; simp
+    simp_rw [e, integral_neg] at h
+    linarith
+
+/-- **Weighted Cauchy–Schwarz**: `(∫ a b)² ≤ (∫ |a|) (∫ |a| b²)`. -/
+theorem sq_integral_mul_le {a b : (Fin n → ℝ) → ℝ} (ha : Integrable a)
+    (hab : Integrable fun u => |a u| * |b u|) (hab2 : Integrable fun u => |a u| * b u ^ 2) :
+    (∫ u, a u * b u) ^ 2 ≤ (∫ u, |a u|) * ∫ u, |a u| * b u ^ 2 := by
+  have h1 : |∫ u, a u * b u| ≤ ∫ u, |a u| * |b u| :=
+    (abs_integral_le_integral_abs).trans (le_of_eq (integral_congr_ae (ae_of_all _ fun u =>
+      abs_mul _ _)))
+  have hq : ∀ x : ℝ, 0 ≤ (∫ u, |a u|) * (x * x) + (-2 * ∫ u, |a u| * |b u|) * x +
+      ∫ u, |a u| * b u ^ 2 := by
+    intro x
+    have e : (∫ u, |a u|) * (x * x) + (-2 * ∫ u, |a u| * |b u|) * x + ∫ u, |a u| * b u ^ 2 =
+        ∫ u, |a u| * (|b u| - x) ^ 2 := by
+      have hI : ∀ u, |a u| * (|b u| - x) ^ 2 =
+          |a u| * b u ^ 2 - 2 * x * (|a u| * |b u|) + x ^ 2 * |a u| := fun u => by
+        rw [sub_sq, sq_abs]; ring
+      simp_rw [hI]
+      have e1 : ∫ u, (|a u| * b u ^ 2 - 2 * x * (|a u| * |b u|) + x ^ 2 * |a u|) =
+          (∫ u, (|a u| * b u ^ 2 - 2 * x * (|a u| * |b u|))) + ∫ u, x ^ 2 * |a u| :=
+        integral_add (hab2.sub (hab.const_mul _)) (ha.abs.const_mul _)
+      have e2 : ∫ u, (|a u| * b u ^ 2 - 2 * x * (|a u| * |b u|)) =
+          (∫ u, |a u| * b u ^ 2) - ∫ u, 2 * x * (|a u| * |b u|) :=
+        integral_sub hab2 (hab.const_mul _)
+      rw [e1, e2, integral_const_mul, integral_const_mul]
+      ring
+    rw [e]
+    exact integral_nonneg fun u => mul_nonneg (abs_nonneg _) (sq_nonneg _)
+  have hd := discrim_le_zero hq
+  unfold discrim at hd
+  have h2 : (∫ u, |a u| * |b u|) ^ 2 ≤ (∫ u, |a u|) * ∫ u, |a u| * b u ^ 2 := by nlinarith
+  calc (∫ u, a u * b u) ^ 2 = |∫ u, a u * b u| ^ 2 := (sq_abs _).symm
+    _ ≤ (∫ u, |a u| * |b u|) ^ 2 := pow_le_pow_left₀ (abs_nonneg _) h1 2
+    _ ≤ _ := h2
+
+/-- The reflection `R_j` as a linear isometry of `ℝⁿ` (sup norm). -/
+def coordReflLIE (j : Fin n) : (Fin n → ℝ) ≃ₗᵢ[ℝ] (Fin n → ℝ) where
+  toFun := coordRefl j
+  invFun := coordRefl j
+  map_add' x y := by funext i; simp only [coordRefl_apply, Pi.add_apply]; split_ifs <;> ring
+  map_smul' a x := by
+    funext i; simp only [coordRefl_apply, Pi.smul_apply, smul_eq_mul, RingHom.id_apply]
+    split_ifs <;> ring
+  left_inv := coordRefl_coordRefl j
+  right_inv := coordRefl_coordRefl j
+  norm_map' x := by
+    have h : ∀ y : Fin n → ℝ, ‖coordRefl j y‖ ≤ ‖y‖ := fun y => by
+      refine (pi_norm_le_iff_of_nonneg (norm_nonneg _)).2 fun i => ?_
+      rw [coordRefl_apply]
+      split_ifs
+      · rw [norm_neg]; exact norm_le_pi_norm y i
+      · exact norm_le_pi_norm y i
+    refine le_antisymm (h x) ?_
+    have := h (coordRefl j x)
+    rwa [coordRefl_coordRefl] at this
+
+/-- **The squared `m`-th derivative of a symmetric function is even and periodic.** -/
+theorem IsSymm.sq_iteratedFDeriv {c : Fin n → ℝ} (hc : IsParity c) {F : (Fin n → ℝ) → ℝ}
+    (hF : IsSymm c F) {m : ℕ} (hd : ContDiff ℝ m F) :
+    IsSymm (fun _ => 1) (fun y => ‖iteratedFDeriv ℝ m F y‖ ^ 2) := by
+  refine ⟨fun i y => ?_, fun y p => ?_⟩
+  · rw [one_mul]
+    have h1 := (coordReflLIE (n := n) i).norm_iteratedFDeriv_comp_right F y m
+    have e : F ∘ (coordReflLIE i) = c i • F := funext fun y => hF.refl i y
+    rw [e, iteratedFDeriv_const_smul_apply (hd.contDiffAt.of_le le_rfl), norm_smul,
+      Real.norm_eq_abs] at h1
+    have hci : |c i| = 1 := by rcases hc i with h | h <;> rw [h] <;> norm_num
+    rw [hci, one_mul] at h1
+    change ‖iteratedFDeriv ℝ m F (coordRefl i y)‖ ^ 2 = _
+    rw [show coordRefl i y = coordReflLIE i y from rfl, ← h1]
+  · have e : (fun z => F (z + fun j => (p j : ℝ))) = F := funext fun z => hF.periodic z p
+    have h := iteratedFDeriv_comp_add_right (𝕜 := ℝ) (f := F) m (fun j => (p j : ℝ)) y
+    rw [e] at h
+    rw [← h]
+
+theorem MomentKernel.integrable_mul {m : ℕ} (K : MomentKernel n m) {f : (Fin n → ℝ) → ℝ}
+    (hf : Continuous f) : Integrable fun u => K u * f u :=
+  (integrable_mul_isTest hf.locallyIntegrable K.isTest).congr
+    (ae_of_all _ fun u => by simp only; ring)
+
+/-- The Taylor remainder of order `m` of `G` at `x` in the direction `-u`. -/
+def taylorRem (G : (Fin n → ℝ) → ℝ) (m : ℕ) (x u : Fin n → ℝ) : ℝ :=
+  ∫ τ in (0 : ℝ)..1, (1 - τ) ^ (m - 1) * iteratedFDeriv ℝ m G (x - τ • u) (fun _ => -u)
+
+/-- **The error of a moment kernel is the averaged Taylor remainder**:
+`G(x) - (G ⋆ ρ)(x) = -((m - 1)!)⁻¹ ∫ ρ(u) R_m(x, u) du` (the polynomial part of degree `< m`
+is reproduced by the vanishing moments). -/
+theorem sub_conv_eq_taylorRem {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
+    {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G) (x : Fin n → ℝ) :
+    Integrable (fun u => K u * taylorRem G m x u) ∧
+      G x - ∫ t, G t * K (x - t) = -(((m - 1).factorial : ℝ))⁻¹ * ∫ u, K u * taylorRem G m x u := by
+  obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
+  simp only [Nat.add_sub_cancel]
+  have hfac : ((m'.factorial : ℝ)) ≠ 0 := by exact_mod_cast Nat.factorial_ne_zero m'
+  -- Taylor's formula in the direction `-u`
+  have hT : ∀ u : Fin n → ℝ, G (x - u) = ∑ k ∈ Finset.range (m' + 1),
+      ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u) +
+        ((m'.factorial : ℝ))⁻¹ * taylorRem G (m' + 1) x u := by
+    intro u
+    have h := map_add_eq_sum_add_integral_iteratedFDeriv (f := G) (x := x) (y := -u) (n := m')
+      (fun t _ => hG.contDiffAt)
+    rw [← sub_eq_add_neg] at h
+    rw [h]
+    simp only [smul_eq_mul, taylorRem, Nat.add_sub_cancel]
+    congr 2
+    refine intervalIntegral.integral_congr fun τ _ => ?_
+    simp only [smul_neg, ← sub_eq_add_neg]
+  have hcontk : ∀ k, Continuous fun u : Fin n → ℝ => iteratedFDeriv ℝ k G x (fun _ => -u) :=
+    fun k => (iteratedFDeriv ℝ k G x).cont.comp (continuous_pi fun _ => continuous_neg)
+  have hGc : Continuous G := hG.continuous
+  -- the remainder as a combination of continuous functions
+  have hR : ∀ u, taylorRem G (m' + 1) x u = (m'.factorial : ℝ) * (G (x - u) -
+      ∑ k ∈ Finset.range (m' + 1),
+        ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) := fun u => by
+    rw [hT u]; field_simp; ring
+  have hRc : Continuous fun u => (m'.factorial : ℝ) * (G (x - u) -
+      ∑ k ∈ Finset.range (m' + 1),
+        ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) :=
+    continuous_const.mul ((hGc.comp (continuous_const.sub continuous_id)).sub
+      (continuous_finsetSum _ fun k _ => continuous_const.mul (hcontk k)))
+  have hKR : Integrable fun u => K u * taylorRem G (m' + 1) x u :=
+    (K.integrable_mul hRc).congr (ae_of_all _ fun u => by simp only [hR])
+  refine ⟨hKR, ?_⟩
+  -- the moments kill the polynomial part
+  have hmom : ∀ k ∈ Finset.range (m' + 1), 1 ≤ k →
+      ∫ u, K u * iteratedFDeriv ℝ k G x (fun _ => -u) = 0 := by
+    intro k hk hk1
+    have hkm : k < m' + 1 := Finset.mem_range.1 hk
+    have h := K.integral_mul_multilinear_eq_zero hk1 hkm
+      ((iteratedFDeriv ℝ k G x).compContinuousLinearMap fun _ => -ContinuousLinearMap.id ℝ _)
+    simpa using h
+  have hconv : ∫ t, G t * K (x - t) = ∫ u, K u * G (x - u) := by
+    rw [← integral_sub_left_eq_self (fun t => G t * K (x - t)) volume x]
+    refine integral_congr_ae (ae_of_all _ fun u => ?_)
+    simp only [sub_sub_cancel]; ring
+  have hK1 : ∫ u, K u = 1 := K.integral_eq_one
+  have hint : ∀ k, Integrable fun u => K u * (((k.factorial : ℝ))⁻¹ *
+      iteratedFDeriv ℝ k G x (fun _ => -u)) := fun k =>
+    K.integrable_mul (continuous_const.mul (hcontk k))
+  have hexp : ∀ u, K u * G (x - u) = ∑ k ∈ Finset.range (m' + 1), K u * (((k.factorial : ℝ))⁻¹ *
+      iteratedFDeriv ℝ k G x (fun _ => -u)) +
+        ((m'.factorial : ℝ))⁻¹ * (K u * taylorRem G (m' + 1) x u) := fun u => by
+    rw [hT u, mul_add, Finset.mul_sum]; ring
+  have hsum : ∫ u, ∑ k ∈ Finset.range (m' + 1), K u * (((k.factorial : ℝ))⁻¹ *
+      iteratedFDeriv ℝ k G x (fun _ => -u)) = G x := by
+    rw [integral_finsetSum _ fun k _ => hint k, Finset.sum_range_succ']
+    rw [Finset.sum_eq_zero fun k hk => by
+      rw [show (fun u => K u * (((k + 1).factorial : ℝ)⁻¹ *
+          iteratedFDeriv ℝ (k + 1) G x (fun _ => -u))) =
+        fun u => ((k + 1).factorial : ℝ)⁻¹ * (K u * iteratedFDeriv ℝ (k + 1) G x (fun _ => -u))
+          from funext fun u => by ring, integral_const_mul,
+        hmom (k + 1) (Finset.mem_range.2 (by simp at hk; omega)) (by omega), mul_zero]]
+    simp only [Nat.factorial_zero, Nat.cast_one, inv_one, one_mul, iteratedFDeriv_zero_apply,
+      zero_add]
+    rw [integral_mul_const, hK1, one_mul]
+  rw [hconv, integral_congr_ae (ae_of_all _ hexp),
+    integral_add (integrable_finsetSum _ fun k _ => hint k) (hKR.const_mul _), hsum,
+    integral_const_mul]
+  ring
+
+/-- The Taylor remainder as a combination of values (Taylor's formula). -/
+theorem taylorRem_eq {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
+    (x u : Fin n → ℝ) : taylorRem G m x u = ((m - 1).factorial : ℝ) * (G (x - u) -
+      ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) := by
+  obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
+  simp only [Nat.add_sub_cancel]
+  have hfac : ((m'.factorial : ℝ)) ≠ 0 := by exact_mod_cast Nat.factorial_ne_zero m'
+  have h := map_add_eq_sum_add_integral_iteratedFDeriv (f := G) (x := x) (y := -u) (n := m')
+    (fun t _ => hG.contDiffAt)
+  rw [← sub_eq_add_neg] at h
+  rw [h]
+  simp only [smul_eq_mul, taylorRem, Nat.add_sub_cancel]
+  have e : ∫ τ in (0 : ℝ)..1, (1 - τ) ^ m' * iteratedFDeriv ℝ (m' + 1) G (x + τ • -u)
+      (fun _ => -u) = ∫ τ in (0 : ℝ)..1, (1 - τ) ^ m' *
+        iteratedFDeriv ℝ (m' + 1) G (x - τ • u) (fun _ => -u) :=
+    intervalIntegral.integral_congr fun τ _ => by simp only [smul_neg, ← sub_eq_add_neg]
+  rw [e]
+  field_simp
+  ring
+
+theorem continuous_taylorRem {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
+    (x : Fin n → ℝ) : Continuous (taylorRem G m x) := by
+  have hcontk : ∀ k, Continuous fun u : Fin n → ℝ => iteratedFDeriv ℝ k G x (fun _ => -u) :=
+    fun k => (iteratedFDeriv ℝ k G x).cont.comp (continuous_pi fun _ => continuous_neg)
+  have e : taylorRem G m x = fun u => ((m - 1).factorial : ℝ) * (G (x - u) -
+      ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) :=
+    funext (taylorRem_eq hm hG x)
+  rw [e]
+  exact continuous_const.mul ((hG.continuous.comp (continuous_const.sub continuous_id)).sub
+    (continuous_finsetSum _ fun k _ => continuous_const.mul (hcontk k)))
+
+open Feec.Models.Cube.FEM (sq_intervalIntegral_le) in
+/-- **The bound of the Taylor remainder**:
+`R_m(x, u)² ≤ ‖u‖^{2m} ∫₀¹ ‖Dᵐ G(x - τ u)‖² dτ`. -/
+theorem sq_taylorRem_le {m : ℕ} {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
+    (x u : Fin n → ℝ) :
+    taylorRem G m x u ^ 2 ≤
+      ‖u‖ ^ (2 * m) * ∫ τ in (0 : ℝ)..1, ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2 := by
+  have hDc : Continuous (iteratedFDeriv ℝ m G) := hG.continuous_iteratedFDeriv le_rfl
+  have hfc : Continuous fun τ : ℝ =>
+      (1 - τ) ^ (m - 1) * iteratedFDeriv ℝ m G (x - τ • u) (fun _ => -u) := by
+    refine (continuous_const.sub continuous_id).pow _ |>.mul ?_
+    exact (continuous_eval_const (fun _ : Fin m => -u)).comp
+      (hDc.comp (continuous_const.sub (continuous_id.smul continuous_const)))
+  refine (sq_intervalIntegral_le hfc).trans ?_
+  rw [← intervalIntegral.integral_const_mul]
+  refine intervalIntegral.integral_mono_on (by norm_num) ((hfc.pow 2).intervalIntegrable _ _)
+    ((continuous_const.mul ((hDc.comp (continuous_const.sub (continuous_id.smul
+      continuous_const))).norm.pow 2)).intervalIntegrable _ _) fun τ hτ => ?_
+  have h1 : |iteratedFDeriv ℝ m G (x - τ • u) (fun _ => -u)| ≤
+      ‖iteratedFDeriv ℝ m G (x - τ • u)‖ * ‖u‖ ^ m := by
+    have := (iteratedFDeriv ℝ m G (x - τ • u)).le_opNorm (fun _ => -u)
+    rw [Real.norm_eq_abs] at this
+    simpa [norm_neg] using this
+  have h2 : |(1 - τ) ^ (m - 1)| ≤ 1 := by
+    rw [abs_of_nonneg (pow_nonneg (by linarith [hτ.2]) _)]
+    exact pow_le_one₀ (by linarith [hτ.2]) (by linarith [hτ.1])
+  rw [← sq_abs, abs_mul]
+  calc (|(1 - τ) ^ (m - 1)| * |iteratedFDeriv ℝ m G (x - τ • u) (fun _ => -u)|) ^ 2
+      ≤ (1 * (‖iteratedFDeriv ℝ m G (x - τ • u)‖ * ‖u‖ ^ m)) ^ 2 :=
+        pow_le_pow_left₀ (by positivity) (mul_le_mul h2 h1 (abs_nonneg _) zero_le_one) 2
+    _ = ‖u‖ ^ (2 * m) * ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2 := by ring
+
+open Feec.Models.Cube.FEM (ofReal_intervalIntegral_le_lintegral) in
+/-- **The `L²` error of a kernel with vanishing moments of orders `< m`** for a `Cᵐ` function: if the
+segments from the points of `U` to the points sampled by `ρ` stay in `V`,
+`∫_U |G - G ⋆ ρ|² ≤ ‖ρ‖₁² (rᵐ / (m - 1)!)² ∫_V ‖Dᵐ G‖²`. -/
+theorem lintegral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
+    {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G) {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U)
+    (hV : MeasurableSet V)
+    (hseg : ∀ x ∈ U, ∀ u : Fin n → ℝ, ‖u‖ ≤ K.radius → ∀ τ ∈ Icc (0 : ℝ) 1, x - τ • u ∈ V) :
+    ∫⁻ x in U, ENNReal.ofReal ((G x - ∫ t, G t * K (x - t)) ^ 2) ≤
+      ENNReal.ofReal (K.l1 ^ 2 * (K.radius ^ m / (m - 1).factorial) ^ 2) *
+        ∫⁻ x in V, ENNReal.ofReal (‖iteratedFDeriv ℝ m G x‖ ^ 2) := by
+  have hDc : Continuous (iteratedFDeriv ℝ m G) := hG.continuous_iteratedFDeriv le_rfl
+  obtain ⟨H, hH⟩ : ∃ H : (Fin n → ℝ) → ℝ≥0∞,
+      H = fun y => ENNReal.ofReal (‖iteratedFDeriv ℝ m G y‖ ^ 2) := ⟨_, rfl⟩
+  have hHc : Continuous H := by
+    rw [hH]; exact ENNReal.continuous_ofReal.comp (hDc.norm.pow 2)
+  obtain ⟨Ψ, hΨ⟩ : ∃ Ψ : (Fin n → ℝ) → (Fin n → ℝ) → ℝ≥0∞,
+      Ψ = fun x u => ∫⁻ τ in Set.Icc (0 : ℝ) 1, H (x - τ • u) := ⟨_, rfl⟩
+  have hAc : Continuous fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × ℝ => H (q.1.1 - q.2 • q.1.2) :=
+    hHc.comp (by fun_prop)
+  have hΨm : Measurable fun q : (Fin n → ℝ) × (Fin n → ℝ) => Ψ q.1 q.2 := by
+    rw [hΨ]; exact hAc.measurable.lintegral_prod_right'
+  obtain ⟨ρe, hρe⟩ : ∃ ρe : (Fin n → ℝ) → ℝ≥0∞, ρe = fun u => ENNReal.ofReal |K u| := ⟨_, rfl⟩
+  have hρm : Measurable ρe := by
+    rw [hρe]; exact (ENNReal.continuous_ofReal.comp K.continuous.abs).measurable
+  set fm := ((m - 1).factorial : ℝ)
+  have hfm : 0 < fm := Nat.cast_pos.2 (Nat.factorial_pos _)
+  set K₀ := (fm⁻¹) ^ 2 * K.l1 * K.radius ^ (2 * m)
+  -- step 1: the pointwise bound
+  have hpt : ∀ x, ENNReal.ofReal ((G x - ∫ t, G t * K (x - t)) ^ 2) ≤
+      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u := by
+    intro x
+    obtain ⟨hKR, he⟩ := sub_conv_eq_taylorRem K hm hG x
+    have hRc := continuous_taylorRem hm hG x
+    have hab : Integrable fun u => |K u| * |taylorRem G m x u| :=
+      (K.integrable_mul hRc.abs).abs.congr (ae_of_all _ fun u => by simp [abs_mul])
+    have hab2 : Integrable fun u => |K u| * taylorRem G m x u ^ 2 :=
+      (K.integrable_mul (hRc.pow 2)).abs.congr (ae_of_all _ fun u => by
+        simp only [abs_mul, Pi.pow_apply]; rw [abs_of_nonneg (sq_nonneg (taylorRem G m x u))])
+    have hCS := sq_integral_mul_le K.integrable hab hab2
+    have hΦc : ∀ u, Continuous fun τ : ℝ => ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2 := fun u =>
+      (hDc.comp (continuous_const.sub (continuous_id.smul continuous_const))).norm.pow 2
+    have hΦ0 : ∀ (u : Fin n → ℝ) (τ : ℝ), 0 ≤ ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2 :=
+      fun u τ => sq_nonneg _
+    rw [he, mul_pow, neg_sq]
+    have hstep1 : (fm⁻¹) ^ 2 * (∫ u, K u * taylorRem G m x u) ^ 2 ≤
+        (fm⁻¹) ^ 2 * (K.l1 * ∫ u, |K u| * taylorRem G m x u ^ 2) :=
+      mul_le_mul_of_nonneg_left hCS (sq_nonneg _)
+    refine (ENNReal.ofReal_le_ofReal hstep1).trans ?_
+    rw [ENNReal.ofReal_mul (sq_nonneg _), ENNReal.ofReal_mul K.l1_nonneg,
+      ofReal_integral_eq_lintegral_ofReal hab2
+        (Eventually.of_forall fun u => mul_nonneg (abs_nonneg _) (sq_nonneg _))]
+    have hK₀ : ENNReal.ofReal K₀ = ENNReal.ofReal ((fm⁻¹) ^ 2) * ENNReal.ofReal K.l1 *
+        ENNReal.ofReal (K.radius ^ (2 * m)) := by
+      simp only [K₀]
+      rw [ENNReal.ofReal_mul (mul_nonneg (sq_nonneg _) K.l1_nonneg),
+        ENNReal.ofReal_mul (sq_nonneg _)]
+    rw [hK₀, mul_assoc, mul_assoc]
+    refine mul_le_mul' le_rfl (mul_le_mul' le_rfl ?_)
+    rw [← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    refine lintegral_mono fun u => ?_
+    by_cases hu : K u = 0
+    · simp [hρe, hu]
+    · have hu' := K.eq_zero_of_lt hu
+      have hR2 := sq_taylorRem_le hG x u
+      have hI : ENNReal.ofReal (∫ τ in (0 : ℝ)..1, ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2) ≤
+          Ψ x u := by
+        rw [hΨ, hH]
+        exact ofReal_intervalIntegral_le_lintegral (hΦc u) (hΦ0 u)
+      calc ENNReal.ofReal (|K u| * taylorRem G m x u ^ 2)
+          ≤ ENNReal.ofReal (|K u| * (K.radius ^ (2 * m) *
+              ∫ τ in (0 : ℝ)..1, ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2)) := by
+            refine ENNReal.ofReal_le_ofReal (mul_le_mul_of_nonneg_left (hR2.trans ?_)
+              (abs_nonneg _))
+            refine mul_le_mul_of_nonneg_right ?_ (intervalIntegral.integral_nonneg zero_le_one
+              fun τ _ => hΦ0 u τ)
+            exact pow_le_pow_left₀ (norm_nonneg _) hu'.le _
+        _ = ENNReal.ofReal (K.radius ^ (2 * m)) * (ρe u * ENNReal.ofReal
+              (∫ τ in (0 : ℝ)..1, ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2)) := by
+            have hr := K.radius_pos
+            rw [hρe, ← ENNReal.ofReal_mul (abs_nonneg _), ← ENNReal.ofReal_mul (by positivity)]
+            congr 1; ring
+        _ ≤ ENNReal.ofReal (K.radius ^ (2 * m)) * (ρe u * Ψ x u) := by gcongr
+  -- step 2: exchange the integrals
+  have h1 : ∫⁻ x in U, ENNReal.ofReal ((G x - ∫ t, G t * K (x - t)) ^ 2) ≤
+      ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u := setLIntegral_mono' hU fun x _ => hpt x
+  have h2 : ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u =
+      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * ∫⁻ x in U, Ψ x u := by
+    rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    congr 1
+    rw [lintegral_lintegral_swap ((hρm.comp measurable_snd).mul hΨm).aemeasurable]
+    refine lintegral_congr fun u => ?_
+    have hmeas : Measurable fun x => Ψ x u := hΨm.comp measurable_prodMk_right
+    exact lintegral_const_mul _ hmeas
+  -- step 3: the translations of each sample
+  set Y := ∫⁻ x in V, H x
+  have h3 : ∀ u, ρe u * ∫⁻ x in U, Ψ x u ≤ ρe u * Y := by
+    intro u
+    by_cases hu : K u = 0
+    · simp [hρe, hu]
+    have hu' : ‖u‖ ≤ K.radius := (K.eq_zero_of_lt hu).le
+    refine mul_le_mul' le_rfl ?_
+    have hswap : ∫⁻ x in U, Ψ x u = ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, H (x - τ • u) := by
+      rw [hΨ]
+      refine lintegral_lintegral_swap ?_
+      exact (hHc.comp (by fun_prop : Continuous fun q : (Fin n → ℝ) × ℝ =>
+        q.1 - q.2 • u)).measurable.aemeasurable
+    rw [hswap]
+    calc ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, H (x - τ • u)
+        ≤ ∫⁻ τ in Set.Icc (0 : ℝ) 1, Y := by
+          refine setLIntegral_mono' measurableSet_Icc fun τ hτ => ?_
+          calc ∫⁻ x in U, H (x - τ • u) = ∫⁻ x in U, V.indicator H (x - τ • u) := by
+                refine setLIntegral_congr_fun hU fun x hx => ?_
+                rw [Set.indicator_of_mem (hseg x hx u hu' τ hτ)]
+            _ ≤ ∫⁻ x, V.indicator H (x - τ • u) := setLIntegral_le_lintegral _ _
+            _ = ∫⁻ x, V.indicator H x := lintegral_sub_right_eq_self _ _
+            _ = Y := by rw [lintegral_indicator hV]
+      _ = Y := by rw [setLIntegral_const, Real.volume_Icc, sub_zero, ENNReal.ofReal_one, mul_one]
+  -- step 4: the mass of `|ρ|`
+  have hρ1 : ∫⁻ u, ρe u = ENNReal.ofReal K.l1 := by
+    rw [hρe, ← ofReal_integral_eq_lintegral_ofReal K.integrable.abs
+      (Eventually.of_forall fun u => abs_nonneg _)]
+    rfl
+  calc _ ≤ _ := h1
+    _ = _ := h2
+    _ ≤ ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Y := mul_le_mul' le_rfl (lintegral_mono fun u => h3 u)
+    _ = ENNReal.ofReal K₀ * (ENNReal.ofReal K.l1 * Y) := by
+        rw [lintegral_mul_const _ hρm, hρ1]
+    _ = _ := by
+        have hl := K.l1_nonneg
+        have hr := K.radius_pos
+        rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity)]
+        simp only [K₀, Y, hH]
+        congr 2
+        rw [div_pow, ← pow_mul]; field_simp; ring
+
+theorem seg_mem_bigCube {r : ℝ} (hr : r < 1 / 2) {x : Fin n → ℝ} (hx : x ∈ Q (Fin n))
+    {u : Fin n → ℝ} (hu : ‖u‖ ≤ r) {τ : ℝ} (hτ : τ ∈ Icc (0 : ℝ) 1) : x - τ • u ∈ bigCube n := by
+  rw [mem_bigCube]
+  intro j
+  have hxj := mem_Q.1 hx j
+  have huj : |u j| ≤ r := by
+    have := (norm_le_pi_norm u j).trans hu; rwa [Real.norm_eq_abs] at this
+  have hτu : |τ * u j| ≤ r := by
+    rw [abs_mul, abs_of_nonneg hτ.1]
+    calc τ * |u j| ≤ 1 * |u j| := mul_le_mul_of_nonneg_right hτ.2 (abs_nonneg _)
+      _ ≤ r := by rw [one_mul]; exact huj
+  rw [abs_le] at hτu
+  simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
+  constructor <;> linarith [hxj.1, hxj.2, hτu.1, hτu.2]
+
+/-- **The high-order estimate of the parity smoother** ([AFW2010], §5.4; [Brezis2011], §9.2): for a
+kernel with vanishing moments of the orders `1, …, m - 1` and the parity extension `G = ext_c u`
+of a function `u` on `Q` which is `Cᵐ` on `ℝⁿ` (`G` symmetric of parity `c`),
+`‖u - R u‖²_{L²(Q)} ≤ ‖ρ‖₁² (εᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` (`ε` the radius of `ρ`; the
+factor `3ⁿ` is `‖Dᵐ ext_c u‖²_{L²(U)} / ‖Dᵐ G‖²_{L²(Q)}`). Here `R u = (ρ ⋆ ext_c u)|_Q` and
+`ext_c u = G` (`IsSymm.parExt_eq`). For `m ≤ 2` every reflection-invariant mollifier qualifies
+(`ReflKernel.toMomentKernel`). -/
+theorem integral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
+    {c : Fin n → ℝ} (hc : IsParity c) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
+    (hGs : IsSymm c G) :
+    ∫ x in Q (Fin n), (G x - ∫ t, parExt c G t * K (x - t)) ^ 2 ≤
+      K.l1 ^ 2 * (K.radius ^ m / (m - 1).factorial) ^ 2 * 3 ^ n *
+        ∫ x in Q (Fin n), ‖iteratedFDeriv ℝ m G x‖ ^ 2 := by
+  have hU : MeasurableSet (bigCube n) :=
+    (isOpen_set_pi finite_univ fun _ _ => isOpen_Ioo).measurableSet
+  have hQc : IsCompact (closure (Q (Fin n))) := (isBounded_openCube _ _).isCompact_closure
+  have hDc : Continuous (iteratedFDeriv ℝ m G) := hG.continuous_iteratedFDeriv le_rfl
+  set D : (Fin n → ℝ) → ℝ := fun y => ‖iteratedFDeriv ℝ m G y‖ ^ 2
+  have hDs : IsSymm (fun _ => 1) D := hGs.sq_iteratedFDeriv hc hG
+  have hDi : IntegrableOn D (Q (Fin n)) :=
+    ((hDc.norm.pow 2).continuousOn.integrableOn_compact hQc).mono_set subset_closure
+  obtain ⟨hDU, hDUe⟩ := integral_bigCube_eq_of_symm hDs hDi
+  -- the parity extension of a symmetric function is itself
+  have hpe : ∀ x ∈ Q (Fin n), ∫ t, parExt c G t * K (x - t) = ∫ t, G t * K (x - t) := by
+    intro x hx
+    have hae := ae_exists_pieceMap (n := n) (P := fun _ => True) (ae_of_all _ fun _ _ => trivial)
+    refine integral_congr_ae ?_
+    filter_upwards [hae] with t ht
+    by_cases htU : t ∈ bigCube n
+    · obtain ⟨p, hp, -⟩ := ht htU
+      rw [hGs.parExt_eq hp]
+    · have hxt : K (x - t) = 0 := K.eq_zero_of_le _ (le_trans K.radius_lt.le
+        (half_le_norm_sub_of_notMem_bigCube (fun j => Ioo_subset_Icc_self (mem_Q.1 hx j)) htU))
+      rw [hxt, mul_zero, mul_zero]
+  set F : (Fin n → ℝ) → ℝ := fun x => (G x - ∫ t, G t * K (x - t)) ^ 2
+  have hFc : Continuous F := by
+    have : (fun x => ∫ t, G t * K (x - t)) =
+        G ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] K.toFun :=
+      funext fun x => (convolution_apply_mul _ _ x).symm
+    have hc2 : Continuous (fun x => ∫ t, G t * K (x - t)) := by
+      rw [this]
+      exact (K.isTest.hasCompactSupport.contDiff_convolution_right _
+        hG.continuous.locallyIntegrable K.isTest.contDiff).continuous
+    exact (hG.continuous.sub hc2).pow 2
+  have hFi : IntegrableOn F (Q (Fin n)) :=
+    (hFc.continuousOn.integrableOn_compact hQc).mono_set subset_closure
+  have hL := lintegral_sq_sub_conv_le_of_moments K hm hG measurableSet_Q hU
+    fun x hx u hu τ hτ => seg_mem_bigCube K.radius_lt hx hu hτ
+  rw [← ofReal_integral_eq_lintegral_ofReal hFi (Eventually.of_forall fun x => sq_nonneg _),
+    ← ofReal_integral_eq_lintegral_ofReal hDU (Eventually.of_forall fun x => sq_nonneg _),
+    ← ENNReal.ofReal_mul (by have := K.l1_nonneg; have := K.radius_pos; positivity),
+    hDUe] at hL
+  rw [ENNReal.ofReal_le_ofReal_iff (by have := K.l1_nonneg; have := K.radius_pos; positivity)]
+    at hL
+  rw [setIntegral_congr_fun measurableSet_Q fun x hx => by rw [hpe x hx]]
+  calc ∫ x in Q (Fin n), F x
+      ≤ K.l1 ^ 2 * (K.radius ^ m / (m - 1).factorial) ^ 2 * (3 ^ n * ∫ z in Q (Fin n), D z) := hL
+    _ = _ := by ring
 
 end Feec.Models.Cube.ParitySmoother

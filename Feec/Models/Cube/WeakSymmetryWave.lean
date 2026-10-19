@@ -15,14 +15,15 @@ the spaces of Table 5.1 (`P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²`, `P�
 
 ## Main definitions
 
-* `Feec.BGG.ExactWave D T f`: a classical solution of the multiplier problem (6.2) (multiplier
-  functional `ℓ(t)` on `V¹`, i.e. an `L²` multiplier), with the time regularity of the energy
-  argument.
+* `Feec.BGG.ExactWave D T g`: a classical solution of the multiplier problem (6.2) (source
+  functional `g(t)` on `Ṽ¹`, multiplier functional `ℓ(t)` on `V¹`, e.g. an `L²` multiplier),
+  with the time regularity of the energy argument.
 * `Feec.BGG.energyEmb`, `Feec.BGG.skewBil`, `Feec.BGG.Discrete.hSegment`,
   `Feec.BGG.Discrete.constraintH`, `Feec.BGG.multTerm`: the concrete setting (energy space,
   continuous and discrete skew forms, constraint, multiplier term) of the abstract Ch. 6
   convergence theorem.
-* `Feec.Models.Cube.WeakSymmetry.cubeWave`, `IsSmoothState`, `waveManufactured`.
+* `Feec.Models.Cube.WeakSymmetry.cubeWave`, `cubeSource` (the `L²` projection of an `L²` source
+  onto `P₂⁻Λ̊¹ ⊗ ℝ³`), `IsSmoothState`, `waveManufactured`.
 
 ## Main results
 
@@ -130,14 +131,15 @@ theorem skewBil_apply (D' : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (x y) :
       (energyCoord V0 Vt1 W2 Wt2 y.1, y.2) := rfl
 
 /-- **A classical solution of the multiplier problem (6.2)** on `[0,T]` for BGG data `D` in the
-`W`-normed domain model, with source `f(t) ∈ Ṽ¹` and multiplier functional `ℓ(t)` on `V¹`
-(`ℓ(t) = ⟪λ(t), ·⟫` for an `L²` multiplier `λ`): the equations (6.2a)–(6.2d) on `[0,T)` against
+`W`-normed domain model, with source functional `g(t)` on `Ṽ¹` (`g(t) v = ⟪f(t), v⟫` for an `L²`
+source `f`) and multiplier functional `ℓ(t)` on `V¹` (`ℓ(t) = ⟪λ(t), ·⟫` for an `L²`
+multiplier `λ`): the equations (6.2a)–(6.2d) on `[0,T)` against
 all test functions, the constraint (6.2e) `dσ = S₀φ` on `[0,T]` (and for the time derivatives),
 and the regularity the energy argument needs: right derivatives on `[0,T)` and continuity on
 `[0,T]` of `σ, u, M, ρ`, of the observables `dφ`, `S₁u`, `du` (the thesis' classes
 `C¹([0,T]; H̊¹ × H̊¹(V) × H̊(curl, M))`), and of `ℓ` on every argument.
 See [QuennevilleBelair2015], §6.1, (6.2), and §6.3. -/
-structure ExactWave (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (T : ℝ) (f : ℝ → Vt1) where
+structure ExactWave (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (T : ℝ) (g : ℝ → Vt1 →ₗ[ℝ] ℝ) where
   σ : ℝ → V0
   φ : ℝ → Vt0
   u : ℝ → Vt1
@@ -176,7 +178,7 @@ structure ExactWave (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (T : ℝ) (f : ℝ �
   dℓ : ∀ t ∈ Ico 0 T, ∀ μ, HasDerivWithinAt (fun s => ℓ s μ) (ℓ' t μ) (Ici t) t
   ea : ∀ t ∈ Ico 0 T, ∀ τ ψ, ⟪σ' t, τ⟫ - ⟪u t, D.dt0 ψ⟫ - ℓ t (D.d0 τ - D.S0 ψ) = 0
   eb : ∀ t ∈ Ico 0 T, ∀ v,
-    ⟪u' t, v⟫ + ⟪D.dt0 (φ t), v⟫ + ⟪M t, D.S1 v⟫ + ⟪ρ t, D.dt1 v⟫ = ⟪f t, v⟫
+    ⟪u' t, v⟫ + ⟪D.dt0 (φ t), v⟫ + ⟪M t, D.S1 v⟫ + ⟪ρ t, D.dt1 v⟫ = g t v
   ec : ∀ t ∈ Ico 0 T, ∀ N, ⟪M' t, N⟫ - ⟪D.S1 (u t), N⟫ = 0
   ed : ∀ t ∈ Ico 0 T, ∀ μ, ⟪ρ' t, μ⟫ - ⟪D.dt1 (u t), μ⟫ = 0
   ee : ∀ t ∈ Icc 0 T, D.d0 (σ t) = D.S0 (φ t)
@@ -249,7 +251,7 @@ theorem DiscreteSolution.sqrt_energy_le {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
 
 namespace Discrete
 
-variable {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D) {T : ℝ} {f : ℝ → Vt1}
+variable {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D) {T : ℝ} {g : ℝ → Vt1 →ₗ[ℝ] ℝ}
 
 /-- The discrete BGG data of `Q` on the continuous spaces: `d`, `S₀,ₕ = Π¹S₀`, `S₁,ₕ = Π²S₁`. -/
 def hSegment : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2 where
@@ -276,7 +278,7 @@ def multTerm (ℓ : V1 →ₗ[ℝ] ℝ) : (EnergySpace V0 Vt1 W2 Wt2 × Vt0) →
   ℓ ∘ₗ ((D.d0 ∘ₗ (LinearMap.fst ℝ V0 _) ∘ₗ energyCoord V0 Vt1 W2 Wt2) ∘ₗ
     LinearMap.fst ℝ _ Vt0 - D.S0 ∘ₗ LinearMap.snd ℝ _ Vt0)
 
-theorem _root_.Feec.BGG.ExactWave.hasDerivWithinAt_ellipticDataH (s : ExactWave D T f) {t : ℝ}
+theorem _root_.Feec.BGG.ExactWave.hasDerivWithinAt_ellipticDataH (s : ExactWave D T g) {t : ℝ}
     (ht : t ∈ Ico 0 T) (y : (Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) :
     HasDerivWithinAt (fun r => Q.ellipticDataH (s.σ r) (s.φ r) (s.u r) (s.M r) (s.ρ r) (s.ℓ r) y)
       (Q.ellipticDataH (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) (s.ℓ' t) y) (Ici t) t := by
@@ -293,7 +295,7 @@ theorem _root_.Feec.BGG.ExactWave.hasDerivWithinAt_ellipticDataH (s : ExactWave 
     (s.dℓ t ht (D.d0 (y.1.1 : V0) - D.S0 (y.2 : Vt0))))
   exact h
 
-theorem _root_.Feec.BGG.ExactWave.continuousOn_ellipticDataH (s : ExactWave D T f)
+theorem _root_.Feec.BGG.ExactWave.continuousOn_ellipticDataH (s : ExactWave D T g)
     (y : (Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) :
     ContinuousOn (fun r => Q.ellipticDataH (s.σ r) (s.φ r) (s.u r) (s.M r) (s.ρ r) (s.ℓ r) y)
       (Icc 0 T) := by
@@ -304,7 +306,7 @@ theorem _root_.Feec.BGG.ExactWave.continuousOn_ellipticDataH (s : ExactWave D T 
     (continuousOn_inner_const s.cρ _)).sub (continuousOn_inner_const s.cSu _)).sub
     (continuousOn_inner_const s.cdu _)).sub (s.cℓ _)
 
-theorem _root_.Feec.BGG.ExactWave.continuousOn_ellipticDataH' (s : ExactWave D T f)
+theorem _root_.Feec.BGG.ExactWave.continuousOn_ellipticDataH' (s : ExactWave D T g)
     (y : (Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) :
     ContinuousOn
       (fun r => Q.ellipticDataH (s.σ' r) (s.φ' r) (s.u' r) (s.M' r) (s.ρ' r) (s.ℓ' r) y)
@@ -319,12 +321,13 @@ theorem _root_.Feec.BGG.ExactWave.continuousOn_ellipticDataH' (s : ExactWave D T
 /-- **End-to-end `O(h)` convergence of (6.3) for a classical solution of (6.2)**, in components:
 `exists_discreteSolution_norm_sub_le_rate` with its setting (`X`, `Z`, `A`, `Aₕ`, `Bₕ`, `ℓ`, `F`)
 built from `energyEmb`, `skewBil`, `constraintH`, `multTerm`, and the exact equation, the weak
-time derivatives of the data of (6.4) and the constraints discharged by `s : ExactWave D T f`.
-The discrete source is the `L²` projection of `f` onto `Ṽₕ¹`. Hypotheses on `Q`: `Stability`,
-`Compatible`, finite-dimensional FE spaces and `S₀,ₕ` onto `Vₕ¹`; rate hypotheses: the
-consistency bounds `K₀`, `K₁` and `strangData ≤ (c h)²` for the state and for its time derivative,
-uniformly on `[0,T]`. Conclusion: the solution of (6.3) starting from the dynamic part of the
-elliptic projection (6.4) of the exact initial state exists and
+time derivatives of the data of (6.4) and the constraints discharged by `s : ExactWave D T g`.
+The discrete source `fₕ(t) ∈ Ṽₕ¹` is the representer of `g(t)` on `Ṽₕ¹` (continuous on `[0,T]`).
+Hypotheses on `Q`: `Stability`, `Compatible`, finite-dimensional FE spaces and `S₀,ₕ` onto
+`Vₕ¹`; rate hypotheses: the consistency bounds `K₀`, `K₁` and `strangData ≤ (c h)²` for the
+state and for its time derivative, uniformly on `[0,T]`. Conclusion: the solution of (6.3)
+starting from the dynamic part of the elliptic projection (6.4) of the exact initial state exists
+and
 `(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2} ≤ √(2(strangConst C_p + 1)) |c| |h|
 (2 + 2t)`.
 See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
@@ -332,9 +335,9 @@ theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
     (H : Stability D Cp CR CS) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h]
     [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
     [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
-    [FiniteDimensional ℝ Q.Wt2h] [Q.Vt1h.HasOrthogonalProjection]
-    (hS : Function.Surjective Q.toSegmentH.S0)
-    (hT : 0 < T) (hf : ContinuousOn f (Icc 0 T)) (s : ExactWave D T f) {K0 K1 c h : ℝ}
+    [FiniteDimensional ℝ Q.Wt2h] (hS : Function.Surjective Q.toSegmentH.S0)
+    (hT : 0 < T) (s : ExactWave D T g) {fh : ℝ → Q.Vt1h} (hfh : ContinuousOn fh (Icc 0 T))
+    (hg : ∀ t ∈ Ico 0 T, ∀ v : Q.Vt1h, g t v = ⟪fh t, v⟫) {K0 K1 c h : ℝ}
     (hK0 : ∀ t ∈ Icc 0 T, ∀ ψ ∈ Q.Vt0h, |s.ℓ t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
     (hK0' : ∀ t ∈ Icc 0 T, ∀ ψ ∈ Q.Vt0h,
       |s.ℓ' t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
@@ -344,7 +347,7 @@ theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
       Q.strangData (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) K0 K1 ≤ (c * h) ^ 2)
     (hdata' : ∀ t ∈ Icc 0 T,
       Q.strangData (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) K0 K1 ≤ (c * h) ^ 2) :
-    ∃ sh : DiscreteSolution Q.toSegmentH T (fun t => Q.Vt1h.orthogonalProjectionOnto (f t)),
+    ∃ sh : DiscreteSolution Q.toSegmentH T fh,
       (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
         (ellipticProjection Q.toSegmentH (toSegmentH_dt0_injective H)
           (exists_sub_eq_of_surjective hS) (ellipticRhs (Q.ellipticDataH (s.σ 0) (s.φ 0)
@@ -352,8 +355,6 @@ theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
       ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 + ‖s.M t - sh.M t‖ ^ 2 +
         ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ √(2 * (strangConst Cp + 1)) * |c| * |h| * (2 + 2 * t) := by
   have hιc := isEnergyEmbedding_energyEmb (V0 := V0) (Vt1 := Vt1) (W2 := W2) (Wt2 := Wt2)
-  have hfh : ContinuousOn (fun t => Q.Vt1h.orthogonalProjectionOnto (f t)) (Icc 0 T) :=
-    (Q.Vt1h.orthogonalProjectionOnto).continuous.comp_continuousOn hf
   obtain ⟨sh, hinit, hbd⟩ := exists_discreteSolution_norm_sub_le_rate (Q := Q) H h54 hS
     hιc LinearMap.id (skewBil V0 Vt1 W2 Wt2 D) (skewBil V0 Vt1 W2 Wt2 Q.hSegment)
     Q.constraintH (fun _ _ _ _ => rfl) (fun _ _ _ _ => rfl)
@@ -362,9 +363,9 @@ theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
       rw [Q.P1_id _ (Q.d0_mem _ a.1.2)]))
     hT hfh (fun t => (s.σ t, s.u t, s.M t, s.ρ t)) (fun t => (s.σ' t, s.u' t, s.M' t, s.ρ' t))
     s.φ s.φ' s.ℓ s.ℓ' (fun t => multTerm D (s.ℓ t)) (fun _ _ _ => rfl)
-    (fun t => energyEmb V0 Vt1 W2 Wt2 (0, f t, 0, 0))
+    (fun t => energyEmb V0 Vt1 W2 Wt2 (0, (fh t : Vt1), 0, 0))
     (fun t _ b => by
-      rw [Discrete.embedH_apply, hιc, Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right]
+      rw [Discrete.embedH_apply, hιc]
       simp)
     (s.cσ.prodMk (s.cu.prodMk (s.cM.prodMk s.cρ)))
     (s.cσ'.prodMk (s.cu'.prodMk (s.cM'.prodMk s.cρ')))
@@ -375,7 +376,7 @@ theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
         discreteSkewForm D ((s.σ t, s.u t, s.M t, s.ρ t), s.φ t)
           (((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2)), (ψ : Vt0)) -
         s.ℓ t (D.d0 (b.1 : V0) - D.S0 (ψ : Vt0)) =
-        ⟪energyEmb V0 Vt1 W2 Wt2 (0, f t, 0, 0),
+        ⟪energyEmb V0 Vt1 W2 Wt2 (0, (fh t : Vt1), 0, 0),
           energyEmb V0 Vt1 W2 Wt2 ((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2))⟫
       rw [hιc, hιc]
       simp only [discreteSkewForm, inner_zero_left]
@@ -383,6 +384,8 @@ theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate {Cp CR CS : ℝ}
       have hb := s.eb t ht b.2.1
       have hc := s.ec t ht b.2.2.1
       have hd := s.ed t ht b.2.2.2
+      have he := hg t ht b.2.1
+      rw [Submodule.coe_inner] at he
       linarith)
     (fun y => s.continuousOn_ellipticDataH Q y)
     (fun t ht y => s.hasDerivWithinAt_ellipticDataH Q ht y)
@@ -471,10 +474,6 @@ instance cubeWave_fdt0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt0h 
   cubeFEM_fdt0 hT hB N
 instance cubeWave_fdt1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt1h :=
   cubeFEM_fdt1 hT hB N
-instance cubeWave_hasOrthogonalProjection (N : ℕ) :
-    (cubeFEM hT hB N).Vt1h.HasOrthogonalProjection :=
-  have : CompleteSpace (cubeFEM hT hB N).Vt1h := FiniteDimensional.complete ℝ _
-  Submodule.HasOrthogonalProjection.ofCompleteSpace _
 instance cubeWave_fdt2 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Wt2h :=
   finiteDimensional_tsub ((polyMin 3 PolySeq.lagrangeP2 N).V 2)
 
@@ -680,15 +679,48 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.bounds_two {L : ℝ} (hL0 : 0 �
   refine ⟨(hz.norm_le hL0).trans (by nlinarith), fun w => (hz.abs_inner_D1_le hL0 w).trans
     (mul_le_mul_of_nonneg_right (by nlinarith) (norm_nonneg _))⟩
 
+/-- The source functional `v ↦ ⟪f, v⟫` on `H̊Λ¹(Q)³` of an `L²` source `f ∈ (L²Λ¹)³`. -/
+def srcFun (f : ℝ → Wv W1) (t : ℝ) : Wv U1 →ₗ[ℝ] ℝ := (innerSL ℝ (f t)).toLinearMap ∘ₗ incl1
+
+theorem srcFun_apply (f : ℝ → Wv W1) (t : ℝ) (v : Wv U1) : srcFun f t v = ⟪f t, incl1 v⟫ := rfl
+
+/-- The inclusion `H̊Λ¹(Q)³ → (L²Λ¹(Q))³` as a bounded map (an isometry). -/
+def incl1CLM : Wv U1 →L[ℝ] Wv W1 :=
+  LinearMap.mkContinuous incl1 1 fun x => by rw [norm_incl1, one_mul]
+
+instance cubeWave_completeSpace_t1 (N : ℕ) : CompleteSpace (cubeFEM hT hB N).Vt1h :=
+  FiniteDimensional.complete ℝ _
+
+/-- **The discrete source of (6.5)**: the representer in `P₂⁻Λ̊¹ ⊗ ℝ³` of `v ↦ ⟪f(t), v⟫`
+(the `L²` projection of `f(t)` onto the discrete space). -/
+def cubeSource (N : ℕ) (f : ℝ → Wv W1) (t : ℝ) : (cubeFEM hT hB N).Vt1h :=
+  (InnerProductSpace.toDual ℝ (cubeFEM hT hB N).Vt1h).symm
+    ((innerSL ℝ (f t)).comp (incl1CLM.comp (cubeFEM hT hB N).Vt1h.subtypeL))
+
+theorem inner_cubeSource (N : ℕ) (f : ℝ → Wv W1) (t : ℝ) (v : (cubeFEM hT hB N).Vt1h) :
+    ⟪cubeSource hT hB N f t, v⟫ = ⟪f t, incl1 (v : Wv U1)⟫ := by
+  rw [cubeSource, InnerProductSpace.toDual_symm_apply]
+  rfl
+
+theorem continuousOn_cubeSource (N : ℕ) {f : ℝ → Wv W1} {T : ℝ}
+    (hf : ContinuousOn f (Icc 0 T)) : ContinuousOn (cubeSource hT hB N f) (Icc 0 T) := by
+  have h1 : Continuous fun w : Wv W1 =>
+      (innerSL ℝ w).comp (incl1CLM.comp (cubeFEM hT hB N).Vt1h.subtypeL) :=
+    ((ContinuousLinearMap.compL ℝ (cubeFEM hT hB N).Vt1h (Wv W1) ℝ).flip
+      (incl1CLM.comp (cubeFEM hT hB N).Vt1h.subtypeL)).continuous.comp (innerSL ℝ).continuous
+  exact (InnerProductSpace.toDual ℝ (cubeFEM hT hB N).Vt1h).symm.continuous.comp_continuousOn
+    (h1.comp_continuousOn hf)
+
 set_option maxHeartbeats 4000000 in
 /-- **`O(h)` convergence of the semi-discrete scheme (6.5) on the cube** (Table 6.1; new: the
 thesis states no convergence result for (6.5)), under the regularity hypothesis (`C_R`). There is
 `K`, independent of `N`, `T`, the data and the solution, such that for every `N`, every `T > 0`,
-every source `f` continuous on `[0,T]` and every classical solution `s` of (6.2) (`ExactWave`)
+every `L²` source `f` continuous on `[0,T]` and every classical solution `s` of (6.2) (`ExactWave`)
 whose states `(σ, φ, u, M, ρ)(t)` and time derivatives `(σ', φ', u', M', ρ')(t)` are `C²` forms
 vanishing outside `Q` with first derivatives bounded by `L` (`IsSmoothState L`), and whose
 multiplier functional and its derivative are `L²`-bounded by `L` (`|ℓ(t) μ| ≤ L ‖μ‖`, i.e.
-`λ(t) ∈ L²`, `‖λ(t)‖ ≤ L`): the scheme (6.5) with source `P_{Ṽₕ¹} f` has a solution starting
+`λ(t) ∈ L²`, `‖λ(t)‖ ≤ L`): the scheme (6.5) with source `P_{Ṽₕ¹} f` (`cubeSource`) has a
+solution starting
 from the dynamic part of the elliptic projection (6.4) of the exact initial state (admissible by
 the (C2) lemma `projected_compatible_u_L2`), and for `t ∈ [0,T]`
 `(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N`.
@@ -701,13 +733,13 @@ the `H¹`/`C²` approximation of the smoothed projections (`cubeFEM_strangData_l
 See [QuennevilleBelair2015], §6.3, (6.5), Table 6.1, and §6.2, (6.4), Prop 6.2. -/
 theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
-    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv U1}
-      (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T f) {L : ℝ}, 0 ≤ L →
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
+      (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
+      0 ≤ L →
       (∀ t ∈ Icc 0 T, IsSmoothState L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
         IsSmoothState L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
       (∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
-      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T
-          (fun t => (cubeFEM hT hB N).Vt1h.orthogonalProjectionOnto (f t)),
+      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
         (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
           (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
             (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
@@ -796,7 +828,8 @@ theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     ring
   have hrate := s.exists_discreteSolution_rate (cubeFEM hT hB N) H h54
     (K0 := L * Capp * meshSize N) (K1 := Capp * meshSize N * ((wa + wb) * (cM * L)))
-    (c := √Kd * L) (h := meshSize N) (cubeWave_S0_surjective hT hB N) hT0 hf
+    (c := √Kd * L) (h := meshSize N) (cubeWave_S0_surjective hT hB N) hT0
+    (continuousOn_cubeSource hT hB N hf) (fun t _ v => (inner_cubeSource hT hB N f t v).symm)
     (fun t ht => hK0 (s.ℓ t) fun μ => (hmult t ht μ).1)
     (fun t ht => hK0 (s.ℓ' t) fun μ => (hmult t ht μ).2)
     (fun t ht => hK1 (s.M t) (hsm t ht).1.isCsFormMin_M)
@@ -887,9 +920,10 @@ theorem segS1_coupledu_eq_zero : bggSegment.S1 coupledu = 0 := by
 /-- **A nontrivial classical solution of (6.2) on the cube** (manufactured data): with `g` the
 bump, `λ = dg`, `σ̄ = dᵗλ`, `φ̄ₐ = ∂ₐσ̄`, `ū = (−g dxₐ)ₐ` (the coupled static solution),
 `σ(t) = t σ̄`, `φ(t) = t φ̄`, `u(t) = ū`, `M ≡ 0` (`S¹ū = 0`), `ρ(t) = t curl ū`, multiplier
-`ℓ(t) = ⟪λ, ·⟫` and source `f(t) = t (grad φ̄ + curl* curl ū)`. -/
+`ℓ(t) = ⟪λ, ·⟫` and source `f(t) = t (grad φ̄ + curl* curl ū)` (an `H̊Λ¹(Q)³` field). -/
 def waveManufactured (T : ℝ) :
-    Feec.BGG.ExactWave bggSegment T (fun t => t • (bggSegment.dt0 coupledφ + waveCurlCurlU)) where
+    Feec.BGG.ExactWave bggSegment T
+      (srcFun fun t => incl1 (t • (bggSegment.dt0 coupledφ + waveCurlCurlU))) where
   σ t := t • coupledσ
   φ t := t • coupledφ
   u _ := coupledu
@@ -930,6 +964,7 @@ def waveManufactured (T : ℝ) :
   dℓ t _ μ := by simpa using hasDerivWithinAt_const t (Ici t) (⟪coupledMult, (μ : W1)⟫)
   ea _ _ τ ψ := coupled_c1 τ ψ
   eb t _ v := by
+    rw [srcFun_apply, ← inner_wv_U1]
     simp only [map_smul, inner_smul_left, inner_add_left, inner_zero_left, zero_add,
       RCLike.conj_to_real, inner_dt1_coupledu]
     ring
@@ -999,7 +1034,9 @@ theorem waveManufactured_hyps {T : ℝ} (hT : 0 < T) : ∃ L, 0 ≤ L ∧
       exact hmono1 (hLz1'.mono hLz1le)
     · change IsCsFormMin 0 2 ((1 + T) * L1) (bggSegment.S1 (0 : Wv U1))
       rw [hS0]; exact hmono1 (hLz.mono hLzle)
-  · obtain ⟨h1, h2⟩ := waveManufactured_mult T t μ
+  · have hm := waveManufactured_mult T t μ
+    have h1 := hm.1
+    have h2 := hm.2
     have hb : ‖coupledMult‖ ≤ (1 + T) * L1 :=
       hM.trans (hL0le.trans (le_mul_of_one_le_left hL10 (by linarith)))
     exact ⟨h1.trans (mul_le_mul_of_nonneg_right hb (norm_nonneg _)),

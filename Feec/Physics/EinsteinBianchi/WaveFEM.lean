@@ -63,11 +63,6 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
 theorem incl1_injective : Function.Injective incl1 := fun _ _ h =>
   PiLp.ext fun a => Subtype.ext (congrArg (fun z : Wv W1 => z a) h)
 
-/-- The inclusion `H̊Λ¹(Q)³ → L²Λ¹(Q)³` as a bounded map (an isometry). -/
-def incl1L : Wv U1 →L[ℝ] Wv W1 :=
-  LinearMap.mkContinuous incl1 1 fun x => by rw [norm_incl1, one_mul]
-
-theorem incl1L_apply (x : Wv U1) : incl1L x = incl1 x := rfl
 
 /-- **The continuous data (6.1)/(6.2) of the BGG system (4.16) on `Q = (0, ½)³`** in the model of
 `Feec.BGG.WaveData`: `V⁰ = H̊Λ⁰(Q)`, `Ṽ⁰ = H̊Λ⁰(Q)³` (graph norms), `Ṽ¹ = H̊Λ¹(Q)³`, the
@@ -247,10 +242,10 @@ set_option maxHeartbeats 4000000 in
 exact solutions of `cubeWave_rate`) **is a solution of the multiplier problem (6.2)** of
 `cubeWaveData`, with `Λ(t) = Jλ(t) ∈ W̌¹` and the same trajectories (read in the graph spaces);
 in particular (`toSolution`) a solution of (6.1). -/
-def exactWave_toMultiplierSolution {T : ℝ} {f : ℝ → Wv U1}
-    (s : Feec.BGG.ExactWave bggSegment T f) (lam : ℝ → W1)
+def exactWave_toMultiplierSolution {T : ℝ} {f : ℝ → Wv W1}
+    (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (lam : ℝ → W1)
     (hℓ : ∀ t μ, s.ℓ t μ = ⟪lam t, (μ : W1)⟫) :
-    cubeWaveData.MultiplierSolution T (fun t => incl1 (f t)) where
+    cubeWaveData.MultiplierSolution T f where
   σ t := D0.toGraphSpace (s.σ t)
   φ t := toGraphVec0 (s.φ t)
   u := s.u
@@ -262,7 +257,7 @@ def exactWave_toMultiplierSolution {T : ℝ} {f : ℝ → Wv U1}
   ρ' := s.ρ'
   cσ := (continuous_subtype_val.comp_continuousOn s.cσ).congr fun t _ =>
     LinearPMap.graphFst_toGraphSpace D0 (s.σ t)
-  cu := (incl1L.continuous.comp_continuousOn s.cu).congr fun t _ => rfl
+  cu := (incl1CLM.continuous.comp_continuousOn s.cu).congr fun t _ => rfl
   cM := s.cM
   cρ := s.cρ
   dσ t ht := by
@@ -270,15 +265,15 @@ def exactWave_toMultiplierSolution {T : ℝ} {f : ℝ → Wv U1}
     exact h.congr (fun r _ => LinearPMap.graphFst_toGraphSpace D0 (s.σ r))
       (LinearPMap.graphFst_toGraphSpace D0 (s.σ t))
   du t ht := by
-    have h := incl1L.hasFDerivAt.comp_hasDerivWithinAt t (s.du t ht)
+    have h := incl1CLM.hasFDerivAt.comp_hasDerivWithinAt t (s.du t ht)
     exact h.congr (fun r _ => rfl) rfl
   dM := s.dM
   dρ := s.dρ
   eb t ht v := by
     have h := s.eb t ht v
     change ⟪incl1 (s.u' t), incl1 v⟫ + ⟪ιt1 (bggDt0 (toGraphVec0 (s.φ t))), incl1 v⟫ +
-      ⟪s.M t, segS1 v⟫ + ⟪s.ρ t, piMap segD1 v⟫ = ⟪incl1 (f t), incl1 v⟫
-    rw [ιt1_bggDt0_toGraphVec0, ← inner_wv_U1, ← inner_wv_U1, ← inner_wv_U1]
+      ⟪s.M t, segS1 v⟫ + ⟪s.ρ t, piMap segD1 v⟫ = ⟪f t, incl1 v⟫
+    rw [ιt1_bggDt0_toGraphVec0, ← inner_wv_U1, ← inner_wv_U1]
     exact h
   ec := s.ec
   ed := s.ed
@@ -367,13 +362,13 @@ theorem waveFEM (hR : CurlPotential) :
         ∀ t ∈ Icc 0 T, √(‖s.σ t‖ ^ 2 + ‖s.u t‖ ^ 2 + ‖s.M t‖ ^ 2 + ‖s.ρ t‖ ^ 2) ≤
           √(‖s.σ 0‖ ^ 2 + ‖s.u 0‖ ^ 2 + ‖s.M 0‖ ^ 2 + ‖s.ρ 0‖ ^ 2) +
             ∫ r in (0:ℝ)..t, ‖f r‖) ∧
-      ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_ : 0 < T) {f : ℝ → Wv U1}
-        (_ : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T f) {L : ℝ}, 0 ≤ L →
+      ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_ : 0 < T) {f : ℝ → Wv W1}
+        (_ : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
+        0 ≤ L →
         (∀ t ∈ Icc 0 T, IsSmoothState L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
           IsSmoothState L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
         (∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
-        ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T
-            (fun t => (cubeFEM hT hB N).Vt1h.orthogonalProjectionOnto (f t)),
+        ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
           (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
             (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
               (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
@@ -404,8 +399,7 @@ theorem waveFEM_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ
     (∀ t ∈ Ioc 0 T, (waveManufactured T).σ t ≠ 0 ∧ (waveManufactured T).φ t ≠ 0) ∧
     (∀ t, (waveManufactured T).u t ≠ 0) ∧ coupledMult ≠ 0 ∧
     ∃ (K : ℝ) (sh : (N : ℕ) → Feec.BGG.DiscreteSolution (cubeWave hT hB N) T
-        (fun t => (cubeFEM hT hB N).Vt1h.orthogonalProjectionOnto
-          (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))),
+        (cubeSource hT hB N fun t => incl1 (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))),
       (∀ N, ∀ t ∈ Icc 0 T,
         √(‖(waveManufactured T).σ t - (sh N).σ t‖ ^ 2 +
           ‖(waveManufactured T).u t - (sh N).u t‖ ^ 2 +
@@ -422,8 +416,10 @@ theorem waveFEM_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ
   obtain ⟨CR, hCR⟩ := hCRex
   have hrate := cubeWave_rate hT hB hCR.1 hCR.2
   obtain ⟨K, hK0, hK⟩ := hrate
-  have hf : ContinuousOn (fun t : ℝ => t • (bggSegment.dt0 coupledφ + waveCurlCurlU)) (Icc 0 T) :=
-    (continuous_id.smul continuous_const).continuousOn
+  have hf : ContinuousOn (fun t : ℝ => incl1 (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))
+      (Icc 0 T) := by
+    simp only [map_smul]
+    exact (continuous_id.smul continuous_const).continuousOn
   have hsol := fun N => hK N hT0 hf (waveManufactured T) hL0 hsm hmult
   choose sh _ hsh using hsol
   refine ⟨hne, hL.2.2.2.2.1, hL.2.2.2.2.2, K * L, sh, fun N t ht => ?_, fun t ht => ?_⟩

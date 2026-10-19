@@ -25,7 +25,8 @@ thesis' complex `H̊¹(Ω) → H̊(curl, Ω) → L²(Ω)`. This file proves that
 The unconditional corollaries `RowWise.gradCurl_coreSub_spectral_Q` and
 `Ident.gradCurl_coreSub_spectral_cube` follow. The same holds for the mirror complexes
 (`Feec.Models.Cube.Mirror`): the parity model, the cube `Q` and every open cube
-(`Mirror.eigenDense_complex`, `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`).
+(`Mirror.eigenDense_complex`, `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`;
+on boxes `Feec.Models.Box.Mirror.eigenDense_complexBoxM`).
 
 Boxes with unequal sides are not covered by this file (their pull-back to `Q` rescales each
 coordinate by its own factor, so the operator changes instead of being rescaled); they are

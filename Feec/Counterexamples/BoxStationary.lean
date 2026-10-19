@@ -27,8 +27,9 @@ whether `K*` contains a moving datum. The strongest general statement is
 `Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` (`Feec.Models.BoundedDomain.MovingTSD`):
 under a complete set of eigenvectors (`EigenDense`), `K*` moves iff some nonzero TSD eigenfield
 `u` has `curl u ∉ H̊(curl)`; and `EigenDense` is proved on cubes and boxes only
-(`Feec.Models.Cube.EigenDense`, `Feec.Models.Box.EigenDense`). The tensorial mirror complexes of
-`Feec.Models.Cube.Mirror` are not transported to boxes here.
+(`Feec.Models.Cube.EigenDense`, `Feec.Models.Box.EigenDense`). With the tensorial mirror
+conditions instead (`Feec.Models.Box.Mirror`, transported from `Feec.Models.Cube.Mirror`) TSD
+reduces the complex on every box, `K* = K`, and non-stationary TSD data exist.
 
 ## References
 

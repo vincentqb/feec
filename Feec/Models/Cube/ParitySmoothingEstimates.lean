@@ -4,7 +4,39 @@ public import Feec.Models.Cube.ParitySmoother
 public import Feec.Models.Cube.DeRhamPartialFEM
 
 /-!
-# Parity smoothing estimates (draft)
+# Parity smoothing estimates on the Freudenthal meshes of the cube
+
+The parity smoother `R^J_ρ` (`Feec.Models.Cube.ParitySmoother`) composed with the canonical
+interpolant `Π_h` of the polynomial families `S` gives commuting maps `Q_N = Π_h R^J` of the
+discrete partially-homogeneous complexes `V_{h,Γ_J} = polyPartial n S N J ⊆ HΛ_J(Q)`. For kernels
+of radius `γ h_N / 32` they are bounded uniformly in `N` and close to the identity on
+`V_{h,Γ_J}`, hence yield uniformly bounded cochain projections `π_N = J_N⁻¹ Q_N`
+([AFW2010], §5.4; [ChristiansenWinther2008]) for every class `J`, without dilations.
+
+## Main definitions
+
+* `FEM.paritySmoothForm`: the smoothed form field `ρ ⋆ ext_J u`;
+  `LocalElement.paritySmoothedCommutingMap`, `FEM.paritySmoothed n S N J ρ`: the commuting maps.
+* `FEM.parKernel n γ`: the product kernels of radius `γ h_N / 32`.
+* `FEM.ParitySmoothingEstimates n J S ρ C`: uniform `L²` bound and closeness `½` on `V_{h,Γ_J}`;
+  `ParitySmoothingEstimates.proj`: the smoothed projections.
+
+## Main results
+
+* `FEM.paritySmoothingEstimates_parKernel`, `FEM.paritySmoothing_exists`: the estimates hold for
+  every class `J` and every admissible sequence `S`.
+* `FEM.exists_uniform_cochainProjection_part`: uniformly bounded (`L²` and graph norms) cochain
+  projections onto `V_{h,Γ_J}`; the homogeneous classes `J = ∅` and `J = univ` give
+  `FEM.exists_uniform_cochainProjection_poly_parity` and
+  `FEM.exists_uniform_cochainProjection_polyMin_parity`, alternatives to the dilation smoothers
+  `pMax`, `pMin`.
+* `FEM.ParitySmoothingEstimates.norm_sub_proj_le_grad`: `‖y - π_N y‖ ≤ C h_N Σₛ ‖∇ yₛ‖` when
+  `ext_J y` has `H¹` coefficients.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.4
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 -/
 
 @[expose] public noncomputable section

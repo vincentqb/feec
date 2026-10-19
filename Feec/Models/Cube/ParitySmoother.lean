@@ -10,7 +10,47 @@ public import Feec.Models.Cube.PolyRate
 public import Mathlib.Analysis.Calculus.TaylorIntegral
 
 /-!
-# Parity smoother (draft)
+# The parity smoother on the cube
+
+For a class `J ⊆ {1, …, n}` of the partially-homogeneous complexes `HΛ_J(Q)` on the unit cube
+`Q = (0, ½)ⁿ` (`Feec.Models.Cube.DeRhamPartialIdent`; vanishing tangential trace on the faces
+normal to `e_j`, `j ∈ J`), the **parity smoother** is `R^J_ρ u = (ρ ⋆ ext_J u)|_Q`: each coefficient
+`u_s` of a `k`-form is extended to `ℝⁿ` by reflections across the faces of `Q`, odd across the
+faces where it must vanish and even across the others (the parity vector `c(J, s)`, `pvec`), and
+then mollified by a reflection-invariant kernel `ρ` of radius `< ½`. In contrast with the smoothers
+of [ChristiansenWinther2008] and [AFW2010], §5.4, no dilation is needed: the reflected extension
+already lies in the class `J`, so `R` commutes with `d_J` exactly, with the same smoother for all
+classes and both rows of the BGG complex.
+
+## Main definitions
+
+* `triW`, `pieceMap`, `bigCube`: the folding of `ℝ` onto `[0, ½]` and the `3ⁿ` reflected copies of
+  `Q` tiling `(-½, 1)ⁿ`.
+* `parExt c f`: the parity extension; `ReflKernel n`: reflection-invariant mollifiers;
+  `prodKernel`: a product of one-dimensional bumps, of any radius `r < ½`.
+* `paritySmooth ρ J k`: the parity smoother on `L²(Q; Λᵏ)`.
+* `MomentKernel n m`: reflection-invariant (signed) kernels with vanishing moments of the orders
+  `1, …, m - 1` (`ReflKernel.toMomentKernel` for `m = 2`).
+
+## Main results
+
+* `norm_paritySmooth_le`: `‖R u‖ ≤ 3^{n/2} ‖u‖`.
+* `paritySmooth_mem_dPart`, `dPart_paritySmooth`: `R u ∈ D(d_J)` and `d_J R u = R d_J u`.
+* `wsL2_paritySmooth`, `wsL2_paritySmooth_symmDiff`: commutation with the algebraic BGG maps
+  `S⁰, S¹` (`wsL2`) for compatible classes, the rows `a` in the classes `J ∆ {a}`.
+* `norm_sub_paritySmooth_le_grad`: `‖y - R y‖ ≤ r √(n 3ⁿ) Σₛ ‖∇ yₛ‖` when `ext_J y` is `H¹`
+  ([Brezis2011], §9.2, for the reflection argument), and
+  `paritySmooth_univ_mem_minimal_and_norm_sub_le`: the case of `H̊Λ(Q)` with vanishing tangential
+  traces only.
+* `integral_sq_sub_conv_le_of_moments`: the high-order estimate
+  `‖G - ρ ⋆ G‖²_{L²(Q)} ≤ ‖ρ‖₁² (rᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` for `Cᵐ` functions `G` of
+  parity `c` (the parity extensions of smooth data) and kernels with vanishing moments.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.4
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011], §9.2
 -/
 
 @[expose] public noncomputable section

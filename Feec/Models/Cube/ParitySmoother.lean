@@ -6,6 +6,7 @@ public import Feec.FiniteElement.WeakSymmetryMaps
 public import Feec.FiniteElement.InverseEstimate
 public import Feec.Domain.StarShapedSmoothing
 public import Mathlib.MeasureTheory.Integral.Pi
+public import Feec.Models.Cube.PolyRate
 
 /-!
 # Parity smoother (draft)
@@ -1622,5 +1623,603 @@ theorem prodKernel_le (r : ℝ) (hr : 0 < r) (hr' : r < 1 / 2) (x : Fin n → �
   rw [Real.volume_real_closedBall (by simp [bump1]; positivity)]
   simp [bump1]
   ring
+
+/-! ### Symmetric functions -/
+
+/-- **A symmetric function** of parity `c`: `F ∘ R_j = c_j F` for every coordinate reflection, and
+`F` is `1`-periodic in every variable (the parity extensions of functions on `Q`). -/
+structure IsSymm (c : Fin n → ℝ) (F : (Fin n → ℝ) → ℝ) : Prop where
+  refl : ∀ j y, F (coordRefl j y) = c j * F y
+  periodic : ∀ y (m : Fin n → ℤ), F (y + fun j => (m j : ℝ)) = F y
+
+theorem IsSymm.update_one_sub {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
+    (j : Fin n) (y : Fin n → ℝ) : F (Function.update y j (1 - y j)) = c j * F y := by
+  rw [update_one_sub_eq, hF.periodic, hF.refl]
+
+theorem coordRefl_eq_update (j : Fin n) (y : Fin n → ℝ) :
+    coordRefl j y = Function.update y j (-y j) := by
+  funext i; rw [coordRefl_apply]
+  by_cases hi : i = j
+  · subst hi; simp
+  · simp [hi]
+
+/-- **A symmetric function on the copies of `Q`**: `F ∘ pieceMap p = sign_c(p) F`. -/
+theorem IsSymm.apply_pieceMap {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
+    (p : Fin n → Fin 3) (z : Fin n → ℝ) : F (pieceMap p z) = pieceSign c p * F z := by
+  classical
+  suffices h : ∀ D : Finset (Fin n), ∀ p : Fin n → Fin 3, (∀ i ∉ D, p i = 1) →
+      F (pieceMap p z) = pieceSign c p * F z from h Finset.univ p (by simp)
+  intro D
+  induction D using Finset.induction_on with
+  | empty =>
+    intro p hp
+    have hp1 : p = fun _ => 1 := funext fun i => hp i (by simp)
+    subst hp1
+    have e : pieceMap (fun _ : Fin n => (1 : Fin 3)) z = z := funext fun _ => rfl
+    rw [e]; simp [pieceSign, pieceSgn]
+  | insert a D ha ih =>
+    intro p hp
+    set p' := Function.update p a 1
+    have hp' : ∀ i ∉ D, p' i = 1 := fun i hi => by
+      by_cases hia : i = a
+      · subst hia; simp [p']
+      · simp only [p', Function.update_of_ne hia]; exact hp i (by simp [hia, hi])
+    have IH := ih p' hp'
+    set y := pieceMap p' z
+    have hya : y a = z a := by simp [y, p']
+    have hmap : pieceMap p z = Function.update y a (piece (p a) (z a)) := by
+      funext i
+      by_cases hia : i = a
+      · subst hia; simp
+      · simp [y, p', Function.update_of_ne hia]
+    have hsign : pieceSign c p = pieceSgn (c a) (p a) * pieceSign c p' := by
+      unfold pieceSign
+      rw [Fintype.prod_eq_mul_prod_compl a, Fintype.prod_eq_mul_prod_compl a
+        (fun i => pieceSgn (c i) (p' i))]
+      simp only [p', Function.update_self, pieceSgn, ↓reduceIte, one_mul]
+      congr 1
+      refine Finset.prod_congr rfl fun i hi => ?_
+      simp [Function.update_of_ne (show i ≠ a by simpa using hi)]
+    rw [hmap, hsign, mul_assoc, ← IH]
+    rcases (show p a = 0 ∨ p a = 1 ∨ p a = 2 by omega) with h | h | h
+    · rw [h, piece_zero, ← hya, ← coordRefl_eq_update, hF.refl]; simp [pieceSgn]
+    · rw [h, piece_one, ← hya, Function.update_eq_self]; simp [pieceSgn]
+    · rw [h, piece_two, ← hya, hF.update_one_sub]; simp [pieceSgn]
+
+/-- **A symmetric function is its own parity extension** (on the copies of `Q`). -/
+theorem IsSymm.parExt_eq {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
+    {t : Fin n → ℝ} {p : Fin n → Fin 3} (hp : pieceMap p t ∈ Q (Fin n)) : parExt c F t = F t := by
+  rw [parExt_eq_of_pieceMap_mem hp]
+  have h := hF.apply_pieceMap p (pieceMap p t)
+  rw [pieceMap_pieceMap] at h
+  rw [h]
+
+/-- **The smoothed extension of a symmetric function is its mollification** at the points of
+`cl Q`. -/
+theorem IsSymm.smoothFun_eq (ρ : ReflKernel n) {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ}
+    (hF : IsSymm c F) {f : (Fin n → ℝ) → ℝ} (hf : f =ᵐ[volume.restrict (Q (Fin n))] F)
+    {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) :
+    smoothFun ρ c f y = ∫ t, F t * ρ (y - t) := by
+  rw [smoothFun_congr_ae ρ c hf, smoothFun_apply]
+  have hae := ae_exists_pieceMap (n := n) (P := fun _ => True) (ae_of_all _ fun _ _ => trivial)
+  refine integral_congr_ae ?_
+  filter_upwards [hae] with t ht
+  by_cases htU : t ∈ bigCube n
+  · obtain ⟨p, hp, -⟩ := ht htU
+    rw [hF.parExt_eq hp]
+  · rw [eq_zero_of_notMem_bigCube ρ hy htU, mul_zero, mul_zero]
+
+/-- **The smoothed extension is symmetric.** -/
+theorem isSymm_smoothFun (ρ : ReflKernel n) {c : Fin n → ℝ} (hc : IsParity c)
+    (f : (Fin n → ℝ) → ℝ) : IsSymm c (smoothFun ρ c f) :=
+  ⟨fun j y => smoothFun_coordRefl ρ hc f j y, fun y m => smoothFun_add_intCast ρ c f y m⟩
+
+/-- **The squared gradient of a symmetric function is even and periodic.** -/
+theorem IsSymm.sq_grad {c : Fin n → ℝ} (hc : IsParity c) {F : (Fin n → ℝ) → ℝ}
+    (hF : IsSymm c F) (hd : Differentiable ℝ F) :
+    IsSymm (fun _ => 1) (fun y => ∑ j, (fderiv ℝ F y (Pi.single j 1)) ^ 2) := by
+  refine ⟨fun i y => ?_, fun y m => ?_⟩
+  · rw [one_mul]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    have h1 : HasFDerivAt (fun y => F (coordRefl i y))
+        ((fderiv ℝ F (coordRefl i y)).comp (diagL (reflIdx i))) y :=
+      (hd _).hasFDerivAt.comp y (hasFDerivAt_pieceMap (reflIdx i) y)
+    have h2 : HasFDerivAt (fun y => c i * F y) (c i • fderiv ℝ F y) y :=
+      (hd y).hasFDerivAt.const_mul (c i)
+    have e : (fun y => F (coordRefl i y)) = fun y => c i * F y := funext (hF.refl i)
+    rw [e] at h1
+    have h3 := congrArg (fun L : (Fin n → ℝ) →L[ℝ] ℝ => L (Pi.single j 1)) (h1.unique h2)
+    simp only [ContinuousLinearMap.coe_comp, Function.comp_apply, diagL_single, map_smul,
+      smul_eq_mul, FunLike.coe_smul, Pi.smul_apply] at h3
+    have hs : pieceSig (reflIdx i j) ^ 2 = 1 := by
+      unfold pieceSig reflIdx; split_ifs <;> norm_num
+    have hc2 : c i ^ 2 = 1 := by rcases hc i with h | h <;> rw [h] <;> norm_num
+    calc (fderiv ℝ F (coordRefl i y) (Pi.single j 1)) ^ 2
+        = (pieceSig (reflIdx i j) * fderiv ℝ F (coordRefl i y) (Pi.single j 1)) ^ 2 := by
+          rw [mul_pow, hs, one_mul]
+      _ = (c i * fderiv ℝ F y (Pi.single j 1)) ^ 2 := by rw [h3]
+      _ = _ := by rw [mul_pow, hc2, one_mul]
+  · refine Finset.sum_congr rfl fun j _ => ?_
+    have e : (fun x => F (x + fun j => (m j : ℝ))) = F := funext fun x => hF.periodic x m
+    have h := fderiv_comp_add_right (𝕜 := ℝ) (f := F) (x := y) (fun j => (m j : ℝ))
+    rw [e] at h
+    rw [← h]
+
+/-- **Integrals of even periodic functions over `U`**: `∫_U G = 3ⁿ ∫_Q G`. -/
+theorem integral_bigCube_eq_of_symm {G : (Fin n → ℝ) → ℝ} (hG : IsSymm (fun _ => 1) G)
+    (hGi : IntegrableOn G (Q (Fin n))) :
+    IntegrableOn G (bigCube n) ∧ ∫ x in bigCube n, G x = 3 ^ n * ∫ z in Q (Fin n), G z := by
+  have hU : MeasurableSet (bigCube n) :=
+    (isOpen_set_pi finite_univ fun _ _ => isOpen_Ioo).measurableSet
+  set G' : (Fin n → ℝ) → ℝ := (bigCube n).indicator G
+  have hG' : ∀ x, x ∉ bigCube n → G' x = 0 := fun x hx => Set.indicator_of_notMem hx _
+  have hsign : ∀ p : Fin n → Fin 3, pieceSign (fun _ : Fin n => (1 : ℝ)) p = 1 := fun p => by
+    simp [pieceSign, pieceSgn]
+  have hGp : ∀ p : Fin n → Fin 3, ∀ z ∈ Q (Fin n), G' (pieceMap p z) = G z := by
+    intro p z hz
+    simp only [G']
+    rw [Set.indicator_of_mem (pieceMap_mem_bigCube hz p), hG.apply_pieceMap, hsign, one_mul]
+  have hp : ∀ p : Fin n → Fin 3, IntegrableOn (fun z => G' (pieceMap p z)) (Q (Fin n)) :=
+    fun p => IntegrableOn.congr_fun hGi (fun z hz => (hGp p z hz).symm) measurableSet_Q
+  obtain ⟨hI, he⟩ := integral_eq_sum_pieceMap hG' hp
+  refine ⟨(integrable_indicator_iff hU).1 hI, ?_⟩
+  rw [← integral_indicator hU, he,
+    Finset.sum_congr rfl fun p _ => setIntegral_congr_fun measurableSet_Q fun z hz => hGp p z hz,
+    Finset.sum_const, card_pieces, nsmul_eq_mul]
+  push_cast; ring
+
+/-! ### The `H¹` estimate for smooth fields -/
+
+/-- **Jensen's inequality for the mollifier**: `(∫ f ρ(x - ·))² ≤ ∫ f² ρ(x - ·)`. -/
+theorem ReflKernel.sq_integral_le (ρ : ReflKernel n) (x : Fin n → ℝ) {f : (Fin n → ℝ) → ℝ}
+    (hf : Integrable fun t => f t * ρ (x - t)) (hf2 : Integrable fun t => f t ^ 2 * ρ (x - t)) :
+    (∫ t, f t * ρ (x - t)) ^ 2 ≤ ∫ t, f t ^ 2 * ρ (x - t) := by
+  set a := ∫ t, f t * ρ (x - t)
+  have hi0 := ρ.integrable_comp_sub x
+  have hvar : 0 ≤ ∫ t, (f t - a) ^ 2 * ρ (x - t) :=
+    integral_nonneg fun t => mul_nonneg (sq_nonneg _) (ρ.nonneg _)
+  have hA : Integrable fun t => f t ^ 2 * ρ (x - t) - 2 * a * (f t * ρ (x - t)) :=
+    hf2.sub (hf.const_mul _)
+  have e1 : ∫ t, (f t ^ 2 * ρ (x - t) - 2 * a * (f t * ρ (x - t)) + a ^ 2 * ρ (x - t)) =
+      (∫ t, (f t ^ 2 * ρ (x - t) - 2 * a * (f t * ρ (x - t)))) + ∫ t, a ^ 2 * ρ (x - t) :=
+    integral_add hA (hi0.const_mul _)
+  have e2 : ∫ t, (f t ^ 2 * ρ (x - t) - 2 * a * (f t * ρ (x - t))) =
+      (∫ t, f t ^ 2 * ρ (x - t)) - ∫ t, 2 * a * (f t * ρ (x - t)) :=
+    integral_sub hf2 (hf.const_mul _)
+  have e : ∫ t, (f t - a) ^ 2 * ρ (x - t) =
+      ∫ t, (f t ^ 2 * ρ (x - t) - 2 * a * (f t * ρ (x - t)) + a ^ 2 * ρ (x - t)) := by
+    congr 1; funext t; ring
+  rw [e, e1, e2, integral_const_mul, integral_const_mul, ρ.integral_comp_sub] at hvar
+  nlinarith
+
+open Feec.Models.Cube.FEM (sq_sub_le_integral_grad ofReal_intervalIntegral_le_lintegral) in
+/-- **The `L²` error of the mollifier for a `C¹` function**: if the segments from the points of `U`
+to the points sampled by `ρ` stay in `V`,
+`∫_U |w - w ⋆ ρ|² ≤ r² n ∫_V |∇w|²` (`r` the radius of `ρ`). -/
+theorem lintegral_sq_sub_conv_le (ρ : ReflKernel n) {w : (Fin n → ℝ) → ℝ} (hw : ContDiff ℝ 1 w)
+    {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U) (hV : MeasurableSet V)
+    (hseg : ∀ x ∈ U, ∀ u : Fin n → ℝ, ‖u‖ ≤ ρ.radius → ∀ τ ∈ Icc (0 : ℝ) 1, x - τ • u ∈ V) :
+    ∫⁻ x in U, ENNReal.ofReal ((w x - ∫ t, w t * ρ (x - t)) ^ 2) ≤
+      ENNReal.ofReal (ρ.radius ^ 2 * n) *
+        ∫⁻ x in V, ENNReal.ofReal (∑ j, (partialDeriv j w x) ^ 2) := by
+  have hfd := hw.continuous_fderiv one_ne_zero
+  have hwc : Continuous w := hw.continuous
+  obtain ⟨G, hG⟩ : ∃ G : (Fin n → ℝ) → ℝ≥0∞,
+      G = fun y => ENNReal.ofReal (∑ j, (partialDeriv j w y) ^ 2) := ⟨_, rfl⟩
+  have hGc : Continuous G := by
+    rw [hG]; simp only [partialDeriv]
+    exact ENNReal.continuous_ofReal.comp (by fun_prop)
+  obtain ⟨Ψ, hΨ⟩ : ∃ Ψ : (Fin n → ℝ) → (Fin n → ℝ) → ℝ≥0∞,
+      Ψ = fun x u => ∫⁻ τ in Set.Icc (0 : ℝ) 1, G (x - τ • u) := ⟨_, rfl⟩
+  have hAc : Continuous fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × ℝ => G (q.1.1 - q.2 • q.1.2) :=
+    hGc.comp (by fun_prop)
+  have hΨm : Measurable fun q : (Fin n → ℝ) × (Fin n → ℝ) => Ψ q.1 q.2 := by
+    rw [hΨ]; exact hAc.measurable.lintegral_prod_right'
+  obtain ⟨ρe, hρe⟩ : ∃ ρe : (Fin n → ℝ) → ℝ≥0∞, ρe = fun u => ENNReal.ofReal (ρ u) := ⟨_, rfl⟩
+  have hρm : Measurable ρe := by
+    rw [hρe]; exact (ENNReal.continuous_ofReal.comp ρ.continuous).measurable
+  set K₀ := ρ.radius ^ 2 * n
+  -- step 1: the pointwise bound
+  have hpt : ∀ x, ENNReal.ofReal ((w x - ∫ t, w t * ρ (x - t)) ^ 2) ≤
+      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u := by
+    intro x
+    have hρi := ρ.integrable_comp_sub x
+    have hρ1 := ρ.integral_comp_sub x
+    set f : (Fin n → ℝ) → ℝ := fun t => w x - w t
+    have hfc : Continuous f := continuous_const.sub hwc
+    have hwi : Integrable fun t => w t * ρ (x - t) :=
+      integrable_mul_isTest hwc.locallyIntegrable (ρ.isTest.comp_sub x)
+    have hfi : Integrable fun t => f t * ρ (x - t) :=
+      integrable_mul_isTest hfc.locallyIntegrable (ρ.isTest.comp_sub x)
+    have hf2i : Integrable fun t => f t ^ 2 * ρ (x - t) :=
+      integrable_mul_isTest (hfc.pow 2).locallyIntegrable (ρ.isTest.comp_sub x)
+    have e1 : w x - ∫ t, w t * ρ (x - t) = ∫ t, f t * ρ (x - t) := by
+      symm
+      calc ∫ t, f t * ρ (x - t) = ∫ t, (w x * ρ (x - t) - w t * ρ (x - t)) :=
+            integral_congr_ae (Eventually.of_forall fun t => by simp only [f]; ring)
+        _ = w x * (∫ t, ρ (x - t)) - ∫ t, w t * ρ (x - t) := by
+            rw [integral_sub (hρi.const_mul _) hwi, integral_const_mul]
+        _ = _ := by rw [hρ1, mul_one]
+    rw [e1]
+    refine (ENNReal.ofReal_le_ofReal (ρ.sq_integral_le x hfi hf2i)).trans ?_
+    rw [ofReal_integral_eq_lintegral_ofReal hf2i
+      (Eventually.of_forall fun t => mul_nonneg (sq_nonneg _) (ρ.nonneg _))]
+    rw [← lintegral_sub_left_eq_self (fun t => ENNReal.ofReal (f t ^ 2 * ρ (x - t))) x,
+      ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    refine lintegral_mono fun u => ?_
+    simp only [sub_sub_cancel]
+    by_cases hu : ρ u = 0
+    · rw [hu]; simp
+    · have hu' : ‖u‖ < ρ.radius := by
+        by_contra h; push Not at h; exact hu (ρ.eq_zero_of_le u h)
+      have hL1 := sq_sub_le_integral_grad hw x (x - u)
+      have hft : f (x - u) ^ 2 = (w (x - u) - w x) ^ 2 := by simp only [f]; ring
+      have hseg' : ∀ τ : ℝ, x + τ • (x - u - x) = x - τ • u := fun τ => by
+        rw [show x - u - x = -u by abel, smul_neg]; abel
+      simp only [hseg'] at hL1
+      have hGc' : Continuous fun τ : ℝ => ∑ j, (partialDeriv j w (x - τ • u)) ^ 2 := by
+        simp only [partialDeriv]; fun_prop
+      have hG0 : ∀ τ : ℝ, 0 ≤ ∑ j, (partialDeriv j w (x - τ • u)) ^ 2 := fun τ =>
+        Finset.sum_nonneg fun _ _ => sq_nonneg _
+      have hI0 : 0 ≤ ∫ τ in (0 : ℝ)..1, ∑ j, (partialDeriv j w (x - τ • u)) ^ 2 :=
+        intervalIntegral.integral_nonneg zero_le_one fun τ _ => hG0 τ
+      have hK : (w (x - u) - w x) ^ 2 ≤ K₀ *
+          ∫ τ in (0 : ℝ)..1, ∑ j, (partialDeriv j w (x - τ • u)) ^ 2 := by
+        refine hL1.trans (mul_le_mul_of_nonneg_right ?_ hI0)
+        rw [show x - u - x = -u by abel, norm_neg]
+        exact mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (norm_nonneg _) hu'.le 2)
+          (Nat.cast_nonneg _)
+      rw [ENNReal.ofReal_mul (sq_nonneg _), hft]
+      calc ENNReal.ofReal ((w (x - u) - w x) ^ 2) * ENNReal.ofReal (ρ u)
+          ≤ ENNReal.ofReal (K₀ *
+              ∫ τ in (0 : ℝ)..1, ∑ j, (partialDeriv j w (x - τ • u)) ^ 2) *
+              ENNReal.ofReal (ρ u) := by gcongr
+        _ = ENNReal.ofReal K₀ * ENNReal.ofReal
+              (∫ τ in (0 : ℝ)..1, ∑ j, (partialDeriv j w (x - τ • u)) ^ 2) *
+              ENNReal.ofReal (ρ u) := by
+            rw [ENNReal.ofReal_mul (by positivity)]
+        _ ≤ ENNReal.ofReal K₀ * (∫⁻ τ in Set.Icc (0 : ℝ) 1,
+              ENNReal.ofReal (∑ j, (partialDeriv j w (x - τ • u)) ^ 2)) *
+              ENNReal.ofReal (ρ u) := by
+            gcongr
+            exact ofReal_intervalIntegral_le_lintegral hGc' hG0
+        _ = _ := by rw [hρe, hΨ, hG]; ring
+  -- step 2: exchange the integrals
+  have h1 : ∫⁻ x in U, ENNReal.ofReal ((w x - ∫ t, w t * ρ (x - t)) ^ 2) ≤
+      ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u := setLIntegral_mono' hU fun x _ => hpt x
+  have h2 : ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u =
+      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * ∫⁻ x in U, Ψ x u := by
+    rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    congr 1
+    rw [lintegral_lintegral_swap ((hρm.comp measurable_snd).mul hΨm).aemeasurable]
+    refine lintegral_congr fun u => ?_
+    have hm : Measurable fun x => Ψ x u := hΨm.comp measurable_prodMk_right
+    exact lintegral_const_mul _ hm
+  -- step 3: the translations of each sample
+  set Y := ∫⁻ x in V, G x
+  have h3 : ∀ u, ρe u * ∫⁻ x in U, Ψ x u ≤ ρe u * Y := by
+    intro u
+    by_cases hu : ρ u = 0
+    · simp [hρe, hu]
+    have hu' : ‖u‖ ≤ ρ.radius := by
+      by_contra h; push Not at h; exact hu (ρ.eq_zero_of_le u h.le)
+    refine mul_le_mul' le_rfl ?_
+    have hswap : ∫⁻ x in U, Ψ x u = ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, G (x - τ • u) := by
+      rw [hΨ]
+      refine lintegral_lintegral_swap ?_
+      exact (hGc.comp (by fun_prop : Continuous fun q : (Fin n → ℝ) × ℝ =>
+        q.1 - q.2 • u)).measurable.aemeasurable
+    rw [hswap]
+    calc ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, G (x - τ • u)
+        ≤ ∫⁻ τ in Set.Icc (0 : ℝ) 1, Y := by
+          refine setLIntegral_mono' measurableSet_Icc fun τ hτ => ?_
+          calc ∫⁻ x in U, G (x - τ • u) = ∫⁻ x in U, V.indicator G (x - τ • u) := by
+                refine setLIntegral_congr_fun hU fun x hx => ?_
+                rw [Set.indicator_of_mem (hseg x hx u hu' τ hτ)]
+            _ ≤ ∫⁻ x, V.indicator G (x - τ • u) := setLIntegral_le_lintegral _ _
+            _ = ∫⁻ x, V.indicator G x := lintegral_sub_right_eq_self _ _
+            _ = Y := by rw [lintegral_indicator hV]
+      _ = Y := by rw [setLIntegral_const, Real.volume_Icc, sub_zero, ENNReal.ofReal_one, mul_one]
+  -- step 4: the mollifier has mass one
+  have hρ1 : ∫⁻ u, ρe u = 1 := by
+    rw [hρe, ← ofReal_integral_eq_lintegral_ofReal ρ.integrable
+      (Eventually.of_forall fun u => ρ.nonneg u), ρ.integral_eq_one, ENNReal.ofReal_one]
+  calc _ ≤ _ := h1
+    _ = _ := h2
+    _ ≤ ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Y := mul_le_mul' le_rfl (lintegral_mono fun u => h3 u)
+    _ = ENNReal.ofReal K₀ * Y := by rw [lintegral_mul_const _ hρm, hρ1, one_mul]
+    _ = _ := by simp only [Y, hG]
+
+/-- **The `H¹` estimate of the parity smoother for smooth symmetric functions**:
+`∫_Q |g - R g|² ≤ r² n 3ⁿ ∫_Q |∇g|²`. -/
+theorem integral_sq_sub_smoothFun_le_of_symm (ρ : ReflKernel n) {c : Fin n → ℝ}
+    (hc : IsParity c) {g : (Fin n → ℝ) → ℝ} (hg : ContDiff ℝ 1 g) (hgs : IsSymm c g) :
+    ∫ y in Q (Fin n), (g y - smoothFun ρ c g y) ^ 2 ≤
+      ρ.radius ^ 2 * n * 3 ^ n * ∫ y in Q (Fin n), ∑ j, (partialDeriv j g y) ^ 2 := by
+  have hU : MeasurableSet (bigCube n) :=
+    (isOpen_set_pi finite_univ fun _ _ => isOpen_Ioo).measurableSet
+  have hQc : IsCompact (closure (Q (Fin n))) := (isBounded_openCube _ _).isCompact_closure
+  have hgi : IntegrableOn g (Q (Fin n)) :=
+    (hg.continuous.continuousOn.integrableOn_compact hQc).mono_set subset_closure
+  have hd : Continuous fun y => ∑ j, (partialDeriv j g y) ^ 2 := by
+    have := hg.continuous_fderiv one_ne_zero
+    simp only [partialDeriv]; fun_prop
+  set G : (Fin n → ℝ) → ℝ := fun y => ∑ j, (partialDeriv j g y) ^ 2
+  have hGs : IsSymm (fun _ => 1) G := hgs.sq_grad hc (hg.differentiable one_ne_zero)
+  have hGi : IntegrableOn G (Q (Fin n)) :=
+    (hd.continuousOn.integrableOn_compact hQc).mono_set subset_closure
+  obtain ⟨hGU, hGUe⟩ := integral_bigCube_eq_of_symm hGs hGi
+  set F : (Fin n → ℝ) → ℝ := fun y => (g y - smoothFun ρ c g y) ^ 2
+  have hFc : Continuous F := (hg.continuous.sub (contDiff_smoothFun ρ c hgi).continuous).pow 2
+  have hFi : IntegrableOn F (Q (Fin n)) :=
+    (hFc.continuousOn.integrableOn_compact hQc).mono_set subset_closure
+  have hFe : ∀ y ∈ Q (Fin n), F y = (g y - ∫ t, g t * ρ (y - t)) ^ 2 := fun y hy => by
+    simp only [F]
+    rw [hgs.smoothFun_eq ρ (ae_eq_refl _) fun j => Ioo_subset_Icc_self (mem_Q.1 hy j)]
+  have hseg : ∀ x ∈ Q (Fin n), ∀ u : Fin n → ℝ, ‖u‖ ≤ ρ.radius → ∀ τ ∈ Icc (0 : ℝ) 1,
+      x - τ • u ∈ bigCube n := by
+    intro x hx u hu τ hτ
+    rw [mem_bigCube]
+    intro j
+    have hxj := mem_Q.1 hx j
+    have huj : |u j| ≤ ρ.radius := by
+      have := (norm_le_pi_norm u j).trans hu; rwa [Real.norm_eq_abs] at this
+    have hτu : |τ * u j| ≤ ρ.radius := by
+      rw [abs_mul, abs_of_nonneg hτ.1]
+      calc τ * |u j| ≤ 1 * |u j| := mul_le_mul_of_nonneg_right hτ.2 (abs_nonneg _)
+        _ ≤ ρ.radius := by rw [one_mul]; exact huj
+    rw [abs_le] at hτu
+    have := ρ.radius_lt
+    simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
+    constructor <;> linarith [hxj.1, hxj.2, hτu.1, hτu.2]
+  have hL := lintegral_sq_sub_conv_le ρ hg measurableSet_Q hU hseg
+  have h1 : ∫⁻ x in Q (Fin n), ENNReal.ofReal (F x) =
+      ∫⁻ x in Q (Fin n), ENNReal.ofReal ((g x - ∫ t, g t * ρ (x - t)) ^ 2) :=
+    setLIntegral_congr_fun measurableSet_Q fun x hx => by rw [hFe x hx]
+  rw [← h1, ← ofReal_integral_eq_lintegral_ofReal hFi
+      (Eventually.of_forall fun x => sq_nonneg _),
+    ← ofReal_integral_eq_lintegral_ofReal hGU
+      (Eventually.of_forall fun x => Finset.sum_nonneg fun _ _ => sq_nonneg _),
+    ← ENNReal.ofReal_mul (by positivity), hGUe] at hL
+  rw [ENNReal.ofReal_le_ofReal_iff (by positivity)] at hL
+  calc ∫ y in Q (Fin n), F y ≤ ρ.radius ^ 2 * n * (3 ^ n * ∫ z in Q (Fin n), G z) := hL
+    _ = _ := by ring
+
+/-! ### The `H¹` estimate on `D(d_J)`, by density -/
+
+/-- The `0`-form with coefficient `f`. -/
+def zeroForm {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) : L2F ℝ Ω (formIdx n ((0 : ℕ) : ℤ)) :=
+  WithLp.toLp 2 fun _ => f
+
+/-- The index of the `0`-forms. -/
+def idx₀ : formIdx n ((0 : ℕ) : ℤ) := ⟨∅, by simp⟩
+
+theorem zeroForm_apply {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) (s : formIdx n ((0 : ℕ) : ℤ)) :
+    zeroForm f s = f := rfl
+
+theorem eq_idx₀ (s : formIdx n ((0 : ℕ) : ℤ)) : s = idx₀ :=
+  Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast s.2))
+
+/-- `Σ_t ((dψ)_t)² = |∇ψ|²` for a `0`-form. -/
+theorem sum_sq_extDerivOp_zero (ψ : formIdx n ((0 : ℕ) : ℤ) → (Fin n → ℝ) → ℝ)
+    (y : Fin n → ℝ) :
+    ∑ t : formIdx n (((0 : ℕ) : ℤ) + 1), ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ t y) ^ 2 =
+      ∑ j, (partialDeriv j (ψ idx₀) y) ^ 2 := by
+  change ∑ t : formIdx n 1, ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ t y) ^ 2 = _
+  rw [← (Feec.Models.Cube.FEM.singletonEquiv n).sum_comp]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  change ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ ⟨{j}, by simp⟩ y) ^ 2 = _
+  rw [extDerivOp_apply, extD, Finset.sum_singleton, Finset.erase_singleton,
+    formExt_of_card _ (by simp)]
+  have hsg : (ExteriorFibre.sgn j ({j} : Finset (Fin n)) : ℝ) = 1 := by
+    simp [ExteriorFibre.sgn, Finset.filter_singleton]
+  rw [hsg, one_mul]
+  rfl
+
+section Approx
+
+open DeRhamIdent UnitAddTorus Feec.Fourier.TorusWeak MirrorExt
+open Feec.Fourier.Exterior (Form)
+
+/-- **Smooth symmetric approximants in `D(d_J)` for `0`-forms**: the real trigonometric
+polynomials of the Fourier truncations of the parity extension
+(`Feec.Models.Cube.DeRhamIdent.mem_dPart_of_JfJ`) are smooth, symmetric with the parities of the
+class, and converge in the graph norm of `d_J`. -/
+theorem exists_symm_approx (J' : Finset (Fin n))
+    (u : (dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ)).domain) {ε : ℝ} (hε : 0 < ε) :
+    ∃ ψ : formIdx n ((0 : ℕ) : ℤ) → (Fin n → ℝ) → ℝ, (∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) ∧
+      (∀ s, IsSymm (pvec J' ∅) (ψ s)) ∧
+      ∃ (hψ : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))))
+        (hdψ : ∀ t, MemLp ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ t) 2
+          (volume.restrict (Q (Fin n)))),
+        ‖(u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) - toL2F hψ‖ < ε ∧
+        ‖dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) u - toL2F hdψ‖ < ε := by
+  classical
+  set x := JfJ J' 0 (u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ)))
+  set y := JfJ J' 1 (dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) u)
+  have hx : RealParJ J' 0 x := JfJ_realParJ J' 0 _
+  have hxy : ∀ m, (Feec.Fourier.Exterior.deRham (Fin n)).m 0 (0 + 1)
+      (Feec.Fourier.Torus.freq m) ((x : (Fin n → ℤ) → Form ℂ (Fin n) 0) m) =
+        (y : (Fin n → ℤ) → Form ℂ (Fin n) (0 + 1)) m := coeff_d_dPart J' 0 u
+  have hc1 : Tendsto (fun N => Jinvf 0 (trunc N 0 x)) atTop
+      (𝓝 (u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ)))) := by
+    have := ((Jinvf (n := n) 0).continuous.tendsto _).comp (tendsto_trunc 0 x)
+    rwa [Jinvf_JfJ] at this
+  have hc2 : Tendsto (fun N => Jinvf 1 (trunc N 1 y)) atTop
+      (𝓝 (dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) u)) := by
+    have := ((Jinvf (n := n) 1).continuous.tendsto _).comp (tendsto_trunc 1 y)
+    rwa [Jinvf_JfJ] at this
+  rw [Metric.tendsto_atTop] at hc1 hc2
+  obtain ⟨N₁, hN₁⟩ := hc1 ε hε
+  obtain ⟨N₂, hN₂⟩ := hc2 ε hε
+  set N := max N₁ N₂
+  have h1 := hN₁ N (le_max_left _ _)
+  have h2 := hN₂ N (le_max_right _ _)
+  rw [dist_eq_norm, norm_sub_rev] at h1 h2
+  set ψ := trigLift 0 (trunc N 0 x) (bandS N)
+  have hxN := realParJ_trunc hx N
+  obtain ⟨M, L, hL0, hM, hL⟩ := trigLift_bounds 0 (trunc N 0 x) (bandS N)
+  have hcl := mem_dPart_of_smooth (J := J') (contDiff_trigLift 0 (trunc N 0 x) (bandS N))
+    hM hL0 hL (fun s j hjJ hj y hy => trigLift_eq_zero_of_faceJ hxN
+      (fun j m hm => flipAt_mem_bandS j hm) hjJ hj hy) (memLp_trigLift 0 _ _)
+      (memLp_d_trigLift 0 _ _)
+  have hJ0 : Jinvf 0 (trunc N 0 x) = toL2F (memLp_trigLift 0 (trunc N 0 x) (bandS N)) :=
+    Jinvf_eq_toL2F fun m hm => trunc_eq_zero_of_notMem x hm
+  rw [← hJ0] at hcl
+  obtain ⟨v, hv1, hv2⟩ := (LinearPMap.mem_graph_iff _).1 hcl
+  have hJ : JfJ J' 1 (dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) v) = trunc N 1 y := by
+    refine Lp.ext_count fun m => ?_
+    rw [← coeff_d_dPart J' 0 v m, ← symbol_trunc hxy N m,
+      show (v : L2F ℝ (Q (Fin n)) _) = Jinvf 0 (trunc N 0 x) from hv1, JfJ_Jinvf hxN]
+  have hd : toL2F (memLp_d_trigLift 0 (trunc N 0 x) (bandS N)) = Jinvf 1 (trunc N 1 y) := by
+    have hv2' : toL2F (memLp_d_trigLift 0 (trunc N 0 x) (bandS N)) =
+        dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) v := hv2.symm
+    rw [hv2', ← hJ, Jinvf_JfJ]
+  refine ⟨ψ, fun s => contDiff_trigLift 0 _ _ s, fun s => ?_, memLp_trigLift 0 _ _,
+    memLp_d_trigLift 0 _ _, by rw [← hJ0]; exact h1, by rw [hd]; exact h2⟩
+  -- the symmetry of the trigonometric polynomials
+  set f := mFourierBasis.repr (physF 0 (trunc N 0 x) s)
+  refine ⟨fun j z => ?_, fun z m => ?_⟩
+  · have hf : ∀ m, f (flipB (single j) m) = (pvec J' ∅ j : ℂ) * f m := fun m => by
+      have e : flipB (single j) m = DeRham.flipAt j m := flipAt_eq j m
+      simp only [f]
+      rw [e, repr_physF, repr_physF, hxN.2]
+      have hs : (idx 0 s).1 = ∅ := by
+        rw [idx_val, eq_idx₀ s]; rfl
+      simp only [DeRham.mixedSign, DeRham.reflSign, pvec, hs, Finset.notMem_empty, ↓reduceIte,
+        mul_one]
+      split_ifs <;> simp
+    have h := trigPoly_reflB (ε := single j) (S := bandS N)
+      (fun m hm => by rw [show flipB (single j) m = DeRham.flipAt j m from flipAt_eq j m];
+                      exact flipAt_mem_bandS j hm) hf (proj z)
+    have hz : proj (coordRefl j z) = reflB (single j) (proj z) := by
+      rw [← proj_reflR]
+      congr 1
+      funext i
+      simp [coordRefl_apply, single]
+    simp only [ψ, trigLift]
+    rw [hz, h, Complex.re_ofReal_mul]
+  · have hp : proj (z + fun j => (m j : ℝ)) = proj z := by
+      rw [proj_add]
+      have : proj (fun j => (m j : ℝ)) = 0 := by funext j; simp [proj]
+      rw [this, add_zero]
+    simp only [ψ, trigLift, hp]
+
+end Approx
+
+open Feec.Models.Cube.FEM (norm_sub_le_of_approx) in
+/-- **The `H¹` estimate of the parity smoother on `D(d_{J'})`** (`0`-forms, i.e. `H¹` with
+vanishing trace on the faces normal to `J'`, the functions whose parity extension `ext_{c(J', ∅)}`
+is `H¹`): `‖f - R f‖ ≤ r √(n 3ⁿ) ‖∇f‖` ([Brezis2011], §9.2; the factor `3^{n/2}` is
+`‖∇ ext f‖_{L²(U)} / ‖∇ f‖_{L²(Q)}`). -/
+theorem norm_sub_scalarSmooth_le_grad (ρ : ReflKernel n) (J' : Finset (Fin n))
+    (u : (DeRhamIdent.dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ)).domain) :
+    ‖(u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) idx₀ -
+      scalarSmooth ρ (pvec J' ∅) (isParity_pvec J' ∅)
+        ((u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) idx₀)‖ ≤
+      ρ.radius * √(n * 3 ^ n) * ‖DeRhamIdent.dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) u‖ := by
+  have hK : 0 ≤ ρ.radius * √(n * 3 ^ n) := mul_nonneg ρ.radius_pos.le (Real.sqrt_nonneg _)
+  refine norm_sub_le_of_approx _ hK _ fun ε hε => ?_
+  obtain ⟨ψ, hψs, hψsym, hψ, hdψ, h1, h2⟩ := exists_symm_approx J' u hε
+  refine ⟨(toL2F hψ) idx₀, ‖toL2F hdψ‖, ?_, ?_, ?_⟩
+  · refine lt_of_le_of_lt ?_ h1
+    exact PiLp.norm_apply_le ((u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) - toL2F hψ) idx₀
+  · have := norm_sub_le (DeRhamIdent.dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) u)
+      (DeRhamIdent.dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ) u - toL2F hdψ)
+    rw [sub_sub_cancel] at this
+    linarith
+  · set g := ψ idx₀
+    have hg1 : ContDiff ℝ 1 g := (hψs idx₀).of_le (by exact_mod_cast le_top)
+    have hcoe : (((toL2F hψ) idx₀ : L2 ℝ (Q (Fin n))) : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict
+        (Q (Fin n))] g := MemLp.coeFn_toLp (hψ idx₀)
+    have hsq1 : ‖(toL2F hψ) idx₀ - scalarSmooth ρ (pvec J' ∅) (isParity_pvec J' ∅)
+        ((toL2F hψ) idx₀)‖ ^ 2 = ∫ y in Q (Fin n), (g y - smoothFun ρ (pvec J' ∅) g y) ^ 2 := by
+      rw [Feec.FiniteElement.norm_sq_eq_integral_sq]
+      refine integral_congr_ae ?_
+      filter_upwards [Lp.coeFn_sub ((toL2F hψ) idx₀) (scalarSmooth ρ (pvec J' ∅)
+        (isParity_pvec J' ∅) ((toL2F hψ) idx₀)), hcoe,
+        coeFn_scalarSmooth ρ (pvec J' ∅) (isParity_pvec J' ∅) ((toL2F hψ) idx₀)] with y e1 e2 e3
+      rw [e1, Pi.sub_apply, e2, e3, smoothFun_congr_ae ρ _ hcoe]
+    have hsq2 : ‖toL2F hdψ‖ ^ 2 = ∫ y in Q (Fin n), ∑ j, (partialDeriv j g y) ^ 2 := by
+      rw [PiLp.norm_sq_eq_of_L2]
+      have e : ∀ t : formIdx n (((0 : ℕ) : ℤ) + 1), ‖(toL2F hdψ) t‖ ^ 2 =
+          ∫ y in Q (Fin n), ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ t y) ^ 2 := fun t => by
+        rw [Feec.FiniteElement.norm_sq_eq_integral_sq]
+        exact integral_congr_ae ((MemLp.coeFn_toLp (hdψ t)).mono fun y hy => by
+          change (((hdψ t).toLp _ : L2 ℝ (Q (Fin n))) : (Fin n → ℝ) → ℝ) y ^ 2 = _
+          rw [hy])
+      simp_rw [e]
+      rw [← integral_finsetSum _ fun t _ => (hdψ t).integrable_sq]
+      refine setIntegral_congr_fun measurableSet_Q fun y _ => ?_
+      exact sum_sq_extDerivOp_zero ψ y
+    have hmain := integral_sq_sub_smoothFun_le_of_symm ρ (isParity_pvec J' ∅) hg1 (hψsym idx₀)
+    rw [← hsq1, ← hsq2] at hmain
+    refine le_of_pow_le_pow_left₀ two_ne_zero (mul_nonneg hK (norm_nonneg _)) ?_
+    calc _ ≤ ρ.radius ^ 2 * n * 3 ^ n * ‖toL2F hdψ‖ ^ 2 := hmain
+      _ = _ := by rw [mul_pow, mul_pow, Real.sq_sqrt (by positivity)]; ring
+
+theorem pvec_symmDiff_empty (J s : Finset (Fin n)) : pvec (symmDiff J s) ∅ = pvec J s := by
+  funext j
+  by_cases hJ : j ∈ J <;> by_cases hs : j ∈ s <;> simp [pvec, Finset.mem_symmDiff, hJ, hs]
+
+open Feec.Models.Cube.FEM (L2F.norm_le_sum_norm) in
+/-- **The `H¹` estimate of the parity smoother on `k`-forms**: if every coefficient `yₛ` lies in
+`H¹` with vanishing trace on the faces normal to `J ∆ s` (equivalently, the parity extension
+`ext_J y` has `H¹` coefficients; for `j ∈ J` the tangential components `j ∉ s` vanish on the faces
+normal to `e_j`, for `j ∉ J` the normal components `j ∈ s`), then
+`‖y - R y‖ ≤ r √(n 3ⁿ) Σₛ ‖∇ yₛ‖`. -/
+theorem norm_sub_paritySmooth_le_grad (ρ : ReflKernel n) (J : Finset (Fin n)) {k : ℤ}
+    (y : L2F ℝ (Q (Fin n)) (formIdx n k))
+    (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
+      (DeRhamIdent.dPart (Q (Fin n)) (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain) :
+    ‖y - paritySmooth ρ J k y‖ ≤ ρ.radius * √(n * 3 ^ n) *
+      ∑ s : formIdx n k,
+        ‖DeRhamIdent.dPart (Q (Fin n)) (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖ := by
+  refine (L2F.norm_le_sum_norm _).trans ?_
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun s _ => ?_
+  have h := norm_sub_scalarSmooth_le_grad ρ (symmDiff J s.1) ⟨zeroForm (y s), hy s⟩
+  have e : (y - paritySmooth ρ J k y) s =
+      (zeroForm (y s) : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) idx₀ -
+        scalarSmooth ρ (pvec (symmDiff J s.1) ∅) (isParity_pvec _ ∅)
+          ((zeroForm (y s) : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) idx₀) := by
+    rw [PiLp.sub_apply, paritySmooth_apply, zeroForm_apply,
+      scalarSmooth_congr ρ (isParity_pvec J s.1) (isParity_pvec _ ∅)
+        (pvec_symmDiff_empty J s.1).symm]
+  rw [e]
+  exact h
+
+/-- **Forms of `H̊Λ(Q)` with vanishing tangential traces only** (the class `J = univ`, which the
+zero-extension smoother cannot handle: it needs all components to vanish on `∂Q`): if every
+coefficient `yₛ` is `H¹` with vanishing trace on the faces normal to the directions `j ∉ s` (the
+faces to which `dxₛ` is tangential; no condition on the normal components), then `R y` lies in
+`H̊Λᵏ(Q) = D(d_min)` and `‖y - R y‖ ≤ r √(n 3ⁿ) Σₛ ‖∇ yₛ‖`. -/
+theorem paritySmooth_univ_mem_minimal_and_norm_sub_le (ρ : ReflKernel n) {k : ℤ}
+    (y : L2F ℝ (Q (Fin n)) (formIdx n k))
+    (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
+      (DeRhamIdent.dPart (Q (Fin n)) (Finset.univ \ s.1) ((0 : ℕ) : ℤ)).domain) :
+    paritySmooth ρ Finset.univ k y ∈ ((extDerivOp ℝ n k).minimal (Q (Fin n))).domain ∧
+      ‖y - paritySmooth ρ Finset.univ k y‖ ≤ ρ.radius * √(n * 3 ^ n) *
+        ∑ s : formIdx n k,
+          ‖DeRhamIdent.dPart (Q (Fin n)) (Finset.univ \ s.1) ((0 : ℕ) : ℤ) ⟨zeroForm (y s), hy s⟩‖ := by
+  have hsd : ∀ s : Finset (Fin n), symmDiff (Finset.univ : Finset (Fin n)) s = Finset.univ \ s :=
+    fun s => by ext j; simp [Finset.mem_symmDiff]
+  refine ⟨?_, ?_⟩
+  · have h := paritySmooth_mem_dPart ρ Finset.univ k y
+    rwa [DeRhamIdent.dPart_univ] at h
+  · have hy' : ∀ s : formIdx n k, zeroForm (y s) ∈
+        (DeRhamIdent.dPart (Q (Fin n)) (symmDiff Finset.univ s.1) ((0 : ℕ) : ℤ)).domain :=
+      fun s => by rw [hsd]; exact hy s
+    have h := norm_sub_paritySmooth_le_grad ρ Finset.univ y hy'
+    refine h.trans (le_of_eq ?_)
+    congr 1
+    refine Finset.sum_congr rfl fun s _ => ?_
+    have key : ∀ (J₁ J₂ : Finset (Fin n)) (hJ : J₁ = J₂) (h₁ : zeroForm (y s) ∈
+        (DeRhamIdent.dPart (Q (Fin n)) J₁ ((0 : ℕ) : ℤ)).domain)
+        (h₂ : zeroForm (y s) ∈ (DeRhamIdent.dPart (Q (Fin n)) J₂ ((0 : ℕ) : ℤ)).domain),
+        ‖DeRhamIdent.dPart (Q (Fin n)) J₁ ((0 : ℕ) : ℤ) ⟨zeroForm (y s), h₁⟩‖ =
+          ‖DeRhamIdent.dPart (Q (Fin n)) J₂ ((0 : ℕ) : ℤ) ⟨zeroForm (y s), h₂⟩‖ := by
+      rintro J₁ J₂ rfl h₁ h₂; rfl
+    exact key _ _ (hsd s.1) _ _
 
 end Feec.Models.Cube.ParitySmoother

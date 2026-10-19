@@ -9,7 +9,7 @@ public import Feec.Models.Cube.MirrorWeakSymmetryFEM
 
 The scheme (6.5) of [QuennevilleBelair2015], §6.3, on the cube `Q = (0, ½)³` with the mirror
 boundary conditions (`Feec.Models.Cube.MirrorWeakSymmetryFEM`: top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²`
-without boundary condition, bottom component `a` in `P₂Λ⁰ → P₂⁻Λ¹ → P₂⁻Λ²` with vanishing degrees
+without boundary condition, bottom component `a` in `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ²` with vanishing degrees
 of freedom on the faces normal to `eₐ`) converges to the solution of the continuous problem (6.2)
 for the mirror data `mirrorBGGSegment` of `Feec.Models.Cube.MirrorWeakSymmetryComplex`.
 
@@ -21,7 +21,10 @@ fails, but neither matters (the shifted form has a mass term on the top row, and
 `S¹𝔥 = 0`).
 
 **The discretization** `mirrorFEM` (a `Feec.BGG.Discrete`) uses the parity-smoothed projections of a
-single family of reflection kernels for the four complexes (`exists_mirror_estimates`): (5.4)
+single family of reflection kernels for the four complexes (`exists_mirror_estimates`), and couples
+the rows by `S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹` (the convention of `Feec.Models.Cube.WeakSymmetryWave`;
+the canonical coupling `S_h = Π¹S⁰` of `Feec.Models.Cube.MirrorWeakSymmetryFEM.mirrorSegment`
+is a different scheme, not analysed here): (5.4)
 (`mirrorFEM_compatible`, the parity smoother intertwines `S⁰` on the compatible classes),
 uniform bounds (`mirrorFEM_bounded`), Prop 5.9(1) for `π¹` (`mirrorFEM_happ0`), regular
 potentials of the bottom row with no regularity hypothesis (`mirrorFEMReg`, from the coexact
@@ -29,7 +32,9 @@ potentials of `Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`), `S₀,�
 (`mirrorWave_S0_surjective`) and `grad` injective on the bottom row (`mirrorWave_dt0_injective`).
 
 **Rates.** For classical solutions whose states and time derivatives are `C²` up to `∂Q` with the
-mirror tangential conditions (`IsSmoothStateMirror`; no flatness at `∂Q`), the error is
+mirror tangential conditions and whose multiplier `M` lies in `D(curl*)` on `HΛ¹(Q)` (vanishing
+normal trace; automatic for TSD data, `M ≡ 0`) (`IsSmoothStateMirror`; no flatness at `∂Q`), the
+error is
 `≤ K L (1 + t) h_N` (`mirrorWave_rate`), with a stationary non-vacuity witness
 (`mirrorStationary`, `mirrorStationary_hyps`). For TSD-type solutions (`σ ≡ 0`, `M ≡ 0`), `σₕ` and
 `Mₕ` are `O(h)` and every bounded linear constraint of `B = ρ` (its symmetry) holds for `ρₕ` up to
@@ -42,10 +47,10 @@ parity-smoothed projections converge strongly (`tendsto_norm_sub_proj`, by densi
 finite element spaces), hence uniformly on the compact trajectories (`eventually_mirrorClose`), and
 the consistency constant `K₁` tends to `0` by density of `D(d_max*)` (`eventually_mirrorFEM_K1`).
 
-**Not done here.** The identification of `ExactWave mirrorBGGSegment` with the Hodge wave solution
-of `Feec.Models.Cube.MirrorBGG.existsUnique_memQ` (complex scalars, matrix fields, and the first
-order system in `(σ, u, (M, B))` versus the multiplier system (6.2)). The theorems above are stated
-for every classical solution of (6.2) for the mirror data.
+**The TSD solution.** The theorems above are stated for every classical solution of (6.2) for the
+mirror data. `Feec.Models.Cube.MirrorWeakSymmetryTSD` identifies the real part of the Hodge wave
+solution of `Feec.Models.Cube.MirrorBGG.existsUnique_memQ` (data in `D(L²)`) with such a solution
+and proves that the scheme converges to it (`mirror_waveFEM`).
 
 ## Main definitions
 

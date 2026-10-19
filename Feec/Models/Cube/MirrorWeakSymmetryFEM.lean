@@ -83,10 +83,14 @@ complexes `HΛ_J(Q)` of `Feec.Models.Cube.DeRhamPartialIdent` and the parity-smo
 curl potential (Prop 5.3) with `C_R = 1`; and a `Feec.BGG.Discrete` instance `mirrorFEM` with (5.4),
 Prop 5.9(1) and regular potentials. The resulting theorems are an `O(h)` rate for `C²` states up to
 `∂Q` with the mirror tangential conditions (`mirrorWave_rate`, `mirrorWave_rate_tsd`) and
-convergence without rate for energy-class solutions (`mirrorWave_converges`). Still open: the
-identification of these classical solutions of (6.2) with the Hodge wave solution of
-`MirrorBGG.existsUnique_memQ`, which differs in complex scalars, matrix proxies and the first-order
-system.
+convergence without rate for energy-class solutions (`mirrorWave_converges`). The identification
+with the Hodge wave solution of `MirrorBGG.existsUnique_memQ` is
+`Feec.Models.Cube.MirrorWeakSymmetryTSD`: for TSD data in `D(L²)` the real part of the solution is
+a classical solution of (6.2) (rows of `E`, `B` as forms, compared through Fourier coefficients of
+the two parity models), and the scheme converges to it with `σₕ, Mₕ → 0` and `Bₕ` asymptotically
+symmetric (`mirror_waveFEM`; `O(h)` under `C²` regularity, `mirror_waveFEM_rate`). The analysed
+scheme couples the rows by the parity-smoothed `S₀,ₕ = π¹S⁰`, not by the canonical `S_h = Π¹S⁰` of
+`mirrorSegment` above, and its spaces are `polyPartial`, not identified with the spaces here.
 
 ## References
 

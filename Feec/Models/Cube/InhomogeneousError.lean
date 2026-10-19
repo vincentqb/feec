@@ -34,8 +34,8 @@ when the solution is TSD, and `V̊ₕ ≠ 0`.
   `inner_of_mem_graph_waveMax`, three rows: `dEmb3`, `discreteD3`, `inner3_of_mem_graph_waveMax`):
   a strong solution of `U' = L_max U = 𝐝 U − 𝐝_min† U` solves the weak form, since
   `⟪𝐝_min† U, v⟫ = ⟪U, 𝐝_min v⟫` on `V̊ₕ ⊆ D(𝐝_min)`.
-* **The linear canonical interpolant** (`FEMInterp.exists_linearMap_whitney_le`): the glued Whitney
-  interpolant as a linear map with the `O(h)` estimates of `FEM.exists_mem_whitney_le`; linearity
+* **The linear canonical interpolant** (`FEMInterp.canonicalInterp`, `canonicalInterp_le`): the
+  glued Whitney interpolant `glue ∘ globalInterp` as a linear map with the `O(h)` estimates of `FEM.exists_mem_whitney_le`; linearity
   gives the estimate for time differences.
 * **Smooth forms** (`formalAdjD`, `complex_d_formL2Q`, `adjoint_complexMin_d_formL2Q`): on `Q`,
   `d` of a smooth form is the classical one, and the adjoint of `d_min` is the formal adjoint
@@ -655,35 +655,69 @@ open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.ExteriorF
 
 variable {n : ℕ} [NeZero n]
 
-/-- **The canonical Whitney interpolant is a linear map with the `O(h)` estimates**
-([Arnold2018], Ch. 7): in every degree `j` there is a linear map `Π : C⁰Λ → Vₕʲ` (the glued
-canonical interpolant of the level-`(N + 1)` Freudenthal mesh of `Q = (0, ½)ⁿ`) such that for a
-`C²` form `w` of degree `j` with `‖Dw‖, ‖D dw‖ ≤ L` on `cl Q`,
-`‖w − Π w‖ ≤ B_j L h_N` and `‖d (w − Π w)‖ ≤ B_j L h_N` (`B_j = interpBound n j`). The
-existential `exists_mem_whitney_le` hides the linearity, which the Crank–Nicolson consistency
-argument needs for time differences. -/
-theorem exists_linearMap_whitney_le (N : ℕ) (j : ℤ) :
-    ∃ P : contForms n →ₗ[ℝ] L2F ℝ (cubeDomain n) (formIdx n j),
-      ∃ hP : ∀ w, P w ∈ (whitney n N).V j,
+/-- A linear map into `L²(Θ)`, as a linear map into `L²(Θ')` for `Θ = Θ'`. -/
+def linearMapOfEq {Θ Θ' : Set (Fin n → ℝ)} (h : Θ = Θ') {j : ℤ}
+    (f : contForms n →ₗ[ℝ] L2F ℝ Θ (formIdx n j)) :
+    contForms n →ₗ[ℝ] L2F ℝ Θ' (formIdx n j) := by
+  subst h; exact f
+
+omit [NeZero n] in
+/-- Any property of a subcomplex together with a linear map is transported by
+`maximalSubcomplexOfEq` and `linearMapOfEq`. -/
+theorem linearMapOfEq_induction {Θ Θ' : Set (Fin n → ℝ)} (h : Θ = Θ') (hΘ : IsOpen Θ)
+    (hΘ' : IsOpen Θ') (S : ((deRham ℝ n).maximalComplex hΘ).Subcomplex) {j : ℤ}
+    (f : contForms n →ₗ[ℝ] L2F ℝ Θ (formIdx n j))
+    (P : ∀ Ω : Set (Fin n → ℝ), ∀ hΩ : IsOpen Ω, ((deRham ℝ n).maximalComplex hΩ).Subcomplex →
+      (contForms n →ₗ[ℝ] L2F ℝ Ω (formIdx n j)) → Prop)
+    (hP : P Θ hΘ S f) :
+    P Θ' hΘ' ((deRham ℝ n).maximalSubcomplexOfEq h hΘ hΘ' S) (linearMapOfEq h f) := by
+  subst h; exact hP
+
+/-- **The canonical Whitney interpolant** `Π_h : C⁰Λʲ → Vₕʲ` of the level-`(N + 1)` Freudenthal
+mesh of `Q = (0, ½)ⁿ` ([Arnold2018], Ch. 7): the glued global interpolant
+`glue ∘ globalInterp` (the degrees of freedom `∫_f w` on the `j`-faces `f`), as a linear map into
+`L²Λʲ(Q)` (transported along `mesh_domain`). -/
+def canonicalInterp (N : ℕ) (j : ℤ) : contForms n →ₗ[ℝ] L2F ℝ (cubeDomain n) (formIdx n j) :=
+  linearMapOfEq (mesh_domain n N)
+    ((whitneyElement n).glue (mesh n N) j ∘ₗ
+      ((whitneyElement n).globalSpace (mesh n N) j.toNat).subtype ∘ₗ
+        (whitneyElement n).globalInterp (mesh n N) j.toNat)
+
+theorem canonicalInterp_mem (N : ℕ) (j : ℤ) (w : contForms n) :
+    canonicalInterp N j w ∈ (whitney n N).V j :=
+  linearMapOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N) (isOpen_cubeDomain n)
+    (whitneySubcomplex (mesh n N) (isOpen_mesh_domain n N)) _
+    (fun _ _ S f => ∀ w, f w ∈ S.V j)
+    (fun w => ⟨(whitneyElement n).globalInterp (mesh n N) j.toNat w, rfl⟩) w
+
+/-- **The `O(h)` estimates of the canonical Whitney interpolant** ([Arnold2018], Ch. 7): for a
+`C²` form `w` of degree `j` with `‖Dw‖, ‖D dw‖ ≤ L` on `cl Q`, `‖w − Π_h w‖ ≤ B_j L h_N` and
+`‖d (w − Π_h w)‖ ≤ B_j L h_N` (`B_j = interpBound n j`). Unlike the existential
+`exists_mem_whitney_le`, `Π_h` is the linear map `canonicalInterp`, which the Crank–Nicolson
+consistency argument needs for time differences. -/
+theorem canonicalInterp_le (N : ℕ) (j : ℤ) :
       ∀ k : ℕ, (k : ℤ) = j → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w), (∀ y, IsDeg k (w y)) →
         ∀ {L : ℝ}, 0 ≤ L → (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
         (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) →
         ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
-            ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩‖ ≤ interpBound n j * L * meshSize N ∧
+            ⟨w, hw.continuous⟩ - canonicalInterp N j ⟨w, hw.continuous⟩‖ ≤
+            interpBound n j * L * meshSize N ∧
         ∀ j' (hx : formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
             ⟨w, hw.continuous⟩ ∈ ((complex n).d j j').domain),
-          ‖(complex n).d j j' ⟨_ - P ⟨w, hw.continuous⟩,
-            Submodule.sub_mem _ hx ((whitney n N).le_domain j j' (hP _))⟩‖ ≤
+          ‖(complex n).d j j' ⟨_ - canonicalInterp N j ⟨w, hw.continuous⟩,
+            Submodule.sub_mem _ hx ((whitney n N).le_domain j j' (canonicalInterp_mem N j _))⟩‖ ≤
             interpBound n j * L * meshSize N := by
   rcases lt_or_ge j 0 with hj | hj
-  · refine ⟨0, fun _ => Submodule.zero_mem _, fun k hk => ?_⟩
+  · intro k hk
     omega
   obtain ⟨k, rfl⟩ := Int.eq_ofNat_of_zero_le hj
-  refine (deRham ℝ n).maximalSubcomplexOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
+  refine linearMapOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
     (isOpen_cubeDomain n) (whitneySubcomplex (mesh n N) (isOpen_mesh_domain n N))
-    (fun Θ hΘ S => ∀ hb : Bornology.IsBounded Θ,
-      ∀ hvol : volume.real Θ = volume.real (cubeDomain n),
-      ∃ P : contForms n →ₗ[ℝ] L2F ℝ Θ (formIdx n k), ∃ hP : ∀ w, P w ∈ S.V k,
+    ((whitneyElement n).glue (mesh n N) k ∘ₗ
+      ((whitneyElement n).globalSpace (mesh n N) (k : ℤ).toNat).subtype ∘ₗ
+        (whitneyElement n).globalInterp (mesh n N) (k : ℤ).toNat)
+    (fun Θ hΘ S P => ∀ hb : Bornology.IsBounded Θ,
+      ∀ hvol : volume.real Θ = volume.real (cubeDomain n), ∀ hP : ∀ w, P w ∈ S.V k,
       ∀ k' : ℕ, (k' : ℤ) = k → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w),
         (∀ y, IsDeg k' (w y)) → ∀ {L : ℝ}, 0 ≤ L →
         (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
@@ -696,14 +730,12 @@ theorem exists_linearMap_whitney_le (N : ℕ) (j : ℤ) :
             ⟨(formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩ :
               L2F ℝ Θ (formIdx n k)), Submodule.sub_mem _ hx (S.le_domain k j' (hP _))⟩‖ ≤
             interpBound n k * L * meshSize N) ?_ (isBounded_cubeDomain n) rfl
-  intro hb hvol
+    (canonicalInterp_mem N k)
+  intro hb hvol _ k' hk' w hw hdeg L hL0 hL hL'
   set M := mesh n N
   have hΩo := isOpen_mesh_domain n N
   have hcl : closure M.domain = closure (cubeDomain n) := by rw [mesh_domain]
   have hshape := fun T hT => mesh_shape n N (T := T) hT
-  refine ⟨(whitneyElement n).glue M k ∘ₗ ((whitneyElement n).globalSpace M k).subtype ∘ₗ
-      (whitneyElement n).globalInterp M k, fun w => ⟨(whitneyElement n).globalInterp M k w, rfl⟩,
-    fun k' hk' w hw hdeg L hL0 hL hL' => ?_⟩
   have hk : k' = k := by exact_mod_cast hk'
   subst hk
   have hw1 : ContDiff ℝ 1 w := hw.of_le (by norm_num)
@@ -753,6 +785,23 @@ theorem exists_linearMap_whitney_le (N : ℕ) (j : ℤ) :
     exact h'.trans (by rw [e]; linarith)
   · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj'), norm_zero]
     exact mul_nonneg (mul_nonneg (interpBound_nonneg n _) hL0) hh
+
+/-- **The canonical Whitney interpolant is a linear map with the `O(h)` estimates**
+(`canonicalInterp`, `canonicalInterp_le`). -/
+theorem exists_linearMap_whitney_le (N : ℕ) (j : ℤ) :
+    ∃ P : contForms n →ₗ[ℝ] L2F ℝ (cubeDomain n) (formIdx n j),
+      ∃ hP : ∀ w, P w ∈ (whitney n N).V j,
+      ∀ k : ℕ, (k : ℤ) = j → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w), (∀ y, IsDeg k (w y)) →
+        ∀ {L : ℝ}, 0 ≤ L → (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
+        (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) →
+        ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
+            ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩‖ ≤ interpBound n j * L * meshSize N ∧
+        ∀ j' (hx : formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
+            ⟨w, hw.continuous⟩ ∈ ((complex n).d j j').domain),
+          ‖(complex n).d j j' ⟨_ - P ⟨w, hw.continuous⟩,
+            Submodule.sub_mem _ hx ((whitney n N).le_domain j j' (hP _))⟩‖ ≤
+            interpBound n j * L * meshSize N :=
+  ⟨canonicalInterp N j, canonicalInterp_mem N j, canonicalInterp_le N j⟩
 
 end FEMInterp
 
@@ -1089,15 +1138,19 @@ theorem norm_piLp_le_sum {κ : Type*} [Fintype κ] {β : κ → Type*}
   rw [PiLp.norm_sq_eq_of_L2]
   exact Finset.sum_sq_le_sq_sum_of_nonneg fun i _ => norm_nonneg _
 
-/-- The canonical Whitney interpolant into `Vₕ^{0 + i}`
-(`FEMInterp.exists_linearMap_whitney_le`). -/
+/-- The canonical Whitney interpolant into `Vₕ^{0 + i}` (`FEMInterp.canonicalInterp`: the
+glued interpolant `glue ∘ globalInterp` of the Freudenthal mesh, whose boundary DOFs are the
+integrals of the interpolated form over the boundary faces). -/
 def rowInterp (N : ℕ) (i : Fin 3) :
     contForms 3 →ₗ[ℝ] L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) :=
-  (FEMInterp.exists_linearMap_whitney_le (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))).choose
+  FEMInterp.canonicalInterp (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))
+
+theorem rowInterp_eq_canonicalInterp (N : ℕ) (i : Fin 3) :
+    rowInterp N i = FEMInterp.canonicalInterp (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ)) := rfl
 
 theorem rowInterp_mem (N : ℕ) (i : Fin 3) (w : contForms 3) :
     rowInterp N i w ∈ (whitneyRow N).V i :=
-  (FEMInterp.exists_linearMap_whitney_le (n := 3) N _).choose_spec.choose w
+  FEMInterp.canonicalInterp_mem N _ w
 
 /-- The row interpolant `Π_h (σ, E, B)`, a linear map into the Whitney row. -/
 def rowInterpL (N : ℕ) : (Fin 3 → contForms 3) →ₗ[ℝ] DState (whitneyRow N) where
@@ -1136,8 +1189,7 @@ theorem rowInterp_bounds (N : ℕ) {g : Fin 3 → FormField 3} (hg : ∀ i, Cont
   set x := dEmb (whitneyRow N) (rowInterpL N fun i => ⟨g i, (hg i).continuous⟩) -
     rowFieldL (fun i => ⟨g i, (hg i).continuous⟩)
   have spec := fun i : Fin 3 =>
-    (FEMInterp.exists_linearMap_whitney_le (n := 3) N
-      ((0 : ℤ) + ((i : ℕ) : ℤ))).choose_spec.choose_spec
+    FEMInterp.canonicalInterp_le (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))
       (i : ℕ) (degIdx i) (hg i) (hdeg i) hL0 (fun y hy => (hb i y hy).1) (fun y hy => (hb i y hy).2)
   have hxi : ∀ i, x i =
       -(formL2Q _ (g i) (hg i).continuous - rowInterp N i ⟨g i, (hg i).continuous⟩) :=

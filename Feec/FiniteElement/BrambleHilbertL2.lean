@@ -63,7 +63,14 @@ derivative. The averaged Taylor polynomial is the construction of Sobolev used b
 * **Non-vacuity** (`lintegral_sub_avgTaylorPoly_sq_nonvacuous`,
   `lintegral_sub_lagrangeP1_sq_nonvacuous`): for the monomial `x₀^{k+1}` both sides of the
   Bramble–Hilbert estimate are nonzero, and in dimensions `1 ≤ n ≤ 3` so are both sides of the
-  reference interpolation estimate for `P₁` Lagrange interpolation and `x₀²`.
+  reference interpolation estimate for `P₁` Lagrange interpolation and `x₀²`. On every
+  `T = t + h K`, the `0`-form `x₀^{r+1}` (`coordPowForm`) gives positive values to both sides of
+  the `P_rΛ⁰` and `P_r⁻Λ⁰` form estimates (`formL2Sq_sub_polyInterp_le_L2_nonvacuous`,
+  `formL2Sq_sub_polyMinusInterp_le_L2_nonvacuous`).
+
+**Norms.** Every norm on `Fin n → ℝ` is Mathlib's sup norm: `d` bounds the sup-norm diameter,
+`|B₁| = 2ⁿ` is the volume of the sup-norm unit ball, and `‖D^m f‖` is the operator norm for the
+sup norm. Other norms change only the constants.
 
 **The restriction `2(s + 1) > n`.** The Bramble–Hilbert part (`lintegral_sub_avgTaylorPoly_sq_le`
 and its derivative versions) holds for every order `≥ 1` in every dimension. The interpolation
@@ -935,7 +942,8 @@ theorem lintegral_sub_avgTaylorPoly_sq_le [CompleteSpace G] (hn : 0 < n) {K U : 
         rw [this]
         ring
 
-/-- **Sobolev embedding** `H^{k+1}(K) ⊂ C(K)` for `2(k + 1) > n`, in the Bramble–Hilbert form:
+/-- **Sobolev embedding** `H^{k+1}(K) ⊂ C(K)` for `2(k + 1) > n`, in a-priori form for
+`C^{k+1}` functions (no Sobolev space is constructed) and in the Bramble–Hilbert form:
 `sup_K ‖f - Q_{k+1} f‖ ≤ dⁿ/(n k! |K|) · C₂^{1/2} (∫_K ‖D^{k+1} f‖²)^{1/2}` with
 `C₂ = n |B₁| d^{2(k+1) - n} / (2(k+1) - n)` the bound of `∫_K ‖x - z‖^{2(k+1-n)} dz`
 (Cauchy–Schwarz on the Riesz potential; [Evans2010], §5.6). -/
@@ -1672,5 +1680,128 @@ theorem lintegral_sub_lagrangeP1_sq_nonvacuous (hn : 0 < n) (hn3 : n ≤ 3) :
       (iteratedFDeriv_coord_pow_ne_zero _ 2 _)
 
 end NonVacuity
+
+/-! ### Non-vacuity of the form estimates on `T = t + h K` -/
+
+section FormNonVacuity
+
+open Feec.Mesh ExteriorFibre
+
+variable {r : ℕ}
+
+/-- The `0`-form `x ↦ x₀^m` (the coefficient of `∅`). -/
+def coordPowForm (hn : 0 < n) (m : ℕ) : FormField n :=
+  fun x s => if s = ∅ then x ⟨0, hn⟩ ^ m else 0
+
+theorem contDiff_coordPowForm (hn : 0 < n) (m : ℕ) {N : WithTop ℕ∞} :
+    ContDiff ℝ N (coordPowForm hn m) := by
+  refine contDiff_pi.2 fun s => ?_
+  by_cases hs : s = ∅
+  · simp only [coordPowForm, hs, ↓reduceIte]; fun_prop
+  · simp only [coordPowForm, hs, ↓reduceIte]; exact contDiff_const
+
+theorem continuous_coordPowForm (hn : 0 < n) (m : ℕ) : Continuous (coordPowForm hn m) :=
+  (contDiff_coordPowForm hn m (N := 0)).continuous
+
+theorem isDeg_coordPowForm (hn : 0 < n) (m : ℕ) (x : Fin n → ℝ) :
+    IsDeg 0 (coordPowForm hn m x) := fun s hs => by
+  simp [coordPowForm, (Finset.card_ne_zero.1 hs).ne_empty]
+
+/-- A form field one of whose components has `∫_S |u_{s₀}|² ≠ 0` (and is continuous on the
+compact `S`) has `‖u‖²_{L²(S)} > 0`. -/
+theorem formL2Sq_pos_of_component {S : Set (Fin n → ℝ)} (hS : IsCompact S) {u : FormField n}
+    (s₀ : Finset (Fin n)) (hu : ContinuousOn (fun x => u x s₀) S)
+    (h0 : ∫⁻ x in S, ‖u x s₀‖ₑ ^ 2 ≠ 0) : 0 < formL2Sq S u := by
+  have hpos : 0 < ∫ x in S, (u x s₀) ^ 2 := by
+    have he : ∫ x in S, (u x s₀) ^ 2 = ∫ x in S, ‖u x s₀‖ ^ 2 := by
+      simp_rw [Real.norm_eq_abs, sq_abs]
+    rw [he, integral_norm_sq_eq_toReal_lintegral hS.isClosed.measurableSet hu]
+    exact ENNReal.toReal_pos h0 (setLIntegral_enorm_sq_lt_top hS hu).ne
+  exact hpos.trans_le (Finset.single_le_sum (f := fun s => ∫ x in S, (u x s) ^ 2)
+    (fun s _ => integral_nonneg fun x => sq_nonneg _) (Finset.mem_univ s₀))
+
+/-- If the `∅`-component of a form field `P` is a polynomial of degree `≤ r`, then
+`‖x₀^{r+1} - P‖²_{L²(T)} > 0` on every `n`-simplex `T`. -/
+theorem formL2Sq_coordPowForm_sub_pos (hn : 0 < n) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+    {P : FormField n} (hP : (fun x => P x ∅) ∈ polyFunctions n r ℝ) :
+    0 < formL2Sq T.closedInterior (coordPowForm hn (r + 1) - P) := by
+  obtain ⟨x₀, hx₀⟩ := interior_closedInterior_nonempty T
+  have hf : ContDiffOn ℝ (r + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (r + 1)) univ :=
+    (by fun_prop : ContDiff ℝ (r + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (r + 1))).contDiffOn
+  have hne := lintegral_sub_sq_ne_zero_of_iteratedFDeriv_ne_zero isOpen_univ (subset_univ _) hf
+    hP hx₀ (iteratedFDeriv_coord_pow_ne_zero _ _ _)
+  refine formL2Sq_pos_of_component T.isCompact_closedInterior ∅ ?_ ?_
+  · simp only [Pi.sub_apply, coordPowForm, ↓reduceIte]
+    exact ((continuous_apply _).pow _).continuousOn.sub
+      (contDiff_of_mem_polyFunctions hP (N := 0)).continuous.continuousOn
+  · simpa only [Pi.sub_apply, coordPowForm, ↓reduceIte] using hne
+
+/-- The `∅`-component of a field of `P_rΛᵏ` is a polynomial of degree `≤ r`. -/
+theorem component_mem_polyFunctions_of_mem_polySpace {k : ℕ} {P : FormField n}
+    (hP : P ∈ polySpace n r k) (s : Finset (Fin n)) :
+    (fun x => P x s) ∈ polyFunctions n r ℝ := by
+  obtain ⟨Ω, hΩ, rfl⟩ := hP
+  exact Submodule.subset_span ⟨Ω s, hΩ.2 s, 1, by funext x; simp [evalForm_apply]⟩
+
+/-- **Non-vacuity of `exists_formL2Sq_sub_polyInterp_le_L2`**: for the `0`-form
+`w(x) = x₀^{r+1}` on any `T = t + h K`, both sides of the estimate are positive (for every
+admissible `s`; the right side by the estimate itself). -/
+theorem formL2Sq_sub_polyInterp_le_L2_nonvacuous (K : Affine.Simplex ℝ (Fin n → ℝ) n)
+    (hn : 0 < n) (hr : 1 ≤ r) {s : ℕ} (hs : s ≤ r) (hns : n < 2 * (s + 1)) {h : ℝ}
+    (hh : 0 < h) (t : Fin n → ℝ) :
+    0 < formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
+        (coordPowForm hn (r + 1) - (polyInterp (isUnit_det_edgeMatrix
+          (mapEquiv (boxMap t h hh.ne') K)) hr (Nat.zero_le n) ⟨coordPowForm hn (r + 1),
+            mem_contDegForms (continuous_coordPowForm hn _) (isDeg_coordPowForm hn _)⟩ :
+              FormField n)) ∧
+      0 < ∫ y in (mapEquiv (boxMap t h hh.ne') K).closedInterior,
+        ‖iteratedFDeriv ℝ (s + 1) (coordPowForm hn (r + 1)) y‖ ^ 2 := by
+  set T := mapEquiv (boxMap t h hh.ne') K
+  have hmem : ((polyInterp (isUnit_det_edgeMatrix T) hr (Nat.zero_le n)
+      ⟨coordPowForm hn (r + 1), mem_contDegForms (continuous_coordPowForm hn _)
+        (isDeg_coordPowForm hn _)⟩ : FormField n)) ∈ polySpace n r 0 := by
+    rw [← localPolySpace_eq (isUnit_det_edgeMatrix T)]; exact Submodule.coe_mem _
+  have hL := formL2Sq_coordPowForm_sub_pos hn T
+    (component_mem_polyFunctions_of_mem_polySpace hmem ∅)
+  refine ⟨hL, ?_⟩
+  obtain ⟨C, -, hC⟩ := exists_formL2Sq_sub_polyInterp_le_L2 K hn hr (Nat.zero_le n) hs hns
+  have hle := hC hh t (continuous_coordPowForm hn (r + 1)) (isDeg_coordPowForm hn (r + 1))
+    isOpen_univ (subset_univ _) (contDiff_coordPowForm hn (r + 1)).contDiffOn
+  refine lt_of_le_of_ne (integral_nonneg fun y => sq_nonneg _) fun h0 => ?_
+  rw [← h0, mul_zero] at hle
+  exact absurd (hL.trans_le hle) (lt_irrefl 0)
+
+/-- **Non-vacuity of `exists_formL2Sq_sub_polyMinusInterp_le_L2`**: for `w(x) = x₀^{r+1}` on
+any `T = t + h K`, both sides of the `P_r⁻Λ⁰` estimate are positive. -/
+theorem formL2Sq_sub_polyMinusInterp_le_L2_nonvacuous (K : Affine.Simplex ℝ (Fin n → ℝ) n)
+    (hn : 0 < n) (hr : 1 ≤ r) {s : ℕ} (hs : s + 1 ≤ r) (hns : n < 2 * (s + 1)) {h : ℝ}
+    (hh : 0 < h) (t : Fin n → ℝ) :
+    0 < formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
+        (coordPowForm hn (r + 1) - (polyMinusInterp (isUnit_det_edgeMatrix
+          (mapEquiv (boxMap t h hh.ne') K)) hr (Nat.zero_le n) ⟨coordPowForm hn (r + 1),
+            mem_contDegForms (continuous_coordPowForm hn _) (isDeg_coordPowForm hn _)⟩ :
+              FormField n)) ∧
+      0 < ∫ y in (mapEquiv (boxMap t h hh.ne') K).closedInterior,
+        ‖iteratedFDeriv ℝ (s + 1) (coordPowForm hn (r + 1)) y‖ ^ 2 := by
+  set T := mapEquiv (boxMap t h hh.ne') K
+  have hmem : ((polyMinusInterp (isUnit_det_edgeMatrix T) hr (Nat.zero_le n)
+      ⟨coordPowForm hn (r + 1), mem_contDegForms (continuous_coordPowForm hn _)
+        (isDeg_coordPowForm hn _)⟩ : FormField n)) ∈ polyMinusSpace n r 0 := by
+    rw [← localPolyMinusSpace_eq (isUnit_det_edgeMatrix T)]; exact Submodule.coe_mem _
+  obtain ⟨Ω, hΩ, hΩe⟩ := hmem
+  have hmem' : (evalForm n Ω) ∈ polySpace n r 0 :=
+    ⟨Ω, Koszul.polyFormMinus_le_polyForm hr 0 hΩ, rfl⟩
+  rw [hΩe] at hmem'
+  have hL := formL2Sq_coordPowForm_sub_pos hn T
+    (component_mem_polyFunctions_of_mem_polySpace hmem' ∅)
+  refine ⟨hL, ?_⟩
+  obtain ⟨C, -, hC⟩ := exists_formL2Sq_sub_polyMinusInterp_le_L2 K hn hr (Nat.zero_le n) hs hns
+  have hle := hC hh t (continuous_coordPowForm hn (r + 1)) (isDeg_coordPowForm hn (r + 1))
+    isOpen_univ (subset_univ _) (contDiff_coordPowForm hn (r + 1)).contDiffOn
+  refine lt_of_le_of_ne (integral_nonneg fun y => sq_nonneg _) fun h0 => ?_
+  rw [← h0, mul_zero] at hle
+  exact absurd (hL.trans_le hle) (lt_irrefl 0)
+
+end FormNonVacuity
 
 end Feec.FiniteElement

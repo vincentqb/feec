@@ -15,7 +15,8 @@ boundary conditions, for data in relative-class Sobolev spaces `Hˢ` instead of 
 tangential traces, `Feec.Models.Cube.Sobolev.sobolevPar Finset.univ`) lies in `Hˢ(𝕋³)` with norm
 `≤ L`. `IsSobolevStateTr` asks it of every field whose projection error enters the Strang data of
 (6.4): `σ, dφₐ, uₐ, duₐ, M, ρₐ, S¹u`. `S¹u` is a separate field: `S¹` does not preserve the
-relative class (it couples components of opposite parities).
+relative class (it couples components of opposite parities). For `s < ½` the class encodes no
+trace condition (`Hˢ` has no traces there); "vanishing tangential traces" is meant for `s > ½`.
 
 **Rates.** The relative-class best approximation `infDist_polyPartial_le_sobolevPar_min` and the
 uniformly bounded smoothed projections ([AFW2010], §5.4) give `CubeClose` with `h^{min(s,1)}`
@@ -27,7 +28,9 @@ standard and not formalized.
 **Gaffney on the cube.** Through `HQmin_eq_compress` (minimal complex of `Q` = compression of the
 torus window along the relative parity), `x ∈ D(d) ∩ D(d*)` in degree `k` gives `x ∈ H¹_univ`
 with `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d*x‖²` (`gaffney_RT`, `gaffney_HQmin`, `sobRel_zero_of_mem`,
-`sobRel_one_of_mem`, `sobRel_two_of_mem`).
+`sobRel_one_of_mem`, `sobRel_two_of_mem`), and conversely `H¹_univ ⊆ D(d) ∩ D(d*)`
+(`mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`): the relative class `H¹_univ`
+is exactly `D(d) ∩ D(d*)`.
 
 **Non-vacuity below `H^{1/2}`.** The sawtooth 2-form `sawW2` (`f(y₀) dy₁ ∧ dy₂`, `f` the odd
 `½`-periodic sawtooth) satisfies `d¹* sawW2 = 0`, lies in `Hˢ_univ` exactly for `s < ½`, and is not
@@ -38,11 +41,20 @@ in `H̊Λ²(Q)`. The stationary state `sawWave T` (`ρ = (sawW2, 0, 0)`) is a cl
 ## Main results
 
 * `cubeClose_of_isSobolevStateTr`: projection errors `O(L h^{min(s,1)})`.
-* **`staticFEM_rate_sobolev`**: Thm 5.5 for relative-class `Hˢ` data, with `‖λ‖ ≤ L` and
-  `S¹u ∈ D(d¹*)` (`|⟪S¹u, d w⟫| ≤ L ‖w‖`) as hypotheses.
-* **`cubeWave_rate_sobolev`**: the rate `K L (1 + t) h^{min(s,1)}` of (6.5); the hypotheses beyond
-  `IsSobolevStateTr` (`M, M' ∈ D(d¹*)`, `L²`-bounded multipliers) are those of `cubeWave_rate_tr`.
-* `gaffney_HQmin`, `sobRel_one_of_mem`, `sobRel_two_of_mem`: Gaffney's identity on the cube.
+* **`staticFEM_rate_sobolev`**: Thm 5.5 for relative-class `Hˢ` data, with `‖λ‖ ≤ L` (as in
+  `staticFEM_rate_tr_cube`) and the pairing bound `|⟪S¹u, d w⟫| ≤ L ‖w‖` (`S¹u ∈ D(d¹*)`) as
+  hypotheses. The pairing bound is new compared with `staticFEM_rate_tr_cube`, where `C²` gives
+  it; it is natural for `s < 1` and redundant for `s ≥ 1` (`staticFEM_rate_sobolev_of_one_le`).
+* **`cubeWave_rate_sobolev`**: the rate `K L (1 + t) h^{min(s,1)}` of (6.5). Beyond
+  `IsSobolevStateTr` it assumes `L²`-bounded multipliers (as `cubeWave_rate_tr`) and the pairing
+  bounds `|⟪M, d v⟫|, |⟪M', d v⟫| ≤ L ‖v‖` (`M, M' ∈ D(d¹*)`). The pairing bounds are new compared
+  with `cubeWave_rate_tr`, where `C²` gives them; they are redundant for `s ≥ 1`
+  (`cubeWave_rate_sobolev_of_one_le`).
+* `staticFEM_rate_sobolev_cube`, `cubeWave_rate_sobolev_cube`: the same with the smoothing
+  estimates discharged (`tableRows_uniform_cochainProjection`).
+* `gaffney_HQmin`, `sobRel_one_of_mem`, `sobRel_two_of_mem`: Gaffney's identity on the cube;
+  `mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`: its converse
+  (`H¹_univ ⊆ D(d) ∩ D(d*)`, with `‖d x‖, ‖d* x‖ ≤ ‖x‖_{1,univ}`).
 * **`cubeWave_rate_sobolev_nonvacuous`**: the rate `h^s`, `s < ½`, for the sawtooth solution, which
   is not in `H^{1/2}` and in no `C²` class.
 
@@ -878,7 +890,260 @@ theorem sobRel_two_of_mem {x : W2} (h1 : x ∈ D2min.domain) (h2 : x ∈ (D1†)
   sobRel_of_sq_eq (gaffney_of_eq 1 (by norm_num) (cubeDomain_eq_Q 3) (x := x) h1 h2).1
     (gaffney_of_eq 1 (by norm_num) (cubeDomain_eq_Q 3) (x := x) h1 h2).2
 
+/-! ### The converse: `H¹_univ ⊆ D(d) ∩ D(d*)` -/
+
+theorem summable_freq_of_memSob_one {k : ℕ} {y : Seq n k} (hy : MemSob 1 y) :
+    Summable fun m => ‖Fourier.Torus.freq m‖ ^ 2 * ‖cf y m‖ ^ 2 :=
+  Summable.of_nonneg_of_le (fun m => by positivity)
+    (fun m => by rw [weight_one]; nlinarith [sq_nonneg ‖cf y m‖]) hy
+
+/-- **`H¹(𝕋ⁿ)` lies in the domain of the outgoing torus differential** (`|ξ ∧ v| ≤ |ξ| |v|`,
+`window_cartan`). -/
+theorem mem_RT_domain_of_memSob_one (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
+    (hy : MemSob 1 (y : Seq n a)) :
+    y ∈ ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain := by
+  change MemLp (fun m => (Torus.DeRham.windowSymbol (Fin n)).m a
+    ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a) m ((y : TW n a) m)) 2
+      Measure.count
+  refine memLp_of_summable (Summable.of_nonneg_of_le (fun m => by positivity) (fun m => ?_)
+    (summable_freq_of_memSob_one hy))
+  have hc := Torus.DeRham.window_cartan a (Fourier.Torus.freq m) (cf (y : Seq n a) m)
+  change ‖(Feec.Fourier.Exterior.deRham (Fin n)).m a _ (Fourier.Torus.freq m)
+    (cf (y : Seq n a) m)‖ ^ 2 ≤ _
+  nlinarith [sq_nonneg ‖ContinuousLinearMap.adjoint ((Feec.Fourier.Exterior.deRham (Fin n)).m
+    ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a (Fourier.Torus.freq m))
+      (cf (y : Seq n a) m)‖]
+
+/-- **`H¹(𝕋ⁿ)` lies in the domain of the adjoint of the incoming torus differential**
+(`|ι_ξ v| ≤ |ξ| |v|`, `window_cartan`). -/
+theorem mem_RT_adjoint_domain_of_memSob_one (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
+    (hy : MemSob 1 (y : Seq n a)) :
+    y ∈ (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain := by
+  rw [RT_adjoint]
+  change y ∈ (((Torus.DeRham.window (Fin n)).d
+    ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain
+  rw [Fourier.SymbolComplex.adjoint_d]
+  change MemLp (fun m => ContinuousLinearMap.adjoint ((Torus.DeRham.windowSymbol (Fin n)).m
+    ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a m) ((y : TW n a) m)) 2
+      Measure.count
+  refine memLp_of_summable (Summable.of_nonneg_of_le (fun m => by positivity) (fun m => ?_)
+    (summable_freq_of_memSob_one hy))
+  have hc := Torus.DeRham.window_cartan a (Fourier.Torus.freq m) (cf (y : Seq n a) m)
+  change ‖ContinuousLinearMap.adjoint ((Feec.Fourier.Exterior.deRham (Fin n)).m _ a
+    (Fourier.Torus.freq m)) (cf (y : Seq n a) m)‖ ^ 2 ≤ _
+  nlinarith [sq_nonneg ‖(Feec.Fourier.Exterior.deRham (Fin n)).m a
+    ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a) (Fourier.Torus.freq m)
+      (cf (y : Seq n a) m)‖]
+
+/-- **The converse of Gaffney in the relative class**: `H¹_univ(Q) ⊆ D(d_min) ∩ D(d_min*)` (the
+outgoing minimal differential and the adjoint of the incoming one), through
+`HQmin_eq_compress`. -/
+theorem mem_HQmin_of_sobolevPar_one (a : Fin (Fintype.card (Fin n) + 1)) {x : WQ n a}
+    (hx : x ∈ sobolevPar Finset.univ (a : ℕ) 1) :
+    x ∈ ((HQmin n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain ∧
+      x ∈ (((HQmin n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain := by
+  have eJ : JfJ (Finset.univ : Finset (Fin n)) (a : ℕ) x = J true a x := by
+    rw [JfJ_univ]; rfl
+  have hm := (mem_sobolevPar (J := Finset.univ) (k := (a : ℕ))).1 hx
+  rw [eJ] at hm
+  rw [HQmin_eq_compress, Feec.HilbertComplex.mem_compress_domain_iff two_pow_pos (inner_J true)
+    (reducing_range true), Feec.HilbertComplex.mem_adjoint_compress_iff two_pow_pos
+    (inner_J true) (reducing_range true)]
+  exact ⟨mem_RT_domain_of_memSob_one a hm, mem_RT_adjoint_domain_of_memSob_one a hm⟩
+
+/-- **The converse of Gaffney on a copy of `Q`, degrees `k + 1 ≤ 2`**: `x ∈ H¹_univ` lies in
+`D(d_min) ∩ D(d_min*)` with `‖d x‖, ‖d* x‖ ≤ ‖x‖_{1,univ}`. -/
+theorem mem_domains_of_eq (k : ℕ) (hk : k + 2 < 4) {Ω : Set (Fin 3 → ℝ)} (h : Ω = Q (Fin 3))
+    {x : L2F ℝ Ω (formIdx 3 ((k + 1 : ℕ) : ℤ))}
+    (hx : castL2F h _ x ∈ sobolevPar Finset.univ (k + 1) 1) :
+    ∃ h1 : x ∈ ((extDerivOp ℝ 3 ((k + 1 : ℕ) : ℤ)).minimal Ω).domain,
+    ∃ h2 : x ∈ (((extDerivOp ℝ 3 (k : ℤ)).minimal Ω)†).domain,
+      ‖(extDerivOp ℝ 3 ((k + 1 : ℕ) : ℤ)).minimal Ω ⟨x, h1⟩‖ ≤
+          parNorm Finset.univ (k + 1) 1 (castL2F h _ x) ∧
+        ‖((extDerivOp ℝ 3 (k : ℤ)).minimal Ω)† ⟨x, h2⟩‖ ≤
+          parNorm Finset.univ (k + 1) 1 (castL2F h _ x) := by
+  subst h
+  obtain ⟨hd1, hd2⟩ := mem_HQmin_of_sobolevPar_one (n := 3) (wi (k + 1) (by omega)) (x := x) hx
+  rw [window_next_wi (k + 1) hk] at hd1
+  rw [window_prev_wi k (by omega)] at hd2
+  have e1 := HQmin_d_wi (k + 1) hk
+  have e2 := HQmin_d_wi k (by omega)
+  have g := (gaffney_Q k hk (x := x) hd1 hd2).2
+  refine ⟨mem_domain_of_eq_op e1.symm hd1, mem_adjoint_domain_of_eq_op e2.symm hd2, ?_, ?_⟩
+  · rw [norm_apply_of_eq_op e1.symm hd1]
+    refine le_of_pow_le_pow_left₀ two_ne_zero (parNorm_nonneg _ _ _ _) ?_
+    change _ ≤ parNorm Finset.univ (k + 1) 1 x ^ 2
+    rw [g]
+    nlinarith [sq_nonneg ‖x‖, sq_nonneg ‖((HQmin 3).d (wi k (by omega))
+      (wi (k + 1) (by omega)))† ⟨x, hd2⟩‖]
+  · rw [norm_adjoint_apply_of_eq_op e2.symm hd2]
+    refine le_of_pow_le_pow_left₀ two_ne_zero (parNorm_nonneg _ _ _ _) ?_
+    change _ ≤ parNorm Finset.univ (k + 1) 1 x ^ 2
+    rw [g]
+    nlinarith [sq_nonneg ‖x‖, sq_nonneg ‖(HQmin 3).d (wi (k + 1) (by omega)) (wi (k + 2) hk)
+      ⟨x, hd1⟩‖]
+
+/-- **The converse of Gaffney on the cube, degree `2`**: a `2`-form in `H¹_univ` with
+`‖x‖_{1,univ} ≤ L` lies in `D(d²) ∩ D(d¹*)` with `‖d² x‖, ‖d¹* x‖ ≤ L`. -/
+theorem mem_D2min_D1adj_of_sobRel_one {L : ℝ} {x : W2} (hx : SobRel 1 L 2 x) :
+    ∃ h1 : x ∈ D2min.domain, ∃ h2 : x ∈ (D1†).domain,
+      ‖D2min ⟨x, h1⟩‖ ≤ L ∧ ‖D1† ⟨x, h2⟩‖ ≤ L := by
+  obtain ⟨h1, h2, b1, b2⟩ := mem_domains_of_eq 1 (by norm_num) (cubeDomain_eq_Q 3) (x := x) hx.1
+  exact ⟨h1, h2, b1.trans hx.2, b2.trans hx.2⟩
+
+/-- **A `2`-form in `H¹_univ` pairs boundedly with `d¹`**: `|⟪x, d v⟫| ≤ ‖x‖_{1,univ} ‖v‖`
+(`x ∈ D(d¹*)`, `mem_D2min_D1adj_of_sobRel_one`). -/
+theorem abs_inner_D1_le_of_sobRel_one {L : ℝ} {x : W2} (hx : SobRel 1 L 2 x) (v : U1) :
+    |⟪x, D1 v⟫| ≤ L * ‖v‖ := by
+  obtain ⟨-, h2, -, b2⟩ := mem_D2min_D1adj_of_sobRel_one hx
+  have hadj := LinearPMap.adjoint_isFormalAdjoint dense_D1_domain ⟨x, h2⟩ v
+  rw [← hadj]
+  exact (abs_real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right b2 (norm_nonneg _))
+
 end Gaffney
+
+/-- **`Hˢ_univ ⊆ H¹_univ` for `s ≥ 1`**, with `‖·‖_{1,univ} ≤ ‖·‖_{s,univ}`. -/
+theorem SobRel.of_one_le {s L : ℝ} {k : ℕ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)}
+    (hx : SobRel s L k x) (hs : 1 ≤ s) : SobRel 1 L k x :=
+  ⟨sobolevPar_anti _ _ hs hx.1, (parNorm_mono _ _ hs hx.1).trans hx.2⟩
+
+/-! ### `s ≥ 1`: the pairing hypotheses are implied by the class -/
+
+section OneLe
+
+variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+  (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+  (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
+
+set_option maxHeartbeats 4000000 in
+/-- **Thm 5.5 for `Hˢ_univ` data, `s ≥ 1`** ([QuennevilleBelair2015], Thm 5.5): the rate
+`(K L h_N)²` of `staticFEM_rate_sobolev` without the pairing hypothesis
+`|⟪S¹u, d w⟫| ≤ L ‖w‖`, which follows from `S¹u ∈ H¹_univ` (`abs_inner_D1_le_of_sobRel_one`). -/
+theorem staticFEM_rate_sobolev_of_one_le :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      {F : Wv U1 →ₗ[ℝ] ℝ} {s L : ℝ}, 1 ≤ s → 0 ≤ L →
+      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
+        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
+      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
+      bggSegment.d0 σ = bggSegment.S0 φ →
+      IsSobolevStaticTr s L σ φ u → ‖lam‖ ≤ L →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
+        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+  obtain ⟨K, hK0, hK⟩ := staticFEM_rate_sobolev hT hB
+  refine ⟨K, hK0, fun N σ φ u lam F s L hs hL0 c1 c2 c3 hsob hlam σh φh uh lh hσh hφh huh h1 h2
+    h3 => ?_⟩
+  have hz : ∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖ := fun w =>
+    abs_inner_D1_le_of_sobRel_one (hsob.2.2.2.2.2.2.of_one_le hs) w
+  have h := hK N (by linarith) hL0 c1 c2 c3 hsob hlam hz hσh hφh huh h1 h2 h3
+  rwa [min_eq_right hs, Real.rpow_one] at h
+
+set_option maxHeartbeats 4000000 in
+/-- **The rate of (6.5) for `Hˢ_univ` states, `s ≥ 1`** ([QuennevilleBelair2015], §6.3): the
+rate `K L (1 + t) h_N` of `cubeWave_rate_sobolev` without the pairing hypotheses
+`|⟪M, d v⟫|, |⟪M', d v⟫| ≤ L ‖v‖`, which follow from `M, M' ∈ H¹_univ`
+(`abs_inner_D1_le_of_sobRel_one`). For `s ≥ 1` the only hypotheses beyond the class are the
+`L²`-bounded multipliers, as in `cubeWave_rate_tr`. -/
+theorem cubeWave_rate_sobolev_of_one_le :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
+      (_hf : ContinuousOn f (Icc 0 T)) (w : Feec.BGG.ExactWave bggSegment T (srcFun f))
+      {s L : ℝ}, 1 ≤ s → 0 ≤ L →
+      (∀ t ∈ Icc 0 T, IsSobolevStateTr s L (w.σ t) (w.φ t) (w.u t) (w.M t) (w.ρ t) ∧
+        IsSobolevStateTr s L (w.σ' t) (w.φ' t) (w.u' t) (w.M' t) (w.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ μ : U1, |w.ℓ t μ| ≤ L * ‖μ‖ ∧ |w.ℓ' t μ| ≤ L * ‖μ‖) →
+      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((cubeFEM hT hB N).ellipticDataH (w.σ 0) (w.φ 0) (w.u 0)
+              (w.M 0) (w.ρ 0) (w.ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖w.σ t - sh.σ t‖ ^ 2 + ‖w.u t - sh.u t‖ ^ 2 +
+          ‖w.M t - sh.M t‖ ^ 2 + ‖w.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N := by
+  have hrate := cubeWave_rate_sobolev hT hB
+  obtain ⟨K, hK⟩ := hrate
+  have hK0 := hK.1
+  refine ⟨K, hK0, fun N T hT0 f hf w s L hs hL0 hsob hmult => ?_⟩
+  have hMd : ∀ t ∈ Icc 0 T, ∀ v : U1, |⟪w.M t, bggSegment.d1 v⟫| ≤ L * ‖v‖ ∧
+      |⟪w.M' t, bggSegment.d1 v⟫| ≤ L * ‖v‖ := fun t ht v =>
+    ⟨abs_inner_D1_le_of_sobRel_one ((hsob t ht).1.2.2.2.2.1.of_one_le hs) v,
+      abs_inner_D1_le_of_sobRel_one ((hsob t ht).2.2.2.2.2.1.of_one_le hs) v⟩
+  have hres := hK.2 N hT0 hf w (by linarith) hL0 hsob hMd hmult
+  obtain ⟨sh, h0, hb⟩ := hres
+  refine ⟨sh, h0, fun t ht => (hb t ht).trans (le_of_eq ?_)⟩
+  rw [min_eq_right hs, Real.rpow_one]
+
+end OneLe
+
+/-! ### Packaged with the smoothed projections of Tables 5.1/6.1 -/
+
+set_option maxHeartbeats 4000000 in
+/-- **`staticFEM_rate_sobolev` with the smoothing estimates discharged**: for the common
+smoother of both rows of Table 5.1 (`tableRows_uniform_cochainProjection`). -/
+theorem staticFEM_rate_sobolev_cube :
+    ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
+      (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+      (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C),
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      {F : Wv U1 →ₗ[ℝ] ℝ} {s L : ℝ}, 0 ≤ s → 0 ≤ L →
+      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
+        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
+      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
+      bggSegment.d0 σ = bggSegment.S0 φ →
+      IsSobolevStaticTr s L σ φ u → ‖lam‖ ≤ L →
+      (∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖) →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
+        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N ^ min s 1) ^ 2 := by
+  obtain ⟨p, C, hT, hB, -⟩ := tableRows_uniform_cochainProjection
+  exact ⟨p, C, hT, hB, staticFEM_rate_sobolev hT hB⟩
+
+set_option maxHeartbeats 4000000 in
+/-- **`cubeWave_rate_sobolev` with the smoothing estimates discharged**: for the common smoother
+of both rows of Table 6.1 (`tableRows_uniform_cochainProjection`). -/
+theorem cubeWave_rate_sobolev_cube :
+    ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
+      (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+      (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C),
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
+      (_hf : ContinuousOn f (Icc 0 T)) (w : Feec.BGG.ExactWave bggSegment T (srcFun f))
+      {s L : ℝ}, 0 ≤ s → 0 ≤ L →
+      (∀ t ∈ Icc 0 T, IsSobolevStateTr s L (w.σ t) (w.φ t) (w.u t) (w.M t) (w.ρ t) ∧
+        IsSobolevStateTr s L (w.σ' t) (w.φ' t) (w.u' t) (w.M' t) (w.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ v : U1, |⟪w.M t, bggSegment.d1 v⟫| ≤ L * ‖v‖ ∧
+        |⟪w.M' t, bggSegment.d1 v⟫| ≤ L * ‖v‖) →
+      (∀ t ∈ Icc 0 T, ∀ μ : U1, |w.ℓ t μ| ≤ L * ‖μ‖ ∧ |w.ℓ' t μ| ≤ L * ‖μ‖) →
+      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((cubeFEM hT hB N).ellipticDataH (w.σ 0) (w.φ 0) (w.u 0)
+              (w.M 0) (w.ρ 0) (w.ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖w.σ t - sh.σ t‖ ^ 2 + ‖w.u t - sh.u t‖ ^ 2 +
+          ‖w.M t - sh.M t‖ ^ 2 + ‖w.ρ t - sh.ρ t‖ ^ 2) ≤
+            K * L * (1 + t) * meshSize N ^ min s 1 := by
+  have hrows := tableRows_uniform_cochainProjection
+  obtain ⟨p, C, hT, hB, -⟩ := hrows
+  exact ⟨p, C, hT, hB, cubeWave_rate_sobolev hT hB⟩
 
 /-! ### A relative-class witness below `H^{1/2}`: the sawtooth `2`-form -/
 

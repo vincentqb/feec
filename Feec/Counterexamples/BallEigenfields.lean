@@ -2,6 +2,8 @@ module
 
 public import Feec.Models.BoundedDomain.MovingTSD
 public import Feec.Counterexamples.BallSymTSD
+public import Feec.Models.Box.EigenDense
+public import Feec.Domain.Rellich
 public import Mathlib.Analysis.Complex.Liouville
 public import Mathlib.Analysis.Complex.Conformal
 public import Mathlib.MeasureTheory.Constructions.HaarToSphere
@@ -58,24 +60,39 @@ Let `U` be a `C²` representative (cut off to `ℝ³`, `exists_contDiff_eq_on_cl
 
 ## What remains
 
-Whether every TSD eigenfield on `B` is `C²` up to `∂B` is elliptic boundary regularity for the
-system `curl curl u = ξ² u`, `div u = 0`, `u × n = 0` (row-wise), absent from Mathlib; it is the
-one explicit hypothesis `TSDEigenfieldRegularity`, and on the ball it is *equivalent* to the
-absence of TSD eigenfields (`tsdEigenfieldRegularity_ball_iff`). With it and a complete set of
-eigenvectors of `L²` (`EigenDense`, from compactness on the ball, task G2), `K*` is stationary on
-the ball (`coreSub_le_stationary_ball_of_regularity`). Without `EigenDense`, a TSD eigenfield
-always produces a moving datum of `K*` on every open `Ω`, with the explicit orbit
-`cos(ξt) u + (sin(ξt)/ξ) L u` (`not_coreSub_le_stationary_of_eigenfield`).
+Whether every TSD eigenfield on `B` is `C²` up to `∂B` is elliptic boundary regularity, absent
+from Mathlib. It is isolated as the standard row-wise statement `MaxwellEigenfieldRegularity`:
+weakly divergence-free vector fields `w ∈ H̊(curl, B)` with `curl curl w = ξ² w` are `C²` up to
+`∂B`. This involves no symmetry or trace, is not equivalent to the absence of eigenfields, and
+implies the TSD form `TSDEigenfieldRegularity` (`tsdEigenfieldRegularity_of_maxwell`: the rows
+of a TSD eigenfield are such fields, `isDivFree_rowF`, `isMaxwellEigenfield_rowF`). On the ball
+the TSD form alone is *equivalent* to the absence of TSD eigenfields
+(`tsdEigenfieldRegularity_ball_iff`), so it only restates the open question; the Maxwell form is
+the genuine missing theorem. With it and a complete set of eigenvectors of `L²` (`EigenDense`,
+from compactness on the ball), `K*` is stationary on the ball
+(`coreSub_le_stationary_ball_of_maxwellRegularity`, `coreSub_le_stationary_ball_of_regularity`).
+Without `EigenDense`, a TSD eigenfield always produces a moving datum of `K*` on every open `Ω`,
+with the explicit orbit `cos(ξt) u + (sin(ξt)/ξ) L u` (`not_coreSub_le_stationary_of_eigenfield`).
 
 ## Non-vacuity
 
 The hypotheses of the smooth-class theorem without the electric boundary condition are met by
 the nonzero smooth TSD shear wave `cos(ξ x₁)(e₂e₃ᵀ + e₃e₂ᵀ)`, which therefore lies outside
-`H̊(curl)` (`shearWaveL2_spec`); the zero field has a smooth representative (`hasC2Rep_zero`), so
+`H̊(curl)` (`shearWaveL2_spec`). The zero field has a smooth representative (`hasC2Rep_zero`), so
 `TSDEigenfieldRegularity` holds wherever TSD eigenfields vanish
-(`tsdEigenfieldRegularity_of_forall_eq_zero`). Dropping symmetry instead, `u = e₃ ⊗ T` with the
-toroidal field `T = j₁(k|x|)/|x| (x₂, -x₁, 0)`, `j₁(k) = 0`, is a nonzero trace-free,
-divergence-free eigenfield in `H̊(curl)` (not formalized: it needs `j₁`).
+(`tsdEigenfieldRegularity_of_forall_eq_zero`), concretely on every box
+(`tsdEigenfieldRegularity_box`); `MaxwellEigenfieldRegularity` holds on `∅`
+(`maxwellEigenfieldRegularity_empty`). On boxes and on the ball it is a genuine statement:
+nonzero smooth electric Maxwell eigenfields exist there (e.g. `sin x₁ sin x₂ e₃` on `(0, π)³`,
+and the toroidal fields below on the ball; not formalized). Dropping symmetry instead,
+`u = e₃ ⊗ T` with the toroidal field `T = j₁(k|x|)/|x| (x₂, -x₁, 0)`, `j₁(k) = 0`, is a nonzero
+trace-free, divergence-free eigenfield in `H̊(curl)` (not formalized: it needs `j₁`).
+
+## Layering
+
+The file lives in `Counterexamples` because it uses the ball geometry (`rho`, `ball3`, the radial
+cut-offs `eta`, `chi`) of `Feec.Counterexamples.BallSymTSD`; `Models` files do not import
+`Counterexamples`.
 
 ## Main results
 
@@ -84,23 +101,28 @@ divergence-free eigenfield in `H̊(curl)` (not formalized: it needs `j₁`).
 * **`eq_zero_of_isSphereTT`**: transverse-traceless `C¹` tensors on `S²` vanish.
 * **`crossF_eq_zero_of_green`**: Green's formula forces the tangential trace to vanish pointwise.
 * **`eq_zero_of_isEigenfield_of_contDiff_ball`**: TSD eigenfields `C²` up to `∂B` vanish.
-* **`coreSub_le_stationary_ball_of_regularity`**, `tsdEigenfieldRegularity_ball_iff`.
-* `shearWaveL2_spec`, `hasC2Rep_zero`: non-vacuity.
+* **`tsdEigenfieldRegularity_of_maxwell`**: row-wise Maxwell regularity implies TSD regularity.
+* **`coreSub_le_stationary_ball_of_maxwellRegularity`**,
+  `coreSub_le_stationary_ball_of_regularity`, `tsdEigenfieldRegularity_ball_iff`.
+* `shearWaveL2_spec`, `hasC2Rep_zero`, `tsdEigenfieldRegularity_box`,
+  `maxwellEigenfieldRegularity_empty`: non-vacuity.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (Prop 4.17)
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.5 (traces), §6.3 (boundary
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.5 (traces), §5.6, §6.3 (boundary
   regularity)
+* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
+  Ch. I, §3 (`H(curl) ∩ H(div)`)
 -/
 
 @[expose] public noncomputable section
 
 open scoped InnerProductSpace LinearPMap ContDiff
-open MeasureTheory Set Filter Topology Feec.Domain
+open MeasureTheory Set Filter Topology Feec.Domain Feec.Models.BoundedDomain
 
-namespace Feec.Models.BoundedDomain
+namespace Feec.Counterexamples.BallEigenfields
 
 -- Over `ℝ` the generic real structure on the window spaces duplicates the inner-product one.
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
@@ -2204,33 +2226,41 @@ section Regularity
 variable {Ω : Set R3}
 
 /-- `v` has a representative that is `C²` on a neighbourhood of `cl Ω`. -/
-def HasC2Rep (Ω : Set R3) (v : L2F ℝ Ω Ix) : Prop :=
-  ∃ O : Set R3, IsOpen O ∧ closure Ω ⊆ O ∧ ∃ U : Ix → R3 → ℝ,
+def HasC2Rep {ι : Type*} [Fintype ι] (Ω : Set R3) (v : L2F ℝ Ω ι) : Prop :=
+  ∃ O : Set R3, IsOpen O ∧ closure Ω ⊆ O ∧ ∃ U : ι → R3 → ℝ,
     (∀ ij, ContDiffOn ℝ 2 (U ij) O) ∧ ∀ ij, v ij =ᵐ[volume.restrict Ω] U ij
 
 /-- **Boundary regularity of TSD eigenfields** (hypothesis, absent from Mathlib): every TSD
 eigenfield `u ∈ L²(TSD) ∩ H̊(curl)`, `curl† curl u = ξ² u`, `ξ > 0`, on `Ω` is `C²` up to `∂Ω`.
-On a smooth bounded `Ω` this is elliptic boundary regularity for the Maxwell system
-`curl curl u = ξ² u`, `div u = 0`, `u × n = 0` (row-wise) ([Evans2010], §6.3 for the
-scalar model). -/
+It follows from the row-wise Maxwell regularity `MaxwellEigenfieldRegularity`
+(`tsdEigenfieldRegularity_of_maxwell`). -/
 def TSDEigenfieldRegularity (Ω : Set R3) (hΩ : IsOpen Ω) : Prop :=
   ∀ ξ : ℝ, 0 < ξ → ∀ v : L2F ℝ Ω Ix, v ∈ tsd Ω → (gradCurl ℝ hΩ).IsEigenfield ξ v → HasC2Rep Ω v
 
-theorem hasC2Rep_zero : HasC2Rep Ω 0 :=
+theorem hasC2Rep_zero {ι : Type*} [Fintype ι] : HasC2Rep Ω (0 : L2F ℝ Ω ι) :=
   ⟨univ, isOpen_univ, subset_univ _, fun _ _ => 0, fun _ => contDiffOn_const, fun ij =>
     (Lp.coeFn_zero ℝ 2 (volume.restrict Ω)).mono fun x hx => by
-      rw [show (0 : L2F ℝ Ω Ix) ij = 0 from rfl, hx]; rfl⟩
+      rw [show (0 : L2F ℝ Ω ι) ij = 0 from rfl, hx]; rfl⟩
 
 /-- The regularity hypothesis holds whenever every TSD eigenfield vanishes (the zero field has a
-smooth representative); in particular it is satisfiable. -/
+smooth representative). -/
 theorem tsdEigenfieldRegularity_of_forall_eq_zero (hΩ : IsOpen Ω)
     (h : ∀ ξ : ℝ, 0 < ξ → ∀ v : L2F ℝ Ω Ix, v ∈ tsd Ω → (gradCurl ℝ hΩ).IsEigenfield ξ v →
       v = 0) : TSDEigenfieldRegularity Ω hΩ := fun ξ hξ v hv hE => by
   rw [h ξ hξ v hv hE]; exact hasC2Rep_zero
 
+/-- **A concrete instance**: on every box `∏ (aᵢ, aᵢ + ℓᵢ)` the regularity hypothesis holds,
+since there are no TSD eigenfields (`Feec.Models.Box.not_exists_tsd_eigenfield_box`). -/
+theorem tsdEigenfieldRegularity_box {a ℓ : R3} (hℓ : ∀ i, 0 < ℓ i) :
+    TSDEigenfieldRegularity (Models.Box.openBox a ℓ) (Models.Box.isOpen_openBox a ℓ) :=
+  tsdEigenfieldRegularity_of_forall_eq_zero _ fun ξ hξ v hv hE => by
+    by_contra hv0
+    exact Models.Box.not_exists_tsd_eigenfield_box hℓ ⟨ξ, hξ, v, hv0, hv, hE⟩
+
 /-- **On the ball, regularity is equivalent to the absence of TSD eigenfields**: the smooth-class
-theorem `eq_zero_of_isEigenfield_of_contDiff_ball` kills every regular eigenfield. So the open
-question O3 on the ball is exactly the boundary regularity of TSD eigenfields. -/
+theorem `eq_zero_of_isEigenfield_of_contDiff_ball` kills every regular eigenfield. So, as a
+hypothesis on the ball, `TSDEigenfieldRegularity` restates the open question O3; the standard
+regularity statement it follows from is `MaxwellEigenfieldRegularity`. -/
 theorem tsdEigenfieldRegularity_ball_iff :
     TSDEigenfieldRegularity ball3 isOpen_ball3 ↔
       ∀ ξ : ℝ, 0 < ξ → ∀ v : L2F ℝ ball3 Ix, v ∈ tsd ball3 →
@@ -2253,6 +2283,206 @@ theorem coreSub_le_stationary_ball_of_regularity (hD : (gradCurl ℝ isOpen_ball
   exact hv0 (tsdEigenfieldRegularity_ball_iff.1 hR ξ hξ v hv hE)
 
 end Regularity
+
+/-! ### Row-wise Maxwell regularity -/
+
+section Maxwell
+
+variable {Ω : Set R3}
+
+/-- Row `i` of a matrix field, as a vector field (index `Fin 1 × Fin 3`, the index of
+`curlOp 1`, the curl of the de Rham complex `Feec.Models.BoundedDomain.deRham3`). -/
+def rowF (i : Fin 3) : L2F ℝ Ω Ix →L[ℝ] L2F ℝ Ω (Fin 1 × Fin 3) :=
+  compF fun p : Fin 1 × Fin 3 => (i, p.2)
+
+theorem rowF_apply (i : Fin 3) (v : L2F ℝ Ω Ix) (p : Fin 1 × Fin 3) :
+    rowF i v p = v (i, p.2) := rfl
+
+/-- A vector field placed in row `i` of a matrix field (the adjoint of `rowF i`). -/
+def rowEmb (i : Fin 3) : L2F ℝ Ω (Fin 1 × Fin 3) →L[ℝ] L2F ℝ Ω Ix :=
+  (PiLp.continuousLinearEquiv 2 ℝ (fun _ : Ix => L2 ℝ Ω)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.pi fun jk : Ix =>
+      if jk.1 = i then PiLp.proj 2 (fun _ : Fin 1 × Fin 3 => L2 ℝ Ω) (0, jk.2) else 0
+
+theorem rowEmb_apply (i : Fin 3) (w : L2F ℝ Ω (Fin 1 × Fin 3)) (jk : Ix) :
+    rowEmb i w jk = if jk.1 = i then w (0, jk.2) else 0 := by
+  by_cases h : jk.1 = i <;> simp [rowEmb, h]
+
+theorem inner_rowEmb (i : Fin 3) (u : L2F ℝ Ω Ix) (w : L2F ℝ Ω (Fin 1 × Fin 3)) :
+    ⟪u, rowEmb i w⟫_ℝ = ⟪rowF i u, w⟫_ℝ := by
+  simp only [PiLp.inner_apply, rowEmb_apply, rowF_apply, Fintype.sum_prod_type]
+  rw [Finset.sum_eq_single i (fun j _ hj => by simp [hj]) (by simp)]
+  simp [Fin.fin_one_eq_zero]
+
+/-- The vector test field `ψ` placed in row `i`. -/
+def rowTest (i : Fin 3) (ψ : Fin 1 × Fin 3 → R3 → ℝ) : Ix → R3 → ℝ :=
+  fun jk => if jk.1 = i then ψ (0, jk.2) else 0
+
+theorem isTestField_rowTest (i : Fin 3) {ψ : Fin 1 × Fin 3 → R3 → ℝ} (hψ : IsTestField Ω ψ) :
+    IsTestField Ω (rowTest i ψ) := fun jk => by
+  unfold rowTest
+  split_ifs
+  exacts [hψ _, IsTest.zero]
+
+theorem rowEmb_testField (i : Fin 3) {ψ : Fin 1 × Fin 3 → R3 → ℝ} (hψ : IsTestField Ω ψ) :
+    rowEmb i (testField hψ) = testField (isTestField_rowTest i hψ) := by
+  refine PiLp.ext fun jk => ?_
+  rw [rowEmb_apply, testField_apply, testField_apply]
+  by_cases h : jk.1 = i
+  · simp only [h, ↓reduceIte]
+    exact toL2_congr _ _ (by simp [rowTest, h])
+  · simp only [h, ↓reduceIte]
+    exact ((toL2_congr _ IsTest.zero (by simp [rowTest, h])).trans toL2_zero).symm
+
+theorem curlOp_rowTest (i : Fin 3) (ψ : Fin 1 × Fin 3 → R3 → ℝ) :
+    (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).apply (rowTest i ψ) =
+      rowTest i ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).apply ψ) := by
+  funext ⟨j, k⟩ x
+  rw [curlOp_apply]
+  by_cases h : j = i
+  · subst h
+    simp [rowTest, curlOp_apply]
+  · simp [rowTest, h]
+
+theorem curlOp_row (i : Fin 3) (φ : Ix → R3 → ℝ) :
+    (curlOp 1 : ConstCoeffOp R3 ℝ _ _).apply (fun p : Fin 1 × Fin 3 => φ (i, p.2)) =
+      fun p => (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).apply φ (i, p.2) := by
+  funext ⟨a, k⟩ x
+  rw [curlOp_apply, curlOp_apply]
+
+theorem gradOp_rowTest (i : Fin 3) (φ : Fin 1 → R3 → ℝ) :
+    (gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).apply (fun j => if j = i then φ 0 else 0) =
+      rowTest i ((gradOp 3 1 : ConstCoeffOp R3 ℝ _ _).apply φ) := by
+  funext ⟨j, k⟩ x
+  rw [gradOp_apply]
+  by_cases h : j = i
+  · subst h
+    simp [rowTest, gradOp_apply]
+  · simp [rowTest, h]
+
+/-- A vector field `w` is **weakly divergence-free** in `Ω`: `∫ w · ∇φ = 0` for all
+`φ ∈ C_c^∞(Ω)` (no boundary condition). -/
+def IsDivFree (w : L2F ℝ Ω (Fin 1 × Fin 3)) : Prop :=
+  ∀ φ : Fin 1 → R3 → ℝ, ∀ hφ : IsTestField Ω φ,
+    ⟪w, testField ((gradOp 3 1 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)⟫_ℝ = 0
+
+/-- `w` is an **electric (perfectly conducting) Maxwell eigenfield** with frequency `ξ`:
+`w ∈ H̊(curl, Ω)`, `curl w ∈ H(curl, Ω)` and `curl curl w = ξ² w`, where the second curl is the
+weak one, `(curl_min)†` (`Feec.Domain.ConstCoeffOp.adjoint_minimal`). -/
+def IsMaxwellEigenfield (ξ : ℝ) (w : L2F ℝ Ω (Fin 1 × Fin 3)) : Prop :=
+  ∃ (h1 : w ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω).domain)
+    (h2 : (curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω ⟨w, h1⟩ ∈
+      ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)†.domain),
+    ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)† ⟨_, h2⟩ = (ξ ^ 2 : ℝ) • w
+
+/-- **Boundary regularity of Maxwell eigenfields** (hypothesis, absent from Mathlib): every
+weakly divergence-free vector field `w ∈ H̊(curl, Ω)` with `curl curl w = ξ² w`, `ξ > 0`, has a
+representative `C²` on a neighbourhood of `cl Ω`. This is the textbook statement for the
+electric Maxwell eigenproblem on a smooth bounded domain: `H̊(curl) ∩ H(div) ↪ H¹` with
+`H^{s+1}` regularity from `curl curl w`, `div w ∈ H^s` ([GiraultRaviart1986], Ch. I, §3), then
+bootstrapping and Sobolev embedding ([Evans2010], §5.6, §6.3 for the scalar model). It involves
+no symmetry or trace condition, and it is not a restatement of the absence of eigenfields:
+nonzero smooth Maxwell eigenfields exist on every box and on the ball (for instance the toroidal
+fields `j₁(k|x|)/|x| (x₂, -x₁, 0)`, `j₁(k) = 0`; not formalized). -/
+def MaxwellEigenfieldRegularity (Ω : Set R3) : Prop :=
+  ∀ ξ : ℝ, 0 < ξ → ∀ w : L2F ℝ Ω (Fin 1 × Fin 3), IsDivFree w → IsMaxwellEigenfield ξ w →
+    HasC2Rep Ω w
+
+/-- The hypothesis is satisfiable: it holds trivially on `∅`, where `L²` is zero. -/
+theorem maxwellEigenfieldRegularity_empty : MaxwellEigenfieldRegularity (∅ : Set R3) :=
+  fun _ _ _ _ _ => ⟨univ, isOpen_univ, subset_univ _, fun _ _ => 0, fun _ => contDiffOn_const,
+    fun _ => ae_iff.2 (by simp)⟩
+
+/-- The rows of a TSD field are weakly divergence-free. -/
+theorem isDivFree_rowF {v : L2F ℝ Ω Ix} (hv : v ∈ tsd Ω) (i : Fin 3) : IsDivFree (rowF i v) := by
+  intro φ hφ
+  have hφ' : IsTestField Ω (fun j => if j = i then φ 0 else 0) := fun j => by
+    dsimp only
+    split_ifs
+    exacts [hφ 0, IsTest.zero]
+  have h0 := hv.2.2 _ hφ'
+  rw [testField_congr _
+      (isTestField_rowTest i ((gradOp 3 1 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ))
+      (gradOp_rowTest i φ), ← rowEmb_testField, inner_rowEmb] at h0
+  exact h0
+
+theorem rowF_mem_testGraph (i : Fin 3) {φ : Ix → R3 → ℝ} (hφ : IsTestField Ω φ) :
+    (rowF i (testField hφ),
+        rowF i (testField ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hφ))) ∈
+      (curlOp 1 : ConstCoeffOp R3 ℝ _ _).testGraph Ω := by
+  refine ⟨fun p => φ (i, p.2), fun p => hφ _, ?_⟩
+  rw [rowF, compF_testField, compF_testField]
+  exact Prod.ext rfl (testField_congr _ _ (curlOp_row i φ).symm)
+
+/-- Rows of `H̊(curl)` matrix fields lie in `H̊(curl)`, with the row of the curl as curl. -/
+theorem rowF_mem_minimal (hΩ : IsOpen Ω) (i : Fin 3)
+    (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) :
+    ∃ h : rowF i (u : L2F ℝ Ω Ix) ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω).domain,
+      (curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω ⟨_, h⟩ =
+        rowF i ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω u) :=
+  (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).mem_minimal_of_mapsTo_testGraph hΩ hΩ (rowF i) (rowF i)
+    (fun _ hφ => rowF_mem_testGraph i hφ) u
+
+/-- Rows of `H(curl)` matrix fields lie in `H(curl)`, with the row of the weak curl as weak
+curl. -/
+theorem rowF_mem_adjoint (hΩ : IsOpen Ω) (i : Fin 3)
+    (c : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω)†.domain) :
+    ∃ h : rowF i (c : L2F ℝ Ω Ix) ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)†.domain,
+      ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)† ⟨_, h⟩ =
+        rowF i (((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω)† c) := by
+  have hid : ∀ ψ : Fin 1 × Fin 3 → R3 → ℝ, ∀ hψ : IsTestField Ω ψ,
+      ⟪rowF i (((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω)† c), testField hψ⟫_ℝ =
+        ⟪rowF i (c : L2F ℝ Ω Ix),
+          testField ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hψ)⟫_ℝ := by
+    intro ψ hψ
+    rw [← inner_rowEmb, rowEmb_testField, ← inner_rowEmb, rowEmb_testField,
+      (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).adjoint_minimal_inner_testField hΩ c
+        (isTestField_rowTest i hψ)]
+    exact congrArg _ (testField_congr _ _ (curlOp_rowTest i ψ))
+  have hmem := ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).mem_adjoint_minimal_domain_iff hΩ).2 ⟨_, hid⟩
+  exact ⟨hmem, (curlOp 1 : ConstCoeffOp R3 ℝ _ _).adjoint_minimal_apply_eq hΩ ⟨_, hmem⟩ hid⟩
+
+/-- **The rows of an electric eigenfield of the thesis' complex are electric Maxwell eigenfields**
+(the curl acts row-wise). -/
+theorem isMaxwellEigenfield_rowF (hΩ : IsOpen Ω) {ξ : ℝ} {v : L2F ℝ Ω Ix}
+    (hE : (gradCurl ℝ hΩ).IsEigenfield ξ v) (i : Fin 3) : IsMaxwellEigenfield ξ (rowF i v) := by
+  obtain ⟨h1, h3, e⟩ := hE
+  obtain ⟨hr1, er1⟩ := rowF_mem_minimal hΩ i ⟨v, h1⟩
+  obtain ⟨hr3, er3⟩ := rowF_mem_adjoint hΩ i ⟨_, h3⟩
+  have key : ∀ (y : L2F ℝ Ω (Fin 1 × Fin 3))
+      (hy : y ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)†.domain),
+      y = rowF i ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω ⟨v, h1⟩) →
+      ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)† ⟨y, hy⟩ = (ξ ^ 2 : ℝ) • rowF i v := by
+    rintro y hy rfl
+    refine er3.trans ?_
+    rw [← map_smul]
+    exact congrArg (rowF i) e
+  exact ⟨hr1, er1 ▸ hr3, key _ _ er1⟩
+
+/-- Componentwise assembly of `C²` representatives. -/
+theorem hasC2Rep_of_rowF {v : L2F ℝ Ω Ix} (h : ∀ i, HasC2Rep Ω (rowF i v)) : HasC2Rep Ω v := by
+  choose O hO hcl U hU hvU using h
+  refine ⟨⋂ i, O i, isOpen_iInter_of_finite hO, subset_iInter hcl, fun jk => U jk.1 (0, jk.2),
+    fun jk => (hU jk.1 (0, jk.2)).mono (iInter_subset _ _), fun jk => ?_⟩
+  simpa only [rowF_apply] using hvU jk.1 (0, jk.2)
+
+/-- **Maxwell regularity implies TSD regularity**: a TSD eigenfield is, row by row, a weakly
+divergence-free electric Maxwell eigenfield. -/
+theorem tsdEigenfieldRegularity_of_maxwell (hΩ : IsOpen Ω) (h : MaxwellEigenfieldRegularity Ω) :
+    TSDEigenfieldRegularity Ω hΩ := fun ξ hξ _ hv hE =>
+  hasC2Rep_of_rowF fun i => h ξ hξ _ (isDivFree_rowF hv i) (isMaxwellEigenfield_rowF hΩ hE i)
+
+/-- **`K*` is stationary on the ball under Maxwell regularity**: for the thesis' complex on the
+unit ball and `K = {0} × L²(TSD) × L²(TSD)`, if the eigenvectors of `L²` are complete (`hD`) and
+electric Maxwell eigenfields on the ball are `C²` up to the boundary (`hM`, the standard elliptic
+regularity statement, absent from Mathlib), every datum of `K*` is stationary. -/
+theorem coreSub_le_stationary_ball_of_maxwellRegularity
+    (hD : (gradCurl ℝ isOpen_ball3).EigenDense) (hM : MaxwellEigenfieldRegularity ball3) :
+    (gradCurl ℝ isOpen_ball3).coreSub (tsd ball3) (tsd ball3) ≤
+      (gradCurl ℝ isOpen_ball3).stationary :=
+  coreSub_le_stationary_ball_of_regularity hD (tsdEigenfieldRegularity_of_maxwell isOpen_ball3 hM)
+
+end Maxwell
 
 /-! ### Non-vacuity: the boundary condition is the operative hypothesis -/
 
@@ -2396,4 +2626,4 @@ end ShearWave
 
 end Ball
 
-end Feec.Models.BoundedDomain
+end Feec.Counterexamples.BallEigenfields

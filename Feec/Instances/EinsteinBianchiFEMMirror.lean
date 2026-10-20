@@ -68,7 +68,8 @@ variable {α : Type*} [MeasurableSpace α] {μ : Measure α}
 theorem ofRealL_reL_add_I_smul (f : Lp ℂ 2 μ) :
     ofRealL μ (reL μ f) + Complex.I • ofRealL μ (reL μ (-Complex.I • f)) = f := by
   refine Lp.ext ?_
-  filter_upwards [Lp.coeFn_add (ofRealL μ (reL μ f)) (Complex.I • ofRealL μ (reL μ (-Complex.I • f))),
+  filter_upwards [Lp.coeFn_add (ofRealL μ (reL μ f))
+      (Complex.I • ofRealL μ (reL μ (-Complex.I • f))),
     Lp.coeFn_smul Complex.I (ofRealL μ (reL μ (-Complex.I • f))), coeFn_ofRealL (reL μ f),
     coeFn_ofRealL (reL μ (-Complex.I • f)), coeFn_reL f, coeFn_reL (-Complex.I • f),
     Lp.coeFn_smul (-Complex.I) f] with x h1 h2 h3 h4 h5 h6 h7
@@ -194,7 +195,8 @@ theorem reM_I_embM (g : W2) : reM (Complex.I • embM g) = 0 := by
   rw [reM_apply, PiLp.smul_apply, embM_apply, reL_I_smul_ofRealL, map_zero]
   rfl
 
-/-- Real `1`-form rows on the cube as a (real-valued) complex matrix field: `E_{ab} = (w_a)_{dx_b}`. -/
+/-- Real `1`-form rows on the cube as a (real-valued) complex matrix field:
+`E_{ab} = (w_a)_{dx_b}`. -/
 def emb1 : Wv W1 →L[ℝ] MQ :=
   (PiLp.continuousLinearEquiv 2 ℝ
       (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))).symm.toContinuousLinearMap ∘L
@@ -213,7 +215,8 @@ theorem emb1_eq (w : Wv W1) : emb1 w = ofRealRows fun a => cQ _ (w a) := rfl
 def emb2 : Wv W2 →L[ℝ] MQ :=
   (PiLp.continuousLinearEquiv 2 ℝ
       (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))).symm.toContinuousLinearMap ∘L
-    ContinuousLinearMap.pi fun p => ((sg2 p.2 : ℂ) • ContinuousLinearMap.id ℂ (L2 ℂ (Q (Fin 3)))).restrictScalars ℝ ∘L
+    ContinuousLinearMap.pi fun p =>
+      ((sg2 p.2 : ℂ) • ContinuousLinearMap.id ℂ (L2 ℂ (Q (Fin 3)))).restrictScalars ℝ ∘L
       ofRealL _ ∘L
       (PiLp.proj (𝕜 := ℝ) 2 (fun _ : formIdx 3 ((2 : ℕ) : ℤ) => L2 ℝ (Q (Fin 3))) (eq2 p.2)) ∘L
       (cQ (formIdx 3 ((2 : ℕ) : ℤ))).toContinuousLinearEquiv.toContinuousLinearMap ∘L
@@ -462,7 +465,8 @@ theorem inner_mirrorReEmb_I (a b : REnergy) :
 /-! ### The forms states of the mirror scheme -/
 
 variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
-  (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅ Feec.FiniteElement.PolySeq.lowestOrder ρ C)
+  (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅
+    Feec.FiniteElement.PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3,
     Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
 

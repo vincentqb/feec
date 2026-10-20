@@ -208,7 +208,8 @@ theorem EState.norm_mapL {f0 : P0 →L[ℝ] Q0} {f1 : Pt1 →L[ℝ] Qt1} {f2 : P
     {f3 : Pt2 →L[ℝ] Qt2} (h0 : ∀ x, ‖f0 x‖ = ‖x‖) (h1 : ∀ x, ‖f1 x‖ = ‖x‖)
     (h2 : ∀ x, ‖f2 x‖ = ‖x‖) (h3 : ∀ x, ‖f3 x‖ = ‖x‖) (x : EState P0 Pt1 P2 Pt2) :
     ‖EState.mapL f0 f1 f2 f3 x‖ = ‖x‖ := by
-  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), EState.norm_sq, EState.norm_sq, EState.mapL_apply,
+  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), EState.norm_sq, EState.norm_sq,
+    EState.mapL_apply,
     EState.σ_mk, EState.u_mk, EState.M_mk, EState.ρ_mk, h0, h1, h2, h3]
 
 end EStateMap
@@ -513,7 +514,8 @@ theorem DiscreteSolution.hasDerivWithinAt_state {T : ℝ} (s : DiscreteSolution 
   exact h
 
 /-- **Every solution of (6.3) without source is the orbit of `e^{t Lₕ}`** from its initial energy
-state, on `[0, T]` (energy argument: the difference has right derivative `Lₕ e`, `⟪Lₕ e, e⟫ = 0`). -/
+state, on `[0, T]` (energy argument: the difference has right derivative `Lₕ e`, and
+`⟪Lₕ e, e⟫ = 0`). -/
 theorem DiscreteSolution.eq_group {T : ℝ} (hT : 0 ≤ T) (s : DiscreteSolution D T 0) :
     ∀ t ∈ Icc 0 T, ((waveGroupH D hdinj hS).S t (DiscreteSolution.hiddenInit hT s)).toEState =
       DiscreteSolution.state D s t := by

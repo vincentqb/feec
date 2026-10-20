@@ -55,6 +55,10 @@ theorem IsOrthogonal.norm_incl (hF : IsOrthogonal F) (h : κ) (a : F.X h) :
   rw [inner_self_eq_norm_sq, inner_self_eq_norm_sq] at e
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 e
 
+/-- Orthogonal reading maps have norm at most `1`. -/
+theorem IsOrthogonal.norm_incl_le_one (hF : IsOrthogonal F) (h : κ) : ‖F.incl h‖ ≤ 1 :=
+  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun a => by rw [hF.norm_incl, one_mul]
+
 /-- `y - ιₕ πₕ y ⊥ ιₕ Xₕ`. -/
 theorem IsOrthogonal.inner_sub_incl_proj (hF : IsOrthogonal F) (h : κ) (y : PiLp 2 W)
     (a : F.X h) : ⟪y - F.incl h (F.proj h y), F.incl h a⟫_𝕜 = 0 := by

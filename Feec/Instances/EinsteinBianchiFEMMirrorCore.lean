@@ -118,7 +118,8 @@ theorem neg_I_smul_mem {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.w
 /-! ### Solutions of (6.5) as orbits of the approximating discretization -/
 
 variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
-  (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅ Feec.FiniteElement.PolySeq.lowestOrder ρ C)
+  (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅
+    Feec.FiniteElement.PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3,
     Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
 
@@ -307,7 +308,8 @@ theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ �
     ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
       ∀ t ∈ Icc 0 T, tsdErr ((tsdDatumOf hx).U t) (dState hT hB N (toSourceFree hT hB N sh) t) ≤
         mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + t) * meshSize N := by
-  obtain ⟨sh, -, hsh⟩ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.2 N (tsdDatumOf hx) h3 hT0
+  obtain ⟨sh, -, hsh⟩ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.2 N
+    (tsdDatumOf hx) h3 hT0
     (tsdDatumOf hx).U_zero ((tsdDatumOf hx).isStrongSolution T)
   exact ⟨sh, hsh⟩
 set_option maxHeartbeats 4000000 in

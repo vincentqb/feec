@@ -70,6 +70,15 @@ subspaces). On `ℝ³` only items 1–2 are stated.
 `MirrorSobolevVerdict`, `MirrorNonvacuous`, `MirrorFEMVerdict`, `StandardCubeVerdict`); each headline
 theorem proves one of them.
 
+**The scheme (6.5) as an approximating FEEC discretization.** Both finite element rows are
+instances of the approximating FEEC theorem `Feec.HilbertComplex.approxFEEC`, in
+`Feec.Instances.EinsteinBianchiFEM`: `MirrorFEMApproxVerdict` (convergence to the TSD solution for
+every TSD datum and every convergent family of discrete initial values, the `O(h)` and `O(hˢ)`
+rates, residual `→ 0`) and `StandardCubeApproxVerdict` (convergence for every datum; from
+`(0, 0, (0, β))` the residuals tend to a positive limit); `einsteinBianchi_summary` there extends
+`einsteinBianchi_constrainedFEEC_summary` by these two verdicts. `MirrorFEMVerdict` and
+`StandardCubeVerdict` are kept: they are the model theorems the two instances are built on.
+
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],

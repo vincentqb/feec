@@ -72,7 +72,8 @@ abbrev gammaTop : bggHilb.Γbar ≃ₗᵢ[ℝ] W0 :=
 /-- **The inverse of the energy vector** `vecL`: `(a, u, M, ρ) ↦ (-a, u, (M, ρ))`. -/
 def vecInv : CEnergy →L[ℝ] WS :=
   (PiLp.continuousLinearEquiv 2 ℝ
-      (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1) (WithLp 2 (W2 × Wv W2)))).symm.toContinuousLinearMap ∘L
+      (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1)
+        (WithLp 2 (W2 × Wv W2)))).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun i => match i with
       | 0 => -(gammaTop.symm.toContinuousLinearEquiv.toContinuousLinearMap ∘L
           (show CEnergy →L[ℝ] W0 from
@@ -276,7 +277,8 @@ read in the matrix model, is the discrete solution. -/
 theorem standardCube_sol_eq_scheme (N : ℕ) {T : ℝ} (hT0 : 0 < T) (v : cubeHidden hT hB N) :
     ∃ s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T 0,
       DiscreteSolution.hiddenInit hT0.le s = v ∧
-      ∀ t ∈ Icc 0 T, (standardCubeApprox hT hB).sol N v t = totalE (vecInv (cState hT hB N s t)) := by
+      ∀ t ∈ Icc 0 T,
+        (standardCubeApprox hT hB).sol N v t = totalE (vecInv (cState hT hB N s t)) := by
   obtain ⟨s, hs, -⟩ := exists_discreteSolution_group (cubeWave_dt0_injective hT hB N)
     (cubeWave_S0_surjective hT hB N) hT0 v
   subst hs

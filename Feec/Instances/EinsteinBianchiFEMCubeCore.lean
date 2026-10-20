@@ -54,7 +54,8 @@ state (`Feec.Models.Cube.WeakSymmetry.cubeWave_converges` for the classical solu
 `exactOfStrong` of the orbit) is within `ε` of `e^{tL} ξ₀` on `[0, T]`. -/
 theorem standardCube_hconv : ∀ x ∈ matrixComplex.wave.domainSq, ∀ T : ℝ, 0 < T →
     ∀ ε : ℝ, 0 < ε → ∀ᶠ N in atTop, ∃ v : (standardCubeApprox hT hB).X N,
-      ∀ t ∈ Icc 0 T, ‖matrixComplex.waveGroup.S t x - (standardCubeApprox hT hB).sol N v t‖ ≤ ε := by
+      ∀ t ∈ Icc 0 T,
+        ‖matrixComplex.waveGroup.S t x - (standardCubeApprox hT hB).sol N v t‖ ≤ ε := by
   intro x hx T hT0 ε hε
   obtain ⟨hx1, hx2⟩ := LinearPMap.mem_domainSq.1 hx
   have hy : totalE.symm x ∈ formsShort.wave.domain := wave_intertwines_symm.mapsTo ⟨x, hx1⟩
@@ -122,7 +123,8 @@ theorem dense_standardCubeCore : Dense ((standardCubeCore hT hB).Data : Set (PiL
 theorem standardCubeCore_closure : (standardCubeCore hT hB).Data.topologicalClosure = ⊤ := by
   rw [eq_top_iff]
   intro x _
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, (dense_standardCubeCore hT hB).closure_eq]
+  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
+    (dense_standardCubeCore hT hB).closure_eq]
   trivial
 
 end Feec.Instances.EinsteinBianchi.FEM

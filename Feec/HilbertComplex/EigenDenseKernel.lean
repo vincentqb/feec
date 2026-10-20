@@ -15,7 +15,8 @@ resolvent by compactness **off the kernel**:
 
 * `Operator.HasCompactPerp T`: the unit box of `D(T) ∩ N(T)ᗮ` in the graph norm lies in a
   compact set ("`T⁻¹ : R(T) → N(T)ᗮ` is compact"); `Operator.HasCompactBall T`: the whole unit
-  box of `D(T)` does (a compact embedding of `D(T)`).
+  box of `D(T)` does (a compact embedding of `D(T)`); it passes to operators acting component
+  by component on finitely many copies (`Operator.HasCompactBall.of_components`).
 * **Duality** (`Operator.HasCompactPerp.adjoint`): `HasCompactPerp T ⇒ HasCompactPerp T†` for
   closed densely defined `T` (Schauder's theorem in this form: `R(T)` is closed, every
   `v ∈ D(T†) ∩ N(T†)ᗮ` is `T u` with `u ∈ N(T)ᗮ`, `‖u‖ ≤ C ‖v‖`, and
@@ -199,6 +200,27 @@ theorem HasCompactBall.of_isClosedEmbedding {E' F' : Type*} [NormedAddCommGroup 
   · exact (J.le_opNorm x).trans ((mul_le_of_le_one_right (norm_nonneg _) h1).trans
       (le_max_left _ _))
   · exact (mul_le_of_le_one_right hC h2).trans (le_max_right _ _)
+
+/-- **Compact boxes from components**: if finitely many bounded maps `P i` send `D(T)` into
+`D(T')` with `T' (P i x) = Q i (T x)`, `T'` has a compact box, and `x` is recovered continuously
+from `(P i x)ᵢ`, then `T` has a compact box (e.g. `H̊¹(Ω; ℝᵐ)` from `m` copies of `H̊¹(Ω)`). -/
+theorem HasCompactBall.of_components {E' F' : Type*} [NormedAddCommGroup E']
+    [InnerProductSpace 𝕜 E'] [NormedAddCommGroup F'] [InnerProductSpace 𝕜 F']
+    {T' : E' →ₗ.[𝕜] F'} (h : HasCompactBall T') {m : Type*} [Finite m] (P : m → E →L[𝕜] E')
+    (Q : m → F →L[𝕜] F') (R : (m → E') → E) (hR : Continuous R)
+    (hRP : ∀ x : E, R (fun i => P i x) = x)
+    (hd : ∀ (x : T.domain) (i : m), ∃ hx : P i x ∈ T'.domain, T' ⟨P i x, hx⟩ = Q i (T x)) :
+    HasCompactBall T := by
+  choose K hK hsub using fun i => h.exists_isCompact (max ‖P i‖ ‖Q i‖)
+  refine ⟨R '' Set.pi univ K, (isCompact_univ_pi hK).image hR, fun x h1 h2 => ?_⟩
+  refine ⟨fun i => P i x, fun i _ => ?_, hRP x⟩
+  obtain ⟨hx, ex⟩ := hd x i
+  refine hsub i ⟨P i x, hx⟩ ?_ ?_
+  · exact ((P i).le_opNorm x).trans ((mul_le_of_le_one_right (norm_nonneg _) h1).trans
+      (le_max_left _ _))
+  · rw [ex]
+    exact ((Q i).le_opNorm _).trans ((mul_le_of_le_one_right (norm_nonneg _) h2).trans
+      (le_max_right _ _))
 
 variable [CompleteSpace E] [CompleteSpace F]
 

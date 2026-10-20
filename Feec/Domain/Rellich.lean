@@ -18,6 +18,12 @@ unit box `‖u‖, ‖A u‖ ≤ 1` lies in a compact set) is
 * **invariant under affine changes of variables** for homogeneous `A`
   (`ConstCoeffOp.hasCompactBall_minimal_pull`, from `ConstCoeffOp.minimal_pull`).
 
+The graph-closure step of the extension holds in general
+(`ConstCoeffOp.mem_minimal_of_mapsTo_testGraph`): bounded maps sending test graphs to test graphs
+send minimal domains to minimal domains. With the reindexing of components
+(`compF`) the same lemma splits a field of `D(A_min)` into components (used for `H̊¹(Ω; ℝᵐ)` in
+`Feec.Models.BoundedDomain.Compactness`).
+
 Hence (`ConstCoeffOp.hasCompactBall_minimal_of_subset_preimage`) a compact embedding on one open
 set `Ω'` gives one on every open `Ω ⊆ T⁻¹(Ω')`, `T x = a x + b`; in particular from the cube on
 every bounded open set. This is the reduction of Rellich's theorem on bounded open sets to the
@@ -112,6 +118,21 @@ theorem extendZeroF_apply (u : L2F 𝕜 Ω ι) (i : ι) :
 
 end Extend
 
+/-! ### Reindexing the components of a field -/
+
+section Reindex
+
+variable {ι ι' : Type*}
+
+/-- **Reindexing of components** `L²(Ω; 𝕜^ι) → L²(Ω; 𝕜^ι')`, `(compF σ u)_j = u_{σ j}`. -/
+def compF (σ : ι' → ι) : L2F 𝕜 Ω ι →L[𝕜] L2F 𝕜 Ω ι' :=
+  (PiLp.continuousLinearEquiv 2 𝕜 (fun _ : ι' => L2 𝕜 Ω)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.pi fun j => PiLp.proj 2 (fun _ : ι => L2 𝕜 Ω) (σ j)
+
+theorem compF_apply (σ : ι' → ι) (u : L2F 𝕜 Ω ι) (j : ι') : compF σ u j = u (σ j) := rfl
+
+end Reindex
+
 section Test
 
 variable [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E]
@@ -130,7 +151,15 @@ theorem extendZeroF_testField (hΩ : MeasurableSet Ω) (hsub : Ω ⊆ Ω') {φ :
   · rw [indicator_of_mem hx]
   · rw [indicator_of_notMem hx, (hφ i).eq_zero_of_notMem hx]
 
+omit [Fintype ι] in
+/-- The reindexing of a test field is the reindexed test field. -/
+theorem compF_testField {ι' : Type*} (σ : ι' → ι)
+    {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
+    compF σ (testField hφ) = testField (φ := fun j => φ (σ j)) fun j => hφ (σ j) := rfl
+
 end Test
+
+
 
 /-! ### The minimal realization under extension by zero -/
 
@@ -162,6 +191,29 @@ theorem extendZeroF_mem_minimal (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (hsub : Ω
   have hgr : Φ ((u : L2F 𝕜 Ω ι), A.minimal Ω u) ∈ (A.minimal Ω').graph := by
     rw [A.minimal_graph hΩ', ← SetLike.mem_coe, Submodule.topologicalClosure_coe]
     exact map_mem_closure hΦ hmem hmaps
+  exact ⟨LinearPMap.mem_domain_of_mem_graph hgr,
+    ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph hgr)).2 hgr).symm⟩
+
+/-- **Minimal domains along maps of test graphs**: continuous linear maps `Φ`, `Ψ` sending the
+test graph of `A` on `Ω` into the test graph of `B` on `Ω'` send `D(A_min(Ω))` into
+`D(B_min(Ω'))`, with `B_min (Φ u) = Ψ (A_min u)` (graph closure). -/
+theorem mem_minimal_of_mapsTo_testGraph {ι' κ' : Type*} [Fintype ι'] [Fintype κ']
+    {B : ConstCoeffOp E 𝕜 ι' κ'} (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω')
+    (Φ : L2F 𝕜 Ω ι →L[𝕜] L2F 𝕜 Ω' ι') (Ψ : L2F 𝕜 Ω κ →L[𝕜] L2F 𝕜 Ω' κ')
+    (hmaps : ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ),
+      (Φ (testField hφ), Ψ (testField (A.isTestField_apply hφ))) ∈ B.testGraph Ω')
+    (u : (A.minimal Ω).domain) :
+    ∃ h : Φ u ∈ (B.minimal Ω').domain, B.minimal Ω' ⟨_, h⟩ = Ψ (A.minimal Ω u) := by
+  set F : L2F 𝕜 Ω ι × L2F 𝕜 Ω κ → L2F 𝕜 Ω' ι' × L2F 𝕜 Ω' κ' := Prod.map Φ Ψ
+  have hF : Continuous F := Φ.continuous.prodMap Ψ.continuous
+  have hm : MapsTo F (A.testGraph Ω : Set _) (B.testGraph Ω' : Set _) := by
+    rintro _ ⟨φ, hφ, rfl⟩
+    exact hmaps φ hφ
+  have hmem := A.mem_closure_minimal hΩ u
+  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hmem
+  have hgr : F ((u : L2F 𝕜 Ω ι), A.minimal Ω u) ∈ (B.minimal Ω').graph := by
+    rw [B.minimal_graph hΩ', ← SetLike.mem_coe, Submodule.topologicalClosure_coe]
+    exact map_mem_closure hF hmem hm
   exact ⟨LinearPMap.mem_domain_of_mem_graph hgr,
     ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph hgr)).2 hgr).symm⟩
 

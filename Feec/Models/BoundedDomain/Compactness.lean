@@ -27,7 +27,8 @@ that `Feec.HilbertComplex.eigenDense_wave_fin3` needs instead, in degrees `0` an
   zero into a cube (`Feec.Domain.ConstCoeffOp.hasCompactBall_minimal_of_subset`). In `ℝⁿ`, for
   `H̊¹ = H̊Λ⁰` (`hasCompactBall_minimal_extDeriv_zero`, `isCompact_closure_minimal_extDeriv_ball`):
   from `H̊Λ(Q)` (`Feec.Models.Cube.FEM.hasCompactProperty_min`) by an affine map and extension by
-  zero. Hence **(3a)** `gradCurl_hasCompactPropertyAt_zero`.
+  zero; for `H̊¹(Ω; ℝᵐ)`, `Ω ⊆ ℝⁿ`, component by component (`hasCompactBall_minimal_gradOp`,
+  `isCompact_closure_minimal_gradOp_ball`). Hence **(3a)** `gradCurl_hasCompactPropertyAt_zero`.
 * **Weber compactness** (`HasWeberCompactness Ω`: the unit box of `D(curl_min) ∩ D(div_max)` on
   matrix fields is precompact) is the compactness property in degree `1`
   (`hasWeberCompactness_iff`); it holds on every open cube (`hasWeberCompactness_cube`).
@@ -36,14 +37,20 @@ that `Feec.HilbertComplex.eigenDense_wave_fin3` needs instead, in degrees `0` an
   bounded measurable coercive `ε`, `{u ∈ D(curl_min) : div(ε u) ∈ L², ‖u‖, ‖curl u‖,
   ‖div(ε u)‖ ≤ 1}` is precompact (`Feec.Operator.HasCompactPair.exists_isCompact_coeff`, the
   Helmholtz argument with Rellich and Weber).
-* **(3c) The criterion** `eigenDense_gradCurl_of_weber`: on a bounded open `Ω` with
-  `HasWeberCompactness Ω`, the wave group of `gradCurl ℝ hΩ` has a dense set of eigenvectors. On
-  cubes it recovers `Feec.Models.Cube.Ident.eigenDense_gradCurl_cube`
-  (`eigenDense_gradCurl_cube_of_weber`).
+* **(3c) The criterion** `eigenDense_gradCurl_of_compactCurlPerp`: on a bounded open `Ω` such
+  that `curl_min` is compact off its kernel (`Operator.HasCompactPerp`), the wave group of
+  `gradCurl ℝ hΩ` has a dense set of eigenvectors; `eigenDense_gradCurl_of_weber` is the
+  corollary under `HasWeberCompactness Ω`. On cubes it recovers
+  `Feec.Models.Cube.Ident.eigenDense_gradCurl_cube` (`eigenDense_gradCurl_cube_of_weber`).
 
-Weber compactness itself is not proved beyond cubes: it holds on Lipschitz domains (Weber,
-Picard; via regular decompositions, [Hiptmair2002], §4) and fails on some non-Lipschitz bounded
-domains, so it stays a hypothesis of `eigenDense_gradCurl_of_weber`.
+**What is proved and what is assumed.** Degree `0` (Rellich) is proved on every bounded open set,
+in `ℝ³` for `ℝ³`-valued fields and in `ℝⁿ` for `ℝᵐ`-valued fields (`hasCompactBall_minimal_gradOp`).
+Degree `1` is not: `HasWeberCompactness Ω` is exactly the compactness property in degree `1`
+(`hasWeberCompactness_iff`), and the weaker hypothesis of
+`eigenDense_gradCurl_of_compactCurlPerp` is its half off the kernel of `curl_min`. Both are proved
+on open cubes only. For Lipschitz domains Weber compactness is a classical theorem (Weber,
+Picard) and follows from regular decompositions ([Hiptmair2002], §4), which are not formalized
+here; for an arbitrary bounded open set no proof is available, so it stays a hypothesis.
 
 ## References
 
@@ -259,6 +266,61 @@ theorem isCompact_closure_minimal_extDeriv_ball {n : ℕ} {Ω : Set (Fin n → �
         ‖u‖ ≤ 1 ∧ ‖(extDerivOp ℝ n 0).minimal Ω ⟨u, hu⟩‖ ≤ 1}) :=
   (hasCompactBall_minimal_extDeriv_zero hΩ hb).isCompact_closure
 
+/-- The element of a `1`-form index `s = {j}`. -/
+def formIdxOne {n : ℕ} (s : formIdx n 1) : Fin n :=
+  (Finset.card_eq_one.1 (by exact_mod_cast s.2 : s.1.card = 1)).choose
+
+theorem formIdxOne_spec {n : ℕ} (s : formIdx n 1) : s.1 = {formIdxOne s} :=
+  (Finset.card_eq_one.1 (by exact_mod_cast s.2 : s.1.card = 1)).choose_spec
+
+theorem eq_formIdxOne {n : ℕ} (s : formIdx n 1) : s = ⟨{formIdxOne s}, by simp⟩ :=
+  Subtype.ext (formIdxOne_spec s)
+
+/-- The gradient of the `i`-th component of a field is `d` of the `0`-form `φᵢ`. -/
+theorem gradOp_apply_formIdxOne {n m : ℕ} (φ : Fin m → (Fin n → ℝ) → ℝ) (i : Fin m) :
+    (fun s : formIdx n 1 =>
+      (gradOp n m : ConstCoeffOp (Fin n → ℝ) ℝ (Fin m) (Fin m × Fin n)).apply φ (i, formIdxOne s)) =
+      (extDerivOp ℝ n 0).apply (fun _ => φ i) := by
+  funext s x
+  have e := extDerivOp_zero_apply (𝕜 := ℝ) (fun _ => φ i) (formIdxOne s) x
+  rw [← eq_formIdxOne] at e
+  rw [e, gradOp_apply]
+
+/-- **Rellich's theorem for `H̊¹(Ω; ℝᵐ)` on every bounded open `Ω ⊆ ℝⁿ`**: the unit box
+`‖u‖, ‖grad u‖ ≤ 1` of `D(grad_min)` (`m` components, `gradOp n m`) lies in a compact subset of
+`L²(Ω; ℝᵐ)`. Component by component from the scalar case `hasCompactBall_minimal_extDeriv_zero`
+(each component of `u ∈ H̊¹(Ω; ℝᵐ)` lies in `H̊Λ⁰(Ω)`,
+`ConstCoeffOp.mem_minimal_of_mapsTo_testGraph`;
+`Operator.HasCompactBall.of_components`). [Evans2010], §5.7, Thm 1. -/
+theorem hasCompactBall_minimal_gradOp {n m : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    (hb : Bornology.IsBounded Ω) :
+    HasCompactBall
+      ((gradOp n m : ConstCoeffOp (Fin n → ℝ) ℝ (Fin m) (Fin m × Fin n)).minimal Ω) := by
+  let e0 : formIdx n 0 := ⟨∅, by simp⟩
+  refine (hasCompactBall_minimal_extDeriv_zero hΩ hb).of_components
+    (fun i => compF (𝕜 := ℝ) (Ω := Ω) fun _ : formIdx n 0 => i)
+    (fun i => compF (𝕜 := ℝ) (Ω := Ω) (ι' := formIdx n (0 + 1)) fun s => (i, formIdxOne s))
+    (fun w => (PiLp.continuousLinearEquiv 2 ℝ (fun _ : Fin m => L2 ℝ Ω)).symm fun i => w i e0)
+    ((PiLp.continuousLinearEquiv 2 ℝ (fun _ : Fin m => L2 ℝ Ω)).symm.continuous.comp
+      (continuous_pi fun i =>
+        (PiLp.proj (𝕜 := ℝ) 2 (fun _ : formIdx n 0 => L2 ℝ Ω) e0).continuous.comp
+          (continuous_apply i)))
+    (fun x => rfl) fun x i => ?_
+  refine (gradOp n m).mem_minimal_of_mapsTo_testGraph hΩ hΩ _ _ (fun φ hφ => ?_) x
+  refine ⟨fun _ => φ i, fun _ => hφ i, ?_⟩
+  rw [compF_testField, compF_testField]
+  exact Prod.ext rfl (testField_congr _ _ (gradOp_apply_formIdxOne φ i))
+
+/-- **Rellich's theorem for `H̊¹(Ω; ℝᵐ)`, closure form.** -/
+theorem isCompact_closure_minimal_gradOp_ball {n m : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    (hb : Bornology.IsBounded Ω) :
+    IsCompact (closure {u : L2F ℝ Ω (Fin m) |
+      ∃ hu : u ∈
+        ((gradOp n m : ConstCoeffOp (Fin n → ℝ) ℝ (Fin m) (Fin m × Fin n)).minimal Ω).domain,
+        ‖u‖ ≤ 1 ∧ ‖(gradOp n m : ConstCoeffOp (Fin n → ℝ) ℝ (Fin m) (Fin m × Fin n)).minimal Ω
+          ⟨u, hu⟩‖ ≤ 1}) :=
+  (hasCompactBall_minimal_gradOp hΩ hb).isCompact_closure
+
 end DeRham
 
 /-! ### Rellich on bounded open sets of `ℝ³` -/
@@ -324,8 +386,9 @@ theorem gradCurl_hasCompactPropertyAt_zero (hΩ : IsOpen Ω) (hb : Bornology.IsB
 /-- **Weber compactness of `Ω`**: the unit box of `D(curl_min) ∩ D(div_max)` on matrix fields
 (rows in `H̊(curl, Ω) ∩ H(div, Ω)`), `‖u‖, ‖curl u‖, ‖div u‖ ≤ 1`, lies in a compact subset of
 `L²(Ω; ℝ³ˣ³)`. The divergence is `(gradᵗ)_max = -div_max` (`gradOp_formalAdj_apply`), the
-adjoint of `grad_min` (`adjoint_gradCurl_d₀`). True on Lipschitz domains (Weber, Picard); here
-proved on open cubes (`hasWeberCompactness_cube`), a hypothesis elsewhere. -/
+adjoint of `grad_min` (`adjoint_gradCurl_d₀`). A classical theorem on Lipschitz domains (Weber,
+Picard; [Hiptmair2002], §4), not formalized; here proved on open cubes (`hasWeberCompactness_cube`)
+and a hypothesis elsewhere. -/
 def HasWeberCompactness (Ω : Set R3) : Prop :=
   ∃ K : Set (L2F ℝ Ω Ix), IsCompact K ∧ ∀ (u : L2F ℝ Ω Ix)
     (hu : u ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
@@ -371,16 +434,47 @@ section EigenDense
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-/-- **(3c) A complete set of eigenvectors from Weber compactness.** On a bounded open
-`Ω ⊆ ℝ³` with `HasWeberCompactness Ω`, the wave group of `H̊¹ → H̊(curl) → L²` has a dense set
-of eigenvectors, although `N(L) ⊇ N(d₁†)` is infinite-dimensional (so that the
+/-- **Half compactness of `curl_min` in degree `1`**: `HasCompactCyclePerpAt 1` of
+`H̊¹ → H̊(curl) → L²` is the compactness of the box of `D(curl_min) ∩ N(curl_min)ᗮ`. -/
+theorem hasCompactCyclePerpAt_one_iff (hΩ : IsOpen Ω) :
+    (gradCurl ℝ hΩ).toHilbertComplex.HasCompactCyclePerpAt 1 ↔
+      HasCompactPerp ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) := by
+  unfold HasCompactCyclePerpAt
+  rw [ComplexShape.next_eq' _ (show ComplexShape.fin3.Rel 1 2 by simp)]
+  rfl
+
+/-- Weber compactness gives the compactness of `curl_min` off its kernel. -/
+theorem HasWeberCompactness.hasCompactPerp_curl (hΩ : IsOpen Ω) (hW : HasWeberCompactness Ω) :
+    HasCompactPerp ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :=
+  (hasCompactCyclePerpAt_one_iff hΩ).1 ((hasWeberCompactness_iff hΩ).1 hW).hasCompactCyclePerpAt
+
+/-- **(3c) A complete set of eigenvectors from the compactness of `curl_min` off its kernel.**
+On a bounded open `Ω ⊆ ℝ³` such that the box `‖u‖, ‖curl u‖ ≤ 1` of
+`D(curl_min) ∩ N(curl_min)ᗮ` is precompact, the wave group of `H̊¹ → H̊(curl) → L²` has a dense
+set of eigenvectors, although `N(L) ⊇ N(d₁†)` is infinite-dimensional (so that the
 compact-resolvent criterion does not apply): half compactness holds in degree `0` (Rellich,
-`gradCurl_hasCompactPropertyAt_zero`) and degree `1` (Weber), and nothing is needed in degree `2`
-(`HilbertComplex.eigenDense_wave_fin3`). -/
+`gradCurl_hasCompactPropertyAt_zero`, unconditional), degree `1` is the hypothesis, and nothing is
+needed in degree `2` (`HilbertComplex.eigenDense_wave_fin3`). The hypothesis is implied by Weber
+compactness (`HasWeberCompactness.hasCompactPerp_curl`) and does not ask the harmonic fields
+`ℌ¹ = N(curl_min) ∩ N(div_max)` to be finite-dimensional: kernel vectors are eigenvectors with
+eigenvalue `0`. -/
+theorem eigenDense_gradCurl_of_compactCurlPerp (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (h : HasCompactPerp ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω)) :
+    (gradCurl ℝ hΩ).EigenDense :=
+  eigenDense_wave_fin3 _ (gradCurl_hasCompactPropertyAt_zero hΩ hb).hasCompactCyclePerpAt
+    ((hasCompactCyclePerpAt_one_iff hΩ).2 h)
+
+/-- **(3c) A complete set of eigenvectors from Weber compactness**: the corollary of
+`eigenDense_gradCurl_of_compactCurlPerp` through `HasWeberCompactness.hasCompactPerp_curl`. -/
 theorem eigenDense_gradCurl_of_weber (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hW : HasWeberCompactness Ω) : (gradCurl ℝ hΩ).EigenDense :=
-  eigenDense_wave_fin3 _ (gradCurl_hasCompactPropertyAt_zero hΩ hb).hasCompactCyclePerpAt
-    ((hasWeberCompactness_iff hΩ).1 hW).hasCompactCyclePerpAt
+  eigenDense_gradCurl_of_compactCurlPerp hΩ hb (hW.hasCompactPerp_curl hΩ)
+
+/-- **Non-vacuity of the hypothesis of `eigenDense_gradCurl_of_compactCurlPerp`**: on every open
+cube `curl_min` is compact off its kernel. -/
+theorem hasCompactPerp_curl_cube (b : R3) {s : ℝ} (hs : 0 < s) :
+    HasCompactPerp ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal (Cube.Geometry.openCube b s)) :=
+  (hasWeberCompactness_cube b hs).hasCompactPerp_curl (Cube.Geometry.isOpen_openCube b s)
 
 /-- **The criterion recovers the cubes**: `Ident.eigenDense_gradCurl_cube` (proved there through
 the Fourier eigenbasis of the torus) follows from `eigenDense_gradCurl_of_weber` and

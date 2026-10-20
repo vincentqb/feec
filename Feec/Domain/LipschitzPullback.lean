@@ -38,7 +38,7 @@ respect to a ball (`Feec.Models.StarShaped.EigenDense`).
 * For smooth `F`, `curl (DFᵀ u ∘ F) = adj(DF) (curl u) ∘ F` (`curl_pullRow`: symmetry of second
   derivatives and a cofactor identity) and its weak form (`integral_curl_pullRow`). For Lipschitz
   `Φ` the weak form follows by mollifying `Φ` and dominated convergence
-  (`integral_curl_pull1Fun`): `D(Φ ⋆ ρ_m) → DΦ` almost everywhere and boundedly.
+  (`integral_curl_pullFun`): `D(Φ ⋆ ρ_m) → DΦ` almost everywhere and boundedly.
 * On `L²`: weighted pullbacks `u ↦ Σₖ Mᵢₖ uₖ ∘ Φ` with bounded measurable weights
   (`BiLipschitz.wpull`), in particular `pull1`, `pull2`, the Jacobian pullback `pullJ`
   (`f ↦ |det DΦ| f ∘ Φ`), the **Piola transform** `piola` (`|det DΦ| DΦ⁻¹ (u_a ∘ Φ)`) and the
@@ -47,7 +47,7 @@ respect to a ball (`Feec.Models.StarShaped.EigenDense`).
 ## Main results
 
 * **`BiLipschitz.pull1_mem_minimal_curl`**: `Φ^*` maps `D(curl_min(Ω))` into `D(curl_min(U))`
-  and `curl_min (Φ^* u) = Φ^♭ (curl_min u)`. On test fields this is `integral_curl_pull1Fun`,
+  and `curl_min (Φ^* u) = Φ^♭ (curl_min u)`. On test fields this is `integral_curl_pullFun`,
   `Φ^* u` being supported in the compact `Φ⁻¹(supp u) ⊆ U`
   (`ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`); then graph closure.
 * **`BiLipschitz.piola_mem_maximal_divT`**: if `div u ∈ L²(Ω)` (no boundary condition), then

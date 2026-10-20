@@ -91,6 +91,10 @@ theorem einsteinBianchi_mirrorFEM_approxFEEC :
     (mirrorFEMApprox hT hB).Verdict (mirrorFEMCore hT hB) :=
   approxFEEC _ _
 
+/-- The TSD constraint of `mirrorFEMApprox` reduces the real mirror wave operator. -/
+theorem mirrorFEMApprox_isReducing : complexQℝ.wave.IsReducing (mirrorFEMApprox hT hB).K :=
+  isReducing_tsdQℝ
+
 /-- **Convergence of the mirror scheme (6.5) to the TSD solution** (item 3b of the verdict, on the
 closure `tsdQℝ` of the core, items 2 and 4a with the reducing constraint): for every TSD datum
 `ξ₀ ∈ L²` (complex fields) the exact solution stays TSD for all `t`, the orthogonal projections

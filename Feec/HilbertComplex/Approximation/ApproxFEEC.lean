@@ -16,8 +16,9 @@ through uniformly bounded maps `ιₕ : Xₕ → W` with uniformly bounded left 
 anything; `ιₕ πₕ → 1` is not assumed either: it is derived (`ApproxFEEC.tendsto_incl_proj`).
 The discrete solution is `ιₕ e^{tLₕ} v` (`ApproxFEEC.sol`).
 
-**Consistency** is tested along exact orbits, never in operator norm (the operator-norm defect is
-refuted for the BGG scheme of [QuennevilleBelair2015], (6.5), with ratio `√(2/3)`; see
+**Consistency** is tested along exact orbits, never in operator norm (for the BGG scheme of
+[QuennevilleBelair2015], (6.5), the static strong consistency bound of Prop. 5.9(2) for
+`S₁ - S₁,ₕ` fails, with ratio `√(2/3)`, per an unformalized symbolic audit recorded in
 `Feec.HilbertComplex.BGG.WeakConsistency`). A **comparison** (`ApproxFEEC.Comparison`) assigns to
 each datum `x` discrete trajectories `pₕ(t)` with derivatives `pₕ'(t)`; its **consistency defect**
 is `pₕ' - Lₕ pₕ`. A **core** (`ApproxFEEC.Core`) is a subspace of data whose comparisons
@@ -27,8 +28,15 @@ approximate the orbit in `W` (`ιₕ pₕ(t) → e^{tL} x`) with defects tending
 
 `‖e^{tL} x - ιₕ e^{tLₕ} pₕ(0)‖ ≤ ‖e^{tL} x - ιₕ pₕ(t)‖ + ‖ιₕ‖ ∫₀ᵗ ‖pₕ' - Lₕ pₕ‖`,
 
-**best approximation plus consistency**, the semi-discrete form of [HolstStern2012], Thm 3.9,
-Thm 3.10.
+**best approximation plus consistency**, a semi-discrete (evolution) analogue of the elliptic
+estimates of [HolstStern2012], Thm 3.9, Thm 3.10. The Holst–Stern terms `‖I - Jₕ‖` and
+`‖(I - iₕπₕ)u‖` do not appear as such: inner-product and commutation crimes both enter through
+the orbit defect `pₕ' - Lₕ pₕ`.
+
+`ApproxFEEC` is a **semigroup-form** abstraction: it carries no discrete differential `𝐝ₕ` and
+no cochain condition on `ιₕ`; the complex structure of the discrete spaces is not a hypothesis.
+Consequently it cannot express discrete constraints such as `𝐝ₕ`-closedness being preserved; the
+constraint residual is measured in `W`, through `ιₕ`.
 
 ## Main results
 
@@ -44,7 +52,10 @@ The **approximating FEEC theorem** `approxFEEC` (statement `ApproxFEEC.Verdict`)
    `approxFEEC_residual_le`, `approxFEEC_residual` (reducing `K`: bounded by the error, tends to
    `0` uniformly), `approxFEEC_residual_not_mem` (per datum: a solution leaving a closed nonempty
    `Q` has residuals tending to `dist(e^{tL} x, Q) > 0`), `approxFEEC_exists_not_mem`
-   (a non-reducing `K` is left by data of `K` or `Kᗮ`).
+   (a non-reducing `K` is left by data of `K` or `Kᗮ`), `approxFEEC_residual_not_isReducing_symm`
+   (with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`),
+   `approxFEEC_residual_not_isReducing_of_grading` (graded complex, `R`-invariant `K`: a datum of
+   `D(L) ∩ K` leaves `K` forward in time, with residuals tending to a positive limit).
 
 Constructions of cores: `ApproxFEEC.Core.ofOperator` (the Trotter–Kato bridge: an operator
 `Rₕ : Γ(𝐝) → Xₕ` with `ιₕ Rₕ → graphFst` pointwise and a defect identity on `D(L²)` with uniformly
@@ -427,8 +438,8 @@ theorem norm_sol_sub_sol_le (h : κ) (v w : F.X h) (t : ℝ) :
 
 /-- **Comparison trajectories** on `[0, T]`: for each datum `x` of `Data`, discrete trajectories
 `pₕ(t)` with right derivatives `pₕ'(t)`. Consistency is tested along them (orbit form), never in
-operator norm: the operator-norm defect is refuted for (6.5), with ratio `√(2/3)`, see
-`Feec.HilbertComplex.BGG.WeakConsistency`. -/
+operator norm: for (6.5) the static strong consistency bound Prop. 5.9(2) fails (ratio `√(2/3)`,
+per the unformalized audit recorded in `Feec.HilbertComplex.BGG.WeakConsistency`). -/
 structure Comparison (T : ℝ) where
   /-- the data -/
   Data : Set (PiLp 2 W)
@@ -461,7 +472,7 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- A **rate class** on `[0, T]`: comparison trajectories with best approximation
 `‖e^{tL} x - ιₕ pₕ(t)‖ ≤ C hᵅ ‖x‖_c` and consistency `‖pₕ' - Lₕ pₕ‖ ≤ C' hᵅ ‖x‖_c`.
-[HolstStern2012], Thm 3.10 -/
+Cf. [HolstStern2012], Thm 3.10 (elliptic analogue) -/
 structure RateClass (T : ℝ) extends F.Comparison T where
   /-- the norm of the class -/
   classNorm : PiLp 2 W → ℝ
@@ -495,7 +506,7 @@ structure Core where
 
 /-- **Best approximation plus consistency**: the error of the discrete solution from the
 comparison initial value is at most the approximation error plus `‖ιₕ‖` times the integrated
-consistency defect. [HolstStern2012], Thm 3.9 -/
+consistency defect. Cf. [HolstStern2012], Thm 3.9 (elliptic analogue) -/
 theorem norm_sub_sol_le {T : ℝ} (P : F.Comparison T) {x : PiLp 2 W} (hx : x ∈ P.Data) (h : κ) :
     ∀ t ∈ Icc 0 T, ‖H.waveGroup.S t x - F.sol h (P.p x h 0) t‖ ≤
       ‖H.waveGroup.S t x - F.incl h (P.p x h t)‖ +
@@ -901,7 +912,7 @@ theorem approxFEEC_converges (Z : F.Core) (T : ℝ) {x : PiLp 2 W}
 /-- **3c. The rate: best approximation plus consistency** (plus the initial mismatch), for data in
 a rate class and every discrete initial value `v`:
 `‖e^{tL} x - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖x‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`.
-[HolstStern2012], Thm 3.10 -/
+Cf. [HolstStern2012], Thm 3.10 (elliptic analogue) -/
 theorem approxFEEC_rate {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hx : x ∈ R.Data) (h : κ)
     (v : F.X h) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x - F.sol h v t‖ ≤
@@ -987,6 +998,77 @@ theorem approxFEEC_exists_not_mem (hK : ¬ H.wave.IsReducing F.K) {T : ℝ} (hT 
     (forall_nonneg_of_forall_Icc H hT (P := F.K) (hc F.K (Or.inl rfl)))
     (forall_nonneg_of_forall_Icc H hT (P := F.Kᗮ) (hc F.Kᗮ (Or.inr rfl))))
 
+/-- The discrete solution is differentiable: `(d/dt) ιₕ e^{tLₕ} v = ιₕ Lₕ e^{tLₕ} v`. -/
+theorem ApproxFEEC.hasDerivAt_sol (h : κ) (v : F.X h) (t : ℝ) :
+    HasDerivAt (F.sol h v) (F.incl h (F.L h ((F.group h).S t v))) t :=
+  ((F.incl h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt t
+    (C0Group.hasDerivAt_exp_ofReal_smul_apply (F.L h) v t)
+
+/-- **Inexactness criterion**: if the discrete initial velocity `ιₕ Lₕ v` differs from `L x`, the
+discrete solution from `v` differs from `e^{tL} x` at some time. -/
+theorem ApproxFEEC.exists_sol_ne {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) (v : F.X h)
+    (hne : F.incl h (F.L h v) ≠ H.wave ⟨x, hx⟩) : ∃ t, F.sol h v t ≠ H.waveGroup.S t x := by
+  by_contra hc
+  push Not at hc
+  have e : F.sol h v = fun s => H.waveGroup.S s x := funext hc
+  have h1 := F.hasDerivAt_sol h v 0
+  rw [e] at h1
+  have h2 := h1.unique (hasDerivAt_waveGroup H hx 0)
+  rw [C0Group.S_zero_apply, C0Group.S_zero_apply] at h2
+  exact hne h2
+
+/-- **4c. A non-reducing constraint is left by data of `D(L) ∩ K`, in one of the two time
+directions**, when `D(L) ∩ K` is dense in `K` (continuous level; no grading, no hypothesis on
+`Kᗮ`). -/
+theorem approxFEEC_residual_not_isReducing_symm (hK : ¬ H.wave.IsReducing F.K)
+    (hdense : ∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) {T : ℝ}
+    (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+      H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) := by
+  have hex : ∃ x ∈ H.wave.domain, x ∈ F.K ∧ ∃ t ∈ Icc (-T) T, H.waveGroup.S t x ∉ F.K := by
+    by_contra hc
+    simp only [not_exists, not_and, not_not] at hc
+    refine hK ((approxFEEC_propagates_iff F).2 fun t => waveGroup_mem_of_dense F.isClosed_K
+      hdense fun x hx hxK => ?_)
+    have hP := forall_of_forall_Icc_neg H hT (P := (H.wave.domain : Set (PiLp 2 W)) ∩ F.K)
+      fun y hy s hs => ⟨waveGroup_mem_domain H hy.1 s, hc y hy.1 hy.2 s hs⟩
+    exact (hP x ⟨hx, hxK⟩ t).2
+  obtain ⟨x, hx, hxK, t, ht, hout⟩ := hex
+  exact ⟨⟨x, hx⟩, hxK, t, ht, hout,
+    (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout⟩
+
+/-- **4c. A non-reducing constraint on a graded complex is left by data of `D(L) ∩ K` forward in
+time**: for a grading `p` and an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, some
+`ξ₀ ∈ D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and (for `ξ₀` in the closure of the core) the
+residuals through `ιₕ` of every convergent discretization tend to `dist(e^{tL} ξ₀, K) > 0`, so they
+stay eventually above half of it. [QuennevilleBelair2015], Prop. 4.17 -/
+theorem approxFEEC_residual_not_isReducing_of_grading (Z : F.Core) {p : ι → Bool}
+    (hp : ∀ i j, c.Rel i j → p j ≠ p i) (hRK : ∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K)
+    (hdense : ∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K))
+    (hK : ¬ H.wave.IsReducing F.K) {T : ℝ} (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
+      H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
+      ((x : PiLp 2 W) ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
+        Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+        Tendsto (fun h => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))) F.l
+          (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
+        ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
+          infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))) := by
+  have hex : ∃ x ∈ H.wave.domain, x ∈ F.K ∧ ∃ t ∈ Icc 0 T, H.waveGroup.S t x ∉ F.K := by
+    by_contra hc
+    simp only [not_exists, not_and, not_not] at hc
+    refine hK ((H.isReducing_iff_forall_nonneg hp F.K hRK hdense).2 fun t ht x hx hxK => ?_)
+    have hP := forall_nonneg_of_forall_Icc H hT
+      (P := (H.wave.domain : Set (PiLp 2 W)) ∩ F.K)
+      fun y hy s hs => ⟨waveGroup_mem_domain H hy.1 s, hc y hy.1 hy.2 s hs⟩
+    exact (hP x ⟨hx, hxK⟩ t ht).2
+  obtain ⟨x, hx, hxK, t, ht, hout⟩ := hex
+  have hpos := (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout
+  refine ⟨⟨x, hx⟩, hxK, t, ht, hout, hpos, fun hxc v hv => ?_⟩
+  have hlim := (approxFEEC_residual_not_mem F Z F.isClosed_K ⟨0, F.K.zero_mem⟩ hxc hv ht.1
+    hout).2
+  exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
+
 /-- The conclusion of the approximating FEEC theorem (instances state their headline as
 `F.Verdict Z`, proved by `approxFEEC F Z`). -/
 abbrev ApproxFEEC.Verdict (Z : F.Core) : Prop :=
@@ -1036,7 +1118,25 @@ abbrev ApproxFEEC.Verdict (Z : F.Core) : Prop :=
         (Dense (Z.Data : Set (PiLp 2 W)) → ∀ v : ∀ h, F.X h,
           Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
           Tendsto (fun h => infDist (F.sol h (v h) t) (Q : Set (PiLp 2 W))) F.l
-            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))))
+            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)))))) ∧
+    -- 4c. with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`
+    (¬ H.wave.IsReducing F.K →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W))) ∧
+    -- 4c. graded complex, `R`-invariant `K`, `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K`
+    -- leaves `K` forward in time, with residuals tending to a positive limit
+    (∀ p : ι → Bool, (∀ i j, c.Rel i j → p j ≠ p i) → (∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K) →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) →
+      ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
+        ((x : PiLp 2 W) ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
+          Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+          Tendsto (fun h => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))) F.l
+            (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
+          ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
+            infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))))
 
 /-- **The approximating FEEC theorem.** For an approximating FEEC discretization `F` (discrete
 Hilbert spaces with their own inner products, skew bounded generators, uniformly bounded reading
@@ -1053,9 +1153,13 @@ orbit-consistent core `Z`:
 4. (**constraint residual**, measured through `ιₕ`) if `K` reduces `L`, it is bounded by the error
    and tends to `0`; a solution leaving a closed nonempty `Q` has residuals with the positive limit
    `dist(e^{tL} ξ₀, Q)`; a non-reducing `K` is left by data of `K` or `Kᗮ`, and with a dense core
-   the residuals of every convergent discretization of that datum have a positive limit.
+   the residuals of every convergent discretization of that datum have a positive limit; if
+   `D(L) ∩ K` is dense in `K`, a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`; on a graded
+   complex with `R`-invariant `K`, a datum of `D(L) ∩ K` leaves `K` forward in time and its
+   residuals tend to a positive limit.
 
-[HolstStern2012], Thm 3.9, Thm 3.10; [QuennevilleBelair2015], Thms 4.6, 4.7, Prop. 4.17 -/
+Cf. [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues); [QuennevilleBelair2015], Thms 4.6,
+4.7, Prop. 4.17 -/
 theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
   refine ⟨fun _ hx T => constrainedFEEC_wellPosed hx T, approxFEEC_propagates_iff F,
     fun T _ hx => approxFEEC_converges_core F Z T hx,
@@ -1064,7 +1168,10 @@ theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
     fun hK _ hxK => ⟨fun h v t => approxFEEC_residual_le F hK hxK h v t,
       fun hx T _ hv => approxFEEC_residual F hK Z T hx hxK hv⟩,
     fun _ hQ hQne _ hx _ hv _ ht hout => approxFEEC_residual_not_mem F Z hQ hQne hx hv ht hout,
-    fun hK T hT => ?_⟩
+    fun hK T hT => ?_,
+    fun hK hdense _ hT => approxFEEC_residual_not_isReducing_symm F hK hdense hT,
+    fun _ hp hRK hdense hK _ hT =>
+      approxFEEC_residual_not_isReducing_of_grading F Z hp hRK hdense hK hT⟩
   obtain ⟨Q, hQK, x, hx, t, ht, hout⟩ := approxFEEC_exists_not_mem F hK hT
   have hQc : IsClosed (Q : Set (PiLp 2 W)) := by
     rcases hQK with rfl | rfl

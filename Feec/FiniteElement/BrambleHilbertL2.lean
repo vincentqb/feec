@@ -18,8 +18,8 @@ polynomial of degree `< m` at `y`, averaged uniformly over the base points `y �
 the Sobolev embedding and the `L²` interpolation error of the canonical interpolants of `P_rΛᵏ`
 and `P_r⁻Λᵏ`. All statements are for functions of class `C^m` on an open neighbourhood of a
 compact set (no Sobolev spaces): the seminorms are `∫_K ‖D^m f‖²`, `D^m` the iterated Fréchet
-derivative. The averaged Taylor polynomial is the construction of Sobolev used by Brenner–Scott
-(*The Mathematical Theory of Finite Element Methods*, Ch. 4), here averaged over `K` itself.
+derivative. The averaged Taylor polynomial is the construction of Sobolev used in [BrennerScott2008], Ch. 4,
+here averaged over `K` itself.
 
 * **Polynomial part** (`avgTaylorPoly_mem_polyFunctions`, `avgTaylorPoly_eq_of_mem_polyFunctions`):
   `Q_{k+1} f ∈ P_k(ℝⁿ; G)` (expansion of `T_{k+1} f(y)(x)` in monomials of `x` with integrable
@@ -101,6 +101,8 @@ to vertex values) need point values, which `H^{s+1}` controls only through the S
 ## References
 
 * [J. H. Bramble, S. R. Hilbert, *Estimation of Linear Functionals on Sobolev Spaces with Application to Fourier Transforms and Spline Interpolation*][BrambleHilbert1970]
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
+  Ch. 4 (averaged Taylor polynomials, the Bramble–Hilbert lemma)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
   (Thm 3.1.1, polynomial approximation; Thm 3.1.4, interpolation error; Thm 3.1.5, regular
   families)

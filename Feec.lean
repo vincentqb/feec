@@ -10,6 +10,8 @@ public import Feec.Algebra.PolynomialFormDim
 public import Feec.Algebra.Proxy3
 public import Feec.Algebra.TransverseTraceless
 public import Feec.Algebra.Wedge
+public import Feec.Counterexamples.BallEigenDense
+public import Feec.Counterexamples.BallEigenfields
 public import Feec.Counterexamples.BallSymTSD
 public import Feec.Counterexamples.BoundedBGG
 public import Feec.Counterexamples.BoundedDomainTSD
@@ -41,9 +43,11 @@ public import Feec.Domain.FiniteSpeed
 public import Feec.Domain.FormPullback
 public import Feec.Domain.HessianComplex
 public import Feec.Domain.L2Field
+public import Feec.Domain.LipschitzPullback
 public import Feec.Domain.Mollify
 public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
+public import Feec.Domain.Rellich
 public import Feec.Domain.StarShapedSmoothing
 public import Feec.Domain.WholeSpace
 public import Feec.Evolution.BoundaryLifting
@@ -58,6 +62,7 @@ public import Feec.Evolution.WellPosed
 public import Feec.Examples.NonVacuity
 public import Feec.FiniteElement.Assembly
 public import Feec.FiniteElement.BrambleHilbert
+public import Feec.FiniteElement.BrambleHilbertL2
 public import Feec.FiniteElement.Conformity
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.InterpolationError
@@ -143,6 +148,7 @@ public import Feec.HilbertComplex.Density
 public import Feec.HilbertComplex.Dirac
 public import Feec.HilbertComplex.DomainComplex
 public import Feec.HilbertComplex.Dual
+public import Feec.HilbertComplex.EigenDenseKernel
 public import Feec.HilbertComplex.Equivariant
 public import Feec.HilbertComplex.Hodge
 public import Feec.HilbertComplex.HodgeHeat
@@ -167,6 +173,7 @@ public import Feec.Mesh.Freudenthal
 public import Feec.Mesh.Kuhn
 public import Feec.Mesh.ShapeRegular
 public import Feec.Models.BoundedDomain.BGG
+public import Feec.Models.BoundedDomain.Compactness
 public import Feec.Models.BoundedDomain.DeRham
 public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
@@ -205,6 +212,7 @@ public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.MirrorTrace
+public import Feec.Models.Cube.MirrorWaveRegularity
 public import Feec.Models.Cube.MirrorWeakSymmetryComplex
 public import Feec.Models.Cube.MirrorWeakSymmetryConvergence
 public import Feec.Models.Cube.MirrorWeakSymmetryFEM
@@ -223,6 +231,8 @@ public import Feec.Models.Cube.Smoothing
 public import Feec.Models.Cube.SmoothingEstimates
 public import Feec.Models.Cube.Sobolev
 public import Feec.Models.Cube.SobolevRate
+public import Feec.Models.Cube.SobolevRateHigh
+public import Feec.Models.Cube.SobolevWeak
 public import Feec.Models.Cube.Static
 public import Feec.Models.Cube.TangentialRate
 public import Feec.Models.Cube.TorusHelmholtz
@@ -230,6 +240,7 @@ public import Feec.Models.Cube.WeakSymmetryComplex
 public import Feec.Models.Cube.WeakSymmetryConvergence
 public import Feec.Models.Cube.WeakSymmetryEstimates
 public import Feec.Models.Cube.WeakSymmetryFEM
+public import Feec.Models.Cube.WeakSymmetrySobolevRate
 public import Feec.Models.Cube.WeakSymmetryTangentialRate
 public import Feec.Models.Cube.WeakSymmetryWave
 public import Feec.Models.Cube.WhitneyApprox
@@ -239,7 +250,10 @@ public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
 public import Feec.Models.Euclidean.SymCurl
 public import Feec.Models.Parallelepiped.FiniteElement
+public import Feec.Models.StarShaped.EigenDense
 public import Feec.Models.StarShaped.FiniteElement
+public import Feec.Models.StarShaped.PolyFiniteElement
+public import Feec.Models.StarShaped.PolySmoothing
 public import Feec.Models.Torus.BGG
 public import Feec.Models.Torus.DeRham
 public import Feec.Models.Torus.DeRhamGalerkin
@@ -262,6 +276,7 @@ public import Feec.Physics.EinsteinBianchi.StaticFEM
 public import Feec.Physics.EinsteinBianchi.System
 public import Feec.Physics.EinsteinBianchi.Unconditional
 public import Feec.Physics.EinsteinBianchi.WaveFEM
+public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
 public import Feec.Physics.EinsteinBianchi.WaveFEMTangential
 public import Feec.Physics.EinsteinBianchi.WaveFEMTangentialCube
 public import Feec.Physics.LinearizedGravity.Einstein

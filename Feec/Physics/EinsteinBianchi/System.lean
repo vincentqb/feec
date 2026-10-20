@@ -510,7 +510,7 @@ theorem energy_eq_zero_iff (E B : Matrix (Fin 3) (Fin 3) ℝ) :
 and `F = flux E B` (both differentiated by the product rule: `energyD`, `fluxD`).
 
 Thesis gap: not in the thesis; this replaces the unverified appeal to Cor 4.5 (energy proof on
-`ℝ³`; field version `prop_3_6`).
+`ℝ³`; field version `tsd_propagates`).
 Cf. [QuennevilleBelair2015], Prop 3.6, Cor 4.5. -/
 theorem energy_flux (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (hE : dE 0 = -curl (sp dB)) (hB : dB 0 = curl (sp dE)) (hdE : div (sp dE) = 0)

@@ -3350,6 +3350,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Maxwell».«CubeFEM».«pmc_norm_sub_le_meshSize» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«CubeFEM».«pmc_tendstoUniformlyOn» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«FEM».«PolySmoothingEstimates».«norm_sub_le_window_sobolevQ» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«FEM».«PolySmoothingEstimates».«norm_sub_le_window_sobolevQ_high» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«FEM».«exists_tendstoUniformlyOn_window» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«FEM».«exists_tendstoUniformlyOn_windowMin_whitney» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«FEM».«exists_tendstoUniformlyOn_window_poly» -- THESIS_MAP.md
@@ -3365,6 +3366,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Models».«Parallelepiped».«norm_sub_le_meshSize_window_smooth» -- THESIS_MAP.md
 #check @«Feec».«Models».«StarShaped».«MeshFamily».«exists_tendstoUniformlyOn_window» -- THESIS_MAP.md
 #check @«Feec».«Models».«StarShaped».«MeshFamily».«exists_tendstoUniformlyOn_windowMin» -- THESIS_MAP.md
+#check @«Feec».«Models».«StarShaped».«MeshFamily».«exists_tendstoUniformlyOn_window_poly» -- THESIS_MAP.md
+#check @«Feec».«Models».«StarShaped».«MeshFamily».«norm_sub_le_window_poly_smooth_of_polyOrderAt» -- THESIS_MAP.md
 #check @«Feec».«Variational».«norm_sub_le_of_projected_error_decay» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«Subcomplex».«CochainProjection» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«euclidean_gauss_propagates» -- THESIS_MAP.md
@@ -3373,6 +3376,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Maxwell».«pmc_gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«torus_gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Maxwell».«waveGroup_mem» -- THESIS_MAP.md
+#check @«Feec».«Counterexamples».«BallEigenDense».«coreSub_le_stationary_ball3_iff» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«BoundedDomainTSD».«obstruction_ne_bot» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«BoxStationary».«forward_iff_stationary_box» -- THESIS_MAP.md
 #check @«Feec».«Counterexamples».«BoxStationary».«mem_invariantCore_tsd_iff_box» -- THESIS_MAP.md
@@ -3440,6 +3444,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeFEM_rate'» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeFEM_rate_C2'» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeFEM_rate_tr'» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«WeakSymmetry».«staticFEM_rate_sobolev» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«WeakSymmetry».«staticFEM_rate_sobolev_of_one_le» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«PolySeq».«dof_comp_coordWedgeC_mem_span» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«PolySeq».«exists_local_formL2Sq_equiv» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«exists_local_formL2Sq_equiv_of_le_polySpace» -- THESIS_MAP.md
@@ -3490,13 +3496,19 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«BGG».«IsEllipticProjection».«galerkin» -- THESIS_MAP.md
 #check @«Feec».«BGG».«ellipticProjection» -- THESIS_MAP.md
 #check @«Feec».«BGG».«existsUnique_isEllipticProjection» -- THESIS_MAP.md
+#check @«Feec».«EinsteinBianchi».«WaveFEM».«waveFEM_rate_of_mem_domain» -- THESIS_MAP.md
+#check @«Feec».«EinsteinBianchi».«WaveFEM».«waveFEM_rate_of_mem_domain_of_orbit» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeFEM_ellipticProjection_rate_tr» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«tendsto_of_isStrongSolution» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«tendsto_of_mem_wave_domain» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«waveFEM_converges_to_non_tsd» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedFailure».«waveFEM_converges_to_non_tsd_of_isRateApproximable» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM_rate_of_mem_domain» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM_rate_sobolev» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM_rate_sobolev_of_add_two» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeWave_converges» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeWave_rate_sobolev» -- THESIS_MAP.md
 #check @«Feec».«Metric».«minkowskiMatrix» -- THESIS_MAP.md
 #check @«Feec».«CurvatureTensor».«ricci» -- THESIS_MAP.md
 #check @«Feec».«TT».«ttProj» -- THESIS_MAP.md
@@ -3556,6 +3568,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«FiniteElement».«LocalElement».«dPiecewise_mem_globalSpacePartial_bcFacets» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«PolySeq».«lagrangeP2_VPartial_bcFacets_ne_bot» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeWave_rate'» -- THESIS_MAP.md
+#check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeWave_rate_sobolev_of_one_le» -- THESIS_MAP.md
 #check @«Feec».«Models».«Euclidean».«BGG».«tsd_propagates» -- THESIS_MAP.md
 #check @«Feec».«Models».«Euclidean».«BGG».«waveGroup_mem» -- THESIS_MAP.md
 #check @«Feec».«Models».«Torus».«BGG».«closedRangeAt» -- THESIS_MAP.md

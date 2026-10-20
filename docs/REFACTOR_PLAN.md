@@ -144,6 +144,22 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > hypothesis on star-shaped domains). What remains is listed in `docs/OVERVIEW.md` (limits of the
 > repairs, FEEC coverage, scope). All are imported by `Feec.lean` and the full gate passes.
 
+> **Status (2026-10-20): open items narrowed, gated.** 15 further modules. Compactness and
+> eigenbases: compactness off the kernel (`Feec.HilbertComplex.EigenDenseKernel`), Rellich on
+> bounded open sets (`Feec.Domain.Rellich`, `Feec.Models.BoundedDomain.Compactness`), bi-Lipschitz
+> pullbacks (`Feec.Domain.LipschitzPullback`) and Weber compactness, hence `EigenDense`, on domains
+> star-shaped with respect to a ball (`Feec.Models.StarShaped.EigenDense`); on the unit ball no
+> TSD eigenfield is `C²` up to the boundary (`Feec.Counterexamples.{BallEigenfields,BallEigenDense}`;
+> stationarity of `K*` there reduces to `MaxwellEigenfieldRegularity`). Approximation: the `L²`
+> Bramble–Hilbert lemma (`Feec.FiniteElement.BrambleHilbertL2`), `Hᵐ` by weak derivatives and rates
+> `h^{min(s, r_eff)}` on the cube (`Feec.Models.Cube.{SobolevWeak,SobolevRateHigh}`), higher-order
+> families on star-shaped domains and on every mesh family of a parallelepiped
+> (`Feec.Models.StarShaped.{PolySmoothing,PolyFiniteElement}`). BGG rates: Sobolev data with the
+> thesis' conditions (`Feec.Models.Cube.WeakSymmetrySobolevRate`), `D(L³)` data under multiplier
+> bounds (`Feec.Physics.EinsteinBianchi.WaveFEMRegularity`) and, with mirror conditions, with no
+> hypothesis (`Feec.Models.Cube.MirrorWaveRegularity`). `docs/OVERVIEW.md` lists what remains.
+> All are imported by `Feec.lean` and the full gate passes.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

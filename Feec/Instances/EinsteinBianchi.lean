@@ -16,7 +16,7 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
 (`Feec.HilbertComplex.constrainedFEEC`) on its realizations.
 
 * **`𝕋³`** (`einsteinBianchi_torus_constrainedFEEC`): the Fourier spectral discretization
-  `torusFEEC` (bands `|n|_∞ ≤ N`, `Feec.Models.Torus.BGG.bandFamily`) is a constrained FEEC
+  `torusFEEC` (bands `|n|_∞ ≤ N`, `bandFamily`) is a constrained FEEC
   discretization, `K` reduces `L`, so TSD propagates for all `t ∈ ℝ`, the discrete solutions
   converge uniformly on `[0, T]`, the constraint residual tends to `0`, and for data in the
   approximation class of order `α` the error and the residual are
@@ -30,7 +30,7 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
   bounded commuting projections approximating `L²(ℝ³)`; no such family is constructed here (the
   Fourier bands of `ℝ³` are infinite-dimensional), so items 3–4 are not stated on `ℝ³`.
 * **The cube `Q = (0, ½)³` with mirror boundary conditions**:
-  - the cosine–sine spectral discretization `mirrorFEEC` (`Feec.Models.Cube.MirrorBGG.bandFamilyQ`)
+  - the cosine–sine spectral discretization `mirrorFEEC` (`bandFamilyQ`)
     is a constrained FEEC discretization of `MirrorBGG.complexQ` with the reducing constraint
     `MirrorBGG.tsdQ` (`einsteinBianchi_mirror_constrainedFEEC`: propagation, convergence to the
     TSD solution, residual `→ 0`, rates for the approximation classes; non-vacuity
@@ -351,7 +351,7 @@ theorem einsteinBianchi_mirror_constrainedFEEC_sobolev : MirrorSobolevVerdict :=
 /-- The mirror datum `(0, E₀, (0, 0))` on `Q` is band-limited: its mirror extension is the
 torus datum, with modes `±k₀`. -/
 theorem cosStateQ_mem_band : cosStateQ ∈ totalSub (bandFamilyQ.B 1) := fun i => by
-  change J i (cosStateQ i) ∈ Models.Torus.BGG.band 1 i
+  change J i (cosStateQ i) ∈ band 1 i
   rw [← HilbertComplex.totalJ_apply, totalJ_cosStateQ]
   exact cosState_mem_band i
 

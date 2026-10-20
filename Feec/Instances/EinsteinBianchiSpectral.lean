@@ -1,15 +1,15 @@
 module
 
-public import Feec.HilbertComplex.Approximation.ApproxFEEC
+public import Feec.HilbertComplex.Approximation.ApproxConforming
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.Models.Torus.DeRhamGalerkin
 public import Feec.Models.Torus.BGG
 public import Feec.Models.Cube.MirrorBGG
 
 /-!
-# Spectral constrained FEEC discretizations of the Einstein–Bianchi BGG complex
+# Spectral discretizations of the Einstein–Bianchi BGG complex
 
-A **spectral family** of a Hilbert complex `H` (`Feec.HilbertComplex.SpectralFamily`) is a
+A **spectral family** of a Hilbert complex `H` (`Feec.Instances.SpectralFamily`) is a
 sequence of finite-dimensional **reducing** subcomplexes `B_N` whose orthogonal projections
 converge strongly to the identity. Each `B_N` is a subcomplex (a finite-dimensional reducing
 subspace lies in the domains, `Feec.Models.Torus.DeRham.le_domain_of_isReducingPair`), its
@@ -19,21 +19,42 @@ closed constraint `K`, is a constrained FEEC discretization (`SpectralFamily.toF
 constrained FEEC theorem applies to it. Spectral families pull back along scaled embeddings whose
 range the projections preserve (`SpectralFamily.comap`).
 
+**Through the approximating FEEC theorem.** A spectral family is also a reducing family
+(`SpectralFamily.toReducingFamily`: the bands `∏ B_N ⊆ D(L)` are reducing, `L` is bounded on
+them, `SpectralFamily.waveBand`), so the spectral method is an approximating FEEC discretization
+(`Feec.HilbertComplex.ReducingFamily.toApprox`, exact on the bands, core `W`, zero consistency
+defect) and the verdict of `Feec.HilbertComplex.approxFEEC` applies. A truncation estimate
+`‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` gives, through `approxFEEC_rate` (`C' = 0`), the **time-uniform** rate
+`‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ C hᵅ ‖x‖_c` for all `t ≥ 0`
+(`norm_sub_sol_le_of_truncation`, residual `infDist_sol_le_of_truncation`). The constrained FEEC
+discretization `SpectralFamily.toFEEC` is the other reading, the special case `ιₕ` = inclusion
+(`ConstrainedFEEC.toApprox`), with the rate `(1 + C_P)(1 + 2t)` of `ConstrainedFEEC.rate_le`
+(`SpectralFamily.norm_sub_discrete_le`, `SpectralFamily.infDist_discrete_le`).
+
 **Rates.** For a spectral family the projection `P_N` commutes with `L` and with `e^{tL}`, so the
 graph-norm error of the truncation of the orbit `e^{tL} ξ₀` is controlled by the truncation errors
-of `ξ₀`, `L ξ₀` and `L² ξ₀` (`SpectralFamily.norm_sub_toGraph_le`). The data whose truncation errors
-decay like `(N + 1)^{-α}` form a rate class of the constrained FEEC theorem on every time horizon
-(`SpectralFamily.rateClass`), which contains every band-limited datum of `D(L²)` for every `α`
+of `ξ₀` and `L ξ₀` (`SpectralFamily.exists_mem_graphSub_le`). The data whose truncation errors of
+`ξ₀`, `L ξ₀`, `L² ξ₀` decay like `(N + 1)^{-α}` form a rate class of the constrained FEEC theorem
+on every time horizon (`SpectralFamily.rateClass`) and of the approximating one
+(`SpectralFamily.reducingRate`), which contains every band-limited datum of `D(L²)` for every `α`
 (`SpectralFamily.mem_rateData_of_mem`); a tail bound `tail_N ≤ (N + 1)^{-α} B` gives membership
 with norm `≤ B` (`SpectralFamily.mem_rateData_of_tail_le`).
 
-**Instances.**
+**Instances** (namespace `Feec.Instances.EinsteinBianchi`).
 
-* `Feec.Models.Torus.BGG.bandFamily`: the Fourier bands `|n|_∞ ≤ N` of the periodic BGG complex
-  (5.1) on `𝕋³` (the Fourier spectral method);
-* `Feec.Models.Cube.MirrorBGG.bandFamilyQ`: their pull-back to the BGG complex on the cube
-  `Q = (0, ½)³` with mirror boundary conditions (cosine–sine bands, through the mirror extensions:
-  the mirror action preserves the bands, `MirrorBGG.act_mem_band`).
+* `bandFamily`: the Fourier bands `|n|_∞ ≤ N` of the periodic BGG complex (5.1) on `𝕋³` (the
+  Fourier spectral method); `torusApprox`, `torusCore` and the headlines
+  `einsteinBianchi_torus_approxFEEC` (`approxFEEC`), `einsteinBianchi_torus_approxFEEC_rate`
+  (time-uniform `(N + 1)^{-α} ‖ξ₀‖_α`), `einsteinBianchi_torus_constrainedFEEC_approxFEEC` (the
+  discretization `torusFEEC` of `Feec.Instances.EinsteinBianchi`, which is
+  `bandFamily.toFEEC (totalSub constraint) isClosed_totalSub`, through `approxFEEC`) and
+  `einsteinBianchi_torus_conforming_rate` (its rate with `(1 + C_P)(1 + 2t)` in place of
+  `(1 + t)²`);
+* `bandFamilyQ`: their pull-back to the BGG complex on the cube `Q = (0, ½)³` with mirror boundary
+  conditions (cosine–sine bands, through the mirror extensions: the mirror action preserves the
+  bands, `act_mem_band`); `mirrorApprox`, `mirrorCore`, `einsteinBianchi_mirror_approxFEEC`,
+  `einsteinBianchi_mirror_approxFEEC_rate`, `einsteinBianchi_mirror_constrainedFEEC_approxFEEC`
+  (`mirrorFEEC`), `einsteinBianchi_mirror_conforming_rate`.
 
 ## References
 
@@ -48,10 +69,54 @@ open Set Filter MeasureTheory LinearPMap Metric
 
 @[expose] public noncomputable section
 
-namespace Feec.HilbertComplex
+namespace Feec.Instances
+
+open Feec.HilbertComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+
+/-! ### Truncation rates of reducing families through the approximating FEEC theorem -/
+
+section Truncation
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] {H : HilbertComplex 𝕜 c W}
+  {κ : Type*} (S : ReducingFamily H κ) (K : Submodule 𝕜 (PiLp 2 W))
+  (hK : IsClosed (K : Set (PiLp 2 W)))
+
+/-- **The time-uniform rate of a spectral Galerkin method**, read off the rate of the
+approximating FEEC theorem (`approxFEEC_rate` for `ReducingFamily.rateClass`, `C' = 0`, from
+`v_N = π_N ξ₀`): a truncation estimate `‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` on a set of data gives
+`‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ C hᵅ ‖x‖_c` for every `t ≥ 0`. -/
+theorem norm_sub_sol_le_of_truncation {Data : Set (PiLp 2 W)} {classNorm : PiLp 2 W → ℝ}
+    {meshSize : κ → ℝ} {α C : ℝ}
+    (hrate : ∀ x ∈ Data, ∀ N, ‖x - (S.B N).starProjection x‖ ≤ C * meshSize N ^ α * classNorm x)
+    {x : PiLp 2 W} (hx : x ∈ Data) (N : κ) {t : ℝ} (ht : 0 ≤ t) :
+    ‖H.waveGroup.S t x - (S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t‖ ≤
+      C * meshSize N ^ α * classNorm x := by
+  set R := S.rateClass K hK t Data classNorm meshSize α C hrate
+  have h := approxFEEC_rate _ R hx N (R.p x N 0) ⟨ht, le_rfl⟩
+  rw [sub_self, norm_zero, mul_zero, add_zero] at h
+  have hp : R.p x N 0 = (S.B N).orthogonalProjectionOnto x := by
+    change (S.B N).orthogonalProjectionOnto (H.waveGroup.S 0 x) = _
+    rw [C0Group.S_zero_apply]
+  rw [hp] at h
+  refine h.trans_eq ?_
+  change (C + ‖(S.toApprox K hK).incl N‖ * 0 * t) * (meshSize N ^ α * classNorm x) = _
+  ring
+
+/-- **The time-uniform rate of the constraint residual** of a spectral Galerkin method (reducing
+`K`, datum in `K`), from `approxFEEC_residual_le`. -/
+theorem infDist_sol_le_of_truncation (hKr : H.wave.IsReducing K) {Data : Set (PiLp 2 W)}
+    {classNorm : PiLp 2 W → ℝ} {meshSize : κ → ℝ} {α C : ℝ}
+    (hrate : ∀ x ∈ Data, ∀ N, ‖x - (S.B N).starProjection x‖ ≤ C * meshSize N ^ α * classNorm x)
+    {x : PiLp 2 W} (hx : x ∈ Data) (hxK : x ∈ K) (N : κ) {t : ℝ} (ht : 0 ≤ t) :
+    infDist ((S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t)
+        (K : Set (PiLp 2 W)) ≤ C * meshSize N ^ α * classNorm x :=
+  (approxFEEC_residual_le (S.toApprox K hK) hKr hxK N _ t).trans
+    (norm_sub_sol_le_of_truncation S K hK hrate hx N ht)
+
+end Truncation
 
 /-- A **spectral family** of a Hilbert complex `H`: finite-dimensional reducing subcomplexes `B_N`
 whose orthogonal projections converge strongly to the identity (e.g. Fourier bands of a symbol
@@ -80,6 +145,15 @@ def sub (N : ℕ) : H.Subcomplex where
 
 instance (N : ℕ) (i : ι) : ((S.sub N).V i).HasOrthogonalProjection :=
   inferInstanceAs ((S.B N i).HasOrthogonalProjection)
+
+/-- The bands `∏ B_N` are finite-dimensional. -/
+instance finiteDimensional_totalSub (N : ℕ) : FiniteDimensional 𝕜 (totalSub (S.B N)) := by
+  let f : totalSub (S.B N) →ₗ[𝕜] ∀ i, S.B N i :=
+    { toFun := fun x i => ⟨(x : PiLp 2 W) i, x.2 i⟩
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  refine Module.Finite.of_injective f fun x y hxy => Subtype.ext (PiLp.ext fun i => ?_)
+  exact congrArg Subtype.val (congrFun hxy i)
 
 /-- The orthogonal projection onto `B_N`, a cochain projection. -/
 def proj (N : ℕ) : (S.sub N).CochainProjection where
@@ -241,6 +315,16 @@ theorem mem_rateData_of_tail_le {α B : ℝ} {x : PiLp 2 W} (hx : x ∈ H.wave.d
       _ = B := by rw [← mul_assoc, hp, one_mul]
   exact ⟨⟨hx, hLx, ⟨B, by rintro _ ⟨N, rfl⟩; exact htail N⟩⟩, ciSup_le htail⟩
 
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- The truncation error of `x` is bounded by its class norm: `‖x - P_N x‖ ≤ (N + 1)^{-α} ‖x‖_α`. -/
+theorem norm_sub_P_le_rateNorm {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ) :
+    ‖x - S.P N x‖ ≤ 1 * (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x := by
+  have h1 : ‖x - S.P N x‖ ≤ S.tail N x := by
+    unfold tail
+    linarith [norm_nonneg (H.waveExt x - S.P N (H.waveExt x)),
+      norm_nonneg (H.waveExt (H.waveExt x) - S.P N (H.waveExt (H.waveExt x)))]
+  exact h1.trans (S.tail_le_rateNorm hx N)
+
 /-- **The rate class of a spectral discretization** on the horizon `[0, T]`: the approximation
 class of order `α`, with `h_N = 1/(N + 1)`, `C = 1` and the norm `rateNorm α`. -/
 def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) (α T : ℝ) :
@@ -274,13 +358,6 @@ def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 /-- A finite-dimensional reducing subspace of the wave operator lies in `D(L)`. -/
 theorem totalSub_le_domain (M : ℕ) : totalSub (S.B M) ≤ H.wave.domain := by
-  have : FiniteDimensional 𝕜 (totalSub (S.B M)) := by
-    let f : totalSub (S.B M) →ₗ[𝕜] ∀ i, S.B M i :=
-      { toFun := fun x i => ⟨(x : PiLp 2 W) i, x.2 i⟩
-        map_add' := fun _ _ => rfl
-        map_smul' := fun _ _ => rfl }
-    refine Module.Finite.of_injective f fun x y hxy => Subtype.ext (PiLp.ext fun i => ?_)
-    exact congrArg Subtype.val (congrFun hxy i)
   exact Models.Torus.DeRham.le_domain_of_isReducingPair (S.isReducing_wave M)
     H.isSkewAdjoint_wave.dense_domain
 
@@ -315,6 +392,106 @@ theorem mem_rateData_of_mem {M : ℕ} {x : PiLp 2 W} (hx : x ∈ totalSub (S.B M
 
 end Rate
 
+/-! ### Spectral families are reducing families -/
+
+section Reducing
+
+/-- `L` on the band `∏ B_N`, a bounded operator (the band is finite-dimensional). -/
+def waveBand (N : ℕ) : totalSub (S.B N) →L[𝕜] PiLp 2 W :=
+  LinearMap.toContinuousLinearMap
+    { toFun := fun x => H.wave ⟨x, S.totalSub_le_domain N x.2⟩
+      map_add' := fun x y => by
+        change H.wave (⟨x, S.totalSub_le_domain N x.2⟩ + ⟨y, S.totalSub_le_domain N y.2⟩) = _
+        rw [LinearPMap.map_add]
+      map_smul' := fun a x => by
+        change H.wave (a • ⟨x, S.totalSub_le_domain N x.2⟩) = _
+        rw [LinearPMap.map_smul]; rfl }
+
+theorem waveBand_apply (N : ℕ) (x : totalSub (S.B N)) :
+    S.waveBand N x = H.wave ⟨x, S.totalSub_le_domain N x.2⟩ := rfl
+
+/-- The orthogonal projections onto the bands `∏ B_N` converge strongly to `1`. -/
+theorem tendsto_starProjection (x : PiLp 2 W) :
+    Tendsto (fun N => (totalSub (S.B N)).starProjection x) atTop (𝓝 x) :=
+  (S.tendsto_totalProj x).congr fun N => PiLp.ext fun i => by
+    rw [totalSub_starProjection_apply, totalProj_apply]
+
+/-- **A spectral family is a reducing family** (`Feec.HilbertComplex.ReducingFamily`): the bands
+`∏ B_N` are finite-dimensional reducing subspaces in `D(L)` on which `L` is bounded, and their
+projections converge strongly to `1`. -/
+def toReducingFamily : ReducingFamily H ℕ where
+  B N := totalSub (S.B N)
+  l := atTop
+  isReducing := S.isReducing_wave
+  le_domain := S.totalSub_le_domain
+  bounded N := ⟨‖S.waveBand N‖, fun x _ hxB => (S.waveBand N).le_opNorm ⟨x, hxB⟩⟩
+  tendsto := S.tendsto_starProjection
+
+@[simp] theorem toReducingFamily_B (N : ℕ) : S.toReducingFamily.B N = totalSub (S.B N) := rfl
+
+@[simp] theorem toReducingFamily_l : S.toReducingFamily.l = atTop := rfl
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+
+/-- **The approximation class of order `α` as a rate class of the spectral approximating FEEC
+discretization** `S.toReducingFamily.toApprox K hK`: `h_N = 1/(N + 1)`, `C = 1`, and `C' = 0`
+(the spectral method is exact on the bands, `ReducingFamily.toApprox_sol`). -/
+def reducingRate (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) (α T : ℝ) :
+    (S.toReducingFamily.toApprox K hK).RateClass T :=
+  S.toReducingFamily.rateClass K hK T (S.rateData α) (S.rateNorm α) (fun N => 1 / ((N : ℝ) + 1)) α
+    1 fun _ hx N => S.norm_sub_P_le_rateNorm hx N
+
+theorem reducingRate_data (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (α T : ℝ) : (S.reducingRate K hK α T).Data = S.rateData α := rfl
+
+/-- **The time-uniform spectral rate**, read off the rate of the approximating FEEC theorem
+(`approxFEEC_rate`, with `C' = 0` and `vₙ = πₙ ξ₀`): for data in the approximation class of
+order `α`, `‖e^{tL} ξ₀ - ιₙ e^{tLₙ} πₙ ξ₀‖ ≤ (N + 1)^{-α} ‖ξ₀‖_α` for all `t ≥ 0`. -/
+theorem norm_sub_sol_le (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    ‖H.waveGroup.S t x - (S.toReducingFamily.toApprox K hK).sol N
+        ((S.toReducingFamily.B N).orthogonalProjectionOnto x) t‖ ≤
+      (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x := by
+  have h := norm_sub_sol_le_of_truncation S.toReducingFamily K hK
+    (fun _ hx N => S.norm_sub_P_le_rateNorm hx N) hx N ht
+  rwa [one_mul] at h
+
+/-- **The time-uniform spectral rate of the constraint residual** (reducing `K`, datum in `K`):
+`dist(ιₙ e^{tLₙ} πₙ ξ₀, K) ≤ (N + 1)^{-α} ‖ξ₀‖_α` (`approxFEEC_residual_le`). -/
+theorem infDist_sol_le (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (hKr : H.wave.IsReducing K) {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (hxK : x ∈ K)
+    (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    infDist ((S.toReducingFamily.toApprox K hK).sol N
+        ((S.toReducingFamily.B N).orthogonalProjectionOnto x) t) (K : Set (PiLp 2 W)) ≤
+      (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x :=
+  (approxFEEC_residual_le (S.toReducingFamily.toApprox K hK) hKr hxK N _ t).trans
+    (S.norm_sub_sol_le K hK hx N ht)
+
+/-- **The conforming rate `(1 + C_P)(1 + 2t)`** of the constrained FEEC discretization
+`S.toFEEC K hK` (the special case `ιₙ` = inclusion of `approxFEEC`, `ConstrainedFEEC.rate_le`),
+sharper than the factor `(1 + C_P)(1 + t)²` of `constrainedFEEC_rate`. -/
+theorem norm_sub_discrete_le (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    {α T : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖H.waveGroup.S t x -
+        H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst H) * (1 + 2 * t) * (1 * (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x) :=
+  (S.toFEEC K hK).rate_le (S.rateClass K hK α T) hx N ht
+
+/-- **The conforming residual rate `(1 + C_P)(1 + 2t)`** of `S.toFEEC K hK` (reducing `K`, datum
+in `K`), from `approxFEEC_residual_le` and `ConstrainedFEEC.toApprox_sol`. -/
+theorem infDist_discrete_le (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (hKr : H.wave.IsReducing K) {α T : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (hxK : x ∈ K)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H ⟨x, hx.1⟩) t))
+        (K : Set (PiLp 2 W)) ≤
+      (1 + ellipticConst H) * (1 + 2 * t) * (1 * (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x) := by
+  have hr := approxFEEC_residual_le (S.toFEEC K hK).toApprox hKr hxK N
+    ((S.toFEEC K hK).ellipticProj N (waveLift H ⟨x, hx.1⟩)) t
+  rw [ConstrainedFEEC.toApprox_sol] at hr
+  exact hr.trans (S.norm_sub_discrete_le K hK hx N ht)
+
+end Reducing
+
 /-! ### Pull-back along scaled embeddings -/
 
 section Comap
@@ -323,8 +500,9 @@ variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerPro
   [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜 c W'}
 
 omit [Fintype ι] in
-theorem _root_.Feec.HilbertComplex.ScaledEmbedding.norm_J (E : ScaledEmbedding H H') (i : ι)
-    (x : W i) : ‖E.J i x‖ = √(E.scale i) * ‖x‖ := by
+/-- A scaled embedding scales norms by `√(scale i)`. -/
+theorem norm_scaledEmbedding_J (E : ScaledEmbedding H H') (i : ι) (x : W i) :
+    ‖E.J i x‖ = √(E.scale i) * ‖x‖ := by
   have h := E.inner_J i x x
   rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h
   have h' : ‖E.J i x‖ ^ 2 = E.scale i * ‖x‖ ^ 2 := by exact_mod_cast h
@@ -351,7 +529,7 @@ def comap (E : ScaledEmbedding H H') (S : SpectralFamily H')
     rw [mul_zero] at h
     refine h.congr fun N => ?_
     have hs : 0 < √(E.scale i) := Real.sqrt_pos.2 (E.scale_pos i)
-    rw [← E.starProjection_comap _ (hS N i), ← _root_.map_sub, E.norm_J, ← mul_assoc,
+    rw [← E.starProjection_comap _ (hS N i), ← _root_.map_sub, norm_scaledEmbedding_J, ← mul_assoc,
       inv_mul_cancel₀ hs.ne', one_mul]
 
 omit [Fintype ι] in
@@ -363,13 +541,17 @@ end Comap
 
 end SpectralFamily
 
-end Feec.HilbertComplex
+end Feec.Instances
+
+namespace Feec.Instances.EinsteinBianchi
+
+open Feec.HilbertComplex
 
 /-! ### The Fourier bands of the periodic BGG complex -/
 
-namespace Feec.Models.Torus.BGG
+section Torus
 
-open Feec.Fourier Feec.Fourier.BGG Feec.HilbertComplex
+open Feec.Fourier Feec.Fourier.BGG Feec.Models.Torus.BGG
 
 /-- The band-limited fields `|n|_∞ ≤ N` of the periodic BGG complex. -/
 abbrev band (N : ℕ) (i : Fin 3) : Submodule ℂ (Space i) :=
@@ -393,31 +575,30 @@ def bandFamily : SpectralFamily complex where
 
 @[simp] theorem bandFamily_B (N : ℕ) : bandFamily.B N = band N := rfl
 
-end Feec.Models.Torus.BGG
+end Torus
 
 /-! ### The cosine–sine bands of the mirror BGG complex on the cube -/
 
-namespace Feec.Models.Cube.MirrorBGG
+section Mirror
 
-open Feec.Fourier Feec.Fourier.GradCurl Feec.Fourier.BGG Feec.HilbertComplex
-open Feec.Models.Torus.BGG (band bandFamily)
+open Feec.Fourier Feec.Fourier.GradCurl Feec.Fourier.BGG Feec.Models.Cube.MirrorBGG
 
 theorem flipAt_mem_bandN {k : Fin 3} {n : Fin 3 → ℤ} {N : ℕ} :
-    MirrorExt.flipAt k n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by
-  simp only [Fourier.Torus.bandN, mem_ofPred_eq, MirrorExt.flipAt_apply]
+    Models.Cube.MirrorExt.flipAt k n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by
+  simp only [Fourier.Torus.bandN, mem_ofPred_eq, Models.Cube.MirrorExt.flipAt_apply]
   refine forall_congr' fun j => ?_
   split_ifs <;> simp
 
 /-- **The mirror action preserves the Fourier bands** (`|flip_k n|_∞ = |n|_∞`). -/
 theorem act_mem_band (N : ℕ) (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3)
-    {x : Models.Torus.BGG.Space i} (hx : x ∈ band N i) : action.act g i x ∈ band N i := by
+    {x : Feec.Models.Torus.BGG.Space i} (hx : x ∈ band N i) : action.act g i x ∈ band N i := by
   refine symmetries.act_mem_fibreSub
     (K := fun i n => bandFibre (𝕜 := ℂ) (E := ShortHilbertComplex.W3 ℂ Mat VM)
       (Fourier.Torus.bandN N) i n) (fun k i n v hv => ?_) g i hx
-  change v ∈ bandFibre _ i (MirrorExt.flipAt k n) at hv
+  change v ∈ bandFibre _ i (Models.Cube.MirrorExt.flipAt k n) at hv
   by_cases hn : n ∈ Fourier.Torus.bandN N
   · simp [bandFibre, hn]
-  · have hn' : MirrorExt.flipAt k n ∉ Fourier.Torus.bandN N := flipAt_mem_bandN.not.2 hn
+  · have hn' : Models.Cube.MirrorExt.flipAt k n ∉ Fourier.Torus.bandN N := flipAt_mem_bandN.not.2 hn
     have hv0 : v = 0 := by simpa [bandFibre, hn'] using hv
     simp [bandFibre, hn, hv0]
 
@@ -435,4 +616,166 @@ Fourier bands along the mirror extensions. -/
 def bandFamilyQ : SpectralFamily complexQ :=
   bandFamily.comap embeddingQ exists_J_eq_starProjection_band
 
-end Feec.Models.Cube.MirrorBGG
+end Mirror
+
+/-! ### The spectral EB discretizations through the approximating FEEC theorem -/
+
+section TorusApprox
+
+open Feec.Models.Torus.BGG
+
+/-- The Fourier bands `|n|_∞ ≤ N` of the periodic BGG complex as a reducing family. -/
+abbrev torusBands : ReducingFamily complex ℕ := bandFamily.toReducingFamily
+
+/-- **The Fourier spectral method for the EB system on `𝕋³` as an approximating FEEC
+discretization**: `X_N` the band `∏ B_N`, `ι_N` its inclusion, `π_N` the orthogonal projection,
+`L_N = L|_{B_N}`, with the TSD constraint. -/
+def torusApprox : ApproxFEEC complex ℕ :=
+  torusBands.toApprox (totalSub constraint) isClosed_totalSub
+
+/-- Its core: all of `W`, with zero consistency defect. -/
+def torusCore : torusApprox.Core := torusBands.toCore (totalSub constraint) isClosed_totalSub
+
+theorem torusCore_data : torusCore.Data = ⊤ := rfl
+
+theorem torusApprox_isReducing : complex.wave.IsReducing (totalSub constraint) :=
+  reducingSubcomplex.isReducing_wave
+
+/-- The spectral method is exact on the bands: `ι_N e^{tL_N} π_N x = P_N e^{tL} x`. -/
+theorem torusApprox_sol (N : ℕ) (x : PiLp 2 Space) (t : ℝ) :
+    torusApprox.sol N ((torusBands.B N).orthogonalProjectionOnto x) t =
+      bandFamily.P N (complex.waveGroup.S t x) :=
+  torusBands.toApprox_sol _ _ N x t
+
+/-- **The approximating FEEC theorem for the EB system on `𝕋³`** (Fourier spectral method): the
+verdict of `approxFEEC` (well-posedness, propagation iff reducing, convergence from every
+convergent family of initial values, rates, constraint residuals). [QuennevilleBelair2015],
+Thm 4.14, Prop 4.17, Ch. 6 -/
+theorem einsteinBianchi_torus_approxFEEC : torusApprox.Verdict torusCore := approxFEEC _ _
+
+/-- **The time-uniform rate on `𝕋³`**: for data in the approximation class of order `α`, the error
+and the TSD residual of the Fourier spectral solution from `π_N ξ₀` are `≤ (N + 1)^{-α} ‖ξ₀‖_α`
+for all `t ≥ 0` (no factor `(1 + C_P)(1 + t)²`: the spectral method is exact on the bands). -/
+abbrev TorusApproxRate : Prop :=
+  ∀ (α : ℝ) (x : PiLp 2 Space), x ∈ bandFamily.rateData α → ∀ (N : ℕ) {t : ℝ}, 0 ≤ t →
+    ‖complex.waveGroup.S t x - torusApprox.sol N ((torusBands.B N).orthogonalProjectionOnto x) t‖ ≤
+        (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x ∧
+      (x ∈ totalSub constraint →
+        infDist (torusApprox.sol N ((torusBands.B N).orthogonalProjectionOnto x) t)
+            (totalSub constraint : Set (PiLp 2 Space)) ≤
+          (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x)
+
+/-- `TorusApproxRate`, from the rate and the residual bound of `approxFEEC`. -/
+theorem einsteinBianchi_torus_approxFEEC_rate : TorusApproxRate := fun _ _ hx N _ ht =>
+  ⟨bandFamily.norm_sub_sol_le _ _ hx N ht,
+    fun hxK => bandFamily.infDist_sol_le _ _ torusApprox_isReducing hx hxK N ht⟩
+
+/-- **The constrained FEEC discretization on `𝕋³` (`torusFEEC`) through the approximating FEEC
+theorem**: the special case `ι_N` = inclusion, `π_N = Π_N` (`ConstrainedFEEC.toApprox`, core
+`D(L²)`). -/
+theorem einsteinBianchi_torus_constrainedFEEC_approxFEEC :
+    (bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).toApprox.Verdict
+      (bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).toCore :=
+  approxFEEC _ _
+
+/-- **The conforming rate on `𝕋³`**: the error and the TSD residual of the semi-discrete
+solutions of `torusFEEC` (from `Rₕ ξ₀`) are `≤ (1 + C_P)(1 + 2t) (N + 1)^{-α} ‖ξ₀‖_α`, sharper than
+the `(1 + t)²` of `einsteinBianchi_torus_constrainedFEEC` (`ConstrainedFEEC.rate_le`). -/
+abbrev TorusConformingRate : Prop :=
+  ∀ (α T : ℝ) (x : PiLp 2 Space) (hx : x ∈ bandFamily.rateData α) (N : ℕ), ∀ t ∈ Icc 0 T,
+    ‖complex.waveGroup.S t x - complex.totalD.graphFst
+        ((bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).discrete N
+          (waveLift complex ⟨x, hx.1⟩) t)‖ ≤
+        (1 + ellipticConst complex) * (1 + 2 * t) *
+          (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x) ∧
+      (x ∈ totalSub constraint →
+        infDist (complex.totalD.graphFst
+            ((bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).discrete N
+              (waveLift complex ⟨x, hx.1⟩) t)) (totalSub constraint : Set (PiLp 2 Space)) ≤
+          (1 + ellipticConst complex) * (1 + 2 * t) *
+            (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x))
+
+theorem einsteinBianchi_torus_conforming_rate : TorusConformingRate := fun _ _ _ hx N _ ht =>
+  ⟨bandFamily.norm_sub_discrete_le _ _ hx N ht,
+    fun hxK => bandFamily.infDist_discrete_le _ _ torusApprox_isReducing hx hxK N ht⟩
+
+end TorusApprox
+
+section MirrorApprox
+
+open Feec.Models.Cube.MirrorBGG
+
+/-- The cosine–sine bands of the mirror BGG complex on `Q` as a reducing family. -/
+abbrev mirrorBands : ReducingFamily complexQ ℕ := bandFamilyQ.toReducingFamily
+
+/-- **The cosine–sine spectral method for the EB system on the cube with mirror boundary
+conditions as an approximating FEEC discretization**, with the TSD constraint `tsdQ`. -/
+def mirrorApprox : ApproxFEEC complexQ ℕ :=
+  mirrorBands.toApprox (totalSub tsdQ) isClosed_totalSub
+
+/-- Its core: all of `W`, with zero consistency defect. -/
+def mirrorCore : mirrorApprox.Core := mirrorBands.toCore (totalSub tsdQ) isClosed_totalSub
+
+theorem mirrorCore_data : mirrorCore.Data = ⊤ := rfl
+
+theorem mirrorApprox_isReducing : complexQ.wave.IsReducing (totalSub tsdQ) :=
+  reducingSubcomplexQ.isReducing_wave
+
+/-- The spectral method is exact on the bands: `ι_N e^{tL_N} π_N x = P_N e^{tL} x`. -/
+theorem mirrorApprox_sol (N : ℕ) (x : PiLp 2 SpaceQ) (t : ℝ) :
+    mirrorApprox.sol N ((mirrorBands.B N).orthogonalProjectionOnto x) t =
+      bandFamilyQ.P N (complexQ.waveGroup.S t x) :=
+  mirrorBands.toApprox_sol _ _ N x t
+
+/-- **The approximating FEEC theorem for the EB system on the cube with mirror boundary
+conditions** (cosine–sine spectral method). [QuennevilleBelair2015], Thm 4.14, Prop 4.17
+(corrected), Ch. 6 -/
+theorem einsteinBianchi_mirror_approxFEEC : mirrorApprox.Verdict mirrorCore := approxFEEC _ _
+
+/-- **The time-uniform rate on the mirror cube**: for data in the approximation class of order
+`α`, the error and the TSD residual of the cosine–sine spectral solution from `π_N ξ₀` are
+`≤ (N + 1)^{-α} ‖ξ₀‖_α` for all `t ≥ 0`. -/
+abbrev MirrorApproxRate : Prop :=
+  ∀ (α : ℝ) (x : PiLp 2 SpaceQ), x ∈ bandFamilyQ.rateData α → ∀ (N : ℕ) {t : ℝ}, 0 ≤ t →
+    ‖complexQ.waveGroup.S t x -
+        mirrorApprox.sol N ((mirrorBands.B N).orthogonalProjectionOnto x) t‖ ≤
+        (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x ∧
+      (x ∈ totalSub tsdQ →
+        infDist (mirrorApprox.sol N ((mirrorBands.B N).orthogonalProjectionOnto x) t)
+            (totalSub tsdQ : Set (PiLp 2 SpaceQ)) ≤
+          (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x)
+
+theorem einsteinBianchi_mirror_approxFEEC_rate : MirrorApproxRate := fun _ _ hx N _ ht =>
+  ⟨bandFamilyQ.norm_sub_sol_le _ _ hx N ht,
+    fun hxK => bandFamilyQ.infDist_sol_le _ _ mirrorApprox_isReducing hx hxK N ht⟩
+
+/-- **The constrained FEEC discretization on the mirror cube (`mirrorFEEC`) through the
+approximating FEEC theorem** (`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem einsteinBianchi_mirror_constrainedFEEC_approxFEEC :
+    (bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub).toApprox.Verdict
+      (bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub).toCore :=
+  approxFEEC _ _
+
+/-- **The conforming rate on the mirror cube**: `(1 + C_P)(1 + 2t) (N + 1)^{-α} ‖ξ₀‖_α` for the
+error and the TSD residual of the semi-discrete solutions of `mirrorFEEC`. -/
+abbrev MirrorConformingRate : Prop :=
+  ∀ (α T : ℝ) (x : PiLp 2 SpaceQ) (hx : x ∈ bandFamilyQ.rateData α) (N : ℕ), ∀ t ∈ Icc 0 T,
+    ‖complexQ.waveGroup.S t x - complexQ.totalD.graphFst
+        ((bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub).discrete N
+          (waveLift complexQ ⟨x, hx.1⟩) t)‖ ≤
+        (1 + ellipticConst complexQ) * (1 + 2 * t) *
+          (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x) ∧
+      (x ∈ totalSub tsdQ →
+        infDist (complexQ.totalD.graphFst
+            ((bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub).discrete N
+              (waveLift complexQ ⟨x, hx.1⟩) t)) (totalSub tsdQ : Set (PiLp 2 SpaceQ)) ≤
+          (1 + ellipticConst complexQ) * (1 + 2 * t) *
+            (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x))
+
+theorem einsteinBianchi_mirror_conforming_rate : MirrorConformingRate := fun _ _ _ hx N _ ht =>
+  ⟨bandFamilyQ.norm_sub_discrete_le _ _ hx N ht,
+    fun hxK => bandFamilyQ.infDist_discrete_le _ _ mirrorApprox_isReducing hx hxK N ht⟩
+
+end MirrorApprox
+
+end Feec.Instances.EinsteinBianchi

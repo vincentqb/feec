@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
+public import Feec.HilbertComplex.Approximation.ApproxConforming
 public import Feec.Physics.Maxwell.CubeFEM
 public import Feec.Physics.Maxwell.Constraints
 public import Feec.Models.Torus.DeRhamGalerkin
@@ -41,6 +42,17 @@ theorem `Feec.HilbertComplex.constrainedFEEC`.
   is dense in it (`dense_potential`). `potential_residual` is the non-reducing branch of item 4
   for it, for every constrained FEEC discretization: data in `D(L) ∩ K` leave `K` forward in time,
   and the discrete residuals tend to a positive limit.
+
+**Through the approximating FEEC theorem.** Every Maxwell discretization is an instance of
+`Feec.HilbertComplex.approxFEEC` (the special case `ιₕ` = inclusion, `πₕ = Pₕ`,
+`ConstrainedFEEC.toApprox`, core `D(L²)`): `feec_approxFEEC`, and per instance
+`torus_approxFEEC`, `torus_potential_approxFEEC` (with the non-reducing vanishing-field
+constraint, so the non-reducing items 4b–4c apply), `cubePMC_approxFEEC`, `cubePEC_approxFEEC`,
+`paraPMC_approxFEEC`, `paraPEC_approxFEEC`, `starPMC_approxFEEC`, `starPEC_approxFEEC`. The rate
+of the approximating theorem gives the conforming factor `(1 + C_P)(1 + 2t)` in place of the
+`(1 + t)²` of `constrainedFEEC_rate` (`approx_rate`, `approx_residual_rate`,
+`approx_rate_regRate`, `approx_residual_rate_regRate`, and `cubePMC_approx_rate`, …,
+`starPEC_approx_residual_rate`).
 
 ## Instances
 
@@ -1646,5 +1658,315 @@ theorem starPEC_paraWitness_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (h
     (fun i j hij z hz => Feec.Models.Parallelepiped.poincare_min A hA b i j hij z hz) hij
 
 end StarShaped
+
+/-! ### Through the approximating FEEC theorem -/
+
+section Approx
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α]
+  [CharZero α] {V : α → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {a : α}
+  {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex} [∀ h k, FiniteDimensional 𝕜 ((S h).V k)]
+  {P : ∀ h, (S h).CochainProjection}
+  (hP : ∃ C, ∀ h k x, ‖(P h).π k x‖ ≤ C * ‖x‖)
+  (hS : ∀ k (y : V k) (ε : ℝ), 0 < ε → ∀ᶠ h in l, ∃ v ∈ (S h).V k, ‖y - v‖ < ε)
+  [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
+
+/-- **Every Maxwell discretization is an instance of the approximating FEEC theorem**: the verdict
+of `approxFEEC` for `(feec H a l S P hP hS).toApprox` (the special case `ιₕ` = inclusion,
+`πₕ = Pₕ` windowed) with the core `D(L²)` (`ConstrainedFEEC.toCore`). The statement of
+`constrainedFEEC` follows from it (`ConstrainedFEEC.constrainedFEEC_of_approxFEEC`). -/
+theorem feec_approxFEEC :
+    (feec H a l S P hP hS).toApprox.Verdict (feec H a l S P hP hS).toCore := approxFEEC _ _
+
+/-- **The rate of the semi-discrete Maxwell solutions with the conforming factor
+`(1 + C_P)(1 + 2t)`** (sharper than the `(1 + t)²` of `rate`), from `approxFEEC_rate`
+(`ConstrainedFEEC.rate_le`). -/
+theorem approx_rate {T : ℝ} (R : (feec H a l S P hP hS).RateClass T)
+    {x : PiLp 2 fun i : Fin 3 => V (a + i)} (hxR : x ∈ R.Data) (h : κ) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    ‖(H.window a 3).waveGroup.S t x - (H.window a 3).totalD.graphFst
+        ((feec H a l S P hP hS).discrete h (waveLift _ ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
+      (1 + ellipticConst (H.window a 3)) * (1 + 2 * t) *
+        (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
+  (feec H a l S P hP hS).rate_le R hxR h ht
+
+/-- **The rate of the Gauss-law residual with the conforming factor `(1 + C_P)(1 + 2t)`**, from
+`approxFEEC_residual_le` (the residual through `ιₕ` is bounded by the error) and `approx_rate`. -/
+theorem approx_residual_rate {T : ℝ} (R : (feec H a l S P hP hS).RateClass T)
+    {x : PiLp 2 fun i : Fin 3 => V (a + i)} (hxR : x ∈ R.Data) (hxK : x ∈ windowGauss H a)
+    (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist ((H.window a 3).totalD.graphFst
+        ((feec H a l S P hP hS).discrete h (waveLift _ ⟨x, R.mem_domain x hxR⟩) t))
+        (windowGauss H a : Set _) ≤
+      (1 + ellipticConst (H.window a 3)) * (1 + 2 * t) *
+        (R.C * R.meshSize h ^ R.α * R.classNorm x) := by
+  have hr := approxFEEC_residual_le (feec H a l S P hP hS).toApprox (isReducing_windowGauss H a)
+    hxK h ((feec H a l S P hP hS).ellipticProj h (waveLift _ ⟨x, R.mem_domain x hxR⟩)) t
+  rw [ConstrainedFEEC.toApprox_sol] at hr
+  exact hr.trans (approx_rate hP hS R hxR h ht)
+
+/-- **The `O(r_h)` rate for regular data with the factor `(1 + C_P)(1 + 2t)`** (`rate_regRate`
+with `(1 + t)²` replaced by `1 + 2t`). -/
+theorem approx_rate_regRate {T : ℝ} {Reg : ∀ k, V k → Prop} {B : α → ℝ} {r : κ → ℝ} {Λ : ℝ}
+    {happ : ∀ h k (x : V k), Reg k x → ∃ v, ∃ hv : v ∈ (S h).V k,
+      ‖x - v‖ ≤ B k * Λ * r h ∧ ∀ j (hxj : x ∈ (H.d k j).domain),
+        ‖H.d k j ⟨x - v, Submodule.sub_mem _ hxj ((S h).le_domain k j hv)⟩‖ ≤ B k * Λ * r h}
+    {hB : ∀ k, 0 ≤ B k} {hΛ : 0 ≤ Λ} {hr : ∀ h, 0 ≤ r h} {x : PiLp 2 fun i : Fin 3 => V (a + i)}
+    (hx : x ∈ (regRate hP hS T Reg B r Λ happ hB hΛ hr).Data) (h : κ) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    ‖(H.window a 3).waveGroup.S t x - (H.window a 3).totalD.graphFst
+        ((feec H a l S P hP hS).discrete h (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst (H.window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, B (a + i)) * r h * Λ) := by
+  simpa only [regRate, Real.rpow_one] using
+    approx_rate hP hS (regRate hP hS T Reg B r Λ happ hB hΛ hr) hx h ht
+
+/-- **The `O(r_h)` rate of the Gauss-law residual with the factor `(1 + C_P)(1 + 2t)`**. -/
+theorem approx_residual_rate_regRate {T : ℝ} {Reg : ∀ k, V k → Prop} {B : α → ℝ} {r : κ → ℝ}
+    {Λ : ℝ}
+    {happ : ∀ h k (x : V k), Reg k x → ∃ v, ∃ hv : v ∈ (S h).V k,
+      ‖x - v‖ ≤ B k * Λ * r h ∧ ∀ j (hxj : x ∈ (H.d k j).domain),
+        ‖H.d k j ⟨x - v, Submodule.sub_mem _ hxj ((S h).le_domain k j hv)⟩‖ ≤ B k * Λ * r h}
+    {hB : ∀ k, 0 ≤ B k} {hΛ : 0 ≤ Λ} {hr : ∀ h, 0 ≤ r h} {x : PiLp 2 fun i : Fin 3 => V (a + i)}
+    (hx : x ∈ (regRate hP hS T Reg B r Λ happ hB hΛ hr).Data) (hxK : x ∈ windowGauss H a)
+    (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist ((H.window a 3).totalD.graphFst
+        ((feec H a l S P hP hS).discrete h (waveLift _ ⟨x, hx.1⟩) t)) (windowGauss H a : Set _) ≤
+      (1 + ellipticConst (H.window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, B (a + i)) * r h * Λ) := by
+  have := approx_residual_rate hP hS (regRate hP hS T Reg B r Λ happ hB hΛ hr) hx hxK h ht
+  simp only [regRate, Real.rpow_one] at this
+  exact this
+
+end Approx
+
+/-! ### The Maxwell instances through the approximating FEEC theorem -/
+
+section TorusApprox
+
+open Models.Torus.DeRham
+
+variable {d : Type*} [Fintype d] [LinearOrder d] {a : ℕ}
+
+/-- **`torus` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem torus_approxFEEC : (torus d a).toApprox.Verdict (torus d a).toCore := approxFEEC _ _
+
+/-- **The vanishing-field constraint on `𝕋ᵈ` through the approximating FEEC theorem**: the
+verdict for the spectral Galerkin discretization with the constraint `E = 0`, `B = 0`
+(`withConstraint`), whose non-reducing branches (items 4b–4c) apply, since the constraint does
+not reduce `L` (`torus_not_isReducing_potential`). -/
+theorem torus_potential_approxFEEC [Nonempty d] :
+    (withConstraint (torus d 0) (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
+        isClosed_potential).toApprox.Verdict
+      (withConstraint (torus d 0) (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
+        isClosed_potential).toCore ∧
+    ¬ ((complex d).window 0 3).wave.IsReducing (potential ℂ fun i : Fin 3 => L2Form d (0 + i)) :=
+  ⟨approxFEEC _ _, torus_not_isReducing_potential⟩
+
+end TorusApprox
+
+section CubeApprox
+
+open Models.Cube Feec.Domain Feec.ExteriorFibre
+
+variable {n : ℕ} [NeZero n] {a : ℤ}
+
+/-- **`cubePMC` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem cubePMC_approxFEEC : (cubePMC n a).toApprox.Verdict (cubePMC n a).toCore := approxFEEC _ _
+
+/-- **`cubePEC` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem cubePEC_approxFEEC : (cubePEC n a).toApprox.Verdict (cubePEC n a).toCore := approxFEEC _ _
+
+/-- **The `O(h)` rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`cubePMC_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem cubePMC_approx_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (cubePMCRate n a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖((FEM.complex n).window a 3).waveGroup.S t x -
+        ((FEM.complex n).window a 3).totalD.graphFst
+          ((cubePMC n a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst ((FEM.complex n).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, FEM.interpBound n (a + i)) * FEM.meshSize N * Λ) :=
+  approx_rate_regRate _ _ hx N ht
+
+/-- **The `O(h)` Gauss-law residual rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`cubePMC_residual_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem cubePMC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (cubePMCRate n a T Λ hΛ).Data) (hxK : x ∈ windowGauss (FEM.complex n) a)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (((FEM.complex n).window a 3).totalD.graphFst
+        ((cubePMC n a).discrete N (waveLift _ ⟨x, hx.1⟩) t))
+        (windowGauss (FEM.complex n) a : Set _) ≤
+      (1 + ellipticConst ((FEM.complex n).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, FEM.interpBound n (a + i)) * FEM.meshSize N * Λ) :=
+  approx_residual_rate_regRate _ _ hx hxK N ht
+
+/-- **The `O(h)` rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`cubePEC_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem cubePEC_approx_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (cubePECRate n a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖((FEM.complexMin n).window a 3).waveGroup.S t x -
+        ((FEM.complexMin n).window a 3).totalD.graphFst
+          ((cubePEC n a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst ((FEM.complexMin n).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, FEM.interpBound n (a + i)) * FEM.meshSize N * Λ) :=
+  approx_rate_regRate _ _ hx N ht
+
+/-- **The `O(h)` Gauss-law residual rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`cubePEC_residual_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem cubePEC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (cubePECRate n a T Λ hΛ).Data) (hxK : x ∈ windowGauss (FEM.complexMin n) a)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (((FEM.complexMin n).window a 3).totalD.graphFst
+        ((cubePEC n a).discrete N (waveLift _ ⟨x, hx.1⟩) t))
+        (windowGauss (FEM.complexMin n) a : Set _) ≤
+      (1 + ellipticConst ((FEM.complexMin n).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, FEM.interpBound n (a + i)) * FEM.meshSize N * Λ) :=
+  approx_residual_rate_regRate _ _ hx hxK N ht
+
+end CubeApprox
+
+section ParallelepipedApprox
+
+open Models.Cube Feec.Domain Feec.ExteriorFibre
+open Models.Parallelepiped (complex complexMin rateBound)
+
+variable {n : ℕ} [NeZero n] {A : Matrix (Fin n) (Fin n) ℝ} {hA : IsUnit A.det} {b : Fin n → ℝ}
+  {a : ℤ}
+
+/-- **`paraPMC` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem paraPMC_approxFEEC : (paraPMC A hA b a).toApprox.Verdict (paraPMC A hA b a).toCore :=
+  approxFEEC _ _
+
+/-- **`paraPEC` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem paraPEC_approxFEEC : (paraPEC A hA b a).toApprox.Verdict (paraPEC A hA b a).toCore :=
+  approxFEEC _ _
+
+/-- **The `O(h)` rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`paraPMC_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem paraPMC_approx_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (paraPMCRate A hA b a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖((complex A b).window a 3).waveGroup.S t x -
+        ((complex A b).window a 3).totalD.graphFst
+          ((paraPMC A hA b a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst ((complex A b).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, rateBound A (a + i)) * FEM.meshSize N * Λ) :=
+  approx_rate_regRate _ _ hx N ht
+
+/-- **The `O(h)` Gauss-law residual rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`paraPMC_residual_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem paraPMC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (paraPMCRate A hA b a T Λ hΛ).Data) (hxK : x ∈ windowGauss (complex A b) a)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (((complex A b).window a 3).totalD.graphFst
+        ((paraPMC A hA b a).discrete N (waveLift _ ⟨x, hx.1⟩) t))
+        (windowGauss (complex A b) a : Set _) ≤
+      (1 + ellipticConst ((complex A b).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, rateBound A (a + i)) * FEM.meshSize N * Λ) :=
+  approx_residual_rate_regRate _ _ hx hxK N ht
+
+/-- **The `O(h)` rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`paraPEC_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem paraPEC_approx_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (paraPECRate A hA b a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖((complexMin A b).window a 3).waveGroup.S t x -
+        ((complexMin A b).window a 3).totalD.graphFst
+          ((paraPEC A hA b a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst ((complexMin A b).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, rateBound A (a + i)) * FEM.meshSize N * Λ) :=
+  approx_rate_regRate _ _ hx N ht
+
+/-- **The `O(h)` Gauss-law residual rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`paraPEC_residual_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem paraPEC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (paraPECRate A hA b a T Λ hΛ).Data) (hxK : x ∈ windowGauss (complexMin A b) a)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (((complexMin A b).window a 3).totalD.graphFst
+        ((paraPEC A hA b a).discrete N (waveLift _ ⟨x, hx.1⟩) t))
+        (windowGauss (complexMin A b) a : Set _) ≤
+      (1 + ellipticConst ((complexMin A b).window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, rateBound A (a + i)) * FEM.meshSize N * Λ) :=
+  approx_residual_rate_regRate _ _ hx hxK N ht
+
+end ParallelepipedApprox
+
+section StarShapedApprox
+
+open Models.Cube Models.StarShaped Feec.Domain Feec.ExteriorFibre
+
+variable {n : ℕ} [NeZero n] {D : StarDomain n} {M : MeshFamily D} {a : ℤ}
+
+/-- **`starPMC` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem starPMC_approxFEEC : (starPMC M a).toApprox.Verdict (starPMC M a).toCore := approxFEEC _ _
+
+/-- **`starPEC` through the approximating FEEC theorem** (the constrained FEEC special case
+`ConstrainedFEEC.toApprox`, core `D(L²)`). -/
+theorem starPEC_approxFEEC : (starPEC M a).toApprox.Verdict (starPEC M a).toCore := approxFEEC _ _
+
+/-- **The `O(h)` rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`starPMC_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem starPMC_approx_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (starPMCRate M a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖(D.complex.window a 3).waveGroup.S t x -
+        (D.complex.window a 3).totalD.graphFst
+          ((starPMC M a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst (D.complex.window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, M.interpBound (a + i)) * (M.mesh N).meshSize * Λ) :=
+  approx_rate_regRate _ _ hx N ht
+
+/-- **The `O(h)` Gauss-law residual rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`starPMC_residual_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem starPMC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (starPMCRate M a T Λ hΛ).Data) (hxK : x ∈ windowGauss D.complex a)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist ((D.complex.window a 3).totalD.graphFst
+        ((starPMC M a).discrete N (waveLift _ ⟨x, hx.1⟩) t))
+        (windowGauss D.complex a : Set _) ≤
+      (1 + ellipticConst (D.complex.window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, M.interpBound (a + i)) * (M.mesh N).meshSize * Λ) :=
+  approx_residual_rate_regRate _ _ hx hxK N ht
+
+/-- **The `O(h)` rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`starPEC_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem starPEC_approx_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (starPECRate M a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖(D.complexMin.window a 3).waveGroup.S t x -
+        (D.complexMin.window a 3).totalD.graphFst
+          ((starPEC M a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+      (1 + ellipticConst (D.complexMin.window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, M.interpBound (a + i)) * (M.mesh N).meshSize * Λ) :=
+  approx_rate_regRate _ _ hx N ht
+
+/-- **The `O(h)` Gauss-law residual rate with the conforming factor `(1 + C_P)(1 + 2t)`**
+(`starPEC_residual_rate` with `(1 + t)²` replaced by `1 + 2t`), through the approximating FEEC
+theorem. -/
+theorem starPEC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
+    (hx : x ∈ (starPECRate M a T Λ hΛ).Data) (hxK : x ∈ windowGauss D.complexMin a)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist ((D.complexMin.window a 3).totalD.graphFst
+        ((starPEC M a).discrete N (waveLift _ ⟨x, hx.1⟩) t))
+        (windowGauss D.complexMin a : Set _) ≤
+      (1 + ellipticConst (D.complexMin.window a 3)) * (1 + 2 * t) *
+        (12 * (∑ i : Fin 3, M.interpBound (a + i)) * (M.mesh N).meshSize * Λ) :=
+  approx_residual_rate_regRate _ _ hx hxK N ht
+
+end StarShapedApprox
 
 end Feec.Instances.Maxwell

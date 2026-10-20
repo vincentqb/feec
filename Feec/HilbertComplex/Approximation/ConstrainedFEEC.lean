@@ -15,7 +15,9 @@ a short complex on `Fin 3`) bundles
 * a family `Vₕ` (indexed by any type `κ`, along a filter `l`, e.g. `h → 0` or `N → ∞`) of
   finite-dimensional **subcomplexes** with **commuting cochain projections** `πₕ`, uniformly
   bounded in `W`;
-* the **approximation property**: every `ζ` of the graph space `Γ(𝐝)` is approximated by `Vₕ`.
+* the **approximation property** in `W`: every `x ∈ W` is approximated by `Vₕ` in the `L²` norm.
+  The commuting projections upgrade it to the graph norm of `Γ(𝐝)`
+  (`ConstrainedFEEC.dense_graph`: `‖ζ - Πₕ ζ‖_Γ ≤ 2 (1 + C) δ`), which drives the convergence.
 
 Its continuous problem is the Hodge wave equation `ξ' = L ξ` with `L = 𝐝 - 𝐝†` (the sign
 convention of `Feec.HilbertComplex.wave`; with `L' = 𝐝† - 𝐝` it reads `ξ' = -L' ξ`), solved by
@@ -29,18 +31,20 @@ The **constrained FEEC theorem** `constrainedFEEC` bundles:
 1. `constrainedFEEC_wellPosed`: for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution, the
    only strong and the only weak solution, and it conserves energy ([QuennevilleBelair2015],
    Thm 4.6, Thm 4.7).
-2. `constrainedFEEC_propagates_iff`: constraints propagate for all data in `K` iff `K` reduces
-   `L` (Stone; [QuennevilleBelair2015], Prop. 4.17, with necessity); `constrainedFEEC_propagates`:
-   strong solutions from `K` then stay in `K`; `constrainedFEEC_propagates_iff_domain` (data in
-   `D(L) ∩ K`, when it is dense in `K`) and `constrainedFEEC_propagates_iff_of_grading`
-   (forward strong solutions, for a graded complex).
+2. `constrainedFEEC_propagates_iff`: constraints propagate for all data in `K` and all times
+   `t ∈ ℝ` iff `K` reduces `L` (Stone; [QuennevilleBelair2015], Prop. 4.17, with necessity);
+   `constrainedFEEC_propagates`: strong solutions from `K` then stay in `K`;
+   `constrainedFEEC_propagates_iff_domain` (data in `D(L) ∩ K`, when it is dense in `K`) and
+   `constrainedFEEC_propagates_iff_of_grading` (forward strong solutions, for a graded complex).
 3. `constrainedFEEC_converges`: `ξₕ → ξ` uniformly on `[0, T]` for `ξ₀ ∈ D(L)`, and for every
    `ξ₀ ∈ W` as soon as `ξₕ(0) → ξ₀` ([QuennevilleBelair2015], Thm 4.14 and the remark after it);
-   `constrainedFEEC_rate`: for data in a **rate class** (`ConstrainedFEEC.RateClass`: `D(L²)`
-   data whose orbit is approximated in `Γ(𝐝)` to order `C hᵅ ‖ξ₀‖_class`, e.g. `D(L³)` or
-   Sobolev data under the approximation estimates of an instance),
-   `‖ξ(t) - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class`, with `C_P = √12 ‖A‖` the uniform bound
-   of the elliptic projections ([QuennevilleBelair2015], Prop. 4.13, Thm 4.14).
+   `constrainedFEEC_rate`: for data in a **rate class** on `[0, T]`
+   (`ConstrainedFEEC.RateClass F T`: `D(L²)` data whose orbit on `[0, T]` is approximated in
+   `Γ(𝐝)` to order `C hᵅ ‖ξ₀‖_class`, with `C` and `‖·‖_class` allowed to depend on `T`; e.g.
+   `D(L³)` or Sobolev data under the approximation estimates of an instance),
+   `‖ξ(t) - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`, with
+   `C_P = √12 ‖A‖` the uniform bound of the elliptic projections ([QuennevilleBelair2015],
+   Prop. 4.13, Thm 4.14).
 4. `constrainedFEEC_residual`: if `K` reduces `L`, the **constraint residual** of the discrete
    solution is bounded by the error, `dist(ξₕ(t), K) ≤ ‖ξ(t) - ξₕ(t)‖`, so it tends to `0`
    uniformly on `[0, T]`, with the rate of item 3 (`constrainedFEEC_residual_rate`);
@@ -51,10 +55,16 @@ The **constrained FEEC theorem** `constrainedFEEC` bundles:
    `D(L) ∩ Kᗮ` are dense in `K`, `Kᗮ` (`ConstrainedFEEC.exists_not_mem_of_not_isReducing_domain`).
    For a graded complex and an `R`-invariant `K` (e.g. a product constraint) with `D(L) ∩ K` dense
    in `K`, the data lie in `D(L) ∩ K` itself and `Q = K`
-   (`constrainedFEEC_residual_not_isReducing_of_grading`).
+   (`constrainedFEEC_residual_not_isReducing_of_grading`). Without a grading, when `D(L) ∩ K` is
+   dense in `K`, some datum of `D(L) ∩ K` leaves `K` at some `t ∈ [-T, T]`
+   (`constrainedFEEC_residual_not_isReducing_symm`).
 
-Further: `constrainedFEEC_discretePoincare` (the uniform discrete Poincaré inequality given by the
-cochain projections, [AFW2010], Thm 3.6) and the non-vacuity witness
+The cochain projections enter twice: the total projection `Πₕ` (`ConstrainedFEEC.piProj`)
+commutes with `𝐝` and turns the approximation property in `W` into the graph-norm approximation
+behind items 3 and 4 (`ConstrainedFEEC.dense_graph`), and they give the uniform discrete Poincaré
+inequality `constrainedFEEC_discretePoincare` ([AFW2010], Thm 3.6).
+
+Further: the non-vacuity witness
 `constrainedFEEC_nonvacuous`: on `𝕜 --id--> 𝕜 → 0` with `Vₕ = W` and `πₕ = id`, both branches of
 item 4 occur: `K = W` reduces `L`, and `K = 𝕜 × 0 × 0` does not, so some datum of `D(L) ∩ K` has
 discrete residuals with a positive limit; it also gives a rate class.
@@ -63,9 +73,12 @@ discrete residuals with a positive limit; it also gives a rate class.
 
 The density of `D(L) ∩ K` in `K` in the converse of item 4 with data in `D(L)` cannot be
 dropped: if `D(L) ∩ K = 0`, no datum of `D(L) ∩ K` leaves `K`. Without a grading the converse is
-stated for `K` or `Kᗮ`: forward invariance of a closed subspace under an isometric group does not
-make it reducing (translations on `L²(ℝ)` leave `L²(0, ∞)` invariant in one time direction only),
-while forward invariance of both `K` and `Kᗮ` does (`ConstrainedFEEC.isReducing_of_forall_nonneg`).
+stated for `K` or `Kᗮ` forward in time, or for `K` in both time directions. Forward invariance
+of a closed subspace under an isometric group does not make it reducing. On the de Rham complex
+over `ℝ`, where the wave equation reads `u' = ∂ₓv`, `v' = ∂ₓu`, the subspace
+`K = {(f, -f) : f ∈ L²(0, ∞)}` is invariant in one time direction only (`u - v` is translated
+and `u + v = 0` is preserved). Forward invariance of both `K` and `Kᗮ`
+does make `K` reducing (`ConstrainedFEEC.isReducing_of_forall_nonneg`).
 
 ## References
 
@@ -106,8 +119,9 @@ structure ConstrainedFEEC (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the commuting cochain projections -/
   π : ∀ h, (V h).CochainProjection
   bound_π : ∃ C, ∀ h i x, ‖(π h).π i x‖ ≤ C * ‖x‖
-  /-- the approximation property in the graph norm -/
-  dense : ∀ ζ : H.totalD.GraphSpace, ∀ δ > 0, ∀ᶠ h in l, ∃ w ∈ (V h).graphSub, ‖ζ - w‖ < δ
+  /-- the approximation property in `W` (the `L²` norm); the commuting projections upgrade it to
+  the graph norm (`ConstrainedFEEC.dense_graph`) -/
+  dense : ∀ x : PiLp 2 W, ∀ δ > 0, ∀ᶠ h in l, ∃ w ∈ totalSub (V h).V, ‖x - w‖ < δ
 
 attribute [instance] ConstrainedFEEC.finiteDimensional
 
@@ -136,10 +150,109 @@ instance : F.K.HasOrthogonalProjection := .ofCompleteSpace _
 /-- The discrete spaces `Vₕ` in the graph space `Γ(𝐝)`. -/
 abbrev Kh (h : κ) : Submodule 𝕜 H.totalD.GraphSpace := (F.V h).graphSub
 
+/-! ### The total cochain projection -/
+
+/-- The **total cochain projection** `Πₕ x = (πₕⁱ xⁱ)ᵢ` on `W = ⊕ Wⁱ`. -/
+def piProj (h : κ) : PiLp 2 W →ₗ[𝕜] PiLp 2 W :=
+  (WithLp.linearEquiv 2 𝕜 (∀ i, W i)).symm.toLinearMap ∘ₗ
+    LinearMap.pi fun i => (F.π h).π i ∘ₗ PiLp.projₗ 2 W i
+
+@[simp] theorem piProj_apply (h : κ) (x : PiLp 2 W) (i : ι) :
+    F.piProj h x i = (F.π h).π i (x i) := rfl
+
+theorem piProj_mem (h : κ) (x : PiLp 2 W) : F.piProj h x ∈ totalSub (F.V h).V :=
+  fun i => (F.π h).mem i _
+
+theorem piProj_of_mem (h : κ) {x : PiLp 2 W} (hx : x ∈ totalSub (F.V h).V) :
+    F.piProj h x = x :=
+  PiLp.ext fun i => (F.π h).proj i _ (hx i)
+
+/-- A nonnegative uniform bound of the cochain projections. -/
+def projConst : ℝ := max F.bound_π.choose 0
+
+theorem projConst_nonneg : 0 ≤ F.projConst := le_max_right _ _
+
+theorem norm_π_le (h : κ) (i : ι) (y : W i) : ‖(F.π h).π i y‖ ≤ F.projConst * ‖y‖ :=
+  (F.bound_π.choose_spec h i y).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
+
+/-- `‖Πₕ x‖ ≤ C ‖x‖`, uniformly in `h`. -/
+theorem norm_piProj_le (h : κ) (x : PiLp 2 W) : ‖F.piProj h x‖ ≤ F.projConst * ‖x‖ := by
+  have h0 := F.projConst_nonneg
+  have hsq : ‖F.piProj h x‖ ^ 2 ≤ (F.projConst * ‖x‖) ^ 2 := by
+    rw [mul_pow, PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
+    refine Finset.sum_le_sum fun i _ => ?_
+    rw [piProj_apply, ← mul_pow]
+    exact pow_le_pow_left₀ (norm_nonneg _) (F.norm_π_le h i _) 2
+  have := norm_nonneg (F.piProj h x)
+  nlinarith [mul_nonneg h0 (norm_nonneg x)]
+
+/-- **Quasi-optimality of the cochain projection** in `W`: `‖y - Πₕ y‖ ≤ (1 + C) ‖y - w‖` for
+every `w ∈ Vₕ`. [AFW2010], §3.3 -/
+theorem norm_sub_piProj_le (h : κ) (y : PiLp 2 W) {w : PiLp 2 W}
+    (hw : w ∈ totalSub (F.V h).V) : ‖y - F.piProj h y‖ ≤ (1 + F.projConst) * ‖y - w‖ := by
+  have e : y - F.piProj h y = (y - w) - F.piProj h (y - w) := by
+    rw [_root_.map_sub, F.piProj_of_mem h hw]; abel
+  rw [e]
+  have := F.norm_piProj_le h (y - w)
+  calc _ ≤ ‖y - w‖ + ‖F.piProj h (y - w)‖ := norm_sub_le _ _
+    _ ≤ _ := by linarith
+
+theorem piProj_mem_domain (h : κ) (x : PiLp 2 W) : F.piProj h x ∈ H.totalD.domain :=
+  fun i j => (F.V h).le_domain i j ((F.π h).mem i _)
+
+/-- **The total cochain projection commutes with `𝐝`**: `𝐝 Πₕ x = Πₕ 𝐝 x`. -/
+theorem totalD_piProj (h : κ) (x : H.totalD.domain) :
+    H.totalD ⟨F.piProj h x, F.piProj_mem_domain h x⟩ = F.piProj h (H.totalD x) := by
+  refine PiLp.ext fun j => ?_
+  rw [totalD_apply, piProj_apply, totalD_apply, map_sum]
+  exact Finset.sum_congr rfl fun i _ => (F.π h).comm i j ⟨(x : PiLp 2 W) i, x.2 i j⟩
+
+/-- **The approximation property in the graph norm**, from the approximation property in `W` and
+the uniformly bounded commuting cochain projections: `Πₕ ζ` approximates `ζ ∈ Γ(𝐝)` since
+`‖x - Πₕ x‖ ≤ (1 + C) ‖x - w₁‖` and `‖𝐝 x - 𝐝 Πₕ x‖ = ‖(1 - Πₕ) 𝐝 x‖ ≤ (1 + C) ‖𝐝 x - w₂‖`.
+[AFW2010], §3.3 -/
+theorem dense_graph (ζ : H.totalD.GraphSpace) (δ : ℝ) (hδ : 0 < δ) :
+    ∀ᶠ h in F.l, ∃ w ∈ (F.V h).graphSub, ‖ζ - w‖ < δ := by
+  obtain ⟨x, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ζ
+  have hC := F.projConst_nonneg
+  set ε := δ / (2 * (1 + F.projConst)) with hε
+  have hε0 : 0 < ε := by positivity
+  filter_upwards [F.dense (x : PiLp 2 W) ε hε0, F.dense (H.totalD x) ε hε0] with h hw₁ hw₂
+  obtain ⟨w₁, hw₁, h₁⟩ := hw₁
+  obtain ⟨w₂, hw₂, h₂⟩ := hw₂
+  set y : H.totalD.domain := ⟨F.piProj h x, F.piProj_mem_domain h x⟩
+  refine ⟨H.totalD.toGraphSpace y, fun i => F.piProj_mem h x i, ?_⟩
+  have e1 : H.totalD.graphFst (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y) =
+      (x : PiLp 2 W) - F.piProj h x := by
+    rw [H.totalD.graphFst.map_sub]; rfl
+  have e2 : H.totalD.graphSnd (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y) =
+      H.totalD x - F.piProj h (H.totalD x) := by
+    rw [H.totalD.graphSnd.map_sub, graphSnd_toGraphSpace, graphSnd_toGraphSpace, F.totalD_piProj]
+  have hsq := norm_sq_graphSpace (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y)
+  rw [e1, e2] at hsq
+  have a1 := F.norm_sub_piProj_le h (x : PiLp 2 W) hw₁
+  have a2 := F.norm_sub_piProj_le h (H.totalD x) hw₂
+  have b1 : (1 + F.projConst) * ‖(x : PiLp 2 W) - w₁‖ < (1 + F.projConst) * ε :=
+    mul_lt_mul_of_pos_left h₁ (by linarith)
+  have b2 : (1 + F.projConst) * ‖H.totalD x - w₂‖ < (1 + F.projConst) * ε :=
+    mul_lt_mul_of_pos_left h₂ (by linarith)
+  have hδε : 2 * ((1 + F.projConst) * ε) = δ := by
+    rw [hε]; field_simp
+  have c1 := a1.trans_lt b1
+  have c2 := a2.trans_lt b2
+  have n1 := norm_nonneg ((x : PiLp 2 W) - F.piProj h x)
+  have n2 := norm_nonneg (H.totalD x - F.piProj h (H.totalD x))
+  have n3 := norm_nonneg (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y)
+  have hm : 0 < (1 + F.projConst) * ε := by positivity
+  have hlt : ‖H.totalD.toGraphSpace x - H.totalD.toGraphSpace y‖ ^ 2 < δ ^ 2 := by
+    rw [hsq, ← hδε]; nlinarith
+  nlinarith
+
 /-- A constrained FEEC discretization is approximating (uniformly bounded elliptic projections,
-[QuennevilleBelair2015], Prop. 4.13, and the approximation property). -/
+[QuennevilleBelair2015], Prop. 4.13, and the approximation property in the graph norm,
+`dense_graph`). -/
 theorem isApproximating : IsApproximating F.l F.Kh :=
-  Subcomplex.isApproximating F.dense
+  Subcomplex.isApproximating F.dense_graph
 
 theorem norm_ellipticProjection_le (h : κ) (ζ : H.totalD.GraphSpace) :
     ‖ellipticProjection (F.Kh h) ζ‖ ≤ ellipticConst H * ‖ζ‖ :=
@@ -291,6 +404,46 @@ theorem forall_nonneg_of_forall_Icc {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
   refine key n x hx t ⟨ht, ?_⟩
   rwa [div_le_iff₀ hT] at hn
 
+/-- If a set `P` is invariant under `e^{sL}` for `s ∈ [-T, T]` (`T > 0`), it is invariant for
+all `s`. -/
+theorem forall_of_forall_Icc_neg {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
+    (hP : ∀ x ∈ P, ∀ s ∈ Icc (-T) T, H.waveGroup.S s x ∈ P) :
+    ∀ x ∈ P, ∀ t, H.waveGroup.S t x ∈ P := by
+  have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc (-(n * T)) (n * T), H.waveGroup.S t x ∈ P := by
+    intro n
+    induction n with
+    | zero =>
+      intro x hx t ht
+      have h1 := ht.1
+      have h2 := ht.2
+      simp only [Nat.cast_zero, zero_mul, neg_zero] at h1 h2
+      have : t = 0 := le_antisymm h2 h1
+      subst this
+      exact hP x hx 0 ⟨by linarith, hT.le⟩
+    | succ n ih =>
+      intro x hx t ht
+      have h1 := ht.1
+      have h2 := ht.2
+      push_cast at h1 h2
+      by_cases htT : t ∈ Icc (-T) T
+      · exact hP x hx t htT
+      · rcases le_or_gt t T with hle | hlt
+        · have hlt' : t < -T := by
+            by_contra hc
+            exact htT ⟨not_lt.1 hc, hle⟩
+          have e : H.waveGroup.S t x = H.waveGroup.S (t + T) (H.waveGroup.S (-T) x) := by
+            rw [← C0Group.map_add_apply, add_neg_cancel_right]
+          rw [e]
+          exact ih _ (hP x hx (-T) ⟨le_rfl, by linarith⟩) _ ⟨by linarith, by linarith⟩
+        · have e : H.waveGroup.S t x = H.waveGroup.S (t - T) (H.waveGroup.S T x) := by
+            rw [← C0Group.map_add_apply, sub_add_cancel]
+          rw [e]
+          exact ih _ (hP x hx T ⟨by linarith, le_rfl⟩) _ ⟨by linarith, by linarith⟩
+  intro x hx t
+  obtain ⟨n, hn⟩ := exists_nat_ge (|t| / T)
+  rw [div_le_iff₀ hT] at hn
+  exact key n x hx t ⟨by linarith [neg_abs_le t], by linarith [le_abs_self t]⟩
+
 end Aux
 
 /-! ### 1. Well-posedness -/
@@ -403,13 +556,15 @@ theorem constrainedFEEC_converges (T : ℝ) :
     simp only [F.discrete_zero, ellipticProjection_of_mem _ (hvK _)]
     exact hv
 
-/-- A **rate class** of a constrained FEEC discretization: data `x ∈ D(L²)` (the class `Data`,
-with a class norm `‖x‖_class`) whose orbit `ξ(t) = e^{tL} x` and its derivative
-`ξ'(t) = e^{tL} L x`, read in the graph space `Γ(𝐝)`, are approximated by `Vₕ` to order
-`C hᵅ ‖x‖_class` for `t ≥ 0`. Instances supply it from regularity (`D(L³)`, Sobolev classes)
-and approximation estimates; the constrained FEEC theorem turns it into the error bound
-`constrainedFEEC_rate`. [QuennevilleBelair2015], Thm 4.14, Thm 4.15; [AFW2010], §3.3 -/
-structure ConstrainedFEEC.RateClass (F : ConstrainedFEEC H κ) where
+/-- A **rate class** of a constrained FEEC discretization on the time horizon `[0, T]`: data
+`x ∈ D(L²)` (the class `Data`, with a class norm `‖x‖_class`) whose orbit `ξ(t) = e^{tL} x` and its
+derivative `ξ'(t) = e^{tL} L x`, read in the graph space `Γ(𝐝)`, are approximated by `Vₕ` to order
+`C hᵅ ‖x‖_class` for `t ∈ [0, T]`. The constant `C` and the class norm may depend on `T` (e.g.
+`‖x‖_class = ‖x‖_{D(L³)} + (1 + T) Λ` for regularity known only along the trajectory on
+`[0, T]`). Instances supply it from regularity (`D(L³)`, Sobolev classes) and approximation
+estimates; the constrained FEEC theorem turns it into the error bound `constrainedFEEC_rate`.
+[QuennevilleBelair2015], Thm 4.14, Thm 4.15; [AFW2010], §3.3 -/
+structure ConstrainedFEEC.RateClass (F : ConstrainedFEEC H κ) (T : ℝ) where
   /-- the data of the class -/
   Data : Set (PiLp 2 W)
   /-- the norm of the class -/
@@ -422,24 +577,25 @@ structure ConstrainedFEEC.RateClass (F : ConstrainedFEEC H κ) where
   C : ℝ
   mem_domain : ∀ x ∈ Data, x ∈ H.wave.domain
   mem_domain_sq : ∀ x (hx : x ∈ H.wave.domain), x ∈ Data → H.wave ⟨x, hx⟩ ∈ H.wave.domain
-  approx : ∀ x ∈ Data, ∀ h t, 0 ≤ t → ∀ v : H.totalD.GraphSpace,
+  approx : ∀ x ∈ Data, ∀ h, ∀ t ∈ Icc 0 T, ∀ v : H.totalD.GraphSpace,
     H.totalD.graphFst v = H.waveGroup.S t x →
       ∃ w ∈ F.Kh h, ‖v - w‖ ≤ C * meshSize h ^ α * classNorm x
-  approx_deriv : ∀ x (hx : x ∈ H.wave.domain), x ∈ Data → ∀ h t, 0 ≤ t →
+  approx_deriv : ∀ x (hx : x ∈ H.wave.domain), x ∈ Data → ∀ h, ∀ t ∈ Icc 0 T,
     ∀ v : H.totalD.GraphSpace, H.totalD.graphFst v = H.waveGroup.S t (H.wave ⟨x, hx⟩) →
       ∃ w ∈ F.Kh h, ‖v - w‖ ≤ C * meshSize h ^ α * classNorm x
 
-/-- **The rate of the constrained FEEC discretization** for data in a rate class:
-`‖e^{tL} ξ₀ - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ≥ 0`, with `ξₕ(0) = Pₕ ξ₀` and
-`C_P = √12 ‖A‖` (`ellipticConst`). [QuennevilleBelair2015], Prop. 4.13, Thm 4.14 -/
-theorem constrainedFEEC_rate (R : F.RateClass) {x : PiLp 2 W} (hxR : x ∈ R.Data) (h : κ)
-    {t : ℝ} (ht : 0 ≤ t) :
+/-- **The rate of the constrained FEEC discretization** for data in a rate class on `[0, T]`:
+`‖e^{tL} ξ₀ - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`, with
+`ξₕ(0) = Pₕ ξ₀` and `C_P = √12 ‖A‖` (`ellipticConst`). [QuennevilleBelair2015], Prop. 4.13,
+Thm 4.14 -/
+theorem constrainedFEEC_rate {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR : x ∈ R.Data)
+    (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x -
         H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
       (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x) := by
   have hx := R.mem_domain x hxR
-  set b := t + 1
-  have hb : 0 < b := by positivity
+  set b := T + 1
+  have hb : 0 < b := by linarith [ht.1.trans ht.2]
   obtain ⟨ξ, ξ', hξ, hξS, hξ'S⟩ :=
     exists_isGraphSolution_waveGroup H hx (R.mem_domain_sq x hx hxR) hb
   set ζ₀ := waveLift H ⟨x, hx⟩
@@ -447,19 +603,22 @@ theorem constrainedFEEC_rate (R : F.RateClass) {x : PiLp 2 W} (hxR : x ∈ R.Dat
     rw [hξS, C0Group.S_zero_apply]; rfl)
   set δ := (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α * R.classNorm x) with hδdef
   set P := ellipticProjection (F.Kh h) with hP
-  have he : ∀ s ∈ Icc 0 b, ‖H.totalD.graphFst (P (ξ s) - ξ s)‖ ≤ δ := fun s hs => by
-    obtain ⟨w, hw, hwb⟩ := R.approx x hxR h s hs.1 (ξ s) (hξS s)
+  have he : ∀ s ∈ Icc 0 T, ‖H.totalD.graphFst (P (ξ s) - ξ s)‖ ≤ δ := fun s hs => by
+    obtain ⟨w, hw, hwb⟩ := R.approx x hxR h s hs (ξ s) (hξS s)
     refine (norm_graphFst_le _).trans ?_
     rw [norm_sub_rev]
     exact (F.norm_sub_ellipticProjection_le h _ hw).trans
       (mul_le_mul_of_nonneg_left hwb (add_nonneg zero_le_one (ellipticConst_nonneg H)))
-  have he' : ∀ s ∈ Icc 0 b, ‖H.totalD.graphFst (P (ξ' s) - ξ' s)‖ ≤ δ := fun s hs => by
-    obtain ⟨w, hw, hwb⟩ := R.approx_deriv x hx hxR h s hs.1 (ξ' s) (hξ'S s hs)
+  have he' : ∀ s ∈ Icc 0 T, ‖H.totalD.graphFst (P (ξ' s) - ξ' s)‖ ≤ δ := fun s hs => by
+    obtain ⟨w, hw, hwb⟩ := R.approx_deriv x hx hxR h s hs (ξ' s)
+      (hξ'S s ⟨hs.1, hs.2.trans (le_add_of_nonneg_right zero_le_one)⟩)
     refine (norm_graphFst_le _).trans ?_
     rw [norm_sub_rev]
     exact (F.norm_sub_ellipticProjection_le h _ hw).trans
       (mul_le_mul_of_nonneg_left hwb (add_nonneg zero_le_one (ellipticConst_nonneg H)))
-  have htb : t ∈ Icc 0 b := ⟨ht, le_add_of_nonneg_right zero_le_one⟩
+  have htb : t ∈ Icc 0 b := ⟨ht.1, ht.2.trans (le_add_of_nonneg_right zero_le_one)⟩
+  have htT := ht
+  replace ht := ht.1
   have hbound := hξ.norm_sub_le (F.isSemidiscreteSolution_discrete h ζ₀ (Icc 0 b)) t htb
   rw [← hP] at hbound
   have e0 : H.totalD.graphFst (P (ξ 0) - F.discrete h ζ₀ 0) = 0 := by
@@ -475,10 +634,10 @@ theorem constrainedFEEC_rate (R : F.RateClass) {x : PiLp 2 W} (hxR : x ∈ R.Dat
           hξ.continuousOn_deriv)).norm.mono (Icc_subset_Icc le_rfl htb.2)
     have := intervalIntegral.integral_mono_on ht (hcont.intervalIntegrable_of_Icc ht)
       (intervalIntegrable_const (μ := MeasureTheory.volume)) fun s hs =>
-        he' s ⟨hs.1, hs.2.trans htb.2⟩
+        he' s ⟨hs.1, hs.2.trans htT.2⟩
     simpa only [intervalIntegral.integral_const, smul_eq_mul, sub_zero] using this
-  have h1 := he t htb
-  have h2 := he 0 ⟨le_rfl, hb.le⟩
+  have h1 := he t htT
+  have h2 := he 0 ⟨le_rfl, ht.trans htT.2⟩
   have i1 : t * ‖H.totalD.graphFst (P (ξ 0) - ξ 0)‖ ≤ t * δ := mul_le_mul_of_nonneg_left h2 ht
   have i2 : (1 + t) * ∫ s in (0 : ℝ)..t, ‖H.totalD.graphFst (P (ξ' s) - ξ' s)‖ ≤
       (1 + t) * (t * δ) := mul_le_mul_of_nonneg_left hint (by linarith only [ht])
@@ -488,7 +647,7 @@ theorem constrainedFEEC_rate (R : F.RateClass) {x : PiLp 2 W} (hxR : x ∈ R.Dat
         (R.C * R.meshSize h ^ R.α * R.classNorm x) := by rw [hδdef]; ring
 
 /-- For mesh sizes `hₖ → 0` and `α > 0`, the rate bound tends to `0` uniformly on `[0, T]`. -/
-theorem ConstrainedFEEC.RateClass.tendsto_rate (R : F.RateClass) (hα : 0 < R.α)
+theorem ConstrainedFEEC.RateClass.tendsto_rate {T : ℝ} (R : F.RateClass T) (hα : 0 < R.α)
     (hmesh : Tendsto R.meshSize F.l (𝓝 0)) (x : PiLp 2 W) (y : ℝ) :
     Tendsto (fun h => y * (R.C * R.meshSize h ^ R.α * R.classNorm x)) F.l (𝓝 0) := by
   have h1 : Tendsto (fun h => R.meshSize h ^ R.α) F.l (𝓝 0) := by
@@ -530,10 +689,10 @@ theorem constrainedFEEC_residual (hK : H.wave.IsReducing F.K) (x : H.wave.domain
   rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg infDist_nonneg]
   exact (hle h t).trans_lt this
 
-/-- **Rate of the constraint residual**: for a reducing `K` and data in `K ∩` a rate class,
-`dist(ξₕ(t), K) ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class`. -/
-theorem constrainedFEEC_residual_rate (hK : H.wave.IsReducing F.K) (R : F.RateClass)
-    {x : PiLp 2 W} (hxR : x ∈ R.Data) (hxK : x ∈ F.K) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
+/-- **Rate of the constraint residual**: for a reducing `K` and data in `K ∩` a rate class on
+`[0, T]`, `dist(ξₕ(t), K) ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`. -/
+theorem constrainedFEEC_residual_rate (hK : H.wave.IsReducing F.K) {T : ℝ} (R : F.RateClass T)
+    {x : PiLp 2 W} (hxR : x ∈ R.Data) (hxK : x ∈ F.K) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     infDist (H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t))
         (F.K : Set (PiLp 2 W)) ≤
       (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
@@ -630,7 +789,8 @@ theorem constrainedFEEC_residual_not_isReducing (hK : ¬ H.wave.IsReducing F.K) 
   · exact conc F.K (Or.inl rfl) x hx t ht hout
   · exact conc F.Kᗮ (Or.inr rfl) x hx t ht hout
 
-/-- **Residual of a non-reducing constraint on a graded complex** (the literal converse): for a
+/-- **Residual of a non-reducing constraint on a graded complex** (the converse with data in
+`D(L) ∩ K` and `Q = K`, under a grading, `R`-invariance of `K` and density of `D(L) ∩ K`): for a
 grading `p`, an `R`-invariant `K` with `D(L) ∩ K` dense in `K` that does not reduce `L`, and every
 `T > 0`, there is a datum `ξ₀ ∈ D(L) ∩ K` whose exact solution leaves `K` at some `t ∈ [0, T]`;
 the residuals `dist(ξₕ(t), K)` of the discrete solutions with `ξₕ(0) = Pₕ ξ₀` tend to
@@ -660,6 +820,28 @@ theorem constrainedFEEC_residual_not_isReducing_of_grading {p : ι → Bool}
     (((constrainedFEEC_converges F T).1 ⟨x, hx⟩).tendsto_at ht)
   exact ⟨⟨x, hx⟩, hxK, t, ht, hout, hpos, hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
+/-- **Non-reducing constraints are violated by data in `D(L) ∩ K`, in one of the two time
+directions**: if `K` does not reduce `L` and `D(L) ∩ K` is dense in `K`, then for every `T > 0`
+some `ξ₀ ∈ D(L) ∩ K` has `e^{tL} ξ₀ ∉ K`, at positive distance, for some `t ∈ [-T, T]`. Neither a
+grading nor a hypothesis on `Kᗮ` is needed. The time direction cannot be fixed in general: a
+closed subspace can be invariant in one time direction without reducing `L` (on de Rham over `ℝ`,
+`K = {(f, -f) : f ∈ L²(0, ∞)}` is invariant forward in time only). -/
+theorem constrainedFEEC_residual_not_isReducing_symm (hK : ¬ H.wave.IsReducing F.K)
+    (hdense : ∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) {T : ℝ}
+    (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+      H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) := by
+  have hex : ∃ x ∈ H.wave.domain, x ∈ F.K ∧ ∃ t ∈ Icc (-T) T, H.waveGroup.S t x ∉ F.K := by
+    by_contra hc
+    simp only [not_exists, not_and, not_not] at hc
+    refine hK ((constrainedFEEC_propagates_iff_domain F hdense).2 fun t x hx hxK => ?_)
+    have hP := forall_of_forall_Icc_neg H hT (P := (H.wave.domain : Set (PiLp 2 W)) ∩ F.K)
+      fun y hy s hs => ⟨waveGroup_mem_domain H hy.1 s, hc y hy.1 hy.2 s hs⟩
+    exact (hP x ⟨hx, hxK⟩ t).2
+  obtain ⟨x, hx, hxK, t, ht, hout⟩ := hex
+  exact ⟨⟨x, hx⟩, hxK, t, ht, hout,
+    (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout⟩
+
 /-! ### The discrete Poincaré inequality -/
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
@@ -681,19 +863,26 @@ theorem constrainedFEEC_discretePoincare {i j : ι} (hij : c.Rel i j) {cP : ℝ}
 
 /-- **The constrained FEEC theorem.** For a constrained FEEC discretization `F` (a Hilbert complex
 on any finite window, a closed constraint `K`, finite-dimensional subcomplexes `Vₕ` with uniformly
-bounded commuting cochain projections and the approximation property) of the Hodge wave equation
-`ξ' = L ξ`:
+bounded commuting cochain projections and the approximation property in `W`) of the Hodge wave
+equation `ξ' = L ξ`:
 
 1. (**well-posedness**, Stone) for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution on
    `[0, T]`, the only strong and the only weak solution, and conserves energy;
-2. (**propagation**) the solutions of all data in `K` stay in `K` iff `K` reduces `L`;
+2. (**propagation**) `K` reduces `L` iff `e^{tL} K ⊆ K` for all `t ∈ ℝ` (both time directions);
 3. (**convergence**) the semi-discrete solutions `ξₕ` with `ξₕ(0) = Pₕ ξ₀` converge to
-   `e^{tL} ξ₀` uniformly on `[0, T]` for `ξ₀ ∈ D(L)` (and for `ξ₀ ∈ W` whenever `ξₕ(0) → ξ₀`), at
-   the rate `(1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for data in every rate class;
+   `e^{tL} ξ₀` uniformly on `[0, T]` for `ξ₀ ∈ D(L)`; for `ξ₀ ∈ W`, every family with
+   `ξₕ(0) → ξ₀` converges uniformly on `[0, T]`, and such families exist; for data in a rate class
+   on `[0, T]`, `‖ξ(t) - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`;
 4. (**constraint residual**) if `K` reduces `L`, then for `ξ₀ ∈ D(L) ∩ K`,
    `dist(ξₕ(t), K) ≤ ‖e^{tL} ξ₀ - ξₕ(t)‖ → 0` uniformly on `[0, T]`; if `K` does not reduce `L`,
-   then for every `T > 0` some datum of `K` (or of `Kᗮ`) leaves the constraint at some
-   `t ∈ [0, T]`, and the residuals of every convergent discretization tend to a positive limit.
+   then for every `T > 0`:
+   (a) some datum of `K` (or of `Kᗮ`) leaves the constraint at some `t ∈ [0, T]`, and the
+   residuals of every convergent discretization tend to a positive limit;
+   (b) if `D(L) ∩ K` is dense in `K`, some `ξ₀ ∈ D(L) ∩ K` has `e^{tL} ξ₀ ∉ K` for some
+   `t ∈ [-T, T]`;
+   (c) on a graded complex, for an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, some
+   `ξ₀ ∈ D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), K)` of the
+   discrete solutions with `ξₕ(0) = Pₕ ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`.
 
 [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [AFW2010], §3.3; [Arnold2018], Ch. 5 -/
 theorem constrainedFEEC :
@@ -711,12 +900,16 @@ theorem constrainedFEEC :
     (∀ T : ℝ, (∀ x : H.wave.domain, TendstoUniformlyOn
         (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
         (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
-      ∀ x : PiLp 2 W, ∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
-        (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
-        Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
-        TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t))
-          (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
-    (∀ (R : F.RateClass) (x : PiLp 2 W) (hxR : x ∈ R.Data) (h : κ) (t : ℝ), 0 ≤ t →
+      ∀ x : PiLp 2 W,
+        (∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+          (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
+          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
+          TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t))
+            (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
+        ∃ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+          (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) ∧
+          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x)) ∧
+    (∀ (T : ℝ) (R : F.RateClass T) (x : PiLp 2 W) (hxR : x ∈ R.Data) (h : κ), ∀ t ∈ Icc 0 T,
       ‖H.waveGroup.S t x -
           H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
         (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x)) ∧
@@ -735,12 +928,28 @@ theorem constrainedFEEC :
           (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
           Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
           Tendsto (fun h => infDist (H.totalD.graphFst (ξh h t)) (Q : Set (PiLp 2 W))) F.l
-            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))) :=
+            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))) ∧
+    (¬ H.wave.IsReducing F.K →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W))) ∧
+    (∀ p : ι → Bool, (∀ i j, c.Rel i j → p j ≠ p i) → (∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K) →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) →
+      ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
+        Tendsto (fun h => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+          (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
+        ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
+          infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))) :=
   ⟨fun _ hx T => constrainedFEEC_wellPosed hx T, constrainedFEEC_propagates_iff F,
-    fun T => ⟨(constrainedFEEC_converges F T).1, fun x => ((constrainedFEEC_converges F T).2 x).1⟩,
-    fun R _ hxR h _ ht => constrainedFEEC_rate F R hxR h ht,
+    fun T => constrainedFEEC_converges F T,
+    fun _ R _ hxR h _ ht => constrainedFEEC_rate F R hxR h ht,
     fun hK x hxK T => constrainedFEEC_residual F hK x hxK T,
-    fun hK _ hT => constrainedFEEC_residual_not_isReducing F hK hT⟩
+    fun hK _ hT => constrainedFEEC_residual_not_isReducing F hK hT,
+    fun hK hdense _ hT => constrainedFEEC_residual_not_isReducing_symm F hK hdense hT,
+    fun _ hp hRK hdense hK _ hT =>
+      constrainedFEEC_residual_not_isReducing_of_grading F hp hRK hdense hK hT⟩
 
 end Main
 
@@ -851,7 +1060,7 @@ theorem idRate_bound (N : ℕ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) {v : (idComplex
 
 /-- A rate class of `idFEEC 𝕜 (firstSub 𝕜)`: all of `W` (here `D(L²) = W`), with `h = 1/(N+1)`,
 `α = 1`, `C = 1` and `‖x‖_class = ‖x‖` (the discretization is exact). -/
-def idRate : (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).RateClass where
+def idRate (T : ℝ) : (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).RateClass T where
   Data := univ
   classNorm := norm
   meshSize N := 1 / ((N : ℝ) + 1)
@@ -866,8 +1075,8 @@ def idRate : (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).RateClass where
 `πₕ = id` (all hypotheses of `ConstrainedFEEC` hold), both branches of item 4 occur. The constraint
 `K = W` reduces `L`; the constraint `K = 𝕜 × 0 × 0` is closed, invariant under the grading, with
 `D(L) ∩ K = K`, and does not reduce `L`; so for every `T > 0` some datum of `D(L) ∩ K` leaves `K`
-at some `t ∈ [0, T]` and the discrete residuals tend to a positive limit. A rate class with
-`α = 1`, `h = 1/(N+1)`, contains all of `D(L²) = W`. -/
+at some `t ∈ [0, T]` and the discrete residuals tend to a positive limit. For every horizon `T`,
+a rate class with `α = 1`, `h = 1/(N+1)`, contains all of `D(L²) = W`. -/
 theorem _root_.Feec.HilbertComplex.constrainedFEEC_nonvacuous :
     (idComplex 𝕜).wave.IsReducing (idFEEC 𝕜 ⊤ (by rw [Submodule.top_coe]; exact isClosed_univ)).K ∧
     ¬ (idComplex 𝕜).wave.IsReducing (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).K ∧
@@ -879,7 +1088,7 @@ theorem _root_.Feec.HilbertComplex.constrainedFEEC_nonvacuous :
             (firstSub 𝕜 : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) atTop
           (𝓝 (infDist ((idComplex 𝕜).waveGroup.S t x)
             (firstSub 𝕜 : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))))) ∧
-    ∃ R : (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).RateClass,
+    ∀ T : ℝ, ∃ R : (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).RateClass T,
       R.Data = univ ∧ R.α = 1 ∧ ∀ N, R.meshSize N = 1 / ((N : ℝ) + 1) := by
   set F := idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub
   refine ⟨(constrainedFEEC_propagates_iff _).2 fun _ _ _ => Submodule.mem_top,
@@ -890,7 +1099,7 @@ theorem _root_.Feec.HilbertComplex.constrainedFEEC_nonvacuous :
         (fun x hx => reversal_mem_totalSub hx)
         (fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩) not_isReducing_firstSub hT
     exact ⟨x, hxK, t, ht, hout, hpos, hlim⟩
-  · exact ⟨idRate, rfl, rfl, fun _ => rfl⟩
+  · exact fun T => ⟨idRate T, rfl, rfl, fun _ => rfl⟩
 
 end ConstrainedFEEC
 

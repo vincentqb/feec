@@ -49,7 +49,7 @@ The "Verdict" column says which branch of item 4 holds. `C_P(1+t)²` stands for 
 | linearized Einstein–Bianchi | `ℝ³`, no discretization | TSD | propagates (items 1–2 only) | — | EB `einsteinBianchi_euclidean` |
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `C_P(1+t)² (N+1)^{-s}` for `H^{2+s}` | EB `einsteinBianchi_mirror_constrainedFEEC_sobolev` |
 | linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5)* | TSD | converges to the constrained solution | `O(h)` for `D(L³)`, `O(hˢ)` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMVerdict` |
-| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5)* | TSD (not reducing) | converges to wrong physics | — | EB `thesisCubeVerdict` |
+| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5)* | TSD (not reducing) | converges to wrong physics | — | EB `standardCubeVerdict` |
 
 \* Scheme (6.5) of the thesis, with the elements of Tables 5.1/6.1. It discretizes the two rows of
 the BGG construction rather than the complex by subcomplexes, so these rows come from the model

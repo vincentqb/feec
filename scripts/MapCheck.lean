@@ -3445,7 +3445,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«constrainedFEEC_propagates_iff_of_grading» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_residual_not_isReducing_of_grading» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«mem_closure_domain_inter_ker_adjoint» -- THESIS_MAP.md
-#check @«Feec».«Instances».«EinsteinBianchi».«ThesisCubeVerdict» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«StandardCubeVerdict» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_thesisCube» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«mirrorFEEC_isReducing» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«not_isReducing_thesisCube» -- THESIS_MAP.md

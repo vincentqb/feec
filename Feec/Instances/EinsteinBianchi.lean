@@ -36,7 +36,7 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
     TSD solution, residual `→ 0`, rates for the approximation classes; non-vacuity
     `mirror_nonvacuous`), with the **Sobolev rate** `(1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}`
     for TSD data in `H^{2+s}`, `s ≥ 0` (`einsteinBianchi_mirror_constrainedFEEC_sobolev`, through
-    `Feec.Models.Cube.MirrorWeakSymmetry.TSDDatum.mem_rateData_of_memSobState`);
+    `Feec.Instances.EinsteinBianchi.mem_rateData_of_memSobState`);
   - the finite element scheme (6.5) with mirror boundary conditions
     (`Feec.Models.Cube.MirrorWeakSymmetry.mirrorFEM`) discretizes the two rows of the
     BGG construction (`Feec.BGG.Discrete`, coupled by `S₀,ₕ = π¹S⁰`), not the BGG Hilbert complex
@@ -46,7 +46,7 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
     (`einsteinBianchi_mirror_waveFEM_rate`) and the `O(hˢ)` rate for `H^{2+s}` data
     (`einsteinBianchi_mirror_waveFEM_rate_sobolev`).
 * **The cube with the thesis' boundary conditions** (`einsteinBianchi_thesisCube`,
-  `ThesisCubeVerdict`): the TSD constraint `thesisTSD = {0} × L²(TSD) × ({0} × L²(TSD))` of the
+  `StandardCubeVerdict`): the TSD constraint `thesisTSD = {0} × L²(TSD) × ({0} × L²(TSD))` of the
   matrix model contains the datum `(0, 0, (0, β))` and does not reduce `L`
   (`not_isReducing_thesisTSD`); more generally every closed subspace containing the datum and
   imposing `E ∈ L²(TSD)` fails to reduce `L` (`not_isReducing_thesisCube`);
@@ -67,7 +67,7 @@ subspaces). On `ℝ³` only items 1–2 are stated.
 
 `einsteinBianchi_constrainedFEEC_summary` is the conjunction of the full verdicts (`TorusVerdict`,
 `TorusSobolevVerdict`, `TorusNonvacuous`, `EuclideanVerdict`, `MirrorVerdict`,
-`MirrorSobolevVerdict`, `MirrorNonvacuous`, `MirrorFEMVerdict`, `ThesisCubeVerdict`); each headline
+`MirrorSobolevVerdict`, `MirrorNonvacuous`, `MirrorFEMVerdict`, `StandardCubeVerdict`); each headline
 theorem proves one of them.
 
 ## References
@@ -495,7 +495,7 @@ end MirrorFEM
 
 /-! ### The cube with the thesis' boundary conditions: the failure half -/
 
-section Thesis
+section StandardBoundary
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
@@ -553,7 +553,7 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
 exact solution leaves TSD (`E(t) ∉ L²(TSD)`, `B(t)` not symmetric), the scheme (6.5) with the
 elements of Table 6.1 has solutions whose initial states converge, every such family converges to
 the exact solution uniformly on `[0, T]`, and the discrete fields leave TSD for all large `N`. -/
-abbrev ThesisCubeFailure {T : ℝ} (hT0 : 0 < T) : Prop :=
+abbrev StandardCubeFailure {T : ℝ} (hT0 : 0 < T) : Prop :=
     (betaU hT0 0 = betaDatum ∧
       Evolution.IsStrongSolution matrixComplex.wave (Icc 0 T) 0 (betaU hT0) ∧
       (∀ V, V 0 = betaDatum → Evolution.IsStrongSolution matrixComplex.wave (Icc 0 T) 0 V →
@@ -581,7 +581,7 @@ abbrev ThesisCubeFailure {T : ℝ} (hT0 : 0 < T) : Prop :=
 
 /-- **The failure half of item 4 on the cube with the thesis' boundary conditions**: the TSD
 constraint does not reduce `L` (`not_isReducing_thesisCube`), and the finite element scheme
-(6.5) with the elements of Table 6.1 converges to the wrong physics (`ThesisCubeFailure`,
+(6.5) with the elements of Table 6.1 converges to the wrong physics (`StandardCubeFailure`,
 `Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`).
 [QuennevilleBelair2015], Prop 4.17, §6.3, (6.5), Table 6.1 -/
 theorem einsteinBianchi_thesisCube {T : ℝ} (hT0 : 0 < T) :
@@ -589,7 +589,7 @@ theorem einsteinBianchi_thesisCube {T : ℝ} (hT0 : 0 < T) :
         (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) [K.HasOrthogonalProjection],
       betaDatum ∈ K → (∀ x ∈ K, (x 1 : L2F ℝ (cubeDomain 3) Ix) ∈ tsd (cubeDomain 3)) →
         ¬ matrixComplex.wave.IsReducing K) ∧
-    ThesisCubeFailure hT hB hT0 :=
+    StandardCubeFailure hT hB hT0 :=
   ⟨fun K _ h0 hE => not_isReducing_thesisCube K h0 hE, waveFEM_converges_to_non_tsd hT hB hT0⟩
 
 /-- **The verdict on the cube with the thesis' boundary conditions**: the TSD constraint
@@ -599,7 +599,7 @@ exist, and for all of them the full conclusion of `einsteinBianchi_thesisCube` h
 solution from the datum leaves TSD, the scheme has solutions whose initial states converge, every
 such family converges to the exact solution uniformly on `[0, T]`, and its discrete fields leave
 TSD at some `t ∈ [0, T]` for all large `N`. [QuennevilleBelair2015], Prop 4.17, §6.3 -/
-abbrev ThesisCubeVerdict : Prop :=
+abbrev StandardCubeVerdict : Prop :=
     (betaDatum ∈ thesisTSD ∧ ¬ matrixComplex.wave.IsReducing thesisTSD) ∧
     (∀ (K : Submodule ℝ (PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
         (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) [K.HasOrthogonalProjection],
@@ -611,16 +611,16 @@ abbrev ThesisCubeVerdict : Prop :=
       ∀ {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
         (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
         (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T),
-        ThesisCubeFailure hT hB hT0)
+        StandardCubeFailure hT hB hT0)
 
-theorem thesisCubeVerdict : ThesisCubeVerdict := by
+theorem standardCubeVerdict : StandardCubeVerdict := by
   refine ⟨⟨betaDatum_mem_thesisTSD, not_isReducing_thesisTSD⟩,
     fun K _ h0 hE => not_isReducing_thesisCube K h0 hE, ?_, fun hT hB T hT0 =>
       (einsteinBianchi_thesisCube hT hB hT0).2⟩
   obtain ⟨p, C, hT, hB, -⟩ := Feec.Models.Cube.FEM.tableRows_H1
   exact ⟨p, C, hT, hB⟩
 
-end Thesis
+end StandardBoundary
 
 /-! ### Summary -/
 
@@ -642,7 +642,7 @@ end Thesis
    for each of them the scheme, started from the elliptic projection (6.4), converges to the TSD
    solution `e^{tL} ξ₀`, at the rate `O(h)` for TSD data in `D(L³)` and `O(hˢ)` for TSD data in
    `H^{2+s}`, `0 ≤ s ≤ 1`;
-5. the cube with the thesis' boundary conditions (`ThesisCubeVerdict`): the TSD constraint
+5. the cube with the thesis' boundary conditions (`StandardCubeVerdict`): the TSD constraint
    `thesisTSD` does not reduce `L`, and the thesis' scheme (6.5) converges to the exact solution,
    which leaves TSD, so its discrete fields leave TSD (the failure half of item 4). -/
 theorem einsteinBianchi_constrainedFEEC_summary :
@@ -655,12 +655,12 @@ theorem einsteinBianchi_constrainedFEEC_summary :
     -- 4. the mirror cube, finite elements
     MirrorFEMVerdict ∧
     -- 5. the cube with the thesis' boundary conditions
-    ThesisCubeVerdict :=
+    StandardCubeVerdict :=
   ⟨⟨einsteinBianchi_torus_constrainedFEEC, einsteinBianchi_torus_constrainedFEEC_sobolev,
       torus_nonvacuous⟩,
     einsteinBianchi_euclidean,
     ⟨einsteinBianchi_mirror_constrainedFEEC, einsteinBianchi_mirror_constrainedFEEC_sobolev,
       mirror_nonvacuous⟩,
-    mirrorFEMVerdict, thesisCubeVerdict⟩
+    mirrorFEMVerdict, standardCubeVerdict⟩
 
 end Feec.Instances.EinsteinBianchi

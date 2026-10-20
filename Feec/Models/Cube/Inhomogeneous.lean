@@ -396,7 +396,7 @@ end TimeDerivative
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
-section Thesis
+section StandardBoundary
 
 open ShortHilbertComplex
 
@@ -453,7 +453,7 @@ theorem hasDerivAt_mk3 {f₀ : ℝ → L2F ℝ Ω (Fin 3)} {f₁ f₂ : ℝ → 
     (W3 (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))).symm.hasFDerivAt.comp_hasDerivAt t h
   simpa [Function.comp_def] using this
 
-end Thesis
+end StandardBoundary
 
 /-! ## Whole-space TSD solutions and their restrictions -/
 

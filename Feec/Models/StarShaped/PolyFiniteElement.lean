@@ -62,7 +62,14 @@ and `_min`), and so are the harmonic finite-dimensionality instances; hence
 parallelepiped with its image Freudenthal meshes (`ParallelepipedWitness.meshFamily`) satisfy all
 the hypotheses for the bottom row and for `P₂⁻Λ` (`CubeWitness.nonvacuous_poly`,
 `ParallelepipedWitness.nonvacuous_poly`), with the instances `CubeWitness.mixed_rate_lagrangeP2`
-and `ParallelepipedWitness.mixed_rate_lagrangeP2`.
+and `ParallelepipedWitness.mixed_rate_lagrangeP2`. The rate is attained by a non-zero smooth
+solution: the harmonic datum `f = 1` on the cube, solved by `σ = 0`, `u = 0`, `p = 1`
+(`CubeWitness.exists_mixedSolution_ne_zero`, `CubeWitness.mixed_rate_lagrangeP2_ne_zero`). The
+general parallelepiped theorems apply beyond the image Freudenthal meshes: the reflected meshes
+`T(reflect(M_N))` (`ParallelepipedWitness.reflectedFamily`) form a mesh family which, for `n ≥ 2`,
+has at every level a simplex whose vertex set is that of no image Freudenthal simplex
+(`ParallelepipedWitness.exists_reflected_simplex`, `ParallelepipedWitness.reflectedFamily_ne`),
+with the instance `ParallelepipedWitness.mixed_rate_lagrangeP2_reflected`.
 
 ## References
 
@@ -1553,5 +1560,334 @@ theorem nonvacuous_poly : ∃ (D : StarDomain n) (F : MeshFamily D),
     FEM.polyOrder_trimmed (n := n) (r := 2) (by norm_num)⟩
 
 end ParallelepipedWitness
+
+/-! ### Non-vacuity beyond the zero solution and beyond the Freudenthal meshes -/
+
+namespace StarDomain
+variable (D : StarDomain n)
+
+theorem IsCsForm.mono {D : StarDomain n} {s : ℕ} {j : ℤ} {L L' : ℝ}
+    {x : L2F ℝ D.Ω (formIdx n j)} (hx : D.IsCsForm s j L x) (hLL : L ≤ L') :
+    D.IsCsForm s j L' x := by
+  rcases hx with hj | ⟨k, hk, w, hw, hdeg, hL, hL', he⟩
+  · exact Or.inl hj
+  · exact Or.inr ⟨k, hk, w, hw, hdeg, fun y hy => (hL y hy).trans hLL,
+      fun y hy => (hL' y hy).trans hLL, he⟩
+
+theorem isCsForm_zero (s : ℕ) (j : ℤ) {L : ℝ} (hL : 0 ≤ L) : D.IsCsForm s j L 0 := by
+  rcases lt_or_ge j 0 with hj | hj
+  · exact Or.inl hj
+  · refine Or.inr ⟨j.toNat, Int.toNat_of_nonneg hj, 0, contDiff_const, fun y s _ => rfl,
+      fun y _ => ?_, fun y _ => ?_, ?_⟩
+    · simp [iteratedFDeriv_zero, hL]
+    · have : extDeriv (0 : FormField n) = 0 := by
+        funext y t; simp [extDeriv]
+      rw [this]; simp [iteratedFDeriv_zero, hL]
+    · exact (map_zero (formL2 D.isOpen.measurableSet D.isBounded j)).symm
+
+/-- A harmonic datum is solved by `σ = 0`, `u = 0`, `p = f`. -/
+theorem isMixedSolution_harmonic (i j k : ℤ) (p : D.complex.harmonic j) :
+    D.complex.IsMixedSolution i j k (p : L2F ℝ D.Ω (formIdx n j)) 0 0 p :=
+  ⟨fun τ => by simp, fun v => by simp, fun q _ => by simp⟩
+
+end StarDomain
+
+namespace CubeWitness
+variable (n)
+
+/-- The constant `0`-form `1` on the cube as a harmonic form of `HΛ(Q)`. -/
+def oneHarmonic : (starDomain n).complex.harmonic 0 :=
+  ⟨FEM.oneForm n, by
+    change FEM.oneForm n ∈ (FEM.complex n).harmonic 0
+    rw [FEM.harmonic_zero_eq_span]; exact Submodule.mem_span_singleton_self _⟩
+
+theorem oneHarmonic_ne_zero : oneHarmonic n ≠ 0 := fun h =>
+  FEM.oneForm_ne_zero (congrArg Subtype.val h)
+
+/-- The constant field `1` of degree `0`. -/
+def oneField : FormField n := fun _ => Pi.single ∅ 1
+
+theorem contDiff_oneField {m : WithTop ℕ∞} : ContDiff ℝ m (oneField n) := contDiff_const
+
+theorem isDeg_oneField (y : Fin n → ℝ) : IsDeg 0 (oneField n y) := fun s hs => by
+  simp only [oneField, Pi.single_apply]
+  exact ite_eq_right_iff.2 fun h => absurd (by rw [h]; rfl) hs
+
+theorem formL2_oneField :
+    formL2 (starDomain n).isOpen.measurableSet (starDomain n).isBounded 0
+      ⟨oneField n, (contDiff_oneField n (m := 0)).continuous⟩ =
+      ((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+        L2F ℝ (starDomain n).Ω (formIdx n 0)) := by
+  refine PiLp.ext fun s => ?_
+  change MemLp.toLp _ (Feec.Domain.memLp_of_continuous (starDomain n).isOpen.measurableSet
+      (starDomain n).isBounded (continuous_formComp (k := 0)
+        (contDiff_oneField n (m := 0)).continuous s)) =
+    MemLp.toLp _ (DeRhamIdent.memLp_constFun (starDomain n).isOpen.measurableSet
+      (starDomain n).isBounded _ s)
+  apply MemLp.toLp_congr
+  refine Eventually.of_forall fun y => ?_
+  simp only [formComp, oneField, Pi.single_apply, DeRhamIdent.constFun]
+  congr 1
+  exact propext ⟨fun h => Subtype.ext h, fun h => congrArg Subtype.val h⟩
+
+theorem rel_neg_one_zero : (ComplexShape.up ℤ).Rel (-1) 0 := by simp
+
+theorem lagrangeP2_polyOrderAt_neg_one : FEM.PolyOrderAt n PolySeq.lagrangeP2 1 (-1) :=
+  fun k hk => absurd hk (by omega)
+
+/-- **A non-zero smooth mixed solution on the cube**: the datum `f = 1 ∈ ℌ⁰(HΛ(Q))` (the constant
+`0`-form) is solved by `σ = 0`, `u = 0`, `p = 1 ≠ 0` (degrees `-1, 0, 1`, the Neumann problem), and
+all four fields are of class `IsCsForm s` for one bound `L`. -/
+theorem exists_mixedSolution_ne_zero (s : ℕ) : ∃ L, 0 ≤ L ∧
+    (starDomain n).complex.IsMixedSolution (-1) 0 1
+      ((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+        L2F ℝ (starDomain n).Ω (formIdx n 0)) 0 0 (oneHarmonic n) ∧
+    oneHarmonic n ≠ 0 ∧
+    (starDomain n).IsCsForm s (-1) L ((starDomain n).complex.domainIncl (-1) 0) ∧
+    (starDomain n).IsCsForm s 0 L ((starDomain n).complex.domainIncl 0 0) ∧
+    (starDomain n).IsCsForm s 0 L ((starDomain n).complex.domainIncl 0
+      ((starDomain n).complex.boundaryPart 0 ((starDomain n).complex.domainIncl 0 0))) ∧
+    (starDomain n).IsCsForm s 0 L
+      ((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+        L2F ℝ (starDomain n).Ω (formIdx n 0)) := by
+  obtain ⟨L, hL0, hL⟩ := (starDomain n).exists_isCsForm s (k := 0)
+    (contDiff_oneField n) (isDeg_oneField n)
+  refine ⟨L, hL0, (starDomain n).isMixedSolution_harmonic _ _ _ _, oneHarmonic_ne_zero n,
+    Or.inl (by norm_num), ?_, ?_, ?_⟩
+  · rw [map_zero]; exact (starDomain n).isCsForm_zero s 0 hL0
+  · simp only [map_zero, boundaryPart, domainIncl_cyclesToDomainSpace]
+    exact (starDomain n).isCsForm_zero s 0 hL0
+  · rw [← formL2_oneField]; exact hL
+
+variable [NeZero n]
+
+/-- **Second-order convergence for a non-zero smooth solution** (non-vacuity of
+`MeshFamily.mixed_rate_poly_of_polyOrderAt` beyond the zero solution): for the harmonic datum
+`f = 1` on the cube, the discrete solutions of the bottom row `P₂Λ⁰ → …` on the Freudenthal meshes
+satisfy `‖σ - σ_h‖ + ‖u - u_h‖ + ‖p - p_h‖ ≤ K L h_N²` with `p = 1 ≠ 0`. -/
+theorem mixed_rate_lagrangeP2_ne_zero : ∃ K L : ℝ, 0 ≤ L ∧ oneHarmonic n ≠ 0 ∧ ∀ N : ℕ,
+    ‖(0 : (starDomain n).complex.domainSpace (-1)) -
+        ((meshFamily n).poly PolySeq.lagrangeP2 N).embD (-1)
+        (Subcomplex.CochainProjection.discreteMixedSolution
+          ((meshFamily n).poly PolySeq.lagrangeP2 N) (rel_neg_one_zero) (j := 0) (k := 1) rfl
+          ((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+            L2F ℝ (starDomain n).Ω (formIdx n 0))).fst‖ +
+      ‖(0 : (starDomain n).complex.domainSpace 0) -
+        ((meshFamily n).poly PolySeq.lagrangeP2 N).embD 0
+        (Subcomplex.CochainProjection.discreteMixedSolution
+          ((meshFamily n).poly PolySeq.lagrangeP2 N) (rel_neg_one_zero) (j := 0) (k := 1) rfl
+          ((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+            L2F ℝ (starDomain n).Ω (formIdx n 0))).snd.fst‖ +
+      ‖((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+          L2F ℝ (starDomain n).Ω (formIdx n 0)) -
+        (((Subcomplex.CochainProjection.discreteMixedSolution
+          ((meshFamily n).poly PolySeq.lagrangeP2 N) (rel_neg_one_zero) (j := 0) (k := 1) rfl
+          ((oneHarmonic n : (starDomain n).complex.harmonic 0) :
+            L2F ℝ (starDomain n).Ω (formIdx n 0))).snd.snd :
+            ((meshFamily n).poly PolySeq.lagrangeP2 N).V 0) :
+          L2F ℝ (starDomain n).Ω (formIdx n 0))‖ ≤
+      K * L * ((meshFamily n).mesh N).meshSize ^ (1 + 1) := by
+  obtain ⟨K, hK⟩ := (meshFamily n).mixed_rate_poly_of_polyOrderAt PolySeq.lagrangeP2
+    (hasPoincare n) (lagrangeP2_polyOrderAt_neg_one n) FEM.lagrangeP2_polyOrderAt_zero
+    (rel_neg_one_zero) (show (ComplexShape.up ℤ).Rel 0 1 from rfl)
+  obtain ⟨L, hL0, hs, hne, h1, h2, h3, h4⟩ := exists_mixedSolution_ne_zero n 1
+  exact ⟨K, L, hL0, hne, hK hs hL0 h1 h2 h3 h4⟩
+
+end CubeWitness
+
+namespace MeshFamily
+
+/-- A mesh family of `D` as a mesh family of any `D'` with the same domain. -/
+def congrDomain {D : StarDomain n} (F : MeshFamily D) (D' : StarDomain n) (h : D'.Ω = D.Ω) :
+    MeshFamily D' where
+  mesh := F.mesh
+  C := F.C
+  c := F.c
+  q := F.q
+  C_nonneg := F.C_nonneg
+  c_pos := F.c_pos
+  q_pos := F.q_pos
+  domain_eq N := (F.domain_eq N).trans h.symm
+  data := F.data
+  tendsto_meshSize := F.tendsto_meshSize
+
+end MeshFamily
+
+namespace CubeWitness
+
+variable (n) [NeZero n]
+
+/-- The sign `-1` on the first coordinate, `1` on the others. -/
+def reflectUnit (i : Fin n) : ℝˣ := if i = 0 then -1 else 1
+
+/-- The reflection `x₀ ↦ ½ - x₀` of the first coordinate, a symmetry of `Q = (0, ½)ⁿ`. -/
+def reflect : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ) :=
+  (LinearEquiv.piCongrRight fun i => LinearEquiv.smulOfUnit (reflectUnit n i)).toAffineEquiv.trans
+    (AffineEquiv.constVAdd ℝ (Fin n → ℝ) (Pi.single 0 (1 / 2)))
+
+theorem reflect_apply (x : Fin n → ℝ) (i : Fin n) :
+    reflect n x i = if i = 0 then 1 / 2 - x i else x i := by
+  by_cases h : i = 0
+  · subst h
+    simp [reflect, reflectUnit, LinearEquiv.smulOfUnit, DistribMulAction.toLinearEquiv,
+      Units.smul_def]; ring
+  · simp [reflect, reflectUnit, h, LinearEquiv.smulOfUnit, DistribMulAction.toLinearEquiv]
+
+theorem reflect_reflect (x : Fin n → ℝ) : reflect n (reflect n x) = x := by
+  funext i; rw [reflect_apply, reflect_apply]; split_ifs <;> ring
+
+theorem reflect_mem_cubeDomain {x : Fin n → ℝ} (hx : x ∈ FEM.cubeDomain n) :
+    reflect n x ∈ FEM.cubeDomain n := by
+  simp only [FEM.cubeDomain, Set.mem_univ_pi, Set.mem_Ioo] at hx ⊢
+  intro i; rw [reflect_apply]; have := hx i
+  split_ifs <;> constructor <;> linarith [this.1, this.2]
+
+theorem cubeDomain_eq_image_reflect : FEM.cubeDomain n = reflect n '' FEM.cubeDomain n := by
+  ext x
+  exact ⟨fun hx => ⟨reflect n x, reflect_mem_cubeDomain n hx, reflect_reflect n x⟩,
+    fun ⟨y, hy, e⟩ => e ▸ reflect_mem_cubeDomain n hy⟩
+
+/-- **The reflected Freudenthal meshes of the cube**: the images of the Freudenthal meshes under
+`x₀ ↦ ½ - x₀`, whose simplices have their long diagonal along `(-1, 1, …, 1)`; a quasi-uniform
+shape-regular mesh family of `Q` other than `CubeWitness.meshFamily` (for `n ≥ 2`,
+`exists_reflected_simplex`). -/
+def reflectedFamily : MeshFamily (starDomain n) :=
+  ((meshFamily n).map (reflect n) _ (cubeDomain_eq_image_reflect n)).congrDomain _ rfl
+
+theorem reflectedFamily_mesh (N : ℕ) :
+    (reflectedFamily n).mesh N = (FEM.mesh n N).map (reflect n) := rfl
+
+omit [NeZero n] in
+/-- Two vertices of a simplex of a Freudenthal mesh are comparable coordinatewise. -/
+theorem le_total_of_mem_vertexSet {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (FEM.mesh n N).simplices) {x y : Fin n → ℝ} (hx : x ∈ vertexSet T)
+    (hy : y ∈ vertexSet T) : x ≤ y ∨ y ≤ x := by
+  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
+  obtain ⟨i, rfl⟩ := mem_vertexSet.1 hx
+  obtain ⟨j, rfl⟩ := mem_vertexSet.1 hy
+  have hh : (0 : ℝ) ≤ 1 / 2 / ((N + 1 : ℕ) : ℝ) := by positivity
+  have hs := freudenthalScale_ne_zero (by norm_num : (0 : ℝ) < 1 / 2) (N + 1)
+  have key : ∀ a b : Fin (n + 1), a ≤ b →
+      (mapEquiv (boxMap 0 (1 / 2 / ((N + 1 : ℕ) : ℝ)) hs)
+        (freudenthalSimplex (finLattice m) σ)).points a ≤
+      (mapEquiv (boxMap 0 (1 / 2 / ((N + 1 : ℕ) : ℝ)) hs)
+        (freudenthalSimplex (finLattice m) σ)).points b := by
+    intro a b hab k
+    simp only [mapEquiv_points, freudenthalSimplex_points, boxMap_apply, zero_add,
+      Pi.smul_apply, Pi.add_apply, smul_eq_mul, Pi.zero_apply]
+    gcongr ?_ * (_ + ?_)
+    simp only [kuhnVertex]
+    split_ifs with h1 h2 <;> norm_num
+    exact h2 (lt_of_lt_of_le h1 (by exact_mod_cast hab))
+  rcases le_total i j with h | h
+  · exact Or.inl (key _ _ h)
+  · exact Or.inr (key _ _ h)
+
+omit [NeZero n] in
+/-- Distinct vertex sets stay distinct under an affine equivalence. -/
+theorem vertexSet_mapEquiv_ne {M : SimplicialMesh n} {T₀ : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (h : ∀ T ∈ M.simplices, vertexSet T ≠ vertexSet T₀) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
+    ∀ T ∈ (M.map e).simplices, vertexSet T ≠ vertexSet (mapEquiv e T₀) := by
+  intro T hT he
+  obtain ⟨T', hT', rfl⟩ := (M.mem_map_simplices).1 hT
+  have h' := congrArg (fun s : Finset (Fin n → ℝ) => (s : Set (Fin n → ℝ))) he
+  simp only [vertexSet_mapEquiv] at h'
+  exact h T' hT' (Finset.coe_injective (e.injective.image_injective h'))
+
+/-- **The reflected meshes are not the Freudenthal meshes** (`n ≥ 2`): at every level, some
+simplex of `reflect(M_N)` has a vertex set that is the vertex set of no simplex of `M_N`. Two
+vertices of a Freudenthal simplex are comparable coordinatewise
+(`le_total_of_mem_vertexSet`), while the reflected images `(½, 0, …)` and `(½ - h, h, …)` of the
+endpoints `0`, `h 𝟙` of the long diagonal of `h K_id` are not. -/
+theorem exists_reflected_simplex (h2 : 2 ≤ n) (N : ℕ) :
+    ∃ T ∈ ((reflectedFamily n).mesh N).simplices,
+      ∀ T' ∈ (FEM.mesh n N).simplices, vertexSet T' ≠ vertexSet T := by
+  set h : ℝ := 1 / 2 / ((N + 1 : ℕ) : ℝ) with hh
+  have hpos : 0 < h := by positivity
+  set T₀ := mapEquiv (boxMap 0 h (freudenthalScale_ne_zero (by norm_num : (0 : ℝ) < 1 / 2)
+    (N + 1))) (freudenthalSimplex (finLattice (0 : Fin n → Fin (N + 1))) 1) with hT₀
+  have hT₀m : T₀ ∈ (FEM.mesh n N).simplices := mem_freudenthalMesh_simplices.2 ⟨0, 1, rfl⟩
+  refine ⟨mapEquiv (reflect n) T₀, (SimplicialMesh.mem_map_simplices _).2 ⟨T₀, hT₀m, rfl⟩,
+    fun T' hT' he => ?_⟩
+  have hv : ∀ j, reflect n (T₀.points j) ∈ vertexSet T' := fun j => by
+    rw [he]; exact mem_vertexSet.2 ⟨j, by rw [mapEquiv_points]⟩
+  have hp : ∀ j k, T₀.points j k = h * kuhnVertex 1 j k := fun j k => by
+    simp [hT₀, freudenthalSimplex_points, finLattice]
+  set i₁ : Fin n := ⟨1, h2⟩
+  have hi₁ : i₁ ≠ 0 := fun e => by
+    have := congrArg Fin.val e; simp [i₁] at this
+  rcases le_total_of_mem_vertexSet n hT' (hv 0) (hv (Fin.last n)) with hle | hle
+  · have := hle 0
+    simp only [reflect_apply, ↓reduceIte, hp, kuhnVertex_zero, kuhnVertex_last] at this
+    simp at this; linarith
+  · have := hle i₁
+    simp only [reflect_apply, hi₁, ↓reduceIte, hp, kuhnVertex_zero, kuhnVertex_last] at this
+    simp at this; linarith
+
+end CubeWitness
+
+namespace ParallelepipedWitness
+
+variable (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ) [NeZero n]
+
+/-- **A mesh family of the parallelepiped that is not an image Freudenthal family**: the images
+`T(reflect(M_N))` of the reflected Freudenthal meshes under `T x = A x + b`, a mesh family of
+`ParallelepipedWitness.starDomain A hA b` to which `Parallelepiped.mixed_rate_poly_general`
+applies (`reflectedFamily_ne`). -/
+def reflectedFamily : MeshFamily (starDomain A hA b) :=
+  ((CubeWitness.reflectedFamily n).map (Feec.Models.Parallelepiped.affEquiv A hA b)
+    (Feec.Models.Parallelepiped.domain A b)
+    (Feec.Models.Parallelepiped.domain_eq_image A hA b)).congrDomain _ rfl
+
+/-- **`reflectedFamily` differs from the image Freudenthal meshes** (`n ≥ 2`): at every level
+some simplex of it has a vertex set that is the vertex set of no simplex of
+`Parallelepiped.mesh A hA b N`; in particular the meshes differ. -/
+theorem exists_reflected_simplex (h2 : 2 ≤ n) (N : ℕ) :
+    ∃ T ∈ ((reflectedFamily A hA b).mesh N).simplices,
+      ∀ T' ∈ (Feec.Models.Parallelepiped.mesh A hA b N).simplices,
+        vertexSet T' ≠ vertexSet T := by
+  obtain ⟨T, hT, hne⟩ := CubeWitness.exists_reflected_simplex n h2 N
+  exact ⟨_, (SimplicialMesh.mem_map_simplices _).2 ⟨T, hT, rfl⟩,
+    CubeWitness.vertexSet_mapEquiv_ne n hne _⟩
+
+theorem reflectedFamily_ne (h2 : 2 ≤ n) (N : ℕ) :
+    (reflectedFamily A hA b).mesh N ≠ Feec.Models.Parallelepiped.mesh A hA b N := fun e => by
+  obtain ⟨T, hT, hne⟩ := exists_reflected_simplex A hA b h2 N
+  exact hne T (e ▸ hT) rfl
+
+/-- **Second-order convergence of the bottom row on the reflected meshes of a parallelepiped**:
+`Parallelepiped.mixed_rate_lagrangeP2_general` for the mesh family `reflectedFamily`, which is not
+an image Freudenthal family (`reflectedFamily_ne`). -/
+theorem mixed_rate_lagrangeP2_reflected :
+    ∃ K : ℝ, ∀ {f : L2F ℝ (starDomain A hA b).Ω (formIdx n 1)}
+    {σ : (starDomain A hA b).complex.domainSpace 0}
+    {u : (starDomain A hA b).complex.domainSpace 1}
+    {q : (starDomain A hA b).complex.harmonic 1},
+    (starDomain A hA b).complex.IsMixedSolution 0 1 2 f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    (starDomain A hA b).IsCsForm 1 0 L ((starDomain A hA b).complex.domainIncl 0 σ) →
+    (starDomain A hA b).IsCsForm 1 1 L ((starDomain A hA b).complex.domainIncl 1 u) →
+    (starDomain A hA b).IsCsForm 1 1 L ((starDomain A hA b).complex.domainIncl 1
+      ((starDomain A hA b).complex.boundaryPart 1
+        ((starDomain A hA b).complex.domainIncl 1 u))) →
+    (starDomain A hA b).IsCsForm 1 1 L
+      (q : L2F ℝ (starDomain A hA b).Ω (formIdx n 1)) → ∀ N : ℕ,
+    ‖σ - ((reflectedFamily A hA b).poly PolySeq.lagrangeP2 N).embD 0
+        (Subcomplex.CochainProjection.discreteMixedSolution
+          ((reflectedFamily A hA b).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
+            f).fst‖ +
+      ‖u - ((reflectedFamily A hA b).poly PolySeq.lagrangeP2 N).embD 1
+        (Subcomplex.CochainProjection.discreteMixedSolution
+          ((reflectedFamily A hA b).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
+            f).snd.fst‖ +
+      ‖(q : L2F ℝ (starDomain A hA b).Ω (formIdx n 1)) -
+        (((Subcomplex.CochainProjection.discreteMixedSolution
+          ((reflectedFamily A hA b).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
+            f).snd.snd : ((reflectedFamily A hA b).poly PolySeq.lagrangeP2 N).V 1) :
+              L2F ℝ (starDomain A hA b).Ω (formIdx n 1))‖ ≤
+      K * L * ((reflectedFamily A hA b).mesh N).meshSize ^ (1 + 1) :=
+  Parallelepiped.mixed_rate_lagrangeP2_general A hA b (reflectedFamily A hA b)
+
+end ParallelepipedWitness
+
 
 end Feec.Models.StarShaped

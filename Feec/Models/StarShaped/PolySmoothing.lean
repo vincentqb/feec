@@ -61,7 +61,8 @@ smoothers `pMax`, `pMin` of `Feec.Models.StarShaped.FiniteElement` at scale `γ 
   `StarGeom.exists_isBoundaryFacet_of_near`: the DOFs of all subfaces of a boundary facet vanish
   on `V̊ₕ`);
 * hence **uniformly bounded cochain projections** onto `Vₕ(S, M)` and `V̊ₕ(S, M)`, in `L²` and in
-  every graph norm, with constants depending only on `n, S, C, c, q, s₀ / R`
+  every graph norm, with constants depending only on `n, S, C, c, q, s₀, R` (chosen after `s₀`
+  and `R`; the mathematical dependence through `s₀ / R` alone is not formalized)
   (`exists_uniform_polyCochainProjection`, `exists_uniform_polyCochainProjectionMin`; on a mesh
   family, with the complexes `MeshFamily.poly`, `MeshFamily.polyMin`:
   `MeshFamily.exists_uniform_polyProj`, `MeshFamily.exists_uniform_polyProjMin`).
@@ -1603,7 +1604,8 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
 /-- **Uniformly bounded smoothed cochain projections onto the complexes of an admissible sequence
 on quasi-uniform shape-regular meshes of a domain star-shaped with respect to a ball**
 ([AFW2010], §5.4; [ChristiansenWinther2008]): there is `K`, depending only on `n`, `S`, the
-shape-regularity and quasi-uniformity constants and the ratio `s₀ / R`, such that every such mesh
+shape-regularity and quasi-uniformity constants, `s₀` and `R` (mathematically only on the ratio
+`s₀ / R`, which is not formalized here), such that every such mesh
 `M` of `Ω` (star-shaped with respect to `B(x₀, s₀)`, `cl Ω ⊆ B̄(x₀, R)`) carries a cochain
 projection onto `Vₕ(S, M) ⊆ HΛ(Ω)` (`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in degree `k`) bounded by `K` in
 `L²` and in every graph norm. -/

@@ -23,7 +23,8 @@ graph-norm error of the truncation of the orbit `e^{tL} ξ₀` is controlled by 
 of `ξ₀`, `L ξ₀` and `L² ξ₀` (`SpectralFamily.norm_sub_toGraph_le`). The data whose truncation errors
 decay like `(N + 1)^{-α}` form a rate class of the constrained FEEC theorem on every time horizon
 (`SpectralFamily.rateClass`), which contains every band-limited datum of `D(L²)` for every `α`
-(`SpectralFamily.mem_rateData_of_mem`).
+(`SpectralFamily.mem_rateData_of_mem`); a tail bound `tail_N ≤ (N + 1)^{-α} B` gives membership
+with norm `≤ B` (`SpectralFamily.mem_rateData_of_tail_le`).
 
 **Instances.**
 
@@ -243,6 +244,24 @@ theorem tail_le_rateNorm {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N
   rw [one_mul, Real.div_rpow zero_le_one hN.le, Real.one_rpow, one_div, inv_mul_eq_div,
     le_div_iff₀ hp, mul_comm]
   exact hle
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- **Membership in the approximation class from a tail bound**: if `x ∈ D(L²)` and
+`tail_N(x) ≤ (N + 1)^{-α} B` for all `N`, then `x` lies in the class of order `α` with norm
+`≤ B`. -/
+theorem mem_rateData_of_tail_le {α B : ℝ} {x : PiLp 2 W} (hx : x ∈ H.wave.domain)
+    (hLx : H.waveExt x ∈ H.wave.domain)
+    (h : ∀ N : ℕ, S.tail N x ≤ (1 / ((N : ℝ) + 1)) ^ α * B) :
+    x ∈ S.rateData α ∧ S.rateNorm α x ≤ B := by
+  have htail : ∀ N : ℕ, ((N : ℝ) + 1) ^ α * S.tail N x ≤ B := fun N => by
+    have hN : (0 : ℝ) < (N : ℝ) + 1 := by positivity
+    have hp : ((N : ℝ) + 1) ^ α * (1 / ((N : ℝ) + 1)) ^ α = 1 := by
+      rw [← Real.mul_rpow hN.le (by positivity), mul_one_div_cancel hN.ne', Real.one_rpow]
+    calc ((N : ℝ) + 1) ^ α * S.tail N x
+        ≤ ((N : ℝ) + 1) ^ α * ((1 / ((N : ℝ) + 1)) ^ α * B) :=
+          mul_le_mul_of_nonneg_left (h N) (Real.rpow_pos_of_pos hN α).le
+      _ = B := by rw [← mul_assoc, hp, one_mul]
+  exact ⟨⟨hx, hLx, ⟨B, by rintro _ ⟨N, rfl⟩; exact htail N⟩⟩, ciSup_le htail⟩
 
 /-- **The rate class of a spectral discretization** on the horizon `[0, T]`: the approximation
 class of order `α`, with `h_N = 1/(N + 1)`, `C = 1` and the norm `rateNorm α`. -/

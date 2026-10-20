@@ -34,8 +34,15 @@ or `D(L)` condition, no factor `(1 + C_P)(1 + t)² · 3`. Non-vacuity: `decaySta
 reproduced by the spectral solution at `t = 0` for any `N` (`torusApprox_sol_decayState_ne`). For
 the constrained FEEC readings `torusFEEC`, `mirrorFEEC` (semi-discrete solutions from `Rₕ ξ₀`),
 the conforming rate `(1 + C_P)(1 + 2t)(N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` for TSD data in `H^{2+s}`
-replaces the `(1 + t)²` of the constrained FEEC verdicts (`einsteinBianchi_torus_conforming_sobolev`,
-`einsteinBianchi_mirror_conforming_sobolev`).
+replaces the `(1 + t)²` of the constrained FEEC verdicts
+(`einsteinBianchi_torus_conforming_sobolev`, `einsteinBianchi_mirror_conforming_sobolev`).
+The two readings concern the same trajectories: the elliptic projection onto a reducing band is
+the truncation, so the semi-discrete solutions are `ξ_N(t) = P_N e^{tL} ξ₀`
+(`SpectralFamily.graphFst_discrete`, `SpectralFamily.graphFst_discrete_eq_sol`), and the
+time-uniform bound holds for the semi-discrete solutions of `torusFEEC`, `mirrorFEEC` themselves,
+for `ξ₀ ∈ D(L) ∩ Hˢ` and all `t ∈ ℝ` (`einsteinBianchi_torus_discrete_sobolev`,
+`einsteinBianchi_mirror_discrete_sobolev`; the error is positive for `decayState`,
+`torus_discrete_decayState_error_pos`).
 
 ## References
 
@@ -580,8 +587,9 @@ def torusSobolevRate {s : ℝ} (hs : 0 ≤ s) (T : ℝ) : torusApprox.RateClass 
 
 /-- **The time-uniform Sobolev rate on `𝕋³`**: for every state `X ∈ Hˢ(𝕋³)`, `s ≥ 0`, the error of
 the Fourier spectral solution from `π_N X` is `≤ (N + 1)^{-s} ‖X‖_s` for all `t ≥ 0`, and so is
-its TSD residual when `X` is TSD. Compared with `TorusSobolevVerdict` (TSD data in `H^{2+s}`,
-factor `(1 + C_P)(1 + t)² · 3`), the data need only `Hˢ` and the bound is uniform in time. -/
+its TSD residual when `X` is TSD. For `X ∈ D(L)` this orbit is the semi-discrete solution of
+`torusFEEC` from `Rₙ X` (`SpectralFamily.graphFst_discrete_eq_sol`); `TorusSobolevDiscreteRate`
+states the bound for those solutions. -/
 abbrev TorusSobolevApproxRate : Prop :=
   ∀ {s : ℝ}, 0 ≤ s → ∀ X : PiLp 2 Space, MemSobStateT s X → ∀ (N : ℕ) {t : ℝ}, 0 ≤ t →
     ‖complex.waveGroup.S t X - torusApprox.sol N ((torusBands.B N).orthogonalProjectionOnto X) t‖ ≤
@@ -717,6 +725,75 @@ theorem einsteinBianchi_mirror_conforming_sobolev : MirrorSobolevConformingRate 
     rw [one_mul]; exact mul_le_mul_of_nonneg_left hn (by positivity)
   exact ⟨hrate.1.trans (mul_le_mul_of_nonneg_left hle hC),
     (hrate.2 D.tsd).trans (mul_le_mul_of_nonneg_left hle hC)⟩
+
+/-- **The time-uniform Sobolev rate of the spectral semi-discrete solutions on `𝕋³`**: for every
+`X ∈ D(L) ∩ Hˢ(𝕋³)`, `s ≥ 0`, the semi-discrete solutions `ξ_N` of `torusFEEC` (spelled
+`bandFamily.toFEEC (totalSub constraint) isClosed_totalSub`) from `Rₙ X` satisfy
+`‖e^{tL} X - ξ_N(t)‖ ≤ (N + 1)^{-s} ‖X‖_s` for all `t ∈ ℝ`, and so does their TSD residual when
+`X` is TSD. Compared with `TorusSobolevVerdict` (TSD data in `H^{2+s}`, factor
+`(1 + C_P)(1 + t)² · 3`) these are the same solutions; the data need only `D(L) ∩ Hˢ` and the
+bound is uniform in time. -/
+abbrev TorusSobolevDiscreteRate : Prop :=
+  ∀ {s : ℝ}, 0 ≤ s → ∀ X : PiLp 2 Space, ∀ hX : X ∈ complex.wave.domain, MemSobStateT s X →
+    ∀ (N : ℕ) (t : ℝ),
+    ‖complex.waveGroup.S t X - complex.totalD.graphFst
+        ((bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).discrete N
+          (waveLift complex ⟨X, hX⟩) t)‖ ≤ (1 / ((N : ℝ) + 1)) ^ s * √(sobStateT s X) ∧
+      (X ∈ totalSub constraint →
+        infDist (complex.totalD.graphFst
+          ((bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).discrete N
+            (waveLift complex ⟨X, hX⟩) t)) (totalSub constraint : Set (PiLp 2 Space)) ≤
+          (1 / ((N : ℝ) + 1)) ^ s * √(sobStateT s X))
+
+/-- `TorusSobolevDiscreteRate`: the semi-discrete solutions are the truncated exact solutions
+(`SpectralFamily.graphFst_discrete`), so the error is the truncation error
+(`SpectralFamily.discrete_le_of_truncation`, `norm_sub_P_le_sobStateT`). -/
+theorem einsteinBianchi_torus_discrete_sobolev : TorusSobolevDiscreteRate := by
+  intro s hs X hX hS N t
+  have h := bandFamily.discrete_le_of_truncation (totalSub constraint) isClosed_totalSub N
+    ⟨X, hX⟩ (norm_sub_P_le_sobStateT hs hS N) t
+  exact ⟨h.1, h.2 torusApprox_isReducing⟩
+
+/-- **Non-vacuity of the time-uniform discrete rate on `𝕋³`**: the TSD state `decayState` lies in
+`D(L) ∩ H³` (`decayState_nonvacuous`) and is not band-limited, so the error of the semi-discrete
+solutions of `torusFEEC` is positive at every time and every `N` (it equals the truncation
+error). -/
+theorem torus_discrete_decayState_error_pos :
+    ∃ hD : decayState ∈ complex.wave.domain, ∀ (N : ℕ) (t : ℝ),
+    0 < ‖complex.waveGroup.S t decayState - complex.totalD.graphFst
+        ((bandFamily.toFEEC (totalSub constraint) isClosed_totalSub).discrete N
+          (waveLift complex ⟨decayState, hD⟩) t)‖ := by
+  obtain ⟨-, -, -, hD, -⟩ := decayState_nonvacuous
+  refine ⟨hD, fun N t => ?_⟩
+  refine lt_of_lt_of_eq ?_ (bandFamily.norm_sub_discrete_eq (totalSub constraint)
+    isClosed_totalSub N ⟨decayState, hD⟩ t).symm
+  rw [norm_pos_iff, sub_ne_zero]
+  intro h
+  exact decayState_not_mem_band N
+    ((Submodule.starProjection_eq_self_iff (K := totalSub (band N))).1 h.symm)
+
+/-- **The time-uniform Sobolev rate of the spectral semi-discrete solutions on the mirror
+cube**: for `x ∈ D(L)` with mirror extension in `Hˢ`, `s ≥ 0`, the semi-discrete solutions of
+`mirrorFEEC` (spelled `bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub`) from `Rₙ x`
+satisfy `‖e^{tL} x - ξ_N(t)‖ ≤ (N + 1)^{-s} ‖x‖_s` for all `t ∈ ℝ`, and so does their TSD
+residual when `x` is TSD. -/
+abbrev MirrorSobolevDiscreteRate : Prop :=
+  ∀ {s : ℝ}, 0 ≤ s → ∀ x : PiLp 2 SpaceQ, ∀ hx : x ∈ complexQ.wave.domain, MemSobState s x →
+    ∀ (N : ℕ) (t : ℝ),
+    ‖complexQ.waveGroup.S t x - complexQ.totalD.graphFst
+        ((bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub).discrete N
+          (waveLift complexQ ⟨x, hx⟩) t)‖ ≤ (1 / ((N : ℝ) + 1)) ^ s * √(sobState s x) ∧
+      (x ∈ totalSub tsdQ →
+        infDist (complexQ.totalD.graphFst
+          ((bandFamilyQ.toFEEC (totalSub tsdQ) isClosed_totalSub).discrete N
+            (waveLift complexQ ⟨x, hx⟩) t)) (totalSub tsdQ : Set (PiLp 2 SpaceQ)) ≤
+          (1 / ((N : ℝ) + 1)) ^ s * √(sobState s x))
+
+theorem einsteinBianchi_mirror_discrete_sobolev : MirrorSobolevDiscreteRate := by
+  intro s hs x hx hS N t
+  have h := bandFamilyQ.discrete_le_of_truncation (totalSub tsdQ) isClosed_totalSub N
+    ⟨x, hx⟩ (norm_sub_P_le_sobState hs hS N) t
+  exact ⟨h.1, h.2 mirrorApprox_isReducing⟩
 
 end Approx
 

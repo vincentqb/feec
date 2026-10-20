@@ -29,7 +29,14 @@ defect) and the verdict of `Feec.HilbertComplex.approxFEEC` applies. A truncatio
 (`norm_sub_sol_le_of_truncation`, residual `infDist_sol_le_of_truncation`). The constrained FEEC
 discretization `SpectralFamily.toFEEC` is the other reading, the special case `ιₕ` = inclusion
 (`ConstrainedFEEC.toApprox`), with the rate `(1 + C_P)(1 + 2t)` of `ConstrainedFEEC.rate_le`
-(`SpectralFamily.norm_sub_discrete_le`, `SpectralFamily.infDist_discrete_le`).
+(`SpectralFamily.norm_sub_discrete_le`, `SpectralFamily.infDist_discrete_le`). The two readings
+have the same trajectories: the elliptic projection onto a reducing band is the truncation
+(`SpectralFamily.ellipticProjection_eq`), the discrete wave operator is `L` on the band
+(`SpectralFamily.coe_discreteWave`), so `ξ_N(t) = P_N e^{tL} ξ₀`
+(`SpectralFamily.graphFst_discrete`, `SpectralFamily.graphFst_discrete_eq_sol`), the error is the
+truncation error for all `t ∈ ℝ` (`SpectralFamily.norm_sub_discrete_eq`), and the time-uniform
+rate holds for the constrained FEEC solutions under the truncation hypothesis alone
+(`SpectralFamily.discrete_le_of_truncation`, `SpectralFamily.discrete_le_rateNorm`).
 
 **Rates.** For a spectral family the projection `P_N` commutes with `L` and with `e^{tL}`, so the
 graph-norm error of the truncation of the orbit `e^{tL} ξ₀` is controlled by the truncation errors
@@ -396,6 +403,8 @@ end Rate
 
 section Reducing
 
+open Feec.HodgeWave Feec.Variational
+
 /-- `L` on the band `∏ B_N`, a bounded operator (the band is finite-dimensional). -/
 def waveBand (N : ℕ) : totalSub (S.B N) →L[𝕜] PiLp 2 W :=
   LinearMap.toContinuousLinearMap
@@ -489,6 +498,150 @@ theorem infDist_discrete_le (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : 
     ((S.toFEEC K hK).ellipticProj N (waveLift H ⟨x, hx.1⟩)) t
   rw [ConstrainedFEEC.toApprox_sol] at hr
   exact hr.trans (S.norm_sub_discrete_le K hK hx N ht)
+
+/-- The elliptic projection is characterized by Galerkin orthogonality. -/
+private theorem ellipticProjection_eq_of_forall {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] {T : E →ₗ.[𝕜] E} (Kg : Submodule 𝕜 T.GraphSpace)
+    [FiniteDimensional 𝕜 Kg] {ζ y : T.GraphSpace} (hy : y ∈ Kg)
+    (hA : ∀ ψ ∈ Kg, shiftedForm T ζ ψ = shiftedForm T y ψ) :
+    ellipticProjection Kg ζ = y := by
+  have h : restrict (shiftedForm T) Kg Kg ⟨_, ellipticProjection_mem Kg ζ⟩ =
+      restrict (shiftedForm T) Kg Kg ⟨y, hy⟩ :=
+    ContinuousLinearMap.ext fun ψ => (shiftedForm_ellipticProjection Kg ζ ψ.2).trans (hA ψ ψ.2)
+  exact congrArg Subtype.val (injective_restrict_shiftedForm Kg h)
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- **The elliptic projection onto a reducing band is the truncation**: `Pₕ ζ = (P_N y, 𝐝 P_N y)`
+for `ζ = (y, 𝐝 y)`, since `P_N` is orthogonal and commutes with `𝐝`, and `𝐝` maps the band into
+itself. -/
+theorem ellipticProjection_eq (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (N : ℕ) (ζ : H.totalD.GraphSpace) :
+    ellipticProjection ((S.toFEEC K hK).Kh N) ζ =
+      H.totalD.toGraphSpace ⟨S.P N (H.totalD.graphFst ζ), S.P_mem_domain N _⟩ := by
+  set F := S.toFEEC K hK
+  set y := H.totalD.toGraphSpace ⟨S.P N (H.totalD.graphFst ζ), S.P_mem_domain N _⟩
+  have hy : y ∈ F.Kh N := fun i => S.P_mem N _ i
+  have hR := (S.reducing N).isReducing_totalD
+  obtain ⟨z, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ζ
+  have hA : ∀ ψ ∈ F.Kh N, shiftedForm H.totalD (H.totalD.toGraphSpace z) ψ =
+      shiftedForm H.totalD y ψ := by
+    intro ψ hψ
+    obtain ⟨w, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ψ
+    have hw : (w : PiLp 2 W) ∈ totalSub (S.B N) := hψ
+    have hdw : H.totalD w ∈ totalSub (S.B N) := hR.mapsTo w hw
+    have hc : H.totalD ⟨S.P N z, S.P_mem_domain N _⟩ = S.P N (H.totalD z) := hR.comm z
+    have key : ∀ {v : PiLp 2 W}, v ∈ totalSub (S.B N) → ∀ u : PiLp 2 W,
+        ⟪v, S.P N u⟫_𝕜 = ⟪v, u⟫_𝕜 := fun hv u => by
+      have := Submodule.inner_right_of_mem_orthogonal hv
+        (Submodule.sub_starProjection_mem_orthogonal (K := totalSub (S.B N)) u)
+      rw [inner_sub_right, sub_eq_zero] at this
+      exact this.symm
+    rw [shiftedForm_apply, shiftedForm_apply, waveForm_apply, waveForm_apply]
+    change ⟪(w : PiLp 2 W), (z : PiLp 2 W)⟫_𝕜 + (⟪H.totalD w, (z : PiLp 2 W)⟫_𝕜 -
+        ⟪(w : PiLp 2 W), H.totalD z⟫_𝕜) = ⟪(w : PiLp 2 W), S.P N z⟫_𝕜 +
+        (⟪H.totalD w, S.P N z⟫_𝕜 - ⟪(w : PiLp 2 W), H.totalD ⟨S.P N z, S.P_mem_domain N _⟩⟫_𝕜)
+    rw [hc, key hw, key hdw, key hw]
+  exact ellipticProjection_eq_of_forall _ hy hA
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- `Rₙ ξ₀ = P_N ξ₀` for `ξ₀ ∈ D(L)`. -/
+theorem coe_ellipticProj_waveLift (K : Submodule 𝕜 (PiLp 2 W))
+    (hK : IsClosed (K : Set (PiLp 2 W))) (N : ℕ) (x : H.wave.domain) :
+    ((S.toFEEC K hK).ellipticProj N (waveLift H x) : PiLp 2 W) = S.P N x := by
+  rw [ConstrainedFEEC.coe_ellipticProj, S.ellipticProjection_eq K hK N]
+  rfl
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- **The discrete wave operator of a reducing band is `L` restricted to it.** -/
+theorem coe_discreteWave (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (N : ℕ) (v : (S.toFEEC K hK).Xh N) :
+    ((S.toFEEC K hK).discreteWave N v : PiLp 2 W) = H.wave ⟨v, S.totalSub_le_domain N v.2⟩ := by
+  have hv : (v : PiLp 2 W) ∈ totalSub (S.B N) := v.2
+  set y : H.wave.domain := ⟨v, S.totalSub_le_domain N hv⟩
+  have hLy : H.wave y ∈ totalSub (S.B N) := (S.isReducing_wave N).mapsTo y hv
+  have e : (S.toFEEC K hK).discreteWave N v = ⟨H.wave y, hLy⟩ := by
+    refine ext_inner_right 𝕜 fun ψ => ?_
+    rw [(S.toFEEC K hK).inner_discreteWave N v ψ, Submodule.coe_inner]
+    exact (inner_wave_left H y ⟨ψ, (S.toFEEC K hK).Xh_mem_domain N ψ⟩).symm
+  exact congrArg Subtype.val e
+
+/-- **The semi-discrete solutions of the spectral constrained FEEC discretization are the
+truncated exact solutions**: `ξ_N(t) = P_N e^{tL} ξ₀` for `ξ₀ ∈ D(L)` and all `t`. -/
+theorem graphFst_discrete (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (N : ℕ) (x : H.wave.domain) (t : ℝ) :
+    H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H x) t) =
+      S.P N (H.waveGroup.S t x) := by
+  set F := S.toFEEC K hK
+  rw [← F.toApprox_sol]
+  have e0 : F.ellipticProj N (waveLift H x) =
+      (totalSub (S.B N)).orthogonalProjectionOnto (x : PiLp 2 W) :=
+    Subtype.ext (S.coe_ellipticProj_waveLift K hK N x)
+  have hu : ∀ s, HasDerivAt
+      (fun r => (totalSub (S.B N)).orthogonalProjectionOnto (H.waveGroup.S r x) : ℝ → F.Xh N)
+      (F.discreteWave N ((totalSub (S.B N)).orthogonalProjectionOnto (H.waveGroup.S s x))) s := by
+    intro s
+    refine (S.toReducingFamily.hasDerivAt_proj_orbit N x s).congr_deriv ?_
+    exact Subtype.ext ((S.toReducingFamily.coe_restrictWave N _).trans
+      (S.coe_discreteWave K hK N _).symm)
+  have e := eq_ofBounded_of_hasDerivAt (F.discreteWave N) (F.discreteWave_skew N) hu t
+  rw [C0Group.S_zero_apply] at e
+  rw [e0]
+  change (((C0Group.ofBounded (F.discreteWave N)).S t
+    ((totalSub (S.B N)).orthogonalProjectionOnto (x : PiLp 2 W)) : F.Xh N) : PiLp 2 W) = _
+  rw [← e]
+  rfl
+
+/-- **The two readings of the spectral method agree**: the semi-discrete solution of the
+constrained FEEC discretization `S.toFEEC K hK` from `Rₙ ξ₀` is the discrete orbit of the
+spectral approximating discretization `S.toReducingFamily.toApprox K hK` from `πₙ ξ₀`. -/
+theorem graphFst_discrete_eq_sol (K : Submodule 𝕜 (PiLp 2 W))
+    (hK : IsClosed (K : Set (PiLp 2 W))) (N : ℕ) (x : H.wave.domain) (t : ℝ) :
+    H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H x) t) =
+      (S.toReducingFamily.toApprox K hK).sol N
+        ((S.toReducingFamily.B N).orthogonalProjectionOnto (x : PiLp 2 W)) t := by
+  rw [S.graphFst_discrete K hK N x t, ReducingFamily.toApprox_sol]
+  rfl
+
+/-- **The error of the spectral semi-discrete solutions is the truncation error, for all
+times**: `‖e^{tL} ξ₀ - ξ_N(t)‖ = ‖ξ₀ - P_N ξ₀‖` for `ξ₀ ∈ D(L)`, `t ∈ ℝ`. -/
+theorem norm_sub_discrete_eq (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    (N : ℕ) (x : H.wave.domain) (t : ℝ) :
+    ‖H.waveGroup.S t x - H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H x) t)‖ =
+      ‖(x : PiLp 2 W) - S.P N x‖ := by
+  rw [S.graphFst_discrete K hK N x t, S.norm_waveGroup_sub_P]
+
+/-- **The time-uniform rate of the spectral semi-discrete solutions** under the truncation
+hypothesis alone: if `‖ξ₀ - P_N ξ₀‖ ≤ b`, then `‖e^{tL} ξ₀ - ξ_N(t)‖ ≤ b` for all `t ∈ ℝ`, and
+`dist(ξ_N(t), K) ≤ b` when `K` reduces `L` and `ξ₀ ∈ K`. This replaces the factor
+`(1 + C_P)(1 + 2t)` of `norm_sub_discrete_le` (and the `(1 + t)²` of `constrainedFEEC_rate`) by
+`1`. -/
+theorem discrete_le_of_truncation (K : Submodule 𝕜 (PiLp 2 W))
+    (hK : IsClosed (K : Set (PiLp 2 W))) (N : ℕ) (x : H.wave.domain) {b : ℝ}
+    (hb : ‖(x : PiLp 2 W) - S.P N x‖ ≤ b) (t : ℝ) :
+    ‖H.waveGroup.S t x - H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H x) t)‖ ≤ b ∧
+      (H.wave.IsReducing K → (x : PiLp 2 W) ∈ K →
+        infDist (H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H x) t))
+          (K : Set (PiLp 2 W)) ≤ b) := by
+  have h1 := (S.norm_sub_discrete_eq K hK N x t).le.trans hb
+  refine ⟨h1, fun hKr hxK => ?_⟩
+  have hmem : H.waveGroup.S t x ∈ K :=
+    (S.toFEEC K hK).constrainedFEEC_of_approxFEEC.2.1.1 hKr t x hxK
+  exact ((S.toFEEC K hK).infDist_le_norm_sub hmem).trans h1
+
+/-- **The time-uniform rate for the approximation class of order `α`**:
+`‖e^{tL} ξ₀ - ξ_N(t)‖ ≤ (N + 1)^{-α} ‖ξ₀‖_α` for all `t ∈ ℝ`, and the same bound for the
+constraint residual of a reducing `K` and `ξ₀ ∈ K`; the semi-discrete solutions are those of
+`S.toFEEC K hK` from `Rₙ ξ₀`. -/
+theorem discrete_le_rateNorm (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
+    {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ) (t : ℝ) :
+    ‖H.waveGroup.S t x -
+        H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H ⟨x, hx.1⟩) t)‖ ≤
+        (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x ∧
+      (H.wave.IsReducing K → x ∈ K →
+        infDist (H.totalD.graphFst ((S.toFEEC K hK).discrete N (waveLift H ⟨x, hx.1⟩) t))
+          (K : Set (PiLp 2 W)) ≤ (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x) :=
+  S.discrete_le_of_truncation K hK N ⟨x, hx.1⟩
+    (by have h := S.norm_sub_P_le_rateNorm hx N; rwa [one_mul] at h) t
 
 end Reducing
 

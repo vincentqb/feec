@@ -47,12 +47,23 @@ theorem `Feec.HilbertComplex.constrainedFEEC`.
 `Feec.HilbertComplex.approxFEEC` (the special case `ιₕ` = inclusion, `πₕ = Pₕ`,
 `ConstrainedFEEC.toApprox`, core `D(L²)`): `feec_approxFEEC`, and per instance
 `torus_approxFEEC`, `torus_potential_approxFEEC` (with the non-reducing vanishing-field
-constraint, so the non-reducing items 4b–4c apply), `cubePMC_approxFEEC`, `cubePEC_approxFEEC`,
+constraint; `torus_potential_residual_of_approxFEEC` reads the graded item 4c off it),
+`cubePMC_approxFEEC`, `cubePEC_approxFEEC`,
 `paraPMC_approxFEEC`, `paraPEC_approxFEEC`, `starPMC_approxFEEC`, `starPEC_approxFEEC`. The rate
 of the approximating theorem gives the conforming factor `(1 + C_P)(1 + 2t)` in place of the
 `(1 + t)²` of `constrainedFEEC_rate` (`approx_rate`, `approx_residual_rate`,
 `approx_rate_regRate`, `approx_residual_rate_regRate`, and `cubePMC_approx_rate`, …,
 `starPEC_approx_residual_rate`).
+
+The evolution statements above (`gauss_propagates`, `converges`, `rate`, `residual`,
+`residual_rate`, `residual_not_isReducing*`, and the per-instance `*_converges`, `*_residual`,
+`*_gauss_propagates`, `*_tendstoUniformlyOn`, `torus_potential_residual`) are projections of
+`ConstrainedFEEC.constrainedFEEC_of_approxFEEC`, the statement of `constrainedFEEC` derived from
+`approxFEEC`; so they depend on the approximating theorem, not on the original proof of
+`constrainedFEEC`. Well-posedness is item 1 of both theorems (`constrainedFEEC_wellPosed`); the
+propagation along strong solutions (`gauss_propagates_strong`) and the discrete Poincaré
+inequalities (`*_discretePoincare`) are not items of either theorem and keep their direct
+proofs.
 
 ## Instances
 
@@ -514,7 +525,7 @@ theorem wellPosed {x : PiLp 2 fun i : Fin 3 => V (a + i)} (hx : x ∈ (H.window 
 the discretization is reducing. [QuennevilleBelair2015], Prop. 4.16, Prop. 4.17 -/
 theorem gauss_propagates : ∀ t, ∀ x ∈ (feec H a l S P hP hS).K,
     (H.window a 3).waveGroup.S t x ∈ (feec H a l S P hP hS).K :=
-  (constrainedFEEC_propagates_iff (feec H a l S P hP hS)).1 (isReducing_windowGauss H a)
+  (feec H a l S P hP hS).constrainedFEEC_of_approxFEEC.2.1.1 (isReducing_windowGauss H a)
 
 /-- **The Gauss laws propagate along strong solutions** on `[0, T]`. [QuennevilleBelair2015],
 Prop. 4.16 -/
@@ -541,7 +552,7 @@ theorem converges (T : ℝ) :
       ∃ ξh ξh' : κ → ℝ → (H.window a 3).totalD.GraphSpace,
         (∀ h, IsSemidiscreteSolution ((feec H a l S P hP hS).Kh h) (Icc 0 T) (ξh h) (ξh' h)) ∧
         Tendsto (fun h => (H.window a 3).totalD.graphFst (ξh h 0)) l (𝓝 x) :=
-  constrainedFEEC_converges (feec H a l S P hP hS) T
+  (feec H a l S P hP hS).constrainedFEEC_of_approxFEEC.2.2.1 T
 
 /-- **The rate of the semi-discrete Maxwell solutions** for data in a rate class on `[0, T]`:
 `‖ξ(t) - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -552,7 +563,7 @@ theorem rate {T : ℝ} (R : (feec H a l S P hP hS).RateClass T)
         ((feec H a l S P hP hS).discrete h (waveLift _ ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
       (1 + ellipticConst (H.window a 3)) * (1 + t) ^ 2 *
         (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
-  constrainedFEEC_rate (feec H a l S P hP hS) R hxR h ht
+  (feec H a l S P hP hS).constrainedFEEC_of_approxFEEC.2.2.2.1 _ R _ hxR h _ ht
 
 /-- **The Gauss-law residual of the discrete solutions**: for data in `D(L)` satisfying the Gauss
 laws, `dist(ξₕ(t), K) ≤ ‖ξ(t) - ξₕ(t)‖`, and the residual tends to `0` uniformly on `[0, T]`. -/
@@ -566,7 +577,8 @@ theorem residual (x : (H.window a 3).wave.domain) (hxK : (x : PiLp 2 _) ∈ wind
       (fun h t => infDist ((H.window a 3).totalD.graphFst
         ((feec H a l S P hP hS).discrete h (waveLift _ x) t)) (windowGauss H a : Set _))
       (fun _ => 0) l (Icc 0 T) :=
-  constrainedFEEC_residual (feec H a l S P hP hS) (isReducing_windowGauss H a) x hxK T
+  (feec H a l S P hP hS).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss H a)
+    x hxK T
 
 /-- **Rate of the Gauss-law residual** for data in a rate class satisfying the Gauss laws. -/
 theorem residual_rate {T : ℝ} (R : (feec H a l S P hP hS).RateClass T)
@@ -577,7 +589,9 @@ theorem residual_rate {T : ℝ} (R : (feec H a l S P hP hS).RateClass T)
         (windowGauss H a : Set _) ≤
       (1 + ellipticConst (H.window a 3)) * (1 + t) ^ 2 *
         (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
-  constrainedFEEC_residual_rate (feec H a l S P hP hS) (isReducing_windowGauss H a) R hxR hxK h ht
+  ((feec H a l S P hP hS).infDist_le_norm_sub
+    ((feec H a l S P hP hS).constrainedFEEC_of_approxFEEC.2.1.1 (isReducing_windowGauss H a) t x
+      hxK)).trans (rate hP hS R hxR h ht)
 
 /-- **Non-vacuity of `regRate`**: the zero datum lies in the rate class whenever the zero form is
 regular in every degree. -/
@@ -609,7 +623,7 @@ theorem rate_regRate {T : ℝ} {Reg : ∀ k, V k → Prop} {B : α → ℝ} {r :
       (1 + ellipticConst (H.window a 3)) * (1 + t) ^ 2 *
         (12 * (∑ i : Fin 3, B (a + i)) * r h * Λ) := by
   simpa only [regRate, Real.rpow_one] using
-    constrainedFEEC_rate (feec H a l S P hP hS) (regRate hP hS T Reg B r Λ happ hB hΛ hr) hx h ht
+    rate hP hS (regRate hP hS T Reg B r Λ happ hB hΛ hr) hx h ht
 
 /-- **The `O(r_h)` rate of the Gauss-law residual** for regular data satisfying the Gauss laws. -/
 theorem residual_rate_regRate {T : ℝ} {Reg : ∀ k, V k → Prop} {B : α → ℝ} {r : κ → ℝ} {Λ : ℝ}
@@ -623,8 +637,7 @@ theorem residual_rate_regRate {T : ℝ} {Reg : ∀ k, V k → Prop} {B : α → 
         ((feec H a l S P hP hS).discrete h (waveLift _ ⟨x, hx.1⟩) t)) (windowGauss H a : Set _) ≤
       (1 + ellipticConst (H.window a 3)) * (1 + t) ^ 2 *
         (12 * (∑ i : Fin 3, B (a + i)) * r h * Λ) := by
-  have := constrainedFEEC_residual_rate (feec H a l S P hP hS) (isReducing_windowGauss H a)
-    (regRate hP hS T Reg B r Λ happ hB hΛ hr) hx hxK h ht
+  have := residual_rate hP hS (regRate hP hS T Reg B r Λ happ hB hΛ hr) hx hxK h ht
   simp only [regRate, Real.rpow_one] at this
   exact this
 
@@ -658,7 +671,7 @@ theorem residual_not_isReducing (F : ConstrainedFEEC H κ) {K : Submodule 𝕜 (
         Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
         Tendsto (fun h => infDist (H.totalD.graphFst (ξh h t)) (Q : Set (PiLp 2 W))) F.l
           (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)))) :=
-  constrainedFEEC_residual_not_isReducing (withConstraint F K hK) hnot hT
+  (withConstraint F K hK).constrainedFEEC_of_approxFEEC.2.2.2.2.2.1 hnot T hT
 
 /-- Changing the constraint does not change the discrete solutions. -/
 @[simp] theorem discrete_withConstraint (F : ConstrainedFEEC H κ) {K : Submodule 𝕜 (PiLp 2 W)}
@@ -673,7 +686,7 @@ theorem residual_not_isReducing_symm (F : ConstrainedFEEC H κ) {K : Submodule �
     (hdense : ∀ k ∈ K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ K)) {T : ℝ} (hT : 0 < T) :
     ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ K ∧ ∃ t ∈ Icc (-T) T,
       H.waveGroup.S t x ∉ K ∧ 0 < infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)) :=
-  constrainedFEEC_residual_not_isReducing_symm (withConstraint F K hK) hnot hdense hT
+  (withConstraint F K hK).constrainedFEEC_of_approxFEEC.2.2.2.2.2.2.1 hnot hdense T hT
 
 /-- **On a graded complex a non-reducing constraint is violated forward in time by data in
 `D(L) ∩ K`, and so are the discrete solutions** (`constrainedFEEC_residual_not_isReducing_of_grading`):
@@ -692,7 +705,7 @@ theorem residual_not_isReducing_of_grading (F : ConstrainedFEEC H κ) {K : Submo
         (K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)))) ∧
       ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)) / 2 <
         infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (K : Set (PiLp 2 W)) :=
-  constrainedFEEC_residual_not_isReducing_of_grading (withConstraint F K hK) hp hRK hdense hnot hT
+  (withConstraint F K hK).constrainedFEEC_of_approxFEEC.2.2.2.2.2.2.2 p hp hRK hdense hnot T hT
 
 end OtherConstraint
 
@@ -765,14 +778,14 @@ theorem torus_wellPosed {x : PiLp 2 fun i : Fin 3 => L2Form d (a + i)}
 /-- **The Gauss laws propagate on the torus** for all data and times. -/
 theorem torus_gauss_propagates : ∀ t, ∀ x ∈ windowGauss (complex d) a,
     ((complex d).window a 3).waveGroup.S t x ∈ windowGauss (complex d) a :=
-  (constrainedFEEC_propagates_iff (torus d a)).1 (isReducing_windowGauss _ a)
+  (torus d a).constrainedFEEC_of_approxFEEC.2.1.1 (isReducing_windowGauss _ a)
 
 /-- **Convergence of the spectral Galerkin Maxwell solutions on the torus.** -/
 theorem torus_converges (T : ℝ) (x : ((complex d).window a 3).wave.domain) :
     TendstoUniformlyOn (fun N t => ((complex d).window a 3).totalD.graphFst
         ((torus d a).discrete N (waveLift _ x) t))
       (fun t => ((complex d).window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (torus d a) T).1 x
+  ((torus d a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual of the spectral Galerkin solutions on the torus** is bounded by
 the error and tends to `0`. -/
@@ -785,7 +798,8 @@ theorem torus_residual (x : ((complex d).window a 3).wave.domain)
     TendstoUniformlyOn (fun N t => infDist (((complex d).window a 3).totalD.graphFst
         ((torus d a).discrete N (waveLift _ x) t)) (windowGauss (complex d) a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (torus d a) (isReducing_windowGauss _ a) x hxK T
+  (torus d a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- The de Rham symbol `d_ξ = i ξ ∧ ·` is injective on `0`-forms for `ξ ≠ 0`. -/
 theorem deRham_m_zero_one_ne_zero {ξ : EuclideanSpace ℝ d} (hξ : ξ ≠ 0)
@@ -946,7 +960,7 @@ theorem cubePMC_wellPosed {x} (hx : x ∈ ((FEM.complex n).window a 3).wave.doma
 theorem cubePMC_gauss_propagates :
     ∀ t, ∀ x ∈ windowGauss (FEM.complex n) a,
       ((FEM.complex n).window a 3).waveGroup.S t x ∈ windowGauss (FEM.complex n) a :=
-  (constrainedFEEC_propagates_iff (cubePMC n a)).1 (isReducing_windowGauss _ a)
+  (cubePMC n a).constrainedFEEC_of_approxFEEC.2.1.1 (isReducing_windowGauss _ a)
 
 /-- **Convergence of the semi-discrete solutions** (perfect magnetic conductor, cube), uniformly on
 `[0, T]`, for `D(L)` data and `ξₕ(0) = Pₕ x`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -955,7 +969,7 @@ theorem cubePMC_converges (T : ℝ) (x : ((FEM.complex n).window a 3).wave.domai
       (fun N t => ((FEM.complex n).window a 3).totalD.graphFst
         ((cubePMC n a).discrete N (waveLift _ x) t))
       (fun t => ((FEM.complex n).window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (cubePMC n a) T).1 x
+  ((cubePMC n a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual** (perfect magnetic conductor, cube) of the discrete solution is
 bounded by the error and tends to `0` uniformly on `[0, T]`. -/
@@ -972,7 +986,8 @@ theorem cubePMC_residual (x : ((FEM.complex n).window a 3).wave.domain)
         ((cubePMC n a).discrete N (waveLift _ x) t))
         (windowGauss (FEM.complex n) a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (cubePMC n a) (isReducing_windowGauss _ a) x hxK T
+  (cubePMC n a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- **The `O(h)` rate for `C²` solutions** (perfect magnetic conductor, cube): if the components of
 `e^{tL} x` and `e^{tL} L x` are `C²` forms (`FEM.IsC2Form`) with bound `Λ` on `[0, T]`, then `‖ξ(t)
@@ -1013,7 +1028,7 @@ theorem cubePEC_wellPosed {x} (hx : x ∈ ((FEM.complexMin n).window a 3).wave.d
 theorem cubePEC_gauss_propagates :
     ∀ t, ∀ x ∈ windowGauss (FEM.complexMin n) a,
       ((FEM.complexMin n).window a 3).waveGroup.S t x ∈ windowGauss (FEM.complexMin n) a :=
-  (constrainedFEEC_propagates_iff (cubePEC n a)).1 (isReducing_windowGauss _ a)
+  (cubePEC n a).constrainedFEEC_of_approxFEEC.2.1.1 (isReducing_windowGauss _ a)
 
 /-- **Convergence of the semi-discrete solutions** (perfect electric conductor, cube), uniformly on
 `[0, T]`, for `D(L)` data and `ξₕ(0) = Pₕ x`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -1022,7 +1037,7 @@ theorem cubePEC_converges (T : ℝ) (x : ((FEM.complexMin n).window a 3).wave.do
       (fun N t => ((FEM.complexMin n).window a 3).totalD.graphFst
         ((cubePEC n a).discrete N (waveLift _ x) t))
       (fun t => ((FEM.complexMin n).window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (cubePEC n a) T).1 x
+  ((cubePEC n a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual** (perfect electric conductor, cube) of the discrete solution is
 bounded by the error and tends to `0` uniformly on `[0, T]`. -/
@@ -1039,7 +1054,8 @@ theorem cubePEC_residual (x : ((FEM.complexMin n).window a 3).wave.domain)
         ((cubePEC n a).discrete N (waveLift _ x) t))
         (windowGauss (FEM.complexMin n) a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (cubePEC n a) (isReducing_windowGauss _ a) x hxK T
+  (cubePEC n a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- **The `O(h)` rate for `C²` solutions** (perfect electric conductor, cube): if the components of
 `e^{tL} x` and `e^{tL} L x` are `C²` forms vanishing outside `Q` (`FEM.IsC2FormMin`) with bound `Λ`
@@ -1114,7 +1130,8 @@ theorem cubePMC_tendstoUniformlyOn (t₁ : ℝ) (x : ((FEM.complex 3).window 0 3
         (fun t => ((FEM.complex 3).window 0 3).waveGroup.S t x) atTop (Icc 0 t₁) :=
   ⟨fun N => (cubePMC 3 0).discrete N _, fun N => (cubePMC 3 0).discreteDeriv N _,
     fun N => (cubePMC 3 0).isSemidiscreteSolution_discrete N _ _,
-    fun N => (cubePMC 3 0).discrete_zero N _, (constrainedFEEC_converges (cubePMC 3 0) t₁).1 x⟩
+    fun N => (cubePMC 3 0).discrete_zero N _, ((cubePMC 3 0).constrainedFEEC_of_approxFEEC.2.2.1
+      t₁).1 x⟩
 
 /-- **`Feec.Maxwell.CubeFEM.pec_tendstoUniformlyOn` at `t₀ = 0`, from the constrained FEEC
 theorem.** -/
@@ -1128,7 +1145,8 @@ theorem cubePEC_tendstoUniformlyOn (t₁ : ℝ) (x : ((FEM.complexMin 3).window 
         (fun t => ((FEM.complexMin 3).window 0 3).waveGroup.S t x) atTop (Icc 0 t₁) :=
   ⟨fun N => (cubePEC 3 0).discrete N _, fun N => (cubePEC 3 0).discreteDeriv N _,
     fun N => (cubePEC 3 0).isSemidiscreteSolution_discrete N _ _,
-    fun N => (cubePEC 3 0).discrete_zero N _, (constrainedFEEC_converges (cubePEC 3 0) t₁).1 x⟩
+    fun N => (cubePEC 3 0).discrete_zero N _, ((cubePEC 3 0).constrainedFEEC_of_approxFEEC.2.2.1
+      t₁).1 x⟩
 
 end Cube
 
@@ -1219,7 +1237,7 @@ theorem paraPMC_converges (T : ℝ) (x : ((complex A b).window a 3).wave.domain)
       (fun N t => ((complex A b).window a 3).totalD.graphFst
         ((paraPMC A hA b a).discrete N (waveLift _ x) t))
       (fun t => ((complex A b).window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (paraPMC A hA b a) T).1 x
+  ((paraPMC A hA b a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual** (perfect magnetic conductor, parallelepiped) of the discrete solution
 is bounded by the error and tends to `0` uniformly on `[0, T]`. -/
@@ -1236,7 +1254,8 @@ theorem paraPMC_residual (x : ((complex A b).window a 3).wave.domain)
         ((paraPMC A hA b a).discrete N (waveLift _ x) t))
         (windowGauss (complex A b) a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (paraPMC A hA b a) (isReducing_windowGauss _ a) x hxK T
+  (paraPMC A hA b a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- **The `O(h)` rate for `C²` solutions** (perfect magnetic conductor, parallelepiped): if the
 components of `e^{tL} x` and `e^{tL} L x` are `C²` forms on `cl Ω` (`Parallelepiped.IsC2Form`) with
@@ -1287,7 +1306,7 @@ theorem paraPEC_converges (T : ℝ) (x : ((complexMin A b).window a 3).wave.doma
       (fun N t => ((complexMin A b).window a 3).totalD.graphFst
         ((paraPEC A hA b a).discrete N (waveLift _ x) t))
       (fun t => ((complexMin A b).window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (paraPEC A hA b a) T).1 x
+  ((paraPEC A hA b a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual** (perfect electric conductor, parallelepiped) of the discrete solution
 is bounded by the error and tends to `0` uniformly on `[0, T]`. -/
@@ -1304,7 +1323,8 @@ theorem paraPEC_residual (x : ((complexMin A b).window a 3).wave.domain)
         ((paraPEC A hA b a).discrete N (waveLift _ x) t))
         (windowGauss (complexMin A b) a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (paraPEC A hA b a) (isReducing_windowGauss _ a) x hxK T
+  (paraPEC A hA b a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- **The `O(h)` rate for `C²` solutions** (perfect electric conductor, parallelepiped): if the
 components of `e^{tL} x` and `e^{tL} L x` are `C²` forms vanishing outside `Ω`
@@ -1432,7 +1452,7 @@ theorem starPMC_converges (T : ℝ) (x : (D.complex.window a 3).wave.domain) :
       (fun N t => (D.complex.window a 3).totalD.graphFst
         ((starPMC M a).discrete N (waveLift _ x) t))
       (fun t => (D.complex.window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (starPMC M a) T).1 x
+  ((starPMC M a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual** (perfect magnetic conductor, star-shaped domain) of the discrete
 solution is bounded by the error and tends to `0` uniformly on `[0, T]`. -/
@@ -1449,7 +1469,8 @@ theorem starPMC_residual (x : (D.complex.window a 3).wave.domain)
         ((starPMC M a).discrete N (waveLift _ x) t))
         (windowGauss D.complex a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (starPMC M a) (isReducing_windowGauss _ a) x hxK T
+  (starPMC M a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- **The `O(h)` rate for `C²` solutions** (perfect magnetic conductor, star-shaped domain): if the
 components of `e^{tL} x` and `e^{tL} L x` are `C²` forms on `cl Ω` (`StarDomain.IsC2Form`) with
@@ -1500,7 +1521,7 @@ theorem starPEC_converges (T : ℝ) (x : (D.complexMin.window a 3).wave.domain) 
       (fun N t => (D.complexMin.window a 3).totalD.graphFst
         ((starPEC M a).discrete N (waveLift _ x) t))
       (fun t => (D.complexMin.window a 3).waveGroup.S t x) atTop (Icc 0 T) :=
-  (constrainedFEEC_converges (starPEC M a) T).1 x
+  ((starPEC M a).constrainedFEEC_of_approxFEEC.2.2.1 T).1 x
 
 /-- **The Gauss-law residual** (perfect electric conductor, star-shaped domain) of the discrete
 solution is bounded by the error and tends to `0` uniformly on `[0, T]`. -/
@@ -1517,7 +1538,8 @@ theorem starPEC_residual (x : (D.complexMin.window a 3).wave.domain)
         ((starPEC M a).discrete N (waveLift _ x) t))
         (windowGauss D.complexMin a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
-  constrainedFEEC_residual (starPEC M a) (isReducing_windowGauss _ a) x hxK T
+  (starPEC M a).constrainedFEEC_of_approxFEEC.2.2.2.2.1 (isReducing_windowGauss _ a)
+    x hxK T
 
 /-- **The `O(h)` rate for `C²` solutions** (perfect electric conductor, star-shaped domain): if the
 components of `e^{tL} x` and `e^{tL} L x` are `C²` forms vanishing outside `Ω`
@@ -1755,8 +1777,9 @@ theorem torus_approxFEEC : (torus d a).toApprox.Verdict (torus d a).toCore := ap
 
 /-- **The vanishing-field constraint on `𝕋ᵈ` through the approximating FEEC theorem**: the
 verdict for the spectral Galerkin discretization with the constraint `E = 0`, `B = 0`
-(`withConstraint`), whose non-reducing branches (items 4b–4c) apply, since the constraint does
-not reduce `L` (`torus_not_isReducing_potential`). -/
+(`withConstraint`), together with the fact that the constraint does not reduce `L`
+(`torus_not_isReducing_potential`), so the non-reducing branches 4b–4c of the verdict are not
+vacuous; `torus_potential_residual_of_approxFEEC` discharges the graded 4c clause. -/
 theorem torus_potential_approxFEEC [Nonempty d] :
     (withConstraint (torus d 0) (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
         isClosed_potential).toApprox.Verdict
@@ -1764,6 +1787,41 @@ theorem torus_potential_approxFEEC [Nonempty d] :
         isClosed_potential).toCore ∧
     ¬ ((complex d).window 0 3).wave.IsReducing (potential ℂ fun i : Fin 3 => L2Form d (0 + i)) :=
   ⟨approxFEEC _ _, torus_not_isReducing_potential⟩
+
+-- the instance arguments of `toApprox` at `L2Form d (0 + i)` need more than the default
+set_option maxHeartbeats 400000 in
+/-- **`torus_potential_residual`, read off the approximating FEEC theorem**: the statement of
+`torus_potential_residual`, derived from the graded item 4c of `torus_potential_approxFEEC`,
+with the parity grading of the window (`ComplexShape.window_parity`), the `R`-invariance of the
+vanishing-field constraint (`reversal_mem_totalSub`), the density of `D(L) ∩ K`
+(`dense_potential`), the density of the core (`mem_toCore_closure`), the convergence of the
+elliptic projections (`tendsto_incl_ellipticProj`) and the identification of the discrete orbits
+from `Rₕ ξ₀` with the semi-discrete solutions (`toApprox_sol`). -/
+theorem torus_potential_residual_of_approxFEEC [Nonempty d] {T : ℝ} (hT : 0 < T) :
+    ∃ x : ((complex d).window 0 3).wave.domain,
+      (x : PiLp 2 _) ∈ potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) ∧ ∃ t ∈ Icc 0 T,
+      ((complex d).window 0 3).waveGroup.S t x ∉ potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) ∧
+      0 < infDist (((complex d).window 0 3).waveGroup.S t x)
+        (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) ∧
+      Tendsto (fun N => infDist (((complex d).window 0 3).totalD.graphFst
+          ((torus d 0).discrete N (waveLift _ x) t))
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _)) atTop
+        (𝓝 (infDist (((complex d).window 0 3).waveGroup.S t x)
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _))) ∧
+      ∀ᶠ N in atTop, infDist (((complex d).window 0 3).waveGroup.S t x)
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) / 2 <
+        infDist (((complex d).window 0 3).totalD.graphFst
+          ((torus d 0).discrete N (waveLift _ x) t))
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) := by
+  obtain ⟨V, hnot⟩ := torus_potential_approxFEEC (d := d)
+  obtain ⟨x, hxK, t, ht, hout, hpos, hres⟩ := V.2.2.2.2.2.2.2.2.2 _
+    (fun _ _ h => ComplexShape.window_parity h) (fun _ hx => reversal_mem_totalSub hx)
+    (dense_potential _) hnot T hT
+  obtain ⟨hlim, hev⟩ := hres (ConstrainedFEEC.mem_toCore_closure _ _) _
+    (ConstrainedFEEC.tendsto_incl_ellipticProj _ x)
+  refine ⟨x, hxK, t, ht, hout, hpos, hlim.congr fun N => ?_, hev.mono fun N hN => ?_⟩
+  · exact congrArg (infDist · _) (ConstrainedFEEC.toApprox_sol _ N _ t)
+  · rwa [ConstrainedFEEC.toApprox_sol] at hN
 
 end TorusApprox
 

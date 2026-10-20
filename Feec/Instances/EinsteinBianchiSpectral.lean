@@ -1,5 +1,6 @@
 module
 
+public import Feec.HilbertComplex.Approximation.ApproxFEEC
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.Models.Torus.DeRhamGalerkin
 public import Feec.Models.Torus.BGG
@@ -149,17 +150,6 @@ theorem norm_waveGroup_sub_P (N : ℕ) (t : ℝ) (x : PiLp 2 W) :
   rw [← S.waveGroup_P, ← _root_.map_sub]
   exact H.isIsometric_waveGroup t _
 
-/-- `L e^{tL} x = e^{tL} L x` on `D(L)`. -/
-theorem _root_.Feec.HilbertComplex.wave_waveGroup {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (t : ℝ) :
-    H.wave ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx t⟩ =
-      H.waveGroup.S t (H.wave ⟨x, hx⟩) := by
-  have hg := H.generator_waveGroup
-  have hx' : x ∈ H.waveGroup.generator.domain := by rw [hg]; exact hx
-  have h := H.waveGroup.generator_apply_S ⟨x, hx'⟩ t
-  rw [apply_eq_of_eq hg _ ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx t⟩ rfl,
-    apply_eq_of_eq hg _ ⟨x, hx⟩ rfl] at h
-  exact h
-
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 /-- **The graph-norm truncation error** of `y ∈ D(L)`: for every `v ∈ Γ(𝐝)` over `y` there is
 `w ∈ B_N` with `‖v - w‖ ≤ ‖y - P_N y‖ + ‖L y - P_N L y‖` (`‖𝐝 z‖ ≤ ‖L z‖`, and `P_N` commutes
@@ -196,18 +186,6 @@ theorem exists_mem_graphSub_le (N : ℕ) {y : PiLp 2 W} (hy : y ∈ H.wave.domai
     rw [hw]; nlinarith [norm_nonneg (H.dual.totalD ⟨_, (hu : _ ∈ H.wave.domain).2⟩)]
   have hn := norm_nonneg (H.totalD.toGraphSpace z - w)
   nlinarith
-
-omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-variable (H) in
-open Classical in
-/-- `L` on `D(L)`, extended by `0`. -/
-def _root_.Feec.HilbertComplex.waveExt (x : PiLp 2 W) : PiLp 2 W :=
-  if hx : x ∈ H.wave.domain then H.wave ⟨x, hx⟩ else 0
-
-omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-theorem _root_.Feec.HilbertComplex.waveExt_of_mem {x : PiLp 2 W} (hx : x ∈ H.wave.domain) :
-    H.waveExt x = H.wave ⟨x, hx⟩ := by
-  simp [waveExt, hx]
 
 /-- The **truncation error** of `x`, `L x` and `L² x` at level `N`. -/
 def tail (N : ℕ) (x : PiLp 2 W) : ℝ :=

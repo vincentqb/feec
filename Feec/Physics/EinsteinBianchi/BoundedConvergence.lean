@@ -2,6 +2,7 @@ module
 
 public import Feec.Physics.EinsteinBianchi.BoundedFailure
 public import Feec.Models.Cube.WeakSymmetryConvergence
+public import Feec.Semigroup.DomainSq
 
 /-!
 # The scheme (6.5) converges for every datum in `D(L)`, and to a solution that leaves TSD
@@ -424,39 +425,8 @@ theorem generator_apply_S_of_eq {G : Feec.C0Group ℝ E} (hgen : G.generator = A
 /-- **`D(A²)` is dense** for a skew-adjoint `A`: the resolvent means `J_n = c²(c² − A²)⁻¹` of
 Stone's theorem map into `D(A²)` and converge strongly to `1` (`Feec.Stone.tendsto_approxJ`). -/
 theorem exists_mem_domain_sq_lt (hA : A.IsSkewAdjoint) (x : E) {ε : ℝ} (hε : 0 < ε) :
-    ∃ (y : E) (hy : y ∈ A.domain), A ⟨y, hy⟩ ∈ A.domain ∧ ‖x - y‖ < ε := by
-  obtain ⟨n, hn⟩ := ((Stone.tendsto_approxJ hA x).eventually
-    (Metric.ball_mem_nhds x hε)).exists
-  have hn' : ‖x - Stone.approxJ A n x‖ < ε := by
-    rw [← dist_eq_norm, dist_comm]; exact hn
-  set c : ℝ := Stone.scale n
-  have hR1 := Stone.isResolvent_res hA (Stone.scale_ne_zero n)
-  have hR2 := Stone.isResolvent_res hA (Stone.neg_scale_ne_zero n)
-  set R1 := Stone.res A (Stone.scale n)
-  set R2 := Stone.res A (-Stone.scale n)
-  have p1 : R1 x ∈ A.domain := hR1.mem_domain x
-  have p2 : R2 x ∈ A.domain := hR2.mem_domain x
-  have hJ : Stone.approxJ A n x = (c / 2) • (R1 x - R2 x) := rfl
-  have hy : Stone.approxJ A n x ∈ A.domain := by
-    rw [hJ]; exact A.domain.smul_mem _ (A.domain.sub_mem p1 p2)
-  refine ⟨_, hy, ?_, hn'⟩
-  have e0 : (⟨Stone.approxJ A n x, hy⟩ : A.domain) =
-      (c / 2) • ((⟨R1 x, p1⟩ : A.domain) - ⟨R2 x, p2⟩) := Subtype.ext hJ
-  have e1 : A ⟨R1 x, p1⟩ = c • R1 x - x := by
-    have h := hR1.sub_apply x
-    simp only [RCLike.ofReal_real_eq_id, id] at h
-    calc A ⟨R1 x, p1⟩ = c • R1 x - (c • R1 x - A ⟨R1 x, p1⟩) := by abel
-      _ = c • R1 x - x := by rw [h]
-  have e2 : A ⟨R2 x, p2⟩ = (-c) • R2 x - x := by
-    have h := hR2.sub_apply x
-    simp only [RCLike.ofReal_real_eq_id, id] at h
-    calc A ⟨R2 x, p2⟩ = (-c) • R2 x - ((-c) • R2 x - A ⟨R2 x, p2⟩) := by abel
-      _ = (-c) • R2 x - x := by rw [h]
-  rw [e0, LinearPMap.map_smul, LinearPMap.map_sub, e1, e2]
-  have e3 : (c / 2) • (c • R1 x - x - ((-c) • R2 x - x)) = (c / 2) • (c • R1 x + c • R2 x) := by
-    congr 1; module
-  rw [e3]
-  exact A.domain.smul_mem _ (A.domain.add_mem (A.domain.smul_mem _ p1) (A.domain.smul_mem _ p2))
+    ∃ (y : E) (hy : y ∈ A.domain), A ⟨y, hy⟩ ∈ A.domain ∧ ‖x - y‖ < ε :=
+  hA.exists_mem_domain_sq_lt x hε
 
 /-- **Orbits of `D(A²)`**: for `y ∈ D(A²)` there is a strong solution `V` of `U' = A U` with
 `V(0) = y` such that `A V` is a strong solution and `A² V` is continuous (the orbit of Stone's

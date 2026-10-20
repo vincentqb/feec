@@ -29,14 +29,27 @@ theorem `Feec.HilbertComplex.constrainedFEEC`.
   (`exists_mem_subWindow_le`).
 * **The four headline statements for every Maxwell discretization**, each a one-line application
   of the constrained FEEC theorem: `wellPosed`, `gauss_propagates` (and
-  `gauss_propagates_strong`), `converges`, `rate`, `residual`, `residual_rate`; for any other
-  closed constraint (`withConstraint`), `residual_not_isReducing`.
+  `gauss_propagates_strong`; with no discretization, `windowGauss_propagates`,
+  `windowGauss_propagates_strong`), `converges`, `rate`, `residual`, `residual_rate`; for any other
+  closed constraint (`withConstraint`, same discrete solutions `discrete_withConstraint`),
+  `residual_not_isReducing` (`K` or `Kᗮ`, forward in time), `residual_not_isReducing_symm` (data
+  in `D(L) ∩ K`, `t ∈ [-T, T]`) and `residual_not_isReducing_of_grading` (data in `D(L) ∩ K`,
+  forward in time, with the discrete residuals).
+* **A non-reducing Maxwell constraint.** The vanishing-field constraint `potential 𝕜 W`
+  (`E = 0`, `B = 0`; `mem_potential`) of a complex on `ComplexShape.fin3` does not reduce `L` as
+  soon as `d₀ ≠ 0` (`not_isReducing_potential`, since `L (σ, 0, 0) = (0, dσ, 0)`), and `D(L) ∩ K`
+  is dense in it (`dense_potential`). `potential_residual` is the non-reducing branch of item 4
+  for it, for every constrained FEEC discretization: data in `D(L) ∩ K` leave `K` forward in time,
+  and the discrete residuals tend to a positive limit.
 
 ## Instances
 
 * **The torus `𝕋ᵈ`** (any `d`, any degree `a`; `d = 3`, `a = 0` is the classical system), with
   the spectral Galerkin spaces of band-limited forms `|n|_∞ ≤ N` and the Fourier truncations
-  (`torus`; `torus_gauss_propagates`, `torus_converges`, `torus_residual`).
+  (`torus`; `torus_gauss_propagates`, `torus_converges`, `torus_residual`). The gradient of `𝕋ᵈ`
+  is not zero (`torus_exists_d_ne_zero`), so the vanishing-field constraint is not reducing
+  (`torus_not_isReducing_potential`) and is violated, also by the spectral Galerkin solutions
+  (`torus_potential_residual`).
 * **The cube `Q = (0, ½)ⁿ`** with the lowest-order Whitney forms of the Freudenthal meshes and
   the smoothed projections, for the **perfect magnetic conductor** (`cubePMC`, the maximal complex
   `HΛ(Q)`) and the **perfect electric conductor** (`cubePEC`, the minimal complex `H̊Λ(Q)`,
@@ -53,12 +66,19 @@ theorem `Feec.HilbertComplex.constrainedFEEC`.
   quasi-uniform mesh family, both boundary conditions (`starPMC`, `starPEC`, `starPMCRate`,
   `starPECRate`). The Poincaré inequality (`StarShaped.HasPoincare`) is needed only for the uniform
   discrete Poincaré inequality (`starPMC_discretePoincare`, `starPEC_discretePoincare`).
+* **Unconditional discrete Poincaré inequalities**, from the proved Poincaré inequalities of the
+  cube and the parallelepipeds: `cubePMC_discretePoincare`, `cubePEC_discretePoincare`,
+  `paraPMC_discretePoincare`, `paraPEC_discretePoincare`, and the star-shaped instances at the
+  concrete witnesses `CubeWitness` and `ParallelepipedWitness`
+  (`starPMC_cubeWitness_discretePoincare`, …, `starPEC_paraWitness_discretePoincare`).
 
 No Poincaré inequality, closed range, compactness or exactness hypothesis enters the
 well-posedness, propagation, convergence and residual statements. The rate classes are
 hypotheses on the data (regularity of the orbit on `[0, T]`), as in `Feec.Maxwell.CubeFEM`.
 The Gauss constraint is reducing, so the second branch of item 4 of the constrained FEEC theorem
-(non-reducing constraints) concerns other constraints (`residual_not_isReducing`).
+(non-reducing constraints) concerns other constraints: the vanishing-field constraint
+(`potential_residual`, `torus_potential_residual`) and any closed constraint
+(`residual_not_isReducing`, `residual_not_isReducing_symm`, `residual_not_isReducing_of_grading`).
 
 ## References
 
@@ -142,6 +162,109 @@ theorem isReducing_gauss [Y.HasOrthogonalProjection]
   (reducingSubcomplex_gaussFam H Y hY).isReducing_wave
 
 end Gauss
+
+/-! ### A non-reducing constraint: vanishing fields -/
+
+section Potential
+
+variable {𝕜 : Type*} [RCLike 𝕜] (W : Fin 3 → Type*)
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
+
+/-- The family `W⁰ × {0} × {0}`. -/
+def potentialFam : ∀ i : Fin 3, Submodule 𝕜 (W i)
+  | 0 => ⊤
+  | 1 => ⊥
+  | 2 => ⊥
+
+instance instHasOrthogonalProjectionPotentialFam [∀ i, CompleteSpace (W i)] :
+    ∀ i, (potentialFam (𝕜 := 𝕜) W i).HasOrthogonalProjection
+  | 0 => inferInstanceAs (⊤ : Submodule 𝕜 (W 0)).HasOrthogonalProjection
+  | 1 => inferInstanceAs (⊥ : Submodule 𝕜 (W 1)).HasOrthogonalProjection
+  | 2 => inferInstanceAs (⊥ : Submodule 𝕜 (W 2)).HasOrthogonalProjection
+
+variable (𝕜) in
+/-- The **vanishing-field constraint** `E = 0`, `B = 0` (only the scalar `σ` is free), the
+constraint `W⁰ × {0} × {0}`. Its orthogonal complement is the constraint `σ = 0`. It does not
+reduce the Maxwell operator as soon as `d₀ ≠ 0` (`not_isReducing_potential`): `E' = dσ`. -/
+abbrev potential : Submodule 𝕜 (PiLp 2 W) := totalSub (potentialFam (𝕜 := 𝕜) W)
+
+variable {W}
+
+theorem mem_potential {x : PiLp 2 W} : x ∈ potential 𝕜 W ↔ x 1 = 0 ∧ x 2 = 0 := by
+  constructor
+  · intro h
+    exact ⟨(Submodule.mem_bot 𝕜).1 (h 1), (Submodule.mem_bot 𝕜).1 (h 2)⟩
+  · rintro ⟨h1, h2⟩ i
+    fin_cases i
+    exacts [Submodule.mem_top, (Submodule.mem_bot 𝕜).2 h1, (Submodule.mem_bot 𝕜).2 h2]
+
+theorem single_zero_mem_potential (σ : W 0) : PiLp.single 2 (0 : Fin 3) σ ∈ potential 𝕜 W :=
+  mem_potential.2 ⟨PiLp.single_eq_of_ne (p := 2) (by decide) _,
+    PiLp.single_eq_of_ne (p := 2) (by decide) _⟩
+
+variable [∀ i, CompleteSpace (W i)]
+
+theorem isClosed_potential : IsClosed (potential 𝕜 W : Set (PiLp 2 W)) := isClosed_totalSub
+
+variable (H : HilbertComplex 𝕜 ComplexShape.fin3 W)
+
+/-- `(σ, 0, 0) ∈ D(L)` for `σ ∈ D(d₀)`. -/
+theorem single_zero_mem_wave_domain {σ : W 0} (hσ : σ ∈ (H.d 0 1).domain) :
+    PiLp.single 2 (0 : Fin 3) σ ∈ H.wave.domain := by
+  refine ⟨H.single_mem_totalDomain 0 ?_, H.dual.single_mem_totalDomain 0 ?_⟩
+  · rw [ComplexShape.next_eq' _ (show ComplexShape.fin3.Rel 0 1 by
+      simp [ComplexShape.window_rel])]
+    exact hσ
+  · rw [H.dual.domain_eq_top_of_not_rel]
+    · exact Submodule.mem_top
+    · intro h
+      change ComplexShape.fin3.Rel _ 0 at h
+      simp [ComplexShape.window_rel] at h
+
+/-- `L (σ, 0, 0) = (0, dσ, 0)`: the electric component is `dσ`. -/
+theorem wave_single_zero_one {σ : W 0} (hσ : σ ∈ (H.d 0 1).domain) :
+    (H.wave ⟨_, single_zero_mem_wave_domain H hσ⟩) 1 = H.d 0 1 ⟨σ, hσ⟩ := by
+  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three]
+  have z : ∀ {j k : Fin 3} (T : W j →ₗ.[𝕜] W k) (h : (0 : W j) ∈ T.domain), T ⟨0, h⟩ = 0 :=
+    fun T h => LinearPMap.apply_mk_eq_zero T h rfl
+  have e0 : (PiLp.single 2 (0 : Fin 3) σ : PiLp 2 W) 0 = σ := PiLp.single_eq_same (p := 2) _ _
+  have e1 : (PiLp.single 2 (0 : Fin 3) σ : PiLp 2 W) 1 = 0 :=
+    PiLp.single_eq_of_ne (p := 2) (by decide) _
+  have e2 : (PiLp.single 2 (0 : Fin 3) σ : PiLp 2 W) 2 = 0 :=
+    PiLp.single_eq_of_ne (p := 2) (by decide) _
+  have h3 : ∀ hx, (H.d 1 0)† ⟨σ, hx⟩ = 0 := fun hx =>
+    H.dual.apply_eq_zero_of_not_rel (i := 0) (j := 1) (by simp [ComplexShape.window_rel]) ⟨_, hx⟩
+  simp only [e0, e1, e2, z, h3, add_zero, sub_zero]
+
+/-- **The vanishing-field constraint does not reduce the Maxwell operator** when `d₀ ≠ 0`:
+for `dσ ≠ 0`, `(σ, 0, 0) ∈ D(L) ∩ K` but `L (σ, 0, 0) = (0, dσ, 0) ∉ K`. -/
+theorem not_isReducing_potential (hd : ∃ σ : (H.d 0 1).domain, H.d 0 1 σ ≠ 0) :
+    ¬ H.wave.IsReducing (potential 𝕜 W) := by
+  intro h
+  obtain ⟨⟨σ, hσ⟩, hne⟩ := hd
+  have hm := ((H.isSkewAdjoint_wave.isReducing_iff).1 h).2 ⟨_, single_zero_mem_wave_domain H hσ⟩
+    (single_zero_mem_potential σ)
+  exact hne ((wave_single_zero_one H hσ).symm.trans (mem_potential.1 hm).1)
+
+/-- `D(L) ∩ K` is dense in the vanishing-field constraint `K` (`D(d₀)` is dense). -/
+theorem dense_potential : ∀ k ∈ potential 𝕜 W,
+    k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ potential 𝕜 W) := by
+  intro k hk
+  have hk' : k = PiLp.single 2 (0 : Fin 3) (k 0) := by
+    ext i
+    fin_cases i
+    · exact (PiLp.single_eq_same (p := 2) _ _).symm
+    · exact (mem_potential.1 hk).1.trans (PiLp.single_eq_of_ne (p := 2) (by decide) _).symm
+    · exact (mem_potential.1 hk).2.trans (PiLp.single_eq_of_ne (p := 2) (by decide) _).symm
+  have hc : Continuous fun σ : W 0 => (PiLp.single 2 (0 : Fin 3) σ : PiLp 2 W) := by
+    refine LipschitzWith.continuous (K := 1) (LipschitzWith.of_dist_le_mul fun a b => ?_)
+    rw [dist_eq_norm, dist_eq_norm, ← PiLp.single_sub, PiLp.norm_single]; simp
+  rw [hk']
+  exact map_mem_closure hc (s := ((H.d 0 1).domain : Set (W 0)))
+    ((H.dense 0 1).closure_eq ▸ mem_univ _) fun σ hσ =>
+      ⟨single_zero_mem_wave_domain H hσ, single_zero_mem_potential σ⟩
+
+end Potential
 
 /-! ### Windows -/
 
@@ -288,6 +411,27 @@ theorem isReducing_feec_K : (H.window a 3).wave.IsReducing (feec H a l S P hP hS
   isReducing_windowGauss H a
 
 variable [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
+
+omit [∀ h k, FiniteDimensional 𝕜 ((S h).V k)] in
+variable (H a) in
+/-- **The Gauss laws propagate** in every Maxwell window, for all data and all times `t ∈ ℝ`, with
+no discretization: item (2) of the constrained FEEC theorem (`constrainedFEEC_propagates_iff`) at
+the reducing constraint `windowGauss H a`. [QuennevilleBelair2015], Prop. 4.16, Prop. 4.17 -/
+theorem windowGauss_propagates : ∀ t, ∀ x ∈ windowGauss H a,
+    (H.window a 3).waveGroup.S t x ∈ windowGauss H a :=
+  ((H.window a 3).isReducing_iff_waveGroup_invariant _ |>.trans C0Group.map_le_iff_forall).1
+    (isReducing_windowGauss H a)
+
+omit [∀ h k, FiniteDimensional 𝕜 ((S h).V k)] in
+variable (H a) in
+/-- **The Gauss laws propagate along strong solutions** on `[0, T]` in every Maxwell window, with
+no discretization. [QuennevilleBelair2015], Prop. 4.16 -/
+theorem windowGauss_propagates_strong {T : ℝ} {U : ℝ → PiLp 2 fun i : Fin 3 => V (a + i)}
+    (h0 : U 0 ∈ windowGauss H a)
+    (hU : Evolution.IsStrongSolution (H.window a 3).wave (Icc 0 T) 0 U) :
+    ∀ t ∈ Icc 0 T, U t ∈ windowGauss H a :=
+  hU.mem_of_isReducing (H.window a 3).isSkewAdjoint_wave.isDissipative
+    (isReducing_windowGauss H a) h0 fun _ _ => (windowGauss H a).zero_mem
 
 /-- The **rate class of regular data** on `[0, T]`: data `x ∈ D(L²)` whose orbit `e^{tL} x` and
 derivative `e^{tL} L x` have components satisfying the degreewise regularity `Reg` for
@@ -504,7 +648,71 @@ theorem residual_not_isReducing (F : ConstrainedFEEC H κ) {K : Submodule 𝕜 (
           (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)))) :=
   constrainedFEEC_residual_not_isReducing (withConstraint F K hK) hnot hT
 
+/-- Changing the constraint does not change the discrete solutions. -/
+@[simp] theorem discrete_withConstraint (F : ConstrainedFEEC H κ) {K : Submodule 𝕜 (PiLp 2 W)}
+    (hK : IsClosed (K : Set (PiLp 2 W))) : (withConstraint F K hK).discrete = F.discrete := rfl
+
+/-- **A non-reducing constraint is violated by data in `D(L) ∩ K`, in one of the two time
+directions** (`constrainedFEEC_residual_not_isReducing_symm`): if `K` does not reduce `L` and
+`D(L) ∩ K` is dense in `K`, for every `T > 0` some `x ∈ D(L) ∩ K` has `e^{tL} x ∉ K` for some
+`t ∈ [-T, T]`. -/
+theorem residual_not_isReducing_symm (F : ConstrainedFEEC H κ) {K : Submodule 𝕜 (PiLp 2 W)}
+    (hK : IsClosed (K : Set (PiLp 2 W))) (hnot : ¬ H.wave.IsReducing K)
+    (hdense : ∀ k ∈ K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ K)) {T : ℝ} (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ K ∧ ∃ t ∈ Icc (-T) T,
+      H.waveGroup.S t x ∉ K ∧ 0 < infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)) :=
+  constrainedFEEC_residual_not_isReducing_symm (withConstraint F K hK) hnot hdense hT
+
+/-- **On a graded complex a non-reducing constraint is violated forward in time by data in
+`D(L) ∩ K`, and so are the discrete solutions** (`constrainedFEEC_residual_not_isReducing_of_grading`):
+for a grading `p`, an `R`-invariant closed `K` not reducing `L` with `D(L) ∩ K` dense in `K`, and
+`T > 0`, some `x ∈ D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the residuals
+`dist(ξₕ(t), K)` of the discrete solutions tend to `dist(e^{tL} x, K) > 0` (eventually above half
+of it). -/
+theorem residual_not_isReducing_of_grading (F : ConstrainedFEEC H κ) {K : Submodule 𝕜 (PiLp 2 W)}
+    (hK : IsClosed (K : Set (PiLp 2 W))) {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i)
+    (hRK : ∀ x ∈ K, reversal 𝕜 p x ∈ K)
+    (hdense : ∀ k ∈ K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ K))
+    (hnot : ¬ H.wave.IsReducing K) {T : ℝ} (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ K ∧ ∃ t ∈ Icc 0 T,
+      H.waveGroup.S t x ∉ K ∧ 0 < infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)) ∧
+      Tendsto (fun h => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+        (K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)))) ∧
+      ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (K : Set (PiLp 2 W)) / 2 <
+        infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (K : Set (PiLp 2 W)) :=
+  constrainedFEEC_residual_not_isReducing_of_grading (withConstraint F K hK) hp hRK hdense hnot hT
+
 end OtherConstraint
+
+/-! ### The vanishing-field constraint: item (4) for a non-reducing Maxwell constraint -/
+
+section PotentialConstraint
+
+variable {𝕜 : Type*} [RCLike 𝕜] {W : Fin 3 → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  {H : HilbertComplex 𝕜 ComplexShape.fin3 W} {κ : Type*}
+
+/-- **The vanishing-field constraint is violated, also by the discrete solutions**: if `d₀ ≠ 0`,
+for every `T > 0` some datum `x ∈ D(L)` with `E = 0`, `B = 0` has `e^{tL} x` leaving the
+constraint at some `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), K)` of the discrete
+solutions of every constrained FEEC discretization `F` tend to `dist(e^{tL} x, K) > 0`. Item (4)
+of the constrained FEEC theorem, non-reducing branch, through the parity grading of the window. -/
+theorem potential_residual (F : ConstrainedFEEC H κ) (hd : ∃ σ : (H.d 0 1).domain, H.d 0 1 σ ≠ 0)
+    {T : ℝ} (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ potential 𝕜 W ∧ ∃ t ∈ Icc 0 T,
+      H.waveGroup.S t x ∉ potential 𝕜 W ∧
+      0 < infDist (H.waveGroup.S t x) (potential 𝕜 W : Set (PiLp 2 W)) ∧
+      Tendsto (fun h => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+        (potential 𝕜 W : Set (PiLp 2 W))) F.l
+        (𝓝 (infDist (H.waveGroup.S t x) (potential 𝕜 W : Set (PiLp 2 W)))) ∧
+      ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (potential 𝕜 W : Set (PiLp 2 W)) / 2 <
+        infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+          (potential 𝕜 W : Set (PiLp 2 W)) :=
+  residual_not_isReducing_of_grading F isClosed_potential (fun _ _ h => ComplexShape.window_parity h)
+    (fun _ hx => reversal_mem_totalSub hx) (dense_potential H) (not_isReducing_potential H hd) hT
+
+end PotentialConstraint
 
 /-! ### The torus: spectral Galerkin -/
 
@@ -566,6 +774,87 @@ theorem torus_residual (x : ((complex d).window a 3).wave.domain)
         ((torus d a).discrete N (waveLift _ x) t)) (windowGauss (complex d) a : Set _))
       (fun _ => 0) atTop (Icc 0 T) :=
   constrainedFEEC_residual (torus d a) (isReducing_windowGauss _ a) x hxK T
+
+/-- The de Rham symbol `d_ξ = i ξ ∧ ·` is injective on `0`-forms for `ξ ≠ 0`. -/
+theorem deRham_m_zero_one_ne_zero {ξ : EuclideanSpace ℝ d} (hξ : ξ ≠ 0)
+    {v : Fourier.Exterior.Form ℂ d 0} (hv : v ≠ 0) : (Fourier.Exterior.deRham d).m 0 1 ξ v ≠ 0 := by
+  intro h
+  refine hv (Fourier.Exterior.eq_zero_of_koszul_eq_zero_of_contr_eq_zero hξ ?_ ?_)
+  · have e : (Fourier.Exterior.deRham d).m 0 1 ξ = Complex.I • Fourier.Exterior.koszulDeg 0 ξ :=
+      Fourier.Exterior.deRham_m_succ 0 ξ
+    rw [e, _root_.smul_apply, smul_eq_zero] at h
+    exact h.resolve_left Complex.I_ne_zero
+  · ext s
+    exact Fourier.Exterior.contr_ext_eq_zero ξ 0 v (by omega)
+
+/-- **The gradient on `𝕋ᵈ` is not zero** (`d ≠ ∅`): the Fourier mode `e^{2πi x_j}` has
+`d e^{2πi x_j} ≠ 0`. -/
+theorem torus_exists_d_ne_zero [Nonempty d] :
+    ∃ σ : (((complex d).window 0 3).d 0 1).domain, ((complex d).window 0 3).d 0 1 σ ≠ 0 := by
+  obtain ⟨j⟩ := ‹Nonempty d›
+  set q : d → ℤ := Pi.single j 1
+  have hq : q ≠ 0 := fun h => by simpa [q] using congrFun h j
+  set v : Fourier.Exterior.Form ℂ d 0 := EuclideanSpace.single ⟨∅, Finset.card_empty⟩ 1
+  have hv : v ≠ 0 := by simp [v]
+  set u : L2Form d 0 :=
+    lp.equivLpCount ℂ (d → ℤ) (Fourier.Exterior.Form ℂ d 0) 2 (lp.single 2 q v)
+  have hu : ∀ p, (u : (d → ℤ) → Fourier.Exterior.Form ℂ d 0) p = if p = q then v else 0 :=
+    fun p => by
+      rw [lp.coeFn_equivLpCount, lp.single_apply]
+      split_ifs with h
+      · subst h; simp
+      · simp [Pi.single, Function.update, h]
+  have hband : u ∈ (bandSubcomplex d 1).V 0 := by
+    refine (Fourier.mem_band_iff
+      (S := Fourier.Torus.symbolComplex (Fourier.Exterior.deRham d))).2
+      (MeasureTheory.ae_of_all _ fun p hp => ?_)
+    rw [hu]
+    split_ifs with hpq
+    · subst hpq
+      refine absurd (fun i => ?_) hp
+      by_cases hi : i = j
+      · subst hi; simp [q]
+      · simp [q, hi]
+    · rfl
+  have hdom : u ∈ ((complex d).d 0 1).domain := (bandSubcomplex d 1).le_domain 0 1 hband
+  refine ⟨⟨u, hdom⟩, fun h0 => ?_⟩
+  have hae := (Fourier.Torus.symbolComplex (Fourier.Exterior.deRham d)).coeFn_d (i := 0) (j := 1)
+    ⟨u, hdom⟩
+  change (complex d).d 0 1 ⟨u, hdom⟩ = 0 at h0
+  change ((complex d).d 0 1 ⟨u, hdom⟩ : (d → ℤ) → Fourier.Exterior.Form ℂ d 1) =ᵐ[_] _ at hae
+  rw [h0] at hae
+  have h1 := (MeasureTheory.Lp.coeFn_zero (Fourier.Exterior.Form ℂ d 1) 2
+    (MeasureTheory.Measure.count : MeasureTheory.Measure (d → ℤ))).symm.trans hae
+  have h2 := MeasureTheory.Measure.ae_count_iff.1 h1 q
+  simp only [Pi.zero_apply, hu, ↓reduceIte, Fourier.Torus.symbolComplex_m] at h2
+  exact deRham_m_zero_one_ne_zero (fun h => hq (Fourier.Torus.freq_eq_zero_iff.1 h)) hv h2.symm
+
+/-- **The vanishing-field constraint does not reduce Maxwell's operator on `𝕋ᵈ`** (`d ≠ ∅`,
+degree `0`). -/
+theorem torus_not_isReducing_potential [Nonempty d] :
+    ¬ ((complex d).window 0 3).wave.IsReducing (potential ℂ fun i : Fin 3 => L2Form d (0 + i)) :=
+  not_isReducing_potential _ torus_exists_d_ne_zero
+
+/-- **Item (4), non-reducing branch, on `𝕋ᵈ`**: for the vanishing-field constraint `E = 0`,
+`B = 0`, for every `T > 0` some datum in `D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the
+residuals of the spectral Galerkin solutions tend to a positive limit. -/
+theorem torus_potential_residual [Nonempty d] {T : ℝ} (hT : 0 < T) :
+    ∃ x : ((complex d).window 0 3).wave.domain,
+      (x : PiLp 2 _) ∈ potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) ∧ ∃ t ∈ Icc 0 T,
+      ((complex d).window 0 3).waveGroup.S t x ∉ potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) ∧
+      0 < infDist (((complex d).window 0 3).waveGroup.S t x)
+        (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) ∧
+      Tendsto (fun N => infDist (((complex d).window 0 3).totalD.graphFst
+          ((torus d 0).discrete N (waveLift _ x) t))
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _)) atTop
+        (𝓝 (infDist (((complex d).window 0 3).waveGroup.S t x)
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _))) ∧
+      ∀ᶠ N in atTop, infDist (((complex d).window 0 3).waveGroup.S t x)
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) / 2 <
+        infDist (((complex d).window 0 3).totalD.graphFst
+          ((torus d 0).discrete N (waveLift _ x) t))
+          (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) :=
+  potential_residual (torus d 0) torus_exists_d_ne_zero hT
 
 end Torus
 
@@ -903,12 +1192,13 @@ theorem paraPMC_wellPosed {x} (hx : x ∈ ((complex A b).window a 3).wave.domain
       ∀ t, ‖((complex A b).window a 3).waveGroup.S t x‖ = ‖x‖ :=
   ⟨(constrainedFEEC_wellPosed hx T).1, (constrainedFEEC_wellPosed hx T).2.2.2⟩
 
+omit [NeZero n] in
 /-- **The Gauss laws propagate** (perfect magnetic conductor, parallelepiped) for all data and all
 times `t ∈ ℝ`. [QuennevilleBelair2015], Prop. 4.16 -/
-theorem paraPMC_gauss_propagates (hA : IsUnit A.det) :
+theorem paraPMC_gauss_propagates :
     ∀ t, ∀ x ∈ windowGauss (complex A b) a,
       ((complex A b).window a 3).waveGroup.S t x ∈ windowGauss (complex A b) a :=
-  (constrainedFEEC_propagates_iff (paraPMC A hA b a)).1 (isReducing_windowGauss _ a)
+  windowGauss_propagates (complex A b) a
 
 /-- **Convergence of the semi-discrete solutions** (perfect magnetic conductor, parallelepiped),
 uniformly on `[0, T]`, for `D(L)` data and `ξₕ(0) = Pₕ x`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -970,12 +1260,13 @@ theorem paraPEC_wellPosed {x} (hx : x ∈ ((complexMin A b).window a 3).wave.dom
       ∀ t, ‖((complexMin A b).window a 3).waveGroup.S t x‖ = ‖x‖ :=
   ⟨(constrainedFEEC_wellPosed hx T).1, (constrainedFEEC_wellPosed hx T).2.2.2⟩
 
+omit [NeZero n] in
 /-- **The Gauss laws propagate** (perfect electric conductor, parallelepiped) for all data and all
 times `t ∈ ℝ`. [QuennevilleBelair2015], Prop. 4.16 -/
-theorem paraPEC_gauss_propagates (hA : IsUnit A.det) :
+theorem paraPEC_gauss_propagates :
     ∀ t, ∀ x ∈ windowGauss (complexMin A b) a,
       ((complexMin A b).window a 3).waveGroup.S t x ∈ windowGauss (complexMin A b) a :=
-  (constrainedFEEC_propagates_iff (paraPEC A hA b a)).1 (isReducing_windowGauss _ a)
+  windowGauss_propagates (complexMin A b) a
 
 /-- **Convergence of the semi-discrete solutions** (perfect electric conductor, parallelepiped),
 uniformly on `[0, T]`, for `D(L)` data and `ξₕ(0) = Pₕ x`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -1114,12 +1405,13 @@ theorem starPMC_wellPosed {x} (hx : x ∈ (D.complex.window a 3).wave.domain) (T
       ∀ t, ‖(D.complex.window a 3).waveGroup.S t x‖ = ‖x‖ :=
   ⟨(constrainedFEEC_wellPosed hx T).1, (constrainedFEEC_wellPosed hx T).2.2.2⟩
 
+omit [NeZero n] in
 /-- **The Gauss laws propagate** (perfect magnetic conductor, star-shaped domain) for all data and
 all times `t ∈ ℝ`. [QuennevilleBelair2015], Prop. 4.16 -/
-theorem starPMC_gauss_propagates (M : MeshFamily D) :
+theorem starPMC_gauss_propagates :
     ∀ t, ∀ x ∈ windowGauss D.complex a,
       (D.complex.window a 3).waveGroup.S t x ∈ windowGauss D.complex a :=
-  (constrainedFEEC_propagates_iff (starPMC M a)).1 (isReducing_windowGauss _ a)
+  windowGauss_propagates D.complex a
 
 /-- **Convergence of the semi-discrete solutions** (perfect magnetic conductor, star-shaped domain),
 uniformly on `[0, T]`, for `D(L)` data and `ξₕ(0) = Pₕ x`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -1181,12 +1473,13 @@ theorem starPEC_wellPosed {x} (hx : x ∈ (D.complexMin.window a 3).wave.domain)
       ∀ t, ‖(D.complexMin.window a 3).waveGroup.S t x‖ = ‖x‖ :=
   ⟨(constrainedFEEC_wellPosed hx T).1, (constrainedFEEC_wellPosed hx T).2.2.2⟩
 
+omit [NeZero n] in
 /-- **The Gauss laws propagate** (perfect electric conductor, star-shaped domain) for all data and
 all times `t ∈ ℝ`. [QuennevilleBelair2015], Prop. 4.16 -/
-theorem starPEC_gauss_propagates (M : MeshFamily D) :
+theorem starPEC_gauss_propagates :
     ∀ t, ∀ x ∈ windowGauss D.complexMin a,
       (D.complexMin.window a 3).waveGroup.S t x ∈ windowGauss D.complexMin a :=
-  (constrainedFEEC_propagates_iff (starPEC M a)).1 (isReducing_windowGauss _ a)
+  windowGauss_propagates D.complexMin a
 
 /-- **Convergence of the semi-discrete solutions** (perfect electric conductor, star-shaped domain),
 uniformly on `[0, T]`, for `D(L)` data and `ξₕ(0) = Pₕ x`. [QuennevilleBelair2015], Thm 4.14 -/
@@ -1258,6 +1551,99 @@ theorem starPEC_discretePoincare {cP : ℝ} (hP : HasPoincare D.complexMin cP) {
         ‖x‖ ≤ C * cP *
           ‖(D.complexMin.window a 3).d i j ⟨x, ((starPEC M a).V N).le_domain i j hx⟩‖ :=
   constrainedFEEC_discretePoincare (starPEC M a) hij (window_poincare hP a hij)
+
+/-! #### Unconditional discrete Poincaré inequalities -/
+
+/-- **The uniform discrete Poincaré inequality on the cube** (perfect magnetic conductor), with
+`c_P = (2π)⁻¹` (`CubeWitness.hasPoincare`). [AFW2010], Thm 3.6 -/
+theorem cubePMC_discretePoincare {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((cubePMC n a).V N).V i),
+      (∀ y ∈ ((cubePMC n a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * (2 * Real.pi)⁻¹ *
+          ‖((FEM.complex n).window a 3).d i j ⟨x, ((cubePMC n a).V N).le_domain i j hx⟩‖ :=
+  constrainedFEEC_discretePoincare (cubePMC n a) hij
+    (window_poincare (H := FEM.complex n) (CubeWitness.hasPoincare n) a hij)
+
+/-- **The uniform discrete Poincaré inequality on the cube** (perfect electric conductor), with
+`c_P = (2π)⁻¹` (`CubeWitness.hasPoincareMin`). [AFW2010], Thm 3.6 -/
+theorem cubePEC_discretePoincare {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((cubePEC n a).V N).V i),
+      (∀ y ∈ ((cubePEC n a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * (2 * Real.pi)⁻¹ *
+          ‖((FEM.complexMin n).window a 3).d i j ⟨x, ((cubePEC n a).V N).le_domain i j hx⟩‖ :=
+  constrainedFEEC_discretePoincare (cubePEC n a) hij
+    (window_poincare (H := FEM.complexMin n) (CubeWitness.hasPoincareMin n) a hij)
+
+/-- **The uniform discrete Poincaré inequality on the parallelepiped** `Ω = A · Q + b` (perfect
+magnetic conductor), with `c_P(A) = Parallelepiped.poincareConst A`. [AFW2010], Thm 3.6 -/
+theorem paraPMC_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det)
+    (b : Fin n → ℝ) {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((paraPMC A hA b a).V N).V i),
+      (∀ y ∈ ((paraPMC A hA b a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * Feec.Models.Parallelepiped.poincareConst A *
+          ‖((Feec.Models.Parallelepiped.complex A b).window a 3).d i j
+            ⟨x, ((paraPMC A hA b a).V N).le_domain i j hx⟩‖ :=
+  constrainedFEEC_discretePoincare (paraPMC A hA b a) hij
+    (window_poincare (Feec.Models.Parallelepiped.poincare A hA b) a hij)
+
+/-- **The uniform discrete Poincaré inequality on the parallelepiped** (perfect electric
+conductor). [AFW2010], Thm 3.6 -/
+theorem paraPEC_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det)
+    (b : Fin n → ℝ) {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((paraPEC A hA b a).V N).V i),
+      (∀ y ∈ ((paraPEC A hA b a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * Feec.Models.Parallelepiped.poincareConst A *
+          ‖((Feec.Models.Parallelepiped.complexMin A b).window a 3).d i j
+            ⟨x, ((paraPEC A hA b a).V N).le_domain i j hx⟩‖ :=
+  constrainedFEEC_discretePoincare (paraPEC A hA b a) hij
+    (window_poincare (Feec.Models.Parallelepiped.poincare_min A hA b) a hij)
+
+/-- **The star-shaped instance at a concrete domain**: for the cube as a star-shaped domain with
+the Freudenthal mesh family (`CubeWitness`), `starPMC` has the uniform discrete Poincaré
+inequality with no hypothesis. -/
+theorem starPMC_cubeWitness_discretePoincare {i j : Fin 3}
+    (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((starPMC (CubeWitness.meshFamily n) a).V N).V i),
+      (∀ y ∈ ((starPMC (CubeWitness.meshFamily n) a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * (2 * Real.pi)⁻¹ * ‖((CubeWitness.starDomain n).complex.window a 3).d i j
+          ⟨x, ((starPMC (CubeWitness.meshFamily n) a).V N).le_domain i j hx⟩‖ :=
+  starPMC_discretePoincare (CubeWitness.hasPoincare n) hij
+
+/-- `starPEC` at the cube witness, with no hypothesis. -/
+theorem starPEC_cubeWitness_discretePoincare {i j : Fin 3}
+    (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((starPEC (CubeWitness.meshFamily n) a).V N).V i),
+      (∀ y ∈ ((starPEC (CubeWitness.meshFamily n) a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * (2 * Real.pi)⁻¹ * ‖((CubeWitness.starDomain n).complexMin.window a 3).d i j
+          ⟨x, ((starPEC (CubeWitness.meshFamily n) a).V N).le_domain i j hx⟩‖ :=
+  starPEC_discretePoincare (CubeWitness.hasPoincareMin n) hij
+
+/-- **The star-shaped instance at every parallelepiped** (`ParallelepipedWitness`), with no
+hypothesis. -/
+theorem starPMC_paraWitness_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det)
+    (b : Fin n → ℝ) {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N,
+      ∀ x (hx : x ∈ ((starPMC (ParallelepipedWitness.meshFamily A hA b) a).V N).V i),
+      (∀ y ∈ ((starPMC (ParallelepipedWitness.meshFamily A hA b) a).V N).cyclesW i,
+        ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * Feec.Models.Parallelepiped.poincareConst A *
+          ‖((ParallelepipedWitness.starDomain A hA b).complex.window a 3).d i j
+            ⟨x, ((starPMC (ParallelepipedWitness.meshFamily A hA b) a).V N).le_domain i j hx⟩‖ :=
+  starPMC_discretePoincare (M := ParallelepipedWitness.meshFamily A hA b)
+    (fun i j hij z hz => Feec.Models.Parallelepiped.poincare A hA b i j hij z hz) hij
+
+/-- `starPEC` at every parallelepiped, with no hypothesis. -/
+theorem starPEC_paraWitness_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det)
+    (b : Fin n → ℝ) {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) :
+    ∃ C, 0 ≤ C ∧ ∀ N,
+      ∀ x (hx : x ∈ ((starPEC (ParallelepipedWitness.meshFamily A hA b) a).V N).V i),
+      (∀ y ∈ ((starPEC (ParallelepipedWitness.meshFamily A hA b) a).V N).cyclesW i,
+        ⟪y, x⟫_ℝ = 0) →
+        ‖x‖ ≤ C * Feec.Models.Parallelepiped.poincareConst A *
+          ‖((ParallelepipedWitness.starDomain A hA b).complexMin.window a 3).d i j
+            ⟨x, ((starPEC (ParallelepipedWitness.meshFamily A hA b) a).V N).le_domain i j hx⟩‖ :=
+  starPEC_discretePoincare (M := ParallelepipedWitness.meshFamily A hA b)
+    (fun i j hij z hz => Feec.Models.Parallelepiped.poincare_min A hA b i j hij z hz) hij
 
 end StarShaped
 

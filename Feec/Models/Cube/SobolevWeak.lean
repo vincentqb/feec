@@ -21,7 +21,9 @@ inequality used by the optimal finite element rates of `Feec.Models.Cube.Sobolev
   `HasWeakDerivs Ω m u`: every coefficient `u_t` has weak derivatives in `L²(Ω)` along every word
   of length `≤ m`. They are unique (`HasWeakDeriv.unique`), pass to `L²` limits
   (`hasWeakDeriv_of_tendsto`), and classical integration by parts of every order holds
-  (`integral_mul_iterPartial`). `weakHmNorm`, `weakHmNormSq`: the norm `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²`.
+  (`integral_mul_iterPartial`). `weakHmNorm`, `weakHmNormSq`: the norm `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²` over ordered words `r`
+  (a mixed derivative of multi-index `α` is counted `|α|!/α!` times; equivalent, up to
+  constants depending on `m`, to the norm over multi-indices).
 * **Forward direction** (`hasWeakDerivs_of_mem_sobolevQ`): every `u ∈ Hᵐ(Q; Λᵏ)` has weak
   derivatives up to order `m` in `L²(Q)`; the derivative along `l` is the restriction of the
   Fourier multiplier `mulSeq l x` (`hasWeakDeriv_of_memSob`), the `L²` limit of the classical
@@ -34,11 +36,24 @@ inequality used by the optimal finite element rates of `Feec.Models.Cube.Sobolev
   derivatives `∂_j^m` and the power-mean inequality). Hence **`mem_sobolevPar_nat_iff`**:
   `u ∈ Hᵐ_J(Q)` iff the parity extension `JfJ J k u` has weak derivatives up to order `m` in
   `L²(𝕋ⁿ)`.
-* **`H²` in the parity classes** (**`mem_sobolevPar_two_compat`**, one inclusion of the `m = 2`
-  characterization): `u ∈ H²_J(Q)` gives `u_t ∈ H¹(Q)` with vanishing traces on the faces normal
-  to `J ∆ t`, and first weak derivatives `∂_j u_t ∈ H¹(Q)` with vanishing traces on the faces
-  normal to `(J ∆ {j}) ∆ t` (`∂_j` flips the parity in `x_j`, `realParJ_mulSeq_single`); on the
-  faces normal to `j` this is the compatibility condition `∂_j u_t = 0` for `j ∉ J ∆ t`.
+* **The parity classes of every integer order, intrinsically on `Q`**
+  (**`mem_sobolevPar_add_one_iff`**): `u ∈ H^{m+1}_J(Q; Λᵏ)` iff `u ∈ H¹_J(Q; Λᵏ)` and every first
+  weak derivative `∂_j u` (in `L²(Q)`) lies in `Hᵐ_{J ∆ {j}}(Q; Λᵏ)` (`∂_j` flips the parity in
+  `x_j`, `realParJ_mulSeq_single`; the weak derivative is the restriction of `∂_j (JfJ J k u)` by
+  uniqueness, `mulSeq_eq_of_hasWeakDeriv`; `x ∈ H^{m+1}(𝕋ⁿ)` iff every `∂_j x ∈ Hᵐ(𝕋ⁿ)`,
+  `memSob_nat_add_one_iff`). With `mem_sobolevPar_one_iff` this is the backward direction for the
+  parity classes: weak derivatives on `Q` plus vanishing traces of the derivatives give `Hᵐ_J`.
+  For `m = 2` (**`mem_sobolevPar_two_iff`**, `⇒` is `mem_sobolevPar_two_compat`): `u ∈ H²_J(Q)`
+  iff `u_t ∈ H¹(Q)` with vanishing traces on the faces normal to `J ∆ t`, and every `∂_j u_t` is
+  the coefficient of `w_j ∈ H¹_{J ∆ {j}}(Q)`, i.e. `∂_j u_t ∈ H¹(Q)` with vanishing traces on the
+  faces normal to `(J ∆ {j}) ∆ t`; on the faces normal to `j` this is the **compatibility
+  condition** `∂_j u_t = 0` for `j ∉ J ∆ t` (the odd-order normal derivatives of the even
+  reflection).
+* **Norms on the parity classes**: the recursion `‖u‖²_{m+1,J} = ‖u‖²_{m,J} + Σ_j ‖∂_j u‖²_{m,J∆{j}}`
+  (`parNorm_add_one_sq`, from `sobSum_add_one`) and the recursion of the weak norm
+  (`weakHmNormSq_succ`) give the equivalence
+  `weakHmNormSq Q m u ≤ ‖u‖²_{m,J} ≤ 2ᵐ weakHmNormSq Q m u` on `Hᵐ_J(Q)`
+  (`weakHmNormSq_le_parNorm_sq`, `parNorm_sq_le_weakHmNormSq`).
 
 ## The Bernstein inequality
 
@@ -68,10 +83,10 @@ derivative on coordinate vectors is the iterated partial derivative
   approximation of `Hᵐ(Q)` functions by functions smooth up to the boundary (the matching
   conditions of the reflection only remove the boundary terms for test functions vanishing to
   order `m` on the face). For `m = 1` the even reflection suffices (`mem_sobolevQ_one_iff`).
-* **The converse of `mem_sobolevPar_two_compat`** on `Q` (that the weak-derivative and trace
-  conditions on `Q` give `H²_J`): it requires gluing the weak derivatives of the reflected pieces
-  across the faces of `Q` on `𝕋ⁿ`; the torus form of the characterization is
-  `mem_sobolevPar_nat_iff`.
+  Consequently the planned `mem_sobolevQ_nat_iff` is proved only as `⇒`
+  (`hasWeakDerivs_of_mem_sobolevQ`), and the planned norm equivalence `qNorm_nat_sq_equiv` only as
+  `weakHmNormSq_le_qNorm_sq`. In the parity classes both directions and both norm inequalities are
+  proved (above).
 
 No hypothesis is assumed.
 
@@ -1150,7 +1165,9 @@ open scoped Classical in
 /-- **The `Hᵐ` norm by weak derivatives** (squared):
 `Σ_t Σ_{p ≤ m} Σ_{|r| = p} ‖∂^r u_t‖²_{L²(Ω)}` over the words `r` of length `≤ m` (a missing
 weak derivative contributes `0`; on open `Ω` the weak derivatives are unique,
-`HasWeakDeriv.unique`). -/
+`HasWeakDeriv.unique`). The sum is over ordered words, so a mixed derivative of multi-index `α`
+is counted `|α|!/α!` times; this is equivalent to the sum over multi-indices up to constants
+depending only on `m`. -/
 def weakHmNormSq (Ω : Set (Fin n → ℝ)) (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) : ℝ :=
   ∑ t : formIdx n k', ∑ p ∈ Finset.range (m + 1), ∑ r : Fin p → Fin n,
     if h : ∃ v, HasWeakDeriv Ω (List.ofFn r) (u t) v then ‖h.choose‖ ^ 2 else 0
@@ -1159,8 +1176,8 @@ def weakHmNormSq (Ω : Set (Fin n → ℝ)) (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω
 def weakHmNorm (Ω : Set (Fin n → ℝ)) (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) : ℝ :=
   √(weakHmNormSq Ω m u)
 
-/-- **Comparison of the norms** (`qNorm_nat_sq_equiv`, the direction available without an
-extension operator): for `u ∈ Hᵐ(Q; Λᵏ)`,
+/-- **Comparison of the norms** (the forward half of the planned `qNorm_nat_sq_equiv`, the direction
+available without an extension operator): for `u ∈ Hᵐ(Q; Λᵏ)`,
 `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖² ≤ (Σ_{p ≤ m} nᵖ) ‖u‖²_{Hᵐ(Q)}`. -/
 theorem weakHmNormSq_le_qNorm_sq {m : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevQ n k m) :
@@ -1298,4 +1315,285 @@ theorem mem_sobolevPar_two_compat (J : Finset (Fin n))
 
 end ParityTwo
 
+/-! ### The recursion of the weak `Hᵐ` norm -/
+
+section WeakSucc
+
+variable {Ω : Set (Fin n → ℝ)}
+
+/-- The empty word: every `f` is its own weak derivative of order `0`. -/
+theorem hasWeakDeriv_nil_self (f : L2 ℝ Ω) : HasWeakDeriv Ω [] f f := fun φ _ => by simp
+
+/-- **Weak derivatives along `j :: l` from a first derivative**: if `g = ∂_j f` weakly, then
+`v = ∂^{j :: l} f` weakly iff `v = ∂^l g` weakly (test with `∂^l φ`). -/
+theorem hasWeakDeriv_cons_iff {j : Fin n} {f g : L2 ℝ Ω}
+    (hg : HasWeakDeriv Ω [j] f g) (l : List (Fin n)) (v : L2 ℝ Ω) :
+    HasWeakDeriv Ω (j :: l) f v ↔ HasWeakDeriv Ω l g v := by
+  have e : ∀ φ, IsTest Ω φ → ∫ x in Ω, (f : (Fin n → ℝ) → ℝ) x * iterPartial (j :: l) φ x =
+      -∫ x in Ω, (g : (Fin n → ℝ) → ℝ) x * iterPartial l φ x := fun φ hφ => by
+    rw [show iterPartial (j :: l) φ = iterPartial [j] (iterPartial l φ) from rfl,
+      hg _ (isTest_iterPartial hφ l)]
+    simp
+  refine forall₂_congr fun φ hφ => ?_
+  rw [e φ hφ, List.length_cons, pow_succ]
+  constructor <;> intro h <;> linear_combination -h
+
+open scoped Classical in
+/-- The order-`0` term of `weakHmNormSq` is `‖f‖²`. -/
+theorem dite_hasWeakDeriv_nil (hΩ : IsOpen Ω) (f : L2 ℝ Ω) :
+    (if h : ∃ v, HasWeakDeriv Ω [] f v then ‖h.choose‖ ^ 2 else 0) = ‖f‖ ^ 2 := by
+  have hex : ∃ v, HasWeakDeriv Ω [] f v := ⟨f, hasWeakDeriv_nil_self f⟩
+  rw [dite_eq_left hex, hex.choose_spec.unique hΩ (hasWeakDeriv_nil_self f)]
+
+open scoped Classical in
+/-- The term of `weakHmNormSq` along `j :: l` for `f` is the term along `l` for `∂_j f`. -/
+theorem dite_hasWeakDeriv_cons (hΩ : IsOpen Ω) {j : Fin n} {f g : L2 ℝ Ω}
+    (hg : HasWeakDeriv Ω [j] f g) (l : List (Fin n)) :
+    (if h : ∃ v, HasWeakDeriv Ω (j :: l) f v then ‖h.choose‖ ^ 2 else 0) =
+      (if h : ∃ v, HasWeakDeriv Ω l g v then ‖h.choose‖ ^ 2 else 0) := by
+  have e : (∃ v, HasWeakDeriv Ω (j :: l) f v) ↔ ∃ v, HasWeakDeriv Ω l g v :=
+    exists_congr fun v => hasWeakDeriv_cons_iff hg l v
+  by_cases h : ∃ v, HasWeakDeriv Ω l g v
+  · rw [dite_eq_left (e.2 h), dite_eq_left h,
+      (e.2 h).choose_spec.unique hΩ ((hasWeakDeriv_cons_iff hg l _).2 h.choose_spec)]
+  · rw [dite_eq_right (mt e.1 h), dite_eq_right h]
+
+theorem weakHmNormSq_nonneg (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) :
+    0 ≤ weakHmNormSq Ω m u := by
+  classical
+  exact Finset.sum_nonneg fun t _ => Finset.sum_nonneg fun p _ => Finset.sum_nonneg fun r _ => by
+    split_ifs <;> positivity
+
+/-- `weakHmNormSq Ω 0 u = ‖u‖²`. -/
+theorem weakHmNormSq_zero (hΩ : IsOpen Ω) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) :
+    weakHmNormSq Ω 0 u = ‖u‖ ^ 2 := by
+  classical
+  rw [PiLp.norm_sq_eq_of_L2]
+  unfold weakHmNormSq
+  refine Finset.sum_congr rfl fun t _ => ?_
+  rw [Finset.sum_range_one, Fintype.sum_unique, List.ofFn_zero]
+  convert dite_hasWeakDeriv_nil hΩ (u t)
+
+theorem weakHmNormSq_mono {m m' : ℕ} (h : m ≤ m') {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) :
+    weakHmNormSq Ω m u ≤ weakHmNormSq Ω m' u := by
+  classical
+  unfold weakHmNormSq
+  refine Finset.sum_le_sum fun t _ => Finset.sum_le_sum_of_subset_of_nonneg
+    (Finset.range_subset_range.2 (by omega)) fun p _ _ => Finset.sum_nonneg fun r _ => ?_
+  split_ifs <;> positivity
+
+/-- **The recursion of the weak `Hᵐ` norm**: if `w_j = ∂_j u` weakly (coefficientwise), then
+`Σ_{|r| ≤ m+1} ‖∂^r u‖² = ‖u‖² + Σ_j Σ_{|r| ≤ m} ‖∂^r w_j‖²` (words `j :: r`). -/
+theorem weakHmNormSq_succ (hΩ : IsOpen Ω) {m : ℕ} {k' : ℤ} {u : L2F ℝ Ω (formIdx n k')}
+    {w : Fin n → L2F ℝ Ω (formIdx n k')} (hw : ∀ j t, HasWeakDeriv Ω [j] (u t) (w j t)) :
+    weakHmNormSq Ω (m + 1) u = ‖u‖ ^ 2 + ∑ j, weakHmNormSq Ω m (w j) := by
+  classical
+  rw [PiLp.norm_sq_eq_of_L2]
+  unfold weakHmNormSq
+  have ht : ∀ t : formIdx n k', ∑ p ∈ Finset.range (m + 1 + 1), ∑ r : Fin p → Fin n,
+      (if h : ∃ v, HasWeakDeriv Ω (List.ofFn r) (u t) v then ‖h.choose‖ ^ 2 else 0) =
+      ‖u t‖ ^ 2 + ∑ j, ∑ p ∈ Finset.range (m + 1), ∑ r : Fin p → Fin n,
+        (if h : ∃ v, HasWeakDeriv Ω (List.ofFn r) (w j t) v then ‖h.choose‖ ^ 2 else 0) := by
+    intro t
+    rw [Finset.sum_range_succ', add_comm, Finset.sum_comm]
+    congr 1
+    · rw [Fintype.sum_unique, List.ofFn_zero]
+      convert dite_hasWeakDeriv_nil hΩ (u t)
+    · refine Finset.sum_congr rfl fun p _ => ?_
+      rw [← (Fin.consEquiv fun _ : Fin (p + 1) => Fin n).sum_comp, Fintype.sum_prod_type]
+      refine Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun r _ => ?_
+      simp only [Fin.consEquiv_apply, List.ofFn_succ, Fin.cons_zero, Fin.cons_succ]
+      exact dite_hasWeakDeriv_cons hΩ (hw j t) _
+  rw [Finset.sum_congr rfl fun t _ => ht t, Finset.sum_add_distrib, Finset.sum_comm]
+
+end WeakSucc
+
+/-! ### The parity classes of every integer order, intrinsically on `Q` -/
+
+section ParitySucc
+
+variable {k : ℕ}
+
+theorem norm_cf_mulSeq_single_sq {x : Seq n k} (hx1 : MemSob 1 x) (j : Fin n) (q : Fin n → ℤ) :
+    ‖cf (mulSeq [j] x) q‖ ^ 2 = (2 * Real.pi * q j) ^ 2 * ‖cf x q‖ ^ 2 := by
+  rw [cf_mulSeq hx1 (by simp), norm_smul, mul_pow, norm_symb_sq]
+  simp
+
+/-- `⟨ξ⟩^{2(s+1)} |x(q)|² = ⟨ξ⟩^{2s} |x(q)|² + Σ_j ⟨ξ⟩^{2s} |(∂_j x)(q)|²`. -/
+theorem weight_add_one_mul {x : Seq n k} (hx1 : MemSob 1 x) (s : ℝ) (q : Fin n → ℤ) :
+    weight (s + 1) q * ‖cf x q‖ ^ 2 =
+      weight s q * ‖cf x q‖ ^ 2 + ∑ j, weight s q * ‖cf (mulSeq [j] x) q‖ ^ 2 := by
+  simp_rw [norm_cf_mulSeq_single_sq hx1]
+  rw [weight_add, weight_one, norm_freq_sq, Finset.mul_sum]
+  have : ∀ j : Fin n, weight s q * ((2 * Real.pi * q j) ^ 2 * ‖cf x q‖ ^ 2) =
+      weight s q * (2 * Real.pi) ^ 2 * ‖cf x q‖ ^ 2 * (q j : ℝ) ^ 2 := fun j => by ring
+  simp_rw [this, ← Finset.mul_sum]
+  ring
+
+/-- `x ∈ H^{s+1}(𝕋ⁿ)` iff `x ∈ Hˢ(𝕋ⁿ)` and every `∂_j x ∈ Hˢ(𝕋ⁿ)` (for `x ∈ H¹`). -/
+theorem memSob_add_one_iff {x : Seq n k} (hx1 : MemSob 1 x) (s : ℝ) :
+    MemSob (s + 1) x ↔ MemSob s x ∧ ∀ j, MemSob s (mulSeq [j] x) := by
+  constructor
+  · intro h
+    refine ⟨h.mono (by linarith), fun j => ?_⟩
+    refine Summable.of_nonneg_of_le (fun q => mul_nonneg (weight_nonneg _ _) (sq_nonneg _))
+      (fun q => ?_) h
+    rw [weight_add_one_mul hx1]
+    have h1 := Finset.single_le_sum (f := fun j => weight s q * ‖cf (mulSeq [j] x) q‖ ^ 2)
+      (fun _ _ => mul_nonneg (weight_nonneg _ _) (sq_nonneg _)) (Finset.mem_univ j)
+    have h2 := mul_nonneg (weight_nonneg s q) (sq_nonneg ‖cf x q‖)
+    linarith
+  · rintro ⟨hs, hj⟩
+    exact ((show Summable _ from hs).add (summable_sum fun j _ => hj j)).congr fun q =>
+      (weight_add_one_mul hx1 s q).symm
+
+/-- `‖x‖²_{s+1} = ‖x‖²_s + Σ_j ‖∂_j x‖²_s`. -/
+theorem sobSum_add_one {x : Seq n k} (hx1 : MemSob 1 x) {s : ℝ} (h : MemSob (s + 1) x) :
+    sobSum (s + 1) x = sobSum s x + ∑ j, sobSum s (mulSeq [j] x) := by
+  obtain ⟨hs, hj⟩ := (memSob_add_one_iff hx1 s).1 h
+  unfold sobSum
+  simp_rw [weight_add_one_mul hx1 s]
+  rw [Summable.tsum_add hs (summable_sum fun j _ => hj j),
+    Summable.tsum_finsetSum fun j _ => hj j]
+
+/-- `x ∈ H^{m+1}(𝕋ⁿ)` iff every `∂_j x ∈ Hᵐ(𝕋ⁿ)` (for `x ∈ H¹`, `m ∈ ℕ`; induction on the
+order). -/
+theorem memSob_nat_add_one_iff {x : Seq n k} (hx1 : MemSob 1 x) (m : ℕ) :
+    MemSob ((m : ℝ) + 1) x ↔ ∀ j, MemSob m (mulSeq [j] x) := by
+  refine ⟨fun h => ((memSob_add_one_iff hx1 m).1 h).2, fun h => ?_⟩
+  have key : ∀ r : ℕ, r ≤ m → MemSob ((r : ℝ) + 1) x := by
+    intro r
+    induction r with
+    | zero => intro _; simpa using hx1
+    | succ r ih =>
+      intro hr
+      have := (memSob_add_one_iff hx1 ((r : ℝ) + 1)).2 ⟨ih (by omega),
+        fun j => (h j).mono (by exact_mod_cast hr)⟩
+      push_cast
+      exact this
+  exact key m le_rfl
+
+/-- **A weak first derivative on `Q` of `u ∈ H¹_J` is the restriction of `∂_j (JfJ J k u)`**
+(uniqueness of weak derivatives), and its parity extension in the class `J ∆ {j}` is
+`∂_j (JfJ J k u)` (`realParJ_mulSeq_single`). -/
+theorem mulSeq_eq_of_hasWeakDeriv {J : Finset (Fin n)} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
+    (hu : u ∈ sobolevPar J k 1) {j : Fin n} {w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
+    (hw : ∀ t, HasWeakDeriv (Q (Fin n)) [j] (u t) (w t)) :
+    w = Jinvf k (mulSeq [j] (JfJ J k u)) ∧
+      JfJ (symmDiff J {j}) k w = mulSeq [j] (JfJ J k u) := by
+  have hx1 : MemSob 1 (JfJ J k u) := hu
+  have e : w = Jinvf k (mulSeq [j] (JfJ J k u)) := PiLp.ext fun t => by
+    have h := hasWeakDeriv_of_memSob hx1 (l := [j]) (by simp) t
+    rw [Jinvf_JfJ] at h
+    exact (hw t).unique isOpen_Q h
+  refine ⟨e, ?_⟩
+  rw [e, JfJ_Jinvf (realParJ_mulSeq_single (JfJ_realParJ J k u) hx1 le_rfl j)]
+
+/-- **The parity classes of every integer order on `Q`** (`mem_sobolevPar_add_one_iff`):
+`u ∈ H^{m+1}_J(Q; Λᵏ)` iff `u ∈ H¹_J(Q; Λᵏ)` and, for every `j`, the weak derivative `∂_j u`
+(coefficientwise in `L²(Q)`) exists and lies in `Hᵐ_{J ∆ {j}}(Q; Λᵏ)`. By induction on `m` (with
+`mem_sobolevPar_one_iff`) this characterizes `Hᵐ_J(Q)` intrinsically on `Q`: weak derivatives up to
+order `m` in `L²(Q)` with the vanishing traces of `∂^r u_t` (`|r| < m`) on the faces normal to
+`(J ∆ r) ∆ t` (`r` read as the set of directions of odd multiplicity). -/
+theorem mem_sobolevPar_add_one_iff (J : Finset (Fin n)) (m : ℕ)
+    (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
+    u ∈ sobolevPar J k ((m : ℝ) + 1) ↔ u ∈ sobolevPar J k 1 ∧ ∀ j : Fin n,
+      ∃ w ∈ sobolevPar (symmDiff J {j}) k m, ∀ t, HasWeakDeriv (Q (Fin n)) [j] (u t) (w t) := by
+  constructor
+  · intro hu
+    have hx : MemSob ((m : ℝ) + 1) (JfJ J k u) := hu
+    have hu1 : u ∈ sobolevPar J k 1 :=
+      sobolevPar_anti J k (by linarith [(Nat.cast_nonneg m : (0 : ℝ) ≤ m)]) hu
+    have hx1 : MemSob 1 (JfJ J k u) := hu1
+    refine ⟨hu1, fun j => ⟨Jinvf k (mulSeq [j] (JfJ J k u)), ?_, fun t => ?_⟩⟩
+    · rw [mem_sobolevPar, JfJ_Jinvf (realParJ_mulSeq_single (JfJ_realParJ J k u) hx1 le_rfl j)]
+      exact (memSob_nat_add_one_iff hx1 m).1 hx j
+    · have h := hasWeakDeriv_of_memSob hx1 (l := [j]) (by simp) t
+      rwa [Jinvf_JfJ] at h
+  · rintro ⟨hu1, hw⟩
+    refine (memSob_nat_add_one_iff hu1 m).2 fun j => ?_
+    obtain ⟨w, hwm, hwd⟩ := hw j
+    rw [← (mulSeq_eq_of_hasWeakDeriv hu1 hwd).2]
+    exact hwm
+
+/-- **`H²` in the parity classes, the full characterization** (`mem_sobolevPar_two_iff`):
+`u ∈ H²_J(Q; Λᵏ)` iff every `u_t ∈ H¹(Q)` has vanishing trace on the faces normal to `J ∆ t` and
+every first weak derivative `∂_j u_t` is the coefficient of `w_j ∈ H¹_{J ∆ {j}}(Q; Λᵏ)`, i.e.
+`∂_j u_t ∈ H¹(Q)` with vanishing trace on the faces normal to `(J ∆ {j}) ∆ t` (the compatibility
+conditions on the normal derivatives). `⇒` is `mem_sobolevPar_two_compat`. -/
+theorem mem_sobolevPar_two_iff (J : Finset (Fin n)) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
+    u ∈ sobolevPar J k 2 ↔ (∀ t : formIdx n (k : ℤ),
+      zeroF (u t) ∈ (dPart (Q (Fin n)) (symmDiff J t.1) ((0 : ℕ) : ℤ)).domain) ∧
+    ∀ j : Fin n, ∃ w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)),
+      w ∈ sobolevPar (symmDiff J {j}) k 1 ∧ (∀ t, HasWeakDeriv (Q (Fin n)) [j] (u t) (w t)) ∧
+      ∀ t : formIdx n (k : ℤ),
+        zeroF (w t) ∈ (dPart (Q (Fin n)) (symmDiff (symmDiff J {j}) t.1) ((0 : ℕ) : ℤ)).domain := by
+  refine ⟨mem_sobolevPar_two_compat J, fun ⟨h1, hw⟩ => ?_⟩
+  have h := (mem_sobolevPar_add_one_iff J 1 u).2 ⟨(mem_sobolevPar_one_iff J k).2 h1, fun j => by
+    obtain ⟨w, hw1, hd, -⟩ := hw j
+    exact ⟨w, by simpa using hw1, hd⟩⟩
+  rwa [show ((1 : ℕ) : ℝ) + 1 = 2 by norm_num] at h
+
+/-- **The recursion of the `H^{m+1}_J` norm**:
+`‖u‖²_{m+1,J} = ‖u‖²_{m,J} + Σ_j ‖∂_j u‖²_{m,J∆{j}}`. -/
+theorem parNorm_add_one_sq (J : Finset (Fin n)) {m : ℕ}
+    {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k ((m : ℝ) + 1))
+    {w : Fin n → L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
+    (hw : ∀ j t, HasWeakDeriv (Q (Fin n)) [j] (u t) (w j t)) :
+    parNorm J k ((m : ℝ) + 1) u ^ 2 =
+      parNorm J k m u ^ 2 + ∑ j, parNorm (symmDiff J {j}) k m (w j) ^ 2 := by
+  have hu1 : u ∈ sobolevPar J k 1 :=
+    sobolevPar_anti J k (by linarith [(Nat.cast_nonneg m : (0 : ℝ) ≤ m)]) hu
+  have e : ∀ j, JfJ (symmDiff J {j}) k (w j) = mulSeq [j] (JfJ J k u) := fun j =>
+    (mulSeq_eq_of_hasWeakDeriv hu1 (hw j)).2
+  simp only [parNorm_sq, e, sobSum_add_one (hu1 : MemSob 1 _) hu, mul_add, Finset.mul_sum]
+
+/-- **Norm comparison on the parity classes, `≤`**: for `u ∈ Hᵐ_J(Q)`,
+`Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²_{L²(Q)} ≤ ‖u‖²_{m,J}`. -/
+theorem weakHmNormSq_le_parNorm_sq (J : Finset (Fin n)) (m : ℕ)
+    {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k m) :
+    weakHmNormSq (Q (Fin n)) m u ≤ parNorm J k m u ^ 2 := by
+  induction m generalizing J u with
+  | zero => rw [weakHmNormSq_zero isOpen_Q, Nat.cast_zero, parNorm_zero]
+  | succ m ih =>
+    rw [Nat.cast_succ] at hu ⊢
+    obtain ⟨-, hw⟩ := (mem_sobolevPar_add_one_iff J m u).1 hu
+    choose w hwm hwd using hw
+    rw [weakHmNormSq_succ isOpen_Q hwd, parNorm_add_one_sq J hu hwd]
+    have h0 : ‖u‖ ^ 2 ≤ parNorm J k m u ^ 2 :=
+      pow_le_pow_left₀ (norm_nonneg _) (norm_le_parNorm J k (Nat.cast_nonneg m)
+        (sobolevPar_anti J k (by linarith) hu)) 2
+    exact add_le_add h0 (Finset.sum_le_sum fun j _ => ih _ (hwm j))
+
+/-- **Norm comparison on the parity classes, `≥`** (the reverse inequality): for `u ∈ Hᵐ_J(Q)`,
+`‖u‖²_{m,J} ≤ 2ᵐ Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²_{L²(Q)}`. With `weakHmNormSq_le_parNorm_sq`, the
+`Hᵐ_J` norm is equivalent to the weak `Hᵐ(Q)` norm, with constants depending only on `m`. -/
+theorem parNorm_sq_le_weakHmNormSq (J : Finset (Fin n)) (m : ℕ)
+    {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k m) :
+    parNorm J k m u ^ 2 ≤ 2 ^ m * weakHmNormSq (Q (Fin n)) m u := by
+  induction m generalizing J u with
+  | zero => rw [weakHmNormSq_zero isOpen_Q, Nat.cast_zero, parNorm_zero, pow_zero, one_mul]
+  | succ m ih =>
+    rw [Nat.cast_succ] at hu ⊢
+    obtain ⟨-, hw⟩ := (mem_sobolevPar_add_one_iff J m u).1 hu
+    choose w hwm hwd using hw
+    rw [parNorm_add_one_sq J hu hwd]
+    have hsucc := weakHmNormSq_succ (m := m) isOpen_Q hwd
+    have h1 := ih J (sobolevPar_anti J k (by linarith) hu)
+    have h2 : ∑ j, parNorm (symmDiff J {j}) k m (w j) ^ 2 ≤
+        2 ^ m * ∑ j, weakHmNormSq (Q (Fin n)) m (w j) := by
+      rw [Finset.mul_sum]; exact Finset.sum_le_sum fun j _ => ih _ (hwm j)
+    have h3 := weakHmNormSq_mono (Ω := Q (Fin n)) (m' := m + 1) (Nat.le_succ m) u
+    have h5 : (0 : ℝ) ≤ 2 ^ m := by positivity
+    have h6 : ∑ j, weakHmNormSq (Q (Fin n)) m (w j) ≤ weakHmNormSq (Q (Fin n)) (m + 1) u := by
+      rw [hsucc]; linarith [sq_nonneg ‖u‖]
+    calc parNorm J k (↑m) u ^ 2 + ∑ j, parNorm (symmDiff J {j}) k (↑m) (w j) ^ 2
+        ≤ 2 ^ m * weakHmNormSq (Q (Fin n)) m u +
+          2 ^ m * ∑ j, weakHmNormSq (Q (Fin n)) m (w j) := add_le_add h1 h2
+      _ ≤ 2 ^ m * weakHmNormSq (Q (Fin n)) (m + 1) u +
+          2 ^ m * weakHmNormSq (Q (Fin n)) (m + 1) u :=
+          add_le_add (mul_le_mul_of_nonneg_left h3 h5) (mul_le_mul_of_nonneg_left h6 h5)
+      _ = _ := by ring
+
+end ParitySucc
 end Feec.Models.Cube.Sobolev

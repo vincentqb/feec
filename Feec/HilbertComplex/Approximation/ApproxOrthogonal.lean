@@ -1,9 +1,10 @@
 module
 
 public import Feec.HilbertComplex.Approximation.ApproxFEEC
+public import Mathlib.Analysis.Calculus.Deriv.Prod
 
 /-!
-# Orbit cores of approximating FEEC discretizations with orthogonal reading maps
+# Orthogonal reading maps, orbit cores and complexified comparisons
 
 For an approximating FEEC discretization (`Feec.HilbertComplex.ApproxFEEC`) whose
 reading maps `ιₕ` are isometric with `πₕ = ιₕ*` (`IsOrthogonal`), `ιₕ πₕ` is the orthogonal
@@ -19,10 +20,15 @@ hypothesis of the core is the model convergence theorem. Likewise a model rate
 `‖e^{tL} x - ιₕ e^{tLₕ} vₕ‖ ≤ c hᵅ ‖x‖_c` on `[0, T]` gives a rate class with constants
 `C = 3c`, `C' = 0` (`orbitRate`).
 
+For a complexification `F.complexify J` (`ApproxFEEC.complexify`), orthogonality is inherited
+(`ApproxFEEC.IsOrthogonal.complexify`), and a pair of real comparison trajectories (real and
+imaginary parts) is a comparison of the complexification (`ApproxFEEC.complexifyCmp`), whose
+consistency defect is the pair of the real defects (`ApproxFEEC.norm_complexifyCmp_defect_le`).
+
 ## References
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (best approximation in the image of the reading map)
+  Thm 3.9, Thm 3.10 (elliptic analogue; best approximation in the image of the reading map)
 -/
 
 open scoped InnerProductSpace
@@ -30,9 +36,7 @@ open Set Filter Topology
 
 @[expose] public noncomputable section
 
-namespace Feec.Instances.EinsteinBianchi.FEM
-
-open Feec.HilbertComplex
+namespace Feec.HilbertComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
@@ -215,6 +219,12 @@ open scoped RealInnerProductSpace
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)]
   [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex ℝ c W'} {κ' : Type*}
 
+/-- The real structure of the discrete spaces of a real discretization used by
+`ApproxFEEC.complexify` (the one of the inner product). -/
+local instance (priority := high) instNormedSpaceRealOfInner' (F : ApproxFEEC H' κ')
+    (h : κ') : NormedSpace ℝ (F.X h) :=
+  (F.innerProductSpace h).toNormedSpace
+
 /-- An isometric `J` with `J² = -1` is skew: `⟪J x, y⟫ = -⟪x, J y⟫`. -/
 theorem inner_J_left {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] (J : E →L[ℝ] E)
     (hJJ : ∀ x, J (J x) = -x) (hJ : ∀ x, ‖J x‖ = ‖x‖) (x y : E) : ⟪J x, y⟫ = -⟪x, J y⟫ := by
@@ -249,6 +259,71 @@ theorem ApproxFEEC.IsOrthogonal.complexify {F : ApproxFEEC H' κ'} (hF : ApproxF
     rw [inner_add_left, hF.inner_incl_left, inner_J_left J hJJ hJ, hF.inner_incl_left,
       inner_neg_right]
 
+/-- **A comparison for complex data from two real families**: on the complexification, the pair
+`(a, b)` of real comparison trajectories (real and imaginary parts). -/
+def ApproxFEEC.complexifyCmp (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
+    (hJJ : ∀ x, J (J x) = -x) (hJ : ∀ x, ‖J x‖ = ‖x‖)
+    (hπJ : ∀ h b, F.proj h (J (F.incl h b)) = 0)
+    (hJι : ∀ h a b, ⟪F.incl h a, J (F.incl h b)⟫ = 0) {T : ℝ} (S : Set (PiLp 2 W'))
+    (a b a' b' : PiLp 2 W' → ∀ h, ℝ → F.X h)
+    (ha : ∀ x ∈ S, ∀ h, ContinuousOn (a x h) (Icc 0 T))
+    (hb : ∀ x ∈ S, ∀ h, ContinuousOn (b x h) (Icc 0 T))
+    (ha' : ∀ x ∈ S, ∀ h, ContinuousOn (a' x h) (Icc 0 T))
+    (hb' : ∀ x ∈ S, ∀ h, ContinuousOn (b' x h) (Icc 0 T))
+    (hda : ∀ x ∈ S, ∀ h, ∀ t ∈ Ico 0 T, HasDerivWithinAt (a x h) (a' x h t) (Ici t) t)
+    (hdb : ∀ x ∈ S, ∀ h, ∀ t ∈ Ico 0 T, HasDerivWithinAt (b x h) (b' x h t) (Ici t) t) :
+    (F.complexify J hJJ hJ hπJ hJι).Comparison T where
+  Data := S
+  p x h t := WithLp.toLp 2 (a x h t, b x h t)
+  p' x h t := WithLp.toLp 2 (a' x h t, b' x h t)
+  continuousOn x hx h :=
+    (WithLp.prodContinuousLinearEquiv 2 ℝ (F.X h) (F.X h)).symm.continuous.comp_continuousOn
+      ((ha x hx h).prodMk (hb x hx h))
+  continuousOn' x hx h :=
+    (WithLp.prodContinuousLinearEquiv 2 ℝ (F.X h) (F.X h)).symm.continuous.comp_continuousOn
+      ((ha' x hx h).prodMk (hb' x hx h))
+  hasDerivWithinAt x hx h t ht :=
+    (WithLp.prodContinuousLinearEquiv 2 ℝ (F.X h)
+      (F.X h)).symm.hasFDerivAt.comp_hasDerivWithinAt t
+        (HasDerivWithinAt.prodMk (hda x hx h t ht) (hdb x hx h t ht))
+
+theorem ApproxFEEC.complexifyCmp_p (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W') hJJ hJ
+    hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb (x : PiLp 2 W') (h : κ')
+    (t : ℝ) : (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).p x h t =
+      WithLp.toLp 2 (a x h t, b x h t) := rfl
+
+/-- The defect of the complexified comparison is the pair of the real defects. -/
+theorem ApproxFEEC.complexifyCmp_defect (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
+    hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
+    (x : PiLp 2 W') (h : κ') (t : ℝ) :
+    (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).defect x h t =
+      WithLp.toLp 2 (a' x h t - F.L h (a x h t), b' x h t - F.L h (b x h t)) := rfl
+
+theorem norm_withLp_toLp_le {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    (a b : E) : ‖WithLp.toLp 2 (a, b)‖ ≤ ‖a‖ + ‖b‖ := by
+  have hn := WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 (a, b))
+  refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+  rw [hn]
+  simp only [WithLp.fst, WithLp.snd]
+  nlinarith [norm_nonneg a, norm_nonneg b]
+
+/-- The defect of the complexified comparison is at most the sum of the real defects. -/
+theorem ApproxFEEC.norm_complexifyCmp_defect_le (F : ApproxFEEC H' κ')
+    (J : PiLp 2 W' →L[ℝ] PiLp 2 W') hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb
+    ha' hb' hda hdb (x : PiLp 2 W') (h : κ') (t : ℝ) :
+    ‖(F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).defect x h t‖ ≤
+      ‖a' x h t - F.L h (a x h t)‖ + ‖b' x h t - F.L h (b x h t)‖ := by
+  rw [ApproxFEEC.complexifyCmp_defect]
+  exact norm_withLp_toLp_le _ _
+
+/-- The complexified comparison read in `W'`: `ι(a) + J ι(b)`. -/
+theorem ApproxFEEC.incl_complexifyCmp_p (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
+    hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
+    (x : PiLp 2 W') (h : κ') (t : ℝ) :
+    (F.complexify J hJJ hJ hπJ hJι).incl h
+      ((F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).p x h t) =
+        F.incl h (a x h t) + J (F.incl h (b x h t)) := rfl
+
 end Complexify
 
-end Feec.Instances.EinsteinBianchi.FEM
+end Feec.HilbertComplex

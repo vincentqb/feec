@@ -1,7 +1,7 @@
 module
 
 public import Feec.Instances.EinsteinBianchiFEMGenerator
-public import Feec.Instances.EinsteinBianchiFEMOrbit
+public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
 public import Feec.Models.Cube.MirrorWaveRegularity
 
 /-!

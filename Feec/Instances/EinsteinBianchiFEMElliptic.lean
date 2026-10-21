@@ -23,10 +23,13 @@ trajectory with a consistency defect**, in the sense of the approximating FEEC t
   exact state and of its time derivative (`norm_ellDefect_le`):
   `‖Πₕ' - Lₕ Πₕ‖ ≤ ‖ξ' - Πₕ'‖ + ‖ξ - Πₕ‖`;
 * the projection errors obey the Strang bound of (6.4) modulo harmonic forms
-  (`norm_sub_ellHidden_le`, from `Feec.BGG.HarmonicStability.strang_of_isEllipticProjection`).
+  (`norm_sub_ellTraj_le`, from `Feec.BGG.HarmonicStability.strang_of_isEllipticProjection`).
 
-The defect is not zero in general: `Lₕ` is built with `S₀,ₕ`, `S₁,ₕ`, the data of (6.4) with
-`S₀`, `S₁` (the variational crime `S_h ≠ S`), and `Πₕ` is not the orthogonal projection.
+Nothing here forces the defect to vanish: `Πₕ` is not a discrete orbit, and `Lₕ` is built with
+`S₀,ₕ`, `S₁,ₕ`, the data of (6.4) with `S₀`, `S₁` (the variational crime `S_h ≠ S`). That it is
+nonzero for some datum is **not** proved. For the mirror TSD data the consistency terms of the
+Strang bound vanish exactly (`K₀ = K₁ = 0`), so there any defect comes from the elliptic
+projection not commuting with the flow.
 
 ## References
 

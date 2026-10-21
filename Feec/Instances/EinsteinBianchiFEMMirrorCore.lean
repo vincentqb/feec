@@ -71,6 +71,27 @@ theorem norm_sub_mirrorReEmb_le {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ) (
   exact le_of_pow_le_pow_left₀ two_ne_zero
     (add_nonneg (tsdErr_nonneg _ _) (tsdErr_nonneg _ _)) hsq
 
+set_option maxHeartbeats 1000000 in
+/-- **The error of the real part is at most the full error**: for a TSD state `y`,
+`tsdErr y a ≤ ‖y - Rt a - i Rt b‖` (the converse of `norm_sub_mirrorReEmb_le`). -/
+theorem tsdErr_le_norm_sub_mirrorReEmb {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ)
+    (a b : REnergy) : tsdErr y a ≤ ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ := by
+  obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hy
+  have e0 : slot0 y = 0 := h0
+  have eM : slotM y = 0 := hM
+  have h := norm_sq_sub_mirrorReEmb y a b
+  rw [e0, eM, smul_zero, smul_zero, map_zero, map_zero, zero_sub, zero_sub, zero_sub, zero_sub,
+    norm_neg, norm_neg, norm_neg, norm_neg] at h
+  have hA : tsdErr y a ^ 2 = ‖a.σ‖ ^ 2 + ‖rowsW1L (slot1 y) - a.u‖ ^ 2 + ‖a.M‖ ^ 2 +
+      ‖rowsW2L (slotB y) - a.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
+  have hB : tsdErr (-Complex.I • y) b ^ 2 = ‖b.σ‖ ^ 2 +
+      ‖rowsW1L (-Complex.I • slot1 y) - b.u‖ ^ 2 + ‖b.M‖ ^ 2 +
+      ‖rowsW2L (-Complex.I • slotB y) - b.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
+  have hsq : tsdErr y a ^ 2 ≤ ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ ^ 2 := by
+    rw [h]
+    nlinarith [sq_nonneg (tsdErr (-Complex.I • y) b)]
+  exact le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg _) hsq
+
 theorem tsdErr_le {y : PiLp 2 SpaceQ} {a : REnergy} {δ : ℝ} (h0 : ‖a.σ‖ ≤ δ)
     (h1 : ‖rowsW1L (slot1 y) - a.u‖ ≤ δ) (h2 : ‖a.M‖ ≤ δ) (h3 : ‖rowsW2L (slotB y) - a.ρ‖ ≤ δ) :
     tsdErr y a ≤ 2 * δ := by
@@ -209,14 +230,20 @@ def mirrorFEMCore : (mirrorFEMApprox hT hB).Core :=
 theorem mirrorFEMCore_data :
     (mirrorFEMCore hT hB).Data = tsdQℝ ⊓ complexQℝ.wave.domainSq := rfl
 
-/-- **The closure of the core is the TSD constraint** (`D(L²) ∩ K` is dense in the reducing `K`). -/
-theorem mirrorFEMCore_closure :
-    (mirrorFEMCore hT hB).Data.topologicalClosure = tsdQℝ := by
+/-- The TSD data of `D(L²)` are dense in the TSD constraint (`D(L²) ∩ K` is dense in the reducing
+`K`). -/
+theorem topologicalClosure_tsdQℝ_inf_domainSq :
+    (tsdQℝ ⊓ complexQℝ.wave.domainSq).topologicalClosure = tsdQℝ := by
   refine le_antisymm ((tsdQℝ ⊓ complexQℝ.wave.domainSq).topologicalClosure_minimal inf_le_left
     isClosed_totalSub) fun k hk => ?_
   have h := complexQℝ.isSkewAdjoint_wave.subset_closure_domainSq_inf isReducing_tsdQℝ hk
-  rw [← SetLike.mem_coe, mirrorFEMCore_data, Submodule.topologicalClosure_coe, inf_comm]
+  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, inf_comm]
   exact h
+
+/-- **The closure of the core is the TSD constraint.** -/
+theorem mirrorFEMCore_closure :
+    (mirrorFEMCore hT hB).Data.topologicalClosure = tsdQℝ :=
+  topologicalClosure_tsdQℝ_inf_domainSq
 
 set_option maxHeartbeats 4000000 in
 /-- **The discrete solutions of `mirrorFEMApprox` are the scheme (6.5)**: from every discrete

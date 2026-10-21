@@ -11,7 +11,7 @@ the thesis' boundary conditions (`Feec.Instances.EinsteinBianchiFEMCube`), this 
 **elliptic core** `standardCubeEllCore`: data `D(L²)` (dense), with the elliptic projection (6.4)
 of the classical solution `Feec.EinsteinBianchi.BoundedConvergence.exactOfStrong` of the orbit as
 comparison trajectory (`Feec.Instances.EinsteinBianchi.FEM.ellTraj`). Its consistency defect
-`Πₕ' - Lₕ Πₕ` is in general not zero; it is bounded by the projection errors of the state and of
+`Πₕ' - Lₕ Πₕ` (not shown to be nonzero) is bounded by the projection errors of the state and of
 its time derivative (`norm_ellDefect_le`). The two hypotheses of the core are discharged by the
 Strang bound of (6.4) (`norm_sub_ellTraj_le`, with `Feec.BGG.Stability` of the cube data,
 `bggStability_curlPotentialConst`) and by the convergence of the smoothed projections
@@ -348,7 +348,7 @@ theorem eventually_cErr_le {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDoma
 
 set_option maxHeartbeats 4000000 in
 /-- **The elliptic core of the thesis' scheme**: `D(L²)` with the elliptic projection (6.4) of the
-classical solution of the orbit as comparison trajectory (nonzero consistency defect in general);
+classical solution of the orbit as comparison trajectory (bounded consistency defect);
 no convergence theorem of the scheme is used. -/
 def standardCubeEllCore : (standardCubeApprox hT hB).Core where
   Data := matrixComplex.wave.domainSq

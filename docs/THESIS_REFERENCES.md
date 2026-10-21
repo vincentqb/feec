@@ -4,7 +4,7 @@ For each entry [1]–[28] of the thesis bibliography: its key in `docs/reference
 thesis cites it, and where `Feec/` cites it (module docstrings, and the declarations whose
 docstrings carry the citation). Citations follow the convention of `docs/REFACTOR_PLAN.md`
 (`[Key], loc`, with a `## References` entry in every citing module) and are checked by
-`scripts/CheckCitations.sh`. Thesis locations use the numbering of
+`lake exe feec-citations`. Thesis locations use the numbering of
 `[QuennevilleBelair2015]`; page numbers inside the references are the thesis' own and were not
 checked against the sources.
 

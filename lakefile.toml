@@ -15,3 +15,62 @@ rev = "6e2a148e19b0c1dbde6f99cdcfa73fe1f4094ed4"
 
 [[lean_lib]]
 name = "Feec"
+
+# Gate checks, in Lean (scripts/FeecCheck): `lake exe feec-gate` runs them all.
+[[lean_lib]]
+name = "FeecCheck"
+srcDir = "scripts"
+
+[[lean_exe]]
+name = "feec-gate"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Gate"
+supportInterpreter = true
+needs = ["Feec"]
+
+[[lean_exe]]
+name = "feec-citations"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Citations"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "feec-layering"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Layering"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "feec-axioms"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Axioms"
+supportInterpreter = true
+needs = ["Feec"]
+
+[[lean_exe]]
+name = "feec-naming"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Naming"
+supportInterpreter = true
+needs = ["Feec"]
+
+[[lean_exe]]
+name = "feec-thesismap"
+srcDir = "scripts"
+root = "FeecCheck.Exe.ThesisMap"
+supportInterpreter = true
+needs = ["Feec"]
+
+[[lean_exe]]
+name = "feec-mapcheck"
+srcDir = "scripts"
+root = "FeecCheck.Exe.MapCheck"
+supportInterpreter = true
+needs = ["Feec"]
+
+[[lean_exe]]
+name = "feec-snapshot"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Snapshot"
+supportInterpreter = true
+needs = ["Feec"]

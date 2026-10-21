@@ -31,15 +31,31 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > * Each module docstring declares its bibliography on a line of its own (user decision,
 >   2026-10-21), `Bibliography: [references.bib](<relative path>/docs/references.bib)`, so that
 >   `leantex` (and doc-gen4) compile the references from the bib file; checked by
->   `scripts/CheckCitations.sh`.
+>   `lake exe feec-citations`.
 > * Each module docstring ends with `## References` listing
 >   `* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]`
 >   (author(s), italic title, then `[Key]`).
 > * Thesis traceability uses the same convention (`[QuennevilleBelair2015], Prop. 4.17, corrected`);
->   the separate `Thesis:` tag is retired, and `scripts/ThesisMap.sh` reads these citations.
+>   the separate `Thesis:` tag is retired, and `lake exe feec-thesismap` reads these citations.
 > * Wave W6 rewrites existing citations to this form (mechanically where possible) and adds
->   `scripts/CheckCitations.sh` (every `[Key]` in `Feec/` exists in `references.bib`; no
+>   a citation check, now `lake exe feec-citations` (every `[Key]` in `Feec/` exists in `references.bib`; no
 >   `[Key, …]` forms; every module has a `## References` section) to the verification gate.
+
+> **Status (2026-10-21): the gate is in Lean.** The checks of §5 run as `lake exe feec-gate`
+> (library `FeecCheck`, `scripts/FeecCheck/`; Lean only, no shell or Python): `feec-citations`
+> (citation convention), `feec-layering` (import order of §1), `feec-axioms` (axiom audit),
+> `feec-naming` (banned identifiers), `feec-thesismap` (`--check`: `docs/THESIS_MAP.md` up to
+> date; without it, regenerate) and `feec-mapcheck --strict` (migration coverage), plus
+> `feec-snapshot OUT` (the one-time declaration snapshot). They replace `scripts/{AxiomAudit.lean,
+> MapCheck.sh, CheckCitations.sh, ThesisMap.sh, DocDump.lean, Snapshot.sh, Snapshot.lean}`, whose
+> results they reproduce on the tree of 2026-10-21 (identical `THESIS_MAP.md` up to its header, an
+> identical snapshot, the same errors on planted violations). The naming check is new as a
+> program: it found three thesis-numbered names that the old greps (`prop_[0-9]`) missed,
+> `exists_counterexample_prop59_two{,_bestApprox}` and `not_exists_prop59_two_bound`, now
+> `Feec.Models.Cube.WeakSymmetry.{exists_interpolationError_ge, exists_bestApproxError_ge,
+> not_exists_interpolationError_bound}`; of the process suffixes of §1 it does not check `_res`
+> and `_max`, which are ordinary vocabulary (`Feec.Stone.res`, `mul_le_max_one`). The status notes
+> below name the old scripts as they were at the time.
 
 > **Status (2026-10-17): waves W0–W6 are done.** `Feec/Legacy` (57 modules) and
 > `Feec/Models/Cube/Bridge.lean` are deleted; the cube models are built on `Feec.Models.Torus`,
@@ -226,10 +242,11 @@ Feec/
 ├── Numerics/CrankNicolsonTable.lean  -- plane-wave check and the step-count table (descriptive names)
 └── Instances/{Maxwell,MaxwellComplex,EuclideanBand,EinsteinBianchi*}.lean  -- Feec.Instances: models as instances of approxFEEC;
                                       -- top layer, imported only by Feec.lean, adds no names to lower namespaces
-docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/{Snapshot,AxiomAudit,MapCheck}.lean
+docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/FeecCheck/*.lean (the gate, `lake exe feec-gate`)
 ```
 
-**Import rules.** Lower layers never import higher ones; a CI grep enforces this. The order is:
+**Import rules.** Lower layers never import higher ones; `lake exe feec-layering` enforces this
+(the rank table is `FeecCheck.Layering.layers`). The order is:
 - `ForMathlib`
 - `Operator` → `Semigroup` → `Evolution`
 - `Variational` → `HilbertComplex`
@@ -516,10 +533,13 @@ Each task owns the files listed and nothing else. Tasks inside a wave are indepe
 
 **Verification gate, run after every wave:**
 1. `lake build` is clean from scratch, with no `sorry` and no new warnings.
-2. `AxiomAudit` reports only `propext`, `Classical.choice` and `Quot.sound` for every `Feec.*` declaration.
+2. `AxiomAudit` (`lake exe feec-axioms`) reports only `propext`, `Classical.choice` and `Quot.sound` for every `Feec.*` declaration.
 3. **Strangler shim.** While an old module still exists, each of its main theorems is re-proved *with its old statement* as a thin theorem calling the new result. This is the semantic proof that the new theorem subsumes the old one. Shims are deleted only in W6.
-4. **Coverage.** A script checks that every row of `old_theorems.tsv` appears in `map.tsv`. Theorems that are thesis-numbered or named in `OVERVIEW.md` (the "main" set, roughly 400) may not be `deleted-helper`. Every `new` name and every `THESIS_MAP.md` entry goes into a generated `scripts/MapCheck.lean` as `#check @Feec.X`, which must elaborate. Every thesis result cited as `[QuennevilleBelair2015], Prop 4.17` must also appear in `THESIS_MAP.md` (the `Thesis:` tags of the original plan are retired).
-5. A CI grep finds no `prop_[0-9]`, `thm_[0-9]`, `Ch[0-9]`, `_unconditional`, `Repair` or `Thesis` identifiers under `Feec/`, and no import from `Models/` in lower layers.
+4. **Coverage.** `lake exe feec-mapcheck --strict` checks that every row of `old_theorems.tsv` appears in `map.tsv`. Theorems that are thesis-numbered or named in `OVERVIEW.md` (the "main" set, roughly 400) may not be `deleted-helper`. Every `new` name and every `THESIS_MAP.md` entry must be a declaration of `Feec` (originally a generated `#check @Feec.X` file). Every thesis result cited as `[QuennevilleBelair2015], Prop 4.17` must also appear in `THESIS_MAP.md` (the `Thesis:` tags of the original plan are retired).
+5. `lake exe feec-naming` finds no `prop_[0-9]`, `thm_[0-9]`, `prop59`-style, `Ch[0-9]`, `_unconditional`, `Repair` or `Thesis` identifiers (nor the other bans of §1, see `FeecCheck.Naming.rules`) in the declaration and module names of `Feec`, and `lake exe feec-layering` finds no import from `Models/` in lower layers.
+6. `docs/THESIS_MAP.md` is up to date (`lake exe feec-thesismap --check`).
+
+Items 2 and 4–6 and the citation check run as one command, `lake exe feec-gate` (one import of `Feec`; nonzero exit on any failure, each violation printed as `path:line: message`).
 
 ## 6. FEEC-book coverage newly in reach, ranked by value/cost
 

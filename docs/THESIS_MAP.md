@@ -5,8 +5,9 @@ General Relativity* (PhD thesis, Minnesota, 2015) [QuennevilleBelair2015] to the
 declarations of `Feec`. Lean names carry no thesis numbers after the refactor
 (`docs/REFACTOR_PLAN.md` §1); this file is the only place where they meet.
 
-**Generated** by `scripts/ThesisMap.sh` from declaration names and docstrings; do not edit by
-hand, rerun after renaming. A declaration is listed under a thesis id when
+**Generated** by `lake exe feec-thesismap` from declaration names and docstrings; do not edit
+by hand, rerun after renaming (`lake exe feec-gate` fails while this file is out of date). A
+declaration is listed under a thesis id when
 
 - **named**: it is a current home (`docs/migration/map.tsv`) of a pre-refactor declaration whose
   name encoded the id (`prop_4_17`, `prop417_density_gap`, `ch6_corrected`, `Sol61`); those old
@@ -16,8 +17,8 @@ hand, rerun after renaming. A declaration is listed under a thesis id when
 - **modules**: the module cites the id anywhere in its source (module docstring,
   `## References`, comments).
 
-Every backticked name in a list item below is checked by `scripts/MapCheck.sh`
-(`#check @name` must elaborate).
+Every backticked name in a list item below is checked by `lake exe feec-mapcheck`
+(the declaration must exist).
 
 Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1013 distinct declarations (133 current homes of thesis-numbered old names).
 
@@ -267,7 +268,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 
 ### Prop 5.9
 
-- cited: `Feec.BGG.Discrete.RegularPotential`, `Feec.BGG.Discrete.consistency_S0_of_approx`, `Feec.BGG.Discrete.consistency_S1_of_regularPotential`, `Feec.BGG.Discrete.error_estimate_of_regularPotential`, `Feec.BGG.Discrete.error_estimate_of_weakConsistency`, `Feec.BGG.Discrete.strang_rate_of_regularPotential`, `Feec.BGG.Discrete.weakConsistency_of_regularPotential`, `Feec.BGG.HarmonicStability.weakConsistency_of_regularPotential_of_bound`, `Feec.FiniteElement.exists_formL2Sq_le_formGradL2Sq`, `Feec.FiniteElement.exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`, `Feec.FiniteElement.exists_local_kernel_bound`, `Feec.Models.Cube.MirrorWeakSymmetry.mirrorFEM_happ0`, `Feec.Models.Cube.WeakSymmetry.cubeFEM_ellipticProjection_rate_trS1`, `Feec.Models.Cube.WeakSymmetry.cubeFEM_happ0`, `Feec.Models.Cube.WeakSymmetry.exists_counterexample_prop59_two`, `Feec.Models.Cube.WeakSymmetry.exists_counterexample_prop59_two_bestApprox`, `Feec.Models.Cube.WeakSymmetry.norm_sub_glue_bggS0h_le`, `Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`, `Feec.Models.Cube.WeakSymmetry.not_exists_prop59_two_bound`, `Feec.Models.Cube.WeakSymmetry.vN_mem_polySpace`
+- cited: `Feec.BGG.Discrete.RegularPotential`, `Feec.BGG.Discrete.consistency_S0_of_approx`, `Feec.BGG.Discrete.consistency_S1_of_regularPotential`, `Feec.BGG.Discrete.error_estimate_of_regularPotential`, `Feec.BGG.Discrete.error_estimate_of_weakConsistency`, `Feec.BGG.Discrete.strang_rate_of_regularPotential`, `Feec.BGG.Discrete.weakConsistency_of_regularPotential`, `Feec.BGG.HarmonicStability.weakConsistency_of_regularPotential_of_bound`, `Feec.FiniteElement.exists_formL2Sq_le_formGradL2Sq`, `Feec.FiniteElement.exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`, `Feec.FiniteElement.exists_local_kernel_bound`, `Feec.Models.Cube.MirrorWeakSymmetry.mirrorFEM_happ0`, `Feec.Models.Cube.WeakSymmetry.cubeFEM_ellipticProjection_rate_trS1`, `Feec.Models.Cube.WeakSymmetry.cubeFEM_happ0`, `Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge`, `Feec.Models.Cube.WeakSymmetry.exists_interpolationError_ge`, `Feec.Models.Cube.WeakSymmetry.norm_sub_glue_bggS0h_le`, `Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`, `Feec.Models.Cube.WeakSymmetry.not_exists_interpolationError_bound`, `Feec.Models.Cube.WeakSymmetry.vN_mem_polySpace`
 - modules: Feec.FiniteElement.PolyInterpolation, Feec.FiniteElement.PolyInverseEstimate, Feec.HilbertComplex.Approximation.ApproxFEEC, Feec.HilbertComplex.BGG.EllipticProjection, Feec.HilbertComplex.BGG.Harmonic, Feec.HilbertComplex.BGG.WeakConsistency, Feec.Models.Cube.MirrorWeakSymmetryConvergence, Feec.Models.Cube.WeakSymmetryConvergence, Feec.Models.Cube.WeakSymmetryEstimates, Feec.Models.Cube.WeakSymmetryFEM, Feec.Models.Cube.WeakSymmetryTangentialRate, Feec.Models.Cube.WeakSymmetryWave, Feec.Physics.EinsteinBianchi.StaticFEM
 
 ### Prop 6.1

@@ -44,7 +44,7 @@ nonzero for large `N`.
   (the normalization of the anticommutation `d S = −S d`).
 * Prop 5.9(1): proved (`norm_sub_glue_bggS0h_le`), and transferred to `π¹`
   (`cubeFEM_happ0`).
-* Prop 5.9(2): **refuted** (`exists_counterexample_prop59_two`, also for every projection onto
+* Prop 5.9(2): **refuted** (`exists_interpolationError_ge`, also for every projection onto
   the Raviart–Thomas spaces, `not_exists_bestApprox_bound`). Thm 5.5 therefore applies with the
   weak consistency `|⟪S¹u, (S₁ − S₁,ₕ)v⟫| ≤ C h ‖v‖_V` in place of the false hypothesis
   (`Feec.BGG.Discrete.error_estimate_of_weakConsistency`), which follows from regular `H̊¹`

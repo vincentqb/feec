@@ -21,11 +21,11 @@ independent of `N`:
   (the kernel lemma `Feec.FiniteElement.exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`).
 * **Strong approximation** (`norm_sub_glue_globalInterp_coordWedge_le`):
   `‖(I − Π) S u‖ ≤ C h sup ‖Du‖` for vectors `u` of `C¹` `k`-forms (`S⁰` and `S¹`).
-* **Prop 5.9(2) is false** (`exists_counterexample_prop59_two`, `not_exists_prop59_two_bound`):
+* **Prop 5.9(2) is false** (`exists_interpolationError_ge`, `not_exists_interpolationError_bound`):
   there is `c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`
   (vanishing boundary DOFs), `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}` for the canonical
   interpolant `Π²`; hence no bound `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds. **Projection
-  independence** (`exists_counterexample_prop59_two_bestApprox`, `not_exists_bestApprox_bound`):
+  independence** (`exists_bestApproxError_ge`, `not_exists_bestApprox_bound`):
   the same `v_N` satisfies `‖S¹ v_N − w‖ ≥ c' ‖v_N‖_{H(curl)}` for *every* piecewise `P₁⁻Λ²`
   field `w`, because `δ₀ = dist_{L²(K₁)}(Ẑ, P₁⁻Λ²) > 0` (`refDist_pos`); so the hypothesis
   `happ1` of `Feec.BGG.Discrete.error_estimate` fails for every projection `P²` onto the
@@ -1949,7 +1949,7 @@ theorem le_norm_sq_wsL2_sub_glue_vN (N : ℕ) :
 `‖(I − Π²) S¹ v‖_{L²(Q)} ≥ c ‖v‖_{H(curl)}`, where `S¹ v` is the `L²` field `wsL2 1`,
 `Π² S¹ v = S₁,ₕ v` and `‖v‖²_{H(curl)} = ‖v‖² + ‖curl v‖²` (row-wise). The field is
 `v_N = (0, 0, grad Π̃⁰ f_N)` (`vN`); `curl v_N = 0` (`dPiecewise_vN`). -/
-theorem exists_counterexample_prop59_two : ∃ c, 0 < c ∧ ∀ N : ℕ,
+theorem exists_interpolationError_ge : ∃ c, 0 < c ∧ ∀ N : ℕ,
     ∃ v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1,
       (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
         (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 (N + 2)) 1) ∧
@@ -2021,7 +2021,7 @@ theorem exists_counterexample_prop59_two : ∃ c, 0 < c ∧ ∀ N : ℕ,
 estimate `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` of [QuennevilleBelair2015], Prop 5.9(2) fails for
 every `C`. For an arbitrary projection onto the Raviart–Thomas space (the hypothesis `happ1` of
 `Feec.BGG.Discrete.error_estimate`) see `not_exists_bestApprox_bound`. -/
-theorem not_exists_prop59_two_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
+theorem not_exists_interpolationError_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
     (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1) ∈
       (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 N) 1) →
@@ -2038,7 +2038,7 @@ theorem not_exists_prop59_two_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
           (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 1
             (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1))‖ ^ 2) := by
   rintro ⟨C, hC⟩
-  obtain ⟨c, hc, hex⟩ := exists_counterexample_prop59_two
+  obtain ⟨c, hc, hex⟩ := exists_interpolationError_ge
   obtain ⟨N, hN'⟩ := exists_nat_gt (C / c)
   obtain ⟨v, hv0, hpos, hlow⟩ := hex N
   have hup := hC (N + 2) v hv0
@@ -2116,7 +2116,7 @@ DOFs), which is also in `P₁Λ¹ ⊗ ℝ³` (piecewise linear), `v ≠ 0`, with
 `inf_{w_h ∈ P₁⁻Λ²_h} ‖S¹ v − w_h‖` is not `O(h) ‖v‖_{H(curl)}`: no map `P²` with values in the
 Raviart–Thomas space (canonical, smoothed, or `L²` projection) satisfies the bound
 `‖(I − P²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` on `P₂⁻Λ̊¹ ⊗ ℝ³`. The field is `v_N` (`vN`). -/
-theorem exists_counterexample_prop59_two_bestApprox : ∃ c, 0 < c ∧ ∀ N : ℕ,
+theorem exists_bestApproxError_ge : ∃ c, 0 < c ∧ ∀ N : ℕ,
     ∃ v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1,
       (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
         (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 (N + 2)) 1) ∧
@@ -2197,7 +2197,7 @@ theorem not_exists_bestApprox_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
           (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 1
             (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1))‖ ^ 2) := by
   rintro ⟨C, hC⟩
-  obtain ⟨c, hc, hex⟩ := exists_counterexample_prop59_two_bestApprox
+  obtain ⟨c, hc, hex⟩ := exists_bestApproxError_ge
   obtain ⟨N, hN'⟩ := exists_nat_gt (C / c)
   obtain ⟨v, hv0, -, hpos, hlow⟩ := hex N
   obtain ⟨w, hup⟩ := hC (N + 2) v hv0

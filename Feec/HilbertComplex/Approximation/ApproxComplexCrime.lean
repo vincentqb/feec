@@ -84,8 +84,8 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   trajectory with approximation, inner-product defect `‖(1 - Jₕ) w‖` and residual `O(m(h)ᵅ)` give
   an `ApproxFEEC.RateClass` with `C = (1 + 8 C_ι) Cₐ`, `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`,
   hence `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
-  `Family.rateData_of_split` and `add_rpow_le_rpow_min` give the data at order `min(α, β, γ)`
-  from graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect
+  `Family.rateData_of_split` and `add_rpow_le_rpow_min` can be combined to give the data at order
+  `min(α, β, γ)` from graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect
   `O(m^γ)`; `galerkinRateClass` for Galerkin cores; `ConstrainedFEEC.RateClass.toCrimeRate`: the
   conforming rate classes give rate classes of `ofComplex` (factor `C + C_ι C' t`).
 
@@ -1296,9 +1296,10 @@ open ApproxFEEC in
 exact trajectory, for `y = e^{tL} x` and `y = e^{tL} L x`, `t ∈ [0, T]`, there are approximants
 `w` with `‖y - iₕ w‖`, `‖(1 - Jₕ) w‖` and the residual (dual discrete graph norm) all
 `≤ Cₐ m(h)ᵅ ‖x‖_c`, then the comparison of `ofComplexCrimeCore` restricted to `Dc` is a rate class
-with `C = (1 + 8 C_ι) Cₐ` and `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. With
-`rateData_of_split` and `add_rpow_le_rpow_min` the data come from graph-norm best approximation
-`O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)` at order `min(α, β, γ)`. -/
+with `C = (1 + 8 C_ι) Cₐ` and `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. The data can be
+assembled with `rateData_of_split` and `add_rpow_le_rpow_min` from graph-norm best approximation
+`O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`, at order `min(α, β, γ)` (no
+lemma packages this step). -/
 def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (hrate : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T, ∀ y ∈ ({H.waveGroup.S t x,

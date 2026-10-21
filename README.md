@@ -73,13 +73,16 @@ The "Verdict" column says which branch of item 4 holds. Lean names are relative 
 | linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_torus_approxFEEC`, `_sobolev` |
 | linearized Einstein–Bianchi | `ℝ³`, frequencies `\|ξ\| ≤ N` | TSD | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ`, exponent sharp | B `einsteinBianchi_euclidean_band` |
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |
-| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `O(h)` for `D(L³)`, `O(hˢ)` for `H^{2+s}`, `s ≤ 1`, linear in `t` | EB `FEM.einsteinBianchi_mirrorFEM_ofComplexCrime`, `_rate`, `_rate_sobolev`; `mirrorFEMApproxVerdict` |
-| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `FEM.einsteinBianchi_standardCube_ofComplexCrime`; `standardCubeApproxVerdict` |
+| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `(4K + 8Kt) h` for `D(L³)`, `(6K + 12Kt) hˢ` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMApproxVerdict`; `FEM.einsteinBianchi_mirrorFEM_ofComplexCrime`, `_rate`, `_rate_sobolev` |
+| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `standardCubeApproxVerdict`; `FEM.einsteinBianchi_standardCube_ofComplexCrime` |
 
 Scheme (6.5) uses the elements of Tables 5.1/6.1 and couples the two rows of the BGG construction
-by `S₀,ₕ = π¹S⁰ ≠ S⁰`, so its discrete complex is not a subcomplex. Its generator is `𝐝ₕ − 𝐝ₕ*` for
-a discrete differential `𝐝ₕ`, so it is formalized through `ofComplexCrime`; its comparison trajectory is
-the elliptic projection (6.4) of the exact solution, a Galerkin projection. On `ℝ³` and `ℝᵈ` the Sobolev classes are
+by `S₀,ₕ = π¹S⁰`, in general different from `S⁰`, so its discrete complex is not a subcomplex. Its
+verdicts are instances of `approxFEEC`, with the elliptic projection (6.4) of the exact solution as
+comparison trajectory. Its generator is `𝐝ₕ − 𝐝ₕ*` for a discrete differential `𝐝ₕ`, so it is also
+formalized through `ofComplexCrime` (via `ofGalerkinCore`): this re-derives the same verdicts from the
+(6.4) cores and adds an exactly preserved discrete Gauss constraint; the cochain defect of (6.5) is not
+computed. On `ℝ³` and `ℝᵈ` the Sobolev classes are
 defined on the Fourier side, and the truncation is a semi-discretization in frequency.
 `einsteinBianchi_summary` bundles the Einstein–Bianchi rows.
 

@@ -143,7 +143,7 @@ isometric, not a cochain map, `⟪κₙ(0, 1, 0), (1, 0, 0)⟫ = cₙ − 1 ≠ 
 README names (and the older names such as `Feec.Instances.Maxwell.cubePMC_rate` and
 `Feec.Instances.EinsteinBianchi.einsteinBianchi_torus_constrainedFEEC`) depend on it. The
 scheme (6.5) (`Feec.Instances.EinsteinBianchiFEM`) is not a discretization by subcomplexes
-(`S₀,ₕ = π¹S⁰ ≠ S⁰`) and enters through its own reading maps, with the elliptic projection (6.4)
+(`S₀,ₕ = π¹S⁰`, in general different from `S⁰`) and enters through its own reading maps, with the elliptic projection (6.4)
 of the exact solution as comparison (`Feec.Instances.EinsteinBianchi.FEM.mirrorEllCore`,
 `Feec.Instances.EinsteinBianchi.FEM.standardCubeEllCore`), without the model convergence theorems
 of (6.5). The model verdict of the mirror scheme is a corollary

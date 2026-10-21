@@ -122,6 +122,8 @@ public import Feec.Geometry.Bivector
 public import Feec.Geometry.Connection
 public import Feec.Geometry.Hodge2
 public import Feec.Geometry.WeylDecomposition
+public import Feec.HilbertComplex.Approximation.ApproxComplex
+public import Feec.HilbertComplex.Approximation.ApproxComplexWitness
 public import Feec.HilbertComplex.Approximation.ApproxConforming
 public import Feec.HilbertComplex.Approximation.ApproxFEEC
 public import Feec.HilbertComplex.Approximation.ApproxFEECWitness

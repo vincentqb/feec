@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.ApproxConforming
+public import Feec.HilbertComplex.Approximation.ApproxComplex
 public import Feec.Physics.Maxwell.CubeFEM
 public import Feec.Physics.Maxwell.Constraints
 public import Feec.Models.Torus.DeRhamGalerkin
@@ -54,6 +55,15 @@ of the approximating theorem gives the conforming factor `(1 + C_P)(1 + 2t)` in 
 `(1 + t)²` of `constrainedFEEC_rate` (`approx_rate`, `approx_residual_rate`,
 `approx_rate_regRate`, `approx_residual_rate_regRate`, and `cubePMC_approx_rate`, …,
 `starPEC_approx_residual_rate`).
+
+**Through the discrete complex.** Every Maxwell discretization is also an instance of the
+complex-level front end `Feec.HilbertComplex.ApproxFEEC.ofComplex`
+(`Feec.HilbertComplex.ConstrainedFEEC.toComplex`: the Whitney subcomplexes as discrete Hilbert
+complexes, zero inner-product defect, the same discrete solutions). There the **discrete Gauss
+laws** `discreteGauss F Y h = {0} × N(𝐝ₕ₀*) × (Vₕ² ∩ Y)` (adjoint in `Vₕ`: the discrete
+divergence) are a reducing subcomplex of `Vₕ`, preserved exactly by the discrete solutions, with
+the magnetic component read in `W` in `Y` (`discreteGauss_propagates`); for the cube,
+`cubePMC_ofComplex` (`Y` the magnetic Gauss law `dB = 0`).
 
 The evolution statements above (`gauss_propagates`, `converges`, `rate`, `residual`,
 `residual_rate`, `residual_not_isReducing*`, and the per-instance `*_converges`, `*_residual`,
@@ -2028,5 +2038,78 @@ theorem starPEC_approx_residual_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   approx_residual_rate_regRate _ _ hx hxK N ht
 
 end StarShapedApprox
+
+/-! ### Through the discrete complex: discrete Gauss laws -/
+
+section DiscreteGauss
+
+variable {𝕜 : Type*} [RCLike 𝕜] {W : Fin 3 → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  {H : HilbertComplex 𝕜 ComplexShape.fin3 W} {κ : Type*} (F : ConstrainedFEEC H κ)
+  (Y : Submodule 𝕜 (W 2))
+
+/-- The **discrete magnetic constraint** `Vₕ² ∩ Y`. -/
+abbrev discreteMagnetic (h : κ) : Submodule 𝕜 ((F.V h).V 2) := Y.comap ((F.V h).V 2).subtype
+
+instance (h : κ) : (discreteMagnetic F Y h).HasOrthogonalProjection :=
+  haveI := FiniteDimensional.complete 𝕜 (discreteMagnetic F Y h); .ofCompleteSpace _
+
+/-- The **discrete Gauss laws** `{0} × N(𝐝ₕ₀*) × (Vₕ² ∩ Y)` of the discrete complex `Vₕ` (the
+adjoint is that of `Vₕ`: the discrete divergence). -/
+abbrev discreteGauss (h : κ) : Submodule 𝕜 (PiLp 2 fun i => (F.V h).V i) :=
+  gauss (F.V h).toHilbertComplex (discreteMagnetic F Y h)
+
+/-- **The discrete Gauss laws are preserved exactly** by the discrete solutions of `ofComplex`
+(conforming case, `ConstrainedFEEC.toComplex`), for every `Y ⊇ R(d₁)`: they form a reducing
+subcomplex of the discrete complex `Vₕ`; in `W`, the magnetic component stays in `Y`. The discrete
+solutions are those of the scheme (4.10) (`ConstrainedFEEC.toComplex_sol`).
+[QuennevilleBelair2015], Prop. 4.16 -/
+theorem discreteGauss_propagates (hY : ∀ x : (H.d 1 2).domain, H.d 1 2 x ∈ Y) (h : κ)
+    {v : PiLp 2 fun i => (F.V h).V i} (hv : v ∈ discreteGauss F Y h) (t : ℝ) :
+    (((ApproxFEEC.ofComplex F.toComplex).group h).S t v : PiLp 2 fun i => (F.V h).V i) ∈
+        discreteGauss F Y h ∧
+      (ApproxFEEC.ofComplex F.toComplex).sol h v t 2 ∈ Y ∧
+      (ApproxFEEC.ofComplex F.toComplex).sol h v t = F.toApprox.sol h (F.toXh h v) t := by
+  have hYh : ∀ x : (((F.V h).toHilbertComplex).d 1 2).domain,
+      ((F.V h).toHilbertComplex).d 1 2 x ∈ discreteMagnetic F Y h := fun x =>
+    hY ⟨(x : (F.V h).V 1), (F.V h).le_domain 1 2 (x : (F.V h).V 1).2⟩
+  have hmem' := (reducingSubcomplex_gaussFam _ _ hYh).waveGroup_mem t hv
+  have e := ApproxFEEC.ofComplex_group F.toComplex h t v
+  refine ⟨(congrArg (fun x : PiLp 2 (fun i => (F.V h).V i) => x ∈ discreteGauss F Y h) e).mpr
+    hmem', ?_, F.toComplex_sol h v t⟩
+  exact (congrArg (fun x : PiLp 2 W => x 2 ∈ Y) (ApproxFEEC.ofComplex_sol F.toComplex h v t)).mpr
+    ((mem_gauss _ _).1 hmem').2.2
+
+end DiscreteGauss
+
+section CubeComplex
+
+open Models.Cube Feec.Domain Feec.ExteriorFibre
+
+variable {n : ℕ} [NeZero n] {a : ℤ}
+
+/-- **`cubePMC` through the discrete complex** (`ApproxFEEC.ofComplex` of
+`ConstrainedFEEC.toComplex`): the approximating FEEC theorem with the Whitney complexes as
+discrete Hilbert complexes (zero inner-product defect), with exactly preserved discrete Gauss
+laws `{0} × N(𝐝ₕ₀*) × (Vₕ² ∩ N(d))` whose magnetic component is read in `W` as `dB = 0`; the
+discrete solutions are those of `cubePMC`. -/
+theorem cubePMC_ofComplex :
+    (ApproxFEEC.ofComplex (cubePMC n a).toComplex).Verdict
+      (ApproxFEEC.ofComplexCore (cubePMC n a).toComplex) ∧
+    (∀ N, (cubePMC n a).toFamily.J N = 1) ∧
+    (∀ N (v : PiLp 2 fun i => ((cubePMC n a).V N).V i),
+      v ∈ discreteGauss (cubePMC n a) (magnetic (FEM.complex n) a) N → ∀ t,
+      (((ApproxFEEC.ofComplex (cubePMC n a).toComplex).group N).S t v :
+          PiLp 2 fun i => ((cubePMC n a).V N).V i) ∈
+          discreteGauss (cubePMC n a) (magnetic (FEM.complex n) a) N ∧
+        (ApproxFEEC.ofComplex (cubePMC n a).toComplex).sol N v t 2 ∈
+          magnetic (FEM.complex n) a ∧
+        (ApproxFEEC.ofComplex (cubePMC n a).toComplex).sol N v t =
+          (cubePMC n a).toApprox.sol N ((cubePMC n a).toXh N v) t) :=
+  ⟨(cubePMC n a).toComplex_verdict, (cubePMC n a).toFamily_J,
+    fun N _ hv t => discreteGauss_propagates _ _ (d_mem_magnetic (FEM.complex n) a) N hv t⟩
+
+end CubeComplex
 
 end Feec.Instances.Maxwell

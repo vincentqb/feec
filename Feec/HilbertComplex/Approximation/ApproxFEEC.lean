@@ -36,7 +36,11 @@ the orbit defect `pₕ' - Lₕ pₕ`.
 `ApproxFEEC` is a **semigroup-form** abstraction: it carries no discrete differential `𝐝ₕ` and
 no cochain condition on `ιₕ`; the complex structure of the discrete spaces is not a hypothesis.
 Consequently it cannot express discrete constraints such as `𝐝ₕ`-closedness being preserved; the
-constraint residual is measured in `W`, through `ιₕ`.
+constraint residual is measured in `W`, through `ιₕ`. The complex-level front end
+`ApproxFEEC.ofComplex` (`Feec.HilbertComplex.Approximation.ApproxComplex`) builds an `ApproxFEEC`
+from a family of discrete Hilbert complexes with cochain maps `iₕ` ([HolstStern2012], §3), derives
+its core from the inner-product defect and the graph-norm approximation property, and states the
+discrete constraints (`approxFEEC_ofComplex`).
 
 ## Main results
 

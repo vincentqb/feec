@@ -203,7 +203,8 @@ Feec/
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,MixedError,SemidiscreteWave}.lean
 │   │   Approximation/{ConstrainedFEEC,ApproxFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness}.lean
-│   │                                 -- constrainedFEEC; approxFEEC (variational crimes) and its conforming case
+│   │   Approximation/{ApproxComplex,ApproxComplexWitness}.lean
+│   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case, ofComplex
 │   └── BGG/{Basic,ToComplex,WeakSymmetry,Discrete}.lean
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces

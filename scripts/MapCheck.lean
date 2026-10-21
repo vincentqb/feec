@@ -3411,6 +3411,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Instances».«EuclideanBand».«maxwell_euclidean_band» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«cubePEC_gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«cubePMC_gauss_propagates» -- THESIS_MAP.md
+#check @«Feec».«Instances».«Maxwell».«discreteGauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«gaussFam» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«gauss_propagates_strong» -- THESIS_MAP.md
@@ -3554,6 +3555,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«HodgeWave».«IsWeakSolution» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«ConstrainedFEEC».«discrete» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«ConstrainedFEEC».«discreteWave» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«ApproxComplex».«Family».«ellProj» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«ConstrainedFEEC».«toXh_ellProj_waveLift» -- THESIS_MAP.md
 #check @«Feec».«Models».«Torus».«SymCurl».«adjoint_d» -- THESIS_MAP.md
 #check @«Feec».«Models».«Torus».«SymCurl».«dual_closedRangeAt» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«PolySeq».«bggS0h» -- THESIS_MAP.md

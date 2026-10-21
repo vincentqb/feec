@@ -76,7 +76,9 @@ instances of the approximating FEEC theorem `Feec.HilbertComplex.approxFEEC`, in
 every TSD datum and every convergent family of discrete initial values, the `O(h)` and `O(hˢ)`
 rates, residual `→ 0`) and `StandardCubeApproxVerdict` (convergence for every datum; from
 `(0, 0, (0, β))` the residuals tend to a positive limit); `einsteinBianchi_summary` there extends
-`einsteinBianchi_constrainedFEEC_summary` by these two verdicts. Their elliptic cores
+`einsteinBianchi_constrainedFEEC_summary` by these two verdicts, with the `ℝ³` row
+`EuclideanVerdict` replaced by the approximating FEEC verdict of the frequency truncation
+(`Feec.Instances.EuclideanBand.EuclideanEBVerdict`). Their elliptic cores
 (`mirrorEllCore`, `standardCubeEllCore`: the elliptic projection (6.4) as comparison trajectory,
 with a consistency defect) derive the convergence from the Strang bound of (6.4) alone, without
 the model convergence theorems; their orbit cores restate the model theorems. `MirrorFEMVerdict`

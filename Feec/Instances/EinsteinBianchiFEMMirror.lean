@@ -40,7 +40,7 @@ projections), not to the variant with the canonical interpolant `Π`.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §6.2 ((6.3), (6.4)), §6.3 ((6.5))
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3
+  Thm 3.9, Thm 3.10 (elliptic analogue)
 -/
 
 open scoped InnerProductSpace
@@ -124,7 +124,7 @@ def i0 : formIdx 3 0 := ⟨∅, by simp⟩
 
 theorem eq_i0 (s : formIdx 3 0) : s = i0 := Feec.Models.Cube.ParitySmoother.eq_idx₀ s
 
-instance : Subsingleton (formIdx 3 0) := ⟨fun a b => (eq_i0 a).trans (eq_i0 b).symm⟩
+scoped instance : Subsingleton (formIdx 3 0) := ⟨fun a b => (eq_i0 a).trans (eq_i0 b).symm⟩
 
 /-- The real part of a scalar field as a `0`-form on the cube. -/
 def re0 : RQ →L[ℝ] W0 :=
@@ -298,18 +298,18 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 /-- Degreewise scalar towers of the mirror state spaces (the real structure is the one of the
 real inner products). -/
-instance instIsScalarTowerSpaceQ : ∀ i, IsScalarTower ℝ ℂ (SpaceQ i)
+scoped instance instIsScalarTowerSpaceQ : ∀ i, IsScalarTower ℝ ℂ (SpaceQ i)
   | 0 => inferInstanceAs (IsScalarTower ℝ ℂ RQ)
   | 1 => inferInstanceAs (IsScalarTower ℝ ℂ MQ)
   | 2 => inferInstanceAs (IsScalarTower ℝ ℂ W2Q)
 
 /-- Shortcut instances for the finite element spaces (synthesis under binders is expensive). -/
-instance instIPS_TU0 : InnerProductSpace ℝ TU0 := inferInstance
-instance instIPS_TU1 : InnerProductSpace ℝ TU1 := inferInstance
-instance instIPS_W2 : InnerProductSpace ℝ W2 := inferInstance
-instance instIPS_BU0 : InnerProductSpace ℝ BU0 := inferInstance
-instance instIPS_BU1 : InnerProductSpace ℝ BU1 := inferInstance
-instance instIPS_WvW2 : InnerProductSpace ℝ (Wv W2) := inferInstance
+scoped instance instIPS_TU0 : InnerProductSpace ℝ TU0 := inferInstance
+scoped instance instIPS_TU1 : InnerProductSpace ℝ TU1 := inferInstance
+scoped instance instIPS_W2 : InnerProductSpace ℝ W2 := inferInstance
+scoped instance instIPS_BU0 : InnerProductSpace ℝ BU0 := inferInstance
+scoped instance instIPS_BU1 : InnerProductSpace ℝ BU1 := inferInstance
+scoped instance instIPS_WvW2 : InnerProductSpace ℝ (Wv W2) := inferInstance
 
 /-- The real continuous energy space `L²Λ⁰ × (L²Λ¹)³ × L²Λ² × (L²Λ²)³` of the mirror forms model. -/
 abbrev REnergy : Type := EState W0 (Wv W1) W2 (Wv W2)

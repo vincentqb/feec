@@ -9,7 +9,7 @@ For the approximating FEEC discretization `mirrorFEMApprox` of the mirror scheme
 (`Feec.Instances.EinsteinBianchiFEMMirror`):
 
 * **the core** `mirrorFEMCore`: the TSD data of `D(L²)`, with the orbit comparison
-  (`Feec.Instances.EinsteinBianchi.FEM.ApproxFEEC.orbitCore`); its approximation hypothesis is the
+  (`Feec.HilbertComplex.ApproxFEEC.orbitCore`); its approximation hypothesis is the
   model convergence theorem `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM`, applied to the
   real part `ξ₀` and to the imaginary part `-i ξ₀` of the datum (`mirrorFEM_hconv`); its closure
   is the whole TSD constraint (`mirrorFEMCore_closure`);

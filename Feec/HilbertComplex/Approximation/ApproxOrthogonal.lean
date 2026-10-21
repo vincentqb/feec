@@ -289,7 +289,8 @@ def ApproxFEEC.complexifyCmp (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] Pi
 
 theorem ApproxFEEC.complexifyCmp_p (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W') hJJ hJ
     hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb (x : PiLp 2 W') (h : κ')
-    (t : ℝ) : (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).p x h t =
+    (t : ℝ) :
+    (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).p x h t =
       WithLp.toLp 2 (a x h t, b x h t) := rfl
 
 /-- The defect of the complexified comparison is the pair of the real defects. -/

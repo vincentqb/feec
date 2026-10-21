@@ -99,14 +99,6 @@ theorem ellErr'_nonneg (N : ℕ) (D : TSDDatum) (T t : ℝ) : 0 ≤ ellErr' hT h
 theorem hg_mirror (T : ℝ) : ∀ t ∈ Ico 0 T, ∀ v, mirrorSrcFun 0 t v = 0 :=
   fun t _ v => mirrorSrcFun_zero_apply t v
 
-theorem Icc_sub_Ico {T t : ℝ} (ht : t ∈ Icc 0 T) : t ∈ Ico 0 (T + 1) :=
-  ⟨ht.1, by linarith [ht.2]⟩
-
-theorem Ico_sub_Ico {T t : ℝ} (ht : t ∈ Ico 0 T) : t ∈ Ico 0 (T + 1) :=
-  ⟨ht.1, by linarith [ht.2]⟩
-
-theorem Icc_sub_Icc_succ (T : ℝ) : Icc 0 T ⊆ Icc 0 (T + 1) :=
-  Icc_subset_Icc le_rfl (by linarith)
 
 set_option maxHeartbeats 1000000 in
 /-- **The consistency defect of one real part** is bounded by the projection errors. -/
@@ -116,7 +108,7 @@ theorem norm_mEll_defect_le (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc
       ellErr' hT hB N D T t + ellErr hT hB N D T t := by
   with_reducible_and_instances exact (norm_ellDefect_le (mirrorFEM hT hB N)
     (mirrorWave_dt0_injective hT hB N) (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))
-    (hg_mirror (T + 1)) (Icc_sub_Ico ht))
+    (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht))
 
 set_option maxHeartbeats 1000000 in
 /-- The four-term error of a discrete energy state against a TSD state is its energy error against
@@ -161,19 +153,19 @@ theorem continuousOn_mEll (N : ℕ) (D : TSDDatum) (T : ℝ) :
     ContinuousOn (mEll hT hB N D T) (Icc 0 T) := by
   with_reducible_and_instances exact
     ((continuousOn_ellTraj (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
-      (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))).mono (Icc_sub_Icc_succ T))
+      (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))).mono (Icc_subset_Icc_add_one T))
 
 theorem continuousOn_mEll' (N : ℕ) (D : TSDDatum) (T : ℝ) :
     ContinuousOn (mEll' hT hB N D T) (Icc 0 T) := by
   with_reducible_and_instances exact
     ((continuousOn_ellTraj' (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
-      (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))).mono (Icc_sub_Icc_succ T))
+      (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))).mono (Icc_subset_Icc_add_one T))
 
 theorem hasDerivWithinAt_mEll (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Ico 0 T) :
     HasDerivWithinAt (mEll hT hB N D T) (mEll' hT hB N D T t) (Ici t) t := by
   with_reducible_and_instances exact
     (hasDerivWithinAt_ellTraj (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
-      (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1)) (Ico_sub_Ico ht))
+      (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1)) (Ico_sub_Ico_add_one ht))
 
 open Classical in
 /-- The elliptic trajectory of the real part `ξ₀` of a datum (zero off the data). -/
@@ -318,13 +310,13 @@ theorem eventually_ellErr_le (D : TSDDatum) (T : ℝ) {ε : ℝ} (hε : 0 < ε) 
   refine ⟨?_, ?_⟩
   · have h := norm_sub_ellTraj_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      s (hg_mirror (T + 1)) (Icc_sub_Ico ht) (D.ell_S0_le_zero hT hB (T + 1) N t ht')
+      s (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht) (D.ell_S0_le_zero hT hB (T + 1) N t ht')
       (D.inner_M_S1_le_zero hT hB (T + 1) N t ht')
       (hdat _ (mirrorFEM_strangData_le_of_close hT hB N (h3 t ht') 0 0))
     with_reducible_and_instances exact h.trans hb
   · have h := norm_sub_ellTraj'_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      s (hg_mirror (T + 1)) (Icc_sub_Ico ht) (D.ell'_S0_le_zero hT hB (T + 1) N t ht')
+      s (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht) (D.ell'_S0_le_zero hT hB (T + 1) N t ht')
       (D.inner_M'_S1_le_zero hT hB (T + 1) N t ht')
       (hdat _ (mirrorFEM_strangData_le_of_close hT hB N (h4 t ht') 0 0))
     with_reducible_and_instances exact h.trans hb
@@ -404,13 +396,13 @@ theorem ellErr_le_sobolev (D : TSDDatum) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 
   refine ⟨?_, ?_⟩
   · have h := norm_sub_ellTraj_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      (D.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico ht)
+      (D.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht)
       (D.ell_S0_le_zero hT hB (T + 1) N t ht') (D.inner_M_S1_le_zero hT hB (T + 1) N t ht')
       (hd.1 t ht')
     with_reducible_and_instances exact h.trans_eq hb
   · have h := norm_sub_ellTraj'_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      (D.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico ht)
+      (D.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht)
       (D.ell'_S0_le_zero hT hB (T + 1) N t ht') (D.inner_M'_S1_le_zero hT hB (T + 1) N t ht')
       (hd.2 t ht')
     with_reducible_and_instances exact h.trans_eq hb

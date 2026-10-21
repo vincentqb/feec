@@ -6,7 +6,7 @@ public import Feec.Instances.EinsteinBianchiFEMCube
 # The core of the thesis' scheme (6.5) on the cube
 
 The core `standardCubeCore` of `standardCubeApprox` is `D(L²)` of the matrix model, with the
-orbit comparison (`Feec.Instances.EinsteinBianchi.FEM.ApproxFEEC.orbitCore`); its approximation
+orbit comparison (`Feec.HilbertComplex.ApproxFEEC.orbitCore`); its approximation
 hypothesis is the model convergence theorem `Feec.Models.Cube.WeakSymmetry.cubeWave_converges`,
 applied to the classical solution `Feec.EinsteinBianchi.BoundedConvergence.exactOfStrong` of the
 orbit read in the forms model (`standardCube_hconv`). The core is dense

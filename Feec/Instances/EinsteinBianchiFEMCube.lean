@@ -37,7 +37,7 @@ with the canonical interpolant `Π`.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Prop 4.17, §6.3 ((6.5), Table 6.1)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3
+  Thm 3.9, Thm 3.10 (elliptic analogue)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace
@@ -59,9 +59,9 @@ open Feec.HilbertComplex Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM
 abbrev CEnergy : Type := EState W0 (Wv W1) W2 (Wv W2)
 
 /-- Shortcut instances (synthesis is expensive). -/
-instance instIPS_W0c : InnerProductSpace ℝ W0 := inferInstance
-instance instIPS_WvW1c : InnerProductSpace ℝ (Wv W1) := inferInstance
-instance instIPS_CEnergy : InnerProductSpace ℝ CEnergy := inferInstance
+scoped instance instIPS_W0c : InnerProductSpace ℝ W0 := inferInstance
+scoped instance instIPS_WvW1c : InnerProductSpace ℝ (Wv W1) := inferInstance
+scoped instance instIPS_CEnergy : InnerProductSpace ℝ CEnergy := inferInstance
 
 /-! ### The forms model total space and energy vectors -/
 
@@ -141,12 +141,12 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 /-- Shortcut instances for the finite element spaces (synthesis under binders is expensive). -/
-instance instIPS_U0 : InnerProductSpace ℝ U0 := inferInstance
-instance instIPS_U1 : InnerProductSpace ℝ U1 := inferInstance
-instance instIPS_WvU0 : InnerProductSpace ℝ (Wv U0) := inferInstance
-instance instIPS_WvU1 : InnerProductSpace ℝ (Wv U1) := inferInstance
-instance instIPS_W2' : InnerProductSpace ℝ W2 := inferInstance
-instance instIPS_WvW2' : InnerProductSpace ℝ (Wv W2) := inferInstance
+scoped instance instIPS_U0 : InnerProductSpace ℝ U0 := inferInstance
+scoped instance instIPS_U1 : InnerProductSpace ℝ U1 := inferInstance
+scoped instance instIPS_WvU0 : InnerProductSpace ℝ (Wv U0) := inferInstance
+scoped instance instIPS_WvU1 : InnerProductSpace ℝ (Wv U1) := inferInstance
+scoped instance instIPS_W2' : InnerProductSpace ℝ W2 := inferInstance
+scoped instance instIPS_WvW2' : InnerProductSpace ℝ (Wv W2) := inferInstance
 
 /-- The hidden space of the thesis' scheme (6.5) at level `N`. -/
 abbrev cubeHidden (N : ℕ) := HiddenState (cubeWave hT hB N)

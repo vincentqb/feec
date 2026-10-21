@@ -45,6 +45,17 @@ namespace Feec.Instances.EinsteinBianchi.FEM
 
 open Feec.BGG Feec.BGG.Discrete
 
+/-! ### Horizons -/
+
+theorem Icc_sub_Ico_add_one {T t : ℝ} (ht : t ∈ Icc 0 T) : t ∈ Ico 0 (T + 1) :=
+  ⟨ht.1, by linarith [ht.2]⟩
+
+theorem Ico_sub_Ico_add_one {T t : ℝ} (ht : t ∈ Ico 0 T) : t ∈ Ico 0 (T + 1) :=
+  ⟨ht.1, by linarith [ht.2]⟩
+
+theorem Icc_subset_Icc_add_one (T : ℝ) : Icc 0 T ⊆ Icc 0 (T + 1) :=
+  Icc_subset_Icc le_rfl (by linarith)
+
 /-! ### The elliptic projection of a discrete segment and the generator -/
 
 section Segment
@@ -256,7 +267,8 @@ def ellTraj (s : ExactWave D T g) (t : ℝ) : HiddenState Q.toSegmentH :=
 def ellTraj' (s : ExactWave D T g) (t : ℝ) : HiddenState Q.toSegmentH :=
   ellHidden Q hdinj hS (ellData' Q s t)
 
-theorem continuousOn_ellTraj (s : ExactWave D T g) : ContinuousOn (ellTraj Q hdinj hS s) (Icc 0 T) :=
+theorem continuousOn_ellTraj (s : ExactWave D T g) :
+    ContinuousOn (ellTraj Q hdinj hS s) (Icc 0 T) :=
   (ellRead Q).continuous.comp_continuousOn (continuousOn_ellipticProjection hdinj
     (exists_sub_eq_of_surjective hS) fun y => s.continuousOn_ellipticDataH Q y)
 

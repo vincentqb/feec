@@ -26,9 +26,10 @@ particular `ℝ` and `ℂ`), with the inclusions between them.
 Inclusions: `contDomain.admissible`, `derivOffCountable.admissible`, `admissible_of_C1`, and
 `ForcingClass.w11_iff` (for continuous `F`, the a.e. identity holds pointwise with `x₀ = F a`).
 
-The real, `[0,T]` predicates `Feec.ForcingClass.* A T F` and the older names `ForcingDL`,
-`ForcingW11`, `ForcingThm43`, `IsW11`, `IsL1D` and `ForcingThm43Full` are kept as abbreviations
-(`a = 0`, `b = T`).
+The real, `[0,T]` predicates `Feec.ForcingClass.* A T F` and the short names `ForcingDL`,
+`ForcingW11`, `IsW11` and `IsL1D` are kept as abbreviations (`a = 0`, `b = T`);
+`ForcingDLOrW11 := ForcingDL ∨ ForcingW11` is a subclass of `ForcingClass.admissible`
+(`ForcingDLOrW11.admissible`).
 
 ## References
 
@@ -245,9 +246,9 @@ countable set; see `ForcingClass.derivOffCountable`. -/
 abbrev ForcingW11 (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.derivOffCountable T F
 
 /-- `C([0,T]; D(A)) ∪ ForcingW11`, a subclass of `ForcingClass.admissible`
-(`forcingThm43Full_of_forcingThm43`). Cf. the thesis' `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪
-L¹(0,T; D(A)))`. -/
-def ForcingThm43 (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
+(`ForcingDLOrW11.admissible`). Cf. the class `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))`
+of [QuennevilleBelair2015], Thm 4.3. -/
+def ForcingDLOrW11 (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   ForcingDL A T F ∨ ForcingW11 T F
 
 /-- `F ∈ W^{1,1}(0,T; X)`; see `ForcingClass.w11`. -/
@@ -256,13 +257,9 @@ abbrev IsW11 (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.w11 T F
 /-- `F ∈ L¹(0,T; D(A))`; see `ForcingClass.l1Domain`. -/
 abbrev IsL1D (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.l1Domain A T F
 
-/-- The forcing class of [QuennevilleBelair2015], Thm 4.3; see `ForcingClass.admissible`. -/
-abbrev ForcingThm43Full (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
-  ForcingClass.admissible A T F
-
-/-- `ForcingThm43` is admissible. -/
-theorem ForcingThm43.admissible [CompleteSpace E] {A : E →ₗ.[ℝ] E} {T : ℝ} {F : ℝ → E}
-    (hF : ForcingThm43 A T F) : ForcingClass.admissible A T F :=
+/-- `ForcingDLOrW11` is admissible. -/
+theorem ForcingDLOrW11.admissible [CompleteSpace E] {A : E →ₗ.[ℝ] E} {T : ℝ} {F : ℝ → E}
+    (hF : ForcingDLOrW11 A T F) : ForcingClass.admissible A T F :=
   hF.elim ForcingClass.contDomain.admissible ForcingClass.derivOffCountable.admissible
 
 end Feec

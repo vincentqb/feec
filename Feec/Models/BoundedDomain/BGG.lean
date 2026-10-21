@@ -21,8 +21,8 @@ scalar embedding, and `Feec.Domain.skwCurlOp = (S₁, curl)` along the isometry
 * `smoothPair_mem_adjoint`: `C¹` magnetic data `(m, Ψ)` with no boundary condition lie in
   `D(d₁†)`, `d₁† (m, Ψ) = S₁† m + curl Ψ`;
 * `bggComplex_divFree_propagates`: `σ ≡ 0` and `div div u ≡ 0` propagate (Prop 4.16);
-* `bggComplex_eq61`, `bggComplex_of_eq61`: strong solutions of the Hodge wave equation of (5.1)
-  are exactly the solutions of the weak system (6.1) with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)`.
+* `bggComplex_weakEqs_of_isStrongSolution`, `bggComplex_isStrongSolution_of_weakEqs`: strong
+  solutions of the Hodge wave equation of (5.1) are exactly the solutions of the weak system (6.1) with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)`.
 
 That TSD data do **not** propagate for this system is in `Feec.Counterexamples.BoundedBGG`.
 
@@ -305,7 +305,7 @@ writing `U(t) = (σ, u, (M, B))` and `U̇(t) = (σ̇, u̇, (Ṁ, Ḃ))`, at ever
 `(u̇, v) - (grad grad σ, v) + (M, S₁ v) + (B, curl v) = 0` for `v ∈ H̊(curl, M)`, `Ṁ = S₁ u` and
 `Ḃ = curl u`. This is (6.1) of [QuennevilleBelair2015], §6.1, with `σ` replaced by `-σ` (the
 convention `U' = L U` instead of `U' = -L U`). -/
-theorem bggComplex_eq61 (hΩ : IsOpen Ω) {I : Set ℝ}
+theorem bggComplex_weakEqs_of_isStrongSolution (hΩ : IsOpen Ω) {I : Set ℝ}
     {U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ Ω) (L2F ℝ Ω Ix) (W2B ℝ Ω))}
     (hU : Evolution.IsStrongSolution (bggComplex ℝ hΩ).wave I 0 U) {t : ℝ} (ht : t ∈ I) :
     ∃ (hσ : (U t 0 : L2 ℝ Ω) ∈ (hessMin ℝ hΩ).domain)
@@ -339,11 +339,11 @@ theorem bggComplex_eq61 (hΩ : IsOpen Ω) {I : Set ℝ}
   · rw [hc]; exact (bggComplex_d₁_apply hΩ ⟨_, hu⟩).2
   · rw [hc, bggComplex_d₁_snd hΩ ⟨_, hu⟩]
 
-/-- **(6.1) implies the Hodge wave equation of (5.1)** (converse of `bggComplex_eq61`): a path
+/-- **(6.1) implies the Hodge wave equation of (5.1)** (converse of `bggComplex_weakEqs_of_isStrongSolution`): a path
 `U = (σ, u, (M, B))` with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)` whose derivative satisfies (6.1) at
 every `t ∈ I` is a strong solution. So strong solutions of the Hodge wave equation of
 `bggComplex` are exactly the solutions of (6.1) with this regularity. -/
-theorem bggComplex_of_eq61 (hΩ : IsOpen Ω) {I : Set ℝ}
+theorem bggComplex_isStrongSolution_of_weakEqs (hΩ : IsOpen Ω) {I : Set ℝ}
     {U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ Ω) (L2F ℝ Ω Ix) (W2B ℝ Ω))}
     (hw : ∀ t ∈ I, ∃ (hσ : (U t 0 : L2 ℝ Ω) ∈ (hessMin ℝ hΩ).domain)
       (hu : (U t 1 : L2F ℝ Ω Ix) ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)

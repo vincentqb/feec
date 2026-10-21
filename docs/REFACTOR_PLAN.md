@@ -54,8 +54,16 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > `exists_counterexample_prop59_two{,_bestApprox}` and `not_exists_prop59_two_bound`, now
 > `Feec.Models.Cube.WeakSymmetry.{exists_interpolationError_ge, exists_bestApproxError_ge,
 > not_exists_interpolationError_bound}`; of the process suffixes of §1 it does not check `_res`
-> and `_max`, which are ordinary vocabulary (`Feec.Stone.res`, `mul_le_max_one`). The status notes
-> below name the old scripts as they were at the time.
+> and `_max`, which are ordinary vocabulary (`Feec.Stone.res`, `mul_le_max_one`). A review then
+> found that camelCase and equation numbers got through (`ForcingThm43`, `bggComplex_eq61`): the
+> check now also bans `Thm`/`Prop`/`Cor`/`Lemma` followed by a digit at any camelCase boundary
+> and `eq`/`Eq` followed by two digits (`eq61`, `eq_6_1`; one digit, as in `eq1 : Fin 3 ≃ …`,
+> and Lean's equation lemmas `f.eq_1` are allowed). `ForcingThm43` is now
+> `Feec.ForcingDLOrW11` (with `.admissible`), the alias `ForcingThm43Full` of
+> `ForcingClass.admissible` is deleted, and `bggComplex_{eq61, of_eq61}` are now
+> `Feec.Models.BoundedDomain.bggComplex_{weakEqs_of_isStrongSolution,
+> isStrongSolution_of_weakEqs}`. The status notes below name the old scripts as they were at the
+> time.
 
 > **Status (2026-10-17): waves W0–W6 are done.** `Feec/Legacy` (57 modules) and
 > `Feec/Models/Cube/Bridge.lean` are deleted; the cube models are built on `Feec.Models.Torus`,
@@ -260,7 +268,7 @@ This fixes today's inversion, where `Ch4/StoneApplications` imports `TorusGroup`
 - Mathlib style: `IsX` for predicates, `lowerCamel` for defs, and theorem names that describe the conclusion (`isSkewAdjoint_wave`, `IsStrongSolution.mem_of_isReducing`).
 - Namespaces name objects, never chapters.
 - **Banned everywhere:**
-  - thesis numbers: `prop_4_17`, `Sol61`, `Hyp54`, `C55`, `Sys56`;
+  - thesis numbers: `prop_4_17`, `ForcingThm43`, `eq61` (two-digit equation numbers), `Sol61`, `Hyp54`, `C55`, `Sys56`;
   - process suffixes: `_unconditional`, `_of_isSkewAdjoint`, `_thm43`, `_ambient`, `_literal`, `_corrected`, `_res`, `_compr`, `_max`;
   - thesis typography: `bigAL`, `tst`, `nV2`, `opMh`, `Bthesis`, `Complex3`.
 - Counterexamples use `not_`/`_false` names in `Feec.Counterexamples`. Global names such as `E0`, `x0` and `betaField` move into that namespace.

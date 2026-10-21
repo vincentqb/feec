@@ -625,7 +625,7 @@ theorem traj_ea {t : ℝ} (ht : t ∈ Ico 0 T) (τ : V0) (ψ : Vt0)
 
 /-- **A strong solution of the Hodge wave equation of the forms model is a solution of (6.1)**
 of `cubeWaveData`, with `(σ, φ) ↦ (−σ, −φ)` (the convention `U' = L U`, `σ' = −d₀† u`, as in
-`Feec.Models.BoundedDomain.bggComplex_eq61`): `u`, `M`, `ρ` are the components of `U`, and
+`Feec.Models.BoundedDomain.bggComplex_weakEqs_of_isStrongSolution`): `u`, `M`, `ρ` are the components of `U`, and
 `(−σ, −φ)` is the `Γ`-pair of the first one. -/
 def solutionOfStrong : cubeWaveData.Solution T 0 where
   σ t := σOf (V t)

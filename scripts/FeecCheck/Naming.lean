@@ -11,8 +11,11 @@ name) and every component of every module name. Docstrings and comments are not 
 references belong there (`[QuennevilleBelair2015], Prop 4.17`).
 
 Banned (see `rules`):
-* thesis numbers: `prop_4_17`, `thm43`, `lemma_5_2`, `ch6_…`, `Ch4`, `Sol61`, `Hyp54`, `Sys56`,
-  `C55`;
+* thesis numbers: `prop_4_17`, `thm43`, `lemma_5_2` (at the start of a component or after `_`),
+  `ForcingThm43`, `IsProp4_17` (capitalized, at any camelCase boundary), `ch6_…`, `Ch4`, `Sol61`,
+  `Hyp54`, `Sys56`, `C55`;
+* thesis equation numbers, two digits: `eq61`, `eq_6_1`, `bggComplex_eq61`, `HasEq61`. One digit
+  is allowed (`eq1 : Fin 3 ≃ formIdx 3 1`), and so are Lean's equation lemmas `f.eq_1`;
 * process suffixes: `_unconditional`, `_of_isSkewAdjoint`, `_ambient`, `_literal`, `_corrected`,
   `_compr` (as a `_`-separated word). The plan also lists `_res` and `_max`; they are not checked,
   since `res` (a resolvent, a restriction) and `max` are ordinary Mathlib vocabulary
@@ -35,6 +38,12 @@ def underscoreWord (w : String) : Re :=
 def rules : List (String × Re) :=
   [("thesis number (thm/prop/cor/lemma N)",
       seqs [.alt .bos (chr '_'), lits ["thm", "prop", "cor", "lemma"], opt (chr '_'), digit]),
+   ("thesis number (camelCase Thm/Prop/Cor/Lemma N)",
+      seqs [lits ["Thm", "Prop", "Cor", "Lemma"], opt (chr '_'), digit]),
+   ("thesis equation number (eqNM)",
+      seqs [.alt .bos (chr '_'), lit "eq", opt (chr '_'), digit, opt (chr '_'), digit]),
+   ("thesis equation number (camelCase EqNM)",
+      seqs [lit "Eq", opt (chr '_'), digit, opt (chr '_'), digit]),
    ("thesis chapter (chN_)", seqs [.alt .bos (chr '_'), lit "ch", plus digit, chr '_']),
    ("thesis chapter (ChN)", seqs [lit "Ch", digit]),
    ("thesis label (Sol61/Hyp54/Sys56/C55)",
@@ -45,9 +54,15 @@ def rules : List (String × Re) :=
   (["bigAL", "tst", "nV2", "opMh", "Bthesis", "Complex3", "Repair", "Thesis"].map fun w =>
     (s!"thesis identifier {w}", lit w))
 
+/-- The equation lemmas that Lean generates, `f.eq_1`, `f.eq_12` (and `f.match_1.eq_2`), are
+not thesis equation numbers. -/
+def isEqnLemma (cs : Array Char) : Bool :=
+  ((seqs [.bos, lit "eq_", plus digit, .eos]).search cs).isSome
+
 /-- The rules a component violates. -/
 def violations (comp : String) : List String :=
   let cs := chars comp
+  if isEqnLemma cs then [] else
   rules.filterMap fun (d, r) => if (r.search cs).isSome then some d else none
 
 /-- The string components of a name (numeric components are skipped). -/

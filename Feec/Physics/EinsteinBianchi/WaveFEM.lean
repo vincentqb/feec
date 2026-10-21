@@ -45,7 +45,7 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
 ## Gaps
 
 * The identification of (6.1) for `bggHilb` with the matrix model
-  `Feec.Models.BoundedDomain.bggComplex` (`Feec.Models.BoundedDomain.bggComplex_eq61`) is
+  `Feec.Models.BoundedDomain.bggComplex` (`Feec.Models.BoundedDomain.bggComplex_weakEqs_of_isStrongSolution`) is
   complete: `gamma_equiv_hessMin` here for the first space, and
   `Feec.EinsteinBianchi.MatrixModel.matrixComplex_eq_map` for the whole complex (the isometry
   `rowsEquiv : H̊Λ¹(Q)³ ≅ H̊(curl, Q; ℝ³ˣ³)`, rows `u_a = Σ_b u_{ab} dx_b`, intertwining

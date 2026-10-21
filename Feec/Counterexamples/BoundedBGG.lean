@@ -580,7 +580,7 @@ end Generic
 
 /-- **Ch. 6 on bounded domains: `B` loses symmetry.** For the BGG complex (5.1) on any nonempty
 bounded open `Ω`, from `(0, E₀, (m, β))` with any `E₀`, `m`: every strong solution of the Hodge
-wave equation (equivalently of (6.1), `Feec.Models.BoundedDomain.bggComplex_eq61`) on `[0, T]`,
+wave equation (equivalently of (6.1), `Feec.Models.BoundedDomain.bggComplex_weakEqs_of_isStrongSolution`) on `[0, T]`,
 `T > 0`, has `B(t)` non-symmetric for some `t`, although `β` is symmetric.
 [QuennevilleBelair2015], §6.3 -/
 theorem bggComplex_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)

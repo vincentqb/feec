@@ -54,7 +54,7 @@ Feec.continuousOn_primitive_Icc_of_integrableOn	Feec.ForcingClass.continuousOn_p
 Feec.isW11_iff	Feec.ForcingClass.w11_iff	rename
 Feec.isW11_of_hasDerivAt	Feec.ForcingClass.w11_of_hasDerivAt	rename
 Feec.forcingThm43Full_of_C1	Feec.ForcingClass.admissible_of_C1	rename
-Feec.forcingThm43Full_of_forcingThm43	Feec.ForcingThm43.admissible	rename
+Feec.forcingThm43Full_of_forcingThm43	Feec.ForcingDLOrW11.admissible	rename
 Feec.HilbertComplex2.thm_4_6_unconditional	Feec.HilbertComplex.HodgeWave.existsUnique	generalize
 Feec.HilbertComplex2.thm_4_6_strong_unconditional	Feec.HilbertComplex.HodgeWave.existsUnique	generalize
 Feec.HilbertComplex2.weak_imp_classical_unconditional	Feec.HodgeWave.IsWeakSolution.isClassicalSolution	generalize
@@ -4175,10 +4175,10 @@ Feec.Ch6.Bounded.bggComplex_betaPair_not_mem_S2max	Feec.Counterexamples.BoundedB
 Feec.Ch6.Bounded.bggComplex_d0	Feec.Models.BoundedDomain.bggComplex_d₀	rename
 Feec.Ch6.Bounded.bggComplex_d1	Feec.Models.BoundedDomain.bggComplex_d₁_apply	corollary
 Feec.Ch6.Bounded.bggComplex_d1_mem_HcurlZero	Feec.Models.BoundedDomain.bggComplex_d₁_domain	corollary
-Feec.Ch6.Bounded.bggComplex_eq61	Feec.Models.BoundedDomain.bggComplex_eq61	rename
+Feec.Ch6.Bounded.bggComplex_eq61	Feec.Models.BoundedDomain.bggComplex_weakEqs_of_isStrongSolution	rename
 Feec.Ch6.Bounded.bggComplex_isSkwCurl	-	deleted-helper
 Feec.Ch6.Bounded.bggComplex_not_propagate	Feec.Counterexamples.BoundedBGG.bggComplex_not_propagate	rename
-Feec.Ch6.Bounded.bggComplex_of_eq61	Feec.Models.BoundedDomain.bggComplex_of_eq61	rename
+Feec.Ch6.Bounded.bggComplex_of_eq61	Feec.Models.BoundedDomain.bggComplex_isStrongSolution_of_weakEqs	rename
 Feec.Ch6.Bounded.bggComplex_prop_4_16	Feec.Models.BoundedDomain.bggComplex_divFree_propagates	rename
 Feec.Ch6.Bounded.bggComplex_prop_4_17_max	Feec.Counterexamples.BoundedBGG.bggComplex_invariantCore_propagates	rename
 Feec.Ch6.Bounded.bggComplex_verdict	Feec.Counterexamples.BoundedBGG.bggComplex_verdict	rename

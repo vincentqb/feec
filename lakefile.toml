@@ -74,3 +74,12 @@ srcDir = "scripts"
 root = "FeecCheck.Exe.Snapshot"
 supportInterpreter = true
 needs = ["Feec"]
+
+# Dependency analysis for the minimality pass (not a gate check): `lake exe feec-deps [OUT_DIR]`,
+# `lake exe feec-deps --strip FILE OUT` (scripts/FeecCheck/Deps.lean).
+[[lean_exe]]
+name = "feec-deps"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Deps"
+supportInterpreter = true
+needs = ["Feec"]

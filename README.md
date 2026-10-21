@@ -48,7 +48,11 @@ discretization from finite-dimensional Hilbert complexes `Vₕ` with their own i
 cochain maps `iₕ : Vₕ → W` (Holst–Stern): the generator is the Hodge wave operator of `Vₕ`, and the
 consistency is derived from the inner-product defect `‖1 − iₕ*iₕ‖ → 0` and graph-norm
 approximation. `approxFEEC_ofComplex` adds discrete constraints: reducing subcomplexes of `Vₕ`,
-such as discrete Gauss laws, are preserved exactly.
+such as discrete Gauss laws, are preserved exactly. `ApproxFEEC.ofComplexCrime` (in
+`ApproxComplexCrime.lean`) drops the cochain condition: a discrete differential `𝐝ₕ` with
+`𝐝ₕ𝐝ₕ = 0` and reading maps with a cochain defect, measured weakly; `ofComplex` is its case with
+zero cochain defect. `ApproxComplexCrime.rateClass` turns complex-level rates (best
+approximation, inner-product and cochain defects) into rate classes.
 
 ## Instances
 
@@ -63,18 +67,19 @@ The "Verdict" column says which branch of item 4 holds. Lean names are relative 
 | Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus_approxFEEC` |
 | Maxwell | `𝕋ᵈ`, spectral Galerkin | `E = 0`, `B = 0` (not reducing) | solutions and discrete limits leave `K` | — | M `torus_potential_residual_of_approxFEEC` |
 | Maxwell | `ℝᵈ`, frequencies `\|ξ\| ≤ N` | Gauss laws | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ` | B `maxwell_euclidean_band` |
-| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `cubePMC_approxFEEC`, `cubePMC_approx_rate` (PEC alike), `cubePMC_ofComplex` |
+| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `cubePMC_approxFEEC`, `cubePMC_approx_rate` (PEC alike), `cubePMC_ofComplex`, `cubePMC_ofComplex_rate` |
 | Maxwell | parallelepipeds, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `paraPMC_approxFEEC`, `paraPMC_approx_rate` (PEC alike) |
 | Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `starPMC_approxFEEC`, `starPMC_approx_rate` (PEC alike) |
 | linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_torus_approxFEEC`, `_sobolev` |
 | linearized Einstein–Bianchi | `ℝ³`, frequencies `\|ξ\| ≤ N` | TSD | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ`, exponent sharp | B `einsteinBianchi_euclidean_band` |
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |
-| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `(4K + 8Kt) h` for `D(L³)`, `(6K + 12Kt) hˢ` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMApproxVerdict` |
-| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `standardCubeApproxVerdict` |
+| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `O(h)` for `D(L³)`, `O(hˢ)` for `H^{2+s}`, `s ≤ 1`, linear in `t` | EB `FEM.einsteinBianchi_mirrorFEM_ofComplexCrime`, `_rate`, `_rate_sobolev`; `mirrorFEMApproxVerdict` |
+| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `FEM.einsteinBianchi_standardCube_ofComplexCrime`; `standardCubeApproxVerdict` |
 
 Scheme (6.5) uses the elements of Tables 5.1/6.1 and couples the two rows of the BGG construction
-by `S₀,ₕ = π¹S⁰ ≠ S⁰`, so its discrete complex is not a subcomplex. Its comparison trajectory is
-the elliptic projection (6.4) of the exact solution. On `ℝ³` and `ℝᵈ` the Sobolev classes are
+by `S₀,ₕ = π¹S⁰ ≠ S⁰`, so its discrete complex is not a subcomplex. Its generator is `𝐝ₕ − 𝐝ₕ*` for
+a discrete differential `𝐝ₕ`, so it is formalized through `ofComplexCrime`; its comparison trajectory is
+the elliptic projection (6.4) of the exact solution, a Galerkin projection. On `ℝ³` and `ℝᵈ` the Sobolev classes are
 defined on the Fourier side, and the truncation is a semi-discretization in frequency.
 `einsteinBianchi_summary` bundles the Einstein–Bianchi rows.
 

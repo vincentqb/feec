@@ -123,6 +123,8 @@ public import Feec.Geometry.Connection
 public import Feec.Geometry.Hodge2
 public import Feec.Geometry.WeylDecomposition
 public import Feec.HilbertComplex.Approximation.ApproxComplex
+public import Feec.HilbertComplex.Approximation.ApproxComplexCrime
+public import Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness
 public import Feec.HilbertComplex.Approximation.ApproxComplexWitness
 public import Feec.HilbertComplex.Approximation.ApproxConforming
 public import Feec.HilbertComplex.Approximation.ApproxFEEC
@@ -177,6 +179,7 @@ public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Instances.EinsteinBianchi
 public import Feec.Instances.EinsteinBianchiFEM
+public import Feec.Instances.EinsteinBianchiFEMComplex
 public import Feec.Instances.EinsteinBianchiFEMCube
 public import Feec.Instances.EinsteinBianchiFEMCubeCore
 public import Feec.Instances.EinsteinBianchiFEMCubeEll
@@ -189,6 +192,7 @@ public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.Maxwell
+public import Feec.Instances.MaxwellComplex
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal
 public import Feec.Mesh.Kuhn

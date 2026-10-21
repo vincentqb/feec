@@ -203,8 +203,9 @@ Feec/
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,MixedError,SemidiscreteWave}.lean
 │   │   Approximation/{ConstrainedFEEC,ApproxFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness}.lean
-│   │   Approximation/{ApproxComplex,ApproxComplexWitness}.lean
-│   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case, ofComplex
+│   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
+│   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,
+│   │                                 -- ofComplex, ofComplexCrime (cochain defect), complex-level rates
 │   └── BGG/{Basic,ToComplex,WeakSymmetry,Discrete}.lean
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
@@ -223,7 +224,7 @@ Feec/
 │                   BallSymTSD,CubeStationary,ConstrainedEvolution,ClassicalRegularity}.lean
 ├── Examples/NonVacuity.lean          -- bddOp, rotGen, idComplex witnesses
 ├── Numerics/CrankNicolsonTable.lean  -- plane-wave check and the step-count table (descriptive names)
-└── Instances/{Maxwell,EuclideanBand,EinsteinBianchi*}.lean  -- Feec.Instances: models as instances of approxFEEC;
+└── Instances/{Maxwell,MaxwellComplex,EuclideanBand,EinsteinBianchi*}.lean  -- Feec.Instances: models as instances of approxFEEC;
                                       -- top layer, imported only by Feec.lean, adds no names to lower namespaces
 docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/{Snapshot,AxiomAudit,MapCheck}.lean
 ```

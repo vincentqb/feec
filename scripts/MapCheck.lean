@@ -3572,6 +3572,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«BGG».«existsUnique_isEllipticProjection» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«waveFEM_rate_of_mem_domain» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«waveFEM_rate_of_mem_domain_of_orbit» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«FEM».«einsteinBianchi_mirrorFEM_ofComplexCrime_rate» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«FEM».«einsteinBianchi_mirrorFEM_ofComplexCrime_rate_sobolev» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeFEM_ellipticProjection_rate_tr» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«tendsto_of_isStrongSolution» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«tendsto_of_mem_wave_domain» -- THESIS_MAP.md

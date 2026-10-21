@@ -2063,8 +2063,8 @@ abbrev discreteGauss (h : κ) : Submodule 𝕜 (PiLp 2 fun i => (F.V h).V i) :=
 /-- **The discrete Gauss laws are preserved exactly** by the discrete solutions of `ofComplex`
 (conforming case, `ConstrainedFEEC.toComplex`), for every `Y ⊇ R(d₁)`: they form a reducing
 subcomplex of the discrete complex `Vₕ`; in `W`, the magnetic component stays in `Y`. The discrete
-solutions are those of the scheme (4.10) (`ConstrainedFEEC.toComplex_sol`).
-[QuennevilleBelair2015], Prop. 4.16 -/
+solutions are those of the scheme (4.10) (`ConstrainedFEEC.toComplex_sol`). Discrete analogue of
+the continuous Gauss propagation, cf. [QuennevilleBelair2015], Prop. 4.16 -/
 theorem discreteGauss_propagates (hY : ∀ x : (H.d 1 2).domain, H.d 1 2 x ∈ Y) (h : κ)
     {v : PiLp 2 fun i => (F.V h).V i} (hv : v ∈ discreteGauss F Y h) (t : ℝ) :
     (((ApproxFEEC.ofComplex F.toComplex).group h).S t v : PiLp 2 fun i => (F.V h).V i) ∈

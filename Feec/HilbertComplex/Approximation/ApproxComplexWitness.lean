@@ -28,7 +28,7 @@ derived by `ofComplexCore` from the inner-product defect and the approximation p
 ## References
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (cochain maps that are not isometric, discrete differentials differing from `d`)
+  §3 (an inner-product crime: cochain maps that are not isometric)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/

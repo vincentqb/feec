@@ -78,7 +78,7 @@ finite-dimensional complexes `Vₕ` with their own inner products, injective bou
 graph-norm approximation property (from `L²` approximation and a commutation defect of `πₕ` on a
 dense set, `Feec.HilbertComplex.ApproxComplex.Family.graphApprox_of_commute`). The discrete
 generator is the Hodge wave operator of `Vₕ` in its own inner product. The comparison is the
-modified elliptic projection `Rₕ = (1 − Lₕ)⁻¹ iₕ*(1 − L)`, and every hypothesis of
+modified elliptic projection `Rₕ = (1 − Lₕ)⁻¹ Gₕ` (on `D(L)`, `Gₕ = iₕ*(1 − L)`), and every hypothesis of
 `ApproxFEEC.Core.ofOperator` is derived: a Strang lemma
 (`Feec.HilbertComplex.ApproxComplex.Family.norm_graphFst_sub_inclL_ellProj_le`, best
 approximation plus inner-product defect) and the defect bound
@@ -118,8 +118,8 @@ Limits.
   through `ofComplex` are not packaged: the Strang lemma bounds each comparison, but no
   `ApproxFEEC.RateClass` is built from complex-level rates. The only non-conforming instance of
   `ofComplex` is the abstract witness, whose crime is the inner product alone; a nonzero
-  commutation defect of `πₕ` is exercised by no instance (in finite dimension the approximation
-  property forces `πₕ = iₕ⁻¹` eventually); the Maxwell instance of `ofComplex` is the conforming
+  commutation defect of `πₕ` is exercised by no instance (remark, not formalized: in finite dimension
+  the approximation property forces `πₕ = iₕ⁻¹` eventually); the Maxwell instance of `ofComplex` is the conforming
   one.
 - Rate classes and cores are hypotheses on the data that each instance must supply. The
   conforming rate carries `(1 + C_P)(1 + t)²`, where the model theorems have `(1 + t)`.

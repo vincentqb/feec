@@ -198,6 +198,8 @@ Feec/
 │   ├── Dirac.lean (dirac = d+d†, wave = d−d†)  HodgeLaplacian.lean  Mixed.lean  HodgeWave.lean
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,MixedError,SemidiscreteWave}.lean
+│   │   Approximation/{ConstrainedFEEC,ApproxFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness}.lean
+│   │                                 -- constrainedFEEC; approxFEEC (variational crimes) and its conforming case
 │   └── BGG/{Basic,ToComplex,WeakSymmetry,Discrete}.lean
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
@@ -215,7 +217,9 @@ Feec/
 ├── Counterexamples/{Ell2,Fredholm,NonClosedRangeEuclidean,BoundedDomainTSD,BoundedSymTSD,
 │                   BallSymTSD,CubeStationary,ConstrainedEvolution,ClassicalRegularity}.lean
 ├── Examples/NonVacuity.lean          -- bddOp, rotGen, idComplex witnesses
-└── Numerics/CrankNicolsonTable.lean  -- plane-wave check and the step-count table (descriptive names)
+├── Numerics/CrankNicolsonTable.lean  -- plane-wave check and the step-count table (descriptive names)
+└── Instances/{Maxwell,EuclideanBand,EinsteinBianchi*}.lean  -- Feec.Instances: models as instances of approxFEEC;
+                                      -- top layer, imported only by Feec.lean, adds no names to lower namespaces
 docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/{Snapshot,AxiomAudit,MapCheck}.lean
 ```
 
@@ -225,6 +229,7 @@ docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/{Snapshot
 - `Variational` → `HilbertComplex`
 - `Fourier` and `Domain`, alongside `Algebra` and `Geometry`
 - `Models` → `Physics` and `Counterexamples`
+- `Instances` last
 
 This fixes today's inversion, where `Ch4/StoneApplications` imports `TorusGroup` and `BoundedDomain`.
 

@@ -21,7 +21,7 @@ The library is organized by mathematics. A layer imports only the layers above i
 | `Feec.Evolution` | Strong and classical solutions of `U' = AU + F` on any interval, energy estimates, forcing classes, Duhamel's formula, existence and uniqueness for generators, constraint propagation through reducing subspaces, inhomogeneous essential boundary data by a lifting (`U − G ∈ D(A)`) | Thm 4.3, Cor 4.5, Lemma 4.12, Ch. 7 |
 | `Feec.Variational` | The inf-sup condition, Babuška–Nečas and Lax–Milgram, Petrov–Galerkin quasi-optimality, Brezzi's theorem, Fortin operators, the Galerkin error bound for evolution problems (all over `ℝ` and `ℂ`) | Thms 4.8–4.11, Thm 4.14 |
 | `Feec.TimeStepping` | Crank–Nicolson as a Cayley transform, also with prescribed boundary DOFs; its amplification factor and phase; signed symmetrization of the block systems for MINRES | Ch. 7 |
-| `Feec.HilbertComplex` | Hilbert complexes over any `ComplexShape` (any length, every index), short complexes, windows, the dual and domain complexes; Hodge decomposition, Poincaré ⇔ closed range, the compactness property; the Dirac and wave operators, the Hodge and mixed Hodge Laplacians, the solution operator `K` with its bounds by Poincaré constants, the Hodge wave and Hodge heat equations; reducing subcomplexes and constraint propagation, with compactness, closed range and eigenbases passing to compressions; eigenbases from compactness off the kernel of the wave operator (compactness in degrees `0` and `1` of a three-term complex suffices) and Weber's lemma with a coefficient, in abstract form; scaled embeddings, reweighting by bounded isomorphisms, equivariance, reality; approximation (subcomplexes, cochain projections, discrete Hodge decomposition, mixed error, quasi-optimal and improved error estimates of the mixed method, graph-norm approximation with a rate, semi-discrete wave equation, the constrained FEEC theorem); BGG complexes (twisted complex, weak symmetry, discretization, weak consistency, time-dependent problem, the elliptic projection (6.4) with its Strang bound and the convergence of (6.3), also modulo finite-dimensional harmonic forms) | §4.2–4.6, Thms 4.1, 4.2, 4.6, 4.7, Props 4.13, 4.16–4.19, Ch. 5–6 |
+| `Feec.HilbertComplex` | Hilbert complexes over any `ComplexShape` (any length, every index), short complexes, windows, the dual and domain complexes; Hodge decomposition, Poincaré ⇔ closed range, the compactness property; the Dirac and wave operators, the Hodge and mixed Hodge Laplacians, the solution operator `K` with its bounds by Poincaré constants, the Hodge wave and Hodge heat equations; reducing subcomplexes and constraint propagation, with compactness, closed range and eigenbases passing to compressions; eigenbases from compactness off the kernel of the wave operator (compactness in degrees `0` and `1` of a three-term complex suffices) and Weber's lemma with a coefficient, in abstract form; scaled embeddings, reweighting by bounded isomorphisms, equivariance, reality; approximation (subcomplexes, cochain projections, discrete Hodge decomposition, mixed error, quasi-optimal and improved error estimates of the mixed method, graph-norm approximation with a rate, semi-discrete wave equation, the constrained FEEC theorem and the approximating FEEC theorem with variational crimes); BGG complexes (twisted complex, weak symmetry, discretization, weak consistency, time-dependent problem, the elliptic projection (6.4) with its Strang bound and the convergence of (6.3), also modulo finite-dimensional harmonic forms) | §4.2–4.6, Thms 4.1, 4.2, 4.6, 4.7, Props 4.13, 4.16–4.19, Ch. 5–6 |
 | `Feec.Algebra`, `Feec.Geometry` | Levi-Civita symbol, constant metrics, the exterior algebra, matrix calculus on jets and symbols, transverse–traceless matrices, the Koszul complex and polynomial forms in any dimension (direct sums, dimensions of `P_rΛᵏ` and `P_r⁻Λᵏ`, exactness), the wedge product; algebraic curvature tensors, the Riemann tensor of a connection, Hodge duality on 2-forms, the Weyl decomposition; the second Bianchi identity and its contractions (`∇^a G_ab = 0`, vacuum `∇^a C_abcd = 0`) for metrics of any signature, Christoffel symbols, frame components and torsion in a frame | Ch. 2–3, §4.7–4.10 |
 | `Feec.Fourier` | Symbol complexes of multiplication operators, fibrewise reducing subspaces, closed range from spectral gaps, the torus and `ℝᵈ`, weak derivatives, real fields, spectral Galerkin; the symbols of de Rham, grad–curl, (4.16) and the BGG complex (5.1) | §4.10–4.11, Ch. 6 |
 | `Feec.Domain` | `L²` fields on an open `Ω ⊆ ℝⁿ`, mollification, constant-coefficient operators with their minimal and maximal realizations and adjoints, complexes of them (also with constrained values), the `L²` de Rham complex of `k`-forms on any open `Ω ⊆ ℝⁿ` with both boundary-condition families and their duality, the Hessian, div-div and elasticity complexes on open `Ω ⊆ ℝ³`, minimal = maximal on `ℝⁿ`, smoothers commuting with `d` on domains star-shaped with respect to a ball, diagonal changes of variables and the pullback of `L²` forms along invertible affine maps, Rellich compactness of minimal domains passing to open subsets and affine images, pullbacks along bi-Lipschitz homeomorphisms of `ℝ³` (change of variables, `H̊(curl)` pullback, Piola transform of `H(div)`), boundary obstructions, finite speed of propagation for symmetric hyperbolic systems | §4.10, Prop 3.6 |
@@ -30,36 +30,82 @@ The library is organized by mathematics. A layer imports only the layers above i
 | `Feec.Models` | Instances: de Rham, grad–curl, (4.16) and BGG on `𝕋ᵈ`/`𝕋³` and `ℝᵈ`/`ℝ³`; de Rham, grad–curl and (4.16) on bounded domains, with the density of `L²(TSD) ∩ H̊(curl)`; cubes: the method of images, the identification with the bounded-domain complex, static data, mirror boundary conditions for grad–curl, (4.16) and BGG, characterized on every open cube by Green's formulas (weak trace conditions), eigenbases on every open cube and, by Rellich on bounded open sets and Weber compactness transported along bi-Lipschitz radial maps, on every domain star-shaped with respect to a ball (balls and bounded convex sets included), the de Rham complex of `(0, ½)ⁿ` (parity model, identified with `H̊Λ` and `HΛ` of `(0, ½)ⁿ`: compactness, Poincaré `(2π)⁻¹`, harmonic forms, cohomology), smoothing by even Fourier multipliers, Whitney complexes on Freudenthal meshes, the smoothed-projection estimates and Whitney approximation on them, and the finite element method with no hypothesis (stability, quasi-optimality, `O(h)` rates, semi-discrete Hodge wave), also for the higher-order families with rates `h^{s+1}`; the BGG data (4.16) on `(0, ½)³` and their finite elements of Tables 5.1/6.1 (compatibility (5.4), Props 5.7–5.9, the static error estimate, the semi-discrete wave scheme (6.5)), with the regular decomposition `CurlPotential` proved (a Helmholtz decomposition on a larger torus cell and a Hestenes extension from a shell), rates for solutions `C²` up to `∂Q` with vanishing tangential traces and convergence of (6.5) without rate; the de Rham complexes `HΛ_J(Q)` with boundary conditions on the faces normal to `J` (Hodge theory, identification with a parity model, conforming finite element subcomplexes) and parity smoothers (reflection and mollification, no dilation) giving uniformly bounded cochain projections onto them; the scheme (6.5) with the mirror boundary conditions (well posed, with a decoupled constant mode, convergent to the TSD solution, at rate `O(h)` for data in `D(L³)` and `O(hˢ)` for `H^{2+s}` data); Sobolev spaces `Hˢ` on `(0, ½)ⁿ` (integer orders by weak derivatives) with finite element rates `h^{min(s, r_eff)}`, and `h^{min(s,1)}` for the BGG elements of Tables 5.1/6.1 with the thesis' conditions; boxes with unequal sides (eigenbases, `K*`, mirror conditions); the finite element method, Whitney and higher-order families, on parallelepipeds (every quasi-uniform shape-regular mesh family) and on domains star-shaped with respect to a ball; inhomogeneous boundary data from whole-space TSD solutions on bounded domains and the fully discrete `fem4gr` scheme on Whitney spaces with its `O(h + Δt²)` error; on bounded domains, eigenfield obstructions to moving `K*` data and (4.16) under affine maps; spectral Galerkin for the torus de Rham complex | §4.10–4.11, Ch. 6–7 |
 | `Feec.Physics` | Linearized gravity (Einstein operator, gauge, plane waves), the linearized Einstein–Bianchi system (jets, fields, propagation of its constraints), the nonlinear Einstein–Bianchi system in an orthonormal frame (satisfied by every vacuum metric, linearizing to the linearized system), Maxwell's equations (Gauss laws, linear media by reweighting with isotropic and anisotropic coefficient fields, Ohmic loss, `k`-form Maxwell on open `Ω ⊆ ℝⁿ`, Whitney finite elements for PMC and PEC on the cube); the linearized Einstein–Bianchi system with weak symmetries on the cube: the static problem (5.3) and the wave problem (6.2) with the finite elements of Tables 5.1/6.1 (well-posedness, error estimates, `O(h)` rates, with no hypothesis), the forms model identified with the matrix model, convergence of (6.5) for every datum in `D(L)`, and to a solution that leaves TSD; powers `D(Lᵏ)` of the forms-model Hodge wave operator and an `O(h)` rate of (6.5) from `D(L³)` under multiplier bounds | Ch. 2–3, §3.4, §5.3, §6.3 |
 | `Feec.Counterexamples`, `Feec.Examples`, `Feec.Numerics` | The refutations listed below; on the unit ball, a complete set of eigenvectors and the absence of TSD eigenfields `C²` up to the boundary; non-vacuity witnesses; the plane-wave check, Table 7.1 and the plane-wave runs of Ch. 7 (Dirichlet data on the cube, periodic on `𝕋³`), with `O(h + Δt²)` error bounds on `(0, ½)³` and on the unit cube of `fem4gr` | Ch. 7 |
-| `Feec.Instances` | The constrained FEEC theorem on the concrete models: Maxwell's equations (Gauss laws as a reducing constraint of every window; spectral Galerkin on `𝕋ᵈ`; Whitney forms for PMC and PEC on cubes, parallelepipeds and domains star-shaped with respect to a ball, with `O(h)` rate classes and discrete Poincaré inequalities; the non-reducing constraint `E = 0`, `B = 0`), and the linearized Einstein–Bianchi system with the TSD constraint (Fourier spectral on `𝕋³` and cosine–sine spectral on the mirror cube, with `H^{2+s}` rates; propagation on `ℝ³`; the mirror scheme (6.5) and the thesis' boundary conditions through the model theorems) | §4.10, Ch. 6 |
+| `Feec.Instances` | The approximating FEEC theorem on the concrete models (top layer: nothing else imports it, and it adds no names to lower namespaces): Maxwell's equations (Gauss laws as a reducing constraint of every window; spectral Galerkin on `𝕋ᵈ`; Whitney forms for PMC and PEC on cubes, parallelepipeds and domains star-shaped with respect to a ball, with `O(h)` rate classes and discrete Poincaré inequalities; the non-reducing constraint `E = 0`, `B = 0`); frequency truncation `\|ξ\| ≤ N` on `ℝᵈ` (Maxwell) and `ℝ³` (linearized Einstein–Bianchi), with exact constraint preservation and Fourier-side `Hˢ` rates, sharp on `ℝ³`; the linearized Einstein–Bianchi system with the TSD constraint (Fourier spectral on `𝕋³` and cosine–sine spectral on the mirror cube, with time-uniform `Hˢ` rates; the scheme (6.5) with mirror boundary conditions and with the thesis' boundary conditions, with the elliptic projection (6.4) as comparison) | §4.10, §4.12–4.13, Ch. 6 |
 
-## The constrained FEEC theorem
+## The approximating FEEC theorem
 
-`Feec.HilbertComplex.constrainedFEEC` (`Feec.HilbertComplex.Approximation.ConstrainedFEEC`) is
-the headline theorem of the library; `README.md` states it in plain language and lists its
-instances. Its setting, `Feec.HilbertComplex.ConstrainedFEEC`, is a Hilbert complex on any finite
-window of any `ComplexShape`, a closed constraint `K`, and finite-dimensional subcomplexes `Vₕ`
-with uniformly bounded commuting cochain projections and the approximation property in `W`; the
-projections upgrade it to graph-norm approximation (`Feec.HilbertComplex.ConstrainedFEEC.dense_graph`).
-The theorem bundles well-posedness (`Feec.HilbertComplex.constrainedFEEC_wellPosed`), propagation
-(`Feec.HilbertComplex.constrainedFEEC_propagates_iff`), convergence and rates
-(`Feec.HilbertComplex.constrainedFEEC_converges`, `Feec.HilbertComplex.constrainedFEEC_rate` over
-`Feec.HilbertComplex.ConstrainedFEEC.RateClass`) and the constraint residual
-(`Feec.HilbertComplex.constrainedFEEC_residual`, `Feec.HilbertComplex.constrainedFEEC_residual_rate`,
-`Feec.HilbertComplex.constrainedFEEC_residual_not_isReducing` and its `_symm`, `_of_grading`
-variants); `Feec.HilbertComplex.constrainedFEEC_nonvacuous` exhibits both branches of the residual
-statement.
+`Feec.HilbertComplex.approxFEEC` (`Feec.HilbertComplex.Approximation.ApproxFEEC`, statement
+`Feec.HilbertComplex.ApproxFEEC.Verdict`) is the headline theorem of the library; `README.md`
+states it in plain language and lists its instances. Its setting,
+`Feec.HilbertComplex.ApproxFEEC`, is a Hilbert complex on any finite window of any
+`ComplexShape`, a closed constraint `K`, Hilbert spaces `Xₕ` with their own inner products and
+skew bounded generators `Lₕ`, and uniformly bounded reading maps `ιₕ : Xₕ → W` with uniformly
+bounded left inverses `πₕ` (variational crimes in the sense of [HolstStern2012] are allowed).
+Consistency is a hypothesis on a core, `Feec.HilbertComplex.ApproxFEEC.Core`: comparison
+trajectories that approximate the exact orbits through `ιₕ` with consistency defects tending to
+`0`, uniformly on `[0, T]`. The abstract estimate is
+`Feec.HilbertComplex.norm_sub_le_of_defect` (best approximation plus integrated consistency
+defect, by the energy method). The theorem bundles well-posedness
+(`Feec.HilbertComplex.constrainedFEEC_wellPosed`), propagation
+(`Feec.HilbertComplex.approxFEEC_propagates_iff`), convergence on the core and its closure for
+every convergent family of initial values (`Feec.HilbertComplex.approxFEEC_converges_core`,
+`Feec.HilbertComplex.approxFEEC_converges`, with `ιₕ πₕ → 1` derived,
+`Feec.HilbertComplex.ApproxFEEC.tendsto_incl_proj`), rates over
+`Feec.HilbertComplex.ApproxFEEC.RateClass` (`Feec.HilbertComplex.approxFEEC_rate`) and the
+constraint residual measured through `ιₕ` (`Feec.HilbertComplex.approxFEEC_residual`,
+`Feec.HilbertComplex.approxFEEC_residual_not_mem`, `Feec.HilbertComplex.approxFEEC_exists_not_mem`,
+`Feec.HilbertComplex.approxFEEC_residual_not_isReducing_symm`,
+`Feec.HilbertComplex.approxFEEC_residual_not_isReducing_of_grading`).
 
-Limits. The generic rate carries the factor `(1 + C_P)(1 + t)²`, where the model theorems have
-`(1 + t)`. Rate classes are hypotheses on the data that each instance must supply. Without a
-grading, the converse with data in `D(L) ∩ K` is stated for `t ∈ [-T, T]`, and its discrete
-residual is not stated for `t < 0`. Forward invariance alone does not give a reducing subspace (the
-de Rham counterexample in the module docstring, not formalized). The instances (`Feec.Instances.Maxwell`,
-`Feec.Instances.EinsteinBianchi`) have these limits:
-- On `ℝ³` only items 1–2 are stated.
-- The mirror scheme (6.5) and the thesis' boundary conditions are read from the model theorems and
-  not from `ConstrainedFEEC`.
-- The Maxwell rate classes require `C²` orbits on `[0, T]`, and their only witness is the zero datum.
-- The non-reducing Maxwell constraint is exhibited on the torus only.
+**The conforming special case.** `Feec.HilbertComplex.constrainedFEEC`
+(`Feec.HilbertComplex.Approximation.ConstrainedFEEC`) covers finite-dimensional subcomplexes `Vₕ`
+with uniformly bounded commuting cochain projections and the approximation property in `W`.
+`Feec.HilbertComplex.ConstrainedFEEC.toApprox` and `toCore` (`Feec.HilbertComplex.Approximation.ApproxConforming`)
+make it an approximating discretization with `ιₕ` the inclusion, and
+`Feec.HilbertComplex.ConstrainedFEEC.constrainedFEEC_of_approxFEEC` derives the statement of
+`constrainedFEEC` from `approxFEEC`. Non-vacuity (`Feec.HilbertComplex.Approximation.ApproxFEECWitness`):
+`Feec.HilbertComplex.ApproxFEEC.perturbed_nonvacuous` (scalar non-isometric `ιₙ`, nonzero
+defect, inexact scheme, both residual branches) and
+`Feec.HilbertComplex.ApproxFEEC.projPerturbed_nonvacuous` (`ιₙ = 1 + hₙP` not a multiple of the
+identity, nonzero commutator defect, graded branch with the half bound);
+`Feec.HilbertComplex.constrainedFEEC_nonvacuous` for the conforming case.
+
+**Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the
+README names (and the older names such as `Feec.Instances.Maxwell.cubePMC_rate` and
+`Feec.Instances.EinsteinBianchi.einsteinBianchi_torus_constrainedFEEC`) depend on it. The
+scheme (6.5) (`Feec.Instances.EinsteinBianchiFEM`) is not a discretization by subcomplexes
+(`S₀,ₕ = π¹S⁰ ≠ S⁰`) and enters through its own reading maps, with the elliptic projection (6.4)
+of the exact solution as comparison (`Feec.Instances.EinsteinBianchi.FEM.mirrorEllCore`,
+`Feec.Instances.EinsteinBianchi.FEM.standardCubeEllCore`), without the model convergence theorems
+of (6.5). The model verdict of the mirror scheme is a corollary
+(`Feec.Instances.EinsteinBianchi.mirrorFEMVerdict_of_approxFEEC`).
+
+Limits.
+- `ApproxFEEC` is a semigroup-form abstraction: it has no discrete differential `dₕ` and no cochain
+  condition on `ιₕ`, so discrete constraints (`dₕ`-closedness) cannot be stated, and there is no
+  bridge from a discrete Hilbert complex with a cochain consistency defect in the sense of
+  [HolstStern2012] to `ApproxFEEC`. The Holst–Stern terms `‖I − Jₕ‖` and `‖(I − iₕπₕ)u‖` enter only
+  through the orbit defect `pₕ' − Lₕ pₕ`.
+- Rate classes and cores are hypotheses on the data that each instance must supply. The
+  conforming rate carries `(1 + C_P)(1 + t)²`, where the model theorems have `(1 + t)`.
+- Without a grading, the converse with data in `D(L) ∩ K` is stated for `t ∈ [-T, T]`, and its
+  discrete residual is not stated. Forward invariance alone does not give a reducing subspace (the
+  de Rham counterexample in the `ConstrainedFEEC` docstring, not formalized).
+- For the thesis' boundary conditions `D(L) ∩ thesisTSD` is not dense in `thesisTSD` (the density
+  gap of Prop 4.17, `Feec.Instances.EinsteinBianchi.exists_mem_thesisTSD_not_mem_closure`), so the
+  `D(L) ∩ K` clauses of the verdict say nothing there; the converse comes from the per-datum clause
+  at `(0, 0, (0, β))` and the `K`-or-`K^⊥` clause. The componentwise discrete failure
+  (`Eₕ ∉ L²(TSD)`, `Bₕ` not symmetric) is the model statement
+  `Feec.Instances.EinsteinBianchi.standardCubeVerdict`, not derived from the instance, and there
+  is no rate class for these boundary conditions.
+- On (6.5) both reading maps are isometric, and that the consistency defect is nonzero is not
+  proved for any datum (for mirror TSD data the Strang consistency terms vanish). Non-isometric
+  reading maps and nonzero defects are exercised only by the abstract witnesses, and no witness
+  goes through `Feec.HilbertComplex.ApproxFEEC.Core.ofOperator` with a nonzero defect.
+- On `ℝᵈ` and `ℝ³` the truncation is conforming (`ιₙ` is the inclusion, zero defect), the
+  Sobolev classes are defined on the Fourier side, and it is a semi-discretization in frequency.
+- The Maxwell rate classes require `C²` orbits on `[0, T]`, and their only witness is the zero
+  datum. The non-reducing Maxwell constraint is exhibited on the torus and on `ℝᵈ`.
 
 ## Highlights
 

@@ -5,56 +5,71 @@ wave equations, following the thesis *A New Approach to Finite Element Simulatio
 Relativity* (Quenneville-Bélair, 2015). There is no `sorry`, `admit` or `axiom`, and every
 theorem depends only on `propext`, `Classical.choice` and `Quot.sound`.
 
-## The constrained FEEC theorem
+## The approximating FEEC theorem
 
-`Feec.HilbertComplex.constrainedFEEC` (in `Feec/HilbertComplex/Approximation/ConstrainedFEEC.lean`).
+`Feec.HilbertComplex.approxFEEC` (in `Feec/HilbertComplex/Approximation/ApproxFEEC.lean`),
+statement `ApproxFEEC.Verdict`.
 
 Take a Hilbert complex `W` (any finite window of any `ComplexShape`, over `ℝ` or `ℂ`), its
-Hodge wave equation `ξ' = Lξ` with `L = d − d†`, a closed constraint subspace `K`, and a family
-of finite-dimensional subcomplexes `Vₕ` with uniformly bounded commuting cochain projections that
-approximate `W`. Then:
+Hodge wave equation `ξ' = Lξ` with `L = d − d†`, and a closed constraint subspace `K`. A
+discretization is a family of Hilbert spaces `Xₕ` with their own inner products, skew bounded
+generators `Lₕ`, and uniformly bounded maps `ιₕ : Xₕ → W` with uniformly bounded left inverses
+`πₕ`. Nothing else is assumed: `ιₕ` need not be an inclusion, an isometry or a cochain map, so
+variational crimes in the sense of Holst–Stern are allowed. Consistency is tested along exact
+orbits: a *core* is a subspace of data with discrete comparison trajectories `pₕ(t)` such that
+`ιₕ pₕ(t) → e^{tL}ξ₀` and the consistency defect `pₕ' − Lₕ pₕ → 0`, uniformly on `[0, T]`. The
+discrete solution is `ξₕ(t) = ιₕ e^{tLₕ} vₕ`. Then:
 
 1. **Well-posedness.** For data in `D(L)` the solution `e^{tL}ξ₀` exists (Stone's theorem), is
    the only strong and the only weak solution, and conserves energy.
 2. **Propagation.** Every solution starting in `K` stays in `K` for all `t ∈ ℝ` if and only if
    `K` reduces `L`.
-3. **Convergence.** The semi-discrete solutions `ξₕ` converge to `ξ` uniformly on `[0, T]`, for
-   data in `D(L)`, and for any data in `W` once `ξₕ(0) → ξ₀`. For data in a rate class (for
-   example `D(L³)` or Sobolev data, when the instance supplies the approximation estimates):
-   `‖ξ(t) − ξₕ(t)‖ ≤ (1 + C_P)(1 + t)² C hᵅ ‖ξ₀‖`.
-4. **Constraint residual.** If `K` reduces `L`, then `dist(ξₕ(t), K) ≤ ‖ξ(t) − ξₕ(t)‖ → 0`,
-   with the same rate. If `K` does not reduce `L`, then for every `T > 0` some data leave the
-   constraint within time `T`, and so do the limits of the discrete solutions, whose residuals
-   tend to a positive number. In general the data lie in `K` or in `K^⊥`. On graded complexes,
-   with `K` invariant under the grading and `D(L) ∩ K` dense in `K`, they lie in `D(L) ∩ K`.
-   Without a grading, if `D(L) ∩ K` is dense in `K`, some datum of `D(L) ∩ K` leaves `K` at some
-   `t ∈ [−T, T]`; in that case the discrete residuals are not stated.
+3. **Convergence.** `ξₕ → ξ` uniformly on `[0, T]` for every datum in the closure of the core and
+   every family with `ιₕ vₕ → ξ₀`; `vₕ = πₕ ξ₀` is one such family. For a rate class the error is
+   best approximation plus consistency:
+   `‖ξ(t) − ξₕ(t)‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖ + ‖ιₕ‖ ‖pₕ(0) − vₕ‖`.
+4. **Constraint residual**, measured as `dist(ξₕ(t), K)` in `W`. If `K` reduces `L`, the
+   residual is at most the error and tends to `0`. If a solution leaves a closed set `Q`, the
+   residuals tend to the positive number `dist(ξ(t), Q)`. A non-reducing `K` is left by some
+   datum of `K` or of `K^⊥`. If `D(L) ∩ K` is dense in `K`, a datum of `D(L) ∩ K` leaves `K` at
+   some `t ∈ [−T, T]`. On graded complexes with `K` invariant under the grading, it leaves `K`
+   forward in time, and the residuals stay above half of their positive limit.
 
-`constrainedFEEC_nonvacuous` shows that both branches of item 4 occur.
+**The conforming case.** When `Xₕ` are finite-dimensional subcomplexes with uniformly bounded
+commuting cochain projections and `ιₕ` is the inclusion, this is the constrained FEEC theorem
+`Feec.HilbertComplex.constrainedFEEC`, with rate factor `(1 + C_P)(1 + t)²`.
+`ConstrainedFEEC.constrainedFEEC_of_approxFEEC` derives its statement verbatim from
+`approxFEEC`. The witnesses `ApproxFEEC.perturbed_nonvacuous` and
+`ApproxFEEC.projPerturbed_nonvacuous` (in `ApproxFEECWitness.lean`) have non-isometric `ιₕ`,
+a nonzero consistency defect and an inexact scheme, and exhibit both branches of item 4.
 
 ## Instances
 
-The "Verdict" column says which branch of item 4 holds. `C_P(1+t)²` stands for the factor
-`(1 + C_P)(1 + t)²` of item 3. Lean names are relative to `Feec.Instances.Maxwell` (M) and
+Every row is an instance of `approxFEEC`: its headline is `F.Verdict Z`, proved by `approxFEEC F Z`,
+and its rate theorem applies the rate clause `approxFEEC_rate`.
+The "Verdict" column says which branch of item 4 holds. Lean names are relative to
+`Feec.Instances.Maxwell` (M), `Feec.Instances.EuclideanBand` (B) and
 `Feec.Instances.EinsteinBianchi` (EB).
 
 | Model | Domain / BCs, discretization | Constraint | Verdict | Rate | Lean name |
 |---|---|---|---|---|---|
-| Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus`, `torus_converges`, `torus_residual` |
-| Maxwell | `𝕋ᵈ`, spectral Galerkin | `E = 0`, `B = 0` (not reducing) | solutions and discrete limits leave `K` | — | M `torus_potential_residual` |
-| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `O(h)` for `C²` orbits | M `cubePMC_rate`, `cubePEC_rate` |
-| Maxwell | parallelepipeds, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `O(h)` for `C²` orbits | M `paraPMC_rate`, `paraPEC_rate` |
-| Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `O(h)` for `C²` orbits | M `starPMC_rate`, `starPEC_rate` |
-| linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `C_P(1+t)² (N+1)^{-s}` for `H^{2+s}` | EB `einsteinBianchi_torus_constrainedFEEC_sobolev` |
-| linearized Einstein–Bianchi | `ℝ³`, no discretization | TSD | propagates (items 1–2 only) | — | EB `einsteinBianchi_euclidean` |
-| linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `C_P(1+t)² (N+1)^{-s}` for `H^{2+s}` | EB `einsteinBianchi_mirror_constrainedFEEC_sobolev` |
-| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5)* | TSD | converges to the constrained solution | `O(h)` for `D(L³)`, `O(hˢ)` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMVerdict` |
-| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5)* | TSD (not reducing) | converges to wrong physics | — | EB `standardCubeVerdict` |
+| Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus_approxFEEC` |
+| Maxwell | `𝕋ᵈ`, spectral Galerkin | `E = 0`, `B = 0` (not reducing) | solutions and discrete limits leave `K` | — | M `torus_potential_residual_of_approxFEEC` |
+| Maxwell | `ℝᵈ`, frequencies `\|ξ\| ≤ N` | Gauss laws | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ` | B `maxwell_euclidean_band` |
+| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `cubePMC_approxFEEC`, `cubePMC_approx_rate` (PEC alike) |
+| Maxwell | parallelepipeds, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `paraPMC_approxFEEC`, `paraPMC_approx_rate` (PEC alike) |
+| Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `starPMC_approxFEEC`, `starPMC_approx_rate` (PEC alike) |
+| linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_torus_approxFEEC`, `_sobolev` |
+| linearized Einstein–Bianchi | `ℝ³`, frequencies `\|ξ\| ≤ N` | TSD | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ`, exponent sharp | B `einsteinBianchi_euclidean_band` |
+| linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |
+| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `(4K + 8Kt) h` for `D(L³)`, `(6K + 12Kt) hˢ` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMApproxVerdict` |
+| linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `standardCubeApproxVerdict` |
 
-\* Scheme (6.5) of the thesis, with the elements of Tables 5.1/6.1. It discretizes the two rows of
-the BGG construction rather than the complex by subcomplexes, so these rows come from the model
-theorems and not from `constrainedFEEC`. `einsteinBianchi_constrainedFEEC_summary` bundles the
-Einstein–Bianchi rows.
+Scheme (6.5) uses the elements of Tables 5.1/6.1 and couples the two rows of the BGG construction
+by `S₀,ₕ = π¹S⁰ ≠ S⁰`, so its discrete complex is not a subcomplex. Its comparison trajectory is
+the elliptic projection (6.4) of the exact solution. On `ℝ³` and `ℝᵈ` the Sobolev classes are
+defined on the Fourier side, and the truncation is a semi-discretization in frequency.
+`einsteinBianchi_summary` bundles the Einstein–Bianchi rows.
 
 [`docs/OVERVIEW.md`](docs/OVERVIEW.md) has the module map, further results, the corrections to the
 thesis with their repaired statements, and the scope. [`docs/THESIS_MAP.md`](docs/THESIS_MAP.md)

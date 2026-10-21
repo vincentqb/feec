@@ -3326,6 +3326,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Maxwell».«gauss_existsUnique» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«bgg_wave_existsUnique» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«bgg_wave_existsUnique_cube» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«approxFEEC» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_wellPosed» -- THESIS_MAP.md
 #check @«Feec».«HodgeWave».«eqOn_waveGroup_of_isWeakSolution» -- THESIS_MAP.md
@@ -3360,8 +3361,10 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«Subcomplex».«norm_sub_le_of_approx» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_converges» -- THESIS_MAP.md
 #check @«Feec».«HodgeWave».«IsGraphSolution».«norm_sub_le» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirror_approxFEEC» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirror_constrainedFEEC» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirror_constrainedFEEC_sobolev» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_torus_approxFEEC» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_torus_constrainedFEEC» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_torus_constrainedFEEC_sobolev» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«converges» -- THESIS_MAP.md
@@ -3404,6 +3407,8 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Models».«StarShaped».«MeshFamily».«norm_sub_le_window_poly_smooth_of_polyOrderAt» -- THESIS_MAP.md
 #check @«Feec».«Variational».«norm_sub_le_of_projected_error_decay» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«Subcomplex».«CochainProjection» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EuclideanBand».«maxwellApprox_isReducing» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EuclideanBand».«maxwell_euclidean_band» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«cubePEC_gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«cubePMC_gauss_propagates» -- THESIS_MAP.md
 #check @«Feec».«Instances».«Maxwell».«gaussFam» -- THESIS_MAP.md
@@ -3439,14 +3444,18 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«EinsteinBianchi».«torus_tsd_propagates» -- THESIS_MAP.md
 #check @«Feec».«Fourier».«FibreReducing».«existsUnique_mem» -- THESIS_MAP.md
 #check @«Feec».«Fourier».«FibreReducing».«propagates» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«approxFEEC_propagates_iff» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«approxFEEC_residual_not_isReducing_of_grading» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_propagates» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_propagates_iff» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_propagates_iff_domain» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_propagates_iff_of_grading» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«constrainedFEEC_residual_not_isReducing_of_grading» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«mem_closure_domain_inter_ker_adjoint» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«FEM».«isReducing_tsdQℝ» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«StandardCubeVerdict» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_thesisCube» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«exists_mem_thesisTSD_not_mem_closure» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«mirrorFEEC_isReducing» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«not_isReducing_thesisCube» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«not_isReducing_thesisTSD» -- THESIS_MAP.md
@@ -3544,6 +3553,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«HilbertComplex».«orthogonal_cycles» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«HodgeWave».«IsWeakSolution» -- THESIS_MAP.md
 #check @«Feec».«HilbertComplex».«ConstrainedFEEC».«discrete» -- THESIS_MAP.md
+#check @«Feec».«HilbertComplex».«ConstrainedFEEC».«discreteWave» -- THESIS_MAP.md
 #check @«Feec».«Models».«Torus».«SymCurl».«adjoint_d» -- THESIS_MAP.md
 #check @«Feec».«Models».«Torus».«SymCurl».«dual_closedRangeAt» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«PolySeq».«bggS0h» -- THESIS_MAP.md
@@ -3564,9 +3574,11 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«tendsto_of_mem_wave_domain» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedConvergence».«waveFEM_converges_to_non_tsd» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«BoundedFailure».«waveFEM_converges_to_non_tsd_of_isRateApproximable» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirrorFEM_approxFEEC» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirror_waveFEM» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirror_waveFEM_rate» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_mirror_waveFEM_rate_sobolev» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_standardCube_approxFEEC» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM_rate_of_mem_domain» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorWeakSymmetry».«mirror_waveFEM_rate_sobolev» -- THESIS_MAP.md
@@ -3613,9 +3625,10 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Koszul».«Proxy3».«vec2_koszul» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«Proxy3».«vol_extDeriv» -- THESIS_MAP.md
 #check @«Feec».«Koszul».«extDeriv_not_mem_polyFormMinus_of_koszul_eq_zero» -- THESIS_MAP.md
-#check @«Feec».«HilbertComplex».«SpectralFamily» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«mirrorFEEC» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«torusFEEC» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EuclideanBand».«einsteinBianchi_euclidean_band» -- THESIS_MAP.md
+#check @«Feec».«Instances».«SpectralFamily» -- THESIS_MAP.md
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«negNorm_le_tripleNorm» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«bggHilb_hyps» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«bggHyps» -- THESIS_MAP.md
@@ -3635,6 +3648,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«EinsteinBianchi».«WaveFEM».«waveFEM_rate_tr» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«LocalElement».«dPiecewise_mem_globalSpacePartial_bcFacets» -- THESIS_MAP.md
 #check @«Feec».«FiniteElement».«PolySeq».«lagrangeP2_VPartial_bcFacets_ne_bot» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EuclideanBand».«ebApprox_isReducing» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeWave_rate'» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«WeakSymmetry».«cubeWave_rate_sobolev_of_one_le» -- THESIS_MAP.md
 #check @«Feec».«Models».«Euclidean».«BGG».«tsd_propagates» -- THESIS_MAP.md
@@ -3646,6 +3660,7 @@ Every `new` name of `docs/migration/map.tsv` and every name of `docs/THESIS_MAP.
 #check @«Feec».«Models».«Torus».«BGG».«tsd_propagates_neg» -- THESIS_MAP.md
 #check @«Feec».«Models».«Torus».«BGG».«waveGroup_mem» -- THESIS_MAP.md
 #check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_constrainedFEEC_summary» -- THESIS_MAP.md
+#check @«Feec».«Instances».«EinsteinBianchi».«einsteinBianchi_summary» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorBGG».«existsUnique_mem» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorBGG».«exists_nonstationary» -- THESIS_MAP.md
 #check @«Feec».«Models».«Cube».«MirrorBGG».«invariantCore_eq» -- THESIS_MAP.md

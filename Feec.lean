@@ -122,6 +122,10 @@ public import Feec.Geometry.Bivector
 public import Feec.Geometry.Connection
 public import Feec.Geometry.Hodge2
 public import Feec.Geometry.WeylDecomposition
+public import Feec.HilbertComplex.Approximation.ApproxConforming
+public import Feec.HilbertComplex.Approximation.ApproxFEEC
+public import Feec.HilbertComplex.Approximation.ApproxFEECWitness
+public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
 public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.Convergence
@@ -170,8 +174,18 @@ public import Feec.HilbertComplex.ShortDual
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Instances.EinsteinBianchi
+public import Feec.Instances.EinsteinBianchiFEM
+public import Feec.Instances.EinsteinBianchiFEMCube
+public import Feec.Instances.EinsteinBianchiFEMCubeCore
+public import Feec.Instances.EinsteinBianchiFEMCubeEll
+public import Feec.Instances.EinsteinBianchiFEMElliptic
+public import Feec.Instances.EinsteinBianchiFEMGenerator
+public import Feec.Instances.EinsteinBianchiFEMMirror
+public import Feec.Instances.EinsteinBianchiFEMMirrorCore
+public import Feec.Instances.EinsteinBianchiFEMMirrorEll
 public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Instances.EinsteinBianchiSpectral
+public import Feec.Instances.EuclideanBand
 public import Feec.Instances.Maxwell
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal
@@ -294,6 +308,7 @@ public import Feec.Physics.Maxwell.Forms
 public import Feec.Physics.Maxwell.Media
 public import Feec.Physics.Maxwell.Ohmic
 public import Feec.Semigroup.Basic
+public import Feec.Semigroup.DomainSq
 public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.LumerPhillips
 public import Feec.Semigroup.Orbit

@@ -39,6 +39,8 @@ with the discrete inf-sup condition `InfSup (restrict B K L) γ`. A Galerkin app
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Module

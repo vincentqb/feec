@@ -34,6 +34,8 @@ on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set Filter Topology MeasureTheory

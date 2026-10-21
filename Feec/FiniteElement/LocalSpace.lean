@@ -74,6 +74,8 @@ polynomials, equivalently on the face). The orthogonality hypotheses use the int
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.1–5.2 (the spaces on simplices and their traces)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MeasureTheory

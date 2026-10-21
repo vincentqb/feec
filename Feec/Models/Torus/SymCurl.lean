@@ -32,6 +32,8 @@ its Hodge wave equation is (4.18).
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.11 (Prop 4.19, (4.16)–(4.18))
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

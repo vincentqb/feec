@@ -52,6 +52,8 @@ every amplitude `A₊`, `Aₓ` and frequency `ω`.
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 7 (the plane-wave test, Table 7.1)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

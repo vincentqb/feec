@@ -32,6 +32,8 @@ and [Stewart1991] as further general references.
 * [T. W. Baumgarte, S. L. Shapiro, *Numerical Relativity: Solving Einstein's Equations on the Computer*][BaumgarteShapiro2010]
 * [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004]
 * [J. Stewart, *Advanced General Relativity*][Stewart1991]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset Matrix

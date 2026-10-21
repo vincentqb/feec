@@ -26,6 +26,8 @@ With tensorial mirror boundary conditions instead, TSD data do propagate on ever
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (Prop 4.17)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace LinearPMap

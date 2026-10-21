@@ -29,6 +29,8 @@ For an isometric group on a Hilbert space with generator `A`:
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.10 (groups of isometries)
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reducing subspaces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology LinearPMap

@@ -45,6 +45,8 @@ class by the natural one, `C^{s+2}` forms whose **tangential components vanish o
   §9.4 (cut-off arguments)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

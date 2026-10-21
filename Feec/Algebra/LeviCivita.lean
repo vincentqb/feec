@@ -36,6 +36,8 @@ The natural volume form is `ω = √|det g| ε` and defines the Hodge dual of a 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.1 (Levi-Civita symbol, volume form)
 * [C. N. Pope, *Geometry and Group Theory*][Pope2008] (volume form and Hodge duality)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Matrix Equiv

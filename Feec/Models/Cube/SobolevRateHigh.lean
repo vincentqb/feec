@@ -99,6 +99,8 @@ and class).
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6 (Sobolev inequalities)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology ContDiff ENNReal

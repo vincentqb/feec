@@ -28,6 +28,8 @@ frequency `ξ ∈ ℝ³` the symbols `grad_ξ u = i u ξᵀ` and `curl_ξ A = i 
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4 (Lemma 3.5), §4.10 (Prop 4.17, (4.14))
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -37,7 +37,6 @@ dimension and degree:
   (`finrank_relative_harmonic_eq_absolute`);
 * **a complete set of eigenvectors** for the Hodge wave group (`eigenDense`), from the compact
   resolvent.
-
 * **the Hodge star exchanges the two classes**: `dx_s ↦ dx_{sᶜ}` (the Hodge star up to the sign
   of each coefficient) maps the `k`-forms of one class unitarily onto the `(n - k)`-forms of the
   other (`hodgeStar`, `starLp_mem_fixed_iff`), and harmonic forms onto harmonic forms
@@ -81,6 +80,8 @@ the unitary exchange of the spaces and of the harmonic forms is.
   (the Koszul complex)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.2 (the compactness property), §4.10 (the cube by the method of images)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

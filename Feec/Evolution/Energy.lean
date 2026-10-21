@@ -30,6 +30,8 @@ non-positive case `norm_le_of_re_inner_deriv_nonpos`, and specializes them to st
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set

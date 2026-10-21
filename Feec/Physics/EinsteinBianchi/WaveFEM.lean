@@ -71,6 +71,8 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
   (regular decomposition)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.10 (Stone's theorem)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace

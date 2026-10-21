@@ -44,6 +44,8 @@ Hodge wave equation is the matrix system (4.14) of the Einstein–Bianchi formul
   §4.10 (Prop 4.17, (4.14), (4.15))
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
   (the Einstein–Bianchi system)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

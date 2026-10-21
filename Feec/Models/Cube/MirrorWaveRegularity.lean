@@ -75,6 +75,8 @@ embedding `Hˢ ⊆ C²` needs `s > 7/2`), and whether a sharper analysis of (6.5
   Ch. 6 (§6.3, (6.5); §6.2, (6.4)), §4.10 (the linearized EB system as a Hodge wave equation)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.4 (smoothed projections)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate LinearPMap

@@ -37,6 +37,8 @@ Duhamel's formula:
   §II.1, §VI.7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.3 (Thm 4.3)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology MeasureTheory

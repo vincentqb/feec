@@ -43,6 +43,8 @@ measure on `ℤⁿ` for `𝕋ⁿ`, Lebesgue measure on `ℝⁿ`), any index shap
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
   (Hilbert complexes)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (Hilbert complexes)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

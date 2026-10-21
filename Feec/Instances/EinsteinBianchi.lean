@@ -89,6 +89,8 @@ and `StandardCubeVerdict` are kept (and `StandardCubeVerdict` is part of
   Ch. 4 (§4.4, §4.6, §4.10, Thm 4.14, Prop 4.17), Ch. 5 ((5.1)), Ch. 6 (§6.1–6.3, (6.5))
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology

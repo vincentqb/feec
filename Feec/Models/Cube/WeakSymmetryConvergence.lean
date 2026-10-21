@@ -49,6 +49,8 @@ uniformly on compact trajectories (`PolySmoothingEstimatesMin.tendsto_norm_sub_p
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002] (Strang's lemma)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace LinearPMap

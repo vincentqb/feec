@@ -25,6 +25,8 @@ equation with `ε` (the spatial form being accretive, or skew, on the discrete s
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set

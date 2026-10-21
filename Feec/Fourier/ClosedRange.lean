@@ -30,6 +30,8 @@ degenerate at low frequency, and then the range is not closed (`not_isClosed_ran
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

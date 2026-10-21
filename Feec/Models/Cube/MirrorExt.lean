@@ -42,6 +42,8 @@ and takes Fourier coefficients (`Feec.Fourier.Torus.fieldFourier`): a scaled iso
   §4.10
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension by reflection)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ENNReal

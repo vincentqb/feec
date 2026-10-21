@@ -42,6 +42,8 @@ constrained.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
   (the de Rham complex)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (the de Rham complex)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set LinearPMap

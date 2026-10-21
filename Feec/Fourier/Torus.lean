@@ -35,6 +35,8 @@ Mathlib's `UnitAddTorus.mFourierBasis`) identifies the model with fields on the 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10–4.11 (the periodic analogue of the complexes (4.2), (4.16))
 * Mathlib, `Mathlib.Analysis.Fourier.AddCircleMulti`
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

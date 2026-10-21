@@ -84,6 +84,8 @@ with the instance `ParallelepipedWitness.mixed_rate_lagrangeP2_reflected`.
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
 * [M. Costabel, A. McIntosh, *On Bogovskiĭ and Regularized Poincaré Integral Operators for de Rham Complexes on Lipschitz Domains*][CostabelMcIntosh2010]
   (the Poincaré inequality on bounded Lipschitz domains)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

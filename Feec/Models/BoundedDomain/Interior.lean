@@ -48,6 +48,8 @@ point whose Euclidean distance to `ℝ³ \ Ω` exceeds `t`.
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (domain of dependence)
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
   (the Einstein–Bianchi system)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

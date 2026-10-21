@@ -86,6 +86,8 @@ explicitly in `IsRefInterpolant` and `HasRefDerivEstimate`. As in
 * [J. H. Bramble, S. R. Hilbert, *Estimation of Linear Functionals on Sobolev Spaces with Application to Fourier Transforms and Spline Interpolation*][BrambleHilbert1970]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates on shape regular meshes)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

@@ -65,6 +65,8 @@ the polynomial ones of `Feec.FiniteElement.PolyInverseEstimate` and
   §4.5–4.6 (the moment degrees of freedom)
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

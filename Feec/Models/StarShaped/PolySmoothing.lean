@@ -82,6 +82,8 @@ are in `Feec.Models.StarShaped.PolyFiniteElement`.
   (shape-regular families, inverse inequalities), Thm 3.1.4 (interpolation error)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

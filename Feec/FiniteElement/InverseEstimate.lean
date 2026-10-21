@@ -44,6 +44,8 @@ norms (`norm_sq_pieceL2_le`).
   §3–5 (trimmed linear forms, Whitney forms and their degrees of freedom)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.2 (inverse
   inequalities)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

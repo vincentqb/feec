@@ -34,6 +34,8 @@ bookkeeping, unlike `lp` over all of `ℤ`) and a total differential `𝐝 = ∑
   §4.4 (the total space `W = W⁰ × W¹ × W²` of the Hodge wave operator)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2 (the operator `D = d + d*` of a
   Hilbert complex)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -29,6 +29,8 @@ For `A : E →ₗ.[𝕜] E` on an inner product space over `𝕜` (`RCLike`):
   §4.1
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.4 (dissipative operators), §1.10 (Stone's theorem)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

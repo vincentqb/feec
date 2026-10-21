@@ -48,6 +48,8 @@ directly as an operator on jets about a constant metric, and the one-parameter f
 * [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004],
   p. 277
 * [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 24
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Finset Matrix

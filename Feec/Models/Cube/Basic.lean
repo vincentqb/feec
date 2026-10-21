@@ -51,6 +51,8 @@ and does not depend on either.
   §4.10 (Prop 4.17 on the cube)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension by reflection)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ENNReal Topology

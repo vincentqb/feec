@@ -98,6 +98,8 @@ No hypothesis is assumed.
   (extensions)
 * [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
   (higher-order reflection)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate Topology ContDiff

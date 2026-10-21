@@ -45,6 +45,8 @@ subspace of `K` reducing `L`. This file decides when `K*` consists of stationary
   §4.10 (Props 4.16–4.18), §4.11 (Prop 4.19)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.10 (groups of isometries)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

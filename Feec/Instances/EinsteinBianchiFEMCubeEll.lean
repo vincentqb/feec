@@ -31,6 +31,8 @@ for some datum is not formalized.
   §6.2 ((6.4)), §6.3 ((6.5), Table 6.1)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   Thm 3.9, Thm 3.10 (elliptic analogue)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace

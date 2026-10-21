@@ -25,6 +25,8 @@ instance of the multiplication-operator theory on `L²(μ; E)` (`Feec.Operator.m
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped ENNReal NNReal

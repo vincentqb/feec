@@ -58,6 +58,8 @@ The degrees of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-face
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3–4 (Whitney forms, `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}`, degrees of freedom)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MeasureTheory

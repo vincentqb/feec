@@ -61,6 +61,8 @@ The DOF argument for (5.4) (thesis Prop 5.7) is `Feec.FiniteElement.comp_eq_of_m
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

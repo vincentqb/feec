@@ -108,6 +108,8 @@ to vertex values) need point values, which `H^{s+1}` controls only through the S
   families)
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6 (Sobolev inequalities),
   §5.8.1 (Poincaré inequalities)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

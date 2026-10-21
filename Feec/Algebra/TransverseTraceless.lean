@@ -37,6 +37,8 @@ divergence-free (TSD) matrix fields, and in linearized gravity the TT gauge ampl
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.8 ((2.12)–(2.13), the TT gauge), §3.4 (TSD fields)
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Matrix

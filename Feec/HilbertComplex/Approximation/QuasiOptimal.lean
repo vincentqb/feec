@@ -61,6 +61,8 @@ and the second half of the gap estimate, `norm_sub_starProjection_harmonic_le`).
   the mixed method)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (stable mixed discretizations from bounded cochain projections)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -34,6 +34,8 @@ resolvent off the imaginary axis.
   identity for closed operators)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.10 (resolvents of skew-adjoint generators)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open LinearPMap Filter Topology

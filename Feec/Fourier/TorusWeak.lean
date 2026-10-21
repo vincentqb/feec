@@ -54,6 +54,8 @@ The measure on `𝕋ᵈ` is the normalized Haar measure of `Feec.Fourier.Torus.f
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the periodic complex)
 * Mathlib, `Mathlib.Analysis.Fourier.AddCircleMulti`
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

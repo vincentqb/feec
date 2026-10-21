@@ -17,6 +17,8 @@ system (`planeWave_weyl`, `planeWave_EB`).
   §3.4 (Prop 3.4, Lemma 3.5), §3.5; §2.8 (TT plane waves)
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
 * [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm

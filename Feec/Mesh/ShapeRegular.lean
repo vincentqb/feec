@@ -45,6 +45,8 @@ the level `N`.
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (shape regular meshes)
 * [J. Bey, *Simplicial grid refinement: on Freudenthal's algorithm and the optimal number of congruence classes*][Bey2000]
   (Freudenthal refinement produces finitely many congruence classes)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

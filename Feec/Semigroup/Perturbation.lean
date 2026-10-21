@@ -36,6 +36,8 @@ formula and is in `Feec.Evolution.Perturbation`.
   §3.1 (Thm 3.1.1: bounded perturbations; Dyson–Phillips series)
 * [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
   §III.1 (Thm III.1.3)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology MeasureTheory LinearPMap

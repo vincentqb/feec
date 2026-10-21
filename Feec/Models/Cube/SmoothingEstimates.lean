@@ -57,6 +57,8 @@ families are treated at once through the admissible parameters `IsAdm` (centre o
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

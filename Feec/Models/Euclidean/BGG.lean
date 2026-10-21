@@ -21,6 +21,8 @@ thesis' boundary conditions this fails, which locates the failure at the boundar
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

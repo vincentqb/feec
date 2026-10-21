@@ -25,6 +25,8 @@ public import Feec.Geometry.Bivector
 * [R. M. Wald, *General Relativity*][Wald1984]
 * [C. N. Pope, *Geometry and Group Theory*][Pope2008]
 * [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

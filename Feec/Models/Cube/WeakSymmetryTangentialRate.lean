@@ -18,7 +18,6 @@ condition on the normal components.
 * **The class of `S¹u` is derived** from that of `u` (`exists_isCsFormTr_segS1`: the tangential
   trace of `dxₐ ∧ uₐ` vanishes with that of `uₐ`), so `cubeFEM_rate_tr`, `cubeFEM_rate_isSaddle_tr`
   and `IsSmoothStateTr` put no hypothesis on `S¹u`.
-
 * The `L²` bound of a field is now its sup bound (`IsCsFormTr.norm_le`), and the bound
   `|⟪x, d w⟫| ≤ c L ‖w‖` for `w ∈ H̊Λ¹(Q)` is **Green's formula** `⟪x, d w⟫ = ⟪δx, w⟫` on `D(d_min)`
   (`IsCsForm.abs_inner_D1_le`: no boundary condition on `x` at all).
@@ -55,6 +54,8 @@ the initial data `M(0)`, `ρ(0)`.
   §5.3, Table 5.1, Thm 5.5; §6.2 (6.4), §6.3 (6.5), Table 6.1
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (vanishing tangential
   traces), Ch. 7 (approximation estimates)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace ContDiff

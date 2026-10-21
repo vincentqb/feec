@@ -78,6 +78,8 @@ Weber compactness, hence `EigenDense`, on every bounded domain star-shaped with 
   (Lipschitz functions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

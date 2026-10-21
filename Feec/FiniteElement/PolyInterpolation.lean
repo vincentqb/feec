@@ -83,6 +83,8 @@ iterated Fréchet derivatives (no Sobolev spaces).
   §5.2
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Prop 5.9
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -30,6 +30,8 @@ wave operators of `Feec.HilbertComplex.Dirac` apply to it. Zero padding uses `PU
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.4, (4.5) and Thm 4.6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

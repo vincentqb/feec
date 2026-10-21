@@ -35,6 +35,8 @@ No closed-range statement is made (it needs the regularity of `Ω`).
   §11 (the elasticity complex)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the elasticity complex from the
   BGG construction)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap

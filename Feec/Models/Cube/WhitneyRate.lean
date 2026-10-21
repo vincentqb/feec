@@ -58,6 +58,8 @@ interpolation error of the Whitney interpolant (`FEM.exists_mem_whitney_le`, [Ar
   Thm 3.9 (quasi-optimality of the mixed method)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -59,6 +59,8 @@ complexes `Maxwell.pec`, `Maxwell.pmc` (`Maxwell.pecForms_conj_eq_pec`,
   §4 (the `L²` de Rham complex and its dual)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.9 (Prop 4.16: the divergence constraint propagates, both boundary conditions)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

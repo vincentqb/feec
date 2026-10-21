@@ -34,6 +34,8 @@ In contrast with the torus (`Feec.Models.Torus.DeRham`):
   and Poincaré inequalities)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.2
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

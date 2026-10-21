@@ -66,6 +66,8 @@ is `IsFullCNStep`, that of the reduced system (4.15) `Ė = -d₁* B`, `Ḃ = d�
   discrete level)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (time discretization of
   Hodge evolution problems)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

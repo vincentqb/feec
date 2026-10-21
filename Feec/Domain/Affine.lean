@@ -37,6 +37,8 @@ conjugation is the image of the kernel (`LinearPMap.mem_ker_conjScaled`).
   §4.10 (the cube complexes under dilations and translations)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (change of variables in Sobolev spaces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

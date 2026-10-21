@@ -21,7 +21,6 @@ degrees of freedom vanish on every face contained in a facet of `Γ`. This inter
 * for the families of an admissible sequence, the dimension is
   `Σ_{m ≤ n} #{m-faces not in a facet of Γ} · dim(test forms on m-faces)`
   (`PolySeq.finrank_globalSpacePartial`).
-
 * with boundary conditions in the degrees `k < j` only (`LocalElement.bcFacets`; `j = 2` in `ℝ³`
   is the pattern `V̊ₕ⁰ → V̊ₕ¹ → Vₕ²` of [QuennevilleBelair2015], §6.3) the spaces are again closed
   under `d` (`LocalElement.dPiecewise_mem_globalSpacePartial_bcFacets`, `LocalElement.dGlobalBC`),
@@ -39,6 +38,8 @@ not treated here.
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §6.3, Table 6.1
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Finset

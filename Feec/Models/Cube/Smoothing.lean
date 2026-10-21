@@ -53,6 +53,8 @@ in `HΛ(Q)` itself, and the smoother is the dilated mollification of
   §4.10 (the cube by the method of images)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   Ch. 4 (convolution and mollifiers)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

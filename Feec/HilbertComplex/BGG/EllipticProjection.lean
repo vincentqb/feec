@@ -89,6 +89,8 @@ Corrections to the thesis' (6.4):
   (saddle-point problems)
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
   (elliptic projections in evolution problems)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

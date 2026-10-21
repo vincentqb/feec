@@ -37,6 +37,8 @@ outcome, the gauge term `2∂_(a ξ_b)` (`gaugeTR`, `Hfun_gauge`), enters, as a 
   p. 277
 * [J. Stewart, *Advanced General Relativity*][Stewart1991], pp. 20, 24
 * [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], p. 39
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Finset Matrix

@@ -29,6 +29,8 @@ generator) with the block-matrix form in `Feec.TimeStepping.BlockMatrix`.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 7 (Table 7.1, the plane-wave test), §3.5 (plane waves)
 * [R. M. Wald, *General Relativity*][Wald1984] (linearized plane waves in TT gauge)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Real

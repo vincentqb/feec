@@ -70,6 +70,8 @@ On a general bounded `Ω` (a ball, a Lipschitz domain) the question is **still o
   §4.10 (Prop 4.17)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §4.4 (mollification), §9.1 (weak derivatives)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

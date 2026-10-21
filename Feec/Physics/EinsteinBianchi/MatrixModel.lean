@@ -62,6 +62,8 @@ are proved at the start of the file.
   §3 (vector proxies in three dimensions)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (`S₁ = 2 vskw`)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace

@@ -29,6 +29,8 @@ For `T : E →ₗ.[𝕜] F` and closed subspaces `K ⊆ E`, `L ⊆ F` with ortho
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.4 (the operator `L̃`)
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reduction of operators)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

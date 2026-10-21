@@ -47,6 +47,8 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, Table 5.1; §6.3, Table 6.1
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open MeasureTheory Set Finset

@@ -44,6 +44,8 @@ complex (`Feec.HilbertComplex.Dual`), which then needs no index transport.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (the Finite Element Exterior Calculus framework)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

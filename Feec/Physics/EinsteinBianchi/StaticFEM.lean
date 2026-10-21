@@ -72,6 +72,8 @@ theorems of this file with it discharged are `staticFEM_cube`, `staticFEM_nonvac
   (regular decomposition)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
   §3 (regular decomposition)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace

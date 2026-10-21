@@ -31,6 +31,8 @@ Two thesis claims about operators and bounded forms are refuted on the sequence 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.3 (closed kernels), Thm 4.9 (Babuška–Nečas)
 * [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

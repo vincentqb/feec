@@ -16,6 +16,8 @@ ball counterexample (`Feec.Counterexamples.BallSymTSD`).
 ## References
 
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (cut-offs in energy estimates)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -37,6 +37,8 @@ projection not commuting with the flow.
   §6.2 ((6.3), (6.4), Prop 6.2)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   Thm 3.9, Thm 3.10 (elliptic analogue: best approximation plus consistency)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

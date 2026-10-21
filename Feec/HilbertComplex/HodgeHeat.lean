@@ -70,6 +70,8 @@ part under closed range. No closed range is needed except for the decay.
   (the Hodge heat equation in FEEC)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.4 (Lumer–Phillips), §4.1–4.2 (the inhomogeneous problem)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -34,6 +34,8 @@ freedom, the gauge change to TT (Prop 2.6, corrected), and the geodesic deviatio
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
 * [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], pp. 44–45
   (geodesic deviation of a TT wave; Fig 2.1 of the thesis, a ring of particles, is p. 45)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Finset Matrix

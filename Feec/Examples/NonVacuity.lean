@@ -33,6 +33,8 @@ hypotheses (`Feec.EinsteinBianchi.propagation_hyps_nonvacuous`).
   §4.3 (Thm 4.3, Cor 4.5), §4.4 (Thms 4.6, 4.7)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   Ch. 1 (uniformly continuous groups)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace LinearPMap

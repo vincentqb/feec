@@ -34,6 +34,8 @@ the graph space `Γ(𝐝)` of the total differential, i.e. `ξ ∈ C¹([0,T]; V)
   §4.4 (Thm 4.6), §4.6 (Thm 4.14 and the remark after it)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.2 (regularity of orbits)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace LinearPMap

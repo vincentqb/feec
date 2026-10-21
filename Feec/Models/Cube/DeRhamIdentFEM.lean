@@ -42,6 +42,8 @@ hypotheses discharged are in `Feec.Models.Cube.DeRhamIdentRate`.
   §3.1 (Poincaré inequality), §4.3 (the de Rham complex), Thm 3.8, Thm 3.9
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (harmonic forms and
   cohomology)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology Finset

@@ -49,6 +49,8 @@ projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further a
   (regular decomposition)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
   §3 (regular decomposition)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

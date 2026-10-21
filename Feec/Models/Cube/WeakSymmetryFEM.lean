@@ -75,6 +75,8 @@ Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`)
   (regular decomposition)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
   §3 (regular decomposition)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace ContDiff

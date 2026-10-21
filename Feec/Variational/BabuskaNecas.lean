@@ -40,6 +40,8 @@ is a corollary of Babuška–Nečas over `RCLike`.
 * [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
   Ch. 4
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Module

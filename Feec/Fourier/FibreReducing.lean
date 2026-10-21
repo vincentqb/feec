@@ -30,6 +30,8 @@ hypothesis left to check: the projection hypothesis `P_K D(d) ⊆ D(d)` and the 
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10–4.11 (Props 4.17, 4.19: the fibrewise commutation of `P_TSD` with the curl symbol)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -43,6 +43,8 @@ the projection hypotheses are discharged (`exists_discreteSolution_norm_sub_le_e
 * [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
 * [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

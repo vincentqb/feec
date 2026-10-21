@@ -46,6 +46,8 @@ finite-dimensional `K ⊆ Γ(T)` (e.g. the total space of a finite element subco
 * [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
 * [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology

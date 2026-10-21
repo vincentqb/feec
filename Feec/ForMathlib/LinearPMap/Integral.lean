@@ -17,6 +17,8 @@ public import Mathlib.Topology.Algebra.Module.LinearPMap
   §1.2
 * [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
   §II.1
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set MeasureTheory

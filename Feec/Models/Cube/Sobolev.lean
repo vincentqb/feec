@@ -77,6 +77,8 @@ No hypothesis is assumed. Not formalized: the identification of `Hᵐ`, `m ≥ 2
   §4.3 (relative and absolute boundary conditions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the cube by the method of images)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate Topology

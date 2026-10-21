@@ -49,6 +49,8 @@ membership proof; `u' t` is the derivative of `t ↦ w t` in `W₀`.
   (second-order Galerkin formulation)
 * [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
   (second-order Galerkin formulation)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

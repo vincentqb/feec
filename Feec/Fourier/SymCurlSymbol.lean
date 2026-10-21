@@ -24,6 +24,8 @@ trace-free (Lemma 3.5). Its adjoint complex (4.17) is `div div ← sym curl`.
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4 (Lemma 3.5), §4.11 (Prop 4.19, (4.16)–(4.18))
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

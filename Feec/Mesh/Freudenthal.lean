@@ -52,6 +52,8 @@ triangulation of `(0, N)ⁿ` by the cells `m + K_σ`, `m ∈ {0, …, N-1}ⁿ`, 
 * [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
 * [J. Bey, *Simplicial grid refinement: on Freudenthal's algorithm and the optimal number of congruence classes*][Bey2000]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (simplicial meshes)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

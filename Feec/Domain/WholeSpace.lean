@@ -50,6 +50,8 @@ element of `D(A_max(Ω))` vanishing a.e. outside a compact subset of `Ω` lies i
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §4
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate Convolution Topology LinearPMap

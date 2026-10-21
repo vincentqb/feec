@@ -24,6 +24,8 @@ For `T : E →ₗ.[𝕜] F` between Hilbert spaces over `𝕜` (`RCLike`):
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.1 (graph relations)
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5 (adjoints and graphs)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

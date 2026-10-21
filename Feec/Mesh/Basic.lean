@@ -54,6 +54,8 @@ convex hull of their common vertices ([Arnold2018], Ch. 7; [Ciarlet2002], Ch. 2)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (simplicial meshes)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Ch. 2
   (triangulations, affine families)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

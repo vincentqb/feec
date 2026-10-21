@@ -113,6 +113,8 @@ Band-limited fields are in every class (`mem_sobolev_of_mem_band`), so each clas
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3 (approximation of Hilbert complexes)
 * Mathlib, `Mathlib.Analysis.Fourier.LpSpace` (the `L²` Fourier transform, Plancherel)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology

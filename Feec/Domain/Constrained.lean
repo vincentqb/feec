@@ -28,6 +28,8 @@ isometrically (`Jx`, `Jy`): closed subspaces (`Submodule.subtypeₗᵢ`), scalar
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §2 (complexes with values in subspaces of matrices)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

@@ -28,6 +28,8 @@ stable.
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 5.3
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.7 (bounded cochain projections from smoothed canonical projections; Thm 4.15)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

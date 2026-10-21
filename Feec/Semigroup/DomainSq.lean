@@ -26,6 +26,8 @@ orbit `t ↦ e^{tA} x` is `C¹` with values in `D(A)` for the graph norm.
   §II.1 (cores and powers of generators)
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
   Cor. 2.4.9 (Stone's theorem)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology

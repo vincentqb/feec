@@ -71,6 +71,8 @@ parts.
   §3.4 (Trotter–Kato approximation theorems)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.4 (Thms 4.6, 4.7), §4.10 (Prop. 4.17), §6.3 ((6.5))
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -35,6 +35,8 @@ is treated in `Feec.Models.BoundedDomain.Compactness`.
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.7 (Rellich–Kondrachov)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.3 (Rellich's theorem), §9.4 (extension by zero of `W₀^{1,p}`)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ENNReal Topology

@@ -101,6 +101,8 @@ scheme couples the rows by the parity-smoothed `S₀,ₕ = π¹S⁰`, not by the
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §4.3 (relative and absolute boundary conditions)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG construction)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open MeasureTheory Set Finset

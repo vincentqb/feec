@@ -40,6 +40,8 @@ On the torus the bands `|k|_∞ ≤ N` are finite sets of modes: this is the Fou
   §4.12–4.13 (Galerkin approximation of the Hodge wave equation)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (approximation of Hilbert
   complexes)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

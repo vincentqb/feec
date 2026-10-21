@@ -52,6 +52,8 @@ facet (`IsFaceNormal F ν`); the proof uses the cofactor normal `faceNormal q` o
   integration by parts across interfaces)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §5 (conformity of piecewise smooth forms)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MeasureTheory

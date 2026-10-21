@@ -43,6 +43,8 @@ non-reducing branch of the residual occurs with its eventual lower bound
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   §3 (variational crimes: non-isometric `iₕ`, discrete differentials differing from `d`)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

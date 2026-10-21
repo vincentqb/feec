@@ -61,6 +61,8 @@ sequence `S` (`FEM.polyPartial n S N J`) and for the Whitney forms (`FEM.whitney
   part of the boundary), Ch. 7 (finite element spaces)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §6.3, (6.5) (the mirror scheme)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology Finset

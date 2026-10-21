@@ -38,6 +38,8 @@ and reflects domains (`J x ∈ D(d') → x ∈ D(d)`). One structure covers:
   §4.10 (Prop 4.17 on the cube, by compression of the torus)
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (parts of operators in
   reducing subspaces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

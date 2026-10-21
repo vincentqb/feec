@@ -76,6 +76,8 @@ the constants are uniform without a shape-regularity argument.
   inequalities)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Props 5.8–5.9
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

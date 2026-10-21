@@ -41,6 +41,8 @@ consumed by the finite element method, are in `Feec.Models.Cube.DeRhamIdentFEM`.
   cohomology of the de Rham complex with boundary conditions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.2 (Poincaré ⇔ closed range, compactness property)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate Topology Finset

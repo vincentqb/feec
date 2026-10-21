@@ -48,6 +48,8 @@ failure is a boundary effect.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3), Ch. 7 ((4.14), (4.15)), §4.10–4.11
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

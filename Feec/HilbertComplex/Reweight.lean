@@ -53,6 +53,8 @@ that adjoints pick up the adjoint weights: `(d')† = (a i)⁻† ∘ d† ∘ (
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4 (Hilbert complexes)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (Hilbert complexes of closed densely
   defined operators)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

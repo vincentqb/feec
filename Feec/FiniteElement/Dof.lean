@@ -51,6 +51,8 @@ and its estimates are proved for the Whitney complexes of the cube in
   (bounded cochain projections from canonical projections and smoothers)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (degrees of freedom,
   canonical projections)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -22,6 +22,8 @@ thesis §4.10 (`P_r⁻Λ¹ = P_{r-1}³ ⊕ H_{r-1}³ × x`).
   §4.7, §4.10
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MvPolynomial

@@ -41,6 +41,8 @@ approximating group is isometric.
   Thm 4.3 (the existence input, cited there from [CazenaveHaraux1998])
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
   Cor. 2.4.9 (skew-adjoint generators of isometry groups) and Prop. 4.1.6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology NormedSpace LinearPMap Feec.Operator

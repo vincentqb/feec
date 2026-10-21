@@ -36,6 +36,8 @@ problem `U' = A U + F` on `[a,b]`, `U a = U₀`, has a classical solution, Duham
   Prop 4.1.6, Cor 2.4.9
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.3 (Thm 4.3)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter

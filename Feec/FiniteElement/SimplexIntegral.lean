@@ -51,6 +51,8 @@ and so does the integral.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §2 (integration of differential forms)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MeasureTheory

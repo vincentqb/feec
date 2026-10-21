@@ -29,6 +29,8 @@ consistency defect is the pair of the real defects (`ApproxFEEC.norm_complexifyC
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   Thm 3.9, Thm 3.10 (elliptic analogue; best approximation in the image of the reading map)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

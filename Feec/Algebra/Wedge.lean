@@ -41,6 +41,8 @@ graded derivation.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §2 (the exterior algebra and the exterior derivative)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset

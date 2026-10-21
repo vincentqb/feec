@@ -27,6 +27,8 @@ thesis' Dirichlet conditions, `Feec.Models.BoundedDomain.gradCurl`) and the **ma
   §4.10 (Prop 4.17)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension by reflection)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

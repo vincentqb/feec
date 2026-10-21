@@ -63,6 +63,8 @@ here; for an arbitrary bounded open set no proof is available, so it stays a hyp
   §3.1.3 (compactness property), §4.3 (the de Rham complex)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ENNReal Topology

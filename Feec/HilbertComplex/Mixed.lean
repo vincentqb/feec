@@ -41,6 +41,8 @@ condition of the Hodge wave form (`Feec.Variational.InfSup.of_testMap`).
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.9
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Prop 4.13 (the same test-function argument for the Hodge wave form)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

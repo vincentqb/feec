@@ -111,6 +111,8 @@ The Gauss constraint is reducing, so the second branch of item 4 of the constrai
   §3.3 (approximation property, bounded cochain projections, Thm 3.6), §5.4 (smoothed projections)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
   solutions), Ch. 8 (evolution problems)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

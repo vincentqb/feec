@@ -35,6 +35,8 @@ and for any finite-dimensional fibres:
 * Mathlib, `Mathlib.Analysis.Fourier.LpSpace` (Plancherel),
   `Mathlib.Analysis.Distribution.SchwartzSpace.Fourier`,
   `Mathlib.Analysis.Distribution.AEEqOfIntegralContDiff`
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

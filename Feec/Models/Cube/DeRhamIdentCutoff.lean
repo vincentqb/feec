@@ -29,6 +29,8 @@ derivative this applies when the **tangential** components vanish on the faces
   §9.4 (`W₀^{1,p}`, cut-off arguments)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (vanishing tangential and
   normal traces)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff Topology

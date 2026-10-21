@@ -84,6 +84,8 @@ Prop 4.19 fails with either placement.
   §3.4 (Lemma 3.5), §4.11 ((4.16)–(4.18), Prop 4.19)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

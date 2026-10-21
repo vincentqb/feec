@@ -34,6 +34,8 @@ coefficient sequences with the parities `c` and real entries (`w(-n) = conj w(n)
   §9.2 (extension by reflection)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the cube by the method of images)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate ENNReal Topology

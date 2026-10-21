@@ -64,6 +64,8 @@ in `H̊Λ²(Q)`. The stationary state `sawWave T` (`ρ = (sawW2, 0, 0)`) is a cl
   Thm 5.5 ((5.3), (5.6), Table 5.1), §6.3 ((6.4), (6.5), Table 6.1)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   Thm 3.9, §4.3 (Gaffney's inequality), §5.4
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace LinearPMap

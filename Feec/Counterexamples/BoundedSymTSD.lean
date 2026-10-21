@@ -36,6 +36,8 @@ space is `tsdSKer = tsdS ∩ ker (grad grad)†`, and the invariant core of
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10–4.11 (Prop. 4.16, Prop. 4.17, Prop. 4.19, complex (4.16))
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §8 (Hessian and div-div complexes)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

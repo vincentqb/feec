@@ -15,6 +15,8 @@ public import Feec.Geometry.AlgebraicCurvature
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.4
 * [R. M. Wald, *General Relativity*][Wald1984], §4.3
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset Matrix

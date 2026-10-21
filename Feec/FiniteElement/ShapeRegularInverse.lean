@@ -46,6 +46,8 @@ shape-regular meshes (`Feec.FiniteElement.ShapeRegularSmoothing`,
   families, shape regularity), §3.2 (inverse inequalities)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.4 (inverse estimates for the smoothed projection)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

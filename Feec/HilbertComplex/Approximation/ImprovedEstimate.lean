@@ -71,6 +71,8 @@ identification is not formalized here), and they avoid solution operators at oth
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 5.6
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (improved estimates by duality)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

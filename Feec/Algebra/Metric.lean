@@ -43,6 +43,8 @@ signature is used and it is fixed explicitly (`minkowski`, `minkowskiMatrix`).
   §2.2 (signature (−+++)), §2.7 ((2.5), trace reversal)
 * [R. M. Wald, *General Relativity*][Wald1984], Ch. 2–4 (§4.4: linearized gravity)
 * [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 42 (Sylvester's law of inertia)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Matrix

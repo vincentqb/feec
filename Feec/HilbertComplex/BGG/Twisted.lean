@@ -35,6 +35,8 @@ a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
   §5.1 (the connecting maps `S` and the complex (5.1))
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes from complexes: the BGG
   construction)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

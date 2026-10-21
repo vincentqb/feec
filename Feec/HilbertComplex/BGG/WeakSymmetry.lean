@@ -50,6 +50,8 @@ bilinear form of `Feec.Variational.existsUnique_isSaddleSolution` with its stabi
   (saddle point problems)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

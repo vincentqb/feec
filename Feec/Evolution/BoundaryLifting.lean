@@ -48,6 +48,8 @@ inhomogeneous problem from Duhamel's formula for the homogeneous one, for every 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §4.1–4.2 (inhomogeneous problems)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (Hodge evolution problems)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter

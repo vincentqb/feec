@@ -25,6 +25,8 @@ multiplication-operator complex with the orthogonal sum of the `L²(μ; Wᵢ)`.
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped ENNReal NNReal

@@ -33,6 +33,8 @@ first one through Weber compactness on convex domains
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §6.3
 * [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
   Ch. I, §3
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

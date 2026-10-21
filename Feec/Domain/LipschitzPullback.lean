@@ -69,6 +69,8 @@ inverse.
   Ch. I, §3 (`H(curl)` and `H(div)`)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
   (pullbacks of differential forms, Piola transforms)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

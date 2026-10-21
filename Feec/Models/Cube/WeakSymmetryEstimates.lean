@@ -59,6 +59,8 @@ of `Feec.FiniteElement.PolyInterpolation` hold with constants uniform over the `
   (interpolation error on affine-equivalent families)
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff

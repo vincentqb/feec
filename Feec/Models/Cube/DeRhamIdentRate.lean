@@ -23,6 +23,8 @@ the smoothing estimates and the `C²` regularity of the solution as hypotheses:
   §3.1 (Poincaré inequality), Thm 3.9 (quasi-optimality of the mixed method)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
   solutions)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

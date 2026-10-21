@@ -29,6 +29,8 @@ gap between `ℌ` and `ℌₕ`.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (approximation of harmonic forms)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

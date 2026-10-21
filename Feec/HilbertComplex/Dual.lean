@@ -26,6 +26,8 @@ the opposite shape `c.symm`, on the same spaces: no index transport is needed. B
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1.2 (dual complex)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -47,6 +47,8 @@ and in `Feec.Models.Cube.EigenDense` on cubes and boxes only.
   §4.10 (Prop 4.17)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (the eigenvalue problem
   of the Hodge Laplacian)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

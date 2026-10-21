@@ -39,6 +39,8 @@ system of [ACBY1997] (built from four parts of the Riemann tensor).
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 * [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Matrix Feec.MatrixSymbol Feec.DoubleForm

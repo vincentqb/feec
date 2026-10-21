@@ -45,6 +45,8 @@ refutation of thesis Prop 4.19).
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Lemma 3.5, Prop. 4.16, Prop. 4.18, §4.11 (Prop. 4.19, complex (4.16))
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §8 (Hessian and div-div complexes)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

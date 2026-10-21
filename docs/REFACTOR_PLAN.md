@@ -28,6 +28,10 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > * Inline citations are bare links `[Key]`, with the location *outside* the brackets:
 >   `[QuennevilleBelair2015], Prop. 4.17 (§4.10, p. 66)`, `see [AFW2010], Thm 3.5`.
 >   Never `[Key, Thm 4.6]` (doc-gen4 would read the whole bracket as the key).
+> * Each module docstring declares its bibliography on a line of its own (user decision,
+>   2026-10-21), `Bibliography: [references.bib](<relative path>/docs/references.bib)`, so that
+>   `leantex` (and doc-gen4) compile the references from the bib file; checked by
+>   `scripts/CheckCitations.sh`.
 > * Each module docstring ends with `## References` listing
 >   `* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]`
 >   (author(s), italic title, then `[Key]`).

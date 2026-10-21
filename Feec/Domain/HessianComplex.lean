@@ -35,6 +35,8 @@ is made (it needs the regularity of `Ω`).
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the Hessian complex)
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the Hessian and div-div complexes on general domains and their duality)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap

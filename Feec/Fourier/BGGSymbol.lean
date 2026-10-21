@@ -28,6 +28,8 @@ curl. At a frequency `ξ` the symbols are `hess_ξ c = -c ξ ξᵀ` and `bgg_ξ 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the BGG construction)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (weakly imposed symmetry)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

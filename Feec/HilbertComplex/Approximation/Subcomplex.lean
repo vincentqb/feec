@@ -32,6 +32,8 @@ cycles, boundaries and harmonic forms, the discrete Hodge decomposition and disc
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.6 (subcomplexes `Vₕ`)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

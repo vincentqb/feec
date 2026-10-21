@@ -56,6 +56,8 @@ The name `partial` of the task is a Lean keyword; the mixed class is `mixed`.
   §4.3 (the de Rham complex with boundary conditions, compactness)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (boundary conditions on
   part of the boundary; harmonic forms)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

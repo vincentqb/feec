@@ -64,6 +64,8 @@ signature (symmetric, nondegenerate). The field theorems assume their hypotheses
   §2.3 ((2.2), (2.4), the twice-contracted identity), §3.4
 * [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.4
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset Matrix

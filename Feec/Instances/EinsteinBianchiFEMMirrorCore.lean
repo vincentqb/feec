@@ -21,6 +21,8 @@ For the approximating FEEC discretization `mirrorFEMApprox` of the mirror scheme
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §6.3 ((6.5))
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

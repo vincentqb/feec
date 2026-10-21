@@ -40,6 +40,8 @@ This is the algebraic layer under the de Rham and Koszul complexes of polynomial
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3 (the Koszul complex)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset

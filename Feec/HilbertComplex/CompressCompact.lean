@@ -43,6 +43,8 @@ complex of the method of images (`Action.hasCompactPropertyAt_fixedComplex`,
   reducing subspaces)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.2 (compactness property), §4.10 (the cube by compression of the torus)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

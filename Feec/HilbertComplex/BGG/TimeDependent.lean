@@ -67,6 +67,8 @@ differential-algebraic system (6.3), and their error equations. Real scalars.
 * [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
   (Lagrange multipliers)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

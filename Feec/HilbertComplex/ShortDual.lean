@@ -22,6 +22,8 @@ weak equations `(σ̇, τ) = -(u, d₀ τ)`, `(u̇, v) - (d₀ σ, v) + (ρ, d�
   §4.2 (dual complex), §6.1 ((6.1), the weak form)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1.2
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -60,6 +60,8 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.2 (degrees of freedom, the complexes `P_r⁻Λ`, `P_rΛ` and their mixtures)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open MeasureTheory Set Finset

@@ -69,6 +69,8 @@ with norm `≤ B` (`SpectralFamily.mem_rateData_of_tail_le`).
   §4.6 (subcomplexes), §4.12–4.13 (Galerkin approximation of the Hodge wave equation), Ch. 6
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3 (approximation property, bounded cochain projections)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology

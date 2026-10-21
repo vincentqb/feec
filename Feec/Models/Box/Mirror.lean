@@ -60,6 +60,8 @@ the question for the thesis' complex is **still open**
   §4.10 (Prop 4.17, (4.14), (4.15))
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension by reflection)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

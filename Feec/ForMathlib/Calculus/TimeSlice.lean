@@ -24,6 +24,8 @@ Space-time `𝕜¹⁺ⁿ = Fin (n + 1) → 𝕜` splits as time `𝕜` times spa
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set Filter Topology

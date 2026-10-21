@@ -36,6 +36,8 @@ they are two-sided.
   §4.1 (classical and strong solutions of the inhomogeneous problem)
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
   Prop 4.1.6, Cor 2.4.9
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology

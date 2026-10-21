@@ -41,6 +41,8 @@ statements:
   §4 (pullback of `L²` forms, the de Rham complex under bi-Lipschitz maps)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (change of variables in Sobolev spaces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal

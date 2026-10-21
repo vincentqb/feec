@@ -55,6 +55,8 @@ resolvent by compactness **off the kernel**:
 * [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
   Thm VI.16
   (Hilbert–Schmidt theorem)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology Pointwise

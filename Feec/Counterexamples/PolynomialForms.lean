@@ -27,6 +27,8 @@ The three-dimensional function form for `r = 1` (lowest-order Nédélec fields `
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MvPolynomial

@@ -36,6 +36,8 @@ divergence-free in `Ω`, with **no** boundary condition. On every bounded open `
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

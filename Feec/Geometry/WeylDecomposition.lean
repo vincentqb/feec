@@ -40,6 +40,8 @@ motivation only and are not formalized.
 * [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
 * [U. Sperhake, *Binary black-hole evolutions of excision and puncture data*][Sperhake2007]
 * [R. Owen, J. Brink, Y. Chen, J. D. Kaplan, G. Lovelace, K. D. Matthews, D. A. Nichols, M. A. Scheel, F. Zhang, A. Zimmerman, K. S. Thorne, *Frame-dragging vortexes and tidal tendexes attached to colliding black holes: visualizing the curvature of spacetime*][Owen2011]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

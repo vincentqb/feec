@@ -21,6 +21,8 @@ What fails is the inference drawn from it in the thesis: that `H̊(curl) ∩ L²
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (proof of Prop 4.17)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

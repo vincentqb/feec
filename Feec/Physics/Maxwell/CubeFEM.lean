@@ -27,6 +27,8 @@ components are `C²` forms (vanishing outside `Q` for PEC), with no further hypo
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
   solutions), Ch. 8 (evolution problems)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

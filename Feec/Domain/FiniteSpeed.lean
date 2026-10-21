@@ -32,6 +32,8 @@ of components, and `β : ι → ι → E` symmetric (`β j i = β i j`). The con
   domain of dependence)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.5 (Prop 3.6), §4.10 (interior propagation)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -34,6 +34,8 @@ and its adjoint is the contraction `(ι_ξ ω)_s = Σ_{j ∉ s} ε(j, s) ξ_j ω
   differential forms)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.2 (the de Rham complex as a Hilbert complex)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

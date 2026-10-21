@@ -44,6 +44,8 @@ adjoint** `A.formalAdj` has entries `(-1)^k conj c · ∂_{v_k} ⋯ ∂_{v₁}`,
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (`H̊` and `H` realizations)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the complexes on bounded domains)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

@@ -42,6 +42,8 @@ same equation for test functions in `K`.
   (mixed methods for the wave equation)
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
   (FEEC for evolution problems)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

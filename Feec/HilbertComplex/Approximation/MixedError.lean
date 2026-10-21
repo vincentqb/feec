@@ -33,6 +33,8 @@ stability on which the quasi-optimal error analysis of mixed finite element meth
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.6 (stability of the discrete Hodge Laplacian, recalled as well known)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

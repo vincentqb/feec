@@ -78,6 +78,8 @@ multipliers only trivially.
   Thm 5.5, §6.1 ((6.1), (6.2)), §6.3 ((6.4), (6.5), Table 6.1)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   Thm 3.9, §4.3 (Gaffney's inequality), §5.4
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace LinearPMap

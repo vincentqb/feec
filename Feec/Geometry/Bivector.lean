@@ -36,6 +36,8 @@ by its bivector matrix in the basis `(t∧x, t∧y, t∧z | y∧z, z∧x, x∧y)
 * [R. M. Wald, *General Relativity*][Wald1984]
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 * [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

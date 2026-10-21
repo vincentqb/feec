@@ -46,6 +46,8 @@ compactness, harmonic forms) are in `Feec.Models.Cube.DeRhamIdentPoincare`, and 
   §4.3 (relative and absolute boundary conditions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the cube by compression of the torus)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate Topology

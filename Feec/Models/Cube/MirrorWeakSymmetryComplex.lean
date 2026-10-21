@@ -65,6 +65,8 @@ mirror data, proved with constant `C_R = 1`: `curl S⁰φ = curl u`, `‖∇φ�
   (regular decomposition)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension by reflection)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

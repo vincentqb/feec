@@ -38,6 +38,8 @@ of `Feec.Models.Cube.RegularDecomposition`.
   (Helmholtz and regular decompositions of `H(curl)`)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §5.4 (Hilbert bases, Parseval)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

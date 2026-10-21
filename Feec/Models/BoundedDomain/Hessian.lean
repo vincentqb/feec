@@ -26,6 +26,8 @@ first operator of the BGG complex (5.1) is `hessMin` (`Feec.Models.BoundedDomain
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §6.3 (the BGG complex on a bounded domain, `H̊²`)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §8 (Hessian and div-div complexes)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

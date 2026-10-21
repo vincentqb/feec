@@ -66,6 +66,8 @@ No hypothesis remains.
   Ch. I, §3 (vector potentials, extension from the outside)
 * [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
   (the extension of step 2)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

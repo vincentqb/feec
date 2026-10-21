@@ -98,6 +98,8 @@ codomain live in one universe; from the reference simplex on, the value space `G
   (polynomial approximation), Thm 3.1.4 (error estimate for `P_r`-invariant interpolants), §3.1
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public section

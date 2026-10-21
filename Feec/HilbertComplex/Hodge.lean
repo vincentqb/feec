@@ -41,6 +41,8 @@ index, `𝕜 = ℝ` or `ℂ`), at every index `i`:
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1.2–§3.1.3
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -30,6 +30,8 @@ Fourier symbols (`∂_c ↦ ξ_c`), over any commutative ring. Conventions (thes
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4 (Lemma 3.5), §4.10–4.11 (its use in Props 4.17 and 4.19)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Matrix

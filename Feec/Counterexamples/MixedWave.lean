@@ -25,6 +25,8 @@ mixed form.
   §4.8
 * [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
 * [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

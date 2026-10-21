@@ -32,6 +32,8 @@ That TSD data do **not** propagate for this system is in `Feec.Counterexamples.B
   Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1 (6.1), §6.3, Table 6.1)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

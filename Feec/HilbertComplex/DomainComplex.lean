@@ -36,6 +36,8 @@ the Hodge decomposition of `domainComplex` is the `V`-level Hodge decomposition.
   §3.1.2 (domain complex)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.1
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

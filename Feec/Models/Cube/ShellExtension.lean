@@ -59,6 +59,8 @@ shell (`box`, `exists_n2_hest_le`). This is the extension step of the regular de
   §9.2 (extension operators by reflection)
 * [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
   (the reflection `hest`)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

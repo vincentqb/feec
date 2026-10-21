@@ -70,6 +70,8 @@ and converge to `u` in the graph norm as `s → 1`; `A_min` is closed.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate Matrix

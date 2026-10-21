@@ -39,6 +39,8 @@ The Koszul differential is the tool of the Finite Element Exterior Calculus fram
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
   (the Koszul complex and the spaces `P_rΛᵏ`, `P_r⁻Λᵏ`)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MvPolynomial

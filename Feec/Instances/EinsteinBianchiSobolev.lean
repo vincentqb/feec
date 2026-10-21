@@ -48,6 +48,8 @@ for `ξ₀ ∈ D(L) ∩ Hˢ` and all `t ∈ ℝ` (`einsteinBianchi_torus_discret
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.12–4.13, Ch. 6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology LinearPMap

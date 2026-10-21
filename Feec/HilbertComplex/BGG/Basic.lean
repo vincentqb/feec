@@ -43,6 +43,8 @@ ring `R`, any complex shape, any length.
   §3 (regularity hypothesis of `Segment.range_D1`)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regularity hypothesis of `Segment.range_D1`)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

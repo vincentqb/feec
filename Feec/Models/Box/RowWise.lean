@@ -57,6 +57,8 @@ frequencies at all. So the cube results hold verbatim on the anisotropic torus
   §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (extension by reflection, change of variables)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

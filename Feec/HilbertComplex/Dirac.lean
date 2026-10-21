@@ -32,6 +32,8 @@ Applied to the total differential `𝐝` of a Hilbert complex on a finite index 
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1 and §2 (`d + d*` of a
   Hilbert complex is self-adjoint)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

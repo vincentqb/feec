@@ -63,6 +63,8 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG connecting maps)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §2 (exterior algebra, pullbacks, traces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open MeasureTheory Set Finset

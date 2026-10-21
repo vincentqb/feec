@@ -73,6 +73,8 @@ Hille–Yosida theorem; here only its contraction case is needed and is proved d
   density in reflexive spaces)
 * [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
   §II.3 (Generation theorems)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology NormedSpace LinearPMap Feec.Operator

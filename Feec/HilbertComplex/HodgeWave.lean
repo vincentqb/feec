@@ -44,6 +44,8 @@ For a short complex `W₀ → W₁ → W₂` the test space `D(𝐝) = V₀ × V
   Prop 4.1.6
 * [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
   (mixed formulation of the wave equation)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -42,6 +42,8 @@ layer); it follows from these component formulas.
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §4 (the `L²` de Rham complex and its dual)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate

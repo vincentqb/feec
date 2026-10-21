@@ -25,6 +25,8 @@ statements):
   §2.8 (Props 2.4, 2.6, (2.15))
 * [R. M. Wald, *General Relativity*][Wald1984], §4.4
 * [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], pp. 44–45
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset Matrix

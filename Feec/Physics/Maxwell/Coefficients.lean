@@ -47,6 +47,8 @@ the Ohmic hypothesis `0 ≤ re ⟪σ E, E⟫` (`MeasureTheory.Lp.re_inner_matMul
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (evolution problems)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §4 (weighted `L²` inner products)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ENNReal ComplexConjugate

@@ -40,6 +40,8 @@ spaces.
   §3.3 (subcomplexes, bounded cochain projections), §5.4 (smoothed projections)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (vector-valued finite element spaces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -63,6 +63,8 @@ No closed-range statement is made: on a general open `Ω` the ranges need not be
   subspaces of matrices)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (minimal and maximal ideal boundary
   conditions)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

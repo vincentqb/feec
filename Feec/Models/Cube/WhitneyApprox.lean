@@ -58,6 +58,8 @@ The subcomplexes `FEM.whitney N` are transported from the mesh domain to `Q` alo
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.6, Thm 4.14 (approximating subcomplexes, convergence of the semi-discrete Hodge wave
   equation)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

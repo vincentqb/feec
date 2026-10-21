@@ -30,6 +30,8 @@ This module also re-exports the `LinearPMap` API of `Feec.ForMathlib.LinearPMap.
   §4.2 (dual complex)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

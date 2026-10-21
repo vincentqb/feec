@@ -32,6 +32,8 @@ No closed-range statement is made (it needs the regularity of `Ω`).
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the div-div complex on general domains and its duality with the Hessian complex)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the div-div complex)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap

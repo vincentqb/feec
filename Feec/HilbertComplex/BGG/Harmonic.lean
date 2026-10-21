@@ -56,6 +56,8 @@ The generalization is strict: `exists_harmonicStability_not_stability` gives dat
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3 (Hodge decomposition with harmonic forms, discrete harmonic forms)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002] (Strang lemma)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

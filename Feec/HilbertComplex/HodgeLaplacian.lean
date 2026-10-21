@@ -33,6 +33,8 @@ Applied to the wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, `
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (the Laplacian `D²` of a Hilbert
   complex)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

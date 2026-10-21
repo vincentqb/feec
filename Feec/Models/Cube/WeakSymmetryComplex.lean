@@ -73,6 +73,8 @@ the unconditional forms of `bggHyps`, `bggStability`, Props 5.1 and 5.2 are `bgg
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1 (Poincaré inequality, Hodge decomposition), §4.3 (the de Rham complex)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG construction)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

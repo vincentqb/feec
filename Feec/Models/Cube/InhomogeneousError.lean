@@ -76,6 +76,8 @@ monitor (its constant depends on the mesh), rates for data of finite Sobolev reg
   Ch. 7 (the Crank–Nicolson runs, the constraint monitors), §4.10 ((4.14))
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (interpolation
   estimates)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

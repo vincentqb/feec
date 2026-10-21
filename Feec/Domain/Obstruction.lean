@@ -35,6 +35,8 @@ behind the bounded-domain refutations of thesis Props 4.17/4.19, in general form
   §4.10 (Prop 4.17, the projection and density hypotheses)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (minimal and maximal domains,
   boundary conditions)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap

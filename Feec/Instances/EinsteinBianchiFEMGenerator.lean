@@ -34,6 +34,8 @@ with `d̃ : Ṽₕ⁰ → Ṽₕ¹` injective and `S₀,ₕ` onto (the hypothese
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §6.2 ((6.3), Prop 6.2)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped RealInnerProductSpace

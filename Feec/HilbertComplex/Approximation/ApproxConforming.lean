@@ -39,6 +39,8 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
   §4.6 ((4.10), (4.11), Prop. 4.13, Thm 4.14), §4.12–4.13
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

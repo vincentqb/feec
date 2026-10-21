@@ -28,6 +28,8 @@ For `T : E →ₗ.[𝕜] F` between Hilbert spaces over `𝕜` (`RCLike`):
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §IV.5.2 (closed range theorem)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

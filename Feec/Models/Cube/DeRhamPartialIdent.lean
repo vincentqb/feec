@@ -69,6 +69,8 @@ The constant is the one of the torus, `(2π)⁻¹`.
   part of the boundary, harmonic forms)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2, §9.4 (extension by reflection, cut-off arguments)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate ContDiff Topology

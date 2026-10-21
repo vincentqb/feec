@@ -59,6 +59,8 @@ orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
   of the Hodge Laplacian and the solution operator)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (the Hodge Laplacian in mixed form)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology

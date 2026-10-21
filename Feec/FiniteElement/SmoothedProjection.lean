@@ -64,6 +64,8 @@ the unit ball.
   §5 (canonical interpolants commuting with `d`)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (bounded commuting
   projections)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

@@ -22,7 +22,6 @@ on every nonempty bounded open `Ω`:
   solution of the Hodge wave equation of every short complex with `d₁ ⊆ curl_min` leaves the
   constraint (`tsd_not_propagates`), through the `Ė(0)` obstruction
   `Feec.ShortHilbertComplex.not_propagates_of_inner_ne_zero`.
-
   With existence (the wave group orbit): `exists_isStrongSolution_tsd_not_propagates`; for every
   datum `(0, E₀, β)`, any `E₀`: `betaL2_not_propagates` (`d₁† β = curl β ∉ L²(TSD₀)`).
 * the **magnetic** projection hypothesis fails too, independently: `P_{L²(TSD)} D(d₁†) ⊄ D(d₁†)`
@@ -49,6 +48,8 @@ Propagation holds instead on `ℝ³`, on the torus and on cubes with mirror boun
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

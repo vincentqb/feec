@@ -92,6 +92,8 @@ depends on the mesh; covered abstractly by `norm_residual_le3`).
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 7, §4.10 (Prop 4.17, (4.14))
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

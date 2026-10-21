@@ -48,6 +48,8 @@ the solution of the full system.
   Prop. 4.18 (§4.10, (4.14), (4.15)), Thm 4.6
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.10 (Stone's theorem)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

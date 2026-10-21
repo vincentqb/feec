@@ -71,6 +71,8 @@ avoid truncated subtraction: e.g. `H_{r+1}Λ^{k+1} = κ H_rΛ^{k+2} ⊕ d H_{r+2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.1 (Thms 5.1–5.4, the resolutions (71), (72))
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MvPolynomial

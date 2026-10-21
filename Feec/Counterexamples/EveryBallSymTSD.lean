@@ -56,6 +56,8 @@ every bounded domain is not decided.
   §3.4 (Lemma 3.5), §4.11 ((4.16)–(4.18), Prop 4.19)
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.2 (change of variables in Sobolev spaces)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

@@ -58,6 +58,8 @@ along the parametrization `F_f : T̂_m → f`, and `∫_f` is the integral over 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.2 (Thm 5.5, Lemma 5.6)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset MeasureTheory MvPolynomial

@@ -40,6 +40,8 @@ stationary data in `K` (`Feec.Models.Cube.Parity.mem_invariantCore_iff`). This f
   §4.10 (Prop 4.17)
 * [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
   §VII.3 (mean ergodic theorem)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate

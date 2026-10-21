@@ -42,6 +42,8 @@ boundary condition `u(t) ∈ H̊Λ¹(Q)³`, so the solution is not expected to b
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, Thm 5.5; §6.2 (6.4), §6.3 ((6.5), Table 6.1)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace ContDiff

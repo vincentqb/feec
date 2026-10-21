@@ -48,6 +48,8 @@ and [Stewart1991] as further general references ([QuennevilleBelair2015], Ch. 2 
 * [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004]
 * [J. Stewart, *Advanced General Relativity*][Stewart1991]
 * [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Finset Matrix

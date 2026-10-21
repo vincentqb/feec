@@ -40,6 +40,8 @@ formalized; see `Feec.Models.Cube.WeakSymmetryTangentialRate`).
   §5.3 (Table 5.1, Thm 5.5), §6.2 ((6.4), Prop 6.2), §6.3 ((6.5), Table 6.1)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace

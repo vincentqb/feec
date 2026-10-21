@@ -30,6 +30,8 @@ range (`Feec.Models.Euclidean.GradCurl.tsd_propagates` and its siblings).
   (closed range and Poincaré inequalities)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (closed range and Poincaré
   inequalities)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

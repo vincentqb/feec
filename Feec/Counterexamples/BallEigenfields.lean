@@ -115,6 +115,8 @@ cut-offs `eta`, `chi`) of `Feec.Counterexamples.BallSymTSD`; `Models` files do n
   regularity)
 * [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
   Ch. I, §3 (`H(curl) ∩ H(div)`)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

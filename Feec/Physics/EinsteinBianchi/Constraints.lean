@@ -32,6 +32,8 @@ model complexes of `Feec.Models.*`; the proofs are one-line references.
   Prop 3.6, §4.10 (Prop 4.17)
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set

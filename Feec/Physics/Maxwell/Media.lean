@@ -58,6 +58,8 @@ skew-adjoint. This gives:
   §3.1 (weighted inner products on a Hilbert complex)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.9 (Prop 4.16: the vector wave equation and its divergence constraint)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

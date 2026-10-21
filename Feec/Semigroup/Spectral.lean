@@ -54,6 +54,8 @@ For an isometric group `G` with generator `A` on a Hilbert space over `𝕜 = �
   Thm VI.16 (Hilbert–Schmidt theorem), §VII.3 (mean ergodic theorem)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (Prop 4.17)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology LinearPMap Feec.Operator

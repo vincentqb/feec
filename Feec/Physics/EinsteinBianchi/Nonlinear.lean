@@ -78,6 +78,8 @@ as `E, B` and the time derivative as `L_n`): the `B`-constraint has `+ E ×· K`
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 * [R. M. Wald, *General Relativity*][Wald1984], §3.4, §10.2
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Matrix Finset Feec.MatrixSymbol Feec.DoubleForm Feec.CurvatureTensor

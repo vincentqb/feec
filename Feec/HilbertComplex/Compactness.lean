@@ -37,6 +37,8 @@ inclusion (a compact subspace is `0`); density is never needed.
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
   (convergence of the discrete Hodge Laplacian under the compactness property)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology

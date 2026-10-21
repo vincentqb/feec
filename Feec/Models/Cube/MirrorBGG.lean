@@ -40,6 +40,8 @@ of Thesis §6.3 it fails on every bounded domain (`Feec.Counterexamples.BoundedB
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (weak symmetry)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

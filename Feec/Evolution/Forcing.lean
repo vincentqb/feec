@@ -38,6 +38,8 @@ The real, `[0,T]` predicates `Feec.ForcingClass.* A T F` and the older names `Fo
   Ch. 1 (`W^{1,p}` in time), Prop 4.1.6, Cor 2.4.9
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §4.2 (forcing in `W^{1,1}` or in `L¹(0,T; D(A))`)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter MeasureTheory

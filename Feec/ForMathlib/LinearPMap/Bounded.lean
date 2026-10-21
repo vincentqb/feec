@@ -19,6 +19,8 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
   self-adjoint operators)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §3.1 (bounded perturbations of generators)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

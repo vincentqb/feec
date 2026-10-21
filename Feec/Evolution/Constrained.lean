@@ -26,6 +26,8 @@ value and forcing in `K` stays in `K`. For a dissipative generator this holds as
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.3 (Thm 4.4, Cor 4.5)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter

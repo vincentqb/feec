@@ -49,6 +49,8 @@ With block mass matrix `M = diag(M₀, M₁, M₂)` (`blockMass`) and stiffness
   Ch. 7 (MINRES for the Crank–Nicolson systems)
 * [C. C. Paige, M. A. Saunders, *Solution of sparse indefinite systems of linear equations*][PaigeSaunders1975]
   (MINRES for symmetric indefinite systems)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Matrix

@@ -35,6 +35,8 @@ limit.
   §9.4 (cut-off arguments)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the cube by the method of images)
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate ContDiff Topology

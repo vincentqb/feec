@@ -395,19 +395,15 @@ theorem exists_testVector (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 
       rw [H.norm_sq_domainSpace_of_rel hij, domainIncl_toDomainSpace, d_domainCoord_toDomainSpace,
         hdρ]
     have haρ : a * ‖ρV‖ ≤ 2 * ‖b‖ := by
-      have hsq : (a * ‖ρV‖) ^ 2 ≤ (2 * ‖b‖) ^ 2 := by
-        have hρ2 : ‖(ρ : W i)‖ ^ 2 ≤ cP ^ 2 * ‖b‖ ^ 2 := by
-          rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) hρn 2
-        have q1 : a ^ 2 * ‖(ρ : W i)‖ ^ 2 ≤ a ^ 2 * (cP ^ 2 * ‖b‖ ^ 2) :=
-          mul_le_mul_of_nonneg_left hρ2 (sq_nonneg a)
-        have e : a ^ 2 * (cP ^ 2 * ‖b‖ ^ 2) = a * ‖b‖ ^ 2 := by
-          rw [← mul_assoc, sq a, mul_assoc a a, haP, mul_one]
-        have q2 : a * ‖b‖ ^ 2 ≤ 1 * ‖b‖ ^ 2 := mul_le_mul_of_nonneg_right ha1 (sq_nonneg _)
-        have ha2 : a ^ 2 ≤ 1 := by rw [sq]; nlinarith
-        have q3 : a ^ 2 * ‖b‖ ^ 2 ≤ 1 * ‖b‖ ^ 2 := mul_le_mul_of_nonneg_right ha2 (sq_nonneg _)
-        rw [mul_pow, hρV, mul_add, mul_pow]
-        linarith only [q1, e, q2, q3, sq_nonneg ‖b‖]
-      exact (abs_le_of_sq_le_sq' hsq (by positivity)).2
+      refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
+      have hρ2 : ‖(ρ : W i)‖ ^ 2 ≤ cP ^ 2 * ‖b‖ ^ 2 := by
+        rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) hρn 2
+      have e : a ^ 2 * (cP ^ 2 * ‖b‖ ^ 2) = a * ‖b‖ ^ 2 := by
+        rw [← mul_assoc, sq a, mul_assoc a a, haP, mul_one]
+      rw [mul_pow, hρV, mul_add, mul_pow]
+      linarith only [mul_le_mul_of_nonneg_left hρ2 (sq_nonneg a), e, sq_nonneg ‖b‖,
+        mul_le_mul_of_nonneg_right ha1 (sq_nonneg ‖b‖),
+        mul_le_mul_of_nonneg_right (pow_le_one₀ (n := 2) ha0.le ha1) (sq_nonneg ‖b‖)]
     have hτ : ‖σ - (a : 𝕜) • ρV‖ ≤ ‖σ‖ + 2 * ‖b‖ := by
       refine (norm_sub_le _ _).trans ?_
       rw [norm_smul, RCLike.norm_ofReal, abs_of_pos ha0]; linarith
@@ -430,16 +426,13 @@ theorem exists_testVector (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 
     have hS : ‖MixedSpace.mk (σ - (a : 𝕜) • ρV) (u + H.domainD i j σ + pV) (p - hV)‖ ^ 2 ≤
         (8 * ‖MixedSpace.mk σ u p‖) ^ 2 := by
       rw [hyN]
-      have n1 := norm_nonneg (σ - (a : 𝕜) • ρV)
-      have n2 := norm_nonneg (u + H.domainD i j σ + pV)
-      have n3 := norm_nonneg ((p - hV : H.harmonic j) : W j)
       have hX := norm_nonneg (MixedSpace.mk σ u p)
-      have b1 : ‖σ - (a : 𝕜) • ρV‖ ≤ 3 * ‖MixedSpace.mk σ u p‖ := by linarith
-      have b2 : ‖u + H.domainD i j σ + pV‖ ≤ 3 * ‖MixedSpace.mk σ u p‖ := by linarith
-      have b3 : ‖((p - hV : H.harmonic j) : W j)‖ ≤ 2 * ‖MixedSpace.mk σ u p‖ := by linarith
-      have c1 := pow_le_pow_left₀ n1 b1 2
-      have c2 := pow_le_pow_left₀ n2 b2 2
-      have c3 := pow_le_pow_left₀ n3 b3 2
+      have c1 := pow_le_pow_left₀ (norm_nonneg _)
+        (show ‖σ - (a : 𝕜) • ρV‖ ≤ 3 * ‖MixedSpace.mk σ u p‖ by linarith) 2
+      have c2 := pow_le_pow_left₀ (norm_nonneg _)
+        (show ‖u + H.domainD i j σ + pV‖ ≤ 3 * ‖MixedSpace.mk σ u p‖ by linarith) 2
+      have c3 := pow_le_pow_left₀ (norm_nonneg _)
+        (show ‖((p - hV : H.harmonic j) : W j)‖ ≤ 2 * ‖MixedSpace.mk σ u p‖ by linarith) 2
       rw [mul_pow] at c1 c2 c3 ⊢
       linarith only [c1, c2, c3, sq_nonneg ‖MixedSpace.mk σ u p‖]
     exact (abs_le_of_sq_le_sq' hS (by positivity)).2

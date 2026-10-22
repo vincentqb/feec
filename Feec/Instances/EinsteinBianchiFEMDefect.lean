@@ -1,6 +1,7 @@
 module
 
 public import Feec.Instances.EinsteinBianchiFEMComplex
+public import Feec.Instances.EinsteinBianchiGauss
 
 /-!
 # The cochain defect of the scheme (6.5)
@@ -119,6 +120,13 @@ theorem inner_dual_totalD_fin3 (y : H.wave.domain) (z : PiLp 2 W) :
     rw [wave_eq_sub]; abel
   rw [inner_fin3, dual_totalD_apply_two_fin3, inner_zero_left, add_zero, e, PiLp.sub_apply,
     PiLp.sub_apply, totalD_apply_zero_fin3, zero_sub, inner_neg_left]
+
+/-- `⟪𝐝* y, z⟫ = -⟪(L y)₁, z₁⟫` when `(L y)₀ = 0` and `(𝐝 y)₁ = 0`. -/
+theorem inner_dual_totalD_fin3_of (y : H.wave.domain) (h0 : (H.wave y) 0 = 0)
+    (h1 : (H.totalD ⟨y, y.2.1⟩) 1 = 0) (z : PiLp 2 W) :
+    ⟪H.dual.totalD ⟨y, y.2.2⟩, z⟫_𝕜 = -⟪(H.wave y) 1, z 1⟫_𝕜 := by
+  rw [inner_dual_totalD_fin3, h0, h1, inner_zero_left, neg_zero, zero_add, zero_sub,
+    inner_neg_left]
 
 end Fin3
 
@@ -640,5 +648,262 @@ theorem eventually_standardCube_cochainDefect_le {x : PiLp 2 (ShortHilbertComple
   rw [← hθε]
 
 end Cube
+
+
+/-! ### Mirror boundary conditions: the cochain defect of `mirrorComplex` vanishes on TSD -/
+
+section Mirror
+
+open Feec.Models.Cube.MirrorWeakSymmetry Feec.Models.Cube.RowWise
+open Feec.Models.Cube.MirrorBGG (SpaceQ W2Q complexQ tsdQ)
+open Feec.Models.Cube.WeakSymmetry (W0 W1 W2 Wv)
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+set_option maxHeartbeats 2000000 in
+/-- **The real pairing with a real state, by slots**:
+`⟪y, Rt z⟫ = ⟪Re y₀, z_σ⟫ + ⟪Re y₁, z_u⟫ + ⟪Re y_M, z_M⟫ + ⟪Re y_B, z_ρ⟫`. -/
+theorem inner_mirrorReEmb_right (y : PiLp 2 SpaceQ) (z : REnergy) :
+    ⟪y, mirrorReEmb z⟫_ℝ = ⟪re0 (slot0 y), z.σ⟫ + ⟪rowsW1L (slot1 y), z.u⟫ +
+      ⟪reM (slotM y), z.M⟫ + ⟪rowsW2L (slotB y), z.ρ⟫ := by
+  have h1 := norm_sq_sub_mirrorReEmb y z 0
+  have h0 := norm_sq_sub_mirrorReEmb y 0 0
+  simp only [map_zero, smul_zero, sub_zero] at h1 h0
+  have hz := EState.norm_sq z
+  have hn := norm_mirrorReEmb z
+  have e := norm_sub_sq_real y (mirrorReEmb z)
+  have e0 := norm_sub_sq_real (re0 (slot0 y)) z.σ
+  have e1 := norm_sub_sq_real (rowsW1L (slot1 y)) z.u
+  have e2 := norm_sub_sq_real (reM (slotM y)) z.M
+  have e3 := norm_sub_sq_real (rowsW2L (slotB y)) z.ρ
+  have q0 : (0 : REnergy).σ = 0 := rfl
+  have q1 : (0 : REnergy).u = 0 := rfl
+  have q2 : (0 : REnergy).M = 0 := rfl
+  have q3 : (0 : REnergy).ρ = 0 := rfl
+  rw [hn] at e
+  rw [q0, q1, q2, q3] at h1 h0
+  simp only [sub_zero] at h1 h0
+  rw [hz] at e
+  linarith
+
+/-- **`⟪u', v⟫ + ⟪ρ, d̃ v⟫ = 0` at every TSD state of `D(L)`**, in `L²` form (the equation
+`E' = -d₁† (0, B)`; `Feec.Models.Cube.MirrorWeakSymmetry.inner_rowsBU_wave_add` without
+`L x ∈ D(L)`). -/
+theorem inner_rowsW1L_wave_add (x : complexQ.wave.domain)
+    (hx : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ) (v : BU1) :
+    ⟪rowsW1L (stEL (complexQ.wave x)), bIncl1 v⟫_ℝ + ⟪rowsW2L (stBL x), bD1 v⟫_ℝ = 0 := by
+  rw [inner_rowsW1L, inner_rowsW2L]
+  obtain ⟨hX, eX⟩ := ofRealRows_BU1_mem v
+  have hM : (WithLp.ofLp (stW2 x)).1 = 0 := (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hx).2.2.1
+  rw [stEL_apply, inner_waveQ_one x hx _ hX, eX, WithLp.prod_inner_apply, WithLp.ofLp_toLp, hM,
+    inner_zero_left, zero_add, map_neg, stBL_apply]
+  exact neg_add_cancel _
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅
+    Feec.FiniteElement.PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3,
+    Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
+
+set_option maxHeartbeats 1000000 in
+theorem mirrorEmb_part1_one (N : ℕ) (v : mirrorHidden hT hB N) :
+    (mirrorEmb hT hB N v.part1) 1 = (mirrorEmb hT hB N v) 1 := rfl
+
+set_option maxHeartbeats 1000000 in
+theorem mirrorEmb_part1_zero (N : ℕ) (v : mirrorHidden hT hB N) :
+    (mirrorEmb hT hB N v.part1) 0 = 0 := by
+  change emb0 (((((0 : (mirrorFEM hT hB N).V0h) : TU0)) : W0)) = 0
+  rw [Submodule.coe_zero, Submodule.coe_zero, map_zero]
+
+set_option maxHeartbeats 1000000 in
+theorem mirrorEmb_part1_two (N : ℕ) (v : mirrorHidden hT hB N) :
+    (mirrorEmb hT hB N v.part1) 2 = 0 := by
+  change WithLp.toLp 2 (embM (((0 : (mirrorFEM hT hB N).W2h) : W2)),
+    emb2 (((0 : (mirrorFEM hT hB N).Wt2h) : Wv W2))) = 0
+  rw [Submodule.coe_zero, Submodule.coe_zero, map_zero, map_zero]
+  rfl
+
+
+set_option maxHeartbeats 1000000 in
+/-- The real pairing with a read hidden state, by slots. -/
+theorem inner_mirrorEmb_right (N : ℕ) (y : PiLp 2 SpaceQ) (v : mirrorHidden hT hB N) :
+    ⟪y, mirrorEmb hT hB N v⟫_ℝ =
+      ⟪re0 (slot0 y), (((v.toEState.σ : (mirrorFEM hT hB N).V0h) : TU0) : W0)⟫_ℝ +
+      ⟪rowsW1L (slot1 y), bIncl1 ((v.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)⟫_ℝ +
+      ⟪reM (slotM y), ((v.toEState.M : (mirrorFEM hT hB N).W2h) : W2)⟫_ℝ +
+      ⟪rowsW2L (slotB y), ((v.toEState.ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2)⟫_ℝ :=
+  inner_mirrorReEmb_right y (mirrorFE hT hB N v)
+
+set_option maxHeartbeats 2000000 in
+theorem mirrorDiffGen_σ (N : ℕ) (a : mirrorHidden hT hB N) :
+    ((((HiddenState.toEState (mirrorDiffGen hT hB N a)).σ : (mirrorFEM hT hB N).V0h) : TU0) :
+      W0) = 0 := rfl
+
+set_option maxHeartbeats 2000000 in
+theorem mirrorDiffGen_u (N : ℕ) (a : mirrorHidden hT hB N) :
+    (((HiddenState.toEState (mirrorDiffGen hT hB N a)).u : (mirrorFEM hT hB N).Vt1h) : BU1) =
+      -bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+        (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0) := rfl
+
+set_option maxHeartbeats 2000000 in
+theorem mirrorDiffGen_ρ (N : ℕ) (a : mirrorHidden hT hB N) :
+    (((HiddenState.toEState (mirrorDiffGen hT hB N a)).ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2) =
+      bD1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1) := rfl
+
+set_option maxHeartbeats 4000000 in
+/-- The pairing of a state with `M`-slot `0` and divergence-free `E` with `ι 𝐝ₕ a`. -/
+theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
+    (hM : (WithLp.ofLp (y 2 : W2Q)).1 = 0) (a : mirrorHidden hT hB N) :
+    ⟪y, mirrorEmb hT hB N (mirrorDiffGen hT hB N a)⟫_ℝ =
+      -⟪rowsW1L (slot1 y), bIncl1 (bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+        (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ +
+        ⟪rowsW2L (slotB y), bD1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)⟫_ℝ := by
+  have e1 := inner_mirrorEmb_right hT hB N y (mirrorDiffGen hT hB N a)
+  have hM' : reM (slotM y) = 0 := by
+    change reM (WithLp.ofLp (y 2 : W2Q)).1 = 0
+    rw [hM, map_zero]
+  rw [mirrorDiffGen_σ, mirrorDiffGen_u, mirrorDiffGen_ρ, hM'] at e1
+  have f0 : ⟪re0 (slot0 y), (0 : W0)⟫_ℝ = 0 := inner_zero_right _
+  have fM : ⟪(0 : W2), (((HiddenState.toEState (mirrorDiffGen hT hB N a)).M :
+      (mirrorFEM hT hB N).W2h) : W2)⟫_ℝ = 0 := inner_zero_left _
+  have fu : ⟪rowsW1L (slot1 y), bIncl1 (-bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+        (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ =
+      -⟪rowsW1L (slot1 y), bIncl1 (bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+        (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ := by
+    rw [map_neg, inner_neg_right]
+  linarith
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 4000000 in
+/-- **The real part of the cochain defect of the mirror scheme vanishes at TSD states**: for
+`y ∈ D(L) ∩ tsdQℝ` and every real hidden state `a`, `⟪y, ι 𝐝ₕ a⟫ + ⟪(L y)₁, (ι a)₁⟫ = 0`
+(`ι = mirrorEmb`). The degree-`1` part of `𝐝ₕ a` is a gradient `-d̃ Φ(σₐ, 0)`, orthogonal to the
+divergence-free `E` of `y`; the `M`-slot of `y` vanishes; and the remaining terms cancel by
+`E' = -d₁† (0, B)` (`inner_rowsW1L_wave_add`). -/
+theorem mirror_realDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) (a : mirrorHidden hT hB N) :
+    ⟪(y : PiLp 2 SpaceQ), mirrorEmb hT hB N (mirrorDiffGen hT hB N a)⟫_ℝ +
+      ⟪(complexQℝ.wave y) 1, (mirrorEmb hT hB N a) 1⟫_ℝ = 0 := by
+  have hy' : (y : PiLp 2 SpaceQ) ∈ complexQ.wave.domain := mem_complexQℝ_domain.1 y.2
+  have hw : complexQℝ.wave y = complexQ.wave ⟨y, hy'⟩ := complexQℝ_wave_apply y
+  obtain ⟨-, hE, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hyK
+  have hpt : ⟪rowsW1L (slot1 (complexQℝ.wave y)),
+        bIncl1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)⟫_ℝ +
+      ⟪rowsW2L (slotB (y : PiLp 2 SpaceQ)),
+        bD1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)⟫_ℝ = 0 := by
+    rw [hw]
+    exact inner_rowsW1L_wave_add ⟨y, hy'⟩ hyK ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)
+  have hgr : ⟪rowsW1L (slot1 (y : PiLp 2 SpaceQ)), bIncl1 (bD0 ((defectPhi (mirrorFEM hT hB N)
+      (mirrorWave_dt0_injective hT hB N) (mirrorWave_S0_surjective hT hB N) a :
+        (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ = 0 := inner_rowsW1L_bD0 hE _
+  have t2 : ⟪(complexQℝ.wave y) 1, (mirrorEmb hT hB N a) 1⟫_ℝ =
+      ⟪rowsW1L (slot1 (complexQℝ.wave y)),
+        bIncl1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)⟫_ℝ := by
+    rw [← mirrorEmb_part1_one, ← inner_eq_of_deg1_fin3 (mirrorEmb_part1_zero hT hB N a)
+      (mirrorEmb_part1_two hT hB N a), inner_mirrorEmb_right]
+    simp only [HiddenState.part1_toEState, EState.σ_mk, EState.u_mk, EState.M_mk, EState.ρ_mk,
+      Submodule.coe_zero, inner_zero_right, zero_add, add_zero]
+  have e1 := inner_mirrorEmb_mirrorDiffGen hT hB N (y : PiLp 2 SpaceQ) hM a
+  linarith [e1, t2, hpt, hgr]
+
+/-- Multiplication by `i` moves across the real inner product of a mirror slot:
+`⟪x, i y⟫_ℝ = ⟪-i x, y⟫_ℝ`. -/
+theorem real_inner_I_smul_spaceQ (i : Fin 3) (x y : SpaceQ i) :
+    ⟪x, Complex.I • y⟫_ℝ = ⟪-Complex.I • x, y⟫_ℝ := by
+  rw [real_inner_eq_re_inner_spaceQ, real_inner_eq_re_inner_spaceQ, inner_smul_right,
+    inner_smul_left]
+  simp
+
+/-- The same on mirror states. -/
+theorem real_inner_I_smul (x y : PiLp 2 SpaceQ) :
+    ⟪x, Complex.I • y⟫_ℝ = ⟪-Complex.I • x, y⟫_ℝ := by
+  rw [PiLp.inner_apply, PiLp.inner_apply]
+  exact Finset.sum_congr rfl fun i _ => real_inner_I_smul_spaceQ i (x i) (y i)
+
+set_option maxHeartbeats 4000000 in
+/-- `L (-i y) = -i L y` on the real mirror complex. -/
+theorem complexQℝ_wave_negI (y : complexQℝ.wave.domain) :
+    ∃ h : -Complex.I • (y : PiLp 2 SpaceQ) ∈ complexQℝ.wave.domain,
+      complexQℝ.wave ⟨_, h⟩ = -Complex.I • complexQℝ.wave y := by
+  have hy' : (y : PiLp 2 SpaceQ) ∈ complexQ.wave.domain := mem_complexQℝ_domain.1 y.2
+  have hs : -Complex.I • (y : PiLp 2 SpaceQ) ∈ complexQ.wave.domain :=
+    complexQ.wave.domain.smul_mem _ hy'
+  refine ⟨mem_complexQℝ_domain.2 hs, ?_⟩
+  rw [complexQℝ_wave_apply, complexQℝ_wave_apply]
+  exact complexQ.wave.map_smul (-Complex.I) ⟨_, hy'⟩
+
+
+set_option maxHeartbeats 2000000 in
+theorem negI_smul_mem_tsdQℝ {y : PiLp 2 SpaceQ} (hy : y ∈ tsdQℝ) : -Complex.I • y ∈ tsdQℝ :=
+  (totalSub tsdQ).smul_mem (-Complex.I) hy
+
+set_option maxHeartbeats 2000000 in
+/-- A TSD state of `D(L)` has no degree-`1` part of `𝐝 y` (its degree-`0` part vanishes). -/
+theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    (complexQℝ.totalD ⟨y, y.2.1⟩) 1 = 0 := by
+  obtain ⟨h0, -, -, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hyK
+  rw [totalD_apply_one_fin3]
+  exact LinearPMap.apply_mk_eq_zero _ _ h0
+
+set_option maxHeartbeats 2000000 in
+/-- `L y` of a TSD state of `D(L)` has no degree-`0` part (TSD reduces `L`). -/
+theorem complexQℝ_wave_zero_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    (complexQℝ.wave y) 0 = 0 :=
+  (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 (isReducing_tsdQℝ.mapsTo y hyK)).1
+
+set_option maxHeartbeats 4000000 in
+/-- The reading and the differential of the complexified family on a pair. -/
+theorem mirrorComplex_incl_D (N : ℕ) (a b : mirrorHidden hT hB N) :
+    (mirrorComplex hT hB).toFamily.incl N (WithLp.toLp 2 (a, b)) =
+        mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b) ∧
+      (mirrorComplex hT hB).toFamily.incl N ((mirrorComplex hT hB).toFamily.D N
+        (WithLp.toLp 2 (a, b))) = mirrorEmb hT hB N (mirrorDiffGen hT hB N a) +
+          mulI (mirrorEmb hT hB N (mirrorDiffGen hT hB N b)) := ⟨rfl, rfl⟩
+
+set_option maxHeartbeats 8000000 in
+/-- **The cochain defect of the mirror scheme vanishes at every TSD state of `D(L)`**: for the
+family `mirrorComplex` (the discrete BGG differential `𝐝ₕ ⊕ 𝐝ₕ` with `S₀,ₕ = π¹S⁰` on real and
+imaginary parts, the reading `ι(a, b) = mirrorEmb a + i mirrorEmb b`), `κₙ(y) = 0` for
+`y ∈ D(L) ∩ tsdQℝ`. The reason: a TSD state has no degree-`0` part and no `M`-slot, and its `E`
+is divergence-free; so `𝐝 y` has no degree-`1` part, `L y` (again TSD) no degree-`0` part, the
+gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with `E`, the crime `S₁ - S₁,ₕ` only meets the
+vanishing `M`-slot, and the rest cancels by `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`). In
+the language of the formula (`cochainDefectForm`): TSD solutions have `ℓ ≡ 0` and `M ≡ 0`. -/
+theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    (mirrorComplex hT hB).toFamily.cochainDefect N y = 0 := by
+  obtain ⟨hs, hLs⟩ := complexQℝ_wave_negI y
+  have hsK := negI_smul_mem_tsdQℝ hyK
+  have hd1 := complexQℝ_totalD_one_of_tsd y hyK
+  have hL0 := complexQℝ_wave_zero_of_tsd y hyK
+  refine ext_inner_right ℝ fun w => ?_
+  obtain ⟨⟨a, b⟩⟩ := w
+  obtain ⟨hi1, hi2⟩ := mirrorComplex_incl_D hT hB N a b
+  have hA := mirror_realDefect_eq_zero hT hB N y hyK a
+  have hB' := mirror_realDefect_eq_zero hT hB N ⟨_, hs⟩ hsK b
+  have hk := (mirrorComplex hT hB).toFamily.inner_cochainDefect N y (WithLp.toLp 2 (a, b))
+  rw [hi1, hi2] at hk
+  have hd := inner_dual_totalD_fin3_of complexQℝ y hL0 hd1
+    (mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b))
+  have hz1 : (mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b)) 1 =
+      (mirrorEmb hT hB N a) 1 + Complex.I • (mirrorEmb hT hB N b) 1 := rfl
+  have h1 : ⟪(complexQℝ.wave y) 1, (mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b)) 1⟫_ℝ =
+      ⟪(complexQℝ.wave y) 1, (mirrorEmb hT hB N a) 1⟫_ℝ +
+        ⟪(-Complex.I • complexQℝ.wave y) 1, (mirrorEmb hT hB N b) 1⟫_ℝ := by
+    rw [hz1, inner_add_right, real_inner_I_smul_spaceQ]
+    rfl
+  have hB2 := congrArg (fun z : PiLp 2 SpaceQ => ⟪z 1, (mirrorEmb hT hB N b) 1⟫_ℝ) hLs
+  have h2 : ⟪(y : PiLp 2 SpaceQ), mirrorEmb hT hB N (mirrorDiffGen hT hB N a) +
+      mulI (mirrorEmb hT hB N (mirrorDiffGen hT hB N b))⟫_ℝ =
+      ⟪(y : PiLp 2 SpaceQ), mirrorEmb hT hB N (mirrorDiffGen hT hB N a)⟫_ℝ +
+        ⟪-Complex.I • (y : PiLp 2 SpaceQ), mirrorEmb hT hB N (mirrorDiffGen hT hB N b)⟫_ℝ := by
+    rw [inner_add_right]
+    exact congrArg (_ + ·) (real_inner_I_smul (y : PiLp 2 SpaceQ)
+      (mirrorEmb hT hB N (mirrorDiffGen hT hB N b)))
+  refine Eq.trans ?_ (inner_zero_left (𝕜 := ℝ) _).symm
+  linarith
+
+end Mirror
 
 end Feec.Instances.EinsteinBianchi.FEM

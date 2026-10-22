@@ -46,15 +46,40 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > the docs, cited docstrings, metaprograms and coercions) and lists wrappers, duplicate statements
 > and name twins; `--strip FILE OUT` deletes the dead groups of a file. Eight parallel tasks and a
 > merge deleted the dead groups, collapsed wrappers and duplicates and proved twins once, with no
-> main statement weakened. Before → after: 329 → 325 modules (`Evolution.Perturbation`,
-> `ForMathlib.LinearPMap.CompPartial`, `Models.BoundedDomain.DeRham` and `Models.Cube.MirrorDirichlet`
-> were left without declarations and are deleted), 220,777 → 194,462 lines in `Feec/**/*.lean`,
-> 17,556 → 15,303 user declarations (13,891 → 11,821 theorems), dead groups 2,422 (20,714 lines)
-> → 259 (1,902 lines, all kept on purpose: `rfl` simp lemmas that bare `simp` uses, the second
-> Bianchi identity, the dualities of the Hessian, div-div and elasticity complexes, isotropic media,
-> non-vacuity witnesses), wrappers 412 → 272, duplicate sets 92 → 44, name-twin sets 93 → 76
-> (10,283 → 7,061 lines). The gate passes; `map.tsv` marks the deleted declarations
-> `deleted-helper` (none `main`).
+> main statement weakened. Before → after: 329 → 327 modules (`ForMathlib.LinearPMap.CompPartial`
+> and `Models.BoundedDomain.DeRham`, left without declarations, are deleted; `deRham3` is the case
+> `n = 3` of `Feec.Domain.deRham`), 220,777 → 198,824 lines in `Feec/**/*.lean`, 17,556 → 15,658
+> user declarations (13,891 → 12,133 theorems), dead groups 2,422 (20,714 lines) → 609 (5,619
+> lines, all kept on purpose: `rfl` simp lemmas that bare `simp` uses, the second Bianchi identity,
+> the dualities of the Hessian, div-div and elasticity complexes, isotropic media, non-vacuity
+> witnesses, and the results a module docstring states in **bold**, see below), wrappers 412 → 282,
+> duplicate sets 92 → 44, name-twin sets 93 → 76 (10,283 → 7,061 lines). The gate passes;
+> `map.tsv` marks the deleted declarations `deleted-helper` (none `main`).
+>
+> A review of the pass found that `feec-deps` does not seed from module docstrings, so it had
+> deleted results the docstrings advertised in bold (and their docstring mentions). These are
+> restored from `ca5b417` with the helpers they need (+4.4k lines, 2 modules): the tangential-class
+> rates `mixed_rate_polyTr(_of_polyOrderAt)`, `mixed_rate_lagrangeP2Tr`,
+> `norm_sub_le_windowTr_poly_smooth`, `IsCsFormTr.d_eq` (`Cube.TangentialRate`); uniqueness and
+> the growth bound of the bounded perturbation theorem (`Feec.Evolution.Perturbation`:
+> `C0Semigroup.eqOn_perturb`, `existsUnique_generator_eq_vadd`, `eqOn_of_generator_eq`;
+> `C0Semigroup.norm_perturb_le` in `Feec.Semigroup.Perturbation`); the mirror complex between
+> the minimal and maximal realizations (`Feec.Models.Cube.MirrorDirichlet`);
+> `HilbertComplex.hodge_unique` and the real Hodge decomposition (`HilbertComplex.Conj.hodge_real`,
+> `SymCurl.hodge_real`);
+> `Domain.ConstCoeffComplex.dual_maximalComplex_d`, `deRham_dual_maximalComplex_d`; the harmonic
+> forms of the parity and mixed models (`Cube.DeRham`, `Cube.DeRhamPartial`) and the Hodge star
+> exchange; `LumerPhillips.existsUnique_normalized_contraction`,
+> `IsSkewAdjoint.eqOn_group_semigroup`, `isSelfAdjoint_S_of_isSymmetric`;
+> `SpectralGalerkin.norm_waveGroup_sub_waveGroup_band`; the cube corollaries
+> `gradCurl_coreSub_spectral_Q/_cube` (`Cube.EigenDense`); `mirror_exists_iff(_compatible_u)`,
+> `cubeWave_exists_iff`; and the non-vacuity witnesses `waveFEM_nonvacuous(_cube)`,
+> `staticFEM_nonvacuous(_coupled)(_cube)` (with the manufactured and coupled solutions of
+> `Cube.WeakSymmetryFEM`/`WeakSymmetryWave`), `waveFEM_rate_of_mem_domain_nonvacuous`,
+> `cubeWave_rate_sobolev_nonvacuous`. The rows of `map.tsv` whose old target is back are
+> restored. Not restored: `planeWave_unique` (`Inhomogeneous.WholeSpaceTSD.restrict_unique`
+> covers it on every bounded domain) and `mirror_waveFEM_rate` (`C²` hypothesis; superseded by
+> the `D(L³)` rate of `Cube.MirrorWaveRegularity`).
 
 > **Status (2026-10-21): the gate is in Lean.** The checks of §5 run as `lake exe feec-gate`
 > (library `FeecCheck`, `scripts/FeecCheck/`; Lean only, no shell or Python): `feec-citations`

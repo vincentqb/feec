@@ -49,10 +49,11 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > main statement weakened. Before → after: 329 → 327 modules (`ForMathlib.LinearPMap.CompPartial`
 > and `Models.BoundedDomain.DeRham`, left without declarations, are deleted; `deRham3` is the case
 > `n = 3` of `Feec.Domain.deRham`), 220,777 → 198,824 lines in `Feec/**/*.lean`, 17,556 → 15,658
-> user declarations (13,891 → 12,133 theorems), dead groups 2,422 (20,714 lines) → 609 (5,619
-> lines, all kept on purpose: `rfl` simp lemmas that bare `simp` uses, the second Bianchi identity,
-> the dualities of the Hessian, div-div and elasticity complexes, isotropic media, non-vacuity
-> witnesses, and the results a module docstring states in **bold**, see below), wrappers 412 → 282,
+> user declarations (13,891 → 12,133 theorems), dead groups 2,422 (20,714 lines) → 408 (3,541
+> lines with the final docs as seeds; all kept on purpose: `rfl` simp lemmas that bare `simp`
+> uses, the second Bianchi identity, the dualities of the Hessian, div-div and elasticity
+> complexes, isotropic media, non-vacuity witnesses, and the results a module docstring states in
+> **bold**, see below), wrappers 412 → 282,
 > duplicate sets 92 → 44, name-twin sets 93 → 76 (10,283 → 7,061 lines). The gate passes;
 > `map.tsv` marks the deleted declarations `deleted-helper` (none `main`).
 >
@@ -283,7 +284,7 @@ Feec/
 │   ├── Torus/{DeRham,GradCurl,SymCurl,BGG}.lean     Euclidean/{DeRham,GradCurl,SymCurl,BGG}.lean
 │   ├── Cube/{Parity,Mirror,MirrorSym,MirrorBGG,Static}.lean        -- equivariant compressions of the torus
 │   └── BoundedDomain/{GradCurl,SymCurl,Hessian,BGG,Interior}.lean  -- minimal/maximal realizations
-├── Physics/{Maxwell,LinearizedGravity,EinsteinBianchi,Elasticity}/*.lean -- headline physical statements, no analysis
+├── Physics/{Maxwell,LinearizedGravity,EinsteinBianchi}/*.lean -- headline physical statements, no analysis (elasticity: Domain/Elasticity)
 ├── Counterexamples/{Ell2,Fredholm,NonClosedRangeEuclidean,BoundedDomainTSD,BoundedSymTSD,
 │                   BallSymTSD,CubeStationary,ConstrainedEvolution,ClassicalRegularity}.lean
 ├── Examples/NonVacuity.lean          -- bddOp, rotGen, idComplex witnesses

@@ -9,45 +9,70 @@ public import Feec.Instances.EinsteinBianchiGauss
 The scheme (6.5) of [QuennevilleBelair2015], §6.3, is an approximating family of discrete
 differential spaces (`Feec.HilbertComplex.ApproxComplexCrime`) whose discrete BGG differential
 `𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` (`Feec.Instances.EinsteinBianchi.FEM.diffGen`) is
-built with `S₀,ₕ = π¹S⁰` and `S₁,ₕ = π²S¹`, so the reading maps are not cochain maps
-(`Feec.Instances.EinsteinBianchiFEMComplex`, where the cochain defect is absorbed by the Galerkin
-identity of (6.4) and not computed). This file computes it.
+built with `S₀,ₕ = π¹S⁰` and `S₁,ₕ = π²S¹`, so the reading maps are not cochain maps. In
+`Feec.Instances.EinsteinBianchiFEMComplex` the cochain defect
+`Feec.HilbertComplex.ApproxComplexCrime.Family.cochainDefect` is absorbed by the Galerkin identity
+of (6.4) and not computed. This file computes it, bounds it, and uses it for a second, independent
+route to the convergence of the mirror scheme.
 
 **The formula.** Along a source-free classical solution `(σ, φ, u, M, ρ, ℓ)` of (6.2), the
 cochain defect pairs with a hidden state `v = (σᵥ, uᵥ, Mᵥ, ρᵥ)` as
 `⟪κₕ, v⟫ = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫`, `S₀ - S₀,ₕ = (I - π¹) S⁰`,
-`S₁ - S₁,ₕ = (I - π²) S¹` (`cochainDefectForm`): it is exactly the pair of consistency
-functionals whose norms `K₀`, `K₁` enter the Strang bound of (6.4)
-(`Feec.BGG.Discrete.strangData`), evaluated at the discrete potential `Φ(σᵥ, 0)` of `Γₕ`
-(`S₀,ₕ Φ(σᵥ, 0) = dσᵥ`, `defectPhi`) and at `uᵥ`. At the energy level this is the identity
-`⟪ξ, 𝐝ₕ v⟫ + ⟪σ', σᵥ⟫ + ⟪d̃ φ + u', uᵥ⟫ = κ(v)` (`cochainDefectForm_eq`, from (6.2a) at
-`(σᵥ, Φ(σᵥ, 0))` and (6.2b) at `uᵥ`), whose middle terms are `-⟪𝐝* ξ, v⟫` in the energy
-components; on a three-term complex `⟪𝐝* y, z⟫ = -⟪(L y)₀, z₀⟫ + ⟪(𝐝 y)₁ - (L y)₁, z₁⟫`
+`S₁ - S₁,ₕ = (I - π²) S¹` (`cochainDefectForm`): exactly the two consistency functionals whose
+norms `K₀`, `K₁` enter the Strang bound of (6.4) (`Feec.BGG.Discrete.strangData`), evaluated at
+the discrete potential `Φ(σᵥ, 0)` of `Γₕ` (`S₀,ₕ Φ(σᵥ, 0) = dσᵥ`, `defectPhi`) and at `uᵥ`. At the
+energy level this is the identity `⟪ξ, 𝐝ₕ v⟫ + ⟪σ', σᵥ⟫ + ⟪d̃ φ + u', uᵥ⟫ = κ(v)`
+(`cochainDefectForm_eq`, from (6.2a) at `(σᵥ, Φ(σᵥ, 0))` and (6.2b) at `uᵥ`), whose middle terms
+are `-⟪𝐝* ξ, v⟫` in the energy components: on a three-term complex
+`⟪𝐝* y, z⟫ = -⟪(L y)₀, z₀⟫ + ⟪(𝐝 y)₁ - (L y)₁, z₁⟫`
 (`Feec.HilbertComplex.inner_dual_totalD_fin3`).
 
 ## Main results
 
-* `cochainDefectForm_eq`: the weak cochain defect identity, for any discrete BGG segment.
-* `abs_cochainDefectForm_le`: `|κ(v)| ≤ (K₀ √(1 + C_P²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)` (dual discrete
+* `cochainDefectForm_eq`: the weak cochain defect identity, for any discrete BGG segment;
+  `abs_cochainDefectForm_le`: `|κ(v)| ≤ (K₀ √(1 + C_P²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)` (dual discrete
   graph norm), with the consistency constants of the Strang bound and a Poincaré constant of `d̃`;
   `cochainDefectForm_eq_zero`, `cochainDefectForm_eq_zero_of`: it vanishes when the consistency
   functionals vanish, in particular when `ℓ(t) = 0` and `M(t) = 0`.
 * **The thesis' boundary conditions** (`standardCubeComplex`):
-  `inner_standardCube_cochainDefect`: the cochain defect
-  `Feec.HilbertComplex.ApproxComplexCrime.Family.cochainDefect` of the family at the exact state
-  `e^{tL} x`, `x ∈ D(L²)`, **is** the formula, for the classical solution `cubeExact` of the
-  orbit (the degree-`1` part of `𝐝` goes through the forms model, `inner_formsTotalD_part1`, and
-  the unitary transport `Feec.HilbertComplex.inner_totalD_map_of_eq`);
+  `inner_standardCube_cochainDefect`: the cochain defect of the family at the exact state
+  `e^{tL} x`, `x ∈ D(L²)`, **is** the formula, for the classical solution `cubeExact` of the orbit
+  (the degree-`1` part of `𝐝` goes through the forms model, `inner_formsTotalD_part1`, and the
+  unitary transport `Feec.HilbertComplex.inner_totalD_map_of_eq`);
   `exists_standardCube_cochainDefect_le_mesh`: it is `O(h)` in the dual discrete graph norm,
   `|⟪κₙ, v⟫| ≤ (C₀ Λ + K c) h_N (‖v‖ + ‖𝐝ₙ v‖)`, at every time at which the multiplier is an `L²`
   functional (`|ℓ(t) μ| ≤ Λ ‖μ‖`) and `M(t) ∈ D(d₁*)` with `‖M(t)‖, ‖d₁* M(t)‖ ≤ c` (these
   regularity hypotheses are assumed, not derived from the datum);
   `eventually_standardCube_cochainDefect_le`: it tends to `0` uniformly on `[0, T]` for every
   datum of `D(L²)` (`K₀, K₁ → 0`).
+* **Mirror boundary conditions** (`mirrorComplex`): `mirrorComplex_cochainDefect_eq_zero`: the
+  cochain defect **vanishes** at every TSD state of `D(L)`, with the reason: a TSD state has no
+  degree-`0` part and no `M`-slot and a divergence-free `E`; so `𝐝 y` has no degree-`1` part,
+  `L y` (TSD again) no degree-`0` part, the gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with
+  `E`, the crime `S₁ - S₁,ₕ` only meets the vanishing `M`-slot, and the rest cancels by
+  `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`, `inner_rowsW1L_wave_add`); in the language of
+  the formula, TSD solutions have `ℓ ≡ 0` and `M ≡ 0`. This is the `K₀ = K₁ = 0` of the mirror
+  Strang bound, now at the level of the family.
+* **The mirror scheme through `ofCochainDefect`** (`mirrorSplitComplex`,
+  `einsteinBianchi_mirrorFEM_ofCochainDefect`): a second route to the convergence of (6.5), from
+  the split hypotheses of `Feec.HilbertComplex.ApproxComplexCrime.ofCochainDefect` instead of the
+  Galerkin identity: graph-norm approximation of every TSD state of `D(L)` by the **hidden
+  interpolants** `(0, Π̃¹ u - P_K Π̃¹ u, 0, Π̃² ρ)`, `K = d̃(ker S₀,ₕ)` (`hiddenInterp`,
+  `hiddenInterp_err_le`, `norm_sq_mirrorPair_le`, `eventually_mirrorPair_lt`: the correction
+  `P_K` is killed by `d̃` and `S₁,ₕ` and is small because TSD `E` is divergence-free), and the
+  vanishing cochain defect. The verdict: the discrete solutions are those of `mirrorFEMApprox`
+  (the scheme (6.5)), the closure of the core is `tsdQℝ`, and for every TSD datum the discrete
+  solutions converge to the TSD solution uniformly on `[0, T]` with TSD residual tending to `0`.
+  Neither the elliptic projection (6.4), nor its Strang bound, nor the model convergence theorems
+  of (6.5) are used.
 
-That the cochain defect is **nonzero** for some mesh and datum is not proved: by the formula it
+**Not proved.** That the cochain defect is nonzero for some mesh and datum: by the formula it
 would need `ℓ(t)((I - π¹) S⁰ Φ(σᵥ, 0)) ≠ 0` or `⟪M(t), (I - π²) S¹ uᵥ⟫ ≠ 0` for the smoothed
-cochain projections, an explicit finite element computation.
+cochain projections of the thesis' boundary conditions, an explicit finite element computation.
+The `O(h)` bound for the thesis' boundary conditions assumes the regularity of `ℓ(t)` and
+`M(t)`. The split route is carried out for the mirror boundary conditions only; for the thesis'
+boundary conditions the graph-norm approximation would need `d̃ Φ(σₕ, 0) → d̃ φ`, that is
+`P_{d̃(ker S₀,ₕ)} d̃ φ → 0`, which nothing here controls (for mirror TSD data `φ ≡ 0`).
 
 ## References
 
@@ -60,7 +85,7 @@ Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace
-open Set Filter Topology
+open Set Filter Topology Metric
 
 @[expose] public noncomputable section
 
@@ -1346,6 +1371,78 @@ theorem eventually_mirrorPair_lt (y : complexQℝ.wave.domain) (hyK : (y : PiLp 
   have hpos : 0 ≤ 4 * δ * √K := by positivity
   have := le_of_pow_le_pow_left₀ two_ne_zero hpos hab
   linarith
+
+
+/-! #### The mirror scheme through `ofCochainDefect` -/
+
+/-- The TSD states of `D(L)`. -/
+def mirrorTSDStates : Set (PiLp 2 SpaceQ) := {y | y ∈ complexQℝ.wave.domain ∧ y ∈ tsdQℝ}
+
+set_option maxHeartbeats 4000000 in
+/-- The orbits of the TSD data of `D(L²)` and of their `L` are TSD states of `D(L)`. -/
+theorem mirrorEllData_orbit : ∀ x ∈ mirrorEllData, ∀ t : ℝ, 0 ≤ t →
+    complexQℝ.waveGroup.S t x ∈ mirrorTSDStates ∧
+      complexQℝ.waveGroup.S t (waveExt complexQℝ x) ∈ mirrorTSDStates := by
+  intro x hx t ht
+  have hx1 := LinearPMap.domainSq_le_domain hx.2
+  refine ⟨⟨waveGroup_mem_domain complexQℝ hx1 t, ?_⟩,
+    ⟨waveGroup_mem_domain complexQℝ (waveExt_mem_domain complexQℝ hx.2) t, ?_⟩⟩
+  · rw [complexQℝ_waveGroup_eq_U hx ht]; exact (tsdDatumOf hx).U_tsd t
+  · rw [complexQℝ_waveGroup_eq_V hx ht]; exact (tsdDatumOf hx).V_tsd t
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 8000000 in
+/-- **The mirror scheme (6.5) as an approximating family of discrete differential spaces from the
+split hypotheses** (`ApproxComplexCrime.ofCochainDefect`): the family of `mirrorComplex`
+(`𝐝ₕ ⊕ 𝐝ₕ`, `S₀,ₕ = π¹S⁰`), the TSD constraint, admissible states the TSD states of `D(L)`, core
+the TSD data of `D(L²)`; consistent approximation from graph-norm approximation by the
+interpolating pairs (`eventually_mirrorPair_lt`) and the vanishing cochain defect
+(`mirrorComplex_cochainDefect_eq_zero`), with no Galerkin identity and no elliptic projection. -/
+def mirrorSplitComplex : ApproxComplexCrime complexQℝ ℕ :=
+  ApproxComplexCrime.ofCochainDefect (mirrorComplex hT hB).toFamily tsdQℝ isClosed_totalSub atTop
+    mirrorTSDStates (fun _ hy => hy.1) mirrorEllData (fun _ hx => hx.2) mirrorEllData_orbit
+    (mirrorComplex hT hB).tendsto_innerDefect
+    (fun y hy _ hε => (eventually_mirrorPair_lt hT hB ⟨y, hy.1⟩ hy.2 hε).mono
+      fun N hN => ⟨mirrorPair hT hB N y, hN⟩)
+    (fun y hy _ hε => Eventually.of_forall fun N v => by
+      rw [mirrorComplex_cochainDefect_eq_zero hT hB N ⟨y, hy.1⟩ hy.2, inner_zero_left, norm_zero]
+      positivity)
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 8000000 in
+/-- **The mirror scheme (6.5) through the split route** (`ofCochainDefect` instead of
+`ofGalerkinCore`): the verdict of the complex-level theorem for `ofComplexCrime (mirrorSplitComplex)`;
+its discrete solutions are those of `mirrorFEMApprox` (the scheme (6.5) on real and imaginary
+parts); the closure of the core is `tsdQℝ`, so for every TSD datum and every family of discrete
+initial values read convergent to it, the discrete solutions converge to the TSD solution
+uniformly on `[0, T]` and the TSD residual tends to `0`; and the cochain defect vanishes on every
+TSD state of `D(L)`. The consistency of the family comes from graph-norm best approximation by
+hidden interpolants and the vanishing cochain defect ([HolstStern2012], §3.3, in the
+`ApproxComplexCrime` form), not from the elliptic projection (6.4) or its Strang bound. -/
+theorem einsteinBianchi_mirrorFEM_ofCochainDefect :
+    (ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).Verdict
+      (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)) ∧
+    (∀ N v t, (ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).sol N v t =
+      (mirrorFEMApprox hT hB).sol N v t) ∧
+    (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure = tsdQℝ ∧
+    (∀ x ∈ tsdQℝ, ∀ T : ℝ, ∀ v : ∀ N, (ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).X N,
+      Tendsto (fun N => (ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).incl N (v N)) atTop
+        (𝓝 x) →
+      TendstoUniformlyOn
+        (fun N t => (ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).sol N (v N) t)
+        (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
+      TendstoUniformlyOn (fun N t => infDist
+        ((ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).sol N (v N) t) (tsdQℝ : Set _))
+        (fun _ => 0) atTop (Icc 0 T)) ∧
+    (∀ N (y : complexQℝ.wave.domain), (y : PiLp 2 SpaceQ) ∈ tsdQℝ →
+      (mirrorSplitComplex hT hB).toFamily.cochainDefect N y = 0) := by
+  have hcl : (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure =
+      tsdQℝ := topologicalClosure_tsdQℝ_inf_domainSq
+  refine ⟨(approxFEEC_ofComplexCrime _).1, fun N v t => mirrorComplex_sol hT hB N v t, hcl,
+    fun x hx T v hv => ?_, fun N y hy => mirrorComplex_cochainDefect_eq_zero hT hB N y hy⟩
+  have hx' : x ∈ (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure :=
+    hcl.ge hx
+  exact ⟨approxFEEC_converges _ _ T hx' hv, approxFEEC_residual _ isReducing_tsdQℝ _ T hx' hx hv⟩
 
 
 end Mirror

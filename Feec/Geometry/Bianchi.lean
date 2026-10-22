@@ -30,8 +30,7 @@ signature (symmetric, nondegenerate). The field theorems assume their hypotheses
 * **Jet level** (any commutative ring, any index type): `cov13_riem_cyclic` (the second Bianchi
   identity for every torsion-free connection jet with symmetric second derivatives; no metric),
   `sum_cov13_riem` (its contraction, no metric), `cov4_lower` (lowering commutes with `∇` given
-  first-order metric compatibility) and `cov4_lower_riem_cyclic` (the lowered identity), the
-  contraction rules `sum_gi_cov02`, `sum_gi_cov02_left`,
+  first-order metric compatibility), the contraction rules `sum_gi_cov02`, `sum_gi_cov02_left`,
   `sum_gi_cov13` (for a parallel inverse-metric jet), and tensoriality under a change of frame
   (`cov4_frame4`, `frame_cyclic`).
 * **Fields** (`IsLeviCivita g Γ`: `g ∈ C²` symmetric, `Γ ∈ C²` torsion-free and compatible; this
@@ -111,11 +110,6 @@ private theorem cov13_riem_eq (Γ : ι → ι → ι → R) (dΓ : ι → ι →
   simp only [riemComp, mul_add, mul_sub, mul_sum, sum_add_distrib, sum_sub_distrib]
   ring
 
-/-- A double sum of `A r s - A s r` vanishes. -/
-private theorem sum_sum_sub_swap' (A : ι → ι → R) : ∑ r, ∑ s, (A r s - A s r) = 0 := by
-  simp only [sum_sub_distrib]
-  rw [Finset.sum_comm (f := fun r s => A s r), sub_self]
-
 /-- **Second (differential) Bianchi identity**, jet level, no metric:
 `∇_f R^a_bcd + ∇_c R^a_bdf + ∇_d R^a_bfc = 0` for the curvature (2.2) of any torsion-free
 connection jet `(Γ, ∂Γ, ∂∂Γ)` with symmetric second derivatives, over any commutative ring.
@@ -140,7 +134,7 @@ theorem cov13_riem_cyclic (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι 
     + (Γ a d e * (Γ e g f * Γ g b c) - Γ a d e * (Γ e g c * Γ g b f))
   have hQ : ∑ e, ∑ g, bQ Γ a b f c d e g + ∑ e, ∑ g, bQ Γ a b c d f e g
       + ∑ e, ∑ g, bQ Γ a b d f c e g = 0 := by
-    rw [← sum_add_distrib, ← sum_add_distrib, ← sum_sum_sub_swap' A]
+    rw [← sum_add_distrib, ← sum_add_distrib, ← sum_sum_sub_swap A]
     refine sum_congr rfl fun e _ => ?_
     rw [← sum_add_distrib, ← sum_add_distrib]
     refine sum_congr rfl fun g _ => ?_
@@ -192,21 +186,6 @@ theorem cov4_lower (Γ : ι → ι → ι → R) (g : Matrix ι ι R) (dg : ι �
   have e5 : ∑ x, ∑ i, Γ x f d * (g a i * T i b c x) = ∑ x, ∑ i, g a x * (Γ i f d * T x b c i) :=
     sum_swap_eq fun x i => by ring
   linear_combination e1 + e2 - e3 - e4 - e5
-
-/-- **Second Bianchi identity, lowered, jet level**: for a torsion-free connection jet with
-symmetric second derivatives, compatible to first order with `g`,
-`∇_f R_abcd + ∇_c R_abdf + ∇_d R_abfc = 0` for `R_abcd = g_ae R^e_bcd`. -/
-theorem cov4_lower_riem_cyclic (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
-    (ddΓ : ι → ι → ι → ι → ι → R) (hΓ : ∀ a b c, Γ a b c = Γ a c b)
-    (hddΓ : ∀ f e a b c, ddΓ f e a b c = ddΓ e f a b c) (g : Matrix ι ι R) (dg : ι → ι → ι → R)
-    (hcomp : ∀ e a b, dg e a b = ∑ r, (g r b * Γ r e a + g a r * Γ r e b)) (f a b c d : ι) :
-    cov4 Γ (lower g (riemComp Γ dΓ)) (dLower g dg (riemComp Γ dΓ) (dRiemComp Γ dΓ ddΓ)) f a b c d
-      + cov4 Γ (lower g (riemComp Γ dΓ)) (dLower g dg (riemComp Γ dΓ) (dRiemComp Γ dΓ ddΓ))
-        c a b d f
-      + cov4 Γ (lower g (riemComp Γ dΓ)) (dLower g dg (riemComp Γ dΓ) (dRiemComp Γ dΓ ddΓ))
-        d a b f c = 0 := by
-  simp only [cov4_lower Γ g dg hcomp, ← sum_add_distrib, ← mul_add]
-  exact sum_eq_zero fun e _ => by rw [cov13_riem_cyclic Γ dΓ ddΓ hΓ hddΓ f e b c d, mul_zero]
 
 /-- Reindex a triple sum by a permutation of `ι × ι × ι`. -/
 theorem sum3_congr_perm {F G : ι → ι → ι → R} (σ : ι × ι × ι ≃ ι × ι × ι)
@@ -413,10 +392,6 @@ def cov4M (A B C D : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     ι → ι → ι → ι → ι → R := fun f a b c d =>
   dT f a b c d - ∑ e, (A e f a * T e b c d + B e f b * T a e c d + C e f c * T a b e d
     + D e f d * T a b c e)
-
-/-- With the same connection in every slot, `cov4M` is `cov4`. -/
-theorem cov4M_eq_cov4 (Γ : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
-    (dT : ι → ι → ι → ι → ι → R) : cov4M Γ Γ Γ Γ T dT = cov4 Γ T dT := rfl
 
 /-- Frame components in the first slot: `T'_μbcd = e^a_μ T_abcd`. -/
 def slot1 (e : ι → ι → R) (T : ι → ι → ι → ι → R) : ι → ι → ι → ι → R :=

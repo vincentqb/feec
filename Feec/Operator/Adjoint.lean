@@ -6,7 +6,6 @@ public import Feec.ForMathlib.LinearPMap.Reducing
 public import Feec.ForMathlib.LinearPMap.Intertwines
 public import Feec.ForMathlib.LinearPMap.ClosedRange
 public import Feec.ForMathlib.LinearPMap.Bounded
-public import Feec.ForMathlib.LinearPMap.CompPartial
 
 /-!
 # Adjoints of composable pairs `T : E → F`, `S : F → G` with `S T = 0`

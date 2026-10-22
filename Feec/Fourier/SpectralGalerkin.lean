@@ -10,10 +10,9 @@ public import Feec.HilbertComplex.Compactness
 For a symbol complex and a measurable set `A` of frequencies, the band-limited fields
 `L²_A = {u | u = 0 a.e. off A}` form a reducing subcomplex: every multiplier preserves them, and
 their orthogonal projection (the Fourier truncation) commutes with every differential. Hence the
-**spectral Galerkin method** (truncate the data to the band, solve the Hodge wave equation) is
-exact on band-limited data, and its error for general data is the truncation error of the data,
-uniformly in time (`norm_waveGroup_sub_waveGroup_band`). For an exhausting sequence of bands the
-truncations converge to the identity (`tendsto_totalProj_band`).
+**spectral Galerkin method** (truncate the data to the band, solve the Hodge wave equation) is a
+reducing-subcomplex discretization. For an exhausting sequence of bands the truncations converge
+to the identity (`tendsto_totalProj_band`).
 
 On the torus the bands `|k|_∞ ≤ N` are finite sets of modes: this is the Fourier spectral method.
 
@@ -23,9 +22,6 @@ On the torus the bands `|k|_∞ ≤ N` are finite sets of modes: this is the Fou
   projection is the cut-off `𝟙_A`).
 * **`fibreReducing_band`**, `reducingSubcomplex_band`: band-limited fields reduce every symbol
   complex.
-* `band_propagates`: band-limited data and forcing give band-limited strong solutions.
-* `waveGroup_totalProj_band`: the wave group commutes with the Fourier truncation.
-* **`norm_waveGroup_sub_waveGroup_band`**: `‖S(t) U₀ - S(t) P_A U₀‖ = ‖U₀ - P_A U₀‖` for all `t`.
 * **`tendsto_totalProj_band`**: `P_{A_N} U₀ → U₀` for an increasing exhausting sequence of bands,
   so the spectral Galerkin solutions converge uniformly in time.
 * `Torus.bandN N = {k | ∀ j, |k j| ≤ N}`: finite bands exhausting `ℤᵈ`.
@@ -120,34 +116,6 @@ theorem reducingSubcomplex_band [∀ i, (S.band A i).HasOrthogonalProjection] :
 
 variable [Fintype ι] [∀ i, (S.band A i).HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)]
-
-/-- **Band-limited data stay band-limited**: strong solutions of the Hodge wave equation with
-band-limited data and forcing are band-limited for all times. -/
-theorem band_propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
-    (hU : Evolution.IsStrongSolution S.toHilbertComplex.wave (Icc a b) F U)
-    (h0 : U a ∈ HilbertComplex.totalSub (S.band A))
-    (hF : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub (S.band A)) :
-    ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub (S.band A) :=
-  (fibreReducing_band S hA).propagates hU h0 hF
-
-/-- The wave group commutes with the Fourier truncation. -/
-theorem waveGroup_totalProj_band (t : ℝ) (x : PiLp 2 fun i => Lp (E i) 2 μ) :
-    S.toHilbertComplex.waveGroup.S t
-        ((HilbertComplex.totalSub (S.band A)).starProjection x) =
-      (HilbertComplex.totalSub (S.band A)).starProjection
-        (S.toHilbertComplex.waveGroup.S t x) :=
-  S.toHilbertComplex.isIsometric_waveGroup.S_starProjection
-    (fun s _ hy => (fibreReducing_band S hA).waveGroup_mem s hy) t x
-
-omit hA in
-/-- **The error of the spectral Galerkin method is the truncation error of the data**, uniformly
-in time: `‖S(t) U₀ - S(t) P_A U₀‖ = ‖U₀ - P_A U₀‖`. -/
-theorem norm_waveGroup_sub_waveGroup_band (t : ℝ) (x : PiLp 2 fun i => Lp (E i) 2 μ) :
-    ‖S.toHilbertComplex.waveGroup.S t x - S.toHilbertComplex.waveGroup.S t
-        ((HilbertComplex.totalSub (S.band A)).starProjection x)‖ =
-      ‖x - (HilbertComplex.totalSub (S.band A)).starProjection x‖ := by
-  rw [← _root_.map_sub]
-  exact S.toHilbertComplex.isIsometric_waveGroup t _
 
 end Band
 

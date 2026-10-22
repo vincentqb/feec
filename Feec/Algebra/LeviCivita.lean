@@ -23,13 +23,10 @@ The natural volume form is `ω = √|det g| ε` and defines the Hodge dual of a 
 ## Main results
 
 * `leviCivita_perm`: `ε_σ = sign σ`; `leviCivita_of_not_injective`: `ε_v = 0` on repeated
-  indices; `leviCivita_comp_perm`: `ε_{v ∘ τ} = sign τ · ε_v` (total antisymmetry);
-  `leviCivita_swap`.
+  indices.
 * `leviCivita3_eq_int`, `leviCivita4_eq_int`: closed (Vandermonde) integer formulas, so finite
-  tables over any `R` reduce to `decide`; `leviCivita3_apply` (the table), swap and cyclic
-  symmetries, `leviCivita4_swap_pairs`.
-* `sum_leviCivita3_mul_leviCivita3`: the contraction `ε_{ijk} ε_{ilm} = δ_{jl}δ_{km} - δ_{jm}δ_{kl}`;
-  `crossProduct_apply_eq_sum`: `(u × v)_a = ε_{abc} u_b v_c`.
+  tables over any `R` reduce to `decide`; `leviCivita3_apply` (the table),
+  `leviCivita4_swap_pairs`.
 
 ## References
 
@@ -55,28 +52,10 @@ def leviCivita {n : ℕ} (v : Fin n → Fin n) : R :=
 
 variable {R}
 
-theorem leviCivita_def {n : ℕ} (v : Fin n → Fin n) :
-    leviCivita R v = ((1 : Matrix (Fin n) (Fin n) R).submatrix v id).det := rfl
-
 /-- On a permutation, the Levi-Civita symbol is its sign. -/
 @[simp] theorem leviCivita_perm {n : ℕ} (σ : Perm (Fin n)) :
     leviCivita R σ = ((Perm.sign σ : ℤˣ) : ℤ) := by
   rw [leviCivita, det_permute, det_one, mul_one]
-
-@[simp] theorem leviCivita_id {n : ℕ} : leviCivita R (id : Fin n → Fin n) = 1 := by
-  simp [leviCivita]
-
-/-- Total antisymmetry: permuting the slots multiplies the symbol by the sign. -/
-theorem leviCivita_comp_perm {n : ℕ} (v : Fin n → Fin n) (τ : Perm (Fin n)) :
-    leviCivita R (v ∘ τ) = ((Perm.sign τ : ℤˣ) : ℤ) * leviCivita R v := by
-  rw [leviCivita, leviCivita, ← det_permute]
-  rfl
-
-/-- Swapping two distinct slots changes the sign. -/
-theorem leviCivita_swap {n : ℕ} (v : Fin n → Fin n) {i j : Fin n} (hij : i ≠ j) :
-    leviCivita R (v ∘ Equiv.swap i j) = -leviCivita R v := by
-  rw [leviCivita_comp_perm, Perm.sign_swap hij]
-  simp
 
 /-- The symbol vanishes on repeated indices. -/
 theorem leviCivita_of_not_injective {n : ℕ} {v : Fin n → Fin n} (hv : ¬ Function.Injective v) :
@@ -162,68 +141,15 @@ theorem leviCivita3_apply (i j k : Fin 3) : leviCivita3 R i j k =
   rw [leviCivita3_eq_int]
   fin_cases i <;> fin_cases j <;> fin_cases k <;> simp [leviCivita3Int]
 
-@[simp] theorem leviCivita3_012 : leviCivita3 R 0 1 2 = 1 := by simp [leviCivita3_apply]
-
-theorem leviCivita3_swap12 (i j k : Fin 3) : leviCivita3 R j i k = -leviCivita3 R i j k := by
-  simp only [leviCivita3_eq_int, ← Int.cast_neg]; congr 1; revert i j k; decide
-
-theorem leviCivita3_swap23 (i j k : Fin 3) : leviCivita3 R i k j = -leviCivita3 R i j k := by
-  simp only [leviCivita3_eq_int, ← Int.cast_neg]; congr 1; revert i j k; decide
-
-theorem leviCivita3_cycle (i j k : Fin 3) : leviCivita3 R j k i = leviCivita3 R i j k := by
-  simp only [leviCivita3_eq_int]; congr 1; revert i j k; decide
-
-theorem leviCivita3_self_left (i k : Fin 3) : leviCivita3 R i i k = 0 := by
-  have : ∀ i k : Fin 3, leviCivita3Int i i k = 0 := by decide
-  simp [leviCivita3_eq_int, this]
-
-theorem leviCivita3_self_right (i j : Fin 3) : leviCivita3 R i j j = 0 := by
-  have : ∀ i j : Fin 3, leviCivita3Int i j j = 0 := by decide
-  simp [leviCivita3_eq_int, this]
-
-/-- The contraction identity `ε_{ijk} ε_{ilm} = δ_{jl} δ_{km} - δ_{jm} δ_{kl}`. -/
-theorem sum_leviCivita3_mul_leviCivita3 (j k l m : Fin 3) :
-    ∑ i, leviCivita3 R i j k * leviCivita3 R i l m =
-      (if j = l ∧ k = m then 1 else 0) - (if j = m ∧ k = l then 1 else 0) := by
-  simp only [leviCivita3_eq_int, Fin.sum_univ_three]
-  have key : ∀ j k l m : Fin 3,
-      leviCivita3Int 0 j k * leviCivita3Int 0 l m + leviCivita3Int 1 j k * leviCivita3Int 1 l m
-        + leviCivita3Int 2 j k * leviCivita3Int 2 l m =
-      (if j = l ∧ k = m then 1 else 0) - (if j = m ∧ k = l then 1 else 0) := by decide
-  have := congrArg (Int.cast : ℤ → R) (key j k l m)
-  push_cast at this
-  rw [← this]
-
-/-- The cross product in Levi-Civita form, `(u × v)_a = ε_{abc} u_b v_c`. -/
-theorem crossProduct_apply_eq_sum (u v : Fin 3 → R) (a : Fin 3) :
-    crossProduct u v a = ∑ b, ∑ c, leviCivita3 R a b c * u b * v c := by
-  fin_cases a <;> simp [cross_apply, leviCivita3_apply, Fin.sum_univ_three] <;> ring
-
 /-! ### Four dimensions -/
-
-@[simp] theorem leviCivita4_0123 : leviCivita4 R 0 1 2 3 = 1 := by
-  simp [leviCivita4_eq_int, leviCivita4Int]
 
 /-- `ε_{abcd} = ε_{cdab}` (an even permutation). -/
 theorem leviCivita4_swap_pairs (a b c d : Fin 4) :
     leviCivita4 R a b c d = leviCivita4 R c d a b := by
   simp only [leviCivita4_eq_int]; congr 1; revert a b c d; decide
 
-theorem leviCivita4_swap12 (a b c d : Fin 4) :
-    leviCivita4 R b a c d = -leviCivita4 R a b c d := by
-  simp only [leviCivita4_eq_int, ← Int.cast_neg]; congr 1; revert a b c d; decide
-
 theorem leviCivita4_swap34 (a b c d : Fin 4) :
     leviCivita4 R a b d c = -leviCivita4 R a b c d := by
   simp only [leviCivita4_eq_int, ← Int.cast_neg]; congr 1; revert a b c d; decide
-
-theorem leviCivita4_swap23 (a b c d : Fin 4) :
-    leviCivita4 R a c b d = -leviCivita4 R a b c d := by
-  simp only [leviCivita4_eq_int, ← Int.cast_neg]; congr 1; revert a b c d; decide
-
-/-- `ε_{0ijk} = ε_{ijk}` on spatial indices (the spatial volume form of `∂_t`). -/
-theorem leviCivita4_zero_succ (i j k : Fin 3) :
-    leviCivita4 R 0 i.succ j.succ k.succ = leviCivita3 R i j k := by
-  simp only [leviCivita4_eq_int, leviCivita3_eq_int]; congr 1; revert i j k; decide
 
 end Feec

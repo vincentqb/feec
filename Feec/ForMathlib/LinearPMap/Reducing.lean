@@ -22,7 +22,7 @@ For `T : E →ₗ.[𝕜] F` and closed subspaces `K ⊆ E`, `L ⊆ F` with ortho
   (`IsSkewSymmetric.commute_proj`).
 * `IsSkewAdjoint.restrict`: the part of a skew-adjoint operator in a reducing subspace is
   skew-adjoint (no density hypothesis on `D(A) ∩ K`: `dense_restrict_domain`).
-* `dense_inter_of_proj_mem`, `proj_orthogonal_mem_of_le`, `hasOrthogonalProjection_ker`.
+* `hasOrthogonalProjection_ker`.
 
 ## References
 
@@ -128,28 +128,10 @@ def restrict (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E)
       map_add' := fun x y => by ext; simp [← LinearPMap.map_add]; rfl
       map_smul' := fun c x => by ext; simp [← LinearPMap.map_smul]; rfl }
 
-theorem mem_restrict_domain {A : E →ₗ.[𝕜] E} {K : Submodule 𝕜 E}
-    {hinv : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K} {x : K} :
-    x ∈ (A.restrict K hinv).domain ↔ (x : E) ∈ A.domain := Iff.rfl
-
 /-- `Ã x = A x` for the part `Ã = A.restrict K hinv`. -/
 @[simp] theorem restrict_apply (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E)
     (hinv : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) (x : (A.restrict K hinv).domain) :
     ((A.restrict K hinv x : K) : E) = A ⟨((x : K) : E), x.2⟩ := rfl
-
-/-- If `D` is dense and `P_K D ⊆ D`, then `D ∩ K` is dense in `K`. -/
-theorem dense_inter_of_proj_mem (D : Submodule 𝕜 E) (hD : Dense (D : Set E))
-    (K : Submodule 𝕜 E) [K.HasOrthogonalProjection]
-    (hPD : ∀ x ∈ D, K.starProjection x ∈ D) :
-    ∀ k ∈ K, k ∈ _root_.closure ((D : Set E) ∩ K) := by
-  intro k hk
-  have hcont : Continuous K.starProjection := K.starProjection.continuous
-  have : K.starProjection k ∈ _root_.closure (K.starProjection '' (D : Set E)) :=
-    map_mem_closure hcont (hD k) (fun x hx => mem_image_of_mem _ hx)
-  rw [(K.starProjection_eq_self_iff).2 hk] at this
-  refine closure_mono ?_ this
-  rintro _ ⟨x, hx, rfl⟩
-  exact ⟨hPD x hx, K.starProjection_apply_mem x⟩
 
 /-- If `D(A)` is dense and `P_K D(A) ⊆ D(A)`, the part of `A` in `K` is densely defined. -/
 theorem dense_restrict_domain (A : E →ₗ.[𝕜] E) (hD : Dense (A.domain : Set E))
@@ -166,13 +148,6 @@ theorem dense_restrict_domain (A : E →ₗ.[𝕜] E) (hD : Dense (A.domain : Se
   change ((K.orthogonalProjectionOnto x : K) : E) ∈ A.domain
   rw [← Submodule.starProjection_apply]
   exact h1 ⟨x, hx⟩
-
-/-- If a closed subspace `M` lies inside `D`, then `P_{Mᗮ} D ⊆ D`. -/
-theorem proj_orthogonal_mem_of_le (D M : Submodule 𝕜 E) [M.HasOrthogonalProjection]
-    (hMD : M ≤ D) : ∀ x ∈ D, Mᗮ.starProjection x ∈ D := by
-  intro x hx
-  rw [Submodule.starProjection_orthogonal_val]
-  exact D.sub_mem hx (hMD (M.starProjection_apply_mem x))
 
 /-- For a closed operator `M` on a Hilbert space, `ker M` has an orthogonal projection. -/
 theorem hasOrthogonalProjection_ker [CompleteSpace E] {G : Type*} [NormedAddCommGroup G]

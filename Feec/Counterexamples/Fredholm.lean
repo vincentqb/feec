@@ -111,10 +111,6 @@ theorem diag_single (n : ℕ) :
 theorem norm_single (n : ℕ) : ‖(lp.single 2 n 1 : L2 𝕜)‖ = 1 := by
   rw [lp.norm_single (by norm_num), norm_one]
 
-/-- `‖A e_n‖ = 1/(n+1)`. -/
-theorem norm_diag_single (n : ℕ) : ‖diag 𝕜 (lp.single 2 n 1)‖ = 1 / ((n : ℝ) + 1) := by
-  rw [diag_single, lp.norm_single (by norm_num), norm_div, norm_one, norm_natCast_add_one]
-
 /-- `R(A)` is dense: anything orthogonal to every `A e_n` vanishes. -/
 theorem eq_zero_of_inner_diag_single {y : L2 𝕜} (hy : ∀ n, ⟪diag 𝕜 (lp.single 2 n 1), y⟫_𝕜 = 0) :
     y = 0 := by
@@ -147,8 +143,6 @@ def harm : L2 𝕜 :=
     refine h.congr fun n => ?_
     rw [ENNReal.toReal_ofNat, norm_div, norm_one, norm_natCast_add_one, Real.rpow_two, div_pow,
       one_pow])⟩
-
-theorem harm_apply (n : ℕ) : (harm : L2 𝕜) n = 1 / ((n : 𝕜) + 1) := rfl
 
 /-- `(1/(n+1))ₙ ∉ R(A)`: its preimage would be the constant sequence `1`. -/
 theorem harm_not_mem_range : (harm : L2 𝕜) ∉ LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) := by

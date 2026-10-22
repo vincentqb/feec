@@ -84,7 +84,8 @@ theorem riemComp_bianchi (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι �
     rw [hΓ e c b, hΓ e d c, hΓ e d b]; ring
   linear_combination hs + hdΓ c a b d - hdΓ d a b c - hdΓ b a c d
 
-private theorem sum_sum_sub_swap (A : ι → ι → R) : ∑ r, ∑ s, (A r s - A s r) = 0 := by
+/-- A double sum of `A r s - A s r` vanishes. -/
+theorem sum_sum_sub_swap (A : ι → ι → R) : ∑ r, ∑ s, (A r s - A s r) = 0 := by
   simp only [sum_sub_distrib]
   rw [Finset.sum_comm (f := fun r s => A s r), sub_self]
 

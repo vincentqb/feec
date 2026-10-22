@@ -88,8 +88,6 @@ variable (𝕜) in
 abbrev invShort : ShortHilbertComplex 𝕜 (L2 𝕜) (L2 𝕜) PUnit :=
   ShortHilbertComplex.ofOp (invDiag 𝕜) dense_invDiag_domain invDiag_isClosed
 
-theorem invShort_toHilbertComplex : (invShort 𝕜).toHilbertComplex = invComplex 𝕜 := rfl
-
 theorem diag_harm_mem_domain : diag 𝕜 harm ∈ (invDiag 𝕜).domain :=
   (invDiag_domain (𝕜 := 𝕜)) ▸ ⟨harm, rfl⟩
 
@@ -189,8 +187,6 @@ def trunc (N : ℕ) : Submodule 𝕜 (L2 𝕜) where
   add_mem' hx hy n hn := by simp [hx n hn, hy n hn]
   zero_mem' _ _ := rfl
   smul_mem' c x hx n hn := by simp [hx n hn]
-
-theorem mem_trunc {N : ℕ} {x : L2 𝕜} : x ∈ trunc 𝕜 N ↔ ∀ n, N ≤ n → x n = 0 := Iff.rfl
 
 variable (𝕜) in
 /-- The truncation `P_N x = Σ_{n<N} x_n e_n`. -/

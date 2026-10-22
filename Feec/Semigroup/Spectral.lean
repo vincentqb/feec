@@ -39,11 +39,8 @@ For an isometric group `G` with generator `A` on a Hilbert space over `𝕜 = �
   `C0Group.IsIsometric.exists_isEigenSq_mem_invariantCore`,
   `C0Group.IsIsometric.mem_invariantCore_iff_of_isEigenSq`: spectral extraction from the
   invariant core.
-* `C0Group.freqSub`: the frequency-`ω` subspace `{v | S t v = cos(ωt) v + sin(ωt) S(π/2ω) v}`,
-  the eigenspace `ker(A² + ω²)` (`C0Group.isEigenSq_of_mem_freqSub`,
-  `C0Group.IsIsometric.mem_freqSub_of_isEigenSq`), orthogonal to the stationary vectors and
-  stable under the projection of the invariant core
-  (`C0Group.IsIsometric.starProjection_freqSub_mem_invariantCore`).
+* `C0Group.not_mem_stationary_of_isEigenSq`: a nonzero eigenvector of `A²` with eigenvalue
+  `-ω² ≠ 0` is not stationary.
 * `C0Group.rescale`, `C0Group.generator_rescale`: the group `t ↦ S (a t)` has generator `a A`.
 
 ## References
@@ -197,26 +194,6 @@ theorem IsIsometric.mem_invariantCore_of_forward_invariant (hG : G.IsIsometric)
     exact hG.starProjection_periodic_mem_invariantCore hN hτ fun t _ =>
       S_mem_invariantCore (N.starProjection_apply_mem x) t
   have := N.starProjection_apply_mem x
-  rwa [← sub_eq_zero.1 h0] at this
-
-/-- Under pure point spectrum, the invariant core is stationary iff its periodic elements are. -/
-theorem IsIsometric.invariantCore_le_stationary (hG : G.IsIsometric) (hPP : G.IsPurePoint)
-    {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E))
-    (hkey : ∀ τ, 0 < τ → ∀ x ∈ G.invariantCore K, x ∈ G.periodic τ → x ∈ G.stationary) :
-    G.invariantCore K ≤ G.stationary := by
-  intro x hx
-  set z := x - G.stationary.starProjection x
-  have hz : z ∈ G.stationaryᗮ := G.stationary.sub_starProjection_mem_orthogonal x
-  have h0 : z = 0 := by
-    refine hPP.eq_zero_of_starProjection fun τ hτ => starProjection_eq_zero_of_mem hz ?_
-    rw [_root_.map_sub, (G.periodic τ).starProjection_eq_self_iff.2
-      (stationary_le_periodic τ (G.stationary.starProjection_apply_mem x))]
-    refine G.stationary.sub_mem (hkey τ hτ _ (invariantCore_le (G := G)
-      (K := G.invariantCore K) ?_) ((G.periodic τ).starProjection_apply_mem x))
-      (G.stationary.starProjection_apply_mem x)
-    exact hG.starProjection_periodic_mem_invariantCore (isClosed_invariantCore hK) hτ
-      fun t _ => S_mem_invariantCore hx t
-  have := G.stationary.starProjection_apply_mem x
   rwa [← sub_eq_zero.1 h0] at this
 
 end C0Group
@@ -739,153 +716,15 @@ end C0Group
 
 end Feec
 
-/-! ### Frequency subspaces -/
+/-! ### Eigenvectors and stationary vectors -/
 
 namespace Feec
-
-/-- **Projections onto commuting closed subspaces**: if `P_N V ⊆ V` for closed `V`, `N`, then
-`P_V N ⊆ N`. -/
-theorem starProjection_mem_of_invariant {V N : Submodule 𝕜 E} [V.HasOrthogonalProjection]
-    [N.HasOrthogonalProjection] (hV : ∀ v ∈ V, N.starProjection v ∈ V) {x : E} (hx : x ∈ N) :
-    V.starProjection x ∈ N := by
-  set y := V.starProjection x
-  have hz : N.starProjection (x - y) ∈ Vᗮ := by
-    rw [Submodule.mem_orthogonal]
-    intro v hv
-    rw [← Submodule.inner_starProjection_left_eq_right]
-    exact Submodule.inner_right_of_mem_orthogonal (hV v hv) (V.sub_starProjection_mem_orthogonal x)
-  have e : V.starProjection x = N.starProjection y :=
-    V.eq_starProjection_of_mem_orthogonal' (hV _ (V.starProjection_apply_mem x)) hz
-      (by rw [_root_.map_sub, (N.starProjection_eq_self_iff).2 hx]; abel)
-  rw [show y = N.starProjection y from e]
-  exact N.starProjection_apply_mem y
 
 namespace C0Group
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {G : C0Group 𝕜 E}
 
-variable (G) in
-/-- **The frequency-`ω` subspace**: the `v` with `S t v = cos(ω t) v + sin(ω t) S(π/(2ω)) v` for
-all `t`. For `ω > 0` and an isometric group it is the eigenspace `ker(A² + ω²)`
-(`isEigenSq_of_mem_freqSub`, `IsIsometric.mem_freqSub_of_isEigenSq`). -/
-def freqSub (ω : ℝ) : Submodule 𝕜 E where
-  carrier := {v | ∀ t, G.S t v =
-    Real.cos (ω * t) • v + Real.sin (ω * t) • G.S (Real.pi / (2 * ω)) v}
-  zero_mem' := fun t => by simp
-  add_mem' := fun {a b} ha hb t => by
-    change G.S t (a + b) = _
-    rw [_root_.map_add, ha t, hb t, _root_.map_add, smul_add, smul_add]
-    abel
-  smul_mem' := fun c x hx t => by
-    change G.S t (c • x) = _
-    rw [_root_.map_smul, hx t, _root_.map_smul, smul_add, smul_comm c (Real.cos (ω * t)),
-      smul_comm c (Real.sin (ω * t))]
-
-theorem mem_freqSub {ω : ℝ} {v : E} : v ∈ G.freqSub ω ↔ ∀ t, G.S t v =
-    Real.cos (ω * t) • v + Real.sin (ω * t) • G.S (Real.pi / (2 * ω)) v := Iff.rfl
-
-theorem isClosed_freqSub (ω : ℝ) : IsClosed (G.freqSub ω : Set E) := by
-  have e : (G.freqSub ω : Set E) = ⋂ t, {v | G.S t v =
-      Real.cos (ω * t) • v + Real.sin (ω * t) • G.S (Real.pi / (2 * ω)) v} := by
-    ext; simp [mem_freqSub]
-  rw [e]
-  exact isClosed_iInter fun t => isClosed_eq (G.S t).continuous
-    ((continuous_const_smul _).add ((continuous_const_smul _).comp (G.S _).continuous))
-
-instance [CompleteSpace E] (ω : ℝ) : (G.freqSub ω).HasOrthogonalProjection := by
-  have : CompleteSpace (G.freqSub ω) := (isClosed_freqSub ω).completeSpace_coe
-  infer_instance
-
-theorem S_mem_freqSub {ω : ℝ} {v : E} (hv : v ∈ G.freqSub ω) (s : ℝ) :
-    G.S s v ∈ G.freqSub ω := by
-  intro t
-  rw [G.comm_apply t s, hv t, _root_.map_add, ContinuousLinearMap.map_smul_of_tower,
-    ContinuousLinearMap.map_smul_of_tower, G.comm_apply s]
-
-theorem freqSub_le_periodic {ω : ℝ} (hω : 0 < ω) :
-    G.freqSub ω ≤ G.periodic (2 * Real.pi / ω) := fun v hv => by
-  rw [mem_periodic, hv, show ω * (2 * Real.pi / ω) = 2 * Real.pi by field_simp]
-  simp
-
-/-- **Stationary vectors are orthogonal to the frequency-`ω` subspace**, `ω > 0`. -/
-theorem IsIsometric.inner_eq_zero_of_mem_stationary_freqSub (hG : G.IsIsometric) {ω : ℝ}
-    (hω : 0 < ω) {s v : E} (hs : s ∈ G.stationary) (hv : v ∈ G.freqSub ω) : ⟪s, v⟫ = 0 := by
-  have h := hG.inner_map_map (Real.pi / ω) s v
-  rw [mem_stationary.1 hs, hv, show ω * (Real.pi / ω) = Real.pi by field_simp, Real.cos_pi,
-    Real.sin_pi, zero_smul, add_zero, neg_one_smul, inner_neg_right] at h
-  linear_combination (-1 / 2 : 𝕜) * h
-
 variable [CompleteSpace E]
-
-/-- On the frequency-`ω` subspace, `A v = ω S(π/(2ω)) v`. -/
-theorem apply_of_mem_freqSub {ω : ℝ} {v : E} (hv : v ∈ G.freqSub ω) :
-    ∃ h : v ∈ G.generator.domain, G.generator ⟨v, h⟩ = ω • G.S (Real.pi / (2 * ω)) v := by
-  set w := G.S (Real.pi / (2 * ω)) v
-  have h1 : HasDerivAt (fun s : ℝ => ω * s) ω 0 := by
-    simpa using (hasDerivAt_id (0 : ℝ)).const_mul ω
-  have hd : HasDerivAt (fun t => G.S t v)
-      ((-Real.sin (ω * 0) * ω) • v + (Real.cos (ω * 0) * ω) • w) 0 := by
-    have := (h1.cos.smul_const v).add (h1.sin.smul_const w)
-    exact this.congr_of_eventuallyEq (Eventually.of_forall fun t => hv t)
-  simp only [mul_zero, Real.sin_zero, neg_zero, zero_mul, zero_smul, Real.cos_zero, one_mul,
-    zero_add] at hd
-  have hdom : v ∈ G.generator.domain := (G.mem_domain_generator_iff v).2 hd.differentiableAt
-  exact ⟨hdom, G.generator_apply_eq hd⟩
-
-/-- **Elements of the frequency-`ω` subspace, `ω > 0`, are eigenvectors of `A²`** with
-eigenvalue `-ω²`. -/
-theorem isEigenSq_of_mem_freqSub {ω : ℝ} (hω : 0 < ω) {v : E} (hv : v ∈ G.freqSub ω) :
-    G.generator.IsEigenSq ω v := by
-  obtain ⟨h, e⟩ := apply_of_mem_freqSub hv
-  set w := G.S (Real.pi / (2 * ω)) v
-  obtain ⟨hw, ew⟩ := apply_of_mem_freqSub (S_mem_freqSub hv (Real.pi / (2 * ω)))
-  have hww : G.S (Real.pi / (2 * ω)) w = -v := by
-    change G.S (Real.pi / (2 * ω)) (G.S (Real.pi / (2 * ω)) v) = -v
-    rw [← mul_apply_eq_comp, ← G.map_add, hv,
-      show ω * (Real.pi / (2 * ω) + Real.pi / (2 * ω)) = Real.pi by field_simp; ring,
-      Real.cos_pi, Real.sin_pi, zero_smul, add_zero, neg_one_smul]
-  have h' : G.generator ⟨v, h⟩ ∈ G.generator.domain := e ▸ G.generator.domain.smul_of_tower_mem ω hw
-  refine ⟨h, h', ?_⟩
-  have : (⟨G.generator ⟨v, h⟩, h'⟩ : G.generator.domain) = ((ω : ℝ) : 𝕜) • ⟨w, hw⟩ := by
-    refine Subtype.ext ?_
-    change G.generator ⟨v, h⟩ = ((ω : ℝ) : 𝕜) • w
-    rw [e, RCLike.real_smul_eq_coe_smul (K := 𝕜)]
-  rw [this, LinearPMap.map_smul, ew, hww, ← RCLike.real_smul_eq_coe_smul (K := 𝕜), smul_smul,
-    smul_neg, ← neg_smul, sq]
-
-/-- **Eigenvectors of `A²` with eigenvalue `-ω²`, `ω > 0`, lie in the frequency-`ω`
-subspace.** -/
-theorem IsIsometric.mem_freqSub_of_isEigenSq (hG : G.IsIsometric) {ω : ℝ} (hω : 0 < ω) {v : E}
-    (hv : G.generator.IsEigenSq ω v) : v ∈ G.freqSub ω := by
-  obtain ⟨h, h', e⟩ := hv
-  intro t
-  have hq : G.S (Real.pi / (2 * ω)) v = (1 / ω) • G.generator ⟨v, h⟩ := by
-    rw [hG.S_eq_of_isEigenSq hω h h' e, show ω * (Real.pi / (2 * ω)) = Real.pi / 2 by field_simp,
-      Real.cos_pi_div_two, Real.sin_pi_div_two, zero_smul, zero_add, one_div]
-  rw [hG.S_eq_of_isEigenSq hω h h' e, hq, smul_smul, div_eq_mul_one_div]
-
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] in
-/-- A closed invariant subspace commutes with the group: `S t P_M = P_M S t`. -/
-theorem IsIsometric.S_starProjection_of_invariant (hG : G.IsIsometric) {M : Submodule 𝕜 E}
-    [M.HasOrthogonalProjection] (hM : ∀ t, ∀ x ∈ M, G.S t x ∈ M) (t : ℝ) (x : E) :
-    G.S t (M.starProjection x) = M.starProjection (G.S t x) := by
-  refine (M.eq_starProjection_of_mem_orthogonal' (hM t _ (M.starProjection_apply_mem x))
-    (z := G.S t (x - M.starProjection x)) ?_ (by rw [_root_.map_sub]; abel)).symm
-  rw [Submodule.mem_orthogonal]
-  intro u hu
-  rw [← inner_conj_symm, hG.inner_S_left, Submodule.inner_left_of_mem_orthogonal (hM _ u hu)
-    (M.sub_starProjection_mem_orthogonal x), _root_.map_zero]
-
-/-- **The invariant core is stable under the projection onto a frequency subspace.** -/
-theorem IsIsometric.starProjection_freqSub_mem_invariantCore (hG : G.IsIsometric)
-    {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E)) (ω : ℝ) {x : E}
-    (hx : x ∈ G.invariantCore K) : (G.freqSub ω).starProjection x ∈ G.invariantCore K := by
-  have : CompleteSpace (G.invariantCore K) := (isClosed_invariantCore hK).completeSpace_coe
-  have hcomm := hG.S_starProjection_of_invariant (M := G.invariantCore K)
-    (fun t _ h => S_mem_invariantCore h t)
-  refine starProjection_mem_of_invariant (fun v hv t => ?_) hx
-  rw [hcomm, hv t, _root_.map_add, ContinuousLinearMap.map_smul_of_tower,
-    ContinuousLinearMap.map_smul_of_tower, ← hcomm]
 
 /-- **A nonzero eigenvector of `A²` with eigenvalue `-ω² ≠ 0` is not stationary.** -/
 theorem not_mem_stationary_of_isEigenSq {ω : ℝ} (hω : ω ≠ 0) {v : E}
@@ -907,24 +746,6 @@ theorem IsIsometric.invariantCore_le_stationary_of_domain (hG : G.IsIsometric)
   refine closure_minimal ?_ isClosed_stationary (hG.mem_closure_domain_inter_invariantCore hk)
   rintro y ⟨hy1, hy2⟩
   exact h ⟨y, hy1⟩ hy2
-
-/-- **The frequency form of `EigenDense`**: if the stationary vectors and the frequency subspaces
-`freqSub ω`, `ω > 0`, span a dense subspace, the eigenvectors of `A²` do. -/
-theorem eigenDense_of_dense_freqSub
-    (hD : Dense ((G.stationary ⊔ ⨆ ω : Ioi (0 : ℝ), G.freqSub ω : Submodule 𝕜 E) : Set E)) :
-    G.EigenDense := by
-  have hle : (G.stationary ⊔ ⨆ ω : Ioi (0 : ℝ), G.freqSub ω : Submodule 𝕜 E) ≤
-      Submodule.span 𝕜 {v | ∃ ω, G.generator.IsEigenSq ω v} := by
-    refine sup_le (fun v hv => Submodule.subset_span (show v ∈ {v | ∃ ω,
-      G.generator.IsEigenSq ω v} from ⟨0, ?_⟩)) (iSup_le fun ω v hv => Submodule.subset_span
-        (show v ∈ {v | ∃ ω, G.generator.IsEigenSq ω v} from ⟨ω, isEigenSq_of_mem_freqSub ω.2 hv⟩))
-    obtain ⟨h, e⟩ := mem_domain_generator_of_mem_stationary hv
-    have h' : G.generator ⟨v, h⟩ ∈ G.generator.domain := e ▸ G.generator.domain.zero_mem
-    refine ⟨h, h', ?_⟩
-    have : (⟨G.generator ⟨v, h⟩, h'⟩ : G.generator.domain) = 0 := Subtype.ext e
-    rw [this, LinearPMap.map_zero]
-    simp
-  exact hD.mono hle
 
 end C0Group
 

@@ -48,17 +48,10 @@ norm, so `B` is not `Metric.ball 0 1`) **TSD does not propagate**.
 
 ## Main results
 
-* **`tsd_not_propagates`**, **`not_propagates`**, `tsdSk_not_propagates`: the TSD datum
+* **`tsd_not_propagates`**, **`not_propagates`**: the TSD datum
   `x₀ ∈ D(L) ∩ K` has, on every `[0, T]`, `T > 0`, a unique strong solution (the wave group
   orbit), and it leaves `K = {0} × L²(TSD) × L²(TSD)`; `x₀` also lies in the variant
   `{0} × (L²(TSD) ∩ ker d₀†) × L²(TSD)` (`Feec.Counterexamples.BoundedSymTSD.tsdSKer`).
-* `negL_x0_not_mem_closure`: `L x₀ ∉ closure (D(L) ∩ K)`. `L` maps `D(L) ∩ K` into `K`, but not
-  into the closure of `D(L) ∩ K`; the defect is in the magnetic slot:
-* `curlE0_not_mem_closure`: `curl E₀ = diag(-1, -1, 2) ∈ L²(TSD)` is not in the closure of
-  `L²(TSD) ∩ H̊(sym curl, T)`, so that intersection is not dense in `L²(TSD)` on `B`.
-* `x0_not_mem_Kmax`: `x₀ ∉ K*`, so the maximal form
-  `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsdSKer` is a strict restriction of the data
-  of Prop 4.19 on `B`.
 
 ## Correction
 
@@ -421,10 +414,6 @@ theorem isTest_chi_mul (n : ℕ) {g : R3 → ℝ} (hg : ContDiff ℝ ∞ g) :
   ⟨(contDiff_chi n).mul hg, (isTest_chi n).hasCompactSupport.mul_right,
     tsupport_mul_subset_left.trans (isTest_chi n).tsupport_subset⟩
 
-theorem pd_eF_diag (i j : Fin 3) (x : R3) : pd j (eF (i, j)) x = 0 := by
-  simp only [eF, pd_linF]
-  fin_cases i <;> fin_cases j <;> simp [ecoef]
-
 theorem abs_eF_le {x : R3} (hx : rho x ≤ 1) (ij : Ix) : |eF ij x| ≤ 1 := by
   have h0 := abs_le_one_of_rho_le hx 0
   have h1 := abs_le_one_of_rho_le hx 1
@@ -439,10 +428,6 @@ theorem contDiff_one_eF (ij : Ix) : ContDiff ℝ 1 (eF ij) := (contDiff_linF _).
 def E0 : symSub ℝ ball3 :=
   ⟨smoothField isOpen_ball3 isBounded_ball3 eF (fun ij => (contDiff_one_eF ij).continuous),
     smoothField_mem_symSub isOpen_ball3 isBounded_ball3 _ eF_symm⟩
-
-theorem coe_E0 : (E0 : L2F ℝ ball3 Ix) =
-    smoothField isOpen_ball3 isBounded_ball3 eF (fun ij => (contDiff_one_eF ij).continuous) :=
-  rfl
 
 /-- **`E₀ ∈ L²(TSD)`**: symmetric, trace-free and divergence-free. -/
 theorem E0_mem_TSDS : E0 ∈ tsdS ball3 :=
@@ -924,23 +909,6 @@ theorem inner_negL_x0_ne_zero :
   rw [h0] at h
   linarith
 
-/-- **The mechanism**: `L x₀ ∉ closure (D(L) ∩ K)`. `K` itself is invariant under `L` on
-`D(L) ∩ K` (Lemma 3.5), but the closure of `D(L) ∩ K` is not, because `N ⊥ D(L) ∩ K` while
-`⟪L x₀, N⟫ ≠ 0`. -/
-theorem negL_x0_not_mem_closure :
-    (hessCurlMax ℝ isOpen_ball3).wave ⟨x0, x0_mem_domL⟩ ∉
-      closure (((hessCurlMax ℝ isOpen_ball3).wave.domain : Set _) ∩
-        (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ ball3))
-          (tsdS ball3) (tsdT ball3)) : Set _)) := by
-  intro hmem
-  have hsub : ((hessCurlMax ℝ isOpen_ball3).wave.domain : Set _) ∩
-      (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ ball3))
-        (tsdS ball3) (tsdT ball3)) : Set _) ⊆ (fun y => ⟪y, Nvec⟫_ℝ) ⁻¹' {0} :=
-    fun y hy => inner_Nvec_eq_zero y hy.1 hy.2
-  have h0 := closure_minimal hsub (isClosed_singleton.preimage (continuous_id.inner
-    continuous_const)) hmem
-  exact inner_negL_x0_ne_zero h0
-
 /-- **The conclusion of Prop 4.19 fails for the boundary conditions as printed, on the unit
 ball** (`hessCurlMax`, `D(L) = H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)`): the TSD
 datum `(σ₀, E₀, B₀) = (0, E₀, 0)`, `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x`, lies in `D(L) ∩ K`,
@@ -987,60 +955,5 @@ theorem not_propagates :
   refine ⟨hU, fun U hU0 hU' => hU'.unique
     (hessCurlMax ℝ isOpen_ball3).isSkewAdjoint_wave.isDissipative hU (by rw [hU0, h0]), ?_⟩
   exact tsd_not_propagates.2.2.2 T hT _ h0 hU
-
-/-- **The `tsdSKer` variant, stated directly**: for `K = {0} × (L²(TSD) ∩ ker d₀†) × L²(TSD)`,
-the datum `x₀` lies in `D(L) ∩ K` and, for every `T > 0`, every strong solution on `[0, T]`
-from `x₀` leaves `K`. -/
-theorem tsdSk_not_propagates :
-    x0 ∈ (hessCurlMax ℝ isOpen_ball3).wave.domain ∧
-      x0 ∈ HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ ball3))
-        (tsdSKer ball3 isOpen_ball3) (tsdT ball3)) ∧
-      ∀ T > 0, ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ ball3) (symSub ℝ ball3)
-          (trSub ℝ ball3)), U 0 = x0 →
-        Evolution.IsStrongSolution (hessCurlMax ℝ isOpen_ball3).wave (Icc 0 T) 0 U →
-          ∃ t ∈ Icc 0 T, U t ∉ HilbertComplex.totalSub
-            (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ ball3))
-              (tsdSKer ball3 isOpen_ball3) (tsdT ball3)) := by
-  refine ⟨x0_mem_domL, not_propagates.2.2.1, fun T hT U hU0 hU => ?_⟩
-  obtain ⟨t, ht, hnot⟩ := tsd_not_propagates.2.2.2 T hT U hU0 hU
-  exact ⟨t, ht, fun h => hnot (ShortHilbertComplex.totalSub_family3_mono le_rfl inf_le_left
-    le_rfl h)⟩
-
-/-- **`K*` does not contain `D(L) ∩ K`** on the unit ball: `x₀ ∈ D(L) ∩ K` but `x₀ ∉ K*`, for
-`K = {0} × (L²(TSD) ∩ ker d₀†) × L²(TSD)` and the wave group of `hessCurlMax`. So the maximal
-form `Feec.Counterexamples.BoundedSymTSD.invariantCore_tsdSKer` is a strict restriction of the
-data of Prop 4.19. -/
-theorem x0_not_mem_Kmax :
-    x0 ∉ (hessCurlMax ℝ isOpen_ball3).coreSub (tsdSKer ball3 isOpen_ball3) (tsdT ball3) := by
-  intro h
-  obtain ⟨U, hU0, hU, hK, -⟩ := ShortHilbertComplex.existsUnique_mem_coreSub x0_mem_domL h 0 1
-  obtain ⟨t, ht, hnot⟩ := tsdSk_not_propagates.2.2 1 one_pos U hU0 hU.toIsStrongSolution
-  exact hnot (ShortHilbertComplex.coreSub_le (hK t ht))
-
-/-- **Density fails in the magnetic slot**: the constant field
-`curl E₀ = diag(-1, -1, 2) ∈ L²(TSD)` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`
-(`⟪·, curl Q⟫` vanishes on that set, and `⟪curl E₀, curl Q⟫ ≤ -(3/5) |B|`). So
-`L²(TSD) ∩ H̊(sym curl, T)` is not dense in `L²(TSD)` on the unit ball. -/
-theorem curlE0_not_mem_closure :
-    (hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, E0_mem_d1.1⟩ ∈ tsdT ball3 ∧
-      (hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, E0_mem_d1.1⟩ ∉
-        closure ((tsdT ball3 : Set (trSub ℝ ball3)) ∩
-          (hessCurlMax ℝ isOpen_ball3).d₁†.domain) := by
-  refine ⟨hessCurlMax_d₁_mem_tsdT isOpen_ball3 _ E0_mem_TSDS, fun hmem => ?_⟩
-  have hsub : (tsdT ball3 : Set (trSub ℝ ball3)) ∩ (hessCurlMax ℝ isOpen_ball3).d₁†.domain ⊆
-      (fun B => ⟪B, (hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, Qs_mem_d1.1⟩⟫_ℝ) ⁻¹' {0} := by
-    rintro B ⟨hB, hD⟩
-    have e := LinearPMap.adjoint_isFormalAdjoint (hessCurlMax ℝ isOpen_ball3).dense₁
-      ⟨_, hD⟩ ⟨_, Qs_mem_d1.1⟩
-    simp only [mem_preimage, mem_singleton_iff]
-    have h := inner_Qs_eq_zero (adjoint_hessCurlMax_d₁_mem_tsdS isOpen_ball3 ⟨_, hD⟩ hB)
-    rw [e] at h
-    exact h
-  have h0 := closure_minimal hsub (isClosed_singleton.preimage (continuous_id.inner
-    continuous_const)) hmem
-  simp only [mem_preimage, mem_singleton_iff] at h0
-  have h := inner_negL_x0_ne_zero
-  rw [inner_negL_x0] at h
-  exact h h0
 
 end Feec.Counterexamples.BallSymTSD

@@ -15,11 +15,8 @@ in `K` has `A U + F ∈ K`.
 
 * `deriv_mem_of_eventually_mem_closed`: the general statement, for a derivative within any set
   `s` with `(𝓝[s \ {t}] t).NeBot`;
-* `deriv_mem_of_eventually_mem_closed_Ici`: the right-derivative case;
 * `IsStrongSolution.deriv_mem_of_mem`: a strong solution on `[a,b]` (`a < b`) with values in a
-  closed subspace `K` has `A (U t) + F t ∈ K` for every `t ∈ [a,b]`;
-* `IsStrongSolution.apply_mem_of_mem`: in particular `A (U t) ∈ K` when the forcing is
-  `K`-valued.
+  closed subspace `K` has `A (U t) + F t ∈ K` for every `t ∈ [a,b]`.
 
 The subspace may be a submodule over any scalar ring `R` acting compatibly with `ℝ`, e.g. `ℝ`,
 `ℂ` or `RCLike 𝕜`.
@@ -52,16 +49,6 @@ theorem deriv_mem_of_eventually_mem_closed {f : ℝ → E} {f' : E} {s : Set ℝ
   rw [slope_def_module]
   exact K.smul_of_tower_mem _ (K.sub_mem hr ht)
 
-/-- **Tangent lemma, right derivative**: if `f` has right derivative `f'` at `t` and `f r ∈ K`
-for `r ≥ t` near `t`, with `K` a closed subspace, then `f' ∈ K`. -/
-theorem deriv_mem_of_eventually_mem_closed_Ici {f : ℝ → E} {f' : E} {t : ℝ}
-    {K : Submodule R E} (hK : IsClosed (K : Set E)) (hf : HasDerivWithinAt f f' (Ici t) t)
-    (hev : ∀ᶠ r in 𝓝[≥] t, f r ∈ K) : f' ∈ K := by
-  refine deriv_mem_of_eventually_mem_closed hK hf ?_ hev
-    (hev.self_of_nhdsWithin self_mem_Ici)
-  exact (inferInstance : (𝓝[>] t).NeBot).mono
-    (nhdsWithin_mono _ fun r (hr : t < r) => ⟨hr.le, hr.ne'⟩)
-
 /-- In `[a,b]` with `a < b`, every point is an accumulation point. -/
 theorem neBot_nhdsWithin_Icc_diff {a b t : ℝ} (hab : a < b) (ht : t ∈ Icc a b) :
     (𝓝[Icc a b \ {t}] t).NeBot := by
@@ -85,14 +72,6 @@ theorem deriv_mem_of_mem (hab : a < b) {K : Submodule 𝕜 E} (hK : IsClosed (K 
     (ht : t ∈ Icc a b) : A ⟨U t, hU.mem_domain ht⟩ + F t ∈ K :=
   deriv_mem_of_eventually_mem_closed hK (hU.hasDerivWithinAt ht) (neBot_nhdsWithin_Icc_diff hab ht)
     (eventually_nhdsWithin_of_forall hmem) (hmem t ht)
-
-/-- A strong solution on `[a,b]` (`a < b`) with `K`-valued forcing and values in a closed
-subspace `K` has `A (U t) ∈ K` for every `t ∈ [a,b]`. -/
-theorem apply_mem_of_mem (hab : a < b) {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E))
-    (hU : IsStrongSolution A (Icc a b) F U) (hmem : ∀ t ∈ Icc a b, U t ∈ K)
-    (hF : ∀ t ∈ Icc a b, F t ∈ K) {t : ℝ} (ht : t ∈ Icc a b) : A ⟨U t, hU.mem_domain ht⟩ ∈ K := by
-  have := K.sub_mem (hU.deriv_mem_of_mem hab hK hmem ht) (hF t ht)
-  rwa [add_sub_cancel_right] at this
 
 end IsStrongSolution
 

@@ -14,8 +14,7 @@ For `T : E →ₗ.[𝕜] F` between Hilbert spaces over `𝕜` (`RCLike`):
   defined `T`), `orthogonal_ker` (`N(T)ᗮ = cl R(T†)`), `orthogonal_range_adjoint`
   (`R(T†)ᗮ = N(T)`), `orthogonal_ker_adjoint` (`N(T†)ᗮ = cl R(T)`);
 * the Poincaré inequality `exists_norm_le_of_isClosed_range` (`‖x‖ ≤ c ‖T x‖` on
-  `D(T) ∩ N(T)ᗮ`) and its converse `isClosed_range_of_norm_le`, and the graph-norm form
-  `exists_graphNorm_le_of_isClosed_range`;
+  `D(T) ∩ N(T)ᗮ`) and its converse `isClosed_range_of_norm_le`;
 * the **closed range theorem** `range_adjoint_eq_orthogonal_ker`, `isClosed_range_adjoint_iff`,
   `range_eq_orthogonal_ker_adjoint`;
 * `closedRange_tfae`: for closed densely defined `T`, closed range of `T`, closed range of
@@ -224,27 +223,6 @@ theorem isClosed_range_iff_exists_norm_le {T : E →ₗ.[𝕜] F} (hc : T.IsClos
     _root_.IsClosed (LinearMap.range T.toFun : Set F) ↔
       ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ :=
   ⟨exists_norm_le_of_isClosed_range hc, fun ⟨_, h⟩ => isClosed_range_of_norm_le hc h⟩
-
-/-- Graph-norm form of the Poincaré inequality: `‖x‖_V ≤ C ‖T x‖` for `x ∈ D(T)` that is
-orthogonal to `N(T)` in the graph inner product `⟪z, x⟫ + ⟪T z, T x⟫`. -/
-theorem exists_graphNorm_le_of_isClosed_range {T : E →ₗ.[𝕜] F} (hc : T.IsClosed)
-    (hR : _root_.IsClosed (LinearMap.range T.toFun : Set F)) :
-    ∃ C, ∀ x : T.domain, (∀ z : T.domain, T z = 0 → ⟪(z : E), x⟫_𝕜 + ⟪T z, T x⟫_𝕜 = 0) →
-      Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ C * ‖T x‖ := by
-  obtain ⟨c, hc'⟩ := exists_norm_le_of_isClosed_range hc hR
-  refine ⟨Real.sqrt (c ^ 2 + 1), fun x hx => ?_⟩
-  have hxk : (x : E) ∈ T.kerᗮ := by
-    rw [Submodule.mem_orthogonal]
-    intro u hu
-    obtain ⟨z, rfl, hz⟩ := (LinearPMap.mem_ker_iff).1 hu
-    have := hx z hz
-    rwa [hz, inner_zero_left, add_zero] at this
-  have h2 : ‖(x : E)‖ ^ 2 ≤ c ^ 2 * ‖T x‖ ^ 2 := by
-    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) (hc' x hxk) 2
-  calc Real.sqrt (‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2) ≤ Real.sqrt ((c ^ 2 + 1) * ‖T x‖ ^ 2) :=
-        Real.sqrt_le_sqrt (by nlinarith)
-    _ = Real.sqrt (c ^ 2 + 1) * ‖T x‖ := by
-        rw [Real.sqrt_mul (by positivity), Real.sqrt_sq (norm_nonneg _)]
 
 /-! ### The closed range theorem -/
 

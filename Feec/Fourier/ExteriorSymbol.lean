@@ -310,10 +310,6 @@ omit [LinearOrder d] in
     res k ω t = ω t.1 := rfl
 
 omit [LinearOrder d] in
-@[simp] theorem res_ext (k : ℕ) (ω : Form 𝕜 d k) : res k (ext k ω) = ω := by
-  ext t; rw [res_apply, ext_apply k ω t.2]
-
-omit [LinearOrder d] in
 theorem ext_res {k : ℕ} {ω : Lam 𝕜 d} (h : ∀ s, #s ≠ k → ω s = 0) : ext k (res k ω) = ω := by
   ext s
   by_cases hs : #s = k

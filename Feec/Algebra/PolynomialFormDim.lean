@@ -18,7 +18,7 @@ dimensions and the exactness of the two polynomial de Rham complexes ([AFW2006],
 
 The homogeneous components `homComp j ω` of a polynomial form (coefficientwise
 `MvPolynomial.homogeneousComponent`) commute with `d` and `κ` up to the degree shift
-(`homComp_extDeriv`, `homComp_koszul`), which reduces everything to the homogeneous homotopy
+(`homComp_extDeriv`), which reduces everything to the homogeneous homotopy
 formula `(dκ + κd) ω = (r + k) ω` on `H_rΛᵏ`.
 
 ## Main results
@@ -45,12 +45,10 @@ In characteristic zero:
   `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ` (`r ≥ 1`), and `polyFormMinus_zero`:
   `P_r⁻Λ⁰ = P_rΛ⁰`;
 * `finrank_polyFormMinus`: `dim P_r⁻Λᵏ = (r + n choose r + k) (r + k - 1 choose k)` (`r ≥ 1`);
-* **exactness**: `exists_extDeriv_eq_of_mem_polyForm`, `map_extDeriv_polyForm` for
-  `P_{r+1}Λᵏ → P_rΛ^{k+1} → P_{r-1}Λ^{k+2}`, `exists_extDeriv_eq_of_mem_polyFormMinus`,
-  `map_extDeriv_polyFormMinus` for `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` (`r ≥ 1`), and the
-  cohomology in degree `0`: `polyForm_inf_ker_extDeriv_zero`,
-  `polyFormMinus_inf_ker_extDeriv_zero` (the closed `0`-forms are the constants `P_0Λ⁰`, of
-  dimension one by `finrank_polyForm_zero_zero`);
+* **exactness**: `exists_extDeriv_eq_of_mem_polyForm` for
+  `P_{r+1}Λᵏ → P_rΛ^{k+1} → P_{r-1}Λ^{k+2}`, `exists_extDeriv_eq_of_mem_polyFormMinus` for
+  `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` (`r ≥ 1`), and in degree `0`
+  `mem_polyForm_zero_of_extDeriv_eq_zero` (the closed `0`-forms are the constants `P_0Λ⁰`);
 * `mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero`: a closed form of `P_r⁻Λᵏ` lies in
   `P_{r-1}Λᵏ` ([AFW2006], Thm 3.4; [AFW2010], Thm 5.4).
 
@@ -101,14 +99,6 @@ theorem homComp_add (j : ℕ) (ω η : PolyForm R d) :
     homComp j (ω + η) = homComp j ω + homComp j η := by
   funext s; simp [homComp_apply]
 
-theorem homComp_smul (j : ℕ) (c : R) (ω : PolyForm R d) :
-    homComp j (c • ω) = c • homComp j ω := by
-  funext s; simp [homComp_apply]
-
-theorem homComp_sum {ι : Type*} (j : ℕ) (u : Finset ι) (ω : ι → PolyForm R d) :
-    homComp j (∑ i ∈ u, ω i) = ∑ i ∈ u, homComp j (ω i) := by
-  funext s; simp [homComp_apply, Finset.sum_apply, map_sum]
-
 theorem isDeg_homComp {k : ℕ} {ω : PolyForm R d} (h : IsDeg k ω) (j : ℕ) :
     IsDeg k (homComp j ω) := fun s hs => by simp [homComp_apply, h s hs]
 
@@ -157,12 +147,6 @@ section Order
 
 variable [LinearOrder d]
 
-/-- Homogeneous components of a constant times a polynomial. -/
-theorem homogeneousComponent_sgn_mul (j : ℕ) (i : d) (s : Finset d) (p : MvPolynomial d R) :
-    homogeneousComponent j ((sgn i s : MvPolynomial d R) * p) =
-      sgn i s * homogeneousComponent j p := by
-  rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], homogeneousComponent_C_mul]
-
 omit [LinearOrder d] in
 theorem homogeneousComponent_pderiv (j : ℕ) (i : d) (p : MvPolynomial d R) :
     homogeneousComponent j (pderiv i p) = pderiv i (homogeneousComponent (j + 1) p) := by
@@ -182,29 +166,6 @@ theorem homogeneousComponent_pderiv (j : ℕ) (i : d) (p : MvPolynomial d R) :
   · intro hj
     rw [homogeneousComponent_eq_zero _ p (by simp at hj; omega), map_zero, map_zero]
 
-omit [LinearOrder d] in
-theorem homogeneousComponent_X_mul (j : ℕ) (i : d) (p : MvPolynomial d R) :
-    homogeneousComponent (j + 1) (X i * p) = X i * homogeneousComponent j p := by
-  conv_lhs => rw [← sum_homogeneousComponent p, mul_sum, map_sum]
-  rw [Finset.sum_eq_single j]
-  · have := (isHomogeneous_X R i).mul (homogeneousComponent_isHomogeneous j p)
-    rw [add_comm] at this
-    exact homogeneousComponent_eq_self this
-  · intro m _ hm
-    have hh := (isHomogeneous_X R i).mul (homogeneousComponent_isHomogeneous m p)
-    rw [homogeneousComponent_of_mem hh]
-    simp only [ite_eq_right_iff]
-    omega
-  · intro hj
-    rw [homogeneousComponent_eq_zero _ p (by simp at hj; omega), mul_zero, map_zero]
-
-omit [LinearOrder d] in
-theorem homogeneousComponent_zero_X_mul (i : d) (p : MvPolynomial d R) :
-    homogeneousComponent 0 (X i * p) = 0 := by
-  classical
-  rw [homogeneousComponent_zero, coeff_X_mul']
-  simp
-
 /-- `d` lowers the polynomial degree by one: `(dω)_j = d(ω_{j+1})`. -/
 theorem homComp_extDeriv (j : ℕ) (ω : PolyForm R d) :
     homComp j (extDeriv ω) = extDeriv (homComp (j + 1) ω) := by
@@ -215,22 +176,6 @@ theorem homComp_extDeriv (j : ℕ) (ω : PolyForm R d) :
     homogeneousComponent_pderiv]
 
 variable [Fintype d]
-
-/-- `κ` raises the polynomial degree by one: `(κω)_{j+1} = κ(ω_j)`. -/
-theorem homComp_koszul (j : ℕ) (ω : PolyForm R d) :
-    homComp (j + 1) (koszul ω) = koszul (homComp j ω) := by
-  funext s
-  simp only [homComp_apply, koszul_apply, map_sum]
-  refine sum_congr rfl fun i _ => ?_
-  rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], mul_assoc,
-    homogeneousComponent_C_mul, homogeneousComponent_X_mul, mul_assoc]
-
-theorem homComp_zero_koszul (ω : PolyForm R d) : homComp 0 (koszul ω) = 0 := by
-  funext s
-  simp only [homComp_apply, koszul_apply, map_sum, Pi.zero_apply]
-  refine sum_eq_zero fun i _ => ?_
-  rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], mul_assoc,
-    homogeneousComponent_C_mul, homogeneousComponent_zero_X_mul, mul_zero]
 
 end Order
 
@@ -496,31 +441,6 @@ theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : PolyForm K d} (h0 : IsDeg 0 
     add_zero] at this
   exact (smul_eq_zero.1 this.symm).resolve_left (Nat.cast_ne_zero.2 (by omega))
 
-/-- The range of `d : P_{r+1}Λᵏ → P_rΛ^{k+1}` is the kernel of `d` on `P_rΛ^{k+1}`. -/
-theorem map_extDeriv_polyForm (r k : ℕ) :
-    (polyForm K d (r + 1) k).map (extDerivₗ K d) =
-      polyForm K d r (k + 1) ⊓ LinearMap.ker (extDerivₗ K d) := by
-  refine le_antisymm ?_ fun ω ⟨h, hd⟩ => ?_
-  · rintro _ ⟨η, hη, rfl⟩
-    exact ⟨by simpa using extDeriv_mem_polyForm hη, extDeriv_extDeriv η⟩
-  · obtain ⟨η, hη, rfl⟩ := exists_extDeriv_eq_of_mem_polyForm h hd
-    exact ⟨η, hη, rfl⟩
-
-/-- The kernel of `d` on `P_rΛ⁰` is the constants `P_0Λ⁰`. -/
-theorem polyForm_inf_ker_extDeriv_zero (r : ℕ) :
-    polyForm K d r 0 ⊓ LinearMap.ker (extDerivₗ K d) = polyForm K d 0 0 := by
-  refine le_antisymm (fun ω ⟨h, hd⟩ => mem_polyForm_zero_of_extDeriv_eq_zero h.1 hd)
-    fun ω h => ⟨polyForm_mono (Nat.zero_le r) 0 h, ?_⟩
-  rw [polyForm_zero_eq_homForm] at h
-  change extDeriv ω = 0
-  rw [← sum_homComp (homForm_le_polyForm _ _ h), Finset.sum_range_one]
-  exact extDeriv_homComp_zero ω
-
-omit [CharZero K] in
-/-- `dim P_0Λ⁰ = 1`: the cohomology of the polynomial complexes in degree `0` is `K`. -/
-theorem finrank_polyForm_zero_zero : Module.finrank K (polyForm K d 0 0) = 1 := by
-  rw [finrank_polyForm]; simp
-
 /-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`). [AFW2010], §5.1.3 -/
 theorem polyFormMinus_zero {r : ℕ} (hr : 1 ≤ r) : polyFormMinus K d r 0 = polyForm K d r 0 := by
   refine le_antisymm (polyFormMinus_le_polyForm hr 0) fun ω h => ?_
@@ -555,21 +475,6 @@ theorem exists_extDeriv_eq_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω :
     refine sum_congr rfl fun j _ => ?_
     exact extDeriv_smul_koszul_of_mem (by omega) (homComp_mem_homForm h'.1 j)
       (extDeriv_homComp_eq_zero hd j)
-
-/-- The range of `d : P_r⁻Λᵏ → P_r⁻Λ^{k+1}` is the kernel of `d` on `P_r⁻Λ^{k+1}` (`r ≥ 1`). -/
-theorem map_extDeriv_polyFormMinus {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
-    (polyFormMinus K d r k).map (extDerivₗ K d) =
-      polyFormMinus K d r (k + 1) ⊓ LinearMap.ker (extDerivₗ K d) := by
-  refine le_antisymm ?_ fun ω ⟨h, hd⟩ => ?_
-  · rintro _ ⟨η, hη, rfl⟩
-    exact ⟨extDeriv_mem_polyFormMinus hr hη, extDeriv_extDeriv η⟩
-  · obtain ⟨η, hη, rfl⟩ := exists_extDeriv_eq_of_mem_polyFormMinus hr h hd
-    exact ⟨η, hη, rfl⟩
-
-/-- The kernel of `d` on `P_r⁻Λ⁰` is the constants (`r ≥ 1`). -/
-theorem polyFormMinus_inf_ker_extDeriv_zero {r : ℕ} (hr : 1 ≤ r) :
-    polyFormMinus K d r 0 ⊓ LinearMap.ker (extDerivₗ K d) = polyForm K d 0 0 := by
-  rw [polyFormMinus_zero hr, polyForm_inf_ker_extDeriv_zero]
 
 /-! #### `P_rΛᵏ = P_r⁻Λᵏ ⊕ d H_{r+1}Λ^{k-1}` -/
 

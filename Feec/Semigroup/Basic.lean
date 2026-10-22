@@ -106,9 +106,6 @@ def generatorDomain : Submodule 𝕜 E where
     have e : (fun t => G.S t (c • a)) = fun t => c • G.S t a := funext fun t => map_smul _ _ _
     rw [e]; exact ha.const_smul c
 
-theorem mem_generatorDomain {x : E} :
-    x ∈ G.generatorDomain ↔ ∃ y, HasDerivWithinAt (fun t => G.S t x) y (Ici 0) 0 := Iff.rfl
-
 theorem hasDerivWithinAt_derivWithin (x : G.generatorDomain) :
     HasDerivWithinAt (fun t => G.S t x) (derivWithin (fun t => G.S t (x : E)) (Ici 0) 0)
       (Ici 0) 0 := by
@@ -166,9 +163,6 @@ theorem comm (s t : ℝ) : G.S s * G.S t = G.S t * G.S s := by
 
 theorem comm_apply (s t : ℝ) (x : E) : G.S s (G.S t x) = G.S t (G.S s x) := by
   rw [← map_add_apply, add_comm, map_add_apply]
-
-@[simp] theorem S_neg_apply_S (t : ℝ) (x : E) : G.S (-t) (G.S t x) = x := by
-  rw [← map_add_apply, neg_add_cancel, G.map_zero]; rfl
 
 @[simp] theorem S_apply_S_neg (t : ℝ) (x : E) : G.S t (G.S (-t) x) = x := by
   rw [← map_add_apply, add_neg_cancel, G.map_zero]; rfl
@@ -410,9 +404,6 @@ theorem IsIsometric.inner_S_left (hG : G.IsIsometric) (t : ℝ) (a b : F) :
 
 theorem IsIsometric.norm_S_le (hG : G.IsIsometric) (t : ℝ) : ‖G.S t‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [hG t, one_mul]
-
-theorem IsIsometric.isContraction (hG : G.IsIsometric) : G.toC0Semigroup.IsContraction :=
-  fun t _ => hG.norm_S_le t
 
 variable [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F] [CompleteSpace F]
 

@@ -115,11 +115,6 @@ theorem IsSkewSymmetric.neg (hA : A.IsSkewSymmetric) : (-A).IsSkewSymmetric := f
 theorem IsSkewSymmetric.isDissipative (hA : A.IsSkewSymmetric) : A.IsDissipative :=
   fun x => (hA.re_inner_self x).le
 
-theorem IsSymmetric.inner_self_re (hA : A.IsSymmetric) (x : A.domain) :
-    ⟪A x, (x : E)⟫_𝕜 = RCLike.re ⟪A x, (x : E)⟫_𝕜 := by
-  rw [eq_comm, RCLike.conj_eq_iff_re.symm, inner_conj_symm]
-  exact (hA x x).symm
-
 section Complete
 
 variable [CompleteSpace E]

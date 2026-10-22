@@ -20,9 +20,6 @@ problem `U' = A U + F` on `[a,b]`, `U a = U₀`, has a classical solution, Duham
 * `C0Semigroup.isStrongSolution_unique`: uniqueness for any semigroup generator (no
   dissipativity), from `Evolution.IsStrongSolution.eq_mild`.
 * `C0Semigroup.isClassicalSolution_orbit`: the homogeneous case `t ↦ S(t - a) U₀`.
-* `C0Semigroup.existsUnique_classicalSolution_contDomain`,
-  `C0Semigroup.existsUnique_classicalSolution_of_C1`: the subclasses `C([a,b]; D(A))` and
-  `C¹([a,b]; E)`.
 * `C0Group.existsUnique_classicalSolution`: the same for groups.
 * `LinearPMap.IsSkewAdjoint.existsUnique_classicalSolution`: for a skew-adjoint generator on a
   Hilbert space (Stone's group `LinearPMap.IsSkewAdjoint.group`). [QuennevilleBelair2015], Thm 4.3 as stated,
@@ -77,13 +74,6 @@ theorem existsUnique_classicalSolution {U₀ : E} (hU₀ : U₀ ∈ G.generator.
     G.isStrongSolution_unique hV (G.isClassicalSolution_mild hU₀ hF).toIsStrongSolution hF.1
       (by rw [hV0, G.mild_self])⟩
 
-/-- The solution of `existsUnique_classicalSolution` is the mild solution. -/
-theorem eqOn_mild_of_isStrongSolution {U₀ : E} {F V : ℝ → E} {a b : ℝ}
-    (hF : ContinuousOn F (Icc a b)) (hV0 : V a = U₀)
-    (hV : Evolution.IsStrongSolution G.generator (Icc a b) F V) :
-    EqOn V (Evolution.mild G.S a U₀ F) (Icc a b) := fun t ht => by
-  rw [hV.eq_mild hF t ht, hV0]
-
 /-- **The homogeneous problem**: for `U₀ ∈ D(A)`, `t ↦ S(t - a) U₀` is a classical solution of
 `U' = A U` on `[a,b]`. -/
 theorem isClassicalSolution_orbit {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain) (a b : ℝ) :
@@ -95,23 +85,6 @@ theorem isClassicalSolution_orbit {U₀ : E} (hU₀ : U₀ ∈ G.generator.domai
   have e : Evolution.mild G.S a U₀ 0 = fun t => G.S (t - a) U₀ := by
     funext t; simp [Evolution.mild]
   rwa [e] at h
-
-/-- Thesis Thm 4.3 for forcing in `C([a,b]; D(A))`. -/
-theorem existsUnique_classicalSolution_contDomain {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain)
-    {F : ℝ → E} {a b : ℝ} (hF : Evolution.ForcingClass.contDomain G.generator a b F) :
-    ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution G.generator (Icc a b) F U ∧
-      ∀ V, V a = U₀ → Evolution.IsStrongSolution G.generator (Icc a b) F V →
-        EqOn V U (Icc a b) :=
-  G.existsUnique_classicalSolution hU₀ hF.admissible
-
-/-- Thesis Thm 4.3 for forcing in `C¹([a,b]; E)`. -/
-theorem existsUnique_classicalSolution_of_C1 {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain)
-    {F F' : ℝ → E} {a b : ℝ} (hFc : ContinuousOn F (Icc a b)) (hF' : ContinuousOn F' (Icc a b))
-    (hd : ∀ t ∈ Ioo a b, HasDerivAt F (F' t) t) :
-    ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution G.generator (Icc a b) F U ∧
-      ∀ V, V a = U₀ → Evolution.IsStrongSolution G.generator (Icc a b) F V →
-        EqOn V U (Icc a b) :=
-  G.existsUnique_classicalSolution hU₀ (Evolution.ForcingClass.admissible_of_C1 hFc hF' hd)
 
 end C0Semigroup
 

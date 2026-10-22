@@ -120,10 +120,6 @@ theorem hessM_mem_orthogonal (ξ : Freq) (c : ℂ) : hessM ξ c ∈ (tsd ξ)ᗮ 
 
 /-! ### The fibre complex -/
 
-theorem bgg_smul_curl (t : ℝ) (ξ : Freq) (M : Mat) :
-    bgg (t • ξ) M = WithLp.toLp 2 (axialL M, (t : ℂ) • curl ξ M) := by
-  rw [bgg_apply, curl_smul]; rfl
-
 theorem continuous_bgg : Continuous bgg := by
   refine continuous_clm_apply.2 fun M => ?_
   have h : Continuous fun ξ : Freq => curl ξ M := continuous_curl.clm_apply continuous_const
@@ -218,9 +214,6 @@ def symPart (M : Mat) : Mat := WithLp.toLp 2 fun p => (M p + M (p.2, p.1)) / 2
 
 theorem symPart_mem (M : Mat) : symPart M ∈ symSub := fun a b => by
   simp only [symPart, WithLp.ofLp_toLp]; ring
-
-theorem axialL_sub_symPart (M : Mat) : axialL (M - symPart M) = axialL M := by
-  rw [_root_.map_sub, axialL_eq_zero_of_mem_symSub (symPart_mem M), sub_zero]
 
 theorem norm_sq_sub_symPart (M : Mat) : 2 * ‖M - symPart M‖ ^ 2 = ‖axialL M‖ ^ 2 := by
   rw [EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]

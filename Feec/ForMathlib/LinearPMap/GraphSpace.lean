@@ -106,11 +106,6 @@ def graphSnd (T : E →ₗ.[𝕜] F) : T.GraphSpace →L[𝕜] F :=
 @[simp] theorem graphSnd_toGraphSpace (T : E →ₗ.[𝕜] F) (x : T.domain) :
     T.graphSnd (T.toGraphSpace x) = T x := rfl
 
-/-- The graph inner product: `⟪(x, T x), (y, T y)⟫ = ⟪x, y⟫ + ⟪T x, T y⟫`. -/
-theorem inner_toGraphSpace (T : E →ₗ.[𝕜] F) (x y : T.domain) :
-    ⟪T.toGraphSpace x, T.toGraphSpace y⟫_𝕜 = ⟪(x : E), (y : E)⟫_𝕜 + ⟪T x, T y⟫_𝕜 := by
-  simp [toGraphSpace, WithLp.prod_inner_apply]
-
 /-- A closed operator has closed graph in `E ⊕₂ F`. -/
 theorem isClosed_graphL2 {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) :
     _root_.IsClosed (T.graphL2 : Set (WithLp 2 (E × F))) :=

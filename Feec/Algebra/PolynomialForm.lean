@@ -209,12 +209,6 @@ theorem extDeriv_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d
     (h : ω ∈ polyFormMinus R d r k) : extDeriv ω ∈ polyFormMinus R d r (k + 1) :=
   polyForm_le_polyFormMinus r (k + 1) (extDeriv_mem_polyForm_of_mem_polyFormMinus hr h)
 
-omit [Fintype d] in
-/-- `P_rΛ` is a subcomplex: `d P_rΛᵏ ⊆ P_rΛ^{k+1}`. -/
-theorem extDeriv_mem_polyForm_same {r k : ℕ} {ω : PolyForm R d} (h : ω ∈ polyForm R d r k) :
-    extDeriv ω ∈ polyForm R d r (k + 1) :=
-  polyForm_mono (Nat.sub_le r 1) _ (extDeriv_mem_polyForm h)
-
 /-! ### `d P_r⁻Λᵏ` for every `r` -/
 
 /-- `d (κ H_{r-1}Λ^{k+1}) ⊆ H_{r-1}Λ^{k+1}`, for every `r`. -/

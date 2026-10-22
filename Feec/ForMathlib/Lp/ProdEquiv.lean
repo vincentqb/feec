@@ -11,7 +11,7 @@ public import Mathlib.MeasureTheory.SpecificCodomains.WithLp
 For `1 ≤ p < ∞`:
 
 * `MeasureTheory.Lp.piEquiv`: `Lᵖ(μ; PiLp p E) ≃ₗᵢ[𝕜] PiLp p (fun i => Lᵖ(μ; E i))` for a finite
-  family `E`, acting componentwise (`coeFn_piEquiv_apply`, `coeFn_piEquiv_symm`);
+  family `E`, acting componentwise;
 * `MeasureTheory.Lp.prodEquiv`: `Lᵖ(μ; WithLp p (E × F)) ≃ₗᵢ[𝕜] WithLp p (Lᵖ(μ; E) × Lᵖ(μ; F))`
   (`coeFn_prodEquiv_fst`, `coeFn_prodEquiv_snd`, `coeFn_prodEquiv_symm`).
 
@@ -124,14 +124,6 @@ def piEquiv (hpt : p ≠ ∞) : Lp (PiLp p E) p μ ≃ₗᵢ[𝕜] PiLp p fun i 
       ENNReal.rpow_rpow_inv hp.ne']
 
 variable (hpt : p ≠ ∞)
-
-theorem coeFn_piEquiv_apply (f : Lp (PiLp p E) p μ) (i : ι) :
-    (piEquiv 𝕜 hpt f i : α → E i) =ᵐ[μ] fun a => (f a : PiLp p E) i :=
-  (PiLp.proj (𝕜 := 𝕜) p E i).coeFn_compLp f
-
-theorem coeFn_piEquiv_symm (g : PiLp p fun i => Lp (E i) p μ) :
-    ((piEquiv 𝕜 hpt).symm g : α → PiLp p E) =ᵐ[μ] fun a => WithLp.toLp p fun i => g i a :=
-  MemLp.coeFn_toLp (memLp_toLp_pi g)
 
 end Lp
 

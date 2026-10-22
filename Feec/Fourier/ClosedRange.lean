@@ -18,8 +18,6 @@ degenerate at low frequency, and then the range is not closed (`not_isClosed_ran
 * `Operator.not_isClosed_range_mulOp`: if for every `ε > 0` the symbol has norm `≤ ε` on a set
   of positive finite measure where it does not vanish on a fixed vector, the range is not
   closed.
-* `gap_of_homotopy`: a fibre homotopy `m₀ h₁ + h₂ m₁ = 1` with `‖h₂‖ ≤ C` gives the gap of `m₁`
-  with constant `C` (an algebraic Poincaré inequality).
 * `SymbolComplex.closedRangeAt_of_gap`, `SymbolComplex.not_closedRangeAt`: the same statements
   for the boundaries of a symbol complex; `SymbolComplex.dual_closedRangeAt_of_gap` for the dual.
 
@@ -209,32 +207,6 @@ variable {E₀ E₁ E₂ : Type*} [NormedAddCommGroup E₀] [InnerProductSpace �
   [NormedAddCommGroup E₁] [InnerProductSpace 𝕜 E₁] [NormedAddCommGroup E₂]
   [InnerProductSpace 𝕜 E₂]
 
-/-- **Algebraic Poincaré inequality from a homotopy.** If `m₁ m₀ = 0` and
-`m₀ h₁ + h₂ m₁ = 1` on `E₁` with `‖h₂‖ ≤ C`, then `‖v‖ ≤ C ‖m₁ v‖` for `v ⊥ N(m₁)`. -/
-theorem gap_of_homotopy (m₀ : E₀ →L[𝕜] E₁) (m₁ : E₁ →L[𝕜] E₂) (h₁ : E₁ →L[𝕜] E₀)
-    (h₂ : E₂ →L[𝕜] E₁) (hcomp : ∀ x, m₁ (m₀ x) = 0) (hhom : ∀ v, m₀ (h₁ v) + h₂ (m₁ v) = v)
-    {C : ℝ} (hC : ‖h₂‖ ≤ C) :
-    ∀ v ∈ (LinearMap.ker (m₁ : E₁ →ₗ[𝕜] E₂))ᗮ, ‖v‖ ≤ C * ‖m₁ v‖ := by
-  intro v hv
-  have h0 : ⟪v, m₀ (h₁ v)⟫_𝕜 = 0 :=
-    (Submodule.mem_orthogonal' _ _).1 hv _ (LinearMap.mem_ker.2 (hcomp _))
-  have hsq : ‖v‖ ^ 2 ≤ ‖v‖ * (C * ‖m₁ v‖) := by
-    have e : ‖v‖ ^ 2 = RCLike.re ⟪v, h₂ (m₁ v)⟫_𝕜 := by
-      conv_lhs => rw [← hhom v]
-      rw [show ‖m₀ (h₁ v) + h₂ (m₁ v)‖ = ‖v‖ by rw [hhom v]]
-      conv_rhs => rw [← sub_eq_of_eq_add' (hhom v).symm]
-      rw [inner_sub_right, h0, sub_zero, inner_self_eq_norm_sq_to_K, ← RCLike.ofReal_pow,
-        RCLike.ofReal_re]
-    rw [e]
-    refine (RCLike.re_le_norm _).trans ((norm_inner_le_norm _ _).trans ?_)
-    refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
-    exact (h₂.le_opNorm _).trans (mul_le_mul_of_nonneg_right hC (norm_nonneg _))
-  rcases (norm_nonneg v).eq_or_lt with h | h
-  · rw [← h]
-    have : (0 : ℝ) ≤ C := (norm_nonneg _).trans hC
-    positivity
-  · nlinarith
-
 end Homotopy
 
 /-! ### Symbol complexes -/
@@ -325,21 +297,6 @@ theorem IsHomogeneous.gap (h : S.IsHomogeneous i j r) {C : ℝ}
   calc ‖ξ‖ ^ r * ‖v‖ ≤ ‖ξ‖ ^ r * (C * ‖S.m i j ω v‖) :=
         mul_le_mul_of_nonneg_left key (by positivity)
     _ = C * (‖ξ‖ ^ r * ‖S.m i j ω v‖) := by ring
-
-/-- A fibre gap on the unit sphere gives a uniform gap `C / Rʳ` on `|ξ| ≥ R > 0`. -/
-theorem IsHomogeneous.gap_of_le (h : S.IsHomogeneous i j r) {C : ℝ}
-    (hgap : ∀ ω : V, ‖ω‖ = 1 → ∀ v ∈ (LinearMap.ker (S.m i j ω : E i →ₗ[𝕜] E j))ᗮ,
-      ‖v‖ ≤ C * ‖S.m i j ω v‖) {R : ℝ} (hR : 0 < R) {ξ : V} (hξ : R ≤ ‖ξ‖) :
-    ∀ v ∈ (LinearMap.ker (S.m i j ξ : E i →ₗ[𝕜] E j))ᗮ, ‖v‖ ≤ C / R ^ r * ‖S.m i j ξ v‖ := by
-  intro v hv
-  have hξ0 : ξ ≠ 0 := norm_pos_iff.1 (hR.trans_le hξ)
-  have key := h.gap hgap hξ0 v hv
-  have hRr : 0 < R ^ r := pow_pos hR r
-  rw [div_mul_eq_mul_div, le_div_iff₀ hRr]
-  calc ‖v‖ * R ^ r ≤ ‖v‖ * ‖ξ‖ ^ r :=
-        mul_le_mul_of_nonneg_left (pow_le_pow_left₀ hR.le hξ r) (norm_nonneg _)
-    _ = ‖ξ‖ ^ r * ‖v‖ := mul_comm _ _
-    _ ≤ C * ‖S.m i j ξ v‖ := key
 
 end FibreComplex
 

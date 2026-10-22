@@ -19,8 +19,6 @@ and for any finite-dimensional fibres:
   `φ = 𝓕⁻¹ (χ M₀)`, `χ ∈ C_c^∞`, and uses the fundamental lemma of the calculus of variations.
 * `firstOrder A φ = Σ_k A_k ∂_k φ` (constant-coefficient first-order operators on Schwartz
   fields) and `fourier_firstOrder`: `𝓕 (Σ A_k ∂_k φ)(x) = Σ_k 2πi x_k A_k 𝓕 φ (x)`.
-* `fourier_conjLp`, **`fourier_fixed_iff`**: `𝓕 (conj f) = J (𝓕 f)` with `J u (ξ) = conj u (-ξ)`,
-  so `𝓕 f` is fixed by the real structure of `Feec.Fourier.Reality` iff `f` is real-valued.
 * `formalAdjoint S i j`, the formal adjoint `-i Σ_k m_k* ∂_k` of a first-order arrow of a family
   of fibre complexes, and **`Euclidean.mem_graph_d_iff_weak`**: for every family whose arrow
   `i → j` is linear in `ξ` (a first-order operator), the domain of `d i j` in the Fourier model
@@ -326,89 +324,6 @@ theorem mulOp_fourier_toLp {m : EuclideanSpace ℝ d → E →L[ℂ] F} (hm : Is
 section Real
 
 variable {ι : Type*} [Fintype ι]
-
-omit [DecidableEq d] in
-theorem fourier_entryConj (φ : 𝓢(EuclideanSpace ℝ d, EuclideanSpace ℂ ι)) (ξ : EuclideanSpace ℝ d) :
-    𝓕 (SchwartzMap.postcompCLM (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι) φ) ξ =
-      entryConj (𝓕 φ (-ξ)) := by
-  rw [SchwartzMap.fourier_coe, SchwartzMap.fourier_coe]
-  have : (SchwartzMap.postcompCLM (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι) φ :
-      EuclideanSpace ℝ d → EuclideanSpace ℂ ι) = fun x => entryConj (φ x) :=
-    funext fun x => SchwartzMap.postcompCLM_apply _ φ x
-  rw [this, Real.fourier_eq, Real.fourier_eq, ← ContinuousLinearMap.integral_comp_comm entryConj
-    ((Real.fourierIntegral_convergent_iff (-ξ)).2 φ.integrable)]
-  congr 1; funext v
-  rw [Circle.smul_def, Circle.smul_def, entryConj_smul, ← Circle.coe_inv_eq_conj,
-    ← AddChar.map_neg_eq_inv, inner_neg_right, neg_neg]
-
-omit [DecidableEq d] in
-/-- **The `L²` Fourier transform intertwines conjugation with the reflection-conjugation**:
-`𝓕 (conj f) = J (𝓕 f)`, `(J u)(ξ) = conj u(-ξ)`. -/
-theorem fourier_conjLp (f : Lp (EuclideanSpace ℂ ι) 2 (volume : Measure (EuclideanSpace ℝ d))) :
-    𝓕 (entryConj.compLp f) = conjLp (Reflection.neg (volume : Measure (EuclideanSpace ℝ d))) entryConj (𝓕 f) := by
-  have hcL : Continuous fun f : Lp (EuclideanSpace ℂ ι) 2 (volume : Measure (EuclideanSpace ℝ d)) =>
-      entryConj.compLp f := by
-    have := (conjLp (μ := (volume : Measure (EuclideanSpace ℝ d))) ⟨id, MeasurePreserving.id _,
-      fun _ => rfl⟩ (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι)).continuous
-    refine this.congr fun f => ?_
-    refine Lp.ext ?_
-    filter_upwards [coeFn_conjLp (μ := (volume : Measure (EuclideanSpace ℝ d))) ⟨id,
-      MeasurePreserving.id _, fun _ => rfl⟩ entryConj f, entryConj.coeFn_compLp f] with x h1 h2
-    rw [h1, h2]; rfl
-  have hc1 : Continuous fun f : Lp (EuclideanSpace ℂ ι) 2 (volume : Measure (EuclideanSpace ℝ d)) =>
-      𝓕 (entryConj.compLp f) :=
-    (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) (EuclideanSpace ℂ ι)).continuous.comp hcL
-  have hc2 : Continuous fun f : Lp (EuclideanSpace ℂ ι) 2 (volume : Measure (EuclideanSpace ℝ d)) =>
-      conjLp (Reflection.neg (volume : Measure (EuclideanSpace ℝ d))) entryConj (𝓕 f) := by
-    have h1 := (conjLp (Reflection.neg (volume : Measure (EuclideanSpace ℝ d)))
-      (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι)).continuous
-    have h2 : Continuous fun f : Lp (EuclideanSpace ℂ ι) 2 (volume : Measure (EuclideanSpace ℝ d)) =>
-        𝓕 f := (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) (EuclideanSpace ℂ ι)).continuous
-    exact h1.comp h2
-  refine DenseRange.induction_on
-    (SchwartzMap.denseRange_toLpCLM (F := EuclideanSpace ℂ ι)
-      (μ := (volume : Measure (EuclideanSpace ℝ d))) (p := 2) ENNReal.ofNat_ne_top) f
-    (isClosed_eq hc1 hc2) ?_
-  intro φ
-  simp only [SchwartzMap.toLpCLM_apply]
-  have h1 : entryConj.compLp (φ.toLp 2 : Lp (EuclideanSpace ℂ ι) 2
-      (volume : Measure (EuclideanSpace ℝ d))) =
-      (SchwartzMap.postcompCLM (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι) φ).toLp 2 := by
-    refine Lp.ext ?_
-    filter_upwards [entryConj.coeFn_compLp (φ.toLp 2 : Lp (EuclideanSpace ℂ ι) 2
-        (volume : Measure (EuclideanSpace ℝ d))), φ.coeFn_toLp 2 volume,
-      (SchwartzMap.postcompCLM (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι) φ).coeFn_toLp
-        2 volume] with ξ h1 h2 h3
-    rw [h1, h2, h3, SchwartzMap.postcompCLM_apply]
-  rw [h1, SchwartzMap.toLp_fourier_eq, SchwartzMap.toLp_fourier_eq]
-  refine Lp.ext ?_
-  filter_upwards [(𝓕 (SchwartzMap.postcompCLM
-      (entryConj : EuclideanSpace ℂ ι →L[ℝ] EuclideanSpace ℂ ι) φ)).coeFn_toLp 2 volume,
-    coeFn_conjLp (Reflection.neg (volume : Measure (EuclideanSpace ℝ d))) entryConj ((𝓕 φ).toLp 2),
-    (Reflection.neg (volume : Measure (EuclideanSpace ℝ d))).ae_comp ((𝓕 φ).coeFn_toLp 2 volume)]
-    with ξ h1 h2 h3
-  rw [h1, h2, h3, fourier_entryConj]
-  rfl
-
-omit [DecidableEq d] in
-/-- **Real fields**: `𝓕 f` is fixed by the reflection-conjugation `J` (i.e. `𝓕 f(-ξ) = conj 𝓕 f(ξ)`)
-iff `f` is real-valued a.e. -/
-theorem fourier_fixed_iff (f : Lp (EuclideanSpace ℂ ι) 2 (volume : Measure (EuclideanSpace ℝ d))) :
-    conjLp (Reflection.neg (volume : Measure (EuclideanSpace ℝ d))) entryConj (𝓕 f) = 𝓕 f ↔
-      ∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ d)), entryConj (f x) = f x := by
-  have hinj : Function.Injective fun u : Lp (EuclideanSpace ℂ ι) 2
-      (volume : Measure (EuclideanSpace ℝ d)) => 𝓕 u :=
-    (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ d) (EuclideanSpace ℂ ι)).injective
-  rw [← fourier_conjLp, hinj.eq_iff]
-  constructor
-  · intro h
-    filter_upwards [entryConj.coeFn_compLp f] with x h1
-    rw [h] at h1
-    exact h1.symm
-  · intro h
-    refine Lp.ext ?_
-    filter_upwards [entryConj.coeFn_compLp f, h] with x h1 h2
-    rw [h1, h2]
 
 end Real
 

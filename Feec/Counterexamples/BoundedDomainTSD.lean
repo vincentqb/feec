@@ -590,12 +590,6 @@ theorem contDiff_symFld (t : ℝ) (ij : Ix) : ContDiff ℝ ∞ (symFld t ij) := 
   split_ifs
   exacts [(contDiff_expSin t).neg, contDiff_expCos t, contDiff_const]
 
-theorem contDiff_skewFld (t : ℝ) (ij : Ix) : ContDiff ℝ ∞ (skewFld t ij) := by
-  unfold skewFld
-  split_ifs
-  exacts [(contDiff_expSin t).neg, contDiff_expSin t, contDiff_expCos t, (contDiff_expCos t).neg,
-    contDiff_const]
-
 /-- `E_t` as an `L²` field. -/
 abbrev gradFldL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (t : ℝ) : L2F ℝ Ω Ix :=
   smoothField hΩ hb (gradFld t) fun ij => (contDiff_gradFld t ij).continuous

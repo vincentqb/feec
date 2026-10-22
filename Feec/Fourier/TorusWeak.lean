@@ -32,15 +32,13 @@ The measure on `𝕋ᵈ` is the normalized Haar measure of `Feec.Fourier.Torus.f
 ## Main results
 
 * Integration by parts on `𝕋ᵈ`: `integral_partialT_eq_zero`, `mFourierCoeff_partialT`
-  (`(∂_c φ)^(k) = 2πi k_c φ̂(k)`), `integral_mul_partialT`; the characters are test functions
+  (`(∂_c φ)^(k) = 2πi k_c φ̂(k)`); the characters are test functions
   (`isSmooth_mFourier`); Parseval pairing `hasSum_pairing`.
 * `isWeakFO_iff`: Fourier characterization of weak first-order operators. Scalar case:
-  `hasWeakPartial_iff`, `HasWeakPartial.unique`, **`exists_hasWeakPartial_iff`** (`f` has a weak
-  `∂_j f ∈ L²` iff `Σ_k |2πk_j|² |f̂(k)|² < ∞`), `summable_norm_freq_iff` (scalar `H¹`),
-  `hasWeakPartial_toL2` (consistency with the classical derivative).
+  `hasWeakPartial_iff`, `HasWeakPartial.unique`.
 * Fields: **`isWeak_iff`** (`(D f)^(k) = m(2πk) f̂(k)`), `IsWeak.unique`,
   **`mem_graph_iff_isWeak`**: the graph of the Fourier multiplier `m(2πk)` is the weak graph of
-  `D`; `fieldFourier_mem_mulDomain_iff`; `memLp_norm_freq_smul_iff` (`H¹` of fields).
+  `D`.
 * Real fields: `mFourierCoeff_star`, `star_eq_self_iff`, **`fieldFourier_fixed_iff`** (a field is
   real iff its coefficients are fixed by `u ↦ conj u(-k)`), `IsWeak.star_eq_self` (an operator
   with a real symbol maps real fields to real fields).
@@ -194,20 +192,6 @@ theorem partialT_mul {φ ψ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ 
   simp only [Pi.single_zero, proj_zero, add_zero] at this
   unfold partialT at this ⊢
   exact this
-
-/-- **Integration by parts on `𝕋ᵈ`**: `∫ ψ ∂_c φ = -∫ (∂_c ψ) φ` (no boundary terms). -/
-theorem integral_mul_partialT {φ ψ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj))
-    (hψ : ContDiff ℝ 1 (ψ ∘ proj)) (c : d) :
-    ∫ x, ψ x * partialT c φ x = -∫ x, partialT c ψ x * φ x := by
-  have hψφ : ContDiff ℝ 1 ((fun x => ψ x * φ x) ∘ proj) := hψ.mul hφ
-  have h0 := integral_partialT_eq_zero hψφ c
-  simp_rw [partialT_mul (hψ.differentiable one_ne_zero) (hφ.differentiable one_ne_zero)] at h0
-  have hcψ := continuous_of_comp_proj hψ.continuous
-  have hcφ := continuous_of_comp_proj hφ.continuous
-  rw [integral_add (f := fun x => partialT c ψ x * φ x) (g := fun x => ψ x * partialT c φ x)
-    (integrable_of_continuous ((continuous_partialT hψ c).mul hcφ))
-    (integrable_of_continuous (hcψ.mul (continuous_partialT hφ c)))] at h0
-  linear_combination h0
 
 omit [DecidableEq d] in
 /-- The characters in coordinates: `e_n(proj y) = exp(2πi n·y)`. -/
@@ -396,11 +380,6 @@ def ofCoeff (a : lp (fun _ : d → ℤ => ℂ) 2) : Lp ℂ 2 (volume : Measure (
   mFourierBasis.repr.symm a
 
 omit [DecidableEq d] in
-@[simp] theorem mFourierCoeff_ofCoeff (a : lp (fun _ : d → ℤ => ℂ) 2) (k : d → ℤ) :
-    mFourierCoeff (ofCoeff a : UnitAddTorus d → ℂ) k = a k := by
-  rw [ofCoeff, ← mFourierBasis_repr, LinearIsometryEquiv.apply_symm_apply]
-
-omit [DecidableEq d] in
 /-- `L²` functions are determined by their Fourier coefficients. -/
 theorem eq_of_mFourierCoeff_eq {f g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
     (h : ∀ k, mFourierCoeff (f : UnitAddTorus d → ℂ) k = mFourierCoeff (g : UnitAddTorus d → ℂ) k) :
@@ -441,24 +420,6 @@ theorem norm_sq_freq_mul (j : d) (k : d → ℤ) (z : ℂ) :
   rw [show (2 * Real.pi * I * k j : ℂ) = ((2 * Real.pi * k j : ℝ) : ℂ) * I by push_cast; ring,
     norm_mul, Complex.norm_I, mul_one, Complex.norm_real, Real.norm_eq_abs, sq_abs]
 
-/-- **Weak `∂_j`-differentiability in `L²` is the Fourier-weight condition**:
-`f` has a weak derivative `∂_j f ∈ L²` iff `Σ_k |2π k_j|² |f̂(k)|² < ∞`. -/
-theorem exists_hasWeakPartial_iff (j : d) (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
-    (∃ g, HasWeakPartial j f g) ↔
-      Summable fun k : d → ℤ =>
-        (2 * Real.pi * k j) ^ 2 * ‖mFourierCoeff (f : UnitAddTorus d → ℂ) k‖ ^ 2 := by
-  constructor
-  · rintro ⟨g, hg⟩
-    have := (hasSum_sq_mFourierCoeff g).summable
-    simp_rw [(hasWeakPartial_iff j f g).1 hg, norm_sq_freq_mul] at this
-    exact this
-  · intro hs
-    have hm : Memℓp (fun k : d → ℤ =>
-        2 * Real.pi * I * k j * mFourierCoeff (f : UnitAddTorus d → ℂ) k) 2 :=
-      memℓp_gen (by simp only [ENNReal.toReal_ofNat, Real.rpow_two, norm_sq_freq_mul]; exact hs)
-    refine ⟨ofCoeff ⟨_, hm⟩, (hasWeakPartial_iff j f _).2 fun k => ?_⟩
-    rw [mFourierCoeff_ofCoeff]
-
 /-- The `L²` class of a continuous function on `𝕋ᵈ`. -/
 def toL2 {φ : UnitAddTorus d → ℂ} (hφ : Continuous φ) :
     Lp ℂ 2 (volume : Measure (UnitAddTorus d)) :=
@@ -473,14 +434,6 @@ omit [DecidableEq d] in
 theorem toL2_ae_eq {φ : UnitAddTorus d → ℂ} (hφ : Continuous φ) :
     (toL2 hφ : UnitAddTorus d → ℂ) =ᵐ[volume] φ :=
   ContinuousMap.coeFn_toLp (p := 2) (𝕜 := ℂ) (μ := volume) (⟨φ, hφ⟩ : C(UnitAddTorus d, ℂ))
-
-/-- **The weak derivative extends the classical one**: for a `C¹` function `φ` on `𝕋ᵈ`, the
-classical partial derivative `∂_j φ` is the weak partial derivative. -/
-theorem hasWeakPartial_toL2 {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj)) (j : d) :
-    HasWeakPartial j (toL2 (continuous_of_comp_proj hφ.continuous))
-      (toL2 (continuous_partialT hφ j)) :=
-  (hasWeakPartial_iff j _ _).2 fun k => by
-    rw [mFourierCoeff_toL2, mFourierCoeff_toL2, mFourierCoeff_partialT hφ]
 
 omit [DecidableEq d] in
 /-- Fourier coefficients of the complex conjugate: `(f̄)^(k) = conj f̂(-k)`. -/
@@ -507,34 +460,6 @@ theorem star_eq_self_iff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     have := h (-k)
     rw [neg_neg] at this
     rw [mFourierCoeff_star, this]
-
-/-- A finite double sum of nonnegative sequences is summable iff each one is. -/
-theorem summable_sum_sum_iff {α P Q : Type*} [Fintype P] [Fintype Q] {F : α → P → Q → ℝ}
-    (hF : ∀ k p q, 0 ≤ F k p q) :
-    (Summable fun k => ∑ p, ∑ q, F k p q) ↔ ∀ p q, Summable fun k => F k p q := by
-  constructor
-  · intro h p q
-    refine h.of_nonneg_of_le (fun k => hF k p q) fun k => ?_
-    calc F k p q ≤ ∑ q', F k p q' :=
-          Finset.single_le_sum (fun q' _ => hF k p q') (Finset.mem_univ q)
-      _ ≤ ∑ p', ∑ q', F k p' q' :=
-          Finset.single_le_sum (f := fun p' => ∑ q', F k p' q')
-            (fun p' _ => Finset.sum_nonneg fun q' _ => hF k p' q') (Finset.mem_univ p)
-  · intro h
-    exact summable_sum fun p _ => summable_sum fun q _ => h p q
-
-/-- **Scalar `H¹(𝕋ᵈ)` is the weak-`H¹` space**: `Σ_k |ξ_k|² |f̂(k)|² < ∞` (`ξ_k = 2πk`) iff `f`
-has all weak first partial derivatives in `L²`. -/
-theorem summable_norm_freq_iff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
-    (Summable fun k : d → ℤ =>
-        ‖Torus.freq k‖ ^ 2 * ‖mFourierCoeff (f : UnitAddTorus d → ℂ) k‖ ^ 2) ↔
-      ∀ j, ∃ g, HasWeakPartial j f g := by
-  simp_rw [exists_hasWeakPartial_iff, EuclideanSpace.norm_sq_eq, Finset.sum_mul,
-    Torus.freq_apply, Real.norm_eq_abs, sq_abs]
-  have := summable_sum_sum_iff (P := d) (Q := Unit)
-    (F := fun k c (_ : Unit) => (2 * Real.pi * k c) ^ 2 *
-      ‖mFourierCoeff (f : UnitAddTorus d → ℂ) k‖ ^ 2) fun _ _ _ => by positivity
-  simpa using this
 
 end Scalar
 
@@ -734,40 +659,6 @@ theorem mem_graph_iff_isWeak
     refine ⟨hmem, Lp.ext_count fun k => ?_⟩
     rw [Operator.coeFn_mulOp_count]
     exact (hg k).symm
-
-/-- **The Fourier domain of a first-order operator on `𝕋ᵈ` is its weak domain**: the
-coefficients of `f` lie in `D(m(2πk))` iff `D f ∈ L²` exists weakly. -/
-theorem mem_mulDomain_iff_exists_isWeak
-    {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q}
-    (hm : Weak.IsLinear m) (f : Field d P) :
-    Torus.fieldFourier d P f ∈ (Operator.mulDomain Measure.count fun k => m (Torus.freq k)) ↔
-      ∃ g, IsWeak m f g := by
-  constructor
-  · intro h
-    refine ⟨(Torus.fieldFourier d Q).symm
-      (Operator.mulOp Measure.count (fun k => m (Torus.freq k)) ⟨_, h⟩), ?_⟩
-    exact (mem_graph_iff_isWeak hm f _).1 ⟨h, (LinearIsometryEquiv.apply_symm_apply _ _).symm⟩
-  · rintro ⟨g, hg⟩
-    exact ((mem_graph_iff_isWeak hm f g).2 hg).1
-
-omit [DecidableEq P] in
-/-- **`H¹(𝕋ᵈ; ℂᴾ)` is the weak-`H¹` space**: `|ξ_k| f̂(k) ∈ ℓ²` iff every component of `f` has
-every weak first partial derivative in `L²`. -/
-theorem memLp_norm_freq_smul_iff (f : Field d P) :
-    MemLp (fun k => ((‖Torus.freq k‖ : ℝ) : ℂ) • coeff f k) 2 Measure.count ↔
-      ∀ p c, ∃ g, HasWeakPartial c (f p) g := by
-  simp_rw [exists_hasWeakPartial_iff]
-  rw [memLp_count_iff two_ne_zero, memℓp_gen_iff (by norm_num)]
-  have e : ∀ k, ‖((‖Torus.freq k‖ : ℝ) : ℂ) • coeff f k‖ ^ (2 : ℝ≥0∞).toReal =
-      ∑ p, ∑ c, (2 * Real.pi * k c) ^ 2 * ‖mFourierCoeff (f p : UnitAddTorus d → ℂ) k‖ ^ 2 :=
-    fun k => by
-      rw [ENNReal.toReal_ofNat, Real.rpow_two, norm_smul, Complex.norm_real, Real.norm_eq_abs,
-        abs_norm, mul_pow, EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq,
-        Finset.sum_mul_sum, Finset.sum_comm]
-      refine Finset.sum_congr rfl fun p _ => Finset.sum_congr rfl fun c _ => ?_
-      rw [Torus.freq_apply, coeff_apply, Real.norm_eq_abs, sq_abs]
-  simp_rw [e]
-  exact summable_sum_sum_iff fun _ _ _ => by positivity
 
 /-! ### Real fields -/
 

@@ -28,8 +28,7 @@ eigenvalue `-ω²` is, at every frequency, an eigenvector of `W(a)²`
 
 ## Main results
 
-* `HilbertComplex.eigenDense_waveGroup_of_reducing`, `isPurePoint_waveGroup_of_reducing`, and
-  the real form `eigenDense_restrictScalars_waveGroup_of_reducing`: finite-dimensional
+* `HilbertComplex.eigenDense_waveGroup_of_reducing` and the real form `eigenDense_restrictScalars_waveGroup_of_reducing`: finite-dimensional
   reducing subcomplexes spanning a dense subspace give an eigenbasis.
 * **`SymbolComplex.eigenDense_waveGroup`**, `SymbolComplex.isPurePoint_waveGroup`,
   `SymbolComplex.mem_invariantCore_of_forward_invariant` (counting measure, finite-dimensional
@@ -88,13 +87,6 @@ theorem eigenDense_waveGroup_of_reducing {κ : Type*} (B : κ → ∀ i, Submodu
     H.isSkewAdjoint_wave.dense_domain (fun n => totalSub (B n))
     (fun n => (hB n).isReducing_wave) hspan
 
-/-- **Pure point spectrum** from finite-dimensional reducing subcomplexes. -/
-theorem isPurePoint_waveGroup_of_reducing {κ : Type*} (B : κ → ∀ i, Submodule 𝕜 (W i))
-    [∀ n i, FiniteDimensional 𝕜 (B n i)] (hB : ∀ n, H.ReducingSubcomplex (B n))
-    (hspan : Dense ((⨆ n, totalSub (B n) : Submodule 𝕜 (PiLp 2 W)) : Set (PiLp 2 W))) :
-    H.waveGroup.IsPurePoint :=
-  H.isIsometric_waveGroup.isPurePoint_of_eigenDense (H.eigenDense_waveGroup_of_reducing B hB hspan)
-
 end Feec.HilbertComplex
 
 /-! ### Complex complexes viewed over `ℝ` -/
@@ -144,18 +136,6 @@ def fibre (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β)
 
 @[simp] theorem fibre_apply (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β)
     (i : ι) : fibre x a i = (x i : β → E i) a := rfl
-
-theorem fibre_add (x y : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β) :
-    fibre (x + y) a = fibre x a + fibre y a := by
-  ext i
-  simp only [fibre_apply, PiLp.add_apply]
-  exact Measure.ae_count_iff.1 (Lp.coeFn_add (x i) (y i)) a
-
-theorem fibre_smul (r : 𝕜) (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β) :
-    fibre (r • x) a = r • fibre x a := by
-  ext i
-  simp only [fibre_apply, PiLp.smul_apply]
-  exact Measure.ae_count_iff.1 (Lp.coeFn_smul r (x i)) a
 
 /-- Two fields with the same fibres are equal. -/
 theorem ext_fibre {x y : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)}

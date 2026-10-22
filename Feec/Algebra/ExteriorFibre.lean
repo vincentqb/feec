@@ -30,10 +30,9 @@ This is the algebraic layer under the de Rham and Koszul complexes of polynomial
 ## Main results
 
 * `wedge_wedge_add_wedge_wedge`, `wedge_wedge_self`: `ξ ∧ η ∧ ω = -η ∧ ξ ∧ ω`, `ξ ∧ ξ ∧ ω = 0`;
-* `interior_interior_add_interior_interior`, `interior_interior_self`: the same for contractions;
+* `interior_interior_self`: `ι_ζ ι_ζ ω = 0`;
 * **Cartan** `wedge_interior_add_interior_wedge`: `ξ ∧ ι_ζ ω + ι_ζ (ξ ∧ ω) = ⟨ξ, ζ⟩ ω`;
-* degrees: `wedge_of_card_ne`, `interior_of_card_ne` (`∧` raises, `ι` lowers the form degree);
-* `sum_wedge_single_interior_single`: `Σⱼ dx_j ∧ ι_{e_j} ω = (form degree) · ω`.
+* degrees: `wedge_of_card_ne`, `interior_of_card_ne` (`∧` raises, `ι` lowers the form degree).
 
 ## References
 
@@ -216,23 +215,6 @@ theorem wedge_interior_add_interior_wedge (ξ ζ : d → R) (ω : Finset d → R
     rw [← sum_mul, ← sum_mul, ← add_mul, sum_add_sum_compl]
   linear_combination hcross + hsum
 
-/-- Contractions anticommute: `ι_ζ ι_ζ' ω + ι_ζ' ι_ζ ω = 0`. -/
-theorem interior_interior_add_interior_interior (ζ ζ' : d → R) (ω : Finset d → R) :
-    interior ζ (interior ζ' ω) + interior ζ' (interior ζ ω) = 0 := by
-  funext s
-  simp only [Pi.add_apply, Pi.zero_apply, interior_apply, mul_sum, ← sum_add_distrib]
-  -- reindex the inner sums over `(s ∪ j)ᶜ = sᶜ ∖ j`
-  have e : ∀ j ∈ sᶜ, (insert j s)ᶜ = sᶜ.erase j := fun j _ => by
-    ext x; simp [eq_comm]
-  rw [sum_congr rfl fun j hj => by rw [e j hj]]
-  refine sum_sum_erase_eq_zero sᶜ (fun j l => sgn j s * ζ j * (sgn l (insert j s) * ζ' l *
-      ω (insert l (insert j s))) + sgn j s * ζ' j * (sgn l (insert j s) * ζ l *
-        ω (insert l (insert j s)))) fun j hj l hl hjl => ?_
-  rw [sgn_insert (mem_compl.1 hj), sgn_insert (mem_compl.1 hl), Finset.insert_comm]
-  have := ite_lt_add_ite_lt (R := R) hjl
-  linear_combination (sgn j s * sgn l s * ω (insert l (insert j s)) *
-    (ζ j * ζ' l + ζ' j * ζ l)) * this
-
 theorem interior_interior_self (ζ : d → R) (ω : Finset d → R) :
     interior ζ (interior ζ ω) = 0 := by
   funext s
@@ -264,37 +246,5 @@ theorem IsDeg.interior {k : ℕ} {ω : Finset d → R} (hω : IsDeg (k + 1) ω) 
     IsDeg k (interior ζ ω) := fun s hs => by
   refine sum_eq_zero fun j hj => ?_
   rw [hω (insert j s) (by rw [card_insert_of_notMem (mem_compl.1 hj)]; omega), mul_zero]
-
-/-- The **form-degree (number) operator**: `Σⱼ dx_j ∧ ι_{e_j} ω = |s| ω_s` componentwise. -/
-theorem sum_wedge_single_interior_single (ω : Finset d → R) (s : Finset d) :
-    ∑ j, wedge (Pi.single j 1) (interior (Pi.single j 1) ω) s = #s * ω s := by
-  have h := fun j => congrFun (wedge_interior_add_interior_wedge
-    (Pi.single j (1 : R)) (Pi.single j 1) ω) s
-  have hw : ∀ j, interior (Pi.single j (1 : R)) (wedge (Pi.single j 1) ω) s =
-      if j ∈ s then 0 else ω s := by
-    intro j
-    split_ifs with hj
-    · refine sum_eq_zero fun l hl => ?_
-      have hl' : l ∉ s := mem_compl.1 hl
-      have : l ≠ j := fun h => hl' (h ▸ hj)
-      simp [this]
-    · rw [interior_apply, sum_eq_single j]
-      · rw [wedge_apply, sum_eq_single j]
-        · rw [sgn_insert_self, erase_insert hj, Pi.single_eq_same, mul_one, ← mul_assoc,
-            sgn_mul_self, one_mul]
-        · intro l _ hlj; simp [hlj]
-        · intro h; exact absurd (mem_insert_self j s) h
-      · intro l _ hlj; simp [hlj]
-      · intro h; exact absurd (mem_compl.2 hj) h
-  have hsum : ∀ j, (∑ i, (Pi.single j (1 : R) : d → R) i * (Pi.single j 1 : d → R) i) = 1 := by
-    intro j; rw [sum_eq_single j] <;> simp [Pi.single_apply]; tauto
-  calc ∑ j, wedge (Pi.single j 1) (interior (Pi.single j 1) ω) s
-      = ∑ j, (ω s - if j ∈ s then 0 else ω s) := by
-        refine sum_congr rfl fun j _ => ?_
-        have := h j
-        simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, hsum, one_mul, hw] at this
-        linear_combination this
-    _ = ∑ j, if j ∈ s then ω s else 0 := sum_congr rfl fun j _ => by split_ifs <;> ring
-    _ = #s * ω s := by rw [Finset.sum_ite_mem, univ_inter, sum_const, nsmul_eq_mul]
 
 end Feec.ExteriorFibre

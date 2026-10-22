@@ -184,11 +184,6 @@ theorem ofBlocks_neg (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     ofBlocks (-E) (-B) (-H) (-D) = -ofBlocks E B H D := by
   funext a b c d; simp [ofBlocks, ofMat_apply, ← fromBlocks_neg]
 
-/-- `ofBlocks` is injective. -/
-theorem ofBlocks_inj {E B H D E' B' H' D' : Matrix (Fin 3) (Fin 3) ℝ} :
-    ofBlocks E B H D = ofBlocks E' B' H' D' ↔ E = E' ∧ B = B' ∧ H = H' ∧ D = D' := by
-  rw [ofBlocks, ofBlocks, ofMat_injective.eq_iff, fromBlocks_inj]
-
 /-- the pair interchange `C_{abcd} ↦ C_{cdab}`. -/
 def swapPairs (C : Tensor4) : Tensor4 := fun a b c d => C c d a b
 

@@ -12,8 +12,6 @@ complex over `ℝᵈ` with Lebesgue measure, with symbols `S.m i j (2πx)` (the 
 `𝓕 f (x) = ∫ e^{-2πi ⟪y, x⟫} f y dy`, under which `∂_c ↦ 2πi x_c`). This file sets up that model
 for any finite index type `d`, `𝕜 = ℝ, ℂ`, and any complex shape, and proves:
 
-* fibre reducing subspaces whose fibres are kernels of a continuous family give reducing
-  subcomplexes (`fibreReducing_of_ker`, through measurability of the kernel projections);
 * **homogeneous symbols do not have closed range** (`not_closedRangeAt`): unlike the torus
   (`Feec.Fourier.Torus.closedRangeAt_of_gap`), there is no Poincaré inequality at low
   frequencies, for every nonzero operator of positive order.
@@ -21,7 +19,7 @@ for any finite index type `d`, `𝕜 = ℝ, ℂ`, and any complex shape, and pro
 ## Main definitions and results
 
 * `Euclidean.scale x = 2πx`, `Euclidean.symbolComplex S`, `Euclidean.complex S`.
-* `Euclidean.fibreReducing`, `Euclidean.fibreReducing_of_ker`.
+* `Euclidean.fibreReducing`.
 * `Euclidean.not_closedRangeAt`, `Euclidean.not_dual_closedRangeAt`.
 * `Euclidean.fourier F : L²(ℝᵈ; F) ≃ₗᵢ L²(ℝᵈ; F)`: Mathlib's Plancherel isometry, which identifies
   the model with fields on `ℝᵈ`.
@@ -85,26 +83,6 @@ theorem fibreReducing {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E}
     have : ProperSpace (E i →L[𝕜] E i) := FiniteDimensional.proper_rclike 𝕜 _
     have : SecondCountableTopology (E i →L[𝕜] E i) := secondCountable_of_proper
     exact ((meas i).comp measurable_scale).aestronglyMeasurable
-
-/-- **Fibre reducing subspaces that are kernels of continuous families** give a fibre reducing
-family on `ℝᵈ`: `ξ ↦ P_{ker T ξ}` is measurable. -/
-theorem fibreReducing_of_ker {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E}
-    {K : ∀ i, EuclideanSpace ℝ d → Submodule 𝕜 (E i)} [∀ i ξ, (K i ξ).HasOrthogonalProjection]
-    (h : S.IsFibreReducing K) {F : ι → Type*} [∀ i, NormedAddCommGroup (F i)]
-    [∀ i, InnerProductSpace 𝕜 (F i)] [∀ i, FiniteDimensional 𝕜 (F i)]
-    [∀ i, CompleteSpace (F i)]
-    (T : ∀ i, EuclideanSpace ℝ d → E i →L[𝕜] F i) (hT : ∀ i, Continuous (T i))
-    (hK : ∀ i ξ, K i ξ = LinearMap.ker (T i ξ : E i →ₗ[𝕜] F i)) :
-    FibreReducing (symbolComplex S) fun i x => K i (scale x) := by
-  refine h.toFibreReducing _ scale _ fun i => ?_
-  have hm : AEStronglyMeasurable (fun x => T i (scale x))
-      (volume : Measure (EuclideanSpace ℝ d)) := by
-    have : ProperSpace (E i →L[𝕜] F i) := FiniteDimensional.proper_rclike 𝕜 _
-    have : SecondCountableTopology (E i →L[𝕜] F i) := secondCountable_of_proper
-    exact ((hT i).comp continuous_scale).aestronglyMeasurable
-  have := aestronglyMeasurable_starProjection_ker hm
-  simp_rw [hK]
-  exact this
 
 /-- **No closed range on `ℝᵈ`**: if the incoming symbol is homogeneous of positive degree and not
 identically zero, the boundaries are not closed (no Poincaré inequality, by scaling to low

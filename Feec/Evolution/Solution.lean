@@ -26,7 +26,6 @@ they are two-sided.
 * `IsStrongSolution.norm_sub_le`, `IsStrongSolution.unique`: for a dissipative `A`, two strong
   solutions with the same forcing satisfy `‖U t - V t‖ ≤ ‖U a - V a‖` on `[a,b]`, hence are
   unique. Energy method: no density, closedness or semigroup is needed.
-* `IsStrongSolution.eqOn_of_ordConnected`: uniqueness forward in time on any interval `I`.
 
 ## References
 
@@ -229,14 +228,6 @@ theorem unique (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A (Icc 
     (hV : IsStrongSolution A (Icc a b) F V) (h0 : U a = V a) : EqOn U V (Icc a b) := fun t ht => by
   have := hU.norm_sub_le hA hV t ht
   rwa [h0, sub_self, norm_zero, norm_le_zero_iff, sub_eq_zero] at this
-
-/-- **Forward uniqueness on any interval**: for a dissipative generator, strong solutions on an
-order-connected time set `I` agreeing at `a ∈ I` agree on `I ∩ [a, ∞)`. -/
-theorem eqOn_of_ordConnected (hA : A.IsDissipative) (hI : I.OrdConnected)
-    (hU : IsStrongSolution A I F U) (hV : IsStrongSolution A I F V) {a : ℝ} (ha : a ∈ I)
-    (h0 : U a = V a) : EqOn U V (I ∩ Ici a) := fun t ⟨ht, hat⟩ => by
-  have hsub : Icc a t ⊆ I := hI.out ha ht
-  exact (hU.mono hsub).unique hA (hV.mono hsub) h0 ⟨hat, le_rfl⟩
 
 end IsStrongSolution
 

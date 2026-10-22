@@ -14,14 +14,12 @@ at `x` along the `i`-th coordinate vector `eᵢ = Pi.single i 1` (junk `0` where
 differentiable). It is the common definition behind the partial derivatives `∂ₖ` used for fields
 on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
 
-* Algebra: `partialDeriv_add`, `_sub`, `_neg`, `_const_smul`, `_smul_const`, `_mul`, `_sum`,
-  `_const`, `_zero`, `_ite_zero`, `partialDeriv_apply_coord` (`∂ₖ xₐ = δₖₐ`), composition with
-  continuous linear maps (`ContinuousLinearMap.partialDeriv_comp`) and with affine changes of
-  variables (`partialDeriv_comp_const_sub`, `partialDeriv_comp_add_smul_sub`);
+* Algebra: `partialDeriv_add`, `_sub`, `_neg`, `_const_smul`, `_mul`, `_sum`,
+  `_const`, `partialDeriv_apply_coord` (`∂ₖ xₐ = δₖₐ`), composition with continuous linear maps
+  (`ContinuousLinearMap.partialDeriv_comp`);
 * Fréchet and one-variable derivatives: `HasFDerivAt.partialDeriv_eq`,
   `DifferentiableAt.hasDerivAt_partialDeriv` (`∂ᵢ f x` is the derivative of
-  `s ↦ f (x + s eᵢ)` at `0`), `DifferentiableAt.partialDeriv_eq_deriv`,
-  `DifferentiableAt.partialDeriv_eq_lineDeriv`;
+  `s ↦ f (x + s eᵢ)` at `0`);
 * Locality: `Filter.EventuallyEq.partialDeriv_eq`;
 * Regularity and support: `ContDiff.partialDeriv`, `ContDiff.continuous_partialDeriv`,
   `ContDiff.differentiable_partialDeriv`, `partialDeriv_partialDeriv` (`∂ᵢ∂ⱼ f = f'' eᵢ eⱼ`),
@@ -73,44 +71,17 @@ theorem DifferentiableAt.hasDerivAt_partialDeriv {f : (ι → 𝕜) → F} {x : 
     simpa using ((hasDerivAt_id (0 : 𝕜)).smul_const (Pi.single i (1 : 𝕜) : ι → 𝕜)).const_add x
   exact hf.hasFDerivAt.comp_hasDerivAt_of_eq 0 hl (by simp)
 
-/-- `∂ᵢ f x` is the derivative of `t ↦ f (x + t eᵢ)` at `t = 0`. -/
-theorem DifferentiableAt.partialDeriv_eq_deriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
-    (hf : DifferentiableAt 𝕜 f x) (i : ι) :
-    partialDeriv i f x = deriv (fun t : 𝕜 => f (x + Pi.single i t)) 0 := by
-  have h := (hf.hasDerivAt_partialDeriv i).deriv
-  have he : (fun s : 𝕜 => f (x + s • Pi.single i (1 : 𝕜))) = fun t => f (x + Pi.single i t) := by
-    funext t; congr 2; ext j; by_cases hj : j = i <;> simp [hj]
-  rw [he] at h
-  exact h.symm
-
-/-- At a point of differentiability, the partial derivative is the line derivative along `eᵢ`. -/
-theorem DifferentiableAt.partialDeriv_eq_lineDeriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
-    (hf : DifferentiableAt 𝕜 f x) (i : ι) :
-    partialDeriv i f x = lineDeriv 𝕜 f x (Pi.single i 1) :=
-  (hf.lineDeriv_eq_fderiv).symm
-
 omit [Fintype ι] in
 /-- Partial derivatives only depend on the germ of `f`. -/
 theorem Filter.EventuallyEq.partialDeriv_eq {f g : (ι → 𝕜) → F} {x : ι → 𝕜}
     (h : f =ᶠ[𝓝 x] g) (i : ι) : partialDeriv i f x = partialDeriv i g x := by
   rw [partialDeriv, partialDeriv, h.fderiv_eq]
 
-omit [Fintype ι] in
-/-- If `f = g` on an open set, their partial derivatives agree there. -/
-theorem partialDeriv_congr_of_isOpen {f g : (ι → 𝕜) → F} {U : Set (ι → 𝕜)} (hU : IsOpen U)
-    (h : EqOn f g U) {x : ι → 𝕜} (hx : x ∈ U) (i : ι) : partialDeriv i f x = partialDeriv i g x :=
-  (Filter.eventuallyEq_of_mem (hU.mem_nhds hx) h).partialDeriv_eq i
-
 /-! ### Algebra -/
 
 omit [Fintype ι] in
 @[simp] theorem partialDeriv_const (i : ι) (c : F) (x : ι → 𝕜) :
     partialDeriv i (fun _ : ι → 𝕜 => c) x = 0 := by
-  simp [partialDeriv]
-
-omit [Fintype ι] in
-@[simp] theorem partialDeriv_zero (i : ι) (x : ι → 𝕜) :
-    partialDeriv i (0 : (ι → 𝕜) → F) x = 0 := by
   simp [partialDeriv]
 
 theorem partialDeriv_add {f g : (ι → 𝕜) → F} {x : ι → 𝕜} (hf : DifferentiableAt 𝕜 f x)
@@ -148,12 +119,6 @@ theorem partialDeriv_mul {𝔸 : Type*} [NormedCommRing 𝔸] [NormedAlgebra �
   ring
 
 omit [Fintype ι] in
-/-- Partial derivatives commute with a constant case split. -/
-theorem partialDeriv_ite_zero (c : Prop) [Decidable c] (f : (ι → 𝕜) → F) (i : ι) (x : ι → 𝕜) :
-    partialDeriv i (if c then f else 0) x = if c then partialDeriv i f x else 0 := by
-  split_ifs <;> simp
-
-omit [Fintype ι] in
 /-- `∂ₖ xₐ = δₖₐ`. -/
 theorem partialDeriv_apply_coord (a k : ι) (x : ι → 𝕜) :
     partialDeriv k (fun y : ι → 𝕜 => y a) x = if k = a then 1 else 0 := by
@@ -166,26 +131,6 @@ theorem ContinuousLinearMap.partialDeriv_comp (L : F →L[𝕜] G) {f : (ι → 
     partialDeriv i (fun y => L (f y)) x = L (partialDeriv i f x) := by
   rw [show (fun y => L (f y)) = L ∘ f from rfl,
     (L.hasFDerivAt.comp x hf.hasFDerivAt).partialDeriv_eq]; rfl
-
-/-- `∂ₖ [h(y - t)] = -(∂ₖ h)(y - t)` (derivative in `t`). -/
-theorem partialDeriv_comp_const_sub {h : (ι → 𝕜) → F} (y t : ι → 𝕜)
-    (hh : DifferentiableAt 𝕜 h (y - t)) (k : ι) :
-    partialDeriv k (fun t => h (y - t)) t = -partialDeriv k h (y - t) := by
-  rw [show (fun t => h (y - t)) = h ∘ fun t => y - t from rfl,
-    (hh.hasFDerivAt.comp t ((hasFDerivAt_id t).const_sub y)).partialDeriv_eq]
-  simp [partialDeriv]
-
-/-- Affine change of variables: `∂ₖ [f(x₀ + c (x - x₀))] = c (∂ₖ f)(x₀ + c (x - x₀))`. -/
-theorem partialDeriv_comp_add_smul_sub {f : (ι → 𝕜) → F} (x₀ : ι → 𝕜) (c : 𝕜) (x : ι → 𝕜)
-    (hf : DifferentiableAt 𝕜 f (x₀ + c • (x - x₀))) (k : ι) :
-    partialDeriv k (fun x => f (x₀ + c • (x - x₀))) x =
-      c • partialDeriv k f (x₀ + c • (x - x₀)) := by
-  have hA : HasFDerivAt (fun x : ι → 𝕜 => x₀ + c • (x - x₀))
-      (c • ContinuousLinearMap.id 𝕜 (ι → 𝕜)) x :=
-    (((hasFDerivAt_id x).sub_const x₀).const_smul c).const_add x₀
-  rw [show (fun x => f (x₀ + c • (x - x₀))) = f ∘ fun x => x₀ + c • (x - x₀) from rfl,
-    (hf.hasFDerivAt.comp x hA).partialDeriv_eq]
-  simp [partialDeriv]
 
 /-! ### Regularity and support -/
 
@@ -217,11 +162,6 @@ omit [Fintype ι] in
 theorem tsupport_partialDeriv_subset (f : (ι → 𝕜) → F) (i : ι) :
     tsupport (partialDeriv i f) ⊆ tsupport f :=
   tsupport_fderiv_apply_subset 𝕜 _
-
-omit [Fintype ι] in
-theorem support_partialDeriv_subset (f : (ι → 𝕜) → F) (i : ι) :
-    Function.support (partialDeriv i f) ⊆ tsupport f :=
-  subset_tsupport _ |>.trans (tsupport_partialDeriv_subset f i)
 
 omit [Fintype ι] in
 theorem HasCompactSupport.partialDeriv {f : (ι → 𝕜) → F} (hf : HasCompactSupport f) (i : ι) :

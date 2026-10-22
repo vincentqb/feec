@@ -23,8 +23,7 @@ Fourier symbols (`∂_c ↦ ξ_c`), over any commutative ring. Conventions (thes
 * `transpose_eq_iff_axial_eq_zero`, `trace_curl_of_transpose_eq`, `transpose_curl_eq`,
   `curl_isTSD`: if `A` is symmetric, trace-free and divergence-free, so is `curl A`;
 * symbols: `curlSymbol ξ A = curl (ξ ⊗ A)`, `curlSymbol_mem_ttSub` (the curl symbol maps the TSD
-  fibre `TT.ttSub ξ` to itself), `sum_curlSymbol_mul` (the curl symbol is skew for the
-  Frobenius pairing).
+  fibre `TT.ttSub ξ` to itself).
 
 ## References
 
@@ -88,10 +87,6 @@ def curlSymbol (ξ : Fin 3 → R) (A : Matrix (Fin 3) (Fin 3) R) : Matrix (Fin 3
 theorem curl_apply (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) (a b : Fin 3) :
     curl dA a b = ∑ c, ∑ d, leviCivita3 R b c d * dA c a d := rfl
 
-theorem curl_add (dA dB : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
-    curl (dA + dB) = curl dA + curl dB := by
-  ext a b; simp [curl, mul_add, Finset.sum_add_distrib]
-
 theorem curl_smul (r : R) (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
     curl (fun c => r • dA c) = r • curl dA := by
   ext a b
@@ -100,9 +95,6 @@ theorem curl_smul (r : R) (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) :
 
 theorem curl_neg (dA : Fin 3 → Matrix (Fin 3) (Fin 3) R) : curl (-dA) = -curl dA := by
   ext a b; simp [curl]
-
-theorem div_add (dA dB : Fin 3 → Matrix (Fin 3) (Fin 3) R) : div (dA + dB) = div dA + div dB := by
-  ext a; simp [div, Finset.sum_add_distrib]
 
 theorem div_symbolJet (ξ : Fin 3 → R) (A : Matrix (Fin 3) (Fin 3) R) :
     div (symbolJet ξ A) = A *ᵥ ξ := by
@@ -123,24 +115,6 @@ theorem axial_apply_two (A : Matrix (Fin 3) (Fin 3) R) : axial A 2 = A 0 1 - A 1
 
 theorem axial_add (A B : Matrix (Fin 3) (Fin 3) R) : axial (A + B) = axial A + axial B := by
   ext a; simp [axial, mul_add, Finset.sum_add_distrib]
-
-theorem axial_transpose (A : Matrix (Fin 3) (Fin 3) R) : axial Aᵀ = -axial A := by
-  ext a; fin_cases a <;> simp [axial_apply_zero, axial_apply_one, axial_apply_two]
-
-/-- `axial (mskw v) = 2 v`. -/
-theorem axial_mskw (v : Fin 3 → R) : axial (mskw v) = (2 : R) • v := by
-  ext a; fin_cases a <;> simp [axial, mskw, leviCivita3_apply, Fin.sum_univ_three] <;> ring
-
-theorem vskw_mskw [Invertible (2 : R)] (v : Fin 3 → R) : vskw (mskw v) = v := by
-  rw [vskw, axial_mskw, smul_smul, invOf_mul_self, one_smul]
-
-theorem transpose_mskw (v : Fin 3 → R) : (mskw v)ᵀ = -mskw v := by
-  ext a b; fin_cases a <;> fin_cases b <;> simp [mskw, leviCivita3_apply, Fin.sum_univ_three]
-
-/-- `mskw v w = w × v`. -/
-theorem mskw_mulVec (v w : Fin 3 → R) : mskw v *ᵥ w = crossProduct w v := by
-  ext a; fin_cases a <;>
-    simp [mskw, mulVec, dotProduct, cross_apply, leviCivita3_apply, Fin.sum_univ_three] <;> ring
 
 /-- A matrix is symmetric iff its axial vector vanishes (no division by `2` is needed). -/
 theorem transpose_eq_iff_axial_eq_zero (A : Matrix (Fin 3) (Fin 3) R) :
@@ -273,11 +247,6 @@ theorem curlSymbol_mem_ttSub {ξ : Fin 3 → R} {A : Matrix (Fin 3) (Fin 3) R}
   refine ⟨?_, trace_curl_of_transpose_eq hs, curlSymbol_mulVec_self ξ A⟩
   exact transpose_curl_eq hs (by rw [traceJet_symbolJet, h2, zero_smul])
     (by rw [div_symbolJet, h3])
-
-/-- The curl symbol is skew for the Frobenius pairing `⟨X, Y⟩ = ∑ X_ij Y_ij`. -/
-theorem sum_curlSymbol_mul (ξ : Fin 3 → R) (A B : Matrix (Fin 3) (Fin 3) R) :
-    ∑ i, ∑ j, curlSymbol ξ A i j * B i j = -∑ i, ∑ j, A i j * curlSymbol ξ B i j := by
-  simp [curlSymbol, curl, symbolJet, leviCivita3_apply, Fin.sum_univ_three]; ring
 
 /-- `curl_ξ` is linear in `A`. -/
 def curlSymbolₗ (ξ : Fin 3 → R) : Matrix (Fin 3) (Fin 3) R →ₗ[R] Matrix (Fin 3) (Fin 3) R where

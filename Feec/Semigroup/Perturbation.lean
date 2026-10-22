@@ -9,26 +9,20 @@ public import Mathlib.Topology.Algebra.Order.Floor
 
 For a strongly continuous semigroup `G` on a Banach space over `𝕜 = ℝ` or `ℂ`, with generator
 `A`, and a bounded operator `B`, the operator `A + B` (domain `D(A)`, written `B +ᵥ A`) generates
-a strongly continuous semigroup `G.perturb B`, and it is the only one:
+a strongly continuous semigroup `G.perturb B`:
 
 * `C0Semigroup.dysonPhillips G B n`: the Dyson–Phillips terms `S₀(t) = S(t)`,
   `S_{n+1}(t) x = ∫₀ᵗ S(t - r) B S_n(r) x dr`, with
   `‖S_n(t) x‖ ≤ M^{n+1} ‖B‖ⁿ tⁿ/n! e^{ωt} ‖x‖` when `‖S t‖ ≤ M e^{ωt}`
   (`norm_dysonPhillips_le`);
 * `C0Semigroup.perturb G B`: `S'(t) = Σₙ S_n(t)`, the unique solution of the Volterra equation
-  `S'(t) x = S(t) x + ∫₀ᵗ S(t - r) B S'(r) x dr` (`perturb_S_apply_eq`,
+  `S'(t) x = S(t) x + ∫₀ᵗ S(t - r) B S'(r) x dr` (`perturbS_eq`,
   `eqOn_zero_of_volterra`);
 * **`C0Semigroup.generator_perturb`**: `(G.perturb B).generator = B +ᵥ G.generator`;
-* `C0Semigroup.norm_perturb_le`: `‖S t‖ ≤ M e^{ωt}` gives `‖S' t‖ ≤ M e^{(ω + M‖B‖)t}`;
 * `C0Semigroup.dense_domain_generator`: the generator of a semigroup is densely defined.
 
-`C0Semigroup.S` is defined at negative times too, where it carries no information; uniqueness is
-therefore stated on `t ≥ 0` (`Set.EqOn _ _ (Ici 0)`).
-
 The orbit calculus used here (`C0Semigroup.extS`, joint continuity, convolutions) lives in
-`Feec.Semigroup.Orbit`. Uniqueness of the perturbed semigroup (`C0Semigroup.eqOn_perturb`,
-`C0Semigroup.existsUnique_generator_eq_vadd`, `C0Semigroup.eqOn_of_generator_eq`) uses Duhamel's
-formula and is in `Feec.Evolution.Perturbation`.
+`Feec.Semigroup.Orbit`.
 
 ## References
 
@@ -416,12 +410,6 @@ def perturb : C0Semigroup 𝕜 E where
 
 @[simp] theorem perturb_S : (G.perturb B).S = G.perturbS B := rfl
 
-/-- The Volterra equation for `G.perturb B`. -/
-theorem perturb_S_apply_eq {t : ℝ} (ht : 0 ≤ t) (x : E) :
-    (G.perturb B).S t x =
-      G.S t x + ∫ r in (0 : ℝ)..t, G.extS (t - r) (B ((G.perturb B).S r x)) :=
-  G.perturbS_eq B ht x
-
 /-- The Duhamel term of the perturbation has derivative `B x` at `0`. -/
 theorem hasDerivAt_perturb_integral (x : E) :
     HasDerivAt (fun h => ∫ r in (0 : ℝ)..h, G.extS (h - r) (B (G.perturbS B r x))) (B x) 0 := by
@@ -441,7 +429,7 @@ theorem generator_perturb :
   have hΦ : ∀ x, HasDerivWithinAt (Φ x) (B x) (Ici 0) 0 := fun x =>
     (G.hasDerivAt_perturb_integral B x).hasDerivWithinAt
   have hU : ∀ x, ∀ h ∈ Ici (0 : ℝ), (G.perturb B).S h x = G.S h x + Φ x h := fun x h hh =>
-    G.perturb_S_apply_eq B hh x
+    G.perturbS_eq B hh x
   have hdom : (G.perturb B).generator.domain = ((B : E →ₗ[𝕜] E) +ᵥ G.generator).domain := by
     ext x
     rw [vadd_domain]
@@ -459,23 +447,6 @@ theorem generator_perturb :
       (fun h hh => hU x h hh) self_mem_Ici
   rw [(G.perturb B).generator_apply_eq (x := ⟨x, hx⟩) hd, vadd_apply, add_comm]
   rfl
-
-/-- **Growth bound**: if `‖S t‖ ≤ M e^{ωt}` for `t ≥ 0`, then
-`‖S' t‖ ≤ M e^{(ω + M‖B‖)t}`. -/
-theorem norm_perturb_le {M ω : ℝ} (hM : 0 ≤ M) (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t))
-    {t : ℝ} (ht : 0 ≤ t) : ‖(G.perturb B).S t‖ ≤ M * Real.exp ((ω + M * ‖B‖) * t) := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun x => ?_
-  have hs := G.hasSum_perturbS B ht x
-  have hg : HasSum (fun n => M ^ (n + 1) * ‖B‖ ^ n * t ^ n / n.factorial * Real.exp (ω * t) * ‖x‖)
-      (M * Real.exp ((ω + M * ‖B‖) * t) * ‖x‖) := by
-    have := (((NormedSpace.expSeries_div_hasSum_exp (M * ‖B‖ * t)).mul_left
-      (M * Real.exp (ω * t))).mul_right ‖x‖)
-    rw [← Real.exp_eq_exp_ℝ] at this
-    convert this using 1
-    · funext n; rw [mul_pow, mul_pow, pow_succ]; ring
-    · rw [add_mul, Real.exp_add]; ring_nf
-  exact hs.norm_le_of_bounded hg fun n =>
-    G.norm_dysonPhillips_le B (T := t) hM (fun τ hτ => hS τ hτ.1) n ⟨ht, le_rfl⟩ x
 
 end C0Semigroup
 

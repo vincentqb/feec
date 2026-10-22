@@ -83,10 +83,6 @@ theorem isResolvent_res (hA : A.IsSkewAdjoint) {z : ℝ} (hz : z ≠ 0) :
     IsResolvent A (z : 𝕜) (res A z) :=
   isResolvent_resolvent hA (by rwa [RCLike.ofReal_re])
 
-theorem res_mem_domain (hA : A.IsSkewAdjoint) {z : ℝ} (hz : z ≠ 0) (y : E) :
-    res A z y ∈ A.domain :=
-  (isResolvent_res hA hz).mem_domain y
-
 /-- `R(z) (A x) = z R(z) x - x` on `D(A)`. -/
 theorem res_apply_domain (hA : A.IsSkewAdjoint) {z : ℝ} (hz : z ≠ 0) (x : A.domain) :
     res A z (A x) = (z : 𝕜) • res A z x - x :=
@@ -591,12 +587,6 @@ theorem _root_.LinearPMap.IsSkewAdjoint.generator_group {A : E →ₗ.[𝕜] E}
 theorem _root_.LinearPMap.IsSkewAdjoint.eq_group {A : E →ₗ.[𝕜] E} (hA : A.IsSkewAdjoint)
     {G : C0Group 𝕜 E} (hgen : G.generator = A) : G = hA.group :=
   (hA.isIsometric_group.ext_of_generator_eq (hA.generator_group.trans hgen.symm)).symm
-
-/-- The Stone group is the strong limit of the isometric groups `exp(t B_n)`. -/
-theorem _root_.LinearPMap.IsSkewAdjoint.tendsto_group {A : E →ₗ.[𝕜] E} (hA : A.IsSkewAdjoint)
-    (t : ℝ) (x : E) :
-    Tendsto (fun n => exp ((t : 𝕜) • approxB A n) x) atTop (𝓝 (hA.group.S t x)) :=
-  tendsto_approxU hA t x
 
 end C0Group
 

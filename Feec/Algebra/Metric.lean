@@ -33,8 +33,7 @@ signature is used and it is fixed explicitly (`minkowski`, `minkowskiMatrix`).
   `mul_eq_one_comm'`: `gi * g = 1 ↔ g * gi = 1`.
 * `trace_metric`: `gi^{ab} g_ab = n`; `trace_trRev`: `tr h̄ = (1 - n/2) tr h` (any dimension).
 * `trRev_trRev`: trace reversal is an involution in dimension `4`; `eq_trRev_sub`: in every
-  dimension `n ≠ 2`, `h = h̄ - (n - 2)⁻¹ (tr h̄) g`; `exists_trRev_trRev_ne`: in dimension
-  `n ∉ {0, 4}` trace reversal is not an involution.
+  dimension `n ≠ 2`, `h = h̄ - (n - 2)⁻¹ (tr h̄) g`.
 * `trRev_add_sym`: the gauge law (2.5), `h ↦ h + P + Pᵀ` gives `h̄ ↦ h̄ + P + Pᵀ - (tr P) g`.
 
 ## References
@@ -87,30 +86,13 @@ def minkowskiMatrix (n : ℕ) : Matrix (Fin (n + 1)) (Fin (n + 1)) R := diagonal
 
 @[simp] theorem minkowski_succ (n : ℕ) (i : Fin n) : minkowski R n i.succ = 1 := rfl
 
-/-- The four-dimensional Minkowski signature as an explicit vector. -/
-theorem minkowski_three : minkowski R 3 = ![-1, 1, 1, 1] := by
-  funext i; fin_cases i <;> rfl
-
 variable (R) in
 /-- The four-dimensional Minkowski signature `(-1, 1, 1, 1)` indexed by `Fin 4` (thesis
 convention; `= minkowski R 3`). [QuennevilleBelair2015], §2.2 -/
 def minkowski4 : Fin 4 → R := ![-1, 1, 1, 1]
 
-theorem minkowski4_eq_minkowski : minkowski4 R = minkowski R 3 := minkowski_three.symm
-
 theorem minkowski4_mul_self (i : Fin 4) : minkowski4 R i * minkowski4 R i = 1 := by
   fin_cases i <;> simp [minkowski4]
-
-theorem minkowski_mul_self (n : ℕ) (i : Fin (n + 1)) : minkowski R n i * minkowski R n i = 1 := by
-  refine Fin.cases ?_ (fun j => ?_) i <;> simp
-
-theorem minkowskiMatrix_mul_self (n : ℕ) :
-    minkowskiMatrix R n * minkowskiMatrix R n = 1 := by
-  rw [minkowskiMatrix, diagonal_mul_diagonal, ← diagonal_one]
-  congr 1; funext i; exact minkowski_mul_self n i
-
-theorem minkowskiMatrix_isSymm (n : ℕ) : (minkowskiMatrix R n).IsSymm := by
-  simp [minkowskiMatrix, Matrix.IsSymm]
 
 /-! ### Traces and trace reversal -/
 
@@ -156,11 +138,6 @@ theorem trace_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hi
 theorem transpose_trRev {g gi h : Matrix ι ι R} (hg : g.IsSymm) (hh : hᵀ = h) :
     (trRev g gi h)ᵀ = trRev g gi h := by
   rw [trRev, transpose_sub, transpose_smul, hh, hg.eq]
-
-/-- Trace reversal is linear. -/
-theorem trRev_add (g gi h k : Matrix ι ι R) :
-    trRev g gi (h + k) = trRev g gi h + trRev g gi k := by
-  simp only [trRev, trace_add, mul_add, add_smul]; abel
 
 theorem trRev_smul (g gi h : Matrix ι ι R) (c : R) :
     trRev g gi (c • h) = c • trRev g gi h := by
@@ -223,27 +200,6 @@ theorem eq_trRev_sub {g gi : Matrix ι ι K} (hg : g.IsSymm) (hinv : gi * g = 1)
       inv_mul_cancel₀ hn']
     ring
   rw [this, zero_smul, sub_zero]
-
-/-- In dimension `n ∉ {0, 4}` (as elements of `K`) trace reversal is not an involution. -/
-theorem exists_trRev_trRev_ne {g gi : Matrix ι ι K} (hg : g.IsSymm) (hinv : gi * g = 1)
-    (hn0 : (Fintype.card ι : K) ≠ 0) (hn : (Fintype.card ι : K) ≠ 4) :
-    ∃ h, trRev g gi (trRev g gi h) ≠ h := by
-  refine ⟨g, fun h => ?_⟩
-  have hne : Nonempty ι := by
-    by_contra hι
-    rw [not_nonempty_iff] at hι
-    exact hn0 (by simp [Fintype.card_eq_zero])
-  obtain ⟨i⟩ := hne
-  have hg0 : g ≠ 0 := by
-    rintro rfl
-    have := congrFun (congrFun hinv i) i
-    simp at this
-  rw [trRev_trRev_eq hg hinv, trace_metric hg hinv, sub_eq_self, smul_eq_zero] at h
-  refine h.elim (fun h => ?_) hg0
-  have h2 : (⅟2 : K) * 2 = 1 := invOf_mul_self 2
-  rcases mul_eq_zero.1 h with h | h
-  · exact hn (by linear_combination (-4 : K) * h - (Fintype.card ι : K) * (1 + 2 * ⅟2) * h2)
-  · exact hn0 h
 
 end Field
 

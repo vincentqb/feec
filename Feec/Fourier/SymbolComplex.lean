@@ -28,8 +28,6 @@ measure on `ℤⁿ` for `𝕋ⁿ`, Lebesgue measure on `ℝⁿ`), any index shap
 
 ## Main results
 
-* `toHilbertComplex_dual`: **the dual complex is the complex of adjoint symbols**,
-  `(toHilbertComplex S).dual = toHilbertComplex S.adjoint`.
 * `ker_mulOp`, `cycles_toHilbertComplex`, `harmonic_toHilbertComplex`: kernels, cycles and
   harmonic forms are the fibrewise subspaces of the fibre kernels, cycles and harmonic forms.
 * `aestronglyMeasurable_starProjection_ker`: the fibre kernel projections of a measurable family
@@ -252,12 +250,6 @@ theorem _root_.Feec.HilbertComplex.ext' {W : ι → Type*} [∀ i, NormedAddComm
     (h : H.d = H'.d) : H = H' := by
   cases H; cases H'; subst h; rfl
 
-/-- **The dual of a symbol complex is the complex of the adjoint symbols.** -/
-theorem toHilbertComplex_dual : S.toHilbertComplex.dual = S.adjoint.toHilbertComplex := by
-  refine HilbertComplex.ext' ?_
-  funext i j
-  exact S.adjoint_d j i
-
 /-- Cycles are the fibrewise cycles. -/
 theorem cycles_toHilbertComplex (i : ι) :
     S.toHilbertComplex.cycles i = Operator.fibreSub μ fun a => LinearMap.ker (S.m i (c.next i) a : E i →ₗ[𝕜] E (c.next i)) :=
@@ -294,12 +286,6 @@ def restrict {ι' : Type*} {c' : ComplexShape ι'} (f : ι' → ι)
   shape i j h := S.shape _ _ fun h' => h (hf i j h')
   comp _ _ _ a := S.comp _ _ _ a
   meas _ _ := S.meas _ _
-
-/-- The Hilbert complex of a restricted symbol complex is the restricted Hilbert complex. -/
-theorem toHilbertComplex_restrict {ι' : Type*} {c' : ComplexShape ι'} (f : ι' → ι)
-    (hf : ∀ i j, c.Rel (f i) (f j) → c'.Rel i j) :
-    (S.restrict f hf).toHilbertComplex = S.toHilbertComplex.restrict f hf :=
-  HilbertComplex.ext' rfl
 
 end SymbolComplex
 

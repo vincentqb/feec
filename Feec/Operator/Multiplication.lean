@@ -17,9 +17,7 @@ family of operators `m : α → E →L[𝕜] F` (a *fibre-matrix symbol*), the m
 
 * Fourier multipliers on `L²(ℝⁿ)` (`α = ℝⁿ` frequency space, `μ = volume`), and
 * Fourier multipliers on the torus, `ℓ²(ℤⁿ)` (`α = ℤⁿ`, `μ = count`), through the isometry
-  `lp.equivLpCount : ℓ²(α; E) ≃ₗᵢ L²(α, count; E)`; for the counting measure no measurability
-  hypothesis is needed (`isClosed_mulOp_count`, `dense_mulDomain_count`, `adjoint_mulOp_count`)
-  and the domain is the weighted-`ℓ²` condition (`equivLpCount_mem_mulDomain_iff`).
+  `lp.equivLpCount : ℓ²(α; E) ≃ₗᵢ L²(α, count; E)`.
 
 ## Main results
 
@@ -115,15 +113,6 @@ theorem norm_mulCLM_apply_le (B : α → E →L[𝕜] F) (hB : AEStronglyMeasura
   filter_upwards [coeFn_mulCLM B hB C hC u, hC] with a h hCa
   rw [h]
   exact (B a).le_of_opNorm_le hCa _
-
-/-- The multiplier only depends on the family up to a.e. equality. -/
-theorem mulCLM_congr_ae {B B' : α → E →L[𝕜] F} {hB : AEStronglyMeasurable B μ}
-    {hB' : AEStronglyMeasurable B' μ} {C C' : ℝ} {hC : ∀ᵐ a ∂μ, ‖B a‖ ≤ C}
-    {hC' : ∀ᵐ a ∂μ, ‖B' a‖ ≤ C'} (h : B =ᵐ[μ] B') (u : Lp E 2 μ) :
-    mulCLM μ B hB C hC u = mulCLM μ B' hB' C' hC' u := by
-  refine Lp.ext ?_
-  filter_upwards [coeFn_mulCLM B hB C hC u, coeFn_mulCLM B' hB' C' hC' u, h] with a h1 h2 h3
-  rw [h1, h2, h3]
 
 variable [CompleteSpace E] [CompleteSpace F]
 
@@ -506,12 +495,6 @@ theorem adjoint_mulOp (hm : AEStronglyMeasurable m μ) :
   filter_upwards [hm.ae_eq_mk] with a ha
   rw [ha]
 
-/-- Membership in the adjoint domain: `y ∈ D(T*)` iff `m* y ∈ L²`. -/
-theorem mem_adjoint_mulOp_domain (hm : AEStronglyMeasurable m μ) {y : Lp F 2 μ} :
-    y ∈ (mulOp μ m)†.domain ↔
-      MemLp (fun a => ContinuousLinearMap.adjoint (m a) (y a)) 2 μ := by
-  rw [adjoint_mulOp hm]; rfl
-
 /-- The adjoint acts fibrewise by the fibre adjoints. -/
 theorem coeFn_adjoint_mulOp (hm : AEStronglyMeasurable m μ) (y : (mulOp μ m)†.domain) :
     (mulOp μ m)† y =ᵐ[μ] fun a => ContinuousLinearMap.adjoint (m a) ((y : Lp F 2 μ) a) := by
@@ -520,29 +503,6 @@ theorem coeFn_adjoint_mulOp (hm : AEStronglyMeasurable m μ) (y : (mulOp μ m)�
     hv (x := y) (hf := y.2) (hg := hd ▸ y.2)
   rw [this]
   exact coeFn_mulOp μ _ _
-
-/-- A multiplier by fibrewise self-adjoint operators is self-adjoint. -/
-theorem adjoint_mulOp_eq_self {m : α → E →L[𝕜] E} (hm : AEStronglyMeasurable m μ)
-    (hsa : ∀ᵐ a ∂μ, ContinuousLinearMap.adjoint (m a) = m a) : (mulOp μ m)† = mulOp μ m := by
-  rw [adjoint_mulOp hm]; exact mulOp_congr_ae hsa
-
-/-- A multiplier by fibrewise skew-adjoint operators is skew-adjoint. -/
-theorem adjoint_mulOp_eq_neg {m : α → E →L[𝕜] E} (hm : AEStronglyMeasurable m μ)
-    (hsk : ∀ᵐ a ∂μ, ContinuousLinearMap.adjoint (m a) = -m a) : (mulOp μ m)† = -mulOp μ m := by
-  rw [adjoint_mulOp hm, mulOp_congr_ae hsk]
-  refine LinearPMap.ext ?_ fun x hx hy => ?_
-  · ext u
-    change MemLp _ 2 μ ↔ MemLp _ 2 μ
-    simp only [_root_.neg_apply]
-    exact memLp_neg_iff
-  · refine Lp.ext ?_
-    have hy' : x ∈ mulDomain μ m := hy
-    filter_upwards [coeFn_mulOp μ (fun a => -m a) ⟨x, hx⟩, Lp.coeFn_neg (mulOp μ m ⟨x, hy'⟩),
-      coeFn_mulOp μ m ⟨x, hy'⟩] with a h1 h2 h3
-    rw [h1, LinearPMap.neg_apply]
-    change _ = (-(mulOp μ m ⟨x, hy'⟩) : Lp E 2 μ) a
-    rw [h2, Pi.neg_apply, h3]
-    rfl
 
 end AEMeasurable
 
@@ -658,37 +618,6 @@ omit [MeasurableSingletonClass α] [Countable α] in
 theorem coeFn_mulOp_count (u : (mulOp Measure.count m).domain) (a : α) :
     (mulOp (Measure.count : Measure α) m u : α → F) a = m a ((u : Lp E 2 Measure.count) a) :=
   Measure.ae_count_iff.1 (coeFn_mulOp Measure.count m u) a
-
-/-- `ℓ²` form of the domain: `u ∈ ℓ²` is in the domain iff `(m a (u a))ₐ ∈ ℓ²`. -/
-theorem equivLpCount_mem_mulDomain_iff (u : lp (fun _ : α => E) 2) :
-    lp.equivLpCount 𝕜 α E 2 u ∈ mulDomain Measure.count m ↔ Memℓp (fun a => m a (u a)) 2 := by
-  rw [mem_mulDomain_count_iff, lp.coeFn_equivLpCount]
-
-/-- `ℓ²` form of the action: `mulOp` transported to `ℓ²` is `u ↦ (m a (u a))ₐ`. -/
-theorem mulOp_equivLpCount (u : lp (fun _ : α => E) 2)
-    (hu : lp.equivLpCount 𝕜 α E 2 u ∈ mulDomain Measure.count m) :
-    (lp.equivLpCount 𝕜 α F 2).symm (mulOp Measure.count m ⟨_, hu⟩) =
-      ⟨fun a => m a (u a), (equivLpCount_mem_mulDomain_iff m u).1 hu⟩ := by
-  ext a
-  rw [lp.equivLpCount_symm_apply, coeFn_mulOp_count]
-  change m a ((lp.equivLpCount 𝕜 α E 2 u : α → E) a) = m a (u a)
-  rw [lp.coeFn_equivLpCount]
-
-/-- **`ℓ²` multipliers are closed** (no measurability hypothesis). -/
-theorem isClosed_mulOp_count : (mulOp (Measure.count : Measure α) m).IsClosed :=
-  isClosed_mulOp AEStronglyMeasurable.of_discrete
-
-/-- **`ℓ²` multipliers are densely defined.** -/
-theorem dense_mulDomain_count [CompleteSpace E] :
-    Dense ((mulDomain (Measure.count : Measure α) m : Submodule 𝕜 (Lp E 2 Measure.count)) :
-      Set (Lp E 2 (Measure.count : Measure α))) :=
-  dense_mulDomain AEStronglyMeasurable.of_discrete
-
-/-- **The adjoint of an `ℓ²` multiplier** is the multiplier by the fibre adjoints. -/
-theorem adjoint_mulOp_count [CompleteSpace E] [CompleteSpace F] :
-    (mulOp (Measure.count : Measure α) m)† =
-      mulOp Measure.count fun a => ContinuousLinearMap.adjoint (m a) :=
-  adjoint_mulOp AEStronglyMeasurable.of_discrete
 
 end Count
 

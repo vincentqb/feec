@@ -30,8 +30,7 @@ on `[a,b]` with right derivative `e'` on `[a,b)`:
 * `norm_le_add_integral_of_re_inner_deriv_le`: if `re ⟪e', e⟫ ≤ g ‖e‖` with `g ≥ 0` continuous,
   then `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ g`;
 * `norm_le_of_re_inner_deriv_le`: the decay-rate form. If `re ⟪e', e⟫ ≤ -λ ‖e‖² + g ‖e‖` then
-  `‖e t‖ ≤ e^{-λ(t-a)} ‖e a‖ + ∫ₐᵗ e^{-λ(t-s)} g s` (any `λ ∈ ℝ`);
-* `norm_le_add_integral_norm_deriv`: `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ ‖e'‖`.
+  `‖e t‖ ≤ e^{-λ(t-a)} ‖e a‖ + ∫ₐᵗ e^{-λ(t-s)} g s` (any `λ ∈ ℝ`).
 
 They follow from the square-root Gronwall inequality applied to `Q = ‖e‖`.
 
@@ -261,15 +260,5 @@ theorem norm_le_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b l
     _ ≤ Real.exp (-lam * (t - a)) * (‖e a‖ + ∫ s in a..t, c s * g s) :=
         mul_le_mul_of_nonneg_left h hpos.le
     _ = _ := by rw [mul_add, hint]
-
-/-- `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ ‖e'‖` on `[a,b]` for `e` continuous on `[a,b]` with right derivative
-`e'` continuous on `[a,b]`; `E` need not be complete. -/
-theorem norm_le_add_integral_norm_deriv {F : Type*} [NormedAddCommGroup F]
-    [InnerProductSpace ℝ F] {e e' : ℝ → F} {a b : ℝ}
-    (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
-    (he'c : ContinuousOn e' (Icc a b)) :
-    ∀ t ∈ Icc a b, ‖e t‖ ≤ ‖e a‖ + ∫ s in a..t, ‖e' s‖ :=
-  norm_le_add_integral_of_re_inner_deriv_le (𝕜 := ℝ) hec he he'c.norm
-    (fun _ _ => norm_nonneg _) fun _ _ => (RCLike.re_le_norm _).trans (norm_inner_le_norm _ _)
 
 end Energy

@@ -79,10 +79,6 @@ theorem restrictScalars_zero : (0 : E →ₗ.[ℂ] F).restrictScalars = 0 := by
   rw [restrictScalars_apply]
   rfl
 
-theorem restrictScalars_neg : (-T).restrictScalars = -T.restrictScalars :=
-  LinearPMap.ext rfl fun x y h => by
-    rw [restrictScalars_apply, LinearPMap.neg_apply, LinearPMap.neg_apply, restrictScalars_apply]
-
 variable [CompleteSpace E]
 
 /-- **The real adjoint is the real restriction of the complex adjoint**, when the real inner

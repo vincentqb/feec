@@ -9,7 +9,7 @@ public import Feec.Semigroup.Basic
 For a strongly continuous group `G` and a subspace `K`:
 
 * `C0Group.invariantCore G K = ⨅ t, (S t)⁻¹ K`: the largest `G`-invariant subspace of `K`
-  (`le_invariantCore`, `isGreatest_invariantCore`), closed when `K` is
+  (`le_invariantCore`), closed when `K` is
   (`isClosed_invariantCore`).
 
 For an isometric group on a Hilbert space with generator `A`:
@@ -80,23 +80,9 @@ theorem le_invariantCore (hM : M ≤ K) (hinv : ∀ t, M.map (G.S t : E →ₗ[�
     M ≤ G.invariantCore K := fun x hx =>
   mem_invariantCore.2 fun t => hM (map_le_iff_forall.1 hinv t x hx)
 
-/-- The invariant core is the largest invariant subspace of `K`. -/
-theorem isGreatest_invariantCore :
-    IsGreatest {M | M ≤ K ∧ ∀ t, M.map (G.S t : E →ₗ[𝕜] E) ≤ M} (G.invariantCore K) :=
-  ⟨⟨invariantCore_le, map_invariantCore_le⟩, fun _ hM => le_invariantCore hM.1 hM.2⟩
-
 theorem invariantCore_eq_self_iff : G.invariantCore K = K ↔ ∀ t, K.map (G.S t : E →ₗ[𝕜] E) ≤ K := by
   refine ⟨fun h => h ▸ map_invariantCore_le, fun h => le_antisymm invariantCore_le
     (le_invariantCore le_rfl h)⟩
-
-theorem invariantCore_mono (h : K ≤ M) : G.invariantCore K ≤ G.invariantCore M := fun _ hx =>
-  mem_invariantCore.2 fun t => h (mem_invariantCore.1 hx t)
-
-@[simp] theorem invariantCore_top : G.invariantCore ⊤ = ⊤ :=
-  invariantCore_eq_self_iff.2 fun _ => le_top
-
-@[simp] theorem invariantCore_bot : G.invariantCore ⊥ = ⊥ :=
-  le_bot_iff.1 invariantCore_le
 
 /-- The invariant core of a closed subspace is closed. -/
 theorem isClosed_invariantCore (hK : IsClosed (K : Set E)) :

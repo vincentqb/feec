@@ -11,8 +11,7 @@ inclusion of a reducing subspace, and compression.
 
 ## Main results
 
-* `Intertwines.id`, `Intertwines.comp`, `intertwines_subtypeL_restrict` (the inclusion
-  `K ↪ E` intertwines the part `A.restrict K _` with `A`).
+* `Intertwines.id`, `Intertwines.comp`.
 * `Intertwines.adjoint`: if `e⁻¹ B = A e⁻¹` for a unitary `e`, then `e` intertwines `A†`
   with `B†`.
 * `Intertwines.isSkewAdjoint_iff`: skew-adjointness is invariant under unitary equivalence.
@@ -56,12 +55,6 @@ theorem Intertwines.comp {J : E →L[𝕜] F} {J' : F →L[𝕜] G} {A : E →�
     calc C ⟨(J'.comp J) x, _⟩ = C ⟨J' (J x), h'.mapsTo ⟨_, h.mapsTo x⟩⟩ := rfl
       _ = J' (B ⟨J x, h.mapsTo x⟩) := h'.comm ⟨J x, h.mapsTo x⟩
       _ = (J'.comp J) (A x) := by rw [h.comm]; rfl⟩
-
-/-- The inclusion of an invariant subspace intertwines the part of `A` with `A`. -/
-theorem intertwines_subtypeL_restrict (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E)
-    (h : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) :
-    Intertwines K.subtypeL (A.restrict K h) A :=
-  ⟨fun x => x.2, fun _ => rfl⟩
 
 variable {A : E →ₗ.[𝕜] E} {B : F →ₗ.[𝕜] F} {e : E ≃ₗᵢ[𝕜] F}
 

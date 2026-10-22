@@ -15,7 +15,7 @@ public import Feec.Geometry.Bivector
 * `rdual_ofMat`, `ldual_ofMat`: right/left dualisation multiply the bivector matrix by `S`.
 * **Prop 3.2**: `rdual_ofBlocks`, `ldual_ofBlocks`, `ldual_rdual_ofBlocks` and
   `blocks_eq_and_duals` (the block action of `C*`, `*C`, `*C*`, with the `½` the thesis drops).
-* `rdual_rdual`, `ldual_ldual`, `ldual_rdual_comm`, `ldual_eq_rdual_swap`.
+* `rdual_rdual`, `ldual_eq_rdual_swap`.
 * `hodge2_hodge2`: `** = -1` on 2-forms in signature `(-+++)`.
 
 ## References
@@ -130,15 +130,6 @@ theorem blocks_eq_and_duals {C : Tensor4} (hC : PairSkew C) :
 `(-+++)`). See [QuennevilleBelair2015], §3.2. -/
 theorem rdual_rdual {C : Tensor4} (hC : PairSkew C) : rdual (rdual C) = -C := by
   rw [eq_ofBlocks_blocks hC, rdual_ofBlocks, rdual_ofBlocks, ofBlocks_neg]
-
-/-- `*(*W) = -W` for every double 2-form. -/
-theorem ldual_ldual {C : Tensor4} (hC : PairSkew C) : ldual (ldual C) = -C := by
-  rw [eq_ofBlocks_blocks hC, ldual_ofBlocks, ldual_ofBlocks, ofBlocks_neg]
-
-/-- left and right duals commute. -/
-theorem ldual_rdual_comm {C : Tensor4} (hC : PairSkew C) :
-    ldual (rdual C) = rdual (ldual C) := by
-  rw [eq_ofBlocks_blocks hC, rdual_ofBlocks, ldual_ofBlocks, ldual_ofBlocks, rdual_ofBlocks]
 
 /-- Thesis §3.2: for `W` with the interchange symmetry, `*W_{abcd} = W*_{cdab}`.
 See [QuennevilleBelair2015], §3.2. -/

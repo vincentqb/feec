@@ -9,8 +9,8 @@ public import Feec.Evolution.Energy
 An evolution problem with boundary conditions is given by two operators `A ≤ A_max` on a
 Hilbert space `E`: `A_max` acts without boundary condition (e.g. `d_max − d_min†` for a Hodge
 wave equation, or `curl_max` for Maxwell), and `A` is its restriction to the fields with
-**homogeneous** boundary values, `D(A) = {x ∈ D(A_max) | γ x = 0}` for a trace `γ`
-(`sub_mem_domain_iff_trace_eq`). Inhomogeneous boundary data are prescribed through a field `G(t)`
+**homogeneous** boundary values, `D(A) = {x ∈ D(A_max) | γ x = 0}` for a trace `γ`.
+Inhomogeneous boundary data are prescribed through a field `G(t)`
 with the desired traces (a **lifting**): `U` solves the problem with data `γ G` when
 
 `U' = A_max U + F`,  `U(t) − G(t) ∈ D(A)` (`IsBoundarySolution A_max A I F G U`).
@@ -30,16 +30,13 @@ inhomogeneous problem from Duhamel's formula for the homogeneous one, for every 
 
 * `isBoundarySolution_iff`: the reduction to homogeneous boundary values.
 * `IsBoundarySolution.unique`: uniqueness for dissipative `A` (no regularity of the lifting).
-* `isBoundarySolution_congr`: the solution depends on `G` only through its traces.
 * `existsUnique_isBoundarySolution` (skew-adjoint `A`, Stone's group),
   `C0Semigroup.existsUnique_isBoundarySolution` (any semigroup generator): a classical solution
   `W = U − G` exists for `U(a) − G(a) ∈ D(A)` and admissible `F − G' + A_max G`, and it is unique.
-* `IsBoundarySolution.norm_sub_le`, `IsBoundarySolution.norm_le`,
-  `IsBoundarySolution.norm_sub_sub_le`: energy estimates and continuous dependence on the initial
-  value, the forcing and the boundary data.
+* `IsBoundarySolution.norm_sub_le`, `IsBoundarySolution.norm_le`: energy estimates.
 * `IsBoundarySolution.hasDerivWithinAt_norm_sq`: the energy identity
   `d/dt ‖U‖² = 2 re ⟪A_max U + F, U⟫`; the boundary flux `re ⟪A_max U, U⟫` vanishes when `U(t)`
-  has homogeneous boundary values and `A` is skew-symmetric (`re_inner_eq_zero_of_mem_domain`).
+  has homogeneous boundary values and `A` is skew-symmetric.
 
 ## References
 
@@ -132,30 +129,6 @@ theorem isBoundarySolution_zero_iff (hle : A ≤ Amax) :
     ⟨fun _ _ => Amax.graph.zero_mem, fun t _ => hasDerivWithinAt_const t I (0 : E)⟩
   rw [isBoundarySolution_iff hle hG, sub_zero, add_zero, sub_zero]
 
-/-- **The solution depends on the lifting only through its traces**: if `G₁(t) − G₂(t)` has
-homogeneous boundary values for every `t`, the problems with the boundary values of `G₁` and of
-`G₂` have the same solutions. -/
-theorem isBoundarySolution_congr {G₁ G₂ : ℝ → E} (h : ∀ t ∈ I, G₁ t - G₂ t ∈ A.domain) :
-    IsBoundarySolution Amax A I F G₁ U ↔ IsBoundarySolution Amax A I F G₂ U := by
-  constructor
-  · rintro ⟨hU, hs⟩
-    refine ⟨hU, fun t ht => ?_⟩
-    have := A.domain.add_mem (hs t ht) (h t ht)
-    rwa [sub_add_sub_cancel] at this
-  · rintro ⟨hU, hs⟩
-    refine ⟨hU, fun t ht => ?_⟩
-    have := A.domain.sub_mem (hs t ht) (h t ht)
-    rwa [sub_sub_sub_cancel_right] at this
-
-omit [NormedSpace ℝ E] in
-/-- **Boundary values as traces**: if `D(A)` is the kernel of a trace map `γ` on `D(A_max)`,
-then `x − y ∈ D(A)` iff `γ x = γ y`, for `x, y ∈ D(A_max)`. -/
-theorem sub_mem_domain_iff_trace_eq {B : Type*} [AddCommGroup B] [Module 𝕜 B]
-    (γ : Amax.domain →ₗ[𝕜] B) (hγ : ∀ x : Amax.domain, γ x = 0 ↔ (x : E) ∈ A.domain)
-    (x y : Amax.domain) : (x : E) - y ∈ A.domain ↔ γ x = γ y := by
-  rw [← sub_eq_zero, ← map_sub, hγ]
-  rfl
-
 /-- Linearity: the difference of two boundary solutions solves the problem with the difference
 of the data. -/
 theorem IsBoundarySolution.sub {F₂ G₂ : ℝ → E} (hU : IsBoundarySolution Amax A I F G U)
@@ -211,38 +184,14 @@ theorem IsBoundarySolution.norm_le (hle : A ≤ Amax) (hA : A.IsDissipative) {a 
     _ ≤ ‖G t‖ + ‖U t - G t‖ := norm_add_le _ _
     _ ≤ _ := by gcongr; exact hU.norm_sub_le hle hA hG hc t ht
 
-/-- **Continuous dependence on the initial value, the forcing and the boundary data**: for two
-solutions with liftings `G₁`, `G₂` and forcings `F₁`, `F₂`,
-`‖(U₁ − G₁)(t) − (U₂ − G₂)(t)‖ ≤ ‖(U₁ − G₁)(a) − (U₂ − G₂)(a)‖ + ∫ₐᵗ ‖Φ₁ − Φ₂‖` with
-`Φᵢ = Fᵢ − Gᵢ' + A_max Gᵢ`. -/
-theorem IsBoundarySolution.norm_sub_sub_le (hle : A ≤ Amax) (hA : A.IsDissipative) {a b : ℝ}
-    {F₁ F₂ G₁ G₂ DG₁ DG₂ AG₁ AG₂ U₁ U₂ : ℝ → E}
-    (hG₁ : IsLifting Amax (Icc a b) G₁ DG₁ AG₁) (hG₂ : IsLifting Amax (Icc a b) G₂ DG₂ AG₂)
-    (hU₁ : IsBoundarySolution Amax A (Icc a b) F₁ G₁ U₁)
-    (hU₂ : IsBoundarySolution Amax A (Icc a b) F₂ G₂ U₂)
-    (hc : ContinuousOn ((F₁ - DG₁ + AG₁) - (F₂ - DG₂ + AG₂)) (Icc a b)) :
-    ∀ t ∈ Icc a b, ‖(U₁ t - G₁ t) - (U₂ t - G₂ t)‖ ≤ ‖(U₁ a - G₁ a) - (U₂ a - G₂ a)‖ +
-      ∫ s in a..t, ‖(F₁ s - DG₁ s + AG₁ s) - (F₂ s - DG₂ s + AG₂ s)‖ := by
-  have hW₁ := (isBoundarySolution_iff hle hG₁).1 hU₁
-  have hW₂ := (isBoundarySolution_iff hle hG₂).1 hU₂
-  exact hW₁.norm_sub_le_add_integral hA hW₂ hc
-
 /-- **Energy identity with boundary flux**: `d/dt ‖U‖² = 2 re ⟪A_max U + F, U⟫` within `I`. The
 term `re ⟪A_max U, U⟫` is the boundary flux: it vanishes for skew-symmetric `A` when `U(t)` has
-homogeneous boundary values (`re_inner_eq_zero_of_mem_domain`). -/
+homogeneous boundary values. -/
 theorem IsBoundarySolution.hasDerivWithinAt_norm_sq (hU : IsBoundarySolution Amax A I F G U)
     {t : ℝ} (ht : t ∈ I) :
     HasDerivWithinAt (fun s => ‖U s‖ ^ 2)
       (2 * RCLike.re ⟪Amax ⟨U t, hU.toIsStrongSolution.mem_domain ht⟩ + F t, U t⟫) I t :=
   hU.toIsStrongSolution.hasDerivWithinAt_norm_sq ht
-
-omit [NormedSpace ℝ E] in
-/-- For skew-symmetric `A ≤ A_max`, the flux `re ⟪A_max x, x⟫` vanishes on `D(A)`. -/
-theorem re_inner_eq_zero_of_mem_domain (hle : A ≤ Amax) (hA : A.IsSkewSymmetric)
-    (x : Amax.domain) (hx : (x : E) ∈ A.domain) : RCLike.re ⟪Amax x, (x : E)⟫ = 0 := by
-  have e : Amax x = A ⟨x, hx⟩ := (hle.2 (x := ⟨x, hx⟩) (y := x) rfl).symm
-  rw [e]
-  exact hA.re_inner_self ⟨x, hx⟩
 
 /-- **Exact liftings**: if the lifting `G` itself solves `G' = A_max G + F` (e.g. the exact
 solution of a test problem, whose traces are prescribed), the solution with the boundary values

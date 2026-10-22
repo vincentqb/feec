@@ -23,15 +23,13 @@ they do not depend on how the thesis' `Γ` is realized.
 
 The loss of symmetry of `B` holds also for the systems run in Ch. 7: the Hodge wave equation
 (4.14) and the reduced system (4.15) of the grad–curl complex (`thesisComplex_B_not_symm`,
-`thesisComplex_reduced_B_not_symm`, with existence `thesisComplex_exists_B_not_symm`,
-`thesisComplex_reduced_exists_B_not_symm`), and for (4.18) (`symComplexB_B_not_symm`).
+`thesisComplex_reduced_B_not_symm`), and for (4.18) (`symComplexB_B_not_symm`).
 
 ## The mathematics
 
 1. *Mean from the skew part of the curl* (`inner_curl_skewLin`): for `E ∈ H̊(curl, M)` and the
    skew field `Ψ_{ab} = skewOf (x_a e_b)` (no boundary condition),
-   `⟪curl E, Ψ_{ab}⟫ = δ_{ab} ∫ tr E - ∫ E_{ab}`; hence `∫ E = 0` whenever `curl E` is symmetric
-   (`integral_eq_zero_of_curl_symm`).
+   `⟪curl E, Ψ_{ab}⟫ = δ_{ab} ∫ tr E - ∫ E_{ab}`; hence `∫ E = 0` whenever `curl E` is symmetric.
 2. *`B` loses symmetry* (`exists_not_symm_of_path`): if `Ḃ = curl E` and `B` stays symmetric,
    `⟪E(t), diag(1, -1, 0)⟫ ≡ 0`, whose derivative at `0` is `⟪Ė(0), diag(1, -1, 0)⟫`.
 3. *The Ch. 6 operator* (`adjoint_betaPair`): `d₁† (m, β) = S₁† m + curl β`, and `S₁† m` is
@@ -129,25 +127,6 @@ theorem inner_curl_skewLin (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B C 
           (Eventually.of_forall fun x => by simp)
   fin_cases a <;> fin_cases b <;>
     simp [Fintype.sum_prod_type, Fin.sum_univ_three]
-
-/-- **Zero mean from a symmetric curl**: if `B ∈ H̊(curl, M)` has symmetric curl, then
-`∫_Ω B = 0` (no condition on `B` itself; the trace condition of `L²(TSD)` is not needed). -/
-theorem integral_eq_zero_of_curl_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    {B C : L2F ℝ Ω Ix} (h : (B, C) ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).graph)
-    (hC : C ∈ symSub ℝ Ω) (a b : Fin 3) : ∫ x, B (a, b) x ∂volume.restrict Ω = 0 := by
-  have e : ∀ a b, (if a = b then ∑ i, ∫ x, B (i, i) x ∂volume.restrict Ω else 0) -
-      ∫ x, B (a, b) x ∂volume.restrict Ω = 0 := fun a b => by
-    rw [← inner_curl_skewLin hΩ hb h, inner_skewLin_eq_zero hΩ hb hC]
-  have e0 := e 0 0
-  have e1 := e 1 1
-  have e2 := e 2 2
-  simp only [Fin.sum_univ_three, ite_true] at e0 e1 e2
-  have htr : ∑ i, ∫ x, B (i, i) x ∂volume.restrict Ω = 0 := by
-    simp only [Fin.sum_univ_three]
-    linarith
-  have := e a b
-  rw [htr, ite_self, zero_sub, neg_eq_zero] at this
-  exact this
 
 /-- `⟪diag(1, -1, 0), diag(1, -1, 0)⟫ = 2 |Ω|`. -/
 theorem inner_constField_diagA (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
@@ -384,43 +363,6 @@ theorem thesisComplex_reduced_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBou
       linarith)
   simpa using hR'
 
-/-- **(4.14) from `(0, 0, β)`: existence, uniqueness, and loss of symmetry of `B`.** -/
-theorem thesisComplex_exists_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) :
-    ∀ T > 0, ∃ U, U 0 = ShortHilbertComplex.mk3 0 0 (betaL2 hΩ hb) ∧
-      Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U ∧
-      (∀ V, V 0 = ShortHilbertComplex.mk3 0 0 (betaL2 hΩ hb) →
-        Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 V → EqOn V U (Icc 0 T)) ∧
-      ∃ t ∈ Icc 0 T, (U t 2 : L2F ℝ Ω Ix) ∉ symSub ℝ Ω := by
-  intro T hT
-  obtain ⟨h, -⟩ := thesisComplex_adjoint_betaL hΩ hb
-  have hD : ShortHilbertComplex.mk3 (0 : L2F ℝ Ω (Fin 3)) (0 : L2F ℝ Ω Ix) (betaL2 hΩ hb) ∈
-      (gradCurl ℝ hΩ).wave.domain :=
-    (gradCurl ℝ hΩ).mem_wave_domain.2 ⟨Submodule.zero_mem _, Submodule.zero_mem _,
-      Submodule.zero_mem _, h⟩
-  have hU := (gradCurl ℝ hΩ).toHilbertComplex.isStrongSolution_waveGroup hD T
-  have h0 : (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S 0
-      (ShortHilbertComplex.mk3 0 0 (betaL2 hΩ hb)) = ShortHilbertComplex.mk3 0 0 (betaL2 hΩ
-          hb) := by
-    rw [(gradCurl ℝ hΩ).toHilbertComplex.waveGroup.map_zero]; rfl
-  refine ⟨_, h0, hU, fun V hV0 hV => hV.unique (gradCurl ℝ hΩ).isSkewAdjoint_wave.isDissipative hU
-    (by rw [hV0, h0]), thesisComplex_B_not_symm hΩ hb hne T hT _ hU ?_ ?_⟩
-  · rw [h0]; rfl
-  · rw [h0]; rfl
-
-/-- **(4.15) from `(0, β)`: existence, uniqueness, and loss of symmetry of `B`.** -/
-theorem thesisComplex_reduced_exists_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) {T : ℝ} (hT : 0 < T) :
-    ∃ E B, E 0 = 0 ∧ B 0 = betaL2 hΩ hb ∧ (gradCurl ℝ hΩ).IsReducedSolution (Icc 0 T) E B ∧
-      (∀ E' B', E' 0 = 0 → B' 0 = betaL2 hΩ hb →
-        (gradCurl ℝ hΩ).IsReducedSolution (Icc 0 T) E' B' →
-          EqOn E' E (Icc 0 T) ∧ EqOn B' B (Icc 0 T)) ∧
-      ∃ t ∈ Icc 0 T, B t ∉ symSub ℝ Ω := by
-  obtain ⟨h, -⟩ := thesisComplex_adjoint_betaL hΩ hb
-  obtain ⟨E, B, hE, hB, hR, -, -, huniq⟩ :=
-    (gradCurl ℝ hΩ).existsUnique_reducedSolution (Submodule.zero_mem _) h 0 T
-  exact ⟨E, B, hE, hB, hR, huniq, thesisComplex_reduced_B_not_symm hΩ hb hne hT hR hB⟩
-
 /-- **(4.18) on bounded domains: `B ∈ L²(T)` loses symmetry.** For the complex (4.16)
 `H̊² → H̊(curl, S) → L²(T)`, from `(0, E₀, β)`, any `E₀ ∈ L²(S)`: every strong solution has
 `B(t)` non-symmetric for some `t ∈ [0, T]`, `T > 0`. [QuennevilleBelair2015], (4.18) -/
@@ -559,23 +501,6 @@ theorem invariantCore₁_le_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
         hd₁ ((S.mem_wave_domain).1 hyD).2.1⟩
   rwa [(isClosed_tsd₀ hΩ hb).closure_eq] at this
 
-/-- **`K* ⊊ K`**: for every complex with `d₁ ⊆ (S₁, curl)` on `H̊(curl, M)`, every `m` and every
-`S₂`, the TSD magnetic datum `(m, β)` is not in `S₂*`. -/
-theorem betaPair_not_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (W2B ℝ Ω))
-    (hd₁ : S.d₁ ≤ (bggComplex ℝ hΩ).d₁) (S₂ : Submodule ℝ (W2B ℝ Ω)) [S₂.HasOrthogonalProjection]
-    (m : L2F ℝ Ω (Fin 3)) : betaPair hΩ hb m ∉ S.invariantCore₂ (tsd Ω) S₂ := by
-  intro hmem
-  obtain ⟨h, -, e⟩ := adjoint_betaPair hΩ hb S hd₁ m
-  have hd : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain := fun u hu => by
-    rw [← bggComplex_d₁_domain hΩ]; exact hd₁.1 hu
-  have h1 := invariantCore₁_le_tsd₀ hΩ hb S hd S₂
-    (ShortHilbertComplex.adjoint_mem_invariantCore₁ (S := S) ⟨_, h⟩ hmem)
-  have h2 := (Submodule.mem_orthogonal' _ _).1 (constField_mem_orthogonal_tsd₀ hΩ hb diagA) _ h1
-  rw [real_inner_comm, e] at h2
-  have := volume_real_pos hΩ hb hne
-  linarith
-
 end Generic
 
 /-- **Ch. 6 on bounded domains: `B` loses symmetry.** For the BGG complex (5.1) on any nonempty
@@ -642,8 +567,8 @@ theorem bggComplex_verdict (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
 /-- **The invariant core for the Ch. 6 complex** (`K = {0} × L²(TSD) × S₂`): every datum
 `U₀ ∈ D(L) ∩ K*` has, on every `[0, T]`, a classical solution, unique among strong solutions;
 it stays in `K* ⊆ K`, and its electric and magnetic parts solve the reduced system (4.15).
-The content is `S₁* ⊆ L²(TSD₀)` (`invariantCore₁_le_tsd₀`) and `K* ⊊ K`
-(`betaPair_not_mem_invariantCore₂`); no non-stationary element of `K*` is exhibited.
+The content is `S₁* ⊆ L²(TSD₀)` (`invariantCore₁_le_tsd₀`) and `K* ⊊ K`; no non-stationary
+element of `K*` is exhibited.
 [QuennevilleBelair2015], Prop. 4.17, corrected, for the Ch. 6 complex -/
 theorem bggComplex_invariantCore_propagates (hΩ : IsOpen Ω) (S₂ : Submodule ℝ (W2B ℝ Ω))
     [S₂.HasOrthogonalProjection]

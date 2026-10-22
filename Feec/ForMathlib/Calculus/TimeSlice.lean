@@ -50,11 +50,6 @@ theorem contDiff_finCons_right {k : WithTop ℕ∞} (t : 𝕜) :
     ContDiff 𝕜 k fun x : Fin n → 𝕜 => (Fin.cons t x : Fin (n + 1) → 𝕜) :=
   contDiff_finCons.comp (contDiff_const.prodMk contDiff_id)
 
-/-- Space slices `t ↦ (t, x)` are smooth. -/
-theorem contDiff_finCons_left {k : WithTop ℕ∞} (x : Fin n → 𝕜) :
-    ContDiff 𝕜 k fun t : 𝕜 => (Fin.cons t x : Fin (n + 1) → 𝕜) :=
-  contDiff_finCons.comp (contDiff_id.prodMk contDiff_const)
-
 /-- `∂ₜ (t, x) = e₀`. -/
 theorem hasDerivAt_finCons_left (x : Fin n → 𝕜) (t : 𝕜) :
     HasDerivAt (fun s => (Fin.cons s x : Fin (n + 1) → 𝕜)) (Pi.single 0 1) t := by
@@ -85,12 +80,6 @@ theorem DifferentiableAt.hasDerivAt_finCons_left {φ : (Fin (n + 1) → 𝕜) �
     {x : Fin n → 𝕜} (hφ : DifferentiableAt 𝕜 φ (Fin.cons t x)) :
     HasDerivAt (fun s => φ (Fin.cons s x)) (partialDeriv 0 φ (Fin.cons t x)) t :=
   hφ.hasFDerivAt.comp_hasDerivAt t (_root_.hasDerivAt_finCons_left x t)
-
-/-- `∂₀ φ (t, x)` is the derivative of `s ↦ φ (s, x)` at `t`. -/
-theorem DifferentiableAt.partialDeriv_zero_finCons {φ : (Fin (n + 1) → 𝕜) → F} {t : 𝕜}
-    {x : Fin n → 𝕜} (hφ : DifferentiableAt 𝕜 φ (Fin.cons t x)) :
-    partialDeriv 0 φ (Fin.cons t x) = deriv (fun s => φ (Fin.cons s x)) t :=
-  hφ.hasDerivAt_finCons_left.deriv.symm
 
 /-- **Spatial partial derivatives of a time slice**: `∂_c (φ (t, ·)) x = ∂_{c+1} φ (t, x)`. -/
 theorem partialDeriv_comp_finCons {φ : (Fin (n + 1) → 𝕜) → F} {t : 𝕜} {x : Fin n → 𝕜}

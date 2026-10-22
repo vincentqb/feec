@@ -584,21 +584,12 @@ theorem ofBlocks_mem_weylSpace {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : E ∈ ST
   (weyl_iff _).2 ⟨E, B, (mem_STF.1 hE).1, (mem_STF.1 hE).2, (mem_STF.1 hB).1,
     (mem_STF.1 hB).2, rfl⟩
 
-/-- `blkE` is additive. -/
-theorem blkE_add (C C' : Tensor4) : blkE (C + C') = blkE C + blkE C' := by ext i j; rfl
-/-- `blkB` is additive. -/
-theorem blkB_add (C C' : Tensor4) : blkB (C + C') = blkB C + blkB C' := by ext i j; rfl
-/-- `blkE` is homogeneous. -/
-theorem blkE_smul (r : ℝ) (C : Tensor4) : blkE (r • C) = r • blkE C := by ext i j; rfl
-/-- `blkB` is homogeneous. -/
-theorem blkB_smul (r : ℝ) (C : Tensor4) : blkB (r • C) = r • blkB C := by ext i j; rfl
-
 /-- Weyl tensors are parametrised linearly by their electric and magnetic blocks. -/
 def weylEquiv : weylSpace ≃ₗ[ℝ] STF × STF where
   toFun C := (⟨blkE C, blkE_mem_STF C.2⟩, ⟨blkB C, blkB_mem_STF C.2⟩)
   invFun EB := ⟨ofBlocks EB.1.1 EB.2.1 EB.2.1 (-EB.1.1), ofBlocks_mem_weylSpace EB.1.2 EB.2.2⟩
-  map_add' C C' := Prod.ext (Subtype.ext (blkE_add _ _)) (Subtype.ext (blkB_add _ _))
-  map_smul' r C := Prod.ext (Subtype.ext (blkE_smul _ _)) (Subtype.ext (blkB_smul _ _))
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
   left_inv := by
     rintro ⟨C, hC⟩
     obtain ⟨E, B, -, -, -, -, rfl⟩ := (weyl_iff C).1 hC

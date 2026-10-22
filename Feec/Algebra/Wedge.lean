@@ -25,14 +25,12 @@ graded derivation.
 
 ## Main results
 
-* bilinearity, units (`wedgeForm_one_left`, `wedgeForm_one_right`) and degrees
+* bilinearity, the unit `wedgeForm_one_left` and degrees
   (`IsDeg.wedgeForm`);
 * `wedgeForm_assoc`: **associativity** `(ω ∧ η) ∧ ζ = ω ∧ (η ∧ ζ)`;
 * `wedgeForm_comm`: **graded commutativity** `η ∧ ω = (-1)^{kl} ω ∧ η`;
 * `wedge_wedgeForm`, `wedge_wedgeForm_right`: associativity with a covector,
   `ξ ∧ (ω ∧ η) = (ξ ∧ ω) ∧ η = (-1)^k ω ∧ (ξ ∧ η)`;
-* `wedgeForm_oneForm_left`, `wedgeForm_oneForm_right`: **compatibility with
-  `Feec.ExteriorFibre.wedge`** for `1`-forms, `ξ^♭ ∧ ω = ξ ∧ ω = (-1)^k ω ∧ ξ^♭`;
 * `Feec.Koszul.extDeriv_wedgeForm`: **the Leibniz rule** `d (ω ∧ η) = dω ∧ η + (-1)^k ω ∧ dη`
   for polynomial forms.
 
@@ -65,16 +63,9 @@ def shuffleSgn (s t : Finset d) : R := ∏ a ∈ s, sgn a t
 @[simp] theorem shuffleSgn_empty_right (s : Finset d) : (shuffleSgn s ∅ : R) = 1 := by
   simp [shuffleSgn, sgn]
 
-theorem shuffleSgn_singleton_left (j : d) (t : Finset d) :
-    (shuffleSgn {j} t : R) = sgn j t := by
-  simp [shuffleSgn]
-
 theorem shuffleSgn_insert_left {j : d} {s : Finset d} (hj : j ∉ s) (t : Finset d) :
     (shuffleSgn (insert j s) t : R) = sgn j t * shuffleSgn s t := by
   rw [shuffleSgn, prod_insert hj]; rfl
-
-theorem sgn_sq (j : d) (s : Finset d) : (sgn j s : R) ^ 2 = 1 := by
-  rw [sq, sgn_mul_self]
 
 theorem shuffleSgn_mul_self (s t : Finset d) : (shuffleSgn s t : R) * shuffleSgn s t = 1 := by
   rw [shuffleSgn, ← prod_mul_distrib]
@@ -162,9 +153,6 @@ theorem wedgeForm_smul_right (c : R) (ω η : Finset d → R) :
   funext u; simp only [wedgeForm_apply, Pi.smul_apply, smul_eq_mul, mul_sum]
   exact sum_congr rfl fun _ _ => by ring
 
-theorem wedgeForm_neg_left (ω η : Finset d → R) : wedgeForm (-ω) η = -wedgeForm ω η := by
-  rw [show -ω = (-1 : R) • ω by simp, wedgeForm_smul_left]; simp
-
 theorem wedgeForm_sum_left {ι : Type*} (u : Finset ι) (ω : ι → Finset d → R) (η : Finset d → R) :
     wedgeForm (∑ i ∈ u, ω i) η = ∑ i ∈ u, wedgeForm (ω i) η := by
   funext v; simp only [wedgeForm_apply, Finset.sum_apply, mul_sum, sum_mul]
@@ -180,15 +168,6 @@ theorem wedgeForm_sum_right {ι : Type*} (u : Finset ι) (ω : Finset d → R) (
   funext u
   rw [wedgeForm_apply, sum_eq_single ∅ (fun s _ hs => by simp [hs]) (by simp)]
   simp
-
-/-- The unit `dx_∅ = 1` is a right identity. -/
-@[simp] theorem wedgeForm_one_right (ω : Finset d → R) : wedgeForm ω (Pi.single ∅ 1) = ω := by
-  funext u
-  rw [wedgeForm_apply, sum_eq_single u (fun s hs hsu => ?_) (by simp)]
-  · simp
-  · have : u \ s ≠ ∅ := fun h =>
-      hsu (le_antisymm (mem_powerset.1 hs) (sdiff_eq_empty_iff_subset.1 h))
-    simp [this]
 
 /-- Degrees add: the exterior product of a `k`-form and an `l`-form is a `(k + l)`-form. -/
 theorem IsDeg.wedgeForm {k l : ℕ} {ω η : Finset d → R} (hω : IsDeg k ω) (hη : IsDeg l η) :
@@ -222,22 +201,6 @@ theorem wedgeForm_comm {k l : ℕ} {ω η : Finset d → R} (hω : IsDeg k ω) (
         (shuffleSgn (u \ s) s * ω (u \ s) * η s) * h
     · rw [hω _ hk]; ring
   · rw [hη _ hl]; ring
-
-/-- The product of two basis forms: `(a dx_s ∧ b dx_t)_u = ε(s, t) a b` if `u = s ⊔ t`, else `0`. -/
-theorem wedgeForm_single_single_apply (s t u : Finset d) (a b : R) :
-    wedgeForm (Pi.single s a) (Pi.single t b) u =
-      if s ⊆ u ∧ u \ s = t then shuffleSgn s t * a * b else 0 := by
-  rw [wedgeForm_apply]
-  split_ifs with h
-  · rw [sum_eq_single s (fun s' _ hs' => by simp [hs']) (fun hs => absurd (mem_powerset.2 h.1) hs),
-      h.2]
-    simp
-  · refine sum_eq_zero fun s' hs' => ?_
-    by_cases hs : s' = s
-    · subst hs
-      have : u \ s' ≠ t := fun e => h ⟨mem_powerset.1 hs', e⟩
-      simp [this]
-    · simp [hs]
 
 /-! ### Exterior multiplication by a covector -/
 
@@ -397,19 +360,6 @@ theorem isDeg_oneForm (ξ : d → R) : IsDeg 1 (oneForm ξ) := by
     intro h; exact absurd (by rw [h, card_empty]) hs
   exact h.wedge ξ
 
-/-- **Compatibility with exterior multiplication by a covector**: `ξ^♭ ∧ ω = ξ ∧ ω`. -/
-theorem wedgeForm_oneForm_left (ξ : d → R) (ω : Finset d → R) :
-    wedgeForm (oneForm ξ) ω = wedge ξ ω := by
-  rw [oneForm, ← wedge_wedgeForm, wedgeForm_one_left]
-
-/-- `ω ∧ ξ^♭ = (-1)^k ξ ∧ ω` for a `k`-form `ω`. -/
-theorem wedgeForm_oneForm_right (ξ : d → R) {k : ℕ} {ω : Finset d → R} (hω : IsDeg k ω) :
-    wedgeForm ω (oneForm ξ) = (-1 : R) ^ k • wedge ξ ω := by
-  have h := wedge_wedgeForm_right ξ hω (Pi.single ∅ 1)
-  rw [wedgeForm_one_right] at h
-  rw [h, smul_smul, ← pow_add, ← two_mul, pow_mul]
-  simp [oneForm]
-
 end Feec.ExteriorFibre
 
 namespace Feec.Koszul
@@ -422,10 +372,6 @@ variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d]
 
 /-- The coefficientwise partial derivative `∂ⱼ ω` of a polynomial form. -/
 def pderivForm (j : d) (ω : PolyForm R d) : PolyForm R d := fun s => pderiv j (ω s)
-
-omit [LinearOrder d] in
-theorem isDeg_pderivForm {k : ℕ} {ω : PolyForm R d} (h : IsDeg k ω) (j : d) :
-    IsDeg k (pderivForm j ω) := fun s hs => by simp [Koszul.pderivForm, h s hs]
 
 /-- `d = Σⱼ dxⱼ ∧ ∂ⱼ` on polynomial forms. -/
 theorem extDeriv_eq_sum_wedge [Fintype d] (ω : PolyForm R d) :

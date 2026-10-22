@@ -239,12 +239,6 @@ section Orbit
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-omit [Fintype ι] [∀ i, CompleteSpace (W i)] [∀ i, NormedSpace ℝ (W i)]
-  [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-private theorem apply_eq_of_eq'' {A B : PiLp 2 W →ₗ.[𝕜] PiLp 2 W} (h : A = B) (x : A.domain)
-    (y : B.domain) (hxy : (x : PiLp 2 W) = y) : A x = B y := by
-  subst h; rw [Subtype.ext hxy]
-
 /-- `L e^{tL} x = e^{tL} L x` on `D(L)`. -/
 theorem wave_waveGroup {H : HilbertComplex 𝕜 c W} {x : PiLp 2 W} (hx : x ∈ H.wave.domain)
     (t : ℝ) :
@@ -253,8 +247,8 @@ theorem wave_waveGroup {H : HilbertComplex 𝕜 c W} {x : PiLp 2 W} (hx : x ∈ 
   have hg := H.generator_waveGroup
   have hx' : x ∈ H.waveGroup.generator.domain := by rw [hg]; exact hx
   have h := H.waveGroup.generator_apply_S ⟨x, hx'⟩ t
-  rwa [apply_eq_of_eq'' hg _ ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx t⟩ rfl,
-    apply_eq_of_eq'' hg _ ⟨x, hx⟩ rfl] at h
+  rwa [LinearPMap.apply_eq_of_eq hg _ ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx t⟩ rfl,
+    LinearPMap.apply_eq_of_eq hg _ ⟨x, hx⟩ rfl] at h
 
 variable (H : HilbertComplex 𝕜 c W)
 

@@ -204,9 +204,6 @@ theorem isMDissipative_neg_hodgeLaplacian : (-H.hodgeLaplacian).IsMDissipative :
 /-- The harmonic forms `⊕ ℌⁱ ⊆ PiLp 2 W`: the kernel of the Hodge Laplacian. -/
 def harmonicSum : Submodule 𝕜 (PiLp 2 W) := H.hodgeLaplacian.ker
 
-theorem mem_harmonicSum_iff {x : PiLp 2 W} : x ∈ H.harmonicSum ↔ ∀ i, x i ∈ H.harmonic i :=
-  H.mem_ker_hodgeLaplacian_iff
-
 theorem isClosed_harmonicSum : _root_.IsClosed (H.harmonicSum : Set (PiLp 2 W)) := by
   have h : H.hodgeLaplacian† = H.hodgeLaplacian := H.isSelfAdjoint_hodgeLaplacian
   have hc : H.hodgeLaplacian.IsClosed := h ▸ adjoint_isClosed H.dense_hodgeLaplacian_domain
@@ -226,7 +223,7 @@ theorem mem_ker_totalD_iff {x : PiLp 2 W} : x ∈ H.totalD.ker ↔ ∀ i, x i �
 /-- `⊕ ℌⁱ = ker 𝐝 ∩ ker 𝐝*`. -/
 theorem mem_harmonicSum_iff_ker {x : PiLp 2 W} :
     x ∈ H.harmonicSum ↔ x ∈ H.totalD.ker ∧ x ∈ H.dual.totalD.ker := by
-  rw [mem_harmonicSum_iff, mem_ker_totalD_iff, H.dual.mem_ker_totalD_iff]
+  rw [harmonicSum, mem_ker_hodgeLaplacian_iff, mem_ker_totalD_iff, H.dual.mem_ker_totalD_iff]
   simp only [harmonic_eq_cycles_inf_dual, Submodule.mem_inf]
   exact ⟨fun h => ⟨fun i => (h i).1, fun i => (h i).2⟩, fun h i => ⟨h.1 i, h.2 i⟩⟩
 

@@ -255,10 +255,6 @@ theorem dense_graph (ζ : H.totalD.GraphSpace) (δ : ℝ) (hδ : 0 < δ) :
 theorem isApproximating : IsApproximating F.l F.Kh :=
   Subcomplex.isApproximating F.dense_graph
 
-theorem norm_ellipticProjection_le (h : κ) (ζ : H.totalD.GraphSpace) :
-    ‖ellipticProjection (F.Kh h) ζ‖ ≤ ellipticConst H * ‖ζ‖ :=
-  (F.V h).norm_ellipticProjection_le ζ
-
 /-- **Quasi-optimality of the elliptic projection**: `‖ζ - Pₕ ζ‖ ≤ (1 + C_P) ‖ζ - w‖` for every
 `w ∈ Vₕ`. -/
 theorem norm_sub_ellipticProjection_le (h : κ) (ζ : H.totalD.GraphSpace) {w : H.totalD.GraphSpace}
@@ -1055,7 +1051,8 @@ theorem _root_.Feec.HilbertComplex.constrainedFEEC_nonvacuous :
     not_isReducing_firstSub, fun T hT => ?_, ?_⟩
   · obtain ⟨x, hxK, t, ht, hout, hpos, hlim, -⟩ :=
       constrainedFEEC_residual_not_isReducing_of_grading F
-        (p := fun i : Fin 3 => decide (Odd i.val)) fin3_parity
+        (p := fun i : Fin 3 => decide (Odd i.val))
+        (fun _ _ h => ComplexShape.window_parity h)
         (fun x hx => reversal_mem_totalSub hx)
         (fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩) not_isReducing_firstSub hT
     exact ⟨x, hxK, t, ht, hout, hpos, hlim⟩

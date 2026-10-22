@@ -21,7 +21,7 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
   `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class` (`ConstrainedFEEC.rate_le`), which implies
   `constrainedFEEC_rate` since `1 + 2t ≤ (1 + t)²` (`ConstrainedFEEC.rate_le_constrainedFEEC`).
   The full statement of `constrainedFEEC` is re-derived from `approxFEEC`
-  (`ConstrainedFEEC.constrainedFEEC_of_approxFEEC`, from `ConstrainedFEEC.approxFEEC_verdict`):
+  (`ConstrainedFEEC.constrainedFEEC_of_approxFEEC`, from the verdict of `ConstrainedFEEC.toApprox`):
   it is the special case `ιₕ` = inclusion, `πₕ = Πₕ`. The consistency defect of this special case
   is in general not zero: by `ConstrainedFEEC.ellipticProj_defect` it is `Δₕ(L y) - Δₕ(y)` along
   the orbit,
@@ -55,11 +55,6 @@ open _root_.Feec.HodgeWave
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
 
-omit [Fintype ι] [∀ i, CompleteSpace (W i)] in
-private theorem apply_eq_of_eq''' {A B : PiLp 2 W →ₗ.[𝕜] PiLp 2 W} (h : A = B) (x : A.domain)
-    (y : B.domain) (hxy : (x : PiLp 2 W) = y) : A x = B y := by
-  subst h; rw [Subtype.ext hxy]
-
 /-- **The weak form of the wave operator**: `⟪L y, ψ⟫ = ⟪𝐝 y, ψ⟫ - ⟪y, 𝐝 ψ⟫` for `y ∈ D(L)`,
 `ψ ∈ D(𝐝)`. -/
 theorem inner_wave_left (H : HilbertComplex 𝕜 c W) (y : H.wave.domain) (ψ : H.totalD.domain) :
@@ -68,7 +63,7 @@ theorem inner_wave_left (H : HilbertComplex 𝕜 c W) (y : H.wave.domain) (ψ : 
         ⟪(y : PiLp 2 W), H.totalD ψ⟫_𝕜 := by
   have h₀ := mem_domain_sub_adjoint H y.2
   have e : H.wave y = H.totalD ⟨y, h₀.1⟩ - H.totalD† ⟨y, h₀.2⟩ := by
-    rw [apply_eq_of_eq''' H.wave_eq y ⟨y, h₀⟩ rfl]; rfl
+    rw [LinearPMap.apply_eq_of_eq H.wave_eq y ⟨y, h₀⟩ rfl]; rfl
   have h2 : (y : PiLp 2 W) ∈ H.totalD†.domain := h₀.2
   have hf : ⟪H.totalD† ⟨y, h2⟩, (ψ : PiLp 2 W)⟫_𝕜 = ⟪(y : PiLp 2 W), H.totalD ψ⟫_𝕜 :=
     adjoint_isFormalAdjoint H.dense_totalD_domain ⟨y, h2⟩ ψ
@@ -157,7 +152,7 @@ theorem liftXh_ellipticProj (h : κ) (ζ : H.totalD.GraphSpace) :
 
 theorem norm_ellipticProj_le (h : κ) : ‖F.ellipticProj h‖ ≤ ellipticConst H :=
   ContinuousLinearMap.opNorm_le_bound _ (ellipticConst_nonneg H) fun ζ =>
-    (norm_graphFst_le _).trans (F.norm_ellipticProjection_le h ζ)
+    (norm_graphFst_le _).trans ((F.V h).norm_ellipticProjection_le ζ)
 
 /-- The total cochain projection `Πₕ` as a bounded map `W → Xₕ`. -/
 def piProjL (h : κ) : PiLp 2 W →L[𝕜] F.Xh h :=
@@ -182,7 +177,8 @@ theorem norm_ellipticDefect_apply_le (h : κ) (ζ : H.totalD.GraphSpace) :
 theorem norm_ellipticDefect_le (h : κ) : ‖F.ellipticDefect h‖ ≤ ellipticConst H + 1 :=
   ContinuousLinearMap.opNorm_le_bound _ (by have := ellipticConst_nonneg H; positivity)
     fun ζ => (F.norm_ellipticDefect_apply_le h ζ).trans (by
-      have := F.norm_ellipticProjection_le h ζ
+      have : ‖ellipticProjection (F.Kh h) ζ‖ ≤ ellipticConst H * ‖ζ‖ :=
+        (F.V h).norm_ellipticProjection_le ζ
       have := norm_sub_le (ellipticProjection (F.Kh h) ζ) ζ
       nlinarith [norm_nonneg ζ])
 
@@ -353,10 +349,6 @@ theorem exists_eq_sol {T : ℝ} (hT : 0 ≤ T) {h : κ} {ξh ξh' : ℝ → H.to
   simp only [sub_zero]
   rfl
 
-/-- **The approximating FEEC verdict of a constrained FEEC discretization** (the statement of
-`constrainedFEEC` follows from it: `constrainedFEEC_of_approxFEEC`). -/
-theorem approxFEEC_verdict : F.toApprox.Verdict F.toCore := approxFEEC _ _
-
 variable {F} in
 /-- **Rate classes transfer**, with `C ↦ (1 + C_P) C`, `C' ↦ 2 (1 + C_P) C`. -/
 def RateClass.toApprox {T : ℝ} (R : F.RateClass T) : F.toApprox.RateClass T where
@@ -462,7 +454,7 @@ theorem tendsto_incl_ellipticProj (x : H.wave.domain) :
       (mem_singleton (waveLift H x)))
 
 /-- **The constrained FEEC theorem, re-derived from the approximating one**: the statement of
-`constrainedFEEC`, verbatim, proved from `approxFEEC_verdict` (the special case `ιₕ` = inclusion,
+`constrainedFEEC`, verbatim, proved from the verdict of `approxFEEC` for `toApprox` (the special case `ιₕ` = inclusion,
 `πₕ = Πₕ`, core `D(L²)`). The bridges are `toApprox_sol` (the semi-discrete solutions of (4.10)
 from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`), `exists_eq_sol` (every semi-discrete solution
 is a discrete orbit), the density of the core (`mem_toCore_closure`), `tendsto_incl_ellipticProj`,
@@ -524,7 +516,7 @@ theorem constrainedFEEC_of_approxFEEC :
           (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
         ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
           infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))) := by
-  obtain ⟨V1, V2, -, V3, -, V4, -, V5, V6, V7⟩ := F.approxFEEC_verdict
+  obtain ⟨V1, V2, -, V3, -, V4, -, V5, V6, V7⟩ := approxFEEC F.toApprox F.toCore
   have hconv : ∀ (T : ℝ) (x : H.wave.domain), TendstoUniformlyOn
       (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
       (fun t => H.waveGroup.S t x) F.l (Icc 0 T) := fun T x =>

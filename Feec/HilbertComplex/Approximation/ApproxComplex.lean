@@ -799,7 +799,7 @@ variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 
 /-- **The approximating FEEC discretization of an approximating family of discrete complexes**:
 `Xₕ = Vₕ` (total space, with the inner product of `Vₕ`), `Lₕ` the Hodge wave operator of `Vₕ`
-(`ApproxFEEC.ofComplex_L`), `ιₕ = iₕ`, `πₕ` the left inverses. -/
+(`HilbertComplex.waveL_apply`), `ιₕ = iₕ`, `πₕ` the left inverses. -/
 def ofComplex : ApproxFEEC H κ where
   K := F.K
   isClosed_K := F.isClosed_K
@@ -812,12 +812,6 @@ def ofComplex : ApproxFEEC H κ where
   proj_incl h v := F.toFamily.projL_inclL h v
   bound := ⟨F.toFamily.boundConst, fun h => ⟨F.toFamily.norm_inclL_le h,
     F.toFamily.norm_projL_le h⟩⟩
-
-/-- The discrete generator is the Hodge wave operator `𝐝ₕ - 𝐝ₕ*` of `Vₕ`. -/
-theorem ofComplex_L (h : κ) (v : PiLp 2 (F.toFamily.V h)) :
-    (ofComplex F).L h v = (F.toFamily.cpx h).wave
-      ⟨v, (F.toFamily.cpx h).mem_wave_domain_of_finiteDimensional v⟩ :=
-  (F.toFamily.cpx h).waveL_apply v
 
 /-- The discrete group is the wave group of `Vₕ`. -/
 theorem ofComplex_group (h : κ) (t : ℝ) (v : PiLp 2 (F.toFamily.V h)) :
@@ -905,7 +899,8 @@ theorem approxFEEC_ofComplex [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTowe
       ∀ t, ∀ v ∈ Kh, ((ofComplex F).group h).S t v ∈ Kh := fun h Kh => by
     rw [(S.cpx h).isReducing_iff_waveGroup_invariant Kh, C0Group.map_le_iff_forall]
     exact forall_congr' fun t => forall₂_congr fun v _ => by rw [ofComplex_group]; rfl
-  refine ⟨approxFEEC _ _, dense_ofComplexCore_data F, ofComplex_L F, ofComplex_group F, hiff,
+  refine ⟨approxFEEC _ _, dense_ofComplexCore_data F, fun h => (F.toFamily.cpx h).waveL_apply,
+    ofComplex_group F, hiff,
     fun h Sh hS v hv t => ?_, fun h Kh hK hKK v hv t => ?_,
     S.norm_graphFst_sub_inclL_ellProj_le, S.norm_defectOp_apply_le, F.tendsto_inclL_ellProj,
     F.tendsto_defectOp⟩

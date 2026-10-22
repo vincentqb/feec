@@ -107,12 +107,6 @@ theorem mem_stationary_of_wave_eq_zero (x : S.wave.domain) (h0 : S.wave x = 0) :
   obtain ⟨hx', e⟩ := key _ S.toHilbertComplex.generator_waveGroup
   exact C0Group.mem_stationary.2 fun t => C0Group.S_apply_eq_of_generator_eq_zero ⟨_, hx'⟩ e t
 
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-private theorem apply_eq_zero_of_coe {E F : Type*} [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F]
-    [Module 𝕜 F] {T : E →ₗ.[𝕜] F} (x : T.domain) (h : (x : E) = 0) : T x = 0 := by
-  have : x = 0 := Subtype.ext h
-  rw [this, LinearPMap.map_zero]
-
 omit [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
 /-- `L (0, E, 0) = (-d₀† E, 0, d₁ E)`. -/
 private theorem wave_inj₁_eq (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀†).domain) :
@@ -206,7 +200,7 @@ theorem coreSub_le_stationary_iff :
     rw [S.wave_apply_zero]
     exact (congrArg Neg.neg e2).trans neg_zero
   · show ((S.wave y : PiLp 2 (W3 W₀ W₁ W₂)) 1 : W₁) = 0
-    rw [S.wave_apply_one, apply_eq_zero_of_coe _ hy0]
+    rw [S.wave_apply_one, LinearPMap.apply_eq_zero_of_coe_eq_zero _ hy0]
     exact (sub_eq_zero.2 hu0.symm)
   · show ((S.wave y : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) = 0
     rw [S.wave_apply_two]
@@ -316,7 +310,7 @@ theorem exists_eigenfield_of_isEigenSq_mem_coreSub {ω : ℝ} (hω : 0 < ω)
   have c0 : ((S.wave ⟨x, h⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) = -(S.d₀† ⟨_, hE2⟩) :=
     S.wave_apply_zero _
   have c1 : ((S.wave ⟨x, h⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 1 : W₁) = -(S.d₁† ⟨_, hB⟩) := by
-    rw [S.wave_apply_one, apply_eq_zero_of_coe _ hx0', zero_sub]
+    rw [S.wave_apply_one, LinearPMap.apply_eq_zero_of_coe_eq_zero _ hx0', zero_sub]
   have c2 : ((S.wave ⟨x, h⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) = S.d₁ ⟨_, hE1⟩ :=
     S.wave_apply_two _
   have e2 : S.d₀† ⟨_, hE2⟩ = 0 := by
@@ -341,7 +335,8 @@ theorem exists_eigenfield_of_isEigenSq_mem_coreSub {ω : ℝ} (hω : 0 < ω)
         (inj₂ (𝕜 := 𝕜) W₀ W₁ W₂ ((-r) • b) 1 : W₁) = ((-r) • a : W₁)
       rw [inj₁_apply_one, inj₂_apply_one]
       exact add_zero _
-    rw [S.wave_apply_one, apply_eq_zero_of_coe (T := S.d₀) _ hl00, zero_sub, neg_smul] at h1
+    rw [S.wave_apply_one, LinearPMap.apply_eq_zero_of_coe_eq_zero (T := S.d₀) _ hl00, zero_sub,
+      neg_smul] at h1
     exact neg_inj.1 h1
   have eB : S.d₁ ⟨_, hu1⟩ = (-r) • b := by
     have h2 : ((S.wave ⟨S.wave ⟨x, h⟩, h'⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) = (-r) • b := by
@@ -356,7 +351,7 @@ theorem exists_eigenfield_of_isEigenSq_mem_coreSub {ω : ℝ} (hω : 0 < ω)
   · -- the electric part vanishes: use `u = -d₁† B`
     refine ⟨_, ?_, hL1, hu1, hu2, eσ, ?_⟩
     · intro hu0
-      rw [apply_eq_zero_of_coe _ hu0] at eB
+      rw [LinearPMap.apply_eq_zero_of_coe_eq_zero _ hu0] at eB
       have hB0 : b = 0 := (smul_eq_zero.1 eB.symm).resolve_left (neg_ne_zero.2 r0)
       refine hx0 ?_
       rw [hxab, hE0, hB0, _root_.map_zero, _root_.map_zero, add_zero]

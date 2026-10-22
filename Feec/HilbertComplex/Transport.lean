@@ -154,11 +154,6 @@ theorem IsReducingPair.adjoint_part [CompleteSpace E] [CompleteSpace K]
   simp only [Submodule.coe_inner] at hadj
   convert hadj using 2 <;> rfl
 
-/-- Equal partial maps agree at equal points. -/
-theorem apply_eq_of_eq {T T' : E →ₗ.[𝕜] F} (hT : T = T') (x : T.domain) (y : T'.domain)
-    (hxy : (x : E) = y) : T x = T' y := by
-  subst hT; exact apply_congr' T x.2 y.2 hxy
-
 /-- The part of a partial map equal to `0` is `0`. -/
 theorem IsReducingPair.part_eq_zero (hT : T = 0) : h.part = 0 := by
   refine LinearPMap.ext ?_ fun x y hxy => ?_

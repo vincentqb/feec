@@ -224,11 +224,6 @@ variable (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)]
   (S₁ : Submodule 𝕜 W₁) (S₂ : Submodule 𝕜 W₂)
 
-/-- The parity `i ↦ (i odd)` of the window `Fin 3` flips along every arrow. -/
-theorem fin3_parity : ∀ i j : Fin 3, ComplexShape.fin3.Rel i j →
-    decide (Odd j.val) ≠ decide (Odd i.val) :=
-  fun _ _ h => ComplexShape.window_parity h
-
 /-- `K* = {x | e^{tL} x ∈ {0} × S₁ × S₂ for all t}`: the invariant core of the product constraint
 under the wave group. -/
 def coreSub : Submodule 𝕜 (PiLp 2 (W3 W₀ W₁ W₂)) :=
@@ -270,7 +265,8 @@ theorem coreSub_eq : S.coreSub S₁ S₂ = HilbertComplex.totalSub
   · intro hx
     have hK := mem_totalSub_family3.1 (coreSub_le hx)
     have h0 : (x 0 : W₀) = 0 := (Submodule.mem_bot 𝕜 (M := W₀)).1 hK.1
-    have hR := S.toHilbertComplex.reversal_mem_invariantCore fin3_parity
+    have hR := S.toHilbertComplex.reversal_mem_invariantCore
+      (fun _ _ h => ComplexShape.window_parity h)
       (fun y hy => HilbertComplex.reversal_mem_totalSub hy) hx
     have hR' : reversal3 (𝕜 := 𝕜) x ∈ S.coreSub S₁ S₂ := hR
     refine mem_totalSub_family3.2 ⟨hK.1, ?_, ?_⟩
@@ -413,10 +409,11 @@ theorem inj₂_mem_wave_domain {v : W₂} (h2 : v ∈ (S.d₁†).domain) :
   S.mem_wave_domain.2 ⟨S.d₀.domain.zero_mem, S.d₁.domain.zero_mem, (S.d₀†).domain.zero_mem, h2⟩
 
 omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-private theorem apply_eq_zero_of_coe {E F : Type*} [AddCommGroup E] [Module 𝕜 E] [AddCommGroup F]
-    [Module 𝕜 F] {T : E →ₗ.[𝕜] F} (x : T.domain) (h : (x : E) = 0) : T x = 0 := by
-  have : x = 0 := Subtype.ext h
-  rw [this, LinearPMap.map_zero]
+/-- A partial map vanishes at a point of its domain whose underlying vector is `0`. -/
+theorem _root_.LinearPMap.apply_eq_zero_of_coe_eq_zero {E F : Type*} [AddCommGroup E]
+    [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] {T : E →ₗ.[𝕜] F} (x : T.domain)
+    (h : (x : E) = 0) : T x = 0 := by
+  rw [show x = 0 from Subtype.ext h, LinearPMap.map_zero]
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
@@ -426,14 +423,15 @@ theorem wave_inj₂ (ρ : S.d₁†.domain) :
   refine PiLp.ext fun i => ?_
   fin_cases i
   · show ((S.wave ⟨_, inj₂_mem_wave_domain (S := S) ρ.2⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) = 0
-    rw [S.wave_apply_zero, apply_eq_zero_of_coe _ rfl, neg_zero]
+    rw [S.wave_apply_zero, LinearPMap.apply_eq_zero_of_coe_eq_zero _ rfl, neg_zero]
     rfl
   · show ((S.wave ⟨_, inj₂_mem_wave_domain (S := S) ρ.2⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 1 : W₁) =
       -(S.d₁† ρ)
-    rw [S.wave_apply_one, apply_eq_zero_of_coe (T := S.d₀) _ rfl, zero_sub]
+    rw [S.wave_apply_one, LinearPMap.apply_eq_zero_of_coe_eq_zero (T := S.d₀) _ rfl,
+      zero_sub]
     rfl
   · show ((S.wave ⟨_, inj₂_mem_wave_domain (S := S) ρ.2⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) = 0
-    rw [S.wave_apply_two, apply_eq_zero_of_coe _ rfl]
+    rw [S.wave_apply_two, LinearPMap.apply_eq_zero_of_coe_eq_zero _ rfl]
     rfl
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
@@ -448,8 +446,8 @@ omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
 theorem wave_inj₁_one (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀†).domain) :
     ((S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 1 : W₁) = 0 := by
-  rw [S.wave_apply_one, apply_eq_zero_of_coe (T := S.d₀) _ rfl,
-    apply_eq_zero_of_coe (T := S.d₁†) _ rfl, sub_zero]
+  rw [S.wave_apply_one, LinearPMap.apply_eq_zero_of_coe_eq_zero (T := S.d₀) _ rfl,
+    LinearPMap.apply_eq_zero_of_coe_eq_zero (T := S.d₁†) _ rfl, sub_zero]
   rfl
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]

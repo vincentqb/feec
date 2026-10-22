@@ -355,7 +355,8 @@ theorem perturbed_nonvacuous :
   · exact isReducingPair_top _
   · obtain ⟨x, hxK, t, ht, hout, hpos, -⟩ :=
       constrainedFEEC_residual_not_isReducing_of_grading (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub)
-        (p := fun i : Fin 3 => decide (Odd i.val)) fin3_parity
+        (p := fun i : Fin 3 => decide (Odd i.val))
+        (fun _ _ h => ComplexShape.window_parity h)
         (fun x hx => reversal_mem_totalSub hx)
         (fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩) not_isReducing_firstSub hT
     have hxc : (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) ∈
@@ -651,7 +652,8 @@ theorem projPerturbed_nonvacuous :
   · obtain ⟨x, hxK, t, ht, hout, hpos, hres⟩ :=
       approxFEEC_residual_not_isReducing_of_grading
         (projPerturbed 𝕜 (firstSub 𝕜) isClosed_totalSub) (projCore _ _)
-        (p := fun i : Fin 3 => decide (Odd i.val)) fin3_parity
+        (p := fun i : Fin 3 => decide (Odd i.val))
+        (fun _ _ h => ComplexShape.window_parity h)
         (fun x hx => reversal_mem_totalSub hx)
         (fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩) not_isReducing_firstSub hT
     have hxc : (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) ∈

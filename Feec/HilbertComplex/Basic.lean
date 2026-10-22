@@ -53,6 +53,12 @@ open LinearPMap
 
 @[expose] public noncomputable section
 
+/-- Equal partial maps agree at equal points. -/
+theorem LinearPMap.apply_eq_of_eq {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {T T' : E →ₗ.[𝕜] F}
+    (hT : T = T') (x : T.domain) (y : T'.domain) (hxy : (x : E) = y) : T x = T' y := by
+  subst hT; rw [Subtype.ext hxy]
+
 namespace Feec
 
 /-- A Hilbert complex over `𝕜` with index shape `c`: closed densely defined operators

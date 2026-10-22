@@ -59,7 +59,8 @@ variable [NormedAddCommGroup X] [NormedSpace 𝕜 X]
 
 /-- `‖B|_{K×L}‖ ≤ ‖B‖`. -/
 theorem norm_restrict_le : ‖restrict B K L‖ ≤ ‖B‖ :=
-  ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x => norm_restrict_apply_le K L x
+  ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x =>
+    norm_restrict_apply_le_of_eq K L x fun _ _ => rfl
 
 namespace InfSup
 

@@ -309,15 +309,12 @@ theorem re_inner_solutionOp_self (f : W j) :
 /-! ### The a priori bounds -/
 
 omit [∀ i, CompleteSpace (W i)] in
-private theorem norm_sub_starProjection_le' {E : Type*} [NormedAddCommGroup E]
-    [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (f : E) :
-    ‖f - K.starProjection f‖ ≤ ‖f‖ := by
-  have h := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := 𝕜) (f - K.starProjection f)
-    (K.starProjection f) (Submodule.starProjection_inner_eq_zero f _
-      (Submodule.starProjection_apply_mem K f))
-  rw [sub_add_cancel] at h
-  nlinarith [norm_nonneg f, norm_nonneg (f - K.starProjection f),
-    norm_nonneg (K.starProjection f)]
+/-- `‖x - P_K x‖ ≤ ‖x - y‖` for `y ∈ K`. -/
+theorem _root_.Submodule.norm_sub_starProjection_le_of_mem {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] {x y : E}
+    (hy : y ∈ K) : ‖x - K.starProjection x‖ ≤ ‖x - y‖ := by
+  rw [← dist_eq_norm, ← dist_eq_norm, Submodule.dist_starProjection_eq_infDist]
+  exact Metric.infDist_le_dist_of_mem hy
 
 /-- **`‖d d† K f‖² + ‖d† d K f‖² ≤ ‖f‖²`** (no Poincaré constant): `d σ` and `d† d u` are the
 orthogonal `𝔅` and `𝔅*` parts of `f - P_ℌ f`. -/
@@ -340,7 +337,8 @@ theorem norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le (f : W j)
     rw [inner_sub_right, inner_sub_right, hsP, ← e, sub_zero, sub_self]
   have hpy := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := 𝕜) s (f - P - s) horth
   rw [add_sub_cancel] at hpy
-  have hle := norm_sub_starProjection_le' (H.harmonic j) f
+  have hle : ‖f - P‖ ≤ ‖f‖ := by
+    simpa using Submodule.norm_sub_starProjection_le_of_mem (x := f) (H.harmonic j) (zero_mem _)
   nlinarith [norm_nonneg (f - P), norm_nonneg f]
 
 theorem norm_d_solutionSigma_le (f : W j) :

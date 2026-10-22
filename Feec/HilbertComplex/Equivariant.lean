@@ -113,8 +113,6 @@ theorem act_avg (h : Γ) (i : ι) (x : W i) : A.act h i (A.avg i x) = A.avg i x 
   congr 1
   exact Equiv.sum_comp (Equiv.mulLeft h) fun g => A.act g i x
 
-theorem avg_mem (i : ι) (x : W i) : A.avg i x ∈ A.fixed i := fun h => A.act_avg h i x
-
 theorem sub_avg_mem_orthogonal (i : ι) (x : W i) : x - A.avg i x ∈ (A.fixed i)ᗮ := by
   rw [Submodule.mem_orthogonal]
   intro y hy
@@ -128,7 +126,8 @@ theorem sub_avg_mem_orthogonal (i : ι) (x : W i) : x - A.avg i x ∈ (A.fixed i
 
 /-- **The projection onto the fixed vectors is the group average.** -/
 theorem starProjection_fixed (i : ι) (x : W i) : (A.fixed i).starProjection x = A.avg i x :=
-  Submodule.eq_starProjection_of_mem_orthogonal (A.avg_mem i x) (A.sub_avg_mem_orthogonal i x)
+  Submodule.eq_starProjection_of_mem_orthogonal (fun h => A.act_avg h i x)
+    (A.sub_avg_mem_orthogonal i x)
 
 /-- **The fixed vectors of a finite unitary action form a reducing subcomplex.** -/
 theorem reducingSubcomplex_fixed : H.ReducingSubcomplex A.fixed := by

@@ -86,13 +86,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- `‖x - P_K x‖ ≤ ‖x - y‖` for `y ∈ K`. -/
-theorem _root_.Submodule.norm_sub_starProjection_le_of_mem {E : Type*} [NormedAddCommGroup E]
-    [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] {x y : E}
-    (hy : y ∈ K) : ‖x - K.starProjection x‖ ≤ ‖x - y‖ := by
-  rw [← dist_eq_norm, ← dist_eq_norm, Submodule.dist_starProjection_eq_infDist]
-  exact Metric.infDist_le_dist_of_mem hy
-
 /-! ### Relative operator norms -/
 
 section RelNorm
@@ -676,13 +669,6 @@ theorem norm_starProjection_boundariesW_le (hij : c.Rel i j) (hjk : c.Rel j k)
 /-! ### The estimates for `d u` and `u` -/
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- `‖x - P_K x‖ ≤ ‖x‖`. -/
-private theorem norm_sub_starProjection_le_self {E : Type*} [NormedAddCommGroup E]
-    [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (x : E) :
-    ‖x - K.starProjection x‖ ≤ ‖x‖ := by
-  simpa using Submodule.norm_sub_starProjection_le_of_mem (x := x) K (zero_mem K)
-
-omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
 /-- **[AFW2010], Lemma 3.12**: for `vₕ ∈ Vₕʲ ⊥ 𝔷ₕʲ` and `v = P_{𝔷ᗮ} vₕ`,
 `‖vₕ - v‖ ≤ ‖(I - π) v‖`. -/
 theorem norm_sub_starProjection_cycles_le {j k : ι} (hjk : c.Rel j k) {vh : W j}
@@ -838,7 +824,8 @@ theorem norm_vh_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
   set vh := P.vh X Y
   set v := vh - Z.starProjection vh
   have hvo : v ∈ Zᗮ := Submodule.sub_starProjection_mem_orthogonal vh
-  have hvn : ‖v‖ ≤ ‖vh‖ := norm_sub_starProjection_le_self Z vh
+  have hvn : ‖v‖ ≤ ‖vh‖ := by
+    simpa using Submodule.norm_sub_starProjection_le_of_mem (x := vh) Z (zero_mem Z)
   have h312 := (P.norm_sub_starProjection_cycles_le hjk (P.vh_mem X Y) (P.vh_orthogonal X Y)).trans
     (hη₄ ⟨_, S.le_domain j k (P.vh_mem X Y)⟩)
   rw [P.d_vh X Y] at h312

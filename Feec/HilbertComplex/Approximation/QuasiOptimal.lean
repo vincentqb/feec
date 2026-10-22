@@ -105,11 +105,6 @@ variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 abbrev toW (i : ι) (a : S.toHilbertComplex.domainSpace i) : W i :=
   (S.toHilbertComplex.domainIncl i a : W i)
 
-theorem norm_sq_discrete_domainSpace (i : ι) (a : S.toHilbertComplex.domainSpace i) :
-    ‖a‖ ^ 2 = ‖S.toW i a‖ ^ 2 +
-      ‖H.d i (c.next i) (S.toDomain i (c.next i) (S.toHilbertComplex.domainIncl i a))‖ ^ 2 :=
-  S.toHilbertComplex.norm_sq_domainSpace i a
-
 /-- **The embedding `Vₕⁱ → Vⁱ`** of the discrete domain space into the domain space, an
 isometry for the graph norms. -/
 def embD (i : ι) : S.toHilbertComplex.domainSpace i →ₗᵢ[𝕜] H.domainSpace i where
@@ -123,7 +118,7 @@ def embD (i : ι) : S.toHilbertComplex.domainSpace i →ₗᵢ[𝕜] H.domainSpa
   norm_map' a := by
     have h1 := H.norm_sq_domainSpace i ((H.d i (c.next i)).toGraphSpace (S.toDomain i (c.next i)
       (S.toHilbertComplex.domainIncl i a)))
-    have h2 := S.norm_sq_discrete_domainSpace i a
+    have h2 := S.toHilbertComplex.norm_sq_domainSpace i a
     have h : ‖(H.d i (c.next i)).toGraphSpace (S.toDomain i (c.next i)
         (S.toHilbertComplex.domainIncl i a))‖ ^ 2 = ‖a‖ ^ 2 := by
       rw [h1, h2]; rfl

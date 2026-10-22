@@ -80,11 +80,6 @@ theorem norm_restrict_apply_le_of_eq (K : Submodule 𝕜 X) (L : Submodule 𝕜 
   rw [restrict_apply, h v v.2]
   exact B.le_opNorm₂ z v
 
-/-- `‖B|_{K×L} x‖ ≤ ‖B‖ ‖x‖`. -/
-theorem norm_restrict_apply_le (K : Submodule 𝕜 X) (L : Submodule 𝕜 Y) (x : K) :
-    ‖restrict B K L x‖ ≤ ‖B‖ * ‖(x : X)‖ :=
-  norm_restrict_apply_le_of_eq K L x fun _ _ => rfl
-
 namespace InfSup
 
 omit [RingHomIsometric σ] in

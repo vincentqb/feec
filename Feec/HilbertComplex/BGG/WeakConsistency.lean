@@ -44,6 +44,14 @@ projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further a
   Thm 5.5, Prop 5.9, Table 5.1
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
   (discrete Hodge decomposition, bounded cochain projections)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (a priori estimates)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+  (weakly imposed symmetry)
+* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
+  (saddle-point problems)
+* [I. Babuška, *Error-bounds for finite element method*][Babuska1971] (saddle-point problems)
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
+  (saddle-point problems)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],

@@ -57,7 +57,6 @@ The DOF argument for (5.4) (thesis Prop 5.7) is `Feec.FiniteElement.comp_eq_of_m
   (weakly imposed symmetry)
 * [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
   (saddle-point problems)
-* [I. Babuška, *Error-bounds for finite element method*][Babuska1971] (saddle-point problems)
 * [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
   (saddle-point problems)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],

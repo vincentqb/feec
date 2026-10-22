@@ -1751,51 +1751,26 @@ theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
   change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitney N).V (k : ℤ), ‖x - v‖ < ε ∧
       ‖D.complex.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.whitney N).le_domain k (k + 1) hv)⟩‖ < ε
-  obtain ⟨w, hw, -, h1, h2⟩ := D.exists_smooth_near k ⟨x, hx⟩ (half_pos hε)
+  refine FEM.eventually_exists_graph_of_near (fun N => F.whitney N) hx (fun ε hε => ?_) hε
+  obtain ⟨w, hw, -, h1, h2⟩ := D.exists_smooth_near k ⟨x, hx⟩ hε
   have hw2 : ContDiff ℝ 2 w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_fderiv (hw.of_le (by exact_mod_cast le_top))
   obtain ⟨L', hL'0, hL'⟩ := D.exists_bound_fderiv (contDiff_extDeriv (m := 1) hw2)
-  have ht : Tendsto (fun N => F.interpConst k * ((F.mesh N).meshSize * L) +
-      F.interpConst (k + 1) * ((F.mesh N).meshSize * L')) atTop (𝓝 0) := by
+  refine ⟨_, _, fun N => F.interpConst k * ((F.mesh N).meshSize * L) +
+      F.interpConst (k + 1) * ((F.mesh N).meshSize * L'), h1, h2, by
     have := ((F.tendsto_meshSize.mul_const L).const_mul (F.interpConst k)).add
       ((F.tendsto_meshSize.mul_const L').const_mul (F.interpConst (k + 1)))
-    simpa using this
-  filter_upwards [ht.eventually (gt_mem_nhds (half_pos hε))] with N hN
+    simpa using this, fun N => ?_⟩
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_whitney_le N k hw2 hL0 hL'0 hL hL'
   have hb1 := mul_nonneg (F.interpConst_nonneg (k + 1)) (mul_nonneg (F.meshSize_pos N).le hL'0)
   have hb0 := mul_nonneg (F.interpConst_nonneg k) (mul_nonneg (F.meshSize_pos N).le hL0)
-  refine ⟨v, hv, ?_, ?_⟩
-  · calc ‖x - v‖ ≤ ‖x - formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩‖ +
-          ‖formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩ - v‖ :=
-          norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1 (hv1.trans (by linarith))
-      _ = ε := add_halves ε
-  · have e : D.complex.d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((F.whitney N).le_domain k (k + 1) hv)⟩ =
-        D.complex.d k (k + 1) ⟨x, hx⟩ - D.complex.d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e]
-    calc ‖D.complex.d k (k + 1) ⟨x, hx⟩ - D.complex.d k (k + 1) ⟨v, hdv⟩‖
-        ≤ ‖D.complex.d k (k + 1) ⟨x, hx⟩ - formL2 D.isOpen.measurableSet D.isBounded
-            ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv
-              (hw.of_le (by exact_mod_cast le_top))⟩‖ +
-          ‖formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
-            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ -
-            D.complex.d k (k + 1) ⟨v, hdv⟩‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2 (hv2.trans (by linarith))
-      _ = ε := add_halves ε
+  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hv2.trans (le_add_of_nonneg_left hb0)⟩
 
 /-- **`L²` density of the Whitney spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitney_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
-    (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitney N).V k, ‖x - v‖ < ε := by
-  obtain ⟨y, hy, hxy⟩ := (D.complex.dense k (k + 1)).exists_dist_lt x (half_pos hε)
-  filter_upwards [F.eventually_exists_whitney_graph k y hy (half_pos hε)] with N hN
-  obtain ⟨v, hv, h1, -⟩ := hN
-  refine ⟨v, hv, ?_⟩
-  rw [dist_eq_norm] at hxy
-  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
-    _ = ε := add_halves ε
+    (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitney N).V k, ‖x - v‖ < ε :=
+  FEM.eventually_exists_lt_of_graph (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) k x
+    hε
 
 /-- **Degreewise approximation in every graph norm of `HΛ(Ω)`**. -/
 theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
@@ -1803,30 +1778,16 @@ theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i)
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitney N).V i, ‖x - v‖ < ε ∧
       ∀ j (hx : x ∈ (D.complex.d i j).domain),
         ‖D.complex.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.whitney N).le_domain i j hv)⟩‖ <
-          ε := by
-  by_cases hx : x ∈ (D.complex.d i (i + 1)).domain
-  · filter_upwards [F.eventually_exists_whitney_graph i x hx hε] with N hN
-    obtain ⟨v, hv, h1, h2⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact h2
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
-  · filter_upwards [F.eventually_exists_whitney_lt i x hε] with N hN
-    obtain ⟨v, hv, h1⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact absurd hxj hx
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+          ε :=
+  FEM.eventually_exists_near_of_graph (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) i x
+    hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitney (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.whitney N).V j :
-      Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) := by
-  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
-    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
-  filter_upwards [F.eventually_exists_whitney_lt j q ha] with N hN
-  obtain ⟨v, hv, h⟩ := hN
-  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+      Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
+  FEM.tendsto_infDist_of_lt (S := fun N => F.whitney N) q fun _ ha =>
+    F.eventually_exists_whitney_lt j q ha
 
 /-- **Graph-norm density of the Whitney spaces in `H̊Λᵏ(Ω)`**: smooth forms are dense
 (`StarDomain.exists_smooth_near`) and their canonical interpolants converge at rate `h_N`
@@ -1845,51 +1806,26 @@ theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx 
   change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitneyMin N).V (k : ℤ), ‖x - v‖ < ε ∧
       ‖D.complexMin.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.whitneyMin N).le_domain k (k + 1) hv)⟩‖ < ε
-  obtain ⟨w, hw, hsupp, h1, h2⟩ := D.exists_smooth_near_min k ⟨x, hx⟩ (half_pos hε)
+  refine FEM.eventually_exists_graph_of_near (fun N => F.whitneyMin N) hx (fun ε hε => ?_) hε
+  obtain ⟨w, hw, hsupp, h1, h2⟩ := D.exists_smooth_near_min k ⟨x, hx⟩ hε
   have hw2 : ContDiff ℝ 2 w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_fderiv (hw.of_le (by exact_mod_cast le_top))
   obtain ⟨L', hL'0, hL'⟩ := D.exists_bound_fderiv (contDiff_extDeriv (m := 1) hw2)
-  have ht : Tendsto (fun N => F.interpConst k * ((F.mesh N).meshSize * L) +
-      F.interpConst (k + 1) * ((F.mesh N).meshSize * L')) atTop (𝓝 0) := by
+  refine ⟨_, _, fun N => F.interpConst k * ((F.mesh N).meshSize * L) +
+      F.interpConst (k + 1) * ((F.mesh N).meshSize * L'), h1, h2, by
     have := ((F.tendsto_meshSize.mul_const L).const_mul (F.interpConst k)).add
       ((F.tendsto_meshSize.mul_const L').const_mul (F.interpConst (k + 1)))
-    simpa using this
-  filter_upwards [ht.eventually (gt_mem_nhds (half_pos hε))] with N hN
+    simpa using this, fun N => ?_⟩
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_whitneyMin_le N k hw2 hsupp hL0 hL'0 hL hL'
   have hb1 := mul_nonneg (F.interpConst_nonneg (k + 1)) (mul_nonneg (F.meshSize_pos N).le hL'0)
   have hb0 := mul_nonneg (F.interpConst_nonneg k) (mul_nonneg (F.meshSize_pos N).le hL0)
-  refine ⟨v, hv, ?_, ?_⟩
-  · calc ‖x - v‖ ≤ ‖x - formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩‖ +
-          ‖formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩ - v‖ :=
-          norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1 (hv1.trans (by linarith))
-      _ = ε := add_halves ε
-  · have e : D.complexMin.d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((F.whitneyMin N).le_domain k (k + 1) hv)⟩ =
-        D.complexMin.d k (k + 1) ⟨x, hx⟩ - D.complexMin.d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e]
-    calc ‖D.complexMin.d k (k + 1) ⟨x, hx⟩ - D.complexMin.d k (k + 1) ⟨v, hdv⟩‖
-        ≤ ‖D.complexMin.d k (k + 1) ⟨x, hx⟩ - formL2 D.isOpen.measurableSet D.isBounded
-            ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv
-              (hw.of_le (by exact_mod_cast le_top))⟩‖ +
-          ‖formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
-            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ -
-            D.complexMin.d k (k + 1) ⟨v, hdv⟩‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2 (hv2.trans (by linarith))
-      _ = ε := add_halves ε
+  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hv2.trans (le_add_of_nonneg_left hb0)⟩
 
 /-- **`L²` density of the Whitney spaces with vanishing boundary DOFs** `V̊ₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitneyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
-    (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε := by
-  obtain ⟨y, hy, hxy⟩ := (D.complexMin.dense k (k + 1)).exists_dist_lt x (half_pos hε)
-  filter_upwards [F.eventually_exists_whitneyMin_graph k y hy (half_pos hε)] with N hN
-  obtain ⟨v, hv, h1, -⟩ := hN
-  refine ⟨v, hv, ?_⟩
-  rw [dist_eq_norm] at hxy
-  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
-    _ = ε := add_halves ε
+    (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε :=
+  FEM.eventually_exists_lt_of_graph (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) k x
+    hε
 
 /-- **Degreewise approximation in every graph norm of `H̊Λ(Ω)`**. -/
 theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
@@ -1897,30 +1833,16 @@ theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitneyMin N).V i, ‖x - v‖ < ε ∧
       ∀ j (hx : x ∈ (D.complexMin.d i j).domain),
         ‖D.complexMin.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.whitneyMin N).le_domain i j hv)⟩‖ <
-          ε := by
-  by_cases hx : x ∈ (D.complexMin.d i (i + 1)).domain
-  · filter_upwards [F.eventually_exists_whitneyMin_graph i x hx hε] with N hN
-    obtain ⟨v, hv, h1, h2⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact h2
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
-  · filter_upwards [F.eventually_exists_whitneyMin_lt i x hε] with N hN
-    obtain ⟨v, hv, h1⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact absurd hxj hx
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+          ε :=
+  FEM.eventually_exists_near_of_graph (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) i x
+    hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.whitneyMin N).V j :
-      Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) := by
-  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
-    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
-  filter_upwards [F.eventually_exists_whitneyMin_lt j q ha] with N hN
-  obtain ⟨v, hv, h⟩ := hN
-  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+      Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
+  FEM.tendsto_infDist_of_lt (S := fun N => F.whitneyMin N) q fun _ ha =>
+    F.eventually_exists_whitneyMin_lt j q ha
 
 include F in
 /-- **Smooth `k`-forms lie in `HΛᵏ(Ω)`**, with `d (w|_Ω) = (dw)|_Ω`. -/

@@ -469,59 +469,30 @@ theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeD
   change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (poly n S N).V (k : ℤ), ‖x - v‖ < ε ∧
       ‖(complex n).d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((poly n S N).le_domain k (k + 1) hv)⟩‖ < ε
-  obtain ⟨w, hw, hdeg, h1, h2⟩ := exists_smooth_near k ⟨x, hx⟩ (half_pos hε)
+  refine eventually_exists_graph_of_near (fun N => poly n S N) hx (fun ε hε => ?_) hε
+  obtain ⟨w, hw, hdeg, h1, h2⟩ := exists_smooth_near k ⟨x, hx⟩ hε
   have hw2 : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
-  have hw1 : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
-  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv hw1
+  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv
+    (hw.of_le (WithTop.coe_le_coe.2 le_top) : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w)
   obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv (m := 1)
     (contDiff_extDeriv (m := 1) (hw.of_le (WithTop.coe_le_coe.2 le_top)))
-  have ht : Tendsto (fun N => polyInterpConst n S k * (meshSize N ^ (0 + 1) * L) +
-      polyInterpConst n S (k + 1) * (meshSize N ^ (0 + 1) * L')) atTop (𝓝 0) := by
-    have := (((tendsto_meshSize.pow 1).mul_const L).const_mul (polyInterpConst n S k)).add
-      (((tendsto_meshSize.pow 1).mul_const L').const_mul (polyInterpConst n S (k + 1)))
-    simpa using this
-  filter_upwards [ht.eventually (gt_mem_nhds (half_pos hε))] with N hN
+  refine ⟨_, _, fun N => polyInterpConst n S k * (meshSize N ^ (0 + 1) * L) +
+    polyInterpConst n S (k + 1) * (meshSize N ^ (0 + 1) * L'), h1, h2, by
+      simpa using (((tendsto_meshSize.pow 1).mul_const L).const_mul (polyInterpConst n S k)).add
+        (((tendsto_meshSize.pow 1).mul_const L').const_mul (polyInterpConst n S (k + 1))),
+    fun N => ?_⟩
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_poly_le S N k 0 (polySpace_zero_le_space S k)
     (polySpace_zero_le_space S (k + 1)) hw2 hdeg hL hL'
-  have hb1 := mul_nonneg (polyInterpConst_nonneg (n := n) S (k + 1))
-    (mul_nonneg (pow_nonneg (meshSize_pos N).le (0 + 1)) hL'0)
-  have hb0 := mul_nonneg (polyInterpConst_nonneg (n := n) S k)
-    (mul_nonneg (pow_nonneg (meshSize_pos N).le (0 + 1)) hL0)
-  refine ⟨v, hv, ?_, ?_⟩
-  · calc ‖x - v‖ ≤ ‖x - formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
-          ⟨w, hw.continuous⟩‖ + ‖formL2 (isOpen_cubeDomain n).measurableSet
-            (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩ - v‖ :=
-            norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1
-        (hv1.trans (le_of_lt (lt_of_le_of_lt (le_add_of_nonneg_right hb1) hN)))
-      _ = ε := add_halves ε
-  · have e : (complex n).d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((poly n S N).le_domain k (k + 1) hv)⟩ =
-        (complex n).d k (k + 1) ⟨x, hx⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e]
-    calc ‖(complex n).d k (k + 1) ⟨x, hx⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩‖
-        ≤ ‖(complex n).d k (k + 1) ⟨x, hx⟩ - formL2 (isOpen_cubeDomain n).measurableSet
-            (isBounded_cubeDomain n) ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv
-              (hw.of_le (by exact_mod_cast le_top))⟩‖ +
-          ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
-            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ -
-            (complex n).d k (k + 1) ⟨v, hdv⟩‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2
-        (hv2.trans (le_of_lt (lt_of_le_of_lt (le_add_of_nonneg_left hb0) hN)))
-      _ = ε := add_halves ε
+  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right (mul_nonneg (polyInterpConst_nonneg S (k + 1))
+    (mul_nonneg (pow_nonneg (meshSize_pos N).le _) hL'0))), hv2.trans (le_add_of_nonneg_left
+      (mul_nonneg (polyInterpConst_nonneg S k) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
+        hL0)))⟩
 
 /-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Q; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
-    {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (poly n S N).V k, ‖x - v‖ < ε := by
-  obtain ⟨y, hy, hxy⟩ := ((complex n).dense k (k + 1)).exists_dist_lt x (half_pos hε)
-  filter_upwards [eventually_exists_poly_graph S k y hy (half_pos hε)] with N hN
-  obtain ⟨v, hv, h1, -⟩ := hN
-  refine ⟨v, hv, ?_⟩
-  rw [dist_eq_norm] at hxy
-  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
-    _ = ε := add_halves ε
+    {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (poly n S N).V k, ‖x - v‖ < ε :=
+  eventually_exists_lt_of_graph (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) k x
+    hε
 
 /-- Degreewise approximation in every graph norm of `HΛ(Q)` by the higher-order spaces. -/
 theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i))
@@ -529,30 +500,16 @@ theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDo
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (poly n S N).V i, ‖x - v‖ < ε ∧
       ∀ j (hx : x ∈ ((complex n).d i j).domain),
         ‖(complex n).d i j ⟨x - v, Submodule.sub_mem _ hx ((poly n S N).le_domain i j hv)⟩‖ <
-          ε := by
-  by_cases hx : x ∈ ((complex n).d i (i + 1)).domain
-  · filter_upwards [eventually_exists_poly_graph S i x hx hε] with N hN
-    obtain ⟨v, hv, h1, h2⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact h2
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
-  · filter_upwards [eventually_exists_poly_lt S i x hε] with N hN
-    obtain ⟨v, hv, h1⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact absurd hxj hx
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+          ε :=
+  eventually_exists_near_of_graph (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) i x
+    hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((poly n S N).V j :
-      Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) := by
-  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
-    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
-  filter_upwards [eventually_exists_poly_lt S j q ha] with N hN
-  obtain ⟨v, hv, h⟩ := hN
-  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+      Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
+  tendsto_infDist_of_lt (S := fun N => poly n S N) q fun _ ha =>
+    eventually_exists_poly_lt S j q ha
 
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((poly n S N).window a m).V i) :=
@@ -645,70 +602,38 @@ theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
   change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (polyMin n S N).V (k : ℤ), ‖x - v‖ < ε ∧
       ‖(complexMin n).d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((polyMin n S N).le_domain k (k + 1) hv)⟩‖ < ε
-  obtain ⟨w, hw, hdeg, hsupp, h1, h2⟩ := exists_smooth_near_min_deg k ⟨x, hx⟩ (half_pos hε)
+  refine eventually_exists_graph_of_near (fun N => polyMin n S N) hx (fun ε hε => ?_) hε
+  obtain ⟨w, hw, hdeg, hsupp, h1, h2⟩ := exists_smooth_near_min_deg k ⟨x, hx⟩ hε
   have hw2 : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
-  have hw1 : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
-  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv hw1
+  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv
+    (hw.of_le (WithTop.coe_le_coe.2 le_top) : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w)
   obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv (m := 1)
     (contDiff_extDeriv (m := 1) (hw.of_le (WithTop.coe_le_coe.2 le_top)))
-  have ht : Tendsto (fun N => polyInterpConst n S k * (meshSize N ^ (0 + 1) * L) +
-      polyInterpConst n S (k + 1) * (meshSize N ^ (0 + 1) * L')) atTop (𝓝 0) := by
-    have := (((tendsto_meshSize.pow 1).mul_const L).const_mul (polyInterpConst n S k)).add
-      (((tendsto_meshSize.pow 1).mul_const L').const_mul (polyInterpConst n S (k + 1)))
-    simpa using this
-  filter_upwards [ht.eventually (gt_mem_nhds (half_pos hε))] with N hN
+  refine ⟨_, _, fun N => polyInterpConst n S k * (meshSize N ^ (0 + 1) * L) +
+    polyInterpConst n S (k + 1) * (meshSize N ^ (0 + 1) * L'), h1, h2, by
+      simpa using (((tendsto_meshSize.pow 1).mul_const L).const_mul (polyInterpConst n S k)).add
+        (((tendsto_meshSize.pow 1).mul_const L').const_mul (polyInterpConst n S (k + 1))),
+    fun N => ?_⟩
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_polyMin_le S N k 0 (polySpace_zero_le_space S k)
     (polySpace_zero_le_space S (k + 1)) hw2 hdeg hsupp hL hL'
-  have hb1 := mul_nonneg (polyInterpConst_nonneg (n := n) S (k + 1))
-    (mul_nonneg (pow_nonneg (meshSize_pos N).le (0 + 1)) hL'0)
-  have hb0 := mul_nonneg (polyInterpConst_nonneg (n := n) S k)
-    (mul_nonneg (pow_nonneg (meshSize_pos N).le (0 + 1)) hL0)
-  refine ⟨v, hv, ?_, ?_⟩
-  · calc ‖x - v‖ ≤ ‖x - formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
-          ⟨w, hw.continuous⟩‖ + ‖formL2 (isOpen_cubeDomain n).measurableSet
-            (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩ - v‖ :=
-            norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1
-        (hv1.trans (le_of_lt (lt_of_le_of_lt (le_add_of_nonneg_right hb1) hN)))
-      _ = ε := add_halves ε
-  · have e : (complexMin n).d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((polyMin n S N).le_domain k (k + 1) hv)⟩ =
-        (complexMin n).d k (k + 1) ⟨x, hx⟩ - (complexMin n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e]
-    calc ‖(complexMin n).d k (k + 1) ⟨x, hx⟩ - (complexMin n).d k (k + 1) ⟨v, hdv⟩‖
-        ≤ ‖(complexMin n).d k (k + 1) ⟨x, hx⟩ - formL2 (isOpen_cubeDomain n).measurableSet
-            (isBounded_cubeDomain n) ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv
-              (hw.of_le (by exact_mod_cast le_top))⟩‖ +
-          ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
-            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ -
-            (complexMin n).d k (k + 1) ⟨v, hdv⟩‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2
-        (hv2.trans (le_of_lt (lt_of_le_of_lt (le_add_of_nonneg_left hb0) hN)))
-      _ = ε := add_halves ε
+  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right (mul_nonneg (polyInterpConst_nonneg S (k + 1))
+    (mul_nonneg (pow_nonneg (meshSize_pos N).le _) hL'0))), hv2.trans (le_add_of_nonneg_left
+      (mul_nonneg (polyInterpConst_nonneg S k) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
+        hL0)))⟩
 
 /-- **`L²` density of the higher-order spaces with vanishing boundary DOFs**. -/
 theorem eventually_exists_polyMin_lt (S : PolySeq) (k : ℤ)
     (x : L2F ℝ (cubeDomain n) (formIdx n k)) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ N in atTop, ∃ v ∈ (polyMin n S N).V k, ‖x - v‖ < ε := by
-  obtain ⟨y, hy, hxy⟩ := ((complexMin n).dense k (k + 1)).exists_dist_lt x (half_pos hε)
-  filter_upwards [eventually_exists_polyMin_graph S k y hy (half_pos hε)] with N hN
-  obtain ⟨v, hv, h1, -⟩ := hN
-  refine ⟨v, hv, ?_⟩
-  rw [dist_eq_norm] at hxy
-  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
-    _ = ε := add_halves ε
+    ∀ᶠ N in atTop, ∃ v ∈ (polyMin n S N).V k, ‖x - v‖ < ε :=
+  eventually_exists_lt_of_graph (fun k x hx _ hε => eventually_exists_polyMin_graph S k x hx hε) k x
+    hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((polyMin n S N).V j :
-      Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) := by
-  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
-    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
-  filter_upwards [eventually_exists_polyMin_lt S j q ha] with N hN
-  obtain ⟨v, hv, h⟩ := hN
-  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+      Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
+  tendsto_infDist_of_lt (S := fun N => polyMin n S N) q fun _ ha =>
+    eventually_exists_polyMin_lt S j q ha
 
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((polyMin n S N).window a m).V i) :=

@@ -13,14 +13,16 @@ namespace FeecCheck
 
 open Lean
 
-private unsafe def loadFeecImpl : IO Environment := do
+private unsafe def loadFeecImpl (withChecks : Bool := false) : IO Environment := do
   enableInitializersExecution
   initSearchPath (← findSysroot)
-  importModules #[{ module := `Feec }] {} (loadExts := true)
+  let mods := if withChecks then #[`Feec, `FeecCheck] else #[`Feec]
+  importModules (mods.map ({ module := · })) {} (loadExts := true)
 
-/-- Import `Feec` (with environment extensions, as `lean` does for a file `import Feec`). -/
+/-- Import `Feec` (with environment extensions, as `lean` does for a file `import Feec`); with
+`withChecks`, also the library `FeecCheck` of the gate (whose names the documentation cites). -/
 @[implemented_by loadFeecImpl]
-opaque loadFeec : IO Environment
+opaque loadFeec (withChecks : Bool := false) : IO Environment
 
 /-- The module of a constant, if it was imported. -/
 def moduleOf? (env : Environment) (nm : Name) : Option Name := do

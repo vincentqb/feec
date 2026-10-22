@@ -26,7 +26,7 @@ name = "feec-gate"
 srcDir = "scripts"
 root = "FeecCheck.Exe.Gate"
 supportInterpreter = true
-needs = ["Feec"]
+needs = ["Feec", "FeecCheck"]
 
 [[lean_exe]]
 name = "feec-citations"
@@ -74,6 +74,13 @@ srcDir = "scripts"
 root = "FeecCheck.Exe.Snapshot"
 supportInterpreter = true
 needs = ["Feec"]
+
+[[lean_exe]]
+name = "feec-docnames"
+srcDir = "scripts"
+root = "FeecCheck.Exe.DocNames"
+supportInterpreter = true
+needs = ["Feec", "FeecCheck"]
 
 # Dependency analysis for the minimality pass (not a gate check): `lake exe feec-deps [OUT_DIR]`,
 # `lake exe feec-deps --strip FILE OUT` (scripts/FeecCheck/Deps.lean).

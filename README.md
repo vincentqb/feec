@@ -107,12 +107,16 @@ lake exe feec-gate   # the verification gate
 ```
 
 `lake exe feec-gate` runs every check of the verification gate (`docs/REFACTOR_PLAN.md` §5), all
-written in Lean (`scripts/FeecCheck/`): the citation convention, the import layering, the axiom
-audit (only `propext`, `Classical.choice`, `Quot.sound`), banned identifiers, `docs/THESIS_MAP.md`
-up to date, and the migration coverage of `docs/migration/map.tsv`. It exits nonzero on any
-failure and prints each violation as `path:line: message`. Each check is also an executable of its
-own (`feec-citations`, `feec-layering`, `feec-axioms`, `feec-naming`, `feec-thesismap`,
-`feec-mapcheck`); `lake exe feec-thesismap` regenerates `docs/THESIS_MAP.md`.
+written in Lean (`scripts/FeecCheck/`): the citation convention, the import layering (the partial
+order of layers of `docs/REFACTOR_PLAN.md` §1), the axiom audit (only `propext`,
+`Classical.choice`, `Quot.sound`), banned identifiers, `docs/THESIS_MAP.md` up to date, the
+migration coverage of `docs/migration/map.tsv`, and the names of the documentation (every Lean name
+in backticks in `README.md` and `docs/*.md` is a declaration, module or namespace; historical
+regions may also name pre-refactor declarations, see `scripts/FeecCheck/DocNames.lean`). It exits
+nonzero on any failure and prints each violation as `path:line: message`. Each check is also an
+executable of its own (`feec-citations`, `feec-layering`, `feec-axioms`, `feec-naming`,
+`feec-thesismap`, `feec-mapcheck`, `feec-docnames`); `lake exe feec-thesismap` regenerates
+`docs/THESIS_MAP.md`.
 
 `lake exe feec-deps [OUT_DIR]` (`scripts/FeecCheck/Deps.lean`, default `.lake/feec-deps`) is a
 measurement tool for minimality, not a gate check: it writes TSV reports of the declarations that

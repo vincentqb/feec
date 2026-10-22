@@ -1,5 +1,6 @@
 import FeecCheck.Axioms
 import FeecCheck.Citations
+import FeecCheck.DocNames
 import FeecCheck.Layering
 import FeecCheck.MapCheck
 import FeecCheck.Naming
@@ -11,7 +12,8 @@ import FeecCheck.ThesisMap
 
 One function per executable of `lakefile.toml`; each prints its report(s) and returns the exit
 code (`0` iff every check passed). `lake exe feec-gate` runs every check of the verification gate
-of `docs/REFACTOR_PLAN.md` §5 on one import of `Feec`:
+of `docs/REFACTOR_PLAN.md` §5 on one import of `Feec` (and of `FeecCheck`, whose names the
+documentation cites):
 
 | check | executable | needs `Feec` |
 |---|---|---|
@@ -21,9 +23,11 @@ of `docs/REFACTOR_PLAN.md` §5 on one import of `Feec`:
 | banned identifiers | `feec-naming` | yes |
 | `docs/THESIS_MAP.md` up to date | `feec-thesismap --check` | yes |
 | migration coverage | `feec-mapcheck --strict` | yes |
+| names in `README.md` and `docs/*.md` exist | `feec-docnames` | yes (and `FeecCheck`) |
 
 Run from the root of the repository (as `lake exe` does) after `lake build`; the executables that
-import `Feec` declare `needs = ["Feec"]`, so `lake exe` builds the library first.
+import `Feec` declare `needs = ["Feec"]` (`feec-gate` and `feec-docnames` also `"FeecCheck"`), so
+`lake exe` builds the libraries first.
 -/
 
 namespace FeecCheck
@@ -73,6 +77,10 @@ def mainMapCheck (args : List String) : IO UInt32 := do
     else some <$> loadFeec
   finish [← MapCheck.run env? (args.contains "--strict")]
 
+def mainDocNames : List String → IO UInt32
+  | [] => do finish [← DocNames.run (← loadFeec (withChecks := true))]
+  | _ => usage "lake exe feec-docnames"
+
 def mainSnapshot : List String → IO UInt32
   | [out] => if out.startsWith "-" then usage "lake exe feec-snapshot OUT" else do
     finish [← Snapshot.run (← loadFeec) out]
@@ -81,11 +89,12 @@ def mainSnapshot : List String → IO UInt32
 def mainGate : List String → IO UInt32
   | [] => do
     let mut rs := #[← Citations.run, ← Layering.run]
-    let env ← loadFeec
+    let env ← loadFeec (withChecks := true)
     rs := rs.push (← Axioms.run env)
     rs := rs.push (← Naming.run env)
     rs := rs.push (← ThesisMap.run env (check := true))
     rs := rs.push (← MapCheck.run env true)
+    rs := rs.push (← DocNames.run env)
     for r in rs do
       r.print
       IO.println ""

@@ -4,8 +4,8 @@ Module map, corrections to the thesis, the proved repaired statements, and the s
 formalization. Declarations are named in full. `docs/THESIS_MAP.md` lists, for every result,
 equation and section of the thesis, the declarations that formalize it, and
 `docs/migration/map.tsv` gives the current home of every declaration of the pre-refactor tree
-(the chapter-ordered modules `Feec.Ch2`–`Feec.Ch7`, `Feec.Repair`, `Feec.Foundation`, and the
-real-scalar layer `Feec.Legacy` that remained of them; see [The pre-refactor tree](#the-pre-refactor-tree)).
+(the chapter-ordered modules and the real-scalar layer that remained of them; see
+[The pre-refactor tree](#the-pre-refactor-tree)).
 [`docs/THESIS_REFERENCES.md`](THESIS_REFERENCES.md) lists, for each entry [1]–[28] of the thesis
 bibliography, where the thesis and the code cite it.
 

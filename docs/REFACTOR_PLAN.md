@@ -23,7 +23,7 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 
 
 > **Citation convention (user decision, 2026-10-17; Mathlib/doc-gen4 style).**
-> * Every cited work has a BibTeX entry in `docs/references.bib` (key `AuthorYear`, DOI when one
+> * Every cited work has a BibTeX entry in `docs/references.bib` (key *AuthorYear*, DOI when one
 >   exists, verified against Crossref). No citation without an entry.
 > * Inline citations are bare links `[Key]`, with the location *outside* the brackets:
 >   `[QuennevilleBelair2015], Prop. 4.17 (§4.10, p. 66)`, `see [AFW2010], Thm 3.5`.
@@ -327,10 +327,11 @@ of `Feec`; nothing below the top tier (`Models`, `Physics`, `Counterexamples`, `
 `Numerics`, `Instances`) imports a layer of it; only `Feec.lean` imports `Instances`, and it
 imports every module.
 
-This fixes today's inversion, where `Ch4/StoneApplications` imports `TorusGroup` and `BoundedDomain`.
+This fixed the inversion of the pre-refactor tree, where `Ch4/StoneApplications` imported the
+torus group (`Ch4/TorusGroup`) and the bounded-domain models (`Ch4/BoundedDomain`).
 
 **Naming:**
-- Mathlib style: `IsX` for predicates, `lowerCamel` for defs, and theorem names that describe the conclusion (`isSkewAdjoint_wave`, `IsStrongSolution.mem_of_isReducing`).
+- Mathlib style: `IsX` for predicates, lower camel case for defs, and theorem names that describe the conclusion (`isSkewAdjoint_wave`, `IsStrongSolution.mem_of_isReducing`).
 - Namespaces name objects, never chapters.
 - **Banned everywhere:**
   - thesis numbers: `prop_4_17`, `ForcingThm43`, `eq61` (two-digit equation numbers), `Sol61`, `Hyp54`, `C55`, `Sys56`;
@@ -605,14 +606,15 @@ Each task owns the files listed and nothing else. Tasks inside a wave are indepe
 
 **Verification gate, run after every wave:**
 1. `lake build` is clean from scratch, with no `sorry` and no new warnings.
-2. `AxiomAudit` (`lake exe feec-axioms`) reports only `propext`, `Classical.choice` and `Quot.sound` for every `Feec.*` declaration.
+2. The axiom audit (`lake exe feec-axioms`) reports only `propext`, `Classical.choice` and `Quot.sound` for every `Feec.*` declaration.
 3. **Strangler shim.** While an old module still exists, each of its main theorems is re-proved *with its old statement* as a thin theorem calling the new result. This is the semantic proof that the new theorem subsumes the old one. Shims are deleted only in W6.
 4. **Coverage.** `lake exe feec-mapcheck --strict` checks that every row of `old_theorems.tsv` appears in `map.tsv`. Theorems that are thesis-numbered or named in `OVERVIEW.md` (the "main" set, roughly 400) may not be `deleted-helper`. Every `new` name and every `THESIS_MAP.md` entry must be a declaration of `Feec` (originally a generated `#check @Feec.X` file). Every thesis result cited as `[QuennevilleBelair2015], Prop 4.17` must also appear in `THESIS_MAP.md` (the `Thesis:` tags of the original plan are retired).
 5. `lake exe feec-naming` finds no `prop_[0-9]`, `thm_[0-9]`, `prop59`-style, `Ch[0-9]`, `_unconditional`, `Repair` or `Thesis` identifiers (nor the other bans of §1, see `FeecCheck.Naming.rules`) in the declaration and module names of `Feec`, and `lake exe feec-layering` finds no import outside the relation of §1 (in particular none from
    `Models/` in lower layers).
 6. `docs/THESIS_MAP.md` is up to date (`lake exe feec-thesismap --check`).
+7. Every Lean name in backticks in `README.md` and `docs/*.md` exists (`lake exe feec-docnames`); the historical regions (dated status notes, the pre-refactor tree) may also name pre-refactor declarations, and the proposals written before the refactor (§0, §2–§4 of this plan, `docs/BLUEPRINT.md`) are not checked.
 
-Items 2 and 4–6 and the citation check run as one command, `lake exe feec-gate` (one import of `Feec`; nonzero exit on any failure, each violation printed as `path:line: message`).
+Items 2 and 4–7 and the citation check run as one command, `lake exe feec-gate` (one import of `Feec` and `FeecCheck`; nonzero exit on any failure, each violation printed as `path:line: message`).
 
 ## 6. FEEC-book coverage newly in reach, ranked by value/cost
 

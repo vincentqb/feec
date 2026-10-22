@@ -552,24 +552,17 @@ theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
     have := norm_dvec_sub_le (cubeFEM hT hB N) shy (sh N) hg0 ht
     simp only [sub_self, norm_zero, intervalIntegral.integral_zero, add_zero] at this
     exact this
-  have k4 : ‖dvec (cubeFEM hT hB N) shy 0 - dvec (cubeFEM hT hB N) (sh N) 0‖ ≤
-      ‖wy.vec 0 - dvec (cubeFEM hT hB N) shy 0‖ + ‖w.vec 0 - wy.vec 0‖ +
-        ‖w.vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖ := by
-    have e : dvec (cubeFEM hT hB N) shy 0 - dvec (cubeFEM hT hB N) (sh N) 0 =
-        -(wy.vec 0 - dvec (cubeFEM hT hB N) shy 0) - (w.vec 0 - wy.vec 0) +
-          (w.vec 0 - dvec (cubeFEM hT hB N) (sh N) 0) := by abel
-    rw [e]
-    have n1 := norm_add_le (-(wy.vec 0 - dvec (cubeFEM hT hB N) shy 0) - (w.vec 0 - wy.vec 0))
-      (w.vec 0 - dvec (cubeFEM hT hB N) (sh N) 0)
-    have n2 := norm_sub_le (-(wy.vec 0 - dvec (cubeFEM hT hB N) shy 0)) (w.vec 0 - wy.vec 0)
-    rw [norm_neg] at n2
-    linarith
-  have e : w.vec t - dvec (cubeFEM hT hB N) (sh N) t = (w.vec t - wy.vec t) +
-      (wy.vec t - dvec (cubeFEM hT hB N) shy t) +
-        (dvec (cubeFEM hT hB N) shy t - dvec (cubeFEM hT hB N) (sh N) t) := by abel
-  rw [e]
-  have htri := norm_add₃_le (a := w.vec t - wy.vec t) (b := wy.vec t - dvec (cubeFEM hT hB N) shy t)
-    (c := dvec (cubeFEM hT hB N) shy t - dvec (cubeFEM hT hB N) (sh N) t)
+  -- triangle inequalities at `0` and at `t`
+  have n1 := norm_sub_le_norm_sub_add_norm_sub (dvec (cubeFEM hT hB N) shy 0) (wy.vec 0)
+    (dvec (cubeFEM hT hB N) (sh N) 0)
+  have n2 := norm_sub_le_norm_sub_add_norm_sub (wy.vec 0) (w.vec 0)
+    (dvec (cubeFEM hT hB N) (sh N) 0)
+  rw [norm_sub_rev (dvec (cubeFEM hT hB N) shy 0) (wy.vec 0)] at n1
+  rw [norm_sub_rev (wy.vec 0) (w.vec 0)] at n2
+  have n3 := norm_sub_le_norm_sub_add_norm_sub (w.vec t) (wy.vec t)
+    (dvec (cubeFEM hT hB N) (sh N) t)
+  have n4 := norm_sub_le_norm_sub_add_norm_sub (wy.vec t) (dvec (cubeFEM hT hB N) shy t)
+    (dvec (cubeFEM hT hB N) (sh N) t)
   have := k2 t ht
   have := k2 0 h0T
   have hε6 : ε = 6 * η := by rw [hηdef]; ring

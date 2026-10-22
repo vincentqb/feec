@@ -34,8 +34,6 @@ it. Both inclusions:
   (`mem_dPart_of_smooth`, by the `J`-direction cut-off `χ_m ψ` with the commutator bound), so
   closedness gives `u ∈ D(d_J)` (`mem_dPart_of_JfJ`).
 
-Conversely Green's identity characterizes `D(d_J)` (`greenForJ_iff`).
-
 **Hodge theory of `HΛ_J(Q)`** (`Hpart n J`, the complex on `ℤ`; `HQpart n J`, its window). The
 Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d_J) ∩ (𝔷ⁱ)ᗮ` (`Hpart_norm_le`), the compactness
 property (`Hpart_hasCompactProperty`), closed range in every degree (`Hpart_closedRangeAt`), the
@@ -51,12 +49,11 @@ The constant is the one of the torus, `(2π)⁻¹`.
 
 ## Main results
 
-* **`inner_JfJ`**, **`range_JJ`**, `reducing_rangeJ`, `JfJ_univ`, `JfJ_empty`,
-  `mem_mixed_fixed_iff_exists`.
+* **`inner_JfJ`**, **`range_JJ`**, `reducing_rangeJ`, `JfJ_univ`.
 * **`coeff_d_of_greenForJ`**, **`greenForJ_dPart`**, `coeff_d_dPart`.
 * `isClosed_dPart`, `minimal_le_dPart`, `dPart_le_maximal`, `dPart_empty`, **`maximal_vanishNear`**,
   `mapsTo_dPart`.
-* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**, **`greenForJ_iff`**,
+* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**,
   **`HQpart_eq_compress`**, **`dPart_univ`**, `HQpartZ_empty`, `HQpartZ_univ`.
 * **`Hpart_norm_le`**, **`Hpart_hasCompactProperty`**, `Hpart_closedRangeAt`,
   **`Hpart_harmonic_eq_bot`**, **`Hpart_harmonic_card`**, `finrank_Hpart_cohomology`.
@@ -84,17 +81,6 @@ open Geometry MirrorExt
 open Feec.Fourier (Reflection entryConj entryConj_apply conjLp coeFn_conjLp symLp coeFn_symLp)
 open Feec.Domain (formIdx formExt formExt_of_card formExt_val extDerivOp L2F L2 toL2F)
 open Feec.Fourier.Exterior (Form Lam)
-
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
-local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
-
-/-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
-
-/-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
-local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
 
 variable {n : ℕ}
 
@@ -130,9 +116,6 @@ theorem update_pcJ_erase (J : Finset (Fin n)) {s : Finset (Fin n)} {j : Fin n} (
 theorem pcJ_univ : pcJ (Finset.univ : Finset (Fin n)) = pcF true := by
   funext s j; simp [pcJ, pcF]
 
-theorem pcJ_empty : pcJ (∅ : Finset (Fin n)) = pcF false := by
-  funext s j; simp [pcJ, pcF]
-
 /-! ### The parity extension in the mixed class -/
 
 /-- **The parity extension of real `k`-forms on `Q` in the mixed class `J`**, on the Fourier side
@@ -155,12 +138,6 @@ theorem JfJ_univ (k : ℕ) : JfJ (Finset.univ : Finset (Fin n)) k = Jf true k :=
   unfold JfJ Jf
   rw [JR_congr (show (fun s : formIdx n (k : ℤ) => pcJF Finset.univ s) = fun s => pc true s from
     funext fun s => by rw [pcJF, pcJ_univ]; rfl) _ (pc_mul_self true)]
-
-/-- **`J = ∅` is the absolute extension.** -/
-theorem JfJ_empty (k : ℕ) : JfJ (∅ : Finset (Fin n)) k = Jf false k := by
-  unfold JfJ Jf
-  rw [JR_congr (show (fun s : formIdx n (k : ℤ) => pcJF ∅ s) = fun s => pc false s from
-    funext fun s => by rw [pcJF, pcJ_empty]; rfl) _ (pc_mul_self false)]
 
 /-- **The coefficients of `JfJ`**: `(JfJ u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
@@ -217,11 +194,6 @@ theorem JfJ_Jinvf {J : Finset (Fin n)} {k : ℕ}
     rw [reidx_symm_apply, reidx_symm_apply, hx.1]
   change reidx k (JR (pcJF_mul_self J) (Jinv (Fin n) (formIdx n (k : ℤ)) w)) = x
   rw [JR_Jinv (pcJF_mul_self J) hw hr, LinearIsometryEquiv.apply_symm_apply]
-
-theorem range_JfJ (J : Finset (Fin n)) (k : ℕ) :
-    Set.range (JfJ (n := n) J k) = {x | RealParJ J k x} := by
-  ext x
-  exact ⟨fun ⟨u, hu⟩ => hu ▸ JfJ_realParJ J k u, fun hx => ⟨_, JfJ_Jinvf hx⟩⟩
 
 /-! ### The real mixed parity class as a fixed space -/
 
@@ -329,9 +301,6 @@ theorem mem_realFixedJ_iff {J : Finset (Fin n)} {i : Fin (Fintype.card (Fin n) +
 def JJ (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1)) : WQ n a →L[ℝ] TW n a :=
   JfJ J (a : ℕ)
 
-theorem JJ_apply (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1)) (u : WQ n a) :
-    JJ J a u = JfJ J (a : ℕ) u := rfl
-
 theorem inner_JJ (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1)) (x y : WQ n a) :
     ⟪JJ J a x, JJ J a y⟫_ℝ = ((2 ^ n : ℝ) : ℝ) * ⟪x, y⟫_ℝ :=
   inner_JfJ J a x y
@@ -354,58 +323,6 @@ theorem reducing_rangeJ (J : Finset (Fin n)) :
   have h := (realActionJ (n := n) J).reducingSubcomplex_fixed
   refine ⟨fun a b => ?_⟩
   convert h.reduces a b using 1 <;> exact range_JJ _ _
-
-theorem mem_mixedAction_fixed_iff_reflJ {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin n) + 1)}
-    {x : TW n a} :
-    x ∈ (DeRham.mixedAction (Fin n) J).fixed a ↔ ∀ j, reflJ J j a x = x :=
-  (DeRham.mixedSymmetries (Fin n) J).toInvolutions.mem_fixed_toAction
-
-theorem mem_realFixedJ_iff_cnj {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin n) + 1)}
-    {x : TW n a} :
-    x ∈ (realActionJ J).fixed a ↔ cnj a x = x ∧ x ∈ (DeRham.mixedAction (Fin n) J).fixed a := by
-  rw [(realInvolutionsJ J).mem_fixed_toAction, mem_mixedAction_fixed_iff_reflJ]
-  exact ⟨fun h => ⟨h none, fun j => h (some j)⟩, fun h k => by cases k; exacts [h.1, h.2 _]⟩
-
-/-- **The mixed parity class of `Feec.Models.Cube.DeRhamPartial` is the complexification** of
-the real forms on `Q`: its `a`-forms are exactly `JJ u + i JJ v`. -/
-theorem mem_mixed_fixed_iff_exists {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin n) + 1)}
-    {x : TW n a} :
-    x ∈ (DeRham.mixedAction (Fin n) J).fixed a ↔
-      ∃ u v : WQ n a, x = JJ J a u + Complex.I • JJ J a v := by
-  constructor
-  · intro hx
-    have hc : cnj a x ∈ (DeRham.mixedAction (Fin n) J).fixed a := by
-      rw [mem_mixedAction_fixed_iff_reflJ] at hx ⊢
-      intro j
-      rw [reflJ_cnj, hx j]
-    set r : TW n a := (2 : ℂ)⁻¹ • (x + cnj a x)
-    set s : TW n a := (2 : ℂ)⁻¹ • (-Complex.I • (x - cnj a x))
-    have hr : r ∈ (realActionJ J).fixed a := by
-      refine mem_realFixedJ_iff_cnj.2 ⟨?_, Submodule.smul_mem _ _ (add_mem hx hc)⟩
-      simp only [r]
-      rw [cnj_smul, _root_.map_add, cnj_cnj, map_inv₀, map_ofNat, add_comm (cnj a x)]
-    have hs : s ∈ (realActionJ J).fixed a := by
-      refine mem_realFixedJ_iff_cnj.2 ⟨?_, Submodule.smul_mem _ _
-        (Submodule.smul_mem _ _ (sub_mem hx hc))⟩
-      simp only [s]
-      rw [cnj_smul, cnj_smul, _root_.map_sub, cnj_cnj, map_inv₀, map_ofNat, _root_.map_neg,
-        Complex.conj_I, neg_neg]
-      simp only [smul_sub, neg_smul, smul_neg]
-      abel
-    rw [← range_JJ] at hr hs
-    obtain ⟨u, hu⟩ := hr
-    obtain ⟨v, hv⟩ := hs
-    refine ⟨u, v, ?_⟩
-    rw [show JJ J a u = r from hu, show JJ J a v = s from hv]
-    have e1 : Complex.I * ((2 : ℂ)⁻¹ * -Complex.I) = (2 : ℂ)⁻¹ := by
-      linear_combination (-(2 : ℂ)⁻¹) * Complex.I_mul_I
-    simp only [r, s, smul_smul, smul_add, smul_sub, e1]
-    rw [add_add_sub_cancel, ← add_smul]
-    norm_num
-  · rintro ⟨u, v, rfl⟩
-    have h1 : ∀ w : WQ n a, JJ J a w ∈ (DeRham.mixedAction (Fin n) J).fixed a := fun w =>
-      (mem_realFixedJ_iff_cnj.1 ((range_JJ J a) ▸ ⟨w, rfl⟩)).2
-    exact add_mem (h1 u) (Submodule.smul_mem _ _ (h1 v))
 
 /-! ### Green's identity with mixed boundary conditions and the torus symbol -/
 
@@ -759,9 +676,6 @@ def coreSub (J : Finset (Fin n)) (ι : Type*) : Submodule ℝ (L2F ℝ Ω ι) wh
     change ((c • u i : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) y = 0
     rw [h2, Pi.smul_apply, h1 hy, smul_zero]
 
-theorem mem_coreSub {J : Finset (Fin n)} {ι : Type*} {u : L2F ℝ Ω ι} :
-    u ∈ coreSub Ω J ι ↔ VanishNear Ω J u := Iff.rfl
-
 variable (Ω) in
 /-- `d_max` on the forms of `D(d_max)` vanishing near the faces normal to `J`. -/
 abbrev dCore (J : Finset (Fin n)) (k : ℤ) :
@@ -810,8 +724,6 @@ theorem dPart_le_maximal (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) :
   rw [dPart_graph hΩ]
   exact Submodule.topologicalClosure_minimal _ (le_graph_of_le domRestrict_le)
     ((extDerivOp ℝ n k).isClosed_maximal hΩ)
-
-theorem le_dPart (J : Finset (Fin n)) (k : ℤ) : dCore Ω J k ≤ dPart Ω J k := le_closure _
 
 /-- `d_J` is `d_max` on its domain. -/
 theorem dPart_apply_eq (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) (x : (dPart Ω J k).domain) :
@@ -1259,25 +1171,6 @@ theorem mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ} {ψ : formIdx n k →
       filter_upwards [hev y hy] with m hm
       exact (apply_congr_of_eventuallyEq _ hm q).symm
 
-/-- `mem_dPart_of_smooth` without the integrability hypotheses: a smooth form and its exterior
-derivative are square integrable on the bounded cube `Q`, and the form lies in `D(d_J)` with
-`d_J ψ = d ψ`. -/
-theorem exists_mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ}
-    {ψ : formIdx n k → (Fin n → ℝ) → ℝ} (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) {M : ℝ}
-    (hM : ∀ s y, |ψ s y| ≤ M) {L : ℝ} (hL0 : 0 ≤ L)
-    (hL : ∀ s j y, |fderiv ℝ (ψ s) y (Pi.single j 1)| ≤ L)
-    (hV : ∀ s j, j ∈ J → j ∉ s.1 → ∀ y : Fin n → ℝ, (y j = 0 ∨ y j = 1 / 2) → ψ s y = 0) :
-    ∃ (hψL : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))))
-      (hdψL : ∀ t, MemLp ((extDerivOp ℝ n k).apply ψ t) 2 (volume.restrict (Q (Fin n)))),
-      (toL2F hψL, toL2F hdψL) ∈ (dPart (Q (Fin n)) J k).graph := by
-  have hψL : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))) := fun s =>
-    Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn (hψ s).continuous
-  have hdψL : ∀ t, MemLp ((extDerivOp ℝ n k).apply ψ t) 2 (volume.restrict (Q (Fin n))) :=
-    fun t => Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn
-      ((extDerivOp ℝ n k).continuous_apply (Feec.Domain.extDerivOp_isOrderLE k)
-        (fun s => (hψ s).of_le (by exact_mod_cast le_top)) t)
-  exact ⟨hψL, hdψL, mem_dPart_of_smooth hψ hM hL0 hL hV hψL hdψL⟩
-
 end Smooth
 
 /-! ### The extension reflects the domains of `d_J` -/
@@ -1366,21 +1259,6 @@ theorem mem_dPart_of_JfJ {J : Finset (Fin n)} {k : ℕ}
   refine ⟨hu, Lp.ext_count fun m => ?_⟩
   rw [← coeff_d_dPart J k ⟨u, hu⟩ m]
   exact h m
-
-/-- **The Green characterization of `D(d_J)`**: `u ∈ D(d_J)` with `d_J u = w` iff Green's identity
-`⟪w, φ dx_t⟫ = ⟪u, dᵗ(φ dx_t)⟫` holds against the smooth `φ` (bounded, with bounded first
-derivatives) vanishing on the faces normal to the directions of `t ∖ J`, i.e. against the smooth
-forms whose normal components vanish on the faces not normal to `J`. -/
-theorem greenForJ_iff {J : Finset (Fin n)} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))} :
-    GreenForJ J k u w ↔ ∃ h : u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain,
-      dPart (Q (Fin n)) J (k : ℤ) ⟨u, h⟩ = w := by
-  constructor
-  · intro hG
-    obtain ⟨h, e⟩ := mem_dPart_of_JfJ (J := J) (k := k) fun m => coeff_d_of_greenForJ hG m
-    exact ⟨h, injective_JfJ J (k + 1) e⟩
-  · rintro ⟨h, rfl⟩
-    exact greenForJ_dPart J k ⟨u, h⟩
 
 end Converse
 

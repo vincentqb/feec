@@ -32,7 +32,7 @@ and takes Fourier coefficients (`Feec.Fourier.Torus.fieldFourier`): a scaled iso
 
 ## Main results
 
-* `resQ_extL2`, `extL2_resQ`, `inner_extL2` (`⟪ext f, ext g⟫ = 2ᵈ ⟪f, g⟫`), `range_extL2`,
+* `resQ_extL2`, `extL2_resQ`, `inner_extL2` (`⟪ext f, ext g⟫ = 2ᵈ ⟪f, g⟫`),
   `extL2_toL2` (on test functions `extL2` is the classical extension `Geometry.ext`).
 * `inner_extF`, `range_extF`, `resQF_extF`, `extF_testField`.
 
@@ -190,8 +190,6 @@ variable {c : d → ℂ} (hc : ∀ j, c j * c j = 1)
 /-- Restriction to `Q` on the parity functions. -/
 def resP (c : d → ℂ) : paritySub c →L[ℂ] Domain.L2 ℂ (Q d) := resQ.comp (paritySub c).subtypeL
 
-theorem resP_apply (f : paritySub c) : resP c f = resQ (f : T2 d) := rfl
-
 include hc
 
 theorem norm_resP (f : paritySub c) :
@@ -237,8 +235,6 @@ def resEquiv : paritySub c ≃L[ℂ] Domain.L2 ℂ (Q d) :=
   ContinuousLinearEquiv.ofBijective (resP c) (LinearMap.ker_eq_bot.2 (injective_resP hc))
     (LinearMap.range_eq_top.2 (surjective_resP hc))
 
-@[simp] theorem resEquiv_apply (f : paritySub c) : resEquiv hc f = resQ (f : T2 d) := rfl
-
 /-- **The extension by parity** `L²(Q) → L²(𝕋ᵈ)`: the parity function with parity `c`
 restricting to the given function on `Q`. -/
 def extL2 : Domain.L2 ℂ (Q d) →L[ℂ] T2 d :=
@@ -261,12 +257,6 @@ theorem eq_extL2_iff {f : T2 d} {g : Domain.L2 ℂ (Q d)} :
   constructor
   · rintro rfl; exact ⟨extL2_mem hc g, resQ_extL2 hc g⟩
   · rintro ⟨hf, rfl⟩; exact (extL2_resQ hc hf).symm
-
-theorem range_extL2 : LinearMap.range (extL2 hc : Domain.L2 ℂ (Q d) →ₗ[ℂ] T2 d) = paritySub c := by
-  ext f
-  constructor
-  · rintro ⟨g, rfl⟩; exact extL2_mem hc g
-  · intro hf; exact ⟨resQ f, extL2_resQ hc hf⟩
 
 theorem norm_sq_extL2 (g : Domain.L2 ℂ (Q d)) :
     ‖extL2 hc g‖ ^ 2 = 2 ^ Fintype.card d * ‖g‖ ^ 2 := by
@@ -411,24 +401,7 @@ theorem extPi_testField {Φ : P → (d → ℝ) → ℂ} (hΦ : Domain.IsTestFie
   rw [extPi_apply]
   exact extL2_toL2 (hc p) (hΦ p)
 
-theorem extF_testField_coeff {Φ : P → (d → ℝ) → ℂ} (hΦ : Domain.IsTestField (Q d) Φ)
-    (n : d → ℤ) (p : P) :
-    (extF hc (Domain.testField hΦ) : (d → ℤ) → EuclideanSpace ℂ P) n p =
-      mFourierCoeff (ext (c p) (Φ p)) n := by
-  rw [extF_coeff, show extL2 (hc p) (Domain.testField hΦ p) =
-      toL2 (continuous_ext (c p) (hΦ p)) from
-    extL2_toL2 (hc p) (hΦ p), mFourierCoeff_toL2]
-
 /-! ### Fourier coefficients of extensions of test functions -/
-
-omit [Fintype P] in
-/-- `ext c` is linear in the test function. -/
-theorem ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ) (f : ι → (d → ℝ) → ℂ) :
-    ext c (fun y => ∑ i ∈ s, a i * f i y) = fun x => ∑ i ∈ s, a i * ext c (f i) x := by
-  funext x
-  simp only [Geometry.ext, Geometry.per, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun ε _ => by ring
 
 omit [DecidableEq d] [Fintype P] in
 /-- Fourier coefficients of finite linear combinations of continuous functions. -/
@@ -442,28 +415,6 @@ theorem mFourierCoeff_sum {ι : Type*} (s : Finset ι) (a : ι → ℂ) {f : ι 
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [← integral_const_mul]
   congr 1; funext x; ring
-
-omit [Fintype P] in
-/-- `(ext Σ aᵢ fᵢ)^ = Σ aᵢ (ext fᵢ)^` for test functions. -/
-theorem mFourierCoeff_ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ)
-    {f : ι → (d → ℝ) → ℂ} (hf : ∀ i, Domain.IsTest (Q d) (f i)) (n : d → ℤ) :
-    mFourierCoeff (ext c fun y => ∑ i ∈ s, a i * f i y) n =
-      ∑ i ∈ s, a i * mFourierCoeff (ext c (f i)) n := by
-  rw [ext_sum]
-  exact mFourierCoeff_sum s a (fun i => continuous_ext c (hf i)) n
-
-omit [Fintype P] in
-theorem mFourierCoeff_ext_sub (c : d → ℂ) {f g : (d → ℝ) → ℂ} (hf : Domain.IsTest (Q d) f)
-    (hg : Domain.IsTest (Q d) g) (n : d → ℤ) :
-    mFourierCoeff (ext c fun y => f y - g y) n =
-      mFourierCoeff (ext c f) n - mFourierCoeff (ext c g) n := by
-  have h := mFourierCoeff_ext_sum c Finset.univ ![1, -1] (f := ![f, g])
-    (fun i => by fin_cases i <;> simpa) n
-  have e : (fun y => f y - g y) =
-      fun y => ∑ i, (![1, -1] : Fin 2 → ℂ) i * (![f, g] : Fin 2 → _) i y := by
-    funext y; simp [Fin.sum_univ_two, sub_eq_add_neg]
-  rw [e, h]
-  simp [Fin.sum_univ_two, sub_eq_add_neg]
 
 omit [Fintype P] in
 /-- **Integration by parts for extensions**: the extension of `∂_k Φ` with the parity of `x_k`
@@ -590,10 +541,6 @@ def extS {c : d → ℂ} (hc : ∀ j, c j * c j = 1) :
     Domain.L2 ℂ (Q d) →L[ℂ] Lp ℂ 2 (Measure.count : Measure (d → ℤ)) :=
   (scalarFourier d).toContinuousLinearEquiv.toContinuousLinearMap.comp (extL2 hc)
 
-theorem extS_coeff {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : Domain.L2 ℂ (Q d)) (n : d → ℤ) :
-    (extS hc g : (d → ℤ) → ℂ) n = mFourierCoeff (extL2 hc g : UnitAddTorus d → ℂ) n :=
-  scalarFourier_apply _ n
-
 theorem scalarFourier_symm_extS {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : Domain.L2 ℂ (Q d)) :
     (scalarFourier d).symm (extS hc g) = extL2 hc g :=
   (scalarFourier d).symm_apply_apply _
@@ -625,13 +572,6 @@ theorem range_extS {c : d → ℂ} (hc : ∀ j, c j * c j = 1) :
     refine ⟨resQ ((scalarFourier d).symm u), ?_⟩
     change scalarFourier d (extL2 hc _) = u
     rw [extL2_resQ hc hu', LinearIsometryEquiv.apply_symm_apply]
-
-theorem extS_resQ {c : d → ℂ} (hc : ∀ j, c j * c j = 1)
-    {u : Lp ℂ 2 (Measure.count : Measure (d → ℤ))} (hu : u ∈ scalarParity d c) :
-    extS hc (resQ ((scalarFourier d).symm u)) = u := by
-  have hu' : (scalarFourier d).symm u ∈ paritySub c := hu
-  change scalarFourier d (extL2 hc _) = u
-  rw [extL2_resQ hc hu', LinearIsometryEquiv.apply_symm_apply]
 
 theorem extS_injective {c : d → ℂ} (hc : ∀ j, c j * c j = 1) : Function.Injective (extS hc) :=
   fun f g h => by
@@ -724,10 +664,6 @@ theorem liftLp_corestrictLp (x : X) : liftLp ι (corestrictLp ι L hL x) = L x :
       LinearMap.range (liftLp ι).toLinearMap) : Lp E 2 Measure.count) = L x
   rw [LinearIsometryEquiv.apply_symm_apply]
   rfl
-
-theorem corestrictLp_apply (x : X) (a : α) :
-    ι (((corestrictLp ι L hL x : Lp F 2 Measure.count) : α → F) a) = (L x : α → E) a := by
-  rw [← liftLp_apply, liftLp_corestrictLp]
 
 theorem inner_corestrictLp (x y : X) :
     ⟪corestrictLp ι L hL x, corestrictLp ι L hL y⟫_ℂ = ⟪L x, L y⟫_ℂ := by

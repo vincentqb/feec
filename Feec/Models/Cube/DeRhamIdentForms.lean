@@ -63,17 +63,6 @@ open Geometry MirrorExt
 open Feec.Domain (formIdx formExt formExt_of_card formExt_val extDerivOp L2F L2 toL2F)
 open Feec.Fourier.Exterior (Form Lam)
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
-local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
-
-/-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
-
-/-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
-local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
-
 variable {n : ℕ}
 
 /-! ### Parity vectors and index sets -/
@@ -113,9 +102,6 @@ def idx (k : ℕ) : formIdx n (k : ℤ) ≃ {s : Finset (Fin n) // #s = k} :=
   Equiv.subtypeEquivRight fun _ => Nat.cast_inj
 
 @[simp] theorem idx_val (k : ℕ) (s : formIdx n (k : ℤ)) : ((idx k s) : Finset (Fin n)) = s.1 := rfl
-
-@[simp] theorem idx_symm_val (k : ℕ) (t : {s : Finset (Fin n) // #s = k}) :
-    (((idx k).symm t) : Finset (Fin n)) = t.1 := rfl
 
 /-- The coefficient sequences of `L²` fields indexed by `formIdx n k`, as `ℓ²(ℤⁿ; Λᵏ)`. -/
 def reidx (k : ℕ) : Lp (EuclideanSpace ℂ (formIdx n (k : ℤ))) 2 (Measure.count : Measure (Fin n → ℤ))
@@ -178,13 +164,6 @@ theorem inner_Jf (rel : Bool) (k : ℕ) (u v : L2F ℝ (Q (Fin n)) (formIdx n (k
     ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, inner_JR,
     Fintype.card_fin]
 
-theorem norm_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    ‖Jf rel k u‖ = Real.sqrt (2 ^ n) * ‖u‖ := by
-  have h := inner_Jf rel k u u
-  rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq] at h
-  rw [← Real.sqrt_sq (norm_nonneg (Jf rel k u)), h, Real.sqrt_mul (by positivity),
-    Real.sqrt_sq (norm_nonneg u)]
-
 /-- **The real coefficient sequences of the parity class `rel`**: `x(-m) = conj x(m)` and
 `x(flip_j m)_t = ± ε_j(t) x(m)_t`. -/
 def RealPar (rel : Bool) (k : ℕ)
@@ -217,11 +196,6 @@ theorem Jf_Jinvf {rel : Bool} {k : ℕ}
     rw [reidx_symm_apply, reidx_symm_apply, hx.1]
   change reidx k (JR (pc_mul_self rel) (Jinv (Fin n) (formIdx n (k : ℤ)) w)) = x
   rw [JR_Jinv (pc_mul_self rel) hw hr, LinearIsometryEquiv.apply_symm_apply]
-
-theorem range_Jf (rel : Bool) (k : ℕ) :
-    Set.range (Jf (n := n) rel k) = {x | RealPar rel k x} := by
-  ext x
-  exact ⟨fun ⟨u, hu⟩ => hu ▸ Jf_realPar rel k u, fun hx => ⟨_, Jf_Jinvf hx⟩⟩
 
 /-! ### The torus symbol and the coefficients of `Jf` on all index sets -/
 

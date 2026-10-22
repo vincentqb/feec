@@ -125,10 +125,6 @@ abbrev gradCurl : HilbertComplex ℝ ComplexShape.fin3 Space :=
 theorem wave_gradCurl : gradCurl.wave = Models.Torus.GradCurl.complex.wave.restrictScalars :=
   HilbertComplex.wave_restrictScalars real_inner_eq_re
 
-/-- The real dual complex is the complex dual. -/
-theorem dual_gradCurl : gradCurl.dual = Models.Torus.GradCurl.complex.dual.restrictScalars :=
-  HilbertComplex.dual_restrictScalars real_inner_eq_re
-
 /-- The TSD constraint `{0} × L²(TSD) × L²(TSD)` as a real subspace. -/
 abbrev constraint (i : Fin 3) :
     @Submodule ℝ (Space i) _ _ (L2.innerProductSpace : InnerProductSpace ℝ (Space i)).toModule :=

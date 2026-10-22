@@ -16,8 +16,8 @@ it descends, by the same general mechanism as for `Feec.Models.Cube.Mirror`, to
 * the **parity model** `MirrorSym.complex` (the fixed complex);
 * the **cube `Q = (0, ½)³`** `MirrorSym.complexQ`: `L²(Q) → L²(Q; S) → L²(Q; T)` (the
   bounded-domain spaces `Feec.Models.BoundedDomain.symSub`, `trSub`), the compression of the torus
-  complex along the mirror extensions (`∂_n u = 0`, `S_{nτ} = 0`); `d₀` is the weak Hessian on `Q`
-  (`MirrorSym.d₀_weakHess`) and the constraint spaces consist of TSD fields (`mem_tsdQ_one`,
+  complex along the mirror extensions (`∂_n u = 0`, `S_{nτ} = 0`); the constraint spaces consist
+  of TSD fields (`mem_tsdQ_one`,
   `mem_tsdQ_two`, with the wall conditions `S_{τn} = 0`, `T_{nn} = 0`);
 * **every open cube** `∏ (bᵢ, bᵢ + s)` (`MirrorSym.complexCube`), with the chain-rule factors
   `(2s)⁻²` on the Hessian and `(2s)⁻¹` on the curl.
@@ -30,11 +30,11 @@ every bounded domain (`Feec.Counterexamples.BoundedSymTSD`).
 * **`MirrorSym.reducingSubcomplex`**, `MirrorSym.propagates`, `MirrorSym.existsUnique_mem`,
   `MirrorSym.invariantCore_eq`, `MirrorSym.exists_nonstationary`.
 * **`MirrorSym.reducingSubcomplexQ`**, `MirrorSym.propagatesQ`, `MirrorSym.existsUnique_memQ`,
-  `MirrorSym.invariantCore_eqQ`, `MirrorSym.exists_nonstationaryQ`, `MirrorSym.d₀_weakHess`,
+  `MirrorSym.invariantCore_eqQ`, `MirrorSym.exists_nonstationaryQ`,
   `MirrorSym.complexQ_d₁_eq`.
 * **`MirrorSym.reducingSubcomplexCube`**, `MirrorSym.propagatesCube`,
   `MirrorSym.existsUnique_memCube`, `MirrorSym.invariantCore_eqCube`,
-  `MirrorSym.exists_nonstationaryCube`, `MirrorSym.mem_tsdCube_one`, `mem_tsdCube_two`.
+  `MirrorSym.exists_nonstationaryCube`.
 
 ## References
 
@@ -67,7 +67,6 @@ def symι : Sym →ₗᵢ[ℂ] Mat := symSub.subtypeₗᵢ
 def trι : Tr →ₗᵢ[ℂ] Mat := trSub.subtypeₗᵢ
 
 @[simp] theorem symι_apply (M : Sym) : symι M = (M : Mat) := rfl
-@[simp] theorem trι_apply (M : Tr) : trι M = (M : Mat) := rfl
 
 theorem range_symι : LinearMap.range symι.toLinearMap = symSub := Submodule.range_subtype _
 theorem range_trι : LinearMap.range trι.toLinearMap = trSub := Submodule.range_subtype _
@@ -94,9 +93,6 @@ def trR (k : Fin 3) : SymCurl.Tr →L[ℂ] SymCurl.Tr :=
 
 @[simp] theorem coe_symR (k : Fin 3) (M : SymCurl.Sym) :
     (symR k M : Mat) = sgnCLM (Fin 3 × Fin 3) (fun p => cE p k) M := rfl
-
-@[simp] theorem coe_trR (k : Fin 3) (M : SymCurl.Tr) :
-    (trR k M : Mat) = sgnCLM (Fin 3 × Fin 3) (fun p => cB p k) M := rfl
 
 theorem symR_symR (k : Fin 3) (M : SymCurl.Sym) : symR k (symR k M) = M :=
   SymCurl.Sym.ext (sgnCLM_sgnCLM (fun p => cE_sq p k) (M : Mat))
@@ -715,167 +711,6 @@ theorem exists_nonstationaryQ :
   rw [← HilbertComplex.totalJ_apply, totalJ_cosStateQ]
   exact cosState_mem_constraint i
 
-/-! #### `d₀` is the weak Hessian on `Q` -/
-
-section WeakHess
-
-open Feec.Domain (IsTest IsTestField testField toL2)
-open Feec.Models.BoundedDomain (R3)
-
-/-- The adjoint of the Hessian symbol: `hess_ξ* M = -Σ ξ_a ξ_b M_{ab}` (`= div div`). -/
-theorem adjoint_hess_apply (ξ : Freq) (M : SymCurl.Sym) :
-    ContinuousLinearMap.adjoint (hess ξ) M =
-      -∑ p : Fin 3 × Fin 3, (ξ p.1 : ℂ) * (ξ p.2 : ℂ) * (M : Mat) p := by
-  have h := ContinuousLinearMap.adjoint_inner_right (hess ξ) 1 M
-  rw [show ⟪(1 : ℂ), ContinuousLinearMap.adjoint (hess ξ) M⟫_ℂ =
-    ContinuousLinearMap.adjoint (hess ξ) M by simp] at h
-  rw [h, SymCurl.Sym.inner_val, coe_hess, inner_mat, Fintype.sum_prod_type,
-    ← Finset.sum_neg_distrib]
-  refine Finset.sum_congr rfl fun a _ => ?_
-  rw [← Finset.sum_neg_distrib]
-  refine Finset.sum_congr rfl fun b _ => ?_
-  rw [hessM_apply]
-  simp [Complex.conj_ofReal]
-
-/-- The parities of the second derivative `∂_a ∂_b` of an extension: reversing the parities of
-`x_b` and then `x_a` takes the tensor parity of `(a, b)` to the even scalar parity. -/
-theorem cU_eq_update₂ (p : Fin 3 × Fin 3) :
-    cU = Function.update (Function.update (cE p) p.2 (-cE p p.2)) p.1
-      (-Function.update (cE p) p.2 (-cE p p.2) p.1) := by
-  obtain ⟨a, b⟩ := p
-  funext k
-  fin_cases a <;> fin_cases b <;> fin_cases k <;> simp [cU, cE, sgn, Function.update]
-
-theorem isTest_divdiv {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
-    IsTest (Q (Fin 3)) fun x => ∑ p : Fin 3 × Fin 3, (1 : ℂ) *
-      fderiv ℝ (fun y => fderiv ℝ (Ψ p) y (Pi.single p.2 1)) x (Pi.single p.1 1) :=
-  IsTest.sum _ fun p _ => (((hΨ p).fderiv_apply _).fderiv_apply _).const_mul 1
-
-/-- **`div div ∘ J₁ = J₀ ∘ div div` on symmetric test fields**: the mirror extension of a
-symmetric test field lies in `D(hess†)` and `hess† = div div` maps it to the mirror extension of
-`div div Ψ = Σ ∂_a ∂_b Ψ_{ab}`. -/
-theorem adjoint_hess_J_testField {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ)
-    (hsym : ∀ i j, Ψ (i, j) = Ψ (j, i)) :
-    ∃ h : J₁ ⟨testField hΨ, Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩ ∈
-        ((Models.Torus.SymCurl.complex.d 0 1)†).domain,
-      (Models.Torus.SymCurl.complex.d 0 1)† ⟨_, h⟩ = J₀ (toL2 (isTest_divdiv hΨ)) := by
-  have hadj := Models.Torus.SymCurl.adjoint_d 0 1
-  have key : ∀ n, ContinuousLinearMap.adjoint (symCurl.m 0 1 (Fourier.Torus.freq n))
-      ((J₁ ⟨testField hΨ, Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩ :
-        (Fin 3 → ℤ) → SymCurl.Sym) n) = (J₀ (toL2 (isTest_divdiv hΨ)) : (Fin 3 → ℤ) → ℂ) n := by
-    intro n
-    show ContinuousLinearMap.adjoint (hess (Fourier.Torus.freq n))
-      ((J₁ ⟨testField hΨ, Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩ :
-        Lp SymCurl.Sym 2 (Measure.count : Measure (Fin 3 → ℤ))) n) =
-      ((J₀ (toL2 (isTest_divdiv hΨ)) : Lp ℂ 2 (Measure.count : Measure (Fin 3 → ℤ))) n)
-    rw [adjoint_hess_apply, extS_coeff, extL2_toL2, TorusWeak.mFourierCoeff_toL2,
-      mFourierCoeff_ext_sum _ _ _ fun p => ((hΨ p).fderiv_apply _).fderiv_apply _,
-      ← Finset.sum_neg_distrib]
-    refine Finset.sum_congr rfl fun p _ => ?_
-    have hJ : SymCurl.Sym.val ((J₁ ⟨testField hΨ,
-        Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩ :
-          Lp SymCurl.Sym 2 (Measure.count : Measure (Fin 3 → ℤ))) n) =
-        (extF cE_sq (testField hΨ) : (Fin 3 → ℤ) → Mat) n :=
-      corestrictLp_apply symι
-        ((extF cE_sq).comp (Models.BoundedDomain.symSub ℂ (Q (Fin 3))).subtypeL) extF_cE_mem_symSub
-        ⟨testField hΨ, Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩ n
-    change -((Fourier.Torus.freq n p.1 : ℂ) * (Fourier.Torus.freq n p.2 : ℂ) *
-      (SymCurl.Sym.val ((J₁ ⟨testField hΨ, Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩ :
-        Lp SymCurl.Sym 2 (Measure.count : Measure (Fin 3 → ℤ))) n)) p) = _
-    rw [hJ, extF_testField_coeff, mFourierCoeff_ext_fderiv' p.1 (cU_eq_update₂ p)
-      ((hΨ p).fderiv_apply _), mFourierCoeff_ext_fderiv' p.2 rfl (hΨ p),
-      Fourier.Torus.freq_apply, Fourier.Torus.freq_apply]
-    push_cast
-    linear_combination (-4 * (Real.pi : ℂ) ^ 2 * (n p.1 : ℂ) * (n p.2 : ℂ) *
-      mFourierCoeff (Geometry.ext (cE p) (Ψ p)) n) * Complex.I_mul_I
-  obtain ⟨h, e⟩ := exists_mulOp_count_eq _ key
-  refine ⟨hadj ▸ h, ?_⟩
-  rw [apply_eq_of_eq hadj _ ⟨_, h⟩ rfl]
-  exact e
-
-/-- **Green's formula for `d₀`**: `⟪d₀ u, Ψ⟫ = ⟪u, div div Ψ⟫` for symmetric test fields `Ψ`. -/
-theorem inner_d₀_testField (u : (complexQ.d 0 1).domain) {Ψ : Fin 3 × Fin 3 → R3 → ℂ}
-    (hΨ : IsTestField (Q (Fin 3)) Ψ) (hsym : ∀ i j, Ψ (i, j) = Ψ (j, i)) :
-    ⟪Subtype.val (complexQ.d 0 1 u : SQ), testField hΨ⟫_ℂ =
-      ⟪(u.1 : RQ), toL2 (isTest_divdiv hΨ)⟫_ℂ := by
-  obtain ⟨h, e⟩ := adjoint_hess_J_testField hΨ hsym
-  have hx' := (HilbertComplex.mem_compress_domain_iff eight_pos inner_J
-    reducingSubcomplex_range).1 u.2
-  have hfa := LinearPMap.adjoint_isFormalAdjoint (Models.Torus.SymCurl.complex.dense 0 1) ⟨_, h⟩
-    ⟨_, hx'⟩
-  have key : ⟪J 1 (complexQ.d 0 1 u), J 1 ⟨testField hΨ,
-      Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩⟫_ℂ =
-      ⟪J 0 u, J 0 (toL2 (isTest_divdiv hΨ))⟫_ℂ := by
-    rw [J_complexQ_d]
-    erw [← e]
-    exact ((inner_conj_symm _ _).symm.trans (congrArg (starRingEnd ℂ) hfa.symm)).trans
-      (inner_conj_symm _ _)
-  have h8 : ((8 : ℝ) : ℂ) * ⟪Subtype.val (complexQ.d 0 1 u : SQ), testField hΨ⟫_ℂ =
-      ((8 : ℝ) : ℂ) * ⟪(u.1 : RQ), toL2 (isTest_divdiv hΨ)⟫_ℂ :=
-    calc _ = ⟪J 1 (complexQ.d 0 1 u), J 1 ⟨testField hΨ,
-          Models.BoundedDomain.testField_mem_symSub hΨ hsym⟩⟫_ℂ := (inner_J 1 _ _).symm
-      _ = _ := key
-      _ = _ := inner_J 0 _ _
-  exact mul_left_cancel₀ (by norm_num) h8
-
-/-- The weights `(δ_{(a, b)} + δ_{(b, a)})/2` of the symmetrization of `e_a ⊗ e_b`. -/
-def symWeight (a b : Fin 3) (p : Fin 3 × Fin 3) : ℂ :=
-  ((if p = (a, b) then 1 else 0) + (if p = (b, a) then 1 else 0)) / 2
-
-theorem symWeight_swap (a b i j : Fin 3) : symWeight a b (i, j) = symWeight a b (j, i) := by
-  unfold symWeight
-  rw [add_comm]
-  congr 3 <;> simp [Prod.mk.injEq, and_comm]
-
-theorem sum_symWeight_mul {f : Fin 3 × Fin 3 → ℂ} (a b : Fin 3) :
-    ∑ p, symWeight a b p * f p = (f (a, b) + f (b, a)) / 2 := by
-  simp only [symWeight, add_div, add_mul, ite_div, ite_mul, one_div, zero_div, zero_mul,
-    Finset.sum_add_distrib, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
-  ring
-
-/-- **`d₀` is the weak Hessian on `Q`**: `⟪(d₀ u)_{ab}, φ⟫ = ⟪u, ∂_b ∂_a φ⟫` for every test
-function `φ` (no boundary condition is lost: `∂_n u = 0` is in the domain). -/
-theorem d₀_weakHess (u : (complexQ.d 0 1).domain) {φ : R3 → ℂ} (hφ : IsTest (Q (Fin 3)) φ)
-    (a b : Fin 3) :
-    ⟪Subtype.val (complexQ.d 0 1 u : SQ) (a, b), toL2 hφ⟫_ℂ =
-      ⟪(u.1 : RQ), toL2 ((hφ.fderiv_apply (Pi.single a 1)).fderiv_apply (Pi.single b 1))⟫_ℂ := by
-  have hΨ : IsTestField (Q (Fin 3)) fun p x => symWeight a b p * φ x :=
-    fun p => hφ.const_mul _
-  have hsym : ∀ i j, (fun p x => symWeight a b p * φ x) (i, j) =
-      (fun p x => symWeight a b p * φ x) (j, i) := fun i j => by
-    simp only [symWeight_swap a b i j]
-  have h := inner_d₀_testField u hΨ hsym
-  have hD : Subtype.val (complexQ.d 0 1 u : SQ) (b, a) =
-      Subtype.val (complexQ.d 0 1 u : SQ) (a, b) := (complexQ.d 0 1 u : SQ).2 b a
-  have lhs : ⟪Subtype.val (complexQ.d 0 1 u : SQ), testField hΨ⟫_ℂ =
-      ⟪Subtype.val (complexQ.d 0 1 u : SQ) (a, b), toL2 hφ⟫_ℂ := by
-    rw [Domain.L2F.inner_def]
-    have e : ∀ p, ⟪Subtype.val (complexQ.d 0 1 u : SQ) p, testField hΨ p⟫_ℂ =
-        symWeight a b p * ⟪Subtype.val (complexQ.d 0 1 u : SQ) p, toL2 hφ⟫_ℂ := fun p => by
-      rw [Domain.testField_apply, Domain.toL2_congr (hΨ p) (hφ.smul (symWeight a b p)) rfl,
-        Domain.toL2_smul, inner_smul_right]
-    rw [Finset.sum_congr rfl fun p _ => e p, sum_symWeight_mul, hD]
-    ring
-  have rhs : toL2 (isTest_divdiv hΨ) = toL2 ((hφ.fderiv_apply (Pi.single a 1)).fderiv_apply
-      (Pi.single b 1)) := by
-    refine Domain.toL2_congr _ _ (funext fun x => ?_)
-    have hd : ∀ p : Fin 3 × Fin 3, fderiv ℝ (fun y => fderiv ℝ (fun x => symWeight a b p * φ x) y
-        (Pi.single p.2 1)) x (Pi.single p.1 1) = symWeight a b p * fderiv ℝ (fun y =>
-          fderiv ℝ φ y (Pi.single p.2 1)) x (Pi.single p.1 1) := fun p => by
-      have h1 : (fun y => fderiv ℝ (fun x => symWeight a b p * φ x) y (Pi.single p.2 1)) =
-          fun y => symWeight a b p * fderiv ℝ φ y (Pi.single p.2 1) := funext fun y => by
-        rw [fderiv_const_mul (hφ.differentiable y)]; rfl
-      rw [h1, fderiv_const_mul (((hφ.fderiv_apply _).differentiable) x)]; rfl
-    have hc := Domain.fderiv_fderiv_comm (hφ.contDiff.of_le (by simp))
-      (Pi.single a 1) (Pi.single b 1) x
-    simp only [hd, one_mul]
-    rw [sum_symWeight_mul, ← hc]
-    simp only
-    ring
-  rw [← lhs, h, rhs]
-
-end WeakHess
-
 /-! ### Every open cube -/
 
 section Cube
@@ -1043,12 +878,6 @@ theorem invariantCore_eqCube :
 def cosStateCube (b : R3) (s : ℝ) (hs : 0 < s) : PiLp 2 (SpaceCube b s) :=
   HilbertComplex.totalMap (eCube b s hs) cosStateQ
 
-theorem embeddingCube_J (i : Fin 3) (x : SpaceCube b s i) :
-    (embeddingCube (b := b) hs).J i x = (eCube b s hs i).symm x := rfl
-
-theorem cosStateCube_apply (i : Fin 3) : cosStateCube b s hs i = eCube b s hs i (cosStateQ i) :=
-  rfl
-
 theorem mem_totalSub_tsdCube_iff {y : PiLp 2 (SpaceCube b s)} :
     y ∈ totalSub (tsdCube b s hs) ↔
       HilbertComplex.totalMap (fun i => (eCube b s hs i).symm) y ∈ totalSub tsdQ := by
@@ -1096,40 +925,6 @@ theorem exists_nonstationaryCube :
       y ∉ (complexCube b s hs).waveGroup.stationary :=
   ⟨cosStateCube b s hs, cosStateCube_mem_domain hs, cosStateCube_mem_tsdCube hs,
     HilbertComplex.not_mem_stationary_of_wave_ne_zero _ (wave_cosStateCube_ne hs)⟩
-
-/-- **The constraint on the cube consists of TSD fields**, for `S`. -/
-theorem mem_tsdCube_one {S : Models.BoundedDomain.symSub ℂ (openCube b s)}
-    (hS : S ∈ tsdCube b s hs 1) :
-    (∀ i j, (S : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) (i, j) =
-        (S : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) (j, i)) ∧
-      ∑ i, (S : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) (i, i) = 0 ∧
-      ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (openCube b s) φ,
-        ⟪(S : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)), Domain.testField
-          ((Domain.gradOp 3 3 : Domain.ConstCoeffOp _ ℂ _ _).isTestField_apply hφ)⟫_ℂ = 0 := by
-  have hS' : (pullSym b s hs).symm S ∈ tsdQ 1 := hS
-  have h := tsd_of_pullCube (b := b) hs (mem_tsdQ_one hS')
-  have e : pullCube b s hs (Fin 3 × Fin 3) (((pullSym b s hs).symm S : SQ) : MQ) =
-      (S : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) :=
-    congrArg Subtype.val ((pullSym b s hs).apply_symm_apply S)
-  simp only [e] at h
-  exact h
-
-/-- **The constraint on the cube consists of TSD fields**, for `T`. -/
-theorem mem_tsdCube_two {T : Models.BoundedDomain.trSub ℂ (openCube b s)}
-    (hT : T ∈ tsdCube b s hs 2) :
-    (∀ i j, (T : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) (i, j) =
-        (T : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) (j, i)) ∧
-      ∑ i, (T : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) (i, i) = 0 ∧
-      ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (openCube b s) φ,
-        ⟪(T : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)), Domain.testField
-          ((Domain.gradOp 3 3 : Domain.ConstCoeffOp _ ℂ _ _).isTestField_apply hφ)⟫_ℂ = 0 := by
-  have hT' : (pullTr b s hs).symm T ∈ tsdQ 2 := hT
-  have h := tsd_of_pullCube (b := b) hs (mem_tsdQ_two hT')
-  have e : pullCube b s hs (Fin 3 × Fin 3) (((pullTr b s hs).symm T : TQ) : MQ) =
-      (T : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)) :=
-    congrArg Subtype.val ((pullTr b s hs).apply_symm_apply T)
-  simp only [e] at h
-  exact h
 
 end Cube
 

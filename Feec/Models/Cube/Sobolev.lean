@@ -31,9 +31,8 @@ sequence `x ∈ ℓ²(ℤⁿ; Λᵏ)` (`Seq n k`) is in `Hˢ(𝕋ⁿ)` if `Σ_m 
 * **`L²` and monotonicity**: `sobolevPar_zero`, **`parNorm_zero`**, `sobolevQ_zero`,
   **`qNorm_zero`** (`H⁰ = L²` isometrically; for `sobolevQ` through the contraction
   `norm_Jinvf_le` and the extension by zero `zeroExt`, the average of the `2ⁿ` parity extensions,
-  orthogonal by `inner_JfJ_eq_zero`); `sobolevPar_anti`, `parNorm_mono`, `sobolevQ_anti`,
-  `qNorm_mono`, `norm_le_parNorm`, `norm_le_qNorm`; `sobolevPar_le_sobolevQ`,
-  `qNorm_le_parNorm`.
+  orthogonal by `inner_JfJ_eq_zero`); `sobolevPar_anti`, `parNorm_mono`, `norm_le_parNorm`;
+  `sobolevPar_le_sobolevQ`.
 * **`H¹` is the weak-derivative space**: **`mem_sobolevPar_one_iff`** (`u ∈ H¹_J` iff every
   coefficient `u_t` lies in `D(d_{J ∆ t})`, i.e. is `H¹(Q)` with vanishing trace on the faces
   normal to `J ∆ t`) with the norm identity **`parNorm_one_sq`**
@@ -45,25 +44,17 @@ sequence `x ∈ ℓ²(ℤⁿ; Λᵏ)` (`Seq n k`) is in `Hˢ(𝕋ⁿ)` if `Σ_m 
   (`norm_sq_add_sum_grad_sq_le_qNorm`; `qNorm_one_sq_le` through the coefficientwise even
   extension `evenExt`, `sobSum_evenExt`).
 * **Fourier truncation** `u_M` (frequencies `|m|_∞ ≤ M`, a real trigonometric polynomial
-  restricted to `Q`, smooth on `cl Q`, `truncPar_eq_smooth`, `Jinvf_trunc_eq_smooth`; `truncPar`
-  in the class `J`, `truncPar_mem`, and `Jinvf k (trunc M k x)` for an extension `x`):
+  restricted to `Q`; `truncPar` in the class `J`, `truncPar_mem`, and `Jinvf k (trunc M k x)` for
+  an extension `x`):
   - `‖u - u_M‖ ≤ (2π(M + 1))^{-s} ‖u‖` (**`norm_sub_truncPar_le`**, **`norm_sub_Jinvf_trunc_le`**),
     in every weaker norm `‖u - u_M‖_t² ≤ (1 + (2π(M + 1))²)^{t - s} ‖u‖_s²`
     (`parNorm_sub_truncPar_sq_le`, `sobSum_sub_trunc_le`);
   - the inverse estimates `‖u_M‖_t² ≤ (1 + n(2πM)²)^{t - s} ‖u‖_s²` for `t ≥ s`
-    (`parNorm_truncPar_sq_le`, `qNorm_Jinvf_trunc_le`); for the gradient,
+    (`parNorm_truncPar_sq_le`); for the gradient,
     `Σ_t ‖∇ (u_M)_t‖² ≤ (1 + n(2πM)²)^{1 - s} ‖x‖²_{Hˢ(𝕋ⁿ)}` for `s ≤ 1` (`grad_truncQ_le`, from
     `grad_Jinvf_sum_le`: `Σ_t ‖∇ (x|_Q)_t‖² ≤ ‖x‖²_{H¹(𝕋ⁿ)}` for trigonometric polynomials), and
     `‖u_M‖²_{1,J} ≤ (1 + n(2πM)²)^{1 - s} ‖u‖²_{s,J}` with `parNorm_one_sq` in the classes; the
-    derivatives `Dᵐ`, `m ≥ 2`, enter only through the `Hᵐ` norm;
-  - the graph norm: `d_J u_M = (d_J u)_M` (`truncPar_mem_dPart`), so
-    `‖d_J (u - u_M)‖ ≤ (2π(M + 1))^{-s} ‖d_J u‖_{s,J}` (`norm_dPart_sub_truncPar_le`).
-* **Non-vacuity**: the logarithmic series `u(y) = Σ_{c ≠ 0} cos(2πc y₀)/|c|` (`logWitness`;
-  classically `= -2 log |2 sin πy₀|`, an unbounded function, which is not formalized) lies in
-  `Hˢ_∅(Q) ⊆ Hˢ(Q)` for every `0 ≤ s < ½`
-  (`logWitness_mem_sobolevPar`, `logWitness_mem_sobolevQ`) but not in `H^{1/2}_∅(Q)` and not in
-  `H¹(Q)` (`logWitness_not_mem_sobolevPar_half`, `logWitness_not_mem_sobolevQ_one`), and is
-  nonzero (`logWitness_ne_zero`).
+    derivatives `Dᵐ`, `m ≥ 2`, enter only through the `Hᵐ` norm.
 
 No hypothesis is assumed. Not formalized: the identification of `Hᵐ`, `m ≥ 2`, with the spaces of
 `m` weak derivatives in `L²(Q)`, the Slobodeckij form of the fractional norms, and the equality
@@ -121,9 +112,6 @@ theorem weight_add (s t : ℝ) (m : Fin n → ℤ) : weight (s + t) m = weight s
 theorem weight_mono {s t : ℝ} (h : s ≤ t) (m : Fin n → ℤ) : weight s m ≤ weight t m :=
   Real.rpow_le_rpow_of_exponent_le (one_le_base m) h
 
-theorem one_le_weight {s : ℝ} (hs : 0 ≤ s) (m : Fin n → ℤ) : 1 ≤ weight s m := by
-  simpa using weight_mono hs m
-
 /-- Outside the band `|m|_∞ ≤ M` the frequencies are at least `2π (M + 1)`. -/
 theorem sq_le_norm_freq_sq_of_notMem {M : ℕ} {m : Fin n → ℤ} (hm : m ∉ bandN M) :
     (2 * Real.pi * (M + 1)) ^ 2 ≤ ‖freq m‖ ^ 2 := by
@@ -151,11 +139,6 @@ theorem norm_freq_sq_le_of_mem {M : ℕ} {m : Fin n → ℤ} (hm : m ∈ bandN M
   calc (2 * Real.pi) ^ 2 * ∑ i, ((m i : ℝ)) ^ 2 ≤ (2 * Real.pi) ^ 2 * ∑ _i : Fin n, (M : ℝ) ^ 2 :=
         mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun i _ => h i) (by positivity)
     _ = n * (2 * Real.pi * M) ^ 2 := by simp; ring
-
-/-- **The weight outside the band**: `(1 + |2π(M+1)|²)^s ≤ ⟨ξ_m⟩^{2s}` for `s ≥ 0`. -/
-theorem weight_ge_of_notMem {s : ℝ} (hs : 0 ≤ s) {M : ℕ} {m : Fin n → ℤ} (hm : m ∉ bandN M) :
-    (1 + (2 * Real.pi * (M + 1)) ^ 2) ^ s ≤ weight s m :=
-  Real.rpow_le_rpow (by positivity) (by linarith [sq_le_norm_freq_sq_of_notMem hm]) hs
 
 /-- **The weight inside the band**: `⟨ξ_m⟩^{2s} ≤ (1 + n (2πM)²)^s` for `s ≥ 0`. -/
 theorem weight_le_of_mem {s : ℝ} (hs : 0 ≤ s) {M : ℕ} {m : Fin n → ℤ} (hm : m ∈ bandN M) :
@@ -195,10 +178,6 @@ theorem cf_sub (x y : Seq n k) (m : Fin n → ℤ) : cf (x - y) m = cf x m - cf 
 theorem cf_smul (c : ℂ) (x : Seq n k) (m : Fin n → ℤ) : cf (c • x) m = c • cf x m :=
   Measure.ae_count_iff.1 (Lp.coeFn_smul c x) m
 
-theorem cf_real_smul (c : ℝ) (x : Seq n k) (m : Fin n → ℤ) :
-    cf (c • x) m = (c : ℂ) • cf x m := by
-  rw [← cf_smul]; rfl
-
 theorem cf_zero (m : Fin n → ℤ) : cf (0 : Seq n k) m = 0 :=
   Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 _) m
 
@@ -230,10 +209,6 @@ theorem sobSum_mono {s t : ℝ} (h : s ≤ t) {x : Seq n k} (hx : MemSob t x) :
     sobSum s x ≤ sobSum t x :=
   Summable.tsum_le_tsum (fun m => mul_le_mul_of_nonneg_right (weight_mono h m) (sq_nonneg _))
     (hx.mono h) hx
-
-theorem norm_sq_le_sobSum {s : ℝ} (hs : 0 ≤ s) {x : Seq n k} (hx : MemSob s x) :
-    ‖x‖ ^ 2 ≤ sobSum s x := by
-  rw [← sobSum_zero]; exact sobSum_mono hs hx
 
 theorem norm_add_sq_le (a b : Form ℂ (Fin n) k) : ‖a + b‖ ^ 2 ≤ 2 * ‖a‖ ^ 2 + 2 * ‖b‖ ^ 2 := by
   have := norm_add_le a b
@@ -510,21 +485,6 @@ theorem truncPar_mem (t : ℝ) (M : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k 
     truncPar J k M u ∈ sobolevPar J k t := by
   rw [mem_sobolevPar, JfJ_truncPar]; exact memSob_trunc t M _
 
-/-- **The truncations are smooth up to the boundary**: `(x_M)|_Q` is the restriction of a
-`C^∞` form on `ℝⁿ` (the real part of a trigonometric polynomial). -/
-theorem Jinvf_trunc_eq_smooth (M : ℕ) (x : Seq n k) :
-    ∃ (ψ : formIdx n (k : ℤ) → (Fin n → ℝ) → ℝ) (_ : ∀ t, ContDiff ℝ (⊤ : ℕ∞) (ψ t))
-      (hψ : ∀ t, MemLp (ψ t) 2 (volume.restrict (Q (Fin n)))),
-      Jinvf k (trunc M k x) = toL2F hψ :=
-  ⟨_, contDiff_trigLift k _ _, memLp_trigLift k _ _,
-    Jinvf_eq_toL2F fun _ hm => trunc_eq_zero_of_notMem x hm⟩
-
-theorem truncPar_eq_smooth (M : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    ∃ (ψ : formIdx n (k : ℤ) → (Fin n → ℝ) → ℝ) (_ : ∀ t, ContDiff ℝ (⊤ : ℕ∞) (ψ t))
-      (hψ : ∀ t, MemLp (ψ t) 2 (volume.restrict (Q (Fin n)))),
-      truncPar J k M u = toL2F hψ :=
-  Jinvf_trunc_eq_smooth k M (JfJ J k u)
-
 /-- **Truncation error in the parity class, in every weaker norm** (`t ≤ s`):
 `‖u - u_M‖²_{t,J} ≤ (1 + (2π(M+1))²)^{t-s} ‖u‖²_{s,J}`. -/
 theorem parNorm_sub_truncPar_sq_le {s t : ℝ} (hts : t ≤ s)
@@ -580,36 +540,6 @@ end Parity
 section ParityH1
 
 variable (J : Finset (Fin n)) (k : ℕ)
-
-/-- **Truncation commutes with `d_J`**: for `u ∈ D(d_J)`, the truncation `u_M` lies in `D(d_J)` and
-`d_J u_M = (d_J u)_M`. -/
-theorem truncPar_mem_dPart {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    (hu : u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain) (M : ℕ) :
-    ∃ h : truncPar J k M u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain,
-      dPart (Q (Fin n)) J (k : ℤ) ⟨_, h⟩ =
-        truncPar J (k + 1) M (dPart (Q (Fin n)) J (k : ℤ) ⟨u, hu⟩) := by
-  have hsym := coeff_d_dPart J k ⟨u, hu⟩
-  have h2 : ∀ m, (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (freq m)
-      (cf (JfJ J k (truncPar J k M u)) m) =
-        cf (trunc M (k + 1) (JfJ J (k + 1) (dPart (Q (Fin n)) J (k : ℤ) ⟨u, hu⟩))) m := by
-    intro m
-    rw [JfJ_truncPar]
-    exact symbol_trunc hsym M m
-  obtain ⟨h, e⟩ := mem_dPart_of_JfJ h2
-  refine ⟨h, injective_JfJ J (k + 1) ?_⟩
-  rw [e, JfJ_truncPar]
-
-/-- **The truncation error in the graph norm**: for `u ∈ D(d_J)` with `d_J u ∈ Hˢ_J(Q; Λᵏ⁺¹)`,
-`‖d_J u - d_J u_M‖ ≤ (2π(M + 1))^{-s} ‖d_J u‖_{s,J}` (`d_J` commutes with the truncation). -/
-theorem norm_dPart_sub_truncPar_le {s : ℝ} (hs : 0 ≤ s) {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    (hu : u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain)
-    (hdu : dPart (Q (Fin n)) J (k : ℤ) ⟨u, hu⟩ ∈ sobolevPar J (k + 1) s) (M : ℕ) :
-    ‖dPart (Q (Fin n)) J (k : ℤ) ⟨u, hu⟩ -
-        dPart (Q (Fin n)) J (k : ℤ) ⟨_, (truncPar_mem_dPart J k hu M).1⟩‖ ≤
-      (2 * Real.pi * (M + 1)) ^ (-s) *
-        parNorm J (k + 1) s (dPart (Q (Fin n)) J (k : ℤ) ⟨u, hu⟩) := by
-  rw [(truncPar_mem_dPart J k hu M).2]
-  exact norm_sub_truncPar_le J (k + 1) hs hdu M
 
 /-- The `0`-form with coefficient `f`. -/
 def zeroF {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) : L2F ℝ Ω (formIdx n ((0 : ℕ) : ℤ)) :=
@@ -843,9 +773,6 @@ def sobolevQ (s : ℝ) : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)
     rintro c _ ⟨x, hx, rfl⟩
     exact ⟨c • x, hx.real_smul c, map_smul _ _ _⟩
 
-theorem mem_sobolevQ {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} :
-    u ∈ sobolevQ n k s ↔ ∃ x : Seq n k, MemSob s x ∧ Jinvf k x = u := Iff.rfl
-
 /-- **The quotient norm** of `Hˢ(Q; Λᵏ)`: `‖u‖_{Hˢ(Q)} = inf {‖x‖_{Hˢ(𝕋ⁿ)} : x|_Q = u}`. -/
 def qNorm (s : ℝ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : ℝ :=
   sInf ((fun x => √(sobSum s x)) '' {x : Seq n k | MemSob s x ∧ Jinvf k x = u})
@@ -893,29 +820,10 @@ theorem qNorm_zero (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : qNorm k 0 u
     rw [sobSum_zero, Real.sqrt_sq (norm_nonneg _), ← hxu]
     exact norm_Jinvf_le k x
 
-/-- **Monotonicity**: `Hᵗ(Q) ⊆ Hˢ(Q)` and `‖u‖_{Hˢ(Q)} ≤ ‖u‖_{Hᵗ(Q)}` for `s ≤ t`. -/
-theorem sobolevQ_anti {s t : ℝ} (h : s ≤ t) : sobolevQ n k t ≤ sobolevQ n k s := by
-  rintro _ ⟨x, hx, rfl⟩; exact ⟨x, hx.mono h, rfl⟩
-
-theorem qNorm_mono {s t : ℝ} (h : s ≤ t) {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    (hu : u ∈ sobolevQ n k t) : qNorm k s u ≤ qNorm k t u :=
-  le_qNorm hu fun _ hx hxu => (qNorm_le (hx.mono h) hxu).trans
-    (Real.sqrt_le_sqrt (sobSum_mono h hx))
-
-theorem norm_le_qNorm {s : ℝ} (hs : 0 ≤ s) {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    (hu : u ∈ sobolevQ n k s) : ‖u‖ ≤ qNorm k s u := by
-  rw [← qNorm_zero u]; exact qNorm_mono hs hu
-
 /-- **The parity classes lie in `Hˢ(Q)`**: `Hˢ_J(Q) ⊆ Hˢ(Q)` with
 `‖u‖_{Hˢ(Q)} ≤ 2^{n/2} ‖u‖_{s,J}`. -/
 theorem sobolevPar_le_sobolevQ (J : Finset (Fin n)) (s : ℝ) :
     sobolevPar J k s ≤ sobolevQ n k s := fun u hu => ⟨JfJ J k u, hu, Jinvf_JfJ J k u⟩
-
-theorem qNorm_le_parNorm (J : Finset (Fin n)) {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    (hu : u ∈ sobolevPar J k s) : qNorm k s u ≤ √(2 ^ n) * parNorm J k s u := by
-  refine (qNorm_le hu (Jinvf_JfJ J k u)).trans (le_of_eq ?_)
-  rw [parNorm, ← Real.sqrt_mul (by positivity), ← mul_assoc, mul_inv_cancel₀ (by positivity),
-    one_mul]
 
 /-- **The truncation error in `Hˢ(Q)`**: for every extension `x` of `u`,
 `‖u - (x_M)|_Q‖ ≤ (2π(M + 1))^{-s} ‖x‖_{Hˢ(𝕋ⁿ)}` (`s ≥ 0`). -/
@@ -929,21 +837,6 @@ theorem norm_sub_Jinvf_trunc_le {s : ℝ} (hs : 0 ≤ s) {x : Seq n k} (hx : Mem
   rw [← Real.sq_sqrt (sobSum_nonneg s x), ← mul_pow] at h2
   exact (sq_le_sq₀ (norm_nonneg _) (mul_nonneg (by positivity) (Real.sqrt_nonneg _))).1 h2
 
-/-- **The truncation is smooth**: `(x_M)|_Q ∈ Hᵗ(Q)` for every `t`, with the inverse estimate
-`‖(x_M)|_Q‖_{Hᵗ(Q)} ≤ (1 + n (2πM)²)^{(t-s)/2} ‖x‖_{Hˢ(𝕋ⁿ)}` for `s ≤ t`. -/
-theorem qNorm_Jinvf_trunc_le {s t : ℝ} (hst : s ≤ t) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
-    Jinvf k (trunc M k x) ∈ sobolevQ n k t ∧
-      qNorm k t (Jinvf k (trunc M k x)) ≤
-        (1 + n * (2 * Real.pi * M) ^ 2) ^ ((t - s) / 2) * √(sobSum s x) := by
-  refine ⟨⟨_, memSob_trunc t M x, rfl⟩, (qNorm_le (memSob_trunc t M x) rfl).trans ?_⟩
-  have h := sobSum_trunc_le hst hx M
-  calc √(sobSum t (trunc M k x)) ≤ √((1 + n * (2 * Real.pi * M) ^ 2) ^ (t - s) * sobSum s x) :=
-        Real.sqrt_le_sqrt h
-    _ = _ := by
-        rw [Real.sqrt_mul (Real.rpow_nonneg (by positivity) _), Real.sqrt_eq_rpow,
-          ← Real.rpow_mul (by positivity)]
-        ring_nf
-
 end NoBC
 
 /-! ### Gradients of the restrictions of trigonometric polynomials -/
@@ -954,10 +847,6 @@ open UnitAddTorus Feec.Fourier.TorusWeak
 
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
-
-/-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
 
 /-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
 local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
@@ -1096,12 +985,6 @@ end Gradient
 section H1Q
 
 variable {k : ℕ}
-
-theorem norm_cf_apply_sq_le (x : Seq n k) (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) :
-    ‖cf x m (idx k t)‖ ^ 2 ≤ ‖cf x m‖ ^ 2 := by
-  rw [norm_cf_sq_eq_sum k x m]
-  exact Finset.single_le_sum (f := fun t => ‖cf x m (idx k t)‖ ^ 2) (fun _ _ => sq_nonneg _)
-    (Finset.mem_univ t)
 
 /-- `Σ_t Σ_m |2πm|² |x(m)_t|² ≤ Σ_m ⟨ξ⟩² |x(m)|²` for finitely supported `x`. -/
 theorem sum_tsum_freq_le (x : Seq n k) {S : Finset (Fin n → ℤ)} (hS : ∀ m ∉ S, cf x m = 0) :
@@ -1452,7 +1335,6 @@ theorem norm_sq_add_sum_grad_sq_le_qNorm {u : L2F ℝ (Q (Fin n)) (formIdx n (k 
   subst hxu
   exact Real.sqrt_le_sqrt (norm_sq_add_sum_grad_sq_le_sobSum hx)
 
-
 /-- **The quotient norm is bounded by the `H¹(Q)` graph norm**: if every coefficient `u_t` lies
 in `H¹(Q)`, then `‖u‖²_{H¹(Q)} ≤ 2ⁿ (‖u‖² + Σ_t ‖∇ u_t‖²)` (extend every coefficient evenly,
 `sobSum_evenExt`). -/
@@ -1476,7 +1358,7 @@ theorem qNorm_one_sq_equiv {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
 
 end H1Q
 
-/-! ### A non-smooth member: the logarithmic series `Σ_{c ≠ 0} cos(2πc y₀)/|c|` -/
+/-! ### Axis frequencies and the coefficients `1/|c|` of the logarithmic series -/
 
 section Witness
 
@@ -1601,93 +1483,6 @@ theorem not_summable_axisTerm_half : ¬ Summable (axisTerm (n := n) (1 / 2)) := 
 theorem summable_norm_logCoeff_sq : Summable fun m : Fin n → ℤ => ‖logCoeff m‖ ^ 2 := by
   have h := (summable_weight_logCoeff_iff (n := n) 0).2 (summable_axisTerm le_rfl (by norm_num))
   simpa using h
-
-/-- The coefficient sequence of the logarithmic series. -/
-def logSeq : Seq n 0 := (memLp_of_summable (summable_norm_logCoeff_sq (n := n))).toLp logCoeff
-
-theorem cf_logSeq (m : Fin n → ℤ) : cf (logSeq (n := n)) m = logCoeff m := by
-  change ((memLp_of_summable (summable_norm_logCoeff_sq (n := n))).toLp logCoeff :
-    (Fin n → ℤ) → Form ℂ (Fin n) 0) m = _
-  rw [MemLp.coeFn_toLp_count]
-
-theorem memSob_logSeq_iff (s : ℝ) :
-    MemSob s (logSeq (n := n)) ↔ Summable (axisTerm (n := n) s) := by
-  rw [← summable_weight_logCoeff_iff]
-  simp only [MemSob, cf_logSeq]
-
-/-- The logarithmic series is real and even in every variable: the parity class `∅`. -/
-theorem realParJ_logSeq : RealParJ (∅ : Finset (Fin n)) 0 (logSeq (n := n)) := by
-  classical
-  have key : ∀ m m' : Fin n → ℤ, (OnAxis m' ↔ OnAxis m) → |(m' 0 : ℝ)| = |(m 0 : ℝ)| →
-      (m' 0 ≠ 0 ↔ m 0 ≠ 0) → logCoeff m' = logCoeff m := by
-    intro m m' h1 h2 h3
-    simp only [logCoeff, h2]
-    congr 1
-    funext _
-    exact if_congr (and_congr h1 h3) rfl rfl
-  refine ⟨fun m t => ?_, fun j m t => ?_⟩
-  · change cf logSeq (-m) t = conj (cf logSeq m t)
-    rw [cf_logSeq, cf_logSeq, key m (-m) (by
-      simp only [OnAxis, Pi.neg_apply, neg_eq_zero]) (by simp) (by simp)]
-    change _ = conj ((if OnAxis m ∧ m 0 ≠ 0 then (((|(m 0 : ℝ)|)⁻¹ : ℝ) : ℂ) else 0))
-    change (if OnAxis m ∧ m 0 ≠ 0 then (((|(m 0 : ℝ)|)⁻¹ : ℝ) : ℂ) else 0) = _
-    split_ifs <;> simp
-  · change cf logSeq (DeRham.flipAt j m) t = _ * cf logSeq m t
-    have ht : t.1 = ∅ := Finset.card_eq_zero.1 t.2
-    have hf : ∀ a, DeRham.flipAt j m a = if a = j then -m a else m a := fun a => rfl
-    rw [cf_logSeq, cf_logSeq, key m (DeRham.flipAt j m) (by
-        simp only [OnAxis, hf]
-        refine forall_congr' fun a => imp_congr_right fun _ => ?_
-        split_ifs <;> simp)
-      (by rw [hf]; split_ifs <;> simp) (by rw [hf]; split_ifs <;> simp)]
-    simp [DeRham.mixedSign, DeRham.reflSign, ht]
-
-/-- **The logarithmic witness** `u(y) = Σ_{c ≠ 0} cos(2π c y₀)/|c|` on `Q` (an `L²` Fourier
-series; classically `= -2 log |2 sin π y₀|`, unbounded near `y₀ = 0`, which is not formalized here:
-what is proved is `logWitness_not_mem_sobolevQ_one`). -/
-def logWitness : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ)) := Jinvf 0 (logSeq (n := n))
-
-theorem JfJ_logWitness : JfJ ∅ 0 (logWitness (n := n)) = logSeq := JfJ_Jinvf realParJ_logSeq
-
-/-- **Non-vacuity of the fractional classes**: the logarithmic witness lies in `Hˢ_∅(Q)` (hence in
-`Hˢ(Q)`) for every `0 ≤ s < ½`. -/
-theorem logWitness_mem_sobolevPar {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
-    logWitness (n := n) ∈ sobolevPar ∅ 0 s := by
-  rw [mem_sobolevPar, JfJ_logWitness, memSob_logSeq_iff]
-  exact summable_axisTerm hs0 hs
-
-theorem logWitness_mem_sobolevQ {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
-    logWitness (n := n) ∈ sobolevQ n 0 s :=
-  sobolevPar_le_sobolevQ ∅ s (logWitness_mem_sobolevPar hs0 hs)
-
-/-- The logarithmic witness is not in `H^{1/2}_∅(Q)`. -/
-theorem logWitness_not_mem_sobolevPar_half : logWitness (n := n) ∉ sobolevPar ∅ 0 (1 / 2) := by
-  rw [mem_sobolevPar, JfJ_logWitness, memSob_logSeq_iff]
-  exact not_summable_axisTerm_half
-
-/-- **The logarithmic witness is not in `H¹(Q)`** (not weakly differentiable with `L²`
-gradient): `u ∈ Hˢ(Q) \ H¹(Q)` for `s < ½`. -/
-theorem logWitness_not_mem_sobolevQ_one : logWitness (n := n) ∉ sobolevQ n 0 1 := by
-  intro h
-  have hpar : logWitness (n := n) ∈ sobolevPar ∅ 0 1 := by
-    refine (mem_sobolevPar_one_iff ∅ 0).2 fun t => ?_
-    have ht : t.1 = ∅ := by exact Finset.card_eq_zero.1 (by exact_mod_cast t.2)
-    rw [ht, symmDiff_self, Finset.bot_eq_empty, dPart_empty isOpen_Q]
-    exact (mem_sobolevQ_one_iff.1 h) t
-  exact logWitness_not_mem_sobolevPar_half (sobolevPar_anti ∅ 0 (by norm_num) hpar)
-
-theorem logWitness_ne_zero : logWitness (n := n) ≠ 0 := by
-  classical
-  intro h
-  have h1 := JfJ_logWitness (n := n)
-  rw [h, map_zero] at h1
-  have h2 := congrArg (fun x : Seq n 0 => cf x (axis 1) t₀) h1
-  simp only [cf_zero, cf_logSeq] at h2
-  have hax : OnAxis (axis (n := n) 1) := (onAxis_iff_mem_range _).2 ⟨1, rfl⟩
-  have h0 : axis (n := n) 1 0 = 1 := by simp [axis]
-  change (0 : ℂ) = (if OnAxis (axis (n := n) 1) ∧ axis (n := n) 1 0 ≠ 0 then
-    (((|(axis (n := n) 1 0 : ℝ)|)⁻¹ : ℝ) : ℂ) else 0) at h2
-  simp [hax, h0] at h2
 
 end Witness
 

@@ -17,15 +17,12 @@ and does not depend on either.
 ## Main definitions and results
 
 * `halfArc`, `boxSet`: the box `(0, ½)ᵈ` in `𝕋ᵈ` (any dimension); `ZeroOnBox f`: the function
-  with Fourier coefficients `f` vanishes a.e. on the box, characterized by orthogonality to the
-  functions supported off the box (`zeroOnBox_iff`), a closed subspace (`boxZero`);
-  **`eq_zero_of_zeroOnBox_of_finite`**: a trigonometric polynomial vanishing a.e. on the box is
+  with Fourier coefficients `f` vanishes a.e. on the box; **`eq_zero_of_zeroOnBox_of_finite`**: a trigonometric polynomial vanishing a.e. on the box is
   zero (`Feec.Fourier.TorusWeak.eq_zero_of_ae_eq_zero_of_finite`).
 * (namespace `Geometry`) `Q d = (0, ½)ᵈ`, `openCube b s = ∏ (bᵢ, bᵢ + s)`; **`measurePreserving_proj_Q`**: the covering
   map `proj : ℝᵈ → 𝕋ᵈ` is measure preserving from `Q` onto the box; `setIntegral_boxSet`.
 * `resQ`, `resQF`: restriction of torus fields to `Q`; `per`, `isSmooth_per`, `partialT_per`,
-  `integral_mul_per`: periodization of test functions supported in `Q`; **`resQ_isWeakFO`**: weak
-  first-order operators on `𝕋ᵈ` restrict to weak first-order operators on `Q`.
+  `integral_mul_per`: periodization of test functions supported in `Q`.
 * `reflB ε`, `piece ε`: the reflections of `𝕋ᵈ` and the `2ᵈ` reflected boxes;
   **`integral_eq_sum_box`** (the tiling, up to the null set `faceSet`);
   `mFourierCoeff_comp_reflB`: `(g ∘ R_ε)^ = ĝ ∘ flip_ε`.
@@ -33,17 +30,11 @@ and does not depend on either.
   **`eq_zero_of_resQ_eq_zero`**: parity fields are determined by their restriction to `Q`
   (`norm_comp_reflB_ae`: the Fourier-side parity criterion).
 * `ext c Φ`: the parity extension of a test function for a sign vector `c`; `ext_reflB`,
-  `isSmooth_ext`, **`resQ_toL2_ext`** (`(ext Φ)|_Q = Φ`), **`norm_sq_toL2_ext`**
-  (`‖ext Φ‖² = 2ᵈ ‖Φ‖²`, the factor `8` for the cube), **`partialT_ext`** (`∂_k ∘ ext_c = ext_{c'} ∘ ∂_k`
+  `isSmooth_ext`, **`resQ_toL2_ext`** (`(ext Φ)|_Q = Φ`), **`partialT_ext`** (`∂_k ∘ ext_c = ext_{c'} ∘ ∂_k`
   with the parity of `x_k` reversed).
-* `sub3`, `reducingSubcomplex_sub3`: families of three subspaces of a short complex, and the
-  reducing subcomplex `({0}, K₁, K₂)` from two reducing pairs.
 * `compSub`, `mem_invariantCore_compSub_iff`, `mem_stationary_compSub_iff`,
   `forward_compSub_iff`, `mem_wave_domain_compress_iff`: invariant cores, stationary vectors and
   wave domains of a compression are those of the big complex.
-* **`reducingSubcomplex_compSub_fixed`**: a reducing subcomplex invariant under a finite unitary
-  action descends to the fixed (method-of-images) complex.
-* `comm_of_eq_zero`, `generator_eq_zero_of_mem_stationary`.
 
 ## References
 
@@ -108,85 +99,6 @@ everywhere on the box `(0, ½)ᵈ`. -/
 def ZeroOnBox (f : lp (fun _ : d → ℤ => ℂ) 2) : Prop :=
   (ofCoeff f : UnitAddTorus d → ℂ) =ᵐ[volume.restrict (boxSet d)] 0
 
-/-- Functions vanishing a.e. on `s` and functions vanishing a.e. off `s` are orthogonal. -/
-theorem inner_eq_zero_of_ae {s : Set (UnitAddTorus d)}
-    {g φ : Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
-    (hg : (g : UnitAddTorus d → ℂ) =ᵐ[volume.restrict s] 0)
-    (hφ : (φ : UnitAddTorus d → ℂ) =ᵐ[volume.restrict sᶜ] 0) : ⟪g, φ⟫_ℂ = 0 := by
-  rw [MeasureTheory.L2.inner_def]
-  have h : (fun x => ⟪g x, φ x⟫_ℂ) =ᵐ[volume] 0 := by
-    have hu : ∀ᵐ x ∂volume.restrict (s ∪ sᶜ), ⟪g x, φ x⟫_ℂ = 0 := by
-      rw [ae_restrict_union_iff]
-      exact ⟨hg.mono fun x hx => by simp [hx], hφ.mono fun x hx => by simp [hx]⟩
-    rwa [union_compl_self, Measure.restrict_univ] at hu
-  rw [integral_congr_ae h]
-  simp
-
-/-- **Characterization of `ZeroOnBox`** by orthogonality to every `L²` function supported off the
-box. -/
-theorem zeroOnBox_iff (f : lp (fun _ : d → ℤ => ℂ) 2) :
-    ZeroOnBox f ↔ ∀ φ : Lp ℂ 2 (volume : Measure (UnitAddTorus d)),
-      (φ : UnitAddTorus d → ℂ) =ᵐ[volume.restrict (boxSet d)ᶜ] 0 → ⟪ofCoeff f, φ⟫_ℂ = 0 := by
-  refine ⟨fun h φ hφ => inner_eq_zero_of_ae h hφ, fun h => ?_⟩
-  set g : Lp ℂ 2 (volume : Measure (UnitAddTorus d)) := ofCoeff f
-  have hm : MemLp ((boxSet d).indicator (g : UnitAddTorus d → ℂ)) 2 volume :=
-    (Lp.memLp g).indicator measurableSet_boxSet.nullMeasurableSet
-  set φ : Lp ℂ 2 (volume : Measure (UnitAddTorus d)) := hm.toLp _
-  have hφ : (φ : UnitAddTorus d → ℂ) =ᵐ[volume] (boxSet d).indicator g := hm.coeFn_toLp
-  have hoff : (φ : UnitAddTorus d → ℂ) =ᵐ[volume.restrict (boxSet d)ᶜ] 0 := by
-    refine EventuallyEq.trans (ae_restrict_of_ae hφ) ?_
-    filter_upwards [ae_restrict_mem measurableSet_boxSet.compl] with x hx
-    simp [indicator_of_notMem hx]
-  have h0 := h φ hoff
-  rw [MeasureTheory.L2.inner_def] at h0
-  have e : (fun x => ⟪(g : UnitAddTorus d → ℂ) x, (φ : UnitAddTorus d → ℂ) x⟫_ℂ) =ᵐ[volume]
-      (boxSet d).indicator fun x => ((‖(g : UnitAddTorus d → ℂ) x‖ ^ 2 : ℝ) : ℂ) := by
-    filter_upwards [hφ] with x hx
-    rw [hx]
-    by_cases hb : x ∈ boxSet d
-    · rw [indicator_of_mem hb, indicator_of_mem hb, RCLike.inner_apply, Complex.mul_conj']
-      push_cast; rfl
-    · rw [indicator_of_notMem hb, indicator_of_notMem hb, inner_zero_right]
-  rw [integral_congr_ae e, integral_indicator measurableSet_boxSet, integral_complex_ofReal]
-    at h0
-  have hint : Integrable (fun x => ‖(g : UnitAddTorus d → ℂ) x‖ ^ 2) (volume.restrict (boxSet d)) :=
-    ((Lp.memLp g).integrable_norm_pow two_ne_zero).restrict
-  have h1 := (integral_eq_zero_iff_of_nonneg (fun _ => by positivity) hint).1
-    (Complex.ofReal_eq_zero.1 h0)
-  filter_upwards [h1] with x hx
-  simpa using hx
-
-/-- `ZeroOnBox` as a (complex) subspace of `ℓ²(ℤᵈ)`. -/
-def boxZero : Submodule ℂ (lp (fun _ : d → ℤ => ℂ) 2) where
-  carrier := {f | ZeroOnBox f}
-  zero_mem' := by
-    simp only [mem_ofPred_eq, zeroOnBox_iff, ofCoeff, _root_.map_zero, inner_zero_left, implies_true]
-  add_mem' := by
-    intro f g hf hg
-    simp only [mem_ofPred_eq, zeroOnBox_iff] at hf hg ⊢
-    intro φ hφ
-    rw [ofCoeff, _root_.map_add, inner_add_left, ← ofCoeff, ← ofCoeff, hf φ hφ, hg φ hφ, add_zero]
-  smul_mem' := by
-    intro c f hf
-    simp only [mem_ofPred_eq, zeroOnBox_iff] at hf ⊢
-    intro φ hφ
-    rw [ofCoeff, _root_.map_smul, inner_smul_left, ← ofCoeff, hf φ hφ, mul_zero]
-
-theorem mem_boxZero {f : lp (fun _ : d → ℤ => ℂ) 2} : f ∈ boxZero ↔ ZeroOnBox f := Iff.rfl
-
-/-- `boxZero` is closed. -/
-theorem isClosed_boxZero : IsClosed (boxZero (d := d) : Set (lp (fun _ : d → ℤ => ℂ) 2)) := by
-  have e : (boxZero (d := d) : Set (lp (fun _ : d → ℤ => ℂ) 2)) =
-      ⋂ φ : {φ : Lp ℂ 2 (volume : Measure (UnitAddTorus d)) //
-        (φ : UnitAddTorus d → ℂ) =ᵐ[volume.restrict (boxSet d)ᶜ] 0},
-      {f | ⟪ofCoeff f, (φ : Lp ℂ 2 (volume : Measure (UnitAddTorus d)))⟫_ℂ = 0} := by
-    ext f
-    simp only [SetLike.mem_coe, mem_boxZero, zeroOnBox_iff, mem_iInter, mem_ofPred_eq,
-      Subtype.forall]
-  rw [e]
-  refine isClosed_iInter fun φ => isClosed_eq ?_ continuous_const
-  exact (continuous_id.inner continuous_const).comp (mFourierBasis.repr.symm.continuous)
-
 /-- **A trigonometric polynomial vanishing a.e. on the box is zero.** -/
 theorem eq_zero_of_zeroOnBox_of_finite {f : lp (fun _ : d → ℤ => ℂ) 2} (S : Finset (d → ℤ))
     (hS : ∀ k ∉ S, f k = 0) (hf : ZeroOnBox f) : f = 0 :=
@@ -209,9 +121,6 @@ local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
   inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
-
-local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
 
 variable {d : Type*} [Fintype d]
 
@@ -340,15 +249,6 @@ def resQF {P : Type*} : Feec.Fourier.TorusWeak.Field d P →L[ℂ] Domain.L2F �
 
 @[simp] theorem resQF_apply {P : Type*} (f : Feec.Fourier.TorusWeak.Field d P) (p : P) :
     resQF f p = resQ (f p) := rfl
-
-/-- Functions vanishing a.e. on the box restrict to `0`. -/
-theorem resQ_eq_zero_of_ae {f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
-    (h : (f : UnitAddTorus d → ℂ) =ᵐ[volume.restrict (boxSet d)] 0) : resQ f = 0 := by
-  refine Lp.ext ?_
-  filter_upwards [coeFn_resQ f, ae_Q_of_ae_boxSet h,
-    Lp.coeFn_zero ℂ 2 (volume.restrict (Q d))] with y h1 h2 h3
-  rw [h1, h3, h2]
-  rfl
 
 /-! #### Periodization of test functions supported in `Q` -/
 
@@ -495,21 +395,6 @@ theorem integral_mul_per (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
   refine integral_congr_ae ?_
   filter_upwards [coeFn_resQ f, ae_restrict_mem measurableSet_Q] with y h1 h2
   rw [per_proj_of_mem h2, h1]
-
-/-- **Restriction of weak first-order operators**: if `g = Σ α_{cp} ∂_c f_p` weakly on `𝕋ᵈ`,
-then `g|_Q = Σ α_{cp} ∂_c (f_p|_Q)` weakly on `Q` (tested against `C_c^∞(Q)`). -/
-theorem resQ_isWeakFO {P : Type*} [Fintype P] {α : d → P → ℂ}
-    {f : P → Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
-    {g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))} (h : IsWeakFO α f g)
-    (hΦ : Domain.IsTest (Q d) Φ) :
-    ∑ c, ∑ p, α c p *
-        ∫ y, resQ (f p) y * fderiv ℝ Φ y (Pi.single c 1) ∂volume.restrict (Q d) =
-      -∫ y, resQ g y * Φ y ∂volume.restrict (Q d) := by
-  have h1 := h (per Φ) (isSmooth_per hΦ)
-  rw [integral_sum_fo _ f (isSmooth_per hΦ)] at h1
-  simp only [partialT_per hΦ] at h1
-  simp only [integral_mul_per _ (hΦ.fderiv_apply _), integral_mul_per _ hΦ] at h1
-  exact h1
 
 end Per
 
@@ -891,18 +776,6 @@ theorem resQ_toL2_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.I
     Domain.coeFn_toL2 hΦ, ae_restrict_mem measurableSet_Q] with y h1 h2 h3 h4
   rw [h1, h2, h3, ext_of_mem_boxSet hΦ (proj_mem_boxSet (mem_Q.1 h4)), per_proj_of_mem h4]
 
-/-- **The norm of the extension**: `‖ext Φ‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖Φ‖²_{L²(Q)}` (`8` for the cube). -/
-theorem norm_sq_toL2_ext {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d → ℝ) → ℂ}
-    (hΦ : Domain.IsTest (Q d) Φ) :
-    ‖toL2 (continuous_ext c hΦ)‖ ^ 2 = 2 ^ Fintype.card d * ‖Domain.toL2 hΦ‖ ^ 2 := by
-  rw [← resQ_toL2_ext c hΦ]
-  refine norm_sq_eq_two_pow fun η => ?_
-  have h := toL2_ae_eq (continuous_ext c hΦ)
-  filter_upwards [h, (measurePreserving_reflB η).quasiMeasurePreserving.ae_eq_comp h] with x h1 h2
-  change ‖(toL2 (continuous_ext c hΦ) : UnitAddTorus d → ℂ) (reflB η x)‖ = _
-  rw [show (toL2 (continuous_ext c hΦ) : UnitAddTorus d → ℂ) (reflB η x) = ext c Φ (reflB η x)
-    from h2, h1, ext_reflB hc, norm_mul, norm_sign hc, one_mul]
-
 /-- `∂_k (φ ∘ R_ε) = ±(∂_k φ) ∘ R_ε`. -/
 theorem partialT_comp_reflB {φ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ (φ ∘ proj))
     (ε : d → Bool) (k : d) (x : UnitAddTorus d) :
@@ -969,53 +842,6 @@ end Covering
 
 end Geometry
 
-
-/-! ### Families of three subspaces -/
-
-section Sub3
-
-variable {𝕜 : Type*} [RCLike 𝕜] {W0 W1 W2 : Type u}
-  [NormedAddCommGroup W0] [InnerProductSpace 𝕜 W0] [CompleteSpace W0]
-  [NormedAddCommGroup W1] [InnerProductSpace 𝕜 W1] [CompleteSpace W1]
-  [NormedAddCommGroup W2] [InnerProductSpace 𝕜 W2] [CompleteSpace W2]
-
-/-- Three subspaces `K₀ ⊆ W0`, `K₁ ⊆ W1`, `K₂ ⊆ W2` as a family on `Fin 3`. -/
-def sub3 (K₀ : Submodule 𝕜 W0) (K₁ : Submodule 𝕜 W1) (K₂ : Submodule 𝕜 W2) :
-    ∀ i : Fin 3, Submodule 𝕜 (W3 W0 W1 W2 i)
-  | 0 => K₀
-  | 1 => K₁
-  | 2 => K₂
-
-instance instHasOrthogonalProjectionSub3 (K₀ : Submodule 𝕜 W0) (K₁ : Submodule 𝕜 W1)
-    (K₂ : Submodule 𝕜 W2) [K₀.HasOrthogonalProjection] [K₁.HasOrthogonalProjection]
-    [K₂.HasOrthogonalProjection] : ∀ i, (sub3 K₀ K₁ K₂ i).HasOrthogonalProjection
-  | 0 => inferInstanceAs K₀.HasOrthogonalProjection
-  | 1 => inferInstanceAs K₁.HasOrthogonalProjection
-  | 2 => inferInstanceAs K₂.HasOrthogonalProjection
-
-omit [CompleteSpace W0] [CompleteSpace W1] [CompleteSpace W2] in
-theorem mem_totalSub_sub3 {K₀ : Submodule 𝕜 W0} {K₁ : Submodule 𝕜 W1} {K₂ : Submodule 𝕜 W2}
-    {x : PiLp 2 (W3 W0 W1 W2)} :
-    x ∈ HilbertComplex.totalSub (sub3 K₀ K₁ K₂) ↔
-      (x 0 : W0) ∈ K₀ ∧ (x 1 : W1) ∈ K₁ ∧ (x 2 : W2) ∈ K₂ := by
-  constructor
-  · intro h; exact ⟨h 0, h 1, h 2⟩
-  · rintro ⟨h0, h1, h2⟩ i
-    fin_cases i
-    exacts [h0, h1, h2]
-
-/-- A reducing subcomplex of a short complex from the two reducing pairs. -/
-theorem reducingSubcomplex_sub3 (S : ShortHilbertComplex 𝕜 W0 W1 W2) {K₀ : Submodule 𝕜 W0}
-    {K₁ : Submodule 𝕜 W1} {K₂ : Submodule 𝕜 W2} [K₀.HasOrthogonalProjection]
-    [K₁.HasOrthogonalProjection] [K₂.HasOrthogonalProjection]
-    (h₀ : S.d₀.IsReducingPair K₀ K₁) (h₁ : S.d₁.IsReducingPair K₁ K₂) :
-    S.toHilbertComplex.ReducingSubcomplex (sub3 K₀ K₁ K₂) := by
-  refine HilbertComplex.ReducingSubcomplex.of_rel fun i j hij => ?_
-  fin_cases i <;> fin_cases j <;> simp at hij
-  exacts [h₀, h₁]
-
-end Sub3
-
 /-! ### Window total spaces of short complexes -/
 
 section Slots
@@ -1036,7 +862,6 @@ abbrev slot1 (y : PiLp 2 (W3 W0 W1 W2)) : W1 := y 1
 
 /-- The third slot of the window total space, with its own type. -/
 abbrev slot2 (y : PiLp 2 (W3 W0 W1 W2)) : W2 := y 2
-
 
 end Slots
 
@@ -1111,17 +936,6 @@ variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex ℝ c W} {Γ : Type*} [Group Γ] [Fintype Γ]
 
-/-- A unitary preserving a closed subspace `K` and its inverse commutes with `P_K`. -/
-theorem starProjection_comm_of_invariant {E : Type*} [NormedAddCommGroup E]
-    [InnerProductSpace ℝ E] (U : E ≃ₗᵢ[ℝ] E) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
-    (hU : ∀ x ∈ K, U x ∈ K) (hU' : ∀ x ∈ K, U.symm x ∈ K) (x : E) :
-    K.starProjection (U x) = U (K.starProjection x) := by
-  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero (u := U x)
-    (hU _ (K.starProjection_apply_mem x)) fun k hk => ?_
-  rw [← _root_.map_sub, show k = U (U.symm k) from (U.apply_symm_apply k).symm,
-    U.inner_map_map]
-  exact K.starProjection_inner_eq_zero x _ (hU' k hk)
-
 instance instHasOrthogonalProjectionCompSub (S : ∀ i, Submodule ℝ (W i))
     [∀ i, CompleteSpace (S i)] (K : ∀ i, Submodule ℝ (W i)) [∀ i, (K i).HasOrthogonalProjection]
     (i : ι) : (compSub S K i).HasOrthogonalProjection := by
@@ -1130,49 +944,6 @@ instance instHasOrthogonalProjectionCompSub (S : ∀ i, Submodule ℝ (W i))
   have : CompleteSpace (compSub S K i) := hc.completeSpace_coe
   infer_instance
 
-omit [Fintype ι] in
-/-- **Invariant constraints descend to the fixed complex**: if `K` is a reducing subcomplex of `H`
-whose spaces are preserved by a finite unitary action, then `K ∩ Fix` is a reducing subcomplex
-of the fixed (method-of-images) complex. -/
-theorem reducingSubcomplex_compSub_fixed (A : H.Action Γ) {K : ∀ i, Submodule ℝ (W i)}
-    [∀ i, (K i).HasOrthogonalProjection] (hK : H.ReducingSubcomplex K)
-    (hA : ∀ g i, ∀ x ∈ K i, A.act g i x ∈ K i) :
-    A.fixedComplex.ReducingSubcomplex (compSub A.fixed K) := by
-  have hS : ∀ i (x : A.fixed i), ∃ y : A.fixed i,
-      A.reducingSubcomplex_fixed.toScaledEmbedding.J i y = (K i).starProjection
-        (A.reducingSubcomplex_fixed.toScaledEmbedding.J i x) := by
-    intro i x
-    refine ⟨⟨(K i).starProjection x, fun g => ?_⟩, rfl⟩
-    have hinv : ∀ y ∈ K i, (A.act g i).symm y ∈ K i := fun y hy => by
-      have e : (A.act g i).symm y = A.act g⁻¹ i y := by
-        apply (A.act g i).injective
-        rw [LinearIsometryEquiv.apply_symm_apply, A.act_act_inv]
-      rw [e]; exact hA g⁻¹ i y hy
-    rw [← starProjection_comm_of_invariant (A.act g i) (K i) (hA g i) hinv, x.2 g]
-  exact A.reducingSubcomplex_fixed.toScaledEmbedding.reducingSubcomplex_comap hK hS
-
 end Action
-
-/-! ### Zero differentials -/
-
-/-- Two zero differentials commute with any pair of maps. -/
-theorem comm_of_eq_zero {E F E' F' : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
-    [Module ℝ F] [AddCommGroup E'] [Module ℝ E'] [AddCommGroup F'] [Module ℝ F']
-    {T : E →ₗ.[ℝ] F} {T' : E' →ₗ.[ℝ] F'} (hT : T = 0) (hT' : T' = 0) (J : E →ₗ[ℝ] E')
-    (J' : F →ₗ[ℝ] F') (κ : ℝ) (x : T.domain) (h : J x ∈ T'.domain) :
-    T' ⟨J x, h⟩ = κ • J' (T x) := by
-  rw [LinearPMap.apply_eq_zero_of_eq_zero hT', LinearPMap.apply_eq_zero_of_eq_zero hT x,
-    _root_.map_zero, smul_zero]
-
-/-! ### Stationary vectors -/
-
-/-- A stationary vector in the domain of the generator is killed by the generator. -/
-theorem generator_eq_zero_of_mem_stationary {E : Type*} [NormedAddCommGroup E]
-    [InnerProductSpace ℝ E] [CompleteSpace E] (G : C0Group ℝ E) (x : G.generator.domain)
-    (hx : (x : E) ∈ G.stationary) : G.generator x = 0 := by
-  refine G.generator_apply_eq ?_
-  have e : (fun t => G.S t x) = fun _ => (x : E) := funext (C0Group.mem_stationary.1 hx)
-  rw [e]
-  exact hasDerivAt_const _ _
 
 end Feec.Models.Cube

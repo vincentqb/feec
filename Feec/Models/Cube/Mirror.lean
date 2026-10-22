@@ -31,10 +31,8 @@ Three realizations are treated, over `ℂ`:
 * the **cube `Q = (0, ½)³`** `Mirror.complexQ`: genuine fields
   `L²(Q; ℂ³) → L²(Q; ℂ³ˣ³) → L²(Q; ℂ³ˣ³)`, the compression of the torus complex along the mirror
   extensions (`Mirror.J`, `Feec.Models.Cube.MirrorExt.extF`; a scaled embedding with scale `8`,
-  `Mirror.embeddingQ`). Its differentials are the weak gradient and curl on `Q`, between the
-  minimal and the maximal realizations (`Feec.Models.Cube.MirrorDirichlet`); the boundary
-  conditions are `σ · n = 0` and `E_{nτ} = 0` (encoded by the parities), the constraint is
-  `{0} × TSD × TSD` with the wall conditions `E_{τn} = 0`, `B_{nn} = 0` (`Mirror.tsdQ`,
+  `Mirror.embeddingQ`); the boundary conditions are `σ · n = 0` and `E_{nτ} = 0` (encoded by the
+  parities), the constraint is `{0} × TSD × TSD` with the wall conditions `E_{τn} = 0`, `B_{nn} = 0` (`Mirror.tsdQ`,
   `Mirror.mem_tsdQ_one`);
 * **every open cube** `∏ (bᵢ, bᵢ + s)` (`Mirror.complexCube`), the transport of `complexQ` along
   the pull-back by `x ↦ (x - b)/(2s)` (`Feec.Domain.pullF`, chain-rule factor `(2s)⁻¹`).
@@ -541,8 +539,6 @@ abbrev complexQ : HilbertComplex ℂ ComplexShape.fin3 SpaceQ :=
 def embeddingQ : ScaledEmbedding complexQ Models.Torus.GradCurl.complex :=
   ScaledEmbedding.ofCompress eight_pos inner_J reducingSubcomplex_range
 
-@[simp] theorem embeddingQ_J (i : Fin 3) : embeddingQ.J i = J i := rfl
-
 /-- `J d = d_{𝕋³} J`. -/
 theorem J_complexQ_d {i j : Fin 3} (x : (complexQ.d i j).domain) :
     J j (complexQ.d i j x) = Models.Torus.GradCurl.complex.d i j
@@ -607,35 +603,6 @@ theorem coeff_extPi_testField {P : Type*} [Fintype P] [DecidableEq P] {c : P →
     TorusWeak.coeff (extPi hc (testField hΦ)) n p = mFourierCoeff (Geometry.ext (c p) (Φ p)) n := by
   rw [TorusWeak.coeff_apply, extPi_testField, TorusWeak.mFourierCoeff_toL2]
 
-theorem coeff_extPi_testField' {P : Type*} [Fintype P] [DecidableEq P] {c : P → Fin 3 → ℂ}
-    (hc : ∀ p k, c p k * c p k = 1) {Φ : P → R3 → ℂ} (hΦ : IsTestField (Q (Fin 3)) Φ)
-    (n : Fin 3 → ℤ) :
-    TorusWeak.coeff (extPi hc (testField hΦ)) n =
-      WithLp.toLp 2 fun p => mFourierCoeff (Geometry.ext (c p) (Φ p)) n :=
-  PiLp.ext fun p => coeff_extPi_testField hc hΦ n p
-
-/-- The curl of extensions: the coefficient identity for the row-wise curl, for parities with
-`c_out (a, b) = c_in (a, b + 2)` and `c_in (a, b + 1)` with the parity of `x_{b+1}`, resp.
-`x_{b+2}`, reversed. -/
-theorem coeff_ext_curl {cin cout : Fin 3 × Fin 3 → Fin 3 → ℂ}
-    (h₁ : ∀ a b, cout (a, b) = Function.update (cin (a, b + 2)) (b + 1) (-cin (a, b + 2) (b + 1)))
-    (h₂ : ∀ a b, cout (a, b) = Function.update (cin (a, b + 1)) (b + 2) (-cin (a, b + 1) (b + 2)))
-    {Φ : Fin 3 × Fin 3 → R3 → ℂ} (hΦ : IsTestField (Q (Fin 3)) Φ) (n : Fin 3 → ℤ)
-    (a b : Fin 3) :
-    mFourierCoeff
-        (Geometry.ext (cout (a, b)) ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).apply Φ (a, b))) n =
-      curl (Fourier.Torus.freq n)
-        (WithLp.toLp 2 fun p => mFourierCoeff (Geometry.ext (cin p) (Φ p)) n) (a, b) := by
-  have e : (curlOp 3 : ConstCoeffOp R3 ℂ _ _).apply Φ (a, b) = fun x =>
-      fderiv ℝ (Φ (a, b + 2)) x (Pi.single (b + 1) 1) -
-        fderiv ℝ (Φ (a, b + 1)) x (Pi.single (b + 2) 1) :=
-    funext fun x => Domain.curlOp_apply Φ (a, b) x
-  rw [e, mFourierCoeff_ext_sub _ ((hΦ _).fderiv_apply _) ((hΦ _).fderiv_apply _),
-    mFourierCoeff_ext_fderiv' (b + 1) (h₁ a b) (hΦ _),
-    mFourierCoeff_ext_fderiv' (b + 2) (h₂ a b) (hΦ _), curl_apply]
-  simp only [Fin.sum_univ_three, leviCivita3_apply, Fourier.Torus.freq_apply]
-  fin_cases b <;> simp <;> ring
-
 variable {cv : Fin 3 → Fin 3 → ℂ} {cm cm' : Fin 3 × Fin 3 → Fin 3 → ℂ}
   (hcv : ∀ a k, cv a k * cv a k = 1) (hcm : ∀ p k, cm p k * cm p k = 1)
   (hcm' : ∀ p k, cm' p k * cm' p k = 1)
@@ -657,109 +624,6 @@ theorem grad_extF_testField (h : ∀ a b, cm (a, b) = Function.update (cv a) b (
   rw [e, mFourierCoeff_ext_fderiv' b (h a b) (hφ a), Fourier.Torus.freq_apply]
   push_cast; ring
 
-/-- **`div` commutes with extensions of test fields** (`grad† = -div` on `𝕋³`). -/
-theorem adjoint_grad_extF_testField (h : ∀ a b, cv a = Function.update (cm (a, b)) b (-cm (a, b) b))
-    {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
-    ∃ h : extF hcm (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 0 1)†).domain,
-      (Models.Torus.GradCurl.complex.d 0 1)† ⟨_, h⟩ =
-        extF hcv (testField ((gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply
-          hΨ)) := by
-  refine (Models.Torus.GradCurl.mem_domain_adjoint_grad_iff_weak (extPi hcm (testField hΨ))
-    (extPi hcv (testField ((gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply
-      hΨ)))).2 ((TorusWeak.isWeak_iff Models.Torus.GradCurl.adjoint_grad_isLinear _ _).2
-      fun n => ?_)
-  refine PiLp.ext fun a => ?_
-  rw [coeff_extPi_testField]
-  erw [gradCurl_m01, adjoint_grad, div_apply]
-  have e : (gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.apply Ψ a =
-      fun x => ∑ b, (-1 : ℂ) * fderiv ℝ (Ψ (a, b)) x (Pi.single b 1) := funext fun x => by
-    rw [Domain.gradOp_formalAdj_apply]; simp [Finset.sum_neg_distrib]
-  rw [e, mFourierCoeff_ext_sum _ _ _ fun b => (hΨ _).fderiv_apply _, Finset.mul_sum]
-  refine Finset.sum_congr rfl fun b _ => ?_
-  rw [mFourierCoeff_ext_fderiv' b (h a b) (hΨ _), coeff_extPi_testField,
-    Fourier.Torus.freq_apply]
-  push_cast; ring
-
-/-- **`curl` commutes with extensions of test fields** (tensor parities in, pseudo-tensor parities
-out, or conversely). -/
-theorem curl_extF_testField
-    (h₁ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 2)) (b + 1) (-cm (a, b + 2) (b + 1)))
-    (h₂ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 1)) (b + 2) (-cm (a, b + 1) (b + 2)))
-    {Φ : Fin 3 × Fin 3 → R3 → ℂ} (hΦ : IsTestField (Q (Fin 3)) Φ) :
-    ∃ h : extF hcm (testField hΦ) ∈ (Models.Torus.GradCurl.complex.d 1 2).domain,
-      Models.Torus.GradCurl.complex.d 1 2 ⟨_, h⟩ =
-        extF hcm' (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).isTestField_apply hΦ)) := by
-  refine (Models.Torus.GradCurl.mem_domain_curl_iff_weak (extPi hcm (testField hΦ))
-    (extPi hcm' (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).isTestField_apply hΦ)))).2
-    ((TorusWeak.isWeak_iff Models.Torus.GradCurl.curl_isLinear _ _).2 fun n => ?_)
-  refine PiLp.ext fun ⟨a, b⟩ => ?_
-  rw [coeff_extPi_testField, gradCurl_m12, coeff_ext_curl h₁ h₂ hΦ n a b,
-    coeff_extPi_testField']
-
-/-- **`curl† = curl` commutes with extensions of test fields.** -/
-theorem adjoint_curl_extF_testField
-    (h₁ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 2)) (b + 1) (-cm (a, b + 2) (b + 1)))
-    (h₂ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 1)) (b + 2) (-cm (a, b + 1) (b + 2)))
-    {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
-    ∃ h : extF hcm (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 1 2)†).domain,
-      (Models.Torus.GradCurl.complex.d 1 2)† ⟨_, h⟩ =
-        extF hcm' (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply
-          hΨ)) := by
-  have hadj : (Models.Torus.GradCurl.complex.d 1 2)† = Operator.mulOp Measure.count fun n =>
-      gradCurl.m 1 2 (Fourier.Torus.freq n) := by
-    rw [show (Models.Torus.GradCurl.complex.d 1 2)† = Operator.mulOp Measure.count fun n =>
-        ContinuousLinearMap.adjoint (gradCurl.m 1 2 (Fourier.Torus.freq n)) from
-      (Fourier.Torus.symbolComplex gradCurl).adjoint_d 1 2]
-    congr 1
-    funext n
-    exact adjoint_curl _
-  have key := (TorusWeak.mem_graph_iff_isWeak Models.Torus.GradCurl.curl_isLinear
-    (extPi hcm (testField hΨ))
-    (extPi hcm' (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply
-      hΨ)))).2 ((TorusWeak.isWeak_iff Models.Torus.GradCurl.curl_isLinear _ _).2 fun n => by
-        refine PiLp.ext fun ⟨a, b⟩ => ?_
-        rw [coeff_extPi_testField, gradCurl_m12]
-        have e : (curlOp 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.apply Ψ (a, b) =
-            (curlOp 3 : ConstCoeffOp R3 ℂ _ _).apply Ψ (a, b) := by
-          rw [Domain.curlOp_formalAdj_apply]
-        rw [e, coeff_ext_curl h₁ h₂ hΨ n a b, coeff_extPi_testField'])
-  obtain ⟨h, e⟩ := key
-  refine ⟨hadj ▸ h, ?_⟩
-  rw [apply_eq_of_eq hadj _ ⟨_, h⟩ rfl]
-  exact e
-
-/-- **`grad ∘ J₀ = J₁ ∘ grad` on test fields**: the mirror extension of a test vector field lies
-in `H¹(𝕋³)` and its gradient is the mirror extension of the gradient. -/
-theorem grad_J_testField {φ : Fin 3 → R3 → ℂ} (hφ : IsTestField (Q (Fin 3)) φ) :
-    ∃ h : J 0 (testField hφ) ∈ (Models.Torus.GradCurl.complex.d 0 1).domain,
-      Models.Torus.GradCurl.complex.d 0 1 ⟨_, h⟩ =
-        J 1 (testField ((gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).isTestField_apply hφ)) :=
-  grad_extF_testField cV_sq cE_sq cE_eq_update hφ
-
-/-- **`curl ∘ J₁ = J₂ ∘ curl` on test fields.** -/
-theorem curl_J_testField {Φ : Fin 3 × Fin 3 → R3 → ℂ} (hΦ : IsTestField (Q (Fin 3)) Φ) :
-    ∃ h : J 1 (testField hΦ) ∈ (Models.Torus.GradCurl.complex.d 1 2).domain,
-      Models.Torus.GradCurl.complex.d 1 2 ⟨_, h⟩ =
-        J 2 (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).isTestField_apply hΦ)) :=
-  curl_extF_testField cE_sq cB_sq cB_eq_update₁ cB_eq_update₂ hΦ
-
-/-- **`div ∘ J₁ = J₀ ∘ div` on test fields**: the mirror extension of a test matrix field (tensor
-parities) lies in `D(grad†) = H(div; 𝕋³)` and `grad† = -div` maps it to the mirror extension of
-`-div`. -/
-theorem adjoint_grad_J_testField {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
-    ∃ h : J 1 (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 0 1)†).domain,
-      (Models.Torus.GradCurl.complex.d 0 1)† ⟨_, h⟩ =
-        J 0 (testField ((gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply hΨ)) :=
-  adjoint_grad_extF_testField cV_sq cE_sq cV_eq_update hΨ
-
-/-- **`curl† ∘ J₂ = J₁ ∘ curl` on test fields** (`curl† = curl`, pseudo-tensor parities in,
-tensor parities out). -/
-theorem adjoint_curl_J_testField {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
-    ∃ h : J 2 (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 1 2)†).domain,
-      (Models.Torus.GradCurl.complex.d 1 2)† ⟨_, h⟩ =
-        J 1 (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply hΨ)) :=
-  adjoint_curl_extF_testField cB_sq cE_sq cE_eq_update₁ cE_eq_update₂ hΨ
-
 end TestFields
 
 /-! ### TSD fields on `Q` -/
@@ -770,10 +634,6 @@ def cPV (a k : Fin 3) : ℂ := -sgn k a
 theorem cPV_sq (a k : Fin 3) : cPV a k * cPV a k = 1 := by rw [cPV, neg_mul_neg]; exact cV_sq a k
 
 theorem cB_eq_update (a b : Fin 3) : cB (a, b) = Function.update (cPV a) b (-cPV a b) := by
-  funext k
-  fin_cases a <;> fin_cases b <;> fin_cases k <;> simp [cB, cPV, sgn, Function.update]
-
-theorem cPV_eq_update (a b : Fin 3) : cPV a = Function.update (cB (a, b)) b (-cB (a, b) b) := by
   funext k
   fin_cases a <;> fin_cases b <;> fin_cases k <;> simp [cB, cPV, sgn, Function.update]
 
@@ -1221,34 +1081,6 @@ theorem tsd_of_pullCube {E₀ : MQ}
     rw [e3, inner_smul_right]
     change _ * ⟪pullCube b s hs (Fin 3 × Fin 3) E₀, pullCube b s hs (Fin 3 × Fin 3) _⟫_ℂ = 0
     rw [inner_pullCube hs, h3 ψ hψ, mul_zero, mul_zero]
-
-/-- **The electric constraint on the cube consists of TSD fields.** -/
-theorem mem_tsdCube_one {E : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)}
-    (hE : E ∈ tsdCube b s hs 1) :
-    (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 ∧
-      ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (openCube b s) φ,
-        ⟪E, Domain.testField ((Domain.gradOp 3 3 : Domain.ConstCoeffOp _ ℂ _ _).isTestField_apply
-          hφ)⟫_ℂ = 0 := by
-  have hE' : (eCube b s hs 1).symm E ∈ tsdQ 1 := hE
-  have h := tsd_of_pullCube (b := b) hs (mem_tsdQ_one hE')
-  have e : pullCube b s hs (Fin 3 × Fin 3) ((eCube b s hs 1).symm E) = E :=
-    (eCube b s hs 1).apply_symm_apply E
-  simp only [e] at h
-  exact h
-
-/-- **The magnetic constraint on the cube consists of TSD fields.** -/
-theorem mem_tsdCube_two {B : Domain.L2F ℂ (openCube b s) (Fin 3 × Fin 3)}
-    (hB : B ∈ tsdCube b s hs 2) :
-    (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 ∧
-      ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (openCube b s) φ,
-        ⟪B, Domain.testField ((Domain.gradOp 3 3 : Domain.ConstCoeffOp _ ℂ _ _).isTestField_apply
-          hφ)⟫_ℂ = 0 := by
-  have hB' : (eCube b s hs 2).symm B ∈ tsdQ 2 := hB
-  have h := tsd_of_pullCube (b := b) hs (mem_tsdQ_two hB')
-  have e : pullCube b s hs (Fin 3 × Fin 3) ((eCube b s hs 2).symm B) = B :=
-    (eCube b s hs 2).apply_symm_apply B
-  simp only [e] at h
-  exact h
 
 end Cube
 

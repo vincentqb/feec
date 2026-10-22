@@ -19,9 +19,7 @@ intertwines `d` (`mapsTo_comm_min`, `mapsTo_comm_max`), and a form whose extensi
 domain lies in the domain on `Q` (`mem_domain_of_J_min`, `mem_domain_of_J_max`, the trace part).
 Inner products are multiplied by `2ⁿ` (`inner_J`); the range is the real parity class
 (`range_J`), a reducing subcomplex of the real torus complex (`reducing_range`), the fixed vectors
-of the reflections `± R_j^*` together with the conjugation (`realInvolutions`), and the parity
-classes of `Feec.Models.Cube.DeRham` (complex coefficients) are exactly the complexifications of the
-forms on `Q` (`mem_parity_fixed_iff`). Here the complexes are the windows `Λ⁰ → ⋯ → Λⁿ`
+of the reflections `± R_j^*` together with the conjugation (`realInvolutions`). Here the complexes are the windows `Λ⁰ → ⋯ → Λⁿ`
 (`HQmin`, `HQmax`, `RT`); the consequences on the `ℤ`-indexed complexes (Poincaré inequality,
 compactness, harmonic forms) are in `Feec.Models.Cube.DeRhamIdentPoincare`, and their statements on
 `Feec.Models.Cube.FEM.complex` and `Feec.Models.Cube.FEM.complexMin` in
@@ -37,8 +35,6 @@ compactness, harmonic forms) are in `Feec.Models.Cube.DeRhamIdentPoincare`, and 
 * `mem_realFixed_iff`, **`range_J`**, **`inner_J`**, **`reducing_range`**.
 * **`mapsTo_comm_min`**, **`mem_domain_of_J_min`**, **`HQmin_eq_compress`**.
 * **`mapsTo_comm_max`**, **`mem_domain_of_J_max`**, **`HQmax_eq_compress`**.
-* **`mem_parity_fixed_iff`**: the spaces of the parity model `Feec.Models.Cube.DeRham.complex` are
-  the complexifications `J u + i J v` of the forms on `Q`; `mem_realFixed_iff_cnj`.
 
 ## References
 
@@ -385,68 +381,7 @@ theorem HQmax_eq_compress :
 
 /-! ### The parity model is the complexification of the forms on `Q` -/
 
-theorem mem_action_fixed_iff_refl {rel : Bool} {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
-    x ∈ (DeRham.action (Fin n) rel).fixed a ↔ ∀ j, refl rel j a x = x :=
-  (DeRham.symmetries (Fin n) rel).toInvolutions.mem_fixed_toAction
-
-/-- The real parity class is the conjugation-fixed part of the parity class of
-`Feec.Models.Cube.DeRham`. -/
-theorem mem_realFixed_iff_cnj {rel : Bool} {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
-    x ∈ (realAction rel).fixed a ↔ cnj a x = x ∧ x ∈ (DeRham.action (Fin n) rel).fixed a := by
-  rw [(realInvolutions rel).mem_fixed_toAction, mem_action_fixed_iff_refl]
-  exact ⟨fun h => ⟨h none, fun j => h (some j)⟩, fun h k => by cases k; exacts [h.1, h.2 _]⟩
-
-theorem cnj_mem_action_fixed {rel : Bool} {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a}
-    (hx : x ∈ (DeRham.action (Fin n) rel).fixed a) :
-    cnj a x ∈ (DeRham.action (Fin n) rel).fixed a := by
-  rw [mem_action_fixed_iff_refl] at hx ⊢
-  intro j
-  rw [refl_cnj, hx j]
-
-theorem cnj_smul (a : Fin (Fintype.card (Fin n) + 1)) (c : ℂ) (x : TW n a) :
-    cnj a (c • x) = (starRingEnd ℂ c) • cnj a x :=
-  Torus.DeRham.windowReal.toConj.antilinear a c x
-
 theorem cnj_cnj (a : Fin (Fintype.card (Fin n) + 1)) (x : TW n a) : cnj a (cnj a x) = x :=
   Torus.DeRham.windowReal.toConj.invol a x
-
-/-- **The parity model of `Feec.Models.Cube.DeRham` is the complexification**: the `a`-forms of
-the parity class `rel` (`Feec.Models.Cube.DeRham.action`, the spaces of
-`Feec.Models.Cube.DeRham.complex (Fin n) rel`) are exactly `J u + i J v` for real forms `u, v` on
-`Q` (`H̊Λ(Q)` for the relative class, `HΛ(Q)` for the absolute class). -/
-theorem mem_parity_fixed_iff {rel : Bool} {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
-    x ∈ (DeRham.action (Fin n) rel).fixed a ↔
-      ∃ u v : WQ n a, x = J rel a u + Complex.I • J rel a v := by
-  constructor
-  · intro hx
-    have hc := cnj_mem_action_fixed hx
-    set r : TW n a := (2 : ℂ)⁻¹ • (x + cnj a x)
-    set s : TW n a := (2 : ℂ)⁻¹ • (-Complex.I • (x - cnj a x))
-    have hr : r ∈ (realAction rel).fixed a := by
-      refine mem_realFixed_iff_cnj.2 ⟨?_, Submodule.smul_mem _ _ (add_mem hx hc)⟩
-      simp only [r]
-      rw [cnj_smul, _root_.map_add, cnj_cnj, map_inv₀, map_ofNat, add_comm (cnj a x)]
-    have hs : s ∈ (realAction rel).fixed a := by
-      refine mem_realFixed_iff_cnj.2 ⟨?_, Submodule.smul_mem _ _
-        (Submodule.smul_mem _ _ (sub_mem hx hc))⟩
-      simp only [s]
-      rw [cnj_smul, cnj_smul, _root_.map_sub, cnj_cnj, map_inv₀, map_ofNat, _root_.map_neg,
-        Complex.conj_I, neg_neg]
-      simp only [smul_sub, neg_smul, smul_neg]
-      abel
-    rw [← range_J] at hr hs
-    obtain ⟨u, hu⟩ := hr
-    obtain ⟨v, hv⟩ := hs
-    refine ⟨u, v, ?_⟩
-    rw [show J rel a u = r from hu, show J rel a v = s from hv]
-    have e1 : Complex.I * ((2 : ℂ)⁻¹ * -Complex.I) = (2 : ℂ)⁻¹ := by
-      linear_combination (-(2 : ℂ)⁻¹) * Complex.I_mul_I
-    simp only [r, s, smul_smul, smul_add, smul_sub, e1]
-    rw [add_add_sub_cancel, ← add_smul]
-    norm_num
-  · rintro ⟨u, v, rfl⟩
-    have h1 : ∀ w : WQ n a, J rel a w ∈ (DeRham.action (Fin n) rel).fixed a := fun w =>
-      (mem_realFixed_iff_cnj.1 ((range_J rel a) ▸ ⟨w, rfl⟩)).2
-    exact add_mem (h1 u) (Submodule.smul_mem _ _ (h1 v))
 
 end Feec.Models.Cube.DeRhamIdent

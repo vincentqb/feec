@@ -52,14 +52,6 @@ open RowWise (ofRealL reL coeFn_ofRealL coeFn_reL reL_ofRealL ofRealL_reL star_o
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
-/-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
-
-/-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
-local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
-
 variable {d : Type*} [Fintype d]
 
 /-- Restriction to `Q` commutes with complex conjugation. -/
@@ -372,9 +364,6 @@ theorem inner_JR (u v : Domain.L2F ℝ (Q d) P) :
   rw [MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, JR_apply,
     JR_apply, inner_extF, inner_ofRealF, ← Complex.ofReal_mul]
   exact Complex.ofReal_re _
-
-theorem injective_JR : Function.Injective (JR hc) := fun u v h => by
-  rw [← Jinv_JR hc u, h, Jinv_JR]
 
 /-- **The coefficients of `JR`** are pairings on `Q` with the folded characters. -/
 theorem coeff_JR (u : Domain.L2F ℝ (Q d) P) (n : d → ℤ) (p : P) :

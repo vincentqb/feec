@@ -88,10 +88,6 @@ attribute [local instance] RealTorus.isScalarTower
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
-/-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
-
 /-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
 local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
   inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
@@ -2080,10 +2076,6 @@ theorem mem_stationary_iff_J (y : PiLp 2 WQ) :
       totalJ J y ∈ RealTorus.gradCurl.waveGroup.stationary := by
   simp only [C0Group.mem_stationary, ← waveGroup_J]
   exact forall_congr' fun t => totalJ_injective.eq_iff.symm
-
-theorem ofRealL_injective {α : Type*} [MeasurableSpace α] {μ : Measure α} :
-    Function.Injective (ofRealL μ) :=
-  fun f g h => by rw [← reL_ofRealL f, h, reL_ofRealL]
 
 /-- On `Q` the extension is the identity: `(J u)|_Q = u`. -/
 theorem resM_JR (pc : Ix → Fin 3 → ℂ) (u : Domain.L2F ℝ (Q (Fin 3)) Ix) :

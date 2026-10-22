@@ -131,10 +131,6 @@ def fib (k : Fin 3) : ∀ i : Fin 3, W3 Vec Mat Mat i →L[ℂ] W3 Vec Mat Mat i
   | 1 => -colR k
   | 2 => colR k
 
-theorem fib_zero (k : Fin 3) (v : Vec) : fib k 0 v = -v := rfl
-theorem fib_one (k : Fin 3) (M : Mat) : fib k 1 M = -colR k M := rfl
-theorem fib_two (k : Fin 3) (M : Mat) : fib k 2 M = colR k M := rfl
-
 theorem neg_colR_neg_colR (k : Fin 3) (M : Mat) : -colR k (-colR k M) = M := by
   rw [_root_.map_neg, neg_neg, colR_colR]
 
@@ -189,8 +185,6 @@ theorem m_cjF (i j : Fin 3) (ξ : Freq) (v : W3 Vec Mat Mat i) :
     | exact curl_neg_entryConj ξ v
     | exact (map_zero (cjF _)).symm
 
-theorem neg_colR (k : Fin 3) (M : Mat) : -colR k M = colR k (-M) := (_root_.map_neg _ _).symm
-
 /-- The row-wise fibre maps have real coefficients. -/
 theorem cjF_fib (k i : Fin 3) (v : W3 Vec Mat Mat i) : cjF i (fib k i v) = fib k i (cjF i v) := by
   fin_cases i
@@ -221,9 +215,6 @@ def symmetries : (Fourier.Torus.symbolComplex gradCurl).Symmetries (Fin 3) where
 def refl (k i : Fin 3) : Space i ≃ₗᵢ[ℝ] Space i where
   toLinearEquiv := (symmetries.toInvolutions.R k i).toLinearEquiv.restrictScalars ℝ
   norm_map' := (symmetries.toInvolutions.R k i).norm_map
-
-theorem refl_apply (k i : Fin 3) (u : Space i) :
-    refl k i u = symLp (symmetries.R k) (fib k i) u := rfl
 
 theorem coeFn_refl (k i : Fin 3) (u : Space i) (n : Fin 3 → ℤ) :
     (refl k i u : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = fib k i (u (MirrorTorus.flip k n)) :=
@@ -413,14 +404,6 @@ theorem curl_curl_curl (ξ : Freq) (M : Mat) :
     curl ξ (curl ξ (curl ξ M)) = ((‖ξ‖ ^ 2 : ℝ) : ℂ) • curl ξ M := by
   have h := grad_div_add_curl_curl ξ (curl ξ M)
   rwa [div_curl, _root_.map_zero, zero_add] at h
-
-theorem gradCurl_m_zero_zero (ξ : Freq) : gradCurl.m 0 0 ξ = 0 := rfl
-theorem gradCurl_m_zero_two (ξ : Freq) : gradCurl.m 0 2 ξ = 0 := rfl
-theorem gradCurl_m_one_zero (ξ : Freq) : gradCurl.m 1 0 ξ = 0 := rfl
-theorem gradCurl_m_one_one (ξ : Freq) : gradCurl.m 1 1 ξ = 0 := rfl
-theorem gradCurl_m_two_zero (ξ : Freq) : gradCurl.m 2 0 ξ = 0 := rfl
-theorem gradCurl_m_two_one (ξ : Freq) : gradCurl.m 2 1 ξ = 0 := rfl
-theorem gradCurl_m_two_two (ξ : Freq) : gradCurl.m 2 2 ξ = 0 := rfl
 
 open Fourier.SymbolComplex in
 theorem waveSym_apply_zero (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :

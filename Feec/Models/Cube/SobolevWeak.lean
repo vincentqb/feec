@@ -21,21 +21,19 @@ inequality used by the optimal finite element rates of `Feec.Models.Cube.Sobolev
   `HasWeakDerivs Ω m u`: every coefficient `u_t` has weak derivatives in `L²(Ω)` along every word
   of length `≤ m`. They are unique (`HasWeakDeriv.unique`), pass to `L²` limits
   (`hasWeakDeriv_of_tendsto`), and classical integration by parts of every order holds
-  (`integral_mul_iterPartial`). `weakHmNorm`, `weakHmNormSq`: the norm `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²` over ordered words `r`
+  (`integral_mul_iterPartial`). `weakHmNormSq`: the squared norm `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²`
+  over ordered words `r`
   (a mixed derivative of multi-index `α` is counted `|α|!/α!` times; equivalent, up to
   constants depending on `m`, to the norm over multi-indices).
 * **Forward direction** (`hasWeakDerivs_of_mem_sobolevQ`): every `u ∈ Hᵐ(Q; Λᵏ)` has weak
   derivatives up to order `m` in `L²(Q)`; the derivative along `l` is the restriction of the
   Fourier multiplier `mulSeq l x` (`hasWeakDeriv_of_memSob`), the `L²` limit of the classical
   derivatives of the truncations (graph convergence, `hasWeakDeriv_Jinvf_trunc`), and
-  `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖² ≤ (Σ_{p ≤ m} nᵖ) ‖u‖²_{Hᵐ(Q)}` (`weakHmNormSq_le_qNorm_sq`,
-  `weakHmNorm_le_qNorm`).
+  `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖² ≤ (Σ_{p ≤ m} nᵖ) ‖u‖²_{Hᵐ(Q)}` (`weakHmNormSq_le_qNorm_sq`).
 * **The torus** (`HasWeakDerivT`, `HasWeakDerivsT`, with `iterPartialT`, test functions the smooth
   functions of `𝕋ⁿ`): `x ∈ Hᵐ(𝕋ⁿ; Λᵏ)` iff every component of `physF k x` has weak derivatives up
   to order `m` in `L²(𝕋ⁿ)` (**`memSob_nat_iff`**; `⇐` by testing against the characters, the pure
-  derivatives `∂_j^m` and the power-mean inequality). Hence **`mem_sobolevPar_nat_iff`**:
-  `u ∈ Hᵐ_J(Q)` iff the parity extension `JfJ J k u` has weak derivatives up to order `m` in
-  `L²(𝕋ⁿ)`.
+  derivatives `∂_j^m` and the power-mean inequality).
 * **The parity classes of every integer order, intrinsically on `Q`**
   (**`mem_sobolevPar_add_one_iff`**): `u ∈ H^{m+1}_J(Q; Λᵏ)` iff `u ∈ H¹_J(Q; Λᵏ)` and every first
   weak derivative `∂_j u` (in `L²(Q)`) lies in `Hᵐ_{J ∆ {j}}(Q; Λᵏ)` (`∂_j` flips the parity in
@@ -64,15 +62,8 @@ derivative on coordinate vectors is the iterated partial derivative
 (`iteratedFDeriv_single_eq_iterPartial`), multilinear maps are bounded by their coordinate values
 (`norm_le_sum_apply_single`, `norm_le_sum_proj`), and Parseval on `Q ⊆ 𝕋ⁿ`
 (`integral_re_expSum_sq_le`) gives **`sum_norm_iteratedFDeriv_truncQ_sq_le`**:
-`‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n(2πM)²)^{p-s} ‖x‖²_{Hˢ(𝕋ⁿ)}` for `s ≤ p`, and its parity version
-`sum_norm_iteratedFDeriv_truncPar_sq_le` (`‖x‖² = 2ⁿ ‖u‖²_{s,J}`). This generalizes
+`‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n(2πM)²)^{p-s} ‖x‖²_{Hˢ(𝕋ⁿ)}` for `s ≤ p`. This generalizes
 `grad_Jinvf_sum_le`, `grad_truncQ_le` (`p = 1`) to every order.
-
-## A power witness
-
-`powWitness a = Σ_{c ≠ 0} |c|^{-a} cos(2π c y₀)` (`a > ½`; `a = 1` is `logWitness`) lies in
-`Hˢ_∅(Q) ⊆ Hˢ(Q)` for `s < a - ½` (`powWitness_mem_sobolevPar`, `powWitness_mem_sobolevQ`), not in
-`H^{a-1/2}_∅(Q)` (`powWitness_not_mem_sobolevPar`), and is nonzero (`powWitness_ne_zero`).
 
 ## What is not formalized
 
@@ -117,10 +108,6 @@ open UnitAddTorus Feec.Fourier.TorusWeak
 
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
-
-/-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
 
 /-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
 local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
@@ -543,224 +530,7 @@ theorem sum_norm_iteratedFDeriv_truncQ_sq_le {s : ℝ} {p : ℕ} (hsp : s ≤ p)
   (integral_norm_iteratedFDeriv_truncField_sq_le x M p).trans
     (mul_le_mul_of_nonneg_left (sobSum_trunc_le hsp hx M) (by positivity))
 
-/-- **Bernstein inequality in the parity classes**: for `u ∈ Hˢ_J(Q)` and `p ≥ s`, the
-truncation `u_M = truncPar J k M u` (the restriction of `truncField k (JfJ J k u) M`) satisfies
-`‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n (2πM)²)^{p - s} 2ⁿ ‖u‖²_{s,J}`. -/
-theorem sum_norm_iteratedFDeriv_truncPar_sq_le (J : Finset (Fin n)) {s : ℝ} {p : ℕ}
-    (hsp : s ≤ p) {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k s)
-    (M : ℕ) :
-    ∫ y in Q (Fin n), ‖iteratedFDeriv ℝ p (truncField k (JfJ J k u) M) y‖ ^ 2 ≤
-      2 ^ n * n ^ p * ((1 + n * (2 * Real.pi * M) ^ 2) ^ ((p : ℝ) - s) *
-        (2 ^ n * parNorm J k s u ^ 2)) := by
-  have h := sum_norm_iteratedFDeriv_truncQ_sq_le hsp ((mem_sobolevPar J k).1 hu) M
-  rwa [show sobSum s (JfJ J k u) = 2 ^ n * parNorm J k s u ^ 2 by
-    rw [parNorm_sq]; field_simp] at h
-
 end Bernstein
-
-/-! ### A power witness: `Hˢ` data outside `H^{a - 1/2}` -/
-
-section PowWitness
-
-variable [NeZero n]
-
-open scoped Classical in
-/-- **The coefficients of the power series** `Σ_{c ≠ 0} |c|^{-a} e^{2πi c y₀}`: `|c|^{-a}` at the
-frequencies `±c e₀`, `c ≠ 0` (for `a = 1` the logarithmic series `logCoeff`). -/
-def powCoeff (a : ℝ) (m : Fin n → ℤ) : Form ℂ (Fin n) 0 :=
-  WithLp.toLp 2 fun _ => if OnAxis m ∧ m 0 ≠ 0 then ((|(m 0 : ℝ)| ^ (-a) : ℝ) : ℂ) else 0
-
-open scoped Classical in
-theorem norm_powCoeff_sq (a : ℝ) (m : Fin n → ℤ) :
-    ‖powCoeff a m‖ ^ 2 = if OnAxis m ∧ m 0 ≠ 0 then (|(m 0 : ℝ)| ^ (-a)) ^ 2 else 0 := by
-  rw [norm_form_zero_sq]
-  change ‖(if OnAxis m ∧ m 0 ≠ 0 then ((|(m 0 : ℝ)| ^ (-a) : ℝ) : ℂ) else 0)‖ ^ 2 = _
-  split_ifs
-  · rw [Complex.norm_real, Real.norm_eq_abs, sq_abs]
-  · simp
-
-/-- The weighted squares of the power series on the axis. -/
-def powTerm (a s : ℝ) (c : ℤ) : ℝ :=
-  weight s (axis (n := n) c) * ‖powCoeff a (axis (n := n) c)‖ ^ 2
-
-theorem powTerm_eq (a s : ℝ) (c : ℤ) :
-    powTerm (n := n) a s c =
-      if c = 0 then 0 else (1 + (2 * Real.pi * c) ^ 2) ^ s * (|(c : ℝ)| ^ (-a)) ^ 2 := by
-  classical
-  have hax : OnAxis (axis (n := n) c) := (onAxis_iff_mem_range _).2 ⟨c, rfl⟩
-  have h0 : axis (n := n) c 0 = c := by simp [axis]
-  rw [powTerm, norm_powCoeff_sq, weight, norm_freq_axis_sq, h0]
-  by_cases hc : c = 0 <;> simp [hc, hax]
-
-theorem summable_weight_powCoeff_iff (a s : ℝ) :
-    Summable (fun m : Fin n → ℤ => weight s m * ‖powCoeff a m‖ ^ 2) ↔
-      Summable (powTerm (n := n) a s) := by
-  classical
-  rw [← axis_injective.summable_iff (f := fun m : Fin n → ℤ => weight s m * ‖powCoeff a m‖ ^ 2)
-    fun m hm => ?_]
-  · rfl
-  · have h : ¬ OnAxis m := fun h => hm ((onAxis_iff_mem_range m).1 h)
-    rw [norm_powCoeff_sq]
-    simp [show ¬ (OnAxis m ∧ m 0 ≠ 0) from fun h' => h h'.1]
-
-theorem powTerm_nonneg (a s : ℝ) (c : ℤ) : 0 ≤ powTerm (n := n) a s c :=
-  mul_nonneg (weight_nonneg s _) (sq_nonneg _)
-
-theorem sq_rpow_neg_abs (a : ℝ) (c : ℤ) :
-    (|(c : ℝ)| ^ (-a)) ^ 2 = |(c : ℝ)| ^ (-(2 * a)) := by
-  rw [← Real.rpow_natCast, ← Real.rpow_mul (abs_nonneg _)]
-  congr 1; push_cast; ring
-
-/-- **The power series is in `Hˢ` for `s < a - ½`**: `Σ_c (1 + 4π²c²)^s |c|^{-2a} < ∞`. -/
-theorem summable_powTerm {a s : ℝ} (hs0 : 0 ≤ s) (hs : s < a - 1 / 2) :
-    Summable (powTerm (n := n) a s) := by
-  refine Summable.of_nonneg_of_le (powTerm_nonneg a s) (fun c => ?_)
-    ((Real.summable_abs_int_rpow (b := 2 * a - 2 * s) (by linarith)).mul_left
-      ((1 + (2 * Real.pi) ^ 2) ^ s))
-  rw [powTerm_eq]
-  split_ifs with hc
-  · exact mul_nonneg (by positivity) (Real.rpow_nonneg (abs_nonneg _) _)
-  · have hc1 : (1 : ℝ) ≤ |(c : ℝ)| := by
-      have : (1 : ℤ) ≤ |c| := Int.one_le_abs hc
-      exact_mod_cast this
-    have hcpos : 0 < |(c : ℝ)| := by linarith
-    have hb : 1 + (2 * Real.pi * c) ^ 2 ≤ (1 + (2 * Real.pi) ^ 2) * |(c : ℝ)| ^ 2 := by
-      rw [sq_abs, mul_pow]
-      have : (1 : ℝ) ≤ (c : ℝ) ^ 2 := by rw [← sq_abs]; nlinarith
-      nlinarith [sq_nonneg (2 * Real.pi)]
-    have h1 := Real.rpow_le_rpow (by positivity) hb hs0
-    rw [Real.mul_rpow (by positivity) (by positivity), ← Real.rpow_natCast (|(c : ℝ)|) 2,
-      ← Real.rpow_mul (abs_nonneg _)] at h1
-    rw [sq_rpow_neg_abs]
-    calc (1 + (2 * Real.pi * c) ^ 2) ^ s * |(c : ℝ)| ^ (-(2 * a)) ≤
-        ((1 + (2 * Real.pi) ^ 2) ^ s * |(c : ℝ)| ^ ((2 : ℕ) * s)) * |(c : ℝ)| ^ (-(2 * a)) :=
-          mul_le_mul_of_nonneg_right h1 (Real.rpow_nonneg (abs_nonneg _) _)
-      _ = (1 + (2 * Real.pi) ^ 2) ^ s * |(c : ℝ)| ^ (-(2 * a - 2 * s)) := by
-          rw [mul_assoc, ← Real.rpow_add hcpos]; push_cast; ring_nf
-
-/-- **The power series is not in `H^{a - 1/2}`**: `Σ_c (1 + 4π²c²)^{a-1/2} |c|^{-2a}
-≥ (2π)^{2a-1} Σ 1/|c| = ∞` (`a ≥ ½`). -/
-theorem not_summable_powTerm {a : ℝ} (ha : 1 / 2 ≤ a) :
-    ¬ Summable (powTerm (n := n) a (a - 1 / 2)) := by
-  intro h
-  have hle : ∀ c : ℤ, (2 * Real.pi) ^ (2 * a - 1) * (1 / |(c : ℝ) + 0| ^ (1 : ℝ)) ≤
-      powTerm (n := n) a (a - 1 / 2) c := by
-    intro c
-    rw [powTerm_eq, add_zero, Real.rpow_one]
-    split_ifs with hc
-    · subst hc; simp
-    · have hcpos : 0 < |(c : ℝ)| := abs_pos.2 (by exact_mod_cast hc)
-      have hs : (2 * Real.pi * |(c : ℝ)|) ^ (2 * a - 1) ≤
-          (1 + (2 * Real.pi * c) ^ 2) ^ (a - 1 / 2) := by
-        have e : (2 * Real.pi * |(c : ℝ)|) ^ (2 * a - 1) =
-            ((2 * Real.pi * |(c : ℝ)|) ^ 2) ^ (a - 1 / 2) := by
-          rw [← Real.rpow_natCast, ← Real.rpow_mul (by positivity)]; congr 1; push_cast; ring
-        rw [e]
-        exact Real.rpow_le_rpow (by positivity) (by rw [mul_pow, sq_abs, mul_pow]; linarith)
-          (by linarith)
-      have e2 : (2 * Real.pi * |(c : ℝ)|) ^ (2 * a - 1) * (|(c : ℝ)| ^ (-a)) ^ 2 =
-          (2 * Real.pi) ^ (2 * a - 1) * (1 / |(c : ℝ)|) := by
-        rw [sq_rpow_neg_abs, Real.mul_rpow (by positivity) hcpos.le, mul_assoc,
-          ← Real.rpow_add hcpos, one_div, ← Real.rpow_neg_one]
-        congr 2; ring
-      calc (2 * Real.pi) ^ (2 * a - 1) * (1 / |(c : ℝ)|) =
-          (2 * Real.pi * |(c : ℝ)|) ^ (2 * a - 1) * (|(c : ℝ)| ^ (-a)) ^ 2 := e2.symm
-        _ ≤ (1 + (2 * Real.pi * c) ^ 2) ^ (a - 1 / 2) * (|(c : ℝ)| ^ (-a)) ^ 2 :=
-            mul_le_mul_of_nonneg_right hs (sq_nonneg _)
-  have hpos : 0 < (2 * Real.pi) ^ (2 * a - 1) := Real.rpow_pos_of_pos (by positivity) _
-  have h2 : Summable fun c : ℤ => (2 * Real.pi) ^ (2 * a - 1) * (1 / |(c : ℝ) + 0| ^ (1 : ℝ)) :=
-    Summable.of_nonneg_of_le (fun c => by positivity) hle h
-  have h3 : Summable fun c : ℤ => 1 / |(c : ℝ) + 0| ^ (1 : ℝ) :=
-    (h2.mul_left ((2 * Real.pi) ^ (2 * a - 1))⁻¹).congr fun c => by
-      rw [← mul_assoc, inv_mul_cancel₀ hpos.ne', one_mul]
-  exact lt_irrefl _ ((Real.summable_one_div_int_add_rpow 0 1).1 h3)
-
-theorem summable_norm_powCoeff_sq {a : ℝ} (ha : 1 / 2 < a) :
-    Summable fun m : Fin n → ℤ => ‖powCoeff a m‖ ^ 2 := by
-  have h := (summable_weight_powCoeff_iff (n := n) a 0).2 (summable_powTerm le_rfl (by linarith))
-  simpa using h
-
-/-- The coefficient sequence of the power series (`a > ½`). -/
-def powSeq {a : ℝ} (ha : 1 / 2 < a) : Seq n 0 :=
-  (memLp_of_summable (summable_norm_powCoeff_sq (n := n) ha)).toLp (powCoeff a)
-
-theorem cf_powSeq {a : ℝ} (ha : 1 / 2 < a) (m : Fin n → ℤ) :
-    cf (powSeq (n := n) ha) m = powCoeff a m := by
-  change ((memLp_of_summable (summable_norm_powCoeff_sq (n := n) ha)).toLp (powCoeff a) :
-    (Fin n → ℤ) → Form ℂ (Fin n) 0) m = _
-  rw [MemLp.coeFn_toLp_count]
-
-theorem memSob_powSeq_iff {a : ℝ} (ha : 1 / 2 < a) (s : ℝ) :
-    MemSob s (powSeq (n := n) ha) ↔ Summable (powTerm (n := n) a s) := by
-  rw [← summable_weight_powCoeff_iff]
-  simp only [MemSob, cf_powSeq]
-
-/-- The power series is real and even in every variable: the parity class `∅`. -/
-theorem realParJ_powSeq {a : ℝ} (ha : 1 / 2 < a) :
-    RealParJ (∅ : Finset (Fin n)) 0 (powSeq (n := n) ha) := by
-  classical
-  have key : ∀ m m' : Fin n → ℤ, (OnAxis m' ↔ OnAxis m) → |(m' 0 : ℝ)| = |(m 0 : ℝ)| →
-      (m' 0 ≠ 0 ↔ m 0 ≠ 0) → powCoeff a m' = powCoeff a m := by
-    intro m m' h1 h2 h3
-    simp only [powCoeff, h2]
-    congr 1
-    funext _
-    exact if_congr (and_congr h1 h3) rfl rfl
-  refine ⟨fun m t => ?_, fun j m t => ?_⟩
-  · change cf (powSeq ha) (-m) t = conj (cf (powSeq ha) m t)
-    rw [cf_powSeq, cf_powSeq, key m (-m) (by
-      simp only [OnAxis, Pi.neg_apply, neg_eq_zero]) (by simp) (by simp)]
-    change _ = conj ((if OnAxis m ∧ m 0 ≠ 0 then ((|(m 0 : ℝ)| ^ (-a) : ℝ) : ℂ) else 0))
-    change (if OnAxis m ∧ m 0 ≠ 0 then ((|(m 0 : ℝ)| ^ (-a) : ℝ) : ℂ) else 0) = _
-    split_ifs <;> simp
-  · change cf (powSeq ha) (DeRham.flipAt j m) t = _ * cf (powSeq ha) m t
-    have ht : t.1 = ∅ := Finset.card_eq_zero.1 t.2
-    have hf : ∀ b, DeRham.flipAt j m b = if b = j then -m b else m b := fun b => rfl
-    rw [cf_powSeq, cf_powSeq, key m (DeRham.flipAt j m) (by
-        simp only [OnAxis, hf]
-        refine forall_congr' fun b => imp_congr_right fun _ => ?_
-        split_ifs <;> simp)
-      (by rw [hf]; split_ifs <;> simp) (by rw [hf]; split_ifs <;> simp)]
-    simp [DeRham.mixedSign, DeRham.reflSign, ht]
-
-/-- **The power witness** `u_a(y) = Σ_{c ≠ 0} |c|^{-a} cos(2π c y₀)` on `Q` (`a > ½`; for `a = 1`
-the logarithmic witness `logWitness`). -/
-def powWitness {a : ℝ} (ha : 1 / 2 < a) : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ)) :=
-  Jinvf 0 (powSeq (n := n) ha)
-
-theorem JfJ_powWitness {a : ℝ} (ha : 1 / 2 < a) :
-    JfJ ∅ 0 (powWitness (n := n) ha) = powSeq ha := JfJ_Jinvf (realParJ_powSeq ha)
-
-/-- **The power witness lies in `Hˢ_∅(Q)` (hence in `Hˢ(Q)`) for every `0 ≤ s < a - ½`**. -/
-theorem powWitness_mem_sobolevPar {a s : ℝ} (ha : 1 / 2 < a) (hs0 : 0 ≤ s) (hs : s < a - 1 / 2) :
-    powWitness (n := n) ha ∈ sobolevPar ∅ 0 s := by
-  rw [mem_sobolevPar, JfJ_powWitness, memSob_powSeq_iff]
-  exact summable_powTerm hs0 hs
-
-theorem powWitness_mem_sobolevQ {a s : ℝ} (ha : 1 / 2 < a) (hs0 : 0 ≤ s) (hs : s < a - 1 / 2) :
-    powWitness (n := n) ha ∈ sobolevQ n 0 s :=
-  sobolevPar_le_sobolevQ ∅ s (powWitness_mem_sobolevPar ha hs0 hs)
-
-/-- **The power witness is not in `H^{a - 1/2}_∅(Q)`**. -/
-theorem powWitness_not_mem_sobolevPar {a : ℝ} (ha : 1 / 2 < a) :
-    powWitness (n := n) ha ∉ sobolevPar ∅ 0 (a - 1 / 2) := by
-  rw [mem_sobolevPar, JfJ_powWitness, memSob_powSeq_iff]
-  exact not_summable_powTerm ha.le
-
-theorem powWitness_ne_zero {a : ℝ} (ha : 1 / 2 < a) : powWitness (n := n) ha ≠ 0 := by
-  classical
-  intro h
-  have h1 := JfJ_powWitness (n := n) ha
-  rw [h, map_zero] at h1
-  have h2 := congrArg (fun x : Seq n 0 => cf x (axis 1) t₀) h1
-  simp only [cf_zero, cf_powSeq] at h2
-  have hax : OnAxis (axis (n := n) 1) := (onAxis_iff_mem_range _).2 ⟨1, rfl⟩
-  have h0 : axis (n := n) 1 0 = 1 := by simp [axis]
-  change (0 : ℂ) = (if OnAxis (axis (n := n) 1) ∧ axis (n := n) 1 0 ≠ 0 then
-    ((|(axis (n := n) 1 0 : ℝ)| ^ (-a) : ℝ) : ℂ) else 0) at h2
-  simp [hax, h0] at h2
-
-end PowWitness
 
 /-! ### Weak derivatives of every order -/
 
@@ -1146,15 +916,6 @@ theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
         refine Finset.sum_congr rfl fun j _ => ?_
         rw [norm_cf_sq_eq_sum k, Finset.mul_sum]
 
-/-- **`mem_sobolevPar_nat_iff`**: `u ∈ Hᵐ_J(Q; Λᵏ)` (`m ∈ ℕ`) iff every component of the parity
-extension `JfJ J k u` (as a function on `𝕋ⁿ`, `physF k (JfJ J k u)`) has weak derivatives up to
-order `m` in `L²(𝕋ⁿ)`. -/
-theorem mem_sobolevPar_nat_iff (J : Finset (Fin n)) (m : ℕ)
-    (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    u ∈ sobolevPar J k m ↔ ∀ t, HasWeakDerivsT m (physF k (JfJ J k u) t) := by
-  rw [mem_sobolevPar]
-  exact memSob_nat_iff _ m
-
 end Torus
 
 /-! ### The `Hᵐ` norm by weak derivatives -/
@@ -1173,10 +934,6 @@ depending only on `m`. -/
 def weakHmNormSq (Ω : Set (Fin n → ℝ)) (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) : ℝ :=
   ∑ t : formIdx n k', ∑ p ∈ Finset.range (m + 1), ∑ r : Fin p → Fin n,
     if h : ∃ v, HasWeakDeriv Ω (List.ofFn r) (u t) v then ‖h.choose‖ ^ 2 else 0
-
-/-- **The `Hᵐ` norm by weak derivatives**, `weakHmNorm Ω m u = (weakHmNormSq Ω m u)^{1/2}`. -/
-def weakHmNorm (Ω : Set (Fin n → ℝ)) (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) : ℝ :=
-  √(weakHmNormSq Ω m u)
 
 /-- **Comparison of the norms** (the forward half of the planned `qNorm_nat_sq_equiv`, the direction
 available without an extension operator): for `u ∈ Hᵐ(Q; Λᵏ)`,
@@ -1235,12 +992,6 @@ theorem weakHmNormSq_le_qNorm_sq {m : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (
     _ ≤ (√(∑ p ∈ Finset.range (m + 1), (n : ℝ) ^ p) * qNorm k m u) ^ 2 :=
         pow_le_pow_left₀ h0 h 2
     _ = _ := by rw [mul_pow, Real.sq_sqrt hC]
-
-theorem weakHmNorm_le_qNorm {m : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
-    (hu : u ∈ sobolevQ n k m) :
-    weakHmNorm (Q (Fin n)) m u ≤ √(∑ p ∈ Finset.range (m + 1), (n : ℝ) ^ p) * qNorm k m u := by
-  rw [weakHmNorm, ← Real.sqrt_sq (qNorm_nonneg (k := k) m u), ← Real.sqrt_mul (by positivity)]
-  exact Real.sqrt_le_sqrt (weakHmNormSq_le_qNorm_sq hu)
 
 end Norm
 
@@ -1359,12 +1110,6 @@ theorem dite_hasWeakDeriv_cons (hΩ : IsOpen Ω) {j : Fin n} {f g : L2 ℝ Ω}
   · rw [dite_eq_left (e.2 h), dite_eq_left h,
       (e.2 h).choose_spec.unique hΩ ((hasWeakDeriv_cons_iff hg l _).2 h.choose_spec)]
   · rw [dite_eq_right (mt e.1 h), dite_eq_right h]
-
-theorem weakHmNormSq_nonneg (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) :
-    0 ≤ weakHmNormSq Ω m u := by
-  classical
-  exact Finset.sum_nonneg fun t _ => Finset.sum_nonneg fun p _ => Finset.sum_nonneg fun r _ => by
-    split_ifs <;> positivity
 
 /-- `weakHmNormSq Ω 0 u = ‖u‖²`. -/
 theorem weakHmNormSq_zero (hΩ : IsOpen Ω) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) :

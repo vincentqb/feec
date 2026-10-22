@@ -6,7 +6,7 @@ public import Feec.Models.BoundedDomain.InvariantCore
 public import Feec.HilbertComplex.CompressCompact
 
 /-!
-# A complete set of eigenvectors on cubes, and `K*` for the thesis' complex on cubes
+# A complete set of eigenvectors on cubes
 
 `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` decides, on a bounded open `Ω ⊆ ℝ³`,
 whether the invariant core `K*` of `K = {0} × L²(TSD) × L²(TSD)` contains a moving datum, under
@@ -22,11 +22,10 @@ thesis' complex `H̊¹(Ω) → H̊(curl, Ω) → L²(Ω)`. This file proves that
   and `EigenDense` passes to such transports (`HilbertComplex.eigenDense_transport_const`, from
   `HilbertComplex.wave_transport_const`).
 
-The unconditional corollaries `RowWise.gradCurl_coreSub_spectral_Q` and
-`Ident.gradCurl_coreSub_spectral_cube` follow. The same holds for the mirror complexes
-(`Feec.Models.Cube.Mirror`): the parity model, the cube `Q` and every open cube
-(`Mirror.eigenDense_complex`, `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`;
-on boxes `Feec.Models.Box.Mirror.eigenDense_complexBoxM`).
+This discharges the hypothesis of `gradCurl_coreSub_spectral` on every open cube
+(`Ident.eigenDense_gradCurl_cube`). The same holds for the mirror complexes
+(`Feec.Models.Cube.Mirror`) on the cube `Q` and every open cube (`Mirror.eigenDense_complexQ`,
+`Mirror.eigenDense_complexCube`; on boxes `Feec.Models.Box.Mirror.eigenDense_complexBoxM`).
 
 Boxes with unequal sides are not covered by this file (their pull-back to `Q` rescales each
 coordinate by its own factor, so the operator changes instead of being rescaled); they are
@@ -36,9 +35,9 @@ treated by the anisotropic parity model of `Feec.Models.Box.EigenDense`
 ## Main results
 
 * `HilbertComplex.eigenDense_transport_const`.
-* **`RowWise.eigenDense_gradCurl_Q`**, **`Ident.eigenDense_gradCurl_cube`**.
-* **`RowWise.gradCurl_coreSub_spectral_Q`**, **`Ident.gradCurl_coreSub_spectral_cube`**.
-* `Mirror.eigenDense_complex`, `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`.
+* **`RowWise.eigenDense_cubeComplex`**, `Ident.eigenDense_complexCube`,
+  **`Ident.eigenDense_gradCurl_cube`**.
+* `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`.
 
 ## References
 
@@ -100,36 +99,6 @@ theorem eigenDense_cubeComplex : cubeComplex.waveGroup.EigenDense := by
   rw [cubeComplex_eq_compress]
   exact HilbertComplex.eigenDense_compress _ _ _ Parity.eigenDense_torus
 
-/-- **The eigenvector hypothesis of `gradCurl_coreSub_spectral` holds on `Q = (0, ½)³`.** -/
-theorem eigenDense_gradCurl_Q : (gradCurl ℝ Geometry.isOpen_Q).EigenDense :=
-  eigenDense_cubeComplex
-
-/-- **`K*` on `Q = (0, ½)³` for the thesis' complex**, unconditionally
-(`Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` with its eigenvector hypothesis
-discharged by `eigenDense_gradCurl_Q`). -/
-theorem gradCurl_coreSub_spectral_Q :
-    (∀ x, (∀ t, 0 ≤ t → (gradCurl ℝ Geometry.isOpen_Q).toHilbertComplex.waveGroup.S t x ∈
-        HilbertComplex.totalSub
-          (ShortHilbertComplex.family3 ⊥ (tsd (Q (Fin 3))) (tsd (Q (Fin 3))))) ↔
-          x ∈ (gradCurl ℝ Geometry.isOpen_Q).coreSub (tsd (Q (Fin 3))) (tsd (Q (Fin 3)))) ∧
-    ((gradCurl ℝ Geometry.isOpen_Q).coreSub (tsd (Q (Fin 3))) (tsd (Q (Fin 3))) ≤
-        (gradCurl ℝ Geometry.isOpen_Q).stationary ↔
-      ∀ v ∈ (gradCurl ℝ Geometry.isOpen_Q).invariantCore₁ (tsd (Q (Fin 3))) (tsd (Q (Fin 3))),
-        ∃ h1 : v ∈ (gradCurl ℝ Geometry.isOpen_Q).d₁.domain,
-          (gradCurl ℝ Geometry.isOpen_Q).d₁ ⟨v, h1⟩ = 0) ∧
-    (¬ (gradCurl ℝ Geometry.isOpen_Q).coreSub (tsd (Q (Fin 3))) (tsd (Q (Fin 3))) ≤
-        (gradCurl ℝ Geometry.isOpen_Q).stationary ↔
-      ∃ ω : ℝ, 0 < ω ∧ ∃ v : L2F ℝ (Q (Fin 3)) Ix, v ≠ 0 ∧ v ∈ tsd (Q (Fin 3)) ∧
-        (gradCurl ℝ Geometry.isOpen_Q).IsEigenfield ω v) ∧
-    (∀ ω : ℝ, 0 < ω → ∀ v : L2F ℝ (Q (Fin 3)) Ix, v ∈ tsd (Q (Fin 3)) →
-      (gradCurl ℝ Geometry.isOpen_Q).IsEigenfield ω v →
-        v ∈ (gradCurl ℝ Geometry.isOpen_Q).invariantCore₁ (tsd (Q (Fin 3))) (tsd (Q (Fin 3))) ∧
-          v ∈ tsd₀ (Q (Fin 3)) Geometry.isOpen_Q isBounded_Q ∧
-            (v ≠ 0 → ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ (Q (Fin 3)) (Fin 3))
-              (L2F ℝ (Q (Fin 3)) Ix) (L2F ℝ (Q (Fin 3)) Ix) v ∉
-                (gradCurl ℝ Geometry.isOpen_Q).stationary)) :=
-  Models.BoundedDomain.gradCurl_coreSub_spectral Geometry.isOpen_Q isBounded_Q eigenDense_gradCurl_Q
-
 end Feec.Models.Cube.RowWise
 
 namespace Feec.Models.Cube.Ident
@@ -156,37 +125,6 @@ theorem eigenDense_gradCurl_cube (hs : 0 < s) :
     (gradCurl ℝ (Geometry.isOpen_openCube b s)).EigenDense :=
   eigenDense_complexCube hs
 
-/-- **`K*` on every open cube `∏ (bᵢ, bᵢ + s)` for the thesis' complex**, unconditionally
-(`Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` with its eigenvector hypothesis
-discharged by `eigenDense_gradCurl_cube`). -/
-theorem gradCurl_coreSub_spectral_cube (hs : 0 < s) :
-    (∀ x, (∀ t, 0 ≤ t →
-        (gradCurl ℝ (Geometry.isOpen_openCube b s)).toHilbertComplex.waveGroup.S t x ∈
-          HilbertComplex.totalSub
-            (ShortHilbertComplex.family3 ⊥ (tsd (openCube b s)) (tsd (openCube b s)))) ↔
-          x ∈ (gradCurl ℝ (Geometry.isOpen_openCube b s)).coreSub (tsd (openCube b s))
-            (tsd (openCube b s))) ∧
-    ((gradCurl ℝ (Geometry.isOpen_openCube b s)).coreSub (tsd (openCube b s))
-        (tsd (openCube b s)) ≤ (gradCurl ℝ (Geometry.isOpen_openCube b s)).stationary ↔
-      ∀ v ∈ (gradCurl ℝ (Geometry.isOpen_openCube b s)).invariantCore₁ (tsd (openCube b s))
-          (tsd (openCube b s)),
-        ∃ h1 : v ∈ (gradCurl ℝ (Geometry.isOpen_openCube b s)).d₁.domain,
-          (gradCurl ℝ (Geometry.isOpen_openCube b s)).d₁ ⟨v, h1⟩ = 0) ∧
-    (¬ (gradCurl ℝ (Geometry.isOpen_openCube b s)).coreSub (tsd (openCube b s))
-        (tsd (openCube b s)) ≤ (gradCurl ℝ (Geometry.isOpen_openCube b s)).stationary ↔
-      ∃ ω : ℝ, 0 < ω ∧ ∃ v : L2F ℝ (openCube b s) Ix, v ≠ 0 ∧ v ∈ tsd (openCube b s) ∧
-        (gradCurl ℝ (Geometry.isOpen_openCube b s)).IsEigenfield ω v) ∧
-    (∀ ω : ℝ, 0 < ω → ∀ v : L2F ℝ (openCube b s) Ix, v ∈ tsd (openCube b s) →
-      (gradCurl ℝ (Geometry.isOpen_openCube b s)).IsEigenfield ω v →
-        v ∈ (gradCurl ℝ (Geometry.isOpen_openCube b s)).invariantCore₁ (tsd (openCube b s))
-            (tsd (openCube b s)) ∧
-          v ∈ tsd₀ (openCube b s) (Geometry.isOpen_openCube b s) (Geometry.isBounded_openCube b s) ∧
-            (v ≠ 0 → ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ (openCube b s) (Fin 3))
-              (L2F ℝ (openCube b s) Ix) (L2F ℝ (openCube b s) Ix) v ∉
-                (gradCurl ℝ (Geometry.isOpen_openCube b s)).stationary)) :=
-  Models.BoundedDomain.gradCurl_coreSub_spectral (Geometry.isOpen_openCube b s)
-    (Geometry.isBounded_openCube b s) (eigenDense_gradCurl_cube hs)
-
 end Feec.Models.Cube.Ident
 
 /-! ### The mirror complexes -/
@@ -194,11 +132,6 @@ end Feec.Models.Cube.Ident
 namespace Feec.Models.Cube.Mirror
 
 open Feec.Models.BoundedDomain (R3)
-
-/-- **The mirror parity model has a dense set of eigenvectors** (the fixed complex of the torus
-complex, whose Fourier modes are an eigenbasis). -/
-theorem eigenDense_complex : complex.waveGroup.EigenDense :=
-  action.eigenDense_fixedComplex (Fourier.Torus.eigenDense_waveGroup Fourier.GradCurl.gradCurl)
 
 /-- **The mirror complex on `Q = (0, ½)³` has a dense set of eigenvectors.** -/
 theorem eigenDense_complexQ : complexQ.waveGroup.EigenDense :=

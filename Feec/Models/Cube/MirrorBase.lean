@@ -72,18 +72,6 @@ def _root_.ContinuousLinearEquiv.restrictSub {X Y : Type*} [NormedAddCommGroup X
   continuous_toFun := (e.continuous.comp continuous_subtype_val).subtype_mk _
   continuous_invFun := (e.symm.continuous.comp continuous_subtype_val).subtype_mk _
 
-@[simp] theorem _root_.ContinuousLinearEquiv.coe_restrictSub_apply {X Y : Type*}
-    [NormedAddCommGroup X] [NormedSpace 𝕜 X] [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
-    (e : X ≃L[𝕜] Y) (S : Submodule 𝕜 X) (T : Submodule 𝕜 Y) (h₁ : ∀ x ∈ S, e x ∈ T)
-    (h₂ : ∀ y ∈ T, e.symm y ∈ S) (x : S) : ((e.restrictSub S T h₁ h₂ x : T) : Y) = e (x : X) :=
-  rfl
-
-@[simp] theorem _root_.ContinuousLinearEquiv.coe_restrictSub_symm_apply {X Y : Type*}
-    [NormedAddCommGroup X] [NormedSpace 𝕜 X] [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
-    (e : X ≃L[𝕜] Y) (S : Submodule 𝕜 X) (T : Submodule 𝕜 Y) (h₁ : ∀ x ∈ S, e x ∈ T)
-    (h₂ : ∀ y ∈ T, e.symm y ∈ S) (y : T) :
-    (((e.restrictSub S T h₁ h₂).symm y : S) : X) = e.symm (y : Y) := rfl
-
 /-! ### The inverse of a transport -/
 
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]

@@ -19,8 +19,8 @@ complex, `Feec.Models.Cube.DeRhamIdent`):
 * **the harmonic forms**: `ℌᵏ(HΛ(Q)) = 0` for `k ≠ 0` and `ℌ⁰(HΛ(Q)) = ℝ · 1`
   (`harmonic_eq_bot`, `harmonic_zero_eq_span`); `ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ n` and
   `ℌⁿ(H̊Λ(Q)) = ℝ · dx₁ ∧ ⋯ ∧ dxₙ` (`harmonic_eq_bot_min`, `harmonic_top_eq_span_min`); they are
-  finite-dimensional (instances), and so is the cohomology: `dim Hᵏ(HΛ(Q)) = [k = 0]`,
-  `dim Hᵏ(H̊Λ(Q)) = [k = n]` (`finrank_cohomology`, `finrank_cohomology_min`);
+  finite-dimensional (instances), and so is the cohomology: `dim Hᵏ(HΛ(Q)) = [k = 0]`
+  (`finrank_cohomology`);
 * **the compactness property** (`hasCompactProperty`, `hasCompactProperty_min`).
 
 Consequently the finite element results of `Feec.Models.Cube.FiniteElementMethod` hold with the
@@ -228,12 +228,6 @@ theorem finrank_harmonic_min (k : ℤ) :
 theorem finrank_cohomology (k : ℤ) :
     Module.finrank ℝ ((complex n).cohomology k) = if k = 0 then 1 else 0 := by
   rw [((complex n).cohomologyEquivHarmonic (closedRangeAt k)).finrank_eq, finrank_harmonic]
-
-/-- **The cohomology of `H̊Λ(Q)`**: `Hᵏ ≅ ℝ` for `k = n`, `0` otherwise. -/
-theorem finrank_cohomology_min (k : ℤ) :
-    Module.finrank ℝ ((complexMin n).cohomology k) = if k = n then 1 else 0 := by
-  rw [((complexMin n).cohomologyEquivHarmonic (closedRangeAt_min k)).finrank_eq,
-    finrank_harmonic_min]
 
 /-! ### The finite element method with the Poincaré hypotheses discharged -/
 

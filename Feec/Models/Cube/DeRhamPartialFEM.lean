@@ -14,11 +14,9 @@ subcomplexes.
 
 **Hodge theory** (from the identification with the mixed parity class,
 `Feec.Models.Cube.DeRhamIdent.HQpart_eq_compress`): the Poincaré inequality
-`‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ` (`norm_le_of_mem_orthogonal_cycles_part`,
-`poincare_part`), closed range (`closedRangeAt_part`), the compactness property
-(`hasCompactProperty_part`), the harmonic forms `ℌᵏ = 0` for `k ≠ |J|` and
-`ℌ^{|J|} = ℝ · dx_J` (`harmonic_eq_bot_part`, `harmonic_card_eq_span_part`), and the
-cohomology `dim Hᵏ = [k = |J|]` (`finrank_cohomology_part`). For `J = ∅` the complex is
+`‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ` (`norm_le_of_mem_orthogonal_cycles_part`), closed
+range (`closedRangeAt_part`), and the harmonic forms `ℌᵏ = 0` for `k ≠ |J|` and
+`ℌ^{|J|} = ℝ · dx_J` (`harmonic_eq_bot_part`, `harmonic_card_eq_span_part`). For `J = ∅` the complex is
 `FEM.complex n = HΛ(Q)` (`complexPart_empty`), for `J = univ` it is `FEM.complexMin n = H̊Λ(Q)`
 (`complexPart_univ`).
 
@@ -36,22 +34,14 @@ glued field in `D(d_J)`. With `d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹` they form s
 (`LocalElement.subcomplexPart`), on the Freudenthal meshes of the cube for every admissible
 sequence `S` (`FEM.polyPartial n S N J`) and for the Whitney forms (`FEM.whitneyPartial n N J`).
 
-* `J = ∅`: `polyPartial ∅` and `whitneyPartial ∅` have the spaces of `FEM.poly`, `FEM.whitney`
-  (`polyPartial_empty_V`, `whitneyPartial_empty_V`);
-* `J = univ`: they have the spaces of `FEM.polyMin`, `FEM.whitneyMin`
-  (`polyPartial_univ_V`, `whitneyPartial_univ_V`): every boundary facet lies in a face of `Q`
+* `J = ∅`: `polyPartial ∅` has the spaces of `FEM.poly` (`polyPartial_empty_V`);
+* `J = univ`: it has the spaces of `FEM.polyMin` (`polyPartial_univ_V`): every boundary facet lies in a face of `Q`
   (`isBoundaryFacet_subset_partialFaces_univ`), and on the Freudenthal meshes every face lying in
   a face of `Q` lies in a boundary facet (`exists_isBoundaryFacet_of_plane`), so
   `Λ_{h,Γ_univ} = Λ̊_h` (`globalSpacePartial_univ_eq`).
-* `J = {a}`, `n = 3`: `partialFaces {a}` is `Feec.Models.Cube.MirrorWeakSymmetry.mirrorFaces a`
-  (`partialFaces_singleton`), so the bottom-row spaces of the mirror scheme (6.5) are exactly the
-  partial spaces `Λ_{h,Γ_{a}}` (`mirror_globalSpacePartial_eq`), conforming in `HΛ_{a}(Q)`
-  (`mirror_glue_mem_dPart`).
-* **Monotonicity and non-vacuity**: the spaces decrease with `J` (`polyPartial_V_anti`,
-  `whitneyPartial_V_anti`), so `V̊_h ⊆ V_{h,Γ_J} ⊆ V_h` (`polyMin_V_le_polyPartial_V`,
-  `polyPartial_V_le_poly_V`, and the Whitney analogues), and on `(0, ½)³` they are nonzero in
-  every degree for every `J` (`lagrangeP2_polyPartial_V_ne_bot`,
-  `lowestOrder_polyPartial_V_ne_bot`).
+* **Monotonicity and non-vacuity**: the spaces decrease with `J` (`polyPartial_V_anti`), so
+  `V̊_h ⊆ V_{h,Γ_J}` (`polyMin_V_le_polyPartial_V`), and on `(0, ½)³` they are nonzero in every
+  degree for every `J` (`lagrangeP2_polyPartial_V_ne_bot`).
 
 ## References
 
@@ -118,27 +108,10 @@ theorem norm_le_of_mem_orthogonal_cycles_part (J : Finset (Fin n)) {i j : ℤ}
     exact DeRhamIdent.Hpart_norm_le J hij z hz
   exact key _ (cubeDomain_eq_Q n) _ _ z hz
 
-/-- The Poincaré inequality of `HΛ_J(Q)` with any constant `c_P ≥ (2π)⁻¹`. -/
-theorem poincare_part (J : Finset (Fin n)) {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    {cP : ℝ} (hcP : (2 * Real.pi)⁻¹ ≤ cP) :
-    ∀ z : ((complexPart n J).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
-      ((complexPart n J).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
-        cP * ‖(complexPart n J).d i j z‖ := fun z hz =>
-  (norm_le_of_mem_orthogonal_cycles_part J hij z hz).trans
-    (mul_le_mul_of_nonneg_right hcP (norm_nonneg _))
-
 /-- **Closed range of `HΛ_J(Q)` in every degree.** -/
 theorem closedRangeAt_part (J : Finset (Fin n)) (j : ℤ) : (complexPart n J).ClosedRangeAt j :=
   ((complexPart n J).closedRangeAt_iff_poincare_of_rel (rel_pred j)).2
     ⟨_, norm_le_of_mem_orthogonal_cycles_part J (rel_pred j)⟩
-
-/-- **The compactness property of `HΛ_J(Q)`**, every degree. -/
-theorem hasCompactProperty_part (J : Finset (Fin n)) : (complexPart n J).HasCompactProperty := by
-  have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω)
-      (hΩQ : Ω ⊆ Geometry.Q (Fin n)), (HQpartZ hΩ hΩQ J).HasCompactProperty := by
-    rintro Ω rfl hΩ hΩQ
-    exact DeRhamIdent.Hpart_hasCompactProperty J
-  exact key _ (cubeDomain_eq_Q n) _ _
 
 /-- **`HΛ_J(Q)` has no harmonic forms in degrees `k ≠ |J|`.** -/
 theorem harmonic_eq_bot_part {J : Finset (Fin n)} {k : ℤ} (hk : k ≠ (#J : ℤ)) :
@@ -175,19 +148,6 @@ instance finiteDimensional_harmonic_part (J : Finset (Fin n)) (k : ℤ) :
   · subst hk; rw [harmonic_card_eq_span_part]; infer_instance
   · rw [harmonic_eq_bot_part hk]; infer_instance
 
-theorem finrank_harmonic_part (J : Finset (Fin n)) (k : ℤ) :
-    Module.finrank ℝ ((complexPart n J).harmonic k) = if k = (#J : ℤ) then 1 else 0 := by
-  by_cases hk : k = (#J : ℤ)
-  · subst hk
-    rw [harmonic_card_eq_span_part, finrank_span_singleton (formPart_ne_zero J)]; simp
-  · rw [harmonic_eq_bot_part hk, finrank_bot]; simp [hk]
-
-/-- **The cohomology of `HΛ_J(Q)`**: `Hᵏ ≅ ℝ` for `k = |J|`, `0` otherwise. -/
-theorem finrank_cohomology_part (J : Finset (Fin n)) (k : ℤ) :
-    Module.finrank ℝ ((complexPart n J).cohomology k) = if k = (#J : ℤ) then 1 else 0 := by
-  rw [((complexPart n J).cohomologyEquivHarmonic (closedRangeAt_part J k)).finrank_eq,
-    finrank_harmonic_part]
-
 /-! ### The faces with a boundary condition and the boundary facets -/
 
 variable (n) in
@@ -198,11 +158,6 @@ def partialFaces (J : Finset (Fin n)) : Set (Finset (Fin n → ℝ)) :=
 
 @[simp] theorem partialFaces_empty : partialFaces n ∅ = ∅ := by
   ext F; simp [partialFaces]
-
-/-- **The mirror faces of the mirror scheme are the faces of `J = {a}`.** -/
-theorem partialFaces_singleton (a : Fin 3) :
-    partialFaces 3 {a} = MirrorWeakSymmetry.mirrorFaces a := by
-  ext F; simp [partialFaces, MirrorWeakSymmetry.mirrorFaces]
 
 /-- The closed cube `[0, ½]ⁿ`. -/
 abbrev closedCube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Icc (0 : ℝ) (1 / 2)
@@ -603,15 +558,6 @@ theorem isBoundaryFacet_subset_partialFaces_univ [NeZero n] {M : SimplicialMesh 
   obtain ⟨i, hi⟩ := exists_plane_of_isBoundaryFacet (closure_eq_closedCube hM) hF hne
   exact ⟨i, Finset.mem_univ i, hi⟩
 
-/-- **`J = univ`: the partial spaces lie in the spaces with vanishing boundary DOFs** `V̊_h`. -/
-theorem VPartial_univ_le [NeZero n] (E : LocalElement n) {M : SimplicialMesh n}
-    (hM : M.domain = Geometry.Q (Fin n)) (k : ℤ) :
-    E.VPartial M (partialFaces n Finset.univ) k ≤ E.V₀ M k := by
-  rintro _ ⟨u, rfl⟩
-  have h := E.globalSpacePartial_anti M (isBoundaryFacet_subset_partialFaces_univ hM) k.toNat u.2
-  rw [E.globalSpacePartial_boundary] at h
-  exact ⟨⟨u, h⟩, rfl⟩
-
 /-- A subcomplex of `HΛ_J(Ω)`, transported along `Ω = Ω'`. -/
 def partialSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω') (hΩQ' : Ω' ⊆ Geometry.Q (Fin n))
@@ -644,7 +590,6 @@ theorem partialSubcomplexOfEq_V_eq_minimal {Ω Ω' : Set (Fin n → ℝ)} (h : �
 
 theorem mesh_domain_eq_Q (N : ℕ) : (mesh n N).domain = Geometry.Q (Fin n) :=
   (mesh_domain n N).trans (cubeDomain_eq_Q n)
-
 
 /-! ### Faces in the boundary of the cube lie in boundary facets (Freudenthal meshes) -/
 
@@ -727,12 +672,6 @@ theorem polyPartial_empty_V (S : PolySeq) (N : ℕ) (k : ℤ) :
   partialSubcomplexOfEq_V_eq_maximal _ _ _ _ _ _ _ _
     (fun k => VPartial_empty (polyElement n S) (mesh n N) k) k
 
-/-- **`J = ∅`: `whitneyPartial` has the spaces of `FEM.whitney`.** -/
-theorem whitneyPartial_empty_V (N : ℕ) (k : ℤ) :
-    (whitneyPartial n N ∅).V k = (whitney n N).V k :=
-  partialSubcomplexOfEq_V_eq_maximal _ _ _ _ _ _ _ _
-    (fun k => VPartial_empty (whitneyElement n) (mesh n N) k) k
-
 /-- **`J = univ`: `polyPartial` has the spaces of `FEM.polyMin`** (vanishing DOFs on every face
 lying in the boundary). -/
 theorem polyPartial_univ_V (S : PolySeq) (N : ℕ) (k : ℤ) :
@@ -740,41 +679,9 @@ theorem polyPartial_univ_V (S : PolySeq) (N : ℕ) (k : ℤ) :
   partialSubcomplexOfEq_V_eq_minimal _ _ _ _ _ _ _ _
     (fun k => VPartial_univ_eq (polyElement n S) N k) k
 
-/-- **`J = univ`: `whitneyPartial` has the spaces of `FEM.whitneyMin`.** -/
-theorem whitneyPartial_univ_V (N : ℕ) (k : ℤ) :
-    (whitneyPartial n N Finset.univ).V k = (whitneyMin n N).V k :=
-  partialSubcomplexOfEq_V_eq_minimal _ _ _ _ _ _ _ _
-    (fun k => VPartial_univ_eq (whitneyElement n) N k) k
-
 /-! ### The bottom row of the mirror scheme -/
 
 open MirrorWeakSymmetry (Ebot mirrorFaces)
-
-/-- **The mirror spaces are the partial spaces of `J = {a}`**: the bottom-row global spaces of
-the mirror scheme (6.5) are `Λ_{h,Γ_{a}}ᵏ`. -/
-theorem mirror_globalSpacePartial_eq (N k : ℕ) (a : Fin 3) :
-    Ebot.globalSpacePartial (mesh 3 N) (mirrorFaces a) k =
-      Ebot.globalSpacePartial (mesh 3 N) (partialFaces 3 {a}) k := by
-  rw [partialFaces_singleton]
-
-/-- The bottom-row component spaces `BotComp N a k` of the mirror scheme are the spaces of the
-subcomplex `subcomplexPart` of `HΛ_{a}` on the mesh. -/
-theorem mirror_VPartial_eq (N k : ℕ) (a : Fin 3) :
-    Ebot.VPartial (mesh 3 N) (mirrorFaces a) (k : ℤ) =
-      (subcomplexPart Ebot (mesh 3 N) (mesh_domain_eq_Q N) {a}).V (k : ℤ) := by
-  rw [subcomplexPart_V, partialFaces_singleton]
-
-/-- **The mirror spaces are conforming in `HΛ_{a}(Q)`**: the bottom-row fields of the mirror
-scheme lie in the domain of `d_{a}` (vanishing tangential traces on the faces normal to `e_a`),
-with `d_{a}` the elementwise exterior derivative. -/
-theorem mirror_glue_mem_dPart (N k : ℕ) (a : Fin 3)
-    (u : Ebot.globalSpacePartial (mesh 3 N) (mirrorFaces a) k) :
-    ∃ h : Ebot.glue (mesh 3 N) k (u : Ebot.Piecewise (mesh 3 N) k) ∈
-        (dPart (mesh 3 N).domain {a} (k : ℤ)).domain,
-      dPart (mesh 3 N).domain {a} (k : ℤ) ⟨_, h⟩ =
-        Ebot.glue (mesh 3 N) ((k : ℤ) + 1) (Ebot.dPiecewise (mesh 3 N) k u) :=
-  glue_mem_dPart Ebot (mesh_domain_eq_Q N) {a} k
-    ⟨u, by rw [← mirror_globalSpacePartial_eq]; exact u.2⟩
 
 /-! ### Monotonicity in `J` and non-vacuity -/
 
@@ -812,27 +719,10 @@ theorem polyPartial_V_anti (S : PolySeq) (N : ℕ) {J J' : Finset (Fin n)} (h : 
     (k : ℤ) : (polyPartial n S N J').V k ≤ (polyPartial n S N J).V k :=
   partialSubcomplexOfEq_V_le _ _ _ _ _ _ _ k (VPartial_anti (polyElement n S) (mesh n N) h k)
 
-/-- **`whitneyPartial` decreases with `J`.** -/
-theorem whitneyPartial_V_anti (N : ℕ) {J J' : Finset (Fin n)} (h : J ⊆ J') (k : ℤ) :
-    (whitneyPartial n N J').V k ≤ (whitneyPartial n N J).V k :=
-  partialSubcomplexOfEq_V_le _ _ _ _ _ _ _ k (VPartial_anti (whitneyElement n) (mesh n N) h k)
-
 /-- **`V̊_h ⊆ V_{h,Γ_J} ⊆ V_h`** for the spaces of an admissible sequence. -/
 theorem polyMin_V_le_polyPartial_V (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
     (polyMin n S N).V k ≤ (polyPartial n S N J).V k := by
   rw [← polyPartial_univ_V]; exact polyPartial_V_anti S N (Finset.subset_univ J) k
-
-theorem polyPartial_V_le_poly_V (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
-    (polyPartial n S N J).V k ≤ (poly n S N).V k := by
-  rw [← polyPartial_empty_V]; exact polyPartial_V_anti S N (Finset.empty_subset J) k
-
-theorem whitneyMin_V_le_whitneyPartial_V (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
-    (whitneyMin n N).V k ≤ (whitneyPartial n N J).V k := by
-  rw [← whitneyPartial_univ_V]; exact whitneyPartial_V_anti N (Finset.subset_univ J) k
-
-theorem whitneyPartial_V_le_whitney_V (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
-    (whitneyPartial n N J).V k ≤ (whitney n N).V k := by
-  rw [← whitneyPartial_empty_V]; exact whitneyPartial_V_anti N (Finset.empty_subset J) k
 
 theorem polyPartial_V_ne_bot_of_V₀ (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ)
     (h : (polyElement n S).V₀ (mesh n N) k ≠ ⊥) : (polyPartial n S N J).V k ≠ ⊥ := by
@@ -847,13 +737,5 @@ spaces (`PolySeq.lagrangeP2_V₀_ne_bot`). -/
 theorem lagrangeP2_polyPartial_V_ne_bot (N k : ℕ) (hk : k ≤ 3) (J : Finset (Fin 3)) :
     (polyPartial 3 PolySeq.lagrangeP2 N J).V k ≠ ⊥ :=
   polyPartial_V_ne_bot_of_V₀ _ N J k (PolySeq.lagrangeP2_V₀_ne_bot N k hk)
-
-/-- **Non-vacuity of the Whitney-type partial subcomplexes** (first row of Tables 5.1/6.1, every
-`J`): on the level-`(N + 2)` Freudenthal mesh of `(0, ½)³`, `P₁Λ⁰`, `P₁⁻Λ¹`, `P₁⁻Λ²`, `P₁⁻Λ³`
-with vanishing degrees of freedom on the faces normal to `J` are nonzero
-(`PolySeq.lowestOrder_V₀_ne_bot`). -/
-theorem lowestOrder_polyPartial_V_ne_bot (N k : ℕ) (hk : k ≤ 3) (J : Finset (Fin 3)) :
-    (polyPartial 3 PolySeq.lowestOrder (N + 1) J).V k ≠ ⊥ :=
-  polyPartial_V_ne_bot_of_V₀ _ (N + 1) J k (PolySeq.lowestOrder_V₀_ne_bot N k hk)
 
 end Feec.Models.Cube.FEM

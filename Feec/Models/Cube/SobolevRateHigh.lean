@@ -46,25 +46,13 @@ every `S` and `J`: `polySmoothingEstimates_exists`, `paritySmoothing_exists`) as
   `ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar_high`.
 * **Mixed Hodge–Laplace problem** ([AFW2010], Thm 3.9): **`mixed_rate_sobolevQ_high`**,
   **`mixed_rate_sobolevPar_high`** (error `≤ K L h_N^{min(s, p+1)}` for `S` reproducing `P_p` in
-  the degrees `i, i + 1, i + 2`), `_of_polyOrderAt` and `_of_polyOrder` variants, and the bottom
-  row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of Tables 5.1/6.1 on `1`-forms at the rate `h^{min(s,2)}`
-  (`mixed_rate_lagrangeP2_sobolevQ`, `mixed_rate_lagrangeP2_sobolevPar`, `n ≤ 3`).
+  the degrees `i, i + 1, i + 2`), the `_of_polyOrderAt` variant, and the bottom row
+  `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of Tables 5.1/6.1 on `1`-forms at the rate `h^{min(s,2)}`
+  (`mixed_rate_lagrangeP2_sobolevQ`, `n ≤ 3`).
 * **Semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14) on every window:
-  `PolySmoothingEstimates.norm_sub_le_window_sobolevQ_high`,
-  `ParitySmoothingEstimates.norm_sub_le_window_sobolevPar_high`.
-* **Non-vacuity beyond `H¹`**: `infDist_poly_powWitness_le`, the rate `h_N^s` for the power
-  witness `u_a ∈ Hˢ(Q) \ H^{a-1/2}_∅(Q)`, `s < a - ½`; for `a = 7/4` the exponents `s ∈ (1, 5/4)`
-  are beyond `Feec.Models.Cube.SobolevRate`.
-* **`Hᵐ` data by weak derivatives** (`Feec.Models.Cube.SobolevWeak`):
-  `infDist_polyPartial_le_of_hasWeakDerivsT` (parity extension with weak derivatives in
-  `L²(𝕋ⁿ)`), `infDist_poly_le_of_hasWeakDerivsT` (an extension with weak derivatives in
-  `L²(𝕋ⁿ)`), and `infDist_polyPartial_le_weakHmNorm` (the rate in the weak `Hᵐ(Q)` norm of the
-  derivatives on `Q`, for the parity classes characterized on `Q` by
-  `Sobolev.mem_sobolevPar_add_one_iff`).
-* **No smoothing hypothesis**: `exists_infDist_domainSub_le_sobGraph_high`,
-  `exists_infDist_domainSub_le_sobGraphPar_high`, `exists_norm_sub_le_window_sobolevQ_high`,
-  `exists_norm_sub_le_window_sobolevPar_high` (the smoothing estimates from
-  `polySmoothingEstimates_exists`, `paritySmoothing_exists`).
+  `PolySmoothingEstimates.norm_sub_le_window_sobolevQ_high`; with no smoothing hypothesis,
+  `exists_norm_sub_le_window_sobolevQ_high` (the smoothing estimates from
+  `polySmoothingEstimates_exists`).
 
 ## Proved exponents (superseding the table of `Feec.Models.Cube.SobolevRate`)
 
@@ -301,10 +289,6 @@ variable (n) in
 /-- The `C⁰`-stability constant `1 + B_k dim(P(T)ᵏ) D_k` of the canonical interpolant of `S`. -/
 def interpCi (S : PolySeq) (k : ℕ) : ℝ :=
   1 + dofConst n S k * Module.finrank ℝ (S.space n k) * coeffConst n S k
-
-theorem interpCi_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ interpCi n S k := by
-  have := dofConst_nonneg (n := n) S k; have := coeffConst_nonneg (n := n) S k
-  unfold interpCi; positivity
 
 variable (n) in
 /-- The constant of the local `L²` interpolation error from `L²` derivatives. -/
@@ -718,15 +702,6 @@ theorem infDist_poly_le_sobolevQ_high [NeZero n] (S : PolySeq) (k p : ℕ)
     _ ≤ ‖y - z'‖ + ‖z' - v‖ := norm_sub_le_norm_sub_add_norm_sub y z' v
     _ ≤ meshSize N ^ q * σ + (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := add_le_add h1 h2
     _ = sobConstHigh n S k p * meshSize N ^ q * σ := by ring
-
-/-- `infDist_poly_le_sobolevQ_high` for a sequence of global order `p` (`FEM.PolyOrder n S p`,
-`r_eff = p + 1`). -/
-theorem infDist_poly_le_sobolevQ_high_of_polyOrder [NeZero n] (S : PolySeq) {p : ℕ}
-    (hS : PolyOrder n S p) (hns : n < 2 * (p + 1)) (k : ℕ) {s : ℝ} (hs0 : 0 ≤ s) (N : ℕ)
-    (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
-    Metric.infDist y ((poly n S N).V k) ≤
-      sobConstHigh n S k p * meshSize N ^ min s (p + 1) * qNorm k s (toQ k y) :=
-  infDist_poly_le_sobolevQ_high S k p (hS k) hns hs0 N y hy
 
 /-- **Best approximation of the parity classes at the optimal rate**
 (`infDist_polyPartial_le_sobolevPar_high`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`,
@@ -1201,104 +1176,6 @@ theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
         ((4 + 2 * C) * T) := mul_le_mul_of_nonneg_left hsum hcK
     _ = _ := by rw [hTdef, he]; ring
 
-variable {J} in
-/-- **Graph-norm approximation in the total space of a window of `HΛ_J(Q)` at the optimal
-rate**. -/
-theorem ParitySmoothingEstimates.exists_mem_window_le_sobPar_high [NeZero n] {S : PolySeq}
-    {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (hL0 : 0 ≤ L) {a : ℤ} {m : ℕ}
-    (hS : ∀ k : ℕ, a ≤ k → (k : ℤ) ≤ a + m → polySpace n p k ≤ S.space n k)
-    (ζ : ((complexPart n J).window a m).totalD.GraphSpace)
-    (hζ : ∀ i : Fin m, SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst ζ i))
-    (N : ℕ) :
-    ∃ w ∈ ((polyPartial n S N J).window a m).graphSub, ‖ζ - w‖ ≤
-      ((m : ℝ) + m * m) * ((1 + 2 * C) * (∑ i : Fin m, (sobConstHighParZ n S p (a + i) +
-        sobConstHighParZ n S p (a + i + 1))) * meshSize N ^ min s (p + 1) * L) := by
-  obtain ⟨x, rfl, -, -⟩ := ((complexPart n J).window a m).totalD.exists_toGraphSpace_eq ζ
-  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-  have hC := hE.two_mul_nonneg
-  set e := meshSize N ^ min s (p + 1)
-  have hh : 0 ≤ e := Real.rpow_nonneg (meshSize_pos N).le _
-  set K := ∑ i : Fin m, (sobConstHighParZ n S p (a + i) + sobConstHighParZ n S p (a + i + 1))
-  have hKi : ∀ i : Fin m, sobConstHighParZ n S p (a + i) + sobConstHighParZ n S p (a + i + 1) ≤ K :=
-    fun i => Finset.single_le_sum
-      (f := fun i : Fin m => sobConstHighParZ n S p (a + i) + sobConstHighParZ n S p (a + i + 1))
-      (fun i _ => add_nonneg (sobConstHighParZ_nonneg S p _) (sobConstHighParZ_nonneg S p _))
-      (Finset.mem_univ i)
-  have hε : 0 ≤ (1 + 2 * C) * K * e * L := by
-    have : 0 ≤ K := Finset.sum_nonneg fun i _ =>
-      add_nonneg (sobConstHighParZ_nonneg S p _) (sobConstHighParZ_nonneg S p _)
-    have : 0 ≤ 1 + 2 * C := by linarith
-    positivity
-  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((polyPartial n S N J).window a m) x
-    (ε := (1 + 2 * C) * K * e * L) fun i => by
-      set xi := (x : PiLp 2 fun i : Fin m => L2F ℝ (cubeDomain n) (formIdx n (a + i))) i
-      have hO : ∀ k : ℕ, (k : ℤ) = a + i → polySpace n p k ≤ S.space n k :=
-        fun k hk => hS k (by omega) (by have := i.2; omega)
-      have hO1 : ∀ k : ℕ, (k : ℤ) = a + i + 1 → polySpace n p k ≤ S.space n k :=
-        fun k hk => hS k (by omega) (by have := i.2; omega)
-      have h0 := infDist_polyPartial_le_sobAtPar_high J S hns hs0 N hO (hζ i).1
-      have hA : (1 + 2 * C) * Metric.infDist xi ((polyPartial n S N J).V (a + i)) ≤
-          (1 + 2 * C) * K * e * L := by
-        have hs := sobConstHighParZ_nonneg (n := n) S p (a + i + 1)
-        calc (1 + 2 * C) * Metric.infDist xi ((polyPartial n S N J).V (a + i)) ≤
-            (1 + 2 * C) * (sobConstHighParZ n S p (a + i) * e * L) :=
-              mul_le_mul_of_nonneg_left h0 (by linarith)
-          _ ≤ (1 + 2 * C) * K * e * L := by
-              rw [mul_assoc (1 + 2 * C) K, mul_assoc (1 + 2 * C) (K * _)]
-              refine mul_le_mul_of_nonneg_left ?_ (by linarith)
-              rw [mul_assoc, mul_assoc]
-              exact mul_le_mul_of_nonneg_right (by linarith [hKi i]) (mul_nonneg hh hL0)
-      have hB : ∀ hx : xi ∈ ((complexPart n J).d (a + i) (a + i + 1)).domain,
-          (1 + 2 * C) * Metric.infDist ((complexPart n J).d (a + i) (a + i + 1) ⟨xi, hx⟩)
-            ((polyPartial n S N J).V (a + i + 1)) ≤ (1 + 2 * C) * K * e * L := by
-        intro hx
-        have h1 := infDist_polyPartial_le_sobAtPar_high J S hns hs0 N hO1 ((hζ i).2 hx)
-        have hs := sobConstHighParZ_nonneg (n := n) S p (a + i)
-        calc (1 + 2 * C) * Metric.infDist ((complexPart n J).d (a + i) (a + i + 1) ⟨xi, hx⟩)
-              ((polyPartial n S N J).V (a + i + 1)) ≤
-            (1 + 2 * C) * (sobConstHighParZ n S p (a + i + 1) * e * L) :=
-              mul_le_mul_of_nonneg_left h1 (by linarith)
-          _ ≤ (1 + 2 * C) * K * e * L := by
-              rw [mul_assoc (1 + 2 * C) K, mul_assoc (1 + 2 * C) (K * _)]
-              refine mul_le_mul_of_nonneg_left ?_ (by linarith)
-              rw [mul_assoc, mul_assoc]
-              exact mul_le_mul_of_nonneg_right (by linarith [hKi i]) (mul_nonneg hh hL0)
-      obtain ⟨v, hv, h1, h2⟩ := exists_mem_le_proj (hE.proj N) hC (hE.norm_proj_le N)
-        (j := a + i) xi hA hB hε
-      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩
-  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-  rw [Fintype.card_fin]
-
-variable {J} in
-/-- **Convergence of the semi-discrete Hodge wave equation in `HΛ_J(Q)` at the optimal rate**
-(`norm_sub_le_window_sobolevPar_high`), for solutions bounded in `Hˢ_J(Q)` uniformly on
-`[t₀, t₁]`, every class `J`. -/
-theorem ParitySmoothingEstimates.norm_sub_le_window_sobolevPar_high [NeZero n] {S : PolySeq}
-    {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) (a : ℤ) (m : ℕ)
-    (hS : ∀ k : ℕ, a ≤ k → (k : ℤ) ≤ a + m → polySpace n p k ≤ S.space n k) {t₀ t₁ : ℝ}
-    {ξ ξ' : ℝ → ((complexPart n J).window a m).totalD.GraphSpace}
-    (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
-    {ξh ξh' : ℕ → ℝ → ((complexPart n J).window a m).totalD.GraphSpace}
-    (hξh : ∀ N, HodgeWave.IsSemidiscreteSolution (((polyPartial n S N J).window a m).graphSub)
-      (Set.Icc t₀ t₁) (ξh N) (ξh' N))
-    (h0 : ∀ N, ξh N t₀ =
-      HodgeWave.ellipticProjection (((polyPartial n S N J).window a m).graphSub) (ξ t₀))
-    {L : ℝ} (hL0 : 0 ≤ L)
-    (hreg : ∀ τ ∈ Set.Icc t₀ t₁, ∀ i : Fin m,
-      SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst (ξ τ) i) ∧
-        SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst (ξ' τ) i))
-    (N : ℕ) {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
-    ‖((complexPart n J).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
-      (1 + ‖HodgeWave.shiftedForm ((complexPart n J).window a m).totalD‖ / ((1 / 2) / √3)) *
-        (1 + (t - t₀)) ^ 2 * (((m : ℝ) + m * m) * ((1 + 2 * C) * (∑ i : Fin m,
-          (sobConstHighParZ n S p (a + i) + sobConstHighParZ n S p (a + i + 1))) *
-            meshSize N ^ min s (p + 1) * L)) :=
-  ((polyPartial n S N J).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (fun τ hτ =>
-    ⟨hE.exists_mem_window_le_sobPar_high hns hs0 hL0 hS (ξ τ) (fun i => (hreg τ hτ i).1) N,
-      hE.exists_mem_window_le_sobPar_high hns hs0 hL0 hS (ξ' τ) (fun i => (hreg τ hτ i).2) N⟩) ht
-
 end Parity
 
 /-! ### Degreewise orders, the bottom row of Tables 5.1/6.1 -/
@@ -1338,26 +1215,6 @@ theorem mixed_rate_sobolevQ_high_of_polyOrderAt [NeZero n] (S : PolySeq) {p : �
       K * L * meshSize N ^ min s (p + 1) :=
   mixed_rate_sobolevQ_high S hns hs0 hij hjk (degrees_of_polyOrderAt hij hj hSi hSj)
 
-/-- **`mixed_rate_sobolevQ_high` for a sequence of global order `p`** (`FEM.PolyOrder n S p`). -/
-theorem mixed_rate_sobolevQ_high_of_polyOrder [NeZero n] (S : PolySeq) {p : ℕ}
-    (hS : PolyOrder n S p) (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) {i j k : ℤ}
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
-    {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
-    (complex n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    SobGraph n s L σ → SobGraph n s L u →
-    SobGraph n s L ((complex n).boundaryPart j ((complex n).domainIncl j u)) →
-    SobAt n s L j (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).fst‖ +
-        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
-            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N ^ min s (p + 1) :=
-  mixed_rate_sobolevQ_high S hns hs0 hij hjk fun d _ _ => hS d
-
 /-- **The bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` on `1`-forms at the rate `h^{min(s,2)}` for
 `Hˢ(Q)` solutions** (`mixed_rate_lagrangeP2_sobolevQ`, `n ≤ 3`): the Hodge Laplacian in degree
 `1` uses only `P₂Λ⁰, P₂⁻Λ¹, P₁Λ²`, which contain `P₁` (`r_eff = 2`, `2 r_eff = 4 > n`), although
@@ -1386,152 +1243,7 @@ theorem mixed_rate_lagrangeP2_sobolevQ [NeZero n] (hn3 : n ≤ 3) {s : ℝ} (hs0
   rw [show ((1 : ℕ) : ℝ) + 1 = 2 by norm_num] at h
   exact h
 
-
-section ParityCor
-
-variable (J : Finset (Fin n))
-
-/-- **`mixed_rate_sobolevPar_high` for the degreewise orders** (`PolyOrderAt` at `i` and
-`j = i + 1 ≥ 0`). -/
-theorem mixed_rate_sobolevPar_high_of_polyOrderAt [NeZero n] (S : PolySeq) {p : ℕ}
-    (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) {i j k : ℤ}
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) (hj : 0 ≤ j)
-    (hSi : PolyOrderAt n S p i) (hSj : PolyOrderAt n S p j) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexPart n J).domainSpace i}
-    {u : (complexPart n J).domainSpace j} {q : (complexPart n J).harmonic j},
-    (complexPart n J).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    SobGraphPar n J s L σ → SobGraphPar n J s L u →
-    SobGraphPar n J s L ((complexPart n J).boundaryPart j ((complexPart n J).domainIncl j u)) →
-    SobAtPar n J s L j (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (polyPartial n S N J).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyPartial n S N J) hij hjk f).fst‖ +
-        ‖u - (polyPartial n S N J).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyPartial n S N J) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyPartial n S N J) hij hjk
-            f).snd.snd : (polyPartial n S N J).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N ^ min s (p + 1) :=
-  mixed_rate_sobolevPar_high J S hns hs0 hij hjk (degrees_of_polyOrderAt hij hj hSi hSj)
-
-/-- **The bottom row on `1`-forms in `HΛ_J(Q)` at the rate `h^{min(s,2)}` for `Hˢ_J(Q)`
-solutions** (`n ≤ 3`; `J = univ`: `H̊Λ(Q)`, the vanishing boundary DOFs of Tables 5.1/6.1). -/
-theorem mixed_rate_lagrangeP2_sobolevPar [NeZero n] (hn3 : n ≤ 3) {s : ℝ} (hs0 : 0 ≤ s) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n 1)} {σ : (complexPart n J).domainSpace 0}
-    {u : (complexPart n J).domainSpace 1} {q : (complexPart n J).harmonic 1},
-    (complexPart n J).IsMixedSolution 0 1 2 f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    SobGraphPar n J s L σ → SobGraphPar n J s L u →
-    SobGraphPar n J s L ((complexPart n J).boundaryPart 1 ((complexPart n J).domainIncl 1 u)) →
-    SobAtPar n J s L 1 (q : L2F ℝ (cubeDomain n) (formIdx n 1)) → ∀ N : ℕ,
-    ‖σ - (polyPartial n PolySeq.lagrangeP2 N J).embD 0
-          (Subcomplex.CochainProjection.discreteMixedSolution
-            (polyPartial n PolySeq.lagrangeP2 N J) (i := 0) (j := 1) (k := 2) rfl rfl f).fst‖ +
-        ‖u - (polyPartial n PolySeq.lagrangeP2 N J).embD 1
-          (Subcomplex.CochainProjection.discreteMixedSolution
-            (polyPartial n PolySeq.lagrangeP2 N J) (i := 0) (j := 1) (k := 2) rfl rfl f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n 1)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution
-            (polyPartial n PolySeq.lagrangeP2 N J) (i := 0) (j := 1) (k := 2) rfl rfl f).snd.snd :
-            (polyPartial n PolySeq.lagrangeP2 N J).V 1) : L2F ℝ (cubeDomain n) (formIdx n 1))‖ ≤
-      K * L * meshSize N ^ min s 2 := by
-  have h := mixed_rate_sobolevPar_high_of_polyOrderAt (n := n) J PolySeq.lagrangeP2 (p := 1)
-    (by omega) hs0 (i := 0) (j := 1) (k := 2) rfl rfl (by norm_num)
-    lagrangeP2_polyOrderAt_zero lagrangeP2_polyOrderAt_one
-  rw [show ((1 : ℕ) : ℝ) + 1 = 2 by norm_num] at h
-  exact h
-
-end ParityCor
-
-/-! ### Non-vacuity beyond `H¹` -/
-
-/-- **Non-vacuity of the optimal rate beyond `h¹`** (`infDist_poly_powWitness_le`): the power
-witness `u_a = Σ_{c ≠ 0} |c|^{-a} cos(2π c y₀)` (`Sobolev.powWitness`, `a > ½`) lies in
-`Hˢ(Q)` for every `s < a - ½` but not in `H^{a - 1/2}_∅(Q)` (`powWitness_not_mem_sobolevPar`), and
-is approximated at the rate `h_N^{min(s, p+1)}` by every sequence reproducing `P_p` in degree `0`.
-For `a = 7/4` and `p ≥ 1` (e.g. `P₂Λ⁰`, `lagrangeP2`) this is `h_N^s` for `s ∈ (1, 5/4)`, beyond
-the `h^{min(s,1)}` of `Feec.Models.Cube.SobolevRate`. (Whether `u_a` is `C²` on `cl Q`, which
-`Feec.Models.Cube.PolyRate` would need for its `O(h²)`, is not decided here; `u_a ∉ H^{a-1/2}_∅`
-is what is proved.) -/
-theorem infDist_poly_powWitness_le [NeZero n] (S : PolySeq) (p : ℕ)
-    (hs : polySpace n p 0 ≤ S.space n 0) (hns : n < 2 * (p + 1)) {a s : ℝ} (ha : 1 / 2 < a)
-    (hs0 : 0 ≤ s) (hsa : s < a - 1 / 2) (N : ℕ) :
-    Metric.infDist ((toQ ((0 : ℕ) : ℤ)).symm (powWitness (n := n) ha))
-        ((poly n S N).V ((0 : ℕ) : ℤ)) ≤
-      sobConstHigh n S 0 p * meshSize N ^ min s (p + 1) * qNorm 0 s (powWitness (n := n) ha) := by
-  have hy : toQ ((0 : ℕ) : ℤ) ((toQ ((0 : ℕ) : ℤ)).symm (powWitness (n := n) ha)) ∈
-      sobolevQ n 0 s := by
-    rw [LinearIsometryEquiv.apply_symm_apply]; exact powWitness_mem_sobolevQ ha hs0 hsa
-  have h := infDist_poly_le_sobolevQ_high S 0 p hs hns hs0 N _ hy
-  rwa [LinearIsometryEquiv.apply_symm_apply] at h
-
-/-! ### Restatements for `Hᵐ` data defined by weak derivatives -/
-
-/-- **The optimal rate for parity data defined by weak derivatives**
-(`infDist_polyPartial_le_of_hasWeakDerivsT`): if every component of the parity extension
-`JfJ J k y` has weak derivatives up to order `m` in `L²(𝕋ⁿ)` (`mem_sobolevPar_nat_iff`), then
-`dist(y, V_{h,Γ_J}ᵏ) ≤ C h_N^{min(m, p+1)} ‖y‖_{m,J}`. -/
-theorem infDist_polyPartial_le_of_hasWeakDerivsT [NeZero n] (S : PolySeq) (J : Finset (Fin n))
-    (k p : ℕ) (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {m : ℕ} (N : ℕ)
-    (y : L2F ℝ (cubeDomain n) (formIdx n k))
-    (hy : ∀ t, HasWeakDerivsT m (DeRhamIdent.physF k (JfJ J k (toQ k y)) t)) :
-    Metric.infDist y ((polyPartial n S N J).V k) ≤
-      √(2 ^ n) * sobConstHigh n S k p * meshSize N ^ min (m : ℝ) (p + 1) *
-        parNorm J k m (toQ k y) :=
-  infDist_polyPartial_le_sobolevPar_high S J k p hs hns (Nat.cast_nonneg m) N y
-    ((mem_sobolevPar_nat_iff J m _).2 hy)
-
-/-- **The optimal rate for data with an `Hᵐ(𝕋ⁿ)` extension defined by weak derivatives**
-(`infDist_poly_le_of_hasWeakDerivsT`): if `y = x|_Q` for a coefficient sequence `x` whose
-physical form has weak derivatives up to order `m` in `L²(𝕋ⁿ)` (`memSob_nat_iff`), then
-`dist(y, Vₕᵏ) ≤ C h_N^{min(m, p+1)} ‖y‖_{Hᵐ(Q)}`. (By `hasWeakDerivs_of_mem_sobolevQ` such `y` has
-weak derivatives up to order `m` on `Q`; the converse, an `Hᵐ` extension operator from `Q`, is
-not formalized.) -/
-theorem infDist_poly_le_of_hasWeakDerivsT [NeZero n] (S : PolySeq) (k p : ℕ)
-    (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {m : ℕ} (N : ℕ)
-    (y : L2F ℝ (cubeDomain n) (formIdx n k))
-    (hy : ∃ x : Seq n k, (∀ t, HasWeakDerivsT m (DeRhamIdent.physF k x t)) ∧
-      Jinvf k x = toQ k y) :
-    Metric.infDist y ((poly n S N).V k) ≤
-      sobConstHigh n S k p * meshSize N ^ min (m : ℝ) (p + 1) * qNorm k m (toQ k y) := by
-  obtain ⟨x, hx, hxy⟩ := hy
-  exact infDist_poly_le_sobolevQ_high S k p hs hns (Nat.cast_nonneg m) N y
-    ⟨x, (memSob_nat_iff x m).2 hx, hxy⟩
-
-/-! ### Graph norms and windows with no smoothing hypothesis -/
-
-/-- **Graph-norm best approximation at the optimal rate, unconditionally**
-(`exists_infDist_domainSub_le_sobGraph_high`):
-`PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high`
-with the smoothing estimates supplied by `polySmoothingEstimates_exists`. -/
-theorem exists_infDist_domainSub_le_sobGraph_high [NeZero n] (S : PolySeq) {p : ℕ}
-    (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) {j : ℤ}
-    (hS0 : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
-    (hS1 : ∀ k : ℕ, (k : ℤ) = j + 1 → polySpace n p k ≤ S.space n k) :
-    ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) {L : ℝ} {σ : (complex n).domainSpace j}, SobGraph n s L σ →
-      Metric.infDist σ ((poly n S N).domainSub j) ≤ K * meshSize N ^ min s (p + 1) * L := by
-  obtain ⟨p', C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  have hC := hE.two_mul_nonneg
-  exact ⟨(1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)),
-    mul_nonneg (by linarith) (add_nonneg (sobConstHighZ_nonneg S p j)
-      (sobConstHighZ_nonneg S p (j + 1))),
-    fun N L σ hσ => hE.infDist_domainSub_le_sobGraph_high hns hs0 N hS0 hS1 hσ⟩
-
-/-- **Graph-norm best approximation in `HΛ_J(Q)` at the optimal rate, unconditionally**
-(`exists_infDist_domainSub_le_sobGraphPar_high`), with the parity smoothing estimates supplied by
-`paritySmoothing_exists`. -/
-theorem exists_infDist_domainSub_le_sobGraphPar_high [NeZero n] (S : PolySeq)
-    (J : Finset (Fin n)) {p : ℕ} (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) {j : ℤ}
-    (hS0 : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
-    (hS1 : ∀ k : ℕ, (k : ℤ) = j + 1 → polySpace n p k ≤ S.space n k) :
-    ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) {L : ℝ} {σ : (complexPart n J).domainSpace j},
-      SobGraphPar n J s L σ →
-      Metric.infDist σ ((polyPartial n S N J).domainSub j) ≤
-        K * meshSize N ^ min s (p + 1) * L := by
-  obtain ⟨ρ, C, hE⟩ := paritySmoothing_exists J S
-  have hC := hE.two_mul_nonneg
-  exact ⟨(1 + 2 * C) * (sobConstHighParZ n S p j + sobConstHighParZ n S p (j + 1)),
-    mul_nonneg (by linarith) (add_nonneg (sobConstHighParZ_nonneg S p j)
-      (sobConstHighParZ_nonneg S p (j + 1))),
-    fun N L σ hσ => hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hS0 hS1 hσ⟩
+/-! ### Windows with no smoothing hypothesis -/
 
 /-- **Convergence of the semi-discrete Hodge wave equation at the optimal rate, unconditionally**
 (`exists_norm_sub_le_window_sobolevQ_high`):
@@ -1568,59 +1280,5 @@ theorem exists_norm_sub_le_window_sobolevQ_high [NeZero n] (S : PolySeq) {p : �
   refine (hE.norm_sub_le_window_sobolevQ_high hns hs0 a m hS hξ hξh h0 hL0 hreg N ht).trans
     (le_of_eq ?_)
   ring
-
-/-- **Convergence of the semi-discrete Hodge wave equation in `HΛ_J(Q)` at the optimal rate,
-unconditionally** (`exists_norm_sub_le_window_sobolevPar_high`), with the parity smoothing
-estimates supplied by `paritySmoothing_exists`. -/
-theorem exists_norm_sub_le_window_sobolevPar_high [NeZero n] (S : PolySeq) (J : Finset (Fin n))
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) (a : ℤ) (m : ℕ)
-    (hS : ∀ k : ℕ, a ≤ k → (k : ℤ) ≤ a + m → polySpace n p k ≤ S.space n k) :
-    ∃ K : ℝ, 0 ≤ K ∧
-      ∀ {t₀ t₁ : ℝ} {ξ ξ' : ℝ → ((complexPart n J).window a m).totalD.GraphSpace},
-      HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ' →
-      ∀ {ξh ξh' : ℕ → ℝ → ((complexPart n J).window a m).totalD.GraphSpace},
-      (∀ N, HodgeWave.IsSemidiscreteSolution (((polyPartial n S N J).window a m).graphSub)
-        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) →
-      (∀ N, ξh N t₀ =
-        HodgeWave.ellipticProjection (((polyPartial n S N J).window a m).graphSub) (ξ t₀)) →
-      ∀ {L : ℝ}, 0 ≤ L →
-      (∀ τ ∈ Set.Icc t₀ t₁, ∀ i : Fin m,
-        SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst (ξ τ) i) ∧
-          SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst (ξ' τ) i)) →
-      ∀ (N : ℕ) {t : ℝ}, t ∈ Set.Icc t₀ t₁ →
-      ‖((complexPart n J).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
-        (1 + ‖HodgeWave.shiftedForm ((complexPart n J).window a m).totalD‖ / ((1 / 2) / √3)) *
-          (1 + (t - t₀)) ^ 2 * (K * meshSize N ^ min s (p + 1) * L) := by
-  obtain ⟨ρ, C, hE⟩ := paritySmoothing_exists J S
-  have hC := hE.two_mul_nonneg
-  have hK : 0 ≤ ∑ i : Fin m,
-      (sobConstHighParZ n S p (a + i) + sobConstHighParZ n S p (a + i + 1)) :=
-    Finset.sum_nonneg fun i _ =>
-      add_nonneg (sobConstHighParZ_nonneg S p _) (sobConstHighParZ_nonneg S p _)
-  refine ⟨((m : ℝ) + m * m) * ((1 + 2 * C) * ∑ i : Fin m,
-    (sobConstHighParZ n S p (a + i) + sobConstHighParZ n S p (a + i + 1))),
-    mul_nonneg (by positivity) (mul_nonneg (by linarith) hK),
-    fun {t₀ t₁ ξ ξ'} hξ {ξh ξh'} hξh h0 {L} hL0 hreg N {t} ht => ?_⟩
-  refine (hE.norm_sub_le_window_sobolevPar_high hns hs0 a m hS hξ hξh h0 hL0 hreg N ht).trans
-    (le_of_eq ?_)
-  ring
-
-/-- **The optimal rate for parity data in the weak `Hᵐ(Q)` norm**
-(`infDist_polyPartial_le_weakHmNorm`): for `y|_Q ∈ Hᵐ_J(Q)` (characterized on `Q` by
-`Sobolev.mem_sobolevPar_add_one_iff`),
-`dist(y, V_{h,Γ_J}ᵏ) ≤ 2^{n/2} C h_N^{min(m, p+1)} 2^{m/2} N_m(y)` with
-`N_m(y)² = Σ_t Σ_{|r| ≤ m} ‖∂^r y_t‖²_{L²(Q)}`,
-the norm of the weak derivatives on `Q` (`Sobolev.parNorm_sq_le_weakHmNormSq`). -/
-theorem infDist_polyPartial_le_weakHmNorm [NeZero n] (S : PolySeq) (J : Finset (Fin n))
-    (k p : ℕ) (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {m : ℕ} (N : ℕ)
-    (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevPar J k m) :
-    Metric.infDist y ((polyPartial n S N J).V k) ≤
-      √(2 ^ n) * sobConstHigh n S k p * meshSize N ^ min (m : ℝ) (p + 1) *
-        (√(2 ^ m) * weakHmNorm (Q (Fin n)) m (toQ k y)) := by
-  refine (infDist_polyPartial_le_sobolevPar_high S J k p hs hns (Nat.cast_nonneg m) N y hy).trans
-    (mul_le_mul_of_nonneg_left ?_ (mul_nonneg (mul_nonneg (Real.sqrt_nonneg _)
-      (sobConstHigh_nonneg S k p)) (Real.rpow_nonneg (meshSize_pos N).le _)))
-  rw [weakHmNorm, ← Real.sqrt_mul (by positivity), ← Real.sqrt_sq (parNorm_nonneg J k _ _)]
-  exact Real.sqrt_le_sqrt (parNorm_sq_le_weakHmNormSq J m hy)
 
 end Feec.Models.Cube.FEM

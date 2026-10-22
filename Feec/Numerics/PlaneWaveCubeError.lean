@@ -17,36 +17,32 @@ every amplitude `A₊`, `Aₓ` and frequency `ω`.
   bound `pwBound A₊ Aₓ ω = (|A₊| + |Aₓ|) (1 + |ω|)³` (`WholeSpaceTSD.Smooth`).
 * **`planeWave_cn_error_le`**: the iterates from the interpolated plane wave with the interpolated
   boundary data satisfy `‖u_M − U(t_M)‖ ≤ C (|A₊| + |Aₓ|) (1 + |ω|)³ (1 + T) (h_N + Δt²)`, and so
-  do the five monitors; `planeWave_cnIterates_error_le`: the run exists (`cnIterates`).
-* **Non-vacuity** (`exactField_planeWave_ne_zero`): for `A₊ ≠ 0`, `ω ≠ 0` the exact field is
-  nonzero and TSD at every time.
+  do the five monitors.
 
 ## Dilation to the unit cube `(0, 1)³`
 
 `fem4gr` runs on `(0, 1)³`. With `dil u = u(·/2)` (`Feec.Domain.pullF` along `x ↦ x/2`):
 
-* `freudenthalMesh_unit_eq_map`: the Freudenthal meshes of `(0, 1)³` are the images of those of
-  `(0, ½)³` under `x ↦ 2x`.
 * `inner_dil`: `⟪dil u, dil v⟫ = 8 ⟪u, v⟫`; `complexU_eq`, `complexUMin_eq`: `HΛ((0, 1)³)` and
   `H̊Λ((0, 1)³)` are the transports of `HΛ(Q)`, `H̊Λ(Q)` with chain-rule factor `½`
   (`Feec.Domain.ConstCoeffComplex.maximalComplex_pull`), so `d (dil u) = ½ dil (d u)`.
 * `whitneyU`, `whitneyUMin`: the Whitney spaces of the unit cube, defined as the dilations of
   those of `Q`, are subcomplexes of `HΛ((0, 1)³)` and `H̊Λ((0, 1)³)`; `unitRow`, `unitInterior3`.
   That they coincide with the spaces assembled directly on the mesh `freudenthalMesh 0 1` is not
-  formalized here: it follows from `freudenthalMesh_unit_eq_map` and the affine invariance of the
-  Whitney element (`Feec.Models.Parallelepiped.fieldPull_mem_whitney_cast`).
-* **`isDirichletCNStep_dilRow3_iff`**: a Crank–Nicolson step with parameter `s` on the unit cube
-  is a step with parameter `s / 2` on `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt`
-  is the scheme on `Q` with step `Δt / 2` (the system is invariant under `(t, x) ↦ (2t, 2x)`;
-  the time steps of Table 7.1 are `Feec.Numerics.CrankNicolson.dt`).
-* **Transported results**: well-posedness `unit_existsUnique_cnStep3`, the error
-  `unit_cn_error_le` (`‖u_M − U(t_M)‖_{L²(0,1)³} ≤ √8 C L (1 + T) (h_N + (Δt/2)²)` for
+  formalized here: it follows from the affine invariance of the Whitney element
+  (`Feec.Models.Parallelepiped.fieldPull_mem_whitney_cast`), the Freudenthal meshes of `(0, 1)³`
+  being the images of those of `(0, ½)³` under `x ↦ 2x`.
+* A Crank–Nicolson step with parameter `s` on the unit cube is a step with parameter `s / 2` on
+  `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt` is the scheme on `Q` with step
+  `Δt / 2` (the system is invariant under `(t, x) ↦ (2t, 2x)`; the time steps of Table 7.1 are
+  `Feec.Numerics.CrankNicolson.dt`).
+* **Transported results**: the error `unit_cn_error_le`
+  (`‖u_M − U(t_M)‖_{L²(0,1)³} ≤ √8 C L (1 + T) (h_N + (Δt/2)²)` for
   `U(t, x) = V(t/2, x/2)`) and the monitors `unit_cn_monitors_le`.
 * **The `fem4gr` run**: the unit-cube plane wave with frequency `ω` is the dilation of the plane
   wave on `Q` with frequency `2ω` (`dilAmb3_exactField_planeWave`), so
   `unit_planeWave_cn_error_le` gives `‖u_M − U_ω(t_M)‖_{L²(0,1)³}` and the five monitors
-  `≤ √8 C (|A₊| + |Aₓ|) (1 + 2|ω|)³ (1 + T_U / 2) (h_N + (Δt/2)²)` for `M Δt ≤ T_U`;
-  `unit_planeWave_cnIterates_error_le`: the run exists (`unitCnIterates`).
+  `≤ √8 C (|A₊| + |Aₓ|) (1 + 2|ω|)³ (1 + T_U / 2) (h_N + (Δt/2)²)` for `M Δt ≤ T_U`.
 
 ## References
 
@@ -118,7 +114,6 @@ theorem abs_curlZ_amplitudeB_le (Ap Ax : ℝ) (a b : Fin 3) :
     |curlZ (amplitudeB Ap Ax) a b| ≤ |Ap| + |Ax| := by
   rw [(planeWave_amplitudes Ap Ax).1]
   exact abs_amplitudeE_le Ap Ax a b
-
 
 /-! ## The plane wave has bounded derivatives -/
 
@@ -322,85 +317,6 @@ theorem planeWave_cn_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt : 0 
     (u := u) (g := fun n => exactInterp (planeWaveRows Ap Ax w T) N (n * Δt)) hstep
     (fun _ _ => sub_self_mem_submodule _ _) hu0
 
-/-- **The run exists**: the iterates of the scheme from the interpolated plane wave with the
-interpolated boundary data (`cnIterates`) satisfy the bounds of `planeWave_cn_error_le` at every
-`M` with `M Δt ≤ T`. -/
-theorem planeWave_cnIterates_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ}
-    (hM : (M : ℝ) * Δt ≤ T) :
-    ‖dEmb3 (whitneyRow N) (cnIterates N (Δt / 2)
-        (fun n => exactInterp (planeWaveRows Ap Ax w T) N (n * Δt))
-        (exactInterp (planeWaveRows Ap Ax w T) N 0) M) -
-      exactField (planeWaveRows Ap Ax w T) (M * Δt)‖ ≤
-        cnConst * pwBound Ap Ax w * (1 + T) * (meshSize N + Δt ^ 2) :=
-  (planeWave_cn_error_le Ap Ax w T N hΔt hM
-    (u := cnIterates N (Δt / 2) (fun n => exactInterp (planeWaveRows Ap Ax w T) N (n * Δt))
-      (exactInterp (planeWaveRows Ap Ax w T) N 0))
-    (fun n _ => cnIterates_spec N (Δt / 2) _ _ n) rfl).1
-
-/-! ## Non-vacuity: the plane wave with `A₊ ≠ 0` is a nonzero exact solution -/
-
-theorem sin_ne_zero_of_abs_lt {x : ℝ} (h0 : x ≠ 0) (hπ : |x| < π) : Real.sin x ≠ 0 := by
-  rcases lt_or_gt_of_ne h0 with hx | hx
-  · exact (sin_neg_of_neg_of_neg_pi_lt hx (by linarith [neg_abs_le x, abs_lt.1 hπ])).ne
-  · exact (sin_pos_of_pos_of_lt_pi hx (by linarith [le_abs_self x])).ne'
-
-theorem planeWaveRows_u_one (Ap Ax w T t : ℝ) (r : Fin 3) :
-    (planeWaveRows Ap Ax w T r).u t 1 =
-      oneForm fun j y => planeWave (amplitudeE Ap Ax) w t y r j := rfl
-
-/-- The component `E₀₀` of row `0` of the plane wave on `Q`: `sin ω(z − t) · E₀₀`. -/
-theorem exactField_planeWave_comp (Ap Ax w T t : ℝ) :
-    entryE' 0 0 (exactField (planeWaveRows Ap Ax w T) t) =
-      (memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
-        ((Real.continuous_sin.comp (continuous_const.mul ((continuous_apply 2).sub
-          continuous_const))).mul continuous_const)).toLp
-        (fun y : Fin 3 → ℝ => Real.sin (w * (y 2 - t)) * amplitudeE Ap Ax 0 0) := by
-  rw [entryE'_exactField]
-  refine MemLp.toLp_congr _ _ (Eventually.of_forall fun y => ?_)
-  change oneForm (fun j y => planeWave (amplitudeE Ap Ax) w t y 0 j) y {0} = _
-  rw [oneForm_apply_singleton, planeWave_apply]
-
-/-- **Non-vacuity of `planeWave_cn_error_le`**: for `A₊ ≠ 0` and `ω ≠ 0` the exact field
-`U(0)` of the plane wave on `Q` is nonzero (its `E₀₀ = −A₊ sin ωz` component does not vanish on
-`Q`), and it is TSD at every time (`IsTSDAt`), so the monitors of `U` vanish while `U ≠ 0`. -/
-theorem exactField_planeWave_ne_zero {Ap Ax w T : ℝ} (hAp : Ap ≠ 0) (hw : w ≠ 0) :
-    exactField (planeWaveRows Ap Ax w T) 0 ≠ 0 ∧
-      ∀ t, IsTSDAt (planeWaveRows Ap Ax w T) t := by
-  refine ⟨fun h => ?_, fun t => (planeWaveSmooth Ap Ax w T).isTSDAt (pwBound_nonneg Ap Ax w) t⟩
-  set c : ℝ := 1 / (4 + 4 * |w|)
-  have hc0 : 0 < c := by positivity
-  have hc1 : c < 1 / 2 := by
-    rw [div_lt_div_iff₀ (by positivity) (by norm_num)]; nlinarith [abs_nonneg w]
-  have hwc : |w * c| < π := by
-    rw [abs_mul, abs_of_pos hc0]
-    have : |w| * c < 1 := by
-      rw [show |w| * c = |w| / (4 + 4 * |w|) by ring, div_lt_one (by positivity)]
-      linarith [abs_nonneg w]
-    linarith [Real.two_le_pi]
-  have hp : (fun _ : Fin 3 => c) ∈ cubeDomain 3 := fun i _ => ⟨hc0, hc1⟩
-  have hcomp := exactField_planeWave_comp Ap Ax w T 0
-  rw [h, map_zero] at hcomp
-  have hae : (fun y : Fin 3 → ℝ => Real.sin (w * (y 2 - 0)) * amplitudeE Ap Ax 0 0) =ᵐ[
-      volume.restrict (cubeDomain 3)] fun _ => (0 : ℝ) := by
-    have h1 := (memLp_of_continuous
-      (f := fun y : Fin 3 → ℝ => Real.sin (w * (y 2 - 0)) * amplitudeE Ap Ax 0 0)
-      (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
-      ((Real.continuous_sin.comp (continuous_const.mul ((continuous_apply 2).sub
-          continuous_const))).mul continuous_const)).coeFn_toLp
-    rw [← hcomp] at h1
-    filter_upwards [h1, Lp.coeFn_zero ℝ 2 (volume.restrict (cubeDomain 3))] with y h2 h3
-    rw [← h2]
-    exact h3
-  have hcont : Continuous fun y : Fin 3 → ℝ => Real.sin (w * (y 2 - 0)) * amplitudeE Ap Ax 0 0 :=
-    (Real.continuous_sin.comp (continuous_const.mul ((continuous_apply 2).sub
-      continuous_const))).mul continuous_const
-  have heq := Measure.eqOn_open_of_ae_eq hae (isOpen_cubeDomain 3) hcont.continuousOn
-    continuousOn_const hp
-  simp only [sub_zero, amplitudeE] at heq
-  have hs := sin_ne_zero_of_abs_lt (mul_ne_zero hw hc0.ne') hwc
-  have : Real.sin (w * c) * -Ap ≠ 0 := mul_ne_zero hs (neg_ne_zero.2 hAp)
-  exact this (by simpa using heq)
-
 end Feec.Numerics.PlaneWaveCube
 
 /-! ## Dilation to the unit cube `(0, 1)³` of `fem4gr` -/
@@ -551,12 +467,6 @@ instance (N : ℕ) (i : Fin 3) : FiniteDimensional ℝ ((unitRow N).V i) :=
 abbrev unitInterior3 (N : ℕ) :=
   interior3 (unitRow N) fun i => (whitneyUMin N).V (0 + (i : ℤ))
 
-/-- **Well-posedness of the `fem4gr` scheme on the unit cube**, for every time step. -/
-theorem unit_existsUnique_cnStep3 (N : ℕ) (s : ℝ) (f g' u : DState3 (unitRow N)) :
-    ∃! u', TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N)) s f g'
-      u u' :=
-  existsUnique_isDirichletCNStep3 _ _ s f g' u
-
 end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
@@ -678,9 +588,6 @@ def dilRow3 (N : ℕ) : DState3 (whitneyRow N) ≃ₗ[ℝ] DState3 (unitRow N) w
   left_inv u := PiLp.ext fun r => (dilRow N).symm_apply_apply (u r)
   right_inv v := PiLp.ext fun r => (dilRow N).apply_symm_apply (v r)
 
-theorem dilRow3_apply (N : ℕ) (u : DState3 (whitneyRow N)) (r : Fin 3) :
-    dilRow3 N u r = dilRow N (u r) := rfl
-
 theorem inner_dilRow3 (N : ℕ) (u v : DState3 (whitneyRow N)) :
     ⟪dilRow3 N u, dilRow3 N v⟫ = 8 * ⟪u, v⟫ := by
   rw [PiLp.inner_apply, PiLp.inner_apply, Finset.mul_sum]
@@ -714,19 +621,6 @@ theorem inner_discreteWave3_dilRow3 (N : ℕ) (u v : DState3 (whitneyRow N)) :
 theorem mem_dilRow3_iff (N : ℕ) (u : DState3 (whitneyRow N)) :
     dilRow3 N u ∈ unitInterior3 N ↔ u ∈ whitneyInterior3 N :=
   forall_congr' fun r => mem_dilRow_iff N (u r)
-
-/-- **The scheme on the unit cube with step `Δt` is the scheme on `(0, ½)³` with step `Δt / 2`**:
-a Dirichlet Crank–Nicolson step with parameter `s` on the dilated Whitney spaces of `(0, 1)³`
-(inner products `×8`, `d` `×½`) is exactly a step with parameter `s / 2` on the Whitney spaces of
-`(0, ½)³`. -/
-theorem isDirichletCNStep_dilRow3_iff (N : ℕ) (s : ℝ) (f g' u u' : DState3 (whitneyRow N)) :
-    TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N)) s
-        (dilRow3 N f) (dilRow3 N g') (dilRow3 N u) (dilRow3 N u') ↔
-      TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) (s / 2)
-        f g' u u' := by
-  have h := isDirichletCNStep_conj_iff (dilRow3 N) (by norm_num : (0 : ℝ) < 8)
-    (inner_dilRow3 N) (inner_discreteWave3_dilRow3 N) (mem_dilRow3_iff N) s f g' u u'
-  rwa [show (1 / 2 : ℝ) * s = s / 2 by ring] at h
 
 end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
@@ -1054,22 +948,6 @@ end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
 
-/-- One step of the scheme on the unit cube. -/
-def unitCnStep (N : ℕ) (s : ℝ) (f g' u : DState3 (unitRow N)) : DState3 (unitRow N) :=
-  (unit_existsUnique_cnStep3 N s f g' u).exists.choose
-
-/-- The iterates of the scheme on the unit cube with boundary data `gₙ`, no load, from `u₀`. -/
-def unitCnIterates (N : ℕ) (s : ℝ) (g : ℕ → DState3 (unitRow N)) (u₀ : DState3 (unitRow N)) :
-    ℕ → DState3 (unitRow N)
-  | 0 => u₀
-  | n + 1 => unitCnStep N s 0 (g (n + 1)) (unitCnIterates N s g u₀ n)
-
-theorem unitCnIterates_spec (N : ℕ) (s : ℝ) (g : ℕ → DState3 (unitRow N))
-    (u₀ : DState3 (unitRow N)) (n : ℕ) :
-    TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N)) s 0
-      (g (n + 1)) (unitCnIterates N s g u₀ n) (unitCnIterates N s g u₀ (n + 1)) :=
-  (unit_existsUnique_cnStep3 N s 0 (g (n + 1)) _).exists.choose_spec
-
 /-- **The Ch. 7 plane-wave run of `fem4gr` on the unit cube converges at rate `O(h + Δt²)`**
 (every `A₊`, `Aₓ`, `ω`): the Crank–Nicolson iterates `uₙ` with step `Δt` on the Whitney spaces
 of `(0, 1)³` (dilations of those of `(0, ½)³`), from the interpolated plane wave and with the
@@ -1107,71 +985,5 @@ theorem unit_planeWave_cn_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt
   exact ⟨herr, unit_cn_monitors_le (planeWaveRows Ap Ax (2 * w) T) (pwBound_nonneg _ _ _) N hΔt
     hM' hstep hu0 ((planeWaveSmooth Ap Ax (2 * w) T).isTSDAt (pwBound_nonneg _ _ _) _)⟩
 
-/-- **The unit-cube run exists**: `unitCnIterates` with the interpolated plane-wave data satisfies
-the bound of `unit_planeWave_cn_error_le`. -/
-theorem unit_planeWave_cnIterates_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt)
-    {M : ℕ} (hM : (M : ℝ) * Δt ≤ 2 * T) :
-    ‖dEmb3 (unitRow N) (unitCnIterates N (Δt / 2)
-        (fun n => dilRow3 N (exactInterp (planeWaveRows Ap Ax (2 * w) T) N (n * (Δt / 2))))
-        (dilRow3 N (exactInterp (planeWaveRows Ap Ax (2 * w) T) N 0)) M) -
-      unitPlaneWave Ap Ax w (M * Δt)‖ ≤
-        Real.sqrt 8 * (cnConst * pwBound Ap Ax (2 * w) * (1 + T) * (meshSize N + (Δt / 2) ^ 2)) :=
-  (unit_planeWave_cn_error_le Ap Ax w T N hΔt hM
-    (u := unitCnIterates N (Δt / 2)
-        (fun n => dilRow3 N (exactInterp (planeWaveRows Ap Ax (2 * w) T) N (n * (Δt / 2))))
-        (dilRow3 N (exactInterp (planeWaveRows Ap Ax (2 * w) T) N 0)))
-    (fun n _ => unitCnIterates_spec N (Δt / 2) _ _ n) rfl).1
-
 end Feec.Numerics.PlaneWaveCube
 
-namespace Feec.Numerics.PlaneWaveCube
-
-open Feec.Mesh
-
-/-- The dilation `x ↦ 2x` of `ℝ³`. -/
-def dilate2 : (Fin 3 → ℝ) ≃ᵃ[ℝ] (Fin 3 → ℝ) := boxMap 0 2 two_ne_zero
-
-theorem mesh_ext' {M M' : SimplicialMesh 3} (h1 : M.simplices = M'.simplices)
-    (h2 : M.domain = M'.domain) : M = M' := by
-  cases M; cases M'; simp only at h1 h2; subst h1; subst h2; rfl
-
-theorem dilate2_boxMap (N : ℕ) (x : Fin 3 → ℝ) :
-    dilate2 (boxMap 0 ((1 / 2 : ℝ) / ((N + 1 : ℕ) : ℝ))
-      (freudenthalScale_ne_zero (by norm_num : (0 : ℝ) < 1 / 2) (N + 1)) x) =
-    boxMap 0 ((1 : ℝ) / ((N + 1 : ℕ) : ℝ)) (freudenthalScale_ne_zero one_pos (N + 1)) x := by
-  simp only [dilate2, boxMap_apply, zero_add, smul_smul]
-  congr 1
-  ring
-
-/-- **The Freudenthal meshes of the unit cube are the images of those of `(0, ½)³` under
-`x ↦ 2x`**: `freudenthalMesh 0 1 (N + 1) = (mesh 3 N).map (x ↦ 2x)`. -/
-theorem freudenthalMesh_unit_eq_map (N : ℕ) :
-    freudenthalMesh (0 : Fin 3 → ℝ) 1 one_pos (N + 1) = (mesh 3 N).map dilate2 := by
-  refine mesh_ext' (Finset.ext fun T => ?_) ?_
-  · rw [mem_freudenthalMesh_simplices, SimplicialMesh.mem_map_simplices]
-    constructor
-    · rintro ⟨m, σ, rfl⟩
-      refine ⟨_, mem_freudenthalMesh_simplices.2 ⟨m, σ, rfl⟩, Affine.Simplex.ext fun i => ?_⟩
-      simp only [mapEquiv_points]
-      exact dilate2_boxMap N _
-    · rintro ⟨T', hT', rfl⟩
-      obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT'
-      refine ⟨m, σ, Affine.Simplex.ext fun i => ?_⟩
-      simp only [mapEquiv_points]
-      exact (dilate2_boxMap N _).symm
-  · rw [SimplicialMesh.map_domain, mesh_domain, freudenthalMesh_domain]
-    ext x
-    simp only [Set.mem_image, cubeDomain, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo,
-      dilate2, boxMap_apply, zero_add, Pi.zero_apply]
-    constructor
-    · intro hx
-      refine ⟨(1 / 2 : ℝ) • x, fun i => ?_, by ext i; simp⟩
-      have := hx i
-      simp only [Pi.smul_apply, smul_eq_mul]
-      constructor <;> linarith [this.1, this.2]
-    · rintro ⟨y, hy, rfl⟩ i
-      have := hy i
-      simp only [Pi.smul_apply, smul_eq_mul]
-      constructor <;> linarith [this.1, this.2]
-
-end Feec.Numerics.PlaneWaveCube

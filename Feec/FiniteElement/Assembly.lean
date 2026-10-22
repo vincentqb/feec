@@ -25,7 +25,7 @@ Then
 
 * `Λ_hᵏ(M)` is finite-dimensional of dimension `Σ_g #DOF(g)` (`finrank_globalSpace`), the global
   DOFs being a linear isomorphism (`globalDofEquiv`); the gluing into `L²(Ω; Λᵏ)` is injective
-  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension (`finrank_V`); with
+  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension; with
   vanishing boundary DOFs, the dimension is the number of interior DOFs, those of the faces not
   contained in a boundary facet (`interiorDofEquiv`, `finrank_globalSpace₀`, `finrank_V₀`);
 * `Λ_hᵏ(M) ⊆ {piecewise fields with continuous tangential traces}`
@@ -36,10 +36,8 @@ Then
   (`LocalElement.subcomplex`), and the global spaces with vanishing boundary DOFs form a subcomplex
   of the minimal complex `H̊Λ(Ω)` (`LocalElement.subcomplexMin`, `Ω` strictly star-shaped);
 * the local and global canonical interpolants `Π_T`, `Π_h` (`localInterp`, `globalInterp`) are
-  projections (`localInterp_inclusion`, `globalInterp_eq_of_eqOn`) commuting with `d` on `C¹`
-  forms (`localInterp_extDeriv`, `globalInterp_extDeriv`);
-* the cases `k = 0` (continuity across facets, `tangentialTraceEq_zero_iff`) and `k = n` (no
-  interface condition, `tangentialTraceEq_top`).
+  determined by the DOFs (`localDof_localInterp`, `globalInterp_piecewise`) and commute with `d`
+  on `C¹` forms (`localInterp_extDeriv`, `globalInterp_extDeriv`).
 
 ## References
 
@@ -188,12 +186,6 @@ def globalSpace (k : ℕ) : Submodule ℝ (E.Piecewise M k) where
     simp only [Pi.add_apply, map_add, hu T T' g hg hg' i, hv T T' g hg hg' i]
   smul_mem' := fun c u hu T T' g hg hg' i => by
     simp only [Pi.smul_apply, map_smul, hu T T' g hg hg' i]
-
-theorem mem_globalSpace {k : ℕ} {u : E.Piecewise M k} :
-    u ∈ E.globalSpace M k ↔ ∀ T T' : M.simplices, ∀ g,
-      g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
-        g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) → ∀ i,
-          E.localDof T k g i (u T) = E.localDof T' k g i (u T') := Iff.rfl
 
 instance (k : ℕ) : FiniteDimensional ℝ (E.globalSpace M k) := inferInstance
 
@@ -411,11 +403,6 @@ theorem localDof_localInterp (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ
     E.localDof T k g i (E.localInterp T k w) = E.dof g k i w :=
   dof_interp (E.unisolvent T k) (fun p => E.dof p.1 k p.2) w ⟨⟨g, mem_powerset.2 hg⟩, i⟩
 
-/-- `Π_T` is a projection onto `P(T)ᵏ`. -/
-theorem localInterp_inclusion (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (u : E.space T k) :
-    E.localInterp T k (Submodule.inclusion (E.le_contForms T k) u) = u :=
-  E.localSpace_ext T k fun g hg i => E.localDof_localInterp T k _ g hg i
-
 /-- **The local canonical interpolant commutes with `d`** on `C¹` forms:
 `Π_T (dw) = d (Π_T w)`. -/
 theorem localInterp_extDeriv (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (w : c1Forms n) :
@@ -455,28 +442,13 @@ theorem localDof_globalInterp (k : ℕ) (w : contForms n) (T : M.simplices) (g :
   (E.unisolvent (T : Affine.Simplex ℝ (Fin n → ℝ) n) k).dof_equiv_symm
     (fun p => E.dof p.1 k p.2 w) ⟨⟨g, mem_powerset.2 hg⟩, i⟩
 
-/-- **`Π_h` is determined by the DOFs**: `Π_h w = u` when the DOFs of `w` are those of `u`
-(see `globalInterp_eq_of_eqOn` for the projection property). -/
+/-- **`Π_h` is determined by the DOFs**: `Π_h w = u` when the DOFs of `w` are those of `u`. -/
 theorem globalInterp_piecewise (k : ℕ) (u : E.globalSpace M k) (w : contForms n)
     (hw : ∀ T : M.simplices, ∀ g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n), ∀ i,
       E.dof g k i w = E.localDof T k g i ((u : E.Piecewise M k) T)) :
     E.globalInterp M k w = u :=
   Subtype.ext (funext fun T => E.localSpace_ext T k fun g hg i => by
     rw [localDof_globalInterp _ _ _ _ _ _ hg, hw T g hg i])
-
-/-- **`Π_h` is a projection onto `Λ_hᵏ(M)`**: if a continuous form `w` coincides with `u_T` on
-every closed element `T` (e.g. a continuous piecewise field for `k = 0`), then `Π_h w = u`. -/
-theorem globalInterp_eq_of_eqOn (k : ℕ) (u : E.globalSpace M k) (w : contForms n)
-    (hw : ∀ T : M.simplices, ∀ x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
-      (w : FormField n) x = (((u : E.Piecewise M k) T : E.space T k) : FormField n) x) :
-    E.globalInterp M k w = u :=
-  E.globalInterp_piecewise M k u w fun T g hg i => by
-    rw [localDof_apply]
-    refine E.dof_congr i fun x hx V _ => ?_
-    have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior := by
-      rw [← convexHull_vertexSet]
-      exact convexHull_mono (Finset.coe_subset.2 hg) hx
-    rw [hw T x hxT]
 
 /-- **The global canonical interpolant commutes with `d`** on `C¹` forms:
 `Π_h (dw) = d (Π_h w)`. -/
@@ -775,16 +747,6 @@ theorem glue_injective (hΩ : IsOpen M.domain) (k : ℕ) :
   have hclosed : IsClosed {y | f y = 0} := isClosed_eq hf continuous_const
   exact closure_minimal (fun y hy => hEq hy) hclosed (hcl hx)
 
-/-- **`dim Vₕᵏ = dim Λ_hᵏ(M) = Σ_g #DOF(g)`**: the gluing is injective. -/
-theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
-    Module.finrank ℝ (E.V M k) = Fintype.card (E.GlobalDofIdx M k) := by
-  have hinj : Function.Injective
-      (E.glue M (k : ℤ) ∘ₗ (E.globalSpace M ((k : ℤ).toNat)).subtype) := by
-    rw [LinearMap.coe_comp]
-    exact (E.glue_injective M hΩ k).comp Subtype.val_injective
-  rw [V, LinearMap.finrank_range_of_inj hinj]
-  exact finrank_globalSpace E M k
-
 /-! ### The dimension of the spaces with vanishing boundary DOFs -/
 
 /-- A global DOF is a **boundary DOF** if its face lies in a boundary facet. -/
@@ -856,47 +818,5 @@ theorem finrank_V₀ (hΩ : IsOpen M.domain) (k : ℕ) :
   exact finrank_globalSpace₀ E M k
 
 end LocalElement
-
-/-! ### The cases `k = 0` and `k = n` -/
-
-/-- **`k = 0`**: equal tangential traces of `0`-forms means equal values (continuity across the
-facet; Lagrange elements). -/
-theorem tangentialTraceEq_zero_iff (F : Finset (Fin n → ℝ)) (α β : Finset (Fin n) → ℝ) :
-    TangentialTraceEq F 0 α β ↔ α ∅ = β ∅ := by
-  have key : ∀ (V : Fin n → Fin 0 → ℝ) (γ : Finset (Fin n) → ℝ), pullback V γ univ = γ ∅ := by
-    intro V γ
-    have hu : (Finset.univ : Finset (Fin 0)) = ∅ := Finset.univ_eq_empty
-    rw [pullback_apply, Finset.sum_eq_single ∅ (fun r _ hr => ?_) (by simp)]
-    · simp
-    · have hr' : #(Finset.univ : Finset (Fin 0)) ≠ #r := by
-        rw [hu, Finset.card_empty]; exact fun h => hr (Finset.card_eq_zero.1 h.symm)
-      rw [isDeg_wedgeProd V r _ hr', mul_zero]
-  refine ⟨fun h => ?_, fun h V _ => by rw [key, key, h]⟩
-  have := h 0 fun l => l.elim0
-  rwa [key, key] at this
-
-/-- **`k = n`**: there is no tangential trace of an `n`-form on a facet: the trace condition is
-vacuous (discontinuous Galerkin elements). -/
-theorem tangentialTraceEq_top {m : ℕ} {F : Finset (Fin (m + 1) → ℝ)} (hc : F.card = m + 1)
-    (α β : Finset (Fin (m + 1)) → ℝ) : TangentialTraceEq F (m + 1) α β := by
-  classical
-  intro V hV
-  have hdet : (Matrix.of V).det = 0 := by
-    by_contra h0
-    have hli : LinearIndependent ℝ (Matrix.of V).col :=
-      Matrix.linearIndependent_col_iff_isUnit.2 ((Matrix.isUnit_iff_isUnit_det _).2
-        (Ne.isUnit h0))
-    have h1 := finrank_span_eq_card hli
-    have h2 : Submodule.span ℝ (Set.range (Matrix.of V).col) ≤
-        vectorSpan ℝ (F : Set (Fin (m + 1) → ℝ)) := by
-      rw [Submodule.span_le]
-      rintro _ ⟨l, rfl⟩
-      exact hV l
-    have h3 := Submodule.finrank_mono h2
-    have h4 := finrank_vectorSpan_image_finset_le ℝ (id : (Fin (m + 1) → ℝ) → _) F hc
-    rw [Finset.image_id] at h4
-    rw [h1, Fintype.card_fin] at h3
-    omega
-  rw [pullback_apply_univ, pullback_apply_univ, hdet, zero_mul, zero_mul]
 
 end Feec.FiniteElement

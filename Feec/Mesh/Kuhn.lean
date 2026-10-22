@@ -5,7 +5,7 @@ public import Mathlib.Data.Fin.Tuple.Sort
 public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 
 /-!
-# Kuhn simplices and the Kuhn triangulation of the unit cube
+# Kuhn simplices and the Freudenthal triangulation
 
 For a permutation `σ` of `Fin n`, the Kuhn simplex `K_σ` has vertices
 `v_j = ∑_{i<j} e_{σ i}` (`j = 0, …, n`) and is the order simplex
@@ -22,14 +22,13 @@ of every translate containing `x`.
 * `kuhnMap σ` (`= B_σ`, `(B_σ x)_{σ i} = ∑_{j ≥ i} xⱼ`), with `kuhnSimplex σ = B_σ(T̂)`.
 * `latticePoint m`, `freudenthalSimplex m σ = m + K_σ`, `freudenthalSet m σ`.
 * `carrier x`: the lattice points `⌊x⌋ + 𝟙[t ≤ fract x]`, `0 < t ≤ 1`.
-* `kuhnMesh n`: the Kuhn triangulation of `[0,1]ⁿ` as a `SimplicialMesh`.
 
 ## Main results
 
-* `kuhnVertex_eq_sum`: `v_j = ∑_{i<j} e_{σ i}`; `kuhnSimplex` is affinely independent since
-  `B_σ` is invertible (`kuhnMap_injective`).
+* `kuhnMap_refPoints`: `B_σ` maps the vertices of `T̂` to the `v_j`; `kuhnSimplex` is affinely
+  independent since `B_σ` is invertible (`kuhnMap_injective`).
 * `closedInterior_kuhnSimplex`: `conv {v₀, …, vₙ} = {x | 1 ≥ x_{σ 0} ≥ ⋯ ≥ x_{σ(n-1)} ≥ 0}`
-  (`kuhnSet` is stated with `Antitone (x ∘ σ)`; `mem_kuhnSet_iff_chain` gives the chain form).
+  (`kuhnSet` is stated with `Antitone (x ∘ σ)`).
 * `iUnion_kuhnSet`: the Kuhn simplices cover `[0,1]ⁿ`;
   `eq_of_mem_kuhnSet_of_injective`: a point with distinct coordinates lies in only one.
 * `inter_closedInterior_freudenthalSimplex`: **face-to-face property** of the Freudenthal
@@ -37,8 +36,6 @@ of every translate containing `x`.
 * `freudenthalSimplex_eq_of_closedInterior_eq`: distinct `(m, σ)` give distinct simplices.
 * `volume_kuhnSet`, `volume_closedInterior_kuhnSimplex`: `vol K_σ = 1 / n!` (the `n!` simplices
   are permutations of each other and overlap only on the null hyperplanes `xᵢ = xⱼ`).
-* `kuhnMesh`: the Kuhn simplices form a `SimplicialMesh` of the unit cube, with `n!` simplices
-  (`card_kuhnMesh_simplices`).
 
 ## References
 
@@ -128,33 +125,9 @@ def kuhnEquiv (σ : Equiv.Perm (Fin n)) : (Fin n → ℝ) ≃ₗ[ℝ] (Fin n →
 @[simp] theorem kuhnEquiv_apply (σ : Equiv.Perm (Fin n)) (x : Fin n → ℝ) :
     kuhnEquiv σ x = kuhnMap σ x := rfl
 
-theorem kuhnMap_kuhnEquiv_symm (σ : Equiv.Perm (Fin n)) (y : Fin n → ℝ) :
-    kuhnMap σ ((kuhnEquiv σ).symm y) = y :=
-  (kuhnEquiv σ).apply_symm_apply y
-
 /-- The Kuhn vertex `v_j`: coordinate `k` is `1` iff `σ⁻¹ k < j`. -/
 def kuhnVertex (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) : Fin n → ℝ :=
   fun k => if (σ.symm k : ℕ) < j then 1 else 0
-
-/-- `v_j = ∑_{i<j} e_{σ i}`. -/
-theorem kuhnVertex_eq_sum (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) :
-    kuhnVertex σ j =
-      ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < j), Pi.single (σ i) (1 : ℝ) := by
-  funext k
-  rw [Finset.sum_apply]
-  by_cases h : (σ.symm k : ℕ) < j
-  · rw [Finset.sum_eq_single (σ.symm k)]
-    · simp [kuhnVertex, h]
-    · intro b _ hb
-      have : σ b ≠ k := fun h' => hb (by rw [← h', Equiv.symm_apply_apply])
-      simp [Ne.symm this]
-    · intro h'; simp [h] at h'
-  · rw [Finset.sum_eq_zero]
-    · simp [kuhnVertex, h]
-    · intro b hb
-      simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hb
-      have : σ b ≠ k := fun h' => h (by rw [← h', Equiv.symm_apply_apply]; exact hb)
-      simp [Ne.symm this]
 
 @[simp] theorem kuhnVertex_zero (σ : Equiv.Perm (Fin n)) : kuhnVertex σ 0 = 0 := by
   funext k; simp [kuhnVertex]
@@ -189,36 +162,6 @@ theorem closedInterior_kuhnSimplex_eq_image (σ : Equiv.Perm (Fin n)) :
 def kuhnSet (σ : Equiv.Perm (Fin n)) : Set (Fin n → ℝ) :=
   {x | (∀ i, 0 ≤ x i ∧ x i ≤ 1) ∧ Antitone (x ∘ σ)}
 
-theorem antitone_of_succ_le {f : Fin n → ℝ} (h : ∀ i j : Fin n, (j : ℕ) = i + 1 → f j ≤ f i) :
-    Antitone f := by
-  intro a b hab
-  obtain ⟨d, hd⟩ := Nat.exists_eq_add_of_le (Fin.le_def.1 hab)
-  induction d generalizing b with
-  | zero => exact le_of_eq (congrArg f (Fin.ext (by omega)))
-  | succ d ih =>
-    have hlt : (a : ℕ) + d < n := by omega
-    exact (h ⟨a + d, hlt⟩ b (by simp only; omega)).trans
-      (ih (Fin.le_def.2 (by simp only; omega)) (by simp only))
-
-/-- The defining chain `1 ≥ x_{σ 0} ≥ ⋯ ≥ x_{σ (n-1)} ≥ 0`, with consecutive inequalities
-(stated for `n ≥ 1`; for `n = 0`, `kuhnSet σ` is the whole one-point space). -/
-theorem mem_kuhnSet_iff_chain (σ : Equiv.Perm (Fin n)) (i₀ : Fin n) (hi₀ : (i₀ : ℕ) = 0)
-    (i₁ : Fin n) (hi₁ : (i₁ : ℕ) + 1 = n) {x : Fin n → ℝ} :
-    x ∈ kuhnSet σ ↔ x (σ i₀) ≤ 1 ∧
-      (∀ i j : Fin n, (j : ℕ) = i + 1 → x (σ j) ≤ x (σ i)) ∧ 0 ≤ x (σ i₁) := by
-  constructor
-  · rintro ⟨h01, ha⟩
-    exact ⟨(h01 _).2, fun i j hij => ha (Fin.le_def.2 (by omega)), (h01 _).1⟩
-  · rintro ⟨h1, hc, h0⟩
-    have ha : Antitone (x ∘ σ) := antitone_of_succ_le hc
-    refine ⟨fun k => ⟨?_, ?_⟩, ha⟩
-    · have := ha (show σ.symm k ≤ i₁ from Fin.le_def.2 (by have := (σ.symm k).2; omega))
-      simp only [Function.comp_apply, Equiv.apply_symm_apply] at this
-      exact h0.trans this
-    · have := ha (show i₀ ≤ σ.symm k from Fin.le_def.2 (by omega))
-      simp only [Function.comp_apply, Equiv.apply_symm_apply] at this
-      exact this.trans h1
-
 /-- **The Kuhn simplex is the order simplex**: `conv {v₀, …, vₙ} = K_σ`. -/
 theorem closedInterior_kuhnSimplex (σ : Equiv.Perm (Fin n)) :
     (kuhnSimplex σ).closedInterior = kuhnSet σ := by
@@ -236,8 +179,8 @@ theorem closedInterior_kuhnSimplex (σ : Equiv.Perm (Fin n)) :
       exact ht (Fin.le_def.1 hab)
   · rintro ⟨h01, hanti⟩
     set x := (kuhnEquiv σ).symm y
-    have hT := tailSum_eq_of_kuhnMap σ (kuhnMap_kuhnEquiv_symm σ y)
-    refine ⟨x, ⟨fun i => ?_, ?_⟩, kuhnMap_kuhnEquiv_symm σ y⟩
+    have hT := tailSum_eq_of_kuhnMap σ ((kuhnEquiv σ).apply_symm_apply y)
+    refine ⟨x, ⟨fun i => ?_, ?_⟩, (kuhnEquiv σ).apply_symm_apply y⟩
     · rw [← tailSum_sub_succ x i, hT, hT, dite_eq_left i.2]
       split_ifs with h
       · have := hanti (show i ≤ ⟨i + 1, h⟩ from Fin.le_def.2 (by simp))
@@ -341,10 +284,6 @@ theorem closedInterior_freudenthalSimplex (m : Fin n → ℤ) (σ : Equiv.Perm (
   · rintro ⟨y, hy, rfl⟩; simpa using hy
   · intro hx; exact ⟨x - latticePoint m, hx, by abel⟩
 
-theorem freudenthalSimplex_zero (σ : Equiv.Perm (Fin n)) :
-    freudenthalSimplex 0 σ = kuhnSimplex σ :=
-  Affine.Simplex.ext fun j => by simp
-
 /-! ### The carrier of a point and the face-to-face property -/
 
 /-- The lattice point `⌊x⌋ + 𝟙[t ≤ fract x]`. -/
@@ -419,7 +358,7 @@ theorem mem_convexHull_carrier {m : Fin n → ℤ} {σ : Equiv.Perm (Fin n)} {x 
   classical
   set y := x - latticePoint m with hydef
   set z := (kuhnEquiv σ).symm y
-  have hBz := kuhnMap_kuhnEquiv_symm σ y
+  have hBz : kuhnMap σ z = y := (kuhnEquiv σ).apply_symm_apply y
   have hT := tailSum_eq_of_kuhnMap σ hBz
   -- `z ∈ T̂`
   have hz : z ∈ (refSimplex n).closedInterior := by
@@ -514,12 +453,6 @@ theorem inter_closedInterior_freudenthalSimplex (m m' : Fin n → ℤ) (σ σ' :
     · rw [← convexHull_vertexSet (freudenthalSimplex m' σ')]
       exact convexHull_mono Set.inter_subset_right
 
-/-- **Face-to-face property of the Kuhn simplices.** -/
-theorem inter_closedInterior_kuhnSimplex (σ σ' : Equiv.Perm (Fin n)) :
-    (kuhnSimplex σ).closedInterior ∩ (kuhnSimplex σ').closedInterior =
-      convexHull ℝ ((vertexSet (kuhnSimplex σ) : Set (Fin n → ℝ)) ∩ vertexSet (kuhnSimplex σ')) := by
-  simpa only [freudenthalSimplex_zero] using inter_closedInterior_freudenthalSimplex 0 0 σ σ'
-
 theorem center_mem_freudenthalSet (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) :
     latticePoint m + kuhnCenter σ ∈ freudenthalSet m σ := by
   simpa [freudenthalSet] using kuhnCenter_mem σ
@@ -551,56 +484,6 @@ theorem freudenthalSimplex_eq_of_closedInterior_eq {m m' : Fin n → ℤ}
   apply eq_of_center_mem
   rw [← closedInterior_freudenthalSimplex, ← h, closedInterior_freudenthalSimplex]
   exact center_mem_freudenthalSet m σ
-
-theorem kuhnSimplex_eq_of_closedInterior_eq {σ σ' : Equiv.Perm (Fin n)}
-    (h : (kuhnSimplex σ).closedInterior = (kuhnSimplex σ').closedInterior) : σ = σ' :=
-  (freudenthalSimplex_eq_of_closedInterior_eq (m := 0) (m' := 0)
-    (by simpa only [freudenthalSimplex_zero] using h)).2
-
-/-! ### The Kuhn mesh of the unit cube -/
-
-theorem closure_unitCube :
-    closure (Set.univ.pi fun _ : Fin n => Set.Ioo (0 : ℝ) 1) = Set.Icc 0 1 := by
-  rw [closure_pi_set]
-  simp only [closure_Ioo zero_ne_one]
-  exact Set.pi_univ_Icc 0 1
-
-/-- **The Kuhn triangulation**: the `n!` Kuhn simplices form a conforming simplicial mesh of the
-unit cube `[0,1]ⁿ`. -/
-def kuhnMesh (n : ℕ) : SimplicialMesh n := by
-  classical
-  exact SimplicialMesh.ofConforming (Finset.univ.image kuhnSimplex)
-    (Set.univ.pi fun _ => Set.Ioo 0 1)
-    (by
-      rw [closure_unitCube, ← iUnion_kuhnSet, Finset.set_biUnion_finset_image]
-      simp [closedInterior_kuhnSimplex])
-    (by
-      simp only [Finset.mem_image, Finset.mem_univ, true_and]
-      rintro _ ⟨σ, rfl⟩ _ ⟨σ', rfl⟩
-      exact inter_closedInterior_kuhnSimplex σ σ')
-    (by
-      simp only [Finset.coe_image, Finset.coe_univ, Set.image_univ]
-      rintro _ ⟨σ, rfl⟩ _ ⟨σ', rfl⟩ h
-      exact congrArg kuhnSimplex (kuhnSimplex_eq_of_closedInterior_eq (by
-        rw [← convexHull_vertexSet, h, convexHull_vertexSet])))
-
-theorem mem_kuhnMesh_simplices {T : Affine.Simplex ℝ (Fin n → ℝ) n} :
-    T ∈ (kuhnMesh n).simplices ↔ ∃ σ, kuhnSimplex σ = T := by
-  classical
-  simp [kuhnMesh, SimplicialMesh.ofConforming]
-
-@[simp] theorem kuhnMesh_domain :
-    (kuhnMesh n).domain = Set.univ.pi fun _ => Set.Ioo 0 1 := rfl
-
-theorem kuhnSimplex_injective : Function.Injective (kuhnSimplex (n := n)) := fun _ _ h =>
-  kuhnSimplex_eq_of_closedInterior_eq (congrArg Affine.Simplex.closedInterior h)
-
-/-- The Kuhn triangulation of the unit cube has `n!` simplices. -/
-theorem card_kuhnMesh_simplices : (kuhnMesh n).simplices.card = n.factorial := by
-  classical
-  simp only [kuhnMesh, SimplicialMesh.ofConforming]
-  rw [Finset.card_image_of_injective _ kuhnSimplex_injective, Finset.card_univ,
-    Fintype.card_perm, Fintype.card_fin]
 
 /-! ### Volume -/
 

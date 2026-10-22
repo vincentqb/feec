@@ -25,9 +25,10 @@ below holds for all `A₊, Aₓ, ω`.
 
 * `planeWaveTSD`: the plane wave is a classical TSD solution of `E' = −curl B`, `B' = curl E` on
   `ℝ³` (`Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD`).
-* **`planeWave_unique`**: on the unit cube, the plane wave is the unique solution of
-  `U' = L_max U` with its own boundary data and initial value, and it is TSD at every time: TSD
-  propagates for the datum actually run. (On every bounded open `Ω`: `planeWave_unique_of_bounded`.)
+* On every bounded open `Ω`, in particular the unit cube, the restriction of the plane wave is
+  the unique solution of `U' = L_max U` with its own boundary data and initial value, and it is
+  TSD at every time (`Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD.restrict_unique` for
+  `planeWaveTSD`): TSD propagates for the datum actually run.
 * **`exists_not_propagates`**: for **every** whole-space TSD solution `R` and every nonempty bounded
   open `Ω`, there is a TSD perturbation `W₀ ∈ D(L) ∩ K` of the initial value such that the
   solution with the boundary data of `R` from the TSD datum `R(0) + W₀` exists and leaves `K` on
@@ -49,12 +50,8 @@ flat torus. On the Fourier side of `Feec.Models.Torus.GradCurl` (coefficients in
 * `wave_modeVec`: for every fibre complex, single-frequency fields `δ_k v` lie in `D(L)` and
   `L (δ_k v) = δ_k (L_{2πk} v)`; `fibreWave_pwVec`: `(0, E₀, B₀)` is an eigenvector of the fibre
   wave operator at `2πn e_z` with eigenvalue `−2πi n`.
-* `torusPlaneWave`: `U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`, `ω = 2πn`, the coefficients of
-  `(0, E₀, B₀) sin ω(z − t)`: `physField P n t` has components `P_{ab} sin 2πn(z − t)`
-  (`sinWave_proj`) and `fieldFourier_physField`, `fieldFourier_physField_B` identify its Fourier
-  coefficients with the `E`- and `B`-components of `U(t)`; **`isStrongSolution_torusPlaneWave`**
-  (exact solution),
-  `torusPlaneWave_mem` (TSD at every time), `torusPlaneWave_unique`.
+* `torusPlaneWave`: `U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`, `ω = 2πn`, the Fourier
+  coefficients of `(0, E₀, B₀) sin ω(z − t)`; `modeVec_kz_mem`: `u±` are TSD.
 * **`cnTorusPlaneWave_props`**: the Crank–Nicolson iterates (time-discrete, space-continuous) from
   `U(0)` are `(2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)` with `|λ±| = 1`: exact energy conservation
   `‖Uₖ‖ = ‖U₀‖`, TSD at every step, and a pure phase error.
@@ -155,21 +152,7 @@ def planeWaveTSD (Ap Ax w : ℝ) : WholeSpaceTSD where
     simp only [pd_planeWave, Fin.sum_univ_three]
     fin_cases j <;> simp [amplitudeB]
 
-/-! ## Uniqueness and TSD propagation for the datum actually run -/
-
-/-- **On every bounded open `Ω`, the plane wave is the unique solution with its own data, and it
-is TSD for all time**: every solution `V` of `V' = L_max V` on `[a, b]` with the boundary data of
-the plane wave (`σ = 0`, `E × n = E_ex × n`) and `V(a) = (0, E_ex(a), B_ex(a))` is the plane wave,
-and `V(t) ∈ {0} × L²(TSD) × L²(TSD)` for all `t ∈ [a, b]`. -/
-theorem planeWave_unique_of_bounded (Ap Ax w : ℝ) {Ω : Set R3} (hΩ : IsOpen Ω)
-    (hb : Bornology.IsBounded Ω) {a b : ℝ} {V : ℝ → State Ω}
-    (hV : Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave (Icc a b) 0
-      ((planeWaveTSD Ap Ax w).restrict hΩ hb) V)
-    (hV0 : V a = (planeWaveTSD Ap Ax w).restrict hΩ hb a) :
-    EqOn V ((planeWaveTSD Ap Ax w).restrict hΩ hb) (Icc a b) ∧
-      ∀ t ∈ Icc a b, V t ∈ constraint Ω :=
-  ⟨(planeWaveTSD Ap Ax w).restrict_unique hΩ hb hV hV0,
-    (planeWaveTSD Ap Ax w).restrict_propagates hΩ hb hV hV0⟩
+/-! ## The unit cube -/
 
 /-- The unit cube `(0, 1)³`. -/
 abbrev unitCube : Set R3 := Models.Cube.Geometry.openCube 0 1
@@ -178,22 +161,6 @@ theorem isOpen_unitCube : IsOpen unitCube := Models.Cube.Geometry.isOpen_openCub
 
 theorem isBounded_unitCube : Bornology.IsBounded unitCube :=
   Models.Cube.Geometry.isBounded_openCube 0 1
-
-theorem nonempty_unitCube : unitCube.Nonempty :=
-  ⟨fun _ => 1 / 2, fun i _ => by simp; norm_num⟩
-
-/-- **The Ch. 7 run on the unit cube**: with the thesis' boundary conditions and the inhomogeneous
-data of `fem4gr` (`σ = 0`, `E × n = E_ex × n` on `∂(0, 1)³`) and the initial value of the plane
-wave, the plane wave is the unique solution on `[0, T]` (the run uses `T = 7.5`), and it is TSD at
-every time. -/
-theorem planeWave_unique (Ap Ax w T : ℝ) {V : ℝ → State unitCube}
-    (hV : Evolution.IsBoundarySolution (thesisWaveMax isOpen_unitCube)
-      (gradCurl ℝ isOpen_unitCube).wave (Icc 0 T) 0
-      ((planeWaveTSD Ap Ax w).restrict isOpen_unitCube isBounded_unitCube) V)
-    (hV0 : V 0 = (planeWaveTSD Ap Ax w).restrict isOpen_unitCube isBounded_unitCube 0) :
-    EqOn V ((planeWaveTSD Ap Ax w).restrict isOpen_unitCube isBounded_unitCube) (Icc 0 T) ∧
-      ∀ t ∈ Icc 0 T, V t ∈ constraint unitCube :=
-  planeWave_unique_of_bounded Ap Ax w isOpen_unitCube isBounded_unitCube hV hV0
 
 /-! ## The homogeneous refutation transported to data from whole-space solutions -/
 
@@ -225,7 +192,6 @@ theorem exists_not_propagates (W : WholeSpaceTSD) {Ω : Set R3} (hΩ : IsOpen Ω
     obtain ⟨t, ht, hnot⟩ := hall T hT (U - W.restrict hΩ hb) (by simp [hU0]) hW
     refine ⟨t, ht, fun hmem => hnot ?_⟩
     exact Submodule.sub_mem _ hmem (W.restrict_mem hΩ hb t)
-
 
 /-! ## The periodic run on `𝕋³` (Fourier side) -/
 
@@ -356,7 +322,6 @@ theorem wave_modeVec (k : d → ℤ) (v : ∀ i, E i) :
 
 end TorusModes
 
-
 section PeriodicRun
 
 open Feec.Fourier Feec.Fourier.GradCurl ShortHilbertComplex
@@ -464,7 +429,6 @@ theorem fibreWave_pwVec (Ap Ax : ℝ) (n : ℤ) :
 
 end PeriodicRun
 
-
 section PeriodicSolution
 
 open Feec.Fourier Feec.Fourier.GradCurl ShortHilbertComplex Models.Torus.GradCurl
@@ -530,7 +494,6 @@ def torusPlaneWave (Ap Ax : ℝ) (n : ℤ) (t : ℝ) : PiLp 2 Space :=
 
 end PeriodicSolution
 
-
 section PeriodicTheorems
 
 open Feec.Fourier Feec.Fourier.GradCurl ShortHilbertComplex Models.Torus.GradCurl
@@ -540,11 +503,6 @@ variable (Ap Ax : ℝ) (n : ℤ)
 /-- The frequency `ω = 2πn` as a complex number. -/
 abbrev omegaC : ℂ := ((2 * Real.pi * n : ℝ) : ℂ)
 
-theorem wave_uPlus :
-    complex.wave ⟨uPlus Ap Ax n, mem_domain_modeVec Ap Ax n⟩ =
-      (-(Complex.I * omegaC n)) • uPlus Ap Ax n :=
-  wave_modeVec_kz Ap Ax n
-
 theorem wave_uMinus :
     complex.wave ⟨uMinus Ap Ax n, mem_domain_modeVec Ap Ax (-n)⟩ =
       (Complex.I * omegaC n) • uMinus Ap Ax n := by
@@ -552,64 +510,6 @@ theorem wave_uMinus :
   congr 1
   push_cast
   ring
-
-theorem mem_graph_uPlus :
-    (uPlus Ap Ax n, (-(Complex.I * omegaC n)) • uPlus Ap Ax n) ∈ complex.wave.graph := by
-  rw [← wave_uPlus]; exact complex.wave.mem_graph ⟨uPlus Ap Ax n, mem_domain_modeVec Ap Ax n⟩
-
-theorem mem_graph_uMinus :
-    (uMinus Ap Ax n, (Complex.I * omegaC n) • uMinus Ap Ax n) ∈ complex.wave.graph := by
-  rw [← wave_uMinus]
-  exact complex.wave.mem_graph ⟨uMinus Ap Ax n, mem_domain_modeVec Ap Ax (-n)⟩
-
-theorem hasDerivAt_cexp_mul (a : ℂ) (t : ℝ) :
-    HasDerivAt (fun t : ℝ => Complex.exp (a * t)) (a * Complex.exp (a * t)) t := by
-  have h := ((hasDerivAt_id t).ofReal_comp.const_mul a).cexp
-  convert h using 1
-  · simp
-  · simp [mul_comm]
-
-/-- **The periodic plane wave is an exact solution on `𝕋³`**: `U(t)` (the Fourier coefficients of
-`(0, E₀, B₀) sin ω(z − t)`, `ω = 2πn`) is a strong solution of the Hodge wave equation
-`U' = L U` of the periodic grad–curl complex on every time set. -/
-theorem isStrongSolution_torusPlaneWave (I : Set ℝ) :
-    Evolution.IsStrongSolution complex.wave I 0 (torusPlaneWave Ap Ax n) := by
-  refine Evolution.IsStrongSolution.of_deriv fun t _ => ?_
-  refine ⟨(2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
-      ((-(Complex.I * omegaC n)) • uPlus Ap Ax n) -
-      Complex.exp (Complex.I * omegaC n * t) • ((Complex.I * omegaC n) • uMinus Ap Ax n)), ?_, ?_⟩
-  · have := complex.wave.graph.smul_mem (2 * Complex.I)⁻¹ (complex.wave.graph.sub_mem
-      (complex.wave.graph.smul_mem (Complex.exp (-(Complex.I * omegaC n) * t))
-        (mem_graph_uPlus Ap Ax n))
-      (complex.wave.graph.smul_mem (Complex.exp (Complex.I * omegaC n * t))
-        (mem_graph_uMinus Ap Ax n)))
-    rw [Prod.smul_mk, Prod.smul_mk, Prod.mk_sub_mk, Prod.smul_mk] at this
-    exact this
-  · rw [Pi.zero_apply, add_zero]
-    have h1 := (hasDerivAt_cexp_mul (-(Complex.I * omegaC n)) t).smul_const (uPlus Ap Ax n)
-    have h2 := (hasDerivAt_cexp_mul (Complex.I * omegaC n) t).smul_const (uMinus Ap Ax n)
-    have := ((h1.sub h2).const_smul (2 * Complex.I)⁻¹).hasDerivWithinAt (s := I)
-    convert this using 1
-    · funext y; rfl
-    · rw [smul_smul, smul_smul, mul_comm (Complex.exp _), mul_comm (Complex.exp _)]
-
-/-- **TSD at every time**: `U(t) ∈ K = {0} × L²(TSD) × L²(TSD)`. -/
-theorem torusPlaneWave_mem (t : ℝ) :
-    torusPlaneWave Ap Ax n t ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint :=
-  Submodule.smul_mem _ _ (Submodule.sub_mem _ (Submodule.smul_mem _ _ (modeVec_kz_mem Ap Ax n))
-    (Submodule.smul_mem _ _ (modeVec_kz_mem Ap Ax (-n))))
-
-/-- **Uniqueness and TSD propagation for the periodic run**: every strong solution on `[a, b]`
-with the initial value of the plane wave is the plane wave, hence TSD at every time (this also
-follows from `Feec.Models.Torus.GradCurl.tsd_existsUnique`). -/
-theorem torusPlaneWave_unique {a b : ℝ} {V : ℝ → PiLp 2 Space}
-    (hV : Evolution.IsStrongSolution complex.wave (Icc a b) 0 V)
-    (h0 : V a = torusPlaneWave Ap Ax n a) :
-    EqOn V (torusPlaneWave Ap Ax n) (Icc a b) ∧
-      ∀ t ∈ Icc a b, V t ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint := by
-  have he := hV.unique complex.isSkewAdjoint_wave.isDissipative
-    (isStrongSolution_torusPlaneWave Ap Ax n _) h0
-  exact ⟨he, fun t ht => (he ht).symm ▸ torusPlaneWave_mem Ap Ax n t⟩
 
 /-! ### Crank–Nicolson for the periodic run -/
 
@@ -634,7 +534,7 @@ theorem cnTorusPlaneWave_zero (s : ℝ) :
 theorem isCNStep_cnTorusPlaneWave (s : ℝ) (k : ℕ) :
     TimeStepping.IsCNStep complex.wave s (cnTorusPlaneWave Ap Ax n s k)
       (cnTorusPlaneWave Ap Ax n s (k + 1)) := by
-  have hp := TimeStepping.isCNStep_of_eigen (mem_domain_modeVec Ap Ax n) (wave_uPlus Ap Ax n)
+  have hp := TimeStepping.isCNStep_of_eigen (mem_domain_modeVec Ap Ax n) (wave_modeVec_kz Ap Ax n)
     (s := s) (one_sub_ne_zero s (by simp))
   have hm := TimeStepping.isCNStep_of_eigen (mem_domain_modeVec Ap Ax (-n)) (wave_uMinus Ap Ax n)
     (s := s) (one_sub_ne_zero s (by simp))
@@ -695,130 +595,5 @@ theorem amp_eq_exp_phase (s : ℝ) :
     positivity
 
 end PeriodicTheorems
-
-
-section PeriodicPhysical
-
-open UnitAddTorus Feec.Fourier Feec.Fourier.GradCurl
-
-noncomputable local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
-
-local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
-
-/-- The continuous function `(2i)⁻¹ (e^{-iωt} e_{n e_z} − e^{iωt} e_{−n e_z})` on `𝕋³`,
-`ω = 2πn`: `sin 2πn(z − t)` (`sinWave_proj`). -/
-def sinWave (n : ℤ) (t : ℝ) : C(UnitAddTorus (Fin 3), ℂ) :=
-  (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) • mFourier (kz n) -
-    Complex.exp (Complex.I * omegaC n * t) • mFourier (kz (-n)))
-
-theorem sinWave_proj (n : ℤ) (t : ℝ) (y : Fin 3 → ℝ) :
-    sinWave n t (TorusWeak.proj y) = (Real.sin (2 * Real.pi * n * (y 2 - t)) : ℂ) := by
-  simp only [sinWave, ContinuousMap.smul_apply, ContinuousMap.sub_apply, TorusWeak.mFourier_proj,
-    kz, Fin.sum_univ_three, smul_eq_mul]
-  simp only [Pi.single_apply, Fin.reduceEq, ite_false, ite_true, Int.cast_zero, zero_mul, zero_add,
-    add_zero, Int.cast_neg]
-  rw [Complex.ofReal_sin, Complex.sin, ← Complex.exp_add, ← Complex.exp_add]
-  have e1 : -(Complex.I * omegaC n) * t + 2 * Real.pi * Complex.I * (n * y 2) =
-      (2 * Real.pi * n * (y 2 - t) : ℝ) * Complex.I := by push_cast; ring
-  have e2 : Complex.I * omegaC n * t + 2 * Real.pi * Complex.I * (-(n : ℂ) * y 2) =
-      -((2 * Real.pi * n * (y 2 - t) : ℝ) * Complex.I) := by push_cast; ring
-  rw [e1, e2]
-  field_simp
-  ring_nf
-  rw [Complex.I_sq]
-  ring
-
-/-- **The physical plane-wave field on `𝕋³`**: components `P_{ab} sin 2πn(z − t)` (by
-`sinWave_proj`), as an element of `L²(𝕋³; ℂ³ˣ³)`. -/
-def physField (P : Matrix (Fin 3) (Fin 3) ℝ) (n : ℤ) (t : ℝ) :
-    PiLp 2 (fun _ : Fin 3 × Fin 3 => Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin 3)))) :=
-  WithLp.toLp 2 fun ab => (P ab.1 ab.2 : ℂ) • (sinWave n t).toLp 2 volume ℂ
-
-theorem toLp_sinWave (n : ℤ) (t : ℝ) : (sinWave n t).toLp 2 volume ℂ =
-    (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) • mFourierLp 2 (kz n) -
-      Complex.exp (Complex.I * omegaC n * t) • mFourierLp 2 (kz (-n))) := by
-  simp only [sinWave, map_smul, map_sub]
-
-theorem mFourierCoeff_mFourierLp (m k : Fin 3 → ℤ) :
-    mFourierCoeff (mFourierLp 2 m) k = if k = m then 1 else 0 := by
-  rw [← mFourierBasis_repr, ← coe_mFourierBasis, HilbertBasis.repr_self, lp.single_apply,
-    Pi.single_apply]
-
-/-- **The Fourier coefficients of the physical electric field are the `E`-component of
-`torusPlaneWave`** (`Feec.Fourier.Torus.fieldFourier`, Parseval's isometry). -/
-theorem fieldFourier_physField (Ap Ax : ℝ) (n : ℤ) (t : ℝ) :
-    Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeE Ap Ax) n t) =
-      (torusPlaneWave Ap Ax n t 1 : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) := by
-  refine Lp.ext_count fun k => ?_
-  have hsmul : ∀ (c : ℂ) (x : Models.Torus.GradCurl.Space 1), ⇑(c • x) = c • ⇑x :=
-    fun c x => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul c x)
-  have hsub : ∀ (x y : Models.Torus.GradCurl.Space 1), ⇑(x - y) = ⇑x - ⇑y :=
-    fun x y => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_sub x y)
-  have hR : ((torusPlaneWave Ap Ax n t 1 : Models.Torus.GradCurl.Space 1) :
-      (Fin 3 → ℤ) → ShortHilbertComplex.W3 Vec Mat Mat 1) k =
-      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
-        ((Pi.single (kz n) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
-        Complex.exp (Complex.I * omegaC n * t) •
-          ((Pi.single (kz (-n)) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k)) := by
-    simp only [torusPlaneWave, PiLp.smul_apply, PiLp.sub_apply]
-    rw [hsmul, Pi.smul_apply, hsub, Pi.sub_apply, hsmul, hsmul, Pi.smul_apply, Pi.smul_apply]
-    simp only [modeVec]
-    rw [coeFn_mode, coeFn_mode]
-    rfl
-  refine (?_ : ((Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeE Ap Ax) n t) :
-      Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → Mat) k =
-      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
-        ((Pi.single (kz n) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
-        Complex.exp (Complex.I * omegaC n * t) •
-          ((Pi.single (kz (-n)) (cAmp (amplitudeE Ap Ax)) : (Fin 3 → ℤ) → Mat) k))).trans hR.symm
-  ext p
-  rw [Torus.fieldFourier_apply]
-  change mFourierCoeff ((amplitudeE Ap Ax p.1 p.2 : ℂ) • (sinWave n t).toLp 2 volume ℂ) k = _
-  rw [toLp_sinWave, ← mFourierBasis_repr, ← coe_mFourierBasis, map_smul, map_smul, map_sub,
-    map_smul, map_smul, HilbertBasis.repr_self, HilbertBasis.repr_self]
-  simp only [lp.coeFn_smul, lp.coeFn_sub, Pi.smul_apply, Pi.sub_apply, lp.single_apply,
-    smul_eq_mul, PiLp.smul_apply, PiLp.sub_apply]
-  simp only [Pi.single_apply]
-  split_ifs <;> simp <;> ring
-
-/-- **The Fourier coefficients of the physical magnetic field are the `B`-component of
-`torusPlaneWave`** (`Feec.Fourier.Torus.fieldFourier`, Parseval's isometry). -/
-theorem fieldFourier_physField_B (Ap Ax : ℝ) (n : ℤ) (t : ℝ) :
-    Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeB Ap Ax) n t) =
-      (torusPlaneWave Ap Ax n t 2 : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) := by
-  refine Lp.ext_count fun k => ?_
-  have hsmul : ∀ (c : ℂ) (x : Models.Torus.GradCurl.Space 2), ⇑(c • x) = c • ⇑x :=
-    fun c x => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul c x)
-  have hsub : ∀ (x y : Models.Torus.GradCurl.Space 2), ⇑(x - y) = ⇑x - ⇑y :=
-    fun x y => Lp.coeFn_eq_count_iff.1 (Lp.coeFn_sub x y)
-  have hR : ((torusPlaneWave Ap Ax n t 2 : Models.Torus.GradCurl.Space 2) :
-      (Fin 3 → ℤ) → ShortHilbertComplex.W3 Vec Mat Mat 2) k =
-      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
-        ((Pi.single (kz n) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
-        Complex.exp (Complex.I * omegaC n * t) •
-          ((Pi.single (kz (-n)) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k)) := by
-    simp only [torusPlaneWave, PiLp.smul_apply, PiLp.sub_apply]
-    rw [hsmul, Pi.smul_apply, hsub, Pi.sub_apply, hsmul, hsmul, Pi.smul_apply, Pi.smul_apply]
-    simp only [modeVec]
-    rw [coeFn_mode, coeFn_mode]
-    rfl
-  refine (?_ : ((Torus.fieldFourier (Fin 3) (Fin 3 × Fin 3) (physField (amplitudeB Ap Ax) n t) :
-      Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → Mat) k =
-      (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * omegaC n) * t) •
-        ((Pi.single (kz n) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k) -
-        Complex.exp (Complex.I * omegaC n * t) •
-          ((Pi.single (kz (-n)) (cAmp (amplitudeB Ap Ax)) : (Fin 3 → ℤ) → Mat) k))).trans hR.symm
-  ext p
-  rw [Torus.fieldFourier_apply]
-  change mFourierCoeff ((amplitudeB Ap Ax p.1 p.2 : ℂ) • (sinWave n t).toLp 2 volume ℂ) k = _
-  rw [toLp_sinWave, ← mFourierBasis_repr, ← coe_mFourierBasis, map_smul, map_smul, map_sub,
-    map_smul, map_smul, HilbertBasis.repr_self, HilbertBasis.repr_self]
-  simp only [lp.coeFn_smul, lp.coeFn_sub, Pi.smul_apply, Pi.sub_apply, lp.single_apply,
-    smul_eq_mul, PiLp.smul_apply, PiLp.sub_apply]
-  simp only [Pi.single_apply]
-  split_ifs <;> simp <;> ring
-
-end PeriodicPhysical
 
 end Feec.Numerics.PlaneWaveCube

@@ -690,18 +690,6 @@ def polyMinusSimplexElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1
   isUnisolvent := isUnisolvent_localDofMinus hp hr hk
   faceTrace_eq f _ _ h := faceTrace_eq_of_localDofMinus_eq hp hr f h
 
-/-! ### Mathlib simplices -/
-
-/-- Unisolvence of the degrees of freedom of `P_rΛᵏ(T)` on a Mathlib `n`-simplex `T`. -/
-theorem isUnisolvent_localDof_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r k : ℕ}
-    (hr : 1 ≤ r) (hk : k ≤ n) : IsUnisolvent (localDof T.points r k) :=
-  isUnisolvent_localDof (isUnit_det_edgeMatrix T) hr hk
-
-/-- Unisolvence of the degrees of freedom of `P_r⁻Λᵏ(T)` on a Mathlib `n`-simplex `T`. -/
-theorem isUnisolvent_localDofMinus_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r k : ℕ}
-    (hr : 1 ≤ r) (hk : k ≤ n) : IsUnisolvent (localDofMinus T.points r k) :=
-  isUnisolvent_localDofMinus (isUnit_det_edgeMatrix T) hr hk
-
 /-! ### The Leibniz rule and Stokes' theorem for moments -/
 
 /-- The coefficientwise partial derivative of the exterior product. -/

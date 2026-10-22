@@ -33,8 +33,7 @@ and its estimates are proved for the Whitney complexes of the cube in
 
 * `isUnisolvent_iff_forall_eq_zero`: over a field with `dim P = #ι`, unisolvence is the
   vanishing criterion `(∀ i, ℓ i p = 0) → p = 0`.
-* `dof_interp`, `interp_incl`, `incl_interp_idem`: `Π` reproduces the DOFs, is a projection onto
-  `P`.
+* `dof_interp`, `interp_incl`: `Π` reproduces the DOFs and is the identity on `P`.
 * `interp_comp_eq`: **commuting interpolant** `Π' (d y) = d_h (Π y)`.
 * `comp_eq_of_dof`, `dof_vanish_of_mem_span`, `comp_eq_of_mem_span`: the DOF argument behind
   the commuting property (5.4) of thesis Prop 5.7, without the invalid density step.
@@ -119,11 +118,6 @@ theorem dof_interp (y : Y) (i : ι) : ℓ i (interp hℓ m y) = m i y :=
 theorem interp_incl (incl : P →ₗ[R] Y) (hm : ∀ i, m i ∘ₗ incl = ℓ i) (p : P) :
     interp hℓ m (incl p) = p :=
   hℓ.ext fun i => by rw [dof_interp, ← hm i, LinearMap.comp_apply]
-
-/-- `incl ∘ Π` is a projection of `Y` onto `P`. -/
-theorem incl_interp_idem (incl : P →ₗ[R] Y) (hm : ∀ i, m i ∘ₗ incl = ℓ i) (y : Y) :
-    incl (interp hℓ m (incl (interp hℓ m y))) = incl (interp hℓ m y) := by
-  rw [interp_incl hℓ m incl hm]
 
 /-- **Commuting interpolant.** Let `Π : Y → P`, `Π' : Y' → P'` be canonical interpolants
 (`incl`, `incl'` embed the shape functions), `d : Y → Y'` and `d_h : P → P'` with

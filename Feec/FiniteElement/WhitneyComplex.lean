@@ -14,13 +14,12 @@ assembled global spaces are the **lowest-order Whitney complex**
 a subcomplex of the `L²` de Rham complex `HΛ(Ω)` (`whitneySubcomplex`) whose `k`-th space has
 dimension the number of `k`-faces of the mesh (`finrank_whitney_globalSpace`); with vanishing
 boundary DOFs it is a subcomplex of `H̊Λ(Ω)` for strictly star-shaped (e.g. convex) `Ω`
-(`whitneySubcomplexMin`). In particular this holds for the Freudenthal meshes of a cube
-(`freudenthalWhitneySubcomplex`, `freudenthalWhitneySubcomplexMin`).
+(`whitneySubcomplexMin`), in particular for the Freudenthal meshes of a cube.
 
 The key algebraic facts are that every Whitney form is a trimmed linear form
 `x ↦ α + ι_x β` (`whitneySpace_le_p1MinusForms`), that affine pullbacks preserve these
 (`affinePullback_mem_p1MinusForms`, from `B^* (ι_{B v} β) = ι_v (B^* β)`,
-`Feec.ExteriorFibre.pullback_interior_mulVec`), and
+`Feec.ExteriorFibre.pullback_interior`), and
 that on the reference simplex they are exactly the Whitney forms
 (`p1MinusForms_le_whitneySpace_refVertex`). The tangential trace of a Whitney form on a facet is
 therefore a Whitney form of the facet, determined by the DOFs of the faces of the facet
@@ -32,8 +31,8 @@ therefore a Whitney form of the facet, determined by the DOFs of the faces of th
 * `Feec.FiniteElement.whitneyFaceDof g k`: the face integral over the face `g`, enumerated by
   `faceEnum g`.
 * `Feec.FiniteElement.whitneyElement n`: the Whitney element family.
-* `Feec.FiniteElement.whitneySubcomplex M hΩ`, `whitneySubcomplexMin M hΩ x₀ hstar`,
-  `freudenthalWhitneySubcomplex`, `freudenthalWhitneySubcomplexMin`: the Whitney subcomplexes.
+* `Feec.FiniteElement.whitneySubcomplex M hΩ`, `whitneySubcomplexMin M hΩ x₀ hstar`: the Whitney
+  subcomplexes.
 
 ## Main results
 
@@ -43,15 +42,7 @@ therefore a Whitney form of the facet, determined by the DOFs of the faces of th
 * `isUnisolvent_whitneyFaceDof`, `tangentialTraceEq_of_whitneyFaceDof_eq`,
   `whitneyFaceDof_congr`, `whitneyFaceDof_comp_extDerivC1_mem_span`: the axioms of an element
   family.
-* `finrank_whitney_globalSpace`, `finrank_whitney_V`, `finrank_whitneySubcomplex_V`,
-  `finrank_freudenthalWhitneySubcomplex_V`: **`dim = #{k-faces}`**.
-* `finrank_whitney_globalSpace₀`, `finrank_whitney_V₀`, `finrank_whitneySubcomplexMin_V`,
-  `finrank_freudenthalWhitneySubcomplexMin_V`: with vanishing boundary DOFs,
-  **`dim = #{k-faces not contained in a boundary facet}`**.
-* `mem_whitney_globalSpace_iff`: the global space is the space of piecewise Whitney forms with
-  continuous tangential traces (facet-connected stars).
-* `whitney_globalSpace_zero_continuous` (`k = 0`, Lagrange: continuity) and
-  `whitney_globalSpace_top` (`k = n`, piecewise constants: no interface condition).
+* `finrank_whitney_globalSpace`: **`dim = #{k-faces}`**.
 
 ## References
 
@@ -71,55 +62,11 @@ open MeasureTheory Set Finset
 
 namespace Feec.ExteriorFibre
 
-variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d] [Fintype d] {ι : Type*}
-  [LinearOrder ι]
+variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d] {ι : Type*} [LinearOrder ι]
 
-/-- **Contraction of an iterated product**:
-`ι_v (θ_{g₀} ∧ ⋯ ∧ θ_{g_k}) = Σᵢ (-1)ⁱ ⟨θ_{gᵢ}, v⟩ θ_{g ∖ gᵢ}^∧`, i.e. the algebraic Whitney form with
-the coefficients `⟨θ_i, v⟩`. -/
-theorem interior_wedgeProd_eq_whitneyFibre (v : d → R) (θ : ι → d → R) (g : Finset ι) :
-    interior v (wedgeProd θ g) = whitneyFibre (fun i => ∑ l, θ i l * v l) θ g := by
-  induction g using Finset.induction_on_min with
-  | empty =>
-    funext s
-    simp only [wedgeProd_empty, whitneyFibre, Finset.sum_empty, Pi.zero_apply, interior_apply]
-    refine Finset.sum_eq_zero fun j _ => ?_
-    rw [Pi.single_eq_of_ne (Finset.insert_ne_empty j s), mul_zero]
-  | insert a g ha ih =>
-    rw [wedgeProd_insert_of_lt _ ha, whitneyFibre_insert_of_lt _ _ ha, ← ih]
-    have h := wedge_interior_add_interior_wedge (θ a) v (wedgeProd θ g)
-    rw [eq_sub_iff_add_eq, add_comm, h]
-
-omit [Fintype d] in
 theorem whitneyFibre_add_coeff (c c' : ι → R) (θ : ι → d → R) (g : Finset ι) :
     whitneyFibre (c + c') θ g = whitneyFibre c θ g + whitneyFibre c' θ g := by
   simp only [whitneyFibre, Pi.add_apply, mul_add, add_smul, Finset.sum_add_distrib]
-
-theorem interior_finsetSum_right {β : Type*} (v : d → R) (u : Finset β) (w : β → Finset d → R) :
-    interior v (∑ b ∈ u, w b) = ∑ b ∈ u, interior v (w b) := by
-  funext s
-  simp only [interior_apply, Finset.sum_apply, Finset.mul_sum]
-  exact Finset.sum_comm
-
-/-- **Pullback commutes with contraction**: `B^* (ι_{B v} β) = ι_v (B^* β)`. -/
-theorem pullback_interior_mulVec {κ : Type*} [LinearOrder κ] [Fintype κ] (B : d → κ → R) (v : κ → R)
-    (β : Finset d → R) :
-    pullback B (interior (fun i => ∑ l, B i l * v l) β) = interior v (pullback B β) := by
-  have hβ : β = ∑ t, β t • wedgeProd (fun j : d => (Pi.single j (1 : R) : d → R)) t := by
-    funext s
-    simp [Finset.sum_apply, wedgeProd_single, Pi.single_apply]
-  rw [hβ]
-  simp only [interior_finsetSum_right, interior_smul, pullback_sum, pullback_smul]
-  refine Finset.sum_congr rfl fun t _ => ?_
-  congr 1
-  rw [interior_wedgeProd_eq_whitneyFibre, pullback_whitneyFibre, pullback_wedgeProd, interior_wedgeProd_eq_whitneyFibre]
-  have hcov : (fun j => covPullback B (Pi.single j (1 : R))) = B := by
-    funext j l
-    simp [covPullback, Pi.single_apply]
-  rw [hcov]
-  congr 1
-  funext i
-  simp [Pi.single_apply, covPullback]
 
 end Feec.ExteriorFibre
 
@@ -160,7 +107,7 @@ theorem whitneyForm_mem_p1MinusForms (p : Fin (n + 1) → Fin n → ℝ) {k : �
       ((fun _ => whitneyFibre (baryCoord p 0) (baryGrad p) f.1) +
         fun x => interior x (wedgeProd (baryGrad p) f.1)) := by
     funext x
-    rw [whitneyForm, hc x, whitneyFibre_add_coeff, ← interior_wedgeProd_eq_whitneyFibre]
+    rw [whitneyForm, hc x, whitneyFibre_add_coeff, ← interior_wedgeProd]
     rfl
   rw [hw]
   refine Submodule.smul_mem _ _ (Submodule.add_mem _ (const_mem_p1MinusForms ?_)
@@ -195,7 +142,7 @@ theorem affinePullback_mem_p1MinusForms (B : Fin n → Fin m → ℝ) (b : Fin n
         rw [affinePullback_apply]
         have ha : affine B b y = (fun i => ∑ l, B i l * y l) + b := by
           funext i; rw [affine_apply]; rfl
-        rw [ha, interior_add_left, pullback_add, pullback_interior_mulVec]
+        rw [ha, interior_add_left, pullback_add, pullback_interior]
         rfl
       rw [e]
       exact Submodule.add_mem _ (interior_mem_p1MinusForms (hβ.pullback B))
@@ -524,72 +471,8 @@ theorem finrank_whitney_globalSpace (M : SimplicialMesh n) (k : ℕ) :
     Module.finrank ℝ ((whitneyElement n).globalSpace M k) = (M.faces k).ncard := by
   rw [LocalElement.finrank_globalSpace, card_globalDofIdx_whitneyElement]
 
-/-- **`dim Vₕᵏ = #{k-faces of M}`**: the glued Whitney spaces in `L²(Ω; Λᵏ)`. -/
-theorem finrank_whitney_V (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℕ) :
-    Module.finrank ℝ ((whitneyElement n).V M k) = (M.faces k).ncard := by
-  rw [LocalElement.finrank_V _ M hΩ, card_globalDofIdx_whitneyElement]
-
-theorem card_interiorDofIdx_whitneyElement (M : SimplicialMesh n) (k : ℕ) :
-    Fintype.card ((whitneyElement n).InteriorDofIdx M k) =
-      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard := by
-  rw [← Nat.card_eq_fintype_card, ← Nat.card_coe_set_eq]
-  refine Nat.card_congr
-    { toFun := fun p => ⟨p.1.1.1, ⟨p.1.2.2, (LocalElement.mem_meshFaces M).1 p.1.1.2⟩, p.2⟩
-      invFun := fun g => ⟨⟨⟨g.1, (LocalElement.mem_meshFaces M).2 g.2.1.2⟩, ⟨(), g.2.1.1⟩⟩,
-        g.2.2⟩
-      left_inv := fun _ => rfl
-      right_inv := fun _ => rfl }
-
-/-- **`dim Λ̊_hᵏ(M) = #{k-faces of M not contained in a boundary facet}`** for the Whitney
-complex with vanishing boundary DOFs. -/
-theorem finrank_whitney_globalSpace₀ (M : SimplicialMesh n) (k : ℕ) :
-    Module.finrank ℝ ((whitneyElement n).globalSpace₀ M k) =
-      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard := by
-  rw [LocalElement.finrank_globalSpace₀, card_interiorDofIdx_whitneyElement]
-
-/-- **`dim V̊ₕᵏ = #{k-faces of M not contained in a boundary facet}`**. -/
-theorem finrank_whitney_V₀ (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℕ) :
-    Module.finrank ℝ ((whitneyElement n).V₀ M k) =
-      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard := by
-  rw [LocalElement.finrank_V₀ _ M hΩ, card_interiorDofIdx_whitneyElement]
-
 instance (k : ℕ) : IsEmpty (WhitneyDofIdx (∅ : Finset (Fin n → ℝ)) k) :=
   ⟨fun i => by have := i.2; simp at this⟩
-
-/-- **The global Whitney space is the space of piecewise Whitney forms with continuous tangential
-traces** (for meshes with facet-connected face stars). -/
-theorem mem_whitney_globalSpace_iff (M : SimplicialMesh n) (hM : LocalElement.FacetConnected M)
-    {k : ℕ} {u : (whitneyElement n).Piecewise M k} :
-    u ∈ (whitneyElement n).globalSpace M k ↔ ∀ F ∈ M.facets, ∀ T T' : M.simplices,
-      F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
-        F ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) →
-          ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)),
-            TangentialTraceEq F k ((u T : FormField n) x) ((u T' : FormField n) x) :=
-  (whitneyElement n).mem_globalSpace_iff M hM (inferInstanceAs (IsEmpty (WhitneyDofIdx ∅ k)))
-
-/-- **`k = 0`: Lagrange `P₁`**: global Whitney `0`-forms are continuous across the facets. -/
-theorem whitney_globalSpace_zero_continuous (M : SimplicialMesh n)
-    {u : (whitneyElement n).Piecewise M 0} (hu : u ∈ (whitneyElement n).globalSpace M 0)
-    {F : Finset (Fin n → ℝ)} (hF : F ∈ M.facets) (T T' : M.simplices)
-    (hT : F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n))
-    (hT' : F ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n))
-    {x : Fin n → ℝ} (hx : x ∈ convexHull ℝ (F : Set (Fin n → ℝ))) :
-    (u T : FormField n) x ∅ = (u T' : FormField n) x ∅ :=
-  (tangentialTraceEq_zero_iff F _ _).1
-    ((whitneyElement n).tangentialTraceEq_of_mem_globalSpace M hu hF T T' hT hT' x hx)
-
-/-- **`k = n`: discontinuous piecewise constants**: every piecewise Whitney `n`-form is global
-(there is no interface condition). -/
-theorem whitney_globalSpace_top (M : SimplicialMesh n) :
-    (whitneyElement n).globalSpace M n = ⊤ := by
-  refine eq_top_iff.2 fun u _ T T' g hg hg' i => ?_
-  have hgT : g = vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) :=
-    Finset.eq_of_subset_of_card_le hg (by rw [card_vertexSet, i.2])
-  have hgT' : g = vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
-    Finset.eq_of_subset_of_card_le hg' (by rw [card_vertexSet, i.2])
-  have : T = T' := Subtype.ext (M.vertexSet_injOn T.2 T'.2 (hgT.symm.trans hgT'))
-  subst this
-  rfl
 
 /-- **The lowest-order Whitney complex** `P₁⁻Λ⁰(M) → P₁⁻Λ¹(M) → ⋯ → P₁⁻Λⁿ(M)` on a conforming mesh
 of an open `Ω ⊆ ℝⁿ`, as a subcomplex of the maximal `L²` de Rham complex `HΛ(Ω)` (in `ℝ³`:
@@ -598,16 +481,9 @@ def whitneySubcomplex [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) 
     ((deRham ℝ n).maximalComplex hΩ).Subcomplex :=
   (whitneyElement n).subcomplex M hΩ
 
-theorem whitneySubcomplex_V [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℤ) :
-    (whitneySubcomplex M hΩ).V k = (whitneyElement n).V M k := rfl
-
 instance [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℤ) :
     FiniteDimensional ℝ ((whitneySubcomplex M hΩ).V k) :=
   inferInstanceAs (FiniteDimensional ℝ ((whitneyElement n).V M k))
-
-theorem finrank_whitneySubcomplex_V [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain)
-    (k : ℕ) : Module.finrank ℝ ((whitneySubcomplex M hΩ).V k) = (M.faces k).ncard :=
-  finrank_whitney_V M hΩ k
 
 /-- **The Whitney complex with vanishing boundary DOFs** as a subcomplex of the minimal `L²` de
 Rham complex `H̊Λ(Ω)`, for `Ω` strictly star-shaped with respect to `x₀`. -/
@@ -621,13 +497,6 @@ instance [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (x₀ : Fin n
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
     (k : ℤ) : FiniteDimensional ℝ ((whitneySubcomplexMin M hΩ x₀ hstar).V k) :=
   inferInstanceAs (FiniteDimensional ℝ ((whitneyElement n).V₀ M k))
-
-theorem finrank_whitneySubcomplexMin_V [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain)
-    (x₀ : Fin n → ℝ)
-    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
-    (k : ℕ) : Module.finrank ℝ ((whitneySubcomplexMin M hΩ x₀ hstar).V k) =
-      {g | g ∈ M.faces k ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard :=
-  finrank_whitney_V₀ M hΩ k
 
 /-- A convex open set is strictly star-shaped with respect to each of its points. -/
 theorem add_smul_sub_mem_of_convex {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (hconv : Convex ℝ Ω) {x₀ : Fin n → ℝ}
@@ -657,34 +526,5 @@ theorem center_mem_freudenthalMesh_domain (b : Fin n → ℝ) (s : ℝ) (hs : 0 
   intro i _
   simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, mul_one, Set.mem_Ioo]
   constructor <;> linarith
-
-/-- **The Whitney complex on the level-`N` Freudenthal mesh of the cube** `∏ (bᵢ, bᵢ + s)`,
-a subcomplex of `HΛ` of the cube with `dim Vₕᵏ = #{k-faces}`. -/
-def freudenthalWhitneySubcomplex [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
-    [NeZero N] :
-    ((deRham ℝ n).maximalComplex (isOpen_freudenthalMesh_domain b s hs N)).Subcomplex :=
-  whitneySubcomplex (freudenthalMesh b s hs N) (isOpen_freudenthalMesh_domain b s hs N)
-
-theorem finrank_freudenthalWhitneySubcomplex_V [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s)
-    (N : ℕ) [NeZero N] (k : ℕ) :
-    Module.finrank ℝ ((freudenthalWhitneySubcomplex b s hs N).V k) =
-      ((freudenthalMesh b s hs N).faces k).ncard :=
-  finrank_whitneySubcomplex_V _ _ k
-
-/-- **The Whitney complex with vanishing boundary DOFs on the Freudenthal mesh of a cube**, a
-subcomplex of `H̊Λ` of the cube (cubes are convex). -/
-def freudenthalWhitneySubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
-    [NeZero N] :
-    ((deRham ℝ n).minimalComplex (isOpen_freudenthalMesh_domain b s hs N)).Subcomplex :=
-  whitneySubcomplexMin (freudenthalMesh b s hs N) (isOpen_freudenthalMesh_domain b s hs N) _
-    (add_smul_sub_mem_of_convex (isOpen_freudenthalMesh_domain b s hs N)
-      (convex_freudenthalMesh_domain b s hs N) (center_mem_freudenthalMesh_domain b s hs N))
-
-theorem finrank_freudenthalWhitneySubcomplexMin_V [NeZero n] (b : Fin n → ℝ) (s : ℝ)
-    (hs : 0 < s) (N : ℕ) [NeZero N] (k : ℕ) :
-    Module.finrank ℝ ((freudenthalWhitneySubcomplexMin b s hs N).V k) =
-      {g | g ∈ (freudenthalMesh b s hs N).faces k ∧
-        ¬ ∃ F, (freudenthalMesh b s hs N).IsBoundaryFacet F ∧ g ⊆ F}.ncard :=
-  finrank_whitneySubcomplexMin_V _ _ _ _ k
 
 end Feec.FiniteElement

@@ -17,7 +17,8 @@ one constant on every family that is **shape regular** in the sense of `Feec.Mes
 * **The reference pullback** `F_T^* u` (`refPull`) of a form field and its inverse:
   `u(x) = (B_T⁻¹)^* (F_T^* u)(F_T⁻¹ x)` (`apply_eq_pullback_refPull`). Pullbacks of `k`-forms by a
   matrix with entries `≤ a` are bounded by `2ⁿ (n a)ᵏ` (`norm_pullback_le`); the entries of `B_T`
-  and `B_T⁻¹` are bounded by `‖B_T‖`, `‖B_T⁻¹‖` (`abs_simplexMatrix_le`, `abs_invEdge_le`).
+  and `B_T⁻¹` are bounded by `‖B_T‖`, `‖B_T⁻¹‖` (`abs_simplexMatrix_le`,
+  `Feec.FiniteElement.abs_inv_edgeMatrix_le`).
   Pointwise and Lipschitz bounds (`norm_apply_le_refPull`, `norm_sub_le_refPull`,
   `norm_refMapInv_sub_le`) and the change of variables `∫_T f = |det B_T| ∫_{T̂} f ∘ F_T`
   (`integral_closedInterior_eq`, `abs_det_mul_formL2Sq_refPull_le`) follow.
@@ -26,9 +27,8 @@ one constant on every family that is **shape regular** in the sense of `Feec.Mes
   `sup_{T̂} ‖u‖, Lip_{T̂}(u) ≤ A₀ ‖u‖_{L²(T̂)}`, then on every shape-regular `T`
   `h_T^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with
   `A = invConst n k A₀ C c`. Instances: every affine-invariant `V ≤ P_rΛᵏ`
-  (`exists_inverse_bound_of_le_polySpace`), `P_rΛᵏ` (`exists_inverse_bound_polySpace`),
-  `P_r⁻Λᵏ` (`exists_inverse_bound_polyMinusSpace`) and the Whitney forms `P₁⁻Λᵏ`, coefficientwise
-  (`exists_inverse_bound_p1MinusForms`).
+  (`exists_inverse_bound_of_le_polySpace`), in particular `P_rΛᵏ` and `P_r⁻Λᵏ`, and the Whitney
+  forms `P₁⁻Λᵏ`, coefficientwise (`exists_inverse_bound_p1MinusForms`).
 * **DOF estimates** (`dof_bound_of_ref`): `h_Tᵏ sup_T ‖u‖ ≤ 2ⁿ (n C)ᵏ B Σⱼ |ℓⱼ(F_T^* u)|` for any
   family `ℓ` of functionals with `sup_{T̂} ‖v‖ ≤ B Σⱼ |ℓⱼ(v)|`; for unisolvent DOFs on polynomial
   spaces `exists_dof_bound_of_le_polySpace` (for moment DOFs `ℓⱼ(F_T^* u)` are the moments of `u`
@@ -105,10 +105,6 @@ theorem abs_simplexMatrix_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i j : F
   · subst hl; simp
   · simp [hl]
 
-theorem abs_invEdge_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i j : Fin n) :
-    |invEdge T i j| ≤ ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ :=
-  abs_inv_edgeMatrix_le T i j
-
 /-- **Pointwise bound of a pullback**: `‖M^* α‖ ≤ 2ⁿ (n a)ᵏ ‖α‖` for a `k`-form `α` and a
 matrix with entries bounded by `a`. -/
 theorem norm_pullback_le {m : ℕ} {M : Fin n → Fin m → ℝ} {a : ℝ} (ha : 0 ≤ a)
@@ -143,7 +139,7 @@ theorem norm_apply_le_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) 
     ‖u x‖ ≤ 2 ^ n * (n * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖) ^ k *
       ‖refPull T u (refMapInv T x)‖ := by
   rw [apply_eq_pullback_refPull T u x]
-  exact norm_pullback_le (norm_nonneg _) (abs_invEdge_le T) (isDeg_refPull T hu _)
+  exact norm_pullback_le (norm_nonneg _) (abs_inv_edgeMatrix_le T) (isDeg_refPull T hu _)
 
 /-- `‖u(x) - u(x')‖ ≤ 2ⁿ (n ‖B_T⁻¹‖)ᵏ ‖(F_T^* u)(F_T⁻¹ x) - (F_T^* u)(F_T⁻¹ x')‖`. -/
 theorem norm_sub_le_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : FormField n}
@@ -151,7 +147,7 @@ theorem norm_sub_le_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     ‖u x - u x'‖ ≤ 2 ^ n * (n * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖) ^ k *
       ‖refPull T u (refMapInv T x) - refPull T u (refMapInv T x')‖ := by
   rw [apply_eq_pullback_refPull T u x, apply_eq_pullback_refPull T u x', ← pullback_sub]
-  refine norm_pullback_le (norm_nonneg _) (abs_invEdge_le T) ?_
+  refine norm_pullback_le (norm_nonneg _) (abs_inv_edgeMatrix_le T) ?_
   intro s hs
   rw [Pi.sub_apply, isDeg_refPull T hu _ s hs, isDeg_refPull T hu _ s hs, sub_zero]
 
@@ -165,9 +161,6 @@ theorem norm_refMapInv_sub_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x x' :
 
 /-! ### Change of variables -/
 
-theorem abs_det_linearEquiv (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    |(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ).det| = |LinearMap.det T.linearPart| := rfl
-
 /-- **Change of variables** on a simplex: `∫_T f = |det B_T| ∫_{T̂} f ∘ F_T`. -/
 theorem integral_closedInterior_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (f : (Fin n → ℝ) → ℝ) :
@@ -179,7 +172,6 @@ theorem integral_closedInterior_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   simp_rw [smul_eq_mul]
   rw [integral_const_mul]
   rfl
-
 
 theorem continuous_pullback {ι κ : Type*} [Fintype ι] [LinearOrder ι] [LinearOrder κ]
     (M : ι → κ → ℝ) : Continuous fun α : Finset ι → ℝ => pullback M α := by
@@ -262,7 +254,6 @@ theorem sqrt_abs_det_mul_le {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   refine (Real.sqrt_le_sqrt h).trans (le_of_eq ?_)
   rw [Real.sqrt_mul (by positivity), Real.sqrt_mul (by positivity), Real.sqrt_sq (by positivity)]
 
-
 /-! ### Transfer of reference estimates to shape-regular simplices -/
 
 /-- `0 < h_T` for an `n`-simplex of `ℝⁿ`, `n ≥ 1`. -/
@@ -276,10 +267,6 @@ theorem diam_pos [NeZero n] (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 < dia
   calc 0 < dist (T.points 0) (T.points 1) := dist_pos.2 hne
     _ ≤ diam T := Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded
         (T.point_mem_closedInterior 0) (T.point_mem_closedInterior 1)
-
-theorem refMapInv_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {x : Fin n → ℝ}
-    (hx : x ∈ T.closedInterior) : refMapInv T x ∈ (Mesh.refSimplex n).closedInterior :=
-  (mem_closedInterior_iff_refMapInv T).1 hx
 
 /-- The constant of the transferred inverse estimates. -/
 def invConst (n k : ℕ) (A₀ C c : ℝ) : ℝ :=
@@ -369,7 +356,7 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
   have hinv : 0 ≤ 2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c := by positivity
   constructor
   · intro x hx
-    have hy := refMapInv_mem hx
+    have hy := (mem_closedInterior_iff_refMapInv _).1 hx
     calc √h ^ n * ‖u x‖ ≤ √h ^ n * (2 ^ n * (n * S) ^ k * ‖v (refMapInv T x)‖) :=
           mul_le_mul_of_nonneg_left (norm_apply_le_refPull T hdeg x) hsq
       _ ≤ √h ^ n * (2 ^ n * (n * S) ^ k * (A₀ * √LK)) :=
@@ -381,8 +368,8 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
           refine mul_le_mul_of_nonneg_right ?_ hLT
           exact le_mul_of_one_le_right hinv (by linarith)
   · intro x hx x' hx'
-    have hy := refMapInv_mem hx
-    have hy' := refMapInv_mem hx'
+    have hy := (mem_closedInterior_iff_refMapInv _).1 hx
+    have hy' := (mem_closedInterior_iff_refMapInv _).1 hx'
     have hyy := norm_refMapInv_sub_le T x x'
     have hhS : h * S ≤ C := by
       have := mul_le_mul_of_nonneg_left hBs hh.le
@@ -412,7 +399,6 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
             _ ≤ (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * (1 + C)) *
                   (‖x - x'‖ * √LT) := mul_le_mul_of_nonneg_right this h0
             _ = _ := by ring
-
 
 /-! ### Instances: polynomial forms and trimmed linear forms -/
 
@@ -447,31 +433,6 @@ theorem exists_inverse_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (For
   exact inverse_bound_of_ref (fun u hu x => isDeg_of_mem_polySpace (hV hu) x)
     (fun u hu => (polySpace_le_c1 (hV hu)).continuous) (fun T u hu => hVA _ _ u hu) hA₀ href hC
     hc hh hB hBs hdet hu
-
-/-- **Inverse estimates on shape-regular simplices for `P_rΛᵏ`.** -/
-theorem exists_inverse_bound_polySpace (r k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
-    ∃ A, 0 ≤ A ∧ ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
-      ∀ T ∈ S, 0 < diam T → ∀ u ∈ polySpace n r k,
-        (∀ x ∈ T.closedInterior, √(diam T) ^ n * ‖u x‖ ≤
-          A * √(formL2Sq T.closedInterior u)) ∧
-        (∀ x ∈ T.closedInterior, ∀ x' ∈ T.closedInterior,
-          √(diam T) ^ n * diam T * ‖u x - u x'‖ ≤
-            A * ‖x - x'‖ * √(formL2Sq T.closedInterior u)) :=
-  exists_inverse_bound_of_le_polySpace le_rfl (fun B b _ hu => affinePullback_mem_polySpace B b hu)
-    hC hc
-
-/-- **Inverse estimates on shape-regular simplices for `P_r⁻Λᵏ`** (`1 ≤ r`). -/
-theorem exists_inverse_bound_polyMinusSpace {r : ℕ} (hr : 1 ≤ r) (k : ℕ) {C c : ℝ}
-    (hC : 0 ≤ C) (hc : 0 < c) :
-    ∃ A, 0 ≤ A ∧ ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
-      ∀ T ∈ S, 0 < diam T → ∀ u ∈ polyMinusSpace n r k,
-        (∀ x ∈ T.closedInterior, √(diam T) ^ n * ‖u x‖ ≤
-          A * √(formL2Sq T.closedInterior u)) ∧
-        (∀ x ∈ T.closedInterior, ∀ x' ∈ T.closedInterior,
-          √(diam T) ^ n * diam T * ‖u x - u x'‖ ≤
-            A * ‖x - x'‖ * √(formL2Sq T.closedInterior u)) :=
-  exists_inverse_bound_of_le_polySpace (polyMinusSpace_le_polySpace hr)
-    (fun B b _ hu => affinePullback_mem_polyMinusSpace B b hu) hC hc
 
 /-- **Inverse estimates on shape-regular simplices for the Whitney forms `P₁⁻Λᵏ`**, coefficient-
 wise: `h_T^{n/2} |u(x)ₛ| ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T |u(x)ₛ - u(x')ₛ| ≤
@@ -547,7 +508,7 @@ theorem dof_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
     have := mul_le_mul_of_nonneg_left hBs hh.le
     rwa [show diam T * (C / diam T) = C by field_simp] at this
   have h1 := norm_apply_le_refPull T (hVdeg u hu) x
-  have h2 := href ⟨refPull T u, hVA T u hu⟩ _ (refMapInv_mem hx)
+  have h2 := href ⟨refPull T u, hVA T u hu⟩ _ ((mem_closedInterior_iff_refMapInv _).1 hx)
   have hsum : 0 ≤ ∑ j, |ℓ j ⟨refPull T u, hVA T u hu⟩| := Finset.sum_nonneg fun _ _ => abs_nonneg _
   calc diam T ^ k * ‖u x‖ ≤ diam T ^ k * (2 ^ n * (n * S) ^ k * ‖refPull T u (refMapInv T x)‖) :=
         mul_le_mul_of_nonneg_left h1 (pow_nonneg hh.le k)
@@ -580,7 +541,6 @@ theorem exists_dof_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (FormFie
     hBs.trans (div_le_div_of_nonneg_right (le_abs_self C) hh.le)
   exact dof_bound_of_ref (fun u hu x => isDeg_of_mem_polySpace (hV hu) x)
     (fun T u hu => hVA _ _ u hu) ℓ hB (abs_nonneg C) hh hBs' hu hx
-
 
 /-- **Face integrals under the reference map**: up to orientation,
 `∫_{ĝ} F_T^* u = ∫_{F_T(ĝ)} u` for a `k`-face `ĝ` of the reference simplex. -/
@@ -656,7 +616,7 @@ theorem exists_dof_bound_p1MinusForms (k : ℕ) {C c : ℝ} :
     refine (pi_norm_le_iff_of_nonneg (by positivity)).2 fun t => ?_
     rw [Real.norm_eq_abs]
     refine (haff.abs_le _ t).trans ?_
-    have hy := norm_le_one_of_mem_refSimplex (refMapInv_mem hx)
+    have hy := norm_le_one_of_mem_refSimplex ((mem_closedInterior_iff_refMapInv _).1 hx)
     calc (‖refMapInv T x‖ + 1) * affSize v ≤ 2 * (B₀ * (N * D)) :=
           mul_le_mul (by linarith) (h1.trans (mul_le_mul_of_nonneg_left hsum hB₀))
             (affSize_nonneg _) (by norm_num)

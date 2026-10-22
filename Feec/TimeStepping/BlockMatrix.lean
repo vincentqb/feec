@@ -339,31 +339,6 @@ theorem blockSign_mul_diag (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n�
   refine ⟨fun i => ?_, fun i => ?_, fun i => ?_⟩ <;>
     simp [blockSign, blockSigns, blockMass, blockStiffness, diagonal_mul]
 
-/-- `J (M + sK)` is not positive definite when the `σ` or the `B` block is nonempty, so CG does
-not apply. -/
-theorem not_posDef_blockSign_mul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
-    {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₂ : M₂.PosDef) (G : Matrix n₁ n₀ ℝ)
-    (C : Matrix n₂ n₁ ℝ) (s : ℝ) (hn : Nonempty n₀ ∨ Nonempty n₂) :
-    ¬ (blockSign * (blockMass M₀ M₁ M₂ + s • blockStiffness G C)).PosDef := by
-  intro h
-  obtain ⟨d0, -, d2⟩ := blockSign_mul_diag M₀ M₁ M₂ G C s
-  rcases hn with hn | hn
-  · obtain ⟨i⟩ := hn
-    have := h.diag_pos (i := .inl i); rw [d0] at this; linarith [h₀.diag_pos (i := i)]
-  · obtain ⟨i⟩ := hn
-    have := h.diag_pos (i := .inr (.inr i)); rw [d2] at this; linarith [h₂.diag_pos (i := i)]
-
-/-- Nor is it negative definite when the `E` block is nonempty. -/
-theorem not_posDef_neg_blockSign_mul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
-    {M₂ : Matrix n₂ n₂ ℝ} (h₁ : M₁.PosDef) (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ)
-    [Nonempty n₁] : ¬ (-(blockSign * (blockMass M₀ M₁ M₂ + s • blockStiffness G C))).PosDef := by
-  intro h
-  obtain ⟨-, d1, -⟩ := blockSign_mul_diag M₀ M₁ M₂ G C s
-  obtain ⟨i⟩ := ‹Nonempty n₁›
-  have := h.diag_pos (i := .inr (.inl i))
-  rw [neg_apply, d1] at this
-  linarith [h₁.diag_pos (i := i)]
-
 /-- The symmetrized CN system is equivalent to the CN system. -/
 theorem blockSign_mul_mulVec_iff (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n₁ ℝ)
     (M₂ : Matrix n₂ n₂ ℝ) (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ)
@@ -527,16 +502,6 @@ theorem posDef_schurComplement {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁
     simpa [conjTranspose_eq_transpose_of_trivial] using
       h₂.inv.posSemidef.conjTranspose_mul_mul_same C
   exact h₁.add_posSemidef ((hG.add hC).smul (sq_nonneg s))
-
-/-- The `E` block of the CN step is `S⁻¹(r₁ - s G M₀⁻¹ r₀ - s Cᵀ M₂⁻¹ r₂)`. -/
-theorem block₁_eq_schurComplement_inv {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
-    {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef)
-    (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) {x' r : BlockIdx n₀ n₁ n₂ → ℝ}
-    (hx' : (blockMass M₀ M₁ M₂ + s • blockStiffness G C) *ᵥ x' = r) :
-    block₁ x' = (schurComplement M₀ M₁ M₂ G C s)⁻¹ *ᵥ
-      (block₁ r - s • (G *ᵥ (M₀⁻¹ *ᵥ block₀ r)) - s • (Cᵀ *ᵥ (M₂⁻¹ *ᵥ block₂ r))) :=
-  (mulVec_eq_iff_eq_inv_mulVec (posDef_schurComplement h₀ h₁ h₂ G C s).isUnit _ _).1
-    ((blockMass_add_smul_mulVec_eq_iff_schur M₁ h₀ h₂ G C s x' r).1 hx').2.2
 
 end ThreeBlock
 

@@ -2,7 +2,6 @@ module
 
 public import Mathlib.Algebra.Order.Star.Real
 public import Mathlib.Analysis.Convex.Side
-public import Mathlib.Analysis.Convex.SimplicialComplex.Basic
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Analysis.LocallyConvex.AbsConvexOpen
 public import Mathlib.Analysis.Normed.Affine.AddTorsorBases
@@ -27,7 +26,7 @@ convex hull of their common vertices ([Arnold2018], Ch. 7; [Ciarlet2002], Ch. 2)
 * `SimplicialMesh n`: a conforming simplicial mesh of `closure Ω`.
 * `SimplicialMesh.faces M k` (vertex sets of the `k`-faces), `M.facets`, `M.cofaces F` (the
   `n`-simplices containing a facet), `M.IsInteriorFacet F`, `M.IsBoundaryFacet F`.
-* `SimplicialMesh.toSimplicialComplex M`: the Mathlib `Geometry.SimplicialComplex` of all faces.
+
 * `diam T` (`h_T`) and `SimplicialMesh.meshSize M` (`h = max_T h_T`).
 * `SimplicialMesh.map M e`: the image of a mesh under an affine equivalence;
   `SimplicialMesh.Refines M₁ M₂`: every simplex of `M₁` lies in one of `M₂`.
@@ -39,15 +38,12 @@ convex hull of their common vertices ([Arnold2018], Ch. 7; [Ciarlet2002], Ch. 2)
 * `interior_closedInterior_nonempty`: an `n`-simplex of `ℝⁿ` has nonempty interior.
 * `disjoint_interior_of_inter_eq`: face-to-face meeting and distinct vertex sets give disjoint
   interiors (`SimplicialMesh.ofConforming` builds a mesh from conformity alone).
-* `SimplicialMesh.space_toSimplicialComplex`: the complex of faces has underlying space
-  `closure Ω`; `faces_eq`: the `k`-faces are its faces with `k + 1` vertices.
+
 * `SimplicialMesh.sOppSide_of_mem_cofaces`: two distinct `n`-simplices sharing a facet `F` lie
   strictly on opposite sides of `aff F` (they induce opposite orientations on `F`).
 * `SimplicialMesh.card_cofaces_le_two`, `isInteriorFacet_or_isBoundaryFacet`: every facet lies
   in one or two `n`-simplices; `isInteriorFacet_iff`, `isBoundaryFacet_iff`: with two it is an
   interior facet, with one its closed hull lies in the topological boundary of `closure Ω`.
-* `SimplicialMesh.Refines.biUnion_eq`: if `M₁` refines `M₂` and both mesh the same closed set,
-  every simplex of `M₂` is the union of the simplices of `M₁` it contains.
 
 ## References
 
@@ -393,39 +389,6 @@ theorem closure_interior_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) 
   rw [(convex_closedInterior T).closure_interior_eq_closure_of_nonempty_interior
     (interior_closedInterior_nonempty T), T.isClosed_closedInterior.closure_eq]
 
-/-- **Nested refinement.** If `M₁` refines `M₂` and both mesh the same closed set, every simplex
-`T'` of `M₂` is the union of the simplices of `M₁` it contains. -/
-theorem Refines.biUnion_eq {M₁ M₂ : SimplicialMesh n} (h : M₁.Refines M₂)
-    (hcl : closure M₁.domain = closure M₂.domain) {T' : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT' : T' ∈ M₂.simplices) :
-    ⋃ T ∈ {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior}, T.closedInterior =
-      T'.closedInterior := by
-  refine subset_antisymm (Set.iUnion₂_subset fun T hT => hT.2) ?_
-  have hfin : {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior}.Finite :=
-    M₁.simplices.finite_toSet.subset fun _ hT => hT.1
-  have hS : IsClosed (⋃ T ∈ {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior},
-      T.closedInterior) :=
-    hfin.isClosed_biUnion fun T _ => T.isClosed_closedInterior
-  have hint : interior T'.closedInterior ⊆
-      ⋃ T ∈ {T | T ∈ M₁.simplices ∧ T.closedInterior ⊆ T'.closedInterior}, T.closedInterior := by
-    intro x hx
-    have hxcl : x ∈ closure M₁.domain :=
-      hcl ▸ M₂.closedInterior_subset_closure hT' (interior_subset hx)
-    rw [← M₁.biUnion_closedInterior] at hxcl
-    obtain ⟨T, hT, hxT⟩ := Set.mem_iUnion₂.1 hxcl
-    obtain ⟨T'', hT'', hsub⟩ := h T hT
-    by_cases he : T'' = T'
-    · subst he
-      exact Set.mem_biUnion (x := T) ⟨hT, hsub⟩ hxT
-    · exfalso
-      have hx'' : x ∈ closure (interior T''.closedInterior) := by
-        rw [closure_interior_closedInterior]; exact hsub hxT
-      obtain ⟨y, hy', hy''⟩ := mem_closure_iff.1 hx'' _ isOpen_interior hx
-      exact Set.disjoint_left.1 (M₂.pairwise_disjoint_interior hT'' hT' he) hy'' hy'
-  calc T'.closedInterior = closure (interior T'.closedInterior) :=
-        (closure_interior_closedInterior T').symm
-    _ ⊆ _ := closure_minimal hint hS
-
 /-! ### Faces -/
 
 /-- The vertex sets of the `k`-faces of the mesh. -/
@@ -435,11 +398,6 @@ def faces (k : ℕ) : Set (Finset (Fin n → ℝ)) :=
 /-- The vertex sets of the facets (`(n-1)`-faces) of the mesh. -/
 def facets : Set (Finset (Fin n → ℝ)) :=
   {F | F.card = n ∧ ∃ T ∈ M.simplices, F ⊆ vertexSet T}
-
-theorem facets_eq_faces [NeZero n] : M.facets = M.faces (n - 1) := by
-  ext F
-  simp only [facets, faces, Set.mem_ofPred_eq]
-  rw [Nat.sub_add_cancel (Nat.one_le_iff_ne_zero.2 (NeZero.ne n))]
 
 /-- The `n`-simplices of the mesh having `F` among their faces. -/
 def cofaces (F : Finset (Fin n → ℝ)) : Finset (Affine.Simplex ℝ (Fin n → ℝ) n) := by
@@ -464,68 +422,9 @@ def IsBoundaryFacet (F : Finset (Fin n → ℝ)) : Prop :=
   F ∈ M.facets ∧ (M.cofaces F).card = 1 ∧
     convexHull ℝ (F : Set (Fin n → ℝ)) ⊆ frontier (closure M.domain)
 
-/-! ### The simplicial complex of faces -/
-
-/-- The Mathlib simplicial complex whose faces are all nonempty sets of vertices of a simplex of
-the mesh. -/
-def toSimplicialComplex : Geometry.SimplicialComplex ℝ (Fin n → ℝ) :=
-  Geometry.SimplicialComplex.ofErase {F | ∃ T ∈ M.simplices, F ⊆ vertexSet T}
-    (fun _ ⟨T, _, hF⟩ => (affineIndependent_vertexSet T).mono (Finset.coe_subset.2 hF))
-    (fun _ _ hGF ⟨T, hT, hF⟩ => ⟨T, hT, fun _ hx => hF (hGF hx)⟩)
-    (by
-      classical
-      rintro F ⟨T, hT, hF⟩ G ⟨T', hT', hG⟩ x ⟨hxF, hxG⟩
-      have hxT : x ∈ convexHull ℝ ((vertexSet T ∩ vertexSet T' : Finset _) : Set (Fin n → ℝ)) := by
-        rw [Finset.coe_inter, ← M.inter_closedInterior T hT T' hT', ← convexHull_vertexSet,
-          ← convexHull_vertexSet]
-        exact ⟨convexHull_mono (Finset.coe_subset.2 hF) hxF,
-          convexHull_mono (Finset.coe_subset.2 hG) hxG⟩
-      have h1 : x ∈ convexHull ℝ ((F ∩ (vertexSet T ∩ vertexSet T') : Finset _) :
-          Set (Fin n → ℝ)) := by
-        rw [Finset.coe_inter, (affineIndependent_vertexSet T).convexHull_inter hF
-          Finset.inter_subset_left]
-        exact ⟨hxF, hxT⟩
-      have h2 : x ∈ convexHull ℝ ((G ∩ (F ∩ (vertexSet T ∩ vertexSet T')) : Finset _) :
-          Set (Fin n → ℝ)) := by
-        rw [Finset.coe_inter, (affineIndependent_vertexSet T').convexHull_inter hG
-          ((Finset.inter_subset_right.trans Finset.inter_subset_right))]
-        exact ⟨hxG, h1⟩
-      refine convexHull_mono ?_ h2
-      intro y hy
-      simp only [Finset.coe_inter, Set.mem_inter_iff, Finset.mem_coe] at hy ⊢
-      exact ⟨hy.2.1, hy.1⟩)
-
-theorem mem_toSimplicialComplex_faces {F : Finset (Fin n → ℝ)} :
-    F ∈ M.toSimplicialComplex.faces ↔ F.Nonempty ∧ ∃ T ∈ M.simplices, F ⊆ vertexSet T := by
-  simp [toSimplicialComplex, Finset.nonempty_iff_ne_empty, and_comm]
-
-/-- The `k`-faces of the mesh are the faces of its simplicial complex with `k + 1` vertices. -/
-theorem faces_eq (k : ℕ) :
-    M.faces k = {F | F ∈ M.toSimplicialComplex.faces ∧ F.card = k + 1} := by
-  ext F
-  simp only [faces, mem_toSimplicialComplex_faces, Set.mem_ofPred_eq]
-  constructor
-  · rintro ⟨hc, h⟩; exact ⟨⟨Finset.card_pos.1 (by omega), h⟩, hc⟩
-  · rintro ⟨⟨_, h⟩, hc⟩; exact ⟨hc, h⟩
-
-/-- The underlying space of the simplicial complex of faces is `closure Ω`. -/
-theorem space_toSimplicialComplex : M.toSimplicialComplex.space = closure M.domain := by
-  apply subset_antisymm
-  · intro x hx
-    obtain ⟨F, hF, hx⟩ := Geometry.SimplicialComplex.mem_space_iff.1 hx
-    obtain ⟨-, T, hT, hFT⟩ := M.mem_toSimplicialComplex_faces.1 hF
-    exact M.closedInterior_subset_closure hT
-      (convexHull_vertexSet T ▸ convexHull_mono (Finset.coe_subset.2 hFT) hx)
-  · rw [← M.biUnion_closedInterior]
-    refine Set.iUnion₂_subset fun T hT => ?_
-    rw [← convexHull_vertexSet]
-    refine Geometry.SimplicialComplex.convexHull_subset_space ?_
-    exact M.mem_toSimplicialComplex_faces.2
-      ⟨⟨T.points 0, points_mem_vertexSet T 0⟩, T, hT, subset_rfl⟩
+end SimplicialMesh
 
 /-! ### Images of meshes under affine equivalences -/
-
-end SimplicialMesh
 
 theorem injective_toAffineMap (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
     Function.Injective e.toAffineMap := by
@@ -554,7 +453,6 @@ theorem vertexSet_mapEquiv (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
 namespace SimplicialMesh
 
 variable (M : SimplicialMesh n)
-
 
 /-- The image of a mesh under an affine equivalence of `ℝⁿ`. -/
 def map (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) : SimplicialMesh n := by

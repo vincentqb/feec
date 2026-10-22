@@ -42,9 +42,7 @@ and so does the integral.
   `simplexIntegral_add_of_simplexIntegrable` under the integrability hypothesis
   `SimplexIntegrable`;
 * `abs_simplexIntegral_le`: `|∫_p ω| ≤ (Σ_s |minor_s(F_p)|) · sup |ω| / k!` (by Cauchy–Binet
-  `Σ_s |minor_s| ≥ k! vol_k`, so this is weaker than `vol_k · sup |ω|` when `k < n`);
-* `volume_real_image_simplexMap`: `|F_p(T̂)| = |det B_p| / n!`, and
-  `abs_simplexIntegral_le_volume_mul`: `|∫_T ω| ≤ |T| · sup_T |ω|` for `n`-simplices in `ℝⁿ`.
+  `Σ_s |minor_s| ≥ k! vol_k`, so this is weaker than `vol_k · sup |ω|` when `k < n`).
 
 ## References
 
@@ -141,9 +139,6 @@ theorem refBary_sum_smul_refVertex {c : Fin (k + 1) → ℝ} (hc : ∑ i, c i = 
   · rw [Fin.sum_univ_succ] at hc
     simp only [refBary_zero]; linarith
   · rfl
-
-theorem refVertex_mem_refSimplex (i : Fin (k + 1)) : refVertex k i ∈ refSimplex k := by
-  intro j; rw [refBary_refVertex]; split_ifs <;> norm_num
 
 /-! ### Fubini on the reference simplex -/
 
@@ -526,14 +521,6 @@ theorem simplexIntegral_comp_perm (p : Fin (k + 1) → Fin n → ℝ) (π : Equi
   change permDet π * ∫ x in refSimplex k, η (permMap π x) univ = _
   rw [permDet_eq_sign, setIntegral_refSimplex_comp_permMap π (fun x => η x univ)]
 
-/-- The same statement for Mathlib simplices: reindexing reverses the orientation by the sign. -/
-theorem simplexIntegral_reindex (σ : Affine.Simplex ℝ (Fin n → ℝ) k)
-    (π : Equiv.Perm (Fin (k + 1))) (ω : FormField n) :
-    simplexIntegral (σ.reindex π).points ω =
-      ((Equiv.Perm.sign π : ℤ) : ℝ) * simplexIntegral σ.points ω := by
-  change simplexIntegral (σ.points ∘ π.symm) ω = _
-  rw [simplexIntegral_comp_perm, Equiv.Perm.sign_symm]
-
 /-! ### Linearity and bounds -/
 
 theorem continuousOn_pullback_univ {p : Fin (k + 1) → Fin n → ℝ} {ω : FormField n}
@@ -555,10 +542,6 @@ integrable on `T̂_k`. -/
 def SimplexIntegrable (p : Fin (k + 1) → Fin n → ℝ) (ω : FormField n) : Prop :=
   IntegrableOn (fun x => affinePullback (simplexMatrix p) (p 0) ω x univ) (refSimplex k)
 
-theorem SimplexIntegrable.of_continuousOn {p : Fin (k + 1) → Fin n → ℝ} {ω : FormField n}
-    (hω : ContinuousOn ω (simplexMap p '' refSimplex k)) : SimplexIntegrable p ω :=
-  integrableOn_pullback_univ hω
-
 /-- Additivity of the integral for integrable forms. -/
 theorem simplexIntegral_add_of_simplexIntegrable {p : Fin (k + 1) → Fin n → ℝ}
     {ω η : FormField n} (hω : SimplexIntegrable p ω) (hη : SimplexIntegrable p η) :
@@ -570,7 +553,8 @@ theorem simplexIntegral_add {p : Fin (k + 1) → Fin n → ℝ} {ω η : FormFie
     (hω : ContinuousOn ω (simplexMap p '' refSimplex k))
     (hη : ContinuousOn η (simplexMap p '' refSimplex k)) :
     simplexIntegral p (ω + η) = simplexIntegral p ω + simplexIntegral p η :=
-  simplexIntegral_add_of_simplexIntegrable (.of_continuousOn hω) (.of_continuousOn hη)
+  simplexIntegral_add_of_simplexIntegrable (integrableOn_pullback_univ hω)
+    (integrableOn_pullback_univ hη)
 
 theorem simplexIntegral_smul (p : Fin (k + 1) → Fin n → ℝ) (c : ℝ) (ω : FormField n) :
     simplexIntegral p (c • ω) = c * simplexIntegral p ω := by
@@ -620,58 +604,5 @@ theorem abs_simplexIntegral_le {p : Fin (k + 1) → Fin n → ℝ} {ω : FormFie
   refine (abs_sum_le_sum_abs _ _).trans (sum_le_sum fun s _ => ?_)
   rw [abs_mul, mul_comm]
   exact mul_le_mul_of_nonneg_left (hM x hx s) (abs_nonneg _)
-
-/-! ### Top-dimensional simplices: `|∫_T ω| ≤ |T| · sup |ω|` -/
-
-/-- For an `n`-simplex in `ℝⁿ`: `|∫_p ω| ≤ |det B_p| / n! · sup_T |ω_univ|`. -/
-theorem abs_simplexIntegral_le_of_top {p : Fin (n + 1) → Fin n → ℝ} {ω : FormField n} {M : ℝ}
-    (hM : ∀ x ∈ refSimplex n, |ω (simplexMap p x) univ| ≤ M) :
-    |simplexIntegral p ω| ≤ |(Matrix.of (simplexMatrix p)).det| / n.factorial * M := by
-  have h : ‖∫ x in refSimplex n, (affinePullback (simplexMatrix p) (p 0) ω x univ : ℝ)‖ ≤
-      |(Matrix.of (simplexMatrix p)).det| * M * volume.real (refSimplex n) := by
-    refine norm_setIntegral_le_of_norm_le_const (volume_refSimplex_lt_top n) fun x hx => ?_
-    rw [affinePullback_apply, pullback_apply_univ, Real.norm_eq_abs, abs_mul]
-    exact mul_le_mul_of_nonneg_left (hM x hx) (abs_nonneg _)
-  rw [volume_real_refSimplex, Real.norm_eq_abs] at h
-  rw [simplexIntegral]
-  convert h using 1
-  ring
-
-/-- The parametrization of a non-degenerate simplex is injective. -/
-theorem injective_simplexMap {p : Fin (n + 1) → Fin n → ℝ}
-    (hp : (Matrix.of (simplexMatrix p)).det ≠ 0) : Function.Injective (simplexMap p) := by
-  intro x y hxy
-  have h1 : Matrix.mulVec (Matrix.of (simplexMatrix p)) x =
-      Matrix.mulVec (Matrix.of (simplexMatrix p)) y := by
-    funext i
-    have hi := congrFun hxy i
-    simp only [simplexMap, affine_apply, add_left_inj] at hi
-    simpa [Matrix.mulVec, dotProduct] using hi
-  exact Matrix.mulVec_injective_iff_isUnit.2 ((Matrix.isUnit_iff_isUnit_det _).2 hp.isUnit) h1
-
-/-- The volume of a non-degenerate `n`-simplex in `ℝⁿ`: `|F_p(T̂)| = |det B_p| / n!`. -/
-theorem volume_real_image_simplexMap {p : Fin (n + 1) → Fin n → ℝ}
-    (hp : (Matrix.of (simplexMatrix p)).det ≠ 0) :
-    volume.real (simplexMap p '' refSimplex n) = |(Matrix.of (simplexMatrix p)).det| /
-      n.factorial := by
-  set L := (Matrix.toLin' (Matrix.of (simplexMatrix p))).toContinuousLinearMap
-  have hderiv : ∀ x ∈ refSimplex n, HasFDerivWithinAt (simplexMap p) L (refSimplex n) x :=
-    fun x _ => (hasFDerivAt_affine _ (p 0) x).hasFDerivWithinAt
-  have hdetL : L.det = (Matrix.of (simplexMatrix p)).det := by
-    rw [ContinuousLinearMap.det, LinearMap.coe_toContinuousLinearMap, LinearMap.det_toLin']
-  have hcov := integral_image_eq_integral_abs_det_fderiv_smul volume
-    (measurableSet_refSimplex n) hderiv (injective_simplexMap hp).injOn (fun _ => (1 : ℝ))
-  simp only [hdetL, smul_eq_mul, mul_one, setIntegral_const] at hcov
-  rw [hcov, volume_real_refSimplex]
-  ring
-
-/-- **`|∫_T ω| ≤ |T| · sup_T |ω|`** for a non-degenerate `n`-simplex `T = F_p(T̂)` in `ℝⁿ`, where
-`|ω_univ|` is the pointwise norm of a top-degree form. -/
-theorem abs_simplexIntegral_le_volume_mul {p : Fin (n + 1) → Fin n → ℝ}
-    (hp : (Matrix.of (simplexMatrix p)).det ≠ 0) {ω : FormField n} {M : ℝ}
-    (hM : ∀ x ∈ simplexMap p '' refSimplex n, |ω x univ| ≤ M) :
-    |simplexIntegral p ω| ≤ volume.real (simplexMap p '' refSimplex n) * M := by
-  rw [volume_real_image_simplexMap hp]
-  exact abs_simplexIntegral_le_of_top fun x hx => hM _ ⟨x, hx, rfl⟩
 
 end Feec.FiniteElement

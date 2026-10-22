@@ -26,7 +26,7 @@ The degrees of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-face
 * `Feec.FiniteElement.baryCoord p`, `baryGrad p`: barycentric coordinates and their gradients;
 * `Feec.FiniteElement.whitneyForm p f`, `Feec.FiniteElement.whitneySpace p k = P₁⁻Λᵏ(T)`;
 * `Feec.FiniteElement.contForms n`, `c1Forms n`: continuous and `C¹` form fields, and
-  `extDerivC1 : C¹ → C⁰`, `extDerivWhitney : P₁⁻Λᵏ(T) → P₁⁻Λ^{k+1}(T)`;
+  `extDerivC1 : C¹ → C⁰`;
 * `Feec.FiniteElement.faceDof p k g`: the degree of freedom `ω ↦ ∫_g ω` on continuous forms,
   `whitneyDof p k g` its restriction to `P₁⁻Λᵏ(T)`;
 * `Feec.FiniteElement.whitneyInterp hp k`: the canonical interpolant `Π_T`;
@@ -35,7 +35,9 @@ The degrees of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-face
 ## Main results
 
 * `Feec.ExteriorFibre.wedgeProd_eq_sum_whitneyFibre`: `θ_f^∧ = Σ_{j ∉ f} ε(j, f) W_{f ∪ j}` when
-  `Σ c = 1` and `Σ θ = 0`;
+  `Σ c = 1` and `Σ θ = 0`; `Feec.ExteriorFibre.interior_wedgeProd`: contraction is an
+  antiderivation, `ι_x θ_g^∧ = W_g` with the scalars `⟨θᵢ, x⟩`, and
+  `Feec.ExteriorFibre.pullback_interior`: `B^*(ι_{Bx} α) = ι_x B^* α`;
 * `simplexIntegral_whitneyForm`: **the Kronecker property** `∫_g φ_f = δ_{fg}`;
 * `extDeriv_whitneyForm`: `dφ_f = (k+1)! dλ_{f₀} ∧ ⋯ ∧ dλ_{f_k}`,
   `extDeriv_whitneyForm_eq_sum`: `dφ_f = Σ_{j ∉ f} ε(j, f) φ_{f ∪ j}`, and
@@ -43,10 +45,7 @@ The degrees of freedom are the integrals `ℓ_g ω = ∫_g ω` over the `k`-face
 * `linearIndependent_whitneyForm`, `finrank_whitneySpace`:
   `dim P₁⁻Λᵏ(T) = (n+1 choose k+1)`;
 * `isUnisolvent_whitneyDof`: the face integrals are unisolvent on `P₁⁻Λᵏ(T)`;
-* `whitneyInterp_eq_sum`: `Π_T ω = Σ_g (∫_g ω) φ_g`, and `abs_whitneyInterp_apply_le`: the
-  pointwise bound `|Π_T ω| ≤ C(T) sup_T |ω|`;
-* `whitneyInterp_extDeriv`: **the commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` forms,
-  from the abstract `Feec.FiniteElement.interp_comp_eq` and Stokes' theorem;
+* `whitneyInterp_eq_sum`: `Π_T ω = Σ_g (∫_g ω) φ_g`;
 * `whitneySpace_refVertex_eq_map_polyFormMinus`: on the reference simplex,
   `P₁⁻Λᵏ(T̂) = P₀Λᵏ + κ H₀Λ^{k+1}` is `Feec.Koszul.polyFormMinus 1 k`;
 * `affinePullback_whitneyForm_face`: the trace of `φ_f` on a face is the Whitney form of the face
@@ -213,6 +212,39 @@ theorem isDeg_single {k : ℕ} {g : Finset d} (hg : #g = k) : IsDeg k (Pi.single
   intro s hs
   have : s ≠ g := fun h => hs (h ▸ hg)
   simp [this]
+
+theorem interior_sum [Fintype d] {β : Type*} (x : d → R) (u : Finset β) (ω : β → Finset d → R) :
+    interior x (∑ b ∈ u, ω b) = ∑ b ∈ u, interior x (ω b) := by
+  funext s; simp only [interior_apply, Finset.sum_apply, mul_sum]; exact sum_comm
+
+/-- **Contraction is an antiderivation**: `ι_x (θ_{g₁} ∧ ⋯ ∧ θ_{g_k}) = W_g` with the scalars
+`⟨θᵢ, x⟩`. -/
+theorem interior_wedgeProd [Fintype d] (θ : ι → d → R) (x : d → R) (g : Finset ι) :
+    interior x (wedgeProd θ g) = whitneyFibre (fun i => ∑ l, θ i l * x l) θ g := by
+  induction g using Finset.induction_on_min with
+  | empty =>
+    funext s
+    simp only [wedgeProd_empty, interior_apply, whitneyFibre, sum_empty, Pi.zero_apply]
+    refine sum_eq_zero fun j hj => ?_
+    have : insert j s ≠ ∅ := insert_ne_empty j s
+    simp [this]
+  | insert a g ha ih =>
+    rw [wedgeProd_insert_of_lt _ ha, whitneyFibre_insert_of_lt _ _ ha, ← ih]
+    have h := wedge_interior_add_interior_wedge (θ a) x (wedgeProd θ g)
+    rw [eq_sub_of_add_eq' h]
+
+/-- **Pullback commutes with contraction**: `B^*(ι_{Bx} α) = ι_x (B^* α)`. -/
+theorem pullback_interior [Fintype ι] {κ : Type*} [LinearOrder κ] [Fintype κ]
+    (B : ι → κ → R) (x : κ → R) (α : Finset ι → R) :
+    pullback B (interior (fun i => ∑ l, B i l * x l) α) = interior x (pullback B α) := by
+  rw [interior_eq_sum_single, pullback_sum, pullback]
+  rw [interior_sum]
+  refine sum_congr rfl fun t _ => ?_
+  rw [pullback_smul, interior_smul, ← whitneyFibre_single_eq_interior, pullback_whitneyFibre,
+    interior_wedgeProd]
+  congr 2
+  funext a l
+  simp [covPullback, Pi.single_apply]
 
 end Feec.ExteriorFibre
 
@@ -606,20 +638,6 @@ theorem extDeriv_mem_whitneySpace {p : Fin (n + 1) → Fin n → ℝ} {ω : Form
   exact whitneyForm_mem_whitneySpace p
     ⟨insert j f.1, by rw [card_insert_of_notMem (mem_compl.1 hj), f.2]⟩
 
-/-- The exterior derivative `P₁⁻Λᵏ(T) → P₁⁻Λ^{k+1}(T)`. -/
-def extDerivWhitney (p : Fin (n + 1) → Fin n → ℝ) (k : ℕ) :
-    whitneySpace p k →ₗ[ℝ] whitneySpace p (k + 1) where
-  toFun ω := ⟨extDeriv ω, extDeriv_mem_whitneySpace ω.2⟩
-  map_add' ω η := by
-    refine Subtype.ext (funext fun x => ?_)
-    exact extDeriv_add_apply
-      ((ContDiff.differentiable (mem_c1Forms.1 (whitneySpace_le_c1Forms p k ω.2)) one_ne_zero) x)
-      ((ContDiff.differentiable (mem_c1Forms.1 (whitneySpace_le_c1Forms p k η.2)) one_ne_zero) x)
-  map_smul' c ω := by
-    refine Subtype.ext (funext fun x => ?_)
-    exact extDeriv_smul_const_apply c
-      ((ContDiff.differentiable (mem_c1Forms.1 (whitneySpace_le_c1Forms p k ω.2)) one_ne_zero) x)
-
 /-! ### Degrees of freedom and unisolvence -/
 
 /-- The degree of freedom `ℓ_g ω = ∫_g ω` of the `k`-face `g`, on continuous forms. -/
@@ -717,83 +735,7 @@ theorem whitneyInterp_eq_sum (hp : IsUnit (edgeMatrix p).det) (ω : contForms n)
     rw [simplexIntegral_whitneyInterp, simplexIntegral_sum_smul_whitneyForm hp]
   rw [h]
 
-/-- **Boundedness of the canonical interpolant**: if `|ω| ≤ M` on `T`, then
-`|(Π_T ω)(x)_s| ≤ C_s(x) M` with the explicit constant
-`C_s(x) = Σ_g (Σ_t |minor_t(B_g)|) / k! · |φ_g(x)_s|` depending only on `T`, `x` and `s`. -/
-theorem abs_whitneyInterp_apply_le (hp : IsUnit (edgeMatrix p).det) (ω : contForms n) {M : ℝ}
-    (hM : ∀ y ∈ convexHull ℝ (Set.range p), ∀ t, |(ω : FormField n) y t| ≤ M)
-    (x : Fin n → ℝ) (s : Finset (Fin n)) :
-    |(whitneyInterp hp k ω : FormField n) x s| ≤
-      (∑ g : Faces n k, (∑ t, |wedgeProd (simplexMatrix (faceVertices p g.1 g.2)) t univ|) /
-        k.factorial * |whitneyForm p g.1 x s|) * M := by
-  rw [whitneyInterp_eq_sum, sum_mul]
-  simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
-  refine (abs_sum_le_sum_abs _ _).trans (sum_le_sum fun g _ => ?_)
-  have hg := abs_simplexIntegral_le (p := faceVertices p g.1 g.2) (ω := (ω : FormField n))
-    (M := M) fun y hy t => hM _ (convexHull_mono (Set.range_comp_subset_range _ _)
-      (simplexMap_mem_convexHull _ hy)) t
-  rw [abs_mul]
-  calc |simplexIntegral (faceVertices p g.1 g.2) (ω : FormField n)| * |whitneyForm p g.1 x s|
-      ≤ (∑ t, |wedgeProd (simplexMatrix (faceVertices p g.1 g.2)) t univ|) * M / k.factorial *
-          |whitneyForm p g.1 x s| := mul_le_mul_of_nonneg_right hg (abs_nonneg _)
-    _ = _ := by ring
-
-/-- The faces of a face: removing the `i`-th vertex of `g` is the face `g ∖ gᵢ`. -/
-theorem faceVertices_comp_succAbove (p : Fin (n + 1) → Fin n → ℝ) (g : Faces n (k + 1))
-    (i : Fin (k + 2)) :
-    faceVertices p g.1 g.2 ∘ i.succAbove = faceVertices p (g.1.erase (g.1.orderEmbOfFin g.2 i))
-      (by rw [card_erase_of_mem (orderEmbOfFin_mem _ _ i), g.2]; rfl) := by
-  rw [faceVertices, faceVertices, Function.comp_assoc]
-  congr 1
-  refine orderEmbOfFin_unique _ (fun x => mem_erase.2 ⟨fun h => ?_, orderEmbOfFin_mem _ _ _⟩)
-    ((g.1.orderEmbOfFin g.2).strictMono.comp (Fin.strictMono_succAbove i))
-  exact Fin.succAbove_ne i x ((g.1.orderEmbOfFin g.2).injective h)
-
-/-- **The commuting property** `Π_T (dω) = d (Π_T ω)` for `C¹` forms `ω`: the canonical
-interpolants form a cochain map. Proved from the abstract `Feec.FiniteElement.interp_comp_eq`:
-by Stokes' theorem each DOF `∫_g dω` of `dω` is the combination `Σᵢ (-1)ⁱ ∫_{∂ᵢ g} ω` of DOFs
-of `ω`. -/
-theorem whitneyInterp_extDeriv (hp : IsUnit (edgeMatrix p).det) (ω : c1Forms n) :
-    whitneyInterp hp (k + 1) (extDerivC1 ω) = extDerivWhitney p k
-      (whitneyInterp hp k (Submodule.inclusion c1Forms_le_contForms ω)) := by
-  set hℓ := isUnisolvent_whitneyDof hp k
-  set mY : Faces n k → c1Forms n →ₗ[ℝ] ℝ := fun g =>
-    faceDof p k g ∘ₗ Submodule.inclusion c1Forms_le_contForms
-  have h1 : whitneyInterp hp k (Submodule.inclusion c1Forms_le_contForms ω) = interp hℓ mY ω :=
-    hℓ.ext fun g => by
-      rw [whitneyInterp, dof_interp, dof_interp]; rfl
-  have hspan : ∀ g : Faces n (k + 1), faceDof p (k + 1) g ∘ₗ extDerivC1 ∈
-      Submodule.span ℝ (Set.range mY) := by
-    intro g
-    have heq : faceDof p (k + 1) g ∘ₗ extDerivC1 = ∑ i : Fin (k + 2), ((-1 : ℝ) ^ (i : ℕ)) •
-        mY ⟨g.1.erase (g.1.orderEmbOfFin g.2 i),
-          by rw [card_erase_of_mem (orderEmbOfFin_mem _ _ i), g.2]; rfl⟩ := by
-      refine LinearMap.ext fun η => ?_
-      rw [LinearMap.sum_apply]
-      simp only [LinearMap.smul_apply, smul_eq_mul]
-      have hL : (faceDof p (k + 1) g ∘ₗ extDerivC1) η =
-          simplexIntegral (faceVertices p g.1 g.2) (extDeriv (η : FormField n)) := rfl
-      rw [hL, simplexIntegral_extDeriv (faceVertices p g.1 g.2) isOpen_univ (Set.subset_univ _)
-        (ContDiff.contDiffOn (mem_c1Forms.1 η.2))]
-      refine sum_congr rfl fun i _ => ?_
-      rw [faceVertices_comp_succAbove]
-      rfl
-    rw [heq]
-    exact Submodule.sum_mem _ fun i _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
-  rw [h1]
-  exact interp_comp_eq hℓ mY (isUnisolvent_whitneyDof hp (k + 1)) (faceDof p (k + 1))
-    (Submodule.inclusion (whitneySpace_le_c1Forms p k))
-    (Submodule.inclusion (whitneySpace_le_contForms p (k + 1))) (fun _ => rfl) (fun _ => rfl)
-    extDerivC1 (extDerivWhitney p k) rfl hspan ω
-
 /-! ### Mathlib simplices -/
-
-/-- For a Mathlib `n`-simplex `T` in `ℝⁿ`: `∫_g φ_f = δ_{fg}`. -/
-theorem simplexIntegral_whitneyForm_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-    {f g : Finset (Fin (n + 1))} (hf : #f = k + 1) (hg : #g = k + 1) :
-    simplexIntegral (faceVertices T.points g hg) (whitneyForm T.points f) =
-      if f = g then 1 else 0 :=
-  simplexIntegral_whitneyForm (isUnit_det_edgeMatrix T) hf hg
 
 /-- For a Mathlib `n`-simplex `T` in `ℝⁿ`: `dim P₁⁻Λᵏ(T) = (n+1 choose k+1)`. -/
 theorem finrank_whitneySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :

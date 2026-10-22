@@ -25,18 +25,16 @@ the level `N`.
 
 * `Feec.Mesh.IsShapeRegular S C c`: the set of simplices `S` is shape regular with constants
   `C, c`.
-* `Feec.Mesh.SimplicialMesh.IsShapeRegularFamily M`: some constants `C, c > 0` work for all the
-  meshes `M i`.
 
 ## Main results
 
-* `linearPart_kuhnSimplex`: `B_{K_σ} = B_σ`; `abs_det_kuhnMap`: `|det B_σ| = 1`;
+* `abs_det_kuhnMap`: `|det B_σ| = 1`;
   `norm_kuhnMap_apply_le`, `norm_le_two_mul_norm_kuhnMap`.
 * `linearPart_freudenthalMesh_simplex`: `B_T = (s/N) B_σ` for the Freudenthal simplices.
 * `norm_linearEquiv_le_freudenthal`, `norm_linearEquiv_symm_le_freudenthal`,
   `abs_det_linearPart_freudenthal`: `‖B_T‖ ≤ n h`, `‖B_T⁻¹‖ ≤ 2 / h`, `|det B_T| = hⁿ`, `h = s/N`.
-* `isShapeRegular_freudenthalMesh`, `isShapeRegularFamily_freudenthalMesh`: the Freudenthal
-  meshes of a box are shape regular with constants `max n 2` and `1`, for every level `N ≥ 1`.
+* `isShapeRegular_freudenthalMesh`: the Freudenthal meshes of a box are shape regular with
+  constants `max n 2` and `1`, for every level `N ≥ 1`.
 
 ## References
 
@@ -68,18 +66,7 @@ def IsShapeRegular (S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) (C c : ℝ) 
     ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C / diam T ∧
     c * diam T ^ n ≤ |LinearMap.det T.linearPart|
 
-/-- A family of meshes is shape regular if one pair of constants `C, c > 0` works for all of
-its simplices. -/
-def SimplicialMesh.IsShapeRegularFamily {ι : Type*} (M : ι → SimplicialMesh n) : Prop :=
-  ∃ C c : ℝ, 0 < C ∧ 0 < c ∧ IsShapeRegular {T | ∃ i, T ∈ (M i).simplices} C c
-
 /-! ### The matrix `B_σ` -/
-
-theorem linearPart_kuhnSimplex (σ : Equiv.Perm (Fin n)) :
-    (kuhnSimplex σ).linearPart = kuhnMap σ := by
-  refine (Pi.basisFun ℝ (Fin n)).ext fun i => ?_
-  rw [Pi.basisFun_apply, Affine.Simplex.linearPart_single, kuhnSimplex_points, kuhnVertex_zero,
-    sub_zero, ← refPoints_succ, kuhnMap_refPoints]
 
 theorem norm_kuhnMap_apply_le (σ : Equiv.Perm (Fin n)) (x : Fin n → ℝ) :
     ‖kuhnMap σ x‖ ≤ n * ‖x‖ := by
@@ -208,11 +195,5 @@ theorem isShapeRegular_freudenthalMesh (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s
     rw [diam_freudenthalMesh_simplex b hh]
     refine ⟨h1.trans (by gcongr; exact le_max_left _ _), h2.trans ?_, by rw [h3, one_mul]⟩
     exact div_le_div_of_nonneg_right (by exact_mod_cast le_max_right n 2) hh.le
-
-/-- The family of Freudenthal meshes of a box, indexed by the level `N + 1`, is shape
-regular. -/
-theorem isShapeRegularFamily_freudenthalMesh (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) :
-    SimplicialMesh.IsShapeRegularFamily fun N : ℕ => freudenthalMesh b s hs (N + 1) :=
-  ⟨max n 2, 1, by positivity, one_pos, isShapeRegular_freudenthalMesh b s hs⟩
 
 end Feec.Mesh

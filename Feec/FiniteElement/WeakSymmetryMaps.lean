@@ -14,8 +14,8 @@ Rham complex and its vector-valued copy `ℝⁿ ⊗ Λ`, are the restrictions to
 
 that is `S⁰ψ = Σᵢ ψᵢ dxᵢ` on vector `0`-forms (the identity `S₀ = I` on vector proxies,
 `coordWedgeSum_singleton`) and `S¹v = Σᵢ dxᵢ ∧ vᵢ` on vector `1`-forms. With rows `vᵢ = Σⱼ uᵢⱼ dxⱼ`,
-`(S¹v)_{ab} = u_{ab} − u_{ba}`: on vector proxies `S¹ = 2 vskw`, `(S₁u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}`
-(`vec2_coordWedgeSum`), the operator of `Feec.Domain.skwCurlOp` (`vec2_coordWedgeSum_eq_skwCurlOp`)
+`(S¹v)_{ab} = u_{ab} − u_{ba}` (`coordWedgeSum_pair`): on vector proxies `S¹ = 2 vskw`,
+`(S₁u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}`, the operator of `Feec.Domain.skwCurlOp`
 and of `Feec.Models.BoundedDomain.skwL` (not `vskw`: the thesis' normalization violates the
 anticommutation, see `docs/audit.json`). This choice of signs gives the thesis' anticommutation
 
@@ -26,12 +26,9 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
 ## Main results
 
 * **Algebra.** `isDeg_coordWedgeSum` (degree `k ↦ k + 1`), `coordWedgeSum_singleton` (`S₀ = I`),
-  `coordWedgeSum_pair` (`(S¹v)_{ab} = v_{a,b} − v_{b,a}`), `vec2_coordWedgeSum` (`S₁ = 2 vskw`);
+  `coordWedgeSum_pair` (`(S¹v)_{ab} = v_{a,b} − v_{b,a}`, so `S₁ = 2 vskw`);
   `pullback_coordWedgeSum`: `B^*(S v) = Σᵢ (Bᵀeᵢ) ∧ B^*vᵢ`, so `S` commutes with the pullback by a
-  dilation `x ↦ c x + t` up to the factor `c` (`affinePullback_scalarMat_coordWedgeField`); `S`
-  maps fields with equal tangential traces to such fields
-  (`tangentialTraceEq_coordWedgeSum`: the trace of `dxᵢ ∧ vᵢ` only involves the tangential traces
-  of `vᵢ`).
+  dilation `x ↦ c x + t` up to the factor `c` (`affinePullback_scalarMat_coordWedgeField`).
 * **Analysis.** `extDeriv_coordWedgeField` (`d S = −S d` pointwise), `contDiff_coordWedgeField`.
 * **`L²` realization.** `wsL2 k : L²(Ω; Λᵏ)ⁿ → L²(Ω; Λᵏ⁺¹)` (bounded, `norm_wsL2_sq_le`:
   `‖S v‖² ≤ (k + 1) ‖v‖²`, adjoint `wsL2Adj`) maps `D(d_min)ⁿ` into `D(d_min)` and `D(d_max)ⁿ`
@@ -43,16 +40,13 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
   are combinations of the DOFs of `v` (`PolySeq.dof_comp_coordWedgeC_mem_span`); this gives
   `S_h = Π' S` on `Vₕ ⊗ ℝⁿ` (`PolySeq.wsPiecewise`, `PolySeq.wsGlobal`, `PolySeq.wsGlobal₀`:
   vanishing boundary DOFs are preserved), **Prop 5.7 corrected** `Π' S Π̃ = Π' S`
-  (`PolySeq.localInterp_coordWedgeC_localInterp`, `PolySeq.wsGlobal_tensorInterp`), the
+  (`PolySeq.wsGlobal_tensorInterp`), the
   **discrete anticommutation** `d S_h = −S_h d` (`PolySeq.dPiecewise_wsPiecewise`), and
   **`S₀,ₕ` onto `P₁⁻Λ̊¹`** (`PolySeq.wsGlobal₀_surjective`). The interpolants coincide with the
   `Feec.FiniteElement.LocalDof` interpolants (`PolySeq.localInterp_eq_polyMinusInterp`).
 * **Table 5.1.** `PolySeq.bggS0h`, `PolySeq.bggS1h` (`P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`, `P₂⁻Λ¹ ⊗ ℝⁿ → P₁⁻Λ²`),
-  `PolySeq.bggS0h₀_surjective`, `PolySeq.bggS0h_tensorInterp`, `PolySeq.bggS1h_tensorInterp`,
-  `PolySeq.dGlobal_bggS0h`.
-* **Smoothed pairs.** `Feec.HilbertComplex.Subcomplex.CommutingMap.toCochainProjection_comp_toCochainProjection`:
-  if `Q 𝒮 = c A Q̃` (from `R 𝒮 = c 𝒮 R̃` and Prop 5.7), the smoothed projections satisfy
-  `π 𝒮 π̃ = π 𝒮`, the compatibility `Feec.BGG.Discrete.Compatible`.
+  `PolySeq.bggS0h₀_surjective`, `PolySeq.bggS0h_tensorInterp` (`Π¹S⁰Π̃⁰ = Π¹S⁰`; the case `k = 1`,
+  `Π²S¹Π̃¹ = Π²S¹`, is `PolySeq.wsGlobal_tensorInterp`).
 
 ## References
 
@@ -98,11 +92,6 @@ theorem coordWedgeSum_add (v w : Fin n → Finset (Fin n) → ℝ) :
 theorem coordWedgeSum_smul (c : ℝ) (v : Fin n → Finset (Fin n) → ℝ) :
     coordWedgeSum (c • v) = c • coordWedgeSum v := by
   simp [coordWedgeSum, wedge_smul, Finset.smul_sum]
-
-theorem coordWedgeSum_sub (v w : Fin n → Finset (Fin n) → ℝ) :
-    coordWedgeSum (v - w) = coordWedgeSum v - coordWedgeSum w := by
-  rw [sub_eq_add_neg, coordWedgeSum_add, show -w = (-1 : ℝ) • w by simp, coordWedgeSum_smul]
-  simp [sub_eq_add_neg]
 
 theorem coordWedgeSum_zero : coordWedgeSum (0 : Fin n → Finset (Fin n) → ℝ) = 0 := by
   simp [coordWedgeSum]
@@ -155,33 +144,6 @@ theorem coordWedgeSum_pair {v : Fin n → Finset (Fin n) → ℝ} {a b : Fin n} 
   simp
   ring
 
-/-- The vector proxy `(w_{12}, −w_{02}, w_{01})` of a fibre `2`-form on `ℝ³`
-(`Feec.Koszul.Proxy3.vec2`). -/
-def vec2Fibre (w : Finset (Fin 3) → ℝ) : Fin 3 → ℝ := ![w {1, 2}, -w {0, 2}, w {0, 1}]
-
-/-- **`S₁ = 2 vskw`**: on `ℝ³`, the vector proxy of `S¹v = Σᵢ dxᵢ ∧ vᵢ` is
-`(S₁u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}` for the matrix `uᵢⱼ = (vᵢ)_{{j}}`. -/
-theorem vec2_coordWedgeSum (v : Fin 3 → Finset (Fin 3) → ℝ) (i : Fin 3) :
-    vec2Fibre (coordWedgeSum v) i = v (i + 1) {i + 2} - v (i + 2) {i + 1} := by
-  fin_cases i
-  · simp only [vec2Fibre, Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero]
-    rw [coordWedgeSum_pair (by decide)]; rfl
-  · simp only [vec2Fibre, Fin.mk_one, Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_zero]
-    rw [coordWedgeSum_pair (by decide)]
-    simp only [neg_sub]; rfl
-  · simp only [vec2Fibre, Fin.reduceFinMk, Fin.isValue, Matrix.cons_val_two,
-      Matrix.tail_cons, Matrix.head_cons]
-    rw [coordWedgeSum_pair (by decide)]; rfl
-
-/-- The proxy identity with the BGG operator of `Feec.Domain`: the `S₁`-part of
-`Feec.Domain.skwCurlOp` is the vector proxy of `S¹`. -/
-theorem vec2_coordWedgeSum_eq_skwCurlOp (v : Fin 3 → (Fin 3 → ℝ) → Finset (Fin 3) → ℝ)
-    (i : Fin 3) (x : Fin 3 → ℝ) :
-    vec2Fibre (coordWedgeSum fun a => v a x) i =
-      (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) ℝ _ _).apply (fun jl y => v jl.1 y {jl.2})
-        (.inl i) x := by
-  rw [skwCurlOp_apply_inl, vec2_coordWedgeSum]
-
 /-- **The pullback of `S v`**: `B^*(Σᵢ dxᵢ ∧ vᵢ) = Σᵢ (Bᵀeᵢ) ∧ B^*vᵢ`. -/
 theorem pullback_coordWedgeSum {m : ℕ} (B : Fin n → Fin m → ℝ) (v : Fin n → Finset (Fin n) → ℝ) :
     pullback B (coordWedgeSum v) = ∑ i, wedge (B i) (pullback B (v i)) := by
@@ -191,38 +153,6 @@ theorem pullback_coordWedgeSum {m : ℕ} (B : Fin n → Fin m → ℝ) (v : Fin 
   congr 1
   funext l
   simp [covPullback, Pi.single_apply]
-
-/-- Restriction of a pullback to coordinates `e(·)` is the pullback by the restricted matrix. -/
-theorem restrict_pullback {m m' : ℕ} (e : Fin m' ↪o Fin m) (B : Fin n → Fin m → ℝ)
-    (α : Finset (Fin n) → ℝ) :
-    ExteriorFibre.restrict e (pullback B α) = pullback (fun i => B i ∘ e) α := by
-  funext r
-  simp only [ExteriorFibre.restrict, pullback_apply]
-  refine Finset.sum_congr rfl fun s _ => ?_
-  congr 1
-  exact congrFun (restrict_wedgeProd e B s) r
-
-/-- The coefficient on `univ ∖ {j}` of a pullback to `ℝ^{k+1}` is the top coefficient of the
-pullback by the matrix without its column `j`. -/
-theorem pullback_apply_univ_erase {k : ℕ} (V : Fin n → Fin (k + 1) → ℝ) (α : Finset (Fin n) → ℝ)
-    (j : Fin (k + 1)) :
-    pullback V α (univ.erase j) = pullback (fun i => V i ∘ Fin.succAboveOrderEmb j) α univ := by
-  rw [← restrict_pullback]
-  simp only [ExteriorFibre.restrict, map_succAboveOrderEmb_univ]
-
-/-- **`S` maps fields with equal tangential traces to such fields**: the tangential trace of
-`dxᵢ ∧ vᵢ` on a face only involves the tangential trace of `vᵢ`. -/
-theorem tangentialTraceEq_coordWedgeSum {F : Finset (Fin n → ℝ)} {k : ℕ}
-    {α β : Fin n → Finset (Fin n) → ℝ} (h : ∀ i, TangentialTraceEq F k (α i) (β i)) :
-    TangentialTraceEq F (k + 1) (coordWedgeSum α) (coordWedgeSum β) := by
-  intro V hV
-  rw [pullback_coordWedgeSum, pullback_coordWedgeSum, Finset.sum_apply, Finset.sum_apply]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  simp only [wedge_apply]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  rw [pullback_apply_univ_erase, pullback_apply_univ_erase]
-  congr 1
-  exact h i _ fun l => hV _
 
 end Fibre
 
@@ -246,11 +176,6 @@ theorem coordWedgeField_smul (c : ℝ) (v : Fin n → FormField n) :
     coordWedgeField (c • v) = c • coordWedgeField v := by
   funext x
   exact coordWedgeSum_smul c (fun i => v i x)
-
-theorem coordWedgeField_sub (v w : Fin n → FormField n) :
-    coordWedgeField (v - w) = coordWedgeField v - coordWedgeField w := by
-  funext x
-  exact coordWedgeSum_sub (fun i => v i x) (fun i => w i x)
 
 theorem isDeg_coordWedgeField {k : ℕ} {v : Fin n → FormField n} (hv : ∀ i x, IsDeg k (v i x))
     (x : Fin n → ℝ) : IsDeg (k + 1) (coordWedgeField v x) :=
@@ -622,43 +547,6 @@ def wsGlobal₀ (hS : S.ConstOneTest k) :
       S.wsPiecewise M k fun a => (u a : (polyElement n S).Piecewise M k) := rfl
 
 /-! ### The surjectivity hypothesis (5.4): `Π' S Π̃ = Π' S` -/
-
-/-- **Thesis Prop 5.7, corrected (local form).** On an `n`-simplex `T`, for continuous `ψ`:
-`Π'_T S Π_T ψ = Π'_T S ψ`, by the DOF argument `Feec.FiniteElement.comp_eq_of_mem_span`: the target
-DOFs of `S ψ` are combinations of the source DOFs of `ψ` (the moment form of the DOFs is needed;
-the thesis' density step is invalid, see `docs/audit.json`). -/
-theorem localInterp_coordWedgeC_localInterp (hS : S.ConstOneTest k)
-    (T : Affine.Simplex ℝ (Fin n → ℝ) n) (ψ : Fin n → contForms n) :
-    (polyElement n lowestOrder).localInterp T (k + 1)
-        (coordWedgeC fun a => S.toCont k ((polyElement n S).localInterp T k (ψ a))) =
-      (polyElement n lowestOrder).localInterp T (k + 1) (coordWedgeC ψ) := by
-  have h := comp_eq_of_mem_span
-    (m := fun p : Fin n × (Σ g : (vertexSet T).powerset, S.DofIdx (g : Finset (Fin n → ℝ)) k) =>
-      S.dof p.2.1 k p.2.2 ∘ₗ LinearMap.proj p.1)
-    (ℓ := fun p : (Σ g : (vertexSet T).powerset,
-      lowestOrder.DofIdx (g : Finset (Fin n → ℝ)) (k + 1)) => lowestOrder.dof p.1 (k + 1) p.2)
-    coordWedgeC
-    (LinearMap.pi fun a => Submodule.inclusion ((polyElement n S).le_contForms T k) ∘ₗ
-      (polyElement n S).localInterp T k ∘ₗ LinearMap.proj a)
-    ((Submodule.inclusion ((polyElement n lowestOrder).le_contForms T (k + 1))) ∘ₗ
-      (polyElement n lowestOrder).localInterp T (k + 1))
-    (fun x y hxy => by
-      simp only [LinearMap.comp_apply]
-      congr 1
-      exact (polyElement n lowestOrder).localSpace_ext T (k + 1) fun g hg i => by
-        rw [(polyElement n lowestOrder).localDof_localInterp T (k + 1) x g hg i,
-          (polyElement n lowestOrder).localDof_localInterp T (k + 1) y g hg i]
-        exact hxy ⟨⟨g, mem_powerset.2 hg⟩, i⟩)
-    (fun p ψ => by
-      simp only [LinearMap.comp_apply, LinearMap.pi_apply, LinearMap.proj_apply]
-      exact (polyElement n S).localDof_localInterp T k (ψ p.1) p.2.1 (mem_powerset.1 p.2.1.2)
-        p.2.2)
-    (fun p => by
-      have h1 := S.dof_comp_coordWedgeC_mem_span hS (p.1 : Finset (Fin n → ℝ)) p.2
-      refine Submodule.span_mono ?_ h1
-      rintro _ ⟨⟨a, j⟩, rfl⟩
-      exact ⟨(a, ⟨p.1, j⟩), rfl⟩) ψ
-  exact Subtype.ext (congrArg (Subtype.val : contForms n → FormField n) h)
 
 /-- **Thesis Prop 5.7, corrected (global form)**: `Π'_h S Π̃_h ψ = Π'_h S ψ` for continuous `ψ`
 (`Π̃_h` the componentwise canonical interpolant, `Π'_h` the canonical interpolant of
@@ -1445,65 +1333,14 @@ theorem bggS0h₀_surjective :
     Function.Surjective (lagrangeP2.wsGlobal₀ (M := M) lagrangeP2_constOneTest_zero) :=
   wsGlobal₀_surjective _
 
-/-- **Thesis Prop 5.7, corrected**, for the elements of Table 5.1:
-`Π¹S⁰Π̃⁰ = Π¹S⁰` and `Π²S¹Π̃¹ = Π²S¹` on continuous fields. -/
+/-- **Thesis Prop 5.7, corrected**, for the elements of Table 5.1: `Π¹S⁰Π̃⁰ = Π¹S⁰` on continuous
+fields (`Π²S¹Π̃¹ = Π²S¹` is `wsGlobal_tensorInterp` with `lagrangeP2_constOneTest_one`). -/
 theorem bggS0h_tensorInterp (ψ : Fin n → contForms n) :
     bggS0h M ((polyElement n lagrangeP2).tensorInterp M n 0 ψ) =
       (polyElement n lowestOrder).globalInterp M 1 (coordWedgeC ψ) :=
   wsGlobal_tensorInterp _ ψ
 
-theorem bggS1h_tensorInterp (v : Fin n → contForms n) :
-    bggS1h M ((polyElement n lagrangeP2).tensorInterp M n 1 v) =
-      (polyElement n lowestOrder).globalInterp M 2 (coordWedgeC v) :=
-  wsGlobal_tensorInterp _ v
-
-/-- **The canonical discrete anticommutation** `curl S₀,ₕ = −S₁,ₕ grad` on `P₂Λ⁰ ⊗ ℝⁿ`. -/
-theorem dGlobal_bggS0h (ψ : Fin n → (polyElement n lagrangeP2).globalSpace M 0) :
-    (polyElement n lowestOrder).dGlobal M 1 (bggS0h M ψ) =
-      -bggS1h M fun a => (polyElement n lagrangeP2).dGlobal M 0 (ψ a) :=
-  Subtype.ext (dPiecewise_wsPiecewise (fun a => ((ψ a : (polyElement n lagrangeP2).globalSpace M 0) :
-    (polyElement n lagrangeP2).Piecewise M 0)))
-
 end PolySeq
 
 end Feec.FiniteElement
 
-/-! ### Compatibility of a pair of smoothed projections -/
-
-namespace Feec.HilbertComplex.Subcomplex.CommutingMap
-
-variable {𝕜 : Type*} [RCLike 𝕜] {ι ι' : Type*} {c : ComplexShape ι} {c' : ComplexShape ι'}
-  {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
-  [∀ i, CompleteSpace (W i)] {W' : ι' → Type*} [∀ i, NormedAddCommGroup (W' i)]
-  [∀ i, InnerProductSpace 𝕜 (W' i)] [∀ i, CompleteSpace (W' i)]
-  {H : HilbertComplex 𝕜 c W} {H' : HilbertComplex 𝕜 c' W'} {S : H.Subcomplex} {S' : H'.Subcomplex}
-  [∀ i, FiniteDimensional 𝕜 (S.V i)] [∀ i, FiniteDimensional 𝕜 (S'.V i)]
-
-/-- **Smoothed projections satisfy the surjectivity hypothesis (5.4)**: let `Q = Π R`,
-`Q̃ = Π̃ R̃` be commuting maps into the two finite element rows and `𝒮 : W̃ⁱ → Wʲ` a connecting map
-with `Q 𝒮 y = c Π' 𝒮 (Q̃ y)` (from `R 𝒮 = c 𝒮 R̃`, the dilation factor `c`, and
-`Π 𝒮 Π̃ = Π 𝒮` on smooth fields, the corrected Prop 5.7; `A` is `Π 𝒮` on the discrete fields).
-Then the smoothed projections `π = J⁻¹ Q`, `π̃ = J̃⁻¹ Q̃` satisfy `π 𝒮 π̃ = π 𝒮`: since
-`Q̃ π̃ = Q̃`, `Q 𝒮 π̃ x = c A (Q̃ π̃ x) = c A (Q̃ x) = Q 𝒮 x`. This is `Feec.BGG.Discrete.Compatible`
-(`P1 = π`, `Pt0 = π̃`, `S0 = 𝒮`) for smoothed projections. The hypothesis `hA` is not discharged
-here for the cube smoothing (it combines `Feec.Models.Cube.WeakSymmetry.smoothForm_wsL2` with
-`PolySeq.wsGlobal_tensorInterp`); this lemma is the abstract step only. -/
-theorem toCochainProjection_comp_toCochainProjection (Q : S.CommutingMap) (Q' : S'.CommutingMap)
-    {θ θ' : ℝ} (hθ : θ < 1) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) (hθ' : θ' < 1)
-    (hQ' : ∀ i, ∀ v ∈ S'.V i, ‖v - Q'.Q i v‖ ≤ θ' * ‖v‖) {i : ι'} {j : ι}
-    (𝒮 : W' i →ₗ[𝕜] W j) (A : S'.V i →ₗ[𝕜] W j) (cst : 𝕜)
-    (hA : ∀ y, Q.Q j (𝒮 y) = cst • A ⟨Q'.Q i y, Q'.mem i y⟩) (x : W' i) :
-    (Q.toCochainProjection hθ hQ).π j (𝒮 ((Q'.toCochainProjection hθ' hQ').π i x)) =
-      (Q.toCochainProjection hθ hQ).π j (𝒮 x) := by
-  have h' : Q'.Q i ((Q'.toCochainProjection hθ' hQ').π i x) = Q'.Q i x := by
-    rw [toCochainProjection_π]
-    exact Q'.Q_restrictVEquiv_symm hθ' hQ' i _
-  have key : Q.Q j (𝒮 ((Q'.toCochainProjection hθ' hQ').π i x)) = Q.Q j (𝒮 x) := by
-    rw [hA, hA]
-    congr 2
-    exact Subtype.ext h'
-  rw [toCochainProjection_π, toCochainProjection_π]
-  exact congrArg (fun z : S.V j => (((Q.restrictVEquiv hθ hQ j).symm z : S.V j) : W j))
-    (Subtype.ext key)
-
-end Feec.HilbertComplex.Subcomplex.CommutingMap

@@ -16,21 +16,15 @@ spaces. This file builds them on the Hilbert-complex side and on the element sid
 domain). It is again a Hilbert complex (closed graphs, dense domains). A subcomplex `S` of `H`
 gives the product subcomplex `S.pi α` (`Subcomplex.pi`), finite-dimensional when `S` is; a
 commuting map or a cochain projection of `S` gives the componentwise one of `S.pi α`
-(`Subcomplex.CommutingMap.pi`, `Subcomplex.CochainProjection.pi`), **with the same bounds**:
-`‖π x‖ ≤ C ‖x‖` (`CochainProjection.norm_pi_le`), the graph bound
-(`CochainProjection.isGraphBounded_pi`), and the estimate `‖v - Q v‖ ≤ θ ‖v‖` on `Vₕ` of the
-smoothed-projection construction (`CommutingMap.norm_sub_pi_le`), so that the smoothed projection
-of the product is a cochain projection with the bounds of the factors
-(`CommutingMap.norm_toCochainProjection_pi_le`).
+(`Subcomplex.CommutingMap.pi`, `Subcomplex.CochainProjection.pi`); `norm_piMap_le` bounds the
+componentwise maps by the bounds of the factors.
 
 **Finite element spaces `⊗ ℝᵐ`.** For an element family `E` on a conforming mesh `M` of an open
 `Ω ⊆ ℝⁿ`, `LocalElement.tensorSubcomplex E M hΩ m` (resp. `tensorSubcomplexMin`, vanishing
 boundary DOFs) is the product subcomplex of the `m`-fold product of `HΛ(Ω)` (resp. `H̊Λ(Ω)`), with
-spaces `(Vₕᵏ)ᵐ ⊆ L²(Ω; Λᵏ)ᵐ` (`mem_tensorSubcomplex_V`), finite-dimensional. The componentwise
-canonical interpolant (`LocalElement.tensorInterp`) maps `(C⁰Λᵏ)ᵐ` to the `m`-fold product of
-global spaces, is a projection, and commutes with `d` on `C¹` forms
-(`tensorInterp_extDeriv`); componentwise gluing (`LocalElement.tensorGlue`) lands in the product
-spaces.
+spaces `(Vₕᵏ)ᵐ ⊆ L²(Ω; Λᵏ)ᵐ`, finite-dimensional. The componentwise canonical interpolant
+(`LocalElement.tensorInterp`) maps `(C⁰Λᵏ)ᵐ` to the `m`-fold product of global spaces, and
+componentwise gluing (`LocalElement.tensorGlue`) maps it into `L²(Ω; Λᵏ)ᵐ`.
 
 ## References
 
@@ -191,19 +185,8 @@ variable {H α}
 
 @[simp] theorem pi_d (i j : ι) : (H.pi α).d i j = H.piD α i j := rfl
 
-theorem mem_pi_domain {i j : ι} {x : PiLp 2 (fun _ : α => W i)} :
-    x ∈ ((H.pi α).d i j).domain ↔ ∀ a, x a ∈ (H.d i j).domain := mem_piDomain
-
 @[simp] theorem pi_d_apply {i j : ι} (x : ((H.pi α).d i j).domain) (a : α) :
     (H.pi α).d i j x a = H.d i j ⟨(x : PiLp 2 (fun _ : α => W i)) a, mem_piDomain.1 x.2 a⟩ :=
-  rfl
-
-/-- The squared graph norm of the product is the sum of the squared graph norms. -/
-theorem norm_sq_add_norm_sq_pi_d {i j : ι} (x : ((H.pi α).d i j).domain) :
-    ‖(x : PiLp 2 (fun _ : α => W i))‖ ^ 2 + ‖(H.pi α).d i j x‖ ^ 2 =
-      ∑ a, (‖(x : PiLp 2 (fun _ : α => W i)) a‖ ^ 2 +
-        ‖H.d i j ⟨(x : PiLp 2 (fun _ : α => W i)) a, mem_piDomain.1 x.2 a⟩‖ ^ 2) := by
-  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, ← Finset.sum_add_distrib]
   rfl
 
 /-! ### Product subcomplexes -/
@@ -260,40 +243,6 @@ variable {Q α}
 @[simp] theorem pi_Q_apply (i : ι) (x : PiLp 2 (fun _ : α => W i)) (a : α) :
     (Q.pi α).Q i x a = Q.Q i (x a) := rfl
 
-/-- `‖v - Q v‖ ≤ θ ‖v‖` on `Vₕ` passes to the product. -/
-theorem norm_sub_pi_le {θ : ℝ} (hθ : 0 ≤ θ) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) :
-    ∀ i, ∀ v ∈ (S.pi α).V i, ‖v - (Q.pi α).Q i v‖ ≤ θ * ‖v‖ := by
-  intro i v hv
-  have h2 : ‖v - (Q.pi α).Q i v‖ ^ 2 ≤ (θ * ‖v‖) ^ 2 := by
-    rw [PiLp.norm_sq_eq_of_L2, mul_pow, PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
-    refine Finset.sum_le_sum fun a _ => ?_
-    rw [← mul_pow]
-    exact pow_le_pow_left₀ (norm_nonneg _) (hQ i _ (mem_pi_V.1 hv a)) 2
-  exact (abs_le_of_sq_le_sq' h2 (mul_nonneg hθ (norm_nonneg v))).2
-
-/-- `‖Q x‖ ≤ C ‖x‖` passes to the product. -/
-theorem norm_pi_Q_le {i : ι} {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖)
-    (x : PiLp 2 (fun _ : α => W i)) : ‖(Q.pi α).Q i x‖ ≤ C * ‖x‖ :=
-  norm_piMap_le (Q.Q i) hC0 hC x
-
-/-- **The smoothed projection of the product** (`π = J⁻¹ Q` for the componentwise `Q`) is a
-cochain projection bounded by `(1 - θ)⁻¹ C`, the bound of the factors. -/
-theorem norm_toCochainProjection_pi_le [∀ i, FiniteDimensional 𝕜 (S.V i)] {θ : ℝ} (hθ0 : 0 ≤ θ)
-    (hθ : θ < 1) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i : ι} {C : ℝ}
-    (hC0 : 0 ≤ C) (hC : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (x : PiLp 2 (fun _ : α => W i)) :
-    ‖((Q.pi α).toCochainProjection hθ (norm_sub_pi_le hθ0 hQ)).π i x‖ ≤ (1 - θ)⁻¹ * C * ‖x‖ :=
-  (Q.pi α).norm_toCochainProjection_le hθ _ (norm_pi_Q_le hC0 hC) x
-
-/-- The graph bound of the smoothed projection of the product, from the `W`-bounds of the
-factors. -/
-theorem isGraphBounded_toCochainProjection_pi [∀ i, FiniteDimensional 𝕜 (S.V i)] {θ : ℝ}
-    (hθ0 : 0 ≤ θ) (hθ : θ < 1) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι}
-    {C : ℝ} (hC0 : 0 ≤ C) (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) :
-    ((Q.pi α).toCochainProjection hθ (norm_sub_pi_le hθ0 hQ)).IsGraphBounded i j
-      ((1 - θ)⁻¹ * C) :=
-  (Q.pi α).isGraphBounded_toCochainProjection_of_norm_le hθ _ (norm_pi_Q_le hC0 hi)
-    (norm_pi_Q_le hC0 hj)
-
 end CommutingMap
 
 namespace CochainProjection
@@ -317,27 +266,6 @@ variable {P α}
 
 @[simp] theorem pi_π_apply (i : ι) (x : PiLp 2 (fun _ : α => W i)) (a : α) :
     (P.pi α).π i x a = P.π i (x a) := rfl
-
-/-- **Same `W`-bound**: `‖π x‖ ≤ C ‖x‖` for the factors gives it for the product. -/
-theorem norm_pi_le {i : ι} {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖)
-    (x : PiLp 2 (fun _ : α => W i)) : ‖(P.pi α).π i x‖ ≤ C * ‖x‖ :=
-  norm_piMap_le (P.π i) hC0 hC x
-
-/-- **Same graph bound** for the product. -/
-theorem isGraphBounded_pi {i j : ι} {C : ℝ} (hP : P.IsGraphBounded i j C) :
-    (P.pi α).IsGraphBounded i j C := by
-  intro x
-  have e1 := norm_sq_add_norm_sq_pi_d (H := H) (α := α) x
-  have e2 : ‖(P.pi α).π i x‖ ^ 2 +
-      ‖(H.pi α).d i j ⟨(P.pi α).π i x, (S.pi α).le_domain i j ((P.pi α).mem i x)⟩‖ ^ 2 =
-      ∑ a, (‖P.π i ((x : PiLp 2 (fun _ : α => W i)) a)‖ ^ 2 +
-        ‖H.d i j ⟨P.π i ((x : PiLp 2 (fun _ : α => W i)) a),
-          S.le_domain i j (P.mem i _)⟩‖ ^ 2) :=
-    norm_sq_add_norm_sq_pi_d (H := H) (α := α)
-      ⟨(P.pi α).π i x, (S.pi α).le_domain i j ((P.pi α).mem i x)⟩
-  rw [e2, e1, Finset.mul_sum]
-  exact Finset.sum_le_sum fun a _ =>
-    hP ⟨(x : PiLp 2 (fun _ : α => W i)) a, mem_piDomain.1 x.2 a⟩
 
 end CochainProjection
 
@@ -368,17 +296,6 @@ def tensorSubcomplexMin [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ
     (m : ℕ) : (((deRham ℝ n).minimalComplex hΩ).pi (Fin m)).Subcomplex :=
   (E.subcomplexMin M hΩ x₀ hstar).pi (Fin m)
 
-theorem mem_tensorSubcomplex_V [NeZero n] (hΩ : IsOpen M.domain) {m : ℕ} {k : ℤ}
-    {x : PiLp 2 (fun _ : Fin m => L2F ℝ M.domain (formIdx n k))} :
-    x ∈ (E.tensorSubcomplex M hΩ m).V k ↔ ∀ a, x a ∈ E.V M k :=
-  Subcomplex.mem_pi_V
-
-theorem mem_tensorSubcomplexMin_V [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
-    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
-    {m : ℕ} {k : ℤ} {x : PiLp 2 (fun _ : Fin m => L2F ℝ M.domain (formIdx n k))} :
-    x ∈ (E.tensorSubcomplexMin M hΩ x₀ hstar m).V k ↔ ∀ a, x a ∈ E.V₀ M k :=
-  Subcomplex.mem_pi_V
-
 instance [NeZero n] (hΩ : IsOpen M.domain) (m : ℕ) (k : ℤ) :
     FiniteDimensional ℝ ((E.tensorSubcomplex M hΩ m).V k) :=
   haveI : ∀ i, FiniteDimensional ℝ ((E.subcomplex M hΩ).V i) := fun _ => inferInstance
@@ -400,41 +317,12 @@ def tensorGlue (m : ℕ) (k : ℤ) :
 @[simp] theorem tensorGlue_apply {m : ℕ} {k : ℤ} (u : Fin m → E.Piecewise M k.toNat) (a : Fin m) :
     E.tensorGlue M m k u a = E.glue M k (u a) := rfl
 
-theorem tensorGlue_mem [NeZero n] (hΩ : IsOpen M.domain) {m : ℕ} {k : ℤ}
-    {u : Fin m → E.Piecewise M k.toNat} (hu : ∀ a, u a ∈ E.globalSpace M k.toNat) :
-    E.tensorGlue M m k u ∈ (E.tensorSubcomplex M hΩ m).V k :=
-  (E.mem_tensorSubcomplex_V M hΩ).2 fun a => ⟨⟨u a, hu a⟩, rfl⟩
-
-theorem tensorGlue_mem_min [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
-    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
-    {m : ℕ} {k : ℤ} {u : Fin m → E.Piecewise M k.toNat}
-    (hu : ∀ a, u a ∈ E.globalSpace₀ M k.toNat) :
-    E.tensorGlue M m k u ∈ (E.tensorSubcomplexMin M hΩ x₀ hstar m).V k :=
-  (E.mem_tensorSubcomplexMin_V M hΩ x₀ hstar).2 fun a => ⟨⟨u a, hu a⟩, rfl⟩
-
 /-- **The componentwise canonical interpolant** `(C⁰Λᵏ)ᵐ → (Λ_hᵏ)ᵐ`. -/
 def tensorInterp (m k : ℕ) : (Fin m → contForms n) →ₗ[ℝ] (Fin m → E.globalSpace M k) :=
   LinearMap.pi fun a => E.globalInterp M k ∘ₗ LinearMap.proj a
 
 @[simp] theorem tensorInterp_apply {m k : ℕ} (w : Fin m → contForms n) (a : Fin m) :
     E.tensorInterp M m k w a = E.globalInterp M k (w a) := rfl
-
-/-- The componentwise interpolant is a projection: componentwise continuous forms equal to the
-discrete fields on every closed element are interpolated to them. -/
-theorem tensorInterp_eq_of_eqOn {m k : ℕ} (u : Fin m → E.globalSpace M k)
-    (w : Fin m → contForms n)
-    (hw : ∀ a, ∀ T : M.simplices, ∀ x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
-      (w a : FormField n) x = ((((u a : E.globalSpace M k) : E.Piecewise M k) T : E.space T k) :
-        FormField n) x) :
-    E.tensorInterp M m k w = u :=
-  funext fun a => E.globalInterp_eq_of_eqOn M k (u a) (w a) (hw a)
-
-/-- **The componentwise interpolant commutes with `d`** on `C¹` forms. -/
-theorem tensorInterp_extDeriv {m k : ℕ} (w : Fin m → c1Forms n) :
-    E.tensorInterp M m (k + 1) (fun a => extDerivC1 (w a)) =
-      fun a => E.dGlobal M k (E.tensorInterp M m k
-        (fun b => Submodule.inclusion c1Forms_le_contForms (w b)) a) :=
-  funext fun a => E.globalInterp_extDeriv M k (w a)
 
 end LocalElement
 

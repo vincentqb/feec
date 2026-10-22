@@ -35,18 +35,11 @@ This generalizes `Feec.FiniteElement.WhitneyInterpolation` (`P₁⁻Λᵏ`) to a
   `sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖` for `s ≤ r` (`P_rΛᵏ`,
   `exists_norm_sub_polyInterp_le`) and `s ≤ r - 1` (`P_r⁻Λᵏ`,
   `exists_norm_sub_polyMinusInterp_le`), so the full orders `h^{r+1}` and `h^r`, and `O(h)` for
-  `C¹` data (`s = 0`); the `L²(T)` versions
-  `‖w - Π_T w‖²_{L²(T)} ≤ C hⁿ (h^{s+1} sup_T ‖D^{s+1} w‖)²` (`exists_formL2Sq_sub_polyInterp_le`,
-  `exists_formL2Sq_sub_polyMinusInterp_le`); and, through the commuting property `d Π_T = Π_T d`
-  (`Feec.FiniteElement.polyInterp_extDeriv`, `polyMinusInterp_extDeriv`), the estimates of
-  `dw - d Π_T w` needed for the graph norm (`exists_norm_extDeriv_sub_polyInterp_le`,
-  `exists_norm_extDeriv_sub_polyMinusInterp_le`, for `w ∈ C^{s+2}`; local versions
-  `exists_norm_extDeriv_sub_polyInterp_le_of_contDiffOn`,
-  `exists_norm_extDeriv_sub_polyMinusInterp_le_of_contDiffOn` for `w ∈ C¹` that are `C^{s+2}` on
-  an open `U ⊇ T`).
-* **Kernel lemma for `Π_T`** (`exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`,
-  `exists_formL2Sq_sub_polyInterp_le_formGradL2Sq`): for `u ∈ P_rΛᵏ` and `Π_T` onto
-  `P_{r'}⁻Λᵏ(T)` (resp. `P_{r'}Λᵏ(T)`), `r' ≤ r`, `‖u - Π_T u‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}`,
+  `C¹` data (`s = 0`). The `L²(T)` and graph-norm versions (through the commuting property
+  `d Π_T = Π_T d`, `Feec.FiniteElement.polyInterp_extDeriv`, `polyMinusInterp_extDeriv`) are
+  proved on shape-regular simplices in `Feec.Models.StarShaped.PolySmoothing`.
+* **Kernel lemma for `Π_T`** (`exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`): for
+  `u ∈ P_rΛᵏ` and `Π_T` onto `P_{r'}⁻Λᵏ(T)`, `r' ≤ r`, `‖u - Π_T u‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}`,
   from `Feec.FiniteElement.exists_local_kernel_bound` and naturality: the first estimate of
   [QuennevilleBelair2015], Prop 5.9 (case `P_2Λ¹ ≅ P_2Λ⁰ ⊗ ℝ³ → P_1⁻Λ¹`), with the scaling in `h`
   made explicit. The second estimate of Prop 5.9, `(I - Π²_T) vskw v` bounded by `h` times the
@@ -61,9 +54,8 @@ This generalizes `Feec.FiniteElement.WhitneyInterpolation` (`P₁⁻Λᵏ`) to a
   `Feec.FiniteElement.PolyInverseEstimate` apply with the unisolvence `PolySeq.isUnisolvent_dof`
   on `K`: `hᵏ sup_T ‖u‖ ≤ B Σ |ℓ_{g,i}(u)|` (`PolySeq.exists_local_dof_bound`) and
   `‖u‖²_{L²(T)} ≍ h^{n-2k} Σ ℓ_{g,i}(u)²` (`PolySeq.exists_local_formL2Sq_equiv`).
-* **Finitely many reference simplices** (`exists_norm_sub_polyInterp_le_uniform`,
-  `exists_norm_sub_polyMinusInterp_le_uniform`, `PolySeq.exists_local_dof_bound_uniform`,
-  `PolySeq.exists_local_formL2Sq_equiv_uniform`): the constants can be taken uniform over a
+* **Finitely many reference simplices** (`exists_norm_sub_polyMinusInterp_le_uniform`,
+  `PolySeq.exists_local_dof_bound_uniform`): the constants can be taken uniform over a
   finite family `K_σ` (the Kuhn simplices of a Freudenthal mesh).
 
 The estimates are local (one simplex); the mesh-level statements are assembled from them on the
@@ -620,12 +612,6 @@ section Transport
 
 variable {r k : ℕ}
 
-theorem simplexMap_points_eq_refMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    simplexMap T.points = T.refMap := by
-  funext x i
-  simp [simplexMap, affine_apply, Affine.Simplex.refMap_apply, Affine.Simplex.linearPart_apply,
-    simplexMatrix, Finset.sum_apply, mul_comm]
-
 /-- The fibre pullback `α ↦ B_p^* α` by the edge matrix of a nondegenerate simplex, as a
 continuous linear equivalence of `Λ(ℝⁿ)` (all degrees). -/
 def fibrePullbackEquiv (p : Fin (n + 1) → Fin n → ℝ) (hp : IsUnit (edgeMatrix p).det) :
@@ -677,7 +663,7 @@ theorem affinePullback_points_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n →
   rw [affinePullback_apply, simplexMatrix_points_mapEquiv_boxMap, pullback_smul_matrix_of_isDeg h
     (hw _), Pi.smul_apply, refPullback, fibrePullbackEquiv_apply]
   congr 2
-  have := congrFun (simplexMap_points_eq_refMap (mapEquiv (boxMap t h hh) K)) x
+  have := congrFun (simplexMap_eq_refMap (mapEquiv (boxMap t h hh) K)) x
   rw [← this, simplexMap, simplexMatrix_points_mapEquiv_boxMap]
 
 theorem linearEquiv_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n) (t : Fin n → ℝ)
@@ -870,169 +856,6 @@ theorem measureReal_closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin 
   have := integral_closedInterior_mapEquiv_boxMap K t hh fun _ => (1 : ℝ)
   simpa [setIntegral_const] using this
 
-/-- **`L²(T)` interpolation error of `Π_T` for `P_rΛᵏ`** on `T = t + h K`, `s ≤ r`:
-`‖w - Π_T w‖²_{L²(T)} ≤ C hⁿ (h^{s+1} sup_T ‖D^{s+1} w‖)²`, i.e.
-`‖w - Π_T w‖_{L²(T)} ≤ C' |T|^{1/2} h^{s+1} sup_T ‖D^{s+1} w‖`. -/
-theorem exists_formL2Sq_sub_polyInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r)
-    (hk : k ≤ n) {s : ℕ} (hs : s ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
-      (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') K).closedInterior ⊆ U → ContDiffOn ℝ (s + 1) w U →
-      ∀ {M : ℝ}, (∀ y ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) →
-      formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (w - (polyInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr hk
-          ⟨w, mem_contDegForms hwc hwk⟩ : FormField n)) ≤ C * h ^ n * (h ^ (s + 1) * M) ^ 2 := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyInterp_le K hr hk hs
-  refine ⟨Fintype.card (Finset (Fin n)) * volume.real K.closedInterior * C ^ 2,
-    mul_nonneg (mul_nonneg (Nat.cast_nonneg _) measureReal_nonneg) (sq_nonneg _),
-    fun {h} hh t w hwc hwk U hU hTU hw M hM => ?_⟩
-  refine (formL2Sq_le_of_norm_le
-    (mapEquiv (boxMap t h hh.ne') K).isCompact_closedInterior.measure_lt_top
-    fun x hx => hC hh t hwc hwk hU hTU hw hM x hx).trans_eq ?_
-  rw [measureReal_closedInterior_mapEquiv_boxMap K t hh]
-  ring
-
-/-- **`L²(T)` interpolation error of `Π_T` for `P_r⁻Λᵏ`** on `T = t + h K`, `s ≤ r - 1`. -/
-theorem exists_formL2Sq_sub_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ} (hs : s + 1 ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
-      (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') K).closedInterior ⊆ U → ContDiffOn ℝ (s + 1) w U →
-      ∀ {M : ℝ}, (∀ y ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) →
-      formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (w - (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr hk
-          ⟨w, mem_contDegForms hwc hwk⟩ : FormField n)) ≤ C * h ^ n * (h ^ (s + 1) * M) ^ 2 := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyMinusInterp_le K hr hk hs
-  refine ⟨Fintype.card (Finset (Fin n)) * volume.real K.closedInterior * C ^ 2,
-    mul_nonneg (mul_nonneg (Nat.cast_nonneg _) measureReal_nonneg) (sq_nonneg _),
-    fun {h} hh t w hwc hwk U hU hTU hw M hM => ?_⟩
-  refine (formL2Sq_le_of_norm_le
-    (mapEquiv (boxMap t h hh.ne') K).isCompact_closedInterior.measure_lt_top
-    fun x hx => hC hh t hwc hwk hU hTU hw hM x hx).trans_eq ?_
-  rw [measureReal_closedInterior_mapEquiv_boxMap K t hh]
-  ring
-
-theorem mem_c1DegForms_of_contDiff {m : WithTop ℕ∞} {w : FormField n} (hw : ContDiff ℝ (m + 1) w)
-    (hwk : ∀ x, IsDeg k (w x)) : w ∈ c1DegForms n k :=
-  ⟨mem_c1Forms.2 (hw.of_le le_add_self), hwk⟩
-
-/-- **Error of `d Π_T` for the `P` family** (the graph-norm part): with
-`Π_T : C⁰Λᵏ → P_{r+1}Λᵏ(T)`, the commuting property `d Π_T w = Π_T dw`
-(`Feec.FiniteElement.polyInterp_extDeriv`) and the estimate of `Π_T : C⁰Λ^{k+1} → P_rΛ^{k+1}(T)`
-give `sup_T ‖dw - d Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} dw‖` for `s ≤ r` and `w ∈ C^{s+2}`. -/
-theorem exists_norm_extDeriv_sub_polyInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k + 1 ≤ n) {s : ℕ} (hs : s ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hw : ContDiff ℝ (s + 1 + 1) w) (hwk : ∀ x, IsDeg k (w x)) {M : ℝ},
-      (∀ y ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ M) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖extDeriv w x - extDeriv (polyInterp
-          (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
-          (Nat.le_add_left 1 r) (by omega : k ≤ n) ⟨w, mem_contDegForms hw.continuous hwk⟩ :
-            FormField n) x‖ ≤ C * h ^ (s + 1) * M := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyInterp_le K hr hk hs
-  refine ⟨C, hC0, fun {h} hh t w hw hwk M hM x hx => ?_⟩
-  have hdw := contDiff_extDeriv hw
-  have hcomm := polyInterp_extDeriv (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr hk
-    ⟨w, mem_c1DegForms_of_contDiff hw hwk⟩
-  have e := congrArg (fun ω : localPolySpace (mapEquiv (boxMap t h hh.ne') K).points r (k + 1) =>
-    (ω : FormField n) x) hcomm
-  have h1 := hC hh t hdw.continuous (fun x => IsDeg.extDeriv hwk x) isOpen_univ
-    (Set.subset_univ _) hdw.contDiffOn hM x hx
-  convert h1 using 3
-  exact e.symm
-
-/-- **Error of `d Π_T` for the `P⁻` family**: `d Π_T w = Π_T dw` in `P_r⁻Λ`
-(`Feec.FiniteElement.polyMinusInterp_extDeriv`), so
-`sup_T ‖dw - d Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} dw‖` for `s ≤ r - 1` and `w ∈ C^{s+2}`. -/
-theorem exists_norm_extDeriv_sub_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k + 1 ≤ n) {s : ℕ} (hs : s + 1 ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hw : ContDiff ℝ (s + 1 + 1) w) (hwk : ∀ x, IsDeg k (w x)) {M : ℝ},
-      (∀ y ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ M) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖extDeriv w x - extDeriv (polyMinusInterp
-          (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr (by omega : k ≤ n)
-            ⟨w, mem_contDegForms hw.continuous hwk⟩ : FormField n) x‖ ≤ C * h ^ (s + 1) * M := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyMinusInterp_le K hr hk hs
-  refine ⟨C, hC0, fun {h} hh t w hw hwk M hM x hx => ?_⟩
-  have hdw := contDiff_extDeriv hw
-  have hcomm := polyMinusInterp_extDeriv (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
-    hr hk ⟨w, mem_c1DegForms_of_contDiff hw hwk⟩
-  have e := congrArg (fun ω : localPolyMinusSpace (mapEquiv (boxMap t h hh.ne') K).points r
-    (k + 1) => (ω : FormField n) x) hcomm
-  have h1 := hC hh t hdw.continuous (fun x => IsDeg.extDeriv hwk x) isOpen_univ
-    (Set.subset_univ _) hdw.contDiffOn hM x hx
-  convert h1 using 3
-  exact e.symm
-
-/-- `d` of a form that is `C^{m+1}` on an open set is `C^m` there. -/
-theorem contDiffOn_extDeriv {m : WithTop ℕ∞} {ω : FormField n} {U : Set (Fin n → ℝ)}
-    (hU : IsOpen U) (hω : ContDiffOn ℝ (m + 1) ω U) : ContDiffOn ℝ m (extDeriv ω) U := by
-  refine contDiffOn_pi.2 fun s => ContDiffOn.sum fun j _ => contDiffOn_const.mul ?_
-  have hc : ContDiffOn ℝ (m + 1) (fun y => ω y (s.erase j)) U := contDiffOn_pi.1 hω _
-  exact (hc.fderiv_of_isOpen hU le_rfl).clm_apply contDiffOn_const
-
-/-- **Local version of `exists_norm_extDeriv_sub_polyInterp_le`**: for `w ∈ C¹` (needed for the
-commuting property) that is `C^{s+2}` on an open `U ⊇ T`,
-`sup_T ‖dw - d Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} dw‖` (`Π_T` onto `P_{r+1}Λᵏ(T)`, `s ≤ r`). -/
-theorem exists_norm_extDeriv_sub_polyInterp_le_of_contDiffOn
-    (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k + 1 ≤ n) {s : ℕ} (hs : s ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hw1 : ContDiff ℝ 1 w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') K).closedInterior ⊆ U → ContDiffOn ℝ (s + 1 + 1) w U →
-      ∀ {M : ℝ}, (∀ y ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ M) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖extDeriv w x - extDeriv (polyInterp
-          (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
-          (Nat.le_add_left 1 r) (by omega : k ≤ n) ⟨w, mem_contDegForms hw1.continuous hwk⟩ :
-            FormField n) x‖ ≤ C * h ^ (s + 1) * M := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyInterp_le K hr hk hs
-  refine ⟨C, hC0, fun {h} hh t w hw1 hwk U hU hTU hw M hM x hx => ?_⟩
-  have hw1' : ContDiff ℝ ((0 : ℕ) + 1) w := by simpa using hw1
-  have hdw := contDiff_extDeriv hw1'
-  have hcomm := polyInterp_extDeriv (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr hk
-    ⟨w, mem_c1DegForms_of_contDiff hw1' hwk⟩
-  have e := congrArg (fun ω : localPolySpace (mapEquiv (boxMap t h hh.ne') K).points r (k + 1) =>
-    (ω : FormField n) x) hcomm
-  have h1 := hC hh t hdw.continuous (fun x => IsDeg.extDeriv hwk x) hU hTU
-    (contDiffOn_extDeriv hU hw) hM x hx
-  convert h1 using 3
-  exact e.symm
-
-/-- **Local version of `exists_norm_extDeriv_sub_polyMinusInterp_le`** (`s ≤ r - 1`). -/
-theorem exists_norm_extDeriv_sub_polyMinusInterp_le_of_contDiffOn
-    (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k + 1 ≤ n) {s : ℕ} (hs : s + 1 ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hw1 : ContDiff ℝ 1 w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') K).closedInterior ⊆ U → ContDiffOn ℝ (s + 1 + 1) w U →
-      ∀ {M : ℝ}, (∀ y ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ M) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖extDeriv w x - extDeriv (polyMinusInterp
-          (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr (by omega : k ≤ n)
-            ⟨w, mem_contDegForms hw1.continuous hwk⟩ : FormField n) x‖ ≤
-          C * h ^ (s + 1) * M := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyMinusInterp_le K hr hk hs
-  refine ⟨C, hC0, fun {h} hh t w hw1 hwk U hU hTU hw M hM x hx => ?_⟩
-  have hw1' : ContDiff ℝ ((0 : ℕ) + 1) w := by simpa using hw1
-  have hdw := contDiff_extDeriv hw1'
-  have hcomm := polyMinusInterp_extDeriv (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
-    hr hk ⟨w, mem_c1DegForms_of_contDiff hw1' hwk⟩
-  have e := congrArg (fun ω : localPolyMinusSpace (mapEquiv (boxMap t h hh.ne') K).points r
-    (k + 1) => (ω : FormField n) x) hcomm
-  have h1 := hC hh t hdw.continuous (fun x => IsDeg.extDeriv hwk x) hU hTU
-    (contDiffOn_extDeriv hU hw) hM x hx
-  convert h1 using 3
-  exact e.symm
-
 end Error
 
 /-! ### The kernel lemma for the canonical interpolants -/
@@ -1106,58 +929,6 @@ theorem exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq (K : Affine.Simplex 
         map_sub (affinePullbackₗ (scalarMat n h) t) _ _, hnat]
     rfl
 
-/-- `Π_K` of `P_{r'}Λᵏ(K)` as a linear map `P_rΛᵏ → P_rΛᵏ` (`r' ≤ r`). -/
-def polyInterpOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) {r' : ℕ} (hr' : 1 ≤ r') (hk : k ≤ n)
-    (hrr : r' ≤ r) : polySpace n r k →ₗ[ℝ] polySpace n r k :=
-  Submodule.inclusion (fun _ hω => polySpace_mono hrr
-      (mem_polySpace_of_mem_localPolySpace (isUnit_det_edgeMatrix K) hω)) ∘ₗ
-    polyInterp (isUnit_det_edgeMatrix K) hr' hk ∘ₗ
-      Submodule.inclusion (polySpace_le_contDegForms r k)
-
-/-- **Kernel lemma for the canonical interpolant of `P_{r'}Λᵏ`** on `T = t + h K` acting on
-`P_rΛᵏ` (`r' ≤ r`): `‖u - Π_T u‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}`, `C` depending only on `K`, `n`,
-`r`, `r'`, `k`. -/
-theorem exists_formL2Sq_sub_polyInterp_le_formGradL2Sq (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    {r' : ℕ} (hr' : 1 ≤ r') (hk : k ≤ n) (hrr : r' ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}
-      (hu : u ∈ polySpace n r k),
-      √(formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (u - (polyInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr' hk
-          ⟨u, polySpace_le_contDegForms r k hu⟩ : FormField n))) ≤
-        C * h * √(formGradL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u) := by
-  set P := polyInterpOn K hr' hk hrr (r := r)
-  have hP : ∀ v : polySpace n r k, (∀ x, (v : FormField n) x = (v : FormField n) 0) →
-      (LinearMap.id - P : polySpace n r k →ₗ[ℝ] polySpace n r k) v = 0 := by
-    intro v hv
-    have hc : (v : FormField n) ∈ localPolySpace K.points r' k := by
-      rw [localPolySpace_eq (isUnit_det_edgeMatrix K)]
-      exact mem_polySpace_of_eq_const hv (isDeg_of_mem_polySpace v.2)
-    have e := polyInterp_inclusion (isUnit_det_edgeMatrix K) hr' hk ⟨_, hc⟩
-    rw [LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]
-    refine Subtype.ext ?_
-    have e2 := congrArg Subtype.val e
-    exact e2.symm
-  obtain ⟨C, hC0, hC⟩ := exists_local_kernel_bound le_rfl
-    (fun h t _ hu => affinePullback_mem_polySpace_scalarMat h t hu) le_rfl
-    (LinearMap.id - P : polySpace n r k →ₗ[ℝ] polySpace n r k) hP K
-  refine ⟨C, hC0, fun {h} hh t u hu => hC hh t u hu _ (fun x => ?_) ?_⟩
-  · have hPi := isDeg_of_mem_polySpace
-      (mem_polySpace_of_mem_localPolySpace (isUnit_det_edgeMatrix _)
-        (polyInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr' hk
-          ⟨u, polySpace_le_contDegForms r k hu⟩).2)
-    intro s hs
-    simp [isDeg_of_mem_polySpace hu x s hs, hPi x s hs]
-  · have hnat := affinePullback_polyInterp (isUnit_det_edgeMatrix K)
-      (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) (scalarMat n h) t
-      (points_mapEquiv_boxMap K t hh.ne') hr' hk ⟨u, polySpace_le_contDegForms r k hu⟩
-    rw [show affinePullback (scalarMat n h) t (u - (polyInterp _ hr' hk ⟨u, _⟩ :
-        FormField n)) = affinePullback (scalarMat n h) t u -
-          affinePullback (scalarMat n h) t (polyInterp
-            (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr' hk
-            ⟨u, polySpace_le_contDegForms r k hu⟩ : FormField n) from
-        map_sub (affinePullbackₗ (scalarMat n h) t) _ _, hnat]
-    rfl
-
 end KernelInterp
 
 /-! ### Degrees of freedom of the global families on homothetic simplices -/
@@ -1194,7 +965,6 @@ theorem lexEnum_image_affine_scalarMat {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ
   refine lexEnum_eq (by rw [card_image_of_injective _ hinj, hg])
     (fun i => mem_image_of_mem _ (lexEnum_mem hg i)) fun i j hij => ?_
   exact strictMono_toLex_affine_scalarMat hh t (strictMono_lexEnum hg hij)
-
 
 theorem injective_affine_scalarMat {h : ℝ} (hh : h ≠ 0) (t : Fin n → ℝ) :
     Function.Injective (affine (scalarMat n h) t) := fun x y hxy => by
@@ -1276,11 +1046,6 @@ def powersetHomothety (K : Affine.Simplex ℝ (Fin n → ℝ) n) {h : ℝ} (hh :
     obtain ⟨s, hs, hse⟩ := Finset.subset_image_iff.1 h1
     exact ⟨⟨s, Finset.mem_powerset.2 hs⟩, Subtype.ext hse⟩
 
-theorem coe_powersetHomothety (K : Affine.Simplex ℝ (Fin n → ℝ) n) {h : ℝ} (hh : 0 < h)
-    (t : Fin n → ℝ) (g : (vertexSet K).powerset) :
-    (powersetHomothety K hh t g : Finset (Fin n → ℝ)) =
-      (g : Finset (Fin n → ℝ)).image (affine (scalarMat n h) t) := rfl
-
 /-- **The degrees of freedom of the global families on `T = t + h K`** are those of `K` applied to
 `H^* u`: for every `f`, `Σ_{g ⊆ T, i} f(ℓ_{g,i}(u)) = Σ_{g ⊆ K, i} f(ℓ_{g,i}(H^* u))`. The
 lexicographic vertex order is preserved by `H` (`h > 0`). -/
@@ -1353,28 +1118,6 @@ section Uniform
 
 variable {r k : ℕ}
 
-/-- `exists_norm_sub_polyInterp_le` with one constant for a finite family of reference simplices
-`K i` (e.g. the Kuhn simplices of a Freudenthal mesh). -/
-theorem exists_norm_sub_polyInterp_le_uniform {ι : Type*} [Finite ι]
-    (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ} (hs : s ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ i, ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hwc : Continuous w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior ⊆ U → ContDiffOn ℝ (s + 1) w U →
-      ∀ {M : ℝ}, (∀ y ∈ (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-        ‖w x - (polyInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') (K i))) hr hk
-          ⟨w, mem_contDegForms hwc hwk⟩ : FormField n) x‖ ≤ C * h ^ (s + 1) * M := by
-  classical
-  have := Fintype.ofFinite ι
-  choose C hC0 hC using fun i => exists_norm_sub_polyInterp_le (K i) hr hk hs
-  refine ⟨∑ i, C i, Finset.sum_nonneg fun i _ => hC0 i,
-    fun i {h} hh t w hwc hwk U hU hTU hw M hM x hx => (hC i hh t hwc hwk hU hTU hw hM x hx).trans ?_⟩
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM x hx)
-  have hCi : C i ≤ ∑ j, C j :=
-    Finset.single_le_sum (f := C) (fun j _ => hC0 j) (Finset.mem_univ i)
-  gcongr
-
 /-- `exists_norm_sub_polyMinusInterp_le` with one constant for a finite family of reference
 simplices. -/
 theorem exists_norm_sub_polyMinusInterp_le_uniform {ι : Type*} [Finite ι]
@@ -1419,35 +1162,6 @@ theorem exists_local_dof_bound_uniform {ι : Type*} [Finite ι]
   have hBi : B i ≤ ∑ j, B j :=
     Finset.single_le_sum (f := B) (fun j _ => hB0 j) (Finset.mem_univ i)
   exact mul_le_mul_of_nonneg_right hBi (Finset.sum_nonneg fun _ _ => abs_nonneg _)
-
-/-- `PolySeq.exists_local_formL2Sq_equiv` with one constant for a finite family of reference
-simplices. -/
-theorem exists_local_formL2Sq_equiv_uniform {ι : Type*} [Finite ι]
-    (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
-    ∃ C, 0 ≤ C ∧ ∀ i, ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}
-      (hu : u ∈ S.space n k),
-      (h ^ k) ^ 2 * formL2Sq (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior u ≤
-          C * (h ^ n * ∑ p : Σ g : (vertexSet (mapEquiv (boxMap t h hh.ne') (K i))).powerset,
-            S.DofIdx (g : Finset (Fin n → ℝ)) k,
-            (S.dof (p.1 : Finset (Fin n → ℝ)) k p.2 ⟨u, S.space_le_contForms n k hu⟩) ^ 2) ∧
-        h ^ n * ∑ p : Σ g : (vertexSet (mapEquiv (boxMap t h hh.ne') (K i))).powerset,
-            S.DofIdx (g : Finset (Fin n → ℝ)) k,
-            (S.dof (p.1 : Finset (Fin n → ℝ)) k p.2 ⟨u, S.space_le_contForms n k hu⟩) ^ 2 ≤
-          C * ((h ^ k) ^ 2 * formL2Sq (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior u) := by
-  classical
-  have := Fintype.ofFinite ι
-  choose C hC0 hC using fun i => S.exists_local_formL2Sq_equiv (K i) k
-  refine ⟨∑ i, C i, Finset.sum_nonneg fun i _ => hC0 i, fun i {h} hh t u hu => ?_⟩
-  have hCi : C i ≤ ∑ j, C j :=
-    Finset.single_le_sum (f := C) (fun j _ => hC0 j) (Finset.mem_univ i)
-  obtain ⟨h1, h2⟩ := hC i hh t hu
-  have hn : 0 ≤ h ^ n := pow_nonneg hh.le n
-  have hk2 : 0 ≤ (h ^ k) ^ 2 := sq_nonneg _
-  have hL : 0 ≤ formL2Sq (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior u :=
-    formL2Sq_nonneg (mapEquiv (boxMap t h hh.ne') (K i)).isCompact_closedInterior.measurableSet u
-  refine ⟨h1.trans (mul_le_mul_of_nonneg_right hCi (mul_nonneg hn
-    (Finset.sum_nonneg fun _ _ => sq_nonneg _))), h2.trans
-    (mul_le_mul_of_nonneg_right hCi (mul_nonneg hk2 hL))⟩
 
 end PolySeq
 

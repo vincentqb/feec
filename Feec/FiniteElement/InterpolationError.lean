@@ -13,7 +13,7 @@ Every `n`-simplex `T` of `ℝⁿ` is `T = F_T(T̂)` with `F_T xh = B_T xh + p₀
 (`Affine.Simplex.refMap`, `Affine.Simplex.linearEquiv`; `Feec.Mesh`). A reference interpolant
 `I` (`Feec.FiniteElement.IsRefInterpolant`) is transported to `T` through `F_T` and a fibre
 isomorphism `Φ_T : G ≃L[ℝ] G`: the identity for scalar functions, the pullback
-`ω ↦ ω ∘ (B_T, …, B_T)` for alternating `k`-forms (`formPullback`), and for vector proxies
+`ω ↦ ω ∘ (B_T, …, B_T)` for alternating `k`-forms, and for vector proxies
 the corresponding Piola map (covariant `û = B_Tᵀ u ∘ F_T` for `1`-forms, contravariant
 `û = det B_T · B_T⁻¹ u ∘ F_T` for `(n-1)`-forms), not the identity. All of these satisfy
 `‖Φ_T‖ ≤ A ‖B_T‖^k`, `‖Φ_T⁻¹‖ ≤ A ‖B_T⁻¹‖^k` with `A` depending only on `n` and `k`:
@@ -27,11 +27,7 @@ gives `‖D^j û‖ ≤ ‖Φ_T‖ ‖B_T‖^j ‖D^j u ∘ F_T‖`, and the ref
 For a shape-regular family (`Feec.Mesh.IsShapeRegular`: `‖B_T‖ ≤ C₀ h_T`, `‖B_T⁻¹‖ ≤ C₀ / h_T`)
 this is
 `sup_T ‖u - Π_T u‖ ≤ A² C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖`
-(`norm_sub_transportInterp_le_of_isShapeRegular`; [Ciarlet2002], Thm 3.1.5), with `A = 1`,
-`k = 0` for scalar functions (`norm_sub_transportInterp_refl_le`) and `A = 1` for Mathlib's
-alternating `k`-forms (`norm_sub_transportInterp_formPullback_le`), and in `L²(T)`
-`‖u - Π_T u‖_{L²(T)} ≤ |T|^{1/2} C' h_T^{r+1} sup_T ‖D^{r+1} u‖`
-(`lintegral_sub_transportInterp_le`, `eLpNorm_sub_transportInterp_le`). With the chain rule for
+(`norm_sub_transportInterp_le_of_isShapeRegular`; [Ciarlet2002], Thm 3.1.5). With the chain rule for
 `F_T⁻¹` (`iteratedFDeriv_comp_refMapInv`), a reference estimate of order `j`
 (`HasRefDerivEstimate`) gives the derivative estimates
 `sup_T ‖D^j (u - Π_T u)‖ ≤ A² C₀^{2k} K C₀^{2j} (C₀ h_T)^{r+1-j} sup_T ‖D^{r+1} u‖`, `j ≤ r + 1`
@@ -39,16 +35,11 @@ alternating `k`-forms (`norm_sub_transportInterp_formPullback_le`), and in `L²(
 
 On a mesh, a piecewise interpolant `Π_h u` is only required to equal `Π_T u` on the *interior*
 of each simplex, which is all that tangentially conforming (Whitney) or discontinuous
-interpolants satisfy; the simplex frontiers are null (`Convex.addHaar_frontier`), so with
-`h = max_T h_T` the bound holds a.e. on `closure Ω` (`ae_norm_sub_le_of_mesh`), and
-`‖u - Π_h u‖_{L²(Ω)} ≤ C' h^{r+1} |Ω|^{1/2} sup_Ω ‖D^{r+1} u‖` (`lintegral_sub_le_of_mesh`,
-`eLpNorm_sub_le_of_mesh`), also summed over the simplices with local mesh sizes
-(`lintegral_sub_le_sum_of_mesh`). The everywhere bound on `closure Ω` (`norm_sub_le_of_mesh`)
-assumes agreement on the closed simplices, i.e. a full-value conforming (Lagrange-type) `Π_h`.
+interpolants satisfy; the simplex frontiers are null (`Convex.addHaar_frontier`), so almost
+every point of `closure Ω` lies in the interior of a simplex (`ae_exists_mem_interior`).
 
 The change of variables `∫_T g = |det B_T| ∫_{T̂} g ∘ F_T` is `lintegral_closedInterior_eq`
-(and `volume_closedInterior_eq`: `|T| = |det B_T| |T̂|`). The `L²` bounds above go through the
-sup norm (`L^∞(T) ⊆ L²(T)` with the factor `|T|^{1/2}`); the sharper transport of Sobolev
+(and `volume_closedInterior_eq`: `|T| = |det B_T| |T̂|`). The sharper transport of Sobolev
 seminorms (`|v̂|_{m,p,T̂} ≤ C ‖B_T‖^m |det B_T|^{-1/p} |v|_{m,p,T}`) is not attempted, since
 this classical form has no Sobolev spaces. Constructing a conforming `Π_h` and instantiating `I`
 for Whitney forms are not done here: the hypotheses on the reference interpolant are stated
@@ -60,24 +51,17 @@ explicitly in `IsRefInterpolant` and `HasRefDerivEstimate`. As in
 * `Feec.FiniteElement.refMapInv T`: `F_T⁻¹`.
 * `Feec.FiniteElement.refPullback T Φ u`: `û = Φ ∘ u ∘ F_T`.
 * `Feec.FiniteElement.transportInterp T Φ I u`: `Π_T u = Φ⁻¹ ∘ I û ∘ F_T⁻¹`.
-* `Feec.FiniteElement.formPullback B k`: the pullback `ω ↦ ω ∘ B` of alternating `k`-forms.
 
 ## Main results
 
 * `iteratedFDeriv_comp_affine`, `iteratedFDeriv_comp_refMap`, `iteratedFDeriv_comp_refMapInv`,
   `norm_iteratedFDeriv_refPullback_le`: chain rules and scaling.
 * `lintegral_closedInterior_eq`, `volume_closedInterior_eq`: change of variables.
-* `norm_sub_transportInterp_le`, `norm_sub_transportInterp_le_of_isShapeRegular`,
-  `norm_sub_transportInterp_refl_le`, `lintegral_sub_transportInterp_le`,
-  `eLpNorm_sub_transportInterp_le`: local estimates.
+* `norm_sub_transportInterp_le`, `norm_sub_transportInterp_le_of_isShapeRegular`: local
+  estimates.
 * `norm_iteratedFDeriv_sub_transportInterp_le`,
   `norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular`: local derivative estimates.
-* `norm_formPullback_le`, `norm_formPullback_symm_le`: `‖Φ‖ ≤ ‖B‖^k`, `‖Φ⁻¹‖ ≤ ‖B⁻¹‖^k`;
-  `norm_sub_transportInterp_formPullback_le`: the local estimate for `k`-forms.
-* `norm_sub_le_of_mesh_of_mem_interior`, `ae_norm_sub_le_of_mesh`, `lintegral_sub_le_of_mesh`,
-  `eLpNorm_sub_le_of_mesh`, `lintegral_sub_le_sum_of_mesh`: global estimates on a
-  shape-regular mesh (agreement on simplex interiors); `norm_sub_le_of_mesh`: the everywhere
-  bound for full-value conforming interpolants.
+* `ae_exists_mem_interior`: almost every point of a mesh lies in the interior of a simplex.
 
 ## References
 
@@ -353,23 +337,6 @@ theorem norm_sub_transportInterp_le_of_isShapeRegular (hI : IsRefInterpolant n r
         refine mul_le_mul_of_nonneg_right (mul_le_mul (mul_le_mul_of_nonneg_right hΦΦ hC1)
           (pow_le_pow_left₀ (norm_nonneg _) hB _) (by positivity) (by positivity)) hM0
 
-/-- **Scalar case** `Φ = id`: on a shape-regular family,
-`sup_T ‖u - Π_T u‖ ≤ (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖`. -/
-theorem norm_sub_transportInterp_refl_le (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C)
-    {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C₀ c : ℝ} (hS : IsShapeRegular S C₀ c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ S) {u : (Fin n → ℝ) → G}
-    {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U) (hTU : T.closedInterior ⊆ U)
-    (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
-    ‖u x - transportInterp T (ContinuousLinearEquiv.refl ℝ G) I u x‖ ≤
-      (1 + C * (m + 1)) * (C₀ * diam T) ^ (r + 1) * M := by
-  have h := norm_sub_transportInterp_le_of_isShapeRegular hI hC hS hT
-    (ContinuousLinearEquiv.refl ℝ G) (A := 1) (k := 0)
-    (by simpa using ContinuousLinearMap.norm_id_le) (by simpa using ContinuousLinearMap.norm_id_le)
-    hU hTU hu hM hx
-  simpa using h
-
 /-! ### Derivative estimates -/
 
 /-- The interpolation error on `T` is the transported reference error:
@@ -450,112 +417,6 @@ theorem norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular {j : ℕ} {
         gcongr
     _ = _ := by ring
 
-/-! ### Pullback of alternating forms -/
-
-/-- The pullback `ω ↦ ω ∘ (B, …, B)` of alternating `k`-forms on `ℝⁿ` by a linear isomorphism
-`B`: the fibre map transporting `k`-forms through `F_T`. -/
-def formPullback (B : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ)) (k : ℕ) :
-    ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) ≃L[ℝ] ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) :=
-  B.symm.continuousAlternatingMapCongrLeft
-
-theorem formPullback_apply (B : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ)) (k : ℕ)
-    (ω : (Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) :
-    formPullback B k ω = ω.compContinuousLinearMap (B : (Fin n → ℝ) →L[ℝ] Fin n → ℝ) := by
-  simp [formPullback]
-
-theorem formPullback_symm_apply (B : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ)) (k : ℕ)
-    (ω : (Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) :
-    (formPullback B k).symm ω =
-      ω.compContinuousLinearMap (B.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ) := by
-  apply (formPullback B k).injective
-  rw [ContinuousLinearEquiv.apply_symm_apply, formPullback_apply]
-  ext v
-  simp [Function.comp_def]
-
-/-- `‖B^*‖ ≤ ‖B‖^k` on `k`-forms. -/
-theorem norm_formPullback_le (B : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ)) (k : ℕ) :
-    ‖(formPullback B k :
-      ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) →L[ℝ] ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ))‖ ≤
-      ‖(B : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun ω => ?_
-  rw [ContinuousLinearEquiv.coe_coe, formPullback_apply]
-  refine (ContinuousAlternatingMap.norm_compContinuousLinearMap_le _ _).trans_eq ?_
-  rw [Fintype.card_fin, mul_comm]
-
-/-- `‖(B^*)⁻¹‖ ≤ ‖B⁻¹‖^k` on `k`-forms. -/
-theorem norm_formPullback_symm_le (B : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ)) (k : ℕ) :
-    ‖((formPullback B k).symm :
-      ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) →L[ℝ] ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ))‖ ≤
-      ‖(B.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun ω => ?_
-  rw [ContinuousLinearEquiv.coe_coe, formPullback_symm_apply]
-  refine (ContinuousAlternatingMap.norm_compContinuousLinearMap_le _ _).trans_eq ?_
-  rw [Fintype.card_fin, mul_comm]
-
-/-- **`k`-forms** transported by pullback: on a shape-regular family,
-`sup_T ‖u - Π_T u‖ ≤ C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖`. -/
-theorem norm_sub_transportInterp_formPullback_le {k : ℕ}
-    {I : ((Fin n → ℝ) → ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ)) →
-      (Fin n → ℝ) → ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ)}
-    (hI : IsRefInterpolant n r m ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ) I C) (hC : 0 ≤ C)
-    {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C₀ c : ℝ} (hS : IsShapeRegular S C₀ c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ S)
-    {u : (Fin n → ℝ) → ((Fin n → ℝ) [⋀^Fin k]→L[ℝ] ℝ)}
-    {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U) (hTU : T.closedInterior ⊆ U)
-    (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
-    ‖u x - transportInterp T (formPullback T.linearEquiv k) I u x‖ ≤
-      C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * diam T) ^ (r + 1) * M := by
-  have h := norm_sub_transportInterp_le_of_isShapeRegular hI hC hS hT
-    (formPullback T.linearEquiv k) (A := 1) (k := k)
-    (by simpa using norm_formPullback_le T.linearEquiv k)
-    (by simpa using norm_formPullback_symm_le T.linearEquiv k) hU hTU hu hM hx
-  simpa using h
-
-/-! ### `L²` estimates -/
-
-/-- **Local `L²(T)` interpolation error** on a shape-regular family:
-`∫_T ‖u - Π_T u‖² ≤ |T| (A² C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖)²`. -/
-theorem lintegral_sub_transportInterp_le (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C)
-    {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C₀ c : ℝ} (hS : IsShapeRegular S C₀ c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ S) (Φ : G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ‖(Φ : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ‖(Φ.symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hTU : T.closedInterior ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M) :
-    ∫⁻ x in T.closedInterior, ‖u x - transportInterp T Φ I u x‖ₑ ^ 2 ≤
-      volume T.closedInterior * ENNReal.ofReal
-        (A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * diam T) ^ (r + 1) * M) ^ 2 := by
-  exact_mod_cast lintegral_enorm_rpow_le_of_forall_norm_le (μ := volume)
-    (measurableSet_closedInterior T) (fun x hx => norm_sub_transportInterp_le_of_isShapeRegular
-      hI hC hS hT Φ hΦ hΦs hU hTU hu hM hx) (q := 2) zero_le_two
-
-/-- **Local `L²(T)` interpolation error**, `eLpNorm` form:
-`‖u - Π_T u‖_{L²(T)} ≤ |T|^{1/2} A² C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖`.
-Mathlib's `eLpNorm` is `∞` on functions that are not a.e. strongly measurable, hence the
-measurability hypothesis. -/
-theorem eLpNorm_sub_transportInterp_le (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C)
-    {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C₀ c : ℝ} (hS : IsShapeRegular S C₀ c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ S) (Φ : G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ‖(Φ : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ‖(Φ.symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hTU : T.closedInterior ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    (hmeas : AEStronglyMeasurable (fun x => u x - transportInterp T Φ I u x)
-      (volume.restrict T.closedInterior)) :
-    eLpNorm (fun x => u x - transportInterp T Φ I u x) 2 (volume.restrict T.closedInterior) ≤
-      volume T.closedInterior ^ (1 / 2 : ℝ) * ENNReal.ofReal
-        (A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * diam T) ^ (r + 1) * M) := by
-  have h := eLpNorm_le_of_ae_bound (p := 2) hmeas
-    ((ae_restrict_iff' (measurableSet_closedInterior T)).2 (Eventually.of_forall fun x hx =>
-      norm_sub_transportInterp_le_of_isShapeRegular hI hC hS hT Φ hΦ hΦs hU hTU hu hM hx))
-  simpa using h
-
 /-! ### Global estimates on a mesh -/
 
 /-- The frontier of a simplex is Lebesgue-null (`Convex.addHaar_frontier`). -/
@@ -579,205 +440,5 @@ theorem ae_exists_mem_interior (Mh : SimplicialMesh n) :
   rw [← Mh.biUnion_closedInterior, mem_iUnion₂] at hxΩ
   obtain ⟨T, hT, hxT⟩ := hxΩ
   exact ⟨T, hT, mem_interior_of_notMem_frontier hxT (hx T hT)⟩
-
-/-- `∫_s ‖f‖² ≤ μ(s) C²` if `‖f‖ ≤ C` a.e. on `s`; no measurability is needed. -/
-theorem lintegral_enorm_sq_le_of_ae_norm_le {α E : Type*} [MeasurableSpace α]
-    [NormedAddCommGroup E] {μ : Measure α} {s : Set α} {f : α → E} {C : ℝ}
-    (hf : ∀ᵐ x ∂μ.restrict s, ‖f x‖ ≤ C) :
-    ∫⁻ x in s, ‖f x‖ₑ ^ 2 ∂μ ≤ μ s * ENNReal.ofReal C ^ 2 := by
-  calc ∫⁻ x in s, ‖f x‖ₑ ^ 2 ∂μ ≤ ∫⁻ _x in s, ENNReal.ofReal C ^ 2 ∂μ := by
-        refine lintegral_mono_ae (hf.mono fun x hx => ?_)
-        gcongr
-        rw [← ofReal_norm]
-        exact ENNReal.ofReal_le_ofReal hx
-    _ = _ := by rw [lintegral_const, Measure.restrict_apply_univ, mul_comm]
-
-section Mesh
-
-variable (Mh : SimplicialMesh n)
-
-/-- **Global pointwise interpolation error for full-value conforming interpolants** (e.g.
-continuous Lagrange elements): if `Π_h u` equals `Π_T u` on every *closed* simplex `T`, then on
-`closure Ω`, `‖u - Π_h u‖ ≤ A² C₀^{2k} (1 + C (m + 1)) (C₀ h)^{r+1} sup_Ω ‖D^{r+1} u‖`, `h` the
-mesh size. The hypothesis forces the local interpolants to agree at every point of shared
-faces, which fails for tangentially conforming (Whitney, Nédélec, Raviart–Thomas) and for
-discontinuous interpolants; for those, use `norm_sub_le_of_mesh_of_mem_interior`,
-`ae_norm_sub_le_of_mesh` and the `L²` estimates, which only need agreement on the simplex
-interiors. -/
-theorem norm_sub_le_of_mesh (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C) {C₀ c : ℝ}
-    (hC₀ : 0 ≤ C₀) (hS : IsShapeRegular {T | T ∈ Mh.simplices} C₀ c)
-    (Φ : Affine.Simplex ℝ (Fin n → ℝ) n → G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ∀ T ∈ Mh.simplices,
-      ‖(Φ T : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ∀ T ∈ Mh.simplices, ‖((Φ T).symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hΩU : closure Mh.domain ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ closure Mh.domain, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    (Ih : (Fin n → ℝ) → G)
-    (hIh : ∀ T ∈ Mh.simplices, ∀ x ∈ T.closedInterior, Ih x = transportInterp T (Φ T) I u x)
-    {x : Fin n → ℝ} (hx : x ∈ closure Mh.domain) :
-    ‖u x - Ih x‖ ≤
-      A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * Mh.meshSize) ^ (r + 1) * M := by
-  rw [← Mh.biUnion_closedInterior, mem_iUnion₂] at hx
-  obtain ⟨T, hT, hxT⟩ := hx
-  have hTΩ := Mh.closedInterior_subset_closure hT
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM _ (hTΩ hxT))
-  have h2k : 0 ≤ C₀ ^ (2 * k) := by rw [pow_mul]; positivity
-  have hC1 : 0 ≤ 1 + C * (m + 1) := by positivity
-  rw [hIh T hT x hxT]
-  refine (norm_sub_transportInterp_le_of_isShapeRegular hI hC hS hT (Φ T) (hΦ T hT) (hΦs T hT)
-    hU (hTΩ.trans hΩU) hu (fun y hy => hM y (hTΩ hy)) hxT).trans ?_
-  exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left (pow_le_pow_left₀
-    (mul_nonneg hC₀ (diam_nonneg T)) (mul_le_mul_of_nonneg_left (Mh.diam_le_meshSize hT) hC₀) _)
-    (by positivity)) hM0
-
-/-- **Global pointwise interpolation error at interior points**: if `Π_h u` equals `Π_T u` on
-the interior of every simplex `T` (no condition on the faces, so this covers Whitney-type and
-discontinuous interpolants), then at every point of the interior of a simplex,
-`‖u - Π_h u‖ ≤ A² C₀^{2k} (1 + C (m + 1)) (C₀ h)^{r+1} sup_Ω ‖D^{r+1} u‖`. -/
-theorem norm_sub_le_of_mesh_of_mem_interior (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C)
-    {C₀ c : ℝ} (hC₀ : 0 ≤ C₀) (hS : IsShapeRegular {T | T ∈ Mh.simplices} C₀ c)
-    (Φ : Affine.Simplex ℝ (Fin n → ℝ) n → G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ∀ T ∈ Mh.simplices,
-      ‖(Φ T : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ∀ T ∈ Mh.simplices, ‖((Φ T).symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hΩU : closure Mh.domain ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ closure Mh.domain, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    (Ih : (Fin n → ℝ) → G)
-    (hIh : ∀ T ∈ Mh.simplices, ∀ x ∈ interior T.closedInterior,
-      Ih x = transportInterp T (Φ T) I u x)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ Mh.simplices) {x : Fin n → ℝ}
-    (hx : x ∈ interior T.closedInterior) :
-    ‖u x - Ih x‖ ≤
-      A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * Mh.meshSize) ^ (r + 1) * M := by
-  have hxT := interior_subset hx
-  have hTΩ := Mh.closedInterior_subset_closure hT
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM _ (hTΩ hxT))
-  have h2k : 0 ≤ C₀ ^ (2 * k) := by rw [pow_mul]; positivity
-  have hC1 : 0 ≤ 1 + C * (m + 1) := by positivity
-  rw [hIh T hT x hx]
-  refine (norm_sub_transportInterp_le_of_isShapeRegular hI hC hS hT (Φ T) (hΦ T hT) (hΦs T hT)
-    hU (hTΩ.trans hΩU) hu (fun y hy => hM y (hTΩ hy)) hxT).trans ?_
-  exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left (pow_le_pow_left₀
-    (mul_nonneg hC₀ (diam_nonneg T)) (mul_le_mul_of_nonneg_left (Mh.diam_le_meshSize hT) hC₀) _)
-    (by positivity)) hM0
-
-/-- **Global a.e. interpolation error** for interpolants agreeing with `Π_T u` on the simplex
-interiors: the bound of `norm_sub_le_of_mesh_of_mem_interior` holds at almost every point of
-`closure Ω` (the simplex frontiers are null). -/
-theorem ae_norm_sub_le_of_mesh (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C)
-    {C₀ c : ℝ} (hC₀ : 0 ≤ C₀) (hS : IsShapeRegular {T | T ∈ Mh.simplices} C₀ c)
-    (Φ : Affine.Simplex ℝ (Fin n → ℝ) n → G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ∀ T ∈ Mh.simplices,
-      ‖(Φ T : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ∀ T ∈ Mh.simplices, ‖((Φ T).symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hΩU : closure Mh.domain ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ closure Mh.domain, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    (Ih : (Fin n → ℝ) → G)
-    (hIh : ∀ T ∈ Mh.simplices, ∀ x ∈ interior T.closedInterior,
-      Ih x = transportInterp T (Φ T) I u x) :
-    ∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), x ∈ closure Mh.domain → ‖u x - Ih x‖ ≤
-      A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * Mh.meshSize) ^ (r + 1) * M := by
-  filter_upwards [ae_exists_mem_interior Mh] with x hx hxΩ
-  obtain ⟨T, hT, hxT⟩ := hx hxΩ
-  exact norm_sub_le_of_mesh_of_mem_interior Mh hI hC hC₀ hS Φ hΦ hΦs hU hΩU hu hM Ih hIh hT hxT
-
-/-- **Global `L²(Ω)` interpolation error** on a shape-regular mesh, for any interpolant `Π_h u`
-equal to `Π_T u` on the interior of every simplex (so tangentially conforming and discontinuous
-interpolants are covered):
-`‖u - Π_h u‖_{L²(Ω)}² ≤ |Ω| (A² C₀^{2k} (1 + C (m + 1)) (C₀ h)^{r+1} sup_Ω ‖D^{r+1} u‖)²`,
-i.e. `‖u - Π_h u‖_{L²(Ω)} ≤ C' h^{r+1} |Ω|^{1/2} sup_Ω ‖D^{r+1} u‖`. -/
-theorem lintegral_sub_le_of_mesh (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C) {C₀ c : ℝ}
-    (hC₀ : 0 ≤ C₀) (hS : IsShapeRegular {T | T ∈ Mh.simplices} C₀ c)
-    (Φ : Affine.Simplex ℝ (Fin n → ℝ) n → G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ∀ T ∈ Mh.simplices,
-      ‖(Φ T : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ∀ T ∈ Mh.simplices, ‖((Φ T).symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hΩU : closure Mh.domain ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ closure Mh.domain, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    (Ih : (Fin n → ℝ) → G)
-    (hIh : ∀ T ∈ Mh.simplices, ∀ x ∈ interior T.closedInterior,
-      Ih x = transportInterp T (Φ T) I u x) :
-    ∫⁻ x in Mh.domain, ‖u x - Ih x‖ₑ ^ 2 ≤
-      volume Mh.domain * ENNReal.ofReal
-        (A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * Mh.meshSize) ^ (r + 1) * M) ^ 2 :=
-  lintegral_enorm_sq_le_of_ae_norm_le (ae_restrict_of_ae_restrict_of_subset subset_closure
-    ((ae_restrict_iff' isClosed_closure.measurableSet).2
-      (ae_norm_sub_le_of_mesh Mh hI hC hC₀ hS Φ hΦ hΦs hU hΩU hu hM Ih hIh)))
-
-/-- **Global `L²(Ω)` interpolation error**, `eLpNorm` form:
-`‖u - Π_h u‖_{L²(Ω)} ≤ |Ω|^{1/2} A² C₀^{2k} (1 + C (m + 1)) (C₀ h)^{r+1} sup_Ω ‖D^{r+1} u‖`, for
-`Π_h u` equal to `Π_T u` on the simplex interiors. -/
-theorem eLpNorm_sub_le_of_mesh (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C) {C₀ c : ℝ}
-    (hC₀ : 0 ≤ C₀) (hS : IsShapeRegular {T | T ∈ Mh.simplices} C₀ c)
-    (Φ : Affine.Simplex ℝ (Fin n → ℝ) n → G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ∀ T ∈ Mh.simplices,
-      ‖(Φ T : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ∀ T ∈ Mh.simplices, ‖((Φ T).symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hΩU : closure Mh.domain ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (hM : ∀ y ∈ closure Mh.domain, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ M)
-    (Ih : (Fin n → ℝ) → G)
-    (hIh : ∀ T ∈ Mh.simplices, ∀ x ∈ interior T.closedInterior,
-      Ih x = transportInterp T (Φ T) I u x)
-    (hmeas : AEStronglyMeasurable (fun x => u x - Ih x) (volume.restrict Mh.domain)) :
-    eLpNorm (fun x => u x - Ih x) 2 (volume.restrict Mh.domain) ≤
-      volume Mh.domain ^ (1 / 2 : ℝ) * ENNReal.ofReal
-        (A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * Mh.meshSize) ^ (r + 1) * M) := by
-  have h := eLpNorm_le_of_ae_bound (p := 2) hmeas
-    (ae_restrict_of_ae_restrict_of_subset subset_closure
-      ((ae_restrict_iff' isClosed_closure.measurableSet).2
-        (ae_norm_sub_le_of_mesh Mh hI hC hC₀ hS Φ hΦ hΦs hU hΩU hu hM Ih hIh)))
-  simpa using h
-
-/-- **`L²(Ω)` interpolation error summed over the mesh**, with the local mesh sizes `h_T` and
-local bounds `M_T ≥ sup_T ‖D^{r+1} u‖`, for `Π_h u` equal to `Π_T u` on the simplex interiors:
-`‖u - Π_h u‖_{L²(closure Ω)}² ≤ ∑_T |T| (A² C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} M_T)²`. -/
-theorem lintegral_sub_le_sum_of_mesh (hI : IsRefInterpolant n r m G I C) (hC : 0 ≤ C)
-    {C₀ c : ℝ} (hS : IsShapeRegular {T | T ∈ Mh.simplices} C₀ c)
-    (Φ : Affine.Simplex ℝ (Fin n → ℝ) n → G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
-    (hΦ : ∀ T ∈ Mh.simplices,
-      ‖(Φ T : G →L[ℝ] G)‖ ≤ A * ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    (hΦs : ∀ T ∈ Mh.simplices, ‖((Φ T).symm : G →L[ℝ] G)‖ ≤
-      A * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ k)
-    {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} (hU : IsOpen U)
-    (hΩU : closure Mh.domain ⊆ U) (hu : ContDiffOn ℝ (r + 1) u U)
-    (MT : Affine.Simplex ℝ (Fin n → ℝ) n → ℝ)
-    (hM : ∀ T ∈ Mh.simplices, ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (r + 1) u y‖ ≤ MT T)
-    (Ih : (Fin n → ℝ) → G)
-    (hIh : ∀ T ∈ Mh.simplices, ∀ x ∈ interior T.closedInterior,
-      Ih x = transportInterp T (Φ T) I u x) :
-    ∫⁻ x in closure Mh.domain, ‖u x - Ih x‖ₑ ^ 2 ≤
-      ∑ T ∈ Mh.simplices, volume T.closedInterior * ENNReal.ofReal
-        (A ^ 2 * C₀ ^ (2 * k) * (1 + C * (m + 1)) * (C₀ * diam T) ^ (r + 1) * MT T) ^ 2 := by
-  rw [← Mh.biUnion_closedInterior, ← Finset.set_biUnion_coe]
-  calc ∫⁻ x in ⋃ T ∈ (Mh.simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)), T.closedInterior,
-        ‖u x - Ih x‖ₑ ^ 2
-      ≤ ∫⁻ x, ‖u x - Ih x‖ₑ ^ 2 ∂(Measure.sum fun T : (Mh.simplices :
-          Set (Affine.Simplex ℝ (Fin n → ℝ) n)) => volume.restrict T.1.closedInterior) :=
-        lintegral_mono' (Measure.restrict_biUnion_le (Mh.simplices.countable_toSet).to_subtype)
-          le_rfl
-    _ = ∑ T ∈ Mh.simplices, ∫⁻ x in T.closedInterior, ‖u x - Ih x‖ₑ ^ 2 := by
-        rw [lintegral_sum_measure]
-        exact Finset.tsum_subtype Mh.simplices (fun T : Affine.Simplex ℝ (Fin n → ℝ) n =>
-          ∫⁻ x in T.closedInterior, ‖u x - Ih x‖ₑ ^ 2)
-    _ ≤ _ := by
-        refine Finset.sum_le_sum fun T hT => ?_
-        have hTΩ := Mh.closedInterior_subset_closure hT
-        rw [setLIntegral_congr_fun_ae (measurableSet_closedInterior T)
-          ((ae_notMem_frontier_closedInterior T).mono fun x hf hx => by
-            rw [hIh T hT x (mem_interior_of_notMem_frontier hx hf)])]
-        exact lintegral_sub_transportInterp_le hI hC hS hT (Φ T) (hΦ T hT) (hΦs T hT) hU
-          (hTΩ.trans hΩU) hu (hM T hT)
-
-end Mesh
 
 end Feec.FiniteElement

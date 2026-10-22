@@ -88,10 +88,6 @@ theorem wedge_sum_left {β : Type*} (u : Finset β) (ξ : β → d → R) (ω : 
 theorem wedge_neg_left (ξ : d → R) (ω : Finset d → R) : wedge (-ξ) ω = -wedge ξ ω := by
   rw [show -ξ = (-1 : R) • ξ by simp, wedge_smul_left]; simp
 
-theorem wedge_sub_left (ξ η : d → R) (ω : Finset d → R) :
-    wedge (ξ - η) ω = wedge ξ ω - wedge η ω := by
-  rw [sub_eq_add_neg, wedge_add_left, wedge_neg_left, sub_eq_add_neg]
-
 /-- `dx_j ∧ dx_s = ε(j, s) dx_{s ∪ j}` for `j ∉ s`. -/
 theorem wedge_single_single {j : d} {s : Finset d} (hj : j ∉ s) :
     wedge (Pi.single j (1 : R)) (Pi.single s (1 : R)) =
@@ -341,18 +337,6 @@ theorem pullback_apply (B : ι → κ → R) (α : Finset ι → R) (t : Finset 
     pullback B α t = ∑ s, α s * wedgeProd B s t := by
   simp [pullback, Finset.sum_apply]
 
-/-- The coefficients of the pullback are the minors of `B`. -/
-theorem pullback_apply_eq_sum_det (B : ι → κ → R) (α : Finset ι → R) {k : ℕ}
-    (t : Finset κ) (ht : #t = k) :
-    pullback B α t = ∑ s, α s * if hs : #s = k then
-      (Matrix.of fun i j : Fin k => B (s.orderEmbOfFin hs i) (t.orderEmbOfFin ht j)).det
-      else 0 := by
-  rw [pullback_apply]
-  refine sum_congr rfl fun s _ => ?_
-  split_ifs with hs
-  · rw [wedgeProd_apply_eq_det_submatrix B hs ht]
-  · rw [isDeg_wedgeProd B s t (by rw [ht]; exact Ne.symm hs)]
-
 @[simp] theorem pullback_zero (B : ι → κ → R) : pullback B (0 : Finset ι → R) = 0 := by
   simp [pullback]
 
@@ -368,10 +352,6 @@ theorem pullback_sum {β : Type*} (B : ι → κ → R) (u : Finset β) (α : β
     pullback B (∑ b ∈ u, α b) = ∑ b ∈ u, pullback B (α b) := by
   simp only [pullback, Finset.sum_apply, sum_smul]
   exact sum_comm
-
-theorem pullback_neg (B : ι → κ → R) (α : Finset ι → R) :
-    pullback B (-α) = -pullback B α := by
-  simp [pullback]
 
 theorem pullback_sub (B : ι → κ → R) (α β : Finset ι → R) :
     pullback B (α - β) = pullback B α - pullback B β := by
@@ -771,8 +751,7 @@ theorem partialDeriv_comp_affine {f : (Fin n → ℝ) → ℝ} (B : Fin n → Fi
   simp [Matrix.toLin'_apply, Matrix.mulVec, dotProduct, Pi.single_apply]
 
 /-- The **pullback** `F^* ω` of a form field along `F(x̂) = B x̂ + b`: its coefficients are the
-`k × k` minors of `B` (`Feec.ExteriorFibre.pullback_apply_eq_sum_det`) times the coefficients of
-`ω ∘ F`. -/
+`k × k` minors of `B` times the coefficients of `ω ∘ F`. -/
 def affinePullback (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (ω : FormField n) : FormField m :=
   fun x => ExteriorFibre.pullback B (ω (affine B b x))
 
@@ -799,15 +778,6 @@ theorem affinePullback_add (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (ω
 theorem affinePullback_smul (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (c : ℝ) (ω : FormField n) :
     affinePullback B b (c • ω) = c • affinePullback B b ω := by
   funext x; simp [affinePullback_apply, pullback_smul]
-
-theorem differentiableAt_affinePullback {ω : FormField n} (B : Fin n → Fin m → ℝ)
-    (b : Fin n → ℝ) {x : Fin m → ℝ} (hω : DifferentiableAt ℝ ω (affine B b x)) :
-    DifferentiableAt ℝ (affinePullback B b ω) x := by
-  rw [differentiableAt_pi]
-  intro t
-  simp only [affinePullback_apply, ExteriorFibre.pullback_apply]
-  refine DifferentiableAt.fun_sum fun s _ => ?_
-  exact ((differentiableAt_pi.1 hω s).comp x (differentiable_affine B b x)).mul_const _
 
 theorem contDiff_affine {r : WithTop ℕ∞} (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) :
     ContDiff ℝ r (affine B b) := by

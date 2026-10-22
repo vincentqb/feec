@@ -6,10 +6,8 @@ public import Feec.Mesh.Kuhn
 # Freudenthal triangulations of boxes and their uniform refinement
 
 The Freudenthal triangulation of `ℝⁿ` consists of the integer translates `m + K_σ` of the Kuhn
-simplices (`Feec.Mesh.freudenthalSimplex`); it is globally defined by ordering fractional parts:
-a point `x` lies in `⌊x⌋ + K_σ` for every `σ` sorting `fract x` decreasingly, and in no other
-translate unless it lies on one of the hyperplanes `xᵢ ∈ ℤ`, `xᵢ - xⱼ ∈ ℤ`. Its face-to-face
-property is `inter_closedInterior_freudenthalSimplex`.
+simplices (`Feec.Mesh.freudenthalSimplex`). Its face-to-face property is
+`inter_closedInterior_freudenthalSimplex`.
 
 For `N ≥ 1`, the level-`N` Freudenthal mesh of the box `∏ (bᵢ, bᵢ + s)` is the image of the
 triangulation of `(0, N)ⁿ` by the cells `m + K_σ`, `m ∈ {0, …, N-1}ⁿ`, under
@@ -23,28 +21,13 @@ triangulation of `(0, N)ⁿ` by the cells `m + K_σ`, `m ∈ {0, …, N-1}ⁿ`, 
 
 ## Main results
 
-* `mem_freudenthalSet_floor`, `eq_floor_of_mem_freudenthalSet`: `x ∈ ⌊x⌋ + K_σ` for `σ` sorting
-  `fract x`, and off the hyperplanes `xᵢ ∈ ℤ`, `xᵢ - xⱼ ∈ ℤ` this simplex is unique.
 * `iUnion_freudenthalSet`: the cells `m + K_σ`, `0 ≤ mᵢ < N`, cover `[0, N]ⁿ`.
 * `latticeMesh`, `freudenthalMesh`: conforming meshes (conformity across neighbouring cells is
   the face-to-face property of the global Freudenthal triangulation).
 * `smul_mem_freudenthalSet`: `M⁻¹ (m + K_σ) ⊆ m' + K_σ'` with `m' = ⌊c / M⌋` for the interior
   point `c = m + g_σ`; hence `freudenthalMesh_refines`: **the level-`N M` mesh refines the level-`N`
   mesh**.
-* `freudenthalMesh_biUnion_eq`: nested refinement, every level-`N` simplex is the union of the
-  level-`N M` simplices it contains (`SimplicialMesh.Refines.biUnion_eq`).
-* `card_latticeMesh_simplices`, `card_freudenthalMesh_simplices`: `Nⁿ n!` simplices;
-  `sum_volume_freudenthalMesh`: their volumes add up to `sⁿ`.
-* `diam_of_mem_freudenthalMesh`, `meshSize_freudenthalMesh`: `h_T = h = s / N` (sup norm).
-* `volume_freudenthalMesh_simplex`: each simplex of the level-`N` mesh has volume
-  `(s / N)ⁿ / n!`.
-* Symmetries: `neg_mem_freudenthalSet_iff` (the central symmetry `x ↦ -x` maps `m + K_σ` to
-  `(-m - 1) + K_{σ ∘ rev}`) and `comp_mem_freudenthalSet_iff` (coordinate permutations).
-* `reflect_kuhnSet_ne`: the Freudenthal triangulation is **not** invariant under a single
-  reflection `x₀ ↦ -x₀` (`n = 2`): the reflected Kuhn simplex `{(-a, b) | 1 ≥ a ≥ b ≥ 0}` is not a
-  Freudenthal simplex (its diagonal runs along `x₀ + x₁ = 0`). So a mesh of `(-½, ½)ⁿ` symmetric
-  under the reflections `x_k ↦ -x_k` is not a Freudenthal mesh; the parity models use the
-  Freudenthal mesh of `(0, ½)ⁿ` instead.
+* `card_latticeMesh_simplices`, `card_freudenthalMesh_simplices`: `Nⁿ n!` simplices.
 
 ## References
 
@@ -181,48 +164,6 @@ theorem smul_mem_freudenthalSet {M : ℕ} (hM : 0 < M) (hx : x ∈ freudenthalSe
     linarith
 
 end Sign
-
-/-! ### The triangulation is defined by ordering fractional parts -/
-
-/-- **Ordering fractional parts.** Every `x ∈ ℝⁿ` lies in `⌊x⌋ + K_σ` for `σ` sorting `fract x`
-decreasingly. -/
-theorem mem_freudenthalSet_floor (x : Fin n → ℝ) :
-    x ∈ freudenthalSet (fun i => ⌊x i⌋) (Tuple.sort fun i => -Int.fract (x i)) := by
-  have hy : x - latticePoint (fun i => ⌊x i⌋) = fun i => Int.fract (x i) := by
-    funext i; simp only [Pi.sub_apply, latticePoint_apply, Int.self_sub_floor]
-  refine ⟨fun i => ?_, fun a b hab => ?_⟩
-  · rw [hy]; exact ⟨Int.fract_nonneg _, (Int.fract_lt_one _).le⟩
-  · rw [hy]
-    have := Tuple.monotone_sort (fun i => -Int.fract (x i)) hab
-    simp only [Function.comp_apply, neg_le_neg_iff] at this ⊢
-    exact this
-
-/-- Off the hyperplanes `xᵢ ∈ ℤ` (`fract xᵢ = 0`) and `xᵢ - xⱼ ∈ ℤ` (`fract xᵢ = fract xⱼ`),
-`⌊x⌋ + K_σ` with `σ` sorting `fract x` is the only Freudenthal simplex containing `x`. -/
-theorem eq_floor_of_mem_freudenthalSet {m : Fin n → ℤ} {σ : Equiv.Perm (Fin n)}
-    {x : Fin n → ℝ} (hx : x ∈ freudenthalSet m σ) (h1 : ∀ i, Int.fract (x i) ≠ 0)
-    (h2 : ∀ i j, i ≠ j → Int.fract (x i) ≠ Int.fract (x j)) :
-    m = (fun i => ⌊x i⌋) ∧ σ = Tuple.sort fun i => -Int.fract (x i) := by
-  have hm : m = fun i => ⌊x i⌋ := by
-    funext i
-    have h0 := (hx.1 i).1
-    have h1' := (hx.1 i).2
-    simp only [Pi.sub_apply, latticePoint_apply] at h0 h1'
-    have hne : x i ≠ ((m i + 1 : ℤ) : ℝ) := by
-      intro h; exact h1 i (by rw [h, Int.fract_intCast])
-    push_cast at hne
-    exact (Int.floor_eq_iff.2 ⟨by linarith, lt_of_le_of_ne (by linarith) hne⟩).symm
-  subst hm
-  refine ⟨rfl, eq_of_mem_kuhnSet_of_injective (x := fun i => Int.fract (x i))
-    (fun i j h => by_contra fun hij => h2 i j hij h) ?_ ?_⟩
-  · have := hx
-    simp only [freudenthalSet, Set.mem_ofPred_eq] at this
-    convert this using 1
-    funext i; simp only [Pi.sub_apply, latticePoint_apply, Int.self_sub_floor]
-  · have := mem_freudenthalSet_floor x
-    simp only [freudenthalSet, Set.mem_ofPred_eq] at this
-    convert this using 1
-    funext i; simp only [Pi.sub_apply, latticePoint_apply, Int.self_sub_floor]
 
 /-! ### The Freudenthal mesh of `(0, N)ⁿ` -/
 
@@ -473,155 +414,5 @@ theorem diam_freudenthalMesh_simplex [NeZero n] (b : Fin n → ℝ) {h : ℝ} (h
     simp only [add_zero, add_sub_add_left_eq_sub, ← smul_sub, norm_smul]
     rw [Real.norm_of_nonneg hh.le]
     simp
-
-/-- In the level-`N` Freudenthal mesh of `∏ (bᵢ, bᵢ + s)` (with the sup norm), every simplex has
-diameter `s / N`. -/
-theorem diam_of_mem_freudenthalMesh [NeZero n] {b : Fin n → ℝ} {s : ℝ} {hs : 0 < s} {N : ℕ}
-    [NeZero N] {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (freudenthalMesh b s hs N).simplices) :
-    diam T = s / N := by
-  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
-  have hN : (0 : ℝ) < N := by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne N)
-  exact diam_freudenthalMesh_simplex b (div_pos hs hN) _ σ
-
-/-- The mesh size of the level-`N` Freudenthal mesh of `∏ (bᵢ, bᵢ + s)` is `h = s / N`. -/
-theorem meshSize_freudenthalMesh [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
-    [NeZero N] : (freudenthalMesh b s hs N).meshSize = s / N := by
-  refine SimplicialMesh.meshSize_eq _ ?_ fun T hT => diam_of_mem_freudenthalMesh hT
-  exact ⟨_, mem_freudenthalMesh_simplices.2 ⟨fun _ => 0, 1, rfl⟩⟩
-
-/-! ### Volume -/
-
-open Pointwise in
-theorem freudenthalSet_eq_vadd (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) :
-    freudenthalSet m σ = latticePoint m +ᵥ kuhnSet σ := by
-  ext x
-  rw [Set.mem_vadd_set]
-  constructor
-  · intro hx; exact ⟨x - latticePoint m, hx, by simp [vadd_eq_add]⟩
-  · rintro ⟨y, hy, rfl⟩; simpa [freudenthalSet, vadd_eq_add] using hy
-
-open Pointwise MeasureTheory in
-/-- The simplex `b + h (m + K_σ)` has volume `hⁿ / n!`. -/
-theorem volume_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh : 0 < h) (m : Fin n → ℤ)
-    (σ : Equiv.Perm (Fin n)) :
-    volume (mapEquiv (boxMap b h hh.ne') (freudenthalSimplex m σ)).closedInterior =
-      ENNReal.ofReal (h ^ n) / n.factorial := by
-  rw [closedInterior_freudenthalMesh_simplex, freudenthalSet_eq_vadd]
-  have e : (fun x => b + h • x) '' (latticePoint m +ᵥ kuhnSet σ) =
-      b +ᵥ h • (latticePoint m +ᵥ kuhnSet σ) := by
-    generalize latticePoint m +ᵥ kuhnSet σ = S
-    rw [← Set.image_smul, ← Set.image_vadd, Set.image_image]; rfl
-  rw [e, measure_vadd, Measure.addHaar_smul, measure_vadd, volume_kuhnSet, Module.finrank_fin_fun,
-    abs_of_pos (pow_pos hh n), mul_one_div]
-
-open MeasureTheory in
-/-- Volume consistency: the `Nⁿ n!` simplices of the level-`N` mesh of `∏ (bᵢ, bᵢ + s)`, each of
-volume `(s / N)ⁿ / n!`, have total volume `sⁿ`. -/
-theorem sum_volume_freudenthalMesh (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ) [NeZero N] :
-    ∑ T ∈ (freudenthalMesh b s hs N).simplices, volume T.closedInterior =
-      ENNReal.ofReal (s ^ n) := by
-  have hN : (0 : ℝ) < N := by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne N)
-  have hh : 0 < s / N := div_pos hs hN
-  rw [Finset.sum_congr rfl (g := fun _ => ENNReal.ofReal ((s / N) ^ n) / n.factorial),
-    Finset.sum_const, card_freudenthalMesh_simplices, nsmul_eq_mul]
-  · have hf : (0 : ℝ) < n.factorial := by exact_mod_cast Nat.factorial_pos n
-    rw [← ENNReal.ofReal_natCast, ← ENNReal.ofReal_natCast (n.factorial),
-      ← ENNReal.ofReal_div_of_pos hf, ← ENNReal.ofReal_mul (by positivity)]
-    congr 1
-    push_cast
-    field_simp
-    rw [← mul_pow, mul_div_cancel₀ s hN.ne']
-  · intro T hT
-    obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
-    exact volume_freudenthalMesh_simplex b hh _ σ
-
-/-- **Nested uniform refinement.** Every simplex of the level-`N` Freudenthal mesh of a box is the
-union of the simplices of the level-`N M` mesh it contains. -/
-theorem freudenthalMesh_biUnion_eq (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N M : ℕ) [NeZero N]
-    [NeZero M] {T' : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT' : T' ∈ (freudenthalMesh b s hs N).simplices) :
-    ⋃ T ∈ {T | T ∈ (freudenthalMesh b s hs (N * M)).simplices ∧
-        T.closedInterior ⊆ T'.closedInterior}, T.closedInterior = T'.closedInterior :=
-  (freudenthalMesh_refines b s hs N M).biUnion_eq
-    (by rw [freudenthalMesh_domain, freudenthalMesh_domain]) hT'
-
-/-! ### Symmetries -/
-
-/-- The central symmetry `x ↦ -x` maps `m + K_σ` onto `(-m - 1) + K_{σ ∘ rev}`. -/
-theorem neg_mem_freudenthalSet_iff {m : Fin n → ℤ} {σ : Equiv.Perm (Fin n)} {x : Fin n → ℝ} :
-    -x ∈ freudenthalSet (-m - 1) (σ * Fin.revPerm) ↔ x ∈ freudenthalSet m σ := by
-  simp only [freudenthalSet, kuhnSet, Set.mem_ofPred_eq, Pi.sub_apply, Pi.neg_apply,
-    latticePoint_apply, Pi.one_apply, Int.cast_sub, Int.cast_neg, Int.cast_one]
-  constructor
-  · rintro ⟨h01, ha⟩
-    refine ⟨fun i => ⟨by linarith [(h01 i).2], by linarith [(h01 i).1]⟩, fun a b hab => ?_⟩
-    have := ha (Fin.rev_le_rev.2 hab)
-    simp only [Function.comp_apply, Equiv.Perm.coe_mul, Fin.revPerm_apply, Fin.rev_rev,
-      Pi.sub_apply, Pi.neg_apply, latticePoint_apply, Int.cast_sub, Int.cast_neg,
-      Int.cast_one, Pi.one_apply] at this ⊢
-    linarith
-  · rintro ⟨h01, ha⟩
-    refine ⟨fun i => ⟨by linarith [(h01 i).2], by linarith [(h01 i).1]⟩, fun a b hab => ?_⟩
-    have := ha (Fin.rev_le_rev.2 hab)
-    simp only [Function.comp_apply, Equiv.Perm.coe_mul, Fin.revPerm_apply, Pi.sub_apply,
-      Pi.neg_apply, latticePoint_apply, Int.cast_sub, Int.cast_neg, Int.cast_one,
-      Pi.one_apply] at this ⊢
-    linarith
-
-/-- A permutation `π` of the coordinates maps `m + K_σ` onto `(m ∘ π) + K_{π⁻¹ σ}`. -/
-theorem comp_mem_freudenthalSet_iff {m : Fin n → ℤ} {σ π : Equiv.Perm (Fin n)}
-    {x : Fin n → ℝ} :
-    x ∘ π ∈ freudenthalSet (m ∘ π) (π⁻¹ * σ) ↔ x ∈ freudenthalSet m σ := by
-  simp only [freudenthalSet, kuhnSet, Set.mem_ofPred_eq, Pi.sub_apply, latticePoint_apply,
-    Function.comp_apply]
-  constructor
-  · rintro ⟨h01, ha⟩
-    refine ⟨fun i => by simpa using h01 (π.symm i), fun a b hab => ?_⟩
-    have := ha hab
-    simpa [Equiv.Perm.coe_mul, Equiv.Perm.inv_def] using this
-  · rintro ⟨h01, ha⟩
-    refine ⟨fun i => h01 (π i), fun a b hab => ?_⟩
-    have := ha hab
-    simpa [Equiv.Perm.coe_mul, Equiv.Perm.inv_def] using this
-
-/-- The reflection `x₀ ↦ -x₀` of the plane. -/
-def reflect₀ (x : Fin 2 → ℝ) : Fin 2 → ℝ := ![-x 0, x 1]
-
-/-- **No reflection symmetry.** The reflection `x₀ ↦ -x₀` of the Kuhn simplex
-`{1 ≥ x₀ ≥ x₁ ≥ 0}` is not a Freudenthal simplex: the Freudenthal triangulation is not invariant
-under the coordinate reflections. -/
-theorem reflect_kuhnSet_ne (m : Fin 2 → ℤ) (σ : Equiv.Perm (Fin 2)) :
-    reflect₀ '' kuhnSet 1 ≠ freudenthalSet m σ := by
-  intro h
-  have hmem : ∀ p ∈ kuhnSet (1 : Equiv.Perm (Fin 2)), reflect₀ p ∈ freudenthalSet m σ :=
-    fun p hp => h ▸ Set.mem_image_of_mem _ hp
-  have hK : ∀ a b : ℝ, 0 ≤ b → b ≤ a → a ≤ 1 → ![a, b] ∈ kuhnSet (1 : Equiv.Perm (Fin 2)) := by
-    intro a b hb hab ha
-    refine ⟨fun i => ?_, fun i j hij => ?_⟩
-    · fin_cases i <;> simp <;> constructor <;> linarith
-    · fin_cases i <;> fin_cases j <;> simp at hij ⊢
-      exact hab
-  have p1 := hmem _ (hK 0 0 le_rfl le_rfl zero_le_one)
-  have p3 := hmem _ (hK 1 1 zero_le_one le_rfl le_rfl)
-  simp only [reflect₀, freudenthalSet, kuhnSet, Set.mem_ofPred_eq] at p1 p3
-  have a0 := (p1.1 0).1; have a1 := (p1.1 0).2; have b0 := (p1.1 1).1; have b1 := (p1.1 1).2
-  have c0 := (p3.1 0).1; have c1 := (p3.1 0).2; have d0 := (p3.1 1).1; have d1 := (p3.1 1).2
-  simp at a0 a1 b0 b1 c0 c1 d0 d1
-  have hm0 : m 0 = -1 := by
-    have : (m 0 : ℝ) = -1 := by linarith
-    exact_mod_cast this
-  have hm1 : m 1 = 0 := by omega
-  have hσ : (σ 0 = 0 ∧ σ 1 = 1) ∨ (σ 0 = 1 ∧ σ 1 = 0) := by
-    have hne : σ 0 ≠ σ 1 := σ.injective.ne (by decide)
-    revert hne
-    generalize σ 0 = u
-    generalize σ 1 = v
-    fin_cases u <;> fin_cases v <;> simp
-  have ha1 := p1.2 (show (0 : Fin 2) ≤ 1 by decide)
-  have ha3 := p3.2 (show (0 : Fin 2) ≤ 1 by decide)
-  rcases hσ with ⟨h0, h1⟩ | ⟨h0, h1⟩ <;>
-  · simp only [Function.comp_apply, h0, h1] at ha1 ha3
-    revert ha1 ha3
-    norm_num [latticePoint_apply, hm0, hm1]
 
 end Feec.Mesh

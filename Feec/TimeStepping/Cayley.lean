@@ -43,7 +43,7 @@ boundary DOFs of `g'` prescribed (`u' − g' ∈ V₀`) and the equations tested
 `V₀`; `IsDirichletCNStep.norm_sub_le`, `norm_sub_le_sum_of_isDirichletCNStep`: the error against
 comparison fields with the same boundary DOFs is at most the initial error plus the sum of the
 consistency errors; `norm_residual_le_of_isDirichletCNStep`: the same bound for every linear
-constraint residual; `IsDirichletCNStep.norm_eq_of_top`: energy conservation without boundary.
+constraint residual.
 
 ## Three-field schemes (thesis Ch. 7)
 
@@ -200,18 +200,6 @@ theorem norm_eq_of_forall_isCNStep (hA : A.IsSkewSymmetric) {U : ℕ → E}
   induction n with
   | zero => rfl
   | succ n ih => rw [(hU n).norm_eq hA, ih]
-
-/-- A CN sequence of a skew-adjoint operator is the sequence of Cayley iterates. -/
-theorem eq_cayley_pow_of_forall_isCNStep [CompleteSpace E] (hA : A.IsSkewAdjoint) (hs : s ≠ 0)
-    {U : ℕ → E} (hU : ∀ n, IsCNStep A s (U n) (U (n + 1))) (n : ℕ) :
-    U n = (cayley A s ^ n) (U 0) := by
-  induction n with
-  | zero => simp
-  | succ n ih =>
-    rw [pow_succ']
-    change U (n + 1) = cayley A s ((cayley A s ^ n) (U 0))
-    rw [← ih]
-    exact (hU n).unique_of_isSkewSymmetric hA.isSkewSymmetric (hA.isCNStep_cayley hs (U n))
 
 /-- **Discrete constraint propagation**: if `K` reduces a dissipative `A` and `s ≥ 0`, a CN step
 from `u ∈ K` stays in `K`. [QuennevilleBelair2015], Prop 4.18 -/
@@ -567,7 +555,6 @@ theorem IsReducedCNStep.apply_eq_of_comp_eq_zero {d₁ : V₁ →ₗ[ℝ] V₂} 
 
 end ThreeField
 
-
 /-! ### Crank–Nicolson with inhomogeneous Dirichlet degrees of freedom (thesis Ch. 7, `fem4gr`) -/
 
 section DirichletCN
@@ -751,17 +738,6 @@ theorem norm_residual_le_of_isDirichletCNStep {W : Type*} [SeminormedAddCommGrou
   have h1 := (hc (u N - ũ N)).trans (mul_le_mul_of_nonneg_left
     (norm_sub_le_sum_of_isDirichletCNStep hA h hũ h0 hτ N) hC)
   linarith [norm_add_le (c (ũ N)) (c (u N - ũ N))]
-
-omit [FiniteDimensional ℝ V] in
-/-- **Discrete energy identity** without boundary (`V₀ = V`, e.g. the periodic run) and without
-load: for `A` skew, `‖u'‖ = ‖u‖`. -/
-theorem IsDirichletCNStep.norm_eq_of_top (hA : ∀ w, ⟪A w, w⟫ = 0) {g' u u' : V}
-    (h : IsDirichletCNStep ⊤ A s 0 g' u u') : ‖u'‖ = ‖u‖ := by
-  have e := h.2 (u' + u) Submodule.mem_top
-  rw [hA, mul_zero, inner_zero_left, add_zero, inner_sub_left, inner_add_right, inner_add_right,
-    real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq, real_inner_comm u u'] at e
-  have h2 : ‖u'‖ ^ 2 = ‖u‖ ^ 2 := by linarith
-  exact (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 h2
 
 end DirichletCN
 

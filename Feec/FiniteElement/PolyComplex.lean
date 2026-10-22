@@ -16,12 +16,11 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
   (`P_rΛ⁰ → P_{r-1}Λ¹ → ⋯`: Lagrange `P_r`, Nédélec of the second kind, BDM), and the two rows of
   Tables 5.1 and 6.1 of [QuennevilleBelair2015] (§5.3, §6.3): `PolySeq.lowestOrder`
   (`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`) and `PolySeq.lagrangeP2` (`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`).
-* Dimensions: `PolySeq.finrank_globalSpace`, `PolySeq.finrank_V`: `Σ_m #{m-faces} · dim(test
-  forms on m-faces)`; `PolySeq.finrank_globalSpace₀`, `PolySeq.finrank_V₀`: the same with the faces
-  not contained in a boundary facet; `PolySeq.finrank_lowestOrder_V` (`#{k-faces}`) and
-  `PolySeq.finrank_lagrangeP2_V` (`#V + #E`, `2#E + 2#F`, `3#F`, `#T` in `ℝ³`).
+* Dimensions: `PolySeq.finrank_globalSpace`: `Σ_m #{m-faces} · dim(test forms on m-faces)`;
+  `PolySeq.finrank_globalSpace₀`, `PolySeq.finrank_V₀`: the same with the faces not contained in
+  a boundary facet.
 * Subcomplexes: `PolySeq.subcomplex`, `PolySeq.subcomplexMin`, and on the level-`N` Freudenthal
-  mesh of a cube `PolySeq.freudenthalSubcomplex`, `PolySeq.freudenthalSubcomplexMin`.
+  mesh of a cube `PolySeq.freudenthalSubcomplexMin`.
 * **Nonzero interior spaces**: a face of `M` whose convex hull meets `Ω` is not contained in a
   boundary facet (`LocalElement.not_isBoundaryDof_of_mem_convexHull`), and on the Freudenthal
   meshes the faces of `b + (s/N) K_id` containing the diagonal from `b` to `b + (s/N)(1, …, 1)`
@@ -89,12 +88,6 @@ def full (r : ℕ) : PolySeq where
         exact Or.inl ⟨rfl, by omega⟩
       · simp only [h1, h2, ↓reduceIte]
         exact Or.inl ⟨rfl, rfl⟩
-
-theorem full_kind {r k : ℕ} (hk : k < r) : (full r).kind k = .full := by
-  simp [full, hk]
-
-theorem full_deg {r k : ℕ} (hk : k < r) : (full r).deg k = r - k := by
-  simp [full, hk]
 
 /-- **The first row of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3), in `ℝ³`:
 `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`, i.e. Lagrange `P₁`, the lowest-order Nédélec `H(curl)`
@@ -187,13 +180,6 @@ theorem finrank_globalSpace (k : ℕ) :
       ∑ m ∈ range (n + 1), (M.faces m).ncard * Module.finrank ℝ (S.test k m) := by
   rw [LocalElement.finrank_globalSpace, card_globalDofIdx]
 
-/-- **`dim Vₕᵏ = Σ_{m ≤ n} #{m-faces} · dim(test forms on m-faces)`** for the glued spaces
-in `L²(Ω; Λᵏ)`. -/
-theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
-    Module.finrank ℝ ((polyElement n S).V M k) =
-      ∑ m ∈ range (n + 1), (M.faces m).ncard * Module.finrank ℝ (S.test k m) := by
-  rw [LocalElement.finrank_V _ M hΩ, card_globalDofIdx]
-
 /-- The faces of `M` not contained in a boundary facet. -/
 def interiorFaces (M : SimplicialMesh n) : Finset (Finset (Fin n → ℝ)) := by
   classical
@@ -267,25 +253,12 @@ def subcomplex [NeZero n] (hΩ : IsOpen M.domain) :
     ((deRham ℝ n).maximalComplex hΩ).Subcomplex :=
   (polyElement n S).subcomplex M hΩ
 
-theorem subcomplex_V [NeZero n] (hΩ : IsOpen M.domain) (k : ℤ) :
-    (S.subcomplex M hΩ).V k = (polyElement n S).V M k := rfl
-
 /-- **The finite element subcomplex with vanishing boundary degrees of freedom**
 `V̊ₕ ⊆ H̊Λ(Ω)`, for `Ω` strictly star-shaped with respect to `x₀` (e.g. convex). -/
 def subcomplexMin [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
     ((deRham ℝ n).minimalComplex hΩ).Subcomplex :=
   (polyElement n S).subcomplexMin M hΩ x₀ hstar
-
-theorem subcomplexMin_V [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
-    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
-    (k : ℤ) : (S.subcomplexMin M hΩ x₀ hstar).V k = (polyElement n S).V₀ M k := rfl
-
-/-- **The finite element subcomplex on the level-`N` Freudenthal mesh of the cube**
-`∏ (bᵢ, bᵢ + s)`, a subcomplex of `HΛ` of the cube. -/
-def freudenthalSubcomplex [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ) [NeZero N] :
-    ((deRham ℝ n).maximalComplex (isOpen_freudenthalMesh_domain b s hs N)).Subcomplex :=
-  S.subcomplex (freudenthalMesh b s hs N) (isOpen_freudenthalMesh_domain b s hs N)
 
 /-- **The finite element subcomplex with vanishing boundary degrees of freedom on the level-`N`
 Freudenthal mesh of a cube**, a subcomplex of `H̊Λ` of the cube. -/
@@ -295,50 +268,6 @@ def freudenthalSubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < 
   S.subcomplexMin (freudenthalMesh b s hs N) (isOpen_freudenthalMesh_domain b s hs N) _
     (add_smul_sub_mem_of_convex (isOpen_freudenthalMesh_domain b s hs N)
       (convex_freudenthalMesh_domain b s hs N) (center_mem_freudenthalMesh_domain b s hs N))
-
-theorem freudenthalSubcomplexMin_V [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
-    [NeZero N] (k : ℤ) :
-    (S.freudenthalSubcomplexMin b s hs N).V k = (polyElement n S).V₀ (freudenthalMesh b s hs N) k :=
-  rfl
-
-end PolySeq
-
-/-! ### Dimension counts of the named sequences -/
-
-namespace PolySeq
-
-/-- **Dimensions of the lowest-order sequence**: `dim Vₕᵏ = #{k-faces}` (as for the Whitney
-complex, `finrank_whitney_V`). -/
-theorem finrank_lowestOrder_V (M : SimplicialMesh n) (hΩ : IsOpen M.domain) {k : ℕ}
-    (hk : k ≤ n) : Module.finrank ℝ ((polyElement n lowestOrder).V M k) = (M.faces k).ncard := by
-  rw [finrank_V _ M hΩ, sum_eq_single k]
-  · rw [finrank_test]
-    by_cases h0 : k = 0
-    · subst h0; simp [lowestOrder, PolyKind.testDim]
-    · simp [lowestOrder, PolyKind.testDim, h0]
-  · intro m _ hmk
-    rw [finrank_test]
-    by_cases h0 : k = 0
-    · subst h0; simp [lowestOrder, PolyKind.testDim]; omega
-    · simp [lowestOrder, PolyKind.testDim, h0]; omega
-  · intro h; simp at h; omega
-
-/-- **Dimensions of the second row of Tables 5.1/6.1** on any mesh of a domain of `ℝ³`:
-`dim P₂Λ⁰ = #V + #E` (Lagrange `P₂`), `dim P₂⁻Λ¹ = 2 #E + 2 #F` (second-lowest-order Nédélec of
-the first kind, 20 DOFs per tetrahedron), `dim P₁Λ² = 3 #F` (`BDM₁`, 12 DOFs per tetrahedron),
-`dim P₀Λ³ = #T`. -/
-theorem finrank_lagrangeP2_V (M : SimplicialMesh 3) (hΩ : IsOpen M.domain) :
-    Module.finrank ℝ ((polyElement 3 lagrangeP2).V M 0) =
-        (M.faces 0).ncard + (M.faces 1).ncard ∧
-      Module.finrank ℝ ((polyElement 3 lagrangeP2).V M 1) =
-        2 * (M.faces 1).ncard + 2 * (M.faces 2).ncard ∧
-      Module.finrank ℝ ((polyElement 3 lagrangeP2).V M 2) = 3 * (M.faces 2).ncard ∧
-      Module.finrank ℝ ((polyElement 3 lagrangeP2).V M 3) = (M.faces 3).ncard := by
-  refine ⟨(finrank_V _ M hΩ 0).trans ?_, (finrank_V _ M hΩ 1).trans ?_,
-    (finrank_V _ M hΩ 2).trans ?_, (finrank_V _ M hΩ 3).trans ?_⟩ <;>
-  · simp only [finrank_test, sum_range_succ, sum_range_zero]
-    simp [PolyKind.testDim]
-    try ring
 
 end PolySeq
 
@@ -493,11 +422,6 @@ theorem lagrangeP2_V₀_ne_bot (N k : ℕ) (hk : k ≤ 3) :
     · exact lagrangeP2.finrank_V₀_freudenthalMesh_pos_of_one_le _ hk1 hk
   rw [h, finrank_bot] at hpos
   exact lt_irrefl 0 hpos
-
-/-- The same statement for the subcomplex `V̊ₕ ⊆ H̊Λ((0, ½)³)`. -/
-theorem lagrangeP2_freudenthalSubcomplexMin_V_ne_bot (N k : ℕ) (hk : k ≤ 3) :
-    (lagrangeP2.freudenthalSubcomplexMin (0 : Fin 3 → ℝ) (1 / 2) (by norm_num) (N + 1)).V k ≠ ⊥ :=
-  lagrangeP2_V₀_ne_bot N k hk
 
 end PolySeq
 

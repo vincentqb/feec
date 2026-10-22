@@ -37,8 +37,7 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
   `PolyKind.test`, `PolyKind.testDim`, `PolyKind.Transition`.
 * `Feec.FiniteElement.lexEnum g m`: the points of `g` in lexicographic order.
 * `Feec.FiniteElement.vertexMoment q η ω = ∫_{T̂_m} F_q^* ω ∧ η`, `degField k ω`, `degMoment`.
-* `Feec.FiniteElement.PolySeq`: admissible sequences; `PolySeq.ofLE` from the degrees `≤ n`;
-  `PolySeq.DofIdx`, `PolySeq.dof`.
+* `Feec.FiniteElement.PolySeq`: admissible sequences; `PolySeq.DofIdx`, `PolySeq.dof`.
 * `Feec.FiniteElement.polyElement n S`: the element family.
 
 ## Main results
@@ -50,8 +49,7 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
 * `vertexMoment_extDeriv`: Stokes' formula for moments along any vertex family;
 * `PolySeq.isUnisolvent_dof`, `PolySeq.tangentialTraceEq_of_dof_eq`, `PolySeq.dof_congr`,
   `PolySeq.dof_comp_extDerivC1_mem_span`: the axioms of an element family;
-* `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`;
-* `PolyKind.space_trimmed_top`: `P_r⁻Λⁿ = P_{r-1}Λⁿ`, so `P_1⁻Λⁿ = P_0Λⁿ`.
+* `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`.
 
 ## References
 
@@ -141,16 +139,6 @@ theorem test_eq_bot {κ : PolyKind} {r k m : ℕ} (h : ¬(k ≤ m ∧ m < r + k)
   cases κ
   · exact testSpace_eq_bot h
   · exact testSpaceMinus_eq_bot h
-
-/-- **`P_r⁻Λⁿ = P_{r-1}Λⁿ`** in top degree (no `κ`-part: there are no `(n+1)`-forms); in particular
-`P_1⁻Λⁿ = P_0Λⁿ` is the space of constant `n`-forms. -/
-theorem space_trimmed_top (r : ℕ) : trimmed.space n r n = full.space n (r - 1) n := by
-  have h : Koszul.homForm ℝ (Fin n) (r - 1) (n + 1) = ⊥ := by
-    refine (Submodule.eq_bot_iff _).2 fun ω hω => funext fun s => hω.1 s fun hs => by
-      have := card_le_univ s; simp at this; omega
-  change (Koszul.polyFormMinus ℝ (Fin n) r n).map (evalForm n) =
-    (Koszul.polyForm ℝ (Fin n) (r - 1) n).map (evalForm n)
-  rw [Koszul.polyFormMinus, h, Submodule.map_bot, sup_bot_eq]
 
 /-- The dimension of the test space: `C(r+k, r) C(r-1, m-k)` for `P_rΛᵏ`, `C(r+k-1, r-1)
 C(r-1, m-k)` for `P_r⁻Λᵏ`, when `k ≤ m < r + k`, and `0` otherwise. -/
@@ -649,8 +637,8 @@ theorem degMoment_apply (k : ℕ) {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) 
 /-- **An admissible sequence** of polynomial families ([AFW2006], §5; [AFW2010], §5.2): in every
 form degree `k` a family `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` with `r_k ≥ 1`, consecutive degrees being
 related by an admissible transition `Xᵏ → P_{r_k}⁻Λᵏ⁺¹` or `Xᵏ → P_{r_k-1}Λᵏ⁺¹`. (The degrees
-`k > n` carry the zero space; `PolySeq.ofLE` builds a sequence from its values in degrees `≤ n`.)
-`P_0Λⁿ`, the piecewise constants, is represented by the equal space `P_1⁻Λⁿ`. -/
+`k > n` carry the zero space.) `P_0Λⁿ`, the piecewise constants, is represented by the equal
+space `P_1⁻Λⁿ`. -/
 structure PolySeq where
   /-- the family in degree `k` -/
   kind : ℕ → PolyKind
@@ -660,35 +648,6 @@ structure PolySeq where
   transition : ∀ k, PolyKind.Transition (deg k) (kind (k + 1)) (deg (k + 1))
 
 namespace PolySeq
-
-/-- The admissible sequence with prescribed families in the degrees `k ≤ n` (extended by
-`P_{r_n}⁻Λᵏ` in the degrees `k > n`, where all spaces of `n`-dimensional forms vanish). -/
-def ofLE (n : ℕ) (kind : ℕ → PolyKind) (deg : ℕ → ℕ) (one_le : ∀ k ≤ n, 1 ≤ deg k)
-    (transition : ∀ k < n, PolyKind.Transition (deg k) (kind (k + 1)) (deg (k + 1))) :
-    PolySeq where
-  kind k := if k ≤ n then kind k else PolyKind.trimmed
-  deg k := if k ≤ n then deg k else deg n
-  one_le_deg k := by
-    split_ifs with h
-    · exact one_le k h
-    · exact one_le n le_rfl
-  transition k := by
-    by_cases hk : k < n
-    · simp only [hk.le, Nat.succ_le_of_lt hk, ↓reduceIte]
-      exact transition k hk
-    · simp only [show ¬k + 1 ≤ n by omega, ↓reduceIte]
-      refine Or.inl ⟨rfl, ?_⟩
-      by_cases hkn : k = n
-      · simp [hkn]
-      · simp [show ¬k ≤ n by omega]
-
-theorem ofLE_kind {n : ℕ} {kind : ℕ → PolyKind} {deg : ℕ → ℕ} {one_le} {transition} {k : ℕ}
-    (hk : k ≤ n) : (ofLE n kind deg one_le transition).kind k = kind k := by
-  simp [ofLE, hk]
-
-theorem ofLE_deg {n : ℕ} {kind : ℕ → PolyKind} {deg : ℕ → ℕ} {one_le} {transition} {k : ℕ}
-    (hk : k ≤ n) : (ofLE n kind deg one_le transition).deg k = deg k := by
-  simp [ofLE, hk]
 
 variable (S : PolySeq)
 

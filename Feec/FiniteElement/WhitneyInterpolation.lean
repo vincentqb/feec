@@ -27,10 +27,9 @@ once, `whitneyRefInterp g = Σ_k Σ_{k-faces f} (∫_f g) φ_f` (equal to `Π_T�
 `whitneyRefInterp_apply_eq_whitneyInterp`), satisfies `Feec.FiniteElement.IsRefInterpolant` with
 `r = 0`, `m = 0` (`isRefInterpolant_whitney`): it reproduces the constant forms
 (`whitneyRefInterp_const`) and is stable in `C⁰(T̂)`; hence
-`sup_{T̂} ‖f - I f‖ ≤ (1 + C) sup_{T̂} ‖Df‖` (`norm_sub_whitneyRefInterp_le`). This instance is a
-side result: it is stated for coefficient fields `T̂ → (Finset (Fin n) → ℝ)`, while the transport
-`Feec.FiniteElement.norm_sub_transportInterp_formPullback_le` is stated for alternating-map
-fields, and the mesh estimates below do not use it.
+`sup_{T̂} ‖f - I f‖ ≤ (1 + C) sup_{T̂} ‖Df‖` (`IsRefInterpolant.norm_sub_le`). This instance is a
+side result, stated for coefficient fields `T̂ → (Finset (Fin n) → ℝ)`; the mesh estimates below
+do not use it.
 
 **On a mesh.** The global canonical interpolant of the Whitney element family is `Π_T` on every
 simplex (`whitney_globalInterp_apply`). With `formL2` the degree-`k` coefficients of a continuous
@@ -55,8 +54,7 @@ of `Π_T` under affine maps).
 ## Main results
 
 * `abs_sub_whitneyInterp_le`: the local interpolation error.
-* `isRefInterpolant_whitney`, `norm_sub_whitneyRefInterp_le`: the Whitney interpolant as a
-  reference interpolant.
+* `isRefInterpolant_whitney`: the Whitney interpolant as a reference interpolant.
 * `whitney_globalInterp_apply`, `norm_formL2_sub_glue_le`,
   `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error.
 * `glue_globalInterp_mem_maximal`, `formL2_mem_maximal`, `contDiff_extDeriv`: `d` on smooth and
@@ -510,19 +508,6 @@ theorem isRefInterpolant_whitney (n : ℕ) :
         ‖((Feec.Mesh.refSimplex n).linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖) ^ k)
       (fun k _ => mul_nonneg (whitneyConst_nonneg n k)
         (pow_nonneg (mul_nonneg (diam_nonneg _) (norm_nonneg _)) k)) hk
-
-/-- **Interpolation error of the Whitney interpolant on `T̂`** (the order-`0` case of
-`IsRefInterpolant.norm_sub_le`): for `f` of class `C¹` near `T̂`,
-`sup_{T̂} ‖f - I f‖ ≤ (1 + C) sup_{T̂} ‖Df‖`. -/
-theorem norm_sub_whitneyRefInterp_le {f : (Fin n → ℝ) → Finset (Fin n) → ℝ}
-    {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
-    (hTU : (Feec.Mesh.refSimplex n).closedInterior ⊆ U) (hf : ContDiffOn ℝ 1 f U)
-    (hM : ∀ y ∈ (Feec.Mesh.refSimplex n).closedInterior, ‖iteratedFDeriv ℝ 1 f y‖ ≤ M)
-    {x : Fin n → ℝ} (hx : x ∈ (Feec.Mesh.refSimplex n).closedInterior) :
-    ‖f x - whitneyRefInterp f x‖ ≤ (1 + whitneyRefConst n) * M := by
-  have h := (isRefInterpolant_whitney n).norm_sub_le (r := 0) hU hTU (by simpa using hf)
-    (by simpa using hM) hx
-  simpa using h
 
 /-! ### The canonical interpolant of the Whitney element family -/
 

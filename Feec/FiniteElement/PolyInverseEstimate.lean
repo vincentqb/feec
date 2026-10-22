@@ -26,8 +26,7 @@ norms are written `formL2Sq S u = Σ_s ∫_S u_s²` and `formGradL2Sq S u = Σ�
   functionals `ℓⱼ` on `V`;
 * `exists_formL2Sq_equiv_sum_sq_dof`: `‖u‖²_{L²(S)} ≍ Σⱼ ℓⱼ(u)²`;
 * `exists_formL2Sq_le_formGradL2Sq` (**kernel lemma**): if `L : V → W` is linear and vanishes on
-  the constant fields of `V`, then `‖L v‖_{L²(S)} ≤ C ‖Dv‖_{L²(S)}`
-  (`exists_formL2Sq_sub_le_formGradL2Sq` for `L = I - P`, `P` reproducing constants). The kernel
+  the constant fields of `V`, then `‖L v‖_{L²(S)} ≤ C ‖Dv‖_{L²(S)}`. The kernel
   of `v ↦ Dv|_S` on polynomial fields is the constants (`eq_const_of_gradEmbed_eq_zero`: a
   polynomial vanishing on a nonempty open set vanishes, `eq_zero_of_eval_eq_zero_of_isOpen`).
 
@@ -43,15 +42,14 @@ norms are written `formL2Sq S u = Σ_s ∫_S u_s²` and `formGradL2Sq S u = Σ�
   (homothetic conjugates `L_T` of a kernel-lemma map `L`, e.g. `u - Π_T u`).
 
 **Moment DOFs.** For every moment `ω ↦ ∫_{T̂_m} (F^* ω ∧ η)_{univ}` along an affine
-parametrization `F` of a face (`affineMoment`, and `faceMoment p e η` for every vertex map `e`,
-hence every ordering of the vertices), the moment on the corresponding face of `T = t + h K` is
-the moment of `H^* ω` on `K` (`affineMoment_homothety`, `faceMoment_mapEquiv_boxMap`; for a general
-affine image, `faceMoment_affine`, `faceTrace_affine`). So the abstract estimates apply to every
-moment DOF family that is unisolvent on `K`, whatever the face parametrization. For the DOFs of
-`Feec.FiniteElement.LocalDof` (`localDof`, `localDofMinus`, on the faces of `K` in the vertex
-order of `K`): `exists_local_dof_bound_polySpace`, `exists_local_dof_bound_polyMinusSpace`,
-`exists_local_formL2Sq_equiv_polySpace`, `exists_local_formL2Sq_equiv_polyMinusSpace`, with the
-moments `∫_f tr_f u ∧ ηᵢ` on the faces of `T` itself.
+parametrization `F` of a face (`faceMoment p e η` for every vertex map `e`, hence every ordering
+of the vertices), the moment on the corresponding face of `T = t + h K` is the moment of `H^* ω`
+on `K` (`faceMoment_mapEquiv_boxMap`; for a general affine image, `faceMoment_affine`,
+`faceTrace_affine`). So the abstract estimates apply to every moment DOF family that is
+unisolvent on `K`, whatever the face parametrization. For the DOFs of
+`Feec.FiniteElement.LocalDof` (`localDof`, on the faces of `K` in the vertex order of `K`):
+`exists_local_formL2Sq_equiv_polySpace`, with the moments `∫_f tr_f u ∧ ηᵢ` on the faces of `T`
+itself.
 
 **Vector-valued fields.** All statements are per field with constants independent of the field,
 so for finitely many components `(u_c)_c` (e.g. `P_rΛᵏ ⊗ ℝ^N`) they hold componentwise and
@@ -525,7 +523,7 @@ theorem exists_local_inverse_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
 /-- **Local DOF estimate on homothetic simplices**: for a unisolvent family `ℓⱼ` on `V` (the
 DOFs on `K`) and `T = t + h K`, `hᵏ sup_T ‖u‖ ≤ B Σⱼ |ℓⱼ(H^* u)|`, `H y = t + h y`, with `B`
 depending only on `K` and `ℓ`. For moment DOFs, `ℓⱼ(H^* u)` is the corresponding moment of `u`
-on `T` (`faceMoment_mapEquiv_boxMap`, `affineMoment_homothety`). -/
+on `T` (`faceMoment_mapEquiv_boxMap`). -/
 theorem exists_local_dof_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
     (K : Affine.Simplex ℝ (Fin n → ℝ) n) {J : Type*} [Fintype J] (ℓ : J → V →ₗ[ℝ] ℝ)
@@ -609,29 +607,6 @@ theorem faceMoment_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n) (t
       faceMoment K.points e η (affinePullback (scalarMat n h) t ω) := by
   rw [points_mapEquiv_boxMap, faceMoment_affine]
 
-/-- The moment `ω ↦ ∫_{T̂_m} (F^* ω ∧ η)_{univ}` along an arbitrary affine parametrization
-`F x̂ = B x̂ + b` of an `m`-dimensional face. -/
-def affineMoment {m : ℕ} (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (η : FormField m)
-    (ω : FormField n) : ℝ :=
-  simplexIntegral (refVertex m) (wedgeField (affinePullback B b ω) η)
-
-theorem faceMoment_eq_affineMoment {m : ℕ} (p : Fin (n + 1) → Fin n → ℝ)
-    (e : Fin (m + 1) → Fin (n + 1)) (η : FormField m) (ω : FormField n) :
-    faceMoment p e η ω = affineMoment (simplexMatrix (p ∘ e)) (p (e 0)) η ω := rfl
-
-/-- **Moments along affine parametrizations under homotheties**: the moment along
-`H ∘ F` (`H y = t + h y`, `F x̂ = B x̂ + b`, so `H ∘ F x̂ = h B x̂ + (t + h b)`) is the moment of
-`H^* ω` along `F`. This covers every moment DOF on `T = t + h K` whatever the parametrization of
-the faces of `K`. -/
-theorem affineMoment_homothety {m : ℕ} (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (h : ℝ)
-    (t : Fin n → ℝ) (η : FormField m) (ω : FormField n) :
-    affineMoment (fun i l => h * B i l) (t + h • b) η ω =
-      affineMoment B b η (affinePullback (scalarMat n h) t ω) := by
-  rw [affineMoment, affineMoment, affinePullback_affinePullback, affine_scalarMat, add_comm]
-  congr 3
-  funext i l
-  simp [scalarMat]
-
 end Moments
 
 /-! ### The moment DOFs of `P_rΛᵏ` and `P_r⁻Λᵏ` on homothetic simplices -/
@@ -658,54 +633,12 @@ theorem polyDofOn_apply (K : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Σ f : F
     polyDofOn K r k i u =
       faceMoment K.points i.1.emb (testBasis r k i.1.dim i.2 : FormField i.1.dim) u := rfl
 
-theorem polyMinusDofOn_apply (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (i : Σ f : Face n, DofIndexMinus r k f) (u : polyMinusSpace n r k) :
-    polyMinusDofOn K r k i u =
-      faceMoment K.points i.1.emb (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim) u := rfl
-
 theorem injective_pi_polyDofOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r) (hk : k ≤ n) :
     Function.Injective (LinearMap.pi (polyDofOn K r k)) := by
   intro u v huv
   have h := (isUnisolvent_localDof (isUnit_det_edgeMatrix K) hr hk).ext fun i =>
     congrFun huv i
   exact (LinearEquiv.ofEq _ _ _).injective h
-
-theorem injective_pi_polyMinusDofOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r)
-    (hk : k ≤ n) : Function.Injective (LinearMap.pi (polyMinusDofOn K r k)) := by
-  intro u v huv
-  have h := (isUnisolvent_localDofMinus (isUnit_det_edgeMatrix K) hr hk).ext fun i =>
-    congrFun huv i
-  exact (LinearEquiv.ofEq _ _ _).injective h
-
-/-- **DOF estimate for `P_rΛᵏ` on `T = t + h K`**: `hᵏ sup_T ‖u‖ ≤ B Σᵢ |ℓᵢᵀ(u)|`, where
-`ℓᵢᵀ(u) = ∫_f tr_f u ∧ ηᵢ` are the moment DOFs on the faces of `T` (vertices `t + h pⱼ`, in the
-order of `K`), and `B` depends only on `K`, `r`, `k`. -/
-theorem exists_local_dof_bound_polySpace (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r)
-    (hk : k ≤ n) :
-    ∃ B, 0 ≤ B ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n},
-      u ∈ polySpace n r k → ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        h ^ k * ‖u x‖ ≤ B * ∑ i : Σ f : Face n, DofIndex r k f,
-          |faceMoment (mapEquiv (boxMap t h hh.ne') K).points i.1.emb
-            (testBasis r k i.1.dim i.2 : FormField i.1.dim) u| := by
-  obtain ⟨B, hB0, hB⟩ := exists_local_dof_bound_of_le_polySpace le_rfl
-    (fun h t _ hu => affinePullback_mem_polySpace_scalarMat h t hu) K (polyDofOn K r k)
-    (injective_pi_polyDofOn K hr hk)
-  refine ⟨B, hB0, fun {h} hh t u hu x hx => (hB hh t u hu x hx).trans_eq ?_⟩
-  simp only [polyDofOn_apply, faceMoment_mapEquiv_boxMap]
-
-/-- **DOF estimate for `P_r⁻Λᵏ` on `T = t + h K`** (moment DOFs of the trimmed family). -/
-theorem exists_local_dof_bound_polyMinusSpace (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k ≤ n) :
-    ∃ B, 0 ≤ B ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n},
-      u ∈ polyMinusSpace n r k → ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        h ^ k * ‖u x‖ ≤ B * ∑ i : Σ f : Face n, DofIndexMinus r k f,
-          |faceMoment (mapEquiv (boxMap t h hh.ne') K).points i.1.emb
-            (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim) u| := by
-  obtain ⟨B, hB0, hB⟩ := exists_local_dof_bound_of_le_polySpace (polyMinusSpace_le_polySpace hr)
-    (fun h t _ hu => affinePullback_mem_polyMinusSpace_scalarMat h t hu) K
-    (polyMinusDofOn K r k) (injective_pi_polyMinusDofOn K hr hk)
-  refine ⟨B, hB0, fun {h} hh t u hu x hx => (hB hh t u hu x hx).trans_eq ?_⟩
-  simp only [polyMinusDofOn_apply, faceMoment_mapEquiv_boxMap]
 
 /-- **`ℓ²`-scaling of the DOFs of `P_rΛᵏ` on `T = t + h K`** (the corrected form of
 [QuennevilleBelair2015], Prop 5.8): `‖u‖²_{L²(T)} ≍ h^{n - 2k} Σᵢ ℓᵢᵀ(u)²`. -/
@@ -731,33 +664,6 @@ theorem exists_local_formL2Sq_equiv_polySpace (K : Affine.Simplex ℝ (Fin n →
       polyDofOn K r k i ⟨affinePullback (scalarMat n h) t u,
         affinePullback_mem_polySpace_scalarMat h t hu⟩ := fun i => by
     rw [polyDofOn_apply, faceMoment_mapEquiv_boxMap]
-  simp only [e]
-  exact hC hh t u hu
-
-/-- **`ℓ²`-scaling of the DOFs of `P_r⁻Λᵏ` on `T = t + h K`**. -/
-theorem exists_local_formL2Sq_equiv_polyMinusSpace (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hr : 1 ≤ r) (hk : k ≤ n) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n},
-      u ∈ polyMinusSpace n r k →
-      (h ^ k) ^ 2 * formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u ≤
-          C * (h ^ n * ∑ i : Σ f : Face n, DofIndexMinus r k f,
-            (faceMoment (mapEquiv (boxMap t h hh.ne') K).points i.1.emb
-              (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim) u) ^ 2) ∧
-        h ^ n * ∑ i : Σ f : Face n, DofIndexMinus r k f,
-            (faceMoment (mapEquiv (boxMap t h hh.ne') K).points i.1.emb
-              (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim) u) ^ 2 ≤
-          C * ((h ^ k) ^ 2 * formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u) := by
-  obtain ⟨C, hC0, hC⟩ := exists_local_formL2Sq_equiv_of_le_polySpace
-    (polyMinusSpace_le_polySpace hr)
-    (fun h t _ hu => affinePullback_mem_polyMinusSpace_scalarMat h t hu) K
-    (polyMinusDofOn K r k) (injective_pi_polyMinusDofOn K hr hk)
-  refine ⟨C, hC0, fun {h} hh t u hu => ?_⟩
-  have e : ∀ i : Σ f : Face n, DofIndexMinus r k f,
-      faceMoment (mapEquiv (boxMap t h hh.ne') K).points i.1.emb
-        (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim) u =
-      polyMinusDofOn K r k i ⟨affinePullback (scalarMat n h) t u,
-        affinePullback_mem_polyMinusSpace_scalarMat h t hu⟩ := fun i => by
-    rw [polyMinusDofOn_apply, faceMoment_mapEquiv_boxMap]
   simp only [e]
   exact hC hh t u hu
 
@@ -911,17 +817,6 @@ theorem exists_local_kernel_bound {r' : ℕ} {W : Submodule ℝ (FormField n)}
     _ = C * (√(h ^ n) * √(formGradL2Sq K.closedInterior v)) := by ring
     _ = h ^ k * (C * h * √(formGradL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u)) := by
         rw [h2]; ring
-
-/-- The kernel lemma for `u - P u`, `P : V → V` linear and reproducing the constant fields of
-`V`. -/
-theorem exists_formL2Sq_sub_le_formGradL2Sq (hV : V ≤ polySpace n r k) (P : V →ₗ[ℝ] V)
-    (hP : ∀ v : V, (∀ x, (v : FormField n) x = (v : FormField n) 0) → P v = v)
-    {S : Set (Fin n → ℝ)} (hS : IsCompact S) (hSi : (interior S).Nonempty) :
-    ∃ C, 0 ≤ C ∧ ∀ v : V,
-      √(formL2Sq S ((v : FormField n) - (P v : FormField n))) ≤ C * √(formGradL2Sq S v) := by
-  obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_le_formGradL2Sq hV hV (LinearMap.id - P)
-    (fun v hv => by rw [LinearMap.sub_apply, LinearMap.id_apply, hP v hv, sub_self]) hS hSi
-  exact ⟨C, hC0, fun v => by simpa using hC v⟩
 
 end Kernel
 

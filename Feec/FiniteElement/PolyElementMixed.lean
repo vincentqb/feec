@@ -23,7 +23,7 @@ degrees of freedom vanish on every face contained in a facet of `Γ`. This inter
   (`PolySeq.finrank_globalSpacePartial`).
 * with boundary conditions in the degrees `k < j` only (`LocalElement.bcFacets`; `j = 2` in `ℝ³`
   is the pattern `V̊ₕ⁰ → V̊ₕ¹ → Vₕ²` of [QuennevilleBelair2015], §6.3) the spaces are again closed
-  under `d` (`LocalElement.dPiecewise_mem_globalSpacePartial_bcFacets`, `LocalElement.dGlobalBC`),
+  under `d` (`LocalElement.dPiecewise_mem_globalSpacePartial_bcFacets`),
   contain `Λ̊_hᵏ` (`LocalElement.finrank_V₀_le_finrank_VPartial`), and for the second row of
   Table 6.1 they are nonzero on every Freudenthal mesh of `(0, ½)³`
   (`PolySeq.lagrangeP2_VPartial_bcFacets_ne_bot`).
@@ -256,18 +256,6 @@ theorem bcFacets_subset (j k : ℕ) : bcFacets M j k ⊆ {F | M.IsBoundaryFacet 
   · exact le_rfl
   · exact Set.empty_subset _
 
-/-- `Λ_{h,bc}ᵏ = Λ̊_hᵏ(M)` in the degrees `k < j` carrying boundary conditions. -/
-theorem globalSpacePartial_bcFacets_of_lt {j k : ℕ} (hk : k < j) :
-    E.globalSpacePartial M (bcFacets M j k) k = E.globalSpace₀ M k := by
-  simp only [bcFacets, hk, ↓reduceIte]
-  exact E.globalSpacePartial_boundary M k
-
-/-- `Λ_{h,bc}ᵏ = Λ_hᵏ(M)` in the degrees `k ≥ j` without boundary conditions. -/
-theorem globalSpacePartial_bcFacets_of_le {j k : ℕ} (hk : j ≤ k) :
-    E.globalSpacePartial M (bcFacets M j k) k = E.globalSpace M k := by
-  simp only [bcFacets, show ¬ k < j by omega, ↓reduceIte]
-  exact E.globalSpacePartial_empty M k
-
 /-- **The complex with boundary conditions in the degrees `< j`** is closed under `d`:
 `d Λ_{h,bc}ᵏ ⊆ Λ_{h,bc}ᵏ⁺¹`. With `j = 2` in `ℝ³` this is the pattern
 `V̊ₕ⁰ → V̊ₕ¹ → Vₕ²` of [QuennevilleBelair2015], §6.3 (boundary conditions on the `0`- and
@@ -276,11 +264,6 @@ theorem dPiecewise_mem_globalSpacePartial_bcFacets (j : ℕ) {k : ℕ} {u : E.Pi
     (hu : u ∈ E.globalSpacePartial M (bcFacets M j k) k) :
     E.dPiecewise M k u ∈ E.globalSpacePartial M (bcFacets M j (k + 1)) (k + 1) :=
   E.dPiecewise_mem_globalSpacePartial_of_subset M (bcFacets_succ_subset M j k) hu
-
-/-- The exterior derivative of the complex with boundary conditions in the degrees `< j`. -/
-def dGlobalBC (j k : ℕ) : E.globalSpacePartial M (bcFacets M j k) k →ₗ[ℝ]
-    E.globalSpacePartial M (bcFacets M j (k + 1)) (k + 1) :=
-  (E.dPiecewise M k).restrict fun _ hu => E.dPiecewise_mem_globalSpacePartial_bcFacets M j hu
 
 /-- `Λ̊_hᵏ(M) ⊆ Λ_{h,Γ}ᵏ(M)` for every set `Γ` of boundary facets. -/
 theorem globalSpace₀_le_globalSpacePartial {Γ : Set (Finset (Fin n → ℝ))}

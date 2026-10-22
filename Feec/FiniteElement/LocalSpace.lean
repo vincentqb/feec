@@ -37,9 +37,7 @@ its traces on all proper faces vanish ([AFW2006], §3–4; [AFW2010], §5.1–5.
 
 ## Main results
 
-* fibre identities: `Feec.ExteriorFibre.pullback_interior` (`B^*(ι_{Bx} α) = ι_x B^* α`),
-  `Feec.ExteriorFibre.pullback_wedgeForm` (`B^*(α ∧ β) = B^*α ∧ B^*β`),
-  `Feec.ExteriorFibre.interior_wedgeProd` (contraction is an antiderivation);
+* fibre identities: `Feec.ExteriorFibre.pullback_wedgeForm` (`B^*(α ∧ β) = B^*α ∧ B^*β`);
 * polynomial calculus: `partialDeriv_eval`, `extDeriv_evalForm` (`d` of an evaluated polynomial
   form), `evalForm_injective`, `evalForm_wedgeForm`;
 * **affine invariance**: `polyPullback_mem_polyForm`, `polyPullback_mem_polyFormMinus`
@@ -54,9 +52,8 @@ its traces on all proper faces vanish ([AFW2006], §3–4; [AFW2010], §5.1–5.
   traces vanish on the faces through `0` and which is orthogonal to `P_{r+k-n}Λ^{n-k}` vanishes),
   `eq_zero_of_isBubble_of_mem_polyForm` (a bubble of `P_rΛᵏ` orthogonal to
   `P⁻_{r+k-n}Λ^{n-k}` vanishes), `eq_zero_of_isBubble_of_mem_polyFormMinus` (a bubble of
-  `P_r⁻Λᵏ` orthogonal to `P_{r+k-n-1}Λ^{n-k}` vanishes), and `bubbleSpace_polySpace_eq_bot`,
-  `bubbleSpace_polyMinusSpace_eq_bot` (no bubbles if `r + k ≤ n`); the dimensions of the bubble
-  spaces are in `Feec.FiniteElement.LocalDof`;
+  `P_r⁻Λᵏ` orthogonal to `P_{r+k-n-1}Λ^{n-k}` vanishes); the dimensions of the bubble spaces are
+  in `Feec.FiniteElement.LocalDof`;
 * `integral_extDeriv_wedge_of_isBubble`: Stokes' theorem for a bubble,
   `∫_{T̂} dω ∧ μ = -(-1)^k ∫_{T̂} ω ∧ dμ`.
 
@@ -101,44 +98,6 @@ theorem map_wedgeProd {S : Type*} [CommRing S] (φ : R →+* S) (θ : ι → d �
     congr 1
     funext t'
     exact ih t'
-
-theorem map_pullback {S : Type*} [CommRing S] [Fintype ι] {κ : Type*} [LinearOrder κ]
-    (φ : R →+* S) (B : ι → κ → R) (α : Finset ι → R) (t : Finset κ) :
-    φ (pullback B α t) = pullback (fun i => φ ∘ B i) (φ ∘ α) t := by
-  simp only [pullback_apply, map_sum, map_mul, map_wedgeProd, Function.comp_apply]
-
-theorem interior_sum [Fintype d] {β : Type*} (x : d → R) (u : Finset β) (ω : β → Finset d → R) :
-    interior x (∑ b ∈ u, ω b) = ∑ b ∈ u, interior x (ω b) := by
-  funext s; simp only [interior_apply, Finset.sum_apply, mul_sum]; exact sum_comm
-
-/-- **Contraction is an antiderivation**: `ι_x (θ_{g₁} ∧ ⋯ ∧ θ_{g_k}) = W_g` with the scalars
-`⟨θᵢ, x⟩`. -/
-theorem interior_wedgeProd [Fintype d] (θ : ι → d → R) (x : d → R) (g : Finset ι) :
-    interior x (wedgeProd θ g) = whitneyFibre (fun i => ∑ l, θ i l * x l) θ g := by
-  induction g using Finset.induction_on_min with
-  | empty =>
-    funext s
-    simp only [wedgeProd_empty, interior_apply, whitneyFibre, sum_empty, Pi.zero_apply]
-    refine sum_eq_zero fun j hj => ?_
-    have : insert j s ≠ ∅ := insert_ne_empty j s
-    simp [this]
-  | insert a g ha ih =>
-    rw [wedgeProd_insert_of_lt _ ha, whitneyFibre_insert_of_lt _ _ ha, ← ih]
-    have h := wedge_interior_add_interior_wedge (θ a) x (wedgeProd θ g)
-    rw [eq_sub_of_add_eq' h]
-
-/-- **Pullback commutes with contraction**: `B^*(ι_{Bx} α) = ι_x (B^* α)`. -/
-theorem pullback_interior [Fintype ι] {κ : Type*} [LinearOrder κ] [Fintype κ]
-    (B : ι → κ → R) (x : κ → R) (α : Finset ι → R) :
-    pullback B (interior (fun i => ∑ l, B i l * x l) α) = interior x (pullback B α) := by
-  rw [interior_eq_sum_single, pullback_sum, pullback]
-  rw [interior_sum]
-  refine sum_congr rfl fun t _ => ?_
-  rw [pullback_smul, interior_smul, ← whitneyFibre_single_eq_interior, pullback_whitneyFibre,
-    interior_wedgeProd]
-  congr 2
-  funext a l
-  simp [covPullback, Pi.single_apply]
 
 /-- `B^*(θ_s^∧ ∧ β) = (Bᵀθ)_s^∧ ∧ B^* β`. -/
 theorem pullback_wedgeForm_wedgeProd [Fintype ι] {κ : Type*} [LinearOrder κ] {μ : Type*}
@@ -519,16 +478,6 @@ theorem localPolyMinusSpace_eq (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
   · rintro _ ⟨ω, h, rfl⟩
     exact affinePullback_mem_polyMinusSpace _ _ h
   · exact affinePullback_affinePullback_of_comp_eq_id _ _ _ _ (simplexMap_affine_inv hp) ω
-
-/-- `F_T^*` maps `P_rΛᵏ(T)` onto the reference space. -/
-theorem map_affinePullback_localPolySpace (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
-    (localPolySpace p r k).map (affinePullbackₗ (simplexMatrix p) (p 0)) = polySpace n r k := by
-  rw [localPolySpace_eq hp]
-  refine le_antisymm ?_ fun ω h => ⟨affinePullback (invMatrix p) (invOffset p) ω,
-    affinePullback_mem_polySpace _ _ h, ?_⟩
-  · rintro _ ⟨ω, h, rfl⟩
-    exact affinePullback_mem_polySpace _ _ h
-  · exact affinePullback_affinePullback_of_comp_eq_id _ _ _ _ (affine_inv_simplexMap hp) ω
 
 /-! ### Traces on faces -/
 
@@ -1093,41 +1042,5 @@ theorem eq_zero_of_mem_bubbleSpace_polyMinusSpace {r k : ℕ} (hr : 1 ≤ r) {ω
   obtain ⟨⟨Ω, hΩ, rfl⟩, hbub⟩ := hω
   rw [eq_zero_of_isBubble_of_mem_polyFormMinus hr hΩ hbub fun h H hH => by
     rw [← simplexIntegral_wedgeField_evalForm]; exact hint h _ ⟨H, hH, rfl⟩, map_zero]
-
-/-- `P̊_rΛᵏ(T̂) = 0` if `r + k ≤ n`. -/
-theorem bubbleSpace_polySpace_eq_bot {r k : ℕ} (hr : 1 ≤ r) (h : r + k ≤ n) :
-    bubbleSpace (refVertex n) (polySpace n r k) = ⊥ :=
-  (Submodule.eq_bot_iff _).2 fun ω hω =>
-    eq_zero_of_mem_bubbleSpace_polySpace hr hω fun h' => absurd h' (by omega)
-
-/-- `P̊_r⁻Λᵏ(T̂) = 0` if `r + k ≤ n`. -/
-theorem bubbleSpace_polyMinusSpace_eq_bot {r k : ℕ} (hr : 1 ≤ r) (h : r + k ≤ n) :
-    bubbleSpace (refVertex n) (polyMinusSpace n r k) = ⊥ :=
-  (Submodule.eq_bot_iff _).2 fun ω hω =>
-    eq_zero_of_mem_bubbleSpace_polyMinusSpace hr hω fun h' => absurd h' (by omega)
-
-/-! ### Mathlib simplices -/
-
-/-- For a Mathlib `n`-simplex `T` in `ℝⁿ`: `P_rΛᵏ(T) = P_rΛᵏ(ℝⁿ)`. -/
-theorem localPolySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) (r k : ℕ) :
-    localPolySpace T.points r k = polySpace n r k :=
-  localPolySpace_eq (isUnit_det_edgeMatrix T) r k
-
-/-- For a Mathlib `n`-simplex `T` in `ℝⁿ`: `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)`. -/
-theorem localPolyMinusSpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) (r k : ℕ) :
-    localPolyMinusSpace T.points r k = polyMinusSpace n r k :=
-  localPolyMinusSpace_eq (isUnit_det_edgeMatrix T) r k
-
-/-- For a Mathlib `n`-simplex `T`: `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)` on every face `f = T ∘ e`. -/
-theorem map_faceTrace_localPolySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-    {e : Fin (m + 1) → Fin (n + 1)} (he : Function.Injective e) (r k : ℕ) :
-    (localPolySpace T.points r k).map (faceTrace T.points e) = polySpace m r k := by
-  rw [localPolySpace_simplex, map_faceTrace_polySpace (isUnit_det_edgeMatrix T) he]
-
-/-- For a Mathlib `n`-simplex `T`: `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)`. -/
-theorem map_faceTrace_localPolyMinusSpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-    {e : Fin (m + 1) → Fin (n + 1)} (he : Function.Injective e) (r k : ℕ) :
-    (localPolyMinusSpace T.points r k).map (faceTrace T.points e) = polyMinusSpace m r k := by
-  rw [localPolyMinusSpace_simplex, map_faceTrace_polyMinusSpace (isUnit_det_edgeMatrix T) he]
 
 end Feec.FiniteElement

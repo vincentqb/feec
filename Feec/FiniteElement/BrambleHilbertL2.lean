@@ -21,9 +21,9 @@ compact set (no Sobolev spaces): the seminorms are `∫_K ‖D^m f‖²`, `D^m` 
 derivative. The averaged Taylor polynomial is the construction of Sobolev used in [BrennerScott2008], Ch. 4,
 here averaged over `K` itself.
 
-* **Polynomial part** (`avgTaylorPoly_mem_polyFunctions`, `avgTaylorPoly_eq_of_mem_polyFunctions`):
-  `Q_{k+1} f ∈ P_k(ℝⁿ; G)` (expansion of `T_{k+1} f(y)(x)` in monomials of `x` with integrable
-  coefficients in `y`, `avgTaylorPoly_eq_sum`), and `Q_{k+1} p = p` for `p ∈ P_k`.
+* **Polynomial part** (`avgTaylorPoly_mem_polyFunctions`): `Q_{k+1} f ∈ P_k(ℝⁿ; G)` (expansion
+  of `T_{k+1} f(y)(x)` in monomials of `x` with integrable coefficients in `y`,
+  `avgTaylorPoly_eq_sum`).
 * **Riesz-potential bound** (`enorm_sub_avgTaylorPoly_le_riesz`): for `K` compact convex with
   `|K| > 0`, `‖x - y‖ ≤ d` on `K` and `x ∈ K`,
   `‖f x - Q_{k+1} f (x)‖ ≤ dⁿ / (n k! |K|) ∫_K ‖D^{k+1} f(z)‖ ‖x - z‖^{k+1-n} dz`
@@ -37,10 +37,7 @@ here averaged over `K` itself.
   coordinates (`MeasureTheory.integral_fun_norm_addHaar`).
 * **`L²` Bramble–Hilbert** (`lintegral_sub_avgTaylorPoly_sq_le`), for every order `k + 1 ≥ 1`:
   `∫_K ‖f - Q_{k+1} f‖² ≤ (dⁿ/(n k! |K|) · C₁)² ∫_K ‖D^{k+1} f‖²`, by a Schur test on the
-  symmetric Riesz kernel (weighted Cauchy–Schwarz `lintegral_mul_sq_le`, Tonelli). The seminorms
-  of order `j ≤ k` (`lintegral_iteratedFDeriv_sub_avgTaylorPoly_sq_le`) follow from
-  `D (Q_{k+1} f) = Q_k (D f)` (`hasFDerivAt_avgTaylorPoly`, differentiation under the integral
-  sign) by induction on `j`.
+  symmetric Riesz kernel (weighted Cauchy–Schwarz `lintegral_mul_sq_le`, Tonelli).
 * **Sobolev embedding** (`enorm_sub_avgTaylorPoly_le_L2`), for `2(k + 1) > n`:
   `sup_K ‖f - Q_{k+1} f‖ ≤ dⁿ/(n k! |K|) · C₂^{1/2} (∫_K ‖D^{k+1} f‖²)^{1/2}` (Cauchy–Schwarz,
   `‖x - ·‖^{2(k+1-n)}` integrable).
@@ -56,24 +53,14 @@ here averaged over `K` itself.
   homothetic copies `T = t + h K` (`Feec.FiniteElement.transportInterp_polyRefInterp_eq`):
   `‖w - Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} w‖²` for `P_rΛᵏ`, `s ≤ r`
   (`exists_formL2Sq_sub_polyInterp_le_L2`) and `P_r⁻Λᵏ`, `s ≤ r - 1`
-  (`exists_formL2Sq_sub_polyMinusInterp_le_L2`), uniformly over finitely many reference simplices
-  (`..._uniform`), and the graph-norm part `‖dw - d Π_T w‖²_{L²(T)}` through the commuting
-  property (`exists_formL2Sq_extDeriv_sub_polyInterp_le_L2`,
-  `exists_formL2Sq_extDeriv_sub_polyMinusInterp_le_L2`).
-* **Non-vacuity** (`lintegral_sub_avgTaylorPoly_sq_nonvacuous`,
-  `lintegral_sub_lagrangeP1_sq_nonvacuous`): for the monomial `x₀^{k+1}` both sides of the
-  Bramble–Hilbert estimate are nonzero, and in dimensions `1 ≤ n ≤ 3` so are both sides of the
-  reference interpolation estimate for `P₁` Lagrange interpolation and `x₀²`. On every
-  `T = t + h K`, the `0`-form `x₀^{r+1}` (`coordPowForm`) gives positive values to both sides of
-  the `P_rΛ⁰` and `P_r⁻Λ⁰` form estimates (`formL2Sq_sub_polyInterp_le_L2_nonvacuous`,
-  `formL2Sq_sub_polyMinusInterp_le_L2_nonvacuous`).
+  (`exists_formL2Sq_sub_polyMinusInterp_le_L2`).
 
 **Norms.** Every norm on `Fin n → ℝ` is Mathlib's sup norm: `d` bounds the sup-norm diameter,
 `|B₁| = 2ⁿ` is the volume of the sup-norm unit ball, and `‖D^m f‖` is the operator norm for the
 sup norm. Other norms change only the constants.
 
-**The restriction `2(s + 1) > n`.** The Bramble–Hilbert part (`lintegral_sub_avgTaylorPoly_sq_le`
-and its derivative versions) holds for every order `≥ 1` in every dimension. The interpolation
+**The restriction `2(s + 1) > n`.** The Bramble–Hilbert part (`lintegral_sub_avgTaylorPoly_sq_le`)
+holds for every order `≥ 1` in every dimension. The interpolation
 estimates need `2(s + 1) > n`: the moment degrees of freedom of `Π_T` (`∫_f tr_f ω ∧ η`, down
 to vertex values) need point values, which `H^{s+1}` controls only through the Sobolev embedding
 `H^{s+1} ⊂ C⁰` ([Evans2010], §5.6). In dimension `n ≤ 3` this is every `s ≥ 1`, and `s ≥ 0` for
@@ -90,13 +77,11 @@ to vertex values) need point values, which `H^{s+1}` controls only through the S
 
 * `sub_taylorPoly_eq_integral`: Taylor's formula with integral remainder.
 * `enorm_sub_avgTaylorPoly_le_riesz`: the Riesz-potential bound.
-* `lintegral_sub_avgTaylorPoly_sq_le`, `lintegral_iteratedFDeriv_sub_avgTaylorPoly_sq_le`:
-  **`L²` Bramble–Hilbert**.
+* `lintegral_sub_avgTaylorPoly_sq_le`: **`L²` Bramble–Hilbert**.
 * `enorm_sub_avgTaylorPoly_le_L2`: **Sobolev embedding** for `2(k + 1) > n`.
 * `IsRefInterpolant.lintegral_sub_sq_le_L2`: the reference interpolation error in `L²`.
 * `lintegral_sub_transportInterp_sq_le_L2`, `exists_formL2Sq_sub_polyInterp_le_L2`,
-  `exists_formL2Sq_sub_polyMinusInterp_le_L2`, `exists_formL2Sq_extDeriv_sub_polyInterp_le_L2`,
-  `exists_formL2Sq_extDeriv_sub_polyMinusInterp_le_L2`, `..._uniform`: physical simplices.
+  `exists_formL2Sq_sub_polyMinusInterp_le_L2`: physical simplices.
 
 ## References
 
@@ -234,14 +219,6 @@ theorem avgTaylorPoly_mem_polyFunctions [CompleteSpace G] {K U : Set (Fin n → 
   calc s.card ≤ (Finset.univ : Finset (Fin i)).card := Finset.card_le_univ s
     _ = i := by simp
     _ ≤ r := Nat.lt_succ_iff.1 (Finset.mem_range.1 hi)
-
-/-- **The averaged Taylor polynomial reproduces `P_r`**: `Q_{r+1} p = p` for `p ∈ P_r`, if
-`0 < |K| < ∞`. -/
-theorem avgTaylorPoly_eq_of_mem_polyFunctions [CompleteSpace G] {K : Set (Fin n → ℝ)}
-    (hK0 : volume K ≠ 0) (hKt : volume K ≠ ∞) {r : ℕ} {p : (Fin n → ℝ) → G}
-    (hp : p ∈ polyFunctions n r G) (x : Fin n → ℝ) : avgTaylorPoly K p (r + 1) x = p x := by
-  simp only [avgTaylorPoly, taylorPoly_eq_of_mem_polyFunctions hp]
-  exact setAverage_const hK0 hKt _
 
 end AvgTaylor
 
@@ -991,128 +968,6 @@ theorem enorm_sub_avgTaylorPoly_le_L2 [CompleteSpace G] (hn : 0 < n) {K U : Set 
 
 end ConvexSet
 
-/-! ### Derivatives of the averaged Taylor polynomial -/
-
-section Derivatives
-
-/-- Joint continuity of `(y, x) ↦ T_k g(y)(x)` for `g` of class `C^N` on an open set,
-`k ≤ N + 1`. -/
-theorem continuousOn_taylorPoly_prod {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-    [NormedAddCommGroup F] [NormedSpace ℝ F] {N : ℕ} {g : E → F} {U : Set E} (hU : IsOpen U)
-    (hg : ContDiffOn ℝ N g U) {k : ℕ} (hk : k ≤ N + 1) :
-    ContinuousOn (fun p : E × E => taylorPoly g p.1 k p.2) (U ×ˢ univ) := by
-  unfold taylorPoly
-  refine continuousOn_finsetSum _ fun i hi => ContinuousOn.const_smul ?_ _
-  have hi : i ≤ N := by have := Finset.mem_range.1 hi; omega
-  have hc := (continuousOn_iteratedFDeriv_of_isOpen hU hg hi).comp
-    (continuousOn_fst (s := U ×ˢ (univ : Set E))) (fun p hp => (Set.mem_prod.1 hp).1)
-  have hv : Continuous fun p : E × E => (fun _ : Fin i => p.2 - p.1) :=
-    continuous_pi fun _ => continuous_snd.sub continuous_fst
-  exact continuous_eval.comp_continuousOn (hc.prodMk hv.continuousOn)
-
-/-- Continuity of `y ↦ T_k g(y)(x)` for `g` of class `C^N` on an open set, `k ≤ N + 1`. -/
-theorem continuousOn_taylorPoly_base {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-    [NormedAddCommGroup F] [NormedSpace ℝ F] {N : ℕ} {g : E → F} {U : Set E} (hU : IsOpen U)
-    (hg : ContDiffOn ℝ N g U) {k : ℕ} (hk : k ≤ N + 1) (x : E) :
-    ContinuousOn (fun y => taylorPoly g y k x) U := by
-  unfold taylorPoly
-  refine continuousOn_finsetSum _ fun i hi => ContinuousOn.const_smul ?_ _
-  have hi : i ≤ N := by have := Finset.mem_range.1 hi; omega
-  have hv : Continuous fun y : E => (fun _ : Fin i => x - y) :=
-    continuous_pi fun _ => continuous_const.sub continuous_id
-  exact continuous_eval.comp_continuousOn
-    ((continuousOn_iteratedFDeriv_of_isOpen hU hg hi).prodMk hv.continuousOn)
-
-/-- **`D (Q_{k+1} f) = Q_k (D f)`**: the averaged Taylor polynomial commutes with
-differentiation (differentiation under the integral sign, `hasFDerivAt_taylorPoly`). -/
-theorem hasFDerivAt_avgTaylorPoly [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK : IsCompact K)
-    (hU : IsOpen U) (hKU : K ⊆ U) {k : ℕ} {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ (k + 1) f U)
-    (x₀ : Fin n → ℝ) :
-    HasFDerivAt (avgTaylorPoly K f (k + 1)) (avgTaylorPoly K (fderiv ℝ f) k x₀) x₀ := by
-  have hKm : MeasurableSet K := hK.isClosed.measurableSet
-  have hdf : ContDiffOn ℝ k (fderiv ℝ f) U := hf.fderiv_of_isOpen hU le_rfl
-  have hF := continuousOn_taylorPoly_prod hU (N := k + 1) (by exact_mod_cast hf)
-    (k := k + 1) (by omega)
-  have hF' := continuousOn_taylorPoly_prod hU hdf (k := k) (by omega)
-  have hFy : ∀ x, ContinuousOn (fun y => taylorPoly f y (k + 1) x) K := fun x =>
-    (continuousOn_taylorPoly_base hU (N := k + 1) (by exact_mod_cast hf) (k := k + 1) (by omega)
-      x).mono hKU
-  have hF'y : ∀ x, ContinuousOn (fun y => taylorPoly (fderiv ℝ f) y k x) K := fun x =>
-    (continuousOn_taylorPoly_base hU hdf (k := k) (by omega) x).mono hKU
-  obtain ⟨B, hB⟩ := (hK.prod (isCompact_closedBall x₀ 1)).exists_bound_of_continuousOn
-    (hF'.mono (Set.prod_mono hKU (subset_univ _)))
-  have : IsFiniteMeasure (volume.restrict K) :=
-    ⟨by rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top⟩
-  have hint := hasFDerivAt_integral_of_dominated_of_fderiv_le (μ := volume.restrict K)
-    (F := fun x y => taylorPoly f y (k + 1) x) (F' := fun x y => taylorPoly (fderiv ℝ f) y k x)
-    (x₀ := x₀) (bound := fun _ => B) (Metric.closedBall_mem_nhds x₀ one_pos)
-    (Eventually.of_forall fun x => (hFy x).aestronglyMeasurable hKm)
-    ((hFy x₀).integrableOn_compact hK) ((hF'y x₀).aestronglyMeasurable hKm)
-    ((ae_restrict_iff' hKm).2 (Eventually.of_forall fun y hy x hx => hB (y, x) ⟨hy, hx⟩))
-    (integrable_const B)
-    ((ae_restrict_iff' hKm).2 (Eventually.of_forall fun y hy x _ =>
-      hasFDerivAt_taylorPoly ((hf.contDiffAt (hU.mem_nhds (hKU hy))).of_le
-        le_self_add) x))
-  have := hint.const_smul (volume.real K)⁻¹
-  have hfun : avgTaylorPoly K f (k + 1) =
-      (volume.real K)⁻¹ • fun x => ∫ y in K, taylorPoly f y (k + 1) x := by
-    funext x; simp only [avgTaylorPoly, setAverage_eq, Pi.smul_apply]
-  rw [hfun, avgTaylorPoly, setAverage_eq]
-  exact this
-
-theorem fderiv_avgTaylorPoly [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK : IsCompact K)
-    (hU : IsOpen U) (hKU : K ⊆ U) {k : ℕ} {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ (k + 1) f U) :
-    fderiv ℝ (avgTaylorPoly K f (k + 1)) = avgTaylorPoly K (fderiv ℝ f) k :=
-  funext fun x => (hasFDerivAt_avgTaylorPoly hK hU hKU hf x).fderiv
-
-/-- **`L²` Bramble–Hilbert in the seminorms of order `j ≤ k`**: on a compact convex `K` with
-`|K| > 0`, for `f` of class `C^{k+1}` near `K`,
-`∫_K ‖D^j (f - Q_{k+1} f)‖² ≤ (dⁿ/(n (k-j)! |K|) · C₁)² ∫_K ‖D^{k+1} f‖²`, with the constant of
-the order-`(k + 1 - j)` estimate. Proof: `D (f - Q_{k+1} f) = D f - Q_k (D f)`
-(`fderiv_avgTaylorPoly`) and induction on `j`. -/
-theorem lintegral_iteratedFDeriv_sub_avgTaylorPoly_sq_le (hn : 0 < n) {K U : Set (Fin n → ℝ)}
-    (hK : IsCompact K) (hKc : Convex ℝ K) (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U)
-    {d : ℝ} (hd : ∀ x ∈ K, ∀ y ∈ K, ‖x - y‖ ≤ d) (j : ℕ) :
-    ∀ {G : Type} [NormedAddCommGroup G] [NormedSpace ℝ G] [CompleteSpace G] {k : ℕ}
-      {f : (Fin n → ℝ) → G}, j ≤ k → ContDiffOn ℝ (k + 1) f U →
-      ∫⁻ x in K, ‖iteratedFDeriv ℝ j (fun y => f y - avgTaylorPoly K f (k + 1) y) x‖ₑ ^ 2 ≤
-        (avgTaylorConst n (k - j) d K * rieszConst n (k + 1 - j) n d) ^ 2 *
-          ∫⁻ z in K, ‖iteratedFDeriv ℝ (k + 1) f z‖ₑ ^ 2 := by
-  have hKm : MeasurableSet K := hK.isClosed.measurableSet
-  induction j with
-  | zero =>
-    intro G _ _ _ k f _ hf
-    simp only [Nat.sub_zero]
-    have h := lintegral_sub_avgTaylorPoly_sq_le hn hK hKc hK0 hU hKU hf hd
-    refine le_of_eq_of_le (setLIntegral_congr_fun hKm fun x _ => ?_) h
-    rw [← enorm_norm, norm_iteratedFDeriv_zero, enorm_norm]
-  | succ j ih =>
-    intro G _ _ _ k f hjk hf
-    obtain ⟨k, rfl⟩ : ∃ k', k = k' + 1 := ⟨k - 1, by omega⟩
-    have hdf : ContDiffOn ℝ (k + 1) (fderiv ℝ f) U :=
-      hf.fderiv_of_isOpen hU (by push_cast; exact le_rfl)
-    have h := ih (G := (Fin n → ℝ) →L[ℝ] G) (k := k) (f := fderiv ℝ f) (by omega) hdf
-    have heq : ∀ x ∈ K, ‖iteratedFDeriv ℝ (j + 1)
-        (fun y => f y - avgTaylorPoly K f (k + 1 + 1) y) x‖ₑ ^ 2 =
-        ‖iteratedFDeriv ℝ j (fun y => fderiv ℝ f y - avgTaylorPoly K (fderiv ℝ f) (k + 1) y)
-          x‖ₑ ^ 2 := by
-      intro x hx
-      have hloc : fderiv ℝ (fun y => f y - avgTaylorPoly K f (k + 1 + 1) y) =ᶠ[𝓝 x]
-          fun y => fderiv ℝ f y - avgTaylorPoly K (fderiv ℝ f) (k + 1) y := by
-        filter_upwards [hU.mem_nhds (hKU hx)] with y hy
-        exact ((((hf.differentiableOn (by simp)) y hy).differentiableAt
-          (hU.mem_nhds hy)).hasFDerivAt.sub (hasFDerivAt_avgTaylorPoly hK hU hKU hf y)).fderiv
-      rw [← enorm_norm, ← norm_iteratedFDeriv_fderiv, (hloc.iteratedFDeriv ℝ j).eq_of_nhds,
-        enorm_norm]
-    have hD : ∫⁻ z in K, ‖iteratedFDeriv ℝ (k + 1) (fderiv ℝ f) z‖ₑ ^ 2 =
-        ∫⁻ z in K, ‖iteratedFDeriv ℝ (k + 1 + 1) f z‖ₑ ^ 2 :=
-      lintegral_congr fun z => by rw [← enorm_norm, norm_iteratedFDeriv_fderiv, enorm_norm]
-    rw [setLIntegral_congr_fun hKm heq]
-    refine h.trans_eq ?_
-    rw [hD, show k + 1 - (j + 1) = k - j by omega, show k + 1 + 1 - (j + 1) = k + 1 - j by omega]
-
-end Derivatives
-
 /-! ### The reference simplex: interpolation error in `L²` -/
 
 section RefSimplex
@@ -1420,8 +1275,7 @@ theorem formL2Sq_sub_le_of_transportInterp_eq (K : Affine.Simplex ℝ (Fin n →
 /-- **`L²(T)` interpolation error of `Π_T` for `P_rΛᵏ` from `L²` derivatives** on
 `T = t + h K`, `s ≤ r`, `2(s + 1) > n`:
 `‖w - Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} w‖²`, `C` depending only on `K`, `n`, `r`,
-`s` (the Sobolev form of `Feec.FiniteElement.exists_formL2Sq_sub_polyInterp_le`; full order
-`h^{2(r+1)}` for `s = r`). -/
+`s` (full order `h^{2(r+1)}` for `s = r`). -/
 theorem exists_formL2Sq_sub_polyInterp_le_L2 (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hn : 0 < n)
     (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ} (hs : s ≤ r) (hns : n < 2 * (s + 1)) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
@@ -1456,356 +1310,6 @@ theorem exists_formL2Sq_sub_polyMinusInterp_le_L2 (K : Affine.Simplex ℝ (Fin n
   exact formL2Sq_sub_le_of_transportInterp_eq K hn hns hCI0 hI hh t hU hTU hw
     (transportInterp_polyMinusRefInterp_eq K hr hk hh t hwc hwk)
 
-/-- **`L²(T)` error of `d Π_T` for the `P` family** (graph-norm part, Sobolev form): with
-`Π_T : C⁰Λᵏ → P_{r+1}Λᵏ(T)` and the commuting property `d Π_T w = Π_T dw`
-(`Feec.FiniteElement.polyInterp_extDeriv`),
-`‖dw - d Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} dw‖²` for `s ≤ r`, `2(s + 1) > n`, `w ∈ C¹`
-of class `C^{s+2}` on an open `U ⊇ T`. -/
-theorem exists_formL2Sq_extDeriv_sub_polyInterp_le_L2 (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hn : 0 < n) (hr : 1 ≤ r) (hk : k + 1 ≤ n) {s : ℕ} (hs : s ≤ r) (hns : n < 2 * (s + 1)) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hw1 : ContDiff ℝ 1 w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') K).closedInterior ⊆ U → ContDiffOn ℝ (s + 1 + 1) w U →
-      formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (extDeriv w - extDeriv (polyInterp
-          (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
-          (Nat.le_add_left 1 r) (by omega : k ≤ n) ⟨w, mem_contDegForms hw1.continuous hwk⟩ :
-            FormField n)) ≤
-        C * h ^ (2 * (s + 1)) * ∫ y in (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-          ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ^ 2 := by
-  obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_sub_polyInterp_le_L2 K hn hr hk hs hns
-  refine ⟨C, hC0, fun {h} hh t w hw1 hwk U hU hTU hw => ?_⟩
-  have hw1' : ContDiff ℝ ((0 : ℕ) + 1) w := by simpa using hw1
-  have hdw := contDiff_extDeriv hw1'
-  have hcomm := polyInterp_extDeriv (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr hk
-    ⟨w, mem_c1DegForms_of_contDiff hw1' hwk⟩
-  have e := congrArg (fun ω : localPolySpace (mapEquiv (boxMap t h hh.ne') K).points r (k + 1) =>
-    (ω : FormField n)) hcomm
-  have h1 := hC hh t hdw.continuous (fun x => IsDeg.extDeriv hwk x) hU hTU
-    (contDiffOn_extDeriv hU hw)
-  convert h1 using 3
-  exact e.symm
-
-/-- **`L²(T)` error of `d Π_T` for the `P⁻` family** (`s ≤ r - 1`, `2(s + 1) > n`). -/
-theorem exists_formL2Sq_extDeriv_sub_polyMinusInterp_le_L2 (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hn : 0 < n) (hr : 1 ≤ r) (hk : k + 1 ≤ n) {s : ℕ} (hs : s + 1 ≤ r)
-    (hns : n < 2 * (s + 1)) :
-    ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hw1 : ContDiff ℝ 1 w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') K).closedInterior ⊆ U → ContDiffOn ℝ (s + 1 + 1) w U →
-      formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (extDeriv w - extDeriv (polyMinusInterp
-          (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr (by omega : k ≤ n)
-            ⟨w, mem_contDegForms hw1.continuous hwk⟩ : FormField n)) ≤
-        C * h ^ (2 * (s + 1)) * ∫ y in (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-          ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ^ 2 := by
-  obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_sub_polyMinusInterp_le_L2 K hn hr hk hs hns
-  refine ⟨C, hC0, fun {h} hh t w hw1 hwk U hU hTU hw => ?_⟩
-  have hw1' : ContDiff ℝ ((0 : ℕ) + 1) w := by simpa using hw1
-  have hdw := contDiff_extDeriv hw1'
-  have hcomm := polyMinusInterp_extDeriv (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
-    hr hk ⟨w, mem_c1DegForms_of_contDiff hw1' hwk⟩
-  have e := congrArg (fun ω : localPolyMinusSpace (mapEquiv (boxMap t h hh.ne') K).points r
-    (k + 1) => (ω : FormField n)) hcomm
-  have h1 := hC hh t hdw.continuous (fun x => IsDeg.extDeriv hwk x) hU hTU
-    (contDiffOn_extDeriv hU hw)
-  convert h1 using 3
-  exact e.symm
-
-/-! #### Finitely many reference simplices -/
-
-/-- `exists_formL2Sq_sub_polyInterp_le_L2` with one constant for a finite family of reference
-simplices `K i` (the Kuhn simplices of a Freudenthal mesh). -/
-theorem exists_formL2Sq_sub_polyInterp_le_L2_uniform {ι : Type*} [Finite ι]
-    (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) (hn : 0 < n) (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ}
-    (hs : s ≤ r) (hns : n < 2 * (s + 1)) :
-    ∃ C, 0 ≤ C ∧ ∀ i, ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hwc : Continuous w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior ⊆ U → ContDiffOn ℝ (s + 1) w U →
-      formL2Sq (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior
-        (w - (polyInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') (K i))) hr hk
-          ⟨w, mem_contDegForms hwc hwk⟩ : FormField n)) ≤
-        C * h ^ (2 * (s + 1)) * ∫ y in (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-          ‖iteratedFDeriv ℝ (s + 1) w y‖ ^ 2 := by
-  classical
-  have := Fintype.ofFinite ι
-  choose C hC0 hC using fun i => exists_formL2Sq_sub_polyInterp_le_L2 (K i) hn hr hk hs hns
-  refine ⟨∑ i, C i, Finset.sum_nonneg fun i _ => hC0 i,
-    fun i {h} hh t w hwc hwk U hU hTU hw => (hC i hh t hwc hwk hU hTU hw).trans ?_⟩
-  have hCi : C i ≤ ∑ j, C j :=
-    Finset.single_le_sum (f := C) (fun j _ => hC0 j) (Finset.mem_univ i)
-  have hJ : 0 ≤ ∫ y in (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-      ‖iteratedFDeriv ℝ (s + 1) w y‖ ^ 2 := setIntegral_nonneg_of_ae (Eventually.of_forall
-        fun _ => sq_nonneg _)
-  gcongr
-
-/-- `exists_formL2Sq_sub_polyMinusInterp_le_L2` with one constant for a finite family of
-reference simplices. -/
-theorem exists_formL2Sq_sub_polyMinusInterp_le_L2_uniform {ι : Type*} [Finite ι]
-    (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) (hn : 0 < n) (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ}
-    (hs : s + 1 ≤ r) (hns : n < 2 * (s + 1)) :
-    ∃ C, 0 ≤ C ∧ ∀ i, ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hwc : Continuous w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior ⊆ U → ContDiffOn ℝ (s + 1) w U →
-      formL2Sq (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior
-        (w - (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') (K i))) hr
-          hk ⟨w, mem_contDegForms hwc hwk⟩ : FormField n)) ≤
-        C * h ^ (2 * (s + 1)) * ∫ y in (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-          ‖iteratedFDeriv ℝ (s + 1) w y‖ ^ 2 := by
-  classical
-  have := Fintype.ofFinite ι
-  choose C hC0 hC using fun i => exists_formL2Sq_sub_polyMinusInterp_le_L2 (K i) hn hr hk hs hns
-  refine ⟨∑ i, C i, Finset.sum_nonneg fun i _ => hC0 i,
-    fun i {h} hh t w hwc hwk U hU hTU hw => (hC i hh t hwc hwk hU hTU hw).trans ?_⟩
-  have hCi : C i ≤ ∑ j, C j :=
-    Finset.single_le_sum (f := C) (fun j _ => hC0 j) (Finset.mem_univ i)
-  have hJ : 0 ≤ ∫ y in (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-      ‖iteratedFDeriv ℝ (s + 1) w y‖ ^ 2 := setIntegral_nonneg_of_ae (Eventually.of_forall
-        fun _ => sq_nonneg _)
-  gcongr
-
 end Forms
-
-/-! ### Non-vacuity -/
-
-section NonVacuity
-
-open Feec.Mesh
-
-/-- A function continuous and nonzero at an interior point of `K` has `∫_K ‖g‖² > 0`. -/
-theorem setLIntegral_enorm_sq_ne_zero {E : Type*} [NormedAddCommGroup E] {K : Set (Fin n → ℝ)}
-    {g : (Fin n → ℝ) → E} {x₀ : Fin n → ℝ} (hx₀ : x₀ ∈ interior K) (hg : ContinuousAt g x₀)
-    (hne : g x₀ ≠ 0) : ∫⁻ x in K, ‖g x‖ₑ ^ 2 ≠ 0 := by
-  have hpos : 0 < ‖g x₀‖ := norm_pos_iff.2 hne
-  have hev : ∀ᶠ x in 𝓝 x₀, ‖g x₀‖ / 2 < ‖g x‖ ∧ x ∈ interior K :=
-    (hg.norm.eventually (lt_mem_nhds (half_lt_self hpos))).and (isOpen_interior.mem_nhds hx₀)
-  obtain ⟨ε, hε, hball⟩ := Metric.mem_nhds_iff.1 hev
-  have hlow : ENNReal.ofReal ((‖g x₀‖ / 2) ^ 2) * volume (Metric.ball x₀ ε) ≤
-      ∫⁻ x in K, ‖g x‖ₑ ^ 2 := by
-    calc ENNReal.ofReal ((‖g x₀‖ / 2) ^ 2) * volume (Metric.ball x₀ ε)
-        = ∫⁻ _x in Metric.ball x₀ ε, ENNReal.ofReal ((‖g x₀‖ / 2) ^ 2) :=
-          (setLIntegral_const _ _).symm
-      _ ≤ ∫⁻ x in Metric.ball x₀ ε, ‖g x‖ₑ ^ 2 :=
-          setLIntegral_mono' measurableSet_ball fun x hx => by
-            rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
-            exact ENNReal.ofReal_le_ofReal
-              (pow_le_pow_left₀ (by positivity) (hball hx).1.le 2)
-      _ ≤ ∫⁻ x in K, ‖g x‖ₑ ^ 2 := lintegral_mono_set fun x hx => interior_subset (hball hx).2
-  have h0 : 0 < ENNReal.ofReal ((‖g x₀‖ / 2) ^ 2) * volume (Metric.ball x₀ ε) :=
-    ENNReal.mul_pos (ENNReal.ofReal_pos.2 (by positivity)).ne' (Metric.measure_ball_pos _ _ hε).ne'
-  exact (h0.trans_le hlow).ne'
-
-/-- If `D^{r+1} f` does not vanish at an interior point of `K`, then no `p ∈ P_r` has
-`∫_K ‖f - p‖² = 0`: the left side of the Bramble–Hilbert estimate is positive. -/
-theorem lintegral_sub_sq_ne_zero_of_iteratedFDeriv_ne_zero {K U : Set (Fin n → ℝ)}
-    (hU : IsOpen U) (hKU : K ⊆ U) {r : ℕ} {f p : (Fin n → ℝ) → G}
-    (hf : ContDiffOn ℝ (r + 1) f U) (hp : p ∈ polyFunctions n r G) {x₀ : Fin n → ℝ}
-    (hx₀ : x₀ ∈ interior K) (hD : iteratedFDeriv ℝ (r + 1) f x₀ ≠ 0) :
-    ∫⁻ x in K, ‖f x - p x‖ₑ ^ 2 ≠ 0 := by
-  by_cases h : ∃ x₁ ∈ interior K, f x₁ ≠ p x₁
-  · obtain ⟨x₁, hx₁, hne⟩ := h
-    exact setLIntegral_enorm_sq_ne_zero hx₁
-      ((hf.continuousOn.continuousAt (hU.mem_nhds (hKU (interior_subset hx₁)))).sub
-        (contDiff_of_mem_polyFunctions hp (N := 0)).continuous.continuousAt) (sub_ne_zero.2 hne)
-  · push Not at h
-    have heq : f =ᶠ[𝓝 x₀] p := Filter.eventually_of_mem (isOpen_interior.mem_nhds hx₀) h
-    exact (hD (((heq.iteratedFDeriv ℝ (r + 1)).eq_of_nhds).trans
-      (iteratedFDeriv_eq_zero_of_mem_polyFunctions r hp x₀))).elim
-
-/-- The `m`-th derivative of the monomial `x ↦ x_{i₀}^m` never vanishes (it is `m!` on
-`(e_{i₀}, …, e_{i₀})`). -/
-theorem iteratedFDeriv_coord_pow_ne_zero (i₀ : Fin n) (m : ℕ) (x : Fin n → ℝ) :
-    iteratedFDeriv ℝ m (fun y : Fin n → ℝ => y i₀ ^ m) x ≠ 0 := by
-  intro h
-  have h1 := congrArg (fun A => A (fun _ => (Pi.single i₀ (1 : ℝ) : Fin n → ℝ))) h
-  have hL : (fun y : Fin n → ℝ => y i₀ ^ m) = (fun t : ℝ => t ^ m) ∘
-      (ContinuousLinearMap.proj i₀ : (Fin n → ℝ) →L[ℝ] ℝ) := rfl
-  have hpow : ContDiff ℝ m (fun t : ℝ => t ^ m) := contDiff_id.pow m
-  simp only [hL] at h1
-  rw [ContinuousLinearMap.iteratedFDeriv_comp_right _ hpow x le_rfl,
-    ContinuousMultilinearMap.compContinuousLinearMap_apply,
-    iteratedFDeriv_apply_eq_iteratedDeriv_mul_prod, iteratedDeriv_pow] at h1
-  simp [Nat.descFactorial_self, Nat.factorial_ne_zero] at h1
-
-/-- **Non-vacuity of the `L²` Bramble–Hilbert lemma** on `T̂` (`n ≥ 1`): for the monomial
-`f(x) = x₀^{k+1}` of degree `k + 1`, both sides of `lintegral_sub_avgTaylorPoly_sq_le` are
-nonzero. -/
-theorem lintegral_sub_avgTaylorPoly_sq_nonvacuous (hn : 0 < n) (k : ℕ) :
-    ∫⁻ x in (Feec.Mesh.refSimplex n).closedInterior,
-        ‖x ⟨0, hn⟩ ^ (k + 1) - avgTaylorPoly (Feec.Mesh.refSimplex n).closedInterior
-          (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (k + 1)) (k + 1) x‖ₑ ^ 2 ≠ 0 ∧
-      ∫⁻ x in (Feec.Mesh.refSimplex n).closedInterior,
-        ‖iteratedFDeriv ℝ (k + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (k + 1)) x‖ₑ ^ 2 ≠ 0 := by
-  obtain ⟨x₀, hx₀⟩ := interior_closedInterior_nonempty (Feec.Mesh.refSimplex n)
-  have hc : ContDiff ℝ (k + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (k + 1)) := by fun_prop
-  have hf : ContDiffOn ℝ (k + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (k + 1)) univ := hc.contDiffOn
-  refine ⟨lintegral_sub_sq_ne_zero_of_iteratedFDeriv_ne_zero isOpen_univ (subset_univ _) hf
-    (avgTaylorPoly_mem_polyFunctions (Feec.Mesh.refSimplex n).isCompact_closedInterior
-      isOpen_univ (subset_univ _) (hf.of_le (by exact_mod_cast Nat.le_succ k))) hx₀
-    (iteratedFDeriv_coord_pow_ne_zero _ _ _), ?_⟩
-  exact setLIntegral_enorm_sq_ne_zero hx₀
-    (hc.continuous_iteratedFDeriv (m := k + 1) (by exact_mod_cast le_rfl)).continuousAt
-    (iteratedFDeriv_coord_pow_ne_zero _ _ _)
-
-/-- `P₁` Lagrange interpolation takes values in `P₁`. -/
-theorem lagrangeP1_mem_polyFunctions (g : (Fin n → ℝ) → G) :
-    lagrangeP1 g ∈ polyFunctions n 1 G := by
-  have : lagrangeP1 g = ∑ i, fun x => refBaryCoord x i • g (refPoints n i) := by
-    funext x; simp [lagrangeP1, Finset.sum_apply]
-  rw [this]
-  refine Submodule.sum_mem _ fun i _ => ?_
-  refine Fin.cases ?_ (fun j => ?_) i
-  · refine Submodule.subset_span ⟨1 - ∑ j, MvPolynomial.X j, ?_, g (refPoints n 0), ?_⟩
-    · refine (MvPolynomial.totalDegree_sub _ _).trans (max_le (by simp) ?_)
-      refine (MvPolynomial.totalDegree_finsetSum _ _).trans (Finset.sup_le fun j _ => ?_)
-      simp
-    · funext x; simp [refBaryCoord]
-  · refine Submodule.subset_span ⟨MvPolynomial.X j, by simp, g (refPoints n j.succ), ?_⟩
-    funext x; simp [refBaryCoord]
-
-/-- **Non-vacuity of `IsRefInterpolant.lintegral_sub_sq_le_L2`**: in dimensions `1 ≤ n ≤ 3`,
-`P₁` Lagrange interpolation (`IsRefInterpolant n 1 0`, `2 (1 + 1) > n`) and the quadratic
-`f(x) = x₀²` give nonzero values to both sides of the estimate. -/
-theorem lintegral_sub_lagrangeP1_sq_nonvacuous (hn : 0 < n) (hn3 : n ≤ 3) :
-    IsRefInterpolant n 1 0 ℝ lagrangeP1 1 ∧ n < 2 * (1 + 1) ∧
-      ∫⁻ x in (Feec.Mesh.refSimplex n).closedInterior,
-        ‖x ⟨0, hn⟩ ^ 2 - lagrangeP1 (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ 2) x‖ₑ ^ 2 ≠ 0 ∧
-      ∫⁻ x in (Feec.Mesh.refSimplex n).closedInterior,
-        ‖iteratedFDeriv ℝ (1 + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ 2) x‖ₑ ^ 2 ≠ 0 := by
-  obtain ⟨x₀, hx₀⟩ := interior_closedInterior_nonempty (Feec.Mesh.refSimplex n)
-  have hc : ContDiff ℝ (1 + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ 2) := by fun_prop
-  have hf : ContDiffOn ℝ (1 + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ 2) univ := hc.contDiffOn
-  refine ⟨isRefInterpolant_lagrangeP1 n ℝ, by omega, ?_, ?_⟩
-  · exact lintegral_sub_sq_ne_zero_of_iteratedFDeriv_ne_zero (r := 1) isOpen_univ
-      (subset_univ _) hf (lagrangeP1_mem_polyFunctions _) hx₀
-      (iteratedFDeriv_coord_pow_ne_zero _ 2 _)
-  · exact setLIntegral_enorm_sq_ne_zero hx₀
-      (hc.continuous_iteratedFDeriv (m := 1 + 1) (by exact_mod_cast le_rfl)).continuousAt
-      (iteratedFDeriv_coord_pow_ne_zero _ 2 _)
-
-end NonVacuity
-
-/-! ### Non-vacuity of the form estimates on `T = t + h K` -/
-
-section FormNonVacuity
-
-open Feec.Mesh ExteriorFibre
-
-variable {r : ℕ}
-
-/-- The `0`-form `x ↦ x₀^m` (the coefficient of `∅`). -/
-def coordPowForm (hn : 0 < n) (m : ℕ) : FormField n :=
-  fun x s => if s = ∅ then x ⟨0, hn⟩ ^ m else 0
-
-theorem contDiff_coordPowForm (hn : 0 < n) (m : ℕ) {N : WithTop ℕ∞} :
-    ContDiff ℝ N (coordPowForm hn m) := by
-  refine contDiff_pi.2 fun s => ?_
-  by_cases hs : s = ∅
-  · simp only [coordPowForm, hs, ↓reduceIte]; fun_prop
-  · simp only [coordPowForm, hs, ↓reduceIte]; exact contDiff_const
-
-theorem continuous_coordPowForm (hn : 0 < n) (m : ℕ) : Continuous (coordPowForm hn m) :=
-  (contDiff_coordPowForm hn m (N := 0)).continuous
-
-theorem isDeg_coordPowForm (hn : 0 < n) (m : ℕ) (x : Fin n → ℝ) :
-    IsDeg 0 (coordPowForm hn m x) := fun s hs => by
-  simp [coordPowForm, (Finset.card_ne_zero.1 hs).ne_empty]
-
-/-- A form field one of whose components has `∫_S |u_{s₀}|² ≠ 0` (and is continuous on the
-compact `S`) has `‖u‖²_{L²(S)} > 0`. -/
-theorem formL2Sq_pos_of_component {S : Set (Fin n → ℝ)} (hS : IsCompact S) {u : FormField n}
-    (s₀ : Finset (Fin n)) (hu : ContinuousOn (fun x => u x s₀) S)
-    (h0 : ∫⁻ x in S, ‖u x s₀‖ₑ ^ 2 ≠ 0) : 0 < formL2Sq S u := by
-  have hpos : 0 < ∫ x in S, (u x s₀) ^ 2 := by
-    have he : ∫ x in S, (u x s₀) ^ 2 = ∫ x in S, ‖u x s₀‖ ^ 2 := by
-      simp_rw [Real.norm_eq_abs, sq_abs]
-    rw [he, integral_norm_sq_eq_toReal_lintegral hS.isClosed.measurableSet hu]
-    exact ENNReal.toReal_pos h0 (setLIntegral_enorm_sq_lt_top hS hu).ne
-  exact hpos.trans_le (Finset.single_le_sum (f := fun s => ∫ x in S, (u x s) ^ 2)
-    (fun s _ => integral_nonneg fun x => sq_nonneg _) (Finset.mem_univ s₀))
-
-/-- If the `∅`-component of a form field `P` is a polynomial of degree `≤ r`, then
-`‖x₀^{r+1} - P‖²_{L²(T)} > 0` on every `n`-simplex `T`. -/
-theorem formL2Sq_coordPowForm_sub_pos (hn : 0 < n) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-    {P : FormField n} (hP : (fun x => P x ∅) ∈ polyFunctions n r ℝ) :
-    0 < formL2Sq T.closedInterior (coordPowForm hn (r + 1) - P) := by
-  obtain ⟨x₀, hx₀⟩ := interior_closedInterior_nonempty T
-  have hf : ContDiffOn ℝ (r + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (r + 1)) univ :=
-    (by fun_prop : ContDiff ℝ (r + 1) (fun y : Fin n → ℝ => y ⟨0, hn⟩ ^ (r + 1))).contDiffOn
-  have hne := lintegral_sub_sq_ne_zero_of_iteratedFDeriv_ne_zero isOpen_univ (subset_univ _) hf
-    hP hx₀ (iteratedFDeriv_coord_pow_ne_zero _ _ _)
-  refine formL2Sq_pos_of_component T.isCompact_closedInterior ∅ ?_ ?_
-  · simp only [Pi.sub_apply, coordPowForm, ↓reduceIte]
-    exact ((continuous_apply _).pow _).continuousOn.sub
-      (contDiff_of_mem_polyFunctions hP (N := 0)).continuous.continuousOn
-  · simpa only [Pi.sub_apply, coordPowForm, ↓reduceIte] using hne
-
-/-- The `∅`-component of a field of `P_rΛᵏ` is a polynomial of degree `≤ r`. -/
-theorem component_mem_polyFunctions_of_mem_polySpace {k : ℕ} {P : FormField n}
-    (hP : P ∈ polySpace n r k) (s : Finset (Fin n)) :
-    (fun x => P x s) ∈ polyFunctions n r ℝ := by
-  obtain ⟨Ω, hΩ, rfl⟩ := hP
-  exact Submodule.subset_span ⟨Ω s, hΩ.2 s, 1, by funext x; simp [evalForm_apply]⟩
-
-/-- **Non-vacuity of `exists_formL2Sq_sub_polyInterp_le_L2`**: for the `0`-form
-`w(x) = x₀^{r+1}` on any `T = t + h K`, both sides of the estimate are positive (for every
-admissible `s`; the right side by the estimate itself). -/
-theorem formL2Sq_sub_polyInterp_le_L2_nonvacuous (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hn : 0 < n) (hr : 1 ≤ r) {s : ℕ} (hs : s ≤ r) (hns : n < 2 * (s + 1)) {h : ℝ}
-    (hh : 0 < h) (t : Fin n → ℝ) :
-    0 < formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (coordPowForm hn (r + 1) - (polyInterp (isUnit_det_edgeMatrix
-          (mapEquiv (boxMap t h hh.ne') K)) hr (Nat.zero_le n) ⟨coordPowForm hn (r + 1),
-            mem_contDegForms (continuous_coordPowForm hn _) (isDeg_coordPowForm hn _)⟩ :
-              FormField n)) ∧
-      0 < ∫ y in (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) (coordPowForm hn (r + 1)) y‖ ^ 2 := by
-  set T := mapEquiv (boxMap t h hh.ne') K
-  have hmem : ((polyInterp (isUnit_det_edgeMatrix T) hr (Nat.zero_le n)
-      ⟨coordPowForm hn (r + 1), mem_contDegForms (continuous_coordPowForm hn _)
-        (isDeg_coordPowForm hn _)⟩ : FormField n)) ∈ polySpace n r 0 := by
-    rw [← localPolySpace_eq (isUnit_det_edgeMatrix T)]; exact Submodule.coe_mem _
-  have hL := formL2Sq_coordPowForm_sub_pos hn T
-    (component_mem_polyFunctions_of_mem_polySpace hmem ∅)
-  refine ⟨hL, ?_⟩
-  obtain ⟨C, -, hC⟩ := exists_formL2Sq_sub_polyInterp_le_L2 K hn hr (Nat.zero_le n) hs hns
-  have hle := hC hh t (continuous_coordPowForm hn (r + 1)) (isDeg_coordPowForm hn (r + 1))
-    isOpen_univ (subset_univ _) (contDiff_coordPowForm hn (r + 1)).contDiffOn
-  refine lt_of_le_of_ne (integral_nonneg fun y => sq_nonneg _) fun h0 => ?_
-  rw [← h0, mul_zero] at hle
-  exact absurd (hL.trans_le hle) (lt_irrefl 0)
-
-/-- **Non-vacuity of `exists_formL2Sq_sub_polyMinusInterp_le_L2`**: for `w(x) = x₀^{r+1}` on
-any `T = t + h K`, both sides of the `P_r⁻Λ⁰` estimate are positive. -/
-theorem formL2Sq_sub_polyMinusInterp_le_L2_nonvacuous (K : Affine.Simplex ℝ (Fin n → ℝ) n)
-    (hn : 0 < n) (hr : 1 ≤ r) {s : ℕ} (hs : s + 1 ≤ r) (hns : n < 2 * (s + 1)) {h : ℝ}
-    (hh : 0 < h) (t : Fin n → ℝ) :
-    0 < formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior
-        (coordPowForm hn (r + 1) - (polyMinusInterp (isUnit_det_edgeMatrix
-          (mapEquiv (boxMap t h hh.ne') K)) hr (Nat.zero_le n) ⟨coordPowForm hn (r + 1),
-            mem_contDegForms (continuous_coordPowForm hn _) (isDeg_coordPowForm hn _)⟩ :
-              FormField n)) ∧
-      0 < ∫ y in (mapEquiv (boxMap t h hh.ne') K).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) (coordPowForm hn (r + 1)) y‖ ^ 2 := by
-  set T := mapEquiv (boxMap t h hh.ne') K
-  have hmem : ((polyMinusInterp (isUnit_det_edgeMatrix T) hr (Nat.zero_le n)
-      ⟨coordPowForm hn (r + 1), mem_contDegForms (continuous_coordPowForm hn _)
-        (isDeg_coordPowForm hn _)⟩ : FormField n)) ∈ polyMinusSpace n r 0 := by
-    rw [← localPolyMinusSpace_eq (isUnit_det_edgeMatrix T)]; exact Submodule.coe_mem _
-  obtain ⟨Ω, hΩ, hΩe⟩ := hmem
-  have hmem' : (evalForm n Ω) ∈ polySpace n r 0 :=
-    ⟨Ω, Koszul.polyFormMinus_le_polyForm hr 0 hΩ, rfl⟩
-  rw [hΩe] at hmem'
-  have hL := formL2Sq_coordPowForm_sub_pos hn T
-    (component_mem_polyFunctions_of_mem_polySpace hmem' ∅)
-  refine ⟨hL, ?_⟩
-  obtain ⟨C, -, hC⟩ := exists_formL2Sq_sub_polyMinusInterp_le_L2 K hn hr (Nat.zero_le n) hs hns
-  have hle := hC hh t (continuous_coordPowForm hn (r + 1)) (isDeg_coordPowForm hn (r + 1))
-    isOpen_univ (subset_univ _) (contDiff_coordPowForm hn (r + 1)).contDiffOn
-  refine lt_of_le_of_ne (integral_nonneg fun y => sq_nonneg _) fun h0 => ?_
-  rw [← h0, mul_zero] at hle
-  exact absurd (hL.trans_le hle) (lt_irrefl 0)
-
-end FormNonVacuity
 
 end Feec.FiniteElement

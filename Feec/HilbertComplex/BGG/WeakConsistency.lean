@@ -32,7 +32,8 @@ projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further a
 * `Feec.BGG.Discrete.S1_sub_S1h_dt0`: `(S₁ − S₁,ₕ)dψ = d(S₀,ₕ − S₀)ψ` (the gradient part).
 * `Feec.BGG.Discrete.weakConsistency_of_regularPotential`: weak consistency for every
   `z ∈ D(d¹*)` from the consistency of `S₀,ₕ` (thesis Prop 5.9(1), which holds) and a regular
-  potential.
+  potential; proved modulo harmonic forms
+  (`Feec.BGG.HarmonicStability.weakConsistency_of_regularPotential_of_bound`).
 * `Feec.BGG.Discrete.error_estimate_of_regularPotential`: Thm 5.5 with these hypotheses.
 
 ## References
@@ -278,6 +279,174 @@ theorem S1_sub_S1h_dt0 (ψ : Vt0) : (D.S1 - Q.S1h) (D.dt0 ψ) = D.d1 (Q.S0h ψ -
 def weakConsistencyConst (Cp CS CP Cinc Creg nz nz' : ℝ) : ℝ :=
   nz' * √(1 + Cp ^ 2) * (1 + CP * (1 + Cinc * Creg)) + nz * (1 + (1 + CP) * CS) * Creg
 
+end Feec.BGG.Discrete
+
+namespace Feec.BGG
+
+namespace HarmonicStability
+
+variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+
+variable {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Hh : Submodule ℝ Vt1} {Cp CS : ℝ}
+  (HS : HarmonicStability D Hh Cp CS)
+include HS
+
+/-- `‖dψ‖ ≤ ‖dψ + k‖` for `k ∈ 𝔥` (`𝔥 ⊥ dṼ⁰`). -/
+theorem norm_dt0_le_norm_add (ψ : Vt0) {k : Vt1} (hk : k ∈ Hh) :
+    ‖D.dt0 ψ‖ ≤ ‖D.dt0 ψ + k‖ := by
+  have h0 : ⟪D.dt0 ψ, k⟫ = 0 := by rw [real_inner_comm]; exact HS.harmonic_orth k hk ψ
+  have e := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (D.dt0 ψ) k h0
+  refine le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg _) ?_
+  nlinarith [sq_nonneg ‖k‖]
+
+variable {Q : Discrete D}
+
+/-- **Discrete exactness at `Ṽₕ¹` modulo the harmonic forms**: if `𝔥 ⊆ Ṽₕ¹`, every discrete
+`u` with `du = 0` is `dχ + k` with `χ ∈ Ṽₕ⁰`, `k ∈ 𝔥` (the cochain projections preserve the
+harmonic forms). See [AFW2010], §3.4 (discrete harmonic forms). -/
+theorem exact_bot_h (hH : Hh ≤ Q.Vt1h) {u : Vt1} (hu : u ∈ Q.Vt1h) (hd : D.dt1 u = 0) :
+    ∃ χ ∈ Q.Vt0h, ∃ k ∈ Hh, D.dt0 χ + k = u := by
+  obtain ⟨ψ, w, k, hk, rfl, hw⟩ := HS.hodget1 u
+  rw [hd, norm_zero, mul_zero] at hw
+  have hw0 : w = 0 := norm_le_zero_iff.1 hw
+  subst hw0
+  refine ⟨Q.Pt0 ψ, Q.Pt0_mem ψ, k, hk, ?_⟩
+  rw [add_zero] at hu ⊢
+  have e := Q.Pt1_id _ hu
+  rw [map_add, ← Q.commt0, Q.Pt1_id _ (hH hk)] at e
+  exact e
+
+/-- `(S₁ − S₁,ₕ) k = 0` on the harmonic forms. -/
+theorem S1_sub_S1h_harmonic {k : Vt1} (hk : k ∈ Hh) : (D.S1 - Q.S1h) k = 0 := by
+  rw [LinearMap.sub_apply, Discrete.S1h_apply, HS.S1_harmonic k hk, map_zero, sub_zero]
+
+open Discrete
+
+/-- **Weak consistency of `S₁,ₕ` from regular potentials, modulo harmonic forms**: the bound of
+`Feec.BGG.Discrete.weakConsistency_of_regularPotential` (with `z ∈ D(d¹*)` as a functional bound)
+when the discrete exactness at `Ṽₕ¹` holds only modulo `𝔥 ⊆ Ṽₕ¹`: the harmonic part `k` of
+`v − Π̃¹Ry` has `(S₁ − S₁,ₕ)k = 0` and `‖dψ‖ ≤ ‖dψ + k‖` (`𝔥 ⊥ dṼ⁰`).
+See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
+theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
+    (hH : Hh ≤ Q.Vt1h) (B : Q.Bounded CP) {Xr : Type*} [NormedAddCommGroup Xr]
+    [NormedSpace ℝ Xr] {Cinc Creg h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
+    (Rg : Q.RegularPotential Xr Cinc Creg Capp h)
+    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
+    {z : W2} {M : ℝ} (hM : 0 ≤ M) (hz : ∀ w, |⟪z, D.d1 w⟫| ≤ M * ‖w‖) :
+    ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
+      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ M *
+        √(graphSq D.dt1 v) := by
+  intro v hv
+  have hp := HS.Cp_nonneg; have hS := HS.CS_nonneg; have hP := B.CP_nonneg
+  have hι := Rg.Cinc_nonneg; have hr := Rg.Creg_nonneg
+  obtain ⟨y, hy1, hy2⟩ := Rg.exists_potential v hv
+  set w := Rg.R y with hw
+  set G := √(graphSq D.dt1 v) with hG
+  have hvG : ‖v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (graphSq_nonneg _ _)).2 (by
+    unfold graphSq; nlinarith [sq_nonneg ‖D.dt1 v‖])
+  have hdG : ‖D.dt1 v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (graphSq_nonneg _ _)).2 (by
+    unfold graphSq; nlinarith [sq_nonneg ‖v‖])
+  have hdv : D.dt1 v ∈ Q.Wt2h := Q.dt1_mem v hv
+  have hdPw : D.dt1 (Q.Pt1 w) = D.dt1 v := by rw [Q.commt1, hy1, Q.Pt2_id _ hdv]
+  have hker : D.dt1 (v - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, sub_self]
+  obtain ⟨ψ, hψ, k, hk, hψeq⟩ := HS.exact_bot_h hH (Submodule.sub_mem _ hv (Q.Pt1_mem w)) hker
+  have hsplit : (D.S1 - Q.S1h) v = D.d1 (Q.S0h ψ - D.S0 ψ) +
+      ((D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)) := by
+    calc (D.S1 - Q.S1h) v = (D.S1 - Q.S1h) (D.dt0 ψ + k + w - (w - Q.Pt1 w)) := by
+          congr 1; rw [hψeq]; abel
+      _ = _ := by
+          rw [map_sub, map_add, map_add, S1_sub_S1h_dt0, HS.S1_sub_S1h_harmonic hk]; abel
+  have hgrad : |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫| ≤
+      M * (Capp * h * √(graphSq D.dt0 ψ)) := by
+    refine (hz _).trans (mul_le_mul_of_nonneg_left ?_ hM)
+    rw [norm_sub_rev]
+    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+    rw [mul_pow, Real.sq_sqrt (graphSq_nonneg _ _)]; exact happ0 ψ hψ
+  have hψg : √(graphSq D.dt0 ψ) ≤ √(1 + Cp ^ 2) * ‖D.dt0 ψ‖ := by
+    rw [← Real.sqrt_sq (norm_nonneg (D.dt0 ψ)), ← Real.sqrt_mul (by positivity)]
+    apply Real.sqrt_le_sqrt
+    have := pow_le_pow_left₀ (norm_nonneg _) (HS.poinct0 ψ) 2
+    unfold graphSq; nlinarith
+  have hwn : ‖w‖ ≤ Cinc * Creg * ‖D.dt1 v‖ := (Rg.norm_R_le y).trans (by
+    rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hy2 hι)
+  have hPw : ‖Q.Pt1 w‖ ≤ CP * (1 + Cinc * Creg) * ‖D.dt1 v‖ := by
+    have hg := B.Pt1 w
+    have hgw : graphSq D.dt1 w ≤ ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by
+      unfold graphSq; rw [hy1]
+      have := pow_le_pow_left₀ (norm_nonneg _) hwn 2
+      nlinarith [norm_nonneg (D.dt1 v), mul_nonneg (mul_nonneg hι hr) (norm_nonneg (D.dt1 v))]
+    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+    calc ‖Q.Pt1 w‖ ^ 2 ≤ graphSq D.dt1 (Q.Pt1 w) := by
+          unfold graphSq; nlinarith [sq_nonneg ‖D.dt1 (Q.Pt1 w)‖]
+      _ ≤ CP ^ 2 * graphSq D.dt1 w := hg
+      _ ≤ CP ^ 2 * ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by gcongr
+      _ = _ := by ring
+  have hdψ : ‖D.dt0 ψ‖ ≤ (1 + CP * (1 + Cinc * Creg)) * G := by
+    refine (HS.norm_dt0_le_norm_add ψ hk).trans ?_
+    rw [hψeq]
+    calc ‖v - Q.Pt1 w‖ ≤ ‖v‖ + ‖Q.Pt1 w‖ := norm_sub_le _ _
+      _ ≤ G + CP * (1 + Cinc * Creg) * G :=
+          add_le_add hvG (hPw.trans (mul_le_mul_of_nonneg_left hdG (by positivity)))
+      _ = _ := by ring
+  have hx : D.dt1 (w - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, hy1, sub_self]
+  have hSx : ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤ (1 + CP) * CS * (Capp * h * ‖y‖) := by
+    have hS1x : ‖D.S1 (w - Q.Pt1 w)‖ ≤ CS * ‖w - Q.Pt1 w‖ := by
+      have := HS.boundS1 (w - Q.Pt1 w)
+      unfold graphSq at this; rw [hx, norm_zero] at this
+      refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+      rw [mul_pow]; simpa using this
+    rw [LinearMap.sub_apply, S1h_apply]
+    calc ‖D.S1 (w - Q.Pt1 w) - Q.P2 (D.S1 (w - Q.Pt1 w))‖
+        ≤ ‖D.S1 (w - Q.Pt1 w)‖ + ‖Q.P2 (D.S1 (w - Q.Pt1 w))‖ := norm_sub_le _ _
+      _ ≤ ‖D.S1 (w - Q.Pt1 w)‖ + CP * ‖D.S1 (w - Q.Pt1 w)‖ := add_le_add le_rfl (B.P2 _)
+      _ = (1 + CP) * ‖D.S1 (w - Q.Pt1 w)‖ := by ring
+      _ ≤ (1 + CP) * (CS * ‖w - Q.Pt1 w‖) :=
+          mul_le_mul_of_nonneg_left hS1x (by linarith)
+      _ ≤ (1 + CP) * (CS * (Capp * h * ‖y‖)) := by
+          gcongr; exact Rg.approx_Pt1 y
+      _ = _ := by ring
+  have hco : ‖(D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤
+      (1 + (1 + CP) * CS) * (Capp * h) * (Creg * G) := by
+    have hyG : ‖y‖ ≤ Creg * G := hy2.trans (mul_le_mul_of_nonneg_left hdG hr)
+    calc _ ≤ ‖(D.S1 - Q.S1h) w‖ + ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ := norm_sub_le _ _
+      _ ≤ Capp * h * ‖y‖ + (1 + CP) * CS * (Capp * h * ‖y‖) := add_le_add (Rg.approx_S1 y) hSx
+      _ = (1 + (1 + CP) * CS) * (Capp * h) * ‖y‖ := by ring
+      _ ≤ _ := mul_le_mul_of_nonneg_left hyG (by positivity)
+  rw [hsplit, inner_add_right]
+  calc |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫ + ⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫|
+      ≤ |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫|
+        + |⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫| := abs_add_le _ _
+    _ ≤ M * (Capp * h * √(graphSq D.dt0 ψ))
+        + ‖z‖ * ((1 + (1 + CP) * CS) * (Capp * h) * (Creg * G)) :=
+        add_le_add hgrad ((abs_real_inner_le_norm _ _).trans
+          (mul_le_mul_of_nonneg_left hco (norm_nonneg _)))
+    _ ≤ M * (Capp * h * (√(1 + Cp ^ 2) * ((1 + CP * (1 + Cinc * Creg)) * G)))
+        + ‖z‖ * ((1 + (1 + CP) * CS) * (Capp * h) * (Creg * G)) := by
+        gcongr
+        exact hψg.trans (mul_le_mul_of_nonneg_left hdψ (Real.sqrt_nonneg _))
+    _ = _ := by unfold weakConsistencyConst; ring
+
+end HarmonicStability
+
+end Feec.BGG
+
+namespace Feec.BGG.Discrete
+
+variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+  {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
+
 /-- **Weak consistency from a discrete Hodge decomposition** (the mechanism intended
 for the corrected Thm 5.5 on cube meshes; the hypotheses are not proved for any concrete element
 here). Let `z ∈ D(d¹*)`, i.e. `⟪z, dw⟫ = ⟪z', w⟫` for all
@@ -300,98 +469,9 @@ theorem weakConsistency_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D
     (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
     {z : W2} {z' : V1} (hz : ∀ w, ⟪z, D.d1 w⟫ = ⟪z', w⟫) :
     ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
-      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ ‖z'‖ * √(graphSq D.dt1 v) := by
-  intro v hv
-  have hp := H.Cp_nonneg; have hS := H.CS_nonneg; have hP := B.CP_nonneg
-  have hι := Rg.Cinc_nonneg; have hr := Rg.Creg_nonneg
-  obtain ⟨y, hy1, hy2⟩ := Rg.exists_potential v hv
-  set w := Rg.R y with hw
-  set G := √(graphSq D.dt1 v) with hG
-  have hvG : ‖v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (graphSq_nonneg _ _)).2 (by
-    unfold graphSq; nlinarith [sq_nonneg ‖D.dt1 v‖])
-  have hdG : ‖D.dt1 v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (graphSq_nonneg _ _)).2 (by
-    unfold graphSq; nlinarith [sq_nonneg ‖v‖])
-  have hdv : D.dt1 v ∈ Q.Wt2h := Q.dt1_mem v hv
-  have hdPw : D.dt1 (Q.Pt1 w) = D.dt1 v := by rw [Q.commt1, hy1, Q.Pt2_id _ hdv]
-  have hker : D.dt1 (v - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, sub_self]
-  obtain ⟨ψ, hψ, hψeq⟩ := exact_bot_h H (Submodule.sub_mem _ hv (Q.Pt1_mem w)) hker
-  -- the splitting `v = dψ + Ry − (I − Π̃¹)Ry`
-  have hsplit : (D.S1 - Q.S1h) v = D.d1 (Q.S0h ψ - D.S0 ψ) +
-      ((D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)) := by
-    calc (D.S1 - Q.S1h) v = (D.S1 - Q.S1h) (D.dt0 ψ + w - (w - Q.Pt1 w)) := by
-          congr 1; rw [hψeq]; abel
-      _ = _ := by rw [map_sub, map_add, S1_sub_S1h_dt0]; abel
-  -- gradient part
-  have hgrad : |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫| ≤ ‖z'‖ * (Capp * h * √(graphSq D.dt0 ψ)) := by
-    rw [hz]
-    refine (abs_real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left ?_ (norm_nonneg _))
-    rw [norm_sub_rev]
-    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-    rw [mul_pow, Real.sq_sqrt (graphSq_nonneg _ _)]; exact happ0 ψ hψ
-  have hψg : √(graphSq D.dt0 ψ) ≤ √(1 + Cp ^ 2) * ‖D.dt0 ψ‖ := by
-    rw [← Real.sqrt_sq (norm_nonneg (D.dt0 ψ)), ← Real.sqrt_mul (by positivity)]
-    apply Real.sqrt_le_sqrt
-    have := pow_le_pow_left₀ (norm_nonneg _) (H.poinct0 ψ) 2
-    unfold graphSq; nlinarith
-  have hwn : ‖w‖ ≤ Cinc * Creg * ‖D.dt1 v‖ := (Rg.norm_R_le y).trans (by
-    rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hy2 hι)
-  have hPw : ‖Q.Pt1 w‖ ≤ CP * (1 + Cinc * Creg) * ‖D.dt1 v‖ := by
-    have hg := B.Pt1 w
-    have hgw : graphSq D.dt1 w ≤ ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by
-      unfold graphSq; rw [hy1]
-      have := pow_le_pow_left₀ (norm_nonneg _) hwn 2
-      nlinarith [norm_nonneg (D.dt1 v), mul_nonneg (mul_nonneg hι hr) (norm_nonneg (D.dt1 v))]
-    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-    calc ‖Q.Pt1 w‖ ^ 2 ≤ graphSq D.dt1 (Q.Pt1 w) := by
-          unfold graphSq; nlinarith [sq_nonneg ‖D.dt1 (Q.Pt1 w)‖]
-      _ ≤ CP ^ 2 * graphSq D.dt1 w := hg
-      _ ≤ CP ^ 2 * ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by gcongr
-      _ = _ := by ring
-  have hdψ : ‖D.dt0 ψ‖ ≤ (1 + CP * (1 + Cinc * Creg)) * G := by
-    rw [hψeq]
-    calc ‖v - Q.Pt1 w‖ ≤ ‖v‖ + ‖Q.Pt1 w‖ := norm_sub_le _ _
-      _ ≤ G + CP * (1 + Cinc * Creg) * G :=
-          add_le_add hvG (hPw.trans (mul_le_mul_of_nonneg_left hdG (by positivity)))
-      _ = _ := by ring
-  -- regular part
-  have hx : D.dt1 (w - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, hy1, sub_self]
-  have hSx : ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤ (1 + CP) * CS * (Capp * h * ‖y‖) := by
-    have hS1x : ‖D.S1 (w - Q.Pt1 w)‖ ≤ CS * ‖w - Q.Pt1 w‖ := by
-      have := H.boundS1 (w - Q.Pt1 w)
-      unfold graphSq at this; rw [hx, norm_zero] at this
-      refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-      rw [mul_pow]; simpa using this
-    rw [LinearMap.sub_apply, S1h_apply]
-    calc ‖D.S1 (w - Q.Pt1 w) - Q.P2 (D.S1 (w - Q.Pt1 w))‖
-        ≤ ‖D.S1 (w - Q.Pt1 w)‖ + ‖Q.P2 (D.S1 (w - Q.Pt1 w))‖ := norm_sub_le _ _
-      _ ≤ ‖D.S1 (w - Q.Pt1 w)‖ + CP * ‖D.S1 (w - Q.Pt1 w)‖ := add_le_add le_rfl (B.P2 _)
-      _ = (1 + CP) * ‖D.S1 (w - Q.Pt1 w)‖ := by ring
-      _ ≤ (1 + CP) * (CS * ‖w - Q.Pt1 w‖) :=
-          mul_le_mul_of_nonneg_left hS1x (by linarith)
-      _ ≤ (1 + CP) * (CS * (Capp * h * ‖y‖)) := by
-          gcongr; exact Rg.approx_Pt1 y
-      _ = _ := by ring
-  have hco : ‖(D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤
-      (1 + (1 + CP) * CS) * (Capp * h) * (Creg * G) := by
-    have hyG : ‖y‖ ≤ Creg * G := hy2.trans (mul_le_mul_of_nonneg_left hdG hr)
-    calc _ ≤ ‖(D.S1 - Q.S1h) w‖ + ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ := norm_sub_le _ _
-      _ ≤ Capp * h * ‖y‖ + (1 + CP) * CS * (Capp * h * ‖y‖) := add_le_add (Rg.approx_S1 y) hSx
-      _ = (1 + (1 + CP) * CS) * (Capp * h) * ‖y‖ := by ring
-      _ ≤ _ := mul_le_mul_of_nonneg_left hyG (by positivity)
-  -- combine
-  rw [hsplit, inner_add_right]
-  calc |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫ + ⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫|
-      ≤ |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫|
-        + |⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫| := abs_add_le _ _
-    _ ≤ ‖z'‖ * (Capp * h * √(graphSq D.dt0 ψ))
-        + ‖z‖ * ((1 + (1 + CP) * CS) * (Capp * h) * (Creg * G)) :=
-        add_le_add hgrad ((abs_real_inner_le_norm _ _).trans
-          (mul_le_mul_of_nonneg_left hco (norm_nonneg _)))
-    _ ≤ ‖z'‖ * (Capp * h * (√(1 + Cp ^ 2) * ((1 + CP * (1 + Cinc * Creg)) * G)))
-        + ‖z‖ * ((1 + (1 + CP) * CS) * (Capp * h) * (Creg * G)) := by
-        gcongr
-        exact hψg.trans (mul_le_mul_of_nonneg_left hdψ (Real.sqrt_nonneg _))
-    _ = _ := by unfold weakConsistencyConst; ring
+      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ ‖z'‖ * √(graphSq D.dt1 v) :=
+  H.toHarmonicStability.weakConsistency_of_regularPotential_of_bound bot_le B hh hCapp Rg happ0
+    (norm_nonneg z') fun w => by rw [hz]; exact abs_real_inner_le_norm z' w
 
 /-- **Thesis Thm 5.5 without Prop 5.9(2).** The a priori estimate with the strong consistency of
 `S₁,ₕ` (false per the audit, thesis Prop 5.9(2)) replaced by: regular potentials

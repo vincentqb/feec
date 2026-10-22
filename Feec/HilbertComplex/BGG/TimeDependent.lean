@@ -78,7 +78,6 @@ open Set Filter Topology
 
 namespace Feec.BGG
 
-
 /-- Auxiliary: two functions that agree on `[0,T]` have the same right derivative at every
 `t ∈ [0,T)`. -/
 lemma hasDerivWithinAt_Ici_unique {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
@@ -241,7 +240,6 @@ theorem Wcheck_eq_range_of_isClosed (hR : IsClosed (D.B.range : Set W1))
   calc Λ z = m (e ⟨z, hz⟩) := by simp [m]
     _ = ⟪μ, e ⟨z, hz⟩⟫ := InnerProductSpace.toDual_symm_apply.symm
     _ = ⟪(μ : W1), D.B z⟫ := rfl
-
 
 /-- The functional `ℓ(τ, ψ) = ⟪w, τ⟫ − ⟪v, dψ⟫` on `V⁰ × Ṽ⁰` (left side of (6.1a) with
 `w = σ̇`, `v = u`). -/
@@ -1079,7 +1077,6 @@ theorem exists_discreteSolution (hdinj : Function.Injective D.dt0) (hS : Functio
   let ⟨s, hs, _⟩ := exists_discreteSolution_regular (M₀ := M₀) (ρ₀ := ρ₀) hdinj hS hf T hC1 hC2 hC3
   ⟨s, hs⟩
 
-
 /-- **Corrected Prop 6.2 (existence ⇔ compatibility).** For `T > 0`, `d` injective on `Ṽₕ⁰`,
 `S₀,ₕ` surjective and `f` continuous, (6.3) has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff
 (C1) `dσ₀ = S₀,ₕφ₀`, (C2) `u₀ ⊥ d(ker S₀,ₕ)` and (C3) `(dφ₀ − f(0), dψ) = 0` on `ker S₀,ₕ`.
@@ -1124,7 +1121,6 @@ theorem exists_discreteSolution_of_continuousOn (hdinj : Function.Injective D.dt
 end Existence
 
 end Discrete
-
 
 /-! ## §3. Error equations (Prop 6.3) -/
 
@@ -1393,9 +1389,7 @@ theorem DiscreteSolution.norm_sub_le_of_ellipticProjection {X Z : Type*} [Normed
 
 end Bridge
 
-
 /-! ## The corrected Prop 6.2: dynamic data and projected initial data -/
-
 
 section Discrete
 

@@ -18,6 +18,9 @@ and discrete connecting maps `S₀,ₕ = Π¹S₀`, `S₁,ₕ = Π²S₁`. The c
 * `Feec.BGG.IsMixedSolution`, `Feec.BGG.mixedForm`: the discrete mixed system (5.6) for any maps.
 * `Feec.BGG.Stability D Cp CR CS`: the continuous (`h`-independent) hypotheses: Poincaré
   inequalities, exactness, regular decomposition with its constant, bounds on `S₀, S₁`.
+* `Feec.BGG.HarmonicStability D 𝔥 Cp CS`: the part of them used by the Ch. 6 theory, with exactness
+  of the bottom row at `Ṽ¹` modulo harmonic forms `𝔥` (`Stability.toHarmonicStability`, `𝔥 = ⊥`;
+  see `Feec.HilbertComplex.BGG.Harmonic`).
 * `Feec.BGG.Discrete D`: subcomplexes with total cochain projections;
   `Discrete.Compatible`: (5.4); `Discrete.Bounded CP`: uniform projection bounds.
 
@@ -341,7 +344,6 @@ theorem graphSq_nonneg {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] 
     [NormedSpace ℝ F] (d : E →ₗ[ℝ] F) (x : E) : 0 ≤ graphSq d x := by
   unfold graphSq; positivity
 
-
 /-- Triangle inequality for the squared graph norm. -/
 theorem graphSq_sub_le {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
     [NormedSpace ℝ F] (d : E →ₗ[ℝ] F) (x y : E) :
@@ -399,6 +401,54 @@ theorem hodge_bot_of_poincare (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) {Cp : ℝ}
   have : D.dt1 (v - K.starProjection v) = D.dt1 v := by
     rw [map_sub, LinearMap.mem_ker.1 hz, sub_zero]
   simpa [this] using hP _ hw
+
+/-- **The continuous hypotheses of the Ch. 6 convergence theory modulo harmonic forms** of the
+bottom row, for BGG data `D` in the "type = domain with `W`-inner product" model:
+* `poinct0`: the Poincaré inequality on `Ṽ⁰` (exactness at `Ṽ⁰`);
+* `hodget1`: the Hodge decomposition on `Ṽ¹` modulo `𝔥`: `v = dψ + w + k`, `k ∈ 𝔥`,
+  `‖w‖ ≤ C_p ‖dv‖`;
+* `harmonic_orth`, `S1_harmonic`: `𝔥 ⊥ dṼ⁰` and `S₁ 𝔥 = 0`;
+* `boundS1`: `S₁ : Ṽ¹ → W²` is bounded in the graph norm.
+Nothing is assumed on the top row. With `𝔥 = ⊥` these are fields of `Stability`
+(`Stability.toHarmonicStability`). See [QuennevilleBelair2015], Prop 5.3; cf. [AFW2010], §3. -/
+structure HarmonicStability (D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (Hh : Submodule ℝ Vt1)
+    (Cp CS : ℝ) : Prop where
+  Cp_nonneg : 0 ≤ Cp
+  CS_nonneg : 0 ≤ CS
+  poinct0 : ∀ φ, ‖φ‖ ≤ Cp * ‖D.dt0 φ‖
+  hodget1 : ∀ v, ∃ ψ w, ∃ k ∈ Hh, v = D.dt0 ψ + w + k ∧ ‖w‖ ≤ Cp * ‖D.dt1 v‖
+  harmonic_orth : ∀ k ∈ Hh, ∀ ψ, ⟪k, D.dt0 ψ⟫ = 0
+  S1_harmonic : ∀ k ∈ Hh, D.S1 k = 0
+  boundS1 : ∀ v, ‖D.S1 v‖ ^ 2 ≤ CS ^ 2 * graphSq D.dt1 v
+
+/-- `Stability` gives the hypotheses modulo the zero harmonic space. -/
+theorem Stability.toHarmonicStability {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Cp CR CS : ℝ}
+    (H : Stability D Cp CR CS) : HarmonicStability D ⊥ Cp CS where
+  Cp_nonneg := H.Cp_nonneg
+  CS_nonneg := H.CS_nonneg
+  poinct0 := H.poinct0
+  hodget1 v := by
+    obtain ⟨ψ, w, hv, hw⟩ := H.hodget1 v
+    exact ⟨ψ, w, 0, Submodule.zero_mem _, by rw [hv, add_zero], hw⟩
+  harmonic_orth k hk ψ := by rw [(Submodule.mem_bot ℝ).1 hk, inner_zero_left]
+  S1_harmonic k hk := by rw [(Submodule.mem_bot ℝ).1 hk, map_zero]
+  boundS1 := H.boundS1
+
+namespace HarmonicStability
+
+variable {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Hh : Submodule ℝ Vt1} {Cp CS : ℝ}
+  (HS : HarmonicStability D Hh Cp CS)
+include HS
+
+/-- `d` is injective on `Ṽ⁰`. -/
+theorem dt0_injective : Function.Injective D.dt0 := by
+  rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+  intro φ hφ
+  have := HS.poinct0 φ
+  rw [hφ, norm_zero, mul_zero] at this
+  exact norm_le_zero_iff.1 this
+
+end HarmonicStability
 
 /-- **Discretization of the BGG data** (thesis §5.2): finite element subspaces forming
 subcomplexes, with cochain projections.
@@ -525,12 +575,8 @@ theorem exact_top_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) {μ : V1} (hμ :
   exact ⟨Q.P0 ρ, Q.P0_mem ρ, by rw [Q.comm0, hρ, Q.P1_id _ hμ]⟩
 
 /-- `d` is injective on `Ṽ⁰` (hence on `Ṽ_h⁰`). -/
-theorem dt0_injective {Cp CR CS : ℝ} (H : Stability D Cp CR CS) : Function.Injective D.dt0 := by
-  rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
-  intro φ hφ
-  have := H.poinct0 φ
-  rw [hφ, norm_zero, mul_zero] at this
-  exact norm_le_zero_iff.1 this
+theorem dt0_injective {Cp CR CS : ℝ} (H : Stability D Cp CR CS) : Function.Injective D.dt0 :=
+  H.toHarmonicStability.dt0_injective
 
 /-- **Exactness of the discrete complex (5.5) at `Ṽ_h¹`**: every `u ∈ Z_h` is `dχ` with
 `(ρ, χ) ∈ Γ_h`. See [QuennevilleBelair2015], §5.2, (5.5). -/
@@ -1260,6 +1306,5 @@ theorem Discrete.exists_nonvacuous :
     have := LinearMap.congr_fun h 1
     simp [exampleSegment] at this
   all_goals exact top_ne_bot
-
 
 end Feec.BGG

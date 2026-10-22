@@ -75,7 +75,6 @@ theorem norm_sq_of_inner_eq {E F G : Type*} [NormedAddCommGroup E] [InnerProduct
   rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h
   exact_mod_cast h
 
-
 /-- Thesis Prop 5.1, third paragraph (closed range of `(S, d)`), for bounded operators: under
 exactness of the bottom complex at `Ṽ¹`, closed ranges of `d¹`, `d̃¹` and the regularity
 `d¹V¹ ⊆ d¹S₀Ṽ⁰`, the range of `u ↦ (S₁u, d̃¹u)` is closed.
@@ -144,7 +143,6 @@ theorem isClosed_range_prod {V1 W2 Vt0 Vt1 Wt2 : Type*}
   · simp [hdd, hw]
 
 /-! ## Product spaces for the saddle point problem (5.3) -/
-
 
 /-- **Standing hypotheses of thesis §5.1**, in the bundled-domain model: each domain
 `V⁰, V¹, Ṽ⁰, Ṽ¹` is a Hilbert space carrying its *graph* inner product, with a continuous
@@ -321,7 +319,6 @@ theorem poincare_Γ (h : D.Hyps) :
       _ = K * ‖D.ι1 ∘L D.S0‖ * Kt * ‖D.ιt1 (D.dt0 x.2)‖ := by ring
       _ ≤ _ := by gcongr; exact le_max_right _ _
   · exact hφ.trans (by gcongr; exact le_max_left _ _)
-
 
 lemma exactt1' (h : D.Hyps) (z : Vt1) (hz : D.dt1 z = 0) : ∃ φ, D.dt0 φ = z := by
   have : z ∈ LinearMap.ker D.toSegment.dt1 := hz
@@ -626,7 +623,6 @@ theorem isClosed_closedRange_exact (h : D.Hyps) (hS0 : Function.Injective D.S0) 
     ?_, D.D1op_isClosed_range h, D.range_D0op_le_ker_D1op hS0, D.exact_D0op_D1op h hS0⟩
   rw [D.D1op_domain]
   exact D.denset1
-
 
 /-! ### (5.1) as a short Hilbert complex on `Γ̄` -/
 

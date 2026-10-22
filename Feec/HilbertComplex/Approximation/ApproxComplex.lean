@@ -921,7 +921,6 @@ theorem approxFEEC_ofComplex [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTowe
   · have hmem := (hiff h Kh).1 hK t v hv
     refine Metric.infDist_zero_of_mem (hKK ⟨_, hmem, rfl⟩)
 
-
 /-! ### The conforming case: constrained FEEC discretizations -/
 
 namespace ConstrainedFEEC

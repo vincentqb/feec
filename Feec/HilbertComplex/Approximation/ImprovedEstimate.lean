@@ -230,7 +230,6 @@ end CochainProjection
 
 end Subcomplex
 
-
 /-! ### Elementary facts -/
 
 /-- If `⟪a, b⟫ = 0` then `‖a‖ ≤ ‖a + b‖`. -/

@@ -31,7 +31,8 @@ the projection hypotheses are discharged (`exists_discreteSolution_norm_sub_le_e
   the data of the Ch. 6 theorems are the data `Discrete.ellipticDataH` of the Strang bound.
 * `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate`: end-to-end `O(h)` convergence of
   (6.3) on `Q`, `‖ξ(t) − ξₕ(t)‖ ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`, assuming in
-  addition that `S₀,ₕ` is onto `Vₕ¹`.
+  addition that `S₀,ₕ` is onto `Vₕ¹`; proved under `HarmonicStability`
+  (`HarmonicStability.exists_discreteSolution_norm_sub_le_rate`).
 
 ## References
 
@@ -386,7 +387,6 @@ theorem exists_discreteSolution_norm_sub_le_ellipticProjection
 
 end Bridge
 
-
 /-! ## End-to-end `O(h)` convergence of (6.3) for a discretization `Q : Discrete D` -/
 
 namespace Discrete
@@ -455,6 +455,176 @@ theorem ellipticData_embedH {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X} (hιc :
   simp only [ellipticDataH, LinearMap.coe_mk, AddHom.coe_mk, shiftedFormC, discreteSkewForm]
   ring
 
+end Discrete
+
+namespace HarmonicStability
+
+variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+
+variable {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Hh : Submodule ℝ Vt1} {Cp CS : ℝ}
+  (HS : HarmonicStability D Hh Cp CS)
+include HS
+
+variable {Q : Discrete D}
+
+variable {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddCommGroup Z]
+  [Module ℝ Z]
+
+open Discrete
+
+/-- **Rate of the elliptic projection, embedded**, modulo harmonic forms
+(`Feec.BGG.Discrete.norm_sub_embedH_ellipticProjection_le`). -/
+theorem norm_sub_embedH_ellipticProjection_le (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
+    [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
+    [FiniteDimensional ℝ Q.Wt2h] {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X}
+    (hιc : IsEnergyEmbedding ιc) (hdinj : Function.Injective Q.toSegmentH.dt0)
+    (hB : ∀ μ, ∃ τ ψ, Q.toSegmentH.d0 τ - Q.toSegmentH.S0 ψ = μ)
+    {a : V0 × Vt1 × W2 × Wt2} {φ : Vt0} (c3 : D.d0 a.1 = D.S0 φ) (ℓ₁ : V1 →ₗ[ℝ] ℝ)
+    {K0 K1 c h : ℝ}
+    (hK0 : ∀ ψ ∈ Q.Vt0h, |ℓ₁ ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
+    (hK1 : ∀ v ∈ Q.Vt1h, |⟪a.2.2.1, (D.S1 - Q.S1h) v⟫| ≤ K1 * √(Q.gnSq v))
+    (hdata : Q.strangData a.1 φ a.2.1 a.2.2.1 a.2.2.2 K0 K1 ≤ (c * h) ^ 2) :
+    ‖ιc a - Q.embedH ιc (ellipticProjection Q.toSegmentH hdinj hB
+        (ellipticRhs (Q.ellipticDataH a.1 φ a.2.1 a.2.2.1 a.2.2.2 ℓ₁) 0)).1.1‖ ≤
+      √(2 * (strangConst Cp + 1)) * |c| * |h| := by
+  have hx := isEllipticProjection_ellipticProjection hdinj hB
+    (Q.ellipticDataH a.1 φ a.2.1 a.2.2.1 a.2.2.2 ℓ₁) 0
+  have hS := (HS.strang_of_isEllipticProjection h54 c3 ℓ₁ hK0 hK1 hx).2
+  have hC : 0 ≤ 2 * (strangConst Cp + 1) := by unfold strangConst; positivity
+  rw [embedH_apply, norm_sub_of_isEnergyEmbedding hιc, mul_assoc, ← abs_mul,
+    ← Real.sqrt_sq_eq_abs, ← Real.sqrt_mul hC]
+  exact Real.sqrt_le_sqrt (hS.trans (mul_le_mul_of_nonneg_left hdata hC))
+
+/-- **End-to-end `O(h)` convergence of the semi-discrete BGG wave system (6.3) modulo harmonic
+forms**: `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate` with `Stability` replaced by
+`HarmonicStability` (no hypothesis on the top row; harmonic forms `𝔥` on the bottom row). The
+discrete solution starts from the elliptic projection (6.4) of the exact initial state, and
+`‖ιc a(t) − ι ξₕ(t)‖ ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`.
+See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
+theorem exists_discreteSolution_norm_sub_le_rate (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
+    [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
+    [FiniteDimensional ℝ Q.Wt2h] (hS : Function.Surjective Q.toSegmentH.S0)
+    {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X} (hιc : IsEnergyEmbedding ιc) (jc : Vt0 →ₗ[ℝ] Z)
+    (A Ah : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ) (Bh : (X × Z) →ₗ[ℝ] Q.V1h)
+    (hA : ∀ a φ (b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) (ψ : Q.Vt0h),
+      A (ιc a, jc φ) (Q.embedH ιc b, jc ψ) = discreteSkewForm D (a, φ)
+        (((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2)), (ψ : Vt0)))
+    (hAh : ∀ a φ b ψ, Ah (Q.embedH ιc a, (jc ∘ₗ Q.Vt0h.subtype) φ)
+      (Q.embedH ιc b, (jc ∘ₗ Q.Vt0h.subtype) ψ) = discreteSkewForm Q.toSegmentH (a, φ) (b, ψ))
+    (hBh : ∀ a ψ, Bh (Q.embedH ιc a, (jc ∘ₗ Q.Vt0h.subtype) ψ) =
+      Q.toSegmentH.d0 a.1 - Q.toSegmentH.S0 ψ)
+    {T : ℝ} (hT : 0 < T) {f : ℝ → Q.Vt1h} (hf : ContinuousOn f (Icc 0 T))
+    (a a' : ℝ → V0 × Vt1 × W2 × Wt2) (φ φ' : ℝ → Vt0) (ℓ₁ ℓ₁' : ℝ → V1 →ₗ[ℝ] ℝ)
+    (ℓ : ℝ → (X × Z) →ₗ[ℝ] ℝ)
+    (hℓ : ∀ t (b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) (ψ : Q.Vt0h),
+      ℓ t (Q.embedH ιc b, jc ψ) = ℓ₁ t (D.d0 b.1 - D.S0 ψ))
+    (F : ℝ → X) (hF : ∀ t ∈ Ico 0 T, ∀ b, ⟪F t, Q.embedH ιc b⟫ = ⟪f t, b.2.1⟫)
+    (hac : ContinuousOn a (Icc 0 T)) (ha'c : ContinuousOn a' (Icc 0 T))
+    (hcont : ∀ t ∈ Ico 0 T, ∀ η ∈ LinearMap.range
+        ((Q.embedH ιc : (Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) →ₗ[ℝ] X).prodMap
+          (jc ∘ₗ Q.Vt0h.subtype)),
+      ⟪ιc (a' t), η.1⟫ + A (ιc (a t), jc (φ t)) η - ℓ t η = ⟪F t, η.1⟫)
+    (hGc : ∀ y, ContinuousOn
+      (fun s => Q.ellipticDataH (a s).1 (φ s) (a s).2.1 (a s).2.2.1 (a s).2.2.2 (ℓ₁ s) y)
+      (Icc 0 T))
+    (hGd : ∀ t ∈ Ico 0 T, ∀ y, HasDerivWithinAt
+      (fun s => Q.ellipticDataH (a s).1 (φ s) (a s).2.1 (a s).2.2.1 (a s).2.2.2 (ℓ₁ s) y)
+      (Q.ellipticDataH (a' t).1 (φ' t) (a' t).2.1 (a' t).2.2.1 (a' t).2.2.2 (ℓ₁' t) y)
+      (Ici t) t)
+    (hG'c : ∀ y, ContinuousOn
+      (fun s => Q.ellipticDataH (a' s).1 (φ' s) (a' s).2.1 (a' s).2.2.1 (a' s).2.2.2 (ℓ₁' s) y)
+      (Icc 0 T))
+    {K0 K1 c h : ℝ}
+    (c3 : ∀ t ∈ Icc 0 T, D.d0 (a t).1 = D.S0 (φ t))
+    (c3' : ∀ t ∈ Icc 0 T, D.d0 (a' t).1 = D.S0 (φ' t))
+    (hK0 : ∀ t ∈ Icc 0 T, ∀ ψ ∈ Q.Vt0h, |ℓ₁ t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
+    (hK0' : ∀ t ∈ Icc 0 T, ∀ ψ ∈ Q.Vt0h, |ℓ₁' t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
+    (hK1 : ∀ t ∈ Icc 0 T, ∀ v ∈ Q.Vt1h, |⟪(a t).2.2.1, (D.S1 - Q.S1h) v⟫| ≤ K1 * √(Q.gnSq v))
+    (hK1' : ∀ t ∈ Icc 0 T, ∀ v ∈ Q.Vt1h,
+      |⟪(a' t).2.2.1, (D.S1 - Q.S1h) v⟫| ≤ K1 * √(Q.gnSq v))
+    (hdata : ∀ t ∈ Icc 0 T,
+      Q.strangData (a t).1 (φ t) (a t).2.1 (a t).2.2.1 (a t).2.2.2 K0 K1 ≤ (c * h) ^ 2)
+    (hdata' : ∀ t ∈ Icc 0 T,
+      Q.strangData (a' t).1 (φ' t) (a' t).2.1 (a' t).2.2.1 (a' t).2.2.2 K0 K1 ≤ (c * h) ^ 2) :
+    ∃ s : DiscreteSolution Q.toSegmentH T f,
+      Q.embedH ιc (s.σ 0, s.u 0, s.M 0, s.ρ 0) =
+        Q.embedH ιc (ellipticProjection Q.toSegmentH HS.toSegmentH_dt0_injective
+          (exists_sub_eq_of_surjective hS) (ellipticRhs (Q.ellipticDataH (a 0).1 (φ 0)
+            (a 0).2.1 (a 0).2.2.1 (a 0).2.2.2 (ℓ₁ 0)) 0)).1.1 ∧
+      ∀ t ∈ Icc 0 T, ‖ιc (a t) - Q.embedH ιc (s.σ t, s.u t, s.M t, s.ρ t)‖ ≤
+        √(2 * (strangConst Cp + 1)) * |c| * |h| * (2 + 2 * t) := by
+  have hdinj := HS.toSegmentH_dt0_injective (Q := Q)
+  set hB := exists_sub_eq_of_surjective hS
+  set ι := Q.embedH ιc
+  set j := jc ∘ₗ Q.Vt0h.subtype
+  set G := fun s => Q.ellipticDataH (a s).1 (φ s) (a s).2.1 (a s).2.2.1 (a s).2.2.2 (ℓ₁ s)
+    with hGdef
+  set G' := fun s => Q.ellipticDataH (a' s).1 (φ' s) (a' s).2.1 (a' s).2.2.1 (a' s).2.2.2
+    (ℓ₁' s) with hG'def
+  have hGeq : ∀ s, ellipticData ι j A (ιc (a s)) (jc (φ s)) (ℓ s) = G s := fun s =>
+    ellipticData_embedH hιc jc A hA (ℓ s) (ℓ₁ s) (hℓ s) (a s) (φ s)
+  have hGeqf : (fun s => ellipticData ι j A (ιc (a s)) (jc (φ s)) (ℓ s)) = G := funext hGeq
+  obtain ⟨s, hinit, -, hbd⟩ := exists_discreteSolution_norm_sub_le_ellipticProjection hdinj hS ι
+    (embedH_inner hιc) j A Ah Bh hAh hBh hT hf (fun t => ιc (a t)) (fun t => ιc (a' t))
+    (fun t => jc (φ t)) ℓ F hF (ιc.continuous.comp_continuousOn hac)
+    (ιc.continuous.comp_continuousOn ha'c) hcont G'
+    (fun y => by simpa only [hGeq] using hGc y)
+    (fun t ht y => by simpa only [hGeq] using hGd t ht y) hG'c
+  rw [hGeqf] at hinit hbd
+  set ε := √(2 * (strangConst Cp + 1)) * |c| * |h|
+  have hε : 0 ≤ ε := by positivity
+  set p := projectedTrajectory hdinj hB ι G
+  set p' := projectedTrajectory hdinj hB ι G'
+  have hp : ∀ t, p t = ι (ellipticProjection Q.toSegmentH hdinj hB (ellipticRhs (G t) 0)).1.1 :=
+    fun t => rfl
+  have hp' : ∀ t,
+      p' t = ι (ellipticProjection Q.toSegmentH hdinj hB (ellipticRhs (G' t) 0)).1.1 :=
+    fun t => rfl
+  set L : (((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) × Q.V1h) →L[ℝ] X :=
+    ι.comp ((ContinuousLinearMap.fst ℝ _ _).comp (ContinuousLinearMap.fst ℝ _ _))
+  have hpc : ContinuousOn p (Icc 0 T) :=
+    L.continuous.comp_continuousOn (continuousOn_ellipticProjection hdinj hB hGc)
+  have hp'c : ContinuousOn p' (Icc 0 T) :=
+    L.continuous.comp_continuousOn (continuousOn_ellipticProjection hdinj hB hG'c)
+  have h1 : ∀ t ∈ Icc 0 T, ‖ιc (a t) - p t‖ ≤ ε := fun t ht => by
+    rw [hp]
+    exact HS.norm_sub_embedH_ellipticProjection_le h54 hιc hdinj hB (c3 t ht) (ℓ₁ t)
+      (hK0 t ht) (hK1 t ht) (hdata t ht)
+  have h3 : ∀ t ∈ Icc 0 T, ‖p' t - ιc (a' t)‖ ≤ ε := fun t ht => by
+    rw [norm_sub_rev, hp']
+    exact HS.norm_sub_embedH_ellipticProjection_le h54 hιc hdinj hB (c3' t ht) (ℓ₁' t)
+      (hK0' t ht) (hK1' t ht) (hdata' t ht)
+  refine ⟨s, hinit, ?_⟩
+  refine norm_sub_le_mul_of_ellipticProjection_L2 (ξ := fun t => ιc (a t))
+    (ξ' := fun t => ιc (a' t)) (ξh := fun t => ι (s.σ t, s.u t, s.M t, s.ρ t)) (p := p)
+    (p' := p') (ιc.continuous.comp_continuousOn hac) (ιc.continuous.comp_continuousOn ha'c)
+    hpc hp'c (fun t ht => ?_) h1 ?_ h3
+  · have hb := hbd t ht
+    have : 0 ≤ ‖p 0 - ι (s.σ 0, s.u 0, s.M 0, s.ρ 0)‖ := norm_nonneg _
+    linarith
+  · rw [show p 0 = ι (s.σ 0, s.u 0, s.M 0, s.ρ 0) from hinit.symm, sub_self, norm_zero]
+    exact hε
+
+end HarmonicStability
+
+namespace Discrete
+
+variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+  {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
+  {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddCommGroup Z] [Module ℝ Z]
+
 /-- **Rate of the elliptic projection, embedded**: if the Strang data are `≤ (c h)²` (`hdata`),
 the embedded projection `ι Πₕ` of an exact state `a` is within `√(2(strangConst C_p + 1))|c||h|`
 of `ιc a` in `X`. -/
@@ -471,14 +641,8 @@ theorem norm_sub_embedH_ellipticProjection_le {Cp CR CS : ℝ} (H : Stability D 
     (hdata : Q.strangData a.1 φ a.2.1 a.2.2.1 a.2.2.2 K0 K1 ≤ (c * h) ^ 2) :
     ‖ιc a - Q.embedH ιc (ellipticProjection Q.toSegmentH hdinj hB
         (ellipticRhs (Q.ellipticDataH a.1 φ a.2.1 a.2.2.1 a.2.2.2 ℓ₁) 0)).1.1‖ ≤
-      √(2 * (strangConst Cp + 1)) * |c| * |h| := by
-  have hx := isEllipticProjection_ellipticProjection hdinj hB
-    (Q.ellipticDataH a.1 φ a.2.1 a.2.2.1 a.2.2.2 ℓ₁) 0
-  have hS := (strang_of_isEllipticProjection H h54 c3 ℓ₁ hK0 hK1 hx).2
-  have hC : 0 ≤ 2 * (strangConst Cp + 1) := by unfold strangConst; positivity
-  rw [embedH_apply, norm_sub_of_isEnergyEmbedding hιc, mul_assoc, ← abs_mul,
-    ← Real.sqrt_sq_eq_abs, ← Real.sqrt_mul hC]
-  exact Real.sqrt_le_sqrt (hS.trans (mul_le_mul_of_nonneg_left hdata hC))
+      √(2 * (strangConst Cp + 1)) * |c| * |h| :=
+  H.toHarmonicStability.norm_sub_embedH_ellipticProjection_le h54 hιc hdinj hB c3 ℓ₁ hK0 hK1 hdata
 
 /-- **End-to-end `O(h)` convergence of the semi-discrete BGG wave system (6.3)** for a
 discretization `Q : Discrete D` (new: the thesis states no convergence rate for (6.3)).
@@ -552,58 +716,10 @@ theorem exists_discreteSolution_norm_sub_le_rate {Cp CR CS : ℝ} (H : Stability
           (exists_sub_eq_of_surjective hS) (ellipticRhs (Q.ellipticDataH (a 0).1 (φ 0)
             (a 0).2.1 (a 0).2.2.1 (a 0).2.2.2 (ℓ₁ 0)) 0)).1.1 ∧
       ∀ t ∈ Icc 0 T, ‖ιc (a t) - Q.embedH ιc (s.σ t, s.u t, s.M t, s.ρ t)‖ ≤
-        √(2 * (strangConst Cp + 1)) * |c| * |h| * (2 + 2 * t) := by
-  have hdinj := toSegmentH_dt0_injective (Q := Q) H
-  set hB := exists_sub_eq_of_surjective hS
-  set ι := Q.embedH ιc
-  set j := jc ∘ₗ Q.Vt0h.subtype
-  set G := fun s => Q.ellipticDataH (a s).1 (φ s) (a s).2.1 (a s).2.2.1 (a s).2.2.2 (ℓ₁ s)
-    with hGdef
-  set G' := fun s => Q.ellipticDataH (a' s).1 (φ' s) (a' s).2.1 (a' s).2.2.1 (a' s).2.2.2
-    (ℓ₁' s) with hG'def
-  have hGeq : ∀ s, ellipticData ι j A (ιc (a s)) (jc (φ s)) (ℓ s) = G s := fun s =>
-    ellipticData_embedH hιc jc A hA (ℓ s) (ℓ₁ s) (hℓ s) (a s) (φ s)
-  have hGeqf : (fun s => ellipticData ι j A (ιc (a s)) (jc (φ s)) (ℓ s)) = G := funext hGeq
-  obtain ⟨s, hinit, -, hbd⟩ := exists_discreteSolution_norm_sub_le_ellipticProjection hdinj hS ι
-    (embedH_inner hιc) j A Ah Bh hAh hBh hT hf (fun t => ιc (a t)) (fun t => ιc (a' t))
-    (fun t => jc (φ t)) ℓ F hF (ιc.continuous.comp_continuousOn hac)
-    (ιc.continuous.comp_continuousOn ha'c) hcont G'
-    (fun y => by simpa only [hGeq] using hGc y)
-    (fun t ht y => by simpa only [hGeq] using hGd t ht y) hG'c
-  rw [hGeqf] at hinit hbd
-  set ε := √(2 * (strangConst Cp + 1)) * |c| * |h|
-  have hε : 0 ≤ ε := by positivity
-  set p := projectedTrajectory hdinj hB ι G
-  set p' := projectedTrajectory hdinj hB ι G'
-  have hp : ∀ t, p t = ι (ellipticProjection Q.toSegmentH hdinj hB (ellipticRhs (G t) 0)).1.1 :=
-    fun t => rfl
-  have hp' : ∀ t,
-      p' t = ι (ellipticProjection Q.toSegmentH hdinj hB (ellipticRhs (G' t) 0)).1.1 :=
-    fun t => rfl
-  set L : (((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) × Q.V1h) →L[ℝ] X :=
-    ι.comp ((ContinuousLinearMap.fst ℝ _ _).comp (ContinuousLinearMap.fst ℝ _ _))
-  have hpc : ContinuousOn p (Icc 0 T) :=
-    L.continuous.comp_continuousOn (continuousOn_ellipticProjection hdinj hB hGc)
-  have hp'c : ContinuousOn p' (Icc 0 T) :=
-    L.continuous.comp_continuousOn (continuousOn_ellipticProjection hdinj hB hG'c)
-  have h1 : ∀ t ∈ Icc 0 T, ‖ιc (a t) - p t‖ ≤ ε := fun t ht => by
-    rw [hp]
-    exact norm_sub_embedH_ellipticProjection_le H h54 hιc hdinj hB (c3 t ht) (ℓ₁ t)
-      (hK0 t ht) (hK1 t ht) (hdata t ht)
-  have h3 : ∀ t ∈ Icc 0 T, ‖p' t - ιc (a' t)‖ ≤ ε := fun t ht => by
-    rw [norm_sub_rev, hp']
-    exact norm_sub_embedH_ellipticProjection_le H h54 hιc hdinj hB (c3' t ht) (ℓ₁' t)
-      (hK0' t ht) (hK1' t ht) (hdata' t ht)
-  refine ⟨s, hinit, ?_⟩
-  refine norm_sub_le_mul_of_ellipticProjection_L2 (ξ := fun t => ιc (a t))
-    (ξ' := fun t => ιc (a' t)) (ξh := fun t => ι (s.σ t, s.u t, s.M t, s.ρ t)) (p := p)
-    (p' := p') (ιc.continuous.comp_continuousOn hac) (ιc.continuous.comp_continuousOn ha'c)
-    hpc hp'c (fun t ht => ?_) h1 ?_ h3
-  · have hb := hbd t ht
-    have : 0 ≤ ‖p 0 - ι (s.σ 0, s.u 0, s.M 0, s.ρ 0)‖ := norm_nonneg _
-    linarith
-  · rw [show p 0 = ι (s.σ 0, s.u 0, s.M 0, s.ρ 0) from hinit.symm, sub_self, norm_zero]
-    exact hε
+        √(2 * (strangConst Cp + 1)) * |c| * |h| * (2 + 2 * t) :=
+  H.toHarmonicStability.exists_discreteSolution_norm_sub_le_rate h54 hS hιc jc A Ah Bh hA hAh hBh hT
+    hf a a' φ φ' ℓ₁ ℓ₁' ℓ hℓ F hF hac ha'c hcont hGc hGd hG'c c3 c3' hK0 hK0' hK1 hK1' hdata
+    hdata'
 
 end Discrete
 

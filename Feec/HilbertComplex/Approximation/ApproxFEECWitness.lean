@@ -668,8 +668,6 @@ theorem projPerturbed_nonvacuous :
     obtain ⟨hlim, hev⟩ := hres hxc _ hv
     exact ⟨x, hxK, t, ht, hout, hpos, hlim, hev⟩
 
-/-! ### The conforming bridge, instantiated -/
-
 end ApproxFEEC
 
 end Feec.HilbertComplex

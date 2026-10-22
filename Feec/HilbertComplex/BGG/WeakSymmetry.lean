@@ -66,7 +66,6 @@ section ProdSpaces
 variable {V0 Vt0 Vt1 : Type*} [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
   [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0] [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
 
-
 /-- `P = V⁰ × Ṽ⁰` with the ℓ² product norm (correction: the thesis' sum norm
 `‖τ‖_V + ‖ψ‖_V` gives an equivalent, non-Hilbertian norm). -/
 abbrev Psp (V0 Vt0 : Type*) := WithLp 2 (V0 × Vt0)
@@ -108,7 +107,6 @@ def ip {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
   (innerSL ℝ : E →L[ℝ] E →L[ℝ] ℝ).bilinearComp f g
 
 end ProdSpaces
-
 
 /-! ## Brezzi's theorem for real bilinear forms -/
 
@@ -406,7 +404,6 @@ theorem infSup_b : ∀ μ : D.Wcheck, 1 * ‖μ‖ ≤ ‖adj D.Bs μ‖ := by
   rcases (norm_nonneg μ).lt_or_eq with hpos | h0
   · nlinarith
   · rw [← h0]; exact norm_nonneg _
-
 
 lemma norm_Z1 {e : Vt1} (he : e ∈ D.Z1) : ‖e‖ = ‖D.ιt1 e‖ := by
   have h1 := D.norm_sq_Vt1 e
@@ -815,7 +812,6 @@ def IsSaddleW1 (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : W1) : Prop :=
   (∀ y, D.aForm x y - ⟪l, D.ι1 (D.d0 (pσ V0 Vt0 Vt1 y) - D.S0 (pφ V0 Vt0 Vt1 y))⟫ =
     ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫) ∧
   ∀ μ : W1, ⟪D.ι1 (D.d0 (pσ V0 Vt0 Vt1 x) - D.S0 (pφ V0 Vt0 Vt1 x)), μ⟫ = 0
-
 
 end Hilb
 

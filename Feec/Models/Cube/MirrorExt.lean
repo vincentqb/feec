@@ -401,6 +401,15 @@ theorem extPi_testField {Φ : P → (d → ℝ) → ℂ} (hΦ : Domain.IsTestFie
   rw [extPi_apply]
   exact extL2_toL2 (hc p) (hΦ p)
 
+omit [Fintype P] in
+/-- `ext c` is linear in the test function. -/
+theorem ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ) (f : ι → (d → ℝ) → ℂ) :
+    ext c (fun y => ∑ i ∈ s, a i * f i y) = fun x => ∑ i ∈ s, a i * ext c (f i) x := by
+  funext x
+  simp only [Geometry.ext, Geometry.per, Finset.mul_sum]
+  rw [Finset.sum_comm]
+  exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun ε _ => by ring
+
 /-! ### Fourier coefficients of extensions of test functions -/
 
 omit [DecidableEq d] [Fintype P] in
@@ -415,6 +424,28 @@ theorem mFourierCoeff_sum {ι : Type*} (s : Finset ι) (a : ι → ℂ) {f : ι 
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [← integral_const_mul]
   congr 1; funext x; ring
+
+omit [Fintype P] in
+/-- `(ext Σ aᵢ fᵢ)^ = Σ aᵢ (ext fᵢ)^` for test functions. -/
+theorem mFourierCoeff_ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ)
+    {f : ι → (d → ℝ) → ℂ} (hf : ∀ i, Domain.IsTest (Q d) (f i)) (n : d → ℤ) :
+    mFourierCoeff (ext c fun y => ∑ i ∈ s, a i * f i y) n =
+      ∑ i ∈ s, a i * mFourierCoeff (ext c (f i)) n := by
+  rw [ext_sum]
+  exact mFourierCoeff_sum s a (fun i => continuous_ext c (hf i)) n
+
+omit [Fintype P] in
+theorem mFourierCoeff_ext_sub (c : d → ℂ) {f g : (d → ℝ) → ℂ} (hf : Domain.IsTest (Q d) f)
+    (hg : Domain.IsTest (Q d) g) (n : d → ℤ) :
+    mFourierCoeff (ext c fun y => f y - g y) n =
+      mFourierCoeff (ext c f) n - mFourierCoeff (ext c g) n := by
+  have h := mFourierCoeff_ext_sum c Finset.univ ![1, -1] (f := ![f, g])
+    (fun i => by fin_cases i <;> simpa) n
+  have e : (fun y => f y - g y) =
+      fun y => ∑ i, (![1, -1] : Fin 2 → ℂ) i * (![f, g] : Fin 2 → _) i y := by
+    funext y; simp [Fin.sum_univ_two, sub_eq_add_neg]
+  rw [e, h]
+  simp [Fin.sum_univ_two, sub_eq_add_neg]
 
 omit [Fintype P] in
 /-- **Integration by parts for extensions**: the extension of `∂_k Φ` with the parity of `x_k`

@@ -24,6 +24,8 @@ its Hodge wave equation is (4.18).
 * `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields
   (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
+* **`hodge_real`**: the Hodge pieces of a real field are real
+  (`L²(𝕋³; S) = R(grad grad) ⊕ ℌ ⊕ R(sym curl)` over the real fields).
 
 ## References
 
@@ -196,5 +198,14 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
   obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
   exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
     realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
+
+/-- **Real Hodge decomposition on `𝕋³`**: a real field (`C x = x`, i.e. `x̂(-ξ) = conj x̂(ξ)`) is
+`x = b + h + a` with `b ∈ R(d)`, `h` harmonic, `a ∈ R(d†)`, all three real. For `i = 1`:
+`A = grad grad u + h + sym curl ρ` in `L²(𝕋³; S)`. -/
+theorem hodge_real {i : Fin 3} {x : Space i} (hx : realStructure.toConj.C i x = x) :
+    ∃ b ∈ complex.boundaries i, ∃ h ∈ complex.harmonic i, ∃ a ∈ complex.dual.boundaries i,
+      x = b + h + a ∧ realStructure.toConj.C i b = b ∧ realStructure.toConj.C i h = h ∧
+        realStructure.toConj.C i a = a :=
+  realStructure.toConj.hodge_real_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i) hx
 
 end Feec.Models.Torus.SymCurl

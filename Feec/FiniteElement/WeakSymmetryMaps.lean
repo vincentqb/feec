@@ -47,6 +47,9 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
 * **Table 5.1.** `PolySeq.bggS0h`, `PolySeq.bggS1h` (`P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`, `P₂⁻Λ¹ ⊗ ℝⁿ → P₁⁻Λ²`),
   `PolySeq.bggS0h₀_surjective`, `PolySeq.bggS0h_tensorInterp` (`Π¹S⁰Π̃⁰ = Π¹S⁰`; the case `k = 1`,
   `Π²S¹Π̃¹ = Π²S¹`, is `PolySeq.wsGlobal_tensorInterp`).
+* **Smoothed pairs.** `Feec.HilbertComplex.Subcomplex.CommutingMap.toCochainProjection_comp_toCochainProjection`:
+  if `Q 𝒮 = c A Q̃` (from `R 𝒮 = c 𝒮 R̃` and Prop 5.7), the smoothed projections satisfy
+  `π 𝒮 π̃ = π 𝒮`, the compatibility `Feec.BGG.Discrete.Compatible`.
 
 ## References
 
@@ -1344,3 +1347,42 @@ end PolySeq
 
 end Feec.FiniteElement
 
+/-! ### Compatibility of a pair of smoothed projections -/
+
+namespace Feec.HilbertComplex.Subcomplex.CommutingMap
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι ι' : Type*} {c : ComplexShape ι} {c' : ComplexShape ι'}
+  {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
+  [∀ i, CompleteSpace (W i)] {W' : ι' → Type*} [∀ i, NormedAddCommGroup (W' i)]
+  [∀ i, InnerProductSpace 𝕜 (W' i)] [∀ i, CompleteSpace (W' i)]
+  {H : HilbertComplex 𝕜 c W} {H' : HilbertComplex 𝕜 c' W'} {S : H.Subcomplex} {S' : H'.Subcomplex}
+  [∀ i, FiniteDimensional 𝕜 (S.V i)] [∀ i, FiniteDimensional 𝕜 (S'.V i)]
+
+/-- **Smoothed projections satisfy the surjectivity hypothesis (5.4)**: let `Q = Π R`,
+`Q̃ = Π̃ R̃` be commuting maps into the two finite element rows and `𝒮 : W̃ⁱ → Wʲ` a connecting map
+with `Q 𝒮 y = c Π' 𝒮 (Q̃ y)` (from `R 𝒮 = c 𝒮 R̃`, the dilation factor `c`, and
+`Π 𝒮 Π̃ = Π 𝒮` on smooth fields, the corrected Prop 5.7; `A` is `Π 𝒮` on the discrete fields).
+Then the smoothed projections `π = J⁻¹ Q`, `π̃ = J̃⁻¹ Q̃` satisfy `π 𝒮 π̃ = π 𝒮`: since
+`Q̃ π̃ = Q̃`, `Q 𝒮 π̃ x = c A (Q̃ π̃ x) = c A (Q̃ x) = Q 𝒮 x`. This is `Feec.BGG.Discrete.Compatible`
+(`P1 = π`, `Pt0 = π̃`, `S0 = 𝒮`) for smoothed projections. The hypothesis `hA` is not discharged
+here for the cube smoothing (it combines `Feec.Models.Cube.WeakSymmetry.smoothForm_wsL2` with
+`PolySeq.wsGlobal_tensorInterp`); this lemma is the abstract step only. -/
+theorem toCochainProjection_comp_toCochainProjection (Q : S.CommutingMap) (Q' : S'.CommutingMap)
+    {θ θ' : ℝ} (hθ : θ < 1) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) (hθ' : θ' < 1)
+    (hQ' : ∀ i, ∀ v ∈ S'.V i, ‖v - Q'.Q i v‖ ≤ θ' * ‖v‖) {i : ι'} {j : ι}
+    (𝒮 : W' i →ₗ[𝕜] W j) (A : S'.V i →ₗ[𝕜] W j) (cst : 𝕜)
+    (hA : ∀ y, Q.Q j (𝒮 y) = cst • A ⟨Q'.Q i y, Q'.mem i y⟩) (x : W' i) :
+    (Q.toCochainProjection hθ hQ).π j (𝒮 ((Q'.toCochainProjection hθ' hQ').π i x)) =
+      (Q.toCochainProjection hθ hQ).π j (𝒮 x) := by
+  have h' : Q'.Q i ((Q'.toCochainProjection hθ' hQ').π i x) = Q'.Q i x := by
+    rw [toCochainProjection_π]
+    exact Q'.Q_restrictVEquiv_symm hθ' hQ' i _
+  have key : Q.Q j (𝒮 ((Q'.toCochainProjection hθ' hQ').π i x)) = Q.Q j (𝒮 x) := by
+    rw [hA, hA]
+    congr 2
+    exact Subtype.ext h'
+  rw [toCochainProjection_π, toCochainProjection_π]
+  exact congrArg (fun z : S.V j => (((Q.restrictVEquiv hθ hQ j).symm z : S.V j) : W j))
+    (Subtype.ext key)
+
+end Feec.HilbertComplex.Subcomplex.CommutingMap

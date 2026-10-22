@@ -32,8 +32,8 @@ every amplitude `A₊`, `Aₓ` and frequency `ω`.
   formalized here: it follows from the affine invariance of the Whitney element
   (`Feec.Models.Parallelepiped.fieldPull_mem_whitney_cast`), the Freudenthal meshes of `(0, 1)³`
   being the images of those of `(0, ½)³` under `x ↦ 2x`.
-* A Crank–Nicolson step with parameter `s` on the unit cube is a step with parameter `s / 2` on
-  `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt` is the scheme on `Q` with step
+* **`isDirichletCNStep_dilRow3_iff`**: a Crank–Nicolson step with parameter `s` on the unit cube
+  is a step with parameter `s / 2` on `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt` is the scheme on `Q` with step
   `Δt / 2` (the system is invariant under `(t, x) ↦ (2t, 2x)`; the time steps of Table 7.1 are
   `Feec.Numerics.CrankNicolson.dt`).
 * **Transported results**: the error `unit_cn_error_le`
@@ -621,6 +621,19 @@ theorem inner_discreteWave3_dilRow3 (N : ℕ) (u v : DState3 (whitneyRow N)) :
 theorem mem_dilRow3_iff (N : ℕ) (u : DState3 (whitneyRow N)) :
     dilRow3 N u ∈ unitInterior3 N ↔ u ∈ whitneyInterior3 N :=
   forall_congr' fun r => mem_dilRow_iff N (u r)
+
+/-- **The scheme on the unit cube with step `Δt` is the scheme on `(0, ½)³` with step `Δt / 2`**:
+a Dirichlet Crank–Nicolson step with parameter `s` on the dilated Whitney spaces of `(0, 1)³`
+(inner products `×8`, `d` `×½`) is exactly a step with parameter `s / 2` on the Whitney spaces of
+`(0, ½)³`. -/
+theorem isDirichletCNStep_dilRow3_iff (N : ℕ) (s : ℝ) (f g' u u' : DState3 (whitneyRow N)) :
+    TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N)) s
+        (dilRow3 N f) (dilRow3 N g') (dilRow3 N u) (dilRow3 N u') ↔
+      TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) (s / 2)
+        f g' u u' := by
+  have h := isDirichletCNStep_conj_iff (dilRow3 N) (by norm_num : (0 : ℝ) < 8)
+    (inner_dilRow3 N) (inner_discreteWave3_dilRow3 N) (mem_dilRow3_iff N) s f g' u u'
+  rwa [show (1 / 2 : ℝ) * s = s / 2 by ring] at h
 
 end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube

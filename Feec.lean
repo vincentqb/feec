@@ -55,6 +55,7 @@ public import Feec.Evolution.Constrained
 public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy
 public import Feec.Evolution.Forcing
+public import Feec.Evolution.Perturbation
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
@@ -230,6 +231,7 @@ public import Feec.Models.Cube.InhomogeneousError
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
 public import Feec.Models.Cube.MirrorBase
+public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.MirrorTrace

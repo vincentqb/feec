@@ -18,7 +18,7 @@ cube arise as fixed complexes (the method of images, `Feec.HilbertComplex.Action
 * **relative** (`relative d`, fixed by `-R_j^*` for every `j`): `ω_s` is odd in `x_j` for
   `j ∉ s` and even for `j ∈ s`, so the tangential components vanish on the faces `x_j ∈ {0, ½}`
   (**tangential trace zero**, `H̊Λ`);
-* **absolute** (`complex d false`, fixed by `R_j^*`): the opposite parities, so the normal components
+* **absolute** (`absolute d`, fixed by `R_j^*`): the opposite parities, so the normal components
   vanish (**normal trace zero**, `H*̊Λ`).
 
 The Hilbert complexes are the compressions of the torus complex; this file proves, in every
@@ -29,33 +29,45 @@ dimension and degree:
   `Feec.HilbertComplex.Action.hasCompactProperty_fixedComplex`;
 * closed range of `d` and of `d†` in every degree (`closedRangeAt`, `dual_closedRangeAt`), with
   the **Poincaré inequality** `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d) ∩ N(d)ᗮ` (`norm_le_of_mem_orthogonal`);
-* **the harmonic forms**: only the zero Fourier mode is harmonic on the torus
-  (`mem_window_harmonic_iff`), so the harmonic forms of either class are its fixed constant forms
-  (`mem_harmonic_iff`);
+* **the harmonic forms**: only the zero Fourier mode is harmonic on the torus, and the parities
+  kill every constant coefficient except `dx_1 ∧ ⋯ ∧ dx_n` (relative) or `1` (absolute):
+  `relative_harmonic_eq_bot` (degrees `< n`), `finrank_relative_harmonic_top` (`= 1` in degree
+  `n`), `absolute_harmonic_eq_bot` (degrees `> 0`), `finrank_absolute_harmonic_zero` (`= 1` in
+  degree `0`: the constants), and their duality `k ↔ n - k`
+  (`finrank_relative_harmonic_eq_absolute`);
 * **a complete set of eigenvectors** for the Hodge wave group (`eigenDense`), from the compact
   resolvent.
+* **the Hodge star exchanges the two classes**: `dx_s ↦ dx_{sᶜ}` (the Hodge star up to the sign
+  of each coefficient) maps the `k`-forms of one class unitarily onto the `(n - k)`-forms of the
+  other (`hodgeStar`, `starLp_mem_fixed_iff`), and harmonic forms onto harmonic forms
+  (`hodgeStar_mem_harmonic_iff`, `harmonicHodgeStar`, `finrank_harmonic_eq_rev`).
 
 **Scope of the model.** The two classes are *defined* as fixed complexes of the parity action on
 the Fourier coefficients of the torus complex, with complex coefficients (the Fourier side of the
 torus complex). Their identification with the boundary-condition spaces `H̊Λ(Q)` (relative class)
 and `HΛ(Q)` (absolute class) of `Feec.Domain.DeRham` is proved in `Feec.Models.Cube.DeRhamIdent`
 (`HQmin_eq_compress`, `HQmax_eq_compress`: the parity extension is a scaled isometry, inner
-products times `2ⁿ`, and the parity classes are the complexifications of the forms on `Q`); the
-Poincaré inequality, compactness and harmonic forms of `HΛ(Q)` and `H̊Λ(Q)` themselves follow in
-`Feec.Models.Cube.DeRhamIdentPoincare`.
+products times `2ⁿ`, and the parity classes are the complexifications of the forms on `Q`,
+`mem_parity_fixed_iff`); the Poincaré inequality, compactness and harmonic forms of `HΛ(Q)` and
+`H̊Λ(Q)` themselves follow in `Feec.Models.Cube.DeRhamIdentPoincare`.
+The intertwining `⋆ d = ± d† ⋆` of the Hodge star with the differentials is not formalized; only
+the unitary exchange of the spaces and of the harmonic forms is.
 
 ## Main definitions
 
 * `flipAt`, `reflFreq`, `reflSign`, `reflForm`, `parSign`; `symmetries`, `action`, `complex`,
-  `relative`.
-* `lpCongr`: a fibre isometry acting pointwise on `ℓ²`.
+  `relative`, `absolute`.
+* `complForm`, `starLp`, `hodgeStar`, `harmonicHodgeStar` (the Hodge star up to sign).
 
 ## Main results
 
-* `koszulDeg_reflForm`, `deRham_reflForm`, `mem_fixed_iff`, `mem_window_harmonic_iff`,
-  `mem_harmonic_iff`.
+* `koszulDeg_reflForm`, `deRham_reflForm`, `mem_fixed_iff`, `mem_window_harmonic_iff`.
 * **`hasCompactProperty`**, `closedRangeAt`, `dual_closedRangeAt`, **`norm_le_of_mem_orthogonal`**,
   **`eigenDense`**.
+* **`relative_harmonic_eq_bot`**, **`finrank_relative_harmonic_top`**,
+  **`absolute_harmonic_eq_bot`**, **`finrank_absolute_harmonic_zero`**,
+  `finrank_relative_harmonic_eq_absolute`, `finrank_relative_harmonic_eq_absolute_rev`.
+* **`starLp_mem_fixed_iff`**, **`hodgeStar_mem_harmonic_iff`**, `finrank_harmonic_eq_rev`.
 
 ## References
 
@@ -110,6 +122,10 @@ theorem flipAt_comm (j l : d) (n : d → ℤ) : flipAt j (flipAt l n) = flipAt l
 omit [Fintype d] in
 @[simp] theorem flipAt_zero (j : d) : flipAt j (0 : d → ℤ) = 0 := by
   funext a; simp [flipAt]
+
+omit [Fintype d] in
+theorem flipAt_eq_zero_iff (j : d) {n : d → ℤ} : flipAt j n = 0 ↔ n = 0 :=
+  ⟨fun h => by rw [← flipAt_flipAt j n, h, flipAt_zero], fun h => by rw [h, flipAt_zero]⟩
 
 /-- The reflection `ξ ↦ (…, -ξ_j, …)` of the frequency space. -/
 def reflFreq (j : d) (ξ : EuclideanSpace ℝ d) : EuclideanSpace ℝ d :=
@@ -244,6 +260,11 @@ variable (d) in
 even for `j ∈ s`. -/
 abbrev relative := complex d true
 
+variable (d) in
+/-- **Absolute boundary conditions** (normal trace zero): `ω_s` even in `x_j` for `j ∉ s`, odd
+for `j ∈ s`. -/
+abbrev absolute := complex d false
+
 /-- **The parity classes, coefficientwise**: `u` is fixed iff `± R_j^* u(flip_j n) = u(n)` for all
 `j` and `n`. -/
 theorem mem_fixed_iff {rel : Bool} {i : Fin (Fintype.card d + 1)}
@@ -356,7 +377,140 @@ theorem mem_harmonic_iff {rel : Bool} {i : Fin (Fintype.card d + 1)} {x : (actio
       ∀ n, n ≠ 0 → (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) n = 0 :=
   ((action d rel).mem_harmonic_fixedComplex_iff).trans mem_window_harmonic_iff
 
-/-! ### Fibre isometries on `ℓ²` -/
+/-- The zero mode of a fixed form is fixed by every `± R_j^*`. -/
+theorem parSign_reflForm_zero {rel : Bool} {i : Fin (Fintype.card d + 1)}
+    (x : (action d rel).fixed i) (j : d) (t : {s : Finset d // #s = (i : ℕ)}) :
+    parSign rel * reflSign j t.1 *
+        (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t =
+      (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t := by
+  have h := congrArg (fun v : Form ℂ d i => v t) (mem_fixed_iff.1 x.2 j 0)
+  simp only [flipAt_zero, PiLp.smul_apply, reflForm_apply, smul_eq_mul] at h
+  rw [mul_assoc]; exact h
+
+/-- A harmonic form whose zero-mode coefficients vanish off `t₀` vanishes off `t₀`. -/
+theorem harmonic_eq_bot_of {rel : Bool} {i : Fin (Fintype.card d + 1)}
+    (h : ∀ t : {s : Finset d // #s = (i : ℕ)}, ∃ j, parSign rel * reflSign j t.1 ≠ 1) :
+    (complex d rel).harmonic i = ⊥ := by
+  rw [eq_bot_iff]
+  intro x hx
+  rw [Submodule.mem_bot]
+  refine Subtype.ext (Lp.ext_count fun n => ?_)
+  rw [ZeroMemClass.coe_zero, coeFn_zero_count]
+  by_cases hn : n = 0
+  · subst hn
+    ext t
+    obtain ⟨j, hj⟩ := h t
+    have e := parSign_reflForm_zero x j t
+    have : (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t = 0 := by
+      by_contra hne
+      exact hj (mul_right_cancel₀ hne (e.trans (one_mul _).symm))
+    rw [this]; rfl
+  · exact mem_harmonic_iff.1 hx n hn
+
+/-- A harmonic space whose degree has a single index set `t₀` fixed by every `± R_j^*` is
+one-dimensional, spanned by the constant form `dx_{t₀}`. -/
+theorem finrank_harmonic_eq_one {rel : Bool} {i : Fin (Fintype.card d + 1)}
+    (t₀ : {s : Finset d // #s = (i : ℕ)}) (ht : ∀ t, t = t₀)
+    (hs : ∀ j, parSign rel * reflSign j t₀.1 = 1) :
+    Module.finrank ℂ ((complex d rel).harmonic i) = 1 := by
+  set e₀ : Form ℂ d i := EuclideanSpace.single t₀ 1
+  set v : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ)) := Torus.DeRham.const i e₀
+  have hv : ∀ n, (v : (d → ℤ) → Form ℂ d i) n = if n = 0 then e₀ else 0 :=
+    Torus.DeRham.const_apply i e₀
+  have hfix : v ∈ (action d rel).fixed i := by
+    refine mem_fixed_iff.2 fun j n => ?_
+    rw [hv, hv]
+    by_cases hn : n = 0
+    · subst hn
+      simp only [flipAt_zero, ite_true]
+      ext t
+      rw [ht t, PiLp.smul_apply, reflForm_apply, smul_eq_mul, ← mul_assoc, hs, one_mul]
+    · have hn' : flipAt j n ≠ 0 := (flipAt_eq_zero_iff j).not.2 hn
+      simp [hn, hn']
+  set x : (action d rel).fixed i := ⟨v, hfix⟩
+  have hx : x ∈ (complex d rel).harmonic i := mem_harmonic_iff.2 fun n hn => by
+    change (v : (d → ℤ) → Form ℂ d i) n = 0
+    simp [hv, hn]
+  have hne : (⟨x, hx⟩ : (complex d rel).harmonic i) ≠ 0 := by
+    intro h0
+    have h1 : (v : (d → ℤ) → Form ℂ d i) 0 t₀ = 1 := by simp [hv, e₀]
+    have h2 : v = 0 := by
+      have := congrArg (fun y : (complex d rel).harmonic i =>
+        ((y : (action d rel).fixed i) : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ)))) h0
+      have h3 : x = 0 := by simpa using this
+      exact congrArg Subtype.val h3
+    rw [h2, coeFn_zero_count] at h1
+    simp at h1
+  refine (finrank_eq_one_iff_of_nonzero' _ hne).2 fun w => ?_
+  refine ⟨((w : (action d rel).fixed i) : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ)))
+    0 t₀, Subtype.ext (Subtype.ext (Lp.ext_count fun n => ?_))⟩
+  simp only [Submodule.coe_smul]
+  rw [coeFn_smul_count]
+  change _ • (v : (d → ℤ) → Form ℂ d i) n = _
+  rw [hv]
+  by_cases hn : n = 0
+  · subst hn
+    simp only [ite_true]
+    ext t
+    rw [ht t]
+    simp [e₀]
+  · have hw0 : ((w : (action d rel).fixed i) : Lp (Form ℂ d i) 2
+        (Measure.count : Measure (d → ℤ))) n = 0 := mem_harmonic_iff.1 w.2 n hn
+    rw [hw0]
+    simp [hn]
+
+/-- **Relative boundary conditions: no harmonic forms below the top degree.** -/
+theorem relative_harmonic_eq_bot {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) ≠ Fintype.card d) :
+    (relative d).harmonic i = ⊥ := by
+  refine harmonic_eq_bot_of fun t => ?_
+  have hne : t.1 ≠ Finset.univ := fun h => hi (by rw [← t.2, h, Finset.card_univ])
+  obtain ⟨j, hj⟩ : ∃ j, j ∉ t.1 := by
+    by_contra h; push Not at h; exact hne (Finset.eq_univ_iff_forall.2 h)
+  exact ⟨j, by simp [parSign, reflSign, hj]; norm_num⟩
+
+/-- **Relative boundary conditions: the harmonic `n`-forms are one-dimensional**
+(`ℌⁿ = span (dx_1 ∧ ⋯ ∧ dx_n)`, `Hⁿ(Q, ∂Q) ≅ ℂ`). -/
+theorem finrank_relative_harmonic_top :
+    Module.finrank ℂ ((relative d).harmonic (Fin.last (Fintype.card d))) = 1 := by
+  refine finrank_harmonic_eq_one ⟨Finset.univ, Finset.card_univ⟩
+    (fun t => Subtype.ext (Finset.eq_univ_of_card _ t.2)) fun j => ?_
+  simp [parSign, reflSign]
+
+/-- **Absolute boundary conditions: no harmonic forms above degree `0`.** -/
+theorem absolute_harmonic_eq_bot {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) ≠ 0) :
+    (absolute d).harmonic i = ⊥ := by
+  refine harmonic_eq_bot_of fun t => ?_
+  obtain ⟨j, hj⟩ : t.1.Nonempty := Finset.card_pos.1 (by rw [t.2]; omega)
+  exact ⟨j, by simp [parSign, reflSign, hj]; norm_num⟩
+
+/-- **Absolute boundary conditions: the harmonic `0`-forms are the constants**
+(`H⁰(Q) ≅ ℂ`). -/
+theorem finrank_absolute_harmonic_zero : Module.finrank ℂ ((absolute d).harmonic 0) = 1 := by
+  refine finrank_harmonic_eq_one ⟨∅, Finset.card_empty⟩
+    (fun t => Subtype.ext (Finset.card_eq_zero.1 t.2)) fun j => ?_
+  simp [parSign, reflSign]
+
+/-- **Duality of the harmonic forms** (Poincaré–Lefschetz, numerically): the relative harmonic
+`k`-forms and the absolute harmonic `k'`-forms, `k + k' = n`, have the same dimension. -/
+theorem finrank_relative_harmonic_eq_absolute {k k' : Fin (Fintype.card d + 1)}
+    (hkk : (k : ℕ) + k' = Fintype.card d) :
+    Module.finrank ℂ ((relative d).harmonic k) = Module.finrank ℂ ((absolute d).harmonic k') := by
+  by_cases hk : (k : ℕ) = Fintype.card d
+  · obtain rfl : k = Fin.last _ := Fin.ext hk
+    obtain rfl : k' = 0 := Fin.ext (by simp at hkk ⊢; omega)
+    exact finrank_relative_harmonic_top.trans finrank_absolute_harmonic_zero.symm
+  · have h1 : Module.finrank ℂ ((relative d).harmonic k) = 0 := by
+      rw [relative_harmonic_eq_bot hk]; exact finrank_bot ℂ _
+    have h2 : Module.finrank ℂ ((absolute d).harmonic k') = 0 := by
+      rw [absolute_harmonic_eq_bot (by omega)]; exact finrank_bot ℂ _
+    rw [h1, h2]
+
+/-- Duality of the harmonic forms, `k ↔ n - k` (`Fin.rev`). -/
+theorem finrank_relative_harmonic_eq_absolute_rev (k : Fin (Fintype.card d + 1)) :
+    Module.finrank ℂ ((relative d).harmonic k) = Module.finrank ℂ ((absolute d).harmonic k.rev) :=
+  finrank_relative_harmonic_eq_absolute (by rw [Fin.val_rev]; have := k.isLt; omega)
+
+/-! ### The Hodge star exchanges the two classes -/
 
 section LpMap
 
@@ -393,5 +547,114 @@ theorem lpCongr_apply (e : E ≃ₗᵢ[ℂ] F) (u : Lp E 2 (Measure.count : Meas
   Measure.ae_count_iff.1 (ContinuousLinearMap.coeFn_compLp (e : E →L[ℂ] F) u) a
 
 end LpMap
+
+variable (d) in
+/-- Complementation `s ↦ sᶜ` of the index sets of `k`-forms and `k'`-forms, `k + k' = n`. -/
+def complIdx {k k' : ℕ} (h : k + k' = Fintype.card d) :
+    {s : Finset d // #s = k} ≃ {s : Finset d // #s = k'} where
+  toFun t := ⟨t.1ᶜ, by rw [Finset.card_compl, t.2]; omega⟩
+  invFun t := ⟨t.1ᶜ, by rw [Finset.card_compl, t.2]; omega⟩
+  left_inv t := Subtype.ext (compl_compl _)
+  right_inv t := Subtype.ext (compl_compl _)
+
+variable (d) in
+/-- **The Hodge star up to sign**, `dx_s ↦ dx_{sᶜ}`, an isometry of `k`-forms onto `k'`-forms,
+`k + k' = n`. -/
+noncomputable def complForm {k k' : ℕ} (h : k + k' = Fintype.card d) : Form ℂ d k ≃ₗᵢ[ℂ] Form ℂ d k' :=
+  LinearIsometryEquiv.piLpCongrLeft 2 ℂ ℂ (complIdx d h)
+
+theorem complForm_apply {k k' : ℕ} (h : k + k' = Fintype.card d) (v : Form ℂ d k)
+    (t : {s : Finset d // #s = k'}) : complForm d h v t = v ⟨t.1ᶜ, by
+      rw [Finset.card_compl, t.2]; omega⟩ := by
+  simp [complForm, LinearIsometryEquiv.piLpCongrLeft_apply, Equiv.piCongrLeft'_apply]
+  rfl
+
+theorem reflSign_compl (j : d) (s : Finset d) : reflSign j sᶜ = -reflSign j s := by
+  unfold reflSign; by_cases hj : j ∈ s <;> simp [hj]
+
+theorem reflForm_complForm {k k' : ℕ} (h : k + k' = Fintype.card d) (j : d) (v : Form ℂ d k) :
+    reflForm j k' (complForm d h v) = -complForm d h (reflForm j k v) := by
+  ext t
+  simp only [reflForm_apply, complForm_apply, PiLp.neg_apply]
+  have e := reflSign_compl j (t.1)ᶜ
+  rw [compl_compl] at e
+  rw [e]
+  ring
+
+theorem parSign_not (rel : Bool) : parSign (!rel) = -parSign rel := by
+  cases rel <;> norm_num [parSign]
+
+omit [LinearOrder d] in
+theorem add_val_rev (i : Fin (Fintype.card d + 1)) : (i : ℕ) + (i.rev : ℕ) = Fintype.card d := by
+  rw [Fin.val_rev]; have := i.isLt; omega
+
+variable (d) in
+/-- The Hodge star up to sign, `u ↦ ⋆ ∘ u`, on the Fourier coefficients of the torus window,
+from degree `i` to degree `n - i`. -/
+noncomputable def starLp (i : Fin (Fintype.card d + 1)) :
+    Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ)) ≃ₗᵢ[ℂ]
+      Lp (Form ℂ d i.rev) 2 (Measure.count : Measure (d → ℤ)) :=
+  lpCongr (complForm d (add_val_rev i))
+
+theorem starLp_apply (i : Fin (Fintype.card d + 1))
+    (u : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) (n : d → ℤ) :
+    starLp d i u n = complForm d (add_val_rev i) (u n) :=
+  lpCongr_apply _ u n
+
+/-- **The Hodge star exchanges the parity classes**: `⋆ u` is absolute iff `u` is relative, and
+conversely. -/
+theorem starLp_mem_fixed_iff {rel : Bool} {i : Fin (Fintype.card d + 1)}
+    {u : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))} :
+    starLp d i u ∈ (action d (!rel)).fixed i.rev ↔ u ∈ (action d rel).fixed i := by
+  rw [mem_fixed_iff, mem_fixed_iff]
+  refine forall_congr' fun j => forall_congr' fun n => ?_
+  rw [starLp_apply, starLp_apply, reflForm_complForm, parSign_not, smul_neg, neg_smul, neg_neg,
+    ← LinearIsometryEquiv.map_smul, (complForm d (add_val_rev i)).injective.eq_iff]
+
+variable (d) in
+/-- **The Hodge star (up to sign) as a unitary map between the parity classes**, from degree
+`i` of one class to degree `n - i` of the other: relative `i`-forms onto absolute `(n - i)`-forms
+(`rel = true`) and absolute onto relative (`rel = false`). -/
+noncomputable def hodgeStar (rel : Bool) (i : Fin (Fintype.card d + 1)) :
+    (action d rel).fixed i ≃ₗᵢ[ℂ] (action d (!rel)).fixed i.rev where
+  toFun x := ⟨starLp d i x, starLp_mem_fixed_iff.2 x.2⟩
+  invFun y := ⟨(starLp d i).symm y, starLp_mem_fixed_iff.1 (by simp)⟩
+  map_add' x y := Subtype.ext (map_add (starLp d i) _ _)
+  map_smul' c x := Subtype.ext ((starLp d i).map_smul c _)
+  left_inv x := Subtype.ext (by simp)
+  right_inv y := Subtype.ext (by simp)
+  norm_map' x := (starLp d i).norm_map x
+
+theorem coe_hodgeStar (rel : Bool) (i : Fin (Fintype.card d + 1)) (x : (action d rel).fixed i) :
+    (hodgeStar d rel i x : Lp (Form ℂ d i.rev) 2 (Measure.count : Measure (d → ℤ))) =
+      starLp d i x := rfl
+
+/-- **The Hodge star exchanges the harmonic forms of the two classes**, `k ↔ n - k`. -/
+theorem hodgeStar_mem_harmonic_iff {rel : Bool} {i : Fin (Fintype.card d + 1)}
+    {x : (action d rel).fixed i} :
+    hodgeStar d rel i x ∈ (complex d (!rel)).harmonic i.rev ↔ x ∈ (complex d rel).harmonic i := by
+  rw [mem_harmonic_iff, mem_harmonic_iff]
+  refine forall_congr' fun n => imp_congr_right fun _ => ?_
+  rw [coe_hodgeStar, starLp_apply, LinearIsometryEquiv.map_eq_zero_iff]
+
+variable (d) in
+/-- The Hodge star (up to sign) restricted to harmonic forms: a unitary isomorphism
+`ℌᵏ ≅ ℌ*ⁿ⁻ᵏ` between the harmonic forms of the two classes. -/
+noncomputable def harmonicHodgeStar (rel : Bool) (i : Fin (Fintype.card d + 1)) :
+    (complex d rel).harmonic i ≃ₗᵢ[ℂ] (complex d (!rel)).harmonic i.rev where
+  toFun x := ⟨hodgeStar d rel i x, hodgeStar_mem_harmonic_iff.2 x.2⟩
+  invFun y := ⟨(hodgeStar d rel i).symm y, hodgeStar_mem_harmonic_iff.1 (by simp)⟩
+  map_add' x y := Subtype.ext (map_add (hodgeStar d rel i) _ _)
+  map_smul' c x := Subtype.ext ((hodgeStar d rel i).map_smul c _)
+  left_inv x := Subtype.ext (by simp)
+  right_inv y := Subtype.ext (by simp)
+  norm_map' x := (hodgeStar d rel i).norm_map x
+
+/-- **Duality of the harmonic forms**, from the unitary `harmonicHodgeStar`: the harmonic
+`k`-forms of one class and the harmonic `(n - k)`-forms of the other have the same dimension. -/
+theorem finrank_harmonic_eq_rev (rel : Bool) (i : Fin (Fintype.card d + 1)) :
+    Module.finrank ℂ ((complex d rel).harmonic i) =
+      Module.finrank ℂ ((complex d (!rel)).harmonic i.rev) :=
+  (harmonicHodgeStar d rel i).toLinearEquiv.finrank_eq
 
 end Feec.Models.Cube.DeRham

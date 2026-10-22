@@ -40,8 +40,10 @@ equation ([QuennevilleBelair2015], Thm 4.14).
   `Hˢ` bounds `L` on `[t₀, t₁]` (`L^∞([t₀, t₁]; Hˢ)`, e.g. `C⁰([t₀, t₁]; Hˢ)` solutions) on the
   values and time derivatives (and their differentials):
   **`PolySmoothingEstimates.norm_sub_le_window_sobolevQ`** (`HΛ(Q)`),
+  **`ParitySmoothingEstimates.norm_sub_le_window_sobolevPar`** (`HΛ_J(Q)`),
   `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (1 + 2C) K L h_N^s`
-  (smoothing estimates exist for every `S`: `polySmoothingEstimates_exists`).
+  (smoothing estimates exist for every `S` and `J`: `polySmoothingEstimates_exists`,
+  `paritySmoothing_exists`).
 
 ## Proved exponents and the optimal ones
 
@@ -809,6 +811,101 @@ omit [NeZero n] in
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) :
     FiniteDimensional ℝ ((polyPartial n S N J).window a m).graphSub :=
   inferInstance
+
+variable (n) in
+/-- **A component with `Hˢ_J(Q)` data in the graph norm of `HΛ_J(Q)`**. -/
+def SobCompPar (s L : ℝ) {j : ℤ} (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
+  SobAtPar n J s L j x ∧ ∀ hx : x ∈ ((complexPart n J).d j (j + 1)).domain,
+    SobAtPar n J s L (j + 1) ((complexPart n J).d j (j + 1) ⟨x, hx⟩)
+
+variable {J} in
+/-- **Graph-norm approximation in the total space of a window of `HΛ_J(Q)`**. -/
+theorem ParitySmoothingEstimates.exists_mem_window_le_sobPar {S : PolySeq}
+    {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
+    {s L : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (hL0 : 0 ≤ L) {a : ℤ} {m : ℕ}
+    (ζ : ((complexPart n J).window a m).totalD.GraphSpace)
+    (hζ : ∀ i : Fin m, SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst ζ i))
+    (N : ℕ) :
+    ∃ w ∈ ((polyPartial n S N J).window a m).graphSub, ‖ζ - w‖ ≤
+      ((m : ℝ) + m * m) * ((1 + 2 * C) * (∑ i : Fin m, (sobConstParZ n S (a + i) +
+        sobConstParZ n S (a + i + 1))) * meshSize N ^ s * L) := by
+  obtain ⟨x, rfl, -, -⟩ := ((complexPart n J).window a m).totalD.exists_toGraphSpace_eq ζ
+  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
+  have hC := hE.two_mul_nonneg
+  have hh := Real.rpow_nonneg (meshSize_pos N).le s
+  set K := ∑ i : Fin m, (sobConstParZ n S (a + i) + sobConstParZ n S (a + i + 1))
+  have hKi : ∀ i : Fin m, sobConstParZ n S (a + i) + sobConstParZ n S (a + i + 1) ≤ K :=
+    fun i => Finset.single_le_sum
+      (f := fun i : Fin m => sobConstParZ n S (a + i) + sobConstParZ n S (a + i + 1))
+      (fun i _ => add_nonneg (sobConstParZ_nonneg S _) (sobConstParZ_nonneg S _))
+      (Finset.mem_univ i)
+  have hε : 0 ≤ (1 + 2 * C) * K * meshSize N ^ s * L := by
+    have : 0 ≤ K := Finset.sum_nonneg fun i _ =>
+      add_nonneg (sobConstParZ_nonneg S _) (sobConstParZ_nonneg S _)
+    have : 0 ≤ 1 + 2 * C := by linarith
+    positivity
+  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((polyPartial n S N J).window a m) x
+    (ε := (1 + 2 * C) * K * meshSize N ^ s * L) fun i => by
+      set xi := (x : PiLp 2 fun i : Fin m => L2F ℝ (cubeDomain n) (formIdx n (a + i))) i
+      have h0 := infDist_polyPartial_le_sobAtPar J S hs0 hs1 N (hζ i).1
+      have hA : (1 + 2 * C) * Metric.infDist xi ((polyPartial n S N J).V (a + i)) ≤
+          (1 + 2 * C) * K * meshSize N ^ s * L := by
+        have hs := sobConstParZ_nonneg (n := n) S (a + i + 1)
+        calc (1 + 2 * C) * Metric.infDist xi ((polyPartial n S N J).V (a + i)) ≤
+            (1 + 2 * C) * (sobConstParZ n S (a + i) * meshSize N ^ s * L) :=
+              mul_le_mul_of_nonneg_left h0 (by linarith)
+          _ ≤ (1 + 2 * C) * K * meshSize N ^ s * L := by
+              rw [mul_assoc (1 + 2 * C) K, mul_assoc (1 + 2 * C) (K * _)]
+              refine mul_le_mul_of_nonneg_left ?_ (by linarith)
+              rw [mul_assoc, mul_assoc]
+              exact mul_le_mul_of_nonneg_right (by linarith [hKi i]) (mul_nonneg hh hL0)
+      have hB : ∀ hx : xi ∈ ((complexPart n J).d (a + i) (a + i + 1)).domain,
+          (1 + 2 * C) * Metric.infDist ((complexPart n J).d (a + i) (a + i + 1) ⟨xi, hx⟩)
+            ((polyPartial n S N J).V (a + i + 1)) ≤ (1 + 2 * C) * K * meshSize N ^ s * L := by
+        intro hx
+        have h1 := infDist_polyPartial_le_sobAtPar J S hs0 hs1 N ((hζ i).2 hx)
+        have hs := sobConstParZ_nonneg (n := n) S (a + i)
+        calc (1 + 2 * C) * Metric.infDist ((complexPart n J).d (a + i) (a + i + 1) ⟨xi, hx⟩)
+              ((polyPartial n S N J).V (a + i + 1)) ≤
+            (1 + 2 * C) * (sobConstParZ n S (a + i + 1) * meshSize N ^ s * L) :=
+              mul_le_mul_of_nonneg_left h1 (by linarith)
+          _ ≤ (1 + 2 * C) * K * meshSize N ^ s * L := by
+              rw [mul_assoc (1 + 2 * C) K, mul_assoc (1 + 2 * C) (K * _)]
+              refine mul_le_mul_of_nonneg_left ?_ (by linarith)
+              rw [mul_assoc, mul_assoc]
+              exact mul_le_mul_of_nonneg_right (by linarith [hKi i]) (mul_nonneg hh hL0)
+      obtain ⟨v, hv, h1, h2⟩ := exists_mem_le_proj (hE.proj N) hC (hE.norm_proj_le N)
+        (j := a + i) xi hA hB hε
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩
+  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
+  rw [Fintype.card_fin]
+
+variable {J} in
+/-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation in `HΛ_J(Q)` for
+solutions bounded in `Hˢ_J(Q)` uniformly on `[t₀, t₁]`, `0 ≤ s ≤ 1`**, on every window, for
+every class `J`. -/
+theorem ParitySmoothingEstimates.norm_sub_le_window_sobolevPar {S : PolySeq}
+    {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
+    {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
+    {ξ ξ' : ℝ → ((complexPart n J).window a m).totalD.GraphSpace}
+    (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
+    {ξh ξh' : ℕ → ℝ → ((complexPart n J).window a m).totalD.GraphSpace}
+    (hξh : ∀ N, HodgeWave.IsSemidiscreteSolution (((polyPartial n S N J).window a m).graphSub)
+      (Set.Icc t₀ t₁) (ξh N) (ξh' N))
+    (h0 : ∀ N, ξh N t₀ =
+      HodgeWave.ellipticProjection (((polyPartial n S N J).window a m).graphSub) (ξ t₀))
+    {L : ℝ} (hL0 : 0 ≤ L)
+    (hreg : ∀ τ ∈ Set.Icc t₀ t₁, ∀ i : Fin m,
+      SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst (ξ τ) i) ∧
+        SobCompPar n J s L (((complexPart n J).window a m).totalD.graphFst (ξ' τ) i))
+    (N : ℕ) {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
+    ‖((complexPart n J).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
+      (1 + ‖HodgeWave.shiftedForm ((complexPart n J).window a m).totalD‖ / ((1 / 2) / √3)) *
+        (1 + (t - t₀)) ^ 2 * (((m : ℝ) + m * m) * ((1 + 2 * C) * (∑ i : Fin m,
+          (sobConstParZ n S (a + i) + sobConstParZ n S (a + i + 1))) * meshSize N ^ s * L)) :=
+  ((polyPartial n S N J).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (fun τ hτ =>
+    ⟨hE.exists_mem_window_le_sobPar hs0 hs1 hL0 (ξ τ) (fun i => (hreg τ hτ i).1) N,
+      hE.exists_mem_window_le_sobPar hs0 hs1 hL0 (ξ' τ) (fun i => (hreg τ hτ i).2) N⟩) ht
 
 end Parity
 

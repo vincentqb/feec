@@ -30,6 +30,9 @@ of the one on `Q` with time rescaled by `a` (`Ident.waveGroup_pull`,
   `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = curl B₀ = 0`;
 * `Ident.forward_iff_pi`, `Ident.mem_invariantCore_tsd_iff_pi`: the cube `(0, π)³`.
 
+The comparison of the mirror complex on `Q` with the minimal and maximal realizations is in
+`Feec.Models.Cube.MirrorDirichlet`.
+
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],

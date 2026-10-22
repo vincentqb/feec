@@ -27,8 +27,8 @@ one constant on every family that is **shape regular** in the sense of `Feec.Mes
   `sup_{T̂} ‖u‖, Lip_{T̂}(u) ≤ A₀ ‖u‖_{L²(T̂)}`, then on every shape-regular `T`
   `h_T^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with
   `A = invConst n k A₀ C c`. Instances: every affine-invariant `V ≤ P_rΛᵏ`
-  (`exists_inverse_bound_of_le_polySpace`), in particular `P_rΛᵏ` and `P_r⁻Λᵏ`, and the Whitney
-  forms `P₁⁻Λᵏ`, coefficientwise (`exists_inverse_bound_p1MinusForms`).
+  (`exists_inverse_bound_of_le_polySpace`), in particular `P_rΛᵏ`
+  (`exists_inverse_bound_polySpace`) and `P_r⁻Λᵏ`, and the Whitney forms `P₁⁻Λᵏ`, coefficientwise (`exists_inverse_bound_p1MinusForms`).
 * **DOF estimates** (`dof_bound_of_ref`): `h_Tᵏ sup_T ‖u‖ ≤ 2ⁿ (n C)ᵏ B Σⱼ |ℓⱼ(F_T^* u)|` for any
   family `ℓ` of functionals with `sup_{T̂} ‖v‖ ≤ B Σⱼ |ℓⱼ(v)|`; for unisolvent DOFs on polynomial
   spaces `exists_dof_bound_of_le_polySpace` (for moment DOFs `ℓⱼ(F_T^* u)` are the moments of `u`
@@ -422,6 +422,18 @@ theorem exists_inverse_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (For
   exact inverse_bound_of_ref (fun u hu x => isDeg_of_mem_polySpace (hV hu) x)
     (fun u hu => (polySpace_le_c1 (hV hu)).continuous) (fun T u hu => hVA _ _ u hu) hA₀ href hC
     hc hh hB hBs hdet hu
+
+/-- **Inverse estimates on shape-regular simplices for `P_rΛᵏ`.** -/
+theorem exists_inverse_bound_polySpace (r k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
+    ∃ A, 0 ≤ A ∧ ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
+      ∀ T ∈ S, 0 < diam T → ∀ u ∈ polySpace n r k,
+        (∀ x ∈ T.closedInterior, √(diam T) ^ n * ‖u x‖ ≤
+          A * √(formL2Sq T.closedInterior u)) ∧
+        (∀ x ∈ T.closedInterior, ∀ x' ∈ T.closedInterior,
+          √(diam T) ^ n * diam T * ‖u x - u x'‖ ≤
+            A * ‖x - x'‖ * √(formL2Sq T.closedInterior u)) :=
+  exists_inverse_bound_of_le_polySpace le_rfl (fun B b _ hu => affinePullback_mem_polySpace B b hu)
+    hC hc
 
 /-- **Inverse estimates on shape-regular simplices for the Whitney forms `P₁⁻Λᵏ`**, coefficient-
 wise: `h_T^{n/2} |u(x)ₛ| ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T |u(x)ₛ - u(x')ₛ| ≤

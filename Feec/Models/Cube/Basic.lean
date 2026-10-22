@@ -22,7 +22,8 @@ and does not depend on either.
 * (namespace `Geometry`) `Q d = (0, ½)ᵈ`, `openCube b s = ∏ (bᵢ, bᵢ + s)`; **`measurePreserving_proj_Q`**: the covering
   map `proj : ℝᵈ → 𝕋ᵈ` is measure preserving from `Q` onto the box; `setIntegral_boxSet`.
 * `resQ`, `resQF`: restriction of torus fields to `Q`; `per`, `isSmooth_per`, `partialT_per`,
-  `integral_mul_per`: periodization of test functions supported in `Q`.
+  `integral_mul_per`: periodization of test functions supported in `Q`; **`resQ_isWeakFO`**: weak
+  first-order operators on `𝕋ᵈ` restrict to weak first-order operators on `Q`.
 * `reflB ε`, `piece ε`: the reflections of `𝕋ᵈ` and the `2ᵈ` reflected boxes;
   **`integral_eq_sum_box`** (the tiling, up to the null set `faceSet`);
   `mFourierCoeff_comp_reflB`: `(g ∘ R_ε)^ = ĝ ∘ flip_ε`.
@@ -30,11 +31,14 @@ and does not depend on either.
   **`eq_zero_of_resQ_eq_zero`**: parity fields are determined by their restriction to `Q`
   (`norm_comp_reflB_ae`: the Fourier-side parity criterion).
 * `ext c Φ`: the parity extension of a test function for a sign vector `c`; `ext_reflB`,
-  `isSmooth_ext`, **`resQ_toL2_ext`** (`(ext Φ)|_Q = Φ`), **`partialT_ext`** (`∂_k ∘ ext_c = ext_{c'} ∘ ∂_k`
+  `isSmooth_ext`, **`resQ_toL2_ext`** (`(ext Φ)|_Q = Φ`), **`norm_sq_toL2_ext`**
+  (`‖ext Φ‖² = 2ᵈ ‖Φ‖²`, the factor `8` for the cube), **`partialT_ext`** (`∂_k ∘ ext_c = ext_{c'} ∘ ∂_k`
   with the parity of `x_k` reversed).
 * `compSub`, `mem_invariantCore_compSub_iff`, `mem_stationary_compSub_iff`,
   `forward_compSub_iff`, `mem_wave_domain_compress_iff`: invariant cores, stationary vectors and
   wave domains of a compression are those of the big complex.
+* **`reducingSubcomplex_compSub_fixed`**: a reducing subcomplex invariant under a finite unitary
+  action descends to the fixed (method-of-images) complex.
 
 ## References
 
@@ -395,6 +399,21 @@ theorem integral_mul_per (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
   refine integral_congr_ae ?_
   filter_upwards [coeFn_resQ f, ae_restrict_mem measurableSet_Q] with y h1 h2
   rw [per_proj_of_mem h2, h1]
+
+/-- **Restriction of weak first-order operators**: if `g = Σ α_{cp} ∂_c f_p` weakly on `𝕋ᵈ`,
+then `g|_Q = Σ α_{cp} ∂_c (f_p|_Q)` weakly on `Q` (tested against `C_c^∞(Q)`). -/
+theorem resQ_isWeakFO {P : Type*} [Fintype P] {α : d → P → ℂ}
+    {f : P → Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
+    {g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))} (h : IsWeakFO α f g)
+    (hΦ : Domain.IsTest (Q d) Φ) :
+    ∑ c, ∑ p, α c p *
+        ∫ y, resQ (f p) y * fderiv ℝ Φ y (Pi.single c 1) ∂volume.restrict (Q d) =
+      -∫ y, resQ g y * Φ y ∂volume.restrict (Q d) := by
+  have h1 := h (per Φ) (isSmooth_per hΦ)
+  rw [integral_sum_fo _ f (isSmooth_per hΦ)] at h1
+  simp only [partialT_per hΦ] at h1
+  simp only [integral_mul_per _ (hΦ.fderiv_apply _), integral_mul_per _ hΦ] at h1
+  exact h1
 
 end Per
 
@@ -776,6 +795,18 @@ theorem resQ_toL2_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.I
     Domain.coeFn_toL2 hΦ, ae_restrict_mem measurableSet_Q] with y h1 h2 h3 h4
   rw [h1, h2, h3, ext_of_mem_boxSet hΦ (proj_mem_boxSet (mem_Q.1 h4)), per_proj_of_mem h4]
 
+/-- **The norm of the extension**: `‖ext Φ‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖Φ‖²_{L²(Q)}` (`8` for the cube). -/
+theorem norm_sq_toL2_ext {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d → ℝ) → ℂ}
+    (hΦ : Domain.IsTest (Q d) Φ) :
+    ‖toL2 (continuous_ext c hΦ)‖ ^ 2 = 2 ^ Fintype.card d * ‖Domain.toL2 hΦ‖ ^ 2 := by
+  rw [← resQ_toL2_ext c hΦ]
+  refine norm_sq_eq_two_pow fun η => ?_
+  have h := toL2_ae_eq (continuous_ext c hΦ)
+  filter_upwards [h, (measurePreserving_reflB η).quasiMeasurePreserving.ae_eq_comp h] with x h1 h2
+  change ‖(toL2 (continuous_ext c hΦ) : UnitAddTorus d → ℂ) (reflB η x)‖ = _
+  rw [show (toL2 (continuous_ext c hΦ) : UnitAddTorus d → ℂ) (reflB η x) = ext c Φ (reflB η x)
+    from h2, h1, ext_reflB hc, norm_mul, norm_sign hc, one_mul]
+
 /-- `∂_k (φ ∘ R_ε) = ±(∂_k φ) ∘ R_ε`. -/
 theorem partialT_comp_reflB {φ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ (φ ∘ proj))
     (ε : d → Bool) (k : d) (x : UnitAddTorus d) :
@@ -926,6 +957,17 @@ theorem mem_wave_domain_compress_iff (h : H.ReducingSubcomplex S) (y : PiLp 2 fu
   rw [HilbertComplex.ReducingSubcomplex.dual_toHilbertComplex_d]
   exact Iff.rfl
 
+/-- A unitary preserving a closed subspace `K` and its inverse commutes with `P_K`. -/
+theorem starProjection_comm_of_invariant {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace ℝ E] (U : E ≃ₗᵢ[ℝ] E) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
+    (hU : ∀ x ∈ K, U x ∈ K) (hU' : ∀ x ∈ K, U.symm x ∈ K) (x : E) :
+    K.starProjection (U x) = U (K.starProjection x) := by
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero (u := U x)
+    (hU _ (K.starProjection_apply_mem x)) fun k hk => ?_
+  rw [← _root_.map_sub, show k = U (U.symm k) from (U.apply_symm_apply k).symm,
+    U.inner_map_map]
+  exact K.starProjection_inner_eq_zero x _ (hU' k hk)
+
 end Compression
 
 /-! ### Constraints invariant under a unitary action -/
@@ -943,6 +985,27 @@ instance instHasOrthogonalProjectionCompSub (S : ∀ i, Submodule ℝ (W i))
     ((K i).isClosed_of_hasOrthogonalProjection).preimage continuous_subtype_val
   have : CompleteSpace (compSub S K i) := hc.completeSpace_coe
   infer_instance
+
+omit [Fintype ι] in
+/-- **Invariant constraints descend to the fixed complex**: if `K` is a reducing subcomplex of `H`
+whose spaces are preserved by a finite unitary action, then `K ∩ Fix` is a reducing subcomplex
+of the fixed (method-of-images) complex. -/
+theorem reducingSubcomplex_compSub_fixed (A : H.Action Γ) {K : ∀ i, Submodule ℝ (W i)}
+    [∀ i, (K i).HasOrthogonalProjection] (hK : H.ReducingSubcomplex K)
+    (hA : ∀ g i, ∀ x ∈ K i, A.act g i x ∈ K i) :
+    A.fixedComplex.ReducingSubcomplex (compSub A.fixed K) := by
+  have hS : ∀ i (x : A.fixed i), ∃ y : A.fixed i,
+      A.reducingSubcomplex_fixed.toScaledEmbedding.J i y = (K i).starProjection
+        (A.reducingSubcomplex_fixed.toScaledEmbedding.J i x) := by
+    intro i x
+    refine ⟨⟨(K i).starProjection x, fun g => ?_⟩, rfl⟩
+    have hinv : ∀ y ∈ K i, (A.act g i).symm y ∈ K i := fun y hy => by
+      have e : (A.act g i).symm y = A.act g⁻¹ i y := by
+        apply (A.act g i).injective
+        rw [LinearIsometryEquiv.apply_symm_apply, A.act_act_inv]
+      rw [e]; exact hA g⁻¹ i y hy
+    rw [← starProjection_comm_of_invariant (A.act g i) (K i) (hA g i) hinv, x.2 g]
+  exact A.reducingSubcomplex_fixed.toScaledEmbedding.reducingSubcomplex_comap hK hS
 
 end Action
 

@@ -33,7 +33,9 @@ inequality used by the optimal finite element rates of `Feec.Models.Cube.Sobolev
 * **The torus** (`HasWeakDerivT`, `HasWeakDerivsT`, with `iterPartialT`, test functions the smooth
   functions of `𝕋ⁿ`): `x ∈ Hᵐ(𝕋ⁿ; Λᵏ)` iff every component of `physF k x` has weak derivatives up
   to order `m` in `L²(𝕋ⁿ)` (**`memSob_nat_iff`**; `⇐` by testing against the characters, the pure
-  derivatives `∂_j^m` and the power-mean inequality).
+  derivatives `∂_j^m` and the power-mean inequality). Hence **`mem_sobolevPar_nat_iff`**:
+  `u ∈ Hᵐ_J(Q)` iff the parity extension `JfJ J k u` has weak derivatives up to order `m` in
+  `L²(𝕋ⁿ)`.
 * **The parity classes of every integer order, intrinsically on `Q`**
   (**`mem_sobolevPar_add_one_iff`**): `u ∈ H^{m+1}_J(Q; Λᵏ)` iff `u ∈ H¹_J(Q; Λᵏ)` and every first
   weak derivative `∂_j u` (in `L²(Q)`) lies in `Hᵐ_{J ∆ {j}}(Q; Λᵏ)` (`∂_j` flips the parity in
@@ -915,6 +917,15 @@ theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
         congr 2
         refine Finset.sum_congr rfl fun j _ => ?_
         rw [norm_cf_sq_eq_sum k, Finset.mul_sum]
+
+/-- **`mem_sobolevPar_nat_iff`**: `u ∈ Hᵐ_J(Q; Λᵏ)` (`m ∈ ℕ`) iff every component of the parity
+extension `JfJ J k u` (as a function on `𝕋ⁿ`, `physF k (JfJ J k u)`) has weak derivatives up to
+order `m` in `L²(𝕋ⁿ)`. -/
+theorem mem_sobolevPar_nat_iff (J : Finset (Fin n)) (m : ℕ)
+    (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
+    u ∈ sobolevPar J k m ↔ ∀ t, HasWeakDerivsT m (physF k (JfJ J k u) t) := by
+  rw [mem_sobolevPar]
+  exact memSob_nat_iff _ m
 
 end Torus
 

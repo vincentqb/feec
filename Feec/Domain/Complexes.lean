@@ -16,7 +16,7 @@ complexes on any open `Ω ⊆ E`, of any length:
 * the **maximal complex** (`maximalComplex`, "`H`", no boundary condition): `d k = (A k)_max`;
 
 and the two families are dual to each other: the adjoint of the minimal complex is the maximal
-complex of the formal adjoints (`dual_minimalComplex_d`), and vice versa by taking adjoints.
+complex of the formal adjoints and vice versa (`dual_minimalComplex_d`, `dual_maximalComplex_d`).
 The three-term versions are `ShortHilbertComplex`es (`ConstCoeffOp.shortMinimal`,
 `ConstCoeffOp.shortMaximal`).
 
@@ -209,6 +209,11 @@ maximal complex of the formal adjoints, `(d_min)ᵏ† = (A kᵗ)_max`. -/
 theorem dual_minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     (C.minimalComplex hΩ).dual.d (k + 1) k = (C.A k).formalAdj.maximal Ω := by
   rw [HilbertComplex.dual_d, minimalComplex_d, ConstCoeffOp.adjoint_minimal]
+
+/-- The dual of the maximal complex is the minimal complex of the formal adjoints. -/
+theorem dual_maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
+    (C.maximalComplex hΩ).dual.d (k + 1) k = (C.A k).formalAdj.minimal Ω := by
+  rw [HilbertComplex.dual_d, maximalComplex_d, ConstCoeffOp.adjoint_maximal _ hΩ]
 
 end ConstCoeffComplex
 

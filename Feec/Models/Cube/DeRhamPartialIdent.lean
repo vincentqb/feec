@@ -16,7 +16,7 @@ graph-norm closure of the forms of `D(d_max)` vanishing a.e. near the faces norm
 (`faceNbhd`, `VanishNear`, `coreSub`): it is closed (`isClosed_dPart`),
 `d_min ≤ d_J ≤ d_max` (`minimal_le_dPart`, `dPart_le_maximal`), `d_∅ = d_max` (`dPart_empty`),
 and the `d_J` form a Hilbert complex `HQpartZ` on `ℤ` (`mapsTo_dPart`, `dPart_comp`: `d_max` is
-local, `maximal_vanishNear`). On `Q`, `d_univ = d_min`.
+local, `maximal_vanishNear`). On `Q`, `d_univ = d_min` (`dPart_univ`).
 
 **The identification** (`HQpart_eq_compress`). The per-direction parity extension `JfJ J k`
 (odd in `x_j` for the tangential components when `j ∈ J`, for the normal components when
@@ -33,6 +33,8 @@ it. Both inclusions:
   **smooth forms with vanishing tangential trace on the `J`-faces lie in `D(d_J)`**
   (`mem_dPart_of_smooth`, by the `J`-direction cut-off `χ_m ψ` with the commutator bound), so
   closedness gives `u ∈ D(d_J)` (`mem_dPart_of_JfJ`).
+
+Conversely Green's identity characterizes `D(d_J)` (`greenForJ_iff`).
 
 **Hodge theory of `HΛ_J(Q)`** (`Hpart n J`, the complex on `ℤ`; `HQpart n J`, its window). The
 Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d_J) ∩ (𝔷ⁱ)ᗮ` (`Hpart_norm_le`), the compactness
@@ -53,8 +55,8 @@ The constant is the one of the torus, `(2π)⁻¹`.
 * **`coeff_d_of_greenForJ`**, **`greenForJ_dPart`**, `coeff_d_dPart`.
 * `isClosed_dPart`, `minimal_le_dPart`, `dPart_le_maximal`, `dPart_empty`, **`maximal_vanishNear`**,
   `mapsTo_dPart`.
-* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**,
-  **`HQpart_eq_compress`**.
+* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**, **`greenForJ_iff`**,
+  **`HQpart_eq_compress`**, **`dPart_univ`**.
 * **`Hpart_norm_le`**, **`Hpart_hasCompactProperty`**, `Hpart_closedRangeAt`,
   **`Hpart_harmonic_eq_bot`**, **`Hpart_harmonic_card`**, `finrank_Hpart_cohomology`.
 
@@ -1162,6 +1164,25 @@ theorem mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ} {ψ : formIdx n k →
       filter_upwards [hev y hy] with m hm
       exact (apply_congr_of_eventuallyEq _ hm q).symm
 
+/-- `mem_dPart_of_smooth` without the integrability hypotheses: a smooth form and its exterior
+derivative are square integrable on the bounded cube `Q`, and the form lies in `D(d_J)` with
+`d_J ψ = d ψ`. -/
+theorem exists_mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ}
+    {ψ : formIdx n k → (Fin n → ℝ) → ℝ} (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) {M : ℝ}
+    (hM : ∀ s y, |ψ s y| ≤ M) {L : ℝ} (hL0 : 0 ≤ L)
+    (hL : ∀ s j y, |fderiv ℝ (ψ s) y (Pi.single j 1)| ≤ L)
+    (hV : ∀ s j, j ∈ J → j ∉ s.1 → ∀ y : Fin n → ℝ, (y j = 0 ∨ y j = 1 / 2) → ψ s y = 0) :
+    ∃ (hψL : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))))
+      (hdψL : ∀ t, MemLp ((extDerivOp ℝ n k).apply ψ t) 2 (volume.restrict (Q (Fin n)))),
+      (toL2F hψL, toL2F hdψL) ∈ (dPart (Q (Fin n)) J k).graph := by
+  have hψL : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))) := fun s =>
+    Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn (hψ s).continuous
+  have hdψL : ∀ t, MemLp ((extDerivOp ℝ n k).apply ψ t) 2 (volume.restrict (Q (Fin n))) :=
+    fun t => Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn
+      ((extDerivOp ℝ n k).continuous_apply (Feec.Domain.extDerivOp_isOrderLE k)
+        (fun s => (hψ s).of_le (by exact_mod_cast le_top)) t)
+  exact ⟨hψL, hdψL, mem_dPart_of_smooth hψ hM hL0 hL hV hψL hdψL⟩
+
 end Smooth
 
 /-! ### The extension reflects the domains of `d_J` -/
@@ -1251,6 +1272,21 @@ theorem mem_dPart_of_JfJ {J : Finset (Fin n)} {k : ℕ}
   rw [← coeff_d_dPart J k ⟨u, hu⟩ m]
   exact h m
 
+/-- **The Green characterization of `D(d_J)`**: `u ∈ D(d_J)` with `d_J u = w` iff Green's identity
+`⟪w, φ dx_t⟫ = ⟪u, dᵗ(φ dx_t)⟫` holds against the smooth `φ` (bounded, with bounded first
+derivatives) vanishing on the faces normal to the directions of `t ∖ J`, i.e. against the smooth
+forms whose normal components vanish on the faces not normal to `J`. -/
+theorem greenForJ_iff {J : Finset (Fin n)} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
+    {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))} :
+    GreenForJ J k u w ↔ ∃ h : u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain,
+      dPart (Q (Fin n)) J (k : ℤ) ⟨u, h⟩ = w := by
+  constructor
+  · intro hG
+    obtain ⟨h, e⟩ := mem_dPart_of_JfJ (J := J) (k := k) fun m => coeff_d_of_greenForJ hG m
+    exact ⟨h, injective_JfJ J (k + 1) e⟩
+  · rintro ⟨h, rfl⟩
+    exact greenForJ_dPart J k ⟨u, h⟩
+
 end Converse
 
 /-! ### `HΛ_J(Q)` is the compression of the torus complex along the mixed extension -/
@@ -1313,6 +1349,35 @@ theorem HQpart_eq_compress (J : Finset (Fin n)) :
   · refine injective_JfJ J (b : ℕ) ?_
     change JJ J b _ = JJ J b _
     rw [Feec.HilbertComplex.J_compress_d, ← (mapsTo_comm_part J a b ⟨x, hx⟩).2]
+
+/-- **`d_univ = d_min` on `Q`**: vanishing tangential traces on all the faces is `H̊Λ(Q)`. -/
+theorem dPart_univ (k : ℤ) :
+    dPart (Q (Fin n)) Finset.univ k = (extDerivOp ℝ n k).minimal (Q (Fin n)) := by
+  rcases k with k | k
+  · show dPart (Q (Fin n)) Finset.univ ((k : ℕ) : ℤ) =
+      (extDerivOp ℝ n ((k : ℕ) : ℤ)).minimal (Q (Fin n))
+    refine LinearPMap.ext (Submodule.ext fun x => ⟨fun hx => ?_, fun hx => ?_⟩)
+      fun x hx hx' => ?_
+    · have := mem_minimal_of_Jf (u := x)
+        (y := JfJ Finset.univ (k + 1) (dPart (Q (Fin n)) Finset.univ (k : ℤ) ⟨x, hx⟩))
+        fun m => by rw [← JfJ_univ]; exact coeff_d_dPart Finset.univ k ⟨x, hx⟩ m
+      exact this.1
+    · have := mem_dPart_of_JfJ (J := Finset.univ) (u := x)
+        (y := Jf true (k + 1) ((extDerivOp ℝ n (k : ℤ)).minimal (Q (Fin n)) ⟨x, hx⟩))
+        fun m => by rw [JfJ_univ]; exact coeff_d_minimal true k ⟨x, hx⟩ m
+      exact this.1
+    · refine injective_JfJ Finset.univ (k + 1) (Lp.ext_count fun m => ?_)
+      rw [← coeff_d_dPart Finset.univ k ⟨x, hx⟩ m, JfJ_univ, JfJ_univ,
+        ← coeff_d_minimal true k ⟨x, hx'⟩ m]
+  · have : Subsingleton (L2F ℝ (Q (Fin n)) (formIdx n (Int.negSucc k))) :=
+      hlow _ _ (Int.negSucc_lt_zero k)
+    refine LinearPMap.ext (Subsingleton.elim _ _) fun x hx hx' => ?_
+    have h1 : (⟨x, hx⟩ : (dPart (Q (Fin n)) Finset.univ (Int.negSucc k)).domain) = 0 :=
+      Subtype.ext (Subsingleton.elim _ _)
+    have h2 : (⟨x, hx'⟩ :
+        ((extDerivOp ℝ n (Int.negSucc k)).minimal (Q (Fin n))).domain) = 0 :=
+      Subtype.ext (Subsingleton.elim _ _)
+    rw [h1, h2, LinearPMap.map_zero, LinearPMap.map_zero]
 
 end Window
 

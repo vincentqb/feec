@@ -34,8 +34,8 @@ are checked: `S₀,ₕ` is onto (`mirror_S0_surjective`) and `grad` is injective
 * `mirror_S0_surjective`, `mirror_dt0_injective` (`grad u = 0` and vanishing DOFs on
   `{x_a = 0}` force `u = 0`: the gluing is a constant, `harmonic_zero_mesh`, with vanishing trace
   on a facet, `exists_facet_mirrorFaces`).
-* **`mirror_exists_unique`**: for dynamic data satisfying (C2) the mirror scheme has a unique
-  solution.
+* **`mirror_exists_iff`**, **`mirror_exists_iff_compatible_u`**, **`mirror_exists_unique`**: the
+  mirror scheme has a solution iff (C1)–(C3), for dynamic data iff (C2), and it is unique.
 * **`mirror_constantMode`**: the constant `1ₕ` is a nonzero element of `ker grad` on the top row
   (`σ` has no boundary condition); `⟪σₕ(t), 1ₕ⟫` is conserved by every solution
   (`Feec.BGG.DiscreteSolution.inner_σ_eq_of_d0_eq_zero`) and `σₕ ≡ 1ₕ` is a stationary solution
@@ -761,6 +761,36 @@ open scoped RealInnerProductSpace
 variable (N : ℕ)
 
 /-! ### Well-posedness of the mirror scheme (corrected Prop 6.2) -/
+
+/-- **Corrected Prop 6.2 for the mirror scheme**: for `T > 0` and a source continuous on `[0,T]`,
+(6.5) with the mirror spaces has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff (C1)
+`grad σ₀ = S₀,ₕφ₀`, (C2) `u₀ ⊥ grad (ker S₀,ₕ)` and (C3) `(grad φ₀ − f(0), grad ψ) = 0` on
+`ker S₀,ₕ`. -/
+theorem mirror_exists_iff {T : ℝ} (hT0 : 0 < T) {f : ℝ → Bot N 1} (hf : ContinuousOn f (Icc 0 T))
+    (σ₀ : Top N 0) (φ₀ : Bot N 0) (u₀ : Bot N 1) (M₀ : Top N 2) (ρ₀ : Bot N 2) :
+    (∃ s : Feec.BGG.DiscreteSolution (mirrorSegment N) T f, s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧
+      s.u 0 = u₀ ∧ s.M 0 = M₀ ∧ s.ρ 0 = ρ₀) ↔
+      (mirrorSegment N).d0 σ₀ = (mirrorSegment N).S0 φ₀ ∧
+        (∀ ψ, (mirrorSegment N).S0 ψ = 0 → ⟪u₀, (mirrorSegment N).dt0 ψ⟫ = 0) ∧
+        (∀ ψ, (mirrorSegment N).S0 ψ = 0 →
+          ⟪(mirrorSegment N).dt0 φ₀, (mirrorSegment N).dt0 ψ⟫ =
+            ⟪f 0, (mirrorSegment N).dt0 ψ⟫) := by
+  constructor
+  · rintro ⟨s, rfl, rfl, rfl, -, -⟩
+    exact Feec.BGG.DiscreteSolution.compatible hT0 s
+  · rintro ⟨h1, h2, h3⟩
+    exact Feec.BGG.exists_discreteSolution_of_continuousOn (mirror_dt0_injective N)
+      (mirror_S0_surjective N) hT0.le hf h1 h2 h3
+
+/-- **Corrected Prop 6.2 for the mirror scheme, dynamic data**: existence ⇔ (C2). -/
+theorem mirror_exists_iff_compatible_u {T : ℝ} (hT0 : 0 < T) {f : ℝ → Bot N 1}
+    (hf : ContinuousOn f (Icc 0 T)) (σ₀ : Top N 0) (u₀ : Bot N 1) (M₀ : Top N 2)
+    (ρ₀ : Bot N 2) :
+    (∃ s : Feec.BGG.DiscreteSolution (mirrorSegment N) T f, s.σ 0 = σ₀ ∧ s.u 0 = u₀ ∧
+      s.M 0 = M₀ ∧ s.ρ 0 = ρ₀) ↔
+      ∀ ψ, (mirrorSegment N).S0 ψ = 0 → ⟪u₀, (mirrorSegment N).dt0 ψ⟫ = 0 :=
+  Feec.BGG.exists_discreteSolution_iff_compatible_u hT0 (mirror_dt0_injective N)
+    (mirror_S0_surjective N) hf σ₀ u₀ M₀ ρ₀
 
 /-- **Well-posedness of the mirror scheme** for dynamic data satisfying (C2): existence, the
 forced `φₕ(0)`, and uniqueness (`σₕ, uₕ, Mₕ, ρₕ, λₕ` on `[0,T]`, `φₕ` on `[0,T)`). -/

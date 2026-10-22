@@ -12,7 +12,8 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
 `C^{s+2}` forms (`FEM.exists_mem_poly_le`), and the rate passes to the finite element methods:
 
 * `FEM.IsCsForm s j L x` (resp. `FEM.IsCsFormMin`, vanishing outside `Q`): `x` is a `C^{s+2}`
-  `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`.
+  `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`
+  (satisfiable: `exists_isCsFormMin`).
 * **Degreewise**: `‖x - v‖, ‖d(x - v)‖ ≤ B_j L h_N^{s+1}` for some `v ∈ Vₕʲ`
   (`IsCsForm.exists_mem_poly_le`, `IsCsFormMin.exists_mem_polyMin_le`), and the graph-norm
   distances (`IsCsForm.infDist_domainSub_poly_le`).
@@ -136,6 +137,22 @@ def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formI
     (∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
     (∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j ⟨w, hw.continuous⟩
+
+/-- **Every `C^{s+2}` form vanishing outside `Q` is `IsCsFormMin s`** for some bound. -/
+theorem exists_isCsFormMin (s : ℕ) {k : ℕ} {w : FormField n}
+    (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y))
+    (hsupp : ∀ y ∉ cubeDomain n, w y = 0) :
+    ∃ L, 0 ≤ L ∧ IsCsFormMin s (k : ℤ) L
+      (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
+        ⟨w, hw.continuous⟩) := by
+  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv (m := s + 1)
+    (hw.of_le (by exact_mod_cast Nat.le_succ (s + 1)))
+  have hw' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
+  have hdw : ContDiff ℝ ((s + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv hw'
+  obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv (m := s + 1) hdw
+  exact ⟨max L L', le_max_of_le_left hL0, Or.inr ⟨k, rfl, w, hw, hdeg, hsupp,
+    fun y hy => (hL y hy).trans (le_max_left _ _),
+    fun y hy => (hL' y hy).trans (le_max_right _ _), rfl⟩⟩
 
 theorem IsCsForm.mono {s : ℕ} {j : ℤ} {L L' : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsCsForm s j L x) (hLL' : L ≤ L') : IsCsForm s j L' x := by

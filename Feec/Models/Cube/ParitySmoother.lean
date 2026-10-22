@@ -29,15 +29,19 @@ classes and both rows of the BGG complex.
   `Q` tiling `(-½, 1)ⁿ`.
 * `parExt c f`: the parity extension; `ReflKernel n`: reflection-invariant mollifiers;
   `prodKernel`: a product of one-dimensional bumps, of any radius `r < ½`.
-* `smoothFun ρ c f = ρ ⋆ ext_c f`, `scalarSmooth ρ c`: the scalar parity smoother on `L²(Q)`.
+* `smoothFun ρ c f = ρ ⋆ ext_c f`, `scalarSmooth ρ c`: the scalar parity smoother on `L²(Q)`;
+  `paritySmooth ρ J k`: the parity smoother on `L²(Q; Λᵏ)`.
 * `MomentKernel n m`: reflection-invariant (signed) kernels with vanishing moments of the orders
   `1, …, m - 1`.
 
 ## Main results
 
-* `integral_sq_smoothFun_le`, `norm_scalarSmoothₗ_le`: `‖R f‖ ≤ 3^{n/2} ‖f‖`.
+* `integral_sq_smoothFun_le`, `norm_scalarSmoothₗ_le`, `norm_paritySmooth_le`: `‖R u‖ ≤ 3^{n/2} ‖u‖`.
 * `extD_smoothFun_eq`: for `u ∈ D(d_J)` the smoothed parity extension commutes with `d_J`,
-  pointwise on `cl Q`.
+  pointwise on `cl Q`; `paritySmooth_mem_dPart`, `dPart_paritySmooth`: `R u ∈ D(d_J)` and
+  `d_J R u = R d_J u`.
+* `wsL2_paritySmooth`, `wsL2_paritySmooth_symmDiff`: commutation with the algebraic BGG maps
+  `S⁰, S¹` (`wsL2`) for compatible classes, the rows `a` in the classes `J ∆ {a}`.
 * `norm_sub_scalarSmooth_le_grad`: `‖f - R f‖ ≤ r √(n 3ⁿ) ‖∇ f‖` for `f ∈ D(d_{J'})` in degree `0`
   ([Brezis2011], §9.2, for the reflection argument).
 * `integral_sq_sub_conv_le_of_moments`: the high-order estimate
@@ -768,6 +772,19 @@ theorem convolution_add_intCast {g K : (Fin n → ℝ) → ℝ}
   simp only [hg]
   congr 2; abel
 
+/-- **A continuous periodic function is bounded.** -/
+theorem exists_bound_of_periodic {F : (Fin n → ℝ) → ℝ} (hF : Continuous F)
+    (hper : ∀ x (m : Fin n → ℤ), F (x + fun j => (m j : ℝ)) = F x) : ∃ M, ∀ x, |F x| ≤ M := by
+  obtain ⟨M, hM⟩ := (isCompact_univ_pi fun _ => isCompact_Icc (a := (0 : ℝ)) (b := 1)).exists_bound_of_continuousOn hF.continuousOn
+  refine ⟨M, fun x => ?_⟩
+  have hmem : (x - fun j => ((⌊x j⌋ : ℤ) : ℝ)) ∈ univ.pi fun _ => Icc (0 : ℝ) 1 := by
+    intro j _
+    simp only [Pi.sub_apply, Set.mem_Icc]
+    exact ⟨sub_nonneg.2 (Int.floor_le _), by linarith [Int.lt_floor_add_one (x j)]⟩
+  have h := hM _ hmem
+  rw [Real.norm_eq_abs, ← hper _ fun j => ⌊x j⌋, sub_add_cancel] at h
+  exact h
+
 section SmoothFun
 
 variable (ρ : ReflKernel n) (c : Fin n → ℝ)
@@ -842,6 +859,28 @@ theorem smoothFun_eq_zero {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n → 
       rw [hy, show (1 : ℝ) - 1 / 2 = 1 / 2 by norm_num, ← hy, Function.update_eq_self]
     rw [e, hcj] at h
     linarith
+
+/-- The smoothed extension is bounded. -/
+theorem exists_bound_smoothFun {f : (Fin n → ℝ) → ℝ} (hf : IntegrableOn f (Q (Fin n))) :
+    ∃ M, ∀ y, |smoothFun ρ c f y| ≤ M :=
+  exists_bound_of_periodic (contDiff_smoothFun ρ c hf).continuous (smoothFun_add_intCast ρ c f)
+
+/-- The first partial derivatives of the smoothed extension are bounded. -/
+theorem exists_bound_fderiv_smoothFun {f : (Fin n → ℝ) → ℝ} (hf : IntegrableOn f (Q (Fin n))) :
+    ∃ L, 0 ≤ L ∧ ∀ j y, |fderiv ℝ (smoothFun ρ c f) y (Pi.single j 1)| ≤ L := by
+  have hb : ∀ j : Fin n, ∃ M, ∀ y, |fderiv ℝ (smoothFun ρ c f) y (Pi.single j 1)| ≤ M := by
+    intro j
+    have hcont : Continuous fun y => fderiv ℝ (smoothFun ρ c f) y (Pi.single j 1) :=
+      ((contDiff_smoothFun ρ c hf).continuous_fderiv (by simp)).clm_apply continuous_const
+    refine exists_bound_of_periodic hcont fun y m => ?_
+    rw [smoothFun, fderiv_convolution_apply ρ.isTest (locallyIntegrable_parExt c hf),
+      fderiv_convolution_apply ρ.isTest (locallyIntegrable_parExt c hf)]
+    exact convolution_add_intCast (fun x m => parExt_add_intCast c f x m) y m
+  choose M hM using hb
+  refine ⟨∑ j, max (M j) 0, Finset.sum_nonneg fun j _ => le_max_right _ _, fun j y => ?_⟩
+  exact (hM j y).trans ((le_max_left _ _).trans
+    (Finset.single_le_sum (f := fun j => max (M j) 0) (fun j _ => le_max_right _ _)
+      (Finset.mem_univ j)))
 
 theorem eq_zero_of_notMem_bigCube {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2))
     {t : Fin n → ℝ} (ht : t ∉ bigCube n) : ρ (y - t) = 0 := by
@@ -1333,16 +1372,143 @@ theorem norm_scalarSmoothₗ_le {c : Fin n → ℝ} (hc : IsParity c) (f : L2 �
   exact h2
 
 /-- **The scalar parity smoother** `R_c f = (ρ ⋆ ext_c f)|_Q` on `L²(Q)`, bounded by
-`3^{n/2}` (`norm_scalarSmoothₗ_le`). -/
+`3^{n/2}` (`norm_scalarSmooth_le`). -/
 def scalarSmooth (c : Fin n → ℝ) (hc : IsParity c) : L2 ℝ (Q (Fin n)) →L[ℝ] L2 ℝ (Q (Fin n)) :=
   (scalarSmoothₗ ρ c).mkContinuous (√(3 ^ n)) (norm_scalarSmoothₗ_le ρ hc)
+
+theorem scalarSmooth_apply (c : Fin n → ℝ) (hc : IsParity c) (f : L2 ℝ (Q (Fin n))) :
+    scalarSmooth ρ c hc f = (memLp_smoothFun ρ c f).toLp _ := rfl
 
 theorem coeFn_scalarSmooth (c : Fin n → ℝ) (hc : IsParity c) (f : L2 ℝ (Q (Fin n))) :
     (scalarSmooth ρ c hc f : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict (Q (Fin n))]
       smoothFun ρ c (f : (Fin n → ℝ) → ℝ) :=
   MemLp.coeFn_toLp (memLp_smoothFun ρ c f)
 
+theorem norm_scalarSmooth_le (c : Fin n → ℝ) (hc : IsParity c) (f : L2 ℝ (Q (Fin n))) :
+    ‖scalarSmooth ρ c hc f‖ ≤ √(3 ^ n) * ‖f‖ :=
+  norm_scalarSmoothₗ_le ρ hc f
+
+theorem scalarSmooth_congr {c c' : Fin n → ℝ} (hc : IsParity c) (hc' : IsParity c') (h : c = c') :
+    scalarSmooth ρ c hc = scalarSmooth ρ c' hc' := by
+  subst h; rfl
+
 variable (J : Finset (Fin n))
+
+/-- The parity smoother on `k`-forms of the class `J`, as a linear map. -/
+def paritySmoothₗ (k : ℤ) : L2F ℝ (Q (Fin n)) (formIdx n k) →ₗ[ℝ] L2F ℝ (Q (Fin n)) (formIdx n k) where
+  toFun u := WithLp.toLp 2 fun s => scalarSmooth ρ (pvec J s.1) (isParity_pvec J s.1) (u s)
+  map_add' u v := by
+    refine (WithLp.ext_iff 2).2 (funext fun s => ?_)
+    simp only [PiLp.add_apply, map_add]
+  map_smul' a u := by
+    refine (WithLp.ext_iff 2).2 (funext fun s => ?_)
+    simp only [PiLp.smul_apply, map_smul, RingHom.id_apply]
+
+theorem norm_paritySmoothₗ_le (k : ℤ) (u : L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    ‖paritySmoothₗ ρ J k u‖ ≤ √(3 ^ n) * ‖u‖ :=
+  L2F.norm_le_of_forall (by positivity) fun s =>
+    norm_scalarSmooth_le ρ (pvec J s.1) (isParity_pvec J s.1) (u s)
+
+/-- **The parity smoother** `R^J_ρ u = (ρ ⋆ ext_J u)|_Q` on `L²(Q; Λᵏ)`: componentwise the
+smoothed parity extension with the parities `c(J, s)` of the class `J` (`pvec`). It is bounded by
+`3^{n/2}` (`norm_paritySmooth_le`), smooth and in the class `J`, hence in `D(d_J)`
+(`paritySmooth_mem_dPart`), and commutes with `d_J` (`dPart_paritySmooth`). -/
+def paritySmooth (k : ℤ) : L2F ℝ (Q (Fin n)) (formIdx n k) →L[ℝ] L2F ℝ (Q (Fin n)) (formIdx n k) :=
+  (paritySmoothₗ ρ J k).mkContinuous (√(3 ^ n)) (norm_paritySmoothₗ_le ρ J k)
+
+theorem paritySmooth_apply (k : ℤ) (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s : formIdx n k) :
+    paritySmooth ρ J k u s = scalarSmooth ρ (pvec J s.1) (isParity_pvec J s.1) (u s) := rfl
+
+/-- **`L²` bound of the parity smoother**: `‖R u‖ ≤ 3^{n/2} ‖u‖`. -/
+theorem norm_paritySmooth_le (k : ℤ) (u : L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    ‖paritySmooth ρ J k u‖ ≤ √(3 ^ n) * ‖u‖ :=
+  norm_paritySmoothₗ_le ρ J k u
+
+/-- The smoothed components `ψ_s = ρ ⋆ ext_{c(J,s)} u_s`. -/
+def smoothComp {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s : formIdx n k) :
+    (Fin n → ℝ) → ℝ :=
+  smoothFun ρ (pvec J s.1) ((u s : L2 ℝ (Q (Fin n))) : (Fin n → ℝ) → ℝ)
+
+theorem memLp_smoothComp {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s : formIdx n k) :
+    MemLp (smoothComp ρ J u s) 2 (volume.restrict (Q (Fin n))) :=
+  memLp_smoothFun ρ (pvec J s.1) (u s)
+
+theorem paritySmooth_eq_toL2F {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    paritySmooth ρ J k u = toL2F (memLp_smoothComp ρ J u) :=
+  PiLp.ext fun s => by rw [paritySmooth_apply, scalarSmooth_apply]; rfl
+
+theorem contDiff_smoothComp {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s : formIdx n k) :
+    ContDiff ℝ ∞ (smoothComp ρ J u s) :=
+  contDiff_smoothFun ρ _ (integrableOn_L2 _)
+
+/-- **The smoothed field is in the class `J`**: its components have the parities `c(J, s)` about
+every face of `Q` (and are `1`-periodic). -/
+theorem smoothComp_coordRefl {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s : formIdx n k)
+    (j : Fin n) (y : Fin n → ℝ) :
+    smoothComp ρ J u s (coordRefl j y) = pvec J s.1 j * smoothComp ρ J u s y :=
+  smoothFun_coordRefl ρ (isParity_pvec J s.1) _ j y
+
+theorem smoothComp_update_one_sub {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k))
+    (s : formIdx n k) (j : Fin n) (y : Fin n → ℝ) :
+    smoothComp ρ J u s (Function.update y j (1 - y j)) = pvec J s.1 j * smoothComp ρ J u s y :=
+  smoothFun_update_one_sub ρ (isParity_pvec J s.1) _ j y
+
+/-- **The tangential components of the smoothed field vanish on the faces normal to `J`.** -/
+theorem smoothComp_eq_zero_of_tangential {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k))
+    (s : formIdx n k) {j : Fin n} (hjJ : j ∈ J) (hjs : j ∉ s.1) {y : Fin n → ℝ}
+    (hy : y j = 0 ∨ y j = 1 / 2) : smoothComp ρ J u s y = 0 :=
+  smoothFun_eq_zero ρ (isParity_pvec J s.1) _ (pvec_of_mem_of_notMem hjJ hjs) hy
+
+/-- **The normal components of the smoothed field vanish on the faces not normal to `J`.** -/
+theorem smoothComp_eq_zero_of_normal {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k))
+    (s : formIdx n k) {j : Fin n} (hjJ : j ∉ J) (hjs : j ∈ s.1) {y : Fin n → ℝ}
+    (hy : y j = 0 ∨ y j = 1 / 2) : smoothComp ρ J u s y = 0 :=
+  smoothFun_eq_zero ρ (isParity_pvec J s.1) _ (pvec_of_notMem_of_mem hjJ hjs) hy
+
+theorem exists_graph_paritySmooth {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    ∃ hdψ : ∀ t, MemLp ((extDerivOp ℝ n k).apply (smoothComp ρ J u) t) 2
+        (volume.restrict (Q (Fin n))),
+      (paritySmooth ρ J k u, toL2F hdψ) ∈ (DeRhamIdent.dPart (Q (Fin n)) J k).graph := by
+  have hb : ∀ s, ∃ M, ∀ y, |smoothComp ρ J u s y| ≤ M := fun s =>
+    exists_bound_smoothFun ρ _ (integrableOn_L2 _)
+  choose M hM using hb
+  have hd : ∀ s, ∃ L, 0 ≤ L ∧ ∀ j y, |fderiv ℝ (smoothComp ρ J u s) y (Pi.single j 1)| ≤ L :=
+    fun s => exists_bound_fderiv_smoothFun ρ _ (integrableOn_L2 _)
+  choose L hL0 hL using hd
+  have hMs : ∀ s y, |smoothComp ρ J u s y| ≤ ∑ s, max (M s) 0 := fun s y =>
+    (hM s y).trans ((le_max_left _ _).trans (Finset.single_le_sum (f := fun s => max (M s) 0)
+      (fun s _ => le_max_right _ _) (Finset.mem_univ s)))
+  have hLs : ∀ s j y, |fderiv ℝ (smoothComp ρ J u s) y (Pi.single j 1)| ≤ ∑ s, L s :=
+    fun s j y => (hL s j y).trans (Finset.single_le_sum (f := L) (fun s _ => hL0 s)
+      (Finset.mem_univ s))
+  obtain ⟨hψL, hdψL, hg⟩ := DeRhamIdent.exists_mem_dPart_of_smooth (J := J)
+    (fun s => contDiff_smoothComp ρ J u s) hMs (Finset.sum_nonneg fun s _ => hL0 s) hLs
+    (fun s j hjJ hjs y hy => smoothComp_eq_zero_of_tangential ρ J u s hjJ hjs hy)
+  rw [paritySmooth_eq_toL2F]
+  exact ⟨hdψL, hg⟩
+
+/-- **`R u ∈ D(d_J)`.** -/
+theorem paritySmooth_mem_dPart (k : ℤ) (u : L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    paritySmooth ρ J k u ∈ (DeRhamIdent.dPart (Q (Fin n)) J k).domain := by
+  obtain ⟨hdψ, hg⟩ := exists_graph_paritySmooth ρ J u
+  obtain ⟨v, hv, -⟩ := (LinearPMap.mem_graph_iff _).1 hg
+  have h := v.2
+  rwa [hv] at h
+
+/-- **The parity smoother commutes with `d_J`**: `d_J (R u) = R (d_J u)` for `u ∈ D(d_J)` (no
+chain-rule factor: no dilation is involved). -/
+theorem dPart_paritySmooth (k : ℕ) (u : (DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ)).domain) :
+    DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ) ⟨_, paritySmooth_mem_dPart ρ J k u⟩ =
+      paritySmooth ρ J ((k : ℤ) + 1) (DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ) u) := by
+  obtain ⟨hdψ, hg⟩ := exists_graph_paritySmooth ρ J (u : L2F ℝ (Q (Fin n)) (formIdx n k))
+  obtain ⟨v, hv, hvd⟩ := (LinearPMap.mem_graph_iff _).1 hg
+  have hv' : v = ⟨_, paritySmooth_mem_dPart ρ J k u⟩ := Subtype.ext hv
+  rw [← hv', hvd]
+  refine (WithLp.ext_iff 2).2 (funext fun t => ?_)
+  change (hdψ t).toLp _ = (memLp_smoothFun ρ (pvec J t.1) _).toLp _
+  refine MemLp.toLp_congr _ _ (ae_restrict_of_forall_mem measurableSet_Q fun y hy => ?_)
+  rw [extDerivOp_apply]
+  exact extD_smoothFun_eq ρ J k u t fun j => Ioo_subset_Icc_self (mem_Q.1 hy j)
 
 end Operator
 
@@ -1354,6 +1520,26 @@ open Feec.FiniteElement (wsL2 wsCoeff wsL2_apply wsCoeff_eq)
 
 variable (ρ : ReflKernel n)
 
+/-- **The parity smoother commutes with the algebraic BGG maps** `S v = Σₐ dxₐ ∧ vₐ`
+(`Feec.FiniteElement.wsL2`; `S⁰` for `k = 0`, `S¹` for `k = 1`) as soon as the classes are
+compatible: every component `(a, r)` of the vector row that enters the component `t` of `S v`
+has the parity vector of `t`. One smoother then serves both rows of the BGG complex. -/
+theorem wsL2_paritySmooth (k : ℤ) (J : Finset (Fin n)) (J' : Fin n → Finset (Fin n))
+    (hJ' : ∀ (t : formIdx n (k + 1)) (p : Fin n × formIdx n k), wsCoeff k t p ≠ 0 →
+      pvec (J' p.1) p.2.1 = pvec J t.1)
+    (v : PiLp 2 fun _ : Fin n => L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    wsL2 k (WithLp.toLp 2 fun a => paritySmooth ρ (J' a) k (v a)) =
+      paritySmooth ρ J (k + 1) (wsL2 k v) := by
+  refine PiLp.ext fun t => ?_
+  rw [wsL2_apply, paritySmooth_apply, wsL2_apply, map_sum]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  rw [map_smul]
+  by_cases hp : wsCoeff k t p = 0
+  · simp [hp]
+  · congr 1
+    change paritySmooth ρ (J' p.1) k (v p.1) p.2 = _
+    rw [paritySmooth_apply, scalarSmooth_congr ρ _ _ (hJ' t p hp)]
+
 /-- `c(J ∆ {a}, t ∖ a) = c(J, t)` for `a ∈ t`: the `a`-th row of a vector of forms in the class
 `J ∆ {a}` matches the class `J` after `S`. -/
 theorem pvec_symmDiff_erase (J : Finset (Fin n)) {t : Finset (Fin n)} {a : Fin n} (ha : a ∈ t) :
@@ -1364,6 +1550,19 @@ theorem pvec_symmDiff_erase (J : Finset (Fin n)) {t : Finset (Fin n)} {a : Fin n
   · subst hj
     by_cases hJ : j ∈ J <;> simp [pvec, Finset.mem_symmDiff, hJ, ha]
   · simp [pvec, Finset.mem_symmDiff, hj, Finset.mem_erase]
+
+/-- **The compatible classes for `S`**: the rows `a` in the classes `J ∆ {a}`. For `k = 0`
+(`S⁰ = I` on vector proxies) the component `ψₐ` of a vector field in the class `J`, as a
+`0`-form, lies in the class `J ∆ {a}`. -/
+theorem wsL2_paritySmooth_symmDiff (k : ℤ) (J : Finset (Fin n))
+    (v : PiLp 2 fun _ : Fin n => L2F ℝ (Q (Fin n)) (formIdx n k)) :
+    wsL2 k (WithLp.toLp 2 fun a => paritySmooth ρ (symmDiff J {a}) k (v a)) =
+      paritySmooth ρ J (k + 1) (wsL2 k v) := by
+  refine wsL2_paritySmooth ρ k J _ (fun t p hp => ?_) v
+  rw [wsCoeff_eq] at hp
+  split_ifs at hp with h
+  · rw [← h.2, pvec_symmDiff_erase J h.1]
+  · exact absurd rfl hp
 
 end WeakSymmetry
 

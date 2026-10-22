@@ -11,7 +11,9 @@ bibliography, where the thesis and the code cite it.
 
 ## Module map
 
-The library is organized by mathematics. A layer imports only the layers above it in this table.
+The library is organized by mathematics. A layer imports only layers above it in this table, and
+only along the import relation of `docs/REFACTOR_PLAN.md` §1, a partial order checked by
+`lake exe feec-layering` (so, e.g., `Feec.Fourier` and `Feec.Domain` do not import each other).
 
 | Layer | Content | Thesis |
 |---|---|---|

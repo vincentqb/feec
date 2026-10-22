@@ -294,14 +294,38 @@ Feec/
 docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/FeecCheck/*.lean (the gate, `lake exe feec-gate`)
 ```
 
-**Import rules.** Lower layers never import higher ones; `lake exe feec-layering` enforces this
-(the rank table is `FeecCheck.Layering.layers`). The order is:
-- `ForMathlib`
-- `Operator` → `Semigroup` → `Evolution`
-- `Variational` → `HilbertComplex`
-- `Fourier` and `Domain`, alongside `Algebra` and `Geometry`
-- `Models` → `Physics` and `Counterexamples`
-- `Instances` last
+**Import rules.** The layers form a partial order (a DAG), not a chain: a layer imports only
+itself and the layers below it along the edges below (the reflexive-transitive closure), and
+layers that no path joins are independent and may not import each other.
+`lake exe feec-layering` enforces this; the edges are the table `FeecCheck.Layering.layerDeps`, which must
+match this list.
+
+| layer | imports directly (and, through them, everything they import) |
+|---|---|
+| `ForMathlib`, `Mesh` | only Mathlib |
+| `Algebra` | `ForMathlib` |
+| `Geometry` | `Algebra` |
+| `Operator` | `ForMathlib` |
+| `Semigroup` | `Operator` |
+| `Evolution` | `Semigroup` |
+| `Variational` | `Evolution` (the Galerkin error bound for evolution problems uses the energy method) |
+| `TimeStepping` | `Operator` |
+| `HilbertComplex` | `Variational` |
+| `Fourier`, `Domain` | `HilbertComplex`, `Algebra` |
+| `FiniteElement` | `Domain`, `Mesh` |
+| `Models` | `FiniteElement`, `Fourier`, `Geometry`, `TimeStepping` |
+| `Physics`, `Counterexamples` | `Models`, and each other (siblings; Lean keeps the modules acyclic) |
+| `Examples`, `Numerics` | `Physics`, `Counterexamples` |
+| `Instances` | `Examples`, `Numerics` (so every layer); imported only by `Feec.lean` |
+
+So `Fourier` and `Domain` are independent of each other and both sit above `Algebra`, which with
+`Geometry` sits beside the analytic chain `Operator` → `Semigroup` → `Evolution` → `Variational` →
+`HilbertComplex`; `TimeStepping` is independent of `Variational` and `HilbertComplex`; `Examples`
+and `Numerics` are independent. Hard rules, which `feec-layering` also checks on the table itself:
+the graph has no cycle (sibling groups contracted); `ForMathlib` and `Mesh` import no other part
+of `Feec`; nothing below the top tier (`Models`, `Physics`, `Counterexamples`, `Examples`,
+`Numerics`, `Instances`) imports a layer of it; only `Feec.lean` imports `Instances`, and it
+imports every module.
 
 This fixes today's inversion, where `Ch4/StoneApplications` imports `TorusGroup` and `BoundedDomain`.
 
@@ -584,7 +608,8 @@ Each task owns the files listed and nothing else. Tasks inside a wave are indepe
 2. `AxiomAudit` (`lake exe feec-axioms`) reports only `propext`, `Classical.choice` and `Quot.sound` for every `Feec.*` declaration.
 3. **Strangler shim.** While an old module still exists, each of its main theorems is re-proved *with its old statement* as a thin theorem calling the new result. This is the semantic proof that the new theorem subsumes the old one. Shims are deleted only in W6.
 4. **Coverage.** `lake exe feec-mapcheck --strict` checks that every row of `old_theorems.tsv` appears in `map.tsv`. Theorems that are thesis-numbered or named in `OVERVIEW.md` (the "main" set, roughly 400) may not be `deleted-helper`. Every `new` name and every `THESIS_MAP.md` entry must be a declaration of `Feec` (originally a generated `#check @Feec.X` file). Every thesis result cited as `[QuennevilleBelair2015], Prop 4.17` must also appear in `THESIS_MAP.md` (the `Thesis:` tags of the original plan are retired).
-5. `lake exe feec-naming` finds no `prop_[0-9]`, `thm_[0-9]`, `prop59`-style, `Ch[0-9]`, `_unconditional`, `Repair` or `Thesis` identifiers (nor the other bans of §1, see `FeecCheck.Naming.rules`) in the declaration and module names of `Feec`, and `lake exe feec-layering` finds no import from `Models/` in lower layers.
+5. `lake exe feec-naming` finds no `prop_[0-9]`, `thm_[0-9]`, `prop59`-style, `Ch[0-9]`, `_unconditional`, `Repair` or `Thesis` identifiers (nor the other bans of §1, see `FeecCheck.Naming.rules`) in the declaration and module names of `Feec`, and `lake exe feec-layering` finds no import outside the relation of §1 (in particular none from
+   `Models/` in lower layers).
 6. `docs/THESIS_MAP.md` is up to date (`lake exe feec-thesismap --check`).
 
 Items 2 and 4–6 and the citation check run as one command, `lake exe feec-gate` (one import of `Feec`; nonzero exit on any failure, each violation printed as `path:line: message`).

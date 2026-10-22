@@ -52,7 +52,8 @@ such as discrete Gauss laws, are preserved exactly. `ApproxFEEC.ofComplexCrime` 
 `ApproxComplexCrime.lean`) drops the cochain condition: a discrete differential `𝐝ₕ` with
 `𝐝ₕ𝐝ₕ = 0` and reading maps with a cochain defect, measured weakly; `ofComplex` is its case with
 zero cochain defect. `ApproxComplexCrime.rateClass` turns complex-level rates (best
-approximation, inner-product and cochain defects) into rate classes.
+approximation, inner-product and cochain defects) into rate classes; `rateClass_of_split` does it
+at order `min(α, β, γ)` from the three orders separately.
 
 ## Instances
 

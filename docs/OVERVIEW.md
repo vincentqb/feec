@@ -128,9 +128,13 @@ residual splitting, the defect bound, and exact preservation of `Lₕ`-invariant
 approximants along the trajectory with approximation, `‖(1 − Jₕ)wₕ‖` and residual `O(m(h)ᵅ)`, so
 `‖e^{tL}x − iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c`
 (`Feec.HilbertComplex.ApproxComplexCrime.error_le_of_rateClass`); the split rates (graph-norm best
-approximation `O(hᵅ)`, inner-product defect `O(h^β)`, cochain defect `O(h^γ)`) give order
-`min(α, β, γ)` (`Feec.HilbertComplex.ApproxComplexCrime.Family.rateData_of_split`,
-`Feec.HilbertComplex.add_rpow_le_rpow_min`). Instances: the conforming rate classes through
+approximation `O(hᵅ)`, inner-product defect `O(h^β)`, cochain defect `O(h^γ)`) give a rate class
+of order `min(α, β, γ)` with explicit constants
+(`Feec.HilbertComplex.ApproxComplexCrime.rateClass_of_split`, `error_le_of_split`; through
+`Feec.HilbertComplex.ApproxComplexCrime.Family.rateData_of_split` and
+`Feec.HilbertComplex.add_rpow_le_rpow_min`), exercised with distinct orders `(2, 1, 2)` by the
+witness `Feec.HilbertComplex.ApproxComplexCrime.mixed_nonvacuous` (inner-product defect `O(h)`,
+cochain defect exactly `h²`, rate `O(h)`). Instances: the conforming rate classes through
 `ofComplex` (`Feec.HilbertComplex.ConstrainedFEEC.RateClass.toCrimeRate`; Whitney Maxwell on the
 cube, `Feec.Instances.Maxwell.cubePMC_ofComplex_rate`, `O(h)`, factor `C + C_ι C' t`); the witness
 `scaled` at the rate of its inner-product defect `cₙ² − 1`

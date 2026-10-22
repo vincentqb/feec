@@ -84,14 +84,18 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   trajectory with approximation, inner-product defect `‖(1 - Jₕ) w‖` and residual `O(m(h)ᵅ)` give
   an `ApproxFEEC.RateClass` with `C = (1 + 8 C_ι) Cₐ`, `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`,
   hence `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
-  `Family.rateData_of_split` and `add_rpow_le_rpow_min` can be combined to give the data at order
-  `min(α, β, γ)` from graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect
-  `O(m^γ)`; `galerkinRateClass` for Galerkin cores; `ConstrainedFEEC.RateClass.toCrimeRate`: the
+  `ApproxComplexCrime.rateClass_of_split` gives a rate class at order `min(α, β, γ)` from
+  graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`
+  (`0 ≤ m ≤ 1`), with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ` in place of `Cₐ` (`C_w` bounds the approximants in the
+  discrete graph norm; through `Family.rateData_of_split` and `add_rpow_le_rpow_min`), and
+  `error_le_of_split`; `galerkinRateClass` for Galerkin cores; `ConstrainedFEEC.RateClass.toCrimeRate`: the
   conforming rate classes give rate classes of `ofComplex` (factor `C + C_ι C' t`).
 
 Non-vacuity, with a nonzero cochain defect and a non-cochain isometric reading map:
 `Feec.HilbertComplex.ApproxComplexCrime.shifted_nonvacuous`
-(`Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness`). Instances: the scheme (6.5) of
+(`Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness`); with distinct orders in
+`rateClass_of_split` (inner-product defect `O(h)`, cochain defect and graph-norm error `O(h²)`,
+rate class of order `1`): `Feec.HilbertComplex.ApproxComplexCrime.mixed_nonvacuous`. Instances: the scheme (6.5) of
 [QuennevilleBelair2015] with both boundary conditions (`Feec.Instances.EinsteinBianchiFEMComplex`)
 and the Whitney discretizations of Maxwell on the cube (`Feec.Instances.MaxwellComplex`).
 
@@ -1269,9 +1273,9 @@ exact trajectory, for `y = e^{tL} x` and `y = e^{tL} L x`, `t ∈ [0, T]`, there
 `w` with `‖y - iₕ w‖`, `‖(1 - Jₕ) w‖` and the residual (dual discrete graph norm) all
 `≤ Cₐ m(h)ᵅ ‖x‖_c`, then the comparison of `ofComplexCrimeCore` restricted to `Dc` is a rate class
 with `C = (1 + 8 C_ι) Cₐ` and `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. The data can be
-assembled with `rateData_of_split` and `add_rpow_le_rpow_min` from graph-norm best approximation
-`O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`, at order `min(α, β, γ)` (no
-lemma packages this step). -/
+assembled from graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain
+defect `O(m^γ)`, at order `min(α, β, γ)`, by `rateClass_of_split` (through `rateData_of_split` and
+`add_rpow_le_rpow_min`). -/
 def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (hrate : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T, ∀ y ∈ ({H.waveGroup.S t x,
@@ -1760,5 +1764,154 @@ theorem complexify_galerkin (hF : F.IsOrthogonal) (h : κ') (a b : F.X h) (z : P
 end ApproxFEEC
 
 end Complexify
+
+
+/-! ### Rates at order `min(α, β, γ)` from the split estimates -/
+
+section RateSplit
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+
+namespace ApproxComplexCrime
+
+variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
+
+/-- The constant `(1 + C_ι) Cₐ + C_β C_w + C_γ` of `rateClass_of_split`. -/
+def splitConst (Ca Cw Cb Cg : ℝ) : ℝ := (1 + F.toFamily.boundConst) * Ca + Cb * Cw + Cg
+
+open ApproxFEEC in
+/-- **A rate class at order `min(α, β, γ)` from the split estimates** (Holst–Stern type, with a
+cochain defect). For a mesh size `0 ≤ m(h) ≤ 1`, orders `α, β, γ ≥ 0` and constants
+`Cₐ, C_w, C_β, C_γ ≥ 0`: if the inner-product defect is `‖1 - Jₕ‖ ≤ C_β m(h)^β`, and along the
+exact trajectory (`y = e^{tL} x` and `y = e^{tL} L x`, `t ∈ [0, T]`, `x ∈ Dc`) there are
+approximants `w` with graph-norm error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Cₐ m(h)ᵅ ‖x‖_c`, size
+`‖w‖ + ‖𝐝ₕ w‖ ≤ C_w ‖x‖_c`, and the cochain defect of `y` is `≤ C_γ m(h)^γ ‖x‖_c` in the dual
+discrete graph norm, then the comparison of `ofComplexCrimeCore` on `Dc` is a rate class of order
+`min(α, β, γ)` (`rateClass` with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ`, `splitConst`): its
+constants are `C = (1 + 8 C_ι) Cₐ'` and `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ'`
+(`rateClass_of_split_C`, `rateClass_of_split_C'`). The three estimates enter through
+`Family.rateData_of_split` and are combined by `add_rpow_le_rpow_min`. -/
+def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
+    (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cw Cb Cg : ℝ)
+    (hm0 : ∀ h, 0 ≤ m h) (hm1 : ∀ h, m h ≤ 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ)
+    (hCa : 0 ≤ Ca) (hCw : 0 ≤ Cw) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x)
+    (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ Cb * m h ^ β)
+    (hsplit : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T, ∀ y ∈ ({H.waveGroup.S t x,
+      H.waveGroup.S t (waveExt H x)} : Set (PiLp 2 W)), ∀ hy : y ∈ H.wave.domain,
+      ∃ w : F.toFamily.X h,
+        ‖y - F.toFamily.incl h w‖ + ‖H.totalD ⟨y, hy.1⟩ - F.toFamily.incl h (F.toFamily.D h w)‖ ≤
+          Ca * m h ^ α * cn x ∧
+        ‖w‖ + ‖F.toFamily.D h w‖ ≤ Cw * cn x ∧
+        ∀ v, ‖⟪F.toFamily.cochainDefect h ⟨y, hy⟩, v⟫_𝕜‖ ≤
+          Cg * m h ^ γ * cn x * (‖v‖ + ‖F.toFamily.D h v‖)) :
+    (ofComplexCrime F).RateClass T :=
+  F.rateClass T Dc hDc cn m (min α (min β γ)) (F.splitConst Ca Cw Cb Cg)
+    fun x hx h t ht y hy => by
+      set S := F.toFamily
+      have hx2 := F.Z_le (hDc hx)
+      have hx1 := domainSq_le_domain hx2
+      have hyD : y ∈ H.wave.domain := by
+        rcases hy with rfl | hy
+        · exact waveGroup_mem_domain H hx1 t
+        · rw [Set.mem_singleton_iff] at hy
+          subst hy
+          exact waveGroup_mem_domain H (waveExt_mem_domain H hx2) t
+      obtain ⟨w, ha, hw, hcd⟩ := hsplit x hx h t ht y hy hyD
+      obtain ⟨h1, h2, h3⟩ := S.rateData_of_split h ⟨y, hyD⟩ w ha hw hcd
+      have hC := S.boundConst_nonneg
+      have hc := hcn x hx
+      have hmh0 := hm0 h
+      have hmh1 := hm1 h
+      have pa : m h ^ α ≤ m h ^ min α (min β γ) :=
+        Real.rpow_le_rpow_of_exponent_ge' hmh0 hmh1 (le_min hα (le_min hβ hγ)) (min_le_left _ _)
+      have pb : m h ^ β ≤ m h ^ min α (min β γ) :=
+        Real.rpow_le_rpow_of_exponent_ge' hmh0 hmh1 (le_min hα (le_min hβ hγ))
+          ((min_le_right _ _).trans (min_le_left _ _))
+      have hpa := Real.rpow_nonneg hmh0 α
+      have hpb := Real.rpow_nonneg hmh0 β
+      have hpμ := Real.rpow_nonneg hmh0 (min α (min β γ))
+      -- the combined bound `‖1 - Jₕ‖ E_w + C_ι Eₐ + E_γ ≤ Cₐ' m^μ ‖x‖_c`
+      have hJw : ‖1 - S.J h‖ * (Cw * cn x) ≤ Cb * Cw * cn x * m h ^ β := by
+        have := mul_le_mul_of_nonneg_right (hJ h) (mul_nonneg hCw hc)
+        linarith [show Cb * m h ^ β * (Cw * cn x) = Cb * Cw * cn x * m h ^ β by ring]
+      have hsum := add_rpow_le_rpow_min hmh0 hmh1 hα hβ hγ
+        (mul_nonneg (mul_nonneg hC hCa) hc) (mul_nonneg (mul_nonneg hCb hCw) hc)
+        (mul_nonneg hCg hc)
+      have hres : ‖1 - S.J h‖ * (Cw * cn x) + S.boundConst * (Ca * m h ^ α * cn x) +
+          Cg * m h ^ γ * cn x ≤ F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x := by
+        have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
+            (S.boundConst * Ca * cn x + Cb * Cw * cn x + Cg * cn x) * m h ^ min α (min β γ) +
+              Ca * cn x * m h ^ min α (min β γ) := by
+          unfold splitConst; ring
+        rw [e]
+        have : 0 ≤ Ca * cn x * m h ^ min α (min β γ) := by positivity
+        have e2 : S.boundConst * (Ca * m h ^ α * cn x) + Cg * m h ^ γ * cn x =
+            S.boundConst * Ca * cn x * m h ^ α + Cg * cn x * m h ^ γ := by ring
+        linarith
+      refine ⟨w, ?_, ?_, fun v => ?_⟩
+      · refine h1.trans ?_
+        have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
+            Ca * cn x * m h ^ min α (min β γ) + (S.boundConst * Ca + Cb * Cw + Cg) * cn x * m h ^ min α (min β γ) := by
+          unfold splitConst; ring
+        rw [e]
+        have := mul_le_mul_of_nonneg_left pa (mul_nonneg hCa hc)
+        have : 0 ≤ (S.boundConst * Ca + Cb * Cw + Cg) * cn x * m h ^ min α (min β γ) := by
+          positivity
+        linarith [show Ca * m h ^ α * cn x = Ca * cn x * m h ^ α by ring]
+      · refine h2.trans (hJw.trans ?_)
+        have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
+            Cb * Cw * cn x * m h ^ min α (min β γ) + ((1 + S.boundConst) * Ca + Cg) * cn x * m h ^ min α (min β γ) := by
+          unfold splitConst; ring
+        rw [e]
+        have := mul_le_mul_of_nonneg_left pb (mul_nonneg (mul_nonneg hCb hCw) hc)
+        have : 0 ≤ ((1 + S.boundConst) * Ca + Cg) * cn x * m h ^ min α (min β γ) := by
+          positivity
+        linarith
+      · rw [waveExt_of_mem hyD]
+        exact (h3 v).trans (mul_le_mul_of_nonneg_right hres
+          (add_nonneg (norm_nonneg _) (norm_nonneg _)))
+
+variable (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
+  (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cw Cb Cg : ℝ)
+  (hm0 : ∀ h, 0 ≤ m h) (hm1 : ∀ h, m h ≤ 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ)
+  (hCa : 0 ≤ Ca) (hCw : 0 ≤ Cw) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x)
+  (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ Cb * m h ^ β) (hsplit)
+
+/-- The order of `rateClass_of_split` is `min(α, β, γ)`. -/
+theorem rateClass_of_split_α :
+    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg hcn hJ
+      hsplit).α = min α (min β γ) := rfl
+
+/-- The approximation constant of `rateClass_of_split`:
+`C = (1 + 8 C_ι) ((1 + C_ι) Cₐ + C_β C_w + C_γ)`. -/
+theorem rateClass_of_split_C :
+    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg hcn hJ
+      hsplit).C = (1 + 8 * F.toFamily.boundConst) *
+        ((1 + F.toFamily.boundConst) * Ca + Cb * Cw + Cg) := rfl
+
+/-- The consistency constant of `rateClass_of_split`:
+`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) ((1 + C_ι) Cₐ + C_β C_w + C_γ)`. -/
+theorem rateClass_of_split_C' :
+    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg hcn hJ
+      hsplit).C' = 2 * (1 + 8 * (1 + F.toFamily.boundConst ^ 2) +
+        F.toFamily.boundConst * (1 + 8 * F.toFamily.boundConst)) *
+        ((1 + F.toFamily.boundConst) * Ca + Cb * Cw + Cg) := rfl
+
+/-- **The error at order `min(α, β, γ)`**: under the split estimates of `rateClass_of_split`,
+from the comparison initial value `Rₕ x`,
+`‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)^{min(α, β, γ)} ‖x‖_c` on `[0, T]`. -/
+theorem error_le_of_split {x : PiLp 2 W} (hx : x ∈ Dc) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖H.waveGroup.S t x - (ApproxFEEC.ofComplexCrime F).sol h
+        ((F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg
+          hcn hJ hsplit).p x h 0) t‖ ≤
+      ((F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg
+          hcn hJ hsplit).C + F.toFamily.boundConst *
+        (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg
+          hcn hJ hsplit).C' * t) * (m h ^ min α (min β γ) * cn x) :=
+  F.error_le_of_rateClass _ hx h ht
+
+end ApproxComplexCrime
+
+end RateSplit
 
 end Feec.HilbertComplex

@@ -45,14 +45,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- Right derivative of `‖e‖²` over `𝕜`: `d/dt ‖e‖² = 2 re ⟪e', e⟫`
-(`HasDerivWithinAt.norm_sq_re_inner`). -/
-theorem hasDerivWithinAt_norm_sq {e : ℝ → E} {e' : E} {s : Set ℝ} {t : ℝ}
-    (he : HasDerivWithinAt e e' s t) :
-    HasDerivWithinAt (fun r => ‖e r‖ ^ 2) (2 * RCLike.re ⟪e', e t⟫) s t :=
-  he.norm_sq_re_inner
-
-omit [IsScalarTower ℝ 𝕜 E] in
 /-- **Energy estimate** (`_root_.norm_le_add_integral_of_re_inner_deriv_le`).
 [QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b : ℝ}

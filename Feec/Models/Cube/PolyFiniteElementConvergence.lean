@@ -196,7 +196,7 @@ theorem norm_formL2_sub_glue_le_of_forall (E : LocalElement n) (M : SimplicialMe
     filter_upwards [Lp.coeFn_sub (formL2 hΩ M.isBounded_domain k w s)
       (pieceL2 M M.domain (fun T => formComp (k := (k : ℤ)) (E.extendPW M u T))
         hcont s), coeFn_formL2 hΩ M.isBounded_domain k w s,
-      coeFn_pieceL2 (𝕜 := ℝ) M M.domain _ hcont s, ae_restrict_exists_mem_interior M hΩ]
+      coeFn_pieceL2 (𝕜 := ℝ) M M.domain _ hcont s, Feec.FiniteElement.ae_mem_interior M hΩ]
       with x h1 h2 h3 hx
     obtain ⟨T, hT, hxT⟩ := hx
     rw [PiLp.sub_apply, h1, Pi.sub_apply, h2, h3, pieceFun_of_mem_interior M _ hT hxT]

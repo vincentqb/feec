@@ -139,12 +139,6 @@ theorem norm_sub_le_of_defect (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y⟫_�
     _ ≤ ‖u t - ι (p t)‖ + ‖ι‖ * ‖e t‖ := (norm_add_le _ _).trans (by gcongr; exact ι.le_opNorm _)
     _ ≤ _ := by gcongr
 
-omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
-/-- The group of a skew bounded generator is unitary. -/
-theorem norm_ofBounded_apply (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y⟫_𝕜 = -⟪x, L y⟫_𝕜)
-    (t : ℝ) (x : X) : ‖(C0Group.ofBounded L).S t x‖ = ‖x‖ :=
-  C0Group.isIsometric_ofBounded hL t x
-
 /-- **Uniqueness for skew bounded generators**: a differentiable `u` with `u' = L u` is the
 orbit `e^{tL} u(0)`, for all times (forward by the energy estimate, backward by time reversal). -/
 theorem eq_ofBounded_of_hasDerivAt (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y⟫_𝕜 = -⟪x, L y⟫_𝕜)
@@ -410,7 +404,7 @@ theorem norm_incl_proj_le (h : κ) (y : PiLp 2 W) :
 def group (h : κ) : C0Group 𝕜 (F.X h) := C0Group.ofBounded (F.L h)
 
 theorem norm_group_apply (h : κ) (t : ℝ) (v : F.X h) : ‖(F.group h).S t v‖ = ‖v‖ :=
-  norm_ofBounded_apply (F.L h) (F.skew h) t v
+  C0Group.isIsometric_ofBounded (F.skew h) t v
 
 /-- The discrete solution `ιₕ e^{t Lₕ} v`. -/
 def sol (h : κ) (v : F.X h) (t : ℝ) : PiLp 2 W := F.incl h ((F.group h).S t v)

@@ -32,9 +32,10 @@ projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further a
 * `Feec.BGG.Discrete.error_estimate`: thesis Thm 5.5 as stated (strong consistency `happ1`), the
   case `K = ‖S₁u‖`.
 * `Feec.BGG.Discrete.S1_sub_S1h_dt0`: `(S₁ − S₁,ₕ)dψ = d(S₀,ₕ − S₀)ψ` (the gradient part).
-* `Feec.BGG.Discrete.weakConsistency_of_regularPotential`: weak consistency for every
-  `z ∈ D(d¹*)` from the consistency of `S₀,ₕ` (thesis Prop 5.9(1), which holds) and a regular
-  potential; proved modulo harmonic forms
+* `Feec.BGG.Discrete.weakConsistency_of_regularPotential`,
+  `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`: weak consistency for every
+  `z ∈ D(d¹*)` (as a functional bound in the second form) from the consistency of `S₀,ₕ`
+  (thesis Prop 5.9(1), which holds) and a regular potential; proved modulo harmonic forms
   (`Feec.BGG.HarmonicStability.weakConsistency_of_regularPotential_of_bound`).
 * `Feec.BGG.Discrete.error_estimate_of_regularPotential`: Thm 5.5 with these hypotheses.
 
@@ -516,6 +517,23 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
 
+/-- **Weak consistency from regular potentials, `d¹*`-regularity as a functional bound**: the
+variant of `weakConsistency_of_regularPotential` with the hypothesis `⟪z, d w⟫ = ⟪z', w⟫`
+(`z' ∈ V¹`) replaced by `|⟪z, d w⟫| ≤ M ‖w‖` for all `w ∈ V¹`. This is the form that applies
+when `V¹` carries the `W`-norm but is not complete (as `H̊Λ¹(Q) ⊆ L²Λ¹(Q)`), where
+`d¹* z ∈ L²` has no representative in `V¹`. The case `𝔥 = ⊥` of
+`Feec.BGG.HarmonicStability.weakConsistency_of_regularPotential_of_bound`. -/
+theorem weakConsistency_of_regularPotential_of_bound {Cp CR CS CP : ℝ}
+    (H : Stability D Cp CR CS) (B : Q.Bounded CP) {Xr : Type*} [NormedAddCommGroup Xr]
+    [NormedSpace ℝ Xr] {Cinc Creg h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
+    (Rg : Q.RegularPotential Xr Cinc Creg Capp h)
+    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
+    {z : W2} {M : ℝ} (hM : 0 ≤ M) (hz : ∀ w, |⟪z, D.d1 w⟫| ≤ M * ‖w‖) :
+    ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
+      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ M * √(graphSq D.dt1 v) :=
+  H.toHarmonicStability.weakConsistency_of_regularPotential_of_bound bot_le B hh hCapp Rg happ0
+    hM hz
+
 /-- **Weak consistency from a discrete Hodge decomposition** (the mechanism intended
 for the corrected Thm 5.5 on cube meshes; the hypotheses are not proved for any concrete element
 here). Let `z ∈ D(d¹*)`, i.e. `⟪z, dw⟫ = ⟪z', w⟫` for all
@@ -539,8 +557,8 @@ theorem weakConsistency_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D
     {z : W2} {z' : V1} (hz : ∀ w, ⟪z, D.d1 w⟫ = ⟪z', w⟫) :
     ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
       Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ ‖z'‖ * √(graphSq D.dt1 v) :=
-  H.toHarmonicStability.weakConsistency_of_regularPotential_of_bound bot_le B hh hCapp Rg happ0
-    (norm_nonneg z') fun w => by rw [hz]; exact abs_real_inner_le_norm z' w
+  weakConsistency_of_regularPotential_of_bound H B hh hCapp Rg happ0 (norm_nonneg z') fun w => by
+    rw [hz]; exact abs_real_inner_le_norm z' w
 
 /-- **Thesis Thm 5.5 without Prop 5.9(2).** The a priori estimate with the strong consistency of
 `S₁,ₕ` (false per the audit, thesis Prop 5.9(2)) replaced by: regular potentials

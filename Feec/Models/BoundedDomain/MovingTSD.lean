@@ -234,7 +234,7 @@ end Pohozaev
 
 section CurlCurl
 
-private theorem pd_fun_sub {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g)
+theorem pd_fun_sub {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g)
     (k : Fin 3) (x : R3) : pd k (fun y => f y - g y) x = pd k f x - pd k g x :=
   pd_sub hf hg k x
 
@@ -265,14 +265,14 @@ theorem sum_pd_curlM (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i : Fin 3) (x : R3)
     show (2 : Fin 3) + 1 = 0 from rfl, show (2 : Fin 3) + 2 = 1 from rfl]
   linarith [hc (i, 2) 0 1, hc (i, 1) 0 2, hc (i, 0) 1 2]
 
-/-- `curl curl V = ∇ div V - ΔV` row-wise, for smooth matrix fields. -/
-theorem curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i k : Fin 3) (x : R3) :
+/-- `curl curl V = ∇ div V - ΔV` row-wise, for `C²` matrix fields. -/
+theorem curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ 2 (V ij)) (i k : Fin 3) (x : R3) :
     curlM (curlM V) (i, k) x =
       pd k (fun y => ∑ l, pd l (V (i, l)) y) x - ∑ j, pd j (pd j (V (i, k))) x := by
   have hd : ∀ ij a, Differentiable ℝ (pd a (V ij)) := fun ij a =>
-    (contDiff_pd_top (hV ij) a).differentiable (by simp)
+    (contDiff_pd (n := 1) (hV ij) a).differentiable one_ne_zero
   have hc : ∀ ij a b, pd a (pd b (V ij)) x = pd b (pd a (V ij)) x := fun ij a b =>
-    pd_pd_comm ((hV ij).of_le (by simp)) a b x
+    pd_pd_comm (hV ij) a b x
   rw [pd_sum Finset.univ (fun l _ => hd _ _) k x, sum_fin3_rot k, sum_fin3_rot k]
   have e1 : curlM V (i, k + 2) = fun y => pd k (V (i, k + 1)) y - pd (k + 1) (V (i, k)) y := by
     funext y
@@ -304,7 +304,7 @@ theorem eq_zero_of_curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij))
   funext ij
   obtain ⟨i, k⟩ := ij
   refine eq_zero_of_laplacian_eq (hV (i, k)) (hVc (i, k)) hc fun x => ?_
-  have e := curlM_curlM_eq hV i k x
+  have e := curlM_curlM_eq (fun ij => (hV ij).of_le (by simp)) i k x
   rw [hdiv i, h] at e
   simp only [pd_zero] at e
   linarith

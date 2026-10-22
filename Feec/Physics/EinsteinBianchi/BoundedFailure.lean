@@ -21,8 +21,9 @@ states the resulting failure under that hypothesis; the unconditional versions a
 ## Main results
 
 * **Energy estimates with different sources**: `Feec.BGG.WaveData.Solution.norm_vec_sub_le`
-  (`‖U₁(t) − U₂(t)‖ ≤ ‖U₁(0) − U₂(0)‖ + ∫₀ᵗ ‖f₁ − f₂‖` for (6.1)), `Solution.sub'`,
-  `Feec.BGG.DiscreteSolution.sub'` and `norm_dvec_sub_le` (the same for (6.3)).
+  (`‖U₁(t) − U₂(t)‖ ≤ ‖U₁(0) − U₂(0)‖ + ∫₀ᵗ ‖f₁ − f₂‖` for (6.1)) and `norm_dvec_sub_le` (the same
+  for (6.3)), through the differences `Feec.BGG.WaveData.Solution.sub'`,
+  `Feec.BGG.DiscreteSolution.sub'` of `Feec.HilbertComplex.BGG.TimeDependent`.
 * `exactWave_toSolution`: a classical solution of (6.2) (the class of the rate theorems) is a
   solution of (6.1) (the multiplier vanishes on `Γ`).
 * **`solutionOfStrong`**: a strong solution of the forms-model Hodge wave equation is a solution
@@ -92,44 +93,6 @@ variable {V0 Vt0 Vt1 W0 W1 W2 Wt1 Wt2 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : WaveData V0 Vt0 Vt1 W0 W1 W2 Wt1 Wt2}
 
-/-- Difference of two solutions of (6.1) with sources `f₁`, `f₂`: a solution with source
-`f₁ − f₂`. -/
-def Solution.sub' {T : ℝ} {f₁ f₂ : ℝ → Wt1} (s₁ : D.Solution T f₁) (s₂ : D.Solution T f₂) :
-    D.Solution T (f₁ - f₂) where
-  σ := s₁.σ - s₂.σ
-  φ := s₁.φ - s₂.φ
-  u := s₁.u - s₂.u
-  M := s₁.M - s₂.M
-  ρ := s₁.ρ - s₂.ρ
-  σ' := s₁.σ' - s₂.σ'
-  u' := s₁.u' - s₂.u'
-  M' := s₁.M' - s₂.M'
-  ρ' := s₁.ρ' - s₂.ρ'
-  cσ := (s₁.cσ.sub s₂.cσ).congr fun x _ => by simp
-  cu := (s₁.cu.sub s₂.cu).congr fun x _ => by simp
-  cM := s₁.cM.sub s₂.cM
-  cρ := s₁.cρ.sub s₂.cρ
-  dσ := fun t ht => by
-    convert (s₁.dσ t ht).sub (s₂.dσ t ht) using 1; funext x; simp
-  du := fun t ht => by
-    convert (s₁.du t ht).sub (s₂.du t ht) using 1; funext x; simp
-  dM := fun t ht => (s₁.dM t ht).sub (s₂.dM t ht)
-  dρ := fun t ht => (s₁.dρ t ht).sub (s₂.dρ t ht)
-  eb := fun t ht v => by
-    have h₁ := s₁.eb t ht v; have h₂ := s₂.eb t ht v
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]
-    linarith
-  ec := fun t ht N => by
-    have h₁ := s₁.ec t ht N; have h₂ := s₂.ec t ht N
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
-  ed := fun t ht μ => by
-    have h₁ := s₁.ed t ht μ; have h₂ := s₂.ed t ht μ
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
-  mem := fun t ht => by simp [s₁.mem t ht, s₂.mem t ht]
-  ea := fun t ht τ ψ h => by
-    have h₁ := s₁.ea t ht τ ψ h; have h₂ := s₂.ea t ht τ ψ h
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
-
 /-- The energy vector `(σ, u, M, ρ)(t)` of a trajectory of (6.1), in `W⁰ × W̃¹ × W² × W̃²`
 (`ℓ²` product, `Feec.BGG.EnergySpace`). -/
 def Trajectory.vec {T : ℝ} {f : ℝ → Wt1} (s : D.Trajectory T f) (t : ℝ) :
@@ -194,61 +157,6 @@ theorem Solution.norm_vec_sub_le {T : ℝ} {f₁ f₂ : ℝ → Wt1} (s₁ : D.S
   simpa using h
 
 end WaveData
-
-section Discrete
-
-variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
-  [NormedAddCommGroup P0] [InnerProductSpace ℝ P0]
-  [NormedAddCommGroup P1] [InnerProductSpace ℝ P1]
-  [NormedAddCommGroup P2] [InnerProductSpace ℝ P2]
-  [NormedAddCommGroup Pt0] [InnerProductSpace ℝ Pt0]
-  [NormedAddCommGroup Pt1] [InnerProductSpace ℝ Pt1]
-  [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
-  {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
-
-/-- Difference of two solutions of (6.3) with sources `f₁`, `f₂`: a solution with source
-`f₁ − f₂`. -/
-def DiscreteSolution.sub' {T : ℝ} {f₁ f₂ : ℝ → Pt1}
-    (s₁ : DiscreteSolution D T f₁) (s₂ : DiscreteSolution D T f₂) :
-    DiscreteSolution D T (f₁ - f₂) where
-  σ := s₁.σ - s₂.σ
-  φ := s₁.φ - s₂.φ
-  u := s₁.u - s₂.u
-  M := s₁.M - s₂.M
-  ρ := s₁.ρ - s₂.ρ
-  lam := s₁.lam - s₂.lam
-  σ' := s₁.σ' - s₂.σ'
-  u' := s₁.u' - s₂.u'
-  M' := s₁.M' - s₂.M'
-  ρ' := s₁.ρ' - s₂.ρ'
-  cσ := s₁.cσ.sub s₂.cσ
-  cu := s₁.cu.sub s₂.cu
-  cM := s₁.cM.sub s₂.cM
-  cρ := s₁.cρ.sub s₂.cρ
-  dσ := fun t ht => (s₁.dσ t ht).sub (s₂.dσ t ht)
-  du := fun t ht => (s₁.du t ht).sub (s₂.du t ht)
-  dM := fun t ht => (s₁.dM t ht).sub (s₂.dM t ht)
-  dρ := fun t ht => (s₁.dρ t ht).sub (s₂.dρ t ht)
-  ea := fun t ht τ ψ => by
-    have h₁ := s₁.ea t ht τ ψ; have h₂ := s₂.ea t ht τ ψ
-    simp only [Pi.sub_apply, inner_sub_left]; linarith
-  eb := fun t ht v => by
-    have h₁ := s₁.eb t ht v; have h₂ := s₂.eb t ht v
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
-  ec := fun t ht N => by
-    have h₁ := s₁.ec t ht N; have h₂ := s₂.ec t ht N
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
-  ed := fun t ht μ => by
-    have h₁ := s₁.ed t ht μ; have h₂ := s₂.ed t ht μ
-    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
-  ee := fun t ht ζ => by
-    have h₁ := s₁.ee t ht ζ; have h₂ := s₂.ee t ht ζ
-    have : D.d0 ((s₁.σ - s₂.σ) t) - D.S0 ((s₁.φ - s₂.φ) t) =
-        (D.d0 (s₁.σ t) - D.S0 (s₁.φ t)) - (D.d0 (s₂.σ t) - D.S0 (s₂.φ t)) := by
-      simp only [Pi.sub_apply, map_sub]; abel
-    rw [this, inner_sub_left]; linarith
-
-end Discrete
 
 end Feec.BGG
 

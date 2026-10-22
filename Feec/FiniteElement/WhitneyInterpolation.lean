@@ -593,13 +593,6 @@ theorem _root_.Feec.Mesh.SimplicialMesh.isBounded_domain (M : SimplicialMesh n) 
   rw [← M.biUnion_closedInterior]
   exact (Bornology.isBounded_biUnion_finset M.simplices).2 fun T _ => T.isCompact_closedInterior.isBounded
 
-/-- A.e. on the meshed domain, points lie in the interior of a simplex. -/
-theorem ae_restrict_exists_mem_interior (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain) :
-    ∀ᵐ x ∂(volume.restrict M.domain), ∃ T ∈ M.simplices, x ∈ interior T.closedInterior := by
-  refine (ae_restrict_iff' hΩ).2 ?_
-  filter_upwards [ae_exists_mem_interior M] with x hx hxΩ
-  exact hx (subset_closure hxΩ)
-
 /-- The constant piecewise field of a continuous form is the form. -/
 theorem pieceL2_formComp_eq_formL2 (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain) (k : ℤ)
     (w : contForms n) :
@@ -609,7 +602,7 @@ theorem pieceL2_formComp_eq_formL2 (M : SimplicialMesh n) (hΩ : MeasurableSet M
   refine PiLp.ext fun s => Lp.ext ?_
   filter_upwards [coeFn_pieceL2 M M.domain (fun _ => formComp (k := k) (w : FormField n))
     (fun _ _ s => continuous_formComp w.2 s) s, coeFn_formL2 hΩ M.isBounded_domain k w s,
-    ae_restrict_exists_mem_interior M hΩ] with x h1 h2 hx
+    Feec.FiniteElement.ae_mem_interior M hΩ] with x h1 h2 hx
   obtain ⟨T, hT, hxT⟩ := hx
   rw [h1, h2, pieceFun_of_mem_interior M _ hT hxT]
   rfl
@@ -686,7 +679,7 @@ theorem norm_formL2_sub_glue_le (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1
     filter_upwards [Lp.coeFn_sub (formL2 hΩ M.isBounded_domain k ⟨w, hw.continuous⟩ s)
       (pieceL2 M M.domain (fun T => formComp (k := (k : ℤ)) ((whitneyElement n).extendPW M u T))
         hcont s), coeFn_formL2 hΩ M.isBounded_domain k ⟨w, hw.continuous⟩ s,
-      coeFn_pieceL2 (𝕜 := ℝ) M M.domain _ hcont s, ae_restrict_exists_mem_interior M hΩ]
+      coeFn_pieceL2 (𝕜 := ℝ) M M.domain _ hcont s, Feec.FiniteElement.ae_mem_interior M hΩ]
       with x h1 h2 h3 hx
     obtain ⟨T, hT, hxT⟩ := hx
     rw [PiLp.sub_apply, h1, Pi.sub_apply, h2, h3, pieceFun_of_mem_interior M _ hT hxT]

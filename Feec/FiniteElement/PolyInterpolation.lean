@@ -54,8 +54,9 @@ This generalizes `Feec.FiniteElement.WhitneyInterpolation` (`P₁⁻Λᵏ`) to a
   `Feec.FiniteElement.PolyInverseEstimate` apply with the unisolvence `PolySeq.isUnisolvent_dof`
   on `K`: `hᵏ sup_T ‖u‖ ≤ B Σ |ℓ_{g,i}(u)|` (`PolySeq.exists_local_dof_bound`) and
   `‖u‖²_{L²(T)} ≍ h^{n-2k} Σ ℓ_{g,i}(u)²` (`PolySeq.exists_local_formL2Sq_equiv`).
-* **Finitely many reference simplices** (`PolySeq.exists_local_dof_bound_uniform`): the constants can be taken uniform over a
-  finite family `K_σ` (the Kuhn simplices of a Freudenthal mesh).
+* **Finitely many reference simplices** (`PolySeq.exists_local_dof_bound_uniform`): the
+  constants can be taken uniform over a finite family `K_σ` (the Kuhn simplices of a Freudenthal
+  mesh).
 
 The estimates are local (one simplex); the mesh-level statements are assembled from them on the
 Freudenthal–Kuhn meshes, whose simplices are homothetic copies `t + h K_σ` of finitely many

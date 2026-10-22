@@ -931,13 +931,6 @@ end Prop59
 
 section Strong
 
-theorem globalInterp_apply_eq_localInterp (E : LocalElement n) (M : SimplicialMesh n) (k : ℕ)
-    (w : contForms n) (T : M.simplices) :
-    ((E.globalInterp M k w : E.Piecewise M k) T) = E.localInterp T k w :=
-  E.localSpace_ext T k fun g hg i => by
-    rw [LocalElement.localDof_globalInterp _ _ _ _ _ _ hg,
-      LocalElement.localDof_localInterp _ _ _ _ _ hg]
-
 end Strong
 
 /-! ### `S` and the smoothing; injectivity of `grad` -/
@@ -950,13 +943,6 @@ def smoothExtₗ {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
   toFun u := smoothExt Ω p (u : (Fin n → ℝ) → ℝ)
   map_add' u v := smoothExt_coe_add hΩ u v
   map_smul' a u := smoothExt_coe_smul hΩ a u
-
-theorem isDeg_smoothForm {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
-    (hΩ : MeasurableSet Ω) (k : ℕ) (u : L2F ℝ Ω (formIdx n k)) (x : Fin n → ℝ) :
-    IsDeg k ((smoothForm p hΩ (k : ℤ) u : FormField n) x) := fun s hs => by
-  change formExt (smoothCoeff p (k : ℤ) u) s x = 0
-  have : ¬ ((s.card : ℤ) = (k : ℤ)) := by exact_mod_cast hs
-  simp [formExt, this]
 
 /-- **`S` commutes with the smoothing up to the dilation factor**: `R S u = c S R̃ u`, with
 `R`, `R̃` the smoothing of `L²` forms of degrees `k + 1`, `k` (`smoothForm`: extension by zero,
@@ -974,7 +960,7 @@ theorem smoothForm_wsL2 {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n �
   by_cases ht : (t.card : ℤ) = (k : ℤ) + 1
   · rw [formExt, dite_eq_left_of_eq_true (eq_true ht)]
     set t' : formIdx n ((k : ℤ) + 1) := ⟨t, ht⟩
-    rw [coordWedgeSum_eq_sum_wsCoeff (fun a => isDeg_smoothForm p hΩ k (u a) x) t']
+    rw [coordWedgeSum_eq_sum_wsCoeff (fun a => FiniteElement.isDeg_smoothForm p hΩ k (u a) x) t']
     change p.factor ^ ((k : ℤ) + 1) * smoothExtₗ p hΩ (wsL2 (Ω := Ω) (k : ℤ) u t') x = _
     rw [wsL2_apply, map_sum, Finset.sum_apply, Finset.mul_sum, Finset.mul_sum,
       zpow_add_one₀ hc]
@@ -987,7 +973,7 @@ theorem smoothForm_wsL2 {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n �
     ring
   · have h0 : ¬ (t.card = k + 1) := fun h => ht (by exact_mod_cast h)
     rw [formExt, dite_eq_right_of_eq_false (eq_false ht),
-      isDeg_coordWedgeSum (fun a => isDeg_smoothForm p hΩ k (u a) x) t h0, mul_zero]
+      isDeg_coordWedgeSum (fun a => FiniteElement.isDeg_smoothForm p hΩ k (u a) x) t h0, mul_zero]
     rfl
 
 theorem eq_zero_of_minimal_eq_zero_of_eq {Ω : Set (Fin 3 → ℝ)} (hΩ : Ω = cubeDomain 3)

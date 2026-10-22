@@ -244,12 +244,6 @@ def adjoint : SymbolComplex 𝕜 μ c.symm E where
 @[simp] theorem adjoint_m (i j : ι) (a : α) :
     S.adjoint.m i j a = ContinuousLinearMap.adjoint (S.m j i a) := rfl
 
-/-- Two Hilbert complexes with the same differentials are equal. -/
-theorem _root_.Feec.HilbertComplex.ext' {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)]
-    [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] {H H' : HilbertComplex 𝕜 c W}
-    (h : H.d = H'.d) : H = H' := by
-  cases H; cases H'; subst h; rfl
-
 /-- Cycles are the fibrewise cycles. -/
 theorem cycles_toHilbertComplex (i : ι) :
     S.toHilbertComplex.cycles i = Operator.fibreSub μ fun a => LinearMap.ker (S.m i (c.next i) a : E i →ₗ[𝕜] E (c.next i)) :=

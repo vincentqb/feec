@@ -102,14 +102,12 @@ theorem reL_I_smul_ofReal_smul_ofRealL (r : ℝ) (g : Lp ℝ 2 μ) :
   rw [h1, h2, Pi.smul_apply, h3, Pi.smul_apply, h4, h5, smul_eq_mul, smul_eq_mul]
   simp
 
-theorem norm_ofRealL' (g : Lp ℝ 2 μ) : ‖ofRealL μ g‖ = ‖g‖ := norm_ofRealL g
-
 /-- **Real/imaginary Parseval**: `‖f‖² = ‖Re f‖² + ‖Re(-i f)‖²`. -/
 theorem norm_sq_eq_reL (f : Lp ℂ 2 μ) :
     ‖f‖ ^ 2 = ‖reL μ f‖ ^ 2 + ‖reL μ (-Complex.I • f)‖ ^ 2 := by
   conv_lhs => rw [← ofRealL_reL_add_I_smul f]
   rw [@norm_add_sq ℂ, inner_smul_right, inner_ofRealL, norm_smul, Complex.norm_I, one_mul,
-    norm_ofRealL', norm_ofRealL']
+    Models.Cube.MirrorWeakSymmetry.norm_ofRealL, Models.Cube.MirrorWeakSymmetry.norm_ofRealL]
   simp
 
 end ReIm

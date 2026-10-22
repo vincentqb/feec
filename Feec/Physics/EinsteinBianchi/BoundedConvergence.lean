@@ -25,15 +25,15 @@ strong solutions of the forms-model Hodge wave equation (and `L² V` is continuo
 
 **Convergence for every datum in `D(L)`.** For `U(0) ∈ D(L²)` the Models theorem
 `Feec.Models.Cube.WeakSymmetry.cubeWave_converges` gives convergence of (6.5) from the elliptic
-projection; `D(L²)` is dense (`exists_mem_domain_sq_lt`: the resolvent means `J_n` of Stone's
-theorem map into `D(L²)`), and the energy estimates of (6.1) and (6.5) carry convergence to every
-datum (`tendsto_of_isStrongSolution`, Lax). The datum of a family of solutions of (6.5) only has to
+projection; `D(L²)` is dense (`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`: the resolvent
+means `J_n` of Stone's theorem map into `D(L²)`), and the energy estimates of (6.1) and (6.5)
+carry convergence to every datum (`tendsto_of_isStrongSolution`, Lax). The datum of a family of solutions of (6.5) only has to
 converge at `t = 0`.
 
 ## Main results
 
 * `exactOfStrong`, `exactOfStrong_isMultRep`, `exactOfStrong_isMultRep'`, `exactOfStrong_vec`.
-* `isStrongSolution_group`, `exists_mem_domain_sq_lt`.
+* `isStrongSolution_group`.
 * **`tendsto_of_isStrongSolution`**, **`tendsto_of_mem_wave_domain`**: convergence of (6.5) without
   rate for every datum in `D(L)` (no regularity hypothesis).
 * **`waveFEM_converges_to_non_tsd`**: for the TSD datum `(0, 0, (0, β))` of
@@ -422,12 +422,6 @@ theorem generator_apply_S_of_eq {G : Feec.C0Group ℝ E} (hgen : G.generator = A
     A ⟨G.S t x, h⟩ = G.S t (A ⟨x, hx⟩) := by
   subst hgen; exact G.generator_apply_S ⟨x, hx⟩ t
 
-/-- **`D(A²)` is dense** for a skew-adjoint `A`: the resolvent means `J_n = c²(c² − A²)⁻¹` of
-Stone's theorem map into `D(A²)` and converge strongly to `1` (`Feec.Stone.tendsto_approxJ`). -/
-theorem exists_mem_domain_sq_lt (hA : A.IsSkewAdjoint) (x : E) {ε : ℝ} (hε : 0 < ε) :
-    ∃ (y : E) (hy : y ∈ A.domain), A ⟨y, hy⟩ ∈ A.domain ∧ ‖x - y‖ < ε :=
-  hA.exists_mem_domain_sq_lt x hε
-
 /-- **Orbits of `D(A²)`**: for `y ∈ D(A²)` there is a strong solution `V` of `U' = A U` with
 `V(0) = y` such that `A V` is a strong solution and `A² V` is continuous (the orbit of Stone's
 group). -/
@@ -482,7 +476,8 @@ set_option maxHeartbeats 8000000 in
 wave equation on the cube ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, thesis' boundary
 conditions; no hypothesis): every family of solutions of (6.5) (source `0`) whose initial
 states converge to `V(0)` in the energy norm converges to the solution `solutionOfStrong hV` of
-(6.1) uniformly on `[0,T]`. Lax: approximate `V(0)` by `y ∈ D(L²)` (`exists_mem_domain_sq_lt`);
+(6.1) uniformly on `[0,T]`. Lax: approximate `V(0)` by `y ∈ D(L²)`
+(`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`);
 the orbit of `y` is a classical solution of (6.2) (`exactOfStrong`) to which (6.5) converges
 from its elliptic projection (`Feec.Models.Cube.WeakSymmetry.cubeWave_converges`); the energy
 estimates of (6.1) (`Feec.BGG.WaveData.Solution.norm_vec_sub_le`) and (6.5) (`norm_dvec_sub_le`)
@@ -499,7 +494,7 @@ theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
   have hη : 0 < η := by rw [hηdef]; positivity
   have hA := formsShort.isSkewAdjoint_wave
   have hδ : 0 < η / (‖vecL‖ + 1) := by positivity
-  obtain ⟨y, hy, hAy, hyd⟩ := exists_mem_domain_sq_lt hA (V 0) hδ
+  obtain ⟨y, hy, hAy, hyd⟩ := hA.exists_mem_domain_sq_lt (V 0) hδ
   obtain ⟨Vy, hd, hd', hVy0, hVy, hWy', hXy'⟩ := exists_orbit_sq hA hy hAy (Icc 0 T)
   have hWy : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 fun t => waveOf (Vy t) :=
     hWy'.congr (fun t _ => (waveOf_eq (hd t)).symm) fun _ _ => rfl

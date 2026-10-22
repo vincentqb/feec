@@ -450,9 +450,10 @@ theorem MultiplierSolution.energy_const {T : ℝ} (s : D.MultiplierSolution T 0)
     ∀ t ∈ Icc 0 T, s.energy t = s.energy 0 :=
   s.toSolution.energy_const
 
-/-- Difference of two solutions of (6.1) with the same source: a solution with `f = 0`
-(linearity, Thesis §6.1). -/
-def Solution.sub {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f) : D.Solution T 0 where
+/-- Difference of two solutions of (6.1) with sources `f₁`, `f₂`: a solution with source
+`f₁ − f₂`. -/
+def Solution.sub' {T : ℝ} {f₁ f₂ : ℝ → Wt1} (s₁ : D.Solution T f₁) (s₂ : D.Solution T f₂) :
+    D.Solution T (f₁ - f₂) where
   σ := s₁.σ - s₂.σ
   φ := s₁.φ - s₂.φ
   u := s₁.u - s₂.u
@@ -474,7 +475,7 @@ def Solution.sub {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f) : D.So
   dρ := fun t ht => (s₁.dρ t ht).sub (s₂.dρ t ht)
   eb := fun t ht v => by
     have h₁ := s₁.eb t ht v; have h₂ := s₂.eb t ht v
-    simp only [Pi.sub_apply, map_sub, inner_sub_left, Pi.zero_apply, inner_zero_left]
+    simp only [Pi.sub_apply, map_sub, inner_sub_left]
     linarith
   ec := fun t ht N => by
     have h₁ := s₁.ec t ht N; have h₂ := s₂.ec t ht N
@@ -487,6 +488,11 @@ def Solution.sub {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f) : D.So
     have h₁ := s₁.ea t ht τ ψ h; have h₂ := s₂.ea t ht τ ψ h
     simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
 
+/-- Difference of two solutions of (6.1) with the same source: a solution with `f = 0`
+(linearity, Thesis §6.1). -/
+def Solution.sub {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f) : D.Solution T 0 :=
+  { s₁.sub' s₂ with eb := fun t ht v => by simpa using (s₁.sub' s₂).eb t ht v }
+
 /-- **Uniqueness for (6.1)** (energy argument): two solutions with the same source and the same
 data `(σ, u, M, ρ)(0)` coincide on `[0,T]`; `φ` too when `S₀` is injective (thesis
 hypothesis of §5.1). See [QuennevilleBelair2015], §6.1 ("uniqueness is shown using an energy
@@ -498,9 +504,9 @@ theorem Solution.unique {T : ℝ} {f : ℝ → Wt1} (s₁ s₂ : D.Solution T f)
   intro t ht
   have hE := (s₁.sub s₂).energy_const t ht
   have hE0 : (s₁.sub s₂).energy 0 = 0 := by
-    simp [Trajectory.energy, Solution.sub, h0.1, h0.2.1, h0.2.2.1, h0.2.2.2]
+    simp [Trajectory.energy, Solution.sub, Solution.sub', h0.1, h0.2.1, h0.2.2.1, h0.2.2.2]
   rw [hE0] at hE
-  simp only [Trajectory.energy, Solution.sub, Pi.sub_apply, map_sub] at hE
+  simp only [Trajectory.energy, Solution.sub, Solution.sub', Pi.sub_apply, map_sub] at hE
   have a := sq_nonneg ‖D.i0 (s₁.σ t) - D.i0 (s₂.σ t)‖
   have b := sq_nonneg ‖D.it1 (s₁.u t) - D.it1 (s₂.u t)‖
   have c := sq_nonneg ‖s₁.M t - s₂.M t‖
@@ -740,9 +746,11 @@ theorem DiscreteSolution.eq_zero_of_initial_eq_zero {T : ℝ} (s : DiscreteSolut
     simp only [inner_zero_left, Pi.zero_apply, zero_add, add_zero] at this
     exact hdinj (by rw [map_zero]; exact inner_self_eq_zero.mp this)
 
-/-- Difference of two solutions of (6.3) with the same source (linearity, Thesis §6.2). -/
-def DiscreteSolution.sub {T : ℝ} {f : ℝ → Pt1}
-    (s₁ s₂ : DiscreteSolution D T f) : DiscreteSolution D T 0 where
+/-- Difference of two solutions of (6.3) with sources `f₁`, `f₂`: a solution with source
+`f₁ − f₂`. -/
+def DiscreteSolution.sub' {T : ℝ} {f₁ f₂ : ℝ → Pt1}
+    (s₁ : DiscreteSolution D T f₁) (s₂ : DiscreteSolution D T f₂) :
+    DiscreteSolution D T (f₁ - f₂) where
   σ := s₁.σ - s₂.σ
   φ := s₁.φ - s₂.φ
   u := s₁.u - s₂.u
@@ -766,7 +774,7 @@ def DiscreteSolution.sub {T : ℝ} {f : ℝ → Pt1}
     simp only [Pi.sub_apply, inner_sub_left]; linarith
   eb := fun t ht v => by
     have h₁ := s₁.eb t ht v; have h₂ := s₂.eb t ht v
-    simp only [Pi.sub_apply, map_sub, inner_sub_left, Pi.zero_apply, inner_zero_left]; linarith
+    simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
   ec := fun t ht N => by
     have h₁ := s₁.ec t ht N; have h₂ := s₂.ec t ht N
     simp only [Pi.sub_apply, map_sub, inner_sub_left]; linarith
@@ -780,6 +788,11 @@ def DiscreteSolution.sub {T : ℝ} {f : ℝ → Pt1}
       simp only [Pi.sub_apply, map_sub]; abel
     rw [this, inner_sub_left]; linarith
 
+/-- Difference of two solutions of (6.3) with the same source (linearity, Thesis §6.2). -/
+def DiscreteSolution.sub {T : ℝ} {f : ℝ → Pt1}
+    (s₁ s₂ : DiscreteSolution D T f) : DiscreteSolution D T 0 :=
+  { s₁.sub' s₂ with eb := fun t ht v => by simpa using (s₁.sub' s₂).eb t ht v }
+
 /-- **Corrected Prop 6.2, uniqueness.** Two solutions of (6.3) with the same source and the same
 data `(σ, u, M, ρ)(0)` agree: `σₕ, uₕ, Mₕ, ρₕ, λₕ` on `[0,T]`, `φₕ` on `[0,T)`.
 See [QuennevilleBelair2015], Prop 6.2. -/
@@ -789,7 +802,8 @@ theorem DiscreteSolution.unique {T : ℝ} {f : ℝ → Pt1} (s₁ s₂ : Discret
     (∀ t ∈ Icc 0 T, s₁.σ t = s₂.σ t ∧ s₁.u t = s₂.u t ∧ s₁.M t = s₂.M t ∧ s₁.ρ t = s₂.ρ t ∧
       s₁.lam t = s₂.lam t) ∧ (∀ t ∈ Ico 0 T, s₁.φ t = s₂.φ t) := by
   obtain ⟨h1, h2⟩ := (s₁.sub s₂).eq_zero_of_initial_eq_zero hdinj hS (by
-    simp only [DiscreteSolution.sub, Pi.sub_apply, h0.1, h0.2.1, h0.2.2.1, h0.2.2.2, sub_self]; simp)
+    simp only [DiscreteSolution.sub, DiscreteSolution.sub', Pi.sub_apply, h0.1, h0.2.1, h0.2.2.1,
+      h0.2.2.2, sub_self]; simp)
   refine ⟨fun t ht => ?_, fun t ht => sub_eq_zero.mp (h2 t ht)⟩
   obtain ⟨a, b, c, d, e⟩ := h1 t ht
   exact ⟨sub_eq_zero.mp a, sub_eq_zero.mp b, sub_eq_zero.mp c, sub_eq_zero.mp d,

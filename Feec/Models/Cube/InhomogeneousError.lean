@@ -1109,13 +1109,6 @@ section RowInterp
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
 
-theorem norm_piLp_le_sum {κ : Type*} [Fintype κ] {β : κ → Type*}
-    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
-  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (Finset.sum_nonneg fun _ _ => norm_nonneg _)
-    two_ne_zero).1 ?_
-  rw [PiLp.norm_sq_eq_of_L2]
-  exact Finset.sum_sq_le_sq_sum_of_nonneg fun i _ => norm_nonneg _
-
 /-- The canonical Whitney interpolant into `Vₕ^{0 + i}` (`FEMInterp.canonicalInterp`: the
 glued interpolant `glue ∘ globalInterp` of the Freudenthal mesh, whose boundary DOFs are the
 integrals of the interpolated form over the boundary faces). -/
@@ -1175,7 +1168,7 @@ theorem rowInterp_bounds (N : ℕ) {g : Fin 3 → FormField 3} (hg : ∀ i, Cont
   have hsum : ∑ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ)) * L * meshSize N =
       rowBound * L * meshSize N := by
     rw [rowBound, Finset.sum_mul, Finset.sum_mul]
-  refine ⟨(norm_piLp_le_sum x).trans ?_, fun hx => ?_⟩
+  refine ⟨(PiLp.norm_le_sum_norm x).trans ?_, fun hx => ?_⟩
   · rw [← hsum]
     refine Finset.sum_le_sum fun i _ => ?_
     rw [hxi, norm_neg]
@@ -1196,7 +1189,7 @@ theorem rowInterp_bounds (N : ℕ) {g : Fin 3 → FormField 3} (hg : ∀ i, Cont
         exact Subtype.ext (hxi i)
       rw [e, norm_neg]
       exact (spec i).2 _ hdom
-    refine (norm_piLp_le_sum _).trans ?_
+    refine (PiLp.norm_le_sum_norm _).trans ?_
     calc ∑ j : Fin 3, ‖rowComplex.totalD ⟨x, hx⟩ j‖ ≤ ∑ _j : Fin 3, rowBound * L * meshSize N :=
           Finset.sum_le_sum fun j _ => hj j
       _ = 3 * (rowBound * L * meshSize N) := by simp
@@ -1229,7 +1222,7 @@ theorem rowL2Const_nonneg : 0 ≤ rowL2Const := Finset.sum_nonneg fun _ _ => by 
 theorem norm_rowField_le {f : Fin 3 → FormField 3} (hf : ∀ i, Continuous (f i)) {B : ℝ}
     (hB : 0 ≤ B) (h : ∀ i, ∀ y ∈ cubeDomain 3, ∀ s, |f i y s| ≤ B) :
     ‖rowField f hf‖ ≤ rowL2Const * B := by
-  refine (norm_piLp_le_sum _).trans ?_
+  refine (PiLp.norm_le_sum_norm _).trans ?_
   rw [rowL2Const, Finset.sum_mul]
   refine Finset.sum_le_sum fun i _ => ?_
   rw [rowField_apply]
@@ -1357,7 +1350,7 @@ theorem hasDerivAt_exactField₂ (t : ℝ) : HasDerivAt (exactField₂ X) (exact
 
 theorem norm_exactField₃_le {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
     ‖exactField₃ X t‖ ≤ 3 * (rowL2Const * L) := by
-  refine (norm_piLp_le_sum _).trans ?_
+  refine (PiLp.norm_le_sum_norm _).trans ?_
   calc ∑ r : Fin 3, ‖exactField₃ X t r‖ ≤ ∑ _r : Fin 3, rowL2Const * L :=
         Finset.sum_le_sum fun r _ => (X r).norm_field₃_le ht hL0
     _ = 3 * (rowL2Const * L) := by simp
@@ -1375,7 +1368,7 @@ theorem inner_exactField₁ (N : ℕ) (t : ℝ) {v : DState3 (whitneyRow N)}
 theorem norm_exactInterp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
     ‖dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t‖ ≤
       3 * (rowBound * L * meshSize N) := by
-  refine (norm_piLp_le_sum _).trans ?_
+  refine (PiLp.norm_le_sum_norm _).trans ?_
   calc ∑ r : Fin 3, ‖(dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t) r‖ ≤
         ∑ _r : Fin 3, rowBound * L * meshSize N :=
         Finset.sum_le_sum fun r _ => (X r).norm_interp_sub_le N ht hL0
@@ -1384,7 +1377,7 @@ theorem norm_exactInterp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 
 theorem norm_d_exactInterp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
     ‖dEmb3 (whitneyRow N) (discreteD3 (whitneyRow N) (exactInterp X N t)) - exactD X t‖ ≤
       3 * (3 * (rowBound * L * meshSize N)) := by
-  refine (norm_piLp_le_sum _).trans ?_
+  refine (PiLp.norm_le_sum_norm _).trans ?_
   calc ∑ r : Fin 3, ‖(dEmb3 (whitneyRow N) (discreteD3 (whitneyRow N) (exactInterp X N t)) -
         exactD X t) r‖ ≤ ∑ _r : Fin 3, 3 * (rowBound * L * meshSize N) :=
         Finset.sum_le_sum fun r _ => (X r).norm_d_interp_sub_le N ht hL0
@@ -1395,7 +1388,7 @@ theorem norm_exactInterp_sub_sub_le (N : ℕ) {t t' : ℝ} (ht : t ∈ Icc 0 T) 
     ‖(dEmb3 (whitneyRow N) (exactInterp X N t') - exactField X t') -
         (dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t)‖ ≤
       3 * (rowBound * (L * |t' - t|) * meshSize N) := by
-  refine (norm_piLp_le_sum _).trans ?_
+  refine (PiLp.norm_le_sum_norm _).trans ?_
   calc ∑ r : Fin 3, ‖((dEmb3 (whitneyRow N) (exactInterp X N t') - exactField X t') -
         (dEmb3 (whitneyRow N) (exactInterp X N t) - exactField X t)) r‖ ≤
         ∑ _r : Fin 3, rowBound * (L * |t' - t|) * meshSize N :=

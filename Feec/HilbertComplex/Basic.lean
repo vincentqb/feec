@@ -85,6 +85,10 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 /-! ### Elementary facts -/
 
+/-- Two Hilbert complexes with the same differentials are equal. -/
+theorem ext_d {H₁ H₂ : HilbertComplex 𝕜 c W} (h : H₁.d = H₂.d) : H₁ = H₂ := by
+  cases H₁; cases H₂; subst h; rfl
+
 /-- A partial map equal to `0` vanishes on its domain. -/
 theorem _root_.LinearPMap.apply_eq_zero_of_eq_zero {R E F : Type*} [Ring R] [AddCommGroup E]
     [Module R E] [AddCommGroup F] [Module R F] {T : E →ₗ.[R] F} (hT : T = 0) (x : T.domain) :

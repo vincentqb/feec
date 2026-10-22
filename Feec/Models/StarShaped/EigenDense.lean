@@ -545,12 +545,6 @@ theorem eigenDense_gradCurl_convex {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornolo
     (hc : Convex ℝ Ω) : (gradCurl ℝ hΩ).EigenDense :=
   eigenDense_gradCurl_of_weber hΩ hb (hasWeberCompactness_convex hΩ hb hc)
 
-/-- The Euclidean ball `{x : |x - c| < r}` of `ℝ³` (the space carries the sup norm). -/
-def euclBall (c : R3) (r : ℝ) : Set R3 := {x | ∑ i, (x i - c i) ^ 2 < r ^ 2}
-
-theorem isOpen_euclBall (c : R3) (r : ℝ) : IsOpen (euclBall c r) :=
-  isOpen_lt (by fun_prop) continuous_const
-
 theorem isBounded_euclBall (c : R3) (r : ℝ) : Bornology.IsBounded (euclBall c r) := by
   refine (Metric.isBounded_closedBall (x := c) (r := |r|)).subset fun x hx => ?_
   rw [Metric.mem_closedBall, dist_pi_le_iff (abs_nonneg r)]

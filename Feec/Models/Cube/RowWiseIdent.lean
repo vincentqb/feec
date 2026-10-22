@@ -2007,12 +2007,9 @@ theorem reducingSubcomplex_range :
   refine ⟨fun i j => ?_⟩
   convert h.reduces i j using 1 <;> exact range_J _
 
-theorem inner_J' (i : Fin 3) (x y : WQ i) : ⟪J i x, J i y⟫_ℝ = ((8 : ℝ) : ℝ) * ⟪x, y⟫_ℝ :=
-  inner_J i x y
-
 /-- **The cube complex is the compression of the torus complex** along the parity extension. -/
 theorem cubeComplex_eq_compress :
-    cubeComplex = RealTorus.gradCurl.compress J (by norm_num : (0 : ℝ) < 8) inner_J'
+    cubeComplex = RealTorus.gradCurl.compress J (by norm_num : (0 : ℝ) < 8) inner_J
       reducingSubcomplex_range := by
   refine HilbertComplex.ext_d (funext fun i => funext fun j => ?_)
   refine LinearPMap.ext (Submodule.ext fun x => ?_) fun x hx hx' => ?_

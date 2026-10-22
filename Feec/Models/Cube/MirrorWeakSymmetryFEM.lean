@@ -42,7 +42,7 @@ are checked: `S₀,ₕ` is onto (`mirror_S0_surjective`) and `grad` is injective
   (`Feec.BGG.DiscreteSolution.stationary`): the constant mode decouples, and well-posedness does
   not need `grad` injective on the top row.
 * `mirror_nonvacuous`: the bottom row is nonzero, and for `f = 0` the energy is conserved
-  (`Feec.BGG.DiscreteSolution.energy_eq`), so nonzero data give solutions nonzero at every time.
+  (`Feec.BGG.DiscreteSolution.energy_const`), so nonzero data give solutions nonzero at every time.
 
 ## Gaps (convergence to the TSD solution of `MirrorBGG.existsUnique_memQ`)
 
@@ -751,15 +751,6 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
 
 open scoped RealInnerProductSpace
 
-/-- **Energy conservation** of (6.3) without source: `‖σₕ‖² + ‖uₕ‖² + ‖Mₕ‖² + ‖ρₕ‖²` is
-constant on `[0,T]`. -/
-theorem DiscreteSolution.energy_eq {T : ℝ} (s : DiscreteSolution D T (0 : ℝ → Pt1)) :
-    ∀ t ∈ Icc 0 T, ‖s.σ t‖ ^ 2 + ‖s.u t‖ ^ 2 + ‖s.M t‖ ^ 2 + ‖s.ρ t‖ ^ 2 =
-      ‖s.σ 0‖ ^ 2 + ‖s.u 0‖ ^ 2 + ‖s.M 0‖ ^ 2 + ‖s.ρ 0‖ ^ 2 := by
-  refine constant_of_has_deriv_right_zero ((((s.cσ.norm.pow 2).add (s.cu.norm.pow 2)).add
-    (s.cM.norm.pow 2)).add (s.cρ.norm.pow 2)) fun t ht => ?_
-  simpa using s.hasDerivWithinAt_energy ht
-
 end Feec.BGG
 
 namespace Feec.Models.Cube.MirrorWeakSymmetry
@@ -822,7 +813,7 @@ theorem mirror_nonvacuous :
   · obtain ⟨μ, hμ⟩ := exists_top_one_ne_zero N
     obtain ⟨φ, hφ⟩ := mirror_S0_surjective N μ
     exact ⟨φ, fun h => hμ (by rw [← hφ, h, map_zero])⟩
-  · have he := s.energy_eq t ht
+  · have he := s.energy_const t ht
     simp only [Prod.mk_eq_zero] at ht0
     rw [ht0.1, ht0.2.1, ht0.2.2.1, ht0.2.2.2] at he
     simp only [norm_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, add_zero]

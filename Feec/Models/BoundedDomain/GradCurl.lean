@@ -50,6 +50,13 @@ namespace Feec.Models.BoundedDomain
 /-- Points of `ℝ³`. -/
 abbrev R3 := Fin 3 → ℝ
 
+/-- The Euclidean ball `{x : |x - c| < r}` of `ℝ³` (`R3` carries the sup norm, so this is not
+`Metric.ball c r`). -/
+def euclBall (c : R3) (r : ℝ) : Set R3 := {x | ∑ i, (x i - c i) ^ 2 < r ^ 2}
+
+theorem isOpen_euclBall (c : R3) (r : ℝ) : IsOpen (euclBall c r) :=
+  isOpen_lt (by fun_prop) continuous_const
+
 /-- Index pairs `(i, j)` of `3 × 3` matrices. -/
 abbrev Ix := Fin 3 × Fin 3
 

@@ -96,10 +96,6 @@ theorem adjoint_symm_adjoint_apply (a : E ≃L[𝕜] F) (x : F) : a.adjoint.symm
   rw [ContinuousLinearMap.adjoint_adjoint]
   rfl
 
-@[simp] theorem adjoint_apply_adjoint_symm_apply (a : E ≃L[𝕜] F) (x : E) :
-    a.adjoint (a.adjoint.symm x) = x :=
-  a.adjoint.apply_symm_apply x
-
 end ContinuousLinearEquiv
 
 namespace Submodule

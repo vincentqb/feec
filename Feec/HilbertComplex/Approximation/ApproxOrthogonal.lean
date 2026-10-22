@@ -199,11 +199,8 @@ open scoped RealInnerProductSpace
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)]
   [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex ℝ c W'} {κ' : Type*}
 
-/-- The real structure of the discrete spaces of a real discretization used by
-`ApproxFEEC.complexify` (the one of the inner product). -/
-local instance (priority := high) instNormedSpaceRealOfInner' (F : ApproxFEEC H' κ')
-    (h : κ') : NormedSpace ℝ (F.X h) :=
-  (F.innerProductSpace h).toNormedSpace
+-- the real structure of the discrete spaces used by `ApproxFEEC.complexify` (of the inner product)
+attribute [local instance high] ApproxFEEC.instNormedSpaceRealOfInner
 
 /-- An isometric `J` with `J² = -1` is skew: `⟪J x, y⟫ = -⟪x, J y⟫`. -/
 theorem inner_J_left {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] (J : E →L[ℝ] E)

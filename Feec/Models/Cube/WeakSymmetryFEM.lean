@@ -39,9 +39,10 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
   `X_reg = (H̊Λ⁰(Q)³)³` (row-wise `H̊¹` potentials, from the regularity hypothesis with its constant
   `C_R`) and the `H̊¹` approximation of the smoothed projections
   (`FEM.PolySmoothingEstimatesMin.norm_sub_proj_le_grad`).
-* `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`: the weak-consistency lemma with
-  `S¹u ∈ D(d¹*)` as a functional bound (in the `W`-normed model `V¹ = H̊Λ¹(Q)` is not complete, so
-  `d¹*S¹u ∈ L²` has no representative in `V¹`).
+* The weak-consistency lemma is used in the form
+  `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`, with `S¹u ∈ D(d¹*)` as a
+  functional bound (in the `W`-normed model `V¹ = H̊Λ¹(Q)` is not complete, so `d¹*S¹u ∈ L²` has no
+  representative in `V¹`).
 * `cubeFEM_rate`, `cubeFEM_rate_C2`: **Thm 5.5 on the cube with the elements of Table 5.1**,
   `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u, S¹u`
   `C²` and vanishing outside `Q` (bound `L` on the first derivatives) and `‖λ‖ ≤ L`, `K`
@@ -80,121 +81,6 @@ open MeasureTheory Set Filter
 @[expose] public noncomputable section
 
 /-! ### Weak consistency against a functional bound -/
-
-namespace Feec.BGG.Discrete
-
-variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
-  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
-  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
-  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
-  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
-  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
-  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
-  {D : Feec.BGG.Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Feec.BGG.Discrete D}
-
-/-- **Weak consistency from regular potentials, `d¹*`-regularity as a functional bound**: the
-variant of `weakConsistency_of_regularPotential` with the hypothesis `⟪z, d w⟫ = ⟪z', w⟫`
-(`z' ∈ V¹`) replaced by `|⟪z, d w⟫| ≤ M ‖w‖` for all `w ∈ V¹`. This is the form that applies
-when `V¹` carries the `W`-norm but is not complete (as `H̊Λ¹(Q) ⊆ L²Λ¹(Q)`), where
-`d¹* z ∈ L²` has no representative in `V¹`. -/
-theorem weakConsistency_of_regularPotential_of_bound {Cp CR CS CP : ℝ}
-    (H : Feec.BGG.Stability D Cp CR CS) (B : Q.Bounded CP) {Xr : Type*} [NormedAddCommGroup Xr]
-    [NormedSpace ℝ Xr] {Cinc Creg h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
-    (Rg : Q.RegularPotential Xr Cinc Creg Capp h)
-    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * Feec.BGG.graphSq D.dt0 ψ)
-    {z : W2} {M : ℝ} (hM : 0 ≤ M) (hz : ∀ w, |⟪z, D.d1 w⟫| ≤ M * ‖w‖) :
-    ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
-      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ M *
-        √(Feec.BGG.graphSq D.dt1 v) := by
-  intro v hv
-  have hp := H.Cp_nonneg; have hS := H.CS_nonneg; have hP := B.CP_nonneg
-  have hι := Rg.Cinc_nonneg; have hr := Rg.Creg_nonneg
-  obtain ⟨y, hy1, hy2⟩ := Rg.exists_potential v hv
-  set w := Rg.R y with hw
-  set G := √(Feec.BGG.graphSq D.dt1 v) with hG
-  have hvG : ‖v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (Feec.BGG.graphSq_nonneg _ _)).2 (by
-    unfold Feec.BGG.graphSq; nlinarith [sq_nonneg ‖D.dt1 v‖])
-  have hdG : ‖D.dt1 v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (Feec.BGG.graphSq_nonneg _ _)).2 (by
-    unfold Feec.BGG.graphSq; nlinarith [sq_nonneg ‖v‖])
-  have hdv : D.dt1 v ∈ Q.Wt2h := Q.dt1_mem v hv
-  have hdPw : D.dt1 (Q.Pt1 w) = D.dt1 v := by rw [Q.commt1, hy1, Q.Pt2_id _ hdv]
-  have hker : D.dt1 (v - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, sub_self]
-  obtain ⟨ψ, hψ, hψeq⟩ := exact_bot_h H (Submodule.sub_mem _ hv (Q.Pt1_mem w)) hker
-  have hsplit : (D.S1 - Q.S1h) v = D.d1 (Q.S0h ψ - D.S0 ψ) +
-      ((D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)) := by
-    calc (D.S1 - Q.S1h) v = (D.S1 - Q.S1h) (D.dt0 ψ + w - (w - Q.Pt1 w)) := by
-          congr 1; rw [hψeq]; abel
-      _ = _ := by rw [map_sub, map_add, S1_sub_S1h_dt0]; abel
-  have hgrad : |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫| ≤
-      M * (Capp * h * √(Feec.BGG.graphSq D.dt0 ψ)) := by
-    refine (hz _).trans (mul_le_mul_of_nonneg_left ?_ hM)
-    rw [norm_sub_rev]
-    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-    rw [mul_pow, Real.sq_sqrt (Feec.BGG.graphSq_nonneg _ _)]; exact happ0 ψ hψ
-  have hψg : √(Feec.BGG.graphSq D.dt0 ψ) ≤ √(1 + Cp ^ 2) * ‖D.dt0 ψ‖ := by
-    rw [← Real.sqrt_sq (norm_nonneg (D.dt0 ψ)), ← Real.sqrt_mul (by positivity)]
-    apply Real.sqrt_le_sqrt
-    have := pow_le_pow_left₀ (norm_nonneg _) (H.poinct0 ψ) 2
-    unfold Feec.BGG.graphSq; nlinarith
-  have hwn : ‖w‖ ≤ Cinc * Creg * ‖D.dt1 v‖ := (Rg.norm_R_le y).trans (by
-    rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hy2 hι)
-  have hPw : ‖Q.Pt1 w‖ ≤ CP * (1 + Cinc * Creg) * ‖D.dt1 v‖ := by
-    have hg := B.Pt1 w
-    have hgw : Feec.BGG.graphSq D.dt1 w ≤ ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by
-      unfold Feec.BGG.graphSq; rw [hy1]
-      have := pow_le_pow_left₀ (norm_nonneg _) hwn 2
-      nlinarith [norm_nonneg (D.dt1 v), mul_nonneg (mul_nonneg hι hr) (norm_nonneg (D.dt1 v))]
-    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-    calc ‖Q.Pt1 w‖ ^ 2 ≤ Feec.BGG.graphSq D.dt1 (Q.Pt1 w) := by
-          unfold Feec.BGG.graphSq; nlinarith [sq_nonneg ‖D.dt1 (Q.Pt1 w)‖]
-      _ ≤ CP ^ 2 * Feec.BGG.graphSq D.dt1 w := hg
-      _ ≤ CP ^ 2 * ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by gcongr
-      _ = _ := by ring
-  have hdψ : ‖D.dt0 ψ‖ ≤ (1 + CP * (1 + Cinc * Creg)) * G := by
-    rw [hψeq]
-    calc ‖v - Q.Pt1 w‖ ≤ ‖v‖ + ‖Q.Pt1 w‖ := norm_sub_le _ _
-      _ ≤ G + CP * (1 + Cinc * Creg) * G :=
-          add_le_add hvG (hPw.trans (mul_le_mul_of_nonneg_left hdG (by positivity)))
-      _ = _ := by ring
-  have hx : D.dt1 (w - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, hy1, sub_self]
-  have hSx : ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤ (1 + CP) * CS * (Capp * h * ‖y‖) := by
-    have hS1x : ‖D.S1 (w - Q.Pt1 w)‖ ≤ CS * ‖w - Q.Pt1 w‖ := by
-      have := H.boundS1 (w - Q.Pt1 w)
-      unfold Feec.BGG.graphSq at this; rw [hx, norm_zero] at this
-      refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-      rw [mul_pow]; simpa using this
-    rw [LinearMap.sub_apply, S1h_apply]
-    calc ‖D.S1 (w - Q.Pt1 w) - Q.P2 (D.S1 (w - Q.Pt1 w))‖
-        ≤ ‖D.S1 (w - Q.Pt1 w)‖ + ‖Q.P2 (D.S1 (w - Q.Pt1 w))‖ := norm_sub_le _ _
-      _ ≤ ‖D.S1 (w - Q.Pt1 w)‖ + CP * ‖D.S1 (w - Q.Pt1 w)‖ := add_le_add le_rfl (B.P2 _)
-      _ = (1 + CP) * ‖D.S1 (w - Q.Pt1 w)‖ := by ring
-      _ ≤ (1 + CP) * (CS * ‖w - Q.Pt1 w‖) :=
-          mul_le_mul_of_nonneg_left hS1x (by linarith)
-      _ ≤ (1 + CP) * (CS * (Capp * h * ‖y‖)) := by
-          gcongr; exact Rg.approx_Pt1 y
-      _ = _ := by ring
-  have hco : ‖(D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤
-      (1 + (1 + CP) * CS) * (Capp * h) * (Creg * G) := by
-    have hyG : ‖y‖ ≤ Creg * G := hy2.trans (mul_le_mul_of_nonneg_left hdG hr)
-    calc _ ≤ ‖(D.S1 - Q.S1h) w‖ + ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ := norm_sub_le _ _
-      _ ≤ Capp * h * ‖y‖ + (1 + CP) * CS * (Capp * h * ‖y‖) := add_le_add (Rg.approx_S1 y) hSx
-      _ = (1 + (1 + CP) * CS) * (Capp * h) * ‖y‖ := by ring
-      _ ≤ _ := mul_le_mul_of_nonneg_left hyG (by positivity)
-  rw [hsplit, inner_add_right]
-  calc |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫ + ⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫|
-      ≤ |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫|
-        + |⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫| := abs_add_le _ _
-    _ ≤ M * (Capp * h * √(Feec.BGG.graphSq D.dt0 ψ))
-        + ‖z‖ * ((1 + (1 + CP) * CS) * (Capp * h) * (Creg * G)) :=
-        add_le_add hgrad ((abs_real_inner_le_norm _ _).trans
-          (mul_le_mul_of_nonneg_left hco (norm_nonneg _)))
-    _ ≤ M * (Capp * h * (√(1 + Cp ^ 2) * ((1 + CP * (1 + Cinc * Creg)) * G)))
-        + ‖z‖ * ((1 + (1 + CP) * CS) * (Capp * h) * (Creg * G)) := by
-        gcongr
-        exact hψg.trans (mul_le_mul_of_nonneg_left hdψ (Real.sqrt_nonneg _))
-    _ = _ := by unfold weakConsistencyConst; ring
-
-end Feec.BGG.Discrete
 
 namespace Feec.Models.Cube.WeakSymmetry
 

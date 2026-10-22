@@ -9,8 +9,9 @@ public import Feec.Models.BoundedDomain.SymDualGeneral
 `Feec.Counterexamples.BallSymTSD` refutes the conclusion of Prop 4.19, read with its printed data
 space `H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)` (the complex
 `Feec.Models.BoundedDomain.hessCurlMax`), on the Euclidean unit ball. This file carries the
-refutation to **every Euclidean ball** `{|x - c| < R}` of `ℝ³` (`ballE`), and more generally to
-every affine image `T⁻¹ Ω'` (`T x = a x + b`, `a ≠ 0`) of a domain `Ω'` on which it holds.
+refutation to **every Euclidean ball** `{|x - c| < R}` of `ℝ³`
+(`Feec.Models.BoundedDomain.euclBall`), and more generally to every affine image `T⁻¹ Ω'`
+(`T x = a x + b`, `a ≠ 0`) of a domain `Ω'` on which it holds.
 
 The wave operator of `hessCurlMax` is not conjugate to a rescaling of itself under dilations
 (its differentials have orders `2` and `1`), so the evolution is not transported. What is
@@ -217,37 +218,30 @@ theorem witness_ball3 : Witness isOpen_ball3 E0 ((hessCurlMax ℝ isOpen_ball3).
     have h := inner_negL_x0_ne_zero
     rwa [inner_negL_x0] at h
 
-/-- The Euclidean ball `{x : |x - c| < R}` (`R3` carries the sup norm, so this is not
-`Metric.ball c R`). -/
-def ballE (c : R3) (R : ℝ) : Set R3 := {x | ∑ i, (x i - c i) ^ 2 < R ^ 2}
-
 /-- `{|x - c| < R}` is the preimage of the unit ball under `x ↦ (x - c)/R`. -/
 theorem preimage_ball3 (c : R3) {R : ℝ} (hR : 0 < R) :
-    aff R⁻¹ (-(R⁻¹ • c)) ⁻¹' ball3 = ballE c R := by
+    aff R⁻¹ (-(R⁻¹ • c)) ⁻¹' ball3 = euclBall c R := by
   ext x
   have e : rho (aff R⁻¹ (-(R⁻¹ • c)) x) = (∑ i, (x i - c i) ^ 2) / R ^ 2 := by
     simp only [rho, aff, Pi.add_apply, Pi.smul_apply, Pi.neg_apply, smul_eq_mul,
       Fin.sum_univ_three]
     field_simp
     ring
-  simp only [mem_preimage, ballE, ball3]
+  simp only [mem_preimage, euclBall, ball3]
   change rho _ < 1 ↔ _
   rw [e, div_lt_one (by positivity)]
   rfl
 
-theorem isOpen_ballE (c : R3) {R : ℝ} (hR : 0 < R) : IsOpen (ballE c R) :=
-  isOpen_of_aff (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR)
-
 /-- The witness on `{|x - c| < R}`: the pull-back of `(E₀, curl Q)` along `x ↦ (x - c)/R`. -/
 theorem witness_ballE (c : R3) {R : ℝ} (hR : 0 < R) :
-    Witness (isOpen_ballE c hR)
+    Witness (isOpen_euclBall c R)
       (pullSym (inv_ne_zero hR.ne') (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR) E0)
       (pullTr (inv_ne_zero hR.ne') (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR)
         ((hessCurlMax ℝ isOpen_ball3).d₁ ⟨Qs, Qs_mem_d1.1⟩)) :=
   witness_ball3.pull (inv_ne_zero hR.ne') (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR)
 
 /-- The TSD datum `E₀((x - c)/R)` on `{|x - c| < R}`, `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x`. -/
-def E0R (c : R3) {R : ℝ} (hR : 0 < R) : symSub ℝ (ballE c R) :=
+def E0R (c : R3) {R : ℝ} (hR : 0 < R) : symSub ℝ (euclBall c R) :=
   pullSym (inv_ne_zero hR.ne') (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR) E0
 
 /-- **The conclusion of Prop 4.19 fails for the boundary conditions as printed, on every ball**
@@ -256,21 +250,21 @@ H̊(sym curl, T)`): the datum `x₀ = (0, E₀((x - c)/R), 0)` lies in `D(L) ∩
 `K = {0} × L²(TSD) × L²(TSD)`, and for every `T > 0` the Hodge wave equation has a unique strong
 solution on `[0, T]` from `x₀`, which leaves `K`. [QuennevilleBelair2015], Prop. 4.19 (§4.11) -/
 theorem tsd_not_propagates (c : R3) {R : ℝ} (hR : 0 < R) :
-    E0R c hR ∈ tsdS (ballE c R) ∧
-      mk3 (0 : L2 ℝ (ballE c R)) (E0R c hR) (0 : trSub ℝ (ballE c R)) ∈
-        (hessCurlMax ℝ (isOpen_ballE c hR)).wave.domain ∧
-      mk3 (0 : L2 ℝ (ballE c R)) (E0R c hR) (0 : trSub ℝ (ballE c R)) ∈
+    E0R c hR ∈ tsdS (euclBall c R) ∧
+      mk3 (0 : L2 ℝ (euclBall c R)) (E0R c hR) (0 : trSub ℝ (euclBall c R)) ∈
+        (hessCurlMax ℝ (isOpen_euclBall c R)).wave.domain ∧
+      mk3 (0 : L2 ℝ (euclBall c R)) (E0R c hR) (0 : trSub ℝ (euclBall c R)) ∈
         HilbertComplex.totalSub (ShortHilbertComplex.family3
-          (⊥ : Submodule ℝ (L2 ℝ (ballE c R))) (tsdS (ballE c R)) (tsdT (ballE c R))) ∧
-      ∀ T > 0, Evolution.IsStrongSolution (hessCurlMax ℝ (isOpen_ballE c hR)).wave (Icc 0 T) 0
-          (fun t => (hessCurlMax ℝ (isOpen_ballE c hR)).toHilbertComplex.waveGroup.S t
-            (mk3 (0 : L2 ℝ (ballE c R)) (E0R c hR) (0 : trSub ℝ (ballE c R)))) ∧
-        (∀ U, U 0 = mk3 (0 : L2 ℝ (ballE c R)) (E0R c hR) (0 : trSub ℝ (ballE c R)) →
-          Evolution.IsStrongSolution (hessCurlMax ℝ (isOpen_ballE c hR)).wave (Icc 0 T) 0 U →
-            (EqOn U (fun t => (hessCurlMax ℝ (isOpen_ballE c hR)).toHilbertComplex.waveGroup.S t
-              (mk3 (0 : L2 ℝ (ballE c R)) (E0R c hR) (0 : trSub ℝ (ballE c R)))) (Icc 0 T) ∧
+          (⊥ : Submodule ℝ (L2 ℝ (euclBall c R))) (tsdS (euclBall c R)) (tsdT (euclBall c R))) ∧
+      ∀ T > 0, Evolution.IsStrongSolution (hessCurlMax ℝ (isOpen_euclBall c R)).wave (Icc 0 T) 0
+          (fun t => (hessCurlMax ℝ (isOpen_euclBall c R)).toHilbertComplex.waveGroup.S t
+            (mk3 (0 : L2 ℝ (euclBall c R)) (E0R c hR) (0 : trSub ℝ (euclBall c R)))) ∧
+        (∀ U, U 0 = mk3 (0 : L2 ℝ (euclBall c R)) (E0R c hR) (0 : trSub ℝ (euclBall c R)) →
+          Evolution.IsStrongSolution (hessCurlMax ℝ (isOpen_euclBall c R)).wave (Icc 0 T) 0 U →
+            (EqOn U (fun t => (hessCurlMax ℝ (isOpen_euclBall c R)).toHilbertComplex.waveGroup.S t
+              (mk3 (0 : L2 ℝ (euclBall c R)) (E0R c hR) (0 : trSub ℝ (euclBall c R)))) (Icc 0 T) ∧
             ∃ t ∈ Icc 0 T, U t ∉ HilbertComplex.totalSub (ShortHilbertComplex.family3
-              (⊥ : Submodule ℝ (L2 ℝ (ballE c R))) (tsdS (ballE c R)) (tsdT (ballE c R))))) :=
+              (⊥ : Submodule ℝ (L2 ℝ (euclBall c R))) (tsdS (euclBall c R)) (tsdT (euclBall c R))))) :=
   ⟨(witness_ballE c hR).mem_tsd, (witness_ballE c hR).mem_domain, (witness_ballE c hR).mem_K,
     (witness_ballE c hR).not_propagates⟩
 
@@ -280,8 +274,8 @@ printed hypothesis names `H(sym curl, T) ∩ L²(TSD)`): on `{|x - c| < R}` the 
 `curl (E₀ ∘ T) ∈ L²(TSD)` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`, so that
 intersection is not dense in `L²(TSD)`. -/
 theorem not_dense_tsdT (c : R3) {R : ℝ} (hR : 0 < R) :
-    closure ((tsdT (ballE c R) : Set (trSub ℝ (ballE c R))) ∩
-      (hessCurlMax ℝ (isOpen_ballE c hR)).d₁†.domain) ≠ (tsdT (ballE c R) : Set _) := by
+    closure ((tsdT (euclBall c R) : Set (trSub ℝ (euclBall c R))) ∩
+      (hessCurlMax ℝ (isOpen_euclBall c R)).d₁†.domain) ≠ (tsdT (euclBall c R) : Set _) := by
   intro he
   obtain ⟨h1, h2⟩ := (witness_ballE c hR).curl_not_mem_closure
   exact h2 (by rw [he]; exact h1)

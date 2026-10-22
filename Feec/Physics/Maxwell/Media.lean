@@ -220,7 +220,7 @@ theorem ε_electric_maxwell_apply (x : (M.maxwell S).domain) :
     (M.complex S).d₁† ⟨M.m (magnetic x.1), (state_mem_wave_domain x).2 2 1⟩) = _
   rw [_root_.map_sub, apply_eq_of_eq (adjoint_complex_d₁ M S) _ ⟨M.m (magnetic x.1), by
       rw [← adjoint_complex_d₁]; exact (state_mem_wave_domain x).2 2 1⟩ rfl, conj_apply,
-    ContinuousLinearEquiv.adjoint_apply_adjoint_symm_apply]
+    ContinuousLinearEquiv.apply_symm_apply]
   congr 1
   refine apply_congr' _ _ _ ?_
   change M.m.adjoint.symm.adjoint (M.m (magnetic x.1)) = magnetic x.1
@@ -236,7 +236,7 @@ theorem μ_magnetic_maxwell_apply (x : (M.maxwell S).domain) :
     PiLp 2 _) 2) = _
   rw [ShortHilbertComplex.wave_apply_two]
   change M.m.adjoint (M.m.adjoint.symm (S.d₁ ⟨M.e.symm (M.e (electric x.1)), _⟩)) = _
-  rw [ContinuousLinearEquiv.adjoint_apply_adjoint_symm_apply]
+  rw [ContinuousLinearEquiv.apply_symm_apply]
   exact apply_congr' _ _ _ (M.e.symm_apply_apply _)
 
 variable (M S)

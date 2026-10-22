@@ -721,21 +721,19 @@ theorem cubeProj_bound : ∃ C, ∀ (N : ℕ) (k : ℤ) (x : L2F ℝ (FEM.cubeDo
   ⟨_, fun N k x => (FEM.smoothingEstimates_exists (n := n)).choose_spec.choose_spec.norm_proj_le
     N k x⟩
 
-theorem cube_dense : ∀ (k : ℤ) (y : L2F ℝ (FEM.cubeDomain n) (formIdx n k)) (ε : ℝ), 0 < ε →
-    ∀ᶠ N in atTop, ∃ v ∈ (FEM.whitney n N).V k, ‖y - v‖ < ε := fun k y _ hε =>
-  (FEM.eventually_exists_whitney_near k y hε).mono fun _ ⟨v, hv, h1, _⟩ => ⟨v, hv, h1⟩
-
 /-- **Maxwell's equations with a perfect magnetic conductor on the cube** `Q = (0, ½)ⁿ`
 (degree `a`; `n = 3`, `a = 0` is the system `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` of
 `Feec.Maxwell.CubeFEM`), discretized by the lowest-order Whitney forms of the Freudenthal meshes
 with the smoothed projections, as a constrained FEEC discretization with the Gauss laws. -/
 def cubePMC (a : ℤ) : ConstrainedFEEC ((FEM.complex n).window a 3) ℕ :=
-  feec (FEM.complex n) a atTop (FEM.whitney n) (cubeProj n) (cubeProj_bound n) (cube_dense n)
+  feec (FEM.complex n) a atTop (FEM.whitney n) (cubeProj n) (cubeProj_bound n)
+    (fun k y _ hε => FEM.eventually_exists_whitney_lt k y hε)
 
 /-- The `O(h)` rate class of `C²` solutions with bound `Λ` on `[0, T]` (`FEM.IsC2Form`). -/
 abbrev cubePMCRate (a : ℤ) (T Λ : ℝ) (hΛ : 0 ≤ Λ) : (cubePMC n a).RateClass T :=
-  regRate (cubeProj_bound n) (cube_dense n) T (fun k x => FEM.IsC2Form k Λ x) (FEM.interpBound n)
-    FEM.meshSize Λ (fun N _ _ hx => hx.exists_mem_whitney_le hΛ N) (FEM.interpBound_nonneg n) hΛ
+  regRate (cubeProj_bound n) (fun k y _ hε => FEM.eventually_exists_whitney_lt k y hε) T
+    (fun k x => FEM.IsC2Form k Λ x) (FEM.interpBound n) FEM.meshSize Λ
+    (fun N _ _ hx => hx.exists_mem_whitney_le hΛ N) (FEM.interpBound_nonneg n) hΛ
     fun N => (FEM.meshSize_pos N).le
 
 /-- The smoothed cochain projections onto the Whitney complexes with vanishing boundary DOFs. -/
@@ -747,22 +745,19 @@ theorem cubeProjMin_bound : ∃ C, ∀ (N : ℕ) (k : ℤ) (x : L2F ℝ (FEM.cub
   ⟨_, fun N k x =>
     (FEM.smoothingEstimatesMin_exists (n := n)).choose_spec.choose_spec.norm_proj_le N k x⟩
 
-theorem cube_denseMin : ∀ (k : ℤ) (y : L2F ℝ (FEM.cubeDomain n) (formIdx n k)) (ε : ℝ), 0 < ε →
-    ∀ᶠ N in atTop, ∃ v ∈ (FEM.whitneyMin n N).V k, ‖y - v‖ < ε := fun k y _ hε =>
-  (FEM.eventually_exists_whitneyMin_near k y hε).mono fun _ ⟨v, hv, h1, _⟩ => ⟨v, hv, h1⟩
-
 /-- **Maxwell's equations with a perfect electric conductor on the cube** (vanishing tangential
 traces: `H̊Λ⁰(Q) → H̊Λ¹(Q) → L²Λ²(Q)` for `n = 3`, `a = 0`), discretized by the Whitney forms with
 vanishing boundary DOFs, as a constrained FEEC discretization with the Gauss laws. -/
 def cubePEC (a : ℤ) : ConstrainedFEEC ((FEM.complexMin n).window a 3) ℕ :=
   feec (FEM.complexMin n) a atTop (FEM.whitneyMin n) (cubeProjMin n) (cubeProjMin_bound n)
-    (cube_denseMin n)
+    (fun k y _ hε => FEM.eventually_exists_whitneyMin_lt k y hε)
 
 /-- The `O(h)` rate class of `C²` solutions vanishing outside `Q` (`FEM.IsC2FormMin`). -/
 abbrev cubePECRate (a : ℤ) (T Λ : ℝ) (hΛ : 0 ≤ Λ) : (cubePEC n a).RateClass T :=
-  regRate (cubeProjMin_bound n) (cube_denseMin n) T (fun k x => FEM.IsC2FormMin k Λ x)
-    (FEM.interpBound n) FEM.meshSize Λ (fun N _ _ hx => hx.exists_mem_whitneyMin_le hΛ N)
-    (FEM.interpBound_nonneg n) hΛ fun N => (FEM.meshSize_pos N).le
+  regRate (cubeProjMin_bound n) (fun k y _ hε => FEM.eventually_exists_whitneyMin_lt k y hε) T
+    (fun k x => FEM.IsC2FormMin k Λ x) (FEM.interpBound n) FEM.meshSize Λ
+    (fun N _ _ hx => hx.exists_mem_whitneyMin_le hΛ N) (FEM.interpBound_nonneg n) hΛ
+    fun N => (FEM.meshSize_pos N).le
 
 variable {n} {a : ℤ}
 

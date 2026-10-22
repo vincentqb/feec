@@ -161,10 +161,6 @@ theorem extDeriv_formField {k : ℕ} (φ : formIdx n k → (Fin n → ℝ) → �
   · rw [IsDeg.extDeriv (isDeg_formField φ) x s (fun h => hs (by exact_mod_cast h))]
     simp [formField, formExt, hs]
 
-/-- On negative degrees there are no components. -/
-theorem formIdx_isEmpty_of_neg {k : ℤ} (hk : k < 0) : IsEmpty (formIdx n k) :=
-  ⟨fun s => by have := s.2; omega⟩
-
 /-- `d` of a field indexed by an empty set of components vanishes. -/
 theorem extDerivOp_apply_of_isEmpty {k : ℤ} [IsEmpty (formIdx n k)]
     (w : formIdx n k → (Fin n → ℝ) → ℝ) (u : formIdx n (k + 1)) (y : Fin n → ℝ) :
@@ -190,7 +186,7 @@ theorem isDIntertwining_minorMat (A : Matrix (Fin n) (Fin n) ℝ) :
       t x, extDeriv_affinePullback_apply _ b ((hω.differentiable (by simp)) _), pullFun_minorMat,
       extDeriv_formField]
     rfl
-  · have := formIdx_isEmpty_of_neg (n := n) (not_le.1 hk)
+  · have := Feec.Models.Cube.DeRhamIdent.isEmpty_formIdx_of_neg (n := n) (not_le.1 hk)
     funext t x
     rw [extDerivOp_apply_of_isEmpty, Feec.Domain.pullFun]
     simp only [extDerivOp_apply_of_isEmpty, mul_zero, Finset.sum_const_zero]

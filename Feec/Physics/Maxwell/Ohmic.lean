@@ -161,7 +161,7 @@ theorem ε_electric_ohmic_apply (x : (M.ohmic S σ).domain) :
   change M.ε (electric (M.maxwell (fields S) ⟨x, x.2⟩) -
     M.e.symm (electric (M.loss σ (M.state PUnit.{u + 1} x)))) = _
   rw [_root_.map_sub, ε_electric_maxwell_apply, ε_e_symm_apply, electric_loss,
-    ContinuousLinearEquiv.adjoint_apply_adjoint_symm_apply]
+    ContinuousLinearEquiv.apply_symm_apply]
   change M.ε ((0 : PUnit.{u + 1} →ₗ.[𝕜] W₁) ⟨gauge x.1, _⟩) - _ - σ (M.e.symm (M.e (electric x.1)))
     = _
   rw [apply_eq_zero_of_eq_zero rfl, _root_.map_zero, zero_sub,

@@ -1690,10 +1690,6 @@ def crossF (U : Ix → R3 → ℝ) (ik : Ix) (x : R3) : ℝ :=
 def fluxG (U ψ : Ix → R3 → ℝ) (m : Fin 3) (x : R3) : ℝ :=
   ∑ i, (U (i, m + 1) x * ψ (i, m + 2) x - U (i, m + 2) x * ψ (i, m + 1) x)
 
-private theorem pd_fun_sub' {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g)
-    (k : Fin 3) (x : R3) : pd k (fun y => f y - g y) x = pd k f x - pd k g x :=
-  pd_sub hf hg k x
-
 theorem contDiff_fluxG (hU : ∀ ij, ContDiff ℝ 1 (U ij)) (hψ : ∀ ij, ContDiff ℝ 1 (ψ ij))
     (m : Fin 3) : ContDiff ℝ 1 (fluxG U ψ m) :=
   ContDiff.sum fun _ _ => ((hU _).mul (hψ _)).sub ((hU _).mul (hψ _))
@@ -1710,7 +1706,7 @@ theorem sum_pd_fluxG (hU : ∀ ij, Differentiable ℝ (U ij)) (hψ : ∀ ij, Dif
     rw [pd_sum (f := fun i y => U (i, m + 1) y * ψ (i, m + 2) y - U (i, m + 2) y * ψ (i, m + 1) y)
       Finset.univ (fun i _ => (hprod _ _).sub (hprod _ _)) m x]
     refine Finset.sum_congr rfl fun i _ => ?_
-    rw [pd_fun_sub' (hprod _ _) (hprod _ _), pd_mul ((hU _) x) ((hψ _) x),
+    rw [pd_fun_sub (hprod _ _) (hprod _ _), pd_mul ((hU _) x) ((hψ _) x),
       pd_mul ((hU _) x) ((hψ _) x)]
   simp only [e, curlM, Fintype.sum_prod_type, Fin.sum_univ_three]
   simp only [show (0 : Fin 3) + 1 = 1 from rfl, show (0 : Fin 3) + 2 = 2 from rfl,
@@ -2001,39 +1997,6 @@ theorem eigen_data (hU : ∀ ij, ContDiff ℝ 2 (U ij)) {ξ : ℝ}
     simp only [e1, e2] at hg
     exact hg
 
-private theorem sum_fin3_rot' (k : Fin 3) (f : Fin 3 → ℝ) :
-    ∑ l, f l = f k + f (k + 1) + f (k + 2) := by
-  fin_cases k <;> simp [Fin.sum_univ_three] <;> ring
-
-/-- `curl curl V = ∇ div V - ΔV` row-wise, for `C²` matrix fields. -/
-theorem curlM_curlM_eq_of_contDiff_two {V : Ix → R3 → ℝ} (hV : ∀ ij, ContDiff ℝ 2 (V ij))
-    (i k : Fin 3) (x : R3) :
-    curlM (curlM V) (i, k) x =
-      pd k (fun y => ∑ l, pd l (V (i, l)) y) x - ∑ j, pd j (pd j (V (i, k))) x := by
-  have hd : ∀ ij a, Differentiable ℝ (pd a (V ij)) := fun ij a =>
-    (contDiff_pd (n := 1) (hV ij) a).differentiable one_ne_zero
-  have hc : ∀ ij a b, pd a (pd b (V ij)) x = pd b (pd a (V ij)) x := fun ij a b =>
-    pd_pd_comm (hV ij) a b x
-  rw [pd_sum Finset.univ (fun l _ => hd _ _) k x, sum_fin3_rot' k, sum_fin3_rot' k]
-  have h21 : k + 2 + 1 = k := by fin_cases k <;> rfl
-  have h22 : k + 2 + 2 = k + 1 := by fin_cases k <;> rfl
-  have h11 : k + 1 + 1 = k + 2 := by fin_cases k <;> rfl
-  have h12 : k + 1 + 2 = k := by fin_cases k <;> rfl
-  have e1 : curlM V (i, k + 2) = fun y => pd k (V (i, k + 1)) y - pd (k + 1) (V (i, k)) y := by
-    funext y
-    simp only [curlM, h21, h22]
-  have e2 : curlM V (i, k + 1) = fun y => pd (k + 2) (V (i, k)) y - pd k (V (i, k + 2)) y := by
-    funext y
-    simp only [curlM, h11, h12]
-  have e3 : curlM (curlM V) (i, k) x =
-      pd (k + 1) (curlM V (i, k + 2)) x - pd (k + 2) (curlM V (i, k + 1)) x := rfl
-  rw [e3, e1, e2, show (fun y => pd k (V (i, k + 1)) y - pd (k + 1) (V (i, k)) y) =
-      pd k (V (i, k + 1)) - pd (k + 1) (V (i, k)) from rfl,
-    show (fun y => pd (k + 2) (V (i, k)) y - pd k (V (i, k + 2)) y) =
-      pd (k + 2) (V (i, k)) - pd k (V (i, k + 2)) from rfl,
-    pd_sub (hd _ _) (hd _ _), pd_sub (hd _ _) (hd _ _)]
-  linarith [hc (i, k + 1) (k + 1) k, hc (i, k + 2) (k + 2) k]
-
 /-- **No TSD eigenfield on the ball with a `C²` representative on `ℝ³`** (core form). -/
 theorem eq_zero_of_isEigenfield_of_contDiff_two {ξ : ℝ} (hξ : ξ ≠ 0)
     (hU : ∀ ij, ContDiff ℝ 2 (U ij))
@@ -2082,7 +2045,7 @@ theorem eq_zero_of_isEigenfield_of_contDiff_two {ξ : ℝ} (hξ : ξ ≠ 0)
         (fun y hy => sub_eq_zero.2 (hcc y hy (i, k))) hx.le
       simp only [Pi.sub_apply, Pi.mul_apply, hU0 x hx (i, k), mul_zero, sub_zero] at this
       exact this
-    have := curlM_curlM_eq_of_contDiff_two hU i k x
+    have := curlM_curlM_eq hU i k x
     rw [h2, h1] at this
     linarith
   -- the boundary layer is transverse-traceless, hence zero (no TT tensors on `S²`)
@@ -2479,7 +2442,7 @@ theorem shearWave_div (ξ : ℝ) (i : Fin 3) (x : R3) : ∑ j, pd j (shearWave �
 theorem curlM_curlM_shearWave (ξ : ℝ) (ij : Ix) (x : R3) :
     curlM (curlM (shearWave ξ)) ij x = ξ ^ 2 * shearWave ξ ij x := by
   obtain ⟨i, k⟩ := ij
-  rw [curlM_curlM_eq_of_contDiff_two (fun ij => (contDiff_shearWave ξ ij).of_le (by simp)) i k x]
+  rw [curlM_curlM_eq (fun ij => (contDiff_shearWave ξ ij).of_le (by simp)) i k x]
   have hdiv : (fun y => ∑ l, pd l (shearWave ξ (i, l)) y) = 0 :=
     funext fun y => shearWave_div ξ i y
   rw [hdiv, pd_zero]

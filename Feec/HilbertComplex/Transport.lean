@@ -517,10 +517,6 @@ open scoped ComplexConjugate
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
   [∀ i, CompleteSpace (W' i)]
 
-/-- Two Hilbert complexes with the same differentials are equal. -/
-theorem ext_d {H₁ H₂ : HilbertComplex 𝕜 c W} (h : H₁.d = H₂.d) : H₁ = H₂ := by
-  cases H₁; cases H₂; subst h; rfl
-
 variable {e : ∀ i, W i ≃L[𝕜] W' i} {κ : ι → ι → 𝕜} {s : ℝ}
 
 /-- **Adjoints of transported differentials** along uniformly scaled isometries

@@ -340,10 +340,6 @@ section Spectral
 open Models.Cube (rowAction)
 open Models.Cube.Parity (eq_zero_of_slots grad_div_add_curl_curl)
 
-/-- The real inner products of the torus spaces are the real parts of the complex ones. -/
-theorem real_inner_eq_re (i : Fin 3) (x y : Space i) : ⟪x, y⟫_ℝ = RCLike.re ⟪x, y⟫_ℂ :=
-  Models.Cube.RealTorus.real_inner_eq_re i x y
-
 theorem dfreq_eq_zero_iff {n : Fin 3 → ℤ} (hd : ∀ i, 0 < d i) : dfreq d n = 0 ↔ n = 0 := by
   constructor
   · intro h
@@ -438,7 +434,8 @@ theorem eigenDense_realD : (realD d).waveGroup.EigenDense := by
   have := fun N i => Fourier.hasOrthogonalProjection_band (symD d)
     (Fourier.Torus.finite_bandN N).measurableSet i
   have := fun N i => Fourier.finiteDimensional_band (symD d) (Fourier.Torus.finite_bandN N) i
-  exact HilbertComplex.eigenDense_restrictScalars_waveGroup_of_reducing real_inner_eq_re
+  exact HilbertComplex.eigenDense_restrictScalars_waveGroup_of_reducing
+    Cube.RealTorus.real_inner_eq_re
     (fun N => (symD d).band (Fourier.Torus.bandN N))
     (fun N => Fourier.reducingSubcomplex_band (symD d) (Fourier.Torus.finite_bandN N).measurableSet)
     ((symD d).mem_closure_iUnion_band Fourier.Torus.finite_bandN Fourier.Torus.bandN_mono
@@ -454,7 +451,7 @@ theorem isPurePoint_torusD (hd : ∀ i, 0 < d i) : (torusD hd).waveGroup.IsPureP
 /-- Eigenvectors of the real wave operator are eigenvectors of the complex one. -/
 theorem isEigenSq_complexD {ω : ℝ} {v : PiLp 2 Space} (h : (realD d).wave.IsEigenSq ω v) :
     (complexD d).wave.IsEigenSq ω v := by
-  rw [HilbertComplex.wave_restrictScalars real_inner_eq_re] at h
+  rw [HilbertComplex.wave_restrictScalars Cube.RealTorus.real_inner_eq_re] at h
   obtain ⟨h1, h2, e⟩ := h
   exact ⟨h1, h2, e⟩
 
@@ -548,7 +545,7 @@ theorem mem_stationary_torusD_of (hd : ∀ i, 0 < d i) {y : PiLp 2 Space}
   rw [← realD_eq_torusD hd] at hst
   have hgen : (realD d).waveGroup.generator = (complexD d).wave.restrictScalars :=
     (HilbertComplex.generator_waveGroup (realD d)).trans
-      (HilbertComplex.wave_restrictScalars real_inner_eq_re)
+      (HilbertComplex.wave_restrictScalars Cube.RealTorus.real_inner_eq_re)
   obtain ⟨hD, hL⟩ := C0Group.mem_domain_generator_of_mem_stationary hst
   have hD' : y ∈ (complexD d).wave.restrictScalars.domain := hgen ▸ hD
   have hL' : (complexD d).wave ⟨y, hD'⟩ = 0 := by
@@ -830,7 +827,7 @@ theorem complexBox_eq_compress (hℓ : ∀ i, 0 < ℓ i) :
       (reducingSubcomplex_rangeJB hℓ) := by
   rw [complexBox_eq_transport hℓ]
   have h := HilbertComplex.transport_transport_compress (by norm_num : (0 : ℝ) < 8)
-    Models.Cube.RowWise.inner_J' Models.Cube.RowWise.reducingSubcomplex_range
+    Feec.Models.Cube.RowWise.inner_J Models.Cube.RowWise.reducingSubcomplex_range
     (phiQ (dB_pos hℓ)) (phiT (dB_pos hℓ)) (J_phiQ (dB_pos hℓ)) (pullB (a := a) hℓ)
     (scaleJB_pos hℓ) (inner_JB hℓ) (reducingSubcomplex_rangeJB hℓ)
   rw [← Models.Cube.RowWise.cubeComplex_eq_compress] at h

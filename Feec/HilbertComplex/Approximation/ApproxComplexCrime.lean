@@ -1695,10 +1695,8 @@ section Complexify
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)]
   [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex ℝ c W'} {κ' : Type*}
 
-/-- Over `ℝ`, the normed space structure of the inner product (as in `ApproxFEEC.complexify`). -/
-local instance (priority := high) instNormedSpaceRealOfInnerCrime (F : ApproxFEEC.{u} H' κ')
-    (h : κ') : NormedSpace ℝ (F.X h) :=
-  (F.innerProductSpace h).toNormedSpace
+-- over `ℝ`, the normed space structure of the inner product (as in `ApproxFEEC.complexify`)
+attribute [local instance high] ApproxFEEC.instNormedSpaceRealOfInner
 
 namespace ApproxFEEC
 

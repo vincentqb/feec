@@ -7,22 +7,19 @@ public import Mathlib.Algebra.Order.Chebyshev
 # Rates of convergence of the higher-order finite element methods on the cube
 
 For an admissible sequence `S` reproducing polynomial forms of degree `s` in every form degree
-(`FEM.PolyOrder n S s`: `P_sΛᵏ ⊆ P(T)ᵏ`; e.g. `s + 1 ≤ r_k` in every degree,
-`polyOrder_of_le_deg`, or `s ≤ r_k` where the full family is used, `polyOrder_of_full`; every
-sequence has order `0`, `polyOrder_zero`; `P_r⁻Λ` has order `r - 1`, `polyOrder_trimmed`), the
+(`FEM.PolyOrder n S s`: `P_sΛᵏ ⊆ P(T)ᵏ`; every sequence has order `0`, `polyOrder_zero`), the
 canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of order `h^{s+1}` for
 `C^{s+2}` forms (`FEM.exists_mem_poly_le`), and the rate passes to the finite element methods:
 
 * `FEM.IsCsForm s j L x` (resp. `FEM.IsCsFormMin`, vanishing outside `Q`): `x` is a `C^{s+2}`
   `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`
-  (satisfiable: `exists_isCsForm`, `exists_isCsFormMin`).
+  (satisfiable: `exists_isCsFormMin`).
 * **Degreewise**: `‖x - v‖, ‖d(x - v)‖ ≤ B_j L h_N^{s+1}` for some `v ∈ Vₕʲ`
   (`IsCsForm.exists_mem_poly_le`, `IsCsFormMin.exists_mem_polyMin_le`), and the graph-norm
   distances (`IsCsForm.infDist_domainSub_poly_le`).
 * **Mixed Hodge–Laplace problem** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): error
   `≤ K L h_N^{s+1}` for solutions with `IsCsForm s` components (`mixed_rate_poly`,
-  `mixed_rate_polyMin`, unconditionally; `mixed_rate_poly_C2`: `O(h)` for `C²` data and every
-  sequence). Only the degrees used matter (`FEM.PolyOrderAt n S s j`: `P_s` in degrees `j` and
+  `mixed_rate_polyMin`, unconditionally). Only the degrees used matter (`FEM.PolyOrderAt n S s j`: `P_s` in degrees `j` and
   `j + 1`; `mixed_rate_poly_of_polyOrderAt`, `mixed_rate_polyMin_of_polyOrderAt`): the bottom row
   `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of Tables 5.1/6.1 has global order `h` only (because of `P₀Λ³`),
   but converges at order `h²` for the Hodge Laplacian on `1`-forms (`mixed_rate_lagrangeP2`,
@@ -30,8 +27,7 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
   (`norm_sub_le_windowMin_lagrangeP2`).
 * **Semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14) on every window:
   `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}`
-  (`norm_sub_le_window_poly_smooth`, `norm_sub_le_windowMin_poly_smooth`; no smoothed projection
-  is needed).
+  (`norm_sub_le_window_poly_smooth`; no smoothed projection is needed).
 * The rates in `H̊Λ(Q)` above are stated for the flat class `IsCsFormMin`; their versions for the
   natural class `FEM.IsCsFormTr` (`C^{s+2}` up to `∂Q` with vanishing tangential traces, no
   condition on the normal components) are `mixed_rate_polyTr`, `mixed_rate_lagrangeP2Tr`,
@@ -42,8 +38,7 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
   the domain of the maximal gradient (`H¹(Q)`), resp. of the minimal gradient (`H¹₀(Q)`: the
   extension by zero is in `H¹(ℝⁿ)`), `‖y - π_N y‖ ≤ (1 + 2C) K_k h_N Σₛ ‖∇ yₛ‖` with `K_k`
   independent of `N` (`PolySmoothingEstimates.norm_sub_proj_le_grad`,
-  `PolySmoothingEstimatesMin.norm_sub_proj_le_grad`, unconditionally `polySmoothedProjection_H1`;
-  both rows of Tables 5.1/6.1 with one smoother: `tableRows_H1`). The approximant is
+  `PolySmoothingEstimatesMin.norm_sub_proj_le_grad`; both rows of Tables 5.1/6.1 with one smoother: `tableRows_H1`). The approximant is
   `c⁻ᵏ Q_N y`: **mollification at scale `h_N`**, `‖f - R f‖ ≤ γ h_N √(n 2ⁿ) ‖∇f‖`
   (`norm_sub_smoothL2_le_pMax`, `norm_sub_smoothL2_le_pMin`: for smooth `f` by the fundamental
   theorem of calculus along segments, Jensen's inequality, Tonelli and the change of variables
@@ -86,25 +81,6 @@ def PolyOrder (S : PolySeq) (s : ℕ) : Prop := ∀ k, polySpace n s k ≤ S.spa
 /-- Every admissible sequence has order `h` (`s = 0`). -/
 theorem polyOrder_zero (S : PolySeq) : PolyOrder n S 0 := fun k => polySpace_zero_le_space S k
 
-/-- `S` has order `h^{s+1}` if `s + 1 ≤ r_k` in every degree `k ≤ n` (both families). -/
-theorem polyOrder_of_le_deg {S : PolySeq} {s : ℕ} (h : ∀ k ≤ n, s + 1 ≤ S.deg k) :
-    PolyOrder n S s := by
-  intro k
-  by_cases hk : k ≤ n
-  · exact Poly.polySpace_le_space S (h k hk)
-  · rw [polySpace_eq_bot_of_lt (by omega)]; exact bot_le
-
-/-- `S` has order `h^{s+1}` if in every degree `k ≤ n` either the full family `P_{r_k}Λᵏ` is used
-with `s ≤ r_k`, or `s + 1 ≤ r_k`. -/
-theorem polyOrder_of_full {S : PolySeq} {s : ℕ}
-    (h : ∀ k ≤ n, (S.kind k = .full ∧ s ≤ S.deg k) ∨ s + 1 ≤ S.deg k) : PolyOrder n S s := by
-  intro k
-  by_cases hk : k ≤ n
-  · rcases h k hk with ⟨hf, hs⟩ | hs
-    · exact Poly.polySpace_le_space_of_full S hf hs
-    · exact Poly.polySpace_le_space S hs
-  · rw [polySpace_eq_bot_of_lt (by omega)]; exact bot_le
-
 variable (n) in
 /-- **Degreewise order**: `S` reproduces polynomial forms of degree `s` in the form degrees `j`
 and `j + 1` (vacuous for `j < 0`), which is all the interpolation error in the graph norm of
@@ -135,12 +111,6 @@ theorem lagrangeP2_polyOrderAt_window : ∀ i : Fin 2, PolyOrderAt n PolySeq.lag
     · simpa using lagrangeP2_polyOrderAt_zero (n := n)
     · simpa using lagrangeP2_polyOrderAt_one (n := n)
 
-/-- The constant trimmed sequence `P_r⁻Λ` has order `h^r`. -/
-theorem polyOrder_trimmed {r : ℕ} (hr : 1 ≤ r) : PolyOrder n (PolySeq.trimmed r hr) (r - 1) :=
-  polyOrder_of_le_deg fun k _ => by
-    change r - 1 + 1 ≤ r
-    omega
-
 /-! ### Smooth forms of order `s` -/
 
 /-- `x ∈ L²(Q; Λʲ)` is a `C^{s+2}` form of degree `j` whose `(s+1)`-st derivative and that of
@@ -167,22 +137,6 @@ def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formI
     (∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
     (∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j ⟨w, hw.continuous⟩
-
-/-- **Every `C^{s+2}` form is `IsCsForm s`** for some bound `L ≥ 0` (the hypotheses of the rate
-theorems are satisfiable). -/
-theorem exists_isCsForm (s : ℕ) {k : ℕ} {w : FormField n}
-    (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y)) :
-    ∃ L, 0 ≤ L ∧ IsCsForm s (k : ℤ) L
-      (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
-        ⟨w, hw.continuous⟩) := by
-  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv (m := s + 1)
-    (hw.of_le (by exact_mod_cast Nat.le_succ (s + 1)))
-  have hw' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
-  have hdw : ContDiff ℝ ((s + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) := contDiff_extDeriv hw'
-  obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv (m := s + 1) hdw
-  exact ⟨max L L', le_max_of_le_left hL0, Or.inr ⟨k, rfl, w, hw, hdeg,
-    fun y hy => (hL y hy).trans (le_max_left _ _),
-    fun y hy => (hL' y hy).trans (le_max_right _ _), rfl⟩⟩
 
 /-- **Every `C^{s+2}` form vanishing outside `Q` is `IsCsFormMin s`** for some bound. -/
 theorem exists_isCsFormMin (s : ℕ) {k : ℕ} {w : FormField n}
@@ -574,29 +528,6 @@ theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k
       K * L * meshSize N ^ (s + 1) :=
   mixed_rate_polyMin_of_polyOrderAt S (hS.polyOrderAt i) (hS.polyOrderAt j) hij hjk
 
-/-- **`O(h)` convergence of every higher-order mixed method for `C²` solutions** (the case
-`s = 0` of `mixed_rate_poly`; every admissible sequence has order `0`). -/
-theorem mixed_rate_poly_C2 (S : PolySeq) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
-    {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
-    (complex n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    IsCsForm 0 i L ((complex n).domainIncl i σ) →
-    IsCsForm 0 j L ((complex n).domainIncl j u) →
-    IsCsForm 0 j L ((complex n).domainIncl j
-      ((complex n).boundaryPart j ((complex n).domainIncl j u))) →
-    IsCsForm 0 j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).fst‖ +
-        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
-            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N := by
-  obtain ⟨K, hK⟩ := mixed_rate_poly (n := n) S (polyOrder_zero S) hij hjk
-  exact ⟨K, fun hs L hL0 hσ hu hB hq N => (hK hs hL0 hσ hu hB hq N).trans_eq (by ring)⟩
-
 /-! ### Second-order rates for the bottom row of Tables 5.1/6.1 -/
 
 /-- **Second-order convergence of the mixed method of the bottom row of Tables 5.1/6.1 for the
@@ -782,29 +713,6 @@ theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ}
   ((polyMin n S N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (fun τ hτ =>
     ⟨exists_mem_windowMin_poly_le hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       exists_mem_windowMin_poly_le hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
-
-/-- The case of a sequence of order `s` in every degree (`PolyOrder`) of
-`norm_sub_le_windowMin_poly_smooth_of_polyOrderAt`. -/
-theorem norm_sub_le_windowMin_poly_smooth {S : PolySeq} {s : ℕ} (hS : PolyOrder n S s) (a : ℤ)
-    (m : ℕ) {t₀ t₁ : ℝ} {ξ ξ' : ℝ → ((complexMin n).window a m).totalD.GraphSpace}
-    (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
-    {ξh ξh' : ℕ → ℝ → ((complexMin n).window a m).totalD.GraphSpace}
-    (hξh : ∀ N, HodgeWave.IsSemidiscreteSolution (((polyMin n S N).window a m).graphSub)
-      (Set.Icc t₀ t₁) (ξh N) (ξh' N))
-    (h0 : ∀ N, ξh N t₀ =
-      HodgeWave.ellipticProjection (((polyMin n S N).window a m).graphSub) (ξ t₀))
-    {L : ℝ} (hL0 : 0 ≤ L)
-    (hreg : ∀ τ ∈ Set.Icc t₀ t₁, ∀ i : Fin m,
-      IsCsFormMin s (a + i) L (((complexMin n).window a m).totalD.graphFst (ξ τ) i) ∧
-        IsCsFormMin s (a + i) L (((complexMin n).window a m).totalD.graphFst (ξ' τ) i))
-    (N : ℕ) {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
-    ‖((complexMin n).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
-      (1 + ‖HodgeWave.shiftedForm ((complexMin n).window a m).totalD‖ / ((1 / 2) / √3)) *
-        (1 + (t - t₀)) ^ 2 *
-          (((m : ℝ) + m * m) * (∑ i : Fin m, polyInterpBound n S (a + i)) * L *
-            meshSize N ^ (s + 1)) :=
-  norm_sub_le_windowMin_poly_smooth_of_polyOrderAt (fun _ => hS.polyOrderAt _) hξ hξh h0 hL0
-    hreg N ht
 
 /-- **Second-order convergence of the semi-discrete Hodge wave equation for the bottom row of
 Tables 5.1/6.1 with vanishing boundary DOFs** on the window `H̊Λ⁰ → H̊Λ¹ → H̊Λ²` (degrees `0, 1`
@@ -1989,30 +1897,6 @@ theorem PolySmoothingEstimatesMin.norm_sub_proj_le_grad {S : PolySeq}
         ∑ s, ‖(complexMin n).d 0 1 ⟨coeffForm (y s), hy s⟩‖) :=
         mul_le_mul_of_nonneg_left hyv (by linarith)
     _ = _ := by ring
-
-/-- **`H¹` approximation of the smoothed cochain projections, unconditionally**: for every
-admissible sequence there are smoothed projections `π_N`, uniformly bounded in `L²` and every
-graph norm, with `‖y - π_N y‖ ≤ K_k h_N Σₛ ‖∇ yₛ‖` for `y` with `H¹(Q)` coefficients, `K_k`
-independent of `N`; and likewise with vanishing boundary DOFs for `H¹₀(Q)` coefficients. -/
-theorem polySmoothedProjection_H1 (S : PolySeq) :
-    (∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) (hE : PolySmoothingEstimates n S p C),
-      (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
-      (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
-      ∀ (N k : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
-        (hy : ∀ s, coeffForm (y s) ∈ ((complex n).d 0 1).domain),
-        ‖y - (hE.proj N).π k y‖ ≤ (1 + 2 * C) * h1Const n S k 1 * meshSize N *
-          ∑ s, ‖(complex n).d 0 1 ⟨coeffForm (y s), hy s⟩‖) ∧
-    (∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) (hE : PolySmoothingEstimatesMin n S p C),
-      (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
-      (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
-      ∀ (N k : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
-        (hy : ∀ s, coeffForm (y s) ∈ ((complexMin n).d 0 1).domain),
-        ‖y - (hE.proj N).π k y‖ ≤ (1 + 2 * C) * h1Const n S k 1 * meshSize N *
-          ∑ s, ‖(complexMin n).d 0 1 ⟨coeffForm (y s), hy s⟩‖) := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  obtain ⟨p', C', hE'⟩ := polySmoothingEstimatesMin_exists (n := n) S
-  exact ⟨⟨p, C, hE, hE.norm_proj_le, hE.isGraphBounded_proj, hE.norm_sub_proj_le_grad⟩,
-    ⟨p', C', hE', hE'.norm_proj_le, hE'.isGraphBounded_proj, hE'.norm_sub_proj_le_grad⟩⟩
 
 /-- **The rows of Tables 5.1/6.1 with one smoother, with the `H¹₀` approximation**: the
 projections `π̊_N` of the top row (`PolySeq.lowestOrder`) and the bottom row

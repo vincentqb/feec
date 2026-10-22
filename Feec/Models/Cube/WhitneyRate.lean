@@ -14,7 +14,7 @@ interpolation error of the Whitney interpolant (`FEM.exists_mem_whitney_le`, [Ar
 * `FEM.IsC2Form j L x`: `x ∈ L²(Q; Λʲ)` is (the restriction of) a `C²` `j`-form `w` with
   `‖Dw‖ ≤ L` and `‖D dw‖ ≤ L` on `cl Q`; trivially true in negative degrees, where
   `L²(Q; Λʲ) = 0` (so the scalar Neumann problem `(i, j, k) = (-1, 0, 1)` and windows with `a < 0`
-  are covered). Every `C²` form satisfies it for some `L` (`exists_isC2Form`).
+  are covered).
 * **Degreewise rate**: such an `x` has `v ∈ Vₕʲ` with `‖x - v‖ ≤ B_j L h_N` and
   `‖d (x - v)‖ ≤ B_j L h_N` (`IsC2Form.exists_mem_whitney_le`), and
   `dist_V(σ, Vₕʲ) ≤ B_j L h_N` in the graph norm (`IsC2Form.infDist_domainSub_whitney_le`),
@@ -29,7 +29,7 @@ interpolation error of the Whitney interpolant (`FEM.exists_mem_whitney_le`, [Ar
   at rate `h_N` (`norm_sub_le_meshSize_window_smooth`), through the degreewise-to-total lemma
   `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`.
 * **Vanishing traces** (`H̊Λ(Q)`, Whitney spaces `V̊ₕ` with vanishing boundary DOFs): the same
-  three statements for `C²` forms vanishing outside `Q` (`FEM.IsC2FormMin`, `exists_isC2FormMin`):
+  three statements for `C²` forms vanishing outside `Q` (`FEM.IsC2FormMin`):
   `SmoothingEstimatesMin.norm_sub_le_meshSize` (generic, as for `HΛ(Q)`),
   `SmoothingEstimatesMin.norm_sub_le_meshSize_smooth` and
   `norm_sub_le_meshSize_windowMin_smooth`. The `d_min` of such a form is computed by
@@ -90,25 +90,6 @@ def interpBound (j : ℤ) : ℝ := interpConst n j.toNat + interpConst n (j.toNa
 variable (n) in
 theorem interpBound_nonneg (j : ℤ) : 0 ≤ interpBound n j :=
   add_nonneg (interpConst_nonneg n _) (interpConst_nonneg n _)
-
-/-- Every form in a negative degree (necessarily `0`) is `C²` with any bound. -/
-theorem isC2Form_of_neg {j : ℤ} (hj : j < 0) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) :
-    IsC2Form j L x :=
-  Or.inl hj
-
-/-- **Every `C²` form is `IsC2Form`**: the `L²` class of a `C²` degree-`k` field `w` on `ℝⁿ`
-satisfies `IsC2Form k L` for some bound `L ≥ 0` (the derivatives of `w` and `dw` are continuous,
-hence bounded on the compact `cl Q`). This exhibits the hypotheses of the rate theorems below as
-satisfiable. -/
-theorem exists_isC2Form {k : ℕ} {w : FormField n} (hw : ContDiff ℝ 2 w)
-    (hdeg : ∀ y, IsDeg k (w y)) :
-    ∃ L, 0 ≤ L ∧ IsC2Form (k : ℤ) L
-      (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩) := by
-  obtain ⟨L, hL0, hL⟩ := exists_bound_fderiv (hw.of_le (by norm_num))
-  obtain ⟨L', hL'0, hL'⟩ := exists_bound_fderiv (contDiff_extDeriv (m := 1) hw)
-  refine ⟨max L L', le_max_of_le_left hL0, Or.inr ⟨k, rfl, w, hw, hdeg,
-    fun y hy => (hL y hy).trans (le_max_left _ _),
-    fun y hy => (hL' y hy).trans (le_max_right _ _), rfl⟩⟩
 
 /-- `IsC2Form` is monotone in the bound. -/
 theorem IsC2Form.mono {j : ℤ} {L L' : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
@@ -300,26 +281,6 @@ def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) :
     (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) ∧
     (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j ⟨w, hw.continuous⟩
-
-omit [NeZero n] in
-/-- A `C²` form vanishing outside `Q` is in particular `IsC2Form`. -/
-theorem IsC2FormMin.isC2Form {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
-    (hx : IsC2FormMin j L x) : IsC2Form j L x := by
-  rcases hx with hj | ⟨k, hk, w, hw, hdeg, -, hL, hL', he⟩
-  · exact Or.inl hj
-  · exact Or.inr ⟨k, hk, w, hw, hdeg, hL, hL', he⟩
-
-omit [NeZero n] in
-/-- **Every `C²` form vanishing outside `Q` is `IsC2FormMin`** for some bound `L ≥ 0`. -/
-theorem exists_isC2FormMin {k : ℕ} {w : FormField n} (hw : ContDiff ℝ 2 w)
-    (hdeg : ∀ y, IsDeg k (w y)) (hsupp : ∀ y ∉ cubeDomain n, w y = 0) :
-    ∃ L, 0 ≤ L ∧ IsC2FormMin (k : ℤ) L
-      (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩) := by
-  obtain ⟨L, hL0, hL⟩ := exists_bound_fderiv (hw.of_le (by norm_num))
-  obtain ⟨L', hL'0, hL'⟩ := exists_bound_fderiv (contDiff_extDeriv (m := 1) hw)
-  refine ⟨max L L', le_max_of_le_left hL0, Or.inr ⟨k, rfl, w, hw, hdeg, hsupp,
-    fun y hy => (hL y hy).trans (le_max_left _ _),
-    fun y hy => (hL' y hy).trans (le_max_right _ _), rfl⟩⟩
 
 omit [NeZero n] in
 /-- **`d_min` of a smooth form**: if `x ∈ H̊Λᵏ(Q)` is the class of a `C¹` `k`-form `w`, then

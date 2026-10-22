@@ -30,14 +30,10 @@ Freudenthal meshes of the cube (`Feec.Models.Cube.PolySmoothingEstimates`) to ge
   `F_T(ĝ)` with coefficients bounded uniformly in `π` (`permConst`, `abs_vertexMoment_le_of_dof`).
 * *Interpolation error* of the canonical interpolant `Π_T` of `S` (the moment DOFs on the faces
   of `T`; [Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): for `P_sΛᵏ ⊆ P(T)ᵏ`,
-  `sup_T ‖w - Π_T w‖ ≤ (1 + B D) h_T^{s+1} sup_T ‖D^{s+1} w‖` (`norm_sub_polyLocalInterp_le`),
-  `‖w - Π_T w‖²_{L²(T)} ≲ h_Tⁿ (h_T^{s+1} sup_T ‖D^{s+1} w‖)²`
-  (`formL2Sq_sub_polyLocalInterp_le`) and, through `d Π_T = Π_T d`, the same for `dw - d Π_T w`
-  (`norm_extDeriv_sub_polyLocalInterp_le`); existence forms with constants depending only on
-  `n, S, k, C` (`exists_norm_sub_polyLocalInterp_le`, `exists_formL2Sq_sub_polyLocalInterp_le`,
-  `exists_formL2Sq_extDeriv_sub_polyLocalInterp_le`). The proof is the Bramble–Hilbert argument
-  (Taylor polynomial `exists_polySpace_near_diam` reproduced by `Π_T`, stability of `Π_T` from the
-  two bounds above); the reference transport enters through the DOF estimate.
+  `sup_T ‖w - Π_T w‖ ≤ (1 + B D) h_T^{s+1} sup_T ‖D^{s+1} w‖` (`norm_sub_polyLocalInterp_le`).
+  The proof is the Bramble–Hilbert argument (Taylor polynomial `exists_polySpace_near_diam`
+  reproduced by `Π_T`, stability of `Π_T` from the two bounds above); the reference transport
+  enters through the DOF estimate.
 * *Inverse estimates* (`exists_polyInvBound`, from
   `Feec.FiniteElement.exists_inverse_bound_of_le_polySpace`), in terms of the mesh size on a
   quasi-uniform mesh (`InvBoundV`, `invBoundV_of`), and the mesh-level DOF estimate
@@ -408,125 +404,6 @@ theorem norm_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.spac
     _ ≤ ‖w x - P x‖ + ‖z x‖ := norm_sub_le _ _
     _ ≤ e + B * D * e := add_le_add h1 hzx
     _ = (1 + B * D) * e := by ring
-
-/-- **The `L²(T)` interpolation error of `Π_T` on a shape-regular simplex**:
-`‖w - Π_T w‖²_{L²(T)} ≤ 2ⁿ (2 h_T)ⁿ ((1 + B D) h_T^{s+1} sup_T ‖D^{s+1} w‖)²`, i.e.
-`‖w - Π_T w‖_{L²(T)} ≲ h_T^{n/2} h_T^{s+1} sup_T ‖D^{s+1} w‖`. -/
-theorem formL2Sq_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
-    {C c B D : ℝ} (hB : PolyDofBound S n k C c B) (hD0 : 0 ≤ D) (hD : PolyCoeffBound S n k D)
-    {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} (hS : IsShapeRegular Sset C c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ Sset) (hh : 0 < diam T) {w : FormField n}
-    (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) :
-    formL2Sq T.closedInterior (w - (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-      (polyElement n S).space T k) : FormField n)) ≤
-      2 ^ n * (2 * diam T) ^ n * ((1 + B * D) * (diam T ^ (s + 1) * M)) ^ 2 := by
-  have h := formL2Sq_le_of_norm_le (volume_closedInterior_lt_top T) (u := w -
-    (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ : (polyElement n S).space T k) :
-      FormField n)) (B := (1 + B * D) * (diam T ^ (s + 1) * M))
-    fun x hx => norm_sub_polyLocalInterp_le S hs hB hD0 hD hS hT hh hw hdeg hM hx
-  refine h.trans ?_
-  rw [Fintype.card_finset, Fintype.card_fin]
-  push_cast
-  exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left
-    (volume_real_closedInterior_le T) (by positivity)) (sq_nonneg _)
-
-/-- **The interpolation error of `d Π_T w = Π_T dw` on a shape-regular simplex** (the commuting
-property `Feec.FiniteElement.LocalElement.localInterp_extDeriv`): if `P_sΛᵏ⁺¹ ⊆ P(T)ᵏ⁺¹` and
-`‖D^{s+1} dw‖ ≤ M'` on `T`, then `‖dw - d Π_T w‖ ≤ (1 + B' D') h_T^{s+1} M'` on `T`. -/
-theorem norm_extDeriv_sub_polyLocalInterp_le {k s : ℕ}
-    (hs : polySpace n s (k + 1) ≤ S.space n (k + 1)) {C c B D : ℝ}
-    (hB : PolyDofBound S n (k + 1) C c B) (hD0 : 0 ≤ D)
-    (hD : PolyCoeffBound S n (k + 1) D)
-    {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} (hS : IsShapeRegular Sset C c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ Sset) (hh : 0 < diam T) {w : FormField n}
-    (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ M)
-    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
-    ‖extDeriv w x - extDeriv (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-      (polyElement n S).space T k) : FormField n) x‖ ≤
-        (1 + B * D) * (diam T ^ (s + 1) * M) := by
-  have hw1 : ContDiff ℝ 1 w := hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1))
-  have hdw : ContDiff ℝ (s + 1) (extDeriv w) := contDiff_extDeriv (m := s + 1) (by
-    exact_mod_cast hw)
-  have hdeg' : ∀ x, IsDeg (k + 1) (extDeriv w x) := fun x => IsDeg.extDeriv hdeg x
-  have hcomm := (polyElement n S).localInterp_extDeriv T k ⟨w, hw1⟩
-  have e : extDeriv (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-      (polyElement n S).space T k) : FormField n) =
-      (((polyElement n S).localInterp T (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
-        (polyElement n S).space T (k + 1)) : FormField n) := by
-    rw [show (⟨extDeriv w, hdw.continuous⟩ : contForms n) =
-      extDerivC1 (⟨w, hw1⟩ : c1Forms n) from rfl, hcomm]
-    rfl
-  rw [e]
-  exact norm_sub_polyLocalInterp_le S hs hB hD0 hD hS hT hh hdw hdeg' hM hx
-
-/-- **The interpolation error of `Π_T` on shape-regular simplices, existence form**: the transfer
-of the homothetic estimate `Feec.FiniteElement.exists_norm_sub_polyInterp_le` to every simplex of a
-shape-regular family, `sup_T ‖w - Π_T w‖ ≤ K h_T^{s+1} sup_T ‖D^{s+1} w‖`, with `K` depending
-only on `n, S, k, C` (through the DOF estimate `exists_polyDofBound`, which uses the reference
-pullback `F_T^*` and the naturality of the moments). -/
-theorem exists_norm_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
-    (C c : ℝ) : ∃ K, 0 ≤ K ∧ ∀ {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)},
-      IsShapeRegular Sset C c → ∀ T ∈ Sset, 0 < diam T → ∀ {w : FormField n}
-      (hw : ContDiff ℝ (s + 1) w), (∀ x, IsDeg k (w x)) → ∀ {M : ℝ},
-      (∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) →
-      ∀ x ∈ T.closedInterior, ‖w x - (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-        (polyElement n S).space T k) : FormField n) x‖ ≤ K * (diam T ^ (s + 1) * M) := by
-  obtain ⟨B, hB0, hB⟩ := exists_polyDofBound S k C c
-  obtain ⟨D, hD0, hD⟩ := exists_polyCoeffBound (n := n) S k
-  exact ⟨1 + B * D, by positivity, fun hS T hT hh w hw hdeg M hM x hx =>
-    norm_sub_polyLocalInterp_le S hs hB hD0 hD hS hT hh hw hdeg hM hx⟩
-
-/-- **The `L²(T)` interpolation error of `Π_T` on shape-regular simplices, existence form** (the
-transfer of `Feec.FiniteElement.exists_formL2Sq_sub_polyInterp_le`):
-`‖w - Π_T w‖²_{L²(T)} ≤ K h_Tⁿ (h_T^{s+1} sup_T ‖D^{s+1} w‖)²`. -/
-theorem exists_formL2Sq_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
-    (C c : ℝ) : ∃ K, 0 ≤ K ∧ ∀ {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)},
-      IsShapeRegular Sset C c → ∀ T ∈ Sset, 0 < diam T → ∀ {w : FormField n}
-      (hw : ContDiff ℝ (s + 1) w), (∀ x, IsDeg k (w x)) → ∀ {M : ℝ},
-      (∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) →
-      formL2Sq T.closedInterior (w - (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-        (polyElement n S).space T k) : FormField n)) ≤
-        K * diam T ^ n * (diam T ^ (s + 1) * M) ^ 2 := by
-  obtain ⟨B, hB0, hB⟩ := exists_polyDofBound S k C c
-  obtain ⟨D, hD0, hD⟩ := exists_polyCoeffBound (n := n) S k
-  refine ⟨4 ^ n * (1 + B * D) ^ 2, by positivity, fun hS T hT hh w hw hdeg M hM => ?_⟩
-  refine (formL2Sq_sub_polyLocalInterp_le S hs hB hD0 hD hS hT hh hw hdeg hM).trans
-    (le_of_eq ?_)
-  rw [mul_pow, show (4 : ℝ) ^ n = 2 ^ n * 2 ^ n by rw [← mul_pow]; norm_num]
-  ring
-
-/-- **The `L²(T)` interpolation error of `d Π_T w = Π_T dw` on shape-regular simplices,
-existence form**: `‖dw - d Π_T w‖²_{L²(T)} ≤ K h_Tⁿ (h_T^{s+1} sup_T ‖D^{s+1} dw‖)²` for
-`P_sΛᵏ⁺¹ ⊆ P(T)ᵏ⁺¹` and `w ∈ C^{s+2}`. -/
-theorem exists_formL2Sq_extDeriv_sub_polyLocalInterp_le {k s : ℕ}
-    (hs : polySpace n s (k + 1) ≤ S.space n (k + 1)) (C c : ℝ) :
-    ∃ K, 0 ≤ K ∧ ∀ {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)},
-      IsShapeRegular Sset C c → ∀ T ∈ Sset, 0 < diam T → ∀ {w : FormField n}
-      (hw : ContDiff ℝ (s + 2) w), (∀ x, IsDeg k (w x)) → ∀ {M : ℝ},
-      (∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ M) →
-      formL2Sq T.closedInterior (extDeriv w - extDeriv
-        (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-          (polyElement n S).space T k) : FormField n)) ≤
-        K * diam T ^ n * (diam T ^ (s + 1) * M) ^ 2 := by
-  obtain ⟨B, hB0, hB⟩ := exists_polyDofBound S (k + 1) C c
-  obtain ⟨D, hD0, hD⟩ := exists_polyCoeffBound (n := n) S (k + 1)
-  refine ⟨4 ^ n * (1 + B * D) ^ 2, by positivity, fun hS T hT hh w hw hdeg M hM => ?_⟩
-  have h := formL2Sq_le_of_norm_le (volume_closedInterior_lt_top T) (u := extDeriv w -
-    extDeriv (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-      (polyElement n S).space T k) : FormField n)) (B := (1 + B * D) * (diam T ^ (s + 1) * M))
-    fun x hx => norm_extDeriv_sub_polyLocalInterp_le S hs hB hD0 hD hS hT hh hw hdeg hM hx
-  refine h.trans ?_
-  rw [Fintype.card_finset, Fintype.card_fin]
-  push_cast
-  calc (2 : ℝ) ^ n * volume.real T.closedInterior * ((1 + B * D) * (diam T ^ (s + 1) * M)) ^ 2
-      ≤ 2 ^ n * (2 * diam T) ^ n * ((1 + B * D) * (diam T ^ (s + 1) * M)) ^ 2 :=
-        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left
-          (volume_real_closedInterior_le T) (by positivity)) (sq_nonneg _)
-    _ = 4 ^ n * (1 + B * D) ^ 2 * diam T ^ n * (diam T ^ (s + 1) * M) ^ 2 := by
-        rw [mul_pow 2 (diam T), show (4 : ℝ) ^ n = 2 ^ n * 2 ^ n by rw [← mul_pow]; norm_num]
-        ring
 
 end Local
 

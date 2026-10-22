@@ -602,8 +602,6 @@ theorem pMax_isMaximal (N : ℕ) : (pMax (n := n) γ hγ hγ1 N).IsMaximal (cent
     change γ * hN N / 32 < 1 / 4 * (1 - (1 - γ * hN N)) / 4
     have := hN_pos N; nlinarith
 
-theorem pMax_factor (N : ℕ) : (pMax (n := n) γ hγ hγ1 N).factor = 1 - γ * hN N := rfl
-
 /-- **The smoothing parameters** of the minimal family on the level-`(N + 1)` mesh: dilation
 factor `1 + γ h_N` towards the centre, bump radii `γ h_N / 64 < γ h_N / 32`. -/
 def pMin (γ : ℝ) (hγ : 0 < γ) (N : ℕ) : SmoothingParam (Fin n → ℝ) where
@@ -2010,9 +2008,6 @@ def coordHyperplane (i : Fin n) (c : ℝ) : AffineSubspace ℝ (Fin n → ℝ) w
   smul_vsub_vadd_mem' a p₁ p₂ p₃ h₁ h₂ h₃ := by
     simp only [Set.mem_ofPred_eq] at h₁ h₂ h₃ ⊢
     simp [h₁, h₂, h₃]
-
-theorem mem_coordHyperplane {i : Fin n} {c : ℝ} {y : Fin n → ℝ} :
-    y ∈ coordHyperplane i c ↔ y i = c := Iff.rfl
 
 /-- A simplex of `ℝⁿ` does not lie in a coordinate hyperplane. -/
 theorem not_closedInterior_subset_coordHyperplane (T : Affine.Simplex ℝ (Fin n → ℝ) n)

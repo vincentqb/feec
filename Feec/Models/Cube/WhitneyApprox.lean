@@ -36,8 +36,7 @@ the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)`
 **Consequences, with no remaining approximation hypothesis**: the Whitney windows are dense in the
 graph space of the total differential of every window (`dense_window`, `dense_windowMin`, from the
 abstract `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt` of
-`Feec.HilbertComplex.Approximation.GraphApprox`), hence approximating
-(`isApproximating_window_whitney`), and the semi-discrete Hodge wave equation converges for every
+`Feec.HilbertComplex.Approximation.GraphApprox`), hence approximating, and the semi-discrete Hodge wave equation converges for every
 window and `D(L)` data ([QuennevilleBelair2015], Thm 4.14;
 `exists_tendstoUniformlyOn_window_whitney`), in particular for Maxwell's equations
 (`maxwell_exists_tendstoUniformlyOn_whitney`); the harmonic forms are approximated
@@ -460,12 +459,6 @@ theorem dense_window (a : ℤ) (m : ℕ) :
     (fun i x _ hε => (eventually_exists_whitney_near (a + i) x hε).mono fun _ hN => by
       obtain ⟨v, hv, h1, h2⟩ := hN
       exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
-
-/-- **The Whitney windows are approximating** for the semi-discrete Hodge wave equation of every
-window of `HΛ(Q)`, unconditionally. -/
-theorem isApproximating_window_whitney (a : ℤ) (m : ℕ) :
-    HodgeWave.IsApproximating atTop fun N => ((whitney n N).window a m).graphSub :=
-  isApproximating_window n a m (dense_window a m)
 
 /-- **Convergence of the semi-discrete Hodge wave equation on the cube meshes**, for every window
 and `D(L)` data, with no remaining hypothesis ([QuennevilleBelair2015], Thm 4.14). -/

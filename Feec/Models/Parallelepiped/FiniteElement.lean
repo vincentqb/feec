@@ -19,7 +19,7 @@ the data and smoothness.
   of `A⁻¹` invert them (Cauchy–Binet, `sum_minorMat_mul`). Hence (`Feec.Domain.FormPullback`)
   `T^* : L²(Ω; Λᵏ) ≃ L²(Q; Λᵏ)` (`pullEquiv`) is a bounded isomorphism with
   `‖T^*‖ ≤ pullConst A`, `‖(T^*)⁻¹‖ ≤ pullConst A⁻¹` (`pullConst A = |det A|^{-1/2} Σ |minors|`,
-  the minors bounded by `k! ‖A‖_max^k`, `abs_wedgeProd_rows_le`), and `HΛ(Q)`, `H̊Λ(Q)` are the
+  the minors bounded by `k! ‖A‖_max^k`), and `HΛ(Q)`, `H̊Λ(Q)` are the
   transports of `HΛ(Ω)`, `H̊Λ(Ω)` (`complex_cube_eq_transport`, `complexMin_cube_eq_transport`):
   an isomorphism of Hilbert complexes (`isChainIso`, `isChainIsoMin`).
 * **Isomorphisms of Hilbert complexes** (`Feec.HilbertComplex.IsChainIso`, not isometric) carry
@@ -47,8 +47,7 @@ the data and smoothness.
   (`mem_whitney_V_iff`, `mem_whitneyMin_V_iff`, `mem_poly_V_iff`, `mem_polyMin_V_iff`).
 * **Hodge theory of `Ω`.** Poincaré with `c_P(A) = pullConst A⁻¹ (2π)⁻¹ pullConst A`
   (`norm_le_of_mem_orthogonal_cycles`, `_min`), closed range in every degree (`closedRangeAt`,
-  `closedRangeAt_min`), `dim ℌᵏ(HΛ(Ω)) = [k = 0]`, `dim ℌᵏ(H̊Λ(Ω)) = [k = n]` (`finrank_harmonic`,
-  `finrank_harmonic_min`), the compactness property of `HΛ(Ω)` and `H̊Λ(Ω)`
+  `closedRangeAt_min`), `dim ℌᵏ(HΛ(Ω)) = [k = 0]`, `dim ℌᵏ(H̊Λ(Ω)) = [k = n]` (`finrank_harmonic`), the compactness property of `HΛ(Ω)` and `H̊Λ(Ω)`
   (`hasCompactProperty`, `hasCompactProperty_min`).
 * **The finite element theorems on `Ω`**, Whitney forms and every admissible sequence, both
   boundary-condition families: uniformly bounded smoothed cochain projections with vanishing
@@ -329,9 +328,6 @@ def comapSub (S' : H'.Subcomplex) : H.Subcomplex where
     change e j (H.d i j ⟨x, _⟩) ∈ S'.V j
     rw [← hI.comm i j ⟨x, _⟩ (S'.le_domain i j hx)]
     exact S'.mapsTo i j _ hx
-
-theorem mem_comapSub_V {S' : H'.Subcomplex} {i : ι} {x : W i} :
-    x ∈ (hI.comapSub S').V i ↔ e i x ∈ S'.V i := Iff.rfl
 
 instance (S' : H'.Subcomplex) [∀ i, FiniteDimensional ℝ (S'.V i)] (i : ι) :
     FiniteDimensional ℝ ((hI.comapSub S').V i) := by
@@ -1105,7 +1101,7 @@ theorem isChainIsoMin : IsChainIso (complexMin A b) (FEM.complexMin n) (pullEqui
 /-! #### Explicit constants -/
 
 /-- The constant `|det A|^{-1/2} Σ_{s,t ⊆ Fin n} |minor_{ts}(A)|` bounding `T^*` in every
-degree; the minors are bounded by `k! ‖A‖_max^k` (`abs_wedgeProd_rows_le`). -/
+degree. -/
 def pullConst : ℝ :=
   Real.sqrt |A.det|⁻¹ * ∑ s : Finset (Fin n), ∑ t : Finset (Fin n), |wedgeProd (rows A) t s|
 
@@ -1149,19 +1145,6 @@ theorem norm_pullEquiv_symm_le (k : ℤ) :
     (preimage_domain A hA b) k u).trans ?_
   gcongr
   exact mul_le_mul_of_nonneg_left (sum_minorMat_le A⁻¹ k) (Real.sqrt_nonneg _)
-
-/-- The minors of `A` are bounded by `k! ‖A‖_max^k` (Leibniz), so `pullConst A` is bounded in
-terms of `‖A‖_max` and `|det A|`. -/
-theorem abs_wedgeProd_rows_le {M : ℝ} (hM0 : 0 ≤ M) (hM : ∀ i j, |A i j| ≤ M)
-    (t s : Finset (Fin n)) :
-    |wedgeProd (rows A) t s| ≤ (#t).factorial * M ^ #t := by
-  by_cases hts : #s = #t
-  · rw [wedgeProd_apply_eq_det_submatrix (rows A) rfl hts]
-    have := Matrix.det_le (A := Matrix.of fun i j : Fin #t => rows A (t.orderEmbOfFin rfl i)
-      (s.orderEmbOfFin hts j)) (abv := AbsoluteValue.abs) (x := M) fun i j => hM _ _
-    simpa [Fintype.card_fin, nsmul_eq_mul] using this
-  · rw [isDeg_wedgeProd (rows A) t s hts, abs_zero]
-    positivity
 
 /-! ### Images of meshes -/
 
@@ -1499,10 +1482,6 @@ theorem affinePullback_wedgeField {m : ℕ} (B : Fin m → Fin m → ℝ) (b' : 
   funext x
   simp only [affinePullback_apply, wedgeField, pullback_wedgeForm]
 
-/-- The vertex permutation `permMap π` as an affine map. -/
-theorem permMap_eq_affine {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) :
-    permMap π = affine (simplexMatrix (refVertex m ∘ π)) (refVertex m (π 0)) := rfl
-
 /-- `(A_π)^* (A_{π⁻¹})^* η = η`. -/
 theorem affinePullback_permMap_inv {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) :
     affinePullback (simplexMatrix (refVertex m ∘ π)) (refVertex m (π 0))
@@ -1753,10 +1732,6 @@ theorem finrank_harmonic (k : ℤ) :
 theorem finiteDimensional_harmonic_min (k : ℤ) :
     FiniteDimensional ℝ ((complexMin A b).harmonic k) :=
   (isChainIsoMin A hA b).finiteDimensional_harmonic k
-
-theorem finrank_harmonic_min (k : ℤ) :
-    Module.finrank ℝ ((complexMin A b).harmonic k) = if k = n then 1 else 0 := by
-  rw [(isChainIsoMin A hA b).finrank_harmonic_eq k, FEM.finrank_harmonic_min]
 
 /-- **The compactness property of `HΛ(Ω)`**, every degree: transferred from the cube
 (`FEM.hasCompactProperty`) along the non-isometric isomorphism `T^*`
@@ -2019,9 +1994,6 @@ def fibCLM : (Finset (Fin n) → ℝ) →L[ℝ] (Finset (Fin n) → ℝ) :=
       map_add' := pullback_add (rows A)
       map_smul' := fun c α => pullback_smul (rows A) c α }
 
-theorem fibCLM_apply (α : Finset (Fin n) → ℝ) : fibCLM A α = ExteriorFibre.pullback (rows A) α :=
-  rfl
-
 /-- The constant `‖A^*‖_{fibre} ‖A‖` of the derivatives of pulled-back forms. -/
 def fibConst : ℝ := ‖fibCLM A‖ * ‖(Matrix.toLin' A).toContinuousLinearMap‖
 
@@ -2094,21 +2066,6 @@ def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : P
     (∀ y ∈ closure (domain A b), ‖fderiv ℝ w y‖ ≤ L) ∧
     (∀ y ∈ closure (domain A b), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
-
-/-- **Every `C²` form is `IsC2Form`** for some bound (the hypotheses of the rates are
-satisfiable). -/
-theorem exists_isC2Form {k : ℕ} {w : FormField n} (hw : ContDiff ℝ 2 w)
-    (hdeg : ∀ y, IsDeg k (w y)) :
-    ∃ L, 0 ≤ L ∧ IsC2Form A hA b (k : ℤ) L
-      (formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) k ⟨w, hw.continuous⟩) := by
-  have hK : IsCompact (closure (domain A b)) := (isBounded_domain A hA b).isCompact_closure
-  obtain ⟨L, hL⟩ := hK.exists_bound_of_continuousOn
-    ((hw.of_le (by norm_num : (1 : WithTop ℕ∞) ≤ 2)).continuous_fderiv one_ne_zero).continuousOn
-  obtain ⟨L', hL'⟩ := hK.exists_bound_of_continuousOn
-    ((contDiff_extDeriv (m := 1) hw).continuous_fderiv one_ne_zero).continuousOn
-  refine ⟨max (max L L') 0, le_max_right _ _, Or.inr ⟨k, rfl, w, hw, hdeg,
-    fun y hy => (hL y hy).trans ((le_max_left _ _).trans (le_max_left _ _)),
-    fun y hy => (hL' y hy).trans ((le_max_right _ _).trans (le_max_left _ _)), rfl⟩⟩
 
 /-- **`C²` forms on `Ω` pull back to `C²` forms on `Q`**, with bound `fibConst A · L`. -/
 theorem IsC2Form.pullEquiv {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
@@ -2903,21 +2860,6 @@ theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) 
     (poly A hA b S) (fun N i x => mem_poly_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b)
     fun i x' _ hε => FEM.eventually_exists_poly_near S i x' hε) a m t₀ t₁ x
 
-theorem exists_tendstoUniformlyOn_windowMin_poly (S : PolySeq) (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
-    (x : ((complexMin A b).window a m).wave.domain) :
-    ∃ ξh ξh' : ℕ → ℝ → ((complexMin A b).window a m).totalD.GraphSpace,
-      (∀ N, HodgeWave.IsSemidiscreteSolution (((polyMin A hA b S N).window a m).graphSub)
-        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
-      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((polyMin A hA b S N).window a m).graphSub)
-        (((complexMin A b).window a m).totalD.toGraphSpace
-          ⟨x, (((complexMin A b).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
-      TendstoUniformlyOn (fun N t => ((complexMin A b).window a m).totalD.graphFst (ξh N t))
-        (fun t => ((complexMin A b).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  exists_tendstoUniformlyOn_window_of ((isChainIsoMin A hA b).eventually_near_comapSub
-    (polyMin A hA b S) (fun N i x => mem_polyMin_V_iff A hA b S N i x)
-    (norm_pullEquiv_symm_le A hA b)
-    fun i x' _ hε => FEM.eventually_exists_polyMin_near S i x' hε) a m t₀ t₁ x
-
 end PolyFEM
 
 /-! ### Rates `h^{s+1}` of the higher-order families on `Ω` -/
@@ -3144,7 +3086,7 @@ theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i
 
 end PolyRates
 
-/-! ### Boxes and non-vacuity -/
+/-! ### Boxes -/
 
 section Boxes
 
@@ -3181,34 +3123,6 @@ theorem domain_boxMatrix {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
       simp only [affMap, boxMatrix, Matrix.mulVec_diagonal, Pi.add_apply]
       rw [mul_div_cancel₀ _ hci]
       ring
-
-/-- **The finite element theorems hold on every open box** `∏ᵢ (aᵢ, cᵢ)` (a non-vacuity witness of
-the parallelepiped setting): e.g. the uniform discrete Poincaré inequality on the image
-Freudenthal meshes. -/
-theorem discretePoincare_box [NeZero n] {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
-    ∃ cP : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-    {x : L2F ℝ (domain (boxMatrix a c) a) (formIdx n i)}
-    (hx : x ∈ (whitney (boxMatrix a c) (isUnit_det_boxMatrix h) a N).V i),
-    (∀ y ∈ (whitney (boxMatrix a c) (isUnit_det_boxMatrix h) a N).cyclesW i, inner ℝ y x = 0) →
-      ‖x‖ ≤ cP * ‖(complex (boxMatrix a c) a).d i j
-        ⟨x, (whitney (boxMatrix a c) (isUnit_det_boxMatrix h) a N).le_domain i j hx⟩‖ :=
-  discretePoincare _ (isUnit_det_boxMatrix h) a
-
-/-- **Every `C^{s+2}` form on `ℝⁿ` is `IsCsForm s` on `Ω`** for some bound (the hypotheses of the
-higher-order rates are satisfiable). -/
-theorem exists_isCsForm (s : ℕ) {k : ℕ} {w : FormField n}
-    (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y)) :
-    ∃ L, 0 ≤ L ∧ IsCsForm A hA b s (k : ℤ) L
-      (formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) k ⟨w, hw.continuous⟩) := by
-  have hK : IsCompact (closure (domain A b)) := (isBounded_domain A hA b).isCompact_closure
-  have hw' : ContDiff ℝ (((s + 1 : ℕ) : WithTop ℕ∞) + 1) w := by exact_mod_cast hw
-  obtain ⟨L, hL⟩ := hK.exists_bound_of_continuousOn
-    ((hw.continuous_iteratedFDeriv (m := s + 1) (by exact_mod_cast Nat.le_succ (s + 1)))).continuousOn
-  obtain ⟨L', hL'⟩ := hK.exists_bound_of_continuousOn
-    (((contDiff_extDeriv hw').continuous_iteratedFDeriv (m := s + 1) le_rfl)).continuousOn
-  refine ⟨max (max L L') 0, le_max_right _ _, Or.inr ⟨k, rfl, w, hw, hdeg,
-    fun y hy => (hL y hy).trans ((le_max_left _ _).trans (le_max_left _ _)),
-    fun y hy => (hL' y hy).trans ((le_max_right _ _).trans (le_max_left _ _)), rfl⟩⟩
 
 end Boxes
 

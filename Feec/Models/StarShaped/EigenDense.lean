@@ -19,7 +19,7 @@ Weber compactness, hence `EigenDense`, on every bounded domain star-shaped with 
 
 1. **The gauge** `g_Ω(v) = inf {t > 0 : x₀ + v / t ∈ Ω}` (`StarDomain.gaugeFun`) of a domain
    star-shaped with respect to `B(x₀, s₀)` with `cl Ω ⊆ B̄(x₀, R)` is positively homogeneous,
-   `‖v‖ / R ≤ g_Ω(v) ≤ ‖v‖ / s₀`, and `s₀⁻¹`-Lipschitz (`StarDomain.lipschitz_gauge`: if
+   `‖v‖ / R ≤ g_Ω(v) ≤ ‖v‖ / s₀`, and `s₀⁻¹`-Lipschitz (`StarDomain.gaugeFun_le_add`: if
    `w ∈ b (Ω - x₀)` then `v / t` lies on a segment from a point of `B(0, s₀)` to `w / b` for
    `t = b + ‖v - w‖ / s₀ + ε`), and `Ω = {g_Ω(· - x₀) < 1}` (`StarDomain.mem_iff_gaugeFun_lt_one`).
 2. **The radial map** `Φ(x) = x₀ + (‖x - x₀‖ / g_Ω(x - x₀)) (x - x₀)` (`StarDomain.toCube`, an
@@ -44,9 +44,8 @@ Weber compactness, hence `EigenDense`, on every bounded domain star-shaped with 
   is stationary iff there is no TSD eigenfield `u` with `curl u ∉ H̊(curl)`, with no hypothesis
   (`Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with `EigenDense` discharged).
 * `hasWeberCompactness_of_biLipschitz`: Weber compactness passes along bi-Lipschitz
-  homeomorphisms of `ℝ³`; `StarDomain.lipschitz_gauge`, `radialMap`.
-* Non-vacuity: `eigenDense_gradCurl_cubeDomain` (the cube `Q` as a `StarDomain` recovers
-  `Feec.Models.Cube.Ident.eigenDense_gradCurl_cube`), `hasWeberCompactness_empty`.
+  homeomorphisms of `ℝ³`; `StarDomain.gaugeFun_le_add`, `radialMap`.
+* Non-vacuity: `hasWeberCompactness_empty`.
 
 ## Scope
 
@@ -424,16 +423,6 @@ theorem gaugeFun_le_add (hne : D.Ω.Nonempty) (v w : Fin n → ℝ) :
   simp only [t] at hle
   linarith
 
-/-- **The gauge of a domain star-shaped with respect to `B(x₀, s₀)` is `s₀⁻¹`-Lipschitz.** -/
-theorem lipschitz_gauge (hne : D.Ω.Nonempty) :
-    LipschitzWith (Real.toNNReal D.s₀⁻¹) D.gaugeFun := by
-  refine LipschitzWith.of_dist_le_mul fun v w => ?_
-  rw [Real.dist_eq, dist_eq_norm, Real.coe_toNNReal _ (inv_nonneg.2 D.s₀_pos.le), abs_le]
-  have h1 := D.gaugeFun_le_add hne v w
-  have h2 := D.gaugeFun_le_add hne w v
-  rw [norm_sub_rev] at h2
-  constructor <;> rw [inv_mul_eq_div] <;> linarith
-
 /-- **`Ω = {g_Ω(· - x₀) < 1}`.** -/
 theorem mem_iff_gaugeFun_lt_one (hne : D.Ω.Nonempty) (x : Fin n → ℝ) :
     x ∈ D.Ω ↔ D.gaugeFun (x - D.x₀) < 1 := by
@@ -617,15 +606,6 @@ theorem coreSub_le_stationary_ball_iff (c : R3) (r : ℝ) :
             ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal (euclBall c r)).domain := by
   rw [← not_coreSub_le_stationary_iff (isOpen_euclBall c r) (isBounded_euclBall c r)
     (eigenDense_gradCurl_ball c r), not_not]
-
-/-! ### Non-vacuity -/
-
-/-- **The cube as a star-shaped domain recovers `eigenDense_gradCurl_cube`**: on
-`Q = (0, ½)³` (`CubeWitness.starDomain`), `StarDomain.eigenDense_gradCurl` gives the complete set
-of eigenvectors proved through the Fourier eigenbasis in `Feec.Models.Cube.Ident`. -/
-theorem eigenDense_gradCurl_cubeDomain :
-    (gradCurl ℝ (Feec.Models.Cube.FEM.isOpen_cubeDomain 3)).EigenDense :=
-  (CubeWitness.starDomain 3).eigenDense_gradCurl
 
 end EigenDense
 

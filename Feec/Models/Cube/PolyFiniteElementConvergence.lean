@@ -21,8 +21,7 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
 * **Density** of the higher-order spaces in `HΛ(Q)`, `H̊Λ(Q)` and in the graph spaces of every
   window (`eventually_exists_poly_graph`, `dense_window_poly`, and `Min` versions), so the
   semi-discrete Hodge wave equation converges on every window for `D(L)` data
-  (`exists_tendstoUniformlyOn_window_poly`, `exists_tendstoUniformlyOn_windowMin_poly`;
-  [QuennevilleBelair2015], Thm 4.14).
+  (`exists_tendstoUniformlyOn_window_poly`; [QuennevilleBelair2015], Thm 4.14).
 * Under the smoothing estimates (proved for all small `γ` in
   `Feec.Models.Cube.PolySmoothingEstimates`), with the Poincaré constant `(2π)⁻¹` of
   `Feec.Models.Cube.DeRhamIdentFEM`: **uniformly bounded cochain projections** `π_N = J_N⁻¹ Q_N`
@@ -32,8 +31,7 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
   Thm 3.9) and convergence at the approximation rate (`norm_sub_le_of_infDist_le`), and the
   **vanishing harmonic gap** (`PolySmoothingEstimates.tendsto_harmonicGap`).
 * **Unconditional statements**: `polySmoothedProjection_uniform`, `discretePoincare_poly`,
-  `mixed_wellPosed_poly`, `mixed_quasiOptimal_poly`, `exists_uniform_cochainProjection_poly` and
-  their `Min` versions.
+  `mixed_wellPosed_poly`, `mixed_quasiOptimal_poly` and their `Min` versions.
 * **The rows of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3) on `(0, ½)³` with
   vanishing boundary DOFs, the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (`PolySeq.lowestOrder`, and the
   Whitney complex) and the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (`PolySeq.lagrangeP2`), **share
@@ -702,27 +700,6 @@ theorem eventually_exists_polyMin_lt (S : PolySeq) (k : ℤ)
     _ < ε / 2 + ε / 2 := add_lt_add hxy h1
     _ = ε := add_halves ε
 
-/-- Degreewise approximation in every graph norm of `H̊Λ(Q)` by the higher-order spaces. -/
-theorem eventually_exists_polyMin_near (S : PolySeq) (i : ℤ)
-    (x : L2F ℝ (cubeDomain n) (formIdx n i)) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (polyMin n S N).V i, ‖x - v‖ < ε ∧
-      ∀ j (hx : x ∈ ((complexMin n).d i j).domain),
-        ‖(complexMin n).d i j
-          ⟨x - v, Submodule.sub_mem _ hx ((polyMin n S N).le_domain i j hv)⟩‖ < ε := by
-  by_cases hx : x ∈ ((complexMin n).d i (i + 1)).domain
-  · filter_upwards [eventually_exists_polyMin_graph S i x hx hε] with N hN
-    obtain ⟨v, hv, h1, h2⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact h2
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
-  · filter_upwards [eventually_exists_polyMin_lt S i x hε] with N hN
-    obtain ⟨v, hv, h1⟩ := hN
-    refine ⟨v, hv, h1, fun j hxj => ?_⟩
-    by_cases hj : i + 1 = j
-    · subst hj; exact absurd hxj hx
-    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
-
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((polyMin n S N).V j :
@@ -740,31 +717,6 @@ instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) :
     FiniteDimensional ℝ ((polyMin n S N).window a m).graphSub :=
   inferInstance
-
-/-- **The windows of the higher-order complexes with vanishing traces approximate every point of
-the graph space** of the total differential of every window of `H̊Λ(Q)`. -/
-theorem dense_windowMin_poly (S : PolySeq) (a : ℤ) (m : ℕ) :
-    ∀ ζ : ((complexMin n).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
-      ∃ w ∈ ((polyMin n S N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
-  Subcomplex.eventually_exists_graphSub_lt (fun N => (polyMin n S N).window a m)
-    (fun i x _ hε => (eventually_exists_polyMin_near S (a + i) x hε).mono fun _ hN => by
-      obtain ⟨v, hv, h1, h2⟩ := hN
-      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
-
-/-- **Convergence of the semi-discrete Hodge wave equation with vanishing traces for the
-higher-order complexes**, on every window of `H̊Λ(Q)` and for `D(L)` data, unconditionally. -/
-theorem exists_tendstoUniformlyOn_windowMin_poly (S : PolySeq) (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
-    (x : ((complexMin n).window a m).wave.domain) :
-    ∃ ξh ξh' : ℕ → ℝ → ((complexMin n).window a m).totalD.GraphSpace,
-      (∀ N, HodgeWave.IsSemidiscreteSolution (((polyMin n S N).window a m).graphSub)
-        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
-      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((polyMin n S N).window a m).graphSub)
-        (((complexMin n).window a m).totalD.toGraphSpace
-          ⟨x, (((complexMin n).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
-      TendstoUniformlyOn (fun N t => ((complexMin n).window a m).totalD.graphFst (ξh N t))
-        (fun t => ((complexMin n).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
-    (Subcomplex.isApproximating (dense_windowMin_poly S a m)) t₀ t₁ x
 
 /-! ### The finite element method of the higher-order families under the smoothing estimates -/
 
@@ -1074,23 +1026,6 @@ theorem polySmoothedProjection_uniform_min (S : PolySeq) :
       ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) := by
   obtain ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
   exact ⟨p, C, hE, hE.norm_proj_le, hE.isGraphBounded_proj, hE.tendsto_harmonicGap⟩
-
-/-- **Uniformly bounded cochain projections onto the higher-order complexes of the cube**: there
-is `C` such that for every `N` the complex of `S` carries a cochain projection bounded by `C` in
-`L²` and in the graph norms. -/
-theorem exists_uniform_cochainProjection_poly (S : PolySeq) :
-    ∃ C : ℝ, ∀ N, ∃ π : (poly n S N).CochainProjection,
-      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, hE.isGraphBounded_proj N⟩⟩
-
-/-- **Uniformly bounded cochain projections onto the higher-order complexes with vanishing
-boundary DOFs**. -/
-theorem exists_uniform_cochainProjection_polyMin (S : PolySeq) :
-    ∃ C : ℝ, ∀ N, ∃ π : (polyMin n S N).CochainProjection,
-      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
-  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, hE.isGraphBounded_proj N⟩⟩
 
 /-- **Uniform discrete Poincaré inequality** for the complexes of every admissible sequence on the
 Freudenthal meshes of the cube ([AFW2010], Thm 3.6), unconditionally. -/

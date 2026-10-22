@@ -26,17 +26,14 @@ of radius `γ h_N / 32` they are bounded uniformly in `N` and close to the ident
 * `FEM.paritySmoothingEstimates_parKernel`, `FEM.paritySmoothing_exists`: the estimates hold for
   every class `J` and every admissible sequence `S`.
 * `FEM.exists_uniform_cochainProjection_part`: uniformly bounded (`L²` and graph norms) cochain
-  projections onto `V_{h,Γ_J}`; the homogeneous classes `J = ∅` and `J = univ` give
-  `FEM.exists_uniform_cochainProjection_poly_parity` and
-  `FEM.exists_uniform_cochainProjection_polyMin_parity`, alternatives to the dilation smoothers
-  `pMax`, `pMin`.
+  projections onto `V_{h,Γ_J}`; the homogeneous classes `J = ∅` and `J = univ` are alternatives
+  to the dilation smoothers `pMax`, `pMin`.
 * `FEM.ParitySmoothingEstimates.norm_sub_proj_le_grad`: `‖y - π_N y‖ ≤ C h_N Σₛ ‖∇ yₛ‖` when
   `ext_J y` has `H¹` coefficients.
 * `FEM.ParitySmoothingEstimates.norm_sub_proj_le_smooth`: the high-order rate
   `‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} sup_{cl Q} ‖D^{s+1} w‖` for `C^{s+1}` forms whose tangential
   components vanish on the faces normal to `J` (`FEM.exists_mem_polyPartial_le_smooth`: the
-  canonical interpolant lies in `V_{h,Γ_J}`), up to the polynomial order;
-  `FEM.ParitySmoothingEstimates.exists_norm_sub_proj_trigForm_le`: a non-zero instance.
+  canonical interpolant lies in `V_{h,Γ_J}`), up to the polynomial order.
   The `L²`-based form `‖y - π_N y‖ ≲ h_N^m ‖Dᵐ ext_J y‖_{L²}` for `m ≥ 2` is not formalized.
 
 ## References
@@ -1459,51 +1456,6 @@ theorem exists_uniform_cochainProjection_part (S : PolySeq) (J : Finset (Fin n))
 
 /-! ### The homogeneous classes `J = ∅` and `J = univ` -/
 
-/-- Cochain projections transport along equal complexes and equal discrete spaces. -/
-theorem exists_cochainProjection_of_eq {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
-    [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
-    {H₁ H₂ : HilbertComplex ℝ c W} (h : H₁ = H₂) (S₁ : H₁.Subcomplex) (S₂ : H₂.Subcomplex)
-    (hV : ∀ i, S₁.V i = S₂.V i) (π₁ : S₁.CochainProjection) :
-    ∃ π₂ : S₂.CochainProjection, (∀ i x, π₂.π i x = π₁.π i x) ∧
-      ∀ i j C, π₁.IsGraphBounded i j C → π₂.IsGraphBounded i j C := by
-  subst h
-  have hS : S₁ = S₂ := by
-    cases S₁; cases S₂
-    congr
-    funext i; exact hV i
-  subst hS
-  exact ⟨π₁, fun _ _ => rfl, fun _ _ _ h => h⟩
-
-/-- **`J = ∅`: the parity smoother gives uniformly bounded cochain projections onto the complexes
-`FEM.poly n S N ⊆ HΛ(Q)`** without any dilation, an alternative to the maximal-family smoothers
-`pMax` (`FEM.polySmoothingEstimates_pMax`, and for the Whitney forms
-`FEM.smoothingEstimates_pMax`): `HΛ_∅(Q) = HΛ(Q)` (`complexPart_empty`) and
-`V_{h,Γ_∅} = Vₕ` (`polyPartial_empty_V`). -/
-theorem exists_uniform_cochainProjection_poly_parity (S : PolySeq) :
-    ∃ C : ℝ, ∀ N, ∃ π : (poly n S N).CochainProjection,
-      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
-  obtain ⟨C, hC⟩ := exists_uniform_cochainProjection_part S (∅ : Finset (Fin n))
-  refine ⟨C, fun N => ?_⟩
-  obtain ⟨π₁, hb, hg⟩ := hC N
-  obtain ⟨π₂, he, hg'⟩ := exists_cochainProjection_of_eq complexPart_empty
-    (polyPartial n S N ∅) (poly n S N) (polyPartial_empty_V S N) π₁
-  exact ⟨π₂, fun i x => by rw [he]; exact hb i x, fun i j => hg' i j C (hg i j)⟩
-
-/-- **`J = univ`: the parity smoother gives uniformly bounded cochain projections onto the
-complexes `FEM.polyMin n S N ⊆ H̊Λ(Q)`** (vanishing boundary DOFs) without any dilation, an
-alternative to the minimal-family smoothers `pMin` (`FEM.polySmoothingEstimatesMin_pMin`,
-`FEM.smoothingEstimatesMin_pMin`): `HΛ_univ(Q) = H̊Λ(Q)` (`complexPart_univ`) and
-`V_{h,Γ_univ} = V̊ₕ` (`polyPartial_univ_V`). -/
-theorem exists_uniform_cochainProjection_polyMin_parity (S : PolySeq) :
-    ∃ C : ℝ, ∀ N, ∃ π : (polyMin n S N).CochainProjection,
-      (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
-  obtain ⟨C, hC⟩ := exists_uniform_cochainProjection_part S (Finset.univ : Finset (Fin n))
-  refine ⟨C, fun N => ?_⟩
-  obtain ⟨π₁, hb, hg⟩ := hC N
-  obtain ⟨π₂, he, hg'⟩ := exists_cochainProjection_of_eq complexPart_univ
-    (polyPartial n S N Finset.univ) (polyMin n S N) (polyPartial_univ_V S N) π₁
-  exact ⟨π₂, fun i x => by rw [he]; exact hb i x, fun i j => hg' i j C (hg i j)⟩
-
 
 /-! ### The `H¹` approximation of the parity-smoothed projections -/
 
@@ -1912,60 +1864,6 @@ theorem ParitySmoothingEstimates.norm_sub_proj_le_smooth {J : Finset (Fin n)} {S
       ≤ (1 + 2 * C) * (polyInterpConst n S k * (meshSize N ^ (s + 1) * L)) :=
         mul_le_mul_of_nonneg_left hyv (by linarith)
     _ = _ := by ring
-
-/-- **The trigonometric `k`-forms of the class `J`**: `wₜ = trigProd c(J, t)` for `#t = k`, the
-parity extension of a smooth form on `Q` whose tangential components vanish on the faces normal
-to `J` (a non-vacuity witness for the high-order rate). -/
-def trigForm (J : Finset (Fin n)) (k : ℕ) : FormField n := fun x t =>
-  if #t = k then trigProd (pvec J t) x else 0
-
-omit [NeZero n] in
-theorem contDiff_trigForm (J : Finset (Fin n)) (k : ℕ) {m : ℕ∞} :
-    ContDiff ℝ m (trigForm J k) := by
-  refine contDiff_pi.2 fun t => ?_
-  simp only [trigForm]
-  split_ifs
-  · exact contDiff_trigProd _
-  · exact contDiff_const
-
-omit [NeZero n] in
-theorem isDeg_trigForm (J : Finset (Fin n)) (k : ℕ) (x : Fin n → ℝ) :
-    IsDeg k (trigForm J k x) := fun t ht => by simp [trigForm, ht]
-
-omit [NeZero n] in
-theorem trigForm_face (J : Finset (Fin n)) (k : ℕ) :
-    ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
-      trigForm J k x t = 0 := by
-  intro x j hj hx t ht
-  simp only [trigForm]
-  split_ifs
-  · exact (isSymm_trigProd (isParity_pvec J t)).eq_zero_of_face (pvec_of_mem_of_notMem hj ht) hx
-  · rfl
-
-omit [NeZero n] in
-theorem trigForm_ne_zero (J : Finset (Fin n)) {k : ℕ} (hk : k ≤ n) : trigForm J k ≠ 0 := by
-  obtain ⟨t, -, ht⟩ := Finset.exists_subset_card_eq (s := (Finset.univ : Finset (Fin n)))
-    (n := k) (by rw [Finset.card_univ, Fintype.card_fin]; exact hk)
-  intro h
-  have h1 := congrFun (congrFun h fun _ => 1 / 8) t
-  simp only [trigForm, ht, ite_true, Pi.zero_apply] at h1
-  exact trigProd_ne_zero _ h1
-
-/-- **Non-vacuity of the high-order rate**: for every class `J`, degree `k ≤ n` and order `s + 1`
-with `P_sΛᵏ ⊆ P(T)ᵏ`, the non-zero trigonometric form `trigForm J k` satisfies the hypotheses of
-`ParitySmoothingEstimates.norm_sub_proj_le_smooth`, so `‖w - π_N w‖ = O(h_N^{s+1})`. -/
-theorem ParitySmoothingEstimates.exists_norm_sub_proj_trigForm_le {J : Finset (Fin n)}
-    {S : PolySeq} {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
-    (k s : ℕ) (hs : polySpace n s k ≤ S.space n k) :
-    ∃ L, 0 ≤ L ∧ ∀ N, ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
-        ⟨trigForm J k, (contDiff_trigForm J k (m := 0)).continuous⟩ -
-        (hE.proj N).π k (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
-          ⟨trigForm J k, (contDiff_trigForm J k (m := 0)).continuous⟩)‖ ≤
-      (1 + 2 * C) * polyInterpConst n S k * meshSize N ^ (s + 1) * L := by
-  have hw : ContDiff ℝ (s + 1) (trigForm J k) := contDiff_trigForm J k
-  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv hw
-  exact ⟨L, hL0, fun N => hE.norm_sub_proj_le_smooth N k s hs hw (isDeg_trigForm J k)
-    (trigForm_face J k) hL⟩
 
 end HighOrder
 

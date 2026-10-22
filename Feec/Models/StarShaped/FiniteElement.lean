@@ -65,8 +65,9 @@ parallelepiped (`Feec.Models.Parallelepiped.poincare`). The finite-dimensionalit
 forms is used only for the harmonic gap (`smoothedProjection_uniform`, `mixed_quasiOptimal`).
 **Non-vacuity**: the cube with its Freudenthal meshes is a `StarDomain` with a `MeshFamily`
 satisfying all these hypotheses (`CubeWitness.starDomain`, `CubeWitness.meshFamily`,
-`CubeWitness.nonvacuous`), and so is every parallelepiped `A · Q + b` (every box) with its image
-Freudenthal meshes (`ParallelepipedWitness.nonvacuous`, via the affine images
+`CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`), and so is every parallelepiped `A · Q + b` (every box) with its image
+Freudenthal meshes (`ParallelepipedWitness.starDomain`, `ParallelepipedWitness.meshFamily`,
+with `Feec.Models.Parallelepiped.poincare`; via the affine images
 `StarDomain.map`, `MeshFamily.map`: shape regularity, quasi-uniformity and star-shapedness with
 respect to a ball are preserved by affine equivalences, `isShapeRegular_image`,
 `MeshData.map`). The higher-order families `P_rΛᵏ`, `P_r⁻Λᵏ` on star-shaped domains
@@ -2283,17 +2284,6 @@ def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ D.Ω (formIdx n j)) : Prop :=
     (∀ y ∈ closure D.Ω, ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
     x = formL2 D.isOpen.measurableSet D.isBounded j ⟨w, hw.continuous⟩
 
-/-- **Every `C²` form is `IsC2Form`** for some bound (non-vacuity of the rate hypotheses). -/
-theorem exists_isC2Form {k : ℕ} {w : FormField n} (hw : ContDiff ℝ 2 w)
-    (hdeg : ∀ y, IsDeg k (w y)) :
-    ∃ L, 0 ≤ L ∧ D.IsC2Form (k : ℤ) L
-      (formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩) := by
-  obtain ⟨L, hL0, hL⟩ := D.exists_bound_fderiv (hw.of_le (by norm_num))
-  obtain ⟨L', hL'0, hL'⟩ := D.exists_bound_fderiv (contDiff_extDeriv (m := 1) hw)
-  exact ⟨max L L', le_max_of_le_left hL0, Or.inr ⟨k, rfl, w, hw, hdeg,
-    fun y hy => (hL y hy).trans (le_max_left _ _),
-    fun y hy => (hL' y hy).trans (le_max_right _ _), rfl⟩⟩
-
 end StarDomain
 
 namespace MeshFamily
@@ -2700,18 +2690,6 @@ instance (j : ℤ) : FiniteDimensional ℝ ((starDomain n).complex.harmonic j) :
 instance (j : ℤ) : FiniteDimensional ℝ ((starDomain n).complexMin.harmonic j) :=
   FEM.finiteDimensional_harmonic_min j
 
-/-- **The hypotheses of the finite element theorems on star-shaped domains are satisfiable**:
-the cube with its Freudenthal meshes is a star-shaped domain with a quasi-uniform shape-regular
-mesh family, whose complexes satisfy the Poincaré inequality (with `c_P = 1 ≥ (2π)⁻¹`) and have
-finite-dimensional harmonic forms. -/
-theorem nonvacuous : ∃ (D : StarDomain n) (_ : MeshFamily D),
-    HasPoincare D.complex 1 ∧ HasPoincare D.complexMin 1 ∧
-    (∀ j, FiniteDimensional ℝ (D.complex.harmonic j)) ∧
-    (∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)) := by
-  have hpi : (2 * Real.pi)⁻¹ ≤ 1 := inv_le_one_of_one_le₀ (by linarith [Real.two_le_pi])
-  exact ⟨starDomain n, meshFamily n, (hasPoincare n).mono hpi, (hasPoincareMin n).mono hpi,
-    fun j => inferInstance, fun j => inferInstance⟩
-
 end CubeWitness
 
 /-! ### Images under affine equivalences; non-vacuity on parallelepipeds -/
@@ -3013,33 +2991,11 @@ def starDomain : StarDomain n :=
   (CubeWitness.starDomain n).map (Parallelepiped.affEquiv A hA b) (Parallelepiped.domain A b)
     (Parallelepiped.domain_eq_image A hA b)
 
-theorem starDomain_Ω : (starDomain A hA b).Ω = Parallelepiped.domain A b := rfl
-
 variable [NeZero n]
 
 /-- The image Freudenthal meshes `T(M_N)` of the parallelepiped as a mesh family. -/
 def meshFamily : MeshFamily (starDomain A hA b) :=
   (CubeWitness.meshFamily n).map (Parallelepiped.affEquiv A hA b) _ _
-
-theorem meshFamily_mesh (N : ℕ) :
-    (meshFamily A hA b).mesh N = Parallelepiped.mesh A hA b N := rfl
-
-/-- **Non-vacuity beyond the reference cube**: every parallelepiped `A · Q + b` (in particular
-every box), with its image Freudenthal meshes, is a star-shaped domain with a quasi-uniform
-shape-regular mesh family whose complexes satisfy the Poincaré inequality with
-`c_P(A) = Parallelepiped.poincareConst A` (`Parallelepiped.poincare`, `poincare_min`) and have
-finite-dimensional harmonic forms. -/
-theorem nonvacuous : ∃ (D : StarDomain n) (F : MeshFamily D),
-    D.Ω = Parallelepiped.domain A b ∧ (∀ N, F.mesh N = Parallelepiped.mesh A hA b N) ∧
-    HasPoincare D.complex (Parallelepiped.poincareConst A) ∧
-    HasPoincare D.complexMin (Parallelepiped.poincareConst A) ∧
-    (∀ j, FiniteDimensional ℝ (D.complex.harmonic j)) ∧
-    (∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)) :=
-  ⟨starDomain A hA b, meshFamily A hA b, rfl, fun _ => rfl,
-    fun i j hij z hz => Parallelepiped.poincare A hA b i j hij z hz,
-    fun i j hij z hz => Parallelepiped.poincare_min A hA b i j hij z hz,
-    Parallelepiped.finiteDimensional_harmonic A hA b,
-    Parallelepiped.finiteDimensional_harmonic_min A hA b⟩
 
 end ParallelepipedWitness
 

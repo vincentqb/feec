@@ -128,6 +128,11 @@ theorem inner_dual_totalD_fin3_of (y : H.wave.domain) (h0 : (H.wave y) 0 = 0)
   rw [inner_dual_totalD_fin3, h0, h1, inner_zero_left, neg_zero, zero_add, zero_sub,
     inner_neg_left]
 
+/-- `(𝐝 y)₂ = (L y)₂` on a three-term complex (`(𝐝* y)₂ = 0`). -/
+theorem totalD_apply_two_eq_wave_fin3 (y : H.wave.domain) :
+    (H.totalD ⟨y, y.2.1⟩) 2 = (H.wave y) 2 := by
+  rw [wave_eq_sub, PiLp.sub_apply, dual_totalD_apply_two_fin3, sub_zero]
+
 end Fin3
 
 /-! ### The total differential of a unitarily transported complex -/
@@ -650,6 +655,161 @@ theorem eventually_standardCube_cochainDefect_le {x : PiLp 2 (ShortHilbertComple
 end Cube
 
 
+/-! ### The hidden interpolant of a discrete BGG segment -/
+
+section Interp
+
+variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+  {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D) [FiniteDimensional ℝ Q.Vt1h]
+
+/-- The discrete gradients of the kernel of `S₀,ₕ`: `d̃(ker S₀,ₕ) ⊆ Ṽₕ¹`. -/
+def gradKer : Submodule ℝ Q.Vt1h :=
+  (LinearMap.ker Q.toSegmentH.S0).map Q.toSegmentH.dt0
+
+instance gradKer_hasOrthogonalProjection : (gradKer Q).HasOrthogonalProjection := by
+  have : CompleteSpace (gradKer Q) := FiniteDimensional.complete ℝ _
+  exact Submodule.HasOrthogonalProjection.ofCompleteSpace _
+
+/-- **The hidden interpolant** of `(z, r) ∈ Ṽₕ¹ × Ṽₕ²`: the hidden state
+`(0, z - P_K z, 0, r)`, `K = d̃(ker S₀,ₕ)`. -/
+def hiddenInterp (z : Q.Vt1h) (r : Q.Wt2h) : HiddenState Q.toSegmentH :=
+  (⟨EState.mk 0 (z - (gradKer Q).starProjection z) 0 r, fun ψ hψ => by
+    rw [EState.u_mk]
+    exact Submodule.inner_left_of_mem_orthogonal (Submodule.mem_map_of_mem hψ)
+      (Submodule.sub_starProjection_mem_orthogonal _)⟩ : hiddenSpace Q.toSegmentH)
+
+@[simp] theorem hiddenInterp_toEState (z : Q.Vt1h) (r : Q.Wt2h) :
+    (hiddenInterp Q z r).toEState = EState.mk 0 (z - (gradKer Q).starProjection z) 0 r := rfl
+
+/-- The correction is a discrete gradient of the kernel of `S₀,ₕ`. -/
+theorem exists_starProjection_gradKer (z : Q.Vt1h) :
+    ∃ k, Q.toSegmentH.S0 k = 0 ∧ Q.toSegmentH.dt0 k = (gradKer Q).starProjection z := by
+  obtain ⟨k, hk, e⟩ := Submodule.mem_map.1 ((gradKer Q).starProjection_apply_mem z)
+  exact ⟨k, hk, e⟩
+
+/-- `d̃` and `S₁,ₕ` vanish on the correction (`d̃ d̃ = 0`, `S₁,ₕ d̃ = -d S₀,ₕ`). -/
+theorem dt1_S1_starProjection_gradKer (z : Q.Vt1h) :
+    Q.toSegmentH.dt1 ((gradKer Q).starProjection z) = 0 ∧
+      Q.toSegmentH.S1 ((gradKer Q).starProjection z) = 0 := by
+  obtain ⟨k, hk, e⟩ := exists_starProjection_gradKer Q z
+  rw [← e]
+  refine ⟨Q.toSegmentH.dt1_dt0 k, ?_⟩
+  have h := Q.toSegmentH.anticomm k
+  rw [hk, map_zero] at h
+  exact neg_eq_zero.1 h.symm
+
+/-- **The correction is small for divergence-free fields**: if `u ⊥ d̃ ψ` for every `ψ ∈ Ṽₕ⁰`,
+then `‖P_K z‖ ≤ ‖z - u‖`. -/
+theorem norm_starProjection_gradKer_le (z : Q.Vt1h) {u : Vt1}
+    (hu : ∀ ψ ∈ Q.Vt0h, ⟪u, D.dt0 ψ⟫_ℝ = 0) :
+    ‖(gradKer Q).starProjection z‖ ≤ ‖(z : Vt1) - u‖ := by
+  set p := (gradKer Q).starProjection z
+  obtain ⟨k, -, e⟩ := exists_starProjection_gradKer Q z
+  have h0 : ⟪u, (p : Vt1)⟫_ℝ = 0 := by
+    have : (p : Vt1) = D.dt0 (k : Vt0) := (congrArg Subtype.val e).symm
+    rw [this]; exact hu _ k.2
+  have h1 : ⟪z - p, p⟫_ℝ = 0 := (gradKer Q).starProjection_inner_eq_zero z p
+    ((gradKer Q).starProjection_apply_mem z)
+  rw [inner_sub_left, real_inner_self_eq_norm_sq] at h1
+  have hp : ‖p‖ ^ 2 = ⟪(z : Vt1) - u, (p : Vt1)⟫_ℝ := by
+    rw [inner_sub_left, h0, sub_zero, ← Submodule.coe_inner]
+    linarith
+  have hb : ⟪(z : Vt1) - u, (p : Vt1)⟫_ℝ ≤ ‖(z : Vt1) - u‖ * ‖p‖ := by
+    exact real_inner_le_norm ((z : Vt1) - u) (p : Vt1)
+  rcases (norm_nonneg p).eq_or_lt with h | h
+  · rw [← h]; exact norm_nonneg _
+  · nlinarith
+
+/-- The projected state `(Π̃¹ u, Π̃² ρ)` as discrete fields. -/
+def projU (u : Vt1) : Q.Vt1h := ⟨Q.Pt1 u, Q.Pt1_mem u⟩
+
+/-- The projected bottom `2`-field. -/
+def projR (r : Wt2) : Q.Wt2h := ⟨Q.Pt2 r, Q.Pt2_mem r⟩
+
+/-- **The interpolation errors of the hidden interpolant** of `(0, u, 0, ρ)`, for
+divergence-free `u` (`u ⊥ d̃ Ṽₕ⁰`) with `S₁ u = 0`: the sum of
+`‖u - uₕ‖² + ‖ρ - ρₕ‖² + ‖S₁,ₕ uₕ‖² + ‖d̃ u - d̃ uₕ‖²` is at most `4` times the Strang data
+`strangData(0, 0, u, 0, ρ, 0, 0)` (projection errors in the graph norms and `‖(S₁ - S₁,ₕ) u‖`). -/
+theorem hiddenInterp_err_le {u : Vt1} (hu : ∀ ψ ∈ Q.Vt0h, ⟪u, D.dt0 ψ⟫_ℝ = 0) (hS : D.S1 u = 0)
+    (r : Wt2) :
+    ‖u - ((hiddenInterp Q (projU Q u) (projR Q r)).toEState.u : Vt1)‖ ^ 2 +
+        ‖r - ((hiddenInterp Q (projU Q u) (projR Q r)).toEState.ρ : Wt2)‖ ^ 2 +
+        ‖Q.S1h ((hiddenInterp Q (projU Q u) (projR Q r)).toEState.u : Vt1)‖ ^ 2 +
+        ‖D.dt1 u - D.dt1 ((hiddenInterp Q (projU Q u) (projR Q r)).toEState.u : Vt1)‖ ^ 2 ≤
+      4 * Q.strangData 0 0 u 0 r 0 0 := by
+  set z := projU Q u
+  set p := (gradKer Q).starProjection z
+  have hp := norm_starProjection_gradKer_le Q z hu
+  obtain ⟨hd, hs⟩ := dt1_S1_starProjection_gradKer Q z
+  have hd' : D.dt1 (p : Vt1) = 0 := congrArg Subtype.val hd
+  have hs' : Q.S1h (p : Vt1) = 0 := congrArg Subtype.val hs
+  have eu : ((hiddenInterp Q z (projR Q r)).toEState.u : Vt1) = Q.Pt1 u - (p : Vt1) := rfl
+  have er : ((hiddenInterp Q z (projR Q r)).toEState.ρ : Wt2) = Q.Pt2 r := rfl
+  rw [eu, er]
+  set w := Q.Pt1 u - u
+  have hzw : ((z : Vt1) - u) = w := rfl
+  rw [hzw] at hp
+  have e1 : u - (Q.Pt1 u - (p : Vt1)) = (p : Vt1) - w := by simp only [w]; abel
+  have e3 : Q.S1h (Q.Pt1 u - (p : Vt1)) = Q.S1h w + (Q.S1h u - D.S1 u) := by
+    rw [map_sub, hs', sub_zero, hS, sub_zero]; simp only [w, map_sub]; abel
+  have e4 : D.dt1 u - D.dt1 (Q.Pt1 u - (p : Vt1)) = -D.dt1 w := by
+    rw [map_sub, hd', sub_zero]; simp only [w, map_sub]; abel
+  rw [e1, e3, e4, norm_neg]
+  have n1 : ‖(p : Vt1) - w‖ ≤ 2 * ‖w‖ := by
+    have := norm_sub_le (p : Vt1) w
+    have hp' : ‖(p : Vt1)‖ = ‖p‖ := rfl
+    linarith
+  have n3 := norm_add_le (Q.S1h w) (Q.S1h u - D.S1 u)
+  have hsd : Q.strangData 0 0 u 0 r 0 0 = ‖Q.P0 0 - 0‖ ^ 2 + ‖D.dt0 (Q.Pt0 0 - 0)‖ ^ 2 +
+      Q.gnSq w + ‖Q.P2 0 - 0‖ ^ 2 + ‖Q.Pt2 r - r‖ ^ 2 + 0 ^ 2 + 0 ^ 2 +
+        ‖D.S1 u - Q.S1h u‖ ^ 2 := rfl
+  have hg : Q.gnSq w = ‖w‖ ^ 2 + ‖Q.S1h w‖ ^ 2 + ‖D.dt1 w‖ ^ 2 := rfl
+  have hr : ‖r - Q.Pt2 r‖ = ‖Q.Pt2 r - r‖ := norm_sub_rev _ _
+  have hS' : ‖Q.S1h u - D.S1 u‖ = ‖D.S1 u - Q.S1h u‖ := norm_sub_rev _ _
+  rw [hr]
+  rw [hS'] at n3
+  have q1 : ‖(p : Vt1) - w‖ ^ 2 ≤ 4 * ‖w‖ ^ 2 := by
+    nlinarith [norm_nonneg ((p : Vt1) - w), norm_nonneg w]
+  have q3 : ‖Q.S1h w + (Q.S1h u - D.S1 u)‖ ^ 2 ≤
+      2 * ‖Q.S1h w‖ ^ 2 + 2 * ‖D.S1 u - Q.S1h u‖ ^ 2 := by
+    have := mul_self_le_mul_self (norm_nonneg _) n3
+    nlinarith [sq_nonneg (‖Q.S1h w‖ - ‖D.S1 u - Q.S1h u‖)]
+  rw [hsd, hg]
+  nlinarith [sq_nonneg ‖Q.P0 0 - 0‖, sq_nonneg ‖D.dt0 (Q.Pt0 0 - 0)‖,
+    sq_nonneg ‖Q.P2 0 - 0‖, sq_nonneg ‖D.dt1 w‖, sq_nonneg ‖Q.Pt2 r - r‖, sq_nonneg ‖w‖]
+
+end Interp
+
+section InterpPhi
+
+variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
+  [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
+  [NormedAddCommGroup V1] [InnerProductSpace ℝ V1]
+  [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+  [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0]
+  [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
+  [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+  {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D)
+  [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
+  [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h] [FiniteDimensional ℝ Q.Wt2h]
+  (hdinj : Function.Injective Q.toSegmentH.dt0) (hS : Function.Surjective Q.toSegmentH.S0)
+
+omit [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Wt2h] in
+/-- The hidden interpolant has no degree-`0` part, so its discrete potential vanishes. -/
+theorem defectPhi_hiddenInterp (z : Q.Vt1h) (r : Q.Wt2h) :
+    defectPhi Q hdinj hS (hiddenInterp Q z r) = 0 := by
+  change phiMap Q.toSegmentH hdinj hS ((0 : Q.V0h), (0 : Q.Vt1h)) = 0
+  rw [show ((0 : Q.V0h), (0 : Q.Vt1h)) = 0 from rfl, map_zero]
+
+end InterpPhi
+
+
 /-! ### Mirror boundary conditions: the cochain defect of `mirrorComplex` vanishes on TSD -/
 
 section Mirror
@@ -903,6 +1063,290 @@ theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.doma
       (mirrorEmb hT hB N (mirrorDiffGen hT hB N b)))
   refine Eq.trans ?_ (inner_zero_left (𝕜 := ℝ) _).symm
   linarith
+
+/-! #### Graph-norm approximation of TSD states by hidden interpolants -/
+
+set_option maxHeartbeats 4000000 in
+/-- **The approximation error of a read pair**, by slots, at a state with vanishing degree-`0`
+and `M` slots, for real forms states with vanishing `σ` and `M`. -/
+theorem norm_sq_sub_mirrorPair (y : PiLp 2 SpaceQ) (h0 : slot0 y = 0) (hM : slotM y = 0)
+    (A B : REnergy) (ha0 : A.σ = 0) (haM : A.M = 0) (hb0 : B.σ = 0) (hbM : B.M = 0) :
+    ‖y - (mirrorReEmb A + mulI (mirrorReEmb B))‖ ^ 2 =
+      ‖rowsW1L (slot1 y) - A.u‖ ^ 2 + ‖rowsW2L (slotB y) - A.ρ‖ ^ 2 +
+      (‖rowsW1L (-Complex.I • slot1 y) - B.u‖ ^ 2 +
+        ‖rowsW2L (-Complex.I • slotB y) - B.ρ‖ ^ 2) := by
+  have e := norm_sq_sub_mirrorReEmb y A B
+  have hy : y - (mirrorReEmb A + mulI (mirrorReEmb B)) =
+      y - mirrorReEmb A - Complex.I • mirrorReEmb B := sub_add_eq_sub_sub _ _ _
+  have t0 : ‖re0 (slot0 y) - A.σ‖ ^ 2 = 0 := by rw [h0, ha0, map_zero, sub_zero, norm_zero]; ring
+  have tM : ‖reM (slotM y) - A.M‖ ^ 2 = 0 := by rw [hM, haM, map_zero, sub_zero, norm_zero]; ring
+  have t0' : ‖re0 (-Complex.I • slot0 y) - B.σ‖ ^ 2 = 0 := by
+    rw [h0, hb0, smul_zero, map_zero, sub_zero, norm_zero]; ring
+  have tM' : ‖reM (-Complex.I • slotM y) - B.M‖ ^ 2 = 0 := by
+    rw [hM, hbM, smul_zero, map_zero, sub_zero, norm_zero]; ring
+  rw [hy]
+  linarith
+
+set_option maxHeartbeats 4000000 in
+/-- The same for a state with vanishing degree-`0`, degree-`1` and `M` slots, against real forms
+states with vanishing `σ` and `u`. -/
+theorem norm_sq_sub_mirrorPair' (y : PiLp 2 SpaceQ) (h0 : slot0 y = 0) (h1 : slot1 y = 0)
+    (hM : slotM y = 0) (A B : REnergy) (ha0 : A.σ = 0) (hau : A.u = 0) (hb0 : B.σ = 0)
+    (hbu : B.u = 0) :
+    ‖y - (mirrorReEmb A + mulI (mirrorReEmb B))‖ ^ 2 =
+      ‖A.M‖ ^ 2 + ‖rowsW2L (slotB y) - A.ρ‖ ^ 2 +
+      (‖B.M‖ ^ 2 + ‖rowsW2L (-Complex.I • slotB y) - B.ρ‖ ^ 2) := by
+  have e := norm_sq_sub_mirrorReEmb y A B
+  have hy : y - (mirrorReEmb A + mulI (mirrorReEmb B)) =
+      y - mirrorReEmb A - Complex.I • mirrorReEmb B := sub_add_eq_sub_sub _ _ _
+  have t0 : ‖re0 (slot0 y) - A.σ‖ ^ 2 = 0 := by rw [h0, ha0, map_zero, sub_zero, norm_zero]; ring
+  have t1 : ‖rowsW1L (slot1 y) - A.u‖ ^ 2 = 0 := by
+    rw [h1, hau, map_zero, sub_zero, norm_zero]; ring
+  have tM : ‖reM (slotM y) - A.M‖ ^ 2 = ‖A.M‖ ^ 2 := by rw [hM, map_zero, zero_sub, norm_neg]
+  have t0' : ‖re0 (-Complex.I • slot0 y) - B.σ‖ ^ 2 = 0 := by
+    rw [h0, hb0, smul_zero, map_zero, sub_zero, norm_zero]; ring
+  have t1' : ‖rowsW1L (-Complex.I • slot1 y) - B.u‖ ^ 2 = 0 := by
+    rw [h1, hbu, smul_zero, map_zero, sub_zero, norm_zero]; ring
+  have tM' : ‖reM (-Complex.I • slotM y) - B.M‖ ^ 2 = ‖B.M‖ ^ 2 := by
+    rw [hM, smul_zero, map_zero, zero_sub, norm_neg]
+  rw [hy]
+  linarith
+
+/-- The hidden interpolant of the real rows of a mirror state. -/
+abbrev mirrorInterp (N : ℕ) (y : PiLp 2 SpaceQ) : mirrorHidden hT hB N :=
+  hiddenInterp (mirrorFEM hT hB N) (projU (mirrorFEM hT hB N) (rowsBU (stEL y)))
+    (projR (mirrorFEM hT hB N) (rowsW2L (stBL y)))
+
+/-- **The interpolating pair** of a mirror state: the hidden interpolants of its real part and of
+the real part of `-i y`. -/
+def mirrorPair (N : ℕ) (y : PiLp 2 SpaceQ) : (mirrorComplex hT hB).toFamily.X N :=
+  WithLp.toLp 2 (mirrorInterp hT hB N y, mirrorInterp hT hB N (-Complex.I • y))
+
+/-- The Strang data of the real rows of a mirror state. -/
+abbrev mirrorSD (N : ℕ) (y : PiLp 2 SpaceQ) : ℝ :=
+  (mirrorFEM hT hB N).strangData 0 0 (rowsBU (stEL y)) 0 (rowsW2L (stBL y)) 0 0
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 4000000 in
+/-- The errors of the hidden interpolant of the real rows of a TSD state of `D(L)`. -/
+theorem mirrorInterp_err_le (N : ℕ) (x : complexQ.wave.domain)
+    (hx : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ) :
+    ‖rowsBU (stEL x) - (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ ^ 2 +
+        ‖rowsW2L (stBL x) -
+          (((mirrorInterp hT hB N x).toEState.ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2)‖ ^ 2 +
+        ‖(mirrorFEM hT hB N).S1h
+          (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ ^ 2 +
+        ‖bD1 (rowsBU (stEL x)) -
+          bD1 (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ ^ 2 ≤
+      4 * mirrorSD hT hB N x :=
+  hiddenInterp_err_le (mirrorFEM hT hB N) (fun ψ _ => inner_rowsBU_bD0 hx ψ)
+    (mS1_rowsBU_state hx) _
+
+set_option maxHeartbeats 2000000 in
+theorem mirrorDiffGen_M (N : ℕ) (a : mirrorHidden hT hB N) :
+    (((HiddenState.toEState (mirrorDiffGen hT hB N a)).M : (mirrorFEM hT hB N).W2h) : W2) =
+      (mirrorFEM hT hB N).S1h ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1) := rfl
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 4000000 in
+/-- `𝐝ₕ` of a hidden interpolant has no degree-`1` part (its potential vanishes). -/
+theorem mirrorFE_diffGen_interp_u (N : ℕ) (y : PiLp 2 SpaceQ) :
+    (mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).u = 0 := by
+  change bIncl1 ((((HiddenState.toEState (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).u :
+    (mirrorFEM hT hB N).Vt1h)) : BU1) = 0
+  rw [mirrorDiffGen_u, defectPhi_hiddenInterp, Submodule.coe_zero, map_zero, neg_zero, map_zero]
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 16000000 in
+/-- The approximation error of the interpolating pair, by slots. -/
+theorem mirrorPair_approx_eq (N : ℕ) (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖ ^ 2 =
+      ‖rowsW1L (slot1 (y : PiLp 2 SpaceQ)) -
+          (mirrorFE hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))).u‖ ^ 2 +
+        ‖rowsW2L (slotB (y : PiLp 2 SpaceQ)) -
+          (mirrorFE hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))).ρ‖ ^ 2 +
+      (‖rowsW1L (-Complex.I • slot1 (y : PiLp 2 SpaceQ)) -
+          (mirrorFE hT hB N (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))).u‖ ^ 2 +
+        ‖rowsW2L (-Complex.I • slotB (y : PiLp 2 SpaceQ)) -
+          (mirrorFE hT hB N (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))).ρ‖ ^ 2) := by
+  obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hyK
+  obtain ⟨hi1, -⟩ := mirrorComplex_incl_D hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))
+    (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))
+  change ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (WithLp.toLp 2
+    (mirrorInterp hT hB N (y : PiLp 2 SpaceQ),
+      mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))))‖ ^ 2 = _
+  rw [hi1]
+  exact norm_sq_sub_mirrorPair _ h0 hM _ _ rfl rfl rfl rfl
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 4000000 in
+/-- The slots of `𝐝 y` for a TSD state of `D(L)`: no degree-`0`, degree-`1` or `M` part. -/
+theorem slots_totalD_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    slot0 (complexQℝ.totalD ⟨y, y.2.1⟩) = 0 ∧ slot1 (complexQℝ.totalD ⟨y, y.2.1⟩) = 0 ∧
+      slotM (complexQℝ.totalD ⟨y, y.2.1⟩) = 0 ∧
+      slotB (complexQℝ.totalD ⟨y, y.2.1⟩) = slotB (complexQℝ.wave y) := by
+  have hz2 := totalD_apply_two_eq_wave_fin3 complexQℝ y
+  have hLK : complexQℝ.wave y ∈ tsdQℝ := isReducing_tsdQℝ.mapsTo y hyK
+  refine ⟨totalD_apply_zero_fin3 complexQℝ ⟨y, y.2.1⟩, complexQℝ_totalD_one_of_tsd y hyK, ?_, ?_⟩
+  · change (WithLp.ofLp ((complexQℝ.totalD ⟨y, y.2.1⟩) 2 : W2Q)).1 = 0
+    rw [hz2]
+    exact (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hLK).2.2.1
+  · change (WithLp.ofLp ((complexQℝ.totalD ⟨y, y.2.1⟩) 2 : W2Q)).2 =
+      (WithLp.ofLp ((complexQℝ.wave y) 2 : W2Q)).2
+    rw [hz2]
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 16000000 in
+/-- The graph error of the interpolating pair, by slots. -/
+theorem mirrorPair_graph_eq (N : ℕ) (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
+        ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖ ^ 2 =
+      ‖(mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).M‖ ^ 2 +
+        ‖rowsW2L (slotB (complexQℝ.wave y)) -
+          (mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).ρ‖ ^ 2 +
+      (‖(mirrorFE hT hB N (mirrorDiffGen hT hB N
+          (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))))).M‖ ^ 2 +
+        ‖rowsW2L (-Complex.I • slotB (complexQℝ.wave y)) - (mirrorFE hT hB N (mirrorDiffGen hT hB N
+          (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))))).ρ‖ ^ 2) := by
+  obtain ⟨hz0, hz1, hzM, hzB⟩ := slots_totalD_of_tsd y hyK
+  obtain ⟨-, hi2⟩ := mirrorComplex_incl_D hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))
+    (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))
+  change ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
+    ((mirrorComplex hT hB).toFamily.D N (WithLp.toLp 2
+      (mirrorInterp hT hB N (y : PiLp 2 SpaceQ),
+        mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))))‖ ^ 2 = _
+  rw [hi2, ← hzB]
+  exact norm_sq_sub_mirrorPair' _ hz0 hz1 hzM _ _
+    (mirrorDiffGen_σ hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ)))
+    (mirrorFE_diffGen_interp_u hT hB N (y : PiLp 2 SpaceQ))
+    (mirrorDiffGen_σ hT hB N (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))))
+    (mirrorFE_diffGen_interp_u hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 16000000 in
+/-- The slot terms of the real part, in the forms model. -/
+theorem mirrorPair_terms (N : ℕ) (x : complexQ.wave.domain) :
+    ‖rowsW1L (slot1 (x : PiLp 2 SpaceQ)) - (mirrorFE hT hB N (mirrorInterp hT hB N x)).u‖ =
+        ‖rowsBU (stEL x) - (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) :
+          BU1)‖ ∧
+      ‖rowsW2L (slotB (complexQ.wave x)) -
+          (mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N x))).ρ‖ =
+        ‖bD1 (rowsBU (stEL x)) -
+          bD1 (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ ∧
+      ‖(mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N x))).M‖ =
+        ‖(mirrorFEM hT hB N).S1h
+          (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ := by
+  refine ⟨?_, ?_, congrArg norm (mirrorDiffGen_M hT hB N _)⟩
+  · have e := bIncl1_rowsBU_state x
+    change ‖rowsW1L (stEL x) - bIncl1 _‖ = _
+    rw [← e, ← map_sub, norm_bIncl1]
+    rfl
+  · have e := bD1_rowsBU_state x
+    change ‖rowsW2L (stBL (complexQ.wave x)) -
+      ((HiddenState.toEState (mirrorDiffGen hT hB N (mirrorInterp hT hB N x))).ρ : Wv W2)‖ = _
+    rw [mirrorDiffGen_ρ, ← e]
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 16000000 in
+/-- **Graph-norm approximation by the interpolating pair**: for `y ∈ D(L) ∩ tsdQℝ`,
+`‖y - ι wₙ‖² + ‖𝐝 y - ι 𝐝ₙ wₙ‖² ≤ 4 (sₙ(y) + sₙ(-i y))`, `wₙ = mirrorPair`, `sₙ` the Strang data
+of the real rows (`mirrorSD`). -/
+theorem norm_sq_mirrorPair_le (N : ℕ) (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖ ^ 2 +
+        ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
+          ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖ ^ 2 ≤
+      4 * (mirrorSD hT hB N y + mirrorSD hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))) := by
+  have hy' : (y : PiLp 2 SpaceQ) ∈ complexQ.wave.domain := mem_complexQℝ_domain.1 y.2
+  obtain ⟨hs, hLs⟩ := complexQℝ_wave_negI y
+  have hs' : -Complex.I • (y : PiLp 2 SpaceQ) ∈ complexQ.wave.domain := mem_complexQℝ_domain.1 hs
+  have hsK := negI_smul_mem_tsdQℝ hyK
+  have E1 := mirrorPair_approx_eq hT hB N y hyK
+  have E2 := mirrorPair_graph_eq hT hB N y hyK
+  have hw : complexQℝ.wave y = complexQ.wave ⟨y, hy'⟩ := complexQℝ_wave_apply y
+  have hw' : complexQℝ.wave ⟨_, hs⟩ = complexQ.wave ⟨_, hs'⟩ := complexQℝ_wave_apply ⟨_, hs⟩
+  obtain ⟨t1, t4, t3⟩ := mirrorPair_terms hT hB N ⟨y, hy'⟩
+  obtain ⟨t1', t4', t3'⟩ := mirrorPair_terms hT hB N ⟨_, hs'⟩
+  have e1 := mirrorInterp_err_le hT hB N ⟨y, hy'⟩ hyK
+  have e2 := mirrorInterp_err_le hT hB N ⟨_, hs'⟩ hsK
+  have hB1 : rowsW2L (slotB (complexQℝ.wave y)) = rowsW2L (slotB (complexQ.wave ⟨y, hy'⟩)) := by
+    rw [hw]
+  have hB2 : rowsW2L (-Complex.I • slotB (complexQℝ.wave y)) =
+      rowsW2L (slotB (complexQ.wave ⟨_, hs'⟩)) := by
+    rw [← hw', hLs]; rfl
+  rw [hB1, hB2] at E2
+  have s1 := congrArg (· ^ 2) t1
+  have s3 := congrArg (· ^ 2) t3
+  have s4 := congrArg (· ^ 2) t4
+  have s1' := congrArg (· ^ 2) t1'
+  have s3' := congrArg (· ^ 2) t3'
+  have s4' := congrArg (· ^ 2) t4'
+  simp only at s1 s3 s4 s1' s3' s4'
+  have r2 : ‖rowsW2L (slotB (y : PiLp 2 SpaceQ)) -
+      (mirrorFE hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))).ρ‖ ^ 2 =
+      ‖rowsW2L (stBL (⟨y, hy'⟩ : complexQ.wave.domain)) - (((mirrorInterp hT hB N
+        (⟨y, hy'⟩ : complexQ.wave.domain)).toEState.ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2)‖ ^ 2 :=
+    rfl
+  have r2' : ‖rowsW2L (-Complex.I • slotB (y : PiLp 2 SpaceQ)) -
+      (mirrorFE hT hB N (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))).ρ‖ ^ 2 =
+      ‖rowsW2L (stBL (⟨_, hs'⟩ : complexQ.wave.domain)) - (((mirrorInterp hT hB N
+        (⟨_, hs'⟩ : complexQ.wave.domain)).toEState.ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2)‖ ^ 2 :=
+    rfl
+  have r1' : ‖rowsW1L (-Complex.I • slot1 (y : PiLp 2 SpaceQ)) -
+      (mirrorFE hT hB N (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))).u‖ ^ 2 =
+      ‖rowsW1L (slot1 ((⟨_, hs'⟩ : complexQ.wave.domain) : PiLp 2 SpaceQ)) -
+        (mirrorFE hT hB N (mirrorInterp hT hB N (⟨_, hs'⟩ : complexQ.wave.domain))).u‖ ^ 2 := rfl
+  linarith
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 8000000 in
+/-- **Graph-norm approximation of every TSD state of `D(L)`**: the interpolating pairs satisfy
+`‖y - ι wₙ‖ + ‖𝐝 y - ι 𝐝ₙ wₙ‖ → 0` (the smoothed projections converge on the fixed forms state,
+`eventually_mirrorClose`, `mirrorFEM_strangData_le_of_close`). -/
+theorem eventually_mirrorPair_lt (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop,
+      ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖ +
+        ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
+          ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖ < ε := by
+  set K := mirrorCloseConst C
+  have hK : 0 ≤ K := mirrorCloseConst_nonneg C
+  set δ := ε / (4 * (√K + 1)) with hδ
+  have hδ0 : 0 < δ := by positivity
+  have hδε : 4 * δ * √K < ε := by
+    have e : δ * (4 * (√K + 1)) = ε := div_mul_cancel₀ _ (by positivity)
+    nlinarith [Real.sqrt_nonneg K]
+  have ev : ∀ z : PiLp 2 SpaceQ, ∀ᶠ N in atTop, ∀ t ∈ Icc (0 : ℝ) 0,
+      MirrorClose hT hB N δ (0 : TU0) (0 : BU0) (rowsBU (stEL z)) (0 : W2) (rowsW2L (stBL z)) :=
+    fun z => eventually_mirrorClose hT hB (σ := fun _ => (0 : TU0)) (φ := fun _ => (0 : BU0))
+      (u := fun _ => rowsBU (stEL z)) (M := fun _ => (0 : W2)) (ρ' := fun _ => rowsW2L (stBL z))
+      continuousOn_const continuousOn_const continuousOn_const continuousOn_const
+      continuousOn_const continuousOn_const continuousOn_const hδ0
+  filter_upwards [ev y, ev (-Complex.I • (y : PiLp 2 SpaceQ))] with N h1 h2
+  have s1 := mirrorFEM_strangData_le_of_close hT hB N (h1 0 ⟨le_rfl, le_rfl⟩) 0 0
+  have s2 := mirrorFEM_strangData_le_of_close hT hB N (h2 0 ⟨le_rfl, le_rfl⟩) 0 0
+  have hsq := norm_sq_mirrorPair_le hT hB N y hyK
+  set a := ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖
+  set b := ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
+    ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖
+  have ha := norm_nonneg ((y : PiLp 2 SpaceQ) -
+    (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y))
+  have hb := norm_nonneg (complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
+    ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y)))
+  have hab : (a + b) ^ 2 ≤ (4 * δ * √K) ^ 2 := by
+    have hsK : (√K) ^ 2 = K := Real.sq_sqrt hK
+    have : a ^ 2 + b ^ 2 ≤ 8 * K * δ ^ 2 := by
+      have e1 : mirrorSD hT hB N y ≤ K * δ ^ 2 := le_of_le_of_eq s1 (by ring)
+      have e2 : mirrorSD hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)) ≤ K * δ ^ 2 :=
+        le_of_le_of_eq s2 (by ring)
+      linarith
+    nlinarith [sq_nonneg (a - b)]
+  have hpos : 0 ≤ 4 * δ * √K := by positivity
+  have := le_of_pow_le_pow_left₀ two_ne_zero hpos hab
+  linarith
+
 
 end Mirror
 

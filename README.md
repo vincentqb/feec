@@ -106,6 +106,13 @@ failure and prints each violation as `path:line: message`. Each check is also an
 own (`feec-citations`, `feec-layering`, `feec-axioms`, `feec-naming`, `feec-thesismap`,
 `feec-mapcheck`); `lake exe feec-thesismap` regenerates `docs/THESIS_MAP.md`.
 
+`lake exe feec-deps [OUT_DIR]` (`scripts/FeecCheck/Deps.lean`, default `.lake/feec-deps`) is a
+measurement tool for minimality, not a gate check: it writes TSV reports of the declarations that
+nothing kept uses (`dead.tsv`, from the seeds of `map.tsv`, the docs, cited docstrings and
+metaprograms), wrappers, duplicate statements, name twins and the largest proofs.
+`lake exe feec-deps --strip FILE OUT [DIR]` writes `FILE` without the dead groups listed in
+`DIR/dead.tsv`; check a deletion by building.
+
 The checks are compiled executables. On hosts whose C library is too old for the toolchain's
 bundled `clang` (glibc < 2.29, e.g. Amazon Linux 2), point Lake at a system `clang` and the
 toolchain's libraries:

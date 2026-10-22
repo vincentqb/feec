@@ -41,6 +41,21 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 >   a citation check, now `lake exe feec-citations` (every `[Key]` in `Feec/` exists in `references.bib`; no
 >   `[Key, …]` forms; every module has a `## References` section) to the verification gate.
 
+> **Status (2026-10-22): minimality pass.** `lake exe feec-deps` (`scripts/FeecCheck/Deps.lean`)
+> measures what nothing kept uses (seeds: the `main` rows of `map.tsv`, the declarations named in
+> the docs, cited docstrings, metaprograms and coercions) and lists wrappers, duplicate statements
+> and name twins; `--strip FILE OUT` deletes the dead groups of a file. Eight parallel tasks and a
+> merge deleted the dead groups, collapsed wrappers and duplicates and proved twins once, with no
+> main statement weakened. Before → after: 329 → 325 modules (`Evolution.Perturbation`,
+> `ForMathlib.LinearPMap.CompPartial`, `Models.BoundedDomain.DeRham` and `Models.Cube.MirrorDirichlet`
+> were left without declarations and are deleted), 220,777 → 194,462 lines in `Feec/**/*.lean`,
+> 17,556 → 15,303 user declarations (13,891 → 11,821 theorems), dead groups 2,422 (20,714 lines)
+> → 259 (1,902 lines, all kept on purpose: `rfl` simp lemmas that bare `simp` uses, the second
+> Bianchi identity, the dualities of the Hessian, div-div and elasticity complexes, isotropic media,
+> non-vacuity witnesses), wrappers 412 → 272, duplicate sets 92 → 44, name-twin sets 93 → 76
+> (10,283 → 7,061 lines). The gate passes; `map.tsv` marks the deleted declarations
+> `deleted-helper` (none `main`).
+
 > **Status (2026-10-21): the gate is in Lean.** The checks of §5 run as `lake exe feec-gate`
 > (library `FeecCheck`, `scripts/FeecCheck/`; Lean only, no shell or Python): `feec-citations`
 > (citation convention), `feec-layering` (import order of §1), `feec-axioms` (axiom audit),
@@ -211,7 +226,7 @@ Design 2 is the base: all three judges picked it. The grafts below come from Des
 ```
 Feec/
 ├── ForMathlib/                       -- imports only Mathlib; Mathlib namespaces (LinearPMap, MeasureTheory.Lp, …)
-│   ├── LinearPMap/{Skew,GraphSpace,Reducing,Intertwines,ClosedRange,Bounded,CompPartial}.lean
+│   ├── LinearPMap/{Skew,GraphSpace,Reducing,Intertwines,ClosedRange,Bounded}.lean
 │   ├── Lp/{CountEquiv,ProdEquiv}.lean          -- lp ≃ₗᵢ Lp count (ae_count_iff); Lp(E×F) ≃ Lp E × Lp F
 │   ├── Analysis/{Gronwall,Inequalities}.lean   -- decay-rate Gronwall; young/absorb/sq_norm_add3_le
 │   └── Calculus/{Partial,TimeSlice}.lean

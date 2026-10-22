@@ -219,6 +219,11 @@ Limits.
   nonzero commutation defect of `πₕ` is exercised by no instance (remark, not formalized: in
   finite dimension the approximation property forces `πₕ = iₕ⁻¹` eventually); the Maxwell
   instance of `ofComplex` is the conforming one.
+- The split rate `rateClass_of_split` (order `min(α, β, γ)`, measure `0 ≤ m ≤ 1`) is exercised
+  only by the witness `mixed`. The rates of (6.5) go through
+  `Feec.HilbertComplex.galerkinRateClass`, with the elliptic projection (6.4) as approximant
+  (residual `0`), not through the split; the `ofCochainDefect` route of the mirror scheme states
+  no rate.
 - Rate classes and cores are hypotheses on the data that each instance must supply. The
   conforming rate carries `(1 + C_P)(1 + t)²`, where the model theorems have `(1 + t)`; through
   `ofComplex` (`ConstrainedFEEC.RateClass.toCrimeRate`) it is `C + C_ι C' t`.

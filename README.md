@@ -82,12 +82,15 @@ by `S₀,ₕ = π¹S⁰`, in general different from `S⁰`, so its discrete comp
 verdicts are instances of `approxFEEC`, with the elliptic projection (6.4) of the exact solution as
 comparison trajectory. Its generator is `𝐝ₕ − 𝐝ₕ*` for a discrete differential `𝐝ₕ`, so it is also
 formalized through `ofComplexCrime` (via `ofGalerkinCore`): this re-derives the same verdicts from the
-(6.4) cores and adds an exactly preserved discrete Gauss constraint. The cochain defect of (6.5) is
+(6.4) cores and adds an exactly preserved discrete Gauss constraint (`FEM.hiddenGauss`; that it
+lies in TSD is not shown). The cochain defect of (6.5) is
 the pair of consistency functionals `ℓ((I − π¹)S⁰·)`, `⟪M, (I − π²)S¹·⟫` of the Strang bound of (6.4)
 (`FEM.cochainDefectForm_eq`); for mirror BCs it vanishes on TSD states, and the mirror verdict also
 follows through `ofCochainDefect` from graph-norm approximation, independently of (6.4): its
 family `FEM.mirrorFamily` is built directly from the discretization, and neither the elliptic core
 nor the Strang theorem is in the dependency closure (`FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`).
+That the cochain defect is nonzero for some mesh and datum is not proved, and the split rate
+`rateClass_of_split` is exercised only by an abstract witness (limits in `docs/OVERVIEW.md`).
 On `ℝ³` and `ℝᵈ` the Sobolev classes are defined on the Fourier side, and the truncation is a semi-discretization in frequency.
 `einsteinBianchi_summary` bundles the Einstein–Bianchi rows.
 

@@ -182,6 +182,7 @@ public import Feec.Instances.EinsteinBianchiFEMComplex
 public import Feec.Instances.EinsteinBianchiFEMCube
 public import Feec.Instances.EinsteinBianchiFEMCubeCore
 public import Feec.Instances.EinsteinBianchiFEMCubeEll
+public import Feec.Instances.EinsteinBianchiFEMDefect
 public import Feec.Instances.EinsteinBianchiFEMElliptic
 public import Feec.Instances.EinsteinBianchiFEMGenerator
 public import Feec.Instances.EinsteinBianchiFEMMirror

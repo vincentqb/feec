@@ -45,14 +45,15 @@ are `-⟪𝐝* ξ, v⟫` in the energy components: on a three-term complex
   regularity hypotheses are assumed, not derived from the datum);
   `eventually_standardCube_cochainDefect_le`: it tends to `0` uniformly on `[0, T]` for every
   datum of `D(L²)` (`K₀, K₁ → 0`).
-* **Mirror boundary conditions** (`mirrorComplex`): `mirrorComplex_cochainDefect_eq_zero`: the
-  cochain defect **vanishes** at every TSD state of `D(L)`, with the reason: a TSD state has no
-  degree-`0` part and no `M`-slot and a divergence-free `E`; so `𝐝 y` has no degree-`1` part,
-  `L y` (TSD again) no degree-`0` part, the gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with
-  `E`, the crime `S₁ - S₁,ₕ` only meets the vanishing `M`-slot, and the rest cancels by
-  `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`, `inner_rowsW1L_wave_add`); in the language of
-  the formula, TSD solutions have `ℓ ≡ 0` and `M ≡ 0`. This is the `K₀ = K₁ = 0` of the mirror
-  Strang bound, now at the level of the family.
+* **Mirror boundary conditions** (`mirrorFamily`, the family of `mirrorComplex` built directly
+  from the discretization): `mirrorFamily_cochainDefect_eq_zero` (and
+  `mirrorComplex_cochainDefect_eq_zero`): the cochain defect **vanishes** at every TSD state of
+  `D(L)`, with the reason: a TSD state has no degree-`0` part and no `M`-slot and a
+  divergence-free `E`; so `𝐝 y` has no degree-`1` part, `L y` (TSD again) no degree-`0` part,
+  the gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with `E`, the crime `S₁ - S₁,ₕ` only meets
+  the vanishing `M`-slot, and the rest cancels by `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`,
+  `inner_rowsW1L_wave_add`); in the language of the formula, TSD solutions have `ℓ ≡ 0` and
+  `M ≡ 0`. This is the `K₀ = K₁ = 0` of the mirror Strang bound, now at the level of the family.
 * **The mirror scheme through `ofCochainDefect`** (`mirrorSplitComplex`,
   `einsteinBianchi_mirrorFEM_ofCochainDefect`): a second route to the convergence of (6.5), from
   the split hypotheses of `Feec.HilbertComplex.ApproxComplexCrime.ofCochainDefect` instead of the
@@ -63,8 +64,13 @@ are `-⟪𝐝* ξ, v⟫` in the energy components: on a three-term complex
   vanishing cochain defect. The verdict: the discrete solutions are those of `mirrorFEMApprox`
   (the scheme (6.5)), the closure of the core is `tsdQℝ`, and for every TSD datum the discrete
   solutions converge to the TSD solution uniformly on `[0, T]` with TSD residual tending to `0`.
-  Neither the elliptic projection (6.4), nor its Strang bound, nor the model convergence theorems
-  of (6.5) are used.
+  Neither the elliptic projection (6.4), nor its Galerkin identity and Strang bound, nor
+  `ofGalerkinCore`, nor the model convergence theorems of (6.5) are used: the family is
+  `mirrorFamily`, built by `Feec.HilbertComplex.ApproxComplexCrime.Family.ofApproxFEEC` from
+  `mirrorFEMApprox` and `mirrorD`, with `Jₙ = 1` (`mirrorFamily_J`) and the discrete solutions of
+  `mirrorFEMApprox` (`mirrorSplitComplex_sol`). The only (6.4)-related constant in the dependency
+  closure is the projection-error functional `Feec.BGG.Discrete.strangData`, through
+  `mirrorFEM_strangData_le_of_close` (convergence of the smoothed projections on a fixed state).
 
 **Not proved.** That the cochain defect is nonzero for some mesh and datum: by the formula it
 would need `ℓ(t)((I - π¹) S⁰ Φ(σᵥ, 0)) ≠ 0` or `⟪M(t), (I - π²) S¹ uᵥ⟫ ≠ 0` for the smoothed
@@ -185,6 +191,25 @@ theorem inner_totalD_map_of_eq {H : HilbertComplex 𝕜 c W} {H' : HilbertComple
 
 end Map
 
+/-! ### Families without inner-product defect -/
+
+section JOne
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+
+/-- A family with `Jₕ = 1` has inner-product defect `‖1 - Jₕ‖ → 0` (it is `0`). Stated over a
+general complex so that its norm elaborates with the family's own instances (on `mirrorFamily`
+the operator norm of `Jₙ` is not synthesized directly). -/
+theorem _root_.Feec.Instances.EinsteinBianchi.FEM.tendsto_innerDefect_of_J_eq_one
+    {H : HilbertComplex 𝕜 c W} {κ : Type*} (S : ApproxComplexCrime.Family H κ) (l : Filter κ)
+    (hJ : ∀ h, S.J h = 1) :
+    Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0) := by
+  simp only [hJ, sub_self, norm_zero]
+  exact tendsto_const_nhds
+
+end JOne
+
 end Feec.HilbertComplex
 
 namespace Feec.Instances.EinsteinBianchi.FEM
@@ -256,8 +281,8 @@ def cochainDefectForm (s : ExactWave D T g) (t : ℝ) (v : HiddenState Q.toSegme
   -s.ℓ t ((D.S0 - Q.S0h) (defectPhi Q hdinj hS v : Vt0)) -
     ⟪s.M t, (D.S1 - Q.S1h) (v.toEState.u : Vt1)⟫
 
-/-- **The weak cochain defect identity**: along a source-free exact solution of (6.2), for every
-hidden state `v`,
+/-- **The weak cochain defect identity** of the scheme [QuennevilleBelair2015], (6.5): along a
+source-free exact solution of (6.2), for every hidden state `v`,
 `⟪ξ, 𝐝ₕ v⟫ + ⟪σ', σᵥ⟫ + ⟪d̃ φ + u', uᵥ⟫ = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫`
 (from (6.2a) at `(σᵥ, Φ(σᵥ, 0))`, (6.2b) at `uᵥ`, and `S₀,ₕ Φ(σᵥ, 0) = dσᵥ`). The middle terms
 are `-⟪𝐝* ξ, v⟫` read in the energy components (`(𝐝* ξ)₀ = -σ'`, `(𝐝* ξ)₁ = -d̃ φ - u'`), so
@@ -835,7 +860,7 @@ theorem defectPhi_hiddenInterp (z : Q.Vt1h) (r : Q.Wt2h) :
 end InterpPhi
 
 
-/-! ### Mirror boundary conditions: the cochain defect of `mirrorComplex` vanishes on TSD -/
+/-! ### Mirror boundary conditions: the cochain defect of the mirror family vanishes on TSD -/
 
 section Mirror
 
@@ -1042,37 +1067,56 @@ theorem complexQℝ_wave_zero_of_tsd (y : complexQℝ.wave.domain)
     (complexQℝ.wave y) 0 = 0 :=
   (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 (isReducing_tsdQℝ.mapsTo y hyK)).1
 
+/-- **The discrete differential spaces of the mirror scheme**, built directly from the
+discretization: the hidden spaces of `mirrorFEMApprox` with `𝐝ₕ ⊕ 𝐝ₕ` (`mirrorD`), its reading
+maps and left inverses (`ApproxComplexCrime.Family.ofApproxFEEC`). It is the family of
+`mirrorComplex` (by `rfl`, `mirrorComplex_toFamily`), but built without the elliptic core, so the
+split route below does not depend on the elliptic projection (6.4) or its Strang bound. -/
+def mirrorFamily : ApproxComplexCrime.Family complexQℝ ℕ :=
+  ApproxComplexCrime.Family.ofApproxFEEC (mirrorFEMApprox hT hB)
+    (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
+
+theorem mirrorComplex_toFamily : (mirrorComplex hT hB).toFamily = mirrorFamily hT hB := rfl
+
+set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 4000000 in
+/-- The mirror family has no inner-product defect: `Jₙ = 1` (orthogonal reading maps). -/
+theorem mirrorFamily_J (N : ℕ) : (mirrorFamily hT hB).J N = 1 :=
+  ContinuousLinearMap.ext fun v => ext_inner_right ℝ fun w => by
+    rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
+    exact (mirrorFEMApprox_isOrthogonal hT hB).inner_incl N v w
+
 set_option maxHeartbeats 4000000 in
 /-- The reading and the differential of the complexified family on a pair. -/
-theorem mirrorComplex_incl_D (N : ℕ) (a b : mirrorHidden hT hB N) :
-    (mirrorComplex hT hB).toFamily.incl N (WithLp.toLp 2 (a, b)) =
+theorem mirrorFamily_incl_D (N : ℕ) (a b : mirrorHidden hT hB N) :
+    (mirrorFamily hT hB).incl N (WithLp.toLp 2 (a, b)) =
         mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b) ∧
-      (mirrorComplex hT hB).toFamily.incl N ((mirrorComplex hT hB).toFamily.D N
+      (mirrorFamily hT hB).incl N ((mirrorFamily hT hB).D N
         (WithLp.toLp 2 (a, b))) = mirrorEmb hT hB N (mirrorDiffGen hT hB N a) +
           mulI (mirrorEmb hT hB N (mirrorDiffGen hT hB N b)) := ⟨rfl, rfl⟩
 
 set_option maxHeartbeats 8000000 in
 /-- **The cochain defect of the mirror scheme vanishes at every TSD state of `D(L)`**: for the
-family `mirrorComplex` (the discrete BGG differential `𝐝ₕ ⊕ 𝐝ₕ` with `S₀,ₕ = π¹S⁰` on real and
+family `mirrorFamily` (the discrete BGG differential `𝐝ₕ ⊕ 𝐝ₕ` with `S₀,ₕ = π¹S⁰` on real and
 imaginary parts, the reading `ι(a, b) = mirrorEmb a + i mirrorEmb b`), `κₙ(y) = 0` for
 `y ∈ D(L) ∩ tsdQℝ`. The reason: a TSD state has no degree-`0` part and no `M`-slot, and its `E`
 is divergence-free; so `𝐝 y` has no degree-`1` part, `L y` (again TSD) no degree-`0` part, the
 gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with `E`, the crime `S₁ - S₁,ₕ` only meets the
 vanishing `M`-slot, and the rest cancels by `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`). In
 the language of the formula (`cochainDefectForm`): TSD solutions have `ℓ ≡ 0` and `M ≡ 0`. -/
-theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
+theorem mirrorFamily_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
-    (mirrorComplex hT hB).toFamily.cochainDefect N y = 0 := by
+    (mirrorFamily hT hB).cochainDefect N y = 0 := by
   obtain ⟨hs, hLs⟩ := complexQℝ_wave_negI y
   have hsK := negI_smul_mem_tsdQℝ hyK
   have hd1 := complexQℝ_totalD_one_of_tsd y hyK
   have hL0 := complexQℝ_wave_zero_of_tsd y hyK
   refine ext_inner_right ℝ fun w => ?_
   obtain ⟨⟨a, b⟩⟩ := w
-  obtain ⟨hi1, hi2⟩ := mirrorComplex_incl_D hT hB N a b
+  obtain ⟨hi1, hi2⟩ := mirrorFamily_incl_D hT hB N a b
   have hA := mirror_realDefect_eq_zero hT hB N y hyK a
   have hB' := mirror_realDefect_eq_zero hT hB N ⟨_, hs⟩ hsK b
-  have hk := (mirrorComplex hT hB).toFamily.inner_cochainDefect N y (WithLp.toLp 2 (a, b))
+  have hk := (mirrorFamily hT hB).inner_cochainDefect N y (WithLp.toLp 2 (a, b))
   rw [hi1, hi2] at hk
   have hd := inner_dual_totalD_fin3_of complexQℝ y hL0 hd1
     (mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b))
@@ -1093,6 +1137,13 @@ theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.doma
       (mirrorEmb hT hB N (mirrorDiffGen hT hB N b)))
   refine Eq.trans ?_ (inner_zero_left (𝕜 := ℝ) _).symm
   linarith
+
+/-- **The cochain defect of `mirrorComplex` vanishes at every TSD state of `D(L)`**: its family is
+`mirrorFamily` (`mirrorComplex_toFamily`), so this is `mirrorFamily_cochainDefect_eq_zero`. -/
+theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+    (mirrorComplex hT hB).toFamily.cochainDefect N y = 0 :=
+  mirrorFamily_cochainDefect_eq_zero hT hB N y hyK
 
 /-! #### Graph-norm approximation of TSD states by hidden interpolants -/
 
@@ -1149,7 +1200,7 @@ abbrev mirrorInterp (N : ℕ) (y : PiLp 2 SpaceQ) : mirrorHidden hT hB N :=
 
 /-- **The interpolating pair** of a mirror state: the hidden interpolants of its real part and of
 the real part of `-i y`. -/
-def mirrorPair (N : ℕ) (y : PiLp 2 SpaceQ) : (mirrorComplex hT hB).toFamily.X N :=
+def mirrorPair (N : ℕ) (y : PiLp 2 SpaceQ) : (mirrorFamily hT hB).X N :=
   WithLp.toLp 2 (mirrorInterp hT hB N y, mirrorInterp hT hB N (-Complex.I • y))
 
 /-- The Strang data of the real rows of a mirror state. -/
@@ -1192,7 +1243,7 @@ set_option maxHeartbeats 16000000 in
 /-- The approximation error of the interpolating pair, by slots. -/
 theorem mirrorPair_approx_eq (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
-    ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖ ^ 2 =
+    ‖(y : PiLp 2 SpaceQ) - (mirrorFamily hT hB).incl N (mirrorPair hT hB N y)‖ ^ 2 =
       ‖rowsW1L (slot1 (y : PiLp 2 SpaceQ)) -
           (mirrorFE hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))).u‖ ^ 2 +
         ‖rowsW2L (slotB (y : PiLp 2 SpaceQ)) -
@@ -1202,9 +1253,9 @@ theorem mirrorPair_approx_eq (N : ℕ) (y : complexQℝ.wave.domain)
         ‖rowsW2L (-Complex.I • slotB (y : PiLp 2 SpaceQ)) -
           (mirrorFE hT hB N (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))).ρ‖ ^ 2) := by
   obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hyK
-  obtain ⟨hi1, -⟩ := mirrorComplex_incl_D hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))
+  obtain ⟨hi1, -⟩ := mirrorFamily_incl_D hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))
     (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))
-  change ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (WithLp.toLp 2
+  change ‖(y : PiLp 2 SpaceQ) - (mirrorFamily hT hB).incl N (WithLp.toLp 2
     (mirrorInterp hT hB N (y : PiLp 2 SpaceQ),
       mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))))‖ ^ 2 = _
   rw [hi1]
@@ -1232,8 +1283,8 @@ set_option maxHeartbeats 16000000 in
 /-- The graph error of the interpolating pair, by slots. -/
 theorem mirrorPair_graph_eq (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
-    ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
-        ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖ ^ 2 =
+    ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorFamily hT hB).incl N
+        ((mirrorFamily hT hB).D N (mirrorPair hT hB N y))‖ ^ 2 =
       ‖(mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).M‖ ^ 2 +
         ‖rowsW2L (slotB (complexQℝ.wave y)) -
           (mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).ρ‖ ^ 2 +
@@ -1242,10 +1293,10 @@ theorem mirrorPair_graph_eq (N : ℕ) (y : complexQℝ.wave.domain)
         ‖rowsW2L (-Complex.I • slotB (complexQℝ.wave y)) - (mirrorFE hT hB N (mirrorDiffGen hT hB N
           (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))))).ρ‖ ^ 2) := by
   obtain ⟨hz0, hz1, hzM, hzB⟩ := slots_totalD_of_tsd y hyK
-  obtain ⟨-, hi2⟩ := mirrorComplex_incl_D hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))
+  obtain ⟨-, hi2⟩ := mirrorFamily_incl_D hT hB N (mirrorInterp hT hB N (y : PiLp 2 SpaceQ))
     (mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))
-  change ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
-    ((mirrorComplex hT hB).toFamily.D N (WithLp.toLp 2
+  change ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorFamily hT hB).incl N
+    ((mirrorFamily hT hB).D N (WithLp.toLp 2
       (mirrorInterp hT hB N (y : PiLp 2 SpaceQ),
         mirrorInterp hT hB N (-Complex.I • (y : PiLp 2 SpaceQ)))))‖ ^ 2 = _
   rw [hi2, ← hzB]
@@ -1286,9 +1337,9 @@ set_option maxHeartbeats 16000000 in
 of the real rows (`mirrorSD`). -/
 theorem norm_sq_mirrorPair_le (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
-    ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖ ^ 2 +
-        ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
-          ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖ ^ 2 ≤
+    ‖(y : PiLp 2 SpaceQ) - (mirrorFamily hT hB).incl N (mirrorPair hT hB N y)‖ ^ 2 +
+        ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorFamily hT hB).incl N
+          ((mirrorFamily hT hB).D N (mirrorPair hT hB N y))‖ ^ 2 ≤
       4 * (mirrorSD hT hB N y + mirrorSD hT hB N (-Complex.I • (y : PiLp 2 SpaceQ))) := by
   have hy' : (y : PiLp 2 SpaceQ) ∈ complexQ.wave.domain := mem_complexQℝ_domain.1 y.2
   obtain ⟨hs, hLs⟩ := complexQℝ_wave_negI y
@@ -1335,13 +1386,14 @@ set_option synthInstance.maxHeartbeats 400000 in
 set_option maxHeartbeats 8000000 in
 /-- **Graph-norm approximation of every TSD state of `D(L)`**: the interpolating pairs satisfy
 `‖y - ι wₙ‖ + ‖𝐝 y - ι 𝐝ₙ wₙ‖ → 0` (the smoothed projections converge on the fixed forms state,
-`eventually_mirrorClose`, `mirrorFEM_strangData_le_of_close`). -/
+`eventually_mirrorClose`, `mirrorFEM_strangData_le_of_close`). `strangData` here is only the
+projection-error functional of the Strang data at a fixed state, not the Strang theorem of (6.4). -/
 theorem eventually_mirrorPair_lt (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ)
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop,
-      ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖ +
-        ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
-          ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖ < ε := by
+      ‖(y : PiLp 2 SpaceQ) - (mirrorFamily hT hB).incl N (mirrorPair hT hB N y)‖ +
+        ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorFamily hT hB).incl N
+          ((mirrorFamily hT hB).D N (mirrorPair hT hB N y))‖ < ε := by
   set K := mirrorCloseConst C
   have hK : 0 ≤ K := mirrorCloseConst_nonneg C
   set δ := ε / (4 * (√K + 1)) with hδ
@@ -1359,13 +1411,13 @@ theorem eventually_mirrorPair_lt (y : complexQℝ.wave.domain) (hyK : (y : PiLp 
   have s1 := mirrorFEM_strangData_le_of_close hT hB N (h1 0 ⟨le_rfl, le_rfl⟩) 0 0
   have s2 := mirrorFEM_strangData_le_of_close hT hB N (h2 0 ⟨le_rfl, le_rfl⟩) 0 0
   have hsq := norm_sq_mirrorPair_le hT hB N y hyK
-  set a := ‖(y : PiLp 2 SpaceQ) - (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y)‖
-  set b := ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
-    ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y))‖
+  set a := ‖(y : PiLp 2 SpaceQ) - (mirrorFamily hT hB).incl N (mirrorPair hT hB N y)‖
+  set b := ‖complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorFamily hT hB).incl N
+    ((mirrorFamily hT hB).D N (mirrorPair hT hB N y))‖
   have ha := norm_nonneg ((y : PiLp 2 SpaceQ) -
-    (mirrorComplex hT hB).toFamily.incl N (mirrorPair hT hB N y))
-  have hb := norm_nonneg (complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorComplex hT hB).toFamily.incl N
-    ((mirrorComplex hT hB).toFamily.D N (mirrorPair hT hB N y)))
+    (mirrorFamily hT hB).incl N (mirrorPair hT hB N y))
+  have hb := norm_nonneg (complexQℝ.totalD ⟨y, y.2.1⟩ - (mirrorFamily hT hB).incl N
+    ((mirrorFamily hT hB).D N (mirrorPair hT hB N y)))
   have hab : (a + b) ^ 2 ≤ (4 * δ * √K) ^ 2 := by
     have hsK : (√K) ^ 2 = K := Real.sq_sqrt hK
     have : a ^ 2 + b ^ 2 ≤ 8 * K * δ ^ 2 := by
@@ -1399,25 +1451,38 @@ theorem mirrorEllData_orbit : ∀ x ∈ mirrorEllData, ∀ t : ℝ, 0 ≤ t →
 set_option synthInstance.maxHeartbeats 400000 in
 set_option maxHeartbeats 8000000 in
 /-- **The mirror scheme (6.5) as an approximating family of discrete differential spaces from the
-split hypotheses** (`ApproxComplexCrime.ofCochainDefect`): the family of `mirrorComplex`
-(`𝐝ₕ ⊕ 𝐝ₕ`, `S₀,ₕ = π¹S⁰`), the TSD constraint, admissible states the TSD states of `D(L)`, core
-the TSD data of `D(L²)`; consistent approximation from graph-norm approximation by the
-interpolating pairs (`eventually_mirrorPair_lt`) and the vanishing cochain defect
-(`mirrorComplex_cochainDefect_eq_zero`), with no Galerkin identity and no elliptic projection. -/
+split hypotheses** (`ApproxComplexCrime.ofCochainDefect`): the family `mirrorFamily`
+(`𝐝ₕ ⊕ 𝐝ₕ`, `S₀,ₕ = π¹S⁰`, `Jₙ = 1` by `mirrorFamily_J`), the TSD constraint, admissible
+states the TSD states of `D(L)`, core the TSD data of `D(L²)`; consistent approximation from
+graph-norm approximation by the interpolating pairs (`eventually_mirrorPair_lt`) and the
+vanishing cochain defect (`mirrorFamily_cochainDefect_eq_zero`), with no Galerkin identity and no
+elliptic projection. -/
 def mirrorSplitComplex : ApproxComplexCrime complexQℝ ℕ :=
-  ApproxComplexCrime.ofCochainDefect (mirrorComplex hT hB).toFamily tsdQℝ isClosed_totalSub atTop
+  ApproxComplexCrime.ofCochainDefect (mirrorFamily hT hB) tsdQℝ isClosed_totalSub atTop
     mirrorTSDStates (fun _ hy => hy.1) mirrorEllData (fun _ hx => hx.2) mirrorEllData_orbit
-    (mirrorComplex hT hB).tendsto_innerDefect
+    (tendsto_innerDefect_of_J_eq_one _ _ (mirrorFamily_J hT hB))
     (fun y hy _ hε => (eventually_mirrorPair_lt hT hB ⟨y, hy.1⟩ hy.2 hε).mono
       fun N hN => ⟨mirrorPair hT hB N y, hN⟩)
     (fun y hy _ hε => Eventually.of_forall fun N v => by
-      rw [mirrorComplex_cochainDefect_eq_zero hT hB N ⟨y, hy.1⟩ hy.2, inner_zero_left, norm_zero]
+      rw [mirrorFamily_cochainDefect_eq_zero hT hB N ⟨y, hy.1⟩ hy.2, inner_zero_left, norm_zero]
       positivity)
 
 set_option synthInstance.maxHeartbeats 400000 in
+set_option maxHeartbeats 4000000 in
+/-- The discrete solutions of `ofComplexCrime (mirrorSplitComplex)` are those of
+`mirrorFEMApprox` (`Lₙ = 𝐝ₙ - 𝐝ₙ*`, `mirrorFEMApprox_L_eq`). -/
+theorem mirrorSplitComplex_sol (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) (t : ℝ) :
+    (ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)).sol N v t =
+      (mirrorFEMApprox hT hB).sol N v t := by
+  change (mirrorFEMApprox hT hB).incl N ((C0Group.ofBounded (diffWave (mirrorD hT hB N))).S t v) =
+    (mirrorFEMApprox hT hB).incl N ((C0Group.ofBounded ((mirrorFEMApprox hT hB).L N)).S t v)
+  rw [mirrorFEMApprox_L_eq]
+  rfl
+
+set_option synthInstance.maxHeartbeats 400000 in
 set_option maxHeartbeats 8000000 in
-/-- **The mirror scheme (6.5) through the split route** (`ofCochainDefect` instead of
-`ofGalerkinCore`): the verdict of the complex-level theorem for
+/-- **The mirror scheme [QuennevilleBelair2015], (6.5), through the split route**
+(`ofCochainDefect` instead of `ofGalerkinCore`): the verdict of the complex-level theorem for
 `ofComplexCrime (mirrorSplitComplex)`;
 its discrete solutions are those of `mirrorFEMApprox` (the scheme (6.5) on real and imaginary
 parts); the closure of the core is `tsdQℝ`, so for every TSD datum and every family of discrete
@@ -1445,8 +1510,8 @@ theorem einsteinBianchi_mirrorFEM_ofCochainDefect :
       (mirrorSplitComplex hT hB).toFamily.cochainDefect N y = 0) := by
   have hcl : (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure =
       tsdQℝ := topologicalClosure_tsdQℝ_inf_domainSq
-  refine ⟨(approxFEEC_ofComplexCrime _).1, fun N v t => mirrorComplex_sol hT hB N v t, hcl,
-    fun x hx T v hv => ?_, fun N y hy => mirrorComplex_cochainDefect_eq_zero hT hB N y hy⟩
+  refine ⟨(approxFEEC_ofComplexCrime _).1, fun N v t => mirrorSplitComplex_sol hT hB N v t,
+    hcl, fun x hx T v hv => ?_, fun N y hy => mirrorFamily_cochainDefect_eq_zero hT hB N y hy⟩
   have hx' : x ∈
       (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure :=
     hcl.ge hx

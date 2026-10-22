@@ -184,10 +184,15 @@ defect (`Feec.Instances.EinsteinBianchi.FEM.inner_standardCube_cochainDefect`); 
 dual discrete graph norm when `ℓ(t)` is an `L²` functional and `M(t) ∈ D(d₁*)`
 (`Feec.Instances.EinsteinBianchi.FEM.exists_standardCube_cochainDefect_le_mesh`, regularity
 assumed) and tends to `0` for every datum of `D(L²)`. For mirror boundary conditions it vanishes
-at every TSD state of `D(L)` (`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex_cochainDefect_eq_zero`),
+at every TSD state of `D(L)` (`Feec.Instances.EinsteinBianchi.FEM.mirrorFamily_cochainDefect_eq_zero`,
+`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex_cochainDefect_eq_zero`),
 which gives a second route to the mirror verdict, through `ofCochainDefect` with hidden
 interpolants `(0, Π̃¹u − P_K Π̃¹u, 0, Π̃²ρ)`, `K = d̃(ker S₀,ₕ)`, and without (6.4)
-(`Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`). That the cochain
+(`Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`): its family
+`Feec.Instances.EinsteinBianchi.FEM.mirrorFamily` is built from the discretization by
+`ApproxComplexCrime.Family.ofApproxFEEC`, and neither the elliptic core, its Galerkin identity,
+`ofGalerkinCore` nor the Strang theorem of (6.4) is in the dependency closure of the theorem (only
+the projection-error functional `strangData`, through `mirrorFEM_strangData_le_of_close`). That the cochain
 defect is nonzero for some mesh and datum is not proved.
 
 Limits.

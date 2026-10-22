@@ -85,9 +85,10 @@ formalized through `ofComplexCrime` (via `ofGalerkinCore`): this re-derives the 
 (6.4) cores and adds an exactly preserved discrete Gauss constraint. The cochain defect of (6.5) is
 the pair of consistency functionals `ℓ((I − π¹)S⁰·)`, `⟪M, (I − π²)S¹·⟫` of the Strang bound of (6.4)
 (`FEM.cochainDefectForm_eq`); for mirror BCs it vanishes on TSD states, and the mirror verdict also
-follows through `ofCochainDefect` from graph-norm approximation, independently of (6.4)
-(`FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`). On `ℝ³` and `ℝᵈ` the Sobolev classes are
-defined on the Fourier side, and the truncation is a semi-discretization in frequency.
+follows through `ofCochainDefect` from graph-norm approximation, independently of (6.4): its
+family `FEM.mirrorFamily` is built directly from the discretization, and neither the elliptic core
+nor the Strang theorem is in the dependency closure (`FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`).
+On `ℝ³` and `ℝᵈ` the Sobolev classes are defined on the Fourier side, and the truncation is a semi-discretization in frequency.
 `einsteinBianchi_summary` bundles the Einstein–Bianchi rows.
 
 [`docs/OVERVIEW.md`](docs/OVERVIEW.md) has the module map, further results, the corrections to the

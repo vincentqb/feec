@@ -839,17 +839,12 @@ theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2
   obtain rfl : j + 1 = k := hjk
   have hij' : i + 1 = j := hij
   have hC := hE.two_mul_nonneg
-  obtain ⟨B, hBdef⟩ : ∃ B : ℝ, B = (1 + 2 * C) * (sobConstHighZ n S p i +
-      sobConstHighZ n S p (i + 1) + sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) :=
-    ⟨_, rfl⟩
+  obtain ⟨A, hA⟩ : ∃ A : ℝ, A = sobConstHighZ n S p i + sobConstHighZ n S p (i + 1) +
+      sobConstHighZ n S p j + sobConstHighZ n S p (j + 1) := ⟨_, rfl⟩
   have hi := sobConstHighZ_nonneg (n := n) S p i
   have hi1 := sobConstHighZ_nonneg (n := n) S p (i + 1)
   have hj := sobConstHighZ_nonneg (n := n) S p j
   have hj1 := sobConstHighZ_nonneg (n := n) S p (j + 1)
-  have hB : 0 ≤ B := by
-    rw [hBdef]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    positivity
   have hSσ0 : ∀ d : ℕ, (d : ℤ) = i → polySpace n p d ≤ S.space n d :=
     fun d hd => hS d (by omega) (by omega)
   have hSσ1 : ∀ d : ℕ, (d : ℤ) = i + 1 → polySpace n p d ≤ S.space n d :=
@@ -858,55 +853,32 @@ theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2
     fun d hd => hS d (by omega) (by omega)
   have hSu1 : ∀ d : ℕ, (d : ℤ) = j + 1 → polySpace n p d ≤ S.space n d :=
     fun d hd => hS d (by omega) (by omega)
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    ((1 + 2 * C) * B), fun {f σ u q} hs {L} hL0 hσ hu hBu hq N => ?_⟩
-  obtain ⟨e, he⟩ : ∃ e : ℝ, e = meshSize N ^ min s (p + 1) := ⟨_, rfl⟩
-  have hh : 0 ≤ e := he ▸ Real.rpow_nonneg (meshSize_pos N).le _
-  have hδ : 0 ≤ e * L := mul_nonneg hh hL0
-  have hle : ∀ a b : ℝ, 0 ≤ a → 0 ≤ b → a + b ≤ sobConstHighZ n S p i +
-      sobConstHighZ n S p (i + 1) + sobConstHighZ n S p j + sobConstHighZ n S p (j + 1) →
-      (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L ≤ ((1 + 2 * C) * B) * (e * L) := by
-    intro a b ha hb hab
-    have h1 : (1 + 2 * C) * (a + b) ≤ B := by
-      rw [hBdef]; exact mul_le_mul_of_nonneg_left hab (by linarith)
-    have h2 : B ≤ (1 + 2 * C) * B := le_mul_of_one_le_left hB (by linarith)
-    calc (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L =
-        (1 + 2 * C) * (a + b) * (e * L) := by rw [he]; ring
-      _ ≤ ((1 + 2 * C) * B) * (e * L) := mul_le_mul_of_nonneg_right (h1.trans h2) hδ
-  have hσ' := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSσ0 hSσ1 hσ).trans
-    (hle _ _ hi hi1 (by linarith))
-  have hu' := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hu).trans
-    (hle _ _ hj hj1 (by linarith))
-  have hB' := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hBu).trans
-    (hle _ _ hj hj1 (by linarith))
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((poly n S N).harmonicW j) ≤ ((1 + 2 * C) * B) * (e * L) := by
-    refine ((hE.proj N).infDist_harmonicW_le rfl hC (hE.isGraphBounded_proj N j (j + 1))
-      q.2).trans ?_
-    have hz := (complex n).harmonic_le_cycles j q.2
-    have hg : SobGraph n s L (HilbertComplex.cyclesToDomainSpace hz) := by
-      refine ⟨?_, ?_⟩
-      · rw [HilbertComplex.domainIncl_cyclesToDomainSpace]; exact hq
-      · rw [HilbertComplex.d_domainCoord_cyclesToDomainSpace]; exact sobAt_zero hL0 _
-    have h := hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hg
-    have h' : (1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) *
-        meshSize N ^ min s (p + 1) * L ≤ B * (e * L) := by
-      rw [hBdef, ← he]
-      have : (1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) ≤
-          (1 + 2 * C) * (sobConstHighZ n S p i + sobConstHighZ n S p (i + 1) +
-            sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) :=
-        mul_le_mul_of_nonneg_left (by linarith) (by linarith)
-      calc (1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) * e * L =
-          ((1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1))) * (e * L) := by
-            ring
-        _ ≤ _ := mul_le_mul_of_nonneg_right this hδ
-    calc (1 + 2 * C) * Metric.infDist (HilbertComplex.cyclesToDomainSpace hz)
-          ((poly n S N).domainSub j) ≤ (1 + 2 * C) * (B * (e * L)) :=
-          mul_le_mul_of_nonneg_left (h.trans h') (by linarith)
-      _ = _ := by ring
-  refine (hE.norm_sub_le_of_infDist_le hij rfl hs N hσ' hu' hq' hB').trans (le_of_eq ?_)
-  rw [he]
-  ring
+  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+    (4 + 2 * (2 * C)) * ((1 + 2 * C) * A), fun {f σ u q} hs {L} hL0 hσ hu hBu hq N => ?_⟩
+  have hδ : 0 ≤ meshSize N ^ min s (p + 1) * L :=
+    mul_nonneg (Real.rpow_nonneg (meshSize_pos N).le _) hL0
+  have hle : ∀ a b : ℝ, a + b ≤ A →
+      (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L ≤
+        (1 + 2 * C) * A * (meshSize N ^ min s (p + 1) * L) :=
+    fun a b hab => by
+      nlinarith [mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hab
+        (by linarith : (0 : ℝ) ≤ 1 + 2 * C)) hδ]
+  have hg : SobGraph n s L (HilbertComplex.cyclesToDomainSpace
+      ((complex n).harmonic_le_cycles j q.2)) :=
+    ⟨by rw [HilbertComplex.domainIncl_cyclesToDomainSpace]; exact hq,
+      by rw [HilbertComplex.d_domainCoord_cyclesToDomainSpace]; exact sobAt_zero hL0 _⟩
+  have h1 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSσ0 hSσ1 hσ).trans
+    (hle _ _ (by linarith))
+  have h2 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hu).trans
+    (hle _ _ (by linarith))
+  have h3 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hg).trans
+    (hle _ _ (by linarith))
+  have h4 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hBu).trans
+    (hle _ _ (by linarith))
+  refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl hE.one_le_two_mul
+    (norm_le_of_mem_orthogonal_cycles hij) (norm_le_of_mem_orthogonal_cycles rfl)
+    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j (j + 1)) hs h1 h2 h3 h4).trans
+    (le_of_eq (by ring))
 
 /-! ### The semi-discrete Hodge wave equation, optimal rate -/
 
@@ -1092,18 +1064,12 @@ theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
   obtain rfl : j + 1 = k := hjk
   have hij' : i + 1 = j := hij
   have hC := hE.two_mul_nonneg
-  have hC1 : 1 ≤ 2 * C := by linarith [hE.half_le]
-  obtain ⟨B, hBdef⟩ : ∃ B : ℝ, B = (1 + 2 * C) * (sobConstHighParZ n S p i +
-      sobConstHighParZ n S p (i + 1) + sobConstHighParZ n S p j +
-        sobConstHighParZ n S p (j + 1)) := ⟨_, rfl⟩
+  obtain ⟨A, hA⟩ : ∃ A : ℝ, A = sobConstHighParZ n S p i + sobConstHighParZ n S p (i + 1) +
+      sobConstHighParZ n S p j + sobConstHighParZ n S p (j + 1) := ⟨_, rfl⟩
   have hi := sobConstHighParZ_nonneg (n := n) S p i
   have hi1 := sobConstHighParZ_nonneg (n := n) S p (i + 1)
   have hj := sobConstHighParZ_nonneg (n := n) S p j
   have hj1 := sobConstHighParZ_nonneg (n := n) S p (j + 1)
-  have hB : 0 ≤ B := by
-    rw [hBdef]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    positivity
   have hSσ0 : ∀ d : ℕ, (d : ℤ) = i → polySpace n p d ≤ S.space n d :=
     fun d hd => hS d (by omega) (by omega)
   have hSσ1 : ∀ d : ℕ, (d : ℤ) = i + 1 → polySpace n p d ≤ S.space n d :=
@@ -1112,69 +1078,32 @@ theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
     fun d hd => hS d (by omega) (by omega)
   have hSu1 : ∀ d : ℕ, (d : ℤ) = j + 1 → polySpace n p d ≤ S.space n d :=
     fun d hd => hS d (by omega) (by omega)
-  have hcK : 0 ≤ (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) :=
-    mul_nonneg (by positivity) (by linarith)
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    ((1 + 2 * C) * B), fun {f σ u q} hs {L} hL0 hσ hu hBu hq N => ?_⟩
-  obtain ⟨e, he⟩ : ∃ e : ℝ, e = meshSize N ^ min s (p + 1) := ⟨_, rfl⟩
-  have hh : 0 ≤ e := he ▸ Real.rpow_nonneg (meshSize_pos N).le _
-  have hδ : 0 ≤ e * L := mul_nonneg hh hL0
-  obtain ⟨T, hTdef⟩ : ∃ T : ℝ, T = ((1 + 2 * C) * B) * (e * L) := ⟨_, rfl⟩
-  have hle : ∀ a b : ℝ, 0 ≤ a → 0 ≤ b → a + b ≤ sobConstHighParZ n S p i +
-      sobConstHighParZ n S p (i + 1) + sobConstHighParZ n S p j + sobConstHighParZ n S p (j + 1) →
-      (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L ≤ B * (e * L) := by
-    intro a b ha hb hab
-    have h1 : (1 + 2 * C) * (a + b) ≤ B := by
-      rw [hBdef]; exact mul_le_mul_of_nonneg_left hab (by linarith)
-    calc (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L =
-        (1 + 2 * C) * (a + b) * (e * L) := by rw [he]; ring
-      _ ≤ B * (e * L) := mul_le_mul_of_nonneg_right h1 hδ
-  have hBT : B * (e * L) ≤ T := by
-    rw [hTdef]; exact mul_le_mul_of_nonneg_right (le_mul_of_one_le_left hB (by linarith)) hδ
-  have hσ' := ((hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSσ0 hSσ1 hσ).trans
-    (hle _ _ hi hi1 (by linarith))).trans hBT
-  have hu' := ((hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hu).trans
-    (hle _ _ hj hj1 (by linarith))).trans hBT
-  have hB' := ((hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hBu).trans
-    (hle _ _ hj hj1 (by linarith))).trans hBT
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((polyPartial n S N J).harmonicW j) ≤ T := by
-    refine ((hE.proj N).infDist_harmonicW_le rfl hC (hE.isGraphBounded_proj N j (j + 1))
-      q.2).trans ?_
-    have hz := (complexPart n J).harmonic_le_cycles j q.2
-    have hg : SobGraphPar n J s L (HilbertComplex.cyclesToDomainSpace hz) := by
-      refine ⟨?_, ?_⟩
-      · rw [HilbertComplex.domainIncl_cyclesToDomainSpace]; exact hq
-      · rw [HilbertComplex.d_domainCoord_cyclesToDomainSpace]; exact sobAtPar_zero J hL0 _
-    have h := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hg).trans
-      (hle _ _ hj hj1 (by linarith))
-    calc (1 + 2 * C) * Metric.infDist (HilbertComplex.cyclesToDomainSpace hz)
-          ((polyPartial n S N J).domainSub j) ≤ (1 + 2 * C) * (B * (e * L)) :=
-          mul_le_mul_of_nonneg_left h (by linarith)
-      _ = T := by rw [hTdef]; ring
-  have hmain := (hE.proj N).norm_sub_le_infDist hij rfl hC1 (by linarith : (0 : ℝ) ≤ 1 + 2 * C)
+  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+    (4 + 2 * (2 * C)) * ((1 + 2 * C) * A), fun {f σ u q} hs {L} hL0 hσ hu hBu hq N => ?_⟩
+  have hδ : 0 ≤ meshSize N ^ min s (p + 1) * L :=
+    mul_nonneg (Real.rpow_nonneg (meshSize_pos N).le _) hL0
+  have hle : ∀ a b : ℝ, a + b ≤ A →
+      (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L ≤
+        (1 + 2 * C) * A * (meshSize N ^ min s (p + 1) * L) :=
+    fun a b hab => by
+      nlinarith [mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hab
+        (by linarith : (0 : ℝ) ≤ 1 + 2 * C)) hδ]
+  have hg : SobGraphPar n J s L (HilbertComplex.cyclesToDomainSpace
+      ((complexPart n J).harmonic_le_cycles j q.2)) :=
+    ⟨by rw [HilbertComplex.domainIncl_cyclesToDomainSpace]; exact hq,
+      by rw [HilbertComplex.d_domainCoord_cyclesToDomainSpace]; exact sobAtPar_zero J hL0 _⟩
+  have h1 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSσ0 hSσ1 hσ).trans
+    (hle _ _ (by linarith))
+  have h2 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hu).trans
+    (hle _ _ (by linarith))
+  have h3 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hg).trans
+    (hle _ _ (by linarith))
+  have h4 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hBu).trans
+    (hle _ _ (by linarith))
+  refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl (by linarith [hE.half_le])
     (norm_le_of_mem_orthogonal_cycles_part J hij) (norm_le_of_mem_orthogonal_cycles_part J rfl)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j (j + 1))
-    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le rfl hC (hE.isGraphBounded_proj N j (j + 1))
-      hq') hs
-  refine hmain.trans ?_
-  have hsum : Metric.infDist σ ((polyPartial n S N J).domainSub i) +
-      Metric.infDist u ((polyPartial n S N J).domainSub j) +
-      Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyPartial n S N J).harmonicW j) +
-      (1 + 2 * C) * Metric.infDist ((complexPart n J).boundaryPart j
-        ((complexPart n J).domainIncl j u)) ((polyPartial n S N J).domainSub j) ≤
-        (4 + 2 * C) * T := by
-    have := mul_le_mul_of_nonneg_left hB' (by linarith : (0 : ℝ) ≤ 1 + 2 * C)
-    linarith
-  calc (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-      (Metric.infDist σ ((polyPartial n S N J).domainSub i) +
-      Metric.infDist u ((polyPartial n S N J).domainSub j) +
-      Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyPartial n S N J).harmonicW j) +
-      (1 + 2 * C) * Metric.infDist ((complexPart n J).boundaryPart j
-        ((complexPart n J).domainIncl j u)) ((polyPartial n S N J).domainSub j)) ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-        ((4 + 2 * C) * T) := mul_le_mul_of_nonneg_left hsum hcK
-    _ = _ := by rw [hTdef, he]; ring
+    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j (j + 1)) hs h1 h2 h3 h4).trans
+    (le_of_eq (by ring))
 
 end Parity
 

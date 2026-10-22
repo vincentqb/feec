@@ -110,8 +110,8 @@ theorem norm_le_of_mem_orthogonal_cycles_part (J : Finset (Fin n)) {i j : ℤ}
 
 /-- **Closed range of `HΛ_J(Q)` in every degree.** -/
 theorem closedRangeAt_part (J : Finset (Fin n)) (j : ℤ) : (complexPart n J).ClosedRangeAt j :=
-  ((complexPart n J).closedRangeAt_iff_poincare_of_rel (rel_pred j)).2
-    ⟨_, norm_le_of_mem_orthogonal_cycles_part J (rel_pred j)⟩
+  ((complexPart n J).closedRangeAt_iff_poincare_of_rel (DeRhamIdent.rel_sub_one j)).2
+    ⟨_, norm_le_of_mem_orthogonal_cycles_part J (DeRhamIdent.rel_sub_one j)⟩
 
 /-- **`HΛ_J(Q)` has no harmonic forms in degrees `k ≠ |J|`.** -/
 theorem harmonic_eq_bot_part {J : Finset (Fin n)} {k : ℤ} (hk : k ≠ (#J : ℤ)) :

@@ -821,4 +821,8 @@ theorem Hmin_harmonic_top : (Hmin n).harmonic n = ℝ ∙ volQ (card_univ_eq n) 
     exact hne (by simpa [this] using hmem)
   exact eq_span_singleton_of_mem_of_finrank_eq_one (by omega) hmem hne
 
+/-- `j - 1 → j` is an arrow of `ComplexShape.up ℤ`. -/
+theorem rel_sub_one (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
+  change j - 1 + 1 = j; ring
+
 end Feec.Models.Cube.DeRhamIdent

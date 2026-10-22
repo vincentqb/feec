@@ -680,9 +680,6 @@ theorem liftLp_symLp (R : Fourier.Reflection (Measure.count : Measure α)) {ρ :
   simp only
   rw [liftLp_apply, h]
 
-omit [MeasurableSingletonClass α] [Countable α] in
-theorem liftLp_injective : Function.Injective (liftLp (α := α) ι) := (liftLp ι).injective
-
 end LiftLp
 
 /-! ### Products of coefficient sequences -/

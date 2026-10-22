@@ -294,13 +294,8 @@ theorem cf_sub_trunc_of_notMem {M : ℕ} (x : Seq n k) {m : Fin n → ℤ} (hm :
     cf (x - trunc M k x) m = cf x m := by
   rw [cf_sub, cf_trunc_of_notMem x hm, sub_zero]
 
-/-- The truncation `x_M` (frequencies `|m|_∞ ≤ M`) is finitely supported. -/
-theorem trunc_eq_zero_of_notMem_bandS {M : ℕ} (x : Seq n k) {m : Fin n → ℤ}
-    (hm : m ∉ bandS (n := n) M) : cf (trunc M k x) m = 0 :=
-  trunc_eq_zero_of_notMem x hm
-
 theorem memSob_trunc (t : ℝ) (M : ℕ) (x : Seq n k) : MemSob t (trunc M k x) :=
-  memSob_of_finite (bandS M) fun _ hm => trunc_eq_zero_of_notMem_bandS x hm
+  memSob_of_finite (bandS M) fun _ hm => trunc_eq_zero_of_notMem x hm
 
 /-- **The truncation error in every weaker norm**: for `t ≤ s`,
 `Σ ⟨ξ⟩^{2t} |x - x_M|² ≤ (1 + (2π(M+1))²)^{t-s} Σ ⟨ξ⟩^{2s} |x|²`. -/
@@ -1020,7 +1015,7 @@ theorem grad_truncQ_le {s : ℝ} (hs1 : s ≤ 1) {x : Seq n k} (hx : MemSob s x)
       ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n)) ⟨_, h t⟩‖ ^ 2 ≤
         (1 + n * (2 * Real.pi * M) ^ 2) ^ (1 - s) * sobSum s x := by
   obtain ⟨h, hle⟩ := grad_Jinvf_sum_le (trunc M k x) (S := bandS M)
-    fun _ hm => trunc_eq_zero_of_notMem_bandS x hm
+    fun _ hm => trunc_eq_zero_of_notMem x hm
   exact ⟨h, hle.trans (sobSum_trunc_le hs1 hx M)⟩
 
 /-- **The truncations converge in `Hᵗ`**: `‖x - x_N‖_{Hᵗ(𝕋ⁿ)} → 0`. -/
@@ -1083,11 +1078,11 @@ theorem exists_tendsto_grad_trunc {x : Seq n k} (hx : MemSob 1 x) (t : formIdx n
     ∃ h : zeroF (Jinvf k x t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain,
       Tendsto (fun N => (extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
         ⟨_, (grad_Jinvf_of_finite (trunc N k x)
-          (fun _ hm => trunc_eq_zero_of_notMem_bandS x hm) t).1⟩) atTop
+          (fun _ hm => trunc_eq_zero_of_notMem x hm) t).1⟩) atTop
         (𝓝 ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n)) ⟨_, h⟩)) := by
   set D := (extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
   have hfin : ∀ N, ∀ m ∉ bandS (n := n) N, cf (trunc N k x) m = 0 := fun N _ hm =>
-    trunc_eq_zero_of_notMem_bandS x hm
+    trunc_eq_zero_of_notMem x hm
   have hmem : ∀ N, zeroF (Jinvf k (trunc N k x) t) ∈ D.domain := fun N =>
     (grad_Jinvf_of_finite (trunc N k x) (hfin N) t).1
   set v : ℕ → D.domain := fun N => ⟨_, hmem N⟩
@@ -1301,7 +1296,7 @@ theorem norm_sq_add_sum_grad_sq_le_sobSum {x : Seq n k} (hx : MemSob 1 x) :
     ‖Jinvf k x‖ ^ 2 + ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
       ⟨zeroF (Jinvf k x t), (exists_tendsto_grad_trunc hx t).1⟩‖ ^ 2 ≤ sobSum 1 x := by
   have hfin : ∀ N, ∀ m ∉ bandS (n := n) N, cf (trunc N k x) m = 0 := fun N _ hm =>
-    trunc_eq_zero_of_notMem_bandS x hm
+    trunc_eq_zero_of_notMem x hm
   have hf : Tendsto (fun N => ‖Jinvf k (trunc N k x)‖ ^ 2 + ∑ t,
       ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
         ⟨_, (grad_Jinvf_of_finite (trunc N k x) (hfin N) t).1⟩‖ ^ 2) atTop

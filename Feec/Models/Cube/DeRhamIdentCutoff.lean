@@ -11,15 +11,16 @@ cut-offs `χ_m ψ` (`χ_m = ∏ᵢ η_m(yᵢ)`, equal to `1` at distance `≥ 1/
 uniformly bounded `A (χ_m ψ)` on `Q` (`mem_closure_testGraph_of_cutoff`): `χ_m ψ → ψ` and
 `A (χ_m ψ) → A ψ` pointwise on `Q`, dominated. The bound comes from the commutator estimate
 `|∂_c χ_m · f| ≤ 4 M₀ L` for `f` vanishing on the faces `{y_c ∈ {0, ½}}` (`abs_fderiv_chi_mul_le`;
-a function vanishing on two opposite faces is `O(dist)`, `abs_le_of_faces`). For the exterior
-derivative this applies when the **tangential** components vanish on the faces
+a function vanishing on two opposite faces is `O(dist)`, `abs_le_of_faces`, in
+`Feec.Models.Cube.RowWiseIdent`). For the exterior derivative this applies when the
+**tangential** components vanish on the faces
 (`Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`), for its formal adjoint
 (minus the codifferential) when the **normal** components vanish
 (`Feec.Models.Cube.DeRhamIdent.mem_closure_formalAdj_single1`).
 
 ## Main results
 
-* `chi`, `isTest_chi_mul`, `eventually_chi_eq_one`, `abs_fderiv_chi_le`; `abs_le_of_faces`,
+* `chi`, `isTest_chi_mul`, `eventually_chi_eq_one`, `abs_fderiv_chi_le`;
   `abs_fderiv_chi_mul_le`, `tendsto_toLp_of_bdd`.
 * `apply_congr_of_eventuallyEq`; **`mem_closure_testGraph_of_cutoff`**.
 
@@ -130,24 +131,6 @@ theorem eventually_chi_eq_one {y : d → ℝ} (hy : y ∈ Q d) :
 
 variable [DecidableEq d]
 
-omit [Fintype d] in
-theorem single_eq_smul (k : d) (t : ℝ) :
-    (Pi.single k t : d → ℝ) = t • (Pi.single k (1 : ℝ) : d → ℝ) := by
-  funext j; by_cases h : j = k
-  · subst h; simp
-  · simp [h]
-
-/-- Line derivative: `d/dt f(x + t e_k) = ∂_k f (x + t e_k)`. -/
-theorem hasDerivAt_line {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) (x : d → ℝ) (k : d) (t : ℝ) :
-    HasDerivAt (fun s => f (x + Pi.single k s))
-      (fderiv ℝ f (x + Pi.single k t) (Pi.single k 1)) t := by
-  have hl : HasDerivAt (fun s : ℝ => x + Pi.single k s) (Pi.single k 1) t := by
-    have : (fun s : ℝ => x + Pi.single k s) = fun s => x + s • (Pi.single k (1 : ℝ) : d → ℝ) := by
-      funext s; rw [single_eq_smul k s]
-    rw [this]
-    simpa using ((hasDerivAt_id t).smul_const (Pi.single k (1 : ℝ) : d → ℝ)).const_add x
-  exact (hf _).hasFDerivAt.comp_hasDerivAt t hl
-
 /-- **The derivative of the cut-off**: `|∂_c χ_m(y)| ≤ |η_m'(y_c)|`. -/
 theorem abs_fderiv_chi_le (m : ℕ) (c : d) (y : d → ℝ) :
     |fderiv ℝ (chi m) y (Pi.single c 1)| ≤ |deriv (eta m) (y c)| := by
@@ -175,33 +158,6 @@ theorem abs_fderiv_chi_le (m : ℕ) (c : d) (y : d → ℝ) :
   calc |deriv (eta m) (y c)| * |R| ≤ |deriv (eta m) (y c)| * 1 :=
         mul_le_mul_of_nonneg_left hR (abs_nonneg _)
     _ = _ := mul_one _
-
-/-- **Vanishing on two opposite faces with a bounded normal derivative**: if `f = 0` on
-`{y_c = 0}` and `{y_c = ½}` and `|∂_c f| ≤ L`, then `|f(y)| ≤ L min(y_c, ½ - y_c)` on `Q`. -/
-theorem abs_le_of_faces {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) {c : d} {L : ℝ}
-    (hL : ∀ y, |fderiv ℝ f y (Pi.single c 1)| ≤ L) (h0 : ∀ y : d → ℝ, y c = 0 → f y = 0)
-    (h1 : ∀ y : d → ℝ, y c = 1 / 2 → f y = 0) {y : d → ℝ} (hy : y ∈ Q d) :
-    |f y| ≤ L * min (y c) (1 / 2 - y c) := by
-  set g : ℝ → ℝ := fun s => f (y + Pi.single c s)
-  have hg : ∀ s, HasDerivAt g (fderiv ℝ f (y + Pi.single c s) (Pi.single c 1)) s :=
-    hasDerivAt_line hf y c
-  have hb : ∀ s ∈ (univ : Set ℝ), ‖deriv g s‖ ≤ L := fun s _ => by
-    rw [(hg s).deriv, Real.norm_eq_abs]; exact hL _
-  have hd : ∀ s ∈ (univ : Set ℝ), DifferentiableAt ℝ g s := fun s _ => (hg s).differentiableAt
-  have hyc := mem_Q.1 hy c
-  have e0 : g 0 = f y := by simp [g]
-  have ea : g (-y c) = 0 := h0 _ (by simp)
-  have eb : g (1 / 2 - y c) = 0 := h1 _ (by simp)
-  have m1 := convex_univ.norm_image_sub_le_of_norm_deriv_le hd hb (mem_univ (-y c)) (mem_univ 0)
-  have m2 := convex_univ.norm_image_sub_le_of_norm_deriv_le hd hb (mem_univ 0)
-    (mem_univ (1 / 2 - y c))
-  rw [e0, ea, sub_zero, Real.norm_eq_abs, Real.norm_eq_abs, zero_sub, neg_neg,
-    abs_of_pos hyc.1] at m1
-  rw [e0, eb, zero_sub, Real.norm_eq_abs, abs_neg, Real.norm_eq_abs, sub_zero,
-    abs_of_pos (by linarith [hyc.2] : 0 < 1 / 2 - y c)] at m2
-  rcases le_total (y c) (1 / 2 - y c) with h | h
-  · rw [min_eq_left h]; exact m1
-  · rw [min_eq_right h]; exact m2
 
 /-- **The commutator bound**: `|∂_c χ_m · f| ≤ 4 M₀ L` on `Q` for `f` vanishing on the faces
 `y_c ∈ {0, ½}` with `|∂_c f| ≤ L`. -/

@@ -118,8 +118,6 @@ theorem cE_sq (p : Fin 3 × Fin 3) (k : Fin 3) : cE p k * cE p k = 1 := by
 theorem cB_sq (p : Fin 3 × Fin 3) (k : Fin 3) : cB p k * cB p k = 1 := by
   rw [cB, neg_mul_neg]; exact cE_sq p k
 
-theorem conj_cV (a k : Fin 3) : (starRingEnd ℂ) (cV a k) = cV a k := conj_sgn k a
-
 theorem conj_cE (p : Fin 3 × Fin 3) (k : Fin 3) : (starRingEnd ℂ) (cE p k) = cE p k := by
   simp [cE, conj_sgn]
 
@@ -188,7 +186,7 @@ def symmetries : (Fourier.Torus.symbolComplex gradCurl).Symmetries (Fin 3) where
     · exact sgnCLM_sgnCLM (fun p => cB_sq p k) v
   inner_ρ k i v w := by
     fin_cases i
-    · exact inner_sgnCLM (fun a => cV_sq a k) (fun a => conj_cV a k) v w
+    · exact inner_sgnCLM (fun a => cV_sq a k) (fun a => conj_sgn k a) v w
     · exact inner_sgnCLM (fun p => cE_sq p k) (fun p => conj_cE p k) v w
     · exact inner_sgnCLM (fun p => cB_sq p k) (fun p => conj_cB p k) v w
   symm k i j n v := by

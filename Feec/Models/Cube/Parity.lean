@@ -251,8 +251,6 @@ theorem cnj_apply (i : Fin 3) (u : Space i) : cnj i u = cnjL i u := rfl
 theorem coeFn_cnj (i : Fin 3) (u : Space i) (n : Fin 3 → ℤ) :
     (cnj i u : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = cjF i (u (-n)) := coeFn_cnjL i u n
 
-theorem cnj_cnj (i : Fin 3) (u : Space i) : cnj i (cnj i u) = u := cnjL_cnjL i u
-
 /-- The conjugation preserves the domains of the differentials and commutes with them. -/
 theorem cnj_mapsTo_comm {i j : Fin 3} (u : (Models.Torus.GradCurl.complex.d i j).domain) :
     ∃ h : cnj i u ∈ (Models.Torus.GradCurl.complex.d i j).domain,
@@ -306,7 +304,7 @@ def realInvolutions : RealTorus.gradCurl.Involutions (Option (Fin 3)) where
   R := realR
   invol k i u := by
     cases k
-    · exact cnj_cnj i u
+    · exact cnjL_cnjL i u
     · exact refl_refl _ i u
   comm k l i u := by
     cases k <;> cases l

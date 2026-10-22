@@ -192,14 +192,14 @@ theorem symLp_symR_iff (k : Fin 3) (u : Lp SymCurl.Sym 2 (Measure.count : Measur
       symLp (flipRefl k) (sgnCLM (Fin 3 × Fin 3) fun p => cE p k) (liftLp symι u) =
         liftLp symι u := by
   rw [← liftLp_symLp symι (flipRefl k) (ρ := symR k) (fun v => rfl)]
-  exact (liftLp_injective symι).eq_iff.symm
+  exact (liftLp symι).injective.eq_iff.symm
 
 theorem symLp_trR_iff (k : Fin 3) (u : Lp SymCurl.Tr 2 (Measure.count : Measure (Fin 3 → ℤ))) :
     symLp (flipRefl k) (trR k) u = u ↔
       symLp (flipRefl k) (sgnCLM (Fin 3 × Fin 3) fun p => cB p k) (liftLp trι u) =
         liftLp trι u := by
   rw [← liftLp_symLp trι (flipRefl k) (ρ := trR k) (fun v => rfl)]
-  exact (liftLp_injective trι).eq_iff.symm
+  exact (liftLp trι).injective.eq_iff.symm
 
 theorem mem_fixed_one {u : Models.Torus.SymCurl.Space 1} :
     u ∈ action.fixed 1 ↔ liftLp symι u ∈ fieldParity cE :=
@@ -467,7 +467,7 @@ theorem mem_range_J₁ (u : Lp SymCurl.Sym 2 (Measure.count : Measure (Fin 3 →
       refine TorusWeak.eq_of_mFourierCoeff_eq fun n => ?_
       rw [coeff_fieldFourier_symm, coeff_fieldFourier_symm, liftLp_apply]
       exact SymCurl.Sym.val_mem _ a b
-    refine ⟨⟨_, hsym⟩, liftLp_injective symι ?_⟩
+    refine ⟨⟨_, hsym⟩, (liftLp symι).injective ?_⟩
     change liftLp symι (J₁ ⟨_, hsym⟩) = liftLp symι u
     rw [liftLp_J₁]
     exact extF_resQF cE_sq hw
@@ -492,7 +492,7 @@ theorem mem_range_J₂ (u : Lp SymCurl.Tr 2 (Measure.count : Measure (Fin 3 → 
         simp only [f, coeff_fieldFourier_symm, liftLp_apply]
         exact SymCurl.Tr.val_mem _
       rw [h0, _root_.map_zero]
-    refine ⟨⟨_, htr⟩, liftLp_injective trι ?_⟩
+    refine ⟨⟨_, htr⟩, (liftLp trι).injective ?_⟩
     change liftLp trι (J₂ ⟨_, htr⟩) = liftLp trι u
     rw [liftLp_J₂]
     exact extF_resQF cB_sq hw
@@ -663,7 +663,7 @@ theorem cosEQ_mem_symSub : cosEQ ∈ Models.BoundedDomain.symSub ℂ (Q (Fin 3))
 def cosSQ : SQ := ⟨cosEQ, cosEQ_mem_symSub⟩
 
 theorem J_cosSQ : J₁ cosSQ = cosS :=
-  liftLp_injective symι ((liftLp_J₁ cosSQ).trans (J_cosEQ.trans liftLp_cosS.symm))
+  (liftLp symι).injective ((liftLp_J₁ cosSQ).trans (J_cosEQ.trans liftLp_cosS.symm))
 
 /-- The datum `(0, E₀, 0)` of (4.18) on `Q`. -/
 def cosStateQ : PiLp 2 SpaceQ := WithLp.toLp 2 (Pi.single 1 cosSQ)

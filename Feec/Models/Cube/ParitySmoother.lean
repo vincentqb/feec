@@ -1218,11 +1218,7 @@ theorem extD_smoothFun_eq (ρ : ReflKernel n) (J : Finset (Fin n)) (k : ℕ)
   have hφdM : ∀ j x, |fderiv ℝ φ x (Pi.single j 1)| ≤ L := fun j x => by
     rw [hφd, abs_neg, ← Real.norm_eq_abs]
     refine ((fderiv ℝ ρ.toFun (y - x)).le_opNorm _).trans ?_
-    have h1 : ‖(Pi.single j 1 : Fin n → ℝ)‖ ≤ 1 := by
-      refine (pi_norm_le_iff_of_nonneg zero_le_one).2 fun i => ?_
-      by_cases h : i = j
-      · subst h; simp
-      · simp [h]
+    have h1 : ‖(Pi.single j 1 : Fin n → ℝ)‖ ≤ 1 := by rw [Pi.norm_single, norm_one]
     calc ‖fderiv ℝ ρ.toFun (y - x)‖ * ‖(Pi.single j 1 : Fin n → ℝ)‖ ≤ L * 1 :=
           mul_le_mul (hL _) h1 (norm_nonneg _) hL0
       _ = L := mul_one L
@@ -1244,9 +1240,7 @@ theorem extD_smoothFun_eq (ρ : ReflKernel n) (J : Finset (Fin n)) (k : ℕ)
     intro i
     by_cases hi : i = j
     · subst hi; rw [Function.update_self]
-      obtain h | h : c i = 1 ∨ c i = -1 := isParity_pvec J t.1 i
-      · rw [h]; norm_num
-      · rw [h]; norm_num
+      obtain h | h : c i = 1 ∨ c i = -1 := isParity_pvec J t.1 i <;> rw [h] <;> norm_num
     · rw [Function.update_of_ne hi]; exact isParity_pvec J t.1 i
   have hΦV : ∀ j ∈ t.1, j ∉ J → ∀ z : Fin n → ℝ, (z j = 0 ∨ z j = 1 / 2) → Φ z = 0 :=
     fun j hjt hjJ z hz => foldFun_eq_zero hφU (pvec_of_notMem_of_mem hjJ hjt) hz
@@ -1609,6 +1603,60 @@ theorem ReflKernel.sq_integral_le (ρ : ReflKernel n) (x : Fin n → ℝ) {f : (
   rw [e, e1, e2, integral_const_mul, integral_const_mul, ρ.integral_comp_sub] at hvar
   nlinarith
 
+/-- **Averaging along segments**: if `F x ≤ K₀ ∫ ρ(u) ∫₀¹ H(x - τu) dτ du` with `ρ` supported in
+the ball of radius `r` and the segments of length `≤ r` from the points of `U` staying in `V`, then
+`∫_U F ≤ K₀ (∫ ρ) ∫_V H`. -/
+theorem lintegral_le_of_segment_avg {ρe H F : (Fin n → ℝ) → ℝ≥0∞} (hρm : Measurable ρe)
+    (hHc : Continuous H) {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U) (hV : MeasurableSet V)
+    {r : ℝ} (hρr : ∀ u, ρe u ≠ 0 → ‖u‖ ≤ r)
+    (hseg : ∀ x ∈ U, ∀ u : Fin n → ℝ, ‖u‖ ≤ r → ∀ τ ∈ Icc (0 : ℝ) 1, x - τ • u ∈ V) (K₀ : ℝ)
+    (hpt : ∀ x, F x ≤ ENNReal.ofReal K₀ * ∫⁻ u, ρe u * ∫⁻ τ in Icc (0 : ℝ) 1, H (x - τ • u)) :
+    ∫⁻ x in U, F x ≤ ENNReal.ofReal K₀ * ((∫⁻ u, ρe u) * ∫⁻ x in V, H x) := by
+  obtain ⟨Ψ, hΨ⟩ : ∃ Ψ : (Fin n → ℝ) → (Fin n → ℝ) → ℝ≥0∞,
+      Ψ = fun x u => ∫⁻ τ in Set.Icc (0 : ℝ) 1, H (x - τ • u) := ⟨_, rfl⟩
+  have hAc : Continuous fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × ℝ => H (q.1.1 - q.2 • q.1.2) :=
+    hHc.comp (by fun_prop)
+  have hΨm : Measurable fun q : (Fin n → ℝ) × (Fin n → ℝ) => Ψ q.1 q.2 := by
+    rw [hΨ]; exact hAc.measurable.lintegral_prod_right'
+  -- exchange the integrals
+  have h1 : ∫⁻ x in U, F x ≤ ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u :=
+    setLIntegral_mono' hU fun x _ => by rw [hΨ]; exact hpt x
+  have h2 : ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u =
+      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * ∫⁻ x in U, Ψ x u := by
+    rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    congr 1
+    rw [lintegral_lintegral_swap ((hρm.comp measurable_snd).mul hΨm).aemeasurable]
+    refine lintegral_congr fun u => ?_
+    exact lintegral_const_mul _ (hΨm.comp measurable_prodMk_right)
+  -- the translations of each sample
+  set Y := ∫⁻ x in V, H x
+  have h3 : ∀ u, ρe u * ∫⁻ x in U, Ψ x u ≤ ρe u * Y := by
+    intro u
+    by_cases hu : ρe u = 0
+    · simp [hu]
+    have hu' := hρr u hu
+    refine mul_le_mul' le_rfl ?_
+    have hswap : ∫⁻ x in U, Ψ x u = ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, H (x - τ • u) := by
+      rw [hΨ]
+      refine lintegral_lintegral_swap ?_
+      exact (hHc.comp (by fun_prop : Continuous fun q : (Fin n → ℝ) × ℝ =>
+        q.1 - q.2 • u)).measurable.aemeasurable
+    rw [hswap]
+    calc ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, H (x - τ • u)
+        ≤ ∫⁻ τ in Set.Icc (0 : ℝ) 1, Y := by
+          refine setLIntegral_mono' measurableSet_Icc fun τ hτ => ?_
+          calc ∫⁻ x in U, H (x - τ • u) = ∫⁻ x in U, V.indicator H (x - τ • u) := by
+                refine setLIntegral_congr_fun hU fun x hx => ?_
+                rw [Set.indicator_of_mem (hseg x hx u hu' τ hτ)]
+            _ ≤ ∫⁻ x, V.indicator H (x - τ • u) := setLIntegral_le_lintegral _ _
+            _ = ∫⁻ x, V.indicator H x := lintegral_sub_right_eq_self _ _
+            _ = Y := by rw [lintegral_indicator hV]
+      _ = Y := by rw [setLIntegral_const, Real.volume_Icc, sub_zero, ENNReal.ofReal_one, mul_one]
+  calc _ ≤ _ := h1
+    _ = _ := h2
+    _ ≤ ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Y := mul_le_mul' le_rfl (lintegral_mono fun u => h3 u)
+    _ = _ := by rw [lintegral_mul_const _ hρm]
+
 open Feec.Models.Cube.FEM (sq_sub_le_integral_grad ofReal_intervalIntegral_le_lintegral) in
 /-- **The `L²` error of the mollifier for a `C¹` function**: if the segments from the points of `U`
 to the points sampled by `ρ` stay in `V`,
@@ -1628,10 +1676,6 @@ theorem lintegral_sq_sub_conv_le (ρ : ReflKernel n) {w : (Fin n → ℝ) → �
     exact ENNReal.continuous_ofReal.comp (by fun_prop)
   obtain ⟨Ψ, hΨ⟩ : ∃ Ψ : (Fin n → ℝ) → (Fin n → ℝ) → ℝ≥0∞,
       Ψ = fun x u => ∫⁻ τ in Set.Icc (0 : ℝ) 1, G (x - τ • u) := ⟨_, rfl⟩
-  have hAc : Continuous fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × ℝ => G (q.1.1 - q.2 • q.1.2) :=
-    hGc.comp (by fun_prop)
-  have hΨm : Measurable fun q : (Fin n → ℝ) × (Fin n → ℝ) => Ψ q.1 q.2 := by
-    rw [hΨ]; exact hAc.measurable.lintegral_prod_right'
   obtain ⟨ρe, hρe⟩ : ∃ ρe : (Fin n → ℝ) → ℝ≥0∞, ρe = fun u => ENNReal.ofReal (ρ u) := ⟨_, rfl⟩
   have hρm : Measurable ρe := by
     rw [hρe]; exact (ENNReal.continuous_ofReal.comp ρ.continuous).measurable
@@ -1701,51 +1745,15 @@ theorem lintegral_sq_sub_conv_le (ρ : ReflKernel n) {w : (Fin n → ℝ) → �
             gcongr
             exact ofReal_intervalIntegral_le_lintegral hGc' hG0
         _ = _ := by rw [hρe, hΨ, hG]; ring
-  -- step 2: exchange the integrals
-  have h1 : ∫⁻ x in U, ENNReal.ofReal ((w x - ∫ t, w t * ρ (x - t)) ^ 2) ≤
-      ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u := setLIntegral_mono' hU fun x _ => hpt x
-  have h2 : ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u =
-      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * ∫⁻ x in U, Ψ x u := by
-    rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
-    congr 1
-    rw [lintegral_lintegral_swap ((hρm.comp measurable_snd).mul hΨm).aemeasurable]
-    refine lintegral_congr fun u => ?_
-    have hm : Measurable fun x => Ψ x u := hΨm.comp measurable_prodMk_right
-    exact lintegral_const_mul _ hm
-  -- step 3: the translations of each sample
-  set Y := ∫⁻ x in V, G x
-  have h3 : ∀ u, ρe u * ∫⁻ x in U, Ψ x u ≤ ρe u * Y := by
-    intro u
-    by_cases hu : ρ u = 0
-    · simp [hρe, hu]
-    have hu' : ‖u‖ ≤ ρ.radius := by
-      by_contra h; push Not at h; exact hu (ρ.eq_zero_of_le u h.le)
-    refine mul_le_mul' le_rfl ?_
-    have hswap : ∫⁻ x in U, Ψ x u = ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, G (x - τ • u) := by
-      rw [hΨ]
-      refine lintegral_lintegral_swap ?_
-      exact (hGc.comp (by fun_prop : Continuous fun q : (Fin n → ℝ) × ℝ =>
-        q.1 - q.2 • u)).measurable.aemeasurable
-    rw [hswap]
-    calc ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, G (x - τ • u)
-        ≤ ∫⁻ τ in Set.Icc (0 : ℝ) 1, Y := by
-          refine setLIntegral_mono' measurableSet_Icc fun τ hτ => ?_
-          calc ∫⁻ x in U, G (x - τ • u) = ∫⁻ x in U, V.indicator G (x - τ • u) := by
-                refine setLIntegral_congr_fun hU fun x hx => ?_
-                rw [Set.indicator_of_mem (hseg x hx u hu' τ hτ)]
-            _ ≤ ∫⁻ x, V.indicator G (x - τ • u) := setLIntegral_le_lintegral _ _
-            _ = ∫⁻ x, V.indicator G x := lintegral_sub_right_eq_self _ _
-            _ = Y := by rw [lintegral_indicator hV]
-      _ = Y := by rw [setLIntegral_const, Real.volume_Icc, sub_zero, ENNReal.ofReal_one, mul_one]
-  -- step 4: the mollifier has mass one
+  have hρr : ∀ u, ρe u ≠ 0 → ‖u‖ ≤ ρ.radius := fun u hu => by
+    by_contra h; push Not at h; exact hu (by simp [hρe, ρ.eq_zero_of_le u h.le])
   have hρ1 : ∫⁻ u, ρe u = 1 := by
     rw [hρe, ← ofReal_integral_eq_lintegral_ofReal ρ.integrable
       (Eventually.of_forall fun u => ρ.nonneg u), ρ.integral_eq_one, ENNReal.ofReal_one]
-  calc _ ≤ _ := h1
-    _ = _ := h2
-    _ ≤ ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Y := mul_le_mul' le_rfl (lintegral_mono fun u => h3 u)
-    _ = ENNReal.ofReal K₀ * Y := by rw [lintegral_mul_const _ hρm, hρ1, one_mul]
-    _ = _ := by simp only [Y, hG]
+  have h := lintegral_le_of_segment_avg hρm hGc hU hV hρr hseg K₀
+    (F := fun x => ENNReal.ofReal ((w x - ∫ t, w t * ρ (x - t)) ^ 2))
+    fun x => (hpt x).trans_eq (by rw [hΨ])
+  rwa [hρ1, one_mul, hG] at h
 
 /-- **The `H¹` estimate of the parity smoother for smooth symmetric functions**:
 `∫_Q |g - R g|² ≤ r² n 3ⁿ ∫_Q |∇g|²`. -/
@@ -2145,6 +2153,37 @@ theorem MomentKernel.integrable_mul {m : ℕ} (K : MomentKernel n m) {f : (Fin n
 def taylorRem (G : (Fin n → ℝ) → ℝ) (m : ℕ) (x u : Fin n → ℝ) : ℝ :=
   ∫ τ in (0 : ℝ)..1, (1 - τ) ^ (m - 1) * iteratedFDeriv ℝ m G (x - τ • u) (fun _ => -u)
 
+/-- The Taylor remainder as a combination of values (Taylor's formula). -/
+theorem taylorRem_eq {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
+    (x u : Fin n → ℝ) : taylorRem G m x u = ((m - 1).factorial : ℝ) * (G (x - u) -
+      ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) := by
+  obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
+  simp only [Nat.add_sub_cancel]
+  have hfac : ((m'.factorial : ℝ)) ≠ 0 := by exact_mod_cast Nat.factorial_ne_zero m'
+  have h := map_add_eq_sum_add_integral_iteratedFDeriv (f := G) (x := x) (y := -u) (n := m')
+    (fun t _ => hG.contDiffAt)
+  rw [← sub_eq_add_neg] at h
+  rw [h]
+  simp only [smul_eq_mul, taylorRem, Nat.add_sub_cancel]
+  have e : ∫ τ in (0 : ℝ)..1, (1 - τ) ^ m' * iteratedFDeriv ℝ (m' + 1) G (x + τ • -u)
+      (fun _ => -u) = ∫ τ in (0 : ℝ)..1, (1 - τ) ^ m' *
+        iteratedFDeriv ℝ (m' + 1) G (x - τ • u) (fun _ => -u) :=
+    intervalIntegral.integral_congr fun τ _ => by simp only [smul_neg, ← sub_eq_add_neg]
+  rw [e]
+  field_simp
+  ring
+
+theorem continuous_taylorRem {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
+    (x : Fin n → ℝ) : Continuous (taylorRem G m x) := by
+  have hcontk : ∀ k, Continuous fun u : Fin n → ℝ => iteratedFDeriv ℝ k G x (fun _ => -u) :=
+    fun k => (iteratedFDeriv ℝ k G x).cont.comp (continuous_pi fun _ => continuous_neg)
+  have e : taylorRem G m x = fun u => ((m - 1).factorial : ℝ) * (G (x - u) -
+      ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) :=
+    funext (taylorRem_eq hm hG x)
+  rw [e]
+  exact continuous_const.mul ((hG.continuous.comp (continuous_const.sub continuous_id)).sub
+    (continuous_finsetSum _ fun k _ => continuous_const.mul (hcontk k)))
+
 /-- **The error of a moment kernel is the averaged Taylor remainder**:
 `G(x) - (G ⋆ ρ)(x) = -((m - 1)!)⁻¹ ∫ ρ(u) R_m(x, u) du` (the polynomial part of degree `< m`
 is reproduced by the vanishing moments). -/
@@ -2158,31 +2197,12 @@ theorem sub_conv_eq_taylorRem {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
   -- Taylor's formula in the direction `-u`
   have hT : ∀ u : Fin n → ℝ, G (x - u) = ∑ k ∈ Finset.range (m' + 1),
       ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u) +
-        ((m'.factorial : ℝ))⁻¹ * taylorRem G (m' + 1) x u := by
-    intro u
-    have h := map_add_eq_sum_add_integral_iteratedFDeriv (f := G) (x := x) (y := -u) (n := m')
-      (fun t _ => hG.contDiffAt)
-    rw [← sub_eq_add_neg] at h
-    rw [h]
-    simp only [smul_eq_mul, taylorRem, Nat.add_sub_cancel]
-    congr 2
-    refine intervalIntegral.integral_congr fun τ _ => ?_
-    simp only [smul_neg, ← sub_eq_add_neg]
+        ((m'.factorial : ℝ))⁻¹ * taylorRem G (m' + 1) x u := fun u => by
+    rw [taylorRem_eq hm hG x u, Nat.add_sub_cancel]; field_simp; ring
   have hcontk : ∀ k, Continuous fun u : Fin n → ℝ => iteratedFDeriv ℝ k G x (fun _ => -u) :=
     fun k => (iteratedFDeriv ℝ k G x).cont.comp (continuous_pi fun _ => continuous_neg)
-  have hGc : Continuous G := hG.continuous
-  -- the remainder as a combination of continuous functions
-  have hR : ∀ u, taylorRem G (m' + 1) x u = (m'.factorial : ℝ) * (G (x - u) -
-      ∑ k ∈ Finset.range (m' + 1),
-        ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) := fun u => by
-    rw [hT u]; field_simp; ring
-  have hRc : Continuous fun u => (m'.factorial : ℝ) * (G (x - u) -
-      ∑ k ∈ Finset.range (m' + 1),
-        ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) :=
-    continuous_const.mul ((hGc.comp (continuous_const.sub continuous_id)).sub
-      (continuous_finsetSum _ fun k _ => continuous_const.mul (hcontk k)))
   have hKR : Integrable fun u => K u * taylorRem G (m' + 1) x u :=
-    (K.integrable_mul hRc).congr (ae_of_all _ fun u => by simp only [hR])
+    K.integrable_mul (continuous_taylorRem hm hG x)
   refine ⟨hKR, ?_⟩
   -- the moments kill the polynomial part
   have hmom : ∀ k ∈ Finset.range (m' + 1), 1 ≤ k →
@@ -2220,37 +2240,6 @@ theorem sub_conv_eq_taylorRem {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
     integral_add (integrable_finsetSum _ fun k _ => hint k) (hKR.const_mul _), hsum,
     integral_const_mul]
   ring
-
-/-- The Taylor remainder as a combination of values (Taylor's formula). -/
-theorem taylorRem_eq {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
-    (x u : Fin n → ℝ) : taylorRem G m x u = ((m - 1).factorial : ℝ) * (G (x - u) -
-      ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) := by
-  obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
-  simp only [Nat.add_sub_cancel]
-  have hfac : ((m'.factorial : ℝ)) ≠ 0 := by exact_mod_cast Nat.factorial_ne_zero m'
-  have h := map_add_eq_sum_add_integral_iteratedFDeriv (f := G) (x := x) (y := -u) (n := m')
-    (fun t _ => hG.contDiffAt)
-  rw [← sub_eq_add_neg] at h
-  rw [h]
-  simp only [smul_eq_mul, taylorRem, Nat.add_sub_cancel]
-  have e : ∫ τ in (0 : ℝ)..1, (1 - τ) ^ m' * iteratedFDeriv ℝ (m' + 1) G (x + τ • -u)
-      (fun _ => -u) = ∫ τ in (0 : ℝ)..1, (1 - τ) ^ m' *
-        iteratedFDeriv ℝ (m' + 1) G (x - τ • u) (fun _ => -u) :=
-    intervalIntegral.integral_congr fun τ _ => by simp only [smul_neg, ← sub_eq_add_neg]
-  rw [e]
-  field_simp
-  ring
-
-theorem continuous_taylorRem {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
-    (x : Fin n → ℝ) : Continuous (taylorRem G m x) := by
-  have hcontk : ∀ k, Continuous fun u : Fin n → ℝ => iteratedFDeriv ℝ k G x (fun _ => -u) :=
-    fun k => (iteratedFDeriv ℝ k G x).cont.comp (continuous_pi fun _ => continuous_neg)
-  have e : taylorRem G m x = fun u => ((m - 1).factorial : ℝ) * (G (x - u) -
-      ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) :=
-    funext (taylorRem_eq hm hG x)
-  rw [e]
-  exact continuous_const.mul ((hG.continuous.comp (continuous_const.sub continuous_id)).sub
-    (continuous_finsetSum _ fun k _ => continuous_const.mul (hcontk k)))
 
 open Feec.Models.Cube.FEM (sq_intervalIntegral_le) in
 /-- **The bound of the Taylor remainder**:
@@ -2302,10 +2291,6 @@ theorem lintegral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm
     rw [hH]; exact ENNReal.continuous_ofReal.comp (hDc.norm.pow 2)
   obtain ⟨Ψ, hΨ⟩ : ∃ Ψ : (Fin n → ℝ) → (Fin n → ℝ) → ℝ≥0∞,
       Ψ = fun x u => ∫⁻ τ in Set.Icc (0 : ℝ) 1, H (x - τ • u) := ⟨_, rfl⟩
-  have hAc : Continuous fun q : ((Fin n → ℝ) × (Fin n → ℝ)) × ℝ => H (q.1.1 - q.2 • q.1.2) :=
-    hHc.comp (by fun_prop)
-  have hΨm : Measurable fun q : (Fin n → ℝ) × (Fin n → ℝ) => Ψ q.1 q.2 := by
-    rw [hΨ]; exact hAc.measurable.lintegral_prod_right'
   obtain ⟨ρe, hρe⟩ : ∃ ρe : (Fin n → ℝ) → ℝ≥0∞, ρe = fun u => ENNReal.ofReal |K u| := ⟨_, rfl⟩
   have hρm : Measurable ρe := by
     rw [hρe]; exact (ENNReal.continuous_ofReal.comp K.continuous.abs).measurable
@@ -2367,51 +2352,18 @@ theorem lintegral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm
             rw [hρe, ← ENNReal.ofReal_mul (abs_nonneg _), ← ENNReal.ofReal_mul (by positivity)]
             congr 1; ring
         _ ≤ ENNReal.ofReal (K.radius ^ (2 * m)) * (ρe u * Ψ x u) := by gcongr
-  -- step 2: exchange the integrals
-  have h1 : ∫⁻ x in U, ENNReal.ofReal ((G x - ∫ t, G t * K (x - t)) ^ 2) ≤
-      ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u := setLIntegral_mono' hU fun x _ => hpt x
-  have h2 : ∫⁻ x in U, ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Ψ x u =
-      ENNReal.ofReal K₀ * ∫⁻ u, ρe u * ∫⁻ x in U, Ψ x u := by
-    rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
-    congr 1
-    rw [lintegral_lintegral_swap ((hρm.comp measurable_snd).mul hΨm).aemeasurable]
-    refine lintegral_congr fun u => ?_
-    have hmeas : Measurable fun x => Ψ x u := hΨm.comp measurable_prodMk_right
-    exact lintegral_const_mul _ hmeas
-  -- step 3: the translations of each sample
+  have hρr : ∀ u, ρe u ≠ 0 → ‖u‖ ≤ K.radius := fun u hu =>
+    (K.eq_zero_of_lt fun h => hu (by simp [hρe, h])).le
   set Y := ∫⁻ x in V, H x
-  have h3 : ∀ u, ρe u * ∫⁻ x in U, Ψ x u ≤ ρe u * Y := by
-    intro u
-    by_cases hu : K u = 0
-    · simp [hρe, hu]
-    have hu' : ‖u‖ ≤ K.radius := (K.eq_zero_of_lt hu).le
-    refine mul_le_mul' le_rfl ?_
-    have hswap : ∫⁻ x in U, Ψ x u = ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, H (x - τ • u) := by
-      rw [hΨ]
-      refine lintegral_lintegral_swap ?_
-      exact (hHc.comp (by fun_prop : Continuous fun q : (Fin n → ℝ) × ℝ =>
-        q.1 - q.2 • u)).measurable.aemeasurable
-    rw [hswap]
-    calc ∫⁻ τ in Set.Icc (0 : ℝ) 1, ∫⁻ x in U, H (x - τ • u)
-        ≤ ∫⁻ τ in Set.Icc (0 : ℝ) 1, Y := by
-          refine setLIntegral_mono' measurableSet_Icc fun τ hτ => ?_
-          calc ∫⁻ x in U, H (x - τ • u) = ∫⁻ x in U, V.indicator H (x - τ • u) := by
-                refine setLIntegral_congr_fun hU fun x hx => ?_
-                rw [Set.indicator_of_mem (hseg x hx u hu' τ hτ)]
-            _ ≤ ∫⁻ x, V.indicator H (x - τ • u) := setLIntegral_le_lintegral _ _
-            _ = ∫⁻ x, V.indicator H x := lintegral_sub_right_eq_self _ _
-            _ = Y := by rw [lintegral_indicator hV]
-      _ = Y := by rw [setLIntegral_const, Real.volume_Icc, sub_zero, ENNReal.ofReal_one, mul_one]
   -- step 4: the mass of `|ρ|`
   have hρ1 : ∫⁻ u, ρe u = ENNReal.ofReal K.l1 := by
     rw [hρe, ← ofReal_integral_eq_lintegral_ofReal K.integrable.abs
       (Eventually.of_forall fun u => abs_nonneg _)]
     rfl
-  calc _ ≤ _ := h1
-    _ = _ := h2
-    _ ≤ ENNReal.ofReal K₀ * ∫⁻ u, ρe u * Y := mul_le_mul' le_rfl (lintegral_mono fun u => h3 u)
-    _ = ENNReal.ofReal K₀ * (ENNReal.ofReal K.l1 * Y) := by
-        rw [lintegral_mul_const _ hρm, hρ1]
+  calc _ ≤ ENNReal.ofReal K₀ * ((∫⁻ u, ρe u) * Y) :=
+        lintegral_le_of_segment_avg hρm hHc hU hV hρr hseg K₀ fun x =>
+          (hpt x).trans_eq (by rw [hΨ])
+    _ = ENNReal.ofReal K₀ * (ENNReal.ofReal K.l1 * Y) := by rw [hρ1]
     _ = _ := by
         have hl := K.l1_nonneg
         have hr := K.radius_pos

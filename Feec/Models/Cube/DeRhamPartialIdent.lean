@@ -1498,9 +1498,6 @@ theorem Hpart_hasCompactProperty (J : Finset (Fin n)) : (Hpart n J).HasCompactPr
   Feec.HilbertComplex.hasCompactProperty_of_window (Hpart n J) ι_rel (hlow _) (hhigh _)
     (HQpart_hasCompactProperty J)
 
-theorem rel_sub_one (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
-  change j - 1 + 1 = j; ring
-
 /-- **Closed range of `HΛ_J(Q)` in every degree.** -/
 theorem Hpart_closedRangeAt (J : Finset (Fin n)) (j : ℤ) : (Hpart n J).ClosedRangeAt j :=
   ((Hpart n J).closedRangeAt_iff_poincare_of_rel (rel_sub_one j)).2
@@ -1589,9 +1586,6 @@ abbrev formJ (J : Finset (Fin n)) : L2F ℝ (Q (Fin n)) (formIdx n (#J : ℤ)) :
 theorem formJ_ne_zero (J : Finset (Fin n)) : formJ n J ≠ 0 :=
   constForm_ne_zero _ _ volume_Q_ne_zero _
 
-theorem formJ_mem_harmonic (J : Finset (Fin n)) : formJ n J ∈ (Hpart n J).harmonic (#J : ℤ) :=
-  constForm_mem_harmonic J rfl
-
 theorem Hpart_harmonic_card_spec (J : Finset (Fin n)) :
     FiniteDimensional ℝ ((Hpart n J).harmonic (#J : ℤ)) ∧
       Module.finrank ℝ ((Hpart n J).harmonic (#J : ℤ)) ≤ 1 := by
@@ -1612,7 +1606,7 @@ theorem Hpart_harmonic_card (J : Finset (Fin n)) :
     (Hpart n J).harmonic (#J : ℤ) = ℝ ∙ formJ n J := by
   obtain ⟨hfin, hle⟩ := Hpart_harmonic_card_spec J
   have hne := formJ_ne_zero J
-  have hmem := formJ_mem_harmonic J
+  have hmem : formJ n J ∈ (Hpart n J).harmonic (#J : ℤ) := constForm_mem_harmonic J rfl
   have hpos : Module.finrank ℝ ((Hpart n J).harmonic (#J : ℤ)) ≠ 0 := fun h0 => by
     have := (Submodule.finrank_eq_zero (S := (Hpart n J).harmonic (#J : ℤ))).1 h0
     exact hne (by simpa [this] using hmem)

@@ -114,18 +114,15 @@ theorem poincare_min {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ
 theorem inv_two_pi_le_one : (2 * Real.pi)⁻¹ ≤ 1 :=
   inv_le_one_of_one_le₀ (by nlinarith [Real.two_le_pi])
 
-theorem rel_pred (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
-  change j - 1 + 1 = j; ring
-
 /-- **Closed range of `HΛ(Q)` in every degree.** -/
 theorem closedRangeAt (j : ℤ) : (complex n).ClosedRangeAt j :=
-  ((complex n).closedRangeAt_iff_poincare_of_rel (rel_pred j)).2
-    ⟨_, norm_le_of_mem_orthogonal_cycles (rel_pred j)⟩
+  ((complex n).closedRangeAt_iff_poincare_of_rel (DeRhamIdent.rel_sub_one j)).2
+    ⟨_, norm_le_of_mem_orthogonal_cycles (DeRhamIdent.rel_sub_one j)⟩
 
 /-- **Closed range of `H̊Λ(Q)` in every degree.** -/
 theorem closedRangeAt_min (j : ℤ) : (complexMin n).ClosedRangeAt j :=
-  ((complexMin n).closedRangeAt_iff_poincare_of_rel (rel_pred j)).2
-    ⟨_, norm_le_of_mem_orthogonal_cycles_min (rel_pred j)⟩
+  ((complexMin n).closedRangeAt_iff_poincare_of_rel (DeRhamIdent.rel_sub_one j)).2
+    ⟨_, norm_le_of_mem_orthogonal_cycles_min (DeRhamIdent.rel_sub_one j)⟩
 
 /-- **The compactness property of `HΛ(Q)`** (Rellich and Gaffney on the cube), every degree. -/
 theorem hasCompactProperty : (complex n).HasCompactProperty := by

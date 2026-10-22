@@ -275,12 +275,8 @@ theorem wedge_eq_zero_of_pullback_eq_zero {m : ℕ} (B : Fin (m + 1) → Fin m �
   classical
   by_cases hν0 : ν = 0
   · subst hν0; exact wedge_zero_left α
-  have hs : (∑ i, ν i * ν i) ≠ 0 := by
-    intro h
-    apply hν0
-    funext i
-    have := (Finset.sum_eq_zero_iff_of_nonneg fun i _ => mul_self_nonneg (ν i)).1 h i (Finset.mem_univ i)
-    simpa using this
+  have hs : (∑ i, ν i * ν i) ≠ 0 := fun h =>
+    hν0 (funext fun i => (Finset.sum_mul_self_eq_zero_iff _ _).1 h i (Finset.mem_univ i))
   set c := (∑ i, ν i * ν i)⁻¹
   set P : Fin (m + 1) → Fin (m + 1) → ℝ := fun i l => Fin.lastCases (c * ν i) (fun l' => B i l') l
   have hcov : covPullback P ν = Pi.single (Fin.last m) 1 := by
@@ -327,12 +323,10 @@ theorem wedge_eq_zero_of_pullback_eq_zero {m : ℕ} (B : Fin (m + 1) → Fin m �
     · rw [Pi.single_eq_of_ne hjl, mul_zero, zero_mul]
   -- `P` is invertible
   have hPinv : IsUnit (Matrix.of P) := by
-    rw [← Matrix.linearIndependent_col_iff_isUnit]
-    rw [Fintype.linearIndependent_iff]
+    rw [← Matrix.linearIndependent_col_iff_isUnit, Fintype.linearIndependent_iff]
     intro g hg
     have hg' : ∀ i, ∑ l, g l * P i l = 0 := fun i => by
-      have := congrFun hg i
-      simpa [Matrix.col, Finset.sum_apply] using this
+      simpa [Matrix.col, Finset.sum_apply] using congrFun hg i
     have hlast : g (Fin.last m) = 0 := by
       have : ∑ i, ν i * ∑ l, g l * P i l = 0 := by simp [hg']
       rw [show (∑ i, ν i * ∑ l, g l * P i l) = ∑ l, g l * ∑ i, ν i * P i l by
@@ -342,19 +336,15 @@ theorem wedge_eq_zero_of_pullback_eq_zero {m : ℕ} (B : Fin (m + 1) → Fin m �
       have h2 : ∀ l : Fin m, ∑ i, ν i * P i (Fin.castSucc l) = 0 := fun l => by
         simp only [P, Fin.lastCases_castSucc]; exact hν l
       have h3 : ∑ i, ν i * P i (Fin.last m) = 1 := by
-        have := congrFun hcov (Fin.last m)
-        simpa [covPullback] using this
-      simp only [h2, mul_zero, sum_const_zero, zero_add, h3, mul_one] at this
-      exact this
-    have hcs : ∀ l : Fin m, g (Fin.castSucc l) = 0 := by
-      have := Fintype.linearIndependent_iff.1 hB (fun l => g (Fin.castSucc l)) (by
+        simpa [covPullback] using congrFun hcov (Fin.last m)
+      simpa only [h2, mul_zero, sum_const_zero, zero_add, h3, mul_one] using this
+    have hcs : ∀ l : Fin m, g (Fin.castSucc l) = 0 :=
+      Fintype.linearIndependent_iff.1 hB (fun l => g (Fin.castSucc l)) (by
         funext i
         have := hg' i
         rw [Fin.sum_univ_castSucc, hlast, zero_mul, add_zero] at this
         simpa [P] using this)
-      exact this
-    intro l
-    refine Fin.lastCases hlast hcs l
+    exact fun l => Fin.lastCases hlast hcs l
   have hinj : ∀ β : Finset (Fin (m + 1)) → ℝ,
       pullback (fun i l => ((Matrix.of P)⁻¹) i l) (pullback P β) = β := by
     intro β
@@ -1212,17 +1202,13 @@ theorem pieceL2_mem_minimal_domain [NeZero n] [Fintype κ]
   set Ω := M.domain
   set s : ℕ → ℝ := fun k => 1 + 1 / ((k : ℝ) + 1)
   have hspos : ∀ k, 0 < s k := fun k => by positivity
-  have hs1 : ∀ k, 1 < s k := fun k => by
-    have : (0 : ℝ) < 1 / ((k : ℝ) + 1) := by positivity
-    simp only [s]; linarith
+  have hs1 : ∀ k, 1 < s k := fun k => lt_add_of_pos_right _ (by positivity)
   have hs12 : ∀ k, s k ∈ Set.Icc (1 : ℝ) 2 := fun k => ⟨(hs1 k).le, by
-    simp only [s]
-    have : 1 / ((k : ℝ) + 1) ≤ 1 := by
-      rw [div_le_one (by positivity)]; linarith [k.cast_nonneg (α := ℝ)]
-    linarith⟩
+    have : 1 / ((k : ℝ) + 1) ≤ 1 := div_le_one_of_le₀ (by linarith [k.cast_nonneg (α := ℝ)])
+      (by positivity)
+    simp only [s]; linarith⟩
   have hslim : Tendsto s atTop (𝓝 1) := by
-    have := (tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)).const_add 1
-    simpa [s] using this
+    simpa [s] using (tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ)).const_add 1
   have hcu : ∀ T ∈ M.simplices, ∀ i, Continuous (u T i) := fun T hT i => (hu T hT i).continuous
   have hcA : ∀ r, ∀ T ∈ M.simplices, ∀ j, Continuous ((A.scale r).apply (u T) j) :=
     fun r T hT j => (A.scale r).continuous_apply (hA.scale r) (hu T hT) j

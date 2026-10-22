@@ -673,13 +673,10 @@ theorem eq_zero_of_coordTrace_of_integral {r k : ℕ} {Ω : Koszul.PolyForm ℝ 
   suffices hall : ∀ σ, b σ = 0 from funext fun σ => (hb0 σ).2 (hall σ)
   by_cases hkn : k ≤ n
   swap
-  · intro σ
-    refine hk σ fun h => hkn ?_
-    rw [← h]; simpa using card_le_univ σ
+  · exact fun σ => hk σ fun h => hkn (h ▸ by simpa using card_le_univ σ)
   by_cases hnr : n ≤ r + k
   swap
-  · intro σ
-    by_contra hne
+  · refine fun σ => by_contra fun hne => ?_
     by_cases hσ : #σ = k
     · have := (hdeg σ hσ hne).1; omega
     · exact hne (hk σ hσ)
@@ -713,35 +710,24 @@ theorem eq_zero_of_coordTrace_of_integral {r k : ℕ} {Ω : Koszul.PolyForm ℝ 
       simp only [map_mul, eval_C]
       linear_combination (eval x (∏ j ∈ σᶜ, X j) * eval x (b σ) ^ 2) * h2
     · rw [hΩ.1 σ hσ]; simp [hσ]
-  have hcont : Continuous fun x : Fin n → ℝ => eval x (wedgeForm Ω H univ) :=
-    (contDiff_eval _ (r := 0)).continuous
-  have hnonneg : ∀ x ∈ refSimplex n, 0 ≤ eval x (wedgeForm Ω H univ) := by
-    intro x hx
-    rw [hwedge]
-    refine sum_nonneg fun σ _ => ?_
+  have hterm0 : ∀ x : Fin n → ℝ, (∀ j, 0 ≤ x j) → ∀ σ : Finset (Fin n),
+      0 ≤ if #σ = k then eval x (∏ j ∈ σᶜ, X j) * eval x (b σ) ^ 2 else 0 := fun x hx σ => by
     split_ifs
-    · exact mul_nonneg (eval_prod_X_nonneg (mem_refSimplex_iff.1 hx).1) (sq_nonneg _)
+    · exact mul_nonneg (eval_prod_X_nonneg hx) (sq_nonneg _)
     · exact le_rfl
-  have hzero := eq_zero_of_setIntegral_refSimplex_eq_zero hcont hnonneg (hint hnr H hHmem)
-  intro σ
-  by_cases hσ : #σ = k
-  swap
-  · exact hk σ hσ
+  have hzero := eq_zero_of_setIntegral_refSimplex_eq_zero (contDiff_eval _ (r := 0)).continuous
+    (fun x hx => by rw [hwedge]; exact sum_nonneg fun σ _ => hterm0 x (mem_refSimplex_iff.1 hx).1 σ)
+    (hint hnr H hHmem)
+  refine fun σ => (em (#σ = k)).elim (fun hσ => ?_) (hk σ)
   refine eq_zero_of_eval_eq_zero_on_box fun x hx => ?_
   have hxpos : ∀ j, 0 < x j := fun j => (hx j (Set.mem_univ j)).1
   have hsum := hzero x hx
   rw [hwedge] at hsum
-  have hterm := (sum_eq_zero_iff_of_nonneg fun σ' _ => by
-    split_ifs
-    · exact mul_nonneg (eval_prod_X_nonneg fun j => (hxpos j).le) (sq_nonneg _)
-    · exact le_rfl).1 hsum σ (mem_univ σ)
+  have hterm := (sum_eq_zero_iff_of_nonneg fun σ' _ => hterm0 x (fun j => (hxpos j).le) σ').1 hsum
+    σ (mem_univ σ)
   simp only [hσ, ↓reduceIte] at hterm
-  have hX := eval_prod_X_pos (S := σᶜ) hxpos
-  have : eval x (b σ) ^ 2 = 0 := by
-    rcases mul_eq_zero.1 hterm with h | h
-    · exact absurd h hX.ne'
-    · exact h
-  exact pow_eq_zero_iff (two_ne_zero) |>.1 this
+  exact pow_eq_zero_iff two_ne_zero |>.1
+    ((mul_eq_zero.1 hterm).resolve_left (eval_prod_X_pos (S := σᶜ) hxpos).ne')
 
 /-! ### Bubbles: forms with vanishing trace on `∂T` -/
 

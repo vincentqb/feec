@@ -406,7 +406,6 @@ theorem mem_convexHull_carrier {m : Fin n → ℤ} {σ : Equiv.Perm (Fin n)} {x 
     by_cases h : t ≤ y k
     · rw [ite_eq_left h, ite_eq_left ((hiff k).1 h)]
     · rw [ite_eq_right h, ite_eq_right (fun h' => h ((hiff k).2 h'))]
-  have h1mem : carrierPoint x 1 ∈ carrier x := ⟨1, ⟨one_pos, le_rfl⟩, rfl⟩
   -- the convex combination
   have hsum : ∑ j, w j • (latticePoint m + kuhnVertex σ j) = x := by
     simp only [smul_add, Finset.sum_add_distrib, ← Finset.sum_smul, hw1, one_smul]
@@ -417,24 +416,9 @@ theorem mem_convexHull_carrier {m : Fin n → ℤ} {σ : Equiv.Perm (Fin n)} {x 
       rw [sum_smul_refPoints]
       funext k; simp [hw, z]
     rw [this, hydef]; abel
-  set p : Fin (n + 1) → Fin n → ℝ := fun j =>
-    if 0 < w j then latticePoint m + kuhnVertex σ j else carrierPoint x 1
-  have hsum' : ∑ j, w j • p j = x := by
-    rw [← hsum]
-    refine Finset.sum_congr rfl fun j _ => ?_
-    simp only [p]
-    split_ifs with h
-    · rfl
-    · rw [le_antisymm (not_lt.1 h) (hw0 j), zero_smul, zero_smul]
-  have hmem : ∀ j ∈ Finset.univ, p j ∈ convexHull ℝ (carrier x) := by
-    intro j _
-    refine subset_convexHull ℝ _ ?_
-    simp only [p]
-    split_ifs with h
-    · exact hpos j h
-    · exact h1mem
-  have := (convex_convexHull ℝ (carrier x)).sum_mem (fun j _ => hw0 j) hw1 hmem
-  rwa [hsum'] at this
+  have := (convex_convexHull ℝ (carrier x)).finsum_mem hw0 (by rwa [finsum_eq_sum_of_fintype])
+    fun j hj => subset_convexHull ℝ _ (hpos j ((hw0 j).lt_of_ne' hj))
+  rwa [finsum_eq_sum_of_fintype, hsum] at this
 
 /-- **Face-to-face property of the Freudenthal triangulation**: two integer translates of Kuhn
 simplices meet in the convex hull of their common vertices. -/

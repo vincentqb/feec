@@ -343,17 +343,16 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
     have : S * a ≤ C / h * (C * h) := mul_le_mul hBs hB ha (by positivity)
     rw [show C / h * (C * h) = C ^ 2 by field_simp] at this
     nlinarith [sq_nonneg (n : ℝ)]
-  have hS8 : 0 ≤ √(8 ^ n : ℝ) := Real.sqrt_nonneg _
-  -- the common bound `2ⁿ (n S)ᵏ A₀ √hⁿ √LK ≤ 2ⁿ A₀ √8ⁿ (n² C²)ᵏ / √c · √LT`
-  have hcore : 2 ^ n * (n * S) ^ k * A₀ * (√h ^ n * √LK) ≤
-      2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * √LT := by
+  -- the common bound `2ⁿ (n S)ᵏ A₀ √hⁿ √LK ≤ K₀ √LT`, `K₀ = 2ⁿ A₀ √8ⁿ (n² C²)ᵏ / √c`
+  set K₀ := 2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c
+  have hK₀ : invConst n k A₀ C c = K₀ * (1 + C) := rfl
+  have hinv : 0 ≤ K₀ := by positivity
+  have hcore : 2 ^ n * (n * S) ^ k * A₀ * (√h ^ n * √LK) ≤ K₀ * √LT := by
     calc 2 ^ n * (n * S) ^ k * A₀ * (√h ^ n * √LK)
         ≤ 2 ^ n * (n * S) ^ k * A₀ * (√(8 ^ n) * (n * a) ^ k / √c * √LT) :=
           mul_le_mul_of_nonneg_left hkey (by positivity)
       _ = 2 ^ n * A₀ * √(8 ^ n) * ((n * S) ^ k * (n * a) ^ k) / √c * √LT := by ring
-      _ ≤ 2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * √LT := by
-          gcongr
-  have hinv : 0 ≤ 2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c := by positivity
+      _ ≤ (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c) * √LT := by gcongr
   constructor
   · intro x hx
     have hy := (mem_closedInterior_iff_refMapInv _).1 hx
@@ -362,11 +361,9 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
       _ ≤ √h ^ n * (2 ^ n * (n * S) ^ k * (A₀ * √LK)) :=
           mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left (hr1 _ hy) (by positivity)) hsq
       _ = 2 ^ n * (n * S) ^ k * A₀ * (√h ^ n * √LK) := by ring
-      _ ≤ 2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * √LT := hcore
+      _ ≤ K₀ * √LT := hcore
       _ ≤ invConst n k A₀ C c * √LT := by
-          unfold invConst
-          refine mul_le_mul_of_nonneg_right ?_ hLT
-          exact le_mul_of_one_le_right hinv (by linarith)
+          rw [hK₀]; exact mul_le_mul_of_nonneg_right (le_mul_of_one_le_right hinv (by linarith)) hLT
   · intro x hx x' hx'
     have hy := (mem_closedInterior_iff_refMapInv _).1 hx
     have hy' := (mem_closedInterior_iff_refMapInv _).1 hx'
@@ -384,21 +381,13 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
             (by positivity)) (by positivity)
           exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hyy hA₀) hLK
       _ = (h * S) * ‖x - x'‖ * (2 ^ n * (n * S) ^ k * A₀ * (√h ^ n * √LK)) := by ring
-      _ ≤ C * ‖x - x'‖ * (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * √LT) :=
+      _ ≤ C * ‖x - x'‖ * (K₀ * √LT) :=
           mul_le_mul (mul_le_mul_of_nonneg_right hhS (norm_nonneg _)) hcore (by positivity)
             (by positivity)
       _ ≤ invConst n k A₀ C c * ‖x - x'‖ * √LT := by
-          unfold invConst
-          have : C * (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c) ≤
-              2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * (1 + C) := by
-            nlinarith
+          rw [hK₀]
           have h0 : 0 ≤ ‖x - x'‖ * √LT := by positivity
-          calc C * ‖x - x'‖ * (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * √LT)
-              = (C * (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c)) *
-                  (‖x - x'‖ * √LT) := by ring
-            _ ≤ (2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * (1 + C)) *
-                  (‖x - x'‖ * √LT) := mul_le_mul_of_nonneg_right this h0
-            _ = _ := by ring
+          nlinarith [mul_le_mul_of_nonneg_right (show C * K₀ ≤ K₀ * (1 + C) by nlinarith) h0]
 
 /-! ### Instances: polynomial forms and trimmed linear forms -/
 

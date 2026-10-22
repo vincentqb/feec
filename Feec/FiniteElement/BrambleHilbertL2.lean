@@ -612,33 +612,13 @@ theorem enorm_sub_avgTaylorPoly_le_riesz [CompleteSpace G] (hn : 0 < n) {K U : S
   have hHm : Measurable fun p : (Fin n → ℝ) × ℝ =>
       ENNReal.ofReal ((1 - p.2) ^ k / k.factorial) * F (p.1 + p.2 • (x - p.1)) *
         ‖x - p.1‖ₑ ^ (k + 1) := by
-    refine Measurable.mul (Measurable.mul ?_ ?_) ?_
-    · exact ENNReal.measurable_ofReal.comp
-        (by fun_prop : Continuous fun p : (Fin n → ℝ) × ℝ => (1 - p.2) ^ k / k.factorial).measurable
-    · exact hFm.comp
-        (by fun_prop : Continuous fun p : (Fin n → ℝ) × ℝ => p.1 + p.2 • (x - p.1)).measurable
-    · exact (continuous_enorm.comp
-        (by fun_prop : Continuous fun p : (Fin n → ℝ) × ℝ => x - p.1)).measurable.pow_const (k + 1)
+    fun_prop
   have hΨm : Measurable fun p : ℝ × (Fin n → ℝ) =>
       ENNReal.ofReal ((1 - p.1) ^ k / k.factorial) * ENNReal.ofReal |((1 - p.1) ^ n)⁻¹| *
         g p.1 p.2 := by
-    have h1 : Measurable fun p : ℝ × (Fin n → ℝ) => ENNReal.ofReal ((1 - p.1) ^ k / k.factorial) :=
-      ENNReal.measurable_ofReal.comp
-        (by fun_prop : Continuous fun p : ℝ × (Fin n → ℝ) => (1 - p.1) ^ k / k.factorial).measurable
-    have h2 : Measurable fun p : ℝ × (Fin n → ℝ) => ENNReal.ofReal |((1 - p.1) ^ n)⁻¹| :=
-      ENNReal.measurable_ofReal.comp (continuous_abs.measurable.comp
-        (((measurable_fst (α := ℝ) (β := Fin n → ℝ)).const_sub (1 : ℝ)).pow_const n).inv)
-    have h3 : Measurable fun p : ℝ × (Fin n → ℝ) => F p.2 := hFm.comp measurable_snd
-    have h4 : Measurable fun p : ℝ × (Fin n → ℝ) =>
-        (ENNReal.ofReal (1 - p.1)⁻¹ * ‖x - p.2‖ₑ) ^ (k + 1) :=
-      ((ENNReal.measurable_ofReal.comp
-        ((measurable_fst (α := ℝ) (β := Fin n → ℝ)).const_sub (1 : ℝ)).inv).mul
-        (continuous_enorm.comp (by fun_prop :
-          Continuous fun p : ℝ × (Fin n → ℝ) => x - p.2)).measurable).pow_const (k + 1)
-    have h5 : Measurable fun p : ℝ × (Fin n → ℝ) =>
-        S.indicator (1 : ℝ × (Fin n → ℝ) → ℝ≥0∞) (p.1, p.2) :=
+    have h5 : Measurable fun p : ℝ × (Fin n → ℝ) => S.indicator (1 : ℝ × (Fin n → ℝ) → ℝ≥0∞) (p.1, p.2) :=
       (measurable_const.indicator hSm).comp (measurable_fst.prodMk measurable_snd)
-    exact (h1.mul h2).mul ((h3.mul h4).mul h5)
+    fun_prop
   -- the change of variables at fixed time
   have h4 : ∀ t ∈ Ioo (0 : ℝ) 1, ∫⁻ y in K, ENNReal.ofReal ((1 - t) ^ k / k.factorial) *
       F (y + t • (x - y)) * ‖x - y‖ₑ ^ (k + 1) ≤ ∫⁻ z, ENNReal.ofReal ((1 - t) ^ k /

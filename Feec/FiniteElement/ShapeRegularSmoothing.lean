@@ -398,6 +398,41 @@ theorem volume_badSet (y : Fin n → ℝ) : volume (badSet M y) = 0 := by
     _ ≤ s.card + 1 := by have := Finset.card_image_le (s := s) (f := T.points); omega
     _ ≤ n := by omega
 
+/-- **The first exit point** of a segment from a closed set. -/
+theorem exists_mem_frontier_lineMap {K : Set (Fin n → ℝ)} (hK : IsClosed K) {a b : Fin n → ℝ}
+    (ha : a ∈ K) (hb : b ∉ K) :
+    ∃ s ∈ Set.Icc (0 : ℝ) 1, AffineMap.lineMap a b s ∈ frontier K ∧
+      AffineMap.lineMap a b '' Set.Icc 0 s ⊆ K := by
+  set φ : ℝ → Fin n → ℝ := fun s => AffineMap.lineMap a b s
+  have hφc : Continuous φ := AffineMap.lineMap_continuous
+  set I : Set ℝ := {s | s ∈ Set.Icc (0 : ℝ) 1 ∧ φ s ∉ K}
+  have h1I : (1 : ℝ) ∈ I := ⟨⟨zero_le_one, le_rfl⟩, by simpa [φ] using hb⟩
+  have hbdd : BddBelow I := ⟨0, fun s hs => hs.1.1⟩
+  set s₀ := sInf I
+  have hs0 : 0 ≤ s₀ := le_csInf ⟨1, h1I⟩ fun s hs => hs.1.1
+  have hs1 : s₀ ≤ 1 := csInf_le hbdd h1I
+  have hc : φ s₀ ∈ closure Kᶜ :=
+    map_mem_closure hφc (csInf_mem_closure ⟨1, h1I⟩ hbdd) fun s hs => hs.2
+  have hsub : φ '' Set.Icc 0 s₀ ⊆ K := by
+    rintro _ ⟨s, hs, rfl⟩
+    rcases hs.2.lt_or_eq with hlt | heq
+    · by_contra hns
+      exact (notMem_of_lt_csInf hlt hbdd) ⟨⟨hs.1, hlt.le.trans hs1⟩, hns⟩
+    · subst heq
+      rcases hs0.lt_or_eq with hpos | h0
+      · have hmaps : Set.MapsTo φ (Set.Ico 0 s₀) K := by
+          intro s' hs'
+          by_contra hns
+          exact (notMem_of_lt_csInf hs'.2 hbdd) ⟨⟨hs'.1, hs'.2.le.trans hs1⟩, hns⟩
+        have hmem : s₀ ∈ closure (Set.Ico 0 s₀) := by
+          rw [closure_Ico hpos.ne]; exact ⟨hs0, le_rfl⟩
+        exact hK.closure_eq ▸ map_mem_closure hφc hmem hmaps
+      · have : φ s₀ = a := by simp [φ, ← h0]
+        rw [this]; exact ha
+  refine ⟨s₀, ⟨hs0, hs1⟩, ?_, hsub⟩
+  rw [frontier_eq_closure_inter_closure, hK.closure_eq]
+  exact ⟨hsub ⟨s₀, ⟨hs0, le_rfl⟩, rfl⟩, hc⟩
+
 /-- **Frontier points lie on boundary facets** (the pseudo-manifold property of conforming
 meshes): if a point `z` of `T₁ ∈ M` lies in the topological boundary of `cl Ω`, some boundary
 facet contains every vertex of `T₁` at which the barycentric coordinate of `z` is positive.
@@ -452,40 +487,14 @@ theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n
     rw [volume_badSet] at h1
     exact (hWo.measure_pos volume hWne).ne' (le_antisymm h1 bot_le)
   -- the first exit point `z'` of the segment `[y, w]` from `cl Ω`
-  set φ : ℝ → Fin n → ℝ := fun s => AffineMap.lineMap y w s
-  have hφc : Continuous φ := AffineMap.lineMap_continuous
-  set I : Set ℝ := {s | s ∈ Set.Icc (0 : ℝ) 1 ∧ φ s ∉ closure M.domain}
-  have h1I : (1 : ℝ) ∈ I := ⟨⟨zero_le_one, le_rfl⟩, by simpa [φ] using hwW.2⟩
-  have hbdd : BddBelow I := ⟨0, fun s hs => hs.1.1⟩
-  set s₀ := sInf I
-  have hs0 : 0 ≤ s₀ := le_csInf ⟨1, h1I⟩ fun s hs => hs.1.1
-  have hs1 : s₀ ≤ 1 := csInf_le hbdd h1I
-  set z' := φ s₀
-  have hz'c : z' ∈ closure (closure M.domain)ᶜ :=
-    map_mem_closure hφc (csInf_mem_closure ⟨1, h1I⟩ hbdd) fun s hs => hs.2
-  have hcompl : closure (closure M.domain)ᶜ = (interior (closure M.domain))ᶜ := closure_compl
-  have hs0pos : 0 < s₀ := by
-    rcases hs0.lt_or_eq with h | h
-    · exact h
-    · exfalso
-      have : z' = y := by simp [z', φ, ← h]
-      rw [hcompl, this] at hz'c
-      exact hz'c hyint
-  have hz'Ω : z' ∈ closure M.domain := by
-    have hsub : Set.MapsTo φ (Set.Ico 0 s₀) (closure M.domain) := by
-      intro s hs
-      by_contra hns
-      exact (notMem_of_lt_csInf hs.2 hbdd) ⟨⟨hs.1, hs.2.le.trans hs1⟩, hns⟩
-    have hmem : s₀ ∈ closure (Set.Ico 0 s₀) := by
-      rw [closure_Ico hs0pos.ne]; exact ⟨hs0, le_rfl⟩
-    exact closure_closure (s := M.domain) ▸ map_mem_closure hφc hmem hsub
-  have hz'b : z' ∈ Metric.ball z ε := by
-    have hseg : z' ∈ segment ℝ y w := by
-      rw [segment_eq_image_lineMap]; exact ⟨s₀, ⟨hs0, hs1⟩, rfl⟩
-    exact (convex_ball z ε).segment_subset hyb hwW.1 hseg
-  have hz'U := hball hz'b
-  have hz'int : z' ∉ interior (closure M.domain) := by
-    rw [hcompl] at hz'c; exact hz'c
+  obtain ⟨s₀, ⟨hs0, hs1⟩, hz'f, -⟩ :=
+    exists_mem_frontier_lineMap isClosed_closure (interior_subset hyint) hwW.2
+  set z' := AffineMap.lineMap y w s₀
+  have hz'Ω : z' ∈ closure M.domain := isClosed_closure.frontier_subset hz'f
+  have hz'int : z' ∉ interior (closure M.domain) := hz'f.2
+  have hs0pos : 0 < s₀ := hs0.lt_of_ne fun h => hz'int (by simpa [z', ← h] using hyint)
+  have hz'U := hball <| (convex_ball z ε).segment_subset hyb hwW.1 <| by
+    rw [segment_eq_image_lineMap]; exact ⟨s₀, ⟨hs0, hs1⟩, rfl⟩
   -- the simplex `T₂` containing `z'`
   have hz'cov := hz'Ω
   rw [← M.biUnion_closedInterior, Set.mem_iUnion₂] at hz'cov
@@ -526,23 +535,16 @@ theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n
       have hw1 := T₂.affineBasis.sum_coord_apply_eq_one z'
       have e := T₂.affineBasis.affineCombination_coord_eq_self z'
       rw [Finset.affineCombination_eq_linear_combination _ _ _ hw1] at e
-      have hoff : ∀ l ∈ Finset.univ, l ∉ s → T₂.affineBasis.coord l z' • T₂.points l = 0 := by
-        intro l _ hl
-        have : l = i₀ ∨ l = j₁ := by
-          by_contra h; push Not at h
-          exact hl (Finset.mem_erase.2 ⟨h.2, Finset.mem_erase.2 ⟨h.1, Finset.mem_univ _⟩⟩)
-        rcases this with rfl | rfl
-        · rw [hi₀, zero_smul]
-        · rw [← h0, zero_smul]
+      have hz0 : ∀ l ∉ s, T₂.affineBasis.coord l z' = 0 := fun l hl => by
+        by_cases h1 : l = i₀
+        · rw [h1, hi₀]
+        by_cases h2 : l = j₁
+        · rw [h2, ← h0]
+        exact absurd (Finset.mem_erase.2 ⟨h2, Finset.mem_erase.2 ⟨h1, Finset.mem_univ _⟩⟩) hl
+      have hoff : ∀ l ∈ Finset.univ, l ∉ s → T₂.affineBasis.coord l z' • T₂.points l = 0 :=
+        fun l _ hl => by rw [hz0 l hl, zero_smul]
       have hsum : ∑ l ∈ s, T₂.affineBasis.coord l z' = 1 := by
-        rw [← hw1, ← Finset.sum_subset (Finset.subset_univ s)]
-        intro l _ hl
-        have : l = i₀ ∨ l = j₁ := by
-          by_contra h; push Not at h
-          exact hl (Finset.mem_erase.2 ⟨h.2, Finset.mem_erase.2 ⟨h.1, Finset.mem_univ _⟩⟩)
-        rcases this with rfl | rfl
-        · exact hi₀
-        · exact h0.symm
+        rw [← hw1, ← Finset.sum_subset (Finset.subset_univ s) fun l _ hl => hz0 l hl]
       have hz'eq : z' = ∑ l ∈ s, T₂.affineBasis.coord l z' • T₂.points l := by
         rw [Finset.sum_subset (Finset.subset_univ s) hoff]
         simpa using e.symm
@@ -556,7 +558,7 @@ theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n
       subset_affineSpan ℝ _ (Finset.mem_coe.2 (Finset.mem_insert_self _ _))
     have hwS := AffineMap.lineMap_mem s₀⁻¹ hyS hz'S
     have hwe : AffineMap.lineMap y z' s₀⁻¹ = w := by
-      simp only [z', φ, AffineMap.lineMap_apply_module']
+      simp only [z', AffineMap.lineMap_apply_module']
       rw [add_sub_cancel_right, smul_smul, inv_mul_cancel₀ hs0pos.ne', one_smul, sub_add_cancel]
     rw [hwe] at hwS
     refine hwB ?_
@@ -580,41 +582,6 @@ theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n
     have hji : j ≠ i₀ := fun h => by rw [h, hi₀] at hjpos; exact lt_irrefl _ hjpos
     rw [← hj]; exact hiF j hji
 
-
-/-- **The first exit point** of a segment from a closed set. -/
-theorem exists_mem_frontier_lineMap {K : Set (Fin n → ℝ)} (hK : IsClosed K) {a b : Fin n → ℝ}
-    (ha : a ∈ K) (hb : b ∉ K) :
-    ∃ s ∈ Set.Icc (0 : ℝ) 1, AffineMap.lineMap a b s ∈ frontier K ∧
-      AffineMap.lineMap a b '' Set.Icc 0 s ⊆ K := by
-  set φ : ℝ → Fin n → ℝ := fun s => AffineMap.lineMap a b s
-  have hφc : Continuous φ := AffineMap.lineMap_continuous
-  set I : Set ℝ := {s | s ∈ Set.Icc (0 : ℝ) 1 ∧ φ s ∉ K}
-  have h1I : (1 : ℝ) ∈ I := ⟨⟨zero_le_one, le_rfl⟩, by simpa [φ] using hb⟩
-  have hbdd : BddBelow I := ⟨0, fun s hs => hs.1.1⟩
-  set s₀ := sInf I
-  have hs0 : 0 ≤ s₀ := le_csInf ⟨1, h1I⟩ fun s hs => hs.1.1
-  have hs1 : s₀ ≤ 1 := csInf_le hbdd h1I
-  have hc : φ s₀ ∈ closure Kᶜ :=
-    map_mem_closure hφc (csInf_mem_closure ⟨1, h1I⟩ hbdd) fun s hs => hs.2
-  have hsub : φ '' Set.Icc 0 s₀ ⊆ K := by
-    rintro _ ⟨s, hs, rfl⟩
-    rcases hs.2.lt_or_eq with hlt | heq
-    · by_contra hns
-      exact (notMem_of_lt_csInf hlt hbdd) ⟨⟨hs.1, hlt.le.trans hs1⟩, hns⟩
-    · subst heq
-      rcases hs0.lt_or_eq with hpos | h0
-      · have hmaps : Set.MapsTo φ (Set.Ico 0 s₀) K := by
-          intro s' hs'
-          by_contra hns
-          exact (notMem_of_lt_csInf hs'.2 hbdd) ⟨⟨hs'.1, hs'.2.le.trans hs1⟩, hns⟩
-        have hmem : s₀ ∈ closure (Set.Ico 0 s₀) := by
-          rw [closure_Ico hpos.ne]; exact ⟨hs0, le_rfl⟩
-        exact hK.closure_eq ▸ map_mem_closure hφc hmem hmaps
-      · have : φ s₀ = a := by simp [φ, ← h0]
-        rw [this]; exact ha
-  refine ⟨s₀, ⟨hs0, hs1⟩, ?_, hsub⟩
-  rw [frontier_eq_closure_inter_closure, hK.closure_eq]
-  exact ⟨hsub ⟨s₀, ⟨hs0, le_rfl⟩, rfl⟩, hc⟩
 
 /-- **Boundary faces near outside points** (the geometric lemma for the vanishing-trace family):
 if a point `t` outside the interior of `cl Ω` is near a face point `x` of `g` lying in a simplex

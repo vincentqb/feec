@@ -900,9 +900,7 @@ theorem whitneySpace_refVertex_eq_map_polyFormMinus (k : ℕ) :
       have hf : f.1 = insert 0 (g.map (Fin.succAboveOrderEmb 0).toEmbedding) := by
         ext i
         rw [mem_insert, hmap]
-        by_cases hi : i = 0
-        · simp [hi, h0]
-        · simp [hi]
+        by_cases hi : i = 0 <;> simp [hi, h0]
       have hg : #g = k := by
         have := f.2
         rw [hf, card_insert_of_notMem (by rw [hmap]; simp), card_map] at this
@@ -921,8 +919,7 @@ theorem whitneySpace_refVertex_eq_map_polyFormMinus (k : ℕ) :
         · simp [((isDeg_single (R := ℝ) hg).wedge (fun _ => (1 : ℝ))) s hs]
       · funext x
         rw [map_add, Pi.add_apply, Koszul.koszulₗ_apply, evalForm_koszul, evalForm_C, evalForm_C,
-          hf,
-          whitneyForm_refVertex_insert_zero, hg]
+          hf, whitneyForm_refVertex_insert_zero, hg]
         have : (fun s => -(k.factorial : ℝ) *
             wedge (fun _ => 1) (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s) =
             (-(k.factorial : ℝ)) • wedge (fun _ => 1) (Pi.single g 1) := rfl
@@ -934,12 +931,8 @@ theorem whitneySpace_refVertex_eq_map_polyFormMinus (k : ℕ) :
       have hf : f.1 = g.map (Fin.succAboveOrderEmb 0).toEmbedding := by
         ext i
         rw [hmap]
-        by_cases hi : i = 0
-        · simp [hi, h0]
-        · simp [hi]
-      have hg : #g = k + 1 := by
-        have := f.2
-        rwa [hf, card_map] at this
+        by_cases hi : i = 0 <;> simp [hi, h0]
+      have hg : #g = k + 1 := by simpa [hf] using f.2
       refine ⟨Koszul.koszulₗ ℝ (Fin n) (fun s => MvPolynomial.C ((k.factorial : ℝ) *
           (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s)),
         Submodule.mem_sup_right (Submodule.mem_map_of_mem (f := Koszul.koszulₗ ℝ (Fin n))
@@ -948,8 +941,7 @@ theorem whitneySpace_refVertex_eq_map_polyFormMinus (k : ℕ) :
       · simp [isDeg_single (R := ℝ) hg s hs]
       · funext x
         rw [Koszul.koszulₗ_apply, evalForm_koszul, evalForm_C, hf, whitneyForm_refVertex_map_succ,
-          hg,
-          Nat.add_sub_cancel]
+          hg, Nat.add_sub_cancel]
         have : (fun s => (k.factorial : ℝ) * (Pi.single g (1 : ℝ) : Finset (Fin n) → ℝ) s) =
             (k.factorial : ℝ) • (Pi.single g 1 : Finset (Fin n) → ℝ) := rfl
         rw [this, ExteriorFibre.interior_smul]

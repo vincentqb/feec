@@ -155,9 +155,6 @@ def equivOfInfSup (h : InfSup B γ) (hs : SeparatingRight B) : X ≃L[𝕜] (Y �
   ContinuousLinearEquiv.ofBijective B (LinearMap.ker_eq_bot.2 h.injective)
     (LinearMap.range_eq_top.2 (h.surjective hs))
 
-@[simp] theorem equivOfInfSup_apply (h : InfSup B γ) (hs : SeparatingRight B) (x : X) :
-    equivOfInfSup h hs x = B x := rfl
-
 omit [CompleteSpace Y] in
 /-- The converse of Babuška–Nečas: a bijective `B` satisfies the inf-sup condition (bounded
 inverse theorem). [QuennevilleBelair2015], Thm 4.9 -/
@@ -283,32 +280,6 @@ def toSesq (B : X →L[ℝ] Y →L[ℝ] ℝ) : X →L[ℝ] Y →L⋆[ℝ] ℝ :=
 @[simp] theorem toSesq_apply (B : X →L[ℝ] Y →L[ℝ] ℝ) (x : X) (y : Y) : toSesq B x y = B x y :=
   rfl
 
-/-- A real linear functional seen as an antilinear one. -/
-def toAnti (f : Y →L[ℝ] ℝ) : Y →L⋆[ℝ] ℝ :=
-  LinearMap.mkContinuous
-    { toFun := f, map_add' := f.map_add, map_smul' := fun a y => by simp } ‖f‖ f.le_opNorm
-
-@[simp] theorem toAnti_apply (f : Y →L[ℝ] ℝ) (y : Y) : toAnti f y = f y := rfl
-
-theorem norm_toAnti (f : Y →L[ℝ] ℝ) : ‖toAnti f‖ = ‖f‖ :=
-  le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun y => f.le_opNorm y)
-    (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun y => (toAnti f).le_opNorm y)
-
-theorem toSesq_apply_eq (B : X →L[ℝ] Y →L[ℝ] ℝ) (x : X) : toSesq B x = toAnti (B x) := rfl
-
-theorem norm_toSesq_apply (B : X →L[ℝ] Y →L[ℝ] ℝ) (x : X) : ‖toSesq B x‖ = ‖B x‖ :=
-  norm_toAnti (B x)
-
-theorem toAnti_injective : Function.Injective (toAnti : (Y →L[ℝ] ℝ) → Y →L⋆[ℝ] ℝ) :=
-  fun f g h => ContinuousLinearMap.ext fun y => by
-    simpa using congrArg (fun F => F y) h
-
-theorem toAnti_surjective : Function.Surjective (toAnti : (Y →L[ℝ] ℝ) → Y →L⋆[ℝ] ℝ) := by
-  intro F
-  refine ⟨LinearMap.mkContinuous
-    { toFun := F, map_add' := F.map_add, map_smul' := fun a y => by simp } ‖F‖ F.le_opNorm,
-    ContinuousLinearMap.ext fun y => rfl⟩
-
 end Real
 
 end Feec.Variational
@@ -349,11 +320,6 @@ theorem infSup_iff_mul_norm_symm_le (h : InfSup B γ) (hs : SeparatingRight B) {
 end Feec.Variational
 
 namespace Feec.Variational
-
-theorem norm_toSesq_le {X Y : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
-    [NormedAddCommGroup Y] [NormedSpace ℝ Y] (B : X →L[ℝ] Y →L[ℝ] ℝ) : ‖toSesq B‖ ≤ ‖B‖ :=
-  ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x => by
-    rw [norm_toSesq_apply]; exact B.le_opNorm x
 
 end Feec.Variational
 

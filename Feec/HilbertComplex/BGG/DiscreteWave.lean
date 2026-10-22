@@ -25,9 +25,9 @@ the projection hypotheses are discharged (`exists_discreteSolution_norm_sub_le_e
 * `Feec.BGG.exists_discreteSolution_norm_sub_le_ellipticProjection`: the same for the elliptic
   projection (6.4) itself, all projection hypotheses proved.
 * `Feec.BGG.norm_sub_le_mul_of_ellipticProjection_L2`: the rate form
-  `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + 2t)`, e.g. `ε = C h` from `Discrete.strang_energy_rate`.
+  `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + 2t)`, e.g. `ε = C h` from `Discrete.strang_rate_of_regularPotential`.
 * `Feec.BGG.Discrete.ellipticData_embedH`: for a discretization `Q : Discrete D` and an energy
-  embedding `ιc` (`Discrete.IsEnergyEmbedding`; one exists, `Discrete.exists_energyEmbedding`),
+  embedding `ιc` (`Discrete.IsEnergyEmbedding`),
   the data of the Ch. 6 theorems are the data `Discrete.ellipticDataH` of the Strang bound.
 * `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate`: end-to-end `O(h)` convergence of
   (6.3) on `Q`, `‖ξ(t) − ξₕ(t)‖ ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`, assuming in
@@ -128,39 +128,9 @@ theorem norm_sub_le_of_ellipticProjection_L2 {X Z Y : Type*} [NormedAddCommGroup
       change _ ≤ (‖p' t - ξ' t‖ + ‖p t - ξ t‖) * ‖e t‖
       linarith
 
-/-- `norm_sub_le_of_ellipticProjection_L2` for a projection given by a fixed continuous linear
-map `P` (the form of `norm_sub_le_of_ellipticProjection`): the bound gains `∫₀ᵗ ‖Pξ − ξ‖`. -/
-theorem norm_sub_le_of_ellipticProjection_L2' {X Z Y : Type*} [NormedAddCommGroup X]
-    [InnerProductSpace ℝ X]
-    [AddCommGroup Z] [Module ℝ Z] [NormedAddCommGroup Y] [InnerProductSpace ℝ Y]
-    (Xh : Submodule ℝ (X × Z)) (A Ah : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ)
-    (Bh : (X × Z) →ₗ[ℝ] Y) (P : X →L[ℝ] X) {T : ℝ}
-    (ξ ξ' : ℝ → X) (χ : ℝ → Z) (ℓ : ℝ → (X × Z) →ₗ[ℝ] ℝ) (F : ℝ → X)
-    (hξc : ContinuousOn ξ (Icc 0 T)) (hξ'c : ContinuousOn ξ' (Icc 0 T))
-    (hξd : ∀ t ∈ Ico 0 T, HasDerivWithinAt ξ (ξ' t) (Ici t) t)
-    (hcont : ∀ t ∈ Ico 0 T, ∀ η ∈ Xh, ⟪ξ' t, η.1⟫ + A (ξ t, χ t) η - ℓ t η = ⟪F t, η.1⟫)
-    (ξh ξh' : ℝ → X) (χh : ℝ → Z) (lamh : ℝ → Y)
-    (hmem : ∀ t ∈ Icc 0 T, (ξh t, χh t) ∈ Xh) (hBh : ∀ t ∈ Icc 0 T, Bh (ξh t, χh t) = 0)
-    (hξhc : ContinuousOn ξh (Icc 0 T))
-    (hξhd : ∀ t ∈ Ico 0 T, HasDerivWithinAt ξh (ξh' t) (Ici t) t)
-    (hdisc : ∀ t ∈ Ico 0 T, ∀ η ∈ Xh,
-      ⟪ξh' t, η.1⟫ + Ah (ξh t, χh t) η - ⟪lamh t, Bh η⟫ = ⟪F t, η.1⟫)
-    (Q : ℝ → Z) (lamP : ℝ → Y) (hPmem : ∀ t ∈ Icc 0 T, (P (ξ t), Q t) ∈ Xh)
-    (hPB : ∀ t ∈ Icc 0 T, Bh (P (ξ t), Q t) = 0)
-    (hproj : ∀ t ∈ Ico 0 T, ∀ η ∈ Xh,
-      ⟪P (ξ t), η.1⟫ + Ah (P (ξ t), Q t) η - ⟪lamP t, Bh η⟫ =
-        ⟪ξ t, η.1⟫ + A (ξ t, χ t) η - ℓ t η)
-    (hskew : ∀ η ∈ Xh, Ah η η = 0) :
-    ∀ t ∈ Icc 0 T, ‖ξ t - ξh t‖ ≤ ‖ξ t - P (ξ t)‖ + ‖P (ξ 0) - ξh 0‖ +
-      ∫ s in (0:ℝ)..t, (‖P (ξ' s) - ξ' s‖ + ‖P (ξ s) - ξ s‖) :=
-  norm_sub_le_of_ellipticProjection_L2 Xh A Ah Bh ξ ξ' χ ℓ F hξc hξ'c hcont ξh ξh' χh lamh
-    hmem hBh hξhc hξhd hdisc (fun t => P (ξ t)) (fun t => P (ξ' t)) Q lamP
-    (P.continuous.comp_continuousOn hξc) (P.continuous.comp_continuousOn hξ'c)
-    (fun t ht => P.hasFDerivAt.comp_hasDerivWithinAt t (hξd t ht)) hPmem hPB hproj hskew
-
 /-- **Rate form** of `norm_sub_le_of_ellipticProjection_L2`: if the projection errors
 `‖ξ − p‖`, `‖p' − ξ'‖` and the initial discrete error are `≤ ε` on `[0,T]` (e.g. `ε = C h` from
-`Discrete.strang_energy_rate` applied to `ξ` and to `ξ'`), then `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + 2t)`.
+`Discrete.strang_rate_of_regularPotential` applied to `ξ` and to `ξ'`), then `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + 2t)`.
 Cf. [QuennevilleBelair2015], Thm 4.14. -/
 theorem norm_sub_le_mul_of_ellipticProjection_L2 {X : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X]
@@ -433,29 +403,9 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
 
 /-- An *energy embedding* of the continuous dynamic state space `V⁰ × Ṽ¹ × V² × Ṽ²` into an inner
 product space `X`: `⟪ιc a, ιc b⟫ = (a₁,b₁) + (a₂,b₂) + (a₃,b₃) + (a₄,b₄)`. (The Mathlib product
-carries the sup norm, so `X` is typically an `L²` product; see `exists_energyEmbedding`.) -/
+carries the sup norm, so `X` is typically an `L²` product.) -/
 def IsEnergyEmbedding (ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X) : Prop :=
   ∀ a b, ⟪ιc a, ιc b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ + ⟪a.2.2.2, b.2.2.2⟫
-
-/-- **Energy embeddings exist**: the nested `L²` product
-`WithLp 2 (V⁰ × WithLp 2 (Ṽ¹ × WithLp 2 (V² × Ṽ²)))`. -/
-theorem exists_energyEmbedding (V0 Vt1 W2 Wt2 : Type*)
-    [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
-    [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
-    [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
-    [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2] :
-    ∃ ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] WithLp 2 (V0 × WithLp 2 (Vt1 × WithLp 2 (W2 × Wt2))),
-      IsEnergyEmbedding ιc := by
-  refine ⟨(WithLp.prodContinuousLinearEquiv 2 ℝ V0 _).symm.toContinuousLinearMap.comp
-    ((ContinuousLinearMap.id ℝ V0).prodMap
-      ((WithLp.prodContinuousLinearEquiv 2 ℝ Vt1 _).symm.toContinuousLinearMap.comp
-        ((ContinuousLinearMap.id ℝ Vt1).prodMap
-          (WithLp.prodContinuousLinearEquiv 2 ℝ W2 Wt2).symm.toContinuousLinearMap))), ?_⟩
-  intro a b
-  simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.coe_prodMap', Prod.map,
-    ContinuousLinearEquiv.coe_coe, WithLp.prodContinuousLinearEquiv_symm_apply,
-    ContinuousLinearMap.id_apply, WithLp.prod_inner_apply]
-  ring
 
 variable (Q) in
 /-- The embedding `Vₕ⁰ × Ṽₕ¹ × Vₕ² × Ṽₕ² → X` of the discrete dynamic state through `ιc`. -/
@@ -505,7 +455,7 @@ theorem ellipticData_embedH {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X} (hιc :
   simp only [ellipticDataH, LinearMap.coe_mk, AddHom.coe_mk, shiftedFormC, discreteSkewForm]
   ring
 
-/-- **Rate of the elliptic projection, embedded**: under the hypotheses of `strang_energy_rate`,
+/-- **Rate of the elliptic projection, embedded**: if the Strang data are `≤ (c h)²` (`hdata`),
 the embedded projection `ι Πₕ` of an exact state `a` is within `√(2(strangConst C_p + 1))|c||h|`
 of `ιc a` in `X`. -/
 theorem norm_sub_embedH_ellipticProjection_le {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
@@ -533,8 +483,7 @@ theorem norm_sub_embedH_ellipticProjection_le {Cp CR CS : ℝ} (H : Stability D 
 /-- **End-to-end `O(h)` convergence of the semi-discrete BGG wave system (6.3)** for a
 discretization `Q : Discrete D` (new: the thesis states no convergence rate for (6.3)).
 
-Setting: an energy embedding `ιc` of the continuous dynamic state into `X` (one exists,
-`exists_energyEmbedding`), `jc : Ṽ⁰ → Z`, the continuous forms `A`, `ℓ(t)` on `X × Z` that
+Setting: an energy embedding `ιc` of the continuous dynamic state into `X`, `jc : Ṽ⁰ → Z`, the continuous forms `A`, `ℓ(t)` on `X × Z` that
 restrict to `discreteSkewForm D` and `ℓ₁(t)(dτ − S₀ψ)` (`hA`, `hℓ`), the discrete forms `Ah`,
 `Bh` of `toSegmentH Q` (`hAh`, `hBh`), and an exact solution: dynamic state `a(t)`, algebraic
 state `φ(t)`, multiplier functional `ℓ₁(t)`, satisfying the exact equation on discrete tests

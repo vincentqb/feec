@@ -41,7 +41,7 @@ and the second half of the gap estimate, `norm_sub_starProjection_harmonic_le`).
 * `CochainProjection.norm_sub_starProjection_harmonic_le`: `‖q - P_ℌ q‖ ≤ ‖(I - π) P_ℌ q‖` for
   `q ∈ ℌₕ` ([AFW2010], Thm 3.5, second inequality); with the first inequality
   (`norm_sub_starProjection_harmonicW_le`) the gap between `ℌ` and `ℌₕ` is at most `μ` in both
-  directions (`norm_sub_starProjection_harmonic_le_mul`, `norm_sub_starProjection_harmonicW_le_mul`).
+  directions (`norm_sub_starProjection_harmonic_le_mul`).
 * `CochainProjection.norm_inner_le_of_orthogonal_harmonic`: the consistency estimate.
 * `CochainProjection.infSup_mixedForm_of_graph`: uniform discrete inf-sup with a graph-bounded
   cochain projection.
@@ -132,10 +132,6 @@ def embD (i : ι) : S.toHilbertComplex.domainSpace i →ₗᵢ[𝕜] H.domainSpa
 @[simp] theorem domainIncl_embD (i : ι) (a : S.toHilbertComplex.domainSpace i) :
     H.domainIncl i (S.embD i a) = S.toW i a := rfl
 
-theorem d_domainCoord_embD (i j : ι) (a : S.toHilbertComplex.domainSpace i) :
-    H.d i j (H.domainCoord i j (S.embD i a)) =
-      (S.toHilbertComplex.d i j (S.toHilbertComplex.domainCoord i j a) : W j) := rfl
-
 /-- The image of `embD`: the discrete domain space `Vₕⁱ` inside `Vⁱ`. -/
 def domainSub (i : ι) : Submodule 𝕜 (H.domainSpace i) := LinearMap.range (S.embD i).toLinearMap
 
@@ -218,13 +214,6 @@ theorem norm_sub_starProjection_harmonic_le_mul {j : ι} (hj : H.ClosedRangeAt j
     (hq : q ∈ S.harmonicW j) : ‖q - (H.harmonic j).starProjection q‖ ≤ μ * ‖q‖ :=
   (P.norm_sub_starProjection_harmonic_le hj hq).trans ((hμ _ (Submodule.starProjection_apply_mem
     _ _)).trans (mul_le_mul_of_nonneg_left (Submodule.norm_starProjection_apply_le _ _) hμ0))
-
-variable [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- With a gap bound `‖q - π q‖ ≤ μ ‖q‖` on `ℌ`: `‖q - P_{ℌₕ} q‖ ≤ μ ‖q‖` for `q ∈ ℌ`. -/
-theorem norm_sub_starProjection_harmonicW_le_mul {j : ι} {μ : ℝ}
-    (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖) {q : W j} (hq : q ∈ H.harmonic j) :
-    ‖q - (S.harmonicW j).starProjection q‖ ≤ μ * ‖q‖ :=
-  (P.norm_sub_starProjection_harmonicW_le hq).trans (hμ q hq)
 
 /-- **The harmonic gap** `μ = sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π q‖` ([AFW2010], (3.20)); it is the
 smallest `μ` with `‖q - π q‖ ≤ μ ‖q‖` on `ℌʲ` when that set of `μ` is nonempty

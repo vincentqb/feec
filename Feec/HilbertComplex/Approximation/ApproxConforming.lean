@@ -251,8 +251,6 @@ def toApprox : ApproxFEEC H κ where
     (ContinuousLinearMap.opNorm_le_bound _ F.projConst_nonneg fun x =>
       F.norm_piProj_le h x).trans (le_max_right _ _)⟩⟩
 
-theorem toApprox_incl (h : κ) (x : F.Xh h) : F.toApprox.incl h x = x := rfl
-
 theorem norm_toApprox_incl_le (h : κ) : ‖F.toApprox.incl h‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [one_mul]; exact le_rfl
 
@@ -278,8 +276,6 @@ def toCore : F.toApprox.Core :=
         have := (F.isApproximating.tendstoUniformlyOn_ellipticProjection
           isCompact_singleton).tendsto_at (mem_singleton ζ)
         exact tendsto_iff_norm_sub_tendsto_zero.1 this))
-
-theorem toCore_data : F.toCore.Data = H.wave.domainSq := rfl
 
 theorem dense_toCore_data : Dense (F.toCore.Data : Set (PiLp 2 W)) :=
   H.isSkewAdjoint_wave.dense_domainSq
@@ -361,22 +357,6 @@ theorem exists_eq_sol {T : ℝ} (hT : 0 ≤ T) {h : κ} {ξh ξh' : ℝ → H.to
 `constrainedFEEC` follows from it: `constrainedFEEC_of_approxFEEC`). -/
 theorem approxFEEC_verdict : F.toApprox.Verdict F.toCore := approxFEEC _ _
 
-/-- **Convergence of every family of semi-discrete solutions** (item 3 of `constrainedFEEC`),
-re-derived from `approxFEEC_converges`: the solutions are discrete orbits (`exists_eq_sol`) and
-the core `D(L²)` is dense. -/
-theorem tendstoUniformlyOn_of_approxFEEC (T : ℝ) (x : PiLp 2 W)
-    (ξh ξh' : κ → ℝ → H.totalD.GraphSpace)
-    (hξh : ∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h))
-    (h0 : Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x)) :
-    TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t)) (fun t => H.waveGroup.S t x)
-      F.l (Icc 0 T) := by
-  rcases lt_or_ge T 0 with hT | hT
-  · rw [Icc_eq_empty (by linarith)]; exact tendstoUniformlyOn_empty
-  choose v hv0 hv using fun h => F.exists_eq_sol hT (hξh h)
-  have hc := approxFEEC_converges F.toApprox F.toCore T (F.mem_toCore_closure x)
-    (v := v) (h0.congr fun h => (hv0 h).symm)
-  refine hc.congr (Eventually.of_forall fun h t ht => (hv h t ht).symm)
-
 variable {F} in
 /-- **Rate classes transfer**, with `C ↦ (1 + C_P) C`, `C' ↦ 2 (1 + C_P) C`. -/
 def RateClass.toApprox {T : ℝ} (R : F.RateClass T) : F.toApprox.RateClass T where
@@ -426,17 +406,6 @@ def RateClass.toApprox {T : ℝ} (R : F.RateClass T) : F.toApprox.RateClass T wh
     calc _ ≤ (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α * R.classNorm x) +
           (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α * R.classNorm x) := add_le_add h1 h2
       _ = _ := by ring
-
-variable {F} in
-theorem RateClass.toApprox_data {T : ℝ} (R : F.RateClass T) : R.toApprox.Data = R.Data := rfl
-
-variable {F} in
-theorem RateClass.toApprox_C {T : ℝ} (R : F.RateClass T) :
-    R.toApprox.C = (1 + ellipticConst H) * R.C := rfl
-
-variable {F} in
-theorem RateClass.toApprox_C' {T : ℝ} (R : F.RateClass T) :
-    R.toApprox.C' = 2 * ((1 + ellipticConst H) * R.C) := rfl
 
 variable {F} in
 theorem RateClass.toApprox_p {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hx : x ∈ R.Data)
@@ -765,9 +734,6 @@ def toCore (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) 
     exact Metric.tendstoUniformlyOn_iff.2 fun ε hε =>
       Eventually.of_forall fun _ _ _ => by rw [dist_self]; exact hε
 
-theorem toCore_data (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
-    (S.toCore K hK).Data = ⊤ := rfl
-
 /-- **Rate classes from truncation rates** (`C' = 0`): a truncation estimate
 `‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` gives the rate on every horizon (the truncation error is conserved by
 the wave group). -/
@@ -788,9 +754,6 @@ def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)
   consistency x _ N t _ := by
     change ‖(S.comparison K hK T).defect x N t‖ ≤ _
     rw [comparison_defect, norm_zero]; simp
-
-theorem rateClass_data (K hK) (T : ℝ) (Data : Set (PiLp 2 W)) classNorm meshSize α C hrate :
-    (S.rateClass K hK T Data classNorm meshSize α C hrate).Data = Data := rfl
 
 end ReducingFamily
 

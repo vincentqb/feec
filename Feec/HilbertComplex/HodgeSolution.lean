@@ -34,9 +34,9 @@ orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
 
 ## Main results
 
-* `solutionOp_mem_orthogonal_harmonic`, `solutionOp_apply_harmonic`, `solutionOp_sub_starProjection`.
+* `solutionOp_mem_orthogonal_harmonic`.
 * `hodgeLaplacian_solutionOp`, `eq_solutionOp`: the strong form and uniqueness.
-* `isSelfAdjoint_solutionOp`, `isPositive_solutionOp`, `inner_solutionOp_left`.
+* `inner_solutionOp_left`.
 * `norm_solutionOp_le`, `norm_sq_solutionSigma_add_norm_sq_d_le`, `norm_solutionSigma_le`,
   `norm_d_solutionOp_le`, `norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le`,
   `norm_d_solutionSigma_add_norm_adjoint_d_le`: the a priori bounds of [AFW2010], §3.2.
@@ -88,8 +88,6 @@ def mixedRHSL (i j : ι) : W j →L[𝕜] (H.MixedSpace i j →L⋆[𝕜] 𝕜) 
         simp only [mixedRHS_apply, _root_.smul_apply, inner_smul_right,
           RingHom.id_apply, smul_eq_mul] }
     1 fun f => by rw [one_mul]; exact H.norm_mixedRHS_le f
-
-@[simp] theorem mixedRHSL_apply (i j : ι) (f : W j) : H.mixedRHSL i j f = H.mixedRHS i j f := rfl
 
 variable {i j k : ι}
 
@@ -161,17 +159,8 @@ def solutionSigmaV : W j →L[𝕜] H.domainSpace i :=
 /-- `σ = d† K f`, as a map into `Wⁱ`. -/
 def solutionSigma : W j →L[𝕜] W i := (H.domainIncl i).comp (H.solutionSigmaV hij hjk hj hk)
 
-theorem solutionOpV_apply (f : W j) :
-    H.solutionOpV hij hjk hj hk f = (H.mixedSolution hij hjk hj hk f).snd.fst := rfl
-
 theorem solutionOp_apply (f : W j) :
     H.solutionOp hij hjk hj hk f = H.domainIncl j (H.solutionOpV hij hjk hj hk f) := rfl
-
-theorem solutionSigmaV_apply (f : W j) :
-    H.solutionSigmaV hij hjk hj hk f = (H.mixedSolution hij hjk hj hk f).fst := rfl
-
-theorem solutionSigma_apply (f : W j) :
-    H.solutionSigma hij hjk hj hk f = H.domainIncl i (H.solutionSigmaV hij hjk hj hk f) := rfl
 
 /-- The mixed solution is `(d† K f, K f, P_ℌ f)`. -/
 theorem harmonic_mixedSolution (f : W j) :
@@ -191,25 +180,6 @@ theorem inner_harmonic_solutionOp (f : W j) {q : W j} (hq : q ∈ H.harmonic j) 
 theorem solutionOp_mem_orthogonal_harmonic (f : W j) :
     H.solutionOp hij hjk hj hk f ∈ (H.harmonic j)ᗮ :=
   (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_solutionOp hij hjk hj hk f hq
-
-/-- **`K = 0` on the harmonic forms.** -/
-theorem solutionOp_apply_harmonic {f : W j} (hf : f ∈ H.harmonic j) :
-    H.solutionOp hij hjk hj hk f = 0 := by
-  have hs : H.IsMixedSolution i j k f 0 0 ⟨f, hf⟩ := by
-    exact ⟨fun _ => by simp, fun _ => by simp, fun _ _ => by simp⟩
-  rw [solutionOp_apply, solutionOpV_apply, H.mixedSolution_eq hij hjk hj hk hs]
-  simp
-
-/-- `K (P_ℌ f) = 0`. -/
-theorem solutionOp_starProjection (f : W j) :
-    H.solutionOp hij hjk hj hk ((H.harmonic j).starProjection f) = 0 :=
-  H.solutionOp_apply_harmonic hij hjk hj hk (Submodule.starProjection_apply_mem _ _)
-
-/-- `K f = K (f - P_ℌ f)`. -/
-theorem solutionOp_sub_starProjection (f : W j) :
-    H.solutionOp hij hjk hj hk (f - (H.harmonic j).starProjection f) =
-      H.solutionOp hij hjk hj hk f := by
-  rw [_root_.map_sub, H.solutionOp_starProjection, sub_zero]
 
 /-! ### Domains and the strong form -/
 
@@ -329,21 +299,12 @@ theorem isSymmetric_solutionOp :
   rw [← inner_conj_symm f, H.inner_solutionOp_left, H.inner_solutionOp_left, _root_.map_add,
     inner_conj_symm, inner_conj_symm]
 
-theorem isSelfAdjoint_solutionOp : IsSelfAdjoint (H.solutionOp hij hjk hj hk) :=
-  ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.2 (H.isSymmetric_solutionOp hij hjk hj hk)
-
 /-- `re ⟪K f, f⟫ = ‖d† K f‖² + ‖d K f‖²`. -/
 theorem re_inner_solutionOp_self (f : W j) :
     RCLike.re ⟪H.solutionOp hij hjk hj hk f, f⟫ =
       ‖H.solutionSigma hij hjk hj hk f‖ ^ 2 +
         ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ^ 2 := by
   rw [H.inner_solutionOp_left, _root_.map_add, inner_self_eq_norm_sq, inner_self_eq_norm_sq]
-
-/-- **`K` is positive** (self-adjoint and `re ⟪K f, f⟫ ≥ 0`). -/
-theorem isPositive_solutionOp : (H.solutionOp hij hjk hj hk).IsPositive :=
-  ⟨H.isSymmetric_solutionOp hij hjk hj hk, fun f => by
-    change 0 ≤ RCLike.re ⟪H.solutionOp hij hjk hj hk f, f⟫
-    rw [H.re_inner_solutionOp_self]; positivity⟩
 
 /-! ### The a priori bounds -/
 

@@ -31,8 +31,7 @@ the variational crimes allowed here are the inner product of `Vₕ` (`Jₕ ≠ 1
 `πₕ` that need not be a cochain map, not a discrete differential independent of `𝐝`.
 
 No consistency hypothesis along exact solutions is made. The comparison uses `iₕ*`, which
-intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*` (`ApproxComplex.Family.inclL_adjoint_adjoint`,
-`iₕ` being a cochain map), so no adjoint-consistency hypothesis is needed. Operator-norm
+intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*` (`iₕ` being a cochain map), so no adjoint-consistency hypothesis is needed. Operator-norm
 consistency is not used and would be too strong in general (for the BGG scheme (6.5) of
 [QuennevilleBelair2015] the static strong consistency bound fails, per the unformalized audit
 recorded in `Feec.HilbertComplex.BGG.WeakConsistency`; that scheme enters through `ApproxFEEC`
@@ -333,9 +332,6 @@ def projL (h : κ) : PiLp 2 W →L[𝕜] PiLp 2 (S.V h) :=
       ((S.proj h i).le_opNorm _).trans
         (mul_le_mul_of_nonneg_right (S.norm_proj_le h i) (norm_nonneg _))
 
-@[simp] theorem projL_apply (h : κ) (x : PiLp 2 W) (i : ι) :
-    S.projL h x i = S.proj h i (x i) := rfl
-
 @[simp] theorem projL_inclL (h : κ) (v : PiLp 2 (S.V h)) : S.projL h (S.inclL h v) = v :=
   PiLp.ext fun i => S.proj_incl h i (v i)
 
@@ -633,15 +629,6 @@ theorem norm_defectOp_apply_le (h : κ) (ζ : H.totalD.GraphSpace) :
     rw [ContinuousLinearMap.adjoint.norm_map (S.inclL h)]
     exact mul_le_mul_of_nonneg_right (S.norm_inclL_le h) (norm_nonneg _)
 
-/-- **The adjoint commutes exactly with the cochain map**: `iₕ* 𝐝* = 𝐝ₕ* iₕ*` on `D(𝐝*)` (for
-`iₕ*`; a left inverse `πₕ` need not commute with the adjoints). -/
-theorem inclL_adjoint_adjoint (h : κ) (y : H.totalD†.domain) :
-    (S.inclL h).adjoint (H.totalD† y) = (S.D h).adjoint ((S.inclL h).adjoint y) := by
-  refine ext_inner_right 𝕜 fun v => ?_
-  rw [ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.adjoint_inner_left,
-    ContinuousLinearMap.adjoint_inner_left, S.inclL_D,
-    ← adjoint_isFormalAdjoint H.dense_totalD_domain y ⟨S.inclL h v, S.inclL_mem h v⟩]
-
 instance (h : κ) (K : Submodule 𝕜 (PiLp 2 (S.V h))) : K.HasOrthogonalProjection :=
   haveI := FiniteDimensional.complete 𝕜 K; .ofCompleteSpace K
 
@@ -826,8 +813,6 @@ def ofComplex : ApproxFEEC H κ where
   bound := ⟨F.toFamily.boundConst, fun h => ⟨F.toFamily.norm_inclL_le h,
     F.toFamily.norm_projL_le h⟩⟩
 
-theorem ofComplex_incl (h : κ) : (ofComplex F).incl h = F.toFamily.inclL h := rfl
-
 /-- The discrete generator is the Hodge wave operator `𝐝ₕ - 𝐝ₕ*` of `Vₕ`. -/
 theorem ofComplex_L (h : κ) (v : PiLp 2 (F.toFamily.V h)) :
     (ofComplex F).L h v = (F.toFamily.cpx h).wave
@@ -858,8 +843,6 @@ def ofComplexCore : (ofComplex F).Core :=
       (norm_neg (F.toFamily.defectOp h)).trans_le (F.toFamily.norm_defectOp_le h)⟩⟩
     F.toFamily.ellProj_defect F.tendsto_defectOp
     (fun ζ => (F.tendsto_defectOp ζ).congr fun _ => (norm_neg _).symm)
-
-theorem ofComplexCore_data : (ofComplexCore F).Data = H.wave.domainSq := rfl
 
 theorem dense_ofComplexCore_data : Dense ((ofComplexCore F).Data : Set (PiLp 2 W)) :=
   H.isSkewAdjoint_wave.dense_domainSq
@@ -1015,9 +998,6 @@ def toComplex : ApproxComplex H κ where
   tendsto_innerDefect := by
     simp only [F.toFamily_J, sub_self, norm_zero]; exact tendsto_const_nhds
   graphApprox := F.toFamily_graphApprox
-
-theorem toComplex_innerDefect (h : κ) : ‖1 - F.toComplex.toFamily.J h‖ = 0 := by
-  rw [show F.toComplex.toFamily = F.toFamily from rfl, F.toFamily_J, sub_self, norm_zero]
 
 /-- The identification of the total discrete space of `toFamily` with `Xₕ = ∏ Vₕⁱ ⊆ W`. -/
 def toXh (h : κ) : PiLp 2 (F.toFamily.V h) →L[𝕜] F.Xh h :=

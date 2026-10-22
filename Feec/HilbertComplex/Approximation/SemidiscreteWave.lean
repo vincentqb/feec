@@ -28,7 +28,6 @@ same equation for test functions in `K`.
   `‖ξ(t) - ξₕ(t)‖ ≤ ‖Pξ(t₀) - ξₕ(t₀)‖ + ‖e(t)‖ + (t - t₀) ‖e(t₀)‖ + (1 + (t - t₀)) ∫ ‖e'‖`
   with `e = Pξ - ξ`, for every operator `T` and every finite-dimensional `K`, over `ℝ` and `ℂ`.
   For the short complex of the thesis this is Thm 4.14; here the complex may have any length.
-* `weak_eq_iff`: the graph-space equation is the weak form of `Feec.HodgeWave.IsWeakSolution`.
 
 ## References
 
@@ -172,22 +171,6 @@ theorem shiftedForm_ellipticProjection_sub (ζ : T.GraphSpace) {ψ : T.GraphSpac
 end Projection
 
 /-! ### The semi-discrete error estimate -/
-
-/-- The graph-space equation `⟪ψ, ξ'⟫ + a(ξ, ψ) = 0` is the weak form
-`⟪ξ', ψ⟫ = ⟪T ξ, ψ⟫ - ⟪ξ, T ψ⟫` of `Feec.HodgeWave.IsWeakSolution` (with `F = 0`). -/
-theorem weak_eq_iff (ξ ψ : T.GraphSpace) (ξ' : E) :
-    ⟪T.graphFst ψ, ξ'⟫ + waveForm T ξ ψ = 0 ↔
-      ⟪ξ', T.graphFst ψ⟫ = ⟪T.graphSnd ξ, T.graphFst ψ⟫ - ⟪T.graphFst ξ, T.graphSnd ψ⟫ := by
-  rw [waveForm_apply]
-  constructor
-  · intro h
-    have := congrArg (starRingEnd 𝕜) h
-    simp only [_root_.map_add, _root_.map_sub, inner_conj_symm, _root_.map_zero] at this
-    linear_combination this
-  · intro h
-    have := congrArg (starRingEnd 𝕜) h
-    simp only [_root_.map_sub, inner_conj_symm] at this
-    linear_combination this
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 

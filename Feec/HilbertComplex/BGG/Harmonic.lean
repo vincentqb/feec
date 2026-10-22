@@ -28,8 +28,6 @@ fact arbitrary) harmonic spaces:
 The results are the Strang bound, the rate of the elliptic projection and the end-to-end `O(h)`
 convergence of (6.3) (`HarmonicStability.exists_discreteSolution_norm_sub_le_rate`) under
 `HarmonicStability`, which `Stability` implies with `𝔥 = ⊥` (`Stability.toHarmonicStability`).
-The generalization is strict: `exists_harmonicStability_not_stability` gives data with
-`HarmonicStability` and `𝔥 ≠ ⊥` for which `Stability` fails for every choice of constants.
 
 ## Main definitions
 
@@ -47,7 +45,6 @@ The generalization is strict: `exists_harmonicStability_not_stability` gives dat
   `HarmonicStability.norm_sub_embedH_ellipticProjection_le`: the Strang bound of (6.4).
 * **`Feec.BGG.HarmonicStability.exists_discreteSolution_norm_sub_le_rate`**: `O(h)` convergence of
   (6.3) from the elliptic projection of the exact initial state.
-* `Feec.BGG.exists_harmonicStability_not_stability`: non-vacuity and strictness.
 
 ## References
 
@@ -632,40 +629,5 @@ theorem exists_discreteSolution_norm_sub_le_rate (h54 : Q.Compatible) [FiniteDim
 end HarmonicStability
 
 /-! ### Non-vacuity and strictness -/
-
-/-- A BGG-type segment with a constant mode on the top row and a harmonic form on the bottom
-row: `V⁰ = V¹ = W² = Ṽ¹ = W̃² = ℝ`, `Ṽ⁰ = 0`, all maps zero. -/
-def harmonicExampleSegment : Segment ℝ ℝ ℝ ℝ (EuclideanSpace ℝ (Fin 0)) ℝ ℝ where
-  d0 := 0
-  d1 := 0
-  dt0 := 0
-  dt1 := 0
-  S0 := 0
-  S1 := 0
-  d1_d0 _ := rfl
-  dt1_dt0 _ := rfl
-  anticomm _ := by simp
-
-/-- **`HarmonicStability` is strictly weaker than `Stability` and non-vacuous**: the data
-`harmonicExampleSegment`, with the nonzero harmonic space `𝔥 = Ṽ¹ = ℝ` contained in the
-discrete space of the identity discretization, satisfy `HarmonicStability` with `C_p = 1`,
-`C_S = 0`, while `Stability` fails for every choice of constants (the top row has the constant
-mode `d⁰ = 0` on `V⁰ = ℝ`). -/
-theorem exists_harmonicStability_not_stability :
-    ∃ (D : Segment ℝ ℝ ℝ ℝ (EuclideanSpace ℝ (Fin 0)) ℝ ℝ) (Hh : Submodule ℝ ℝ),
-      Hh ≠ ⊥ ∧ HarmonicStability D Hh 1 0 ∧ Hh ≤ (Discrete.top D).Vt1h ∧
-        ∀ Cp CR CS, ¬ Stability D Cp CR CS := by
-  refine ⟨harmonicExampleSegment, ⊤, top_ne_bot, ?_, le_top, fun Cp CR CS H => ?_⟩
-  · exact
-      { Cp_nonneg := zero_le_one
-        CS_nonneg := le_rfl
-        poinct0 := fun φ => by simp [Subsingleton.elim φ 0]
-        hodget1 := fun v => ⟨0, 0, v, Submodule.mem_top, by simp, by simp⟩
-        harmonic_orth := fun k _ ψ => by simp [harmonicExampleSegment]
-        S1_harmonic := fun k _ => rfl
-        boundS1 := fun v => by simp [harmonicExampleSegment, graphSq] }
-  · have h := H.poinc0 1
-    simp [harmonicExampleSegment] at h
-    linarith
 
 end Feec.BGG

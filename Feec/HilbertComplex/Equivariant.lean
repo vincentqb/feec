@@ -15,8 +15,7 @@ for the symmetric complex (`Action.propagates`).
 
 ## Main definitions
 
-* `Feec.HilbertComplex.Action H Γ`, `Action.fixed`, `Action.avg`, `Action.totalAct`,
-  `Action.fixedComplex`.
+* `Feec.HilbertComplex.Action H Γ`, `Action.fixed`, `Action.avg`, `Action.fixedComplex`.
 * `Feec.HilbertComplex.Involutions H κ`: commuting unitary involutions `R k` commuting with the
   differentials (reflections of a torus in its coordinates); **`Involutions.toAction`**: the
   induced action of `(ℤ/2)^κ`, `g ↦ ∏_k R_k^{g_k}`, whose fixed vectors are the vectors fixed by
@@ -26,8 +25,7 @@ for the symmetric complex (`Action.propagates`).
 
 * `Action.starProjection_fixed`: `P_{Fix} = |Γ|⁻¹ ∑_g act g` (finite `Γ`).
 * **`Action.reducingSubcomplex_fixed`**; `Action.propagates`.
-* `Action.adjoint_comm`, `Action.wave_totalAct`, `Action.totalAct_waveGroup`: the wave group is
-  `Γ`-equivariant.
+* `Action.adjoint_comm`: the action commutes with the adjoints of the differentials.
 
 ## References
 
@@ -62,9 +60,6 @@ structure Action (Γ : Type*) [Group Γ] where
 namespace Action
 
 variable {H} {Γ : Type*} [Group Γ] (A : H.Action Γ)
-
-@[simp] theorem act_inv_act (g : Γ) (i : ι) (x : W i) : A.act g⁻¹ i (A.act g i x) = x := by
-  rw [← A.act_mul, inv_mul_cancel, A.act_one]
 
 @[simp] theorem act_act_inv (g : Γ) (i : ι) (x : W i) : A.act g i (A.act g⁻¹ i x) = x := by
   rw [← A.act_mul, mul_inv_cancel, A.act_one]
@@ -119,11 +114,6 @@ theorem act_avg (h : Γ) (i : ι) (x : W i) : A.act h i (A.avg i x) = A.avg i x 
   exact Equiv.sum_comp (Equiv.mulLeft h) fun g => A.act g i x
 
 theorem avg_mem (i : ι) (x : W i) : A.avg i x ∈ A.fixed i := fun h => A.act_avg h i x
-
-theorem avg_of_mem {i : ι} {x : W i} (hx : x ∈ A.fixed i) : A.avg i x = x := by
-  have hn : (Fintype.card Γ : 𝕜) ≠ 0 := Nat.cast_ne_zero.2 Fintype.card_ne_zero
-  simp only [avg, hx _, Finset.sum_const, Finset.card_univ, ← Nat.cast_smul_eq_nsmul 𝕜, smul_smul,
-    inv_mul_cancel₀ hn, one_smul]
 
 theorem sub_avg_mem_orthogonal (i : ι) (x : W i) : x - A.avg i x ∈ (A.fixed i)ᗮ := by
   rw [Submodule.mem_orthogonal]
@@ -204,35 +194,7 @@ section Total
 
 variable [Fintype ι]
 
-/-- The action on the total space. -/
-def totalAct (g : Γ) : PiLp 2 W ≃ₗᵢ[𝕜] PiLp 2 W :=
-  LinearIsometryEquiv.piLpCongrRight 2 fun i => A.act g i
-
-theorem totalAct_apply (g : Γ) (x : PiLp 2 W) (i : ι) : A.totalAct g x i = A.act g i (x i) := rfl
-
-/-- The action commutes with the wave operator. -/
-theorem wave_totalAct (g : Γ) :
-    Intertwines ((A.totalAct g : PiLp 2 W ≃ₗᵢ[𝕜] PiLp 2 W) : PiLp 2 W →L[𝕜] PiLp 2 W)
-      H.wave H.wave := by
-  have hmem : ∀ x : H.wave.domain, A.totalAct g (x : PiLp 2 W) ∈ H.wave.domain := fun x =>
-    H.mem_wave_domain.2 ⟨fun i j => A.mapsTo g i j ⟨_, x.2.1 i j⟩,
-      fun i j => (A.adjoint_comm g ⟨_, x.2.2 j i⟩).1⟩
-  refine ⟨hmem, fun x => ?_⟩
-  set x' : H.wave.domain := ⟨_, hmem x⟩
-  change H.wave x' = A.totalAct g (H.wave x)
-  refine PiLp.ext fun j => ?_
-  rw [wave_apply, totalAct_apply, wave_apply, _root_.map_sub, map_sum, map_sum]
-  refine congrArg₂ (· - ·) (Finset.sum_congr rfl fun i _ => A.comm g i j ⟨_, x.2.1 i j⟩)
-    (Finset.sum_congr rfl fun k _ => (A.adjoint_comm g ⟨_, x.2.2 k j⟩).2)
-
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
-
-/-- **The wave group is equivariant**: `act g ∘ e^{tL} = e^{tL} ∘ act g`. -/
-theorem totalAct_waveGroup (g : Γ) (t : ℝ) (x : PiLp 2 W) :
-    A.totalAct g (H.waveGroup.S t x) = H.waveGroup.S t (A.totalAct g x) := by
-  have h := A.wave_totalAct g
-  rw [← generator_waveGroup] at h
-  exact H.isIsometric_waveGroup.intertwines_S _ h t x
 
 end Total
 

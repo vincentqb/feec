@@ -91,9 +91,6 @@ def restrictScalars : HilbertComplex ℝ c W where
   mapsTo i j k x := H.mapsTo i j k ⟨x.1, x.2⟩
   d_comp_d i j k x := H.d_comp_d i j k ⟨x.1, x.2⟩
 
-@[simp] theorem restrictScalars_d (i j : ι) :
-    H.restrictScalars.d i j = (H.d i j).restrictScalars := rfl
-
 variable {H}
 
 /-- **The dual of the real complex is the real dual complex.** -/
@@ -107,10 +104,6 @@ theorem mem_cycles_restrictScalars {i : ι} {x : W i} :
     x ∈ H.restrictScalars.cycles i ↔ x ∈ H.cycles i := by
   simp only [cycles, LinearPMap.mem_ker_iff]
   exact ⟨fun ⟨y, h1, h2⟩ => ⟨⟨y.1, y.2⟩, h1, h2⟩, fun ⟨y, h1, h2⟩ => ⟨⟨y.1, y.2⟩, h1, h2⟩⟩
-
-theorem mem_boundaries_restrictScalars {i : ι} {x : W i} :
-    x ∈ H.restrictScalars.boundaries i ↔ x ∈ H.boundaries i :=
-  ⟨fun ⟨y, h⟩ => ⟨⟨y.1, y.2⟩, h⟩, fun ⟨y, h⟩ => ⟨⟨y.1, y.2⟩, h⟩⟩
 
 /-- **Reducing subcomplexes over `ℂ` are reducing over `ℝ`.** -/
 theorem ReducingSubcomplex.restrictScalars (hre : ∀ i (x y : W i), ⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ)

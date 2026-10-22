@@ -26,8 +26,7 @@ flipping along the arrows, e.g. `i` odd on a window), forward invariance suffice
 * `Feec.HilbertComplex.ReducingSubcomplex H S`.
 * `Feec.HilbertComplex.waveGroup H`: the isometric group `e^{tL}` of the wave operator.
 * `Feec.HilbertComplex.reversal 𝕜 p`: the grading operator `(R x) i = ± x i` of a parity
-  `p : ι → Bool` flipping along every arrow (`ComplexShape.window_parity`,
-  `ComplexShape.up_int_parity`).
+  `p : ι → Bool` flipping along every arrow (`ComplexShape.window_parity`).
 * `Feec.ShortHilbertComplex.divFreeSub S Y`: the constraint family `{0} × N(d₀†) × Y`.
 
 ## Main results
@@ -36,7 +35,7 @@ flipping along the arrows, e.g. `i` odd on a window), forward invariance suffice
   `LinearPMap.isReducingPair_of_le_ker` (`K ⊆ N(T)`, `R(T) ⊥ L`): the two ways a constraint
   pair reduces one differential; `IsReducingPair.add`, `.sub`, `.neg`, `isReducingPair_zero`.
 * `ReducingSubcomplex.dual`, `.orthogonal`, `ReducingSubcomplex.of_rel`.
-* `ReducingSubcomplex.isReducing_totalD`, `.isReducing_wave`, `.isReducing_dirac`.
+* `ReducingSubcomplex.isReducing_totalD`, `.isReducing_wave`.
 * **`ReducingSubcomplex.propagates`**: strong solutions of `U' = L U + F` with `U a` and `F` in
   `∏ S i` stay in `∏ S i` (Thesis Props 4.16, 4.17, 4.19, any length, any `S₀`).
   `ReducingSubcomplex.existsUnique_mem`: with existence and uniqueness.
@@ -265,9 +264,6 @@ variable {S : ∀ i, Submodule 𝕜 (W i)}
 theorem totalSub_mono {S' : ∀ i, Submodule 𝕜 (W i)} (h : ∀ i, S i ≤ S' i) :
     totalSub S ≤ totalSub S' := fun _ hx i => h i (hx i)
 
-@[simp] theorem totalSub_top : totalSub (fun i => (⊤ : Submodule 𝕜 (W i))) = ⊤ :=
-  eq_top_iff.2 fun _ _ _ => Submodule.mem_top
-
 /-- The componentwise projection `∏ P_{S i}`. -/
 def totalProj (S : ∀ i, Submodule 𝕜 (W i)) [∀ i, (S i).HasOrthogonalProjection]
     (x : PiLp 2 W) : PiLp 2 W :=
@@ -331,9 +327,6 @@ theorem of_rel (h : ∀ i j, c.Rel i j → (H.d i j).IsReducingPair (S i) (S j))
     by_cases hij : c.Rel i j
     exacts [h i j hij, isReducingPair_of_eq_zero (H.shape i j hij)]⟩
 
-theorem bot : H.ReducingSubcomplex fun i => (⊥ : Submodule 𝕜 (W i)) :=
-  ⟨fun _ _ => isReducingPair_bot _⟩
-
 theorem top : H.ReducingSubcomplex fun i => (⊤ : Submodule 𝕜 (W i)) :=
   ⟨fun _ _ => isReducingPair_top _⟩
 
@@ -372,10 +365,6 @@ theorem isReducing_dual_totalD (h : H.ReducingSubcomplex S) :
 theorem isReducing_wave (h : H.ReducingSubcomplex S) : H.wave.IsReducing (totalSub S) :=
   h.isReducing_totalD.sub h.isReducing_dual_totalD
 
-/-- A reducing subcomplex reduces the Dirac operator `D = 𝐝 + 𝐝*`. -/
-theorem isReducing_dirac (h : H.ReducingSubcomplex S) : H.dirac.IsReducing (totalSub S) :=
-  h.isReducing_totalD.add h.isReducing_dual_totalD
-
 /-- A reducing subcomplex reduces `-L` (the sign convention `ξ' = -L ξ` of Thesis (4.4)). -/
 theorem isReducing_neg_wave (h : H.ReducingSubcomplex S) : (-H.wave).IsReducing (totalSub S) :=
   h.isReducing_wave.neg
@@ -396,13 +385,6 @@ theorem propagates_neg (h : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → P
     (hU : Evolution.IsStrongSolution (-H.wave) (Icc a b) F U) (h0 : U a ∈ totalSub S)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub S) : ∀ t ∈ Icc a b, U t ∈ totalSub S :=
   hU.mem_of_isReducing H.isSkewAdjoint_wave.neg.isDissipative h.isReducing_neg_wave h0 hF
-
-/-- The orthogonal part propagates too: the `∏ S i`- and `∏ (S i)ᗮ`-components of a solution
-evolve independently. -/
-theorem propagates_orthogonal (h : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → PiLp 2 W}
-    (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : U a ∈ (totalSub S)ᗮ)
-    (hF : ∀ t ∈ Icc a b, F t ∈ (totalSub S)ᗮ) : ∀ t ∈ Icc a b, U t ∈ (totalSub S)ᗮ :=
-  hU.mem_orthogonal_of_isReducing H.isSkewAdjoint_wave.isSkewSymmetric h.isReducing_wave h0 hF
 
 /-- **Constraint propagation with existence and uniqueness**: for `U₀ ∈ D(L) ∩ ∏ S i` and
 admissible forcing valued in `∏ S i`, `U' = L U + F`, `U a = U₀` has a classical solution on
@@ -589,8 +571,7 @@ theorem isReducing_iff_forall_isStrongSolution {p : ι → Bool}
     (by rw [show H.waveGroup.toC0Semigroup.generator = H.wave from H.generator_waveGroup];
         exact hx) 0 t
   rw [show H.waveGroup.toC0Semigroup.generator = H.wave from H.generator_waveGroup] at hU
-  have := h t _ (by simpa using hxK) hU.toIsStrongSolution t ⟨ht, le_rfl⟩
-  simpa using this
+  simpa [sub_zero] using h t _ (by simpa using hxK) hU.toIsStrongSolution t ⟨ht, le_rfl⟩
 
 end Reversal
 
@@ -604,13 +585,6 @@ theorem ComplexShape.window_parity {n : ℕ} {i j : Fin n} (h : (ComplexShape.wi
   rw [ComplexShape.window_rel] at h
   rw [← h]
   by_cases hi : Odd i.val <;> simp [hi, Nat.odd_add_one]
-
-/-- The parity grades `ComplexShape.up ℤ`. -/
-theorem ComplexShape.up_int_parity {i j : ℤ} (h : (ComplexShape.up ℤ).Rel i j) :
-    decide (Odd j) ≠ decide (Odd i) := by
-  rw [ComplexShape.up_Rel] at h
-  rw [← h]
-  by_cases hi : Odd i <;> simp [hi, parity_simps]
 
 /-! ### The divergence constraint of a short complex (Prop 4.16) -/
 

@@ -17,12 +17,11 @@ Applied to the total differential `𝐝` of a Hilbert complex on a finite index 
 ## Main results
 
 * `LinearPMap.dense_domain_inf_adjoint`: `D(T) ∩ D(T†)` is dense.
-* `LinearPMap.isSkewAdjoint_sub_adjoint`, `LinearPMap.isSelfAdjoint_add_adjoint`.
-* `HilbertComplex.isSkewAdjoint_wave`, `HilbertComplex.isSelfAdjoint_dirac`: for every finite
-  Hilbert complex, in particular for every window of a complex on `ℤ`.
-* `HilbertComplex.wave_apply`, `HilbertComplex.dirac_apply`: the coordinates
-  `(L x) j = ∑ i, d i j (x i) ∓ ∑ k, (d j k)† (x k)`; `HilbertComplex.mem_wave_domain`.
-* `HilbertComplex.wave_dual`, `HilbertComplex.dirac_dual`: `L* = -L`, `D* = D`.
+* `LinearPMap.isSkewAdjoint_sub_adjoint`.
+* `HilbertComplex.isSkewAdjoint_wave`: for every finite Hilbert complex, in particular for every
+  window of a complex on `ℤ`.
+* `HilbertComplex.wave_apply`: the coordinates `(L x) j = ∑ i, d i j (x i) - ∑ k, (d j k)† (x k)`;
+  `HilbertComplex.mem_wave_domain`.
 
 ## References
 
@@ -171,21 +170,6 @@ theorem isSkewAdjoint_sub_adjoint : (T - T†).IsSkewAdjoint := by
       (z := (T - T†)† ⟨x, hx⟩) fun v => ?_
     rw [key v, sub_apply, inner_sub_right]; ring
 
-/-- `T + T†` is self-adjoint for closed densely defined `T` with `T T = 0`. -/
-theorem isSelfAdjoint_add_adjoint : IsSelfAdjoint (T + T†) := by
-  have hD : Dense ((T + T†).domain : Set E) := dense_domain_inf_adjoint hT hc hmaps hcomp
-  refine (isSelfAdjoint_iff hD).2 ⟨fun x y => ?_, fun x hx => ?_⟩
-  · rw [add_apply, add_apply, inner_add_left, inner_add_right]
-    have h1 := adjoint_isFormalAdjoint hT ⟨y, y.2.2⟩ ⟨x, x.2.1⟩
-    have h2 := adjoint_isFormalAdjoint hT ⟨x, x.2.2⟩ ⟨y, y.2.1⟩
-    have h3 : ⟪T ⟨x, x.2.1⟩, (y : E)⟫_𝕜 = ⟪(x : E), T† ⟨y, y.2.2⟩⟫_𝕜 := by
-      rw [← inner_conj_symm, ← h1, inner_conj_symm]
-    rw [h3, h2]; ring
-  · have key := adjoint_isFormalAdjoint hD ⟨x, hx⟩
-    refine mem_domain_inf_adjoint_of_inner hT hc hmaps hcomp (s := 1) one_ne_zero
-      (z := (T + T†)† ⟨x, hx⟩) fun v => ?_
-    rw [key v, add_apply, inner_add_right]; ring
-
 end Nilpotent
 
 end LinearPMap
@@ -203,28 +187,17 @@ def dirac : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := H.totalD + H.dual.totalD
 the abstract Hodge wave equation `x' = L x`. [QuennevilleBelair2015], (4.5) -/
 def wave : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := H.totalD - H.dual.totalD
 
-theorem dirac_eq : H.dirac = H.totalD + H.totalD† := by rw [adjoint_totalD]; rfl
-
 theorem wave_eq : H.wave = H.totalD - H.totalD† := by rw [adjoint_totalD]; rfl
 
 theorem mem_wave_domain {x : PiLp 2 W} : x ∈ H.wave.domain ↔
     (∀ i j, x i ∈ (H.d i j).domain) ∧ ∀ i j, x j ∈ ((H.d i j)†).domain :=
   ⟨fun h => ⟨h.1, fun i j => h.2 j i⟩, fun h => ⟨h.1, fun j i => h.2 i j⟩⟩
 
-theorem dirac_domain : H.dirac.domain = H.wave.domain := rfl
-
 /-- `(L x) j = ∑ i, d i j (x i) − ∑ k, (d j k)† (x k)`. -/
 theorem wave_apply (x : H.wave.domain) (j : ι) :
     (H.wave x) j = ∑ i, H.d i j ⟨(x : PiLp 2 W) i, x.2.1 i j⟩ -
       ∑ k, (H.d j k)† ⟨(x : PiLp 2 W) k, x.2.2 k j⟩ := by
   exact congrArg₂ (fun a b => a - b) (H.totalD_apply ⟨x, x.2.1⟩ j)
-    (H.dual.totalD_apply ⟨x, x.2.2⟩ j)
-
-/-- `(D x) j = ∑ i, d i j (x i) + ∑ k, (d j k)† (x k)`. -/
-theorem dirac_apply (x : H.dirac.domain) (j : ι) :
-    (H.dirac x) j = ∑ i, H.d i j ⟨(x : PiLp 2 W) i, x.2.1 i j⟩ +
-      ∑ k, (H.d j k)† ⟨(x : PiLp 2 W) k, x.2.2 k j⟩ := by
-  exact congrArg₂ (fun a b => a + b) (H.totalD_apply ⟨x, x.2.1⟩ j)
     (H.dual.totalD_apply ⟨x, x.2.2⟩ j)
 
 theorem dense_wave_domain : Dense (H.wave.domain : Set (PiLp 2 W)) := by
@@ -239,19 +212,5 @@ theorem isSkewAdjoint_wave : H.wave.IsSkewAdjoint := by
   rw [wave_eq]
   exact isSkewAdjoint_sub_adjoint H.dense_totalDomain H.isClosed_totalD H.totalD_mapsTo
     H.totalD_comp_totalD
-
-/-- The Dirac operator of every finite Hilbert complex is self-adjoint. -/
-theorem isSelfAdjoint_dirac : IsSelfAdjoint H.dirac := by
-  rw [dirac_eq]
-  exact isSelfAdjoint_add_adjoint H.dense_totalDomain H.isClosed_totalD H.totalD_mapsTo
-    H.totalD_comp_totalD
-
-/-- The wave operator of the dual complex is `-L`. -/
-theorem wave_dual : H.dual.wave = -H.wave := by
-  rw [wave, wave, dual_dual_totalD, neg_sub]
-
-/-- The Dirac operator of the dual complex is `D`. -/
-theorem dirac_dual : H.dual.dirac = H.dirac := by
-  rw [dirac, dirac, dual_dual_totalD, add_comm]
 
 end Feec.HilbertComplex

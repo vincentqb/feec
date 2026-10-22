@@ -77,7 +77,7 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   (`ApproxFEEC.ofComplexCrimeCore_toCrime_p`).
 * **Galerkin cores** (`ApproxComplexCrime.ofGalerkinCore`): the discrete solutions are those of
   the given discretization (`ofComplexCrime_ofGalerkinCore_sol`), the comparison is the given one
-  (`ofGalerkinCore_cmp_p`, `galerkin_p'_eq` for the derivative). Complexification of a
+  (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative). Complexification of a
   differential and of Galerkin identities: `ApproxFEEC.complexifyD`,
   `ApproxFEEC.complexify_L_eq_diffWave`, `ApproxFEEC.complexify_galerkin`.
 * **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`): approximants along the
@@ -262,11 +262,6 @@ theorem mem_of_invariant [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X �
 
 end DiffSpace
 
-theorem waveL_eq_diffWave {ι : Type*} [Fintype ι] {c : ComplexShape ι}
-    {V : ι → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
-    [∀ i, CompleteSpace (V i)] [∀ i, FiniteDimensional 𝕜 (V i)] (E : HilbertComplex 𝕜 c V) :
-    E.waveL = diffWave E.totalDL := rfl
-
 variable {ι : Type*} [Fintype ι] {c : ComplexShape ι}
   {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
   [∀ i, CompleteSpace (W i)]
@@ -291,13 +286,6 @@ theorem norm_wave_sq' (y : H.wave.domain) :
 
 /-- `‖𝐝 y‖ ≤ ‖L y‖` on `D(L)`. -/
 theorem norm_totalD_le_norm_wave (y : H.wave.domain) : ‖H.totalD ⟨y, y.2.1⟩‖ ≤ ‖H.wave y‖ := by
-  have h := norm_wave_sq' H y
-  nlinarith [norm_nonneg (H.totalD ⟨y, y.2.1⟩), norm_nonneg (H.wave y),
-    norm_nonneg (H.dual.totalD ⟨y, y.2.2⟩)]
-
-/-- `‖𝐝* y‖ ≤ ‖L y‖` on `D(L)`. -/
-theorem norm_dual_totalD_le_norm_wave (y : H.wave.domain) :
-    ‖H.dual.totalD ⟨y, y.2.2⟩‖ ≤ ‖H.wave y‖ := by
   have h := norm_wave_sq' H y
   nlinarith [norm_nonneg (H.totalD ⟨y, y.2.1⟩), norm_nonneg (H.wave y),
     norm_nonneg (H.dual.totalD ⟨y, y.2.2⟩)]
@@ -781,8 +769,6 @@ def ofComplexCrime : ApproxFEEC H κ where
 theorem ofComplexCrime_L (h : κ) : (ofComplexCrime F).L h = F.toFamily.D h - (F.toFamily.D h).adjoint :=
   rfl
 
-theorem ofComplexCrime_incl (h : κ) : (ofComplexCrime F).incl h = F.toFamily.incl h := rfl
-
 /-- **The comparison of `ofComplexCrime`** on `[0, T]`: data the core `Z`, trajectory
 `pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x) = Rₕ (e^{tL} x)` (the exact-load modified elliptic projection
 of the exact orbit) with derivative `Rₕ (e^{tL} L x)`. -/
@@ -909,8 +895,6 @@ def ofComplexCrimeCore : (ofComplexCrime F).Core where
   data_eq _ := rfl
   tendsto_approx T _ hx := crimeCmp_tendsto_approx F T hx
   tendsto_defect T _ hx := crimeCmp_tendsto_defect F T hx
-
-theorem ofComplexCrimeCore_data : (ofComplexCrimeCore F).Data = F.Z := rfl
 
 theorem ofComplexCrimeCore_cmp (T : ℝ) : (ofComplexCrimeCore F).cmp T = crimeCmp F T := rfl
 
@@ -1114,10 +1098,6 @@ def toCrimeFamily : ApproxComplexCrime.Family H κ where
   proj_incl := S.projL_inclL
   bound := ⟨S.boundConst, fun h => ⟨S.norm_inclL_le h, S.norm_projL_le h⟩⟩
 
-theorem toCrimeFamily_L (h : κ) : S.toCrimeFamily.L h = S.L h := rfl
-
-theorem toCrimeFamily_J (h : κ) : S.toCrimeFamily.J h = S.J h := rfl
-
 /-- **The cochain defect of cochain reading maps vanishes.** -/
 theorem cochainDefect_toCrimeFamily (h : κ) (y : H.wave.domain) :
     S.toCrimeFamily.cochainDefect h y = 0 :=
@@ -1166,8 +1146,6 @@ def toCrime : ApproxComplexCrime H κ :=
       rw [F.toFamily.cochainDefect_toCrimeFamily, inner_zero_left, norm_zero]
       positivity)
 
-theorem toCrime_toFamily : F.toCrime.toFamily = F.toFamily.toCrimeFamily := rfl
-
 end ApproxComplex
 
 namespace ApproxFEEC
@@ -1206,12 +1184,6 @@ def rateConstA : ℝ := 1 + 8 * S.boundConst
 
 /-- The consistency constant `1 + 8 (1 + C²) + C (1 + 8 C)` of the defect bound. -/
 def rateConstD : ℝ := 1 + 8 * (1 + S.boundConst ^ 2) + S.boundConst * (1 + 8 * S.boundConst)
-
-theorem rateConstA_nonneg : 0 ≤ S.rateConstA := by
-  have := S.boundConst_nonneg; unfold rateConstA; positivity
-
-theorem rateConstD_nonneg : 0 ≤ S.rateConstD := by
-  have := S.boundConst_nonneg; unfold rateConstD; positivity
 
 /-- **The Strang lemma with rates**: an approximant `w` of `y` with `‖y - iₕ w‖ ≤ ε` and residual
 `≤ ε` gives `‖y - iₕ Bₕ z‖ ≤ (1 + 8 C) ε`. -/
@@ -1340,13 +1312,6 @@ def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W
           F.toFamily.rateConstD * (Ca * m h ^ α * cn x) := add_le_add d2 d1
       _ = _ := by ring
 
-theorem rateClass_data (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca) (hrate) :
-    (F.rateClass T Dc hDc cn m α Ca hrate).Data = Dc := rfl
-
-theorem rateClass_p (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca) (hrate)
-    (x : PiLp 2 W) (h : κ) (t : ℝ) :
-    (F.rateClass T Dc hDc cn m α Ca hrate).p x h t = (ApproxFEEC.crimeCmp F T).p x h t := rfl
-
 /-- **The error bound of a rate class of `ofComplexCrime`** (item 3c of the verdict,
 `approxFEEC_rate`, from the comparison initial value): `‖e^{tL} x - iₕ e^{tLₕ} pₕ(0)‖ ≤
 (C + C_ι C' t) m(h)ᵅ ‖x‖_c` on `[0, T]`, with `C_ι` the uniform bound of the reading maps. -/
@@ -1373,12 +1338,6 @@ theorem error_le_of_rateClass {T : ℝ} (R : (ApproxFEEC.ofComplexCrime F).RateC
         F.toFamily.boundConst * (t * (R.C' * (R.meshSize h ^ R.α * R.classNorm x))) := by ring
   rw [e1, e2]
   exact add_le_add le_rfl (mul_le_mul_of_nonneg_right hI hpos)
-
-theorem rateClass_C (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca) (hrate) :
-    (F.rateClass T Dc hDc cn m α Ca hrate).C = F.toFamily.rateConstA * Ca := rfl
-
-theorem rateClass_C' (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca) (hrate) :
-    (F.rateClass T Dc hDc cn m α Ca hrate).C' = 2 * F.toFamily.rateConstD * Ca := rfl
 
 end ApproxComplexCrime
 
@@ -1669,16 +1628,6 @@ def ApproxComplexCrime.ofGalerkinCore : ApproxComplexCrime.{u} H κ where
     rw [S.inner_load_sub, sub_self, norm_zero]
     positivity
 
-theorem ofGalerkinCore_toFamily :
-    (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal hcl).toFamily =
-      ApproxComplexCrime.Family.ofApproxFEEC F D hDD := rfl
-
-theorem ofGalerkinCore_Z :
-    (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal hcl).Z = Z0.Data := rfl
-
-theorem ofGalerkinCore_K :
-    (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal hcl).K = F.K := rfl
-
 include hL in
 /-- **The discrete solutions are those of `F`**: `ofComplexCrime` of the Galerkin family has the
 spaces, reading maps and (by `Lₕ = 𝐝ₕ - 𝐝ₕ*`) the generators of `F`. -/
@@ -1688,15 +1637,6 @@ theorem ofComplexCrime_ofGalerkinCore_sol (h : κ) (v : F.X h) (t : ℝ) :
   change F.incl h ((C0Group.ofBounded (diffWave (D h))).S t v) =
     F.incl h ((C0Group.ofBounded (F.L h)).S t v)
   rw [hL]
-
-include hL hgal in
-/-- **The comparisons agree**: on `[0, T)` the comparison of `ofComplexCrimeCore` is the Galerkin
-comparison of `Z0`. -/
-theorem ofGalerkinCore_cmp_p {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t : ℝ}
-    (ht : t ∈ Ico 0 T) :
-    ((ApproxFEEC.ofComplexCrimeCore (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal
-      hcl)).cmp T).p x h t = (Z0.cmp T).p x h t :=
-  (galerkin_p_eq F D hDD hL Z0 hgal hx h ht).symm
 
 include hF hL hgal hZ hcl in
 /-- **Rates of a Galerkin family**: approximation estimates of the Galerkin comparison and of its

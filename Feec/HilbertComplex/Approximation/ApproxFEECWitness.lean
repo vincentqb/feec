@@ -18,8 +18,8 @@ On the complex `𝕜 --id--> 𝕜 → 0` (`Feec.HilbertComplex.ConstrainedFEEC.i
 
 It is not a subcomplex discretization, and its consistency defect along the exact orbit is
 `pₙ' - Lₙ pₙ = (cₙ⁻¹ - 1) e^{tL} L₀ x`, nonzero for `x = (1, 0, 0)` at every level and time
-(`ApproxFEEC.perturbed_defect_ne_zero`), of order `hₙ`. The approximating FEEC theorem applies
-(`ApproxFEEC.perturbed_verdict`), with a core of all data and an `O(h)` rate class
+(`ApproxFEEC.perturbed_defect_ne_zero`), of order `hₙ`. The approximating FEEC theorem applies,
+with a core of all data and an `O(h)` rate class
 (`ApproxFEEC.perturbedRate`, `C = 0`, `C' = ‖L₀‖`), and both branches of the constraint residual
 occur: `K = W` reduces `L`, and for `K = 𝕜 × 0 × 0` a datum of `K` leaves `K` and the residuals of
 every convergent discretization of it have a positive limit
@@ -35,9 +35,9 @@ consistency defect along `pₙ(t) = πₙ e^{tL} x` is the commutator `bₙ [L�
 every level and time along `e^{-tL} (1, 0, 0)`; `ιₙ` is neither a scalar multiple of the identity
 nor isometric, the scheme is inexact, the rate class is `O(h)` with `C' = 2 ‖L₀‖`, and the graded
 non-reducing branch of the residual occurs with its eventual lower bound
-(`ApproxFEEC.projPerturbed_nonvacuous`). Finally `ApproxFEEC.idFEEC_approxFEEC_verdict` and
-`ApproxFEEC.idFEEC_constrainedFEEC_of_approxFEEC` instantiate the conforming bridge
-`ConstrainedFEEC.toApprox` / `ConstrainedFEEC.toCore`.
+(`ApproxFEEC.projPerturbed_nonvacuous`). Finally `ApproxFEEC.idFEEC`, a constrained FEEC
+discretization, enters through the conforming bridge `ConstrainedFEEC.toApprox` /
+`ConstrainedFEEC.toCore`.
 
 ## References
 
@@ -72,9 +72,6 @@ def idWave : (PiLp 2 (W3 𝕜 𝕜 PUnit)) →L[𝕜] (PiLp 2 (W3 𝕜 𝕜 PUni
       map_smul' := fun a x => by
         change (idComplex 𝕜).wave (a • ⟨x, mem_idComplex_wave_domain x⟩) = _
         rw [LinearPMap.map_smul]; rfl }
-
-theorem idWave_apply (x : (PiLp 2 (W3 𝕜 𝕜 PUnit))) :
-    idWave 𝕜 x = (idComplex 𝕜).wave ⟨x, mem_idComplex_wave_domain x⟩ := rfl
 
 theorem idWave_skew (x y : (PiLp 2 (W3 𝕜 𝕜 PUnit))) : ⟪idWave 𝕜 x, y⟫_𝕜 = -⟪x, idWave 𝕜 y⟫_𝕜 :=
   (idComplex 𝕜).isSkewAdjoint_wave.isSkewSymmetric ⟨x, mem_idComplex_wave_domain x⟩
@@ -251,8 +248,6 @@ def perturbedCore : (perturbed 𝕜 Q hQ).Core where
       _ ≤ perturbMesh n * (‖idWave 𝕜 x‖ + 1) := by nlinarith
       _ < ε := hn
 
-theorem perturbedCore_data : (perturbedCore Q hQ).Data = ⊤ := rfl
-
 /-- An `O(h)` rate class with all data: `C = 0` (exact approximation), `C' = ‖L₀‖`. -/
 def perturbedRate (T : ℝ) : (perturbed 𝕜 Q hQ).RateClass T where
   toComparison := perturbedComparison Q hQ T
@@ -274,9 +269,6 @@ def perturbedRate (T : ℝ) : (perturbed 𝕜 Q hQ).RateClass T where
     calc perturbMesh n / perturbScale n * ‖idWave 𝕜 x‖ ≤ perturbMesh n * (‖idWave 𝕜‖ * ‖x‖) :=
           mul_le_mul h1 ((idWave 𝕜).le_opNorm x) (norm_nonneg _) hm.le
       _ = _ := by ring
-
-/-- **The approximating FEEC theorem applies to the perturbed discretization.** -/
-theorem perturbed_verdict : (perturbed 𝕜 Q hQ).Verdict (perturbedCore Q hQ) := approxFEEC _ _
 
 /-- **The consistency defect is genuinely nonzero**: along `(1, 0, 0)`, at every level and time. -/
 theorem perturbed_defect_ne_zero (T : ℝ) (n : ℕ) (t : ℝ) :
@@ -560,9 +552,6 @@ def projRate (T : ℝ) : (projPerturbed 𝕜 Q hQ).RateClass T where
     rw [Real.rpow_one]
     exact (norm_projComparison_defect_le Q hQ T x n t).trans_eq (by ring)
 
-/-- **The approximating FEEC theorem applies to `projPerturbed`.** -/
-theorem projPerturbed_verdict : (projPerturbed 𝕜 Q hQ).Verdict (projCore Q hQ) := approxFEEC _ _
-
 /-- **The commutator defect is genuinely nonzero**: at every level and time, along the datum
 `e^{-tL} (1, 0, 0)`. -/
 theorem projComparison_defect_ne_zero (T : ℝ) (n : ℕ) (t : ℝ) :
@@ -678,18 +667,6 @@ theorem projPerturbed_nonvacuous :
     exact ⟨x, hxK, t, ht, hout, hpos, hlim, hev⟩
 
 /-! ### The conforming bridge, instantiated -/
-
-/-- **The conforming bridge on a concrete discretization**: the approximating FEEC verdict of the
-constrained FEEC discretization `idFEEC` of `𝕜 --id--> 𝕜 → 0` (any closed constraint), through
-`ConstrainedFEEC.toApprox` / `ConstrainedFEEC.toCore`, whose core is `D(L²)`. -/
-theorem idFEEC_approxFEEC_verdict :
-    (idFEEC 𝕜 Q hQ).toApprox.Verdict (idFEEC 𝕜 Q hQ).toCore ∧
-      (idFEEC 𝕜 Q hQ).toCore.Data = (idComplex 𝕜).wave.domainSq :=
-  ⟨approxFEEC _ _, rfl⟩
-
-/-- **`constrainedFEEC` for `idFEEC`, from `approxFEEC`** (the statement of `constrainedFEEC`). -/
-theorem idFEEC_constrainedFEEC_of_approxFEEC : type_of% (constrainedFEEC (idFEEC 𝕜 Q hQ)) :=
-  ConstrainedFEEC.constrainedFEEC_of_approxFEEC _
 
 end ApproxFEEC
 

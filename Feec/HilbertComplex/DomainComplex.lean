@@ -145,19 +145,6 @@ def domainD (i j : ι) : H.domainSpace i →L[𝕜] H.domainSpace j :=
 @[simp] theorem domainIncl_domainD (i j : ι) (v : H.domainSpace i) :
     H.domainIncl j (H.domainD i j v) = H.d i j (H.domainCoord i j v) := rfl
 
-theorem domainD_snd (i j : ι) (v : H.domainSpace i) :
-    (H.d j (c.next j)).graphSnd (H.domainD i j v) = 0 := rfl
-
-/-- At a related pair `i → j`, `⟪d u, d v⟫` computed in `W (c.next i)` is computed in `W j`. -/
-theorem inner_graphSnd_eq_of_rel {i j : ι} (h : c.Rel i j)
-    (u v : H.domainSpace i) :
-    ⟪(H.d i (c.next i)).graphSnd u, (H.d i (c.next i)).graphSnd v⟫_𝕜 =
-      ⟪H.domainIncl j (H.domainD i j u), H.domainIncl j (H.domainD i j v)⟫_𝕜 := by
-  obtain rfl := c.next_eq' h
-  obtain ⟨x, rfl, -, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq u
-  obtain ⟨y, rfl, -, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq v
-  rfl
-
 /-- `d (domainD v) = 0`: the image of `domainD` consists of cycles. -/
 theorem d_domainCoord_domainD (i j k : ι) (v : H.domainSpace i) :
     H.d j k (H.domainCoord j k (H.domainD i j v)) = 0 :=
@@ -183,11 +170,6 @@ def domainComplex : HilbertComplex 𝕜 c H.domainSpace where
   closed i j := ContinuousLinearMap.isClosed_toPMap_top (H.domainD i j)
   mapsTo _ _ _ _ := Submodule.mem_top
   d_comp_d i j k x := H.domainD_comp_domainD i j k x
-
-@[simp] theorem domainComplex_d_apply (i j : ι) (v : (H.domainComplex.d i j).domain) :
-    H.domainComplex.d i j v = H.domainD i j v := rfl
-
-theorem domainComplex_d_domain (i j : ι) : (H.domainComplex.d i j).domain = ⊤ := rfl
 
 theorem range_domainComplex_d (i j : ι) :
     LinearMap.range (H.domainComplex.d i j).toFun =
@@ -237,10 +219,6 @@ theorem inner_of_mem_domainComplex_cycles {i : ι} {u : H.domainSpace i}
   rw [e, inner_zero_left, add_zero]
   rfl
 
-theorem domainComplex_boundaries_le (j : ι) :
-    H.domainComplex.boundaries j ≤ H.domainComplex.cycles j :=
-  H.domainComplex.boundaries_le_cycles j
-
 /-- With no arrow into `j`, there are no boundaries at `j`. -/
 theorem boundaries_eq_bot_of_not_rel {j : ι} (h : ¬ c.Rel (c.prev j) j) : H.boundaries j = ⊥ := by
   rw [eq_bot_iff]
@@ -268,23 +246,6 @@ theorem map_domainIncl_boundaries (j : ι) :
       H.map_domainIncl_range_domainD h]
   · rw [H.boundaries_eq_bot_of_not_rel h, H.domainComplex.boundaries_eq_bot_of_not_rel h,
       Submodule.map_bot]
-
-/-- A cycle of `V` is a boundary iff its image in `W` is. -/
-theorem mem_domainComplex_boundaries_iff {j : ι} {v : H.domainSpace j}
-    (hv : v ∈ H.domainComplex.cycles j) :
-    v ∈ H.domainComplex.boundaries j ↔ H.domainIncl j v ∈ H.boundaries j := by
-  rw [← H.map_domainIncl_boundaries j]
-  constructor
-  · exact fun h => Submodule.mem_map_of_mem h
-  · rintro ⟨u, hu, huv⟩
-    have hu' : u ∈ H.domainComplex.cycles j := H.domainComplex.boundaries_le_cycles j hu
-    have : u = v := by
-      have h1 := H.norm_of_mem_domainComplex_cycles (sub_mem hu' hv)
-      rw [_root_.map_sub] at h1
-      change H.domainIncl j u = H.domainIncl j v at huv
-      rw [huv, sub_self, norm_zero, norm_eq_zero, sub_eq_zero] at h1
-      exact h1
-    exact this ▸ hu
 
 /-- **Closed in `V` ⇔ closed in `W`**: the boundaries of the domain complex are closed iff
 those of `H` are. [QuennevilleBelair2015], §4.2 -/
@@ -342,14 +303,9 @@ theorem map_domainIncl_harmonic (i : ι) :
     rw [← H.map_domainIncl_boundaries i] at hwB
     exact (Submodule.mem_orthogonal _ _).1 hwB _ (Submodule.mem_map_of_mem hu)
 
-/-- `ℌⁱ(V) ≃ ℌⁱ(W)`. -/
-def domainHarmonicEquiv (i : ι) : H.domainComplex.harmonic i ≃ₗ[𝕜] H.harmonic i :=
-  (Submodule.equivMapOfInjective _ (H.domainIncl_injective i) _).trans
-    (LinearEquiv.ofEq _ _ (H.map_domainIncl_harmonic i))
-
 /-- **Hodge decomposition of `V`** (`V`-level, Thesis Thm 4.1): under closed range,
 `Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (𝔷ⁱ)^{⊥V}`, pairwise orthogonal in the graph inner product. Here the summands are
-those of the domain complex: `ℌⁱ(V)` corresponds to `ℌⁱ` under `domainHarmonicEquiv`.
+those of the domain complex.
 [QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge_domainComplex {i : ι} (hi : H.ClosedRangeAt i) :
     H.domainComplex.boundaries i ⊔ H.domainComplex.harmonic i ⊔

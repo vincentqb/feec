@@ -16,8 +16,7 @@ corrected version for finite-dimensional discrete BGG data (`Feec.BGG.Segment` o
 as in `Feec.BGG.DiscreteSolution`), proves unique solvability, Galerkin orthogonality and, for
 discretizations `Feec.BGG.Discrete` of a continuous complex, a uniform (in `h`) inf-sup
 condition on the constrained space `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²` and a Strang bound. The multiplier
-block has no uniform inf-sup here; the discrete multiplier `λₕ` is estimated only in the
-discrete dual norm (`Discrete.abs_multiplier_le_of_isEllipticProjection`), not in `L²`.
+block has no uniform inf-sup here, and the discrete multiplier `λₕ` is not estimated.
 
 Corrections to the thesis' (6.4):
 
@@ -60,23 +59,17 @@ Corrections to the thesis' (6.4):
   differentiable when the data are (weakly) differentiable.
 * `Feec.BGG.Discrete.infSup_shiftedForm_h`: the uniform (in `h`) inf-sup condition of the
   discrete shifted form on `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²`, constant `(1/2)/√3`, via the test map
-  `x ↦ x + (0, 0, dφ, −Sₕu, −du)`; `Discrete.graphNormSq_le_shiftedNormSq`: it controls the full
-  graph norms of `σ, φ`.
+  `x ↦ x + (0, 0, dφ, −Sₕu, −du)`.
 * `Feec.BGG.Discrete.strang_shiftedForm_h`, `Feec.BGG.Discrete.strang_energy`,
   `Feec.BGG.Discrete.strang_of_isEllipticProjection`: the Strang bound
   `‖e‖² ≤ C (interpolation errors + consistency functionals)`, `C` depending on the Poincaré
-  constant only; `Feec.BGG.Discrete.strang_energy_rate`: the `O(h)` rate.
+  constant only.
 * `Feec.BGG.Discrete.consistency_S0_of_approx`,
   `Feec.BGG.Discrete.consistency_S1_of_regularPotential`: the consistency constants
   `K₀ = Λ C_app h`, `K₁ = C_app h K_w` of the Strang bound from thesis Prop 5.9(1) and regular
   potentials (`Feec.BGG.Discrete.RegularPotential`), without Prop 5.9(2);
   `Feec.BGG.Discrete.strang_rate_of_regularPotential`: the resulting `O(h)` rate of (6.4) from
   `O(h)` interpolation errors.
-* `Feec.BGG.Discrete.abs_multiplier_le_of_isEllipticProjection`: `λₕ − ℓ` in the discrete dual
-  norm, bounded by the energy error plus `K₀`.
-* `Feec.BGG.Discrete.exists_strang_rate_nonvacuous`: a non-identity discretization
-  (`Discrete.swapDiscrete`, `S₀,ₕ ≠ S₀`, `S₁,ₕ ≠ S₁`) satisfying all hypotheses of the rate
-  theorem.
 
 ## References
 
@@ -288,13 +281,6 @@ theorem existsUnique_isEllipticProjection (hdinj : Function.Injective D.dt0)
   ⟨_, isEllipticProjection_ellipticProjection hdinj hB G g,
     fun _ hx => hx.eq_ellipticProjection hdinj hB⟩
 
-/-- Unique solvability of (6.4) under the hypotheses of the corrected Prop 6.2
-(`d` injective on `Ṽₕ⁰`, `S₀,ₕ` onto). -/
-theorem existsUnique_isEllipticProjection_of_surjective (hdinj : Function.Injective D.dt0)
-    (hS : Function.Surjective D.S0) (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1) :
-    ∃! x, IsEllipticProjection D G g x :=
-  existsUnique_isEllipticProjection hdinj (exists_sub_eq_of_surjective hS) G g
-
 /-- Time derivative of the elliptic projection: if the data `G(s)` are differentiable when
 evaluated on every test function, then so is `Π(G(s), 0)`, with derivative `Π(G'(t), 0)`
 (finite dimensions: expand `G(s)` in a dual basis). -/
@@ -423,8 +409,7 @@ def shiftedFormC (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2)
     + ⟪ρ, D.dt1 v⟫ - ⟪D.S1 u, N⟫ - ⟪D.dt1 u, μ⟫
 
 /-- The `h`-dependent graph norm (squared) of the discrete shifted form:
-`‖σ‖² + ‖u‖² + ‖M‖² + ‖ρ‖² + ‖dφ‖² + ‖S₁,ₕu‖² + ‖du‖²`. On `Γₕ` it controls the full graph
-norms (`graphNormSq_le_shiftedNormSq`). -/
+`‖σ‖² + ‖u‖² + ‖M‖² + ‖ρ‖² + ‖dφ‖² + ‖S₁,ₕu‖² + ‖du‖²`. -/
 def shiftedNormSq (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) : ℝ :=
   ‖σ‖ ^ 2 + ‖u‖ ^ 2 + ‖M‖ ^ 2 + ‖ρ‖ ^ 2 + ‖D.dt0 φ‖ ^ 2 + ‖Q.S1h u‖ ^ 2 + ‖D.dt1 u‖ ^ 2
 
@@ -507,29 +492,6 @@ theorem infSup_shiftedForm_h {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
         rw [show (1 / 2) / √3 * √a * (√3 * √a) = (1 / 2) * (√a * √a) * (√3 / √3) by ring,
           div_self h3.ne', Real.mul_self_sqrt ha]; ring
 
-/-- On `Γₕ` the shifted norm controls the full `h`-dependent graph norm
-`‖σ‖_V² + ‖φ‖_V² + ‖u‖_{Γₕ}² + ‖M‖² + ‖ρ‖²`, uniformly in `h` (discrete Poincaré inequality
-`poincare_Γh`, thesis Prop 5.3(a), and `poinct0`). -/
-theorem graphNormSq_le_shiftedNormSq {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
-    (B : Q.Bounded CP) {σ : V0} {φ : Vt0} (u : Vt1) (M : W2) (ρ : Wt2)
-    (hΓ : D.d0 σ = Q.S0h φ) :
-    graphSq D.d0 σ + graphSq D.dt0 φ + Q.gnSq u + ‖M‖ ^ 2 + ‖ρ‖ ^ 2 ≤
-      (Ca Cp CS CP ^ 2 + Cp ^ 2 + 2) * Q.shiftedNormSq σ φ u M ρ := by
-  have h1 := poincare_Γh H B hΓ
-  have h2 := pow_le_pow_left₀ (norm_nonneg _) (H.poinct0 φ) 2
-  rw [mul_pow] at h2
-  have hn := Q.shiftedNormSq_nonneg σ φ u M ρ
-  have hd : ‖D.dt0 φ‖ ^ 2 ≤ Q.shiftedNormSq σ φ u M ρ := by
-    unfold shiftedNormSq; nlinarith [sq_nonneg ‖σ‖, sq_nonneg ‖u‖, sq_nonneg ‖M‖, sq_nonneg ‖ρ‖,
-      sq_nonneg ‖Q.S1h u‖, sq_nonneg ‖D.dt1 u‖]
-  have hca := mul_le_mul_of_nonneg_left hd (sq_nonneg (Ca Cp CS CP))
-  have hcp := mul_le_mul_of_nonneg_left hd (sq_nonneg Cp)
-  unfold graphSq gnSq
-  unfold graphSq at h1
-  unfold shiftedNormSq at hn hd hca hcp ⊢
-  nlinarith [sq_nonneg ‖σ‖, sq_nonneg ‖u‖, sq_nonneg ‖M‖, sq_nonneg ‖ρ‖,
-      sq_nonneg ‖Q.S1h u‖, sq_nonneg ‖D.dt1 u‖, sq_nonneg ‖D.dt0 φ‖]
-
 /-- The constant of the Strang bound, depending on the Poincaré constant only. -/
 def strangConst (Cp : ℝ) : ℝ := 112 * (2 + Cp ^ 2)
 
@@ -540,11 +502,6 @@ projections (in the graph norms that the shifted form sees), the consistency con
 def strangData (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (K0 K1 : ℝ) : ℝ :=
   ‖Q.P0 σ - σ‖ ^ 2 + ‖D.dt0 (Q.Pt0 φ - φ)‖ ^ 2 + Q.gnSq (Q.Pt1 u - u) + ‖Q.P2 M - M‖ ^ 2
     + ‖Q.Pt2 ρ - ρ‖ ^ 2 + K0 ^ 2 + K1 ^ 2 + ‖D.S1 u - Q.S1h u‖ ^ 2
-
-variable (Q) in
-theorem strangData_nonneg (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (K0 K1 : ℝ) :
-    0 ≤ Q.strangData σ φ u M ρ K0 K1 := by
-  unfold strangData; have := Q.gnSq_nonneg (Q.Pt1 u - u); positivity
 
 /-- **Strang bound for the elliptic projection (6.4)** of a discretization `Q : Discrete D`
 (new: the thesis states no approximation property of (6.4)). Let `(σ, φ, u, M, ρ)` be an exact
@@ -762,27 +719,6 @@ theorem strang_energy {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compa
       sq_nonneg ‖D.dt1 (uP - Q.Pt1 u)‖]
   nlinarith only [hS, hD, hn, e1, e2, e3, e4]
 
-/-- **`O(h)` rate of the elliptic projection**: if the Strang data are `O(h²)`
-(interpolation errors and consistency constants `O(h)`), so is the energy error. -/
-theorem strang_energy_rate {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible)
-    {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2} (c3 : D.d0 σ = D.S0 φ)
-    (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 c h : ℝ}
-    (hK0 : ∀ ψ ∈ Q.Vt0h, |ℓ ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
-    (hK1 : ∀ v ∈ Q.Vt1h, |⟪M, (D.S1 - Q.S1h) v⟫| ≤ K1 * √(Q.gnSq v))
-    (hdata : Q.strangData σ φ u M ρ K0 K1 ≤ (c * h) ^ 2)
-    {σP : V0} {φP : Vt0} {uP : Vt1} {MP : W2} {ρP : Wt2}
-    (hσP : σP ∈ Q.V0h) (hφP : φP ∈ Q.Vt0h) (huP : uP ∈ Q.Vt1h) (hMP : MP ∈ Q.W2h)
-    (hρP : ρP ∈ Q.Wt2h) (hcons : D.d0 σP = Q.S0h φP)
-    (heq : ∀ τ ∈ Q.V0h, ∀ ψ ∈ Q.Vt0h, D.d0 τ = Q.S0h ψ → ∀ v ∈ Q.Vt1h, ∀ N ∈ Q.W2h,
-      ∀ μ ∈ Q.Wt2h, Q.shiftedFormH σP φP uP MP ρP τ ψ v N μ =
-        shiftedFormC D σ φ u M ρ τ ψ v N μ - ℓ (D.d0 τ - D.S0 ψ)) :
-    √(‖σ - σP‖ ^ 2 + ‖u - uP‖ ^ 2 + ‖M - MP‖ ^ 2 + ‖ρ - ρP‖ ^ 2) ≤
-      √(2 * (strangConst Cp + 1)) * |c| * |h| := by
-  have hS := strang_energy H h54 c3 ℓ hK0 hK1 hσP hφP huP hMP hρP hcons heq
-  have hC : 0 ≤ 2 * (strangConst Cp + 1) := by unfold strangConst; positivity
-  rw [mul_assoc, ← abs_mul, ← Real.sqrt_sq_eq_abs, ← Real.sqrt_mul hC]
-  exact Real.sqrt_le_sqrt (hS.trans (mul_le_mul_of_nonneg_left hdata hC))
-
 /-! ### The elliptic projection of a discretization -/
 
 variable (Q) in
@@ -804,13 +740,6 @@ def toSegmentH : Segment ℝ Q.V0h Q.V1h Q.W2h Q.Vt0h Q.Vt1h Q.Wt2h where
 theorem toSegmentH_dt0_injective {Cp CR CS : ℝ} (H : Stability D Cp CR CS) :
     Function.Injective Q.toSegmentH.dt0 := fun a b hab =>
   Subtype.ext (dt0_injective H (by simpa [toSegmentH, Subtype.ext_iff] using hab))
-
-/-- `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹` (from `exists_sub_S0h_eq`): the hypothesis of
-`existsUnique_isEllipticProjection`, weaker than the surjectivity of `S₀,ₕ`. -/
-theorem toSegmentH_exists_sub {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible)
-    (μ : Q.V1h) : ∃ τ ψ, Q.toSegmentH.d0 τ - Q.toSegmentH.S0 ψ = μ := by
-  obtain ⟨τ, hτ, ψ, hψ, h⟩ := exists_sub_S0h_eq H h54 μ.2
-  exact ⟨⟨τ, hτ⟩, ⟨ψ, hψ⟩, Subtype.ext (by simpa [toSegmentH] using h)⟩
 
 /-- The left side of (6.4) for `toSegmentH` is the discrete shifted form. -/
 theorem energyInner_add_discreteSkewForm_toSegmentH
@@ -840,7 +769,7 @@ def ellipticDataH (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (ℓ : V1 �
 `x = ((σₚ, uₚ, Mₚ, ρₚ), φₚ, λₚ)` of (6.4) for the discrete data `toSegmentH` with the data
 `ellipticDataH` of an exact state (`dσ = S₀φ`) satisfies the bounds of `strang_shiftedForm_h`
 and `strang_energy`; such a solution exists and is unique
-(`existsUnique_isEllipticProjection` with `toSegmentH_dt0_injective`, `toSegmentH_exists_sub`).
+(`existsUnique_isEllipticProjection` with `toSegmentH_dt0_injective`).
 See [QuennevilleBelair2015], §6.2, (6.4); cf. [Ciarlet2002]. -/
 theorem strang_of_isEllipticProjection {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
     (h54 : Q.Compatible) {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
@@ -871,74 +800,7 @@ theorem strang_of_isEllipticProjection {Cp CR CS : ℝ} (H : Stability D Cp CR C
   exact ⟨strang_shiftedForm_h H h54 c3 ℓ hK0 hK1 σP.2 φP.2 uP.2 MP.2 ρP.2 hcons heq,
     strang_energy H h54 c3 ℓ hK0 hK1 σP.2 φP.2 uP.2 MP.2 ρP.2 hcons heq⟩
 
-/-- **Well-posedness of (6.4) for a discretization** (for each fixed `h`): for
-finite-dimensional FE spaces, the elliptic projection of every exact state exists and is unique,
-under the continuous hypotheses `Stability` and (5.4) only (no surjectivity of `S₀,ₕ` is needed).
-No `h`-uniform bound on the multiplier is claimed (see the module docstring). -/
-theorem existsUnique_isEllipticProjection_toSegmentH {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
-    (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
-    [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
-    [FiniteDimensional ℝ Q.Wt2h]
-    (G : Module.Dual ℝ ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h)) (g : Q.V1h) :
-    ∃! x, IsEllipticProjection Q.toSegmentH G g x :=
-  existsUnique_isEllipticProjection (toSegmentH_dt0_injective H) (toSegmentH_exists_sub H h54)
-    G g
-
 /-! ### The discrete multiplier in the discrete dual norm -/
-
-/-- **Multiplier identity of (6.4)**: testing (6.4) with `(τ, ψ)` only gives
-`(λₕ − ℓ)(dτ − S₀,ₕψ) = ⟪σₚ − σ, τ⟫ − ⟪uₚ − u, dψ⟫ − ℓ((S₀ − S₀,ₕ)ψ)`, where
-`(λₕ − ℓ)(μ) := ⟪λₕ, μ⟫ − ℓ μ`. -/
-theorem multiplier_eq_of_isEllipticProjection {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
-    (ℓ : V1 →ₗ[ℝ] ℝ) {x : ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) × Q.V1h}
-    (hx : IsEllipticProjection Q.toSegmentH (Q.ellipticDataH σ φ u M ρ ℓ) 0 x)
-    {τ : V0} (hτ : τ ∈ Q.V0h) {ψ : Vt0} (hψ : ψ ∈ Q.Vt0h) :
-    ⟪(x.2 : V1), D.d0 τ - Q.S0h ψ⟫ - ℓ (D.d0 τ - Q.S0h ψ) =
-      ⟪(x.1.1.1 : V0) - σ, τ⟫ - ⟪(x.1.1.2.1 : Vt1) - u, D.dt0 ψ⟫ - ℓ ((D.S0 - Q.S0h) ψ) := by
-  have e := hx.1 ((⟨τ, hτ⟩, 0, 0, 0), ⟨ψ, hψ⟩)
-  rw [energyInner_add_discreteSkewForm_toSegmentH] at e
-  simp only [shiftedFormH, ellipticDataH, shiftedFormC, LinearMap.coe_mk, AddHom.coe_mk,
-    Submodule.coe_zero, map_zero, inner_zero_right, toSegmentH,
-    Submodule.coe_inner, LinearMap.restrict_apply, Submodule.coe_sub] at e
-  simp only [inner_sub_left, LinearMap.sub_apply, map_sub] at e ⊢
-  linarith
-
-/-- **The discrete multiplier `λₕ` of (6.4) in the discrete dual norm** (new): for all
-`τ ∈ Vₕ⁰`, `ψ ∈ Ṽₕ⁰`,
-`|(λₕ − ℓ)(dτ − S₀,ₕψ)| ≤ (‖σ − σₚ‖ + ‖u − uₚ‖ + K₀) √(‖τ‖² + ‖ψ‖_V²)`.
-Since `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹` (`toSegmentH_exists_sub`), this bounds `λₕ − ℓ` in the dual norm
-of `Vₕ¹` for the quotient norm of `(τ, ψ) ↦ dτ − S₀,ₕψ`, and with `strang_energy` it is
-`O(h)` when the Strang data are `O(h²)`. An `L²` bound would need a uniform bound on that
-quotient norm (a quantitative `exact1`), which `Stability` does not provide. -/
-theorem abs_multiplier_le_of_isEllipticProjection {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
-    (ℓ : V1 →ₗ[ℝ] ℝ) {K0 : ℝ} (hK0nn : 0 ≤ K0)
-    (hK0 : ∀ ψ ∈ Q.Vt0h, |ℓ ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
-    {x : ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) × Q.V1h}
-    (hx : IsEllipticProjection Q.toSegmentH (Q.ellipticDataH σ φ u M ρ ℓ) 0 x)
-    {τ : V0} (hτ : τ ∈ Q.V0h) {ψ : Vt0} (hψ : ψ ∈ Q.Vt0h) :
-    |⟪(x.2 : V1), D.d0 τ - Q.S0h ψ⟫ - ℓ (D.d0 τ - Q.S0h ψ)| ≤
-      (‖σ - x.1.1.1‖ + ‖u - x.1.1.2.1‖ + K0) * √(‖τ‖ ^ 2 + graphSq D.dt0 ψ) := by
-  rw [multiplier_eq_of_isEllipticProjection ℓ hx hτ hψ]
-  set N := √(‖τ‖ ^ 2 + graphSq D.dt0 ψ)
-  have hg := graphSq_nonneg D.dt0 ψ
-  have hτN : ‖τ‖ ≤ N := Real.le_sqrt_of_sq_le (by linarith)
-  have hdN : ‖D.dt0 ψ‖ ≤ N := Real.le_sqrt_of_sq_le (by
-    unfold graphSq at hg ⊢; nlinarith [sq_nonneg ‖τ‖, sq_nonneg ‖ψ‖])
-  have hgN : √(graphSq D.dt0 ψ) ≤ N := Real.sqrt_le_sqrt (by nlinarith [sq_nonneg ‖τ‖])
-  have hK0n : |ℓ ((D.S0 - Q.S0h) ψ)| ≤ K0 * N :=
-    (hK0 ψ hψ).trans (mul_le_mul_of_nonneg_left hgN hK0nn)
-  have e1 : |⟪(x.1.1.1 : V0) - σ, τ⟫| ≤ ‖σ - x.1.1.1‖ * N := by
-    rw [norm_sub_rev]
-    exact (abs_real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left hτN (norm_nonneg _))
-  have e2 : |⟪(x.1.1.2.1 : Vt1) - u, D.dt0 ψ⟫| ≤ ‖u - x.1.1.2.1‖ * N := by
-    rw [norm_sub_rev]
-    exact (abs_real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left hdN (norm_nonneg _))
-  calc _ ≤ |⟪(x.1.1.1 : V0) - σ, τ⟫ - ⟪(x.1.1.2.1 : Vt1) - u, D.dt0 ψ⟫|
-        + |ℓ ((D.S0 - Q.S0h) ψ)| := abs_sub _ _
-    _ ≤ |⟪(x.1.1.1 : V0) - σ, τ⟫| + |⟪(x.1.1.2.1 : Vt1) - u, D.dt0 ψ⟫|
-        + |ℓ ((D.S0 - Q.S0h) ψ)| := by gcongr; exact abs_sub _ _
-    _ ≤ ‖σ - x.1.1.1‖ * N + ‖u - x.1.1.2.1‖ * N + K0 * N := add_le_add (add_le_add e1 e2) hK0n
-    _ = _ := by ring
 
 /-! ### The consistency constants from Prop 5.9(1) and regular potentials -/
 
@@ -1035,32 +897,6 @@ theorem strang_rate_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D Cp 
     ← Real.sqrt_mul hC]
   exact Real.sqrt_le_sqrt (hS.trans (mul_le_mul_of_nonneg_left hdata hC))
 
-/-- **Non-vacuity of the hypotheses of the Strang bound** (`strang_of_isEllipticProjection`):
-on the identity discretization of `Discrete.exampleSegment` (`S₀, S₁ ≠ 0`), `Stability`,
-`Compatible`, the solvability hypotheses of (6.4) for `toSegmentH`, and the consistency bounds
-(with `K₀ = K₁ = 0`) hold simultaneously. -/
-theorem exists_strang_nonvacuous :
-    ∃ (D : Segment ℝ (EuclideanSpace ℝ (Fin 0)) ℝ ℝ ℝ ℝ ℝ) (Q : Discrete D),
-      Stability D 1 1 1 ∧ Q.Compatible ∧ D.S0 ≠ 0 ∧ D.S1 ≠ 0 ∧
-      Function.Injective Q.toSegmentH.dt0 ∧
-      (∀ μ, ∃ τ ψ, Q.toSegmentH.d0 τ - Q.toSegmentH.S0 ψ = μ) ∧
-      (∀ ℓ : ℝ →ₗ[ℝ] ℝ, ∀ ψ ∈ Q.Vt0h, |ℓ ((D.S0 - Q.S0h) ψ)| ≤ 0 * √(graphSq D.dt0 ψ)) ∧
-      ∀ M : ℝ, ∀ v ∈ Q.Vt1h, |⟪M, (D.S1 - Q.S1h) v⟫| ≤ 0 * √(Q.gnSq v) := by
-  have H : Stability exampleSegment 1 1 1 :=
-    { Cp_nonneg := zero_le_one, CR_nonneg := zero_le_one, CS_nonneg := zero_le_one,
-      poinc0 := fun σ => by simp [Subsingleton.elim σ 0],
-      poinct0 := fun φ => by simp [exampleSegment],
-      exact1 := fun μ hμ => ⟨0, by simpa [exampleSegment, eq_comm] using hμ⟩,
-      hodget1 := fun v => ⟨v, 0, by simp [exampleSegment]⟩,
-      reg := fun x => ⟨x, by simp [exampleSegment]⟩,
-      boundS0 := fun ψ => by simp [exampleSegment, graphSq],
-      boundS1 := fun v => by simp [exampleSegment, graphSq] }
-  refine ⟨exampleSegment, Discrete.top _, H, Discrete.top_compatible _, ?_, ?_,
-    toSegmentH_dt0_injective H, toSegmentH_exists_sub H (Discrete.top_compatible _),
-    fun ℓ ψ _ => by simp [Discrete.top, S0h], fun M v _ => by simp [Discrete.top, S1h]⟩
-  · intro h; have := LinearMap.congr_fun h 1; simp [exampleSegment] at this
-  · intro h; have := LinearMap.congr_fun h 1; simp [exampleSegment] at this
-
 
 /-! ### A non-identity example: nonzero consistency errors
 
@@ -1068,169 +904,6 @@ The witnesses above use the identity discretization, where every consistency err
 Here `S₀ = swap` on `ℝ²`, `V_h¹ = V_h² = ℝe₀` with the orthogonal projection, so
 `S₀,ₕ ≠ S₀`, `S₁,ₕ ≠ S₁`, and the consistency errors are of size `‖ψ‖` (`C_app h = 2`). -/
 
-/-- The unit vector `e₀` of `ℝ²`. -/
-def swapE0 : EuclideanSpace ℝ (Fin 2) := EuclideanSpace.single 0 1
-
-/-- The coordinate swap of `ℝ²`. -/
-def swapIso : EuclideanSpace ℝ (Fin 2) ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin 2) :=
-  LinearIsometryEquiv.piLpCongrLeft 2 ℝ ℝ (Equiv.swap (0 : Fin 2) 1)
-
-/-- A BGG segment with `S₀ = swap` (invertible), `S₁ = −swap`. -/
-def swapSegment : Segment ℝ (EuclideanSpace ℝ (Fin 0)) (EuclideanSpace ℝ (Fin 2))
-    (EuclideanSpace ℝ (Fin 2)) (EuclideanSpace ℝ (Fin 2)) (EuclideanSpace ℝ (Fin 2)) ℝ where
-  d0 := 0
-  d1 := LinearMap.id
-  dt0 := LinearMap.id
-  dt1 := 0
-  S0 := swapIso.toLinearEquiv.toLinearMap
-  S1 := -swapIso.toLinearEquiv.toLinearMap
-  d1_d0 _ := by simp
-  dt1_dt0 _ := by simp
-  anticomm _ := by simp
-
-/-- The line `ℝe₀`. -/
-def swapLine : Submodule ℝ (EuclideanSpace ℝ (Fin 2)) := ℝ ∙ swapE0
-
-/-- A non-identity discretization of `swapSegment`. -/
-def swapDiscrete : Discrete swapSegment where
-  V0h := ⊤
-  V1h := swapLine
-  W2h := swapLine
-  Vt0h := ⊤
-  Vt1h := ⊤
-  Wt2h := ⊤
-  d0_mem _ _ := by simp [swapSegment]
-  d1_mem x hx := by simpa [swapSegment] using hx
-  dt0_mem _ _ := Submodule.mem_top
-  dt1_mem _ _ := Submodule.mem_top
-  P0 := LinearMap.id
-  P1 := swapLine.starProjection.toLinearMap
-  P2 := swapLine.starProjection.toLinearMap
-  Pt0 := LinearMap.id
-  Pt1 := LinearMap.id
-  Pt2 := LinearMap.id
-  P0_mem _ := Submodule.mem_top
-  P1_mem x := swapLine.starProjection_apply_mem x
-  P2_mem x := swapLine.starProjection_apply_mem x
-  Pt0_mem _ := Submodule.mem_top
-  Pt1_mem _ := Submodule.mem_top
-  Pt2_mem _ := Submodule.mem_top
-  P0_id _ _ := rfl
-  P1_id x hx := Submodule.starProjection_eq_self_iff.2 hx
-  P2_id x hx := Submodule.starProjection_eq_self_iff.2 hx
-  Pt0_id _ _ := rfl
-  Pt1_id _ _ := rfl
-  Pt2_id _ _ := rfl
-  comm0 _ := by simp [swapSegment]
-  comm1 _ := rfl
-  commt0 _ := rfl
-  commt1 _ := by simp [swapSegment]
-
-/-- `swap e₀ = e₁`. -/
-theorem swapIso_e0 : swapIso swapE0 = EuclideanSpace.single 1 1 := by
-  ext i; fin_cases i <;> simp [swapIso, swapE0]
-
-/-- `e₁ ⊥ ℝe₀`. -/
-theorem starProjection_swapLine_e1 :
-    swapLine.starProjection (EuclideanSpace.single 1 1 : EuclideanSpace ℝ (Fin 2)) = 0 := by
-  unfold swapLine
-  rw [Submodule.starProjection_singleton]
-  simp [swapE0, EuclideanSpace.inner_single_left]
-
-/-- `‖(I − P)x‖ ≤ 2‖x‖` for the projection onto `ℝe₀`. -/
-theorem norm_sub_starProjection_swapLine_le (x : EuclideanSpace ℝ (Fin 2)) :
-    ‖x - swapLine.starProjection x‖ ≤ 2 * ‖x‖ := by
-  have := swapLine.norm_starProjection_apply_le x
-  linarith [norm_sub_le x (swapLine.starProjection x)]
-
-/-- `swapSegment` satisfies `Stability` with all constants `1`. -/
-theorem swapStability : Stability swapSegment 1 1 1 where
-  Cp_nonneg := zero_le_one
-  CR_nonneg := zero_le_one
-  CS_nonneg := zero_le_one
-  poinc0 σ := by simp [Subsingleton.elim σ 0]
-  poinct0 φ := by simp [swapSegment]
-  exact1 μ hμ := ⟨0, by simpa [swapSegment, eq_comm] using hμ⟩
-  hodget1 v := ⟨v, 0, by simp [swapSegment]⟩
-  reg x := ⟨swapIso.symm x, by simp [swapSegment]⟩
-  boundS0 ψ := by simp [swapSegment, graphSq]
-  boundS1 v := by simp [swapSegment, graphSq]
-
-/-- `swapDiscrete` has projections bounded by `1`. -/
-theorem swapBounded : swapDiscrete.Bounded 1 where
-  CP_nonneg := zero_le_one
-  P1 x := by
-    have := swapLine.norm_starProjection_apply_le x
-    have := pow_le_pow_left₀ (norm_nonneg _) this 2
-    simp only [swapDiscrete, swapSegment, graphSq, LinearMap.id_apply,
-      ContinuousLinearMap.coe_coe]
-    nlinarith
-  P2 z := by simpa [swapDiscrete] using swapLine.norm_starProjection_apply_le z
-  Pt1 v := by simp [swapDiscrete]
-
-/-- `swapDiscrete` satisfies `Compatible` (`Π̃⁰ = I`). -/
-theorem swapCompatible : swapDiscrete.Compatible := fun _ => rfl
-
-
-/-- **Non-vacuity of the hypotheses of `strang_rate_of_regularPotential`** (and of the
-discretization hypotheses of `exists_discreteSolution_norm_sub_le_rate`) **with nonzero
-consistency errors**: on `swapDiscrete`, `Stability`, `Bounded`, `Compatible`, `S₀,ₕ` onto
-`V_h¹`, the consistency of `S₀,ₕ` with `C_app h = 2`, a regular potential with `R ≠ 0`, and
-`D(d¹*) = W²` hold, while `S₀,ₕ ≠ S₀` and `S₁,ₕ ≠ S₁`. -/
-theorem exists_strang_rate_nonvacuous :
-    ∃ (D : Segment ℝ (EuclideanSpace ℝ (Fin 0)) (EuclideanSpace ℝ (Fin 2))
-        (EuclideanSpace ℝ (Fin 2)) (EuclideanSpace ℝ (Fin 2)) (EuclideanSpace ℝ (Fin 2)) ℝ)
-      (Q : Discrete D),
-      Stability D 1 1 1 ∧ Q.Bounded 1 ∧ Q.Compatible ∧ Q.S0h ≠ D.S0 ∧ Q.S1h ≠ D.S1 ∧
-      Function.Surjective Q.toSegmentH.S0 ∧
-      (∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (2 * 1) ^ 2 * graphSq D.dt0 ψ) ∧
-      (∃ Rg : Q.RegularPotential (EuclideanSpace ℝ (Fin 2)) 1 1 2 1, Rg.R ≠ 0) ∧
-      ∀ z : EuclideanSpace ℝ (Fin 2), ∃ z', ∀ w, ⟪z, D.d1 w⟫ = ⟪z', w⟫ := by
-  have hS0h : ∀ ψ, swapDiscrete.S0h ψ = swapLine.starProjection (swapIso ψ) := fun _ => rfl
-  have hS1h : ∀ v, swapDiscrete.S1h v = -swapLine.starProjection (swapIso v) := fun v => by
-    simp [S1h, swapDiscrete, swapSegment]
-  have hne : swapLine.starProjection (swapIso swapE0) ≠ swapIso swapE0 := by
-    rw [swapIso_e0, starProjection_swapLine_e1]
-    intro h; have := congrArg (fun x : EuclideanSpace ℝ (Fin 2) => x 1) h; simp at this
-  let Rg : swapDiscrete.RegularPotential (EuclideanSpace ℝ (Fin 2)) 1 1 2 1 :=
-    { R := LinearMap.id
-      Cinc_nonneg := zero_le_one
-      Creg_nonneg := zero_le_one
-      norm_R_le := fun y => by simp
-      exists_potential := fun v _ => ⟨0, by simp [swapSegment]⟩
-      approx_Pt1 := fun y => by simp [swapDiscrete]
-      approx_S1 := fun y => by
-        rw [LinearMap.sub_apply, hS1h]
-        have := norm_sub_starProjection_swapLine_le (swapIso y)
-        simp only [swapSegment, LinearMap.id_apply, LinearMap.neg_apply,
-          LinearEquiv.coe_coe, LinearIsometryEquiv.coe_toLinearEquiv, sub_neg_eq_add,
-          LinearIsometryEquiv.norm_map] at this ⊢
-        rw [show -swapIso y + swapLine.starProjection (swapIso y) =
-          -(swapIso y - swapLine.starProjection (swapIso y)) by abel, norm_neg, mul_one]
-        exact this }
-  refine ⟨swapSegment, swapDiscrete, swapStability, swapBounded, swapCompatible, ?_, ?_, ?_, ?_,
-    ⟨Rg, ?_⟩, fun z => ⟨z, fun w => by simp [swapSegment]⟩⟩
-  · intro h
-    have := LinearMap.congr_fun h swapE0
-    rw [hS0h] at this
-    exact hne (by simpa [swapSegment] using this)
-  · intro h
-    have := LinearMap.congr_fun h swapE0
-    rw [hS1h] at this
-    exact hne (by simpa [swapSegment] using this)
-  · intro μ
-    refine ⟨⟨swapIso.symm μ, Submodule.mem_top⟩, Subtype.ext ?_⟩
-    simp only [toSegmentH, LinearMap.restrict_apply, hS0h, LinearIsometryEquiv.apply_symm_apply]
-    exact Submodule.starProjection_eq_self_iff.2 μ.2
-  · intro ψ _
-    rw [hS0h]
-    have := norm_sub_starProjection_swapLine_le (swapIso ψ)
-    have := pow_le_pow_left₀ (norm_nonneg _) this 2
-    simp only [swapSegment, LinearEquiv.coe_coe, LinearIsometryEquiv.coe_toLinearEquiv,
-      LinearIsometryEquiv.norm_map, graphSq, LinearMap.id_apply] at this ⊢
-    nlinarith [sq_nonneg ‖ψ‖]
-  · intro h; have := LinearMap.congr_fun h swapE0
-    simp [Rg, swapE0] at this
 
 end Discrete
 

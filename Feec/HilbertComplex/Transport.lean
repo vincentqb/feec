@@ -192,9 +192,6 @@ def toHilbertComplex (h : H.ReducingSubcomplex S) : HilbertComplex 𝕜 c fun i 
   mapsTo i j k x := H.mapsTo i j k ⟨_, x.2⟩
   d_comp_d i j k x := Subtype.ext (H.d_comp_d i j k ⟨_, x.2⟩)
 
-@[simp] theorem toHilbertComplex_d (h : H.ReducingSubcomplex S) (i j : ι) :
-    h.toHilbertComplex.d i j = (h.reduces i j).part := rfl
-
 /-- The dual of the compressed complex is the compression of the dual complex. -/
 theorem dual_toHilbertComplex_d (h : H.ReducingSubcomplex S) (i j : ι) :
     h.toHilbertComplex.dual.d i j = h.dual.toHilbertComplex.d i j :=
@@ -532,19 +529,9 @@ def ScaledEmbedding.ofTransport (hκ : ∀ i j, κ i j ≠ 0) (s : ι → ℝ) (
 abbrev map (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) : HilbertComplex 𝕜 c W' :=
   H.transport (fun i => (u i).toContinuousLinearEquiv) (fun _ _ => 1) fun _ _ => one_ne_zero
 
-/-- A unitary transport is a scaled embedding with scales and chain-rule factors `1`. -/
-def ScaledEmbedding.ofMap (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) : ScaledEmbedding H (H.map u) :=
-  ScaledEmbedding.ofTransport H _ _ _ (fun _ => 1) (fun _ => one_pos) fun i x y => by
-    simp
-
 /-- Rescaling of the differentials: `d' i j = κ i j • d i j`. -/
 abbrev smul (hκ : ∀ i j, κ i j ≠ 0) : HilbertComplex 𝕜 c W :=
   H.transport (fun i => ContinuousLinearEquiv.refl 𝕜 (W i)) κ hκ
-
-/-- The identity is a scaled embedding of `H` into its rescaling, with chain-rule factors `κ`. -/
-def ScaledEmbedding.ofSmul (hκ : ∀ i j, κ i j ≠ 0) : ScaledEmbedding H (H.smul κ hκ) :=
-  ScaledEmbedding.ofTransport H _ _ hκ (fun _ => 1) (fun _ => one_pos) fun i x y => by
-    simp
 
 end Transport
 
@@ -599,14 +586,6 @@ theorem adjoint_transportD (hs : 0 < s)
   have h3 : ⟪(e i).symm z, (x : W i)⟫_𝕜 = κ i j * ⟪(e j).symm y, H.d i j x⟫_𝕜 :=
     mul_left_cancel₀ hs' (h2.trans (by ring))
   rw [h3, ← mul_assoc, inv_mul_cancel₀ hκ, one_mul]
-
-/-- **The dual of a transported complex is the transport of the dual**, for uniformly scaled
-isometries, with conjugated chain-rule factors. -/
-theorem transport_dual (hs : 0 < s)
-    (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (hκ : ∀ i j, κ i j ≠ 0) :
-    (H.transport e κ hκ).dual =
-      H.dual.transport e (fun a b => conj (κ b a)) fun a b => by simpa using hκ b a :=
-  ext_d (funext fun i => funext fun j => adjoint_transportD hs he (hκ j i))
 
 variable [Fintype ι]
 
@@ -670,18 +649,6 @@ theorem norm_apply_of_inner (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i
   rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h
   have h' : ‖J i x‖ ^ 2 = s * ‖x‖ ^ 2 := by exact_mod_cast h
   rw [← Real.sqrt_sq (norm_nonneg (J i x)), h', Real.sqrt_mul hs.le, Real.sqrt_sq (norm_nonneg x)]
-
-omit [∀ i, CompleteSpace (W i)] in
-/-- The range of a scaled isometry is closed. -/
-theorem isClosed_range_of_inner (hs : 0 < s)
-    (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (i : ι) :
-    IsClosed ((LinearMap.range (J i : W' i →ₗ[𝕜] W i) : Submodule 𝕜 (W i)) : Set (W i)) := by
-  have hb : ∀ x, ‖x‖ ≤ (Real.toNNReal (Real.sqrt s)⁻¹ : ℝ) * ‖J i x‖ := fun x => by
-    rw [norm_apply_of_inner hs hJ, Real.coe_toNNReal _ (by positivity), ← mul_assoc,
-      inv_mul_cancel₀ (Real.sqrt_pos.2 hs).ne', one_mul]
-  have := ((J i).antilipschitz_of_bound hb).isClosed_range (J i).uniformContinuous
-  rw [LinearMap.coe_range, ContinuousLinearMap.coe_coe]
-  exact this
 
 /-- The scaled isometry onto its range, `x ↦ J x`, as a continuous linear equivalence. -/
 def rangeEquiv (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)

@@ -656,23 +656,6 @@ theorem exists_poincare_of_closedRangeAt {i j : ι} (hij : c.Rel i j) (hj : H.Cl
   exact ⟨max C 1, le_max_right _ _, fun z hz => (hC z hz).trans
     (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))⟩
 
-/-- **Well-posedness of the mixed Hodge Laplacian under closed range** at `j` and `k`: unique
-solvability with a stability constant `16 c_P²`, `c_P` the Poincaré constant. -/
-theorem existsUnique_mixed_of_closedRangeAt (hij : c.Rel i j) (hjk : c.Rel j k)
-    (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) :
-    ∃ C, ∀ f : W j, (∃! x, H.mixedForm i j k x = H.mixedRHS i j f) ∧
-      ∀ x, H.mixedForm i j k x = H.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  obtain ⟨c₁, hc₁, h₁⟩ := H.exists_poincare_of_closedRangeAt hij hj
-  obtain ⟨c₂, hc₂, h₂⟩ := H.exists_poincare_of_closedRangeAt hjk hk
-  set cP := max c₁ c₂
-  have hcP : 1 ≤ cP := hc₁.trans (le_max_left _ _)
-  have hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖ :=
-    fun z hz => (h₁ z hz).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-  have hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖ :=
-    fun z hz => (h₂ z hz).trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-  exact ⟨16 * cP ^ 2, fun f => ⟨H.existsUnique_mixed hij hjk hcP hPi hPj f,
-    fun x hx => H.norm_le_of_mixed hij hjk hcP hPi hPj hx⟩⟩
-
 end InfSup
 
 end Feec.HilbertComplex

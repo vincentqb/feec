@@ -73,10 +73,6 @@ def restrict {ι' : Type*} {c' : ComplexShape ι'} (f : ι' → ι)
   mapsTo _ _ _ := H.mapsTo _ _ _
   d_comp_d _ _ _ := H.d_comp_d _ _ _
 
-@[simp] theorem restrict_d {ι' : Type*} {c' : ComplexShape ι'} (f : ι' → ι)
-    (hf : ∀ i j, c.Rel (f i) (f j) → c'.Rel i j) (i j : ι') :
-    (H.restrict f hf).d i j = H.d (f i) (f j) := rfl
-
 section Window
 
 variable {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α] {V : α → Type*}
@@ -91,9 +87,6 @@ def window (H : HilbertComplex 𝕜 (ComplexShape.up α) V) (a : α) (n : ℕ) :
     change i.val + 1 = j.val
     rw [add_assoc] at h
     exact_mod_cast add_left_cancel h
-
-@[simp] theorem window_d (H : HilbertComplex 𝕜 (ComplexShape.up α) V) (a : α) (n : ℕ)
-    (i j : Fin n) : (H.window a n).d i j = H.d (a + i) (a + j) := rfl
 
 end Window
 
@@ -156,9 +149,6 @@ def totalD : PiLp 2 W →ₗ.[𝕜] PiLp 2 W where
   domain := H.totalDomain
   toFun := (WithLp.linearEquiv 2 𝕜 (∀ i, W i)).symm.toLinearMap.comp
     (LinearMap.pi fun j => ∑ i, (H.d i j).toFun.comp (H.totalCoord i j))
-
-omit [Fintype ι] in
-@[simp] theorem totalD_domain [Fintype ι] : H.totalD.domain = H.totalDomain := rfl
 
 theorem totalD_apply (x : H.totalD.domain) (j : ι) :
     (H.totalD x) j = ∑ i, H.d i j ⟨(x : PiLp 2 W) i, x.2 i j⟩ := by

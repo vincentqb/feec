@@ -34,8 +34,7 @@ subspace of `K` reducing `L`. This file decides when `K*` consists of stationary
 
 ## Main results
 
-* `inj₁_mem_stationary_iff`, `coreSub_le_stationary_iff`, `coreSub_le_stationary_iff_harmonic`,
-  `coreSub_le_stationary_of_invariantCore₁_eq_bot`.
+* `inj₁_mem_stationary_iff`, `coreSub_le_stationary_iff`, `coreSub_le_stationary_iff_harmonic`.
 * `eigenfield_mem_invariantCore₁`, `exists_eigenfield_of_isEigenSq_mem_coreSub`.
 * **`not_coreSub_le_stationary_iff`**, **`coreSub_spectral`**.
 
@@ -221,14 +220,6 @@ theorem coreSub_le_stationary_iff_harmonic :
         S.d₁ ⟨v, h1⟩ = 0 ∧ S.d₀† ⟨v, h2⟩ = 0 := by
   rw [coreSub_le_stationary_iff]
   exact forall₂_congr fun _ _ => inj₁_mem_stationary_iff
-
-/-- If the electric slot `S₁*` is `0`, every element of `K*` is stationary. -/
-theorem coreSub_le_stationary_of_invariantCore₁_eq_bot (h : S.invariantCore₁ S₁ S₂ = ⊥) :
-    S.coreSub S₁ S₂ ≤ S.stationary :=
-  coreSub_le_stationary_iff.2 fun v hv => by
-    rw [h, Submodule.mem_bot] at hv
-    rw [hv, _root_.map_zero]
-    exact Submodule.zero_mem _
 
 /-! ### Electric eigenfields -/
 

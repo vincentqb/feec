@@ -255,18 +255,6 @@ def ell (w : W0) (v : Wt1) : StrongDual ℝ (X V0 Vt0) :=
 @[simp] lemma ell_toLp (w : W0) (v : Wt1) (τ : V0) (ψ : Vt0) :
     D.ell w v (WithLp.toLp 2 (τ, ψ)) = ⟪w, D.i0 τ⟫ - ⟪v, D.dt0 ψ⟫ := rfl
 
-/-- `ℓ` depends continuously on `(σ̇, u)` (dual norm). -/
-lemma continuous_ell : Continuous fun p : W0 × Wt1 => D.ell p.1 p.2 := by
-  have h1 : Continuous fun w : W0 => (innerSL ℝ w).comp (D.i0.comp
-      ((ContinuousLinearMap.fst ℝ V0 Vt0).comp
-        (WithLp.prodContinuousLinearEquiv 2 ℝ V0 Vt0).toContinuousLinearMap)) :=
-    ((ContinuousLinearMap.compL ℝ (X V0 Vt0) W0 ℝ).flip _).continuous.comp (innerSL ℝ).continuous
-  have h2 : Continuous fun v : Wt1 => (innerSL ℝ v).comp (D.dt0.comp
-      ((ContinuousLinearMap.snd ℝ V0 Vt0).comp
-        (WithLp.prodContinuousLinearEquiv 2 ℝ V0 Vt0).toContinuousLinearMap)) :=
-    ((ContinuousLinearMap.compL ℝ (X V0 Vt0) Wt1 ℝ).flip _).continuous.comp (innerSL ℝ).continuous
-  exact (h1.comp continuous_fst).sub (h2.comp continuous_snd)
-
 omit [CompleteSpace V0] [CompleteSpace Vt0] in
 /-- Functionals on `V⁰ × Ṽ⁰` are determined by their values on pairs. -/
 lemma ext_X {ℓ₁ ℓ₂ : StrongDual ℝ (X V0 Vt0)}
@@ -339,11 +327,6 @@ def MultiplierSolution.toSolution {T : ℝ} {f : ℝ → Wt1}
     have := s.ea t ht τ ψ
     rwa [D.Wcheck_vanish (s.Λ t).2 (by simp [h]), sub_zero] at this
 
-/-- `toSolution` keeps the trajectories. -/
-@[simp] lemma MultiplierSolution.toSolution_toTrajectory {T : ℝ} {f : ℝ → Wt1}
-    (s : D.MultiplierSolution T f) :
-    s.toSolution.toTrajectory = s.toTrajectory := rfl
-
 /-- The multiplier of (6.2) on `[0,T)` is the functional `ℓ_t = ⟪σ̇, ·⟫ − ⟪u, d·⟫`. -/
 theorem MultiplierSolution.Λ_eq {T : ℝ} {f : ℝ → Wt1} (s : D.MultiplierSolution T f) {t : ℝ}
     (ht : t ∈ Ico 0 T) :
@@ -382,15 +365,6 @@ theorem Solution.exists_multiplierSolution {T : ℝ} {f : ℝ → Wt1} (s : D.So
   refine ⟨s', rfl, fun s'' h t ht => Subtype.ext ?_⟩
   rw [s''.Λ_eq ht, h]
   exact (hΛ t ht).symm
-
-/-- The multiplier is continuous in time with values in `W̌¹` (thesis: `λ ∈ C⁰([0,T]; W̌¹)`),
-as soon as `σ̇` is continuous (the thesis' `σ ∈ C¹([0,T]; W⁰)`). -/
-theorem MultiplierSolution.continuousOn_Λ {T : ℝ} {f : ℝ → Wt1} (s : D.MultiplierSolution T f)
-    (hσ' : ContinuousOn s.σ' (Ico 0 T)) :
-    ContinuousOn (fun t => (s.Λ t : StrongDual ℝ (X V0 Vt0))) (Ico 0 T) := by
-  have hp : ContinuousOn (fun t => (s.σ' t, D.it1 (s.u t))) (Ico 0 T) :=
-    hσ'.prodMk (s.cu.mono Ico_subset_Icc_self)
-  exact (D.continuous_ell.comp_continuousOn hp).congr fun t ht => s.Λ_eq ht
 
 /-- **Prop 6.1(i) under closed range.** If `B = (d, −S)` has closed range, the multiplier is a
 genuine `λ(t) ∈ W¹`. (Remark, not formalized: in EB the range `grad H̊¹ + H̊¹(V)` is expected

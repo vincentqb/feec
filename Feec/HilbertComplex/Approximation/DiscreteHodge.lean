@@ -19,8 +19,6 @@ gap between `ℌ` and `ℌₕ`.
 * `Subcomplex.cohomologyEquivHarmonic`: discrete cohomology `≅` discrete harmonic forms.
 * `CochainProjection.norm_sub_starProjection_harmonicW_le`: the **harmonic gap**
   `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖` for `q ∈ ℌ`.
-* `CochainProjection.injective_starProjection_harmonicW`: if `‖q - π q‖ < ‖q‖` on `ℌ ∖ 0`, then
-  `P_{ℌₕ}` is injective on `ℌ` (so `dim ℌ ≤ dim ℌₕ`).
 
 ## References
 
@@ -124,21 +122,6 @@ theorem norm_sub_starProjection_harmonicW_le {i : ι} {q : W i} (hq : q ∈ H.ha
   rw [S.starProjection_harmonicW_eq hq, ← dist_eq_norm, ← dist_eq_norm,
     Submodule.dist_starProjection_eq_infDist]
   exact Metric.infDist_le_dist_of_mem (P.mem_cyclesW (H.harmonic_le_cycles i hq))
-
-/-- If `‖q - π q‖ < ‖q‖` for every nonzero harmonic `q`, the projection onto `ℌₕ` is injective
-on `ℌ`. -/
-theorem injective_starProjection_harmonicW {i : ι}
-    (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) :
-    Function.Injective fun q : H.harmonic i => (S.harmonicW i).starProjection (q : W i) := by
-  intro q q' hqq'
-  by_contra hne
-  have hd : (q : W i) - q' ≠ 0 := sub_ne_zero.2 fun h => hne (Subtype.ext h)
-  have hmem : (q : W i) - q' ∈ H.harmonic i := sub_mem q.2 q'.2
-  have h0 : (S.harmonicW i).starProjection ((q : W i) - q') = 0 := by
-    rw [_root_.map_sub, sub_eq_zero]; exact hqq'
-  have := P.norm_sub_starProjection_harmonicW_le hmem
-  rw [h0, sub_zero] at this
-  exact absurd (hgap _ hmem hd) (not_lt.2 this)
 
 end CochainProjection
 

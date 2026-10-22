@@ -47,12 +47,11 @@ The **constrained FEEC theorem** `constrainedFEEC` bundles:
    Prop. 4.13, Thm 4.14).
 4. `constrainedFEEC_residual`: if `K` reduces `L`, the **constraint residual** of the discrete
    solution is bounded by the error, `dist(ξₕ(t), K) ≤ ‖ξ(t) - ξₕ(t)‖`, so it tends to `0`
-   uniformly on `[0, T]`, with the rate of item 3 (`constrainedFEEC_residual_rate`);
+   uniformly on `[0, T]`, with the rate of item 3;
    `constrainedFEEC_residual_not_isReducing`: if `K` does not reduce `L`, then for every `T > 0`
    there are data in `K` (or in `Kᗮ`, the complementary constraint) whose exact solution leaves
    the constraint `Q` at some `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), Q)` of every
-   convergent discretization tend to `dist(ξ(t), Q) > 0`; with data in `D(L)` when `D(L) ∩ K` and
-   `D(L) ∩ Kᗮ` are dense in `K`, `Kᗮ` (`ConstrainedFEEC.exists_not_mem_of_not_isReducing_domain`).
+   convergent discretization tend to `dist(ξ(t), Q) > 0`.
    For a graded complex and an `R`-invariant `K` (e.g. a product constraint) with `D(L) ∩ K` dense
    in `K`, the data lie in `D(L) ∩ K` itself and `Q = K`
    (`constrainedFEEC_residual_not_isReducing_of_grading`). Without a grading, when `D(L) ∩ K` is
@@ -648,16 +647,6 @@ theorem constrainedFEEC_rate {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR :
     _ = (1 + ellipticConst H) * (1 + t) ^ 2 *
         (R.C * R.meshSize h ^ R.α * R.classNorm x) := by rw [hδdef]; ring
 
-/-- For mesh sizes `hₖ → 0` and `α > 0`, the rate bound tends to `0` uniformly on `[0, T]`. -/
-theorem ConstrainedFEEC.RateClass.tendsto_rate {T : ℝ} (R : F.RateClass T) (hα : 0 < R.α)
-    (hmesh : Tendsto R.meshSize F.l (𝓝 0)) (x : PiLp 2 W) (y : ℝ) :
-    Tendsto (fun h => y * (R.C * R.meshSize h ^ R.α * R.classNorm x)) F.l (𝓝 0) := by
-  have h1 : Tendsto (fun h => R.meshSize h ^ R.α) F.l (𝓝 0) := by
-    have := ((Real.continuousAt_rpow_const 0 R.α (Or.inr hα.le)).tendsto).comp hmesh
-    rwa [Real.zero_rpow hα.ne'] at this
-  have := ((h1.const_mul R.C).mul_const (R.classNorm x)).const_mul y
-  simpa using this
-
 /-! ### 4. The constraint residual -/
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
@@ -691,16 +680,6 @@ theorem constrainedFEEC_residual (hK : H.wave.IsReducing F.K) (x : H.wave.domain
   rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg infDist_nonneg]
   exact (hle h t).trans_lt this
 
-/-- **Rate of the constraint residual**: for a reducing `K` and data in `K ∩` a rate class on
-`[0, T]`, `dist(ξₕ(t), K) ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`. -/
-theorem constrainedFEEC_residual_rate (hK : H.wave.IsReducing F.K) {T : ℝ} (R : F.RateClass T)
-    {x : PiLp 2 W} (hxR : x ∈ R.Data) (hxK : x ∈ F.K) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
-    infDist (H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t))
-        (F.K : Set (PiLp 2 W)) ≤
-      (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
-  (F.infDist_le_norm_sub ((constrainedFEEC_propagates_iff F).1 hK t x hxK)).trans
-    (constrainedFEEC_rate F R hxR h ht)
-
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 /-- The residual of every convergent discretization tends to the distance of the exact solution
 to the constraint. -/
@@ -733,27 +712,6 @@ theorem ConstrainedFEEC.exists_not_mem_of_not_isReducing (hK : ¬ H.wave.IsReduc
   simp only [not_or, not_exists, not_and, not_not] at hc
   exact hK (F.isReducing_of_forall_nonneg (forall_nonneg_of_forall_Icc H hT (P := F.K) hc.1)
     (forall_nonneg_of_forall_Icc H hT (P := F.Kᗮ) hc.2))
-
-/-- **Non-reducing constraints are violated by data in `D(L)`**, when `D(L) ∩ K` is dense in `K`
-and `D(L) ∩ Kᗮ` is dense in `Kᗮ`. -/
-theorem ConstrainedFEEC.exists_not_mem_of_not_isReducing_domain (hK : ¬ H.wave.IsReducing F.K)
-    {T : ℝ} (hT : 0 < T) (hdense : ∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K))
-    (hdense' : ∀ k ∈ F.Kᗮ, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.Kᗮ)) :
-    (∃ x ∈ H.wave.domain, x ∈ F.K ∧ ∃ t ∈ Icc 0 T, H.waveGroup.S t x ∉ F.K) ∨
-      ∃ x ∈ H.wave.domain, x ∈ F.Kᗮ ∧ ∃ t ∈ Icc 0 T, H.waveGroup.S t x ∉ F.Kᗮ := by
-  by_contra hc
-  simp only [not_or, not_exists, not_and, not_not] at hc
-  have key : ∀ Q : Submodule 𝕜 (PiLp 2 W), IsClosed (Q : Set (PiLp 2 W)) →
-      (∀ k ∈ Q, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ Q)) →
-      (∀ x ∈ H.wave.domain, x ∈ Q → ∀ t ∈ Icc 0 T, H.waveGroup.S t x ∈ Q) →
-      ∀ x ∈ Q, ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ Q := by
-    intro Q hQ hd h x hx t ht
-    have hP := forall_nonneg_of_forall_Icc H hT
-      (P := (H.wave.domain : Set (PiLp 2 W)) ∩ Q)
-      fun y hy s hs => ⟨waveGroup_mem_domain H hy.1 s, h y hy.1 hy.2 s hs⟩
-    exact waveGroup_mem_of_dense hQ hd (fun y hy hyQ => (hP y ⟨hy, hyQ⟩ t ht).2) x hx
-  exact hK (F.isReducing_of_forall_nonneg (key F.K F.isClosed_K hdense hc.1)
-    (key F.Kᗮ (Submodule.isClosed_orthogonal _) hdense' hc.2))
 
 /-- **Residual of a non-reducing constraint**: if `K` does not reduce `L`, then for every
 `T > 0` the constraint `Q = K` or the complementary constraint `Q = Kᗮ` has a datum `x ∈ Q`

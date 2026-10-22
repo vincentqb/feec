@@ -29,8 +29,8 @@ bending in [DuranLiberman1992] and [Falk2008] ([QuennevilleBelair2015], Ch. 5 in
   transposed condition `Hilb.nondeg_a` (missing in the thesis).
 * `Hilb.tripleNorm_spec`, `Hilb.tripleNorm_definite`, `Hilb.jW_spec`: `W̌¹` is the completion of
   `(W¹, |||·|||)` under the corrected density hypothesis.
-* `Hilb.existsUnique_isReduced`, `Hilb.existsUnique_multiplier`, `Hilb.isSaddle_iff_isReduced`,
-  `Hilb.isSaddle_jW_of_isSaddleW1`: (5.2) ⇔ (5.3).
+* `Hilb.existsUnique_isReduced`, `Hilb.existsUnique_multiplier`, `Hilb.isSaddle_iff_isReduced`:
+  (5.2) ⇔ (5.3).
 
 The scalars are real; Brezzi's theorem enters through `Feec.BGG.brezzi_wellPosed_real`, the
 bilinear form of `Feec.Variational.existsUnique_isSaddleSolution` with its stability bounds.
@@ -94,9 +94,6 @@ def mkX (σ : V0) (φ : Vt0) (u : Vt1) : Xsp V0 Vt0 Vt1 := WithLp.toLp 2 (WithLp
 lemma mkX_eta (x : Xsp V0 Vt0 Vt1) :
     mkX (pσ V0 Vt0 Vt1 x) (pφ V0 Vt0 Vt1 x) (pu V0 Vt0 Vt1 x) = x := rfl
 
-lemma pP_apply (x : Xsp V0 Vt0 Vt1) :
-    pP V0 Vt0 Vt1 x = WithLp.toLp 2 (pσ V0 Vt0 Vt1 x, pφ V0 Vt0 Vt1 x) := rfl
-
 lemma norm_sq_X (x : Xsp V0 Vt0 Vt1) :
     ‖x‖ ^ 2 = ‖pσ V0 Vt0 Vt1 x‖ ^ 2 + ‖pφ V0 Vt0 Vt1 x‖ ^ 2 + ‖pu V0 Vt0 Vt1 x‖ ^ 2 := by
   rw [WithLp.prod_norm_sq_eq_of_L2, WithLp.prod_norm_sq_eq_of_L2]; rfl
@@ -109,9 +106,6 @@ lemma inner_X (x y : Xsp V0 Vt0 Vt1) :
 def ip {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     (f g : Xsp V0 Vt0 Vt1 →L[ℝ] E) : Xsp V0 Vt0 Vt1 →L[ℝ] Xsp V0 Vt0 Vt1 →L[ℝ] ℝ :=
   (innerSL ℝ : E →L[ℝ] E →L[ℝ] ℝ).bilinearComp f g
-
-@[simp] lemma ip_apply {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
-    (f g : Xsp V0 Vt0 Vt1 →L[ℝ] E) (x y : Xsp V0 Vt0 Vt1) : ip f g x y = ⟪f x, g y⟫ := rfl
 
 end ProdSpaces
 
@@ -130,9 +124,6 @@ def toSesq (a : X →L[ℝ] X →L[ℝ] ℝ) : X →L[ℝ] X →L⋆[ℝ] ℝ :=
     (fun c u v => by simp)) ‖a‖ (fun u v => by simpa using a.le_opNorm₂ u v)
 
 @[simp] lemma toSesq_apply (a : X →L[ℝ] X →L[ℝ] ℝ) (u v : X) : toSesq a u v = a u v := rfl
-
-lemma norm_toSesq_le (a : X →L[ℝ] X →L[ℝ] ℝ) : ‖toSesq a‖ ≤ ‖a‖ :=
-  LinearMap.mkContinuous₂_norm_le _ (norm_nonneg a) _
 
 lemma norm_innerSLFlip_le (x : X) : ‖innerSLFlip ℝ x‖ ≤ ‖x‖ :=
   ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg x) fun v => by
@@ -306,12 +297,6 @@ theorem tripleNorm_spec (l : W1) :
           real_inner_self_eq_norm_sq, tripleNorm]
         field_simp
 
-/-- `|||λ||| ≤ ‖B‖ ‖λ‖` (thesis: `≤ max(1, ‖S‖) ‖λ‖` for the sum norm). -/
-theorem tripleNorm_le (l : W1) : D.tripleNorm l ≤ ‖D.Bop‖ * ‖l‖ := by
-  have : ‖adj D.Bop‖ = ‖D.Bop‖ := LinearIsometryEquiv.norm_map _ _
-  rw [tripleNorm, ← this]
-  exact (adj D.Bop).le_opNorm l
-
 /-- **`|||·|||` is a norm** (thesis: "is actually a norm", no proof), under the corrected density
 hypothesis `d⁰V⁰ + S₀Ṽ⁰` dense in `W¹`.
 
@@ -335,14 +320,6 @@ theorem tripleNorm_definite
     map_neg, inner_neg_left, neg_eq_zero] at h1 h2
   simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.comp_apply, inner_add_left]
   rw [h1, h2, add_zero]
-
-/-- The thesis' hypothesis "`S Ṽ⁰` dense in `W¹`" implies the corrected one. -/
-theorem dense_sup_of_denseRange_S0 (hS : DenseRange (D.ι1 ∘L D.S0)) :
-    Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
-      LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1) :=
-  Dense.mono (fun y hy => by
-    obtain ⟨ψ, rfl⟩ := hy
-    exact Submodule.mem_sup_right ⟨ψ, rfl⟩) hS
 
 /-- The embedding `W¹ → W̌¹`, `λ ↦ B*λ`. -/
 def jW : W1 →L[ℝ] D.Wcheck :=
@@ -838,16 +815,6 @@ def IsSaddleW1 (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : W1) : Prop :=
   (∀ y, D.aForm x y - ⟪l, D.ι1 (D.d0 (pσ V0 Vt0 Vt1 y) - D.S0 (pφ V0 Vt0 Vt1 y))⟫ =
     ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫) ∧
   ∀ μ : W1, ⟪D.ι1 (D.d0 (pσ V0 Vt0 Vt1 x) - D.S0 (pφ V0 Vt0 Vt1 x)), μ⟫ = 0
-
-/-- Consistency with the thesis' (5.3): a solution with `λ ∈ W¹` is the solution of `IsSaddle`
-with multiplier `jW λ ∈ W̌¹` (in general no solution with `λ ∈ W¹` exists, which is why the
-thesis' Prop 5.2 is stated over `W̌¹`). -/
-theorem isSaddle_jW_of_isSaddleW1 {f : Wt1} {x : Xsp V0 Vt0 Vt1} {l : W1}
-    (hs : D.IsSaddleW1 f x l) : D.IsSaddle f x (D.jW l) := by
-  refine ⟨fun y => by rw [D.bForm_jW, ← hs.1 y]; ring, (D.forall_bForm_eq_zero_iff x).2 ?_⟩
-  have h0 := hs.2 (D.ι1 (D.d0 (pσ V0 Vt0 Vt1 x) - D.S0 (pφ V0 Vt0 Vt1 x)))
-  rw [inner_self_eq_zero, map_sub, sub_eq_zero] at h0
-  exact D.mem_Γ.2 (D.ι1_injective h0)
 
 
 end Hilb

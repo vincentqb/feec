@@ -256,14 +256,6 @@ theorem wave_waveGroup {H : HilbertComplex 𝕜 c W} {x : PiLp 2 W} (hx : x ∈ 
   rwa [apply_eq_of_eq'' hg _ ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx t⟩ rfl,
     apply_eq_of_eq'' hg _ ⟨x, hx⟩ rfl] at h
 
-/-- `D(L²)` is invariant under the wave group. -/
-theorem waveGroup_mem_domainSq {H : HilbertComplex 𝕜 c W} {x : PiLp 2 W}
-    (hx : x ∈ H.wave.domainSq) (t : ℝ) : H.waveGroup.S t x ∈ H.wave.domainSq := by
-  obtain ⟨hx1, hx2⟩ := mem_domainSq.1 hx
-  refine mem_domainSq.2 ⟨waveGroup_mem_domain H hx1 t, ?_⟩
-  rw [wave_waveGroup hx1 t]
-  exact waveGroup_mem_domain H hx2 t
-
 variable (H : HilbertComplex 𝕜 c W)
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
@@ -400,10 +392,6 @@ theorem norm_incl_le (h : κ) : ‖F.incl h‖ ≤ F.boundConst :=
 
 theorem norm_proj_le (h : κ) : ‖F.proj h‖ ≤ F.boundConst :=
   (F.bound.choose_spec h).2.trans (le_max_left _ _)
-
-theorem incl_injective (h : κ) : Function.Injective (F.incl h) := fun a b hab => by
-  have := congrArg (F.proj h) hab
-  rwa [F.proj_incl, F.proj_incl] at this
 
 /-- **Stability of the reading map**: `‖v‖ ≤ C ‖ιₕ v‖` (from `πₕ ιₕ = 1`). -/
 theorem norm_le_norm_incl (h : κ) (v : F.X h) : ‖v‖ ≤ F.boundConst * ‖F.incl h v‖ :=
@@ -583,13 +571,6 @@ def Comparison.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T :
     ((R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t
       ((waveOrbit_isC1' H hx T).2.2 t ht)
 
-theorem Comparison.ofOperator_data (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T : ℝ) :
-    (Comparison.ofOperator F R T).Data = H.wave.domainSq := rfl
-
-theorem Comparison.ofOperator_p (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T : ℝ)
-    (x : PiLp 2 W) (h : κ) (t : ℝ) :
-    (Comparison.ofOperator F R T).p x h t = R h (waveOrbit H x t) := rfl
-
 /-- Uniform approximation along the orbits, from pointwise approximation by uniformly bounded
 `ιₕ Rₕ` (compactness of the orbit). -/
 theorem tendstoUniformlyOn_ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h)
@@ -664,15 +645,6 @@ def Core.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h)
     rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _)]
     have := hdefect h t
     linarith [h1 _ (mem_image_of_mem _ ht), h2 _ (mem_image_of_mem _ ht)]
-
-theorem Core.ofOperator_data (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) hR happrox Δ Δ' hΔ hdef
-    hΔ0 hΔ'0 :
-    (Core.ofOperator F R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0).Data = H.wave.domainSq := rfl
-
-theorem Core.ofOperator_cmp (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) hR happrox Δ Δ' hΔ hdef
-    hΔ0 hΔ'0 (T : ℝ) :
-    (Core.ofOperator F R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0).cmp T = Comparison.ofOperator F R T :=
-  rfl
 
 /-! ### Complexification (real schemes for complex data: real and imaginary parts) -/
 

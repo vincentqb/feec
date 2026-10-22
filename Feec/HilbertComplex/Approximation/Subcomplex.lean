@@ -138,9 +138,6 @@ variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 def dh (i j : ι) : S.V i →L[𝕜] S.V j :=
   ⟨S.dLin i j, LinearMap.continuous_of_finiteDimensional _⟩
 
-@[simp] theorem coe_dh_apply (i j : ι) (x : S.V i) :
-    (S.dh i j x : W j) = H.d i j (S.toDomain i j x) := rfl
-
 /-- **The discrete complex**: a finite-dimensional subcomplex is a Hilbert complex with the
 restricted (bounded) differentials. [QuennevilleBelair2015], §4.6 -/
 def toHilbertComplex : HilbertComplex 𝕜 c (fun i => S.V i) where
@@ -152,11 +149,6 @@ def toHilbertComplex : HilbertComplex 𝕜 c (fun i => S.V i) where
   closed i j := ContinuousLinearMap.isClosed_toPMap_top (S.dh i j)
   mapsTo _ _ _ _ := Submodule.mem_top
   d_comp_d i j k x := S.dLin_comp_dLin i j k x
-
-theorem toHilbertComplex_d_apply (i j : ι) (x : (S.toHilbertComplex.d i j).domain) :
-    S.toHilbertComplex.d i j x = S.dh i j x := rfl
-
-theorem toHilbertComplex_d_domain (i j : ι) : (S.toHilbertComplex.d i j).domain = ⊤ := rfl
 
 /-- `x ∈ Vₕⁱ` is a discrete cycle iff it is a cycle. -/
 theorem mem_cycles_iff {i : ι} {x : S.V i} :

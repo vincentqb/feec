@@ -18,12 +18,7 @@ For a Hilbert complex graded by a parity `p` (flipping along every arrow), the g
 `R` reverses time, `R e^{tL} = e^{-tL} R` (`Feec.HilbertComplex.reversal_waveGroup`). Hence:
 
 * `R` preserves the invariant core of every `R`-invariant `K` (`reversal_mem_invariantCore`),
-  in particular of every product `totalSub S` (`reversal_mem_totalSub`);
-* **which data propagate** (`mem_invariantCore_iff_forall_isStrongSolution`): `x ∈ D(L)` lies in
-  `K*` iff every strong solution of `U' = L U` from `x` and every one from `R x` stay in `K` on
-  every `[0, T]`. Forward propagation of `x` alone is weaker in general: for
-  `0 → H¹(ℝ) --d/dx--> L²(ℝ)` and `S₁ = S₂ = L²(0, ∞)`, `E - B` moves right and `E + B` moves
-  left, so `(0, f, -f)` with `supp f ⊆ (1, 2)` stays in `K` for `t ≥ 0` while `R` of it leaves.
+  in particular of every product `totalSub S` (`reversal_mem_totalSub`).
 
 ## Short complexes
 
@@ -33,14 +28,12 @@ For a short complex and `K = {0} × S₁ × S₂` (`Feec.ShortHilbertComplex.cor
   `S₂* = {B | (0, 0, B) ∈ K*}` (`invariantCore₁`, `invariantCore₂`): the even and odd parts
   `(x ± R x)/2` of `x ∈ K*` lie in `K*`;
 * `{0} × S₁* × S₂*` reduces `L` (`isReducing_wave_coreSub`), so strong solutions with data in it
-  stay in it (`propagates_coreSub`, the corrected Prop 4.17), with existence and uniqueness
-  (`existsUnique_mem_coreSub`); when `S₁ ⊆ N(d₀†)` it is even a reducing subcomplex
-  (`reducingSubcomplex_coreSub`): `d₁ (D(d₁) ∩ S₁*) ⊆ S₂*`, `d₁† (D(d₁†) ∩ S₂*) ⊆ S₁*`;
-* **maximality** (`le_invariantCore_of_isReducing`, `le_invariantCore_of_forall`): every closed
-  `S₁' ⊆ S₁`, `S₂' ⊆ S₂` whose product reduces `L` (for instance: `S₁' ⊆ N(d₀†)`, the projection
-  hypothesis, and `d₁ S₁' ⊆ S₂'`, `d₁† S₂' ⊆ S₁'`, `isReducing_wave_family3`) lies in
-  `(S₁*, S₂*)`;
-* stationary data lie in `K*` (`mem_invariantCore₁_of_eq_zero`, `mem_invariantCore₂_of_eq_zero`).
+  exist, are unique and stay in it (`existsUnique_mem_coreSub`, the corrected Prop 4.17); when
+  `S₁ ⊆ N(d₀†)` it is even a reducing subcomplex (`reducingSubcomplex_coreSub`):
+  `d₁ (D(d₁) ∩ S₁*) ⊆ S₂*`, `d₁† (D(d₁†) ∩ S₂*) ⊆ S₁*`;
+* **maximality** (`le_invariantCore_of_isReducing`): every closed `S₁' ⊆ S₁`, `S₂' ⊆ S₂` whose
+  product reduces `L` lies in `(S₁*, S₂*)`;
+* stationary data of degree `2` lie in `K*` (`mem_invariantCore₂_of_eq_zero`).
 
 ## References
 
@@ -87,11 +80,6 @@ theorem reversal_mem_invariantCore {K : Submodule 𝕜 (PiLp 2 W)}
     rw [← e]
     exact hRK _ (C0Group.mem_invariantCore.1 hx _)
 
-/-- `e^{tL} x = R e^{-tL} R x`. -/
-theorem waveGroup_eq_reversal (t : ℝ) (x : PiLp 2 W) :
-    H.waveGroup.S t x = reversal 𝕜 p (H.waveGroup.S (-t) (reversal 𝕜 p x)) := by
-  rw [H.reversal_waveGroup hp, neg_neg, reversal_reversal]
-
 omit hp in
 /-- Strong solutions of `U' = L U` from `x ∈ D(L)` are the orbit `t ↦ e^{tL} x`. -/
 theorem eq_waveGroup_of_isStrongSolution {x : PiLp 2 W} (hx : x ∈ H.wave.domain) {T : ℝ}
@@ -113,33 +101,6 @@ theorem isStrongSolution_waveGroup {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (T 
     0 T
   rw [hg] at hO
   simpa using hO.toIsStrongSolution
-
-/-- **Which data propagate.** For an `R`-invariant `K` and `x ∈ D(L)`: `x ∈ K*` iff every strong
-solution of `U' = L U` from `x`, and every one from `R x`, stays in `K` on every `[0, T]`. -/
-theorem mem_invariantCore_iff_forall_isStrongSolution (K : Submodule 𝕜 (PiLp 2 W))
-    (hRK : ∀ x ∈ K, reversal 𝕜 p x ∈ K) {x : PiLp 2 W} (hx : x ∈ H.wave.domain) :
-    x ∈ H.waveGroup.invariantCore K ↔
-      (∀ (T : ℝ) (U : ℝ → PiLp 2 W), U 0 = x →
-        Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U → ∀ t ∈ Icc 0 T, U t ∈ K) ∧
-      (∀ (T : ℝ) (U : ℝ → PiLp 2 W), U 0 = reversal 𝕜 p x →
-        Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U → ∀ t ∈ Icc 0 T, U t ∈ K) := by
-  have hRx : reversal 𝕜 p x ∈ H.wave.domain := (H.wave_reversal hp).mapsTo ⟨x, hx⟩
-  constructor
-  · intro hK
-    have key : ∀ y ∈ H.wave.domain, y ∈ H.waveGroup.invariantCore K →
-        ∀ (T : ℝ) (U : ℝ → PiLp 2 W), U 0 = y →
-          Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U → ∀ t ∈ Icc 0 T, U t ∈ K := by
-      intro y hy hyK T U h0 hU t ht
-      rw [H.eq_waveGroup_of_isStrongSolution hy h0 hU ht]
-      exact C0Group.mem_invariantCore.1 hyK t
-    exact ⟨key x hx hK, key _ hRx (H.reversal_mem_invariantCore hp hRK hK)⟩
-  · rintro ⟨hf, hr⟩
-    refine C0Group.mem_invariantCore.2 fun t => ?_
-    rcases le_total 0 t with ht | ht
-    · exact hf t _ (by simp) (H.isStrongSolution_waveGroup hx t) t ⟨ht, le_rfl⟩
-    · rw [H.waveGroup_eq_reversal hp]
-      refine hRK _ (hr (-t) _ ?_ (H.isStrongSolution_waveGroup hRx (-t)) (-t) ⟨by linarith, le_rfl⟩)
-      simp
 
 end Feec.HilbertComplex
 
@@ -167,18 +128,6 @@ instance instHasOrthogonalProjectionFamily3 (K₀ : Submodule 𝕜 W₀) (K₁ :
   | 0 => inferInstanceAs K₀.HasOrthogonalProjection
   | 1 => inferInstanceAs K₁.HasOrthogonalProjection
   | 2 => inferInstanceAs K₂.HasOrthogonalProjection
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem family3_zero (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    family3 K₀ K₁ K₂ 0 = K₀ := rfl
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem family3_one (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    family3 K₀ K₁ K₂ 1 = K₁ := rfl
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem family3_two (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁) (K₂ : Submodule 𝕜 W₂) :
-    family3 K₀ K₁ K₂ 2 = K₂ := rfl
 
 omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
 theorem mem_totalSub_family3 {K₀ : Submodule 𝕜 W₀} {K₁ : Submodule 𝕜 W₁}
@@ -231,14 +180,6 @@ variable (W₀ W₁ W₂) in
 def inj₂ : W₂ →L[𝕜] PiLp 2 (W3 W₀ W₁ W₂) :=
   (PiLp.continuousLinearEquiv 2 𝕜 (W3 W₀ W₁ W₂)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.single 𝕜 (W3 W₀ W₁ W₂) 2
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-theorem inj₁_apply (v : W₁) :
-    inj₁ (𝕜 := 𝕜) W₀ W₁ W₂ v = WithLp.toLp 2 (Pi.single (M := W3 W₀ W₁ W₂) 1 v) := rfl
-
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-theorem inj₂_apply (v : W₂) :
-    inj₂ (𝕜 := 𝕜) W₀ W₁ W₂ v = WithLp.toLp 2 (Pi.single (M := W3 W₀ W₁ W₂) 2 v) := rfl
 
 omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
 @[simp] theorem inj₁_apply_zero (v : W₁) : (inj₁ (𝕜 := 𝕜) W₀ W₁ W₂ v 0 : W₀) = 0 := rfl
@@ -309,9 +250,6 @@ theorem mem_coreSub {x : PiLp 2 (W3 W₀ W₁ W₂)} : x ∈ S.coreSub S₁ S₂
 
 theorem mem_invariantCore₁ {v : W₁} :
     v ∈ S.invariantCore₁ S₁ S₂ ↔ inj₁ (𝕜 := 𝕜) W₀ W₁ W₂ v ∈ S.coreSub S₁ S₂ := Iff.rfl
-
-theorem mem_invariantCore₂ {v : W₂} :
-    v ∈ S.invariantCore₂ S₁ S₂ ↔ inj₂ (𝕜 := 𝕜) W₀ W₁ W₂ v ∈ S.coreSub S₁ S₂ := Iff.rfl
 
 theorem coreSub_le :
     S.coreSub S₁ S₂ ≤ HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂) :=
@@ -427,15 +365,6 @@ theorem mem_closure_wave_domain_inter_coreSub {k : PiLp 2 (W3 W₀ W₁ W₂)}
   have := S.toHilbertComplex.isIsometric_waveGroup.mem_closure_domain_inter_invariantCore hk
   rwa [HilbertComplex.generator_waveGroup] at this
 
-/-- **Corrected Prop 4.17**: strong solutions of `U' = L U + F` with data and forcing in
-`K* = {0} × S₁* × S₂*` stay in `K* ⊆ {0} × S₁ × S₂`; no hypothesis. -/
-theorem propagates_coreSub [NormedSpace ℝ (PiLp 2 (W3 W₀ W₁ W₂))]
-    [IsScalarTower ℝ 𝕜 (PiLp 2 (W3 W₀ W₁ W₂))] {a b : ℝ} {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)}
-    (hU : Evolution.IsStrongSolution S.wave (Icc a b) F U) (h0 : U a ∈ S.coreSub S₁ S₂)
-    (hF : ∀ t ∈ Icc a b, F t ∈ S.coreSub S₁ S₂) : ∀ t ∈ Icc a b, U t ∈ S.coreSub S₁ S₂ := by
-  rw [coreSub_eq] at h0 hF ⊢
-  exact hU.mem_of_isReducing S.isSkewAdjoint_wave.isDissipative isReducing_wave_coreSub h0 hF
-
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
 /-- **Corrected Prop 4.17 with existence**: for `U₀ ∈ D(L) ∩ K*` and every `[a, b]`,
 `U' = L U`, `U a = U₀` has a classical solution, unique among strong solutions, and it stays in
@@ -468,49 +397,6 @@ theorem le_invariantCore_of_isReducing {S₁' : Submodule 𝕜 W₁} {S₂' : Su
     S.toHilbertComplex.le_invariantCore_waveGroup (totalSub_family3_mono le_rfl h₁ h₂) hred
   exact ⟨fun v hv => hK (single_one_mem_totalSub_family3 _ _ _ hv),
     fun v hv => hK (single_two_mem_totalSub_family3 _ _ _ hv)⟩
-
-omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
-  [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
-/-- The hypotheses of the thesis' Prop 4.17 (`S₁ ⊆ N(d₀†)`, the projection hypothesis
-`P_K D(L) ⊆ D(L)`, `d₁ (D(d₁) ∩ S₁) ⊆ S₂`, `d₁† (D(d₁†) ∩ S₂) ⊆ S₁`) say exactly that
-`K = {0} × S₁ × S₂` reduces `L`. -/
-theorem isReducing_wave_family3 [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
-    (hS₁ : S₁ ≤ (S.d₀†).ker)
-    (hPD : ∀ x ∈ S.wave.domain, (HilbertComplex.totalSub
-      (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂)).starProjection x ∈ S.wave.domain)
-    (hd₁ : ∀ u : S.d₁.domain, (u : W₁) ∈ S₁ → S.d₁ u ∈ S₂)
-    (hd₁' : ∀ ρ : S.d₁†.domain, (ρ : W₂) ∈ S₂ → S.d₁† ρ ∈ S₁) :
-    S.wave.IsReducing (HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂)) := by
-  refine S.isSkewAdjoint_wave.isReducing (fun x => hPD x x.2) fun x hx => ?_
-  obtain ⟨h0, h1, h2⟩ := mem_totalSub_family3.1 hx
-  refine mem_totalSub_family3.2 ⟨?_, ?_, ?_⟩
-  · rw [S.wave_apply_zero]
-    refine (Submodule.mem_bot 𝕜 (M := W₀)).2 ((neg_eq_zero (α := W₀)).2 ?_)
-    obtain ⟨z, hz, hz0⟩ := mem_ker_iff.1 (hS₁ h1)
-    rw [← hz0]
-    exact LinearPMap.apply_congr' _ _ _ hz
-  · rw [S.wave_apply_one]
-    have e : S.d₀ ⟨((x : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀), x.2.1 0 1⟩ = 0 := by
-      have : (⟨((x : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀), x.2.1 0 1⟩ : S.d₀.domain) = 0 :=
-        Subtype.ext ((Submodule.mem_bot 𝕜 (M := W₀)).1 h0)
-      rw [this, LinearPMap.map_zero]
-    rw [e, zero_sub]
-    exact S₁.neg_mem (hd₁' ⟨_, _⟩ h2)
-  · rw [S.wave_apply_two]
-    exact hd₁ ⟨_, _⟩ h1
-
-omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- **Maximality, thesis form**: every closed pair `S₁' ⊆ S₁`, `S₂' ⊆ S₂` satisfying the
-hypotheses of Prop 4.17 lies in `(S₁*, S₂*)`. -/
-theorem le_invariantCore_of_forall {S₁' : Submodule 𝕜 W₁} {S₂' : Submodule 𝕜 W₂}
-    [S₁'.HasOrthogonalProjection] [S₂'.HasOrthogonalProjection] (h₁ : S₁' ≤ S₁) (h₂ : S₂' ≤ S₂)
-    (hS₁ : S₁' ≤ (S.d₀†).ker)
-    (hPD : ∀ x ∈ S.wave.domain, (HilbertComplex.totalSub
-      (family3 (⊥ : Submodule 𝕜 W₀) S₁' S₂')).starProjection x ∈ S.wave.domain)
-    (hd₁ : ∀ u : S.d₁.domain, (u : W₁) ∈ S₁' → S.d₁ u ∈ S₂')
-    (hd₁' : ∀ ρ : S.d₁†.domain, (ρ : W₂) ∈ S₂' → S.d₁† ρ ∈ S₁') :
-    S₁' ≤ S.invariantCore₁ S₁ S₂ ∧ S₂' ≤ S.invariantCore₂ S₁ S₂ :=
-  le_invariantCore_of_isReducing h₁ h₂ (isReducing_wave_family3 hS₁ hPD hd₁ hd₁')
 
 /-! ### The differentials on the slots of `K*` -/
 
@@ -581,15 +467,6 @@ theorem adjoint_mem_invariantCore₁ (ρ : S.d₁†.domain) (hρ : (ρ : W₂) 
   rw [wave_inj₂] at hm
   have h1 : -(S.d₁† ρ) ∈ S.invariantCore₁ S₁ S₂ := (mem_totalSub_family3.1 hm).2.1
   exact (Submodule.neg_mem_iff _).1 h1
-
-/-- `d₁ (D(d₁) ∩ S₁*) ⊆ S₂*` when `S₁ ⊆ N(d₀†)`. -/
-theorem apply_mem_invariantCore₂ (hS₁ : S₁ ≤ (S.d₀†).ker) (u : S.d₁.domain)
-    (hu : (u : W₁) ∈ S.invariantCore₁ S₁ S₂) : S.d₁ u ∈ S.invariantCore₂ S₁ S₂ := by
-  have hu' := (S.d₀†).ker_le_domain (hS₁ (invariantCore₁_le hu))
-  have hm := (isReducing_wave_coreSub (S := S) (S₁ := S₁) (S₂ := S₂)).mapsTo
-    ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu'⟩ (single_one_mem_totalSub_family3 _ _ _ hu)
-  have h2 := (mem_totalSub_family3.1 hm).2.2
-  rwa [wave_inj₁_two u hu'] at h2
 
 /-- **`{0} × S₁* × S₂*` is a reducing subcomplex** when `S₁ ⊆ N(d₀†)`: `(⊥, S₁*)` reduces `d₀`
 because `R(d₀) ⊥ N(d₀†) ⊇ S₁*`, and `(S₁*, S₂*)` reduces `d₁` since `L` is reduced by `K*` on
@@ -671,40 +548,5 @@ theorem mem_invariantCore₂_of_eq_zero (ρ : S.d₁†.domain) (hρ : (ρ : W�
     (h0 : S.d₁† ρ = 0) : (ρ : W₂) ∈ S.invariantCore₂ S₁ S₂ :=
   mem_coreSub_of_wave_eq_zero ⟨_, inj₂_mem_wave_domain (S := S) ρ.2⟩
     (single_two_mem_totalSub_family3 _ _ _ hρ) (by rw [wave_inj₂, h0, neg_zero, _root_.map_zero])
-
-omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- **Stationary electric data lie in `K*`**: if `E ∈ D(d₁) ∩ N(d₀†) ∩ S₁` and `d₁ E = 0`, then
-`E ∈ S₁*`. -/
-theorem mem_invariantCore₁_of_eq_zero (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀†).ker)
-    (hu₁ : (u : W₁) ∈ S₁) (h0 : S.d₁ u = 0) : (u : W₁) ∈ S.invariantCore₁ S₁ S₂ := by
-  have hu' := (S.d₀†).ker_le_domain hu
-  refine mem_coreSub_of_wave_eq_zero ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu'⟩
-    (single_one_mem_totalSub_family3 _ _ _ hu₁) ?_
-  obtain ⟨z, hz, hz0⟩ := mem_ker_iff.1 hu
-  refine PiLp.ext fun i => ?_
-  fin_cases i
-  · show ((S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu'⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) = 0
-    rw [wave_inj₁_zero u hu',
-      show S.d₀† ⟨u, hu'⟩ = S.d₀† z from LinearPMap.apply_congr' _ _ _ hz, hz0, neg_zero]
-    rfl
-  · exact wave_inj₁_one u hu'
-  · show ((S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu'⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) = 0
-    rw [wave_inj₁_two u hu', h0]
-    rfl
-
-omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- **Which data propagate** (short complexes): `x ∈ D(L)` lies in `K*` iff the strong solutions
-from `x` and from `R x = (x₀, -x₁, x₂)` stay in `{0} × S₁ × S₂`. -/
-theorem mem_coreSub_iff_forall_isStrongSolution {x : PiLp 2 (W3 W₀ W₁ W₂)}
-    (hx : x ∈ S.wave.domain) :
-    x ∈ S.coreSub S₁ S₂ ↔
-      (∀ (T : ℝ) (U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)), U 0 = x →
-        Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
-          ∀ t ∈ Icc 0 T, U t ∈ HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂)) ∧
-      (∀ (T : ℝ) (U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)), U 0 = reversal3 (𝕜 := 𝕜) x →
-        Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
-          ∀ t ∈ Icc 0 T, U t ∈ HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂)) :=
-  S.toHilbertComplex.mem_invariantCore_iff_forall_isStrongSolution fin3_parity _
-    (fun _ hy => HilbertComplex.reversal_mem_totalSub hy) hx
 
 end Feec.ShortHilbertComplex

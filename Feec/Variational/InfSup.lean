@@ -23,7 +23,6 @@ inf-sup condition with constant `γ > 0` is `γ ‖x‖ ≤ ‖B x‖ = sup_{y �
 * `InfSup.injective`, `InfSup.norm_le_of_apply_eq`: uniqueness and the stability bound
   `‖x‖ ≤ γ⁻¹ ‖B x‖`.
 * `InfSup.le_opNorm`: `γ ≤ ‖B‖` on a nontrivial space.
-* `InfSup.of_forall_exists`: the inf-sup condition from test elements.
 * `InfSup.of_testMap`, `InfSup.restrict_of_testMap`: a test map `T` with `‖T x‖ ≤ M ‖x‖` and
   `c ‖x‖² ≤ re B x (T x)` gives the inf-sup constant `c / M`, on every pair of subspaces
   `K, L` with `T K ⊆ L`. This is the proof pattern of the inf-sup condition for the Hodge wave
@@ -114,17 +113,6 @@ theorem le_opNorm [Nontrivial X] (h : InfSup B γ) : γ ≤ ‖B‖ := by
   obtain ⟨x, hx⟩ := exists_ne (0 : X)
   have hx' : 0 < ‖x‖ := norm_pos_iff.2 hx
   exact le_of_mul_le_mul_right ((h.le x).trans (B.le_opNorm x)) hx'
-
-/-- The inf-sup condition from test elements: if every `x` has a `y` with
-`γ ‖x‖ ‖y‖ ≤ |B x y|`, then `InfSup B γ`. -/
-theorem of_forall_exists (hγ : 0 < γ) (h : ∀ x, ∃ y, γ * ‖x‖ * ‖y‖ ≤ ‖B x y‖ ∧ (y = 0 → x = 0)) :
-    InfSup B γ := by
-  refine ⟨hγ, fun x => ?_⟩
-  obtain ⟨y, hy, hy0⟩ := h x
-  by_cases hy' : y = 0
-  · rw [hy0 hy', norm_zero, mul_zero]; exact norm_nonneg _
-  · have : 0 < ‖y‖ := norm_pos_iff.2 hy'
-    exact le_of_mul_le_mul_right (hy.trans ((B x).le_opNorm y)) this
 
 /-- The inf-sup condition in the normalized "attained" form
 `∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. -/

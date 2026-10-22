@@ -26,7 +26,7 @@ The result is [AFW2010], Thm 3.11 ([Arnold2018], Thm 5.6), with explicit constan
 
 These are unconditional abstract theorems. They are proved first for any numbers `η`, `δ`, `μ`
 dominating the corresponding operators (hypotheses `hη₁ … hη₄`, `hδ`, `hμ`), then for the defined
-quantities, which are finite (`improvedEta_le`: `η ≤ (1 + C_W) c_P`; `improvedDelta_le`:
+quantities, which are finite (`improvedEta_le`: `η ≤ (1 + C_W) c_P`; similarly
 `δ ≤ (1 + C_W) c_P²`) as soon as `π` is `W`-bounded and Poincaré constants exist. Regularity
 enters only when `η`, `δ`, `μ` are shown to be small for concrete spaces (e.g. `η = O(h)`,
 `δ = O(h²)` on convex domains, by elliptic regularity); the compactness property assumed in
@@ -50,15 +50,14 @@ identification is not formalized here), and they avoid solution operators at oth
 
 ## Main results
 
-* `IsMixedSolution.toContinuousSolution`, `Subcomplex.toDiscreteSolution`: the solutions of
-  `Feec.HilbertComplex.existsUnique_mixed` and of the discrete complex
-  (e.g. `CochainProjection.discreteMixedSolution`) as such.
+* `IsMixedSolution.toContinuousSolution`: the solutions of
+  `Feec.HilbertComplex.existsUnique_mixed` as such.
 * `CochainProjection.norm_d_sub_le`, `norm_sub_sigma_le`, `norm_sub_harmonic_le`,
   `norm_d_sub_u_le`, `norm_sub_u_le`: the five estimates (35)–(39) of [AFW2010], Thm 3.11;
   `norm_starProjection_boundariesW_le'`: (40).
 * `CochainProjection.norm_sub_sigma_le_improvedEta`, `norm_sub_harmonic_le_harmonicGap`,
   `norm_d_sub_u_le_improvedEta`, **`norm_sub_u_le_improved`**: (36)–(39) with the defined `η`,
-  `δ`, `μ`; `improvedEta_le`, `improvedDelta_le`: their finiteness.
+  `δ`, `μ`; `improvedEta_le`: the finiteness of `η`.
 * The intermediate lemmas of [AFW2010], Lemmas 3.12–3.16: `norm_sub_starProjection_cycles_le`
   (3.12), `norm_starProjection_boundariesW_le` (3.13), `norm_starProjection_harmonicW_le` (3.14,
   (34)), `norm_d_vh_le` (3.15), `norm_vh_le` (3.16), and the decomposition
@@ -201,28 +200,6 @@ structure DiscreteSolution (i j k : ι) (f : W j) where
   harm : ∀ q ∈ S.harmonicW j, ⟪q, u⟫ = 0
 
 variable {S} [∀ i, FiniteDimensional 𝕜 (S.V i)]
-
-/-- A solution of the mixed problem of the discrete complex gives a `DiscreteSolution`. -/
-def toDiscreteSolution {i j k : ι} {f : W j} {fh : S.V j}
-    (hfh : ∀ v : S.V j, ⟪(v : W j), (fh : W j)⟫ = ⟪(v : W j), f⟫)
-    {σh : S.toHilbertComplex.domainSpace i} {uh : S.toHilbertComplex.domainSpace j}
-    {ph : S.toHilbertComplex.harmonic j}
-    (hsh : S.toHilbertComplex.IsMixedSolution i j k fh σh uh ph) :
-    S.DiscreteSolution i j k f where
-  σ := S.toW i σh
-  u := S.toW j uh
-  p := ((ph : S.V j) : W j)
-  mem_σ := (S.toHilbertComplex.domainIncl i σh).2
-  mem_u := (S.toHilbertComplex.domainIncl j uh).2
-  mem_p := S.mem_harmonic_iff.1 ph.2
-  fst τ hτ := by
-    have e := hsh.fst ((S.toHilbertComplex.d i (c.next i)).toGraphSpace ⟨⟨τ, hτ⟩, Submodule.mem_top⟩)
-    rw [sub_eq_zero] at e
-    exact e
-  snd v hv := by
-    have e := hsh.snd ((S.toHilbertComplex.d j (c.next j)).toGraphSpace ⟨⟨v, hv⟩, Submodule.mem_top⟩)
-    exact e.trans (hfh ⟨v, hv⟩)
-  harm q hq := hsh.harm ⟨q, S.harmonicW_le_V j hq⟩ (S.mem_harmonic_iff.2 hq)
 
 /-- **The `W`-best approximation error** `E(w) = dist(w, Vₕⁱ)`. -/
 def bestApprox (S : H.Subcomplex) {i : ι} (w : W i) : ℝ := Metric.infDist w (S.V i)
@@ -376,11 +353,6 @@ abbrev dσ : W j := H.d i j ⟨Y.σ, S.le_domain i j Y.mem_σ⟩
 
 /-- `d uₕ`. -/
 abbrev du : W k := H.d j k ⟨Y.u, S.le_domain j k Y.mem_u⟩
-
-/-- `σₕ ⊥ 𝔷ₕⁱ`. -/
-theorem σ_inner_cyclesW {z : W i} (hz : z ∈ S.cyclesW i) : ⟪z, Y.σ⟫ = 0 := by
-  rw [Y.fst z (S.cyclesW_le i hz), H.d_eq_zero_of_mem_cycles (S.cyclesW_le_cycles i hz),
-    inner_zero_left]
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
@@ -1235,13 +1207,6 @@ theorem improvedEta_le (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖) (hπj : �
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
 include hCw hcP hPi hPj in
-/-- **`δ` is finite**: `δ ≤ (1 + C_W) c_P²`. -/
-theorem improvedDelta_le (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) :
-    P.improvedDelta hij hjk hj hk ≤ (1 + Cw) * cP ^ 2 :=
-  relNorm_le (by positivity) (P.bound_delta hij hjk hj hk hCw hcP hPi hPj hπj)
-
-omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-include hCw hcP hPi hPj in
 theorem norm_sub_π_solutionOp_d_le (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (τ : (H.d i j).domain) :
     ‖H.solutionOp hij hjk hj hk (H.d i j τ) - P.π j (H.solutionOp hij hjk hj hk (H.d i j τ))‖ ≤
       P.improvedEta hij hjk hj hk * ‖(τ : W i)‖ :=
@@ -1314,8 +1279,7 @@ theorem norm_d_sub_u_le_improvedEta (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x�
 
 include hCw hcP hPi hPj in
 /-- **[AFW2010], Thm 3.11, (39)** with `η = improvedEta`, `δ = improvedDelta` and
-`μ = harmonicGap`: all three quantities are defined (and finite, `improvedEta_le`,
-`improvedDelta_le`), and the estimate needs only the `W`-bound of `π` and Poincaré constants. -/
+`μ = harmonicGap`: all three quantities are defined (and finite, e.g. `improvedEta_le`), and the estimate needs only the `W`-bound of `π` and Poincaré constants. -/
 theorem norm_sub_u_le_improved (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖)
     (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f) :

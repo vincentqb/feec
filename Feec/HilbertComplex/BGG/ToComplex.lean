@@ -31,8 +31,7 @@ symmetries (5.1), `Γ̄ ⊃ Γ --(0 d̃)--> W̃¹ ⊃ Ṽ¹ --(S₁, d̃)--> W²
 * `Hilb.isClosed_closedRange_exact`: (5.1) is a closed Hilbert complex with closed ranges, exact
   at `Γ̄` and `W̃¹` (thesis Prop 5.1, corrected).
 * `Hilb.toHilbertComplex_closedRangeAt_one`, `Hilb.toHilbertComplex_closedRangeAt_two`,
-  `Hilb.toHilbertComplex_cycles_one`, `Hilb.toHilbertComplex_cycles_zero`,
-  `Hilb.toHilbertComplex_harmonic_one`: the same statements for the Hilbert complex, so the
+  `Hilb.toHilbertComplex_cycles_one`, `Hilb.toHilbertComplex_cycles_zero`: the same statements for the Hilbert complex, so the
   Hodge theory of `Feec.HilbertComplex` applies to (5.1).
 
 ## References
@@ -266,22 +265,12 @@ structure Hyps : Prop where
 lemma norm_sq_V0 (σ : V0) : ‖σ‖ ^ 2 = ‖D.ι0 σ‖ ^ 2 + ‖D.ι1 (D.d0 σ)‖ ^ 2 :=
   norm_sq_of_inner_eq (D.graph0 σ σ)
 
-lemma norm_sq_V1 (μ : V1) : ‖μ‖ ^ 2 = ‖D.ι1 μ‖ ^ 2 + ‖D.d1 μ‖ ^ 2 :=
-  norm_sq_of_inner_eq (D.graph1 μ μ)
-
-lemma norm_sq_Vt0 (φ : Vt0) : ‖φ‖ ^ 2 = ‖D.ιt0 φ‖ ^ 2 + ‖D.ιt1 (D.dt0 φ)‖ ^ 2 :=
-  norm_sq_of_inner_eq (D.grapht0 φ φ)
-
 lemma norm_sq_Vt1 (u : Vt1) : ‖u‖ ^ 2 = ‖D.ιt1 u‖ ^ 2 + ‖D.dt1 u‖ ^ 2 :=
   norm_sq_of_inner_eq (D.grapht1 u u)
 
 lemma norm_ι0_le (σ : V0) : ‖D.ι0 σ‖ ≤ ‖σ‖ := by
   have h := D.norm_sq_V0 σ
   nlinarith [norm_nonneg (D.ι0 σ), norm_nonneg σ, sq_nonneg ‖D.ι1 (D.d0 σ)‖]
-
-lemma norm_ιt1_le (u : Vt1) : ‖D.ιt1 u‖ ≤ ‖u‖ := by
-  have h := D.norm_sq_Vt1 u
-  nlinarith [norm_nonneg (D.ιt1 u), norm_nonneg u, sq_nonneg ‖D.dt1 u‖]
 
 /-- Poincaré inequality from injectivity plus closed range (open mapping theorem). -/
 lemma exists_poincare {E F : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
@@ -855,71 +844,6 @@ section Example
 /-- `c • id` on `ℝ` -/
 def sc (c : ℝ) : ℝ →L[ℝ] ℝ := c • ContinuousLinearMap.id ℝ ℝ
 
-@[simp] private lemma sc_apply (c x : ℝ) : sc c x = c * x := rfl
-
-lemma sc_injective {c : ℝ} (hc : c ≠ 0) : Function.Injective (sc c) := fun x y h => by
-  simpa [hc] using h
-
-lemma sc_surjective {c : ℝ} (hc : c ≠ 0) : Function.Surjective (sc c) := fun y =>
-  ⟨y / c, by simp [mul_div_cancel₀ _ hc]⟩
-
-/-- A nontrivial BGG datum on `ℝ`: `ι⁰ = 3/5`, `d⁰ = 4/5` (graph norm `9/25 + 16/25 = 1`),
-`d¹ = 0`, the same for the bottom complex, `S₀ = id`, `S₁ = 0`. Here `Γ = {(σ, 4σ/5)} ≠ 0`. -/
-def scalarExample : Hilb ℝ ℝ ℝ ℝ ℝ ℝ ℝ ℝ ℝ ℝ ℝ where
-  ι0 := sc (3 / 5)
-  ι1 := sc 1
-  ιt0 := sc (3 / 5)
-  ιt1 := sc 1
-  ι0_injective := sc_injective (by norm_num)
-  ι1_injective := sc_injective one_ne_zero
-  ιt0_injective := sc_injective (by norm_num)
-  ιt1_injective := sc_injective one_ne_zero
-  dense0 := (sc_surjective (by norm_num)).denseRange
-  dense1 := (sc_surjective one_ne_zero).denseRange
-  denset0 := (sc_surjective (by norm_num)).denseRange
-  denset1 := (sc_surjective one_ne_zero).denseRange
-  d0 := sc (4 / 5)
-  d1 := 0
-  dt0 := sc (4 / 5)
-  dt1 := 0
-  S0 := sc 1
-  S1 := 0
-  graph0 u v := by simp; ring
-  graph1 u v := by simp
-  grapht0 u v := by simp; ring
-  grapht1 u v := by simp
-  d1_d0 _ := rfl
-  dt1_dt0 _ := rfl
-  anticomm _ := by simp
-
-/-- Non-vacuity of the hypotheses of thesis Props 5.1 and 5.2: they are satisfiable with
-`Γ ≠ 0`. -/
-theorem scalarExample_hyps :
-    scalarExample.Hyps ∧ Function.Injective scalarExample.S0 ∧ ((1 : ℝ), (4 / 5 : ℝ)) ∈ scalarExample.Γ := by
-  refine ⟨⟨sc_injective (by norm_num), sc_injective (by norm_num), ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩,
-    sc_injective one_ne_zero, ?_⟩
-  · have : Set.range (scalarExample.ι1 ∘L scalarExample.d0) = Set.univ :=
-      Set.range_eq_univ.2 fun y => ⟨y * (5 / 4), by simp [scalarExample]; ring⟩
-    rw [this]; exact isClosed_univ
-  · have : Set.range (scalarExample.ιt1 ∘L scalarExample.dt0) = Set.univ :=
-      Set.range_eq_univ.2 fun y => ⟨y * (5 / 4), by simp [scalarExample]; ring⟩
-    rw [this]; exact isClosed_univ
-  · ext x
-    simp only [LinearMap.mem_ker, LinearMap.mem_range]
-    exact ⟨fun _ => ⟨x * (5 / 4), by simp [Hilb.toSegment, scalarExample]; ring⟩, fun _ => rfl⟩
-  · ext x
-    simp only [LinearMap.mem_ker, LinearMap.mem_range]
-    exact ⟨fun _ => ⟨x * (5 / 4), by simp [Hilb.toSegment, scalarExample]; ring⟩, fun _ => rfl⟩
-  · have : Set.range scalarExample.d1 = {0} := by
-      ext y; simp [scalarExample]
-    rw [this]; exact isClosed_singleton
-  · have : Set.range scalarExample.dt1 = {0} := by
-      ext y; simp [scalarExample]
-    rw [this]; exact isClosed_singleton
-  · rintro _ ⟨x, rfl⟩
-    exact ⟨0, by simp [scalarExample]⟩
-  · rw [Hilb.mem_Γ]; simp [scalarExample]
-
 end Example
 
 end Hilb
@@ -976,15 +900,6 @@ theorem toHilbertComplex_cycles_one :
 theorem toHilbertComplex_cycles_zero : (D.toHilbertComplex h hS0).cycles 0 = ⊥ := by
   rw [HilbertComplex.cycles_eq _ (show ComplexShape.fin3.Rel 0 1 from rfl)]
   exact (D.toShort_closedRange_exact h hS0).2.2.2
-
-/-- (5.1) has no harmonic forms at `W̃¹`: its cohomology vanishes there. -/
-theorem toHilbertComplex_harmonic_one : (D.toHilbertComplex h hS0).harmonic 1 = ⊥ :=
-  ((D.toHilbertComplex h hS0).exact_iff_harmonic_eq_bot
-    (D.toHilbertComplex_closedRangeAt_one h hS0)).1 (D.toHilbertComplex_cycles_one h hS0).symm
-
-/-- (5.1) has no harmonic forms at `Γ̄`. -/
-theorem toHilbertComplex_harmonic_zero : (D.toHilbertComplex h hS0).harmonic 0 = ⊥ :=
-  eq_bot_iff.2 (inf_le_left.trans (D.toHilbertComplex_cycles_zero h hS0).le)
 
 end Hilb
 

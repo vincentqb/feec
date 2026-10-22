@@ -28,10 +28,8 @@ ring `R`, any complex shape, any length.
 
 * `Segment.D1_D0`: (5.1) is a complex; `Segment.ker_D1_eq_range_D0`: it is exact at `Ṽ¹`
   when both rows are exact at the middle; `Segment.range_D0`, `Segment.D0_injective`,
-  `Segment.range_D1`, `Segment.D1_surjective`.
+  `Segment.range_D1`.
 * `Data.twist_twist`: the twisted differential squares to zero, for any length.
-* `Data.mem_Γ_iff_twist`, `Data.twist_of_mem_Γ`, `Data.twist_inr`: (5.1) is the subcomplex
-  `twist⁻¹(0 × Ṽʲ) → 0 × Ṽʲ → Vᵏ × Ṽᵏ` of the twisted complex, up to the sign of the `V`-part.
 
 ## References
 
@@ -103,7 +101,6 @@ def D0 : D.Γ →ₗ[R] Vt1 := D.dt0.comp ((LinearMap.snd R V0 Vt0).comp D.Γ.su
 See [QuennevilleBelair2015], §5.1, (5.1). -/
 def D1 : Vt1 →ₗ[R] V2 × Vt2 := D.S1.prod D.dt1
 
-@[simp] lemma D0_apply (x : D.Γ) : D.D0 x = D.dt0 (x : V0 × Vt0).2 := rfl
 @[simp] lemma D1_apply (u : Vt1) : D.D1 u = (D.S1 u, D.dt1 u) := rfl
 
 /-- `S₁ d̃ φ = 0` for `(σ, φ) ∈ Γ`. -/
@@ -183,27 +180,6 @@ theorem range_D1 (hreg : LinearMap.range D.d1 ≤ LinearMap.range (D.d1 ∘ₗ D
     · rw [map_sub, sub_eq_add_neg, hφ]; abel
     · simp [D.dt1_dt0, hw]
 
-/-- Exactness of (5.1) at `V² × Ṽ²`: if moreover `d¹` and `d̃¹` are onto, so is `(S₁, d̃¹)`. -/
-theorem D1_surjective (hreg : LinearMap.range D.d1 ≤ LinearMap.range (D.d1 ∘ₗ D.S0))
-    (h1 : Function.Surjective D.d1) (h2 : Function.Surjective D.dt1) :
-    Function.Surjective D.D1 := by
-  intro p
-  have : p ∈ (LinearMap.range D.D1 : Set (V2 × Vt2)) := by
-    rw [range_D1 D hreg]
-    obtain ⟨w, hw⟩ := h2 p.2
-    obtain ⟨y, hy⟩ := h1 (p.1 - D.S1 w)
-    exact ⟨w, hw, y, hy⟩
-  exact this
-
-/-- The bottom-row diagram chase behind exactness at `Ṽ¹`: if `S₁u = 0` and `d̃¹u = 0`, then
-`u = d̃⁰χ` with `(ρ, χ) ∈ Γ`. -/
-theorem exists_mem_Γ_of_exact {u : Vt1} (hT : ∀ μ, D.d1 μ = 0 → ∃ ρ, D.d0 ρ = μ)
-    (hB : ∀ v, D.dt1 v = 0 → ∃ χ, D.dt0 χ = v) (hS : D.S1 u = 0) (hd : D.dt1 u = 0) :
-    ∃ ρ χ, D.d0 ρ = D.S0 χ ∧ D.dt0 χ = u := by
-  obtain ⟨χ, hχ⟩ := hB u hd
-  obtain ⟨ρ, hρ⟩ := hT (D.S0 χ) (by rw [D.anticomm, hχ, hS, neg_zero])
-  exact ⟨ρ, χ, hρ, hχ⟩
-
 end Segment
 
 /-! ## BGG data of any length -/
@@ -260,37 +236,7 @@ theorem twist_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.twist i j = 0 := by
 theorem twist_twist (i j k : ι) (x : V i × Vt i) : D.twist j k (D.twist i j x) = 0 := by
   simp [D.d_comp_d, D.dt_comp_dt, D.anticomm]
 
-/-- (5.1) inside the twisted complex: `Γ` is the preimage of `0 × Ṽʲ`. -/
-theorem mem_Γ_iff_twist (i j k : ι) {x : V i × Vt i} :
-    x ∈ (D.segment i j k).Γ ↔ (D.twist i j x).1 = 0 := by
-  rw [Segment.mem_Γ, twist_apply, sub_eq_zero]; rfl
-
-/-- On `Γ`, the twisted differential is `(0, (0 d̃) x)`. -/
-theorem twist_of_mem_Γ (i j k : ι) (x : (D.segment i j k).Γ) :
-    D.twist i j x = (0, (D.segment i j k).D0 x) := by
-  rw [Prod.ext_iff]
-  exact ⟨(D.mem_Γ_iff_twist i j k).1 x.2, rfl⟩
-
-/-- On `0 × Ṽʲ`, the twisted differential is `(S₁, d̃¹)` up to the sign of the `V`-part. -/
-theorem twist_inr (i j k : ι) (u : Vt j) :
-    D.twist j k (0, u) = (-((D.segment i j k).D1 u).1, ((D.segment i j k).D1 u).2) := by
-  simp [segment]
-
 section Complex
-
-/-- The top complex `(V, d)` as a homological complex of `R`-modules. -/
-def topComplex : HomologicalComplex (ModuleCat.{v} R) c where
-  X i := ModuleCat.of R (V i)
-  d i j := ModuleCat.ofHom (D.d i j)
-  shape i j h := by rw [D.shape_d i j h]; rfl
-  d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => D.d_comp_d i j k x)
-
-/-- The bottom complex `(Ṽ, d̃)` as a homological complex of `R`-modules. -/
-def botComplex : HomologicalComplex (ModuleCat.{v} R) c where
-  X i := ModuleCat.of R (Vt i)
-  d i j := ModuleCat.ofHom (D.dt i j)
-  shape i j h := by rw [D.shape_dt i j h]; rfl
-  d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => D.dt_comp_dt i j k x)
 
 /-- **The twisted complex** `(V × Ṽ, (σ, φ) ↦ (dσ - Sφ, d̃φ))` of BGG data of any length, as a
 homological complex of `R`-modules. -/

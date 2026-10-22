@@ -22,7 +22,7 @@ index, `𝕜 = ℝ` or `ℂ`), at every index `i`:
 
 ## Main results
 
-* `HilbertComplex.harmonic_eq`, `HilbertComplex.harmonic_dual`.
+* `HilbertComplex.harmonic_eq`.
 * `HilbertComplex.closure_boundaries_sup_harmonic`: `cl 𝔅ⁱ ⊕ ℌⁱ = 𝔷ⁱ`.
 * `HilbertComplex.hodge`, `HilbertComplex.hodge_of_closedRangeAt`.
 * `HilbertComplex.hodge_domain`, `HilbertComplex.hodge_domain_of_closedRangeAt`.
@@ -192,11 +192,6 @@ theorem closure_boundaries_le_cycles (i : ι) :
     (H.boundaries i).topologicalClosure ≤ H.cycles i :=
   Submodule.topologicalClosure_minimal _ (H.boundaries_le_cycles i) (H.isClosed_cycles i)
 
-/-- `cl 𝔅ⁱ = N((d (c.prev i) i)†)ᗮ = (𝔷*ᵢ)ᗮ`. -/
-theorem closure_boundaries_eq (i : ι) :
-    (H.boundaries i).topologicalClosure = (H.dual.cycles i)ᗮ := by
-  rw [← orthogonal_boundaries, Submodule.orthogonal_orthogonal_eq_closure]
-
 /-! ### Harmonic forms -/
 
 /-- `ℌⁱ = 𝔷ⁱ ∩ (𝔅ⁱ)ᗮ`. [QuennevilleBelair2015], §4.2 -/
@@ -213,24 +208,8 @@ theorem harmonic_eq_cycles_inf_dual (i : ι) : H.harmonic i = H.cycles i ⊓ H.d
 
 theorem harmonic_le_cycles (i : ι) : H.harmonic i ≤ H.cycles i := inf_le_left
 
-/-- The dual complex has the same harmonic forms. -/
-theorem harmonic_dual (i : ι) : H.dual.harmonic i = H.harmonic i := by
-  rw [harmonic_eq_cycles_inf_dual, harmonic_eq_cycles_inf_dual, dual_dual, inf_comm]
-
 theorem harmonic_le_dual_cycles (i : ι) : H.harmonic i ≤ H.dual.cycles i := by
   rw [harmonic_eq_cycles_inf_dual]; exact inf_le_right
-
-/-- At an index with no incoming arrow, `ℌⁱ = 𝔷ⁱ`. -/
-theorem harmonic_eq_cycles_of_not_rel {i : ι} (hi : ∀ h, ¬ c.Rel h i) :
-    H.harmonic i = H.cycles i := by
-  rw [harmonic, H.shape _ i (hi _), adjoint_zero]
-  refine inf_eq_left.2 fun x _ => (LinearPMap.mem_ker_iff).2 ⟨⟨x, trivial⟩, rfl, rfl⟩
-
-/-- At an index with no outgoing arrow, `ℌⁱ = 𝔷*ᵢ = N((d (c.prev i) i)†)`. -/
-theorem harmonic_eq_dual_cycles_of_not_rel {i : ι} (hi : ∀ j, ¬ c.Rel i j) :
-    H.harmonic i = H.dual.cycles i := by
-  rw [← harmonic_dual]
-  exact H.dual.harmonic_eq_cycles_of_not_rel fun h => hi h
 
 /-- **`𝔷ⁱ = cl 𝔅ⁱ ⊕ ℌⁱ`** (orthogonal; no closed range). [QuennevilleBelair2015], §4.2 -/
 theorem closure_boundaries_sup_harmonic (i : ι) :
@@ -330,8 +309,8 @@ theorem domain_eq_cycles_sup (i : ι) :
 
 /-- **Hodge decomposition of the domain** (`V`-level, no closed range):
 `Vⁱ = cl 𝔅ⁱ ⊕ ℌⁱ ⊕ (Vⁱ ∩ cl 𝔅*ᵢ)`, pairwise orthogonal in `Wⁱ`; since the first two summands
-are cycles, they are also orthogonal in the graph inner product
-(`inner_graph_eq_of_mem_cycles`). [QuennevilleBelair2015], Thm 4.1 -/
+are cycles, they are also orthogonal in the graph inner product. [QuennevilleBelair2015],
+Thm 4.1 -/
 theorem hodge_domain (i : ι) :
     (H.d i (c.next i)).domain = (H.boundaries i).topologicalClosure ⊔ H.harmonic i ⊔
       (H.dual.boundaries i).topologicalClosure ⊓ (H.d i (c.next i)).domain := by
@@ -344,13 +323,6 @@ theorem hodge_domain_of_closedRangeAt {i : ι} (hi : H.ClosedRangeAt i) :
       H.boundaries i ⊔ H.harmonic i ⊔ (H.cycles i)ᗮ ⊓ (H.d i (c.next i)).domain := by
   rw [H.boundaries_sup_harmonic hi]
   exact H.domain_eq_cycles_sup i
-
-/-- On cycles the graph inner product `⟪x, y⟫ + ⟪d x, d y⟫` is the `W` inner product. -/
-theorem inner_graph_eq_of_mem_cycles {i : ι} (x y : (H.d i (c.next i)).domain)
-    (hx : (x : W i) ∈ H.cycles i) :
-    ⟪(x : W i), (y : W i)⟫_𝕜 + ⟪H.d i (c.next i) x, H.d i (c.next i) y⟫_𝕜 =
-      ⟪(x : W i), (y : W i)⟫_𝕜 := by
-  rw [(LinearPMap.coe_mem_ker_iff).1 hx, inner_zero_left, add_zero]
 
 /-! ### Closed range: Poincaré inequality and duality -/
 
@@ -387,11 +359,6 @@ theorem dual_closedRangeAt_iff {i j : ι} (h : c.Rel i j) :
   obtain rfl := c.next_eq' h
   rw [ClosedRangeAt, ClosedRangeAt, boundaries_dual, H.boundaries_eq h]
   exact isClosed_range_adjoint_iff _ (H.dense _ _) (H.closed _ _)
-
-/-- Under closed range at `j`, `cl 𝔅ʲ = 𝔅ʲ = (𝔷*ⱼ)ᗮ`. -/
-theorem boundaries_eq_orthogonal {j : ι} (hj : H.ClosedRangeAt j) :
-    H.boundaries j = (H.dual.cycles j)ᗮ := by
-  rw [← closure_boundaries_eq, IsClosed.submodule_topologicalClosure_eq hj]
 
 /-! ### Cohomology -/
 
@@ -462,10 +429,6 @@ def cohomologyEquivHarmonic {i : ι} (hi : H.ClosedRangeAt i) : H.cohomology i �
   (LinearEquiv.ofBijective _
     ⟨H.harmonicToCohomology_injective i, (H.harmonicToCohomology_surjective_iff i).2 hi⟩).symm
 
-@[simp] theorem cohomologyEquivHarmonic_symm_apply {i : ι} (hi : H.ClosedRangeAt i)
-    (x : H.harmonic i) : (H.cohomologyEquivHarmonic hi).symm x = H.harmonicToCohomology i x :=
-  rfl
-
 /-- **Brüning–Lesch: finite-dimensional cohomology ⇒ closed range.** If `𝔷ⁱ / 𝔅ⁱ` is
 finite-dimensional, `𝔅ⁱ` is closed. (With "Fredholm" read as finite-dimensional *harmonic*
 forms the implication fails; see `Counterexamples`.) [QuennevilleBelair2015], §4.2 (corrected) -/
@@ -482,19 +445,6 @@ theorem finiteDimensional_harmonic_iff {i : ι} (hi : H.ClosedRangeAt i) :
     FiniteDimensional 𝕜 (H.harmonic i) ↔ FiniteDimensional 𝕜 (H.cohomology i) :=
   ⟨fun _ => (H.cohomologyEquivHarmonic hi).symm.finiteDimensional,
     fun _ => (H.cohomologyEquivHarmonic hi).finiteDimensional⟩
-
-/-- Finite-dimensional cohomology gives closed range and finite-dimensional harmonic forms
-(a Fredholm complex in the sense of Brüning–Lesch is closed). -/
-theorem closedRangeAt_and_finiteDimensional_harmonic (i : ι)
-    [FiniteDimensional 𝕜 (H.cohomology i)] :
-    H.ClosedRangeAt i ∧ FiniteDimensional 𝕜 (H.harmonic i) :=
-  have hi := H.closedRangeAt_of_finiteDimensional_cohomology i
-  ⟨hi, (H.finiteDimensional_harmonic_iff hi).2 inferInstance⟩
-
-/-- An exact complex (`𝔅ⁱ = 𝔷ⁱ`) has no harmonic forms (no closed range needed). -/
-theorem harmonic_eq_bot_of_exact {i : ι} (h : H.boundaries i = H.cycles i) :
-    H.harmonic i = ⊥ := by
-  rw [harmonic_eq, ← h, Submodule.inf_orthogonal_eq_bot]
 
 /-- `ℌⁱ = 0` iff `𝔅ⁱ` is dense in `𝔷ⁱ` (no closed range needed). -/
 theorem harmonic_eq_bot_iff (i : ι) :

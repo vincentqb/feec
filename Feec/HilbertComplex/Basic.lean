@@ -160,10 +160,6 @@ theorem isClosed_harmonic (i : ι) : IsClosed (H.harmonic i : Set (W i)) :=
 theorem d_eq_zero_of_ne_next {i j : ι} (hj : j ≠ c.next i) : H.d i j = 0 :=
   H.shape i j fun h => hj (c.next_eq' h).symm
 
-/-- Every `d i j` with `i ≠ c.prev j` is zero. -/
-theorem d_eq_zero_of_ne_prev {i j : ι} (hi : i ≠ c.prev j) : H.d i j = 0 :=
-  H.shape i j fun h => hi (c.prev_eq' h).symm
-
 /-- At a related pair `i → j`, the cycles at `i` are `N(d i j)`. -/
 theorem cycles_eq {i j : ι} (h : c.Rel i j) : H.cycles i = (H.d i j).ker := by
   obtain rfl := c.next_eq' h; rfl

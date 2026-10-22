@@ -107,10 +107,6 @@ theorem orbitComparison_defect (T : ℝ) (x : PiLp 2 W) (h : κ) (t : ℝ) :
     (orbitComparison F T).defect x h t = 0 :=
   sub_self (F.L h ((F.group h).S t (F.proj h x)))
 
-variable (F) in
-theorem incl_orbitComparison_p (T : ℝ) (x : PiLp 2 W) (h : κ) (t : ℝ) :
-    F.incl h ((orbitComparison F T).p x h t) = F.sol h (F.proj h x) t := rfl
-
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **Initial values by orthogonal projection**: the discrete solution from `πₕ x` is within
@@ -167,13 +163,6 @@ def orbitCore (hF : IsOrthogonal F) (Data : Submodule 𝕜 (PiLp 2 W))
     rw [orbitComparison_defect, norm_zero, dist_self]
     exact hε
 
-theorem orbitCore_data (hF : IsOrthogonal F) (Data : Submodule 𝕜 (PiLp 2 W)) hconv :
-    (orbitCore hF Data hconv).Data = Data := rfl
-
-theorem orbitCore_p (hF : IsOrthogonal F) (Data : Submodule 𝕜 (PiLp 2 W)) hconv (T : ℝ)
-    (x : PiLp 2 W) (h : κ) (t : ℝ) :
-    ((orbitCore hF Data hconv).cmp T).p x h t = (F.group h).S t (F.proj h x) := rfl
-
 /-- **The orbit rate class** of a model rate: if for every datum `x` of `S` and every `h` some
 discrete initial value gives `‖e^{tL} x - ιₕ e^{tLₕ} v‖ ≤ c hᵅ ‖x‖_c` on `[0, T]`, the orbit
 comparison is a rate class on `S` with `C = 3c` and `C' = 0`. -/
@@ -198,17 +187,6 @@ def orbitRate (hF : IsOrthogonal F) {T : ℝ} (S : Set (PiLp 2 W)) (classNorm : 
   consistency x _ h t _ := by
     change ‖(orbitComparison F T).defect x h t‖ ≤ _
     rw [orbitComparison_defect, norm_zero, zero_mul, zero_mul]
-
-theorem orbitRate_C (hF : IsOrthogonal F) {T : ℝ} (S : Set (PiLp 2 W)) classNorm meshSize α cst
-    hrate : (orbitRate (T := T) hF S classNorm meshSize α cst hrate).C = 3 * cst := rfl
-
-theorem orbitRate_C' (hF : IsOrthogonal F) {T : ℝ} (S : Set (PiLp 2 W)) classNorm meshSize α cst
-    hrate : (orbitRate (T := T) hF S classNorm meshSize α cst hrate).C' = 0 := rfl
-
-theorem orbitRate_p (hF : IsOrthogonal F) {T : ℝ} (S : Set (PiLp 2 W)) classNorm meshSize α cst
-    hrate (x : PiLp 2 W) (h : κ) (t : ℝ) :
-    (orbitRate (T := T) hF S classNorm meshSize α cst hrate).p x h t =
-      (F.group h).S t (F.proj h x) := rfl
 
 end ApproxFEEC
 
@@ -289,12 +267,6 @@ def ApproxFEEC.complexifyCmp (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] Pi
       (F.X h)).symm.hasFDerivAt.comp_hasDerivWithinAt t
         (HasDerivWithinAt.prodMk (hda x hx h t ht) (hdb x hx h t ht))
 
-theorem ApproxFEEC.complexifyCmp_p (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W') hJJ hJ
-    hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb (x : PiLp 2 W') (h : κ')
-    (t : ℝ) :
-    (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).p x h t =
-      WithLp.toLp 2 (a x h t, b x h t) := rfl
-
 /-- The defect of the complexified comparison is the pair of the real defects. -/
 theorem ApproxFEEC.complexifyCmp_defect (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
     hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
@@ -318,14 +290,6 @@ theorem ApproxFEEC.norm_complexifyCmp_defect_le (F : ApproxFEEC H' κ')
       ‖a' x h t - F.L h (a x h t)‖ + ‖b' x h t - F.L h (b x h t)‖ := by
   rw [ApproxFEEC.complexifyCmp_defect]
   exact norm_withLp_toLp_le _ _
-
-/-- The complexified comparison read in `W'`: `ι(a) + J ι(b)`. -/
-theorem ApproxFEEC.incl_complexifyCmp_p (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
-    hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
-    (x : PiLp 2 W') (h : κ') (t : ℝ) :
-    (F.complexify J hJJ hJ hπJ hJι).incl h
-      ((F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).p x h t) =
-        F.incl h (a x h t) + J (F.incl h (b x h t)) := rfl
 
 end Complexify
 

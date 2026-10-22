@@ -166,17 +166,6 @@ theorem HasCompactBall.isCompact_closure (h : HasCompactBall T) :
   exact hK.of_isClosed_subset isClosed_closure
     (closure_minimal (fun x ⟨hx, h1, h2⟩ => hsub ⟨x, hx⟩ h1 h2) hK.isClosed)
 
-/-- A compact box from a bound with any positive radius. -/
-theorem hasCompactBall_of_bound {r : ℝ} (hr : 0 < r) {K : Set E} (hK : IsCompact K)
-    (hsub : ∀ x : T.domain, ‖(x : E)‖ ≤ r → ‖T x‖ ≤ r → (x : E) ∈ K) : HasCompactBall T := by
-  refine ⟨(fun y => ((r⁻¹ : ℝ) : 𝕜) • y) '' K, hK.image (continuous_const_smul _), ?_⟩
-  intro x h1 h2
-  refine ⟨(r : 𝕜) • (x : E), hsub ((r : 𝕜) • x)
-    (by rw [Submodule.coe_smul, norm_ofReal_smul hr]; nlinarith [norm_nonneg (x : E)])
-    (by rw [LinearPMap.map_smul, norm_ofReal_smul hr]; nlinarith [norm_nonneg (T x)]), ?_⟩
-  simp only [smul_smul]
-  rw [← RCLike.ofReal_mul, inv_mul_cancel₀ hr.ne', RCLike.ofReal_one, one_smul]
-
 /-- An operator with `N(T) = ⊤` (e.g. `T = 0`) is trivially compact off its kernel. -/
 theorem hasCompactPerp_of_ker_eq_top (h : T.ker = ⊤) : HasCompactPerp T := by
   refine ⟨{0}, isCompact_singleton, fun x hx _ _ => ?_⟩
@@ -757,12 +746,6 @@ are dense, although `N(L) = ⊕ ℌⁱ` may be infinite-dimensional and `(1 - L)
 theorem eigenDense_wave_of_compact_perp (h : ∀ i, H.HasCompactCyclePerpAt i) :
     H.isSkewAdjoint_wave.group.EigenDense :=
   C0Group.eigenDense_of_hasCompactPerp _ (hasCompactPerp_wave h)
-
-/-- The compactness property in every degree gives `EigenDense` through half compactness (cf.
-the compact-resolvent proof `HasCompactProperty.eigenDense_wave`). -/
-theorem HasCompactProperty.eigenDense_wave_of_perp (h : H.HasCompactProperty) :
-    H.isSkewAdjoint_wave.group.EigenDense :=
-  eigenDense_wave_of_compact_perp fun i => (h i).hasCompactCyclePerpAt
 
 end Feec.HilbertComplex
 

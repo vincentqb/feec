@@ -23,8 +23,7 @@ Applied to the wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, `
 * `LinearPMap.IsSkewAdjoint.isResolvent_sq`: the resolvent of `A²` at `1`, with norm `≤ 1`.
 * `Feec.HilbertComplex.isSelfAdjoint_hodgeLaplacian`,
   `Feec.HilbertComplex.re_inner_hodgeLaplacian_self` (`re ⟪Δ x, x⟫ = ‖𝐝 x‖² + ‖𝐝* x‖²`),
-  `Feec.HilbertComplex.mem_ker_hodgeLaplacian_iff` (`ker Δ = ⊕ ℌⁱ`, no closed range needed),
-  `Feec.HilbertComplex.isResolvent_hodgeLaplacian` (the solution operator `(1 + Δ)⁻¹`).
+  `Feec.HilbertComplex.mem_ker_hodgeLaplacian_iff` (`ker Δ = ⊕ ℌⁱ`, no closed range needed).
 
 ## References
 
@@ -79,18 +78,11 @@ def sq (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E := ⟨A.sqDomain, A.toFun ∘
 
 variable {A : E →ₗ.[𝕜] E}
 
-theorem mem_sq_domain {x : E} : x ∈ A.sq.domain ↔ ∃ h : x ∈ A.domain, (A ⟨x, h⟩ : E) ∈ A.domain :=
-  Iff.rfl
-
 /-- `x ∈ D(A²)` as a point of `D(A)`. -/
 def sqFst (x : A.sq.domain) : A.domain := ⟨x, x.2.1⟩
 
 /-- `A x ∈ D(A)` for `x ∈ D(A²)`. -/
 def sqSnd (x : A.sq.domain) : A.domain := ⟨A (sqFst x), x.2.2⟩
-
-@[simp] theorem coe_sqFst (x : A.sq.domain) : (sqFst x : E) = x := rfl
-
-@[simp] theorem coe_sqSnd (x : A.sq.domain) : (sqSnd x : E) = A (sqFst x) := rfl
 
 theorem sq_apply (x : A.sq.domain) : A.sq x = A (sqSnd x) := rfl
 
@@ -205,19 +197,6 @@ theorem isResolvent_sq (hA : A.IsSkewAdjoint) : IsResolvent A.sq 1 (sqResolvent 
       exact sub_self _
     exact congrArg Subtype.val (sub_eq_zero.1 this)
 
-/-- `‖(1 - A²)⁻¹‖ ≤ 1`. -/
-theorem norm_sqResolvent_le (hA : A.IsSkewAdjoint) : ‖sqResolvent A‖ ≤ 1 := by
-  have h1 : RCLike.re (1 : 𝕜) ≠ 0 := by simp
-  have hm1 : RCLike.re (-1 : 𝕜) ≠ 0 := by simp
-  rw [sqResolvent, norm_neg]
-  calc ‖(resolvent A (-1)).comp (resolvent A 1)‖ ≤ ‖resolvent A (-1)‖ * ‖resolvent A 1‖ :=
-        ContinuousLinearMap.opNorm_comp_le _ _
-    _ ≤ 1 * 1 := by
-        gcongr
-        · simpa using norm_resolvent_le hA hm1
-        · simpa using norm_resolvent_le hA h1
-    _ = 1 := one_mul 1
-
 /-- `D(A²)` is dense for skew-adjoint `A`. -/
 theorem dense_sq_domain (hA : A.IsSkewAdjoint) : Dense (A.sq.domain : Set E) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
@@ -279,8 +258,6 @@ local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 `L = 𝐝 − 𝐝*` is the wave operator; its `i`-th component is the Hodge Laplacian
 `d (d*)ⁱ + (d*) dⁱ` at index `i`. -/
 def hodgeLaplacian : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := -H.wave.sq
-
-theorem hodgeLaplacian_domain : H.hodgeLaplacian.domain = H.wave.sq.domain := rfl
 
 /-- **The Hodge Laplacian is self-adjoint**, with no closed-range hypothesis. -/
 theorem isSelfAdjoint_hodgeLaplacian : IsSelfAdjoint H.hodgeLaplacian :=
@@ -364,32 +341,5 @@ theorem mem_ker_hodgeLaplacian_iff {x : PiLp 2 W} :
     mem_ker_iff, mem_ker_iff]
   simp only [LinearPMap.neg_apply, neg_eq_zero]
   rfl
-
-/-- The solution operator `(1 + Δ)⁻¹`, of norm `≤ 1`. -/
-def hodgeSolution : PiLp 2 W →L[𝕜] PiLp 2 W := IsSkewAdjoint.sqResolvent H.wave
-
-theorem norm_hodgeSolution_le : ‖H.hodgeSolution‖ ≤ 1 :=
-  H.isSkewAdjoint_wave.norm_sqResolvent_le
-
-/-- **The solution operator of the Hodge Laplacian**: `-(1 + Δ)⁻¹` is the resolvent of `Δ` at
-`-1`; i.e. `u + Δ u = f` has the unique solution `u = hodgeSolution f ∈ D(Δ)`. -/
-theorem isResolvent_hodgeLaplacian :
-    IsResolvent H.hodgeLaplacian (-1) (-H.hodgeSolution) := by
-  have hR := H.isSkewAdjoint_wave.isResolvent_sq
-  refine ⟨fun f => H.hodgeLaplacian.domain.neg_mem (hR.mem_domain f), fun f => ?_, fun x => ?_⟩
-  · have h := hR.sub_apply f
-    rw [one_smul] at h
-    have e : H.hodgeLaplacian ⟨(-H.hodgeSolution) f,
-        H.hodgeLaplacian.domain.neg_mem (hR.mem_domain f)⟩ = H.wave.sq (hR.toDomain f) := by
-      change -H.wave.sq (-hR.toDomain f) = _
-      rw [LinearPMap.map_neg, neg_neg]
-    rw [e, _root_.neg_apply, smul_neg, neg_one_smul, neg_neg]
-    exact h
-  · have h := hR.apply_sub ⟨x, x.2⟩
-    rw [one_smul] at h
-    change -H.hodgeSolution ((-1 : 𝕜) • (x : PiLp 2 W) - -H.wave.sq x) = x
-    rw [show (-1 : 𝕜) • (x : PiLp 2 W) - -H.wave.sq x = -((x : PiLp 2 W) - H.wave.sq x) by
-      rw [neg_one_smul]; abel, _root_.map_neg, neg_neg]
-    exact h
 
 end Feec.HilbertComplex

@@ -15,7 +15,7 @@ anticommute with the differentials (`d S = -S d̃` on `D(d̃)`), give the **twis
 
 a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
 `Feec.BGG.Data.twist`; for one segment, the BGG complex (5.1) is the subcomplex
-`twist⁻¹(0 × W̃ʲ) → 0 × W̃ʲ → Wᵏ ⊕ W̃ᵏ` (`Feec.BGG.Data.mem_Γ_iff_twist`).
+`twist⁻¹(0 × W̃ʲ) → 0 × W̃ʲ → Wᵏ ⊕ W̃ᵏ`.
 
 ## Main definitions
 
@@ -27,7 +27,6 @@ a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
 
 * `LinearPMap.IsClosed.prodL2`, `LinearPMap.dense_prodL2_domain`: the direct sum of closed
   densely defined operators is closed and densely defined.
-* `HilbertData.twistComplex_d_apply`: the twisted differential is `(σ, φ) ↦ (dσ - Sφ, d̃φ)`.
 
 ## References
 
@@ -77,11 +76,6 @@ theorem continuous_prodL2Swap : Continuous (prodL2Swap (𝕜 := 𝕜) (E₁ := E
 def prodL2Graph (T₁ : E₁ →ₗ.[𝕜] F₁) (T₂ : E₂ →ₗ.[𝕜] F₂) :
     Submodule 𝕜 (WithLp 2 (E₁ × E₂) × WithLp 2 (F₁ × F₂)) :=
   (T₁.graph.prod T₂.graph).comap prodL2Swap
-
-theorem mem_prodL2Graph {T₁ : E₁ →ₗ.[𝕜] F₁} {T₂ : E₂ →ₗ.[𝕜] F₂}
-    {p : WithLp 2 (E₁ × E₂) × WithLp 2 (F₁ × F₂)} :
-    p ∈ prodL2Graph T₁ T₂ ↔ (p.1.fst, p.2.fst) ∈ T₁.graph ∧ (p.1.snd, p.2.snd) ∈ T₂.graph :=
-  Iff.rfl
 
 /-- **The direct sum** `T₁ ⊕ T₂ : WithLp 2 (E₁ × E₂) →ₗ.[𝕜] WithLp 2 (F₁ × F₂)`, with domain
 `D(T₁) × D(T₂)`. -/
@@ -261,14 +255,6 @@ def twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i)) where
       simp only [twistD_apply_snd]
       exact sub_self _
     · rw [twistD_apply_snd, WithLp.zero_snd, key2 _ (by simp only [twistD_apply_snd]; rfl)]
-
-/-- The twisted differential `(σ, φ) ↦ (dσ - Sφ, d̃φ)` of `twistComplex`. -/
-theorem twistComplex_d_apply {i j : ι} (x : (D.twistComplex.d i j).domain) :
-    (D.twistComplex.d i j x).fst = D.H.d i j ⟨(x : WithLp 2 (W i × Wt i)).fst,
-      (D.mem_twistD_domain.1 x.2).1⟩ - D.S i j (x : WithLp 2 (W i × Wt i)).snd ∧
-    (D.twistComplex.d i j x).snd = D.Ht.d i j ⟨(x : WithLp 2 (W i × Wt i)).snd,
-      (D.mem_twistD_domain.1 x.2).2⟩ :=
-  ⟨D.twistD_apply_fst x, D.twistD_apply_snd x⟩
 
 end HilbertData
 

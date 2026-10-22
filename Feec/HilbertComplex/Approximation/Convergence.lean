@@ -675,31 +675,6 @@ theorem norm_sub_le_of_comparison {ζ₀ : E} (h₀ : ζ₀ ∈ (T - T†).domai
           + ‖T.graphFst (ζ t - ξh t)‖ := norm_add_le _ _
     _ ≤ _ := by rw [hiso]; linarith
 
-/-- The comparison-datum bound with the initial error measured against `ξ₀`:
-`‖Pζ(a) - ξₕ(a)‖` is replaced by `‖ξ₀ - ζ₀‖ + ‖ξ₀ - ξₕ(a)‖ + ‖e(a)‖`. -/
-theorem norm_sub_le_of_comparison' {ζ₀ : E} (h₀ : ζ₀ ∈ (T - T†).domain)
-    (hL₀ : (T - T†) ⟨ζ₀, h₀⟩ ∈ (T - T†).domain) (a b : ℝ) :
-    ∃ ζ ζ' : ℝ → T.GraphSpace, IsGraphSolution (Icc a b) ζ ζ' ∧
-      (∀ t, T.graphFst (ζ t) = (waveGroup hT hc hmaps hcomp).S (t - a) ζ₀) ∧
-      ∀ (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K] (ξh ξh' : ℝ → T.GraphSpace),
-        IsSemidiscreteSolution K (Icc a b) ξh ξh' → ∀ (ξ₀ : E), ∀ t ∈ Icc a b,
-          ‖(waveGroup hT hc hmaps hcomp).S (t - a) ξ₀ - T.graphFst (ξh t)‖ ≤ 2 * ‖ξ₀ - ζ₀‖ +
-            ‖ξ₀ - T.graphFst (ξh a)‖ + ‖T.graphFst (ellipticProjection K (ζ t) - ζ t)‖ +
-            (1 + (t - a)) * ‖T.graphFst (ellipticProjection K (ζ a) - ζ a)‖ +
-            (1 + (t - a)) * ∫ s in a..t, ‖T.graphFst (ellipticProjection K (ζ' s) - ζ' s)‖ := by
-  obtain ⟨ζ, ζ', hζ, hζS, hb⟩ := norm_sub_le_of_comparison hT hc hmaps hcomp h₀ hL₀ a b
-  refine ⟨ζ, ζ', hζ, hζS, fun K _ ξh ξh' hξh ξ₀ t ht => (hb K ξh ξh' hξh ξ₀ t ht).trans ?_⟩
-  have hza : T.graphFst (ζ a) = ζ₀ := by rw [hζS, sub_self, C0Group.S_zero_apply]
-  have hi : ‖T.graphFst (ellipticProjection K (ζ a) - ξh a)‖ ≤
-      ‖T.graphFst (ellipticProjection K (ζ a) - ζ a)‖ + ‖ξ₀ - ζ₀‖ + ‖ξ₀ - T.graphFst (ξh a)‖ := by
-    have e : T.graphFst (ellipticProjection K (ζ a) - ξh a) =
-        T.graphFst (ellipticProjection K (ζ a) - ζ a) - (ξ₀ - ζ₀) + (ξ₀ - T.graphFst (ξh a)) := by
-      rw [_root_.map_sub, _root_.map_sub, hza]; abel
-    rw [e]
-    have hs := norm_sub_le (T.graphFst (ellipticProjection K (ζ a) - ζ a)) (ξ₀ - ζ₀)
-    exact (norm_add_le _ _).trans (by linarith)
-  nlinarith [ht.1]
-
 /-- **Convergence of the semi-discrete method for data in `E`** (thesis' convergence remark,
 extended): under the density hypothesis, if `ξₕ(a) → ξ₀` in `E` then `ξₕ(t) → e^{(t-a)L} ξ₀`
 (the mild solution), uniformly on `[a, b]`. Stability of the semi-discrete flow plus density of
@@ -913,9 +888,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
 `(x, 𝐝 x)` with `x i ∈ Vₕⁱ` for every `i`. See [QuennevilleBelair2015], §4.6. -/
 def graphSub : Submodule 𝕜 H.totalD.GraphSpace :=
   (totalSub S.V).comap (H.totalD.graphFst : H.totalD.GraphSpace →ₗ[𝕜] PiLp 2 W)
-
-theorem mem_graphSub {v : H.totalD.GraphSpace} :
-    v ∈ S.graphSub ↔ ∀ i, H.totalD.graphFst v i ∈ S.V i := Iff.rfl
 
 instance [∀ i, FiniteDimensional 𝕜 (S.V i)] : FiniteDimensional 𝕜 S.graphSub := by
   let f : S.graphSub →ₗ[𝕜] ∀ i, S.V i :=

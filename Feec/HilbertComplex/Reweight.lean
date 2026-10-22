@@ -28,16 +28,10 @@ that adjoints pick up the adjoint weights: `(d')† = (a i)⁻† ∘ d† ∘ (
 
 ## Main results
 
-* `LinearPMap.adjoint_conj`: `(b T a⁻¹)† = (a⁻¹)† T† b†`; `HilbertComplex.dual_conj`: the dual
-  of the conjugated complex is the dual complex conjugated by the adjoint-inverse weights.
-* `HilbertComplex.cycles_conj`, `HilbertComplex.boundaries_conj`: cycles and boundaries are the
-  images under `a`; `HilbertComplex.harmonic_conj`: the harmonic forms of the conjugated complex
-  are `a 𝔷 ∩ (a⁻¹)† N(d†)` (not `a ℌ` in general: the weighted harmonic forms).
-* `HilbertComplex.closedRangeAt_conj_iff`: closed range is invariant under reweighting.
+* `LinearPMap.adjoint_conj`: `(b T a⁻¹)† = (a⁻¹)† T† b†`.
 * `HilbertComplex.ReducingSubcomplex.conj`: a reducing subcomplex `S` of `H` gives the reducing
   subcomplex `S'` of `H.conj a` whenever `a S ⊆ S'` and `a Sᗮ ⊆ S'ᗮ` (e.g. `S' = S` when the
-  weights commute with the projections), with `ReducingSubcomplex.invariantCore_conj`: then
-  `∏ S'` is its own invariant core under the wave group of `H.conj a`.
+  weights commute with the projections).
 * `ShortHilbertComplex.conj`: the same for short complexes.
 * `Evolution.isStrongSolution_conj_symm_iff`, `Evolution.isClassicalSolution_conj_symm_iff`,
   `Evolution.ForcingClass.admissible.conjEquiv`, `Evolution.existsUnique_conj_symm`: evolution
@@ -81,12 +75,6 @@ def adjoint (a : E ≃L[𝕜] F) : F ≃L[𝕜] E :=
       rw [← ContinuousLinearMap.comp_apply, ← ContinuousLinearMap.adjoint_comp,
         ContinuousLinearEquiv.coe_symm_comp_coe, ContinuousLinearMap.adjoint_id]; rfl)
 
-@[simp] theorem adjoint_apply (a : E ≃L[𝕜] F) (y : F) :
-    a.adjoint y = ContinuousLinearMap.adjoint (a : E →L[𝕜] F) y := rfl
-
-@[simp] theorem adjoint_symm_apply (a : E ≃L[𝕜] F) (x : E) :
-    a.adjoint.symm x = ContinuousLinearMap.adjoint (a.symm : F →L[𝕜] E) x := rfl
-
 theorem inner_adjoint_apply (a : E ≃L[𝕜] F) (y : F) (x : E) :
     ⟪a.adjoint y, x⟫_𝕜 = ⟪y, a x⟫_𝕜 :=
   ContinuousLinearMap.adjoint_inner_left _ _ _
@@ -107,10 +95,6 @@ theorem adjoint_symm_adjoint_apply (a : E ≃L[𝕜] F) (x : F) : a.adjoint.symm
   change ContinuousLinearMap.adjoint (ContinuousLinearMap.adjoint (a.symm : F →L[𝕜] E)) x = _
   rw [ContinuousLinearMap.adjoint_adjoint]
   rfl
-
-@[simp] theorem adjoint_refl_apply (x : E) : (ContinuousLinearEquiv.refl 𝕜 E).adjoint x = x := by
-  change ContinuousLinearMap.adjoint (ContinuousLinearMap.id 𝕜 E) x = x
-  rw [ContinuousLinearMap.adjoint_id]; rfl
 
 @[simp] theorem adjoint_refl_symm_apply (x : E) :
     (ContinuousLinearEquiv.refl 𝕜 E).adjoint.symm x = x := by
@@ -245,17 +229,6 @@ theorem ker_conj : (T.conj a b).ker = T.ker.map (a : E →ₗ[𝕜] E') := by
     change b (T ⟨a.symm (a x), _⟩) = 0
     rw [this, hz0, _root_.map_zero]
 
-/-- `R(b T a⁻¹) = b R(T)`. -/
-theorem range_conj :
-    LinearMap.range (T.conj a b).toFun = (LinearMap.range T.toFun).map (b : F →ₗ[𝕜] F') := by
-  ext y
-  simp only [LinearMap.mem_range, Submodule.mem_map]
-  constructor
-  · rintro ⟨z, rfl⟩
-    exact ⟨_, ⟨⟨_, z.2⟩, rfl⟩, rfl⟩
-  · rintro ⟨_, ⟨x, rfl⟩, rfl⟩
-    exact ⟨⟨a x, apply_mem_conj_domain.2 x.2⟩, conj_apply_apply x⟩
-
 /-- Conjugating back by the inverses recovers `T`. -/
 theorem conj_symm_conj : (T.conj a b).conj a.symm b.symm = T := by
   refine LinearPMap.ext ?_ fun x y hxy => ?_
@@ -330,43 +303,9 @@ def conj : HilbertComplex 𝕜 c W' where
       change (a j).symm ((H.d i j).conj (a i) (a j) y) = _
       rw [conj_apply, ContinuousLinearEquiv.symm_apply_apply]))
 
-@[simp] theorem conj_d (i j : ι) : (H.conj a).d i j = (H.d i j).conj (a i) (a j) := rfl
-
-/-- **The dual of the conjugated complex** is the dual complex conjugated by the weights
-`(a i)⁻†`: `(d' i j)† = (a i)⁻† ∘ (d i j)† ∘ (a j)†`. -/
-theorem dual_conj : (H.conj a).dual = H.dual.conj fun i => (a i).adjoint.symm :=
-  ext_d (funext fun i => funext fun j => adjoint_conj (a j) (a i) (H.dense j i))
-
-/-- The adjoint differentials of the conjugated complex. -/
-theorem adjoint_conj_d (i j : ι) :
-    ((H.conj a).d i j)† = (H.d i j)†.conj (a j).adjoint.symm (a i).adjoint.symm :=
-  adjoint_conj (a i) (a j) (H.dense i j)
-
 /-- Conjugating back by the inverse weights recovers `H`. -/
 theorem conj_symm_conj : (H.conj a).conj (fun i => (a i).symm) = H :=
   ext_d (funext fun _ => funext fun _ => LinearPMap.conj_symm_conj)
-
-/-- The cycles of the conjugated complex are the images of the cycles. -/
-theorem cycles_conj (i : ι) : (H.conj a).cycles i = (H.cycles i).map (a i : W i →ₗ[𝕜] W' i) :=
-  ker_conj
-
-/-- The boundaries of the conjugated complex are the images of the boundaries. -/
-theorem boundaries_conj (i : ι) :
-    (H.conj a).boundaries i = (H.boundaries i).map (a i : W i →ₗ[𝕜] W' i) :=
-  range_conj
-
-/-- **The harmonic forms of the conjugated complex**: `ℌ' = a 𝔷 ∩ (a⁻¹)† N(d†)`, the harmonic
-forms of the weighted inner product (in general not `a ℌ`). -/
-theorem harmonic_conj (i : ι) :
-    (H.conj a).harmonic i = (H.cycles i).map (a i : W i →ₗ[𝕜] W' i) ⊓
-      ((H.d (c.prev i) i)†).ker.map ((a i).adjoint.symm : W i →ₗ[𝕜] W' i) := by
-  rw [harmonic, cycles_conj, conj_d, adjoint_conj _ _ (H.dense _ _), ker_conj]
-
-/-- **Closed range is invariant under reweighting.** -/
-theorem closedRangeAt_conj_iff (i : ι) : (H.conj a).ClosedRangeAt i ↔ H.ClosedRangeAt i := by
-  unfold ClosedRangeAt
-  rw [boundaries_conj, Submodule.map_coe]
-  exact (a i).toHomeomorph.isClosed_image
 
 /-! ### Reducing subcomplexes and invariant cores of the conjugated complex -/
 
@@ -416,24 +355,7 @@ theorem conj (h : H.ReducingSubcomplex S) (hS : ∀ i, (S i).map (a i : W i →�
       ← (h.reduces i j).comm ⟨(a i).symm (y : W' i), y.2⟩]
     exact congrArg (a j) (apply_congr' _ _ _ (hP i y))
 
-/-- The special case `S' = S` for weights `a i : W i ≃L W i` preserving `S i` and `(S i)ᗮ` (e.g.
-weights commuting with the projections). -/
-theorem conj_self {a : ∀ i, W i ≃L[𝕜] W i} (h : H.ReducingSubcomplex S)
-    (hS : ∀ i, (S i).map (a i : W i →ₗ[𝕜] W i) ≤ S i)
-    (hSo : ∀ i, (S i)ᗮ.map (a i : W i →ₗ[𝕜] W i) ≤ (S i)ᗮ) :
-    (H.conj a).ReducingSubcomplex S :=
-  h.conj hS hSo
-
 variable [Fintype ι] [∀ i, NormedSpace ℝ (W' i)] [∀ i, IsScalarTower ℝ 𝕜 (W' i)]
-
-/-- **Invariant cores transport**: under the hypotheses of `ReducingSubcomplex.conj`, `∏ S' i`
-is its own invariant core for the wave group of the conjugated complex, and the group preserves
-it. -/
-theorem invariantCore_conj (h : H.ReducingSubcomplex S)
-    (hS : ∀ i, (S i).map (a i : W i →ₗ[𝕜] W' i) ≤ S' i)
-    (hSo : ∀ i, (S i)ᗮ.map (a i : W i →ₗ[𝕜] W' i) ≤ (S' i)ᗮ) :
-    (H.conj a).waveGroup.invariantCore (totalSub S') = totalSub S' :=
-  (h.conj hS hSo).invariantCore_eq
 
 end ReducingSubcomplex
 
@@ -574,9 +496,6 @@ def conj (a₀ : W₀ ≃L[𝕜] W₀') (a₁ : W₁ ≃L[𝕜] W₁') (a₂ : W
 
 @[simp] theorem conj_d₀ (a₀ : W₀ ≃L[𝕜] W₀') (a₁ : W₁ ≃L[𝕜] W₁') (a₂ : W₂ ≃L[𝕜] W₂') :
     (S.conj a₀ a₁ a₂).d₀ = S.d₀.conj a₀ a₁ := rfl
-
-@[simp] theorem conj_d₁ (a₀ : W₀ ≃L[𝕜] W₀') (a₁ : W₁ ≃L[𝕜] W₁') (a₂ : W₂ ≃L[𝕜] W₂') :
-    (S.conj a₀ a₁ a₂).d₁ = S.d₁.conj a₁ a₂ := rfl
 
 end Feec.ShortHilbertComplex
 

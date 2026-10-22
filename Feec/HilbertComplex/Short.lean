@@ -22,7 +22,7 @@ wave operators of `Feec.HilbertComplex.Dirac` apply to it. Zero padding uses `PU
 
 ## Main results
 
-* `ShortHilbertComplex.isSkewAdjoint_wave`, `ShortHilbertComplex.isSelfAdjoint_dirac`.
+* `ShortHilbertComplex.isSkewAdjoint_wave`.
 * `ShortHilbertComplex.wave_apply_zero`, `wave_apply_one`, `wave_apply_two`, and
   `ShortHilbertComplex.mem_wave_domain` (`D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`).
 
@@ -115,9 +115,6 @@ def toHilbertComplex : HilbertComplex 𝕜 ComplexShape.fin3 (W3 W₀ W₁ W₂)
       first | exact S.comp x | rfl |
         exact LinearPMap.apply_mk_eq_zero _ _ (apply_eq_zero_of_eq_zero rfl x)
 
-@[simp] theorem toHilbertComplex_d01 : S.toHilbertComplex.d 0 1 = S.d₀ := rfl
-@[simp] theorem toHilbertComplex_d12 : S.toHilbertComplex.d 1 2 = S.d₁ := rfl
-
 /-- The Dirac operator `d + d†` of a short complex, on `PiLp 2 (W3 W₀ W₁ W₂)`. -/
 abbrev dirac : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) := S.toHilbertComplex.dirac
 
@@ -128,8 +125,6 @@ abbrev wave : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂
 /-- The wave operator of a short complex is skew-adjoint (no closed range needed).
 [QuennevilleBelair2015], Thm 4.6 -/
 theorem isSkewAdjoint_wave : S.wave.IsSkewAdjoint := S.toHilbertComplex.isSkewAdjoint_wave
-
-theorem isSelfAdjoint_dirac : IsSelfAdjoint S.dirac := S.toHilbertComplex.isSelfAdjoint_dirac
 
 end ShortHilbertComplex
 
@@ -159,8 +154,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [CompleteSpace W₁]
   [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
-
-theorem toShort_toHilbertComplex : S.toHilbertComplex.toShort = S := rfl
 
 /-- `D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`. -/
 theorem mem_wave_domain {x : PiLp 2 (W3 W₀ W₁ W₂)} : x ∈ S.wave.domain ↔
@@ -252,12 +245,6 @@ def ofBounded (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 
   closed₁ := B.isClosed_toPMap_top
   mapsTo _ := Submodule.mem_top
   comp x := hBA x
-
-@[simp] theorem ofBounded_d₀ (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 0) :
-    (ofBounded A B hBA).d₀ = (A : E →ₗ[𝕜] F).toPMap ⊤ := rfl
-
-@[simp] theorem ofBounded_d₁ (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 0) :
-    (ofBounded A B hBA).d₁ = (B : F →ₗ[𝕜] G).toPMap ⊤ := rfl
 
 end ShortHilbertComplex
 

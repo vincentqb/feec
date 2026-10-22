@@ -29,15 +29,11 @@ projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further a
 
 * `Feec.BGG.Discrete.error_estimate_of_weakConsistency`: thesis Thm 5.5 with weak consistency
   `|⟪S₁u, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V`; the bound has `h²K²` in place of `h²‖S₁u‖²`.
-* `Feec.BGG.Discrete.weakConsistency_of_approx`, `Feec.BGG.Discrete.error_estimate_of_approx`:
-  the strong hypothesis implies the weak one with `K = ‖S₁u‖`, so the new theorem generalizes
-  `error_estimate`.
 * `Feec.BGG.Discrete.S1_sub_S1h_dt0`: `(S₁ − S₁,ₕ)dψ = d(S₀,ₕ − S₀)ψ` (the gradient part).
 * `Feec.BGG.Discrete.weakConsistency_of_regularPotential`: weak consistency for every
   `z ∈ D(d¹*)` from the consistency of `S₀,ₕ` (thesis Prop 5.9(1), which holds) and a regular
   potential.
 * `Feec.BGG.Discrete.error_estimate_of_regularPotential`: Thm 5.5 with these hypotheses.
-* `Feec.BGG.Discrete.exists_regularPotential_nonvacuous`: the hypotheses are satisfiable.
 
 ## References
 
@@ -75,7 +71,7 @@ with the strong consistency hypothesis `happ1` on `S₁,ₕ` (false for the Tabl
 per the audit, thesis Prop 5.9(2)) replaced by weak consistency against the exact solution:
 `|⟪S₁u, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V` for `v ∈ Ṽₕ¹`, `K ≥ 0` a data constant. The bound has
 `h²K²` in place of `h²‖S₁u‖²`; the constant `errorConst` is unchanged.
-`weakConsistency_of_approx` shows that `happ1` implies the hypothesis with `K = ‖S₁u‖`;
+`happ1` implies the hypothesis with `K = ‖S₁u‖`;
 `weakConsistency_of_regularPotential` derives it from hypotheses (`Stability`, `Bounded`,
 regular potentials, Prop 5.9(1), `S₁u ∈ D(d¹*)`) that do not include Prop 5.9(2); whether they hold
 for the Table 5.1 elements is open.
@@ -244,46 +240,6 @@ theorem error_estimate_of_weakConsistency {Cp CR CS CP : ℝ} (H : Stability D C
     (norm_add_sq_le_two_mul _ _) hωn2
     (le_add_of_nonneg_right (sq_nonneg _)) (le_add_of_nonneg_left (sq_nonneg _)) hg3
     (graphSq_nonneg _ _) (graphSq_nonneg _ _)
-
-/-- The strong consistency hypothesis of Thm 5.5 (`happ1` of `error_estimate`) implies weak
-consistency against any `u`, with `K = ‖S₁u‖` (Cauchy–Schwarz). -/
-theorem weakConsistency_of_approx {h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
-    (happ1 : ∀ v ∈ Q.Vt1h, ‖D.S1 v - Q.S1h v‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt1 v)
-    (u : Vt1) :
-    ∀ v ∈ Q.Vt1h, |⟪D.S1 u, (D.S1 - Q.S1h) v⟫| ≤ Capp * h * ‖D.S1 u‖ * √(graphSq D.dt1 v) := by
-  intro v hv
-  have hz : ‖(D.S1 - Q.S1h) v‖ ≤ Capp * h * √(graphSq D.dt1 v) := by
-    rw [LinearMap.sub_apply]
-    refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-    rw [mul_pow, Real.sq_sqrt (graphSq_nonneg _ _)]; exact happ1 _ hv
-  refine (abs_real_inner_le_norm _ _).trans ?_
-  calc ‖D.S1 u‖ * ‖(D.S1 - Q.S1h) v‖ ≤ ‖D.S1 u‖ * (Capp * h * √(graphSq D.dt1 v)) :=
-        mul_le_mul_of_nonneg_left hz (norm_nonneg _)
-    _ = _ := by ring
-
-/-- `error_estimate` is the special case `K = ‖S₁u‖` of `error_estimate_of_weakConsistency`
-(the original Thm 5.5 statement, re-derived from the weak-consistency version). -/
-theorem error_estimate_of_approx {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
-    (B : Q.Bounded CP) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.Vt1h]
-    {h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
-    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
-    (happ1 : ∀ v ∈ Q.Vt1h, ‖D.S1 v - Q.S1h v‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt1 v)
-    {σ : V0} {φ : Vt0} {u : Vt1} (ℓ : V1 →ₗ[ℝ] ℝ) {Λ : ℝ} (hΛ : 0 ≤ Λ)
-    (hℓ : ∀ μ, |ℓ μ| ≤ Λ * ‖μ‖) (F : Vt1 →ₗ[ℝ] ℝ)
-    (c1 : ∀ τ ∈ Q.V0h, ∀ ψ ∈ Q.Vt0h, ⟪σ, τ⟫ - ⟪u, D.dt0 ψ⟫ - ℓ (D.d0 τ - D.S0 ψ) = 0)
-    (c2 : ∀ v ∈ Q.Vt1h, ⟪D.dt0 φ, v⟫ + ⟪D.S1 u, D.S1 v⟫ + ⟪D.dt1 u, D.dt1 v⟫ = F v)
-    (c3 : D.d0 σ = D.S0 φ)
-    {σh : V0} {φh : Vt0} {uh : Vt1} {lh : V1}
-    (hσh : σh ∈ Q.V0h) (hφh : φh ∈ Q.Vt0h) (huh : uh ∈ Q.Vt1h)
-    (h1 : ∀ τ ∈ Q.V0h, ∀ ψ ∈ Q.Vt0h, ⟪σh, τ⟫ - ⟪uh, D.dt0 ψ⟫ - ⟪lh, D.d0 τ - Q.S0h ψ⟫ = 0)
-    (h2 : ∀ v ∈ Q.Vt1h, ⟪D.dt0 φh, v⟫ + ⟪Q.S1h uh, Q.S1h v⟫ + ⟪D.dt1 uh, D.dt1 v⟫ = F v)
-    (h3 : ∀ μ ∈ Q.V1h, ⟪D.d0 σh - Q.S0h φh, μ⟫ = 0) :
-    graphSq D.d0 (σ - σh) + graphSq D.dt0 (φ - φh) + Q.gnSq (u - uh) ≤
-      errorConst Cp CR CS CP Capp * (graphSq D.d0 (Q.P0 σ - σ) + graphSq D.dt0 (Q.Pt0 φ - φ)
-        + Q.gnSq (Q.Pt1 u - u) + h ^ 2 * Λ ^ 2 + h ^ 2 * ‖D.S1 u‖ ^ 2
-        + ‖D.S1 u - Q.S1h u‖ ^ 2) :=
-  error_estimate_of_weakConsistency H B h54 hh hCapp happ0
-    (weakConsistency_of_approx hh hCapp happ1 u) ℓ hΛ hℓ F c1 c2 c3 hσh hφh huh h1 h2 h3
 
 /-! ## Weak consistency from a discrete Hodge decomposition -/
 
@@ -468,37 +424,5 @@ theorem error_estimate_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D 
   error_estimate_of_weakConsistency H B h54 hh hCapp happ0
     (weakConsistency_of_regularPotential H B hh hCapp Rg happ0 hz) ℓ hΛ hℓ F c1 c2 c3
     hσh hφh huh h1 h2 h3
-
-/-- **Non-vacuity of `RegularPotential`** together with the hypotheses of Thm 5.5: on the
-identity discretization of `Discrete.exampleSegment` (with `S₀, S₁ ≠ 0`, all constants `1`),
-`Stability`, `Bounded`, `Compatible`, a regular potential with `X_reg = ℝ`, `R ≠ 0`, and
-`D(d¹*) = W²` hold simultaneously. -/
-theorem exists_regularPotential_nonvacuous :
-    ∃ (D : Segment ℝ (EuclideanSpace ℝ (Fin 0)) ℝ ℝ ℝ ℝ ℝ) (Q : Discrete D),
-      Stability D 1 1 1 ∧ Q.Bounded 1 ∧ Q.Compatible ∧ D.S0 ≠ 0 ∧ D.S1 ≠ 0 ∧
-      (∃ Rg : Q.RegularPotential ℝ 1 1 1 1, Rg.R ≠ 0) ∧
-      ∀ z : ℝ, ∃ z' : ℝ, ∀ w, ⟪z, D.d1 w⟫ = ⟪z', w⟫ := by
-  let Rg : (Discrete.top exampleSegment).RegularPotential ℝ 1 1 1 1 :=
-    { R := LinearMap.id
-      Cinc_nonneg := zero_le_one
-      Creg_nonneg := zero_le_one
-      norm_R_le := fun y => (by simp)
-      exists_potential := fun v _ => ⟨0, (by simp [exampleSegment])⟩
-      approx_Pt1 := fun y => (by simp [Discrete.top])
-      approx_S1 := fun y => (by simp [Discrete.top, S1h]) }
-  refine ⟨exampleSegment, Discrete.top _, ?_, Discrete.top_bounded _, Discrete.top_compatible _,
-    ?_, ?_, ⟨Rg, ?_⟩, fun z => ⟨z, fun w => by simp [exampleSegment]⟩⟩
-  · exact
-      { Cp_nonneg := zero_le_one, CR_nonneg := zero_le_one, CS_nonneg := zero_le_one,
-        poinc0 := fun σ => by simp [Subsingleton.elim σ 0],
-        poinct0 := fun φ => by simp [exampleSegment],
-        exact1 := fun μ hμ => ⟨0, by simpa [exampleSegment, eq_comm] using hμ⟩,
-        hodget1 := fun v => ⟨v, 0, by simp [exampleSegment]⟩,
-        reg := fun x => ⟨x, by simp [exampleSegment]⟩,
-        boundS0 := fun ψ => by simp [exampleSegment, graphSq],
-        boundS1 := fun v => by simp [exampleSegment, graphSq] }
-  · intro h; have := LinearMap.congr_fun h 1; simp [exampleSegment] at this
-  · intro h; have := LinearMap.congr_fun h 1; simp [exampleSegment] at this
-  · intro h; have := LinearMap.congr_fun h 1; simp [Rg] at this
 
 end Feec.BGG.Discrete

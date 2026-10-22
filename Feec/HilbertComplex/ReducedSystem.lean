@@ -178,8 +178,6 @@ theorem mem_totalSub_divFreeSub {Y : Submodule 𝕜 W₂} [Y.HasOrthogonalProjec
 system (4.15). -/
 def reduced : ShortHilbertComplex 𝕜 W₁ W₂ PUnit.{u + 1} := ofOp S.d₁ S.dense₁ S.closed₁
 
-@[simp] theorem reduced_d₀ : S.reduced.d₀ = S.d₁ := rfl
-
 theorem reduced_adjoint_d₁_apply (y : (S.reduced.d₁†).domain) : S.reduced.d₁† y = 0 :=
   apply_eq_zero_of_eq_zero (show (0 : W₂ →ₗ.[𝕜] PUnit.{u + 1})† = 0 from adjoint_zero) y
 

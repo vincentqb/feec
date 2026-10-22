@@ -17,8 +17,7 @@ At an index with the compactness property:
 * both `𝔅ⁱ` and the next boundaries `R(d i (c.next i))` are closed, and so is `𝔅*ᵢ`
   (`HasCompactPropertyAt.closedRangeAt`, `.isClosed_range`, `.dual_closedRangeAt`);
 * `ℌⁱ` and the cohomology `𝔷ⁱ / 𝔅ⁱ` are finite-dimensional, and the Hodge decomposition holds
-  without closures (`HasCompactPropertyAt.closed_and_fredholm`);
-* the property is symmetric under duality (`hasCompactPropertyAt_dual_iff`).
+  without closures (`HasCompactPropertyAt.closed_and_fredholm`).
 
 For a finite complex with the compactness property at every index, the wave operator
 `d − d†` has compact resolvent (`HasCompactProperty.isCompactOperator_resolvent_wave`), so the
@@ -253,20 +252,6 @@ theorem HasCompactPropertyAt.exists_isCompact {i : ι} (h : H.HasCompactProperty
   simp only [smul_smul]
   rw [← RCLike.ofReal_mul, mul_inv_cancel₀ hs.ne', RCLike.ofReal_one, one_smul]
 
-/-- The compactness property from a bound with any positive radius. -/
-theorem hasCompactPropertyAt_of_bound {i : ι} {r : ℝ} (hr : 0 < r) {K : Set (W i)}
-    (hK : IsCompact K) (hsub : ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain)
-      (hx' : x ∈ ((H.d (c.prev i) i)†).domain), ‖x‖ ≤ r → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ r →
-        ‖(H.d (c.prev i) i)† ⟨x, hx'⟩‖ ≤ r → x ∈ K) : H.HasCompactPropertyAt i := by
-  refine ⟨(fun y => ((r⁻¹ : ℝ) : 𝕜) • y) '' K, hK.image (continuous_const_smul _), ?_⟩
-  intro x hx hx' h1 h2 h3
-  obtain ⟨e1, e2, e3⟩ := smul_mem_box hr hx hx'
-  refine ⟨(r : 𝕜) • x, hsub _ _ _ (by rw [e1]; nlinarith [norm_nonneg x])
-    (by rw [e2]; nlinarith [norm_nonneg (H.d i (c.next i) ⟨x, hx⟩)])
-    (by rw [e3]; nlinarith [norm_nonneg ((H.d (c.prev i) i)† ⟨x, hx'⟩)]), ?_⟩
-  simp only [smul_smul]
-  rw [← RCLike.ofReal_mul, inv_mul_cancel₀ hr.ne', RCLike.ofReal_one, one_smul]
-
 /-- The compactness property at `i`, at a related pair `h → i → j`. -/
 theorem hasCompactPropertyAt_iff_of_rel {h i j : ι} (hhi : c.Rel h i) (hij : c.Rel i j) :
     H.HasCompactPropertyAt i ↔ ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i)
@@ -275,22 +260,6 @@ theorem hasCompactPropertyAt_iff_of_rel {h i j : ι} (hhi : c.Rel h i) (hij : c.
   obtain rfl := c.next_eq' hij
   obtain rfl := c.prev_eq' hhi
   rfl
-
-/-- The compactness property at an index with no outgoing arrow, `h → i`: only `D((d h i)†)`
-enters. -/
-theorem hasCompactPropertyAt_iff_of_rel_of_not_rel {h i : ι} (hhi : c.Rel h i)
-    (hi : ∀ j, ¬ c.Rel i j) :
-    H.HasCompactPropertyAt i ↔ ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i)
-      (hx' : x ∈ ((H.d h i)†).domain), ‖x‖ ≤ 1 → ‖(H.d h i)† ⟨x, hx'⟩‖ ≤ 1 → x ∈ K := by
-  obtain rfl := c.prev_eq' hhi
-  have h0 := H.shape i (c.next i) (hi _)
-  constructor
-  · rintro ⟨K, hK, hsub⟩
-    refine ⟨K, hK, fun x hx' h1 h3 => hsub x (H.domain_eq_top_of_not_rel (hi _) ▸ trivial) hx'
-      h1 ?_ h3⟩
-    rw [apply_eq_zero_of_eq_zero h0, norm_zero]; exact zero_le_one
-  · rintro ⟨K, hK, hsub⟩
-    exact ⟨K, hK, fun x _ hx' h1 _ h3 => hsub x hx' h1 h3⟩
 
 /-- The compactness property at an index with no incoming arrow, `i → j`: only `D(d i j)`
 enters. -/
@@ -313,22 +282,12 @@ theorem hasCompactPropertyAt_of_finiteDimensional (i : ι) [FiniteDimensional �
   haveI := FiniteDimensional.proper_rclike 𝕜 (W i)
   ⟨Metric.closedBall 0 1, isCompact_closedBall 0 1, fun _ _ _ h1 _ _ => mem_closedBall_zero_iff.2 h1⟩
 
-/-- The compactness property at `i` is compactness of the middle space of the pair
-`d (c.prev i) i`, `d i (c.next i)`. -/
-theorem hasCompactPropertyAt_iff_hasCompactPair {i : ι} :
-    H.HasCompactPropertyAt i ↔ Operator.HasCompactPair (H.d (c.prev i) i) (H.d i (c.next i)) :=
-  Iff.rfl
-
 /-! ### Duality -/
 
 /-- The compactness property passes to the dual complex. -/
 theorem HasCompactPropertyAt.dual {i : ι} (h : H.HasCompactPropertyAt i) :
     H.dual.HasCompactPropertyAt i :=
   Operator.HasCompactPair.adjoint h (H.dense _ _) (H.closed _ _)
-
-theorem hasCompactPropertyAt_dual_iff {i : ι} :
-    H.dual.HasCompactPropertyAt i ↔ H.HasCompactPropertyAt i :=
-  ⟨fun h => by simpa only [dual_dual] using h.dual, HasCompactPropertyAt.dual⟩
 
 theorem HasCompactProperty.dual (h : H.HasCompactProperty) : H.dual.HasCompactProperty :=
   fun i => (h i).dual

@@ -24,7 +24,7 @@ given antilinear `F`, `G`, find `(u, p) ∈ X × Y` with
 * `exists_lift`, `exists_adjoint_eq_of_mem_orthogonal`: `B` is onto with a bounded right inverse
   and `(ker B)ᗮ = R(B†)` under the inf-sup condition of `b`;
 * `rieszOp`-translation lemmas for constraint forms `b : X →L[𝕜] Y →L⋆[𝕜] 𝕜`
-  (`mem_ker_rieszOp_iff`, `norm_adjoint_rieszOp_apply`, `isSaddleSolution_rieszOp_iff`).
+  (`norm_adjoint_rieszOp_apply`, `isSaddleSolution_rieszOp_iff`).
 
 ## References
 
@@ -312,14 +312,6 @@ theorem brezzi_iff :
 section Form
 
 variable {b : X →L[𝕜] Y →L⋆[𝕜] 𝕜}
-
-/-- `ker (rieszOp b) = {v | b v = 0}`. -/
-theorem mem_ker_rieszOp_iff {v : X} : v ∈ (rieszOp b).ker ↔ ∀ q, b v q = 0 := by
-  constructor
-  · intro h q; rw [← inner_rieszOp, show rieszOp b v = 0 from h, inner_zero_right]
-  · intro h
-    show rieszOp b v = 0
-    exact ext_inner_left 𝕜 fun q => by rw [inner_rieszOp, h, inner_zero_right]
 
 /-- `‖(rieszOp b)† q‖ = sup_v |b v q| / ‖v‖`: the inf-sup condition of `b` with the inf over `q`
 is `β ‖q‖ ≤ ‖(rieszOp b)† q‖`. -/

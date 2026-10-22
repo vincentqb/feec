@@ -19,8 +19,7 @@ Hodge-theoretic and spectral properties of `H` pass to the compression:
   transport (`hasCompactPropertyAt_transport`) and compression along scaled isometries
   (`hasCompactPropertyAt_compress`);
 * **closed range** and the **Poincaré inequality** with the same constant
-  (`ReducingSubcomplex.closedRangeAt_toHilbertComplex`,
-  `ReducingSubcomplex.norm_le_of_mem_orthogonal`): `R(d|_S) = R(d) ∩ S` and
+  (`ReducingSubcomplex.norm_le_of_mem_orthogonal`): `R(d|_S) = R(d) ∩ S` and
   `N(d|_S)ᗮ ⊆ N(d)ᗮ`;
 * **the harmonic forms of the compression are the harmonic forms lying in `S`**
   (`ReducingSubcomplex.mem_harmonic_toHilbertComplex_iff`);
@@ -185,41 +184,6 @@ theorem hasCompactPropertyAt_toHilbertComplex (h : H.ReducingSubcomplex S) {i : 
     (fun x => ⟨x.2, ?_⟩) fun x => ⟨(mem_adjoint_toHilbertComplex_d_domain_iff h).1 x.2, ?_⟩
   · rw [one_mul]; rfl
   · rw [one_mul, ← Submodule.norm_coe, coe_adjoint_toHilbertComplex_d]; rfl
-
-theorem hasCompactProperty_toHilbertComplex (h : H.ReducingSubcomplex S)
-    (hc : H.HasCompactProperty) : h.toHilbertComplex.HasCompactProperty := fun i =>
-  h.hasCompactPropertyAt_toHilbertComplex (hc i)
-
-/-- **The boundaries of the compression** are the boundaries of `H` lying in `S`:
-`R(d|_S) = R(d) ∩ S` (`d P_S = P_S d`). -/
-theorem mem_range_part_iff (h : H.ReducingSubcomplex S) {i j : ι} {x : S j} :
-    x ∈ LinearMap.range (h.toHilbertComplex.d i j).toFun ↔
-      (x : W j) ∈ LinearMap.range (H.d i j).toFun := by
-  constructor
-  · rintro ⟨y, rfl⟩
-    exact ⟨⟨_, y.2⟩, rfl⟩
-  · rintro ⟨y, hy⟩
-    refine ⟨⟨⟨(S i).starProjection (y : W i), (S i).starProjection_apply_mem _⟩,
-      (h.reduces i j).proj_mem y⟩, Subtype.ext ?_⟩
-    change H.d i j ⟨_, (h.reduces i j).proj_mem y⟩ = (x : W j)
-    rw [(h.reduces i j).comm y]
-    have hy' : H.d i j y = (x : W j) := hy
-    change (S j).starProjection (H.d i j y) = _
-    rw [hy', (S j).starProjection_eq_self_iff.2 x.2]
-
-theorem mem_boundaries_toHilbertComplex_iff (h : H.ReducingSubcomplex S) {i : ι} {x : S i} :
-    x ∈ h.toHilbertComplex.boundaries i ↔ (x : W i) ∈ H.boundaries i :=
-  h.mem_range_part_iff
-
-/-- **Closed range passes to the compression.** -/
-theorem closedRangeAt_toHilbertComplex (h : H.ReducingSubcomplex S) {i : ι}
-    (hc : H.ClosedRangeAt i) : h.toHilbertComplex.ClosedRangeAt i := by
-  have e : (h.toHilbertComplex.boundaries i : Set (S i)) =
-      ((↑) : S i → W i) ⁻¹' (H.boundaries i : Set (W i)) := by
-    ext x; exact h.mem_boundaries_toHilbertComplex_iff
-  unfold ClosedRangeAt
-  rw [e]
-  exact hc.preimage continuous_subtype_val
 
 theorem mem_ker_part_iff (h : H.ReducingSubcomplex S) {i j : ι} {x : S i} :
     x ∈ (h.toHilbertComplex.d i j).ker ↔ (x : W i) ∈ (H.d i j).ker := by
@@ -454,11 +418,6 @@ theorem hasCompactPropertyAt_fixedComplex {i : ι} (hc : H.HasCompactPropertyAt 
 
 theorem hasCompactProperty_fixedComplex (hc : H.HasCompactProperty) :
     A.fixedComplex.HasCompactProperty := fun _ => A.hasCompactPropertyAt_fixedComplex (hc _)
-
-/-- Closed range passes to the fixed complex. -/
-theorem closedRangeAt_fixedComplex {i : ι} (hc : H.ClosedRangeAt i) :
-    A.fixedComplex.ClosedRangeAt i :=
-  A.reducingSubcomplex_fixed.closedRangeAt_toHilbertComplex hc
 
 /-- **The harmonic forms of the fixed complex are the fixed harmonic forms.** -/
 theorem mem_harmonic_fixedComplex_iff {i : ι} {x : A.fixed i} :

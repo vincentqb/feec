@@ -54,10 +54,6 @@ def dual : ShortHilbertComplex 𝕜 W₂ W₁ W₀ where
   mapsTo := Feec.Operator.adjoint_mapsTo S.dense₁ S.mapsTo S.comp
   comp := Feec.Operator.adjoint_comp_eq_zero S.dense₀ S.dense₁ S.mapsTo S.comp
 
-@[simp] theorem dual_d₀ : S.dual.d₀ = S.d₁† := rfl
-
-@[simp] theorem dual_d₁ : S.dual.d₁ = S.d₀† := rfl
-
 /-- `(d₁†)† = d₁` (von Neumann). -/
 theorem adjoint_dual_d₀ : S.dual.d₀† = S.d₁ :=
   LinearPMap.adjoint_adjoint _ S.dense₁ S.closed₁

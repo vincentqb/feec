@@ -1111,7 +1111,11 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
       ContDiff.sum fun j _ => hc1 _ _
     exact eq_zero_of_ball3 (continuous_pd hC m)
       (fun y hy => pd_eq_zero_of_ball3 (fun z hz => hdiv z hz i) hy m) hx.le
-  refine ⟨fun x hx => ⟨fun i j => ?_, ?_, fun i => ?_, fun i => ?_⟩, hnorm⟩
+  -- tangency: `V x = div U = 0`
+  have hVx : ∀ x, rho x = 1 → ∀ i, ∑ j, radDeriv U (i, j) x * x j = 0 := fun x hx i => by
+    rw [← hdivS x hx i]
+    exact Finset.sum_congr rfl fun j _ => by rw [hnorm x hx]; ring
+  refine ⟨fun x hx => ⟨fun i j => ?_, ?_, hVx x hx, fun i => ?_⟩, hnorm⟩
   · -- symmetry
     unfold radDeriv
     refine Finset.sum_congr rfl fun k _ => ?_
@@ -1132,11 +1136,6 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     rw [Finset.sum_comm]
     refine Finset.sum_eq_zero fun k _ => ?_
     rw [← Finset.mul_sum, ← pd_sum Finset.univ (fun i _ => hd _) k x, h0 k, mul_zero]
-  · -- tangency: `V x = div U = 0`
-    have h := hdivS x hx i
-    simp only [hnorm x hx] at h
-    rw [← h]
-    exact Finset.sum_congr rfl fun j _ => by ring
   · -- tangential divergence
     have hV : ∀ j k, pd k (radDeriv U (i, j)) x =
         pd k (U (i, j)) x + ∑ m, x m * pd k (pd m (U (i, j))) x := fun j k =>
@@ -1169,15 +1168,11 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     rw [e1]
     simp only [hdivS x hx i, hdiv1 x hx i, mul_zero, Finset.sum_const_zero, add_zero, zero_sub,
       hH]
-    have hVx : ∑ j, radDeriv U (i, j) x * x j = 0 := by
-      have h := hdivS x hx i
-      simp only [hnorm x hx] at h
-      rw [← h]
-      exact Finset.sum_congr rfl fun j _ => by ring
     have e2 : ∑ j, x j * (radDeriv U (i, j) x + -2 * radDeriv U (i, j) x) =
         -∑ j, radDeriv U (i, j) x * x j := by
       rw [← Finset.sum_neg_distrib]
       exact Finset.sum_congr rfl fun j _ => by ring
+    have hVx := hVx x hx i
     simp only [radDeriv] at e2 hVx ⊢
     rw [e2, hVx, neg_zero, neg_zero]
 
@@ -1328,15 +1323,11 @@ theorem smoothField_mem_minimal_of_eq_zero_sphere {W : Ix → R3 → ℝ} (hW : 
     obtain ⟨C, -, hC⟩ := exists_bound_closedBall3 (hW ij).continuous
     refine tendsto_toLp_of_bound hΩm isBounded_ball3.measure_lt_top.ne _ _ (C := C)
       (fun n x hx => ?_) (fun x hx => ?_)
-    · have h1 := eta_nonneg n (rho x)
-      have h2 := eta_le_one n (rho x)
-      have h3 := hC x (le_of_lt hx)
-      calc |Wn n ij x - W ij x| = |chi n x - 1| * |W ij x| := by
-            rw [← abs_mul]; congr 1; simp only [Wn]; ring
-        _ ≤ 1 * C := by
-            gcongr
-            rw [abs_le]; constructor <;> simp only [chi] <;> linarith
-        _ = C := one_mul C
+    · have h1 : |chi n x - 1| ≤ 1 := by
+        rw [abs_le]; constructor <;> simp only [chi] <;>
+          linarith [eta_nonneg n (rho x), eta_le_one n (rho x)]
+      rw [show Wn n ij x - W ij x = (chi n x - 1) * W ij x by simp only [Wn]; ring, abs_mul]
+      simpa using mul_le_mul h1 (hC x (le_of_lt hx)) (abs_nonneg _) zero_le_one
     · refine tendsto_const_nhds.congr' ((eventually_eta_eq_one hx).mono fun n hn => ?_)
       simp only [Wn, chi, hn.1, one_mul]
   have hlim2 : Tendsto (fun n => toL2F (hcm n)) atTop (𝓝 (toL2F hcW)) := by
@@ -1377,22 +1368,14 @@ theorem smoothField_mem_minimal_of_eq_zero_sphere {W : Ix → R3 → ℝ} (hW : 
           _ ≤ 2 * L ij * (2 * D) := by gcongr; linarith [hL0 ij]
           _ = 4 * D * L ij := by ring
       have hc1 : |(chi n x - 1) * curlM W (i, k) x| ≤ C := by
-        have h1 := eta_nonneg n (rho x)
-        have h2 := eta_le_one n (rho x)
+        have h1 : |chi n x - 1| ≤ 1 := by
+          rw [abs_le]; constructor <;> simp only [chi] <;>
+            linarith [eta_nonneg n (rho x), eta_le_one n (rho x)]
         rw [abs_mul]
-        calc |chi n x - 1| * |curlM W (i, k) x| ≤ 1 * C := by
-              gcongr
-              · rw [abs_le]; constructor <;> simp only [chi] <;> linarith
-              · exact hC x hx1
-          _ = C := one_mul C
-      calc _ ≤ |(chi n x - 1) * curlM W (i, k) x| +
-            (|W (i, k + 2) x * (deriv (eta n) (rho x) * (2 * x (k + 1)))| +
-              |W (i, k + 1) x * (deriv (eta n) (rho x) * (2 * x (k + 2)))|) :=
-            (abs_add_le _ _).trans (add_le_add le_rfl (abs_sub _ _))
-        _ ≤ C + (4 * D * L (i, k + 2) + 4 * D * L (i, k + 1)) :=
-            add_le_add hc1 (add_le_add (hb _ _) (hb _ _))
-        _ ≤ C + 8 * D * (L (i, k + 2) + L (i, k + 1)) := by
-            nlinarith [hL0 (i, k + 2), hL0 (i, k + 1)]
+        simpa using mul_le_mul h1 (hC x hx1) (abs_nonneg _) zero_le_one
+      refine ((abs_add_le _ _).trans (add_le_add hc1 ((abs_sub _ _).trans
+        (add_le_add (hb _ _) (hb _ _))))).trans ?_
+      nlinarith [hL0 (i, k + 2), hL0 (i, k + 1)]
     · refine tendsto_const_nhds.congr' ((eventually_eta_eq_one hx).mono fun n hn => ?_)
       have h := hform n x
       simp only [chi, hn.1, hn.2, sub_self, zero_mul, mul_zero, zero_add] at h

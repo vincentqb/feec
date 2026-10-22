@@ -187,6 +187,7 @@ public import Feec.Instances.EinsteinBianchiFEMGenerator
 public import Feec.Instances.EinsteinBianchiFEMMirror
 public import Feec.Instances.EinsteinBianchiFEMMirrorCore
 public import Feec.Instances.EinsteinBianchiFEMMirrorEll
+public import Feec.Instances.EinsteinBianchiGauss
 public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand

@@ -450,8 +450,7 @@ theorem SmoothingEstimates.tendsto_harmonicGap_whitney {p : ℕ → SmoothingPar
 
 /-- **The Whitney windows approximate every point of the graph space** of the total
 differential of the window `HΛᵃ(Q) → ⋯ → HΛ^{a+m-1}(Q)`: the density hypothesis of
-`FEM.isApproximating_window`, `FEM.exists_tendstoUniformlyOn_window` and
-`FEM.maxwell_exists_tendstoUniformlyOn`. -/
+`FEM.isApproximating_window` and `FEM.exists_tendstoUniformlyOn_window`. -/
 theorem dense_window (a : ℤ) (m : ℕ) :
     ∀ ζ : ((complex n).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
       ∃ w ∈ ((whitney n N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
@@ -729,6 +728,6 @@ theorem maxwell_exists_tendstoUniformlyOn_whitney (t₀ t₁ : ℝ)
           ⟨x, (((complex 3).window 0 3).mem_wave_domain.1 x.2).1⟩)) ∧
       TendstoUniformlyOn (fun N t => ((complex 3).window 0 3).totalD.graphFst (ξh N t))
         (fun t => ((complex 3).window 0 3).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  maxwell_exists_tendstoUniformlyOn (dense_window 0 3) t₀ t₁ x
+  exists_tendstoUniformlyOn_window 3 0 3 (dense_window 0 3) t₀ t₁ x
 
 end Feec.Models.Cube.FEM

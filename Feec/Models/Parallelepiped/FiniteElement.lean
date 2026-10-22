@@ -29,7 +29,7 @@ the data and smoothness.
   and the dimension of the harmonic forms (`finiteDimensional_harmonic`, `finrank_harmonic_eq`:
   `x ↦ P_{ℌ'} (e x)` is injective), degreewise approximation (`exists_near_comapSub`,
   `eventually_near_comapSub`, `tendsto_infDist_comapSub`) and the compactness property
-  (`IsChainIso.hasCompactProperty`). The box `D(d) ∩ D(d†)` is not mapped to the box of the
+  (`IsChainIso.hasCompactPropertyAt`). The box `D(d) ∩ D(d†)` is not mapped to the box of the
   other complex, but the compactness property splits into `dim ℌ < ∞` and two half-compactness
   properties (`hasCompactPropertyAt_iff_half`: the boxes of `D(d) ∩ 𝔷ᗮ` and `D(d†) ∩ N(d†)ᗮ`),
   which transfer through `e` and through the adjoints `e*` (`IsChainIso.halfCompactAt`,
@@ -991,9 +991,6 @@ theorem hasCompactPropertyAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.HasCompa
   exact (hasCompactPropertyAt_iff_half i).2
     ⟨hI.finiteDimensional_harmonic i, hI.halfCompactAt h3, hI.adjHalfCompactAt h1⟩
 
-theorem hasCompactProperty (hI : IsChainIso H H' e) (h' : H'.HasCompactProperty) :
-    H.HasCompactProperty := fun i => hI.hasCompactPropertyAt (h' i)
-
 end IsChainIso
 
 end Compact
@@ -1735,13 +1732,13 @@ theorem finiteDimensional_harmonic_min (k : ℤ) :
 
 /-- **The compactness property of `HΛ(Ω)`**, every degree: transferred from the cube
 (`FEM.hasCompactProperty`) along the non-isometric isomorphism `T^*`
-(`IsChainIso.hasCompactProperty`). -/
+(`IsChainIso.hasCompactPropertyAt`). -/
 theorem hasCompactProperty : (complex A b).HasCompactProperty :=
-  (isChainIso A hA b).hasCompactProperty FEM.hasCompactProperty
+  fun i => (isChainIso A hA b).hasCompactPropertyAt (FEM.hasCompactProperty i)
 
 /-- **The compactness property of `H̊Λ(Ω)`**, every degree. -/
 theorem hasCompactProperty_min : (complexMin A b).HasCompactProperty :=
-  (isChainIsoMin A hA b).hasCompactProperty FEM.hasCompactProperty_min
+  fun i => (isChainIsoMin A hA b).hasCompactPropertyAt (FEM.hasCompactProperty_min i)
 
 end Hodge
 

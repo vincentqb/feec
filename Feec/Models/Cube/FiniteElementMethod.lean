@@ -50,8 +50,7 @@ every consequence is proved:
   when the solution and its time derivative are approximable at rate `h`
   (`FEM.norm_sub_le_meshSize_window`, from `Feec.HodgeWave.norm_sub_le_of_semidiscrete`, which needs
   no smoothed projection); **Maxwell's equations** (perfect
-  magnetic conductor, `n = 3`, window `HΛ⁰ → HΛ¹ → L²Λ²`) are the instance
-  `FEM.maxwell_exists_tendstoUniformlyOn`.
+  magnetic conductor, `n = 3`, window `HΛ⁰ → HΛ¹ → L²Λ²`) are the instance `a = 0`, `m = 3`.
 
 **Remaining hypotheses.** None for the cube: the three hypotheses of this module are theorems
 elsewhere, and `Feec.Models.Cube.FiniteElementConvergence` states the results without them.
@@ -1046,24 +1045,5 @@ theorem norm_sub_le_meshSize_window (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
       (1 + ‖HodgeWave.shiftedForm ((complex n).window a m).totalD‖ / ((1 / 2) / √3)) *
         (1 + (t - t₀)) ^ 2 * (K * meshSize N) :=
   ((whitney n N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (happ N) ht
-
-/-- **Maxwell's equations on cube meshes** (perfect magnetic conductor): for `n = 3` the window
-`HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` is the PMC Maxwell complex `H¹ → H(curl) → L²` in form coordinates
-(`Feec.Maxwell.maximalComplex_d_eq_pmcForms_d₀`, `_d₁`), discretized by Lagrange `P₁` and
-Nédélec edge elements and Raviart–Thomas face elements (as `2`-forms) on the Freudenthal meshes;
-the semi-discrete solutions converge for `D(L)` data. -/
-theorem maxwell_exists_tendstoUniformlyOn
-    (hd : ∀ ζ : ((complex 3).window 0 3).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
-      ∃ w ∈ ((whitney 3 N).window 0 3).graphSub, ‖ζ - w‖ < δ)
-    (t₀ t₁ : ℝ) (x : ((complex 3).window 0 3).wave.domain) :
-    ∃ ξh ξh' : ℕ → ℝ → ((complex 3).window 0 3).totalD.GraphSpace,
-      (∀ N, HodgeWave.IsSemidiscreteSolution (((whitney 3 N).window 0 3).graphSub)
-        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
-      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((whitney 3 N).window 0 3).graphSub)
-        (((complex 3).window 0 3).totalD.toGraphSpace
-          ⟨x, (((complex 3).window 0 3).mem_wave_domain.1 x.2).1⟩)) ∧
-      TendstoUniformlyOn (fun N t => ((complex 3).window 0 3).totalD.graphFst (ξh N t))
-        (fun t => ((complex 3).window 0 3).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  exists_tendstoUniformlyOn_window 3 0 3 hd t₀ t₁ x
 
 end Feec.Models.Cube.FEM

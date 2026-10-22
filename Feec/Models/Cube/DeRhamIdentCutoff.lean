@@ -42,8 +42,8 @@ open Set MeasureTheory Filter
 namespace Feec.Models.Cube.DeRhamIdent
 
 open Geometry
-open RowWise (mN mN_pos eta eta_nonneg eta_le_one abs_eta_le_one contDiff_eta eta_eq_zero_of_ne
-  eta_eq_one abs_deriv_eta_mul_le exists_bound_deriv_smoothTransition)
+open RowWise (eventually_eventually_mem_shrunk mN mN_pos eta eta_nonneg eta_le_one abs_eta_le_one
+  contDiff_eta eta_eq_zero_of_ne eta_eq_one abs_deriv_eta_mul_le exists_bound_deriv_smoothTransition)
 
 variable {d : Type*} [Fintype d]
 
@@ -95,37 +95,8 @@ theorem isTest_chi_mul {f : (d → ℝ) → ℝ} (hf : ContDiff ℝ (⊤ : ℕ�
 /-- **Near each point of `Q`, `χ_m = 1` for all large `m`.** -/
 theorem eventually_chi_eq_one {y : d → ℝ} (hy : y ∈ Q d) :
     ∀ᶠ m in atTop, chi (d := d) m =ᶠ[𝓝 y] fun _ => 1 := by
-  have hy' := mem_Q.1 hy
-  have hpos : ∀ i, 0 < min (y i) (1 / 2 - y i) := fun i =>
-    lt_min (hy' i).1 (by linarith [(hy' i).2])
-  obtain ⟨δ, hδ, hδi⟩ : ∃ δ : ℝ, 0 < δ ∧ ∀ i, δ ≤ min (y i) (1 / 2 - y i) := by
-    by_cases he : IsEmpty d
-    · exact ⟨1, one_pos, fun i => (he.false i).elim⟩
-    · have hne : (Finset.univ : Finset d).Nonempty := by
-        rw [Finset.univ_nonempty_iff]; exact not_isEmpty_iff.1 he
-      refine ⟨Finset.univ.inf' hne fun i => min (y i) (1 / 2 - y i), ?_, fun i =>
-        Finset.inf'_le _ (Finset.mem_univ i)⟩
-      rw [Finset.lt_inf'_iff]
-      exact fun i _ => hpos i
-  obtain ⟨N, hN⟩ := exists_nat_gt (2 / δ)
-  filter_upwards [eventually_ge_atTop N] with m hm
-  have hmN : 2 / δ < mN m := by
-    unfold mN; linarith [show (N : ℝ) ≤ m from Nat.cast_le.2 hm]
-  have hmδ : 1 / mN m < δ / 2 := by
-    rw [div_lt_iff₀ (mN_pos m)]
-    rw [div_lt_iff₀ hδ] at hmN
-    linarith
-  filter_upwards [Metric.ball_mem_nhds y (by linarith : (0 : ℝ) < δ / 2)] with z hz
-  rw [Metric.mem_ball] at hz
-  have hzi : ∀ i, 1 / mN m ≤ z i ∧ z i ≤ 1 / 2 - 1 / mN m := by
-    intro i
-    have hd : |z i - y i| < δ / 2 := by
-      have := (dist_le_pi_dist z y i).trans_lt hz
-      rwa [Real.dist_eq] at this
-    rw [abs_lt] at hd
-    have h1 := (hδi i).trans (min_le_left _ _)
-    have h2 := (hδi i).trans (min_le_right _ _)
-    constructor <;> linarith
+  filter_upwards [eventually_eventually_mem_shrunk hy] with m hm
+  filter_upwards [hm] with z hzi
   simp only [chi]
   exact Finset.prod_eq_one fun i _ => eta_eq_one (hzi i).1 (hzi i).2
 

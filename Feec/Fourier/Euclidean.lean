@@ -107,17 +107,12 @@ theorem not_closedRangeAt {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} {i 
     obtain ⟨δ, hδ, hsub⟩ := Metric.mem_nhds_iff.1 (Filter.inter_mem h1 h2)
     exact ⟨δ, hδ, fun ζ hζ => ⟨(hsub hζ).1, (hsub hζ).2.le⟩⟩
   refine (symbolComplex S).not_closedRangeAt fun ε hε => ?_
-  set t := min 1 (ε / M) with ht
+  set t := min 1 (ε / M)
   have htpos : 0 < t := lt_min one_pos (div_pos hε hMpos)
   have ht1 : t ≤ 1 := min_le_left _ _
   have htM : t ^ r * M ≤ ε := by
     have h1 : t ^ r ≤ t := pow_le_of_le_one htpos.le ht1 hr.ne'
-    have h2 : t * M ≤ ε := by
-      have := min_le_right 1 (ε / M)
-      rw [← ht] at this
-      calc t * M ≤ ε / M * M := mul_le_mul_of_nonneg_right this hMpos.le
-        _ = ε := div_mul_cancel₀ _ hMpos.ne'
-    nlinarith
+    nlinarith [(le_div_iff₀ hMpos).1 (min_le_right 1 (ε / M))]
   have h2pi : 0 < 2 * Real.pi := by positivity
   set s := Metric.ball ((t / (2 * Real.pi)) • ξ₀) (t * δ / (2 * Real.pi))
   refine ⟨s, measurableSet_ball, (Metric.measure_ball_pos _ _ (by positivity)).ne',
@@ -134,19 +129,14 @@ theorem not_closedRangeAt {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} {i 
       rw [div_mul_div_comm, mul_comm (2 * Real.pi) t, div_self (by positivity), one_smul]
     rw [dist_eq_norm, e, norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity),
       ← dist_eq_norm]
-    calc 2 * Real.pi / t * dist x ((t / (2 * Real.pi)) • ξ₀)
-        < 2 * Real.pi / t * (t * δ / (2 * Real.pi)) :=
-          mul_lt_mul_of_pos_left hx (by positivity)
-      _ = δ := by field_simp
+    exact (mul_lt_mul_of_pos_left hx (by positivity)).trans_eq (by field_simp)
   obtain ⟨hζv, hζM⟩ := hball ζ hζ
   rw [symbolComplex_m, hx', hS t ζ htpos]
   refine ⟨?_, ?_⟩
   · rw [_root_.smul_apply, smul_ne_zero_iff]
     exact ⟨by exact_mod_cast (pow_pos htpos r).ne', hζv⟩
   · rw [norm_smul, RCLike.norm_ofReal, abs_of_nonneg (by positivity)]
-    calc t ^ r * ‖S.m (c.prev i) i ζ‖ ≤ t ^ r * M :=
-          mul_le_mul_of_nonneg_left hζM (by positivity)
-      _ ≤ ε := htM
+    exact (mul_le_mul_of_nonneg_left hζM (by positivity)).trans htM
 
 /-! ### Plancherel -/
 

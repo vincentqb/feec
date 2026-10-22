@@ -168,14 +168,10 @@ theorem not_isClosed_range_mulOp (hm : AEStronglyMeasurable m μ)
     rw [hε_def, show |c| * (1 / (2 * (|c| + 1))) = |c| / (2 * (|c| + 1)) by ring,
       div_le_iff₀ (by positivity)]
     nlinarith [abs_nonneg c]
-  have hle : ‖u‖ ≤ ‖u‖ / 2 := by
-    calc ‖u‖ ≤ c * ‖mulOp μ m ⟨u, hud⟩‖ := h1
-      _ ≤ |c| * ‖mulOp μ m ⟨u, hud⟩‖ := mul_le_mul_of_nonneg_right (le_abs_self c) (norm_nonneg _)
-      _ ≤ |c| * (ε * ‖u‖) := mul_le_mul_of_nonneg_left h2 (abs_nonneg c)
-      _ = (|c| * ε) * ‖u‖ := by ring
-      _ ≤ (1 / 2) * ‖u‖ := mul_le_mul_of_nonneg_right hkey (norm_nonneg _)
-      _ = ‖u‖ / 2 := by ring
-  have hu0 : u = 0 := norm_eq_zero.1 (le_antisymm (by linarith [norm_nonneg u]) (norm_nonneg u))
+  have hc' := (mul_le_mul_of_nonneg_right (le_abs_self c) (norm_nonneg _)).trans
+    (mul_le_mul_of_nonneg_left h2 (abs_nonneg c))
+  have hu0 : u = 0 := norm_eq_zero.1 (le_antisymm (by
+    nlinarith [norm_nonneg u, mul_le_mul_of_nonneg_right hkey (norm_nonneg u)]) (norm_nonneg u))
   have hnull : ∀ᵐ a ∂μ, a ∉ s := by
     filter_upwards [hmu, Lp.coeFn_zero E 2 μ] with a h3 h4 ha
     rw [hu0, h4, Pi.zero_apply, _root_.map_zero, Set.indicator_of_mem ha] at h3

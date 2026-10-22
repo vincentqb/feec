@@ -240,9 +240,7 @@ theorem hasCompactPropertyAt_of_coercive (S : SymbolComplex 𝕜 (Measure.count 
   have hB : TotallyBounded B := by
     refine Metric.totallyBounded_iff.2 fun ε hε => ?_
     set R : ℝ := 8 / ε ^ 2 + 1 with hR
-    have hR1 : 1 ≤ R := by rw [hR]; have : 0 ≤ 8 / ε ^ 2 := by positivity
-                           linarith
-    have hRpos : 0 < R := by linarith
+    have hRpos : 0 < R := by positivity
     set A := {a | lam a ≤ R}
     have hAm : MeasurableSet A := MeasurableSet.of_discrete
     have := hasOrthogonalProjection_band S hAm i
@@ -305,12 +303,9 @@ theorem hasCompactPropertyAt_of_coercive (S : SymbolComplex 𝕜 (Measure.count 
     have hlt : dist x (P x) < ε / 2 := by
       rw [dist_eq_norm]
       exact (sq_lt_sq₀ (norm_nonneg _) (by positivity)).1 hsq
-    calc dist x y ≤ dist x (P x) + dist (P x) y := dist_triangle _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add hlt hxy
-      _ = ε := by ring
-  refine ⟨closure B, hB.closure.isCompact_of_isClosed isClosed_closure, ?_⟩
-  intro x hx hx' h1 h2 h3
-  exact subset_closure ⟨hx, hx', h1, h2, h3⟩
+    exact (dist_triangle x (P x) y).trans_lt (by linarith [show dist (P x) y < ε / 2 from hxy])
+  exact ⟨closure B, hB.closure.isCompact_of_isClosed isClosed_closure,
+    fun x hx hx' h1 h2 h3 => subset_closure ⟨hx, hx', h1, h2, h3⟩⟩
 
 end Compact
 

@@ -122,8 +122,7 @@ theorem mem_graph_iff_weak {m : EuclideanSpace ℝ d → E →L[ℂ] F} (hm : Co
         rw [inner_conj_symm, inner_smul_left, Complex.conj_ofReal,
           RCLike.real_smul_eq_coe_smul (K := ℂ), inner_smul_right]
         rfl
-      simp only [e] at h'
-      exact h'
+      simpa only [e] using h'
     have hmem : Fu ∈ Operator.mulDomain volume m := (Lp.memLp G).ae_eq hae.symm
     refine ⟨hmem, Lp.ext ?_⟩
     filter_upwards [Operator.coeFn_mulOp volume m ⟨Fu, hmem⟩, hae] with x h1 h2

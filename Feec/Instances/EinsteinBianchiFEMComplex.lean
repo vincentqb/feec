@@ -22,7 +22,9 @@ solution is a Galerkin projection, `(1 - Lₕ) Πₕ(t) = ιₕ* (1 - L) ξ(t)` 
 the read state), so it is the approximant of the consistent-approximation hypothesis (residual
 `0`), and its convergence is the Strang bound of (6.4) with the weak consistency constants
 `K₀`, `K₁` (`Feec.Instances.EinsteinBianchi.FEM.norm_sub_ellTraj_le`). The cochain defect of
-(6.5) is not computed: it is absorbed by the Galerkin identity. `ofGalerkinCore` takes the existing
+(6.5) is not computed here: it is absorbed by the Galerkin identity (it is computed in
+`Feec.Instances.EinsteinBianchiFEMDefect`, where it is the pair of consistency functionals of the
+Strang bound and vanishes on TSD states for mirror boundary conditions). `ofGalerkinCore` takes the existing
 elliptic cores of `Feec.Instances.EinsteinBianchiFEM` as input, so the convergence verdicts below
 re-derive, through the complex-level theorem, verdicts already proved there; what is new is the
 discrete differential, the complex-level form of the scheme, the exactly preserved discrete

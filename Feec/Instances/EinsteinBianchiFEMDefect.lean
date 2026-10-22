@@ -941,7 +941,8 @@ set_option maxHeartbeats 4000000 in
 theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
     (hM : (WithLp.ofLp (y 2 : W2Q)).1 = 0) (a : mirrorHidden hT hB N) :
     ⟪y, mirrorEmb hT hB N (mirrorDiffGen hT hB N a)⟫_ℝ =
-      -⟪rowsW1L (slot1 y), bIncl1 (bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+      -⟪rowsW1L (slot1 y), bIncl1 (bD0 (((defectPhi (mirrorFEM hT hB N)
+        (mirrorWave_dt0_injective hT hB N)
         (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ +
         ⟪rowsW2L (slotB y), bD1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)⟫_ℝ := by
   have e1 := inner_mirrorEmb_right hT hB N y (mirrorDiffGen hT hB N a)
@@ -952,9 +953,11 @@ theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
   have f0 : ⟪re0 (slot0 y), (0 : W0)⟫_ℝ = 0 := inner_zero_right _
   have fM : ⟪(0 : W2), (((HiddenState.toEState (mirrorDiffGen hT hB N a)).M :
       (mirrorFEM hT hB N).W2h) : W2)⟫_ℝ = 0 := inner_zero_left _
-  have fu : ⟪rowsW1L (slot1 y), bIncl1 (-bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+  have fu : ⟪rowsW1L (slot1 y), bIncl1 (-bD0 (((defectPhi (mirrorFEM hT hB N)
+      (mirrorWave_dt0_injective hT hB N)
         (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ =
-      -⟪rowsW1L (slot1 y), bIncl1 (bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
+      -⟪rowsW1L (slot1 y), bIncl1 (bD0 (((defectPhi (mirrorFEM hT hB N)
+        (mirrorWave_dt0_injective hT hB N)
         (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0))⟫_ℝ := by
     rw [map_neg, inner_neg_right]
   linarith
@@ -1025,7 +1028,8 @@ theorem negI_smul_mem_tsdQℝ {y : PiLp 2 SpaceQ} (hy : y ∈ tsdQℝ) : -Comple
 
 set_option maxHeartbeats 2000000 in
 /-- A TSD state of `D(L)` has no degree-`1` part of `𝐝 y` (its degree-`0` part vanishes). -/
-theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     (complexQℝ.totalD ⟨y, y.2.1⟩) 1 = 0 := by
   obtain ⟨h0, -, -, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hyK
   rw [totalD_apply_one_fin3]
@@ -1033,7 +1037,8 @@ theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : 
 
 set_option maxHeartbeats 2000000 in
 /-- `L y` of a TSD state of `D(L)` has no degree-`0` part (TSD reduces `L`). -/
-theorem complexQℝ_wave_zero_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
+theorem complexQℝ_wave_zero_of_tsd (y : complexQℝ.wave.domain)
+    (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     (complexQℝ.wave y) 0 = 0 :=
   (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 (isReducing_tsdQℝ.mapsTo y hyK)).1
 
@@ -1156,7 +1161,8 @@ set_option maxHeartbeats 4000000 in
 /-- The errors of the hidden interpolant of the real rows of a TSD state of `D(L)`. -/
 theorem mirrorInterp_err_le (N : ℕ) (x : complexQ.wave.domain)
     (hx : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ) :
-    ‖rowsBU (stEL x) - (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ ^ 2 +
+    ‖rowsBU (stEL x) -
+          (((mirrorInterp hT hB N x).toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1)‖ ^ 2 +
         ‖rowsW2L (stBL x) -
           (((mirrorInterp hT hB N x).toEState.ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2)‖ ^ 2 +
         ‖(mirrorFEM hT hB N).S1h
@@ -1411,7 +1417,8 @@ def mirrorSplitComplex : ApproxComplexCrime complexQℝ ℕ :=
 set_option synthInstance.maxHeartbeats 400000 in
 set_option maxHeartbeats 8000000 in
 /-- **The mirror scheme (6.5) through the split route** (`ofCochainDefect` instead of
-`ofGalerkinCore`): the verdict of the complex-level theorem for `ofComplexCrime (mirrorSplitComplex)`;
+`ofGalerkinCore`): the verdict of the complex-level theorem for
+`ofComplexCrime (mirrorSplitComplex)`;
 its discrete solutions are those of `mirrorFEMApprox` (the scheme (6.5) on real and imaginary
 parts); the closure of the core is `tsdQℝ`, so for every TSD datum and every family of discrete
 initial values read convergent to it, the discrete solutions converge to the TSD solution
@@ -1440,7 +1447,8 @@ theorem einsteinBianchi_mirrorFEM_ofCochainDefect :
       tsdQℝ := topologicalClosure_tsdQℝ_inf_domainSq
   refine ⟨(approxFEEC_ofComplexCrime _).1, fun N v t => mirrorComplex_sol hT hB N v t, hcl,
     fun x hx T v hv => ?_, fun N y hy => mirrorComplex_cochainDefect_eq_zero hT hB N y hy⟩
-  have hx' : x ∈ (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure :=
+  have hx' : x ∈
+      (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure :=
     hcl.ge hx
   exact ⟨approxFEEC_converges _ _ T hx' hv, approxFEEC_residual _ isReducing_tsdQℝ _ T hx' hx hv⟩
 

@@ -521,21 +521,15 @@ theorem infSup_a (h : D.Hyps) :
     rw [T_apply, Prod.norm_def]
     exact max_le (le_add_of_nonneg_right (norm_nonneg _)) (le_add_of_nonneg_left (norm_nonneg _))
   have hwn : ‖w‖ ≤ c * (A + B) := (hP2 w hw).trans (by gcongr)
-  have hw2 : ‖w‖ ^ 2 ≤ 2 * c ^ 2 * (A ^ 2 + B ^ 2) := by
-    calc ‖w‖ ^ 2 ≤ (c * (A + B)) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hwn 2
-      _ = c ^ 2 * (A + B) ^ 2 := by ring
-      _ ≤ c ^ 2 * (2 * (A ^ 2 + B ^ 2)) := by gcongr; exact sq_add_le_two A B
-      _ = _ := by ring
+  have sq_le {x y : ℝ} (hx : 0 ≤ x) (h : x ≤ c * y) : x ^ 2 ≤ c ^ 2 * y ^ 2 := by
+    rw [← mul_pow]; exact pow_le_pow_left₀ hx h 2
+  have hw2 : ‖w‖ ^ 2 ≤ 2 * c ^ 2 * (A ^ 2 + B ^ 2) :=
+    (sq_le (norm_nonneg _) hwn).trans (by nlinarith [sq_add_le_two A B, sq_nonneg c])
   have hz2 : ‖z‖ ^ 2 ≤ 2 * c ^ 2 * Q := by
-    rw [norm_sq_X, ← hσdef, ← hφdef, ← hudef, hun]
-    have a1 : ‖σ‖ ^ 2 ≤ c ^ 2 * P ^ 2 := by
-      have := pow_le_pow_left₀ (norm_nonneg _) hσc 2; rwa [mul_pow] at this
-    have a2 : ‖φ‖ ^ 2 ≤ c ^ 2 * P ^ 2 := by
-      have := pow_le_pow_left₀ (norm_nonneg _) hφc 2; rwa [mul_pow] at this
-    have a3 : E ^ 2 ≤ c ^ 2 * E ^ 2 := le_mul_of_one_le_left (sq_nonneg _) hc2
-    have p1 : 0 ≤ c ^ 2 * E ^ 2 := by positivity
-    have p2 : 0 ≤ c ^ 2 * (A ^ 2 + B ^ 2) := by positivity
-    rw [hQ]; linarith
+    rw [norm_sq_X, ← hσdef, ← hφdef, ← hudef, hun, hQ]
+    linarith [sq_le (norm_nonneg _) hσc, sq_le (norm_nonneg _) hφc,
+      le_mul_of_one_le_left (sq_nonneg E) hc2, (by positivity : 0 ≤ c ^ 2 * E ^ 2),
+      (by positivity : 0 ≤ c ^ 2 * (A ^ 2 + B ^ 2))]
   have hyz2 : ‖y - z‖ ^ 2 ≤ 2 * c ^ 2 * Q := by
     rw [norm_sq_X]
     have e1 : pσ V0 Vt0 Vt1 (y - z) = -(ε • ρ) := by
@@ -546,16 +540,12 @@ theorem infSup_a (h : D.Hyps) :
       rw [map_sub, hydef, pu_mkX, ← hudef]; abel
     rw [e1, e2, e3, norm_neg, norm_neg, norm_smul, norm_smul, norm_smul,
       Real.norm_of_nonneg hε0.le, hpn]
-    have a1 : ‖ρ‖ ^ 2 ≤ c ^ 2 * E ^ 2 := by
-      have := pow_le_pow_left₀ (norm_nonneg _) hρc 2; rwa [mul_pow] at this
-    have a2 : ‖χ‖ ^ 2 ≤ c ^ 2 * E ^ 2 := by
-      have := pow_le_pow_left₀ (norm_nonneg _) hχc 2; rwa [mul_pow] at this
-    have a3 : P ^ 2 ≤ c ^ 2 * P ^ 2 := le_mul_of_one_le_left (sq_nonneg _) hc2
     have hε2 : ε ^ 2 ≤ 1 := pow_le_one₀ hε0.le hε1
     have hb : ‖ρ‖ ^ 2 + ‖χ‖ ^ 2 + P ^ 2 ≤ 2 * c ^ 2 * Q := by
-      have p1 : 0 ≤ c ^ 2 * P ^ 2 := by positivity
-      have p2 : 0 ≤ c ^ 2 * (A ^ 2 + B ^ 2) := by positivity
-      rw [hQ]; linarith
+      rw [hQ]
+      linarith [sq_le (norm_nonneg _) hρc, sq_le (norm_nonneg _) hχc,
+        le_mul_of_one_le_left (sq_nonneg P) hc2, (by positivity : 0 ≤ c ^ 2 * P ^ 2),
+        (by positivity : 0 ≤ c ^ 2 * (A ^ 2 + B ^ 2))]
     have hnn : 0 ≤ ‖ρ‖ ^ 2 + ‖χ‖ ^ 2 + P ^ 2 := by positivity
     calc (ε * ‖ρ‖) ^ 2 + (ε * ‖χ‖) ^ 2 + (ε * P) ^ 2
         = ε ^ 2 * (‖ρ‖ ^ 2 + ‖χ‖ ^ 2 + P ^ 2) := by ring
@@ -574,15 +564,10 @@ theorem infSup_a (h : D.Hyps) :
       _ ≤ _ := hlow
   rcases eq_or_ne y 0 with hy0 | hy0
   · refine ⟨0, Submodule.zero_mem _, by simp, ?_⟩
-    have ha : D.aForm z y = 0 := by rw [hy0, map_zero]
-    have hQ0 : Q ≤ 0 := by
-      have h1 : ε / 2 * Q ≤ 0 := ha ▸ hlow
-      by_contra hneg
-      have : 0 < ε / 2 * Q := mul_pos (by positivity) (not_le.1 hneg)
-      linarith
-    have h2 : 2 * c ^ 2 * Q ≤ 0 := mul_nonpos_of_nonneg_of_nonpos (by positivity) hQ0
+    rw [hy0, map_zero] at hlow
+    have hQ0 : Q ≤ 0 := le_of_mul_le_mul_left (by simpa using hlow) (half_pos hε0)
     have hz0 : ‖z‖ = 0 := pow_eq_zero_iff two_ne_zero |>.1
-      (le_antisymm (hz2.trans h2) (sq_nonneg _))
+      (le_antisymm (hz2.trans (mul_nonpos_of_nonneg_of_nonpos (by positivity) hQ0)) (sq_nonneg _))
     rw [hz0, mul_zero, map_zero]
   · have hyn : 0 < ‖y‖ := norm_pos_iff.2 hy0
     refine ⟨‖y‖⁻¹ • y, Submodule.smul_mem _ _ hy, ?_, ?_⟩

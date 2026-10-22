@@ -167,7 +167,7 @@ differential, the exactly preserved discrete Gauss constraint and the rates thro
 `Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofComplexCrime` (mirror BCs:
 convergence to the TSD solution and TSD residual `→ 0` on the closure `tsdQℝ`; rates
 `Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofComplexCrime_rate`, `O(h)` for TSD
-data of `D(L³)`, and `_rate_sobolev`, `O(hˢ)` for `H^{2+s}`, both from the initialization (6.4)
+data of `D(L³)`, and `einsteinBianchi_mirrorFEM_ofComplexCrime_rate_sobolev`, `O(hˢ)` for `H^{2+s}`, both from the initialization (6.4)
 and linear in `t`) and
 `Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_standardCube_ofComplexCrime` (thesis' BCs:
 convergence for every datum, and from `(0, 0, (0, β)) ∈ thesisTSD` TSD residuals tending to a

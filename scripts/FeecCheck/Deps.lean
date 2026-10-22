@@ -48,7 +48,7 @@ by `rfl`. A deletion is checked by building.
 
 **Reports** (`OUT_DIR/*.tsv`, `summary.md`): `dead.tsv` (dead groups: deletion range `line`–
 `endLine`, size, text references, the `map.tsv` rows they are `new` of, the dead groups using
-them and their modules), `dead_by_module.tsv`, `keep_seeds.tsv`, `dups.tsv`
+them, their modules and their names), `dead_by_module.tsv`, `keep_seeds.tsv`, `dups.tsv`
 (theorems with the same statement up to universe levels and binder names, definitions with the
 same type and value), `wrappers.tsv` (declarations whose value is a single application of another
 constant: every constant of the value but one, `c`, already occurs in the type, or is glue such as
@@ -683,7 +683,8 @@ def run (env : Environment) (outDir : System.FilePath) (allDocs modDocs : Bool) 
       if g.members.any simpRfl.contains then "rflSimp" else "",
       ", ".intercalate (rows.toList.map fun (k, _, _) => s!"map.tsv:{k}"),
       toString (nUsers i), " ".intercalate (userMods i).toList,
-      if g.members.any modDocNamed.contains then "moddoc" else ""]
+      if g.members.any modDocNamed.contains then "moddoc" else "",
+      " ".intercalate ((usersOf.getD i {}).toList.map fun u => nameStr groups[u]!.primary)]
   -- per-module and per-directory stats
   let mut modRows : Array (List String) := #[]
   let mut dirStats : Std.HashMap String (Nat × Nat × Nat × Nat × Nat × Nat) := {}
@@ -709,7 +710,7 @@ def run (env : Environment) (outDir : System.FilePath) (allDocs modDocs : Bool) 
   -- write
   writeTsv outDir "dead.tsv" ["file", "line", "endLine", "lines", "kind", "name", "private",
     "members", "textrefs", "firstTextRefs", "rflSimp", "mapRows", "deadUsers",
-    "deadUserModules", "modDoc"] deadRows
+    "deadUserModules", "modDoc", "deadUserNames"] deadRows
   writeTsv outDir "dead_by_module.tsv" ["file", "sourceLines", "groups", "groupLines", "deadGroups",
     "deadLines"] modRows
   writeTsv outDir "keep_seeds.tsv" ["name", "status", "reasons"] <|

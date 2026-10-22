@@ -96,21 +96,9 @@ theorem adjoint_symm_adjoint_apply (a : E ≃L[𝕜] F) (x : F) : a.adjoint.symm
   rw [ContinuousLinearMap.adjoint_adjoint]
   rfl
 
-@[simp] theorem adjoint_refl_symm_apply (x : E) :
-    (ContinuousLinearEquiv.refl 𝕜 E).adjoint.symm x = x := by
-  change ContinuousLinearMap.adjoint (ContinuousLinearMap.id 𝕜 E) x = x
-  rw [ContinuousLinearMap.adjoint_id]; rfl
-
 @[simp] theorem adjoint_apply_adjoint_symm_apply (a : E ≃L[𝕜] F) (x : E) :
     a.adjoint (a.adjoint.symm x) = x :=
   a.adjoint.apply_symm_apply x
-
-/-- A **unitary** equivalence (`⟪a x, a y⟫ = ⟪x, y⟫`) satisfies `(a⁻¹)† = a`. -/
-theorem adjoint_symm_eq_of_inner_map_map {a : E ≃L[𝕜] F}
-    (ha : ∀ x y, ⟪a x, a y⟫_𝕜 = ⟪x, y⟫_𝕜) : a.adjoint.symm = a := by
-  ext x
-  refine ext_inner_right 𝕜 fun y => ?_
-  rw [inner_adjoint_symm_apply, ← ha, ContinuousLinearEquiv.apply_symm_apply]
 
 end ContinuousLinearEquiv
 
@@ -118,14 +106,6 @@ namespace Submodule
 
 variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-theorem mem_map_continuousLinearEquiv {a : E ≃L[𝕜] F} {K : Submodule 𝕜 E} {y : F} :
-    y ∈ K.map (a : E →ₗ[𝕜] F) ↔ a.symm y ∈ K := by
-  constructor
-  · rintro ⟨x, hx, rfl⟩
-    simpa using hx
-  · intro h
-    exact ⟨a.symm y, h, a.apply_symm_apply y⟩
 
 /-- The image of a subspace with an orthogonal projection under a continuous linear isomorphism
 of Hilbert spaces has an orthogonal projection (it is closed). -/
@@ -210,24 +190,6 @@ theorem conj_eq_zero (hT : T = 0) : T.conj a b = 0 := by
     change a.symm y ∈ T.domain ↔ y ∈ (⊤ : Submodule 𝕜 E')
     rw [hT]; exact ⟨fun _ => Submodule.mem_top, fun _ => Submodule.mem_top⟩
   · rw [conj_apply, apply_eq_zero_of_eq_zero hT, _root_.map_zero, apply_eq_zero_of_eq_zero rfl]
-
-/-- `N(b T a⁻¹) = a N(T)`. -/
-theorem ker_conj : (T.conj a b).ker = T.ker.map (a : E →ₗ[𝕜] E') := by
-  ext y
-  rw [mem_ker_iff, Submodule.mem_map]
-  constructor
-  · rintro ⟨z, hz, hz0⟩
-    refine ⟨a.symm y, mem_ker_iff.2 ⟨⟨_, z.2⟩, by simp [← hz], ?_⟩, by simp⟩
-    rw [conj_apply] at hz0
-    exact b.map_eq_zero_iff.1 hz0
-  · rintro ⟨x, hx, rfl⟩
-    obtain ⟨z, hz, hz0⟩ := mem_ker_iff.1 hx
-    refine ⟨⟨a x, apply_mem_conj_domain.2 (hz ▸ z.2)⟩, rfl, ?_⟩
-    rw [conj_apply]
-    have : T ⟨a.symm (a x), by simpa using (hz ▸ z.2 : x ∈ T.domain)⟩ = T z :=
-      apply_congr' _ _ _ (by simp [hz])
-    change b (T ⟨a.symm (a x), _⟩) = 0
-    rw [this, hz0, _root_.map_zero]
 
 /-- Conjugating back by the inverses recovers `T`. -/
 theorem conj_symm_conj : (T.conj a b).conj a.symm b.symm = T := by
@@ -368,12 +330,6 @@ namespace ContinuousLinearMap
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E]
 
-/-- `G = e† e` is self-adjoint. -/
-theorem isSelfAdjoint_adjoint_comp_self (e : E →L[𝕜] E) :
-    IsSelfAdjoint (ContinuousLinearMap.adjoint e ∘L e) := by
-  rw [IsSelfAdjoint, ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_comp,
-    ContinuousLinearMap.adjoint_adjoint]
-
 /-- `⟪e† e x, y⟫ = ⟪e x, e y⟫`: the weighted inner product of `G = e† e`. -/
 theorem inner_adjoint_comp_self_apply (e : E →L[𝕜] E) (x y : E) :
     ⟪(ContinuousLinearMap.adjoint e ∘L e) x, y⟫_𝕜 = ⟪e x, e y⟫_𝕜 := by
@@ -383,22 +339,6 @@ theorem inner_adjoint_comp_self_apply (e : E →L[𝕜] E) (x y : E) :
 theorem re_inner_adjoint_comp_self_apply (e : E →L[𝕜] E) (x : E) :
     RCLike.re ⟪(ContinuousLinearMap.adjoint e ∘L e) x, x⟫_𝕜 = ‖e x‖ ^ 2 := by
   rw [inner_adjoint_comp_self_apply, inner_self_eq_norm_sq]
-
-/-- `G = e† e` is uniformly positive when `e` is an isomorphism:
-`‖e⁻¹‖⁻² ‖x‖² ≤ re ⟪G x, x⟫`. -/
-theorem coercive_adjoint_comp_self (e : E ≃L[𝕜] E) :
-    ∃ c > 0, ∀ x, c * ‖x‖ ^ 2 ≤
-      RCLike.re ⟪(ContinuousLinearMap.adjoint (e : E →L[𝕜] E) ∘L (e : E →L[𝕜] E)) x, x⟫_𝕜 := by
-  obtain ⟨C, hC, hb⟩ : ∃ C > 0, ∀ y, ‖e.symm y‖ ≤ C * ‖y‖ :=
-    ⟨‖(e.symm : E →L[𝕜] E)‖ + 1, by positivity, fun y =>
-      ((e.symm : E →L[𝕜] E).le_opNorm y).trans
-        (mul_le_mul_of_nonneg_right (le_add_of_nonneg_right zero_le_one) (norm_nonneg _))⟩
-  refine ⟨(C ^ 2)⁻¹, by positivity, fun x => ?_⟩
-  rw [re_inner_adjoint_comp_self_apply]
-  have h := hb (e x)
-  rw [e.symm_apply_apply] at h
-  rw [inv_mul_le_iff₀ (by positivity), ← mul_pow]
-  exact pow_le_pow_left₀ (norm_nonneg _) h 2
 
 end ContinuousLinearMap
 

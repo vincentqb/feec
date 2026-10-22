@@ -89,16 +89,6 @@ theorem adjoint_gradCurl_d₁ (hΩ : IsOpen Ω) :
     (gradCurl 𝕜 hΩ).d₁† = (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.maximal Ω :=
   ConstCoeffOp.adjoint_minimal _
 
-/-- Duality: the adjoints of the maximal complex are the minimal realizations of the formal
-adjoints (`d₀† = -div` on `H̊(div)`, `d₁† = curl` on `H̊(curl)`). -/
-theorem adjoint_gradCurlMax_d₀ (hΩ : IsOpen Ω) :
-    (gradCurlMax 𝕜 hΩ).d₀† = (gradOp 3 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.minimal Ω :=
-  ConstCoeffOp.adjoint_maximal _ hΩ
-
-theorem adjoint_gradCurlMax_d₁ (hΩ : IsOpen Ω) :
-    (gradCurlMax 𝕜 hΩ).d₁† = (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.minimal Ω :=
-  ConstCoeffOp.adjoint_maximal _ hΩ
-
 end Complexes
 
 /-! ## The pointwise boundary lemma -/

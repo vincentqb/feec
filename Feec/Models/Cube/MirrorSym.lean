@@ -1,6 +1,6 @@
 module
 
-public import Feec.Models.Cube.MirrorDirichlet
+public import Feec.Models.Cube.Mirror
 public import Feec.Models.Torus.SymCurl
 public import Feec.Models.BoundedDomain.SymCurl
 

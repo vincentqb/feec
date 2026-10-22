@@ -97,12 +97,6 @@ theorem SobRel.mono {s L L' : ℝ} {k : ℕ} {x : L2F ℝ (cubeDomain 3) (formId
     (hx : SobRel s L k x) (h : L ≤ L') : SobRel s L' k x :=
   ⟨hx.1, hx.2.trans h⟩
 
-theorem sobRel_zero {s L : ℝ} (hL : 0 ≤ L) (k : ℕ) :
-    SobRel s L k (0 : L2F ℝ (cubeDomain 3) (formIdx 3 k)) := by
-  refine ⟨by rw [map_zero]; exact Submodule.zero_mem _, ?_⟩
-  rw [map_zero, parNorm, map_zero]
-  simpa [sobSum, cf_zero] using hL
-
 /-! ### Projection errors of the smoothed projections for relative-class data -/
 
 section ProjSob

@@ -17,8 +17,7 @@ subcomplexes.
 `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ` (`norm_le_of_mem_orthogonal_cycles_part`), closed
 range (`closedRangeAt_part`), and the harmonic forms `ℌᵏ = 0` for `k ≠ |J|` and
 `ℌ^{|J|} = ℝ · dx_J` (`harmonic_eq_bot_part`, `harmonic_card_eq_span_part`). For `J = ∅` the complex is
-`FEM.complex n = HΛ(Q)` (`complexPart_empty`), for `J = univ` it is `FEM.complexMin n = H̊Λ(Q)`
-(`complexPart_univ`).
+`FEM.complex n = HΛ(Q)`, for `J = univ` it is `FEM.complexMin n = H̊Λ(Q)`.
 
 **Finite element subcomplexes.** The partial-boundary spaces `Λ_{h,Γ}ᵏ`
 (`Feec.FiniteElement.LocalElement.globalSpacePartial`) with `Γ = partialFaces J`, the vertex sets
@@ -34,7 +33,7 @@ glued field in `D(d_J)`. With `d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹` they form s
 (`LocalElement.subcomplexPart`), on the Freudenthal meshes of the cube for every admissible
 sequence `S` (`FEM.polyPartial n S N J`) and for the Whitney forms (`FEM.whitneyPartial n N J`).
 
-* `J = ∅`: `polyPartial ∅` has the spaces of `FEM.poly` (`polyPartial_empty_V`);
+* `J = ∅`: `polyPartial ∅` has the spaces of `FEM.poly`;
 * `J = univ`: it has the spaces of `FEM.polyMin` (`polyPartial_univ_V`): every boundary facet lies in a face of `Q`
   (`isBoundaryFacet_subset_partialFaces_univ`), and on the Freudenthal meshes every face lying in
   a face of `Q` lies in a boundary facet (`exists_isBoundaryFacet_of_plane`), so
@@ -81,19 +80,6 @@ theorem complexPart_d (J : Finset (Fin n)) (k : ℤ) :
     (complexPart n J).d k (k + 1) = dPart (cubeDomain n) J k :=
   DeRhamIdent.HQpartZ_d _ _ J k
 
-/-- **`HΛ_∅(Q) = HΛ(Q)`.** -/
-theorem complexPart_empty : complexPart n ∅ = complex n :=
-  DeRhamIdent.HQpartZ_empty _ _
-
-/-- **`HΛ_univ(Q) = H̊Λ(Q)`.** -/
-theorem complexPart_univ : complexPart n Finset.univ = complexMin n := by
-  have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω)
-      (hΩQ : Ω ⊆ Geometry.Q (Fin n)),
-      HQpartZ hΩ hΩQ Finset.univ = (deRham ℝ n).minimalComplex hΩ := by
-    rintro Ω rfl hΩ hΩQ
-    exact DeRhamIdent.HQpartZ_univ
-  exact key _ (cubeDomain_eq_Q n) _ _
-
 /-- **The Poincaré inequality of `HΛ_J(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` for `z ∈ D(d) ∩ (𝔷ⁱ)ᗮ`, in
 every degree. -/
 theorem norm_le_of_mem_orthogonal_cycles_part (J : Finset (Fin n)) {i j : ℤ}
@@ -137,10 +123,6 @@ theorem harmonic_card_eq_span_part (J : Finset (Fin n)) :
     rintro Ω rfl hΩ hΩQ hm hb
     exact DeRhamIdent.Hpart_harmonic_card J
   exact key _ (cubeDomain_eq_Q n) _ _ _ _
-
-theorem formPart_ne_zero (J : Finset (Fin n)) : formPart n J ≠ 0 :=
-  DeRhamIdent.constForm_ne_zero _ _
-    (by rw [cubeDomain_eq_Q]; exact DeRhamIdent.volume_Q_ne_zero) _
 
 instance finiteDimensional_harmonic_part (J : Finset (Fin n)) (k : ℤ) :
     FiniteDimensional ℝ ((complexPart n J).harmonic k) := by
@@ -572,14 +554,6 @@ theorem finiteDimensional_partialSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (
     FiniteDimensional ℝ ((partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k) := by
   subst h; exact hS k
 
-theorem partialSubcomplexOfEq_V_eq_maximal {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
-    (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω')
-    (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (J : Finset (Fin n)) (S : (HQpartZ hΩ hΩQ J).Subcomplex)
-    (S' : ((deRham ℝ n).maximalComplex hΩ).Subcomplex) (hV : ∀ k, S.V k = S'.V k) (k : ℤ) :
-    (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k =
-      ((deRham ℝ n).maximalSubcomplexOfEq h hΩ hΩ' S').V k := by
-  subst h; exact hV k
-
 theorem partialSubcomplexOfEq_V_eq_minimal {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
     (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω')
     (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (J : Finset (Fin n)) (S : (HQpartZ hΩ hΩQ J).Subcomplex)
@@ -665,12 +639,6 @@ def whitneyPartial (N : ℕ) (J : Finset (Fin n)) : (complexPart n J).Subcomplex
 instance (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
     FiniteDimensional ℝ ((whitneyPartial n N J).V k) :=
   finiteDimensional_partialSubcomplexOfEq _ _ _ _ _ _ _ k
-
-/-- **`J = ∅`: `polyPartial` has the spaces of `FEM.poly`.** -/
-theorem polyPartial_empty_V (S : PolySeq) (N : ℕ) (k : ℤ) :
-    (polyPartial n S N ∅).V k = (poly n S N).V k :=
-  partialSubcomplexOfEq_V_eq_maximal _ _ _ _ _ _ _ _
-    (fun k => VPartial_empty (polyElement n S) (mesh n N) k) k
 
 /-- **`J = univ`: `polyPartial` has the spaces of `FEM.polyMin`** (vanishing DOFs on every face
 lying in the boundary). -/

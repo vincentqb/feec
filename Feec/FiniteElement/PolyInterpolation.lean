@@ -54,8 +54,7 @@ This generalizes `Feec.FiniteElement.WhitneyInterpolation` (`P₁⁻Λᵏ`) to a
   `Feec.FiniteElement.PolyInverseEstimate` apply with the unisolvence `PolySeq.isUnisolvent_dof`
   on `K`: `hᵏ sup_T ‖u‖ ≤ B Σ |ℓ_{g,i}(u)|` (`PolySeq.exists_local_dof_bound`) and
   `‖u‖²_{L²(T)} ≍ h^{n-2k} Σ ℓ_{g,i}(u)²` (`PolySeq.exists_local_formL2Sq_equiv`).
-* **Finitely many reference simplices** (`exists_norm_sub_polyMinusInterp_le_uniform`,
-  `PolySeq.exists_local_dof_bound_uniform`): the constants can be taken uniform over a
+* **Finitely many reference simplices** (`PolySeq.exists_local_dof_bound_uniform`): the constants can be taken uniform over a
   finite family `K_σ` (the Kuhn simplices of a Freudenthal mesh).
 
 The estimates are local (one simplex); the mesh-level statements are assembled from them on the
@@ -1117,29 +1116,6 @@ end GlobalDof
 section Uniform
 
 variable {r k : ℕ}
-
-/-- `exists_norm_sub_polyMinusInterp_le` with one constant for a finite family of reference
-simplices. -/
-theorem exists_norm_sub_polyMinusInterp_le_uniform {ι : Type*} [Finite ι]
-    (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ}
-    (hs : s + 1 ≤ r) :
-    ∃ C, 0 ≤ C ∧ ∀ i, ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
-      (hwc : Continuous w) (hwk : ∀ x, IsDeg k (w x)) {U : Set (Fin n → ℝ)}, IsOpen U →
-      (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior ⊆ U → ContDiffOn ℝ (s + 1) w U →
-      ∀ {M : ℝ}, (∀ y ∈ (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-        ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') (K i)).closedInterior,
-        ‖w x - (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') (K i))) hr
-          hk ⟨w, mem_contDegForms hwc hwk⟩ : FormField n) x‖ ≤ C * h ^ (s + 1) * M := by
-  classical
-  have := Fintype.ofFinite ι
-  choose C hC0 hC using fun i => exists_norm_sub_polyMinusInterp_le (K i) hr hk hs
-  refine ⟨∑ i, C i, Finset.sum_nonneg fun i _ => hC0 i,
-    fun i {h} hh t w hwc hwk U hU hTU hw M hM x hx => (hC i hh t hwc hwk hU hTU hw hM x hx).trans ?_⟩
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM x hx)
-  have hCi : C i ≤ ∑ j, C j :=
-    Finset.single_le_sum (f := C) (fun j _ => hC0 j) (Finset.mem_univ i)
-  gcongr
 
 namespace PolySeq
 

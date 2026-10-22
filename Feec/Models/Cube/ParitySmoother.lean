@@ -32,7 +32,6 @@ classes and both rows of the BGG complex.
 * `smoothFun ρ c f = ρ ⋆ ext_c f`, `scalarSmooth ρ c`: the scalar parity smoother on `L²(Q)`.
 * `MomentKernel n m`: reflection-invariant (signed) kernels with vanishing moments of the orders
   `1, …, m - 1`.
-* `trigProd c`: symmetric trigonometric products of parity `c`.
 
 ## Main results
 
@@ -1438,20 +1437,6 @@ theorem IsSymm.update_one_sub {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} 
     (j : Fin n) (y : Fin n → ℝ) : F (Function.update y j (1 - y j)) = c j * F y := by
   rw [update_one_sub_eq, hF.periodic, hF.refl]
 
-/-- **An odd symmetric function vanishes on the faces**: if `F` is symmetric of parity `c` with
-`c_j = -1`, then `F = 0` on `{x_j = 0}` and on `{x_j = ½}`. -/
-theorem IsSymm.eq_zero_of_face {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
-    {j : Fin n} (hcj : c j = -1) {x : Fin n → ℝ} (hx : x j = 0 ∨ x j = 1 / 2) : F x = 0 := by
-  rcases hx with hx | hx
-  · have h := hF.refl j x
-    rw [coordRefl_of_eq_zero hx, hcj] at h
-    linarith
-  · have h := hF.update_one_sub j x
-    have e : Function.update x j (1 - x j) = x := by
-      rw [hx, show (1 : ℝ) - 1 / 2 = 1 / 2 by norm_num, ← hx, Function.update_eq_self]
-    rw [e, hcj] at h
-    linarith
-
 theorem coordRefl_eq_update (j : Fin n) (y : Fin n → ℝ) :
     coordRefl j y = Function.update y j (-y j) := by
   funext i; rw [coordRefl_apply]
@@ -2390,7 +2375,7 @@ theorem seg_mem_bigCube {r : ℝ} (hr : r < 1 / 2) {x : Fin n → ℝ} (hx : x �
 /-- **The high-order estimate of the parity smoother** ([AFW2010], §5.4; [Brezis2011], §9.2): for a
 kernel with vanishing moments of the orders `1, …, m - 1` and the parity extension `G = ext_c u`
 of a function `u` on `Q` which is `Cᵐ` on `ℝⁿ` (`G` symmetric of parity `c`; this requires the
-reflection compatibility conditions of `u` on `∂Q`, e.g. `trigProd c`),
+reflection compatibility conditions of `u` on `∂Q`),
 `‖u - R u‖²_{L²(Q)} ≤ ‖ρ‖₁² (εᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` (`ε` the radius of `ρ`; the
 factor `3ⁿ` is `‖Dᵐ ext_c u‖²_{L²(U)} / ‖Dᵐ G‖²_{L²(Q)}`). Here `R u = (ρ ⋆ ext_c u)|_Q` and
 `ext_c u = G` (`IsSymm.parExt_eq`). For `m ≤ 2` every reflection-invariant mollifier qualifies. -/
@@ -2447,61 +2432,5 @@ theorem integral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm 
     _ = _ := by ring
 
 /-! ### Non-vacuity: symmetric trigonometric products of every parity -/
-
-/-- The one-dimensional factor `cos 2πz` (parity `1`) or `sin 2πz` (parity `-1`). -/
-def trig1 (c z : ℝ) : ℝ := if c = 1 then Real.cos (2 * Real.pi * z) else Real.sin (2 * Real.pi * z)
-
-/-- **A symmetric trigonometric product of parity `c`**: `∏ⱼ trig1 cⱼ xⱼ`. For `c = c(J, s)` it is
-the parity extension of a smooth function on `Q` satisfying every reflection compatibility
-condition (its odd factors `sin 2πxⱼ` vanish on both faces normal to `e_j`). -/
-def trigProd (c : Fin n → ℝ) (x : Fin n → ℝ) : ℝ := ∏ j, trig1 (c j) (x j)
-
-theorem contDiff_trig1 (c : ℝ) : ContDiff ℝ ∞ (trig1 c) := by
-  unfold trig1
-  split_ifs
-  · exact Real.contDiff_cos.comp (contDiff_const.mul contDiff_id)
-  · exact Real.contDiff_sin.comp (contDiff_const.mul contDiff_id)
-
-theorem contDiff_trigProd (c : Fin n → ℝ) {m : ℕ∞} : ContDiff ℝ m (trigProd c) :=
-  (contDiff_prod fun j _ => (contDiff_trig1 (c j)).comp (contDiff_apply ℝ (fun _ : Fin n => ℝ) j)).of_le
-    (by exact_mod_cast le_top)
-
-theorem trig1_neg {c : ℝ} (hc : c = 1 ∨ c = -1) (z : ℝ) : trig1 c (-z) = c * trig1 c z := by
-  unfold trig1
-  rcases hc with rfl | rfl
-  · simp [mul_neg, Real.cos_neg]
-  · simp [mul_neg, Real.sin_neg, show (-1 : ℝ) ≠ 1 by norm_num]
-
-theorem trig1_add_intCast (c z : ℝ) (k : ℤ) : trig1 c (z + k) = trig1 c z := by
-  unfold trig1
-  have e : 2 * Real.pi * (z + k) = 2 * Real.pi * z + (k : ℤ) * (2 * Real.pi) := by ring
-  split_ifs
-  · rw [e, Real.cos_add_int_mul_two_pi]
-  · rw [e, Real.sin_add_int_mul_two_pi]
-
-/-- **`trigProd c` is symmetric of parity `c`.** -/
-theorem isSymm_trigProd {c : Fin n → ℝ} (hc : IsParity c) : IsSymm c (trigProd c) := by
-  classical
-  refine ⟨fun j y => ?_, fun y p => ?_⟩
-  · have e : ∀ i, trig1 (c i) (coordRefl j y i) =
-        (if i = j then c j else 1) * trig1 (c i) (y i) := fun i => by
-      rw [coordRefl_apply]
-      split_ifs with h
-      · subst h; exact trig1_neg (hc i) _
-      · ring
-    simp only [trigProd]
-    rw [Finset.prod_congr rfl fun i _ => e i, Finset.prod_mul_distrib, Finset.prod_ite_eq']
-    simp
-  · simp only [trigProd, Pi.add_apply]
-    exact Finset.prod_congr rfl fun j _ => trig1_add_intCast _ _ _
-
-/-- **`trigProd c` is not identically zero**: its value at `(⅛, …, ⅛)` is `(√2/2)ⁿ`. -/
-theorem trigProd_ne_zero (c : Fin n → ℝ) : trigProd c (fun _ => 1 / 8) ≠ 0 := by
-  refine Finset.prod_ne_zero_iff.2 fun j _ => ?_
-  have e : 2 * Real.pi * (1 / 8) = Real.pi / 4 := by ring
-  unfold trig1
-  split_ifs
-  · rw [e, Real.cos_pi_div_four]; positivity
-  · rw [e, Real.sin_pi_div_four]; positivity
 
 end Feec.Models.Cube.ParitySmoother

@@ -39,9 +39,7 @@ The measure on `𝕋ᵈ` is the normalized Haar measure of `Feec.Fourier.Torus.f
 * Fields: **`isWeak_iff`** (`(D f)^(k) = m(2πk) f̂(k)`), `IsWeak.unique`,
   **`mem_graph_iff_isWeak`**: the graph of the Fourier multiplier `m(2πk)` is the weak graph of
   `D`.
-* Real fields: `mFourierCoeff_star`, `star_eq_self_iff`, **`fieldFourier_fixed_iff`** (a field is
-  real iff its coefficients are fixed by `u ↦ conj u(-k)`), `IsWeak.star_eq_self` (an operator
-  with a real symbol maps real fields to real fields).
+* Real fields: `mFourierCoeff_star`, `star_eq_self_iff`.
 * Trigonometric polynomials: **`eq_zero_of_ae_eq_zero_of_finite`**: a trigonometric polynomial
   vanishing a.e. on a nonempty open set of `𝕋ᵈ` is zero (analytic continuation of its lift).
 
@@ -661,51 +659,6 @@ theorem mem_graph_iff_isWeak
     exact (hg k).symm
 
 /-! ### Real fields -/
-
-omit [DecidableEq d] [DecidableEq P] in
-theorem coeFn_conjLp_count (u : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ)))
-    (k : d → ℤ) :
-    (conjLp (E := EuclideanSpace ℂ P) Reflection.count_neg entryConj u :
-      (d → ℤ) → EuclideanSpace ℂ P) k = entryConj (u (-k)) :=
-  Measure.ae_count_iff.1 (coeFn_conjLp _ _ u) k
-
-omit [DecidableEq d] [DecidableEq P] in
-/-- **Real fields**: the coefficients of `f` are fixed by the reflection-conjugation
-`u ↦ conj u(-k)` iff every component of `f` is real-valued. -/
-theorem fieldFourier_fixed_iff (f : Field d P) :
-    conjLp (E := EuclideanSpace ℂ P) Reflection.count_neg entryConj (Torus.fieldFourier d P f) =
-      Torus.fieldFourier d P f ↔
-      ∀ p, star (f p) = f p := by
-  simp only [star_eq_self_iff]
-  constructor
-  · intro h p k
-    have := congrArg (fun u : Lp (EuclideanSpace ℂ P) 2 Measure.count => u (-k) p) h
-    simp only [coeFn_conjLp_count, entryConj_apply, neg_neg] at this
-    rw [← coeff_apply, ← coeff_apply]
-    exact this.symm
-  · intro h
-    refine Lp.ext_count fun k => ?_
-    ext p
-    rw [coeFn_conjLp_count, entryConj_apply]
-    change (starRingEnd ℂ) (coeff f (-k) p) = coeff f k p
-    rw [coeff_apply, coeff_apply, h p k, RCLike.conj_conj]
-
-/-- **Operators with real symbols preserve real fields**: if `m(-ξ) (conj v) = conj (m ξ v)` and
-`g = D f` weakly with `f` real, then `g` is real. -/
-theorem IsWeak.star_eq_self
-    {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q}
-    (hm : Weak.IsLinear m) (hreal : ∀ ξ v, m (-ξ) (entryConj v) = entryConj (m ξ v))
-    {f : Field d P} {g : Field d Q} (h : IsWeak m f g) (hf : ∀ p, star (f p) = f p) :
-    ∀ q, star (g q) = g q := by
-  rw [← fieldFourier_fixed_iff] at hf ⊢
-  have hf' : ∀ k, entryConj (coeff f (-k)) = coeff f k := fun k => by
-    rw [← coeFn_conjLp_count]; exact congrArg (fun u : Lp (EuclideanSpace ℂ P) 2 Measure.count => u k) hf
-  have hg := (isWeak_iff hm f g).1 h
-  refine Lp.ext_count fun k => ?_
-  rw [coeFn_conjLp_count]
-  change entryConj (coeff g (-k)) = coeff g k
-  have hf'' : coeff f (-k) = entryConj (coeff f k) := by rw [← hf' k, entryConj_entryConj]
-  rw [hg, hg, Torus.freq_neg, hf'', hreal, entryConj_entryConj]
 
 end Fields
 

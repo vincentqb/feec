@@ -238,11 +238,6 @@ def invariantCore₂ : Submodule 𝕜 W₂ := (S.coreSub S₁ S₂).comap (inj�
 
 variable {S S₁ S₂}
 
-theorem mem_coreSub {x : PiLp 2 (W3 W₀ W₁ W₂)} : x ∈ S.coreSub S₁ S₂ ↔
-    ∀ t, S.toHilbertComplex.waveGroup.S t x ∈
-      HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂) :=
-  C0Group.mem_invariantCore
-
 theorem mem_invariantCore₁ {v : W₁} :
     v ∈ S.invariantCore₁ S₁ S₂ ↔ inj₁ (𝕜 := 𝕜) W₀ W₁ W₂ v ∈ S.coreSub S₁ S₂ := Iff.rfl
 

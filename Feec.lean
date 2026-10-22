@@ -55,7 +55,6 @@ public import Feec.Evolution.Constrained
 public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy
 public import Feec.Evolution.Forcing
-public import Feec.Evolution.Perturbation
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
@@ -93,7 +92,6 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
-public import Feec.ForMathlib.LinearPMap.CompPartial
 public import Feec.ForMathlib.LinearPMap.GraphSpace
 public import Feec.ForMathlib.LinearPMap.Integral
 public import Feec.ForMathlib.LinearPMap.Intertwines
@@ -199,7 +197,6 @@ public import Feec.Mesh.Kuhn
 public import Feec.Mesh.ShapeRegular
 public import Feec.Models.BoundedDomain.BGG
 public import Feec.Models.BoundedDomain.Compactness
-public import Feec.Models.BoundedDomain.DeRham
 public import Feec.Models.BoundedDomain.Density
 public import Feec.Models.BoundedDomain.GradCurl
 public import Feec.Models.BoundedDomain.Hessian
@@ -233,7 +230,6 @@ public import Feec.Models.Cube.InhomogeneousError
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
 public import Feec.Models.Cube.MirrorBase
-public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym
 public import Feec.Models.Cube.MirrorTrace

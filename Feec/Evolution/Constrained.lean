@@ -18,8 +18,6 @@ value and forcing in `K` stays in `K`. For a dissipative generator this holds as
 * `IsStrongSolution.mem_of_isReducing`: the same for a reducing subspace `K`
   (`LinearPMap.IsReducing`). [QuennevilleBelair2015], Thm 4.4, Cor 4.5 (generalized from skew-adjoint to
   dissipative `A`, with no density hypothesis).
-* `IsStrongSolution.mem_orthogonal_of_isReducing`: for skew-symmetric `A` the orthogonal
-  complement `Kᗮ` propagates too, so the `K`- and `Kᗮ`-components evolve independently.
 
 ## References
 
@@ -96,12 +94,5 @@ theorem mem_of_isReducing (hA : A.IsDissipative) {K : Submodule 𝕜 E} [K.HasOr
     (hK : A.IsReducing K) (hU : IsStrongSolution A (Icc a b) F U) (h0 : U a ∈ K)
     (hF : ∀ t ∈ Icc a b, F t ∈ K) : ∀ t ∈ Icc a b, U t ∈ K :=
   hU.mem_of_invariant hA hK.proj_mem hK.mapsTo h0 hF
-
-/-- For a skew-symmetric generator, a reducing subspace `K` and its orthogonal complement both
-propagate: the `Kᗮ`-component of a solution with `Kᗮ`-valued data stays in `Kᗮ`. -/
-theorem mem_orthogonal_of_isReducing (hA : A.IsSkewSymmetric) {K : Submodule 𝕜 E}
-    [K.HasOrthogonalProjection] (hK : A.IsReducing K) (hU : IsStrongSolution A (Icc a b) F U)
-    (h0 : U a ∈ Kᗮ) (hF : ∀ t ∈ Icc a b, F t ∈ Kᗮ) : ∀ t ∈ Icc a b, U t ∈ Kᗮ :=
-  hU.mem_of_isReducing hA.isDissipative hK.orthogonal h0 hF
 
 end Feec.Evolution.IsStrongSolution

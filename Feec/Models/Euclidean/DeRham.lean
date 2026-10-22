@@ -134,7 +134,7 @@ abbrev window : HilbertComplex ℂ (ComplexShape.window (Fintype.card d + 1))
   (windowSymbol d).toHilbertComplex
 
 /-- **The real structure** of the whole-space de Rham window: real forms have
-`𝓕ω(-ξ) = conj 𝓕ω(ξ)` (`Feec.Fourier.Weak.fourier_fixed_iff`). -/
+`𝓕ω(-ξ) = conj 𝓕ω(ξ)`. -/
 def windowReal : (windowSymbol d).RealStructure (Reflection.neg volume) where
   cj _ := entryConj
   antilinear _ a v := entryConj_smul a v

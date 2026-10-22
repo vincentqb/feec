@@ -2,7 +2,6 @@ module
 
 public import Feec.Physics.Maxwell.Media
 public import Feec.Semigroup.Perturbation
-public import Feec.Evolution.Perturbation
 public import Feec.Evolution.WellPosed
 
 /-!

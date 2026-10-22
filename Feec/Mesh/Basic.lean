@@ -500,12 +500,6 @@ theorem _root_.Feec.Mesh.mapEquiv_injective (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fi
   Affine.Simplex.ext fun i => e.injective (by
     rw [← mapEquiv_points, ← mapEquiv_points, h])
 
-theorem card_map_simplices (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
-    (M.map e).simplices.card = M.simplices.card := by
-  classical
-  simp only [map, ofConforming]
-  exact Finset.card_image_of_injective _ (mapEquiv_injective e)
-
 end SimplicialMesh
 
 /-! ### Facets: the two sides of an interior facet, and boundary facets -/

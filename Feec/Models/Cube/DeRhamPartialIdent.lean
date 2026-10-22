@@ -16,7 +16,7 @@ graph-norm closure of the forms of `D(d_max)` vanishing a.e. near the faces norm
 (`faceNbhd`, `VanishNear`, `coreSub`): it is closed (`isClosed_dPart`),
 `d_min ≤ d_J ≤ d_max` (`minimal_le_dPart`, `dPart_le_maximal`), `d_∅ = d_max` (`dPart_empty`),
 and the `d_J` form a Hilbert complex `HQpartZ` on `ℤ` (`mapsTo_dPart`, `dPart_comp`: `d_max` is
-local, `maximal_vanishNear`). On `Q`, `d_univ = d_min` (`dPart_univ`).
+local, `maximal_vanishNear`). On `Q`, `d_univ = d_min`.
 
 **The identification** (`HQpart_eq_compress`). The per-direction parity extension `JfJ J k`
 (odd in `x_j` for the tangential components when `j ∈ J`, for the normal components when
@@ -54,7 +54,7 @@ The constant is the one of the torus, `(2π)⁻¹`.
 * `isClosed_dPart`, `minimal_le_dPart`, `dPart_le_maximal`, `dPart_empty`, **`maximal_vanishNear`**,
   `mapsTo_dPart`.
 * **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**,
-  **`HQpart_eq_compress`**, **`dPart_univ`**, `HQpartZ_empty`, `HQpartZ_univ`.
+  **`HQpart_eq_compress`**.
 * **`Hpart_norm_le`**, **`Hpart_hasCompactProperty`**, `Hpart_closedRangeAt`,
   **`Hpart_harmonic_eq_bot`**, **`Hpart_harmonic_card`**, `finrank_Hpart_cohomology`.
 
@@ -885,15 +885,6 @@ theorem HQpartZ_d (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Q (Fin n)) (J : Finset (Fin n
     (HQpartZ hΩ hΩQ J).d k (k + 1) = dPart Ω J k :=
   Feec.HilbertComplex.ofSuccD_succ (dPart Ω J) k
 
-/-- **`HΛ_∅(Ω) = HΛ(Ω)`.** -/
-theorem HQpartZ_empty (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Q (Fin n)) :
-    HQpartZ hΩ hΩQ (∅ : Finset (Fin n)) = (Feec.Domain.deRham ℝ n).maximalComplex hΩ := by
-  refine Feec.HilbertComplex.ext_d ?_
-  change Feec.HilbertComplex.ofSuccD _ = Feec.HilbertComplex.ofSuccD _
-  congr 1
-  funext k
-  exact dPart_empty hΩ k
-
 end Domain
 
 /-! ### Green's identity on `D(d_J)` -/
@@ -1322,44 +1313,6 @@ theorem HQpart_eq_compress (J : Finset (Fin n)) :
   · refine injective_JfJ J (b : ℕ) ?_
     change JJ J b _ = JJ J b _
     rw [Feec.HilbertComplex.J_compress_d, ← (mapsTo_comm_part J a b ⟨x, hx⟩).2]
-
-/-- **`d_univ = d_min` on `Q`**: vanishing tangential traces on all the faces is `H̊Λ(Q)`. -/
-theorem dPart_univ (k : ℤ) :
-    dPart (Q (Fin n)) Finset.univ k = (extDerivOp ℝ n k).minimal (Q (Fin n)) := by
-  rcases k with k | k
-  · show dPart (Q (Fin n)) Finset.univ ((k : ℕ) : ℤ) =
-      (extDerivOp ℝ n ((k : ℕ) : ℤ)).minimal (Q (Fin n))
-    refine LinearPMap.ext (Submodule.ext fun x => ⟨fun hx => ?_, fun hx => ?_⟩)
-      fun x hx hx' => ?_
-    · have := mem_minimal_of_Jf (u := x)
-        (y := JfJ Finset.univ (k + 1) (dPart (Q (Fin n)) Finset.univ (k : ℤ) ⟨x, hx⟩))
-        fun m => by rw [← JfJ_univ]; exact coeff_d_dPart Finset.univ k ⟨x, hx⟩ m
-      exact this.1
-    · have := mem_dPart_of_JfJ (J := Finset.univ) (u := x)
-        (y := Jf true (k + 1) ((extDerivOp ℝ n (k : ℤ)).minimal (Q (Fin n)) ⟨x, hx⟩))
-        fun m => by rw [JfJ_univ]; exact coeff_d_minimal true k ⟨x, hx⟩ m
-      exact this.1
-    · refine injective_JfJ Finset.univ (k + 1) (Lp.ext_count fun m => ?_)
-      rw [← coeff_d_dPart Finset.univ k ⟨x, hx⟩ m, JfJ_univ, JfJ_univ,
-        ← coeff_d_minimal true k ⟨x, hx'⟩ m]
-  · have : Subsingleton (L2F ℝ (Q (Fin n)) (formIdx n (Int.negSucc k))) :=
-      hlow _ _ (Int.negSucc_lt_zero k)
-    refine LinearPMap.ext (Subsingleton.elim _ _) fun x hx hx' => ?_
-    have h1 : (⟨x, hx⟩ : (dPart (Q (Fin n)) Finset.univ (Int.negSucc k)).domain) = 0 :=
-      Subtype.ext (Subsingleton.elim _ _)
-    have h2 : (⟨x, hx'⟩ :
-        ((extDerivOp ℝ n (Int.negSucc k)).minimal (Q (Fin n))).domain) = 0 :=
-      Subtype.ext (Subsingleton.elim _ _)
-    rw [h1, h2, LinearPMap.map_zero, LinearPMap.map_zero]
-
-/-- **`HΛ_univ(Q) = H̊Λ(Q)`.** -/
-theorem HQpartZ_univ :
-    HQpartZ (isOpen_Q (d := Fin n)) subset_rfl Finset.univ = Hmin n := by
-  refine Feec.HilbertComplex.ext_d ?_
-  change Feec.HilbertComplex.ofSuccD _ = Feec.HilbertComplex.ofSuccD _
-  congr 1
-  funext k
-  exact dPart_univ k
 
 end Window
 

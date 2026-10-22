@@ -15,17 +15,14 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
   operator, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` (`extDerivOp_apply`);
 * its **formal adjoint** is minus the codifferential,
   `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` (`formalAdj_extDerivOp_apply`);
-* `d ∘ d = 0` and `dᵗ ∘ dᵗ = 0` on smooth forms (Schwarz; `isComplexPair_extDerivOp`,
-  `isComplexPair_formalAdj_extDerivOp`);
+* `d ∘ d = 0` on smooth forms (Schwarz; `isComplexPair_extDerivOp`);
 * the complex `Feec.Domain.deRham n` of constant-coefficient operators indexed by `ℤ`, whose
   minimal realization on any open `Ω` is `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯` (the closure of `d` on
   `C_c^∞(Ω)`; for Lipschitz `Ω` these are the forms with vanishing tangential trace), whose maximal realization is `HΛ⁰(Ω) → HΛ¹(Ω) → ⋯` (no boundary
   condition), and the dual of the minimal complex is the maximal complex of the codifferentials
   (`deRham_dual_minimalComplex_d`).
-* the components in low degree: `(d f)_{j} = ∂_j f` (`extDerivOp_zero_apply`),
-  `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (`extDerivOp_one_apply_pair`) and
-  `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l`
-  (`extDerivOp_two_apply_triple`).
+* the components in low degree: `(d f)_{j} = ∂_j f` (`extDerivOp_zero_apply`) and
+  `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (`extDerivOp_one_apply_pair`).
 
 ## Implementation notes
 
@@ -114,30 +111,6 @@ theorem extD_extD {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s,
   have := ite_lt_add_ite_lt (R := 𝕜) hjl
   linear_combination (sgn j s * sgn l s * fderiv ℝ (fun y => fderiv ℝ (F ((s.erase j).erase l))
     y (coordDir j)) x (coordDir l)) * this
-
-/-- **`δ ∘ δ = 0`** on smooth families (Schwarz). -/
-theorem extDAdj_extDAdj {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s, ContDiff ℝ ∞ (F s))
-    (s : Finset (Fin n)) (x : Fin n → ℝ) : extDAdj (extDAdj F) s x = 0 := by
-  have hd : ∀ j, fderiv ℝ (extDAdj F (insert j s)) x (coordDir j) =
-      -∑ l ∈ sᶜ.erase j, sgn l (insert j s) * fderiv ℝ (fun y => fderiv ℝ
-        (F (insert l (insert j s))) y (coordDir l)) x (coordDir j) := by
-    intro j
-    have h1 := fderiv_sum_const_mul ((insert j s)ᶜ) (fun l => sgn l (insert j s))
-      (G := fun l y => fderiv ℝ (F (insert l (insert j s))) y (coordDir l))
-      (fun l => contDiff_fderiv_apply (hF _) _) x (coordDir j)
-    change fderiv ℝ (fun y => -∑ l ∈ (insert j s)ᶜ, sgn l (insert j s) *
-        fderiv ℝ (F (insert l (insert j s))) y (coordDir l)) x (coordDir j) = _
-    rw [fderiv_fun_neg, neg_apply, h1, compl_insert]
-  simp only [extDAdj]
-  simp only [hd, mul_neg, Finset.sum_neg_distrib, neg_neg, Finset.mul_sum]
-  refine sum_sum_erase_eq_zero sᶜ _ fun j hj l hl hjl => ?_
-  have hj' : j ∉ s := Finset.mem_compl.1 hj
-  have hl' : l ∉ s := Finset.mem_compl.1 hl
-  rw [sgn_insert hj', sgn_insert hl', Finset.insert_comm l j,
-    fderiv_fderiv_comm ((hF (insert j (insert l s))).of_le (by simp)) (coordDir j) (coordDir l) x]
-  have := ite_lt_add_ite_lt (R := 𝕜) hjl
-  linear_combination (sgn j s * sgn l s * fderiv ℝ (fun y => fderiv ℝ (F (insert j (insert l s)))
-    y (coordDir l)) x (coordDir j)) * this
 
 /-! ## The exterior derivative as a constant-coefficient operator -/
 
@@ -237,14 +210,6 @@ theorem formExt_extDerivOp_apply {k : ℤ} (w : formIdx n k → (Fin n → ℝ) 
   funext x
   exact extDerivOp_apply w ⟨s, hs⟩ x
 
-/-- `dᵗ ψ` extended by zero is `extDAdj` of the extension of `ψ`, in degree `k`. -/
-theorem formExt_formalAdj_extDerivOp_apply {k : ℤ} (w : formIdx n (k + 1) → (Fin n → ℝ) → 𝕜)
-    {s : Finset (Fin n)} (hs : (#s : ℤ) = k) :
-    formExt ((extDerivOp 𝕜 n k).formalAdj.apply w) s = extDAdj (formExt w) s := by
-  rw [formExt_of_card _ hs]
-  funext x
-  exact formalAdj_extDerivOp_apply w ⟨s, hs⟩ x
-
 /-- **`d ∘ d = 0`** on smooth `k`-forms. -/
 theorem isComplexPair_extDerivOp (k : ℤ) :
     (extDerivOp 𝕜 n k).IsComplexPair (extDerivOp 𝕜 n (k + 1)) := by
@@ -258,21 +223,6 @@ theorem isComplexPair_extDerivOp (k : ℤ) :
     simp only [extD]
     exact Finset.sum_congr rfl fun j hj => by rw [e j hj]
   rw [this, extD_extD (contDiff_formExt hw)]
-
-/-- **`dᵗ ∘ dᵗ = 0`**: the codifferentials form a complex. -/
-theorem isComplexPair_formalAdj_extDerivOp (k : ℤ) :
-    (extDerivOp 𝕜 n (k + 1)).formalAdj.IsComplexPair (extDerivOp 𝕜 n k).formalAdj := by
-  intro w hw
-  funext r x
-  rw [formalAdj_extDerivOp_apply, Pi.zero_apply, Pi.zero_apply]
-  have e : ∀ j ∈ r.1ᶜ, formExt ((extDerivOp 𝕜 n (k + 1)).formalAdj.apply w) (insert j r.1) =
-      extDAdj (formExt w) (insert j r.1) := fun j hj =>
-    formExt_formalAdj_extDerivOp_apply w (card_insert_of_formIdx r (Finset.mem_compl.1 hj))
-  have : extDAdj (formExt ((extDerivOp 𝕜 n (k + 1)).formalAdj.apply w)) r.1 x =
-      extDAdj (extDAdj (formExt w)) r.1 x := by
-    simp only [extDAdj]
-    exact congrArg Neg.neg (Finset.sum_congr rfl fun j hj => by rw [e j hj])
-  rw [this, extDAdj_extDAdj (contDiff_formExt hw)]
 
 /-- **In degree `0`, `d` is the gradient**: `(d f)_{{j}} = ∂_j f`. -/
 theorem extDerivOp_zero_apply (f : formIdx n 0 → (Fin n → ℝ) → 𝕜) (j : Fin n)
@@ -309,47 +259,6 @@ theorem extDerivOp_one_apply_pair (w : formIdx n 1 → (Fin n → ℝ) → 𝕜)
       · exact absurd h (lt_irrefl _)
     · rintro rfl; exact ⟨Or.inl rfl, hjl⟩
   simp [sgn, h1, h2]
-  ring
-
-/-- **`d` on 2-forms**: `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l` (in
-`ℝ³`, the divergence of the proxy `(w_{12}, -w_{02}, w_{01})`). -/
-theorem extDerivOp_two_apply_triple (w : formIdx n 2 → (Fin n → ℝ) → 𝕜) {i j l : Fin n}
-    (hij : i < j) (hjl : j < l) (x : Fin n → ℝ) :
-    (extDerivOp 𝕜 n 2).apply w ⟨{i, j, l}, by
-        rw [card_insert_of_notMem (by simp [hij.ne, (hij.trans hjl).ne]), card_pair hjl.ne]
-        norm_num⟩ x =
-      fderiv ℝ (w ⟨{j, l}, by rw [card_pair hjl.ne]; norm_num⟩) x (coordDir i) -
-        fderiv ℝ (w ⟨{i, l}, by rw [card_pair (hij.trans hjl).ne]; norm_num⟩) x (coordDir j) +
-        fderiv ℝ (w ⟨{i, j}, by rw [card_pair hij.ne]; norm_num⟩) x (coordDir l) := by
-  rw [extDerivOp_apply]
-  have hil := hij.trans hjl
-  have hi : i ∉ ({j, l} : Finset (Fin n)) := by simp [hij.ne, hil.ne]
-  have hj : j ∉ ({l} : Finset (Fin n)) := by simpa using hjl.ne
-  simp only [extD, sum_insert hi, sum_insert hj, sum_singleton, erase_insert hi,
-    erase_insert_of_ne hij.ne, erase_insert_of_ne hil.ne, erase_insert hj,
-    erase_insert_of_ne hjl.ne, erase_singleton, Finset.insert_empty]
-  rw [formExt_of_card w (by rw [card_pair hjl.ne]; norm_num),
-    formExt_of_card w (by rw [card_pair hil.ne]; norm_num),
-    formExt_of_card w (by rw [card_pair hij.ne]; norm_num)]
-  have h1 : ({m ∈ ({i, j, l} : Finset (Fin n)) | m < i}) = ∅ := by
-    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton, Finset.notMem_empty, iff_false]
-    rintro ⟨rfl | rfl | rfl, h⟩ <;> order
-  have h2 : ({m ∈ ({i, j, l} : Finset (Fin n)) | m < j}) = {i} := by
-    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton]
-    constructor
-    · rintro ⟨rfl | rfl | rfl, h⟩ <;> first | rfl | order
-    · rintro rfl; exact ⟨Or.inl rfl, hij⟩
-  have h3 : ({m ∈ ({i, j, l} : Finset (Fin n)) | m < l}) = {i, j} := by
-    ext m; simp only [Finset.mem_filter, Finset.mem_insert, Finset.mem_singleton]
-    constructor
-    · rintro ⟨rfl | rfl | rfl, h⟩
-      · exact Or.inl rfl
-      · exact Or.inr rfl
-      · order
-    · rintro (rfl | rfl)
-      · exact ⟨Or.inl rfl, hil⟩
-      · exact ⟨Or.inr (Or.inl rfl), hjl⟩
-  simp [sgn, h1, h2, h3, card_pair hij.ne]
   ring
 
 /-! ## The de Rham complex and its two boundary-condition families -/

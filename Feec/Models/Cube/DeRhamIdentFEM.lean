@@ -193,9 +193,6 @@ theorem harmonic_top_eq_span_min : (complexMin n).harmonic n = ℝ ∙ volForm n
 theorem oneForm_ne_zero : oneForm n ≠ 0 :=
   DeRhamIdent.constForm_ne_zero _ _ (by rw [cubeDomain_eq_Q]; exact DeRhamIdent.volume_Q_ne_zero) _
 
-theorem volForm_ne_zero : volForm n ≠ 0 :=
-  DeRhamIdent.constForm_ne_zero _ _ (by rw [cubeDomain_eq_Q]; exact DeRhamIdent.volume_Q_ne_zero) _
-
 /-- The harmonic forms of `HΛ(Q)` are finite-dimensional in every degree. -/
 instance finiteDimensional_harmonic (k : ℤ) : FiniteDimensional ℝ ((complex n).harmonic k) := by
   by_cases hk : k = 0
@@ -214,12 +211,6 @@ theorem finrank_harmonic (k : ℤ) :
   by_cases hk : k = 0
   · subst hk; rw [harmonic_zero_eq_span, finrank_span_singleton oneForm_ne_zero]; simp
   · rw [harmonic_eq_bot hk, finrank_bot]; simp [hk]
-
-theorem finrank_harmonic_min (k : ℤ) :
-    Module.finrank ℝ ((complexMin n).harmonic k) = if k = n then 1 else 0 := by
-  by_cases hk : k = n
-  · subst hk; rw [harmonic_top_eq_span_min, finrank_span_singleton volForm_ne_zero]; simp
-  · rw [harmonic_eq_bot_min hk, finrank_bot]; simp [hk]
 
 /-- **The cohomology of `HΛ(Q)`**: `Hᵏ ≅ ℝ` for `k = 0`, `0` otherwise. -/
 theorem finrank_cohomology (k : ℤ) :

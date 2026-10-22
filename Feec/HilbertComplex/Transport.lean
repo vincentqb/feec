@@ -14,7 +14,7 @@ and reflects domains (`J x ∈ D(d') → x ∈ D(d)`). One structure covers:
   inclusion `ReducingSubcomplex.toScaledEmbedding`): restriction to a box, to the fixed vectors
   of a symmetry group (`Feec.HilbertComplex.Equivariant`), to a constraint subspace;
 * **transport** along scaled isomorphisms with rescaled differentials
-  (`HilbertComplex.transport e κ`, with `ScaledEmbedding.ofTransport`): unitary maps
+  (`HilbertComplex.transport e κ`): unitary maps
   (`κ = 1`, `s = 1`), rescaling of the differentials (`e = 1`), and pull-back along an affine
   change of variables (`e` the composition operator, `s = |det|⁻¹`, `κ` the chain-rule factors);
 * composition (`ScaledEmbedding.comp`) and the identity (`ScaledEmbedding.refl`).
@@ -497,28 +497,6 @@ def transport (hκ : ∀ i j, κ i j ≠ 0) : HilbertComplex 𝕜 c W' where
 
 @[simp] theorem transport_d (hκ : ∀ i j, κ i j ≠ 0) (i j : ι) :
     (H.transport e κ hκ).d i j = transportD H e κ i j := rfl
-
-/-- `e` is a scaled embedding of `H` into its transport. -/
-def ScaledEmbedding.ofTransport (hκ : ∀ i j, κ i j ≠ 0) (s : ι → ℝ) (hs : ∀ i, 0 < s i)
-    (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s i : 𝕜) * ⟪x, y⟫_𝕜) :
-    ScaledEmbedding H (H.transport e κ hκ) where
-  J i := (e i : W i →L[𝕜] W' i)
-  scale := s
-  scale_pos := hs
-  inner_J := he
-  dScale := κ
-  dScale_ne_zero := hκ
-  mapsTo i j x := by
-    change (e i).symm (e i x) ∈ (H.d i j).domain
-    rw [ContinuousLinearEquiv.symm_apply_apply]; exact x.2
-  comm i j x := by
-    have hx : (e i).symm (e i x) ∈ (H.d i j).domain := by
-      rw [ContinuousLinearEquiv.symm_apply_apply]; exact x.2
-    change κ i j • e j (H.d i j ⟨(e i).symm (e i x), hx⟩) = κ i j • e j (H.d i j x)
-    rw [apply_congr' (H.d i j) hx x.2 ((e i).symm_apply_apply x)]
-  mem_domain_of_map i j x h := by
-    have : (e i).symm (e i x) ∈ (H.d i j).domain := h
-    rwa [ContinuousLinearEquiv.symm_apply_apply] at this
 
 /-- Transport along unitary isomorphisms. -/
 abbrev map (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) : HilbertComplex 𝕜 c W' :=

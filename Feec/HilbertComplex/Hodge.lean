@@ -269,34 +269,6 @@ theorem hodge_of_closedRangeAt {i : ι} (hi : H.ClosedRangeAt i) (hi' : H.dual.C
   rwa [IsClosed.submodule_topologicalClosure_eq hi,
     IsClosed.submodule_topologicalClosure_eq hi'] at h
 
-/-- The Hodge decomposition is unique: the components of `x = b + h + b*` are the orthogonal
-projections of `x`. -/
-theorem hodge_unique {i : ι} {b b' h h' a a' : W i}
-    (hb : b ∈ (H.boundaries i).topologicalClosure) (hb' : b' ∈ (H.boundaries i).topologicalClosure)
-    (hh : h ∈ H.harmonic i) (hh' : h' ∈ H.harmonic i)
-    (ha : a ∈ (H.dual.boundaries i).topologicalClosure)
-    (ha' : a' ∈ (H.dual.boundaries i).topologicalClosure)
-    (heq : b + h + a = b' + h' + a') : b = b' ∧ h = h' ∧ a = a' := by
-  have hz : (b - b') + (h - h') ∈ H.cycles i :=
-    add_mem (H.closure_boundaries_le_cycles i (sub_mem hb hb'))
-      (H.harmonic_le_cycles i (sub_mem hh hh'))
-  have ha'' : a' - a ∈ (H.cycles i)ᗮ := by
-    rw [orthogonal_cycles]; exact sub_mem ha' ha
-  have e1 : (b - b') + (h - h') = a' - a := by
-    rw [← sub_eq_zero, ← sub_eq_zero.2 heq]; abel
-  have hzz : a' - a ∈ H.cycles i ⊓ (H.cycles i)ᗮ := ⟨e1 ▸ hz, ha''⟩
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at hzz
-  rw [hzz] at e1
-  have e2 : b - b' = h' - h := by rw [← sub_eq_zero, ← e1]; abel
-  have hbb : b - b' ∈ (H.boundaries i).topologicalClosure ⊓
-      (H.boundaries i).topologicalClosureᗮ := by
-    refine ⟨sub_mem hb hb', ?_⟩
-    rw [e2]
-    exact (H.isOrtho_closure_boundaries_harmonic i).symm (sub_mem hh' hh)
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at hbb
-  rw [hbb] at e2
-  exact ⟨sub_eq_zero.1 hbb, (sub_eq_zero.1 e2.symm).symm, (sub_eq_zero.1 hzz).symm⟩
-
 /-! ### Decomposition of the domain `Vⁱ = D(d i (c.next i))` -/
 
 theorem cycles_le_domain (i : ι) : H.cycles i ≤ (H.d i (c.next i)).domain :=

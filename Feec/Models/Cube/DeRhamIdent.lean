@@ -381,7 +381,4 @@ theorem HQmax_eq_compress :
 
 /-! ### The parity model is the complexification of the forms on `Q` -/
 
-theorem cnj_cnj (a : Fin (Fintype.card (Fin n) + 1)) (x : TW n a) : cnj a (cnj a x) = x :=
-  Torus.DeRham.windowReal.toConj.invol a x
-
 end Feec.Models.Cube.DeRhamIdent

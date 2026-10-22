@@ -29,14 +29,12 @@ condition on the normal components.
   cube, the cube form of `Feec.BGG.Discrete.strang_rate_of_regularPotential`);
   `IsSmoothStateTr`, **`cubeWave_rate_tr`** (the `O(h)` rate of (6.5)).
 * Every flat form is a form of the new class with the same bound (`FEM.IsCsFormMin.isCsFormTr`).
-* **Non-vacuity beyond flat data**: `tangentialManufactured_solution` is a smooth solution of (5.3)
-  (`σ = φ = λ = 0`, `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)`, divergence free with `S¹u = 0`) whose
-  normal component does not vanish on `∂Q` (`normalWitness_ne_zero`, the first row being
-  `normalWitness`) and which is not flat (`not_isCsFormMin_tangentialU0`); `waveTangential T` is
-  a classical solution of (6.2) built on it (`u(t) = ū`, `ρ(t) = t curl ū`, `M = 0`), meeting
-  the hypotheses of `cubeWave_rate_tr` (`waveTangential_hyps`). `combinedManufactured_solution` adds the flat
-  coupled solution of `Feec.Models.Cube.WeakSymmetryFEM` to it: `σ, φ, λ ≠ 0` and `u` not flat
-  (`not_isCsFormMin_coupledu_add_tangentialU`, through `IsCsFormMin.sub`).
+* **Non-vacuity beyond flat data**: the field `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)` (with
+  `σ = φ = λ = 0`, divergence free with `S¹u = 0`) has a normal component that does not vanish on
+  `∂Q` (`normalWitness_ne_zero`, the first row being `normalWitness`) and is not flat
+  (`not_isCsFormMin_tangentialU0`); `waveTangential T` is a classical solution of (6.2) built on
+  it (`u(t) = ū`, `ρ(t) = t curl ū`, `M = 0`), meeting the hypotheses of `cubeWave_rate_tr`
+  (`waveTangential_hyps`).
 
 **Boundary conditions on `M` and `ρ`.** The discrete fields `Mₕ ∈ P₁⁻Λ̊²` and
 `ρₕ ∈ P₁Λ̊² ⊗ ℝ³` have vanishing boundary DOFs (Table 6.1 with the thesis' boundary conditions),
@@ -934,11 +932,6 @@ theorem segS1_tangentialU : bggSegment.S1 tangentialU = 0 := by
       rw [hp, PiLp.zero_apply, smul_zero]
   · rw [zero_smul]
 
-/-- The datum of the solution, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`. -/
-def tangentialDatum : Wv U1 →ₗ[ℝ] ℝ :=
-  (innerₛₗ ℝ (bggSegment.S1 tangentialU)) ∘ₗ bggSegment.S1 +
-    (innerₛₗ ℝ (bggSegment.dt1 tangentialU)) ∘ₗ bggSegment.dt1
-
 /-- The zero field is in the flat class (with every bound `L ≥ 0`). -/
 theorem isCsFormMin_zero_field {n : ℕ} (s k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
     IsCsFormMin s (k : ℤ) L (0 : L2F ℝ (cubeDomain n) (formIdx n k)) := by
@@ -962,92 +955,6 @@ theorem tangentialU_ne_zero : tangentialU ≠ 0 := by
     simpa [tangentialU_apply_zero, tangentialU0] using this
   exact not_isCsFormMin_normalWitness (n := 3) 0 0
     (by change IsCsFormMin 0 1 0 tangentialX; rw [h0]; exact isCsFormMin_zero_field 0 1 le_rfl)
-
-/-- **A smooth solution of (5.3) that is not flat at `∂Q`** (non-vacuity of `cubeFEM_rate_tr`
-beyond the flat class): `σ = 0`, `φ = 0`, `λ = 0`, `u = tangentialU ≠ 0` (first row
-`(sin 2πy₁ sin 2πy₂) dx₀`, divergence free, `S¹u = 0`, normal component nonzero on `{y₀ = 0}`),
-datum `F = tangentialDatum`: the equations hold and `u` is `IsCsFormTr 0`. -/
-theorem tangentialManufactured_solution :
-    (∀ τ ψ, ⟪(0 : U0), τ⟫ - ⟪tangentialU, bggSegment.dt0 ψ⟫ -
-      ⟪(0 : W1), ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
-    (∀ v, ⟪bggSegment.dt0 (0 : Wv U0), v⟫ + ⟪bggSegment.S1 tangentialU, bggSegment.S1 v⟫ +
-      ⟪bggSegment.dt1 tangentialU, bggSegment.dt1 v⟫ = tangentialDatum v) ∧
-    bggSegment.d0 (0 : U0) = bggSegment.S0 (0 : Wv U0) ∧
-    ∃ L, 0 ≤ L ∧ IsCsFormTr 0 0 L ((0 : U0) : W0) ∧
-      (∀ a, IsCsFormTr 0 0 L (((0 : Wv U0) a : U0) : W0)) ∧
-      (∀ a, IsCsFormTr 0 1 L ((tangentialU a : U1) : W1)) ∧ ‖(0 : W1)‖ ≤ L := by
-  refine ⟨fun τ ψ => ?_, fun v => ?_, by rw [map_zero, map_zero], ?_⟩
-  · rw [inner_tangentialU_dt0, inner_zero_left, inner_zero_left, sub_zero, sub_zero]
-  · have hz : bggSegment.dt0 (0 : Wv U0) = 0 := map_zero _
-    rw [hz, inner_zero_left, zero_add]
-    rfl
-  obtain ⟨L, hL0, hL⟩ := exists_isCsFormTr_tangentialX
-  refine ⟨L, hL0, isCsFormTr_zero 0 0 hL0, fun a => isCsFormTr_zero 0 0 hL0, fun a => ?_,
-    by simpa using hL0⟩
-  by_cases ha : a = 0
-  · subst ha; rw [tangentialU_apply_zero]; exact hL
-  · rw [tangentialU_apply_of_ne ha]; exact isCsFormTr_zero 0 1 hL0
-
-/-- **The combined `u` is not flat**: `(coupledu + tangentialU) 0 − coupledu 0 = tangentialU 0`
-and the flat class is closed under differences (`IsCsFormMin.sub`). -/
-theorem not_isCsFormMin_coupledu_add_tangentialU (L : ℝ) :
-    ¬ IsCsFormMin 0 1 L ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1) := by
-  intro h
-  obtain ⟨Lc, -, -, -, -, -, -, -, -, -, -, hu, -⟩ := exists_coupled_manufactured_solution
-  have h' := h.sub (hu 0)
-  have e : ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1) - ((coupledu 0 : U1) : W1) =
-      ((tangentialU 0 : U1) : W1) := by
-    rw [PiLp.add_apply, Submodule.coe_add, add_sub_cancel_left]
-  rw [e] at h'
-  exact not_isCsFormMin_tangentialU0 0 _ h'
-
-set_option maxHeartbeats 2000000 in
-/-- **A smooth solution of (5.3) with `σ, φ, λ ≠ 0` that is not flat at `∂Q`** (non-vacuity of
-`cubeFEM_rate_tr` with every unknown nonzero): the sum of the flat coupled solution
-`exists_coupled_manufactured_solution` (`σ = dᵗd g`, `φ = ∇σ`, `uₐ = −g dxₐ`, `λ = d g`) and of
-`tangentialManufactured_solution` (`σ = φ = λ = 0`, `u = tangentialU`), with datum
-`coupledDatum + tangentialDatum`; `u = coupledu + tangentialU` has a nonzero normal component on
-`∂Q`. (`S¹u = 0` for both summands, so this witness does not exercise `S¹u ≠ 0`.) -/
-theorem combinedManufactured_solution :
-    coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledMult ≠ 0 ∧
-    (∀ L, ¬ IsCsFormMin 0 1 L ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1)) ∧
-    (∀ τ ψ, ⟪coupledσ, τ⟫ - ⟪coupledu + tangentialU, bggSegment.dt0 ψ⟫ -
-      ⟪coupledMult, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
-    (∀ v, ⟪bggSegment.dt0 coupledφ, v⟫ +
-      ⟪bggSegment.S1 (coupledu + tangentialU), bggSegment.S1 v⟫ +
-      ⟪bggSegment.dt1 (coupledu + tangentialU), bggSegment.dt1 v⟫ =
-        (coupledDatum + tangentialDatum) v) ∧
-    bggSegment.d0 coupledσ = bggSegment.S0 coupledφ ∧
-    ∃ L, 0 ≤ L ∧ IsCsFormTr 0 0 L (coupledσ : W0) ∧
-      (∀ a, IsCsFormTr 0 0 L ((coupledφ a : U0) : W0)) ∧
-      (∀ a, IsCsFormTr 0 1 L ((((coupledu + tangentialU : Wv U1)) a : U1) : W1)) ∧
-      ‖coupledMult‖ ≤ L := by
-  obtain ⟨Lc, hLc0, hσ0, hφ0, -, hM0, c1, c2, c3, hσ, hφ, hu, hM, -⟩ :=
-    exists_coupled_manufactured_solution
-  obtain ⟨-, -, -, L2, hL20, -, -, hu2, -⟩ := tangentialManufactured_solution
-  refine ⟨hσ0, hφ0, hM0, not_isCsFormMin_coupledu_add_tangentialU, fun τ ψ => ?_, fun v => ?_,
-    c3, Lc + L2, add_nonneg hLc0 hL20, hσ.isCsFormTr.mono (le_add_of_nonneg_right hL20),
-    fun a => (hφ a).isCsFormTr.mono (le_add_of_nonneg_right hL20), fun a => ?_,
-    hM.trans (le_add_of_nonneg_right hL20)⟩
-  · have e := inner_add_left (𝕜 := ℝ) coupledu tangentialU (bggSegment.dt0 ψ)
-    have h0 := inner_tangentialU_dt0 ψ
-    have h1 := c1 τ ψ
-    linarith
-  · have eS := map_add bggSegment.S1 coupledu tangentialU
-    have ed := map_add bggSegment.dt1 coupledu tangentialU
-    have eS' := (congrArg (fun z : W2 => ⟪z, bggSegment.S1 v⟫) eS).trans
-      (inner_add_left (𝕜 := ℝ) (bggSegment.S1 coupledu) (bggSegment.S1 tangentialU)
-        (bggSegment.S1 v))
-    have ed' := (congrArg (fun z : Wv W2 => ⟪z, bggSegment.dt1 v⟫) ed).trans
-      (inner_add_left (𝕜 := ℝ) (bggSegment.dt1 coupledu) (bggSegment.dt1 tangentialU)
-        (bggSegment.dt1 v))
-    have eD := LinearMap.add_apply coupledDatum tangentialDatum v
-    have eT : tangentialDatum v = ⟪bggSegment.S1 tangentialU, bggSegment.S1 v⟫ +
-        ⟪bggSegment.dt1 tangentialU, bggSegment.dt1 v⟫ := rfl
-    have h2 := c2 v
-    linarith
-  · rw [PiLp.add_apply, Submodule.coe_add]
-    exact (hu a).isCsFormTr.add (hu2 a)
 
 end TangentialManufactured
 

@@ -27,7 +27,6 @@ triangulation of `(0, N)ⁿ` by the cells `m + K_σ`, `m ∈ {0, …, N-1}ⁿ`, 
 * `smul_mem_freudenthalSet`: `M⁻¹ (m + K_σ) ⊆ m' + K_σ'` with `m' = ⌊c / M⌋` for the interior
   point `c = m + g_σ`; hence `freudenthalMesh_refines`: **the level-`N M` mesh refines the level-`N`
   mesh**.
-* `card_latticeMesh_simplices`, `card_freudenthalMesh_simplices`: `Nⁿ n!` simplices.
 
 ## References
 
@@ -170,13 +169,6 @@ end Sign
 /-- The lattice point of `m ∈ {0, …, N-1}ⁿ`. -/
 def finLattice {N : ℕ} (m : Fin n → Fin N) : Fin n → ℤ := fun i => ((m i : ℕ) : ℤ)
 
-theorem finLattice_injective {N : ℕ} : Function.Injective (finLattice (n := n) (N := N)) := by
-  intro m m' h
-  funext i
-  have := congrFun h i
-  simp only [finLattice, Nat.cast_inj] at this
-  exact Fin.ext this
-
 /-- The cells `m + K_σ`, `0 ≤ mᵢ < N`, cover `[0, N]ⁿ`. -/
 theorem iUnion_freudenthalSet (N : ℕ) [NeZero N] :
     ⋃ p : (Fin n → Fin N) × Equiv.Perm (Fin n), freudenthalSet (finLattice p.1) p.2 =
@@ -255,18 +247,6 @@ theorem mem_latticeMesh_simplices {N : ℕ} [NeZero N] {T : Affine.Simplex ℝ (
 @[simp] theorem latticeMesh_domain (N : ℕ) [NeZero N] :
     (latticeMesh n N).domain = Set.univ.pi fun _ => Set.Ioo (0 : ℝ) N := rfl
 
-/-- The level-`N` lattice mesh has `Nⁿ n!` simplices. -/
-theorem card_latticeMesh_simplices (N : ℕ) [NeZero N] :
-    (latticeMesh n N).simplices.card = N ^ n * n.factorial := by
-  classical
-  simp only [latticeMesh, SimplicialMesh.ofConforming]
-  rw [Finset.card_image_of_injective, Finset.card_univ, Fintype.card_prod, Fintype.card_fun,
-    Fintype.card_fin, Fintype.card_fin, Fintype.card_perm, Fintype.card_fin]
-  rintro ⟨m, σ⟩ ⟨m', σ'⟩ h
-  obtain ⟨h1, h2⟩ := freudenthalSimplex_eq_of_closedInterior_eq
-    (congrArg Affine.Simplex.closedInterior h)
-  exact Prod.ext (finLattice_injective h1) h2
-
 /-! ### The Freudenthal mesh of a box -/
 
 /-- The affine map `x ↦ b + h x`. -/
@@ -334,11 +314,6 @@ theorem closedInterior_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh
       (fun x => b + h • x) '' freudenthalSet m σ := by
   rw [closedInterior_mapEquiv, closedInterior_freudenthalSimplex]
   congr 1
-
-/-- The level-`N` Freudenthal mesh of a box has `Nⁿ n!` simplices. -/
-theorem card_freudenthalMesh_simplices (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
-    [NeZero N] : (freudenthalMesh b s hs N).simplices.card = N ^ n * n.factorial := by
-  rw [freudenthalMesh, SimplicialMesh.card_map_simplices, card_latticeMesh_simplices]
 
 /-- **Uniform refinement.** The level-`N M` Freudenthal mesh of a box refines the level-`N`
 mesh. -/

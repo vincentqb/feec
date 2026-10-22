@@ -1579,7 +1579,7 @@ theorem exists_mem_polyPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k
 /-- **The high-order rate of the parity-smoothed projections** ([AFW2010], §5.4; [Arnold2018],
 Ch. 7): under `ParitySmoothingEstimates`, for a `C^{s+1}` degree-`k` form `w` whose tangential
 components vanish on the faces normal to `J` (e.g. coefficients `wₜ` symmetric of the parity
-`c(J, t)` on `ℝⁿ`, `IsSymm.eq_zero_of_face`), with `‖D^{s+1} w‖ ≤ L` on `cl Q` and
+`c(J, t)` on `ℝⁿ`), with `‖D^{s+1} w‖ ≤ L` on `cl Q` and
 `P_sΛᵏ ⊆ P(T)ᵏ` (e.g. `s + 1 ≤ r_k`, `polySpace_le_space`),
 `‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} L`: the order `m = s + 1` up to the polynomial order. -/
 theorem ParitySmoothingEstimates.norm_sub_proj_le_smooth {J : Finset (Fin n)} {S : PolySeq}

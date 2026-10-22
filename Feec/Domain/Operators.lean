@@ -240,16 +240,6 @@ theorem symCurlOp_apply (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (ij :
 
 /-! ## Orders -/
 
-theorem gradOp_isOrderLE : (gradOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).IsOrderLE 1 := by
-  intro j i t ht
-  simp only [gradOp] at ht
-  split_ifs at ht <;> simp_all
-
-theorem divOp_isOrderLE : (divOp n m : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).IsOrderLE 1 := by
-  intro j i t ht
-  simp only [divOp] at ht
-  split_ifs at ht <;> simp_all
-
 theorem curlOp_isOrderLE : (curlOp m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsOrderLE 1 := by
   intro j i t ht
   simp only [curlOp] at ht

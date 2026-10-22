@@ -301,23 +301,6 @@ theorem mem_graph_iff_weak_of_isLinear {m : EuclideanSpace ℝ d → E →L[ℂ]
   mem_graph_iff_weak (hc.comp Euclidean.continuous_scale) (formalAdjointOp m)
     (fun φ x => fourier_formalAdjointOp hm φ x) f g
 
-omit [FiniteDimensional ℂ E] [FiniteDimensional ℂ F] in
-/-- On Schwartz fields, the multiplier is the classical operator: `m 𝓕 ψ = 𝓕 (D ψ)`. -/
-theorem mulOp_fourier_toLp {m : EuclideanSpace ℝ d → E →L[ℂ] F} (hm : IsLinear m)
-    (ψ : 𝓢(EuclideanSpace ℝ d, E)) :
-    ∃ h : 𝓕 (ψ.toLp 2 : Lp E 2 (volume : Measure (EuclideanSpace ℝ d))) ∈
-        Operator.mulDomain volume (fun x => m (Euclidean.scale x)),
-      Operator.mulOp volume (fun x => m (Euclidean.scale x)) ⟨_, h⟩ =
-        𝓕 ((symbolOp m ψ).toLp 2 : Lp F 2 (volume : Measure (EuclideanSpace ℝ d))) := by
-  rw [SchwartzMap.toLp_fourier_eq, SchwartzMap.toLp_fourier_eq]
-  have hae : (fun x => m (Euclidean.scale x) (((𝓕 ψ).toLp 2 :
-      Lp E 2 (volume : Measure (EuclideanSpace ℝ d))) x)) =ᵐ[volume]
-      ((𝓕 (symbolOp m ψ)).toLp 2 : Lp F 2 (volume : Measure (EuclideanSpace ℝ d))) := by
-    filter_upwards [(𝓕 ψ).coeFn_toLp 2 volume, (𝓕 (symbolOp m ψ)).coeFn_toLp 2 volume]
-      with x h1 h2
-    rw [h1, h2, fourier_symbolOp hm]
-  exact ⟨(Lp.memLp _).ae_eq hae.symm, (Operator.mulOp_apply_eq_iff _ _).2 hae⟩
-
 /-! ### Real fields and the Fourier transform -/
 
 section Real

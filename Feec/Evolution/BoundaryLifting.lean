@@ -201,11 +201,6 @@ theorem isBoundarySolution_self_unique {a b : ℝ} (hle : A ≤ Amax) (hA : A.Is
     (hV : IsBoundarySolution Amax A (Icc a b) F G V) : EqOn V G (Icc a b) :=
   hV.unique hle hA ⟨hG, fun t _ => by rw [sub_self]; exact A.domain.zero_mem⟩ hV0
 
-/-- The exact lifting is a boundary solution with its own boundary values. -/
-theorem isBoundarySolution_self (hG : IsStrongSolution Amax I F G) :
-    IsBoundarySolution Amax A I F G G :=
-  ⟨hG, fun t _ => by rw [sub_self]; exact A.domain.zero_mem⟩
-
 end General
 
 section Existence

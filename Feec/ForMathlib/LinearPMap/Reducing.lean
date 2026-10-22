@@ -16,7 +16,7 @@ For `T : E →ₗ.[𝕜] F` and closed subspaces `K ⊆ E`, `L ⊆ F` with ortho
 ## Main results
 
 * `IsReducingPair.mapsTo`, `.map_orthogonal_mem`, `.orthogonal` (`(Kᗮ, Lᗮ)` reduces `T`),
-  `.adjoint` (`(L, K)` reduces `T†`), `isReducingPair_bot`, `isReducingPair_top`.
+  `.adjoint` (`(L, K)` reduces `T†`), `isReducingPair_top`.
 * `IsSkewSymmetric.isReducing_iff`, `IsSkewAdjoint.isReducing_iff`: for a densely defined
   skew-symmetric operator, `K` reduces `A` iff `P_K D(A) ⊆ D(A)` and `A (D(A) ∩ K) ⊆ K`
   (`IsSkewSymmetric.commute_proj`).
@@ -89,13 +89,6 @@ theorem IsReducingPair.orthogonal (h : T.IsReducingPair K L) : T.IsReducingPair 
   have e : (⟨_, hmem x⟩ : T.domain) = x - ⟨_, h.proj_mem x⟩ := by
     ext; simp
   rw [e, LinearPMap.map_sub, h.comm, Submodule.starProjection_orthogonal_val]
-
-/-- The trivial subspaces reduce every operator. -/
-theorem isReducingPair_bot (T : E →ₗ.[𝕜] F) : T.IsReducingPair ⊥ ⊥ := by
-  refine ⟨fun x => by simp [Submodule.starProjection_bot], fun x => ?_⟩
-  have : (⟨(⊥ : Submodule 𝕜 E).starProjection (x : E), by simp [Submodule.starProjection_bot]⟩ :
-      T.domain) = 0 := Subtype.ext (by simp [Submodule.starProjection_bot])
-  rw [this, LinearPMap.map_zero]; simp [Submodule.starProjection_bot]
 
 theorem isReducingPair_top (T : E →ₗ.[𝕜] F) : T.IsReducingPair ⊤ ⊤ :=
   ⟨fun x => by simp [Submodule.starProjection_top], fun x => by simp [Submodule.starProjection_top]⟩

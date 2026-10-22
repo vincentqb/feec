@@ -561,15 +561,6 @@ theorem restrict_unique {a b : ℝ} {V : ℝ → State Ω}
   Evolution.isBoundarySolution_self_unique (wave_le_thesisWaveMax hΩ)
     (gradCurl ℝ hΩ).isSkewAdjoint_wave.isDissipative (W.isStrongSolution_restrict hΩ hb _) hV0 hV
 
-/-- **TSD propagation for the data of `R`**: the solution with the boundary data and the initial
-value of `R` stays in `K` for all `t ∈ [a, b]`. -/
-theorem restrict_propagates {a b : ℝ} {V : ℝ → State Ω}
-    (hV : Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave (Icc a b) 0
-      (W.restrict hΩ hb) V) (hV0 : V a = W.restrict hΩ hb a) :
-    ∀ t ∈ Icc a b, V t ∈ constraint Ω := fun t ht => by
-  rw [W.restrict_unique hΩ hb hV hV0 ht]
-  exact W.restrict_mem hΩ hb t
-
 theorem forcing_eq_zero :
     (0 - W.restrictDeriv hΩ hb + W.restrictDeriv hΩ hb : ℝ → State Ω) = 0 := by
   funext t; simp

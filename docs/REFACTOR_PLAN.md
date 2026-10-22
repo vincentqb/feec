@@ -321,8 +321,7 @@ theorem LinearPMap.isSkewAdjoint_iff_existsUnique_isometricGroup :
 noncomputable def LinearPMap.IsSkewAdjoint.group (hA : A.IsSkewAdjoint) : C0Group 𝕜 E
 theorem C0Semigroup.perturb (G) (B : E →L[𝕜] E) : ∃! G', G'.generator = G.generator + B.toPMap
 theorem LinearPMap.IsMDissipative.existsUnique_contraction  -- as built: unique on `Ici 0`, since
-  -- `C0Semigroup.S` is unconstrained for t < 0 (the literal `∃!` is false); the normalized `∃!`
-  -- is `existsUnique_normalized_contraction`
+  -- `C0Semigroup.S` is unconstrained for t < 0 (the literal `∃!` is false)
   : ∃ G : C0Semigroup 𝕜 E, G.IsContraction ∧ G.generator = A ∧ ∀ G', … → EqOn G'.S G.S (Ici 0)
 theorem C0Group.isReducing_iff_invariant (hG : G.IsIsometric) : G.generator.IsReducing K ↔ ∀ t, K.map (G.S t) ≤ K
 theorem eigenDense_of_compactResolvent (hA : A.IsSkewAdjoint) (hK : IsCompactOperator (resolvent A 1)) : EigenDense hA.group

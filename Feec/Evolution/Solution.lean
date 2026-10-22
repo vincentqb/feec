@@ -144,10 +144,6 @@ end IsStrongSolution
 
 namespace IsClassicalSolution
 
-theorem of_continuousOn (hU : IsStrongSolution A I F U) {V : ℝ → E} (hV : ContinuousOn V I)
-    (hUV : ∀ t ∈ I, (U t, V t) ∈ A.graph) : IsClassicalSolution A I F U :=
-  ⟨hU, V, hV, hUV⟩
-
 /-- Classical solutions in domain form. -/
 theorem iff : IsClassicalSolution A I F U ↔ ∃ h : ∀ t ∈ I, U t ∈ A.domain,
     (∀ t (ht : t ∈ I), HasDerivWithinAt U (A ⟨U t, h t ht⟩ + F t) I t) ∧

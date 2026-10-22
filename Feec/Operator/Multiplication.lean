@@ -106,14 +106,6 @@ theorem coeFn_mulCLM (B : α → E →L[𝕜] F) (hB : AEStronglyMeasurable B μ
     mulCLM μ B hB C hC u =ᵐ[μ] fun a => B a (u a) :=
   (memLp_clm_apply hB hC u).coeFn_toLp
 
-/-- `‖B u‖ ≤ C ‖u‖`. -/
-theorem norm_mulCLM_apply_le (B : α → E →L[𝕜] F) (hB : AEStronglyMeasurable B μ) (C : ℝ)
-    (hC : ∀ᵐ a ∂μ, ‖B a‖ ≤ C) (u : Lp E 2 μ) : ‖mulCLM μ B hB C hC u‖ ≤ C * ‖u‖ := by
-  refine Lp.norm_le_mul_norm_of_ae_le_mul ?_
-  filter_upwards [coeFn_mulCLM B hB C hC u, hC] with a h hCa
-  rw [h]
-  exact (B a).le_of_opNorm_le hCa _
-
 variable [CompleteSpace E] [CompleteSpace F]
 
 /-- The fibrewise adjoint family of a measurable family is measurable. -/

@@ -441,21 +441,6 @@ theorem koszulDeg_smul (k : ℕ) (t : ℝ) (ξ : EuclideanSpace ℝ d) :
     smul_eq_mul, mul_sum, RCLike.ofReal_mul]
   refine sum_congr rfl fun j _ => by ring
 
-/-- The Koszul differential is linear in the frequency: `κ_ξ = Σ_j ξ_j κ_{e_j}`. -/
-theorem koszulDeg_eq_sum (k : ℕ) (ξ : EuclideanSpace ℝ d) :
-    koszulDeg (𝕜 := 𝕜) k ξ =
-      ∑ j, ((ξ j : ℝ) : 𝕜) • koszulDeg k (EuclideanSpace.single j (1 : ℝ)) := by
-  refine ContinuousLinearMap.ext fun ω => ?_
-  ext u
-  simp only [_root_.sum_apply, _root_.smul_apply, WithLp.ofLp_sum, Finset.sum_apply,
-    PiLp.smul_apply, koszulDeg_apply, res_apply, koszul_apply, smul_eq_mul, Finset.mul_sum]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun l _ => ?_
-  rw [Finset.sum_eq_single l]
-  · simp; ring
-  · intro j _ hj; simp [Ne.symm hj]
-  · intro h; exact absurd (Finset.mem_univ l) h
-
 @[simp] theorem koszulDeg_zero (k : ℕ) : koszulDeg (𝕜 := 𝕜) k (0 : EuclideanSpace ℝ d) = 0 := by
   refine ContinuousLinearMap.ext fun ω => ?_
   ext u
@@ -499,14 +484,6 @@ theorem norm_deRham_of_mem_orthogonal {k : ℕ} {ξ : EuclideanSpace ℝ d} {v :
   rw [norm_deRham_apply]
   rw [ker_deRham] at hv
   exact norm_koszulDeg_of_mem_orthogonal hv
-
-/-- The de Rham symbol is linear in the frequency (a first-order operator). -/
-theorem deRham_eq_sum (k : ℕ) (ξ : EuclideanSpace ℝ d) :
-    (deRham d).m k (k + 1) ξ =
-      ∑ j, ((ξ j : ℝ) : ℂ) • (deRham d).m k (k + 1) (EuclideanSpace.single j (1 : ℝ)) := by
-  simp only [deRham_m_succ]
-  rw [koszulDeg_eq_sum, Finset.smul_sum]
-  refine Finset.sum_congr rfl fun j _ => smul_comm _ _ _
 
 /-- The de Rham symbol is homogeneous of degree `1`. -/
 theorem deRham_isHomogeneous (k : ℕ) : (deRham d).IsHomogeneous k (k + 1) 1 := by

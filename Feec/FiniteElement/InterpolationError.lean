@@ -36,7 +36,8 @@ this is
 On a mesh, a piecewise interpolant `Π_h u` is only required to equal `Π_T u` on the *interior*
 of each simplex, which is all that tangentially conforming (Whitney) or discontinuous
 interpolants satisfy; the simplex frontiers are null (`Convex.addHaar_frontier`), so almost
-every point of `closure Ω` lies in the interior of a simplex (`ae_exists_mem_interior`).
+every point of `closure Ω` lies in the interior of a simplex
+(`Feec.FiniteElement.ae_mem_interior`, in `Feec.FiniteElement.Conformity`).
 
 The change of variables `∫_T g = |det B_T| ∫_{T̂} g ∘ F_T` is `lintegral_closedInterior_eq`
 (and `volume_closedInterior_eq`: `|T| = |det B_T| |T̂|`). The sharper transport of Sobolev
@@ -61,7 +62,6 @@ explicitly in `IsRefInterpolant` and `HasRefDerivEstimate`. As in
   estimates.
 * `norm_iteratedFDeriv_sub_transportInterp_le`,
   `norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular`: local derivative estimates.
-* `ae_exists_mem_interior`: almost every point of a mesh lies in the interior of a simplex.
 
 ## References
 
@@ -416,29 +416,5 @@ theorem norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular {j : ℕ} {
         have : 0 ≤ A ^ 2 * C₀ ^ (2 * k) * K := mul_nonneg (mul_nonneg (sq_nonneg A) h2k) hK
         gcongr
     _ = _ := by ring
-
-/-! ### Global estimates on a mesh -/
-
-/-- The frontier of a simplex is Lebesgue-null (`Convex.addHaar_frontier`). -/
-theorem ae_notMem_frontier_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    ∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), x ∉ frontier T.closedInterior :=
-  measure_eq_zero_iff_ae_notMem.1 (Convex.addHaar_frontier volume (convex_closedInterior T))
-
-theorem mem_interior_of_notMem_frontier {T : Affine.Simplex ℝ (Fin n → ℝ) n} {x : Fin n → ℝ}
-    (hx : x ∈ T.closedInterior) (hf : x ∉ frontier T.closedInterior) :
-    x ∈ interior T.closedInterior := by
-  by_contra h
-  exact hf ⟨subset_closure hx, h⟩
-
-/-- Almost every point of `closure Ω` lies in the interior of a simplex of the mesh. -/
-theorem ae_exists_mem_interior (Mh : SimplicialMesh n) :
-    ∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), x ∈ closure Mh.domain →
-      ∃ T ∈ Mh.simplices, x ∈ interior T.closedInterior := by
-  have h := (Filter.eventually_all_finset Mh.simplices).2 fun T _ =>
-    ae_notMem_frontier_closedInterior T
-  filter_upwards [h] with x hx hxΩ
-  rw [← Mh.biUnion_closedInterior, mem_iUnion₂] at hxΩ
-  obtain ⟨T, hT, hxT⟩ := hxΩ
-  exact ⟨T, hT, mem_interior_of_notMem_frontier hxT (hx T hT)⟩
 
 end Feec.FiniteElement

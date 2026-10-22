@@ -220,6 +220,31 @@ theorem exists_projTSD_not_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
+/-- **A projection that leaves the middle domain**: if `y ∈ D(d₁) ∩ D(d₀†)` and
+`P_{K₁} y ∉ D(d₁)`, then `{0} × K₁ × S₂` does not reduce the wave operator, for every `S₂`
+(the projection of `(0, y, 0) ∈ D(L)` is not in `D(L)`). -/
+theorem not_isReducing_of_starProjection_not_mem {W₀ W₁ W₂ : Type}
+    [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+    [NormedAddCommGroup W₁] [InnerProductSpace ℝ W₁] [CompleteSpace W₁]
+    [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
+    (S : ShortHilbertComplex ℝ W₀ W₁ W₂) (K₁ : Submodule ℝ W₁) [K₁.HasOrthogonalProjection]
+    (S₂ : Submodule ℝ W₂) [S₂.HasOrthogonalProjection] {y : W₁} (hy : y ∈ S.d₁.domain)
+    (hy' : y ∈ S.d₀†.domain) (hP : K₁.starProjection y ∉ S.d₁.domain) :
+    ¬ S.wave.IsReducing
+      (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) K₁ S₂)) := by
+  intro hred
+  let x : PiLp 2 (ShortHilbertComplex.W3 W₀ W₁ W₂) :=
+    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ W₁ W₂) 1 y)
+  have hxD : x ∈ S.wave.domain := by
+    rw [S.mem_wave_domain, show (x 0 : W₀) = 0 from rfl, show (x 1 : W₁) = y from rfl,
+      show (x 2 : W₂) = 0 from rfl]
+    exact ⟨Submodule.zero_mem _, hy, hy', Submodule.zero_mem _⟩
+  have hP' := hred.proj_mem ⟨x, hxD⟩
+  rw [S.mem_wave_domain] at hP'
+  have h1 := hP'.2.1
+  rw [HilbertComplex.totalSub_starProjection_apply] at h1
+  exact hP h1
+
 /-- **`K = {0} × L²(TSD) × S₂` does not reduce the wave operator** (the projection hypothesis
 `P_K D(L) ⊆ D(L)` of Prop 4.17 fails) for every short complex with `D(d₁) ⊆ H̊(curl)` containing
 the test fields in `D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. [QuennevilleBelair2015], Prop 4.17 -/
@@ -233,21 +258,9 @@ theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
       testField hΦ ∈ S.d₁.domain ∧ testField hΦ ∈ S.d₀†.domain) :
     ¬ S.wave.IsReducing
       (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) S₂)) := by
-  intro hred
   obtain ⟨Φ, hΦ, hnot⟩ := exists_projTSD_not_mem_domain hΩ hb hne
-  let x : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) :=
-    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) 1 (testField hΦ))
-  have hx0 : (x 0 : W₀) = 0 := rfl
-  have hx1 : (x 1 : L2F ℝ Ω Ix) = testField hΦ := rfl
-  have hx2 : (x 2 : W₂) = 0 := rfl
-  have hxD : x ∈ S.wave.domain := by
-    rw [S.mem_wave_domain, hx0, hx1, hx2]
-    exact ⟨Submodule.zero_mem _, (htest Φ hΦ).1, (htest Φ hΦ).2, Submodule.zero_mem _⟩
-  have hP := hred.proj_mem ⟨x, hxD⟩
-  rw [S.mem_wave_domain] at hP
-  have h1 := hP.2.1
-  rw [HilbertComplex.totalSub_starProjection_apply] at h1
-  exact hnot (hd₁ h1)
+  exact not_isReducing_of_starProjection_not_mem S _ S₂ (htest Φ hΦ).1 (htest Φ hΦ).2
+    fun h => hnot (hd₁ h)
 
 /-- **`D(L) ∩ K` is not dense in `K`** for `K = {0} × L²(TSD) × S₂` and every short complex with
 `D(d₁) ⊆ H̊(curl)`: the datum `(0, diag(1, -1, 0), 0) ∈ K` is orthogonal to the middle
@@ -374,6 +387,36 @@ theorem betaL2_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {W₀
   simp only [toL2F, PiLp.neg_apply] at h1 h2 ⊢
   rw [h1, h2, Pi.neg_apply, h3, ← curlM_eq_formalAdj_apply, curlM_betaField]
 
+/-- **The `Ė(0)` obstruction for the datum `(0, 0, β)`**: for a short complex
+`W₀ → W₁ → W₂`, constraint spaces `K₁ ⊆ W₁`, `K₂ ⊆ W₂`, `β ∈ D(d₁†) ∩ K₂` and
+`G ⊥ K₁ ∩ D(d₁)` with `⟪G, d₁† β⟫ ≠ 0`, the datum `(0, 0, β)` lies in `D(L) ∩ K`,
+`K = {0} × K₁ × K₂`, and for every `T > 0` every strong solution of `U' = L U` on `[0, T]` from
+it leaves `K` (`ShortHilbertComplex.not_propagates_of_inner_ne_zero`). -/
+theorem exists_single_two_not_propagates {W₀ W₁ W₂ : Type}
+    [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+    [NormedAddCommGroup W₁] [InnerProductSpace ℝ W₁] [CompleteSpace W₁]
+    [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
+    (S : ShortHilbertComplex ℝ W₀ W₁ W₂) {K₁ : Submodule ℝ W₁} {K₂ : Submodule ℝ W₂} {β : W₂}
+    (hβ : β ∈ S.d₁†.domain) (hβK : β ∈ K₂) {G : W₁} (hG : G ∈ (K₁ ⊓ S.d₁.domain)ᗮ)
+    (hne : ⟪G, S.d₁† ⟨β, hβ⟩⟫_ℝ ≠ 0) :
+    ∃ U₀ ∈ S.wave.domain,
+      U₀ ∈ HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) K₁ K₂) ∧
+      ∀ T > 0, ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ W₁ W₂), U 0 = U₀ →
+        Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
+          ∃ t ∈ Icc 0 T, U t ∉
+            HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) K₁ K₂) := by
+  let U₀ : PiLp 2 (ShortHilbertComplex.W3 W₀ W₁ W₂) :=
+    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ W₁ W₂) 2 β)
+  have h0 : (U₀ 0 : W₀) = 0 := rfl
+  have h2 : (U₀ 2 : W₂) = β := rfl
+  refine ⟨U₀, ?_, ShortHilbertComplex.single_two_mem_totalSub_family3 _ _ _ hβK,
+    fun T hT U hU0 hU => ?_⟩
+  · rw [S.mem_wave_domain, h0, show (U₀ 1 : W₁) = 0 from rfl, h2]
+    exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, Submodule.zero_mem _, hβ⟩
+  obtain ⟨t, ht, hnot⟩ := S.not_propagates_of_inner_ne_zero hG ⟨β, hβ⟩ hne hT hU
+    (by rw [hU0]; exact h0) (by rw [hU0]; exact h2)
+  exact ⟨t, ht, fun hmem => hnot (hmem 1)⟩
+
 /-- **TSD data do not propagate** (the conclusion of thesis Prop 4.17 fails on every nonempty
 bounded open `Ω ⊆ ℝ³`): for every short complex `W₀ → L²(Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` with
 `d₁ ⊆ curl_min` (the electric boundary condition), the TSD datum `(0, 0, β)` lies in
@@ -393,38 +436,14 @@ theorem tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
           ∃ t ∈ Icc 0 T, U t ∉ HilbertComplex.totalSub
             (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) (tsd Ω)) := by
   obtain ⟨hβ, hβv⟩ := betaL2_mem_adjoint hΩ hb S hd₁
-  let U₀ : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)) :=
-    WithLp.toLp 2
-      (Pi.single (M := ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)) 2 (betaL2 hΩ hb))
-  have h0 : (U₀ 0 : W₀) = 0 := rfl
-  have h1 : (U₀ 1 : L2F ℝ Ω Ix) = 0 := rfl
-  have h2 : (U₀ 2 : L2F ℝ Ω Ix) = betaL2 hΩ hb := rfl
-  have hD : U₀ ∈ S.wave.domain := by
-    rw [S.mem_wave_domain, h0, h1, h2]
-    exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, Submodule.zero_mem _, hβ⟩
-  have hK : U₀ ∈ HilbertComplex.totalSub
-      (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) (tsd Ω)) := by
-    intro i
-    match i with
-    | 0 =>
-      show (U₀ 0 : W₀) ∈ (⊥ : Submodule ℝ W₀)
-      rw [h0]; exact Submodule.zero_mem _
-    | 1 => exact h1 ▸ Submodule.zero_mem _
-    | 2 => exact h2 ▸ betaL2_mem_tsd hΩ hb
-  refine ⟨U₀, hD, hK, fun T hT U hU0 hU => ?_⟩
-  have hG : constField hΩ hb diagA ∈ (tsd Ω ⊓ S.d₁.domain)ᗮ := by
-    rw [Submodule.mem_orthogonal]
-    intro z hz
-    exact inner_constField_eq_zero hΩ hb diagA ⟨hz.1, hd₁.1 hz.2⟩
-  have hne0 : ⟪constField hΩ hb diagA, S.d₁† ⟨_, hβ⟩⟫_ℝ ≠ 0 := by
-    rw [hβv, inner_neg_right, real_inner_comm, inner_constField]
-    simp only [integral_constField, Fintype.sum_prod_type, Fin.sum_univ_three]
-    have hpos := volume_real_pos hΩ hb hne
-    simp [diagA]
-    positivity
-  obtain ⟨t, ht, hnot⟩ := S.not_propagates_of_inner_ne_zero hG ⟨_, hβ⟩ hne0 hT hU
-    (by rw [hU0]; exact h0) (by rw [hU0]; exact h2)
-  exact ⟨t, ht, fun hmem => hnot (hmem 1)⟩
+  refine exists_single_two_not_propagates S hβ (betaL2_mem_tsd hΩ hb)
+    ((Submodule.mem_orthogonal _ _).2 fun z hz =>
+      inner_constField_eq_zero hΩ hb diagA ⟨hz.1, hd₁.1 hz.2⟩) ?_
+  rw [hβv, inner_neg_right, real_inner_comm, inner_constField]
+  simp only [integral_constField, Fintype.sum_prod_type, Fin.sum_univ_three]
+  have hpos := volume_real_pos hΩ hb hne
+  simp [diagA]
+  positivity
 
 /-! ### Every datum `(0, E₀, β)` leaves the constraint; existence of the solutions -/
 
@@ -647,66 +666,29 @@ theorem not_starProjection_mem_adjoint_domain (hΩ : IsOpen Ω) (hb : Bornology.
     (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
     ¬ ∀ B ∈ S.d₁†.domain, (tsd Ω).starProjection B ∈ S.d₁†.domain := by
   intro hyp
-  set A := S.d₁†
-  have hAc : A.IsClosed := LinearPMap.adjoint_isClosed S.dense₁
-  have : CompleteSpace A.graph :=
-    (show IsClosed (A.graph : Set (L2F ℝ Ω Ix × L2F ℝ Ω Ix)) from hAc).completeSpace_coe
-  have hdom : ∀ p : A.graph, (tsd Ω).starProjection (p : L2F ℝ Ω Ix × L2F ℝ Ω Ix).1 ∈ A.domain :=
-    fun p => hyp _ (LinearPMap.mem_domain_of_mem_graph (y := (p : L2F ℝ Ω Ix × L2F ℝ Ω Ix).2) p.2)
-  let g0 : A.graph →ₗ[ℝ] A.domain := LinearMap.codRestrict A.domain
-    (((tsd Ω).starProjection : L2F ℝ Ω Ix →L[ℝ] L2F ℝ Ω Ix).toLinearMap ∘ₗ
-      (LinearMap.fst ℝ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)) ∘ₗ A.graph.subtype) hdom
-  let g : A.graph →ₗ[ℝ] L2F ℝ Ω Ix := A.toFun ∘ₗ g0
-  have hgc : IsClosed (g.graph : Set (A.graph × L2F ℝ Ω Ix)) := by
-    have e : (g.graph : Set (A.graph × L2F ℝ Ω Ix)) =
-        (fun q : A.graph × L2F ℝ Ω Ix =>
-          ((tsd Ω).starProjection (q.1 : L2F ℝ Ω Ix × L2F ℝ Ω Ix).1, q.2)) ⁻¹'
-          (A.graph : Set (L2F ℝ Ω Ix × L2F ℝ Ω Ix)) := by
-      ext ⟨p, F⟩
-      simp only [SetLike.mem_coe, LinearMap.mem_graph_iff, mem_preimage]
-      constructor
-      · rintro rfl
-        exact A.mem_graph (g0 p)
-      · intro h
-        obtain ⟨y, hy1, hy2⟩ := A.mem_graph_iff.1 h
-        have e1 : y = g0 p := Subtype.ext hy1
-        change F = A (g0 p)
-        rw [← e1]
-        exact hy2.symm
-    rw [e]
-    exact hAc.preimage (((tsd Ω).starProjection.continuous.comp
-      (continuous_fst.comp (continuous_subtype_val.comp continuous_fst))).prodMk continuous_snd)
-  let gc : A.graph →L[ℝ] L2F ℝ Ω Ix := ⟨g, g.continuous_of_isClosed_graph hgc⟩
-  set t : ℝ := 2 * ‖gc‖ + 1
-  set E := gradFldL2 hΩ hb t
+  obtain ⟨C, hC⟩ := LinearPMap.exists_norm_apply_le_of_mapsTo
+    (LinearPMap.adjoint_isClosed S.dense₁) (tsd Ω).starProjection fun x => hyp _ x.2
+  obtain ⟨t, ht⟩ : ∃ t : ℝ, t = 2 * |C| + 1 := ⟨_, rfl⟩
   obtain ⟨hE, hE'⟩ := smoothField_mem_adjoint hΩ hb S hd₁ (Ψ := gradFld t)
     fun ij => (contDiff_gradFld t ij).of_le (by simp)
   obtain ⟨hB, hB'⟩ := smoothField_mem_adjoint hΩ hb S hd₁ (Ψ := symFld t)
     fun ij => (contDiff_symFld t ij).of_le (by simp)
   rw [smoothField_eq_zero hΩ hb _ fun ij x _ => curlM_gradFld t ij x] at hE'
-  have hpmem : ((E, 0) : L2F ℝ Ω Ix × L2F ℝ Ω Ix) ∈ A.graph := by
-    have := A.mem_graph ⟨E, hE⟩
-    rwa [hE'] at this
-  let p : A.graph := ⟨(E, 0), hpmem⟩
-  have hgp : gc p = curlSymFldL2 hΩ hb t := by
-    have : g0 p = ⟨_, hB⟩ := Subtype.ext (starProjection_gradFld hΩ hb t)
-    change A (g0 p) = _
-    rw [this, hB']
-  have hnp : ‖p‖ = ‖E‖ := by
-    change ‖((E, 0) : L2F ℝ Ω Ix × L2F ℝ Ω Ix)‖ = ‖E‖
-    simp [Prod.norm_def]
-  have hbound := gc.le_opNorm p
-  rw [hgp, hnp] at hbound
+  have h := hC ⟨gradFldL2 hΩ hb t, hE⟩
+  rw [show (⟨(tsd Ω).starProjection (gradFldL2 hΩ hb t), hyp _ hE⟩ : S.d₁†.domain) = ⟨_, hB⟩
+    from Subtype.ext (starProjection_gradFld hΩ hb t), hB', hE', Prod.norm_def, norm_zero,
+    max_eq_left (norm_nonneg _)] at h
   have h1 := norm_sq_curlSymFld hΩ hb t
   have h2 := norm_sq_gradFld hΩ hb hne t
-  have hsq : t ^ 2 / 2 * ‖E‖ ^ 2 ≤ (‖gc‖ * ‖E‖) ^ 2 := by
+  have hsq : t ^ 2 / 2 * ‖gradFldL2 hΩ hb t‖ ^ 2 ≤ (|C| * ‖gradFldL2 hΩ hb t‖) ^ 2 := by
     rw [← h1]
-    exact pow_le_pow_left₀ (norm_nonneg _) hbound 2
-  have hc := norm_nonneg gc
-  have : t ^ 2 / 2 ≤ ‖gc‖ ^ 2 := by
+    exact pow_le_pow_left₀ (norm_nonneg _)
+      (h.trans (mul_le_mul_of_nonneg_right (le_abs_self C) (norm_nonneg _))) 2
+  have : t ^ 2 / 2 ≤ |C| ^ 2 := by
     rw [mul_pow] at hsq
     exact le_of_mul_le_mul_right hsq h2
-  nlinarith
+  rw [ht] at this
+  nlinarith [abs_nonneg C]
 
 /-- **`P_{L²(TSD)} H(curl) ⊄ H(curl)`** on every nonempty bounded open `Ω ⊆ ℝ³`, with
 `H(curl) = D(curl_max)` (no boundary condition). [QuennevilleBelair2015], Prop 4.17 -/

@@ -71,8 +71,6 @@ the TSD form alone is *equivalent* to the absence of TSD eigenfields
 the genuine missing theorem. With it and a complete set of eigenvectors of `L²` (`EigenDense`,
 from compactness on the ball), `K*` is stationary on the ball
 (`coreSub_le_stationary_ball_of_maxwellRegularity`, `coreSub_le_stationary_ball_of_regularity`).
-Without `EigenDense`, a TSD eigenfield always produces a moving datum of `K*` on every open `Ω`,
-with the explicit orbit `cos(ξt) u + (sin(ξt)/ξ) L u` (`not_coreSub_le_stationary_of_eigenfield`).
 
 ## Non-vacuity
 
@@ -96,8 +94,6 @@ cut-offs `eta`, `chi`) of `Feec.Counterexamples.BallSymTSD`; `Models` files do n
 
 ## Main results
 
-* **`not_coreSub_le_stationary_of_eigenfield`**: a nonzero TSD eigenfield gives a non-stationary
-  datum of `K*`, on every open `Ω`, without `EigenDense`.
 * **`eq_zero_of_isSphereTT`**: transverse-traceless `C¹` tensors on `S²` vanish.
 * **`crossF_eq_zero_of_green`**: Green's formula forces the tangential trace to vanish pointwise.
 * **`eq_zero_of_isEigenfield_of_contDiff_ball`**: TSD eigenfields `C²` up to `∂B` vanish.
@@ -135,53 +131,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 section Sufficiency
 
 variable {Ω : Set R3}
-
-/-- **A TSD eigenfield gives a moving datum of `K*`, without `EigenDense`**: on every open
-`Ω ⊆ ℝ³` (bounded or not), if `u ≠ 0` lies in `L²(TSD) ∩ H̊(curl)` with `curl u ∈ H(curl)` and
-`curl† curl u = ξ² u`, `ξ > 0`, then `x = (0, u, 0)` lies in `K*`, is not stationary, and its
-orbit is `e^{tL} x = cos(ξt) x + (sin(ξt)/ξ) L x`
-(`Feec.C0Group.IsIsometric.S_eq_of_isEigenSq`). So `K*` is not stationary. This is the
-sufficiency half of `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` (part 3), which needs
-no spectral hypothesis (`Feec.ShortHilbertComplex.eigenfield_mem_invariantCore₁`). -/
-theorem not_coreSub_le_stationary_of_eigenfield (hΩ : IsOpen Ω)
-    {ξ : ℝ} (hξ : 0 < ξ) {v : L2F ℝ Ω Ix} (hv0 : v ≠ 0) (hv : v ∈ tsd Ω)
-    (hE : (gradCurl ℝ hΩ).IsEigenfield ξ v) :
-    ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v ∈
-        (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) ∧
-      ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v ∉
-        (gradCurl ℝ hΩ).stationary ∧
-      (∃ h : ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v ∈
-          (gradCurl ℝ hΩ).wave.domain, ∀ t : ℝ,
-        (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t
-            (ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v) =
-          Real.cos (ξ * t) •
-              ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v +
-            (Real.sin (ξ * t) / ξ) • (gradCurl ℝ hΩ).wave ⟨_, h⟩) ∧
-      ¬ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) ≤ (gradCurl ℝ hΩ).stationary := by
-  obtain ⟨hv1, hv3, e⟩ := hE
-  obtain ⟨h2, e2⟩ := LinearPMap.exists_apply_eq_zero_of_mem_ker (tsd_le_ker_gradCurl hΩ hv)
-  obtain ⟨hES, hm, hns⟩ := ShortHilbertComplex.eigenfield_mem_invariantCore₁
-    (S := gradCurl ℝ hΩ) (S₂ := tsd Ω) hξ hv hv1 h2 e2 hv3
-    (minimal_curl_mem_tsd hΩ ⟨v, hv1⟩ hv) e
-  obtain ⟨hD, hD2, hLL⟩ := hES
-  have horbit : ∀ t : ℝ, (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t
-      (ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v) =
-        Real.cos (ξ * t) •
-            ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v +
-          (Real.sin (ξ * t) / ξ) • (gradCurl ℝ hΩ).wave ⟨_, hD⟩ := by
-    have key : ∀ (A : _ →ₗ.[ℝ] _) (_ : (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.generator = A)
-        (h : ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v ∈
-          A.domain) (h' : A ⟨_, h⟩ ∈ A.domain) (_ : A ⟨A ⟨_, h⟩, h'⟩ = -(ξ ^ 2) •
-          ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v),
-        ∀ t : ℝ, (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t
-          (ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v) =
-          Real.cos (ξ * t) •
-            ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) v +
-            (Real.sin (ξ * t) / ξ) • A ⟨_, h⟩ := by
-      rintro A rfl h h' e t
-      exact (gradCurl ℝ hΩ).toHilbertComplex.isIsometric_waveGroup.S_eq_of_isEigenSq hξ h h' e t
-    exact key _ (gradCurl ℝ hΩ).toHilbertComplex.generator_waveGroup hD hD2 hLL
-  exact ⟨hm, hns hv0, ⟨hD, horbit⟩, fun hle => hns hv0 (hle hm)⟩
 
 end Sufficiency
 
@@ -275,14 +224,12 @@ private theorem hasDerivAt_mul_inv_pow' {P Q : ℝ → ℝ} {P' Q' x : ℝ} (hP 
 def stNx (x : ℝ) : R3 := ![2, 0, 2 * x]
 /-- `∂_y N`. -/
 def stNy (y : ℝ) : R3 := ![0, 2, 2 * y]
-/-- `∂ₓ X`. -/
+/-- `∂ₓ X`, also `∂_y Y`. -/
 def stXx (x y : ℝ) : R3 := ![-4 * x, -4 * y, 4]
 /-- `∂_y X`. -/
 def stXy (x y : ℝ) : R3 := ![4 * y, -4 * x, 0]
 /-- `∂ₓ Y`. -/
 def stYx (x y : ℝ) : R3 := ![-4 * y, 4 * x, 0]
-/-- `∂_y Y`. -/
-def stYy (x y : ℝ) : R3 := ![-4 * x, -4 * y, 4]
 
 private theorem hasDerivAt_stN_x (x y : ℝ) (k : Fin 3) :
     HasDerivAt (fun t => stN t y k) (stNx x k) x := by
@@ -333,8 +280,8 @@ private theorem hasDerivAt_stY_x (x y : ℝ) (k : Fin 3) :
   · exact hasDerivAt_const x _
 
 private theorem hasDerivAt_stY_y (x y : ℝ) (k : Fin 3) :
-    HasDerivAt (fun t => stY x t k) (stYy x y k) y := by
-  fin_cases k <;> simp only [stY, stYy, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk,
+    HasDerivAt (fun t => stY x t k) (stXx x y k) y := by
+  fin_cases k <;> simp only [stY, stXx, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk,
     Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.head_cons,
     Matrix.tail_cons]
   · exact ((hasDerivAt_id y).const_mul (-4 * x)).congr_deriv (by simp)
@@ -378,7 +325,7 @@ theorem hasDerivAt_stSy_y (x y : ℝ) (k : Fin 3) :
     HasDerivAt (fun t => stSy x t k) (stSyy x y k) y :=
   hasDerivAt_mul_inv_pow' (hasDerivAt_stY_y x y k) (hasDerivAt_stQ_y x y)
     (stQ_ne_zero x y) 2 (R := stYY x y k) (by
-      fin_cases k <;> simp [stY, stYy, stYY, stQ] <;> ring)
+      fin_cases k <;> simp [stY, stXx, stYY, stQ] <;> ring)
 
 /-! ### Calculus along the chart -/
 

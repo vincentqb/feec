@@ -105,14 +105,4 @@ theorem not_exists_tsd_eigenfield_box (hℓ : ∀ i, 0 < ℓ i) :
       (gradCurl ℝ (isOpen_openBox a ℓ)).IsEigenfield ω v :=
   Models.Box.not_exists_tsd_eigenfield_box hℓ
 
-/-- The results apply to boxes with unequal sides, e.g. `(0, 1) × (0, 2) × (0, 3)`. -/
-theorem forward_iff_stationary_box_123 {S1 S2 : Submodule ℝ (L2F ℝ (openBox 0 ![1, 2, 3]) Ix)}
-    (h1 : S1 ≤ tsd (openBox 0 ![1, 2, 3])) (h2 : S2 ≤ tsd (openBox 0 ![1, 2, 3]))
-    (y : PiLp 2 (WB 0 ![1, 2, 3])) :
-    (∀ t, 0 ≤ t → (complexBox 0 ![1, 2, 3]).waveGroup.S t y ∈
-        totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (openBox 0 ![1, 2, 3]) (Fin 3))) S1 S2)) ↔
-      y ∈ totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (openBox 0 ![1, 2, 3]) (Fin 3))) S1 S2) ∧
-        y ∈ (complexBox 0 ![1, 2, 3]).waveGroup.stationary :=
-  forward_iff_stationary_box (fun i => by fin_cases i <;> norm_num) h1 h2 y
-
 end Feec.Counterexamples.BoxStationary

@@ -17,15 +17,14 @@ the zero-mean theorem applies, and on every nonempty bounded open `Ω` the proje
 propagate for any short complex with `d₁ ⊆ curl` on `H̊(curl, S)` (`tsd_not_propagates`), from
 the same datum `(0, 0, β)` as for the grad–curl complex (`Feec.Counterexamples.BoundedDomainTSD`).
 
-The obstruction is quantified: a datum that propagates for every such complex must have its
-electric field in `L²(TSD₀)` (`mem_tsd₀_of_propagates`), the invariant core
+The obstruction is quantified: the invariant core
 `K* = {0} × S₁* × S₂*` of `K = {0} × tsdS × tsdT` has `S₁* ⊆ L²(TSD₀)` and an infinite-dimensional
 `S₂*` (`invariantCore_tsd`, `not_finiteDimensional_obstruction`), and `diagnosis` records which
 hypotheses of Prop. 4.19 fail.
 
 For the complex with the maximal boundary conditions (`Feec.Models.BoundedDomain.hessCurlMax`,
 `H²(Ω) → H(curl, S) → L²(T)`) the same hypotheses fail (`not_dense_hessCurlMax`,
-`not_starProjection_mem_wave_domain_hessCurlMax`, `not_isReducing_tsd_hessCurlMax`), although the
+`not_starProjection_mem_wave_domain_hessCurlMax`), although the
 divergence-free constraint propagates (`hessCurlMax_divFree_propagates`) and `curl` maps TSD fields
 to TSD fields (`hessCurlMax_d₁_mem_tsdT`); `tsdS ⊄ ker (grad grad)†` here, so the constraint
 space is `tsdSKer = tsdS ∩ ker (grad grad)†`, and the invariant core of
@@ -133,22 +132,9 @@ theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
         (⟨testField hΦ, testField_mem_symSub hΦ hs⟩ : symSub ℝ Ω) ∈ S.d₀†.domain) :
     ¬ S.wave.IsReducing
       (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) S₂)) := by
-  intro hred
   obtain ⟨Φ, hΦ, hs, hnot⟩ := exists_projTSD_not_mem_domain hΩ hb hne
-  let x : PiLp 2 (ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) W₂) :=
-    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) W₂) 1
-      (⟨testField hΦ, testField_mem_symSub hΦ hs⟩ : symSub ℝ Ω))
-  have hx0 : (x 0 : W₀) = 0 := rfl
-  have hx1 : (x 1 : symSub ℝ Ω) = ⟨testField hΦ, testField_mem_symSub hΦ hs⟩ := rfl
-  have hx2 : (x 2 : W₂) = 0 := rfl
-  have hxD : x ∈ S.wave.domain := by
-    rw [S.mem_wave_domain, hx0, hx1, hx2]
-    exact ⟨Submodule.zero_mem _, (htest Φ hΦ hs).1, (htest Φ hΦ hs).2, Submodule.zero_mem _⟩
-  have hP := hred.proj_mem ⟨x, hxD⟩
-  rw [S.mem_wave_domain] at hP
-  have h1 := hP.2.1
-  rw [HilbertComplex.totalSub_starProjection_apply] at h1
-  exact hnot (hd₁ h1)
+  exact BoundedDomainTSD.not_isReducing_of_starProjection_not_mem S _ S₂ (htest Φ hΦ hs).1
+    (htest Φ hΦ hs).2 fun h => hnot (hd₁ h)
 
 /-- `⟪-diag(1, -1, 0), Φ⟫ = ⟪β, curl Φ⟫` for every test field `Φ`: `curl β = -diag(1, -1, 0)`
 weakly. -/
@@ -191,7 +177,6 @@ theorem betaT_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {W₀ 
   exact (curlOp 3).adjoint_minimalVia_apply_eq _ _ (denseVia_trSub hΩ) (hessCurl ℝ hΩ).dense₁
     ⟨β, hβ1⟩ key
 
-set_option maxHeartbeats 800000 in
 /-- **TSD data do not propagate for the complex (4.16)** (the conclusion of thesis Prop 4.19
 fails on every nonempty bounded open `Ω ⊆ ℝ³`): for every short complex
 `W₀ → L²(Ω; S) → L²(Ω; T)` with `d₁ ⊆ curl` on `H̊(curl, S)`, the TSD datum `(0, 0, β)` lies in
@@ -209,41 +194,20 @@ theorem tsd_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne 
           ∃ t ∈ Icc 0 T, U t ∉ HilbertComplex.totalSub
             (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) (tsdT Ω)) := by
   obtain ⟨hβS, hβSv⟩ := betaT_mem_adjoint hΩ hb S hd₁
-  let β : trSub ℝ Ω := ⟨_, (BoundedDomainTSD.betaL2_mem_tsd hΩ hb).2.1⟩
   let G : symSub ℝ Ω := ⟨_, (BoundedDomainTSD.constField_mem_tsd hΩ hb
     BoundedDomainTSD.diagA_transpose BoundedDomainTSD.diagA_trace).1⟩
-  let U₀ : PiLp 2 (ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) (trSub ℝ Ω)) :=
-    WithLp.toLp 2 (Pi.single (M := ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) (trSub ℝ Ω)) 2 β)
-  have h0 : (U₀ 0 : W₀) = 0 := rfl
-  have h1 : (U₀ 1 : symSub ℝ Ω) = 0 := by
-    simp only [U₀]
-    rfl
-  have h2 : (U₀ 2 : trSub ℝ Ω) = β := rfl
-  have hD : U₀ ∈ S.wave.domain := by
-    rw [S.mem_wave_domain, h0, h1, h2]
-    exact ⟨Submodule.zero_mem _, Submodule.zero_mem _, Submodule.zero_mem _, hβS⟩
-  have hK : U₀ ∈ HilbertComplex.totalSub
-      (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) (tsdT Ω)) :=
-    ShortHilbertComplex.single_two_mem_totalSub_family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) (tsdT Ω)
-      (v := β) (Submodule.mem_comap.2 (BoundedDomainTSD.betaL2_mem_tsd hΩ hb))
-  refine ⟨U₀, hD, hK, fun T hT U hU0 hU => ?_⟩
-  have hG : G ∈ (tsdS Ω ⊓ S.d₁.domain)ᗮ := by
-    rw [Submodule.mem_orthogonal]
-    rintro z ⟨hzK, hzD⟩
-    have hzM := hessCurl_d₁_graph_map hΩ ⟨z, hd₁.1 hzD⟩
-    rw [Submodule.coe_inner]
+  refine BoundedDomainTSD.exists_single_two_not_propagates S hβS
+    (Submodule.mem_comap.2 (BoundedDomainTSD.betaL2_mem_tsd hΩ hb)) (G := G)
+    ((Submodule.mem_orthogonal _ _).2 fun z ⟨hzK, hzD⟩ => ?_) ?_
+  · rw [Submodule.coe_inner]
     exact BoundedDomainTSD.inner_constField_eq_zero hΩ hb BoundedDomainTSD.diagA
-      ⟨hzK, LinearPMap.mem_domain_of_mem_graph hzM⟩
-  have hne0 : ⟪G, S.d₁† ⟨β, hβS⟩⟫_ℝ ≠ 0 := by
-    rw [hβSv, inner_neg_right, Submodule.coe_inner, real_inner_comm,
-      BoundedDomainTSD.inner_constField]
-    simp only [BoundedDomainTSD.integral_constField, Fintype.sum_prod_type, Fin.sum_univ_three]
-    have hpos := BoundedDomainTSD.volume_real_pos hΩ hb hne
-    simp [BoundedDomainTSD.diagA]
-    positivity
-  obtain ⟨t, ht, hnot⟩ := S.not_propagates_of_inner_ne_zero hG ⟨β, hβS⟩ hne0 hT hU
-    (by rw [hU0]; exact h0) (by rw [hU0]; exact h2)
-  exact ⟨t, ht, fun hmem => hnot (hmem 1)⟩
+      ⟨hzK, LinearPMap.mem_domain_of_mem_graph (hessCurl_d₁_graph_map hΩ ⟨z, hd₁.1 hzD⟩)⟩
+  rw [hβSv, inner_neg_right, Submodule.coe_inner, real_inner_comm,
+    BoundedDomainTSD.inner_constField]
+  simp only [BoundedDomainTSD.integral_constField, Fintype.sum_prod_type, Fin.sum_univ_three]
+  have hpos := BoundedDomainTSD.volume_real_pos hΩ hb hne
+  simp [BoundedDomainTSD.diagA]
+  positivity
 
 /-! ### Named fields: `diag(1, -1, 0)` and `β` in `L²(S)`, `L²(T)` -/
 
@@ -264,17 +228,6 @@ theorem constT_ne_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω
 def betaT (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : trSub ℝ Ω :=
   ⟨_, (BoundedDomainTSD.betaL2_mem_tsd hΩ hb).2.1⟩
 
-theorem betaT_mem_tsdT (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : betaT hΩ hb ∈ tsdT Ω :=
-  BoundedDomainTSD.betaL2_mem_tsd hΩ hb
-
-theorem betaField_symm (i j : Fin 3) :
-    BoundedDomainTSD.betaField (i, j) = BoundedDomainTSD.betaField (j, i) := by
-  fin_cases i <;> fin_cases j <;> rfl
-
-/-- `β` as a symmetric field (an element of `L²(S)`). -/
-def betaS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : symSub ℝ Ω :=
-  ⟨_, (BoundedDomainTSD.betaL2_mem_tsd hΩ hb).1⟩
-
 /-! ### The obstruction `L²(TSD₀)` for `H̊(curl, S)` -/
 
 /-- `L²(TSD) ∩ H̊(curl, S) ⊆ L²(TSD₀)` (orthogonal to every gradient, weakly `E n = 0`). -/
@@ -282,12 +235,6 @@ theorem mem_tsd₀_of_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hE : E ∈ tsdS Ω) (hD : E ∈ (hessCurl ℝ hΩ).d₁.domain) :
     (E : L2F ℝ Ω Ix) ∈ tsd₀ Ω hΩ hb :=
   inf_le_tsd₀ hΩ hb ⟨hE, LinearPMap.mem_domain_of_mem_graph (hessCurl_d₁_graph_map hΩ ⟨E, hD⟩)⟩
-
-/-- **Zero mean on `H̊(curl, S) ∩ L²(TSD)`**: `∫_Ω E = 0`. -/
-theorem integral_eq_zero_of_mem_tsdS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    {E : symSub ℝ Ω} (hE : E ∈ tsdS Ω) (hD : E ∈ (hessCurl ℝ hΩ).d₁.domain) (a b : Fin 3) :
-    ∫ x, (E : L2F ℝ Ω Ix) (a, b) x ∂volume.restrict Ω = 0 :=
-  integral_eq_zero_of_mem_tsd₀ hΩ hb (mem_tsd₀_of_mem_domain hΩ hb hE hD) a b
 
 /-- `cl (L²(TSD) ∩ D(d₁)) ⊆ L²(TSD₀)` for every complex with `D(d₁) ⊆ H̊(curl, S)`. -/
 theorem closure_le_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {D : Submodule ℝ (symSub ℝ Ω)}
@@ -298,25 +245,6 @@ theorem closure_le_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {D : S
   exact Submodule.topologicalClosure_minimal (tsdS Ω ⊓ D)
     (t := (tsd₀ Ω hΩ hb).comap (symSub ℝ Ω).subtype)
     (fun F (hF : F ∈ tsdS Ω ⊓ D) => mem_tsd₀_of_mem_domain hΩ hb hF.1 (hD hF.2)) hcl hE
-
-/-- **A necessary condition for TSD propagation** (the thesis' `Ė(0)` argument): for every short
-complex `W₀ → L²(S) → W₂` with `D(d₁) ⊆ H̊(curl, S)`, if a strong solution from `(0, E₀, B₀)`
-keeps its electric field in `L²(TSD)` on `[0, T]`, `T > 0`, then `E₀ ∈ L²(TSD₀)` and
-`d₁† B₀ ∈ L²(TSD₀)` (weakly `E₀ n = 0` and `(d₁† B₀) n = 0` on `∂Ω`). -/
-theorem mem_tsd₀_of_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
-    [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
-    (S : ShortHilbertComplex ℝ W₀ (symSub ℝ Ω) W₂) (hd₁ : S.d₁.domain ≤ (hessCurl ℝ hΩ).d₁.domain)
-    {T : ℝ} (hT : 0 < T) {U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ (symSub ℝ Ω) W₂)}
-    (hU : Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U) (h0 : (U 0 0 : W₀) = 0)
-    (hK : ∀ t ∈ Icc 0 T, (U t 1 : symSub ℝ Ω) ∈ tsdS Ω) :
-    Subtype.val (U 0 1 : symSub ℝ Ω) ∈ tsd₀ Ω hΩ hb ∧
-      ∃ hB : (U 0 2 : W₂) ∈ S.d₁†.domain, Subtype.val (S.d₁† ⟨_, hB⟩) ∈ tsd₀ Ω hΩ hb := by
-  have h0T : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT.le⟩
-  have hD := (S.mem_wave_domain).1 (hU.mem_domain h0T)
-  refine ⟨mem_tsd₀_of_mem_domain hΩ hb (hK 0 h0T) (hd₁ hD.2.1), ?_⟩
-  obtain ⟨hB, hm⟩ := S.adjoint_mem_closure_of_propagates hT hU h0 hK
-  exact ⟨hB, closure_le_tsd₀ hΩ hb hd₁ hm⟩
 
 /-! ### The magnetic projection hypothesis of Prop 4.19 fails -/
 
@@ -580,52 +508,10 @@ theorem invariantCore_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne :
     ShortHilbertComplex.reducingSubcomplex_coreSub (tsdS_le_ker hΩ),
     fun _ _ _ _ h₁ h₂ hred => ShortHilbertComplex.le_invariantCore_of_isReducing h₁ h₂ hred,
     constS_mem_tsdS hΩ hb, constS_not_mem_invariantCore₁ hΩ hb hne (hessCurl ℝ hΩ) le_rfl _,
-    betaT_mem_tsdT hΩ hb, betaT_not_mem_invariantCore₂ hΩ hb hne (hessCurl ℝ hΩ) le_rfl _,
+    BoundedDomainTSD.betaL2_mem_tsd hΩ hb, betaT_not_mem_invariantCore₂ hΩ hb hne (hessCurl ℝ hΩ) le_rfl _,
     constT_mem_invariantCore₂ hΩ hb _, constT_ne_zero hΩ hb hne,
     not_finiteDimensional_invariantCore₂ hΩ hb hne _,
     fun _ hU₀ hK T => ShortHilbertComplex.existsUnique_mem_coreSub hU₀ hK 0 T⟩
-
-/-- **When does `K*` of (4.16) contain a moving datum?** For the Hessian–curl complex and
-`K = {0} × L²(TSD) ∩ L²(S) × L²(TSD) ∩ L²(T)`, under a complete set of eigenvectors of `L²`
-(`hD`, the hypothesis of `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral`): forward
-invariance is equivalent to membership in `K*`; `K*` is stationary iff `S₁* ⊆ ker d₁`; `K*`
-contains a non-stationary datum iff `d₁† d₁ u = ω² u` has a nonzero solution
-`u ∈ L²(TSD) ∩ D(d₁)` with `d₁ u ∈ D(d₁†)`, `ω > 0` (`d₁ u ∈ L²(TSD)` is automatic,
-`hessCurl_d₁_mem_tsdT`); and every such `u` lies in `S₁*`, has `u ∈ L²(TSD₀)`, and moves. -/
-theorem hessCurl_coreSub_spectral (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hD : (hessCurl ℝ hΩ).EigenDense) :
-    (∀ x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ Ω) (symSub ℝ Ω) (trSub ℝ Ω)),
-      (∀ t, 0 ≤ t → (hessCurl ℝ hΩ).toHilbertComplex.waveGroup.S t x ∈
-        HilbertComplex.totalSub (ShortHilbertComplex.family3 ⊥ (tsdS Ω) (tsdT Ω))) ↔
-          x ∈ (hessCurl ℝ hΩ).coreSub (tsdS Ω) (tsdT Ω)) ∧
-    ((hessCurl ℝ hΩ).coreSub (tsdS Ω) (tsdT Ω) ≤
-        (hessCurl ℝ hΩ).stationary ↔
-      ∀ v ∈ (hessCurl ℝ hΩ).invariantCore₁ (tsdS Ω) (tsdT Ω),
-        ∃ h1 : v ∈ (hessCurl ℝ hΩ).d₁.domain, (hessCurl ℝ hΩ).d₁ ⟨v, h1⟩ = 0) ∧
-    (¬ (hessCurl ℝ hΩ).coreSub (tsdS Ω) (tsdT Ω) ≤
-        (hessCurl ℝ hΩ).stationary ↔
-      ∃ w : ℝ, 0 < w ∧ ∃ v : symSub ℝ Ω, v ≠ 0 ∧ v ∈ tsdS Ω ∧ (hessCurl ℝ hΩ).IsEigenfield w v) ∧
-    (∀ w : ℝ, 0 < w → ∀ v : symSub ℝ Ω, v ∈ tsdS Ω → (hessCurl ℝ hΩ).IsEigenfield w v →
-          v ∈ (hessCurl ℝ hΩ).invariantCore₁ (tsdS Ω) (tsdT Ω) ∧
-            (v : L2F ℝ Ω Ix) ∈ tsd₀ Ω hΩ hb ∧
-            (v ≠ 0 → ShortHilbertComplex.inj₁ (𝕜 := ℝ) (L2 ℝ Ω) (symSub ℝ Ω) (trSub ℝ Ω)
-              v ∉ (hessCurl ℝ hΩ).stationary)) := by
-  have H :=
-    ShortHilbertComplex.coreSub_spectral (S := hessCurl ℝ hΩ) (S₁ := tsdS Ω) (S₂ := tsdT Ω)
-      (tsdS_le_ker hΩ) hD
-  refine ⟨H.1, H.2.1, ?_, fun w hw v hv hE => ?_⟩
-  · rw [H.2.2]
-    refine exists_congr fun w => and_congr_right fun _ => exists_congr fun v =>
-        and_congr_right fun _ => and_congr_right fun hv => ?_
-    unfold ShortHilbertComplex.IsEigenfield
-    exact exists_congr fun h1 => exists_congr fun _ =>
-      ⟨And.right, And.intro (hessCurl_d₁_mem_tsdT hΩ ⟨v, h1⟩ hv)⟩
-  obtain ⟨hv1, hv3, e⟩ := hE
-  obtain ⟨h2, e2⟩ := LinearPMap.exists_apply_eq_zero_of_mem_ker (tsdS_le_ker hΩ hv)
-  obtain ⟨-, hm, hns⟩ := ShortHilbertComplex.eigenfield_mem_invariantCore₁
-    (S := hessCurl ℝ hΩ) (S₂ := tsdT Ω) hw hv hv1 h2 e2 hv3
-    (hessCurl_d₁_mem_tsdT hΩ ⟨v, hv1⟩ hv) e
-  exact ⟨hm, invariantCore₁_le_tsd₀ hΩ hb (hessCurl ℝ hΩ) le_rfl (tsdT Ω) hm, hns⟩
 
 end InvariantCore
 
@@ -814,13 +700,6 @@ theorem not_starProjection_mem_wave_domain_hessCurlMax (hΩ : IsOpen Ω)
   exact hne0 (inner_constS_eq_zero_of_ker hΩ hb
     (mem_ker_of_mem_tsdS hΩ (Submodule.starProjection_apply_mem _ _) h))
 
-/-- The reducing form: `{0} × L²(TSD) × S₂` does not reduce the wave operator of `hessCurlMax`. -/
-theorem not_isReducing_tsd_hessCurlMax (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) (S₂ : Submodule ℝ (trSub ℝ Ω)) [S₂.HasOrthogonalProjection] :
-    ¬ (hessCurlMax ℝ hΩ).wave.IsReducing (HilbertComplex.totalSub
-      (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ Ω)) (tsdS Ω) S₂)) := fun h =>
-  not_starProjection_mem_wave_domain_hessCurlMax hΩ hb hne S₂ fun x hx => h.proj_mem ⟨x, hx⟩
-
 /-- **The density hypothesis of Prop 4.19 fails also with the boundary conditions of its
 statement**: `H(curl, S) ∩ H̊(div div, S) ∩ L²(TSD)` is not dense in `L²(TSD)`;
 `diag(1, -1, 0)` is not in its closure. [QuennevilleBelair2015], Prop. 4.19 (§4.11) -/
@@ -967,56 +846,6 @@ theorem adjoint_hessCurlMax_d₁_mem_tsdS (hΩ : IsOpen Ω) (ρ : (hessCurlMax �
   rw [hle.2 (x := ρ) (y := ⟨_, hle.1 ρ.2⟩) rfl]
   exact adjoint_hessCurl_d₁_mem_tsdS hΩ _ hρ
 
-/-- **`β ∉ H̊(sym curl, T)`** for the printed placement: otherwise `sym curl β = -diag(1, -1, 0)`
-would pair to `0` with `diag(1, -1, 0)` (`inner_adjoint_hessCurlMax_d₁_constS`). So the datum
-behind the refutation for (4.16) is not admissible here. -/
-theorem betaT_not_mem_adjoint_hessCurlMax_d₁ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) : betaT hΩ hb ∉ (hessCurlMax ℝ hΩ).d₁†.domain := fun hβ => by
-  have hle := adjoint_hessCurlMax_d₁_le (𝕜 := ℝ) hΩ
-  obtain ⟨h, hv⟩ := betaT_mem_adjoint hΩ hb (hessCurl ℝ hΩ) le_rfl
-  have e := hle.2 (x := ⟨_, hβ⟩) (y := ⟨_, h⟩) rfl
-  have h0 := inner_adjoint_hessCurlMax_d₁_constS hΩ hb ⟨_, hβ⟩
-  rw [e, hv, inner_neg_left, neg_eq_zero, Submodule.coe_inner] at h0
-  change ⟪BoundedDomainTSD.constField hΩ hb BoundedDomainTSD.diagA,
-    BoundedDomainTSD.constField hΩ hb BoundedDomainTSD.diagA⟫_ℝ = 0 at h0
-  rw [BoundedDomainTSD.inner_constField] at h0
-  simp only [BoundedDomainTSD.integral_constField, Fintype.sum_prod_type, Fin.sum_univ_three] at h0
-  have hpos := BoundedDomainTSD.volume_real_pos hΩ hb hne
-  simp [BoundedDomainTSD.diagA] at h0
-  linarith
-
-/-- **The mean of a magnetic field in `H̊(sym curl, T)` is a pairing of its `sym curl`**:
-`⟪B, diag(1, -1, 0)⟫ = -⟪sym curl B, β⟫` for every `B ∈ D(d₁†)` of the printed placement. -/
-theorem inner_constT_eq_neg_inner_betaS (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (B : (hessCurlMax ℝ hΩ).d₁†.domain) :
-    ⟪(B : trSub ℝ Ω), constT hΩ hb⟫_ℝ = -⟪(hessCurlMax ℝ hΩ).d₁† B, betaS hΩ hb⟫_ℝ := by
-  obtain ⟨hm, em⟩ := smoothField_mem_hessCurlMax_d₁ (Ψ := BoundedDomainTSD.betaField) hΩ hb
-    (fun ij => (BoundedDomainTSD.contDiff_betaField ij).of_le (by simp)) betaField_symm
-  have e := LinearPMap.adjoint_isFormalAdjoint (hessCurlMax ℝ hΩ).dense₁ B ⟨_, hm⟩
-  have e' : ⟪(hessCurlMax ℝ hΩ).d₁† B, betaS hΩ hb⟫_ℝ =
-      ⟪(B : trSub ℝ Ω), (hessCurlMax ℝ hΩ).d₁ ⟨_, hm⟩⟫_ℝ := e
-  rw [e', Submodule.coe_inner, Submodule.coe_inner, em, BoundedDomainTSD.curl_betaL2,
-      inner_neg_right,
-    neg_neg]
-  rfl
-
-/-- **`diag(1, -1, 0) ∉ H̊(sym curl, T)`** for the printed placement, although it is a
-stationary datum of (4.16) (`constT_mem_invariantCore₂`). -/
-theorem constT_not_mem_adjoint_hessCurlMax_d₁ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) : constT hΩ hb ∉ (hessCurlMax ℝ hΩ).d₁†.domain := fun hc => by
-  have hle := adjoint_hessCurlMax_d₁_le (𝕜 := ℝ) hΩ
-  obtain ⟨h0, e0⟩ := smoothField_mem_adjoint_hessCurl_d₁
-    (Ψ := fun ij _ => BoundedDomainTSD.diagA ij.1 ij.2) hΩ hb (fun _ => contDiff_const)
-    (fun _ => by simpa [Matrix.trace] using BoundedDomainTSD.diagA_trace)
-  have hz : (hessCurlMax ℝ hΩ).d₁† ⟨_, hc⟩ = 0 := by
-    rw [hle.2 (x := ⟨_, hc⟩) (y := ⟨_, h0⟩) rfl]
-    refine Subtype.ext ?_
-    rw [e0]
-    exact smoothField_eq_zero hΩ hb _ fun ij x _ => by simp [symF, curlM, pd]
-  have h1 := inner_constT_eq_neg_inner_betaS hΩ hb ⟨_, hc⟩
-  rw [hz, inner_zero_left, neg_zero] at h1
-  exact constT_ne_zero hΩ hb hne (inner_self_eq_zero.1 h1)
-
 variable (Ω) in
 /-- `L²(TSD) ∩ ker d₀†` for the printed placement: TSD fields that are `div div`-free with the
 `H̊(div div)` boundary condition. It has the same intersection with `D(L)` as `L²(TSD)`
@@ -1086,8 +915,8 @@ theorem diagnosis_hessCurlMax (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (h
 wave group of `hessCurlMax` and `K = {0} × (L²(TSD) ∩ ker d₀†) × L²(TSD)`, the invariant core
 `K* = {0} × S₁* × S₂*` is a reducing subcomplex, the largest one inside `K`, misses
 `diag(1, -1, 0)`, and its data have unique solutions staying in `K* ⊆ K`. Whether `K* ≠ {0}` is
-open: the stationary data found for (4.16) are not admissible here
-(`constT_not_mem_adjoint_hessCurlMax_d₁`). [QuennevilleBelair2015], Prop. 4.19, corrected -/
+open: the stationary data found for (4.16) are not admissible here.
+[QuennevilleBelair2015], Prop. 4.19, corrected -/
 theorem invariantCore_tsdSKer (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     (hessCurlMax ℝ hΩ).coreSub (tsdSKer Ω hΩ) (tsdT Ω) = HilbertComplex.totalSub
         (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ Ω))

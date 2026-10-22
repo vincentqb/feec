@@ -143,11 +143,6 @@ theorem contract (hinv : gi * g = 1) (F : ι → R) (d : ι) :
     exact sum_congr rfl fun a _ => by ring
   simp [this]
 
-omit [Invertible (2 : R)] in
-/-- The trace of the metric jet direction: `gi^{ab} g_ab = n`. -/
-theorem trace_metric' (hg : g.IsSymm) (hinv : gi * g = 1) :
-    Metric.trace gi g = Fintype.card ι := Metric.trace_metric hg hinv
-
 /-! ### Thm 2.3 -/
 
 omit [DecidableEq ι] in

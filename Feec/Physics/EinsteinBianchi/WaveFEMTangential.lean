@@ -21,11 +21,8 @@ conditions of the discrete spaces:
 * **`waveFEM_rate_tr`**: items 1–4 of `waveFEM` unchanged, item 5 on `IsSmoothStateTr`
   (`cubeWave_rate_tr`), and the `O(h)` rate of the elliptic projection (6.4) on the cube
   (`cubeFEM_ellipticProjection_rate_tr`);
-* non-vacuity beyond the flat class: `staticFEM_rate_tr_nonvacuous` (the solution
-  `tangentialManufactured_solution`, whose `u` has a nonzero normal component on `∂Q`),
-  `staticFEM_rate_tr_nonvacuous_combined` (the solution `combinedManufactured_solution`, with
-  `σ, φ, λ ≠ 0` and non-flat `u`) and
-  `waveFEM_rate_tr_nonvacuous` (the classical solution `waveTangential T` of (6.2)).
+* non-vacuity beyond the flat class: `waveFEM_rate_tr_nonvacuous` (the classical solution
+  `waveTangential T` of (6.2)).
 
 "`C²` up to `∂Q`" means the restriction to `Q` of a `C²` field on `ℝ³` (equivalent through an
 extension theorem for the cube, which is not formalized). The class of `S¹u` is derived from that
@@ -116,86 +113,6 @@ theorem staticFEM_rate_tr (hR : CurlPotential) :
   obtain ⟨p, C, hT, hB, -⟩ := hrows
   exact ⟨p, C, hT, hB, cubeFEM_rate_tr hT hB hCR.1 hCR.2,
     cubeFEM_rate_isSaddle_tr hT hB hCR.1 hCR.2⟩
-
-set_option maxHeartbeats 1000000 in
-/-- **Non-vacuity of `staticFEM_rate_tr` beyond flat data** (for any common smoother): the field
-`tangentialU` (first row `(sin 2πy₁ sin 2πy₂) dx₀`) is nonzero and not flat (its first row is in
-no class `IsCsFormMin`: its normal component does not vanish on `{y₀ = 0}`);
-`(σ, φ, u, λ) = (0, 0, tangentialU, 0)` with datum `tangentialDatum` solves (5.3) with the
-hypotheses of `cubeFEM_rate_tr`; under the regularity hypothesis the discrete solutions `uₕ` of
-(5.6) converge to it at rate `h_N` in `‖·‖_{Γₕ}`. -/
-theorem staticFEM_rate_tr_nonvacuous {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
-    tangentialU ≠ 0 ∧ (∀ s L, ¬ IsCsFormMin s 1 L ((tangentialU 0 : U1) : W1)) ∧
-    (CurlPotential → ∃ (K : ℝ) (uh : ℕ → Wv U1), ∀ N, uh N ∈ (cubeFEM hT hB N).Vt1h ∧
-      ∃ (σh : U0) (φh : Wv U0) (lh : U1), σh ∈ (cubeFEM hT hB N).V0h ∧
-        φh ∈ (cubeFEM hT hB N).Vt0h ∧
-        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-          ⟪σh, τ⟫ - ⟪uh N, bggSegment.dt0 ψ⟫ -
-            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) ∧
-        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-          ⟪(cubeFEM hT hB N).S1h (uh N), (cubeFEM hT hB N).S1h v⟫ +
-            ⟪bggSegment.dt1 (uh N), bggSegment.dt1 v⟫ = tangentialDatum v) ∧
-        (∀ μ ∈ (cubeFEM hT hB N).V1h,
-          ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) ∧
-        (cubeFEM hT hB N).gnSq (tangentialU - uh N) ≤ (K * meshSize N) ^ 2) := by
-  refine ⟨tangentialU_ne_zero, not_isCsFormMin_tangentialU0, fun hR => ?_⟩
-  obtain ⟨c1, c2, c3, L, hL0, hσ, hφ, hu, hlam⟩ := tangentialManufactured_solution
-  have hCRex := hR.exists_bound
-  obtain ⟨CR, hCR⟩ := hCRex
-  obtain ⟨K, hK0, hK⟩ := cubeFEM_rate_tr hT hB hCR.1 hCR.2
-  have hsol := fun N => (cubeFEM_existsUnique hT hB hCR.1 hCR.2 N tangentialDatum).exists
-  choose x hx using hsol
-  have hbound : ∀ N, Feec.BGG.graphSq bggSegment.d0 ((0 : U0) - (x N).1) +
-      Feec.BGG.graphSq bggSegment.dt0 ((0 : Wv U0) - (x N).2.1) +
-      (cubeFEM hT hB N).gnSq (tangentialU - (x N).2.2.1) ≤ (K * L * meshSize N) ^ 2 := fun N =>
-    hK N hL0 c1 c2 c3 hσ hφ hu hlam (x N).1.2 (x N).2.1.2 (x N).2.2.1.2 (hx N).1
-      (hx N).2.1 (hx N).2.2
-  refine ⟨K * L, fun N => (x N).2.2.1, fun N => ⟨(x N).2.2.1.2, (x N).1, (x N).2.1, (x N).2.2.2,
-    (x N).1.2, (x N).2.1.2, (hx N).1, (hx N).2.1, (hx N).2.2, ?_⟩⟩
-  exact le_trans (le_add_of_nonneg_left (add_nonneg (Feec.BGG.graphSq_nonneg _ _)
-    (Feec.BGG.graphSq_nonneg _ _))) (hbound N)
-
-set_option maxHeartbeats 2000000 in
-/-- **Non-vacuity of `staticFEM_rate_tr` with every unknown nonzero and non-flat `u`**: the
-solution `combinedManufactured_solution` (`σ, φ, λ ≠ 0`, `u = coupledu + tangentialU`, not in
-any `IsCsFormMin 0 1 L`) of (5.3) with datum `coupledDatum + tangentialDatum`; under the
-regularity hypothesis the discrete solutions of (5.6) converge to it at rate `h_N` in
-`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ}`. -/
-theorem staticFEM_rate_tr_nonvacuous_combined {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)}
-    {C : ℝ} (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
-    coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledMult ≠ 0 ∧
-    (∀ L, ¬ IsCsFormMin 0 1 L ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1)) ∧
-    (CurlPotential → ∃ K : ℝ, ∀ N, ∃ (σh : U0) (φh : Wv U0) (uh : Wv U1) (lh : U1),
-      σh ∈ (cubeFEM hT hB N).V0h ∧ φh ∈ (cubeFEM hT hB N).Vt0h ∧ uh ∈ (cubeFEM hT hB N).Vt1h ∧
-        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-          ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
-            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) ∧
-        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-          ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
-            ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = (coupledDatum + tangentialDatum) v) ∧
-        (∀ μ ∈ (cubeFEM hT hB N).V1h,
-          ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) ∧
-        Feec.BGG.graphSq bggSegment.d0 (coupledσ - σh) +
-          Feec.BGG.graphSq bggSegment.dt0 (coupledφ - φh) +
-          (cubeFEM hT hB N).gnSq ((coupledu + tangentialU) - uh) ≤ (K * meshSize N) ^ 2) := by
-  have hsol0 := combinedManufactured_solution
-  obtain ⟨hσ0, hφ0, hM0, hnf, c1, c2, c3, L, hL0, hσ, hφ, hu, hlam⟩ := hsol0
-  refine ⟨hσ0, hφ0, hM0, hnf, fun hR => ?_⟩
-  have hCRex := hR.exists_bound
-  obtain ⟨CR, hCR⟩ := hCRex
-  have hrate := cubeFEM_rate_tr hT hB hCR.1 hCR.2
-  obtain ⟨K, hK⟩ := hrate
-  have hsol := fun N =>
-    (cubeFEM_existsUnique hT hB hCR.1 hCR.2 N (coupledDatum + tangentialDatum)).exists
-  choose x hx using hsol
-  refine ⟨K * L, fun N => ⟨(x N).1, (x N).2.1, (x N).2.2.1, (x N).2.2.2, (x N).1.2,
-    (x N).2.1.2, (x N).2.2.1.2, (hx N).1, (hx N).2.1, (hx N).2.2, ?_⟩⟩
-  have hb := hK.2 N hL0 c1 c2 c3 hσ hφ hu hlam (x N).1.2 (x N).2.1.2 (x N).2.2.1.2 (hx N).1
-    (hx N).2.1 (hx N).2.2
-  exact hb.trans_eq (by ring)
 
 end Feec.EinsteinBianchi.StaticFEM
 

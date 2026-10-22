@@ -9,10 +9,9 @@ public import Feec.Physics.Maxwell.Forms
 On `Q = (0, ½)³` (`Feec.Models.Cube.FEM.cubeDomain 3`) Maxwell's equations in form coordinates
 are the Hodge wave equation of the window `0, 1, 2` of the `L²` de Rham complex:
 
-* **perfect magnetic conductor**: `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)`, the window of the maximal complex
-  (`Feec.Maxwell.maximalComplex_d_eq_pmcForms_d₀`, `_d₁`);
+* **perfect magnetic conductor**: `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)`, the window of the maximal complex;
 * **perfect electric conductor**: `H̊Λ⁰(Q) → H̊Λ¹(Q) → L²Λ²(Q)`, the window of the minimal complex
-  (`Feec.Maxwell.minimalComplex_d_eq_pecForms_d₀`, `_d₁`).
+  (in the degrees `0, 1` the complex `Feec.Maxwell.pecForms`).
 
 Discretized on the level-`(N + 1)` Freudenthal meshes by Lagrange `P₁`, Nédélec edge and
 Raviart–Thomas face elements (the lowest-order Whitney forms; with vanishing boundary DOFs for

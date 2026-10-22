@@ -114,19 +114,10 @@ def standardCubeCore : (standardCubeApprox hT hB).Core :=
   ApproxFEEC.orbitCore (standardCubeApprox_isOrthogonal hT hB) matrixComplex.wave.domainSq
     (standardCube_hconv hT hB)
 
-theorem standardCubeCore_data : (standardCubeCore hT hB).Data = matrixComplex.wave.domainSq := rfl
-
 /-- **The core is dense** (`D(L²)` is dense for the skew-adjoint `L`). -/
 theorem dense_standardCubeCore : Dense ((standardCubeCore hT hB).Data : Set (PiLp 2
     (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
       (W2B ℝ (cubeDomain 3))))) :=
   matrixComplex.isSkewAdjoint_wave.dense_domainSq
-
-theorem standardCubeCore_closure : (standardCubeCore hT hB).Data.topologicalClosure = ⊤ := by
-  rw [eq_top_iff]
-  intro x _
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
-    (dense_standardCubeCore hT hB).closure_eq]
-  trivial
 
 end Feec.Instances.EinsteinBianchi.FEM

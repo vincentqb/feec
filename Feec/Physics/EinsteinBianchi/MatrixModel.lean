@@ -36,7 +36,7 @@ strong/classical solutions correspond.
   realizations correspond because the test forms correspond (`rowsEquiv`, `rows2Equiv` map test
   forms onto test matrix fields and `⋆ d = curl` on them; closures of products are products of
   closures). In particular `rowsEquiv` maps `H̊Λ¹(Q)³` onto `H̊(curl, Q; ℝ³ˣ³)`
-  (`mem_curlMin_domain_iff`) and intertwines `d` with `curl` (`curlMin_rowsEquiv`);
+  (`mem_curlMin_domain_iff`);
 * **`skwL_rowsEquiv`**: `S₁ (rowsEquiv u) = ⋆ (S¹ u)` (`S¹ = Σᵢ dxᵢ ∧ ·` is `2 vskw`);
 * `mem_hessMin_graph_iff` (from `Feec.EinsteinBianchi.WaveFEM.gamma_equiv_hessMin`) and
   `mem_bggComplex_d₁_graph_iff'`: the two differentials of the forms complex are carried to
@@ -44,11 +44,11 @@ strong/classical solutions correspond.
 * **`matrixComplex_eq_map`**: the Hilbert complex of `bggComplex` on `Q` *is* the unitary
   transport (`Feec.HilbertComplex.map`) of the forms complex `bggHilb.toHilbertComplex` along
   `totalEquiv = (zeroEquiv, rowsEquiv, topEquiv)`;
-* **`wave_intertwines`**, `wave_intertwines_symm`, `mem_matrix_wave_domain_iff`: the total
+* **`wave_intertwines`**, `wave_intertwines_symm`: the total
   isometry `totalE` intertwines the Hodge wave operators both ways; **`waveGroup_conj`**:
   `e (e^{tL} x) = e^{tL'} (e x)`;
-* **`isStrongSolution_iff`**, `isClassicalSolution_iff`: `U` is a strong (classical) solution of
-  the forms-model Hodge wave equation iff `e ∘ U` is one of the matrix model.
+* **`isStrongSolution_iff`**: `U` is a strong solution of the forms-model Hodge wave equation iff
+  `e ∘ U` is one of the matrix model.
 
 Generic facts on unitary transport of Hilbert complexes used here (`map_map_symm`, `wave_map`,
 `waveGroup_map_of_eq`) and on intertwined evolution equations (`Evolution.IsStrongSolution.map`)
@@ -105,14 +105,6 @@ variable [Fintype ι]
 /-- The total unitary `∏ W i ≃ ∏ W' i` of a degreewise unitary family. -/
 def totalIso (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) : PiLp 2 W ≃ₗᵢ[𝕜] PiLp 2 W' :=
   LinearIsometryEquiv.piLpCongrRight 2 u
-
-omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] in
-@[simp] theorem totalIso_apply (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) (x : PiLp 2 W) (i : ι) :
-    totalIso u x i = u i (x i) := rfl
-
-omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] in
-theorem totalIso_symm (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) :
-    (totalIso u).symm = totalIso fun i => (u i).symm := rfl
 
 omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] in
 theorem totalMap_eq_totalIso (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) :
@@ -207,13 +199,9 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
 def idx1 : Fin 3 ≃ formIdx 3 1 :=
   Equiv.ofBijective (fun j => ⟨{j}, by simp⟩) (by decide)
 
-@[simp] theorem idx1_val (j : Fin 3) : (idx1 j).1 = {j} := rfl
-
 /-- `k ↦ {k}ᶜ`: the coordinate `2`-forms dual to `dx_k`. -/
 def idx2 : Fin 3 ≃ formIdx 3 2 :=
   Equiv.ofBijective (fun k => ⟨{k}ᶜ, by rw [Finset.card_compl]; simp⟩) (by decide)
-
-@[simp] theorem idx2_val (k : Fin 3) : (idx2 k).1 = {k}ᶜ := rfl
 
 /-- The sign of the Hodge-star proxy `(⋆w)_k = sgn2 k · w_{{k}ᶜ}`: `(w_{12}, −w_{02}, w_{01})`. -/
 def sgn2 (k : Fin 3) : ℝ := if k = 1 then -1 else 1
@@ -230,9 +218,6 @@ theorem sgn2_smul_sgn2_smul {E : Type*} [AddCommGroup E] [Module ℝ E] (k : Fin
 /-- `L²Λ¹(Q) ≃ L²(Q; ℝ³)`, `w ↦ (w_{{j}})_j`. -/
 def vecEquiv : W1 ≃ₗᵢ[ℝ] L2F ℝ (cubeDomain 3) (Fin 3) :=
   LinearIsometryEquiv.piLpCongrLeft 2 ℝ (L2 ℝ (cubeDomain 3)) idx1.symm
-
-@[simp] theorem vecEquiv_apply (w : W1) (j : Fin 3) : vecEquiv w j = w (idx1 j) := by
-  simp [vecEquiv, LinearIsometryEquiv.piLpCongrLeft_apply, Equiv.piCongrLeft'_apply]
 
 /-- The linear equivalence underlying `rowsEquiv`. -/
 def rowsLin : Wv W1 ≃ₗ[ℝ] L2F ℝ (cubeDomain 3) Ix where
@@ -356,12 +341,6 @@ def topEquiv : WithLp 2 (W2 × Wv W2) ≃ₗᵢ[ℝ] W2B ℝ (cubeDomain 3) :=
 
 @[simp] theorem topEquiv_apply_snd (p : WithLp 2 (W2 × Wv W2)) :
     (WithLp.ofLp (topEquiv p)).2 = rows2Equiv (WithLp.ofLp p).2 := rfl
-
-@[simp] theorem topEquiv_symm_apply_fst (q : W2B ℝ (cubeDomain 3)) :
-    (WithLp.ofLp (topEquiv.symm q)).1 = starEquiv.symm (WithLp.ofLp q).1 := rfl
-
-@[simp] theorem topEquiv_symm_apply_snd (q : W2B ℝ (cubeDomain 3)) :
-    (WithLp.ofLp (topEquiv.symm q)).2 = rows2Equiv.symm (WithLp.ofLp q).2 := rfl
 
 /-! ### `⋆ d = curl` on smooth `1`-forms -/
 
@@ -553,15 +532,6 @@ theorem mem_curlMin_domain_iff {u : Wv W1} :
       (mem_curlMin_graph_iff.2 fun a => ?_)
     exact D1.mem_graph ⟨_, h a⟩
 
-/-- **`rowsEquiv` intertwines `d` with `curl`**: `curl (rowsEquiv u) = rows2Equiv (d uₐ)ₐ` on
-`H̊Λ¹(Q)³`. -/
-theorem curlMin_rowsEquiv {u : Wv W1} (h : ∀ a, u a ∈ D1.domain) :
-    curlMin ⟨rowsEquiv u, mem_curlMin_domain_iff.2 h⟩ =
-      rows2Equiv (WithLp.toLp 2 fun a => D1 ⟨_, h a⟩) := by
-  have hg : (rowsEquiv u, rows2Equiv (WithLp.toLp 2 fun a => D1 ⟨_, h a⟩)) ∈ curlMin.graph :=
-    mem_curlMin_graph_iff.2 fun a => D1.mem_graph ⟨_, h a⟩
-  exact (curlMin.mem_graph_snd_inj (curlMin.mem_graph _) hg rfl)
-
 /-! ### `S¹ = 2 vskw` -/
 
 theorem wsCoeff_one_idx2 (k i j : Fin 3) :
@@ -588,11 +558,6 @@ theorem skwL_rowsEquiv (u : Wv W1) :
   rw [skwL_apply, starEquiv_apply, wsL2_one_apply_idx2, sgn2_smul_sgn2_smul, rowsEquiv_apply,
     rowsEquiv_apply]
 
-/-- `S₁ (rowsEquiv u) = ⋆ (S¹ u)` in the domain model (`segS1`). -/
-theorem skwL_rowsEquiv_incl1 (v : Wv U1) :
-    skwL ℝ (cubeDomain 3) (rowsEquiv (incl1 v)) = starEquiv (segS1 v) :=
-  skwL_rowsEquiv (incl1 v)
-
 /-! ### `Γ̄ = L²Λ⁰(Q)` -/
 
 theorem formIdx_zero_eq (t : formIdx 3 0) : t = idx0 :=
@@ -612,11 +577,6 @@ def scalarEquiv : W0 ≃ₗᵢ[ℝ] L2 ℝ (cubeDomain 3) :=
   scalarLin.isometryOfInner fun σ τ => by
     change ⟪σ idx0, τ idx0⟫ = ∑ t, ⟪σ t, τ t⟫
     rw [Finset.sum_eq_single idx0 (fun t _ ht => absurd (formIdx_zero_eq t) ht) (by simp)]
-
-@[simp] theorem scalarEquiv_apply (σ : W0) : scalarEquiv σ = toScalar σ := rfl
-
-theorem toScalar_scalarEquiv_symm (v : L2 ℝ (cubeDomain 3)) : toScalar (scalarEquiv.symm v) = v :=
-  scalarEquiv.apply_symm_apply v
 
 /-- A pair `(σ, φ)` of the segment's `Γ` gives a pair of `bggHilb.Γ` (graph spaces). -/
 theorem mem_hilbΓ_of_mem_segΓ {x : U0 × Wv U0} (hx : x ∈ bggSegment.Γ) :
@@ -659,11 +619,6 @@ theorem Γbar_eq_top : bggHilb.Γbar = ⊤ := by
 /-- **The first dictionary** `Γ̄ ≃ L²(Q)`: `Γ̄ = L²Λ⁰(Q)` (`Γbar_eq_top`), read as scalars. -/
 def zeroEquiv : bggHilb.Γbar ≃ₗᵢ[ℝ] L2 ℝ (cubeDomain 3) :=
   (LinearIsometryEquiv.ofTop (E := W0) bggHilb.Γbar Γbar_eq_top).trans scalarEquiv
-
-@[simp] theorem zeroEquiv_apply (x : bggHilb.Γbar) : zeroEquiv x = toScalar (x : W0) := rfl
-
-@[simp] theorem coe_zeroEquiv_symm (v : L2 ℝ (cubeDomain 3)) :
-    ((zeroEquiv.symm v : bggHilb.Γbar) : W0) = scalarEquiv.symm v := rfl
 
 /-! ### The differentials correspond -/
 
@@ -723,7 +678,7 @@ theorem mem_hessMin_graph_iff {v : L2 ℝ (cubeDomain 3)} {H : L2F ℝ (cubeDoma
     have hv : toScalar ((graphDom D0 (y : V0 × Vt0).1 : U0) : W0) = v := by
       change toScalar (D0.graphFst (y : V0 × Vt0).1) = v
       rw [h1]
-      exact toScalar_scalarEquiv_symm v
+      exact scalarEquiv.apply_symm_apply v
     have hH : hessOf (rp (y : V0 × Vt0).2) = H :=
       (rowsEquiv_ιt1_bggDt0 (y : V0 × Vt0).2).symm.trans
         ((congrArg rowsEquiv h2).trans (rowsEquiv.apply_symm_apply H))
@@ -859,16 +814,6 @@ theorem wave_intertwines_symm :
       formsComplex.wave :=
   HilbertComplex.wave_map_symm_of_eq matrixComplex_eq_map
 
-/-- `D(L') = e D(L)`. -/
-theorem mem_matrix_wave_domain_iff {x} :
-    totalE x ∈ matrixComplex.wave.domain ↔ x ∈ formsComplex.wave.domain := by
-  constructor
-  · intro h
-    have := wave_intertwines_symm.mapsTo ⟨_, h⟩
-    simpa using this
-  · intro h
-    exact wave_intertwines.mapsTo ⟨x, h⟩
-
 /-- **The wave groups are conjugate**: `e (e^{tL} x) = e^{tL'} (e x)`. -/
 theorem waveGroup_conj (t : ℝ) (x) :
     totalE (formsComplex.waveGroup.S t x) = matrixComplex.waveGroup.S t (totalE x) :=
@@ -880,18 +825,6 @@ theorem isStrongSolution_iff {I : Set ℝ} {F U : ℝ → PiLp 2
       (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1) (WithLp 2 (W2 × Wv W2)))} :
     Evolution.IsStrongSolution formsComplex.wave I F U ↔
       Evolution.IsStrongSolution matrixComplex.wave I (fun t => totalE (F t))
-        (fun t => totalE (U t)) := by
-  constructor
-  · exact fun h => h.map wave_intertwines
-  · intro h
-    have := h.map wave_intertwines_symm
-    simpa using this
-
-/-- **Classical solutions correspond** (as `isStrongSolution_iff`). -/
-theorem isClassicalSolution_iff {I : Set ℝ} {F U : ℝ → PiLp 2
-      (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1) (WithLp 2 (W2 × Wv W2)))} :
-    Evolution.IsClassicalSolution formsComplex.wave I F U ↔
-      Evolution.IsClassicalSolution matrixComplex.wave I (fun t => totalE (F t))
         (fun t => totalE (U t)) := by
   constructor
   · exact fun h => h.map wave_intertwines

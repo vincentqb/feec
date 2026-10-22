@@ -32,8 +32,7 @@ from `ρ(0)` (`compρL_waveOrbit_mem`). It is not implied by `D(L^∞)`: the sta
 `ρ = (sawW2, 0, 0)` lies in `ker L` while `sawW2 ∉ H̊Λ²(Q)` and `∉ H^{1/2}_univ`
 (`exists_memDomainPow_compρL_not_mem`; the obstruction is the tangential trace, the field is
 smooth inside `Q`). The obstruction lives in `N(L)`: on `N(L)ᗮ = cl R(L)` the magnetic rows are in
-`N(d²)` (`compρL_mem_ker_of_mem_orthogonal`), hence in `H¹_univ` with norm
-`≤ (1 + √2) ‖U‖ + 2 ‖L U‖` for `U ∈ D(L) ∩ N(L)ᗮ` (`sobRel_compρL_of_mem_orthogonal`); for general
+`N(d²)` (`compρL_mem_ker_of_mem_orthogonal`), hence in `H¹_univ`; for general
 `U₀` only the stationary part `P_{N(L)} U₀` needs a hypothesis (`compρL_mem_of_projKer`). The skew
 field `M` is assumed in `H¹_univ = D(d²) ∩ D(d¹*)`: `S¹` couples components of incompatible
 parities, and the corresponding coupled regularity is absent from Mathlib.
@@ -50,25 +49,17 @@ multiplier and on `S¹u` remain (see the docstring of `waveFEM_rate_of_mem_domai
 (`du' = (L² U)_ρ ∈ D(d¹*)` needs `L² U ∈ D(L)`); minimality is not shown.
 `waveFEM_rate_of_mem_domain_of_orbit` is the version with all hypotheses along the orbit.
 
-**Non-vacuity.** The standing wave `U(t) = cos(ωt) (0, u, 0) + ω⁻¹ sin(ωt) (0, 0, (0, du))`,
-`u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)`, `ω² = 8π²`, is the orbit of `(0, u, 0) ∈ D(L³)`
-(`waveOrbit_modeU`, by uniqueness of strong solutions), is not stationary, and satisfies the
-hypotheses with `Λ = 0` (`waveFEM_rate_of_mem_domain_nonvacuous`: zero multipliers, `M ≡ 0`,
-`P_{N(L)} U₀ = 0` since `U₀ ∈ R(L)`). It exercises the hypotheses on `M`, `S¹u` and the
-multipliers only trivially.
-
 ## Main results
 
 * `memDomainPow_group`, `norm_iterate_extOp_group`, `group_S_eq_self`.
 * `isSobolevStateTr_of_mem`: the rate class of `cubeWave_rate_sobolev` at `s = 1` from `D(L³)`
   and the hypotheses on multipliers, `M` and `ρ(0)`.
-* `compρL_mem_ker_of_mem_orthogonal`, `sobRel_compρL_of_mem_orthogonal`: the magnetic rows on
-  `N(L)ᗮ`; `projKer`, `projKer_waveOrbit`, `compρL_mem_of_projKer`: the stationary part.
+* `compρL_mem_ker_of_mem_orthogonal`: the magnetic rows on `N(L)ᗮ`; `projKer`,
+  `compρL_mem_of_projKer`: the stationary part.
 * `exists_mem_domain_of_hasDerivWithinAt`: domains of closed operators along trajectories.
 * **`waveFEM_rate_of_mem_domain`**: the `O(h)` rate of (6.5) for data in `D(L³)`;
   `waveFEM_rate_of_mem_domain_cube`, with the smoothing estimates discharged;
   `waveFEM_rate_of_mem_domain_of_orbit`, with the hypotheses along the orbit.
-* **`waveFEM_rate_of_mem_domain_nonvacuous`**: the hypotheses hold for a non-stationary solution.
 * **`exists_memDomainPow_compρL_not_mem`**: a state in every `D(Lᵏ)` whose `ρ` row is not in
   `D(d²)` nor in `H^{1/2}_univ`.
 
@@ -201,22 +192,6 @@ theorem MemDomainPow.iterate_mem : ∀ {k : ℕ} {x : E}, MemDomainPow A k x →
   | k + 1, _, hx, 0, _ => hx.1
   | k + 1, _, hx, j + 1, hj => MemDomainPow.iterate_mem hx.2 j (by omega)
 
-theorem MemDomainPow.iterate : ∀ {k : ℕ} {x : E}, MemDomainPow A k x → ∀ j ≤ k,
-    MemDomainPow A (k - j) ((extOp A)^[j] x)
-  | _, _, hx, 0, _ => hx
-  | 0, _, _, j + 1, hj => absurd hj (by omega)
-  | k + 1, _, hx, j + 1, hj => by
-    have := MemDomainPow.iterate hx.2 j (by omega)
-    rwa [show k + 1 - (j + 1) = k - j by omega]
-
-theorem extOp_add_smul (a b : ℝ) {x y : E} (hx : x ∈ A.domain) (hy : y ∈ A.domain) :
-    extOp A (a • x + b • y) = a • extOp A x + b • extOp A y := by
-  have h : a • x + b • y ∈ A.domain :=
-    A.domain.add_mem (A.domain.smul_mem a hx) (A.domain.smul_mem b hy)
-  rw [extOp_eq h, extOp_eq hx, extOp_eq hy]
-  have e : (⟨a • x + b • y, h⟩ : A.domain) = a • ⟨x, hx⟩ + b • ⟨y, hy⟩ := rfl
-  rw [e, LinearPMap.map_add, LinearPMap.map_smul, LinearPMap.map_smul]
-
 /-- A kernel vector of `A` lies in every `D(Aᵏ)`. -/
 theorem memDomainPow_of_mem_ker {x : E} (hx : x ∈ A.domain) (h0 : A ⟨x, hx⟩ = 0) :
     ∀ k, MemDomainPow A k x
@@ -267,11 +242,6 @@ theorem group_S_eq_self {z : E} (hz : z ∈ A.domain) (h0 : A ⟨z, hz⟩ = 0) (
   rw [this]
   simp
 
-/-- **Orthogonality to the kernel**: `⟪e^{tA} x − x, z⟫ = 0` for `z ∈ N(A)`. -/
-theorem inner_group_sub_self_ker (x : E) {z : E} (hz : z ∈ A.domain) (h0 : A ⟨z, hz⟩ = 0)
-    (t : ℝ) : ⟪hA.group.S t x - x, z⟫ = 0 := by
-  rw [inner_sub_left, hA.isIsometric_group.inner_S_left, group_S_eq_self hA hz h0, sub_self]
-
 /-- **`R(A)ᗮ ⊆ N(A)`**: a vector orthogonal to the range is in `D(A*) = D(A)` with
 `A x = −A* x = 0`. -/
 theorem mem_ker_of_forall_inner_eq_zero (hD : Dense (A.domain : Set E)) {z : E}
@@ -283,15 +253,6 @@ theorem mem_ker_of_forall_inner_eq_zero (hD : Dense (A.domain : Set E)) {z : E}
   have hn := norm_apply_of_eq_op e.symm hz
   rw [LinearPMap.neg_apply, norm_neg] at hn
   exact LinearPMap.mem_ker_iff.2 ⟨⟨z, hz'⟩, rfl, norm_le_zero_iff.1 (hn.trans_le hb)⟩
-
-/-- **`R(A) ⊆ N(A)ᗮ`** (skew-symmetry). -/
-theorem mem_orthogonal_ker (y : A.domain) : A y ∈ (A.ker)ᗮ := by
-  rw [Submodule.mem_orthogonal]
-  intro u hu
-  obtain ⟨u', rfl, hu0⟩ := LinearPMap.mem_ker_iff.1 hu
-  have hs := hA.isSkewSymmetric u' y
-  rw [hu0, inner_zero_left] at hs
-  linarith
 
 /-- **`N(A)ᗮ = cl R(A)`, in the form used here**: a closed subspace containing `R(A)` contains
 `N(A)ᗮ`. -/
@@ -317,31 +278,9 @@ def projKerOf : E →L[ℝ] E :=
   haveI : CompleteSpace A.ker := (LinearPMap.isClosed_ker hA.isClosed).completeSpace_coe
   A.ker.starProjection
 
-theorem projKerOf_mem_ker (x : E) : projKerOf hA x ∈ A.ker := by
-  have : CompleteSpace A.ker := (LinearPMap.isClosed_ker hA.isClosed).completeSpace_coe
-  exact Submodule.starProjection_apply_mem _ x
-
 theorem sub_projKerOf_mem_orthogonal (x : E) : x - projKerOf hA x ∈ (A.ker)ᗮ := by
   have : CompleteSpace A.ker := (LinearPMap.isClosed_ker hA.isClosed).completeSpace_coe
   exact Submodule.sub_starProjection_mem_orthogonal x
-
-theorem projKerOf_eq_zero {x : E} (hx : x ∈ (A.ker)ᗮ) : projKerOf hA x = 0 := by
-  have : CompleteSpace A.ker := (LinearPMap.isClosed_ker hA.isClosed).completeSpace_coe
-  exact (Submodule.starProjection_apply_eq_zero_iff _).2 hx
-
-theorem projKerOf_smul_eq_zero (c : ℝ) (y : A.domain) : projKerOf hA (c • A y) = 0 :=
-  projKerOf_eq_zero hA (Submodule.smul_mem _ c (mem_orthogonal_ker hA y))
-
-/-- **The stationary part is conserved by the group**: `P_{N(A)} e^{tA} x = P_{N(A)} x`. -/
-theorem projKerOf_group (x : E) (t : ℝ) : projKerOf hA (hA.group.S t x) = projKerOf hA x := by
-  have h : hA.group.S t x - x ∈ (A.ker)ᗮ := by
-    rw [Submodule.mem_orthogonal']
-    intro u hu
-    obtain ⟨u', rfl, hu0⟩ := LinearPMap.mem_ker_iff.1 hu
-    exact inner_group_sub_self_ker hA x u'.2 hu0 t
-  have h0 := projKerOf_eq_zero hA h
-  rw [map_sub, sub_eq_zero] at h0
-  exact h0
 
 end Powers
 
@@ -538,18 +477,6 @@ theorem D2min_D1 (w : U1) : D2min ⟨D1 w, D1_mem_D2min w⟩ = 0 := by
   rw [← LinearPMap.apply_eq_of_eq complexMin_d23
     ⟨_, (complexMin 3).mapsTo 1 2 3 ⟨w, by rw [complexMin_d12]; exact w.2⟩⟩ _ e1]
   exact h
-
-/-- **The orthogonal of `N((d¹)*)` lies in `N(d²)`** (`HilbertComplex.orthogonal_ker_adjoint_le_ker`
-for `H̊Λ(Q)`): no closed range is needed. -/
-theorem mem_D2min_of_mem_orthogonal {y : W2} (hy : y ∈ ((D1†).ker)ᗮ) :
-    ∃ h : y ∈ D2min.domain, D2min ⟨y, h⟩ = 0 := by
-  have h := (complexMin 3).orthogonal_ker_adjoint_le_ker 1 2 3 (by rw [complexMin_d12]; exact hy)
-  obtain ⟨y', hy', h0⟩ := LinearPMap.mem_ker_iff.1 h
-  have hd : y ∈ D2min.domain := by
-    rw [hy']; exact mem_domain_of_eq_op complexMin_d23.symm y'.2
-  refine ⟨hd, ?_⟩
-  rw [← LinearPMap.apply_eq_of_eq complexMin_d23 y' ⟨y, hd⟩ hy'.symm]
-  exact h0
 
 /-- The pairing of the magnetic slot with `D(d₁)`: every `y ∈ D(d₁)` is `ιt1 v'`, and
 `⟪w, d₁ y⟫ = ⟪w_M, S¹ v'⟫ + ⟪w_ρ, d v'⟫`. -/
@@ -876,8 +803,6 @@ set_option maxHeartbeats 2000000
 /-- The orbit `t ↦ e^{tL} U₀` of the forms-model Hodge wave group. -/
 def waveOrbit (U₀ : WS) (t : ℝ) : WS := formsShort.isSkewAdjoint_wave.group.S t U₀
 
-theorem extOp_wave : extOp formsShort.wave = waveOf := rfl
-
 theorem waveOrbit_zero (U₀ : WS) : waveOrbit U₀ 0 = U₀ := by
   simp [waveOrbit, (formsShort.isSkewAdjoint_wave.group).map_zero]
 
@@ -1009,28 +934,11 @@ theorem compρL_mem_ker_of_mem_orthogonal {z : WS} (hz : z ∈ (formsShort.wave.
   rw [← h0]
   exact LinearPMap.apply_congr' _ _ _ hy
 
-/-- **(c) `H¹` on `N(L)ᗮ`**: for `z ∈ D(L) ∩ N(L)ᗮ` every magnetic row is in `H¹_univ`, with
-`‖ρₐ‖_{1,univ} ≤ (1 + √2) ‖z‖ + 2 ‖L z‖` (`ρₐ ∈ N(d²) ∩ D(d¹*)`, Gaffney). The obstruction of
-`exists_memDomainPow_compρL_not_mem` lives in `N(L)`. -/
-theorem sobRel_compρL_of_mem_orthogonal {z : WS} (hz : z ∈ formsShort.wave.domain)
-    (hzo : z ∈ (formsShort.wave.ker)ᗮ) (a : Fin 3) :
-    SobRel 1 ((1 + √2) * ‖z‖ + 2 * ‖waveOf z‖) 2 (compρL z a) := by
-  obtain ⟨h, h0⟩ := compρL_mem_ker_of_mem_orthogonal hzo a
-  refine (sobRel_compρL hz a h (Λ := 0) (by rw [h0, norm_zero])).mono (le_of_eq ?_)
-  ring
-
 /-- **The stationary part `P_{N(L)} U`** of a state. -/
 def projKer (U : WS) : WS := projKerOf formsShort.isSkewAdjoint_wave U
 
-theorem projKer_mem_ker (U : WS) : projKer U ∈ formsShort.wave.ker :=
-  projKerOf_mem_ker formsShort.isSkewAdjoint_wave U
-
 theorem sub_projKer_mem_orthogonal (U : WS) : U - projKer U ∈ (formsShort.wave.ker)ᗮ :=
   sub_projKerOf_mem_orthogonal formsShort.isSkewAdjoint_wave U
-
-/-- **The stationary part is conserved**: `P_{N(L)} e^{tL} U = P_{N(L)} U`. -/
-theorem projKer_waveOrbit (U : WS) (t : ℝ) : projKer (waveOrbit U t) = projKer U :=
-  projKerOf_group formsShort.isSkewAdjoint_wave U t
 
 /-- **(c) The magnetic rows of the datum from its stationary part**: if the rows of
 `P_{N(L)} U₀` are in `H¹_univ` with norm `≤ Λ`, the rows of `U₀` are in `D(d²)` with
@@ -1317,561 +1225,18 @@ theorem waveFEM_rate_of_mem_domain :
 
 end Rate
 
-/-! ### An explicit mode: `δ d w = 8π² w` for `w = (sin 2πy₁ sin 2πy₂) dx₀` -/
+/-! ### The kernel obstruction for the top rows -/
 
-section ModeCalculus
-
-open Real
-open Feec.ExteriorFibre (sgn)
-
-theorem fderiv_coordDir_eq {g : (Fin 3 → ℝ) → ℝ} (hg : Differentiable ℝ g) (y : Fin 3 → ℝ)
-    (i : Fin 3) {c : ℝ} (h : HasDerivAt (fun t : ℝ => g (y + t • coordDir i)) c 0) :
-    fderiv ℝ g y (coordDir i) = c := by
-  have h1 : HasDerivAt (fun t : ℝ => g (y + t • coordDir i)) (fderiv ℝ g y (coordDir i)) 0 := by
-    have hl : HasDerivAt (fun t : ℝ => y + t • (coordDir i : Fin 3 → ℝ)) (coordDir i) 0 := by
-      simpa using ((hasDerivAt_id (0 : ℝ)).smul_const (coordDir i : Fin 3 → ℝ)).const_add y
-    have h2 : HasFDerivAt g (fderiv ℝ g y) (y + (0 : ℝ) • (coordDir i : Fin 3 → ℝ)) := by
-      simpa using (hg y).hasFDerivAt
-    exact h2.comp_hasDerivAt (0 : ℝ) hl
-  exact h1.unique h
-
-theorem line_apply (y : Fin 3 → ℝ) (t : ℝ) (i j : Fin 3) :
-    (y + t • coordDir i) j = y j + if j = i then t else 0 := by
-  simp [coordDir, Pi.single_apply]
-
-/-- `sin(2π y₁) sin(2π y₂)`. -/
-def gW (y : Fin 3 → ℝ) : ℝ := Real.sin (2 * π * y 1) * Real.sin (2 * π * y 2)
-/-- `∂₁ gW`. -/
-def gW1 (y : Fin 3 → ℝ) : ℝ := 2 * π * (Real.cos (2 * π * y 1) * Real.sin (2 * π * y 2))
-/-- `∂₂ gW`. -/
-def gW2 (y : Fin 3 → ℝ) : ℝ := 2 * π * (Real.sin (2 * π * y 1) * Real.cos (2 * π * y 2))
-
-theorem hasDerivAt_sin_line (a : ℝ) :
-    HasDerivAt (fun t : ℝ => Real.sin (2 * π * (a + t))) (2 * π * Real.cos (2 * π * a)) 0 := by
-  have h := (((hasDerivAt_id' (0 : ℝ)).const_add a).const_mul (2 * π)).sin
-  convert h using 1
-  simp only [add_zero, mul_one]; ring
-
-theorem hasDerivAt_cos_line (a : ℝ) :
-    HasDerivAt (fun t : ℝ => Real.cos (2 * π * (a + t))) (-(2 * π * Real.sin (2 * π * a))) 0 := by
-  have h := (((hasDerivAt_id' (0 : ℝ)).const_add a).const_mul (2 * π)).cos
-  convert h using 1
-  simp only [add_zero, mul_one]; ring
-
-theorem differentiable_gW : Differentiable ℝ gW := by
-  unfold gW; fun_prop
-theorem differentiable_gW1 : Differentiable ℝ gW1 := by
-  unfold gW1; fun_prop
-theorem differentiable_gW2 : Differentiable ℝ gW2 := by
-  unfold gW2; fun_prop
-
-theorem fderiv_gW_zero (y : Fin 3 → ℝ) : fderiv ℝ gW y (coordDir 0) = 0 := by
-  refine fderiv_coordDir_eq differentiable_gW y 0 ?_
-  simp only [gW, line_apply]
-  simpa using hasDerivAt_const (0 : ℝ) (Real.sin (2 * π * y 1) * Real.sin (2 * π * y 2))
-
-theorem fderiv_gW_one (y : Fin 3 → ℝ) : fderiv ℝ gW y (coordDir 1) = gW1 y := by
-  refine fderiv_coordDir_eq differentiable_gW y 1 ?_
-  simp only [gW, gW1, line_apply]
-  have h := (hasDerivAt_sin_line (y 1)).mul_const (Real.sin (2 * π * y 2))
-  convert h using 1
-  · funext t; simp
-  · ring
-
-theorem fderiv_gW_two (y : Fin 3 → ℝ) : fderiv ℝ gW y (coordDir 2) = gW2 y := by
-  refine fderiv_coordDir_eq differentiable_gW y 2 ?_
-  simp only [gW, gW2, line_apply]
-  have h := (hasDerivAt_sin_line (y 2)).const_mul (Real.sin (2 * π * y 1))
-  convert h using 1
-  · funext t; simp
-  · ring
-
-theorem fderiv_gW1_zero (y : Fin 3 → ℝ) : fderiv ℝ gW1 y (coordDir 0) = 0 := by
-  refine fderiv_coordDir_eq differentiable_gW1 y 0 ?_
-  simp only [gW1, line_apply]
-  simpa using hasDerivAt_const (0 : ℝ)
-    (2 * π * (Real.cos (2 * π * y 1) * Real.sin (2 * π * y 2)))
-
-theorem fderiv_gW2_zero (y : Fin 3 → ℝ) : fderiv ℝ gW2 y (coordDir 0) = 0 := by
-  refine fderiv_coordDir_eq differentiable_gW2 y 0 ?_
-  simp only [gW2, line_apply]
-  simpa using hasDerivAt_const (0 : ℝ)
-    (2 * π * (Real.sin (2 * π * y 1) * Real.cos (2 * π * y 2)))
-
-theorem fderiv_gW1_one (y : Fin 3 → ℝ) :
-    fderiv ℝ gW1 y (coordDir 1) = -(4 * π ^ 2) * gW y := by
-  refine fderiv_coordDir_eq differentiable_gW1 y 1 ?_
-  simp only [gW1, gW, line_apply]
-  have h := ((hasDerivAt_cos_line (y 1)).mul_const (Real.sin (2 * π * y 2))).const_mul (2 * π)
-  convert h using 1
-  · funext t; simp
-  · ring
-
-theorem fderiv_gW2_two (y : Fin 3 → ℝ) :
-    fderiv ℝ gW2 y (coordDir 2) = -(4 * π ^ 2) * gW y := by
-  refine fderiv_coordDir_eq differentiable_gW2 y 2 ?_
-  simp only [gW2, gW, line_apply]
-  have h := ((hasDerivAt_cos_line (y 2)).const_mul (Real.sin (2 * π * y 1))).const_mul (2 * π)
-  convert h using 1
-  · funext t; simp
-  · ring
-
-/-- The witness is `gW dx₀`. -/
-theorem normalWitness_eq (y : Fin 3 → ℝ) (s : Finset (Fin 3)) :
-    normalWitness (n := 3) y s = if s = {0} then gW y else 0 := by
-  simp only [normalWitness, gW]
-  split_ifs
-  · rw [show (Finset.univ.erase (0 : Fin 3)) = {1, 2} by decide, Finset.prod_pair (by decide)]
-  · rfl
-
-theorem sgn_vals : (sgn (0 : Fin 3) ({0, 1} : Finset (Fin 3)) : ℝ) = 1 ∧
-    (sgn (1 : Fin 3) ({0, 1} : Finset (Fin 3)) : ℝ) = -1 ∧
-    (sgn (0 : Fin 3) ({0, 2} : Finset (Fin 3)) : ℝ) = 1 ∧
-    (sgn (2 : Fin 3) ({0, 2} : Finset (Fin 3)) : ℝ) = -1 ∧
-    (sgn (1 : Fin 3) ({0} : Finset (Fin 3)) : ℝ) = -1 ∧
-    (sgn (2 : Fin 3) ({0} : Finset (Fin 3)) : ℝ) = -1 := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> simp only [sgn]
-  · rw [show ({l ∈ ({0, 1} : Finset (Fin 3)) | l < 0}).card = 0 by decide]; norm_num
-  · rw [show ({l ∈ ({0, 1} : Finset (Fin 3)) | l < 1}).card = 1 by decide]; norm_num
-  · rw [show ({l ∈ ({0, 2} : Finset (Fin 3)) | l < 0}).card = 0 by decide]; norm_num
-  · rw [show ({l ∈ ({0, 2} : Finset (Fin 3)) | l < 2}).card = 1 by decide]; norm_num
-  · rw [show ({l ∈ ({0} : Finset (Fin 3)) | l < 1}).card = 1 by decide]; norm_num
-  · rw [show ({l ∈ ({0} : Finset (Fin 3)) | l < 2}).card = 1 by decide]; norm_num
-
-theorem extDeriv_nW_01 (y : Fin 3 → ℝ) :
-    FiniteElement.extDeriv (normalWitness (n := 3)) y {0, 1} = -gW1 y := by
-  rw [FiniteElement.extDeriv_apply, Finset.sum_pair (by decide)]
-  have e0 : (fun z => normalWitness (n := 3) z (({0, 1} : Finset (Fin 3)).erase 0)) =
-      fun _ => 0 := by
-    funext z; rw [normalWitness_eq]; simp [show (({0, 1} : Finset (Fin 3)).erase 0) = {1} by decide]
-  have e1 : (fun z => normalWitness (n := 3) z (({0, 1} : Finset (Fin 3)).erase 1)) = gW := by
-    funext z; rw [normalWitness_eq]; simp [show (({0, 1} : Finset (Fin 3)).erase 1) = {0} by decide]
-  rw [e0, e1]
-  simp only [partialDeriv, fderiv_const_apply, zero_apply, mul_zero, zero_add]
-  rw [show (Pi.single (1 : Fin 3) (1 : ℝ) : Fin 3 → ℝ) = coordDir 1 from rfl, fderiv_gW_one,
-    sgn_vals.2.1]
-  ring
-
-theorem extDeriv_nW_02 (y : Fin 3 → ℝ) :
-    FiniteElement.extDeriv (normalWitness (n := 3)) y {0, 2} = -gW2 y := by
-  rw [FiniteElement.extDeriv_apply, Finset.sum_pair (by decide)]
-  have e0 : (fun z => normalWitness (n := 3) z (({0, 2} : Finset (Fin 3)).erase 0)) =
-      fun _ => 0 := by
-    funext z; rw [normalWitness_eq]; simp [show (({0, 2} : Finset (Fin 3)).erase 0) = {2} by decide]
-  have e1 : (fun z => normalWitness (n := 3) z (({0, 2} : Finset (Fin 3)).erase 2)) = gW := by
-    funext z; rw [normalWitness_eq]; simp [show (({0, 2} : Finset (Fin 3)).erase 2) = {0} by decide]
-  rw [e0, e1]
-  simp only [partialDeriv, fderiv_const_apply, zero_apply, mul_zero, zero_add]
-  rw [show (Pi.single (2 : Fin 3) (1 : ℝ) : Fin 3 → ℝ) = coordDir 2 from rfl, fderiv_gW_two,
-    sgn_vals.2.2.2.1]
-  ring
-
-theorem extDeriv_nW_12 (y : Fin 3 → ℝ) :
-    FiniteElement.extDeriv (normalWitness (n := 3)) y {1, 2} = 0 := by
-  rw [FiniteElement.extDeriv_apply, Finset.sum_pair (by decide)]
-  have e0 : (fun z => normalWitness (n := 3) z (({1, 2} : Finset (Fin 3)).erase 1)) =
-      fun _ => 0 := by
-    funext z; rw [normalWitness_eq]; simp [show (({1, 2} : Finset (Fin 3)).erase 1) = {2} by decide]
-  have e1 : (fun z => normalWitness (n := 3) z (({1, 2} : Finset (Fin 3)).erase 2)) =
-      fun _ => 0 := by
-    funext z; rw [normalWitness_eq]; simp [show (({1, 2} : Finset (Fin 3)).erase 2) = {1} by decide]
-  rw [e0, e1]
-  simp only [partialDeriv, fderiv_const_apply, zero_apply, mul_zero, zero_add]
-
-theorem formExt_tangentialDψ_01 :
-    formExt tangentialDψ ({0, 1} : Finset (Fin 3)) = fun y => -gW1 y := by
-  rw [formExt_of_card _ (by decide)]; funext y; exact extDeriv_nW_01 y
-
-theorem formExt_tangentialDψ_02 :
-    formExt tangentialDψ ({0, 2} : Finset (Fin 3)) = fun y => -gW2 y := by
-  rw [formExt_of_card _ (by decide)]; funext y; exact extDeriv_nW_02 y
-
-theorem formExt_tangentialDψ_12 :
-    formExt tangentialDψ ({1, 2} : Finset (Fin 3)) = fun _ => 0 := by
-  rw [formExt_of_card _ (by decide)]; funext y; exact extDeriv_nW_12 y
-
-/-- **`δ d w = 8π² w`** for `w = (sin 2πy₁ sin 2πy₂) dx₀`, pointwise. -/
-theorem formalAdj_tangentialDψ (r : formIdx 3 1) (y : Fin 3 → ℝ) :
-    (extDerivOp ℝ 3 1).formalAdj.apply tangentialDψ r y =
-      8 * π ^ 2 * normalWitness (n := 3) y r.1 := by
-  rw [formalAdj_extDerivOp_apply, extDAdj, normalWitness_eq]
-  obtain ⟨a, ha⟩ := Finset.card_eq_one.1 (by exact_mod_cast r.2 : r.1.card = 1)
-  rw [ha]
-  have hn1 : fderiv ℝ (fun y => -gW1 y) y = -fderiv ℝ gW1 y := fderiv_neg
-  have hn2 : fderiv ℝ (fun y => -gW2 y) y = -fderiv ℝ gW2 y := fderiv_neg
-  obtain rfl | rfl | rfl : a = 0 ∨ a = 1 ∨ a = 2 := by fin_cases a <;> simp
-  · rw [show ({0} : Finset (Fin 3))ᶜ = {1, 2} by decide, Finset.sum_pair (by decide),
-      show insert (1 : Fin 3) ({0} : Finset (Fin 3)) = {0, 1} by decide,
-      show insert (2 : Fin 3) ({0} : Finset (Fin 3)) = {0, 2} by decide,
-      formExt_tangentialDψ_01, formExt_tangentialDψ_02, hn1, hn2]
-    simp only [neg_apply, fderiv_gW1_one, fderiv_gW2_two, sgn_vals.2.2.2.2.1,
-      sgn_vals.2.2.2.2.2, ite_true]
-    ring
-  · rw [show ({1} : Finset (Fin 3))ᶜ = {0, 2} by decide, Finset.sum_pair (by decide),
-      show insert (0 : Fin 3) ({1} : Finset (Fin 3)) = {0, 1} by decide,
-      show insert (2 : Fin 3) ({1} : Finset (Fin 3)) = {1, 2} by decide,
-      formExt_tangentialDψ_01, formExt_tangentialDψ_12, hn1]
-    simp only [neg_apply, fderiv_gW1_zero, fderiv_const_apply, zero_apply]
-    simp
-  · rw [show ({2} : Finset (Fin 3))ᶜ = {0, 1} by decide, Finset.sum_pair (by decide),
-      show insert (0 : Fin 3) ({2} : Finset (Fin 3)) = {0, 2} by decide,
-      show insert (1 : Fin 3) ({2} : Finset (Fin 3)) = {1, 2} by decide,
-      formExt_tangentialDψ_02, formExt_tangentialDψ_12, hn2]
-    simp only [neg_apply, fderiv_gW2_zero, fderiv_const_apply, zero_apply]
-    simp
-
-
-/-- **`D1* D1 w = 8π² w`** in `L²`: the source of `waveTangential` is `8π²` times the witness. -/
-theorem toL2F_formalAdj_tangentialDψ :
-    toL2F memLp_formalAdj_tangentialDψ = (8 * π ^ 2) • tangentialX := by
-  refine PiLp.ext fun r => ?_
-  refine Lp.ext ?_
-  filter_upwards [(memLp_formalAdj_tangentialDψ r).coeFn_toLp,
-    Lp.coeFn_smul (8 * π ^ 2) (tangentialX r),
-    coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
-      ⟨normalWitness, contDiff_normalWitness.continuous⟩ r] with y h1 h2 h3
-  change ((memLp_formalAdj_tangentialDψ r).toLp _ : L2 ℝ (cubeDomain 3)) y =
-    (((8 * π ^ 2) • tangentialX) r : L2 ℝ (cubeDomain 3)) y
-  rw [h1, PiLp.smul_apply, h2, Pi.smul_apply, smul_eq_mul]
-  have h3' : (tangentialX r : L2 ℝ (cubeDomain 3)) y = normalWitness y r.1 := h3
-  rw [h3', formalAdj_tangentialDψ]
-
-theorem waveTangentialSrc_eq : waveTangentialSrc = (8 * π ^ 2) • incl1 tangentialU := by
-  refine PiLp.ext fun a => ?_
-  by_cases ha : a = 0
-  · subst ha
-    rw [waveTangentialSrc_apply_zero, toL2F_formalAdj_tangentialDψ, PiLp.smul_apply]
-    change _ = (8 * π ^ 2) • ((tangentialU 0 : U1) : W1)
-    rw [tangentialU_apply_zero]; rfl
-  · rw [waveTangentialSrc_apply_of_ne ha, PiLp.smul_apply]
-    change _ = (8 * π ^ 2) • ((tangentialU a : U1) : W1)
-    rw [tangentialU_apply_of_ne ha]; simp
-
-end ModeCalculus
-
-/-! ### The mode `(0, cos(ωt) u, sin(ωt) ω⁻¹ (0, du))`, `ω² = 8π²` -/
-
-section Mode
+section KernelObstruction
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
 set_option maxHeartbeats 4000000
-
-open Real
-
-/-- The datum `(0, u, 0)`, `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)` (`tangentialU`). -/
-def modeU : WS :=
-  ShortHilbertComplex.mk3 (0 : bggHilb.Γbar) (incl1 tangentialU) (0 : WithLp 2 (W2 × Wv W2))
-
-/-- `L (0, u, 0) = (0, 0, (0, du))` (`S¹u = 0`). -/
-def modeY : WS :=
-  ShortHilbertComplex.mk3 (0 : bggHilb.Γbar) (0 : Wv W1)
-    (WithLp.toLp 2 ((0 : W2), bggSegment.dt1 tangentialU) : WithLp 2 (W2 × Wv W2))
-
-theorem comp1_modeU_mem_D1L : comp1 modeU ∈ bggHilb.D1L.domain := by
-  rw [bggHilb.D1L_domain]; exact ⟨toGraphVec1 tangentialU, ιt1_toGraphVec1 _⟩
-
-theorem comp1_modeU_mem_adjoint :
-    ∃ h : comp1 modeU ∈ (bggHilb.D0Γ†).domain, bggHilb.D0Γ† ⟨_, h⟩ = 0 := by
-  obtain ⟨h, hb⟩ := exists_mem_adjoint_of_abs_le bggHilb.D0Γ formsShort.dense₀ le_rfl
-    (y := comp1 modeU) fun y => by
-      obtain ⟨g, hg⟩ := bggHilb.mem_D0Γ_graph bggS0_injective y
-      have e : bggHilb.D0Γ y = ιt1 (bggDt0 (g : V0 × Vt0).2) := (congrArg Prod.snd hg).symm
-      rw [e, ιt1_bggDt0]
-      change |⟪incl1 tangentialU, incl1 (bggSegment.dt0 (rp (g : V0 × Vt0).2))⟫| ≤ _
-      rw [← inner_wv_U1, inner_tangentialU_dt0, abs_zero, zero_mul]
-  exact ⟨h, norm_le_zero_iff.1 hb⟩
-
-theorem modeU_mem : modeU ∈ formsShort.wave.domain :=
-  formsShort.mem_wave_domain.2 ⟨Submodule.zero_mem _, comp1_modeU_mem_D1L,
-    comp1_modeU_mem_adjoint.1, Submodule.zero_mem _⟩
-
-theorem ext_WS {x y : WS} (h0 : comp0 x = comp0 y) (h1 : comp1 x = comp1 y)
-    (h2 : comp2 x = comp2 y) : x = y := by
-  rw [← ShortHilbertComplex.mk3_eta x, ← ShortHilbertComplex.mk3_eta y]
-  change ShortHilbertComplex.mk3 (comp0 x) (comp1 x) (comp2 x) =
-    ShortHilbertComplex.mk3 (comp0 y) (comp1 y) (comp2 y)
-  rw [h0, h1, h2]
-
-theorem waveOf_modeU : waveOf modeU = modeY := by
-  obtain ⟨hadj, hadj0⟩ := comp1_modeU_mem_adjoint
-  refine ext_WS ?_ ?_ ?_
-  · rw [comp0_waveOf modeU_mem]
-    rw [LinearPMap.apply_congr' _ _ hadj rfl, hadj0, neg_zero]
-    rfl
-  · rw [comp1_waveOf modeU_mem, apply_eq_zero_of_coe_eq_zero (f := bggHilb.D0Γ) _ rfl,
-      apply_eq_zero_of_coe_eq_zero (f := bggHilb.D1L†) _ rfl, sub_zero]
-    rfl
-  · rw [comp2_waveOf modeU_mem]
-    have hv : ιt1 (toGraphVec1 tangentialU) ∈ bggHilb.D1L.domain := by
-      rw [bggHilb.D1L_domain]; exact ⟨_, rfl⟩
-    rw [LinearPMap.apply_congr' bggHilb.D1L (dom1 modeU_mem) hv
-      (ιt1_toGraphVec1 tangentialU).symm, D1L_apply_ιt1]
-    change (WithLp.toLp 2 (segS1 tangentialU, piMap segD1 tangentialU) : WithLp 2 (W2 × Wv W2)) =
-      WithLp.toLp 2 ((0 : W2), bggSegment.dt1 tangentialU)
-    have : segS1 tangentialU = 0 := segS1_tangentialU
-    rw [this]
-    rfl
-
-theorem comp2_modeY_mem_adjoint :
-    ∃ h : comp2 modeY ∈ (bggHilb.D1L†).domain,
-      bggHilb.D1L† ⟨_, h⟩ = (8 * π ^ 2) • incl1 tangentialU := by
-  have key : ∀ y : bggHilb.D1L.domain, ⟪comp2 modeY, bggHilb.D1L y⟫ =
-      ⟪(8 * π ^ 2) • incl1 tangentialU, (y : Wv W1)⟫ := fun y => by
-    obtain ⟨v', hv', e⟩ := inner_comp2_D1L (comp2 modeY) y
-    rw [e]
-    change ⟪(0 : W2), bggSegment.S1 v'⟫ + ⟪bggSegment.dt1 tangentialU, bggSegment.dt1 v'⟫ = _
-    rw [inner_zero_left, zero_add, inner_dt1_tangentialU, waveTangentialSrc_eq, hv']
-  obtain ⟨h, -⟩ := exists_mem_adjoint_of_abs_le bggHilb.D1L formsShort.dense₁
-    (norm_nonneg ((8 * π ^ 2) • incl1 tangentialU)) (y := comp2 modeY) fun y => by
-      rw [key]; exact abs_real_inner_le_norm _ _
-  exact ⟨h, LinearPMap.adjoint_apply_eq formsShort.dense₁ ⟨_, h⟩ fun x => (key x).symm⟩
-
-theorem modeY_mem : modeY ∈ formsShort.wave.domain :=
-  formsShort.mem_wave_domain.2 ⟨Submodule.zero_mem _, Submodule.zero_mem _, Submodule.zero_mem _,
-    comp2_modeY_mem_adjoint.1⟩
-
-theorem waveOf_modeY : waveOf modeY = (-(8 * π ^ 2)) • modeU := by
-  obtain ⟨hadj, hadj0⟩ := comp2_modeY_mem_adjoint
-  refine ext_WS ?_ ?_ ?_
-  · rw [comp0_waveOf modeY_mem, apply_eq_zero_of_coe_eq_zero (f := bggHilb.D0Γ†) _ rfl, neg_zero]
-    change (0 : bggHilb.Γbar) = (-(8 * π ^ 2)) • (0 : bggHilb.Γbar)
-    rw [smul_zero]
-  · rw [comp1_waveOf modeY_mem, apply_eq_zero_of_coe_eq_zero (f := bggHilb.D0Γ) _ rfl, zero_sub,
-      LinearPMap.apply_congr' _ _ hadj rfl, hadj0]
-    change _ = (-(8 * π ^ 2)) • incl1 tangentialU
-    rw [neg_smul]
-  · rw [comp2_waveOf modeY_mem, apply_eq_zero_of_coe_eq_zero (f := bggHilb.D1L) _ rfl]
-    change (0 : WithLp 2 (W2 × Wv W2)) = (-(8 * π ^ 2)) • (0 : WithLp 2 (W2 × Wv W2))
-    rw [smul_zero]
-
-/-- The combinations `α (0, u, 0) + β (0, 0, (0, du))`, invariant under `L`. -/
-def modeComb (α β : ℝ) : WS := α • modeU + β • modeY
-
-theorem modeComb_mem (α β : ℝ) : modeComb α β ∈ formsShort.wave.domain :=
-  Submodule.add_mem _ (Submodule.smul_mem _ α modeU_mem) (Submodule.smul_mem _ β modeY_mem)
-
-theorem waveOf_modeComb (α β : ℝ) :
-    waveOf (modeComb α β) = modeComb (-(8 * π ^ 2) * β) α := by
-  rw [modeComb, ← extOp_wave, extOp_add_smul α β modeU_mem modeY_mem, extOp_wave, waveOf_modeU,
-    waveOf_modeY, smul_smul, modeComb, add_comm, mul_comm]
-
-theorem iterate_waveOf_modeComb (j : ℕ) (α β : ℝ) :
-    ∃ α' β', waveOf^[j] (modeComb α β) = modeComb α' β' := by
-  induction j generalizing α β with
-  | zero => exact ⟨α, β, rfl⟩
-  | succ j ih =>
-    obtain ⟨α', β', h⟩ := ih (-(8 * π ^ 2) * β) α
-    refine ⟨α', β', ?_⟩
-    change waveOf^[j] (waveOf (modeComb α β)) = _
-    rw [waveOf_modeComb, h]
-
-theorem compML_modeComb (α β : ℝ) : compML (modeComb α β) = 0 := by
-  rw [modeComb, map_add, map_smul, map_smul]
-  change α • (0 : W2) + β • (0 : W2) = 0
-  simp
-
-theorem comp0_modeComb (α β : ℝ) : comp0 (modeComb α β) = 0 := by
-  change comp0L (modeComb α β) = 0
-  rw [modeComb, map_add, map_smul, map_smul]
-  change α • (0 : bggHilb.Γbar) + β • (0 : bggHilb.Γbar) = 0
-  simp
-
-theorem comp1_modeComb (α β : ℝ) : comp1 (modeComb α β) = α • incl1 tangentialU := by
-  change comp1L (modeComb α β) = _
-  rw [modeComb, map_add, map_smul, map_smul]
-  change α • incl1 tangentialU + β • (0 : Wv W1) = _
-  simp
-
-/-- **The multiplier of every combination vanishes** (`div u = 0` row by row: `⟪u, dψ⟫ = 0`). -/
-theorem multOf_modeComb (α β : ℝ) (μ : U1) :
-    multOf (aOf (modeComb α β)) (bOf (modeComb α β)) μ = 0 := by
-  have ha : aOf (modeComb α β) = 0 := by
-    rw [aOf, waveOf_modeComb, comp0_modeComb]; simp
-  rw [multOf_apply, ha, inner_zero_left, zero_sub, neg_eq_zero, bOf, comp1_modeComb,
-    inner_smul_left, ← inner_wv_U1, inner_tangentialU_dt0, mul_zero]
-
-/-- The frequency `ω = 2√2 π` of the mode (`ω² = 8π²`). -/
-def modeFreq : ℝ := 2 * √2 * π
-
-theorem modeFreq_pos : 0 < modeFreq := by unfold modeFreq; positivity
-
-theorem modeFreq_sq : modeFreq ^ 2 = 8 * π ^ 2 := by
-  unfold modeFreq
-  rw [mul_pow, mul_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]; ring
-
-/-- **The explicit solution** `U(t) = cos(ωt) (0, u, 0) + sin(ωt) ω⁻¹ (0, 0, (0, du))`. -/
-def modeG (t : ℝ) : WS := modeComb (Real.cos (modeFreq * t)) (Real.sin (modeFreq * t) / modeFreq)
-
-theorem isStrongSolution_modeG (I : Set ℝ) :
-    Evolution.IsStrongSolution formsShort.wave I (fun _ => 0) modeG := by
-  refine Evolution.IsStrongSolution.of_deriv fun t _ => ⟨formsShort.wave ⟨_, modeComb_mem _ _⟩,
-    formsShort.wave.mem_graph ⟨_, modeComb_mem _ _⟩, ?_⟩
-  rw [← waveOf_eq (modeComb_mem _ _), waveOf_modeComb]
-  simp only [add_zero]
-  have hω := modeFreq_pos
-  have hc : HasDerivAt (fun r => Real.cos (modeFreq * r)) (-(modeFreq * Real.sin (modeFreq * t)))
-      t := by
-    have := ((hasDerivAt_id' t).const_mul modeFreq).cos
-    convert this using 1; ring
-  have hs : HasDerivAt (fun r => Real.sin (modeFreq * r) / modeFreq) (Real.cos (modeFreq * t))
-      t := by
-    have := (((hasDerivAt_id' t).const_mul modeFreq).sin).div_const modeFreq
-    convert this using 1; field_simp
-  have h := (hc.smul_const modeU).add (hs.smul_const modeY)
-  refine h.hasDerivWithinAt.congr_deriv ?_
-  rw [modeComb, mul_div_assoc', ← modeFreq_sq]
-  congr 1
-  congr 1
-  field_simp
-
-theorem modeG_zero : modeG 0 = modeU := by simp [modeG, modeComb]
-
-theorem memDomainPow_modeU : MemDomainPow formsShort.wave 3 modeU := by
-  refine ⟨modeU_mem, ?_⟩
-  change MemDomainPow formsShort.wave 2 (waveOf modeU)
-  rw [waveOf_modeU]
-  refine ⟨modeY_mem, ?_⟩
-  change MemDomainPow formsShort.wave 1 (waveOf modeY)
-  rw [waveOf_modeY]
-  exact ⟨Submodule.smul_mem _ _ modeU_mem, trivial⟩
-
-theorem waveOrbit_modeU {T : ℝ} : ∀ t ∈ Icc 0 T, waveOrbit modeU t = modeG t :=
-  (isStrongSolution_waveOrbit memDomainPow_modeU T).unique
-    formsShort.isSkewAdjoint_wave.isDissipative (isStrongSolution_modeG _)
-    (by rw [waveOrbit_zero, modeG_zero])
-
-theorem dt1_tangentialU_ne_zero : bggSegment.dt1 tangentialU ≠ 0 := by
-  intro h
-  have e := inner_dt1_tangentialU tangentialU
-  rw [h, inner_zero_left, waveTangentialSrc_eq, inner_smul_left, real_inner_self_eq_norm_sq,
-    norm_incl1] at e
-  have hn : ‖tangentialU‖ ≠ 0 := norm_ne_zero_iff.2 tangentialU_ne_zero
-  have hpi := Real.pi_pos
-  have : (8 * π ^ 2 : ℝ) * ‖tangentialU‖ ^ 2 = 0 := by simpa using e.symm
-  rcases mul_eq_zero.1 this with h1 | h1
-  · nlinarith
-  · exact hn (pow_eq_zero_iff (by norm_num) |>.1 h1)
-
-/-- **The mode is not stationary**: `U(t) ≠ U(0)` as soon as `sin(ωt) ≠ 0`. -/
-theorem modeG_ne_modeU {t : ℝ} (ht : Real.sin (modeFreq * t) ≠ 0) : modeG t ≠ modeU := by
-  intro h
-  have h2 := congrArg comp2 h
-  change comp2L (modeG t) = comp2L modeU at h2
-  rw [modeG, modeComb, map_add, map_smul, map_smul] at h2
-  change Real.cos (modeFreq * t) • (0 : WithLp 2 (W2 × Wv W2)) +
-    (Real.sin (modeFreq * t) / modeFreq) •
-      (WithLp.toLp 2 ((0 : W2), bggSegment.dt1 tangentialU) : WithLp 2 (W2 × Wv W2)) = 0 at h2
-  rw [smul_zero, zero_add, smul_eq_zero] at h2
-  rcases h2 with h2 | h2
-  · exact ht (by have := modeFreq_pos; field_simp at h2; simpa using h2)
-  · have := congrArg (fun w : WithLp 2 (W2 × Wv W2) => (WithLp.ofLp w).2) h2
-    exact dt1_tangentialU_ne_zero this
-
-end Mode
-
-/-! ### Non-vacuity, and the kernel obstruction for the top rows -/
-
-section NonVacuity
-
-attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
-  ShortHilbertComplex.instIsScalarTowerRealW3
-
-set_option maxHeartbeats 4000000
-
-open Real
-
-theorem multOf_waveOrbit_modeU {T t : ℝ} (ht : t ∈ Icc 0 T) (j : ℕ) (μ : U1) :
-    multOf (aOf (waveOf^[j] (waveOrbit modeU t))) (bOf (waveOf^[j] (waveOrbit modeU t))) μ = 0 := by
-  rw [waveOrbit_modeU t ht, modeG]
-  obtain ⟨α, β, h⟩ := iterate_waveOf_modeComb j (Real.cos (modeFreq * t))
-    (Real.sin (modeFreq * t) / modeFreq)
-  rw [h, multOf_modeComb]
-
-theorem compML_waveOrbit_modeU {T t : ℝ} (ht : t ∈ Icc 0 T) (j : ℕ) :
-    compML (waveOf^[j] (waveOrbit modeU t)) = 0 := by
-  rw [waveOrbit_modeU t ht, modeG]
-  obtain ⟨α, β, h⟩ := iterate_waveOf_modeComb j (Real.cos (modeFreq * t))
-    (Real.sin (modeFreq * t) / modeFreq)
-  rw [h, compML_modeComb]
-
-theorem compρL_modeU (a : Fin 3) : compρL modeU a = 0 := rfl
-
-/-- `ω t₀ ∈ (0, π/2]` for `t₀ = min T (π / (2ω))`. -/
-theorem sin_modeFreq_min_ne_zero {T : ℝ} (hT0 : 0 < T) :
-    Real.sin (modeFreq * min T (π / (2 * modeFreq))) ≠ 0 := by
-  have hω := modeFreq_pos
-  have hpi := Real.pi_pos
-  refine (Real.sin_pos_of_pos_of_lt_pi (by positivity) ?_).ne'
-  calc modeFreq * min T (π / (2 * modeFreq)) ≤ modeFreq * (π / (2 * modeFreq)) :=
-        mul_le_mul_of_nonneg_left (min_le_right _ _) hω.le
-    _ = π / 2 := by field_simp
-    _ < π := by linarith
 
 variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
-
-/-- **Non-vacuity of `waveFEM_rate_of_mem_domain`**: the hypotheses hold, with `Λ = 0`, for the
-non-stationary standing wave `U(t) = cos(ωt) (0, u, 0) + ω⁻¹ sin(ωt) (0, 0, (0, du))`,
-`u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)` (`tangentialU`, `ω² = 8π²`), whose orbit is
-`waveOrbit_modeU`: the multipliers vanish (`div u = 0`), `M ≡ 0`, `ρ(0) = 0`; so the scheme (6.5)
-converges at `O(h)` to it, with a constant `K (Σ_{j ≤ 3} ‖Lʲ U₀‖)`. -/
-theorem waveFEM_rate_of_mem_domain_nonvacuous :
-    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T),
-      (∃ t ∈ Icc 0 T, waveOrbit modeU t ≠ modeU) ∧
-      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
-        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
-          (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
-            (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
-            (Feec.BGG.ellipticRhs ((cubeFEM hT hB N).ellipticDataH
-              ((orbitExact memDomainPow_modeU T).σ 0) ((orbitExact memDomainPow_modeU T).φ 0)
-              ((orbitExact memDomainPow_modeU T).u 0) ((orbitExact memDomainPow_modeU T).M 0)
-              ((orbitExact memDomainPow_modeU T).ρ 0) ((orbitExact memDomainPow_modeU T).ℓ 0))
-              0)).1.1 ∧
-        ∀ t ∈ Icc 0 T, √(‖(orbitExact memDomainPow_modeU T).σ t - sh.σ t‖ ^ 2 +
-          ‖(orbitExact memDomainPow_modeU T).u t - sh.u t‖ ^ 2 +
-          ‖(orbitExact memDomainPow_modeU T).M t - sh.M t‖ ^ 2 +
-          ‖(orbitExact memDomainPow_modeU T).ρ t - sh.ρ t‖ ^ 2) ≤
-            K * domNorm3 modeU * (1 + t) * meshSize N := by
-  have hrate := waveFEM_rate_of_mem_domain hT hB
-  obtain ⟨K, hK⟩ := hrate
-  have hK0 := hK.1
-  refine ⟨K, hK0, fun N T hT0 => ⟨?_, ?_⟩⟩
-  · have hω := modeFreq_pos
-    refine ⟨min T (π / (2 * modeFreq)), ⟨by positivity, min_le_left _ _⟩, ?_⟩
-    rw [waveOrbit_modeU _ ⟨by positivity, min_le_left _ _⟩]
-    exact modeG_ne_modeU (sin_modeFreq_min_ne_zero hT0)
-  · have hpt : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT0.le⟩
-    have hm0 : ∀ μ : U1, |multOf (aOf modeU) (bOf modeU) μ| ≤ 0 * ‖μ‖ := fun μ => by
-      have h := multOf_waveOrbit_modeU hpt 0 μ
-      rw [Function.iterate_zero_apply, waveOrbit_zero] at h
-      rw [h, abs_zero, zero_mul]
-    have hm : ∀ t ∈ Icc 0 T, ∀ j, 1 ≤ j → j ≤ 2 → ∀ μ : U1,
-        |multOf (aOf (waveOf^[j] (waveOrbit modeU t))) (bOf (waveOf^[j] (waveOrbit modeU t))) μ|
-          ≤ 0 * ‖μ‖ := fun t ht j _ _ μ => by
-      rw [multOf_waveOrbit_modeU ht, abs_zero, zero_mul]
-    have hM0 : SobRel 1 0 2 (compML modeU) := by
-      have h := compML_waveOrbit_modeU hpt 0
-      rw [Function.iterate_zero_apply, waveOrbit_zero] at h
-      rw [h]; exact sobRel_zero le_rfl 2
-    have hM : ∀ t ∈ Icc 0 T, ∀ j, 1 ≤ j → j ≤ 2 →
-        SobRel 1 0 2 (compML (waveOf^[j] (waveOrbit modeU t))) := fun t ht j _ _ => by
-      rw [compML_waveOrbit_modeU ht j]; exact sobRel_zero le_rfl 2
-    have hP : projKer modeU = 0 := by
-      have e : modeU = (-(8 * π ^ 2))⁻¹ • formsShort.wave ⟨modeY, modeY_mem⟩ := by
-        rw [← waveOf_eq modeY_mem, waveOf_modeY, smul_smul,
-          inv_mul_cancel₀ (neg_ne_zero.2 (by positivity)), one_smul]
-      rw [e]
-      exact projKerOf_smul_eq_zero formsShort.isSkewAdjoint_wave _ _
-    have hρ : ∀ a, SobRel 1 0 2 (compρL (projKer modeU) a) := fun a => by
-      rw [hP, map_zero, PiLp.zero_apply]; exact sobRel_zero le_rfl 2
-    have hres := hK.2 N hT0 memDomainPow_modeU le_rfl hm0 hm hM0 hM hρ
-    obtain ⟨sh, hsh⟩ := hres
-    have h1 := hsh.1
-    have h2 := hsh.2
-    exact ⟨sh, h1, fun t ht => by simpa only [mul_zero, add_zero] using h2 t ht⟩
 
 /-- **(c) `D(L^∞)` does not control the top rows**: the stationary state `(0, 0, (0, (q, 0, 0)))`,
 `q` the sawtooth 2-form `sawW2` (`d¹* q = 0`), lies in the kernel of `L`, hence in every `D(Lᵏ)`,
@@ -1924,6 +1289,6 @@ theorem waveFEM_rate_of_mem_domain_cube :
   obtain ⟨p, C, hT, hB, -⟩ := hrows
   exact ⟨p, C, hT, hB, waveFEM_rate_of_mem_domain hT hB⟩
 
-end NonVacuity
+end KernelObstruction
 
 end Feec.EinsteinBianchi.WaveFEM

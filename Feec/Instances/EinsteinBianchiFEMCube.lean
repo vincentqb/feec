@@ -63,7 +63,6 @@ abbrev CEnergy : Type := EState W0 (Wv W1) W2 (Wv W2)
 /-- Shortcut instances (synthesis is expensive). -/
 scoped instance instIPS_W0c : InnerProductSpace ℝ W0 := inferInstance
 scoped instance instIPS_WvW1c : InnerProductSpace ℝ (Wv W1) := inferInstance
-scoped instance instIPS_CEnergy : InnerProductSpace ℝ CEnergy := inferInstance
 
 /-! ### The forms model total space and energy vectors -/
 
@@ -86,14 +85,6 @@ def vecInv : CEnergy →L[ℝ] WS :=
       | 2 => (WithLp.prodContinuousLinearEquiv 2 ℝ W2 (Wv W2)).symm.toContinuousLinearMap ∘L
           (ContinuousLinearMap.snd ℝ (Wv W1) _ ∘L (ContinuousLinearMap.snd ℝ W0 _) ∘L
             EState.mkL.symm.toContinuousLinearMap)
-
-theorem comp0_vecInv (z : CEnergy) : comp0 (vecInv z) = -gammaTop.symm z.σ := rfl
-theorem comp1_vecInv (z : CEnergy) : comp1 (vecInv z) = z.u := rfl
-theorem compML_vecInv (z : CEnergy) : compML (vecInv z) = z.M := rfl
-theorem compρL_vecInv (z : CEnergy) : compρL (vecInv z) = z.ρ := rfl
-
-theorem vecL_apply (x : WS) :
-    vecL x = EState.mk (-((comp0 x : bggHilb.Γbar) : W0)) (comp1 x) (compML x) (compρL x) := rfl
 
 theorem vecL_vecInv (z : CEnergy) : vecL (vecInv z) = z := by
   refine EState.ext ?_ rfl rfl rfl
@@ -194,16 +185,11 @@ theorem inner_cubeEmb (N : ℕ) (v w : cubeHidden hT hB N) :
     cubeHidden hT hB N →ₗᵢ[ℝ] PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
       (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))) v w
 
-theorem inner_cubeEmb_adjoint (N : ℕ) (v : cubeHidden hT hB N)
-    (y : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
-      (W2B ℝ (cubeDomain 3)))) :
-    ⟪cubeEmb hT hB N v, y⟫ = ⟪v, (cubeEmb hT hB N).adjoint y⟫ :=
-  (ContinuousLinearMap.adjoint_inner_right (cubeEmb hT hB N) v y).symm
-
 theorem adjoint_cubeEmb_apply (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N).adjoint (cubeEmb hT hB N v) = v :=
   ext_inner_left ℝ fun w =>
-    ((inner_cubeEmb_adjoint hT hB N w (cubeEmb hT hB N v)).symm).trans (inner_cubeEmb hT hB N w v)
+    (ContinuousLinearMap.adjoint_inner_right (cubeEmb hT hB N) w (cubeEmb hT hB N v)).trans
+      (inner_cubeEmb hT hB N w v)
 
 theorem norm_cubeEmb_le (N : ℕ) : ‖cubeEmb hT hB N‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun v =>
@@ -233,11 +219,9 @@ def standardCubeApprox : ApproxFEEC matrixComplex ℕ where
   bound := ⟨1, fun N => ⟨norm_cubeEmb_le hT hB N,
     (ContinuousLinearMap.adjoint.norm_map (cubeEmb hT hB N)).trans_le (norm_cubeEmb_le hT hB N)⟩⟩
 
-theorem standardCubeApprox_K : (standardCubeApprox hT hB).K = thesisTSD := rfl
-
 theorem standardCubeApprox_isOrthogonal : ApproxFEEC.IsOrthogonal (standardCubeApprox hT hB) where
   inner_incl N a b := inner_cubeEmb hT hB N a b
-  inner_incl_left N a y := inner_cubeEmb_adjoint hT hB N a y
+  inner_incl_left _ a y := (ContinuousLinearMap.adjoint_inner_right _ a y).symm
 
 theorem cubeSource_zero (N : ℕ) (t : ℝ) : cubeSource hT hB N 0 t = 0 :=
   ext_inner_right ℝ fun v => (inner_cubeSource hT hB N 0 t v).trans
@@ -253,10 +237,6 @@ def cubeSourceFree (N : ℕ) {T : ℝ}
 abbrev cState (N : ℕ) {T : ℝ} {g : ℝ → (cubeFEM hT hB N).Vt1h}
     (s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T g) (t : ℝ) : CEnergy :=
   EState.mk ((s.σ t : U0) : W0) (incl1 (s.u t : Wv U1)) (s.M t : W2) (s.ρ t : Wv W2)
-
-theorem cState_eq_dvec (N : ℕ) {T : ℝ} {g : ℝ → (cubeFEM hT hB N).Vt1h}
-    (s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T g) (t : ℝ) :
-    cState hT hB N s t = dvec (cubeFEM hT hB N) s t := rfl
 
 set_option maxHeartbeats 4000000 in
 /-- **The discrete solution of `standardCubeApprox` is (6.5)**: from the initial state of a

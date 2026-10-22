@@ -12,7 +12,7 @@ For the approximating FEEC discretization `mirrorFEMApprox` of the mirror scheme
   (`Feec.HilbertComplex.ApproxFEEC.orbitCore`); its approximation hypothesis is the
   model convergence theorem `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM`, applied to the
   real part `ξ₀` and to the imaginary part `-i ξ₀` of the datum (`mirrorFEM_hconv`); its closure
-  is the whole TSD constraint (`mirrorFEMCore_closure`);
+  is the whole TSD constraint (`topologicalClosure_tsdQℝ_inf_domainSq`);
 * **the rate classes** `mirrorFEMRate` (TSD data of `D(L³)`, order `1`, from
   `mirror_waveFEM_rate_of_mem_domain`) and `mirrorFEMRateSobolev` (TSD data in `H^{2+s}`,
   order `s ≤ 1`, from `mirror_waveFEM_rate_sobolev_of_add_two`).
@@ -116,9 +116,6 @@ def tsdDatumOf {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.doma
     have e := complexQℝ_wave_apply ⟨x, h1⟩
     exact mem_complexQℝ_domain.1 (e ▸ h2)
   tsd := hx.1
-
-theorem tsdDatumOf_U₀ {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) :
-    (tsdDatumOf hx).U₀ = x := rfl
 
 theorem neg_I_smul_mem {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) :
     -Complex.I • x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq := by
@@ -229,9 +226,6 @@ def mirrorFEMCore : (mirrorFEMApprox hT hB).Core :=
   ApproxFEEC.orbitCore (mirrorFEMApprox_isOrthogonal hT hB) (tsdQℝ ⊓ complexQℝ.wave.domainSq)
     (mirrorFEM_hconv hT hB)
 
-theorem mirrorFEMCore_data :
-    (mirrorFEMCore hT hB).Data = tsdQℝ ⊓ complexQℝ.wave.domainSq := rfl
-
 /-- The TSD data of `D(L²)` are dense in the TSD constraint (`D(L²) ∩ K` is dense in the reducing
 `K`). -/
 theorem topologicalClosure_tsdQℝ_inf_domainSq :
@@ -241,11 +235,6 @@ theorem topologicalClosure_tsdQℝ_inf_domainSq :
   have h := complexQℝ.isSkewAdjoint_wave.subset_closure_domainSq_inf isReducing_tsdQℝ hk
   rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, inf_comm]
   exact h
-
-/-- **The closure of the core is the TSD constraint.** -/
-theorem mirrorFEMCore_closure :
-    (mirrorFEMCore hT hB).Data.topologicalClosure = tsdQℝ :=
-  topologicalClosure_tsdQℝ_inf_domainSq
 
 set_option maxHeartbeats 4000000 in
 /-- **The discrete solutions of `mirrorFEMApprox` are the scheme (6.5)**: from every discrete
@@ -377,22 +366,6 @@ def mirrorFEMRate (T : ℝ) (hT0 : 0 < T) : (mirrorFEMApprox hT hB).RateClass T 
   ApproxFEEC.orbitRate (mirrorFEMApprox_isOrthogonal hT hB) mirrorL3Data mirrorL3Norm meshSize 1
     (2 * mirrorRateK hT hB * (1 + T)) (mirrorFEM_hrate hT hB hT0)
 
-theorem mirrorFEMRate_data (T : ℝ) (hT0 : 0 < T) :
-    (mirrorFEMRate hT hB T hT0).Data = mirrorL3Data := rfl
-
-theorem mirrorFEMRate_α (T : ℝ) (hT0 : 0 < T) : (mirrorFEMRate hT hB T hT0).α = 1 := rfl
-
-theorem mirrorFEMRate_C (T : ℝ) (hT0 : 0 < T) :
-    (mirrorFEMRate hT hB T hT0).C = 3 * (2 * mirrorRateK hT hB * (1 + T)) := rfl
-
-theorem mirrorFEMRate_C' (T : ℝ) (hT0 : 0 < T) : (mirrorFEMRate hT hB T hT0).C' = 0 := rfl
-
-theorem mirrorFEMRate_meshSize (T : ℝ) (hT0 : 0 < T) :
-    (mirrorFEMRate hT hB T hT0).meshSize = meshSize := rfl
-
-theorem mirrorFEMRate_classNorm (T : ℝ) (hT0 : 0 < T) :
-    (mirrorFEMRate hT hB T hT0).classNorm = mirrorL3Norm := rfl
-
 /-! ### Sobolev rates -/
 
 theorem fibreEnergy_smul (c : ℂ) (X : PiLp 2 Feec.Models.Torus.BGG.Space) (m : Fin 3 → ℤ) :
@@ -478,14 +451,5 @@ def mirrorFEMRateSobolev (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 
   ApproxFEEC.orbitRate (mirrorFEMApprox_isOrthogonal hT hB) (mirrorSobData s)
     (fun x => √(sobState (2 + s) x)) meshSize s (2 * mirrorSobK hT hB * (1 + T))
     (mirrorFEM_hrate_sobolev hT hB hT0 hs0 hs1)
-
-theorem mirrorFEMRateSobolev_data (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).Data = mirrorSobData s := rfl
-
-theorem mirrorFEMRateSobolev_α (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).α = s := rfl
-
-theorem mirrorFEMRateSobolev_C' (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).C' = 0 := rfl
 
 end Feec.Instances.EinsteinBianchi.FEM

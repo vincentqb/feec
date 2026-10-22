@@ -16,8 +16,7 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
 
 * `cubeWaveData`: the data of (6.1)/(6.2) on `Q` (`Feec.BGG.WaveData`);
   `exists_multiplierSolution`: every solution of (6.1) has a unique multiplier `Λ(t) ∈ W̌¹`
-  (corrected Prop 6.1); `exactWave_toMultiplierSolution`: the classical solutions with `L²`
-  multiplier of `Feec.Models.Cube.WeakSymmetry.cubeWave_rate` solve (6.2) (and (6.1)).
+  (corrected Prop 6.1).
 * `negNorm_le_tripleNorm`: `|||λ||| = ‖Jλ‖` is equivalent to `‖div λ‖_{H⁻¹} + ‖λ‖_{H⁻¹}`
   (`W̌¹ = H⁻¹(div, V)` of §6.3); `denseRange_B`, `J_injective`: `B = (d, −S)` has dense range, so
   `W̌¹` is the completion of `(L²Λ¹(Q), |||·|||)`; `not_isClosed_range_B`: the range of `B` is not
@@ -36,10 +35,9 @@ conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
 * **`waveFEM`**: under `CurlPotential`, for one smoother: (5.4) and uniform bounds; `grad`
   injective and `S₀,ₕ` onto; corrected Prop 6.2 for (6.5); energy stability; `O(h)` convergence
   for classical solutions whose states and time derivatives are `C²` and vanish outside `Q`
-  (flat at `∂Q`). **`waveFEM_nonvacuous`**: a nontrivial manufactured solution meets
-  all hypotheses and its discrete `σₕ(t)` converge and are nonzero for large `N`.
-  `CurlPotential` is proved: the unconditional versions are `waveFEM_cube`,
-  `waveFEM_nonvacuous_cube` and `bgg_wave_existsUnique_cube`
+  (flat at `∂Q`).
+  `CurlPotential` is proved: the unconditional versions are `waveFEM_cube` and
+  `bgg_wave_existsUnique_cube`
   (`Feec.Physics.EinsteinBianchi.Unconditional`).
 
 ## Gaps
@@ -264,69 +262,6 @@ theorem not_isClosed_range_B : ¬ IsClosed (Set.range cubeWaveData.B) := by
 
 /-! ### Classical solutions of (6.2) with `L²` multiplier are solutions of (6.1)/(6.2) -/
 
-set_option maxHeartbeats 4000000 in
-/-- **A classical solution of (6.2) with an `L²` multiplier `λ(t)`** (`Feec.BGG.ExactWave`, the
-exact solutions of `cubeWave_rate`) **is a solution of the multiplier problem (6.2)** of
-`cubeWaveData`, with `Λ(t) = Jλ(t) ∈ W̌¹` and the same trajectories (read in the graph spaces);
-in particular (`toSolution`) a solution of (6.1). -/
-def exactWave_toMultiplierSolution {T : ℝ} {f : ℝ → Wv W1}
-    (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (lam : ℝ → W1)
-    (hℓ : ∀ t μ, s.ℓ t μ = ⟪lam t, (μ : W1)⟫) :
-    cubeWaveData.MultiplierSolution T f where
-  σ t := D0.toGraphSpace (s.σ t)
-  φ t := toGraphVec0 (s.φ t)
-  u := s.u
-  M := s.M
-  ρ := s.ρ
-  σ' t := (s.σ' t : W0)
-  u' t := incl1 (s.u' t)
-  M' := s.M'
-  ρ' := s.ρ'
-  cσ := (continuous_subtype_val.comp_continuousOn s.cσ).congr fun t _ =>
-    LinearPMap.graphFst_toGraphSpace D0 (s.σ t)
-  cu := (incl1CLM.continuous.comp_continuousOn s.cu).congr fun t _ => rfl
-  cM := s.cM
-  cρ := s.cρ
-  dσ t ht := by
-    have h := (D0.domain.subtypeL.hasFDerivAt).comp_hasDerivWithinAt t (s.dσ t ht)
-    exact h.congr (fun r _ => LinearPMap.graphFst_toGraphSpace D0 (s.σ r))
-      (LinearPMap.graphFst_toGraphSpace D0 (s.σ t))
-  du t ht := by
-    have h := incl1CLM.hasFDerivAt.comp_hasDerivWithinAt t (s.du t ht)
-    exact h.congr (fun r _ => rfl) rfl
-  dM := s.dM
-  dρ := s.dρ
-  eb t ht v := by
-    have h := s.eb t ht v
-    change ⟪incl1 (s.u' t), incl1 v⟫ + ⟪ιt1 (bggDt0 (toGraphVec0 (s.φ t))), incl1 v⟫ +
-      ⟪s.M t, segS1 v⟫ + ⟪s.ρ t, piMap segD1 v⟫ = ⟪f t, incl1 v⟫
-    rw [ιt1_bggDt0_toGraphVec0, ← inner_wv_U1, ← inner_wv_U1]
-    exact h
-  ec := s.ec
-  ed := s.ed
-  Λ t := ⟨cubeWaveData.J (lam t), cubeWaveData.J_mem_Wcheck _⟩
-  ea t ht τ ψ := by
-    have h := s.ea t ht (graphDom D0 τ) (rp ψ)
-    rw [hℓ] at h
-    change ⟪(s.σ' t : W0), D0.graphFst τ⟫ - ⟪incl1 (s.u t), ιt1 (bggDt0 ψ)⟫ -
-      cubeWaveData.J (lam t) (WithLp.toLp 2 (τ, ψ)) = 0
-    rw [Feec.BGG.WaveData.J_apply, Feec.BGG.WaveData.B_toLp]
-    change ⟪(s.σ' t : W0), D0.graphFst τ⟫ - ⟪incl1 (s.u t), ιt1 (bggDt0 ψ)⟫ -
-      ⟪lam t, D1.graphFst (bggD0 τ) - D1.graphFst (bggS0 ψ)⟫ = 0
-    have e1 : D1.graphFst (bggD0 τ) - D1.graphFst (bggS0 ψ) =
-        ((bggSegment.d0 (graphDom D0 τ) - bggSegment.S0 (rp ψ) : U1) : W1) := by
-      rw [graphFst_bggD0, graphFst_bggS0, ← incl0_rp, Submodule.coe_sub, ← apply_graphDom D0 τ]
-      rfl
-    rw [e1, ιt1_bggDt0, ← inner_wv_U1]
-    exact h
-  ee t ht ζ := by
-    have h := s.ee t ht
-    have e : cubeWaveData.d0 (D0.toGraphSpace (s.σ t)) =
-        cubeWaveData.S0 (toGraphVec0 (s.φ t)) := by
-      rw [cubeWaveData_d0, cubeWaveData_S0, ιt0_toGraphVec0, LinearPMap.graphSnd_toGraphSpace]
-      exact congrArg Subtype.val h
-    rw [e, sub_self, inner_zero_left]
-
 /-! ### Existence for the Hodge wave equation of (5.1) on the cube (Stone) -/
 
 section Stone
@@ -412,53 +347,6 @@ theorem waveFEM (hR : CurlPotential) :
     fun N => ⟨cubeWave_dt0_injective hT hB N, cubeWave_S0_surjective hT hB N⟩,
     fun N _ hT0 _ hf σ₀ u₀ M₀ ρ₀ => cubeWave_exists_iff_compatible_u hT hB N hT0 hf σ₀ u₀ M₀ ρ₀,
     fun N _ _ s hf => s.sqrt_energy_le hf, cubeWave_rate hT hB hCR.1 hCR.2⟩
-
-set_option maxHeartbeats 4000000 in
-/-- **Non-vacuity of `waveFEM`** (for any common smoother): the manufactured classical solution
-`waveManufactured T` of (6.2) on the cube (`σ(t) = t σ̄`, `φ(t) = t φ̄`, `u = ū`, `ρ(t) = t curl ū`,
-`λ = dg`, from the coupled static solution) has `σ(t), φ(t) ≠ 0` for `t ∈ (0,T]` and `u, λ ≠ 0`,
-meets every hypothesis of item 5 of `waveFEM`, and under `CurlPotential` the discrete solutions of
-(6.5) from the elliptic projection of its initial state converge at rate `h_N`, with `σₕ(t) ≠ 0`
-for all large `N` at every `t ∈ (0,T]`. -/
-theorem waveFEM_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) (hR : CurlPotential) {T : ℝ}
-    (hT0 : 0 < T) :
-    (∀ t ∈ Ioc 0 T, (waveManufactured T).σ t ≠ 0 ∧ (waveManufactured T).φ t ≠ 0) ∧
-    (∀ t, (waveManufactured T).u t ≠ 0) ∧ coupledMult ≠ 0 ∧
-    ∃ (K : ℝ) (sh : (N : ℕ) → Feec.BGG.DiscreteSolution (cubeWave hT hB N) T
-        (cubeSource hT hB N fun t => incl1 (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))),
-      (∀ N, ∀ t ∈ Icc 0 T,
-        √(‖(waveManufactured T).σ t - (sh N).σ t‖ ^ 2 +
-          ‖(waveManufactured T).u t - (sh N).u t‖ ^ 2 +
-          ‖(waveManufactured T).M t - (sh N).M t‖ ^ 2 +
-          ‖(waveManufactured T).ρ t - (sh N).ρ t‖ ^ 2) ≤ K * (1 + t) * meshSize N) ∧
-      ∀ t ∈ Ioc 0 T, ∀ᶠ N in atTop, ((sh N).σ t : U0) ≠ 0 := by
-  have hyps := waveManufactured_hyps hT0
-  obtain ⟨L, hL⟩ := hyps
-  have hL0 := hL.1
-  have hsm := hL.2.1
-  have hmult := hL.2.2.1
-  have hne := hL.2.2.2.1
-  have hCRex := hR.exists_bound
-  obtain ⟨CR, hCR⟩ := hCRex
-  have hrate := cubeWave_rate hT hB hCR.1 hCR.2
-  obtain ⟨K, hK0, hK⟩ := hrate
-  have hf : ContinuousOn (fun t : ℝ => incl1 (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))
-      (Icc 0 T) := by
-    simp only [map_smul]
-    exact (continuous_id.smul continuous_const).continuousOn
-  have hsol := fun N => hK N hT0 hf (waveManufactured T) hL0 hsm hmult
-  choose sh _ hsh using hsol
-  refine ⟨hne, hL.2.2.2.2.1, hL.2.2.2.2.2, K * L, sh, fun N t ht => ?_, fun t ht => ?_⟩
-  · refine (hsh N t ht).trans (le_of_eq ?_); ring
-  · refine eventually_ne_zero_of_le (A := K * L * (1 + t)) (B := 1) (hne t ht).1 fun N => ?_
-    have h := hsh N t (Ioc_subset_Icc_self ht)
-    refine le_trans ?_ (h.trans (le_of_eq (by ring)))
-    have a1 := sq_nonneg (‖(waveManufactured T).u t - (sh N).u t‖)
-    have a2 := sq_nonneg (‖(waveManufactured T).M t - (sh N).M t‖)
-    have a3 := sq_nonneg (‖(waveManufactured T).ρ t - (sh N).ρ t‖)
-    exact Real.le_sqrt_of_sq_le (by nlinarith)
 
 /-! ### `Γ ≅ H̊²(Q)` -/
 

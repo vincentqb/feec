@@ -104,9 +104,6 @@ def cubeExact {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
 theorem srcFun_zero_apply (t : ℝ) (v : Wv U1) : srcFun 0 t v = 0 := by
   rw [srcFun_apply, Pi.zero_apply, inner_zero_left]
 
-theorem hg_cube (T : ℝ) : ∀ t ∈ Ico 0 T, ∀ v, srcFun 0 t v = 0 :=
-  fun t _ v => srcFun_zero_apply t v
-
 /-! ### The elliptic trajectory -/
 
 variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
@@ -150,7 +147,7 @@ theorem norm_cEll_defect_le (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 �
       cErr' hT hB N hx T t + cErr hT hB N hx T t := by
   with_reducible_and_instances exact (norm_ellDefect_le (cubeFEM hT hB N)
     (cubeWave_dt0_injective hT hB N) (cubeWave_S0_surjective hT hB N) (cubeExact hx (T + 1))
-    (hg_cube (T + 1)) (Icc_sub_Ico_add_one ht))
+    (fun t _ v => srcFun_zero_apply t v) (Icc_sub_Ico_add_one ht))
 
 set_option maxHeartbeats 1000000 in
 /-- The energy error of a hidden state against a classical solution, through the reading map of
@@ -334,13 +331,13 @@ theorem eventually_cErr_le {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDoma
   have HS := bggStability_curlPotentialConst.toHarmonicStability
   refine ⟨?_, ?_⟩
   · have h := norm_sub_ellTraj_le (cubeFEM hT hB N) (cubeWave_dt0_injective hT hB N)
-      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s (hg_cube (T + 1))
+      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s (fun t _ v => srcFun_zero_apply t v)
       (Icc_sub_Ico_add_one ht) (h0 t ht')
       (fun v hv => h2 (s.M t) (Or.inl (mem_image_of_mem _ ht')) v hv)
       (hdat _ (cubeFEM_strangData_le_of_close hT hB N (h3 t ht') θ θ))
     with_reducible_and_instances exact h.trans hb
   · have h := norm_sub_ellTraj'_le (cubeFEM hT hB N) (cubeWave_dt0_injective hT hB N)
-      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s (hg_cube (T + 1))
+      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s (fun t _ v => srcFun_zero_apply t v)
       (Icc_sub_Ico_add_one ht) (h0' t ht')
       (fun v hv => h2 (s.M' t) (Or.inr (mem_image_of_mem _ ht')) v hv)
       (hdat _ (cubeFEM_strangData_le_of_close hT hB N (h4 t ht') θ θ))
@@ -370,9 +367,6 @@ def standardCubeEllCore : (standardCubeApprox hT hB).Core where
     rw [dist_zero_left, Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _)]
     have := norm_cubeEllCmp_defect_le hT hB T hx N ht
     linarith [(h1 t ht).1, (h1 t ht).2]
-
-theorem standardCubeEllCore_data :
-    (standardCubeEllCore hT hB).Data = matrixComplex.wave.domainSq := rfl
 
 theorem dense_standardCubeEllCore : Dense ((standardCubeEllCore hT hB).Data : Set (PiLp 2
     (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)

@@ -16,11 +16,10 @@ without it.
 
 ## Main results
 
-* `Feec.Models.Cube.WeakSymmetry.cubeFEM_rate_tr'`, `cubeFEM_rate_tr_of_bounds'`,
-  `cubeFEM_rate_isSaddle_tr'` (Thm 5.5), `cubeFEM_ellipticProjection_rate_tr'` (the `O(h)` rate of
+* `Feec.Models.Cube.WeakSymmetry.cubeFEM_rate_tr'` (Thm 5.5),
+  `cubeFEM_ellipticProjection_rate_tr'` (the `O(h)` rate of
   the elliptic projection (6.4)), `cubeWave_rate_tr'` (the `O(h)` rate of (6.5));
-* `Feec.EinsteinBianchi.StaticFEM.staticFEM_rate_tr_cube`, `staticFEM_rate_tr_nonvacuous_cube`,
-  `staticFEM_rate_tr_nonvacuous_combined_cube`;
+* `Feec.EinsteinBianchi.StaticFEM.staticFEM_rate_tr_cube`;
 * `Feec.EinsteinBianchi.WaveFEM.waveFEM_rate_tr_cube`, `waveFEM_rate_tr_nonvacuous_cube`.
 
 ## The failing datum is not in the rate class
@@ -62,35 +61,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 1000000 in
-/-- **`cubeFEM_rate_tr_of_bounds`, unconditionally**: with the constant of `curlPotential`
-(`exists_curlPotential_bound`). -/
-theorem cubeFEM_rate_tr_of_bounds' :
-    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
-      {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
-      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
-        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
-      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
-        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
-      bggSegment.d0 σ = bggSegment.S0 φ →
-      IsCsFormTr 0 0 L (σ : W0) → (∀ a, IsCsFormTr 0 0 L (φ a : W0)) →
-      (∀ a, IsCsFormTr 0 1 L (u a : W1)) → IsCsFormTr 0 2 L (bggSegment.S1 u) →
-      ‖lam‖ ≤ L → ‖bggSegment.S1 u‖ ≤ L →
-      (∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖) →
-      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
-      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
-      uh ∈ (cubeFEM hT hB N).Vt1h →
-      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
-          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
-      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
-          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
-      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
-      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
-        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 :=
-  exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_tr_of_bounds hT hB h.1 h.2
-
-set_option maxHeartbeats 1000000 in
 /-- **[QuennevilleBelair2015], Thm 5.5 for solutions with vanishing tangential traces,
 unconditionally**: `cubeFEM_rate_tr` with the constant of `curlPotential`. -/
 theorem cubeFEM_rate_tr' :
@@ -116,31 +86,6 @@ theorem cubeFEM_rate_tr' :
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 :=
   exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_tr hT hB h.1 h.2
-
-set_option maxHeartbeats 1000000 in
-/-- **The rate for the solution of Prop 5.2 with vanishing tangential traces, unconditionally**:
-`cubeFEM_rate_isSaddle_tr` with the constant of `curlPotential`. -/
-theorem cubeFEM_rate_isSaddle_tr' :
-    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
-      0 ≤ L → bggHilb.IsSaddle f x (bggHilb.jW lam) →
-      IsCsFormTr 0 0 L ((graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) : U0) : W0) →
-      (∀ a, IsCsFormTr 0 0 L ((rp (Feec.BGG.pφ V0 Vt0 Vt1 x) a : U0) : W0)) →
-      (∀ a, IsCsFormTr 0 1 L ((rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) a : U1) : W1)) → ‖lam‖ ≤ L →
-      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
-      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
-      uh ∈ (cubeFEM hT hB N).Vt1h →
-      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
-          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
-      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
-          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = ((innerSL ℝ f).toLinearMap ∘ₗ incl1) v) →
-      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
-      Feec.BGG.graphSq bggSegment.d0 (graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) - σh) +
-        Feec.BGG.graphSq bggSegment.dt0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x) - φh) +
-        (cubeFEM hT hB N).gnSq (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) - uh) ≤
-          (K * L * meshSize N) ^ 2 :=
-  exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_isSaddle_tr hT hB h.1 h.2
 
 set_option maxHeartbeats 4000000 in
 /-- **The `O(h)` rate of the elliptic projection (6.4) on the cube, unconditionally**:
@@ -236,53 +181,6 @@ theorem staticFEM_rate_tr_cube :
           (cubeFEM hT hB N).gnSq (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) - uh) ≤
             (K * L * meshSize N) ^ 2 :=
   staticFEM_rate_tr curlPotential
-
-set_option maxHeartbeats 1000000 in
-/-- **Non-vacuity of `staticFEM_rate_tr_cube`**: `staticFEM_rate_tr_nonvacuous` with the regularity
-hypothesis discharged. -/
-theorem staticFEM_rate_tr_nonvacuous_cube {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
-    tangentialU ≠ 0 ∧ (∀ s L, ¬ IsCsFormMin s 1 L ((tangentialU 0 : U1) : W1)) ∧
-    (∃ (K : ℝ) (uh : ℕ → Wv U1), ∀ N, uh N ∈ (cubeFEM hT hB N).Vt1h ∧
-      ∃ (σh : U0) (φh : Wv U0) (lh : U1), σh ∈ (cubeFEM hT hB N).V0h ∧
-        φh ∈ (cubeFEM hT hB N).Vt0h ∧
-        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-          ⟪σh, τ⟫ - ⟪uh N, bggSegment.dt0 ψ⟫ -
-            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) ∧
-        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-          ⟪(cubeFEM hT hB N).S1h (uh N), (cubeFEM hT hB N).S1h v⟫ +
-            ⟪bggSegment.dt1 (uh N), bggSegment.dt1 v⟫ = tangentialDatum v) ∧
-        (∀ μ ∈ (cubeFEM hT hB N).V1h,
-          ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) ∧
-        (cubeFEM hT hB N).gnSq (tangentialU - uh N) ≤ (K * meshSize N) ^ 2) :=
-  let h := staticFEM_rate_tr_nonvacuous hT hB
-  ⟨h.1, h.2.1, h.2.2 curlPotential⟩
-
-set_option maxHeartbeats 2000000 in
-/-- **Non-vacuity of `staticFEM_rate_tr_cube` with every unknown nonzero and non-flat `u`**:
-`staticFEM_rate_tr_nonvacuous_combined` with the regularity hypothesis discharged. -/
-theorem staticFEM_rate_tr_nonvacuous_combined_cube
-    {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)}
-    {C : ℝ} (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
-    coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledMult ≠ 0 ∧
-    (∀ L, ¬ IsCsFormMin 0 1 L ((((coupledu + tangentialU : Wv U1)) 0 : U1) : W1)) ∧
-    (∃ K : ℝ, ∀ N, ∃ (σh : U0) (φh : Wv U0) (uh : Wv U1) (lh : U1),
-      σh ∈ (cubeFEM hT hB N).V0h ∧ φh ∈ (cubeFEM hT hB N).Vt0h ∧ uh ∈ (cubeFEM hT hB N).Vt1h ∧
-        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-          ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
-            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) ∧
-        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-          ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
-            ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = (coupledDatum + tangentialDatum) v) ∧
-        (∀ μ ∈ (cubeFEM hT hB N).V1h,
-          ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) ∧
-        Feec.BGG.graphSq bggSegment.d0 (coupledσ - σh) +
-          Feec.BGG.graphSq bggSegment.dt0 (coupledφ - φh) +
-          (cubeFEM hT hB N).gnSq ((coupledu + tangentialU) - uh) ≤ (K * meshSize N) ^ 2) :=
-  let h := staticFEM_rate_tr_nonvacuous_combined hT hB
-  ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.1, h.2.2.2.2 curlPotential⟩
 
 end Feec.EinsteinBianchi.StaticFEM
 

@@ -123,10 +123,6 @@ def hiddenGauss : Submodule ℝ (HiddenState D) where
     fun τ => by rw [HiddenState.toEState_smul, EState.u_smul, real_inner_smul_left, hx.2 τ,
       mul_zero]⟩
 
-theorem mem_hiddenGauss {x : HiddenState D} : x ∈ hiddenGauss D hdinj hS ↔
-    x.toEState.σ = 0 ∧ ∀ τ : P0, ⟪x.toEState.u, D.dt0 (phiMap D hdinj hS (τ, 0))⟫ = 0 :=
-  Iff.rfl
-
 variable [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt2]
 
 /-- **The discrete differential `𝐝ₕ`** on the hidden space. -/
@@ -202,9 +198,6 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 /-- The pair of subspaces `K ⊕ K`. -/
 def prodSub (K : Submodule ℝ E) : Submodule ℝ (WithLp 2 (E × E)) :=
   (K.prod K).comap (WithLp.linearEquiv 2 ℝ (E × E)).toLinearMap
-
-theorem mem_prodSub {K : Submodule ℝ E} {a b : E} :
-    WithLp.toLp 2 (a, b) ∈ prodSub K ↔ a ∈ K ∧ b ∈ K := Iff.rfl
 
 end Pair
 
@@ -390,7 +383,7 @@ theorem mEll_galerkin (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
           coeH (mirrorFEM hT hB N) v.toEState⟫ := by
     with_reducible_and_instances exact (inner_ellDefect (mirrorFEM hT hB N)
       (mirrorWave_dt0_injective hT hB N) (mirrorWave_S0_surjective hT hB N)
-      (Dd.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht) v)
+      (Dd.exactWave (T + 1)) (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht) v)
   have hd1 := inner_sub_left (𝕜 := ℝ) (coeH (mirrorFEM hT hB N) (mEll' hT hB N Dd T t).toEState)
     (exState' (Dd.exactWave (T + 1)) t) (coeH (mirrorFEM hT hB N) v.toEState)
   have hd2 := inner_sub_left (𝕜 := ℝ) (exState (Dd.exactWave (T + 1)) t)
@@ -519,18 +512,12 @@ def mirrorComplex : ApproxComplexCrime complexQℝ ℕ :=
     (mirrorD hT hB) (mirrorD_D hT hB) (mirrorFEMApprox_L_eq hT hB) (mirrorEllCore hT hB)
     (fun _ hx => hx.2) (mirrorEllCore_galerkin hT hB) (mirrorEllCore_orbit_closure hT hB)
 
-theorem mirrorComplex_K : (mirrorComplex hT hB).K = tsdQℝ := rfl
-
 /-- The discrete solutions of `ofComplexCrime (mirrorComplex)` are those of `mirrorFEMApprox`. -/
 theorem mirrorComplex_sol (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) (t : ℝ) :
     (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N v t =
       (mirrorFEMApprox hT hB).sol N v t :=
   ofComplexCrime_ofGalerkinCore_sol (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ _ _ _ _ _
     _ _ N v t
-
-theorem mirrorComplex_closure :
-    (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)).Data.topologicalClosure = tsdQℝ :=
-  mirrorEllCore_closure hT hB
 
 /-- **The mirror scheme (6.5) through the complex-level front end**: the verdict of the
 approximating FEEC theorem for `ofComplexCrime (mirrorComplex)` (the family is built by
@@ -560,9 +547,9 @@ theorem einsteinBianchi_mirrorFEM_ofComplexCrime :
         (fun _ => 0) atTop (Icc 0 T)) := by
   refine ⟨(approxFEEC_ofComplexCrime _).1,
     mirrorComplex_sol hT hB,
-    mirrorFEMApprox_L_eq hT hB, mirrorComplex_closure hT hB, fun x hx T v hv => ?_⟩
+    mirrorFEMApprox_L_eq hT hB, mirrorEllCore_closure hT hB, fun x hx T v hv => ?_⟩
   have hx' : x ∈ (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)).Data.topologicalClosure :=
-    by rw [mirrorComplex_closure]; exact hx
+    (mirrorEllCore_closure hT hB).ge hx
   exact ⟨approxFEEC_converges _ _ T hx' hv,
     approxFEEC_residual _ isReducing_tsdQℝ _ T hx' hx hv⟩
 
@@ -840,7 +827,7 @@ theorem cEll_galerkin (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cub
           coeH (cubeFEM hT hB N) v.toEState⟫ := by
     with_reducible_and_instances exact (inner_ellDefect (cubeFEM hT hB N)
       (cubeWave_dt0_injective hT hB N) (cubeWave_S0_surjective hT hB N)
-      (cubeExact hx (T + 1)) (hg_cube (T + 1)) ht'' v)
+      (cubeExact hx (T + 1)) (fun t _ v => srcFun_zero_apply t v) ht'' v)
   have hd1 := inner_sub_left (𝕜 := ℝ) (coeH (cubeFEM hT hB N) (cEll' hT hB N hx T t).toEState)
     (exState' (cubeExact hx (T + 1)) t) (coeH (cubeFEM hT hB N) v.toEState)
   have hd2 := inner_sub_left (𝕜 := ℝ) (exState (cubeExact hx (T + 1)) t)
@@ -908,8 +895,6 @@ def standardCubeComplex : ApproxComplexCrime matrixComplex ℕ :=
     (cubeD hT hB) (cubeD_D hT hB) (standardCubeApprox_L_eq hT hB) (standardCubeEllCore hT hB)
     le_rfl (standardCubeEllCore_galerkin hT hB)
     (fun _ _ _ _ => by rw [standardCubeEllCore_closure]; trivial)
-
-theorem standardCubeComplex_K : (standardCubeComplex hT hB).K = thesisTSD := rfl
 
 /-- The discrete solutions of `ofComplexCrime (standardCubeComplex)` are those of
 `standardCubeApprox`. -/

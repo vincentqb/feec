@@ -33,22 +33,19 @@ skew-adjoint. This gives:
 * `Maxwell.Medium`: the factors `e`, `m`; `Medium.ε`, `Medium.μ`; `Medium.state`: the change of
   variables `(σ, E, H) ↦ (σ, e E, m H)`.
 * `Medium.maxwell S`: the Maxwell operator of the medium on `W₀ × W₁ × W₂`, with domain and
-  action `mem_maxwell_domain`, `gauge_maxwell_apply`, `ε_electric_maxwell_apply`,
-  `μ_magnetic_maxwell_apply`.
+  action `mem_maxwell_domain`, `ε_electric_maxwell_apply`, `μ_magnetic_maxwell_apply`.
 * `Medium.energy`: `½ (‖σ‖² + ⟪ε E, E⟫ + ⟪μ H, H⟫)`; `Medium.gauss S Y`: the weighted Gauss
   laws `σ = 0`, `d₀† (ε E) = 0` (`div (ε E) = 0`), `μ H ∈ Y` (`div (μ H) = 0` for `Y = N(d₂)`).
 
 ## Main results
 
-* `Medium.isStrongSolution_iff`, `Medium.equations`: strong solutions of `U' = M U + F` are the
-  solutions of the three equations above (with forcing).
+* `Medium.isStrongSolution_iff`: strong solutions of `U' = M U + F` are, in the variables
+  `(σ, e E, m H)`, the strong solutions of the Hodge wave equation of the conjugated complex.
 * `Medium.existsUnique`: **well-posedness** for data in the domain and admissible forcing
   (Stone's theorem for the conjugated complex).
 * `Medium.energy_eq`: **conservation of the weighted energy**.
 * `Medium.gauss_propagates`, `Medium.gauss_existsUnique`: **the weighted Gauss laws
-  propagate**; instances for the window of any complex (`window_gauss_propagates`) and for
-  perfect electric and magnetic conductors on every open `Ω ⊆ ℝ³` (`pec_gauss_propagates_medium`,
-  `pmc_gauss_propagates_medium`).
+  propagate**.
 
 ## References
 
@@ -117,13 +114,6 @@ def ε : W₁ →L[𝕜] W₁ := ContinuousLinearMap.adjoint (M.e : W₁ →L[�
 
 theorem ε_apply (x : W₁) : M.ε x = M.e.adjoint (M.e x) := rfl
 
-/-- The permittivity is bounded and self-adjoint. -/
-theorem isSelfAdjoint_ε : IsSelfAdjoint M.ε := ContinuousLinearMap.isSelfAdjoint_adjoint_comp_self _
-
-/-- The permittivity is uniformly positive. -/
-theorem coercive_ε : ∃ c > 0, ∀ x, c * ‖x‖ ^ 2 ≤ RCLike.re ⟪M.ε x, x⟫_𝕜 :=
-  ContinuousLinearMap.coercive_adjoint_comp_self M.e
-
 theorem re_inner_ε_apply (x : W₁) : RCLike.re ⟪M.ε x, x⟫_𝕜 = ‖M.e x‖ ^ 2 :=
   ContinuousLinearMap.re_inner_adjoint_comp_self_apply _ x
 
@@ -141,13 +131,6 @@ variable [CompleteSpace W₂]
 def μ : W₂ →L[𝕜] W₂ := ContinuousLinearMap.adjoint (M.m : W₂ →L[𝕜] W₂) ∘L (M.m : W₂ →L[𝕜] W₂)
 
 theorem μ_apply (x : W₂) : M.μ x = M.m.adjoint (M.m x) := rfl
-
-/-- The permeability is bounded and self-adjoint. -/
-theorem isSelfAdjoint_μ : IsSelfAdjoint M.μ := ContinuousLinearMap.isSelfAdjoint_adjoint_comp_self _
-
-/-- The permeability is uniformly positive. -/
-theorem coercive_μ : ∃ c > 0, ∀ x, c * ‖x‖ ^ 2 ≤ RCLike.re ⟪M.μ x, x⟫_𝕜 :=
-  ContinuousLinearMap.coercive_adjoint_comp_self M.m
 
 theorem re_inner_μ_apply (x : W₂) : RCLike.re ⟪M.μ x, x⟫_𝕜 = ‖M.m x‖ ^ 2 :=
   ContinuousLinearMap.re_inner_adjoint_comp_self_apply _ x
@@ -198,27 +181,9 @@ def state : PiLp 2 (W3 W₀ W₁ W₂) ≃L[𝕜] PiLp 2 (W3 W₀ W₁ W₂) :=
     (fun x => PiLp.ext fun i => (M.stateW W₀ i).symm_apply_apply (x i))
     (fun x => PiLp.ext fun i => (M.stateW W₀ i).apply_symm_apply (x i))
 
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem gauge_state (U : PiLp 2 (W3 W₀ W₁ W₂)) : gauge (M.state W₀ U) = gauge U := rfl
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem electric_state (U : PiLp 2 (W3 W₀ W₁ W₂)) :
-    electric (M.state W₀ U) = M.e (electric U) := rfl
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem magnetic_state (U : PiLp 2 (W3 W₀ W₁ W₂)) :
-    magnetic (M.state W₀ U) = M.m (magnetic U) := rfl
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem gauge_state_symm (U : PiLp 2 (W3 W₀ W₁ W₂)) :
-    gauge ((M.state W₀).symm U) = gauge U := rfl
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem electric_state_symm (U : PiLp 2 (W3 W₀ W₁ W₂)) :
-    electric ((M.state W₀).symm U) = M.e.symm (electric U) := rfl
-omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-@[simp] theorem magnetic_state_symm (U : PiLp 2 (W3 W₀ W₁ W₂)) :
-    magnetic ((M.state W₀).symm U) = M.m.symm (magnetic U) := rfl
-
 /-- The **Maxwell operator of the medium** on `W₀ × W₁ × W₂`: `Φ⁻¹ L' Φ` for the wave operator
 `L'` of the conjugated complex and the change of variables `Φ = M.state`. Explicitly
-(`gauge_maxwell_apply`, `ε_electric_maxwell_apply`, `μ_magnetic_maxwell_apply`)
+(`ε_electric_maxwell_apply`, `μ_magnetic_maxwell_apply`)
 `(σ, E, H) ↦ (−d₀† (ε E), d₀ σ − ε⁻¹ d₁† H, μ⁻¹ d₁ E)`. -/
 def maxwell : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) :=
   (M.complex S).wave.conj (M.state W₀).symm (M.state W₀).symm
@@ -240,22 +205,6 @@ variable {M S}
 
 theorem state_mem_wave_domain (x : (M.maxwell S).domain) :
     M.state W₀ x ∈ (M.complex S).wave.domain := x.2
-
-theorem maxwell_apply (x : (M.maxwell S).domain) :
-    M.maxwell S x = (M.state W₀).symm ((M.complex S).wave ⟨_, state_mem_wave_domain x⟩) := rfl
-
-/-- `(M U)_σ = −d₀† (ε E)`: the gauge equation `σ' = −d₀† (ε E)`. -/
-theorem gauge_maxwell_apply (x : (M.maxwell S).domain) :
-    gauge (M.maxwell S x) =
-      -(S.d₀† ⟨M.ε (electric x.1), (M.mem_maxwell_domain S |>.1 x.2).2.2.1⟩) := by
-  change ((M.complex S).wave ⟨M.state W₀ x, state_mem_wave_domain x⟩ : PiLp 2 _) 0 = _
-  rw [ShortHilbertComplex.wave_apply_zero]
-  change -((M.complex S).d₀† ⟨M.e (electric x.1), (state_mem_wave_domain x).2 1 0⟩) = _
-  congr 1
-  rw [apply_eq_of_eq (adjoint_complex_d₀ M S) _ ⟨M.e (electric x.1), by
-      rw [← adjoint_complex_d₀]; exact (state_mem_wave_domain x).2 1 0⟩ rfl, conj_apply,
-    ContinuousLinearEquiv.adjoint_refl_symm_apply]
-  exact apply_congr' _ _ _ rfl
 
 /-- `ε (M U)_E = ε d₀ σ − d₁† H`: Ampère's law `ε E' = ε d₀ σ − d₁† H`. -/
 theorem ε_electric_maxwell_apply (x : (M.maxwell S).domain) :
@@ -311,43 +260,6 @@ theorem isStrongSolution_iff {I : Set ℝ} {F U : ℝ → PiLp 2 (W3 W₀ W₁ W
         (fun t => M.state W₀ (U t)) :=
   Evolution.isStrongSolution_conj_symm_iff (M.state W₀)
 
-/-- **Maxwell's equations in the medium**: a strong solution `U = (σ, E, H)` of `U' = M U + F`
-satisfies, at every `t ∈ I` (derivatives within `I`),
-`σ' = −d₀† (ε E) + F_σ`, `(ε E)' = ε d₀ σ − d₁† H + ε F_E`, `(μ H)' = d₁ E + μ F_H`. -/
-theorem equations {I : Set ℝ} {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)}
-    (hU : Evolution.IsStrongSolution (M.maxwell S) I F U) (t : ℝ) (ht : t ∈ I) :
-    HasDerivWithinAt (fun s => gauge (U s))
-        (-(S.d₀† ⟨M.ε (electric (U t)), (M.mem_maxwell_domain S |>.1 (hU.mem_domain ht)).2.2.1⟩) +
-          gauge (F t)) I t ∧
-      HasDerivWithinAt (fun s => M.ε (electric (U s)))
-        (M.ε (S.d₀ ⟨gauge (U t), (M.mem_maxwell_domain S |>.1 (hU.mem_domain ht)).1⟩) -
-          S.d₁† ⟨magnetic (U t), (M.mem_maxwell_domain S |>.1 (hU.mem_domain ht)).2.2.2⟩ +
-            M.ε (electric (F t))) I t ∧
-      HasDerivWithinAt (fun s => M.μ (magnetic (U s)))
-        (S.d₁ ⟨electric (U t), (M.mem_maxwell_domain S |>.1 (hU.mem_domain ht)).2.1⟩ +
-          M.μ (magnetic (F t))) I t := by
-  have hd := hU.hasDerivWithinAt ht
-  set x : (M.maxwell S).domain := ⟨U t, hU.mem_domain ht⟩
-  let p₀ : PiLp 2 (W3 W₀ W₁ W₂) →L[𝕜] W₀ := PiLp.proj 2 (W3 W₀ W₁ W₂) 0
-  let p₁ : PiLp 2 (W3 W₀ W₁ W₂) →L[𝕜] W₁ := M.ε ∘L PiLp.proj 2 (W3 W₀ W₁ W₂) 1
-  let p₂ : PiLp 2 (W3 W₀ W₁ W₂) →L[𝕜] W₂ := M.μ ∘L PiLp.proj 2 (W3 W₀ W₁ W₂) 2
-  have h₀ : HasDerivWithinAt (fun s => gauge (U s)) (p₀ (M.maxwell S x + F t)) I t :=
-    (p₀.restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t hd
-  have h₁ : HasDerivWithinAt (fun s => M.ε (electric (U s))) (p₁ (M.maxwell S x + F t)) I t :=
-    (p₁.restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t hd
-  have h₂ : HasDerivWithinAt (fun s => M.μ (magnetic (U s))) (p₂ (M.maxwell S x + F t)) I t :=
-    (p₂.restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t hd
-  refine ⟨?_, ?_, ?_⟩
-  · convert h₀ using 1
-    change _ = gauge (M.maxwell S x) + gauge (F t)
-    rw [gauge_maxwell_apply]
-  · convert h₁ using 1
-    change _ = M.ε (electric (M.maxwell S x) + electric (F t))
-    rw [_root_.map_add, ε_electric_maxwell_apply]
-  · convert h₂ using 1
-    change _ = M.μ (magnetic (M.maxwell S x) + magnetic (F t))
-    rw [_root_.map_add, μ_magnetic_maxwell_apply]
-
 /-- **Well-posedness of Maxwell's equations in a medium**: for initial data in the domain and
 admissible forcing `F ∈ C([a,b]) ∩ (W^{1,1} ∪ L¹(D(M)))` there is a classical solution of
 `U' = M U + F`, `U a = U₀`, unique among strong solutions (Stone's theorem for the skew-adjoint
@@ -401,33 +313,10 @@ variable (Y : Submodule 𝕜 W₂)
 
 /-- The **weighted Gauss laws** `σ = 0`, `d₀† (ε E) = 0` (`div (ε E) = 0`) and `μ H ∈ Y`
 (`div (μ H) = 0` for `Y = N(d₂)`), in the physical variables `(σ, E, H)`: the pull-back of the
-constraint family `{0} × N(d₀'†) × (m⁻¹)† Y` of the conjugated complex (`mem_gauss_iff`). -/
+constraint family `{0} × N(d₀'†) × (m⁻¹)† Y` of the conjugated complex. -/
 def gauss : Submodule 𝕜 (PiLp 2 (W3 W₀ W₁ W₂)) :=
   (totalSub ((M.complex S).divFreeSub (Y.map (M.m.adjoint.symm : W₂ →ₗ[𝕜] W₂)))).comap
     (M.state W₀ : PiLp 2 (W3 W₀ W₁ W₂) →ₗ[𝕜] PiLp 2 (W3 W₀ W₁ W₂))
-
-theorem mem_gauss_iff {U : PiLp 2 (W3 W₀ W₁ W₂)} : U ∈ M.gauss S Y ↔
-    gauge U = 0 ∧ M.ε (electric U) ∈ (S.d₀†).ker ∧ M.μ (magnetic U) ∈ Y := by
-  set Y' := Y.map (M.m.adjoint.symm : W₂ →ₗ[𝕜] W₂)
-  have e0 : (M.state W₀ U) 0 ∈ (M.complex S).divFreeSub Y' 0 ↔ gauge U = 0 := by
-    change gauge U ∈ (⊥ : Submodule 𝕜 W₀) ↔ _
-    exact Submodule.mem_bot 𝕜
-  have e1 : (M.state W₀ U) 1 ∈ (M.complex S).divFreeSub Y' 1 ↔
-      M.ε (electric U) ∈ (S.d₀†).ker := by
-    change M.e (electric U) ∈ ((M.complex S).d₀†).ker ↔ _
-    rw [adjoint_complex_d₀, ker_conj, Submodule.mem_map_continuousLinearEquiv]
-    rfl
-  have e2 : (M.state W₀ U) 2 ∈ (M.complex S).divFreeSub Y' 2 ↔ M.μ (magnetic U) ∈ Y := by
-    change M.m (magnetic U) ∈ Y' ↔ _
-    rw [Submodule.mem_map_continuousLinearEquiv]
-    rfl
-  change (∀ i, (M.state W₀ U) i ∈ (M.complex S).divFreeSub Y' i) ↔ _
-  constructor
-  · intro h
-    exact ⟨e0.1 (h 0), e1.1 (h 1), e2.1 (h 2)⟩
-  · rintro ⟨h0, h1, h2⟩ i
-    fin_cases i
-    exacts [e0.2 h0, e1.2 h1, e2.2 h2]
 
 variable {Y} in
 /-- If `R(d₁) ⊆ Y`, the conjugated `d₁'` maps into `(m⁻¹)† Y`. -/
@@ -484,56 +373,5 @@ theorem Medium.exists_eq {W₁ W₂ : Type*} [NormedAddCommGroup W₁] [InnerPro
   obtain ⟨e, -, he⟩ := ContinuousLinearMap.exists_selfAdjoint_equiv_adjoint_comp_eq hε hc hcε
   obtain ⟨m, -, hm⟩ := ContinuousLinearMap.exists_selfAdjoint_equiv_adjoint_comp_eq hμ hc hcμ
   exact ⟨⟨e, m⟩, he, hm⟩
-
-/-! ### Instances: windows of complexes, perfect conductors on domains -/
-
-section Window
-
-variable {𝕜 : Type*} [RCLike 𝕜] {V : ℕ → Type u} [∀ i, NormedAddCommGroup (V i)]
-  [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
-  [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
-  (H : HilbertComplex 𝕜 (ComplexShape.up ℕ) V) (a : ℕ)
-  (M : Medium 𝕜 (V (a + ((1 : Fin 3) : ℕ))) (V (a + ((2 : Fin 3) : ℕ))))
-
-/-- **Maxwell in a medium on the window of any complex** (any degree): the weighted Gauss laws
-`σ = 0`, `d† (ε E) = 0`, `d (μ H) = 0` propagate. -/
-theorem window_gauss_propagates {t₀ t₁ : ℝ} {F U : ℝ → Space a (V := V)}
-    (hU : Evolution.IsStrongSolution (M.maxwell (window H a)) (Icc t₀ t₁) F U)
-    (h0 : U t₀ ∈ M.gauss (window H a) (closedSub H a))
-    (hF : ∀ t ∈ Icc t₀ t₁, F t ∈ M.gauss (window H a) (closedSub H a)) :
-    ∀ t ∈ Icc t₀ t₁, U t ∈ M.gauss (window H a) (closedSub H a) :=
-  M.gauss_propagates (window H a) (d_mem_closedSub H a) hU h0 hF
-
-end Window
-
-section Conductor
-
-open Feec.Domain
-
-variable {𝕜 : Type*} [RCLike 𝕜] {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) [Fact (IsOpen Ω)]
-  (M : Medium 𝕜 (L2F 𝕜 Ω (Fin 1 × Fin 3)) (L2F 𝕜 Ω (Fin 1 × Fin 3)))
-
-/-- **Maxwell in a medium with a perfect electric conductor** on any open `Ω ⊆ ℝ³` (bounded or
-not): the weighted Gauss laws `σ = 0`, `div (ε E) = 0`, `div (μ H) = 0` with `μ H · n = 0`
-propagate. -/
-theorem pec_gauss_propagates_medium {t₀ t₁ : ℝ}
-    {F U : ℝ → PiLp 2 (W3 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3)) (L2F 𝕜 Ω (Fin 1 × Fin 3)))}
-    (hU : Evolution.IsStrongSolution (M.maxwell (pec 𝕜 hΩ)) (Icc t₀ t₁) F U)
-    (h0 : U t₀ ∈ M.gauss (pec 𝕜 hΩ) (magneticPEC 𝕜 Ω))
-    (hF : ∀ t ∈ Icc t₀ t₁, F t ∈ M.gauss (pec 𝕜 hΩ) (magneticPEC 𝕜 Ω)) :
-    ∀ t ∈ Icc t₀ t₁, U t ∈ M.gauss (pec 𝕜 hΩ) (magneticPEC 𝕜 Ω) :=
-  M.gauss_propagates _ (curl_mem_magneticPEC hΩ) hU h0 hF
-
-/-- **Maxwell in a medium with a perfect magnetic conductor** on any open `Ω ⊆ ℝ³`: the weighted
-Gauss laws propagate. -/
-theorem pmc_gauss_propagates_medium {t₀ t₁ : ℝ}
-    {F U : ℝ → PiLp 2 (W3 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3)) (L2F 𝕜 Ω (Fin 1 × Fin 3)))}
-    (hU : Evolution.IsStrongSolution (M.maxwell (pmc 𝕜 hΩ)) (Icc t₀ t₁) F U)
-    (h0 : U t₀ ∈ M.gauss (pmc 𝕜 hΩ) (magneticPMC 𝕜 Ω))
-    (hF : ∀ t ∈ Icc t₀ t₁, F t ∈ M.gauss (pmc 𝕜 hΩ) (magneticPMC 𝕜 Ω)) :
-    ∀ t ∈ Icc t₀ t₁, U t ∈ M.gauss (pmc 𝕜 hΩ) (magneticPMC 𝕜 Ω) :=
-  M.gauss_propagates _ (curl_mem_magneticPMC hΩ) hU h0 hF
-
-end Conductor
 
 end Feec.Maxwell

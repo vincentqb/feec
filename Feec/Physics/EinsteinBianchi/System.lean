@@ -61,11 +61,6 @@ def skwJ (dA : SpaceJet) : SpaceJet := fun c => (1 / 2 : ℝ) • (dA c - (dA c)
 /-- The symmetric part `sym A = ½ (A + Aᵀ)`. -/
 def symPart (A : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ := (1 / 2 : ℝ) • (A + Aᵀ)
 
-/-- Entrywise symmetry of a jet of symmetric matrices. -/
-theorem jet_symm {dA : SpaceJet} (hsym : ∀ c, (dA c)ᵀ = dA c) (c i j : Fin 3) :
-    dA c i j = dA c j i := by
-  simpa [Matrix.transpose_apply] using congrFun (congrFun (hsym c) j) i
-
 /-! ## Prop 3.4 on jets: the linearized second Bianchi identity
 
 A first jet of a spacetime matrix field is `dX : Fin 4 → Matrix`, `dX μ = ∂_μ X`, with

@@ -35,19 +35,12 @@ with `re ⟪Σ x, x⟫ ≥ 0`.
 
 ## Main results
 
-* `Medium.generator_ohmicSemigroup`: its generator is `L' − Σ` (`C0Semigroup.generator_perturb`);
-  `Medium.isContraction_ohmicSemigroup`: it is a contraction semigroup, proved by the energy
-  method from the dissipativity of `L' − Σ` (`Medium.isDissipative_ohmicGen`), not assumed.
+* `Medium.generator_ohmicSemigroup`: its generator is `L' − Σ` (`C0Semigroup.generator_perturb`).
 * `Medium.ohmic_existsUnique`: existence and uniqueness of classical solutions.
-* `Medium.hasDerivWithinAt_energy`, `Medium.energy_le_ohmic`: **energy decay**,
-  `d/dt ½ (⟪ε E, E⟫ + ⟪μ H, H⟫) = −re ⟪σ E, E⟫ ≤ 0`.
+* `Medium.hasDerivWithinAt_energy`: **energy decay**,
+  `d/dt ½ (⟪ε E, E⟫ + ⟪μ H, H⟫) = −re ⟪σ E, E⟫`.
 * `Medium.ohmic_magnetic_gauss_propagates`: the magnetic Gauss law `μ H ∈ Y`
   (`div (μ H) = 0`) propagates, for every bounded `σ` (no sign condition).
-* `Medium.charge_relaxation`, `Medium.charge_relaxation_adjoint`: **charge relaxation** for
-  a conductivity proportional to the permittivity, `σ = s ε` (e.g. scalar constants, `s = σ/ε`):
-  the charge `d₀† (ε E)` (`= −div (ε E)`), tested against any `φ ∈ D(d₀)`, satisfies
-  `⟪d₀ φ, ε E(t)⟫ = e^{−s (t − t₀)} ⟪d₀ φ, ε E(t₀)⟫`, and if `ε E(t₀) ∈ D(d₀†)` then
-  `d₀† (ε E(t)) = e^{−s (t − t₀)} d₀† (ε E(t₀))`.
 
 ## References
 
@@ -137,13 +130,6 @@ def ohmicGen : PiLp 2 (W3 PUnit.{u + 1} W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 PUni
 def ohmic : PiLp 2 (W3 PUnit.{u + 1} W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 PUnit.{u + 1} W₁ W₂) :=
   (M.ohmicGen S σ).conj (M.state PUnit.{u + 1}).symm (M.state PUnit.{u + 1}).symm
 
-/-- `L' − Σ` is dissipative when `re ⟪σ E, E⟫ ≥ 0`. -/
-theorem isDissipative_ohmicGen (hσ : ∀ x, 0 ≤ RCLike.re ⟪σ x, x⟫_𝕜) :
-    (M.ohmicGen S σ).IsDissipative :=
-  (M.isSkewAdjoint_wave_complex (fields S)).isDissipative.vadd fun x => by
-    rw [_root_.neg_apply, inner_neg_left, _root_.map_neg, inner_loss_apply, neg_nonpos]
-    exact hσ _
-
 /-- `D(ohmic) = {(E, H) | E ∈ D(d₁), H ∈ D(d₁†)}`. -/
 theorem mem_ohmic_domain {U : PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)} :
     U ∈ (M.ohmic S σ).domain ↔ electric U ∈ S.d₁.domain ∧ magnetic U ∈ S.d₁†.domain := by
@@ -209,26 +195,6 @@ theorem generator_ohmicSemigroup : (M.ohmicSemigroup S σ).generator = M.ohmicGe
   change _ +ᵥ (M.isSkewAdjoint_wave_complex (fields S)).group.generator = _
   rw [LinearPMap.IsSkewAdjoint.generator_group]
   rfl
-
-/-- **The Ohmic semigroup is a contraction semigroup**, by the energy method: orbits of
-`D(L' − Σ)` are strong solutions of the dissipative equation `U' = (L' − Σ) U`, so their norm
-does not increase, and `D(L' − Σ)` is dense. -/
-theorem isContraction_ohmicSemigroup (hσ : ∀ x, 0 ≤ RCLike.re ⟪σ x, x⟫_𝕜) :
-    (M.ohmicSemigroup S σ).IsContraction := by
-  intro t ht
-  set G := M.ohmicSemigroup S σ
-  have hdiss : G.generator.IsDissipative := by
-    rw [generator_ohmicSemigroup]; exact M.isDissipative_ohmicGen S σ hσ
-  have hD : ∀ x ∈ G.generator.domain, ‖G.S t x‖ ≤ ‖x‖ := fun x hx => by
-    have h := (G.isClassicalSolution_orbit hx 0 t).toIsStrongSolution.norm_le hdiss t
-      ⟨ht, le_rfl⟩
-    simpa [G.map_zero] using h
-  refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => ?_
-  have hcl : IsClosed {x | ‖G.S t x‖ ≤ ‖x‖} :=
-    isClosed_le (G.S t).continuous.norm continuous_norm
-  have hsub := closure_minimal (fun x hx => hD x hx) hcl
-  rw [G.dense_domain_generator.closure_eq] at hsub
-  simpa using hsub (mem_univ x)
 
 /-! ### Well-posedness, energy decay, magnetic Gauss law -/
 
@@ -310,22 +276,6 @@ theorem hasDerivWithinAt_energy {a b : ℝ} {U : ℝ → PiLp 2 (W3 PUnit.{u + 1
   rw [ContinuousLinearEquiv.symm_apply_apply]
   ring
 
-/-- **The energy does not increase** under Ohmic loss (`re ⟪σ E, E⟫ ≥ 0`). -/
-theorem energy_le_ohmic (hσ : ∀ x, 0 ≤ RCLike.re ⟪σ x, x⟫_𝕜) {a b : ℝ}
-    {U : ℝ → PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)}
-    (hU : Evolution.IsStrongSolution (M.ohmic S σ) (Icc a b) 0 U) :
-    ∀ t ∈ Icc a b, M.energy (U t) ≤ M.energy (U a) := by
-  have h := (M.isStrongSolution_ohmic_iff S σ).1 hU
-  have hV : Evolution.IsStrongSolution (M.ohmicGen S σ) (Icc a b) 0
-      (fun s => M.state PUnit.{u + 1} (U s)) := by
-    convert h using 1
-    funext s; simp
-  intro t ht
-  rw [energy_eq_norm_state, energy_eq_norm_state]
-  have := hV.norm_le (M.isDissipative_ohmicGen S σ hσ) t ht
-  have h0 : 0 ≤ ‖M.state PUnit.{u + 1} (U t)‖ := norm_nonneg _
-  gcongr
-
 variable {σ}
 
 /-- **The magnetic Gauss law propagates** under Ohmic loss, for every bounded `σ` (no sign
@@ -357,81 +307,6 @@ theorem ohmic_magnetic_gauss_propagates
   change q t = 0
   rw [h1, inner_eq_zero_symm]
   exact Submodule.inner_right_of_mem_orthogonal h0 hw
-
-/-! ### Charge relaxation -/
-
-/-- **Charge relaxation** (weak form) for a conductivity proportional to the permittivity,
-`σ = s ε` (e.g. scalar constants `σ`, `ε`, with `s = σ/ε`): along a strong solution of the free
-Ohmic Maxwell equations, for every test field `φ ∈ D(d₀)`,
-`⟪d₀ φ, ε E(t)⟫ = e^{−s (t − t₀)} ⟪d₀ φ, ε E(t₀)⟫`: the charge `d₀† (ε E)` decays at the rate
-`s`, whatever the magnetic field. -/
-theorem charge_relaxation {s : ℝ} (hσ : σ = (s : 𝕜) • M.ε) {t₀ t₁ : ℝ}
-    {U : ℝ → PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)}
-    (hU : Evolution.IsStrongSolution (M.ohmic S σ) (Icc t₀ t₁) 0 U) (φ : S.d₀.domain) :
-    ∀ t ∈ Icc t₀ t₁, ⟪S.d₀ φ, M.ε (electric (U t))⟫_𝕜 =
-      (Real.exp (-(s * (t - t₀))) : 𝕜) * ⟪S.d₀ φ, M.ε (electric (U t₀))⟫_𝕜 := by
-  set q : ℝ → 𝕜 := fun t => ⟪S.d₀ φ, M.ε (electric (U t))⟫_𝕜
-  -- `q' = −s q`
-  have hq : ∀ t ∈ Icc t₀ t₁, HasDerivWithinAt q (-(s : 𝕜) * q t) (Icc t₀ t₁) t := by
-    intro t ht
-    have hdom := (M.mem_ohmic_domain S σ |>.1 (hU.mem_domain ht)).2
-    have h := (M.ohmic_equations S σ hU t ht).1
-    have h' : HasDerivWithinAt q (⟪S.d₀ φ, -S.d₁† ⟨magnetic (U t), hdom⟩ - σ (electric (U t)) +
-        M.ε (electric ((0 : ℝ → PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)) t))⟫_𝕜) (Icc t₀ t₁) t :=
-      ((innerSL 𝕜 (S.d₀ φ)).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t h
-    refine h'.congr_deriv ?_
-    have h0 : ⟪S.d₀ φ, S.d₁† ⟨magnetic (U t), hdom⟩⟫_𝕜 = 0 := by
-      have := adjoint_isFormalAdjoint S.dense₁ ⟨magnetic (U t), hdom⟩ ⟨S.d₀ φ, S.mapsTo φ⟩
-      rw [← inner_conj_symm, this, S.comp φ, inner_zero_right, _root_.map_zero]
-    rw [Pi.zero_apply]
-    change ⟪S.d₀ φ, -S.d₁† ⟨magnetic (U t), hdom⟩ - σ (electric (U t)) + M.ε 0⟫_𝕜 = _
-    rw [_root_.map_zero, add_zero, inner_sub_right, inner_neg_right, h0, neg_zero, zero_sub, hσ,
-      _root_.smul_apply, inner_smul_right]
-    ring
-  -- `e^{s (t − t₀)} q(t)` is constant
-  set g : ℝ → 𝕜 := fun t => Real.exp (s * (t - t₀)) • q t
-  have hexp : ∀ t, HasDerivAt (fun t => Real.exp (s * (t - t₀))) (s * Real.exp (s * (t - t₀))) t :=
-    fun t => by
-      have := (((hasDerivAt_id t).sub_const t₀).const_mul s).exp
-      refine this.congr_deriv ?_
-      change Real.exp (s * (t - t₀)) * (s * 1) = s * Real.exp (s * (t - t₀))
-      ring
-  have hg : ∀ t ∈ Icc t₀ t₁, HasDerivWithinAt g 0 (Icc t₀ t₁) t := fun t ht => by
-    have := (hexp t).hasDerivWithinAt.smul (hq t ht)
-    convert this using 1
-    rw [RCLike.real_smul_eq_coe_mul, RCLike.real_smul_eq_coe_mul]
-    push_cast
-    ring
-  have hgc : ContinuousOn g (Icc t₀ t₁) := fun t ht => (hg t ht).continuousWithinAt
-  have hconst := constant_of_has_deriv_right_zero hgc fun t ht =>
-    ((hg t (Ico_subset_Icc_self ht)).mono_of_mem_nhdsWithin (Icc_mem_nhdsGE_of_mem ht))
-  intro t ht
-  have h1 := hconst t ht
-  simp only [g, sub_self, mul_zero, Real.exp_zero, one_smul] at h1
-  change q t = (Real.exp (-(s * (t - t₀))) : 𝕜) * q t₀
-  rw [← h1, RCLike.real_smul_eq_coe_mul, ← mul_assoc, ← RCLike.ofReal_mul, ← Real.exp_add]
-  simp
-
-/-- **Charge relaxation** (strong form), `σ = s ε`: if the initial charge is defined,
-`ε E(t₀) ∈ D(d₀†)`, then `ε E(t) ∈ D(d₀†)` and `d₀† (ε E(t)) = e^{−s (t − t₀)} d₀† (ε E(t₀))`
-for all `t`; in particular a charge-free initial field stays charge-free. -/
-theorem charge_relaxation_adjoint {s : ℝ} (hσ : σ = (s : 𝕜) • M.ε) {t₀ t₁ : ℝ}
-    {U : ℝ → PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)}
-    (hU : Evolution.IsStrongSolution (M.ohmic S σ) (Icc t₀ t₁) 0 U)
-    (h0 : M.ε (electric (U t₀)) ∈ S.d₀†.domain) :
-    ∀ t ∈ Icc t₀ t₁, ∃ h : M.ε (electric (U t)) ∈ S.d₀†.domain,
-      S.d₀† ⟨_, h⟩ = (Real.exp (-(s * (t - t₀))) : 𝕜) • S.d₀† ⟨_, h0⟩ := by
-  intro t ht
-  have key : ∀ φ : S.d₀.domain,
-      ⟪(Real.exp (-(s * (t - t₀))) : 𝕜) • S.d₀† ⟨_, h0⟩, (φ : W₀)⟫_𝕜 =
-        ⟪M.ε (electric (U t)), S.d₀ φ⟫_𝕜 := fun φ => by
-    have h := M.charge_relaxation S hσ hU φ t ht
-    rw [inner_smul_left, RCLike.conj_ofReal, adjoint_isFormalAdjoint S.dense₀ ⟨_, h0⟩ φ,
-      ← inner_conj_symm (M.ε (electric (U t))) (S.d₀ φ), h, map_mul, RCLike.conj_ofReal,
-      inner_conj_symm]
-  have hmem : M.ε (electric (U t)) ∈ S.d₀†.domain :=
-    mem_adjoint_domain_of_exists _ ⟨_, key⟩
-  exact ⟨hmem, adjoint_apply_eq S.dense₀ ⟨_, hmem⟩ key⟩
 
 end Medium
 

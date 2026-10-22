@@ -241,8 +241,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 /-- `−(x₀ : W0)` as a bounded map. -/
 def negComp0L : WS →L[ℝ] W0 := -(bggHilb.Γbar.subtypeL.comp comp0L)
 
-theorem negComp0L_apply (x : WS) : negComp0L x = -((comp0 x : bggHilb.Γbar) : W0) := rfl
-
 theorem hasDerivWithinAt_Ici_of_strong {T : ℝ} {V : ℝ → WS}
     (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V) {t : ℝ} (ht : t ∈ Ico 0 T)
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] (g : WS →L[ℝ] E) :
@@ -676,26 +674,6 @@ theorem waveFEM_converges_to_non_tsd {T : ℝ} (hT0 : 0 < T) :
       (hEB ε hε).mono fun N hN => (hN t₁ ht₁).1
   · exact eventually_not_mem_of_tendsto isClosed_symSub hBt fun ε hε =>
       (hEB ε hε).mono fun N hN => (hN t₂ ht₂).2
-
-set_option maxHeartbeats 4000000 in
-/-- **The discrete solutions from the projected TSD datum leave TSD** (the conclusion of
-`waveFEM_converges_to_non_tsd` for the family of its item 3): there are solutions of (6.5) with
-data `(0, 0, 0, P ρ(0))` that converge uniformly on `[0,T]` to the continuous solution, and at
-some `t₁`, `t₂ ∈ [0,T]`, for all large `N`, `E_h(t₁) ∉ L²(TSD)` and `B_h(t₂)` is not symmetric. -/
-theorem exists_betaDiscrete_not_tsd {T : ℝ} (hT0 : 0 < T) :
-    ∃ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
-      (∀ N, (sh N).σ 0 = 0 ∧ (sh N).u 0 = 0 ∧ (sh N).M 0 = 0 ∧ (sh N).ρ 0 = rhoBetaH hT hB N) ∧
-      (∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
-        ‖(betaW hT0).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε) ∧
-      (∃ t ∈ Icc 0 T, ∀ᶠ N in atTop,
-        rowsEquiv (incl1 (((sh N).u t : (cubeFEM hT hB N).Vt1h) : Wv U1)) ∉
-          tsd (cubeDomain 3)) ∧
-      ∃ t ∈ Icc 0 T, ∀ᶠ N in atTop,
-        rows2Equiv (((sh N).ρ t : (cubeFEM hT hB N).Wt2h) : Wv W2) ∉
-          symSub ℝ (cubeDomain 3) := by
-  obtain ⟨-, -, ⟨sh, hsh, hsh0⟩, h4⟩ := waveFEM_converges_to_non_tsd hT hB hT0
-  obtain ⟨hc, -, hE, hBt⟩ := h4 sh hsh0
-  exact ⟨sh, hsh, hc, hE, hBt⟩
 
 end Beta
 

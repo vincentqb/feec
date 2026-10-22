@@ -16,7 +16,7 @@ cochain defect), rate classes of `ofComplex`, so that the discrete solutions of 
 started from the modified elliptic projection `Rₕ (x, 𝐝 x)` satisfy
 `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) h_N Λ`, linear in `t`
 (`cubePMC_ofComplex_rate`, `cubePEC_ofComplex_rate`); the constants do not depend on `T` or `Λ`
-(`cubePMC_toCrimeRate_C`; they take no `N` or `x`). This is an `O(h)` rate, as for the conforming
+(they take no `N` or `x`). This is an `O(h)` rate, as for the conforming
 routes (`Feec.Instances.Maxwell.cubePMC_approx_rate`, factor `(1 + C_P)(1 + 2t)`;
 `Feec.Instances.Maxwell.cubePMC_rate`, factor `(1 + C_P)(1 + t)²`), now from complex-level
 estimates, with larger constants.
@@ -87,11 +87,5 @@ theorem cubePEC_ofComplex_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine h.trans_eq ?_
   change _ * (FEM.meshSize N ^ (1 : ℝ) * Λ) = _
   rw [Real.rpow_one]
-
-/-- The constants of `cubePMC_ofComplex_rate` do not depend on `T` or `Λ`. -/
-theorem cubePMC_toCrimeRate_C {T T' Λ Λ' : ℝ} {hΛ : 0 ≤ Λ} {hΛ' : 0 ≤ Λ'} :
-    (cubePMCRate n a T Λ hΛ).toCrimeRate.C = (cubePMCRate n a T' Λ' hΛ').toCrimeRate.C ∧
-      (cubePMCRate n a T Λ hΛ).toCrimeRate.C' = (cubePMCRate n a T' Λ' hΛ').toCrimeRate.C' :=
-  ⟨rfl, rfl⟩
 
 end Feec.Instances.Maxwell

@@ -89,9 +89,7 @@ thesis' boundary conditions (`Eₕ ∉ L²(TSD)`, `Bₕ` not symmetric) enters t
 element row proved by `mirrorFEMVerdict_of_approxFEEC`, and its propagation-only `ℝ³` row
 `EuclideanVerdict` replaced by the approximating FEEC verdict of the frequency truncation,
 `Feec.Instances.EuclideanBand.EuclideanEBVerdict`, from `einsteinBianchi_euclidean_band`) together
-with `MirrorFEMApproxVerdict` and `StandardCubeApproxVerdict`;
-`einsteinBianchi_constrainedFEEC_summary_of_summary` recovers the former
-(`euclideanVerdict_of_euclideanEBVerdict` reads the old `ℝ³` row off the new one).
+with `MirrorFEMApproxVerdict` and `StandardCubeApproxVerdict`.
 
 ## References
 
@@ -133,10 +131,6 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
 theorem einsteinBianchi_mirrorFEM_approxFEEC :
     (mirrorFEMApprox hT hB).Verdict (mirrorFEMCore hT hB) :=
   approxFEEC _ _
-
-/-- The TSD constraint of `mirrorFEMApprox` reduces the real mirror wave operator. -/
-theorem mirrorFEMApprox_isReducing : complexQℝ.wave.IsReducing (mirrorFEMApprox hT hB).K :=
-  isReducing_tsdQℝ
 
 /-- **Convergence of the mirror scheme (6.5) to the TSD solution** (item 3b of the verdict of the
 elliptic core `mirrorEllCore`, on its closure `tsdQℝ`, items 2 and 4a with the reducing
@@ -244,13 +238,6 @@ theorem mirrorSource_zero (N : ℕ) : mirrorSource hT hB N 0 = 0 := by
   funext t
   simp [mirrorSource]
 
-/-- Transport of a discrete solution along an equality of sources. -/
-theorem exists_discreteSolution_eq {N : ℕ} {T : ℝ} {f g : ℝ → (mirrorFEM hT hB N).Vt1h}
-    (h : f = g) (s : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T g) :
-    ∃ s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T f,
-      s'.σ = s.σ ∧ s'.u = s.u ∧ s'.M = s.M ∧ s'.ρ = s.ρ := by
-  subst h; exact ⟨s, rfl, rfl, rfl, rfl⟩
-
 set_option maxHeartbeats 4000000 in
 /-- **The real part of the instance is the scheme (6.5) from (6.4)**: for a TSD datum and a source
 `f = 0`, the solution of (6.5) from the elliptic projection (6.4) of the exact initial state has,
@@ -280,7 +267,7 @@ theorem exists_mirrorScheme_le_of_eq (N : ℕ) (D : TSDDatum) {T : ℝ} (hT0 : 0
   have hs := h2.1
   have hsol := h2.2.2
   have hinit : mirrorEllInit hT hB D.U₀ N = WithLp.toLp 2 (mEll hT hB N D 0 0,
-      mEll hT hB N (tsdDatumOf (neg_I_smul_mem hx)) 0 0) := mirrorEllInit_of_mem hT hB hx N
+      mEll hT hB N (tsdDatumOf (neg_I_smul_mem hx)) 0 0) := mirrorEllCmp_p_zero hT hB 0 hx N
   refine ⟨s, ?_, fun t ht => ?_⟩
   · apply EState.mkL.injective
     exact (congrArg HiddenState.toEState (hs.trans (mEll_horizon hT hB N D 0 T 0))).trans
@@ -452,7 +439,7 @@ set_option maxHeartbeats 4000000 in
 theorem mirrorFEMApproxVerdict : MirrorFEMApproxVerdict :=
   ⟨exists_mirror_estimates, ⟨cosDatum_mem_mirrorL3Data, cosDatum_mem_mirrorSobData,
       cosDatum_not_stationary⟩, mirrorFEMVerdict_of_approxFEEC, fun hT hB =>
-    ⟨einsteinBianchi_mirrorFEM_approxFEEC hT hB, mirrorFEMCore_closure hT hB, isReducing_tsdQℝ,
+    ⟨einsteinBianchi_mirrorFEM_approxFEEC hT hB, topologicalClosure_tsdQℝ_inf_domainSq, isReducing_tsdQℝ,
       fun _ hx T => einsteinBianchi_mirrorFEM_converges hT hB hx T,
       fun hT0 _ hx N v _ ht => einsteinBianchi_mirrorFEM_rate hT hB hT0 hx N v ht,
       fun hT0 hs0 hs1 _ hx N v _ ht =>
@@ -460,7 +447,7 @@ theorem mirrorFEMApproxVerdict : MirrorFEMApproxVerdict :=
       fun N _ hT0 a b => mirrorFEMApprox_sol_eq_scheme hT hB N hT0 a b,
       einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB, mirrorEllCore_closure hT hB,
       fun hx N =>
-        ⟨fun T => mirrorEllCmp_p_zero_eq_init hT hB T _ N, mirrorEllInit_of_mem hT hB hx N⟩,
+        ⟨fun T => mirrorEllCmp_p_zero_eq_init hT hB T _ N, mirrorEllCmp_p_zero hT hB 0 hx N⟩,
       fun N D _ hT0 => (congrArg HiddenState.toEState (mEll_horizon hT hB N D 0 _ 0)).trans
         (mEll_zero_toEState hT hB N D hT0),
       fun hx N _ ht => einsteinBianchi_mirrorFEM_rate_init hT hB hx N ht,
@@ -724,14 +711,6 @@ end StandardBoundary
 
 /-! ### Summary -/
 
-/-- **The old `ℝ³` row from the approximating one**: well-posedness (item 1 of the Verdict) and
-TSD propagation (item 2 with the reducing TSD constraint) of `EuclideanEBVerdict` give the
-propagation-only `EuclideanVerdict`. -/
-theorem euclideanVerdict_of_euclideanEBVerdict (V : EuclideanBand.EuclideanEBVerdict) :
-    EuclideanVerdict :=
-  ⟨fun x hx T => ⟨(V.1.1 x hx T).1, (V.1.1 x hx T).2.1, (V.1.1 x hx T).2.2.2⟩, V.2.1,
-    V.1.2.1.1 V.2.1⟩
-
 /-- **The verdicts for the linearized Einstein–Bianchi system** ([QuennevilleBelair2015],
 Ch. 4–6): the constrained FEEC verdicts on `𝕋³`, the mirror cube (spectral) and the model
 verdicts of the scheme (6.5) (as in `einsteinBianchi_constrainedFEEC_summary`, the mirror finite
@@ -751,15 +730,5 @@ theorem einsteinBianchi_summary :
   have h := einsteinBianchi_constrainedFEEC_summary
   ⟨⟨h.1, EuclideanBand.einsteinBianchi_euclidean_band, h.2.2.1, mirrorFEMVerdict_of_approxFEEC,
     h.2.2.2.2⟩, mirrorFEMApproxVerdict, standardCubeApproxVerdict⟩
-
-/-- **The constrained FEEC summary as a corollary of `einsteinBianchi_summary`** (the old name
-`einsteinBianchi_constrainedFEEC_summary` lives upstream in `Feec.Instances.EinsteinBianchi`; its
-`ℝ³` row is read off the approximating one by `euclideanVerdict_of_euclideanEBVerdict`). -/
-theorem einsteinBianchi_constrainedFEEC_summary_of_summary :
-    (TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧ EuclideanVerdict ∧
-      (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧ MirrorFEMVerdict ∧
-      StandardCubeVerdict :=
-  have h := einsteinBianchi_summary.1
-  ⟨h.1, euclideanVerdict_of_euclideanEBVerdict h.2.1, h.2.2⟩
 
 end Feec.Instances.EinsteinBianchi

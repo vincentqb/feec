@@ -382,6 +382,14 @@ theorem tsd_propagates (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     obtain ⟨K, hK, hsK⟩ := hsl s
     exact (he_cont s).integrable_of_hasCompactSupport (HasCompactSupport.intro hK fun y hy => by
       simp [(hsK y hy).1, (hsK y hy).2, energy])
+  have hfluxD_int : ∀ s c, Integrable fun y => fluxD (E (ev s y)) (B (ev s y))
+      (jet4 E (ev s y) c.succ) (jet4 B (ev s y) c.succ) c := fun s c => by
+    obtain ⟨K, hK, hsK⟩ := hsl s
+    exact ((cd_fluxD hE1 hB1 (hEp c.succ) (hBp c.succ) c).continuous.comp
+      (contDiff_finCons_right (k := 1) s).continuous).integrable_of_hasCompactSupport
+      (HasCompactSupport.intro hK fun y hy => by
+        simp only [Function.comp_apply]
+        rw [(hsK y hy).1, (hsK y hy).2, fluxD_zero_left])
   -- the spatial integrals of the flux divergence vanish
   have hflux : ∀ s c, ∫ y, fluxD (E (ev s y)) (B (ev s y)) (jet4 E (ev s y) c.succ)
       (jet4 B (ev s y) c.succ) c = 0 := by
@@ -397,13 +405,6 @@ theorem tsd_propagates (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
       funext y
       show partialDeriv c (fun y => flux (E (ev s y)) (B (ev s y)) c) y = _
       rw [partialDeriv_comp_finCons (hΦ _) c, partialDeriv_flux hE1 hB1]
-    have hG'int : Integrable fun y => fluxD (E (ev s y)) (B (ev s y))
-        (jet4 E (ev s y) c.succ) (jet4 B (ev s y) c.succ) c :=
-      ((cd_fluxD hE1 hB1 (hEp c.succ) (hBp c.succ) c).continuous.comp
-        (contDiff_finCons_right (k := 1) s).continuous).integrable_of_hasCompactSupport
-        (HasCompactSupport.intro hK fun y hy => by
-          simp only [Function.comp_apply]
-          rw [(hsK y hy).1, (hsK y hy).2, fluxD_zero_left])
     have hgint : Integrable fun y => flux (E (ev s y)) (B (ev s y)) c :=
       ((cd_flux hE1 hB1 c).continuous.comp
         (contDiff_finCons_right (k := 1) s).continuous).integrable_of_hasCompactSupport
@@ -412,7 +413,7 @@ theorem tsd_propagates (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
           simp [(hsK y hy).1, (hsK y hy).2, flux])
     have ibp := integral_mul_fderiv_eq_neg_fderiv_mul_of_integrable (μ := volume)
       (f := fun _ : Fin 3 → ℝ => (1 : ℝ)) (g := fun y => flux (E (ev s y)) (B (ev s y)) c)
-      (v := Pi.single c 1) (by simp) (by simpa [hg'] using hG'int) (by simpa using hgint)
+      (v := Pi.single c 1) (by simp) (by simpa [hg'] using hfluxD_int s c) (by simpa using hgint)
       (fun _ _ => differentiableAt_const _) (fun y _ => hg y)
     simpa [hg'] using ibp
   -- differentiation under the integral sign
@@ -456,15 +457,8 @@ theorem tsd_propagates (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
         (hEeq _ hs) (hBeq _ hs) (hdiv s hs.le y).1 (hdiv s hs.le y).2
       linarith
     simp only [pw]
-    rw [integral_const_mul, integral_finsetSum]
-    · simp [hflux]
-    · intro c _
-      obtain ⟨K, hK, hsK⟩ := hsl s
-      exact ((cd_fluxD hE1 hB1 (hEp c.succ) (hBp c.succ) c).continuous.comp
-        (contDiff_finCons_right (k := 1) s).continuous).integrable_of_hasCompactSupport
-        (HasCompactSupport.intro hK fun y hy => by
-          simp only [Function.comp_apply]
-          rw [(hsK y hy).1, (hsK y hy).2, fluxD_zero_left])
+    rw [integral_const_mul, integral_finsetSum _ fun c _ => hfluxD_int s c]
+    simp [hflux]
   have hconst := const_of_deriv_pos hI hI0 t ht
   have hinit : ∫ y, energy (E (ev 0 y)) (B (ev 0 y)) = 0 := by
     have : (fun y => energy (E (ev 0 y)) (B (ev 0 y))) = fun _ => 0 := by

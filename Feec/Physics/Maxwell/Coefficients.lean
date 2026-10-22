@@ -21,9 +21,7 @@ Concrete `Maxwell.Medium`s on the `L²` fields `ℓ²(ι; L²(μ))` (e.g. `L²(�
 
 All results of `Feec.Physics.Maxwell.Media` and `Feec.Physics.Maxwell.Ohmic` (well-posedness,
 energy conservation and decay, propagation of the weighted Gauss laws `div (ε E) = 0`,
-`div (μ H) = 0`) then hold for such media, e.g. on every open `Ω ⊆ ℝ³` with PEC or PMC
-(`Maxwell.pec_isotropic_gauss_propagates`); a pointwise nonnegative matrix conductivity satisfies
-the Ohmic hypothesis `0 ≤ re ⟪σ E, E⟫` (`MeasureTheory.Lp.re_inner_matMul_nonneg`).
+`div (μ H) = 0`) then hold for such media, e.g. on every open `Ω ⊆ ℝ³` with PEC or PMC.
 
 ## Main definitions
 
@@ -70,26 +68,9 @@ def mulL2 (G : Lp 𝕜 ∞ μ) : Lp 𝕜 2 μ →L[𝕜] Lp 𝕜 2 μ :=
       map_smul' := fun c u => (Lp.smul_comm c G u).symm }
     ‖G‖ fun u => Lp.norm_smul_le G u
 
-theorem mulL2_apply (G : Lp 𝕜 ∞ μ) (u : Lp 𝕜 2 μ) : mulL2 G u = G • u := rfl
-
 theorem coeFn_mulL2 (G : Lp 𝕜 ∞ μ) (u : Lp 𝕜 2 μ) :
     mulL2 G u =ᵐ[μ] fun x => G x * u x :=
   Lp.coeFn_lpSMul (r := 2) G u
-
-/-- Composition of multiplications: `G (H u) = K u` if `K = G H` a.e. -/
-theorem mulL2_mulL2 {G H K : Lp 𝕜 ∞ μ} (h : ∀ᵐ x ∂μ, K x = G x * H x) (u : Lp 𝕜 2 μ) :
-    mulL2 G (mulL2 H u) = mulL2 K u := by
-  refine Lp.ext ?_
-  filter_upwards [coeFn_mulL2 G (mulL2 H u), coeFn_mulL2 H u, coeFn_mulL2 K u, h] with
-    x h1 h2 h3 h4
-  rw [h1, h2, h3, h4, mul_assoc]
-
-/-- Multiplication by `1` is the identity. -/
-theorem mulL2_of_eq_one {G : Lp 𝕜 ∞ μ} (h : ∀ᵐ x ∂μ, G x = 1) (u : Lp 𝕜 2 μ) :
-    mulL2 G u = u := by
-  refine Lp.ext ?_
-  filter_upwards [coeFn_mulL2 G u, h] with x h1 h2
-  rw [h1, h2, one_mul]
 
 /-- **The adjoint of a multiplication** is multiplication by the conjugate:
 `⟪G u, v⟫ = ⟪u, G' v⟫` for `G' = Ḡ` a.e. -/
@@ -120,14 +101,6 @@ def diagL (T : E →L[𝕜] E) : PiLp 2 (fun _ : ι => E) →L[𝕜] PiLp 2 (fun
       (ι → E) →L[𝕜] PiLp 2 (fun _ : ι => E)).comp
     ((ContinuousLinearMap.pi fun j => T.comp (ContinuousLinearMap.proj j)).comp
       (PiLp.continuousLinearEquiv 2 𝕜 (fun _ : ι => E) : PiLp 2 (fun _ : ι => E) →L[𝕜] ι → E))
-
-omit [Fintype ι] in
-theorem diagL_apply (T : E →L[𝕜] E) (u : PiLp 2 (fun _ : ι => E)) (j : ι) :
-    diagL T u j = T (u j) := rfl
-
-omit [Fintype ι] in
-theorem diagL_diagL (T T' : E →L[𝕜] E) (u : PiLp 2 (fun _ : ι => E)) :
-    diagL T (diagL T' u) = diagL (T.comp T') u := rfl
 
 theorem inner_diagL {T T' : E →L[𝕜] E} (h : ∀ x y, ⟪T x, y⟫_𝕜 = ⟪x, T' y⟫_𝕜)
     (u v : PiLp 2 (fun _ : ι => E)) :
@@ -211,14 +184,6 @@ theorem le_re_inner_matMul {A : ι → ι → Lp 𝕜 ∞ μ} {c : ℝ}
     (integrable_finsetSum _ fun j _ => hintj j).re ?_
   filter_upwards [hc] with x hx
   exact hx fun i => u i x
-
-/-- A pointwise **nonnegative** matrix field (e.g. a conductivity `σ(x) ≥ 0`) gives
-`0 ≤ re ⟪σ u, u⟫`, the hypothesis of the Ohmic-loss results (`Maxwell.Medium.ohmic`). -/
-theorem re_inner_matMul_nonneg {A : ι → ι → Lp 𝕜 ∞ μ}
-    (hc : ∀ᵐ x ∂μ, ∀ v : ι → 𝕜, 0 ≤ RCLike.re (∑ j, conj (∑ i, A j i x * v i) * v j))
-    (u : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) : 0 ≤ RCLike.re ⟪matMul A u, u⟫_𝕜 := by
-  have := le_re_inner_matMul (c := 0) (by filter_upwards [hc] with x hx v; simpa using hx v) u
-  simpa using this
 
 end Matrix
 
@@ -310,10 +275,6 @@ def isotropicFactor : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) ≃L[𝕜] PiLp 2 (fun
         x h1 h2 h3
       rw [h1, h2, ← mul_assoc, h3, one_mul])
 
-omit [Fintype ι] in
-theorem isotropicFactor_apply (u : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) (j : ι) :
-    isotropicFactor 𝕜 ι hs ha hab u j = mulL2 (sqrtField 𝕜 hs hab) (u j) := rfl
-
 /-- The factor `√s` is **self-adjoint**. -/
 theorem adjoint_isotropicFactor :
     ContinuousLinearMap.adjoint (isotropicFactor 𝕜 ι hs ha hab :
@@ -381,36 +342,5 @@ theorem Medium.exists_anisotropic {κ : Type*} [Fintype κ] {A : ι → ι → L
       M.ε = matMul A ∧ M.μ = matMul B :=
   Medium.exists_eq (isSelfAdjoint_matMul hA) (isSelfAdjoint_matMul hB) hc (le_re_inner_matMul hcA)
     (le_re_inner_matMul hcB)
-
-/-! ### Isotropic media on domains of `ℝ³` -/
-
-section Domain
-
-open Feec.Domain Set ShortHilbertComplex
-
-variable {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) [Fact (IsOpen Ω)] {ε μ' : (Fin 3 → ℝ) → ℝ}
-  (hε : AEStronglyMeasurable ε (volume.restrict Ω)) (hμ : AEStronglyMeasurable μ' (volume.restrict Ω))
-  {a b : ℝ} (ha : 0 < a) (hεb : ∀ᵐ x ∂(volume.restrict Ω), a ≤ ε x ∧ ε x ≤ b)
-  (hμb : ∀ᵐ x ∂(volume.restrict Ω), a ≤ μ' x ∧ μ' x ≤ b)
-
-/-- **Maxwell in an isotropic inhomogeneous medium with a perfect electric conductor** on any
-open `Ω ⊆ ℝ³`: for measurable `a ≤ ε(x), μ(x) ≤ b` (`0 < a`), the weighted Gauss laws `σ = 0`,
-`div (ε E) = 0`, `div (μ H) = 0` with `μ H · n = 0` propagate. -/
-theorem pec_isotropic_gauss_propagates {t₀ t₁ : ℝ}
-    {F U : ℝ → PiLp 2 (W3 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3)) (L2F 𝕜 Ω (Fin 1 × Fin 3)))}
-    (hU : Evolution.IsStrongSolution
-      ((Medium.isotropic 𝕜 (Fin 1 × Fin 3) (Fin 1 × Fin 3) hε hμ ha hεb hμb).maxwell (pec 𝕜 hΩ))
-      (Icc t₀ t₁) F U)
-    (h0 : U t₀ ∈ (Medium.isotropic 𝕜 (Fin 1 × Fin 3) (Fin 1 × Fin 3) hε hμ ha hεb hμb).gauss
-      (pec 𝕜 hΩ) (magneticPEC 𝕜 Ω))
-    (hF : ∀ t ∈ Icc t₀ t₁, F t ∈
-      (Medium.isotropic 𝕜 (Fin 1 × Fin 3) (Fin 1 × Fin 3) hε hμ ha hεb hμb).gauss (pec 𝕜 hΩ)
-        (magneticPEC 𝕜 Ω)) :
-    ∀ t ∈ Icc t₀ t₁, U t ∈
-      (Medium.isotropic 𝕜 (Fin 1 × Fin 3) (Fin 1 × Fin 3) hε hμ ha hεb hμb).gauss (pec 𝕜 hΩ)
-        (magneticPEC 𝕜 Ω) :=
-  pec_gauss_propagates_medium hΩ _ hU h0 hF
-
-end Domain
 
 end Feec.Maxwell

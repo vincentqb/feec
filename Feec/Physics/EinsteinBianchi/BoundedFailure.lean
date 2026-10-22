@@ -33,9 +33,7 @@ states the resulting failure under that hypothesis; the unconditional versions a
   `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` with small residual (`IsRateApproximable`),
   then every family of solutions of (6.5) whose initial states converge to `w(0)` converges to
   `w` uniformly on `[0,T]` (consistency: the `O(h)` rate on the class; stability: the energy
-  estimates). Non-vacuity: `isRateApproximable_waveTangential`.
-* `tendsto_of_mem_wave_domain_of_isRateApproximable`: the same for the solution of every datum in
-  `D(L)` (Stone), under `IsRateApproximable`.
+  estimates).
 * `exists_betaSolution`, `betaU`, `betaW`, `isStrongSolution_forms`: the TSD solution in the
   matrix and forms models; `exists_betaDiscrete`, `tendsto_infDist_rhoBeta`: discrete solutions of
   (6.5) from `(0, 0, 0, P ρ(0))`, whose initial states converge.
@@ -137,13 +135,6 @@ def Solution.sub' {T : ℝ} {f₁ f₂ : ℝ → Wt1} (s₁ : D.Solution T f₁)
 def Trajectory.vec {T : ℝ} {f : ℝ → Wt1} (s : D.Trajectory T f) (t : ℝ) :
     Feec.BGG.EnergySpace W0 Wt1 W2 Wt2 :=
   Feec.BGG.energyEmb W0 Wt1 W2 Wt2 (D.i0 (s.σ t), D.it1 (s.u t), s.M t, s.ρ t)
-
-theorem Trajectory.norm_vec_sub {T : ℝ} {f g : ℝ → Wt1} (s : D.Trajectory T f)
-    (s' : D.Trajectory T g) (t : ℝ) :
-    ‖s.vec t - s'.vec t‖ = √(‖D.i0 (s.σ t) - D.i0 (s'.σ t)‖ ^ 2 +
-      ‖D.it1 (s.u t) - D.it1 (s'.u t)‖ ^ 2 + ‖s.M t - s'.M t‖ ^ 2 + ‖s.ρ t - s'.ρ t‖ ^ 2) :=
-  Discrete.norm_sub_of_isEnergyEmbedding Feec.BGG.isEnergyEmbedding_energyEmb
-    _ _
 
 /-- **Energy stability of (6.1) with a source** (§6.1, the energy argument):
 `‖(σ, u, M, ρ)(t)‖ ≤ ‖(σ, u, M, ρ)(0)‖ + ∫₀ᵗ ‖f‖` on `[0,T]`. -/
@@ -752,15 +743,6 @@ theorem norm_srcQ_le [CompleteSpace Q.Vt1h] (f : ℝ → Wv W1) (t : ℝ) :
       rw [← sq, h]; exact h2
     exact le_of_mul_le_mul_right h3 h0
 
-theorem continuousOn_srcQ [CompleteSpace Q.Vt1h] {f : ℝ → Wv W1} {T : ℝ}
-    (hf : ContinuousOn f (Icc 0 T)) :
-    ContinuousOn (srcQ Q f) (Icc 0 T) := by
-  have h1 : Continuous fun w : Wv W1 => (innerSL ℝ w).comp (incl1CLM.comp Q.Vt1h.subtypeL) :=
-    ((ContinuousLinearMap.compL ℝ Q.Vt1h (Wv W1) ℝ).flip
-      (incl1CLM.comp Q.Vt1h.subtypeL)).continuous.comp (innerSL ℝ).continuous
-  exact (InnerProductSpace.toDual ℝ Q.Vt1h).symm.continuous.comp_continuousOn
-    (h1.comp_continuousOn hf)
-
 /-- The energy embedding of the domain model `H̊Λ⁰ × H̊Λ¹(Q)³ × L²Λ² × (L²Λ²)³` into the
 continuous energy space. -/
 def embU : (U0 × Wv U1 × W2 × Wv W2) →L[ℝ] Feec.BGG.EnergySpace W0 (Wv W1) W2 (Wv W2) :=
@@ -840,9 +822,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-theorem cubeSource_eq_srcQ (N : ℕ) (f : ℝ → Wv W1) :
-    cubeSource hT hB N f = srcQ (cubeFEM hT hB N) f := rfl
-
 /-- **The rate class** of `cubeWave_rate_tr'`: classical solutions of (6.2) whose states and time
 derivatives are `C²` up to `∂Q` with vanishing tangential traces (bound `L`), with
 `L²`-bounded multiplier functionals. -/
@@ -861,22 +840,6 @@ def IsRateApproximable {T : ℝ} {fw : ℝ → Wv W1} (w : cubeWaveData.Solution
   ∀ ε > 0, ∃ (f : ℝ → Wv W1) (_ : ContinuousOn f (Icc 0 T))
     (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (L : ℝ), IsRateClass s L ∧
       ‖w.vec 0 - (exactWave_toSolution s).vec 0‖ + ∫ r in (0:ℝ)..T, ‖fw r - f r‖ < ε
-
-/-- Every solution in the rate class is rate approximable (by itself). -/
-theorem isRateApproximable_of_isRateClass {T : ℝ} {f : ℝ → Wv W1} (hf : ContinuousOn f (Icc 0 T))
-    (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ} (hs : IsRateClass s L) :
-    IsRateApproximable (exactWave_toSolution s) := fun ε hε =>
-  ⟨f, hf, s, L, hs, by simpa using hε⟩
-
-/-- **Non-vacuity of `IsRateApproximable`**: the classical solution `waveTangential T` of (6.2)
-(nonzero `u(t)`, not flat at `∂Q`, nonzero source) is in the rate class, hence rate
-approximable. -/
-theorem isRateApproximable_waveTangential {T : ℝ} (hT0 : 0 < T) :
-    (∀ t, (waveTangential T).u t ≠ 0) ∧
-      IsRateApproximable (exactWave_toSolution (waveTangential T)) := by
-  obtain ⟨L, hL0, hsm, hmult, hne⟩ := waveTangential_hyps hT0
-  exact ⟨hne, isRateApproximable_of_isRateClass
-    ((continuous_id.smul continuous_const).continuousOn) _ ⟨hL0, hsm, hmult⟩⟩
 
 set_option maxHeartbeats 4000000 in
 /-- **Convergence of (6.5) without rate (Lax)**: let `w` be a solution of (6.1) on the cube with
@@ -1287,33 +1250,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
-
-set_option maxHeartbeats 4000000 in
-/-- **(6.5) for a datum in `D(L)`, through the rate class**: for every `U₀` in the domain of the
-forms-model Hodge wave
-operator, the Hodge wave equation has a classical solution `V` on `[0,T]` (Stone,
-`Feec.EinsteinBianchi.WaveFEM.bgg_wave_existsUnique` with `curlPotential`), which solves (6.1)
-(`solutionOfStrong`) with initial energy vector `(−σ₀, u₀, M₀, ρ₀)`; if it is approximable by
-the rate class, every family of solutions of (6.5) (source `0`) whose initial states converge to
-it converges to it uniformly on `[0,T]`. The unconditional version is
-`Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_mem_wave_domain`. -/
-theorem tendsto_of_mem_wave_domain_of_isRateApproximable {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
-    (hU₀ : U₀ ∈ formsShort.wave.domain) :
-    ∃ (V : ℝ → WS) (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V), V 0 = U₀ ∧
-      (solutionOfStrong hV).vec 0 = Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)
-        (-((comp0 U₀ : bggHilb.Γbar) : W0), comp1 U₀, compML U₀, compρL U₀) ∧
-      (IsRateApproximable (solutionOfStrong hV) →
-        ∀ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
-          Tendsto (fun N => ‖(solutionOfStrong hV).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖) atTop
-            (𝓝 0) →
-          ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
-            ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε) := by
-  obtain ⟨V, hV0, hV, -⟩ := bgg_wave_existsUnique curlPotential hU₀ (a := 0) (b := T)
-    (Evolution.ForcingClass.admissible_zero _ 0 T)
-  have hVs : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V := hV.toIsStrongSolution
-  refine ⟨V, hVs, hV0, ?_, fun hw sh hsh0 =>
-    tendsto_of_isRateApproximable hT hB hT0 continuousOn_const _ hw sh hsh0⟩
-  rw [solutionOfStrong_vec hVs ⟨le_rfl, hT0.le⟩, hV0]
 
 end DomainData
 

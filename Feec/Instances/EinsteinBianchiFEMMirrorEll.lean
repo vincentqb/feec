@@ -98,15 +98,6 @@ abbrev ellErr (N : ℕ) (D : TSDDatum) (T t : ℝ) : ℝ :=
 abbrev ellErr' (N : ℕ) (D : TSDDatum) (T t : ℝ) : ℝ :=
   ‖exState' (D.exactWave (T + 1)) t - coeH (mirrorFEM hT hB N) (mEll' hT hB N D T t).toEState‖
 
-theorem ellErr_nonneg (N : ℕ) (D : TSDDatum) (T t : ℝ) : 0 ≤ ellErr hT hB N D T t :=
-  norm_nonneg _
-
-theorem ellErr'_nonneg (N : ℕ) (D : TSDDatum) (T t : ℝ) : 0 ≤ ellErr' hT hB N D T t :=
-  norm_nonneg _
-
-theorem hg_mirror (T : ℝ) : ∀ t ∈ Ico 0 T, ∀ v, mirrorSrcFun 0 t v = 0 :=
-  fun t _ v => mirrorSrcFun_zero_apply t v
-
 
 set_option maxHeartbeats 1000000 in
 /-- **The consistency defect of one real part** is bounded by the projection errors. -/
@@ -116,7 +107,7 @@ theorem norm_mEll_defect_le (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc
       ellErr' hT hB N D T t + ellErr hT hB N D T t := by
   with_reducible_and_instances exact (norm_ellDefect_le (mirrorFEM hT hB N)
     (mirrorWave_dt0_injective hT hB N) (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))
-    (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht))
+    (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht))
 
 set_option maxHeartbeats 1000000 in
 /-- The four-term error of a discrete energy state against a TSD state is its energy error against
@@ -318,13 +309,13 @@ theorem eventually_ellErr_le (D : TSDDatum) (T : ℝ) {ε : ℝ} (hε : 0 < ε) 
   refine ⟨?_, ?_⟩
   · have h := norm_sub_ellTraj_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      s (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht) (D.ell_S0_le_zero hT hB (T + 1) N t ht')
+      s (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht) (D.ell_S0_le_zero hT hB (T + 1) N t ht')
       (D.inner_M_S1_le_zero hT hB (T + 1) N t ht')
       (hdat _ (mirrorFEM_strangData_le_of_close hT hB N (h3 t ht') 0 0))
     with_reducible_and_instances exact h.trans hb
   · have h := norm_sub_ellTraj'_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      s (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht) (D.ell'_S0_le_zero hT hB (T + 1) N t ht')
+      s (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht) (D.ell'_S0_le_zero hT hB (T + 1) N t ht')
       (D.inner_M'_S1_le_zero hT hB (T + 1) N t ht')
       (hdat _ (mirrorFEM_strangData_le_of_close hT hB N (h4 t ht') 0 0))
     with_reducible_and_instances exact h.trans hb
@@ -360,8 +351,6 @@ def mirrorEllCore : (mirrorFEMApprox hT hB).Core where
     rw [dist_zero_left, Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _)]
     have := norm_mirrorEllCmp_defect_le hT hB T hx N ht
     linarith [(h1 t ht).1, (h1 t ht).2, (h2 t ht).1, (h2 t ht).2]
-
-theorem mirrorEllCore_data : (mirrorEllCore hT hB).Data = tsdQℝ ⊓ complexQℝ.wave.domainSq := rfl
 
 theorem mirrorEllCore_closure : (mirrorEllCore hT hB).Data.topologicalClosure = tsdQℝ :=
   topologicalClosure_tsdQℝ_inf_domainSq
@@ -405,13 +394,13 @@ theorem ellErr_le_sobolev (D : TSDDatum) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 
   refine ⟨?_, ?_⟩
   · have h := norm_sub_ellTraj_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      (D.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht)
+      (D.exactWave (T + 1)) (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht)
       (D.ell_S0_le_zero hT hB (T + 1) N t ht') (D.inner_M_S1_le_zero hT hB (T + 1) N t ht')
       (hd.1 t ht')
     with_reducible_and_instances exact h.trans_eq hb
   · have h := norm_sub_ellTraj'_le (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) mirror_harmonicStability (mirrorFEM_compatible hT hB N)
-      (D.exactWave (T + 1)) (hg_mirror (T + 1)) (Icc_sub_Ico_add_one ht)
+      (D.exactWave (T + 1)) (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht)
       (D.ell'_S0_le_zero hT hB (T + 1) N t ht') (D.inner_M'_S1_le_zero hT hB (T + 1) N t ht')
       (hd.2 t ht')
     with_reducible_and_instances exact h.trans_eq hb
@@ -469,12 +458,6 @@ def mirrorEllRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     change _ ≤ 12 * mirrorEllK (C := C) * meshSize N ^ s * √(sobState (2 + s) x)
     nlinarith [e1.1, e1.2, e2.1, e2.2]
 
-theorem mirrorEllRateSobolev_data (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    (mirrorEllRateSobolev hT hB T s hs0 hs1).Data = mirrorSobData s := rfl
-
-theorem mirrorEllRateSobolev_C' (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    (mirrorEllRateSobolev hT hB T s hs0 hs1).C' = 12 * mirrorEllK (C := C) := rfl
-
 /-- The data of `mirrorL3Data` have `U₀`, `LU₀`, `L²U₀` in `H¹` with
 `‖·‖_1 + ‖L·‖_1 + ‖L²·‖_1 ≤ 2 ‖ξ₀‖_{L³}`, for the real and imaginary parts. -/
 theorem sobSize_le_of_mem_l3 {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data) :
@@ -528,10 +511,6 @@ def mirrorEllRate (T : ℝ) : (mirrorFEMApprox hT hB).RateClass T where
     change _ ≤ 8 * mirrorEllK (C := C) * meshSize N ^ (1 : ℝ) * mirrorL3Norm x
     nlinarith [e1.1, e1.2, e2.1, e2.2]
 
-theorem mirrorEllRate_data (T : ℝ) : (mirrorEllRate hT hB T).Data = mirrorL3Data := rfl
-
-theorem mirrorEllRate_C' (T : ℝ) : (mirrorEllRate hT hB T).C' = 8 * mirrorEllK (C := C) := rfl
-
 /-! ### The verdict with the elliptic initialization (6.4) -/
 
 set_option maxHeartbeats 1000000 in
@@ -547,7 +526,7 @@ theorem mEll_zero_toEState (N : ℕ) (D : TSDDatum) {T : ℝ} (hT0 : 0 ≤ T) :
         ((D.exactWave T).φ 0) ((D.exactWave T).u 0) ((D.exactWave T).M 0) ((D.exactWave T).ρ 0)
         ((D.exactWave T).ℓ 0)) 0)).1.1 :=
   toEState_ellTraj (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
-    (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1)) (hg_mirror (T + 1))
+    (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1)) (fun t _ v => mirrorSrcFun_zero_apply t v)
     ⟨le_rfl, by linarith⟩
 
 /-- The comparison initial value of a datum: the elliptic projections of its real and imaginary
@@ -579,18 +558,13 @@ theorem mirrorEllCmp_p_horizon (T T' : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) (t : �
 
 /-- **The thesis' initialization (6.4) of a datum**, independent of the horizon: the pair of
 elliptic projections of the real and imaginary parts of the exact initial state
-(`mirrorEllInit_of_mem`, `mEll_zero_toEState`). -/
+(`mirrorEllCmp_p_zero`, `mEll_zero_toEState`). -/
 def mirrorEllInit (x : PiLp 2 SpaceQ) (N : ℕ) : (mirrorFEMApprox hT hB).X N :=
   (mirrorEllCmp hT hB 0).p x N 0
 
 theorem mirrorEllCmp_p_zero_eq_init (T : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) :
     (mirrorEllCmp hT hB T).p x N 0 = mirrorEllInit hT hB x N :=
   mirrorEllCmp_p_horizon hT hB T 0 x N 0
-
-theorem mirrorEllInit_of_mem {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) (N : ℕ) :
-    mirrorEllInit hT hB x N = WithLp.toLp 2 (mEll hT hB N (tsdDatumOf hx) 0 0,
-      mEll hT hB N (tsdDatumOf (neg_I_smul_mem hx)) 0 0) :=
-  mirrorEllCmp_p_zero hT hB 0 hx N
 
 set_option maxHeartbeats 1000000 in
 /-- **The `O(h)` rate of the mirror scheme (6.5) from the elliptic projection (6.4)**, for TSD data

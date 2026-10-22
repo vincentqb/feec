@@ -131,21 +131,12 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D)
 
-/-- The energy state of the continuous forms. -/
-abbrev CState (V0 Vt1 W2 Wt2 : Type*) [NormedAddCommGroup V0] [NormedAddCommGroup Vt1]
-    [NormedAddCommGroup W2] [NormedAddCommGroup Wt2] : Type _ := EState V0 Vt1 W2 Wt2
-
 /-- The discrete energy states as continuous energy states (isometric). -/
-def coeH : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h →L[ℝ] CState V0 Vt1 W2 Wt2 :=
+def coeH : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h →L[ℝ] EState V0 Vt1 W2 Wt2 :=
   EState.mapL Q.V0h.subtypeL Q.Vt1h.subtypeL Q.W2h.subtypeL Q.Wt2h.subtypeL
 
 theorem coeH_apply (a : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) :
     coeH Q a = EState.mk (a.σ : V0) (a.u : Vt1) (a.M : W2) (a.ρ : Wt2) := rfl
-
-@[simp] theorem coeH_σ (a : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) : (coeH Q a).σ = (a.σ : V0) := rfl
-@[simp] theorem coeH_u (a : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) : (coeH Q a).u = (a.u : Vt1) := rfl
-@[simp] theorem coeH_M (a : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) : (coeH Q a).M = (a.M : W2) := rfl
-@[simp] theorem coeH_ρ (a : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) : (coeH Q a).ρ = (a.ρ : Wt2) := rfl
 
 theorem inner_coeH (a b : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) :
     ⟪coeH Q a, coeH Q b⟫ = ⟪a, b⟫ := by
@@ -158,21 +149,12 @@ theorem norm_coeH (a : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) : ‖coeH Q a‖ = ‖a
 variable {T : ℝ} {g : ℝ → Vt1 →ₗ[ℝ] ℝ}
 
 /-- The exact energy state `(σ, u, M, ρ)(t)`. -/
-def exState (s : ExactWave D T g) (t : ℝ) : CState V0 Vt1 W2 Wt2 :=
+def exState (s : ExactWave D T g) (t : ℝ) : EState V0 Vt1 W2 Wt2 :=
   EState.mk (s.σ t) (s.u t) (s.M t) (s.ρ t)
 
 /-- Its time derivative `(σ', u', M', ρ')(t)`. -/
-def exState' (s : ExactWave D T g) (t : ℝ) : CState V0 Vt1 W2 Wt2 :=
+def exState' (s : ExactWave D T g) (t : ℝ) : EState V0 Vt1 W2 Wt2 :=
   EState.mk (s.σ' t) (s.u' t) (s.M' t) (s.ρ' t)
-
-@[simp] theorem exState_σ (s : ExactWave D T g) (t : ℝ) : (exState s t).σ = s.σ t := rfl
-@[simp] theorem exState_u (s : ExactWave D T g) (t : ℝ) : (exState s t).u = s.u t := rfl
-@[simp] theorem exState_M (s : ExactWave D T g) (t : ℝ) : (exState s t).M = s.M t := rfl
-@[simp] theorem exState_ρ (s : ExactWave D T g) (t : ℝ) : (exState s t).ρ = s.ρ t := rfl
-@[simp] theorem exState'_σ (s : ExactWave D T g) (t : ℝ) : (exState' s t).σ = s.σ' t := rfl
-@[simp] theorem exState'_u (s : ExactWave D T g) (t : ℝ) : (exState' s t).u = s.u' t := rfl
-@[simp] theorem exState'_M (s : ExactWave D T g) (t : ℝ) : (exState' s t).M = s.M' t := rfl
-@[simp] theorem exState'_ρ (s : ExactWave D T g) (t : ℝ) : (exState' s t).ρ = s.ρ' t := rfl
 
 /-- The error of a discrete energy state against the exact state, in components. -/
 theorem norm_exState_sub_coeH_sq (s : ExactWave D T g) (t : ℝ)
@@ -353,7 +335,7 @@ theorem norm_ellDefect_le (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, 
 omit [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
   [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h] [FiniteDimensional ℝ Q.Wt2h] in
 /-- The error of the hidden state against the exact state, in components. -/
-theorem norm_sub_coeH_sq (a : CState V0 Vt1 W2 Wt2) (x : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) :
+theorem norm_sub_coeH_sq (a : EState V0 Vt1 W2 Wt2) (x : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) :
     ‖a - coeH Q (EState.mkL x)‖ ^ 2 = ‖a.σ - x.1‖ ^ 2 + ‖a.u - x.2.1‖ ^ 2 +
       ‖a.M - x.2.2.1‖ ^ 2 + ‖a.ρ - x.2.2.2‖ ^ 2 := by
   rw [EState.norm_sq]; rfl

@@ -24,9 +24,8 @@ over `ℝ` (`complexQℝ`). The scheme is not a subcomplex discretization: its d
 * complex data: real and imaginary parts each run (6.5)
   (`mirrorFEMApprox = mirrorFEMReal.complexify mulI`).
 
-The real-part maps (`mirrorRe`, `mirrorReEmb`) satisfy `‖y‖² = ‖Re y‖² + ‖Re(-i y)‖²`,
-`Re (Rt w) = w`, `Re (i Rt w) = 0` (`norm_sq_mirrorRe`, `mirrorRe_mirrorReEmb`,
-`mirrorRe_I_mirrorReEmb`), whence the **error identity** `norm_sub_complexEmb_sq`:
+The real-part maps `Re` (componentwise `re0`, `rowsW1L`, `reM`, `rowsW2L`) and the embedding
+`Rt = mirrorReEmb` satisfy the **error identity** `norm_sq_sub_mirrorReEmb`:
 `‖y - Rt a - i Rt b‖² = ‖Re y - a‖² + ‖Re(-i y) - b‖²`; for a TSD state `y` the two terms are
 the error quantities of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` for the data `y` and
 `-i y`.
@@ -207,8 +206,6 @@ def emb1 : Wv W1 →L[ℝ] MQ :=
       (cQ (formIdx 3 ((1 : ℕ) : ℤ))).toContinuousLinearEquiv.toContinuousLinearMap ∘L
       (PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin 3 => W1) p.1)
 
-theorem emb1_eq (w : Wv W1) : emb1 w = ofRealRows fun a => cQ _ (w a) := rfl
-
 @[simp] theorem emb1_apply (w : Wv W1) (p : Fin 3 × Fin 3) :
     emb1 w p = ofRealL _ (cQ _ (w p.1) (eq1 p.2)) := rfl
 
@@ -223,8 +220,6 @@ def emb2 : Wv W2 →L[ℝ] MQ :=
       (PiLp.proj (𝕜 := ℝ) 2 (fun _ : formIdx 3 ((2 : ℕ) : ℤ) => L2 ℝ (Q (Fin 3))) (eq2 p.2)) ∘L
       (cQ (formIdx 3 ((2 : ℕ) : ℤ))).toContinuousLinearEquiv.toContinuousLinearMap ∘L
       (PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin 3 => W2) p.1)
-
-theorem emb2_eq (w : Wv W2) : emb2 w = matB w := rfl
 
 @[simp] theorem emb2_apply (w : Wv W2) (p : Fin 3 × Fin 3) :
     emb2 w p = (sg2 p.2 : ℂ) • ofRealL _ (cQ _ (w p.1) (eq2 p.2)) := rfl
@@ -327,25 +322,6 @@ def slotM : PiLp 2 SpaceQ →L[ℝ] VQ :=
 def slotB : PiLp 2 SpaceQ →L[ℝ] MQ :=
   WithLp.sndL 2 ℝ VQ MQ ∘L (PiLp.proj (𝕜 := ℝ) 2 SpaceQ 2 : PiLp 2 SpaceQ →L[ℝ] W2Q)
 
-@[simp] theorem slot0_apply (y : PiLp 2 SpaceQ) : slot0 y = y 0 := rfl
-@[simp] theorem slot1_apply (y : PiLp 2 SpaceQ) : slot1 y = y 1 := rfl
-@[simp] theorem slotM_apply (y : PiLp 2 SpaceQ) : slotM y = (WithLp.ofLp (y 2 : W2Q)).1 := rfl
-@[simp] theorem slotB_apply (y : PiLp 2 SpaceQ) : slotB y = (WithLp.ofLp (y 2 : W2Q)).2 := rfl
-
-theorem slot1_eq_stEL (y : PiLp 2 SpaceQ) : slot1 y = stEL y := rfl
-theorem slotB_eq_stBL (y : PiLp 2 SpaceQ) : slotB y = stBL y := rfl
-
-/-- **The real part of a mirror state** as a forms state: `(Re σ, rows of Re E, Re M,
-rows of ⋆ Re B)`. -/
-def mirrorRe : PiLp 2 SpaceQ →L[ℝ] REnergy :=
-  EState.mkL.toContinuousLinearMap ∘L
-    ((re0 ∘L slot0).prod ((rowsW1L ∘L slot1).prod ((reM ∘L slotM).prod (rowsW2L ∘L slotB))))
-
-@[simp] theorem mirrorRe_σ (y : PiLp 2 SpaceQ) : (mirrorRe y).σ = re0 (slot0 y) := rfl
-@[simp] theorem mirrorRe_u (y : PiLp 2 SpaceQ) : (mirrorRe y).u = rowsW1L (slot1 y) := rfl
-@[simp] theorem mirrorRe_M (y : PiLp 2 SpaceQ) : (mirrorRe y).M = reM (slotM y) := rfl
-@[simp] theorem mirrorRe_ρ (y : PiLp 2 SpaceQ) : (mirrorRe y).ρ = rowsW2L (slotB y) := rfl
-
 /-- **A real forms state as a real-valued mirror state.** -/
 def mirrorReEmb : REnergy →L[ℝ] PiLp 2 SpaceQ :=
   (PiLp.continuousLinearEquiv 2 ℝ SpaceQ).symm.toContinuousLinearMap ∘L
@@ -362,11 +338,6 @@ def mirrorReEmb : REnergy →L[ℝ] PiLp 2 SpaceQ :=
           (emb2 ∘L (show REnergy →L[ℝ] Wv W2 from
             (ContinuousLinearMap.snd ℝ W2 (Wv W2)) ∘L (ContinuousLinearMap.snd ℝ (Wv W1) _) ∘L
               (ContinuousLinearMap.snd ℝ W0 _) ∘L EState.mkL.symm.toContinuousLinearMap)))
-
-@[simp] theorem mirrorReEmb_zero (z : REnergy) : mirrorReEmb z 0 = emb0 z.σ := rfl
-@[simp] theorem mirrorReEmb_one (z : REnergy) : mirrorReEmb z 1 = emb1 z.u := rfl
-@[simp] theorem mirrorReEmb_two (z : REnergy) :
-    (mirrorReEmb z 2 : W2Q) = WithLp.toLp 2 (embM z.M, emb2 z.ρ) := rfl
 
 theorem norm_sq_spaceQ (y : PiLp 2 SpaceQ) :
     ‖y‖ ^ 2 = ‖slot0 y‖ ^ 2 + ‖slot1 y‖ ^ 2 + ‖slotM y‖ ^ 2 + ‖slotB y‖ ^ 2 := by
@@ -481,10 +452,6 @@ def mirrorFE (N : ℕ) : mirrorHidden hT hB N →L[ℝ] REnergy :=
     (bIncl1CLM ∘L (mirrorFEM hT hB N).Vt1h.subtypeL) (mirrorFEM hT hB N).W2h.subtypeL
     (mirrorFEM hT hB N).Wt2h.subtypeL ∘L HiddenState.subtypeL _
 
-theorem mirrorFE_apply (N : ℕ) (v : mirrorHidden hT hB N) :
-    mirrorFE hT hB N v = EState.mk ((v.toEState.σ : TU0) : W0) (bIncl1 (v.toEState.u : BU1))
-      (v.toEState.M : W2) (v.toEState.ρ : Wv W2) := rfl
-
 theorem norm_mirrorFE0 (N : ℕ) (x : (mirrorFEM hT hB N).V0h) :
     ‖((TD0.domain.subtypeL) ∘L (mirrorFEM hT hB N).V0h.subtypeL) x‖ = ‖x‖ := rfl
 
@@ -518,14 +485,10 @@ theorem inner_mirrorEmb (N : ℕ) (v w : mirrorHidden hT hB N) :
   LinearIsometry.inner_map_map (⟨(mirrorEmb hT hB N).toLinearMap, norm_mirrorEmb hT hB N⟩ :
     mirrorHidden hT hB N →ₗᵢ[ℝ] PiLp 2 SpaceQ) v w
 
-theorem inner_mirrorEmb_adjoint (N : ℕ) (v : mirrorHidden hT hB N) (y : PiLp 2 SpaceQ) :
-    ⟪mirrorEmb hT hB N v, y⟫_ℝ = ⟪v, (mirrorEmb hT hB N).adjoint y⟫_ℝ :=
-  (ContinuousLinearMap.adjoint_inner_right (mirrorEmb hT hB N) v y).symm
-
 theorem adjoint_mirrorEmb_apply (N : ℕ) (v : mirrorHidden hT hB N) :
     (mirrorEmb hT hB N).adjoint (mirrorEmb hT hB N v) = v :=
   ext_inner_left ℝ fun w =>
-    ((inner_mirrorEmb_adjoint hT hB N w (mirrorEmb hT hB N v)).symm).trans
+    (ContinuousLinearMap.adjoint_inner_right (mirrorEmb hT hB N) w (mirrorEmb hT hB N v)).trans
       (inner_mirrorEmb hT hB N w v)
 
 /-! ### The real mirror complex and the scheme as an approximating FEEC discretization -/
@@ -594,8 +557,6 @@ theorem complexQℝ_waveGroup {t : ℝ} (ht : 0 ≤ t) (x : PiLp 2 SpaceQ) :
 /-- **The real TSD constraint**. -/
 abbrev tsdQℝ : Submodule ℝ (PiLp 2 SpaceQ) := totalSub fun i => (tsdQ i).restrictScalars ℝ
 
-theorem mem_tsdQℝ {x : PiLp 2 SpaceQ} : x ∈ tsdQℝ ↔ x ∈ totalSub tsdQ := Iff.rfl
-
 /-- **The TSD constraint reduces the real mirror wave operator.** [QuennevilleBelair2015],
 Prop 4.17 (corrected) -/
 theorem isReducing_tsdQℝ : complexQℝ.wave.IsReducing tsdQℝ :=
@@ -631,7 +592,7 @@ def mirrorFEMReal : ApproxFEEC complexQℝ ℕ where
 
 theorem mirrorFEMReal_isOrthogonal : ApproxFEEC.IsOrthogonal (mirrorFEMReal hT hB) where
   inner_incl N a b := inner_mirrorEmb hT hB N a b
-  inner_incl_left N a y := inner_mirrorEmb_adjoint hT hB N a y
+  inner_incl_left _ a y := (ContinuousLinearMap.adjoint_inner_right _ a y).symm
 
 /-- Multiplication by `i` on mirror states, as a real-linear map. -/
 def mulI : PiLp 2 SpaceQ →L[ℝ] PiLp 2 SpaceQ :=
@@ -652,7 +613,7 @@ theorem inner_mirrorEmb_mulI (N : ℕ) (a b : mirrorHidden hT hB N) :
 theorem adjoint_mirrorEmb_mulI (N : ℕ) (b : mirrorHidden hT hB N) :
     (mirrorEmb hT hB N).adjoint (mulI (mirrorEmb hT hB N b)) = 0 :=
   ext_inner_left ℝ fun w =>
-    ((inner_mirrorEmb_adjoint hT hB N w _).symm.trans (inner_mirrorEmb_mulI hT hB N w b)).trans
+    ((ContinuousLinearMap.adjoint_inner_right _ w _).trans (inner_mirrorEmb_mulI hT hB N w b)).trans
       (inner_zero_right w).symm
 
 /-- **The mirror scheme (6.5) for complex data**: real and imaginary parts each run (6.5)
@@ -660,8 +621,6 @@ theorem adjoint_mirrorEmb_mulI (N : ℕ) (b : mirrorHidden hT hB N) :
 def mirrorFEMApprox : ApproxFEEC complexQℝ ℕ :=
   (mirrorFEMReal hT hB).complexify mulI mulI_mulI norm_mulI (adjoint_mirrorEmb_mulI hT hB)
     (inner_mirrorEmb_mulI hT hB)
-
-theorem mirrorFEMApprox_K : (mirrorFEMApprox hT hB).K = tsdQℝ := rfl
 
 theorem mirrorFEMApprox_isOrthogonal : ApproxFEEC.IsOrthogonal (mirrorFEMApprox hT hB) :=
   (mirrorFEMReal_isOrthogonal hT hB).complexify mulI mulI_mulI norm_mulI

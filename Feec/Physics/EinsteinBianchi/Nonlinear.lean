@@ -35,7 +35,7 @@ derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection c
   identity for `W = [[E, B], [B, -E]]` ⇔ `NonlinearEB`: `div E + conE = 0`, `div B + conB = 0`,
   `e_0(E) + curl B + lotE = 0`, `e_0(B) - curl E + lotB = 0`, with explicit lower-order terms.
 * `vacuum_nonlinearEB`: **every vacuum metric** satisfies `NonlinearEB` in every orthonormal frame.
-* `nonlinearEB_zero_conn_iff`, `hasDerivAt_frameBianchi`, `linearization_nonlinearEB`:
+* `linearization_nonlinearEB`:
   **the linearization at Minkowski space is exactly the linearized EB system** `EBJet` of
   `Feec.Physics.EinsteinBianchi.System` (equivalently, by `linBianchi_iff`, the linearized Bianchi
   identity of Prop 3.4).
@@ -295,37 +295,6 @@ theorem frameBianchi_iff (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE
 
 /-! ### Linearization at Minkowski space -/
 
-/-- The lower-order terms vanish when the frame connection coefficients do. -/
-theorem lowerOrder_zero_conn (W : Tensor4) (α β γ' δ θ : Fin 4) :
-    lowerOrder 0 W α β γ' δ θ = 0 := by
-  simp [lowerOrder, connPart]
-
-/-- The lower-order terms vanish when the curvature does. -/
-theorem lowerOrder_zero_weyl (γ : FrameConn) (α β γ' δ θ : Fin 4) :
-    lowerOrder γ 0 α β γ' δ θ = 0 := by
-  simp [lowerOrder, connPart]
-
-/-- With vanishing frame connection coefficients (Minkowski space in a Cartesian frame, where
-`γ = 0` and the frame derivatives are the partial derivatives) the nonlinear EB system is exactly
-the linearized EB system. -/
-theorem nonlinearEB_zero_conn_iff (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) :
-    NonlinearEB 0 E B dE dB ↔ EBJet dE dB := by
-  have h1 : conE 0 (weylOf E B) = 0 := funext fun j => by simp [conE, lowerOrder_zero_conn]
-  have h2 : conB 0 (weylOf E B) = 0 := funext fun j => by simp [conB, lowerOrder_zero_conn]
-  have h3 : lotE 0 (weylOf E B) = 0 := Matrix.ext fun j m => by
-    simp [lotE, lowerOrder_zero_conn]
-  have h4 : lotB 0 (weylOf E B) = 0 := Matrix.ext fun j m => by
-    simp [lotB, lowerOrder_zero_conn]
-  simp only [NonlinearEB, EBJet, h1, h2, h3, h4, add_zero]
-
-/-- The lower-order terms are quadratic: `lowerOrder (ε γ) (ε W) = ε² lowerOrder γ W`. -/
-theorem lowerOrder_smul (ε : ℝ) (γ : FrameConn) (W : Tensor4) (α β γ' δ θ : Fin 4) :
-    lowerOrder (ε • γ) (ε • W) α β γ' δ θ = ε ^ 2 * lowerOrder γ W α β γ' δ θ := by
-  simp only [lowerOrder, connPart, Pi.smul_apply, smul_eq_mul, ← sum_add_distrib,
-    ← sum_neg_distrib]
-  rw [mul_sum]
-  exact sum_congr rfl fun _ _ => by ring
-
 /-- `weylOf` is linear: `weylOf (ε E) (ε B) = ε weylOf E B`. -/
 theorem weylOf_smul (ε : ℝ) (E B : Matrix (Fin 3) (Fin 3) ℝ) :
     weylOf (ε • E) (ε • B) = ε • weylOf E B := by
@@ -351,13 +320,6 @@ theorem hasDerivAt_weylOf {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ} {E' B' : Ma
   · exact (hB i j).const_mul _
   · exact (hE i j).neg.const_mul _
 
-/-- Derivative of a component of `dWeyl` along a family of jets. -/
-theorem hasDerivAt_dWeyl {dE dB : ℝ → Jet4} {dE' dB' : Jet4} {t : ℝ}
-    (hE : ∀ μ i j, HasDerivAt (fun ε => dE ε μ i j) (dE' μ i j) t)
-    (hB : ∀ μ i j, HasDerivAt (fun ε => dB ε μ i j) (dB' μ i j) t) (μ a b c d : Fin 4) :
-    HasDerivAt (fun ε => dWeyl (dE ε) (dB ε) μ a b c d) (dWeyl dE' dB' μ a b c d) t :=
-  hasDerivAt_weylOf (E := fun ε => dE ε μ) (B := fun ε => dB ε μ) (hE μ) (hB μ) a b c d
-
 /-- The lower-order terms have vanishing derivative at a background with `γ = 0` and `W = 0`. -/
 theorem hasDerivAt_lowerOrder {γ : ℝ → FrameConn} {W : ℝ → Tensor4} {γ' : FrameConn}
     {W' : Tensor4} (hγ : ∀ l κ ν, HasDerivAt (fun ε => γ ε l κ ν) (γ' l κ ν) 0)
@@ -378,36 +340,6 @@ theorem hasDerivAt_lowerOrder {γ : ℝ → FrameConn} {W : ℝ → Tensor4} {γ
     simpa [connPart] using this
   simpa [lowerOrder] using
     (((hc α β γ'' δ θ).fun_add (hc β γ'' α δ θ)).fun_add (hc γ'' α β δ θ)).fun_neg
-
-/-- Derivative of `bianchi2` along a family of jets. -/
-theorem hasDerivAt_bianchi2 {dE dB : ℝ → Jet4} {dE' dB' : Jet4} {t : ℝ}
-    (hE : ∀ μ i j, HasDerivAt (fun ε => dE ε μ i j) (dE' μ i j) t)
-    (hB : ∀ μ i j, HasDerivAt (fun ε => dB ε μ i j) (dB' μ i j) t) (α β γ δ θ : Fin 4) :
-    HasDerivAt (fun ε => bianchi2 (dE ε) (dB ε) α β γ δ θ) (bianchi2 dE' dB' α β γ δ θ) t :=
-  ((hasDerivAt_dWeyl hE hB α β γ δ θ).fun_add (hasDerivAt_dWeyl hE hB β γ α δ θ)).add
-    (hasDerivAt_dWeyl hE hB γ α β δ θ)
-
-/-- **Linearization at Minkowski space**: along any differentiable family of frame connection
-coefficients, electric and magnetic parts and their frame-derivative jets starting at Minkowski
-space in a Cartesian frame (`γ(0) = 0`, `E(0) = B(0) = 0`), the derivative at `ε = 0` of the
-frame Bianchi expression is the linearized Bianchi expression of the derivative jets. -/
-theorem hasDerivAt_frameBianchi {γ : ℝ → FrameConn} {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ}
-    {dE dB : ℝ → Jet4} {γ' : FrameConn} {E' B' : Matrix (Fin 3) (Fin 3) ℝ} {dE' dB' : Jet4}
-    (hγ : ∀ l κ ν, HasDerivAt (fun ε => γ ε l κ ν) (γ' l κ ν) 0)
-    (hE : ∀ i j, HasDerivAt (fun ε => E ε i j) (E' i j) 0)
-    (hB : ∀ i j, HasDerivAt (fun ε => B ε i j) (B' i j) 0)
-    (hdE : ∀ μ i j, HasDerivAt (fun ε => dE ε μ i j) (dE' μ i j) 0)
-    (hdB : ∀ μ i j, HasDerivAt (fun ε => dB ε μ i j) (dB' μ i j) 0)
-    (hγ0 : γ 0 = 0) (hE0 : E 0 = 0) (hB0 : B 0 = 0) (α β γ'' δ θ : Fin 4) :
-    HasDerivAt (fun ε => frameBianchi (γ ε) (E ε) (B ε) (dE ε) (dB ε) α β γ'' δ θ)
-      (bianchi2 dE' dB' α β γ'' δ θ) 0 := by
-  have hW0 : weylOf (E 0) (B 0) = 0 := by
-    rw [hE0, hB0, show (0 : Matrix (Fin 3) (Fin 3) ℝ) = (0 : ℝ) • 0 by simp, weylOf_smul,
-      zero_smul]
-  simp only [frameBianchi_eq]
-  simpa using (hasDerivAt_bianchi2 hdE hdB α β γ'' δ θ).fun_add
-    (hasDerivAt_lowerOrder (W := fun ε => weylOf (E ε) (B ε)) hγ (hasDerivAt_weylOf hE hB)
-      hγ0 hW0 α β γ'' δ θ)
 
 /-- Derivative of `div` along a family of jets. -/
 theorem hasDerivAt_div {dX : ℝ → Jet4} {dX' : Jet4} {t : ℝ}

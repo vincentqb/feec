@@ -18,12 +18,10 @@ hypothesis discharged.
 
 * `StaticFEM.staticFEM_cube`: [QuennevilleBelair2015], §5.3, Props 5.2, 5.4, Thm 5.5 on the cube
   with the elements of Table 5.1 (well-posedness, (5.4), discrete well-posedness, `O(h)` rates);
-* `StaticFEM.staticFEM_nonvacuous_cube`, `StaticFEM.staticFEM_nonvacuous_coupled_cube`: the
-  manufactured solutions and the convergence of their discrete solutions;
 * `WaveFEM.bgg_wave_existsUnique_cube`: existence and uniqueness for the Hodge wave equation of
   (5.1) on the cube (Thm 4.6 for (4.16));
 * `WaveFEM.waveFEM_cube`: the semi-discrete method (6.5) of Table 6.1 ((5.4), well-posedness,
-  energy stability, `O(h)` convergence), and `WaveFEM.waveFEM_nonvacuous_cube`.
+  energy stability, `O(h)` convergence).
 
 ## References
 
@@ -118,74 +116,6 @@ theorem staticFEM_cube :
             (K * L * meshSize N) ^ 2 :=
   staticFEM curlPotential
 
-/-- **Non-vacuity of `staticFEM_cube`**: `staticFEM_nonvacuous` with the regularity hypothesis
-discharged; the discrete solutions of the manufactured problem converge at rate `h_N` and are
-nonzero for all large `N`. -/
-theorem staticFEM_nonvacuous_cube {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
-    (∀ᶠ N in atTop, (cubeFEM hT hB N).V0h ≠ ⊥ ∧ (cubeFEM hT hB N).V1h ≠ ⊥ ∧
-      (cubeFEM hT hB N).Vt0h ≠ ⊥ ∧ (cubeFEM hT hB N).Vt1h ≠ ⊥) ∧
-    manufacturedU ≠ 0 ∧
-    (∀ τ ψ, ⟪(0 : U0), τ⟫ - ⟪manufacturedU, bggSegment.dt0 ψ⟫ -
-      ⟪(0 : W1), ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
-    (∀ v, ⟪bggSegment.dt0 (0 : Wv U0), v⟫ + ⟪bggSegment.S1 manufacturedU, bggSegment.S1 v⟫ +
-      ⟪bggSegment.dt1 manufacturedU, bggSegment.dt1 v⟫ = manufacturedDatum v) ∧
-    bggSegment.d0 (0 : U0) = bggSegment.S0 (0 : Wv U0) ∧
-    (∃ L, 0 ≤ L ∧
-      IsCsFormMin 0 0 L ((0 : U0) : W0) ∧ (∀ a, IsCsFormMin 0 0 L (((0 : Wv U0) a : U0) : W0)) ∧
-      (∀ a, IsCsFormMin 0 1 L ((manufacturedU a : U1) : W1)) ∧ IsCsFormMin 0 1 L (0 : W1) ∧
-      IsCsFormMin 0 2 L (bggSegment.S1 manufacturedU)) ∧
-    (∃ (K : ℝ) (uh : ℕ → Wv U1), (∀ N, uh N ∈ (cubeFEM hT hB N).Vt1h ∧
-      ∃ (σh : U0) (φh : Wv U0) (lh : U1), σh ∈ (cubeFEM hT hB N).V0h ∧
-        φh ∈ (cubeFEM hT hB N).Vt0h ∧
-        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-          ⟪σh, τ⟫ - ⟪uh N, bggSegment.dt0 ψ⟫ -
-            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) ∧
-        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-          ⟪(cubeFEM hT hB N).S1h (uh N), (cubeFEM hT hB N).S1h v⟫ +
-            ⟪bggSegment.dt1 (uh N), bggSegment.dt1 v⟫ = manufacturedDatum v) ∧
-        (∀ μ ∈ (cubeFEM hT hB N).V1h,
-          ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) ∧
-        (cubeFEM hT hB N).gnSq (manufacturedU - uh N) ≤ (K * meshSize N) ^ 2) ∧
-      ∀ᶠ N in atTop, uh N ≠ 0) :=
-  let h := staticFEM_nonvacuous hT hB
-  ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.1, h.2.2.2.2.1, h.2.2.2.2.2.1, h.2.2.2.2.2.2 curlPotential⟩
-
-set_option maxHeartbeats 1000000 in
-/-- **Non-vacuity of `staticFEM_cube` with every unknown coupled**: `staticFEM_nonvacuous_coupled`
-with the regularity hypothesis discharged. -/
-theorem staticFEM_nonvacuous_coupled_cube {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
-    coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledu ≠ 0 ∧ coupledMult ≠ 0 ∧
-    (∀ τ ψ, ⟪coupledσ, τ⟫ - ⟪coupledu, bggSegment.dt0 ψ⟫ -
-      ⟪coupledMult, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) ∧
-    (∀ v, ⟪bggSegment.dt0 coupledφ, v⟫ + ⟪bggSegment.S1 coupledu, bggSegment.S1 v⟫ +
-      ⟪bggSegment.dt1 coupledu, bggSegment.dt1 v⟫ = coupledDatum v) ∧
-    bggSegment.d0 coupledσ = bggSegment.S0 coupledφ ∧
-    (∃ L, 0 ≤ L ∧ IsCsFormMin 0 0 L (coupledσ : W0) ∧ (∀ a, IsCsFormMin 0 0 L (coupledφ a : W0)) ∧
-      (∀ a, IsCsFormMin 0 1 L (coupledu a : W1)) ∧ ‖coupledMult‖ ≤ L ∧
-      IsCsFormMin 0 2 L (bggSegment.S1 coupledu)) ∧
-    (∃ (K : ℝ) (σh : ℕ → U0) (φh : ℕ → Wv U0) (uh : ℕ → Wv U1),
-      (∀ N, σh N ∈ (cubeFEM hT hB N).V0h ∧ φh N ∈ (cubeFEM hT hB N).Vt0h ∧
-        uh N ∈ (cubeFEM hT hB N).Vt1h ∧ ∃ lh : U1,
-        (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-          ⟪σh N, τ⟫ - ⟪uh N, bggSegment.dt0 ψ⟫ -
-            ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) ∧
-        (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 (φh N), v⟫ +
-          ⟪(cubeFEM hT hB N).S1h (uh N), (cubeFEM hT hB N).S1h v⟫ +
-            ⟪bggSegment.dt1 (uh N), bggSegment.dt1 v⟫ = coupledDatum v) ∧
-        (∀ μ ∈ (cubeFEM hT hB N).V1h,
-          ⟪bggSegment.d0 (σh N) - (cubeFEM hT hB N).S0h (φh N), μ⟫ = 0) ∧
-        Feec.BGG.graphSq bggSegment.d0 (coupledσ - σh N) +
-          Feec.BGG.graphSq bggSegment.dt0 (coupledφ - φh N) +
-          (cubeFEM hT hB N).gnSq (coupledu - uh N) ≤ (K * meshSize N) ^ 2) ∧
-      ∀ᶠ N in atTop, σh N ≠ 0 ∧ φh N ≠ 0 ∧ uh N ≠ 0) :=
-  let h := staticFEM_nonvacuous_coupled hT hB
-  ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.1, h.2.2.2.2.1, h.2.2.2.2.2.1, h.2.2.2.2.2.2.1,
-    h.2.2.2.2.2.2.2.1, h.2.2.2.2.2.2.2.2 curlPotential⟩
-
 end Feec.EinsteinBianchi.StaticFEM
 
 namespace Feec.EinsteinBianchi.WaveFEM
@@ -252,24 +182,5 @@ theorem waveFEM_cube :
           ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
             ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N :=
   waveFEM curlPotential
-
-set_option maxHeartbeats 4000000 in
-/-- **Non-vacuity of `waveFEM_cube`**: `waveFEM_nonvacuous` with the regularity hypothesis
-discharged. -/
-theorem waveFEM_nonvacuous_cube {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ}
-    (hT0 : 0 < T) :
-    (∀ t ∈ Ioc 0 T, (waveManufactured T).σ t ≠ 0 ∧ (waveManufactured T).φ t ≠ 0) ∧
-    (∀ t, (waveManufactured T).u t ≠ 0) ∧ coupledMult ≠ 0 ∧
-    ∃ (K : ℝ) (sh : (N : ℕ) → Feec.BGG.DiscreteSolution (cubeWave hT hB N) T
-        (cubeSource hT hB N fun t => incl1 (t • (bggSegment.dt0 coupledφ + waveCurlCurlU)))),
-      (∀ N, ∀ t ∈ Icc 0 T,
-        √(‖(waveManufactured T).σ t - (sh N).σ t‖ ^ 2 +
-          ‖(waveManufactured T).u t - (sh N).u t‖ ^ 2 +
-          ‖(waveManufactured T).M t - (sh N).M t‖ ^ 2 +
-          ‖(waveManufactured T).ρ t - (sh N).ρ t‖ ^ 2) ≤ K * (1 + t) * meshSize N) ∧
-      ∀ t ∈ Ioc 0 T, ∀ᶠ N in atTop, ((sh N).σ t : U0) ≠ 0 :=
-  waveFEM_nonvacuous hT hB curlPotential hT0
 
 end Feec.EinsteinBianchi.WaveFEM

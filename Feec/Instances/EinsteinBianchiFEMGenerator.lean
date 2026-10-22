@@ -97,10 +97,7 @@ theorem EState.ext {x y : EState P0 Pt1 P2 Pt2} (h1 : x.σ = y.σ) (h2 : x.u = y
 @[simp] theorem EState.u_sub (x y : EState P0 Pt1 P2 Pt2) : (x - y).u = x.u - y.u := rfl
 @[simp] theorem EState.M_sub (x y : EState P0 Pt1 P2 Pt2) : (x - y).M = x.M - y.M := rfl
 @[simp] theorem EState.ρ_sub (x y : EState P0 Pt1 P2 Pt2) : (x - y).ρ = x.ρ - y.ρ := rfl
-@[simp] theorem EState.σ_zero : (0 : EState P0 Pt1 P2 Pt2).σ = 0 := rfl
 @[simp] theorem EState.u_zero : (0 : EState P0 Pt1 P2 Pt2).u = 0 := rfl
-@[simp] theorem EState.M_zero : (0 : EState P0 Pt1 P2 Pt2).M = 0 := rfl
-@[simp] theorem EState.ρ_zero : (0 : EState P0 Pt1 P2 Pt2).ρ = 0 := rfl
 
 theorem EState.mk_add (σ σ' : P0) (u u' : Pt1) (M M' : P2) (ρ ρ' : Pt2) :
     EState.mk (σ + σ') (u + u') (M + M') (ρ + ρ') = EState.mk σ u M ρ + EState.mk σ' u' M' ρ' :=
@@ -258,14 +255,6 @@ variable {D} in
 theorem HiddenState.toEState_mem (x : HiddenState D) : x.toEState ∈ hiddenSpace D :=
   (show hiddenSpace D from x).2
 
-variable {D} in
-/-- A hidden energy state as a point of `HiddenState`. -/
-def HiddenState.mk (x : EState P0 Pt1 P2 Pt2) (hx : x ∈ hiddenSpace D) : HiddenState D :=
-  (⟨x, hx⟩ : hiddenSpace D)
-
-@[simp] theorem HiddenState.toEState_mk (x : EState P0 Pt1 P2 Pt2) (hx : x ∈ hiddenSpace D) :
-    (HiddenState.mk x hx).toEState = x := rfl
-
 /-- The isometric inclusion into the energy space. -/
 def HiddenState.subtypeL : HiddenState D →L[ℝ] EState P0 Pt1 P2 Pt2 :=
   (hiddenSpace D).subtypeL
@@ -283,10 +272,6 @@ variable {D} in
     (x + y).toEState = x.toEState + y.toEState := rfl
 
 variable {D} in
-@[simp] theorem HiddenState.toEState_sub (x y : HiddenState D) :
-    (x - y).toEState = x.toEState - y.toEState := rfl
-
-variable {D} in
 @[simp] theorem HiddenState.toEState_zero : (0 : HiddenState D).toEState = 0 := rfl
 
 variable {D} in
@@ -299,8 +284,6 @@ theorem HiddenState.inner_toEState (x y : HiddenState D) :
 
 variable {D} in
 theorem HiddenState.norm_toEState (x : HiddenState D) : ‖x.toEState‖ = ‖x‖ := rfl
-
-theorem HiddenState.norm_subtypeL (x : HiddenState D) : ‖HiddenState.subtypeL D x‖ = ‖x‖ := rfl
 
 /-! ### Energy states of solutions of (6.3) -/
 
@@ -323,7 +306,7 @@ variable {D} in
 /-- The initial hidden state of a solution of (6.3). -/
 def DiscreteSolution.hiddenInit {T : ℝ} (hT : 0 ≤ T) {f : ℝ → Pt1} (s : DiscreteSolution D T f) :
     HiddenState D :=
-  HiddenState.mk _ (DiscreteSolution.state_mem s ⟨le_rfl, hT⟩)
+  (⟨_, DiscreteSolution.state_mem s ⟨le_rfl, hT⟩⟩ : hiddenSpace D)
 
 section FiniteDimensional
 
@@ -379,9 +362,6 @@ theorem lamMap_eq {u : Pt1} {μ : P1} (h : LinearMap.adjoint D.S0 μ = LinearMap
 
 /-- `σ ↦ Φ(σ, 0)`. -/
 def phi0 : P0 →ₗ[ℝ] Pt0 := phiMap D hdinj hS ∘ₗ LinearMap.inl ℝ P0 Pt1
-
-omit [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt2] in
-theorem phi0_apply (σ : P0) : phi0 D hdinj hS σ = phiMap D hdinj hS (σ, 0) := rfl
 
 /-- **The operator of (6.3) without source** on all energy states:
 `(σ, u, M, ρ) ↦ (d* λ(u), -d̃ Φ(σ, 0) - S₁* M - d̃* ρ, S₁ u, d̃ u)`. -/

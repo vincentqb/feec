@@ -19,8 +19,8 @@ public import Mathlib.Analysis.Calculus.ContDiff.Polynomial
 Let `S = (-¼, ¾)³ ∖ [0, ½]³` be the shell around `Q` (`shell`). For a smooth `q` on `ℝ³` this
 file constructs a smooth `s = lift q` such that
 
-* `s = q` and `∇s = ∇q` on the hyperplanes `xᵢ ∈ {0, ½}` containing the faces of `Q`: the
-  remainder `r = q - s` and its first derivatives vanish there (`rem_of_face`, `pd_rem_of_face`);
+* `∇s = ∇q` on the hyperplanes `xᵢ ∈ {0, ½}` containing the faces of `Q`: the first derivatives
+  of the remainder `r = q - s` vanish there (`pd_rem_of_face`);
 * on `Q`, `s` depends only on `q|_S`, with the `H²` bound `n2 s Q ≤ C n2 q S`
   (`exists_n2_lift_le`, `C` independent of `q`), where
   `n2 F B = ‖F‖ + Σⱼ ‖∂ⱼF‖ + Σⱼₖ ‖∂ₖ∂ⱼF‖` in `L²(B)` (`n2`).
@@ -50,7 +50,7 @@ shell (`box`, `exists_n2_hest_le`). This is the extension step of the regular de
 ## Main results
 
 * `map_refl_volume`, `eLpNorm_comp_refl_le`, `pd_ext1`, `ext1_comm`.
-* `hest_of_face`, `pd_hest_of_face`, **`rem_of_face`**, **`pd_rem_of_face`**.
+* `hest_of_face`, `pd_hest_of_face`, **`pd_rem_of_face`**.
 * `eLpNorm_ext1_le`, `n2_ext1_le`, `exists_n2_hest_le`, **`exists_n2_lift_le`**.
 
 ## References
@@ -396,10 +396,6 @@ theorem tI_comm {i j : Fin 3} (h : i ≠ j) (F : (Fin 3 → ℝ) → ℝ) :
 theorem contDiff_tI (i : Fin 3) {F : (Fin 3 → ℝ) → ℝ} {n : WithTop ℕ∞} (hF : ContDiff ℝ n F) :
     ContDiff ℝ n (tI i F) := hF.sub (contDiff_hest i hF)
 
-theorem tI_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 / 2)
-    (F : (Fin 3 → ℝ) → ℝ) : tI i F x = 0 := by
-  simp [tI, hest_of_face h]
-
 theorem pd_tI_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 / 2)
     {F : (Fin 3 → ℝ) → ℝ} (hF : ContDiff ℝ 1 F) (j : Fin 3) : pd j (tI i F) x = 0 := by
   have hd := hF.differentiable one_ne_zero
@@ -410,8 +406,8 @@ theorem pd_tI_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 /
 def rem (q : (Fin 3 → ℝ) → ℝ) : (Fin 3 → ℝ) → ℝ := tI 0 (tI 1 (tI 2 q))
 
 /-- **The shell extension** `s = q - r`: on `Q` it depends only on the values of `q` on the
-shell (`n2_lift_le`), and on `∂Q` it agrees with `q` together with its first derivatives
-(`rem_of_face`, `pd_rem_of_face`). -/
+shell (`exists_n2_lift_le`), and on `∂Q` its first derivatives agree with those of `q`
+(`pd_rem_of_face`). -/
 def lift (q : (Fin 3 → ℝ) → ℝ) : (Fin 3 → ℝ) → ℝ := q - rem q
 
 theorem contDiff_rem {q : (Fin 3 → ℝ) → ℝ} {n : WithTop ℕ∞} (hq : ContDiff ℝ n q) :
@@ -428,14 +424,6 @@ theorem rem_eq_tI2 (q : (Fin 3 → ℝ) → ℝ) : rem q = tI 2 (tI 0 (tI 1 q)) 
 
 /-- The faces of `Q` (as hyperplanes): `xᵢ ∈ {0, ½}` for some `i`. -/
 def OnFace (x : Fin 3 → ℝ) : Prop := ∃ i, x i = 0 ∨ x i = 1 / 2
-
-/-- **The remainder vanishes on the faces.** -/
-theorem rem_of_face {x : Fin 3 → ℝ} (hx : OnFace x) (q : (Fin 3 → ℝ) → ℝ) : rem q x = 0 := by
-  obtain ⟨i, hi⟩ := hx
-  fin_cases i
-  · exact tI_of_face hi _
-  · rw [rem_eq_tI1]; exact tI_of_face hi _
-  · rw [rem_eq_tI2]; exact tI_of_face hi _
 
 /-- **The first derivatives of the remainder vanish on the faces.** -/
 theorem pd_rem_of_face {x : Fin 3 → ℝ} (hx : OnFace x) {q : (Fin 3 → ℝ) → ℝ}

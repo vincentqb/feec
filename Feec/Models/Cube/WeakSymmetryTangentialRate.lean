@@ -28,8 +28,7 @@ condition on the normal components.
   **`cubeFEM_ellipticProjection_rate_tr`** (the `O(h)` rate of the elliptic projection (6.4) on the
   cube, the cube form of `Feec.BGG.Discrete.strang_rate_of_regularPotential`);
   `IsSmoothStateTr`, **`cubeWave_rate_tr`** (the `O(h)` rate of (6.5)).
-* Every flat state is a state of the new class with the same bound (`IsSmoothState.isSmoothStateTr`,
-  from `FEM.IsCsFormMin.isCsFormTr`).
+* Every flat form is a form of the new class with the same bound (`FEM.IsCsFormMin.isCsFormTr`).
 * **Non-vacuity beyond flat data**: `tangentialManufactured_solution` is a smooth solution of (5.3)
   (`σ = φ = λ = 0`, `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)`, divergence free with `S¹u = 0`) whose
   normal component does not vanish on `∂Q` (`normalWitness_ne_zero`, the first row being
@@ -83,70 +82,6 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.norm_le {s : ℕ} {j : ℤ} {L : 
   rw [h1]
   calc ‖(w y) t.1‖ ≤ ‖w y‖ := norm_le_pi_norm (w y) t.1
     _ ≤ L := by simpa using (hL 0 (Nat.zero_le _) y (subset_closure hy)).1
-
-/-- **`S¹u ∈ D(d¹*)` for `C²` fields by Green's formula**: if `x ∈ L²(Q; Λ²)` is the class of a
-`C²` `2`-form with `‖Dw‖ ≤ L` on `cl Q` (no boundary condition), then
-`|⟪x, d w⟫| ≤ 9 L ‖w‖` for `w ∈ H̊Λ¹(Q)`: `⟪x, d w⟫ = ⟪δx, w⟫` on `D(d_min)` (by density of the
-test forms, `minimal_green`) and `|δx| ≤ 3L`. -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsForm.abs_inner_D1_le {L : ℝ} {x : W2}
-    (hx : IsCsForm 0 2 L x) (hL0 : 0 ≤ L)
-    (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ := by
-  rcases hx with hj | ⟨k, hk, w2, hw2, -, hL, -, rfl⟩
-  · norm_num at hj
-  obtain rfl : k = 2 := by omega
-  set ψ : formIdx 3 2 → (Fin 3 → ℝ) → ℝ := fun s y => w2 y s.1 with hψ_def
-  have hψs : ∀ s, ContDiff ℝ 1 (ψ s) := fun s => (contDiff_pi.1 hw2 s.1).of_le (by norm_num)
-  have hψ : ∀ s, MemLp (ψ s) 2 (volume.restrict (cubeDomain 3)) := fun s =>
-    memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
-      (hψs s).continuous
-  have hAψ : ∀ r, MemLp ((extDerivOp ℝ 3 1).formalAdj.apply ψ r) 2
-      (volume.restrict (cubeDomain 3)) := fun r =>
-    memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
-      (ConstCoeffOp.continuous_apply _ (formalAdj_extDerivOp_isOrderLE 1) hψs r)
-  have key := (extDerivOp ℝ 3 1).minimal_green (isOpen_cubeDomain 3) (extDerivOp_isOrderLE 1) w
-    hψs hψ hAψ
-  have hpt : ∀ r : formIdx 3 1, ∀ y ∈ cubeDomain 3,
-      ‖(extDerivOp ℝ 3 1).formalAdj.apply ψ r y‖ ≤ 3 * L := by
-    intro r y hy
-    rw [formalAdj_extDerivOp_apply, extDAdj, norm_neg]
-    have hterm : ∀ j ∈ r.1ᶜ, ‖(ExteriorFibre.sgn j r.1 : ℝ) *
-        fderiv ℝ (formExt ψ (insert j r.1)) y (coordDir j)‖ ≤ L := by
-      intro j hj
-      have hj' : j ∉ r.1 := Finset.mem_compl.1 hj
-      rw [formExt_of_card ψ (card_insert_of_formIdx r hj'), norm_mul, Real.norm_eq_abs,
-        abs_sgn, one_mul]
-      have hd : HasFDerivAt w2 (fderiv ℝ w2 y) y :=
-        ((hw2.differentiable (by norm_num)) y).hasFDerivAt
-      have hd' := (hasFDerivAt_pi'.1 hd (insert j r.1)).fderiv
-      change ‖fderiv ℝ (fun z => w2 z (insert j r.1)) y (coordDir j)‖ ≤ L
-      rw [hd']
-      change ‖(fderiv ℝ w2 y (coordDir j)) (insert j r.1)‖ ≤ L
-      have hfd : ‖fderiv ℝ w2 y‖ ≤ L := by
-        simpa [norm_iteratedFDeriv_one] using hL y (subset_closure hy)
-      calc _ ≤ ‖fderiv ℝ w2 y (coordDir j)‖ := norm_le_pi_norm _ _
-        _ ≤ ‖fderiv ℝ w2 y‖ * ‖(coordDir j : Fin 3 → ℝ)‖ := ContinuousLinearMap.le_opNorm _ _
-        _ ≤ L * 1 := mul_le_mul hfd (norm_coordDir_le j) (norm_nonneg _) hL0
-        _ = L := mul_one L
-    calc _ ≤ ∑ j ∈ r.1ᶜ, ‖(ExteriorFibre.sgn j r.1 : ℝ) *
-          fderiv ℝ (formExt ψ (insert j r.1)) y (coordDir j)‖ := norm_sum_le _ _
-      _ ≤ ∑ _j ∈ r.1ᶜ, L := Finset.sum_le_sum hterm
-      _ = (r.1ᶜ.card : ℝ) * L := by rw [Finset.sum_const, nsmul_eq_mul]
-      _ ≤ 3 * L := by
-          refine mul_le_mul_of_nonneg_right ?_ hL0
-          have : r.1ᶜ.card ≤ 3 := (Finset.card_le_univ _).trans (by simp)
-          exact_mod_cast this
-  have hnorm : ‖toL2F hAψ‖ ≤ Fintype.card (formIdx 3 1) * (3 * L) := by
-    refine norm_L2F_le_of_bound _ (by positivity) fun r => ?_
-    filter_upwards [(hAψ r).coeFn_toLp, ae_restrict_mem (isOpen_cubeDomain 3).measurableSet]
-      with y h1 hy
-    change ‖((hAψ r).toLp _ : L2 ℝ (cubeDomain 3)) y‖ ≤ _
-    rw [h1]
-    exact hpt r y hy
-  change |⟪toL2F hψ, D1 w⟫| ≤ _
-  rw [real_inner_comm, key]
-  refine (abs_real_inner_le_norm _ _).trans ?_
-  rw [mul_comm]
-  exact mul_le_mul_of_nonneg_right hnorm (norm_nonneg _)
 
 /-- The Green bound for the class `IsCsFormTr` (which carries no condition used by it). -/
 theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.abs_inner_D1_le {L : ℝ} {x : W2}
@@ -411,119 +346,12 @@ theorem cubeFEM_rate_tr_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
-  have hh0 := cubeFEM_happ0 hT hB
-  obtain ⟨C0, hh1⟩ := hh0
-  have hC00 := hh1.1
-  have hhapp := hh1.2
-  have hC := hT.two_mul_nonneg
-  have hA : 0 ≤ 1 + 2 * C := by linarith
-  have hreg := regConst_nonneg hT
-  have hCapp_defex : ∃ x : ℝ, x = C0 + regConst C := ⟨_, rfl⟩
-  obtain ⟨Capp, hCapp_def⟩ := hCapp_defex
-  have hCapp0 : 0 ≤ Capp := by rw [hCapp_def]; linarith
-  have hCpex : ∃ x : ℝ, x = (2 * Real.pi)⁻¹ := ⟨_, rfl⟩
-  obtain ⟨Cp, hCp⟩ := hCpex
-  have hCp0 : 0 ≤ Cp := by rw [hCp]; positivity
-  have hCS0 : 0 ≤ Real.sqrt 2 := Real.sqrt_nonneg _
-  have hE_defex : ∃ x : ℝ,
-      x = Feec.BGG.Discrete.errorConst Cp CR (Real.sqrt 2) (2 * C) Capp := ⟨_, rfl⟩
-  obtain ⟨E, hE_def⟩ := hE_defex
-  have hE0 : 0 ≤ E := by
-    rw [hE_def]
-    unfold Feec.BGG.Discrete.errorConst Feec.BGG.Discrete.Ca1 Feec.BGG.Discrete.Ca
-      Feec.BGG.Discrete.KL Feec.BGG.Discrete.Cb
-    positivity
-  have hwaex : ∃ x : ℝ, x = √(1 + Cp ^ 2) * (1 + 2 * C * (1 + 1 * CR)) := ⟨_, rfl⟩
-  obtain ⟨wa, hwa⟩ := hwaex
-  have hwbex : ∃ x : ℝ, x = (1 + (1 + 2 * C) * Real.sqrt 2) * CR := ⟨_, rfl⟩
-  obtain ⟨wb, hwb⟩ := hwbex
-  have hwa0 : 0 ≤ wa := by rw [hwa]; positivity
-  have hwb0 : 0 ≤ wb := by rw [hwb]; positivity
-  have hBt0dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lowestOrder 0 := ⟨_, rfl⟩
-  obtain ⟨Bt0, hBt0d⟩ := hBt0dex
-  have hBb0dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lagrangeP2 0 := ⟨_, rfl⟩
-  obtain ⟨Bb0, hBb0d⟩ := hBb0dex
-  have hBb1dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lagrangeP2 1 := ⟨_, rfl⟩
-  obtain ⟨Bb1, hBb1d⟩ := hBb1dex
-  have hBt2dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lowestOrder 2 := ⟨_, rfl⟩
-  obtain ⟨Bt2, hBt2d⟩ := hBt2dex
-  have hBt0 : 0 ≤ Bt0 := by rw [hBt0d]; exact polyInterpBound_nonneg _ _
-  have hBb0 : 0 ≤ Bb0 := by rw [hBb0d]; exact polyInterpBound_nonneg _ _
-  have hBb1 : 0 ≤ Bb1 := by rw [hBb1d]; exact polyInterpBound_nonneg _ _
-  have hBt2 : 0 ≤ Bt2 := by rw [hBt2d]; exact polyInterpBound_nonneg _ _
-  have hKdex : ∃ x : ℝ, x = 2 * ((1 + 2 * C) * Bt0) ^ 2 + 3 * (2 * ((1 + 2 * C) * Bb0) ^ 2) +
-    (1 + 8 * C ^ 2) * (3 * (2 * ((1 + 2 * C) * Bb1) ^ 2)) + 1 + (wa + wb) ^ 2 +
-      ((1 + 2 * C) * Bt2) ^ 2 := ⟨_, rfl⟩
-  obtain ⟨Kd, hKd⟩ := hKdex
-  have hKd0 : 0 ≤ Kd := by rw [hKd]; positivity
-  refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu hlam
-    hSun hz σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
-  have := cubeFEM_fdt1 hT hB N
-  have hh : 0 ≤ meshSize N := (meshSize_pos N).le
-  have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
-    rw [hCp]; exact bggStability_of hCR0 hCR
-  have Bd := cubeFEM_bounded hT hB N
-  have h54 := cubeFEM_compatible hT hB N
-  have happ : ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-      ‖bggSegment.S0 ψ - (cubeFEM hT hB N).S0h ψ‖ ^ 2 ≤
-        (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq bggSegment.dt0 ψ := fun ψ hψ => by
-    refine (hhapp N ψ hψ).trans (mul_le_mul_of_nonneg_right ?_ (Feec.BGG.graphSq_nonneg _ _))
-    exact pow_le_pow_left₀ (by positivity) (mul_le_mul_of_nonneg_right
-      (by rw [hCapp_def]; linarith) hh) 2
-  have Rg := cubeFEMReg hT hB N hCR0 hCR (by rw [hCapp_def]; linarith : regConst C ≤ Capp)
-  have hwc := Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound H Bd hh hCapp0 Rg
-    happ hL0 hz
-  have hℓ : ∀ μ, |((innerSL ℝ lam).toLinearMap ∘ₗ D1.domain.subtype) μ| ≤ L * ‖μ‖ := fun μ =>
-    (abs_real_inner_le_norm lam (μ : W1)).trans (mul_le_mul_of_nonneg_right hlam (norm_nonneg _))
-  have hest := Feec.BGG.Discrete.error_estimate_of_weakConsistency H Bd h54 hh hCapp0 happ hwc
-    ((innerSL ℝ lam).toLinearMap ∘ₗ D1.domain.subtype) hL0 hℓ F (fun τ _ ψ _ => c1 τ ψ)
-    (fun v _ => c2 v) c3 hσh hφh huh h1 h2 h3
-  refine hest.trans ?_
-  have hD1 := cubeFEM_err_P0_tr hT hB N hL0 σ hσ
-  have hD2 := cubeFEM_err_Pt0_tr hT hB N hL0 φ hφ
-  have hD3 := cubeFEM_err_gnSq_tr hT hB N hL0 u hu
-  rw [← hBt0d] at hD1
-  rw [← hBb0d] at hD2
-  rw [← hBb1d] at hD3
-  have hK0 : 0 ≤ Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR
-      ‖bggSegment.S1 u‖ L := by
-    unfold Feec.BGG.Discrete.weakConsistencyConst
-    have := norm_nonneg (bggSegment.S1 u)
-    positivity
-  have hD5 :
-      Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L ≤
-      (wa + wb) * L := by
-    have e :
-        Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L =
-        L * wa + ‖bggSegment.S1 u‖ * wb := by
-      rw [hwa, hwb]; unfold Feec.BGG.Discrete.weakConsistencyConst; ring
-    rw [e]
-    have := mul_le_mul_of_nonneg_right hSun hwb0
-    calc L * wa + ‖bggSegment.S1 u‖ * wb ≤ L * wa + L * wb := add_le_add_right this _
-      _ = (wa + wb) * L := by ring
-  have hD5' : meshSize N ^ 2 *
-      Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L ^ 2 ≤
-      (wa + wb) ^ 2 * (L * meshSize N) ^ 2 := by
-    have := pow_le_pow_left₀ hK0 hD5 2
-    have h2 := mul_le_mul_of_nonneg_left this (sq_nonneg (meshSize N))
-    exact le_of_le_of_eq h2 (by ring)
-  have hD6 := cubeFEM_err_S1_tr hT hB N hL0 u hSu
-  rw [← hBt2d] at hD6
-  have hsum : Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) +
-      Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) +
-      (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) + meshSize N ^ 2 * L ^ 2 +
-      meshSize N ^ 2 *
-        Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR
-          ‖bggSegment.S1 u‖ L ^ 2 +
-      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤ Kd * (L * meshSize N) ^ 2 := by
-    rw [hKd]
-    linear_combination hD1 + hD2 + hD3 + hD5' + hD6
-  rw [← hE_def]
-  calc E * (_ : ℝ) ≤ E * (Kd * (L * meshSize N) ^ 2) := mul_le_mul_of_nonneg_left hsum hE0
-    _ = (√(E * Kd) * L * meshSize N) ^ 2 := by
-        rw [show (√(E * Kd) * L * meshSize N) ^ 2 = √(E * Kd) ^ 2 * (L * meshSize N) ^ 2 by ring,
-          Real.sq_sqrt (mul_nonneg hE0 hKd0)]
-        ring
+  have hK := cubeFEM_rate_of_err hT hB hCR0 hCR
+  refine ⟨hK.choose, hK.choose_spec.1, ?_⟩
+  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu
+  exact hK.choose_spec.2 N hL0 c1 c2 c3 (cubeFEM_err_P0_tr hT hB N hL0 σ hσ)
+    (cubeFEM_err_Pt0_tr hT hB N hL0 φ hφ) (cubeFEM_err_gnSq_tr hT hB N hL0 u hu)
+    (cubeFEM_err_S1_tr hT hB N hL0 u hSu)
 
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions
@@ -700,13 +528,6 @@ theorem exists_isSmoothStateTrS1 : ∃ c : ℝ, 1 ≤ c ∧ ∀ {L : ℝ} {σ : 
       IsSmoothStateTrS1 (c * L) σ φ u M ρ := by
   obtain ⟨c, hc1, hc⟩ := exists_isCsFormTr_segS1
   exact ⟨c, hc1, fun hL0 h => ⟨h.mono (le_mul_of_one_le_left hL0 hc1), hc _ hL0 h.2.2.1⟩⟩
-
-/-- **Flat states are states of the new class, with the same bound** (`IsCsFormMin.isCsFormTr`):
-`cubeWave_rate_tr` contains `cubeWave_rate`. -/
-theorem IsSmoothState.isSmoothStateTr {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2}
-    {ρ : Wv W2} (h : IsSmoothState L σ φ u M ρ) : IsSmoothStateTr L σ φ u M ρ :=
-  ⟨h.1.isCsFormTr, fun a => (h.2.1 a).isCsFormTr, fun a => (h.2.2.1 a).isCsFormTr,
-    h.2.2.2.2.1.isCsFormTr, fun a => (h.2.2.2.2.2 a).isCsFormTr⟩
 
 set_option maxHeartbeats 2000000 in
 /-- **The data of the Strang bound of (6.4) for a smooth exact state**: the interpolation part
@@ -903,7 +724,7 @@ theorem cubeFEM_ellipticProjection_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
     hx).trans (le_of_eq ?_)
   ring
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 1000000 in
 /-- **`O(h)` convergence of the semi-discrete scheme (6.5) on the cube** (Table 6.1; new: the
 thesis states no convergence result for (6.5)), under the regularity hypothesis (`C_R`). There is
 `K`, independent of `N`, `T`, the data and the solution, such that for every `N`, every `T > 0`,
@@ -940,114 +761,24 @@ theorem cubeWave_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
               (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
         ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
           ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N := by
-  have hcSex := exists_isSmoothStateTrS1
-  obtain ⟨cS, hcS1, hcS⟩ := hcSex
-  have hcS0 : 0 ≤ cS := by linarith
-  have hh0 := cubeFEM_happ0 hT hB
-  obtain ⟨C0, hh1⟩ := hh0
-  have hC00 := hh1.1
-  have hhapp := hh1.2
-  have hC := hT.two_mul_nonneg
-  have hreg := regConst_nonneg hT
-  have Capp_ex : ∃ x : ℝ, x = C0 + regConst C := ⟨_, rfl⟩
-  obtain ⟨Capp, hCapp_def⟩ := Capp_ex
-  have hCapp0 : 0 ≤ Capp := by rw [hCapp_def]; linarith
-  have Cp_ex : ∃ x : ℝ, x = (2 * Real.pi)⁻¹ := ⟨_, rfl⟩
-  obtain ⟨Cp, hCp⟩ := Cp_ex
-  have hCp0 : 0 ≤ Cp := by rw [hCp]; positivity
-  have wa_ex : ∃ x : ℝ, x = √(1 + Cp ^ 2) * (1 + 2 * C * (1 + 1 * CR)) := ⟨_, rfl⟩
-  obtain ⟨wa, hwa⟩ := wa_ex
-  have wb_ex : ∃ x : ℝ, x = (1 + (1 + 2 * C) * Real.sqrt 2) * CR := ⟨_, rfl⟩
-  obtain ⟨wb, hwb⟩ := wb_ex
-  have hwa0 : 0 ≤ wa := by rw [hwa]; positivity
-  have hwb0 : 0 ≤ wb := by rw [hwb]; positivity
-  have cM_ex : ∃ x : ℝ,
-      x = 1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2) := ⟨_, rfl⟩
-  obtain ⟨cM, hcM⟩ := cM_ex
-  have hcM0 : 0 ≤ cM := by rw [hcM]; positivity
-  have Kd_ex : ∃ x : ℝ,
-      x = interpConst C + Capp ^ 2 + (Capp * ((wa + wb) * cM)) ^ 2 := ⟨_, rfl⟩
-  obtain ⟨Kd, hKd⟩ := Kd_ex
-  have hKd0 : 0 ≤ Kd := by rw [hKd]; have := interpConst_nonneg C; positivity
-  have Ks_ex : ∃ x : ℝ, x = √(2 * (Feec.BGG.Discrete.strangConst Cp + 1)) := ⟨_, rfl⟩
-  obtain ⟨Ks, hKs⟩ := Ks_ex
-  have hKs0 : 0 ≤ Ks := by rw [hKs]; positivity
-  have hKK : 0 ≤ 2 * Ks * √Kd * cS := mul_nonneg (by positivity) hcS0
-  refine ⟨2 * Ks * √Kd * cS, hKK,
-    fun N T hT0 f hf s L0 hL00 hsm0 hmult0 => ?_⟩
-  have hLex : ∃ x : ℝ, x = cS * L0 := ⟨_, rfl⟩
-  obtain ⟨L, hLdef⟩ := hLex
-  have hL0 : 0 ≤ L := by rw [hLdef]; exact mul_nonneg hcS0 hL00
-  have hLL : L0 ≤ L := by rw [hLdef]; exact le_mul_of_one_le_left hL00 hcS1
-  have hsm : ∀ t ∈ Icc 0 T, IsSmoothStateTrS1 L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
-      IsSmoothStateTrS1 L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) := fun t ht => by
-    rw [hLdef]; exact ⟨hcS hL00 (hsm0 t ht).1, hcS hL00 (hsm0 t ht).2⟩
-  have hmult : ∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖ :=
-    fun t ht μ => ⟨(hmult0 t ht μ).1.trans (mul_le_mul_of_nonneg_right hLL (norm_nonneg _)),
-      (hmult0 t ht μ).2.trans (mul_le_mul_of_nonneg_right hLL (norm_nonneg _))⟩
-  have hh : 0 ≤ meshSize N := (meshSize_pos N).le
-  have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
-    rw [hCp]; exact bggStability_of hCR0 hCR
-  have Bd := cubeFEM_bounded hT hB N
-  have h54 := cubeFEM_compatible hT hB N
-  have happ : ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-      ‖bggSegment.S0 ψ - (cubeFEM hT hB N).S0h ψ‖ ^ 2 ≤
-        (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq bggSegment.dt0 ψ := fun ψ hψ => by
-    refine (hhapp N ψ hψ).trans (mul_le_mul_of_nonneg_right ?_ (Feec.BGG.graphSq_nonneg _ _))
-    exact pow_le_pow_left₀ (by positivity) (mul_le_mul_of_nonneg_right
-      (by rw [hCapp_def]; linarith) hh) 2
-  have Rg := cubeFEMReg hT hB N hCR0 hCR (by rw [hCapp_def]; linarith : regConst C ≤ Capp)
-  have hK0 : ∀ ℓ : U1 →ₗ[ℝ] ℝ, (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-      |ℓ ((bggSegment.S0 - (cubeFEM hT hB N).S0h) ψ)| ≤
-        (L * Capp * meshSize N) * √(Feec.BGG.graphSq bggSegment.dt0 ψ) := fun ℓ hℓ =>
-    Feec.BGG.Discrete.consistency_S0_of_approx hh hCapp0 hL0 ℓ hℓ happ
-  have hK1 : ∀ z : W2, IsCsFormTr 0 2 L z → ∀ v ∈ (cubeFEM hT hB N).Vt1h,
-      |⟪z, (bggSegment.S1 - (cubeFEM hT hB N).S1h) v⟫| ≤
-        (Capp * meshSize N * ((wa + wb) * (cM * L))) * √((cubeFEM hT hB N).gnSq v) := by
-    intro z hz v hv
-    obtain ⟨hzn, hzd⟩ := hz.bounds_two hL0
-    rw [← hcM] at hzn hzd
-    have hw := Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound H Bd hh hCapp0 Rg
-      happ (by positivity) hzd v hv
-    have hwc : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR (‖z‖)
-        (cM * L) ≤ (wa + wb) * (cM * L) := by
-      have e : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR (‖z‖)
-          (cM * L) = (cM * L) * wa + ‖z‖ * wb := by
-        rw [hwa, hwb]; unfold Feec.BGG.Discrete.weakConsistencyConst; ring
-      rw [e]; nlinarith
-    have hwc0 : 0 ≤ Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR (‖z‖)
-        (cM * L) := Feec.BGG.Discrete.weakConsistencyConst_nonneg hCp0 (Real.sqrt_nonneg _) hC
-          zero_le_one hCR0 (norm_nonneg _) (by positivity)
-    refine hw.trans ?_
-    have hg := Feec.BGG.Discrete.sqrt_graphSq_le_sqrt_gnSq (Q := cubeFEM hT hB N) v
-    have hm : 0 ≤ Capp * meshSize N := by positivity
-    have h1 := mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hwc hm)
-      (Real.sqrt_nonneg (Feec.BGG.graphSq bggSegment.dt1 v))
-    have h2 := mul_le_mul_of_nonneg_left hg
-      (by positivity : 0 ≤ Capp * meshSize N * ((wa + wb) * (cM * L)))
-    exact h1.trans h2
-  have hdata : ∀ {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2},
-      IsSmoothStateTrS1 L σ φ u M ρ → (cubeFEM hT hB N).strangData σ φ u M ρ (L * Capp * meshSize N)
-        (Capp * meshSize N * ((wa + wb) * (cM * L))) ≤ (√Kd * L * meshSize N) ^ 2 := by
-    intro σ φ u M ρ hs
-    refine (cubeFEM_strangData_le_tr hT hB N hL0 hs _ _).trans (le_of_eq ?_)
-    rw [show (√Kd * L * meshSize N) ^ 2 = √Kd ^ 2 * (L * meshSize N) ^ 2 by ring,
-      Real.sq_sqrt hKd0, hKd]
-    ring
-  have hrate := s.exists_discreteSolution_rate (cubeFEM hT hB N) H h54
-    (K0 := L * Capp * meshSize N) (K1 := Capp * meshSize N * ((wa + wb) * (cM * L)))
-    (c := √Kd * L) (h := meshSize N) (cubeWave_S0_surjective hT hB N) hT0
-    (continuousOn_cubeSource hT hB N hf) (fun t _ v => (inner_cubeSource hT hB N f t v).symm)
-    (fun t ht => hK0 (s.ℓ t) fun μ => (hmult t ht μ).1)
-    (fun t ht => hK0 (s.ℓ' t) fun μ => (hmult t ht μ).2)
-    (fun t ht => hK1 (s.M t) (hsm t ht).1.1.isCsFormTr_M)
-    (fun t ht => hK1 (s.M' t) (hsm t ht).2.1.isCsFormTr_M)
-    (fun t ht => hdata (hsm t ht).1) (fun t ht => hdata (hsm t ht).2)
-  obtain ⟨sh, h0, hb⟩ := hrate
-  refine ⟨sh, h0, fun t ht => (hb t ht).trans (le_of_eq ?_)⟩
-  rw [abs_of_nonneg (by positivity : 0 ≤ √Kd * L), abs_of_nonneg hh, ← hKs, hLdef]
-  ring
-
+  have hc := exists_isSmoothStateTrS1
+  have hK := cubeWave_rate_of_bounds hT hB hCR0 hCR
+  have hcS0 : 0 ≤ hc.choose := by linarith [hc.choose_spec.1]
+  refine ⟨hK.choose * hc.choose, mul_nonneg hK.choose_spec.1 hcS0,
+    fun N T hT0 f hf s L hL0 hsm hmult => ?_⟩
+  have hL0' : 0 ≤ hc.choose * L := mul_nonneg hcS0 hL0
+  have hLL : L ≤ hc.choose * L := le_mul_of_one_le_left hL0 hc.choose_spec.1
+  have hs := fun t (ht : t ∈ Icc 0 T) =>
+    And.intro (hc.choose_spec.2 hL0 (hsm t ht).1) (hc.choose_spec.2 hL0 (hsm t ht).2)
+  have H := hK.choose_spec.2 N hT0 hf s hL0'
+    (fun t ht K0 K1 => ⟨cubeFEM_strangData_le_tr hT hB N hL0' (hs t ht).1 K0 K1,
+      cubeFEM_strangData_le_tr hT hB N hL0' (hs t ht).2 K0 K1⟩)
+    (fun t ht => ⟨(hs t ht).1.1.isCsFormTr_M.bounds_two hL0',
+      (hs t ht).2.1.isCsFormTr_M.bounds_two hL0'⟩)
+    (fun t ht μ => ⟨(hmult t ht μ).1.trans (mul_le_mul_of_nonneg_right hLL (norm_nonneg _)),
+      (hmult t ht μ).2.trans (mul_le_mul_of_nonneg_right hLL (norm_nonneg _))⟩)
+  exact ⟨H.choose, H.choose_spec.1, fun t ht =>
+    (H.choose_spec.2 t ht).trans (le_of_eq (by ring))⟩
 
 end CubeFEM
 

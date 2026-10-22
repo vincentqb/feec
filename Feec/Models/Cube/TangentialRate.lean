@@ -20,8 +20,8 @@ class by the natural one, `C^{s+2}` forms whose **tangential components vanish o
   `(∏_{j ≠ 0} sin 2πy_j) dx₀` has nonzero normal component on `∂Q`).
 * `IsCsFormTr.add`, `IsCsFormTr.smul` (the class is a cone, bounds add) and `IsCsFormMin.sub`
   (differences of flat forms are flat).
-* **`IsCsFormTr.mem_domain`**, `IsCsFormTr.d_eq`: `x ∈ D(d_min) = H̊Λʲ(Q)` and
-  `d_min x = (dw)|_Q`, for `C¹` forms with bounded first derivatives
+* **`IsCsFormTr.mem_domain`**: `x ∈ D(d_min) = H̊Λʲ(Q)`, with `d_min x = (dw)|_Q`
+  for `C¹` forms with bounded first derivatives
   (`mem_minimal_of_isTangentialZero`; the cut-off argument of
   `Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`, which needs `C^∞`, with
   the cut-offs `χ_m w ∈ C¹_c(Q)` placed in `D(d_min)` by
@@ -32,8 +32,8 @@ class by the natural one, `C^{s+2}` forms whose **tangential components vanish o
   `j ∉ t`. So the interpolant has vanishing boundary DOFs (`globalInterp_mem_globalSpace₀_of_tr`)
   and `exists_mem_polyMin_le_of_tr`, `IsCsFormTr.exists_mem_polyMin_le` give
   `‖x − v‖, ‖d(x − v)‖ ≤ B_j L h^{s+1}` for some `v ∈ V̊ₕʲ`.
-* The rates on the new class: `mixed_rate_polyTr`, `mixed_rate_polyTr_of_polyOrderAt`,
-  `mixed_rate_lagrangeP2Tr`, `norm_sub_le_windowTr_poly_smooth`, `norm_sub_le_windowTr_lagrangeP2`.
+* Approximation on the new class: `IsCsFormTr.infDist_domainSub_polyMin_le`,
+  `norm_sub_le_windowTr_poly_smooth_of_polyOrderAt`, `norm_sub_le_windowTr_lagrangeP2`.
 
 ## References
 
@@ -759,17 +759,6 @@ theorem IsCsFormTr.mem_domain [NeZero n] {s : ℕ} {j : ℤ} {L : ℝ}
     (fun y hy => by simpa using (hL 0 (Nat.zero_le _) y hy).2)
   rw [deRham_minimalComplex_d]; exact h
 
-/-- **`d_min` of an `IsCsFormTr` class is the class of `dw`.** -/
-theorem IsCsFormTr.d_eq [NeZero n] {s k : ℕ} {L : ℝ} {w : FormField n}
-    (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y))
-    (hx : IsCsFormTr s k L
-      (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩)) :
-    (complexMin n).d k (k + 1) ⟨_, hx.mem_domain⟩ =
-      formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
-        ⟨FiniteElement.extDeriv w, continuous_extDeriv
-          (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1)))⟩ :=
-  complexMin_d_formL2 k (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1))) hdeg _ rfl
-
 /-! ### Vanishing boundary DOFs of the canonical interpolant -/
 
 /-- **Tangential traces on a face of the cube**: if the vertices of `g` lie in `cl Q ∩ {y_j = c}`
@@ -1023,143 +1012,8 @@ theorem IsCsFormTr.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ
   rw [e, two_mul]
   exact add_le_add h1 (h2 (j + 1) ((complexMin n).domainCoord j (j + 1) σ).2)
 
-/-- **Convergence of order `h^{s+1}` of the mixed method with vanishing traces for smooth
-solutions**, for a sequence of order `s` under its smoothing estimates (`H̊Λ(Q)`, data with
-vanishing tangential traces). -/
-theorem PolySmoothingEstimatesMin.norm_sub_le_meshSize_pow_tr {S : PolySeq}
-    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimatesMin n S p C)
-    {s : ℕ} {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
-    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
-    (hσ : IsCsFormTr s i L ((complexMin n).domainIncl i σ))
-    (hu : IsCsFormTr s j L ((complexMin n).domainIncl j u))
-    (hB : IsCsFormTr s j L ((complexMin n).domainIncl j
-      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
-    (hq : IsCsFormTr s j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-        (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L)) *
-          meshSize N ^ (s + 1) := by
-  have hC := hE.two_mul_nonneg
-  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
-  have hBi := polyInterpBound_nonneg (n := n) S i
-  have hBj := polyInterpBound_nonneg (n := n) S j
-  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
-  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
-  have hK : 2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-      meshSize N ^ (s + 1) =
-      2 * ((1 + 2 * C) * (polyInterpBound n S i * L * meshSize N ^ (s + 1))) +
-        2 * ((1 + 2 * C) * (polyInterpBound n S j * L * meshSize N ^ (s + 1))) := by ring
-  have hi : 2 * (polyInterpBound n S i * L * meshSize N ^ (s + 1)) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    rw [hK]; nlinarith
-  have hj : 2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    rw [hK]; nlinarith
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((polyMin n S N).harmonicW j) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    refine ((hE.proj N).infDist_harmonicW_le hjk hC (hE.isGraphBounded_proj N j k) q.2).trans ?_
-    have h := IsCsFormTr.infDist_domainSub_polyMin_le hSj
-      (σ := cyclesToDomainSpace ((complexMin n).harmonic_le_cycles j q.2)) hq hL0 N
-    rw [hK]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    nlinarith [mul_le_mul_of_nonneg_left h this]
-  exact hE.norm_sub_le_of_infDist_le hij hjk hs N
-    ((hσ.infDist_domainSub_polyMin_le hSi hL0 N).trans hi)
-    ((hu.infDist_domainSub_polyMin_le hSj hL0 N).trans hj) hq'
-    ((hB.infDist_domainSub_polyMin_le hSj hL0 N).trans hj)
-
 
 /-! ### The rates on the class `IsCsFormTr` -/
-
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces on
-the cube**, with no hypothesis beyond the regularity of the solution (components `IsCsFormTr`,
-i.e. `C^{s+2}` with vanishing tangential traces on `∂Q`, no condition on the normal components). -/
-theorem mixed_rate_polyTr_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
-    (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j) (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j},
-    (complexMin n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    IsCsFormTr s i L ((complexMin n).domainIncl i σ) →
-    IsCsFormTr s j L ((complexMin n).domainIncl j u) →
-    IsCsFormTr s j L ((complexMin n).domainIncl j
-      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))) →
-    IsCsFormTr s j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N ^ (s + 1) := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j))),
-    fun hs L hL0 hσ hu hB hq N => ?_⟩
-  refine (hE.norm_sub_le_meshSize_pow_tr hSi hSj hij hjk hs hL0 hσ hu hB hq N).trans_eq ?_
-  ring
-
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces** for
-a sequence of order `s` in every degree; see `mixed_rate_polyTr_of_polyOrderAt`. -/
-theorem mixed_rate_polyTr (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j},
-    (complexMin n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    IsCsFormTr s i L ((complexMin n).domainIncl i σ) →
-    IsCsFormTr s j L ((complexMin n).domainIncl j u) →
-    IsCsFormTr s j L ((complexMin n).domainIncl j
-      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))) →
-    IsCsFormTr s j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N ^ (s + 1) :=
-  mixed_rate_polyTr_of_polyOrderAt S (hS.polyOrderAt i) (hS.polyOrderAt j) hij hjk
-
-/-- **Second-order convergence of the mixed method of the bottom row of Tables 5.1/6.1 with
-vanishing boundary DOFs for the Hodge Laplacian on `1`-forms** (`H̊Λ(Q)`, data with vanishing
-tangential traces): error `≤ K L h_N²`. -/
-theorem mixed_rate_lagrangeP2Tr :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n 1)} {σ : (complexMin n).domainSpace 0}
-    {u : (complexMin n).domainSpace 1} {q : (complexMin n).harmonic 1},
-    (complexMin n).IsMixedSolution 0 1 2 f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    IsCsFormTr 1 0 L ((complexMin n).domainIncl 0 σ) →
-    IsCsFormTr 1 1 L ((complexMin n).domainIncl 1 u) →
-    IsCsFormTr 1 1 L ((complexMin n).domainIncl 1
-      ((complexMin n).boundaryPart 1 ((complexMin n).domainIncl 1 u))) →
-    IsCsFormTr 1 1 L (q : L2F ℝ (cubeDomain n) (formIdx n 1)) → ∀ N : ℕ,
-    ‖σ - (polyMin n PolySeq.lagrangeP2 N).embD 0
-          (Subcomplex.CochainProjection.discreteMixedSolution
-            (polyMin n PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl f).fst‖ +
-        ‖u - (polyMin n PolySeq.lagrangeP2 N).embD 1
-          (Subcomplex.CochainProjection.discreteMixedSolution
-            (polyMin n PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n 1)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n PolySeq.lagrangeP2 N)
-            (i := 0) (j := 1) (k := 2) rfl rfl f).snd.snd :
-            (polyMin n PolySeq.lagrangeP2 N).V 1) : L2F ℝ (cubeDomain n) (formIdx n 1))‖ ≤
-      K * L * meshSize N ^ 2 :=
-  mixed_rate_polyTr_of_polyOrderAt (n := n) PolySeq.lagrangeP2 lagrangeP2_polyOrderAt_zero
-    lagrangeP2_polyOrderAt_one rfl rfl
 
 /-- **Graph-norm rate in the total space of a window of `H̊Λ(Q)`** for a sequence of order `s`. -/
 theorem exists_mem_windowTr_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
@@ -1211,29 +1065,6 @@ theorem norm_sub_le_windowTr_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ} 
   ((polyMin n S N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (fun τ hτ =>
     ⟨exists_mem_windowTr_poly_le hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       exists_mem_windowTr_poly_le hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
-
-/-- The case of a sequence of order `s` in every degree (`PolyOrder`) of
-`norm_sub_le_windowTr_poly_smooth_of_polyOrderAt`. -/
-theorem norm_sub_le_windowTr_poly_smooth {S : PolySeq} {s : ℕ} (hS : PolyOrder n S s) (a : ℤ)
-    (m : ℕ) {t₀ t₁ : ℝ} {ξ ξ' : ℝ → ((complexMin n).window a m).totalD.GraphSpace}
-    (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
-    {ξh ξh' : ℕ → ℝ → ((complexMin n).window a m).totalD.GraphSpace}
-    (hξh : ∀ N, HodgeWave.IsSemidiscreteSolution (((polyMin n S N).window a m).graphSub)
-      (Set.Icc t₀ t₁) (ξh N) (ξh' N))
-    (h0 : ∀ N, ξh N t₀ =
-      HodgeWave.ellipticProjection (((polyMin n S N).window a m).graphSub) (ξ t₀))
-    {L : ℝ} (hL0 : 0 ≤ L)
-    (hreg : ∀ τ ∈ Set.Icc t₀ t₁, ∀ i : Fin m,
-      IsCsFormTr s (a + i) L (((complexMin n).window a m).totalD.graphFst (ξ τ) i) ∧
-        IsCsFormTr s (a + i) L (((complexMin n).window a m).totalD.graphFst (ξ' τ) i))
-    (N : ℕ) {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
-    ‖((complexMin n).window a m).totalD.graphFst (ξ t - ξh N t)‖ ≤
-      (1 + ‖HodgeWave.shiftedForm ((complexMin n).window a m).totalD‖ / ((1 / 2) / √3)) *
-        (1 + (t - t₀)) ^ 2 *
-          (((m : ℝ) + m * m) * (∑ i : Fin m, polyInterpBound n S (a + i)) * L *
-            meshSize N ^ (s + 1)) :=
-  norm_sub_le_windowTr_poly_smooth_of_polyOrderAt (fun _ => hS.polyOrderAt _) hξ hξh h0 hL0
-    hreg N ht
 
 /-- **Second-order convergence of the semi-discrete Hodge wave equation for the bottom row of
 Tables 5.1/6.1 with vanishing boundary DOFs** on the window `H̊Λ⁰ → H̊Λ¹ → H̊Λ²` (degrees `0, 1`

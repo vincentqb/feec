@@ -217,36 +217,12 @@ theorem norm_sub_proj_le_add (N : ℕ) (k : ℤ) (x y : L2F ℝ (cubeDomain 3) (
   have := hE.norm_proj_le N k (x - y)
   linarith
 
-omit hE in
-/-- **Uniform convergence on compact sets** of a family of functions, Lipschitz with a common
-constant and tending to `0` pointwise. -/
-theorem eventually_forall_le_of_isCompact' {E : Type*} [PseudoMetricSpace E] {K : Set E}
-    (hK : IsCompact K) {F : ℕ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
-    (hlip : ∀ N x y, F N x ≤ F N y + B * dist x y)
-    (hF : ∀ x, Tendsto (fun N => F N x) atTop (𝓝 0)) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ N in atTop, ∀ x ∈ K, F N x ≤ ε := by
-  have hδ : 0 < ε / (2 * (B + 1)) := by positivity
-  obtain ⟨t, htK, htf, hcov⟩ := finite_cover_balls_of_compact hK hδ
-  have hev : ∀ᶠ N in atTop, ∀ y ∈ t, F N y < ε / 2 :=
-    (Filter.eventually_all_finite htf).2 fun y _ =>
-      (hF y).eventually (gt_mem_nhds (half_pos hε))
-  filter_upwards [hev] with N hN x hx
-  obtain ⟨y, hy, hxy⟩ := mem_iUnion₂.1 (hcov hx)
-  have h1 := hlip N x y
-  have h2 := hN y hy
-  have h3 : B * dist x y ≤ B * (ε / (2 * (B + 1))) :=
-    mul_le_mul_of_nonneg_left (Metric.mem_ball.1 hxy).le hB
-  have h4 : B * (ε / (2 * (B + 1))) ≤ ε / 2 := by
-    rw [mul_div_assoc', div_le_div_iff₀ (by positivity) (by norm_num)]
-    nlinarith
-  linarith
-
 /-- **Uniform convergence of the projections along a continuous trajectory** on `[0,T]`. -/
 theorem eventually_norm_sub_proj_le (k : ℤ) {T : ℝ}
     {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε := by
   have hK := isCompact_Icc.image_of_continuousOn hg
-  have h := eventually_forall_le_of_isCompact' hK
+  have h := WeakSymmetry.eventually_forall_le_of_isCompact hK
     (F := fun N x => ‖x - (hE.proj N).π k x‖)
     (by linarith [hE.two_mul_nonneg] : 0 ≤ 1 + 2 * C)
     (fun N x y => hE.norm_sub_proj_le_add N k x y) (fun x => hE.tendsto_norm_sub_proj k x) hε
@@ -622,11 +598,6 @@ def cubeCloseConst (C : ℝ) : ℝ := 1 + 3 + (1 + 8 * C ^ 2) * 3 + 3 + 1 + 3 + 
 theorem cubeCloseConst_nonneg (C : ℝ) : 0 ≤ cubeCloseConst C := by
   unfold cubeCloseConst; positivity
 
-theorem sum_sq_le_three' {f : Fin 3 → ℝ} {B : ℝ} (h : ∀ a, f a ^ 2 ≤ B) :
-    ∑ a, f a ^ 2 ≤ 3 * B := by
-  have := Finset.sum_le_sum (s := Finset.univ) fun a (_ : a ∈ Finset.univ) => h a
-  simpa [Finset.sum_const, Finset.card_univ] using this
-
 set_option maxHeartbeats 1000000 in
 /-- **The Strang data of (6.4) from the projection errors**: `≤ cubeCloseConst C · δ² + K₀² + K₁²`
 for a state `δ`-close to its projections (no regularity). -/
@@ -640,7 +611,7 @@ theorem cubeFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : U0} {φ : Wv U
     rw [norm_sub_rev]; exact hσ
   have h2 : ‖bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ)‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     have e : ‖(bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ)) a‖ =
         ‖(hB.proj N).π 1 (D0 (φ a)) - D0 (φ a)‖ := by
       change ‖D0 (projU0 (hB.proj N) (φ a) - φ a)‖ = _
@@ -651,14 +622,14 @@ theorem cubeFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : U0} {φ : Wv U
     exact hφ a
   have h3a : ‖(cubeFEM hT hB N).Pt1 u - u‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     change ‖(hB.proj N).π 1 (u a : W1) - (u a : W1)‖ ≤ _
     rw [norm_sub_rev]
     exact hu a
   have h3b := norm_cubeFEM_S1h_sq_le hT hB N ((cubeFEM hT hB N).Pt1 u - u)
   have h3c : ‖bggSegment.dt1 ((cubeFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     have e : ‖(bggSegment.dt1 ((cubeFEM hT hB N).Pt1 u - u)) a‖ =
         ‖(hB.proj N).π 2 (D1 (u a)) - D1 (u a)‖ := by
       change ‖D1 (projU1 (hB.proj N) (u a) - u a)‖ = _
@@ -672,7 +643,7 @@ theorem cubeFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : U0} {φ : Wv U
     rw [norm_sub_rev]; exact hM
   have h5 : ‖(cubeFEM hT hB N).Pt2 ρ - ρ‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     change ‖(hB.proj N).π 2 (ρ a) - ρ a‖ ≤ _
     rw [norm_sub_rev]
     exact hρ a

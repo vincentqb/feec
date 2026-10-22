@@ -57,7 +57,7 @@ when the solution is TSD, and `V̊ₕ ≠ 0`.
   `½ (E − Eᵀ)`, `½ (B − Bᵀ)`, `tr E / √3`, `tr B / √3` and `σ` of `u_M` are
   `≤ C L (1 + T) (h_N + Δt²)` (they vanish for `U`, `monitors_exactField_eq_zero`).
 * **`whitneyInterior3_ne_bot`**: `V̊ₕ ≠ 0` on every mesh (an interior edge function,
-  `whitneyMin_one_ne_bot`; interior hat functions for `N ≥ 1`, `whitneyMin_zero_ne_bot`).
+  `whitneyMin_one_ne_bot`).
 * **Whole-space TSD solutions** (`WholeSpaceTSD.Smooth`, `WholeSpaceTSD.Smooth.row`,
   `WholeSpaceTSD.Smooth.isTSDAt`, `WholeSpaceTSD.Smooth.whitney_cn_error_monitors_le`): every
   whole-space TSD solution with bounded derivatives gives three row solutions
@@ -788,23 +788,6 @@ theorem canonicalInterp_le (N : ℕ) (j : ℤ) :
   · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj'), norm_zero]
     exact mul_nonneg (mul_nonneg (interpBound_nonneg n _) hL0) hh
 
-/-- **The canonical Whitney interpolant is a linear map with the `O(h)` estimates**
-(`canonicalInterp`, `canonicalInterp_le`). -/
-theorem exists_linearMap_whitney_le (N : ℕ) (j : ℤ) :
-    ∃ P : contForms n →ₗ[ℝ] L2F ℝ (cubeDomain n) (formIdx n j),
-      ∃ hP : ∀ w, P w ∈ (whitney n N).V j,
-      ∀ k : ℕ, (k : ℤ) = j → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w), (∀ y, IsDeg k (w y)) →
-        ∀ {L : ℝ}, 0 ≤ L → (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
-        (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) →
-        ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
-            ⟨w, hw.continuous⟩ - P ⟨w, hw.continuous⟩‖ ≤ interpBound n j * L * meshSize N ∧
-        ∀ j' (hx : formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j
-            ⟨w, hw.continuous⟩ ∈ ((complex n).d j j').domain),
-          ‖(complex n).d j j' ⟨_ - P ⟨w, hw.continuous⟩,
-            Submodule.sub_mem _ hx ((whitney n N).le_domain j j' (hP _))⟩‖ ≤
-            interpBound n j * L * meshSize N :=
-  ⟨canonicalInterp N j, canonicalInterp_mem N j, canonicalInterp_le N j⟩
-
 end FEMInterp
 
 /-! ## Smooth forms on the cube: `d`, its formal adjoint, and `L²` norms -/
@@ -840,13 +823,6 @@ theorem formL2Q_sub (k : ℤ) {w w' : FormField n} (hw : Continuous w) (hw' : Co
 theorem formL2Q_neg (k : ℤ) {w : FormField n} (hw : Continuous w) :
     -formL2Q k w hw = formL2Q k (-w) hw.neg := by
   rw [← map_neg]; rfl
-
-theorem formL2Q_congr (k : ℤ) {w w' : FormField n} (hw : Continuous w) (h : w = w') :
-    formL2Q k w hw = formL2Q k w' (h ▸ hw) := by
-  subst h; rfl
-
-theorem formL2Q_zero (k : ℤ) : formL2Q k (0 : FormField n) continuous_const = 0 :=
-  map_zero _
 
 /-- `‖w|_Q‖ ≤ #Λᵏ |Q|^{1/2} B` if `|w| ≤ B` on `Q`. -/
 theorem norm_formL2Q_le (k : ℤ) {w : FormField n} (hw : Continuous w) {B : ℝ} (hB : 0 ≤ B)
@@ -1147,9 +1123,6 @@ def rowInterp (N : ℕ) (i : Fin 3) :
     contForms 3 →ₗ[ℝ] L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) :=
   FEMInterp.canonicalInterp (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))
 
-theorem rowInterp_eq_canonicalInterp (N : ℕ) (i : Fin 3) :
-    rowInterp N i = FEMInterp.canonicalInterp (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ)) := rfl
-
 theorem rowInterp_mem (N : ℕ) (i : Fin 3) (w : contForms 3) :
     rowInterp N i w ∈ (whitneyRow N).V i :=
   FEMInterp.canonicalInterp_mem N _ w
@@ -1166,9 +1139,6 @@ def rowFieldL : (Fin 3 → contForms 3) →ₗ[ℝ] RowSpace where
     formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) _ (g i)
   map_add' g g' := PiLp.ext fun i => by simp
   map_smul' a g := PiLp.ext fun i => by simp
-
-theorem rowField_eq_rowFieldL (f : Fin 3 → FormField 3) (hf : ∀ i, Continuous (f i)) :
-    rowField f hf = rowFieldL fun i => ⟨f i, hf i⟩ := rfl
 
 /-- The constant `Σᵢ B_{0+i}` of the row interpolation error. -/
 def rowBound : ℝ := ∑ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ))
@@ -1278,8 +1248,6 @@ theorem norm_field₃_le {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
 def interp (N : ℕ) (t : ℝ) : DState (whitneyRow N) :=
   rowInterpL N fun i => ⟨X.u t i, X.continuous t i⟩
 
-theorem field_eq (t : ℝ) : X.field t = rowFieldL fun i => ⟨X.u t i, X.continuous t i⟩ := rfl
-
 /-- `‖Π_h U(t) − U(t)‖ ≤ (Σᵢ Bᵢ) L h_N` on `[0, T]`. -/
 theorem norm_interp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
     ‖dEmb (whitneyRow N) (X.interp N t) - X.field t‖ ≤ rowBound * L * meshSize N :=
@@ -1359,9 +1327,6 @@ def exactInterp (X : Fin 3 → RowSolution T L) (N : ℕ) (t : ℝ) : DState3 (w
 /-- The constant of `whitney_cn_error_le`: `18 Σᵢ Bᵢ + 3 Σᵢ #Λⁱ |Q|^{1/2}`, independent of `N`,
 `Δt`, `T` and the solution. -/
 def cnConst : ℝ := 18 * rowBound + 3 * rowL2Const
-
-theorem cnConst_nonneg : 0 ≤ cnConst := by
-  have := rowBound_nonneg; have := rowL2Const_nonneg; unfold cnConst; positivity
 
 /-- `U'(t)` of the three rows. -/
 def exactField₁ (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpace :=
@@ -1524,16 +1489,6 @@ theorem whitneyMin_one_ne_bot (N : ℕ) : (whitneyMin 3 N).V ((1 : ℕ) : ℤ) �
   rw [h, finrank_bot] at this
   exact lt_irrefl 0 this
 
-/-- **The interior Lagrange spaces are nonzero for `N ≥ 1`**: `V̊ₕ⁰ ≠ 0` (an interior hat function;
-the level-`(N + 1)` mesh has an interior vertex as soon as `N + 1 ≥ 2`). -/
-theorem whitneyMin_zero_ne_bot {N : ℕ} (hN : 1 ≤ N) : (whitneyMin 3 N).V ((0 : ℕ) : ℤ) ≠ ⊥ := by
-  intro h
-  have := finrank_whitneyMin_pos_of_mesh N 0
-    (finrank_whitney_V₀_freudenthalMesh_pos_zero (n := 3) (b := 0) (s := 1 / 2) (by norm_num)
-      (N := N + 1) (by omega))
-  rw [h, finrank_bot] at this
-  exact lt_irrefl 0 this
-
 /-- **`V̊ₕ ≠ 0`** for the three-row Whitney space with vanishing boundary DOFs, on every mesh (a
 row with an interior edge function in its `E`-slot). -/
 theorem whitneyInterior3_ne_bot (N : ℕ) : whitneyInterior3 N ≠ ⊥ := by
@@ -1583,12 +1538,6 @@ def sigmaPart' : (PiLp 2 fun _ : Fin 3 => RowSpace) →ₗ[ℝ]
   toFun y := WithLp.toLp 2 fun r => y r 0
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
-
-theorem entryE_eq (N : ℕ) (r j : Fin 3) (u : DState3 (whitneyRow N)) :
-    entryE N r j u = entryE' r j (dEmb3 (whitneyRow N) u) := rfl
-
-theorem entryB_eq (N : ℕ) (r j : Fin 3) (u : DState3 (whitneyRow N)) :
-    entryB N r j u = entryB' r j (dEmb3 (whitneyRow N) u) := rfl
 
 theorem norm_sigmaPart_eq (N : ℕ) (u : DState3 (whitneyRow N)) :
     ‖sigmaPart N u‖ = ‖sigmaPart' (dEmb3 (whitneyRow N) u)‖ := by
@@ -1811,10 +1760,6 @@ theorem formalAdjD_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
     simp (config := {decide := true}) [Fin.sum_univ_three, sgn, pd, compl_fin3]
 
-/-- The row-wise curl of a vector field is `curlM`. -/
-theorem curlV_eq_curlM (Φ : Ix → (Fin 3 → ℝ) → ℝ) (r k : Fin 3) (y : Fin 3 → ℝ) :
-    curlV (fun j => Φ (r, j)) k y = curlM Φ (r, k) y := rfl
-
 theorem oneForm_neg (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
     oneForm (fun j y => -v j y) = -oneForm v := by
   funext y s
@@ -2025,9 +1970,6 @@ variable {W : WholeSpaceTSD} {T L : ℝ} (S : W.Smooth T L)
 
 theorem extDeriv_zero : extDeriv (0 : FormField 3) = 0 := extDeriv_const (0 : Finset (Fin 3) → ℝ)
 
-theorem fderiv_zero_form (y : Fin 3 → ℝ) : fderiv ℝ (0 : FormField 3) y = 0 :=
-  fderiv_const_apply (0 : Finset (Fin 3) → ℝ)
-
 theorem extDeriv_twoForm_B (t : ℝ) (r : Fin 3) :
     extDeriv (twoForm fun j => W.B t (r, j)) = 0 := by
   rw [extDeriv_twoForm]
@@ -2153,7 +2095,7 @@ def row (hL0 : 0 ≤ L) (r : Fin 3) : RowSolution T L where
     have hE := fun j => S.bound t ht (r, j) y hy
     fin_cases i
     · change ‖fderiv ℝ (0 : FormField 3) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (0 : FormField 3)) y‖ ≤ L
-      rw [extDeriv_zero, fderiv_zero_form, norm_zero]
+      rw [extDeriv_zero, fderiv_zero, Pi.zero_apply, norm_zero]
       exact ⟨hL0, hL0⟩
     · change ‖fderiv ℝ (oneForm fun j => W.E t (r, j)) y‖ ≤ L ∧
         ‖fderiv ℝ (extDeriv (oneForm fun j => W.E t (r, j))) y‖ ≤ L
@@ -2164,7 +2106,7 @@ def row (hL0 : 0 ≤ L) (r : Fin 3) : RowSolution T L where
           (r, j)).differentiable one_ne_zero y) fun j => (hE j).2.1⟩
     · change ‖fderiv ℝ (twoForm fun j => W.B t (r, j)) y‖ ≤ L ∧
         ‖fderiv ℝ (extDeriv (twoForm fun j => W.B t (r, j))) y‖ ≤ L
-      rw [extDeriv_twoForm_B, fderiv_zero_form, norm_zero]
+      rw [extDeriv_twoForm_B, fderiv_zero, Pi.zero_apply, norm_zero]
       exact ⟨norm_fderiv_twoForm_le hL0
           (fun j => (S.contDiff_B t (r, j)).differentiable (by norm_num) y)
           fun j => (hE j).2.2.1, hL0⟩

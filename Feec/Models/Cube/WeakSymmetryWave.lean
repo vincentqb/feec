@@ -34,9 +34,10 @@ the spaces of Table 5.1 (`P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²`, `P�
   `E(t)^{1/2} ≤ E(0)^{1/2} + ∫₀ᵗ ‖f‖`.
 * `cubeWave_dt0_injective` (`grad` injective on `P₂Λ̊⁰ ⊗ ℝ³`), `cubeWave_S0_surjective`
   (`π¹S⁰` onto `P₁⁻Λ̊¹`, from (5.4) and the density of `S⁰H̊¹(Q; ℝ³)` in `L²Λ¹`;
-  `exists_S0h_eq`), `canonical_S0h_surjective` (the canonical `Π¹S⁰`, Prop 5.7).
-* `cubeWave_exists_iff`, `cubeWave_exists_iff_compatible_u`, `cubeWave_exists_unique`: the
-  corrected Prop 6.2 for (6.5): existence ⇔ (C1)–(C3), for dynamic data ⇔ (C2), uniqueness.
+  `exists_S0h_eq`); the canonical `Π¹S⁰` (Prop 5.7) is onto by
+  `Feec.FiniteElement.PolySeq.bggS0h₀_surjective`.
+* `cubeWave_exists_iff_compatible_u`, `cubeWave_exists_unique`: the corrected Prop 6.2 for (6.5),
+  dynamic data: existence ⇔ (C2), and uniqueness.
 * **`cubeWave_rate`**: `O(h)` convergence of (6.5) from the elliptic projection (6.4) of the
   exact initial state, `‖(σ, u, M, ρ)(t) − (σₕ, uₕ, Mₕ, ρₕ)(t)‖ ≤ K L (1 + t) h_N`, for classical
   solutions whose states and time derivatives are `C²` and vanish outside `Q` (flat at `∂Q`,
@@ -131,10 +132,6 @@ def skewBil (D' : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) :
           inner_add_right]; ring)
     (by intros; simp only [discreteSkewForm, Prod.smul_fst, Prod.smul_snd, map_smul,
           real_inner_smul_right, smul_eq_mul]; ring)
-
-theorem skewBil_apply (D' : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2) (x y) :
-    skewBil V0 Vt1 W2 Wt2 D' x y = discreteSkewForm D' (energyCoord V0 Vt1 W2 Wt2 x.1, x.2)
-      (energyCoord V0 Vt1 W2 Wt2 y.1, y.2) := rfl
 
 /-- **A classical solution of the multiplier problem (6.2)** on `[0,T]` for BGG data `D` in the
 `W`-normed domain model, with source functional `g(t)` on `Ṽ¹` (`g(t) v = ⟪f(t), v⟫` for an `L²`
@@ -472,14 +469,8 @@ theorem exists_S0h_eq (N : ℕ) {μ : U1} (hμ : μ ∈ (cubeFEM hT hB N).V1h) :
 semi-discrete system (6.5) (`Feec.BGG.DiscreteSolution (cubeWave hT hB N) T f`). -/
 abbrev cubeWave (N : ℕ) := (cubeFEM hT hB N).toSegmentH
 
-instance cubeWave_fd0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).V0h := cubeFEM_fd0 hT hB N
-instance cubeWave_fd1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).V1h := cubeFEM_fd1 hT hB N
 instance cubeWave_fd2 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).W2h :=
   inferInstanceAs (FiniteDimensional ℝ ((polyMin 3 PolySeq.lowestOrder N).V 2))
-instance cubeWave_fdt0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt0h :=
-  cubeFEM_fdt0 hT hB N
-instance cubeWave_fdt1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt1h :=
-  cubeFEM_fdt1 hT hB N
 instance cubeWave_fdt2 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Wt2h :=
   finiteDimensional_tsub ((polyMin 3 PolySeq.lagrangeP2 N).V 2)
 
@@ -504,35 +495,7 @@ theorem cubeWave_S0_surjective (N : ℕ) : Function.Surjective (cubeWave hT hB N
       ← Feec.BGG.Discrete.S0h_apply, hψ]
   exact ⟨⟨_, (cubeFEM hT hB N).Pt0_mem ψ⟩, Subtype.ext hc⟩
 
-/-- The canonical `S₀,ₕ = Π¹S⁰` of the thesis is onto `P₁⁻Λ̊¹` as well (thesis Prop 5.7, via the
-edge moments, `Feec.FiniteElement.PolySeq.bggS0h₀_surjective`), on every Freudenthal mesh. -/
-theorem canonical_S0h_surjective (N : ℕ) :
-    Function.Surjective (PolySeq.lagrangeP2.wsGlobal₀ (M := mesh 3 N)
-      PolySeq.lagrangeP2_constOneTest_zero) :=
-  PolySeq.bggS0h₀_surjective (mesh 3 N)
-
 /-! ### Well-posedness of (6.5) (corrected Prop 6.2) -/
-
-/-- **Corrected Prop 6.2 for (6.5) on the cube**: for `T > 0` and a source continuous on `[0,T]`,
-(6.5) has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff (C1) `grad σ₀ = S₀,ₕφ₀`,
-(C2) `u₀ ⊥ grad (ker S₀,ₕ)` and (C3) `(grad φ₀ − f(0), grad ψ) = 0` on `ker S₀,ₕ`. -/
-theorem cubeWave_exists_iff (N : ℕ) {T : ℝ} (hT0 : 0 < T)
-    {f : ℝ → (cubeFEM hT hB N).Vt1h} (hf : ContinuousOn f (Icc 0 T)) (σ₀ : (cubeFEM hT hB N).V0h)
-    (φ₀ : (cubeFEM hT hB N).Vt0h) (u₀ : (cubeFEM hT hB N).Vt1h) (M₀ : (cubeFEM hT hB N).W2h)
-    (ρ₀ : (cubeFEM hT hB N).Wt2h) :
-    (∃ s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T f, s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧
-      s.u 0 = u₀ ∧ s.M 0 = M₀ ∧ s.ρ 0 = ρ₀) ↔
-      (cubeWave hT hB N).d0 σ₀ = (cubeWave hT hB N).S0 φ₀ ∧
-        (∀ ψ, (cubeWave hT hB N).S0 ψ = 0 → ⟪u₀, (cubeWave hT hB N).dt0 ψ⟫ = 0) ∧
-        (∀ ψ, (cubeWave hT hB N).S0 ψ = 0 →
-          ⟪(cubeWave hT hB N).dt0 φ₀, (cubeWave hT hB N).dt0 ψ⟫ =
-            ⟪f 0, (cubeWave hT hB N).dt0 ψ⟫) := by
-  constructor
-  · rintro ⟨s, rfl, rfl, rfl, -, -⟩
-    exact Feec.BGG.DiscreteSolution.compatible hT0 s
-  · rintro ⟨h1, h2, h3⟩
-    exact Feec.BGG.exists_discreteSolution_of_continuousOn (cubeWave_dt0_injective hT hB N)
-      (cubeWave_S0_surjective hT hB N) hT0.le hf h1 h2 h3
 
 /-- **Corrected Prop 6.2 for (6.5), dynamic data**: existence ⇔ (C2), with the forced algebraic
 datum `φₕ(0) = Φ(σ₀, f(0))`. -/
@@ -723,32 +686,25 @@ theorem continuousOn_cubeSource (N : ℕ) {f : ℝ → Wv W1} {T : ℝ}
     (h1.comp_continuousOn hf)
 
 set_option maxHeartbeats 4000000 in
-/-- **`O(h)` convergence of the semi-discrete scheme (6.5) on the cube** (Table 6.1; new: the
-thesis states no convergence result for (6.5)), under the regularity hypothesis (`C_R`). There is
-`K`, independent of `N`, `T`, the data and the solution, such that for every `N`, every `T > 0`,
-every `L²` source `f` continuous on `[0,T]` and every classical solution `s` of (6.2) (`ExactWave`)
-whose states `(σ, φ, u, M, ρ)(t)` and time derivatives `(σ', φ', u', M', ρ')(t)` are `C²` forms
-vanishing outside `Q` with first derivatives bounded by `L` (`IsSmoothState L`), and whose
-multiplier functional and its derivative are `L²`-bounded by `L` (`|ℓ(t) μ| ≤ L ‖μ‖`, i.e.
-`λ(t) ∈ L²`, `‖λ(t)‖ ≤ L`): the scheme (6.5) with source `P_{Ṽₕ¹} f` (`cubeSource`) has a
-solution starting
-from the dynamic part of the elliptic projection (6.4) of the exact initial state (admissible by
-the (C2) lemma `projected_compatible_u_L2`), and for `t ∈ [0,T]`
-`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N`.
-All hypotheses of `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate` are discharged:
-`Stability` (`bggStability_of`), (5.4) (`cubeFEM_compatible`), `S₀,ₕ` onto
-(`cubeWave_S0_surjective`), `K₀` from Prop 5.9(1) (`cubeFEM_happ0`,
-`consistency_S0_of_approx`), `K₁` from the weak-consistency lemma with regular potentials
-(`cubeFEMReg`, `weakConsistency_of_regularPotential_of_bound`), the interpolation errors from
-the `H¹`/`C²` approximation of the smoothed projections (`cubeFEM_strangData_le`).
-See [QuennevilleBelair2015], §6.3, (6.5), Table 6.1, and §6.2, (6.4), Prop 6.2. -/
-theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
+/-- **The rate of `cubeWave_rate` from the Strang data and the bounds on `M`**: the conclusion of
+`cubeWave_rate` for every classical solution of (6.2) whose Strang data of (6.4) are bounded by
+`interpConst C · (L h_N)² + K₀² + K₁²` (`cubeFEM_strangData_le`) and whose `M`, `M'` satisfy the
+bounds of `IsCsFormMin.bounds_two`, with `L²`-bounded multipliers. -/
+theorem cubeWave_rate_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
       0 ≤ L →
-      (∀ t ∈ Icc 0 T, IsSmoothState L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
-        IsSmoothState L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ K0 K1 : ℝ,
+        (cubeFEM hT hB N).strangData (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) K0 K1 ≤
+          interpConst C * (L * meshSize N) ^ 2 + K0 ^ 2 + K1 ^ 2 ∧
+        (cubeFEM hT hB N).strangData (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) K0 K1 ≤
+          interpConst C * (L * meshSize N) ^ 2 + K0 ^ 2 + K1 ^ 2) →
+      (∀ t ∈ Icc 0 T,
+        (‖s.M t‖ ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L ∧
+          ∀ w : U1, |⟪s.M t, bggSegment.d1 w⟫| ≤ ((1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L) * ‖w‖) ∧
+        (‖s.M' t‖ ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L ∧
+          ∀ w : U1, |⟪s.M' t, bggSegment.d1 w⟫| ≤ ((1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L) * ‖w‖)) →
       (∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
       ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
         (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
@@ -787,7 +743,7 @@ theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
   have Ks_ex : ∃ x : ℝ, x = √(2 * (Feec.BGG.Discrete.strangConst Cp + 1)) := ⟨_, rfl⟩
   obtain ⟨Ks, hKs⟩ := Ks_ex
   have hKs0 : 0 ≤ Ks := by rw [hKs]; positivity
-  refine ⟨2 * Ks * √Kd, by positivity, fun N T hT0 f hf s L hL0 hsm hmult => ?_⟩
+  refine ⟨2 * Ks * √Kd, by positivity, fun N T hT0 f hf s L hL0 hdat hM hmult => ?_⟩
   have hh : 0 ≤ meshSize N := (meshSize_pos N).le
   have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
     rw [hCp]; exact bggStability_of hCR0 hCR
@@ -804,11 +760,12 @@ theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       |ℓ ((bggSegment.S0 - (cubeFEM hT hB N).S0h) ψ)| ≤
         (L * Capp * meshSize N) * √(Feec.BGG.graphSq bggSegment.dt0 ψ) := fun ℓ hℓ =>
     Feec.BGG.Discrete.consistency_S0_of_approx hh hCapp0 hL0 ℓ hℓ happ
-  have hK1 : ∀ z : W2, IsCsFormMin 0 2 L z → ∀ v ∈ (cubeFEM hT hB N).Vt1h,
+  have hK1 : ∀ z : W2, (‖z‖ ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L ∧
+        ∀ w : U1, |⟪z, bggSegment.d1 w⟫| ≤ ((1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * L) * ‖w‖) → ∀ v ∈ (cubeFEM hT hB N).Vt1h,
       |⟪z, (bggSegment.S1 - (cubeFEM hT hB N).S1h) v⟫| ≤
         (Capp * meshSize N * ((wa + wb) * (cM * L))) * √((cubeFEM hT hB N).gnSq v) := by
     intro z hz v hv
-    obtain ⟨hzn, hzd⟩ := hz.bounds_two hL0
+    obtain ⟨hzn, hzd⟩ := hz
     rw [← hcM] at hzn hzd
     have hw := Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound H Bd hh hCapp0 Rg
       happ (by positivity) hzd v hv
@@ -830,10 +787,12 @@ theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       (by positivity : 0 ≤ Capp * meshSize N * ((wa + wb) * (cM * L)))
     exact h1.trans h2
   have hdata : ∀ {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2},
-      IsSmoothState L σ φ u M ρ → (cubeFEM hT hB N).strangData σ φ u M ρ (L * Capp * meshSize N)
+      (∀ K0 K1 : ℝ, (cubeFEM hT hB N).strangData σ φ u M ρ K0 K1 ≤
+        interpConst C * (L * meshSize N) ^ 2 + K0 ^ 2 + K1 ^ 2) →
+      (cubeFEM hT hB N).strangData σ φ u M ρ (L * Capp * meshSize N)
         (Capp * meshSize N * ((wa + wb) * (cM * L))) ≤ (√Kd * L * meshSize N) ^ 2 := by
     intro σ φ u M ρ hs
-    refine (cubeFEM_strangData_le hT hB N hL0 hs _ _).trans (le_of_eq ?_)
+    refine (hs _ _).trans (le_of_eq ?_)
     rw [show (√Kd * L * meshSize N) ^ 2 = √Kd ^ 2 * (L * meshSize N) ^ 2 by ring,
       Real.sq_sqrt hKd0, hKd]
     ring
@@ -843,13 +802,58 @@ theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     (continuousOn_cubeSource hT hB N hf) (fun t _ v => (inner_cubeSource hT hB N f t v).symm)
     (fun t ht => hK0 (s.ℓ t) fun μ => (hmult t ht μ).1)
     (fun t ht => hK0 (s.ℓ' t) fun μ => (hmult t ht μ).2)
-    (fun t ht => hK1 (s.M t) (hsm t ht).1.isCsFormMin_M)
-    (fun t ht => hK1 (s.M' t) (hsm t ht).2.isCsFormMin_M)
-    (fun t ht => hdata (hsm t ht).1) (fun t ht => hdata (hsm t ht).2)
+    (fun t ht => hK1 (s.M t) (hM t ht).1) (fun t ht => hK1 (s.M' t) (hM t ht).2)
+    (fun t ht => hdata fun K0 K1 => (hdat t ht K0 K1).1)
+    (fun t ht => hdata fun K0 K1 => (hdat t ht K0 K1).2)
   obtain ⟨sh, h0, hb⟩ := hrate
   refine ⟨sh, h0, fun t ht => (hb t ht).trans (le_of_eq ?_)⟩
   rw [abs_of_nonneg (by positivity : 0 ≤ √Kd * L), abs_of_nonneg hh, ← hKs]
   ring
+
+
+set_option maxHeartbeats 1000000 in
+/-- **`O(h)` convergence of the semi-discrete scheme (6.5) on the cube** (Table 6.1; new: the
+thesis states no convergence result for (6.5)), under the regularity hypothesis (`C_R`). There is
+`K`, independent of `N`, `T`, the data and the solution, such that for every `N`, every `T > 0`,
+every `L²` source `f` continuous on `[0,T]` and every classical solution `s` of (6.2) (`ExactWave`)
+whose states `(σ, φ, u, M, ρ)(t)` and time derivatives `(σ', φ', u', M', ρ')(t)` are `C²` forms
+vanishing outside `Q` with first derivatives bounded by `L` (`IsSmoothState L`), and whose
+multiplier functional and its derivative are `L²`-bounded by `L` (`|ℓ(t) μ| ≤ L ‖μ‖`, i.e.
+`λ(t) ∈ L²`, `‖λ(t)‖ ≤ L`): the scheme (6.5) with source `P_{Ṽₕ¹} f` (`cubeSource`) has a
+solution starting
+from the dynamic part of the elliptic projection (6.4) of the exact initial state (admissible by
+the (C2) lemma `projected_compatible_u_L2`), and for `t ∈ [0,T]`
+`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N`.
+All hypotheses of `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate` are discharged:
+`Stability` (`bggStability_of`), (5.4) (`cubeFEM_compatible`), `S₀,ₕ` onto
+(`cubeWave_S0_surjective`), `K₀` from Prop 5.9(1) (`cubeFEM_happ0`,
+`consistency_S0_of_approx`), `K₁` from the weak-consistency lemma with regular potentials
+(`cubeFEMReg`, `weakConsistency_of_regularPotential_of_bound`), the interpolation errors from
+the `H¹`/`C²` approximation of the smoothed projections (`cubeFEM_strangData_le`).
+See [QuennevilleBelair2015], §6.3, (6.5), Table 6.1, and §6.2, (6.4), Prop 6.2. -/
+theorem cubeWave_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
+      (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
+      0 ≤ L →
+      (∀ t ∈ Icc 0 T, IsSmoothState L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
+        IsSmoothState L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
+      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((cubeFEM hT hB N).ellipticDataH (s.σ 0) (s.φ 0) (s.u 0)
+              (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
+          ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N := by
+  have h := cubeWave_rate_of_bounds hT hB hCR0 hCR
+  refine ⟨h.choose, h.choose_spec.1, fun N T hT0 f hf s L hL0 hsm hmult =>
+    h.choose_spec.2 N hT0 hf s hL0 (fun t ht K0 K1 =>
+      ⟨cubeFEM_strangData_le hT hB N hL0 (hsm t ht).1 K0 K1,
+        cubeFEM_strangData_le hT hB N hL0 (hsm t ht).2 K0 K1⟩)
+      (fun t ht => ⟨(hsm t ht).1.isCsFormMin_M.bounds_two hL0,
+        (hsm t ht).2.isCsFormMin_M.bounds_two hL0⟩) hmult⟩
 
 end Rate
 

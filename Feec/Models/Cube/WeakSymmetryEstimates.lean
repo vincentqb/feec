@@ -19,8 +19,6 @@ independent of `N`:
   copies `t + h K_σ` of the Kuhn simplices (`exists_formL2Sq_localInterp_le`).
 * **Prop 5.9(1)** (`norm_sub_glue_bggS0h_le`): `‖(I − Π¹) S⁰ψ‖ ≤ C h ‖∇ψ‖` on `P₂Λ⁰ ⊗ ℝ³`
   (the kernel lemma `Feec.FiniteElement.exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`).
-* **Strong approximation** (`norm_sub_glue_globalInterp_coordWedge_le`):
-  `‖(I − Π) S u‖ ≤ C h sup ‖Du‖` for vectors `u` of `C¹` `k`-forms (`S⁰` and `S¹`).
 * **Prop 5.9(2) is false** (`exists_interpolationError_ge`, `not_exists_interpolationError_bound`):
   there is `c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`
   (vanishing boundary DOFs), `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}` for the canonical
@@ -940,164 +938,6 @@ theorem globalInterp_apply_eq_localInterp (E : LocalElement n) (M : SimplicialMe
     rw [LocalElement.localDof_globalInterp _ _ _ _ _ _ hg,
       LocalElement.localDof_localInterp _ _ _ _ _ hg]
 
-theorem card_mesh_simplices (N : ℕ) :
-    (mesh n N).simplices.card = (N + 1) ^ n * n.factorial :=
-  card_freudenthalMesh_simplices _ _ _ _
-
-/-- **`‖(I − Π) w‖²_{L²(Q)} ≲ (h sup ‖Dw‖)²`** for `C¹` `(k+1)`-forms `w` and the canonical
-interpolant of `P₁⁻Λᵏ⁺¹`, on the cube meshes (sum of the local `C¹` estimates of
-`Feec.FiniteElement.exists_norm_sub_polyMinusInterp_le_uniform`). -/
-theorem exists_sum_formL2Sq_sub_globalInterp_le {k : ℕ} (hk : k + 1 ≤ n) :
-    ∃ C, 0 ≤ C ∧ ∀ (N : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
-      (_ : ∀ x, IsDeg (k + 1) (w x)) {B : ℝ}
-      (_ : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ 1 w y‖ ≤ B),
-      ∑ T : (mesh n N).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
-        (w - ((((polyElement n PolySeq.lowestOrder).globalInterp (mesh n N) (k + 1)
-          ⟨w, hw.continuous⟩ : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T :
-            (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n)) ≤
-        C * (hN N * B) ^ 2 := by
-  obtain ⟨C, hC0, hC⟩ := exists_norm_sub_polyMinusInterp_le_uniform (n := n)
-    (fun σ : Equiv.Perm (Fin n) => kuhnLex σ) (r := 1) le_rfl hk (s := 0) le_rfl
-  set c : ℝ := Fintype.card (Finset (Fin n)) * C ^ 2 with hc
-  refine ⟨n.factorial * c, by positivity, fun N w hw hwk B hB => ?_⟩
-  have hh := hN_pos N
-  have hloc : ∀ T : (mesh n N).simplices,
-      formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
-        (w - ((((polyElement n PolySeq.lowestOrder).globalInterp (mesh n N) (k + 1)
-          ⟨w, hw.continuous⟩ : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T :
-            (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n)) ≤
-        c * hN N ^ n * (hN N * B) ^ 2 := by
-    intro T
-    obtain ⟨σ, t, hT⟩ := exists_mesh_simplex_eq T.2
-    set wc : contDegForms n (k + 1) := ⟨w, hw.continuous, hwk⟩
-    have e1 : ((((polyElement n PolySeq.lowestOrder).globalInterp (mesh n N) (k + 1)
-          ⟨w, hw.continuous⟩ : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T :
-            (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n) =
-        (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t (hN N) hh.ne') (kuhnLex σ)))
-          (PolySeq.lowestOrder.one_le_deg (k + 1)) hk wc : FormField n) := by
-      rw [globalInterp_apply_eq_localInterp, ← localInterp_lowestOrder_eq (kuhnSimplex σ) t hh hk wc]
-      exact PolySeq.localInterp_congr _ _ (by rw [hT]) _
-    have hS := closedInterior_mapEquiv_lexSimplex (kuhnSimplex σ) t hh.ne'
-    have hsub : (mapEquiv (boxMap t (hN N) hh.ne') (kuhnLex σ)).closedInterior ⊆
-        closure (cubeDomain n) := by
-      rw [hS, ← hT, ← mesh_domain n N]
-      exact (mesh n N).closedInterior_subset_closure T.2
-    have hpt := hC σ hh t hw.continuous hwk isOpen_univ (Set.subset_univ _)
-      (hw.contDiffOn.of_le (by norm_num)) (M := B) (fun y hy => hB y (hsub hy))
-    rw [e1, hT]
-    have hvol : volume (mapEquiv (boxMap t (hN N) hh.ne') (kuhnSimplex σ)).closedInterior < ⊤ :=
-      (mapEquiv (boxMap t (hN N) hh.ne') (kuhnSimplex σ)).isCompact_closedInterior.measure_lt_top
-    refine (formL2Sq_le_of_norm_le hvol (B := C * hN N ^ (0 + 1) * B) fun x hx => ?_).trans ?_
-    · rw [← hS] at hx
-      exact hpt x hx
-    · rw [measureReal_closedInterior_mapEquiv_boxMap _ _ hh, closedInterior_kuhnSimplex]
-      have h1 := volume_real_kuhnSet_le σ
-      have h0 : 0 ≤ volume.real (kuhnSet σ) := measureReal_nonneg
-      have hn0 : 0 ≤ hN N ^ n := pow_nonneg hh.le n
-      calc (Fintype.card (Finset (Fin n)) : ℝ) * (hN N ^ n * volume.real (kuhnSet σ)) *
-            (C * hN N ^ (0 + 1) * B) ^ 2
-          ≤ (Fintype.card (Finset (Fin n)) : ℝ) * (hN N ^ n * 1) * (C * hN N ^ (0 + 1) * B) ^ 2 := by
-            gcongr
-        _ = c * hN N ^ n * (hN N * B) ^ 2 := by rw [hc]; ring
-  calc _ ≤ ∑ _T : (mesh n N).simplices, c * hN N ^ n * (hN N * B) ^ 2 :=
-        Finset.sum_le_sum fun T _ => hloc T
-    _ = ((N + 1) ^ n * n.factorial : ℕ) * (c * hN N ^ n * (hN N * B) ^ 2) := by
-        rw [Finset.sum_const, Finset.card_univ, Fintype.card_coe, card_mesh_simplices,
-          nsmul_eq_mul]
-    _ = n.factorial * c * (((N + 1 : ℕ) : ℝ) * hN N) ^ n * (hN N * B) ^ 2 := by
-        rw [mul_pow (((N + 1 : ℕ) : ℝ)) (hN N) n]; push_cast; ring
-    _ ≤ n.factorial * c * 1 * (hN N * B) ^ 2 := by
-        have : ((N + 1 : ℕ) : ℝ) * hN N = 1 / 2 := by
-          unfold hN; field_simp
-        rw [this]
-        gcongr
-        exact pow_le_one₀ (by norm_num) (by norm_num)
-    _ = n.factorial * c * (hN N * B) ^ 2 := by ring
-
-/-- The fibre map of `S` as a bounded operator. -/
-def coordWedgeSumL : (Fin n → Finset (Fin n) → ℝ) →L[ℝ] (Finset (Fin n) → ℝ) :=
-  LinearMap.toContinuousLinearMap coordWedgeSumₗ
-
-/-- `‖D(S u)‖ ≤ ‖S‖ ‖Du‖`. -/
-theorem norm_iteratedFDeriv_coordWedgeField_le {u : Fin n → FormField n}
-    (hu : ∀ a, ContDiff ℝ 1 (u a)) (y : Fin n → ℝ) :
-    ‖iteratedFDeriv ℝ 1 (coordWedgeField u) y‖ ≤
-      ‖(coordWedgeSumL : (Fin n → Finset (Fin n) → ℝ) →L[ℝ] _)‖ *
-        ‖iteratedFDeriv ℝ 1 (fun x a => u a x) y‖ := by
-  have hU : ContDiff ℝ 1 (fun x a => u a x) := contDiff_pi.2 hu
-  have e : coordWedgeField u = coordWedgeSumL ∘ fun x a => u a x := rfl
-  rw [e, coordWedgeSumL.iteratedFDeriv_comp_left hU.contDiffAt le_rfl]
-  exact ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _
-
-/-- **Strong approximation**: `‖(I − Π) S u‖_{L²(Q)} ≤ C h sup_{cl Q} ‖Du‖` for vectors `u` of
-`C¹` `k`-forms (`Π` the canonical interpolant of `P₁⁻Λᵏ⁺¹`; for `k = 0` this is
-`‖(I − Π¹) S⁰ψ‖`, for `k = 1` it is `‖(I − Π²) S¹u‖`). `S u` is the glued field of the smooth
-form `S u` (equal to it a.e. on `Q`). -/
-theorem norm_sub_glue_globalInterp_coordWedge_le {k : ℕ} (hk : k + 1 ≤ n) :
-    ∃ C, 0 ≤ C ∧ ∀ (N : ℕ) {u : Fin n → FormField n} (hu : ∀ a, ContDiff ℝ 1 (u a))
-      (_ : ∀ a x, IsDeg k (u a x)) {B : ℝ}
-      (_ : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ 1 (fun x a => u a x) y‖ ≤ B),
-      ‖pieceL2 (mesh n N) (mesh n N).domain
-          (fun _ => formComp (k := ((k + 1 : ℕ) : ℤ)) (coordWedgeField u))
-          (fun _ _ s => continuous_formComp (continuous_coordWedgeField fun a =>
-            (hu a).continuous) s) -
-        (polyElement n PolySeq.lowestOrder).glue (mesh n N) ((k + 1 : ℕ) : ℤ)
-          ((polyElement n PolySeq.lowestOrder).globalInterp (mesh n N) (k + 1)
-            ⟨coordWedgeField u, continuous_coordWedgeField fun a => (hu a).continuous⟩ :
-              (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1))‖ ≤
-        C * hN N * B := by
-  obtain ⟨C, hC0, hC⟩ := exists_sum_formL2Sq_sub_globalInterp_le (n := n) hk
-  set L := ‖(coordWedgeSumL : (Fin n → Finset (Fin n) → ℝ) →L[ℝ] (Finset (Fin n) → ℝ))‖
-  refine ⟨√C * L, mul_nonneg (Real.sqrt_nonneg _) (norm_nonneg _),
-    fun N u hu huk B hB => ?_⟩
-  have hw : ContDiff ℝ 1 (coordWedgeField u) := contDiff_coordWedgeField hu
-  have hwk : ∀ x, IsDeg (k + 1) (coordWedgeField u x) := isDeg_coordWedgeField huk
-  have hB0 : 0 ≤ B := (norm_nonneg _).trans (hB _ (subset_closure
-    (show (fun _ => 1 / 4 : Fin n → ℝ) ∈ cubeDomain n by
-      simp [cubeDomain]; norm_num)))
-  have hB' : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ 1 (coordWedgeField u) y‖ ≤ L * B :=
-    fun y hy => (norm_iteratedFDeriv_coordWedgeField_le hu y).trans
-      (mul_le_mul_of_nonneg_left (hB y hy) (norm_nonneg _))
-  have h1 := hC N hw hwk hB'
-  set PI := (polyElement n PolySeq.lowestOrder).globalInterp (mesh n N) (k + 1)
-    ⟨coordWedgeField u, hw.continuous⟩
-  have hg : (polyElement n PolySeq.lowestOrder).glue (mesh n N) ((k + 1 : ℕ) : ℤ)
-      (PI : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) =
-      pieceL2 (mesh n N) (mesh n N).domain (fun T => formComp (k := ((k + 1 : ℕ) : ℤ))
-        ((polyElement n PolySeq.lowestOrder).extendPW (mesh n N)
-          (PI : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T))
-        (fun T hT s => continuous_formComp ((polyElement n PolySeq.lowestOrder).contDiff_extendPW
-          (mesh n N) _ hT).continuous s) := rfl
-  rw [hg, pieceL2_sub]
-  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (mul_nonneg (mul_nonneg (mul_nonneg
-    (Real.sqrt_nonneg _) (norm_nonneg _)) (hN_pos N).le) hB0) two_ne_zero).1 ?_
-  refine (norm_sq_pieceL2_le _ _ _ _).trans ?_
-  rw [← Finset.sum_coe_sort]
-  have hloc : ∀ T : (mesh n N).simplices,
-      ∑ i : formIdx n ((k + 1 : ℕ) : ℤ), ∫ x in (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
-        (formComp (k := ((k + 1 : ℕ) : ℤ)) (coordWedgeField u) i x -
-          formComp (k := ((k + 1 : ℕ) : ℤ)) ((polyElement n PolySeq.lowestOrder).extendPW (mesh n N)
-            (PI : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T) i x) ^ 2 =
-      formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
-        (coordWedgeField u - (((PI : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N)
-          (k + 1)) T : (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n)) := by
-    intro T
-    have hdeg : ∀ x, IsDeg (k + 1) ((coordWedgeField u - (((PI : (polyElement n
-        PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T :
-          (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n)) x) :=
-      fun x s hs => by
-        simp only [Pi.sub_apply]
-        rw [hwk x s hs, (polyElement n PolySeq.lowestOrder).isDeg_of_mem
-          ((PI : (polyElement n PolySeq.lowestOrder).Piecewise (mesh n N) (k + 1)) T).2 x s hs,
-          sub_zero]
-    refine Eq.trans ?_ (sum_formIdx_integral_eq_formL2Sq hdeg)
-    refine Finset.sum_congr rfl fun i _ => ?_
-    simp only [formComp, (polyElement n PolySeq.lowestOrder).extendPW_of_mem _ _ T.2, Pi.sub_apply]
-  rw [Finset.sum_congr rfl fun T _ => hloc T]
-  refine h1.trans_eq ?_
-  conv_rhs => rw [mul_pow, mul_pow, mul_pow, Real.sq_sqrt hC0]
-  ring
-
 end Strong
 
 /-! ### `S` and the smoothing; injectivity of `grad` -/
@@ -1211,15 +1051,6 @@ theorem extDeriv_refQ_zero (y : Fin 3 → ℝ) : extDeriv refQ y {0} = y 0 := by
     ring
   simp [this]
 
-
-theorem extDeriv_refQ_two (y : Fin 3 → ℝ) : extDeriv refQ y {2} = 0 := by
-  rw [extDeriv_apply, Finset.sum_singleton, Finset.erase_singleton]
-  simp only [ExteriorFibre.sgn, Finset.filter_singleton]
-  have : partialDeriv 2 (fun z => refQ z ∅) y = 0 := by
-    change partialDeriv 2 (fun z => MvPolynomial.eval z (refΩ ∅)) y = 0
-    rw [partialDeriv_eval]
-    simp [refΩ]
-  simp [this]
 
 /-- The reference field `Ẑ = S¹(0, 0, dQ)`, `Q(y) = y₀²/2`. -/
 def refZ : FormField 3 := coordWedgeField (Pi.single (2 : Fin 3) (extDeriv refQ))

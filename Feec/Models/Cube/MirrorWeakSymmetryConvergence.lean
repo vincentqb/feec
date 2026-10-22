@@ -35,8 +35,7 @@ potentials of `Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`), `S₀,�
 mirror tangential conditions and whose multiplier `M` lies in `D(curl*)` on `HΛ¹(Q)` (vanishing
 normal trace; automatic for TSD data, `M ≡ 0`) (`IsSmoothStateMirror`; no flatness at `∂Q`), the
 error is
-`≤ K L (1 + t) h_N` (`mirrorWave_rate`), with a stationary non-vacuity witness
-(`mirrorStationary`, `mirrorStationary_hyps`). For TSD-type solutions (`σ ≡ 0`, `M ≡ 0`), `σₕ` and
+`≤ K L (1 + t) h_N` (`mirrorWave_rate`). For TSD-type solutions (`σ ≡ 0`, `M ≡ 0`), `σₕ` and
 `Mₕ` are `O(h)` and every bounded linear constraint of `B = ρ` (its symmetry) holds for `ρₕ` up to
 `O(h)` (`mirrorWave_rate_tsd`).
 
@@ -55,17 +54,17 @@ and proves that the scheme converges to it (`mirror_waveFEM`).
 ## Main definitions
 
 * `mirrorDiscrete`, **`mirrorFEM`**, `mirrorWave`, `mirrorSource`, `mirrorSrcFun`.
-* `IsCsFormPart`, `IsSmoothStateMirror`, `MirrorClose`, `mirrorStationary`.
+* `IsCsFormPart`, `IsSmoothStateMirror`, `MirrorClose`.
 
 ## Main results
 
 * **`Feec.BGG.ExactWave.exists_discreteSolution_rate_harm`**.
 * `mirrorFEM_compatible`, `mirrorFEM_bounded`, `mirrorFEM_happ0`, `mirrorFEMReg`, `harmBot_le`,
   `mirrorWave_S0_surjective`, `mirrorWave_dt0_injective`, `mirrorFEM_strangData_le`.
-* **`mirrorWave_rate`**, **`mirrorWave_rate_tsd`**, `mirrorStationary_hyps`.
+* **`mirrorWave_rate`**, **`mirrorWave_rate_tsd`**.
 * `Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_proj`,
   `eventually_mirrorClose`, `exists_adjoint_approx`, `eventually_mirrorFEM_K1`,
-  **`mirrorWave_converges`**, `mirrorStationary_tsd`.
+  **`mirrorWave_converges`**.
 
 ## References
 
@@ -868,11 +867,6 @@ theorem abs_wsCoeff_le_one {k : ℤ} (t : formIdx 3 (k + 1)) (p : Fin 3 × formI
   · rw [WeakSymmetry.abs_sgn]
   · simp
 
-theorem graphSnd_eq_apply {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
-    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (v : T.GraphSpace)
-    (h : T.graphFst v ∈ T.domain) : T ⟨T.graphFst v, h⟩ = T.graphSnd v :=
-  ((LinearPMap.image_iff h).2 (LinearPMap.mem_graphL2.1 v.2)).symm
-
 theorem sum_norm_graphSnd_le (a : Fin 3) (z : RegRow a) :
     ∑ s : formIdx 3 1, ‖(dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphSnd (z s)‖ ≤
       (Fintype.card (formIdx 3 1) : ℝ) * ‖z‖ := by
@@ -1384,11 +1378,6 @@ theorem hs_lagrangeP2 (k : ℕ) : polySpace 3 0 k ≤ PolySeq.lagrangeP2.space 3
 abbrev cT (C : ℝ) (k : ℕ) : ℝ := (1 + 2 * C) * polyInterpConst 3 PolySeq.lowestOrder k
 abbrev cB (C : ℝ) (k : ℕ) : ℝ := (1 + 2 * C) * polyInterpConst 3 PolySeq.lagrangeP2 k
 
-theorem sum_sq_le_three {f : Fin 3 → ℝ} {B : ℝ} (h : ∀ a, f a ^ 2 ≤ B) :
-    ∑ a, f a ^ 2 ≤ 3 * B := by
-  calc ∑ a, f a ^ 2 ≤ ∑ _a : Fin 3, B := Finset.sum_le_sum fun a _ => h a
-    _ = 3 * B := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; norm_num
-
 theorem mirrorFEM_err_P0 (N : ℕ) {L : ℝ} {σ : TU0} (hσ : IsCsFormPart ∅ 0 L (σ : W0)) :
     ‖(mirrorFEM hT hB N).P0 σ - σ‖ ≤ cT C 0 * meshSize N * L := by
   have h := norm_sub_proj_le_of_isCsFormPart hT N 0 (hs_lowestOrder 0) hσ
@@ -1400,7 +1389,7 @@ theorem mirrorFEM_err_Pt0 (N : ℕ) {L : ℝ} {φ : BU0} (hφ : ∀ a, IsCsFormP
       3 * (cB C 1 * meshSize N * L) ^ 2 := by
   change ‖bD0 (projB0 (fun a => (hB a).proj N) φ - φ)‖ ^ 2 ≤ _
   rw [norm_sq_bD0]
-  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
   have h := norm_d_sub_proj_le_of_isCsFormPart (hB a) N 0 (hs_lagrangeP2 1) (hφ a) (φ a).2
   have e : BD0 a ((projB0 (fun a => (hB a).proj N) φ - φ) a) =
       ((hB a).proj N).π 1 (BD0 a (φ a)) - BD0 a (φ a) := by
@@ -1414,7 +1403,7 @@ theorem mirrorFEM_err_Pt1 (N : ℕ) {L : ℝ} {u : BU1} (hu : ∀ a, IsCsFormPar
     ‖(mirrorFEM hT hB N).Pt1 u - u‖ ^ 2 ≤ 3 * (cB C 1 * meshSize N * L) ^ 2 := by
   change ‖projB1 (fun a => (hB a).proj N) u - u‖ ^ 2 ≤ _
   rw [norm_sq_BU1]
-  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
   have h := norm_sub_proj_le_of_isCsFormPart (hB a) N 1 (hs_lagrangeP2 1) (hu a)
   change ‖((hB a).proj N).π 1 (u a : W1) - (u a : W1)‖ ≤ _
   rw [norm_sub_rev]
@@ -1425,7 +1414,7 @@ theorem mirrorFEM_err_d1 (N : ℕ) {L : ℝ} {u : BU1} (hu : ∀ a, IsCsFormPart
       3 * (cB C 2 * meshSize N * L) ^ 2 := by
   change ‖bD1 (projB1 (fun a => (hB a).proj N) u - u)‖ ^ 2 ≤ _
   rw [norm_sq_bD1]
-  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
   have h := norm_d_sub_proj_le_of_isCsFormPart (hB a) N 1 (hs_lagrangeP2 2) (hu a) (u a).2
   have e : BD1 a ((projB1 (fun a => (hB a).proj N) u - u) a) =
       ((hB a).proj N).π 2 (BD1 a (u a)) - BD1 a (u a) := by
@@ -1457,7 +1446,7 @@ theorem mirrorFEM_err_Pt2 (N : ℕ) {L : ℝ} {ρ' : Wv W2} (hρ : ∀ a, IsCsFo
     ‖(mirrorFEM hT hB N).Pt2 ρ' - ρ'‖ ^ 2 ≤ 3 * (cB C 2 * meshSize N * L) ^ 2 := by
   change ‖projB2 (fun a => (hB a).proj N) ρ' - ρ'‖ ^ 2 ≤ _
   rw [PiLp.norm_sq_eq_of_L2]
-  refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+  refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
   have h := norm_sub_proj_le_of_isCsFormPart (hB a) N 2 (hs_lagrangeP2 2) (hρ a)
   change ‖((hB a).proj N).π 2 (ρ' a) - ρ' a‖ ≤ _
   rw [norm_sub_rev]
@@ -1696,208 +1685,6 @@ section Witness
 
 open ExteriorFibre (IsDeg)
 
-/-- Constant forms are in every class `IsCsFormPart` whose tangential condition they meet. -/
-theorem isCsFormPart_const (J : Finset (Fin 3)) (j : ℕ) {α : Finset (Fin 3) → ℝ}
-    (hdeg : IsDeg j α) (hJ : ∀ i ∈ J, ∀ t : Finset (Fin 3), i ∉ t → α t = 0) {L : ℝ}
-    (hL : ‖α‖ ≤ L) (hL0 : 0 ≤ L) :
-    IsCsFormPart J j L (formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) j
-      ⟨fun _ => α, continuous_const⟩) := by
-  refine ⟨fun _ => α, contDiff_const, fun _ => hdeg, fun y i hi _ t ht => hJ i hi t ht,
-    fun y _ => ⟨hL, ?_, ?_⟩, rfl⟩
-  · rw [iteratedFDeriv_const_of_ne (by norm_num)]; simpa using hL0
-  · rw [extDeriv_const, show (0 : FormField 3) = fun _ => (0 : Finset (Fin 3) → ℝ) from rfl,
-      iteratedFDeriv_const_of_ne (by norm_num)]; simpa using hL0
-
-theorem formL2_single (k : ℕ) (s₀ : formIdx 3 (k : ℤ)) :
-    formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
-      ⟨fun _ t => if t = s₀.1 then 1 else 0, continuous_const⟩ =
-        DeRhamIdent.constForm (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) s₀ := by
-  refine PiLp.ext fun s => Lp.ext ?_
-  filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
-    ⟨fun _ t => if t = s₀.1 then 1 else 0, continuous_const⟩ s,
-    MemLp.coeFn_toLp (DeRhamIdent.memLp_constFun (isOpen_cubeDomain 3).measurableSet
-      (isBounded_cubeDomain 3) s₀ s)] with y h1 h2
-  refine h1.trans (Eq.trans ?_ h2.symm)
-  simp only [DeRhamIdent.constFun]
-  congr 1
-  exact propext ⟨fun h => Subtype.ext h, fun h => congrArg Subtype.val h⟩
-
-theorem norm_single_le (s₀ : Finset (Fin 3)) (c : ℝ) :
-    ‖(fun t : Finset (Fin 3) => if t = s₀ then c else 0)‖ ≤ |c| := by
-  refine (pi_norm_le_iff_of_nonneg (abs_nonneg c)).2 fun t => ?_
-  split_ifs <;> simp
-
-theorem isCsFormPart_zero (J : Finset (Fin 3)) (j : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
-    IsCsFormPart J j L (0 : L2F ℝ (cubeDomain 3) (formIdx 3 j)) := by
-  have h := isCsFormPart_const J j (α := 0) (fun _ _ => rfl) (fun _ _ _ _ => rfl)
-    (by simpa using hL0) hL0
-  have e : formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) j
-      ⟨fun _ => (0 : Finset (Fin 3) → ℝ), continuous_const⟩ = 0 := by
-    rw [show (⟨fun _ => (0 : Finset (Fin 3) → ℝ), continuous_const⟩ : contForms 3) = 0 from rfl,
-      map_zero]
-  rwa [e] at h
-
-theorem isCsFormPart_constOne (c : ℝ) :
-    IsCsFormPart ∅ 0 |c| ((c • oneU : TU0) : W0) := by
-  have hdeg : IsDeg 0 (fun t : Finset (Fin 3) => if t = ∅ then c else 0) := by
-    intro t ht
-    have : t ≠ ∅ := fun h => ht (by rw [h, Finset.card_empty])
-    simp [this]
-  have h := isCsFormPart_const ∅ 0 hdeg (fun i hi => absurd hi (Finset.notMem_empty i))
-    (norm_single_le ∅ c) (abs_nonneg c)
-  have e : formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) ((0 : ℕ) : ℤ)
-      ⟨fun _ => fun t => if t = ∅ then c else 0, continuous_const⟩ =
-        ((c • oneU : TU0) : W0) := by
-    refine PiLp.ext fun s => Lp.ext ?_
-    have hs : s.1 = ∅ := Finset.card_eq_zero.1 (by exact_mod_cast s.2)
-    filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
-      ((0 : ℕ) : ℤ) ⟨fun _ => fun t => if t = ∅ then c else 0, continuous_const⟩ s,
-      Lp.coeFn_smul c (constOneForm s),
-      MemLp.coeFn_toLp (DeRhamIdent.memLp_constFun (isOpen_cubeDomain 3).measurableSet
-        (isBounded_cubeDomain 3) (⟨∅, rfl⟩ : formIdx 3 ((#(∅ : Finset (Fin 3)) : ℕ) : ℤ)) s)]
-      with y h1 h2 h3
-    refine h1.trans ?_
-    change _ = ((c • constOneForm s : L2 ℝ (cubeDomain 3)) : (Fin 3 → ℝ) → ℝ) y
-    rw [h2, Pi.smul_apply]
-    have h3' : ((constOneForm s : L2 ℝ (cubeDomain 3)) : (Fin 3 → ℝ) → ℝ) y =
-        DeRhamIdent.constFun (⟨∅, rfl⟩ : formIdx 3 ((#(∅ : Finset (Fin 3)) : ℕ) : ℤ)) s y := h3
-    rw [h3']
-    have hs' : s = ⟨∅, rfl⟩ := Subtype.ext hs
-    simp [DeRhamIdent.constFun, hs']
-  rwa [e] at h
-
-theorem isCsFormPart_harmVec (a b : Fin 3) {L : ℝ} (hL : 1 ≤ L) :
-    IsCsFormPart {b} 1 L ((harmVec a b : (BD1 b).domain) : W1) := by
-  by_cases hab : b = a
-  · subst hab
-    have h := isCsFormPart_const {b} 1 (α := fun t => if t = {b} then 1 else 0)
-      (fun t ht => by
-        simp only; split_ifs with h
-        · exact absurd (by rw [h, Finset.card_singleton]) ht
-        · rfl)
-      (fun i hi t ht => by
-        rw [Finset.mem_singleton] at hi; subst hi
-        split_ifs with h
-        · exact absurd (h ▸ Finset.mem_singleton_self i) ht
-        · rfl)
-      ((norm_single_le {b} 1).trans (by simpa using hL)) (zero_le_one.trans hL)
-    have e : ((harmVec b b : (BD1 b).domain) : W1) = dxForm b := by
-      simp only [harmVec, PiLp.toLp_apply, Pi.single_eq_same]
-    rw [e, ← formL2_dxField]
-    exact h
-  · have e : ((harmVec a b : (BD1 b).domain) : W1) = 0 := by
-      simp [harmVec, Pi.single_eq_of_ne hab]
-    rw [e]
-    exact isCsFormPart_zero {b} 1 (zero_le_one.trans hL)
-
-theorem bD1_harmVec (a : Fin 3) : bD1 (harmVec a) = 0 := by
-  refine PiLp.ext fun b => ?_
-  have hh : ((harmVec a b : (BD1 b).domain) : W1) ∈ (complexPart 3 {b}).harmonic 1 :=
-    harmVec_mem a b
-  have hc := (complexPart 3 {b}).harmonic_le_cycles 1 hh
-  rw [cycles_one_part] at hc
-  obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 hc
-  change BD1 b (harmVec a b) = 0
-  rw [show harmVec a b = y from Subtype.ext hy, hy0]
-
-/-- **A stationary solution of (6.2) for the mirror data**: the constant mode `σ ≡ c` and the
-bottom harmonic form `u ≡ dxₐ ⊗ eₐ` (no source, no multiplier). -/
-def mirrorStationary (T c : ℝ) (a : Fin 3) :
-    Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun 0) where
-  σ _ := c • oneU
-  φ _ := 0
-  u _ := harmVec a
-  M _ := 0
-  ρ _ := 0
-  ℓ _ := 0
-  σ' _ := 0
-  φ' _ := 0
-  u' _ := 0
-  M' _ := 0
-  ρ' _ := 0
-  ℓ' _ := 0
-  cσ := continuousOn_const
-  cu := continuousOn_const
-  cM := continuousOn_const
-  cρ := continuousOn_const
-  cdφ := continuousOn_const
-  cSu := continuousOn_const
-  cdu := continuousOn_const
-  cℓ _ := continuousOn_const
-  cσ' := continuousOn_const
-  cu' := continuousOn_const
-  cM' := continuousOn_const
-  cρ' := continuousOn_const
-  cdφ' := continuousOn_const
-  cSu' := continuousOn_const
-  cdu' := continuousOn_const
-  cℓ' _ := continuousOn_const
-  dσ _ _ := hasDerivWithinAt_const _ _ _
-  du _ _ := hasDerivWithinAt_const _ _ _
-  dM _ _ := hasDerivWithinAt_const _ _ _
-  dρ _ _ := hasDerivWithinAt_const _ _ _
-  ddφ _ _ := by simpa using hasDerivWithinAt_const _ _ (mirrorBGGSegment.dt0 0)
-  dSu _ _ := by simpa using hasDerivWithinAt_const _ _ (mirrorBGGSegment.S1 (harmVec a))
-  ddu _ _ := by simpa using hasDerivWithinAt_const _ _ (mirrorBGGSegment.dt1 (harmVec a))
-  dℓ _ _ μ := hasDerivWithinAt_const _ _ _
-  ea _ _ τ ψ := by
-    simp only [inner_zero_left, LinearMap.zero_apply, zero_sub, sub_zero, neg_eq_zero]
-    exact mirror_harmonic_orth _ (harmVec_mem a) ψ
-  eb _ _ v := by
-    simp [mirrorSrcFun_apply]
-  ec _ _ N := by
-    change ⟪(0 : W2), N⟫ - ⟪mS1 (harmVec a), N⟫ = 0
-    rw [mirror_S1_harmonic _ (harmVec_mem a)]; simp
-  ed _ _ μ := by
-    change ⟪(0 : Wv W2), μ⟫ - ⟪bD1 (harmVec a), μ⟫ = 0
-    rw [bD1_harmVec]; simp
-  ee _ _ := by
-    change tD0 (c • oneU) = mS0 0
-    rw [map_smul, tD0_oneU, smul_zero, map_zero]
-  ee' _ _ := by
-    change tD0 0 = mS0 0
-    rw [map_zero, map_zero]
-
-theorem isSmoothStateMirror_zero {L : ℝ} (hL0 : 0 ≤ L) :
-    IsSmoothStateMirror L 0 0 0 0 0 := by
-  refine ⟨isCsFormPart_zero ∅ 0 hL0, fun a => isCsFormPart_zero {a} 0 hL0,
-    fun a => isCsFormPart_zero {a} 1 hL0, ?_, isCsFormPart_zero ∅ 2 hL0,
-    fun w => by rw [inner_zero_left, abs_zero]; exact mul_nonneg hL0 (norm_nonneg _),
-    fun a => isCsFormPart_zero {a} 2 hL0⟩
-  rw [map_zero]; exact isCsFormPart_zero ∅ 2 hL0
-
-/-- **Non-vacuity of `mirrorWave_rate`**: for every `T > 0`, `c ∈ ℝ` and `a`, the stationary
-solution `mirrorStationary T c a` (the decoupled constant mode `σ ≡ c` of the top row and the
-harmonic form `u ≡ dxₐ ⊗ eₐ` of the bottom row, the two features of the mirror conditions absent
-from Table 6.1) satisfies the hypotheses of `mirrorWave_rate` with `L = max |c| 1`; `u(t) ≠ 0`,
-and `σ(t) ≠ 0` for `c ≠ 0`. -/
-theorem mirrorStationary_hyps (T c : ℝ) (a : Fin 3) :
-    (∀ t ∈ Icc 0 T, IsSmoothStateMirror (max |c| 1) ((mirrorStationary T c a).σ t)
-        ((mirrorStationary T c a).φ t) ((mirrorStationary T c a).u t)
-        ((mirrorStationary T c a).M t) ((mirrorStationary T c a).ρ t) ∧
-      IsSmoothStateMirror (max |c| 1) ((mirrorStationary T c a).σ' t)
-        ((mirrorStationary T c a).φ' t) ((mirrorStationary T c a).u' t)
-        ((mirrorStationary T c a).M' t) ((mirrorStationary T c a).ρ' t)) ∧
-    (∀ t ∈ Icc 0 T, ∀ μ : TU1, |(mirrorStationary T c a).ℓ t μ| ≤ max |c| 1 * ‖μ‖ ∧
-      |(mirrorStationary T c a).ℓ' t μ| ≤ max |c| 1 * ‖μ‖) ∧
-    (∀ t, (mirrorStationary T c a).u t ≠ 0) ∧ (c ≠ 0 → ∀ t, (mirrorStationary T c a).σ t ≠ 0) := by
-  have hL0 : 0 ≤ max |c| 1 := le_max_of_le_right zero_le_one
-  have hL1 : 1 ≤ max |c| 1 := le_max_right _ _
-  refine ⟨fun t _ => ⟨?_, isSmoothStateMirror_zero hL0⟩, fun t _ μ => ?_,
-    fun _ => harmVec_ne_zero a, fun hc _ => smul_ne_zero hc oneU_ne_zero⟩
-  refine ⟨(isCsFormPart_constOne c).mono (le_max_left _ _), fun b => isCsFormPart_zero {b} 0 hL0,
-    fun b => isCsFormPart_harmVec a b hL1, ?_, isCsFormPart_zero ∅ 2 hL0,
-    fun w => by
-      change |⟪(0 : W2), tD1 w⟫| ≤ _
-      rw [inner_zero_left, abs_zero]; exact mul_nonneg hL0 (norm_nonneg _),
-    fun b => isCsFormPart_zero {b} 2 hL0⟩
-  · change IsCsFormPart ∅ 2 (max |c| 1) (mS1 (harmVec a))
-    rw [mirror_S1_harmonic _ (harmVec_mem a)]
-    exact isCsFormPart_zero ∅ 2 hL0
-  · change |(0 : TU1 →ₗ[ℝ] ℝ) μ| ≤ _ ∧ |(0 : TU1 →ₗ[ℝ] ℝ) μ| ≤ _
-    rw [LinearMap.zero_apply, abs_zero]
-    exact ⟨mul_nonneg hL0 (norm_nonneg _), mul_nonneg hL0 (norm_nonneg _)⟩
-
 end Witness
 
 
@@ -1906,29 +1693,6 @@ end Witness
 section Converge
 
 open scoped Topology LinearPMap
-
-/-- **Uniform convergence on compact sets**: a family `F N` of functions, Lipschitz in `x` with a
-common constant and tending to `0` pointwise, tends to `0` uniformly on every compact set. -/
-theorem eventually_forall_le_of_isCompact {E : Type*} [PseudoMetricSpace E] {K : Set E}
-    (hK : IsCompact K) {F : ℕ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
-    (hlip : ∀ N x y, F N x ≤ F N y + B * dist x y)
-    (hF : ∀ x, Tendsto (fun N => F N x) atTop (𝓝 0)) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ N in atTop, ∀ x ∈ K, F N x ≤ ε := by
-  have hδ : 0 < ε / (2 * (B + 1)) := by positivity
-  obtain ⟨t, htK, htf, hcov⟩ := finite_cover_balls_of_compact hK hδ
-  have hev : ∀ᶠ N in atTop, ∀ y ∈ t, F N y < ε / 2 :=
-    (Filter.eventually_all_finite htf).2 fun y _ =>
-      (hF y).eventually (gt_mem_nhds (half_pos hε))
-  filter_upwards [hev] with N hN x hx
-  obtain ⟨y, hy, hxy⟩ := mem_iUnion₂.1 (hcov hx)
-  have h1 := hlip N x y
-  have h2 := hN y hy
-  have h3 : B * dist x y ≤ B * (ε / (2 * (B + 1))) :=
-    mul_le_mul_of_nonneg_left (Metric.mem_ball.1 hxy).le hB
-  have h4 : B * (ε / (2 * (B + 1))) ≤ ε / 2 := by
-    rw [mul_div_assoc', div_le_div_iff₀ (by positivity) (by norm_num)]
-    nlinarith
-  linarith
 
 /-- **The parity-smoothed projections converge strongly**: `‖x − π_N x‖ → 0` for every
 `x ∈ L²Λᵏ(Q)` (`‖x − π_N x‖ ≤ (1 + 2C) dist(x, V̊ₕᵏ)` and `V̊ₕᵏ ⊆ V_{h,Γ_J}ᵏ` is dense). -/
@@ -1966,7 +1730,7 @@ theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.eventually_norm_sub
     {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε := by
   have hK := isCompact_Icc.image_of_continuousOn hg
-  have h := eventually_forall_le_of_isCompact hK
+  have h := WeakSymmetry.eventually_forall_le_of_isCompact hK
     (F := fun N x => ‖x - (hE.proj N).π k x‖)
     (by linarith [hE.two_mul_nonneg] : 0 ≤ 1 + 2 * C)
     (fun N x y => hE.norm_sub_proj_le_add N k x y) (fun x => hE.tendsto_norm_sub_proj k x) hε
@@ -2046,7 +1810,7 @@ theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : B
   have h2 : ‖mirrorBGGSegment.dt0 ((mirrorFEM hT hB N).Pt0 φ - φ)‖ ^ 2 ≤ 3 * δ ^ 2 := by
     change ‖bD0 (projB0 (fun a => (hB a).proj N) φ - φ)‖ ^ 2 ≤ _
     rw [norm_sq_bD0]
-    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     have e : BD0 a ((projB0 (fun a => (hB a).proj N) φ - φ) a) =
         ((hB a).proj N).π 1 (BD0 a (φ a)) - BD0 a (φ a) := by
       rw [PiLp.sub_apply, LinearPMap.map_sub]
@@ -2057,7 +1821,7 @@ theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : B
   have h3a : ‖(mirrorFEM hT hB N).Pt1 u - u‖ ^ 2 ≤ 3 * δ ^ 2 := by
     change ‖projB1 (fun a => (hB a).proj N) u - u‖ ^ 2 ≤ _
     rw [norm_sq_BU1]
-    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     change ‖((hB a).proj N).π 1 (u a : W1) - (u a : W1)‖ ≤ _
     rw [norm_sub_rev]
     exact hu a
@@ -2065,7 +1829,7 @@ theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : B
   have h3c : ‖mirrorBGGSegment.dt1 ((mirrorFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤ 3 * δ ^ 2 := by
     change ‖bD1 (projB1 (fun a => (hB a).proj N) u - u)‖ ^ 2 ≤ _
     rw [norm_sq_bD1]
-    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     have e : BD1 a ((projB1 (fun a => (hB a).proj N) u - u) a) =
         ((hB a).proj N).π 2 (BD1 a (u a)) - BD1 a (u a) := by
       rw [PiLp.sub_apply, LinearPMap.map_sub]
@@ -2077,7 +1841,7 @@ theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : B
   have h5 : ‖(mirrorFEM hT hB N).Pt2 ρ' - ρ'‖ ^ 2 ≤ 3 * δ ^ 2 := by
     change ‖projB2 (fun a => (hB a).proj N) ρ' - ρ'‖ ^ 2 ≤ _
     rw [PiLp.norm_sq_eq_of_L2]
-    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine WeakSymmetry.sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     change ‖((hB a).proj N).π 2 (ρ' a) - ρ' a‖ ≤ _
     rw [norm_sub_rev]
     exact hρ a
@@ -2409,19 +2173,6 @@ theorem mirrorWave_rate_tsd :
     rw [map_sub, hΦ, zero_sub, neg_neg]
   rw [e, norm_neg]
   exact (Φ.le_opNorm _).trans (mul_le_mul_of_nonneg_left hρ (norm_nonneg _))
-
-/-- **Non-vacuity of `mirrorWave_rate_tsd` and `mirrorWave_converges`**: the stationary solution
-`mirrorStationary T 0 a` (`σ ≡ 0`, `u ≡ dxₐ ⊗ eₐ ≠ 0`, `M ≡ 0`, `ρ ≡ 0`) is of TSD type and
-satisfies the hypotheses of both theorems with `L = 1` (`mirrorStationary_hyps`). -/
-theorem mirrorStationary_tsd (T : ℝ) (a : Fin 3) :
-    (∀ t ∈ Icc 0 T, (mirrorStationary T 0 a).σ t = 0 ∧ (mirrorStationary T 0 a).M t = 0) ∧
-      (∀ t ∈ Icc 0 T, ∀ μ : TU1, |(mirrorStationary T 0 a).ℓ t μ| ≤ 1 * ‖μ‖ ∧
-        |(mirrorStationary T 0 a).ℓ' t μ| ≤ 1 * ‖μ‖) ∧
-      ∀ t, (mirrorStationary T 0 a).u t ≠ 0 := by
-  have h := mirrorStationary_hyps T 0 a
-  have e : max |(0 : ℝ)| 1 = 1 := by norm_num
-  rw [e] at h
-  exact ⟨fun t _ => ⟨zero_smul ℝ oneU, rfl⟩, h.2.1, h.2.2.1⟩
 
 end Converge
 

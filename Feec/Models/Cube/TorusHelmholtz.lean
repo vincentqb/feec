@@ -68,9 +68,6 @@ abbrev T3 := UnitAddTorus (Fin 3)
 /-- The unit cell `(-¼, ¾]³`. -/
 def cell : Set (Fin 3 → ℝ) := univ.pi fun _ => Ioc (-1 / 4 : ℝ) (3 / 4)
 
-theorem measurableSet_cell : MeasurableSet cell :=
-  MeasurableSet.univ_pi fun _ => measurableSet_Ioc
-
 /-- `proj : ℝ³ → 𝕋³` is measure preserving from the cell `(-¼, ¾]³`. -/
 theorem measurePreserving_proj_cell :
     MeasurePreserving proj (volume.restrict cell) (volume : Measure T3) := by
@@ -111,12 +108,6 @@ theorem mFourierCoeff_mFourier (m k : Fin 3 → ℤ) :
 theorem integrable_smul_mFourier {f : T3 → ℂ} (hf : Continuous f) (k : Fin 3 → ℤ) :
     Integrable fun t => mFourier (-k) t • f t :=
   integrable_of_continuous ((mFourier (-k)).continuous.smul hf)
-
-theorem mFourierCoeff_add' {f g : T3 → ℂ} (hf : Continuous f) (hg : Continuous g)
-    (k : Fin 3 → ℤ) :
-    mFourierCoeff (fun x => f x + g x) k = mFourierCoeff f k + mFourierCoeff g k := by
-  simp only [mFourierCoeff, smul_add]
-  exact integral_add (integrable_smul_mFourier hf k) (integrable_smul_mFourier hg k)
 
 theorem mFourierCoeff_sub' {f g : T3 → ℂ} (hf : Continuous f) (hg : Continuous g)
     (k : Fin 3 → ℤ) :
@@ -291,8 +282,6 @@ theorem partialT_Pc (F : Finset (Fin 3 → ℤ)) (a : Fin 3) : partialT a (Pc u 
   ring_nf
   rw [Complex.I_sq]
   ring
-
-theorem kv_zero : kv 0 = 0 := by funext a; simp [kv]
 
 theorem nk_zero : nk 0 = 0 := by simp [nk, kv]
 

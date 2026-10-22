@@ -31,14 +31,11 @@ are checked: `S₀,ₕ` is onto (`mirror_S0_surjective`) and `grad` is injective
 
 * `Feec.FiniteElement.PolySeq.wsGlobalPartial_surjective`: `Π' S` maps `∏ₐ Λ_{h,Γₐ}ᵏ` onto
   `P₁⁻Λ_hᵏ⁺¹` when the faces of `Γₐ` are flat in the direction `a`.
-* `top_conforming_zero`, `top_conforming_one`, `bot_conforming_zero`, `bot_conforming_one`: the
-  spaces lie in `HΛ(Q)` (componentwise) and the scheme's `d` is the weak exterior derivative.
 * `mirror_S0_surjective`, `mirror_dt0_injective` (`grad u = 0` and vanishing DOFs on
   `{x_a = 0}` force `u = 0`: the gluing is a constant, `harmonic_zero_mesh`, with vanishing trace
   on a facet, `exists_facet_mirrorFaces`).
-* **`mirror_exists_iff`**, **`mirror_exists_iff_compatible_u`**, **`mirror_exists_unique`**: the
-  mirror scheme has a solution iff (C1)–(C3), for dynamic data iff (C2), and it is unique;
-  `mirror_sqrt_energy_le`: energy stability.
+* **`mirror_exists_unique`**: for dynamic data satisfying (C2) the mirror scheme has a unique
+  solution.
 * **`mirror_constantMode`**: the constant `1ₕ` is a nonzero element of `ker grad` on the top row
   (`σ` has no boundary condition); `⟪σₕ(t), 1ₕ⟫` is conserved by every solution
   (`Feec.BGG.DiscreteSolution.inner_σ_eq_of_d0_eq_zero`) and `σₕ ≡ 1ₕ` is a stationary solution
@@ -60,8 +57,8 @@ needs, for the mirror conditions, three pieces that are not built:
   `Feec.Models.Cube.MirrorTrace` characterizes the domains of the grad–curl mirror complex (the
   bottom row, in matrix form) by Green's formulas against trace test functions, not the BGG
   complex with its second-order operator `grad grad`.
-* **Conformity with the partial boundary conditions**: the bottom-row spaces are proved
-  conforming in `HΛ(Q)³` (`bot_conforming_zero`, `bot_conforming_one`), with the conditions on
+* **Conformity with the partial boundary conditions**: the bottom-row spaces are
+  conforming in `HΛ(Q)³` (the glued spaces lie in the maximal domain, `glue_mem_maximal`), with the conditions on
   `{x_a = 0, ½}` imposed through the degrees of freedom. Their membership in the mirror domains
   needs the Green's formulas of `MirrorTrace` for piecewise polynomial fields, i.e. elementwise
   integration by parts on `Q̄` with boundary terms against test functions that do not vanish on
@@ -88,7 +85,7 @@ with the Hodge wave solution of `MirrorBGG.existsUnique_memQ` is
 `Feec.Models.Cube.MirrorWeakSymmetryTSD`: for TSD data in `D(L²)` the real part of the solution is
 a classical solution of (6.2) (rows of `E`, `B` as forms, compared through Fourier coefficients of
 the two parity models), and the scheme converges to it with `σₕ, Mₕ → 0` and `Bₕ` asymptotically
-symmetric (`mirror_waveFEM`; `O(h)` under `C²` regularity, `mirror_waveFEM_rate`). The analysed
+symmetric (`mirror_waveFEM`; `O(h)` for TSD data in `D(L³)`, `mirror_waveFEM_rate_of_mem_domain`). The analysed
 scheme couples the rows by the parity-smoothed `S₀,ₕ = π¹S⁰`, not by the canonical `S_h = Π¹S⁰` of
 `mirrorSegment` above, and its spaces are `polyPartial`, not identified with the spaces here.
 
@@ -474,76 +471,6 @@ theorem mirrorSegment_S0_apply (φ : Bot N 0) :
 theorem mirrorSegment_dt0_apply (φ : Bot N 0) :
     (mirrorSegment N).dt0 φ = botEquiv N 1 (dBot N 0 ((botEquiv N 0).symm φ)) := rfl
 
-/-! ### Conformity in `HΛ(Q)` -/
-
-/-- **Conformity of the top row**: `Vₕ⁰ ⊆ H¹(Q)`, `Vₕ¹ ⊆ H(curl, Q)` (no boundary condition) and
-`d₀ = grad`, `d₁ = curl` of the scheme are the weak exterior derivatives `d_max`. -/
-theorem top_conforming_zero (σ : Top N 0) :
-    ∃ h : (σ : L2F ℝ (mesh 3 N).domain (formIdx 3 0)) ∈
-        ((extDerivOp ℝ 3 0).maximal (mesh 3 N).domain).domain,
-      (extDerivOp ℝ 3 0).maximal (mesh 3 N).domain ⟨_, h⟩ =
-        ((mirrorSegment N).d0 σ : L2F ℝ (mesh 3 N).domain (formIdx 3 1)) := by
-  obtain ⟨h, e⟩ := Etop.glue_mem_maximal (mesh 3 N) (isOpen_mesh_domain 3 N) 0
-    ((topEquiv N 0).symm σ)
-  have hσ : (σ : L2F ℝ (mesh 3 N).domain (formIdx 3 0)) =
-      Etop.glue (mesh 3 N) ((0 : ℕ) : ℤ) (((topEquiv N 0).symm σ : Etop.globalSpace _ 0) :
-        Etop.Piecewise (mesh 3 N) 0) := by
-    conv_lhs => rw [← (topEquiv N 0).apply_symm_apply σ]
-    rfl
-  rw [hσ]
-  exact ⟨h, e⟩
-
-theorem top_conforming_one (μ : Top N 1) :
-    ∃ h : (μ : L2F ℝ (mesh 3 N).domain (formIdx 3 1)) ∈
-        ((extDerivOp ℝ 3 1).maximal (mesh 3 N).domain).domain,
-      (extDerivOp ℝ 3 1).maximal (mesh 3 N).domain ⟨_, h⟩ =
-        ((mirrorSegment N).d1 μ : L2F ℝ (mesh 3 N).domain (formIdx 3 2)) := by
-  obtain ⟨h, e⟩ := Etop.glue_mem_maximal (mesh 3 N) (isOpen_mesh_domain 3 N) 1
-    ((topEquiv N 1).symm μ)
-  have hμ : (μ : L2F ℝ (mesh 3 N).domain (formIdx 3 1)) =
-      Etop.glue (mesh 3 N) ((1 : ℕ) : ℤ) (((topEquiv N 1).symm μ : Etop.globalSpace _ 1) :
-        Etop.Piecewise (mesh 3 N) 1) := by
-    conv_lhs => rw [← (topEquiv N 1).apply_symm_apply μ]
-    rfl
-  rw [hμ]
-  exact ⟨h, e⟩
-
-/-- **Conformity of the bottom row** (componentwise): `V_{h,Γₐ}⁰ ⊆ H¹(Q)`,
-`V_{h,Γₐ}¹ ⊆ H(curl, Q)`, and `d̃₀ = grad`, `d̃₁ = curl` (row-wise) of the scheme are the weak
-exterior derivatives. The boundary conditions on the faces `{x_a = 0, ½}` are imposed through the
-degrees of freedom. -/
-theorem bot_conforming_zero (φ : Bot N 0) (a : Fin 3) :
-    ∃ h : (φ a : L2F ℝ (mesh 3 N).domain (formIdx 3 0)) ∈
-        ((extDerivOp ℝ 3 0).maximal (mesh 3 N).domain).domain,
-      (extDerivOp ℝ 3 0).maximal (mesh 3 N).domain ⟨_, h⟩ =
-        ((mirrorSegment N).dt0 φ a : L2F ℝ (mesh 3 N).domain (formIdx 3 1)) := by
-  set u := (botEquiv N 0).symm φ
-  obtain ⟨h, e⟩ := Ebot.glue_mem_maximal (mesh 3 N) (isOpen_mesh_domain 3 N) 0
-    ⟨u a, Ebot.globalSpacePartial_le (mesh 3 N) (mirrorFaces a) 0 (u a).2⟩
-  have hφ : (φ a : L2F ℝ (mesh 3 N).domain (formIdx 3 0)) =
-      Ebot.glue (mesh 3 N) ((0 : ℕ) : ℤ) ((u a : Ebot.globalSpacePartial _ _ 0) :
-        Ebot.Piecewise (mesh 3 N) 0) := by
-    conv_lhs => rw [← (botEquiv N 0).apply_symm_apply φ]
-    rfl
-  rw [hφ]
-  exact ⟨h, e⟩
-
-theorem bot_conforming_one (v : Bot N 1) (a : Fin 3) :
-    ∃ h : (v a : L2F ℝ (mesh 3 N).domain (formIdx 3 1)) ∈
-        ((extDerivOp ℝ 3 1).maximal (mesh 3 N).domain).domain,
-      (extDerivOp ℝ 3 1).maximal (mesh 3 N).domain ⟨_, h⟩ =
-        ((mirrorSegment N).dt1 v a : L2F ℝ (mesh 3 N).domain (formIdx 3 2)) := by
-  set u := (botEquiv N 1).symm v
-  obtain ⟨h, e⟩ := Ebot.glue_mem_maximal (mesh 3 N) (isOpen_mesh_domain 3 N) 1
-    ⟨u a, Ebot.globalSpacePartial_le (mesh 3 N) (mirrorFaces a) 1 (u a).2⟩
-  have hv : (v a : L2F ℝ (mesh 3 N).domain (formIdx 3 1)) =
-      Ebot.glue (mesh 3 N) ((1 : ℕ) : ℤ) ((u a : Ebot.globalSpacePartial _ _ 1) :
-        Ebot.Piecewise (mesh 3 N) 1) := by
-    conv_lhs => rw [← (botEquiv N 1).apply_symm_apply v]
-    rfl
-  rw [hv]
-  exact ⟨h, e⟩
-
 /-! ### `S₀,ₕ` is onto -/
 
 /-- **`S₀,ₕ = Π¹S⁰ : ∏ₐ P₂Λ⁰_{Γₐ} → P₁⁻Λ¹` is onto** (the hypothesis (5.4) of corrected
@@ -844,36 +771,6 @@ variable (N : ℕ)
 
 /-! ### Well-posedness of the mirror scheme (corrected Prop 6.2) -/
 
-/-- **Corrected Prop 6.2 for the mirror scheme**: for `T > 0` and a source continuous on `[0,T]`,
-(6.5) with the mirror spaces has a solution with data `(σ₀, φ₀, u₀, M₀, ρ₀)` iff (C1)
-`grad σ₀ = S₀,ₕφ₀`, (C2) `u₀ ⊥ grad (ker S₀,ₕ)` and (C3) `(grad φ₀ − f(0), grad ψ) = 0` on
-`ker S₀,ₕ`. -/
-theorem mirror_exists_iff {T : ℝ} (hT0 : 0 < T) {f : ℝ → Bot N 1} (hf : ContinuousOn f (Icc 0 T))
-    (σ₀ : Top N 0) (φ₀ : Bot N 0) (u₀ : Bot N 1) (M₀ : Top N 2) (ρ₀ : Bot N 2) :
-    (∃ s : Feec.BGG.DiscreteSolution (mirrorSegment N) T f, s.σ 0 = σ₀ ∧ s.φ 0 = φ₀ ∧
-      s.u 0 = u₀ ∧ s.M 0 = M₀ ∧ s.ρ 0 = ρ₀) ↔
-      (mirrorSegment N).d0 σ₀ = (mirrorSegment N).S0 φ₀ ∧
-        (∀ ψ, (mirrorSegment N).S0 ψ = 0 → ⟪u₀, (mirrorSegment N).dt0 ψ⟫ = 0) ∧
-        (∀ ψ, (mirrorSegment N).S0 ψ = 0 →
-          ⟪(mirrorSegment N).dt0 φ₀, (mirrorSegment N).dt0 ψ⟫ =
-            ⟪f 0, (mirrorSegment N).dt0 ψ⟫) := by
-  constructor
-  · rintro ⟨s, rfl, rfl, rfl, -, -⟩
-    exact Feec.BGG.DiscreteSolution.compatible hT0 s
-  · rintro ⟨h1, h2, h3⟩
-    exact Feec.BGG.exists_discreteSolution_of_continuousOn (mirror_dt0_injective N)
-      (mirror_S0_surjective N) hT0.le hf h1 h2 h3
-
-/-- **Corrected Prop 6.2 for the mirror scheme, dynamic data**: existence ⇔ (C2). -/
-theorem mirror_exists_iff_compatible_u {T : ℝ} (hT0 : 0 < T) {f : ℝ → Bot N 1}
-    (hf : ContinuousOn f (Icc 0 T)) (σ₀ : Top N 0) (u₀ : Bot N 1) (M₀ : Top N 2)
-    (ρ₀ : Bot N 2) :
-    (∃ s : Feec.BGG.DiscreteSolution (mirrorSegment N) T f, s.σ 0 = σ₀ ∧ s.u 0 = u₀ ∧
-      s.M 0 = M₀ ∧ s.ρ 0 = ρ₀) ↔
-      ∀ ψ, (mirrorSegment N).S0 ψ = 0 → ⟪u₀, (mirrorSegment N).dt0 ψ⟫ = 0 :=
-  Feec.BGG.exists_discreteSolution_iff_compatible_u hT0 (mirror_dt0_injective N)
-    (mirror_S0_surjective N) hf σ₀ u₀ M₀ ρ₀
-
 /-- **Well-posedness of the mirror scheme** for dynamic data satisfying (C2): existence, the
 forced `φₕ(0)`, and uniqueness (`σₕ, uₕ, Mₕ, ρₕ, λₕ` on `[0,T]`, `φₕ` on `[0,T)`). -/
 theorem mirror_exists_unique {T : ℝ} (hT0 : 0 < T) {f : ℝ → Bot N 1}
@@ -889,13 +786,6 @@ theorem mirror_exists_unique {T : ℝ} (hT0 : 0 < T) {f : ℝ → Bot N 1}
             s'.lam t = s.lam t) ∧ (∀ t ∈ Ico 0 T, s'.φ t = s.φ t) :=
   Feec.BGG.exists_discreteSolution_unique hT0 (mirror_dt0_injective N) (mirror_S0_surjective N)
     hf σ₀ u₀ M₀ ρ₀ hC2
-
-/-- **Energy stability of the mirror scheme**: `E(t)^{1/2} ≤ E(0)^{1/2} + ∫₀ᵗ ‖f‖`. -/
-theorem mirror_sqrt_energy_le {T : ℝ} {f : ℝ → Bot N 1}
-    (s : Feec.BGG.DiscreteSolution (mirrorSegment N) T f) (hf : ContinuousOn f (Icc 0 T)) :
-    ∀ t ∈ Icc 0 T, √(‖s.σ t‖ ^ 2 + ‖s.u t‖ ^ 2 + ‖s.M t‖ ^ 2 + ‖s.ρ t‖ ^ 2) ≤
-      √(‖s.σ 0‖ ^ 2 + ‖s.u 0‖ ^ 2 + ‖s.M 0‖ ^ 2 + ‖s.ρ 0‖ ^ 2) + ∫ r in (0:ℝ)..t, ‖f r‖ :=
-  Feec.BGG.DiscreteSolution.sqrt_energy_le s hf
 
 /-- **The constant mode of `σ` decouples**: the constant `1ₕ ∈ P₁Λ⁰` is a nonzero element of
 `ker grad` (absent for the thesis' boundary conditions), its coefficient `⟪σₕ(t), 1ₕ⟫` is

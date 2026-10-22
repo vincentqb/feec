@@ -62,7 +62,7 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
 
 The regularity hypothesis (`CurlPotential`, the regular decomposition of [Hiptmair2002],
 Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`); it is proved
-(`curlPotential`, `curlPotentialConst`, `cubeFEMReg'` in `Feec.Models.Cube.RegularDecomposition`).
+(`curlPotential`, `curlPotentialConst` in `Feec.Models.Cube.RegularDecomposition`).
 
 ## References
 
@@ -272,9 +272,6 @@ def tsub {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] (P : Submo
   add_mem' hx hy a := P.add_mem (hx a) (hy a)
   zero_mem' := fun _ => P.zero_mem
   smul_mem' c _ hx a := P.smul_mem c (hx a)
-
-theorem mem_tsub {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] {P : Submodule ℝ V}
-    {x : Wv V} : x ∈ tsub P ↔ ∀ a, x a ∈ P := Iff.rfl
 
 variable {S' : (complexMin 3).Subcomplex}
 
@@ -923,13 +920,14 @@ theorem norm_coordDir_le (j : Fin 3) : ‖(coordDir j : Fin 3 → ℝ)‖ ≤ 1 
 theorem abs_sgn (j : Fin 3) (s : Finset (Fin 3)) : |(ExteriorFibre.sgn j s : ℝ)| = 1 := by
   simp [ExteriorFibre.sgn]
 
-/-- **`S¹u ∈ D(d¹*)` for `C²` fields**: if `x ∈ L²(Q; Λ²)` is the class of a `C²` `2`-form with
-`‖Dw‖ ≤ L` on `cl Q` (no boundary condition is needed), then
-`|⟪x, d w⟫| ≤ 9 L ‖w‖` for `w ∈ H̊Λ¹(Q)` (Green's formula on `D(d_min)`). -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W2}
-    (hx : IsCsFormMin 0 2 L x) (hL0 : 0 ≤ L)
+/-- **`S¹u ∈ D(d¹*)` for `C²` fields by Green's formula**: if `x ∈ L²(Q; Λ²)` is the class of a
+`C²` `2`-form with `‖Dw‖ ≤ L` on `cl Q` (no boundary condition), then
+`|⟪x, d w⟫| ≤ 9 L ‖w‖` for `w ∈ H̊Λ¹(Q)`: `⟪x, d w⟫ = ⟪δx, w⟫` on `D(d_min)` (by density of the
+test forms, `minimal_green`) and `|δx| ≤ 3L`. -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsForm.abs_inner_D1_le {L : ℝ} {x : W2}
+    (hx : IsCsForm 0 2 L x) (hL0 : 0 ≤ L)
     (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ := by
-  rcases hx with hj | ⟨k, hk, w2, hw2, -, -, hL, -, rfl⟩
+  rcases hx with hj | ⟨k, hk, w2, hw2, -, hL, -, rfl⟩
   · norm_num at hj
   obtain rfl : k = 2 := by omega
   set ψ : formIdx 3 2 → (Fin 3 → ℝ) → ℝ := fun s y => w2 y s.1 with hψ_def
@@ -985,6 +983,12 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W
   refine (abs_real_inner_le_norm _ _).trans ?_
   rw [mul_comm]
   exact mul_le_mul_of_nonneg_right hnorm (norm_nonneg _)
+
+/-- **`S¹u ∈ D(d¹*)` for flat `C²` fields**: the Green bound of `IsCsForm.abs_inner_D1_le`. -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W2}
+    (hx : IsCsFormMin 0 2 L x) (hL0 : 0 ≤ L)
+    (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ :=
+  hx.isCsForm.abs_inner_D1_le hL0 w
 
 end SmoothBounds
 
@@ -1598,17 +1602,17 @@ theorem bggStability_of {CR : ℝ} (hCR0 : 0 ≤ CR)
     fun μ hμ => by obtain ⟨x, hx⟩ := exists_D0_eq hμ; exact ⟨x, Subtype.ext hx⟩,
     seg_hodget1, seg_reg hCR, seg_boundS0, seg_boundS1⟩
 
-theorem cubeFEM_fd0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).V0h :=
+instance cubeWave_fd0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).V0h :=
   finiteDimensional_comap ((polyMin 3 PolySeq.lowestOrder N).V 0) D0.domain
 
-theorem cubeFEM_fd1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).V1h :=
+instance cubeWave_fd1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).V1h :=
   finiteDimensional_comap ((polyMin 3 PolySeq.lowestOrder N).V 1) D1.domain
 
-theorem cubeFEM_fdt0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt0h :=
+instance cubeWave_fdt0 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt0h :=
   haveI := finiteDimensional_comap ((polyMin 3 PolySeq.lagrangeP2 N).V 0) D0.domain
   finiteDimensional_tsub _
 
-theorem cubeFEM_fdt1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt1h :=
+instance cubeWave_fdt1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt1h :=
   haveI := finiteDimensional_comap ((polyMin 3 PolySeq.lagrangeP2 N).V 1) D1.domain
   finiteDimensional_tsub _
 
@@ -1704,14 +1708,11 @@ theorem cubeFEM_err_S1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
   nlinarith
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate**: under the regularity
-hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every
-solution `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` and
-vanish outside `Q` (`IsCsFormMin 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`
-(`S¹u ∈ D(d¹*)`), every discrete solution of the method (5.6), i.e. (5.7) with `S_h = πS` in place
-of the canonical `Π¹_h S⁰`, `Π²_h S¹`, satisfies
-`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`. -/
-theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
+/-- **The rate of `cubeFEM_rate` from the projection errors**: the bound
+`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for every solution of (5.3) whose
+projection errors are `O(L h_N)` (the conclusions of `cubeFEM_err_P0`, `cubeFEM_err_Pt0`,
+`cubeFEM_err_gnSq`, `cubeFEM_err_S1`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
+theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
       {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
@@ -1720,8 +1721,16 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
         ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
       bggSegment.d0 σ = bggSegment.S0 φ →
-      IsCsFormMin 0 0 L (σ : W0) → (∀ a, IsCsFormMin 0 0 L (φ a : W0)) →
-      (∀ a, IsCsFormMin 0 1 L (u a : W1)) → IsCsFormMin 0 2 L (bggSegment.S1 u) →
+      Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) ≤
+        2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2 * (L * meshSize N) ^ 2 →
+      Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) ≤
+        3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2) *
+          (L * meshSize N) ^ 2 →
+      (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) ≤
+        (1 + 8 * C ^ 2) * (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)) *
+          (L * meshSize N) ^ 2 →
+      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤
+        ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2 * (L * meshSize N) ^ 2 →
       ‖lam‖ ≤ L → ‖bggSegment.S1 u‖ ≤ L →
       (∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖) →
       ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
@@ -1781,9 +1790,8 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       ((1 + 2 * C) * Bt2) ^ 2 := ⟨_, rfl⟩
   obtain ⟨Kd, hKd⟩ := hKdex
   have hKd0 : 0 ≤ Kd := by rw [hKd]; positivity
-  refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu hlam
+  refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F L hL0 c1 c2 c3 hD1 hD2 hD3 hD6 hlam
     hSun hz σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
-  have := cubeFEM_fdt1 hT hB N
   have hh : 0 ≤ meshSize N := (meshSize_pos N).le
   have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
     rw [hCp]; exact bggStability_of hCR0 hCR
@@ -1804,9 +1812,6 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     ((innerSL ℝ lam).toLinearMap ∘ₗ D1.domain.subtype) hL0 hℓ F (fun τ _ ψ _ => c1 τ ψ)
     (fun v _ => c2 v) c3 hσh hφh huh h1 h2 h3
   refine hest.trans ?_
-  have hD1 := cubeFEM_err_P0 hT hB N hL0 σ hσ
-  have hD2 := cubeFEM_err_Pt0 hT hB N hL0 φ hφ
-  have hD3 := cubeFEM_err_gnSq hT hB N hL0 u hu
   rw [← hBt0d] at hD1
   rw [← hBb0d] at hD2
   rw [← hBb1d] at hD3
@@ -1832,7 +1837,6 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     have := pow_le_pow_left₀ hK0 hD5 2
     have h2 := mul_le_mul_of_nonneg_left this (sq_nonneg (meshSize N))
     exact le_of_le_of_eq h2 (by ring)
-  have hD6 := cubeFEM_err_S1 hT hB N hL0 u hSu
   rw [← hBt2d] at hD6
   have hsum : Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) +
       Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) +
@@ -1849,6 +1853,45 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
         rw [show (√(E * Kd) * L * meshSize N) ^ 2 = √(E * Kd) ^ 2 * (L * meshSize N) ^ 2 by ring,
           Real.sq_sqrt (mul_nonneg hE0 hKd0)]
         ring
+
+set_option maxHeartbeats 1000000 in
+/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate**: under the regularity
+hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every
+solution `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` and
+vanish outside `Q` (`IsCsFormMin 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`
+(`S¹u ∈ D(d¹*)`), every discrete solution of the method (5.6), i.e. (5.7) with `S_h = πS` in place
+of the canonical `Π¹_h S⁰`, `Π²_h S¹`, satisfies
+`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`. -/
+theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
+      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
+        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
+      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
+      bggSegment.d0 σ = bggSegment.S0 φ →
+      IsCsFormMin 0 0 L (σ : W0) → (∀ a, IsCsFormMin 0 0 L (φ a : W0)) →
+      (∀ a, IsCsFormMin 0 1 L (u a : W1)) → IsCsFormMin 0 2 L (bggSegment.S1 u) →
+      ‖lam‖ ≤ L → ‖bggSegment.S1 u‖ ≤ L →
+      (∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖) →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
+        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+  have hK := cubeFEM_rate_of_err hT hB hCR0 hCR
+  refine ⟨hK.choose, hK.choose_spec.1, ?_⟩
+  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu
+  exact hK.choose_spec.2 N hL0 c1 c2 c3 (cubeFEM_err_P0 hT hB N hL0 σ hσ) (cubeFEM_err_Pt0 hT hB N hL0 φ hφ)
+    (cubeFEM_err_gnSq hT hB N hL0 u hu) (cubeFEM_err_S1 hT hB N hL0 u hSu)
 
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions**:
@@ -1950,10 +1993,6 @@ theorem cubeFEM_existsUnique {CR : ℝ} (hCR0 : 0 ≤ CR)
         ⟪(cubeFEM hT hB N).S1h x.2.2.1, (cubeFEM hT hB N).S1h v⟫ +
           ⟪bggSegment.dt1 x.2.2.1, bggSegment.dt1 v⟫ = F v) ∧
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 x.1 - (cubeFEM hT hB N).S0h x.2.1, μ⟫ = 0) :=
-  haveI := cubeFEM_fd0 hT hB N
-  haveI := cubeFEM_fd1 hT hB N
-  haveI := cubeFEM_fdt0 hT hB N
-  haveI := cubeFEM_fdt1 hT hB N
   Feec.BGG.Discrete.existsUnique_mixed_h (bggStability_of hCR0 hCR) (cubeFEM_compatible hT hB N) F
 
 theorem wv_single_ne_zero {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] {v : V}

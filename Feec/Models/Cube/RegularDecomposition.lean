@@ -17,7 +17,7 @@ level of `curl`. Consequently the hypotheses (H1)–(H3), (H6) of §5.1, the con
 Props 5.1, 5.2, 5.4 and the rates of Thm 5.5 and of the scheme (6.5) on the cube hold
 unconditionally (`bggHilb_hyps`, `bggStability'`, `bggShort_closedRange_exact'`,
 `bgg_existsUnique_isSaddle'`, `cubeFEM_existsUnique'`, `cubeFEM_rate'`, `cubeFEM_rate_C2'`,
-`cubeFEM_rate_isSaddle'`, `cubeWave_rate'`).
+`cubeWave_rate'`).
 
 **Proof.** The parity model of the cube alone does not give it: the potential must vanish on
 `∂Q` in every component, a parity class different from that of `H̊Λ¹`. The argument goes
@@ -49,8 +49,8 @@ No hypothesis remains.
 * `exists_preimage_of_mem_closure`, `mem_closure_test`.
 * **`Feec.Models.Cube.WeakSymmetry.curlPotential`**, `exists_curlPotential_bound`,
   `bggHilb_hyps`, `bggStability'`, `bggShort_closedRange_exact'`, `bgg_existsUnique_isSaddle'`;
-  `cubeFEM_rate'`, `cubeFEM_rate_C2'`, `cubeFEM_rate_isSaddle'`, `cubeFEM_existsUnique'`,
-  `cubeWave_rate'`; `curlPotentialConst`, `bggStability_curlPotentialConst`, `cubeFEMReg'`.
+  `cubeFEM_rate'`, `cubeFEM_rate_C2'`, `cubeFEM_existsUnique'`,
+  `cubeWave_rate'`; `curlPotentialConst`, `bggStability_curlPotentialConst`.
 
 ## References
 
@@ -109,12 +109,6 @@ theorem ball_subset_cell {r : ℝ} (hr : r ≤ 1 / 2) : Metric.ball ctr r ⊆ ce
   intro i _
   have := abs_lt.1 (hy i)
   constructor <;> linarith [this.1, this.2]
-
-theorem bump_eq_zero {y : Fin 3 → ℝ} (hy : y ∉ cell) : bump y = 0 := by
-  by_contra h
-  have : y ∈ Function.support bump := h
-  rw [bump.support_eq] at this
-  exact hy (ball_subset_cell le_rfl this)
 
 /-! ### The shell and the linear part of the potential -/
 
@@ -199,9 +193,6 @@ theorem NcurlQ_nonneg (u : Fin 3 → (Fin 3 → ℝ) → ℝ) : 0 ≤ NcurlQ u :
   have h : ∀ j l, 0 ≤ ∫ y in Q (Fin 3), curlR u j l y ^ 2 := fun j l =>
     integral_nonneg fun y => sq_nonneg _
   linarith [h 0 1, h 0 2, h 1 2]
-
-theorem NuQ_nonneg (u : Fin 3 → (Fin 3 → ℝ) → ℝ) : 0 ≤ NuQ u :=
-  Finset.sum_nonneg fun _ _ => integral_nonneg fun _ => sq_nonneg _
 
 theorem eLpNorm_restrict_mono {F : (Fin 3 → ℝ) → ℝ} {B B' : Set (Fin 3 → ℝ)} (h : B ⊆ B') :
     eLpNorm F 2 (volume.restrict B) ≤ eLpNorm F 2 (volume.restrict B') :=
@@ -744,7 +735,7 @@ theorem exists_curlPotential_bound :
 
 /-- **A regularity constant `C_R` of the cube**, chosen from `exists_curlPotential_bound`; it lets
 callers of the constructions parameterized by `C_R` (`cubeFEMReg`, `bggStability_of`) use them
-without threading the constant (`cubeFEMReg'`, `bggStability_curlPotentialConst`). -/
+without threading the constant (`bggStability_curlPotentialConst`). -/
 def curlPotentialConst : ℝ := Classical.choose exists_curlPotential_bound
 
 theorem curlPotentialConst_nonneg : 0 ≤ curlPotentialConst :=
@@ -854,31 +845,6 @@ theorem cubeFEM_rate_C2' :
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 :=
   exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_C2 hT hB h.1 h.2
 
-/-- **The rate for the solution of Prop 5.2, unconditionally** (`cubeFEM_rate_isSaddle` with the
-constant of `curlPotential`). -/
-theorem cubeFEM_rate_isSaddle' :
-    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
-      0 ≤ L → bggHilb.IsSaddle f x (bggHilb.jW lam) →
-      IsCsFormMin 0 0 L ((graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) : U0) : W0) →
-      (∀ a, IsCsFormMin 0 0 L ((rp (Feec.BGG.pφ V0 Vt0 Vt1 x) a : U0) : W0)) →
-      (∀ a, IsCsFormMin 0 1 L ((rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) a : U1) : W1)) → ‖lam‖ ≤ L →
-      IsCsFormMin 0 2 L (bggSegment.S1 (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x))) →
-      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
-      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
-      uh ∈ (cubeFEM hT hB N).Vt1h →
-      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
-          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
-      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
-        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
-          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = ((innerSL ℝ f).toLinearMap ∘ₗ incl1) v) →
-      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
-      Feec.BGG.graphSq bggSegment.d0 (graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) - σh) +
-        Feec.BGG.graphSq bggSegment.dt0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x) - φh) +
-        (cubeFEM hT hB N).gnSq (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) - uh) ≤
-          (K * L * meshSize N) ^ 2 :=
-  exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_isSaddle hT hB h.1 h.2
-
 /-- **[QuennevilleBelair2015], Prop 5.4 for Table 5.1, unconditionally**: for every `N` and every
 datum `F` the discrete system (5.6) has exactly one solution (`cubeFEM_existsUnique` with the
 constant of `curlPotential`). -/
@@ -912,12 +878,6 @@ theorem cubeWave_rate' :
         ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
           ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N :=
   exists_curlPotential_bound.elim fun _ h => cubeWave_rate hT hB h.1 h.2
-
-/-- **Regular potentials for the discretization of Table 5.1, unconditionally**: `cubeFEMReg`
-with the regularity constant `curlPotentialConst` and the approximation constant `regConst C`. -/
-def cubeFEMReg' (N : ℕ) :
-    (cubeFEM hT hB N).RegularPotential (Wv Vt0) 1 curlPotentialConst (regConst C) (meshSize N) :=
-  cubeFEMReg hT hB N curlPotentialConst_nonneg exists_curlPotential_le le_rfl
 
 
 end Rate

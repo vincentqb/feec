@@ -24,7 +24,8 @@ equation of the thesis' complex `H̊¹ → H̊(curl) → L²` (`Feec.Models.Boun
 For a finite Hilbert complex `H` (the boundary conditions, e.g. the minimal realization) and a
 complex `H'` with `d ≤ d'` (no boundary conditions, e.g. the maximal realization), the operator
 without boundary conditions is `L_max = 𝐝' − 𝐝†` (`waveMax H H'`), and `L = 𝐝 − 𝐝† ≤ L_max`
-(`wave_le_waveMax`); existence and uniqueness with a lifting: `existsUnique_hodgeWave`. The
+(`wave_le_waveMax`); existence and uniqueness with a lifting is
+`Feec.Evolution.existsUnique_isBoundarySolution` for the skew-adjoint `L`. The
 boundary values are prescribed by a lifting through
 `Feec.Evolution.IsBoundarySolution L_max L`: the essential conditions are those of `𝐝`, while
 `𝐝†` carries none. For the thesis' complex, `L_max (σ, E, B) = (div E, grad σ − curl B, curl E)`
@@ -48,7 +49,7 @@ one (`Feec.Numerics.PlaneWaveCube`). On every bounded open `Ω`:
   exists, is unique (`WholeSpaceTSD.existsUnique`), and equals `R(t) + e^{tL}(U₀ − R(0))`
   (`WholeSpaceTSD.eq_add_waveGroup`); it stays TSD on `[0, T]` **iff** the homogeneous solution
   from `U₀ − R(0)` does (`WholeSpaceTSD.mem_iff`), in particular whenever `U₀ − R(0)` lies in
-  the invariant core `K*` of the homogeneous problem (`WholeSpaceTSD.mem_of_mem_coreSub`).
+  the invariant core `K*` of the homogeneous problem.
 
 The homogeneous refutation (`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`) then
 transfers to these data: TSD propagation fails for a TSD perturbation `R(0) + W₀` of the initial
@@ -67,14 +68,14 @@ DOFs, `discreteWave S = 𝐝ₕ − 𝐝ₕ*` is the matrix of `fem4gr`'s biline
 (`existsUnique_isDirichletCNStep`); the constraint residuals of its solution are bounded by the
 consistency error (`norm_residual_le`). On the Whitney spaces of the Freudenthal meshes of the cube
 (`whitneyRow N`: Lagrange `P₁`, Nédélec, Raviart–Thomas, with `V̊ₕ ⊆ Vₕ` by
-`whitneyMin_le_whitney`): `whitney_existsUnique_cnStep`. The meshes are those of `(0, ½)³`
+`whitneyMin_le_whitney`) it applies row by row. The meshes are those of `(0, ½)³`
 (`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation: the meshes of
 `(0, 1)³` are their images under `x ↦ 2x`, and the scheme on the dilated Whitney spaces with step
 `Δt` is the scheme on `(0, ½)³` with step `Δt / 2` (`Feec.Numerics.PlaneWaveCube`, file
 `Feec/Numerics/PlaneWaveCubeError.lean`).
 One row of (4.14) is the scalar de Rham window. The `fem4gr` spaces are the three-row space
 `DState3 (whitneyRow N)` (row `r` holds `(σ_r, E_r, B_r)`), on which the row-wise scheme
-`discreteWave3` decouples into the three rows (`isDirichletCNStep3_iff`) and is well posed
+`discreteWave3` decouples into the three rows and is well posed
 (`whitney_existsUnique_cnStep3`). The constraint monitors of `fem4gr` couple the rows: the skew parts
 `½ (E − Eᵀ)`, `½ (B − Bᵀ)` (`skewPart`), the traces `tr E / √3`, `tr B / √3` (`tracePart`), with
 `E_{rj}` the `dx_j` component of row `r` (`entryE`) and `B_{rj}` the Hodge-star vector proxy of the
@@ -157,23 +158,6 @@ theorem waveMax_apply {H H' : HilbertComplex 𝕜 c W} (x : (waveMax H H').domai
 
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
-
-/-- **The Hodge wave equation with inhomogeneous essential boundary data** (any finite Hilbert
-complex `H` with boundary conditions and `H'` without, `d ≤ d'`): for a lifting `G` (with
-`G' = DG`, `L_max G = AG`), an initial value with `U₀ − G(a) ∈ D(L)` and admissible
-`F − G' + L_max G`, the problem `U' = L_max U + F`, `U − G ∈ D(L)`, `U(a) = U₀` has a solution,
-`U − G` is a classical solution of the homogeneous Hodge wave equation with forcing
-`F − (G' − L_max G)`, and the solution is unique. -/
-theorem existsUnique_hodgeWave {H H' : HilbertComplex 𝕜 c W} (h : ∀ i j, H.d i j ≤ H'.d i j)
-    {F G DG AG : ℝ → PiLp 2 W} {a b : ℝ}
-    (hG : Evolution.IsLifting (waveMax H H') (Set.Icc a b) G DG AG) {U₀ : PiLp 2 W}
-    (hU₀ : U₀ - G a ∈ H.wave.domain)
-    (hF : Evolution.ForcingClass.admissible H.wave a b (F - DG + AG)) :
-    ∃ U, U a = U₀ ∧ Evolution.IsBoundarySolution (waveMax H H') H.wave (Set.Icc a b) F G U ∧
-      Evolution.IsClassicalSolution H.wave (Set.Icc a b) (F - DG + AG) (U - G) ∧
-      ∀ V, V a = U₀ → Evolution.IsBoundarySolution (waveMax H H') H.wave (Set.Icc a b) F G V →
-        Set.EqOn V U (Set.Icc a b) :=
-  Evolution.existsUnique_isBoundarySolution H.isSkewAdjoint_wave (wave_le_waveMax h) hG hU₀ hF
 
 end WaveMax
 
@@ -424,23 +408,6 @@ theorem wave_le_thesisWaveMax (hΩ : IsOpen Ω) : (gradCurl ℝ hΩ).wave ≤ th
   wave_le_shortWaveMax ((gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).minimal_le_maximal hΩ)
     ((curlOp 3 : ConstCoeffOp R3 ℝ _ _).minimal_le_maximal hΩ)
 
-/-- The boundary condition of the homogeneous problem: `U − G ∈ D(L)` iff `σ − σ_G ∈ H̊¹`,
-`E − E_G ∈ H̊(curl)` (agreement of `σ` and of the tangential trace `E × n`), given that both lie
-in `D(L_max)`. -/
-theorem sub_mem_wave_domain_iff (hΩ : IsOpen Ω) {U G : State Ω}
-    (hU : U ∈ (thesisWaveMax hΩ).domain) (hG : G ∈ (thesisWaveMax hΩ).domain) :
-    U - G ∈ (gradCurl ℝ hΩ).wave.domain ↔
-      ((U 0 : L2F ℝ Ω (Fin 3)) - G 0 ∈ ((gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).minimal Ω).domain ∧
-        (U 1 : L2F ℝ Ω Ix) - G 1 ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ _ _).minimal Ω).domain) := by
-  rw [mem_wave_domain]
-  have hU' := mem_shortWaveMax_domain.1 hU
-  have hG' := mem_shortWaveMax_domain.1 hG
-  constructor
-  · rintro ⟨h0, h1, -, -⟩
-    exact ⟨h0, h1⟩
-  · rintro ⟨h0, h1⟩
-    exact ⟨h0, h1, Submodule.sub_mem _ hU'.2.2.1 hG'.2.2.1, Submodule.sub_mem _ hU'.2.2.2 hG'.2.2.2⟩
-
 /-- Derivatives of the three components give the derivative of the point of `State Ω`. -/
 theorem hasDerivAt_mk3 {f₀ : ℝ → L2F ℝ Ω (Fin 3)} {f₁ f₂ : ℝ → L2F ℝ Ω Ix}
     {f₀' : L2F ℝ Ω (Fin 3)} {f₁' f₂' : L2F ℝ Ω Ix} {t : ℝ} (h₀ : HasDerivAt f₀ f₀' t)
@@ -584,12 +551,6 @@ theorem isLifting (I : Set ℝ) :
 
 /-! ### Uniqueness, existence and TSD propagation for the data of `R` -/
 
-/-- The restriction solves the problem with its own boundary data. -/
-theorem isBoundarySolution_restrict (I : Set ℝ) :
-    Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave I 0 (W.restrict hΩ hb)
-      (W.restrict hΩ hb) :=
-  Evolution.isBoundarySolution_self (W.isStrongSolution_restrict hΩ hb I)
-
 /-- **The restriction is the unique solution with its own boundary data**: every solution `V` of
 `V' = L_max V` on `[a, b]` with `σ = 0` and `E × n = E_R × n` on `∂Ω` and `V(a) = R(a)` is `R`.
 In particular it is TSD at every time (`restrict_mem`). -/
@@ -659,16 +620,6 @@ theorem mem_iff {T : ℝ} {U : ℝ → State Ω}
   refine forall₂_congr fun t ht => ?_
   rw [W.eq_add_waveGroup hΩ hb hU t ht]
   exact Submodule.add_mem_iff_right _ (W.restrict_mem hΩ hb t)
-
-/-- **Sufficient condition**: if `U(0) − R(0)` lies in the invariant core `K*` of the homogeneous
-problem (the largest reducing subcomplex inside `K`), the solution with the boundary data of `R`
-stays TSD. This contains the datum `U(0) = R(0)` (`restrict_propagates`). -/
-theorem mem_of_mem_coreSub {T : ℝ} {U : ℝ → State Ω}
-    (hU : Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave (Icc 0 T) 0
-      (W.restrict hΩ hb) U)
-    (hcore : U 0 - W.restrict hΩ hb 0 ∈ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω)) :
-    ∀ t ∈ Icc 0 T, U t ∈ constraint Ω :=
-  (W.mem_iff hΩ hb hU).2 fun t _ => ShortHilbertComplex.mem_coreSub.1 hcore t
 
 end WholeSpaceTSD
 
@@ -768,33 +719,6 @@ def interior3 (V₀ : ∀ i, Submodule ℝ (W i)) : Submodule ℝ (DState3 S) wh
   zero_mem' r := by simp
   add_mem' hu hv r := by simpa using (interior S V₀).add_mem (hu r) (hv r)
   smul_mem' a _ hu r := by simpa using (interior S V₀).smul_mem a (hu r)
-
-/-- **The three rows decouple**: a Crank–Nicolson step with prescribed boundary DOFs on the
-three-row space is exactly a step in each row. -/
-theorem isDirichletCNStep3_iff (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {f g' u u' : DState3 S} :
-    TimeStepping.IsDirichletCNStep (interior3 S V₀) (discreteWave3 S) s f g' u u' ↔
-      ∀ r, TimeStepping.IsDirichletCNStep (interior S V₀) (discreteWave S) s (f r) (g' r) (u r)
-        (u' r) := by
-  constructor
-  · rintro ⟨h1, h2⟩ r
-    refine ⟨by simpa using h1 r, fun v hv => ?_⟩
-    set w : DState3 S := WithLp.toLp 2 (Pi.single r v)
-    have hw : w ∈ interior3 S V₀ := fun q => by
-      by_cases hq : q = r
-      · subst hq; simpa [w] using hv
-      · simp [w, hq]
-    have key : ∀ x : DState3 S, ⟪x, w⟫ = ⟪x r, v⟫ := fun x => by
-      rw [PiLp.inner_apply x w, Finset.sum_eq_single r (fun q _ hq => by simp [w, hq])
-        (by simp)]
-      simp [w]
-    have := h2 w hw
-    rw [key, key, key] at this
-    simpa [discreteWave3] using this
-  · intro h
-    refine ⟨fun r => by simpa using (h r).1, fun v hv => ?_⟩
-    rw [PiLp.inner_apply (u' - u) v, PiLp.inner_apply (discreteWave3 S (u' + u)) v,
-      PiLp.inner_apply f v, Finset.mul_sum, ← Finset.sum_add_distrib]
-    exact Finset.sum_congr rfl fun r _ => by simpa [discreteWave3] using (h r).2 (v r) (hv r)
 
 /-- **Well-posedness on the three-row space**, for every time step. -/
 theorem existsUnique_isDirichletCNStep3 (V₀ : ∀ i, Submodule ℝ (W i)) (s : ℝ)
@@ -926,17 +850,6 @@ theorem whitneyMin_le_whitney (N : ℕ) (k : ℤ) :
 level-`(N + 1)` Freudenthal mesh of the cube: one row of the `fem4gr` spaces
 `(CG₁)³ × (N1curl)³ × (RT)³` of (4.14) (the row-wise operators decouple the three rows). -/
 abbrev whitneyRow (N : ℕ) := (whitney 3 N).window 0 3
-
-/-- **The scheme on one row of the Whitney spaces of the cube meshes is well-posed**: for every
-time step and every data, the Crank–Nicolson step with prescribed boundary DOFs (those of `V̊ₕ`,
-the Whitney spaces with vanishing boundary DOFs) exists and is unique. This is the abstract
-skew-form result (`existsUnique_isDirichletCNStep`) on these spaces (`V̊ₕ ≠ 0` is
-`whitneyInterior3_ne_bot` of `Feec.Models.Cube.InhomogeneousError`). -/
-theorem whitney_existsUnique_cnStep (N : ℕ) (s : ℝ) (f g' u : DState (whitneyRow N)) :
-    ∃! u', TimeStepping.IsDirichletCNStep
-      (interior (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ)))
-      (discreteWave (whitneyRow N)) s f g' u u' :=
-  existsUnique_isDirichletCNStep _ _ s f g' u
 
 /-! ### The three-row Whitney space and the `fem4gr` constraint monitors -/
 

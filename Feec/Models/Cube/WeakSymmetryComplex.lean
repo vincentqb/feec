@@ -28,16 +28,13 @@ ranges, exactness at
 `H̊Λ¹` (`exact1`) and the Hodge decomposition with Poincaré constant `(2π)⁻¹` (`hodge_one`), in
 both rows; `‖S⁰ψ‖ ≤ ‖ψ‖`, `‖S¹v‖² ≤ 2 ‖v‖²` (`Feec.FiniteElement.norm_wsL2_sq_le`).
 
-**The regularity hypothesis** `curl H̊(curl) = curl H̊¹(V)` is the one hypothesis that is not
-proved here (`CurlPotential`): the regular decomposition `H̊(curl) = H̊¹(V) + grad H̊¹` of
-[Hiptmair2002], Lemma 2.4, [HiptmairXu2007], §3 (Costabel–McIntosh regularized Poincaré
-operators) is absent from Mathlib, and it does not follow from the parity model of the cube (the
-potential must vanish on `∂Q` in every component, a parity class different from that of
-`H̊Λ¹`). We show that it is **exactly the closedness of `curl S⁰ H̊¹(V)`**
-(`curlPotential_iff_isClosed`): the inclusion `curl H̊(curl) ⊆ cl (curl S⁰ H̊¹(V))` is a theorem
-(`range_d1_subset_closure`: on test fields `u = S⁰ (proxy u)`), so the hypothesis is non-vacuous
-in the sense that it holds on the dense subspace of test fields, and its constant `C_R` follows
-from the open mapping theorem (`CurlPotential.exists_bound`). With it, `bggHyps` and
+**The regularity hypothesis** `curl H̊(curl) = curl H̊¹(V)` (`CurlPotential`) is not proved
+here: it is the regular decomposition `H̊(curl) = H̊¹(V) + grad H̊¹` of [Hiptmair2002], Lemma 2.4,
+[HiptmairXu2007], §3 (Costabel–McIntosh regularized Poincaré operators), which is absent from
+Mathlib and does not follow from the parity model of the cube (the potential must vanish on `∂Q`
+in every component, a parity class different from that of `H̊Λ¹`). Its constant `C_R` follows
+from the open mapping theorem (`CurlPotential.exists_bound`), and it is proved in
+`Feec.Models.Cube.RegularDecomposition` (`curlPotential`). With it, `bggHyps` and
 `bggStability` hold. The hypothesis is now a theorem,
 `Feec.Models.Cube.WeakSymmetry.curlPotential` in `Feec.Models.Cube.RegularDecomposition` (a
 Helmholtz decomposition on a larger cell and a Hestenes extension from the shell around `Q`), and
@@ -60,7 +57,7 @@ the unconditional forms of `bggHyps`, `bggStability`, Props 5.1 and 5.2 are `bgg
   `√2` of Prop 5.3);
 * **Prop 5.1** (`bggShort_closedRange_exact`) and **Prop 5.2** (`bgg_existsUnique_isSaddle`) on
   the cube, under `CurlPotential`;
-* `range_d1_subset_closure`, `curlPotential_iff_isClosed`, `CurlPotential.exists_bound`.
+* `CurlPotential.exists_bound`.
 
 ## References
 
@@ -137,11 +134,6 @@ def piCLM {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [Normed
 @[simp] theorem piCLM_apply {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     [NormedAddCommGroup W] [InnerProductSpace ℝ W] (f : V →L[ℝ] W) (x : Wv V) (a : Fin 3) :
     piCLM f x a = f (x a) := rfl
-
-theorem inner_piCLM {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
-    [NormedAddCommGroup W] [InnerProductSpace ℝ W] (f : V →L[ℝ] W) (x y : Wv V) :
-    ⟪piCLM f x, piCLM f y⟫_ℝ = ∑ a, ⟪f (x a), f (y a)⟫_ℝ := by
-  rw [PiLp.inner_apply]; rfl
 
 theorem injective_piCLM {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     [NormedAddCommGroup W] [InnerProductSpace ℝ W] {f : V →L[ℝ] W}
@@ -272,15 +264,14 @@ abbrev ιt0 : Vt0 →L[ℝ] Wv W0 := piCLM D0.graphFst
 /-- The inclusion `H̊Λ¹(Q)³ → L²Λ¹(Q)³`. -/
 abbrev ιt1 : Vt1 →L[ℝ] Wv W1 := piCLM D1.graphFst
 
-theorem ιt0_mem (φ : Vt0) (a : Fin 3) : ιt0 φ a ∈ D0.domain := graphFst_mem_domain D0 (φ a)
-
 /-- `S⁰ ψ ∈ H̊Λ¹(Q)` for `ψ ∈ H̊Λ⁰(Q)³`, with `d S⁰ψ = −S¹ dψ`. -/
 theorem wsL2_zero_mem (φ : Vt0) :
     ∃ h : wsL2 (Ω := cubeDomain 3) 0 (ιt0 φ) ∈ D1.domain,
       D1 ⟨_, h⟩ = -wsL2 (Ω := cubeDomain 3) 1 (ιt1 (bggDt0 φ)) := by
-  obtain ⟨h, e⟩ := wsL2_mem_minimal (isOpen_cubeDomain 3) 0 (v := ιt0 φ) (ιt0_mem φ)
+  obtain ⟨h, e⟩ := wsL2_mem_minimal (isOpen_cubeDomain 3) 0 (v := ιt0 φ)
+    fun a => graphFst_mem_domain D0 (φ a)
   have e' : D1 ⟨_, h⟩ = -wsL2 (Ω := cubeDomain 3) 1
-      (WithLp.toLp 2 fun a => D0 ⟨ιt0 φ a, ιt0_mem φ a⟩) := e
+      (WithLp.toLp 2 fun a => D0 ⟨ιt0 φ a, graphFst_mem_domain D0 (φ a)⟩) := e
   refine ⟨h, e'.trans ?_⟩
   congr 2
 
@@ -430,10 +421,6 @@ theorem isClosed_range_D1 : IsClosed (Set.range fun x : D1.domain => D1 x) := by
 
 /-! ### The hypotheses (H1)–(H3), (H6) -/
 
-theorem graphDom_toGraphSpace {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
-    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (x : T.domain) :
-    graphDom T (T.toGraphSpace x) = x := Subtype.ext rfl
-
 theorem range_graphSnd_D0 : Set.range D0.graphSnd = Set.range fun x : D0.domain => D0 x := by
   ext y
   constructor
@@ -504,9 +491,7 @@ curl S⁰ H̊¹(Q; ℝ³)`: every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` fo
 `φ ∈ H̊Λ⁰(Q)³`, i.e. has a potential with components in `H̊¹(Q)`. The thesis derives it from the
 regular decomposition `H̊(curl) = H̊¹(V) + grad H̊¹` ([Hiptmair2002], Lemma 2.4;
 [HiptmairXu2007], §3), which is not in Mathlib; it is the field `reg` of `Feec.BGG.Hilb.Hyps`.
-It holds on the dense subspace of test fields (`range_d1_subset_closure`), is equivalent to the
-closedness of `curl S⁰ H̊¹(Q; ℝ³)` (`curlPotential_iff_isClosed`), and carries its constant
-(`CurlPotential.exists_bound`). It is proved in `Feec.Models.Cube.RegularDecomposition`
+It carries its constant (`CurlPotential.exists_bound`). It is proved in `Feec.Models.Cube.RegularDecomposition`
 (`Feec.Models.Cube.WeakSymmetry.curlPotential`). -/
 def CurlPotential : Prop := Set.range bggD1 ⊆ Set.range (bggD1 ∘ bggS0)
 
@@ -565,46 +550,6 @@ theorem wsFields_proxy0 (φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) :
     rw [wsCoeff_eq]
     simp [ha]
   · simp
-
-/-- **Non-vacuity of the regularity hypothesis**: `curl H̊(curl) ⊆ cl (curl S⁰ H̊¹(V))`. On a
-test `1`-form `u`, `u = S⁰ ψ` with the test vector field `ψ = (u_{{a}})ₐ`, and the test forms are
-dense in `H̊Λ¹(Q)` in the graph norm (the definition of `d_min`). -/
-theorem range_d1_subset_closure : Set.range bggD1 ⊆ closure (Set.range (bggD1 ∘ bggS0)) := by
-  have hQ := isOpen_cubeDomain 3
-  have hsub : Prod.snd '' (SetLike.coe ((extDerivOp ℝ 3 1).testGraph (cubeDomain 3)) :
-      Set (W1 × W2)) ⊆ Set.range (bggD1 ∘ bggS0) := by
-    rintro _ ⟨_, ⟨φ, hφ, rfl⟩, rfl⟩
-    have hψ : ∀ a, IsTestField (cubeDomain 3) (proxy0 φ a) := fun a r => hφ _
-    set Φ : Vt0 := WithLp.toLp 2 fun a =>
-      D0.toGraphSpace ⟨testField (hψ a), ConstCoeffOp.testField_mem_minimal_domain _ hQ (hψ a)⟩
-    refine ⟨Φ, ?_⟩
-    have hS : wsL2 (Ω := cubeDomain 3) 0 (ιt0 Φ) = testField hφ := by
-      have := wsL2_testField (Ω := cubeDomain 3) (k := 0) hψ
-      refine this.trans (testField_congr _ _ (wsFields_proxy0 φ))
-    change D1 ⟨wsL2 (Ω := cubeDomain 3) 0 (ιt0 Φ), _⟩ = testField _
-    have e := ConstCoeffOp.minimal_testField (extDerivOp ℝ 3 1) hQ hφ
-    refine Eq.trans ?_ e
-    congr 1
-    exact Subtype.ext hS
-  intro y ⟨v, hv⟩
-  have hmem := ConstCoeffOp.mem_closure_minimal (extDerivOp ℝ 3 1) hQ (graphDom D1 v)
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hmem
-  have := mem_closure_image continuous_snd.continuousAt hmem
-  rw [apply_graphDom] at this
-  rw [← hv]
-  exact closure_mono hsub this
-
-/-- **The regularity hypothesis is the closedness of `curl S⁰ H̊¹(Q; ℝ³)`.** -/
-theorem curlPotential_iff_isClosed :
-    CurlPotential ↔ IsClosed (Set.range (bggD1 ∘ bggS0)) := by
-  constructor
-  · intro h
-    have : Set.range (bggD1 ∘ bggS0) = Set.range bggD1 :=
-      Set.Subset.antisymm (by rintro _ ⟨φ, rfl⟩; exact ⟨_, rfl⟩) h
-    rw [this]
-    exact isClosed_range_bggD1
-  · intro h
-    exact range_d1_subset_closure.trans h.closure_eq.le
 
 /-- **The constant of the regularity hypothesis** (open mapping theorem): a potential can be
 chosen with `‖φ‖_{H̊Λ⁰(Q)³} ≤ C_R ‖d u‖`. -/
@@ -757,14 +702,6 @@ def bggSegment : Feec.BGG.Segment ℝ U0 U1 W2 (Wv U0) (Wv U1) (Wv W2) where
   dt1_dt0 _ := PiLp.ext fun _ => D1_D0 _
   anticomm ψ := (wsL2_incl0_mem ψ).2
 
-theorem norm_sq_piMap_le {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
-    [NormedAddCommGroup W] [InnerProductSpace ℝ W] (f : V →ₗ[ℝ] W) {C : ℝ}
-    (hC : ∀ v, ‖f v‖ ≤ C * ‖v‖) (φ : Wv V) : ‖piMap f φ‖ ^ 2 ≤ C ^ 2 * ‖φ‖ ^ 2 := by
-  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
-  refine Finset.sum_le_sum fun a _ => ?_
-  rw [piMap_apply, ← mul_pow]
-  exact pow_le_pow_left₀ (norm_nonneg _) (hC _) 2
-
 theorem sqrt_le_of_sq {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (h : a ^ 2 ≤ b ^ 2) : a ≤ b :=
   (pow_le_pow_iff_left₀ ha hb two_ne_zero).1 h
 
@@ -891,5 +828,35 @@ theorem bgg_existsUnique_isSaddle (hR : CurlPotential) :
     ∃ C, ∀ (f : Wv W1) (x : Feec.BGG.Xsp V0 Vt0 Vt1) (l : bggHilb.Wcheck),
       bggHilb.IsSaddle f x l → ‖x‖ + ‖l‖ ≤ C * ‖f‖ :=
   bggHilb.existsUnique_isSaddle (bggHyps hR)
+
+/-! ### Two elementary estimates -/
+
+/-- `∑ₐ fₐ² ≤ 3 B` when every `fₐ² ≤ B`. -/
+theorem sum_sq_le_three {f : Fin 3 → ℝ} {B : ℝ} (h : ∀ a, f a ^ 2 ≤ B) :
+    ∑ a, f a ^ 2 ≤ 3 * B := by
+  have := Finset.sum_le_sum (s := Finset.univ) fun a (_ : a ∈ Finset.univ) => h a
+  simpa [Finset.sum_const, Finset.card_univ] using this
+
+open scoped Topology in
+/-- **Uniform convergence on compact sets**: a family `F N` of functions, Lipschitz in `x` with a
+common constant and tending to `0` pointwise, tends to `0` uniformly on every compact set. -/
+theorem eventually_forall_le_of_isCompact {E : Type*} [PseudoMetricSpace E] {K : Set E}
+    (hK : IsCompact K) {F : ℕ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
+    (hlip : ∀ N x y, F N x ≤ F N y + B * dist x y)
+    (hF : ∀ x, Tendsto (fun N => F N x) atTop (𝓝 0)) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∀ x ∈ K, F N x ≤ ε := by
+  have hδ : 0 < ε / (2 * (B + 1)) := by positivity
+  obtain ⟨t, htK, htf, hcov⟩ := finite_cover_balls_of_compact hK hδ
+  have hev : ∀ᶠ N in atTop, ∀ y ∈ t, F N y < ε / 2 :=
+    (Filter.eventually_all_finite htf).2 fun y _ =>
+      (hF y).eventually (gt_mem_nhds (half_pos hε))
+  filter_upwards [hev] with N hN x hx
+  obtain ⟨y, hy, hxy⟩ := mem_iUnion₂.1 (hcov hx)
+  have h3 : B * dist x y ≤ B * (ε / (2 * (B + 1))) :=
+    mul_le_mul_of_nonneg_left (Metric.mem_ball.1 hxy).le hB
+  have h4 : B * (ε / (2 * (B + 1))) ≤ ε / 2 := by
+    rw [mul_div_assoc', div_le_div_iff₀ (by positivity) (by norm_num)]
+    nlinarith
+  linarith [hlip N x y, hN y hy]
 
 end Feec.Models.Cube.WeakSymmetry

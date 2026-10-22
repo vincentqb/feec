@@ -21,13 +21,12 @@ boundary conditions** of `Feec.Models.Cube.MirrorBGG` (the boundary conditions o
   (`wsL2_bIncl0_mem`: the bottom row lies in `HΛ⁰(Q)³` and `S` maps `D(d_max)³` into `D(d_max)`).
 
 The rows carry harmonic forms: the constants on the top row in degree `0`
-(`mirror_constantMode_continuous`; `ℌ⁰(HΛ(Q)) = ℝ`) and `ℝ dxₐ` in the component `a` of the bottom
+(`ℌ⁰(HΛ(Q)) = ℝ`) and `ℝ dxₐ` in the component `a` of the bottom
 row in degree `1` (`harmonic_one_part`, from `Feec.Models.Cube.FEM.harmonic_card_eq_span_part`).
-So `Feec.BGG.Stability` fails (`mirror_not_stability`), and the data satisfy instead
+So `Feec.BGG.Stability` fails (not stated here), and the data satisfy instead
 **`Feec.BGG.HarmonicStability` modulo `𝔥 = {Σₐ cₐ dxₐ ⊗ eₐ}`** (`mirror_harmonicStability`):
 Poincaré on the bottom `0`-forms, the Hodge decomposition `v = dψ + w + k` with `k ∈ 𝔥`,
-`𝔥 ⊥ dṼ⁰`, and `S¹ 𝔥 = 0` (diagonal matrices are symmetric). The top row is exact at `HΛ¹`
-(`mirror_exact1`).
+`𝔥 ⊥ dṼ⁰`, and `S¹ 𝔥 = 0` (diagonal matrices are symmetric).
 
 **Regular potentials in the parity model.** For every class `J` and degree `k`, every
 `u ∈ D(d_J)` has a coexact companion `w` with `d_J w = d_J u`, `‖w‖ ≤ (2π)⁻¹ ‖d_J u‖`, whose
@@ -44,13 +43,12 @@ mirror data, proved with constant `C_R = 1`: `curl S⁰φ = curl u`, `‖∇φ�
 
 * `TD0`, `TD1`, `BD0`, `BD1`, `TU0`, `TU1`, `BU0`, `BU1`; `tD0`, `tD1`, `bD0`, `bD1`, `mS0`,
   `mS1`; **`mirrorBGGSegment`**.
-* `harmBot` (`𝔥`), `harmVec a` (`dxₐ ⊗ eₐ`), `oneU` (the constant mode).
+* `harmBot` (`𝔥`).
 * `Feec.Models.Cube.DeRhamIdent.coexactProj`, `coexactLp`.
 
 ## Main results
 
-* **`mirror_harmonicStability`**, `mirror_not_stability`, `mirror_constantMode_continuous`,
-  `mirror_exact1`, `harmBot_ne_bot`, `hodge_one_part`, `bpoincare0`.
+* **`mirror_harmonicStability`**, `hodge_one_part`, `bpoincare0`.
 * **`Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`**,
   `Feec.Models.Cube.DeRhamIdent.mem_dPart_of_coeff`, `exists_coexact_potential_cube`,
   **`mirrorCurlPotential`**.
@@ -658,11 +656,6 @@ def bIncl1 : BU1 →ₗ[ℝ] Wv W1 where
 @[simp] theorem bIncl0_apply (φ : BU0) (a : Fin 3) : bIncl0 φ a = (φ a : W0) := rfl
 @[simp] theorem bIncl1_apply (v : BU1) (a : Fin 3) : bIncl1 v a = (v a : W1) := rfl
 
-theorem norm_bIncl0 (φ : BU0) : ‖bIncl0 φ‖ = ‖φ‖ := by
-  rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), PiLp.norm_sq_eq_of_L2,
-    PiLp.norm_sq_eq_of_L2]
-  rfl
-
 theorem norm_bIncl1 (v : BU1) : ‖bIncl1 v‖ = ‖v‖ := by
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), PiLp.norm_sq_eq_of_L2,
     PiLp.norm_sq_eq_of_L2]
@@ -852,9 +845,6 @@ def harmBot : Submodule ℝ BU1 where
   zero_mem' _ := Submodule.zero_mem _
   smul_mem' c _ hv a := Submodule.smul_mem _ c (hv a)
 
-theorem mem_harmBot {v : BU1} : v ∈ harmBot ↔ ∀ a, (v a : W1) ∈ (complexPart 3 {a}).harmonic 1 :=
-  Iff.rfl
-
 theorem norm_sq_BU0 (φ : BU0) : ‖φ‖ ^ 2 = ∑ a, ‖(φ a : W0)‖ ^ 2 := PiLp.norm_sq_eq_of_L2 _ φ
 theorem norm_sq_BU1 (v : BU1) : ‖v‖ ^ 2 = ∑ a, ‖(v a : W1)‖ ^ 2 := PiLp.norm_sq_eq_of_L2 _ v
 theorem norm_sq_bD0 (φ : BU0) : ‖bD0 φ‖ ^ 2 = ∑ a, ‖BD0 a (φ a)‖ ^ 2 :=
@@ -907,9 +897,8 @@ theorem mirror_boundS1 (v : BU1) :
 
 /-- **The continuous hypotheses of the Ch. 6 convergence theory for the mirror data, modulo the
 harmonic forms of the bottom row** (`Feec.BGG.HarmonicStability`), with `C_p = (2π)⁻¹` and
-`C_S = √2`. The top row has the constant mode (`mirror_constantMode_continuous`), the bottom
-row the harmonic forms `dxₐ ⊗ eₐ` (`harmBot`), and `Feec.BGG.Stability` fails
-(`mirror_not_stability`). -/
+`C_S = √2`. The top row has the constant mode, the bottom row the harmonic forms `dxₐ ⊗ eₐ`
+(`harmBot`), so `Feec.BGG.Stability` fails. -/
 theorem mirror_harmonicStability :
     Feec.BGG.HarmonicStability mirrorBGGSegment harmBot (2 * Real.pi)⁻¹ (Real.sqrt 2) where
   Cp_nonneg := by positivity
@@ -921,84 +910,6 @@ theorem mirror_harmonicStability :
   boundS1 := mirror_boundS1
 
 /-! #### The top row: exactness at `HΛ¹`, the constant mode, and the regularity -/
-
-theorem harmonic_one_empty : (complexPart 3 ∅).harmonic 1 = ⊥ :=
-  harmonic_eq_bot_part (by simp)
-
-/-- **Exactness of `HΛ(Q)` at `HΛ¹`** (`ℌ¹(HΛ(Q)) = 0`): `curl μ = 0` gives `μ = grad ρ`. -/
-theorem mirror_exact1 (μ : TU1) (hμ : tD1 μ = 0) : ∃ ρ, tD0 ρ = μ := by
-  have hz : (μ : W1) ∈ (complexPart 3 ∅).cycles 1 := by
-    rw [cycles_one_part]
-    exact LinearPMap.mem_ker_iff.2 ⟨μ, rfl, hμ⟩
-  rw [← (complexPart 3 ∅).exact_iff_harmonic_eq_bot (closedRangeAt_part ∅ 1) |>.2
-    harmonic_one_empty, boundaries_one_part] at hz
-  obtain ⟨ρ, hρ⟩ := hz
-  exact ⟨ρ, Subtype.ext hρ⟩
-
-/-- The constant function `1` on `Q`. -/
-abbrev constOneForm : W0 := formPart 3 ∅
-
-theorem oneForm_mem_harmonic : constOneForm ∈ (complexPart 3 ∅).harmonic 0 := by
-  have h : (complexPart 3 ∅).harmonic 0 = ℝ ∙ constOneForm := harmonic_card_eq_span_part ∅
-  rw [h]
-  exact Submodule.mem_span_singleton_self _
-
-theorem oneForm_mem : constOneForm ∈ TD0.domain := by
-  have h := (complexPart 3 ∅).harmonic_le_cycles 0 oneForm_mem_harmonic
-  rw [(complexPart 3 ∅).cycles_eq rel_01, complexPart_d01] at h
-  exact TD0.ker_le_domain h
-
-/-- The constant mode `1 ∈ HΛ⁰(Q)`. -/
-def oneU : TU0 := ⟨constOneForm, oneForm_mem⟩
-
-theorem oneU_ne_zero : oneU ≠ 0 := fun h =>
-  formPart_ne_zero (n := 3) ∅ (congrArg Subtype.val h)
-
-theorem tD0_oneU : tD0 oneU = 0 := by
-  have h := (complexPart 3 ∅).harmonic_le_cycles 0 oneForm_mem_harmonic
-  rw [(complexPart 3 ∅).cycles_eq rel_01, complexPart_d01] at h
-  obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 h
-  refine Subtype.ext ?_
-  change TD0 oneU = 0
-  rw [show oneU = y from Subtype.ext hy, hy0]
-
-/-- **The constant mode of the continuous top row**: `σ = 1` has `grad σ = 0` (`σ` carries no
-boundary condition), so the Poincaré inequality `poinc0` fails on `HΛ⁰(Q)`. -/
-theorem mirror_constantMode_continuous : oneU ≠ 0 ∧ mirrorBGGSegment.d0 oneU = 0 :=
-  ⟨oneU_ne_zero, tD0_oneU⟩
-
-/-- **`Feec.BGG.Stability` fails for the mirror data** (whatever the constants): the constant
-mode violates `poinc0`. The convergence theory runs on `mirror_harmonicStability` instead. -/
-theorem mirror_not_stability (Cp CR CS : ℝ) : ¬ Feec.BGG.Stability mirrorBGGSegment Cp CR CS := by
-  intro H
-  have h := H.poinc0 oneU
-  rw [show mirrorBGGSegment.d0 oneU = 0 from tD0_oneU, norm_zero, mul_zero] at h
-  exact oneU_ne_zero (norm_le_zero_iff.1 h)
-
-theorem dxForm_mem_harmonic (a : Fin 3) : dxForm a ∈ (complexPart 3 {a}).harmonic 1 := by
-  rw [harmonic_one_part]; exact Submodule.mem_span_singleton_self _
-
-/-- The bottom harmonic form `dxₐ ⊗ eₐ`. -/
-def harmVec (a : Fin 3) : BU1 :=
-  WithLp.toLp 2 (Pi.single (M := fun b : Fin 3 => (BD1 b).domain) a
-    ⟨dxForm a, harmonic_le_domain {a} (dxForm_mem_harmonic a)⟩)
-
-theorem harmVec_mem (a : Fin 3) : harmVec a ∈ harmBot := fun b => by
-  by_cases h : b = a
-  · subst h
-    simp only [harmVec, PiLp.toLp_apply, Pi.single_eq_same]
-    rw [harmonic_one_part]; exact Submodule.mem_span_singleton_self _
-  · simp only [harmVec, PiLp.toLp_apply, Pi.single_eq_of_ne h, ZeroMemClass.coe_zero]
-    exact Submodule.zero_mem _
-
-theorem harmVec_ne_zero (a : Fin 3) : harmVec a ≠ 0 := fun h => by
-  have := congrArg (fun v : BU1 => ((v a : (BD1 a).domain) : W1)) h
-  simp only [harmVec, PiLp.toLp_apply, Pi.single_eq_same, PiLp.zero_apply,
-    ZeroMemClass.coe_zero] at this
-  exact formPart_ne_zero (n := 3) {a} this
-
-theorem harmBot_ne_bot : harmBot ≠ ⊥ := fun h =>
-  harmVec_ne_zero 0 ((Submodule.mem_bot ℝ).1 (h ▸ harmVec_mem 0))
 
 /-- **`mirrorCurlPotential`, the mirror regularity hypothesis, proved**: for every
 `u ∈ HΛ¹(Q)` (no boundary condition) there is `φ` with `φₐ ∈ H¹(Q)`, `φₐ = 0` on the faces

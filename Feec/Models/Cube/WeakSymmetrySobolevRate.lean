@@ -32,11 +32,9 @@ with `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d*x‖²` (`gaffney_RT`, 
 (`mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`): the relative class `H¹_univ`
 is exactly `D(d) ∩ D(d*)`.
 
-**Non-vacuity below `H^{1/2}`.** The sawtooth 2-form `sawW2` (`f(y₀) dy₁ ∧ dy₂`, `f` the odd
-`½`-periodic sawtooth) satisfies `d¹* sawW2 = 0`, lies in `Hˢ_univ` exactly for `s < ½`, and is not
-in `H̊Λ²(Q)`. The stationary state `sawWave T` (`ρ = (sawW2, 0, 0)`) is a classical solution of
-(6.2) satisfying every hypothesis of `cubeWave_rate_sobolev` for `0 ≤ s < ½`, outside every class
-`IsSmoothStateTr` of `cubeWave_rate_tr` (`cubeWave_rate_sobolev_nonvacuous`).
+**The sawtooth form.** The sawtooth 2-form `sawW2` (`f(y₀) dy₁ ∧ dy₂`, `f` the odd `½`-periodic
+sawtooth) satisfies `d¹* sawW2 = 0` (`inner_sawW2_D1`), is not in `H̊Λ²(Q)`
+(`sawW2_not_mem_D2min`) and not in `H^{1/2}_univ` (`not_sobRel_sawW2_half`).
 
 ## Main results
 
@@ -55,8 +53,7 @@ in `H̊Λ²(Q)`. The stationary state `sawWave T` (`ρ = (sawW2, 0, 0)`) is a cl
 * `gaffney_HQmin`, `sobRel_one_of_mem`, `sobRel_two_of_mem`: Gaffney's identity on the cube;
   `mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`: its converse
   (`H¹_univ ⊆ D(d) ∩ D(d*)`, with `‖d x‖, ‖d* x‖ ≤ ‖x‖_{1,univ}`).
-* **`cubeWave_rate_sobolev_nonvacuous`**: the rate `h^s`, `s < ½`, for the sawtooth solution, which
-  is not in `H^{1/2}` and in no `C²` class.
+* `inner_sawW2_D1`, `sawW2_not_mem_D2min`, `not_sobRel_sawW2_half`: the sawtooth form.
 
 ## References
 
@@ -265,13 +262,13 @@ theorem graphSq_Pt0_sub_le_of_close (N : ℕ) {δ : ℝ} (φ : Wv U0)
     Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) ≤ 2 * (3 * δ ^ 2) := by
   have a1 : ‖(cubeFEM hT hB N).Pt0 φ - φ‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     change ‖(hB.proj N).π 0 (φ a : W0) - (φ a : W0)‖ ≤ _
     rw [norm_sub_rev]
     exact h1 a
   have a2 : ‖bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ)‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     have e : ‖(bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ)) a‖ =
         ‖(hB.proj N).π 1 (D0 (φ a)) - D0 (φ a)‖ := by
       change ‖D0 (projU0 (hB.proj N) (φ a) - φ a)‖ = _
@@ -289,13 +286,13 @@ theorem gnSq_Pt1_sub_le_of_close (N : ℕ) {δ : ℝ} (u : Wv U1)
     (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) ≤ (1 + 8 * C ^ 2) * (2 * (3 * δ ^ 2)) := by
   have a1 : ‖(cubeFEM hT hB N).Pt1 u - u‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     change ‖(hB.proj N).π 1 (u a : W1) - (u a : W1)‖ ≤ _
     rw [norm_sub_rev]
     exact h1 a
   have a2 : ‖bggSegment.dt1 ((cubeFEM hT hB N).Pt1 u - u)‖ ^ 2 ≤ 3 * δ ^ 2 := by
     rw [norm_sq_wv]
-    refine sum_sq_le_three' fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+    refine sum_sq_le_three fun a => pow_le_pow_left₀ (norm_nonneg _) ?_ 2
     have e : ‖(bggSegment.dt1 ((cubeFEM hT hB N).Pt1 u - u)) a‖ =
         ‖(hB.proj N).π 2 (D1 (u a)) - D1 (u a)‖ := by
       change ‖D1 (projU1 (hB.proj N) (u a) - u a)‖ = _
@@ -392,7 +389,6 @@ theorem staticFEM_rate_sobolev :
   refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F s L hs0 hL0 c1 c2 c3 hsob hlam
     hz σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
   obtain ⟨hσ, hdσ, hφ, hdφ, hu, hdu, hSu⟩ := hsob
-  have := cubeFEM_fdt1 hT hB N
   have hh : 0 ≤ meshSize N := (meshSize_pos N).le
   have H : Feec.BGG.Stability bggSegment Cp curlPotentialConst (Real.sqrt 2) := by
     rw [hCp]; exact bggStability_curlPotentialConst
@@ -1253,22 +1249,11 @@ def sawWitness : L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ)) := Jinvf 2 sa
 theorem JfJ_sawWitness : JfJ (Finset.univ : Finset (Fin 3)) 2 sawWitness = sawSeq :=
   JfJ_Jinvf realParJ_sawSeq
 
-theorem sawWitness_mem_sobolevPar {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
-    sawWitness ∈ sobolevPar Finset.univ 2 s := by
-  rw [mem_sobolevPar, JfJ_sawWitness, memSob_sawSeq_iff]
-  exact summable_axisTerm hs0 hs
-
 /-- **The sawtooth witness is not in `H^{1/2}_univ`**: its tangential trace on `{y₀ = 0}` does
 not vanish (the odd extension in `y₀` jumps). -/
 theorem sawWitness_not_mem_sobolevPar_half : sawWitness ∉ sobolevPar Finset.univ 2 (1 / 2) := by
   rw [mem_sobolevPar, JfJ_sawWitness, memSob_sawSeq_iff]
   exact not_summable_axisTerm_half
-
-theorem sawWitness_ne_zero : sawWitness ≠ 0 := by
-  intro h
-  have h1 := sawWitness_not_mem_sobolevPar_half
-  rw [h] at h1
-  exact h1 (Submodule.zero_mem _)
 
 open Feec.Fourier.Exterior in
 /-- **`ι_ξ` kills the sawtooth coefficients**: at `ξ = 2πc e₀` the contraction of `dx₁ ∧ dx₂`
@@ -1432,11 +1417,6 @@ theorem sawW2_not_mem_D2min : sawW2 ∉ D2min.domain := fun hx => by
   rw [toQ_sawW2] at h
   exact sawWitness_not_mem_domain h
 
-theorem sobRel_sawW2 {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
-    SobRel s (parNorm Finset.univ 2 s sawWitness) 2 sawW2 := by
-  refine ⟨?_, ?_⟩ <;> rw [toQ_sawW2]
-  · exact sawWitness_mem_sobolevPar hs0 hs
-
 theorem not_sobRel_sawW2_half (L : ℝ) : ¬ SobRel (1 / 2) L 2 sawW2 := fun h => by
   have h1 := h.1
   rw [toQ_sawW2] at h1
@@ -1447,155 +1427,6 @@ end Saw
 /-! ### Non-vacuity: a stationary solution of (6.2) below `H^{1/2}` -/
 
 section SawWave
-
-/-- The magnetic field `ρ = (f(y₀) dx₁ ∧ dx₂, 0, 0)` of the sawtooth solution. -/
-def sawRho : Wv W2 := WithLp.toLp 2 (Pi.single 0 sawW2)
-
-theorem sawRho_apply_zero : sawRho 0 = sawW2 := by
-  change (Pi.single (0 : Fin 3) sawW2 : Fin 3 → W2) 0 = _
-  exact Pi.single_eq_same _ _
-
-theorem sawRho_apply_of_ne {a : Fin 3} (ha : a ≠ 0) : sawRho a = 0 := by
-  change (Pi.single (0 : Fin 3) sawW2 : Fin 3 → W2) a = 0
-  exact Pi.single_eq_of_ne ha _
-
-theorem inner_sawRho_dt1 (v : Wv U1) : ⟪sawRho, bggSegment.dt1 v⟫ = 0 := by
-  rw [inner_Vt, Fin.sum_univ_three, sawRho_apply_zero,
-    sawRho_apply_of_ne (by decide : (1 : Fin 3) ≠ 0),
-    sawRho_apply_of_ne (by decide : (2 : Fin 3) ≠ 0), inner_zero_left, inner_zero_left, add_zero,
-    add_zero]
-  exact inner_sawW2_D1 (v 0)
-
-/-- **A stationary classical solution of (6.2) whose magnetic field is the sawtooth form**:
-`σ = φ = u = M = 0`, `ρ = (f(y₀) dx₁ ∧ dx₂, 0, 0)`, `ℓ = 0`, source `0`; (6.2b) holds because
-`ρ` is co-closed (`inner_sawW2_D1`). `ρ` has a nonzero tangential trace on `{y₀ = 0}` (it is in
-`Hˢ_univ` exactly for `s < ½`). -/
-def sawWave (T : ℝ) : Feec.BGG.ExactWave bggSegment T (srcFun 0) where
-  σ _ := 0
-  φ _ := 0
-  u _ := 0
-  M _ := 0
-  ρ _ := sawRho
-  ℓ _ := 0
-  σ' _ := 0
-  φ' _ := 0
-  u' _ := 0
-  M' _ := 0
-  ρ' _ := 0
-  ℓ' _ := 0
-  cσ := continuousOn_const
-  cu := continuousOn_const
-  cM := continuousOn_const
-  cρ := continuousOn_const
-  cdφ := continuousOn_const
-  cSu := continuousOn_const
-  cdu := continuousOn_const
-  cℓ _ := continuousOn_const
-  cσ' := continuousOn_const
-  cu' := continuousOn_const
-  cM' := continuousOn_const
-  cρ' := continuousOn_const
-  cdφ' := continuousOn_const
-  cSu' := continuousOn_const
-  cdu' := continuousOn_const
-  cℓ' _ := continuousOn_const
-  dσ t _ := hasDerivWithinAt_const _ _ _
-  du t _ := hasDerivWithinAt_const _ _ _
-  dM t _ := hasDerivWithinAt_const _ _ _
-  dρ t _ := hasDerivWithinAt_const _ _ _
-  ddφ t _ := by simpa using hasDerivWithinAt_const t (Ici t) (bggSegment.dt0 (0 : Wv U0))
-  dSu t _ := by simpa using hasDerivWithinAt_const t (Ici t) (bggSegment.S1 (0 : Wv U1))
-  ddu t _ := by simpa using hasDerivWithinAt_const t (Ici t) (bggSegment.dt1 (0 : Wv U1))
-  dℓ t _ μ := by simpa using hasDerivWithinAt_const t (Ici t) (0 : ℝ)
-  ea _ _ τ ψ := by
-    simp only [inner_zero_left, LinearMap.zero_apply, sub_zero]
-  eb t _ v := by
-    rw [srcFun_apply]
-    simp only [map_zero, inner_zero_left, zero_add, Pi.zero_apply]
-    exact inner_sawRho_dt1 v
-  ec _ _ N := by simp
-  ed _ _ μ := by simp
-  ee _ _ := by rw [map_zero, map_zero]
-  ee' _ _ := by rw [map_zero, map_zero]
-
-theorem sawWave_isSobolevStateTr (T : ℝ) {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) (t : ℝ) :
-    IsSobolevStateTr s (parNorm Finset.univ 2 s sawWitness) ((sawWave T).σ t) ((sawWave T).φ t)
-        ((sawWave T).u t) ((sawWave T).M t) ((sawWave T).ρ t) ∧
-      IsSobolevStateTr s (parNorm Finset.univ 2 s sawWitness) ((sawWave T).σ' t)
-        ((sawWave T).φ' t) ((sawWave T).u' t) ((sawWave T).M' t) ((sawWave T).ρ' t) := by
-  have hL := parNorm_nonneg Finset.univ 2 s sawWitness
-  have z0 := sobRel_zero (s := s) hL 0
-  have z1 := sobRel_zero (s := s) hL 1
-  have z2 := sobRel_zero (s := s) hL 2
-  have hS : bggSegment.S1 (0 : Wv U1) = 0 := map_zero _
-  have hd0 : ∀ a, D0 ((0 : Wv U0) a) = 0 := fun a => by
-    change D0 (0 : U0) = 0; exact LinearPMap.map_zero _
-  have hd1 : ∀ a, D1 ((0 : Wv U1) a) = 0 := fun a => by
-    change D1 (0 : U1) = 0; exact LinearPMap.map_zero _
-  have w0 : ∀ a, SobRel s (parNorm Finset.univ 2 s sawWitness) 1 (D0 ((0 : Wv U0) a)) :=
-    fun a => by rw [hd0 a]; exact z1
-  have w1 : ∀ a, SobRel s (parNorm Finset.univ 2 s sawWitness) 2 (D1 ((0 : Wv U1) a)) :=
-    fun a => by rw [hd1 a]; exact z2
-  have w2 : SobRel s (parNorm Finset.univ 2 s sawWitness) 2 (bggSegment.S1 (0 : Wv U1)) := by
-    rw [hS]; exact z2
-  refine ⟨⟨z0, w0, fun a => z1, w1, z2, fun a => ?_, w2⟩, ⟨z0, w0, fun a => z1, w1, z2,
-    fun a => z2, w2⟩⟩
-  change SobRel s _ 2 (sawRho a)
-  by_cases ha : a = 0
-  · subst ha; rw [sawRho_apply_zero]; exact sobRel_sawW2 hs0 hs
-  · rw [sawRho_apply_of_ne ha]; exact z2
-
-/-- **The sawtooth solution is outside the `C²` class of `cubeWave_rate_tr`**: its magnetic field
-is in no class `IsCsFormTr 0 2 L` (it is not in `H̊Λ²(Q)`, `sawW2_not_mem_D2min`). -/
-theorem not_isSmoothStateTr_sawWave (T t L : ℝ) :
-    ¬ IsSmoothStateTr L ((sawWave T).σ t) ((sawWave T).φ t) ((sawWave T).u t) ((sawWave T).M t)
-      ((sawWave T).ρ t) := fun h => by
-  have h0 := (h.2.2.2.2 0).mem_domain
-  change sawRho 0 ∈ _ at h0
-  rw [sawRho_apply_zero, deRham_minimalComplex_d (isOpen_cubeDomain 3) 2] at h0
-  exact sawW2_not_mem_D2min h0
-
-set_option maxHeartbeats 2000000 in
-/-- **Non-vacuity of `cubeWave_rate_sobolev` beyond the `C²` class** (and of the exponent
-`h^{min(s,1)}` with `s < 1`): for every `0 ≤ s < ½` the stationary sawtooth solution `sawWave T`
-of (6.2) satisfies all hypotheses of `cubeWave_rate_sobolev` with `L = ‖f dx₁ ∧ dx₂‖_{s,univ}`, so
-(6.5) converges to it at the rate `h_N^s`; its magnetic field is not in `H^{1/2}_univ` and the
-solution is in no class `IsSmoothStateTr` (`cubeWave_rate_tr` does not apply to it). -/
-theorem cubeWave_rate_sobolev_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T) {s : ℝ}
-    (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
-    (∀ L, ¬ SobRel (1 / 2) L 2 ((sawWave T).ρ 0 0)) ∧
-    (∀ t L, ¬ IsSmoothStateTr L ((sawWave T).σ t) ((sawWave T).φ t) ((sawWave T).u t)
-      ((sawWave T).M t) ((sawWave T).ρ t)) ∧
-    ∃ K, 0 ≤ K ∧ ∀ N, ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T
-        (cubeSource hT hB N 0),
-      ∀ t ∈ Icc 0 T, √(‖(sawWave T).σ t - sh.σ t‖ ^ 2 + ‖(sawWave T).u t - sh.u t‖ ^ 2 +
-        ‖(sawWave T).M t - sh.M t‖ ^ 2 + ‖(sawWave T).ρ t - sh.ρ t‖ ^ 2) ≤
-          K * (1 + t) * meshSize N ^ min s 1 := by
-  refine ⟨fun L h => ?_, fun t L => not_isSmoothStateTr_sawWave T t L, ?_⟩
-  · change SobRel (1 / 2) L 2 (sawRho 0) at h
-    rw [sawRho_apply_zero] at h
-    exact not_sobRel_sawW2_half L h
-  have hrate := cubeWave_rate_sobolev hT hB
-  obtain ⟨K, hK⟩ := hrate
-  have hK0 := hK.1
-  have hL := parNorm_nonneg Finset.univ 2 s sawWitness
-  refine ⟨K * parNorm Finset.univ 2 s sawWitness, mul_nonneg hK0 hL, fun N => ?_⟩
-  have h := hK.2 N hT0 continuousOn_const (sawWave T) hs0 hL
-    (fun t _ => sawWave_isSobolevStateTr T hs0 hs t)
-    (fun t _ v => ⟨by
-        change |⟪(0 : W2), bggSegment.d1 v⟫| ≤ _
-        rw [inner_zero_left, abs_zero]; exact mul_nonneg hL (norm_nonneg _), by
-        change |⟪(0 : W2), bggSegment.d1 v⟫| ≤ _
-        rw [inner_zero_left, abs_zero]; exact mul_nonneg hL (norm_nonneg _)⟩)
-    (fun t _ μ => ⟨by
-        change |(0 : U1 →ₗ[ℝ] ℝ) μ| ≤ _
-        rw [LinearMap.zero_apply, abs_zero]; exact mul_nonneg hL (norm_nonneg _), by
-        change |(0 : U1 →ₗ[ℝ] ℝ) μ| ≤ _
-        rw [LinearMap.zero_apply, abs_zero]; exact mul_nonneg hL (norm_nonneg _)⟩)
-  obtain ⟨sh, -, hb⟩ := h
-  exact ⟨sh, hb⟩
 
 end SawWave
 

@@ -44,17 +44,13 @@ the divergence condition, (6.2b) is `E' = -d₁† (0, B)` tested against comple
   scheme (6.5) from the elliptic projection (6.4) of the initial forms state has a solution with
   `‖σₕ‖, ‖Re E − uₕ‖, ‖Mₕ‖, ‖Re B − ρₕ‖ ≤ ε` and `‖Bₕ − Bₕᵀ‖ ≤ 2ε` on `[0,T]`, and the continuous
   solution keeps `σ ≡ 0`, `M ≡ 0`, `E`, `B` TSD.
-* **`mirror_waveFEM_rate`**: the bound `K L (1 + t) h_N` when the forms states of the solution
-  are `C²` up to `∂Q` with the mirror tangential conditions (`IsSmoothStateMirror`; a hypothesis).
-* `mirror_waveFEM_nonvacuous`: `E₀ = 2 cos(2π x₃) diag(1, -1, 0)` is a non-stationary TSD datum in
-  `D(L²)` with a non-zero forms state (`cosDatum`).
+* `cosDatum`: `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, a non-stationary TSD datum in `D(L²)`.
 * `TSDDatum.exactWave`, `TSDDatum.eqOn_of_isStrongSolution`, `rowRe_mem`, `ofRealRows_mem`,
   `coeff_JfJ_rowRe`, `deRham_rowF`, `inner_rowRe_dPart_zero`, `wsL2_rowsW1L_of_symm`.
 
-## Not proved
+## Remarks
 
-The rate theorem assumes the `C²` regularity of the solution up to `∂Q`; regularity of the Hodge
-wave equation on `Q` is not formalized. The scheme works with real fields: the imaginary part of a
+Rates: `Feec.Models.Cube.MirrorWaveRegularity` (`O(h)` for TSD data in `D(L³)`). The scheme works with real fields: the imaginary part of a
 complex TSD solution is the real part of the solution from `-i U₀`.
 
 ## References
@@ -73,10 +69,6 @@ open Set MeasureTheory Filter Finset UnitAddTorus
 @[expose] public noncomputable section
 
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
-local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (Measure.IsAddHaarMeasure AddCircle.haarAddCircle)
-local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
-  inferInstanceAs (IsProbabilityMeasure AddCircle.haarAddCircle)
 
 namespace Feec.Models.Cube.MirrorWeakSymmetry
 
@@ -98,8 +90,6 @@ def e2 : Fin 3 ≃ {s : Finset (Fin 3) // #s = 2} := Equiv.ofBijective sub2 sub2
 @[simp] theorem e2_apply (i : Fin 3) : e2 i = sub2 i := rfl
 @[simp] theorem e1_symm_sub1 (b : Fin 3) : e1.symm (sub1 b) = b := e1.symm_apply_apply b
 @[simp] theorem e2_symm_sub2 (i : Fin 3) : e2.symm (sub2 i) = i := e2.symm_apply_apply i
-theorem e1_symm_mk (b : Fin 3) (h : #({b} : Finset (Fin 3)) = 1) : e1.symm ⟨{b}, h⟩ = b :=
-  e1.symm_apply_apply b
 
 def sg2 (i : Fin 3) : ℝ := if i = 1 then -1 else 1
 
@@ -592,8 +582,6 @@ def rowReL (a : Fin 3) : MQ →L[ℝ] L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) 
       ((PiLp.proj (𝕜 := ℂ) 2 (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))
         (a, e1.symm (idx 1 s))).restrictScalars ℝ)
 
-theorem rowReL_apply (a : Fin 3) (E : MQ) : rowReL a E = rowRe E a := rfl
-
 /-- `B ↦ ⋆ Re B_a` as a bounded real-linear map. -/
 def rowRe2L (a : Fin 3) : MQ →L[ℝ] L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ)) :=
   (PiLp.continuousLinearEquiv 2 ℝ
@@ -601,8 +589,6 @@ def rowRe2L (a : Fin 3) : MQ →L[ℝ] L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ)
     ContinuousLinearMap.pi fun s => sg2 (e2.symm (idx 2 s)) • ((reL _) ∘L
       ((PiLp.proj (𝕜 := ℂ) 2 (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))
         (a, e2.symm (idx 2 s))).restrictScalars ℝ))
-
-theorem rowRe2L_apply (a : Fin 3) (B : MQ) : rowRe2L a B = rowRe2 B a := rfl
 
 /-- **The matrix proxy of the bottom `1`-forms**: the real rows of `E` as `(L²Λ¹(Q))³`. -/
 def rowsW1L : MQ →L[ℝ] Wv W1 :=
@@ -1161,17 +1147,6 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
-/-- The initial forms state is `(0, 0, Re E₀, 0, Re B₀)` (rows; `B` through the Hodge star). -/
-theorem TSDDatum.exactWave_zero (D : TSDDatum) (T : ℝ) :
-    (D.exactWave T).σ 0 = 0 ∧ (D.exactWave T).φ 0 = 0 ∧
-      (D.exactWave T).u 0 = rowsBU (stEL D.U₀) ∧ (D.exactWave T).M 0 = 0 ∧
-      (D.exactWave T).ρ 0 = rowsW2L (stBL D.U₀) ∧ (D.exactWave T).ℓ 0 = 0 := by
-  refine ⟨rfl, rfl, ?_, rfl, ?_, rfl⟩
-  · change rowsBU (stEL (D.U 0)) = _
-    rw [D.U_zero]
-  · change rowsW2L (stBL (D.U 0)) = _
-    rw [D.U_zero]
-
 theorem sqrt_four_le {a b c d ε : ℝ} (h : √(a ^ 2 + b ^ 2 + c ^ 2 + d ^ 2) ≤ ε) (ha : 0 ≤ a)
     (hb : 0 ≤ b) (hc : 0 ≤ c) (hd : 0 ≤ d) : a ≤ ε ∧ b ≤ ε ∧ c ≤ ε ∧ d ≤ ε := by
   have k : ∀ x : ℝ, 0 ≤ x → x ^ 2 ≤ a ^ 2 + b ^ 2 + c ^ 2 + d ^ 2 → x ≤ ε := fun x hx hxE =>
@@ -1216,7 +1191,7 @@ wave equation of the mirror BGG complex on `Q` (`Feec.Models.Cube.MirrorBGG.exis
 every strong solution from `U₀` qualifies, `TSDDatum.eqOn_of_isStrongSolution`). Then:
 * `U(t)` stays in the constraint on `[0,T]`: `σ ≡ 0`, `M ≡ 0`, `E` and `B` TSD;
 * for every `ε > 0` and all large `N`, the scheme (6.5) without source, started from the elliptic
-  projection (6.4) of the forms state `(0, 0, Re E₀, 0, Re B₀)` (`TSDDatum.exactWave_zero`), has a
+  projection (6.4) of the forms state `(0, 0, Re E₀, 0, Re B₀)`, has a
   solution with, on `[0,T]`, `‖σₕ‖ ≤ ε`, `‖Re E − uₕ‖ ≤ ε`, `‖Mₕ‖ ≤ ε`, `‖Re B − ρₕ‖ ≤ ε` (rows of
   the matrix fields as forms, `B` through the Hodge star) and `‖Bₕ − Bₕᵀ‖ ≤ 2ε` for the matrix proxy
   `Bₕ = matB ρₕ`: `σₕ → 0`, `Mₕ → 0` and `Bₕ` becomes symmetric.
@@ -1251,47 +1226,6 @@ theorem mirror_waveFEM (D : TSDDatum) {T : ℝ} (hT0 : 0 < T)
   exact tsd_bounds (sqrt_four_congr (hN.choose_spec.2 t ht) (norm_zero_sub' _)
     (D.norm_exactWave_u_sub hEq ht _) (norm_zero_sub' _) (D.norm_exactWave_ρ_sub hEq ht _))
     (MirrorBGG.tsd_of_mem_tsdQ (hEq ht ▸ D.U_tsd t)).2.2.2.1
-
-/-- **`O(h)` rate of the mirror scheme (6.5) for smooth TSD solutions**: there is `K`, independent
-of `N`, `T` and the datum, such that whenever the forms states of the TSD solution and of its time
-derivative are `C²` up to `∂Q` with the mirror tangential conditions and bound `L`
-(`IsSmoothStateMirror L`; for the TSD solution `σ`, `φ`, `M` vanish), the scheme (6.5) has a
-solution from the elliptic projection of the initial state with
-`(‖σₕ‖² + ‖Re E − uₕ‖² + ‖Mₕ‖² + ‖Re B − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N` on `[0,T]`
-(`mirrorWave_rate` applied to `TSDDatum.exactWave`). The smoothness is a hypothesis on the
-solution; it is not derived from the datum (regularity of the Hodge wave equation on `Q` up to the
-boundary is not formalized). -/
-theorem mirror_waveFEM_rate :
-    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (D : TSDDatum) {T : ℝ} (_hT0 : 0 < T) {L : ℝ}, 0 ≤ L →
-      (∀ t ∈ Icc 0 T, IsSmoothStateMirror L ((D.exactWave T).σ t) ((D.exactWave T).φ t)
-          ((D.exactWave T).u t) ((D.exactWave T).M t) ((D.exactWave T).ρ t) ∧
-        IsSmoothStateMirror L ((D.exactWave T).σ' t) ((D.exactWave T).φ' t)
-          ((D.exactWave T).u' t) ((D.exactWave T).M' t) ((D.exactWave T).ρ' t)) →
-      ∀ {U : ℝ → PiLp 2 MirrorBGG.SpaceQ}, U 0 = D.U₀ →
-        Evolution.IsStrongSolution MirrorBGG.complexQ.wave (Icc 0 T) 0 U →
-      ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
-        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
-          (Feec.BGG.ellipticProjection (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
-            (Feec.BGG.exists_sub_eq_of_surjective (mirrorWave_S0_surjective hT hB N))
-            (Feec.BGG.ellipticRhs ((mirrorFEM hT hB N).ellipticDataH ((D.exactWave T).σ 0)
-              ((D.exactWave T).φ 0) ((D.exactWave T).u 0) ((D.exactWave T).M 0)
-              ((D.exactWave T).ρ 0) ((D.exactWave T).ℓ 0)) 0)).1.1 ∧
-        ∀ t ∈ Icc 0 T, √(‖(sh.σ t : TU0)‖ ^ 2 +
-          ‖rowsW1L (stEL (U t)) - bIncl1 (sh.u t : BU1)‖ ^ 2 + ‖(sh.M t : W2)‖ ^ 2 +
-          ‖rowsW2L (stBL (U t)) - (sh.ρ t : Wv W2)‖ ^ 2) ≤ K * L * (1 + t) * meshSize N := by
-  have hR := mirrorWave_rate hT hB
-  refine ⟨hR.choose, hR.choose_spec.1, ?_⟩
-  intro N D T hT0 L hL hsm U hU0 hU
-  have hEq := D.eqOn_of_isStrongSolution hU0 hU
-  have hmult : ∀ t ∈ Icc 0 T, ∀ μ : TU1, |(D.exactWave T).ℓ t μ| ≤ L * ‖μ‖ ∧
-      |(D.exactWave T).ℓ' t μ| ≤ L * ‖μ‖ := fun t _ μ =>
-    ⟨(by simpa [TSDDatum.exactWave] using mul_nonneg hL (norm_nonneg μ)),
-      (by simpa [TSDDatum.exactWave] using mul_nonneg hL (norm_nonneg μ))⟩
-  have hf : ContinuousOn (0 : ℝ → Wv W1) (Icc 0 T) := continuousOn_const
-  have h1 := hR.choose_spec.2 N hT0 hf (D.exactWave T) hL hsm hmult
-  refine ⟨h1.choose, h1.choose_spec.1, fun t ht => ?_⟩
-  exact sqrt_four_congr (h1.choose_spec.2 t ht) (norm_zero_sub' _) (D.norm_exactWave_u_sub hEq ht _)
-    (norm_zero_sub' _) (D.norm_exactWave_ρ_sub hEq ht _)
 
 end Main
 
@@ -1436,40 +1370,6 @@ theorem cosDatum_not_stationary : cosDatum.U₀ ∉ MirrorBGG.complexQ.waveGroup
   exact (HilbertComplex.not_mem_stationary_compress Mirror.eight_pos MirrorBGG.inner_J
     MirrorBGG.reducingSubcomplex_range hd fun h0 => MirrorBGG.wave_cosState_ne
       ((LinearPMap.apply_congr' _ _ _ MirrorBGG.totalJ_cosStateQ.symm).trans h0)).2
-
-/-- The real part of the row `0` of `E₀` is not zero: its coefficient of `dx₀` at `k₀` is `1`. -/
-theorem rowRe_cosEQ_ne : rowRe Mirror.cosEQ 0 ≠ 0 := by
-  intro h
-  have h1 := coeff_JfJ_rowRe Mirror.cosEQ 0 k0
-  have hJ : MirrorExt.extF Mirror.cE_sq Mirror.cosEQ = cosE := Mirror.J_cosEQ
-  rw [h, map_zero, MirrorBGG.J₁, hJ] at h1
-  have h2 := congrArg (fun v : Feec.Fourier.Exterior.Form ℂ (Fin 3) 1 => v (sub1 0)) h1
-  simp only at h2
-  rw [Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) k0] at h2
-  simp [rowF_apply, coe_cosE, cosCoeff, Mirror.M0_apply] at h2
-  norm_num at h2
-
-/-- The forms state of the TSD solution from `E₀ = 2 cos(2π x₃) diag(1, -1, 0)` is not zero. -/
-theorem cosDatum_u_ne (T : ℝ) : (cosDatum.exactWave T).u 0 ≠ 0 := by
-  intro h
-  have h1 : bIncl1 ((cosDatum.exactWave T).u 0) = rowsW1L (stEL (cosDatum.U 0)) :=
-    cosDatum.bIncl1_u le_rfl
-  rw [h, map_zero, cosDatum.U_zero] at h1
-  have h2 := congrArg (fun w : Wv W1 => w 0) h1
-  simp only [PiLp.zero_apply, rowsW1L_apply] at h2
-  have h3 : rowRe (stEL MirrorBGG.cosStateQ) 0 = 0 := by
-    have := congrArg (cQ (Feec.Domain.formIdx 3 ((1 : ℕ) : ℤ))) h2
-    rwa [map_zero, LinearIsometryEquiv.apply_symm_apply, eq_comm] at this
-  exact rowRe_cosEQ_ne (by rw [← h3]; rfl)
-
-/-- **Non-vacuity of `mirror_waveFEM`**: the datum `(0, E₀, (0, 0))`,
-`E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, is a TSD datum in `D(L²)` (`cosDatum`), it is not stationary,
-`t ↦ e^{tL} U₀` is a strong solution from it, and the forms state it gives is not zero. -/
-theorem mirror_waveFEM_nonvacuous :
-    cosDatum.U₀ ∉ MirrorBGG.complexQ.waveGroup.stationary ∧
-      (∀ T, Evolution.IsStrongSolution MirrorBGG.complexQ.wave (Icc 0 T) 0 cosDatum.U) ∧
-      cosDatum.U 0 = cosDatum.U₀ ∧ ∀ T, (cosDatum.exactWave T).u 0 ≠ 0 :=
-  ⟨cosDatum_not_stationary, cosDatum.isStrongSolution, cosDatum.U_zero, cosDatum_u_ne⟩
 
 end NonVacuity
 

@@ -7,9 +7,9 @@ public import Feec.Models.Cube.Sobolev
 /-!
 # Regularity of the mirror TSD wave and the unconditional rate of the mirror scheme (6.5)
 
-`Feec.Models.Cube.MirrorWeakSymmetryTSD.mirror_waveFEM_rate` gives the `O(h)` rate of the mirror
+`Feec.Models.Cube.MirrorWeakSymmetry.mirrorWave_rate` gives the `O(h)` rate of the mirror
 scheme (6.5) of [QuennevilleBelair2015], §6.3, under the hypothesis that the forms states of the
-TSD solution are `C²` up to `∂Q` (`IsSmoothStateMirror`). This file removes that hypothesis: the
+solution are `C²` up to `∂Q` (`IsSmoothStateMirror`). This file removes that hypothesis: the
 rate holds for every TSD datum of `D(L³)`, and `O(hˢ)` holds for Sobolev data, `0 ≤ s ≤ 1`.
 
 **The parity model.** The BGG complex on `Q = (0, ½)³` with mirror boundary conditions is the
@@ -23,16 +23,11 @@ wave equation is [QuennevilleBelair2015], §4.10). For a state `x` on `Q` let
 * **Invariance.** Each frequency `{m}` and its complement are reducing for the torus complex
   (`freqIn_reducing`, `freqOut_reducing`), so `e_{e^{tL}x}(m) = e_x(m)` for every `t ∈ ℝ`
   (`fibreEnergy_waveGroupQ`): every Sobolev norm of the mirror extension is conserved
-  (`sobState_waveGroupQ`; the torus symbol is skew-Hermitian at each frequency). The wave group
-  maps `D(L)` into `D(L)` and commutes with `L` for all `t ∈ ℝ` (`waveGroupQ_mem_domain_wave`), and
-  preserves `D(Lᵏ)` with `‖Lʲ e^{tL} x‖ = ‖Lʲ x‖`, `j ≤ k` (`waveGroupQ_mem_domain_pow`,
-  `norm_pow_waveGroupQ_eq`).
+  (`sobState_waveGroupQ`; the torus symbol is skew-Hermitian at each frequency).
 * **Identification on TSD states.** On the constraint `{0} × L²(TSD) × ({0} × L²(TSD))`,
   `e_{Lx}(m) = |ξ_m|² e_x(m)` (`fibreEnergy_waveQ_of_tsd`): `(L x)₁^(m) = -curl_ξ B̂(m)`,
   `(L x)₂^(m) = (0, curl_ξ Ê(m))`, and `|curl_ξ A| = |ξ| |A|` on symmetric matrices with `A ξ = 0`
-  (`|ξ × a| = |ξ| |a|` when `ξ · a = 0`, row-wise). Hence `‖Lᵏ x‖² = 8⁻¹ Σ_m |ξ_m|^{2k} e_x(m)`
-  (`norm_wavePow_sq_of_tsd`), `D(Lᵏ) ∩ TSD = Hᵏ ∩ TSD` (`mem_domain_pow_iff_sobolev_of_tsd`) with
-  `‖Lᵏ x‖² ≤ ‖x‖²_k ≤ 2ᵏ (‖x‖² + ‖Lᵏ x‖²)` (`norm_wavePow_sq_le_sobState`), and
+  (`|ξ × a| = |ξ| |a|` when `ξ · a = 0`, row-wise). Hence
   `‖x‖²_1 = ‖x‖² + ‖L x‖²` (`sobState_one_of_tsd`). The compatibility conditions of `D(Lᵏ)` at
   `∂Q` are exactly the mirror parities.
 * **Rows in the parity classes.** For `J x ∈ Hˢ(𝕋³)` the rows `(Re E)_a` (`1`-forms) and
@@ -49,22 +44,18 @@ wave equation is [QuennevilleBelair2015], §4.10). For a state `x` on `Q` let
 ## Main results
 
 * **`mirror_waveFEM_rate_of_mem_domain`**: for every TSD datum with `L² U₀ ∈ D(L)` (i.e.
-  `U₀ ∈ D(L³)`), the conclusion of `mirror_waveFEM_rate` with the bound
+  `U₀ ∈ D(L³)`), the conclusion of `MirrorWeakSymmetry.mirrorWave_rate` with the bound
   `K (‖U₀‖ + ‖LU₀‖ + ‖L²U₀‖ + ‖L³U₀‖)(1 + t) h_N`, no smoothness hypothesis.
 * **`mirror_waveFEM_rate_sobolev`**: the bound `K (‖U₀‖_s + ‖LU₀‖_s + ‖L²U₀‖_s)(1 + t) h_Nˢ` for
   TSD data whose mirror extensions `J U₀`, `J LU₀`, `J L²U₀` lie in `Hˢ(𝕋³)`, `0 ≤ s ≤ 1`.
 * **`mirror_waveFEM_rate_sobolev_of_add_two`**: the bound `K ‖U₀‖_{2+s} (1 + t) h_Nˢ` for TSD
   data with `J U₀ ∈ H^{2+s}(𝕋³)`, a single Sobolev class on the datum
   (`TSDDatum.memSobState_of_add_two`).
-* `mirror_waveFEM_rate_of_mem_domain_nonvacuous`: the cos datum of `mirror_waveFEM_nonvacuous`
-  lies in `D(L³)` (`cosDatum_LLU₀_mem`) and in every `Hˢ`, `s ≤ 1`.
-* `sobState_waveGroupQ`, `waveGroupQ_mem_domain_pow`, `norm_pow_waveGroupQ_eq`,
-  `norm_wavePow_sq_of_tsd`, `mem_domain_pow_iff_sobolev_of_tsd`, `norm_wavePow_sq_le_sobState`,
-  `rowRe_sobolevPar`, `rowRe2_sobolevPar`, `mirrorClose_of_sobolev`.
+* `cosDatum_LLU₀_mem`: the cos datum (`cosDatum`) lies in `D(L³)`.
+* `sobState_waveGroupQ`, `sobState_one_of_tsd`, `rowRe_sobolevPar`, `rowRe2_sobolevPar`, `mirrorClose_of_sobolev`.
 
 No hypothesis is assumed. **The data class.** The Strang data of (6.4) contain `d u'`, the rows of
-`⋆Re B''`, so the proof needs `J L² U₀ ∈ Hˢ`: `U₀ ∈ D(L³)` for `O(h)` (on TSD data,
-`D(L³) = H³` of the mirror extension), and `J L² U₀ ∈ Hˢ` (roughly `H^{2+s}` data) for `O(hˢ)`.
+`⋆Re B''`, so the proof needs `J L² U₀ ∈ Hˢ`: `U₀ ∈ D(L³)` for `O(h)`, and `J L² U₀ ∈ Hˢ` (roughly `H^{2+s}` data) for `O(hˢ)`.
 Not formalized: a TSD datum of `D(L³)` that is not `C²` (expected, since `H³(𝕋³) ⊄ C²(𝕋³)`; the
 embedding `Hˢ ⊆ C²` needs `s > 7/2`), and whether a sharper analysis of (6.5) needs less than
 `D(L³)` for `O(h)`.
@@ -344,12 +335,6 @@ def MemSobState (s : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) : Prop :=
 theorem sobState_nonneg (s : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) : 0 ≤ sobState s x :=
   mul_nonneg (by norm_num) (tsum_nonneg fun m =>
     mul_nonneg (weight_nonneg s m) (fibreEnergy_nonneg _ m))
-
-theorem sobState_zero (x : PiLp 2 MirrorBGG.SpaceQ) : sobState 0 x = ‖x‖ ^ 2 := by
-  simp [sobState, norm_sq_eq_tsum_extState]
-
-theorem memSobState_zero (x : PiLp 2 MirrorBGG.SpaceQ) : MemSobState 0 x := by
-  simpa [MemSobState] using summable_fibreEnergy (extState x)
 
 /-- **The wave group preserves every Sobolev norm of states**: `‖e^{tL} x‖_s = ‖x‖_s`, for every
 `s` and every `t` (the torus symbol is skew-Hermitian at each frequency). -/
@@ -661,269 +646,14 @@ def MemDomainPow : ℕ → PiLp 2 MirrorBGG.SpaceQ → Prop
   | k + 1, x => ∃ h : x ∈ MirrorBGG.complexQ.wave.domain,
       MemDomainPow k (MirrorBGG.complexQ.wave ⟨x, h⟩)
 
-open Classical in
-/-- `Lᵏ x` (`0` off `D(Lᵏ)`). -/
-def wavePow : ℕ → PiLp 2 MirrorBGG.SpaceQ → PiLp 2 MirrorBGG.SpaceQ
-  | 0, x => x
-  | k + 1, x => if h : x ∈ MirrorBGG.complexQ.wave.domain then
-      wavePow k (MirrorBGG.complexQ.wave ⟨x, h⟩) else 0
-
-theorem wavePow_zero (x : PiLp 2 MirrorBGG.SpaceQ) : wavePow 0 x = x := rfl
-
-theorem wavePow_succ {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (h : x ∈ MirrorBGG.complexQ.wave.domain) :
-    wavePow (k + 1) x = wavePow k (MirrorBGG.complexQ.wave ⟨x, h⟩) := by
-  simp [wavePow, h]
-
-theorem memDomainPow_succ {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ} :
-    MemDomainPow (k + 1) x ↔ ∃ h : x ∈ MirrorBGG.complexQ.wave.domain,
-      MemDomainPow k (MirrorBGG.complexQ.wave ⟨x, h⟩) := Iff.rfl
-
-/-- **The wave group maps `D(L)` into `D(L)` and commutes with `L`, for every `t ∈ ℝ`**
-(generalizes `waveGroupQ_graph`, `t ≥ 0`). -/
-theorem waveGroupQ_mem_domain_wave (t : ℝ) {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : x ∈ MirrorBGG.complexQ.wave.domain) :
-    ∃ h : MirrorBGG.complexQ.waveGroup.S t x ∈ MirrorBGG.complexQ.wave.domain,
-      MirrorBGG.complexQ.wave ⟨_, h⟩ =
-        MirrorBGG.complexQ.waveGroup.S t (MirrorBGG.complexQ.wave ⟨x, hx⟩) := by
-  have hg := HilbertComplex.generator_waveGroup MirrorBGG.complexQ
-  have hx' : x ∈ MirrorBGG.complexQ.waveGroup.generator.domain := by rw [hg]; exact hx
-  have h1 := MirrorBGG.complexQ.waveGroup.mapsTo_domain ⟨x, hx'⟩ t
-  have h2 := MirrorBGG.complexQ.waveGroup.generator_apply_S ⟨x, hx'⟩ t
-  have h1' : MirrorBGG.complexQ.waveGroup.S t x ∈ MirrorBGG.complexQ.wave.domain := by
-    rw [← hg]; exact h1
-  refine ⟨h1', ?_⟩
-  calc MirrorBGG.complexQ.wave ⟨_, h1'⟩ =
-        MirrorBGG.complexQ.waveGroup.generator ⟨_, h1⟩ :=
-          (LinearPMap.apply_eq_of_eq hg ⟨_, h1⟩ ⟨_, h1'⟩ rfl).symm
-    _ = MirrorBGG.complexQ.waveGroup.S t (MirrorBGG.complexQ.waveGroup.generator ⟨x, hx'⟩) := h2
-    _ = _ := by rw [LinearPMap.apply_eq_of_eq hg ⟨x, hx'⟩ ⟨x, hx⟩ rfl]
-
-/-- **The wave group preserves `D(Lᵏ)` and commutes with `Lʲ`, `j ≤ k`, for every `t ∈ ℝ`.** -/
-theorem waveGroupQ_mem_domain_pow (k : ℕ) (t : ℝ) {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemDomainPow k x) :
-    MemDomainPow k (MirrorBGG.complexQ.waveGroup.S t x) ∧
-      ∀ j ≤ k, wavePow j (MirrorBGG.complexQ.waveGroup.S t x) =
-        MirrorBGG.complexQ.waveGroup.S t (wavePow j x) := by
-  induction k generalizing x with
-  | zero =>
-    refine ⟨trivial, fun j hj => ?_⟩
-    obtain rfl : j = 0 := Nat.le_zero.1 hj
-    rfl
-  | succ k ih =>
-    obtain ⟨h, hk⟩ := memDomainPow_succ.1 hx
-    obtain ⟨h', e⟩ := waveGroupQ_mem_domain_wave t h
-    have ih' := ih hk
-    refine ⟨memDomainPow_succ.2 ⟨h', by rw [e]; exact ih'.1⟩, fun j hj => ?_⟩
-    rcases j with _ | j
-    · rfl
-    · rw [wavePow_succ h', wavePow_succ h, e]
-      exact ih'.2 j (by omega)
-
-/-- **`‖Lʲ e^{tL} x‖ = ‖Lʲ x‖` for `x ∈ D(Lᵏ)`, `j ≤ k`, `t ∈ ℝ`.** -/
-theorem norm_pow_waveGroupQ_eq {k : ℕ} (t : ℝ) {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemDomainPow k x) {j : ℕ} (hj : j ≤ k) :
-    ‖wavePow j (MirrorBGG.complexQ.waveGroup.S t x)‖ = ‖wavePow j x‖ := by
-  rw [(waveGroupQ_mem_domain_pow k t hx).2 j hj, MirrorBGG.complexQ.isIsometric_waveGroup]
-
 /-! ### `D(Lᵏ)` on TSD states is the Sobolev class `Hᵏ` of the mirror extension -/
-
-theorem wavePow_mem_tsd {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ} (hx : MemDomainPow k x)
-    (hxt : x ∈ totalSub MirrorBGG.tsdQ) : wavePow k x ∈ totalSub MirrorBGG.tsdQ := by
-  induction k generalizing x with
-  | zero => exact hxt
-  | succ k ih =>
-    obtain ⟨h, hk⟩ := memDomainPow_succ.1 hx
-    rw [wavePow_succ h]
-    exact ih hk (waveQ_mem_tsd ⟨x, h⟩ hxt)
-
-/-- **`Lᵏ` on TSD states, one frequency at a time**:
-`Σᵢ |(J Lᵏ x)ᵢ^(m)|² = |ξ_m|^{2k} Σᵢ |(J x)ᵢ^(m)|²`. -/
-theorem fibreEnergy_wavePow_of_tsd {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemDomainPow k x) (hxt : x ∈ totalSub MirrorBGG.tsdQ) (m : Fin 3 → ℤ) :
-    fibreEnergy (extState (wavePow k x)) m =
-      (‖Fourier.Torus.freq m‖ ^ 2) ^ k * fibreEnergy (extState x) m := by
-  induction k generalizing x with
-  | zero => rw [wavePow_zero, pow_zero, one_mul]
-  | succ k ih =>
-    obtain ⟨h, hk⟩ := memDomainPow_succ.1 hx
-    rw [wavePow_succ h, ih hk (waveQ_mem_tsd ⟨x, h⟩ hxt), fibreEnergy_waveQ_of_tsd ⟨x, h⟩ hxt,
-      pow_succ]
-    ring
-
-/-- **`‖Lᵏ x‖² = 8⁻¹ Σ_m |ξ_m|^{2k} Σᵢ |(J x)ᵢ^(m)|²` on TSD states of `D(Lᵏ)`** (the term
-`m = 0` vanishes for `k ≥ 1`): TSD fields are symmetric and divergence-free row-wise, and
-`|ξ × x| = |ξ| |x|` when `ξ · x = 0`. -/
-theorem norm_wavePow_sq_of_tsd {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ} (hx : MemDomainPow k x)
-    (hxt : x ∈ totalSub MirrorBGG.tsdQ) :
-    ‖wavePow k x‖ ^ 2 =
-      8⁻¹ * ∑' m, (‖Fourier.Torus.freq m‖ ^ 2) ^ k * fibreEnergy (extState x) m := by
-  rw [norm_sq_eq_tsum_extState]
-  simp_rw [fibreEnergy_wavePow_of_tsd hx hxt]
 
 theorem weight_natCast (k : ℕ) (m : Fin 3 → ℤ) :
     weight (k : ℝ) m = (1 + ‖Fourier.Torus.freq m‖ ^ 2) ^ k := by
   rw [weight, Real.rpow_natCast]
 
-theorem one_add_pow_le {a : ℝ} (ha : 0 ≤ a) (k : ℕ) : (1 + a) ^ k ≤ 2 ^ k * (1 + a ^ k) := by
-  rcases le_total 1 a with h | h
-  · have h1 : 1 + a ≤ 2 * a := by linarith
-    calc (1 + a) ^ k ≤ (2 * a) ^ k := pow_le_pow_left₀ (by linarith) h1 k
-      _ = 2 ^ k * a ^ k := mul_pow _ _ _
-      _ ≤ 2 ^ k * (1 + a ^ k) := by nlinarith [pow_pos (two_pos (α := ℝ)) k]
-  · have h1 : 1 + a ≤ 2 := by linarith
-    calc (1 + a) ^ k ≤ 2 ^ k := pow_le_pow_left₀ (by linarith) h1 k
-      _ ≤ 2 ^ k * (1 + a ^ k) := by
-        nlinarith [pow_pos (two_pos (α := ℝ)) k, pow_nonneg ha k]
-
 theorem le_one_add_pow {a : ℝ} (ha : 0 ≤ a) (k : ℕ) : a ^ k ≤ (1 + a) ^ k :=
   pow_le_pow_left₀ ha (by linarith) k
-
-theorem memSobState_of_memDomainPow {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemDomainPow k x) (hxt : x ∈ totalSub MirrorBGG.tsdQ) : MemSobState k x := by
-  have hS : Summable fun m => 2 ^ k * (fibreEnergy (extState x) m +
-      fibreEnergy (extState (wavePow k x)) m) :=
-    ((summable_fibreEnergy _).add (summable_fibreEnergy _)).mul_left _
-  refine Summable.of_nonneg_of_le (fun m => mul_nonneg (weight_nonneg _ m)
-    (fibreEnergy_nonneg _ m)) (fun m => ?_) hS
-  rw [weight_natCast, fibreEnergy_wavePow_of_tsd hx hxt]
-  have h := one_add_pow_le (sq_nonneg ‖Fourier.Torus.freq m‖) k
-  have hf := fibreEnergy_nonneg (extState x) m
-  nlinarith [mul_le_mul_of_nonneg_right h hf]
-
-open Feec.Models.Cube.Sobolev (MemSob) in
-/-- A TSD state with `Σ_m |ξ_m|² Σᵢ |(J x)ᵢ^(m)|² < ∞` lies in `D(L)`. -/
-theorem mem_wave_domain_of_summable {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hxt : x ∈ totalSub MirrorBGG.tsdQ)
-    (h : Summable fun m => ‖Fourier.Torus.freq m‖ ^ 2 * fibreEnergy (extState x) m) :
-    x ∈ MirrorBGG.complexQ.wave.domain := by
-  refine (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos MirrorBGG.inner_J
-    MirrorBGG.reducingSubcomplex_range).2 ?_
-  have hX := extState_mem_constraint hxt
-  have hE : ∀ n, tc1 (extState x) n ∈ tsd (Fourier.Torus.freq n) := fun n =>
-    Measure.ae_count_iff.1 (Operator.mem_fibreSub.1 (hX 1)) n
-  have hB := fun n => Models.Torus.BGG.mem_constraint_two_iff.1 (hX 2) n
-  refine Models.Torus.BGG.mem_wave_domain_of (Models.Torus.BGG.mem_constraint_zero_iff.1 (hX 0))
-    (hX 1) ?_ ?_
-  · refine (Operator.mem_mulDomain_count_iff
-      (fun n => bggFamily.m 1 2 (Fourier.Torus.freq n))).2 (memℓp_gen ?_)
-    have hb : ∀ n, ‖bgg (Fourier.Torus.freq n) (tc1 (extState x) n)‖ ^ 2 ≤
-        ‖Fourier.Torus.freq n‖ ^ 2 * fibreEnergy (extState x) n := fun n => by
-      have haxial : Fourier.BGG.axialL (tc1 (extState x) n) = 0 :=
-        (mem_tsdB.1 (Fourier.BGG.bgg_mem_tsdB (hE n))).1
-      rw [norm_sq_VM]
-      change ‖Fourier.BGG.axialL (tc1 (extState x) n)‖ ^ 2 +
-        ‖curl (Fourier.Torus.freq n) (tc1 (extState x) n)‖ ^ 2 ≤ _
-      rw [haxial, norm_zero, norm_curl_of_mem_tsd (hE n), fibreEnergy_eq]
-      nlinarith [sq_nonneg ‖tc0 (extState x) n‖, sq_nonneg ‖tc2 (extState x) n‖,
-        sq_nonneg ‖Fourier.Torus.freq n‖, mul_nonneg (sq_nonneg ‖Fourier.Torus.freq n‖)
-          (sq_nonneg ‖tc0 (extState x) n‖), mul_nonneg (sq_nonneg ‖Fourier.Torus.freq n‖)
-          (sq_nonneg ‖tc2 (extState x) n‖)]
-    have hs : Summable fun n => ‖bgg (Fourier.Torus.freq n) (tc1 (extState x) n)‖ ^ 2 :=
-      Summable.of_nonneg_of_le (fun _ => sq_nonneg _) hb h
-    refine hs.congr fun n => ?_
-    rw [ENNReal.toReal_ofNat, Real.rpow_two]
-    rfl
-  · rw [show (Models.Torus.BGG.complex.d 1 2)† = Operator.mulOp Measure.count fun n =>
-        ContinuousLinearMap.adjoint (bggFamily.m 1 2 (Fourier.Torus.freq n)) from
-      (Fourier.Torus.symbolComplex bggFamily).adjoint_d 1 2]
-    refine (Operator.mem_mulDomain_count_iff _).2 (memℓp_gen ?_)
-    have hb : ∀ n, ‖ContinuousLinearMap.adjoint (bgg (Fourier.Torus.freq n))
-        (tc2 (extState x) n)‖ ^ 2 ≤ ‖Fourier.Torus.freq n‖ ^ 2 * fibreEnergy (extState x) n :=
-      fun n => by
-        have hw : tc2 (extState x) n =
-            WithLp.toLp 2 ((0 : Vec), (WithLp.ofLp (tc2 (extState x) n)).2) := by
-          rw [← (hB n).1]; rfl
-        have hadj : ContinuousLinearMap.adjoint (bgg (Fourier.Torus.freq n))
-            (tc2 (extState x) n) =
-            curl (Fourier.Torus.freq n) (WithLp.ofLp (tc2 (extState x) n)).2 := by
-          conv_lhs => rw [hw]
-          exact adjoint_bgg_inr _ _
-        have h3 : ‖tc2 (extState x) n‖ ^ 2 = ‖(WithLp.ofLp (tc2 (extState x) n)).2‖ ^ 2 := by
-          rw [norm_sq_VM, (hB n).1, norm_zero]; ring
-        rw [hadj, norm_curl_of_mem_tsd (hB n).2, fibreEnergy_eq, mul_pow, ← h3]
-        nlinarith [sq_nonneg ‖tc0 (extState x) n‖, sq_nonneg ‖tc1 (extState x) n‖,
-          mul_nonneg (sq_nonneg ‖Fourier.Torus.freq n‖) (sq_nonneg ‖tc0 (extState x) n‖),
-          mul_nonneg (sq_nonneg ‖Fourier.Torus.freq n‖) (sq_nonneg ‖tc1 (extState x) n‖)]
-    have hs : Summable fun n => ‖ContinuousLinearMap.adjoint (bgg (Fourier.Torus.freq n))
-        (tc2 (extState x) n)‖ ^ 2 :=
-      Summable.of_nonneg_of_le (fun _ => sq_nonneg _) hb h
-    refine hs.congr fun n => ?_
-    rw [ENNReal.toReal_ofNat, Real.rpow_two]
-    rfl
-
-theorem memDomainPow_of_memSobState {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hxt : x ∈ totalSub MirrorBGG.tsdQ) (hs : MemSobState k x) : MemDomainPow k x := by
-  induction k generalizing x with
-  | zero => trivial
-  | succ k ih =>
-    have hsum : Summable fun m => ‖Fourier.Torus.freq m‖ ^ 2 * fibreEnergy (extState x) m := by
-      refine Summable.of_nonneg_of_le (fun m => mul_nonneg (sq_nonneg _)
-        (fibreEnergy_nonneg _ m)) (fun m => ?_) hs
-      rw [weight_natCast]
-      have ha := sq_nonneg ‖Fourier.Torus.freq m‖
-      have h1 : ‖Fourier.Torus.freq m‖ ^ 2 ≤ (1 + ‖Fourier.Torus.freq m‖ ^ 2) ^ (k + 1) :=
-        (le_self_pow₀ (by linarith) (Nat.succ_ne_zero k)).trans' (by linarith)
-      exact mul_le_mul_of_nonneg_right h1 (fibreEnergy_nonneg _ m)
-    have h := mem_wave_domain_of_summable hxt hsum
-    refine memDomainPow_succ.2 ⟨h, ih (waveQ_mem_tsd ⟨x, h⟩ hxt) ?_⟩
-    refine Summable.of_nonneg_of_le (fun m => mul_nonneg (weight_nonneg _ m)
-      (fibreEnergy_nonneg _ m)) (fun m => ?_) hs
-    rw [weight_natCast, weight_natCast, fibreEnergy_waveQ_of_tsd ⟨x, h⟩ hxt]
-    have ha := sq_nonneg ‖Fourier.Torus.freq m‖
-    have hf := fibreEnergy_nonneg (extState x) m
-    have hp := pow_nonneg (by linarith : (0 : ℝ) ≤ 1 + ‖Fourier.Torus.freq m‖ ^ 2) k
-    rw [pow_succ]
-    have : ‖Fourier.Torus.freq m‖ ^ 2 ≤ 1 + ‖Fourier.Torus.freq m‖ ^ 2 := by linarith
-    calc (1 + ‖Fourier.Torus.freq m‖ ^ 2) ^ k * (‖Fourier.Torus.freq m‖ ^ 2 *
-          fibreEnergy (extState x) m) ≤
-        (1 + ‖Fourier.Torus.freq m‖ ^ 2) ^ k * ((1 + ‖Fourier.Torus.freq m‖ ^ 2) *
-          fibreEnergy (extState x) m) :=
-          mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right this hf) hp
-      _ = _ := by ring
-
-/-- **On TSD states, `D(Lᵏ)` is the Sobolev class `Hᵏ` of the mirror extension**:
-`x ∈ D(Lᵏ)` iff `Σ_m ⟨ξ_m⟩^{2k} Σᵢ |(J x)ᵢ^(m)|² < ∞`. The mirror extension `J` of a field on
-`Q` is its parity extension in the mirror classes (`E` tensor parities, `B` pseudo-tensor
-parities), so this is the parity Sobolev class of `Q`: the rows of `Re E` and `⋆Re B` lie in
-`Hᵏ_{a}(Q)` (`rowRe_sobolevPar`, `rowRe2_sobolevPar`). The compatibility conditions of `D(Lᵏ)`
-at `∂Q` are exactly the mirror parities. -/
-theorem mem_domain_pow_iff_sobolev_of_tsd {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hxt : x ∈ totalSub MirrorBGG.tsdQ) : MemDomainPow k x ↔ MemSobState k x :=
-  ⟨fun h => memSobState_of_memDomainPow h hxt, memDomainPow_of_memSobState hxt⟩
-
-/-- **Equivalent norms**: `‖Lᵏ x‖² ≤ ‖x‖²_k ≤ 2ᵏ (‖x‖² + ‖Lᵏ x‖²)` on TSD states of `D(Lᵏ)`. -/
-theorem norm_wavePow_sq_le_sobState {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemDomainPow k x) (hxt : x ∈ totalSub MirrorBGG.tsdQ) :
-    ‖wavePow k x‖ ^ 2 ≤ sobState k x ∧
-      sobState k x ≤ 2 ^ k * (‖x‖ ^ 2 + ‖wavePow k x‖ ^ 2) := by
-  have hS := memSobState_of_memDomainPow hx hxt
-  have hP : Summable fun m => (‖Fourier.Torus.freq m‖ ^ 2) ^ k * fibreEnergy (extState x) m :=
-    (summable_fibreEnergy (extState (wavePow k x))).congr fun m =>
-      fibreEnergy_wavePow_of_tsd hx hxt m
-  rw [norm_wavePow_sq_of_tsd hx hxt, norm_sq_eq_tsum_extState, sobState]
-  constructor
-  · refine mul_le_mul_of_nonneg_left (Summable.tsum_le_tsum (fun m => ?_) hP hS) (by norm_num)
-    rw [weight_natCast]
-    exact mul_le_mul_of_nonneg_right (le_one_add_pow (sq_nonneg _) k) (fibreEnergy_nonneg _ m)
-  · have hQ : Summable fun m => 2 ^ k * (fibreEnergy (extState x) m +
-        (‖Fourier.Torus.freq m‖ ^ 2) ^ k * fibreEnergy (extState x) m) :=
-      ((summable_fibreEnergy _).add hP).mul_left _
-    have hle := Summable.tsum_le_tsum (fun m => ?_) hS hQ
-    · rw [tsum_mul_left, Summable.tsum_add (summable_fibreEnergy _) hP] at hle
-      have h8 : (0 : ℝ) ≤ 8⁻¹ := by norm_num
-      nlinarith [mul_le_mul_of_nonneg_left hle h8]
-    · rw [weight_natCast]
-      have h := one_add_pow_le (sq_nonneg ‖Fourier.Torus.freq m‖) k
-      have hf := fibreEnergy_nonneg (extState x) m
-      nlinarith [mul_le_mul_of_nonneg_right h hf]
-
-/-- **`D(Lᵏ)` TSD states have `Hᵏ` rows in the mirror parity classes.** -/
-theorem rows_sobolevPar_of_memDomainPow {k : ℕ} {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemDomainPow k x) (hxt : x ∈ totalSub MirrorBGG.tsdQ) (a : Fin 3) :
-    rowRe (stE x) a ∈ sobolevPar {a} 1 k ∧ rowRe2 (stB x) a ∈ sobolevPar {a} 2 k :=
-  ⟨(rowRe_sobolevPar (memSobState_of_memDomainPow hx hxt) a).1,
-    (rowRe2_sobolevPar (memSobState_of_memDomainPow hx hxt) a).1⟩
 
 /-! ### Closeness of the TSD states to their parity-smoothed projections -/
 
@@ -1142,8 +872,7 @@ end TSDDatum
 smoothness hypothesis on the solution: there is `K`, independent of `N`, `T`, `s` and the datum,
 such that for every TSD datum `D` (`U₀ ∈ D(L²)` in the constraint) whose mirror extensions
 `J U₀`, `J L U₀`, `J L² U₀` lie in `Hˢ(𝕋³)` (`MemSobState s`, the torus weights of the mirror
-extension; on TSD states of `D(Lᵏ)` this is `D(Lᵏ)` for `s = k`,
-`mem_domain_pow_iff_sobolev_of_tsd`), and every strong solution `U` from `U₀`, the scheme (6.5)
+extension), and every strong solution `U` from `U₀`, the scheme (6.5)
 without source has a solution from the
 elliptic projection of the initial forms state with
 `(‖σₕ‖² + ‖Re E − uₕ‖² + ‖Mₕ‖² + ‖Re B − ρₕ‖²)^{1/2}(t)`
@@ -1244,7 +973,7 @@ hypothesis**: there is `K`, independent of `N`, `T` and the datum, such that for
 has a solution from the elliptic projection (6.4) of the initial forms state with
 `(‖σₕ‖² + ‖Re E − uₕ‖² + ‖Mₕ‖² + ‖Re B − ρₕ‖²)^{1/2}(t)`
 `≤ K (‖U₀‖ + ‖LU₀‖ + ‖L²U₀‖ + ‖L³U₀‖)(1 + t) h_N`
-on `[0,T]`. This is the conclusion of `mirror_waveFEM_rate` with its hypothesis that the forms
+on `[0,T]`. This is the conclusion of `MirrorWeakSymmetry.mirrorWave_rate` with its hypothesis that the forms
 states of the solution are `C²` up to `∂Q` (`IsSmoothStateMirror`) replaced by the explicit
 condition `U₀ ∈ D(L³)` on the datum. On TSD states of `D(L)` the graph norm of `L` is the `H¹`
 norm of the mirror extension (`sobState_one_of_tsd`: `|L(ξ) v| = |ξ| |v|` on the TSD fibres), so
@@ -1338,7 +1067,6 @@ theorem TSDDatum.memSobState_of_add_two (D : TSDDatum) {s : ℝ}
 /-- **`O(hˢ)` rate of the mirror scheme (6.5) for TSD data in `H^{2+s}`, `0 ≤ s ≤ 1`**: the
 conclusion of `mirror_waveFEM_rate_sobolev` under the single Sobolev condition `J U₀ ∈ H^{2+s}`
 on the datum, with the bound `K ‖U₀‖_{2+s} (1 + t) h_Nˢ` (`TSDDatum.memSobState_of_add_two`).
-For `s = 1` this is `U₀ ∈ D(L³)` (`mem_domain_pow_iff_sobolev_of_tsd`).
 See [QuennevilleBelair2015], Ch. 6, §6.3, (6.5); [AFW2010], §5.4. -/
 theorem mirror_waveFEM_rate_sobolev_of_add_two :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (D : TSDDatum) {s : ℝ}, 0 ≤ s → s ≤ 1 →
@@ -1370,14 +1098,9 @@ theorem mirror_waveFEM_rate_sobolev_of_add_two :
           gcongr; exact hm.2.2.2
     _ = _ := by ring
 
-theorem memSobState_mono {s t : ℝ} (hst : s ≤ t) {x : PiLp 2 MirrorBGG.SpaceQ}
-    (hx : MemSobState t x) : MemSobState s x :=
-  Summable.of_nonneg_of_le (fun m => mul_nonneg (weight_nonneg s m) (fibreEnergy_nonneg _ m))
-    (fun m => mul_le_mul_of_nonneg_right (Sobolev.weight_mono hst m) (fibreEnergy_nonneg _ m)) hx
-
 /-! ### Non-vacuity -/
 
-/-- **The cos datum `E₀ = 2 cos(2π x₃) diag(1, -1, 0)` of `mirror_waveFEM_nonvacuous` lies in
+/-- **The cos datum `E₀ = 2 cos(2π x₃) diag(1, -1, 0)` (`cosDatum`) lies in
 `D(L³)`**: its mirror extension has finitely many Fourier modes, which `L` preserves on the
 torus (`torusBGG_wave_finite`). -/
 theorem cosDatum_LLU₀_mem : cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain := by
@@ -1396,18 +1119,5 @@ theorem cosDatum_LLU₀_mem : cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain
   change extState cosDatum.LLU₀ ∈ _
   rw [e2]
   exact torusBGG_wave_mem_of_finite _ _ hfin
-
-/-- **Non-vacuity of `mirror_waveFEM_rate_of_mem_domain` and `mirror_waveFEM_rate_sobolev`**: the
-cos datum is a non-stationary TSD datum with `L² U₀ ∈ D(L)`, its mirror extensions
-`J U₀`, `J L U₀`, `J L² U₀` lie in `Hˢ(𝕋³)` for every `s ≤ 1`, and its forms state is not zero. -/
-theorem mirror_waveFEM_rate_of_mem_domain_nonvacuous :
-    cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain ∧
-      cosDatum.U₀ ∉ MirrorBGG.complexQ.waveGroup.stationary ∧
-      (∀ s ≤ 1, MemSobState s cosDatum.U₀ ∧ MemSobState s cosDatum.LU₀ ∧
-        MemSobState s cosDatum.LLU₀) ∧ ∀ T, (cosDatum.exactWave T).u 0 ≠ 0 := by
-  have h := cosDatum.memSobState_one cosDatum_LLU₀_mem
-  exact ⟨cosDatum_LLU₀_mem, cosDatum_not_stationary, fun s hs =>
-    ⟨memSobState_mono hs h.1, memSobState_mono hs h.2.1, memSobState_mono hs h.2.2.1⟩,
-    cosDatum_u_ne⟩
 
 end Feec.Models.Cube.MirrorWeakSymmetry

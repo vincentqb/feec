@@ -21,12 +21,9 @@ its Hodge wave equation is (4.18).
   `𝕋³`, with existence and uniqueness, forcing, any time interval.
 * **`closedRangeAt`**, `dual_closedRangeAt'`, **`hodge`**: closed range at every index (Poincaré
   constant `1`) and the Hodge decomposition without closures.
-* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
-  real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
+* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields
+  (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
-* **`hodge_real`**, `exists_real_hess_preimage`, `exists_real_symCurl_preimage`: the Hodge pieces
-  of a real field are real, with real potentials (`L²(𝕋³; S) = R(grad grad) ⊕ ℌ ⊕ R(sym curl)`
-  over the real fields).
 
 ## References
 
@@ -199,34 +196,5 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
   obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
   exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
     realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
-
-/-- The wave group maps real fields to real fields. -/
-theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
-    realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
-  realStructure.waveGroup_conj t x
-
-/-! ### Real Hodge decomposition -/
-
-/-- **Real Hodge decomposition on `𝕋³`**: a real field (`C x = x`, i.e. `x̂(-ξ) = conj x̂(ξ)`) is
-`x = b + h + a` with `b ∈ R(d)`, `h` harmonic, `a ∈ R(d†)`, all three real. For `i = 1`:
-`A = grad grad u + h + sym curl ρ` in `L²(𝕋³; S)`. -/
-theorem hodge_real {i : Fin 3} {x : Space i} (hx : realStructure.toConj.C i x = x) :
-    ∃ b ∈ complex.boundaries i, ∃ h ∈ complex.harmonic i, ∃ a ∈ complex.dual.boundaries i,
-      x = b + h + a ∧ realStructure.toConj.C i b = b ∧ realStructure.toConj.C i h = h ∧
-        realStructure.toConj.C i a = a :=
-  realStructure.toConj.hodge_real_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i) hx
-
-/-- A real field in `R(grad grad)` is `grad grad u` for a real `u ∈ H²(𝕋³)`. -/
-theorem exists_real_hess_preimage {A : Space 1}
-    (hA : A ∈ LinearMap.range (complex.d 0 1).toFun) (hAr : realStructure.toConj.C 1 A = A) :
-    ∃ u : (complex.d 0 1).domain, realStructure.toConj.C 0 u = u ∧ complex.d 0 1 u = A :=
-  realStructure.toConj.exists_real_preimage hA hAr
-
-/-- A real field in `R(sym curl)` (the range of `curl†`) is `sym curl ρ` for a real
-`ρ ∈ H(sym curl; 𝕋³, T)`. -/
-theorem exists_real_symCurl_preimage {A : Space 1}
-    (hA : A ∈ LinearMap.range ((complex.d 1 2)†).toFun) (hAr : realStructure.toConj.C 1 A = A) :
-    ∃ ρ : ((complex.d 1 2)†).domain, realStructure.toConj.C 2 ρ = ρ ∧ (complex.d 1 2)† ρ = A :=
-  realStructure.toConj.exists_real_preimage_adjoint hA hAr
 
 end Feec.Models.Torus.SymCurl

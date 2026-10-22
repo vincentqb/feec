@@ -240,13 +240,6 @@ theorem toL2_zero : toL2 (IsTest.zero : IsTest Ω (0 : E → 𝕜)) = 0 := by
     Lp.coeFn_zero 𝕜 2 (volume.restrict Ω)] with x h1 h2
   rw [h1, h2]
 
-theorem toL2_eq_zero (hΩ : MeasurableSet Ω) {f : E → 𝕜} (hf : IsTest Ω f)
-    (h0 : ∀ x ∈ Ω, f x = 0) : toL2 hf = 0 := by
-  refine Lp.ext ?_
-  filter_upwards [coeFn_toL2 hf, Lp.coeFn_zero 𝕜 2 (volume.restrict Ω), ae_restrict_mem hΩ]
-    with x h1 h2 hx
-  rw [h1, h2, h0 x hx, Pi.zero_apply]
-
 /-- A test field as an element of `L²(Ω; 𝕜^ι)`. -/
 def testField {ι : Type*} {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) : L2F 𝕜 Ω ι :=
   WithLp.toLp 2 fun i => toL2 (hφ i)
@@ -440,10 +433,6 @@ def piL2Equiv : Lp (EuclideanSpace 𝕜 ι) 2 μ ≃ₗᵢ[𝕜] PiLp 2 (fun _ :
   LinearIsometryEquiv.ofSurjective
     (LinearMap.isometryOfInner (toPiL2 μ ι (𝕜 := 𝕜)) (inner_toPiL2 (𝕜 := 𝕜)))
     (toPiL2_surjective (𝕜 := 𝕜))
-
-theorem piL2Equiv_apply (f : Lp (EuclideanSpace 𝕜 ι) 2 μ) (i : ι) :
-    (piL2Equiv μ 𝕜 ι f i : α → 𝕜) =ᵐ[μ] fun x => f x i :=
-  toPiL2_apply f i
 
 end Bochner
 

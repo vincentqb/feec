@@ -28,14 +28,8 @@ Hodge wave equation is the matrix system (4.14) of the Einstein–Bianchi formul
 * **`mem_domain_grad_iff_weak`**, **`mem_domain_curl_iff_weak`**,
   **`mem_domain_adjoint_grad_iff_weak`**: `H¹(𝕋³; ℂ³)`, `H(curl; 𝕋³)` and `H(div; 𝕋³)` of the Fourier
   model are the weak-derivative spaces of `L²(𝕋³)` fields tested against all smooth functions
-  (`Feec.Fourier.TorusWeak`); `curl_star_eq_self`: the weak curl of a real field is real.
-* `starProjection_eq_zero_of_mem_orthogonal`: fields whose Fourier coefficients are orthogonal
-  to the TSD fibres (e.g. `A = c ξᵀ`, gradients) have zero TSD part, though `dev sym A ≠ 0` (the
-  answer to the blueprint review's claimed counterexample: `P_TSD` is not pointwise).
-* `starProjection_mem_H1`: the TSD projection maps `H(curl)` into `H¹`, with
-  `‖|ξ| P_TSD A‖ ≤ ‖curl A‖`.
-* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
-  real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
+  (`Feec.Fourier.TorusWeak`).
+* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
 
 ## References
@@ -156,11 +150,6 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
   exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
     realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
 
-/-- The wave group maps real fields to real fields. -/
-theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
-    realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
-  realStructure.waveGroup_conj t x
-
 /-! ### Closed range -/
 
 theorem gap (i j : Fin 3) {ξ : EuclideanSpace ℝ (Fin 3)} (hξ : 2 * Real.pi ≤ ‖ξ‖) :
@@ -189,36 +178,6 @@ theorem norm_le_of_mem_orthogonal {i j : Fin 3} (u : (complex.d i j).domain)
     rw [eq_zero_of_mem_orthogonal_ker_zero hv, norm_zero]
     positivity
   · exact gap _ _ (Fourier.Torus.two_pi_le_norm_freq hk)
-
-/-! ### `H¹` regularity of the TSD projection -/
-
-/-- **The TSD projection maps `H(curl)` into `H¹`**: `|ξ| P_TSD A ∈ L²` for `A ∈ H(curl)`, with
-`‖|ξ| P_TSD A‖ ≤ ‖curl A‖` (fibrewise `Feec.Fourier.GradCurl.mul_norm_starProjection_le`). -/
-theorem starProjection_mem_H1 (A : (complex.d 1 2).domain) :
-    MemLp (fun k => ((‖Fourier.Torus.freq k‖ : ℝ) : ℂ) •
-      ((constraint 1).starProjection (A : Space 1) : _ → Mat) k) 2 Measure.count := by
-  have hP := Operator.coeFn_starProjection_fibreSub (μ := Measure.count)
-    (fun k => tsdK 1 (Fourier.Torus.freq k)) AEStronglyMeasurable.of_discrete (A : Space 1)
-  have hd := (Fourier.Torus.symbolComplex gradCurl).coeFn_d A
-  refine MemLp.of_le (Lp.memLp (complex.d 1 2 A)) AEStronglyMeasurable.of_discrete ?_
-  filter_upwards [hP, hd] with k h1 h2
-  rw [h1, norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_norm]
-  exact le_of_le_of_eq (mul_norm_starProjection_le _ _) (congrArg norm h2).symm
-
-/-! ### The TSD projection is not pointwise -/
-
-/-- Fields whose coefficients are orthogonal to the TSD fibres have zero TSD part (for instance
-`Â(k) = c_k ξ_kᵀ`, `Feec.Fourier.GradCurl.grad_mem_orthogonal`), even when their pointwise
-symmetric trace-free part does not vanish. -/
-theorem starProjection_eq_zero_of_mem_orthogonal {i : Fin 3} {A : Space i}
-    (hA : ∀ k, A k ∈ (tsdK i (Fourier.Torus.freq k))ᗮ) :
-    (constraint i).starProjection A = 0 := by
-  refine Lp.ext_count fun k => ?_
-  have h := Operator.coeFn_starProjection_fibreSub (μ := Measure.count)
-    (fun k => tsdK i (Fourier.Torus.freq k)) AEStronglyMeasurable.of_discrete A
-  rw [Measure.ae_count_iff.1 h k, Measure.ae_count_iff.1 (Lp.coeFn_zero (W3 Vec Mat Mat i) 2
-    Measure.count) k]
-  exact (Submodule.starProjection_apply_eq_zero_iff _).2 (hA k)
 
 /-! ### Weak derivatives on `𝕋³` -/
 
@@ -265,11 +224,5 @@ theorem mem_domain_adjoint_grad_iff_weak (A : TorusWeak.Field (Fin 3) (Fin 3 × 
     ((Fourier.Torus.symbolComplex gradCurl).toHilbertComplex.d 0 1)† ⟨_, h⟩ = _) ↔ _
   rw [e]
   exact TorusWeak.mem_graph_iff_isWeak (P := Fin 3 × Fin 3) (Q := Fin 3) adjoint_grad_isLinear A D
-
-/-- **The weak curl of a real field is real.** -/
-theorem curl_star_eq_self {A C : TorusWeak.Field (Fin 3) (Fin 3 × Fin 3)}
-    (h : TorusWeak.IsWeak (P := Fin 3 × Fin 3) (Q := Fin 3 × Fin 3) (gradCurl.m 1 2) A C)
-    (hA : ∀ p, star (A p) = A p) : ∀ p, star (C p) = C p :=
-  h.star_eq_self curl_isLinear curl_neg_entryConj hA
 
 end Feec.Models.Torus.GradCurl

@@ -21,8 +21,8 @@ scalar embedding, and `Feec.Domain.skwCurlOp = (S₁, curl)` along the isometry
 * `smoothPair_mem_adjoint`: `C¹` magnetic data `(m, Ψ)` with no boundary condition lie in
   `D(d₁†)`, `d₁† (m, Ψ) = S₁† m + curl Ψ`;
 * `bggComplex_divFree_propagates`: `σ ≡ 0` and `div div u ≡ 0` propagate (Prop 4.16);
-* `bggComplex_weakEqs_of_isStrongSolution`, `bggComplex_isStrongSolution_of_weakEqs`: strong
-  solutions of the Hodge wave equation of (5.1) are exactly the solutions of the weak system (6.1) with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)`.
+* `bggComplex_weakEqs_of_isStrongSolution`: strong solutions of the Hodge wave equation of (5.1)
+  solve the weak system (6.1) with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)`.
 
 That TSD data do **not** propagate for this system is in `Feec.Counterexamples.BoundedBGG`.
 
@@ -338,46 +338,6 @@ theorem bggComplex_weakEqs_of_isStrongSolution (hΩ : IsOpen Ω) {I : Set ℝ}
     linear_combination h
   · rw [hc]; exact (bggComplex_d₁_apply hΩ ⟨_, hu⟩).2
   · rw [hc, bggComplex_d₁_snd hΩ ⟨_, hu⟩]
-
-/-- **(6.1) implies the Hodge wave equation of (5.1)** (converse of `bggComplex_weakEqs_of_isStrongSolution`): a path
-`U = (σ, u, (M, B))` with `σ(t) ∈ H̊²`, `u(t) ∈ H̊(curl, M)` whose derivative satisfies (6.1) at
-every `t ∈ I` is a strong solution. So strong solutions of the Hodge wave equation of
-`bggComplex` are exactly the solutions of (6.1) with this regularity. -/
-theorem bggComplex_isStrongSolution_of_weakEqs (hΩ : IsOpen Ω) {I : Set ℝ}
-    {U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ Ω) (L2F ℝ Ω Ix) (W2B ℝ Ω))}
-    (hw : ∀ t ∈ I, ∃ (hσ : (U t 0 : L2 ℝ Ω) ∈ (hessMin ℝ hΩ).domain)
-      (hu : (U t 1 : L2F ℝ Ω Ix) ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
-      (σ' : L2 ℝ Ω) (u' : L2F ℝ Ω Ix) (ρ' : W2B ℝ Ω),
-      HasDerivWithinAt U (ShortHilbertComplex.mk3 σ' u' ρ') I t ∧
-      (∀ τ : (hessMin ℝ hΩ).domain,
-        ⟪σ', (τ : L2 ℝ Ω)⟫_ℝ + ⟪(U t 1 : L2F ℝ Ω Ix), hessMin ℝ hΩ τ⟫_ℝ = 0) ∧
-      (∀ v : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain,
-        ⟪u', (v : L2F ℝ Ω Ix)⟫_ℝ - ⟪hessMin ℝ hΩ ⟨_, hσ⟩, (v : L2F ℝ Ω Ix)⟫_ℝ +
-          ⟪(WithLp.ofLp (U t 2 : W2B ℝ Ω)).1, skwL ℝ Ω v⟫_ℝ +
-          ⟪(WithLp.ofLp (U t 2 : W2B ℝ Ω)).2, (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω v⟫_ℝ =
-          0) ∧
-      (WithLp.ofLp ρ').1 = skwL ℝ Ω (U t 1 : L2F ℝ Ω Ix) ∧
-      (WithLp.ofLp ρ').2 = (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω ⟨_, hu⟩) :
-    Evolution.IsStrongSolution (bggComplex ℝ hΩ).wave I 0 U := by
-  refine (bggComplex ℝ hΩ).isStrongSolution_of_weakEqs fun t ht => ?_
-  obtain ⟨hσ, hu, σ', u', ρ', hd, ha, hb', hc1, hc2⟩ := hw t ht
-  have hu' : (U t 1 : L2F ℝ Ω Ix) ∈ (bggComplex ℝ hΩ).d₁.domain := by
-    rw [bggComplex_d₁_domain hΩ]; exact hu
-  refine ⟨hσ, hu', σ', u', ρ', hd, fun τ => ?_, fun v => ?_, ?_⟩
-  · have h : ⟪σ', (τ : L2 ℝ Ω)⟫_ℝ + ⟪(U t 1 : L2F ℝ Ω Ix), hessMin ℝ hΩ τ⟫_ℝ = 0 := ha τ
-    change ⟪σ', (τ : L2 ℝ Ω)⟫_ℝ = -⟪(U t 1 : L2F ℝ Ω Ix), hessMin ℝ hΩ τ⟫_ℝ
-    linear_combination h
-  · have hv : (v : L2F ℝ Ω Ix) ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain := by
-      rw [← bggComplex_d₁_domain hΩ]; exact v.2
-    have h := hb' ⟨_, hv⟩
-    change ⟪u', (v : L2F ℝ Ω Ix)⟫_ℝ - ⟪hessMin ℝ hΩ ⟨_, hσ⟩, (v : L2F ℝ Ω Ix)⟫_ℝ +
-        (⟪(WithLp.ofLp (U t 2 : W2B ℝ Ω)).1, (WithLp.ofLp ((bggComplex ℝ hΩ).d₁ v)).1⟫_ℝ +
-          ⟪(WithLp.ofLp (U t 2 : W2B ℝ Ω)).2, (WithLp.ofLp ((bggComplex ℝ hΩ).d₁ v)).2⟫_ℝ) = 0
-    rw [(bggComplex_d₁_apply hΩ v).2, bggComplex_d₁_snd hΩ v]
-    linear_combination h
-  · refine WithLp.ofLp_injective 2 (Prod.ext ?_ ?_)
-    · rw [hc1, (bggComplex_d₁_apply hΩ ⟨_, hu'⟩).2]
-    · rw [hc2, bggComplex_d₁_snd hΩ ⟨_, hu'⟩]
 
 end Weak
 

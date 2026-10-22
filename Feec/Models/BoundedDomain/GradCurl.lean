@@ -16,7 +16,7 @@ On an open `Ω ⊆ ℝ³` the thesis' complex for the Einstein–Bianchi system 
 **minimal complex** of the operators `Feec.Domain.gradOp 3 3`, `Feec.Domain.curlOp 3`
 (`gradCurl`); the maximal complex `H¹ → H(curl) → L²` is `gradCurlMax`, and the duality of
 `Feec.Domain.Complexes` identifies the adjoints: `d₀† = -div` on `H(div)` and `d₁† = curl` on
-`H(curl)` (`adjoint_gradCurl_d₀`, `adjoint_gradCurl_d₁`, `mem_adjoint_gradCurl_d₁_domain_iff`).
+`H(curl)` (`adjoint_gradCurl_d₀`, `adjoint_gradCurl_d₁`).
 
 The constraint of thesis Prop 4.17 is `L²(TSD)` (`tsd`): symmetric, trace-free, weakly
 divergence-free in `Ω`, with **no** boundary condition. On every bounded open `Ω`:
@@ -98,20 +98,6 @@ theorem adjoint_gradCurlMax_d₀ (hΩ : IsOpen Ω) :
 theorem adjoint_gradCurlMax_d₁ (hΩ : IsOpen Ω) :
     (gradCurlMax 𝕜 hΩ).d₁† = (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.minimal Ω :=
   ConstCoeffOp.adjoint_maximal _ hΩ
-
-/-- **`D(d₁†) = H(curl)`**: `B ∈ D(d₁†)` iff `B` has a weak curl in `L²`. -/
-theorem mem_adjoint_gradCurl_d₁_domain_iff (hΩ : IsOpen Ω) {B : L2F 𝕜 Ω Ix} :
-    B ∈ (gradCurl 𝕜 hΩ).d₁†.domain ↔ ∃ C : L2F 𝕜 Ω Ix, ∀ Φ : Ix → R3 → 𝕜,
-      ∀ hΦ : IsTestField Ω Φ,
-        ⟪C, testField hΦ⟫_𝕜 = ⟪B, testField ((curlOp 3).isTestField_apply hΦ)⟫_𝕜 :=
-  ConstCoeffOp.mem_adjoint_minimal_domain_iff _ hΩ
-
-/-- **`D(d₀†) = H(div)`**: `B ∈ D(d₀†)` iff `B` has a weak (row-wise) divergence in `L²`. -/
-theorem mem_adjoint_gradCurl_d₀_domain_iff (hΩ : IsOpen Ω) {B : L2F 𝕜 Ω Ix} :
-    B ∈ (gradCurl 𝕜 hΩ).d₀†.domain ↔ ∃ D : L2F 𝕜 Ω (Fin 3), ∀ φ : Fin 3 → R3 → 𝕜,
-      ∀ hφ : IsTestField Ω φ,
-        ⟪D, testField hφ⟫_𝕜 = ⟪B, testField ((gradOp 3 3).isTestField_apply hφ)⟫_𝕜 :=
-  ConstCoeffOp.mem_adjoint_minimal_domain_iff _ hΩ
 
 end Complexes
 
@@ -761,41 +747,6 @@ theorem starProjection_smoothField_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
   have := hGD i j x hx
   rw [hsym j i x hx]
   linarith
-
-/-- The gradient `(∇w)_{ij} = ∂_j w_i` of a vector field. -/
-def gradW (w : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij => pd ij.2 (w ij.1)
-
-/-- `dev sym ∇w = ½ (∇w + ∇wᵀ) - ⅓ (div w) I`. -/
-def devSymGrad (w : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij x =>
-  (pd ij.2 (w ij.1) x + pd ij.1 (w ij.2) x) / 2 -
-    (if ij.1 = ij.2 then (1 : ℝ) else 0) * (∑ k, pd k (w k) x) / 3
-
-theorem contDiff_devSymGrad {w : Fin 3 → R3 → ℝ} (hw : ∀ i, ContDiff ℝ 2 (w i)) (ij : Ix) :
-    ContDiff ℝ 1 (devSymGrad w ij) :=
-  (((contDiff_pd (hw _) _).add (contDiff_pd (hw _) _)).div_const 2).sub
-    ((contDiff_const.mul (ContDiff.sum fun k _ => contDiff_pd (hw k) k)).div_const 3)
-
-/-- **`P_{L²(TSD)} ∇w = dev sym ∇w`** for a `C²` vector field `w` with `div dev sym ∇w = 0` in
-`Ω` (`Δw + ⅓ ∇ div w = 0`): `∇w - dev sym ∇w = skew ∇w + ⅓ (div w) I ⊥ L²(TSD)`. -/
-theorem starProjection_gradW (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {w : Fin 3 → R3 → ℝ}
-    (hw : ∀ i, ContDiff ℝ 2 (w i)) (hdiv : ∀ i, ∀ x ∈ Ω, ∑ j, pd j (devSymGrad w (i, j)) x = 0) :
-    (tsd Ω).starProjection
-        (smoothField hΩ hb (gradW w) fun ij => continuous_pd ((hw ij.1).of_le (by norm_num)) ij.2) =
-      smoothField hΩ hb (devSymGrad w) fun ij => (contDiff_devSymGrad hw ij).continuous := by
-  refine starProjection_smoothField_eq hΩ hb _ (contDiff_devSymGrad hw) (fun i j x _ => ?_)
-    (fun x _ => ?_) hdiv (s := fun x => 2 / 3 * ∑ k, pd k (w k) x)
-    (continuous_const.mul (continuous_finsetSum _ fun k _ =>
-      continuous_pd ((hw k).of_le (by norm_num)) k)) (fun i j x _ => ?_)
-  · rcases eq_or_ne i j with rfl | h
-    · rfl
-    · simp [devSymGrad, h, h.symm, add_comm]
-  · simp only [devSymGrad, ↓reduceIte, one_mul, Fin.sum_univ_three]
-    ring
-  · rcases eq_or_ne i j with rfl | h
-    · simp only [gradW, devSymGrad, ↓reduceIte]
-      ring
-    · simp only [gradW, devSymGrad, h, ↓reduceIte]
-      ring
 
 /-! ## The literal density hypothesis of Prop 4.17 -/
 

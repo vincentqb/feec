@@ -18,12 +18,10 @@ constrained realizations on every open `Ω ⊆ ℝ³` (`divDivComplex`):
   (`divDivComplex.minimalComplex`, `divDivComplex.maximalComplex`);
 * **duality with the Hessian complex** (`Feec.Domain.hessianComplex`): the dual of the minimal
   Hessian complex is the maximal div-div complex read backwards (`hessian_dual_minimalComplex_d₀`,
-  …), the dual of the maximal Hessian complex is the minimal div-div complex
-  (`hessian_dual_maximalComplex_d₀`, …), and symmetrically for the div-div complex
-  (`divDiv_dual_minimalComplex_d₀`, …). The formal adjoint of `div ∘ dev` is `-dev grad`, so in
-  degree `2` the dual differential is the realization of `-dev grad`
-  (`ConstCoeffOp.negOp`), i.e. `-(dev grad)_max` (`hessian_dual_minimalComplex_d₂_eq_neg`, …,
-  and the classical forms `adjoint_divDevOp_minimalVia`, …).
+  …), and symmetrically the dual of the minimal div-div complex is the maximal Hessian complex
+  (`divDiv_dual_minimalComplex_d₀`, …); the duals of the maximal complexes are the minimal ones
+  by taking adjoints. The formal adjoint of `div ∘ dev` is `-dev grad`, so in degree `2` the dual
+  differential is the realization of `-dev grad` (`ConstCoeffOp.negOp`).
 
 No closed-range statement is made (it needs the regularity of `Ω`).
 
@@ -267,40 +265,6 @@ section OnOmega
 
 variable {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω)
 
-theorem divDivComplex_V_one : (divDivComplex 𝕜 hΩ).V 1 = L2F.traceFreeSubmodule 𝕜 Ω 3 := rfl
-
-theorem divDivComplex_V_two : (divDivComplex 𝕜 hΩ).V 2 = L2F.symSubmodule 𝕜 Ω 3 := rfl
-
-theorem divDiv_minimalComplex_d₀ :
-    (divDivComplex 𝕜 hΩ).minimalComplex.d 0 1 =
-      devGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) :=
-  (divDivComplex 𝕜 hΩ).minimalComplex_d 0
-
-theorem divDiv_minimalComplex_d₁ :
-    (divDivComplex 𝕜 hΩ).minimalComplex.d 1 2 =
-      symCurlOp.minimalVia (traceFreeEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3) :=
-  (divDivComplex 𝕜 hΩ).minimalComplex_d 1
-
-theorem divDiv_minimalComplex_d₂ :
-    (divDivComplex 𝕜 hΩ).minimalComplex.d 2 3 =
-      (divdivOp 3).minimalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω Unit) :=
-  (divDivComplex 𝕜 hΩ).minimalComplex_d 2
-
-theorem divDiv_maximalComplex_d₀ :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).d 0 1 =
-      devGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) :=
-  (divDivComplex 𝕜 hΩ).maximalComplex_d hΩ 0
-
-theorem divDiv_maximalComplex_d₁ :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).d 1 2 =
-      symCurlOp.maximalVia (traceFreeEmb 𝕜 Ω 3) (symEmb 𝕜 Ω 3) :=
-  (divDivComplex 𝕜 hΩ).maximalComplex_d hΩ 1
-
-theorem divDiv_maximalComplex_d₂ :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).d 2 3 =
-      (divdivOp 3).maximalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω Unit) :=
-  (divDivComplex 𝕜 hΩ).maximalComplex_d hΩ 2
-
 /-! ## Duality of the Hessian and div-div complexes -/
 
 theorem hessOp_formalAdj_formalAdj_apply (ψ : Unit → (Fin 3 → ℝ) → 𝕜) :
@@ -319,23 +283,6 @@ theorem divDevOp_formalAdj_formalAdj_apply {ψ : Fin 3 × Fin 3 → (Fin 3 → �
     (divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.formalAdj.apply ψ =
       devGradOp.negOp.formalAdj.apply ψ := by
   rw [formalAdj_formalAdj, formalAdj_negOp, negOp_apply, devGradOp_formalAdj_apply hψ, neg_neg]
-
-theorem divDevOp_formalAdj_apply_eq_negOp (φ : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
-    (divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply φ = devGradOp.negOp.apply φ := by
-  rw [negOp_apply, divDevOp_formalAdj_apply]
-
-theorem devGradOp_formalAdj_apply_eq_negOp {φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
-    (hφ : ∀ i, ContDiff ℝ ∞ (φ i)) :
-    (devGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply φ = divDevOp.negOp.apply φ := by
-  rw [negOp_apply, devGradOp_formalAdj_apply hφ]
-
-theorem hessOp_formalAdj_apply_eq (φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
-    (hessOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply φ = (divdivOp 3).apply φ := by
-  rw [hessOp_formalAdj]
-
-theorem divdivOp_formalAdj_apply_eq (φ : Unit → (Fin 3 → ℝ) → 𝕜) :
-    (divdivOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply φ = (hessOp 3).apply φ := by
-  rw [divdivOp_formalAdj]
 
 theorem divdivOp_formalAdj_formalAdj_apply (ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (divdivOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.formalAdj.apply ψ =
@@ -371,41 +318,13 @@ theorem hessian_dual_minimalComplex_d₁ :
       testField_congr _ _ (curlSymOp_formalAdj_formalAdj_apply fun i => (hψ i).contDiff)).trans
       ((divDivComplex 𝕜 hΩ).maximalComplex_d hΩ 1).symm)
 
-/-- Degree `2`: `(div_min on T)†` is the maximal realization of `-dev grad`
-(`= -(dev grad)_max`, `ConstCoeffOp.maximalVia_negOp`). -/
+/-- Degree `2`: `(div_min on T)†` is the maximal realization of `-dev grad`. -/
 theorem hessian_dual_minimalComplex_d₂ :
     (hessianComplex 𝕜 hΩ).minimalComplex.dual.d 3 2 =
       devGradOp.negOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) :=
   ((hessianComplex 𝕜 hΩ).dual_minimalComplex_d 2).trans
     (maximalVia_congr _ _ _ fun _ hψ _ _ =>
       testField_congr _ _ (divDevOp_formalAdj_formalAdj_apply fun i => (hψ i).contDiff))
-
-/-- **The dual of the maximal Hessian complex is the minimal div-div complex**, degree `0`:
-`(hess_max)† = (div div)_min`. -/
-theorem hessian_dual_maximalComplex_d₀ :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 1 0 =
-      (divDivComplex 𝕜 hΩ).minimalComplex.d 2 3 :=
-  ((hessianComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 0).trans
-    ((minimalVia_congr _ _ _ fun φ _ _ _ =>
-      testField_congr _ _ (hessOp_formalAdj_apply_eq φ)).trans
-      ((divDivComplex 𝕜 hΩ).minimalComplex_d 2).symm)
-
-/-- Degree `1`: `(curl_max on Sym)† = (sym curl)_min on T`. -/
-theorem hessian_dual_maximalComplex_d₁ :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 2 1 =
-      (divDivComplex 𝕜 hΩ).minimalComplex.d 1 2 :=
-  ((hessianComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 1).trans
-    ((minimalVia_congr _ _ _ fun φ _ _ _ =>
-      testField_congr _ _ (curlSymOp_formalAdj_apply φ)).trans
-      ((divDivComplex 𝕜 hΩ).minimalComplex_d 1).symm)
-
-/-- Degree `2`: `(div_max on T)†` is the minimal realization of `-dev grad`. -/
-theorem hessian_dual_maximalComplex_d₂ :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 3 2 =
-      devGradOp.negOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) :=
-  ((hessianComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 2).trans
-    (minimalVia_congr _ _ _ fun φ _ _ _ =>
-      testField_congr _ _ (divDevOp_formalAdj_apply_eq_negOp φ))
 
 /-- **The dual of the minimal div-div complex is the maximal Hessian complex**, degree `0`:
 `((dev grad)_min)†` is the maximal realization of `-div` on `T`. -/
@@ -433,111 +352,6 @@ theorem divDiv_dual_minimalComplex_d₂ :
     ((maximalVia_congr _ _ _ fun ψ _ _ _ =>
       testField_congr _ _ (divdivOp_formalAdj_formalAdj_apply ψ)).trans
       ((hessianComplex 𝕜 hΩ).maximalComplex_d hΩ 0).symm)
-
-/-- **The dual of the maximal div-div complex is the minimal Hessian complex**, degree `0`. -/
-theorem divDiv_dual_maximalComplex_d₀ :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 1 0 =
-      divDevOp.negOp.minimalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) :=
-  ((divDivComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 0).trans
-    (minimalVia_congr _ _ _ fun _ hφ _ _ =>
-      testField_congr _ _ (devGradOp_formalAdj_apply_eq_negOp fun i => (hφ i).contDiff))
-
-/-- Degree `1`: `((sym curl)_max on T)† = curl_min on Sym`. -/
-theorem divDiv_dual_maximalComplex_d₁ :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 2 1 =
-      (hessianComplex 𝕜 hΩ).minimalComplex.d 1 2 :=
-  ((divDivComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 1).trans
-    ((minimalVia_congr _ _ _ fun _ hφ _ _ =>
-      testField_congr _ _ (symCurlOp_formalAdj_apply fun i => (hφ i).contDiff)).trans
-      ((hessianComplex 𝕜 hΩ).minimalComplex_d 1).symm)
-
-/-- Degree `2`: `((div div)_max)† = hess_min`. -/
-theorem divDiv_dual_maximalComplex_d₂ :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 3 2 =
-      (hessianComplex 𝕜 hΩ).minimalComplex.d 0 1 :=
-  ((divDivComplex 𝕜 hΩ).dual_maximalComplex_d hΩ 2).trans
-    ((minimalVia_congr _ _ _ fun φ _ _ _ =>
-      testField_congr _ _ (divdivOp_formalAdj_apply_eq φ)).trans
-      ((hessianComplex 𝕜 hΩ).minimalComplex_d 0).symm)
-
-/-! ### The classical forms `(T_via)† = -S_max` of the degree-`2`/degree-`0` dualities
-
-The formal adjoint of `div ∘ dev` is `-dev grad` and that of `dev grad` is `-div ∘ dev`, so the
-adjoints of their realizations are the negatives of the realizations of the other operator. -/
-
-include hΩ in
-/-- `((div ∘ dev)_min)† = -(dev grad)_max`. -/
-theorem adjoint_divDevOp_minimalVia :
-    ((divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (traceFreeEmb 𝕜 Ω 3)
-      (freeEmb 𝕜 Ω (Fin 3)))† =
-      -devGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) := by
-  rw [adjoint_minimalVia]
-  refine devGradOp.maximalVia_eq_neg _ _ (denseVia_freeEmb hΩ _) (denseVia_traceFreeEmb hΩ 3)
-    ((matMapsTo_idMat (κ := Fin 3) _ _).mapsToVia hΩ) fun ψ hψ _ _ => ?_
-  rw [testField_congr _ _ (congrArg (fun A => ConstCoeffOp.apply A ψ)
-    (formalAdj_formalAdj (divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _))),
-    testField_apply_eq_neg hψ (devGradOp_formalAdj_apply fun i => (hψ i).contDiff), neg_neg]
-
-include hΩ in
-/-- `((dev grad)_min)† = -(div ∘ dev)_max`. -/
-theorem adjoint_devGradOp_minimalVia :
-    ((devGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (freeEmb 𝕜 Ω (Fin 3))
-      (traceFreeEmb 𝕜 Ω 3))† =
-      -divDevOp.maximalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
-  rw [adjoint_minimalVia]
-  refine divDevOp.maximalVia_eq_neg _ _ (denseVia_traceFreeEmb hΩ 3) (denseVia_freeEmb hΩ _)
-    (divDevOp_formalAdj_matMapsTo.mapsToVia hΩ) fun ψ hψ _ _ => ?_
-  rw [testField_congr _ _ (congrArg (fun A => ConstCoeffOp.apply A ψ)
-    (formalAdj_formalAdj (devGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _))),
-    testField_apply_eq_neg hψ (divDevOp_formalAdj_apply ψ), neg_neg]
-
-include hΩ in
-/-- `((div ∘ dev)_max)† = -(dev grad)_min`. -/
-theorem adjoint_divDevOp_maximalVia :
-    ((divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (traceFreeEmb 𝕜 Ω 3)
-      (freeEmb 𝕜 Ω (Fin 3)))† =
-      -devGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) := by
-  rw [adjoint_maximalVia _ _ _ (denseVia_traceFreeEmb hΩ 3) (denseVia_freeEmb hΩ _)
-    (divDevOp_formalAdj_matMapsTo.mapsToVia hΩ)]
-  exact devGradOp.minimalVia_eq_neg _ _ (denseVia_traceFreeEmb hΩ 3) fun φ hφ _ _ =>
-    testField_apply_eq_neg hφ (divDevOp_formalAdj_apply φ)
-
-include hΩ in
-/-- `((dev grad)_max)† = -(div ∘ dev)_min`. -/
-theorem adjoint_devGradOp_maximalVia :
-    ((devGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximalVia (freeEmb 𝕜 Ω (Fin 3))
-      (traceFreeEmb 𝕜 Ω 3))† =
-      -divDevOp.minimalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
-  rw [adjoint_maximalVia _ _ _ (denseVia_freeEmb hΩ _) (denseVia_traceFreeEmb hΩ 3)
-    ((matMapsTo_idMat (κ := Fin 3) _ _).mapsToVia hΩ)]
-  exact divDevOp.minimalVia_eq_neg _ _ (denseVia_freeEmb hΩ _) fun φ hφ _ _ =>
-    testField_apply_eq_neg hφ (devGradOp_formalAdj_apply fun i => (hφ i).contDiff)
-
-/-- `hessian_dual_minimalComplex_d₂` in the form `(div_min on T)† = -(dev grad)_max`. -/
-theorem hessian_dual_minimalComplex_d₂_eq_neg :
-    (hessianComplex 𝕜 hΩ).minimalComplex.dual.d 3 2 =
-      -devGradOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) := by
-  rw [hessian_dual_minimalComplex_d₂, maximalVia_negOp (A := devGradOp) _ _ (denseVia_freeEmb hΩ _)
-    (denseVia_traceFreeEmb hΩ 3) ((matMapsTo_idMat (κ := Fin 3) _ _).mapsToVia hΩ)]
-
-/-- `hessian_dual_maximalComplex_d₂` in the form `(div_max on T)† = -(dev grad)_min`. -/
-theorem hessian_dual_maximalComplex_d₂_eq_neg :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 3 2 =
-      -devGradOp.minimalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) := by
-  rw [hessian_dual_maximalComplex_d₂, minimalVia_negOp (A := devGradOp) _ _ (denseVia_traceFreeEmb hΩ 3)]
-
-/-- `divDiv_dual_minimalComplex_d₀` in the form `((dev grad)_min)† = -(div on T)_max`. -/
-theorem divDiv_dual_minimalComplex_d₀_eq_neg :
-    (divDivComplex 𝕜 hΩ).minimalComplex.dual.d 1 0 =
-      -divDevOp.maximalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
-  rw [divDiv_dual_minimalComplex_d₀, maximalVia_negOp (A := divDevOp) _ _ (denseVia_traceFreeEmb hΩ 3)
-    (denseVia_freeEmb hΩ _) (divDevOp_formalAdj_matMapsTo.mapsToVia hΩ)]
-
-/-- `divDiv_dual_maximalComplex_d₀` in the form `((dev grad)_max)† = -(div on T)_min`. -/
-theorem divDiv_dual_maximalComplex_d₀_eq_neg :
-    ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).dual.d 1 0 =
-      -divDevOp.minimalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
-  rw [divDiv_dual_maximalComplex_d₀, minimalVia_negOp (A := divDevOp) _ _ (denseVia_freeEmb hΩ _)]
 
 end OnOmega
 

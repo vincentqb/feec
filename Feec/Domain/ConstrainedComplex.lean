@@ -21,11 +21,10 @@ constrained test fields to constrained test fields. It gives two Hilbert complex
 * the **maximal complex** (`ConstrainedComplex.maximalComplex`), `d k = (A k)_max,via`, the
   adjoint of the minimal realization of the formal adjoint
   (`Feec.Domain.ConstCoeffOp.maximalVia`): the weak realization tested against constrained test
-  fields, with no boundary condition (`ConstCoeffOp.mem_maximalVia_domain_iff`);
+  fields, with no boundary condition;
 
 and the **duality** of the two families: the dual of the minimal complex is the maximal complex
-of the formal adjoints and vice versa (`dual_minimalComplex_d`, `dual_maximalComplex_d`). The
-minimal operators are restrictions of the maximal ones (`minimalComplex_d_le_maximalComplex_d`).
+of the formal adjoints (`dual_minimalComplex_d`), and vice versa by taking adjoints.
 
 The constraints of the elasticity, Hessian and div-div complexes are ranges of pointwise
 self-adjoint projections `M` (`L2F.matSubmodule`, with density `L2F.denseVia_matSubmodule`): the
@@ -39,12 +38,10 @@ post-composition with constant matrices (`ConstCoeffOp.preComp`, `ConstCoeffOp.p
 ## Main definitions
 
 * `ConstCoeffOp.preComp`, `ConstCoeffOp.comp`, `ConstCoeffOp.negOp`: operator algebra.
-* `ConstCoeffOp.maximalVia`: the maximal constrained realization; congruence and sign lemmas
-  `ConstCoeffOp.minimalVia_congr`, `ConstCoeffOp.maximalVia_congr`,
-  `ConstCoeffOp.minimalVia_negOp`, `ConstCoeffOp.maximalVia_negOp`.
-* `L2F.matSubmodule`, `L2F.symSubmodule` (`L2F.mem_symSubmodule`), `L2F.traceFreeSubmodule`
-  (`L2F.mem_traceFreeSubmodule`): pointwise constraints, with embeddings `symEmb`,
-  `traceFreeEmb`, `freeEmb`.
+* `ConstCoeffOp.maximalVia`: the maximal constrained realization; congruence lemmas
+  `ConstCoeffOp.minimalVia_congr`, `ConstCoeffOp.maximalVia_congr`.
+* `L2F.matSubmodule`, `L2F.symSubmodule`, `L2F.traceFreeSubmodule`: pointwise constraints, with
+  embeddings `symEmb`, `traceFreeEmb`, `freeEmb`.
 * `ConstrainedComplex`, `ConstrainedComplex.minimalComplex`, `ConstrainedComplex.maximalComplex`,
   and `ConstrainedComplex.ofMatrices` (constraints given by pointwise projections).
 
@@ -256,7 +253,7 @@ def MapsToVia : Prop :=
 
 /-- The **maximal constrained realization** `A_max,via : X → Y`, the adjoint of the constrained
 minimal realization of the formal adjoint: `u ∈ D(A_max,via)` iff `A u ∈ Y` weakly, tested
-against the `Y`-valued test fields (`mem_maximalVia_domain_iff`), with no boundary condition. -/
+against the `Y`-valued test fields, with no boundary condition. -/
 def maximalVia [CompleteSpace Y] : X →ₗ.[𝕜] Y := (A.formalAdj.minimalVia Jy Jx)†
 
 variable [CompleteSpace X] [CompleteSpace Y]
@@ -276,63 +273,6 @@ theorem dense_maximalVia_domain (hX : DenseVia Jx) (hY : DenseVia Jy)
   LinearPMap.dense_adjoint_domain _ (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA)
     (A.formalAdj.isClosed_minimalVia Jy Jx hX)
 
-/-- **`(A_max,via)† = (Aᵗ)_via`** (von Neumann). -/
-theorem adjoint_maximalVia (hX : DenseVia Jx) (hY : DenseVia Jy)
-    (hA : A.formalAdj.MapsToVia Jy Jx) :
-    (A.maximalVia Jx Jy)† = A.formalAdj.minimalVia Jy Jx :=
-  LinearPMap.adjoint_adjoint _ (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA)
-    (A.formalAdj.isClosed_minimalVia Jy Jx hX)
-
-omit [CompleteSpace X] in
-/-- **The maximal constrained realization is weak**: `u ∈ D(A_max,via)` iff there is `w ∈ Y`
-with `⟪w, y⟫ = ⟪u, x⟫` for every pair `(y, x)` with `Jy y = ψ ∈ C_c^∞`, `Jx x = Aᵗ ψ`. -/
-theorem mem_maximalVia_domain_iff (hX : DenseVia Jx) (hY : DenseVia Jy)
-    (hA : A.formalAdj.MapsToVia Jy Jx) {u : X} :
-    u ∈ (A.maximalVia Jx Jy).domain ↔
-      ∃ w : Y, ∀ p ∈ A.formalAdj.testGraphVia Jy Jx, ⟪w, p.1⟫_𝕜 = ⟪u, p.2⟫_𝕜 :=
-  A.formalAdj.mem_adjoint_minimalVia_domain_iff Jy Jx hX
-    (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA)
-
-omit [CompleteSpace X] in
-/-- The value of `A_max,via` is the weak one. -/
-theorem maximalVia_apply_eq (hX : DenseVia Jx) (hY : DenseVia Jy)
-    (hA : A.formalAdj.MapsToVia Jy Jx) (u : (A.maximalVia Jx Jy).domain) {w : Y}
-    (hw : ∀ p ∈ A.formalAdj.testGraphVia Jy Jx, ⟪w, p.1⟫_𝕜 = ⟪(u : X), p.2⟫_𝕜) :
-    A.maximalVia Jx Jy u = w :=
-  A.formalAdj.adjoint_minimalVia_apply_eq Jy Jx hX
-    (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA) u hw
-
-omit [CompleteSpace X] [CompleteSpace Y] in
-/-- Green's formula between the two constrained test graphs. -/
-theorem inner_testGraphVia {p : X × Y} (hp : p ∈ A.testGraphVia Jx Jy) {q : Y × X}
-    (hq : q ∈ A.formalAdj.testGraphVia Jy Jx) : ⟪p.2, q.1⟫_𝕜 = ⟪p.1, q.2⟫_𝕜 := by
-  obtain ⟨φ, hφ, h1, h2⟩ := hp
-  obtain ⟨ψ, hψ, h1', h2'⟩ := hq
-  rw [← Jy.inner_map_map, ← Jx.inner_map_map, h2, h1', h1, h2']
-  exact A.inner_testField_apply_testField hφ hψ
-
-omit [CompleteSpace X] [CompleteSpace Y] in
-/-- `A_via` and `(Aᵗ)_via` are formal adjoints. -/
-theorem isFormalAdjoint_minimalVia (hX : DenseVia Jx) (hY : DenseVia Jy) :
-    (A.minimalVia Jx Jy).IsFormalAdjoint (A.formalAdj.minimalVia Jy Jx) := by
-  intro x y
-  let S : Set (X × Y) := {p | ⟪p.2, (y : Y)⟫_𝕜 = ⟪p.1, A.formalAdj.minimalVia Jy Jx y⟫_𝕜}
-  have hS : IsClosed S := isClosed_eq (continuous_snd.inner continuous_const)
-    (continuous_fst.inner continuous_const)
-  refine closure_minimal (fun p hp => ?_) hS (A.mem_closure_minimalVia Jx Jy hY x)
-  let T : Set (Y × X) := {q | ⟪p.2, q.1⟫_𝕜 = ⟪p.1, q.2⟫_𝕜}
-  have hT : IsClosed T := isClosed_eq (continuous_const.inner continuous_fst)
-    (continuous_const.inner continuous_snd)
-  exact closure_minimal (fun q hq => A.inner_testGraphVia Jx Jy hp hq) hT
-    (A.formalAdj.mem_closure_minimalVia Jy Jx hX y)
-
-omit [CompleteSpace X] in
-/-- **`A_via ≤ A_max,via`** (`H̊ ⊆ H`). -/
-theorem minimalVia_le_maximalVia (hX : DenseVia Jx) (hY : DenseVia Jy)
-    (hA : A.formalAdj.MapsToVia Jy Jx) : A.minimalVia Jx Jy ≤ A.maximalVia Jx Jy :=
-  (A.isFormalAdjoint_minimalVia Jx Jy hX hY).symm.le_adjoint
-    (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA)
-
 /-! ### Complexes on constrained test fields -/
 
 section Complex
@@ -344,11 +284,6 @@ def IsComplexPairVia (A : ConstCoeffOp E 𝕜 ι κ) (B : ConstCoeffOp E 𝕜 κ
     (Jx : X →ₗᵢ[𝕜] L2F 𝕜 Ω ι) : Prop :=
   ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ) (x : X), Jx x = testField hφ →
     testField (B.isTestField_apply (A.isTestField_apply hφ)) = 0
-
-omit [FiniteDimensional ℝ E] [Fintype μ] [CompleteSpace X] in
-theorem IsComplexPair.isComplexPairVia (hAB : A.IsComplexPair B) : A.IsComplexPairVia B Jx :=
-  fun φ hφ _ _ => by
-    rw [testField_congr _ IsTestField.zero (hAB φ fun i => (hφ i).contDiff), testField_zero]
 
 omit [CompleteSpace X] [CompleteSpace Y] in
 /-- The formal adjoints of a complex pair form a complex pair on test fields. -/
@@ -419,55 +354,6 @@ theorem maximalVia_congr {A' : ConstCoeffOp E 𝕜 ι κ}
     A'.maximalVia Jx Jy = A.maximalVia Jx Jy := by
   rw [maximalVia, maximalVia, minimalVia_congr A.formalAdj Jy Jx h]
 
-omit [CompleteSpace X] [CompleteSpace Y] in
-/-- An operator acting as `-A` on the `X`-valued test fields has the realization `-A_via`. -/
-theorem minimalVia_eq_neg (hY : DenseVia Jy) {A' : ConstCoeffOp E 𝕜 ι κ}
-    (h : ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ) (x : X), Jx x = testField hφ →
-      testField (A'.isTestField_apply hφ) = -testField (A.isTestField_apply hφ)) :
-    A'.minimalVia Jx Jy = -A.minimalVia Jx Jy := by
-  let N : X × Y ≃ₜ X × Y := (Homeomorph.refl X).prodCongr (Homeomorph.neg Y)
-  have hG : (A'.testGraphVia Jx Jy : Set (X × Y)) = N '' (A.testGraphVia Jx Jy : Set (X × Y)) := by
-    ext ⟨x, y⟩
-    constructor
-    · rintro ⟨φ, hφ, h1, h2⟩
-      refine ⟨(x, -y), ⟨φ, hφ, h1, ?_⟩, by simp [N]⟩
-      simp only [map_neg, h2, h φ hφ x h1, neg_neg]
-    · rintro ⟨⟨x', y'⟩, ⟨φ, hφ, h1, h2⟩, he⟩
-      change (x', -y') = (x, y) at he
-      obtain ⟨rfl, rfl⟩ := Prod.mk.inj he
-      exact ⟨φ, hφ, h1, by simp [h2, h φ hφ x' h1]⟩
-  apply LinearPMap.eq_of_eq_graph
-  rw [LinearPMap.neg_graph, A'.minimalVia_graph Jx Jy hY, A.minimalVia_graph Jx Jy hY]
-  apply SetLike.coe_injective
-  rw [Submodule.topologicalClosure_coe, Submodule.map_coe, Submodule.topologicalClosure_coe, hG,
-    ← N.image_closure]
-  rfl
-
-omit [CompleteSpace X] in
-/-- An operator whose formal adjoint acts as `-Aᵗ` on the `Y`-valued test fields has the maximal
-realization `-A_max,via`. -/
-theorem maximalVia_eq_neg (hX : DenseVia Jx) (hY : DenseVia Jy)
-    (hA : A.formalAdj.MapsToVia Jy Jx) {A' : ConstCoeffOp E 𝕜 ι κ}
-    (h : ∀ (ψ : κ → E → 𝕜) (hψ : IsTestField Ω ψ) (y : Y), Jy y = testField hψ →
-      testField (A'.formalAdj.isTestField_apply hψ) =
-        -testField (A.formalAdj.isTestField_apply hψ)) :
-    A'.maximalVia Jx Jy = -A.maximalVia Jx Jy := by
-  rw [maximalVia, maximalVia, A.formalAdj.minimalVia_eq_neg Jy Jx hX h,
-    LinearPMap.adjoint_neg _ (A.formalAdj.dense_minimalVia_domain_of Jy Jx hX hY hA)]
-
-omit [CompleteSpace X] [CompleteSpace Y] in
-theorem minimalVia_negOp (hY : DenseVia Jy) : A.negOp.minimalVia Jx Jy = -A.minimalVia Jx Jy :=
-  A.minimalVia_eq_neg Jx Jy hY fun φ hφ _ _ => by
-    rw [testField_congr _ ((A.isTestField_apply hφ).smul (-1 : 𝕜))
-      (by rw [negOp_apply]; funext j x; simp), testField_smul, neg_one_smul]
-
-omit [CompleteSpace X] in
-theorem maximalVia_negOp (hX : DenseVia Jx) (hY : DenseVia Jy)
-    (hA : A.formalAdj.MapsToVia Jy Jx) : A.negOp.maximalVia Jx Jy = -A.maximalVia Jx Jy :=
-  A.maximalVia_eq_neg Jx Jy hX hY hA fun ψ hψ _ _ => by
-    rw [testField_congr _ ((A.formalAdj.isTestField_apply hψ).smul (-1 : 𝕜))
-      (by rw [formalAdj_negOp, negOp_apply]; funext j x; simp), testField_smul, neg_one_smul]
-
 end Realization
 
 /-! ## The zero operator and empty components -/
@@ -479,10 +365,6 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {𝕜 : Type*} [
 
 /-- The zero operator. -/
 def zeroOp (ι κ : Type*) : ConstCoeffOp E 𝕜 ι κ := ⟨fun _ _ => []⟩
-
-theorem zeroOp_apply (f : ι → E → 𝕜) : (zeroOp ι κ : ConstCoeffOp E 𝕜 ι κ).apply f = 0 := by
-  funext j x
-  simp [zeroOp, apply, applyEntry]
 
 theorem apply_of_isEmpty [IsEmpty ι] (A : ConstCoeffOp E 𝕜 ι κ) (f : ι → E → 𝕜) :
     A.apply f = 0 := by
@@ -660,18 +542,6 @@ theorem ConstCoeffOp.matMapsTo_of_isEmpty_right [IsEmpty κ] (A : ConstCoeffOp E
     (M : ι → ι → 𝕜) (N : κ → κ → 𝕜) : A.MatMapsTo M N := fun _ _ =>
   funext fun j => isEmptyElim j
 
-omit [Fintype ι] in
-theorem testField_neg {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hφ' : IsTestField Ω (-φ)) :
-    testField hφ' = -testField hφ := by
-  rw [testField_congr hφ' (hφ.smul (-1 : 𝕜)) (by funext i x; simp), testField_smul, neg_one_smul]
-
-omit [Fintype κ] in
-theorem ConstCoeffOp.testField_apply_eq_neg {A A' : ConstCoeffOp E 𝕜 ι κ} {φ : ι → E → 𝕜}
-    (hφ : IsTestField Ω φ) (h : A'.apply φ = -A.apply φ) :
-    testField (A'.isTestField_apply hφ) = -testField (A.isTestField_apply hφ) := by
-  have h' : IsTestField Ω (-A.apply φ) := h ▸ A'.isTestField_apply hφ
-  rw [testField_congr _ h' h, testField_neg]
-
 /-- Equal test fields have equal images. -/
 theorem ConstCoeffOp.testField_apply_congr [FiniteDimensional ℝ E] (hΩ : IsOpen Ω)
     (A : ConstCoeffOp E 𝕜 ι κ) {φ ψ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hψ : IsTestField Ω ψ)
@@ -808,12 +678,6 @@ theorem sum_diag_sub_trace [NeZero n] (g : Fin n × Fin n → 𝕜) :
   rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul,
     ← mul_assoc, mul_inv_cancel₀ (Nat.cast_ne_zero.2 (NeZero.ne n)), one_mul, sub_self]
 
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-theorem trace_matMulField_deviatoricMat [NeZero n] (φ : Fin n × Fin n → E → 𝕜) (x : E) :
-    ∑ k, matMulField (deviatoricMat n) φ (k, k) x = 0 := by
-  simp only [matMulField_deviatoricMat, ite_true]
-  exact sum_diag_sub_trace fun kl => φ kl x
-
 theorem isProjMat_deviatoricMat [NeZero n] : IsProjMat (deviatoricMat n : _ → _ → 𝕜) where
   idem ij kl := by
     rw [sum_deviatoricMat_mul ij fun j => deviatoricMat n j kl]
@@ -840,81 +704,20 @@ theorem deviatoricMat_conjTranspose [NeZero n] :
   funext ij kl
   exact ((isProjMat_deviatoricMat (𝕜 := 𝕜) (n := n)).selfAdj kl ij).symm
 
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-theorem sum_symMat_smul {W : Type*} [AddCommGroup W] [Module 𝕜 W] (ij : Fin n × Fin n)
-    (g : Fin n × Fin n → W) :
-    ∑ kl, (symMat n ij kl : 𝕜) • g kl = (2⁻¹ : 𝕜) • (g ij + g (ij.2, ij.1)) := by
-  simp only [symMat, div_eq_inv_mul, mul_smul, add_smul, ite_smul, one_smul, zero_smul,
-    ← Finset.smul_sum, Finset.sum_add_distrib, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-theorem sum_deviatoricMat_smul {W : Type*} [AddCommGroup W] [Module 𝕜 W] (ij : Fin n × Fin n)
-    (g : Fin n × Fin n → W) :
-    ∑ kl, (deviatoricMat n ij kl : 𝕜) • g kl =
-      g ij - if ij.1 = ij.2 then (n : 𝕜)⁻¹ • ∑ k, g (k, k) else 0 := by
-  simp only [deviatoricMat, sub_smul, Finset.sum_sub_distrib, ite_smul, one_smul, zero_smul,
-    Finset.sum_ite_eq', Finset.mem_univ, ite_true]
-  congr 1
-  split_ifs with h
-  · rw [Fintype.sum_prod_type, Finset.smul_sum]
-    refine Finset.sum_congr rfl fun k _ => ?_
-    simp [h, Finset.sum_ite_eq]
-  · simp [h]
-
 end Projections
 
 namespace L2F
 
 variable (𝕜 Ω) (n : ℕ)
 
-/-- `L²(Ω; S)`: the symmetric matrix fields (`mem_symSubmodule`). -/
+/-- `L²(Ω; S)`: the symmetric matrix fields. -/
 abbrev symSubmodule : Submodule 𝕜 (L2F 𝕜 Ω (Fin n × Fin n)) := matSubmodule 𝕜 Ω (symMat n)
 
-/-- `L²(Ω; T)`: the trace-free matrix fields (`mem_traceFreeSubmodule`). -/
+/-- `L²(Ω; T)`: the trace-free matrix fields. -/
 abbrev traceFreeSubmodule : Submodule 𝕜 (L2F 𝕜 Ω (Fin n × Fin n)) :=
   matSubmodule 𝕜 Ω (deviatoricMat n)
 
 variable {𝕜 Ω n}
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E]
-  [(volume : Measure E).IsAddHaarMeasure] in
-theorem mem_symSubmodule {u : L2F 𝕜 Ω (Fin n × Fin n)} :
-    u ∈ symSubmodule 𝕜 Ω n ↔ ∀ i j, u (i, j) = u (j, i) := by
-  rw [mem_matSubmodule, WithLp.ext_iff]
-  simp only [funext_iff, matCLM_apply, sum_symMat_smul]
-  constructor
-  · intro h i j
-    have h1 := h (i, j)
-    have h2 := h (j, i)
-    simp only at h1 h2
-    exact h1.symm.trans ((congrArg _ (add_comm _ _)).trans h2)
-  · intro h ij
-    change (2⁻¹ : 𝕜) • (u ij + u (ij.2, ij.1)) = u ij
-    rw [← h ij.1 ij.2, ← two_smul 𝕜, smul_smul]
-    norm_num
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E]
-  [(volume : Measure E).IsAddHaarMeasure] in
-theorem mem_traceFreeSubmodule [NeZero n] {u : L2F 𝕜 Ω (Fin n × Fin n)} :
-    u ∈ traceFreeSubmodule 𝕜 Ω n ↔ ∑ k, u (k, k) = 0 := by
-  rw [mem_matSubmodule, WithLp.ext_iff]
-  simp only [funext_iff, matCLM_apply, sum_deviatoricMat_smul]
-  constructor
-  · intro h
-    have h0 := h (0, 0)
-    simp only [ite_true, sub_eq_self] at h0
-    exact (smul_eq_zero.1 h0).resolve_left (inv_ne_zero (Nat.cast_ne_zero.2 (NeZero.ne n)))
-  · intro h ij
-    change u ij - _ = u ij
-    rw [h, smul_zero, ite_self, sub_zero]
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E]
-  [(volume : Measure E).IsAddHaarMeasure] in
-/-- No constraint: `matSubmodule 1 = ⊤`. -/
-theorem matSubmodule_idMat {ι : Type*} [Fintype ι] [DecidableEq ι] :
-    matSubmodule 𝕜 Ω (idMat ι) = ⊤ := by
-  refine eq_top_iff.2 fun u _ => mem_matSubmodule.2 ((WithLp.ext_iff 2).2 (funext fun i => ?_))
-  simp [matCLM_apply, idMat]
 
 end L2F
 
@@ -933,18 +736,6 @@ variable (𝕜 Ω) in
 abbrev freeEmb (ι : Type*) [Fintype ι] [DecidableEq ι] :
     L2F.matSubmodule 𝕜 Ω (idMat ι) →ₗᵢ[𝕜] L2F 𝕜 Ω ι :=
   (L2F.matSubmodule 𝕜 Ω (idMat ι)).subtypeₗᵢ
-
-theorem denseVia_symEmb [FiniteDimensional ℝ E] (hΩ : IsOpen Ω) (n : ℕ) :
-    ConstCoeffOp.DenseVia (symEmb 𝕜 Ω n) :=
-  L2F.denseVia_matSubmodule hΩ isProjMat_symMat
-
-theorem denseVia_traceFreeEmb [FiniteDimensional ℝ E] (hΩ : IsOpen Ω) (n : ℕ) [NeZero n] :
-    ConstCoeffOp.DenseVia (traceFreeEmb 𝕜 Ω n) :=
-  L2F.denseVia_matSubmodule hΩ isProjMat_deviatoricMat
-
-theorem denseVia_freeEmb [FiniteDimensional ℝ E] (hΩ : IsOpen Ω) (ι : Type*) [Fintype ι]
-    [DecidableEq ι] : ConstCoeffOp.DenseVia (freeEmb 𝕜 Ω ι) :=
-  L2F.denseVia_matSubmodule hΩ isProjMat_idMat
 
 omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
 theorem ConstCoeffOp.matMapsTo_idMat [DecidableEq κ] (A : ConstCoeffOp E 𝕜 ι κ)
@@ -1051,40 +842,6 @@ theorem maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
 theorem dual_minimalComplex_d (k : ℤ) :
     K.minimalComplex.dual.d (k + 1) k = (K.A k).formalAdj.maximalVia (K.J (k + 1)) (K.J k) := by
   rw [HilbertComplex.dual_d, minimalComplex_d, ConstCoeffOp.adjoint_minimalVia]
-
-/-- The dual of the maximal complex is the minimal complex of the formal adjoints. -/
-theorem dual_maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
-    (K.maximalComplex hΩ).dual.d (k + 1) k =
-      (K.A k).formalAdj.minimalVia (K.J (k + 1)) (K.J k) := by
-  rw [HilbertComplex.dual_d, maximalComplex_d, ConstCoeffOp.adjoint_maximalVia _ _ _ (K.denseVia k)
-    (K.denseVia (k + 1)) (K.mapsTo_formalAdj k)]
-
-/-- **`H̊ ⊆ H`**: the minimal differentials are restrictions of the maximal ones. -/
-theorem minimalComplex_d_le_maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
-    K.minimalComplex.d k (k + 1) ≤ (K.maximalComplex hΩ).d k (k + 1) := by
-  rw [minimalComplex_d, maximalComplex_d]
-  exact (K.A k).minimalVia_le_maximalVia _ _ (K.denseVia k) (K.denseVia (k + 1))
-    (K.mapsTo_formalAdj k)
-
-/-- `D(d_max k)` is the weak domain, tested against the `V (k+1)`-valued test fields. -/
-theorem mem_maximalComplex_d_domain_iff (hΩ : IsOpen Ω) (k : ℤ) {u : K.V k} :
-    u ∈ ((K.maximalComplex hΩ).d k (k + 1)).domain ↔
-      ∃ w : K.V (k + 1), ∀ p ∈ (K.A k).formalAdj.testGraphVia (K.J (k + 1)) (K.J k),
-        ⟪w, p.1⟫_𝕜 = ⟪u, p.2⟫_𝕜 := by
-  rw [maximalComplex_d]
-  exact (K.A k).mem_maximalVia_domain_iff _ _ (K.denseVia k) (K.denseVia (k + 1))
-    (K.mapsTo_formalAdj k)
-
-/-- The minimal differentials are restrictions of the unconstrained minimal realizations:
-`J (d_min k x) = (A k)_min (J x)`. -/
-theorem minimalComplex_d_graph_map (hΩ : IsOpen Ω) (k : ℤ)
-    (x : (K.minimalComplex.d k (k + 1)).domain) :
-    (((x : K.V k) : L2F 𝕜 Ω (K.ι k)), ((K.minimalComplex.d k (k + 1) x : K.V (k + 1)) :
-      L2F 𝕜 Ω (K.ι (k + 1)))) ∈ ((K.A k).minimal Ω).graph := by
-  have h := K.minimalComplex_d k
-  revert x
-  rw [h]
-  exact (K.A k).minimalVia_graph_map (K.J k) (K.J (k + 1)) hΩ (K.denseVia (k + 1))
 
 end ConstrainedComplex
 

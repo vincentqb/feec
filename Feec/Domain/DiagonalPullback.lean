@@ -20,11 +20,7 @@ The pull-back `f ↦ f ∘ T` is a scaled unitary `L²(Ω'; 𝕜^ι) ≃ L²(Ω;
 realizations of `A_d` on `Ω'` to those of `A` on `Ω`:
 
 * `ConstCoeffOp.minimal_pullDiag`: `A_min,Ω = P (A_d)_min,Ω' P⁻¹` (test graphs correspond);
-* `ConstCoeffOp.maximal_pullDiag`: `A_max,Ω = P (A_d)_max,Ω' P⁻¹` (by duality,
-  `(A_d)ᵗ = (Aᵗ)_d`, `ConstCoeffOp.formalAdj_diagScale`);
-* `ConstCoeffComplex.minimalComplex_pullDiag`, `ConstCoeffComplex.maximalComplex_pullDiag`: the
-  minimal (maximal) complex of `A` on `Ω` is the transport of the one of `A_d` on `Ω'`
-  (`ConstCoeffComplex.diagScale`, again a complex).
+  `ConstCoeffComplex.diagScale` is again a complex.
 
 A second, purely algebraic, tool: if a constant-coefficient operator `B` is a **conjugate of `A`
 by constant diagonal fibre scalings**, `B (w • ψ) = w' • A ψ` on smooth fields, then
@@ -398,22 +394,6 @@ theorem apply_comp_diagAff [Fintype ι] (A : ConstCoeffOp (Fin n → ℝ) 𝕜 �
   rw [applyEntry_comp_diagAff _ (hf i)]
   rfl
 
-theorem isOrderLE_diagScale {A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ} {N : ℕ} (h : A.IsOrderLE N)
-    (d : Fin n → ℝ) : (diagScale d A).IsOrderLE N := by
-  intro j i t ht
-  simp only [diagScale, List.mem_map] at ht
-  obtain ⟨t', ht', rfl⟩ := ht
-  simpa using h j i t' ht'
-
-/-- **The formal adjoint commutes with the rescaling**: `(A_d)ᵗ = (Aᵗ)_d`. -/
-theorem formalAdj_diagScale (d : Fin n → ℝ) (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) :
-    (diagScale d A).formalAdj = diagScale d A.formalAdj := by
-  simp only [formalAdj, diagScale, adjEntry, List.map_map]
-  congr 1
-  funext i j
-  refine List.map_congr_left fun t _ => ?_
-  simp [List.map_reverse]
-
 /-- The rescalings compose: `(A_d)_{d'} = A_{d d'}`. -/
 theorem diagScale_diagScale (d d' : Fin n → ℝ) (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) :
     diagScale d' (diagScale d A) = diagScale (d * d') A := by
@@ -508,16 +488,6 @@ theorem minimal_pullDiag (hΩo' : IsOpen Ω') :
     Submodule.topologicalClosure_coe, Submodule.topologicalClosure_coe,
     testGraph_eq_preimage_diag hd b hΩ' hT, ← Homeomorph.preimage_closure]
   rfl
-
-/-- **The maximal realization under a diagonal change of variables**:
-`A_max,Ω = P (A_d)_max,Ω' P⁻¹` (by duality from `minimal_pullDiag`). -/
-theorem maximal_pullDiag (hΩo' : IsOpen Ω') :
-    A.maximal Ω = ((diagScale d A).maximal Ω').conjScaled (pullDiagF hd b hΩ' hT ι)
-      (pullDiagF hd b hΩ' hT κ) 1 := by
-  rw [maximal, maximal, minimal_pullDiag (A := A.formalAdj) hd b hΩ' hT hΩo',
-    LinearPMap.adjoint_conjScaled (inv_pos.2 (jacD_pos hd)) (inner_pullDiagF hd b hΩ' hT)
-      (inner_pullDiagF hd b hΩ' hT) one_ne_zero
-      ((diagScale d A.formalAdj).dense_minimal_domain hΩo'), map_one, formalAdj_diagScale]
 
 end Realization
 
@@ -657,33 +627,6 @@ abbrev diagScale (hd : ∀ i, d i ≠ 0) : ConstCoeffComplex (Fin n → ℝ) �
 variable (hd : ∀ i, d i ≠ 0) (b : Fin n → ℝ) {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : IsOpen Ω')
   (hΩ : IsOpen Ω) (hT : diagAff d b ⁻¹' Ω' = Ω)
 include hT
-
-/-- **The minimal complex on `Ω = T⁻¹ Ω'` is the transport of the rescaled minimal complex on
-`Ω'`** along the pull-back (chain-rule factors `1`: the rescaling is in the operators). -/
-theorem minimalComplex_pullDiag :
-    C.minimalComplex hΩ = ((C.diagScale hd).minimalComplex hΩ').transport
-      (fun k => pullDiagF (𝕜 := 𝕜) hd b hΩ'.measurableSet hT (C.ι k)) (fun _ _ => 1)
-      (fun _ _ => one_ne_zero) := by
-  refine HilbertComplex.ext_d (funext fun i => funext fun j => ?_)
-  by_cases h : i + 1 = j
-  · subst h
-    rw [HilbertComplex.transport_d, transportD_eq_conjScaled, minimalComplex_d, minimalComplex_d]
-    exact ConstCoeffOp.minimal_pullDiag hd b hΩ'.measurableSet hT hΩ'
-  · rw [(C.minimalComplex hΩ).shape i j h, HilbertComplex.transport_d,
-      HilbertComplex.transportD_eq_zero (((C.diagScale hd).minimalComplex hΩ').shape i j h)]
-
-/-- **The maximal complex on `Ω = T⁻¹ Ω'` is the transport of the rescaled maximal complex.** -/
-theorem maximalComplex_pullDiag :
-    C.maximalComplex hΩ = ((C.diagScale hd).maximalComplex hΩ').transport
-      (fun k => pullDiagF (𝕜 := 𝕜) hd b hΩ'.measurableSet hT (C.ι k)) (fun _ _ => 1)
-      (fun _ _ => one_ne_zero) := by
-  refine HilbertComplex.ext_d (funext fun i => funext fun j => ?_)
-  by_cases h : i + 1 = j
-  · subst h
-    rw [HilbertComplex.transport_d, transportD_eq_conjScaled, maximalComplex_d, maximalComplex_d]
-    exact ConstCoeffOp.maximal_pullDiag hd b hΩ'.measurableSet hT hΩ'
-  · rw [(C.maximalComplex hΩ).shape i j h, HilbertComplex.transport_d,
-      HilbertComplex.transportD_eq_zero (((C.diagScale hd).maximalComplex hΩ').shape i j h)]
 
 end ConstCoeffComplex
 

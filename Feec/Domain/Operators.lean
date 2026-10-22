@@ -255,20 +255,11 @@ theorem curlOp_isOrderLE : (curlOp m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).Is
   simp only [curlOp] at ht
   split_ifs at ht <;> simp_all
 
-theorem hessOp_isOrderLE : (hessOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).IsOrderLE 2 := by
-  intro j i t ht
-  simp only [hessOp, List.mem_singleton] at ht
-  subst ht
-  simp
-
 theorem divdivOp_isOrderLE : (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).IsOrderLE 2 := by
   intro j i t ht
   simp only [divdivOp, List.mem_singleton] at ht
   subst ht
   simp
-
-theorem symCurlOp_isOrderLE : (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsOrderLE 1 :=
-  curlOp_isOrderLE.postComp _
 
 /-! ## Complex identities -/
 
@@ -428,13 +419,6 @@ theorem skwCurlOp_apply_inl (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (
 theorem skwCurlOp_apply_inr (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (ik : Fin 3 × Fin 3) :
     (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply Φ (.inr ik) = (curlOp 3).apply Φ ik :=
   rfl
-
-theorem skwCurlOp_isOrderLE : (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsOrderLE 1 := by
-  intro j i t ht
-  rcases j with j | j
-  · simp only [skwCurlOp] at ht
-    split_ifs at ht <;> simp_all
-  · exact curlOp_isOrderLE j i t ht
 
 /-- **`(S₁, curl) ∘ hess = 0`**: Hessians are symmetric and curl-free. -/
 theorem isComplexPair_hess_skwCurl :

@@ -94,8 +94,6 @@ theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.to
 
 theorem prev_one : ComplexShape.fin3.prev 1 = 0 := ComplexShape.fin3.prev_eq' rfl
 
-theorem prev_two : ComplexShape.fin3.prev 2 = 1 := ComplexShape.fin3.prev_eq' rfl
-
 /-- **The whole-space Hessian does not have closed range.** -/
 theorem not_closedRangeAt_one : ¬ complex.ClosedRangeAt 1 := by
   have h1 : bggFamily.IsHomogeneous (ComplexShape.fin3.prev 1) 1 2 := by

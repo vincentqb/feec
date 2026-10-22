@@ -142,8 +142,6 @@ theorem poincare {i j : ℕ} (hij : (ComplexShape.up ℕ).Rel i j)
 /-- The constant of the spectral Galerkin estimate. -/
 def bandConst : ℝ := (1 + 144 * (1 * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 1)
 
-theorem bandConst_nonneg : 0 ≤ bandConst := by unfold bandConst; positivity
-
 set_option maxHeartbeats 2000000 in
 /-- **Quasi-optimality of the spectral Galerkin mixed method** on the torus: the abstract
 estimate ([AFW2010], Thm 3.9) with `C = 1`, `c_P = (2π)⁻¹` and `μ = 0`. -/

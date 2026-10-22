@@ -27,24 +27,21 @@ frequency, so nothing else changes:
 
 The mirror complex on `Q` with the weights `d` is the compression `Box.Mirror.complexQD d`; it
 is the cube mirror complex `Feec.Models.Cube.Mirror.complexQ` reweighted by the column scalings
-`E ↦ E D`, `B ↦ det D · B D⁻¹` (`complexQD_eq_transport`), exactly as for the row-wise conditions
+`E ↦ E D`, `B ↦ det D · B D⁻¹`, as for the row-wise conditions
 (`Feec.Models.Box.complexBox_eq_transport`). The **mirror complex on the box**
-`Box.Mirror.complexBoxM a ℓ` is its pull-back along `T`, i.e. the cube mirror complex reweighted
-and pulled back (`complexBoxM_eq_transport`).
+`Box.Mirror.complexBoxM a ℓ` is its pull-back along `T`.
 
 ## Main results
 
 * **`Box.Mirror.reducingSubcomplexBox`**: TSD reduces the mirror complex on every box;
   `propagatesBox`, `existsUnique_memBox`, **`invariantCore_eqBox`** (`K* = K`, thesis Prop 4.17
-  with mirror conditions); on `(0, 1) × (0, 2) × (0, 3)`: `invariantCore_eqBox_123`.
+  with mirror conditions).
 * **`Box.Mirror.eigenDense_complexBoxM`**: a complete set of eigenvectors (the analogue of
   `Feec.Models.Cube.Mirror.eigenDense_complexCube`); also `eigenDense_complexD`,
   `eigenDense_complexQD`.
 * **`Box.Mirror.exists_nonstationaryBox`**: the datum `(0, 2 cos(π (x₃ - a₃)/ℓ₃) diag(1, -1, 0), 0)`
   (the pull-back of the cube datum) is TSD, in `D(L)`, and not stationary: the constraint has
   dynamical content.
-* `Box.Mirror.mem_tsdBox_one`, `mem_tsdBox_two`: the constraint consists of symmetric
-  trace-free fields (its divergence condition is the fibre condition `M ξ_d(n) = 0`).
 
 ## Scope
 
@@ -303,170 +300,11 @@ theorem curl_cosE_applyD :
   rw [coe_cosE]
   simp [cosCoeff]
 
-/-- **`L (0, E₀, 0) ≠ 0`** on the anisotropic torus. -/
-theorem wave_cosState_neD (hd : ∀ i, 0 < d i) :
-    (complexD d).wave ⟨cosState, cosState_mem_domainD⟩ ≠ 0 := by
-  intro h
-  have h2 := congrArg (fun y : PiLp 2 Space => y 2) h
-  rw [HilbertComplex.wave_apply_fin3_two] at h2
-  have h3 : (complexD d).d 1 2 ⟨cosE, cosE_mem_domainD⟩ = 0 :=
-    (apply_congr' _ _ _ cosState_one.symm).trans h2
-  apply curl_M0_neD hd
-  rw [← curl_cosE_applyD, h3]
-  exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) k0
-
 theorem cosState_mem_constraintD (i : Fin 3) : cosState i ∈ constraintD d i := by
   fin_cases i
   · change cosState 0 ∈ _; rw [cosState_zero]; exact Submodule.zero_mem _
   · change cosState 1 ∈ _; rw [cosState_one]; exact cosE_mem_constraintD
   · change cosState 2 ∈ _; rw [cosState_two]; exact Submodule.zero_mem _
-
-/-- **A non-stationary TSD datum on `Q` with weights `d`**:
-`(0, (2 cos(2π x₃) diag(1, -1, 0))|_Q, 0)`. -/
-theorem exists_nonstationaryQD (hd : ∀ i, 0 < d i) :
-    ∃ y ∈ (complexQD d).wave.domain, y ∈ totalSub (tsdQD d) ∧
-      y ∉ (complexQD d).waveGroup.stationary := by
-  have hdom : HilbertComplex.totalJ J cosStateQ ∈ (complexD d).wave.domain :=
-    totalJ_cosStateQ ▸ cosState_mem_domainD
-  obtain ⟨h1, h2⟩ := HilbertComplex.not_mem_stationary_compress eight_pos inner_J
-    (reducingSubcomplex_rangeD d) hdom fun h0 =>
-      wave_cosState_neD hd ((apply_congr' _ _ _ totalJ_cosStateQ.symm).trans h0)
-  refine ⟨cosStateQ, h1, fun i => ?_, h2⟩
-  change J i (cosStateQ i) ∈ constraintD d i
-  rw [← HilbertComplex.totalJ_apply, totalJ_cosStateQ]
-  exact cosState_mem_constraintD i
-
-/-! ### The constraint on `Q` consists of symmetric trace-free fields -/
-
-theorem symm_trace_of_extF {cm : Fin 3 × Fin 3 → Fin 3 → ℂ} (hcm : ∀ p k, cm p k * cm p k = 1)
-    (hsym : ∀ a b, cm (a, b) = cm (b, a)) (hdiag : ∀ a, cm (a, a) = cm (0, 0)) {E : MQ}
-    (hfib : ∀ n, (extF hcm E : (Fin 3 → ℤ) → Mat) n ∈ tsd (dfreq d n)) :
-    (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 := by
-  refine ⟨fun i j => ?_, ?_⟩
-  · have h : extL2 (hcm (i, j)) (E (i, j)) = extL2 (hcm (j, i)) (E (j, i)) := by
-      refine TorusWeak.eq_of_mFourierCoeff_eq fun n => ?_
-      rw [← extF_coeff, ← extF_coeff]
-      have := congrFun (congrFun (mem_tsd.1 (hfib n)).1 j) i
-      simpa [Matrix.transpose_apply, toMatrix_apply] using this
-    rw [Cube.Mirror.extL2_congr (hsym i j) _ (hcm (j, i))] at h
-    rw [← resQ_extL2 (hcm (j, i)) (E (i, j)), h, resQ_extL2]
-  · have hc0 : ∀ j, cm (0, 0) j * cm (0, 0) j = 1 := hcm (0, 0)
-    have h : extL2 hc0 (∑ i, E (i, i)) = 0 := by
-      refine TorusWeak.eq_of_mFourierCoeff_eq fun n => ?_
-      have htr := (mem_tsd.1 (hfib n)).2.1
-      simp only [Matrix.trace, Matrix.diag, toMatrix_apply] at htr
-      rw [map_sum, ← coeffCLM_apply, map_sum]
-      simp only [coeffCLM_apply]
-      rw [show (0 : T2 (Fin 3)) = extL2 hc0 0 from (_root_.map_zero _).symm, ← coeffCLM_apply,
-        _root_.map_zero, _root_.map_zero, ← htr]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      rw [extF_coeff, Cube.Mirror.extL2_congr (hdiag i) (hcm (i, i)) hc0]
-    rw [← resQ_extL2 hc0 (∑ i, E (i, i)), h, _root_.map_zero]
-
-/-- **The electric constraint on `Q` consists of symmetric trace-free fields.** -/
-theorem mem_tsdQD_one {E : MQ} (hE : E ∈ tsdQD d 1) :
-    (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 :=
-  symm_trace_of_extF cE_sq (fun a b => funext fun k => by simp only [cE]; ring)
-    (fun a => funext fun k => by simp only [cE, sgn_mul_self])
-    (Measure.ae_count_iff.1 (Operator.mem_fibreSub.1 hE))
-
-/-- **The magnetic constraint on `Q` consists of symmetric trace-free fields.** -/
-theorem mem_tsdQD_two {B : MQ} (hB : B ∈ tsdQD d 2) :
-    (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 :=
-  symm_trace_of_extF cB_sq (fun a b => funext fun k => by simp only [cB]; ring)
-    (fun a => funext fun k => by simp only [cB, sgn_mul_self])
-    (Measure.ae_count_iff.1 (Operator.mem_fibreSub.1 hB))
-
-/-! ### Comparison with the cube mirror complex -/
-
-/-- The column scalings over `ℂ` on the torus spaces. -/
-abbrev psiT (hd : ∀ i, 0 < d i) (i : Fin 3) : Space i ≃L[ℂ] Space i := cfib (fibW hd i)
-
-/-- **The anisotropic torus complex is the transport of the torus complex along the column
-scalings** (over `ℂ`, domains included). -/
-theorem complexD_eq_transport (hd : ∀ i, 0 < d i) :
-    complexD d = Models.Torus.GradCurl.complex.transport (psiT hd) (fun _ _ => 1)
-      fun _ _ => one_ne_zero := by
-  refine HilbertComplex.ext_d (funext fun i => funext fun j => ?_)
-  have hpt : ∀ x : Space i, ∀ n, (symD d).m i j n ((x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n) =
-      fibW hd j (gradCurl.m i j (Fourier.Torus.freq n)
-        (((psiT hd i).symm x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n)) := fun x n => by
-    rw [symD_m, gradCurl_m_dfreq hd, coeFn_cfib_symm]
-  refine LinearPMap.ext (Submodule.ext fun x => ?_) fun x hx hx' => ?_
-  · change MemLp (fun n => (symD d).m i j n ((x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n)) 2 _ ↔
-      MemLp (fun n => gradCurl.m i j (Fourier.Torus.freq n)
-        (((psiT hd i).symm x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n)) 2 _
-    simp only [hpt]
-    constructor
-    · intro h
-      have := ((fibW hd j).symm : W3 Vec Mat Mat j →L[ℂ] W3 Vec Mat Mat j).comp_memLp' h
-      refine this.ae_eq (Filter.Eventually.of_forall fun n => ?_)
-      exact (fibW hd j).symm_apply_apply _
-    · intro h
-      exact ((fibW hd j : W3 Vec Mat Mat j →L[ℂ] W3 Vec Mat Mat j)).comp_memLp' h
-  · refine Lp.ext_count fun n => ?_
-    change ((symD d).toHilbertComplex.d i j ⟨x, hx⟩ : (Fin 3 → ℤ) → W3 Vec Mat Mat j) n =
-      (((1 : ℂ) • psiT hd j (Models.Torus.GradCurl.complex.d i j ⟨(psiT hd i).symm x, hx'⟩) :
-        Space j) : (Fin 3 → ℤ) → W3 Vec Mat Mat j) n
-    rw [one_smul, coeFn_cfib, Fourier.coeFn_d_count, hpt]
-    congr 1
-    exact (Fourier.coeFn_d_count (Fourier.Torus.symbolComplex gradCurl)
-      ⟨(psiT hd i).symm x, hx'⟩ n).symm
-
-/-- The column scalings `σ ↦ σ`, `E ↦ E D`, `B ↦ det D · B D⁻¹` of fields on `Q`, over `ℂ`. -/
-def phiQC (hd : ∀ i, 0 < d i) : ∀ i : Fin 3, SpaceQ i ≃L[ℂ] SpaceQ i
-  | 0 => ContinuousLinearEquiv.refl ℂ VQ
-  | 1 => Domain.ConstCoeffOp.scaleF (fun p => ((w1 d p : ℝ) : ℂ))
-      fun p => Complex.ofReal_ne_zero.2 (w1_ne_zero hd p)
-  | 2 => Domain.ConstCoeffOp.scaleF (fun p => ((w2 d p : ℝ) : ℂ))
-      fun p => Complex.ofReal_ne_zero.2 (w2_ne_zero hd p)
-
-theorem extF_scaleF {P : Type*} [Fintype P] {c : P → Fin 3 → ℂ} (hc : ∀ p j, c p j * c p j = 1)
-    (w : P → ℝ) (hw : ∀ p, w p ≠ 0) (u : Domain.L2F ℂ (Q (Fin 3)) P) :
-    extF hc (Domain.ConstCoeffOp.scaleF (fun p => ((w p : ℝ) : ℂ))
-      (fun p => Complex.ofReal_ne_zero.2 (hw p)) u) = cfib (eScale w hw) (extF hc u) := by
-  refine Lp.ext_count fun n => ?_
-  ext p
-  rw [coeFn_cfib, eScale_apply, extF_coeff, extF_coeff, Domain.ConstCoeffOp.scaleF_apply,
-    _root_.map_smul, ← coeffCLM_apply, ← coeffCLM_apply, _root_.map_smul, smul_eq_mul]
-
-/-- **The mirror extensions commute with the column scalings.** -/
-theorem J_phiQC (hd : ∀ i, 0 < d i) (i : Fin 3) (u : SpaceQ i) :
-    J i (phiQC hd i u) = psiT hd i (J i u) := by
-  fin_cases i
-  · refine Lp.ext_count fun n => ?_
-    rw [coeFn_cfib]; rfl
-  · exact extF_scaleF cE_sq (w1 d) (w1_ne_zero hd) u
-  · exact extF_scaleF cB_sq (w2 d) (w2_ne_zero hd) u
-
-/-- **The weighted mirror complex is the cube mirror complex reweighted by the column scalings**
-(domains included): `grad_d σ = (grad σ) D`, `curl_d (E D) = det D · (curl E) D⁻¹`. -/
-theorem complexQD_eq_transport (hd : ∀ i, 0 < d i) :
-    complexQD d = complexQ.transport (phiQC hd) (fun _ _ => 1) fun _ _ => one_ne_zero := by
-  have hψ : ∀ i y, (psiT hd i).symm (J i y) = J i ((phiQC hd i).symm y) := fun i y => by
-    rw [ContinuousLinearEquiv.symm_apply_eq, ← J_phiQC, ContinuousLinearEquiv.apply_symm_apply]
-  have hE := complexD_eq_transport hd
-  have hdomD : ∀ i j (y : Space i), y ∈ ((complexD d).d i j).domain ↔
-      (psiT hd i).symm y ∈ (Models.Torus.GradCurl.complex.d i j).domain := fun i j y => by
-    rw [hE]; rfl
-  have hdom : ∀ i j (x : SpaceQ i), x ∈ ((complexQ.transport (phiQC hd) (fun _ _ => 1)
-      fun _ _ => one_ne_zero).d i j).domain ↔ J i x ∈ ((complexD d).d i j).domain :=
-    fun i j x => by
-      change (phiQC hd i).symm x ∈ (complexQ.d i j).domain ↔ _
-      rw [Cube.Mirror.mem_complexQ_domain_iff, hdomD, hψ]
-  refine (HilbertComplex.eq_compress_of eight_pos inner_J (reducingSubcomplex_rangeD d) hdom
-    fun i j x => ?_).symm
-  have hx : (phiQC hd i).symm (x : SpaceQ i) ∈ (complexQ.d i j).domain := x.2
-  have hdE := congrFun (congrFun (congrArg HilbertComplex.d hE) i) j
-  obtain ⟨-, hdE'⟩ := LinearPMap.ext_iff.1 hdE
-  have hy : J i (x : SpaceQ i) ∈ ((Models.Torus.GradCurl.complex.transport (psiT hd)
-      (fun _ _ => 1) fun _ _ => one_ne_zero).d i j).domain := by
-    rw [← hE]; exact (hdom i j x).1 x.2
-  rw [hdE' (x := J i x) (hf := (hdom i j x).1 x.2) (hg := hy)]
-  change J j ((1 : ℂ) • phiQC hd j (complexQ.d i j ⟨(phiQC hd i).symm x, hx⟩)) =
-    (1 : ℂ) • psiT hd j (Models.Torus.GradCurl.complex.d i j ⟨(psiT hd i).symm (J i x), _⟩)
-  rw [one_smul, one_smul, J_phiQC, Cube.Mirror.J_complexQ_d]
-  exact congrArg (psiT hd j) (apply_congr' _ _ _ (hψ i _).symm)
 
 /-! ### Every box -/
 
@@ -512,13 +350,6 @@ theorem kappaB_ne_zero (i j : Fin 3) : kappaB i j ≠ 0 := by simp [kappaB]
 abbrev complexBoxM (a ℓ : R3) (hℓ : ∀ i, 0 < ℓ i) :
     HilbertComplex ℂ ComplexShape.fin3 (SpaceBox a ℓ) :=
   (complexQD (dB ℓ)).transport (pullBC hℓ) kappaB kappaB_ne_zero
-
-/-- **The mirror complex on the box is the cube mirror complex reweighted by the column scalings
-and pulled back** (the analogue of `Feec.Models.Box.complexBox_eq_transport`). -/
-theorem complexBoxM_eq_transport :
-    complexBoxM a ℓ hℓ = (complexQ.transport (phiQC (dB_pos hℓ)) (fun _ _ => 1)
-      fun _ _ => one_ne_zero).transport (pullBC hℓ) kappaB kappaB_ne_zero := by
-  rw [complexBoxM, complexQD_eq_transport (dB_pos hℓ)]
 
 /-- The pull-back to `Q` embeds the box complex in the weighted complex on `Q`. -/
 def embeddingBox : ScaledEmbedding (complexBoxM a ℓ hℓ) (complexQD (dB ℓ)) :=
@@ -637,56 +468,6 @@ theorem exists_nonstationaryBox :
     rw [smul_eq_zero, or_iff_right (kappaB_ne_zero 1 2), (pullBC hℓ 2).map_eq_zero_iff] at h2
     exact hne ((apply_congr' _ _ _ (by
       rw [ContinuousLinearEquiv.symm_apply_apply, cosStateQ_one])).trans h2)
-
-/-! #### The constraint on the box consists of symmetric trace-free fields -/
-
-/-- The pull-back of matrix fields from `Q` to the box. -/
-abbrev pullM : MQ ≃L[ℂ] L2F ℂ (openBox a ℓ) (Fin 3 × Fin 3) :=
-  Domain.pullDiagF (dB_ne_zero hℓ) (bB a ℓ) Models.Cube.Geometry.measurableSet_Q
-    (preimage_Q hℓ) (Fin 3 × Fin 3)
-
-theorem symm_trace_pullM {E₀ : MQ} (h : (∀ i j, E₀ (i, j) = E₀ (j, i)) ∧ ∑ i, E₀ (i, i) = 0) :
-    (∀ i j, pullM (a := a) hℓ E₀ (i, j) = pullM hℓ E₀ (j, i)) ∧
-      ∑ i, pullM (a := a) hℓ E₀ (i, i) = 0 := by
-  obtain ⟨h1, h2⟩ := h
-  refine ⟨fun i j => ?_, ?_⟩
-  · rw [Domain.pullDiagF_apply, Domain.pullDiagF_apply, h1]
-  · simp only [Domain.pullDiagF_apply]
-    rw [← map_sum, h2, _root_.map_zero]
-
-/-- **The electric constraint on the box consists of symmetric trace-free fields.** -/
-theorem mem_tsdBox_one {E : L2F ℂ (openBox a ℓ) (Fin 3 × Fin 3)} (hE : E ∈ tsdBox a ℓ hℓ 1) :
-    (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 := by
-  have hE' : (pullM (a := a) hℓ).symm E ∈ tsdQD (dB ℓ) 1 := hE
-  have h := symm_trace_pullM (a := a) hℓ (mem_tsdQD_one hE')
-  have e : pullM hℓ ((pullM (a := a) hℓ).symm E) = E := (pullM hℓ).apply_symm_apply E
-  rw [e] at h
-  exact h
-
-/-- **The magnetic constraint on the box consists of symmetric trace-free fields.** -/
-theorem mem_tsdBox_two {B : L2F ℂ (openBox a ℓ) (Fin 3 × Fin 3)} (hB : B ∈ tsdBox a ℓ hℓ 2) :
-    (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 := by
-  have hB' : (pullM (a := a) hℓ).symm B ∈ tsdQD (dB ℓ) 2 := hB
-  have h := symm_trace_pullM (a := a) hℓ (mem_tsdQD_two hB')
-  have e : pullM hℓ ((pullM (a := a) hℓ).symm B) = B := (pullM hℓ).apply_symm_apply B
-  rw [e] at h
-  exact h
-
-/-! #### A box with unequal sides -/
-
-theorem sides_123_pos : ∀ i, 0 < (![1, 2, 3] : R3) i := by
-  intro i; fin_cases i <;> norm_num
-
-/-- **Mirror conditions on `(0, 1) × (0, 2) × (0, 3)`**: `K* = K`, and the constraint contains a
-non-stationary datum. -/
-theorem invariantCore_eqBox_123 :
-    (complexBoxM 0 ![1, 2, 3] sides_123_pos).waveGroup.invariantCore
-        (totalSub (tsdBox 0 ![1, 2, 3] sides_123_pos)) =
-      totalSub (tsdBox 0 ![1, 2, 3] sides_123_pos) ∧
-    ∃ y ∈ (complexBoxM 0 ![1, 2, 3] sides_123_pos).wave.domain,
-      y ∈ totalSub (tsdBox 0 ![1, 2, 3] sides_123_pos) ∧
-        y ∉ (complexBoxM 0 ![1, 2, 3] sides_123_pos).waveGroup.stationary :=
-  ⟨invariantCore_eqBox sides_123_pos, exists_nonstationaryBox sides_123_pos⟩
 
 end Box
 

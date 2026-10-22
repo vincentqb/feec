@@ -415,16 +415,11 @@ theorem cone_energy {β : ι → ι → E} {c : ℝ} (hβ : IsSymmHyperbolic β 
     have iSj : ∀ j, Integrable fun y => ∑ i,
         (ψ s y * fderiv ℝ (g j i) y (β j i) + L y (β j i) * g j i y) := fun j =>
       integrable_finsetSum _ fun i _ => iji j i
-    have iS : Integrable fun y => ∑ j, ∑ i,
-        (ψ s y * fderiv ℝ (g j i) y (β j i) + L y (β j i) * g j i y) :=
-      integrable_finsetSum _ fun j _ => iSj j
-    have hS0 : ∫ y, ∑ j, ∑ i,
-        (ψ s y * fderiv ℝ (g j i) y (β j i) + L y (β j i) * g j i y) = 0 := by
-      rw [integral_finsetSum _ fun j _ => iSj j]
-      refine Finset.sum_eq_zero fun j _ => ?_
-      rw [integral_finsetSum _ fun i _ => iji j i]
-      exact Finset.sum_eq_zero fun i _ => hP0 j i
-    rw [integral_congr_ae (Eventually.of_forall hsplit), integral_add intG iS, hS0, add_zero]
+    rw [integral_congr_ae (Eventually.of_forall hsplit),
+      integral_add intG (integrable_finsetSum _ fun j _ => iSj j),
+      integral_finsetSum _ fun j _ => iSj j, Finset.sum_eq_zero fun j _ => by
+        rw [integral_finsetSum _ fun i _ => iji j i]
+        exact Finset.sum_eq_zero fun i _ => hP0 j i, add_zero]
     refine integral_nonpos fun y => ?_
     have hsp := hβ.speed (L y) (fun j => w s j y)
     have hLn : ‖L y‖ ≤ dχ (R - c * s - qd x δ y) := norm_fderiv_wt_le hδ s y
@@ -565,6 +560,10 @@ theorem IsWeakSolution.molli_eq_zero {β : ι → ι → E} {c : ℝ} (hβ : IsS
   set C : ℝ := (eLpNorm ρ 2 volume).toReal +
     ∑ j, ∑ i, (eLpNorm (fun z => fderiv ℝ ρ z (β j i)) 2 volume).toReal with hC
   have hdρ : ∀ v : E, IsTest (univ : Set E) (fun z => fderiv ℝ ρ z v) := fun v => hρ.fderiv_apply v
+  have hmemB : ∀ z t' : E, ‖z - x‖ < R → ‖z - t'‖ ≤ φ.rOut → t' ∈ Metric.ball x (R + φ.rOut) :=
+    fun z t' hz h => by
+      rw [Metric.mem_ball, dist_eq_norm]
+      linarith [norm_sub_le_norm_sub_add_norm_sub t' z x, norm_sub_rev t' z]
   refine cone_energy (w := w) (x := x) (R := R) hβ (T := T) (fun s _ i => ?_) (fun i z => ?_) ?_
     (fun s hs z hz j => ?_) (fun z hz i => ?_) ht hy i₀
   · exact (contDiff_molli φ (hli s i)).of_le (by simp)
@@ -592,12 +591,7 @@ theorem IsWeakSolution.molli_eq_zero {β : ι → ι → E} {c : ℝ} (hβ : IsS
         (continuous_const.sub continuous_id)).trans ?_
       intro t' ht'
       rw [mem_preimage, φ.tsupport_normed_eq, Metric.mem_closedBall, dist_zero_right] at ht'
-      refine hball ?_
-      rw [Metric.mem_ball, dist_eq_norm]
-      calc ‖t' - x‖ ≤ ‖t' - z‖ + ‖z - x‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-        _ < φ.rOut + R := by
-          rw [norm_sub_rev]; linarith
-        _ = R + φ.rOut := add_comm _ _
+      exact hball (hmemB z t' hz ht')
     have hψt : IsTest Ω (fun t' => ρ (z - t')) :=
       ⟨(hρ.comp_sub z).contDiff, (hρ.comp_sub z).hasCompactSupport, hsupp⟩
     have hψ : IsTestField Ω (Pi.single j fun t' => ρ (z - t')) := IsTestField.single j hψt
@@ -637,11 +631,7 @@ theorem IsWeakSolution.molli_eq_zero {β : ι → ι → E} {c : ℝ} (hβ : IsS
         by_contra hne
         have hmem : z - t' ∈ Function.support ρ := hne
         rw [hρd, φ.support_normed_eq, Metric.mem_ball, dist_zero_right] at hmem
-        apply hin
-        rw [Metric.mem_ball, dist_eq_norm]
-        calc ‖t' - x‖ ≤ ‖t' - z‖ + ‖z - x‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-          _ < φ.rOut + R := by rw [norm_sub_rev]; linarith
-          _ = R + φ.rOut := add_comm _ _
+        exact hin (hmemB z t' hz hmem.le)
       rw [this, mul_zero]; rfl
 
 

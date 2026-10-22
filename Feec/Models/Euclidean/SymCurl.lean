@@ -18,8 +18,7 @@ The complex (4.16) `H²(ℝ³) --grad grad--> H(curl; ℝ³, S) --curl--> L²(�
 * **`tsd_propagates`**, `tsd_propagates_neg`, **`tsd_existsUnique`**, `waveGroup_mem`: Prop 4.19
   on `ℝ³`, with existence and uniqueness, forcing, any time interval.
 * `not_closedRangeAt_one`, `not_closedRangeAt_two`: neither differential has closed range.
-* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
-  real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
+* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
 
 ## References
@@ -134,11 +133,6 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
   obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
   exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
     realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
-
-/-- The wave group maps real fields to real fields. -/
-theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
-    realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
-  realStructure.waveGroup_conj t x
 
 /-! ### No closed range -/
 

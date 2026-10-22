@@ -21,16 +21,13 @@ isolated source.
   on `ℝ³`, with existence and uniqueness, forcing, any time interval.
 * `not_closedRangeAt_one`, `not_closedRangeAt_two`: neither differential has closed range (no
   Poincaré inequality at low frequencies), which Prop 4.17 does not need.
-* `starProjection_mem_H1`: the TSD projection maps `H(curl)` into `H¹`, with
-  `‖|ξ| P_TSD A‖ ≤ ‖curl A‖`.
 * **`mem_domain_grad_iff_weak`**, **`mem_domain_curl_iff_weak`**: `H¹` and `H(curl)` of the
   Fourier model are the weak-derivative spaces tested against all Schwartz fields (formal
   adjoints `-div` and the row-wise `curl`).
-* **`fourier_mem_constraint_iff`**, `constraint_eq_image`: the constraint space `L²(TSD)` is the
-  Fourier image of the physical TSD fields: symmetric and trace-free a.e., and weakly
+* **`fourier_mem_constraint_iff`**: the constraint space `L²(TSD)` is the Fourier image of the
+  physical TSD fields: symmetric and trace-free a.e., and weakly
   divergence-free (`mem_ker_adjoint_grad_iff_weak`: `⟪f, ∇φ⟫ = 0` for all Schwartz `φ`).
-* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`, `waveGroup_realConj`:
-  real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
+* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
   (`Feec.Fourier.SymbolComplex.RealStructure`).
 
 ## References
@@ -105,23 +102,6 @@ theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.to
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
 
-/-! ### `H¹` regularity of the TSD projection -/
-
-/-- **The TSD projection maps `H(curl)` into `H¹`**: `|ξ| P_TSD A ∈ L²` for `A ∈ H(curl)`, with
-`‖|ξ| P_TSD A‖ ≤ ‖curl A‖` (fibrewise `Feec.Fourier.GradCurl.mul_norm_starProjection_le`). -/
-theorem starProjection_mem_H1 (A : (complex.d 1 2).domain) :
-    MemLp (fun k => ((‖Fourier.Euclidean.scale k‖ : ℝ) : ℂ) •
-      ((constraint 1).starProjection (A : Space 1) : _ → Mat) k) 2 volume := by
-  have hP := Operator.coeFn_starProjection_fibreSub (μ := volume)
-    (fun k => tsdK 1 (Fourier.Euclidean.scale k)) (fibreReducing.meas 1) (A : Space 1)
-  have hd := (Fourier.Euclidean.symbolComplex gradCurl).coeFn_d A
-  refine MemLp.of_le (Lp.memLp (complex.d 1 2 A)) ((Complex.continuous_ofReal.comp
-    (continuous_norm.comp Fourier.Euclidean.continuous_scale)).aestronglyMeasurable.smul
-      (Lp.aestronglyMeasurable _)) ?_
-  filter_upwards [hP, hd] with k h1 h2
-  rw [h1, norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_norm]
-  exact le_of_le_of_eq (mul_norm_starProjection_le _ _) (congrArg norm h2).symm
-
 /-! ### Real fields -/
 
 /-- **The real structure**: real fields are those with `Â(-ξ) = conj Â(ξ)`. -/
@@ -161,11 +141,6 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
   obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
   exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
     realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
-
-/-- The wave group maps real fields to real fields. -/
-theorem waveGroup_realConj (t : ℝ) (x : PiLp 2 Space) :
-    realConj (complex.waveGroup.S t x) = complex.waveGroup.S t (realConj x) :=
-  realStructure.waveGroup_conj t x
 
 /-! ### Weak derivatives -/
 
@@ -243,23 +218,6 @@ theorem fourier_mem_constraint_iff
   rw [h1, ← mem_ker_adjoint_grad_iff_weak, mem_ker_adjoint_grad_iff_ae, ← Filter.eventually_and,
     Operator.mem_fibreSub]
   exact Filter.eventually_congr (Filter.Eventually.of_forall fun x => mem_tsd_iff_div)
-
-/-- Set form: `L²(TSD) = 𝓕 {f | f symmetric, trace-free a.e., weakly divergence-free}`. -/
-theorem constraint_eq_image :
-    (constraint 1 : Set (Space 1)) = (fun f => 𝓕 f) ''
-      {f : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3))) | (∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))), f x ∈ tsd 0) ∧
-        ∀ φ : 𝓢(EuclideanSpace ℝ (Fin 3), W3 Vec Mat Mat 0),
-          ⟪f, (Weak.symbolOp (gradCurl.m 0 1) φ).toLp 2⟫_ℂ = 0} := by
-  ext A
-  constructor
-  · intro hA
-    set e := Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin 3)) (W3 Vec Mat Mat 1)
-    have hA' : 𝓕 (e.symm A) = A := e.apply_symm_apply A
-    refine ⟨e.symm A, ?_, hA'⟩
-    rw [Set.mem_ofPred_eq, ← fourier_mem_constraint_iff, hA']
-    exact hA
-  · rintro ⟨f, hf, rfl⟩
-    exact (fourier_mem_constraint_iff f).2 hf
 
 /-! ### No closed range -/
 

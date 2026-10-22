@@ -136,21 +136,6 @@ theorem iterDeriv_zero (vs : List E) : iterDeriv vs (0 : E → F) = 0 := by
     rw [iterDeriv_cons, ih]
     simp
 
-theorem iterDeriv_sum {α : Type*} (s : Finset α) {f : α → E → F}
-    (hf : ∀ a ∈ s, ContDiff ℝ ∞ (f a)) (vs : List E) :
-    iterDeriv vs (fun x => ∑ a ∈ s, f a x) = fun x => ∑ a ∈ s, iterDeriv vs (f a) x := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => exact iterDeriv_zero (F := F) vs
-  | insert a s ha ih =>
-    have hs : ContDiff ℝ ∞ (fun x => ∑ b ∈ s, f b x) :=
-      ContDiff.sum fun b hb => hf b (Finset.mem_insert_of_mem hb)
-    simp only [Finset.sum_insert ha]
-    have := iterDeriv_add (hf a (Finset.mem_insert_self a s)) hs vs
-    rw [show (fun x => f a x + ∑ b ∈ s, f b x) = f a + fun x => ∑ b ∈ s, f b x from rfl, this,
-      ih fun b hb => hf b (Finset.mem_insert_of_mem hb)]
-    rfl
-
 theorem iterDeriv_comp_clm (L : F →L[ℝ] G) {f : E → F} (hf : ContDiff ℝ ∞ f) (vs : List E) :
     iterDeriv vs (fun x => L (f x)) = fun x => L (iterDeriv vs f x) := by
   induction vs with
@@ -491,10 +476,6 @@ theorem _root_.Feec.Domain.inner_toL2F (u : L2F 𝕜 Ω ι) {ψ : ι → E → �
     ⟪u, toL2F hψ⟫_𝕜 = ∑ i, ∫ x, conj (u i x) * ψ i x ∂volume.restrict Ω := by
   rw [L2F.inner_def]
   exact Finset.sum_congr rfl fun i _ => inner_toLp _ (hψ i)
-
-omit [FiniteDimensional ℝ E] [Fintype ι] in
-theorem _root_.Feec.Domain.testField_eq_toL2F {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
-    testField hφ = toL2F fun i => (hφ i).memLp := rfl
 
 omit [FiniteDimensional ℝ E] in
 /-- `⟪φ, ψ⟫_{L²(Ω)} = Σᵢ ∫_E conj φᵢ ψᵢ` for a test field `φ` (the integrand vanishes off `Ω`). -/

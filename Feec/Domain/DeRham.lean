@@ -20,8 +20,8 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
 * the complex `Feec.Domain.deRham n` of constant-coefficient operators indexed by `ℤ`, whose
   minimal realization on any open `Ω` is `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯` (the closure of `d` on
   `C_c^∞(Ω)`; for Lipschitz `Ω` these are the forms with vanishing tangential trace), whose maximal realization is `HΛ⁰(Ω) → HΛ¹(Ω) → ⋯` (no boundary
-  condition), and each is the dual of the other through the codifferentials
-  (`deRham_dual_minimalComplex_d`, `deRham_dual_maximalComplex_d`).
+  condition), and the dual of the minimal complex is the maximal complex of the codifferentials
+  (`deRham_dual_minimalComplex_d`).
 * the components in low degree: `(d f)_{j} = ∂_j f` (`extDerivOp_zero_apply`),
   `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (`extDerivOp_one_apply_pair`) and
   `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l`
@@ -31,9 +31,7 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
 
 In `ℝ³`, with the vector proxies of `Feec.Algebra.Proxy3` (`v = (w_0, w_1, w_2)` for a 1-form,
 `v = (w_{12}, -w_{02}, w_{01})` for a 2-form), the last three lemmas say that `d` is grad, curl
-and div componentwise. The identification of `deRham 3` with
-`Feec.Models.BoundedDomain.deRham3` as complexes cannot be stated here (`Feec.Models` is a higher
-layer); it follows from these component formulas.
+and div componentwise.
 
 ## References
 
@@ -89,14 +87,6 @@ def extD (F : Finset (Fin n) → (Fin n → ℝ) → 𝕜) (s : Finset (Fin n)) 
 `extD`. -/
 def extDAdj (F : Finset (Fin n) → (Fin n → ℝ) → 𝕜) (s : Finset (Fin n)) (x : Fin n → ℝ) : 𝕜 :=
   -∑ j ∈ sᶜ, sgn j s * fderiv ℝ (F (insert j s)) x (coordDir j)
-
-theorem contDiff_extD {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s, ContDiff ℝ ∞ (F s))
-    (s : Finset (Fin n)) : ContDiff ℝ ∞ (extD F s) :=
-  ContDiff.sum fun _ _ => contDiff_const.mul (contDiff_fderiv_apply (hF _) _)
-
-theorem contDiff_extDAdj {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s, ContDiff ℝ ∞ (F s))
-    (s : Finset (Fin n)) : ContDiff ℝ ∞ (extDAdj F s) :=
-  (ContDiff.sum fun _ _ => contDiff_const.mul (contDiff_fderiv_apply (hF _) _)).neg
 
 /-- `∂_v (Σ_j c_j G_j) = Σ_j c_j ∂_v G_j` for smooth `G_j`. -/
 theorem fderiv_sum_const_mul {α : Type*} (t : Finset α) (c : α → 𝕜)
@@ -395,11 +385,6 @@ theorem deRham_dual_minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     ((deRham 𝕜 n).minimalComplex hΩ).dual.d (k + 1) k = (extDerivOp 𝕜 n k).formalAdj.maximal Ω :=
   (deRham 𝕜 n).dual_minimalComplex_d hΩ k
 
-/-- **Duality**: the dual of `HΛ` is the minimal codifferential complex, `(d_max)† = (dᵗ)_min`. -/
-theorem deRham_dual_maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
-    ((deRham 𝕜 n).maximalComplex hΩ).dual.d (k + 1) k = (extDerivOp 𝕜 n k).formalAdj.minimal Ω :=
-  (deRham 𝕜 n).dual_maximalComplex_d hΩ k
-
 /-- `H̊Λᵏ(Ω) ⊆ HΛᵏ(Ω)`: `d_min ≤ d_max`. -/
 theorem extDerivOp_minimal_le_maximal (hΩ : IsOpen Ω) (k : ℤ) :
     (extDerivOp 𝕜 n k).minimal Ω ≤ (extDerivOp 𝕜 n k).maximal Ω :=
@@ -414,12 +399,5 @@ theorem extDerivOp_smooth_mem_maximal_domain (hΩ : IsOpen Ω) {k : ℤ}
     ∃ h : toL2F hw ∈ ((extDerivOp 𝕜 n k).maximal Ω).domain,
       (extDerivOp 𝕜 n k).maximal Ω ⟨_, h⟩ = toL2F hdw :=
   (extDerivOp 𝕜 n k).smooth_mem_maximal_domain hΩ (extDerivOp_isOrderLE k) hws hw hdw
-
-/-- On test forms, `d_min` is the classical exterior derivative. -/
-theorem extDerivOp_minimal_testField (hΩ : IsOpen Ω) {k : ℤ}
-    {w : formIdx n k → (Fin n → ℝ) → 𝕜} (hw : IsTestField Ω w) :
-    (extDerivOp 𝕜 n k).minimal Ω ⟨testField hw, (extDerivOp 𝕜 n k).testField_mem_minimal_domain hΩ hw⟩ =
-      testField ((extDerivOp 𝕜 n k).isTestField_apply hw) :=
-  (extDerivOp 𝕜 n k).minimal_testField hΩ hw
 
 end Feec.Domain

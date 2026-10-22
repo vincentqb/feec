@@ -128,12 +128,6 @@ theorem preimage_preimage_inv (hA : IsUnit A.det) (Ω : Set (Fin n → ℝ)) :
 theorem isUnit_det_inv (hA : IsUnit A.det) : IsUnit (A⁻¹).det := by
   rw [Matrix.det_nonsing_inv]; exact hA.ringInverse
 
-theorem inv_inv_of_isUnit (hA : IsUnit A.det) : (A⁻¹)⁻¹ = A := Matrix.nonsing_inv_nonsing_inv A hA
-
-theorem affInvShift_inv (hA : IsUnit A.det) : affInvShift A⁻¹ (affInvShift A b) = b := by
-  simp [affInvShift, inv_inv_of_isUnit hA, Matrix.mulVec_neg, Matrix.mulVec_mulVec,
-    Matrix.mul_nonsing_inv A hA]
-
 /-- **`x ↦ A x + b` is measure preserving from `|det A| · volume` to `volume`.** -/
 theorem measurePreserving_affMap (hA : IsUnit A.det) :
     MeasurePreserving (affMap A b) (ENNReal.ofReal |A.det| • volume) volume := by
@@ -251,8 +245,6 @@ theorem norm_affPullₗ (f : L2 ℝ Ω') :
 def affPull : L2 ℝ Ω' →L[ℝ] L2 ℝ Ω :=
   (affPullₗ hA b hΩ' hT).mkContinuous (Real.sqrt |A.det|⁻¹) fun f =>
     (norm_affPullₗ hA b hΩ' hT f).le
-
-theorem affPull_apply (f : L2 ℝ Ω') : affPull hA b hΩ' hT f = affPullₗ hA b hΩ' hT f := rfl
 
 theorem coeFn_affPull (f : L2 ℝ Ω') :
     (affPull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]

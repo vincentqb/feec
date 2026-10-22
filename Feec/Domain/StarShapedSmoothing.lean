@@ -9,8 +9,8 @@ public import Feec.Domain.DeRham
 Let `Ω ⊆ E = ℝⁿ` be open and bounded. For a centre `x₀`, a factor `c ≥ ½` and a bump `φ`, the
 **smoother** `R` maps `u ∈ L²(Ω)` to the restriction to `Ω` of
 `x ↦ (ū ⋆ ρ_φ)(x₀ + c (x - x₀))`, `ū` the zero extension (`smoothExt`, `smoothL2`). It is
-smooth on all of `E`, linear, bounded on `L²(Ω)` by `2ⁿ` (by `1` if `c ≥ 1`)
-(`norm_smoothL2_le`, `norm_smoothL2_le_of_one_le`), and converges strongly to the identity as
+smooth on all of `E`, linear, bounded on `L²(Ω)` by `2ⁿ` (`norm_smoothL2_le`), and converges
+strongly to the identity as
 `c → 1` and the bump radius `→ 0` (`exists_norm_smoothL2_sub_lt`). On fields
 `u ∈ L²(Ω; ℝ^ι)` it acts componentwise with a scalar weight `a` (`smoothField`).
 
@@ -26,15 +26,13 @@ realizations:
   (`sum_integral_indicator_formalAdj_eq`).
 * **maximal (no boundary condition) family**, `½ ≤ c < 1` and bump radius `< s (1 - c) / 4`:
   only points whose `φ`-ball lies in `Ω` are sampled, and for `u ∈ D(A_max)`,
-  `R u ∈ D(A_max)` with `A_max (R_a u) = R_{a c^k} (A_max u)`
-  (`smoothField_mem_maximal_domain`, `maximal_smoothField`); `R u` is smooth on `E`, in
-  particular on a neighbourhood of `cl Ω`.
+  `A (a R̃ u) = a c^k R̃ (A_max u)` pointwise on `cl Ω` (`apply_smoothExt_of_maximal`); `R u` is
+  smooth on `E`, in particular on a neighbourhood of `cl Ω`.
 
 For the de Rham complex (`Feec.Domain.deRham`), `d` is homogeneous of order one, so the
 **pullback of `k`-forms by the dilation** `x ↦ x₀ + c (x - x₀)`, which multiplies the
 coefficients of a `k`-form by `cᵏ`, commutes **exactly** with `d`: the weights `cᵏ` on `k`-forms
-give `d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` (`deRham_minimal_smoothField`) and likewise for
-`d_max` (`deRham_maximal_smoothField`). These are the smoothers `R_ε` of [AFW2010], §5.4 and
+give `d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` (`deRham_minimal_smoothField`). These are the smoothers `R_ε` of [AFW2010], §5.4 and
 [ChristiansenWinther2008] in the case of a domain star-shaped with respect to a ball (cubes,
 convex domains).
 
@@ -47,11 +45,11 @@ convex domains).
 
 ## Main results
 
-* `norm_smoothL2_le`, `norm_smoothL2_le_of_one_le`, `norm_smoothField_le`: `L²` bounds.
+* `norm_smoothL2_le`: the `L²` bound.
 * `exists_norm_smoothL2_sub_lt`, `exists_norm_smoothField_sub_lt`: strong convergence.
 * `isTestField_smoothExt`, **`smoothField_mem_minimal_domain`**, **`minimal_smoothField`**.
-* **`smoothField_mem_maximal_domain`**, **`maximal_smoothField`**.
-* **`deRham_minimal_smoothField`**, **`deRham_maximal_smoothField`**: exact commutation with `d`.
+* `apply_smoothExt_of_maximal`: the maximal family, pointwise.
+* **`deRham_minimal_smoothField`**: exact commutation with `d_min`.
 
 ## References
 
@@ -117,13 +115,6 @@ theorem eLpNorm_smoothExt_le {f : E → ℝ} (hf : MemLp (Ω.indicator f) 2 volu
   (eLpNorm_dil_le_of_half_le _ p.half_le_factor
     (continuous_molli _ (hf.locallyIntegrable (by norm_num))).aestronglyMeasurable).trans
     (by gcongr; exact eLpNorm_molli_le _ hf)
-
-theorem eLpNorm_smoothExt_le_of_one_le (hc : 1 ≤ p.factor) {f : E → ℝ}
-    (hf : MemLp (Ω.indicator f) 2 volume) :
-    eLpNorm (smoothExt Ω p f) 2 volume ≤ eLpNorm (Ω.indicator f) 2 volume :=
-  (eLpNorm_dil_le _ hc
-    (continuous_molli _ (hf.locallyIntegrable (by norm_num))).aestronglyMeasurable).trans
-    (eLpNorm_molli_le _ hf)
 
 theorem memLp_smoothExt {f : E → ℝ} (hf : MemLp (Ω.indicator f) 2 volume) :
     MemLp (smoothExt Ω p f) 2 volume :=
@@ -224,14 +215,6 @@ theorem norm_smoothL2_le (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     ‖smoothL2 p hΩ u‖ ≤ 2 ^ Module.finrank ℝ E * ‖u‖ :=
   norm_toLp_smoothExt_le hΩ u
 
-/-- **`R` is an `L²(Ω)`-contraction for `c ≥ 1`.** -/
-theorem norm_smoothL2_le_of_one_le (hΩ : MeasurableSet Ω) (hc : 1 ≤ p.factor) (u : L2 ℝ Ω) :
-    ‖smoothL2 p hΩ u‖ ≤ ‖u‖ := by
-  rw [smoothL2_apply, Lp.norm_toLp, ← eLpNorm_indicator_eq_norm hΩ u]
-  refine ENNReal.toReal_mono (memLp_indicator hΩ u).eLpNorm_ne_top ?_
-  exact (eLpNorm_mono_measure _ Measure.restrict_le_self).trans
-    (eLpNorm_smoothExt_le_of_one_le hc (memLp_indicator hΩ u))
-
 /-- `‖R u - u‖_{L²(Ω)} ≤ ‖R̃ ū - ū‖_{L²(E)}`. -/
 theorem norm_smoothL2_sub_le (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     ‖smoothL2 p hΩ u - u‖ ≤
@@ -307,20 +290,6 @@ variable [Fintype ι]
 
 @[simp] theorem smoothField_apply (hΩ : MeasurableSet Ω) (w : ι → ℝ) (u : L2F ℝ Ω ι) (i : ι) :
     smoothField p hΩ w u i = w i • smoothL2 p hΩ (u i) := rfl
-
-/-- `‖R_a u‖ ≤ |a| 2ⁿ ‖u‖` (constant weight). -/
-theorem norm_smoothField_le (hΩ : MeasurableSet Ω) (a : ℝ) (u : L2F ℝ Ω ι) :
-    ‖smoothField p hΩ (fun _ => a) u‖ ≤ |a| * 2 ^ Module.finrank ℝ E * ‖u‖ := by
-  refine L2F.norm_le_of_forall (by positivity) fun i => ?_
-  rw [smoothField_apply, norm_smul, Real.norm_eq_abs, mul_assoc]
-  exact mul_le_mul_of_nonneg_left (norm_smoothL2_le hΩ (u i)) (abs_nonneg a)
-
-/-- `‖R_a u‖ ≤ |a| ‖u‖` for `c ≥ 1` (constant weight). -/
-theorem norm_smoothField_le_of_one_le (hΩ : MeasurableSet Ω) (hc : 1 ≤ p.factor) (a : ℝ)
-    (u : L2F ℝ Ω ι) : ‖smoothField p hΩ (fun _ => a) u‖ ≤ |a| * ‖u‖ := by
-  refine L2F.norm_le_of_forall (abs_nonneg a) fun i => ?_
-  rw [smoothField_apply, norm_smul, Real.norm_eq_abs]
-  exact mul_le_mul_of_nonneg_left (norm_smoothL2_le_of_one_le hΩ hc (u i)) (abs_nonneg a)
 
 /-- **Strong convergence of the field smoother**: `R_a u → u` as `c → 1`, the bump radius `→ 0`
 and `a → 1`. -/
@@ -625,57 +594,6 @@ theorem apply_smoothExt_of_maximal [DecidableEq κ] (hΩ : IsOpen Ω)
   simp only [smoothExt, dil]
   ring
 
-theorem memLp_apply_smoothExt_of_maximal [DecidableEq κ] (hΩ : IsOpen Ω)
-    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
-    {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k)
-    (u : (A.maximal Ω).domain) (a : ℝ) (j : κ) :
-    MemLp (A.apply (fun i => a • smoothExt Ω p (((u : L2F ℝ Ω ι) i : E → ℝ))) j) 2
-      (volume.restrict Ω) := by
-  refine ((memLp_smoothExt_restrict (p := p) hΩ.measurableSet (A.maximal Ω u j)).const_smul
-    (a * p.factor ^ k j)).ae_eq ?_
-  refine ae_restrict_of_forall_mem hΩ.measurableSet fun x hx => ?_
-  rw [apply_smoothExt_of_maximal hΩ hstar hp hA u a j (subset_closure hx)]
-  simp only [Pi.smul_apply, smul_eq_mul]
-
-/-- **Maximal family: `R_a` maps `D(A_max)` into `D(A_max)`** for a row-homogeneous `A`. -/
-theorem smoothField_mem_maximal_domain [DecidableEq κ] (hΩ : IsOpen Ω)
-    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
-    {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (a : ℝ)
-    (u : (A.maximal Ω).domain) :
-    smoothField p hΩ.measurableSet (fun _ => a) u ∈ (A.maximal Ω).domain := by
-  have hl : ∀ i, LocallyIntegrable (Ω.indicator (((u : L2F ℝ Ω ι) i : E → ℝ))) volume :=
-    fun i => (memLp_indicator hΩ.measurableSet _).locallyIntegrable (by norm_num)
-  obtain ⟨h, -⟩ := A.smooth_mem_maximal_domain hΩ A.isOrderLE_order
-    (ψ := fun i => a • smoothExt Ω p (((u : L2F ℝ Ω ι) i : E → ℝ)))
-    (fun i => ((contDiff_smoothExt (hl i)).const_smul a).of_le (by exact_mod_cast le_top))
-    (fun i => (memLp_smoothExt_restrict hΩ.measurableSet ((u : L2F ℝ Ω ι) i)).const_smul a)
-    (memLp_apply_smoothExt_of_maximal hΩ hstar hp hA u a)
-  exact h
-
-/-- **Maximal family: `R` commutes with a row-homogeneous `A_max` up to the chain-rule factor**:
-`A_max (R_a u) = R_{a c^k} (A_max u)` for `u ∈ D(A_max)`. -/
-theorem maximal_smoothField [DecidableEq κ] (hΩ : IsOpen Ω)
-    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
-    {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (a : ℝ)
-    (u : (A.maximal Ω).domain) :
-    A.maximal Ω ⟨smoothField p hΩ.measurableSet (fun _ => a) u,
-        smoothField_mem_maximal_domain hΩ hstar hp hA a u⟩ =
-      smoothField p hΩ.measurableSet (fun j => a * p.factor ^ k j) (A.maximal Ω u) := by
-  have hl : ∀ i, LocallyIntegrable (Ω.indicator (((u : L2F ℝ Ω ι) i : E → ℝ))) volume :=
-    fun i => (memLp_indicator hΩ.measurableSet _).locallyIntegrable (by norm_num)
-  obtain ⟨h, hv⟩ := A.smooth_mem_maximal_domain hΩ A.isOrderLE_order
-    (ψ := fun i => a • smoothExt Ω p (((u : L2F ℝ Ω ι) i : E → ℝ)))
-    (fun i => ((contDiff_smoothExt (hl i)).const_smul a).of_le (by exact_mod_cast le_top))
-    (fun i => (memLp_smoothExt_restrict hΩ.measurableSet ((u : L2F ℝ Ω ι) i)).const_smul a)
-    (memLp_apply_smoothExt_of_maximal hΩ hstar hp hA u a)
-  refine hv.trans ((WithLp.ext_iff 2).2 (funext fun j => ?_))
-  show (memLp_apply_smoothExt_of_maximal hΩ hstar hp hA u a j).toLp _ =
-    (a * p.factor ^ k j) • smoothL2 p hΩ.measurableSet _
-  rw [smoothL2_apply, ← MemLp.toLp_const_smul]
-  refine MemLp.toLp_congr _ _ (ae_restrict_of_forall_mem hΩ.measurableSet fun x hx => ?_)
-  rw [apply_smoothExt_of_maximal hΩ hstar hp hA u a j (subset_closure hx)]
-  simp only [Pi.smul_apply, smul_eq_mul]
-
 end Families
 
 /-! ## The de Rham complex: pullback by the dilation commutes with `d` -/
@@ -709,17 +627,6 @@ theorem deRham_minimal_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
       smoothField p hΩ.measurableSet (fun _ => p.factor ^ (k + 1))
         ((extDerivOp ℝ n k).minimal Ω u) := by
   rw [minimal_smoothField hΩ hb hstar hp (extDerivOp_isRowHomogeneous k), factor_zpow_mul_factor]
-
-/-- **The pullback of `k`-forms by the dilation commutes exactly with `d_max`** (maximal
-family, `c < 1`): `d_max (cᵏ R ω) = c^{k+1} R (d_max ω)` on `HΛᵏ(Ω)`. -/
-theorem deRham_maximal_smoothField (hΩ : IsOpen Ω)
-    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
-    (k : ℤ) (u : ((extDerivOp ℝ n k).maximal Ω).domain) :
-    (extDerivOp ℝ n k).maximal Ω ⟨smoothField p hΩ.measurableSet (fun _ => p.factor ^ k) u,
-        smoothField_mem_maximal_domain hΩ hstar hp (extDerivOp_isRowHomogeneous k) _ u⟩ =
-      smoothField p hΩ.measurableSet (fun _ => p.factor ^ (k + 1))
-        ((extDerivOp ℝ n k).maximal Ω u) := by
-  rw [maximal_smoothField hΩ hstar hp (extDerivOp_isRowHomogeneous k), factor_zpow_mul_factor]
 
 end DeRham
 

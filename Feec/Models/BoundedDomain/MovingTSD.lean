@@ -388,11 +388,6 @@ theorem eq_zero_of_isEigenfield_of_mem_minimal (hΩ : IsOpen Ω) (hb : Bornology
       (fun i => (memLp_of_isTest
         ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.isTestField_apply hψ i)).restrict Ω)
   generalize hwd : (gradCurl ℝ hΩ).d₁ ⟨v, h1⟩ = w at h3 e hw
-  have hgreen1' : ∀ {ψ : Ix → R3 → ℝ} (hψ : IsTestField (univ : Set R3) ψ),
-      ⟪w, toL2F (fun j => (memLp_of_isTest (hψ j)).restrict Ω)⟫_ℝ =
-        ⟪v, toL2F (fun i => (memLp_of_isTest
-          ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.isTestField_apply hψ i)).restrict Ω)⟫_ℝ :=
-    fun hψ => by rw [← hwd]; exact hgreen1 hψ
   have hAw : (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω ⟨w, hw⟩ = (ξ ^ 2 : ℝ) • v := by
     rw [minimal_curl_eq_adjoint hΩ ⟨w, hw⟩ h3, e]
     rfl
@@ -412,7 +407,7 @@ theorem eq_zero_of_isEigenfield_of_mem_minimal (hΩ : IsOpen Ω) (hb : Bornology
     intro ψ hψ
     rw [sum_integral_extendL2F hΩm w hψ,
       sum_integral_extendL2F hΩm v ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.isTestField_apply hψ)]
-    exact hgreen1' hψ
+    rw [← hwd]; exact hgreen1 hψ
   -- `curl (curl u)~ = ξ² ũ` weakly on `ℝ³`
   have weak2 : ∀ ψ : Ix → R3 → ℝ, IsTestField (univ : Set R3) ψ →
       ∑ j, ∫ x, (starRingEnd ℝ) (U' j x) * ψ j x =

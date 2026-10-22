@@ -695,10 +695,6 @@ theorem isBounded_openBox (a ℓ : R3) : Bornology.IsBounded (openBox a ℓ) :=
 theorem nonempty_openBox (a : R3) {ℓ : R3} (hℓ : ∀ i, 0 < ℓ i) : (openBox a ℓ).Nonempty :=
   ⟨fun i => a i + ℓ i / 2, fun i _ => ⟨by linarith [hℓ i], by linarith [hℓ i]⟩⟩
 
-/-- A cube is a box with equal sides. -/
-theorem openBox_const (a : R3) (s : ℝ) :
-    openBox a (fun _ => s) = Models.Cube.Geometry.openCube a s := rfl
-
 variable {a ℓ : R3}
 
 /-- The scalings `dᵢ = 1/(2ℓᵢ)` of the map `T x = d * (x - a)` of the box onto `Q`. -/

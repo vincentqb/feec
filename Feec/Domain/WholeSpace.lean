@@ -23,8 +23,7 @@ Moreover (`ConstCoeffOp.mem_minimal_of_support_subset`): if `u ∈ D(A_max(E))` 
 outside a compact subset of an open `Ω`, then `u|_Ω ∈ D(A_min(Ω))` and `A_min(u|_Ω) = (A u)|_Ω`.
 The same holds starting from `Ω` (`ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`): an
 element of `D(A_max(Ω))` vanishing a.e. outside a compact subset of `Ω` lies in `D(A_min(Ω))`
-(its extension by zero, `extendL2F`, lies in `D(A_max(E))`). Restriction maps `D(A_max(E))` into
-`D(A_max(Ω))` (`ConstCoeffOp.restrictL2F_mem_maximal`).
+(its extension by zero, `extendL2F`, lies in `D(A_max(E))`).
 
 ## Proof
 
@@ -495,11 +494,6 @@ theorem list_sum_le_sum (L : List α) {F F' : α → ℝ} (h : ∀ a ∈ L, F a 
   | cons a L ih =>
     simp only [List.map_cons, List.sum_cons]
     exact add_le_add (h a List.mem_cons_self) (ih fun b hb => h b (List.mem_cons_of_mem _ hb))
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [MeasureSpace E]
-  [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-theorem list_sum_nonneg (L : List α) {F : α → ℝ} (h : ∀ a ∈ L, 0 ≤ F a) : 0 ≤ (L.map F).sum := by
-  simpa using list_sum_le_sum L (F := fun _ => 0) h
 
 end ListSums
 
@@ -985,11 +979,6 @@ theorem minimal_univ_eq_maximal_univ (A : ConstCoeffOp E 𝕜 ι κ) :
   rw [A.minimal_graph isOpen_univ]
   exact A.mem_closure_testGraph_of_mem_maximal_univ u
 
-/-- `D(A_max(E)) = D(A_min(E))`. -/
-theorem maximal_univ_domain_eq (A : ConstCoeffOp E 𝕜 ι κ) :
-    (A.maximal univ).domain = (A.minimal univ).domain := by
-  rw [A.minimal_univ_eq_maximal_univ]
-
 /-- The restriction to `Ω` of an `L²(E)` field. -/
 def restrictL2F (Ω : Set E) (v : L2F 𝕜 (univ : Set E) ι) : L2F 𝕜 Ω ι :=
   toL2F (ψ := fun i => (v i : E → 𝕜)) fun i =>
@@ -1100,35 +1089,6 @@ theorem apply_congr_nhds (A : ConstCoeffOp E 𝕜 ι κ) {f g : ι → E → �
   congr 1
   refine List.map_congr_left fun t _ => ?_
   rw [(iterDeriv_eventuallyEq (h i) t.1).eq_of_nhds]
-
-omit [FiniteDimensional ℝ E] in
-/-- Against a test field of `Ω`, the inner product of a restriction is the inner product on `E`. -/
-theorem inner_restrictL2F_testField {Ω : Set E} (v : L2F 𝕜 (univ : Set E) ι)
-    {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hφ' : IsTestField (univ : Set E) φ) :
-    ⟪restrictL2F Ω v, testField hφ⟫_𝕜 = ⟪v, testField hφ'⟫_𝕜 := by
-  rw [inner_testField, inner_testField]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [setIntegral_univ, ← integral_restrict_of_eq_zero (Ω := Ω) fun x hx => by
-    rw [(hφ i).eq_zero_of_notMem hx, mul_zero]]
-  refine integral_congr_ae ?_
-  filter_upwards [coeFn_restrictL2F Ω v i] with x hx
-  rw [hx]
-
-/-- **Restriction maps `D(A_max(E))` into `D(A_max(Ω))`**, and `A_max(u|_Ω) = (A_max u)|_Ω`. -/
-theorem restrictL2F_mem_maximal (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set E} (hΩ : IsOpen Ω)
-    (u : (A.maximal univ).domain) :
-    ∃ h : restrictL2F Ω (u : L2F 𝕜 univ ι) ∈ (A.maximal Ω).domain,
-      A.maximal Ω ⟨_, h⟩ = restrictL2F Ω (A.maximal univ u) := by
-  have key : ∀ φ : κ → E → 𝕜, ∀ hφ : IsTestField Ω φ,
-      ⟪restrictL2F Ω (A.maximal univ u), testField hφ⟫_𝕜 =
-        ⟪restrictL2F Ω (u : L2F 𝕜 univ ι), testField (A.formalAdj.isTestField_apply hφ)⟫_𝕜 := by
-    intro φ hφ
-    have hφ' : IsTestField (univ : Set E) φ := fun j => (hφ j).mono (subset_univ Ω)
-    rw [inner_restrictL2F_testField _ hφ hφ', inner_restrictL2F_testField _
-      (A.formalAdj.isTestField_apply hφ) (A.formalAdj.isTestField_apply hφ')]
-    exact A.maximal_inner_testField isOpen_univ u hφ'
-  have hmem := (A.mem_maximal_domain_iff hΩ).2 ⟨_, key⟩
-  exact ⟨hmem, A.maximal_apply_eq hΩ ⟨_, hmem⟩ key⟩
 
 /-- The extension by zero to `E` of an `L²(Ω)` field. -/
 def extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι) : L2F 𝕜 (univ : Set E) ι :=
@@ -1247,11 +1207,6 @@ theorem ConstCoeffComplex.minimalComplex_univ_eq_maximalComplex_univ
     funext fun k => (C.A k).minimal_univ_eq_maximal_univ
   unfold ConstCoeffComplex.minimalComplex ConstCoeffComplex.maximalComplex
   congr 1
-
-/-- **`H̊Λᵏ(ℝⁿ) = HΛᵏ(ℝⁿ)`**: the minimal and maximal exterior derivatives of `ℝⁿ` coincide. -/
-theorem extDerivOp_minimal_univ_eq_maximal_univ (n : ℕ) (k : ℤ) :
-    (extDerivOp 𝕜 n k).minimal univ = (extDerivOp 𝕜 n k).maximal univ :=
-  (extDerivOp 𝕜 n k).minimal_univ_eq_maximal_univ
 
 /-- **The minimal and maximal de Rham complexes of `ℝⁿ` coincide.** -/
 theorem deRham_minimalComplex_univ_eq_maximalComplex_univ (n : ℕ) :

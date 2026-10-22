@@ -26,8 +26,7 @@ constraint propagation) applies to it.
   (Rellich on `𝕋ᵈ`, from the fibre Cartan identity `window_cartan`) and **`window_eigenDense`**:
   the Hodge wave group of the torus de Rham complex has a dense set of eigenvectors (discrete
   spectrum).
-* `windowReal`, `window_conj_eq`: real forms (`ω̂(-k) = conj ω̂(k)`) give real solutions of the
-  Hodge wave equation.
+* `windowReal`: the real structure of the window (real forms have `ω̂(-k) = conj ω̂(k)`).
 
 ## References
 
@@ -301,14 +300,5 @@ def windowReal : (windowSymbol d).RealStructure Reflection.count_neg where
     change (deRham d).m i j (Fourier.Torus.freq (-k)) (entryConj v) = _
     rw [Fourier.Torus.freq_neg]
     exact deRham_neg_entryConj _ _ _ v
-
-/-- **Real data give real solutions** of the Hodge wave equation of the torus de Rham complex. -/
-theorem window_conj_eq {a b : ℝ} {F U : ℝ → PiLp 2 fun i : Fin (Fintype.card d + 1) =>
-      Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))}
-    (hU : Evolution.IsStrongSolution (window d).wave (Icc a b) F U)
-    (h0 : windowReal.toConj.totalConj (U a) = U a)
-    (hF : ∀ t ∈ Icc a b, windowReal.toConj.totalConj (F t) = F t) :
-    ∀ t ∈ Icc a b, windowReal.toConj.totalConj (U t) = U t :=
-  windowReal.conj_eq hU h0 hF
 
 end Feec.Models.Torus.DeRham

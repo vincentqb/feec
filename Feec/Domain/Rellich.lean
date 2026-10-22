@@ -131,8 +131,6 @@ def compF (σ : ι' → ι) : L2F 𝕜 Ω ι →L[𝕜] L2F 𝕜 Ω ι' :=
   (PiLp.continuousLinearEquiv 2 𝕜 (fun _ : ι' => L2 𝕜 Ω)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun j => PiLp.proj 2 (fun _ : ι => L2 𝕜 Ω) (σ j)
 
-theorem compF_apply (σ : ι' → ι) (u : L2F 𝕜 Ω ι) (j : ι') : compF σ u j = u (σ j) := rfl
-
 end Reindex
 
 section Test

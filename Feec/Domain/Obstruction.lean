@@ -15,14 +15,10 @@ behind the bounded-domain refutations of thesis Props 4.17/4.19, in general form
 
 * `Feec.Domain.obstruction D K = K ⊓ (K ⊓ D)ᗮ`: the part of a closed subspace `K` that the
   constrained domain `K ∩ D` cannot approximate; `K = cl (K ∩ D) ⊕ obstruction D K`
-  (`closure_sup_obstruction`), each `G ∈ obstruction D K` is at distance `‖G‖` from `K ∩ D`
-  (`norm_le_norm_sub_of_mem_obstruction`), and `K ∩ D` is dense in `K` iff the obstruction
-  vanishes (`dense_iff_obstruction_eq_bot`).
+  (`closure_sup_obstruction`), and `K ∩ D` is dense in `K` iff the obstruction vanishes
+  (`dense_iff_obstruction_eq_bot`).
 * **Boundary form.** `ConstCoeffOp.mem_minimal_domain_iff`: `u ∈ D(A_min)` iff the boundary form
-  `⟪A_max u, v⟫ - ⟪u, (Aᵗ)_max v⟫` vanishes for all `v ∈ D((Aᵗ)_max)` (no traces needed);
-  `ConstCoeffOp.formalAdj_mem_orthogonal`: a smooth field `ψ` with no boundary condition and
-  `ψ ⊥ A_min (K ∩ D(A_min))` gives `Aᵗ ψ ⊥ K ∩ D(A_min)` (the "zero mean" / "normal trace"
-  obstruction: `B n = 0` on `∂Ω` in the weak sense).
+  `⟪A_max u, v⟫ - ⟪u, (Aᵗ)_max v⟫` vanishes for all `v ∈ D((Aᵗ)_max)` (no traces needed).
 * **The `Ė(0)` argument** (`ShortHilbertComplex.adjoint_mem_closure_of_propagates`): if a strong
   solution of `U' = L U` from `(0, E₀, B₀)` keeps its middle component in `K₁` on `[0, T]`,
   `T > 0`, then `d₁† B₀ ∈ cl (K₁ ∩ D(d₁))`. Hence (`not_propagates_of_inner_ne_zero`) a single
@@ -143,16 +139,6 @@ theorem closure_sup_obstruction (hK : IsClosed (K : Set H)) :
   rw [obstruction_eq, inf_comm K ((K ⊓ D).topologicalClosureᗮ)]
   exact h
 
-omit [CompleteSpace H] in
-/-- Every element of the obstruction is at distance `‖G‖` from `K ∩ D`. -/
-theorem norm_le_norm_sub_of_mem_obstruction {G z : H} (hG : G ∈ obstruction D K)
-    (hz : z ∈ K ⊓ D) : ‖G‖ ≤ ‖G - z‖ := by
-  have h0 : ⟪z, G⟫_𝕜 = 0 := (mem_obstruction.1 hG).2 z hz
-  have h : ‖G - z‖ ^ 2 = ‖G‖ ^ 2 + ‖z‖ ^ 2 := by
-    rw [@norm_sub_sq 𝕜, inner_eq_zero_symm.1 h0, map_zero]
-    ring
-  nlinarith [norm_nonneg G, norm_nonneg (G - z), sq_nonneg ‖z‖]
-
 /-- `K ∩ D` is dense in a closed `K` iff the obstruction vanishes. -/
 theorem dense_iff_obstruction_eq_bot (hK : IsClosed (K : Set H)) :
     (K ⊓ D).topologicalClosure = K ↔ obstruction D K = ⊥ := by
@@ -190,37 +176,6 @@ theorem mem_minimal_domain_iff (hΩ : IsOpen Ω) {u : L2F 𝕜 Ω ι} :
     exact ⟨_, LinearPMap.adjoint_isFormalAdjoint (A.formalAdj.dense_maximal_domain hΩ) ⟨u, hu⟩⟩
   · rintro ⟨w, hw⟩
     exact LinearPMap.mem_adjoint_domain_of_exists _ ⟨w, hw⟩
-
-/-- **Green's formula with vanishing boundary form**: for `u ∈ D(A_min)` and
-`v ∈ D((Aᵗ)_max)`, `⟪A_min u, v⟫ = ⟪u, (Aᵗ)_max v⟫`. -/
-theorem inner_minimal_eq_inner_maximal (hΩ : IsOpen Ω) (u : (A.minimal Ω).domain)
-    (v : (A.formalAdj.maximal Ω).domain) :
-    ⟪A.minimal Ω u, (v : L2F 𝕜 Ω κ)⟫_𝕜 = ⟪(u : L2F 𝕜 Ω ι), A.formalAdj.maximal Ω v⟫_𝕜 := by
-  have h := LinearPMap.adjoint_isFormalAdjoint (A.formalAdj.dense_maximal_domain hΩ)
-    ⟨(u : L2F 𝕜 Ω ι), by rw [A.adjoint_formalAdj_maximal hΩ]; exact u.2⟩ v
-  have e : (A.formalAdj.maximal Ω)† ⟨(u : L2F 𝕜 Ω ι), by
-      rw [A.adjoint_formalAdj_maximal hΩ]; exact u.2⟩ = A.minimal Ω u := by
-    have key : ∀ T : L2F 𝕜 Ω ι →ₗ.[𝕜] L2F 𝕜 Ω κ, T = A.minimal Ω →
-        ∀ hu : (u : L2F 𝕜 Ω ι) ∈ T.domain, T ⟨u, hu⟩ = A.minimal Ω u := by
-      rintro _ rfl hu; rfl
-    exact key _ (A.adjoint_formalAdj_maximal hΩ) _
-  rw [e] at h
-  exact h
-
-/-- **The normal-trace obstruction.** Let `ψ` be a `C^N` field on `E` (`N ≥` the order of `A`),
-with **no boundary condition**, such that `ψ, Aᵗ ψ ∈ L²(Ω)` and `ψ ⊥ A_min u` for every
-`u ∈ K ∩ D(A_min)`. Then `Aᵗ ψ ⊥ K ∩ D(A_min)`. -/
-theorem formalAdj_mem_orthogonal (hΩ : IsOpen Ω) {N : ℕ} (hA : A.IsOrderLE N)
-    {K : Submodule 𝕜 (L2F 𝕜 Ω ι)} {ψ : κ → E → 𝕜} (hψs : ∀ j, ContDiff ℝ N (ψ j))
-    (hψ : ∀ j, MemLp (ψ j) 2 (volume.restrict Ω))
-    (hAψ : ∀ i, MemLp (A.formalAdj.apply ψ i) 2 (volume.restrict Ω))
-    (horth : ∀ u : (A.minimal Ω).domain, (u : L2F 𝕜 Ω ι) ∈ K →
-      ⟪A.minimal Ω u, toL2F hψ⟫_𝕜 = 0) :
-    toL2F hAψ ∈ (K ⊓ (A.minimal Ω).domain)ᗮ := by
-  rw [Submodule.mem_orthogonal]
-  rintro u ⟨huK, hu⟩
-  rw [← A.minimal_green hΩ hA ⟨u, hu⟩ hψs hψ hAψ]
-  exact horth ⟨u, hu⟩ huK
 
 end ConstCoeffOp
 

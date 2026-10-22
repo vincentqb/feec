@@ -36,8 +36,7 @@ point whose Euclidean distance to `ℝ³ \ Ω` exceeds `t`.
 
 * `WeakEB.mem_tsd_univ`: on `Ω = ℝ³` the weak equations propagate `L²(TSD)`.
 * `tsd_depDomain`: strong solutions of the Hodge wave equation of the grad–curl complex with TSD
-  data are symmetric and trace-free a.e. on `depDomain Ω t`; `tsd_depDomain_distrib`,
-  `tsd_depDomain_local` (restriction to `depDomain Ω t` lies in `L²(TSD)`).
+  data are symmetric and trace-free a.e. on `depDomain Ω t`.
 * The explicit datum `(0, 0, β)` violates TSD in the boundary layer
   (`Feec.Counterexamples.BoundedDomainTSD.beta_violation_boundary_layer`).
 
@@ -68,9 +67,6 @@ def dens (aE aB : Fin 3 → ℝ) (τE τB : ℝ) : ℝ :=
 /-- The energy flux `F = a_E × a_B - τ_B a_E + τ_E a_B` (component `c`). -/
 def vflux (aE aB : Fin 3 → ℝ) (τE τB : ℝ) (c : Fin 3) : ℝ :=
   aE (c + 1) * aB (c + 2) - aE (c + 2) * aB (c + 1) - τB * aE c + τE * aB c
-
-theorem dens_nonneg (aE aB : Fin 3 → ℝ) (τE τB : ℝ) : 0 ≤ dens aE aB τE τB := by
-  unfold dens; positivity
 
 /-- Cauchy–Schwarz in `ℝ⁴`. -/
 theorem sq_dot4_le (u0 u1 u2 u3 v0 v1 v2 v3 : ℝ) :
@@ -150,14 +146,6 @@ theorem violDir_symm (j i : VIdx) : violDir j i = violDir i j := by
 
 /-- The Euclidean structure on `ℝ³`: `toLp : R3 ≃ EuclideanSpace ℝ (Fin 3)`. -/
 abbrev euc : R3 ≃L[ℝ] EuclideanSpace ℝ (Fin 3) := (EuclideanSpace.equiv (Fin 3) ℝ).symm
-
-theorem euc_apply (x : R3) : euc x = WithLp.toLp 2 x := rfl
-
-theorem measurePreserving_euc : MeasurePreserving euc volume volume :=
-  PiLp.volume_preserving_toLp (Fin 3)
-
-theorem measurePreserving_euc_symm : MeasurePreserving euc.symm volume volume :=
-  PiLp.volume_preserving_ofLp (Fin 3)
 
 /-- `‖x‖_{EuclideanSpace}² = Σ xᵢ²`. -/
 theorem sum_sq_le_opNorm_sq (L : EuclideanSpace ℝ (Fin 3) →L[ℝ] ℝ) :
@@ -250,10 +238,6 @@ def cAx (k : Fin 3) : Ix → ℝ := fun ij =>
 
 theorem isTestField_cT (c : Ix → ℝ) {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) : IsTestField Ω (cT c ψ) :=
   fun ij => hψ.const_mul (c ij)
-
-theorem isTestField_curlM {Φ : Ix → R3 → ℝ} (hΦ : IsTestField Ω Φ) :
-    IsTestField Ω (curlM Φ) := fun _ =>
-  ((hΦ _).fderiv_apply _).sub ((hΦ _).fderiv_apply _)
 
 theorem isTestField_gradM {φ : Fin 3 → R3 → ℝ} (hφ : IsTestField Ω φ) :
     IsTestField Ω (gradM φ) := fun _ => (hφ _).fderiv_apply _
@@ -559,8 +543,8 @@ theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     rw [h0, PiLp.zero_apply]
     exact ae_restrict_of_ae_restrict_of_subset (fun z hz => hr z hz)
       ((Lp.coeFn_zero ℝ 2 (volume.restrict Ω)).mono fun x hx => hx)
-  have := h.isWeakSolution_viol.ae_eq_zero_of_preimage_ball euc measurePreserving_euc
-    measurePreserving_euc_symm isSymmHyperbolic_violDir hΩ (x := x) (R := r)
+  have := h.isWeakSolution_viol.ae_eq_zero_of_preimage_ball euc (PiLp.volume_preserving_toLp (Fin 3))
+    (PiLp.volume_preserving_ofLp (Fin 3)) isSymmHyperbolic_violDir hΩ (x := x) (R := r)
     (fun z hz => hr z hz) hz ht j
   simpa [Metric.ball, one_mul] using this
 
@@ -588,13 +572,6 @@ theorem depDomain_eq_iUnion (t : ℝ) :
   · rintro ⟨q, r, h, hy⟩
     refine ⟨r - dist (euc y) (euc q), by linarith, fun z hz => h z ?_⟩
     linarith [dist_triangle (euc z) (euc y) (euc q)]
-
-theorem isOpen_depDomain (t : ℝ) : IsOpen (depDomain Ω t) := by
-  rw [depDomain_eq_iUnion]
-  exact isOpen_iUnion fun p => isOpen_ball_euc _ _
-
-theorem measurableSet_depDomain (t : ℝ) : MeasurableSet (depDomain Ω t) :=
-  (isOpen_depDomain t).measurableSet
 
 /-- **Interior finite speed of propagation on an arbitrary open `Ω ⊆ ℝ³`**: under `WeakEB` with
 vanishing initial violation, the violation vanishes a.e. on `depDomain Ω t`. -/
@@ -893,80 +870,13 @@ theorem existsUnique_tsd_depDomain (hΩ : IsOpen Ω) {U₀ : Win Ω}
     fun t ht => tsd_depDomain hΩ hS (by rw [hS0]; exact h0) (by rw [hS0]; exact hE₀)
       (by rw [hS0]; exact hB₀) ht⟩
 
-/-- If `V = 0` a.e. on a measurable `S`, then `∫_Ω V g = 0` for every `g` supported in `S`. -/
-theorem integral_mul_eq_zero_of_ae {S : Set R3} (hS : MeasurableSet S) {V g : R3 → ℝ}
-    (hV : ∀ᵐ y ∂volume.restrict S, V y = 0) (hg : Function.support g ⊆ S) :
-    ∫ y, V y * g y ∂volume.restrict Ω = 0 := by
-  refine integral_eq_zero_of_ae (ae_restrict_of_ae ?_)
-  filter_upwards [(ae_restrict_iff' hS).1 hV] with y hy
-  by_cases hyS : y ∈ S
-  · simp [hy hyS]
-  · simp [Function.notMem_support.1 fun h => hyS (hg h)]
-
-/-- **Distributional form**: for `g` supported in `depDomain Ω t`,
-`∫_Ω (E_{ij} - E_{ji}) g = 0` and `∫_Ω (tr E) g = 0`, and likewise for `B`. -/
-theorem tsd_depDomain_distrib (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
-    (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U) (h0 : winσ (U 0) = 0)
-    (hE₀ : winE (U 0) ∈ tsd Ω) (hB₀ : winB (U 0) ∈ tsd Ω) {t : ℝ} (ht : t ∈ Icc 0 T)
-    {g : R3 → ℝ} (hg : Function.support g ⊆ depDomain Ω t) :
-    (∀ i j, ∫ y, (winE (U t) (i, j) y - winE (U t) (j, i) y) * g y ∂volume.restrict Ω = 0) ∧
-      ∫ y, (∑ i, winE (U t) (i, i) y) * g y ∂volume.restrict Ω = 0 ∧
-      (∀ i j, ∫ y, (winB (U t) (i, j) y - winB (U t) (j, i) y) * g y ∂volume.restrict Ω = 0) ∧
-      ∫ y, (∑ i, winB (U t) (i, i) y) * g y ∂volume.restrict Ω = 0 := by
-  have h := tsd_depDomain hΩ hU h0 hE₀ hB₀ ht
-  have hm := measurableSet_depDomain (Ω := Ω) t
-  refine ⟨fun i j => integral_mul_eq_zero_of_ae hm (h.mono fun y hy => ?_) hg,
-    integral_mul_eq_zero_of_ae hm (h.mono fun y hy => hy.1.2) hg,
-    fun i j => integral_mul_eq_zero_of_ae hm (h.mono fun y hy => ?_) hg,
-    integral_mul_eq_zero_of_ae hm (h.mono fun y hy => hy.2.2) hg⟩
-  · rw [hy.1.1 i j, sub_self]
-  · rw [hy.2.1 i j, sub_self]
-
 /-- Restriction `L²(Ω) → L²(S)` for `S ⊆ Ω`. -/
 def resL2 {S : Set R3} (hS : S ⊆ Ω) (f : L2 ℝ Ω) : L2 ℝ S :=
   (Measure.restrict_restrict_of_subset (μ := volume) hS ▸ (Lp.memLp f).restrict S).toLp _
 
-theorem coeFn_resL2 {S : Set R3} (hS : S ⊆ Ω) (f : L2 ℝ Ω) :
-    (resL2 hS f : R3 → ℝ) =ᵐ[volume.restrict S] f :=
-  MemLp.coeFn_toLp _
-
 /-- Restriction `L²(Ω; ℝ³ˣ³) → L²(S; ℝ³ˣ³)`, componentwise. -/
 def resM {S : Set R3} (hS : S ⊆ Ω) (X : L2F ℝ Ω Ix) : L2F ℝ S Ix :=
   WithLp.toLp 2 fun ij => resL2 hS (X ij)
-
-/-- **Local `L²(TSD)`**: if `X` is weakly divergence-free in `Ω` and symmetric and trace-free a.e.
-on an open `S ⊆ Ω`, its restriction lies in `L²(TSD)(S)`. -/
-theorem resM_mem_tsd (hΩ : IsOpen Ω) {S : Set R3} (hS : S ⊆ Ω) {X : L2F ℝ Ω Ix}
-    (hX : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, X ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0)
-    (hsym : ∀ᵐ y ∂volume.restrict S, SymTF X y) : resM hS X ∈ tsd S := by
-  have hc : ∀ ij, ((resM hS X) ij : R3 → ℝ) =ᵐ[volume.restrict S] X ij := fun ij =>
-    coeFn_resL2 hS (X ij)
-  refine mem_tsd_of_ae_symTF ?_ fun φ hφ => ?_
-  · filter_upwards [hsym, ae_all_iff.2 hc] with y hy hcy
-    refine ⟨fun i j => ?_, ?_⟩
-    · rw [hcy, hcy, hy.1]
-    · simp only [hcy]; exact hy.2
-  · have hφΩ : IsTestField Ω φ := fun i => (hφ i).mono hS
-    rw [← hX φ hφΩ]
-    refine Finset.sum_congr rfl fun ij _ => ?_
-    rw [integral_congr_ae ((hc ij).mono fun y hy => by simp only; rw [hy]),
-      setIntegral_eq_of_subset_of_forall_sdiff_eq_zero hΩ.measurableSet hS fun y hy => ?_]
-    have : y ∉ tsupport (φ ij.1) := fun h => hy.2 ((hφ ij.1).tsupport_subset h)
-    simp [pd, fderiv_of_notMem_tsupport (𝕜 := ℝ) this]
-
-/-- **Local `L²(TSD)` form**: at `t ∈ [0, T]` the restrictions of `E(t)` and `B(t)` to the open
-set `depDomain Ω t` lie in `L²(TSD)(depDomain Ω t)`. -/
-theorem tsd_depDomain_local (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
-    (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U) (h0 : winσ (U 0) = 0)
-    (hE₀ : winE (U 0) ∈ tsd Ω) (hB₀ : winB (U 0) ∈ tsd Ω) {t : ℝ} (ht : t ∈ Icc 0 T) :
-    resM (depDomain_subset ht.1) (winE (U t)) ∈ tsd (depDomain Ω t) ∧
-      resM (depDomain_subset ht.1) (winB (U t)) ∈ tsd (depDomain Ω t) := by
-  have h := tsd_depDomain hΩ hU h0 hE₀ hB₀ ht
-  obtain ⟨-, hdE, hdB, -⟩ := tsd_cone hΩ hU h0 hE₀ hB₀ (x := 0) (r := 0)
-    (fun z hz => absurd hz (not_lt.2 dist_nonneg)) ht
-  exact ⟨resM_mem_tsd hΩ _ (weakDiv_eq_zero_of_mem_ker hΩ hdE) (h.mono fun y hy => hy.1),
-    resM_mem_tsd hΩ _ (weakDiv_eq_zero_of_mem_ker hΩ hdB) (h.mono fun y hy => hy.2)⟩
 
 end Strong
 

@@ -17,9 +17,8 @@ On a bounded open `Ω ⊆ ℝ³` let `Z = L²(TSD) ∩ H̊(curl, M)`.
   symmetric, trace-free and divergence-free; an instance of the constrained density theorem
   `Feec.Domain.exists_isTestField_ker_dist_lt` for the row-homogeneous TSD operator `tsdOp`.
 * Hence `cl Z = L²(TSD₀)` (`closure_eq_tsd₀`) and the obstruction of `L²(TSD)` for `H̊(curl)`
-  is `L²(TSD) ⊓ L²(TSD₀)ᗮ` (`obstruction_eq`).
-* **The obstruction is large**: Hessians of harmonic functions lie in it
-  (`hessL2_mem_obstruction`); it is infinite-dimensional (`not_finiteDimensional_obstruction`) and
+  contains `L²(TSD) ⊓ L²(TSD₀)ᗮ` (`inf_orthogonal_tsd₀_le_obstruction`).
+* **The obstruction is large**: it is infinite-dimensional (`not_finiteDimensional_obstruction`) and
   no finite-dimensional correction restores density
   (`not_tsd_le_closure_sup_finiteDimensional`).
 * **Without the boundary condition density holds**: `cl (L²(TSD) ∩ H(curl)) = L²(TSD)` on
@@ -348,13 +347,6 @@ theorem closure_eq_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ 
       tsd₀ Ω hΩ hb :=
   le_antisymm (closure_le_tsd₀ hΩ hb) (tsd₀_le_closure hΩ hb hs hstar)
 
-/-- **The obstruction is exactly `L²(TSD) ⊓ L²(TSD₀)ᗮ`** (star-shaped bounded `Ω`). -/
-theorem obstruction_eq_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : R3} {s : ℝ}
-    (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
-    obstruction ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain (tsd Ω) =
-      tsd Ω ⊓ (tsd₀ Ω hΩ hb)ᗮ := by
-  rw [obstruction_eq, closure_eq_tsd₀ hΩ hb hs hstar]
-
 /-! ## `L²(TSD₀)`: gradients, zero mean, the `Ė(0)` argument -/
 
 /-- Gradients of `C¹` fields are orthogonal to `L²(TSD₀)`. -/
@@ -388,8 +380,8 @@ theorem integral_eq_zero_of_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBound
     simp [this]) (by simp)] at e
   simpa using e
 
-/-- `L²(TSD) ⊓ L²(TSD₀)ᗮ` lies in the obstruction of `L²(TSD)` for `H̊(curl)` (equality on
-star-shaped domains, `obstruction_eq_tsd₀`). -/
+/-- `L²(TSD) ⊓ L²(TSD₀)ᗮ` lies in the obstruction of `L²(TSD)` for `H̊(curl)` (with equality on
+star-shaped domains, by `closure_eq_tsd₀`). -/
 theorem inf_orthogonal_tsd₀_le_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
     tsd Ω ⊓ (tsd₀ Ω hΩ hb)ᗮ ≤
       obstruction ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain (tsd Ω) :=
@@ -468,15 +460,6 @@ theorem hessL2_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 �
     Filter.eventually_of_mem (hΩ.mem_nhds hx) fun y hy => hΔ y hy
   rw [pd, hev.fderiv_eq]
   simp
-
-/-- **Hessians of harmonic functions lie in the obstruction** of `L²(TSD)` for `H̊(curl)`: they
-are TSD and, being gradients, orthogonal to `L²(TSD₀) ⊇ L²(TSD) ∩ H̊(curl)`. -/
-theorem hessL2_mem_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 → ℝ}
-    (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x ∈ Ω, lap h x = 0) :
-    hessL2 hΩ hb hh ∈
-      obstruction ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain (tsd Ω) :=
-  inf_orthogonal_tsd₀_le_obstruction hΩ hb ⟨hessL2_mem_tsd hΩ hb hh hΔ, by
-    rw [hessL2_eq_gradL2]; exact gradL2_mem_orthogonal_tsd₀ hΩ hb _⟩
 
 /-! ## The obstruction is infinite-dimensional -/
 
@@ -713,38 +696,6 @@ theorem not_tsd_le_closure_sup_finiteDimensional (hΩ : IsOpen Ω) (hb : Bornolo
   exact not_finiteDimensional_inf_orthogonal_tsd₀ hΩ hb hne
     (Submodule.finiteDimensional_of_le hob)
 
-/-! ## Convex domains -/
-
-/-- A nonempty open convex set is star-shaped with respect to a ball. -/
-theorem exists_starBall_of_convex (hΩ : IsOpen Ω) (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :
-    ∃ x₀ : R3, ∃ s > 0, ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω := by
-  obtain ⟨x₀, hx₀⟩ := hne
-  obtain ⟨s, hs, hsub⟩ := Metric.isOpen_iff.1 hΩ x₀ hx₀
-  exact ⟨x₀, s, hs, fun y hy z hz => hc.segment_subset (hsub hz) hy⟩
-
-/-- `cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀)` on a nonempty bounded open convex `Ω`. -/
-theorem closure_eq_tsd₀_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :
-    (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure =
-      tsd₀ Ω hΩ hb := by
-  obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
-  exact closure_eq_tsd₀ hΩ hb hs hstar
-
-/-- `cl (L²(TSD) ∩ H̊(curl)) = L²(TSD₀)` on a ball. -/
-theorem closure_eq_tsd₀_ball (x₀ : R3) {R : ℝ} (hR : 0 < R) :
-    (tsd (Metric.ball x₀ R) ⊓
-      ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal (Metric.ball x₀ R)).domain).topologicalClosure =
-      tsd₀ (Metric.ball x₀ R) Metric.isOpen_ball Metric.isBounded_ball :=
-  closure_eq_tsd₀_of_convex _ _ (convex_ball x₀ R) (Metric.nonempty_ball.2 hR)
-
-/-- The obstruction is exactly `L²(TSD) ⊓ L²(TSD₀)ᗮ` on a nonempty bounded open convex `Ω`. -/
-theorem obstruction_eq_tsd₀_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :
-    obstruction ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain (tsd Ω) =
-      tsd Ω ⊓ (tsd₀ Ω hΩ hb)ᗮ := by
-  obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
-  exact obstruction_eq_tsd₀ hΩ hb hs hstar
-
 /-! ## Density of `L²(TSD) ∩ H(curl)` in `L²(TSD)` -/
 
 /-- A field of `L²(TSD)` satisfies the TSD constraints in `𝒟'(Ω)` (tested against `C_c^∞(Ω)`
@@ -863,34 +814,6 @@ theorem closure_tsd_inf_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded
       tsd Ω :=
   le_antisymm (Submodule.topologicalClosure_minimal _ inf_le_left isClosed_tsd)
     (tsd_le_closure_curl_maximal hΩ hb hs hstar)
-
-theorem closure_tsd_inf_curl_maximal_of_convex (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hc : Convex ℝ Ω) (hne : Ω.Nonempty) :
-    (tsd Ω ⊓
-      ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain).topologicalClosure =
-      tsd Ω := by
-  obtain ⟨x₀, s, hs, hstar⟩ := exists_starBall_of_convex hΩ hc hne
-  exact closure_tsd_inf_curl_maximal hΩ hb hs hstar
-
-theorem closure_tsd_inf_curl_maximal_ball (x₀ : R3) {R : ℝ} (hR : 0 < R) :
-    (tsd (Metric.ball x₀ R) ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal
-      (Metric.ball x₀ R)).domain).topologicalClosure = tsd (Metric.ball x₀ R) :=
-  closure_tsd_inf_curl_maximal_of_convex Metric.isOpen_ball Metric.isBounded_ball
-    (convex_ball x₀ R) (Metric.nonempty_ball.2 hR)
-
-/-- The `H(curl)` density holds inside `H(curl) ∩ H(div)`, the magnetic component of `D(L)` of
-Prop 4.17 (`L²(TSD) ⊆ H(div)`). -/
-theorem closure_tsd_inf_curl_maximal_inf_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    {x₀ : R3} {s : ℝ} (hs : 0 < s)
-    (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
-    (tsd Ω ⊓ (((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain ⊓
-      (gradCurl ℝ hΩ).d₀†.domain)).topologicalClosure = tsd Ω := by
-  have e : tsd Ω ⊓ (((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain ⊓
-      (gradCurl ℝ hΩ).d₀†.domain) =
-      tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain := by
-    refine le_antisymm (inf_le_inf_left _ inf_le_left) fun B hB => ⟨hB.1, hB.2, ?_⟩
-    exact (gradCurl ℝ hΩ).d₀†.ker_le_domain ((mem_tsd_iff_ker hΩ).1 hB.1).2.2
-  rw [e, closure_tsd_inf_curl_maximal hΩ hb hs hstar]
 
 /-! ## The largest propagating constraint space `K*` -/
 

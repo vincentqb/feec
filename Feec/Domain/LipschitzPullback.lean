@@ -296,9 +296,6 @@ def pullRow (F u : Fin 3 → (Fin 3 → ℝ) → ℝ) (i : Fin 3) (x : Fin 3 →
 
 variable {F u : Fin 3 → (Fin 3 → ℝ) → ℝ}
 
-theorem contDiff_cmap (hF : ∀ k, ContDiff ℝ ∞ (F k)) : ContDiff ℝ ∞ (cmap F) :=
-  contDiff_pi.2 hF
-
 theorem contDiff_cd (hF : ∀ k, ContDiff ℝ ∞ (F k)) (k i : Fin 3) :
     ContDiff ℝ ∞ (cd F k i) :=
   contDiff_iterDeriv (hF k) [coordDir i]
@@ -306,13 +303,13 @@ theorem contDiff_cd (hF : ∀ k, ContDiff ℝ ∞ (F k)) (k i : Fin 3) :
 theorem contDiff_pullRow (hF : ∀ k, ContDiff ℝ ∞ (F k)) (hu : ∀ k, ContDiff ℝ ∞ (u k))
     (i : Fin 3) : ContDiff ℝ ∞ (pullRow F u i) := by
   unfold pullRow
-  exact ContDiff.sum fun k _ => (contDiff_cd hF k i).mul ((hu k).comp (contDiff_cmap hF))
+  exact ContDiff.sum fun k _ => (contDiff_cd hF k i).mul ((hu k).comp (contDiff_pi.2 hF))
 
 theorem fderiv_comp_cmap (hF : ∀ k, ContDiff ℝ ∞ (F k)) {g : (Fin 3 → ℝ) → ℝ}
     (hg : ContDiff ℝ ∞ g) (x : Fin 3 → ℝ) (j : Fin 3) :
     fderiv ℝ (fun y => g (cmap F y)) x (coordDir j) =
       ∑ l, cd F l j x * fderiv ℝ g (cmap F x) (coordDir l) := by
-  have hc : DifferentiableAt ℝ (cmap F) x := (contDiff_cmap hF).differentiable (by simp) x
+  have hc : DifferentiableAt ℝ (cmap F) x := (contDiff_pi.2 hF).differentiable (by simp) x
   have hgd : DifferentiableAt ℝ g (cmap F x) := hg.differentiable (by simp) _
   rw [show (fun y => g (cmap F y)) = g ∘ cmap F from rfl, fderiv_comp x hgd hc,
     ContinuousLinearMap.comp_apply]
@@ -334,7 +331,7 @@ theorem fderiv_pullRow (hF : ∀ k, ContDiff ℝ ∞ (F k)) (hu : ∀ k, ContDif
   have hJ : ∀ k, DifferentiableAt ℝ (cd F k i) x := fun k =>
     (contDiff_cd hF k i).differentiable (by simp) x
   have hU : ∀ k, DifferentiableAt ℝ (fun y => u k (cmap F y)) x := fun k =>
-    ((hu k).comp (contDiff_cmap hF)).differentiable (by simp) x
+    ((hu k).comp (contDiff_pi.2 hF)).differentiable (by simp) x
   have e : pullRow F u i = fun y => ∑ k, cd F k i y * u k (cmap F y) := rfl
   rw [e, fderiv_fun_sum fun k _ => (hJ k).fun_mul (hU k), _root_.sum_apply]
   refine Finset.sum_congr rfl fun k _ => ?_
@@ -559,7 +556,7 @@ theorem integral_curl_pullFun (hΦ : LipschitzWith K Φ) {u : Fin 3 × Fin 3 →
       (B := 3 * (2 * (K : ℝ) ^ 2 * Cw)) (fun m => ?_) (fun m x => ?_) ?_
     · refine continuous_finsetSum _ fun p _ => Continuous.mul ?_ ?_
       · exact (continuous_apply p).comp ((continuous_apply j.2).comp (hcj m).matrix_adjugate)
-      · exact (hcu (j.1, p)).continuous.comp (contDiff_cmap (hF m)).continuous
+      · exact (hcu (j.1, p)).continuous.comp (contDiff_pi.2 (hF m)).continuous
     · refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
       calc ∑ p, |(cjac (F m) x).adjugate j.2 p * A.apply u (j.1, p) (cmap (F m) x)| ≤
             ∑ _p : Fin 3, (2 * (K : ℝ) ^ 2 * Cw) :=
@@ -1551,10 +1548,6 @@ def wE (U : Set (Fin 3 → ℝ)) : Weight U (Fin 3 × Fin 3) (Fin 3 × Fin 3) :=
 bounded, and with `ε Φ^* = P` (the Piola transform). -/
 def coeff (hU : MeasurableSet U) : L2F ℝ U (Fin 3 × Fin 3) →L[ℝ] L2F ℝ U (Fin 3 × Fin 3) :=
   refl.wpull (Φ.wE U) hU (fun _ => Iff.rfl)
-
-theorem wpullFun_refl {ι κ : Type*} [Fintype κ] (M : (Fin 3 → ℝ) → ι → κ → ℝ)
-    (u : κ → (Fin 3 → ℝ) → ℝ) (i : ι) (x : Fin 3 → ℝ) :
-    refl.wpullFun M u i x = ∑ k, M x i k * u k x := rfl
 
 /-- **`ε Φ^* u = P u`**: the coefficient turns the `1`-form pullback into the Piola transform
 (`|det DΦ| DΦ⁻¹ DΦ⁻ᵀ DΦᵀ = |det DΦ| DΦ⁻¹` at almost every point). -/

@@ -25,7 +25,7 @@ adjoints are `div div`, `sym curl` and `-dev grad`, the operators of the div-div
   `H(grad grad) = {u ∈ L² : ∇²u ∈ L²}` (weakly) and `H̊(grad grad)` is the closure of the test
   functions in its graph norm (these are `H̊²` and, for regular `Ω`, `H²`; not proved here)
   (`hessianComplex.minimalComplex`, `hessianComplex.maximalComplex`), whose differentials are
-  the realizations of `hess`, `curl`, `div` (`hessian_minimalComplex_d₀`, …).
+  the realizations of `hess`, `curl`, `div`.
 
 The duality with the div-div complex is in `Feec.Domain.DivDivComplex`. No closed-range statement
 is made (it needs the regularity of `Ω`).
@@ -313,72 +313,6 @@ def hessianComplex {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) : ConstrainedCom
 section OnOmega
 
 variable {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω)
-
-theorem hessianComplex_V_one : (hessianComplex 𝕜 hΩ).V 1 = L2F.symSubmodule 𝕜 Ω 3 := rfl
-
-theorem hessianComplex_V_two : (hessianComplex 𝕜 hΩ).V 2 = L2F.traceFreeSubmodule 𝕜 Ω 3 := rfl
-
-theorem hessianComplex_V_zero : (hessianComplex 𝕜 hΩ).V 0 = ⊤ :=
-  L2F.matSubmodule_idMat (ι := Unit)
-
-theorem hessianComplex_V_three : (hessianComplex 𝕜 hΩ).V 3 = ⊤ :=
-  L2F.matSubmodule_idMat (ι := Fin 3)
-
-/-- `d₀ = hess_min`: `H̊(grad grad, Ω) → L²(Ω; Sym)`. -/
-theorem hessian_minimalComplex_d₀ :
-    (hessianComplex 𝕜 hΩ).minimalComplex.d 0 1 =
-      (hessOp 3).minimalVia (freeEmb 𝕜 Ω Unit) (symEmb 𝕜 Ω 3) :=
-  (hessianComplex 𝕜 hΩ).minimalComplex_d 0
-
-theorem hessian_minimalComplex_d₁ :
-    (hessianComplex 𝕜 hΩ).minimalComplex.d 1 2 =
-      curlSymOp.minimalVia (symEmb 𝕜 Ω 3) (traceFreeEmb 𝕜 Ω 3) :=
-  (hessianComplex 𝕜 hΩ).minimalComplex_d 1
-
-theorem hessian_minimalComplex_d₂ :
-    (hessianComplex 𝕜 hΩ).minimalComplex.d 2 3 =
-      divDevOp.minimalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) :=
-  (hessianComplex 𝕜 hΩ).minimalComplex_d 2
-
-include hΩ in
-/-- On symmetric fields `curl ∘ sym` and `curl` have the same realization: `d₁ = curl_min`,
-`H̊(curl, Ω; Sym) → L²(Ω; T)`. -/
-theorem curlSymOp_minimalVia :
-    (curlSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (symEmb 𝕜 Ω 3) (traceFreeEmb 𝕜 Ω 3) =
-      (curlOp 3).minimalVia (symEmb 𝕜 Ω 3) (traceFreeEmb 𝕜 Ω 3) := by
-  refine minimalVia_congr _ _ _ fun φ hφ x hx => ?_
-  have hmem : testField hφ ∈ L2F.symSubmodule 𝕜 Ω 3 := by rw [← hx]; exact x.2
-  rw [(curlOp 3).testField_apply_congr hΩ hφ (hφ.matMulField (symMat 3))
-    (L2F.testField_eq_of_mem_matSubmodule hφ hmem)]
-  exact testField_congr _ _ (curlSymOp_apply fun i => (hφ i).contDiff)
-
-include hΩ in
-/-- On trace-free fields `div ∘ dev` and `div` have the same realization: `d₂ = div_min`,
-`H̊(div, Ω; T) → L²(Ω; 𝕜³)`. -/
-theorem divDevOp_minimalVia :
-    (divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimalVia (traceFreeEmb 𝕜 Ω 3)
-        (freeEmb 𝕜 Ω (Fin 3)) =
-      (divOp 3 3).minimalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
-  refine minimalVia_congr _ _ _ fun φ hφ x hx => ?_
-  have hmem : testField hφ ∈ L2F.traceFreeSubmodule 𝕜 Ω 3 := by rw [← hx]; exact x.2
-  rw [(divOp 3 3).testField_apply_congr hΩ hφ (hφ.matMulField (deviatoricMat 3))
-    (L2F.testField_eq_of_mem_matSubmodule hφ hmem)]
-  exact testField_congr _ _ (divDevOp_apply fun i => (hφ i).contDiff)
-
-theorem hessian_maximalComplex_d₀ :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).d 0 1 =
-      (hessOp 3).maximalVia (freeEmb 𝕜 Ω Unit) (symEmb 𝕜 Ω 3) :=
-  (hessianComplex 𝕜 hΩ).maximalComplex_d hΩ 0
-
-theorem hessian_maximalComplex_d₁ :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).d 1 2 =
-      curlSymOp.maximalVia (symEmb 𝕜 Ω 3) (traceFreeEmb 𝕜 Ω 3) :=
-  (hessianComplex 𝕜 hΩ).maximalComplex_d hΩ 1
-
-theorem hessian_maximalComplex_d₂ :
-    ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).d 2 3 =
-      divDevOp.maximalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) :=
-  (hessianComplex 𝕜 hΩ).maximalComplex_d hΩ 2
 
 end OnOmega
 

@@ -648,11 +648,6 @@ theorem continuous_symF {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Continuous (Ψ i
     Continuous (symF Ψ ij) :=
   ((hΨ ij).add (hΨ _)).div_const 2
 
-theorem symF_eq_self {Ψ : Ix → R3 → ℝ} (hs : ∀ i j, Ψ (i, j) = Ψ (j, i)) : symF Ψ = Ψ := by
-  funext ij x
-  simp only [symF, ← hs ij.1 ij.2]
-  ring
-
 /-- The scalar field `g I`. -/
 def diagOf (g : R3 → ℝ) : Ix → R3 → ℝ := fun ij => if ij.1 = ij.2 then g else 0
 
@@ -669,11 +664,6 @@ theorem curlM_diagOf (g : R3 → ℝ) (ij : Ix) (x : R3) :
   obtain ⟨a, b⟩ := ij
   simp only [curlM, diagOf, skewOf, pd_ite_zero]
   fin_cases a <;> fin_cases b <;> simp
-
-/-- `curl (g I)` is skew-symmetric (its rows are `∇g × e_i`). -/
-theorem curlM_diagOf_swap (g : R3 → ℝ) (j k : Fin 3) (x : R3) :
-    curlM (diagOf g) (k, j) x = -curlM (diagOf g) (j, k) x := by
-  rw [curlM_diagOf, curlM_diagOf, skewOf_swap]
 
 /-- `∂_k ((f + g)/2) = (∂_k f + ∂_k g)/2`. -/
 theorem pd_avg {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)

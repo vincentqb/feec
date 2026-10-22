@@ -21,27 +21,26 @@ that `Feec.HilbertComplex.eigenDense_wave_fin3` needs instead, in degrees `0` an
   (`HilbertComplex.HasCompactPropertyAt.restrictScalars`), to the cube `Q = (0, ½)³` by
   compression along the parity extension (`cubeComplex_hasCompactPropertyAt`) and to every open
   cube by affine transport (`complexCube_hasCompactPropertyAt`).
-* **Rellich on bounded open sets** (`hasCompactBall_minimal_grad`,
-  `isCompact_closure_minimal_grad_ball`): for every bounded open `Ω ⊆ ℝ³`, the unit box
+* **Rellich on bounded open sets** (`hasCompactBall_minimal_grad`): for every bounded open
+  `Ω ⊆ ℝ³`, the unit box
   `‖u‖, ‖grad u‖ ≤ 1` of `D(grad_min) = H̊¹(Ω; ℝ³)` is precompact in `L²(Ω; ℝ³)`, by extension by
   zero into a cube (`Feec.Domain.ConstCoeffOp.hasCompactBall_minimal_of_subset`). In `ℝⁿ`, for
-  `H̊¹ = H̊Λ⁰` (`hasCompactBall_minimal_extDeriv_zero`, `isCompact_closure_minimal_extDeriv_ball`):
-  from `H̊Λ(Q)` (`Feec.Models.Cube.FEM.hasCompactProperty_min`) by an affine map and extension by
-  zero; for `H̊¹(Ω; ℝᵐ)`, `Ω ⊆ ℝⁿ`, component by component (`hasCompactBall_minimal_gradOp`,
-  `isCompact_closure_minimal_gradOp_ball`). Hence **(3a)** `gradCurl_hasCompactPropertyAt_zero`.
+  `H̊¹ = H̊Λ⁰` (`hasCompactBall_minimal_extDeriv_zero`): from `H̊Λ(Q)`
+  (`Feec.Models.Cube.FEM.hasCompactProperty_min`) by an affine map and extension by zero; for
+  `H̊¹(Ω; ℝᵐ)`, `Ω ⊆ ℝⁿ`, component by component (`hasCompactBall_minimal_gradOp`). Hence
+  **(3a)** `gradCurl_hasCompactPropertyAt_zero`.
 * **Weber compactness** (`HasWeberCompactness Ω`: the unit box of `D(curl_min) ∩ D(div_max)` on
   matrix fields is precompact) is the compactness property in degree `1`
   (`hasWeberCompactness_iff`); it holds on every open cube (`hasWeberCompactness_cube`).
 * **(3b) Weber's lemma with a coefficient** (`HasWeberCompactness.weber_of_coeff`, unconditional
-  on cubes `weber_of_coeff`, row-wise matrices `HasWeberCompactness.weber_of_rowCoeff`): for a
+  on cubes `weber_of_coeff`): for a
   bounded measurable coercive `ε`, `{u ∈ D(curl_min) : div(ε u) ∈ L², ‖u‖, ‖curl u‖,
   ‖div(ε u)‖ ≤ 1}` is precompact (`Feec.Operator.HasCompactPair.exists_isCompact_coeff`, the
   Helmholtz argument with Rellich and Weber).
 * **(3c) The criterion** `eigenDense_gradCurl_of_compactCurlPerp`: on a bounded open `Ω` such
   that `curl_min` is compact off its kernel (`Operator.HasCompactPerp`), the wave group of
   `gradCurl ℝ hΩ` has a dense set of eigenvectors; `eigenDense_gradCurl_of_weber` is the
-  corollary under `HasWeberCompactness Ω`. On cubes it recovers
-  `Feec.Models.Cube.Ident.eigenDense_gradCurl_cube` (`eigenDense_gradCurl_cube_of_weber`).
+  corollary under `HasWeberCompactness Ω`.
 
 **What is proved and what is assumed.** Degree `0` (Rellich) is proved on every bounded open set,
 in `ℝ³` for `ℝ³`-valued fields and in `ℝⁿ` for `ℝᵐ`-valued fields (`hasCompactBall_minimal_gradOp`).
@@ -100,32 +99,11 @@ namespace Feec.Models.BoundedDomain
 
 open Feec.Fourier Feec.Fourier.GradCurl Feec.HilbertComplex Feec.Domain Feec.Operator
 
-/-- The frequencies `2πk` of the torus with `|2πk|² ≤ R` form a finite set. -/
-theorem finite_norm_freq_sq_le (R : ℝ) :
-    {k : Fin 3 → ℤ | ‖Torus.freq k‖ ^ 2 ≤ R}.Finite := by
-  refine (Torus.finite_bandN ⌈R⌉₊).subset fun k hk j => ?_
-  have hk' : ‖Torus.freq k‖ ^ 2 ≤ R := hk
-  have h1 : ((k j : ℝ)) ^ 2 ≤ ‖Torus.freq k‖ ^ 2 := by
-    rw [Torus.norm_freq_sq]
-    have hs := Finset.single_le_sum (f := fun j => ((k j : ℝ)) ^ 2) (fun _ _ => sq_nonneg _)
-      (Finset.mem_univ j)
-    have hpi : (1 : ℝ) ≤ (2 * Real.pi) ^ 2 := by nlinarith [Real.two_le_pi]
-    nlinarith [sq_nonneg ((k j : ℝ))]
-  have h2 : |k j| ≤ (k j) ^ 2 := by
-    rcases eq_or_ne (k j) 0 with h0 | h0
-    · simp [h0]
-    · have : 1 ≤ |k j| := Int.one_le_abs h0
-      rw [← sq_abs]; nlinarith
-  have h3 : ((|k j| : ℤ) : ℝ) ≤ ⌈R⌉₊ := by
-    have : ((|k j| : ℤ) : ℝ) ≤ ((k j : ℝ)) ^ 2 := by exact_mod_cast h2
-    exact this.trans (h1.trans (hk'.trans (Nat.le_ceil R)))
-  exact_mod_cast h3
-
 /-- **Rellich on the torus, degree `0`**: `‖grad_ξ v‖² = |ξ|² ‖v‖²`, coercive off a finite set of
 frequencies (`hasCompactPropertyAt_of_coercive`). -/
 theorem torus_hasCompactPropertyAt_zero : Models.Torus.GradCurl.complex.HasCompactPropertyAt 0 := by
   refine hasCompactPropertyAt_of_coercive (Torus.symbolComplex Fourier.GradCurl.gradCurl) 0
-    (fun k => ‖Torus.freq k‖ ^ 2) ?_ finite_norm_freq_sq_le
+    (fun k => ‖Torus.freq k‖ ^ 2) ?_ Models.Torus.DeRham.finite_norm_freq_sq_le
   have hn : ComplexShape.fin3.next 0 = 1 := ComplexShape.next_eq' _ (by simp)
   have hp : ComplexShape.fin3.prev 0 = 0 := ComplexShape.prev_eq_self' _ _ (by simp)
   rw [hn, hp]
@@ -140,7 +118,7 @@ theorem torus_hasCompactPropertyAt_zero : Models.Torus.GradCurl.complex.HasCompa
 symbol `curl_ξ` kills the gradients and there is no compactness. -/
 theorem torus_hasCompactPropertyAt_one : Models.Torus.GradCurl.complex.HasCompactPropertyAt 1 := by
   refine hasCompactPropertyAt_of_coercive (Torus.symbolComplex Fourier.GradCurl.gradCurl) 1
-    (fun k => ‖Torus.freq k‖ ^ 2) ?_ finite_norm_freq_sq_le
+    (fun k => ‖Torus.freq k‖ ^ 2) ?_ Models.Torus.DeRham.finite_norm_freq_sq_le
   have hn : ComplexShape.fin3.next 1 = 2 := ComplexShape.next_eq' _ (by simp)
   have hp : ComplexShape.fin3.prev 1 = 0 := ComplexShape.prev_eq' _ (by simp)
   rw [hn, hp]
@@ -260,14 +238,6 @@ theorem hasCompactBall_minimal_extDeriv_zero {n : ℕ} {Ω : Set (Fin n → ℝ)
   exact ConstCoeffOp.hasCompactBall_minimal_of_subset_preimage (extDerivOp_isHomogeneous n 0) ha
     b hΩ (Cube.FEM.isOpen_cubeDomain n) hsub (hasCompactBall_minimal_extDeriv_cube n)
 
-/-- **Rellich's theorem in `ℝⁿ`, closure form.** -/
-theorem isCompact_closure_minimal_extDeriv_ball {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
-    (hb : Bornology.IsBounded Ω) :
-    IsCompact (closure {u : L2F ℝ Ω (formIdx n 0) |
-      ∃ hu : u ∈ ((extDerivOp ℝ n 0).minimal Ω).domain,
-        ‖u‖ ≤ 1 ∧ ‖(extDerivOp ℝ n 0).minimal Ω ⟨u, hu⟩‖ ≤ 1}) :=
-  (hasCompactBall_minimal_extDeriv_zero hΩ hb).isCompact_closure
-
 /-- The element of a `1`-form index `s = {j}`. -/
 def formIdxOne {n : ℕ} (s : formIdx n 1) : Fin n :=
   (Finset.card_eq_one.1 (by exact_mod_cast s.2 : s.1.card = 1)).choose
@@ -312,16 +282,6 @@ theorem hasCompactBall_minimal_gradOp {n m : ℕ} {Ω : Set (Fin n → ℝ)} (h�
   refine ⟨fun _ => φ i, fun _ => hφ i, ?_⟩
   rw [compF_testField, compF_testField]
   exact Prod.ext rfl (testField_congr _ _ (gradOp_apply_formIdxOne φ i))
-
-/-- **Rellich's theorem for `H̊¹(Ω; ℝᵐ)`, closure form.** -/
-theorem isCompact_closure_minimal_gradOp_ball {n m : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
-    (hb : Bornology.IsBounded Ω) :
-    IsCompact (closure {u : L2F ℝ Ω (Fin m) |
-      ∃ hu : u ∈
-        ((gradOp n m : ConstCoeffOp (Fin n → ℝ) ℝ (Fin m) (Fin m × Fin n)).minimal Ω).domain,
-        ‖u‖ ≤ 1 ∧ ‖(gradOp n m : ConstCoeffOp (Fin n → ℝ) ℝ (Fin m) (Fin m × Fin n)).minimal Ω
-          ⟨u, hu⟩‖ ≤ 1}) :=
-  (hasCompactBall_minimal_gradOp hΩ hb).isCompact_closure
 
 end DeRham
 
@@ -368,14 +328,6 @@ theorem hasCompactBall_minimal_grad (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   obtain ⟨b, s, hs, hsub⟩ := exists_openCube_superset hb
   exact (gradOp 3 3).hasCompactBall_minimal_of_subset hΩ (Cube.Geometry.isOpen_openCube b s) hsub
     (hasCompactBall_minimal_grad_openCube b hs)
-
-/-- **Rellich's theorem, closure form**: the closure of
-`{u ∈ D(grad_min) : ‖u‖ ≤ 1, ‖grad u‖ ≤ 1}` is compact in `L²(Ω; ℝ³)`. -/
-theorem isCompact_closure_minimal_grad_ball (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
-    IsCompact (closure {u : L2F ℝ Ω (Fin 3) |
-      ∃ hu : u ∈ ((gradOp 3 3 : ConstCoeffOp R3 ℝ (Fin 3) Ix).minimal Ω).domain,
-        ‖u‖ ≤ 1 ∧ ‖(gradOp 3 3 : ConstCoeffOp R3 ℝ (Fin 3) Ix).minimal Ω ⟨u, hu⟩‖ ≤ 1}) :=
-  (hasCompactBall_minimal_grad hΩ hb).isCompact_closure
 
 /-- **(3a) The thesis' complex has the compactness property in degree `0` on every bounded open
 `Ω ⊆ ℝ³`.** -/
@@ -472,20 +424,6 @@ theorem eigenDense_gradCurl_of_weber (hΩ : IsOpen Ω) (hb : Bornology.IsBounded
     (hW : HasWeberCompactness Ω) : (gradCurl ℝ hΩ).EigenDense :=
   eigenDense_gradCurl_of_compactCurlPerp hΩ hb (hW.hasCompactPerp_curl hΩ)
 
-/-- **Non-vacuity of the hypothesis of `eigenDense_gradCurl_of_compactCurlPerp`**: on every open
-cube `curl_min` is compact off its kernel. -/
-theorem hasCompactPerp_curl_cube (b : R3) {s : ℝ} (hs : 0 < s) :
-    HasCompactPerp ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal (Cube.Geometry.openCube b s)) :=
-  (hasWeberCompactness_cube b hs).hasCompactPerp_curl (Cube.Geometry.isOpen_openCube b s)
-
-/-- **The criterion recovers the cubes**: `Ident.eigenDense_gradCurl_cube` (proved there through
-the Fourier eigenbasis of the torus) follows from `eigenDense_gradCurl_of_weber` and
-`hasWeberCompactness_cube`. -/
-theorem eigenDense_gradCurl_cube_of_weber (b : R3) {s : ℝ} (hs : 0 < s) :
-    (gradCurl ℝ (Cube.Geometry.isOpen_openCube b s)).EigenDense :=
-  eigenDense_gradCurl_of_weber _ (Cube.Geometry.isBounded_openCube b s)
-    (hasWeberCompactness_cube b hs)
-
 end EigenDense
 
 /-! ### Weber's lemma with a coefficient -/
@@ -573,94 +511,6 @@ theorem weber_of_coeff (b : R3) {s : ℝ} (hs : 0 < s)
           ⟨coeffMul ε hε Λ hΛ u, hu'⟩‖ ≤ 1 → u ∈ K :=
   (hasWeberCompactness_cube b hs).weber_of_coeff (Cube.Geometry.isOpen_openCube b s)
     (Cube.Geometry.isBounded_openCube b s) ε hε hlam0 hΛ hlam
-
-/-- **Non-vacuity of the coefficient hypotheses**: the identity coefficient (`λ = Λ = 1`). -/
-theorem coeff_id_hypotheses :
-    AEStronglyMeasurable (fun _ : R3 => ContinuousLinearMap.id ℝ (EuclideanSpace ℝ Ix))
-        (volume.restrict Ω) ∧
-      (∀ᵐ x ∂volume.restrict Ω,
-        ‖(fun _ : R3 => ContinuousLinearMap.id ℝ (EuclideanSpace ℝ Ix)) x‖ ≤ 1) ∧
-      ∀ᵐ x ∂volume.restrict Ω, ∀ M : EuclideanSpace ℝ Ix,
-        1 * ‖M‖ ^ 2 ≤ ⟪(fun _ : R3 => ContinuousLinearMap.id ℝ (EuclideanSpace ℝ Ix)) x M, M⟫_ℝ :=
-  ⟨aestronglyMeasurable_const, Eventually.of_forall fun _ => ContinuousLinearMap.norm_id_le,
-    Eventually.of_forall fun _ M => by simp⟩
-
-/-! #### A matrix coefficient acting on the rows -/
-
-open Matrix in
-/-- The row-wise action `(A · M)_{ab} = Σ_c A_{bc} M_{ac}` of a `3 × 3` matrix on `ℝ³ˣ³`. -/
-def rowOpₗ (A : Matrix (Fin 3) (Fin 3) ℝ) : EuclideanSpace ℝ Ix →ₗ[ℝ] EuclideanSpace ℝ Ix where
-  toFun M := WithLp.toLp 2 fun ab => ∑ c, A ab.2 c * M (ab.1, c)
-  map_add' M N := by ext ab; simp [mul_add, Finset.sum_add_distrib]
-  map_smul' r M := by
-    ext ab; simp only [PiLp.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum]
-    exact Finset.sum_congr rfl fun _ _ => by ring
-
-/-- The row-wise action, linear in the matrix. -/
-def rowOp : Matrix (Fin 3) (Fin 3) ℝ →ₗ[ℝ] (EuclideanSpace ℝ Ix →L[ℝ] EuclideanSpace ℝ Ix) where
-  toFun A := LinearMap.toContinuousLinearMap (rowOpₗ A)
-  map_add' A B := by ext M ab; simp [rowOpₗ, add_mul, Finset.sum_add_distrib]
-  map_smul' r A := by ext M ab; simp [rowOpₗ, Finset.mul_sum, mul_assoc]
-
-theorem continuous_rowOp : Continuous rowOp := LinearMap.continuous_of_finiteDimensional _
-
-theorem rowOp_apply (A : Matrix (Fin 3) (Fin 3) ℝ) (M : EuclideanSpace ℝ Ix) (ab : Ix) :
-    rowOp A M ab = ∑ c, A ab.2 c * M (ab.1, c) := rfl
-
-open Matrix in
-theorem inner_rowOp (A : Matrix (Fin 3) (Fin 3) ℝ) (M : EuclideanSpace ℝ Ix) :
-    ⟪rowOp A M, M⟫_ℝ = ∑ a, (A *ᵥ fun c => M (a, c)) ⬝ᵥ fun c => M (a, c) := by
-  simp [PiLp.inner_apply, rowOp_apply, Fintype.sum_prod_type, mulVec, dotProduct, mul_comm]
-
-open Matrix in
-theorem norm_sq_eq_sum_rows (M : EuclideanSpace ℝ Ix) :
-    ‖M‖ ^ 2 = ∑ a, (fun c => M (a, c)) ⬝ᵥ fun c => M (a, c) := by
-  rw [EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]; simp [dotProduct, _root_.sq]
-
-open Matrix in
-theorem norm_sq_rowOp (A : Matrix (Fin 3) (Fin 3) ℝ) (M : EuclideanSpace ℝ Ix) :
-    ‖rowOp A M‖ ^ 2 = ∑ a, (A *ᵥ fun c => M (a, c)) ⬝ᵥ (A *ᵥ fun c => M (a, c)) := by
-  rw [EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]; simp [dotProduct, _root_.sq, rowOp_apply, mulVec]
-
-open Matrix in
-/-- `|A ξ| ≤ Λ |ξ|` row by row gives `‖A ·‖ ≤ Λ` on `ℝ³ˣ³`. -/
-theorem norm_rowOp_le {A : Matrix (Fin 3) (Fin 3) ℝ} {Λ : ℝ} (hΛ0 : 0 ≤ Λ)
-    (h : ∀ ξ : Fin 3 → ℝ, (A *ᵥ ξ) ⬝ᵥ (A *ᵥ ξ) ≤ Λ ^ 2 * (ξ ⬝ᵥ ξ)) : ‖rowOp A‖ ≤ Λ := by
-  refine ContinuousLinearMap.opNorm_le_bound _ hΛ0 fun M => ?_
-  have : ‖rowOp A M‖ ^ 2 ≤ (Λ * ‖M‖) ^ 2 := by
-    rw [norm_sq_rowOp, mul_pow, norm_sq_eq_sum_rows, Finset.mul_sum]
-    exact Finset.sum_le_sum fun a _ => h _
-  exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 this
-
-open Matrix in
-/-- `λ |ξ|² ≤ ⟪A ξ, ξ⟫` row by row gives `λ ‖M‖² ≤ ⟪A · M, M⟫`. -/
-theorem coercive_rowOp {A : Matrix (Fin 3) (Fin 3) ℝ} {lam : ℝ}
-    (h : ∀ ξ : Fin 3 → ℝ, lam * (ξ ⬝ᵥ ξ) ≤ (A *ᵥ ξ) ⬝ᵥ ξ) (M : EuclideanSpace ℝ Ix) :
-    lam * ‖M‖ ^ 2 ≤ ⟪rowOp A M, M⟫_ℝ := by
-  rw [inner_rowOp, norm_sq_eq_sum_rows, Finset.mul_sum]
-  exact Finset.sum_le_sum fun a _ => h _
-
-open Matrix in
-/-- **Weber's lemma with a matrix coefficient acting on the rows.** For a bounded open `Ω ⊆ ℝ³`
-with Weber compactness and an a.e. strongly measurable `ε : Ω → ℝ³ˣ³` with
-`λ |ξ|² ≤ ξ · ε(x) ξ` and `|ε(x) ξ| ≤ Λ |ξ|` a.e. (for symmetric `ε` the second bound is
-`ε ≤ Λ`; symmetry itself is not needed), the box
-`{u ∈ D(curl_min) : div(ε u) ∈ L², ‖u‖, ‖curl u‖, ‖div(ε u)‖ ≤ 1}` (rows: `(ε u)_a = ε u_a`) lies in
-a compact subset of `L²(Ω; ℝ³ˣ³)`. -/
-theorem HasWeberCompactness.weber_of_rowCoeff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hW : HasWeberCompactness Ω) (e : R3 → Matrix (Fin 3) (Fin 3) ℝ)
-    (he : AEStronglyMeasurable e (volume.restrict Ω)) {lam Λ : ℝ} (hlam0 : 0 < lam)
-    (hΛ0 : 0 ≤ Λ) (hlam : ∀ᵐ x ∂volume.restrict Ω, ∀ ξ, lam * (ξ ⬝ᵥ ξ) ≤ (e x *ᵥ ξ) ⬝ᵥ ξ)
-    (hΛ : ∀ᵐ x ∂volume.restrict Ω, ∀ ξ, (e x *ᵥ ξ) ⬝ᵥ (e x *ᵥ ξ) ≤ Λ ^ 2 * (ξ ⬝ᵥ ξ)) :
-    ∃ K : Set (L2F ℝ Ω Ix), IsCompact K ∧ ∀ (u : L2F ℝ Ω Ix)
-      (hu : u ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
-      (hu' : coeffMul (fun x => rowOp (e x)) (continuous_rowOp.comp_aestronglyMeasurable he) Λ
-        (hΛ.mono fun _ hx => norm_rowOp_le hΛ0 hx) u ∈
-        ((gradOp 3 3 : ConstCoeffOp R3 ℝ (Fin 3) Ix).formalAdj.maximal Ω).domain),
-      ‖u‖ ≤ 1 → ‖(curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω ⟨u, hu⟩‖ ≤ 1 →
-        ‖(gradOp 3 3 : ConstCoeffOp R3 ℝ (Fin 3) Ix).formalAdj.maximal Ω
-          ⟨_, hu'⟩‖ ≤ 1 → u ∈ K :=
-  hW.weber_of_coeff hΩ hb _ _ hlam0 _ (hlam.mono fun _ hx => coercive_rowOp hx)
 
 end Coefficient
 

@@ -21,8 +21,8 @@ factor `a^r`:
 
 For a complex of homogeneous operators the minimal (and maximal) complex on `Ω` is the transport
 of the one on `Ω'` (`minimalComplex_pull`, `maximalComplex_pull`), and the pull-back is a
-`Feec.HilbertComplex.ScaledEmbedding` between them (`scaledEmbeddingMinimal`), with scale
-`|a|^{-n}` and chain-rule factors `a^{r_k}`. This transports every reducing subcomplex, hence
+`Feec.HilbertComplex.ScaledEmbedding` between them, with scale `|a|^{-n}` and chain-rule factors
+`a^{r_k}`. This transports every reducing subcomplex, hence
 constraint propagation, from one domain to its affine images (e.g. from `(0, ½)³` to every open
 cube).
 
@@ -221,11 +221,6 @@ omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
 theorem preimage_aff_inv {a : ℝ} (ha : a ≠ 0) (b : E) (Ω' : Set E) :
     aff a⁻¹ (-(a⁻¹ • b)) ⁻¹' (aff a b ⁻¹' Ω') = Ω' := by
   ext y; simp only [mem_preimage, aff_inv' ha b]
-
-omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
-  [(volume : Measure E).IsAddHaarMeasure] in
-theorem jac_inv (a : ℝ) : jac (E := E) a⁻¹ = (jac (E := E) a)⁻¹ := by
-  rw [jac, jac, abs_inv, inv_pow]
 
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
@@ -682,21 +677,6 @@ theorem maximalComplex_pull :
     exact ConstCoeffOp.maximal_pull (hC i) ha b hΩ'.measurableSet hT hΩ'
   · rw [(C.maximalComplex hΩ).shape i j h, HilbertComplex.transport_d,
       HilbertComplex.transportD_eq_zero ((C.maximalComplex hΩ').shape i j h)]
-
-/-- **The pull-back is a scaled embedding between the minimal complexes** on `Ω'` and on
-`Ω = T⁻¹ Ω'`: scale `|a|^{-n}`, chain-rule factors `a^{r k}`. -/
-def scaledEmbeddingMinimal :
-    HilbertComplex.ScaledEmbedding (C.minimalComplex hΩ') (C.minimalComplex hΩ) := by
-  rw [C.minimalComplex_pull hC ha b hΩ' hΩ hT]
-  exact HilbertComplex.ScaledEmbedding.ofTransport _ _ _ _ (fun _ => (jac (E := E) a)⁻¹)
-    (fun _ => inv_pos.2 (jac_pos ha)) fun k => inner_pullF ha b hΩ'.measurableSet hT
-
-/-- **The pull-back is a scaled embedding between the maximal complexes.** -/
-def scaledEmbeddingMaximal :
-    HilbertComplex.ScaledEmbedding (C.maximalComplex hΩ') (C.maximalComplex hΩ) := by
-  rw [C.maximalComplex_pull hC ha b hΩ' hΩ hT]
-  exact HilbertComplex.ScaledEmbedding.ofTransport _ _ _ _ (fun _ => (jac (E := E) a)⁻¹)
-    (fun _ => inv_pos.2 (jac_pos ha)) fun k => inner_pullF ha b hΩ'.measurableSet hT
 
 end ConstCoeffComplex
 

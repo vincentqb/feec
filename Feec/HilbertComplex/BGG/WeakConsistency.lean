@@ -29,6 +29,8 @@ projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further a
 
 * `Feec.BGG.Discrete.error_estimate_of_weakConsistency`: thesis Thm 5.5 with weak consistency
   `|⟪S₁u, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V`; the bound has `h²K²` in place of `h²‖S₁u‖²`.
+* `Feec.BGG.Discrete.error_estimate`: thesis Thm 5.5 as stated (strong consistency `happ1`), the
+  case `K = ‖S₁u‖`.
 * `Feec.BGG.Discrete.S1_sub_S1h_dt0`: `(S₁ − S₁,ₕ)dψ = d(S₀,ₕ − S₀)ψ` (the gradient part).
 * `Feec.BGG.Discrete.weakConsistency_of_regularPotential`: weak consistency for every
   `z ∈ D(d¹*)` from the consistency of `S₀,ₕ` (thesis Prop 5.9(1), which holds) and a regular
@@ -241,6 +243,65 @@ theorem error_estimate_of_weakConsistency {Cp CR CS CP : ℝ} (H : Stability D C
     (norm_add_sq_le_two_mul _ _) hωn2
     (le_add_of_nonneg_right (sq_nonneg _)) (le_add_of_nonneg_left (sq_nonneg _)) hg3
     (graphSq_nonneg _ _) (graphSq_nonneg _ _)
+
+/-- **Thesis Thm 5.5 (a priori error estimate), corrected and with full proof.**
+
+Let `(σ, φ, u, λ)` solve the continuous problem (5.3) (tested against discrete functions,
+by conformity), with `λ ∈ W¹` represented by the functional `ℓ = (λ, ·)`, `|ℓ μ| ≤ Λ ‖μ‖`, and let
+`(σ_h, φ_h, u_h, λ_h)` solve the discrete problem (5.6) with the same right-hand side `F`.
+Assume the continuous hypotheses `H`, uniformly bounded total cochain projections `B`, (5.4),
+and the consistency bounds `‖(I - Π¹)S₀ψ‖ ≤ C_app h ‖ψ‖_V` on `Ṽ_h⁰`,
+`‖(I - Π²)S₁v‖ ≤ C_app h ‖v‖_V` on `Ṽ_h¹`. Then
+`‖σ-σ_h‖_V² + ‖φ-φ_h‖_V² + ‖u-u_h‖_{Γ_h}² ≤ C (‖Πσ-σ‖_V² + ‖Π̃φ-φ‖_V² + ‖Π̃u-u‖_{Γ_h}²`
+`+ h²‖λ‖² + h²‖S₁u‖² + ‖(I-Π²)S₁u‖²)` with `C = errorConst C_p C_R C_S C_Π C_app` independent of
+`h`.
+
+Thesis gaps / corrections:
+* `λ ∈ W¹` is needed (Prop 5.2 only gives `λ ∈ W̌¹`); here it is the hypothesis `hℓ`.
+* `‖·‖_{Γ_h}` is the `h`-dependent graph norm `gnSq` on `Ṽ¹`, not a norm on `Γ_h`.
+* Projections are total, uniformly bounded cochain projections (`Discrete`, `Bounded`).
+* The discrete decomposition `Π̃u - u_h = dχ_h + ω_h` with `(ρ_h, χ_h) ∈ Γ_h` is `exact_mid_h`
+  (exactness of (5.5), derived); `(e_σ, e_φ) ∈ Γ_h` follows from (5.4) and commuting.
+* The `ε`'s lost in the thesis are placed on `τ, ψ` only (`mixed_coercivity_eq`), with
+  `ε = 1/C_a²`; Prop 5.3(a) is used in its `V`-norm form; Prop 5.3(b) supplies `‖ω_h‖`.
+* The constant is explicit; it depends only on `h`-independent constants.
+* `λ_h` need not lie in `V_h¹`, and the continuous equations are only needed on discrete test
+  functions.
+* Caveat (inherited from the thesis): `B` and `h54` are imposed on the same projections; see
+  `Compatible`.
+
+See [QuennevilleBelair2015], Thm 5.5 and Prop 5.6; cf. the quasi-optimal a priori estimates
+for the discrete mixed Hodge Laplacian in [AFW2010], [Arnold2018], the weak-symmetry
+elasticity estimates of [AFW2007], and the Babuška–Brezzi theory [Babuska1971], [Brezzi1974],
+[BoffiBrezziFortin2013]. [QuennevilleBelair2015], Thm 5.5 (corrected) -/
+theorem error_estimate {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
+    (h54 : Q.Compatible)
+    [FiniteDimensional ℝ Q.Vt1h]
+    {h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
+    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
+    (happ1 : ∀ v ∈ Q.Vt1h, ‖D.S1 v - Q.S1h v‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt1 v)
+    {σ : V0} {φ : Vt0} {u : Vt1} (ℓ : V1 →ₗ[ℝ] ℝ) {Λ : ℝ} (hΛ : 0 ≤ Λ)
+    (hℓ : ∀ μ, |ℓ μ| ≤ Λ * ‖μ‖) (F : Vt1 →ₗ[ℝ] ℝ)
+    (c1 : ∀ τ ∈ Q.V0h, ∀ ψ ∈ Q.Vt0h, ⟪σ, τ⟫ - ⟪u, D.dt0 ψ⟫ - ℓ (D.d0 τ - D.S0 ψ) = 0)
+    (c2 : ∀ v ∈ Q.Vt1h, ⟪D.dt0 φ, v⟫ + ⟪D.S1 u, D.S1 v⟫ + ⟪D.dt1 u, D.dt1 v⟫ = F v)
+    (c3 : D.d0 σ = D.S0 φ)
+    {σh : V0} {φh : Vt0} {uh : Vt1} {lh : V1}
+    (hσh : σh ∈ Q.V0h) (hφh : φh ∈ Q.Vt0h) (huh : uh ∈ Q.Vt1h)
+    (h1 : ∀ τ ∈ Q.V0h, ∀ ψ ∈ Q.Vt0h, ⟪σh, τ⟫ - ⟪uh, D.dt0 ψ⟫ - ⟪lh, D.d0 τ - Q.S0h ψ⟫ = 0)
+    (h2 : ∀ v ∈ Q.Vt1h, ⟪D.dt0 φh, v⟫ + ⟪Q.S1h uh, Q.S1h v⟫ + ⟪D.dt1 uh, D.dt1 v⟫ = F v)
+    (h3 : ∀ μ ∈ Q.V1h, ⟪D.d0 σh - Q.S0h φh, μ⟫ = 0) :
+    graphSq D.d0 (σ - σh) + graphSq D.dt0 (φ - φh) + Q.gnSq (u - uh) ≤
+      errorConst Cp CR CS CP Capp * (graphSq D.d0 (Q.P0 σ - σ) + graphSq D.dt0 (Q.Pt0 φ - φ)
+        + Q.gnSq (Q.Pt1 u - u) + h ^ 2 * Λ ^ 2 + h ^ 2 * ‖D.S1 u‖ ^ 2
+        + ‖D.S1 u - Q.S1h u‖ ^ 2) :=
+  error_estimate_of_weakConsistency H B h54 hh hCapp happ0 (fun v hv => by
+    have hz : ‖(D.S1 - Q.S1h) v‖ ≤ Capp * h * √(graphSq D.dt1 v) := by
+      rw [LinearMap.sub_apply]
+      refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+      rw [mul_pow, Real.sq_sqrt (graphSq_nonneg _ _)]; exact happ1 _ hv
+    refine (abs_real_inner_le_norm _ _).trans ?_
+    nlinarith [norm_nonneg (D.S1 u)])
+    ℓ hΛ hℓ F c1 c2 c3 hσh hφh huh h1 h2 h3
 
 /-! ## Weak consistency from a discrete Hodge decomposition -/
 

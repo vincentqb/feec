@@ -981,33 +981,6 @@ theorem sampleOK_pMax {γ : ℝ} {hγ : 0 < γ} {hγ1 : γ ≤ 1} {N k : ℕ}
   rw [← hp.center_eq] at this
   exact htΩ (this (Metric.mem_closedBall.2 ht.le))
 
-/-- Points of a face of a mesh simplex with weights `≥ θ` are `θ`-separated in lattice
-coordinates (lexicographic parametrization). -/
-theorem isSep_inv_smul_of_face_lex {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) {m : ℕ} {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T)
-    (hg : #g = m + 1) {θ : ℝ} (hθ0 : 0 < θ) (hθ : θ ≤ 1 / 2) {μ : Fin (m + 1) → ℝ}
-    (hμ : ∀ a, θ ≤ μ a) (hμ1 : ∑ a, μ a = 1) :
-    IsSep θ ((hN N)⁻¹ • ∑ a, μ a • lexEnum g m a) := by
-  classical
-  set q := lexEnum g m
-  have hqT : ∀ a, q a ∈ vertexSet T := fun a => hgT (lexEnum_mem hg a)
-  obtain ⟨m₀, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  have hj : ∀ a, ∃ j, q a = hN N • (latticePoint (finLattice m₀) + kuhnVertex σ j) := fun a => by
-    obtain ⟨j, hj⟩ := mem_vertexSet.1 (hqT a)
-    exact ⟨j, by rw [← hj, cubeSimplex_points]⟩
-  choose j hj using hj
-  have hxs : (hN N)⁻¹ • ∑ a, μ a • q a =
-      latticePoint (finLattice m₀) + ∑ a, μ a • kuhnVertex σ (j a) := by
-    have hh := hN_ne_zero N
-    simp only [hj, Finset.smul_sum, smul_smul, smul_add, Finset.sum_add_distrib,
-      ← Finset.sum_smul]
-    have e1 : (hN N)⁻¹ * ∑ i, μ i * hN N = 1 := by
-      rw [← Finset.sum_mul, hμ1]; field_simp
-    have e2 : ∀ a, (hN N)⁻¹ * (μ a * hN N) = μ a := fun a => by field_simp
-    simp only [e1, e2, one_smul]
-  rw [hxs]
-  exact isSep_latticePoint_add_sum hθ0.le hθ (finLattice m₀) σ j hμ hμ1
-
 /-- **The minimal family satisfies the sampling condition on `V̊ₕ`** (higher-order families): a
 sample outside `Ω` near a point of a face with weights `≥ γ` forces the face to lie in a boundary
 facet, where the DOFs of fields with vanishing boundary DOFs vanish. -/
@@ -1017,105 +990,18 @@ theorem sampleOK_pMin {γ : ℝ} {hγ : 0 < γ} (hγ2 : γ ≤ 1 / 2) {N k : ℕ
     SampleOK S γ (pMin (n := n) γ hγ N) u := by
   classical
   intro T g hgT m hg ξ hξ hgood t ht htΩ
-  have hp := pMin_isAdm (n := n) (γ := γ) (hγ := hγ) N
-  have hh := hN_pos N
-  set h := hN N
   set q := lexEnum g m
-  set x := simplexMap q ξ
   have hμ : ∀ a, γ ≤ refBary ξ a := by
     intro a; by_contra hlt; push Not at hlt; exact hgood ⟨a, hlt⟩
-  have hx : x = ∑ a, refBary ξ a • q a := simplexMap_eq_sum q ξ
-  have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
-    simplexMap_lexEnum_mem hgT hg hξ
-  have hxc : x ∈ closure (cubeDomain n) := by
-    rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure T.2 hxT
-  have hxt : ‖x - t‖ < γ * h / 2 := by
-    have hŷ := hp.norm_dil_sub_le hxc
-    have h1 : ‖(pMin (n := n) γ hγ N).center + (pMin (n := n) γ hγ N).factor •
-        (x - (pMin (n := n) γ hγ N).center) - t‖ < γ * h / 32 := by
-      rw [← dist_eq_norm, dist_comm, ← hp.rOut_eq]; exact ht
-    calc ‖x - t‖ = ‖(x - ((pMin (n := n) γ hγ N).center + (pMin (n := n) γ hγ N).factor •
-          (x - (pMin (n := n) γ hγ N).center))) + (((pMin (n := n) γ hγ N).center +
-            (pMin (n := n) γ hγ N).factor • (x - (pMin (n := n) γ hγ N).center)) - t)‖ := by
-          congr 1; abel
-      _ ≤ _ := norm_add_le _ _
-      _ < γ * h / 4 + γ * h / 32 := by
-          rw [norm_sub_rev] at hŷ; exact add_lt_add_of_le_of_lt hŷ h1
-      _ ≤ γ * h / 2 := by nlinarith
-  have hsep := isSep_inv_smul_of_face_lex T.2 hgT hg hγ hγ2 hμ (sum_refBary ξ)
-  rw [← hx] at hsep
-  have hqT : ∀ a, q a ∈ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) := fun a =>
-    hgT (lexEnum_mem hg a)
-  have hgq : ∀ v ∈ g, ∃ a, q a = v := fun v hv => by
-    have : v ∈ Set.range q := by rw [range_lexEnum hg]; exact hv
-    exact this
-  have hμp : ∀ a, 0 < refBary ξ a := fun a => hγ.trans_le (hμ a)
-  -- `t ∉ Ω`: some coordinate leaves `(0, ½)`
-  obtain ⟨i, hi⟩ : ∃ i, ¬ (0 < t i ∧ t i < 1 / 2) := by
-    by_contra hcon; push Not at hcon
-    exact htΩ (by rw [mesh_domain]; exact fun i _ => hcon i)
-  have hxi : |x i - t i| < γ * h / 2 := by
-    have := norm_le_pi_norm (x - t) i
-    rw [Real.norm_eq_abs, Pi.sub_apply] at this
-    exact this.trans_lt hxt
-  rw [abs_lt] at hxi
-  have hxbox := hxc
-  rw [closure_cubeDomain] at hxbox
-  have hx01 := hxbox i (Set.mem_univ i)
-  have hXi : ((hN N)⁻¹ • x) i = x i / h := by
-    simp [div_eq_inv_mul, h]
-  obtain ⟨m₀, σ, hmσ⟩ := mem_mesh_simplices.1 T.2
-  have hgT' : g ⊆ vertexSet (cubeSimplex N m₀ σ) := by rw [hmσ]; exact hgT
-  have hgne : g.Nonempty := Finset.card_pos.1 (by rw [hg]; omega)
-  obtain ⟨T'', hT'', F, hF, hFT'', hgF⟩ : ∃ T'' ∈ (mesh n N).simplices, ∃ F,
-      (mesh n N).IsBoundaryFacet F ∧ F ⊆ vertexSet T'' ∧ g ⊆ F := by
-    by_cases hlow : t i ≤ 0
-    · -- the lower face
-      have hx0 : x i = 0 := by
-        rcases hsep.1 i 0 with e | e
-        · rw [hXi] at e; push_cast at e
-          rcases (div_eq_zero_iff.1 e) with e' | e'
-          · exact e'
-          · exact absurd e' hh.ne'
-        · exfalso
-          rw [hXi] at e; push_cast at e
-          rw [sub_zero, abs_of_nonneg (div_nonneg hx01.1 hh.le), le_div_iff₀ hh] at e
-          nlinarith
-      refine exists_boundaryFacet_of_lower m₀ σ i hgT' (fun v hv => ?_) hgne
-      obtain ⟨a, rfl⟩ := hgq v hv
-      refine eq_of_sum_smul_apply_eq hμp (sum_refBary ξ) (fun b => ?_) (by rw [← hx]; exact hx0) a
-      have := (apply_mem_Icc_of_mem_vertexSet T.2 (hqT b) i).1; linarith
-    · -- the upper face
-      have hup : 1 / 2 ≤ t i := by
-        by_contra h'; push Not at h'; exact hi ⟨by push Not at hlow; exact hlow, h'⟩
-      have hhN : h * ((N : ℝ) + 1) = 1 / 2 := by
-        simp only [h]; unfold hN; push_cast; field_simp
-      have hx1 : x i = 1 / 2 := by
-        rcases hsep.1 i (N + 1) with e | e
-        · rw [hXi] at e; push_cast at e
-          rw [div_eq_iff hh.ne'] at e; rw [e, mul_comm]; exact hhN
-        · exfalso
-          rw [hXi] at e; push_cast at e
-          have hx2 := hx01.2
-          have hle : x i / h ≤ N + 1 := by
-            rw [div_le_iff₀ hh]; linarith [hhN, mul_comm h ((N : ℝ) + 1)]
-          have hgt : (N : ℝ) + 1 - γ / 2 < x i / h := by
-            rw [lt_div_iff₀ hh]
-            have : (N : ℝ) + 1 - γ / 2 = ((N : ℝ) + 1) - γ / 2 := rfl
-            nlinarith [hhN, mul_comm h ((N : ℝ) + 1)]
-          rw [abs_of_nonpos (by linarith)] at e
-          linarith
-      refine exists_boundaryFacet_of_upper m₀ σ i hgT' (fun v hv => ?_) hgne
-      obtain ⟨a, rfl⟩ := hgq v hv
-      have h1 := eq_of_sum_smul_apply_eq (q := fun a => -q a) (i := i) (c := -(1 / 2)) hμp
-        (sum_refBary ξ)
-        (fun b => by have := (apply_mem_Icc_of_mem_vertexSet T.2 (hqT b) i).2; simp; linarith)
-        (by
-          have : (∑ a, refBary ξ a • -q a) = -(∑ a, refBary ξ a • q a) := by
-            simp [Finset.sum_neg_distrib]
-          rw [this, ← hx, Pi.neg_apply, hx1]) a
-      simp only [Pi.neg_apply, neg_inj] at h1
-      exact h1
+  have hxc : simplexMap q ξ ∈ closure (cubeDomain n) := by
+    rw [← mesh_domain n N]
+    exact (mesh n N).closedInterior_subset_closure T.2 (simplexMap_lexEnum_mem hgT hg hξ)
+  obtain ⟨T'', hT'', F, hF, hFT'', hgF⟩ := exists_boundaryFacet_of_near T.2 hgT
+    (Finset.card_pos.1 (by rw [hg]; omega)) (q := q) (fun a => hgT (lexEnum_mem hg a))
+    (fun v hv => by
+      have : v ∈ Set.range q := by rw [range_lexEnum hg]; exact hv
+      exact this) hγ hγ2 hμ (sum_refBary ξ)
+    (by rw [← simplexMap_eq_sum q ξ]; exact (pMin_isAdm N).norm_sub_lt hxc ht) htΩ
   -- the boundary DOFs vanish
   intro g' hg' j
   have h0 := hu.2 ⟨T'', hT''⟩ F hF hFT'' g' (hg'.trans hgF) j

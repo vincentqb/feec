@@ -422,42 +422,16 @@ theorem exists_norm_paritySmoothedInterp_le (S : PolySeq) (J : Finset (Fin n)) {
 
 /-- **A good point of a face near `{y_i = 0}`**: if a point of a face `g` of a mesh simplex with
 barycentric weights `≥ γ` has `i`-th coordinate `< γ h_N / 2`, then the whole face lies in
-`{y_i = 0}` (lattice separation, `Poly.isSep_inv_smul_of_face_lex`). -/
+`{y_i = 0}` (`coord_eq_zero_of_near`). -/
 theorem face_coord_eq_zero {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ}
     (hg : #g = m + 1) {γ : ℝ} (hγ : 0 < γ) (hγ2 : γ ≤ 1 / 2) {ξ : Fin m → ℝ}
     (hμ : ∀ a, γ ≤ refBary ξ a) {i : Fin n}
     (hx : simplexMap (lexEnum g m) ξ i < γ * hN N / 2) : ∀ v ∈ g, v i = 0 := by
-  classical
-  set h := hN N
-  have hh : 0 < h := hN_pos N
-  set q := lexEnum g m
-  set x := simplexMap q ξ
-  have hxe : x = ∑ a, refBary ξ a • q a := simplexMap_eq_sum q ξ
-  have hsep := Poly.isSep_inv_smul_of_face_lex hT hgT hg hγ hγ2 hμ (sum_refBary ξ)
-  rw [← hxe] at hsep
-  have hqT : ∀ a, q a ∈ vertexSet T := fun a => hgT (lexEnum_mem hg a)
-  have hμp : ∀ a, 0 < refBary ξ a := fun a => hγ.trans_le (hμ a)
-  have hx0' : 0 ≤ x i := by
-    rw [hxe, Finset.sum_apply]
-    exact Finset.sum_nonneg fun a _ => by
-      simp only [Pi.smul_apply, smul_eq_mul]
-      exact mul_nonneg (hμp a).le (apply_mem_Icc_of_mem_vertexSet hT (hqT a) i).1
-  have hXi : ((hN N)⁻¹ • x) i = x i / h := by simp [div_eq_inv_mul, h]
-  have hx0 : x i = 0 := by
-    rcases hsep.1 i 0 with e | e
-    · rw [hXi] at e; push_cast at e
-      rcases div_eq_zero_iff.1 e with e' | e'
-      · exact e'
-      · exact absurd e' hh.ne'
-    · exfalso
-      rw [hXi] at e; push_cast at e
-      rw [sub_zero, abs_of_nonneg (div_nonneg hx0' hh.le), le_div_iff₀ hh] at e
-      nlinarith
   intro v hv
-  obtain ⟨a, rfl⟩ : v ∈ Set.range q := by rw [range_lexEnum hg]; exact hv
-  refine eq_of_sum_smul_apply_eq hμp (sum_refBary ξ) (fun b => ?_) (by rw [← hxe]; exact hx0) a
-  have := (apply_mem_Icc_of_mem_vertexSet hT (hqT b) i).1; linarith
+  obtain ⟨a, rfl⟩ : v ∈ Set.range (lexEnum g m) := by rw [range_lexEnum hg]; exact hv
+  exact coord_eq_zero_of_near hT (fun a => hgT (lexEnum_mem hg a)) hγ hγ2 hμ (sum_refBary ξ)
+    (by rw [← simplexMap_eq_sum]; exact hx) a
 
 /-- **A good point of a face near `{y_i = ½}`**: the upper analogue of `face_coord_eq_zero`. -/
 theorem face_coord_eq_half {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
@@ -465,50 +439,10 @@ theorem face_coord_eq_half {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hg : #g = m + 1) {γ : ℝ} (hγ : 0 < γ) (hγ2 : γ ≤ 1 / 2) {ξ : Fin m → ℝ}
     (hμ : ∀ a, γ ≤ refBary ξ a) {i : Fin n}
     (hx : 1 / 2 - γ * hN N / 2 < simplexMap (lexEnum g m) ξ i) : ∀ v ∈ g, v i = 1 / 2 := by
-  classical
-  set h := hN N
-  have hh : 0 < h := hN_pos N
-  set q := lexEnum g m
-  set x := simplexMap q ξ
-  have hxe : x = ∑ a, refBary ξ a • q a := simplexMap_eq_sum q ξ
-  have hsep := Poly.isSep_inv_smul_of_face_lex hT hgT hg hγ hγ2 hμ (sum_refBary ξ)
-  rw [← hxe] at hsep
-  have hqT : ∀ a, q a ∈ vertexSet T := fun a => hgT (lexEnum_mem hg a)
-  have hμp : ∀ a, 0 < refBary ξ a := fun a => hγ.trans_le (hμ a)
-  have hx2 : x i ≤ 1 / 2 := by
-    have e : x i = ∑ a, refBary ξ a * q a i := by rw [hxe]; simp [Finset.sum_apply]
-    have : ∑ a, refBary ξ a * q a i ≤ ∑ a, refBary ξ a * (1 / 2) :=
-      Finset.sum_le_sum fun a _ => mul_le_mul_of_nonneg_left
-        (apply_mem_Icc_of_mem_vertexSet hT (hqT a) i).2 (hμp a).le
-    rw [← Finset.sum_mul, sum_refBary, one_mul] at this
-    linarith
-  have hXi : ((hN N)⁻¹ • x) i = x i / h := by simp [div_eq_inv_mul, h]
-  have hhN : h * ((N : ℝ) + 1) = 1 / 2 := by
-    simp only [h]; unfold hN; push_cast; field_simp
-  have hx1 : x i = 1 / 2 := by
-    rcases hsep.1 i (N + 1) with e | e
-    · rw [hXi] at e; push_cast at e
-      rw [div_eq_iff hh.ne'] at e; rw [e, mul_comm]; exact hhN
-    · exfalso
-      rw [hXi] at e; push_cast at e
-      have hle : x i / h ≤ N + 1 := by
-        rw [div_le_iff₀ hh]; linarith [hhN, mul_comm h ((N : ℝ) + 1)]
-      have hgt : (N : ℝ) + 1 - γ / 2 < x i / h := by
-        rw [lt_div_iff₀ hh]
-        nlinarith [hhN, mul_comm h ((N : ℝ) + 1)]
-      rw [abs_of_nonpos (by linarith)] at e
-      linarith
   intro v hv
-  obtain ⟨a, rfl⟩ : v ∈ Set.range q := by rw [range_lexEnum hg]; exact hv
-  have h1 := eq_of_sum_smul_apply_eq (q := fun a => -q a) (i := i) (c := -(1 / 2)) hμp
-    (sum_refBary ξ)
-    (fun b => by have := (apply_mem_Icc_of_mem_vertexSet hT (hqT b) i).2; simp; linarith)
-    (by
-      have : (∑ a, refBary ξ a • -q a) = -(∑ a, refBary ξ a • q a) := by
-        simp [Finset.sum_neg_distrib]
-      rw [this, ← hxe, Pi.neg_apply, hx1]) a
-  simp only [Pi.neg_apply, neg_inj] at h1
-  exact h1
+  obtain ⟨a, rfl⟩ : v ∈ Set.range (lexEnum g m) := by rw [range_lexEnum hg]; exact hv
+  exact coord_eq_half_of_near hT (fun a => hgT (lexEnum_mem hg a)) hγ hγ2 hμ (sum_refBary ξ)
+    (by rw [← simplexMap_eq_sum]; exact hx) a
 
 /-- A pullback only sees the components whose rows are nonzero. -/
 theorem pullback_congr_of_rows {ι κ : Type*} [LinearOrder ι] [Fintype ι] [LinearOrder κ]

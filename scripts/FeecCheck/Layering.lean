@@ -7,12 +7,12 @@ import FeecCheck.Util
 `docs/REFACTOR_PLAN.md` §1 on the headers of `Feec/**/*.lean` (no environment needed).
 
 The layers (the top-level directories of `Feec/`) form a partial order, not a chain: the table
-`layerDeps` lists, for each layer, the layers it may import directly, and a layer may import a module
-of layer `L'` iff `L'` is the layer itself, a layer of its `layerSiblings` group, or reachable through
-`layerDeps` (the reflexive-transitive closure). Layers that the plan sets side by side and that no edge
-joins (`Fourier` and `Domain`; `Variational` and `TimeStepping`; `Mesh` and everything but
-`FiniteElement` and above) may not import each other. The relation is the one drawn in
-`docs/REFACTOR_PLAN.md` §1; change both together.
+`layerDeps` lists, for each layer, the layers it may import directly, and a layer may import a
+module of layer `L'` iff `L'` is the layer itself, a layer of its `layerSiblings` group, or
+reachable through `layerDeps` (the reflexive-transitive closure). Layers that no path joins
+(`Fourier` and `Domain`; `Variational` and `TimeStepping`; `Examples` and `Numerics`; `Algebra`
+and the analytic chain `Operator` → … → `HilbertComplex`) may not import each other. The relation
+is the one drawn in `docs/REFACTOR_PLAN.md` §1; change both together.
 
 The check fails when
 
@@ -73,7 +73,8 @@ def layerSiblings : List (List String) := [["Physics", "Counterexamples"]]
 def isolatedLayers : List String := ["ForMathlib", "Mesh"]
 
 /-- The top tier: instances, applications and counterexamples. Nothing below imports them. -/
-def topTier : List String := ["Models", "Physics", "Counterexamples", "Examples", "Numerics", "Instances"]
+def topTier : List String :=
+  ["Models", "Physics", "Counterexamples", "Examples", "Numerics", "Instances"]
 
 /-- The relation of `docs/REFACTOR_PLAN.md` §1: direct edges, sibling groups, the layers that
 import only Mathlib, and the top tier. -/

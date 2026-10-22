@@ -347,11 +347,17 @@ theorem cubeFEM_rate_tr_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
   have hK := cubeFEM_rate_of_err hT hB hCR0 hCR
+    (by positivity : 0 ≤ 2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2)
+    (by positivity : 0 ≤ 3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2))
+    (by positivity : 0 ≤ (1 + 8 * C ^ 2) *
+      (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)))
+    (by positivity : 0 ≤ ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2)
   refine ⟨hK.choose, hK.choose_spec.1, ?_⟩
-  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu
-  exact hK.choose_spec.2 N hL0 c1 c2 c3 (cubeFEM_err_P0_tr hT hB N hL0 σ hσ)
-    (cubeFEM_err_Pt0_tr hT hB N hL0 φ hφ) (cubeFEM_err_gnSq_tr hT hB N hL0 u hu)
-    (cubeFEM_err_S1_tr hT hB N hL0 u hSu)
+  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu hlam hSun hz σh φh uh lh hσh hφh huh h1 h2 h3
+  exact (hK.choose_spec.2 N hL0 (le_of_eq (mul_comm _ _)) c1 c2 c3
+    (cubeFEM_err_P0_tr hT hB N hL0 σ hσ) (cubeFEM_err_Pt0_tr hT hB N hL0 φ hφ)
+    (cubeFEM_err_gnSq_tr hT hB N hL0 u hu) (cubeFEM_err_S1_tr hT hB N hL0 u hSu) hlam hSun hz
+    hσh hφh huh h1 h2 h3).trans_eq (by ring)
 
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions

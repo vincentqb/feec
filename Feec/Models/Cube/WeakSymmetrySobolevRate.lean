@@ -349,136 +349,34 @@ theorem staticFEM_rate_sobolev :
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N ^ min s 1) ^ 2 := by
-  have hCR0 := curlPotentialConst_nonneg
-  have hh0 := cubeFEM_happ0 hT hB
-  obtain ⟨C0, hh1⟩ := hh0
-  have hC00 := hh1.1
-  have hhapp := hh1.2
-  have hC := hT.two_mul_nonneg
-  have hA : 0 ≤ 1 + 2 * C := by linarith
-  have hreg := regConst_nonneg hT
-  have ex_Capp : ∃ x : ℝ, x = C0 + regConst C := ⟨_, rfl⟩
-  obtain ⟨Capp, hCapp_def⟩ := ex_Capp
-  have hCapp0 : 0 ≤ Capp := by rw [hCapp_def]; linarith
-  have ex_Cp : ∃ x : ℝ, x = (2 * Real.pi)⁻¹ := ⟨_, rfl⟩
-  obtain ⟨Cp, hCp⟩ := ex_Cp
-  have hCp0 : 0 ≤ Cp := by rw [hCp]; positivity
-  have ex_E : ∃ x : ℝ,
-      x = Feec.BGG.Discrete.errorConst Cp curlPotentialConst (Real.sqrt 2) (2 * C) Capp :=
-    ⟨_, rfl⟩
-  obtain ⟨E, hE_def⟩ := ex_E
-  have hE0 : 0 ≤ E := by
-    rw [hE_def]
-    unfold Feec.BGG.Discrete.errorConst Feec.BGG.Discrete.Ca1 Feec.BGG.Discrete.Ca
-      Feec.BGG.Discrete.KL Feec.BGG.Discrete.Cb
-    positivity
-  have ex_wa : ∃ x : ℝ, x = √(1 + Cp ^ 2) * (1 + 2 * C * (1 + 1 * curlPotentialConst)) :=
-    ⟨_, rfl⟩
-  obtain ⟨wa, hwa⟩ := ex_wa
-  have ex_wb : ∃ x : ℝ, x = (1 + (1 + 2 * C) * Real.sqrt 2) * curlPotentialConst :=
-    ⟨_, rfl⟩
-  obtain ⟨wb, hwb⟩ := ex_wb
-  have hwa0 : 0 ≤ wa := by rw [hwa]; positivity
-  have hwb0 : 0 ≤ wb := by rw [hwb]; positivity
   have hsc := sobStateConst_nonneg hT
-  have ex_Kd : ∃ x : ℝ, x = 2 * sobStateConst C ^ 2 + 2 * (3 * sobStateConst C ^ 2) +
-      (1 + 8 * C ^ 2) * (2 * (3 * sobStateConst C ^ 2)) + 1 + (wa + wb) ^ 2 +
-      sobStateConst C ^ 2 := ⟨_, rfl⟩
-  obtain ⟨Kd, hKd⟩ := ex_Kd
-  have hKd0 : 0 ≤ Kd := by rw [hKd]; positivity
-  refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F s L hs0 hL0 c1 c2 c3 hsob hlam
-    hz σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
-  obtain ⟨hσ, hdσ, hφ, hdφ, hu, hdu, hSu⟩ := hsob
-  have hh : 0 ≤ meshSize N := (meshSize_pos N).le
-  have H : Feec.BGG.Stability bggSegment Cp curlPotentialConst (Real.sqrt 2) := by
-    rw [hCp]; exact bggStability_curlPotentialConst
-  have Bd := cubeFEM_bounded hT hB N
-  have h54 := cubeFEM_compatible hT hB N
-  have happ : ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
-      ‖bggSegment.S0 ψ - (cubeFEM hT hB N).S0h ψ‖ ^ 2 ≤
-        (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq bggSegment.dt0 ψ := fun ψ hψ => by
-    refine (hhapp N ψ hψ).trans (mul_le_mul_of_nonneg_right ?_ (Feec.BGG.graphSq_nonneg _ _))
-    exact pow_le_pow_left₀ (by positivity) (mul_le_mul_of_nonneg_right
-      (by rw [hCapp_def]; linarith) hh) 2
-  have Rg := cubeFEMReg hT hB N hCR0 exists_curlPotential_le
-    (by rw [hCapp_def]; linarith : regConst C ≤ Capp)
-  have hwc := Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound H Bd hh hCapp0 Rg
-    happ hL0 hz
-  have hℓ : ∀ μ, |((innerSL ℝ lam).toLinearMap ∘ₗ D1.domain.subtype) μ| ≤ L * ‖μ‖ := fun μ =>
-    (abs_real_inner_le_norm lam (μ : W1)).trans (mul_le_mul_of_nonneg_right hlam (norm_nonneg _))
-  have hest := Feec.BGG.Discrete.error_estimate_of_weakConsistency H Bd h54 hh hCapp0 happ hwc
-    ((innerSL ℝ lam).toLinearMap ∘ₗ D1.domain.subtype) hL0 hℓ F (fun τ _ ψ _ => c1 τ ψ)
-    (fun v _ => c2 v) c3 hσh hφh huh h1 h2 h3
-  have hm0 : 0 ≤ meshSize N ^ min s 1 := rpow_min_nonneg s N
-  have hhm' : meshSize N ≤ meshSize N ^ min s 1 := meshSize_le_rpow_min s N
-  refine hest.trans ?_
+  have hK := cubeFEM_rate_of_err hT hB curlPotentialConst_nonneg exists_curlPotential_le
+    (by positivity : 0 ≤ 2 * sobStateConst C ^ 2)
+    (by positivity : 0 ≤ 2 * (3 * sobStateConst C ^ 2))
+    (by positivity : 0 ≤ (1 + 8 * C ^ 2) * (2 * (3 * sobStateConst C ^ 2)))
+    (by positivity : 0 ≤ sobStateConst C ^ 2)
+  refine ⟨hK.choose, hK.choose_spec.1, fun N σ φ u lam F s L hs0 hL0 c1 c2 c3 hsob hlam hz
+    σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
   have lT : PolySeq.lowestOrder = PolySeq.lowestOrder ∨ PolySeq.lowestOrder = PolySeq.lagrangeP2 :=
     Or.inl rfl
   have lB : PolySeq.lagrangeP2 = PolySeq.lowestOrder ∨ PolySeq.lagrangeP2 = PolySeq.lagrangeP2 :=
     Or.inr rfl
   have hD1 := graphSq_P0_sub_le_of_close hT hB N σ
-    (norm_sub_proj_le_sobStateConst hT hT lT N (by norm_num) hs0 hσ)
-    (norm_sub_proj_le_sobStateConst hT hT lT N (by norm_num) hs0 hdσ)
+    (norm_sub_proj_le_sobStateConst hT hT lT N (by norm_num) hs0 hsob.1)
+    (norm_sub_proj_le_sobStateConst hT hT lT N (by norm_num) hs0 hsob.2.1)
   have hD2 := graphSq_Pt0_sub_le_of_close hT hB N φ
-    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hφ a))
-    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hdφ a))
+    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hsob.2.2.1 a))
+    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hsob.2.2.2.1 a))
   have hD3 := gnSq_Pt1_sub_le_of_close hT hB N u
-    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hu a))
-    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hdu a))
-  have hD6' : ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ≤
-      sobStateConst C * meshSize N ^ min s 1 * L :=
-    norm_sub_proj_le_sobStateConst hT hT lT N (by norm_num) hs0 hSu
-  have hD6 := pow_le_pow_left₀ (norm_nonneg _) hD6' 2
-  have hSun : ‖bggSegment.S1 u‖ ≤ L := hSu.norm_le hs0
-  have hK0 : 0 ≤ Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
-      curlPotentialConst ‖bggSegment.S1 u‖ L := by
-    unfold Feec.BGG.Discrete.weakConsistencyConst
-    have := norm_nonneg (bggSegment.S1 u)
-    positivity
-  have hD5 : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 curlPotentialConst
-      ‖bggSegment.S1 u‖ L ≤ (wa + wb) * L := by
-    have e : Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 curlPotentialConst
-        ‖bggSegment.S1 u‖ L = L * wa + ‖bggSegment.S1 u‖ * wb := by
-      rw [hwa, hwb]; unfold Feec.BGG.Discrete.weakConsistencyConst; ring
-    rw [e]
-    have := mul_le_mul_of_nonneg_right hSun hwb0
-    linarith
-  have hhL : meshSize N * L ≤ meshSize N ^ min s 1 * L := mul_le_mul_of_nonneg_right hhm' hL0
-  have hhL2 : (meshSize N * L) ^ 2 ≤ (meshSize N ^ min s 1 * L) ^ 2 :=
-    pow_le_pow_left₀ (mul_nonneg hh hL0) hhL 2
-  have hD5' : meshSize N ^ 2 * Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
-      curlPotentialConst ‖bggSegment.S1 u‖ L ^ 2 ≤
-        (wa + wb) ^ 2 * (meshSize N ^ min s 1 * L) ^ 2 := by
-    have h1 := pow_le_pow_left₀ hK0 hD5 2
-    have h2 := mul_le_mul_of_nonneg_left h1 (sq_nonneg (meshSize N))
-    have h3 : meshSize N ^ 2 * ((wa + wb) * L) ^ 2 = (wa + wb) ^ 2 * (meshSize N * L) ^ 2 := by
-      ring
-    have h4 := mul_le_mul_of_nonneg_left hhL2 (sq_nonneg (wa + wb))
-    linarith
-  have hL2 : meshSize N ^ 2 * L ^ 2 ≤ (meshSize N ^ min s 1 * L) ^ 2 := by
-    have e : meshSize N ^ 2 * L ^ 2 = (meshSize N * L) ^ 2 := by ring
-    rw [e]; exact hhL2
-  have hδ2 : (sobStateConst C * meshSize N ^ min s 1 * L) ^ 2 =
-      sobStateConst C ^ 2 * (meshSize N ^ min s 1 * L) ^ 2 := by ring
-  have hsum : Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) +
-      Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) +
-      (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) + meshSize N ^ 2 * L ^ 2 +
-      meshSize N ^ 2 * Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1
-        curlPotentialConst ‖bggSegment.S1 u‖ L ^ 2 +
-      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤ Kd * (meshSize N ^ min s 1 * L) ^ 2 := by
-    have e1 := add_le_add (add_le_add (add_le_add (add_le_add (add_le_add hD1 hD2) hD3) hL2)
-      hD5') hD6
-    refine e1.trans (le_of_eq ?_)
-    rw [hKd, hδ2]
-    ring
-  rw [← hE_def]
-  calc E * (_ : ℝ) ≤ E * (Kd * (meshSize N ^ min s 1 * L) ^ 2) := mul_le_mul_of_nonneg_left hsum hE0
-    _ = (√(E * Kd) * L * meshSize N ^ min s 1) ^ 2 := by
-        rw [show (√(E * Kd) * L * meshSize N ^ min s 1) ^ 2 =
-            √(E * Kd) ^ 2 * (meshSize N ^ min s 1 * L) ^ 2 by ring,
-          Real.sq_sqrt (mul_nonneg hE0 hKd0)]
-        ring
-
+    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hsob.2.2.2.2.1 a))
+    (fun a => norm_sub_proj_le_sobStateConst hT hB lB N (by norm_num) hs0 (hsob.2.2.2.2.2.1 a))
+  have hD6 := pow_le_pow_left₀ (norm_nonneg _)
+    (norm_sub_proj_le_sobStateConst hT hT lT N (by norm_num) hs0 hsob.2.2.2.2.2.2) 2
+  exact (hK.choose_spec.2 N hL0
+    (mul_le_mul_of_nonneg_right (meshSize_le_rpow_min s N) hL0) c1 c2 c3
+    (hD1.trans_eq (by ring)) (hD2.trans_eq (by ring)) (hD3.trans_eq (by ring))
+    (hD6.trans_eq (by ring)) hlam (hsob.2.2.2.2.2.2.norm_le hs0) hz hσh hφh huh h1 h2
+    h3).trans_eq (by ring)
 
 /-! ### The rate of (6.5) for relative-class Sobolev data -/
 

@@ -1708,29 +1708,25 @@ theorem cubeFEM_err_S1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
   nlinarith
 
 set_option maxHeartbeats 1000000 in
-/-- **The rate of `cubeFEM_rate` from the projection errors**: the bound
-`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for every solution of (5.3) whose
-projection errors are `O(L h_N)` (the conclusions of `cubeFEM_err_P0`, `cubeFEM_err_Pt0`,
-`cubeFEM_err_gnSq`, `cubeFEM_err_S1`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
+/-- **The rate of `cubeFEM_rate` from the projection errors**: for constants `A₀, …, A₃ ≥ 0`
+there is `K` such that `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K δ)²` for every solution of
+(5.3) whose projection errors are `≤ Aᵢ δ²` at a level `δ ≥ h_N L` (e.g. the conclusions of
+`cubeFEM_err_P0`, `cubeFEM_err_Pt0`, `cubeFEM_err_gnSq`, `cubeFEM_err_S1` with `δ = L h_N`), with
+`‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
 theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
-    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖)
+    {A0 A1 A2 A3 : ℝ} (hA0 : 0 ≤ A0) (hA1 : 0 ≤ A1) (hA2 : 0 ≤ A2) (hA3 : 0 ≤ A3) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
-      {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
+      {F : Wv U1 →ₗ[ℝ] ℝ} {L δ : ℝ}, 0 ≤ L → meshSize N * L ≤ δ →
       (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
         ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
       (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
         ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
       bggSegment.d0 σ = bggSegment.S0 φ →
-      Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) ≤
-        2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2 * (L * meshSize N) ^ 2 →
-      Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) ≤
-        3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2) *
-          (L * meshSize N) ^ 2 →
-      (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) ≤
-        (1 + 8 * C ^ 2) * (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)) *
-          (L * meshSize N) ^ 2 →
-      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤
-        ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2 * (L * meshSize N) ^ 2 →
+      Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) ≤ A0 * δ ^ 2 →
+      Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) ≤ A1 * δ ^ 2 →
+      (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) ≤ A2 * δ ^ 2 →
+      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤ A3 * δ ^ 2 →
       ‖lam‖ ≤ L → ‖bggSegment.S1 u‖ ≤ L →
       (∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖) →
       ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
@@ -1744,7 +1740,7 @@ theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
           ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
-        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * δ) ^ 2 := by
   have hh0 := cubeFEM_happ0 hT hB
   obtain ⟨C0, hh1⟩ := hh0
   have hC00 := hh1.1
@@ -1773,24 +1769,10 @@ theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
   obtain ⟨wb, hwb⟩ := hwbex
   have hwa0 : 0 ≤ wa := by rw [hwa]; positivity
   have hwb0 : 0 ≤ wb := by rw [hwb]; positivity
-  have hBt0dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lowestOrder 0 := ⟨_, rfl⟩
-  obtain ⟨Bt0, hBt0d⟩ := hBt0dex
-  have hBb0dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lagrangeP2 0 := ⟨_, rfl⟩
-  obtain ⟨Bb0, hBb0d⟩ := hBb0dex
-  have hBb1dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lagrangeP2 1 := ⟨_, rfl⟩
-  obtain ⟨Bb1, hBb1d⟩ := hBb1dex
-  have hBt2dex : ∃ x : ℝ, x = polyInterpBound 3 PolySeq.lowestOrder 2 := ⟨_, rfl⟩
-  obtain ⟨Bt2, hBt2d⟩ := hBt2dex
-  have hBt0 : 0 ≤ Bt0 := by rw [hBt0d]; exact polyInterpBound_nonneg _ _
-  have hBb0 : 0 ≤ Bb0 := by rw [hBb0d]; exact polyInterpBound_nonneg _ _
-  have hBb1 : 0 ≤ Bb1 := by rw [hBb1d]; exact polyInterpBound_nonneg _ _
-  have hBt2 : 0 ≤ Bt2 := by rw [hBt2d]; exact polyInterpBound_nonneg _ _
-  have hKdex : ∃ x : ℝ, x = 2 * ((1 + 2 * C) * Bt0) ^ 2 + 3 * (2 * ((1 + 2 * C) * Bb0) ^ 2) +
-    (1 + 8 * C ^ 2) * (3 * (2 * ((1 + 2 * C) * Bb1) ^ 2)) + 1 + (wa + wb) ^ 2 +
-      ((1 + 2 * C) * Bt2) ^ 2 := ⟨_, rfl⟩
+  have hKdex : ∃ x : ℝ, x = A0 + A1 + A2 + 1 + (wa + wb) ^ 2 + A3 := ⟨_, rfl⟩
   obtain ⟨Kd, hKd⟩ := hKdex
   have hKd0 : 0 ≤ Kd := by rw [hKd]; positivity
-  refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F L hL0 c1 c2 c3 hD1 hD2 hD3 hD6 hlam
+  refine ⟨√(E * Kd), Real.sqrt_nonneg _, fun N σ φ u lam F L δ hL0 hδ c1 c2 c3 hD1 hD2 hD3 hD6 hlam
     hSun hz σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
   have hh : 0 ≤ meshSize N := (meshSize_pos N).le
   have H : Feec.BGG.Stability bggSegment Cp CR (Real.sqrt 2) := by
@@ -1812,9 +1794,8 @@ theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
     ((innerSL ℝ lam).toLinearMap ∘ₗ D1.domain.subtype) hL0 hℓ F (fun τ _ ψ _ => c1 τ ψ)
     (fun v _ => c2 v) c3 hσh hφh huh h1 h2 h3
   refine hest.trans ?_
-  rw [← hBt0d] at hD1
-  rw [← hBb0d] at hD2
-  rw [← hBb1d] at hD3
+  have hhL : 0 ≤ meshSize N * L := mul_nonneg hh hL0
+  have hδ2 : (meshSize N * L) ^ 2 ≤ δ ^ 2 := pow_le_pow_left₀ hhL hδ 2
   have hK0 : 0 ≤ Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR
       ‖bggSegment.S1 u‖ L := by
     unfold Feec.BGG.Discrete.weakConsistencyConst
@@ -1833,25 +1814,24 @@ theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
       _ = (wa + wb) * L := by ring
   have hD5' : meshSize N ^ 2 *
       Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR ‖bggSegment.S1 u‖ L ^ 2 ≤
-      (wa + wb) ^ 2 * (L * meshSize N) ^ 2 := by
+      (wa + wb) ^ 2 * δ ^ 2 := by
     have := pow_le_pow_left₀ hK0 hD5 2
     have h2 := mul_le_mul_of_nonneg_left this (sq_nonneg (meshSize N))
-    exact le_of_le_of_eq h2 (by ring)
-  rw [← hBt2d] at hD6
+    have h3 := mul_le_mul_of_nonneg_left hδ2 (sq_nonneg (wa + wb))
+    linear_combination h2 + h3
   have hsum : Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) +
       Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) +
       (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) + meshSize N ^ 2 * L ^ 2 +
       meshSize N ^ 2 *
         Feec.BGG.Discrete.weakConsistencyConst Cp (Real.sqrt 2) (2 * C) 1 CR
           ‖bggSegment.S1 u‖ L ^ 2 +
-      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤ Kd * (L * meshSize N) ^ 2 := by
+      ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤ Kd * δ ^ 2 := by
     rw [hKd]
-    linear_combination hD1 + hD2 + hD3 + hD5' + hD6
+    linear_combination hD1 + hD2 + hD3 + hδ2 + hD5' + hD6
   rw [← hE_def]
-  calc E * (_ : ℝ) ≤ E * (Kd * (L * meshSize N) ^ 2) := mul_le_mul_of_nonneg_left hsum hE0
-    _ = (√(E * Kd) * L * meshSize N) ^ 2 := by
-        rw [show (√(E * Kd) * L * meshSize N) ^ 2 = √(E * Kd) ^ 2 * (L * meshSize N) ^ 2 by ring,
-          Real.sq_sqrt (mul_nonneg hE0 hKd0)]
+  calc E * (_ : ℝ) ≤ E * (Kd * δ ^ 2) := mul_le_mul_of_nonneg_left hsum hE0
+    _ = (√(E * Kd) * δ) ^ 2 := by
+        rw [mul_pow, Real.sq_sqrt (mul_nonneg hE0 hKd0)]
         ring
 
 set_option maxHeartbeats 1000000 in
@@ -1888,10 +1868,17 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
   have hK := cubeFEM_rate_of_err hT hB hCR0 hCR
+    (by positivity : 0 ≤ 2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2)
+    (by positivity : 0 ≤ 3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2))
+    (by positivity : 0 ≤ (1 + 8 * C ^ 2) *
+      (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)))
+    (by positivity : 0 ≤ ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2)
   refine ⟨hK.choose, hK.choose_spec.1, ?_⟩
-  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu
-  exact hK.choose_spec.2 N hL0 c1 c2 c3 (cubeFEM_err_P0 hT hB N hL0 σ hσ) (cubeFEM_err_Pt0 hT hB N hL0 φ hφ)
-    (cubeFEM_err_gnSq hT hB N hL0 u hu) (cubeFEM_err_S1 hT hB N hL0 u hSu)
+  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu hlam hSun hz σh φh uh lh hσh hφh huh h1 h2 h3
+  exact (hK.choose_spec.2 N hL0 (le_of_eq (mul_comm _ _)) c1 c2 c3
+    (cubeFEM_err_P0 hT hB N hL0 σ hσ) (cubeFEM_err_Pt0 hT hB N hL0 φ hφ)
+    (cubeFEM_err_gnSq hT hB N hL0 u hu) (cubeFEM_err_S1 hT hB N hL0 u hSu) hlam hSun hz hσh hφh
+    huh h1 h2 h3).trans_eq (by ring)
 
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions**:

@@ -85,8 +85,8 @@ formalized through `ofComplexCrime` (via `ofGalerkinCore`): this re-derives the 
 (6.4) cores and adds an exactly preserved discrete Gauss constraint (`FEM.hiddenGauss`; that it
 lies in TSD is not shown). The cochain defect of (6.5) is
 the pair of consistency functionals `ℓ((I − π¹)S⁰·)`, `⟪M, (I − π²)S¹·⟫` of the Strang bound of (6.4)
-(`FEM.cochainDefectForm_eq`); for mirror BCs it vanishes on TSD states, and the mirror verdict also
-follows through `ofCochainDefect` from graph-norm approximation, independently of (6.4): its
+(`FEM.cochainDefectForm_eq`); for mirror BCs it vanishes on TSD states, and the mirror convergence verdict
+(without rates) also follows through `ofCochainDefect` from graph-norm approximation, independently of (6.4): its
 family `FEM.mirrorFamily` is built directly from the discretization, and neither the elliptic core
 nor the Strang theorem is in the dependency closure (`FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`).
 That the cochain defect is nonzero for some mesh and datum is not proved, and the split rate

@@ -70,7 +70,9 @@ are `-⟪𝐝* ξ, v⟫` in the energy components: on a three-term complex
   `mirrorFEMApprox` and `mirrorD`, with `Jₙ = 1` (`mirrorFamily_J`) and the discrete solutions of
   `mirrorFEMApprox` (`mirrorSplitComplex_sol`). The only (6.4)-related constant in the dependency
   closure is the projection-error functional `Feec.BGG.Discrete.strangData`, through
-  `mirrorFEM_strangData_le_of_close` (convergence of the smoothed projections on a fixed state).
+  `mirrorFEM_strangData_le_of_close` (convergence of the smoothed projections on a fixed state); the
+  closure also uses the generic segment plumbing `Discrete.toSegmentH` and
+  `HarmonicStability.toSegmentH_dt0_injective`, which live in the same module.
 
 **Not proved.** That the cochain defect is nonzero for some mesh and datum: by the formula it
 would need `ℓ(t)((I - π¹) S⁰ Φ(σᵥ, 0)) ≠ 0` or `⟪M(t), (I - π²) S¹ uᵥ⟫ ≠ 0` for the smoothed

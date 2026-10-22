@@ -491,8 +491,8 @@ theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeD
 /-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Q; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
     {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (poly n S N).V k, ‖x - v‖ < ε :=
-  eventually_exists_lt_of_graph (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) k x
-    hε
+  eventually_exists_lt_of_graph
+    (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) k x hε
 
 /-- Degreewise approximation in every graph norm of `HΛ(Q)` by the higher-order spaces. -/
 theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i))
@@ -501,8 +501,8 @@ theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDo
       ∀ j (hx : x ∈ ((complex n).d i j).domain),
         ‖(complex n).d i j ⟨x - v, Submodule.sub_mem _ hx ((poly n S N).le_domain i j hv)⟩‖ <
           ε :=
-  eventually_exists_near_of_graph (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) i x
-    hε
+  eventually_exists_near_of_graph
+    (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) i x hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
@@ -625,8 +625,8 @@ theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
 theorem eventually_exists_polyMin_lt (S : PolySeq) (k : ℤ)
     (x : L2F ℝ (cubeDomain n) (formIdx n k)) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v ∈ (polyMin n S N).V k, ‖x - v‖ < ε :=
-  eventually_exists_lt_of_graph (fun k x hx _ hε => eventually_exists_polyMin_graph S k x hx hε) k x
-    hε
+  eventually_exists_lt_of_graph
+    (fun k x hx _ hε => eventually_exists_polyMin_graph S k x hx hε) k x hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :

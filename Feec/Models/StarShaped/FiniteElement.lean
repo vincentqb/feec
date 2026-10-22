@@ -313,7 +313,8 @@ end IsAdm
 /-- A simplex of `M` through a point within `2 γ h ≤ h` of `x ∈ T` lies in the
 `2h`-neighbourhood of `T`. -/
 theorem closedInterior_subset_cthickening {M : SimplicialMesh n} {γ : ℝ}
-    (hh : 0 < M.meshSize) (hγ2 : γ ≤ 1 / 2) {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} {x t : Fin n → ℝ}
+    (hh : 0 < M.meshSize) (hγ2 : γ ≤ 1 / 2) {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
+    {x t : Fin n → ℝ}
     (hxT : x ∈ T.closedInterior) (htT' : t ∈ T'.closedInterior) (hT' : T' ∈ M.simplices)
     (hxt : ‖t - x‖ ≤ 2 * (γ * M.meshSize)) :
     T'.closedInterior ⊆ Metric.cthickening (2 * M.meshSize) T.closedInterior := by
@@ -853,8 +854,8 @@ theorem sqrt_mul_abs_dof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.do
         (mul_le_mul_of_nonneg_right hMm hA0) (Real.sqrt_nonneg _)) (by positivity))
         (by split_ifs <;> positivity))).trans ?_
   have : 0 ≤ c * ((k + 1) * θ) := by positivity
-  calc c * ((k + 1) * (2 * γ) + (k + 1) * θ) ≤ c * ((k + 1) * (2 * γ)) + 2 * (c * ((k + 1) * θ)) := by
-        linarith
+  calc c * ((k + 1) * (2 * γ) + (k + 1) * θ) ≤
+        c * ((k + 1) * (2 * γ)) + 2 * (c * ((k + 1) * θ)) := by linarith
     _ = _ := by simp only [c]; ring
 
 /-- **The local `L²` error of `Q` on `Vₕ`**: `‖v - Q v‖²_{L²(T)} ≲ (γ + θ)² m_T(v)`. -/
@@ -1628,50 +1629,12 @@ theorem exists_smooth_near (k : ℕ) (u : (D.complex.d k (k + 1)).domain) {ε : 
       ‖D.complex.d k (k + 1) u -
           formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
             ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩‖ < ε := by
-  set Ω := D.Ω
-  have hΩ := D.isOpen
-  have hd := deRham_maximalComplex_d (𝕜 := ℝ) (n := n) hΩ (k : ℤ)
-  set u' : ((extDerivOp ℝ n k).maximal Ω).domain := ⟨u, hd ▸ u.2⟩
-  have hu' : D.complex.d k (k + 1) u = (extDerivOp ℝ n k).maximal Ω u' :=
+  have hd := deRham_maximalComplex_d (𝕜 := ℝ) (n := n) D.isOpen (k : ℤ)
+  obtain ⟨w, hw, h0, h1, h2⟩ := FEM.exists_smooth_near_of_starBall D.isOpen D.isBounded D.s₀_pos
+    D.starBall k ⟨u, hd ▸ u.2⟩ hε
+  have hu : D.complex.d k (k + 1) u = (extDerivOp ℝ n k).maximal D.Ω ⟨u, hd ▸ u.2⟩ :=
     LinearPMap.apply_eq_of_eq' hd u
-  obtain ⟨η₁, hη₁, hP₁⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet D.x₀
-    (u : L2F ℝ Ω (formIdx n k)) hε
-  obtain ⟨η₂, hη₂, hP₂⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet D.x₀
-    ((extDerivOp ℝ n k).maximal Ω u') hε
-  obtain ⟨δ₁, hδ₁, hc₁⟩ := FEM.exists_abs_pow_sub_one_lt k hη₁
-  obtain ⟨δ₂, hδ₂, hc₂⟩ := FEM.exists_abs_pow_sub_one_lt (k + 1) hη₂
-  obtain ⟨p, hp, hc, hr⟩ := SmoothingParam.exists_isMaximal D.x₀ D.s₀_pos
-    (η := min (min η₁ η₂) (min δ₁ δ₂)) (by positivity)
-  have hcη₁ : |p.factor - 1| < η₁ := hc.trans_le ((min_le_left _ _).trans (min_le_left _ _))
-  have hcη₂ : |p.factor - 1| < η₂ := hc.trans_le ((min_le_left _ _).trans (min_le_right _ _))
-  have hcδ₁ : |p.factor - 1| < δ₁ := hc.trans_le ((min_le_right _ _).trans (min_le_left _ _))
-  have hcδ₂ : |p.factor - 1| < δ₂ := hc.trans_le ((min_le_right _ _).trans (min_le_right _ _))
-  have hrη₁ : p.bump.rOut < η₁ := hr.trans_le ((min_le_left _ _).trans (min_le_left _ _))
-  have hrη₂ : p.bump.rOut < η₂ := hr.trans_le ((min_le_left _ _).trans (min_le_right _ _))
-  set w : FormField n := (smoothForm p hΩ.measurableSet k (u : L2F ℝ Ω (formIdx n k)) :
-    FormField n)
-  have hw : ContDiff ℝ ∞ w := FEM.contDiff_smoothForm p hΩ.measurableSet k _
-  refine ⟨w, hw, isDeg_smoothForm p hΩ.measurableSet k _, ?_, ?_⟩
-  · have e := FEM.formL2_smoothForm hΩ.measurableSet D.isBounded p (k : ℤ)
-      (u : L2F ℝ Ω (formIdx n k))
-    change ‖(u : L2F ℝ Ω (formIdx n k)) - formL2 hΩ.measurableSet D.isBounded k
-      (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet k
-        (u : L2F ℝ Ω (formIdx n k))))‖ < ε
-    rw [e, norm_sub_rev]
-    refine hP₁ p hp.center_eq hcη₁ hrη₁ _ ?_
-    rw [zpow_natCast]; exact hc₁ _ hcδ₁
-  · have e1 : formL2 hΩ.measurableSet D.isBounded ((k : ℤ) + 1)
-          ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ =
-        formL2 hΩ.measurableSet D.isBounded ((k : ℤ) + 1)
-          (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet ((k : ℤ) + 1)
-            ((extDerivOp ℝ n k).maximal Ω u'))) :=
-      formL2_congr _ _ _ fun x hx =>
-        extDeriv_smoothForm_of_maximal p hΩ.measurableSet hΩ D.starBall hp k u'
-          (subset_closure hx)
-    rw [e1, FEM.formL2_smoothForm, hu', norm_sub_rev]
-    refine hP₂ p hp.center_eq hcη₂ hrη₂ _ ?_
-    rw [show ((k : ℤ) + 1) = ((k + 1 : ℕ) : ℤ) by push_cast; ring, zpow_natCast]
-    exact hc₂ _ hcδ₂
+  exact ⟨w, hw, h0, h1, hu ▸ h2⟩
 
 /-- **Smooth forms with compact support in `Ω` are dense in `H̊Λᵏ(Ω)`** (the smoother with
 dilation towards the centre, `c > 1`). -/
@@ -1683,50 +1646,12 @@ theorem exists_smooth_near_min (k : ℕ) (u : (D.complexMin.d k (k + 1)).domain)
       ‖D.complexMin.d k (k + 1) u -
           formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
             ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩‖ < ε := by
-  set Ω := D.Ω
-  have hΩ := D.isOpen
-  have hd := deRham_minimalComplex_d (𝕜 := ℝ) (n := n) hΩ (k : ℤ)
-  set u' : ((extDerivOp ℝ n k).minimal Ω).domain := ⟨u, hd ▸ u.2⟩
-  have hu' : D.complexMin.d k (k + 1) u = (extDerivOp ℝ n k).minimal Ω u' :=
+  have hd := deRham_minimalComplex_d (𝕜 := ℝ) (n := n) D.isOpen (k : ℤ)
+  obtain ⟨w, hw, h0, h1, h2⟩ := FEM.exists_smooth_near_min_of_starBall D.isOpen D.isBounded
+    D.s₀_pos D.starBall k ⟨u, hd ▸ u.2⟩ hε
+  have hu : D.complexMin.d k (k + 1) u = (extDerivOp ℝ n k).minimal D.Ω ⟨u, hd ▸ u.2⟩ :=
     LinearPMap.apply_eq_of_eq' hd u
-  obtain ⟨η₁, hη₁, hP₁⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet D.x₀
-    (u : L2F ℝ Ω (formIdx n k)) hε
-  obtain ⟨η₂, hη₂, hP₂⟩ := exists_norm_smoothField_sub_lt hΩ.measurableSet D.x₀
-    ((extDerivOp ℝ n k).minimal Ω u') hε
-  obtain ⟨δ₁, hδ₁, hc₁⟩ := FEM.exists_abs_pow_sub_one_lt k hη₁
-  obtain ⟨δ₂, hδ₂, hc₂⟩ := FEM.exists_abs_pow_sub_one_lt (k + 1) hη₂
-  obtain ⟨p, hp, hc, hr⟩ := SmoothingParam.exists_isMinimal D.x₀ D.s₀_pos
-    (η := min (min η₁ η₂) (min δ₁ δ₂)) (by positivity)
-  have hcη₁ : |p.factor - 1| < η₁ := hc.trans_le ((min_le_left _ _).trans (min_le_left _ _))
-  have hcη₂ : |p.factor - 1| < η₂ := hc.trans_le ((min_le_left _ _).trans (min_le_right _ _))
-  have hcδ₁ : |p.factor - 1| < δ₁ := hc.trans_le ((min_le_right _ _).trans (min_le_left _ _))
-  have hcδ₂ : |p.factor - 1| < δ₂ := hc.trans_le ((min_le_right _ _).trans (min_le_right _ _))
-  have hrη₁ : p.bump.rOut < η₁ := hr.trans_le ((min_le_left _ _).trans (min_le_left _ _))
-  have hrη₂ : p.bump.rOut < η₂ := hr.trans_le ((min_le_left _ _).trans (min_le_right _ _))
-  set w : FormField n := (smoothForm p hΩ.measurableSet k (u : L2F ℝ Ω (formIdx n k)) :
-    FormField n)
-  have hw : ContDiff ℝ ∞ w := FEM.contDiff_smoothForm p hΩ.measurableSet k _
-  refine ⟨w, hw, fun x hx => smoothForm_eq_zero_of_minimal p hΩ D.isBounded
-    D.starBall hp k _ hx, ?_, ?_⟩
-  · have e := FEM.formL2_smoothForm hΩ.measurableSet D.isBounded p (k : ℤ)
-      (u : L2F ℝ Ω (formIdx n k))
-    change ‖(u : L2F ℝ Ω (formIdx n k)) - formL2 hΩ.measurableSet D.isBounded k
-      (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet k
-        (u : L2F ℝ Ω (formIdx n k))))‖ < ε
-    rw [e, norm_sub_rev]
-    refine hP₁ p hp.center_eq hcη₁ hrη₁ _ ?_
-    rw [zpow_natCast]; exact hc₁ _ hcδ₁
-  · have e1 : formL2 hΩ.measurableSet D.isBounded ((k : ℤ) + 1)
-          ⟨extDeriv w, continuous_extDeriv (hw.of_le (by exact_mod_cast le_top))⟩ =
-        formL2 hΩ.measurableSet D.isBounded ((k : ℤ) + 1)
-          (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ.measurableSet ((k : ℤ) + 1)
-            ((extDerivOp ℝ n k).minimal Ω u'))) :=
-      formL2_congr _ _ _ fun x _ =>
-        extDeriv_smoothForm_of_minimal p hΩ.measurableSet hΩ k u' x
-    rw [e1, FEM.formL2_smoothForm, hu', norm_sub_rev]
-    refine hP₂ p hp.center_eq hcη₂ hrη₂ _ ?_
-    rw [show ((k : ℤ) + 1) = ((k + 1 : ℕ) : ℤ) by push_cast; ring, zpow_natCast]
-    exact hc₂ _ hcδ₂
+  exact ⟨w, hw, h0, h1, hu ▸ h2⟩
 
 end StarDomain
 
@@ -1769,8 +1694,8 @@ theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
 /-- **`L²` density of the Whitney spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitney_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitney N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) k x
-    hε
+  FEM.eventually_exists_lt_of_graph
+    (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) k x hε
 
 /-- **Degreewise approximation in every graph norm of `HΛ(Ω)`**. -/
 theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
@@ -1779,8 +1704,8 @@ theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i)
       ∀ j (hx : x ∈ (D.complex.d i j).domain),
         ‖D.complex.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.whitney N).le_domain i j hv)⟩‖ <
           ε :=
-  FEM.eventually_exists_near_of_graph (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) i x
-    hε
+  FEM.eventually_exists_near_of_graph
+    (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) i x hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitney (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
@@ -1824,8 +1749,8 @@ theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx 
 /-- **`L²` density of the Whitney spaces with vanishing boundary DOFs** `V̊ₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitneyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) k x
-    hε
+  FEM.eventually_exists_lt_of_graph
+    (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) k x hε
 
 /-- **Degreewise approximation in every graph norm of `H̊Λ(Ω)`**. -/
 theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
@@ -1834,8 +1759,8 @@ theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n
       ∀ j (hx : x ∈ (D.complexMin.d i j).domain),
         ‖D.complexMin.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.whitneyMin N).le_domain i j hv)⟩‖ <
           ε :=
-  FEM.eventually_exists_near_of_graph (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) i x
-    hε
+  FEM.eventually_exists_near_of_graph
+    (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) i x hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :

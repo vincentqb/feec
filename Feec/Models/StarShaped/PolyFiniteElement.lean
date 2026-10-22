@@ -499,8 +499,8 @@ theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
 /-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.poly S N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) k
-    x hε
+  FEM.eventually_exists_lt_of_graph
+    (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) k x hε
 
 /-- **Degreewise approximation in every graph norm of `HΛ(Ω)`** by the higher-order spaces. -/
 theorem eventually_exists_poly_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
@@ -509,8 +509,8 @@ theorem eventually_exists_poly_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
       ∀ j (hx : x ∈ (D.complex.d i j).domain),
         ‖D.complex.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.poly S N).le_domain i j hv)⟩‖ <
           ε :=
-  FEM.eventually_exists_near_of_graph (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) i
-    x hε
+  FEM.eventually_exists_near_of_graph
+    (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) i x hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
@@ -598,8 +598,8 @@ theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
 `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_polyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.polyMin S N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph (fun k x hx _ hε => F.eventually_exists_polyMin_graph S k x hx hε) k
-    x hε
+  FEM.eventually_exists_lt_of_graph
+    (fun k x hx _ hε => F.eventually_exists_polyMin_graph S k x hx hε) k x hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :

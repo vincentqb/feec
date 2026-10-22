@@ -1879,7 +1879,8 @@ theorem mixed_rate_of {C : ℝ} (π : ∀ N, (S N).CochainProjection) (hC1 : 1 �
     {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
     {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {q : H.harmonic j}
     (hs : H.IsMixedSolution i j k f σ u q) (hσ : Reg i (H.domainIncl i σ))
-    (hu : Reg j (H.domainIncl j u)) (hb : Reg j (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))))
+    (hu : Reg j (H.domainIncl j u))
+    (hb : Reg j (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))))
     (hq : Reg j (q : W j)) (N : ℕ) :
     ‖σ - (S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).fst‖ +
         ‖u - (S N).embD j
@@ -2380,7 +2381,8 @@ theorem mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j
     (2 * (rateBound A i + rateBound A j) * (3 + 2 * projConst A C)),
     fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
   refine (mixed_rate_of (poincare_min A hA b) (projMin A hA b hE) (one_le_projConst A C)
-    (isGraphBounded_projMin A hA b hE) (Reg := fun l x => IsC2FormMin A hA b l L x) (B := rateBound A)
+    (isGraphBounded_projMin A hA b hE) (Reg := fun l x => IsC2FormMin A hA b l L x)
+    (B := rateBound A)
     (rateBound_nonneg A) (r := fun N => L * FEM.meshSize N)
     (fun N => mul_nonneg hL0 (FEM.meshSize_pos N).le) (fun N l x hx => ?_) hij hjk hs hσ hu hb hq
     N).trans (le_of_eq (by ring))

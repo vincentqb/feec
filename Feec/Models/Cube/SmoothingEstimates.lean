@@ -1436,7 +1436,8 @@ theorem mul_abs_sum_mul_le {H K : ℝ} (hH : 0 ≤ H) {f c : Finset (Fin n) → 
           (le_of_eq (Finset.sum_congr rfl fun s _ => abs_mul _ _))) hH
     _ = ∑ s, (H * |f s|) * |c s| := by
         rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun s _ => by ring
-    _ ≤ ∑ s, K * |c s| := Finset.sum_le_sum fun s _ => mul_le_mul_of_nonneg_right (hf s) (abs_nonneg _)
+    _ ≤ ∑ s, K * |c s| :=
+        Finset.sum_le_sum fun s _ => mul_le_mul_of_nonneg_right (hf s) (abs_nonneg _)
     _ = K * ∑ s, |c s| := by rw [Finset.mul_sum]
 
 open Classical in
@@ -1511,7 +1512,8 @@ theorem sqrt_mul_abs_sum_sub_smoothForm_le {Ω : Set (Fin n → ℝ)} (hΩ : Mea
               add_le_add (ha s) (mul_le_mul hκ (hwt s) (by positivity) h2k)
           _ ≤ 2 ^ (k + 1) * (A * √L) := by
               rw [pow_succ]
-              nlinarith [mul_le_mul_of_nonneg_right (one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 2) (n := k)) hAL]
+              nlinarith [mul_le_mul_of_nonneg_right
+                (one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 2) (n := k)) hAL]
       · obtain ⟨htr, hwx, hlip⟩ := hfar' hbad
         have e : ∑ s, (a s - κ * w t s) * c s =
             ∑ s, ((1 - κ) * w x s + κ * (w x s - w t s)) * c s := by
@@ -1621,7 +1623,8 @@ theorem IsAdm.norm_sub_lt_and_subset {N : ℕ} {p : SmoothingParam (Fin n → �
     {x t : Fin n → ℝ} (hxT : x ∈ T.closedInterior) (hxc : x ∈ closure (cubeDomain n))
     (htT' : t ∈ T'.closedInterior)
     (hdist : dist t (p.center + p.factor • (x - p.center)) < p.bump.rOut) :
-    ‖x - t‖ < γ * hN N / 2 ∧ T'.closedInterior ⊆ Metric.cthickening (2 * hN N) T.closedInterior := by
+    ‖x - t‖ < γ * hN N / 2 ∧
+      T'.closedInterior ⊆ Metric.cthickening (2 * hN N) T.closedInterior := by
   have hxt := hp.norm_sub_lt hxc hdist
   refine ⟨hxt, fun y hy => ?_⟩
   obtain ⟨m', σ', rfl⟩ := mem_mesh_simplices.1 hT'

@@ -678,7 +678,8 @@ theorem sqrt_mul_abs_integrand_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : In
       _ = γ * (A * √L) * h := by ring
   · intro hbad t hdist htΩ
     have h0 := hs T g hgT hg ξ hξ hbad t hdist htΩ
-    have hpb : pullback (simplexMatrix q) (uT x) = pullback (simplexMatrix q) ((0 : FormField n) x) :=
+    have hpb : pullback (simplexMatrix q) (uT x) =
+        pullback (simplexMatrix q) ((0 : FormField n) x) :=
       S.pullback_eq_of_dof_eq hgT hg huT (Submodule.zero_mem _) (fun g' hg' i => by
         rw [show (⟨(0 : FormField n), S.space_le_contForms n k (Submodule.zero_mem _)⟩ :
           contForms n) = 0 from rfl, map_zero]

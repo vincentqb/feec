@@ -134,6 +134,7 @@ public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
 public import Feec.HilbertComplex.Approximation.DissipFEEC
+public import Feec.HilbertComplex.Approximation.DissipGalerkin
 public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
@@ -215,6 +216,7 @@ public import Feec.Models.Box.Mirror
 public import Feec.Models.Box.RowWise
 public import Feec.Models.Cube.Absorbing
 public import Feec.Models.Cube.AbsorbingFiniteSpeed
+public import Feec.Models.Cube.AbsorbingGalerkin
 public import Feec.Models.Cube.AbsorbingTSD
 public import Feec.Models.Cube.AbsorbingTrace
 public import Feec.Models.Cube.Basic

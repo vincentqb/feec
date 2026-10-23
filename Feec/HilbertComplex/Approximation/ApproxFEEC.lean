@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
+public import Feec.HilbertComplex.Approximation.DissipFEEC
 public import Feec.Semigroup.DomainSq
 
 /-!
@@ -61,6 +62,15 @@ The **approximating FEEC theorem** `approxFEEC` (statement `ApproxFEEC.Verdict`)
    `approxFEEC_residual_not_isReducing_of_grading` (graded complex, `R`-invariant `K`: a datum of
    `D(L) ∩ K` leaves `K` forward in time, with residuals tending to a positive limit).
 
+**The skew-adjoint case of the dissipative theorem.** `ApproxFEEC.toDissipFEEC` reads `F` as a
+dissipative FEEC discretization (`Feec.HilbertComplex.DissipFEEC`) of the m-dissipative
+skew-adjoint `L`, whose Lumer–Phillips semigroup is the wave group for `t ≥ 0`
+(`waveGroup_S_eq_semigroup`); cores and rate classes transfer (`ApproxFEEC.Core.toDissip`,
+`ApproxFEEC.RateClass.toDissip`), and `approxFEEC_converges_core`, `approxFEEC_converges`,
+`approxFEEC_rate`, `approxFEEC_residual` are proved from `dissipFEEC_converges_core`,
+`dissipFEEC_converges`, `dissipFEEC_rate`, `dissipFEEC_residual`. The clauses using both time
+directions (item 2 and the non-reducing branches) use the group.
+
 Constructions of cores: `ApproxFEEC.Core.ofOperator` (the Trotter–Kato bridge: an operator
 `Rₕ : Γ(𝐝) → Xₕ` with `ιₕ Rₕ → graphFst` pointwise and a defect identity on `D(L²)` with uniformly
 bounded defect operators tending to `0` pointwise; uniformity on `[0, T]` comes from the
@@ -96,6 +106,15 @@ variable {𝕜 : Type*} [RCLike 𝕜] {X E : Type*}
   [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X] [NormedSpace ℝ X]
   [IsScalarTower ℝ 𝕜 X] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
+omit [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
+/-- A skew bounded operator has `re ⟪L x, x⟫ = 0`. -/
+theorem re_inner_self_eq_zero_of_skew {L : X →L[𝕜] X} (hL : ∀ x y, ⟪L x, y⟫_𝕜 = -⟪x, L y⟫_𝕜)
+    (x : X) : RCLike.re ⟪L x, x⟫_𝕜 = 0 := by
+  have : RCLike.re ⟪L x, x⟫_𝕜 = - RCLike.re ⟪L x, x⟫_𝕜 := by
+    conv_rhs => rw [hL x x, _root_.map_neg, ← inner_conj_symm, RCLike.conj_re]
+    simp
+  linarith
+
 /-- **The abstract consistency estimate** (energy method): for a skew bounded `L` on `X`, a
 bounded `ι : X → E`, a target `u` and a comparison trajectory `p` with right derivative `p'` on
 `[0, T]`, `‖u(t) - ι e^{tL} p(0)‖ ≤ ‖u(t) - ι p(t)‖ + ‖ι‖ ∫₀ᵗ ‖p' - L p‖`. -/
@@ -104,40 +123,9 @@ theorem norm_sub_le_of_defect (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y⟫_�
     (hpc : ContinuousOn p (Icc 0 T)) (hp'c : ContinuousOn p' (Icc 0 T))
     (hp : ∀ t ∈ Ico 0 T, HasDerivWithinAt p (p' t) (Ici t) t) :
     ∀ t ∈ Icc 0 T, ‖u t - ι ((C0Group.ofBounded L).S t (p 0))‖ ≤
-      ‖u t - ι (p t)‖ + ‖ι‖ * ∫ s in (0 : ℝ)..t, ‖p' s - L (p s)‖ := by
-  set G := C0Group.ofBounded L
-  set e : ℝ → X := fun t => p t - G.S t (p 0)
-  have hGd : ∀ t, HasDerivAt (fun s => G.S s (p 0)) (L (G.S t (p 0))) t := fun t =>
-    C0Group.hasDerivAt_exp_ofReal_smul_apply L (p 0) t
-  have hec : ContinuousOn e (Icc 0 T) :=
-    hpc.sub (fun t _ => (hGd t).continuousAt.continuousWithinAt)
-  have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (p' t - L (G.S t (p 0))) (Ici t) t :=
-    fun t ht => (hp t ht).sub (hGd t).hasDerivWithinAt
-  have hgc : ContinuousOn (fun s => ‖p' s - L (p s)‖) (Icc 0 T) :=
-    (hp'c.sub (L.continuous.comp_continuousOn hpc)).norm
-  have hle : ∀ t ∈ Ico 0 T, RCLike.re ⟪p' t - L (G.S t (p 0)), e t⟫_𝕜 ≤
-      ‖p' t - L (p t)‖ * ‖e t‖ := by
-    intro t _
-    have hsplit : p' t - L (G.S t (p 0)) = (p' t - L (p t)) + L (e t) := by
-      simp only [e, _root_.map_sub]; abel
-    have hskew : RCLike.re ⟪L (e t), e t⟫_𝕜 = 0 := by
-      have h := hL (e t) (e t)
-      have : RCLike.re ⟪L (e t), e t⟫_𝕜 = - RCLike.re ⟪L (e t), e t⟫_𝕜 := by
-        conv_rhs => rw [h, _root_.map_neg, ← inner_conj_symm, RCLike.conj_re]
-        simp
-      linarith
-    rw [hsplit, inner_add_left, _root_.map_add, hskew, add_zero]
-    exact (RCLike.re_le_norm _).trans (norm_inner_le_norm _ _)
-  have hE := Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := 𝕜) hec hed hgc
-    (fun _ _ => norm_nonneg _) hle
-  intro t ht
-  have h0 : e 0 = 0 := by simp [e, G]
-  have he := hE t ht
-  rw [h0, norm_zero, zero_add] at he
-  calc ‖u t - ι (G.S t (p 0))‖ = ‖(u t - ι (p t)) + ι (e t)‖ := by
-        simp only [e, _root_.map_sub]; abel_nf
-    _ ≤ ‖u t - ι (p t)‖ + ‖ι‖ * ‖e t‖ := (norm_add_le _ _).trans (by gcongr; exact ι.le_opNorm _)
-    _ ≤ _ := by gcongr
+      ‖u t - ι (p t)‖ + ‖ι‖ * ∫ s in (0 : ℝ)..t, ‖p' s - L (p s)‖ :=
+  norm_sub_le_of_defect_of_dissipative L (fun x => (re_inner_self_eq_zero_of_skew hL x).le) ι
+    hpc hp'c hp
 
 /-- **Uniqueness for skew bounded generators**: a differentiable `u` with `u' = L u` is the
 orbit `e^{tL} u(0)`, for all times (forward by the energy estimate, backward by time reversal). -/
@@ -168,61 +156,6 @@ theorem eq_ofBounded_of_hasDerivAt (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y
     rw [RCLike.ofReal_neg, smul_neg, neg_smul, neg_neg]
 
 end Core
-
-/-! ### Uniform convergence on compact sets -/
-
-section Compact
-
-/-- **Pointwise convergence to `0` is uniform on compact sets** for a family of functions with a
-uniform Lipschitz-type bound `f h ζ ≤ f h ζ' + M ‖ζ - ζ'‖` (finite cover by small balls). -/
-theorem eventually_forall_lt_of_tendsto {κ F : Type*} [SeminormedAddCommGroup F] {l : Filter κ}
-    {f : κ → F → ℝ} {M : ℝ} (hf : ∀ h ζ ζ', f h ζ ≤ f h ζ' + M * ‖ζ - ζ'‖)
-    (hlim : ∀ ζ, Tendsto (fun h => f h ζ) l (𝓝 0)) {S : Set F} (hS : IsCompact S) {ε : ℝ}
-    (hε : 0 < ε) : ∀ᶠ h in l, ∀ ζ ∈ S, f h ζ < ε := by
-  set M' := max M 0
-  have hM' : 0 ≤ M' := le_max_right _ _
-  set δ := ε / (2 * (M' + 1))
-  have hδ : 0 < δ := by positivity
-  obtain ⟨t, -, htf, hcov⟩ := hS.finite_cover_balls hδ
-  have hev : ∀ᶠ h in l, ∀ z ∈ t, f h z < ε / 2 :=
-    (htf.eventually_all).2 fun z _ => (tendsto_order.1 (hlim z)).2 _ (half_pos hε)
-  filter_upwards [hev] with h hh ζ hζ
-  obtain ⟨z, hz, hζz⟩ := mem_iUnion₂.1 (hcov hζ)
-  rw [Metric.mem_ball, dist_eq_norm] at hζz
-  have h1 := hf h ζ z
-  have h2 : M * ‖ζ - z‖ ≤ M' * δ :=
-    (mul_le_mul_of_nonneg_right (le_max_left M 0) (norm_nonneg _)).trans
-      (mul_le_mul_of_nonneg_left hζz.le hM')
-  have h3 : M' * δ < ε / 2 := by
-    have e : M' * δ = ε / 2 * (M' / (M' + 1)) := by
-      simp only [δ]; field_simp
-    rw [e]
-    have : M' / (M' + 1) < 1 := (div_lt_one (by linarith)).2 (by linarith)
-    nlinarith
-  linarith [hh z hz]
-
-/-- Uniformly bounded linear maps converging pointwise to `0` converge uniformly on compact
-sets (the codomains may vary). -/
-theorem eventually_forall_norm_lt_of_tendsto {𝕜 κ F : Type*} [RCLike 𝕜]
-    [SeminormedAddCommGroup F] [NormedSpace 𝕜 F] {G : κ → Type*}
-    [∀ h, SeminormedAddCommGroup (G h)] [∀ h, NormedSpace 𝕜 (G h)] {l : Filter κ}
-    {A : ∀ h, F →L[𝕜] G h} {M : ℝ} (hM : ∀ h ζ, ‖A h ζ‖ ≤ M * ‖ζ‖)
-    (hlim : ∀ ζ, Tendsto (fun h => ‖A h ζ‖) l (𝓝 0)) {S : Set F} (hS : IsCompact S) {ε : ℝ}
-    (hε : 0 < ε) : ∀ᶠ h in l, ∀ ζ ∈ S, ‖A h ζ‖ < ε :=
-  eventually_forall_lt_of_tendsto (M := M) (fun h ζ ζ' => by
-    have e : A h ζ = A h ζ' + A h (ζ - ζ') := by rw [_root_.map_sub]; abel
-    rw [e]
-    exact (norm_add_le _ _).trans (by linarith [hM h (ζ - ζ')])) hlim hS hε
-
-/-- `∫₀ᵗ g ≤ M t` for `‖g‖ ≤ M` on `[0, t]` (no integrability needed). -/
-theorem integral_le_mul_of_norm_le {g : ℝ → ℝ} {t M : ℝ} (ht : 0 ≤ t)
-    (hg : ∀ s ∈ Icc 0 t, ‖g s‖ ≤ M) : ∫ s in (0 : ℝ)..t, g s ≤ M * t := by
-  have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := t) (f := g)
-    (C := M) fun s hs => hg s (Ioc_subset_Icc_self (by rwa [uIoc_of_le ht] at hs))
-  rw [sub_zero, abs_of_nonneg ht, Real.norm_eq_abs] at h
-  exact (le_abs_self _).trans h
-
-end Compact
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
@@ -762,6 +695,78 @@ end Complexify
 
 end ApproxFEEC
 
+/-! ### The skew-adjoint case of the dissipative FEEC theorem -/
+
+section Skew
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+
+/-- For `t ≥ 0` the wave group is the Lumer–Phillips semigroup of the m-dissipative
+skew-adjoint wave operator. -/
+theorem waveGroup_S_eq_semigroup (H : HilbertComplex 𝕜 c W) {t : ℝ} (ht : 0 ≤ t) :
+    H.waveGroup.S t = H.isSkewAdjoint_wave.isMDissipative.semigroup.S t :=
+  H.isSkewAdjoint_wave.eqOn_group_semigroup ht
+
+variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxFEEC.{u} H κ)
+
+namespace ApproxFEEC
+
+/-- **An approximating FEEC discretization is a dissipative FEEC discretization** of the
+m-dissipative skew-adjoint wave operator: skew discrete generators are dissipative
+(`re ⟪Lₕ v, v⟫ = 0`). This makes `approxFEEC` the skew-adjoint case of `dissipFEEC`. -/
+def toDissipFEEC : DissipFEEC.{u} H.isSkewAdjoint_wave.isMDissipative κ where
+  K := F.K
+  isClosed_K := F.isClosed_K
+  l := F.l
+  X := F.X
+  L := F.L
+  dissipative h x := (re_inner_self_eq_zero_of_skew (F.skew h) x).le
+  incl := F.incl
+  proj := F.proj
+  proj_incl := F.proj_incl
+  bound := F.bound
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+theorem toDissipFEEC_sol (h : κ) (v : F.X h) (t : ℝ) : F.toDissipFEEC.sol h v t = F.sol h v t :=
+  rfl
+
+variable {F} in
+/-- A comparison of `F` is a comparison of `F.toDissipFEEC`. -/
+def Comparison.toDissip {T : ℝ} (P : F.Comparison T) : F.toDissipFEEC.Comparison T where
+  Data := P.Data
+  p := P.p
+  p' := P.p'
+  continuousOn := P.continuousOn
+  continuousOn' := P.continuousOn'
+  hasDerivWithinAt := P.hasDerivWithinAt
+
+variable {F} in
+/-- A core of `F` is a core of `F.toDissipFEEC` (the targets agree for `t ≥ 0`). -/
+def Core.toDissip (Z : F.Core) : F.toDissipFEEC.Core where
+  Data := Z.Data
+  cmp T := (Z.cmp T).toDissip
+  data_eq := Z.data_eq
+  tendsto_approx T x hx := (Z.tendsto_approx T x hx).congr_right fun t ht => by
+    simp only [waveGroup_S_eq_semigroup H ht.1]
+  tendsto_defect := Z.tendsto_defect
+
+variable {F} in
+/-- A rate class of `F` is a rate class of `F.toDissipFEEC`. -/
+def RateClass.toDissip {T : ℝ} (R : F.RateClass T) : F.toDissipFEEC.RateClass T where
+  toComparison := R.toComparison.toDissip
+  classNorm := R.classNorm
+  meshSize := R.meshSize
+  α := R.α
+  C := R.C
+  C' := R.C'
+  approx x hx h t ht := by
+    rw [← waveGroup_S_eq_semigroup H ht.1]; exact R.approx x hx h t ht
+  consistency := R.consistency
+
+end ApproxFEEC
+
+end Skew
+
 /-! ### The approximating FEEC theorem -/
 
 section Main
@@ -780,39 +785,9 @@ theorem approxFEEC_propagates_iff :
 /-- **3a. Convergence on the core**, from the comparison initial values, uniformly on `[0, T]`. -/
 theorem approxFEEC_converges_core (Z : F.Core) (T : ℝ) {x : PiLp 2 W} (hx : x ∈ Z.Data) :
     TendstoUniformlyOn (fun h t => F.sol h ((Z.cmp T).p x h 0) t)
-      (fun t => H.waveGroup.S t x) F.l (Icc 0 T) := by
-  have hxP : x ∈ (Z.cmp T).Data := by rw [Z.data_eq]; exact hx
-  have ha := Metric.tendstoUniformlyOn_iff.1 (Z.tendsto_approx T x hx)
-  have hd := Metric.tendstoUniformlyOn_iff.1 (Z.tendsto_defect T x hx)
-  rw [Metric.tendstoUniformlyOn_iff]
-  intro ε hε
-  set T' := max T 0
-  set C := F.boundConst
-  have hC := F.boundConst_nonneg
-  set δ := ε / (2 * (C * T' + 1))
-  have hδ : 0 < δ := by positivity
-  filter_upwards [ha _ (half_pos hε), hd δ hδ] with h h1 h2 t ht
-  rw [dist_eq_norm]
-  have hb := F.norm_sub_sol_le (Z.cmp T) hxP h t ht
-  have hint : ∫ s in (0 : ℝ)..t, ‖(Z.cmp T).defect x h s‖ ≤ δ * t :=
-    integral_le_mul_of_norm_le ht.1 fun s hs => by
-      have := h2 s ⟨hs.1, hs.2.trans ht.2⟩
-      rw [dist_eq_norm, zero_sub, norm_neg] at this
-      exact this.le
-  have hT' : t ≤ T' := ht.2.trans (le_max_left _ _)
-  have i1 : ‖F.incl h‖ * ∫ s in (0 : ℝ)..t, ‖(Z.cmp T).defect x h s‖ ≤ C * (δ * T') :=
-    mul_le_mul (F.norm_incl_le h) (hint.trans (mul_le_mul_of_nonneg_left hT' hδ.le))
-      (intervalIntegral.integral_nonneg ht.1 fun _ _ => norm_nonneg _) hC
-  have i2 : C * (δ * T') < ε / 2 := by
-    have e : C * (δ * T') = ε / 2 * (C * T' / (C * T' + 1)) := by
-      simp only [δ]; field_simp
-    rw [e]
-    have hCT : 0 ≤ C * T' := mul_nonneg hC (le_max_right _ _)
-    have : C * T' / (C * T' + 1) < 1 := (div_lt_one (by linarith)).2 (by linarith)
-    nlinarith
-  have := h1 t ht
-  rw [dist_eq_norm] at this
-  linarith
+      (fun t => H.waveGroup.S t x) F.l (Icc 0 T) :=
+  (dissipFEEC_converges_core F.toDissipFEEC Z.toDissip T hx).congr_right fun t ht => by
+    simp only [waveGroup_S_eq_semigroup H ht.1]
 
 /-- **3b. Convergence on the closure of the core**: for `x` in the closure of the core, every
 family of discrete initial values with `ιₕ vₕ → x` gives discrete solutions converging to
@@ -821,59 +796,9 @@ theorem approxFEEC_converges (Z : F.Core) (T : ℝ) {x : PiLp 2 W}
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h}
     (hv : Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x)) :
     TendstoUniformlyOn (fun h t => F.sol h (v h) t) (fun t => H.waveGroup.S t x) F.l
-      (Icc 0 T) := by
-  rcases lt_or_ge T 0 with hT | hT
-  · rw [Icc_eq_empty (by linarith)]; exact tendstoUniformlyOn_empty
-  rw [Metric.tendstoUniformlyOn_iff]
-  intro ε hε
-  set C := F.boundConst
-  have hC := F.boundConst_nonneg
-  set B := C ^ 2 + 1
-  have hB : 0 < B := by positivity
-  have hε' : 0 < ε / (4 * B) := by positivity
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hx
-  obtain ⟨y, hy, hxy⟩ := Metric.mem_closure_iff.1 hx _ hε'
-  rw [dist_eq_norm] at hxy
-  have hy' : y ∈ Z.Data := SetLike.mem_coe.1 hy
-  have hc := Metric.tendstoUniformlyOn_iff.1 (approxFEEC_converges_core F Z T hy') _
-    (show 0 < ε / 4 by positivity)
-  filter_upwards [hc, (Metric.tendsto_nhds.1 (Z.tendsto_incl_p hT hy')) _ hε',
-    Metric.tendsto_nhds.1 hv _ hε'] with h h1 h2 h3 t ht
-  set w := (Z.cmp T).p y h 0
-  rw [dist_eq_norm] at h2 h3 ⊢
-  have a1 : ‖H.waveGroup.S t x - H.waveGroup.S t y‖ = ‖x - y‖ := by
-    rw [← _root_.map_sub]; exact H.isIsometric_waveGroup t _
-  have a2 : ‖H.waveGroup.S t y - F.sol h w t‖ < ε / 4 := by
-    have := h1 t ht; rwa [dist_eq_norm] at this
-  have a3 : ‖F.sol h w t - F.sol h (v h) t‖ ≤ C * ‖w - v h‖ :=
-    (F.norm_sol_sub_sol_le h _ _ t).trans
-      (mul_le_mul_of_nonneg_right (F.norm_incl_le h) (norm_nonneg _))
-  have a4 : ‖w - v h‖ ≤ C * (‖F.incl h w - y‖ + ‖y - x‖ + ‖x - F.incl h (v h)‖) := by
-    refine (F.norm_le_norm_incl h _).trans (mul_le_mul_of_nonneg_left ?_ hC)
-    rw [_root_.map_sub]
-    calc ‖F.incl h w - F.incl h (v h)‖ =
-        ‖(F.incl h w - y) + (y - x) + (x - F.incl h (v h))‖ := by abel_nf
-      _ ≤ _ := norm_add₃_le
-  have e : H.waveGroup.S t x - F.sol h (v h) t = (H.waveGroup.S t x - H.waveGroup.S t y) +
-      (H.waveGroup.S t y - F.sol h w t) + (F.sol h w t - F.sol h (v h) t) := by abel
-  rw [e]
-  refine norm_add₃_le.trans_lt ?_
-  rw [a1]
-  rw [norm_sub_rev] at h3
-  have hyx : ‖y - x‖ < ε / (4 * B) := by rw [norm_sub_rev]; exact hxy
-  have hsum : ‖F.incl h w - y‖ + ‖y - x‖ + ‖x - F.incl h (v h)‖ < 3 * (ε / (4 * B)) := by
-    linarith
-  have hCC : C * (C * (‖F.incl h w - y‖ + ‖y - x‖ + ‖x - F.incl h (v h)‖)) ≤
-      C ^ 2 * (3 * (ε / (4 * B))) := by
-    rw [← mul_assoc, ← pow_two]
-    exact mul_le_mul_of_nonneg_left hsum.le (sq_nonneg _)
-  have key : ε / (4 * B) + C ^ 2 * (3 * (ε / (4 * B))) ≤ 3 * (ε / 4) := by
-    have e1 : ε / (4 * B) + C ^ 2 * (3 * (ε / (4 * B))) = ε / 4 * ((1 + 3 * C ^ 2) / B) := by
-      field_simp
-    rw [e1]
-    have : (1 + 3 * C ^ 2) / B ≤ 3 := (div_le_iff₀ hB).2 (by simp only [B]; linarith)
-    nlinarith
-  linarith [a3.trans (mul_le_mul_of_nonneg_left a4 hC), hxy]
+      (Icc 0 T) :=
+  (dissipFEEC_converges F.toDissipFEEC Z.toDissip T hx hv).congr_right fun t ht => by
+    simp only [waveGroup_S_eq_semigroup H ht.1]
 
 /-- **3c. The rate: best approximation plus consistency** (plus the initial mismatch), for data in
 a rate class and every discrete initial value `v`:
@@ -884,25 +809,8 @@ theorem approxFEEC_rate {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hx : x ∈
     ‖H.waveGroup.S t x - F.sol h v t‖ ≤
       (R.C + ‖F.incl h‖ * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) +
         ‖F.incl h‖ * ‖R.p x h 0 - v‖ := by
-  have hb := F.norm_sub_sol_le R.toComparison hx h t ht
-  have hint : ∫ s in (0 : ℝ)..t, ‖R.toComparison.defect x h s‖ ≤
-      R.C' * R.meshSize h ^ R.α * R.classNorm x * t :=
-    integral_le_mul_of_norm_le ht.1 fun s hs => by
-      rw [Real.norm_of_nonneg (norm_nonneg _)]
-      exact R.consistency x hx h s ⟨hs.1, hs.2.trans ht.2⟩
-  have h1 := R.approx x hx h t ht
-  have h2 := mul_le_mul_of_nonneg_left hint (norm_nonneg (F.incl h))
-  have h3 := F.norm_sol_sub_sol_le h (R.p x h 0) v t
-  have e : H.waveGroup.S t x - F.sol h v t =
-      (H.waveGroup.S t x - F.sol h (R.p x h 0) t) + (F.sol h (R.p x h 0) t - F.sol h v t) := by
-    abel
-  rw [e]
-  refine (norm_add_le _ _).trans ?_
-  have : (R.C + ‖F.incl h‖ * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) =
-      R.C * R.meshSize h ^ R.α * R.classNorm x +
-        ‖F.incl h‖ * (R.C' * R.meshSize h ^ R.α * R.classNorm x * t) := by ring
-  rw [this]
-  linarith
+  rw [waveGroup_S_eq_semigroup H ht.1]
+  exact dissipFEEC_rate F.toDissipFEEC R.toDissip hx h v ht
 
 /-- **4a. The constraint residual is bounded by the error** (reducing `K`, datum in `K`). -/
 theorem approxFEEC_residual_le (hK : H.wave.IsReducing F.K) {x : PiLp 2 W} (hxK : x ∈ F.K)
@@ -918,15 +826,10 @@ theorem approxFEEC_residual (hK : H.wave.IsReducing F.K) (Z : F.Core) (T : ℝ) 
     (hx : x ∈ Z.Data.topologicalClosure) (hxK : x ∈ F.K) {v : ∀ h, F.X h}
     (hv : Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x)) :
     TendstoUniformlyOn (fun h t => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W)))
-      (fun _ => 0) F.l (Icc 0 T) := by
-  have hc := Metric.tendstoUniformlyOn_iff.1 (approxFEEC_converges F Z T hx hv)
-  rw [Metric.tendstoUniformlyOn_iff]
-  intro ε hε
-  filter_upwards [hc ε hε] with h hh t ht
-  have := hh t ht
-  rw [dist_eq_norm] at this
-  rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg infDist_nonneg]
-  exact (approxFEEC_residual_le F hK hxK h (v h) t).trans_lt this
+      (fun _ => 0) F.l (Icc 0 T) :=
+  dissipFEEC_residual F.toDissipFEEC (fun t ht y hy => by
+    rw [← waveGroup_S_eq_semigroup H ht]; exact (approxFEEC_propagates_iff F).1 hK t y hy)
+    Z.toDissip T hx hxK hv
 
 /-- **4b. Residual of a solution leaving a constraint** (per datum, any closed nonempty `Q`): if
 `e^{tL} x ∉ Q`, the residuals `dist(ιₕ e^{tLₕ} vₕ, Q)` of every convergent family tend to

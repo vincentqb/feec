@@ -133,6 +133,7 @@ public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
+public import Feec.HilbertComplex.Approximation.DissipFEEC
 public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
@@ -315,6 +316,7 @@ public import Feec.Physics.Maxwell.Forms
 public import Feec.Physics.Maxwell.Media
 public import Feec.Physics.Maxwell.Ohmic
 public import Feec.Semigroup.Basic
+public import Feec.Semigroup.DissipativeInvariance
 public import Feec.Semigroup.DomainSq
 public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.LumerPhillips

@@ -194,6 +194,7 @@ public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.Maxwell
 public import Feec.Instances.MaxwellComplex
+public import Feec.Instances.Headline
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal
 public import Feec.Mesh.Kuhn

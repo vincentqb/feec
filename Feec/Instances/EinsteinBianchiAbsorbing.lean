@@ -13,7 +13,7 @@ the dissipative FEEC theorem `Feec.HilbertComplex.dissipFEEC`. **`absorbingVerdi
 1. **well-posedness and radiation**: the generator is m-dissipative, smooth states with the
    boundary condition are in its domain, the energy decreases by twice the outgoing flux
    `∫₀ᵗ ‖E_τ‖²_{L²(∂Q)}`, strictly from some state;
-2. **the constraint**: the Gauss laws propagate and TSD holds on the domain of dependence of TSD
+2. **the constraint**: the Gauss laws propagate from TSD data and TSD holds on the domain of dependence of TSD
    data, but **TSD is not invariant** (`Feec.Models.Cube.Absorbing.not_invariant_tsdPair`): the
    naive absorbing condition is not constraint preserving;
 3. **finite speed**: the absorbing solution equals every weak solution of the system in `Q` with

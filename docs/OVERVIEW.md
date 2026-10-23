@@ -273,13 +273,13 @@ property (`Feec.ImpedanceTriple.GalerkinData.galerkin_verdict`).
 On the cube `(0, ½)³` the row-wise linearized Einstein–Bianchi system with the absorbing condition
 `n × Eᵢ + (Bᵢ)_τ = 0` (`Feec.Models.Cube.Absorbing`) is such an impedance operator; the headline is
 `Feec.Instances.EinsteinBianchi.absorbingVerdict`. It is m-dissipative, radiates
-(`‖S(t) u₀‖² = ‖u₀‖² - 2 ∫₀ᵗ ‖E_τ‖²`), propagates the Gauss laws, keeps TSD on the domain of
+(`‖S(t) u₀‖² = ‖u₀‖² - 2 ∫₀ᵗ ‖E_τ‖²`), propagates the Gauss laws from TSD data, keeps TSD on the domain of
 dependence and has finite speed of propagation
 (`Feec.Models.Cube.Absorbing.absorbingSemigroup_eq_depDomain`), but **TSD is not invariant**
 (`Feec.Models.Cube.Absorbing.not_invariant_tsdPair`): on TSD states of the domain the condition
 forces the weak normal–normal trace of `E` to vanish on the face `{x₀ = ½}`, which the constant TSD field
-`diag(1, -½, -½)` violates. The semi-discrete Galerkin scheme converges for every datum to a
-solution that leaves TSD, with residuals of positive limit
+`diag(1, -½, -½)` violates. The semi-discrete Galerkin scheme converges for every datum; from some
+TSD datum the solution leaves TSD, and the discrete residuals have a positive limit
 (`Feec.Models.Cube.Absorbing.absorbingGalerkin_residual_not_invariant`).
 
 Limits:

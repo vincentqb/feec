@@ -213,6 +213,10 @@ public import Feec.Models.BoundedDomain.SymDualGeneral
 public import Feec.Models.Box.EigenDense
 public import Feec.Models.Box.Mirror
 public import Feec.Models.Box.RowWise
+public import Feec.Models.Cube.Absorbing
+public import Feec.Models.Cube.AbsorbingFiniteSpeed
+public import Feec.Models.Cube.AbsorbingTSD
+public import Feec.Models.Cube.AbsorbingTrace
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.DeRham
 public import Feec.Models.Cube.DeRhamIdent
@@ -318,6 +322,7 @@ public import Feec.Physics.Maxwell.Ohmic
 public import Feec.Semigroup.Basic
 public import Feec.Semigroup.DissipativeInvariance
 public import Feec.Semigroup.DomainSq
+public import Feec.Semigroup.Impedance
 public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.LumerPhillips
 public import Feec.Semigroup.Orbit

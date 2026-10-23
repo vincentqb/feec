@@ -149,11 +149,13 @@ theorem einsteinBianchi_mirrorFEM_converges {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQ
         (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
       TendstoUniformlyOn (fun N t => infDist ((mirrorFEMApprox hT hB).sol N (v N) t)
         (tsdQℝ : Set (PiLp 2 SpaceQ))) (fun _ => 0) atTop (Icc 0 T) := by
-  have V := einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB
   have hxc : x ∈ (mirrorEllCore hT hB).Data.topologicalClosure := by
     rw [mirrorEllCore_closure]; exact hx
-  refine ⟨fun t => (V.2.1.1 isReducing_tsdQℝ) t x hx, (V.2.2.2.1 T x hxc).1, fun v hv =>
-    ⟨(V.2.2.2.1 T x hxc).2 v hv, (V.2.2.2.2.2.1 isReducing_tsdQℝ x hx).2 hxc T v hv⟩⟩
+  refine ⟨fun t => (approxFEEC_propagates_iff (mirrorFEMApprox hT hB)).1 isReducing_tsdQℝ t x hx,
+    ApproxFEEC.tendsto_incl_proj _ (mirrorEllCore hT hB) hxc, fun v hv =>
+    ⟨approxFEEC_converges _ (mirrorEllCore hT hB) T hxc hv,
+      approxFEEC_residual (mirrorFEMApprox hT hB) isReducing_tsdQℝ (mirrorEllCore hT hB) T hxc hx
+        hv⟩⟩
 
 /-- **The `O(h)` rate of the mirror scheme (6.5) for TSD data of `D(L³)`** (item 3c of the verdict
 for the rate class `mirrorFEMRate`): for every discrete initial value `v`,
@@ -166,8 +168,7 @@ theorem einsteinBianchi_mirrorFEM_rate {T : ℝ} (hT0 : 0 < T) {x : PiLp 2 Space
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
       3 * (2 * mirrorRateK hT hB * (1 + T)) * (meshSize N * mirrorL3Norm x) +
         ‖(mirrorFEMApprox hT hB).proj N x - v‖ := by
-  have h := (einsteinBianchi_mirrorFEM_approxFEEC hT hB).2.2.2.2.1 T
-    (mirrorFEMRate hT hB T hT0) x hx N v t ht
+  have h := approxFEEC_rate (mirrorFEMApprox hT hB) (mirrorFEMRate hT hB T hT0) hx N v ht
   have hp : (mirrorFEMRate hT hB T hT0).p x N 0 = (mirrorFEMApprox hT hB).proj N x :=
     C0Group.S_zero_apply _ _
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
@@ -191,8 +192,7 @@ theorem einsteinBianchi_mirrorFEM_rate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
       3 * (2 * mirrorSobK hT hB * (1 + T)) * (meshSize N ^ s * √(sobState (2 + s) x)) +
         ‖(mirrorFEMApprox hT hB).proj N x - v‖ := by
-  have h := (einsteinBianchi_mirrorFEM_approxFEEC hT hB).2.2.2.2.1 T
-    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1) x hx N v t ht
+  have h := approxFEEC_rate (mirrorFEMApprox hT hB) (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1) hx N v ht
   have hp : (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).p x N 0 =
       (mirrorFEMApprox hT hB).proj N x := C0Group.S_zero_apply _ _
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
@@ -320,13 +320,14 @@ theorem mirrorWaveFEMRateSobolev_of_approxFEEC : MirrorWaveFEMRateSobolev hT hB 
   nlinarith [mul_nonneg (mul_nonneg hK hh) hn, mul_nonneg (mul_nonneg (mul_nonneg hK hh) hn) ht.1]
 
 set_option maxHeartbeats 4000000 in
-/-- **`MirrorWaveFEMConvergence` from the approximating FEEC theorem**: item 3a of the verdict of
-the elliptic core (`mirror_waveFEM` is not used). -/
+/-- **`MirrorWaveFEMConvergence` from the approximating FEEC theorem**: convergence on the elliptic
+core from the comparison initial values (`approxFEEC_converges_core`; `mirror_waveFEM` is not
+used). -/
 theorem mirrorWaveFEMConvergence_of_approxFEEC : MirrorWaveFEMConvergence hT hB := by
   intro D T hT0 ε hε
   refine ⟨fun t _ => D.U_tsd t, ?_⟩
   have hx := mem_mirrorEllData_of_tsdDatum D
-  have hconv := (einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB).2.2.1 T D.U₀ hx
+  have hconv := approxFEEC_converges_core (mirrorFEMApprox hT hB) (mirrorEllCore hT hB) T hx
   rw [Metric.tendstoUniformlyOn_iff] at hconv
   filter_upwards [hconv ε hε] with N hN
   refine (exists_mirrorScheme_le_of_eq hT hB N D hT0 _ (mirrorSource_zero hT hB N)).elim
@@ -513,12 +514,11 @@ theorem standardCube_residual_not_mem {T : ℝ} (hT0 : 0 < T) :
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
       (dense_standardCubeEllCore hT hB).closure_eq]
     trivial
-  have V := einsteinBianchi_standardCube_approxFEEC_elliptic hT hB
   have hpos : 0 < infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _) :=
     (isClosed_thesisTSD.notMem_iff_infDist_pos ⟨0, thesisTSD.zero_mem⟩).1 hout
   refine ⟨t, ht, hout, hpos, fun v hv => ?_⟩
-  have hlim := (V.2.2.2.2.2.2.1 (thesisTSD : Set _) isClosed_thesisTSD ⟨0, thesisTSD.zero_mem⟩
-    betaDatum hxc v hv t ht.1 hout).2
+  have hlim := (approxFEEC_residual_not_mem (standardCubeApprox hT hB) (standardCubeEllCore hT hB)
+    isClosed_thesisTSD ⟨0, thesisTSD.zero_mem⟩ hxc hv ht.1 hout).2
   exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
 /-- **Convergence of the thesis' scheme to the exact solution for every datum** (item 3b of the
@@ -539,7 +539,8 @@ theorem einsteinBianchi_standardCube_converges (x : PiLp 2 (ShortHilbertComplex.
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
       (dense_standardCubeEllCore hT hB).closure_eq]
     trivial
-  exact (einsteinBianchi_standardCube_approxFEEC_elliptic hT hB).2.2.2.1 T x hxc
+  exact ⟨ApproxFEEC.tendsto_incl_proj _ (standardCubeEllCore hT hB) hxc,
+    fun _ hv => approxFEEC_converges _ (standardCubeEllCore hT hB) T hxc hv⟩
 
 /-- **The converse part of the approximating FEEC theorem on the thesis' scheme** (item 4b of the
 verdict, non-reducing branch, with the dense elliptic core): since `thesisTSD` does not reduce
@@ -559,8 +560,8 @@ theorem standardCube_residual_not_isReducing {T : ℝ} (hT0 : 0 < T) :
           Tendsto (fun N => infDist ((standardCubeApprox hT hB).sol N (v N) t) (Q : Set _))
             atTop (𝓝 (infDist (matrixComplex.waveGroup.S t x) (Q : Set _))) := by
   obtain ⟨Q, hQ, x, hx, t, ht, hout, hpos, hlim⟩ :=
-    (einsteinBianchi_standardCube_approxFEEC_elliptic hT hB).2.2.2.2.2.2.2.1
-      not_isReducing_thesisTSD T hT0
+    approxFEEC_residual_not_isReducing (standardCubeApprox hT hB) (standardCubeEllCore hT hB)
+      not_isReducing_thesisTSD hT0
   exact ⟨Q, hQ, x, hx, t, ht, hout, hpos, hlim (dense_standardCubeEllCore hT hB)⟩
 
 /-- **`D(L) ∩ thesisTSD` is not dense in `thesisTSD`** (the density gap of [QuennevilleBelair2015],

@@ -56,6 +56,7 @@ public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy
 public import Feec.Evolution.Forcing
 public import Feec.Evolution.Perturbation
+public import Feec.Evolution.Scheme
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed

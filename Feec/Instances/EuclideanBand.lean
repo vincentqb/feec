@@ -592,8 +592,8 @@ theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2
         (bandApprox S hS K hK).sol N ((bandApprox S hS K hK).proj N x) t‖ ≤
       (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x := by
   set R := sobolevRate S hS K hK t hs
-  have h := (bandApprox_verdict S hS K hK).2.2.2.2.1 t R x hx N
-    ((bandApprox S hS K hK).proj N x) t ⟨ht, le_rfl⟩
+  have h := approxFEEC_rate (bandApprox S hS K hK) R hx N ((bandApprox S hS K hK).proj N x)
+    ⟨ht, le_rfl⟩
   have hp : R.p x N 0 = (bandApprox S hS K hK).proj N x := by
     change ((bands S hS).B N).orthogonalProjectionOnto (S.toHilbertComplex.waveGroup.S 0 x) = _
     rw [C0Group.S_zero_apply]; rfl
@@ -1440,14 +1440,14 @@ theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} 
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) / 2 <
         infDist ((maxwellPotentialApprox d a).sol N ((maxwellPotentialApprox d a).proj N x) t)
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) := by
-  have V := maxwell_euclidean_potential_approxFEEC d a
-  obtain ⟨x, hxK, t, ht, hout, hpos, hlim⟩ := V.2.2.2.2.2.2.2.2.2
-    (fun i : Fin 3 => decide (Odd i.val)) (fun _ _ h => ComplexShape.window_parity h)
+  obtain ⟨x, hxK, t, ht, hout, hpos, hlim⟩ := approxFEEC_residual_not_isReducing_of_grading
+    (maxwellPotentialApprox d a) (maxwellPotentialCore d a)
+    (p := fun i : Fin 3 => decide (Odd i.val)) (fun _ _ h => ComplexShape.window_parity h)
     (fun _ hx => reversal_mem_totalSub hx) (dense_potential _)
-    (maxwell_euclidean_not_isReducing_potential d a h) T hT
+    (maxwell_euclidean_not_isReducing_potential d a h) hT
   have hx : (x : PiLp 2 _) ∈ (maxwellPotentialCore d a).Data.topologicalClosure :=
     Submodule.le_topologicalClosure _ (by rw [bandCore_data]; trivial)
-  obtain ⟨h1, h2⟩ := hlim hx _ (V.2.2.2.1 T x hx).1
+  obtain ⟨h1, h2⟩ := hlim hx _ (ApproxFEEC.tendsto_incl_proj _ _ hx)
   exact ⟨x, hxK, t, ht, hout, hpos, h1, h2⟩
 
 /-! #### The classical system: `d = 3`, `a = 0` -/

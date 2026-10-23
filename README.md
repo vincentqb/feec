@@ -8,7 +8,11 @@ theorem depends only on `propext`, `Classical.choice` and `Quot.sound`.
 ## The approximating FEEC theorem
 
 `Feec.HilbertComplex.approxFEEC` (in `Feec/HilbertComplex/Approximation/ApproxFEEC.lean`),
-statement `ApproxFEEC.Verdict`.
+statement `ApproxFEEC.Verdict`: the verdict `DissipFEEC.Verdict` of the dissipative theorem
+`dissipFEEC` for its forward-time reading, and the conclusions that use both time directions,
+each a named predicate of the shared vocabulary `Feec.Evolution.Scheme` (convergence from a
+datum, invariance, departures, residuals). The whole statement, in words, is
+[docs/headline.md](docs/headline.md) (`Feec.HilbertComplex.headline`, typeset by leantex).
 
 Take a Hilbert complex `W` (any finite window of any `ComplexShape`, over `ℝ` or `ℂ`), its
 Hodge wave equation `ξ' = Lξ` with `L = d − d†`, and a closed constraint subspace `K`. A
@@ -33,7 +37,7 @@ discrete solution is `ξₕ(t) = ιₕ e^{tLₕ} vₕ`. Then:
    residuals tend to the positive number `dist(ξ(t), Q)`. A non-reducing `K` is left by some
    datum of `K` or of `K^⊥`. If `D(L) ∩ K` is dense in `K`, a datum of `D(L) ∩ K` leaves `K` at
    some `t ∈ [−T, T]`. On graded complexes with `K` invariant under the grading, it leaves `K`
-   forward in time, and the residuals stay above half of their positive limit.
+   forward in time, so its residuals tend to a positive limit.
 
 **The conforming case.** When `Xₕ` are finite-dimensional subcomplexes with uniformly bounded
 commuting cochain projections and `ιₕ` is the inclusion, this is the constrained FEEC theorem
@@ -61,8 +65,8 @@ Every row but the last is an instance of `approxFEEC`: its headline is `F.Verdic
 `approxFEEC F Z`, and its rate theorem applies the rate clause `approxFEEC_rate`. The last row
 (absorbing boundary conditions, a dissipative generator) is an instance of `dissipFEEC`, the
 dissipative extension of `approxFEEC` (an approximating discretization is a dissipative one for the
-skew-adjoint generator, `ApproxFEEC.toDissipFEEC`, and the forward-in-time clauses of `approxFEEC`
-follow from `dissipFEEC`).
+skew-adjoint generator, `ApproxFEEC.toDissipFEEC`, and the verdict of `approxFEEC` contains the
+verdict of `dissipFEEC` for it).
 The "Verdict" column says which branch of item 4 holds. Lean names are relative to
 `Feec.Instances.Maxwell` (M), `Feec.Instances.EuclideanBand` (B) and
 `Feec.Instances.EinsteinBianchi` (EB).

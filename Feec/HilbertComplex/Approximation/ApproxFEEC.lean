@@ -45,7 +45,12 @@ discrete constraints (`approxFEEC_ofComplex`).
 
 ## Main results
 
-The **approximating FEEC theorem** `approxFEEC` (statement `ApproxFEEC.Verdict`) bundles:
+The **approximating FEEC theorem** `approxFEEC` (statement `ApproxFEEC.Verdict`) is the
+dissipative FEEC theorem for the forward-time reading `ApproxFEEC.toDissipFEEC` of `F`
+(`dissipFEEC`, statement `DissipFEEC.Verdict`) together with the clauses that use both time
+directions, stated with the predicates of `Feec.Evolution.Scheme` for the scheme
+`ApproxFEEC.toScheme` of the wave group (which agrees with that of `F.toDissipFEEC` for `t ≥ 0`,
+`ApproxFEEC.toScheme_S_of_nonneg`). Its results are:
 
 1. well-posedness of the continuous problem (`constrainedFEEC_wellPosed`);
 2. `approxFEEC_propagates_iff`: constraints propagate iff `K` reduces `L`;
@@ -763,6 +768,25 @@ def RateClass.toDissip {T : ℝ} (R : F.RateClass T) : F.toDissipFEEC.RateClass 
     rw [← waveGroup_S_eq_semigroup H ht.1]; exact R.approx x hx h t ht
   consistency := R.consistency
 
+/-- The scheme of `F`, its wave group `e^{tL}` for all `t ∈ ℝ`, constraint `K` and discrete
+solutions `ιₕ e^{tLₕ} v` (`Feec.Evolution.Scheme`). For `t ≥ 0` it is the scheme of
+`F.toDissipFEEC` (`toScheme_S_of_nonneg`; the other fields agree by definition). -/
+def toScheme : Evolution.Scheme.{u} (PiLp 2 W) κ where
+  S t := H.waveGroup.S t
+  K := F.K
+  l := F.l
+  X := F.X
+  incl h := F.incl h
+  proj h := F.proj h
+  sol := F.sol
+
+/-- **The forward-time reading agrees**: for `t ≥ 0`, the flow of `F.toScheme` is that of
+`F.toDissipFEEC.toScheme`. -/
+theorem toScheme_S_of_nonneg {t : ℝ} (ht : 0 ≤ t) :
+    F.toScheme.S t = F.toDissipFEEC.toScheme.S t := by
+  change ⇑(H.waveGroup.S t) = ⇑(H.isSkewAdjoint_wave.isMDissipative.semigroup.S t)
+  rw [waveGroup_S_eq_semigroup H ht]
+
 end ApproxFEEC
 
 end Skew
@@ -938,109 +962,17 @@ theorem approxFEEC_residual_not_isReducing_of_grading (Z : F.Core) {p : ι → B
     hout).2
   exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
-/-- The conclusion of the approximating FEEC theorem (instances state their headline as
-`F.Verdict Z`, proved by `approxFEEC F Z`). -/
-abbrev ApproxFEEC.Verdict (Z : F.Core) : Prop :=
-    -- 1. well-posedness (`constrainedFEEC_wellPosed`)
-    (∀ x ∈ H.wave.domain, ∀ T : ℝ,
-      Evolution.IsClassicalSolution H.wave (Icc 0 T) 0 (fun t => H.waveGroup.S t x) ∧
-      (∀ U, U 0 = x → Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U →
-        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
-      (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
-        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
-      ∀ t, ‖H.waveGroup.S t x‖ = ‖x‖) ∧
-    -- 2. propagation iff reducing
-    (H.wave.IsReducing F.K ↔ ∀ t, ∀ x ∈ F.K, H.waveGroup.S t x ∈ F.K) ∧
-    -- 3a. convergence on the core
-    (∀ T : ℝ, ∀ x ∈ Z.Data, TendstoUniformlyOn
-      (fun h t => F.sol h ((Z.cmp T).p x h 0) t) (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
-    -- 3b. convergence on the closure of the core, every convergent initial family; one exists
-    (∀ T : ℝ, ∀ x ∈ Z.Data.topologicalClosure,
-      Tendsto (fun h => F.incl h (F.proj h x)) F.l (𝓝 x) ∧
-      ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
-        TendstoUniformlyOn (fun h t => F.sol h (v h) t) (fun t => H.waveGroup.S t x) F.l
-          (Icc 0 T)) ∧
-    -- 3c. rates: best approximation + consistency (+ initial mismatch)
-    (∀ (T : ℝ) (R : F.RateClass T), ∀ x ∈ R.Data, ∀ h, ∀ v : F.X h, ∀ t ∈ Icc 0 T,
-      ‖H.waveGroup.S t x - F.sol h v t‖ ≤
-        (R.C + ‖F.incl h‖ * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) +
-          ‖F.incl h‖ * ‖R.p x h 0 - v‖) ∧
-    -- 4a. reducing constraint: residual through `ιₕ` bounded by the error, tends to `0`
-    (H.wave.IsReducing F.K → ∀ x ∈ F.K,
-      (∀ h (v : F.X h) t, infDist (F.sol h v t) (F.K : Set (PiLp 2 W)) ≤
-        ‖H.waveGroup.S t x - F.sol h v t‖) ∧
-      (x ∈ Z.Data.topologicalClosure → ∀ T : ℝ, ∀ v : ∀ h, F.X h,
+/-- **4b. Residuals of a non-reducing constraint have a positive limit**: a datum of `K` or of
+`Kᗮ` leaves it at some `t ∈ [0, T]`, at positive distance, and with a dense core the residuals of
+every convergent discretization of that datum tend to that distance. -/
+theorem approxFEEC_residual_not_isReducing (Z : F.Core) (hK : ¬ H.wave.IsReducing F.K) {T : ℝ}
+    (hT : 0 < T) :
+    ∃ Q : Submodule 𝕜 (PiLp 2 W), (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
+      H.waveGroup.S t x ∉ Q ∧ 0 < infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)) ∧
+      (Dense (Z.Data : Set (PiLp 2 W)) → ∀ v : ∀ h, F.X h,
         Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
-        TendstoUniformlyOn (fun h t => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W)))
-          (fun _ => 0) F.l (Icc 0 T))) ∧
-    -- 4b. per datum: a solution leaving `Q` has residual tending to `dist(e^{tL}x, Q) > 0`
-    (∀ Q : Set (PiLp 2 W), IsClosed Q → Q.Nonempty → ∀ x ∈ Z.Data.topologicalClosure,
-      ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) → ∀ t, 0 ≤ t →
-      H.waveGroup.S t x ∉ Q → 0 < infDist (H.waveGroup.S t x) Q ∧
-        Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l
-          (𝓝 (infDist (H.waveGroup.S t x) Q))) ∧
-    -- 4b. a non-reducing constraint is left by data of `K` or `Kᗮ`; with a dense core, the
-    -- residuals of every convergent discretization of that datum have a positive limit
-    (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
-      ∃ Q : Submodule 𝕜 (PiLp 2 W), (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
-        H.waveGroup.S t x ∉ Q ∧ 0 < infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)) ∧
-        (Dense (Z.Data : Set (PiLp 2 W)) → ∀ v : ∀ h, F.X h,
-          Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
-          Tendsto (fun h => infDist (F.sol h (v h) t) (Q : Set (PiLp 2 W))) F.l
-            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)))))) ∧
-    -- 4c. with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`
-    (¬ H.wave.IsReducing F.K →
-      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) → ∀ T : ℝ, 0 < T →
-      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
-        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W))) ∧
-    -- 4c. graded complex, `R`-invariant `K`, `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K`
-    -- leaves `K` forward in time, with residuals tending to a positive limit
-    (∀ p : ι → Bool, (∀ i j, c.Rel i j → p j ≠ p i) → (∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K) →
-      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) →
-      ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
-      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
-        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
-        ((x : PiLp 2 W) ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
-          Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
-          Tendsto (fun h => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))) F.l
-            (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
-          ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
-            infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))))
-
-/-- **The approximating FEEC theorem.** For an approximating FEEC discretization `F` (discrete
-Hilbert spaces with their own inner products, skew bounded generators, uniformly bounded reading
-maps `ιₕ` with uniformly bounded left inverses `πₕ`; variational crimes allowed) and an
-orbit-consistent core `Z`:
-
-1. (**well-posedness**, Stone) for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution, the only
-   strong and the only weak solution, and conserves energy;
-2. (**propagation**) `K` reduces `L` iff `e^{tL} K ⊆ K` for all `t`;
-3. (**convergence**) on the core, from the comparison initial values; on its closure, for every
-   family `vₕ` with `ιₕ vₕ → ξ₀` (and `vₕ = πₕ ξ₀` is one), uniformly on `[0, T]`; for data in a
-   rate class, `‖e^{tL} ξ₀ - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`
-   (best approximation plus consistency);
-4. (**constraint residual**, measured through `ιₕ`) if `K` reduces `L`, it is bounded by the error
-   and tends to `0`; a solution leaving a closed nonempty `Q` has residuals with the positive limit
-   `dist(e^{tL} ξ₀, Q)`; a non-reducing `K` is left by data of `K` or `Kᗮ`, and with a dense core
-   the residuals of every convergent discretization of that datum have a positive limit; if
-   `D(L) ∩ K` is dense in `K`, a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`; on a graded
-   complex with `R`-invariant `K`, a datum of `D(L) ∩ K` leaves `K` forward in time and its
-   residuals tend to a positive limit.
-
-Cf. [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues); [QuennevilleBelair2015], Thms 4.6,
-4.7, Prop. 4.17 -/
-theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
-  refine ⟨fun _ hx T => constrainedFEEC_wellPosed hx T, approxFEEC_propagates_iff F,
-    fun T _ hx => approxFEEC_converges_core F Z T hx,
-    fun T _ hx => ⟨tendsto_incl_proj F Z hx, fun _ hv => approxFEEC_converges F Z T hx hv⟩,
-    fun _ R _ hx h v _ ht => approxFEEC_rate F R hx h v ht,
-    fun hK _ hxK => ⟨fun h v t => approxFEEC_residual_le F hK hxK h v t,
-      fun hx T _ hv => approxFEEC_residual F hK Z T hx hxK hv⟩,
-    fun _ hQ hQne _ hx _ hv _ ht hout => approxFEEC_residual_not_mem F Z hQ hQne hx hv ht hout,
-    fun hK T hT => ?_,
-    fun hK hdense _ hT => approxFEEC_residual_not_isReducing_symm F hK hdense hT,
-    fun _ hp hRK hdense hK _ hT =>
-      approxFEEC_residual_not_isReducing_of_grading F Z hp hRK hdense hK hT⟩
+        Tendsto (fun h => infDist (F.sol h (v h) t) (Q : Set (PiLp 2 W))) F.l
+          (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))) := by
   obtain ⟨Q, hQK, x, hx, t, ht, hout⟩ := approxFEEC_exists_not_mem F hK hT
   have hQc : IsClosed (Q : Set (PiLp 2 W)) := by
     rcases hQK with rfl | rfl
@@ -1050,6 +982,81 @@ theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
   have hxc : x ∈ Z.Data.topologicalClosure := by
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, hd.closure_eq]; trivial
   exact (approxFEEC_residual_not_mem F Z hQc ⟨0, Q.zero_mem⟩ hxc hv ht.1 hout).2
+
+/-- `p` alternates along `c`, `p j ≠ p i` whenever `c.Rel i j`. -/
+abbrev Alternates (c : ComplexShape ι) (p : ι → Bool) : Prop := ∀ i j, c.Rel i j → p j ≠ p i
+
+/-- `F` has its constraint invariant under the reversal by `p`, `R_p K ⊆ K`. -/
+abbrev ApproxFEEC.ReversalInvariant (p : ι → Bool) : Prop := ∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K
+
+/-- `F` satisfies the approximating FEEC theorem with the core `Z`: the conclusion of
+`approxFEEC` (instances state their headline as `F.Verdict Z`, proved by `approxFEEC F Z`), the
+dissipative verdict of the forward-time reading
+`F.toDissipFEEC` (`DissipFEEC.Verdict`, whose scheme agrees with `F.toScheme` for `t ≥ 0`,
+`ApproxFEEC.toScheme_S_of_nonneg`), and the conclusions that use both time directions, stated
+for the scheme `F.toScheme` of the wave group. -/
+abbrev ApproxFEEC.Verdict (Z : F.Core) : Prop :=
+    -- the dissipative verdict of the forward-time reading
+    F.toDissipFEEC.Verdict Z.toDissip ∧
+    -- 1. weak solutions are unique; the norm is conserved for all `t`
+    (∀ x ∈ H.wave.domain, ∀ T : ℝ,
+      (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
+        EqOn U (fun t => F.toScheme.S t x) (Icc 0 T)) ∧
+      ∀ t, ‖F.toScheme.S t x‖ = ‖x‖) ∧
+    -- 2. propagation for all `t` iff reducing
+    (H.wave.IsReducing F.K ↔ F.toScheme.Keeps F.toScheme.K univ) ∧
+    -- 4b. a non-reducing constraint is left by data of `K` or `Kᗮ`
+    (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      F.toScheme.Exits F.toScheme.K F.toScheme.K (Icc 0 T) ∨
+        F.toScheme.Exits F.Kᗮ F.Kᗮ (Icc 0 T)) ∧
+    -- 4c. with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`
+    (¬ H.wave.IsReducing F.K → F.toScheme.SmoothDense H.wave.domain → ∀ T : ℝ, 0 < T →
+      F.toScheme.Exits ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
+        (Icc (-T) T)) ∧
+    -- 4c. graded complex, `R`-invariant `K`, `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K`
+    -- leaves `K` forward in time
+    (∀ p : ι → Bool, Alternates c p → F.ReversalInvariant p →
+      F.toScheme.SmoothDense H.wave.domain → ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      F.toScheme.Exits ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
+        (Icc 0 T))
+
+/-- **The approximating FEEC theorem.** For an approximating FEEC discretization `F` (discrete
+Hilbert spaces with their own inner products, skew bounded generators, uniformly bounded reading
+maps `ιₕ` with uniformly bounded left inverses `πₕ`; variational crimes allowed) and an
+orbit-consistent core `Z`, the dissipative FEEC theorem holds for its forward-time reading
+`F.toDissipFEEC` (`dissipFEEC`), and:
+
+1. (**well-posedness**, Stone) for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution, the only
+   strong and the only weak solution, and conserves energy;
+2. (**propagation**) `K` reduces `L` iff `e^{tL} K ⊆ K` for all `t`;
+3. (**convergence**) on the closure of the core, for every family `vₕ` with `ιₕ vₕ → ξ₀` (and
+   `vₕ = πₕ ξ₀` is one), uniformly on `[0, T]`; for data in a rate class,
+   `‖e^{tL} ξ₀ - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`
+   (best approximation plus consistency);
+4. (**constraint residual**, measured through `ιₕ`) if `K` reduces `L`, it is bounded by the error
+   and tends to `0`; a solution leaving a closed nonempty `Q` has residuals with the positive limit
+   `dist(e^{tL} ξ₀, Q)`; a non-reducing `K` is left by data of `K` or `Kᗮ`; if `D(L) ∩ K` is dense
+   in `K`, a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`; on a graded complex with
+   `R`-invariant `K`, a datum of `D(L) ∩ K` leaves `K` forward in time (and its residuals tend to
+   a positive limit, `approxFEEC_residual_not_isReducing_of_grading`).
+
+Cf. [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues); [QuennevilleBelair2015], Thms 4.6,
+4.7, Prop. 4.17 -/
+theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
+  refine ⟨dissipFEEC F.toDissipFEEC Z.toDissip, fun x hx T => ?_,
+    (approxFEEC_propagates_iff F).trans
+      ⟨fun h t _ x hx => h t x hx, fun h t x hx => h t (mem_univ t) x hx⟩,
+    fun hK T hT => ?_, fun hK hdense T hT => ?_, fun p hp hRK hdense hK T hT => ?_⟩
+  · obtain ⟨-, -, h3, h4⟩ := constrainedFEEC_wellPosed hx T
+    exact ⟨h3, h4⟩
+  · obtain ⟨Q, hQK, x, hx, t, ht, hout⟩ := approxFEEC_exists_not_mem F hK hT
+    rcases hQK with rfl | rfl
+    exacts [Or.inl ⟨x, hx, t, ht, hout⟩, Or.inr ⟨x, hx, t, ht, hout⟩]
+  · obtain ⟨x, hxK, t, ht, hout, -⟩ := approxFEEC_residual_not_isReducing_symm F hK hdense hT
+    exact ⟨x, ⟨x.2, hxK⟩, t, ht, hout⟩
+  · obtain ⟨x, hxK, t, ht, hout, -⟩ :=
+      approxFEEC_residual_not_isReducing_of_grading F Z hp hRK hdense hK hT
+    exact ⟨x, ⟨x.2, hxK⟩, t, ht, hout⟩
 
 end Main
 

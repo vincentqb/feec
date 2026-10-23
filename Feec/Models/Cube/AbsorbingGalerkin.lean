@@ -108,7 +108,7 @@ theorem absorbingGalerkin_converges (T : ℝ) (x : State) {v : ∀ n, absorbingG
       (fun t => absorbingSemigroup.S t x) atTop (Icc 0 T) := by
   have hx : x ∈ absorbingGalerkinCore.Data.topologicalClosure := by
     rw [absorbingGalerkin_verdict.1]; trivial
-  exact (absorbingGalerkin_verdict.2.2.2.2.1 T x hx).2 v hv
+  exact (absorbingGalerkin_verdict.2.2.2.1 x hx).2 v hv T
 
 /-- **The TSD residual has a positive limit**: for every `T > 0` some TSD datum `x` leaves
 `tsdPair` at some `t ∈ [0, T]`, and for every family of discrete initial values with `ιₙ vₙ → x`
@@ -123,9 +123,11 @@ theorem absorbingGalerkin_residual_not_invariant {T : ℝ} (hT : 0 < T) :
         Tendsto (fun n => infDist (absorbingGalerkin.sol n (v n) t) (tsdPair : Set State)) atTop
           (𝓝 (infDist (absorbingSemigroup.S t x) (tsdPair : Set State))) := by
   obtain ⟨hcl, hV⟩ := absorbingGalerkin_verdict
-  obtain ⟨x, hxK, t, ht, hout, hpos, hlim⟩ := (hV.2.2.2.2.2.2.2 not_invariant_tsdPair T hT).2
+  obtain ⟨x, hxK, t, ht, hout⟩ := (hV.2.2.2.2.2.2 not_invariant_tsdPair T hT).1
   have hx : x ∈ absorbingGalerkinCore.Data.topologicalClosure := by rw [hcl]; trivial
-  exact ⟨x, hxK, t, ht, hout, hpos, (hV.2.2.2.1 T x hx).1, fun v hv => (hlim hx v hv).1⟩
+  obtain ⟨hpos, hlim⟩ :=
+    hV.2.2.2.2.2.1 _ isClosed_tsdPair ⟨0, tsdPair.zero_mem⟩ x hx t ht.1 hout
+  exact ⟨x, hxK, t, ht, hout, hpos, (hV.2.2.1 x hx).1, hlim⟩
 
 /-- **The discrete energy identity** of the absorbing scheme: the semi-discrete energy decreases
 by twice the discrete outgoing flux `‖(vₙ)_τ‖²_{L²(∂Q)}`. -/

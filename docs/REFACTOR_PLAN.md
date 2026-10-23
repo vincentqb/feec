@@ -258,7 +258,7 @@ Feec/
 │   └── Calculus/{Partial,TimeSlice}.lean
 ├── Operator/{Adjoint,Multiplication,Resolvent}.lean                         -- Feec.Operator
 ├── Semigroup/{Basic,Stone,Perturbation,LumerPhillips,Invariance,Spectral}.lean  -- Feec.C0Group / Feec.C0Semigroup
-├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained}.lean -- Feec.Evolution
+├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained,Scheme}.lean -- Feec.Evolution
 ├── Variational/{InfSup,BabuskaNecas,Galerkin,SaddlePoint,Fortin,GalerkinEvolution}.lean -- Feec.Variational
 ├── TimeStepping/{Cayley,BlockMatrix}.lean                                   -- Feec.TimeStepping
 ├── HilbertComplex/                                                          -- Feec.HilbertComplex

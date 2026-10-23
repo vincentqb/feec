@@ -47,15 +47,25 @@ Consistency is a hypothesis on a core, `Feec.HilbertComplex.ApproxFEEC.Core`: co
 trajectories that approximate the exact orbits through `ιₕ` with consistency defects tending to
 `0`, uniformly on `[0, T]`. The abstract estimate is
 `Feec.HilbertComplex.norm_sub_le_of_defect` (best approximation plus integrated consistency
-defect, by the energy method). The theorem bundles well-posedness
+defect, by the energy method). The verdict is the verdict of `Feec.HilbertComplex.dissipFEEC`
+for the forward-time reading `Feec.HilbertComplex.ApproxFEEC.toDissipFEEC`, and the conclusions
+that use both time directions; both are conjunctions of the predicates of
+`Feec.Evolution.Scheme` (`Feec.Evolution.Scheme.ConvergesFrom`, `Feec.Evolution.Scheme.Keeps`,
+`Feec.Evolution.Scheme.Exits`, `Feec.Evolution.Scheme.Detects`, residuals) for the schemes
+`Feec.HilbertComplex.ApproxFEEC.toScheme` and `Feec.HilbertComplex.DissipFEEC.toScheme`, which
+agree for `t ≥ 0` (`Feec.HilbertComplex.ApproxFEEC.toScheme_S_of_nonneg`);
+`Feec.HilbertComplex.headline` restates it unfolded to those predicates, typeset in words in
+`docs/headline.md`. The theorem bundles well-posedness
 (`Feec.HilbertComplex.constrainedFEEC_wellPosed`), propagation
-(`Feec.HilbertComplex.approxFEEC_propagates_iff`), convergence on the core and its closure for
-every convergent family of initial values (`Feec.HilbertComplex.approxFEEC_converges_core`,
-`Feec.HilbertComplex.approxFEEC_converges`, with `ιₕ πₕ → 1` derived,
+(`Feec.HilbertComplex.approxFEEC_propagates_iff`), convergence on the closure of the core for
+every convergent family of initial values (`Feec.HilbertComplex.approxFEEC_converges`; on the core
+from the comparison initial values, `Feec.HilbertComplex.approxFEEC_converges_core`, is the case
+`vₕ = pₕ(0)`; with `ιₕ πₕ → 1` derived,
 `Feec.HilbertComplex.ApproxFEEC.tendsto_incl_proj`), rates over
 `Feec.HilbertComplex.ApproxFEEC.RateClass` (`Feec.HilbertComplex.approxFEEC_rate`) and the
 constraint residual measured through `ιₕ` (`Feec.HilbertComplex.approxFEEC_residual`,
 `Feec.HilbertComplex.approxFEEC_residual_not_mem`, `Feec.HilbertComplex.approxFEEC_exists_not_mem`,
+`Feec.HilbertComplex.approxFEEC_residual_not_isReducing`,
 `Feec.HilbertComplex.approxFEEC_residual_not_isReducing_symm`,
 `Feec.HilbertComplex.approxFEEC_residual_not_isReducing_of_grading`).
 
@@ -258,11 +268,12 @@ Limits.
 `Feec.HilbertComplex.DissipFEEC.Verdict`) extends `approxFEEC` to m-dissipative generators `A`
 (Lumer–Phillips contraction semigroups) and dissipative bounded discrete generators `Lₕ`; an approximating FEEC discretization is a
 dissipative one for the skew-adjoint generator (`Feec.HilbertComplex.ApproxFEEC.toDissipFEEC`), and
-the forward-in-time clauses of `approxFEEC` follow from `dissipFEEC`. It bundles
+the verdict of `approxFEEC` contains the verdict of `dissipFEEC` for it. It bundles
 well-posedness with the energy identity, the propagation criteria (invariance of `K` iff resolvent
 invariance iff solvability of the stationary problem in `D(A) ∩ K`, from
-`Feec.Semigroup.DissipativeInvariance`; reducing iff `K` and `Kᗮ` invariant), convergence on a
-core and its closure, rates, and the residual in both directions. The resolvent form of the
+`Feec.Semigroup.DissipativeInvariance`; reducing iff `K` and `Kᗮ` invariant), convergence on the
+closure of a core, rates (`Feec.HilbertComplex.DissipFEEC.RateClass.Bounds`), and the residual in
+both directions. The resolvent form of the
 Trotter–Kato theorem gives cores from consistent discrete resolvents
 (`Feec.HilbertComplex.DissipFEEC.Core.ofResolvent`). Impedance triples (`Feec.ImpedanceTriple`:
 energy space, field, differential, boundary trace) give m-dissipative impedance operators, and

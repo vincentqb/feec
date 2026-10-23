@@ -43,7 +43,7 @@ theorem `Feec.HilbertComplex.constrainedFEEC`.
 `Feec.HilbertComplex.approxFEEC` (the special case `ιₕ` = inclusion, `πₕ = Pₕ`,
 `ConstrainedFEEC.toApprox`, core `D(L²)`), per instance
 `torus_approxFEEC`, `torus_potential_approxFEEC` (with the non-reducing vanishing-field
-constraint; `torus_potential_residual_of_approxFEEC` reads the graded item 4c off it),
+constraint; `torus_potential_residual_of_approxFEEC` reads the graded departure clause off it),
 `cubePMC_approxFEEC`, `cubePEC_approxFEEC`,
 `paraPMC_approxFEEC`, `paraPEC_approxFEEC`, `starPMC_approxFEEC`, `starPEC_approxFEEC`. The rate
 of the approximating theorem gives the conforming factor `(1 + C_P)(1 + 2t)` in place of the
@@ -1296,8 +1296,8 @@ theorem torus_approxFEEC : (torus d a).toApprox.Verdict (torus d a).toCore := ap
 /-- **The vanishing-field constraint on `𝕋ᵈ` through the approximating FEEC theorem**: the
 verdict for the spectral Galerkin discretization with the constraint `E = 0`, `B = 0`
 (`withConstraint`), together with the fact that the constraint does not reduce `L`
-(`torus_not_isReducing_potential`), so the non-reducing branches 4b–4c of the verdict are not
-vacuous; `torus_potential_residual_of_approxFEEC` discharges the graded 4c clause. -/
+(`torus_not_isReducing_potential`), so the non-reducing departure clauses of the verdict are
+not vacuous; `torus_potential_residual_of_approxFEEC` discharges the graded one. -/
 theorem torus_potential_approxFEEC [Nonempty d] :
     (withConstraint (torus d 0) (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
         isClosed_potential).toApprox.Verdict
@@ -1309,8 +1309,7 @@ theorem torus_potential_approxFEEC [Nonempty d] :
 -- the instance arguments of `toApprox` at `L2Form d (0 + i)` need more than the default
 set_option maxHeartbeats 400000 in
 /-- **The non-reducing branch on the torus, read off the approximating FEEC theorem**, derived
-from its graded item 4c with residuals (`approxFEEC_residual_not_isReducing_of_grading`) and the
-non-reducing constraint of `torus_potential_approxFEEC`,
+from the graded departure clause of `torus_potential_approxFEEC` (`ApproxFEEC.Verdict.old`),
 with the parity grading of the window (`ComplexShape.window_parity`), the `R`-invariance of the
 vanishing-field constraint (`reversal_mem_totalSub`), the density of `D(L) ∩ K`
 (`dense_potential`), the density of the core (`mem_toCore_closure`), the convergence of the
@@ -1332,14 +1331,11 @@ theorem torus_potential_residual_of_approxFEEC [Nonempty d] {T : ℝ} (hT : 0 < 
         infDist (((complex d).window 0 3).totalD.graphFst
           ((torus d 0).discrete N (waveLift _ x) t))
           (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) := by
-  obtain ⟨-, hnot⟩ := torus_potential_approxFEEC (d := d)
-  obtain ⟨x, hxK, t, ht, hout, hpos, hres⟩ := approxFEEC_residual_not_isReducing_of_grading
-    (withConstraint (torus d 0) (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
-      isClosed_potential).toApprox
-    (withConstraint (torus d 0) (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
-      isClosed_potential).toCore
+  obtain ⟨V, hnot⟩ := torus_potential_approxFEEC (d := d)
+  replace V := V.old
+  obtain ⟨x, hxK, t, ht, hout, hpos, hres⟩ := V.2.2.2.2.2.2.2.2.2 _
     (fun _ _ h => ComplexShape.window_parity h) (fun _ hx => reversal_mem_totalSub hx)
-    (dense_potential _) hnot hT
+    (dense_potential _) hnot T hT
   obtain ⟨hlim, hev⟩ := hres (ConstrainedFEEC.mem_toCore_closure _ _) _
     (ConstrainedFEEC.tendsto_incl_ellipticProj _ x)
   refine ⟨x, hxK, t, ht, hout, hpos, hlim.congr fun N => ?_, hev.mono fun N hN => ?_⟩

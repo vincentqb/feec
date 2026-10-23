@@ -568,7 +568,7 @@ theorem mirrorEllCmp_p_zero_eq_init (T : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) :
 
 set_option maxHeartbeats 1000000 in
 /-- **The `O(h)` rate of the mirror scheme (6.5) from the elliptic projection (6.4)**, for TSD data
-of `D(L³)` (item 3c of the verdict for `mirrorEllRate`, initial value `Πₕ(0)`):
+of `D(L³)` (the rate clause of the verdict for `mirrorEllRate`, initial value `Πₕ(0)`):
 `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (4K + 8K t) h_N ‖ξ₀‖_{L³}` on `[0, T]`, `K = mirrorEllK`,
 independent of `T` (cf. `K L (1 + t) h_N` of
 `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain`). -/

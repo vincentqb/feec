@@ -13,6 +13,9 @@ statement `ApproxFEEC.Verdict`: the verdict `DissipFEEC.Verdict` of the dissipat
 each a named predicate of the shared vocabulary `Feec.Evolution.Scheme` (convergence from a
 datum, invariance, departures, residuals). The whole statement, in words, is
 [docs/headline.md](docs/headline.md) (`Feec.HilbertComplex.headline`, typeset by leantex).
+`ApproxFEEC.Verdict.old` and `DissipFEEC.Verdict.old` derive from the verdicts their earlier,
+longer conjunctions (convergence on the core, departures with their residual limits), so the
+compact statement loses nothing; the instances read those through them.
 
 Take a Hilbert complex `W` (any finite window of any `ComplexShape`, over `ℝ` or `ℂ`), its
 Hodge wave equation `ξ' = Lξ` with `L = d − d†`, and a closed constraint subspace `K`. A
@@ -33,11 +36,12 @@ discrete solution is `ξₕ(t) = ιₕ e^{tLₕ} vₕ`. Then:
    best approximation plus consistency:
    `‖ξ(t) − ξₕ(t)‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖ + ‖ιₕ‖ ‖pₕ(0) − vₕ‖`.
 4. **Constraint residual**, measured as `dist(ξₕ(t), K)` in `W`. If `K` reduces `L`, the
-   residual is at most the error and tends to `0`. If a solution leaves a closed set `Q`, the
-   residuals tend to the positive number `dist(ξ(t), Q)`. A non-reducing `K` is left by some
+   residual is at most the error and tends to `0`. If a solution from a datum in the closure of
+   the core leaves a closed set `Q`, the residuals tend to the positive number `dist(ξ(t), Q)`. A non-reducing `K` is left by some
    datum of `K` or of `K^⊥`. If `D(L) ∩ K` is dense in `K`, a datum of `D(L) ∩ K` leaves `K` at
    some `t ∈ [−T, T]`. On graded complexes with `K` invariant under the grading, it leaves `K`
-   forward in time, so its residuals tend to a positive limit.
+   forward in time, and when that datum lies in the closure of the core its residuals tend to a
+   positive limit.
 
 **The conforming case.** When `Xₕ` are finite-dimensional subcomplexes with uniformly bounded
 commuting cochain projections and `ιₕ` is the inclusion, this is the constrained FEEC theorem

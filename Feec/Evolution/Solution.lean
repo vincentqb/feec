@@ -160,6 +160,12 @@ theorem mono (hU : IsClassicalSolution A I F U) (hJ : J ⊆ I) : IsClassicalSolu
   let ⟨V, hV, hUV⟩ := hU.deriv_cont
   ⟨hU.toIsStrongSolution.mono hJ, V, hV.mono hJ, fun t ht => hUV t (hJ ht)⟩
 
+/-- Changing `U` and `F` off `I` does not matter. -/
+theorem congr (hU : IsClassicalSolution A I F U) (hUV : EqOn U V I) (hFG : EqOn F G I) :
+    IsClassicalSolution A I G V :=
+  let ⟨W, hW, hUW⟩ := hU.deriv_cont
+  ⟨hU.toIsStrongSolution.congr hUV hFG, W, hW, fun t ht => hUV ht ▸ hUW t ht⟩
+
 /-- A classical solution with continuous forcing is `C¹` on `I`: `U'` is continuous. -/
 theorem continuousOn_deriv (hU : IsClassicalSolution A I F U) (hF : ContinuousOn F I) :
     ∃ U' : ℝ → E, ContinuousOn U' I ∧ ∀ t ∈ I, HasDerivWithinAt U (U' t) I t := by

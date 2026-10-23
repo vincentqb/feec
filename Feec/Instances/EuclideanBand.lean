@@ -584,7 +584,7 @@ def sobolevRate (T : ℝ) {s : ℝ} (hs : 0 ≤ s) : (bandApprox S hS K hK).Rate
       rw [one_mul, sobolevNorm_eq hy]
       exact norm_sub_starProjection_le S hs hy N
 
-/-- **The Sobolev rate** (item 3c of `approxFEEC` for the class `Hˢ`): for `x ∈ Hˢ`, `s ≥ 0`,
+/-- **The Sobolev rate** (the rate clause of `approxFEEC` for the class `Hˢ`): for `x ∈ Hˢ`, `s ≥ 0`,
 `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` for all `t ≥ 0`. -/
 theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2 volume}
     (hx : x ∈ sobolev 𝕜 E s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
@@ -592,8 +592,8 @@ theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2
         (bandApprox S hS K hK).sol N ((bandApprox S hS K hK).proj N x) t‖ ≤
       (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x := by
   set R := sobolevRate S hS K hK t hs
-  have h := approxFEEC_rate (bandApprox S hS K hK) R hx N ((bandApprox S hS K hK).proj N x)
-    ⟨ht, le_rfl⟩
+  have h := (bandApprox_verdict S hS K hK).old.2.2.2.2.1 t R x hx N
+    ((bandApprox S hS K hK).proj N x) t ⟨ht, le_rfl⟩
   have hp : R.p x N 0 = (bandApprox S hS K hK).proj N x := by
     change ((bands S hS).B N).orthogonalProjectionOnto (S.toHilbertComplex.waveGroup.S 0 x) = _
     rw [C0Group.S_zero_apply]; rfl
@@ -1221,12 +1221,12 @@ theorem ebApprox_sol_mem {x : PiLp 2 Space} (hx : x ∈ totalSub constraint) (N 
 
 /-- **The verdict of the approximating FEEC theorem for the EB system on `ℝ³`** (frequency
 truncation `|ξ| ≤ N`):
-1. the full `ApproxFEEC.Verdict` (core = all data, so items 3b and 4 apply to every datum);
+1. the full `ApproxFEEC.Verdict` (core = all data, so convergence and the residual clauses apply to every datum);
 2. the TSD constraint reduces `L`;
 3. the error is the truncation error of the datum, at every time:
    `‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ = ‖ξ₀ - P_N ξ₀‖`;
 4. for data in `Hˢ`, `s ≥ 0`, the error is `≤ (N + 1)^{-s} ‖ξ₀‖_{Hˢ}` for all `t ≥ 0`
-   (item 3c of the Verdict);
+   (the rate clause of the verdict);
 5. the exponent is sharp: for `0 ≤ s < s'` no bound `C (N + 1)^{-s'} ‖ξ₀‖_{Hˢ}` holds on TSD
    data, at any time;
 6. the truncated solutions of TSD data are TSD (constraint residual identically `0`). -/
@@ -1440,14 +1440,14 @@ theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} 
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) / 2 <
         infDist ((maxwellPotentialApprox d a).sol N ((maxwellPotentialApprox d a).proj N x) t)
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) := by
-  obtain ⟨x, hxK, t, ht, hout, hpos, hlim⟩ := approxFEEC_residual_not_isReducing_of_grading
-    (maxwellPotentialApprox d a) (maxwellPotentialCore d a)
-    (p := fun i : Fin 3 => decide (Odd i.val)) (fun _ _ h => ComplexShape.window_parity h)
+  have V := (maxwell_euclidean_potential_approxFEEC d a).old
+  obtain ⟨x, hxK, t, ht, hout, hpos, hlim⟩ := V.2.2.2.2.2.2.2.2.2
+    (fun i : Fin 3 => decide (Odd i.val)) (fun _ _ h => ComplexShape.window_parity h)
     (fun _ hx => reversal_mem_totalSub hx) (dense_potential _)
-    (maxwell_euclidean_not_isReducing_potential d a h) hT
+    (maxwell_euclidean_not_isReducing_potential d a h) T hT
   have hx : (x : PiLp 2 _) ∈ (maxwellPotentialCore d a).Data.topologicalClosure :=
     Submodule.le_topologicalClosure _ (by rw [bandCore_data]; trivial)
-  obtain ⟨h1, h2⟩ := hlim hx _ (ApproxFEEC.tendsto_incl_proj _ _ hx)
+  obtain ⟨h1, h2⟩ := hlim hx _ (V.2.2.2.1 T x hx).1
   exact ⟨x, hxK, t, ht, hout, hpos, h1, h2⟩
 
 /-! #### The classical system: `d = 3`, `a = 0` -/

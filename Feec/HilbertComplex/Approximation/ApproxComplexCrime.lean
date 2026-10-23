@@ -1316,7 +1316,7 @@ def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W
           F.toFamily.rateConstD * (Ca * m h ^ α * cn x) := add_le_add d2 d1
       _ = _ := by ring
 
-/-- **The error bound of a rate class of `ofComplexCrime`** (item 3c of the verdict,
+/-- **The error bound of a rate class of `ofComplexCrime`** (the rate clause of the verdict,
 `approxFEEC_rate`, from the comparison initial value): `‖e^{tL} x - iₕ e^{tLₕ} pₕ(0)‖ ≤
 (C + C_ι C' t) m(h)ᵅ ‖x‖_c` on `[0, T]`, with `C_ι` the uniform bound of the reading maps. -/
 theorem error_le_of_rateClass {T : ℝ} (R : (ApproxFEEC.ofComplexCrime F).RateClass T)

@@ -55,7 +55,10 @@ that use both time directions; both are conjunctions of the predicates of
 `Feec.HilbertComplex.ApproxFEEC.toScheme` and `Feec.HilbertComplex.DissipFEEC.toScheme`, which
 agree for `t ≥ 0` (`Feec.HilbertComplex.ApproxFEEC.toScheme_S_of_nonneg`);
 `Feec.HilbertComplex.headline` restates it unfolded to those predicates, typeset in words in
-`docs/headline.md`. The theorem bundles well-posedness
+`docs/headline.md`. `Feec.HilbertComplex.ApproxFEEC.Verdict.old` and
+`Feec.HilbertComplex.DissipFEEC.Verdict.old` derive from the verdicts their earlier conjunctions
+(convergence on the core from the comparison initial values, the departures with their positive
+residual limits), which the instances read. The theorem bundles well-posedness
 (`Feec.HilbertComplex.constrainedFEEC_wellPosed`), propagation
 (`Feec.HilbertComplex.approxFEEC_propagates_iff`), convergence on the closure of the core for
 every convergent family of initial values (`Feec.HilbertComplex.approxFEEC_converges`; on the core

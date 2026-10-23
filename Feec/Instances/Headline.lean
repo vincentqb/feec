@@ -1,4 +1,4 @@
--- leantex: show = prose, glossary = where, decls = headline_dissip, headline, phrase.Feec.HilbertComplex.Headline.Converges = "#2 converges to #3 through the reading maps of #1", phrase.Feec.HilbertComplex.Headline.ConvergesFrom = "#1 converges from #2", phrase.Feec.HilbertComplex.Headline.Keeps = "#1 keeps #2 at the times in #3", phrase.Feec.HilbertComplex.Headline.Exits = "#1 takes some datum of #2 out of #3 at a time in #4", phrase.Feec.HilbertComplex.Headline.SmoothDense = "#1 has its constraint in the closure of its part in #2", phrase.Feec.HilbertComplex.Headline.ResidualBounded = "#1 has residuals at most its errors from #2", phrase.Feec.HilbertComplex.Headline.ResidualVanishes = "#1 has residuals tending to zero from #2", phrase.Feec.HilbertComplex.Headline.Detects = "#1 detects the departure of #3 from #2 at time #4", phrase.Feec.HilbertComplex.Headline.IsUniqueSolution = "#4 is the unique solution of #1 from #3 up to time #2", phrase.Feec.HilbertComplex.Headline.Bounds = "#1 bounds the error by best approximation plus consistency plus initial mismatch", phrase.Feec.HilbertComplex.Headline.Alternates = "#2 alternates along #1", phrase.Feec.HilbertComplex.Headline.ReversalInvariant = "#1 has its constraint invariant under the reversal by #2", phrase.Feec.HilbertComplex.DissipFEEC.Verdict = "#1 satisfies the dissipative FEEC theorem with the core #2", phrase.Feec.HilbertComplex.ApproxFEEC.toScheme = "the wave scheme of #1", phrase.Feec.HilbertComplex.DissipFEEC.toScheme = "the scheme of #1", phrase.Feec.HilbertComplex.ApproxFEEC.toDissipFEEC = "the forward reading of #1", phrase.Feec.HilbertComplex.ApproxFEEC.Core.toDissip = "the forward core of #1", phrase.Feec.Evolution.Scheme.K = "the constraint of #1", phrase.SetLike.coe = "the set #1", phrase.Inter.inter = "the part of #2 in #1", phrase.Set.Icc = "the interval from #1 to #2", phrase.Set.Ici = "the half-line from #1", phrase.Set.univ = "the whole line", phrase.AntitoneOn = "#1 is antitone on #2"
+-- leantex: show = prose, glossary = where, decls = headline_dissip, headline_wave, headline, phrase.Feec.HilbertComplex.Headline.Converges = "#2 converges to #3 through the reading maps of #1", phrase.Feec.HilbertComplex.Headline.ConvergesFrom = "#1 converges from #2", phrase.Feec.HilbertComplex.Headline.Keeps = "#1 keeps #2 at the times in #3", phrase.Feec.HilbertComplex.Headline.Exits = "#1 takes some datum of #2 out of #3 at a time in #4", phrase.Feec.HilbertComplex.Headline.SmoothDense = "#1 has its constraint in the closure of its part in #2", phrase.Feec.HilbertComplex.Headline.ResidualBounded = "#1 has residuals at most its errors from #2", phrase.Feec.HilbertComplex.Headline.ResidualVanishes = "#1 has residuals tending to zero from #2", phrase.Feec.HilbertComplex.Headline.Detects = "#1 detects the departure of #3 from #2 at time #4", phrase.Feec.HilbertComplex.Headline.IsUniqueSolution = "#4 is the unique solution of #1 from #3 up to time #2", phrase.Feec.HilbertComplex.Headline.Bounds = "#1 bounds the error by best approximation plus consistency plus initial mismatch", phrase.Feec.HilbertComplex.Headline.Alternates = "#2 alternates along #1", phrase.Feec.HilbertComplex.Headline.ReversalInvariant = "#1 has its constraint invariant under the reversal by #2", phrase.Feec.HilbertComplex.DissipFEEC.Verdict = "#1 satisfies the dissipative FEEC theorem on #2", phrase.Feec.HilbertComplex.ApproxFEEC.toScheme = "the wave scheme of #1", phrase.Feec.HilbertComplex.DissipFEEC.toScheme = "the scheme of #1", phrase.Feec.HilbertComplex.ApproxFEEC.toDissipFEEC = "the forward reading of #1", phrase.Feec.HilbertComplex.ApproxFEEC.Core.toDissip = "the core #1 read forward", phrase.SetLike.coe = "the set #1", phrase.Inter.inter = "the part of #2 in #1", phrase.Set.Icc = "the interval from #1 to #2", phrase.Set.Ici = "the half-line from #1", phrase.Set.univ = "the whole line", phrase.AntitoneOn = "#1 is antitone on #2"
 module
 
 public import Feec.HilbertComplex.Approximation.ApproxFEEC
@@ -52,6 +52,18 @@ class Spaces (𝕜 : Type*) [RCLike 𝕜] {ι : Type*} (W : ι → Type*) [∀ i
   isScalarTower : ∀ i, IsScalarTower ℝ 𝕜 (W i)
 
 attribute [local instance] Spaces.complete Spaces.isScalarTower
+
+/-- The propositional assumptions on a space, as data: `E` is complete and its real scalars are
+those of `𝕜` (a binder of this class hides in a typeset statement). -/
+class Space (𝕜 : Type*) [RCLike 𝕜] (E : Type*) [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    [NormedSpace ℝ E] : Type where
+  complete : CompleteSpace E
+  isScalarTower : IsScalarTower ℝ 𝕜 E
+
+/-- An m-dissipative operator, as data (a binder of this class hides in a typeset statement). -/
+class MDissipative {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] (A : E →ₗ.[𝕜] E) : Type where
+  isMDissipative : A.IsMDissipative
 
 namespace Headline
 
@@ -110,18 +122,6 @@ abbrev Detects {iE : PseudoMetricSpace E} (σ : Scheme.{u} E κ) (Q : Set E) (x 
 
 end Vocabulary
 
-/-- The propositional assumptions on a space, as data: `E` is complete and its real scalars are
-those of `𝕜` (a binder of this class hides in a typeset statement). -/
-class Space (𝕜 : Type*) [RCLike 𝕜] (E : Type*) [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-    [NormedSpace ℝ E] : Type where
-  complete : CompleteSpace E
-  isScalarTower : IsScalarTower ℝ 𝕜 E
-
-/-- An m-dissipative operator, as data (a binder of this class hides in a typeset statement). -/
-class MDissipative {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E]
-    [InnerProductSpace 𝕜 E] (A : E →ₗ.[𝕜] E) : Type where
-  isMDissipative : A.IsMDissipative
-
 attribute [local instance] Space.complete Space.isScalarTower
 
 section Dissip
@@ -130,11 +130,10 @@ variable {𝕜 : Type*} {i𝕜 : RCLike 𝕜} {E : Type*} {iE : NormedAddCommGro
   {iI : InnerProductSpace 𝕜 E} {iR : NormedSpace ℝ E} {sp : Space 𝕜 E} {A : E →ₗ.[𝕜] E}
   {m : MDissipative A} {κ : Type*}
 
-/-- `u` is a classical solution of `A` up to time `T` and the only strong one from `x`:
-`u` is a classical solution of `u' = A u` on `[0, T]`, and every strong solution `U` there with
-`U 0 = x` is `u`. -/
+/-- `u` is the unique solution of `A` from `x` up to time `T`: `u 0 = x`, `u` is a classical
+solution of `u' = A u` on `[0, T]`, and every strong solution `U` there with `U 0 = x` is `u`. -/
 abbrev IsUniqueSolution (A : E →ₗ.[𝕜] E) (T : ℝ) (x : E) (u : ℝ → E) : Prop :=
-  Evolution.IsClassicalSolution A (Icc 0 T) 0 u ∧
+  u 0 = x ∧ Evolution.IsClassicalSolution A (Icc 0 T) 0 u ∧
     ∀ U : ℝ → E, U 0 = x → Evolution.IsStrongSolution A (Icc 0 T) 0 U → EqOn U u (Icc 0 T)
 
 /-- `R` bounds the error by best approximation plus consistency plus initial mismatch:
@@ -187,23 +186,23 @@ theorem headline_dissip (F : DissipFEEC.{u} m.isMDissipative κ) (Z : F.Core) :
       AntitoneOn (fun t => ‖F.toScheme.S t x‖) (Ici 0) ∧
       ∀ t, 0 ≤ t → ‖F.toScheme.S t x‖ ^ 2 = ‖(x : E)‖ ^ 2 +
         ∫ s in (0 : ℝ)..t, 2 * RCLike.re ⟪F.toScheme.S s (A x), F.toScheme.S s x⟫_𝕜) ∧
-    ((Keeps F.toScheme F.toScheme.K (Ici 0) ↔
+    ((Keeps F.toScheme F.K (Ici 0) ↔
       ∀ μ : ℝ, 0 < μ → ∀ y ∈ F.K, Operator.resolvent A (μ : 𝕜) y ∈ F.K) ∧
-    (Keeps F.toScheme F.toScheme.K (Ici 0) ↔
+    (Keeps F.toScheme F.K (Ici 0) ↔
       ∃ μ : ℝ, 0 < μ ∧ ∀ y ∈ F.K, ∃ u : A.domain, (u : E) ∈ F.K ∧ (μ : 𝕜) • (u : E) - A u = y) ∧
     (A.IsReducing F.K ↔
-      Keeps F.toScheme F.toScheme.K (Ici 0) ∧ Keeps F.toScheme F.Kᗮ (Ici 0))) ∧
+      Keeps F.toScheme F.K (Ici 0) ∧ Keeps F.toScheme F.Kᗮ (Ici 0))) ∧
     (∀ x ∈ Z.Data.topologicalClosure, ConvergesFrom (iE := inferInstance) F.toScheme x) ∧
     (∀ (T : ℝ) (R : F.RateClass T), Bounds (iR := iR) (sp := sp) (m := m) R) ∧
-    (Keeps F.toScheme F.toScheme.K (Ici 0) → ∀ x ∈ F.toScheme.K,
+    (Keeps F.toScheme F.K (Ici 0) → ∀ x ∈ F.K,
       ResidualBounded (iE := inferInstance) F.toScheme x ∧
       (x ∈ Z.Data.topologicalClosure → ResidualVanishes (iE := inferInstance) F.toScheme x)) ∧
     (∀ Q : Set E, IsClosed Q → Q.Nonempty → ∀ x ∈ Z.Data.topologicalClosure, ∀ t, 0 ≤ t →
       Detects (iE := inferInstance) F.toScheme Q x t) ∧
-    (¬ Keeps F.toScheme F.toScheme.K (Ici 0) → ∀ T : ℝ, 0 < T →
-      Exits F.toScheme F.toScheme.K F.toScheme.K (Icc 0 T) ∧
+    (¬ Keeps F.toScheme F.K (Ici 0) → ∀ T : ℝ, 0 < T →
+      Exits F.toScheme F.K F.K (Icc 0 T) ∧
       (SmoothDense (iE := inferInstance) F.toScheme A.domain →
-        Exits F.toScheme ((A.domain : Set E) ∩ F.toScheme.K) F.toScheme.K (Icc 0 T))) :=
+        Exits F.toScheme ((A.domain : Set E) ∩ F.K) F.K (Icc 0 T))) :=
   dissipFEEC F Z
 
 end Dissip
@@ -218,34 +217,39 @@ variable {𝕜 : Type*} {_ : RCLike 𝕜} {ι : Type*} {_ : Fintype ι} {c : Com
   {_ : ∀ i, NormedSpace ℝ (W i)} {iS : Spaces 𝕜 W}
   {H : HilbertComplex 𝕜 c W} {κ : Type*}
 
+/-- **The wave scheme.** The flow of the scheme `F.toScheme` of an approximating FEEC
+discretization `F` is the wave group `e^{tL}` of `H`, for every time `t` (`ApproxFEEC.toScheme`). -/
+theorem headline_wave (F : ApproxFEEC.{u} H κ) : ∀ t x, F.toScheme.S t x = H.waveGroup.S t x :=
+  fun _ _ => rfl
+
 /-- **The approximating FEEC theorem.** For an approximating FEEC discretization `F` of the Hodge
 wave equation of `H` and an orbit-consistent core `Z`: the forward-time reading `F.toDissipFEEC`
 satisfies the dissipative FEEC theorem with the core `Z.toDissip`, and the conclusions that use
 both time directions hold for the wave group: unique weak solutions and conservation of the norm,
 propagation iff reducing, departures from a non-reducing constraint or its orthogonal complement,
-from `D(L) ∩ K` in one of the two time directions, and forward in time on a graded complex. This
-is `ApproxFEEC.Verdict`. [QuennevilleBelair2015], Thms 4.6, 4.7, Prop. 4.17; [HolstStern2012],
+from `D(L) ∩ K` in one of the two time directions, and forward in time on a graded complex; `D`
+stands for `D(L)` and `K` for the constraint. The flow of the forward-time reading is the wave
+group for `t ≥ 0` (the flow of `F.toScheme` is the wave group, `headline_wave`). This is
+`ApproxFEEC.Verdict`. [QuennevilleBelair2015], Thms 4.6, 4.7, Prop. 4.17; [HolstStern2012],
 Thm 3.9, Thm 3.10 (elliptic analogues) -/
-theorem headline (F : ApproxFEEC.{u} H κ) (Z : F.Core) :
+theorem headline (F : ApproxFEEC.{u} H κ) (Z : F.Core) (D K : Set (PiLp 2 W))
+    (hD : D = H.wave.domain) (hK : K = F.K) :
     F.toDissipFEEC.Verdict Z.toDissip ∧
+    (∀ t, 0 ≤ t → F.toDissipFEEC.toScheme.S t = F.toScheme.S t) ∧
     (∀ x ∈ H.wave.domain, ∀ T : ℝ,
       (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
         EqOn U (fun t => F.toScheme.S t x) (Icc 0 T)) ∧
       ∀ t, ‖F.toScheme.S t x‖ = ‖x‖) ∧
-    (H.wave.IsReducing F.K ↔ Keeps F.toScheme F.toScheme.K univ) ∧
+    (H.wave.IsReducing F.K ↔ Keeps F.toScheme K univ) ∧
     (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
-      Exits F.toScheme F.toScheme.K F.toScheme.K (Icc 0 T) ∨
-        Exits F.toScheme F.Kᗮ F.Kᗮ (Icc 0 T)) ∧
-    (¬ H.wave.IsReducing F.K → SmoothDense (iE := inferInstance) F.toScheme H.wave.domain →
-      ∀ T : ℝ, 0 < T →
-      Exits F.toScheme ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
-        (Icc (-T) T)) ∧
+      Exits F.toScheme K K (Icc 0 T) ∨ Exits F.toScheme F.Kᗮ F.Kᗮ (Icc 0 T)) ∧
+    (¬ H.wave.IsReducing F.K → SmoothDense (iE := inferInstance) F.toScheme D →
+      ∀ T : ℝ, 0 < T → Exits F.toScheme (D ∩ K) K (Icc (-T) T)) ∧
     (∀ p : ι → Bool, Headline.Alternates c p →
       Headline.ReversalInvariant (iN := inferInstance) (iS := iS) F p →
-      SmoothDense (iE := inferInstance) F.toScheme H.wave.domain → ¬ H.wave.IsReducing F.K →
-      ∀ T : ℝ, 0 < T →
-      Exits F.toScheme ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
-        (Icc 0 T)) :=
-  approxFEEC F Z
+      SmoothDense (iE := inferInstance) F.toScheme D → ¬ H.wave.IsReducing F.K →
+      ∀ T : ℝ, 0 < T → Exits F.toScheme (D ∩ K) K (Icc 0 T)) := by
+  subst hD hK
+  exact approxFEEC F Z
 
 end Feec.HilbertComplex

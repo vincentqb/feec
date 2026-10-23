@@ -65,7 +65,8 @@ directions, stated with the predicates of `Feec.Evolution.Scheme` for the scheme
    (a non-reducing `K` is left by data of `K` or `Kᗮ`), `approxFEEC_residual_not_isReducing_symm`
    (with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`),
    `approxFEEC_residual_not_isReducing_of_grading` (graded complex, `R`-invariant `K`: a datum of
-   `D(L) ∩ K` leaves `K` forward in time, with residuals tending to a positive limit).
+   `D(L) ∩ K` leaves `K` forward in time, with residuals tending to a positive limit when it lies
+   in the closure of the core).
 
 **The skew-adjoint case of the dissipative theorem.** `ApproxFEEC.toDissipFEEC` reads `F` as a
 dissipative FEEC discretization (`Feec.HilbertComplex.DissipFEEC`) of the m-dissipative
@@ -998,22 +999,24 @@ for the scheme `F.toScheme` of the wave group. -/
 abbrev ApproxFEEC.Verdict (Z : F.Core) : Prop :=
     -- the dissipative verdict of the forward-time reading
     F.toDissipFEEC.Verdict Z.toDissip ∧
-    -- 1. weak solutions are unique; the norm is conserved for all `t`
+    -- whose flow is the wave group for `t ≥ 0`
+    (∀ t, 0 ≤ t → F.toDissipFEEC.toScheme.S t = F.toScheme.S t) ∧
+    -- 1'. weak solutions are unique; the norm is conserved for all `t`
     (∀ x ∈ H.wave.domain, ∀ T : ℝ,
       (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
         EqOn U (fun t => F.toScheme.S t x) (Icc 0 T)) ∧
       ∀ t, ‖F.toScheme.S t x‖ = ‖x‖) ∧
-    -- 2. propagation for all `t` iff reducing
+    -- 2'. propagation for all `t` iff reducing
     (H.wave.IsReducing F.K ↔ F.toScheme.Keeps F.toScheme.K univ) ∧
-    -- 4b. a non-reducing constraint is left by data of `K` or `Kᗮ`
+    -- 4'. a non-reducing constraint is left by data of `K` or `Kᗮ`
     (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
       F.toScheme.Exits F.toScheme.K F.toScheme.K (Icc 0 T) ∨
         F.toScheme.Exits F.Kᗮ F.Kᗮ (Icc 0 T)) ∧
-    -- 4c. with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`
+    -- 4''. with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`
     (¬ H.wave.IsReducing F.K → F.toScheme.SmoothDense H.wave.domain → ∀ T : ℝ, 0 < T →
       F.toScheme.Exits ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
         (Icc (-T) T)) ∧
-    -- 4c. graded complex, `R`-invariant `K`, `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K`
+    -- 4'''. graded complex, `R`-invariant `K`, `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K`
     -- leaves `K` forward in time
     (∀ p : ι → Bool, Alternates c p → F.ReversalInvariant p →
       F.toScheme.SmoothDense H.wave.domain → ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
@@ -1037,13 +1040,15 @@ orbit-consistent core `Z`, the dissipative FEEC theorem holds for its forward-ti
    and tends to `0`; a solution leaving a closed nonempty `Q` has residuals with the positive limit
    `dist(e^{tL} ξ₀, Q)`; a non-reducing `K` is left by data of `K` or `Kᗮ`; if `D(L) ∩ K` is dense
    in `K`, a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`; on a graded complex with
-   `R`-invariant `K`, a datum of `D(L) ∩ K` leaves `K` forward in time (and its residuals tend to
-   a positive limit, `approxFEEC_residual_not_isReducing_of_grading`).
+   `R`-invariant `K`, a datum of `D(L) ∩ K` leaves `K` forward in time (and, when it lies in the
+   closure of the core, its residuals tend to a positive limit,
+   `approxFEEC_residual_not_isReducing_of_grading`).
 
 Cf. [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues); [QuennevilleBelair2015], Thms 4.6,
 4.7, Prop. 4.17 -/
 theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
-  refine ⟨dissipFEEC F.toDissipFEEC Z.toDissip, fun x hx T => ?_,
+  refine ⟨dissipFEEC F.toDissipFEEC Z.toDissip, fun t ht => (F.toScheme_S_of_nonneg ht).symm,
+    fun x hx T => ?_,
     (approxFEEC_propagates_iff F).trans
       ⟨fun h t _ x hx => h t x hx, fun h t x hx => h t (mem_univ t) x hx⟩,
     fun hK T hT => ?_, fun hK hdense T hT => ?_, fun p hp hRK hdense hK T hT => ?_⟩
@@ -1057,6 +1062,133 @@ theorem approxFEEC (Z : F.Core) : F.Verdict Z := by
   · obtain ⟨x, hxK, t, ht, hout, -⟩ :=
       approxFEEC_residual_not_isReducing_of_grading F Z hp hRK hdense hK hT
     exact ⟨x, ⟨x.2, hxK⟩, t, ht, hout⟩
+
+variable {F} in
+/-- **Nothing is lost**: the verdict in the shape it had before it was stated as the dissipative
+verdict of the forward-time reading and the clauses that use both time directions (the wave
+group throughout, convergence on the core from the comparison initial values, the residual bound
+for all `t`, the departures with their positive residual limits), derived from `F.Verdict Z`,
+the core's comparisons and the closedness of `K` and `Kᗮ`. -/
+theorem ApproxFEEC.Verdict.old {Z : F.Core} (V : F.Verdict Z) :
+    -- 1. well-posedness (`constrainedFEEC_wellPosed`)
+    (∀ x ∈ H.wave.domain, ∀ T : ℝ,
+      Evolution.IsClassicalSolution H.wave (Icc 0 T) 0 (fun t => H.waveGroup.S t x) ∧
+      (∀ U, U 0 = x → Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U →
+        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
+      (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
+        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
+      ∀ t, ‖H.waveGroup.S t x‖ = ‖x‖) ∧
+    -- 2. propagation iff reducing
+    (H.wave.IsReducing F.K ↔ ∀ t, ∀ x ∈ F.K, H.waveGroup.S t x ∈ F.K) ∧
+    -- 3a. convergence on the core
+    (∀ T : ℝ, ∀ x ∈ Z.Data, TendstoUniformlyOn
+      (fun h t => F.sol h ((Z.cmp T).p x h 0) t) (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
+    -- 3b. convergence on the closure of the core, every convergent initial family; one exists
+    (∀ T : ℝ, ∀ x ∈ Z.Data.topologicalClosure,
+      Tendsto (fun h => F.incl h (F.proj h x)) F.l (𝓝 x) ∧
+      ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+        TendstoUniformlyOn (fun h t => F.sol h (v h) t) (fun t => H.waveGroup.S t x) F.l
+          (Icc 0 T)) ∧
+    -- 3c. rates: best approximation + consistency (+ initial mismatch)
+    (∀ (T : ℝ) (R : F.RateClass T), ∀ x ∈ R.Data, ∀ h, ∀ v : F.X h, ∀ t ∈ Icc 0 T,
+      ‖H.waveGroup.S t x - F.sol h v t‖ ≤
+        (R.C + ‖F.incl h‖ * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) +
+          ‖F.incl h‖ * ‖R.p x h 0 - v‖) ∧
+    -- 4a. reducing constraint: residual through `ιₕ` bounded by the error, tends to `0`
+    (H.wave.IsReducing F.K → ∀ x ∈ F.K,
+      (∀ h (v : F.X h) t, infDist (F.sol h v t) (F.K : Set (PiLp 2 W)) ≤
+        ‖H.waveGroup.S t x - F.sol h v t‖) ∧
+      (x ∈ Z.Data.topologicalClosure → ∀ T : ℝ, ∀ v : ∀ h, F.X h,
+        Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+        TendstoUniformlyOn (fun h t => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W)))
+          (fun _ => 0) F.l (Icc 0 T))) ∧
+    -- 4b. per datum: a solution leaving `Q` has residual tending to `dist(e^{tL}x, Q) > 0`
+    (∀ Q : Set (PiLp 2 W), IsClosed Q → Q.Nonempty → ∀ x ∈ Z.Data.topologicalClosure,
+      ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) → ∀ t, 0 ≤ t →
+      H.waveGroup.S t x ∉ Q → 0 < infDist (H.waveGroup.S t x) Q ∧
+        Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l
+          (𝓝 (infDist (H.waveGroup.S t x) Q))) ∧
+    -- 4b. a non-reducing constraint is left by data of `K` or `Kᗮ`; with a dense core, the
+    -- residuals of every convergent discretization of that datum have a positive limit
+    (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      ∃ Q : Submodule 𝕜 (PiLp 2 W), (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
+        H.waveGroup.S t x ∉ Q ∧ 0 < infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)) ∧
+        (Dense (Z.Data : Set (PiLp 2 W)) → ∀ v : ∀ h, F.X h,
+          Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+          Tendsto (fun h => infDist (F.sol h (v h) t) (Q : Set (PiLp 2 W))) F.l
+            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)))))) ∧
+    -- 4c. with `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K` leaves `K` for some `t ∈ [-T, T]`
+    (¬ H.wave.IsReducing F.K →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W))) ∧
+    -- 4c. graded complex, `R`-invariant `K`, `D(L) ∩ K` dense in `K`: a datum of `D(L) ∩ K`
+    -- leaves `K` forward in time, with residuals tending to a positive limit
+    (∀ p : ι → Bool, (∀ i j, c.Rel i j → p j ≠ p i) → (∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K) →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) →
+      ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
+        ((x : PiLp 2 W) ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
+          Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+          Tendsto (fun h => infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W))) F.l
+            (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
+          ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
+            infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W)))) := by
+  obtain ⟨VD, Vag, V1, V2, V3, V4, V5⟩ := V
+  obtain ⟨D1, D2, D3a, D3b, D3c, D4a, D4b, -⟩ := VD.old
+  have hS : ∀ t, 0 ≤ t → ∀ x : PiLp 2 W,
+      H.isSkewAdjoint_wave.isMDissipative.semigroup.S t x = H.waveGroup.S t x :=
+    fun t ht x => congrFun (Vag t ht) x
+  have hlim : ∀ Q : Set (PiLp 2 W), IsClosed Q → Q.Nonempty → ∀ x ∈ Z.Data.topologicalClosure,
+      ∀ t, 0 ≤ t → H.waveGroup.S t x ∉ Q → 0 < infDist (H.waveGroup.S t x) Q ∧
+        ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+          Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l
+            (𝓝 (infDist (H.waveGroup.S t x) Q)) := by
+    intro Q hQ hQne x hx t ht hout
+    rw [← hS t ht x] at hout ⊢
+    exact ⟨(hQ.notMem_iff_infDist_pos hQne).1 hout,
+      fun v hv => (D4b Q hQ hQne x hx v hv t ht hout).2⟩
+  have hcl : Dense (Z.Data : Set (PiLp 2 W)) → ∀ x, x ∈ Z.Data.topologicalClosure := fun hd x => by
+    rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, hd.closure_eq]; trivial
+  have hfwd : H.wave.IsReducing F.K → ∀ t, 0 ≤ t → ∀ x ∈ F.K,
+      H.isSkewAdjoint_wave.isMDissipative.semigroup.S t x ∈ F.K := fun hK => (D2.2.2.1 hK).1
+  refine ⟨fun x hx T => ?_, V2.trans ⟨fun h t x hx => h t (mem_univ t) x hx,
+      fun h t _ x hx => h t x hx⟩,
+    fun T x hx => (D3a T x hx).congr_right fun t ht => hS t ht.1 x,
+    fun T x hx => ⟨(D3b T x hx).1, fun v hv => ((D3b T x hx).2 v hv).congr_right
+      fun t ht => hS t ht.1 x⟩,
+    fun T R x hx h v t ht => by
+      have := D3c T R.toDissip x hx h v t ht
+      rwa [hS t ht.1 x] at this,
+    fun hK x hxK => ⟨fun h v t => by
+      rw [norm_sub_rev, ← dist_eq_norm]
+      exact infDist_le_dist_of_mem (V2.1 hK t (mem_univ t) x hxK),
+      fun hx T v hv => (D4a (hfwd hK) x hxK).2 hx T v hv⟩,
+    fun Q hQ hQne x hx v hv t ht hout =>
+      ⟨(hlim Q hQ hQne x hx t ht hout).1, (hlim Q hQ hQne x hx t ht hout).2 v hv⟩,
+    fun hK T hT => ?_, fun hK hd T hT => ?_, fun p hp hRK hd hK T hT => ?_⟩
+  · obtain ⟨c, u, -, -⟩ := D1 ⟨x, hx⟩ T
+    have e : EqOn (fun t => H.isSkewAdjoint_wave.isMDissipative.semigroup.S t x)
+        (fun t => H.waveGroup.S t x) (Icc 0 T) := fun t ht => hS t ht.1 x
+    exact ⟨c.congr e fun _ _ => rfl, fun U hU0 hU => (u U hU0 hU).trans e, (V1 x hx T).1,
+      (V1 x hx T).2⟩
+  · rcases V3 hK T hT with ⟨x, hx, t, ht, hout⟩ | ⟨x, hx, t, ht, hout⟩
+    · exact ⟨F.K, Or.inl rfl, x, hx, t, ht, hout,
+        (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout, fun hd v hv =>
+        (hlim _ F.isClosed_K ⟨0, F.K.zero_mem⟩ x (hcl hd x) t ht.1 hout).2 v hv⟩
+    · have hc : IsClosed (F.Kᗮ : Set (PiLp 2 W)) := Submodule.isClosed_orthogonal _
+      exact ⟨F.Kᗮ, Or.inr rfl, x, hx, t, ht, hout,
+        (hc.notMem_iff_infDist_pos ⟨0, F.Kᗮ.zero_mem⟩).1 hout, fun hd v hv =>
+        (hlim _ hc ⟨0, F.Kᗮ.zero_mem⟩ x (hcl hd x) t ht.1 hout).2 v hv⟩
+  · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V4 hK hd T hT
+    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout,
+      (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout⟩
+  · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V5 p hp hRK hd hK T hT
+    have hpos := (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout
+    refine ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, fun hx v hv => ?_⟩
+    have hl := (hlim _ F.isClosed_K ⟨0, F.K.zero_mem⟩ x hx t ht.1 hout).2 v hv
+    exact ⟨hl, (tendsto_order.1 hl).1 _ (half_lt_self hpos)⟩
 
 end Main
 

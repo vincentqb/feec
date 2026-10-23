@@ -516,31 +516,7 @@ theorem constrainedFEEC_of_approxFEEC :
           (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
         ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
           infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))) := by
-  have V1 := fun (x : PiLp 2 W) (hx : x ∈ H.wave.domain) (T : ℝ) => constrainedFEEC_wellPosed hx T
-  have V2 := approxFEEC_propagates_iff F.toApprox
-  have V3 : ∀ T : ℝ, ∀ x ∈ F.toCore.Data.topologicalClosure,
-      Tendsto (fun h => F.toApprox.incl h (F.toApprox.proj h x)) F.toApprox.l (𝓝 x) ∧
-      ∀ v : ∀ h, F.toApprox.X h, Tendsto (fun h => F.toApprox.incl h (v h)) F.toApprox.l (𝓝 x) →
-        TendstoUniformlyOn (fun h t => F.toApprox.sol h (v h) t) (fun t => H.waveGroup.S t x)
-          F.toApprox.l (Icc 0 T) :=
-    fun T _ hx =>
-      ⟨ApproxFEEC.tendsto_incl_proj _ _ hx, fun _ hv => approxFEEC_converges _ _ T hx hv⟩
-  have V4 : H.wave.IsReducing F.toApprox.K → ∀ x ∈ F.toApprox.K,
-      (∀ h (v : F.toApprox.X h) t, infDist (F.toApprox.sol h v t) (F.toApprox.K : Set (PiLp 2 W)) ≤
-        ‖H.waveGroup.S t x - F.toApprox.sol h v t‖) ∧
-      (x ∈ F.toCore.Data.topologicalClosure → ∀ T : ℝ, ∀ v : ∀ h, F.toApprox.X h,
-        Tendsto (fun h => F.toApprox.incl h (v h)) F.toApprox.l (𝓝 x) →
-        TendstoUniformlyOn
-          (fun h t => infDist (F.toApprox.sol h (v h) t) (F.toApprox.K : Set (PiLp 2 W)))
-          (fun _ => 0) F.toApprox.l (Icc 0 T)) :=
-    fun hK _ hxK => ⟨fun h v t => approxFEEC_residual_le _ hK hxK h v t,
-      fun hx T _ hv => approxFEEC_residual _ hK _ T hx hxK hv⟩
-  have V5 := fun hK (T : ℝ) (hT : 0 < T) =>
-    approxFEEC_residual_not_isReducing F.toApprox F.toCore hK hT
-  have V6 := fun hK hdense (T : ℝ) (hT : 0 < T) =>
-    approxFEEC_residual_not_isReducing_symm F.toApprox hK hdense hT
-  have V7 := fun (p : ι → Bool) hp hRK hdense hK (T : ℝ) (hT : 0 < T) =>
-    approxFEEC_residual_not_isReducing_of_grading F.toApprox F.toCore (p := p) hp hRK hdense hK hT
+  obtain ⟨V1, V2, -, V3, -, V4, -, V5, V6, V7⟩ := (approxFEEC F.toApprox F.toCore).old
   have hconv : ∀ (T : ℝ) (x : H.wave.domain), TendstoUniformlyOn
       (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
       (fun t => H.waveGroup.S t x) F.l (Icc 0 T) := fun T x =>

@@ -46,8 +46,9 @@ rate clause `DissipFEEC.RateClass.Bounds`) bundles:
    and tends to `0` (`dissipFEEC_residual`); a solution leaving a closed nonempty `Q` has
    residuals tending to `dist(S(t) ξ₀, Q) > 0` (`dissipFEEC_residual_not_mem`); a non-invariant
    `K` is left by a datum of `K` at some `t ∈ [0, T]`, by a datum of `D(A) ∩ K` when that is dense in
-   `K`, and the residuals of every convergent discretization of that datum have a positive limit
-   (`dissipFEEC_exists_not_mem`, `dissipFEEC_residual_not_invariant`).
+   `K`, and, when that datum lies in the closure of the core, the residuals of every convergent
+   discretization of it have a positive limit (`dissipFEEC_exists_not_mem`,
+   `dissipFEEC_residual_not_invariant`).
 
 The **Trotter–Kato bridge** `DissipFEEC.Core.ofOperator` builds a core `D(A)` from bounded
 `Rₕ : E → Xₕ` with `ιₕ Rₕ → 1` strongly and a defect identity `Rₕ A - Lₕ Rₕ = Δₕ A + Δₕ'` on `D(A)`
@@ -827,7 +828,8 @@ variational crimes allowed) and an orbit-consistent core `Z`:
 4. (**constraint residual**) for invariant `K`: bounded by the error, tends to `0`; a solution
    leaving a closed nonempty `Q` has residuals with the positive limit `dist(S(t) ξ₀, Q)`; a
    non-invariant `K` is left by data of `K` (of `D(A) ∩ K` when dense in `K`), whose residuals
-   then have a positive limit (`dissipFEEC_residual_not_invariant`).
+   have a positive limit when the datum lies in the closure of the core
+   (`dissipFEEC_residual_not_invariant`).
 
 Cf. [Pazy1983], §1.4 (Thm 4.3), §3.4; [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues) -/
 theorem dissipFEEC (Z : F.Core) : F.Verdict Z := by
@@ -840,11 +842,94 @@ theorem dissipFEEC (Z : F.Core) : F.Verdict Z := by
       fun _ hv => (dissipFEEC_residual_not_mem F Z hQ hQne hx hv ht hout).2⟩,
     fun hK _ hT => ⟨?_, fun hd => ?_⟩⟩
   · obtain ⟨h1, h2, h3, h4⟩ := dissipFEEC_wellPosed hA x T
-    exact ⟨⟨h1, h2⟩, fun s hs t _ hst => h3 s t hs hst, h4⟩
+    exact ⟨⟨hA.semigroup.S_zero_apply _, h1, h2⟩, fun s hs t _ hst => h3 s t hs hst, h4⟩
   · obtain ⟨x, hx, t, ht, hout⟩ := (dissipFEEC_exists_not_mem F hK hT).1
     exact ⟨x, hx, t, ht, hout⟩
   · obtain ⟨x, hx, t, ht, hout⟩ := (dissipFEEC_exists_not_mem F hK hT).2 hd
     exact ⟨x, ⟨x.2, hx⟩, t, ht, hout⟩
+
+variable {F} in
+/-- **Nothing is lost**: the verdict in the shape it had before it was stated in the vocabulary
+of `Feec.Evolution.Scheme` (with convergence on the core from the comparison initial values, and
+the departures from a non-invariant constraint with their positive residual limits), derived from
+`F.Verdict Z`, the core's comparisons (`DissipFEEC.Core.tendsto_incl_p`) and the closedness of
+`K`. -/
+theorem DissipFEEC.Verdict.old {Z : F.Core} (V : F.Verdict Z) :
+    -- 1. well-posedness and energy (Lumer–Phillips)
+    (∀ x : A.domain, ∀ T : ℝ,
+      Evolution.IsClassicalSolution A (Icc 0 T) 0 (fun t => hA.semigroup.S t x) ∧
+      (∀ U, U 0 = (x : E) → Evolution.IsStrongSolution A (Icc 0 T) 0 U →
+        EqOn U (fun t => hA.semigroup.S t x) (Icc 0 T)) ∧
+      (∀ s t, 0 ≤ s → s ≤ t → ‖hA.semigroup.S t x‖ ≤ ‖hA.semigroup.S s x‖) ∧
+      ∀ t, 0 ≤ t → ‖hA.semigroup.S t x‖ ^ 2 = ‖(x : E)‖ ^ 2 +
+        ∫ s in (0 : ℝ)..t, 2 * RCLike.re ⟪hA.semigroup.S s (A x), hA.semigroup.S s x⟫_𝕜) ∧
+    -- 2. propagation: invariance iff resolvent invariance iff solvability in `K`; reducing iff
+    -- `K` and `Kᗮ` invariant
+    (((∀ t, 0 ≤ t → ∀ x ∈ F.K, hA.semigroup.S t x ∈ F.K) ↔
+      ∀ μ : ℝ, 0 < μ → ∀ y ∈ F.K, Operator.resolvent A (μ : 𝕜) y ∈ F.K) ∧
+    ((∀ t, 0 ≤ t → ∀ x ∈ F.K, hA.semigroup.S t x ∈ F.K) ↔
+      ∃ μ : ℝ, 0 < μ ∧ ∀ y ∈ F.K, ∃ u : A.domain, (u : E) ∈ F.K ∧ (μ : 𝕜) • (u : E) - A u = y) ∧
+    (A.IsReducing F.K ↔ (∀ t, 0 ≤ t → ∀ x ∈ F.K, hA.semigroup.S t x ∈ F.K) ∧
+      ∀ t, 0 ≤ t → ∀ x ∈ F.Kᗮ, hA.semigroup.S t x ∈ F.Kᗮ)) ∧
+    -- 3a. convergence on the core
+    (∀ T : ℝ, ∀ x ∈ Z.Data, TendstoUniformlyOn
+      (fun h t => F.sol h ((Z.cmp T).p x h 0) t) (fun t => hA.semigroup.S t x) F.l (Icc 0 T)) ∧
+    -- 3b. convergence on the closure of the core, every convergent initial family; one exists
+    (∀ T : ℝ, ∀ x ∈ Z.Data.topologicalClosure,
+      Tendsto (fun h => F.incl h (F.proj h x)) F.l (𝓝 x) ∧
+      ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+        TendstoUniformlyOn (fun h t => F.sol h (v h) t) (fun t => hA.semigroup.S t x) F.l
+          (Icc 0 T)) ∧
+    -- 3c. rates: best approximation + consistency (+ initial mismatch)
+    (∀ (T : ℝ) (R : F.RateClass T), ∀ x ∈ R.Data, ∀ h, ∀ v : F.X h, ∀ t ∈ Icc 0 T,
+      ‖hA.semigroup.S t x - F.sol h v t‖ ≤
+        (R.C + ‖F.incl h‖ * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) +
+          ‖F.incl h‖ * ‖R.p x h 0 - v‖) ∧
+    -- 4a. invariant constraint: residual bounded by the error, tends to `0`
+    ((∀ t, 0 ≤ t → ∀ x ∈ F.K, hA.semigroup.S t x ∈ F.K) → ∀ x ∈ F.K,
+      (∀ h (v : F.X h) t, 0 ≤ t → infDist (F.sol h v t) (F.K : Set E) ≤
+        ‖hA.semigroup.S t x - F.sol h v t‖) ∧
+      (x ∈ Z.Data.topologicalClosure → ∀ T : ℝ, ∀ v : ∀ h, F.X h,
+        Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+        TendstoUniformlyOn (fun h t => infDist (F.sol h (v h) t) (F.K : Set E))
+          (fun _ => 0) F.l (Icc 0 T))) ∧
+    -- 4b. per datum: a solution leaving `Q` has residual tending to `dist(S(t) x, Q) > 0`
+    (∀ Q : Set E, IsClosed Q → Q.Nonempty → ∀ x ∈ Z.Data.topologicalClosure,
+      ∀ v : ∀ h, F.X h, Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) → ∀ t, 0 ≤ t →
+      hA.semigroup.S t x ∉ Q → 0 < infDist (hA.semigroup.S t x) Q ∧
+        Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l
+          (𝓝 (infDist (hA.semigroup.S t x) Q))) ∧
+    -- 4c. a non-invariant constraint is left by a datum of `K` (of `D(A) ∩ K` if dense), whose
+    -- residuals have a positive limit
+    ((¬ ∀ t, 0 ≤ t → ∀ x ∈ F.K, hA.semigroup.S t x ∈ F.K) → ∀ T : ℝ, 0 < T →
+      ((∀ k ∈ F.K, k ∈ closure ((A.domain : Set E) ∩ F.K)) →
+        ∃ x : A.domain, (x : E) ∈ F.K ∧ ∃ t ∈ Icc 0 T, hA.semigroup.S t x ∉ F.K) ∧
+      ∃ x ∈ F.K, ∃ t ∈ Icc 0 T, hA.semigroup.S t x ∉ F.K ∧
+        0 < infDist (hA.semigroup.S t x) (F.K : Set E) ∧
+        (x ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
+          Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) →
+          Tendsto (fun h => infDist (F.sol h (v h) t) (F.K : Set E)) F.l
+            (𝓝 (infDist (hA.semigroup.S t x) (F.K : Set E))) ∧
+          ∀ᶠ h in F.l, infDist (hA.semigroup.S t x) (F.K : Set E) / 2 <
+            infDist (F.sol h (v h) t) (F.K : Set E))) := by
+  obtain ⟨V1, V2, V3, V4, V5, V6, V7⟩ := V
+  refine ⟨fun x T => ?_, V2, fun T x hx => ?_, fun T x hx => ⟨(V3 x hx).1, fun v hv =>
+    (V3 x hx).2 v hv T⟩, V4, fun hK x hxK => ⟨(V5 hK x hxK).1, fun hx T v hv =>
+    (V5 hK x hxK).2 hx v hv T⟩, fun Q hQ hQne x hx v hv t ht hout =>
+    ⟨(V6 Q hQ hQne x hx t ht hout).1, (V6 Q hQ hQne x hx t ht hout).2 v hv⟩,
+    fun hK T hT => ⟨fun hd => ?_, ?_⟩⟩
+  · obtain ⟨⟨-, h1, h2⟩, h3, h4⟩ := V1 x T
+    exact ⟨h1, h2, fun s t hs hst => h3 hs (hs.trans hst) hst, h4⟩
+  · rcases lt_or_ge T 0 with hT | hT
+    · rw [Icc_eq_empty (by linarith)]; exact tendstoUniformlyOn_empty
+    exact (V3 x (Submodule.le_topologicalClosure _ hx)).2 _ (Z.tendsto_incl_p hT hx) T
+  · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := (V7 hK T hT).2 hd
+    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout⟩
+  · obtain ⟨x, hxK, t, ht, hout⟩ := (V7 hK T hT).1
+    have hpos := (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout
+    refine ⟨x, hxK, t, ht, hout, hpos, fun hx v hv => ?_⟩
+    have hlim := (V6 _ F.isClosed_K ⟨0, F.K.zero_mem⟩ x hx t ht.1 hout).2 v hv
+    exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
 end Main
 

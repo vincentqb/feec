@@ -55,11 +55,11 @@ section Unique
 
 variable {𝕜 E : Type*} [Ring 𝕜] [NormedAddCommGroup E] [Module 𝕜 E] [NormedSpace ℝ E]
 
-/-- `u` is a classical solution of `A` up to time `T` and the only strong one from `x`:
-`u` is a classical solution of `u' = A u` on `[0, T]`, and every strong solution `U` there with
-`U 0 = x` is `u`. See [Pazy1983], §4.1. -/
+/-- `u` is the unique solution of `A` from `x` up to time `T`: `u 0 = x`, `u` is a classical
+solution of `u' = A u` on `[0, T]`, and every strong solution `U` there with `U 0 = x` is `u`.
+See [Pazy1983], §4.1. -/
 abbrev IsUniqueSolution (A : E →ₗ.[𝕜] E) (T : ℝ) (x : E) (u : ℝ → E) : Prop :=
-  IsClassicalSolution A (Icc 0 T) 0 u ∧
+  u 0 = x ∧ IsClassicalSolution A (Icc 0 T) 0 u ∧
     ∀ U : ℝ → E, U 0 = x → IsStrongSolution A (Icc 0 T) 0 U → EqOn U u (Icc 0 T)
 
 end Unique

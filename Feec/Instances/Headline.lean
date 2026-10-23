@@ -236,11 +236,14 @@ theorem headline (F : ApproxFEEC.{u} H κ) (Z : F.Core) :
     (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
       Exits F.toScheme F.toScheme.K F.toScheme.K (Icc 0 T) ∨
         Exits F.toScheme F.Kᗮ F.Kᗮ (Icc 0 T)) ∧
-    (¬ H.wave.IsReducing F.K → SmoothDense (iE := inferInstance) F.toScheme H.wave.domain → ∀ T : ℝ, 0 < T →
+    (¬ H.wave.IsReducing F.K → SmoothDense (iE := inferInstance) F.toScheme H.wave.domain →
+      ∀ T : ℝ, 0 < T →
       Exits F.toScheme ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
         (Icc (-T) T)) ∧
-    (∀ p : ι → Bool, Headline.Alternates c p → Headline.ReversalInvariant (iN := inferInstance) (iS := iS) F p →
-      SmoothDense (iE := inferInstance) F.toScheme H.wave.domain → ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+    (∀ p : ι → Bool, Headline.Alternates c p →
+      Headline.ReversalInvariant (iN := inferInstance) (iS := iS) F p →
+      SmoothDense (iE := inferInstance) F.toScheme H.wave.domain → ¬ H.wave.IsReducing F.K →
+      ∀ T : ℝ, 0 < T →
       Exits F.toScheme ((H.wave.domain : Set (PiLp 2 W)) ∩ F.toScheme.K) F.toScheme.K
         (Icc 0 T)) :=
   approxFEEC F Z

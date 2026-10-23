@@ -57,8 +57,12 @@ at order `min(α, β, γ)` from the three orders separately.
 
 ## Instances
 
-Every row is an instance of `approxFEEC`: its headline is `F.Verdict Z`, proved by `approxFEEC F Z`,
-and its rate theorem applies the rate clause `approxFEEC_rate`.
+Every row but the last is an instance of `approxFEEC`: its headline is `F.Verdict Z`, proved by
+`approxFEEC F Z`, and its rate theorem applies the rate clause `approxFEEC_rate`. The last row
+(absorbing boundary conditions, a dissipative generator) is an instance of `dissipFEEC`, the
+dissipative extension of `approxFEEC` (an approximating discretization is a dissipative one for the
+skew-adjoint generator, `ApproxFEEC.toDissipFEEC`, and the forward-in-time clauses of `approxFEEC`
+follow from `dissipFEEC`).
 The "Verdict" column says which branch of item 4 holds. Lean names are relative to
 `Feec.Instances.Maxwell` (M), `Feec.Instances.EuclideanBand` (B) and
 `Feec.Instances.EinsteinBianchi` (EB).
@@ -76,6 +80,7 @@ The "Verdict" column says which branch of item 4 holds. Lean names are relative 
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |
 | linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `(4K + 8Kt) h` for `D(L³)`, `(6K + 12Kt) hˢ` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMApproxVerdict`; `FEM.einsteinBianchi_mirrorFEM_ofComplexCrime`, `_rate`, `_rate_sobolev`; `FEM.einsteinBianchi_mirrorFEM_ofCochainDefect` |
 | linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `standardCubeApproxVerdict`; `FEM.einsteinBianchi_standardCube_ofComplexCrime` |
+| linearized Einstein–Bianchi | cube, absorbing BCs `n × Eᵢ + (Bᵢ)_τ = 0`, Galerkin with boundary term (dense-sequence spaces) | TSD (not invariant) | well posed, radiates; converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `absorbingVerdict` |
 
 Scheme (6.5) uses the elements of Tables 5.1/6.1 and couples the two rows of the BGG construction
 by `S₀,ₕ = π¹S⁰`, in general different from `S⁰`, so its discrete complex is not a subcomplex. Its

@@ -179,6 +179,7 @@ public import Feec.HilbertComplex.ShortDual
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Instances.EinsteinBianchi
+public import Feec.Instances.EinsteinBianchiAbsorbing
 public import Feec.Instances.EinsteinBianchiFEM
 public import Feec.Instances.EinsteinBianchiFEMComplex
 public import Feec.Instances.EinsteinBianchiFEMCube

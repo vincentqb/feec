@@ -171,7 +171,6 @@ theorem mirrorFEMApprox_sol_pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
   (mirrorFEMApprox_sol hT hB N _ _ t).trans (congrArg₂ (· + ·)
     (mirrorFEMReal_sol_eq hT hB N hT0 _ ht) (congrArg mulI (mirrorFEMReal_sol_eq hT hB N hT0 _ ht)))
 
-set_option maxHeartbeats 1000000 in
 /-- **The error of a pair of solutions of (6.5)** against the TSD solution: at most the error of
 the real part plus the error of the imaginary part, each being the quantity of
 `mirror_waveFEM` for the data `ξ₀` and `-i ξ₀`. -/
@@ -184,7 +183,7 @@ theorem norm_sub_sol_pairInit_le (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
   rw [mirrorFEMApprox_sol_pairInit hT hB N hT0 s s' ht, mulI_apply, ← sub_sub]
   exact norm_sub_mirrorReEmb_le hy _ _
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 1000000 in
 /-- **The model convergence of the mirror scheme (6.5) for complex TSD data of `D(L²)`**: for every
 `T > 0` and `ε > 0`, for all large `N`, the real and imaginary parts of the datum run (6.5) from
 their elliptic projections (6.4) (`Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` for `ξ₀`
@@ -319,7 +318,7 @@ def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose
 theorem mirrorRateK_nonneg : 0 ≤ mirrorRateK hT hB :=
   (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.1
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 400000 in
 /-- The model rate (`mirror_waveFEM_rate_of_mem_domain`) for one TSD datum of `D(L³)`. -/
 theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq)
     (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) {T : ℝ} (hT0 : 0 < T) :
@@ -396,7 +395,7 @@ def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose
 theorem mirrorSobK_nonneg : 0 ≤ mirrorSobK hT hB :=
   (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose_spec.1
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 400000 in
 /-- The model Sobolev rate (`mirror_waveFEM_rate_sobolev_of_add_two`) for one TSD datum. -/
 theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
     (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)

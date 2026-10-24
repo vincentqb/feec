@@ -162,7 +162,7 @@ theorem norm_cubeFE2 (N : ℕ) (x : (cubeFEM hT hB N).W2h) :
 theorem norm_cubeFE3 (N : ℕ) (x : (cubeFEM hT hB N).Wt2h) :
     ‖(cubeFEM hT hB N).Wt2h.subtypeL x‖ = ‖x‖ := rfl
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 400000 in
 theorem norm_cubeFE (N : ℕ) (v : cubeHidden hT hB N) : ‖cubeFE hT hB N v‖ = ‖v‖ :=
   (EState.norm_mapL (norm_cubeFE0 hT hB N) (norm_cubeFE1 hT hB N) (norm_cubeFE2 hT hB N)
     (norm_cubeFE3 hT hB N) v.toEState).trans (HiddenState.norm_toEState v)
@@ -239,7 +239,7 @@ abbrev cState (N : ℕ) {T : ℝ} {g : ℝ → (cubeFEM hT hB N).Vt1h}
     (s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T g) (t : ℝ) : CEnergy :=
   EState.mk ((s.σ t : U0) : W0) (incl1 (s.u t : Wv U1)) (s.M t : W2) (s.ρ t : Wv W2)
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 400000 in
 /-- **The discrete solution of `standardCubeApprox` is (6.5)**: from the initial state of a
 solution `s` of (6.5) without source, `ιₙ e^{tLₙ} v` is the energy vector of `s` read in the
 matrix model, on `[0, T]`. -/
@@ -253,7 +253,7 @@ theorem standardCube_sol_eq (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (DiscreteSolution.eq_group (cubeWave_dt0_injective hT hB N)
       (cubeWave_S0_surjective hT hB N) hT0 s t ht))
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 2000000 in
 /-- **The discrete solutions of `standardCubeApprox` are the scheme (6.5)**: every discrete
 initial value is the initial state of a solution of (6.5) without source, whose energy vector,
 read in the matrix model, is the discrete solution. -/

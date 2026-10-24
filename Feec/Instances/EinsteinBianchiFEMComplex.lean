@@ -215,7 +215,7 @@ open Feec.Models.Cube.FEM (meshSize meshSize_pos)
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 /-- **The difference `‖y - Rt a‖² - tsdErr(y, a)²` does not depend on `a`** for a TSD state `y`
 (it is the energy of the imaginary part). -/
 theorem norm_sq_sub_mirrorReEmb_sub_tsdErr {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ)
@@ -306,7 +306,7 @@ theorem tsdErr_zero_eq (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T
   exact h
 
 include hT hB in
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 400000 in
 /-- **The continuous forms state of a TSD solution, tested with a hidden state, is its pairing
 with the read state**: `⟪ξ(t), v⟫ = ⟪U(t), ι v⟫_ℝ` (polarization of `tsdErr_eq`). -/
 theorem inner_exState_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -346,7 +346,7 @@ theorem tsdErr_zero_eq' (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 
   exact h
 
 include hT hB in
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 400000 in
 /-- The same for the time derivative: `⟪ξ'(t), v⟫ = ⟪U'(t), ι v⟫_ℝ`. -/
 theorem inner_exState'_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
     (v : mirrorHidden hT hB N) :
@@ -366,7 +366,7 @@ theorem inner_exState'_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t
     (by linarith)
   exact key.symm.trans (congrArg (fun z => ⟪Dd.V t, z⟫_ℝ) (mirrorEmb_apply hT hB N v).symm)
 
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 1000000 in
 /-- **The elliptic projection (6.4) of a TSD solution is a Galerkin projection**:
 `(1 - Lₕ) Πₕ(t) = ιₕ* (U(t) - U'(t))` on `[0, T]` (`inner_ellDefect` and the identification of the
 continuous forms state). -/
@@ -454,7 +454,7 @@ theorem complexQℝ_waveGroup_eq_V {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData
   rw [waveExt_of_mem (LinearPMap.domainSq_le_domain hx.2), complexQℝ_wave_apply]
   exact complexQℝ_waveGroup ht _
 
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 400000 in
 /-- **The Galerkin identity of the elliptic core of the mirror scheme**: real and imaginary parts
 of the comparison are the elliptic projections (6.4) of the TSD solutions from `ξ₀` and `-iξ₀`,
 and `(1 - Lₕ) pₕ(t) = ιₕ* (e^{tL} ξ₀ - e^{tL} L ξ₀)`. -/
@@ -577,14 +577,13 @@ theorem mirrorFEM_preserves_hiddenGauss (N : ℕ) {v : (mirrorFEMApprox hT hB).X
 
 /-! #### Rates of the mirror scheme through the complex-level front end -/
 
-set_option maxHeartbeats 1000000 in
 /-- **The approximation error of the derivative of one real part** is the projection error of the
 time derivative. -/
 theorem tsdErr_mEll' (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     tsdErr (D.V t) (mirrorFE hT hB N (mEll' hT hB N D T t)) = ellErr' hT hB N D T t :=
   tsdErr_eq' hT hB N D (T := T + 1) ⟨ht.1, by linarith [ht.2]⟩ (mEll' hT hB N D T t).toEState
 
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 1000000 in
 /-- **The approximation error of the derivative of the elliptic comparison**:
 `‖e^{tL} L ξ₀ - ιₕ pₕ'(t)‖` is at most the projection errors of the time derivatives of the real and
 imaginary parts. -/
@@ -753,7 +752,7 @@ theorem norm_sub_cubeEmb_eq (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 �
   refine (congrArg (fun z => ‖z - cubeFE hT hB N v‖) e3).trans ?_
   with_reducible_and_instances exact h4
 
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 400000 in
 /-- **The continuous forms state, tested with a hidden state, is the pairing of the exact state
 with the read state**: `⟪ξ(t), v⟫ = ⟪e^{tL} x, ι v⟫` (polarization of `norm_sub_cubeEmb_eq`). -/
 theorem inner_exState_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
@@ -776,7 +775,6 @@ theorem inner_exState_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L
   have a0 := congrArg (· ^ 2) h0'
   exact (real_inner_eq_of_norm hn (by linarith)).symm
 
-set_option maxHeartbeats 2000000 in
 /-- **The same for the time derivative** (uniqueness of one-sided derivatives of
 `t ↦ ⟪ξ(t), v⟫ = ⟪e^{tL} x, ι v⟫`): `⟪ξ'(t), v⟫ = ⟪e^{tL} L x, ι v⟫` on `[0, T + 1)`. -/
 theorem inner_exState'_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
@@ -807,7 +805,7 @@ theorem inner_exState'_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (
   have := (uniqueDiffWithinAt_Ici t).eq_deriv _ h2 h3
   exact (real_inner_comm _ _).trans (this.symm.trans (real_inner_comm _ _))
 
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 400000 in
 /-- **The elliptic projection (6.4) of the classical solution is a Galerkin projection** (thesis'
 boundary conditions): `(1 - Lₕ) Πₕ(t) = ιₕ* (e^{tL} x - e^{tL} L x)` on `[0, T]`. -/
 theorem cEll_galerkin (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))

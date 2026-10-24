@@ -109,7 +109,7 @@ theorem norm_mEll_defect_le (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc
     (mirrorWave_dt0_injective hT hB N) (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))
     (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht))
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 /-- The four-term error of a discrete energy state against a TSD state is its energy error against
 the forms state `(0, Re E, 0, ⋆Re B)` of the TSD solution. -/
 theorem tsdErr_eq (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -137,7 +137,6 @@ theorem tsdErr_eq (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
   exact congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg (· ^ 2) e1.symm)
     (congrArg (· ^ 2) e2.symm)) (congrArg (· ^ 2) e3.symm)) (congrArg (· ^ 2) e4.symm)
 
-set_option maxHeartbeats 1000000 in
 /-- **The approximation error of one real part** is the projection error. -/
 theorem tsdErr_mEll (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     tsdErr (D.U t) (mirrorFE hT hB N (mEll hT hB N D T t)) = ellErr hT hB N D T t :=
@@ -229,13 +228,14 @@ theorem norm_mirrorEllCmp_defect_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mi
         (ellErr' hT hB N (tsdDatumOf (neg_I_smul_mem hx)) T t +
           ellErr hT hB N (tsdDatumOf (neg_I_smul_mem hx)) T t) := by
   refine (ApproxFEEC.norm_complexifyCmp_defect_le (mirrorFEMReal hT hB) mulI mulI_mulI norm_mulI
-    (adjoint_mirrorEmb_mulI hT hB) (inner_mirrorEmb_mulI hT hB) _ _ _ _ _ _ _ _ _ _ _ x N
-    t).trans ?_
+    (adjoint_mirrorEmb_mulI hT hB) (inner_mirrorEmb_mulI hT hB) mirrorEllData
+    (mirrorEllRe hT hB T) (mirrorEllIm hT hB T) (mirrorEllRe' hT hB T) (mirrorEllIm' hT hB T)
+    _ _ _ _ _ _ x N t).trans ?_
   rw [mirrorEllRe_of_mem hT hB T hx, mirrorEllIm_of_mem hT hB T hx,
     mirrorEllRe'_of_mem hT hB T hx, mirrorEllIm'_of_mem hT hB T hx]
   exact add_le_add (norm_mEll_defect_le hT hB N _ ht) (norm_mEll_defect_le hT hB N _ ht)
 
-set_option maxHeartbeats 2000000 in
+set_option maxHeartbeats 1000000 in
 /-- **The approximation error of the elliptic comparison** is at most the projection errors of the
 real and imaginary parts. -/
 theorem norm_sub_mirrorEllCmp_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) (N : ℕ)
@@ -277,7 +277,6 @@ abbrev mirrorStrangK : ℝ := √(2 * (strangConst (2 * Real.pi)⁻¹ + 1))
 
 theorem mirrorStrangK_nonneg : 0 ≤ mirrorStrangK := Real.sqrt_nonneg _
 
-set_option maxHeartbeats 2000000 in
 /-- **The projection errors of a TSD datum tend to `0` uniformly on `[0, T]`** (the parity-smoothed
 projections converge on the compact trajectories, `eventually_mirrorClose`; `K₀ = K₁ = 0` for TSD
 data). -/
@@ -372,7 +371,6 @@ theorem mirrorEllK_nonneg : 0 ≤ mirrorEllK (C := C) := by
   have := mirrorStrangK_nonneg
   positivity
 
-set_option maxHeartbeats 2000000 in
 /-- **The projection errors are `O(hˢ)`** for a TSD datum with `U₀`, `LU₀`, `L²U₀` in `Hˢ`
 (`TSDDatum.strangData_le`, `K₀ = K₁ = 0`), uniformly on `[0, T]`. -/
 theorem ellErr_le_sobolev (D : TSDDatum) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
@@ -515,7 +513,6 @@ def mirrorEllRate (T : ℝ) : (mirrorFEMApprox hT hB).RateClass T where
 
 /-! ### The verdict with the elliptic initialization (6.4) -/
 
-set_option maxHeartbeats 1000000 in
 /-- **The comparison initial value is the elliptic projection (6.4) of the exact initial state**,
 the initialization of the thesis' scheme (and of `mirror_waveFEM`): for each real part, the
 energy state of `Πₕ(0)` is the dynamic part of the elliptic projection of the data

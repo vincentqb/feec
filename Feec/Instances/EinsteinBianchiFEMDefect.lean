@@ -420,17 +420,14 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-set_option maxHeartbeats 1000000 in
 theorem cubeEmb_part0_zero (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part0) 0 = (cubeEmb hT hB N v) 0 := rfl
 
-set_option maxHeartbeats 1000000 in
 theorem cubeEmb_part0_one (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part0) 1 = 0 := by
   change rowsEquiv (incl1CLM (((0 : (cubeFEM hT hB N).Vt1h) : Wv U1))) = 0
   rw [Submodule.coe_zero, map_zero, map_zero]
 
-set_option maxHeartbeats 1000000 in
 theorem cubeEmb_part0_two (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part0) 2 = 0 := by
   change topEquiv (WithLp.toLp 2 (((0 : (cubeFEM hT hB N).W2h) : W2),
@@ -438,17 +435,15 @@ theorem cubeEmb_part0_two (N : ℕ) (v : cubeHidden hT hB N) :
   rw [Submodule.coe_zero, Submodule.coe_zero]
   exact map_zero _
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 theorem cubeEmb_part1_zero (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part1) 0 = 0 := by
   change zeroEquiv (-(gammaTop.symm (((((0 : (cubeFEM hT hB N).V0h) : U0)) : W0)))) = 0
   rw [Submodule.coe_zero, Submodule.coe_zero, map_zero, neg_zero, map_zero]
 
-set_option maxHeartbeats 1000000 in
 theorem cubeEmb_part1_one (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part1) 1 = (cubeEmb hT hB N v) 1 := rfl
 
-set_option maxHeartbeats 1000000 in
 theorem cubeEmb_part1_two (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part1) 2 = 0 := cubeEmb_part0_two hT hB N v
 
@@ -479,14 +474,12 @@ theorem inner_formsTotalD_part1 {V : WS} (hV : V ∈ formsShort.wave.domain)
   exact (inner_neg_left (𝕜 := ℝ) (incl1 (bggSegment.dt0 (rp (φOf V)))) _).trans
     (congrArg Neg.neg (inner_wv_U1 _ _).symm)
 
-set_option maxHeartbeats 4000000 in
 /-- The exact orbit stays in `D(L)`. -/
 theorem matrix_waveGroup_mem_domain {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     (t : ℝ) : matrixComplex.waveGroup.S t x ∈ matrixComplex.wave.domain :=
   waveGroup_mem_domain matrixComplex (LinearPMap.domainSq_le_domain hx) t
 
-set_option maxHeartbeats 4000000 in
 /-- `L e^{tL} x = e^{tL} L x`. -/
 theorem matrix_wave_waveGroup {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
@@ -496,7 +489,7 @@ theorem matrix_wave_waveGroup {x : PiLp 2 (ShortHilbertComplex.W3
   (waveExt_of_mem (matrix_waveGroup_mem_domain hx t)).symm.trans
     (waveExt_waveGroup matrixComplex (LinearPMap.domainSq_le_domain hx) t)
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 2000000 in
 /-- **The degree-`0` part of `L y`** against the reading: `⟪(L y)₀, (ι v)₀⟫ = ⟪σ', σᵥ⟫`. -/
 theorem inner_matrix_wave_cubeEmb_zero (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
@@ -524,7 +517,7 @@ theorem inner_matrix_wave_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertComplex
     ← inner_exState'_coeH_cube hT hB N hx (Icc_sub_Ico_add_one ht), EState.inner_def, coeH_apply]
   simp [exState']
 
-set_option maxHeartbeats 8000000 in
+set_option maxHeartbeats 2000000 in
 /-- **The degree-`1` part of `𝐝 y`** against the reading, through the forms model:
 `⟪(𝐝 y)₁, (ι v)₁⟫ = -⟪d̃ φ, uᵥ⟫`. -/
 theorem inner_matrix_totalD_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
@@ -549,7 +542,6 @@ theorem inner_matrix_totalD_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertCompl
     -⟪bggSegment.dt0 (rp (φOf (cubeOrbit hx (T + 1) t))), _⟫
   rw [hspec]
 
-set_option maxHeartbeats 8000000 in
 /-- **The cochain defect of the thesis' scheme (6.5)**, computed: for the discrete BGG differential
 `𝐝ₕ = cubeD` (with `S₀,ₕ = π¹S⁰`) and the reading map `cubeEmb`, along the exact orbit
 `y = e^{tL} x` of `x ∈ D(L²)`, for every hidden state `v`,
@@ -604,7 +596,7 @@ local instance instNormedSpaceWvU1 : NormedSpace ℝ (Wv U1) := inferInstance
 /-- The Poincaré constant `(2π)⁻¹` of `d̃` on the cube enters as `√(1 + (2π)⁻²)`. -/
 abbrev cubeDefectConst : ℝ := √(1 + ((2 * Real.pi)⁻¹) ^ 2)
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 400000 in
 /-- **The cochain defect of (6.5) is bounded by the consistency constants**: if
 `|ℓ((S₀ - S₀,ₕ) ψ)| ≤ K₀ ‖ψ‖_{H(d̃)}` and `|⟪M, (S₁ - S₁,ₕ) w⟫| ≤ K₁ ‖w‖_{Γₕ}` at time `t`, then
 `|⟪κₕ(e^{tL} x), v⟫| ≤ (K₀ √(1 + (2π)⁻²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)`. -/
@@ -626,7 +618,7 @@ theorem abs_inner_standardCube_cochainDefect_le (N : ℕ) {x : PiLp 2 (ShortHilb
   exact abs_cochainDefectForm_le (cubeFEM hT hB N) (cubeWave_dt0_injective hT hB N)
     (cubeWave_S0_surjective hT hB N) (cubeExact hx (T + 1)) t hK0' hK1' seg_poinct0 hK0 hK1 v
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 1000000 in
 /-- **The `O(h)` weak bound of the cochain defect of (6.5) along smooth exact solutions** (thesis'
 boundary conditions): there are constants `C₀, K ≥ 0` such that, whenever at time `t` the
 multiplier of the exact solution is an `L²` functional, `|ℓ(t) μ| ≤ Λ ‖μ‖`, and `M(t) ∈ D(d₁*)`
@@ -670,7 +662,7 @@ theorem exists_standardCube_cochainDefect_le_mesh :
   refine h.trans (le_of_eq ?_)
   ring
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 2000000 in
 /-- **The cochain defect of (6.5) tends to `0`** at every exact state of a datum of `D(L²)`,
 uniformly on `[0, T]`, in the dual discrete graph norm (the consistency constants tend to `0`:
 `eventually_cubeFEM_K0` on the represented multipliers, `eventually_cubeFEM_K1` on the compact
@@ -873,7 +865,6 @@ open Feec.Models.Cube.WeakSymmetry (W0 W1 W2 Wv)
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-set_option maxHeartbeats 2000000 in
 /-- **The real pairing with a real state, by slots**:
 `⟪y, Rt z⟫ = ⟪Re y₀, z_σ⟫ + ⟪Re y₁, z_u⟫ + ⟪Re y_M, z_M⟫ + ⟪Re y_B, z_ρ⟫`. -/
 theorem inner_mirrorReEmb_right (y : PiLp 2 SpaceQ) (z : REnergy) :
@@ -918,17 +909,14 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hB : ∀ a : Fin 3,
     Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
 
-set_option maxHeartbeats 1000000 in
 theorem mirrorEmb_part1_one (N : ℕ) (v : mirrorHidden hT hB N) :
     (mirrorEmb hT hB N v.part1) 1 = (mirrorEmb hT hB N v) 1 := rfl
 
-set_option maxHeartbeats 1000000 in
 theorem mirrorEmb_part1_zero (N : ℕ) (v : mirrorHidden hT hB N) :
     (mirrorEmb hT hB N v.part1) 0 = 0 := by
   change emb0 (((((0 : (mirrorFEM hT hB N).V0h) : TU0)) : W0)) = 0
   rw [Submodule.coe_zero, Submodule.coe_zero, map_zero]
 
-set_option maxHeartbeats 1000000 in
 theorem mirrorEmb_part1_two (N : ℕ) (v : mirrorHidden hT hB N) :
     (mirrorEmb hT hB N v.part1) 2 = 0 := by
   change WithLp.toLp 2 (embM (((0 : (mirrorFEM hT hB N).W2h) : W2)),
@@ -937,7 +925,6 @@ theorem mirrorEmb_part1_two (N : ℕ) (v : mirrorHidden hT hB N) :
   rfl
 
 
-set_option maxHeartbeats 1000000 in
 /-- The real pairing with a read hidden state, by slots. -/
 theorem inner_mirrorEmb_right (N : ℕ) (y : PiLp 2 SpaceQ) (v : mirrorHidden hT hB N) :
     ⟪y, mirrorEmb hT hB N v⟫_ℝ =
@@ -947,23 +934,19 @@ theorem inner_mirrorEmb_right (N : ℕ) (y : PiLp 2 SpaceQ) (v : mirrorHidden hT
       ⟪rowsW2L (slotB y), ((v.toEState.ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2)⟫_ℝ :=
   inner_mirrorReEmb_right y (mirrorFE hT hB N v)
 
-set_option maxHeartbeats 2000000 in
 theorem mirrorDiffGen_σ (N : ℕ) (a : mirrorHidden hT hB N) :
     ((((HiddenState.toEState (mirrorDiffGen hT hB N a)).σ : (mirrorFEM hT hB N).V0h) : TU0) :
       W0) = 0 := rfl
 
-set_option maxHeartbeats 2000000 in
 theorem mirrorDiffGen_u (N : ℕ) (a : mirrorHidden hT hB N) :
     (((HiddenState.toEState (mirrorDiffGen hT hB N a)).u : (mirrorFEM hT hB N).Vt1h) : BU1) =
       -bD0 (((defectPhi (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N)
         (mirrorWave_S0_surjective hT hB N) a) : (mirrorFEM hT hB N).Vt0h) : BU0) := rfl
 
-set_option maxHeartbeats 2000000 in
 theorem mirrorDiffGen_ρ (N : ℕ) (a : mirrorHidden hT hB N) :
     (((HiddenState.toEState (mirrorDiffGen hT hB N a)).ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2) =
       bD1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1) := rfl
 
-set_option maxHeartbeats 4000000 in
 /-- The pairing of a state with `M`-slot `0` and divergence-free `E` with `ι 𝐝ₕ a`. -/
 theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
     (hM : (WithLp.ofLp (y 2 : W2Q)).1 = 0) (a : mirrorHidden hT hB N) :
@@ -1036,7 +1019,6 @@ theorem real_inner_I_smul (x y : PiLp 2 SpaceQ) :
   rw [PiLp.inner_apply, PiLp.inner_apply]
   exact Finset.sum_congr rfl fun i _ => real_inner_I_smul_spaceQ i (x i) (y i)
 
-set_option maxHeartbeats 4000000 in
 /-- `L (-i y) = -i L y` on the real mirror complex. -/
 theorem complexQℝ_wave_negI (y : complexQℝ.wave.domain) :
     ∃ h : -Complex.I • (y : PiLp 2 SpaceQ) ∈ complexQℝ.wave.domain,
@@ -1049,11 +1031,9 @@ theorem complexQℝ_wave_negI (y : complexQℝ.wave.domain) :
   exact complexQ.wave.map_smul (-Complex.I) ⟨_, hy'⟩
 
 
-set_option maxHeartbeats 2000000 in
 theorem negI_smul_mem_tsdQℝ {y : PiLp 2 SpaceQ} (hy : y ∈ tsdQℝ) : -Complex.I • y ∈ tsdQℝ :=
   (totalSub tsdQ).smul_mem (-Complex.I) hy
 
-set_option maxHeartbeats 2000000 in
 /-- A TSD state of `D(L)` has no degree-`1` part of `𝐝 y` (its degree-`0` part vanishes). -/
 theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
@@ -1062,7 +1042,6 @@ theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain)
   rw [totalD_apply_one_fin3]
   exact LinearPMap.apply_mk_eq_zero _ _ h0
 
-set_option maxHeartbeats 2000000 in
 /-- `L y` of a TSD state of `D(L)` has no degree-`0` part (TSD reduces `L`). -/
 theorem complexQℝ_wave_zero_of_tsd (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
@@ -1081,14 +1060,12 @@ def mirrorFamily : ApproxComplexCrime.Family complexQℝ ℕ :=
 theorem mirrorComplex_toFamily : (mirrorComplex hT hB).toFamily = mirrorFamily hT hB := rfl
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 4000000 in
 /-- The mirror family has no inner-product defect: `Jₙ = 1` (orthogonal reading maps). -/
 theorem mirrorFamily_J (N : ℕ) : (mirrorFamily hT hB).J N = 1 :=
   ContinuousLinearMap.ext fun v => ext_inner_right ℝ fun w => by
     rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
     exact (mirrorFEMApprox_isOrthogonal hT hB).inner_incl N v w
 
-set_option maxHeartbeats 4000000 in
 /-- The reading and the differential of the complexified family on a pair. -/
 theorem mirrorFamily_incl_D (N : ℕ) (a b : mirrorHidden hT hB N) :
     (mirrorFamily hT hB).incl N (WithLp.toLp 2 (a, b)) =
@@ -1149,7 +1126,6 @@ theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.doma
 
 /-! #### Graph-norm approximation of TSD states by hidden interpolants -/
 
-set_option maxHeartbeats 4000000 in
 /-- **The approximation error of a read pair**, by slots, at a state with vanishing degree-`0`
 and `M` slots, for real forms states with vanishing `σ` and `M`. -/
 theorem norm_sq_sub_mirrorPair (y : PiLp 2 SpaceQ) (h0 : slot0 y = 0) (hM : slotM y = 0)
@@ -1170,7 +1146,6 @@ theorem norm_sq_sub_mirrorPair (y : PiLp 2 SpaceQ) (h0 : slot0 y = 0) (hM : slot
   rw [hy]
   linarith
 
-set_option maxHeartbeats 4000000 in
 /-- The same for a state with vanishing degree-`0`, degree-`1` and `M` slots, against real forms
 states with vanishing `σ` and `u`. -/
 theorem norm_sq_sub_mirrorPair' (y : PiLp 2 SpaceQ) (h0 : slot0 y = 0) (h1 : slot1 y = 0)
@@ -1210,7 +1185,6 @@ abbrev mirrorSD (N : ℕ) (y : PiLp 2 SpaceQ) : ℝ :=
   (mirrorFEM hT hB N).strangData 0 0 (rowsBU (stEL y)) 0 (rowsW2L (stBL y)) 0 0
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 4000000 in
 /-- The errors of the hidden interpolant of the real rows of a TSD state of `D(L)`. -/
 theorem mirrorInterp_err_le (N : ℕ) (x : complexQ.wave.domain)
     (hx : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ) :
@@ -1226,13 +1200,11 @@ theorem mirrorInterp_err_le (N : ℕ) (x : complexQ.wave.domain)
   hiddenInterp_err_le (mirrorFEM hT hB N) (fun ψ _ => inner_rowsBU_bD0 hx ψ)
     (mS1_rowsBU_state hx) _
 
-set_option maxHeartbeats 2000000 in
 theorem mirrorDiffGen_M (N : ℕ) (a : mirrorHidden hT hB N) :
     (((HiddenState.toEState (mirrorDiffGen hT hB N a)).M : (mirrorFEM hT hB N).W2h) : W2) =
       (mirrorFEM hT hB N).S1h ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1) := rfl
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 4000000 in
 /-- `𝐝ₕ` of a hidden interpolant has no degree-`1` part (its potential vanishes). -/
 theorem mirrorFE_diffGen_interp_u (N : ℕ) (y : PiLp 2 SpaceQ) :
     (mirrorFE hT hB N (mirrorDiffGen hT hB N (mirrorInterp hT hB N y))).u = 0 := by
@@ -1264,7 +1236,6 @@ theorem mirrorPair_approx_eq (N : ℕ) (y : complexQℝ.wave.domain)
   exact norm_sq_sub_mirrorPair _ h0 hM _ _ rfl rfl rfl rfl
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 4000000 in
 /-- The slots of `𝐝 y` for a TSD state of `D(L)`: no degree-`0`, degree-`1` or `M` part. -/
 theorem slots_totalD_of_tsd (y : complexQℝ.wave.domain) (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     slot0 (complexQℝ.totalD ⟨y, y.2.1⟩) = 0 ∧ slot1 (complexQℝ.totalD ⟨y, y.2.1⟩) = 0 ∧
@@ -1385,7 +1356,7 @@ theorem norm_sq_mirrorPair_le (N : ℕ) (y : complexQℝ.wave.domain)
   linarith
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 8000000 in
+set_option maxHeartbeats 1000000 in
 /-- **Graph-norm approximation of every TSD state of `D(L)`**: the interpolating pairs satisfy
 `‖y - ι wₙ‖ + ‖𝐝 y - ι 𝐝ₙ wₙ‖ → 0` (the smoothed projections converge on the fixed forms state,
 `eventually_mirrorClose`, `mirrorFEM_strangData_le_of_close`). `strangData` here is only the
@@ -1438,7 +1409,6 @@ theorem eventually_mirrorPair_lt (y : complexQℝ.wave.domain) (hyK : (y : PiLp 
 /-- The TSD states of `D(L)`. -/
 def mirrorTSDStates : Set (PiLp 2 SpaceQ) := {y | y ∈ complexQℝ.wave.domain ∧ y ∈ tsdQℝ}
 
-set_option maxHeartbeats 4000000 in
 /-- The orbits of the TSD data of `D(L²)` and of their `L` are TSD states of `D(L)`. -/
 theorem mirrorEllData_orbit : ∀ x ∈ mirrorEllData, ∀ t : ℝ, 0 ≤ t →
     complexQℝ.waveGroup.S t x ∈ mirrorTSDStates ∧
@@ -1451,7 +1421,6 @@ theorem mirrorEllData_orbit : ∀ x ∈ mirrorEllData, ∀ t : ℝ, 0 ≤ t →
   · rw [complexQℝ_waveGroup_eq_V hx ht]; exact (tsdDatumOf hx).V_tsd t
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 8000000 in
 /-- **The mirror scheme (6.5) as an approximating family of discrete differential spaces from the
 split hypotheses** (`ApproxComplexCrime.ofCochainDefect`): the family `mirrorFamily`
 (`𝐝ₕ ⊕ 𝐝ₕ`, `S₀,ₕ = π¹S⁰`, `Jₙ = 1` by `mirrorFamily_J`), the TSD constraint, admissible
@@ -1470,7 +1439,7 @@ def mirrorSplitComplex : ApproxComplexCrime complexQℝ ℕ :=
       positivity)
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 400000 in
 /-- The discrete solutions of `ofComplexCrime (mirrorSplitComplex)` are those of
 `mirrorFEMApprox` (`Lₙ = 𝐝ₙ - 𝐝ₙ*`, `mirrorFEMApprox_L_eq`). -/
 theorem mirrorSplitComplex_sol (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) (t : ℝ) :

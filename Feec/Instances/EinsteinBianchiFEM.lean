@@ -287,7 +287,7 @@ theorem exists_mirrorScheme_le_of_eq (N : ℕ) (D : TSDDatum) {T : ℝ} (hT0 : 0
     rfl
 
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 1000000 in
 /-- **`MirrorWaveFEMRate` from the approximating FEEC theorem** (constant `8 mirrorEllK`), through
 `einsteinBianchi_mirrorFEM_rate_init`; the model rate theorem is not used. -/
 theorem mirrorWaveFEMRate_of_approxFEEC : MirrorWaveFEMRate hT hB := by
@@ -307,7 +307,7 @@ theorem mirrorWaveFEMRate_of_approxFEEC : MirrorWaveFEMRate hT hB := by
   rw [← e]
   nlinarith [mul_nonneg (mul_nonneg hK hh) hn, mul_nonneg (mul_nonneg (mul_nonneg hK hh) hn) ht.1]
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 1000000 in
 /-- **`MirrorWaveFEMRateSobolev` from the approximating FEEC theorem** (constant `12 mirrorEllK`),
 through `einsteinBianchi_mirrorFEM_rate_sobolev_init`. -/
 theorem mirrorWaveFEMRateSobolev_of_approxFEEC : MirrorWaveFEMRateSobolev hT hB := by
@@ -323,7 +323,6 @@ theorem mirrorWaveFEMRateSobolev_of_approxFEEC : MirrorWaveFEMRateSobolev hT hB 
   have hn := Real.sqrt_nonneg (sobState (2 + s) D.U₀)
   nlinarith [mul_nonneg (mul_nonneg hK hh) hn, mul_nonneg (mul_nonneg (mul_nonneg hK hh) hn) ht.1]
 
-set_option maxHeartbeats 4000000 in
 /-- **`MirrorWaveFEMConvergence` from the approximating FEEC theorem**: convergence on the core
 (`DissipFEEC.Verdict.converges` from the comparison initial values), for the elliptic core
 (`mirror_waveFEM` is not used). -/
@@ -443,7 +442,7 @@ abbrev MirrorFEMApproxVerdict : Prop :=
           (6 * mirrorEllK (C := C) + 12 * mirrorEllK (C := C) * t) *
             (meshSize N ^ s * √(sobState (2 + s) x)))
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 2000000 in
 theorem mirrorFEMApproxVerdict : MirrorFEMApproxVerdict :=
   ⟨exists_mirror_estimates, ⟨cosDatum_mem_mirrorL3Data, cosDatum_mem_mirrorSobData,
       cosDatum_not_stationary⟩, mirrorFEMVerdict_of_approxFEEC, fun hT hB =>

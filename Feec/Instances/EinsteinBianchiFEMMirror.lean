@@ -407,7 +407,6 @@ theorem norm_sq_sub_mirrorReEmb (y : PiLp 2 SpaceQ) (a b : REnergy) :
   rw [norm_sq_spaceQ, h0, h1, hM, h2, e0, e1, eM, e2]
   ring
 
-set_option maxHeartbeats 1000000 in
 /-- `‖Rt a + i Rt b‖² = ‖a‖² + ‖b‖²`. -/
 theorem norm_sq_mirrorReEmb_add (a b : REnergy) :
     ‖mirrorReEmb a + Complex.I • mirrorReEmb b‖ ^ 2 = ‖a‖ ^ 2 + ‖b‖ ^ 2 := by

@@ -137,7 +137,7 @@ abbrev cErr' (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3
     (T t : ℝ) : ℝ :=
   ‖exState' (cubeExact hx (T + 1)) t - coeH (cubeFEM hT hB N) (cEll' hT hB N hx T t).toEState‖
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 /-- **The consistency defect** of the elliptic trajectory is bounded by the projection errors. -/
 theorem norm_cEll_defect_le (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
@@ -176,7 +176,7 @@ theorem norm_vec_sub_cubeFE (N : ℕ) {T : ℝ} (s : Feec.BGG.ExactWave bggSegme
       (congrArg (· ^ 2) e4)).trans hR.symm)
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 hsq
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 2000000 in
 /-- **The approximation error of the elliptic trajectory** through the reading map is its
 projection error. -/
 theorem norm_sub_cubeEmb_cEll (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
@@ -283,7 +283,7 @@ theorem norm_sub_cubeEllCmp_le (T : ℝ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2
 /-- The Strang constant `√(2 (C_p + 1))` of the cube data. -/
 abbrev cubeStrangK : ℝ := √(2 * (strangConst (2 * Real.pi)⁻¹ + 1))
 
-set_option maxHeartbeats 4000000 in
+set_option maxHeartbeats 1000000 in
 /-- **The projection errors tend to `0` uniformly on `[0, T]`** (the smoothed projections converge
 on the compact trajectories, `eventually_cubeClose`; `K₀ → 0` on the represented multipliers,
 `eventually_cubeFEM_K0`; `K₁ → 0`, `eventually_cubeFEM_K1`). -/

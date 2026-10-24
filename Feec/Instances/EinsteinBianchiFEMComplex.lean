@@ -7,27 +7,27 @@ public import Feec.HilbertComplex.Approximation.ApproxComplexCrime
 # The scheme (6.5) through the complex-level front end
 
 The source-free scheme (6.3)/(6.5) of [QuennevilleBelair2015], §6.2–6.3, written on the
-hidden-constraint space with the skew generator `Lₕ = waveGen` (`Feec.Instances.EinsteinBianchiFEMGenerator`),
-is the Hodge wave operator of a **discrete differential space**: `Lₕ = 𝐝ₕ - 𝐝ₕ*`
-(`waveGen_eq_diffWave`) for the discrete BGG differential
-`𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` (`diffGen`; `𝐝ₕ 𝐝ₕ = 0`, `diffGen_diffGen`,
-from `S₁,ₕ d̃ = -d S₀,ₕ`, `S₀,ₕ Φ(σ, 0) = dσ`, `d d = 0` and `d̃ d̃ = 0`). Its first differential
-uses `S₀,ₕ = π¹S⁰`, which differs from `S⁰` in general; the reading maps of (6.5) are not shown to
-be cochain maps, and (6.5) is not formalized as an instance of
-`Feec.HilbertComplex.ApproxFEEC.ofComplex`. It is formalized as an instance of the generalized
-front end `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime`, through
+hidden-constraint space with the skew generator `Lₕ = waveGen`
+(`Feec.Instances.EinsteinBianchiFEMGenerator`), is the Hodge wave operator of a **discrete
+differential space**: `Lₕ = 𝐝ₕ - 𝐝ₕ*` (`waveGen_eq_diffWave`) for the discrete BGG differential
+`𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` (`diffGen`; `𝐝ₕ 𝐝ₕ = 0`, `diffGen_diffGen`, from
+`S₁,ₕ d̃ = -d S₀,ₕ`, `S₀,ₕ Φ(σ, 0) = dσ`, `d d = 0` and `d̃ d̃ = 0`). Its first differential uses
+`S₀,ₕ = π¹S⁰`, which differs from `S⁰` in general; the reading maps of (6.5) are not shown to be
+cochain maps, and (6.5) is not formalized as an instance of
+`Feec.HilbertComplex.ApproxFEEC.ofComplex`. It is formalized as an instance of the generalized front
+end `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime`, through
 `Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`: the elliptic projection (6.4) of the exact
 solution is a Galerkin projection, `(1 - Lₕ) Πₕ(t) = ιₕ* (1 - L) ξ(t)` (`mEll_galerkin`,
 `cEll_galerkin`, from `inner_ellDefect` and the identification of the continuous forms state with
-the read state), so it is the approximant of the consistent-approximation hypothesis (residual
-`0`), and its convergence is the Strang bound of (6.4) with the weak consistency constants
-`K₀`, `K₁` (`Feec.Instances.EinsteinBianchi.FEM.norm_sub_ellTraj_le`). The cochain defect of
-(6.5) is not computed here: it is absorbed by the Galerkin identity (it is computed in
+the read state), so it is the approximant of the consistent-approximation hypothesis (residual `0`),
+and its convergence is the Strang bound of (6.4) with the weak consistency constants `K₀`, `K₁`
+(`Feec.Instances.EinsteinBianchi.FEM.norm_sub_ellTraj_le`). The cochain defect of (6.5) is not
+computed here: it is absorbed by the Galerkin identity (it is computed in
 `Feec.Instances.EinsteinBianchiFEMDefect`, where it is the pair of consistency functionals of the
-Strang bound and vanishes on TSD states for mirror boundary conditions). `ofGalerkinCore` takes the existing
-elliptic cores of `Feec.Instances.EinsteinBianchiFEM` as input, so the convergence verdicts below
-re-derive, through the complex-level theorem, verdicts already proved there; what is new is the
-discrete differential, the complex-level form of the scheme, the exactly preserved discrete
+Strang bound and vanishes on TSD states for mirror boundary conditions). `ofGalerkinCore` takes the
+existing elliptic cores of `Feec.Instances.EinsteinBianchiFEM` as input, so the convergence verdicts
+below re-derive, through the complex-level theorem, verdicts already proved there; what is new is
+the discrete differential, the complex-level form of the scheme, the exactly preserved discrete
 constraint and the rates through `Feec.HilbertComplex.ApproxComplexCrime.rateClass`.
 
 * **Mirror boundary conditions** (`mirrorComplex`, on `complexQℝ`, constraint `tsdQℝ`):
@@ -623,7 +623,6 @@ theorem norm_sub_mirrorEllCmp_p'_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mi
     (congrArg₂ (· - ·) hyV e).trans (sub_add_eq_sub_sub _ _ _)
   exact (congrArg norm hz).trans_le (key.trans_eq (congrArg₂ (· + ·) h1 h2))
 
-set_option maxHeartbeats 4000000 in
 /-- **The `O(h)` rate class of the mirror scheme through the complex-level front end**
 (`galerkinRateClass` of `mirrorComplex`): TSD data of `D(L³)`, class norm `‖ξ₀‖_{L³}`, order `1`
 in `h_N`, with `Cₐ = 4K` (`K = mirrorEllK`) from the Strang bound of (6.4) for the state and its
@@ -648,7 +647,6 @@ def mirrorComplexRate (T : ℝ) :
       · nlinarith [e1.1, e2.1]
       · nlinarith [e1.2, e2.2]
 
-set_option maxHeartbeats 4000000 in
 /-- **The `O(hˢ)` rate class of the mirror scheme through the complex-level front end**: TSD data
 in `H^{2+s}`, `0 ≤ s ≤ 1`, class norm `‖ξ₀‖_{2+s}`, `Cₐ = 6K`. -/
 def mirrorComplexRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
@@ -672,10 +670,9 @@ def mirrorComplexRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
       · nlinarith [e1.1, e2.1]
       · nlinarith [e1.2, e2.2]
 
-set_option maxHeartbeats 2000000 in
 /-- **The `O(h)` rate of the mirror scheme (6.5) from the complex-level estimates**, for TSD data
-of `D(L³)` and all `t ≥ 0`, from the initialization [QuennevilleBelair2015], (6.4) (`mirrorEllInit`):
-`‖e^{tL} ξ₀ - ι e^{tL'} Πₕ(0)‖ ≤ (C + C_ι C' t) h_N ‖ξ₀‖_{L³}` with
+of `D(L³)` and all `t ≥ 0`, from the initialization [QuennevilleBelair2015], (6.4)
+(`mirrorEllInit`): `‖e^{tL} ξ₀ - ι e^{tL'} Πₕ(0)‖ ≤ (C + C_ι C' t) h_N ‖ξ₀‖_{L³}` with
 `C = (1 + 8 C_ι) 4K`, `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) 4K` (`K = mirrorEllK`), the
 discrete solution being that of `mirrorFEMApprox` (the scheme (6.5)). -/
 theorem einsteinBianchi_mirrorFEM_ofComplexCrime_rate {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data)
@@ -697,7 +694,6 @@ theorem einsteinBianchi_mirrorFEM_ofComplexCrime_rate {x : PiLp 2 SpaceQ} (hx : 
   rw [Real.rpow_one]
   rfl
 
-set_option maxHeartbeats 2000000 in
 /-- **The `O(hˢ)` rate of the mirror scheme (6.5) from the complex-level estimates**, for TSD data
 in `H^{2+s}`, `0 ≤ s ≤ 1`, and all `t ≥ 0`, from the initialization [QuennevilleBelair2015], (6.4):
 `‖e^{tL} ξ₀ - ι e^{tL'} Πₕ(0)‖ ≤ (C + C_ι C' t) h_Nˢ ‖ξ₀‖_{2+s}` (`Cₐ = 6K`). -/
@@ -799,7 +795,8 @@ theorem inner_exState'_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (
   have h2 : HasDerivWithinAt (fun r => ⟪cubeEmb hT hB N v, matrixComplex.waveGroup.S r x⟫)
       ⟪cubeEmb hT hB N v, matrixComplex.waveGroup.S t (waveExt matrixComplex x)⟫ (Ici t) t :=
     ((innerSL ℝ (cubeEmb hT hB N v)).hasFDerivAt.comp_hasDerivAt t
-      (hasDerivAt_waveGroup_waveExt matrixComplex (LinearPMap.domainSq_le_domain hx) t)).hasDerivWithinAt
+      (hasDerivAt_waveGroup_waveExt matrixComplex (LinearPMap.domainSq_le_domain hx)
+        t)).hasDerivWithinAt
   have heq : (fun r => ⟪cubeEmb hT hB N v, matrixComplex.waveGroup.S r x⟫) =ᶠ[𝓝[Ici t] t]
       fun r => ⟪coeH (cubeFEM hT hB N) v.toEState, exState (cubeExact hx (T + 1)) r⟫ := by
     filter_upwards [Ico_mem_nhdsGE ht.2] with r hr
@@ -865,7 +862,8 @@ instance standardCubeApprox_finiteDimensional (N : ℕ) :
 abbrev cubeD (N : ℕ) : (standardCubeApprox hT hB).X N →L[ℝ] (standardCubeApprox hT hB).X N :=
   diffGen (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N) (cubeWave_S0_surjective hT hB N)
 
-theorem cubeD_D (N : ℕ) (v : (standardCubeApprox hT hB).X N) : cubeD hT hB N (cubeD hT hB N v) = 0 :=
+theorem cubeD_D (N : ℕ) (v : (standardCubeApprox hT hB).X N) :
+    cubeD hT hB N (cubeD hT hB N v) = 0 :=
   diffGen_diffGen _ _ _ v
 
 /-- **The generator of the thesis' scheme is the Hodge wave operator of `𝐝ₕ`.** -/
@@ -914,12 +912,12 @@ approximating FEEC theorem for `ofComplexCrime (standardCubeComplex)` (the famil
 `ofGalerkinCore` from the existing elliptic core `standardCubeEllCore`, through the Galerkin
 identity of (6.4) and orthogonal reading maps; the convergence of that core, the Strang bound of
 (6.4), is an input, so this re-derives the verdict of `einsteinBianchi_standardCube_converges`
-through the complex-level theorem); its discrete solutions are those of `standardCubeApprox` (the scheme (6.5) without source); the
-generator is `𝐝ₕ - 𝐝ₕ*`; the core is dense, so for every datum and every family of discrete
-initial values read convergent to it the discrete solutions converge uniformly on `[0, T]`; and
-from the datum `(0, 0, (0, β))`, which lies in `thesisTSD`, the exact solution leaves TSD at some `t ∈ [0, T]`, where the
-TSD residuals of the discrete solutions tend to the positive limit `dist(e^{tL} ξ₀, TSD)`: the
-scheme converges to a solution that leaves TSD. -/
+through the complex-level theorem); its discrete solutions are those of `standardCubeApprox` (the
+scheme (6.5) without source); the generator is `𝐝ₕ - 𝐝ₕ*`; the core is dense, so for every datum and
+every family of discrete initial values read convergent to it the discrete solutions converge
+uniformly on `[0, T]`; and from the datum `(0, 0, (0, β))`, which lies in `thesisTSD`, the exact
+solution leaves TSD at some `t ∈ [0, T]`, where the TSD residuals of the discrete solutions tend to
+the positive limit `dist(e^{tL} ξ₀, TSD)`: the scheme converges to a solution that leaves TSD. -/
 theorem einsteinBianchi_standardCube_ofComplexCrime :
     (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).Verdict
       (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)) ∧

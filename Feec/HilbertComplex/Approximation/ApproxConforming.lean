@@ -457,11 +457,11 @@ theorem tendsto_incl_ellipticProj (x : H.wave.domain) :
       (mem_singleton (waveLift H x)))
 
 /-- **The constrained FEEC theorem, re-derived from the approximating one**: the statement of
-`constrainedFEEC`, verbatim, proved from the verdict of `approxFEEC` for `toApprox` (the special case `ιₕ` = inclusion,
-`πₕ = Πₕ`, core `D(L²)`). The bridges are `toApprox_sol` (the semi-discrete solutions of (4.10)
-from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`), `exists_eq_sol` (every semi-discrete solution
-is a discrete orbit), the density of the core (`mem_toCore_closure`), `tendsto_incl_ellipticProj`,
-and the rate comparison `rate_le_constrainedFEEC`. -/
+`constrainedFEEC`, verbatim, proved from the verdict of `approxFEEC` for `toApprox` (the special
+case `ιₕ` = inclusion, `πₕ = Πₕ`, core `D(L²)`). The bridges are `toApprox_sol` (the semi-discrete
+solutions of (4.10) from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`), `exists_eq_sol` (every
+semi-discrete solution is a discrete orbit), the density of the core (`mem_toCore_closure`),
+`tendsto_incl_ellipticProj`, and the rate comparison `rate_le_constrainedFEEC`. -/
 theorem constrainedFEEC_of_approxFEEC :
     -- 1. well-posedness
     (∀ x ∈ H.wave.domain, ∀ T : ℝ,

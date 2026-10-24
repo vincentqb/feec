@@ -591,17 +591,20 @@ theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2
     ‖S.toHilbertComplex.waveGroup.S t x -
         (bandApprox S hS K hK).sol N ((bandApprox S hS K hK).proj N x) t‖ ≤
       (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x := by
-  rw [← ApproxFEEC.S_eq_waveGroup (bandApprox S hS K hK) ht]
+  rw [← ApproxFEEC.S_eq_waveGroup _ ht]
   set R := sobolevRate S hS K hK t hs
-  have h := dissipFEEC_rate (bandApprox S hS K hK).toDissipFEEC R (x := x) hx N
-    ((bandApprox S hS K hK).proj N x) (t := t) ⟨ht, le_rfl⟩
+  have h := dissipFEEC_rate _ R hx N ((bandApprox S hS K hK).proj N x) ⟨ht, le_rfl⟩
   have hp : R.p x N 0 = (bandApprox S hS K hK).proj N x := by
     change ((bands S hS).B N).orthogonalProjectionOnto (S.toHilbertComplex.waveGroup.S 0 x) = _
     rw [C0Group.S_zero_apply]; rfl
-  refine h.trans (le_of_eq ?_)
-  simp only [hp, sub_self, norm_zero, mul_zero, add_zero]
-  change (1 + _ * 0 * t) * ((1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x) = _
-  ring
+  have hC : R.C = 1 := rfl
+  have hC' : R.C' = 0 := rfl
+  have hm : R.meshSize N = 1 / ((N : ℝ) + 1) := rfl
+  have hα : R.α = s := rfl
+  have hn : R.classNorm x = sobolevNorm 𝕜 s x := rfl
+  simp only [hp, sub_self, norm_zero, mul_zero, add_zero, hC, hC', hm, hα, hn, mul_zero, zero_mul,
+    add_zero, one_mul] at h
+  exact h
 
 /-- **The exact error identity**: `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ = ‖x - P_N x‖` for every `t`
 (`P_N` commutes with `e^{tL}`, which is unitary). The error is the truncation error of the
@@ -1218,7 +1221,8 @@ theorem ebApprox_sol_mem {x : PiLp 2 Space} (hx : x ∈ totalSub constraint) (N 
 
 /-- **The verdict of the approximating FEEC theorem for the EB system on `ℝ³`** (frequency
 truncation `|ξ| ≤ N`):
-1. the full `ApproxFEEC.Verdict` (core = all data, so convergence and the residual clauses apply to every datum);
+1. the full `ApproxFEEC.Verdict` (core = all data, so convergence and the residual clauses apply to
+   every datum);
 2. the TSD constraint reduces `L`;
 3. the error is the truncation error of the datum, at every time:
    `‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ = ‖ξ₀ - P_N ξ₀‖`;
@@ -1447,7 +1451,7 @@ theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} 
     Submodule.le_topologicalClosure _ (by rw [bandCore_data]; trivial)
   obtain ⟨hpos, hdet⟩ := V.detects isClosed_potential ⟨0, Submodule.zero_mem _⟩ ht.1 hout
   obtain ⟨hlim, hev⟩ := hdet hx _ (V.tendsto_incl_proj hx)
-  simp only [ApproxFEEC.S_eq_waveGroup _ ht.1] at hout hpos hlim hev
+  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at hout hpos hlim hev
   exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, hlim, hev⟩
 
 /-! #### The classical system: `d = 3`, `a = 0` -/

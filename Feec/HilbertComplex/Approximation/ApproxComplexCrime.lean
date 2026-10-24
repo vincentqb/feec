@@ -87,18 +87,20 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
   `ApproxComplexCrime.rateClass_of_split` gives a rate class at order `min(α, β, γ)` from
   graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`
-  (`0 ≤ m ≤ 1`), with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ` in place of `Cₐ` (`C_w` bounds the approximants in the
-  discrete graph norm; through `Family.rateData_of_split` and `add_rpow_le_rpow_min`), and
-  `error_le_of_split`; `galerkinRateClass` for Galerkin cores; `ConstrainedFEEC.RateClass.toCrimeRate`: the
-  conforming rate classes give rate classes of `ofComplex` (factor `C + C_ι C' t`).
+  (`0 ≤ m ≤ 1`), with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ` in place of `Cₐ` (`C_w` bounds the
+  approximants in the discrete graph norm; through `Family.rateData_of_split` and
+  `add_rpow_le_rpow_min`), and `error_le_of_split`; `galerkinRateClass` for Galerkin cores;
+  `ConstrainedFEEC.RateClass.toCrimeRate`: the conforming rate classes give rate classes of
+  `ofComplex` (factor `C + C_ι C' t`).
 
 Non-vacuity, with a nonzero cochain defect and a non-cochain isometric reading map:
 `Feec.HilbertComplex.ApproxComplexCrime.shifted_nonvacuous`
 (`Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness`); with distinct orders in
 `rateClass_of_split` (inner-product defect `O(h)`, cochain defect and graph-norm error `O(h²)`,
-rate class of order `1`): `Feec.HilbertComplex.ApproxComplexCrime.mixed_nonvacuous`. Instances: the scheme (6.5) of
-[QuennevilleBelair2015] with both boundary conditions (`Feec.Instances.EinsteinBianchiFEMComplex`)
-and the Whitney discretizations of Maxwell on the cube (`Feec.Instances.MaxwellComplex`).
+rate class of order `1`): `Feec.HilbertComplex.ApproxComplexCrime.mixed_nonvacuous`. Instances: the
+scheme (6.5) of [QuennevilleBelair2015] with both boundary conditions
+(`Feec.Instances.EinsteinBianchiFEMComplex`) and the Whitney discretizations of Maxwell on the cube
+(`Feec.Instances.MaxwellComplex`).
 
 ## References
 
@@ -772,7 +774,8 @@ def ofComplexCrime : ApproxFEEC H κ where
   proj_incl := F.toFamily.proj_incl
   bound := F.toFamily.bound
 
-theorem ofComplexCrime_L (h : κ) : (ofComplexCrime F).L h = F.toFamily.D h - (F.toFamily.D h).adjoint :=
+theorem ofComplexCrime_L (h : κ) :
+    (ofComplexCrime F).L h = F.toFamily.D h - (F.toFamily.D h).adjoint :=
   rfl
 
 /-- **The comparison of `ofComplexCrime`** on `[0, T]`: data the core `Z`, trajectory
@@ -920,10 +923,10 @@ elliptic projection of the exact orbit) satisfies:
 3. **discrete constraints**: a subspace `Kₕ ⊆ Xₕ` invariant under `Lₕ` is preserved exactly by
    `e^{tLₕ}` for all `t`, and if `iₕ Kₕ ⊆ K` the residual `dist(ξₕ(t), K)` of the discrete
    solutions from `Kₕ` is exactly `0`;
-4. the **Strang estimate** `‖y - iₕ Rₕ y‖ ≤ ‖y - iₕ w‖ + 8 C ε` for every approximant `w` of residual
-   `≤ ε`, with the **splitting** of the residual into inner-product defect, graph-norm approximation
-   and cochain defect, and the **defect bound** `‖Δₕ y‖ ≤ ‖1 - Jₕ‖ ‖Rₕ y‖ + C ‖y - iₕ Rₕ y‖`; both
-   tend to `0` at admissible states.
+4. the **Strang estimate** `‖y - iₕ Rₕ y‖ ≤ ‖y - iₕ w‖ + 8 C ε` for every approximant `w` of
+   residual `≤ ε`, with the **splitting** of the residual into inner-product defect, graph-norm
+   approximation and cochain defect, and the **defect bound**
+   `‖Δₕ y‖ ≤ ‖1 - Jₕ‖ ‖Rₕ y‖ + C ‖y - iₕ Rₕ y‖`; both tend to `0` at admissible states.
 
 Cf. [HolstStern2012], §3.3, Thm 3.10 (elliptic analogues) -/
 theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
@@ -1271,14 +1274,14 @@ namespace ApproxComplexCrime
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
 
 open ApproxFEEC in
-/-- **A rate class from complex-level rate data**. Data `Dc ⊆ Z` with a class norm `‖·‖_c`, a mesh size `m` and an order `α`: if along the
-exact trajectory, for `y = e^{tL} x` and `y = e^{tL} L x`, `t ∈ [0, T]`, there are approximants
-`w` with `‖y - iₕ w‖`, `‖(1 - Jₕ) w‖` and the residual (dual discrete graph norm) all
-`≤ Cₐ m(h)ᵅ ‖x‖_c`, then the comparison of `ofComplexCrimeCore` restricted to `Dc` is a rate class
-with `C = (1 + 8 C_ι) Cₐ` and `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. The data can be
-assembled from graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain
-defect `O(m^γ)`, at order `min(α, β, γ)`, by `rateClass_of_split` (through `rateData_of_split` and
-`add_rpow_le_rpow_min`). -/
+/-- **A rate class from complex-level rate data**. Data `Dc ⊆ Z` with a class norm `‖·‖_c`, a mesh
+size `m` and an order `α`: if along the exact trajectory, for `y = e^{tL} x` and `y = e^{tL} L x`,
+`t ∈ [0, T]`, there are approximants `w` with `‖y - iₕ w‖`, `‖(1 - Jₕ) w‖` and the residual (dual
+discrete graph norm) all `≤ Cₐ m(h)ᵅ ‖x‖_c`, then the comparison of `ofComplexCrimeCore` restricted
+to `Dc` is a rate class with `C = (1 + 8 C_ι) Cₐ` and
+`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. The data can be assembled from graph-norm best
+approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`, at order
+`min(α, β, γ)`, by `rateClass_of_split` (through `rateData_of_split` and `add_rpow_le_rpow_min`). -/
 def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (hrate : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T, ∀ y ∈ ({H.waveGroup.S t x,
@@ -1339,7 +1342,8 @@ theorem error_le_of_rateClass {T : ℝ} (R : (ApproxFEEC.ofComplexCrime F).RateC
   have hpos : 0 ≤ t * (R.C' * (R.meshSize h ^ R.α * R.classNorm x)) := mul_nonneg ht.1 h0
   have e1 : (R.C + ‖(ApproxFEEC.ofComplexCrime F).incl h‖ * R.C' * t) *
       (R.meshSize h ^ R.α * R.classNorm x) = R.C * (R.meshSize h ^ R.α * R.classNorm x) +
-        ‖(ApproxFEEC.ofComplexCrime F).incl h‖ * (t * (R.C' * (R.meshSize h ^ R.α * R.classNorm x))) := by
+        ‖(ApproxFEEC.ofComplexCrime F).incl h‖ *
+          (t * (R.C' * (R.meshSize h ^ R.α * R.classNorm x))) := by
     ring
   have e2 : (R.C + F.toFamily.boundConst * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) =
       R.C * (R.meshSize h ^ R.α * R.classNorm x) +
@@ -1370,7 +1374,8 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
     (ApproxFEEC.ofComplexCrime F.toComplex.toCrime).RateClass T :=
   F.toComplex.toCrime.rateClass T R.Data
     (fun x hx => mem_domainSq.2 ⟨R.mem_domain x hx, R.mem_domain_sq x _ hx⟩)
-    R.classNorm R.meshSize R.α (2 * (1 + F.toFamily.toCrimeFamily.boundConst) * R.C) fun x hx h t ht y hy => by
+    R.classNorm R.meshSize R.α (2 * (1 + F.toFamily.toCrimeFamily.boundConst) * R.C)
+    fun x hx h t ht y hy => by
       set S := F.toFamily
       have hx1 := R.mem_domain x hx
       have hC := S.toCrimeFamily.boundConst_nonneg
@@ -1389,7 +1394,8 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
         obtain ⟨u, rfl⟩ := F.exists_graphIncl_eq hw
         set Rc := R.C * R.meshSize h ^ R.α * R.classNorm x
         have hRc : 0 ≤ Rc := (norm_nonneg _).trans hle
-        have e1 : (y : PiLp 2 W) - S.inclL h u = H.totalD.graphFst (waveLift H y - S.graphIncl h u) := by
+        have e1 : (y : PiLp 2 W) - S.inclL h u =
+            H.totalD.graphFst (waveLift H y - S.graphIncl h u) := by
           rw [H.totalD.graphFst.map_sub, S.graphFst_graphIncl]; rfl
         have e2 : H.totalD ⟨y, y.2.1⟩ - S.inclL h (S.D h u) =
             H.totalD.graphSnd (waveLift H y - S.graphIncl h u) := by
@@ -1443,7 +1449,8 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The discrete differential spaces of an approximating FEEC discretization** with a
 differential `𝐝ₕ` on its spaces: the same spaces, reading maps and left inverses. When
-`Lₕ = 𝐝ₕ - 𝐝ₕ*` the discretization is `ofComplexCrime` of it (`ofComplexCrime_ofGalerkinCore_sol`). -/
+`Lₕ = 𝐝ₕ - 𝐝ₕ*` the discretization is `ofComplexCrime` of it (`ofComplexCrime_ofGalerkinCore_sol`).
+-/
 def ApproxComplexCrime.Family.ofApproxFEEC (F : ApproxFEEC.{u} H κ)
     [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
     (hDD : ∀ h v, D h (D h v) = 0) : ApproxComplexCrime.Family.{u} H κ where
@@ -1652,11 +1659,11 @@ theorem ofComplexCrime_ofGalerkinCore_sol (h : κ) (v : F.X h) (t : ℝ) :
 
 include hF hL hgal hZ hcl in
 /-- **Rates of a Galerkin family**: approximation estimates of the Galerkin comparison and of its
-derivative along the trajectory, `‖e^{tL} x - iₕ pₕ(t)‖`, `‖e^{tL} L x - iₕ pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c`
-on `[0, T]` (horizon `T + 1` of the core), give the complex-level rate data with the elliptic
-projection as approximant (residual `0`, `Jₕ = 1`), hence a rate class of `ofComplexCrime`
-(`ApproxComplexCrime.rateClass`). The estimates `happ` are rates of the given core; this
-transports them to the complex-level constants, it does not derive them. -/
+derivative along the trajectory, `‖e^{tL} x - iₕ pₕ(t)‖`,
+`‖e^{tL} L x - iₕ pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c` on `[0, T]` (horizon `T + 1` of the core), give the
+complex-level rate data with the elliptic projection as approximant (residual `0`, `Jₕ = 1`), hence
+a rate class of `ofComplexCrime` (`ApproxComplexCrime.rateClass`). The estimates `happ` are rates of
+the given core; this transports them to the complex-level constants, it does not derive them. -/
 def galerkinRateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (Z0.Data : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (happ : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T,
@@ -1859,7 +1866,8 @@ def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set 
       refine ⟨w, ?_, ?_, fun v => ?_⟩
       · refine h1.trans ?_
         have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
-            Ca * cn x * m h ^ min α (min β γ) + (S.boundConst * Ca + Cb * Cw + Cg) * cn x * m h ^ min α (min β γ) := by
+            Ca * cn x * m h ^ min α (min β γ) +
+              (S.boundConst * Ca + Cb * Cw + Cg) * cn x * m h ^ min α (min β γ) := by
           unfold splitConst; ring
         rw [e]
         have := mul_le_mul_of_nonneg_left pa (mul_nonneg hCa hc)
@@ -1868,7 +1876,8 @@ def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set 
         linarith [show Ca * m h ^ α * cn x = Ca * cn x * m h ^ α by ring]
       · refine h2.trans (hJw.trans ?_)
         have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
-            Cb * Cw * cn x * m h ^ min α (min β γ) + ((1 + S.boundConst) * Ca + Cg) * cn x * m h ^ min α (min β γ) := by
+            Cb * Cw * cn x * m h ^ min α (min β γ) +
+              ((1 + S.boundConst) * Ca + Cg) * cn x * m h ^ min α (min β γ) := by
           unfold splitConst; ring
         rw [e]
         have := mul_le_mul_of_nonneg_left pb (mul_nonneg (mul_nonneg hCb hCw) hc)

@@ -1482,7 +1482,6 @@ theorem mirrorSplitComplex_sol (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) (t : 
   rfl
 
 set_option synthInstance.maxHeartbeats 400000 in
-set_option maxHeartbeats 8000000 in
 /-- **The mirror scheme [QuennevilleBelair2015], (6.5), through the split route**
 (`ofCochainDefect` instead of `ofGalerkinCore`): the verdict of the complex-level theorem for
 `ofComplexCrime (mirrorSplitComplex)`;

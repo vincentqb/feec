@@ -31,12 +31,12 @@ the variational crimes allowed here are the inner product of `Vₕ` (`Jₕ ≠ 1
 `πₕ` that need not be a cochain map, not a discrete differential independent of `𝐝`.
 
 No consistency hypothesis along exact solutions is made. The comparison uses `iₕ*`, which
-intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*` (`iₕ` being a cochain map), so no adjoint-consistency hypothesis is needed. Operator-norm
-consistency is not used and would be too strong in general (for the BGG scheme (6.5) of
-[QuennevilleBelair2015] the static strong consistency bound fails, per the unformalized audit
-recorded in `Feec.HilbertComplex.BGG.WeakConsistency`; that scheme enters through `ApproxFEEC`
-directly: its discrete differential uses `S₀,ₕ = π¹S⁰ ≠ S⁰`, and its reading maps are not shown
-to be cochain maps).
+intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*` (`iₕ` being a cochain map), so no
+adjoint-consistency hypothesis is needed. Operator-norm consistency is not used and would be too
+strong in general (for the BGG scheme (6.5) of [QuennevilleBelair2015] the static strong consistency
+bound fails, per the unformalized audit recorded in `Feec.HilbertComplex.BGG.WeakConsistency`; that
+scheme enters through `ApproxFEEC` directly: its discrete differential uses `S₀,ₕ = π¹S⁰ ≠ S⁰`, and
+its reading maps are not shown to be cochain maps).
 
 ## Main definitions
 
@@ -472,9 +472,9 @@ theorem norm_inner_G_le (h : κ) (ζ : H.totalD.GraphSpace) (v : PiLp 2 (S.V h))
 
 /-- The **modified elliptic projection** `Rₕ = (1 - Lₕ)⁻¹ Gₕ : Γ(𝐝) → Vₕ`: on `D(L)`,
 `(1 - Lₕ) Rₕ y = iₕ* (1 - L) y`. In the conforming case (`iₕ` an inclusion, `iₕ*` the orthogonal
-projection) it agrees on `D(L)` with the elliptic projection (`ConstrainedFEEC.toXh_ellProj_waveLift`;
-[QuennevilleBelair2015], (4.11)); in general `iₕ*` replaces the orthogonal projection
-(cf. [HolstStern2012], §3). -/
+projection) it agrees on `D(L)` with the elliptic projection
+(`ConstrainedFEEC.toXh_ellProj_waveLift`; [QuennevilleBelair2015], (4.11)); in general `iₕ*`
+replaces the orthogonal projection (cf. [HolstStern2012], §3). -/
 def ellProj (h : κ) : H.totalD.GraphSpace →L[𝕜] PiLp 2 (S.V h) :=
   ((S.cpx h).oneSubWaveL.symm : PiLp 2 (S.V h) →L[𝕜] PiLp 2 (S.V h)) ∘L S.G h
 
@@ -958,9 +958,9 @@ theorem toFamily_J (h : κ) : F.toFamily.J h = 1 := by
 theorem inclL_projL_toFamily (h : κ) (x : PiLp 2 W) :
     F.toFamily.inclL h (F.toFamily.projL h x) = F.piProj h x := rfl
 
-/-- **The graph-norm approximation property of the conforming family**, from `graphApprox_of_commute`
-with `L²` approximation `Πₕ → 1` and commutation defect `𝐝ₕ Πₕ ζ₁ - Πₕ ζ₂ = 0` (`Πₕ` is a cochain
-projection). -/
+/-- **The graph-norm approximation property of the conforming family**, from
+`graphApprox_of_commute` with `L²` approximation `Πₕ → 1` and commutation defect
+`𝐝ₕ Πₕ ζ₁ - Πₕ ζ₂ = 0` (`Πₕ` is a cochain projection). -/
 theorem toFamily_graphApprox : F.toFamily.GraphApprox F.l := by
   refine F.toFamily.graphApprox_of_commute (fun x => ?_) dense_univ fun ζ _ => ?_
   · rw [Metric.tendsto_nhds]

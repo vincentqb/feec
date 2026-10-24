@@ -330,7 +330,6 @@ theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ �
     (tsdDatumOf hx) h3 hT0
     (tsdDatumOf hx).U_zero ((tsdDatumOf hx).isStrongSolution T)
   exact ⟨sh, hsh⟩
-set_option maxHeartbeats 4000000 in
 /-- **The model rate of the mirror scheme for TSD data of `D(L³)`**
 (`mirror_waveFEM_rate_of_mem_domain` for `ξ₀` and `-i ξ₀`): for every `N`, some discrete initial
 value gives `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_N ‖ξ₀‖_{L³}` on `[0, T]`. -/
@@ -413,7 +412,6 @@ theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
 def mirrorSobData (s : ℝ) : Set (PiLp 2 SpaceQ) :=
   {x | x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq ∧ MemSobState (2 + s) x}
 
-set_option maxHeartbeats 4000000 in
 /-- **The model Sobolev rate of the mirror scheme** (`mirror_waveFEM_rate_sobolev_of_add_two` for
 `ξ₀` and `-i ξ₀`): `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_Nˢ ‖ξ₀‖_{2+s}` on `[0, T]`. -/
 theorem mirrorFEM_hrate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :

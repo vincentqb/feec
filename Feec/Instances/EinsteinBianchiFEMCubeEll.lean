@@ -246,7 +246,6 @@ theorem cubeEllP'_of_mem (T : ℝ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (
     (N : ℕ) : cubeEllP' hT hB T x N = cEll' hT hB N hx T :=
   funext fun _ => dite_eq_left hx
 
-set_option maxHeartbeats 1000000 in
 /-- **The elliptic comparison** of the thesis' scheme on `[0, T]`. -/
 def cubeEllCmp (T : ℝ) : (standardCubeApprox hT hB).Comparison T where
   Data := matrixComplex.wave.domainSq
@@ -270,7 +269,6 @@ theorem norm_cubeEllCmp_defect_le (T : ℝ) {x : PiLp 2 (ShortHilbertComplex.W3 
   rw [e, cubeEllP_of_mem hT hB T hx, cubeEllP'_of_mem hT hB T hx]
   exact norm_cEll_defect_le hT hB N hx ht
 
-set_option maxHeartbeats 1000000 in
 theorem norm_sub_cubeEllCmp_le (T : ℝ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ
     (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
@@ -331,21 +329,20 @@ theorem eventually_cErr_le {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDoma
   have HS := bggStability_curlPotentialConst.toHarmonicStability
   refine ⟨?_, ?_⟩
   · have h := norm_sub_ellTraj_le (cubeFEM hT hB N) (cubeWave_dt0_injective hT hB N)
-      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s (fun t _ v => srcFun_zero_apply t v)
-      (Icc_sub_Ico_add_one ht) (h0 t ht')
+      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s
+      (fun t _ v => srcFun_zero_apply t v) (Icc_sub_Ico_add_one ht) (h0 t ht')
       (fun v hv => h2 (s.M t) (Or.inl (mem_image_of_mem _ ht')) v hv)
       (hdat _ (cubeFEM_strangData_le_of_close hT hB N (h3 t ht') θ θ))
     with_reducible_and_instances exact h.trans hb
   · have h := norm_sub_ellTraj'_le (cubeFEM hT hB N) (cubeWave_dt0_injective hT hB N)
-      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s (fun t _ v => srcFun_zero_apply t v)
-      (Icc_sub_Ico_add_one ht) (h0' t ht')
+      (cubeWave_S0_surjective hT hB N) HS (cubeFEM_compatible hT hB N) s
+      (fun t _ v => srcFun_zero_apply t v) (Icc_sub_Ico_add_one ht) (h0' t ht')
       (fun v hv => h2 (s.M' t) (Or.inr (mem_image_of_mem _ ht')) v hv)
       (hdat _ (cubeFEM_strangData_le_of_close hT hB N (h4 t ht') θ θ))
     with_reducible_and_instances exact h.trans hb
 
 /-! ### The elliptic core -/
 
-set_option maxHeartbeats 4000000 in
 /-- **The elliptic core of the thesis' scheme**: `D(L²)` with the elliptic projection (6.4) of the
 classical solution of the orbit as comparison trajectory (bounded consistency defect);
 no convergence theorem of the scheme is used. -/

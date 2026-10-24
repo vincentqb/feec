@@ -23,7 +23,9 @@ generator `A`:
   `S τ x - x = ∫₀^τ S s y ds` for all `τ ≥ 0`; hence `C0Semigroup.isClosed_generator`;
 * convolutions `∫ₐᵗ S(t - s) g(s) ds`: continuity (`continuousOn_conv`), the graph property
   (`conv_mem_graph`, `integral_mem_graph_S`) and the primitive identity (`conv_primitive`);
-* `C0Semigroup.hasDerivWithinAt_extS_comp`: the product rule along the semigroup.
+* `C0Semigroup.hasDerivWithinAt_extS_comp`: the product rule along the semigroup;
+* `C0Semigroup.forall_nonneg_of_forall_Icc`, `C0Group.forall_of_forall_Icc_neg`: invariance on
+  `[0, T]` (resp. `[-T, T]`), `T > 0`, is invariance for all `t ≥ 0` (resp. all `t`).
 
 Duhamel's formula and mild solutions are in `Feec.Evolution.Duhamel`.
 
@@ -58,6 +60,28 @@ theorem S_add_apply {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) (x : E) :
 theorem S_comm_apply {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) (x : E) :
     G.S s (G.S t x) = G.S t (G.S s x) := by
   rw [← G.S_add_apply hs ht, add_comm, G.S_add_apply ht hs]
+
+/-- **Invariance on `[0, T]` is invariance for all `t ≥ 0`** (`S(t) = S(t - T) S(T)`). -/
+theorem forall_nonneg_of_forall_Icc {P : Set E} {T : ℝ} (hT : 0 < T)
+    (h : ∀ x ∈ P, ∀ t ∈ Icc 0 T, G.S t x ∈ P) : ∀ x ∈ P, ∀ t, 0 ≤ t → G.S t x ∈ P := by
+  have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc 0 (n * T), G.S t x ∈ P := by
+    intro n
+    induction n with
+    | zero =>
+      intro x hx t ht
+      have : t = 0 := le_antisymm (by simpa using ht.2) ht.1
+      subst this; simpa using hx
+    | succ n ih =>
+      intro x hx t ht
+      rcases le_total t T with htT | htT
+      · exact h x hx t ⟨ht.1, htT⟩
+      · have e : t = (t - T) + T := by ring
+        rw [e, G.S_add_apply (by linarith) hT.le]
+        refine ih _ (h x hx T ⟨hT.le, le_rfl⟩) _ ⟨by linarith, ?_⟩
+        have := ht.2; push_cast at this; linarith
+  intro x hx t ht
+  obtain ⟨n, hn⟩ := Archimedean.arch t hT
+  exact key n x hx t ⟨ht, by simpa [nsmul_eq_mul] using hn⟩
 
 /-- `S` extended to negative times by `S 0 = 1`: `extS t = S (max t 0)`. -/
 def extS (t : ℝ) : E →L[𝕜] E := G.S (max t 0)
@@ -428,5 +452,26 @@ theorem hasDerivAt_extS_apply (x : G.generator.domain) {u : ℝ} (hu : 0 < u) :
 end Generator
 
 end C0Semigroup
+
+namespace C0Group
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+
+/-- **Invariance on `[-T, T]` is invariance for all `t`** (`T > 0`): the forward case for the
+group and for its reversal `t ↦ S(-t)`. -/
+theorem forall_of_forall_Icc_neg (G : C0Group 𝕜 E) {P : Set E} {T : ℝ} (hT : 0 < T)
+    (hP : ∀ x ∈ P, ∀ s ∈ Icc (-T) T, G.S s x ∈ P) : ∀ x ∈ P, ∀ t, G.S t x ∈ P := by
+  let R : C0Semigroup 𝕜 E := ⟨fun t => G.S (-t), by rw [neg_zero, G.map_zero],
+    fun s t _ _ => by rw [neg_add, G.map_add],
+    fun x => ((G.strongCont x).comp continuous_neg).continuousOn⟩
+  intro x hx t
+  rcases le_total 0 t with ht | ht
+  · exact G.toC0Semigroup.forall_nonneg_of_forall_Icc hT
+      (fun y hy s hs => hP y hy s ⟨by linarith [hs.1], hs.2⟩) x hx t ht
+  · simpa [R] using R.forall_nonneg_of_forall_Icc hT
+      (fun y hy s hs => hP y hy (-s) ⟨by linarith [hs.2], by linarith [hs.1]⟩) x hx (-t)
+      (by linarith)
+
+end C0Group
 
 end Feec

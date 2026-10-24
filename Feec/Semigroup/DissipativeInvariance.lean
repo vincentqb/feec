@@ -30,8 +30,7 @@ semigroup `S(t)` (`LinearPMap.IsMDissipative.semigroup`), and a closed subspace 
   (maximality).
 * `C0Semigroup.norm_sq_S_apply`: the energy identity
   `‖S(t) x‖² = ‖x‖² + ∫₀ᵗ 2 re ⟪S(s) A x, S(s) x⟫ ds` on `D(A)`.
-* `C0Semigroup.forall_nonneg_of_forall_Icc`: invariance on `[0, T]` (`T > 0`) is invariance for
-  all `t ≥ 0`.
+* `C0Semigroup.mem_of_dense`: invariance of a closed set extends from a dense subset.
 
 ## References
 
@@ -68,34 +67,11 @@ theorem exp_apply_mem_of_mapsTo [CompleteSpace E] {K : Submodule 𝕜 E} (hK : I
   simp only [ContinuousLinearMap.apply_apply, _root_.smul_apply]
   exact K.smul_mem _ (hpow n)
 
-/-! ### Invariance on `[0, T]` -/
+/-! ### Invariance from a dense subset -/
 
 namespace C0Semigroup
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
-
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **Invariance on `[0, T]` is invariance for all `t ≥ 0`** (`S(t) = S(t - T) S(T)`). -/
-theorem forall_nonneg_of_forall_Icc {P : Set E} {T : ℝ} (hT : 0 < T)
-    (h : ∀ x ∈ P, ∀ t ∈ Icc 0 T, G.S t x ∈ P) : ∀ x ∈ P, ∀ t, 0 ≤ t → G.S t x ∈ P := by
-  have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc 0 (n * T), G.S t x ∈ P := by
-    intro n
-    induction n with
-    | zero =>
-      intro x hx t ht
-      have : t = 0 := le_antisymm (by simpa using ht.2) ht.1
-      subst this; simpa using hx
-    | succ n ih =>
-      intro x hx t ht
-      rcases le_total t T with htT | htT
-      · exact h x hx t ⟨ht.1, htT⟩
-      · have e : t = (t - T) + T := by ring
-        rw [e, G.S_add_apply (by linarith) hT.le]
-        refine ih _ (h x hx T ⟨hT.le, le_rfl⟩) _ ⟨by linarith, ?_⟩
-        have := ht.2; push_cast at this; linarith
-  intro x hx t ht
-  obtain ⟨n, hn⟩ := Archimedean.arch t hT
-  exact key n x hx t ⟨ht, by simpa [nsmul_eq_mul] using hn⟩
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- **Invariance of a closed set extends from a dense subset** (continuity of `S(t)`). -/

@@ -373,33 +373,8 @@ theorem exists_isGraphSolution_waveGroup {x : PiLp 2 W} (hx : x ∈ H.wave.domai
 all `s ≥ 0`. -/
 theorem forall_nonneg_of_forall_Icc {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
     (hP : ∀ x ∈ P, ∀ s ∈ Icc 0 T, H.waveGroup.S s x ∈ P) :
-    ∀ x ∈ P, ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ P := by
-  have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc 0 (n * T), H.waveGroup.S t x ∈ P := by
-    intro n
-    induction n with
-    | zero =>
-      intro x hx t ht
-      have h2 := ht.2
-      simp only [Nat.cast_zero, zero_mul] at h2
-      have : t = 0 := le_antisymm h2 ht.1
-      subst this
-      exact hP x hx 0 ⟨le_rfl, hT.le⟩
-    | succ n ih =>
-      intro x hx t ht
-      by_cases htT : t ≤ T
-      · exact hP x hx t ⟨ht.1, htT⟩
-      · replace htT := not_le.1 htT
-        have e : H.waveGroup.S t x = H.waveGroup.S (t - T) (H.waveGroup.S T x) := by
-          rw [← C0Group.map_add_apply, sub_add_cancel]
-        rw [e]
-        refine ih _ (hP x hx T ⟨hT.le, le_rfl⟩) _ ⟨by linarith, ?_⟩
-        have := ht.2
-        push_cast at this
-        linarith
-  intro x hx t ht
-  obtain ⟨n, hn⟩ := exists_nat_ge (t / T)
-  refine key n x hx t ⟨ht, ?_⟩
-  rwa [div_le_iff₀ hT] at hn
+    ∀ x ∈ P, ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ P :=
+  H.waveGroup.toC0Semigroup.forall_nonneg_of_forall_Icc hT hP
 
 /-- If a set `P` is invariant under `e^{sL}` for `s ∈ [-T, T]` (`T > 0`), it is invariant for
 all `s`. -/

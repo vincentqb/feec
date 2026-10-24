@@ -11,8 +11,6 @@ For a strongly continuous group `G` and a subspace `K`:
 * `C0Group.invariantCore G K = ⨅ t, (S t)⁻¹ K`: the largest `G`-invariant subspace of `K`
   (`le_invariantCore`), closed when `K` is
   (`isClosed_invariantCore`).
-* `C0Group.forall_of_forall_Icc_neg`: invariance for `t ∈ [-T, T]` (`T > 0`) is invariance for
-  all `t`.
 
 For an isometric group on a Hilbert space with generator `A`:
 
@@ -93,44 +91,6 @@ theorem isClosed_invariantCore (hK : IsClosed (K : Set E)) :
     ext; simp [mem_invariantCore]
   rw [e]
   exact isClosed_iInter fun t => hK.preimage (G.S t).continuous
-
-/-- **Invariance on `[-T, T]` is invariance for all `t`** (`T > 0`; `S(t) = S(t ∓ T) S(±T)`). -/
-theorem forall_of_forall_Icc_neg (G : C0Group 𝕜 E) {P : Set E} {T : ℝ} (hT : 0 < T)
-    (hP : ∀ x ∈ P, ∀ s ∈ Icc (-T) T, G.S s x ∈ P) : ∀ x ∈ P, ∀ t, G.S t x ∈ P := by
-  have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc (-(n * T)) (n * T), G.S t x ∈ P := by
-    intro n
-    induction n with
-    | zero =>
-      intro x hx t ht
-      have h1 := ht.1
-      have h2 := ht.2
-      simp only [Nat.cast_zero, zero_mul, neg_zero] at h1 h2
-      have : t = 0 := le_antisymm h2 h1
-      subst this
-      exact hP x hx 0 ⟨by linarith, hT.le⟩
-    | succ n ih =>
-      intro x hx t ht
-      have h1 := ht.1
-      have h2 := ht.2
-      push_cast at h1 h2
-      by_cases htT : t ∈ Icc (-T) T
-      · exact hP x hx t htT
-      · rcases le_or_gt t T with hle | hlt
-        · have hlt' : t < -T := by
-            by_contra hc
-            exact htT ⟨not_lt.1 hc, hle⟩
-          have e : G.S t x = G.S (t + T) (G.S (-T) x) := by
-            rw [← map_add_apply, add_neg_cancel_right]
-          rw [e]
-          exact ih _ (hP x hx (-T) ⟨le_rfl, by linarith⟩) _ ⟨by linarith, by linarith⟩
-        · have e : G.S t x = G.S (t - T) (G.S T x) := by
-            rw [← map_add_apply, sub_add_cancel]
-          rw [e]
-          exact ih _ (hP x hx T ⟨by linarith, le_rfl⟩) _ ⟨by linarith, by linarith⟩
-  intro x hx t
-  obtain ⟨n, hn⟩ := exists_nat_ge (|t| / T)
-  rw [div_le_iff₀ hT] at hn
-  exact key n x hx t ⟨by linarith [neg_abs_le t], by linarith [le_abs_self t]⟩
 
 end NormedSpace
 

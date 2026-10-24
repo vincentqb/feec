@@ -24,7 +24,7 @@ range the projections preserve (`SpectralFamily.comap`).
 them, `SpectralFamily.waveBand`), so the spectral method is an approximating FEEC discretization
 (`Feec.HilbertComplex.ReducingFamily.toApprox`, exact on the bands, core `W`, zero consistency
 defect) and the verdict of `Feec.HilbertComplex.approxFEEC` applies. A truncation estimate
-`‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` gives, through `approxFEEC_rate` (`C' = 0`), the **time-uniform** rate
+`‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` gives, through `dissipFEEC_rate` (`C' = 0`), the **time-uniform** rate
 `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ C hᵅ ‖x‖_c` for all `t ≥ 0`
 (`norm_sub_sol_le_of_truncation`, residual `infDist_sol_le_of_truncation`). The constrained FEEC
 discretization `SpectralFamily.toFEEC` is the other reading, the special case `ιₕ` = inclusion
@@ -80,7 +80,7 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] {H
   (hK : IsClosed (K : Set (PiLp 2 W)))
 
 /-- **The time-uniform rate of a spectral Galerkin method**, read off the rate of the
-approximating FEEC theorem (`approxFEEC_rate` for `ReducingFamily.rateClass`, `C' = 0`, from
+approximating FEEC theorem (`dissipFEEC_rate` for `ReducingFamily.rateClass`, `C' = 0`, from
 `v_N = π_N ξ₀`): a truncation estimate `‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` on a set of data gives
 `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ C hᵅ ‖x‖_c` for every `t ≥ 0`. -/
 theorem norm_sub_sol_le_of_truncation {Data : Set (PiLp 2 W)} {classNorm : PiLp 2 W → ℝ}
@@ -90,8 +90,8 @@ theorem norm_sub_sol_le_of_truncation {Data : Set (PiLp 2 W)} {classNorm : PiLp 
     ‖H.waveGroup.S t x - (S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t‖ ≤
       C * meshSize N ^ α * classNorm x := by
   set R := S.rateClass K hK t Data classNorm meshSize α C hrate
-  have h := approxFEEC_rate _ R hx N (R.p x N 0) ⟨ht, le_rfl⟩
-  rw [sub_self, norm_zero, mul_zero, add_zero] at h
+  have h := dissipFEEC_rate _ R hx N (R.p x N 0) ⟨ht, le_rfl⟩
+  rw [ApproxFEEC.S_apply _ ht, sub_self, norm_zero, mul_zero, add_zero] at h
   have hp : R.p x N 0 = (S.B N).orthogonalProjectionOnto x := by
     change (S.B N).orthogonalProjectionOnto (H.waveGroup.S 0 x) = _
     rw [C0Group.S_zero_apply]
@@ -101,15 +101,15 @@ theorem norm_sub_sol_le_of_truncation {Data : Set (PiLp 2 W)} {classNorm : PiLp 
   ring
 
 /-- **The time-uniform rate of the constraint residual** of a spectral Galerkin method (reducing
-`K`, datum in `K`), from `approxFEEC_residual_le`. -/
+`K`, datum in `K`), from `dissipFEEC_residual_le`. -/
 theorem infDist_sol_le_of_truncation (hKr : H.wave.IsReducing K) {Data : Set (PiLp 2 W)}
     {classNorm : PiLp 2 W → ℝ} {meshSize : κ → ℝ} {α C : ℝ}
     (hrate : ∀ x ∈ Data, ∀ N, ‖x - (S.B N).starProjection x‖ ≤ C * meshSize N ^ α * classNorm x)
     {x : PiLp 2 W} (hx : x ∈ Data) (hxK : x ∈ K) (N : κ) {t : ℝ} (ht : 0 ≤ t) :
     infDist ((S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t)
         (K : Set (PiLp 2 W)) ≤ C * meshSize N ^ α * classNorm x :=
-  (approxFEEC_residual_le (S.toApprox K hK) hKr hxK N _ t).trans
-    (norm_sub_sol_le_of_truncation S K hK hrate hx N ht)
+  (dissipFEEC_residual_le _ ((dissipFEEC_propagates_iff _).2.2.1 hKr).1 hxK N _ ht).trans
+    (by rw [ApproxFEEC.S_apply _ ht]; exact norm_sub_sol_le_of_truncation S K hK hrate hx N ht)
 
 end Truncation
 
@@ -418,7 +418,7 @@ def toReducingFamily : ReducingFamily H ℕ where
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The time-uniform spectral rate**, read off the rate of the approximating FEEC theorem
-(`approxFEEC_rate`, with `C' = 0` and `vₙ = πₙ ξ₀`): for data in the approximation class of
+(`dissipFEEC_rate`, with `C' = 0` and `vₙ = πₙ ξ₀`): for data in the approximation class of
 order `α`, `‖e^{tL} ξ₀ - ιₙ e^{tLₙ} πₙ ξ₀‖ ≤ (N + 1)^{-α} ‖ξ₀‖_α` for all `t ≥ 0`. -/
 theorem norm_sub_sol_le (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
     {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :

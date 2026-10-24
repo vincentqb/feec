@@ -232,7 +232,7 @@ def Core.ofResolvent
     have := hh _ (mem_image_of_mem _ ht)
     have e : hA.semigroup.S t x = R (hA.semigroup.S t u) := by
       rw [resolvent_semigroup_comm hA ht.1, resolvent_sub_genExt (hA := hA) hx]
-    rw [dist_eq_norm, e, norm_sub_rev]
+    rw [dist_eq_norm, F.S_def, e, norm_sub_rev]
     change ‖F.incl h (F.discreteRes h (F.proj h (hA.semigroup.S t u))) -
       R (hA.semigroup.S t u)‖ < ε
     simpa only [B, sub_apply, ContinuousLinearMap.comp_apply] using this

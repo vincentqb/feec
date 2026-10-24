@@ -133,7 +133,7 @@ theorem einsteinBianchi_mirrorFEM_approxFEEC :
   approxFEEC _ _
 
 /-- **Convergence of the mirror scheme (6.5) to the TSD solution** (the convergence clause of the
-verdict of the elliptic core `mirrorEllCore`, read through `ApproxFEEC.Verdict.old`, on its
+verdict of the elliptic core `mirrorEllCore`, read off its fields, on its
 closure `tsdQℝ`, with the propagation and reducing-residual clauses for the reducing
 constraint; no model convergence theorem is used): for every TSD datum
 `ξ₀ ∈ L²` (complex fields) the exact solution stays TSD for all `t`, the orthogonal projections
@@ -150,11 +150,12 @@ theorem einsteinBianchi_mirrorFEM_converges {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQ
         (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
       TendstoUniformlyOn (fun N t => infDist ((mirrorFEMApprox hT hB).sol N (v N) t)
         (tsdQℝ : Set (PiLp 2 SpaceQ))) (fun _ => 0) atTop (Icc 0 T) := by
-  have V := (einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB).old
+  have V := einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB
   have hxc : x ∈ (mirrorEllCore hT hB).Data.topologicalClosure := by
     rw [mirrorEllCore_closure]; exact hx
-  refine ⟨fun t => (V.2.1.1 isReducing_tsdQℝ) t x hx, (V.2.2.2.1 T x hxc).1, fun v hv =>
-    ⟨(V.2.2.2.1 T x hxc).2 v hv, (V.2.2.2.2.2.1 isReducing_tsdQℝ x hx).2 hxc T v hv⟩⟩
+  refine ⟨fun t => V.isReducing_iff_invariant.1 isReducing_tsdQℝ t x hx, V.tendsto_incl_proj hxc,
+    fun v hv => ⟨(V.converges hxc hv T).congr_right fun t ht => ApproxFEEC.S_apply _ ht.1 x,
+      V.residual_tendsto (V.isReducing_iff.1 isReducing_tsdQℝ).1 hx hxc hv T⟩⟩
 
 /-- **The `O(h)` rate of the mirror scheme (6.5) for TSD data of `D(L³)`** (the rate clause of the verdict
 for the rate class `mirrorFEMRate`): for every discrete initial value `v`,
@@ -167,8 +168,8 @@ theorem einsteinBianchi_mirrorFEM_rate {T : ℝ} (hT0 : 0 < T) {x : PiLp 2 Space
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
       3 * (2 * mirrorRateK hT hB * (1 + T)) * (meshSize N * mirrorL3Norm x) +
         ‖(mirrorFEMApprox hT hB).proj N x - v‖ := by
-  have h := (einsteinBianchi_mirrorFEM_approxFEEC hT hB).old.2.2.2.2.1 T
-    (mirrorFEMRate hT hB T hT0) x hx N v t ht
+  have h := (einsteinBianchi_mirrorFEM_approxFEEC hT hB).rate (mirrorFEMRate hT hB T hT0) hx N v ht
+  simp only [ApproxFEEC.S_apply (mirrorFEMApprox hT hB) ht.1] at h
   have hp : (mirrorFEMRate hT hB T hT0).p x N 0 = (mirrorFEMApprox hT hB).proj N x :=
     C0Group.S_zero_apply _ _
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
@@ -178,7 +179,7 @@ theorem einsteinBianchi_mirrorFEM_rate {T : ℝ} (hT0 : 0 < T) {x : PiLp 2 Space
       (mirrorFEMRate hT hB T hT0).classNorm x = meshSize N * mirrorL3Norm x := by
     change meshSize N ^ (1 : ℝ) * mirrorL3Norm x = _
     rw [Real.rpow_one]
-  rw [hC, hC', hm, hp, mul_zero, zero_mul, add_zero] at h
+  simp only [hC, hC', hm, hp, mul_zero, zero_mul, add_zero] at h
   have hn := norm_nonneg ((mirrorFEMApprox hT hB).proj N x - v)
   linarith [mul_le_of_le_one_left hn hι]
 
@@ -192,8 +193,9 @@ theorem einsteinBianchi_mirrorFEM_rate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
       3 * (2 * mirrorSobK hT hB * (1 + T)) * (meshSize N ^ s * √(sobState (2 + s) x)) +
         ‖(mirrorFEMApprox hT hB).proj N x - v‖ := by
-  have h := (einsteinBianchi_mirrorFEM_approxFEEC hT hB).old.2.2.2.2.1 T
-    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1) x hx N v t ht
+  have h := (einsteinBianchi_mirrorFEM_approxFEEC hT hB).rate
+    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1) hx N v ht
+  simp only [ApproxFEEC.S_apply (mirrorFEMApprox hT hB) ht.1] at h
   have hp : (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).p x N 0 =
       (mirrorFEMApprox hT hB).proj N x := C0Group.S_zero_apply _ _
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
@@ -204,7 +206,7 @@ theorem einsteinBianchi_mirrorFEM_rate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 
       (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).α *
       (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).classNorm x =
         meshSize N ^ s * √(sobState (2 + s) x) := rfl
-  rw [hC, hC', hm, hp, mul_zero, zero_mul, add_zero] at h
+  simp only [hC, hC', hm, hp, mul_zero, zero_mul, add_zero] at h
   have hn := norm_nonneg ((mirrorFEMApprox hT hB).proj N x - v)
   linarith [mul_le_of_le_one_left hn hι]
 
@@ -321,14 +323,16 @@ theorem mirrorWaveFEMRateSobolev_of_approxFEEC : MirrorWaveFEMRateSobolev hT hB 
   nlinarith [mul_nonneg (mul_nonneg hK hh) hn, mul_nonneg (mul_nonneg (mul_nonneg hK hh) hn) ht.1]
 
 set_option maxHeartbeats 4000000 in
-/-- **`MirrorWaveFEMConvergence` from the approximating FEEC theorem**: convergence on the core in
-`ApproxFEEC.Verdict.old`, for
+/-- **`MirrorWaveFEMConvergence` from the approximating FEEC theorem**: convergence on the core (`DissipFEEC.Verdict.converges` from the comparison initial
+values), for
 the elliptic core (`mirror_waveFEM` is not used). -/
 theorem mirrorWaveFEMConvergence_of_approxFEEC : MirrorWaveFEMConvergence hT hB := by
   intro D T hT0 ε hε
   refine ⟨fun t _ => D.U_tsd t, ?_⟩
   have hx := mem_mirrorEllData_of_tsdDatum D
-  have hconv := (einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB).old.2.2.1 T D.U₀ hx
+  have hconv := ((einsteinBianchi_mirrorFEM_approxFEEC_elliptic hT hB).converges
+    (Submodule.le_topologicalClosure _ hx) ((mirrorEllCore hT hB).tendsto_incl_p hT0.le hx)
+    T).congr_right fun t ht => ApproxFEEC.S_apply _ ht.1 D.U₀
   rw [Metric.tendstoUniformlyOn_iff] at hconv
   filter_upwards [hconv ε hε] with N hN
   refine (exists_mirrorScheme_le_of_eq hT hB N D hT0 _ (mirrorSource_zero hT hB N)).elim
@@ -515,12 +519,12 @@ theorem standardCube_residual_not_mem {T : ℝ} (hT0 : 0 < T) :
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
       (dense_standardCubeEllCore hT hB).closure_eq]
     trivial
-  have V := (einsteinBianchi_standardCube_approxFEEC_elliptic hT hB).old
+  have V := einsteinBianchi_standardCube_approxFEEC_elliptic hT hB
   have hpos : 0 < infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _) :=
     (isClosed_thesisTSD.notMem_iff_infDist_pos ⟨0, thesisTSD.zero_mem⟩).1 hout
   refine ⟨t, ht, hout, hpos, fun v hv => ?_⟩
-  have hlim := (V.2.2.2.2.2.2.1 (thesisTSD : Set _) isClosed_thesisTSD ⟨0, thesisTSD.zero_mem⟩
-    betaDatum hxc v hv t ht.1 hout).2
+  have hlim := V.tendsto_infDist (thesisTSD : Set _) hxc hv ht.1
+  rw [ApproxFEEC.S_apply _ ht.1] at hlim
   exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
 /-- **Convergence of the thesis' scheme to the exact solution for every datum** (the convergence clause of the
@@ -541,7 +545,9 @@ theorem einsteinBianchi_standardCube_converges (x : PiLp 2 (ShortHilbertComplex.
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
       (dense_standardCubeEllCore hT hB).closure_eq]
     trivial
-  exact (einsteinBianchi_standardCube_approxFEEC_elliptic hT hB).old.2.2.2.1 T x hxc
+  have V := einsteinBianchi_standardCube_approxFEEC_elliptic hT hB
+  exact ⟨V.tendsto_incl_proj hxc, fun v hv =>
+    (V.converges hxc hv T).congr_right fun t ht => ApproxFEEC.S_apply _ ht.1 x⟩
 
 /-- **The converse part of the approximating FEEC theorem on the thesis' scheme** (the non-reducing departure clause of the
 verdict, non-reducing branch, with the dense elliptic core): since `thesisTSD` does not reduce
@@ -560,18 +566,29 @@ theorem standardCube_residual_not_isReducing {T : ℝ} (hT0 : 0 < T) :
           Tendsto (fun N => (standardCubeApprox hT hB).incl N (v N)) atTop (𝓝 x) →
           Tendsto (fun N => infDist ((standardCubeApprox hT hB).sol N (v N) t) (Q : Set _))
             atTop (𝓝 (infDist (matrixComplex.waveGroup.S t x) (Q : Set _))) := by
-  obtain ⟨Q, hQ, x, hx, t, ht, hout, hpos, hlim⟩ :=
-    (einsteinBianchi_standardCube_approxFEEC_elliptic hT hB).old.2.2.2.2.2.2.2.1
-      not_isReducing_thesisTSD T hT0
-  exact ⟨Q, hQ, x, hx, t, ht, hout, hpos, hlim (dense_standardCubeEllCore hT hB)⟩
+  have V := einsteinBianchi_standardCube_approxFEEC_elliptic hT hB
+  obtain ⟨Q, hQ, x, hx, t, ht, hout⟩ := dissipFEEC_leaves_of_not_isReducing
+    (standardCubeApprox hT hB).toDissipFEEC not_isReducing_thesisTSD hT0
+  rw [ApproxFEEC.S_apply _ ht.1] at hout
+  have hQc : IsClosed (SetLike.coe Q) := by
+    rcases hQ with rfl | rfl
+    exacts [isClosed_thesisTSD, Submodule.isClosed_orthogonal _]
+  have hxc : x ∈ (standardCubeEllCore hT hB).Data.topologicalClosure := by
+    rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
+      (dense_standardCubeEllCore hT hB).closure_eq]
+    trivial
+  refine ⟨Q, hQ, x, hx, t, ht, hout, (hQc.notMem_iff_infDist_pos ⟨0, Q.zero_mem⟩).1 hout,
+    fun v hv => ?_⟩
+  have hlim := V.tendsto_infDist (SetLike.coe Q) hxc hv ht.1
+  rwa [ApproxFEEC.S_apply _ ht.1] at hlim
 
 /-- **`D(L) ∩ thesisTSD` is not dense in `thesisTSD`** (the density gap of [QuennevilleBelair2015],
 Prop 4.17): a nonzero `G` of the obstruction `L²(TSD) ⊓ (L²(TSD) ⊓ H̊(curl))ᗮ`
 (`Feec.Models.BoundedDomain.not_finiteDimensional_obstruction`) gives the TSD datum `(0, G, 0)`,
 orthogonal to every datum of `D(L) ∩ thesisTSD` (the electric slot of `D(L)` lies in
 `D(d₁) = H̊(curl)`), hence not in its closure. So the density hypothesis of the clauses
-`approxFEEC_residual_not_isReducing_symm` and `approxFEEC_residual_not_isReducing_of_grading` of
-the verdict fails for the thesis' boundary conditions, and those clauses give nothing there; the
+`SkewFEEC.Verdict.leaves_smooth_symm`, `DissipFEEC.Verdict.leaves_smooth` and
+`ApproxFEEC.Verdict.isReducing_iff_keeps` of the verdict fails for the thesis' boundary conditions, and those clauses give nothing there; the
 converse part comes from the per-datum clause (`standardCube_residual_not_mem`) and from the
 `K`-or-`Kᗮ` clause (`standardCube_residual_not_isReducing`). -/
 theorem exists_mem_thesisTSD_not_mem_closure :

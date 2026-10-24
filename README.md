@@ -7,15 +7,25 @@ theorem depends only on `propext`, `Classical.choice` and `Quot.sound`.
 
 ## The approximating FEEC theorem
 
-`Feec.HilbertComplex.approxFEEC` (in `Feec/HilbertComplex/Approximation/ApproxFEEC.lean`),
-statement `ApproxFEEC.Verdict`: the verdict `DissipFEEC.Verdict` of the dissipative theorem
-`dissipFEEC` for its forward-time reading, and the conclusions that use both time directions,
-each a named predicate of the shared vocabulary `Feec.Evolution.Scheme` (convergence from a
-datum, invariance, departures, residuals). The whole statement, in words, is
-[docs/headline.md](docs/headline.md) (`Feec.HilbertComplex.headline`, typeset by leantex).
-`ApproxFEEC.Verdict.old` and `DissipFEEC.Verdict.old` derive from the verdicts their earlier,
-longer conjunctions (convergence on the core, departures with their residual limits), so the
-compact statement loses nothing; the instances read those through them.
+The master theorem is a tower of three, each a structure of named conclusions extending the one
+below and each proved from the one below, with every conclusion stated at the most general layer
+where it holds (all in `Feec/HilbertComplex/Approximation/`):
+
+* `Feec.HilbertComplex.dissipFEEC : F.Verdict Z` (`DissipFEEC.lean`) for a discretization
+  `F : DissipFEEC hA κ` of an m-dissipative generator `A`, whose exact flow `F.S` is the
+  Lumer–Phillips contraction semigroup: well-posedness and energy, the propagation criteria,
+  convergence and rates, the constraint residual and the departures from sets that are not kept;
+* `Feec.HilbertComplex.skewFEEC` (`SkewFEEC.lean`) for `F : SkewFEEC hA κ`, a skew-adjoint `A`
+  with skew discrete generators (a `DissipFEEC` with one more field, so cores and rate classes
+  are shared): adds Stone's isometric group `F.U` (equal to `F.S` for `t ≥ 0`), conservation of
+  the norm, reducing iff invariant for all `t ∈ ℝ`, and the departure in both time directions;
+* `Feec.HilbertComplex.approxFEEC` (`ApproxFEEC.lean`) for `F : ApproxFEEC H κ`, the skew case of
+  the Hodge wave operator `L = 𝐝 − 𝐝†` of a Hilbert complex `H`: adds unique weak solutions and,
+  on graded complexes, reducing iff kept forward in time.
+
+The regression tests `scripts/FeecCheck/Verdicts.lean` derive from the verdicts the earlier,
+longer conjunctions (with the semigroup and the wave group written out, convergence on the core,
+the departures with their residual limits), so the structured statement loses nothing.
 
 Take a Hilbert complex `W` (any finite window of any `ComplexShape`, over `ℝ` or `ℂ`), its
 Hodge wave equation `ξ' = Lξ` with `L = d − d†`, and a closed constraint subspace `K`. A
@@ -66,11 +76,9 @@ at order `min(α, β, γ)` from the three orders separately.
 ## Instances
 
 Every row but the last is an instance of `approxFEEC`: its headline is `F.Verdict Z`, proved by
-`approxFEEC F Z`, and its rate theorem applies the rate clause `approxFEEC_rate`. The last row
-(absorbing boundary conditions, a dissipative generator) is an instance of `dissipFEEC`, the
-dissipative extension of `approxFEEC` (an approximating discretization is a dissipative one for the
-skew-adjoint generator, `ApproxFEEC.toDissipFEEC`, and the verdict of `approxFEEC` contains the
-verdict of `dissipFEEC` for it).
+`approxFEEC F Z`, and its rate theorem applies the rate clause `dissipFEEC_rate` (the field
+`rate` of the verdict). The last row (absorbing boundary conditions, a dissipative generator) is
+an instance of `dissipFEEC`, the base of the tower.
 The "Verdict" column says which branch of item 4 holds. Lean names are relative to
 `Feec.Instances.Maxwell` (M), `Feec.Instances.EuclideanBand` (B) and
 `Feec.Instances.EinsteinBianchi` (EB).

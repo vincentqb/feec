@@ -116,8 +116,8 @@ theorem IsOrthogonal.norm_sub_sol_proj_le (hF : IsOrthogonal F) (h : κ) (x : Pi
     ‖H.waveGroup.S t x - F.sol h (F.proj h x) t‖ ≤
       ‖H.waveGroup.S t x - F.sol h v t‖ + 2 * ‖x - F.incl h v‖ := by
   have h1 : ‖F.sol h v t - F.sol h (F.proj h x) t‖ = ‖F.proj h x - v‖ := by
-    rw [ApproxFEEC.sol, ApproxFEEC.sol, ← map_sub, ← map_sub, hF.norm_incl,
-      ApproxFEEC.norm_group_apply, norm_sub_rev]
+    rw [DissipFEEC.sol, DissipFEEC.sol, ← map_sub, ← map_sub, hF.norm_incl,
+      SkewFEEC.norm_group_apply, norm_sub_rev]
   have h2 : ‖F.proj h x - v‖ ≤ 2 * ‖x - F.incl h v‖ := by
     rw [← hF.norm_incl h, map_sub]
     have e : F.incl h (F.proj h x) - F.incl h v =
@@ -150,8 +150,8 @@ def orbitCore (hF : IsOrthogonal F) (Data : Submodule 𝕜 (PiLp 2 W))
     have ht' : t ∈ Icc 0 (max T 1) := ⟨ht.1, ht.2.trans (le_max_left _ _)⟩
     have h0 : (0 : ℝ) ∈ Icc 0 (max T 1) := ⟨le_rfl, le_max_of_le_right zero_le_one⟩
     have hv0 := hv 0 h0
-    rw [C0Group.S_zero_apply, ApproxFEEC.sol_zero] at hv0
-    rw [dist_eq_norm]
+    rw [C0Group.S_zero_apply, DissipFEEC.sol_zero] at hv0
+    rw [dist_eq_norm, F.S_apply ht.1]
     change ‖H.waveGroup.S t x - F.sol h (F.proj h x) t‖ < ε
     have := hF.norm_sub_sol_proj_le h x v t
     linarith [hv t ht']
@@ -180,7 +180,8 @@ def orbitRate (hF : IsOrthogonal F) {T : ℝ} (S : Set (PiLp 2 W)) (classNorm : 
   approx x hx h t ht := by
     obtain ⟨v, hv⟩ := hrate x hx h
     have hv0 := hv 0 ⟨le_rfl, ht.1.trans ht.2⟩
-    rw [C0Group.S_zero_apply, ApproxFEEC.sol_zero] at hv0
+    rw [C0Group.S_zero_apply, DissipFEEC.sol_zero] at hv0
+    rw [F.S_apply ht.1]
     change ‖H.waveGroup.S t x - F.sol h (F.proj h x) t‖ ≤ _
     have := hF.norm_sub_sol_proj_le h x v t
     linarith [hv t ht]
@@ -266,7 +267,9 @@ def ApproxFEEC.complexifyCmp (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] Pi
 
 /-- The defect of the complexified comparison is the pair of the real defects. -/
 theorem ApproxFEEC.complexifyCmp_defect (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
-    hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
+    (hJJ : ∀ x, J (J x) = -x) (hJ : ∀ x, ‖J x‖ = ‖x‖)
+    (hπJ : ∀ h b, F.proj h (J (F.incl h b)) = 0)
+    (hJι : ∀ h a b, ⟪F.incl h a, J (F.incl h b)⟫ = 0) {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
     (x : PiLp 2 W') (h : κ') (t : ℝ) :
     (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).defect x h t =
       WithLp.toLp 2 (a' x h t - F.L h (a x h t), b' x h t - F.L h (b x h t)) := rfl
@@ -281,7 +284,10 @@ theorem norm_withLp_toLp_le {E : Type*} [NormedAddCommGroup E] [InnerProductSpac
 
 /-- The defect of the complexified comparison is at most the sum of the real defects. -/
 theorem ApproxFEEC.norm_complexifyCmp_defect_le (F : ApproxFEEC H' κ')
-    (J : PiLp 2 W' →L[ℝ] PiLp 2 W') hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb
+    (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
+    (hJJ : ∀ x, J (J x) = -x) (hJ : ∀ x, ‖J x‖ = ‖x‖)
+    (hπJ : ∀ h b, F.proj h (J (F.incl h b)) = 0)
+    (hJι : ∀ h a b, ⟪F.incl h a, J (F.incl h b)⟫ = 0) {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb
     ha' hb' hda hdb (x : PiLp 2 W') (h : κ') (t : ℝ) :
     ‖(F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).defect x h t‖ ≤
       ‖a' x h t - F.L h (a x h t)‖ + ‖b' x h t - F.L h (b x h t)‖ := by

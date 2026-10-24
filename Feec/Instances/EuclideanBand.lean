@@ -584,27 +584,24 @@ def sobolevRate (T : ℝ) {s : ℝ} (hs : 0 ≤ s) : (bandApprox S hS K hK).Rate
       rw [one_mul, sobolevNorm_eq hy]
       exact norm_sub_starProjection_le S hs hy N
 
-/-- **The Sobolev rate** (the rate clause of `approxFEEC` for the class `Hˢ`): for `x ∈ Hˢ`, `s ≥ 0`,
+/-- **The Sobolev rate** (the rate clause of `dissipFEEC` for the class `Hˢ`): for `x ∈ Hˢ`, `s ≥ 0`,
 `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` for all `t ≥ 0`. -/
 theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2 volume}
     (hx : x ∈ sobolev 𝕜 E s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
     ‖S.toHilbertComplex.waveGroup.S t x -
         (bandApprox S hS K hK).sol N ((bandApprox S hS K hK).proj N x) t‖ ≤
       (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x := by
+  simp only [← ApproxFEEC.S_apply (bandApprox S hS K hK) ht]
   set R := sobolevRate S hS K hK t hs
-  have h := (bandApprox_verdict S hS K hK).old.2.2.2.2.1 t R x hx N
-    ((bandApprox S hS K hK).proj N x) t ⟨ht, le_rfl⟩
+  have h := dissipFEEC_rate (bandApprox S hS K hK).toDissipFEEC R (x := x) hx N
+    ((bandApprox S hS K hK).proj N x) (t := t) ⟨ht, le_rfl⟩
   have hp : R.p x N 0 = (bandApprox S hS K hK).proj N x := by
     change ((bands S hS).B N).orthogonalProjectionOnto (S.toHilbertComplex.waveGroup.S 0 x) = _
     rw [C0Group.S_zero_apply]; rfl
-  have hC : R.C = 1 := rfl
-  have hC' : R.C' = 0 := rfl
-  have hm : R.meshSize N = 1 / ((N : ℝ) + 1) := rfl
-  have hα : R.α = s := rfl
-  have hn : R.classNorm x = sobolevNorm 𝕜 s x := rfl
-  rw [hp, sub_self, norm_zero, mul_zero, add_zero, hC, hC', hm, hα, hn, mul_zero, zero_mul,
-    add_zero, one_mul] at h
-  exact h
+  refine h.trans (le_of_eq ?_)
+  simp only [hp, sub_self, norm_zero, mul_zero, add_zero]
+  change (1 + _ * 0 * t) * ((1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x) = _
+  ring
 
 /-- **The exact error identity**: `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ = ‖x - P_N x‖` for every `t`
 (`P_N` commutes with `e^{tL}`, which is unitary). The error is the truncation error of the
@@ -1440,15 +1437,21 @@ theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} 
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) / 2 <
         infDist ((maxwellPotentialApprox d a).sol N ((maxwellPotentialApprox d a).proj N x) t)
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) := by
-  have V := (maxwell_euclidean_potential_approxFEEC d a).old
-  obtain ⟨x, hxK, t, ht, hout, hpos, hlim⟩ := V.2.2.2.2.2.2.2.2.2
-    (fun i : Fin 3 => decide (Odd i.val)) (fun _ _ h => ComplexShape.window_parity h)
-    (fun _ hx => reversal_mem_totalSub hx) (dense_potential _)
-    (maxwell_euclidean_not_isReducing_potential d a h) T hT
-  have hx : (x : PiLp 2 _) ∈ (maxwellPotentialCore d a).Data.topologicalClosure :=
+  have V := maxwell_euclidean_potential_approxFEEC d a
+  obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth isClosed_potential
+    (fun hk => maxwell_euclidean_not_isReducing_potential d a h
+      ((V.isReducing_iff_keeps (p := fun i : Fin 3 => decide (Odd i.val))
+        (fun _ _ h => ComplexShape.window_parity h) (fun _ hx => reversal_mem_totalSub hx)
+        fun k hk => dense_potential _ k hk).2 hk))
+    (fun k hk => dense_potential _ k hk) hT
+  rw [ApproxFEEC.S_apply _ ht.1] at hout
+  have hpos := (isClosed_potential.notMem_iff_infDist_pos ⟨0, Submodule.zero_mem _⟩).1 hout
+  have hx : x ∈ (maxwellPotentialCore d a).Data.topologicalClosure :=
     Submodule.le_topologicalClosure _ (by rw [bandCore_data]; trivial)
-  obtain ⟨h1, h2⟩ := hlim hx _ (V.2.2.2.1 T x hx).1
-  exact ⟨x, hxK, t, ht, hout, hpos, h1, h2⟩
+  have h1 := V.tendsto_infDist (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) hx
+    (V.tendsto_incl_proj hx) ht.1
+  rw [ApproxFEEC.S_apply _ ht.1] at h1
+  exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, h1, (tendsto_order.1 h1).1 _ (half_lt_self hpos)⟩
 
 /-! #### The classical system: `d = 3`, `a = 0` -/
 

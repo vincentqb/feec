@@ -258,7 +258,7 @@ Feec/
 │   └── Calculus/{Partial,TimeSlice}.lean
 ├── Operator/{Adjoint,Multiplication,Resolvent}.lean                         -- Feec.Operator
 ├── Semigroup/{Basic,Stone,Perturbation,LumerPhillips,Invariance,Spectral}.lean  -- Feec.C0Group / Feec.C0Semigroup
-├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained,Scheme}.lean -- Feec.Evolution
+├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained}.lean -- Feec.Evolution
 ├── Variational/{InfSup,BabuskaNecas,Galerkin,SaddlePoint,Fortin,GalerkinEvolution}.lean -- Feec.Variational
 ├── TimeStepping/{Cayley,BlockMatrix}.lean                                   -- Feec.TimeStepping
 ├── HilbertComplex/                                                          -- Feec.HilbertComplex
@@ -267,7 +267,8 @@ Feec/
 │   ├── Dirac.lean (dirac = d+d†, wave = d−d†)  HodgeLaplacian.lean  Mixed.lean  HodgeWave.lean
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,MixedError,SemidiscreteWave}.lean
-│   │   Approximation/{ConstrainedFEEC,ApproxFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness}.lean
+│   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
+│   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,
 │   │                                 -- ofComplex, ofComplexCrime (cochain defect), complex-level rates

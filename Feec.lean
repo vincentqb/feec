@@ -56,7 +56,6 @@ public import Feec.Evolution.Duhamel
 public import Feec.Evolution.Energy
 public import Feec.Evolution.Forcing
 public import Feec.Evolution.Perturbation
-public import Feec.Evolution.Scheme
 public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
@@ -141,6 +140,7 @@ public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
+public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Discrete
@@ -198,7 +198,6 @@ public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.Maxwell
 public import Feec.Instances.MaxwellComplex
-public import Feec.Instances.Headline
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal
 public import Feec.Mesh.Kuhn

@@ -11,7 +11,7 @@ For the source-free scheme (6.3) of [QuennevilleBelair2015], §6.2, written as t
 `Lₕ = waveGen` on the hidden space (`Feec.Instances.EinsteinBianchiFEMGenerator`), the dynamic
 part `Πₕ(t)` of the elliptic projection (6.4) of an exact solution of (6.2) is a **comparison
 trajectory with a consistency defect**, in the sense of the approximating FEEC theorem
-(`Feec.HilbertComplex.ApproxFEEC.Comparison`):
+(`Feec.HilbertComplex.DissipFEEC.Comparison`):
 
 * `Πₕ(t)` lies in the hidden space (`IsEllipticProjection.mem_hiddenSpace`; the data of (6.4)
   vanish on the tests `(0, ψ)` by the exact equation (6.2a));

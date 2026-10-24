@@ -405,41 +405,8 @@ theorem forall_nonneg_of_forall_Icc {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
 all `s`. -/
 theorem forall_of_forall_Icc_neg {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
     (hP : ∀ x ∈ P, ∀ s ∈ Icc (-T) T, H.waveGroup.S s x ∈ P) :
-    ∀ x ∈ P, ∀ t, H.waveGroup.S t x ∈ P := by
-  have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc (-(n * T)) (n * T), H.waveGroup.S t x ∈ P := by
-    intro n
-    induction n with
-    | zero =>
-      intro x hx t ht
-      have h1 := ht.1
-      have h2 := ht.2
-      simp only [Nat.cast_zero, zero_mul, neg_zero] at h1 h2
-      have : t = 0 := le_antisymm h2 h1
-      subst this
-      exact hP x hx 0 ⟨by linarith, hT.le⟩
-    | succ n ih =>
-      intro x hx t ht
-      have h1 := ht.1
-      have h2 := ht.2
-      push_cast at h1 h2
-      by_cases htT : t ∈ Icc (-T) T
-      · exact hP x hx t htT
-      · rcases le_or_gt t T with hle | hlt
-        · have hlt' : t < -T := by
-            by_contra hc
-            exact htT ⟨not_lt.1 hc, hle⟩
-          have e : H.waveGroup.S t x = H.waveGroup.S (t + T) (H.waveGroup.S (-T) x) := by
-            rw [← C0Group.map_add_apply, add_neg_cancel_right]
-          rw [e]
-          exact ih _ (hP x hx (-T) ⟨le_rfl, by linarith⟩) _ ⟨by linarith, by linarith⟩
-        · have e : H.waveGroup.S t x = H.waveGroup.S (t - T) (H.waveGroup.S T x) := by
-            rw [← C0Group.map_add_apply, sub_add_cancel]
-          rw [e]
-          exact ih _ (hP x hx T ⟨by linarith, le_rfl⟩) _ ⟨by linarith, by linarith⟩
-  intro x hx t
-  obtain ⟨n, hn⟩ := exists_nat_ge (|t| / T)
-  rw [div_le_iff₀ hT] at hn
-  exact key n x hx t ⟨by linarith [neg_abs_le t], by linarith [le_abs_self t]⟩
+    ∀ x ∈ P, ∀ t, H.waveGroup.S t x ∈ P :=
+  H.waveGroup.forall_of_forall_Icc_neg hT hP
 
 end Aux
 

@@ -1252,7 +1252,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [Is
   [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
 
 /-- **The rate of the semi-discrete Maxwell solutions with the conforming factor
-`(1 + C_P)(1 + 2t)`** (sharper than the `(1 + t)²` of `rate`), from `approxFEEC_rate`
+`(1 + C_P)(1 + 2t)`** (sharper than the `(1 + t)²` of `rate`), from `dissipFEEC_rate`
 (`ConstrainedFEEC.rate_le`). -/
 theorem approx_rate {T : ℝ} (R : (feec H a l S P hP hS).RateClass T)
     {x : PiLp 2 fun i : Fin 3 => V (a + i)} (hxR : x ∈ R.Data) (h : κ) {t : ℝ}
@@ -1309,7 +1309,8 @@ theorem torus_potential_approxFEEC [Nonempty d] :
 -- the instance arguments of `toApprox` at `L2Form d (0 + i)` need more than the default
 set_option maxHeartbeats 400000 in
 /-- **The non-reducing branch on the torus, read off the approximating FEEC theorem**, derived
-from the graded departure clause of `torus_potential_approxFEEC` (`ApproxFEEC.Verdict.old`),
+from the graded clause of `torus_potential_approxFEEC` (`ApproxFEEC.Verdict.isReducing_iff_keeps`:
+reducing iff kept forward in time) and its departure clause `DissipFEEC.Verdict.leaves_smooth`,
 with the parity grading of the window (`ComplexShape.window_parity`), the `R`-invariance of the
 vanishing-field constraint (`reversal_mem_totalSub`), the density of `D(L) ∩ K`
 (`dense_potential`), the density of the core (`mem_toCore_closure`), the convergence of the
@@ -1332,13 +1333,18 @@ theorem torus_potential_residual_of_approxFEEC [Nonempty d] {T : ℝ} (hT : 0 < 
           ((torus d 0).discrete N (waveLift _ x) t))
           (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _) := by
   obtain ⟨V, hnot⟩ := torus_potential_approxFEEC (d := d)
-  replace V := V.old
-  obtain ⟨x, hxK, t, ht, hout, hpos, hres⟩ := V.2.2.2.2.2.2.2.2.2 _
-    (fun _ _ h => ComplexShape.window_parity h) (fun _ hx => reversal_mem_totalSub hx)
-    (dense_potential _) hnot T hT
-  obtain ⟨hlim, hev⟩ := hres (ConstrainedFEEC.mem_toCore_closure _ _) _
-    (ConstrainedFEEC.tendsto_incl_ellipticProj _ x)
-  refine ⟨x, hxK, t, ht, hout, hpos, hlim.congr fun N => ?_, hev.mono fun N hN => ?_⟩
+  obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth isClosed_potential
+    (fun h => hnot ((V.isReducing_iff_keeps (fun _ _ h => ComplexShape.window_parity h)
+      (fun _ hx => reversal_mem_totalSub hx) fun k hk => dense_potential _ k hk).2 h))
+    (fun k hk => dense_potential _ k hk) hT
+  rw [ApproxFEEC.S_apply _ ht.1] at hout
+  have hpos := (isClosed_potential.notMem_iff_infDist_pos ⟨0, Submodule.zero_mem _⟩).1 hout
+  have hlim := V.tendsto_infDist (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _)
+    (ConstrainedFEEC.mem_toCore_closure _ x)
+    (ConstrainedFEEC.tendsto_incl_ellipticProj _ ⟨x, hxD⟩) ht.1
+  rw [ApproxFEEC.S_apply _ ht.1] at hlim
+  have hev := (tendsto_order.1 hlim).1 _ (half_lt_self hpos)
+  refine ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, hlim.congr fun N => ?_, hev.mono fun N hN => ?_⟩
   · exact congrArg (infDist · _) (ConstrainedFEEC.toApprox_sol _ N _ t)
   · rwa [ConstrainedFEEC.toApprox_sol] at hN
 

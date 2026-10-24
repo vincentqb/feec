@@ -38,39 +38,46 @@ only along the import relation of `docs/REFACTOR_PLAN.md` §1, a partial order c
 
 `Feec.HilbertComplex.approxFEEC` (`Feec.HilbertComplex.Approximation.ApproxFEEC`, statement
 `Feec.HilbertComplex.ApproxFEEC.Verdict`) is the headline theorem of the library; `README.md`
-states it in plain language and lists its instances. Its setting,
-`Feec.HilbertComplex.ApproxFEEC`, is a Hilbert complex on any finite window of any
-`ComplexShape`, a closed constraint `K`, Hilbert spaces `Xₕ` with their own inner products and
-skew bounded generators `Lₕ`, and uniformly bounded reading maps `ιₕ : Xₕ → W` with uniformly
-bounded left inverses `πₕ` (variational crimes in the sense of [HolstStern2012] are allowed).
-Consistency is a hypothesis on a core, `Feec.HilbertComplex.ApproxFEEC.Core`: comparison
-trajectories that approximate the exact orbits through `ιₕ` with consistency defects tending to
-`0`, uniformly on `[0, T]`. The abstract estimate is
-`Feec.HilbertComplex.norm_sub_le_of_defect` (best approximation plus integrated consistency
-defect, by the energy method). The verdict is the verdict of `Feec.HilbertComplex.dissipFEEC`
-for the forward-time reading `Feec.HilbertComplex.ApproxFEEC.toDissipFEEC`, and the conclusions
-that use both time directions; both are conjunctions of the predicates of
-`Feec.Evolution.Scheme` (`Feec.Evolution.Scheme.ConvergesFrom`, `Feec.Evolution.Scheme.Keeps`,
-`Feec.Evolution.Scheme.Exits`, `Feec.Evolution.Scheme.Detects`, residuals) for the schemes
-`Feec.HilbertComplex.ApproxFEEC.toScheme` and `Feec.HilbertComplex.DissipFEEC.toScheme`, which
-agree for `t ≥ 0` (`Feec.HilbertComplex.ApproxFEEC.toScheme_S_of_nonneg`);
-`Feec.HilbertComplex.headline` restates it unfolded to those predicates, typeset in words in
-`docs/headline.md`. `Feec.HilbertComplex.ApproxFEEC.Verdict.old` and
-`Feec.HilbertComplex.DissipFEEC.Verdict.old` derive from the verdicts their earlier conjunctions
-(convergence on the core from the comparison initial values, the departures with their positive
-residual limits), which the instances read. The theorem bundles well-posedness
-(`Feec.HilbertComplex.constrainedFEEC_wellPosed`), propagation
-(`Feec.HilbertComplex.approxFEEC_propagates_iff`), convergence on the closure of the core for
-every convergent family of initial values (`Feec.HilbertComplex.approxFEEC_converges`; on the core
-from the comparison initial values, `Feec.HilbertComplex.approxFEEC_converges_core`, is the case
-`vₕ = pₕ(0)`; with `ιₕ πₕ → 1` derived,
-`Feec.HilbertComplex.ApproxFEEC.tendsto_incl_proj`), rates over
-`Feec.HilbertComplex.ApproxFEEC.RateClass` (`Feec.HilbertComplex.approxFEEC_rate`) and the
-constraint residual measured through `ιₕ` (`Feec.HilbertComplex.approxFEEC_residual`,
-`Feec.HilbertComplex.approxFEEC_residual_not_mem`, `Feec.HilbertComplex.approxFEEC_exists_not_mem`,
-`Feec.HilbertComplex.approxFEEC_residual_not_isReducing`,
-`Feec.HilbertComplex.approxFEEC_residual_not_isReducing_symm`,
-`Feec.HilbertComplex.approxFEEC_residual_not_isReducing_of_grading`).
+states it in plain language and lists its instances. It is the top of a tower of three theorems,
+each stated as a structure of named conclusions extending the one below and proved from it:
+
+1. `Feec.HilbertComplex.dissipFEEC` (`Feec.HilbertComplex.Approximation.DissipFEEC`, statement
+   `Feec.HilbertComplex.DissipFEEC.Verdict`) for `Feec.HilbertComplex.DissipFEEC`: an
+   m-dissipative generator `A` on a Hilbert space, a closed constraint `K`, Hilbert spaces `Xₕ`
+   with their own inner products and dissipative bounded generators `Lₕ`, and uniformly bounded
+   reading maps `ιₕ : Xₕ → E` with uniformly bounded left inverses `πₕ` (variational crimes in the
+   sense of [HolstStern2012] are allowed). The exact flow is the Lumer–Phillips semigroup
+   `Feec.HilbertComplex.DissipFEEC.S`. Consistency is a hypothesis on a core,
+   `Feec.HilbertComplex.DissipFEEC.Core`: comparison trajectories that approximate the exact orbits
+   through `ιₕ` with consistency defects tending to `0`, uniformly on `[0, T]`; rates are over
+   `Feec.HilbertComplex.DissipFEEC.RateClass`. The abstract estimate is
+   `Feec.HilbertComplex.norm_sub_le_of_defect_of_dissipative` (best approximation plus integrated
+   consistency defect, by the energy method). The verdict: well-posedness and the energy identity
+   (`Feec.HilbertComplex.dissipFEEC_wellPosed`), the propagation criteria
+   (`Feec.HilbertComplex.dissipFEEC_propagates_iff`, for `Feec.HilbertComplex.DissipFEEC.Keeps`),
+   convergence on the closure of the core for every convergent family of initial values
+   (`Feec.HilbertComplex.dissipFEEC_converges`, with `ιₕ πₕ → 1` derived,
+   `Feec.HilbertComplex.DissipFEEC.tendsto_incl_proj`), rates
+   (`Feec.HilbertComplex.dissipFEEC_rate`), the constraint residual measured through `ιₕ`
+   (`Feec.HilbertComplex.dissipFEEC_residual`, `Feec.HilbertComplex.dissipFEEC_tendsto_infDist`)
+   and the departures from sets that are not kept (`Feec.HilbertComplex.dissipFEEC_leaves`,
+   `Feec.HilbertComplex.dissipFEEC_leaves_smooth`).
+2. `Feec.HilbertComplex.skewFEEC` (`Feec.HilbertComplex.Approximation.SkewFEEC`, statement
+   `Feec.HilbertComplex.SkewFEEC.Verdict`) for `Feec.HilbertComplex.SkewFEEC`, a `DissipFEEC` of a
+   skew-adjoint generator with skew discrete generators (cores and rate classes are those of the
+   base): adds Stone's isometric group `Feec.HilbertComplex.SkewFEEC.U`, equal to the semigroup
+   for `t ≥ 0`, conservation of the norm, reducing iff invariant for all `t ∈ ℝ`
+   (`Feec.HilbertComplex.skewFEEC_isReducing_iff_invariant`) and the departure in both time
+   directions (`Feec.HilbertComplex.skewFEEC_leaves_smooth_symm`).
+3. `Feec.HilbertComplex.approxFEEC` for `Feec.HilbertComplex.ApproxFEEC`, the `SkewFEEC` of the Hodge
+   wave operator `L = 𝐝 - 𝐝†` of a Hilbert complex on any finite window of any `ComplexShape`
+   (its group is the wave group): adds unique weak solutions
+   (`Feec.HilbertComplex.approxFEEC_unique_weak`) and, on graded complexes, reducing iff kept forward
+   in time (`Feec.HilbertComplex.approxFEEC_isReducing_iff_keeps`).
+
+The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of
+`dissipFEEC` and `approxFEEC` (convergence on the core from the comparison initial values, the
+departures with their positive residual limits) from the verdicts.
 
 **The conforming special case.** `Feec.HilbertComplex.constrainedFEEC`
 (`Feec.HilbertComplex.Approximation.ConstrainedFEEC`) covers finite-dimensional subcomplexes `Vₕ`
@@ -139,7 +146,7 @@ zero cochain defect (`Feec.HilbertComplex.ApproxComplex.toCrime`,
 `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime_toCrime`, by `rfl`, with the same comparison on
 `D(L²)`). `Feec.HilbertComplex.approxFEEC_ofComplexCrime` gives the verdict, the Strang bound, the
 residual splitting, the defect bound, and exact preservation of `Lₕ`-invariant subspaces of `Xₕ`.
-**Rates**: `Feec.HilbertComplex.ApproxComplexCrime.rateClass` builds an `ApproxFEEC.RateClass` from
+**Rates**: `Feec.HilbertComplex.ApproxComplexCrime.rateClass` builds a `DissipFEEC.RateClass` from
 approximants along the trajectory with approximation, `‖(1 − Jₕ)wₕ‖` and residual `O(m(h)ᵅ)`, so
 `‖e^{tL}x − iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c`
 (`Feec.HilbertComplex.ApproxComplexCrime.error_le_of_rateClass`); the split rates (graph-norm best
@@ -268,15 +275,14 @@ Limits.
 ## The dissipative FEEC theorem and absorbing boundary conditions
 
 `Feec.HilbertComplex.dissipFEEC` (`Feec.HilbertComplex.Approximation.DissipFEEC`, statement
-`Feec.HilbertComplex.DissipFEEC.Verdict`) extends `approxFEEC` to m-dissipative generators `A`
-(Lumer–Phillips contraction semigroups) and dissipative bounded discrete generators `Lₕ`; an approximating FEEC discretization is a
-dissipative one for the skew-adjoint generator (`Feec.HilbertComplex.ApproxFEEC.toDissipFEEC`), and
-the verdict of `approxFEEC` contains the verdict of `dissipFEEC` for it. It bundles
-well-posedness with the energy identity, the propagation criteria (invariance of `K` iff resolvent
-invariance iff solvability of the stationary problem in `D(A) ∩ K`, from
+`Feec.HilbertComplex.DissipFEEC.Verdict`) is the base of the tower: m-dissipative generators `A`
+(Lumer–Phillips contraction semigroups) and dissipative bounded discrete generators `Lₕ`; an
+approximating FEEC discretization is one by definition (`ApproxFEEC` is a `SkewFEEC`, which
+extends `DissipFEEC`), and the verdict of `approxFEEC` extends the verdict of `dissipFEEC`. It
+bundles well-posedness with the energy identity, the propagation criteria (invariance of `K` iff
+resolvent invariance iff solvability of the stationary problem in `D(A) ∩ K`, from
 `Feec.Semigroup.DissipativeInvariance`; reducing iff `K` and `Kᗮ` invariant), convergence on the
-closure of a core, rates (`Feec.HilbertComplex.DissipFEEC.RateClass.Bounds`), and the residual in
-both directions. The resolvent form of the
+closure of a core, rates, the residual and the departures. The resolvent form of the
 Trotter–Kato theorem gives cores from consistent discrete resolvents
 (`Feec.HilbertComplex.DissipFEEC.Core.ofResolvent`). Impedance triples (`Feec.ImpedanceTriple`:
 energy space, field, differential, boundary trace) give m-dissipative impedance operators, and

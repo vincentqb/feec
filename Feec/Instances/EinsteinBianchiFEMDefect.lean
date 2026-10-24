@@ -976,7 +976,7 @@ theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
   have hM' : reM (slotM y) = 0 := by
     change reM (WithLp.ofLp (y 2 : W2Q)).1 = 0
     rw [hM, map_zero]
-  rw [mirrorDiffGen_σ, mirrorDiffGen_u, mirrorDiffGen_ρ, hM'] at e1
+  simp only [mirrorDiffGen_σ, mirrorDiffGen_u, mirrorDiffGen_ρ, hM'] at e1
   have f0 : ⟪re0 (slot0 y), (0 : W0)⟫_ℝ = 0 := inner_zero_right _
   have fM : ⟪(0 : W2), (((HiddenState.toEState (mirrorDiffGen hT hB N a)).M :
       (mirrorFEM hT hB N).W2h) : W2)⟫_ℝ = 0 := inner_zero_left _
@@ -1517,7 +1517,10 @@ theorem einsteinBianchi_mirrorFEM_ofCochainDefect :
   have hx' : x ∈
       (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure :=
     hcl.ge hx
-  exact ⟨approxFEEC_converges _ _ T hx' hv, approxFEEC_residual _ isReducing_tsdQℝ _ T hx' hx hv⟩
+  set F := ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)
+  exact ⟨(dissipFEEC_converges _ _ T hx' hv).congr_right fun t ht => ApproxFEEC.S_apply F ht.1 x,
+    dissipFEEC_residual F.toDissipFEEC ((dissipFEEC_propagates_iff _).2.2.1 isReducing_tsdQℝ).1 _ T
+      hx' hx hv⟩
 
 
 end Mirror

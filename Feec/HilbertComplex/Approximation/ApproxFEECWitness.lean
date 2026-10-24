@@ -25,7 +25,7 @@ occur: `K = W` reduces `L`, and for `K = 𝕜 × 0 × 0` a datum of `K` leaves `
 every convergent discretization of it have a positive limit
 (`ApproxFEEC.perturbed_nonvacuous`). The scheme is inexact: its solution from `πₙ (1, 0, 0)` differs
 from the exact one at some time (`ApproxFEEC.perturbed_exists_sol_ne`, via the inexactness
-criterion `ApproxFEEC.exists_sol_ne`).
+criterion `SkewFEEC.exists_sol_ne`).
 
 Since `perturbed` is a scalar time rescaling, a second witness has a **non-scalar** reading map:
 `ApproxFEEC.projPerturbed` has `Xₙ = W`, `Lₙ = L₀` and `ιₙ = 1 + hₙ P`, `πₙ = 1 - bₙ P = ιₙ⁻¹`
@@ -223,7 +223,8 @@ def perturbedCore : (perturbed 𝕜 Q hQ).Core where
   cmp T := perturbedComparison Q hQ T
   data_eq _ := Submodule.top_coe.symm
   tendsto_approx T x _ := by
-    refine Metric.tendstoUniformlyOn_iff.2 fun ε hε => Eventually.of_forall fun n t _ => ?_
+    refine Metric.tendstoUniformlyOn_iff.2 fun ε hε => Eventually.of_forall fun n t ht => ?_
+    rw [ApproxFEEC.S_apply _ ht.1]
     change dist _ ((perturbScale n : 𝕜) • (((perturbScale n : 𝕜))⁻¹ •
       (idComplex 𝕜).waveGroup.S t x)) < ε
     rw [smul_smul, mul_inv_cancel₀ (perturbScale_ne_zero (𝕜 := 𝕜) n), one_smul, dist_self]
@@ -256,7 +257,8 @@ def perturbedRate (T : ℝ) : (perturbed 𝕜 Q hQ).RateClass T where
   α := 1
   C := 0
   C' := ‖idWave 𝕜‖
-  approx x _ n t _ := by
+  approx x _ n t ht := by
+    rw [ApproxFEEC.S_apply _ ht.1]
     change ‖_ - (perturbScale n : 𝕜) • (((perturbScale n : 𝕜))⁻¹ •
       (idComplex 𝕜).waveGroup.S t x)‖ ≤ _
     rw [smul_smul, mul_inv_cancel₀ (perturbScale_ne_zero (𝕜 := 𝕜) n), one_smul, sub_self, norm_zero]
@@ -362,9 +364,9 @@ theorem perturbed_nonvacuous :
     have hxc : (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) ∈
         (perturbedCore (firstSub 𝕜) isClosed_totalSub).Data.topologicalClosure :=
       Submodule.le_topologicalClosure _ Submodule.mem_top
-    refine ⟨x, hxK, t, ht, hout, hpos, tendsto_incl_proj _ _ hxc, fun v hv => ?_⟩
-    exact (approxFEEC_residual_not_mem _ _ isClosed_totalSub ⟨0, (firstSub 𝕜).zero_mem⟩ hxc hv
-      ht.1 hout).2
+    refine ⟨x, hxK, t, ht, hout, hpos, DissipFEEC.tendsto_incl_proj _ _ hxc, fun v hv => ?_⟩
+    rw [← ApproxFEEC.S_apply (perturbed 𝕜 (firstSub 𝕜) isClosed_totalSub) ht.1]
+    exact dissipFEEC_tendsto_infDist _ (perturbedCore _ _) _ hxc hv ht.1
 
 /-! ### A non-scalar reading map: an inner-product crime that does not commute with `L` -/
 
@@ -516,7 +518,8 @@ def projCore : (projPerturbed 𝕜 Q hQ).Core where
   cmp T := projComparison Q hQ T
   data_eq _ := Submodule.top_coe.symm
   tendsto_approx T x _ := by
-    refine Metric.tendstoUniformlyOn_iff.2 fun ε hε => Eventually.of_forall fun n t _ => ?_
+    refine Metric.tendstoUniformlyOn_iff.2 fun ε hε => Eventually.of_forall fun n t ht => ?_
+    rw [ApproxFEEC.S_apply _ ht.1]
     change dist _ ((projPerturbed 𝕜 Q hQ).incl n
       ((projPerturbed 𝕜 Q hQ).proj n ((idComplex 𝕜).waveGroup.S t x))) < ε
     rw [projPerturbed_incl_proj, dist_self]
@@ -544,7 +547,8 @@ def projRate (T : ℝ) : (projPerturbed 𝕜 Q hQ).RateClass T where
   α := 1
   C := 0
   C' := 2 * ‖idWave 𝕜‖
-  approx x _ n t _ := by
+  approx x _ n t ht := by
+    rw [ApproxFEEC.S_apply _ ht.1]
     change ‖_ - (projPerturbed 𝕜 Q hQ).incl n
       ((projPerturbed 𝕜 Q hQ).proj n ((idComplex 𝕜).waveGroup.S t x))‖ ≤ _
     rw [projPerturbed_incl_proj, sub_self, norm_zero]
@@ -649,13 +653,27 @@ theorem projPerturbed_nonvacuous :
     have hx' : ‖firstDatum 𝕜‖ ≠ 0 := norm_ne_zero_iff.2 firstDatum_ne_zero
     have := mul_right_cancel₀ hx' (h.trans (one_mul _).symm)
     linarith [perturbMesh_pos n]
-  · obtain ⟨x, hxK, t, ht, hout, hpos, hres⟩ :=
-      approxFEEC_residual_not_isReducing_of_grading
-        (projPerturbed 𝕜 (firstSub 𝕜) isClosed_totalSub) (projCore _ _)
-        (p := fun i : Fin 3 => decide (Odd i.val))
-        (fun _ _ h => ComplexShape.window_parity h)
-        (fun x hx => reversal_mem_totalSub hx)
-        (fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩) not_isReducing_firstSub hT
+  · set F := projPerturbed 𝕜 (firstSub 𝕜) isClosed_totalSub
+    have V := approxFEEC F (projCore _ _)
+    have hD : (F.K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit))) ⊆
+        closure (((idComplex 𝕜).wave.domain : Set (PiLp 2 (W3 𝕜 𝕜 PUnit))) ∩ F.K) :=
+      fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩
+    have hnk : ¬ F.Keeps F.K := fun h => not_isReducing_firstSub
+      ((V.isReducing_iff_keeps (p := fun i : Fin 3 => decide (Odd i.val))
+        (fun _ _ h => ComplexShape.window_parity h) (fun x hx => reversal_mem_totalSub hx)
+        hD).2 h)
+    obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K hnk hD hT
+    rw [ApproxFEEC.S_apply F ht.1] at hout
+    have hpos := (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout
+    have hres : ∀ {v : ∀ n, F.X n}, F.Converges v x →
+        Tendsto (fun n => infDist (F.sol n (v n) t) (F.K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) atTop
+          (𝓝 (infDist ((idComplex 𝕜).waveGroup.S t x) F.K)) ∧
+        ∀ᶠ n in atTop, infDist ((idComplex 𝕜).waveGroup.S t x) (F.K : Set _) / 2 <
+          infDist (F.sol n (v n) t) F.K := fun {v} hv => by
+      have hl := V.tendsto_infDist (F.K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))
+        (Submodule.le_topologicalClosure _ Submodule.mem_top) hv ht.1
+      rw [ApproxFEEC.S_apply F ht.1] at hl
+      exact ⟨hl, (tendsto_order.1 hl).1 _ (half_lt_self hpos)⟩
     have hxc : (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) ∈
         (projCore (firstSub 𝕜) isClosed_totalSub).Data.topologicalClosure :=
       Submodule.le_topologicalClosure _ Submodule.mem_top
@@ -665,8 +683,8 @@ theorem projPerturbed_nonvacuous :
       (tendsto_const_nhds (x := (x : PiLp 2 (W3 𝕜 𝕜 PUnit)))).congr fun n =>
         (projPerturbed_incl_proj (𝕜 := 𝕜) (firstSub 𝕜) isClosed_totalSub n
           (x : PiLp 2 (W3 𝕜 𝕜 PUnit))).symm
-    obtain ⟨hlim, hev⟩ := hres hxc _ hv
-    exact ⟨x, hxK, t, ht, hout, hpos, hlim, hev⟩
+    obtain ⟨hlim, hev⟩ := hres hv
+    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, hlim, hev⟩
 
 end ApproxFEEC
 

@@ -324,9 +324,9 @@ theorem shifted_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : 
         ((shiftedRate Q hQ T).p x n 0) t‖ ≤
       ((shiftedRate Q hQ T).C + ‖(ofComplexCrime (shifted 𝕜 Q hQ)).incl n‖ *
         (shiftedRate Q hQ T).C' * t) * ((perturbScale n - 1) * l2Norm x) := by
-  have h := approxFEEC_rate (ofComplexCrime (shifted 𝕜 Q hQ)) (shiftedRate Q hQ T) (Set.mem_univ x) n
+  have h := dissipFEEC_rate _ (shiftedRate Q hQ T) (Set.mem_univ x) n
     ((shiftedRate Q hQ T).p x n 0) ht
-  rw [sub_self, norm_zero, mul_zero, add_zero] at h
+  rw [ApproxFEEC.S_apply _ ht.1, sub_self, norm_zero, mul_zero, add_zero] at h
   refine h.trans_eq ?_
   change _ * (perturbMesh n ^ (1 : ℝ) * l2Norm x) = _
   rw [Real.rpow_one]
@@ -416,9 +416,9 @@ theorem scaled_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : �
         (((ofComplexCore (scaled 𝕜 Q hQ)).cmp T).p x n 0) t‖ ≤
       ((scaledRate Q hQ T).C + ‖(ofComplex (scaled 𝕜 Q hQ)).incl n‖ *
         (scaledRate Q hQ T).C' * t) * ((perturbScale n ^ 2 - 1) * l2Norm x) := by
-  have h := approxFEEC_rate (ofComplexCrime (scaled 𝕜 Q hQ).toCrime) (scaledRate Q hQ T) (Set.mem_univ x) n
+  have h := dissipFEEC_rate _ (scaledRate Q hQ T) (Set.mem_univ x) n
     ((scaledRate Q hQ T).p x n 0) ht
-  rw [sub_self, norm_zero, mul_zero, add_zero] at h
+  rw [ApproxFEEC.S_apply _ ht.1, sub_self, norm_zero, mul_zero, add_zero] at h
   have hp : (scaledRate Q hQ T).p x n 0 = ((ofComplexCore (scaled 𝕜 Q hQ)).cmp T).p x n 0 :=
     ofComplexCrimeCore_toCrime_p (scaled 𝕜 Q hQ) T (mem_idComplex_domainSq x) n 0
   rw [hp] at h

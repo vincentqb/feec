@@ -267,9 +267,7 @@ def ApproxFEEC.complexifyCmp (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] Pi
 
 /-- The defect of the complexified comparison is the pair of the real defects. -/
 theorem ApproxFEEC.complexifyCmp_defect (F : ApproxFEEC H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
-    (hJJ : ∀ x, J (J x) = -x) (hJ : ∀ x, ‖J x‖ = ‖x‖)
-    (hπJ : ∀ h b, F.proj h (J (F.incl h b)) = 0)
-    (hJι : ∀ h a b, ⟪F.incl h a, J (F.incl h b)⟫ = 0) {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
+    hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb ha' hb' hda hdb
     (x : PiLp 2 W') (h : κ') (t : ℝ) :
     (F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).defect x h t =
       WithLp.toLp 2 (a' x h t - F.L h (a x h t), b' x h t - F.L h (b x h t)) := rfl
@@ -284,10 +282,7 @@ theorem norm_withLp_toLp_le {E : Type*} [NormedAddCommGroup E] [InnerProductSpac
 
 /-- The defect of the complexified comparison is at most the sum of the real defects. -/
 theorem ApproxFEEC.norm_complexifyCmp_defect_le (F : ApproxFEEC H' κ')
-    (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
-    (hJJ : ∀ x, J (J x) = -x) (hJ : ∀ x, ‖J x‖ = ‖x‖)
-    (hπJ : ∀ h b, F.proj h (J (F.incl h b)) = 0)
-    (hJι : ∀ h a b, ⟪F.incl h a, J (F.incl h b)⟫ = 0) {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb
+    (J : PiLp 2 W' →L[ℝ] PiLp 2 W') hJJ hJ hπJ hJι {T : ℝ} (S : Set (PiLp 2 W')) a b a' b' ha hb
     ha' hb' hda hdb (x : PiLp 2 W') (h : κ') (t : ℝ) :
     ‖(F.complexifyCmp J hJJ hJ hπJ hJι (T := T) S a b a' b' ha hb ha' hb' hda hdb).defect x h t‖ ≤
       ‖a' x h t - F.L h (a x h t)‖ + ‖b' x h t - F.L h (b x h t)‖ := by

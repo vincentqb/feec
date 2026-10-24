@@ -202,22 +202,25 @@ theorem mirrorEllIm'_of_mem (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllD
     mirrorEllIm' hT hB T x N = mEll' hT hB N (tsdDatumOf (neg_I_smul_mem hx)) T :=
   funext fun _ => dite_eq_left hx
 
-set_option maxHeartbeats 1000000 in
 /-- **The elliptic comparison** of the mirror scheme on `[0, T]`: the elliptic projections (6.4)
 of the exact solutions from the real part `ξ₀` and the imaginary part `-i ξ₀` of the datum. -/
 def mirrorEllCmp (T : ℝ) : (mirrorFEMApprox hT hB).Comparison T :=
   ApproxFEEC.complexifyCmp (mirrorFEMReal hT hB) mulI mulI_mulI norm_mulI
     (adjoint_mirrorEmb_mulI hT hB) (inner_mirrorEmb_mulI hT hB) mirrorEllData
     (mirrorEllRe hT hB T) (mirrorEllIm hT hB T) (mirrorEllRe' hT hB T) (mirrorEllIm' hT hB T)
-    (fun x hx N => by rw [mirrorEllRe_of_mem hT hB T hx]; exact continuousOn_mEll hT hB N _ T)
-    (fun x hx N => by rw [mirrorEllIm_of_mem hT hB T hx]; exact continuousOn_mEll hT hB N _ T)
-    (fun x hx N => by rw [mirrorEllRe'_of_mem hT hB T hx]; exact continuousOn_mEll' hT hB N _ T)
-    (fun x hx N => by rw [mirrorEllIm'_of_mem hT hB T hx]; exact continuousOn_mEll' hT hB N _ T)
+    (fun x hx N => by
+      simp only [mirrorEllRe_of_mem hT hB T hx]; exact continuousOn_mEll hT hB N _ T)
+    (fun x hx N => by
+      simp only [mirrorEllIm_of_mem hT hB T hx]; exact continuousOn_mEll hT hB N _ T)
+    (fun x hx N => by
+      simp only [mirrorEllRe'_of_mem hT hB T hx]; exact continuousOn_mEll' hT hB N _ T)
+    (fun x hx N => by
+      simp only [mirrorEllIm'_of_mem hT hB T hx]; exact continuousOn_mEll' hT hB N _ T)
     (fun x hx N t ht => by
-      rw [mirrorEllRe_of_mem hT hB T hx, mirrorEllRe'_of_mem hT hB T hx]
+      simp only [mirrorEllRe_of_mem hT hB T hx, mirrorEllRe'_of_mem hT hB T hx]
       exact hasDerivWithinAt_mEll hT hB N _ ht)
     (fun x hx N t ht => by
-      rw [mirrorEllIm_of_mem hT hB T hx, mirrorEllIm'_of_mem hT hB T hx]
+      simp only [mirrorEllIm_of_mem hT hB T hx, mirrorEllIm'_of_mem hT hB T hx]
       exact hasDerivWithinAt_mEll hT hB N _ ht)
 
 set_option maxHeartbeats 2000000 in

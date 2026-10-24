@@ -591,7 +591,7 @@ theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2
     ‖S.toHilbertComplex.waveGroup.S t x -
         (bandApprox S hS K hK).sol N ((bandApprox S hS K hK).proj N x) t‖ ≤
       (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x := by
-  simp only [← ApproxFEEC.S_eq_waveGroup (bandApprox S hS K hK) ht]
+  rw [← ApproxFEEC.S_eq_waveGroup (bandApprox S hS K hK) ht]
   set R := sobolevRate S hS K hK t hs
   have h := dissipFEEC_rate (bandApprox S hS K hK).toDissipFEEC R (x := x) hx N
     ((bandApprox S hS K hK).proj N x) (t := t) ⟨ht, le_rfl⟩

@@ -341,7 +341,7 @@ def mirrorEllCore : (mirrorFEMApprox hT hB).Core where
     filter_upwards [eventually_ellErr_le hT hB (tsdDatumOf hx) T (half_pos (half_pos hε)),
       eventually_ellErr_le hT hB (tsdDatumOf (neg_I_smul_mem hx)) T (half_pos (half_pos hε))]
       with N h1 h2 t ht
-    rw [dist_eq_norm, ApproxFEEC.S_apply _ ht.1]
+    rw [dist_eq_norm, ApproxFEEC.S_eq_waveGroup _ ht.1]
     have := norm_sub_mirrorEllCmp_le hT hB T hx N ht
     linarith [(h1 t ht).1, (h2 t ht).1]
   tendsto_defect T x hx := by
@@ -438,7 +438,7 @@ def mirrorEllRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
   C := 6 * mirrorEllK (C := C)
   C' := 12 * mirrorEllK (C := C)
   approx x hx N t ht := by
-    rw [ApproxFEEC.S_apply _ ht.1]
+    rw [ApproxFEEC.S_eq_waveGroup _ ht.1]
     obtain ⟨⟨a0, a1, a2, a3⟩, ⟨b0, b1, b2, b3⟩⟩ := sobSize_le_of_mem hx
     have e1 := (ellErr_le_sobolev hT hB _ hs0 hs1 a0 a1 a2 N ht).1
     have e2 := (ellErr_le_sobolev hT hB _ hs0 hs1 b0 b1 b2 N ht).1
@@ -492,7 +492,7 @@ def mirrorEllRate (T : ℝ) : (mirrorFEMApprox hT hB).RateClass T where
   C := 4 * mirrorEllK (C := C)
   C' := 8 * mirrorEllK (C := C)
   approx x hx N t ht := by
-    rw [ApproxFEEC.S_apply _ ht.1]
+    rw [ApproxFEEC.S_eq_waveGroup _ ht.1]
     obtain ⟨⟨a0, a1, a2, a3⟩, ⟨b0, b1, b2, b3⟩⟩ := sobSize_le_of_mem_l3 hx
     have e1 := (ellErr_le_sobolev hT hB _ zero_le_one le_rfl a0 a1 a2 N ht).1
     have e2 := (ellErr_le_sobolev hT hB _ zero_le_one le_rfl b0 b1 b2 N ht).1
@@ -584,7 +584,7 @@ theorem einsteinBianchi_mirrorFEM_rate_elliptic {T : ℝ} {x : PiLp 2 SpaceQ}
         (meshSize N * mirrorL3Norm x) := by
   have h := dissipFEEC_rate _ (mirrorEllRate hT hB T) hx N
     ((mirrorEllCmp hT hB T).p x N 0) ht
-  rw [ApproxFEEC.S_apply _ ht.1] at h
+  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
   have hp : (mirrorEllRate hT hB T).p x N 0 = (mirrorEllCmp hT hB T).p x N 0 := rfl
   rw [hp, sub_self, norm_zero, mul_zero, add_zero] at h
@@ -614,7 +614,7 @@ theorem einsteinBianchi_mirrorFEM_rate_sobolev_elliptic {T s : ℝ} (hs0 : 0 ≤
         (meshSize N ^ s * √(sobState (2 + s) x)) := by
   have h := dissipFEEC_rate _ (mirrorEllRateSobolev hT hB T s hs0 hs1) hx N
     ((mirrorEllCmp hT hB T).p x N 0) ht
-  rw [ApproxFEEC.S_apply _ ht.1] at h
+  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
   have hp : (mirrorEllRateSobolev hT hB T s hs0 hs1).p x N 0 =
       (mirrorEllCmp hT hB T).p x N 0 := rfl

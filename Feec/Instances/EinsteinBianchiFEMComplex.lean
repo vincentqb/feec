@@ -553,7 +553,8 @@ theorem einsteinBianchi_mirrorFEM_ofComplexCrime :
   have hx' : x ∈ (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)).Data.topologicalClosure :=
     (mirrorEllCore_closure hT hB).ge hx
   set F := ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)
-  exact ⟨(dissipFEEC_converges _ _ T hx' hv).congr_right fun t ht => ApproxFEEC.S_apply F ht.1 x,
+  exact ⟨(dissipFEEC_converges _ _ T hx' hv).congr_right fun t ht =>
+    DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup F ht.1) x,
     dissipFEEC_residual F.toDissipFEEC ((dissipFEEC_propagates_iff _).2.2.1 isReducing_tsdQℝ).1 _ T
       hx' hx hv⟩
 
@@ -948,12 +949,12 @@ theorem einsteinBianchi_standardCube_ofComplexCrime :
     standardCubeApprox_L_eq hT hB, hcl, fun x T v hv => ?_, betaDatum_mem_thesisTSD,
     fun T hT0 => ?_⟩
   · exact (dissipFEEC_converges _ _ T (by rw [hcl]; trivial) hv).congr_right fun t ht =>
-      ApproxFEEC.S_apply (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)) ht.1 x
+      DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup _ ht.1) x
   · obtain ⟨t, ht, hout⟩ := exists_waveGroup_betaDatum_not_mem hT0
     have hpos := (isClosed_thesisTSD.notMem_iff_infDist_pos ⟨0, thesisTSD.zero_mem⟩).1 hout
     refine ⟨t, ht, hout, hpos, fun v hv => ?_⟩
     have h := dissipFEEC_tendsto_infDist _ _ (thesisTSD : Set _) (by rw [hcl]; trivial) hv ht.1
-    rwa [ApproxFEEC.S_apply (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)) ht.1] at h
+    rwa [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
 
 /-! #### The discrete Gauss constraint is preserved exactly -/
 

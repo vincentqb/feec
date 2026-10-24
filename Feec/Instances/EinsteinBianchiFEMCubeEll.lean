@@ -357,7 +357,7 @@ def standardCubeEllCore : (standardCubeApprox hT hB).Core where
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     filter_upwards [eventually_cErr_le hT hB hx T (half_pos hε)] with N h1 t ht
-    rw [dist_eq_norm, ApproxFEEC.S_apply _ ht.1]
+    rw [dist_eq_norm, ApproxFEEC.S_eq_waveGroup _ ht.1]
     have := norm_sub_cubeEllCmp_le hT hB T hx N ht
     linarith [(h1 t ht).1]
   tendsto_defect T x hx := by

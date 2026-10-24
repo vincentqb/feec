@@ -22,7 +22,8 @@ The **skew-adjoint FEEC theorem** `skewFEEC` (statement `SkewFEEC.Verdict`) is t
 FEEC theorem `dissipFEEC` for `F`, together with the conclusions that use both time directions:
 
 1. the semigroup is the group for `t ≥ 0`, and the group conserves the norm of every datum;
-2. `skewFEEC_isReducing_iff_invariant`: `K` reduces `A` iff `U(t) K ⊆ K` for every `t ∈ ℝ`;
+2. `skewFEEC_isReducing_iff_invariant`: `K` reduces `A` iff `U(t) K ⊆ K` for every `t ∈ ℝ`
+   (`SkewFEEC.Invariant`);
 3. `skewFEEC_leaves_smooth_symm`: a closed set with a dense part in `D(A)` that is not invariant
    under the group is left by a datum of that part at some `t ∈ [-T, T]`, for every `T > 0`.
 
@@ -30,16 +31,15 @@ The time direction is genuinely needed in 2 and 3: the dissipative theorem only 
 `t ≥ 0`, where `K` reduces `A` iff `K` and `Kᗮ` are kept.
 
 The discrete side: `SkewFEEC.norm_group_apply` (unitarity of `e^{tLₕ}`), and the bounded-operator
-facts `re_inner_self_eq_zero_of_skew` (skew generators are dissipative), `norm_sub_le_of_defect`
-(the energy estimate) and `eq_ofBounded_of_hasDerivAt` (uniqueness for skew bounded generators,
-in both time directions).
+facts `re_inner_self_eq_zero_of_skew` (skew generators are dissipative) and
+`eq_ofBounded_of_hasDerivAt` (uniqueness for skew bounded generators, in both time directions).
 
 ## References
 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.10 (groups of isometries, Stone's theorem), §3.4 (Trotter–Kato approximation theorems)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (Thm 3.9, Thm 3.10, elliptic analogues)
+  §3 (Hilbert complexes with variational crimes)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.4 (Thms 4.6, 4.7), §4.10 (Prop. 4.17)
 
@@ -59,9 +59,9 @@ namespace Feec.HilbertComplex
 
 section Bounded
 
-variable {𝕜 : Type*} [RCLike 𝕜] {X E : Type*}
+variable {𝕜 : Type*} [RCLike 𝕜] {X : Type*}
   [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X] [NormedSpace ℝ X]
-  [IsScalarTower ℝ 𝕜 X] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+  [IsScalarTower ℝ 𝕜 X]
 
 omit [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
 /-- A skew bounded operator has `re ⟪L x, x⟫ = 0`. -/
@@ -72,18 +72,6 @@ theorem re_inner_self_eq_zero_of_skew {L : X →L[𝕜] X} (hL : ∀ x y, ⟪L x
     simp
   linarith
 
-/-- **The abstract consistency estimate** (energy method): for a skew bounded `L` on `X`, a
-bounded `ι : X → E`, a target `u` and a comparison trajectory `p` with right derivative `p'` on
-`[0, T]`, `‖u(t) - ι e^{tL} p(0)‖ ≤ ‖u(t) - ι p(t)‖ + ‖ι‖ ∫₀ᵗ ‖p' - L p‖`. -/
-theorem norm_sub_le_of_defect (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y⟫_𝕜 = -⟪x, L y⟫_𝕜)
-    (ι : X →L[𝕜] E) {u : ℝ → E} {p p' : ℝ → X} {T : ℝ}
-    (hpc : ContinuousOn p (Icc 0 T)) (hp'c : ContinuousOn p' (Icc 0 T))
-    (hp : ∀ t ∈ Ico 0 T, HasDerivWithinAt p (p' t) (Ici t) t) :
-    ∀ t ∈ Icc 0 T, ‖u t - ι ((C0Group.ofBounded L).S t (p 0))‖ ≤
-      ‖u t - ι (p t)‖ + ‖ι‖ * ∫ s in (0 : ℝ)..t, ‖p' s - L (p s)‖ :=
-  norm_sub_le_of_defect_of_dissipative L (fun x => (re_inner_self_eq_zero_of_skew hL x).le) ι
-    hpc hp'c hp
-
 /-- **Uniqueness for skew bounded generators**: a differentiable `u` with `u' = L u` is the
 orbit `e^{tL} u(0)`, for all times (forward by the energy estimate, backward by time reversal). -/
 theorem eq_ofBounded_of_hasDerivAt (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y⟫_𝕜 = -⟪x, L y⟫_𝕜)
@@ -93,8 +81,9 @@ theorem eq_ofBounded_of_hasDerivAt (L : X →L[𝕜] X) (hL : ∀ x y, ⟪L x, y
       (∀ t, HasDerivAt u (L (u t)) t) → ∀ t, 0 ≤ t → u t = (C0Group.ofBounded L).S t (u 0) := by
     intro L hL u hu t ht
     have hc : Continuous u := continuous_iff_continuousAt.2 fun s => (hu s).continuousAt
-    have h := norm_sub_le_of_defect L hL (ContinuousLinearMap.id 𝕜 X) (u := u) (p := u)
-      (p' := fun s => L (u s)) (T := t) hc.continuousOn
+    have h := norm_sub_le_of_defect_of_dissipative L
+      (fun x => (re_inner_self_eq_zero_of_skew hL x).le) (ContinuousLinearMap.id 𝕜 X) (u := u)
+      (p := u) (p' := fun s => L (u s)) (T := t) hc.continuousOn
       (L.continuous.comp hc).continuousOn (fun s _ => (hu s).hasDerivWithinAt) t ⟨ht, le_rfl⟩
     simp only [ContinuousLinearMap.id_apply, sub_self, norm_zero, intervalIntegral.integral_zero,
       mul_zero, add_zero, norm_le_zero_iff] at h
@@ -141,18 +130,23 @@ variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 /-- The **exact group** `U(t)` of `F`, `t ∈ ℝ`: Stone's isometric group of `A`. -/
 def U (_ : SkewFEEC.{u} hA κ) (t : ℝ) : E →L[𝕜] E := hA.group.S t
 
-/-- **The semigroup is the group** for `t ≥ 0`. -/
+theorem U_def (t : ℝ) : F.U t = hA.group.S t := rfl
+
+/-- **The semigroup is the group** for `t ≥ 0`: the bridge between the dissipative layer (the
+Lumer–Phillips semigroup `F.S`) and the skew layer (Stone's group `F.U`), which are equal there
+but not by definition. -/
 theorem S_eq_U {t : ℝ} (ht : 0 ≤ t) : F.S t = F.U t :=
   (hA.eqOn_group_semigroup ht).symm
 
-theorem S_apply {t : ℝ} (ht : 0 ≤ t) (x : E) : F.S t x = F.U t x := by rw [F.S_eq_U ht]
+/-- `F` keeps `Q` in both time directions: `U(t) Q ⊆ Q` for every `t ∈ ℝ`. -/
+abbrev Invariant (Q : Set E) : Prop := ∀ t, ∀ x ∈ Q, F.U t x ∈ Q
 
 /-- **Inexactness criterion**, in group form: if `ιₕ Lₕ v ≠ A x`, the discrete solution from
 `v` differs from `U(t) x` at some time (`DissipFEEC.exists_sol_ne`, at some `t ≥ 0`). -/
 theorem exists_sol_ne {x : E} (hx : x ∈ A.domain) (h : κ) (v : F.X h)
     (hne : F.incl h (F.L h v) ≠ A ⟨x, hx⟩) : ∃ t, F.sol h v t ≠ F.U t x := by
   obtain ⟨t, ht, hne'⟩ := F.toDissipFEEC.exists_sol_ne hx h v hne
-  exact ⟨t, by rwa [F.S_apply ht] at hne'⟩
+  exact ⟨t, by rwa [F.S_eq_U ht] at hne'⟩
 
 end SkewFEEC
 
@@ -165,13 +159,9 @@ variable {A : E →ₗ.[𝕜] E} {hA : A.IsSkewAdjoint} {κ : Type*} (F : SkewFE
 
 open SkewFEEC
 
-/-- **The group conserves the norm**, `‖U(t) x‖ = ‖x‖` for every `t ∈ ℝ` and every datum. -/
-theorem skewFEEC_norm_U (t : ℝ) (x : E) : ‖F.U t x‖ = ‖x‖ := hA.isIsometric_group t x
-
 /-- **Constraints propagate iff `K` is reducing**: `K` reduces `A` iff `U(t) K ⊆ K` for every
 `t ∈ ℝ`. [QuennevilleBelair2015], Prop. 4.17, with necessity. -/
-theorem skewFEEC_isReducing_iff_invariant :
-    A.IsReducing F.K ↔ ∀ t, ∀ x ∈ F.K, F.U t x ∈ F.K := by
+theorem skewFEEC_isReducing_iff_invariant : A.IsReducing F.K ↔ F.Invariant F.K := by
   have h := hA.isIsometric_group.isReducing_iff_invariant (K := F.K)
   rw [hA.generator_group] at h
   exact h.trans C0Group.map_le_iff_forall
@@ -179,16 +169,14 @@ theorem skewFEEC_isReducing_iff_invariant :
 /-- **A closed set that the group does not keep is left by a smooth datum, in one of the two
 time directions**: if `D(A) ∩ Q` is dense in the closed `Q` and `U(t) Q ⊄ Q` for some `t ∈ ℝ`,
 then for every `T > 0` some datum of `D(A) ∩ Q` leaves `Q` at some `t ∈ [-T, T]`. -/
-theorem skewFEEC_leaves_smooth_symm {Q : Set E} (hQc : IsClosed Q)
-    (hQ : ¬ ∀ t, ∀ x ∈ Q, F.U t x ∈ Q) (hD : Q ⊆ closure ((A.domain : Set E) ∩ Q)) {T : ℝ}
-    (hT : 0 < T) : ∃ x ∈ (A.domain : Set E) ∩ Q, ∃ t ∈ Icc (-T) T, F.U t x ∉ Q := by
+theorem skewFEEC_leaves_smooth_symm {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Invariant Q)
+    (hD : F.SmoothDense Q) {T : ℝ} (hT : 0 < T) :
+    ∃ x ∈ (A.domain : Set E) ∩ Q, ∃ t ∈ Icc (-T) T, F.U t x ∉ Q := by
   by_contra hc
-  refine hQ fun t => hA.group.toC0Semigroup.mem_of_dense hQc (fun k hk => hD hk) fun y hy => ?_
-  have hmem : ∀ z ∈ (A.domain : Set E), ∀ s, hA.group.S s z ∈ A.domain := fun z hz s => by
-    have hg : (hA.group.generator.domain : Set E) = A.domain := by rw [hA.generator_group]
-    have h1 : hA.group.S s z ∈ (hA.group.generator.domain : Set E) :=
-      hA.group.mapsTo_domain ⟨z, by rw [← SetLike.mem_coe, hg]; exact hz⟩ s
-    rwa [hg] at h1
+  refine hQ fun t => hA.group.toC0Semigroup.mem_of_dense hQc hD fun y hy => ?_
+  have hg : hA.group.generator.domain = A.domain := by rw [hA.generator_group]
+  have hmem : ∀ z ∈ (A.domain : Set E), ∀ s, hA.group.S s z ∈ A.domain := fun z hz s =>
+    hg ▸ hA.group.mapsTo_domain ⟨z, hg ▸ hz⟩ s
   have hP := hA.group.forall_of_forall_Icc_neg hT (P := (A.domain : Set E) ∩ Q)
     fun z hz s hs => ⟨hmem z hz.1 s, by_contra fun hout => hc ⟨z, hz, s, hs, hout⟩⟩
   exact (hP y hy t).2
@@ -202,12 +190,11 @@ structure SkewFEEC.Verdict (Z : F.Core) : Prop extends
   /-- the group conserves the norm of every datum, for every `t ∈ ℝ` -/
   norm_U (t : ℝ) (x : E) : ‖F.U t x‖ = ‖x‖
   /-- `K` reduces `A` iff `U(t) K ⊆ K` for every `t ∈ ℝ` -/
-  isReducing_iff_invariant : A.IsReducing F.K ↔ ∀ t, ∀ x ∈ F.K, F.U t x ∈ F.K
+  isReducing_iff_invariant : A.IsReducing F.K ↔ F.Invariant F.K
   /-- a closed set, with a dense part in `D(A)`, that the group does not keep is left by a
   datum of that part at some `t ∈ [-T, T]`, for every `T > 0` -/
-  leaves_smooth_symm {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ ∀ t, ∀ x ∈ Q, F.U t x ∈ Q)
-    (hD : Q ⊆ closure ((A.domain : Set E) ∩ Q)) {T : ℝ} (hT : 0 < T) :
-    ∃ x ∈ (A.domain : Set E) ∩ Q, ∃ t ∈ Icc (-T) T, F.U t x ∉ Q
+  leaves_smooth_symm {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Invariant Q) (hD : F.SmoothDense Q)
+    {T : ℝ} (hT : 0 < T) : ∃ x ∈ (A.domain : Set E) ∩ Q, ∃ t ∈ Icc (-T) T, F.U t x ∉ Q
 
 /-- **The skew-adjoint FEEC theorem.** For a skew FEEC discretization `F` of `ξ' = A ξ` with `A`
 skew-adjoint (discrete Hilbert spaces with their own inner products, bounded skew generators,
@@ -224,7 +211,7 @@ Cf. [Pazy1983], §1.10, §3.4; [QuennevilleBelair2015], Thms 4.6, 4.7, Prop. 4.1
 theorem skewFEEC (Z : F.Core) : F.Verdict Z where
   toDissip := dissipFEEC F.toDissipFEEC Z
   S_eq_U := fun {_} ht => F.S_eq_U ht
-  norm_U := skewFEEC_norm_U F
+  norm_U := hA.isIsometric_group
   isReducing_iff_invariant := skewFEEC_isReducing_iff_invariant F
   leaves_smooth_symm := fun {_} hQc hQ hD {_} hT => skewFEEC_leaves_smooth_symm F hQc hQ hD hT
 

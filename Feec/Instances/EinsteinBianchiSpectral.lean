@@ -91,7 +91,7 @@ theorem norm_sub_sol_le_of_truncation {Data : Set (PiLp 2 W)} {classNorm : PiLp 
       C * meshSize N ^ α * classNorm x := by
   set R := S.rateClass K hK t Data classNorm meshSize α C hrate
   have h := dissipFEEC_rate _ R hx N (R.p x N 0) ⟨ht, le_rfl⟩
-  rw [ApproxFEEC.S_apply _ ht, sub_self, norm_zero, mul_zero, add_zero] at h
+  rw [ApproxFEEC.S_eq_waveGroup _ ht, sub_self, norm_zero, mul_zero, add_zero] at h
   have hp : R.p x N 0 = (S.B N).orthogonalProjectionOnto x := by
     change (S.B N).orthogonalProjectionOnto (H.waveGroup.S 0 x) = _
     rw [C0Group.S_zero_apply]
@@ -109,7 +109,7 @@ theorem infDist_sol_le_of_truncation (hKr : H.wave.IsReducing K) {Data : Set (Pi
     infDist ((S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t)
         (K : Set (PiLp 2 W)) ≤ C * meshSize N ^ α * classNorm x :=
   (dissipFEEC_residual_le _ ((dissipFEEC_propagates_iff _).2.2.1 hKr).1 hxK N _ ht).trans
-    (by rw [ApproxFEEC.S_apply _ ht]; exact norm_sub_sol_le_of_truncation S K hK hrate hx N ht)
+    (by rw [ApproxFEEC.S_eq_waveGroup _ ht]; exact norm_sub_sol_le_of_truncation S K hK hrate hx N ht)
 
 end Truncation
 

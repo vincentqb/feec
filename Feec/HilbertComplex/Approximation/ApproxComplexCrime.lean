@@ -82,8 +82,9 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   `ApproxFEEC.complexify_L_eq_diffWave`, `ApproxFEEC.complexify_galerkin`.
 * **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`): approximants along the
   trajectory with approximation, inner-product defect `‖(1 - Jₕ) w‖` and residual `O(m(h)ᵅ)` give
-  a `DissipFEEC.RateClass` with `C = (1 + 8 C_ι) Cₐ`, `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`,
-  hence `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
+  a `DissipFEEC.RateClass` with `C = (1 + 8 C_ι) Cₐ`,
+  `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`, hence
+  `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
   `ApproxComplexCrime.rateClass_of_split` gives a rate class at order `min(α, β, γ)` from
   graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`
   (`0 ≤ m ≤ 1`), with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ` in place of `Cₐ` (`C_w` bounds the approximants in the
@@ -898,7 +899,7 @@ def ofComplexCrimeCore : (ofComplexCrime F).Core where
   cmp T := crimeCmp F T
   data_eq _ := rfl
   tendsto_approx T _ hx := (crimeCmp_tendsto_approx F T hx).congr_right
-    fun _ ht => ((ofComplexCrime F).S_apply ht.1 _).symm
+    fun _ ht => (DFunLike.congr_fun ((ofComplexCrime F).S_eq_waveGroup ht.1) _).symm
   tendsto_defect T _ hx := crimeCmp_tendsto_defect F T hx
 
 theorem ofComplexCrimeCore_cmp (T : ℝ) : (ofComplexCrimeCore F).cmp T = crimeCmp F T := rfl
@@ -1295,7 +1296,7 @@ def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W
   approx x hx h t ht := by
     obtain ⟨w, hw, -, hres⟩ := hrate x hx h t ht _ (Set.mem_insert _ _)
     have e := crimeCmp_p_eq F T (hDc hx) h t
-    rw [ApproxFEEC.S_apply _ ht.1]
+    rw [ApproxFEEC.S_eq_waveGroup _ ht.1]
     change ‖H.waveGroup.S t x - F.toFamily.incl h ((crimeCmp F T).p x h t)‖ ≤ _
     rw [e]
     have := F.toFamily.norm_sub_incl_load_le_of_rate h _ _ w hw hres
@@ -1326,7 +1327,7 @@ theorem error_le_of_rateClass {T : ℝ} (R : (ApproxFEEC.ofComplexCrime F).RateC
     ‖H.waveGroup.S t x - (ApproxFEEC.ofComplexCrime F).sol h (R.p x h 0) t‖ ≤
       (R.C + F.toFamily.boundConst * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) := by
   have hr := dissipFEEC_rate _ R hx h (R.p x h 0) ht
-  rw [ApproxFEEC.S_apply _ ht.1, sub_self, norm_zero, mul_zero, add_zero] at hr
+  rw [ApproxFEEC.S_eq_waveGroup _ ht.1, sub_self, norm_zero, mul_zero, add_zero] at hr
   refine hr.trans ?_
   have h0 : 0 ≤ R.C' * (R.meshSize h ^ R.α * R.classNorm x) := by
     have := (norm_nonneg _).trans (R.consistency x hx h t ht)
@@ -1548,7 +1549,7 @@ theorem tendsto_reading_galerkin {y : PiLp 2 W} (hy : y ∈ orbitStates H Z0.Dat
   · have hx2 := hZ hx
     have ht : t ∈ Ico 0 (t + 1) := ⟨ht0, by linarith⟩
     have h1 := (Z0.tendsto_approx (t + 1) x hx).tendsto_at (Ico_subset_Icc_self ht)
-    rw [F.S_apply ht0] at h1
+    rw [F.S_eq_waveGroup ht0] at h1
     have h2 := tendsto_iff_norm_sub_tendsto_zero.1 h1
     refine h2.congr fun h => ?_
     rw [norm_sub_rev, waveExt_waveGroup H (domainSq_le_domain hx2),
@@ -1565,7 +1566,7 @@ theorem tendsto_reading_galerkin {y : PiLp 2 W} (hy : y ∈ orbitStates H Z0.Dat
     have hda : Tendsto (fun h => ‖F.incl h (p h) - y‖) F.l (𝓝 0) := by
       have := tendsto_iff_norm_sub_tendsto_zero.1
         ((Z0.tendsto_approx T x hx).tendsto_at (Ico_subset_Icc_self ht))
-      rw [F.S_apply ht0] at this
+      rw [F.S_eq_waveGroup ht0] at this
       exact this
     have hdd : Tendsto (fun h => ‖p' h - F.L h (p h)‖) F.l (𝓝 0) := by
       have := (Z0.tendsto_defect T x hx).tendsto_at (Ico_subset_Icc_self ht)

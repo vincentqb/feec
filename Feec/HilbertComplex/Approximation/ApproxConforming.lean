@@ -361,7 +361,7 @@ def RateClass.toApprox {T : ℝ} (R : F.RateClass T) : F.toApprox.RateClass T wh
   C' := 2 * ((1 + ellipticConst H) * R.C)
   approx x hx h t ht := by
     have hx1 := R.mem_domain x hx
-    rw [F.toApprox.S_apply ht.1]
+    rw [F.toApprox.S_eq_waveGroup ht.1]
     change ‖H.waveGroup.S t x - ((F.ellipticProj h (waveOrbit H x t) : F.Xh h) : PiLp 2 W)‖ ≤ _
     obtain ⟨w, hw, hwb⟩ := R.approx x hx h t ht (waveOrbit H x t) (graphFst_waveOrbit H hx1 t)
     rw [coe_ellipticProj, ← graphFst_waveOrbit H hx1 t, ← H.totalD.graphFst.map_sub]
@@ -417,7 +417,8 @@ theorem rate_le {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR : x ∈ R.Data
         H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
       (1 + ellipticConst H) * (1 + 2 * t) * (R.C * R.meshSize h ^ R.α * R.classNorm x) := by
   have hr := dissipFEEC_rate F.toApprox.toDissipFEEC R.toApprox hxR h (R.toApprox.p x h 0) ht
-  rw [F.toApprox.S_apply ht.1, sub_self, norm_zero, mul_zero, add_zero, R.toApprox_p hxR, F.toApprox_sol] at hr
+  rw [F.toApprox.S_eq_waveGroup ht.1, sub_self, norm_zero, mul_zero, add_zero, R.toApprox_p hxR,
+    F.toApprox_sol] at hr
   refine hr.trans ?_
   have hx1 := R.mem_domain x hxR
   obtain ⟨w, -, hwb⟩ := R.approx x hxR h t ht (waveOrbit H x t) (graphFst_waveOrbit H hx1 t)
@@ -518,11 +519,8 @@ theorem constrainedFEEC_of_approxFEEC :
         ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
           infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))) := by
   have V := approxFEEC F.toApprox F.toCore
-  have hS : ∀ t, 0 ≤ t → ∀ x, F.toApprox.S t x = H.waveGroup.S t x := fun t ht x =>
-    F.toApprox.S_apply ht x
-  have hpos : ∀ Q : Submodule 𝕜 (PiLp 2 W), IsClosed (Q : Set (PiLp 2 W)) → ∀ y, y ∉ Q →
-      0 < infDist y (Q : Set (PiLp 2 W)) := fun Q hQ y hy =>
-    (hQ.notMem_iff_infDist_pos ⟨0, Q.zero_mem⟩).1 hy
+  have hS : ∀ t, 0 ≤ t → ∀ x, F.toApprox.S t x = H.waveGroup.S t x := fun t ht x => by
+    rw [F.toApprox.S_eq_waveGroup ht]
   have V1 : ∀ x ∈ H.wave.domain, ∀ T : ℝ,
       Evolution.IsClassicalSolution H.wave (Icc 0 T) 0 (fun t => H.waveGroup.S t x) ∧
       (∀ U, U 0 = x → Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U →
@@ -542,11 +540,6 @@ theorem constrainedFEEC_of_approxFEEC :
           (fun t => H.waveGroup.S t x) F.l (Icc 0 T) := fun T x hx =>
     ⟨V.tendsto_incl_proj hx, fun v hv =>
       (V.converges hx hv T).congr_right fun t ht => hS t ht.1 x⟩
-  have hlim : ∀ (Q : Set (PiLp 2 W)) {x}, x ∈ F.toCore.Data.topologicalClosure →
-      ∀ {v : ∀ h, F.toApprox.X h}, Tendsto (fun h => F.toApprox.incl h (v h)) F.l (𝓝 x) →
-      ∀ {t}, 0 ≤ t → Tendsto (fun h => infDist (F.toApprox.sol h (v h) t) Q) F.l
-        (𝓝 (infDist (H.waveGroup.S t x) Q)) := fun Q x hx v hv t ht => by
-    rw [← hS t ht x]; exact V.tendsto_infDist Q hx hv ht
   have hconv : ∀ (T : ℝ) (x : H.wave.domain), TendstoUniformlyOn
       (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
       (fun t => H.waveGroup.S t x) F.l (Icc 0 T) := fun T x =>
@@ -593,30 +586,28 @@ theorem constrainedFEEC_of_approxFEEC :
     intro hK T hT
     obtain ⟨Q, hQ, x, hx, t, ht, hout⟩ :=
       dissipFEEC_leaves_of_not_isReducing F.toApprox.toDissipFEEC hK hT
-    rw [hS t ht.1 x] at hout
     have hQc : IsClosed (Q : Set (PiLp 2 W)) := by
       rcases hQ with rfl | rfl
       exacts [F.isClosed_K, Submodule.isClosed_orthogonal _]
-    refine ⟨Q, hQ, x, hx, t, ht, hout, hpos Q hQc _ hout, fun ξh ξh' hξh h0 => ?_⟩
+    obtain ⟨hp, hdet⟩ := V.detects hQc ⟨0, Q.zero_mem⟩ ht.1 hout
+    rw [F.toApprox.S_eq_waveGroup ht.1] at hout hp hdet
+    refine ⟨Q, hQ, x, hx, t, ht, hout, hp, fun ξh ξh' hξh h0 => ?_⟩
     obtain ⟨v, hv0, hv⟩ := horb hT.le ξh ξh' hξh
-    exact (hlim (Q : Set (PiLp 2 W)) (F.mem_toCore_closure x)
-      (h0.congr fun h => (hv0 h).symm) ht.1).congr fun h => by rw [hv h t ht]
+    exact (hdet (F.mem_toCore_closure x) v (h0.congr fun h => (hv0 h).symm)).1.congr fun h => by
+      rw [hv h t ht]
   · -- non-reducing constraint, `D(L) ∩ K` dense in `K`: both time directions
     intro hK hd T hT
     obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth_symm F.isClosed_K
-      (fun h => hK (V.isReducing_iff_invariant.2 h)) (fun k hk => hd k hk) hT
-    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos F.K F.isClosed_K _ hout⟩
+      (fun h => hK (V.isReducing_iff_invariant.2 h)) hd hT
+    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout,
+      (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout⟩
   · -- graded complex
     intro p hp hRK hdense hK T hT
-    have hnk : ¬ F.toApprox.Keeps F.K := fun h =>
-      hK ((V.isReducing_iff_keeps hp hRK fun k hk => hdense k hk).2 h)
-    obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K hnk
-      (fun k hk => hdense k hk) hT
-    rw [hS t ht.1 x] at hout
-    have hp0 := hpos F.K F.isClosed_K _ hout
-    have hl := hlim (F.K : Set (PiLp 2 W)) (F.mem_toCore_closure x)
-      (F.tendsto_incl_ellipticProj ⟨x, hxD⟩) ht.1
-    have hev := (tendsto_order.1 hl).1 _ (half_lt_self hp0)
+    obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K
+      (fun h => hK ((V.isReducing_iff_keeps hp hRK hdense).2 h)) hdense hT
+    obtain ⟨hp0, hdet⟩ := V.detects F.isClosed_K ⟨0, F.K.zero_mem⟩ ht.1 hout
+    obtain ⟨hl, hev⟩ := hdet (F.mem_toCore_closure x) _ (F.tendsto_incl_ellipticProj ⟨x, hxD⟩)
+    rw [F.toApprox.S_eq_waveGroup ht.1] at hout hp0 hl hev
     simp only [F.toApprox_sol] at hl hev
     exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hp0, hl, hev⟩
 
@@ -763,7 +754,7 @@ def toCore (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) 
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     filter_upwards [(Metric.tendsto_nhds.1 (S.tendsto x)) ε hε] with N hN t ht
-    rw [dist_eq_norm, (S.toApprox K hK).S_apply ht.1]
+    rw [dist_eq_norm, (S.toApprox K hK).S_eq_waveGroup ht.1]
     change ‖H.waveGroup.S t x - (S.B N).starProjection (H.waveGroup.S t x)‖ < ε
     rw [← S.waveGroup_starProjection, ← _root_.map_sub, H.isIsometric_waveGroup t,
       ← dist_eq_norm, dist_comm]
@@ -787,7 +778,7 @@ def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)
   C := C
   C' := 0
   approx x hx N t ht := by
-    rw [(S.toApprox K hK).S_apply ht.1]
+    rw [(S.toApprox K hK).S_eq_waveGroup ht.1]
     change ‖H.waveGroup.S t x - (S.B N).starProjection (H.waveGroup.S t x)‖ ≤ _
     rw [← S.waveGroup_starProjection, ← _root_.map_sub, H.isIsometric_waveGroup t]
     exact hrate x hx N

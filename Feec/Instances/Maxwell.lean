@@ -1310,7 +1310,8 @@ theorem torus_potential_approxFEEC [Nonempty d] :
 set_option maxHeartbeats 400000 in
 /-- **The non-reducing branch on the torus, read off the approximating FEEC theorem**, derived
 from the graded clause of `torus_potential_approxFEEC` (`ApproxFEEC.Verdict.isReducing_iff_keeps`:
-reducing iff kept forward in time) and its departure clause `DissipFEEC.Verdict.leaves_smooth`,
+reducing iff kept forward in time), its departure clause `DissipFEEC.Verdict.leaves_smooth` and
+the corollary `DissipFEEC.Verdict.detects`,
 with the parity grading of the window (`ComplexShape.window_parity`), the `R`-invariance of the
 vanishing-field constraint (`reversal_mem_totalSub`), the density of `D(L) ∩ K`
 (`dense_potential`), the density of the core (`mem_toCore_closure`), the convergence of the
@@ -1335,15 +1336,12 @@ theorem torus_potential_residual_of_approxFEEC [Nonempty d] {T : ℝ} (hT : 0 < 
   obtain ⟨V, hnot⟩ := torus_potential_approxFEEC (d := d)
   obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth isClosed_potential
     (fun h => hnot ((V.isReducing_iff_keeps (fun _ _ h => ComplexShape.window_parity h)
-      (fun _ hx => reversal_mem_totalSub hx) fun k hk => dense_potential _ k hk).2 h))
-    (fun k hk => dense_potential _ k hk) hT
-  rw [ApproxFEEC.S_apply _ ht.1] at hout
-  have hpos := (isClosed_potential.notMem_iff_infDist_pos ⟨0, Submodule.zero_mem _⟩).1 hout
-  have hlim := V.tendsto_infDist (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _)
-    (ConstrainedFEEC.mem_toCore_closure _ x)
-    (ConstrainedFEEC.tendsto_incl_ellipticProj _ ⟨x, hxD⟩) ht.1
-  rw [ApproxFEEC.S_apply _ ht.1] at hlim
-  have hev := (tendsto_order.1 hlim).1 _ (half_lt_self hpos)
+      (fun _ hx => reversal_mem_totalSub hx) (dense_potential _)).2 h)) (dense_potential _) hT
+  obtain ⟨hpos, hdet⟩ := V.detects (Q := (potential ℂ (fun i : Fin 3 => L2Form d (0 + i)) : Set _))
+    isClosed_potential ⟨0, Submodule.zero_mem _⟩ ht.1 hout
+  obtain ⟨hlim, hev⟩ := hdet (ConstrainedFEEC.mem_toCore_closure _ x) _
+    (ConstrainedFEEC.tendsto_incl_ellipticProj _ ⟨x, hxD⟩)
+  simp only [ApproxFEEC.S_eq_waveGroup _ ht.1] at hout hpos hlim hev
   refine ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, hlim.congr fun N => ?_, hev.mono fun N hN => ?_⟩
   · exact congrArg (infDist · _) (ConstrainedFEEC.toApprox_sol _ N _ t)
   · rwa [ConstrainedFEEC.toApprox_sol] at hN

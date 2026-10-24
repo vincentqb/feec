@@ -47,11 +47,16 @@ discrete solution is `ξₕ(t) = ιₕ e^{tLₕ} vₕ`. Then:
    `‖ξ(t) − ξₕ(t)‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖ + ‖ιₕ‖ ‖pₕ(0) − vₕ‖`.
 4. **Constraint residual**, measured as `dist(ξₕ(t), K)` in `W`. If `K` reduces `L`, the
    residual is at most the error and tends to `0`. If a solution from a datum in the closure of
-   the core leaves a closed set `Q`, the residuals tend to the positive number `dist(ξ(t), Q)`. A non-reducing `K` is left by some
-   datum of `K` or of `K^⊥`. If `D(L) ∩ K` is dense in `K`, a datum of `D(L) ∩ K` leaves `K` at
-   some `t ∈ [−T, T]`. On graded complexes with `K` invariant under the grading, it leaves `K`
-   forward in time, and when that datum lies in the closure of the core its residuals tend to a
-   positive limit.
+   the core leaves a closed set `Q`, the residuals tend to the positive number `dist(ξ(t), Q)`.
+   A non-reducing `K` is left by some datum of `K` or of `K^⊥`. If `D(L) ∩ K` is dense in `K`, a
+   datum of `D(L) ∩ K` leaves `K` at some `t ∈ [−T, T]`. On graded complexes with `K` invariant
+   under the grading, it leaves `K` forward in time, and when that datum lies in the closure of
+   the core its residuals tend to a positive limit. The fields of the verdicts are the
+   departures `DissipFEEC.Verdict.leaves` (a set that is not kept), `leaves_smooth` (with a dense
+   smooth part) and `SkewFEEC.Verdict.leaves_smooth_symm` (both time directions), and the limit
+   `tendsto_infDist`; derived, not fields, are `DissipFEEC.Verdict.detects` (a departure gives a
+   positive residual limit, eventually above half of it) and `dissipFEEC_leaves_of_not_isReducing`
+   (the `K`-or-`K^⊥` case of `leaves`).
 
 **The conforming case.** When `Xₕ` are finite-dimensional subcomplexes with uniformly bounded
 commuting cochain projections and `ιₕ` is the inclusion, this is the constrained FEEC theorem

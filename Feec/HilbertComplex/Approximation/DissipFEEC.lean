@@ -45,7 +45,9 @@ through the orbit defect `pₕ' - Lₕ pₕ`.
 The **dissipative FEEC theorem** `dissipFEEC` (statement `DissipFEEC.Verdict`, a structure whose
 fields are the conclusions) bundles the following results; `dissipFEEC_converges_core` and
 `dissipFEEC_leaves_of_not_isReducing` are not fields, being the cases `vₕ = pₕ(0)` of
-`converges` and `Q ∈ {K, Kᗮ}` of `leaves`:
+`converges` and `Q ∈ {K, Kᗮ}` of `leaves`, nor is `DissipFEEC.Verdict.detects` (a departure
+from a closed set has residuals of positive limit, eventually above half of it), a corollary of
+`tendsto_infDist`:
 
 1. well-posedness (Lumer–Phillips, `dissipFEEC_wellPosed`): for `ξ₀ ∈ D(A)`, `t ↦ S(t) ξ₀` is a
    classical solution and the only strong one, with the energy identity
@@ -57,14 +59,16 @@ fields are the conclusions) bundles the following results; `dissipFEEC_converges
    iff both `K` and `Kᗮ` are invariant;
 3. convergence: on the core (`dissipFEEC_converges_core`), on its closure for every family `vₕ`
    with `ιₕ vₕ → ξ₀` (`dissipFEEC_converges`; `ιₕ πₕ ξ₀ → ξ₀` gives one), with rates for a rate
-   class (`dissipFEEC_rate`: `‖S(t) ξ₀ - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`);
+   class (`dissipFEEC_rate`:
+   `‖S(t) ξ₀ - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`);
 4. the constraint residual `dist(ιₕ e^{tLₕ} vₕ, K)`: for invariant `K` it is bounded by the error
    and tends to `0` (`dissipFEEC_residual_le`, `dissipFEEC_residual`); for every set `Q` the
    distances `dist(ιₕ e^{tLₕ} vₕ, Q)` tend to `dist(S(t) ξ₀, Q)`, which is positive when the
    solution has left a closed `Q` (`dissipFEEC_tendsto_infDist`); a set that is not kept is left by
    one of its data before any time `T > 0` (`dissipFEEC_leaves`; a non-reducing `K` is left by a
    datum of `K` or of `Kᗮ`, `dissipFEEC_leaves_of_not_isReducing`), by a datum of `D(A) ∩ Q` when
-   `Q` is closed and `D(A) ∩ Q` is dense in it (`dissipFEEC_leaves_smooth`).
+   `Q` is closed and `D(A) ∩ Q` is dense in it (`DissipFEEC.SmoothDense`,
+   `dissipFEEC_leaves_smooth`).
 
 The **Trotter–Kato bridge** `DissipFEEC.Core.ofOperator` builds a core `D(A)` from bounded
 `Rₕ : E → Xₕ` with `ιₕ Rₕ → 1` strongly and a defect identity `Rₕ A - Lₕ Rₕ = Δₕ A + Δₕ'` on `D(A)`
@@ -195,6 +199,50 @@ theorem eventually_forall_norm_lt_of_tendsto {𝕜 κ F : Type*} [RCLike 𝕜]
     rw [e]
     exact (norm_add_le _ _).trans (by linarith [hM h (ζ - ζ')])) hlim hS hε
 
+/-- **Pointwise convergence of uniformly bounded operators is uniform along a curve with compact
+image**: `Pₕ ζ → P₀ ζ` for every `ζ` and `‖Pₕ‖ ≤ C` give `Pₕ (f t) → P₀ (f t)` uniformly on `S`
+when `f(S)` is compact. -/
+theorem tendstoUniformlyOn_apply_of_tendsto {𝕜 κ F G : Type*} [RCLike 𝕜]
+    [SeminormedAddCommGroup F] [NormedSpace 𝕜 F] [SeminormedAddCommGroup G] [NormedSpace 𝕜 G]
+    {l : Filter κ} {P : κ → F →L[𝕜] G} {P₀ : F →L[𝕜] G} (hP : ∃ C, ∀ h, ‖P h‖ ≤ C)
+    (hlim : ∀ ζ, Tendsto (fun h => P h ζ) l (𝓝 (P₀ ζ))) {f : ℝ → F} {S : Set ℝ}
+    (hf : IsCompact (f '' S)) :
+    TendstoUniformlyOn (fun h t => P h (f t)) (fun t => P₀ (f t)) l S := by
+  obtain ⟨C, hC⟩ := hP
+  have hB : ∀ h ζ, ‖(P₀ - P h) ζ‖ ≤ (‖P₀‖ + C) * ‖ζ‖ := fun h ζ =>
+    ((P₀ - P h).le_opNorm ζ).trans (mul_le_mul_of_nonneg_right
+      ((norm_sub_le _ _).trans (add_le_add_right (hC h) _)) (norm_nonneg _))
+  have hB0 : ∀ ζ, Tendsto (fun h => ‖(P₀ - P h) ζ‖) l (𝓝 0) := fun ζ =>
+    (tendsto_iff_norm_sub_tendsto_zero.1 (hlim ζ)).congr fun h => norm_sub_rev _ _
+  rw [Metric.tendstoUniformlyOn_iff]
+  intro ε hε
+  filter_upwards [eventually_forall_norm_lt_of_tendsto hB hB0 hf hε] with h hh t ht
+  simpa [dist_eq_norm] using hh _ (mem_image_of_mem _ ht)
+
+/-- **Defects dominated by uniformly bounded operators tending to `0` pointwise tend to `0`
+uniformly along compact orbits**: `‖dₕ(t)‖ ≤ ‖Δₕ (f t)‖ + ‖Δₕ' (g t)‖` on `S`, with `f(S)` and
+`g(S)` compact, give `‖dₕ‖ → 0` uniformly on `S`. -/
+theorem tendstoUniformlyOn_norm_of_le {𝕜 κ F : Type*} [RCLike 𝕜] [SeminormedAddCommGroup F]
+    [NormedSpace 𝕜 F] {G D : κ → Type*} [∀ h, SeminormedAddCommGroup (G h)]
+    [∀ h, NormedSpace 𝕜 (G h)] [∀ h, SeminormedAddCommGroup (D h)] {l : Filter κ}
+    {Δ Δ' : ∀ h, F →L[𝕜] G h} (hΔ : ∃ C, ∀ h, ‖Δ h‖ ≤ C ∧ ‖Δ' h‖ ≤ C)
+    (hΔ0 : ∀ ζ, Tendsto (fun h => ‖Δ h ζ‖) l (𝓝 0))
+    (hΔ'0 : ∀ ζ, Tendsto (fun h => ‖Δ' h ζ‖) l (𝓝 0)) {f g : ℝ → F} {S : Set ℝ}
+    (hf : IsCompact (f '' S)) (hg : IsCompact (g '' S)) {d : ∀ h, ℝ → D h}
+    (hd : ∀ h, ∀ t ∈ S, ‖d h t‖ ≤ ‖Δ h (f t)‖ + ‖Δ' h (g t)‖) :
+    TendstoUniformlyOn (fun h t => ‖d h t‖) (fun _ => 0) l S := by
+  obtain ⟨C, hC⟩ := hΔ
+  have hb : ∀ B : ∀ h, F →L[𝕜] G h, (∀ h, ‖B h‖ ≤ C) → ∀ h ζ, ‖B h ζ‖ ≤ C * ‖ζ‖ :=
+    fun B hB h ζ => ((B h).le_opNorm ζ).trans (mul_le_mul_of_nonneg_right (hB h) (norm_nonneg _))
+  rw [Metric.tendstoUniformlyOn_iff]
+  intro ε hε
+  filter_upwards [eventually_forall_norm_lt_of_tendsto (hb Δ fun h => (hC h).1) hΔ0 hf
+      (half_pos hε),
+    eventually_forall_norm_lt_of_tendsto (hb Δ' fun h => (hC h).2) hΔ'0 hg (half_pos hε)]
+    with h h1 h2 t ht
+  rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _)]
+  linarith [hd h t ht, h1 _ (mem_image_of_mem _ ht), h2 _ (mem_image_of_mem _ ht)]
+
 /-- `∫₀ᵗ g ≤ M t` for `‖g‖ ≤ M` on `[0, t]` (no integrability needed). -/
 theorem integral_le_mul_of_norm_le {g : ℝ → ℝ} {t M : ℝ} (ht : 0 ≤ t)
     (hg : ∀ s ∈ Icc 0 t, ‖g s‖ ≤ M) : ∫ s in (0 : ℝ)..t, g s ≤ M * t := by
@@ -268,6 +316,13 @@ theorem norm_le_norm_incl (h : κ) (v : F.X h) : ‖v‖ ≤ F.boundConst * ‖F
 
 theorem norm_incl_apply_le (h : κ) (v : F.X h) : ‖F.incl h v‖ ≤ F.boundConst * ‖v‖ :=
   ((F.incl h).le_opNorm v).trans (mul_le_mul_of_nonneg_right (F.norm_incl_le h) (norm_nonneg _))
+
+/-- `ιₕ Rₕ` is uniformly bounded when `Rₕ` is. -/
+theorem bound_incl_comp {G : Type*} [SeminormedAddCommGroup G] [NormedSpace 𝕜 G]
+    {R : ∀ h, G →L[𝕜] F.X h} (hR : ∃ C, ∀ h, ‖R h‖ ≤ C) : ∃ C, ∀ h, ‖F.incl h ∘L R h‖ ≤ C :=
+  let ⟨C, hC⟩ := hR
+  ⟨F.boundConst * C, fun h => (ContinuousLinearMap.opNorm_comp_le _ _).trans
+    (mul_le_mul (F.norm_incl_le h) (hC h) (norm_nonneg _) F.boundConst_nonneg)⟩
 
 theorem norm_incl_proj_le (h : κ) (y : E) :
     ‖F.incl h (F.proj h y)‖ ≤ F.boundConst ^ 2 * ‖y‖ := by
@@ -369,6 +424,10 @@ abbrev Keeps (Q : Set E) : Prop := ∀ t, 0 ≤ t → ∀ x ∈ Q, F.S t x ∈ Q
 
 /-- `x` leaves `Q` by time `T`: `S(t) x ∉ Q` for some `t ∈ [0, T]`. -/
 abbrev Leaves (x : E) (Q : Set E) (T : ℝ) : Prop := ∃ t ∈ Icc 0 T, F.S t x ∉ Q
+
+/-- `Q` has a dense smooth part: `D(A) ∩ Q` is dense in `Q`. -/
+abbrev SmoothDense (_ : DissipFEEC.{u} hA κ) (Q : Set E) : Prop :=
+  ∀ k ∈ Q, k ∈ closure ((A.domain : Set E) ∩ Q)
 
 /-- A **rate class** on `[0, T]`: comparison trajectories with best approximation
 `‖S(t) x - ιₕ pₕ(t)‖ ≤ C hᵅ ‖x‖_c` and consistency `‖pₕ' - Lₕ pₕ‖ ≤ C' hᵅ ‖x‖_c`.
@@ -502,53 +561,19 @@ def Core.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h�
   Data := A.domain
   cmp T := Comparison.ofOperator F R T
   data_eq _ := rfl
-  tendsto_approx T x _ := by
-    obtain ⟨C, hC⟩ := hR
-    set B : ∀ _ : κ, E →L[𝕜] E := fun h => ContinuousLinearMap.id 𝕜 E - F.incl h ∘L R h
-    have hB : ∀ h y, ‖B h y‖ ≤ (1 + F.boundConst * max C 0) * ‖y‖ := fun h y => by
-      have h2 : ‖F.incl h (R h y)‖ ≤ F.boundConst * (max C 0 * ‖y‖) :=
-        (F.norm_incl_apply_le h _).trans (mul_le_mul_of_nonneg_left
-          (((R h).le_opNorm y).trans (mul_le_mul_of_nonneg_right
-            ((hC h).trans (le_max_left _ _)) (norm_nonneg _))) F.boundConst_nonneg)
-      calc ‖B h y‖ ≤ ‖y‖ + ‖F.incl h (R h y)‖ := norm_sub_le _ _
-        _ ≤ _ := by nlinarith [norm_nonneg y]
-    have hlim : ∀ y, Tendsto (fun h => ‖B h y‖) F.l (𝓝 0) := fun y => by
-      have := tendsto_iff_norm_sub_tendsto_zero.1 (happrox y)
-      refine this.congr fun h => ?_
-      rw [norm_sub_rev]; rfl
-    have hcpt : IsCompact ((fun t => F.S t x) '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont x).mono Icc_subset_Ici_self)
-    rw [Metric.tendstoUniformlyOn_iff]
-    intro ε hε
-    filter_upwards [eventually_forall_norm_lt_of_tendsto hB hlim hcpt hε] with h hh t ht
-    have := hh _ (mem_image_of_mem _ ht)
-    rw [dist_eq_norm]
-    simpa [B, Comparison.ofOperator] using this
-  tendsto_defect T x hx := by
-    obtain ⟨C, hC⟩ := hΔ
-    have hb1 : ∀ h y, ‖Δ h y‖ ≤ C * ‖y‖ := fun h y => ((Δ h).le_opNorm y).trans
-      (mul_le_mul_of_nonneg_right (hC h).1 (norm_nonneg _))
-    have hb2 : ∀ h y, ‖Δ' h y‖ ≤ C * ‖y‖ := fun h y => ((Δ' h).le_opNorm y).trans
-      (mul_le_mul_of_nonneg_right (hC h).2 (norm_nonneg _))
-    have hcpt1 : IsCompact ((fun t => F.S t x) '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont x).mono Icc_subset_Ici_self)
-    have hcpt2 : IsCompact ((fun t => F.S t (genExt A x)) '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont _).mono Icc_subset_Ici_self)
-    have hdefect : ∀ h, ∀ t ∈ Icc 0 T, ‖(Comparison.ofOperator F R T).defect x h t‖ ≤
-        ‖Δ h (F.S t (genExt A x))‖ + ‖Δ' h (F.S t x)‖ := fun h t ht => by
+  tendsto_approx T x _ := tendstoUniformlyOn_apply_of_tendsto (P₀ := ContinuousLinearMap.id 𝕜 E)
+    (F.bound_incl_comp hR) happrox
+    (isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont x).mono Icc_subset_Ici_self))
+  tendsto_defect T x hx := tendstoUniformlyOn_norm_of_le hΔ hΔ0 hΔ'0
+    (isCompact_Icc.image_of_continuousOn
+      ((hA.semigroup.strongCont (genExt A x)).mono Icc_subset_Ici_self))
+    (isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont x).mono Icc_subset_Ici_self))
+    fun h t ht => by
       have e := hdef h ⟨_, hA.semigroup_mem_domain ⟨x, hx⟩ ht.1⟩
       rw [hA.apply_semigroup ⟨x, hx⟩ ht.1] at e
       change ‖R h (hA.semigroup.S t (genExt A x)) - F.L h (R h (hA.semigroup.S t x))‖ ≤ _
-      rw [genExt_of_mem hx]
-      rw [e]
+      rw [genExt_of_mem hx, e]
       exact norm_add_le _ _
-    rw [Metric.tendstoUniformlyOn_iff]
-    intro ε hε
-    filter_upwards [eventually_forall_norm_lt_of_tendsto hb1 hΔ0 hcpt2 (half_pos hε),
-      eventually_forall_norm_lt_of_tendsto hb2 hΔ'0 hcpt1 (half_pos hε)] with h h1 h2 t ht
-    rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _)]
-    have := hdefect h t ht
-    linarith [h1 _ (mem_image_of_mem _ ht), h2 _ (mem_image_of_mem _ ht)]
 
 /-- **The Trotter–Kato core is dense**: its data `D(A)` are dense (an m-dissipative operator is
 densely defined), so `dissipFEEC_converges` applies to every datum. -/
@@ -795,14 +820,14 @@ theorem dissipFEEC_leaves_of_not_isReducing (hK : ¬ A.IsReducing F.K) {T : ℝ}
 /-- **4c. A closed set that is not kept is left by a smooth datum**: if `D(A) ∩ Q` is dense in
 the closed `Q`, some datum of `D(A) ∩ Q` leaves `Q` by any time `T > 0`. -/
 theorem dissipFEEC_leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps Q)
-    (hD : Q ⊆ closure ((A.domain : Set E) ∩ Q)) {T : ℝ} (hT : 0 < T) :
+    (hD : F.SmoothDense Q) {T : ℝ} (hT : 0 < T) :
     ∃ x ∈ (A.domain : Set E) ∩ Q, F.Leaves x Q T := by
   by_contra hc
   refine hQ fun t ht => ?_
   have hP : ∀ y ∈ (A.domain : Set E) ∩ Q, ∀ s, 0 ≤ s → F.S s y ∈ (A.domain : Set E) ∩ Q :=
     hA.semigroup.forall_nonneg_of_forall_Icc hT fun y hy s hs =>
       ⟨hA.semigroup_mem_domain ⟨y, hy.1⟩ hs.1, by_contra fun hout => hc ⟨y, hy, s, hs, hout⟩⟩
-  exact hA.semigroup.mem_of_dense hQc (fun k hk => hD hk) fun y hy => (hP y hy t ht).2
+  exact hA.semigroup.mem_of_dense hQc hD fun y hy => (hP y hy t ht).2
 
 /-- The conclusions of the dissipative FEEC theorem (`dissipFEEC`) for `F` and the core `Z`. -/
 structure DissipFEEC.Verdict (Z : F.Core) : Prop where
@@ -855,9 +880,8 @@ structure DissipFEEC.Verdict (Z : F.Core) : Prop where
   leaves {Q : Set E} (hQ : ¬ F.Keeps Q) {T : ℝ} (hT : 0 < T) : ∃ x ∈ Q, F.Leaves x Q T
   /-- a closed set that is not kept, with a dense part in `D(A)`, is left by a datum of that
   part before any time `T > 0` -/
-  leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps Q)
-    (hD : Q ⊆ closure ((A.domain : Set E) ∩ Q)) {T : ℝ} (hT : 0 < T) :
-    ∃ x ∈ (A.domain : Set E) ∩ Q, F.Leaves x Q T
+  leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps Q) (hD : F.SmoothDense Q) {T : ℝ}
+    (hT : 0 < T) : ∃ x ∈ (A.domain : Set E) ∩ Q, F.Leaves x Q T
 
 /-- **The dissipative FEEC theorem.** For a dissipative FEEC discretization `F` of `ξ' = A ξ`
 with `A` m-dissipative (discrete Hilbert spaces with their own inner products, bounded
@@ -893,6 +917,22 @@ theorem dissipFEEC (Z : F.Core) : F.Verdict Z where
   tendsto_infDist := fun Q {_} hx {_} hv {_} ht => dissipFEEC_tendsto_infDist F Z Q hx hv ht
   leaves := fun {_} hQ {_} hT => dissipFEEC_leaves F hQ hT
   leaves_smooth := fun {_} hQc hQ hD {_} hT => dissipFEEC_leaves_smooth F hQc hQ hD hT
+
+variable {F} in
+/-- **A departure is detected by the residuals** (a corollary of the verdict, not a field): if
+`S(t) x ∉ Q` (`t ≥ 0`) for a closed nonempty `Q`, then `dist(S(t) x, Q) > 0`, and when `x` is in
+the closure of the core, the residuals `dist(ιₕ e^{tLₕ} vₕ, Q)` of every family `ιₕ vₕ → x` tend to
+it (`tendsto_infDist`), so they eventually exceed half of it. -/
+theorem DissipFEEC.Verdict.detects {Z : F.Core} (V : F.Verdict Z) {Q : Set E} (hQc : IsClosed Q)
+    (hQ : Q.Nonempty) {x : E} {t : ℝ} (ht : 0 ≤ t) (hout : F.S t x ∉ Q) :
+    0 < infDist (F.S t x) Q ∧ (x ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
+      F.Converges v x → Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l
+        (𝓝 (infDist (F.S t x) Q)) ∧
+      ∀ᶠ h in F.l, infDist (F.S t x) Q / 2 < infDist (F.sol h (v h) t) Q) := by
+  have hpos := (hQc.notMem_iff_infDist_pos hQ).1 hout
+  refine ⟨hpos, fun hx v hv => ?_⟩
+  have hlim := V.tendsto_infDist Q hx hv ht
+  exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
 end Main
 

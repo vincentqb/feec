@@ -584,14 +584,14 @@ def sobolevRate (T : ℝ) {s : ℝ} (hs : 0 ≤ s) : (bandApprox S hS K hK).Rate
       rw [one_mul, sobolevNorm_eq hy]
       exact norm_sub_starProjection_le S hs hy N
 
-/-- **The Sobolev rate** (the rate clause of `dissipFEEC` for the class `Hˢ`): for `x ∈ Hˢ`, `s ≥ 0`,
-`‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` for all `t ≥ 0`. -/
+/-- **The Sobolev rate** (the rate clause of `dissipFEEC` for the class `Hˢ`): for `x ∈ Hˢ`,
+`s ≥ 0`, `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` for all `t ≥ 0`. -/
 theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2 volume}
     (hx : x ∈ sobolev 𝕜 E s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
     ‖S.toHilbertComplex.waveGroup.S t x -
         (bandApprox S hS K hK).sol N ((bandApprox S hS K hK).proj N x) t‖ ≤
       (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x := by
-  simp only [← ApproxFEEC.S_apply (bandApprox S hS K hK) ht]
+  simp only [← ApproxFEEC.S_eq_waveGroup (bandApprox S hS K hK) ht]
   set R := sobolevRate S hS K hK t hs
   have h := dissipFEEC_rate (bandApprox S hS K hK).toDissipFEEC R (x := x) hx N
     ((bandApprox S hS K hK).proj N x) (t := t) ⟨ht, le_rfl⟩
@@ -1442,16 +1442,13 @@ theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} 
     (fun hk => maxwell_euclidean_not_isReducing_potential d a h
       ((V.isReducing_iff_keeps (p := fun i : Fin 3 => decide (Odd i.val))
         (fun _ _ h => ComplexShape.window_parity h) (fun _ hx => reversal_mem_totalSub hx)
-        fun k hk => dense_potential _ k hk).2 hk))
-    (fun k hk => dense_potential _ k hk) hT
-  rw [ApproxFEEC.S_apply _ ht.1] at hout
-  have hpos := (isClosed_potential.notMem_iff_infDist_pos ⟨0, Submodule.zero_mem _⟩).1 hout
+        (dense_potential _)).2 hk)) (dense_potential _) hT
   have hx : x ∈ (maxwellPotentialCore d a).Data.topologicalClosure :=
     Submodule.le_topologicalClosure _ (by rw [bandCore_data]; trivial)
-  have h1 := V.tendsto_infDist (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) hx
-    (V.tendsto_incl_proj hx) ht.1
-  rw [ApproxFEEC.S_apply _ ht.1] at h1
-  exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, h1, (tendsto_order.1 h1).1 _ (half_lt_self hpos)⟩
+  obtain ⟨hpos, hdet⟩ := V.detects isClosed_potential ⟨0, Submodule.zero_mem _⟩ ht.1 hout
+  obtain ⟨hlim, hev⟩ := hdet hx _ (V.tendsto_incl_proj hx)
+  simp only [ApproxFEEC.S_eq_waveGroup _ ht.1] at hout hpos hlim hev
+  exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, hlim, hev⟩
 
 /-! #### The classical system: `d = 3`, `a = 0` -/
 

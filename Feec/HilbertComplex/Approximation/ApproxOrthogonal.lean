@@ -151,7 +151,7 @@ def orbitCore (hF : IsOrthogonal F) (Data : Submodule 𝕜 (PiLp 2 W))
     have h0 : (0 : ℝ) ∈ Icc 0 (max T 1) := ⟨le_rfl, le_max_of_le_right zero_le_one⟩
     have hv0 := hv 0 h0
     rw [C0Group.S_zero_apply, DissipFEEC.sol_zero] at hv0
-    rw [dist_eq_norm, F.S_apply ht.1]
+    rw [dist_eq_norm, F.S_eq_waveGroup ht.1]
     change ‖H.waveGroup.S t x - F.sol h (F.proj h x) t‖ < ε
     have := hF.norm_sub_sol_proj_le h x v t
     linarith [hv t ht']
@@ -181,7 +181,7 @@ def orbitRate (hF : IsOrthogonal F) {T : ℝ} (S : Set (PiLp 2 W)) (classNorm : 
     obtain ⟨v, hv⟩ := hrate x hx h
     have hv0 := hv 0 ⟨le_rfl, ht.1.trans ht.2⟩
     rw [C0Group.S_zero_apply, DissipFEEC.sol_zero] at hv0
-    rw [F.S_apply ht.1]
+    rw [F.S_eq_waveGroup ht.1]
     change ‖H.waveGroup.S t x - F.sol h (F.proj h x) t‖ ≤ _
     have := hF.norm_sub_sol_proj_le h x v t
     linarith [hv t ht]

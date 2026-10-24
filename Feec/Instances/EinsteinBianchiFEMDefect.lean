@@ -1518,7 +1518,8 @@ theorem einsteinBianchi_mirrorFEM_ofCochainDefect :
       (ApproxFEEC.ofComplexCrimeCore (mirrorSplitComplex hT hB)).Data.topologicalClosure :=
     hcl.ge hx
   set F := ApproxFEEC.ofComplexCrime (mirrorSplitComplex hT hB)
-  exact ⟨(dissipFEEC_converges _ _ T hx' hv).congr_right fun t ht => ApproxFEEC.S_apply F ht.1 x,
+  exact ⟨(dissipFEEC_converges _ _ T hx' hv).congr_right fun t ht =>
+    DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup F ht.1) x,
     dissipFEEC_residual F.toDissipFEEC ((dissipFEEC_propagates_iff _).2.2.1 isReducing_tsdQℝ).1 _ T
       hx' hx hv⟩
 

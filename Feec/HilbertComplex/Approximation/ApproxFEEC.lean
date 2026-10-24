@@ -14,8 +14,9 @@ equation `ξ' = L ξ` (`L = 𝐝 - 𝐝†`) of a Hilbert complex `H` is a skew 
 inner products, not necessarily finite-dimensional), its discrete generators `Lₕ` are bounded and
 skew in the discrete inner product (so `e^{tLₕ}` is unitary: uniform stability), and it is read
 in `W` through uniformly bounded maps `ιₕ : Xₕ → W` with uniformly bounded left inverses `πₕ`
-(`πₕ ιₕ = 1`). Its comparisons, cores and rate classes are those of `Feec.HilbertComplex.DissipFEEC`;
-its exact group `SkewFEEC.U` is the wave group `e^{tL}` of `H`.
+(`πₕ ιₕ = 1`). Its comparisons, cores and rate classes are those of
+`Feec.HilbertComplex.DissipFEEC`; its exact group `SkewFEEC.U` is the wave group `e^{tL}` of `H`
+(`ApproxFEEC.U_eq_waveGroup`), hence so is its flow for `t ≥ 0` (`ApproxFEEC.S_eq_waveGroup`).
 
 `ApproxFEEC` is a **semigroup-form** abstraction: it carries no discrete differential `𝐝ₕ` and
 no cochain condition on `ιₕ`; the complex structure of the discrete spaces is not a hypothesis.
@@ -36,8 +37,9 @@ theorem `dissipFEEC`), together with the conclusions specific to Hilbert complex
    ([QuennevilleBelair2015], Thm 4.7);
 2. `approxFEEC_isReducing_iff_keeps`: on a graded complex, for an `R`-invariant `K` with
    `D(L) ∩ K` dense in `K`, `K` reduces `L` iff `e^{tL} K ⊆ K` for `t ≥ 0` (forward propagation
-   suffices, [QuennevilleBelair2015], Prop. 4.17); with `dissipFEEC_leaves_smooth`, a
-   non-reducing such `K` is left by a datum of `D(L) ∩ K` forward in time.
+   suffices, [QuennevilleBelair2015], Prop. 4.17); with `DissipFEEC.Verdict.leaves_smooth` and
+   `DissipFEEC.Verdict.detects`, a non-reducing such `K` is left by a datum of `D(L) ∩ K` forward
+   in time, with residuals of positive limit.
 
 Constructions of cores: `ApproxFEEC.Core.ofOperator` (the Trotter–Kato bridge on the graph space:
 an operator `Rₕ : Γ(𝐝) → Xₕ` with `ιₕ Rₕ → graphFst` pointwise and a defect identity on `D(L²)`
@@ -185,10 +187,13 @@ namespace ApproxFEEC
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxFEEC.{u} H κ)
 
+/-- The exact group `SkewFEEC.U` of an approximating FEEC discretization is the wave group, by
+definition. -/
+theorem U_eq_waveGroup (t : ℝ) : F.U t = H.waveGroup.S t := rfl
+
 /-- For `t ≥ 0`, the exact flow of an approximating FEEC discretization is the wave group
-(its exact group `SkewFEEC.U` is the wave group by definition). -/
-theorem S_apply {t : ℝ} (ht : 0 ≤ t) (x : PiLp 2 W) : F.S t x = H.waveGroup.S t x :=
-  SkewFEEC.S_apply F ht x
+(`SkewFEEC.S_eq_U`). -/
+theorem S_eq_waveGroup {t : ℝ} (ht : 0 ≤ t) : F.S t = H.waveGroup.S t := F.S_eq_U ht
 
 /-! ### The Trotter–Kato bridge -/
 
@@ -204,39 +209,6 @@ def Comparison.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T :
   hasDerivWithinAt _ hx h t ht :=
     ((R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t
       ((waveOrbit_isC1' H hx T).2.2 t ht)
-
-/-- Uniform approximation along the orbits, from pointwise approximation by uniformly bounded
-`ιₕ Rₕ` (compactness of the orbit). -/
-theorem tendstoUniformlyOn_ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h)
-    (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
-    (happrox : ∀ ζ, Tendsto (fun h => F.incl h (R h ζ)) F.l (𝓝 (H.totalD.graphFst ζ)))
-    (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) :
-    TendstoUniformlyOn (fun h t => F.incl h (R h (waveOrbit H x t)))
-      (fun t => H.waveGroup.S t x) F.l (Icc 0 T) := by
-  obtain ⟨C, hC⟩ := hR
-  set A : ∀ _ : κ, H.totalD.GraphSpace →L[𝕜] PiLp 2 W := fun h =>
-    H.totalD.graphFst - F.incl h ∘L R h
-  have hA : ∀ h ζ, ‖A h ζ‖ ≤ (1 + F.boundConst * max C 0) * ‖ζ‖ := fun h ζ => by
-    have h1 := HodgeWave.norm_graphFst_le (T := H.totalD) ζ
-    have h2 : ‖F.incl h (R h ζ)‖ ≤ F.boundConst * (max C 0 * ‖ζ‖) :=
-      (F.norm_incl_apply_le h _).trans (mul_le_mul_of_nonneg_left
-        (((R h).le_opNorm ζ).trans (mul_le_mul_of_nonneg_right
-          ((hC h).trans (le_max_left _ _)) (norm_nonneg _))) F.boundConst_nonneg)
-    calc ‖A h ζ‖ ≤ ‖H.totalD.graphFst ζ‖ + ‖F.incl h (R h ζ)‖ := norm_sub_le _ _
-      _ ≤ _ := by nlinarith
-  have hlim : ∀ ζ, Tendsto (fun h => ‖A h ζ‖) F.l (𝓝 0) := fun ζ => by
-    have := (tendsto_iff_norm_sub_tendsto_zero.1 (happrox ζ))
-    refine this.congr fun h => ?_
-    rw [norm_sub_rev]; rfl
-  rw [Metric.tendstoUniformlyOn_iff]
-  intro ε hε
-  filter_upwards [eventually_forall_norm_lt_of_tendsto hA hlim (isCompact_waveOrbit H hx T).1
-    hε] with h hh t ht
-  have := hh _ (mem_image_of_mem _ ht)
-  rw [dist_eq_norm]
-  convert this using 2
-  simp only [A, _root_.sub_apply, ContinuousLinearMap.comp_apply,
-    graphFst_waveOrbit H (domainSq_le_domain hx)]
 
 /-- **The Trotter–Kato bridge**: an operator `Rₕ : Γ(𝐝) → Xₕ`, uniformly bounded, with
 `ιₕ Rₕ ζ → graphFst ζ`, and a defect identity on `D(L²)`,
@@ -255,31 +227,18 @@ def Core.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h)
   Data := H.wave.domainSq
   cmp T := Comparison.ofOperator F R T
   data_eq _ := rfl
-  tendsto_approx T _ hx := (F.tendstoUniformlyOn_ofOperator R hR happrox T hx).congr_right
-    fun t ht => (F.S_apply ht.1 _).symm
-  tendsto_defect T x hx := by
-    obtain ⟨C, hC⟩ := hΔ
-    have hb1 : ∀ h ζ, ‖Δ h ζ‖ ≤ C * ‖ζ‖ := fun h ζ => ((Δ h).le_opNorm ζ).trans
-      (mul_le_mul_of_nonneg_right (hC h).1 (norm_nonneg _))
-    have hb2 : ∀ h ζ, ‖Δ' h ζ‖ ≤ C * ‖ζ‖ := fun h ζ => ((Δ' h).le_opNorm ζ).trans
-      (mul_le_mul_of_nonneg_right (hC h).2 (norm_nonneg _))
-    have hx1 := domainSq_le_domain hx
-    have hdefect : ∀ h t, ‖(Comparison.ofOperator F R T).defect x h t‖ ≤
-        ‖Δ h (waveOrbit H (waveExt H x) t)‖ + ‖Δ' h (waveOrbit H x t)‖ := fun h t => by
+  tendsto_approx T x hx := (tendstoUniformlyOn_apply_of_tendsto (P₀ := H.totalD.graphFst)
+    (F.bound_incl_comp hR) happrox (isCompact_waveOrbit H hx T).1).congr_right fun t ht =>
+      (graphFst_waveOrbit H (domainSq_le_domain hx) t).trans
+        (DFunLike.congr_fun (F.S_eq_waveGroup ht.1) x).symm
+  tendsto_defect T x hx := tendstoUniformlyOn_norm_of_le hΔ hΔ0 hΔ'0
+    (isCompact_waveOrbit H hx T).2 (isCompact_waveOrbit H hx T).1 fun h t _ => by
+      have hx1 := domainSq_le_domain hx
       have e := hdef h ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx1 t⟩ (by
         rw [wave_waveGroup hx1 t]; exact waveGroup_mem_domain H (mem_domainSq.1 hx).2 t)
       change ‖R h (waveOrbit H (waveExt H x) t) - F.L h (R h (waveOrbit H x t))‖ ≤ _
       rw [waveOrbit_waveExt H (SetLike.mem_coe.1 hx), waveOrbit_of_mem H hx1, e]
       exact norm_add_le _ _
-    rw [Metric.tendstoUniformlyOn_iff]
-    intro ε hε
-    filter_upwards [eventually_forall_norm_lt_of_tendsto hb1 hΔ0
-      (isCompact_waveOrbit H hx T).2 (half_pos hε),
-      eventually_forall_norm_lt_of_tendsto hb2 hΔ'0 (isCompact_waveOrbit H hx T).1
-        (half_pos hε)] with h h1 h2 t ht
-    rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _)]
-    have := hdefect h t
-    linarith [h1 _ (mem_image_of_mem _ ht), h2 _ (mem_image_of_mem _ ht)]
 
 /-! ### Complexification (real schemes for complex data: real and imaginary parts) -/
 
@@ -422,22 +381,24 @@ theorem approxFEEC_unique_weak (x : H.wave.domain) (T : ℝ) (U : ℝ → PiLp 2
     (hU0 : U 0 = (x : PiLp 2 W)) (hU : HodgeWave.IsWeakSolution H (Icc 0 T) 0 U) :
     EqOn U (fun t => F.S t x) (Icc 0 T) := fun t ht => by
   change U t = F.S t x
-  rw [F.S_apply ht.1]
+  rw [F.S_eq_waveGroup ht.1]
   exact (constrainedFEEC_wellPosed x.2 T).2.2.1 U hU0 hU ht
+
+/-- `p` alternates along `c`: `p j ≠ p i` whenever `c.Rel i j` (a grading of the complex). -/
+abbrev Alternates (c : ComplexShape ι) (p : ι → Bool) : Prop := ∀ i j, c.Rel i j → p j ≠ p i
+
+/-- `F` has its constraint invariant under the reversal by `p`: `R_p K ⊆ K`. -/
+abbrev ApproxFEEC.ReversalInvariant (p : ι → Bool) : Prop := ∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K
 
 /-- **Forward propagation characterizes reducing constraints on graded complexes**: for a
 grading `p` and an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, `K` reduces `L` iff
 `e^{tL} K ⊆ K` for every `t ≥ 0`. [QuennevilleBelair2015], Prop. 4.17 -/
-theorem approxFEEC_isReducing_iff_keeps {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i)
-    (hRK : ∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K)
-    (hD : (F.K : Set (PiLp 2 W)) ⊆ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) :
-    H.wave.IsReducing F.K ↔ F.Keeps F.K := by
-  refine ⟨fun h t ht x hx => ?_, fun h => (H.isReducing_iff_forall_nonneg hp F.K hRK
-    fun k hk => hD hk).2 fun t ht x _ hx => ?_⟩
-  · rw [F.S_apply ht]
-    exact (skewFEEC_isReducing_iff_invariant F).1 h t x hx
-  · have := h t ht x hx
-    rwa [F.S_apply ht] at this
+theorem approxFEEC_isReducing_iff_keeps {p : ι → Bool} (hp : Alternates c p)
+    (hRK : F.ReversalInvariant p) (hD : F.SmoothDense F.K) :
+    H.wave.IsReducing F.K ↔ F.Keeps F.K :=
+  ⟨fun h => (H.isSkewAdjoint_wave.isMDissipative.isReducing_iff.1 h).1, fun h =>
+    (H.isReducing_iff_forall_nonneg hp F.K hRK hD).2 fun t ht x _ hx => by
+      rw [← F.S_eq_waveGroup ht]; exact h t ht x hx⟩
 
 /-- The conclusions of the approximating FEEC theorem (`approxFEEC`) for `F` and the core `Z`:
 those of the skew-adjoint FEEC theorem for the wave operator, and those specific to Hilbert
@@ -448,10 +409,8 @@ structure ApproxFEEC.Verdict (Z : F.Core) : Prop extends toSkew : SkewFEEC.Verdi
     (hU : HodgeWave.IsWeakSolution H (Icc 0 T) 0 U) : EqOn U (fun t => F.S t x) (Icc 0 T)
   /-- on a graded complex, for an `R`-invariant `K` with `D(L) ∩ K` dense in `K`: `K` reduces `L`
   iff `K` is kept (forward in time) -/
-  isReducing_iff_keeps {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i)
-    (hRK : ∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K)
-    (hD : (F.K : Set (PiLp 2 W)) ⊆ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) :
-    H.wave.IsReducing F.K ↔ F.Keeps F.K
+  isReducing_iff_keeps {p : ι → Bool} (hp : Alternates c p) (hRK : F.ReversalInvariant p)
+    (hD : F.SmoothDense F.K) : H.wave.IsReducing F.K ↔ F.Keeps F.K
 
 /-- **The approximating FEEC theorem.** For an approximating FEEC discretization `F` (discrete
 Hilbert spaces with their own inner products, skew bounded generators, uniformly bounded reading

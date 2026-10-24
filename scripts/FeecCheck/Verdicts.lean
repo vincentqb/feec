@@ -9,8 +9,16 @@ one below and stated at the most general layer where it is provable. Their earli
 conjunction per theorem, with the flow of each theorem written out (the Lumer–Phillips semigroup
 `hA.semigroup.S` and the wave group `H.waveGroup.S`), convergence on the core from the comparison
 initial values, the residual bound for all `t` and the departures with their positive residual
-limits. The two theorems below derive those conjunctions, verbatim, from the new verdicts; they
-are compiled by `lake build FeecCheck` and so fail the build if a conclusion is dropped.
+limits. The two theorems below derive those conjunctions, verbatim, from the new verdicts.
+
+One thing did change besides the shape: the binder types `F.Core` and `F.RateClass T` of an
+approximating discretization are now those of `DissipFEEC`, whose approximation clauses are
+stated for the semigroup `F.S` rather than for the wave group; the two agree on `[0, T]`
+(`ApproxFEEC.S_eq_waveGroup`), the only times these clauses mention.
+
+This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
+`lake build FeecCheck` (and so by `lake exe feec-gate`), not by a plain `lake build`, and fails
+that build if a conclusion is dropped.
 -/
 
 open scoped InnerProductSpace
@@ -93,19 +101,15 @@ theorem dissip_old {Z : F.Core} (V : F.Verdict Z) :
     fun hK x hxK => ⟨fun h v t ht => V.residual_le hK hxK h v ht,
       fun hx T v hv => V.residual_tendsto hK hxK hx hv T⟩,
     fun Q hQ hQne x hx v hv t ht hout =>
-      ⟨(hQ.notMem_iff_infDist_pos hQne).1 hout, V.tendsto_infDist Q hx hv ht⟩,
+      ⟨(V.detects hQ hQne ht hout).1, V.tendsto_infDist Q hx hv ht⟩,
     fun hK T hT => ⟨fun hd => ?_, ?_⟩⟩
   · rcases lt_or_ge T 0 with hT | hT
     · rw [Icc_eq_empty (by linarith)]; exact tendstoUniformlyOn_empty
     exact V.converges (Submodule.le_topologicalClosure _ hx) (Z.tendsto_incl_p hT hx) T
-  · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ :=
-      V.leaves_smooth F.isClosed_K hK (fun k hk => hd k hk) hT
+  · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K hK hd hT
     exact ⟨⟨x, hxD⟩, hxK, t, ht, hout⟩
   · obtain ⟨x, hxK, t, ht, hout⟩ := V.leaves hK hT
-    have hpos := (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout
-    refine ⟨x, hxK, t, ht, hout, hpos, fun hx v hv => ?_⟩
-    have hlim := V.tendsto_infDist (F.K : Set E) hx hv ht.1
-    exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
+    exact ⟨x, hxK, t, ht, hout, V.detects F.isClosed_K ⟨0, F.K.zero_mem⟩ ht.1 hout⟩
 
 end Dissip
 
@@ -183,12 +187,9 @@ theorem approx_old {Z : F.Core} (V : F.Verdict Z) :
           ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
             infDist (F.sol h (v h) t) (F.K : Set (PiLp 2 W)))) := by
   have hS : ∀ t, 0 ≤ t → ∀ x, F.S t x = H.waveGroup.S t x := fun t ht x => by
-    rw [V.S_eq_U ht]; rfl
+    rw [F.S_eq_waveGroup ht]
   have hcl : Dense (Z.Data : Set (PiLp 2 W)) → ∀ x, x ∈ Z.Data.topologicalClosure := fun hd x => by
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, hd.closure_eq]; trivial
-  have hpos : ∀ Q : Submodule 𝕜 (PiLp 2 W), IsClosed (Q : Set (PiLp 2 W)) → ∀ y, y ∉ Q →
-      0 < infDist y (Q : Set (PiLp 2 W)) := fun Q hQ y hy =>
-    (hQ.notMem_iff_infDist_pos ⟨0, Q.zero_mem⟩).1 hy
   have hlim : ∀ (Q : Set (PiLp 2 W)) {x}, x ∈ Z.Data.topologicalClosure → ∀ {v : ∀ h, F.X h},
       Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x) → ∀ {t}, 0 ≤ t →
       Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l
@@ -208,8 +209,8 @@ theorem approx_old {Z : F.Core} (V : F.Verdict Z) :
       fun U hU0 hU => (V.unique_weak ⟨x, hx⟩ T U hU0 hU).trans e, fun t => V.norm_U t x⟩
   · rcases lt_or_ge T 0 with hT | hT
     · rw [Icc_eq_empty (by linarith)]; exact tendstoUniformlyOn_empty
-    exact (V.converges (Submodule.le_topologicalClosure _ hx) (Z.tendsto_incl_p hT hx) T).congr_right
-      fun t ht => hS t ht.1 x
+    exact (V.converges (Submodule.le_topologicalClosure _ hx) (Z.tendsto_incl_p hT hx)
+      T).congr_right fun t ht => hS t ht.1 x
   · intro T x hx
     exact ⟨V.tendsto_incl_proj hx, fun v hv =>
       (V.converges hx hv T).congr_right fun t ht => hS t ht.1 x⟩
@@ -226,26 +227,23 @@ theorem approx_old {Z : F.Core} (V : F.Verdict Z) :
             Tendsto (fun h => infDist (F.sol h (v h) t) (Q : Set (PiLp 2 W))) F.l
               (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))) := fun Q hQ hnk => by
       obtain ⟨x, hx, t, ht, hout⟩ := V.leaves hnk hT
-      rw [hS t ht.1 x] at hout
-      exact ⟨x, hx, t, ht, hout, hpos Q hQ _ hout,
-        fun hd v hv => hlim (Q : Set (PiLp 2 W)) (hcl hd x) hv ht.1⟩
+      obtain ⟨hp, hd⟩ := V.detects hQ ⟨0, Q.zero_mem⟩ ht.1 hout
+      rw [F.S_eq_waveGroup ht.1] at hout hp hd
+      exact ⟨x, hx, t, ht, hout, hp, fun hdn v hv => (hd (hcl hdn x) v hv).1⟩
     by_cases hk : F.Keeps F.K
     · obtain ⟨x, hx, t, ht, h⟩ := key F.Kᗮ hc fun h => hnot ⟨hk, h⟩
       exact ⟨F.Kᗮ, Or.inr rfl, x, hx, t, ht, h⟩
     · obtain ⟨x, hx, t, ht, h⟩ := key F.K F.isClosed_K hk
       exact ⟨F.K, Or.inl rfl, x, hx, t, ht, h⟩
   · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth_symm F.isClosed_K
-      (fun h => hK (V.isReducing_iff_invariant.2 h)) (fun k hk => hd k hk) hT
-    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos F.K F.isClosed_K _ hout⟩
-  · have hnk : ¬ F.Keeps F.K := fun h => hK ((V.isReducing_iff_keeps hp hRK
-      fun k hk => hd k hk).2 h)
-    obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K hnk
-      (fun k hk => hd k hk) hT
-    rw [hS t ht.1 x] at hout
-    have hp0 := hpos F.K F.isClosed_K _ hout
-    refine ⟨⟨x, hxD⟩, hxK, t, ht, hout, hp0, fun hx v hv => ?_⟩
-    have hl := hlim (F.K : Set (PiLp 2 W)) hx hv ht.1
-    exact ⟨hl, (tendsto_order.1 hl).1 _ (half_lt_self hp0)⟩
+      (fun h => hK (V.isReducing_iff_invariant.2 h)) hd hT
+    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout,
+      (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout⟩
+  · obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K
+      (fun h => hK ((V.isReducing_iff_keeps hp hRK hd).2 h)) hd hT
+    have hdet := V.detects F.isClosed_K ⟨0, F.K.zero_mem⟩ ht.1 hout
+    rw [F.S_eq_waveGroup ht.1] at hout hdet
+    exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hdet⟩
 
 end Approx
 

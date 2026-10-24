@@ -11,8 +11,10 @@ conjunction per theorem, with the flow of each theorem written out (the Lumer–
 initial values, the residual bound for all `t` and the departures with their positive residual
 limits. The two theorems below derive those conjunctions, verbatim, from the new verdicts.
 
-One thing did change besides the shape: the binder types `F.Core` and `F.RateClass T` of an
-approximating discretization are now those of `DissipFEEC`, whose approximation clauses are
+Two things did change besides the shape. The m-dissipativity of `A` is now a field
+`F.isMDissipative` of `F` rather than a parameter of its type: `hA` below is any proof of it, and
+`hA.semigroup.S` is `F.S` by proof irrelevance. And the binder types `F.Core` and `F.RateClass T`
+of an approximating discretization are now those of `DissipFEEC`, whose approximation clauses are
 stated for the semigroup `F.S` rather than for the wave group; the two agree on `[0, T]`
 (`ApproxFEEC.S_eq_waveGroup`), the only times these clauses mention.
 
@@ -34,7 +36,7 @@ section Dissip
 
 variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-  {A : E →ₗ.[𝕜] E} {hA : A.IsMDissipative} {κ : Type*} {F : DissipFEEC.{u} hA κ}
+  {A : E →ₗ.[𝕜] E} {hA : A.IsMDissipative} {κ : Type*} {F : DissipFEEC.{u} A κ}
 
 /-- The conclusion of `dissipFEEC` in its earlier shape, from `DissipFEEC.Verdict`. -/
 theorem dissip_old {Z : F.Core} (V : F.Verdict Z) :

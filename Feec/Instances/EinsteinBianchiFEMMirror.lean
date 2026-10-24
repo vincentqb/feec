@@ -580,6 +580,7 @@ def mirrorFEMReal : ApproxFEEC complexQℝ ℕ where
   isScalarTower _ := IsScalarTower.left _
   L N := waveGen (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
     (mirrorWave_S0_surjective hT hB N)
+  isSkewAdjoint := complexQℝ.isSkewAdjoint_wave
   skew _ := waveGen_skew _ _ _
   incl := mirrorEmb hT hB
   proj N := (mirrorEmb hT hB N).adjoint

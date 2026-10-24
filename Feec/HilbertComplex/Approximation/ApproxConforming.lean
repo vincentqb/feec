@@ -236,6 +236,7 @@ def toApprox : ApproxFEEC H κ where
   l := F.l
   X := F.Xh
   L := F.discreteWave
+  isSkewAdjoint := H.isSkewAdjoint_wave
   skew := F.discreteWave_skew
   incl h := (totalSub (F.V h).V).subtypeL
   proj := F.piProjL
@@ -667,6 +668,7 @@ def toApprox (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))
   l := S.l
   X N := S.B N
   L := S.restrictWave
+  isSkewAdjoint := H.isSkewAdjoint_wave
   skew := S.restrictWave_skew
   incl N := (S.B N).subtypeL
   proj N := (S.B N).orthogonalProjectionOnto

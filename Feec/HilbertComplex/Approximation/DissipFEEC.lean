@@ -262,8 +262,11 @@ constraint `K`; Hilbert spaces `Xₕ` with their own inner products and bounded 
 generators `Lₕ` (`re ⟪Lₕ v, v⟫ ≤ 0`, so `e^{tLₕ}` is a contraction for `t ≥ 0`); uniformly bounded
 `ιₕ : Xₕ → E`, `πₕ : E → Xₕ` with `πₕ ιₕ = 1`. `ιₕ` need not be an inclusion, an isometry or a
 cochain map, and `ιₕ πₕ → 1` is not assumed (it is derived on the closure of a core,
-`tendsto_incl_proj`). [HolstStern2012], §3; [Pazy1983], §3.4 -/
-structure DissipFEEC {A : E →ₗ.[𝕜] E} (hA : A.IsMDissipative) (κ : Type*) where
+`tendsto_incl_proj`). The m-dissipativity of `A` is a field, not a parameter, so that a projection
+`F.X h` carries `A` once. [HolstStern2012], §3; [Pazy1983], §3.4 -/
+structure DissipFEEC (A : E →ₗ.[𝕜] E) (κ : Type*) where
+  /-- the generator is m-dissipative -/
+  isMDissipative : A.IsMDissipative
   /-- the constraint subspace -/
   K : Submodule 𝕜 E
   isClosed_K : IsClosed (K : Set E)
@@ -291,7 +294,7 @@ attribute [instance] DissipFEEC.normedAddCommGroup DissipFEEC.innerProductSpace
 
 namespace DissipFEEC
 
-variable {A : E →ₗ.[𝕜] E} {hA : A.IsMDissipative} {κ : Type*} (F : DissipFEEC.{u} hA κ)
+variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : DissipFEEC.{u} A κ)
 
 instance [CompleteSpace E] : CompleteSpace F.K := F.isClosed_K.completeSpace_coe
 
@@ -401,9 +404,9 @@ theorem hasDerivAt_sol (h : κ) (v : F.X h) (t : ℝ) :
 
 /-- The **exact flow** `S(t)` of `F`: the Lumer–Phillips contraction semigroup of `A` (only
 `t ≥ 0` matters). -/
-def S (_ : DissipFEEC.{u} hA κ) (t : ℝ) : E →L[𝕜] E := hA.semigroup.S t
+def S (t : ℝ) : E →L[𝕜] E := F.isMDissipative.semigroup.S t
 
-theorem S_def (t : ℝ) : F.S t = hA.semigroup.S t := rfl
+theorem S_def (t : ℝ) : F.S t = F.isMDissipative.semigroup.S t := rfl
 
 /-- **Inexactness criterion**: if the discrete initial velocity `ιₕ Lₕ v` differs from `A x`,
 the discrete solution from `v` differs from `S(t) x` at some time `t ≥ 0`. -/
@@ -414,7 +417,7 @@ theorem exists_sol_ne {x : E} (hx : x ∈ A.domain) (h : κ) (v : F.X h)
   have h1 : HasDerivWithinAt (fun s => F.S s x) (F.incl h (F.L h ((F.group h).S 0 v))) (Ici 0)
       0 := ((F.hasDerivAt_sol h v 0).hasDerivWithinAt).congr (fun s hs => (hc s hs).symm)
     (hc 0 le_rfl).symm
-  have h2 := hA.hasDerivWithinAt_semigroup ⟨x, hx⟩ (le_refl 0)
+  have h2 := F.isMDissipative.hasDerivWithinAt_semigroup ⟨x, hx⟩ (le_refl 0)
   have e := (uniqueDiffWithinAt_Ici 0).eq_deriv _ h1 h2
   rw [C0Group.S_zero_apply, C0Semigroup.S_zero_apply] at e
   exact hne e
@@ -426,7 +429,7 @@ abbrev Keeps (Q : Set E) : Prop := ∀ t, 0 ≤ t → ∀ x ∈ Q, F.S t x ∈ Q
 abbrev Leaves (x : E) (Q : Set E) (T : ℝ) : Prop := ∃ t ∈ Icc 0 T, F.S t x ∉ Q
 
 /-- `Q` has a dense smooth part: `D(A) ∩ Q` is dense in `Q`. -/
-abbrev SmoothDense (_ : DissipFEEC.{u} hA κ) (Q : Set E) : Prop :=
+abbrev SmoothDense (_ : DissipFEEC.{u} A κ) (Q : Set E) : Prop :=
   ∀ k ∈ Q, k ∈ closure ((A.domain : Set E) ∩ Q)
 
 /-- A **rate class** on `[0, T]`: comparison trajectories with best approximation
@@ -540,11 +543,11 @@ def Comparison.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (T : ℝ) : F.Comparis
   p x h t := R h (F.S t x)
   p' x h t := R h (F.S t (genExt A x))
   continuousOn _ _ h := (R h).continuous.comp_continuousOn
-    ((hA.semigroup.strongCont _).mono Icc_subset_Ici_self)
+    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
   continuousOn' _ _ h := (R h).continuous.comp_continuousOn
-    ((hA.semigroup.strongCont _).mono Icc_subset_Ici_self)
+    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
   hasDerivWithinAt x hx h t ht := by
-    have hd := hA.hasDerivWithinAt_semigroup ⟨x, hx⟩ ht.1
+    have hd := F.isMDissipative.hasDerivWithinAt_semigroup ⟨x, hx⟩ ht.1
     rw [← genExt_of_mem hx] at hd
     exact ((R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t hd
 
@@ -563,15 +566,18 @@ def Core.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h�
   data_eq _ := rfl
   tendsto_approx T x _ := tendstoUniformlyOn_apply_of_tendsto (P₀ := ContinuousLinearMap.id 𝕜 E)
     (F.bound_incl_comp hR) happrox
-    (isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont x).mono Icc_subset_Ici_self))
+    (isCompact_Icc.image_of_continuousOn
+      ((F.isMDissipative.semigroup.strongCont x).mono Icc_subset_Ici_self))
   tendsto_defect T x hx := tendstoUniformlyOn_norm_of_le hΔ hΔ0 hΔ'0
     (isCompact_Icc.image_of_continuousOn
-      ((hA.semigroup.strongCont (genExt A x)).mono Icc_subset_Ici_self))
-    (isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont x).mono Icc_subset_Ici_self))
+      ((F.isMDissipative.semigroup.strongCont (genExt A x)).mono Icc_subset_Ici_self))
+    (isCompact_Icc.image_of_continuousOn
+      ((F.isMDissipative.semigroup.strongCont x).mono Icc_subset_Ici_self))
     fun h t ht => by
-      have e := hdef h ⟨_, hA.semigroup_mem_domain ⟨x, hx⟩ ht.1⟩
-      rw [hA.apply_semigroup ⟨x, hx⟩ ht.1] at e
-      change ‖R h (hA.semigroup.S t (genExt A x)) - F.L h (R h (hA.semigroup.S t x))‖ ≤ _
+      have e := hdef h ⟨_, F.isMDissipative.semigroup_mem_domain ⟨x, hx⟩ ht.1⟩
+      rw [F.isMDissipative.apply_semigroup ⟨x, hx⟩ ht.1] at e
+      change ‖R h (F.isMDissipative.semigroup.S t (genExt A x)) -
+        F.L h (R h (F.isMDissipative.semigroup.S t x))‖ ≤ _
       rw [genExt_of_mem hx, e]
       exact norm_add_le _ _
 
@@ -584,7 +590,7 @@ theorem Core.ofOperator_data_closure (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C
     (hΔ0 : ∀ y, Tendsto (fun h => ‖Δ h y‖) F.l (𝓝 0))
     (hΔ'0 : ∀ y, Tendsto (fun h => ‖Δ' h y‖) F.l (𝓝 0)) :
     (Core.ofOperator F R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0).Data.topologicalClosure = ⊤ := by
-  exact Submodule.dense_iff_topologicalClosure_eq_top.1 hA.dense_domain
+  exact Submodule.dense_iff_topologicalClosure_eq_top.1 F.isMDissipative.dense_domain
 
 end DissipFEEC
 
@@ -593,7 +599,7 @@ end DissipFEEC
 section Main
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-variable {A : E →ₗ.[𝕜] E} {hA : A.IsMDissipative} {κ : Type*} (F : DissipFEEC.{u} hA κ)
+variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : DissipFEEC.{u} A κ)
 
 open DissipFEEC
 
@@ -608,11 +614,12 @@ theorem dissipFEEC_wellPosed (x : A.domain) (T : ℝ) :
     ∀ t, 0 ≤ t → ‖F.S t x‖ ^ 2 = ‖(x : E)‖ ^ 2 +
       ∫ s in (0 : ℝ)..t, 2 * RCLike.re ⟪F.S s (A x), F.S s x⟫_𝕜 := by
   have hcl : Evolution.IsClassicalSolution A (Icc 0 T) 0 (fun t => F.S t x) := by
-    have h := hA.semigroup.isClassicalSolution_orbit (hA.mem_semigroup_generator_domain x) 0 T
-    rw [hA.generator_semigroup] at h
+    have h := F.isMDissipative.semigroup.isClassicalSolution_orbit
+      (F.isMDissipative.mem_semigroup_generator_domain x) 0 T
+    rw [F.isMDissipative.generator_semigroup] at h
     simpa [S_def] using h
-  refine ⟨hcl, fun U hU0 hU => ?_, fun t ht => hA.norm_sq_semigroup_apply x ht⟩
-  exact hU.unique hA.dissipative hcl.toIsStrongSolution (by rw [hU0, S_def]; simp)
+  refine ⟨hcl, fun U hU0 hU => ?_, fun t ht => F.isMDissipative.norm_sq_semigroup_apply x ht⟩
+  exact hU.unique F.isMDissipative.dissipative hcl.toIsStrongSolution (by rw [hU0, S_def]; simp)
 
 /-- **1. The energy is nonincreasing**, `‖S(t) x‖ ≤ ‖S(s) x‖` for `0 ≤ s ≤ t`, for every datum. -/
 theorem dissipFEEC_antitone (x : E) : AntitoneOn (fun t => ‖F.S t x‖) (Ici 0) := by
@@ -623,8 +630,8 @@ theorem dissipFEEC_antitone (x : E) : AntitoneOn (fun t => ‖F.S t x‖) (Ici 0
   change ‖F.S t x‖ ≤ ‖F.S s x‖
   rw [e]
   exact ((F.S (t - s)).le_opNorm _).trans (by
-    simpa [S_def] using mul_le_mul_of_nonneg_right (hA.isContraction_semigroup _ (by linarith))
-      (norm_nonneg (F.S s x)))
+    simpa [S_def] using mul_le_mul_of_nonneg_right
+      (F.isMDissipative.isContraction_semigroup _ (by linarith)) (norm_nonneg (F.S s x)))
 
 /-- **2. Constraint propagation**: `S(t) K ⊆ K` for all `t ≥ 0` iff the resolvents map `K` into
 `K`, iff the stationary problem is solvable within `K`; `K` reduces `A` iff `K` and `Kᗮ` are both
@@ -634,8 +641,8 @@ theorem dissipFEEC_propagates_iff :
     (F.Keeps F.K ↔
       ∃ μ : ℝ, 0 < μ ∧ ∀ y ∈ F.K, ∃ u : A.domain, (u : E) ∈ F.K ∧ (μ : 𝕜) • (u : E) - A u = y) ∧
     (A.IsReducing F.K ↔ F.Keeps F.K ∧ F.Keeps F.Kᗮ) :=
-  ⟨hA.invariant_iff_resolvent F.isClosed_K, hA.invariant_iff_exists_solve F.isClosed_K,
-    hA.isReducing_iff⟩
+  ⟨F.isMDissipative.invariant_iff_resolvent F.isClosed_K,
+    F.isMDissipative.invariant_iff_exists_solve F.isClosed_K, F.isMDissipative.isReducing_iff⟩
 
 /-- **3a. Convergence on the core**, from the comparison initial values, uniformly on `[0, T]`. -/
 theorem dissipFEEC_converges_core (Z : F.Core) (T : ℝ) {x : E} (hx : x ∈ Z.Data) :
@@ -702,8 +709,8 @@ theorem dissipFEEC_converges (Z : F.Core) (T : ℝ) {x : E} (hx : x ∈ Z.Data.t
   have a1 : ‖F.S t x - F.S t y‖ ≤ ‖x - y‖ := by
     rw [← _root_.map_sub]
     exact ((F.S t).le_opNorm _).trans (by
-      simpa [S_def] using mul_le_mul_of_nonneg_right (hA.isContraction_semigroup t ht.1)
-        (norm_nonneg (x - y)))
+      simpa [S_def] using mul_le_mul_of_nonneg_right
+        (F.isMDissipative.isContraction_semigroup t ht.1) (norm_nonneg (x - y)))
   have a2 : ‖F.S t y - F.sol h w t‖ < ε / 4 := by
     have := h1 t ht; rwa [dist_eq_norm] at this
   have a3 : ‖F.sol h w t - F.sol h (v h) t‖ ≤ C * ‖w - v h‖ :=
@@ -803,8 +810,8 @@ then for every `T > 0` some datum of `Q` leaves `Q` by time `T` (`S(t) = S(t - T
 theorem dissipFEEC_leaves {Q : Set E} (hQ : ¬ F.Keeps Q) {T : ℝ} (hT : 0 < T) :
     ∃ x ∈ Q, F.Leaves x Q T := by
   by_contra hc
-  refine hQ fun t ht x hx => hA.semigroup.forall_nonneg_of_forall_Icc hT (fun y hy s hs => ?_)
-    x hx t ht
+  refine hQ fun t ht x hx =>
+    F.isMDissipative.semigroup.forall_nonneg_of_forall_Icc hT (fun y hy s hs => ?_) x hx t ht
   by_contra hout
   exact hc ⟨y, hy, s, hs, hout⟩
 
@@ -825,9 +832,10 @@ theorem dissipFEEC_leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps
   by_contra hc
   refine hQ fun t ht => ?_
   have hP : ∀ y ∈ (A.domain : Set E) ∩ Q, ∀ s, 0 ≤ s → F.S s y ∈ (A.domain : Set E) ∩ Q :=
-    hA.semigroup.forall_nonneg_of_forall_Icc hT fun y hy s hs =>
-      ⟨hA.semigroup_mem_domain ⟨y, hy.1⟩ hs.1, by_contra fun hout => hc ⟨y, hy, s, hs, hout⟩⟩
-  exact hA.semigroup.mem_of_dense hQc hD fun y hy => (hP y hy t ht).2
+    F.isMDissipative.semigroup.forall_nonneg_of_forall_Icc hT fun y hy s hs =>
+      ⟨F.isMDissipative.semigroup_mem_domain ⟨y, hy.1⟩ hs.1,
+        by_contra fun hout => hc ⟨y, hy, s, hs, hout⟩⟩
+  exact F.isMDissipative.semigroup.mem_of_dense hQc hD fun y hy => (hP y hy t ht).2
 
 /-- The conclusions of the dissipative FEEC theorem (`dissipFEEC`) for `F` and the core `Z`. -/
 structure DissipFEEC.Verdict (Z : F.Core) : Prop where

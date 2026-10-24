@@ -30,13 +30,14 @@ on `Xₕ = ι Vₕ ⊕₂ Wₕ`:
 
 whose bilinear form carries the boundary term `⟪γ vₕ, γ v'⟫`: the discrete generator is
 dissipative, `⟪Lₕ x, x⟫ = -‖γ vₕ‖²` (`inner_Lh`), so the discrete energy decreases by twice the
-integrated discrete outgoing flux (`norm_sq_galerkin_sol`). Its discrete resolvent is the Galerkin solution
-built on the `V`-orthogonal projection of the exact one (Céa's lemma with constant `1`,
+integrated discrete outgoing flux (`norm_sq_galerkin_sol`). Its discrete resolvent is the Galerkin
+solution built on the `V`-orthogonal projection of the exact one (Céa's lemma with constant `1`,
 `discreteRes_galerkin`, `norm_incl_galerkinRes_sub_le`), so under the approximation property
 (`Approximates`: `Vₕ` approximates `V`, `Wₕ` approximates `H₂`) the scheme is consistent and
 **`galerkin_verdict`** gives the full `dissipFEEC` verdict with a dense core: convergence for
-every datum, the rate bound for every rate class, the constraint residual in both directions. For separable `V`, `H₂`,
-dense-sequence spaces (`ofDenseSeq`) are an approximating family (`approximates_ofDenseSeq`).
+every datum, the rate bound for every rate class, the constraint residual in both directions. For
+separable `V`, `H₂`, dense-sequence spaces (`ofDenseSeq`) are an approximating family
+(`approximates_ofDenseSeq`).
 
 ## References
 
@@ -133,7 +134,7 @@ theorem resolvent_semigroup_comm (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t
 
 namespace DissipFEEC
 
-variable (F : DissipFEEC.{u} hA κ)
+variable (F : DissipFEEC.{u} A κ)
 
 /-- The discrete resolvent `(1 - Lₕ)⁻¹`. -/
 def discreteRes (h : κ) : F.X h →L[𝕜] F.X h := boundedRes (F.L h)
@@ -181,15 +182,16 @@ theorem resolvent_sub_genExt (hA : A.IsMDissipative) {x : E} (hx : x ∈ resData
 /-- The comparison trajectories `pₕ(t) = (1 - Lₕ)⁻¹ πₕ (1 - A) S(t) x` of the resolvent core. -/
 def Comparison.ofResolvent (T : ℝ) : F.Comparison T where
   Data := resData (A := A)
-  p x h t := F.discreteRes h (F.proj h (hA.semigroup.S t (x - genExt A x)))
-  p' x h t := F.discreteRes h (F.proj h (hA.semigroup.S t (genExt A (x - genExt A x))))
+  p x h t := F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t (x - genExt A x)))
+  p' x h t :=
+    F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t (genExt A (x - genExt A x))))
   continuousOn _ _ h := ((F.discreteRes h).continuous.comp (F.proj h).continuous).comp_continuousOn
-    ((hA.semigroup.strongCont _).mono Icc_subset_Ici_self)
+    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
   continuousOn' _ _ h := ((F.discreteRes h).continuous.comp (F.proj h).continuous).comp_continuousOn
-    ((hA.semigroup.strongCont _).mono Icc_subset_Ici_self)
+    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
   hasDerivWithinAt x hx h t ht := by
-    have hu := sub_genExt_mem_domain (hA := hA) hx
-    have hd := hA.hasDerivWithinAt_semigroup ⟨_, hu⟩ ht.1
+    have hu := sub_genExt_mem_domain (hA := F.isMDissipative) hx
+    have hd := F.isMDissipative.hasDerivWithinAt_semigroup ⟨_, hu⟩ ht.1
     rw [← genExt_of_mem hu] at hd
     exact (((F.discreteRes h).comp (F.proj h)).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt
       t hd
@@ -218,47 +220,52 @@ def Core.ofResolvent
               (mul_le_mul_of_nonneg_right (F.norm_proj_le h) (norm_nonneg _))) hC
           _ = _ := by ring
       have h2 : ‖R y‖ ≤ ‖y‖ := by
-        have := hA.norm_resolvent_apply_le one_pos y; simpa using this
+        have := F.isMDissipative.norm_resolvent_apply_le one_pos y; simpa using this
       calc ‖B h y‖ ≤ ‖F.incl h (F.discreteRes h (F.proj h y))‖ + ‖R y‖ := norm_sub_le _ _
         _ ≤ _ := by nlinarith
     have hlim : ∀ y, Tendsto (fun h => ‖B h y‖) F.l (𝓝 0) := fun y => by
       have := tendsto_iff_norm_sub_tendsto_zero.1 (hres y)
       exact this.congr fun h => rfl
-    have hcpt : IsCompact ((fun t => hA.semigroup.S t u) '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont u).mono Icc_subset_Ici_self)
+    have hcpt : IsCompact ((fun t => F.isMDissipative.semigroup.S t u) '' Icc 0 T) :=
+      isCompact_Icc.image_of_continuousOn
+        ((F.isMDissipative.semigroup.strongCont u).mono Icc_subset_Ici_self)
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     filter_upwards [eventually_forall_norm_lt_of_tendsto hB hlim hcpt hε] with h hh t ht
     have := hh _ (mem_image_of_mem _ ht)
-    have e : hA.semigroup.S t x = R (hA.semigroup.S t u) := by
-      rw [resolvent_semigroup_comm hA ht.1, resolvent_sub_genExt (hA := hA) hx]
+    have e : F.isMDissipative.semigroup.S t x = R (F.isMDissipative.semigroup.S t u) := by
+      rw [resolvent_semigroup_comm F.isMDissipative ht.1,
+        resolvent_sub_genExt (hA := F.isMDissipative) hx]
     rw [dist_eq_norm, F.S_def, e, norm_sub_rev]
-    change ‖F.incl h (F.discreteRes h (F.proj h (hA.semigroup.S t u))) -
-      R (hA.semigroup.S t u)‖ < ε
+    change ‖F.incl h (F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u))) -
+      R (F.isMDissipative.semigroup.S t u)‖ < ε
     simpa only [B, sub_apply, ContinuousLinearMap.comp_apply] using this
   tendsto_defect T x hx := by
-    have hu := sub_genExt_mem_domain (hA := hA) hx
+    have hu := sub_genExt_mem_domain (hA := F.isMDissipative) hx
     set u := x - genExt A x
     set R := Operator.resolvent A (1 : 𝕜)
     set C := F.boundConst
     have hC := F.boundConst_nonneg
     have hR1 : ∀ y, ‖R y‖ ≤ ‖y‖ := fun y => by
-      have := hA.norm_resolvent_apply_le one_pos y; simpa using this
-    set w : ℝ → E := fun t => hA.semigroup.S t (u - genExt A u)
+      have := F.isMDissipative.norm_resolvent_apply_le one_pos y; simpa using this
+    set w : ℝ → E := fun t => F.isMDissipative.semigroup.S t (u - genExt A u)
     -- the defect is `πₕ R w - Gₕ w`
     have hdef : ∀ h, ∀ t ∈ Icc 0 T, (Comparison.ofResolvent F T).defect x h t =
         F.proj h (R (w t)) - F.discreteRes h (F.proj h (w t)) := fun h t ht => by
-      have hRw : R (w t) = hA.semigroup.S t u := by
+      have hRw : R (w t) = F.isMDissipative.semigroup.S t u := by
         simp only [w]
-        rw [resolvent_semigroup_comm hA ht.1, genExt_of_mem hu, resolvent_one_apply_sub hA ⟨u, hu⟩]
-      have hs := F.discreteRes_sub h (F.proj h (hA.semigroup.S t u))
-      have hL : F.L h (F.discreteRes h (F.proj h (hA.semigroup.S t u))) =
-          F.discreteRes h (F.proj h (hA.semigroup.S t u)) - F.proj h (hA.semigroup.S t u) := by
-        generalize F.discreteRes h (F.proj h (hA.semigroup.S t u)) = g at hs ⊢
+        rw [resolvent_semigroup_comm F.isMDissipative ht.1, genExt_of_mem hu,
+          resolvent_one_apply_sub F.isMDissipative ⟨u, hu⟩]
+      have hs := F.discreteRes_sub h (F.proj h (F.isMDissipative.semigroup.S t u))
+      have hL : F.L h (F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u))) =
+          F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u)) -
+            F.proj h (F.isMDissipative.semigroup.S t u) := by
+        generalize F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u)) = g at hs ⊢
         rw [← hs, sub_sub_cancel]
-      have hw : w t = hA.semigroup.S t u - hA.semigroup.S t (genExt A u) := _root_.map_sub _ _ _
-      change F.discreteRes h (F.proj h (hA.semigroup.S t (genExt A u))) -
-        F.L h (F.discreteRes h (F.proj h (hA.semigroup.S t u))) = _
+      have hw : w t = F.isMDissipative.semigroup.S t u -
+          F.isMDissipative.semigroup.S t (genExt A u) := _root_.map_sub _ _ _
+      change F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t (genExt A u))) -
+        F.L h (F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u))) = _
       rw [hRw, hw, _root_.map_sub (F.proj h), _root_.map_sub (F.discreteRes h), hL]
       abel
     set D1 : ∀ _ : κ, E →L[𝕜] E := fun h => F.incl h ∘L F.proj h ∘L R - R
@@ -286,7 +293,8 @@ def Core.ofResolvent
       refine this.congr fun h => ?_
       rw [norm_sub_rev]; rfl
     have hcpt : IsCompact (w '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn ((hA.semigroup.strongCont _).mono Icc_subset_Ici_self)
+      isCompact_Icc.image_of_continuousOn
+        ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     set δ := ε / (2 * (C + 1))
@@ -480,7 +488,8 @@ variable (K : Submodule ℝ (WithLp 2 (H₁ × H₂))) (hK : IsClosed (K : Set (
 
 /-- **The conforming Galerkin scheme as a dissipative FEEC discretization** of the impedance
 operator, for a closed constraint subspace `K`. -/
-def galerkin : DissipFEEC T.isMDissipative_op κ where
+def galerkin : DissipFEEC T.op κ where
+  isMDissipative := T.isMDissipative_op
   K := K
   isClosed_K := hK
   l := G.l

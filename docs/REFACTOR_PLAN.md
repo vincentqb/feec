@@ -432,6 +432,21 @@ abbrev Tot3 := PiLp 2 (fun i : Fin 3 => W3 W₀ W₁ W₂ i)       -- window tot
 --   ReducingSubcomplex.isReducing_wave; hodge; closedRangeAt_iff_poincare; HasCompactProperty.*;
 --   hodgeLaplacian (via (1−D)(1+D) = 1−D², D = wave, Stone resolvents); Mixed.wellPosed
 
+-- HilbertComplex/Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean   [as built]
+-- the generator is the one parameter; its m-dissipativity / skew-adjointness are Prop fields, so
+-- a projection `F.X h` carries `A` once (not `A` and a proof term repeating `A` and `E`'s instances)
+structure DissipFEEC (A : E →ₗ.[𝕜] E) (κ : Type*) where
+  isMDissipative : A.IsMDissipative
+  K : Submodule 𝕜 E; isClosed_K; l : Filter κ; X : κ → Type u; [instances]
+  L : ∀ h, X h →L[𝕜] X h; dissipative : ∀ h x, re ⟪L h x, x⟫ ≤ 0
+  incl : ∀ h, X h →L[𝕜] E; proj : ∀ h, E →L[𝕜] X h; proj_incl; bound
+structure SkewFEEC (A : E →ₗ.[𝕜] E) (κ) extends DissipFEEC A κ where   -- [CompleteSpace E]
+  isSkewAdjoint : A.IsSkewAdjoint; skew : ∀ h x y, ⟪L h x, y⟫ = -⟪x, L h y⟫
+  isMDissipative := isSkewAdjoint.isMDissipative; dissipative h x := …   -- derived
+abbrev ApproxFEEC (H : HilbertComplex 𝕜 c W) (κ) := SkewFEEC H.wave κ
+-- verdicts: structure DissipFEEC.Verdict (Z : F.Core) : Prop; SkewFEEC.Verdict extends it;
+--   ApproxFEEC.Verdict extends that; theorems dissipFEEC, skewFEEC, approxFEEC
+
 -- Fourier/SymbolComplex.lean   [checked]
 structure SymbolComplex (μ : Measure α) (c : ComplexShape ι) (E : ι → Type*) [… FiniteDimensional, CompleteSpace] where
   m : ∀ i j, α → E i →L[𝕜] E j; shape : ∀ i j, ¬ c.Rel i j → m i j = 0

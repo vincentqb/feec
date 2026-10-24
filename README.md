@@ -12,16 +12,19 @@ below and each proved from the one below, with every conclusion stated at the mo
 where it holds (all in `Feec/HilbertComplex/Approximation/`):
 
 * `Feec.HilbertComplex.dissipFEEC : F.Verdict Z` (`DissipFEEC.lean`) for a discretization
-  `F : DissipFEEC hA κ` of an m-dissipative generator `A`, whose exact flow `F.S` is the
-  Lumer–Phillips contraction semigroup: well-posedness and energy, the propagation criteria,
-  convergence and rates, the constraint residual and the departures from sets that are not kept;
-* `Feec.HilbertComplex.skewFEEC` (`SkewFEEC.lean`) for `F : SkewFEEC hA κ`, a skew-adjoint `A`
-  with skew discrete generators (a `DissipFEEC` with one more field, so cores and rate classes
-  are shared): adds Stone's isometric group `F.U` (equal to `F.S` for `t ≥ 0`), conservation of
-  the norm, reducing iff invariant for all `t ∈ ℝ`, and the departure in both time directions;
-* `Feec.HilbertComplex.approxFEEC` (`ApproxFEEC.lean`) for `F : ApproxFEEC H κ`, the skew case of
-  the Hodge wave operator `L = 𝐝 − 𝐝†` of a Hilbert complex `H`: adds unique weak solutions and,
-  on graded complexes, reducing iff kept forward in time.
+  `F : DissipFEEC A κ` of a generator `A`, m-dissipative by the field `F.isMDissipative`, whose
+  exact flow `F.S` is the Lumer–Phillips contraction semigroup: well-posedness and energy, the
+  propagation criteria, convergence and rates, the constraint residual and the departures from
+  sets that are not kept;
+* `Feec.HilbertComplex.skewFEEC` (`SkewFEEC.lean`) for `F : SkewFEEC A κ`, a skew-adjoint `A`
+  (field `F.isSkewAdjoint`) with skew discrete generators (a `DissipFEEC` whose m-dissipativity
+  and discrete dissipativity are derived, so cores and rate classes are shared): adds Stone's
+  isometric group `F.U` (equal to `F.S` for `t ≥ 0`), conservation of the norm, reducing iff
+  invariant for all `t ∈ ℝ`, and the departure in both time directions;
+* `Feec.HilbertComplex.approxFEEC` (`ApproxFEEC.lean`) for `F : ApproxFEEC H κ`
+  (`:= SkewFEEC H.wave κ`), the skew case of the Hodge wave operator `L = 𝐝 − 𝐝†` of a Hilbert
+  complex `H`: adds unique weak solutions and, on graded complexes, reducing iff kept forward in
+  time.
 
 The regression tests `scripts/FeecCheck/Verdicts.lean` derive from the verdicts the earlier,
 longer conjunctions (with the semigroup and the wave group written out, convergence on the core,

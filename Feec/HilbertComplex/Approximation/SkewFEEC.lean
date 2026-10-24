@@ -110,16 +110,19 @@ variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerP
 
 /-- A **skew FEEC discretization** of `ξ' = A ξ` for a skew-adjoint `A` on `E`: a dissipative
 FEEC discretization of the m-dissipative `A` whose discrete generators `Lₕ` are skew in the
-discrete inner products (so `e^{tLₕ}` is unitary). Dissipativity of `Lₕ` is not a field to give:
-it follows from skewness. [HolstStern2012], §3 -/
-structure SkewFEEC {A : E →ₗ.[𝕜] E} (hA : A.IsSkewAdjoint) (κ : Type*) extends
-    DissipFEEC.{u} hA.isMDissipative κ where
+discrete inner products (so `e^{tLₕ}` is unitary). Neither the m-dissipativity of `A` nor the
+dissipativity of `Lₕ` is a field to give: they follow from skew-adjointness and skewness.
+[HolstStern2012], §3 -/
+structure SkewFEEC (A : E →ₗ.[𝕜] E) (κ : Type*) extends DissipFEEC.{u} A κ where
+  /-- the generator is skew-adjoint -/
+  isSkewAdjoint : A.IsSkewAdjoint
   skew : ∀ h x y, ⟪L h x, y⟫_𝕜 = -⟪x, L h y⟫_𝕜
+  isMDissipative := isSkewAdjoint.isMDissipative
   dissipative h x := (re_inner_self_eq_zero_of_skew (skew h) x).le
 
 namespace SkewFEEC
 
-variable {A : E →ₗ.[𝕜] E} {hA : A.IsSkewAdjoint} {κ : Type*} (F : SkewFEEC.{u} hA κ)
+variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : SkewFEEC.{u} A κ)
 
 /-- The discrete group `e^{tLₕ}` is unitary. -/
 theorem norm_group_apply (h : κ) (t : ℝ) (v : F.X h) : ‖(F.group h).S t v‖ = ‖v‖ :=
@@ -128,15 +131,15 @@ theorem norm_group_apply (h : κ) (t : ℝ) (v : F.X h) : ‖(F.group h).S t v�
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 /-- The **exact group** `U(t)` of `F`, `t ∈ ℝ`: Stone's isometric group of `A`. -/
-def U (_ : SkewFEEC.{u} hA κ) (t : ℝ) : E →L[𝕜] E := hA.group.S t
+def U (t : ℝ) : E →L[𝕜] E := F.isSkewAdjoint.group.S t
 
-theorem U_def (t : ℝ) : F.U t = hA.group.S t := rfl
+theorem U_def (t : ℝ) : F.U t = F.isSkewAdjoint.group.S t := rfl
 
 /-- **The semigroup is the group** for `t ≥ 0`: the bridge between the dissipative layer (the
 Lumer–Phillips semigroup `F.S`) and the skew layer (Stone's group `F.U`), which are equal there
 but not by definition. -/
 theorem S_eq_U {t : ℝ} (ht : 0 ≤ t) : F.S t = F.U t :=
-  (hA.eqOn_group_semigroup ht).symm
+  (F.isSkewAdjoint.eqOn_group_semigroup ht).symm
 
 /-- `F` keeps `Q` in both time directions: `U(t) Q ⊆ Q` for every `t ∈ ℝ`. -/
 abbrev Invariant (Q : Set E) : Prop := ∀ t, ∀ x ∈ Q, F.U t x ∈ Q
@@ -155,15 +158,15 @@ end SkewFEEC
 section Main
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-variable {A : E →ₗ.[𝕜] E} {hA : A.IsSkewAdjoint} {κ : Type*} (F : SkewFEEC.{u} hA κ)
+variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : SkewFEEC.{u} A κ)
 
 open SkewFEEC
 
 /-- **Constraints propagate iff `K` is reducing**: `K` reduces `A` iff `U(t) K ⊆ K` for every
 `t ∈ ℝ`. [QuennevilleBelair2015], Prop. 4.17, with necessity. -/
 theorem skewFEEC_isReducing_iff_invariant : A.IsReducing F.K ↔ F.Invariant F.K := by
-  have h := hA.isIsometric_group.isReducing_iff_invariant (K := F.K)
-  rw [hA.generator_group] at h
+  have h := F.isSkewAdjoint.isIsometric_group.isReducing_iff_invariant (K := F.K)
+  rw [F.isSkewAdjoint.generator_group] at h
   exact h.trans C0Group.map_le_iff_forall
 
 /-- **A closed set that the group does not keep is left by a smooth datum, in one of the two
@@ -173,11 +176,12 @@ theorem skewFEEC_leaves_smooth_symm {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.In
     (hD : F.SmoothDense Q) {T : ℝ} (hT : 0 < T) :
     ∃ x ∈ (A.domain : Set E) ∩ Q, ∃ t ∈ Icc (-T) T, F.U t x ∉ Q := by
   by_contra hc
-  refine hQ fun t => hA.group.toC0Semigroup.mem_of_dense hQc hD fun y hy => ?_
-  have hg : hA.group.generator.domain = A.domain := by rw [hA.generator_group]
-  have hmem : ∀ z ∈ (A.domain : Set E), ∀ s, hA.group.S s z ∈ A.domain := fun z hz s =>
-    hg ▸ hA.group.mapsTo_domain ⟨z, hg ▸ hz⟩ s
-  have hP := hA.group.forall_of_forall_Icc_neg hT (P := (A.domain : Set E) ∩ Q)
+  refine hQ fun t => F.isSkewAdjoint.group.toC0Semigroup.mem_of_dense hQc hD fun y hy => ?_
+  have hg : F.isSkewAdjoint.group.generator.domain = A.domain := by
+    rw [F.isSkewAdjoint.generator_group]
+  have hmem : ∀ z ∈ (A.domain : Set E), ∀ s, F.isSkewAdjoint.group.S s z ∈ A.domain := fun z hz s =>
+    hg ▸ F.isSkewAdjoint.group.mapsTo_domain ⟨z, hg ▸ hz⟩ s
+  have hP := F.isSkewAdjoint.group.forall_of_forall_Icc_neg hT (P := (A.domain : Set E) ∩ Q)
     fun z hz s hs => ⟨hmem z hz.1 s, by_contra fun hout => hc ⟨z, hz, s, hs, hout⟩⟩
   exact (hP y hy t).2
 
@@ -211,7 +215,7 @@ Cf. [Pazy1983], §1.10, §3.4; [QuennevilleBelair2015], Thms 4.6, 4.7, Prop. 4.1
 theorem skewFEEC (Z : F.Core) : F.Verdict Z where
   toDissip := dissipFEEC F.toDissipFEEC Z
   S_eq_U := fun {_} ht => F.S_eq_U ht
-  norm_U := hA.isIsometric_group
+  norm_U := F.isSkewAdjoint.isIsometric_group
   isReducing_iff_invariant := skewFEEC_isReducing_iff_invariant F
   leaves_smooth_symm := fun {_} hQc hQ hD {_} hT => skewFEEC_leaves_smooth_symm F hQc hQ hD hT
 

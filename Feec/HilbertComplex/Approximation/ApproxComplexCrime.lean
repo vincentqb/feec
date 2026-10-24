@@ -765,6 +765,7 @@ def ofComplexCrime : ApproxFEEC H κ where
   l := F.l
   X := F.toFamily.X
   L h := F.toFamily.L h
+  isSkewAdjoint := H.isSkewAdjoint_wave
   skew h := diffWave_skew (F.toFamily.D h)
   incl := F.toFamily.incl
   proj := F.toFamily.proj

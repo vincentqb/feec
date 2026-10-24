@@ -143,6 +143,7 @@ abbrev perturbed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
   l := atTop
   X _ := (PiLp 2 (W3 𝕜 𝕜 PUnit))
   L n := (perturbScale n : 𝕜) • idWave 𝕜
+  isSkewAdjoint := (idComplex 𝕜).isSkewAdjoint_wave
   skew n x y := by
     simp only [_root_.smul_apply, inner_smul_left, inner_smul_right, RCLike.conj_ofReal,
       idWave_skew, mul_neg]
@@ -423,6 +424,7 @@ abbrev projPerturbed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
   l := atTop
   X _ := PiLp 2 (W3 𝕜 𝕜 PUnit)
   L _ := idWave 𝕜
+  isSkewAdjoint := (idComplex 𝕜).isSkewAdjoint_wave
   skew _ := idWave_skew
   incl n := ContinuousLinearMap.id 𝕜 _ + (perturbMesh n : 𝕜) • firstProj 𝕜
   proj n := ContinuousLinearMap.id 𝕜 _ - (projCoeff n : 𝕜) • firstProj 𝕜

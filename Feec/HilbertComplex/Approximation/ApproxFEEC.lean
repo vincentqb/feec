@@ -179,8 +179,7 @@ a skew FEEC discretization of the skew-adjoint wave operator `L = 𝐝 - 𝐝†
 constraint `K`; Hilbert spaces `Xₕ` with their own inner products (not subspaces of `W`, not
 necessarily finite-dimensional) and skew bounded generators `Lₕ`; uniformly bounded
 `ιₕ : Xₕ → W`, `πₕ : W → Xₕ` with `πₕ ιₕ = 1`. [HolstStern2012], §3 -/
-abbrev ApproxFEEC (H : HilbertComplex 𝕜 c W) (κ : Type*) :=
-  SkewFEEC.{u} H.isSkewAdjoint_wave κ
+abbrev ApproxFEEC (H : HilbertComplex 𝕜 c W) (κ : Type*) := SkewFEEC.{u} H.wave κ
 
 namespace ApproxFEEC
 
@@ -280,6 +279,7 @@ def complexify (F : ApproxFEEC.{u} H' κ') (J : PiLp 2 W' →L[ℝ] PiLp 2 W')
   normedSpaceReal _ := inferInstance
   isScalarTower _ := IsScalarTower.left _
   L := complexifyL F
+  isSkewAdjoint := F.isSkewAdjoint
   skew h x y := by
     obtain ⟨⟨a, b⟩⟩ := x
     obtain ⟨⟨a', b'⟩⟩ := y

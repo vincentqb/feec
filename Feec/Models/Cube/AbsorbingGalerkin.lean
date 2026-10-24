@@ -86,7 +86,7 @@ theorem approximates_galerkinData : galerkinData.Approximates :=
 
 /-- **The semi-discrete Galerkin scheme for the absorbing problem**, as a dissipative FEEC
 discretization with constraint `tsdPair`. -/
-def absorbingGalerkin : DissipFEEC isMDissipative_absorbing ℕ :=
+def absorbingGalerkin : DissipFEEC absorbing ℕ :=
   galerkinData.galerkin tsdPair isClosed_tsdPair
 
 /-- Its Trotter–Kato core `R(1) D(A)`. -/

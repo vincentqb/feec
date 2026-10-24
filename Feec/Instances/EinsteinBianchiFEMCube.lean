@@ -212,6 +212,7 @@ def standardCubeApprox : ApproxFEEC matrixComplex ℕ where
   isScalarTower _ := IsScalarTower.left _
   L N := waveGen (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
     (cubeWave_S0_surjective hT hB N)
+  isSkewAdjoint := matrixComplex.isSkewAdjoint_wave
   skew _ := waveGen_skew _ _ _
   incl := cubeEmb hT hB
   proj N := (cubeEmb hT hB N).adjoint

@@ -806,6 +806,7 @@ def ofComplex : ApproxFEEC H κ where
   l := F.l
   X h := PiLp 2 (F.toFamily.V h)
   L h := F.toFamily.L h
+  isSkewAdjoint := H.isSkewAdjoint_wave
   skew h := (F.toFamily.cpx h).waveL_skew
   incl h := F.toFamily.inclL h
   proj h := F.toFamily.projL h

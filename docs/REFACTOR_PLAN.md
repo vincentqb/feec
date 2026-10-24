@@ -432,7 +432,7 @@ abbrev Tot3 := PiLp 2 (fun i : Fin 3 => W3 W₀ W₁ W₂ i)       -- window tot
 --   ReducingSubcomplex.isReducing_wave; hodge; closedRangeAt_iff_poincare; HasCompactProperty.*;
 --   hodgeLaplacian (via (1−D)(1+D) = 1−D², D = wave, Stone resolvents); Mixed.wellPosed
 
--- HilbertComplex/Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean   [as built]
+-- HilbertComplex/Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean   [checked]
 -- the generator is the one parameter; its m-dissipativity / skew-adjointness are Prop fields, so
 -- a projection `F.X h` carries `A` once (not `A` and a proof term repeating `A` and `E`'s instances)
 structure DissipFEEC (A : E →ₗ.[𝕜] E) (κ : Type*) where

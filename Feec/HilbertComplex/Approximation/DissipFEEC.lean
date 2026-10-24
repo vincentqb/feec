@@ -408,6 +408,10 @@ def S (t : ℝ) : E →L[𝕜] E := F.isMDissipative.semigroup.S t
 
 theorem S_def (t : ℝ) : F.S t = F.isMDissipative.semigroup.S t := rfl
 
+/-- The orbits of the exact flow are continuous on `[0, T]`. -/
+theorem continuousOn_S (x : E) (T : ℝ) : ContinuousOn (fun t => F.S t x) (Icc 0 T) :=
+  (F.isMDissipative.semigroup.strongCont x).mono Icc_subset_Ici_self
+
 /-- **Inexactness criterion**: if the discrete initial velocity `ιₕ Lₕ v` differs from `A x`,
 the discrete solution from `v` differs from `S(t) x` at some time `t ≥ 0`. -/
 theorem exists_sol_ne {x : E} (hx : x ∈ A.domain) (h : κ) (v : F.X h)
@@ -542,10 +546,8 @@ def Comparison.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (T : ℝ) : F.Comparis
   Data := A.domain
   p x h t := R h (F.S t x)
   p' x h t := R h (F.S t (genExt A x))
-  continuousOn _ _ h := (R h).continuous.comp_continuousOn
-    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
-  continuousOn' _ _ h := (R h).continuous.comp_continuousOn
-    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
+  continuousOn x _ h := (R h).continuous.comp_continuousOn (F.continuousOn_S x T)
+  continuousOn' x _ h := (R h).continuous.comp_continuousOn (F.continuousOn_S (genExt A x) T)
   hasDerivWithinAt x hx h t ht := by
     have hd := F.isMDissipative.hasDerivWithinAt_semigroup ⟨x, hx⟩ ht.1
     rw [← genExt_of_mem hx] at hd
@@ -565,14 +567,10 @@ def Core.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h�
   cmp T := Comparison.ofOperator F R T
   data_eq _ := rfl
   tendsto_approx T x _ := tendstoUniformlyOn_apply_of_tendsto (P₀ := ContinuousLinearMap.id 𝕜 E)
-    (F.bound_incl_comp hR) happrox
-    (isCompact_Icc.image_of_continuousOn
-      ((F.isMDissipative.semigroup.strongCont x).mono Icc_subset_Ici_self))
+    (F.bound_incl_comp hR) happrox (isCompact_Icc.image_of_continuousOn (F.continuousOn_S x T))
   tendsto_defect T x hx := tendstoUniformlyOn_norm_of_le hΔ hΔ0 hΔ'0
-    (isCompact_Icc.image_of_continuousOn
-      ((F.isMDissipative.semigroup.strongCont (genExt A x)).mono Icc_subset_Ici_self))
-    (isCompact_Icc.image_of_continuousOn
-      ((F.isMDissipative.semigroup.strongCont x).mono Icc_subset_Ici_self))
+    (isCompact_Icc.image_of_continuousOn (F.continuousOn_S (genExt A x) T))
+    (isCompact_Icc.image_of_continuousOn (F.continuousOn_S x T))
     fun h t ht => by
       have e := hdef h ⟨_, F.isMDissipative.semigroup_mem_domain ⟨x, hx⟩ ht.1⟩
       rw [F.isMDissipative.apply_semigroup ⟨x, hx⟩ ht.1] at e

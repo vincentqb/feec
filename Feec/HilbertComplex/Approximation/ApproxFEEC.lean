@@ -178,7 +178,8 @@ end Orbit
 a skew FEEC discretization of the skew-adjoint wave operator `L = 𝐝 - 𝐝†`, that is, a closed
 constraint `K`; Hilbert spaces `Xₕ` with their own inner products (not subspaces of `W`, not
 necessarily finite-dimensional) and skew bounded generators `Lₕ`; uniformly bounded
-`ιₕ : Xₕ → W`, `πₕ : W → Xₕ` with `πₕ ιₕ = 1`. [HolstStern2012], §3 -/
+`ιₕ : Xₕ → W`, `πₕ : W → Xₕ` with `πₕ ιₕ = 1`. The field `isSkewAdjoint` holds for every complex,
+so constructions give it as `H.isSkewAdjoint_wave`. [HolstStern2012], §3 -/
 abbrev ApproxFEEC (H : HilbertComplex 𝕜 c W) (κ : Type*) := SkewFEEC.{u} H.wave κ
 
 namespace ApproxFEEC
@@ -186,8 +187,9 @@ namespace ApproxFEEC
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxFEEC.{u} H κ)
 
-/-- The exact group `SkewFEEC.U` of an approximating FEEC discretization is the wave group, by
-definition. -/
+/-- The exact group `SkewFEEC.U` of an approximating FEEC discretization is the wave group: both
+are the Stone group of `L`, from the proofs `F.isSkewAdjoint` and `H.isSkewAdjoint_wave` of its
+skew-adjointness, equal by proof irrelevance. -/
 theorem U_eq_waveGroup (t : ℝ) : F.U t = H.waveGroup.S t := rfl
 
 /-- For `t ≥ 0`, the exact flow of an approximating FEEC discretization is the wave group
@@ -396,7 +398,7 @@ grading `p` and an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, `K` reduces
 theorem approxFEEC_isReducing_iff_keeps {p : ι → Bool} (hp : Alternates c p)
     (hRK : F.ReversalInvariant p) (hD : F.SmoothDense F.K) :
     H.wave.IsReducing F.K ↔ F.Keeps F.K :=
-  ⟨fun h => (H.isSkewAdjoint_wave.isMDissipative.isReducing_iff.1 h).1, fun h =>
+  ⟨fun h => (F.isMDissipative.isReducing_iff.1 h).1, fun h =>
     (H.isReducing_iff_forall_nonneg hp F.K hRK hD).2 fun t ht x _ hx => by
       rw [← F.S_eq_waveGroup ht]; exact h t ht x hx⟩
 

@@ -66,13 +66,14 @@ each stated as a structure of named conclusions extending the one below and prov
 2. `Feec.HilbertComplex.skewFEEC` (`Feec.HilbertComplex.Approximation.SkewFEEC`, statement
    `Feec.HilbertComplex.SkewFEEC.Verdict`) for `Feec.HilbertComplex.SkewFEEC`, a `DissipFEEC` of a
    skew-adjoint generator (the field `isSkewAdjoint`, from which m-dissipativity is derived) with
-   skew discrete generators (cores and rate classes are those of the base): adds Stone's isometric group `Feec.HilbertComplex.SkewFEEC.U`, equal to the semigroup
-   for `t ≥ 0`, conservation of the norm, reducing iff invariant for all `t ∈ ℝ`
+   skew discrete generators (cores and rate classes are those of the base): adds Stone's isometric
+   group `Feec.HilbertComplex.SkewFEEC.U`, equal to the semigroup for `t ≥ 0`, conservation of the
+   norm, reducing iff invariant for all `t ∈ ℝ`
    (`Feec.HilbertComplex.skewFEEC_isReducing_iff_invariant`) and the departure in both time
    directions (`Feec.HilbertComplex.skewFEEC_leaves_smooth_symm`).
 3. `Feec.HilbertComplex.approxFEEC` for `Feec.HilbertComplex.ApproxFEEC`, the `SkewFEEC` of the Hodge
-   wave operator `L = 𝐝 - 𝐝†` (`ApproxFEEC H κ = SkewFEEC H.wave κ`) of a Hilbert complex on any finite window of any `ComplexShape`
-   (its group is the wave group): adds unique weak solutions
+   wave operator `L = 𝐝 - 𝐝†` (`ApproxFEEC H κ = SkewFEEC H.wave κ`) of a Hilbert complex on any
+   finite window of any `ComplexShape` (its group is the wave group): adds unique weak solutions
    (`Feec.HilbertComplex.approxFEEC_unique_weak`) and, on graded complexes, reducing iff kept forward
    in time (`Feec.HilbertComplex.approxFEEC_isReducing_iff_keeps`).
 

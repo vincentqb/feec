@@ -602,9 +602,8 @@ theorem bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2
   have hm : R.meshSize N = 1 / ((N : ℝ) + 1) := rfl
   have hα : R.α = s := rfl
   have hn : R.classNorm x = sobolevNorm 𝕜 s x := rfl
-  simp only [hp, sub_self, norm_zero, mul_zero, add_zero, hC, hC', hm, hα, hn, mul_zero, zero_mul,
-    add_zero, one_mul] at h
-  exact h
+  simpa only [hp, sub_self, norm_zero, mul_zero, add_zero, hC, hC', hm, hα, hn, zero_mul, one_mul]
+    using h
 
 /-- **The exact error identity**: `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ = ‖x - P_N x‖` for every `t`
 (`P_N` commutes with `e^{tL}`, which is unitary). The error is the truncation error of the

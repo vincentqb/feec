@@ -109,7 +109,7 @@ section TrotterKato
 
 variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-  {A : E →ₗ.[𝕜] E} {hA : A.IsMDissipative} {κ : Type*}
+  {A : E →ₗ.[𝕜] E} {κ : Type*}
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- `R(1) (y - A y) = y` and `R(1) y - A R(1) y = y`, with `R(1) = (1 - A)⁻¹`. -/
@@ -148,6 +148,11 @@ theorem discreteRes_sub (h : κ) (y : F.X h) :
     F.discreteRes h y - F.L h (F.discreteRes h y) = y :=
   boundedRes_sub (F.dissipative h) y
 
+/-- `R(1) S(t) = S(t) R(1)` for the exact flow of `F` (`resolvent_semigroup_comm`). -/
+theorem resolvent_S {t : ℝ} (ht : 0 ≤ t) (y : E) :
+    Operator.resolvent A 1 (F.S t y) = F.S t (Operator.resolvent A 1 y) :=
+  resolvent_semigroup_comm F.isMDissipative ht y
+
 /-- The data of the resolvent core: `R(1) D(A) = D(A²)`. -/
 def resData : Submodule 𝕜 E := A.domain.map (Operator.resolvent A 1).toLinearMap
 
@@ -175,22 +180,21 @@ theorem sub_genExt_mem_domain (hA : A.IsMDissipative) {x : E} (hx : x ∈ resDat
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 theorem resolvent_sub_genExt (hA : A.IsMDissipative) {x : E} (hx : x ∈ resData (A := A)) :
     Operator.resolvent A 1 (x - genExt A x) = x := by
-  have hd := mem_domain_of_mem_resData (hA := hA) hx
+  have hd := mem_domain_of_mem_resData hA hx
   rw [genExt_of_mem hd]
   exact resolvent_one_apply_sub hA ⟨x, hd⟩
 
 /-- The comparison trajectories `pₕ(t) = (1 - Lₕ)⁻¹ πₕ (1 - A) S(t) x` of the resolvent core. -/
 def Comparison.ofResolvent (T : ℝ) : F.Comparison T where
   Data := resData (A := A)
-  p x h t := F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t (x - genExt A x)))
-  p' x h t :=
-    F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t (genExt A (x - genExt A x))))
+  p x h t := F.discreteRes h (F.proj h (F.S t (x - genExt A x)))
+  p' x h t := F.discreteRes h (F.proj h (F.S t (genExt A (x - genExt A x))))
   continuousOn _ _ h := ((F.discreteRes h).continuous.comp (F.proj h).continuous).comp_continuousOn
-    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
+    (F.continuousOn_S _ T)
   continuousOn' _ _ h := ((F.discreteRes h).continuous.comp (F.proj h).continuous).comp_continuousOn
-    ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
+    (F.continuousOn_S _ T)
   hasDerivWithinAt x hx h t ht := by
-    have hu := sub_genExt_mem_domain (hA := F.isMDissipative) hx
+    have hu := sub_genExt_mem_domain F.isMDissipative hx
     have hd := F.isMDissipative.hasDerivWithinAt_semigroup ⟨_, hu⟩ ht.1
     rw [← genExt_of_mem hu] at hd
     exact (((F.discreteRes h).comp (F.proj h)).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt
@@ -226,46 +230,41 @@ def Core.ofResolvent
     have hlim : ∀ y, Tendsto (fun h => ‖B h y‖) F.l (𝓝 0) := fun y => by
       have := tendsto_iff_norm_sub_tendsto_zero.1 (hres y)
       exact this.congr fun h => rfl
-    have hcpt : IsCompact ((fun t => F.isMDissipative.semigroup.S t u) '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn
-        ((F.isMDissipative.semigroup.strongCont u).mono Icc_subset_Ici_self)
+    have hcpt : IsCompact ((fun t => F.S t u) '' Icc 0 T) :=
+      isCompact_Icc.image_of_continuousOn (F.continuousOn_S u T)
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     filter_upwards [eventually_forall_norm_lt_of_tendsto hB hlim hcpt hε] with h hh t ht
     have := hh _ (mem_image_of_mem _ ht)
-    have e : F.isMDissipative.semigroup.S t x = R (F.isMDissipative.semigroup.S t u) := by
-      rw [resolvent_semigroup_comm F.isMDissipative ht.1,
-        resolvent_sub_genExt (hA := F.isMDissipative) hx]
-    rw [dist_eq_norm, F.S_def, e, norm_sub_rev]
-    change ‖F.incl h (F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u))) -
-      R (F.isMDissipative.semigroup.S t u)‖ < ε
+    have e : F.S t x = R (F.S t u) := by
+      rw [F.resolvent_S ht.1, resolvent_sub_genExt F.isMDissipative hx]
+    rw [dist_eq_norm, e, norm_sub_rev]
+    change ‖F.incl h (F.discreteRes h (F.proj h (F.S t u))) - R (F.S t u)‖ < ε
     simpa only [B, sub_apply, ContinuousLinearMap.comp_apply] using this
   tendsto_defect T x hx := by
-    have hu := sub_genExt_mem_domain (hA := F.isMDissipative) hx
+    have hu := sub_genExt_mem_domain F.isMDissipative hx
     set u := x - genExt A x
     set R := Operator.resolvent A (1 : 𝕜)
     set C := F.boundConst
     have hC := F.boundConst_nonneg
     have hR1 : ∀ y, ‖R y‖ ≤ ‖y‖ := fun y => by
       have := F.isMDissipative.norm_resolvent_apply_le one_pos y; simpa using this
-    set w : ℝ → E := fun t => F.isMDissipative.semigroup.S t (u - genExt A u)
+    set w : ℝ → E := fun t => F.S t (u - genExt A u)
     -- the defect is `πₕ R w - Gₕ w`
     have hdef : ∀ h, ∀ t ∈ Icc 0 T, (Comparison.ofResolvent F T).defect x h t =
         F.proj h (R (w t)) - F.discreteRes h (F.proj h (w t)) := fun h t ht => by
-      have hRw : R (w t) = F.isMDissipative.semigroup.S t u := by
+      have hRw : R (w t) = F.S t u := by
         simp only [w]
-        rw [resolvent_semigroup_comm F.isMDissipative ht.1, genExt_of_mem hu,
+        rw [F.resolvent_S ht.1, genExt_of_mem hu,
           resolvent_one_apply_sub F.isMDissipative ⟨u, hu⟩]
-      have hs := F.discreteRes_sub h (F.proj h (F.isMDissipative.semigroup.S t u))
-      have hL : F.L h (F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u))) =
-          F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u)) -
-            F.proj h (F.isMDissipative.semigroup.S t u) := by
-        generalize F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u)) = g at hs ⊢
+      have hs := F.discreteRes_sub h (F.proj h (F.S t u))
+      have hL : F.L h (F.discreteRes h (F.proj h (F.S t u))) =
+          F.discreteRes h (F.proj h (F.S t u)) - F.proj h (F.S t u) := by
+        generalize F.discreteRes h (F.proj h (F.S t u)) = g at hs ⊢
         rw [← hs, sub_sub_cancel]
-      have hw : w t = F.isMDissipative.semigroup.S t u -
-          F.isMDissipative.semigroup.S t (genExt A u) := _root_.map_sub _ _ _
-      change F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t (genExt A u))) -
-        F.L h (F.discreteRes h (F.proj h (F.isMDissipative.semigroup.S t u))) = _
+      have hw : w t = F.S t u - F.S t (genExt A u) := _root_.map_sub _ _ _
+      change F.discreteRes h (F.proj h (F.S t (genExt A u))) -
+        F.L h (F.discreteRes h (F.proj h (F.S t u))) = _
       rw [hRw, hw, _root_.map_sub (F.proj h), _root_.map_sub (F.discreteRes h), hL]
       abel
     set D1 : ∀ _ : κ, E →L[𝕜] E := fun h => F.incl h ∘L F.proj h ∘L R - R
@@ -293,8 +292,7 @@ def Core.ofResolvent
       refine this.congr fun h => ?_
       rw [norm_sub_rev]; rfl
     have hcpt : IsCompact (w '' Icc 0 T) :=
-      isCompact_Icc.image_of_continuousOn
-        ((F.isMDissipative.semigroup.strongCont _).mono Icc_subset_Ici_self)
+      isCompact_Icc.image_of_continuousOn (F.continuousOn_S _ T)
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     set δ := ε / (2 * (C + 1))

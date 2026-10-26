@@ -148,6 +148,8 @@ public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
+public import Feec.HilbertComplex.Approximation.Ritz
+public import Feec.HilbertComplex.Approximation.RitzResolvent
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex

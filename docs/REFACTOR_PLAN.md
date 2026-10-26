@@ -271,6 +271,7 @@ Feec/
 │   │   Approximation/ConformingFamily.lean -- AFW §3.3 data: subcomplexes, bounded cochain projections, windows
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
 │   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
+│   │   Approximation/{Ritz,RitzResolvent}.lean -- Ritz projections → cores, rate classes (regularity scales)
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,

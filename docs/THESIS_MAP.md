@@ -20,7 +20,7 @@ declaration is listed under a thesis id when
 Every backticked name in a list item below is checked by `lake exe feec-mapcheck`
 (the declaration must exist).
 
-Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1018 distinct declarations (133 current homes of thesis-numbered old names).
+Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1020 distinct declarations (133 current homes of thesis-numbered old names).
 
 ## Results
 
@@ -218,8 +218,8 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 
 - named: `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_one`, `Feec.BGG.Hilb.toHilbertComplex_cycles_one`, `Feec.BGG.Hilb.toShort_closedRange_exact`
 - old: Feec.Ch5.BGG.BGGHilb.prop_5_1
-- cited: `Feec.BGG.Hilb.D0op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed_range`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.exact_D0op_D1op`, `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.isClosed_range_T`, `Feec.BGG.Hilb.isClosed_Γ`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_one`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_two`, `Feec.BGG.Hilb.toHilbertComplex_cycles_one`, `Feec.BGG.Hilb.toHilbertComplex_cycles_zero`, `Feec.BGG.Hilb.toShort`, `Feec.BGG.Hilb.toShort_closedRange_exact`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.range_D0`, `Feec.BGG.Segment.range_D1`, `Feec.BGG.Stability`, `Feec.BGG.isClosed_range_prod`, `Feec.Models.Cube.WeakSymmetry.bggShort_closedRange_exact'`
-- modules: Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.ToComplex, Feec.Instances.EinsteinBianchiGauss, Feec.Models.Cube.RegularDecomposition, Feec.Models.Cube.WeakSymmetryComplex
+- cited: `Feec.BGG.Hilb.D0op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed`, `Feec.BGG.Hilb.D1op_isClosed_range`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.exact_D0op_D1op`, `Feec.BGG.Hilb.isClosed_closedRange_exact`, `Feec.BGG.Hilb.isClosed_range_T`, `Feec.BGG.Hilb.isClosed_Γ`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_one`, `Feec.BGG.Hilb.toHilbertComplex_closedRangeAt_two`, `Feec.BGG.Hilb.toHilbertComplex_cycles_one`, `Feec.BGG.Hilb.toHilbertComplex_cycles_zero`, `Feec.BGG.Hilb.toShort`, `Feec.BGG.Hilb.toShort_closedRange_exact`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.range_D0`, `Feec.BGG.Segment.range_D1`, `Feec.BGG.Segment.sup_range_eq_top`, `Feec.BGG.Stability`, `Feec.BGG.isClosed_range_prod`, `Feec.Models.Cube.WeakSymmetry.bggShort_closedRange_exact'`
+- modules: Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Derived, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.ToComplex, Feec.Instances.EinsteinBianchiGauss, Feec.Models.Cube.RegularDecomposition, Feec.Models.Cube.WeakSymmetryComplex
 
 ### Prop 5.2
 
@@ -442,7 +442,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 ### Eq (5.1)
 
 - cited: `Feec.BGG.Hilb.D0op`, `Feec.BGG.Hilb.D1op`, `Feec.BGG.Hilb.toHilbertComplex`, `Feec.BGG.Segment.D0`, `Feec.BGG.Segment.D1`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.Γ`, `Feec.Models.BoundedDomain.bggComplex`, `Feec.Models.Cube.WeakSymmetry.bggShort_closedRange_exact'`
-- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.ToComplex, Feec.Instances.EinsteinBianchi, Feec.Instances.EinsteinBianchiGauss, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorWeakSymmetryTSD, Feec.Models.Cube.RegularDecomposition, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.MatrixModel
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Derived, Feec.HilbertComplex.BGG.ToComplex, Feec.Instances.EinsteinBianchi, Feec.Instances.EinsteinBianchiGauss, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorWeakSymmetryTSD, Feec.Models.Cube.RegularDecomposition, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.MatrixModel
 
 ### Eq (5.2)
 
@@ -625,8 +625,8 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 
 ### Sec §5.1
 
-- cited: `Feec.BGG.Data`, `Feec.BGG.Hilb`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.Wcheck`, `Feec.BGG.Hilb.existsUnique_isReduced`, `Feec.BGG.Hilb.existsUnique_multiplier`, `Feec.BGG.Hilb.isSaddle_iff_isReduced`, `Feec.BGG.Hilb.jW_spec`, `Feec.BGG.Hilb.mem_Z1_iff`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.tripleNorm`, `Feec.BGG.Hilb.tripleNorm_definite`, `Feec.BGG.Hilb.tripleNorm_spec`, `Feec.BGG.HilbertData`, `Feec.BGG.HilbertData.twistComplex`, `Feec.BGG.Segment`, `Feec.BGG.Segment.D0`, `Feec.BGG.Segment.D1`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ExactBot`, `Feec.BGG.Segment.ExactTop`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.Γ`, `Feec.BGG.Stability`, `Feec.BGG.WaveData.Wcheck`, `Feec.EinsteinBianchi.WaveFEM.negNorm_le_tripleNorm`, `Feec.Models.Cube.WeakSymmetry.bggHilb_hyps`, `Feec.Models.Cube.WeakSymmetry.bggHyps`
-- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.BGG.Twisted, Feec.HilbertComplex.BGG.WeakSymmetry, Feec.Instances.EinsteinBianchiGauss, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Cube.MirrorWeakSymmetryComplex, Feec.Models.Cube.RegularDecomposition, Feec.Models.Cube.WeakSymmetryComplex, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.WaveFEM
+- cited: `Feec.BGG.Data`, `Feec.BGG.Data.Γ_eq_segment_Γ`, `Feec.BGG.Hilb`, `Feec.BGG.Hilb.Hyps`, `Feec.BGG.Hilb.Wcheck`, `Feec.BGG.Hilb.existsUnique_isReduced`, `Feec.BGG.Hilb.existsUnique_multiplier`, `Feec.BGG.Hilb.isSaddle_iff_isReduced`, `Feec.BGG.Hilb.jW_spec`, `Feec.BGG.Hilb.mem_Z1_iff`, `Feec.BGG.Hilb.poincare_T`, `Feec.BGG.Hilb.poincare_Γ`, `Feec.BGG.Hilb.tripleNorm`, `Feec.BGG.Hilb.tripleNorm_definite`, `Feec.BGG.Hilb.tripleNorm_spec`, `Feec.BGG.HilbertData`, `Feec.BGG.HilbertData.twistComplex`, `Feec.BGG.Segment`, `Feec.BGG.Segment.D0`, `Feec.BGG.Segment.D1`, `Feec.BGG.Segment.D1_D0`, `Feec.BGG.Segment.ExactBot`, `Feec.BGG.Segment.ExactTop`, `Feec.BGG.Segment.ker_D1_eq_range_D0`, `Feec.BGG.Segment.Γ`, `Feec.BGG.Stability`, `Feec.BGG.WaveData.Wcheck`, `Feec.EinsteinBianchi.WaveFEM.negNorm_le_tripleNorm`, `Feec.Models.Cube.WeakSymmetry.bggHilb_hyps`, `Feec.Models.Cube.WeakSymmetry.bggHyps`
+- modules: Feec.Counterexamples.BoundedBGG, Feec.Fourier.BGGSymbol, Feec.HilbertComplex.BGG.Basic, Feec.HilbertComplex.BGG.Derived, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent, Feec.HilbertComplex.BGG.ToComplex, Feec.HilbertComplex.BGG.Twisted, Feec.HilbertComplex.BGG.WeakSymmetry, Feec.Instances.EinsteinBianchiGauss, Feec.Models.BoundedDomain.BGG, Feec.Models.Cube.MirrorBGG, Feec.Models.Cube.MirrorWeakSymmetryComplex, Feec.Models.Cube.RegularDecomposition, Feec.Models.Cube.WeakSymmetryComplex, Feec.Models.Euclidean.BGG, Feec.Models.Torus.BGG, Feec.Physics.EinsteinBianchi.WaveFEM
 
 ### Sec §5.2
 

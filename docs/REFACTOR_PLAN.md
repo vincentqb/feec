@@ -255,7 +255,8 @@ Feec/
 │   ├── LinearPMap/{Skew,GraphSpace,Reducing,Intertwines,ClosedRange,Bounded}.lean
 │   ├── Lp/{CountEquiv,ProdEquiv}.lean          -- lp ≃ₗᵢ Lp count (ae_count_iff); Lp(E×F) ≃ Lp E × Lp F
 │   ├── Analysis/{Gronwall,Inequalities}.lean   -- decay-rate Gronwall; young/absorb/sq_norm_add3_le
-│   └── Calculus/{Partial,TimeSlice}.lean
+│   ├── Calculus/{Partial,TimeSlice}.lean
+│   └── Homology/Subcomplex.lean               -- subcomplex/quotient of modules; exact pieces are quasi-isos
 ├── Operator/{Adjoint,Multiplication,Resolvent}.lean                         -- Feec.Operator
 ├── Semigroup/{Basic,Stone,Perturbation,LumerPhillips,Invariance,Spectral}.lean  -- Feec.C0Group / Feec.C0Semigroup
 ├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained}.lean -- Feec.Evolution
@@ -272,7 +273,7 @@ Feec/
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,
 │   │                                 -- ofComplex, ofComplexCrime (cochain defect), complex-level rates
-│   └── BGG/{Basic,ToComplex,WeakSymmetry,Discrete}.lean
+│   └── BGG/{Basic,Derived,DomainData,ToComplex,WeakSymmetry,Discrete}.lean -- Derived: BGG complex, any length
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3}.lean

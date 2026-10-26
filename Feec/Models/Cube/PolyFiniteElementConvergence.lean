@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.PolySmoothingEstimates
 public import Feec.Models.Cube.FiniteElementConvergence
+public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 
 /-!
 # Convergence of the higher-order finite element methods on the cube, with no hypotheses
@@ -32,6 +33,11 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
   **vanishing harmonic gap** (`PolySmoothingEstimates.tendsto_harmonicGap`).
 * **Unconditional statements**: `polySmoothedProjection_uniform`, `discretePoincare_poly`,
   `mixed_wellPosed_poly`, `mixed_quasiOptimal_poly` and their `Min` versions.
+* **Discrete cohomology** ([AFW2010], Thm 3.4; `Feec.HilbertComplex.Approximation.DiscreteCohomology`):
+  for every admissible sequence and for the Whitney forms, `dim Hᵏ(Vₕ) = [k = 0]` and
+  `dim Hᵏ(V̊ₕ) = [k = n]` for `N` large (**`eventually_finrank_cohomology_poly`**,
+  `eventually_finrank_cohomology_polyMin`, `eventually_finrank_cohomology_whitney`,
+  `eventually_finrank_cohomology_whitneyMin`).
 * **The rows of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3) on `(0, ½)³` with
   vanishing boundary DOFs, the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (`PolySeq.lowestOrder`, and the
   Whitney complex) and the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (`PolySeq.lagrangeP2`), **share
@@ -41,8 +47,9 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (discrete Poincaré inequality, Thm 3.6), Thm 3.8 (stability), Thm 3.9
-  (quasi-optimality), §5.4 (smoothed projections)
+  §3.3 (discrete Poincaré inequality, Thm 3.6; cohomology, Thm 3.4), Thm 3.8 (stability),
+  Thm 3.9 (quasi-optimality), §5.4 (smoothed projections), §5.6 (cohomology of the finite element
+  de Rham complexes)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates, density)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
@@ -1107,5 +1114,43 @@ theorem tableRows_uniform_cochainProjection :
   have hB := h₂.mono (le_max_right C₁ C₂)
   exact ⟨_, max C₁ C₂, hT, hB, hT.norm_proj_le, hT.isGraphBounded_proj, hB.norm_proj_le,
     hB.isGraphBounded_proj, hT.tendsto_harmonicGap, hB.tendsto_harmonicGap⟩
+
+/-! ### Discrete cohomology -/
+
+/-- **The Whitney complexes of the cube have the cohomology of `HΛ(Q)`** for `N` large
+([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`. -/
+theorem eventually_finrank_cohomology_whitney (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((whitney n N).toHilbertComplex.cohomology k) =
+      if k = 0 then 1 else 0 := by
+  obtain ⟨p, C, hE, hb, -, hgap⟩ := smoothedProjection_uniform (n := n)
+  exact (Subcomplex.CochainProjection.eventually_finrank_cohomology_eq hE.proj (fun N => hb N k)
+    (hgap k) (closedRangeAt k)).mono fun _ h => h.trans (finrank_cohomology k)
+
+/-- **The Whitney complexes with vanishing boundary DOFs have the cohomology of `H̊Λ(Q)`** for `N`
+large: `dim Hᵏ(V̊ₕ) = [k = n]`. -/
+theorem eventually_finrank_cohomology_whitneyMin (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((whitneyMin n N).toHilbertComplex.cohomology k) =
+      if k = n then 1 else 0 := by
+  obtain ⟨p, C, hE, hb, -, hgap⟩ := smoothedProjection_uniform_min (n := n)
+  exact (Subcomplex.CochainProjection.eventually_finrank_cohomology_eq hE.proj (fun N => hb N k)
+    (hgap k) (closedRangeAt_min k)).mono fun _ h => h.trans (finrank_cohomology_min k)
+
+/-- **The complexes of every admissible sequence `S` have the cohomology of `HΛ(Q)`** for `N`
+large ([AFW2010], Thm 3.4, §5.6): `dim Hᵏ(Vₕ) = [k = 0]`. -/
+theorem eventually_finrank_cohomology_poly (S : PolySeq) (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((poly n S N).toHilbertComplex.cohomology k) =
+      if k = 0 then 1 else 0 := by
+  obtain ⟨p, C, hE, hb, -, hgap⟩ := polySmoothedProjection_uniform (n := n) S
+  exact (Subcomplex.CochainProjection.eventually_finrank_cohomology_eq hE.proj (fun N => hb N k)
+    (hgap k) (closedRangeAt k)).mono fun _ h => h.trans (finrank_cohomology k)
+
+/-- **The complexes of `S` with vanishing boundary DOFs have the cohomology of `H̊Λ(Q)`** for `N`
+large: `dim Hᵏ(V̊ₕ) = [k = n]`. -/
+theorem eventually_finrank_cohomology_polyMin (S : PolySeq) (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((polyMin n S N).toHilbertComplex.cohomology k) =
+      if k = n then 1 else 0 := by
+  obtain ⟨p, C, hE, hb, -, hgap⟩ := polySmoothedProjection_uniform_min (n := n) S
+  exact (Subcomplex.CochainProjection.eventually_finrank_cohomology_eq hE.proj (fun N => hb N k)
+    (hgap k) (closedRangeAt_min k)).mono fun _ h => h.trans (finrank_cohomology_min k)
 
 end Feec.Models.Cube.FEM

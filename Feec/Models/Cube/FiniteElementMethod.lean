@@ -4,6 +4,7 @@ public import Feec.FiniteElement.SmoothedProjection
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.Domain.StarShapedSmoothing
 public import Feec.HilbertComplex.Approximation.Convergence
+public import Feec.HilbertComplex.Approximation.ConformingFamily
 
 /-!
 # Smoothed projections and the finite element method on cube meshes
@@ -477,26 +478,6 @@ def commutingMapOfEqMin {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsO
   subst h; exact Q
 
 end Feec.Domain.ConstCoeffComplex
-
-/-! ## Windows of subcomplexes -/
-
-namespace Feec.HilbertComplex.Subcomplex
-
-variable {𝕜 : Type*} [RCLike 𝕜] {V : ℤ → Type*} [∀ i, NormedAddCommGroup (V i)]
-  [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
-  {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) V}
-
-/-- The window `Vₕ^a → ⋯ → Vₕ^{a + m - 1}` of a subcomplex, a subcomplex of `H.window a m`. -/
-def window (S : H.Subcomplex) (a : ℤ) (m : ℕ) : (H.window a m).Subcomplex where
-  V i := S.V (a + i)
-  le_domain _ _ := S.le_domain _ _
-  mapsTo _ _ := S.mapsTo _ _
-
-instance (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)] (a : ℤ) (m : ℕ) (i : Fin m) :
-    FiniteDimensional 𝕜 ((S.window a m).V i) :=
-  inferInstanceAs (FiniteDimensional 𝕜 (S.V (a + i)))
-
-end Feec.HilbertComplex.Subcomplex
 
 /-! ## Rate of the semi-discrete Hodge wave equation on a subcomplex -/
 

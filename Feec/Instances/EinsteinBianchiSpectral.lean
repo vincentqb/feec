@@ -164,22 +164,24 @@ theorem tendsto_totalProj (x : PiLp 2 W) :
   exact ((PiLp.continuous_toLp 2 _).tendsto _).comp
     (tendsto_pi_nhds.2 fun i => S.tendsto i (x i))
 
-/-- **The constrained FEEC discretization of a spectral family** with a closed constraint `K`:
-`V_N = B_N`, `π_N` the orthogonal projections (norm `1`), along `N → ∞`. -/
-def toFEEC (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
-    ConstrainedFEEC H ℕ where
-  K := K
-  isClosed_K := hK
+/-- **A spectral family is a conforming family**: `V_N = B_N`, `π_N` the orthogonal projections
+(norm `1`), along `N → ∞`; `dist(x, B_N) ≤ ‖x - P_N x‖ → 0`. -/
+def toConforming : ConformingFamily H ℕ where
   l := atTop
   V := S.sub
   finiteDimensional N i := inferInstanceAs (FiniteDimensional 𝕜 (S.B N i))
   π := S.proj
   bound_π := ⟨1, fun N i x => by
     rw [one_mul]; exact Submodule.norm_starProjection_apply_le (S.B N i) x⟩
-  dense x δ hδ := by
-    filter_upwards [Metric.tendsto_nhds.1 (S.tendsto_totalProj x) δ hδ] with N hN
-    refine ⟨totalProj (S.B N) x, totalProj_mem x, ?_⟩
-    rwa [dist_comm, dist_eq_norm] at hN
+  approx i y := (tendsto_infDist_submodule_iff _ y).2 fun ε hε => by
+    filter_upwards [Metric.tendsto_nhds.1 (S.tendsto i y) ε hε] with N hN
+    exact ⟨_, Submodule.starProjection_apply_mem (S.B N i) y, by rwa [dist_comm, dist_eq_norm] at hN⟩
+
+/-- **The constrained FEEC discretization of a spectral family** with a closed constraint `K`:
+`V_N = B_N`, `π_N` the orthogonal projections (norm `1`), along `N → ∞`. -/
+def toFEEC (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
+    ConstrainedFEEC H ℕ :=
+  S.toConforming.withConstraint K hK
 
 /-! ### Rates: data with algebraically decaying truncation errors -/
 

@@ -160,12 +160,14 @@ abbrev TorusVerdict : Prop :=
 `constrainedFEEC`, derived from `approxFEEC`). [QuennevilleBelair2015], Thm 4.14,
 Prop 4.17, Ch. 6 -/
 theorem einsteinBianchi_torus_constrainedFEEC : TorusVerdict := by
-  obtain ⟨-, hprop, hconv, hrate, hres, -⟩ := torusFEEC.constrainedFEEC_of_approxFEEC
-  exact ⟨torusFEEC_isReducing, hprop.1 torusFEEC_isReducing, fun T => (hconv T).1,
-    fun x hx T => hres torusFEEC_isReducing x hx T,
-    fun α T x hx N t ht => ⟨hrate T (torusRate α T) x hx N t ht,
-      fun hxK => (torusFEEC.infDist_le_norm_sub (hprop.1 torusFEEC_isReducing t x hxK)).trans
-        (hrate T (torusRate α T) x hx N t ht)⟩⟩
+  have V := torusFEEC.constrainedFEEC_of_approxFEEC
+  exact ⟨torusFEEC_isReducing, V.propagates_iff.1 torusFEEC_isReducing, fun T x => V.converges x T,
+    fun x hx T => ⟨V.residual_le torusFEEC_isReducing x hx,
+      V.residual_tendsto torusFEEC_isReducing x hx T⟩,
+    fun α T x hx N t ht => ⟨V.rate (torusRate α T) hx N ht,
+      fun hxK => (torusFEEC.infDist_le_norm_sub
+        (V.propagates_iff.1 torusFEEC_isReducing t x hxK)).trans
+        (V.rate (torusRate α T) hx N ht)⟩⟩
 
 /-- `k₀ = (0, 0, 1)` and `-k₀` lie in the band `|n|_∞ ≤ 1`. -/
 theorem mem_bandN_one_of_mem {n : Fin 3 → ℤ}
@@ -325,12 +327,14 @@ conditions**: `MirrorVerdict`, read off `constrainedFEEC_of_approxFEEC mirrorFEE
 statement of `constrainedFEEC`, derived from `approxFEEC`). [QuennevilleBelair2015],
 Thm 4.14, Prop 4.17 (corrected), Ch. 6 -/
 theorem einsteinBianchi_mirror_constrainedFEEC : MirrorVerdict := by
-  obtain ⟨-, hprop, hconv, hrate, hres, -⟩ := mirrorFEEC.constrainedFEEC_of_approxFEEC
-  exact ⟨mirrorFEEC_isReducing, hprop.1 mirrorFEEC_isReducing, fun T => (hconv T).1,
-    fun x hx T => hres mirrorFEEC_isReducing x hx T,
-    fun α T x hx N t ht => ⟨hrate T (mirrorRate α T) x hx N t ht,
-      fun hxK => (mirrorFEEC.infDist_le_norm_sub (hprop.1 mirrorFEEC_isReducing t x hxK)).trans
-        (hrate T (mirrorRate α T) x hx N t ht)⟩⟩
+  have V := mirrorFEEC.constrainedFEEC_of_approxFEEC
+  exact ⟨mirrorFEEC_isReducing, V.propagates_iff.1 mirrorFEEC_isReducing, fun T x => V.converges x T,
+    fun x hx T => ⟨V.residual_le mirrorFEEC_isReducing x hx,
+      V.residual_tendsto mirrorFEEC_isReducing x hx T⟩,
+    fun α T x hx N t ht => ⟨V.rate (mirrorRate α T) hx N ht,
+      fun hxK => (mirrorFEEC.infDist_le_norm_sub
+        (V.propagates_iff.1 mirrorFEEC_isReducing t x hxK)).trans
+        (V.rate (mirrorRate α T) hx N ht)⟩⟩
 
 /-- **The Sobolev verdict on the mirror cube**: for a TSD datum `ξ₀ ∈ D(L²)` with mirror
 extension in `H^{2+s}`, `s ≥ 0`, the error and the constraint residual of the cosine–sine

@@ -267,6 +267,7 @@ Feec/
 │   ├── Dirac.lean (dirac = d+d†, wave = d−d†)  HodgeLaplacian.lean  Mixed.lean  HodgeWave.lean
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,DiscreteCohomology,MixedError,SemidiscreteWave}.lean
+│   │   Approximation/ConformingFamily.lean -- AFW §3.3 data: subcomplexes, bounded cochain projections, windows
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
@@ -284,7 +285,8 @@ Feec/
 ├── Models/                           -- INSTANCES ONLY; nothing generic may import Models
 │   ├── Torus/{DeRham,GradCurl,SymCurl,BGG}.lean     Euclidean/{DeRham,GradCurl,SymCurl,BGG}.lean
 │   ├── Cube/{Parity,Mirror,MirrorSym,MirrorBGG,Static}.lean        -- equivariant compressions of the torus
-│   └── BoundedDomain/{GradCurl,SymCurl,Hessian,BGG,Interior}.lean  -- minimal/maximal realizations
+│   ├── BoundedDomain/{GradCurl,SymCurl,Hessian,BGG,Interior}.lean  -- minimal/maximal realizations
+│   └── ConformingFamilies.lean   -- Whitney and every PolySeq family (cube, parallelepiped, star-shaped) as conforming families
 ├── Physics/{Maxwell,LinearizedGravity,EinsteinBianchi}/*.lean -- headline physical statements, no analysis (elasticity: Domain/Elasticity)
 ├── Counterexamples/{Ell2,Fredholm,NonClosedRangeEuclidean,BoundedDomainTSD,BoundedSymTSD,
 │                   BallSymTSD,CubeStationary,ConstrainedEvolution,ClassicalRegularity}.lean

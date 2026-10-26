@@ -429,16 +429,6 @@ theorem dof_comp_coordWedgeC_mem_span (S : PolySeq) {k : ℕ} (hS : S.ConstOneTe
     exact Submodule.sum_mem _ fun a _ => Submodule.sum_mem _ fun j _ =>
       Submodule.smul_mem _ _ (Submodule.subset_span ⟨(a, j), rfl⟩)
 
-/-- A functional in the span of functionals agreeing at two points takes equal values there. -/
-theorem eq_of_mem_span_range {X ι' : Type*} [AddCommGroup X] [Module ℝ X] {m : ι' → X →ₗ[ℝ] ℝ}
-    {L : X →ₗ[ℝ] ℝ} (hL : L ∈ Submodule.span ℝ (Set.range m)) {x y : X} (h : ∀ i, m i x = m i y) :
-    L x = L y := by
-  induction hL using Submodule.span_induction with
-  | mem f hf => obtain ⟨i, rfl⟩ := hf; exact h i
-  | zero => simp
-  | add f f' _ _ hf hf' => simp [hf, hf']
-  | smul c f _ hf => simp [hf]
-
 /-- **The target DOFs of `S v` only see the source DOFs of the components on the same face.** -/
 theorem dof_coordWedgeC_eq (S : PolySeq) {k : ℕ} (hS : S.ConstOneTest k)
     {g : Finset (Fin n → ℝ)} (i : lowestOrder.DofIdx g (k + 1)) {v w : Fin n → contForms n}

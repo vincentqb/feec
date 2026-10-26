@@ -25,7 +25,7 @@ graded derivation.
 
 ## Main results
 
-* bilinearity, the unit `wedgeForm_one_left` and degrees
+* bilinearity, the unit `wedgeForm_one_left`, `wedgeForm_one_right` and degrees
   (`IsDeg.wedgeForm`);
 * `wedgeForm_assoc`: **associativity** `(ω ∧ η) ∧ ζ = ω ∧ (η ∧ ζ)`;
 * `wedgeForm_comm`: **graded commutativity** `η ∧ ω = (-1)^{kl} ω ∧ η`;
@@ -167,6 +167,15 @@ theorem wedgeForm_sum_right {ι : Type*} (u : Finset ι) (ω : Finset d → R) (
 @[simp] theorem wedgeForm_one_left (ω : Finset d → R) : wedgeForm (Pi.single ∅ 1) ω = ω := by
   funext u
   rw [wedgeForm_apply, sum_eq_single ∅ (fun s _ hs => by simp [hs]) (by simp)]
+  simp
+
+/-- The unit `dx_∅ = 1` is a right identity. -/
+@[simp] theorem wedgeForm_one_right (ω : Finset d → R) : wedgeForm ω (Pi.single ∅ 1) = ω := by
+  funext u
+  rw [wedgeForm_apply, sum_eq_single u (fun s hs hsu => by
+    have : u \ s ≠ ∅ := fun h =>
+      hsu (le_antisymm (mem_powerset.1 hs) (sdiff_eq_empty_iff_subset.1 h))
+    simp [this]) (by simp)]
   simp
 
 /-- Degrees add: the exterior product of a `k`-form and an `l`-form is a `(k + l)`-form. -/

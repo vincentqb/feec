@@ -1073,10 +1073,6 @@ theorem refZ_notMem : refZ ∉ p1MinusForms 3 2 := fun h => by
   rw [refZ_apply, refZ_apply] at this
   simp at this
 
-theorem polyMinusSpace_one_le : polyMinusSpace 3 1 2 ≤ p1MinusForms 3 2 := by
-  rw [polyMinusSpace, ← whitneySpace_refVertex_eq_map_polyFormMinus]
-  exact whitneySpace_le_p1MinusForms _ _
-
 
 /-- The reference simplex `K₁ = lex(Kuhn(id))`. -/
 abbrev refK : Affine.Simplex ℝ (Fin 3 → ℝ) 3 := kuhnLex (1 : Equiv.Perm (Fin 3))
@@ -1106,7 +1102,7 @@ theorem refGap_pos : 0 < refGap := by
     exact h0.symm
   have h2 : (⟨_, hu⟩ : polySpace 3 1 2) = 0 := hinj (h1.trans (map_zero _).symm)
   have h3 : refZ = P := sub_eq_zero.1 (congrArg Subtype.val h2)
-  exact refZ_notMem (polyMinusSpace_one_le (h3 ▸ hPm))
+  exact refZ_notMem ((polyMinusSpace_one_eq_p1MinusForms 2).le (h3 ▸ hPm))
 
 
 theorem affinePullback_scalarMat_inv {h : ℝ} (hh : h ≠ 0) (t : Fin 3 → ℝ) (w : FormField 3) :
@@ -1201,7 +1197,7 @@ theorem refDist_pos : 0 < refDist := by
     refK.isCompact_closedInterior (interior_closedInterior_nonempty refK)
   have : p = ⟨refZ, refZ_mem⟩ := hinj hpe
   subst this
-  exact refZ_notMem (polyMinusSpace_one_le hp)
+  exact refZ_notMem ((polyMinusSpace_one_eq_p1MinusForms 2).le hp)
 
 /-- `‖Ẑ − p‖²_{L²(K₁)} ≥ δ₀²` for every `p ∈ P₁⁻Λ²`. -/
 theorem refDist_sq_le {p : FormField 3} (hp : p ∈ polyMinusSpace 3 1 2) :

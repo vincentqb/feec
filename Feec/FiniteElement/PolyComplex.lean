@@ -12,10 +12,33 @@ tangential traces, a subcomplex of `HΛ(Ω)` and, with vanishing boundary degree
 `H̊Λ(Ω)` for strictly star-shaped `Ω`; this file names the classical sequences, computes the
 dimensions, and specializes to the Freudenthal meshes of cubes.
 
-* Named sequences: `PolySeq.trimmed r` (`P_r⁻Λ⁰ → ⋯ → P_r⁻Λⁿ`), `PolySeq.full r`
-  (`P_rΛ⁰ → P_{r-1}Λ¹ → ⋯`: Lagrange `P_r`, Nédélec of the second kind, BDM), and the two rows of
-  Tables 5.1 and 6.1 of [QuennevilleBelair2015] (§5.3, §6.3): `PolySeq.lowestOrder`
-  (`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`) and `PolySeq.lagrangeP2` (`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`).
+* **The periodic table** ([ArnoldLogg2014]): `PolySeq.ofKinds n κ s` is the admissible sequence
+  with the kinds `κ k` in the degrees `k < n` ending in `P_sΛⁿ` (`PolySeq.ofKinds_space_top`,
+  from `P_{s+1}⁻Λⁿ = P_sΛⁿ`, `polyMinusSpace_top`). Every admissible sequence ending in `P_sΛⁿ`
+  has this form, and as `P_r⁻Λ⁰ = P_rΛ⁰` (`polyMinusSpace_zero`) only `κ 1, …, κ (n-1)` matter:
+  `2ⁿ⁻¹` sequences for each `s` (this count is not formalized). Named corners:
+  `PolySeq.trimmed r` (`P_r⁻Λ⁰ → ⋯ → P_r⁻Λⁿ`: Lagrange, Nédélec first kind [Nedelec1980],
+  Raviart–Thomas–Nédélec [RaviartThomas1977], discontinuous `P_{r-1}`;
+  `PolySeq.trimmed_eq_ofKinds`),
+  `PolySeq.full n r` (`P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_{r-n}Λⁿ`, `n ≤ r`: Lagrange, Nédélec second kind
+  [Nedelec1986], Brezzi–Douglas–Marini [BrezziDouglasMarini1985], discontinuous `P_{r-n}`;
+  `PolySeq.full_space`), and the two rows of Tables 5.1 and 6.1 of [QuennevilleBelair2015]
+  (§5.3, §6.3): `PolySeq.lowestOrder` (`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`) and `PolySeq.lagrangeP2`
+  (`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`) (`PolySeq.lowestOrder_eq_ofKinds`,
+  `PolySeq.lagrangeP2_eq_ofKinds`).
+* **The classical elements in closed form**: in `ℝ³`, `dim P_rΛ⁰ = dim P_rΛ³ = (r+1)(r+2)(r+3)/6`
+  (Lagrange, discontinuous `P_r`), `dim P_r⁻Λ¹ = r(r+2)(r+3)/2` (Nédélec first kind),
+  `dim P_rΛ¹ = dim P_rΛ² = (r+1)(r+2)(r+3)/2` (Nédélec second kind, Brezzi–Douglas–Marini),
+  `dim P_r⁻Λ² = r(r+1)(r+3)/2` (Raviart–Thomas–Nédélec): `finrank_polySpace_three_zero`, …,
+  `finrank_polyMinusSpace_three_two`; in `ℝ²`, `dim P_r⁻Λ¹ = r(r+2)` (Raviart–Thomas),
+  `dim P_rΛ¹ = (r+1)(r+2)` (Brezzi–Douglas–Marini): `finrank_polySpace_two_zero`, …,
+  `finrank_polyMinusSpace_two_one`.
+* **The Whitney complex is `P₁⁻Λ`**: the Whitney element and the element of `PolySeq.trimmed 1`
+  are equivalent (`whitneyElement_equivalent_trimmed`: the same local spaces,
+  `polyMinusSpace_one_eq_p1MinusForms`, and on every face the moment degrees of freedom are
+  nonzero multiples of the face integrals, `PolySeq.trimmed_one_dof_eq`), so they assemble the
+  same subcomplexes on every mesh (`whitneySubcomplex_eq_trimmed`,
+  `whitneySubcomplexMin_eq_trimmed`, by `LocalElement.Equivalent.subcomplex_eq`).
 * Dimensions: `PolySeq.finrank_globalSpace`: `Σ_m #{m-faces} · dim(test forms on m-faces)`;
   `PolySeq.finrank_globalSpace₀`, `PolySeq.finrank_V₀`: the same with the faces not contained in
   a boundary facet.
@@ -44,6 +67,14 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, Table 5.1; §6.3, Table 6.1
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
+* [J.-C. Nédélec, *Mixed finite elements in ℝ³*][Nedelec1980] (`P_r⁻Λ¹`, `P_r⁻Λ²` in `ℝ³`)
+* [J.-C. Nédélec, *A new family of mixed finite elements in ℝ³*][Nedelec1986] (`P_rΛ¹`, `P_rΛ²`
+  in `ℝ³`)
+* [P.-A. Raviart, J.-M. Thomas, *A mixed finite element method for 2-nd order elliptic problems*][RaviartThomas1977]
+  (`P_r⁻Λ¹` in `ℝ²`)
+* [F. Brezzi, J. Douglas, Jr., L. D. Marini, *Two families of mixed finite elements for second order elliptic problems*][BrezziDouglasMarini1985]
+  (`P_rΛ¹` in `ℝ²`)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -58,34 +89,93 @@ open ExteriorFibre Feec.Mesh Feec.Domain
 
 variable {n : ℕ}
 
-/-! ### Named admissible sequences -/
+/-! ### The admissible sequences of the periodic table -/
 
 namespace PolySeq
 
-/-- The trimmed sequence `P_r⁻Λ⁰ → P_r⁻Λ¹ → ⋯ → P_r⁻Λⁿ` (`r ≥ 1`; `r = 1`: the Whitney forms). -/
+/-- **The admissible sequence of kinds `κ` ending in `P_sΛⁿ`** ([AFW2006], §5; [AFW2010], §5.2;
+[ArnoldLogg2014]): in each degree `k < n` the family `κ k` of degree
+`r_k = s + 1 + #{j | k < j < n, κ j = full}`, and in the top degree `P_{s+1}⁻Λⁿ = P_sΛⁿ`
+(`ofKinds_space_top`). Read from the top down, a full space `P_{r_j}Λʲ` raises the degree of the
+space below it by one and a trimmed space `P_{r_j}⁻Λʲ` keeps it, which is the admissibility
+condition `PolyKind.Transition`. As `P_r⁻Λ⁰ = P_rΛ⁰` (`polyMinusSpace_zero`), `κ 0` does not
+change the spaces: the `2ⁿ⁻¹` choices of `κ 1, …, κ (n-1)` give the admissible sequences ending
+in `P_sΛⁿ`. -/
+def ofKinds (n : ℕ) (κ : ℕ → PolyKind) (s : ℕ) : PolySeq where
+  kind k := if k < n then κ k else .trimmed
+  deg k := s + 1 + #{j ∈ Finset.Ioo k n | κ j = .full}
+  one_le_deg _ := by omega
+  transition k := by
+    by_cases hk : k + 1 < n
+    · have hI : Finset.Ioo k n = insert (k + 1) (Finset.Ioo (k + 1) n) := by
+        ext j; simp only [Finset.mem_Ioo, Finset.mem_insert]; omega
+      rw [hI, Finset.filter_insert]
+      cases h : κ (k + 1)
+      · refine Or.inr ⟨by simp [hk], ?_⟩
+        simp only [↓reduceIte]
+        rw [Finset.card_insert_of_notMem (by simp)]
+        omega
+      · exact Or.inl ⟨by simp [hk], by simp⟩
+    · have h0 : ∀ i, k ≤ i → Finset.Ioo i n = ∅ := fun i hi => by
+        ext j; simp only [Finset.mem_Ioo, Finset.notMem_empty, iff_false]; omega
+      rw [h0 k le_rfl, h0 (k + 1) (by omega)]
+      exact Or.inl ⟨by simp [hk], rfl⟩
+
+variable {κ : ℕ → PolyKind} {s : ℕ}
+
+theorem ofKinds_kind_of_lt {k : ℕ} (hk : k < n) : (ofKinds n κ s).kind k = κ k := by
+  simp [ofKinds, hk]
+
+theorem ofKinds_deg (k : ℕ) :
+    (ofKinds n κ s).deg k = s + 1 + #{j ∈ Finset.Ioo k n | κ j = .full} := rfl
+
+/-- **The admissible sequence `ofKinds n κ s` ends in `P_sΛⁿ`** (as `P_{s+1}⁻Λⁿ`,
+`polyMinusSpace_top`). -/
+theorem ofKinds_space_top : (ofKinds n κ s).space n n = polySpace n s n := by
+  change (if n < n then κ n else .trimmed).space n (s + 1 + #{j ∈ Finset.Ioo n n | κ j = .full})
+    n = _
+  simp only [lt_irrefl, ↓reduceIte, Finset.Ioo_self, Finset.filter_empty, Finset.card_empty,
+    add_zero, PolyKind.space_trimmed]
+  rw [polyMinusSpace_top (by omega), Nat.add_sub_cancel]
+
+/-- The trimmed sequence `P_r⁻Λ⁰ → P_r⁻Λ¹ → ⋯ → P_r⁻Λⁿ` (`r ≥ 1`): in `ℝ³` Lagrange `P_r`, the
+Nédélec edge elements of the first kind ([Nedelec1980]), the Raviart–Thomas–Nédélec face elements
+([RaviartThomas1977], [Nedelec1980]) and discontinuous `P_{r-1}`; for `r = 1` the Whitney forms
+(`whitneyElement_equivalent_trimmed`). -/
 def trimmed (r : ℕ) (hr : 1 ≤ r) : PolySeq where
   kind _ := .trimmed
   deg _ := r
   one_le_deg _ := hr
   transition _ := Or.inl ⟨rfl, rfl⟩
 
-/-- The full sequence `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_{r-k}Λᵏ → ⋯` (Lagrange `P_r`, Nédélec edge
-elements of the second kind `P_{r-1}Λ¹`, Brezzi–Douglas–Marini `P_{r-2}Λ²` in `ℝ³`), continued by
-`P_1⁻Λᵏ` in the degrees `k ≥ r` (so for `r ≥ n` it is `P_{r-k}Λᵏ` in every degree `k ≤ n`, with
-`P_0Λⁿ = P_1⁻Λⁿ`). -/
-def full (r : ℕ) : PolySeq where
-  kind k := if k < r then .full else .trimmed
-  deg k := if k < r then r - k else 1
-  one_le_deg k := by split_ifs <;> omega
-  transition k := by
-    by_cases h1 : k + 1 < r
-    · simp only [h1, show k < r by omega, ↓reduceIte]
-      exact Or.inr ⟨rfl, by omega⟩
-    · by_cases h2 : k < r
-      · simp only [h1, h2, ↓reduceIte]
-        exact Or.inl ⟨rfl, by omega⟩
-      · simp only [h1, h2, ↓reduceIte]
-        exact Or.inl ⟨rfl, rfl⟩
+/-- The trimmed sequence is the admissible sequence of trimmed kinds ending in `P_{r-1}Λⁿ`. -/
+theorem trimmed_eq_ofKinds {r : ℕ} (hr : 1 ≤ r) :
+    trimmed r hr = ofKinds n (fun _ => .trimmed) (r - 1) := by
+  ext k
+  · simp only [trimmed, ofKinds, ite_self]
+  · simp only [trimmed, ofKinds, reduceCtorEq, Finset.filter_false, Finset.card_empty, add_zero]
+    omega
+
+/-- **The full sequence** `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_{r-n}Λⁿ` on `ℝⁿ` (`n ≤ r`), the admissible
+sequence of full kinds ending in `P_{r-n}Λⁿ` (`full_space`): in `ℝ³` Lagrange `P_r`, the Nédélec
+edge elements of the second kind `P_{r-1}Λ¹` ([Nedelec1986]), the Brezzi–Douglas–Marini face
+elements `P_{r-2}Λ²` ([BrezziDouglasMarini1985], [Nedelec1986]) and discontinuous `P_{r-3}`. -/
+def full (n r : ℕ) (_hr : n ≤ r) : PolySeq := ofKinds n (fun _ => .full) (r - n)
+
+theorem full_kind {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k < n) : (full n r hr).kind k = .full :=
+  ofKinds_kind_of_lt hk
+
+theorem full_deg {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k < n) : (full n r hr).deg k = r - k := by
+  rw [full, ofKinds_deg, Finset.filter_true_of_mem fun _ _ => rfl, Nat.card_Ioo]
+  omega
+
+/-- **The spaces of the full sequence**: `P_{r-k}Λᵏ` in every degree `k ≤ n`. -/
+theorem full_space {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k ≤ n) :
+    (full n r hr).space n k = polySpace n (r - k) k := by
+  rcases hk.lt_or_eq with hk | rfl
+  · change ((full n r hr).kind k).space n ((full n r hr).deg k) k = _
+    rw [full_kind hr hk, full_deg hr hk, PolyKind.space_full]
+  · rw [full, ofKinds_space_top]
 
 /-- **The first row of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3), in `ℝ³`:
 `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`, i.e. Lagrange `P₁`, the lowest-order Nédélec `H(curl)`
@@ -120,6 +210,243 @@ def lagrangeP2 : PolySeq where
 @[simp] theorem lagrangeP2_deg_one : lagrangeP2.deg 1 = 2 := rfl
 @[simp] theorem lagrangeP2_deg_two : lagrangeP2.deg 2 = 1 := rfl
 @[simp] theorem lagrangeP2_deg_three : lagrangeP2.deg 3 = 1 := rfl
+
+/-- The first row of Tables 5.1/6.1 is the admissible sequence of the trimmed kinds above degree
+`0` ending in `P_0Λⁿ`, on every `ℝⁿ`, `n ≥ 1`. -/
+theorem lowestOrder_eq_ofKinds (hn : 1 ≤ n) :
+    lowestOrder = ofKinds n (fun k => if k = 0 then .full else .trimmed) 0 := by
+  ext k
+  · simp only [lowestOrder, ofKinds]
+    split_ifs <;> first | rfl | omega
+  · simp only [lowestOrder, ofKinds, zero_add, left_eq_add, Finset.card_eq_zero,
+      Finset.filter_eq_empty_iff, Finset.mem_Ioo]
+    intro j hj
+    simp [show j ≠ 0 by omega]
+
+/-- The second row of Tables 5.1/6.1 is the admissible sequence of kinds `(full, trimmed, full)`
+ending in `P_0Λ³`. -/
+theorem lagrangeP2_eq_ofKinds :
+    lagrangeP2 = ofKinds 3 (fun k => if k = 0 ∨ k = 2 then .full else .trimmed) 0 := by
+  ext k
+  · rcases k with _ | _ | _ | k
+    · rfl
+    · rfl
+    · rfl
+    · simp [lagrangeP2, ofKinds]
+  · rcases k with _ | _ | _ | k
+    · decide
+    · decide
+    · decide
+    · simp only [lagrangeP2, ofKinds, Finset.Ioo_eq_empty (show ¬(k + 3 < 3) by omega),
+        Finset.filter_empty, Finset.card_empty]
+      simp
+
+end PolySeq
+
+/-! ### The classical elements in `ℝ³` and `ℝ²`
+
+The local spaces of the periodic table ([ArnoldLogg2014]; [AFW2006], §3; [AFW2010], §5.1),
+specializing `finrank_polySpace`, `finrank_polyMinusSpace`. -/
+
+private theorem two_mul_choose_two (m : ℕ) : 2 * (m + 2).choose 2 = (m + 2) * (m + 1) := by
+  have := Nat.add_one_mul_choose_eq (m + 1) 1
+  simp only [Nat.choose_one_right] at this
+  linarith
+
+private theorem six_mul_choose_three (m : ℕ) :
+    6 * (m + 3).choose 3 = (m + 3) * (m + 2) * (m + 1) := by
+  have h := Nat.add_one_mul_choose_eq (m + 2) 2
+  have h2 := two_mul_choose_two m
+  nlinarith
+
+/-- **Lagrange `P_r` on tetrahedra**: `dim P_rΛ⁰(ℝ³) = (r+1)(r+2)(r+3)/6`. -/
+theorem finrank_polySpace_three_zero (r : ℕ) :
+    6 * Module.finrank ℝ (polySpace 3 r 0) = (r + 1) * (r + 2) * (r + 3) := by
+  rw [finrank_polySpace, add_zero, Nat.choose_zero_right, mul_one,
+    Nat.choose_symm_of_eq_add (show r + 3 = r + 3 by rfl), six_mul_choose_three]
+  ring
+
+/-- **Nédélec edge elements of the second kind** ([Nedelec1986]):
+`dim P_rΛ¹(ℝ³) = (r+1)(r+2)(r+3)/2`. -/
+theorem finrank_polySpace_three_one (r : ℕ) :
+    2 * Module.finrank ℝ (polySpace 3 r 1) = (r + 1) * (r + 2) * (r + 3) := by
+  rw [finrank_polySpace, Nat.choose_one_right,
+    Nat.choose_symm_of_eq_add (show r + 3 = r + 1 + 2 by omega), ← mul_assoc,
+    show r + 1 + 2 = r + 1 + 2 from rfl, two_mul_choose_two (r + 1)]
+  ring
+
+/-- **Brezzi–Douglas–Marini face elements** ([BrezziDouglasMarini1985], [Nedelec1986]):
+`dim P_rΛ²(ℝ³) = (r+1)(r+2)(r+3)/2`. -/
+theorem finrank_polySpace_three_two (r : ℕ) :
+    2 * Module.finrank ℝ (polySpace 3 r 2) = (r + 1) * (r + 2) * (r + 3) := by
+  rw [finrank_polySpace, Nat.choose_symm_of_eq_add (show r + 3 = r + 2 + 1 by omega),
+    Nat.choose_one_right, mul_left_comm, two_mul_choose_two r]
+  ring
+
+/-- **Discontinuous `P_r` on tetrahedra**: `dim P_rΛ³(ℝ³) = (r+1)(r+2)(r+3)/6`. -/
+theorem finrank_polySpace_three_three (r : ℕ) :
+    6 * Module.finrank ℝ (polySpace 3 r 3) = (r + 1) * (r + 2) * (r + 3) := by
+  rw [finrank_polySpace, Nat.choose_self, one_mul, six_mul_choose_three]
+  ring
+
+/-- **Nédélec edge elements of the first kind** ([Nedelec1980]):
+`dim P_r⁻Λ¹(ℝ³) = r(r+2)(r+3)/2`. -/
+theorem finrank_polyMinusSpace_three_one {r : ℕ} (hr : 1 ≤ r) :
+    2 * Module.finrank ℝ (polyMinusSpace 3 r 1) = r * (r + 2) * (r + 3) := by
+  rw [finrank_polyMinusSpace 3 hr, Nat.add_sub_cancel, Nat.choose_one_right,
+    Nat.choose_symm_of_eq_add (show r + 3 = r + 1 + 2 by omega), ← mul_assoc,
+    two_mul_choose_two (r + 1)]
+  ring
+
+/-- **Raviart–Thomas–Nédélec face elements** ([RaviartThomas1977], [Nedelec1980]):
+`dim P_r⁻Λ²(ℝ³) = r(r+1)(r+3)/2`. -/
+theorem finrank_polyMinusSpace_three_two {r : ℕ} (hr : 1 ≤ r) :
+    2 * Module.finrank ℝ (polyMinusSpace 3 r 2) = r * (r + 1) * (r + 3) := by
+  obtain ⟨t, rfl⟩ : ∃ t, r = t + 1 := ⟨r - 1, by omega⟩
+  rw [finrank_polyMinusSpace 3 hr, Nat.choose_symm_of_eq_add (show t + 1 + 3 = t + 1 + 2 + 1 by
+    omega), Nat.choose_one_right, show t + 1 + 2 - 1 = t + 2 by omega, mul_left_comm,
+    two_mul_choose_two t]
+  ring
+
+/-- **Lagrange `P_r` on triangles**: `dim P_rΛ⁰(ℝ²) = (r+1)(r+2)/2`. -/
+theorem finrank_polySpace_two_zero (r : ℕ) :
+    2 * Module.finrank ℝ (polySpace 2 r 0) = (r + 1) * (r + 2) := by
+  rw [finrank_polySpace, add_zero, Nat.choose_zero_right, mul_one,
+    Nat.choose_symm_of_eq_add (show r + 2 = r + 2 by rfl), two_mul_choose_two]
+  ring
+
+/-- **Brezzi–Douglas–Marini elements on triangles** ([BrezziDouglasMarini1985]):
+`dim P_rΛ¹(ℝ²) = (r+1)(r+2)`. -/
+theorem finrank_polySpace_two_one (r : ℕ) :
+    Module.finrank ℝ (polySpace 2 r 1) = (r + 1) * (r + 2) := by
+  rw [finrank_polySpace, Nat.choose_symm_of_eq_add (show r + 2 = r + 1 + 1 by omega),
+    Nat.choose_one_right, Nat.choose_one_right]
+  ring
+
+/-- **Discontinuous `P_r` on triangles**: `dim P_rΛ²(ℝ²) = (r+1)(r+2)/2`. -/
+theorem finrank_polySpace_two_two (r : ℕ) :
+    2 * Module.finrank ℝ (polySpace 2 r 2) = (r + 1) * (r + 2) := by
+  rw [finrank_polySpace, Nat.choose_self, one_mul, two_mul_choose_two]
+  ring
+
+/-- **Raviart–Thomas elements on triangles** ([RaviartThomas1977]; the rotated Nédélec edge
+elements of the first kind): `dim P_r⁻Λ¹(ℝ²) = r(r+2)`. -/
+theorem finrank_polyMinusSpace_two_one {r : ℕ} (hr : 1 ≤ r) :
+    Module.finrank ℝ (polyMinusSpace 2 r 1) = r * (r + 2) := by
+  rw [finrank_polyMinusSpace 2 hr, Nat.add_sub_cancel, Nat.choose_one_right,
+    Nat.choose_symm_of_eq_add (show r + 2 = r + 1 + 1 by omega), Nat.choose_one_right]
+  ring
+
+namespace PolySeq
+
+/-! ### The Whitney forms are the trimmed sequence of degree one -/
+
+/-- **`P₁⁻Λᵏ(ℝⁿ)` is the space of trimmed linear forms** `x ↦ α + ι_x β` ([AFW2006], §3.3). -/
+theorem _root_.Feec.FiniteElement.polyMinusSpace_one_eq_p1MinusForms (k : ℕ) :
+    polyMinusSpace n 1 k = p1MinusForms n k := by
+  rw [polyMinusSpace, ← whitneySpace_refVertex_eq_map_polyFormMinus]
+  exact le_antisymm (whitneySpace_le_p1MinusForms _ k) (p1MinusForms_le_whitneySpace_refVertex k)
+
+/-- A test form of `P₁⁻Λᵏ` on a `k`-face is constant, of degree `0`. -/
+theorem _root_.Feec.FiniteElement.eq_single_of_mem_testSpaceMinus_one {k : ℕ} {η : FormField k}
+    (hη : η ∈ testSpaceMinus 1 k k) : η = fun _ => Pi.single ∅ (η 0 ∅) := by
+  rw [testSpaceMinus_eq ⟨le_rfl, by omega⟩, show 1 + k - k - 1 = 0 by omega, Nat.sub_self] at hη
+  obtain ⟨Ω, ⟨hdeg, htot⟩, rfl⟩ := hη
+  funext x s
+  by_cases hs : s = ∅
+  · subst hs
+    rw [Pi.single_eq_same, evalForm_apply, evalForm_apply,
+      MvPolynomial.totalDegree_eq_zero_iff_eq_C.1 (Nat.le_zero.1 (htot ∅))]
+    simp
+  · rw [Pi.single_eq_of_ne hs, evalForm_apply, hdeg s (by simpa using hs), map_zero]
+
+/-- **Moments against a constant test form are multiples of the face integral**: for the test
+forms of `P₁⁻Λᵏ` on a `k`-face, `∫_{T̂_k} F_q^* ω_k ∧ η = η₀ ∫_q ω`. -/
+theorem _root_.Feec.FiniteElement.degMoment_eq_mul_simplexIntegral {k : ℕ}
+    (q : Fin (k + 1) → Fin n → ℝ) {η : FormField k} (hη : η ∈ testSpaceMinus 1 k k)
+    (hc : Continuous η) (ω : contForms n) :
+    degMoment k q η hc ω = η 0 ∅ * simplexIntegral q ω := by
+  have hw : ∀ α : Finset (Fin k) → ℝ, wedgeForm α (Pi.single ∅ (η 0 ∅)) = η 0 ∅ • α := fun α => by
+    rw [show (Pi.single ∅ (η 0 ∅) : Finset (Fin k) → ℝ) = η 0 ∅ • Pi.single ∅ 1 by
+      rw [← Pi.single_smul, smul_eq_mul, mul_one], wedgeForm_smul_right, wedgeForm_one_right]
+  rw [degMoment_apply, vertexMoment_eq_integral, simplexIntegral, ← integral_const_mul]
+  congr 1
+  funext x
+  rw [eq_single_of_mem_testSpaceMinus_one hη]
+  simp only [wedgeField, hw, Pi.smul_apply, smul_eq_mul, affinePullback_apply,
+    pullback_degField_univ, Pi.single_eq_same]
+
+/-- The degrees of freedom of `P₁⁻Λᵏ` live on the `k`-faces. -/
+theorem card_eq_of_trimmed_one_dofIdx {g : Finset (Fin n → ℝ)} {k : ℕ}
+    (i : (trimmed 1 le_rfl).DofIdx g k) : #g = k + 1 := by
+  have h1 := card_pos.2 i.2
+  by_contra h
+  have h0 : Module.finrank ℝ ((trimmed 1 le_rfl).test k (#g - 1)) = 0 := by
+    change Module.finrank ℝ (testSpaceMinus 1 k (#g - 1)) = 0
+    rw [testSpaceMinus_eq_bot (show ¬(k ≤ #g - 1 ∧ #g - 1 < 1 + k) by omega), finrank_bot]
+  have := i.1.isLt
+  omega
+
+theorem degMoment_eq_smul_whitneyFaceDof {g : Finset (Fin n → ℝ)} {k m : ℕ} (hm : m = k)
+    (hg : #g = k + 1) {η : FormField m} (hη : η ∈ testSpaceMinus 1 k m) (hη0 : η ≠ 0)
+    (hc : Continuous η) :
+    ∃ c : ℝ, c ≠ 0 ∧ degMoment k (lexEnum g m) η hc = c • whitneyFaceDof g k := by
+  subst hm
+  have hc0 : η 0 ∅ ≠ 0 := fun h => hη0 (by
+    rw [eq_single_of_mem_testSpaceMinus_one hη, h]; funext x s; simp)
+  obtain ⟨ε, hε, hεeq⟩ := exists_sign_simplexIntegral_eq (lexEnum_injective hg)
+    (injective_faceEnum hg) (by rw [range_lexEnum hg, range_faceEnum hg])
+  refine ⟨η 0 ∅ * ε, mul_ne_zero hc0 (by rcases hε with rfl | rfl <;> norm_num),
+    LinearMap.ext fun ω => ?_⟩
+  rw [degMoment_eq_mul_simplexIntegral _ hη, LinearMap.smul_apply, whitneyFaceDof_apply, hεeq,
+    smul_eq_mul, mul_assoc]
+
+/-- **The degrees of freedom of `P₁⁻Λᵏ` are the face integrals**, up to nonzero factors. -/
+theorem trimmed_one_dof_eq {g : Finset (Fin n → ℝ)} {k : ℕ}
+    (i : (trimmed 1 le_rfl).DofIdx g k) :
+    ∃ c : ℝ, c ≠ 0 ∧ (trimmed 1 le_rfl).dof g k i = c • whitneyFaceDof g k := by
+  have hg := card_eq_of_trimmed_one_dofIdx i
+  exact degMoment_eq_smul_whitneyFaceDof (by omega) hg ((trimmed 1 le_rfl).testBasis k _ i.1).2
+    (fun h => ((trimmed 1 le_rfl).testBasis k _).ne_zero i.1 (Subtype.ext h)) _
+
+end PolySeq
+
+/-- **The Whitney element is the trimmed element `P₁⁻Λ` of degree one**: the same local spaces
+(`whitneySpace_eq_p1MinusForms`, `polyMinusSpace_one_eq_p1MinusForms`) and, on every face, the
+face integral and the moment degrees of freedom are nonzero multiples of each other. -/
+theorem whitneyElement_equivalent_trimmed :
+    (whitneyElement n).Equivalent (polyElement n (PolySeq.trimmed 1 le_rfl)) where
+  space_eq T k :=
+    (whitneySpace_eq_p1MinusForms T k).trans (polyMinusSpace_one_eq_p1MinusForms k).symm
+  span_dof_eq g k := by
+    by_cases hg : #g = k + 1
+    · have : Nonempty ((whitneyElement n).DofIdx g k) := ⟨⟨(), hg⟩⟩
+      have hW : Set.range ((whitneyElement n).dof g k) = {whitneyFaceDof g k} := Set.range_const
+      have hpos : 0 < Module.finrank ℝ ((PolySeq.trimmed 1 le_rfl).test k (#g - 1)) := by
+        change 0 < Module.finrank ℝ (testSpaceMinus 1 k (#g - 1))
+        rw [finrank_testSpaceMinus le_rfl]
+        simp only [show k ≤ #g - 1 ∧ #g - 1 < 1 + k by omega, and_self, ↓reduceIte,
+          show #g - 1 - k = 0 by omega]
+        simp
+      set i₀ : (PolySeq.trimmed 1 le_rfl).DofIdx g k := ⟨⟨0, hpos⟩, card_pos.1 (by omega)⟩
+      obtain ⟨c, hc, h₀⟩ := PolySeq.trimmed_one_dof_eq i₀
+      rw [hW]
+      refine le_antisymm ?_ (Submodule.span_le.2 ?_)
+      · rw [Submodule.span_singleton_le_iff_mem, show whitneyFaceDof g k =
+          c⁻¹ • (PolySeq.trimmed 1 le_rfl).dof g k i₀ by rw [h₀, smul_smul, inv_mul_cancel₀ hc,
+            one_smul]]
+        exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨i₀, rfl⟩)
+      · rintro _ ⟨i, rfl⟩
+        obtain ⟨c, -, h⟩ := PolySeq.trimmed_one_dof_eq i
+        change (PolySeq.trimmed 1 le_rfl).dof g k i ∈ _
+        rw [h]
+        exact Submodule.smul_mem _ _ (Submodule.mem_span_singleton_self _)
+    · have : IsEmpty ((whitneyElement n).DofIdx g k) := ⟨fun i => hg i.2⟩
+      have : IsEmpty ((polyElement n (PolySeq.trimmed 1 le_rfl)).DofIdx g k) :=
+        ⟨fun i => hg (PolySeq.card_eq_of_trimmed_one_dofIdx i)⟩
+      rw [Set.range_eq_empty, Set.range_eq_empty]
+
+namespace PolySeq
 
 /-! ### Counting the degrees of freedom on a set of faces -/
 
@@ -268,6 +595,20 @@ def freudenthalSubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < 
       (convex_freudenthalMesh_domain b s hs N) (center_mem_freudenthalMesh_domain b s hs N))
 
 end PolySeq
+
+/-- **The Whitney complex is the trimmed complex of degree one**, `P₁⁻Λ⁰ → ⋯ → P₁⁻Λⁿ`, on every
+conforming mesh: `whitneySubcomplex = (PolySeq.trimmed 1).subcomplex`. -/
+theorem whitneySubcomplex_eq_trimmed [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) :
+    whitneySubcomplex M hΩ = (PolySeq.trimmed 1 le_rfl).subcomplex M hΩ :=
+  whitneyElement_equivalent_trimmed.subcomplex_eq M hΩ
+
+/-- **The Whitney complex with vanishing boundary degrees of freedom is the trimmed one of degree
+one**, on every conforming mesh of a strictly star-shaped domain. -/
+theorem whitneySubcomplexMin_eq_trimmed [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    whitneySubcomplexMin M hΩ x₀ hstar = (PolySeq.trimmed 1 le_rfl).subcomplexMin M hΩ x₀ hstar :=
+  whitneyElement_equivalent_trimmed.subcomplexMin_eq M hΩ x₀ hstar
 
 /-! ### Nonzero spaces with vanishing boundary degrees of freedom -/
 

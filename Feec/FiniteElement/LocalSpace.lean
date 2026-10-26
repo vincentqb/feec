@@ -44,6 +44,8 @@ its traces on all proper faces vanish ([AFW2006], §3–4; [AFW2010], §5.1–5.
   (`F^* P_rΛᵏ(ℝⁿ) ⊆ P_rΛᵏ(ℝᵐ)`, `F^* P_r⁻Λᵏ(ℝⁿ) ⊆ P_r⁻Λᵏ(ℝᵐ)` for every affine `F : ℝᵐ → ℝⁿ`,
   via `F^*(κω) = κ(F^*ω) + F^*(ι_b ω)`), hence `localPolySpace_eq`, `localPolyMinusSpace_eq`:
   `P_rΛᵏ(T) = P_rΛᵏ(ℝⁿ)` and `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)` for every simplex;
+* the extreme degrees: `polyMinusSpace_zero` (`P_r⁻Λ⁰ = P_rΛ⁰`) and `polyMinusSpace_top`
+  (`P_r⁻Λⁿ = P_{r-1}Λⁿ`);
 * **traces**: `map_faceTrace_polySpace`, `map_faceTrace_polyMinusSpace`:
   `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)`, `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)` (the inclusion by affine invariance,
   the equality by the barycentric retraction of `T` onto `f`); traces are multiplicative
@@ -415,6 +417,17 @@ theorem polyMinusSpace_le_polySpace {r k : ℕ} (hr : 1 ≤ r) :
 theorem polySpace_le_polyMinusSpace (r k : ℕ) :
     polySpace n (r - 1) k ≤ polyMinusSpace n r k :=
   Submodule.map_mono (Koszul.polyForm_le_polyFormMinus r k)
+
+/-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions. -/
+theorem polyMinusSpace_zero {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r 0 = polySpace n r 0 := by
+  rw [polyMinusSpace, polySpace, Koszul.polyFormMinus_zero hr]
+
+/-- **`P_r⁻Λⁿ = P_{r-1}Λⁿ`** (`r ≥ 1`): in the top degree the trimmed space is the full space of
+one degree less (for `r = 1`, the constants: piecewise constants are `P₁⁻Λⁿ`). -/
+theorem polyMinusSpace_top {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r n = polySpace n (r - 1) n := by
+  have h := Koszul.polyFormMinus_top (K := ℝ) (d := Fin n) hr
+  rw [Fintype.card_fin] at h
+  rw [polyMinusSpace, polySpace, h]
 
 /-! ### Local spaces on a simplex -/
 

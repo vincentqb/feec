@@ -638,8 +638,8 @@ theorem degMoment_apply (k : ℕ) {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) 
 form degree `k` a family `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` with `r_k ≥ 1`, consecutive degrees being
 related by an admissible transition `Xᵏ → P_{r_k}⁻Λᵏ⁺¹` or `Xᵏ → P_{r_k-1}Λᵏ⁺¹`. (The degrees
 `k > n` carry the zero space.) `P_0Λⁿ`, the piecewise constants, is represented by the equal
-space `P_1⁻Λⁿ`. -/
-structure PolySeq where
+space `P_1⁻Λⁿ` (`polyMinusSpace_top`). -/
+@[ext] structure PolySeq where
   /-- the family in degree `k` -/
   kind : ℕ → PolyKind
   /-- the polynomial degree `r_k` in degree `k` -/

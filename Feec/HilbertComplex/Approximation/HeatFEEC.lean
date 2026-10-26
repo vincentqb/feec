@@ -23,13 +23,13 @@ the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
 * **The discrete side**: the discrete Hodge Laplacian `Δₕ = dₕ dₕ* + dₕ* dₕ`
   (`Subcomplex.laplacian`, bounded), the discrete Green operator `Gₕ` (the solution operator of
   the discrete total complex, `Δₕ Gₕ = 1 - P_ℌₕ`, `Subcomplex.laplacian_solutionOp`) and the
-  discrete harmonic projection `P_ℌₕ`. The discrete Green operator *is* the mixed method (`discreteGreen_orthProj`:
-  `Gₕ Qₕ f = uₕ`, `discreteHarmonicProj_orthProj`: `P_ℌₕ Qₕ f = pₕ`), so the static error
-  `e(f) = ‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖` (`staticError`) bounds `‖G f - Gₕ Qₕ f‖` and
-  `‖P_ℌ f - P_ℌₕ Qₕ f‖`.
+  discrete harmonic projection `P_ℌₕ`. The discrete Green operator *is* the mixed method
+  (`discreteGreen_orthProj`: `Gₕ Qₕ f = uₕ`; `discreteHarmonicProj_orthProj`: `P_ℌₕ Qₕ f = pₕ`),
+  so the static error `e(f) = ‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖` (`staticError`) bounds
+  `‖G f - Gₕ Qₕ f‖` and `‖P_ℌ f - P_ℌₕ Qₕ f‖`.
 * **The heat Ritz projection** (`heatRitz`), for the graph lift `ℓ y = (y, A y)` of `D(A²)`,
   `A = -Δ`, read by `ρ (y, z) = P_ℌ y - G z` (the Hodge decomposition `y = P_ℌ y + G Δ y`,
-  `heatRead_lift`): `Rₕ ℓ y = Gₕ Qₕ (Δ y) + P_ℌₕ Qₕ y`. Its Galerkin property is
+  `heatRead_lift`): `Rₕ ℓ y = Gₕ Qₕ (Δ y) + P_ℌₕ Qₕ y` (`ritzR_lift`). Its Galerkin property is
   `-Δₕ Rₕ ℓ y = (1 - P_ℌₕ) Qₕ (A y)` (`heatGen_ritzR`), so the consistency defect is
   `Rₕ ℓ(A y) - (1 - P_ℌₕ) Qₕ (A y)` (`heatRitz_defect_eq`; for `y ∈ D(Δ²)`,
   `(Qₕ - Rₕ ℓ)(Δ y) - P_ℌₕ Qₕ Δ y`), which on `ℓ (A y)` is the operator
@@ -47,8 +47,8 @@ the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
 
 * `ConstrainedFEEC.toHeat`, `ConstrainedFEEC.heatRitz`, `ConstrainedFEEC.heatCore`;
 * **`ConstrainedFEEC.heatFEEC_verdict`**, **`ConstrainedFEEC.heat_rate`**;
-* `ConstrainedFEEC.heatRitz_defect_eq`, `ConstrainedFEEC.heatGen_ritzR`,
-  `ConstrainedFEEC.ritzDefect_lift`.
+* `ConstrainedFEEC.ritzR_lift`, `ConstrainedFEEC.heatRitz_defect_eq`,
+  `ConstrainedFEEC.heatGen_ritzR`, `ConstrainedFEEC.ritzDefect_lift`.
 
 ## References
 
@@ -335,6 +335,15 @@ theorem ritzR_apply (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     F.ritzR h g = F.discreteHarmonicProj h (F.orthProj h g.1) -
       F.discreteGreen h (F.orthProj h g.2) :=
   rfl
+
+/-- **The heat Ritz projection on the graph lift** is the discrete mixed solution with data `Δ y`
+plus the discrete harmonic part of `y`: `Rₕ ℓ y = Gₕ Qₕ (Δ y) + P_ℌₕ Qₕ y` on `D(Δ)`. -/
+theorem ritzR_lift (h : κ) {y : PiLp 2 W} (hy : y ∈ H.hodgeLaplacian.domain) :
+    F.ritzR h (y, DissipFEEC.genExt (-H.hodgeLaplacian) y) =
+      F.discreteGreen h (F.orthProj h (H.hodgeLaplacian ⟨y, hy⟩)) +
+        F.discreteHarmonicProj h (F.orthProj h y) := by
+  rw [ritzR_apply, H.genExt_neg_hodgeLaplacian hy, _root_.map_neg, _root_.map_neg,
+    sub_neg_eq_add, add_comm]
 
 /-- The defect operator `Δₕ (y, z) = 2 P_ℌₕ Qₕ (1 - P_ℌ) y + Qₕ G z - Gₕ Qₕ z` of the heat Ritz
 projection; on `ℓ (A y)` it is the consistency defect (`ritzDefect_lift`), and it tends to `0`

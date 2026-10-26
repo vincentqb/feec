@@ -520,7 +520,8 @@ theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
       residual_tendsto := fun hK x hxK T => ?_
       leaves := fun hK _ hT => ?_
       leaves_symm := fun hK hd _ hT => ?_
-      leaves_graded := fun hp hRK hdense hK _ hT => ?_ }
+      leaves_graded := fun hp hRK hdense hK _ hT => ?_
+      cohomology := fun hi hfd => haveI := hfd; F.eventually_bijective_cohomologyMap hi }
   · -- existence of a convergent family: the solutions from `Πₕ ξ₀`
     refine ⟨fun h => F.discrete h (F.liftXh h (F.piProjL h x)),
       fun h => F.discreteDeriv h (F.liftXh h (F.piProjL h x)),

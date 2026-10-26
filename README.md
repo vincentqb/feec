@@ -61,11 +61,17 @@ discrete solution is `ξₕ(t) = ιₕ e^{tLₕ} vₕ`. Then:
    positive residual limit, eventually above half of it) and `dissipFEEC_leaves_of_not_isReducing`
    (the `K`-or-`K^⊥` case of `leaves`).
 
-**The conforming case.** When `Xₕ` are finite-dimensional subcomplexes with uniformly bounded
-commuting cochain projections and `ιₕ` is the inclusion, this is the constrained FEEC theorem
-`Feec.HilbertComplex.constrainedFEEC`, with rate factor `(1 + C_P)(1 + t)²`.
-`ConstrainedFEEC.constrainedFEEC_of_approxFEEC` derives its statement verbatim from
-`approxFEEC`. The witnesses `ApproxFEEC.perturbed_nonvacuous` and
+**The conforming case.** A conforming family (`Feec.HilbertComplex.ConformingFamily`, the data
+of Arnold–Falk–Winther 2010, §3.3, on any Hilbert complex) is a family of finite-dimensional
+subcomplexes `Vₕ` with commuting cochain projections `πₕ`, uniformly bounded in `W`, and the
+approximation property `dist(w, Vₕⁱ) → 0`. With a closed constraint
+(`ConformingFamily.withConstraint`) it is the case where `ιₕ` is the inclusion, and the
+constrained FEEC theorem `Feec.HilbertComplex.constrainedFEEC` gives the verdict
+`ConstrainedFEEC.Verdict`. It contains items 1–4, with rate factor `(1 + C_P)(1 + t)²`. It also
+contains the discrete cohomology (field `cohomology`): wherever `H` has closed range and
+finite-dimensional harmonic forms, `πₕ` eventually induces isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`
+(Arnold–Falk–Winther 2010, Thm 3.4). `ConstrainedFEEC.constrainedFEEC_of_approxFEEC` derives
+the same verdict from `approxFEEC`. The witnesses `ApproxFEEC.perturbed_nonvacuous` and
 `ApproxFEEC.projPerturbed_nonvacuous` (in `ApproxFEECWitness.lean`) have non-isometric `ιₕ`,
 a nonzero consistency defect and an inexact scheme, and exhibit both branches of item 4.
 
@@ -122,6 +128,15 @@ That the cochain defect is nonzero for some mesh and datum is not proved, and th
 `rateClass_of_split` is exercised only by an abstract witness (limits in `docs/OVERVIEW.md`).
 On `ℝ³` and `ℝᵈ` the Sobolev classes are defined on the Fourier side, and the truncation is a semi-discretization in frequency.
 `einsteinBianchi_summary` bundles the Einstein–Bianchi rows.
+
+## Finite elements and complexes
+
+| Topic | Statement | Lean name |
+|---|---|---|
+| Finite element front end | Every conforming family, on every window and with every closed constraint, falls under `constrainedFEEC`. Whitney forms and every admissible `P_rΛ`/`P_r⁻Λ` sequence are conforming families on the Freudenthal cube, on parallelepipeds and on domains star-shaped w.r.t. a ball. | `ConformingFamily.withConstraint`, `ConformingFamily.window`, `Feec.Models.ConformingFamilies` |
+| Periodic table (simplicial) | Every sequence of `P_r` and `P_r⁻` kinds ending in `P_sΛⁿ`, in any dimension. Whitney forms are the `P₁⁻Λ` complex on every mesh. Closed-form dimensions are given for Lagrange, both Nédélec kinds, Raviart–Thomas and BDM in `ℝ²` and `ℝ³`. | `Feec.FiniteElement.PolySeq.ofKinds`, `Feec.FiniteElement.whitneySubcomplex_eq_trimmed`, `Feec.FiniteElement.finrank_polyMinusSpace_three_one` |
+| Discrete cohomology | A cochain projection with `‖q − πq‖ < ‖q‖` on nonzero harmonic forms induces `Hⁱ(H) ≅ Hⁱ(Vₕ)`. This holds eventually for every conforming family. For `N` large, `dim Hᵏ(Vₕ) = [k = 0]`, or `[k = n]` with vanishing traces, on the cube and on parallelepipeds; on star-shaped domains with closed range and finite-dimensional harmonic forms, `dim Hᵏ(Vₕ) = dim Hᵏ(Ω)`. | `Feec.HilbertComplex.Subcomplex.CochainProjection.cohomologyEquiv`, `Feec.HilbertComplex.ConformingFamily.eventually_bijective_cohomologyMap`, `Feec.Models.Parallelepiped.eventually_finrank_cohomology_poly` |
+| BGG construction | Take two complexes linked by maps `S` with `d S = −S d̃`, of any length, on any shape and over any ring. Eliminating the pairs matched by `S` leaves a derived complex with the cohomology of the twisted complex. The Arnold–Hu BGG complex on `ℤ` is a special case. The Hessian, div-div and elasticity complexes are described as its outputs, but are not yet proved equal to it. | `Feec.BGG.Data.derivedHomologyIso`, `Feec.BGG.Data.bggHomologyIso` |
 
 [`docs/OVERVIEW.md`](docs/OVERVIEW.md) has the module map, further results, the corrections to the
 thesis with their repaired statements, and the scope. [`docs/THESIS_MAP.md`](docs/THESIS_MAP.md)

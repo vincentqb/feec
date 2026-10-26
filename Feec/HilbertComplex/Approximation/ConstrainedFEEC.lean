@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.ConformingFamily
 public import Feec.HilbertComplex.Approximation.Convergence
+public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.InvariantCore
 
@@ -68,6 +69,9 @@ structure with one named field per conclusion) bundles:
    (`constrainedFEEC_residual_not_isReducing_of_grading`). Without a grading, when `D(L) ∩ K` is
    dense in `K`, some datum of `D(L) ∩ K` leaves `K` at some `t ∈ [-T, T]`
    (`constrainedFEEC_residual_not_isReducing_symm`).
+5. **Discrete cohomology** (`ConformingFamily.eventually_bijective_cohomologyMap`): wherever `H`
+   has closed range and finite-dimensional harmonic forms, the projections `πₕ` eventually induce
+   isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)` ([AFW2010], Thm 3.4, Thm 3.5).
 
 The cochain projections enter twice: the total projection `Πₕ` (`ConstrainedFEEC.piProj`)
 commutes with `𝐝` and turns the approximation property in `W` into the graph-norm approximation
@@ -93,7 +97,7 @@ does make `K` reducing (`ConstrainedFEEC.isReducing_of_forall_nonneg`).
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (approximation property, bounded cochain projections, Thm 3.6, Thm 3.9)
+  §3.3 (approximation property, bounded cochain projections, Thm 3.4, Thm 3.6, Thm 3.9)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (Thm 5.3)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   §3 (approximation of Hilbert complexes by subcomplexes with bounded cochain projections)
@@ -853,7 +857,7 @@ theorem constrainedFEEC_discretePoincare {i j : ι} (hij : c.Rel i j) {cP : ℝ}
 /-- **The conclusions of the constrained FEEC theorem** (`constrainedFEEC`) for a constrained FEEC
 discretization `F` of the Hodge wave equation `ξ' = L ξ`, with `ξₕ` the semi-discrete solutions
 (4.10) from the elliptic projections `Pₕ ξ₀` (`ConstrainedFEEC.discrete`). [QuennevilleBelair2015],
-Thms 4.6, 4.7, 4.14, Prop. 4.17; [AFW2010], §3.3 -/
+Thms 4.6, 4.7, 4.14, Prop. 4.17; [AFW2010], §3.3, Thm 3.4 -/
 structure ConstrainedFEEC.Verdict (F : ConstrainedFEEC H κ) : Prop where
   /-- (**well-posedness**, Stone) for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution on
   `[0, T]`, the only strong and the only weak solution, and it conserves energy -/
@@ -931,6 +935,10 @@ structure ConstrainedFEEC.Verdict (F : ConstrainedFEEC H κ) : Prop where
         (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
       ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
         infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))
+  /-- (**discrete cohomology**) if `H` has closed range at `i` and `ℌⁱ` is finite-dimensional,
+  the projections `πₕ` eventually induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`, `[z] ↦ [πₕ z]` -/
+  cohomology {i : ι} (hi : H.ClosedRangeAt i) (hfd : FiniteDimensional 𝕜 (H.harmonic i)) :
+    ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap i)
 
 /-- **The constrained FEEC theorem.** For a constrained FEEC discretization `F` (a Hilbert complex
 on any finite window, a closed constraint `K`, finite-dimensional subcomplexes `Vₕ` with uniformly
@@ -953,9 +961,12 @@ equation `ξ' = L ξ` (`ConstrainedFEEC.Verdict`):
    `t ∈ [-T, T]`;
    (c) on a graded complex, for an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, some
    `ξ₀ ∈ D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), K)` of the
-   discrete solutions with `ξₕ(0) = Pₕ ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`.
+   discrete solutions with `ξₕ(0) = Pₕ ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`;
+5. (**discrete cohomology**) where `H` has closed range and finite-dimensional harmonic forms,
+   `πₕ` eventually induces isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`.
 
-[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [AFW2010], §3.3; [Arnold2018], Ch. 5 -/
+[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [AFW2010], §3.3, Thm 3.4;
+[Arnold2018], Ch. 5 -/
 theorem constrainedFEEC : F.Verdict where
   wellPosed hx T := constrainedFEEC_wellPosed hx T
   propagates_iff := constrainedFEEC_propagates_iff F
@@ -969,6 +980,7 @@ theorem constrainedFEEC : F.Verdict where
   leaves_symm hK hD _ hT := constrainedFEEC_residual_not_isReducing_symm F hK hD hT
   leaves_graded hp hRK hD hK _ hT :=
     constrainedFEEC_residual_not_isReducing_of_grading F hp hRK hD hK hT
+  cohomology hi hfd := haveI := hfd; F.eventually_bijective_cohomologyMap hi
 
 end Main
 

@@ -10,7 +10,9 @@ public import Feec.Mesh.Freudenthal
 # `HΛ`-conformity of the cubical spaces `Q_r⁻Λᵏ(𝒯_h)`
 
 On the uniform cubical mesh of `(0, 1)ⁿ` with `N` cells per direction
-(`Feec.FiniteElement.CubeMesh`), a piecewise polynomial form `(ω_m)_m` (in local coordinates)
+(`Feec.FiniteElement.CubeMesh`; here the coordinates are `Fin n` and the mesh is isotropic, the
+Freudenthal refinement being so, while `Feec.FiniteElement.CubeMesh` allows `N : d → ℕ`), a
+piecewise polynomial form `(ω_m)_m` (in local coordinates)
 is the field `cellField ω m = F_m^{-*} ω_m` on the cell `m`, `F_m(y) = (m + y) / N`. We show that
 tangential continuity (`cubeCompatible`: equal traces on common faces) gives
 `HΛᵏ((0, 1)ⁿ)`-conformity, with the weak exterior derivative the piecewise one
@@ -25,10 +27,10 @@ those of the (equal) polynomial traces of `ω_m` and `ω_{m'}` (`tangentialTrace
 
 ## Main definitions
 
-* `Feec.FiniteElement.cellField ω m`: the field of the cell `m` in global coordinates;
-* `Feec.FiniteElement.cubeRefinement n N`, `simplexCell`, `closedCell`: the Freudenthal
+* `Feec.FiniteElement.Cube.cellField ω m`: the field of the cell `m` in global coordinates;
+* `Feec.FiniteElement.Cube.cubeRefinement n N`, `simplexCell`, `closedCell`: the Freudenthal
   refinement and the cell of each of its simplices;
-* `Feec.FiniteElement.cubeGlue n N k`, `cubeV n N b k`, `cubeSubcomplex`: the gluing into
+* `Feec.FiniteElement.Cube.cubeGlue n N k`, `cubeV n N b k`, `cubeSubcomplex`: the gluing into
   `L²((0, 1)ⁿ; Λᵏ)`, the glued spaces `Vₕᵏ` and the subcomplex they form.
 
 ## Main results
@@ -58,7 +60,7 @@ open Finset MvPolynomial
 
 @[expose] public noncomputable section
 
-namespace Feec.FiniteElement
+namespace Feec.FiniteElement.Cube
 
 open Feec.Domain Feec.Mesh Koszul ExteriorFibre
 
@@ -234,6 +236,9 @@ theorem cubeRefinement_domain :
   rw [freudenthalMesh_domain]
   simp
 
+theorem isOpen_cubeRefinement_domain : IsOpen (cubeRefinement n N).domain := by
+  rw [cubeRefinement_domain]; exact isOpen_set_pi Set.finite_univ fun _ _ => isOpen_Ioo
+
 /-- **`HΛᵏ`-conformity of the cubical spaces** ([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §3): a
 tangentially continuous piecewise polynomial `k`-form on the cubical mesh of `(0, 1)ⁿ` with `N`
 cells per direction lies in `HΛᵏ((0, 1)ⁿ) = D(d_max)`, and `d_max` is the piecewise exterior
@@ -251,8 +256,7 @@ theorem cellField_mem_maximal_domain [NeZero n] (k : ℕ)
           (fun T => formComp (k := (k : ℤ) + 1)
             (cellField (fun m => Koszul.extDeriv (ω m)) (simplexCell T)))
           (fun _ _ t => continuous_formComp (contDiff_cellField _ _ (r := 0)).continuous t) := by
-  have hΩ : IsOpen (cubeRefinement n N).domain := by
-    rw [cubeRefinement_domain]; exact isOpen_set_pi Set.finite_univ fun _ _ => isOpen_Ioo
+  have hΩ := isOpen_cubeRefinement_domain (n := n) (N := N)
   obtain ⟨h, hval⟩ := extDeriv_pieceL2_mem_maximal_domain k (cubeRefinement n N) hΩ
     (η := fun T => cellField ω (simplexCell T)) (fun T _ => contDiff_cellField _ _)
     (fun T _ x => isDeg_cellField (hk _) x) fun F _ T hT T' hT' x hx => by
@@ -316,6 +320,9 @@ variable (n N) in
 def cubeV (b : Fin n → ℕ) (k : ℤ) : Submodule ℝ (L2F ℝ (cubeRefinement n N).domain (formIdx n k)) :=
   LinearMap.range (cubeGlue n N k ∘ₗ (cubeGlobalSpace (fun _ : Fin n => N) b k.toNat).subtype)
 
+instance (b : Fin n → ℕ) (k : ℤ) : FiniteDimensional ℝ (cubeV n N b k) :=
+  LinearMap.finiteDimensional_range _
+
 theorem cubeV_le_maximal_domain [NeZero n] (b : Fin n → ℕ) (i : ℤ) :
     cubeV n N b i ≤ ((extDerivOp ℝ n i).maximal (cubeRefinement n N).domain).domain := by
   rintro x ⟨u, rfl⟩
@@ -342,11 +349,12 @@ theorem maximal_apply_mem_cubeV [NeZero n] (b : Fin n → ℕ) (i : ℤ)
     rw [this, LinearPMap.map_zero]
     exact Submodule.zero_mem _
 
+variable (n N) in
 /-- **The cubical finite element subcomplex** `Q_b⁻Λ(𝒯_h) ⊆ HΛ((0, 1)ⁿ)` of the maximal de Rham
 complex: the glued global spaces are finite-dimensional, lie in `D(d_max)`, and
 `d Vₕᵏ ⊆ Vₕᵏ⁺¹`. -/
-def cubeSubcomplex [NeZero n] (b : Fin n → ℕ) (hΩ : IsOpen (cubeRefinement n N).domain) :
-    ((deRham ℝ n).maximalComplex hΩ).Subcomplex where
+def cubeSubcomplex [NeZero n] (b : Fin n → ℕ) :
+    ((deRham ℝ n).maximalComplex (isOpen_cubeRefinement_domain (n := n) (N := N))).Subcomplex where
   V := cubeV n N b
   le_domain i j := by
     by_cases hij : i + 1 = j
@@ -358,13 +366,12 @@ def cubeSubcomplex [NeZero n] (b : Fin n → ℕ) (hΩ : IsOpen (cubeRefinement 
   mapsTo i j x hx := by
     by_cases hij : i + 1 = j
     · subst hij
-      exact LocalElement.apply_mem_of_eq (deRham_maximalComplex_d hΩ i) _ (· ∈ cubeV n N b (i + 1))
+      exact LocalElement.apply_mem_of_eq (deRham_maximalComplex_d
+        (isOpen_cubeRefinement_domain (n := n) (N := N)) i) _
+        (· ∈ cubeV n N b (i + 1))
         fun y' hy' => maximal_apply_mem_cubeV b i y' (hy' ▸ hx)
     · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hij)]
       exact Submodule.zero_mem _
-
-theorem isOpen_cubeRefinement_domain : IsOpen (cubeRefinement n N).domain := by
-  rw [cubeRefinement_domain]; exact isOpen_set_pi Set.finite_univ fun _ _ => isOpen_Ioo
 
 /-! ### Injectivity of the gluing and the dimension of `Vₕᵏ` -/
 
@@ -462,4 +469,4 @@ theorem finrank_cubeV [NeZero n] {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k 
   exact (LinearMap.finrank_range_of_inj (cubeGlue_injective (N := N) b k)).trans
     (finrank_cubeGlobalSpace (fun _ => Nat.one_le_iff_ne_zero.2 (NeZero.ne N)) hb)
 
-end Feec.FiniteElement
+end Feec.FiniteElement.Cube

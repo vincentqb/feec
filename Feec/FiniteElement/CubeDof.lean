@@ -37,15 +37,15 @@ determination for free.
 
 ## Main definitions
 
-* `Feec.FiniteElement.unitIntegral`: `∫_{[0,1]^d}` on polynomials (`unitIntegral_eq_integral`);
-* `Feec.FiniteElement.cubeMoment g η ω = ∫_g tr_g ω ∧ η`;
-* `Feec.FiniteElement.edgeDof`, `Feec.FiniteElement.tensorDof`: the one-dimensional degrees of
+* `Feec.FiniteElement.Cube.unitIntegral`: `∫_{[0,1]^d}` on polynomials (`unitIntegral_eq_integral`);
+* `Feec.FiniteElement.Cube.cubeMoment g η ω = ∫_g tr_g ω ∧ η`;
+* `Feec.FiniteElement.Cube.edgeDof`, `tensorDof`: the one-dimensional degrees of
   freedom and their tensor products;
-* `Feec.FiniteElement.momentDof f s α`, `Feec.FiniteElement.CubeDofIdx b k`,
-  `Feec.FiniteElement.cubeDof f i`: the degrees of freedom of `Q_b⁻Λᵏ(f)`, indexed like the
+* `Feec.FiniteElement.Cube.momentDof f s α`, `Feec.FiniteElement.Cube.CubeDofIdx b k`,
+  `Feec.FiniteElement.Cube.cubeDof f i`: the degrees of freedom of `Q_b⁻Λᵏ(f)`, indexed like the
   monomial basis;
-* `Feec.FiniteElement.IsFaceDeg f b`: `b` is a degree on the face `f`;
-* `Feec.FiniteElement.cubeInterp f b k hfb`: the canonical interpolant onto `Q_b⁻Λᵏ(f)`.
+* `Feec.FiniteElement.Cube.IsFaceDeg f b`: `b` is a degree on the face `f`;
+* `Feec.FiniteElement.Cube.cubeInterp f b k hfb`: the canonical interpolant onto `Q_b⁻Λᵏ(f)`.
 
 ## Main results
 
@@ -59,7 +59,7 @@ determination for free.
   ([ArnoldBoffiBonizzoni2015], §3);
 * `cubeTrace_eq_zero_of_cubeDof_eq_zero`: **the degrees of freedom of the faces of `f` determine
   the trace on `f`**;
-* `cubeDof_comp_extDeriv_mem_span`: **Stokes compatibility**, `ℓ ∘ d` is a combination of
+* `cubeDof_extDeriv_mem_span`: **Stokes compatibility**, `ℓ ∘ d` is a combination of
   degrees of freedom (one-dimensional integration by parts, `edgeDof_pderiv`), hence
   `cubeInterp_extDeriv`: **the canonical interpolant commutes with `d`**.
 
@@ -69,9 +69,6 @@ determination for free.
   §3 (degrees of freedom, unisolvence and the commuting projection of `Q_r⁻Λᵏ`)
 * [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
   §2 (the tensor-product construction)
-* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4.9 (canonical projections commuting with `d`)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -80,7 +77,7 @@ open Finset
 
 @[expose] public noncomputable section
 
-namespace Feec.FiniteElement
+namespace Feec.FiniteElement.Cube
 
 /-! ### One-dimensional moments -/
 
@@ -661,16 +658,9 @@ theorem tensorDof_pderiv {s : Finset d} {α : d →₀ ℕ} {j : d} (hj : j ∈ 
       linear_combination P * this
   exact LinearMap.congr_fun this p
 
-omit [Fintype d] in
-/-- Linear functionals commute with the signs. -/
-theorem map_sgn_mul' (L : MvPolynomial d ℝ →ₗ[ℝ] ℝ) (j : d) (s : Finset d)
-    (p : MvPolynomial d ℝ) : L (sgn j s * p) = sgn j s * L p := by
-  rw [show (sgn j s : MvPolynomial d ℝ) = C (sgn j s) by simp [sgn], ← smul_eq_C_mul, map_smul,
-    smul_eq_mul]
-
 /-- **Stokes compatibility**: each degree of freedom of `Q_b⁻Λ^{k+1}(f)` composed with `d` is a
 linear combination of degrees of freedom of `Q_b⁻Λᵏ(f)`. -/
-theorem cubeDof_comp_extDeriv_mem_span (hf : ∀ j, f j ≠ none → b j = 0)
+theorem cubeDof_extDeriv_mem_span (hf : ∀ j, f j ≠ none → b j = 0)
     (i : CubeDofIdx b (k + 1)) :
     cubeDof f i ∘ₗ extDerivₗ ℝ d ∈
       Submodule.span ℝ (Set.range fun i' : CubeDofIdx b k => cubeDof f i') := by
@@ -678,11 +668,7 @@ theorem cubeDof_comp_extDeriv_mem_span (hf : ∀ j, f j ≠ none → b j = 0)
   set ε := (shuffleSgn s (freeSet (dofFace f s α) \ s) : ℝ)
   -- the degrees of freedom of the faces of `(s, α)` that appear
   have hmem : ∀ j ∈ s, ∀ v ≤ α j + 1, α.update j v ∈ cubeSupport b (s.erase j) :=
-    fun j hj v hv l => by
-      have := hα l
-      by_cases hl : l = j
-      · subst hl; simp only [hj, ↓reduceIte] at this; simp [Finsupp.update_apply]; omega
-      · simpa [Finsupp.update_apply, hl] using this
+    fun _ hj _ hv => update_mem_cubeSupport_erase hα hj hv
   have hcard : ∀ j ∈ s, #(s.erase j) = k := fun j hj => by rw [card_erase_of_mem hj, hs]; rfl
   let D : ∀ j ∈ s, ∀ v ≤ α j + 1, PolyForm ℝ d →ₗ[ℝ] ℝ := fun j hj v hv =>
     (shuffleSgn (s.erase j) (freeSet (dofFace f (s.erase j) (α.update j v)) \ s.erase j) : ℝ) •
@@ -707,7 +693,7 @@ theorem cubeDof_comp_extDeriv_mem_span (hf : ∀ j, f j ≠ none → b j = 0)
       LinearMap.sub_apply, hD, smul_eq_mul, mul_sum]
     rw [← sum_attach s]
     refine sum_congr rfl fun j _ => ?_
-    rw [map_sgn_mul', tensorDof_pderiv j.2 (hfs j.1 j.2)]
+    rw [map_sgn_mul, tensorDof_pderiv j.2 (hfs j.1 j.2)]
     ring
   rw [key]
   refine Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _ (Submodule.sub_mem _
@@ -739,8 +725,8 @@ theorem cubeInterp_extDeriv (hfb : IsFaceDeg f b) (ω : PolyForm ℝ d) :
     (cubeFormMinus ℝ b k).subtype (cubeFormMinus ℝ b (k + 1)).subtype
     (fun _ => rfl) (fun _ => rfl) (extDerivₗ ℝ d)
     ((extDerivₗ ℝ d).restrict fun _ h => extDeriv_mem_cubeFormMinus h) rfl
-    (cubeDof_comp_extDeriv_mem_span hfb.eq_zero) ω)
+    (cubeDof_extDeriv_mem_span hfb.eq_zero) ω)
 
 end Commuting
 
-end Feec.FiniteElement
+end Feec.FiniteElement.Cube

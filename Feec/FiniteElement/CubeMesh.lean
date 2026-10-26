@@ -15,17 +15,18 @@ polynomial forms, `ω_m` written in the local coordinates `y ∈ [0, 1]^d` of th
 continuous piecewise forms of `Q_b⁻Λᵏ` ([ArnoldBoffiBonizzoni2015], §3; [ArnoldAwanou2014], §2;
 the assembly is that of [AFW2006], §5).
 
-The local degrees of freedom (`Feec.FiniteElement.cubeDof`) are numbered globally by tensor
+The local degrees of freedom (`Feec.FiniteElement.Cube.cubeDof`) are numbered globally by tensor
 products of one-dimensional numberings (`GlobalEdge`): in a direction with `dx`, `b` moments per
 cell; without, the `N + 1` vertices and `b - 1` moments per cell.
 
 ## Main definitions
 
-* `Feec.FiniteElement.CubeCell N`, `CubeCell.Adj`, `commonFace`: cells, neighbours, common faces;
-* `Feec.FiniteElement.cubeCompatible N`, `cubeGlobalSpace N b k`;
-* `Feec.FiniteElement.GlobalEdge`, `CubeGlobalIdx N b k`, `toGlobal`, `globalDof`: the global
+* `Feec.FiniteElement.Cube.CubeCell N`, `CubeCell.Adj`, `commonFace`: cells, neighbours, common
+  faces;
+* `Feec.FiniteElement.Cube.cubeCompatible N`, `cubeGlobalSpace N b k`;
+* `Feec.FiniteElement.Cube.GlobalEdge`, `CubeGlobalIdx N b k`, `toGlobal`, `globalDof`: the global
   degrees of freedom;
-* `Feec.FiniteElement.globalDofEquiv`, `cubeGlobalInterp`.
+* `Feec.FiniteElement.Cube.globalDofEquiv`, `cubeGlobalInterp`.
 
 ## Main results
 
@@ -62,7 +63,7 @@ open Finset MvPolynomial
 
 @[expose] public noncomputable section
 
-namespace Feec.FiniteElement
+namespace Feec.FiniteElement.Cube
 
 open Koszul ExteriorFibre
 
@@ -227,6 +228,13 @@ forms of `Q_b⁻Λᵏ`. -/
 def cubeGlobalSpace (b : d → ℕ) (k : ℕ) : Submodule ℝ (CubeCell N → PolyForm ℝ d) :=
   cubeCompatible N ⊓ Submodule.pi Set.univ fun _ => cubeFormMinus ℝ b k
 
+instance (b : d → ℕ) (k : ℕ) : FiniteDimensional ℝ (cubeGlobalSpace N b k) := by
+  have : Submodule.pi Set.univ (fun _ : CubeCell N => cubeFormMinus ℝ b k) =
+      LinearMap.range (LinearMap.pi fun m => (cubeFormMinus ℝ b k).subtype ∘ₗ LinearMap.proj m) :=
+    Submodule.ext fun ω => ⟨fun h => ⟨fun m => ⟨ω m, h m (Set.mem_univ _)⟩, rfl⟩, by
+      rintro ⟨u, rfl⟩ m _; exact (u m).2⟩
+  exact Submodule.finiteDimensional_of_le (inf_le_right.trans this.le)
+
 variable {N}
 
 theorem mem_cubeGlobalSpace {b : d → ℕ} {k : ℕ} {ω : CubeCell N → PolyForm ℝ d} :
@@ -244,13 +252,7 @@ theorem extDeriv_mem_cubeGlobalSpace {b : d → ℕ} {k : ℕ} {ω : CubeCell N 
   mem_cubeGlobalSpace.2 ⟨extDeriv_mem_cubeCompatible (mem_cubeGlobalSpace.1 hω).1,
     fun m => extDeriv_mem_cubeFormMinus ((mem_cubeGlobalSpace.1 hω).2 m)⟩
 
-
 /-! ### Moments on common faces -/
-
-omit [LinearOrder d] [Fintype d] in
-theorem faceSubst_filter_apply {g : d → Option ℝ} {γ : d →₀ ℕ} {j : d} (hj : g j ≠ none) :
-    (γ.filter fun i => (g i).isNone) j = 0 := by
-  simp [Option.isNone_iff_eq_none, hj]
 
 /-- A moment on a face contained in the plane `g` only sees the trace on `g`. -/
 theorem momentDof_cubeTrace_of_le {f g : d → Option ℝ} {s : Finset d} {α : d →₀ ℕ}
@@ -292,7 +294,8 @@ theorem momentDof_cubeTrace_congr {g : d → Option ℝ} {b : d → ℕ} {s : Fi
       by_cases hg : g j = none
       · rw [heq j hg]
       · obtain ⟨hjs, h1, h2⟩ := hfix j hg
-        rw [faceSubst_filter_apply hg]
+        rw [show (γ.filter fun i => (g i).isNone) j = 0 by
+          simp [Option.isNone_iff_eq_none, hg]]
         simp only [hjs, decide_false]
         interval_cases (α j) <;> interval_cases (α' j) <;> rfl
   simp only [cubeTrace]
@@ -351,7 +354,6 @@ theorem liftIdx_mem {g : d → Option ℝ} {b : d → ℕ} (hb : ∀ j, 1 ≤ b 
     have hjs : j ∉ s := fun h => by simp [h] at this
     have := hb j
     split_ifs <;> simp <;> omega
-
 
 /-! ### Global degrees of freedom -/
 
@@ -427,7 +429,6 @@ theorem cubeDof_eq_of_toGlobal_eq {ω : CubeCell N → PolyForm ℝ d} (hω : ω
     · simp [commonFace, h1] at hj
     · exact ⟨hjs, by omega, by omega⟩
     · exact ⟨hjs, by omega, by omega⟩
-
 
 variable (hN : ∀ j, 1 ≤ N j) (hb : ∀ j, 1 ≤ b j)
 
@@ -606,5 +607,4 @@ theorem cubeGlobalInterp_extDeriv (ω : cubeCompatible N) :
   funext fun m => by
     rw [cubeGlobalInterp_apply, cubeGlobalInterp_apply, cubeInterp_extDeriv]
 
-
-end Feec.FiniteElement
+end Feec.FiniteElement.Cube

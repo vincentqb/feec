@@ -112,6 +112,7 @@ def readBib (path : System.FilePath := "docs/references.bib") :
       let authors ← if au.isEmpty then pure "" else do
         let ps ← (andSep.split au).toList.mapM person
         pure (", ".intercalate ps)
+      if bib.contains (m.group 2) then throw s!"duplicate entry key {m.group 2}"
       bib := bib.insert (m.group 2) (authors, ← delatex (← field body "title"))
     return bib
 

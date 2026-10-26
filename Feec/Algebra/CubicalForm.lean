@@ -8,10 +8,10 @@ public import Feec.Algebra.PolynomialFormDim
 On the cube `[0, 1]ⁿ` the trimmed tensor-product family of [ArnoldBoffiBonizzoni2015] (the
 cubical column of the periodic table [ArnoldLogg2014]) is
 
-  `Q_r⁻Λᵏ = ⊕_{k₁ + ⋯ + kₙ = k} P_r⁻Λ^{k₁}(I) ⊗ ⋯ ⊗ P_r⁻Λ^{kₙ}(I)`,
+  `Q_r⁻Λᵏ = Σ_{k₁ + ⋯ + kₙ = k} P_r⁻Λ^{k₁}(I) ⊗ ⋯ ⊗ P_r⁻Λ^{kₙ}(I)`
 
-the span of the products of `1`-dimensional factors in `P_r⁻Λ⁰(I) = P_rΛ⁰(I)` and
-`P_r⁻Λ¹(I) = P_{r-1}Λ¹(I)`. In coordinates, `ω = Σ_s ω_s dx_s` lies in `Q_r⁻Λᵏ` when every
+(a direct sum; only the spanning is formalized), the span of the products of `1`-dimensional
+factors in `P_r⁻Λ⁰(I) = P_rΛ⁰(I)` and `P_r⁻Λ¹(I) = P_{r-1}Λ¹(I)`. In coordinates, `ω = Σ_s ω_s dx_s` lies in `Q_r⁻Λᵏ` when every
 coefficient `ω_s` has degree at most `r - 1` in the variables `x_j`, `j ∈ s`, and at most `r` in
 the others. We allow a degree `b_j` in each direction (`cubeFormMinus R b k`, the isotropic family
 being `b = fun _ => r`): the faces of the cube are then the directions with `b_j = 0`
@@ -52,12 +52,16 @@ exactness proof is the classical Poincaré lemma by integration along one coordi
 the operators `hⱼ` and `Pⱼ` preserve the tensor-product degree bounds direction by direction, so
 it works for any multidegree `b`.
 
+The other cubical families, the serendipity forms `S_rΛᵏ` [ArnoldAwanou2014] and the trimmed
+serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019], are not formalized.
+
 ## References
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
   §3 (the spaces `Q_r⁻Λᵏ`, their dimension and degrees of freedom)
 * [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
   §2 (the tensor-product family `Q_r⁻Λᵏ`)
+* [A. Gillette, T. Kloefkorn, *Trimmed serendipity finite element differential forms*][GilletteKloefkorn2019]
 * [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3 (the polynomial de Rham complex)
@@ -102,10 +106,11 @@ theorem pderiv_mem_restrictSupport [DecidableEq d] {S T : Set (d →₀ ℕ)} (j
   · exact (monomial_mem_restrictSupport R).2 (Or.inl (h α hα h0))
 
 /-- Linear maps commute with the signs. -/
-theorem map_sgn_mul [LinearOrder d] (f : MvPolynomial d R →ₗ[R] MvPolynomial d R) (j : d)
-    (s : Finset d) (p : MvPolynomial d R) : f (sgn j s * p) = sgn j s * f p := by
-  rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], ← smul_eq_C_mul,
-    ← smul_eq_C_mul, map_smul]
+theorem map_sgn_mul [LinearOrder d] {A : Type*} [CommRing A] [Algebra R A]
+    (f : MvPolynomial d R →ₗ[R] A) (j : d) (s : Finset d) (p : MvPolynomial d R) :
+    f (sgn j s * p) = sgn j s * f p := by
+  rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], ← smul_eq_C_mul, map_smul,
+    Algebra.smul_def, show algebraMap R A (sgn j s) = sgn j s by simp [sgn]]
 
 /-- Multiplying by a sign stays in a submodule. -/
 theorem sgn_mul_mem [LinearOrder d] {M : Submodule R (MvPolynomial d R)} (j : d) (s : Finset d)
@@ -123,6 +128,15 @@ variable [LinearOrder d]
 variables `x_j` of `dx_s`, `≤ b_j` in the others. -/
 def cubeSupport (b : d → ℕ) (s : Finset d) : Set (d →₀ ℕ) :=
   {α | ∀ j, α j + (if j ∈ s then 1 else 0) ≤ b j}
+
+/-- Lowering `j ∈ s` to a face exponent `v ≤ α_j + 1` stays in the support of `s ∖ j`. -/
+theorem update_mem_cubeSupport_erase {b : d → ℕ} {s : Finset d} {α : d →₀ ℕ}
+    (hα : α ∈ cubeSupport b s) {j : d} (hj : j ∈ s) {v : ℕ} (hv : v ≤ α j + 1) :
+    α.update j v ∈ cubeSupport b (s.erase j) := fun l => by
+  have := hα l
+  by_cases hl : l = j
+  · subst hl; simp only [hj, ↓reduceIte] at this; simp [Finsupp.update_apply]; omega
+  · simpa [Finsupp.update_apply, hl] using this
 
 variable (R) in
 /-- `Q_b⁻Λᵏ`: the `k`-forms whose coefficient `ω_s` has degree `≤ b_j - [j ∈ s]` in each
@@ -784,7 +798,7 @@ theorem prodForm_monomial (s : Finset d) (α : d →₀ ℕ) :
 
 /-- **`Q_b⁻Λᵏ` is spanned by tensor products** of `1`-dimensional factors `ωⱼ ∈ P_{b_j}Λ⁰(I)`
 or `P_{b_j - 1}Λ¹(I)` (`= P_{b_j}⁻Λ⁰(I)`, `P_{b_j}⁻Λ¹(I)`) whose form degrees `e_j` sum to `k`:
-`Q_b⁻Λᵏ = ⊕_{Σ e_j = k} ⊗ⱼ P_{b_j}⁻Λ^{e_j}(I)` (`b_j ≥ 1`). [ArnoldBoffiBonizzoni2015], §3 -/
+`Q_b⁻Λᵏ = Σ_{Σ e_j = k} ⊗ⱼ P_{b_j}⁻Λ^{e_j}(I)` (`b_j ≥ 1`). [ArnoldBoffiBonizzoni2015], §3 -/
 theorem cubeFormMinus_eq_span {b : d → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℕ) :
     cubeFormMinus R b k = Submodule.span R {θ | ∃ (e : d → ℕ) (ω : d → PolyForm R Unit),
       ∑ j, e j = k ∧ (∀ j, ω j ∈ polyForm R Unit (b j - e j) (e j)) ∧ prodForm ω = θ} := by

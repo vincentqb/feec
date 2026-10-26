@@ -18,19 +18,21 @@ argument with the Taylor polynomial at the centre of the cube
 the homotheties `F_m(y) = (y + m)/N` transport to the cells (`cellInterp`): the error is
 `O(hʳ)`, `h = 1/N` ([ArnoldBoffiBonizzoni2015], §4; [Ciarlet2002], Thm 3.1.4). The field degrees
 of freedom are single-valued on the mesh, so the local interpolants glue into the global
-canonical interpolant `Π_h w ∈ Q_b⁻Λᵏ(𝒯_h)` (`cubeFieldGlobalInterp`). Integrating the
+canonical interpolant `Π_h w ∈ Q_b⁻Λᵏ(𝒯_h)` (`cubeFieldGlobalInterp`); as in
+`Feec.FiniteElement.CubeConformity`, the coordinates are `Fin n` and the mesh is isotropic.
+Integrating the
 moments of `d w` by parts in one direction at a time expresses them through the moments of `w` on
 the faces (`fieldDofAt_extDeriv`, `cubeT_partialDeriv`), so `Π̂` commutes with `d` on `C¹`
 fields (`cubeFieldInterp_extDeriv`).
 
 ## Main definitions
 
-* `Feec.FiniteElement.planePoint`, `fieldTrace`, `fieldMoment`, `fieldDof`: traces and moments
+* `Feec.FiniteElement.Cube.planePoint`, `fieldTrace`, `fieldMoment`, `fieldDof`: traces and moments
   of form fields on the faces of the cube;
-* `Feec.FiniteElement.cubeFieldInterp k hb`: the canonical interpolant on the reference cube;
-* `Feec.FiniteElement.cellPullback`, `cellInterp`: the pullback to and the interpolant on the
+* `Feec.FiniteElement.Cube.cubeFieldInterp k hb`: the canonical interpolant on the reference cube;
+* `Feec.FiniteElement.Cube.cellPullback`, `cellInterp`: the pullback to and the interpolant on the
   cell `m`;
-* `Feec.FiniteElement.cubeFieldGlobalInterp k hb`: the global canonical interpolant.
+* `Feec.FiniteElement.Cube.cubeFieldGlobalInterp k hb`: the global canonical interpolant.
 
 ## Main results
 
@@ -44,7 +46,7 @@ fields (`cubeFieldInterp_extDeriv`).
   in `Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ`) and is the local interpolant on each cell;
 * `exists_norm_sub_cubeFieldGlobalInterp_le`: **`sup ‖w - Π_h w‖ ≤ C hʳ sup ‖Dʳ w‖` on the
   mesh**;
-* `setIntegral_unitCube_partialDeriv`: the fundamental theorem of calculus on `[0, 1]ⁿ` in one
+* `setIntegral_closedCube_partialDeriv`: the fundamental theorem of calculus on `[0, 1]ⁿ` in one
   direction;
 * `cubeFieldInterp_extDeriv`: **`Π̂ (d w) = d (Π̂ w)`** for `w` of class `C¹` near `[0, 1]ⁿ`.
 
@@ -52,7 +54,6 @@ fields (`cubeFieldInterp_extDeriv`).
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
   §4 (approximation by `Q_r⁻Λᵏ` on affine cubical meshes), §3 (commuting degrees of freedom)
-* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
   (interpolation error for affine-equivalent families)
 
@@ -63,7 +64,7 @@ open Finset MvPolynomial
 
 @[expose] public noncomputable section
 
-namespace Feec.FiniteElement
+namespace Feec.FiniteElement.Cube
 
 open Koszul ExteriorFibre
 
@@ -109,11 +110,11 @@ theorem continuous_fieldTrace (g : Fin n → Option ℝ) {w : FormField n} (hw :
     · exact continuous_const
 
 /-- The unit cube `[0, 1]ⁿ`. -/
-abbrev unitCube (n : ℕ) : Set (Fin n → ℝ) := Set.univ.pi fun _ => Set.Icc 0 1
+abbrev closedCube (n : ℕ) : Set (Fin n → ℝ) := Set.univ.pi fun _ => Set.Icc 0 1
 
 /-- The moment `∫_g tr_g w ∧ η` of a form field on the face `g`. -/
 def fieldMoment (g : Fin n → Option ℝ) (η : PolyForm ℝ (Fin n)) (w : FormField n) : ℝ :=
-  ∫ y in unitCube n, wedgeForm (fieldTrace g w y) (evalForm n η y) (freeSet g)
+  ∫ y in closedCube n, wedgeForm (fieldTrace g w y) (evalForm n η y) (freeSet g)
 
 /-- On polynomial forms, the moments of fields are the moments of `Feec.FiniteElement.CubeDof`. -/
 theorem fieldMoment_evalForm (g : Fin n → Option ℝ) (η ω : PolyForm ℝ (Fin n)) :
@@ -122,9 +123,9 @@ theorem fieldMoment_evalForm (g : Fin n → Option ℝ) (η ω : PolyForm ℝ (F
   refine MeasureTheory.setIntegral_congr_fun (by measurability) fun y _ => ?_
   rw [← evalForm_cubeTrace, ← evalForm_wedgeForm, evalForm_apply]
 
-theorem planePoint_mem_unitCube {g : Fin n → Option ℝ}
-    (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) {y : Fin n → ℝ} (hy : y ∈ unitCube n) :
-    planePoint g y ∈ unitCube n := fun j _ => by
+theorem planePoint_mem_closedCube {g : Fin n → Option ℝ}
+    (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) {y : Fin n → ℝ} (hy : y ∈ closedCube n) :
+    planePoint g y ∈ closedCube n := fun j _ => by
   unfold planePoint
   cases hgj : g j with
   | none => exact hy j (Set.mem_univ j)
@@ -132,14 +133,14 @@ theorem planePoint_mem_unitCube {g : Fin n → Option ℝ}
 
 theorem continuousOn_fieldMoment_integrand {g : Fin n → Option ℝ}
     (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) (η : PolyForm ℝ (Fin n))
-    {w : FormField n} (hw : ContinuousOn w (unitCube n)) :
+    {w : FormField n} (hw : ContinuousOn w (closedCube n)) :
     ContinuousOn (fun y => wedgeForm (fieldTrace g w y) (evalForm n η y) (freeSet g))
-      (unitCube n) := by
-  have htr : ContinuousOn (fieldTrace g w) (unitCube n) := continuousOn_pi.2 fun s => by
+      (closedCube n) := by
+  have htr : ContinuousOn (fieldTrace g w) (closedCube n) := continuousOn_pi.2 fun s => by
     unfold fieldTrace
     split_ifs
     · exact (continuous_apply s).comp_continuousOn (hw.comp (continuous_planePoint g).continuousOn
-        fun y hy => planePoint_mem_unitCube hg hy)
+        fun y hy => planePoint_mem_closedCube hg hy)
     · exact continuousOn_const
   simp only [wedgeForm_apply]
   exact continuousOn_finsetSum _ fun s _ =>
@@ -148,10 +149,11 @@ theorem continuousOn_fieldMoment_integrand {g : Fin n → Option ℝ}
 
 theorem fieldMoment_sub {g : Fin n → Option ℝ}
     (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) (η : PolyForm ℝ (Fin n))
-    {w w' : FormField n} (hw : ContinuousOn w (unitCube n)) (hw' : ContinuousOn w' (unitCube n)) :
+    {w w' : FormField n} (hw : ContinuousOn w (closedCube n))
+    (hw' : ContinuousOn w' (closedCube n)) :
     fieldMoment g η (w - w') = fieldMoment g η w - fieldMoment g η w' := by
-  have hint : ∀ {v : FormField n}, ContinuousOn v (unitCube n) → MeasureTheory.IntegrableOn
-      (fun y => wedgeForm (fieldTrace g v y) (evalForm n η y) (freeSet g)) (unitCube n) :=
+  have hint : ∀ {v : FormField n}, ContinuousOn v (closedCube n) → MeasureTheory.IntegrableOn
+      (fun y => wedgeForm (fieldTrace g v y) (evalForm n η y) (freeSet g)) (closedCube n) :=
     fun hv => (continuousOn_fieldMoment_integrand hg η hv).integrableOn_compact
       (isCompact_univ_pi fun _ => isCompact_Icc)
   rw [fieldMoment, fieldMoment, fieldMoment, ← MeasureTheory.integral_sub (hint hw) (hint hw')]
@@ -163,14 +165,14 @@ theorem fieldMoment_sub {g : Fin n → Option ℝ}
 /-- The moments are bounded in `C⁰([0, 1]ⁿ)` (on faces of the cube). -/
 theorem exists_abs_fieldMoment_le {g : Fin n → Option ℝ}
     (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) (η : PolyForm ℝ (Fin n)) :
-    ∃ C, ∀ (w : FormField n) (B : ℝ), (∀ y ∈ unitCube n, ‖w y‖ ≤ B) →
+    ∃ C, ∀ (w : FormField n) (B : ℝ), (∀ y ∈ closedCube n, ‖w y‖ ≤ B) →
       |fieldMoment g η w| ≤ C * B := by
   obtain ⟨A, hA⟩ := (isCompact_univ_pi fun _ : Fin n => isCompact_Icc (a := (0 : ℝ)) (b := 1)
     ).exists_bound_of_continuousOn (contDiff_evalForm η (r := 0)).continuous.continuousOn
-  refine ⟨2 ^ n * max A 0 * (MeasureTheory.volume (unitCube n)).toReal, fun w B hB => ?_⟩
-  have hplane : ∀ y ∈ unitCube n, planePoint g y ∈ unitCube n :=
-    fun y hy => planePoint_mem_unitCube hg hy
-  have hpt : ∀ y ∈ unitCube n, |wedgeForm (fieldTrace g w y) (evalForm n η y) (freeSet g)| ≤
+  refine ⟨2 ^ n * max A 0 * (MeasureTheory.volume (closedCube n)).toReal, fun w B hB => ?_⟩
+  have hplane : ∀ y ∈ closedCube n, planePoint g y ∈ closedCube n :=
+    fun y hy => planePoint_mem_closedCube hg hy
+  have hpt : ∀ y ∈ closedCube n, |wedgeForm (fieldTrace g w y) (evalForm n η y) (freeSet g)| ≤
       2 ^ n * max A 0 * B := fun y hy => by
     have hwB : ∀ t, |fieldTrace g w y t| ≤ B := fun t => by
       unfold fieldTrace
@@ -186,8 +188,8 @@ theorem exists_abs_fieldMoment_le {g : Fin n → Option ℝ}
             evalForm n η y (freeSet g \ s)|
         ≤ ∑ _s ∈ (freeSet g).powerset, B * max A 0 := sum_le_sum fun s _ => by
           rw [abs_mul, abs_mul, show |(shuffleSgn s (freeSet g \ s) : ℝ)| = 1 by
-            rcases neg_one_pow_eq_or ℝ (∑ a ∈ s, #({l ∈ freeSet g \ s | l < a})) with h | h <;>
-            simp [shuffleSgn, sgn, h, prod_pow_eq_pow_sum]]
+            rcases mul_self_eq_one_iff.1 (shuffleSgn_mul_self (R := ℝ) s (freeSet g \ s)) with
+              h | h <;> simp [h]]
           rw [one_mul]
           exact mul_le_mul (hwB s) (hηA _) (abs_nonneg _) hB0
       _ ≤ 2 ^ n * max A 0 * B := by
@@ -201,14 +203,14 @@ theorem exists_abs_fieldMoment_le {g : Fin n → Option ℝ}
           linarith
   rw [fieldMoment]
   have := MeasureTheory.norm_setIntegral_le_of_norm_le_const (C := 2 ^ n * max A 0 * B)
-    (μ := MeasureTheory.volume) (s := unitCube n) (f := fun y =>
+    (μ := MeasureTheory.volume) (s := closedCube n) (f := fun y =>
       wedgeForm (fieldTrace g w y) (evalForm n η y) (freeSet g))
     (by
-      rw [show unitCube n = Set.Icc (0 : Fin n → ℝ) 1 from (Set.pi_univ_Icc 0 1)]
+      rw [show closedCube n = Set.Icc (0 : Fin n → ℝ) 1 from (Set.pi_univ_Icc 0 1)]
       exact measure_Icc_lt_top)
     fun y hy => by rw [Real.norm_eq_abs]; exact hpt y hy
   rw [Real.norm_eq_abs] at this
-  calc _ ≤ 2 ^ n * max A 0 * B * (MeasureTheory.volume (unitCube n)).toReal := this
+  calc _ ≤ 2 ^ n * max A 0 * B * (MeasureTheory.volume (closedCube n)).toReal := this
     _ = _ := by ring
 
 /-! ### The canonical interpolant on form fields -/
@@ -236,7 +238,7 @@ theorem dofFace_mem_Icc (s : Finset (Fin n)) (α : Fin n →₀ ℕ) :
   exact ⟨by positivity, by exact_mod_cast (show α j ≤ 1 by omega)⟩
 
 theorem fieldDof_sub (i : CubeDofIdx b k) {w w' : FormField n}
-    (hw : ContinuousOn w (unitCube n)) (hw' : ContinuousOn w' (unitCube n)) :
+    (hw : ContinuousOn w (closedCube n)) (hw' : ContinuousOn w' (closedCube n)) :
     fieldDof i (w - w') = fieldDof i w - fieldDof i w' :=
   fieldMoment_sub (dofFace_mem_Icc _ _) _ hw hw'
 
@@ -256,7 +258,7 @@ theorem cubeFieldInterp_evalForm (hb : ∀ j, 1 ≤ b j) {ω : PolyForm ℝ (Fin
   rw [cubeFieldInterp, this, LinearEquiv.symm_apply_apply]
 
 theorem cubeFieldInterp_sub (hb : ∀ j, 1 ≤ b j) {w w' : FormField n}
-    (hw : ContinuousOn w (unitCube n)) (hw' : ContinuousOn w' (unitCube n)) :
+    (hw : ContinuousOn w (closedCube n)) (hw' : ContinuousOn w' (closedCube n)) :
     cubeFieldInterp k hb (w - w') = cubeFieldInterp k hb w - cubeFieldInterp k hb w' := by
   have : (fun i : CubeDofIdx b k => fieldDof i (w - w')) =
       (fun i => fieldDof i w) - fun i => fieldDof i w' :=
@@ -265,16 +267,16 @@ theorem cubeFieldInterp_sub (hb : ∀ j, 1 ≤ b j) {w w' : FormField n}
 
 /-- **Stability of `Π` in `C⁰([0, 1]ⁿ)`**. -/
 theorem exists_norm_cubeFieldInterp_le (hb : ∀ j, 1 ≤ b j) :
-    ∃ C, ∀ (w : FormField n) (B : ℝ), (∀ y ∈ unitCube n, ‖w y‖ ≤ B) →
-      ∀ x ∈ unitCube n, ‖cubeFieldInterp k hb w x‖ ≤ C * B := by
+    ∃ C, ∀ (w : FormField n) (B : ℝ), (∀ y ∈ closedCube n, ‖w y‖ ≤ B) →
+      ∀ x ∈ closedCube n, ‖cubeFieldInterp k hb w x‖ ≤ C * B := by
   set e := (isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv
   set φ : CubeDofIdx b k → FormField n := fun i =>
     evalForm n (e.symm (Pi.single i 1) : PolyForm ℝ (Fin n))
   have hC : ∀ i : CubeDofIdx b k, ∃ C, ∀ (w : FormField n) (B : ℝ),
-      (∀ y ∈ unitCube n, ‖w y‖ ≤ B) → |fieldDof i w| ≤ C * B :=
+      (∀ y ∈ closedCube n, ‖w y‖ ≤ B) → |fieldDof i w| ≤ C * B :=
     fun i => exists_abs_fieldMoment_le (dofFace_mem_Icc _ _) _
   choose C hC using hC
-  have hA : ∀ i, ∃ A, ∀ x ∈ unitCube n, ‖φ i x‖ ≤ A := fun i =>
+  have hA : ∀ i, ∃ A, ∀ x ∈ closedCube n, ‖φ i x‖ ≤ A := fun i =>
     (isCompact_univ_pi fun _ : Fin n => isCompact_Icc (a := (0 : ℝ)) (b := 1)
       ).exists_bound_of_continuousOn (contDiff_evalForm _ (r := 0)).continuous.continuousOn
   choose A hA using hA
@@ -331,17 +333,17 @@ on a neighbourhood of `[0, 1]ⁿ` (`1 ≤ r ≤ b_j`), `sup ‖w - Π w‖ ≤ C
 reproduces `P_{r-1}Λᵏ ⊆ Q_b⁻Λᵏ` and is bounded in `C⁰` (Bramble–Hilbert with the Taylor
 polynomial at the centre). [ArnoldBoffiBonizzoni2015], §4 -/
 theorem exists_norm_sub_cubeFieldInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r ≤ b j) :
-    ∃ C, ∀ (w : FormField n) (U : Set (Fin n → ℝ)), IsOpen U → unitCube n ⊆ U →
+    ∃ C, ∀ (w : FormField n) (U : Set (Fin n → ℝ)), IsOpen U → closedCube n ⊆ U →
       ContDiffOn ℝ r w U → (∀ x, IsDeg k (w x)) → ∀ M : ℝ,
-      (∀ y ∈ unitCube n, ‖iteratedFDeriv ℝ r w y‖ ≤ M) →
-      ∀ x ∈ unitCube n, ‖w x - cubeFieldInterp k (fun j => hr.trans (hrb j)) w x‖ ≤ C * M := by
+      (∀ y ∈ closedCube n, ‖iteratedFDeriv ℝ r w y‖ ≤ M) →
+      ∀ x ∈ closedCube n, ‖w x - cubeFieldInterp k (fun j => hr.trans (hrb j)) w x‖ ≤ C * M := by
   set hb : ∀ j, 1 ≤ b j := fun j => hr.trans (hrb j)
   obtain ⟨C, hC⟩ := exists_norm_cubeFieldInterp_le (k := k) hb
   refine ⟨1 + C, fun w U hU hKU hw hk M hM x hx => ?_⟩
   set x₀ : Fin n → ℝ := fun _ => 1 / 2
-  have hcube : Convex ℝ (unitCube n) := convex_pi fun _ _ => convex_Icc 0 1
-  have hx₀ : x₀ ∈ unitCube n := fun _ _ => ⟨by norm_num, by norm_num⟩
-  have hd : ∀ y ∈ unitCube n, ‖y - x₀‖ ≤ 1 := fun y hy =>
+  have hcube : Convex ℝ (closedCube n) := convex_pi fun _ _ => convex_Icc 0 1
+  have hx₀ : x₀ ∈ closedCube n := fun _ _ => ⟨by norm_num, by norm_num⟩
+  have hd : ∀ y ∈ closedCube n, ‖y - x₀‖ ≤ 1 := fun y hy =>
     (pi_norm_le_iff_of_nonneg zero_le_one).2 fun j => by
       have := hy j (Set.mem_univ j)
       simp only [Set.mem_Icc] at this
@@ -359,10 +361,11 @@ theorem exists_norm_sub_cubeFieldInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j
         · exact hωp t
         · simp⟩
   set pk := evalForm n ωk
-  have hpk : ContinuousOn pk (unitCube n) := (contDiff_evalForm ωk (r := 0)).continuous.continuousOn
-  have hwc : ContinuousOn w (unitCube n) := (hw.continuousOn).mono hKU
+  have hpk : ContinuousOn pk (closedCube n) :=
+    (contDiff_evalForm ωk (r := 0)).continuous.continuousOn
+  have hwc : ContinuousOn w (closedCube n) := (hw.continuousOn).mono hKU
   -- the Taylor estimate
-  have hT : ∀ y ∈ unitCube n, ‖(w - pk) y‖ ≤ M := fun y hy => by
+  have hT : ∀ y ∈ closedCube n, ‖(w - pk) y‖ ≤ M := fun y hy => by
     have h := norm_iteratedFDeriv_sub_taylorPoly_le (k := r) hU hKU hcube hx₀ hw hd hM hy
       (Nat.zero_le r)
     rw [norm_iteratedFDeriv_zero, one_pow, one_mul, hpω] at h
@@ -429,7 +432,7 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
   have hwh : ∀ y, wh y = h ^ k • w (A y) := fun y => by
     rw [hA]; exact affinePullback_scalarMat h t hk y
   -- the cell is the image of the unit cube
-  have hcube : ∀ y ∈ unitCube n, A y ∈ closedCell m := fun y hy j => by
+  have hcube : ∀ y ∈ closedCube n, A y ∈ closedCell m := fun y hy j => by
     have := hy j (Set.mem_univ j)
     simp only [Set.mem_Icc] at this
     rw [hA, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
@@ -438,14 +441,14 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
       field_simp]
     constructor <;> linarith [this.1, this.2]
   have hU' : IsOpen (A ⁻¹' U) := hU.preimage (continuous_affine _ _)
-  have hKU' : unitCube n ⊆ A ⁻¹' U := fun y hy => hKU (hcube y hy)
+  have hKU' : closedCube n ⊆ A ⁻¹' U := fun y hy => hKU (hcube y hy)
   have hcd : ContDiffOn ℝ r wh (A ⁻¹' U) := by
     have : wh = fun y => h ^ k • w (A y) := funext hwh
     rw [this]
     exact (hw.comp (contDiff_affine _ _).contDiffOn (fun y hy => hy)).const_smul _
   have hdeg : ∀ y, IsDeg k (wh y) := fun y => IsDeg.affinePullback hk _ _ y
   -- the derivatives scale like `h^{k+r}`
-  have hD : ∀ y ∈ unitCube n, ‖iteratedFDeriv ℝ r wh y‖ ≤ h ^ k * h ^ r * M := fun y hy => by
+  have hD : ∀ y ∈ closedCube n, ‖iteratedFDeriv ℝ r wh y‖ ≤ h ^ k * h ^ r * M := fun y hy => by
     set L : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ) :=
       (LinearEquiv.smulOfNeZero ℝ (Fin n → ℝ) h hh.ne').toContinuousLinearEquiv
     set Φ : (Finset (Fin n) → ℝ) ≃L[ℝ] (Finset (Fin n) → ℝ) :=
@@ -474,7 +477,7 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
       _ = _ := by ring
   -- back to the cell
   set y := affine (scalarMat n N) (cellOffset m) x
-  have hy : y ∈ unitCube n := fun j _ => by
+  have hy : y ∈ closedCube n := fun j _ => by
     have := hx j
     simp only [y, affine_cellOffset]
     constructor <;> linarith [this.1, this.2]
@@ -593,14 +596,14 @@ closed unit cube (`1 ≤ r ≤ b_j`), with `C` independent of `N` and `w`: the c
 `Π_h w ∈ Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ` approximate `w` on each cell. [ArnoldBoffiBonizzoni2015], §4 -/
 theorem exists_norm_sub_cubeFieldGlobalInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r ≤ b j) :
     ∃ C, ∀ (N : ℕ) [NeZero N] (w : FormField n) (U : Set (Fin n → ℝ)), IsOpen U →
-      unitCube n ⊆ U → ContDiffOn ℝ r w U → (∀ x, IsDeg k (w x)) → ∀ M : ℝ,
-      (∀ x ∈ unitCube n, ‖iteratedFDeriv ℝ r w x‖ ≤ M) →
+      closedCube n ⊆ U → ContDiffOn ℝ r w U → (∀ x, IsDeg k (w x)) → ∀ M : ℝ,
+      (∀ x ∈ closedCube n, ‖iteratedFDeriv ℝ r w x‖ ≤ M) →
       ∀ (m : CubeCell fun _ : Fin n => N), ∀ x ∈ closedCell m,
         ‖w x - cellField (cubeFieldGlobalInterp k (fun j => hr.trans (hrb j)) w) m x‖ ≤
           C * ((N : ℝ)⁻¹) ^ r * M := by
   obtain ⟨C, hC⟩ := exists_norm_sub_cellInterp_le (k := k) hr hrb
   refine ⟨C, fun N _ w U hU hKU hw hk M hM m x hx => ?_⟩
-  have hcell : closedCell m ⊆ unitCube n := fun y hy j _ => by
+  have hcell : closedCell m ⊆ closedCube n := fun y hy j _ => by
     have hN0 : (0 : ℝ) < N := Nat.cast_pos.2 (Nat.pos_of_ne_zero (NeZero.ne N))
     have := hy j
     have hm := (m j).isLt
@@ -615,25 +618,38 @@ theorem exists_norm_sub_cubeFieldGlobalInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb :
 
 section Slices
 
+theorem continuousOn_partialDeriv {f : (Fin n → ℝ) → ℝ} {U : Set (Fin n → ℝ)} (hU : IsOpen U)
+    (hf : ContDiffOn ℝ 1 f U) (j : Fin n) : ContinuousOn (partialDeriv j f) U := by
+  have := (ContinuousLinearMap.apply ℝ ℝ (Pi.single j (1 : ℝ))).continuous.comp_continuousOn
+    (hf.continuousOn_fderiv_of_isOpen hU le_rfl)
+  exact this
+
+theorem update_mem_closedCube {x : Fin n → ℝ} (hx : x ∈ closedCube n) (j : Fin n) {c : ℝ}
+    (hc : c ∈ Set.Icc (0 : ℝ) 1) : Function.update x j c ∈ closedCube n := fun i _ => by
+  by_cases hi : i = j
+  · subst hi; simpa using hc
+  · rw [Function.update_of_ne hi]; exact hx i (Set.mem_univ i)
+
 variable {m : ℕ}
 
-theorem insertNth_mem_unitCube_iff (j : Fin (m + 1)) (t : ℝ) (y : Fin m → ℝ) :
-    Fin.insertNth j t y ∈ unitCube (m + 1) ↔ t ∈ Set.Icc 0 1 ∧ y ∈ unitCube m := by
-  simp only [unitCube, Set.mem_pi, Set.mem_univ, true_implies]
+theorem insertNth_mem_closedCube_iff (j : Fin (m + 1)) (t : ℝ) (y : Fin m → ℝ) :
+    Fin.insertNth j t y ∈ closedCube (m + 1) ↔ t ∈ Set.Icc 0 1 ∧ y ∈ closedCube m := by
+  simp only [closedCube, Set.mem_pi, Set.mem_univ, true_implies]
   rw [Fin.forall_iff_succAbove j, Fin.insertNth_apply_same]
   simp only [Fin.insertNth_apply_succAbove]
 
 /-- **Fubini on the unit cube**, slicing along the coordinate `j`. -/
-theorem setIntegral_unitCube_succ (j : Fin (m + 1)) {g : (Fin (m + 1) → ℝ) → ℝ}
-    (hg : MeasureTheory.IntegrableOn g (unitCube (m + 1))) :
-    ∫ x in unitCube (m + 1), g x = ∫ y in unitCube m, ∫ t in (0 : ℝ)..1, g (Fin.insertNth j t y) := by
-  have hmeas : ∀ k, MeasurableSet (unitCube k) := fun k =>
+theorem setIntegral_closedCube_succ (j : Fin (m + 1)) {g : (Fin (m + 1) → ℝ) → ℝ}
+    (hg : MeasureTheory.IntegrableOn g (closedCube (m + 1))) :
+    ∫ x in closedCube (m + 1), g x =
+      ∫ y in closedCube m, ∫ t in (0 : ℝ)..1, g (Fin.insertNth j t y) := by
+  have hmeas : ∀ k, MeasurableSet (closedCube k) := fun k =>
     MeasurableSet.univ_pi fun _ => measurableSet_Icc
   set e := MeasurableEquiv.piFinSuccAbove (fun _ : Fin (m + 1) => ℝ) j
   have he : MeasureTheory.MeasurePreserving e.symm :=
     (MeasureTheory.volume_preserving_piFinSuccAbove _ j).symm e
   have hes : ∀ z : ℝ × (Fin m → ℝ), e.symm z = Fin.insertNth j z.1 z.2 := fun z => rfl
-  set G := (unitCube (m + 1)).indicator g
+  set G := (closedCube (m + 1)).indicator g
   have hG : MeasureTheory.Integrable G :=
     (MeasureTheory.integrable_indicator_iff (hmeas _)).2 hg
   have hGe : MeasureTheory.Integrable (fun z => G (e.symm z))
@@ -645,44 +661,38 @@ theorem setIntegral_unitCube_succ (j : Fin (m + 1)) {g : (Fin (m + 1) → ℝ) �
     ← MeasureTheory.integral_indicator (hmeas _)]
   refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
   simp only [hes, G]
-  by_cases hy : y ∈ unitCube m
+  by_cases hy : y ∈ closedCube m
   · rw [Set.indicator_of_mem hy]
-    have : (fun t => (unitCube (m + 1)).indicator g (Fin.insertNth j t y)) =
+    have : (fun t => (closedCube (m + 1)).indicator g (Fin.insertNth j t y)) =
         (Set.Icc (0 : ℝ) 1).indicator fun t => g (Fin.insertNth j t y) := by
       funext t
       by_cases ht : t ∈ Set.Icc (0 : ℝ) 1
       · rw [Set.indicator_of_mem ht, Set.indicator_of_mem
-          ((insertNth_mem_unitCube_iff j t y).2 ⟨ht, hy⟩)]
+          ((insertNth_mem_closedCube_iff j t y).2 ⟨ht, hy⟩)]
       · rw [Set.indicator_of_notMem ht, Set.indicator_of_notMem
-          (fun h => ht ((insertNth_mem_unitCube_iff j t y).1 h).1)]
+          (fun h => ht ((insertNth_mem_closedCube_iff j t y).1 h).1)]
     rw [this, MeasureTheory.integral_indicator measurableSet_Icc,
       MeasureTheory.integral_Icc_eq_integral_Ioc, intervalIntegral.integral_of_le zero_le_one]
   · rw [Set.indicator_of_notMem hy]
     refine MeasureTheory.integral_eq_zero_of_ae (Filter.Eventually.of_forall fun t => ?_)
-    exact Set.indicator_of_notMem (fun h => hy ((insertNth_mem_unitCube_iff j t y).1 h).2) _
+    exact Set.indicator_of_notMem (fun h => hy ((insertNth_mem_closedCube_iff j t y).1 h).2) _
 
 /-- **The fundamental theorem of calculus on the unit cube**:
 `∫_{[0,1]ⁿ} ∂ⱼ Φ = ∫_{[0,1]ⁿ} (Φ|_{x_j = 1} - Φ|_{x_j = 0})`. -/
-theorem setIntegral_unitCube_partialDeriv (j : Fin (m + 1)) {Φ : (Fin (m + 1) → ℝ) → ℝ}
-    {U : Set (Fin (m + 1) → ℝ)} (hU : IsOpen U) (hKU : unitCube (m + 1) ⊆ U)
+theorem setIntegral_closedCube_partialDeriv (j : Fin (m + 1)) {Φ : (Fin (m + 1) → ℝ) → ℝ}
+    {U : Set (Fin (m + 1) → ℝ)} (hU : IsOpen U) (hKU : closedCube (m + 1) ⊆ U)
     (hΦ : ContDiffOn ℝ 1 Φ U) :
-    ∫ x in unitCube (m + 1), partialDeriv j Φ x =
-      ∫ x in unitCube (m + 1), (Φ (Function.update x j 1) - Φ (Function.update x j 0)) := by
-  have hcpt : IsCompact (unitCube (m + 1)) := isCompact_univ_pi fun _ => isCompact_Icc
-  have hd : ContinuousOn (partialDeriv j Φ) U :=
-    (ContinuousLinearMap.apply ℝ ℝ (Pi.single j (1 : ℝ))).continuous.comp_continuousOn
-      (hΦ.continuousOn_fderiv_of_isOpen hU le_rfl) |>.congr fun x _ => rfl
-  have hupdm : ∀ c ∈ Set.Icc (0 : ℝ) 1, ∀ x ∈ unitCube (m + 1),
-      Function.update x j c ∈ unitCube (m + 1) := fun c hc x hx i _ => by
-    by_cases hi : i = j
-    · subst hi; simpa using hc
-    · rw [Function.update_of_ne hi]; exact hx i (Set.mem_univ i)
+    ∫ x in closedCube (m + 1), partialDeriv j Φ x =
+      ∫ x in closedCube (m + 1), (Φ (Function.update x j 1) - Φ (Function.update x j 0)) := by
+  have hcpt : IsCompact (closedCube (m + 1)) := isCompact_univ_pi fun _ => isCompact_Icc
+  have hd := continuousOn_partialDeriv hU hΦ j
   have hupd : ∀ c ∈ Set.Icc (0 : ℝ) 1,
-      ContinuousOn (fun x => Φ (Function.update x j c)) (unitCube (m + 1)) := fun c hc =>
+      ContinuousOn (fun x => Φ (Function.update x j c)) (closedCube (m + 1)) := fun c hc =>
     hΦ.continuousOn.comp (continuous_id.update j continuous_const).continuousOn
-      fun x hx => hKU (hupdm c hc x hx)
-  rw [setIntegral_unitCube_succ j ((hd.mono hKU).integrableOn_compact hcpt),
-    setIntegral_unitCube_succ j (g := fun x => Φ (Function.update x j 1) - Φ (Function.update x j 0))
+      fun x hx => hKU (update_mem_closedCube hx j hc)
+  rw [setIntegral_closedCube_succ j ((hd.mono hKU).integrableOn_compact hcpt),
+    setIntegral_closedCube_succ j
+      (g := fun x => Φ (Function.update x j 1) - Φ (Function.update x j 0))
       (((hupd 1 ⟨zero_le_one, le_rfl⟩).sub (hupd 0 ⟨le_rfl, zero_le_one⟩)).integrableOn_compact
         hcpt)]
   refine MeasureTheory.setIntegral_congr_fun (MeasurableSet.univ_pi fun _ => measurableSet_Icc)
@@ -693,7 +703,7 @@ theorem setIntegral_unitCube_partialDeriv (j : Fin (m + 1)) {Φ : (Fin (m + 1) �
       fun t => Function.update (Fin.insertNth j (0 : ℝ) y : Fin (m + 1) → ℝ) j t :=
     funext fun t => by rw [Fin.update_insertNth]
   have hmem : ∀ t ∈ Set.Icc (0 : ℝ) 1, Fin.insertNth j t y ∈ U := fun t ht =>
-    hKU ((insertNth_mem_unitCube_iff j t y).2 ⟨ht, hy⟩)
+    hKU ((insertNth_mem_closedCube_iff j t y).2 ⟨ht, hy⟩)
   refine intervalIntegral.integral_eq_sub_of_hasDerivAt
     (f := fun t => Φ (Fin.insertNth j t y)) (fun t ht => ?_) ?_
   · rw [Set.uIcc_of_le zero_le_one] at ht
@@ -718,7 +728,7 @@ section Commuting
 /-- The scalar moment `f ↦ ∫_{[0,1]ⁿ} f(P y) y^β` of the degree of freedom `(s, α)`, `P` the
 point of its face, `β = dofTest s α`. -/
 def cubeT (s : Finset (Fin n)) (α : Fin n →₀ ℕ) (f : (Fin n → ℝ) → ℝ) : ℝ :=
-  ∫ y in unitCube n, f (planePoint (dofFace (fun _ => none) s α) y) *
+  ∫ y in closedCube n, f (planePoint (dofFace (fun _ => none) s α) y) *
     eval y (monomial (dofTest s α) 1)
 
 theorem subset_freeSet_dofFace (s : Finset (Fin n)) (α : Fin n →₀ ℕ) :
@@ -738,15 +748,6 @@ theorem fieldDofAt_apply (s : Finset (Fin n)) (α : Fin n →₀ ℕ) (w : FormF
     (fun h => absurd (mem_powerset.2 hsub) h), evalForm_apply, Pi.single_eq_same, fieldTrace,
     ite_eq_left fun j hj => by simpa using hsub hj]
   ring
-
-/-- The point of a free face moves with the free coordinates: `P(y + t e_j) = P(y) + t e_j`. -/
-theorem planePoint_update_of_none {g : Fin n → Option ℝ} {j : Fin n} (hj : g j = none)
-    (y : Fin n → ℝ) (c : ℝ) :
-    planePoint g (Function.update y j c) = Function.update (planePoint g y) j c := by
-  funext i
-  by_cases hi : i = j
-  · subst hi; simp [planePoint, hj]
-  · simp [planePoint, hi]
 
 /-- The linear part of `planePoint g`: keep the free coordinates, kill the fixed ones. -/
 def planeProj (g : Fin n → Option ℝ) : (Fin n → ℝ) →L[ℝ] Fin n → ℝ :=
@@ -768,25 +769,19 @@ theorem hasFDerivAt_planePoint (g : Fin n → Option ℝ) (y : Fin n → ℝ) :
   rw [planePoint_eq]; exact (planeProj g).hasFDerivAt.add_const _
 
 theorem integrableOn_cubeT (s : Finset (Fin n)) (α : Fin n →₀ ℕ) {f : (Fin n → ℝ) → ℝ}
-    (hf : ContinuousOn f (unitCube n)) :
+    (hf : ContinuousOn f (closedCube n)) :
     MeasureTheory.IntegrableOn (fun y => f (planePoint (dofFace (fun _ => none) s α) y) *
-      eval y (monomial (dofTest s α) 1)) (unitCube n) :=
+      eval y (monomial (dofTest s α) 1)) (closedCube n) :=
   ((hf.comp (continuous_planePoint _).continuousOn fun _ hy =>
-      planePoint_mem_unitCube (dofFace_mem_Icc s α) hy).mul
+      planePoint_mem_closedCube (dofFace_mem_Icc s α) hy).mul
     (MvPolynomial.continuous_eval _).continuousOn).integrableOn_compact
     (isCompact_univ_pi fun _ => isCompact_Icc)
-
-theorem continuousOn_partialDeriv {f : (Fin n → ℝ) → ℝ} {U : Set (Fin n → ℝ)} (hU : IsOpen U)
-    (hf : ContDiffOn ℝ 1 f U) (j : Fin n) : ContinuousOn (partialDeriv j f) U := by
-  have := (ContinuousLinearMap.apply ℝ ℝ (Pi.single j (1 : ℝ))).continuous.comp_continuousOn
-    (hf.continuousOn_fderiv_of_isOpen hU le_rfl)
-  exact this
 
 /-- **One-dimensional integration by parts in the moments**:
 `T_{s,α}(∂ⱼ f) = T_{s∖j,α[j↦1]}(f) - 0^{α_j} T_{s∖j,α[j↦0]}(f) - α_j T_{s∖j,α[j↦α_j+1]}(f)`
 for `j ∈ s` and `f` of class `C¹` near `[0, 1]ⁿ`. -/
 theorem cubeT_partialDeriv {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin n} (hj : j ∈ s)
-    {f : (Fin n → ℝ) → ℝ} {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : unitCube n ⊆ U)
+    {f : (Fin n → ℝ) → ℝ} {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedCube n ⊆ U)
     (hf : ContDiffOn ℝ 1 f U) :
     cubeT s α (partialDeriv j f) = cubeT (s.erase j) (α.update j 1) f -
       0 ^ α j * cubeT (s.erase j) (α.update j 0) f -
@@ -797,8 +792,8 @@ theorem cubeT_partialDeriv {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin
   set μ : (Fin n → ℝ) → ℝ := fun y => eval y (monomial β 1)
   have hgj : g j = none := by simp [g, dofFace, hj]
   have hβj : β j = α j := by simp [β, dofTest, hj]
-  have hPc : ∀ y ∈ unitCube n, P y ∈ unitCube n := fun y hy =>
-    planePoint_mem_unitCube (dofFace_mem_Icc s α) hy
+  have hPc : ∀ y ∈ closedCube n, P y ∈ closedCube n := fun y hy =>
+    planePoint_mem_closedCube (dofFace_mem_Icc s α) hy
   -- the faces and the test monomials of the three moments of `s ∖ j`
   have hface1 : dofFace (fun _ => none) (s.erase j) (α.update j 1) =
       Function.update g j (some 1) := funext fun i => by
@@ -829,7 +824,8 @@ theorem cubeT_partialDeriv {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin
   have htest : ∀ c : ℕ, ∀ i ≠ j, dofTest (s.erase j) (α.update j c) i = β i := fun c i hi => by
     simp [β, dofTest, hi, Finsupp.update_apply]
   have hμc : ∀ (c : ℝ) (e : ℕ), dofTest (s.erase j) (α.update j e) j = 0 → ∀ y,
-      μ (Function.update y j c) = c ^ α j * eval y (monomial (dofTest (s.erase j) (α.update j e)) 1) :=
+      μ (Function.update y j c) =
+        c ^ α j * eval y (monomial (dofTest (s.erase j) (α.update j e)) 1) :=
     fun c e he y => by
       simp only [μ, eval_monomial, one_mul, Finsupp.prod_fintype _ _ (fun _ => pow_zero _)]
       rw [Fintype.prod_eq_mul_prod_compl j, Fintype.prod_eq_mul_prod_compl j, he, pow_zero, one_mul,
@@ -853,7 +849,7 @@ theorem cubeT_partialDeriv {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by have := j.pos; omega⟩
   set V := P ⁻¹' U
   have hV : IsOpen V := hU.preimage (continuous_planePoint g)
-  have hKV : unitCube (m + 1) ⊆ V := fun y hy => hKU (hPc y hy)
+  have hKV : closedCube (m + 1) ⊆ V := fun y hy => hKU (hPc y hy)
   have hfP : ContDiffOn ℝ 1 (fun y => f (P y)) V :=
     hf.comp (contDiff_planePoint g).contDiffOn fun y hy => hy
   have hμd : ContDiff ℝ 1 μ := contDiff_eval _
@@ -877,9 +873,9 @@ theorem cubeT_partialDeriv {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin
     · simp only [planeProj, ContinuousLinearMap.pi_apply]
       split_ifs <;> simp [hi]
   -- continuity of the integrands
-  have hcpt : IsCompact (unitCube (m + 1)) := isCompact_univ_pi fun _ => isCompact_Icc
-  have hfc : ContinuousOn (fun y => f (P y)) (unitCube (m + 1)) := hfP.continuousOn.mono hKV
-  have hdfc : ContinuousOn (fun y => partialDeriv j f (P y)) (unitCube (m + 1)) :=
+  have hcpt : IsCompact (closedCube (m + 1)) := isCompact_univ_pi fun _ => isCompact_Icc
+  have hfc : ContinuousOn (fun y => f (P y)) (closedCube (m + 1)) := hfP.continuousOn.mono hKV
+  have hdfc : ContinuousOn (fun y => partialDeriv j f (P y)) (closedCube (m + 1)) :=
     (continuousOn_partialDeriv hU hf j).comp (continuous_planePoint g).continuousOn
       fun y hy => hKV hy
   have hμc : Continuous μ := hμd.continuous
@@ -887,30 +883,26 @@ theorem cubeT_partialDeriv {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin
     have : partialDeriv j μ = fun y : Fin (m + 1) → ℝ =>
         (α j : ℝ) * eval y (monomial (dofTest (s.erase j) (α.update j (α j + 1))) 1) := funext hdμ
     rw [this]; exact continuous_const.mul (MvPolynomial.continuous_eval _)
-  have hint1 : MeasureTheory.IntegrableOn (fun y => partialDeriv j Φ y) (unitCube (m + 1)) :=
+  have hint1 : MeasureTheory.IntegrableOn (fun y => partialDeriv j Φ y) (closedCube (m + 1)) :=
     ((hdfc.mul hμc.continuousOn).add (hfc.mul hdμc.continuousOn)).integrableOn_compact hcpt
       |>.congr_fun (fun y hy => (hdΦ y (hKV hy)).symm) (MeasurableSet.univ_pi fun _ =>
         measurableSet_Icc)
   have hint2 : MeasureTheory.IntegrableOn (fun y => f (P y) * partialDeriv j μ y)
-      (unitCube (m + 1)) := (hfc.mul hdμc.continuousOn).integrableOn_compact hcpt
-  have hupdm : ∀ c ∈ Set.Icc (0 : ℝ) 1, ∀ y ∈ unitCube (m + 1),
-      Function.update y j c ∈ unitCube (m + 1) := fun c hc y hy i _ => by
-    by_cases hi : i = j
-    · subst hi; simpa using hc
-    · rw [Function.update_of_ne hi]; exact hy i (Set.mem_univ i)
+      (closedCube (m + 1)) := (hfc.mul hdμc.continuousOn).integrableOn_compact hcpt
   have hintu : ∀ c ∈ Set.Icc (0 : ℝ) 1,
-      MeasureTheory.IntegrableOn (fun y => Φ (Function.update y j c)) (unitCube (m + 1)) :=
+      MeasureTheory.IntegrableOn (fun y => Φ (Function.update y j c)) (closedCube (m + 1)) :=
     fun c hc => (hΦ.continuousOn.comp (continuous_id.update j continuous_const).continuousOn
-      fun y hy => hKV (hupdm c hc y hy)).integrableOn_compact hcpt
-  have hmeas : MeasurableSet (unitCube (m + 1)) := MeasurableSet.univ_pi fun _ => measurableSet_Icc
+      fun y hy => hKV (update_mem_closedCube hy j hc)).integrableOn_compact hcpt
+  have hmeas : MeasurableSet (closedCube (m + 1)) :=
+    MeasurableSet.univ_pi fun _ => measurableSet_Icc
   calc cubeT s α (partialDeriv j f)
-      = ∫ y in unitCube (m + 1), (partialDeriv j Φ y - f (P y) * partialDeriv j μ y) :=
+      = ∫ y in closedCube (m + 1), (partialDeriv j Φ y - f (P y) * partialDeriv j μ y) :=
         MeasureTheory.setIntegral_congr_fun hmeas fun y hy => by
           rw [hdΦ y (hKV hy)]; ring
-    _ = (∫ y in unitCube (m + 1), Φ (Function.update y j 1)) -
-          (∫ y in unitCube (m + 1), Φ (Function.update y j 0)) -
-          ∫ y in unitCube (m + 1), f (P y) * partialDeriv j μ y := by
-        rw [MeasureTheory.integral_sub hint1 hint2, setIntegral_unitCube_partialDeriv j hV hKV hΦ,
+    _ = (∫ y in closedCube (m + 1), Φ (Function.update y j 1)) -
+          (∫ y in closedCube (m + 1), Φ (Function.update y j 0)) -
+          ∫ y in closedCube (m + 1), f (P y) * partialDeriv j μ y := by
+        rw [MeasureTheory.integral_sub hint1 hint2, setIntegral_closedCube_partialDeriv j hV hKV hΦ,
           MeasureTheory.integral_sub (hintu 1 ⟨zero_le_one, le_rfl⟩)
             (hintu 0 ⟨le_rfl, zero_le_one⟩)]
     _ = _ := by
@@ -934,9 +926,9 @@ theorem cubeT_eq_fieldDofAt (s : Finset (Fin n)) (α : Fin n →₀ ℕ) (w : Fo
   rw [fieldDofAt_apply, ← mul_assoc, shuffleSgn_mul_self, one_mul]
 
 /-- **The moments of `d w`**: `ℓ_{s,α}(d w) = ± Σ_{j ∈ s} ε(j, s) T_{s,α}(∂ⱼ w_{s∖j})`, each
-term integrated by parts in the direction `j` (`Feec.FiniteElement.cubeT_partialDeriv`). -/
+term integrated by parts in the direction `j` (`Feec.FiniteElement.Cube.cubeT_partialDeriv`). -/
 theorem fieldDofAt_extDeriv (s : Finset (Fin n)) (α : Fin n →₀ ℕ) {w : FormField n}
-    {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : unitCube n ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
+    {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedCube n ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
     fieldDofAt s α (extDeriv w) = shuffleSgn s (freeSet (dofFace (fun _ => none) s α) \ s) *
       ∑ j ∈ s, sgn j s * (cubeT (s.erase j) (α.update j 1) (fun z => w z (s.erase j)) -
         0 ^ α j * cubeT (s.erase j) (α.update j 0) (fun z => w z (s.erase j)) -
@@ -971,9 +963,9 @@ theorem cubeT_cubeFieldInterp (hb : ∀ j, 1 ≤ b j) {t : Finset (Fin n)} {β :
   exact congrArg _ (fieldDof_cubeFieldInterp hb ⟨⟨t, ht⟩, ⟨β, hβ⟩⟩ w)
 
 /-- **The canonical interpolant commutes with `d`** on fields of class `C¹` near `[0, 1]ⁿ`:
-`Π(d w) = d(Π w)` ([ArnoldBoffiBonizzoni2015], §3; [ArnoldLogg2014]). -/
+`Π(d w) = d(Π w)` ([ArnoldBoffiBonizzoni2015], §3). -/
 theorem cubeFieldInterp_extDeriv (hb : ∀ j, 1 ≤ b j) {w : FormField n} {U : Set (Fin n → ℝ)}
-    (hU : IsOpen U) (hKU : unitCube n ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
+    (hU : IsOpen U) (hKU : closedCube n ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
     cubeFieldInterp (k + 1) hb (extDeriv w) = extDeriv (cubeFieldInterp k hb w) := by
   have hω := ((isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv.symm fun i => fieldDof i w).2
   have hdI : extDeriv (cubeFieldInterp k hb w) =
@@ -983,11 +975,7 @@ theorem cubeFieldInterp_extDeriv (hb : ∀ j, 1 ≤ b j) {w : FormField n} {U : 
   rw [hdI]
   refine cubeFieldInterp_congr hb fun ⟨⟨s, hs⟩, ⟨α, hα⟩⟩ => ?_
   have hmem : ∀ j ∈ s, ∀ v ≤ α j + 1, α.update j v ∈ cubeSupport b (s.erase j) :=
-    fun j hj v hv l => by
-      have := hα l
-      by_cases hl : l = j
-      · subst hl; simp only [hj, ↓reduceIte] at this; simp [Finsupp.update_apply]; omega
-      · simpa [Finsupp.update_apply, hl] using this
+    fun _ hj _ hv => update_mem_cubeSupport_erase hα hj hv
   have hcard : ∀ j ∈ s, #(s.erase j) = k := fun j hj => by rw [card_erase_of_mem hj, hs]; rfl
   have hcd : ContDiffOn ℝ 1 (cubeFieldInterp k hb w) Set.univ :=
     (contDiff_evalForm _).contDiffOn
@@ -1002,4 +990,4 @@ theorem cubeFieldInterp_extDeriv (hb : ∀ j, 1 ≤ b j) {w : FormField n} {U : 
 
 end Commuting
 
-end Feec.FiniteElement
+end Feec.FiniteElement.Cube

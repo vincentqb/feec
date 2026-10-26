@@ -132,6 +132,7 @@ public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
 public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.Convergence
+public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
 public import Feec.HilbertComplex.Approximation.DissipFEEC
 public import Feec.HilbertComplex.Approximation.DissipGalerkin

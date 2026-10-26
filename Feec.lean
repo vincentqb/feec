@@ -330,6 +330,7 @@ public import Feec.Physics.Maxwell.Media
 public import Feec.Physics.Maxwell.Ohmic
 public import Feec.Semigroup.Basic
 public import Feec.Semigroup.DissipativeInvariance
+public import Feec.Semigroup.DissipativePerturbation
 public import Feec.Semigroup.DomainSq
 public import Feec.Semigroup.Impedance
 public import Feec.Semigroup.Invariance

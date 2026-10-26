@@ -418,12 +418,12 @@ theorem polySpace_le_polyMinusSpace (r k : ℕ) :
     polySpace n (r - 1) k ≤ polyMinusSpace n r k :=
   Submodule.map_mono (Koszul.polyForm_le_polyFormMinus r k)
 
-/-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions. -/
+/-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions. [AFW2006], §3 -/
 theorem polyMinusSpace_zero {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r 0 = polySpace n r 0 := by
   rw [polyMinusSpace, polySpace, Koszul.polyFormMinus_zero hr]
 
 /-- **`P_r⁻Λⁿ = P_{r-1}Λⁿ`** (`r ≥ 1`): in the top degree the trimmed space is the full space of
-one degree less (for `r = 1`, the constants: piecewise constants are `P₁⁻Λⁿ`). -/
+one degree less (for `r = 1`, the constants: piecewise constants are `P₁⁻Λⁿ`). [AFW2006], §3 -/
 theorem polyMinusSpace_top {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r n = polySpace n (r - 1) n := by
   have h := Koszul.polyFormMinus_top (K := ℝ) (d := Fin n) hr
   rw [Fintype.card_fin] at h

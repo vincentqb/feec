@@ -58,7 +58,7 @@ def domainS (i j : ι) : D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace j where
     D.H.domainIncl j (D.domainS i j v) = D.S i j (D.Ht.domainIncl i v) := rfl
 
 /-- **Analytic BGG data restricted to the domains** is algebraic BGG data on the domain
-spaces, with the bounded differentials. -/
+spaces, with the bounded differentials. [ArnoldHu2021], §3 -/
 def domainData : Data 𝕜 c D.H.domainSpace D.Ht.domainSpace where
   d i j := D.H.domainD i j
   dt i j := D.Ht.domainD i j
@@ -87,7 +87,8 @@ def domainBggHomologyIso {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i
     (D.domainData.bgg J).homology i ≅ D.domainData.twistComplex.homology i :=
   Data.bggHomologyIso h i
 
-/-- **The BGG complex of the domain complexes is exact when both domain complexes are.** -/
+/-- **The BGG complex of the domain complexes is exact when both domain complexes are.**
+[ArnoldHu2021], §5.2 -/
 theorem domainBgg_acyclic {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     [∀ i, NormedAddCommGroup (Wt i)] [∀ i, InnerProductSpace 𝕜 (Wt i)]

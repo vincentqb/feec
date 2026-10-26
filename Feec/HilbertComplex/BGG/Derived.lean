@@ -33,8 +33,8 @@ is the BGG complex of Arnold and Hu ([ArnoldHu2021], (24)–(26)):
 with differentials `d` (modulo `R(S)`), `σ ↦ d̃ (Sᴶ)⁻¹ dσ` at `J`, and `d̃`. The hypothesis
 `Data.InjSurj J` (`Sⁱ` injective for `i < J`, surjective for `i ≥ J`) is weaker than the
 `J`-injectivity/surjectivity condition [ArnoldHu2021], (23), which also asks `Sᴶ` injective;
-with it, `Υᴶ ≅ Vᴶ / R(Sᴶ⁻¹)` and the theorem is [ArnoldHu2021], §5.2 (the cohomology of the output complex is
-that of the twisted complex). The complex with weak symmetries (5.1) of
+with it, `Υᴶ ≅ Vᴶ / R(Sᴶ⁻¹)` and the theorem is [ArnoldHu2021], §5.2 (the cohomology of the
+output complex is that of the twisted complex). The complex with weak symmetries (5.1) of
 [QuennevilleBelair2015], §5.1 is the elimination of the one top space `V¹`: `Γ (· = j)` at the
 index before `j` is `Feec.BGG.Segment.Γ` (`Data.Γ_eq_segment_Γ`), and the regularity hypothesis
 of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) = V¹`
@@ -156,7 +156,7 @@ theorem twistShortComplex_shortExact : D.twistShortComplex.ShortExact :=
       epi_g := (ModuleCat.epi_iff_surjective _).2 fun (φ : Vt i) =>
         ⟨((0 : V i), φ), rfl⟩ }
 
-/-- **The twisted complex is exact when both rows are.** -/
+/-- **The twisted complex is exact when both rows are.** [ArnoldHu2021], §5.1 -/
 theorem twistComplex_acyclic (hV : D.rowTop.Acyclic) (hVt : D.rowBot.Acyclic) :
     D.twistComplex.Acyclic :=
   D.twistShortComplex_shortExact.acyclic_X₂ hV hVt
@@ -280,7 +280,7 @@ def Γι : D.ΓComplex E ⟶ D.twistComplex := HomologicalComplex.subι _ _ _
 variable {D E F}
 
 /-- **The elimination of the top spaces is a quasi-isomorphism**: `T / Γ E` is exact when
-`R(d) + R(S)` is everything at the eliminated top spaces. -/
+`R(d) + R(S)` is everything at the eliminated top spaces. [ArnoldHu2021], §5.2 -/
 theorem quasiIso_Γ (h : ∀ j, E j →
     LinearMap.range (D.d (c.prev j) j) ⊔ LinearMap.range (D.S (c.prev j) j) = ⊤) :
     QuasiIso (D.Γι E) := by
@@ -304,7 +304,7 @@ theorem quasiIso_Γ (h : ∀ j, E j →
     exact ⟨fun h' => absurd h' hE, hx1⟩
 
 /-- **The elimination of the bottom spaces is a quasi-isomorphism**: `Δ F` is exact when
-`N(d̃) ∩ N(S) = 0` at the eliminated bottom spaces. -/
+`N(d̃) ∩ N(S) = 0` at the eliminated bottom spaces. [ArnoldHu2021], §5.2 -/
 theorem quasiIso_derived (h : D.Eliminates E F) : QuasiIso (D.derivedπ E F) := by
   refine HomologicalComplex.quasiIso_quoπ _ _ _ (HomologicalComplex.sub_acyclic _ _ _ ?_)
   intro i (x : D.Γ E i) hx hdx
@@ -343,7 +343,7 @@ def derivedHomologyIso (h : D.Eliminates E F) (i : ι) :
   have := quasiIso_Γ (D := D) h.top
   (isoOfQuasiIsoAt (D.derivedπ E F) i).symm ≪≫ isoOfQuasiIsoAt (D.Γι E) i
 
-/-- **The derived complex is exact when both rows are.** -/
+/-- **The derived complex is exact when both rows are.** [ArnoldHu2021], §5.2 -/
 theorem derived_acyclic (h : D.Eliminates E F) (hV : D.rowTop.Acyclic) (hVt : D.rowBot.Acyclic) :
     (D.derived E F).Acyclic := fun i => by
   rw [HomologicalComplex.exactAt_iff_isZero_homology]
@@ -445,7 +445,7 @@ def bggHomologyIso {J : ℤ} (h : D.InjSurj J) (i : ℤ) :
     (D.bgg J).homology i ≅ D.twistComplex.homology i :=
   derivedHomologyIso h.eliminates i
 
-/-- **The BGG complex is exact when both rows are.** -/
+/-- **The BGG complex is exact when both rows are.** [ArnoldHu2021], §5.2 -/
 theorem bgg_acyclic {J : ℤ} (h : D.InjSurj J) (hV : D.rowTop.Acyclic) (hVt : D.rowBot.Acyclic) :
     (D.bgg J).Acyclic :=
   derived_acyclic h.eliminates hV hVt

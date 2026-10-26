@@ -60,13 +60,15 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (assembly, dimension counts, Thms 4.9, 4.13)
+  §3 (the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and their dimensions), §4 (degrees of freedom), §5 (assembly,
+  dimension counts, Thms 4.9, 4.13)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.2
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, Table 5.1; §6.3, Table 6.1
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV, §27 (Whitney forms)
 * [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 * [J.-C. Nédélec, *Mixed finite elements in ℝ³*][Nedelec1980] (`P_r⁻Λ¹`, `P_r⁻Λ²` in `ℝ³`)
 * [J.-C. Nédélec, *A new family of mixed finite elements in ℝ³*][Nedelec1986] (`P_rΛ¹`, `P_rΛ²`
@@ -130,7 +132,7 @@ theorem ofKinds_deg (k : ℕ) :
     (ofKinds n κ s).deg k = s + 1 + #{j ∈ Finset.Ioo k n | κ j = .full} := rfl
 
 /-- **The admissible sequence `ofKinds n κ s` ends in `P_sΛⁿ`** (as `P_{s+1}⁻Λⁿ`,
-`polyMinusSpace_top`). -/
+`polyMinusSpace_top`). [ArnoldLogg2014] -/
 theorem ofKinds_space_top : (ofKinds n κ s).space n n = polySpace n s n := by
   change (if n < n then κ n else .trimmed).space n (s + 1 + #{j ∈ Finset.Ioo n n | κ j = .full})
     n = _
@@ -169,7 +171,8 @@ theorem full_deg {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k < n) : (full n r hr)
   rw [full, ofKinds_deg, Finset.filter_true_of_mem fun _ _ => rfl, Nat.card_Ioo]
   omega
 
-/-- **The spaces of the full sequence**: `P_{r-k}Λᵏ` in every degree `k ≤ n`. -/
+/-- **The spaces of the full sequence**: `P_{r-k}Λᵏ` in every degree `k ≤ n`. [AFW2006], §3;
+[ArnoldLogg2014] -/
 theorem full_space {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k ≤ n) :
     (full n r hr).space n k = polySpace n (r - k) k := by
   rcases hk.lt_or_eq with hk | rfl
@@ -259,7 +262,7 @@ private theorem six_mul_choose_three (m : ℕ) :
   have h2 := two_mul_choose_two m
   nlinarith
 
-/-- **Lagrange `P_r` on tetrahedra**: `dim P_rΛ⁰(ℝ³) = (r+1)(r+2)(r+3)/6`. -/
+/-- **Lagrange `P_r` on tetrahedra**: `dim P_rΛ⁰(ℝ³) = (r+1)(r+2)(r+3)/6`. [AFW2006], §3 -/
 theorem finrank_polySpace_three_zero (r : ℕ) :
     6 * Module.finrank ℝ (polySpace 3 r 0) = (r + 1) * (r + 2) * (r + 3) := by
   rw [finrank_polySpace, add_zero, Nat.choose_zero_right, mul_one,
@@ -283,7 +286,7 @@ theorem finrank_polySpace_three_two (r : ℕ) :
     Nat.choose_one_right, mul_left_comm, two_mul_choose_two r]
   ring
 
-/-- **Discontinuous `P_r` on tetrahedra**: `dim P_rΛ³(ℝ³) = (r+1)(r+2)(r+3)/6`. -/
+/-- **Discontinuous `P_r` on tetrahedra**: `dim P_rΛ³(ℝ³) = (r+1)(r+2)(r+3)/6`. [AFW2006], §3 -/
 theorem finrank_polySpace_three_three (r : ℕ) :
     6 * Module.finrank ℝ (polySpace 3 r 3) = (r + 1) * (r + 2) * (r + 3) := by
   rw [finrank_polySpace, Nat.choose_self, one_mul, six_mul_choose_three]
@@ -308,7 +311,7 @@ theorem finrank_polyMinusSpace_three_two {r : ℕ} (hr : 1 ≤ r) :
     two_mul_choose_two t]
   ring
 
-/-- **Lagrange `P_r` on triangles**: `dim P_rΛ⁰(ℝ²) = (r+1)(r+2)/2`. -/
+/-- **Lagrange `P_r` on triangles**: `dim P_rΛ⁰(ℝ²) = (r+1)(r+2)/2`. [AFW2006], §3 -/
 theorem finrank_polySpace_two_zero (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 2 r 0) = (r + 1) * (r + 2) := by
   rw [finrank_polySpace, add_zero, Nat.choose_zero_right, mul_one,
@@ -323,7 +326,7 @@ theorem finrank_polySpace_two_one (r : ℕ) :
     Nat.choose_one_right, Nat.choose_one_right]
   ring
 
-/-- **Discontinuous `P_r` on triangles**: `dim P_rΛ²(ℝ²) = (r+1)(r+2)/2`. -/
+/-- **Discontinuous `P_r` on triangles**: `dim P_rΛ²(ℝ²) = (r+1)(r+2)/2`. [AFW2006], §3 -/
 theorem finrank_polySpace_two_two (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 2 r 2) = (r + 1) * (r + 2) := by
   rw [finrank_polySpace, Nat.choose_self, one_mul, two_mul_choose_two]
@@ -401,7 +404,8 @@ theorem degMoment_eq_smul_whitneyFaceDof {g : Finset (Fin n → ℝ)} {k m : ℕ
   rw [degMoment_eq_mul_simplexIntegral _ hη, LinearMap.smul_apply, whitneyFaceDof_apply, hεeq,
     smul_eq_mul, mul_assoc]
 
-/-- **The degrees of freedom of `P₁⁻Λᵏ` are the face integrals**, up to nonzero factors. -/
+/-- **The degrees of freedom of `P₁⁻Λᵏ` are the face integrals**, up to nonzero factors.
+[AFW2006], §4 -/
 theorem trimmed_one_dof_eq {g : Finset (Fin n → ℝ)} {k : ℕ}
     (i : (trimmed 1 le_rfl).DofIdx g k) :
     ∃ c : ℝ, c ≠ 0 ∧ (trimmed 1 le_rfl).dof g k i = c • whitneyFaceDof g k := by
@@ -413,7 +417,8 @@ end PolySeq
 
 /-- **The Whitney element is the trimmed element `P₁⁻Λ` of degree one**: the same local spaces
 (`whitneySpace_eq_p1MinusForms`, `polyMinusSpace_one_eq_p1MinusForms`) and, on every face, the
-face integral and the moment degrees of freedom are nonzero multiples of each other. -/
+face integral and the moment degrees of freedom are nonzero multiples of each other.
+[Whitney1957], Ch. IV, §27; [AFW2006], §3–4 -/
 theorem whitneyElement_equivalent_trimmed :
     (whitneyElement n).Equivalent (polyElement n (PolySeq.trimmed 1 le_rfl)) where
   space_eq T k :=
@@ -597,7 +602,7 @@ def freudenthalSubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < 
 end PolySeq
 
 /-- **The Whitney complex is the trimmed complex of degree one**, `P₁⁻Λ⁰ → ⋯ → P₁⁻Λⁿ`, on every
-conforming mesh: `whitneySubcomplex = (PolySeq.trimmed 1).subcomplex`. -/
+conforming mesh: `whitneySubcomplex = (PolySeq.trimmed 1).subcomplex`. [AFW2006], §3–4 -/
 theorem whitneySubcomplex_eq_trimmed [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) :
     whitneySubcomplex M hΩ = (PolySeq.trimmed 1 le_rfl).subcomplex M hΩ :=
   whitneyElement_equivalent_trimmed.subcomplex_eq M hΩ

@@ -168,9 +168,8 @@ theorem eq_const_of_mem_p1MinusForms_self {k : ℕ} {w : FormField k}
 
 /-- **The Whitney forms of a nondegenerate simplex are the trimmed linear forms**:
 `P₁⁻Λᵏ(T) = P₀Λᵏ + κ H₀Λ^{k+1}`, independently of `T`. Stated for vertex families `p` with
-invertible edge matrix; for an `Affine.Simplex` this is
-`Feec.FiniteElement.whitneySpace_eq_p1MinusForms` of `Feec.FiniteElement.WhitneyInterpolation`,
-which this module does not import (it would pull in the interpolation-error theory). -/
+invertible edge matrix; for an `Affine.Simplex` see
+`Feec.FiniteElement.whitneySpace_eq_p1MinusForms`. -/
 theorem whitneySpace_eq_p1MinusForms_of_isUnit {p : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (k : ℕ) : whitneySpace p k = p1MinusForms n k := by
   have hle := whitneySpace_le_p1MinusForms p k

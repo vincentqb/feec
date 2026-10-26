@@ -136,9 +136,9 @@ theorem norm_π_le (h : κ) (i : ι) (x : W i) : ‖(F.π h).π i x‖ ≤ F.pro
 /-- **A Jackson estimate** for a conforming family `F` (cf. [AFW2010], §3.4; [Arnold2018], Ch. 7): a
 mesh size `hₕ → 0` and, for every regularity index `s : ρ`, a class `Reg s` of forms with a bound
 `L` (`Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L`) approximated in `Vₕⁱ` in the graph
-norm at the order `hₕ^{ord s}`: `‖x - v‖, ‖d (x - v)‖ ≤ B_{s,i} L hₕ^{ord s}`. It is data over
-`F`, not a strengthening of it: one family carries Jackson estimates for several classes (`C²`
-forms at order `1`, `C^{s+2}` forms at order `s + 1`, …). -/
+norm at the real order `hₕ^{ord s}`: `‖x - v‖, ‖d (x - v)‖ ≤ B_{s,i} L hₕ^{ord s}`. It is data
+over `F`, not a strengthening of it: one family carries Jackson estimates for several classes
+(`C²` forms at order `1`, `C^{s+2}` forms at order `s + 1`, `Hˢ` forms at order `s`, …). -/
 structure Jackson (ρ : Type*) where
   /-- the mesh size -/
   meshSize : κ → ℝ
@@ -146,8 +146,8 @@ structure Jackson (ρ : Type*) where
   tendsto_meshSize : Tendsto meshSize F.l (𝓝 0)
   /-- `Reg s i L x`: the form `x ∈ Wⁱ` is `s`-regular with bound `L` -/
   Reg : ρ → ∀ i, ℝ → W i → Prop
-  /-- the order of approximation of the class `s` -/
-  ord : ρ → ℕ
+  /-- the order of approximation of the class `s` (real, for the Sobolev classes) -/
+  ord : ρ → ℝ
   /-- the constants of the Jackson estimate -/
   B : ρ → ι → ℝ
   B_nonneg : ∀ s i, 0 ≤ B s i

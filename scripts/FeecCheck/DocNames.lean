@@ -121,7 +121,10 @@ def historicalNames : List String :=
     -- deleted by the minimality pass of 2026-10-22 (empty modules, superseded results)
     "ForMathlib.LinearPMap.CompPartial", "Models.BoundedDomain.DeRham", "deRham3",
     "planeWave_unique", "mirror_waveFEM_rate",
-    "Feec.Models.BoundedDomain.bggComplex_isStrongSolution_of_weakEqs"]
+    "Feec.Models.BoundedDomain.bggComplex_isStrongSolution_of_weakEqs",
+    -- deleted by the static model migration (crown WP6): the rates are those of the static FEEC
+    -- theorem for the conforming families of the models
+    "Feec.Models.Cube.DeRhamIdentRate"]
 
 /-- File extensions: a dotted span ending in one is a file name, not a Lean name. -/
 def fileExts : List String :=

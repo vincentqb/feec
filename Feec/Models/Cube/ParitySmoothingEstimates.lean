@@ -1163,13 +1163,6 @@ theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n 
   have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
   rwa [e] at h
 
-/-- **Uniform graph-norm bound**: `π_N` is bounded by `2 C` in the graph norm of every `d_J`. -/
-theorem isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) := by
-  have h := (paritySmoothed n S N J (ρ N)).isGraphBounded_toCochainProjection_of_norm_le
-    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) (hE.bound N j)
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
-  rwa [e] at h
-
 /-- **Uniform discrete Poincaré inequality** on `V_{h,Γ_J}`: `‖x‖ ≤ 2 C (2π)⁻¹ ‖d_J x‖` for
 `x ∈ V_{h,Γ_J}ⁱ ⊥ 𝔷ₕⁱ` ([AFW2010], Thm 3.6, with the Poincaré inequality of `HΛ_J(Q)`). -/
 theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
@@ -1189,7 +1182,8 @@ theorem exists_uniform_cochainProjection_part (S : PolySeq) (J : Finset (Fin n))
     ∃ C : ℝ, ∀ N, ∃ π : (polyPartial n S N J).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
   obtain ⟨ρ, C, hE⟩ := paritySmoothing_exists J S
-  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, hE.isGraphBounded_proj N⟩⟩
+  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, fun i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)⟩⟩
 
 /-! ### The homogeneous classes `J = ∅` and `J = univ` -/
 

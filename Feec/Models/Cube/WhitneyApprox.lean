@@ -20,10 +20,9 @@ the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)`
   `w` vanishing outside `Q` the interpolant has vanishing boundary DOFs
   (`exists_mem_whitneyMin_le`). In the graph norm of `HΛᵏ(Q)`:
   `dist(σ, Vₕᵏ) ≤ (A_k L + A_{k+1} L') h_N` for `σ` a `C²` `k`-form
-  (`infDist_domainSub_whitney_le`), the hypotheses `hσ`, `hu`, `hB` of
-  `FEM.SmoothingEstimates.norm_sub_le_meshSize` for smooth solutions. The packaged rates (all
-  four hypotheses of `norm_sub_le_meshSize`, and `happ` of `norm_sub_le_meshSize_window`, for `C²`
-  solutions) are in `Feec.Models.Cube.WhitneyRate`.
+  (`infDist_domainSub_whitney_le`). The packaged estimates (the Jackson estimate of the Whitney
+  forms for `C²` forms, and `happ` of `norm_sub_le_meshSize_window`, for `C²` solutions) are in
+  `Feec.Models.Cube.WhitneyRate` and `Feec.Models.Cube.FiniteElementConvergence`.
 * **Smooth forms are dense in the graph norms** of `HΛ(Q)` and `H̊Λ(Q)` (`exists_smooth_near`,
   `exists_smooth_near_min`): the smoothed forms `Feec.FiniteElement.smoothForm` of [AFW2010],
   §5.5, with dilation factor `c → 1` and bump radius `→ 0`, are the field smoothers
@@ -40,9 +39,9 @@ abstract `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt` of
 window and `D(L)` data ([QuennevilleBelair2015], Thm 4.14;
 `exists_tendstoUniformlyOn_window_whitney`), in particular for Maxwell's equations
 (`maxwell_exists_tendstoUniformlyOn_whitney`); the harmonic forms are approximated
-(`tendsto_infDist_whitney`, `tendsto_infDist_whitneyMin`), so under the smoothing estimates the
-harmonic gap tends to zero (`SmoothingEstimates.tendsto_harmonicGap_whitney`,
-`SmoothingEstimatesMin.tendsto_harmonicGap_whitney`).
+(`tendsto_infDist_whitney`, `tendsto_infDist_whitneyMin`): the approximation property of the
+conforming families of the Whitney forms (`SmoothingEstimates.family`), whose harmonic gap
+therefore tends to zero (`Feec.HilbertComplex.ConformingFamily.tendsto_harmonicGap`).
 
 The subcomplexes `FEM.whitney N` are transported from the mesh domain to `Q` along
 `FEM.mesh_domain`; statements about them are proved on the mesh domain and transported by
@@ -526,8 +525,7 @@ theorem formL2_mem_domain (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
 /-- **`O(h)` approximation of smooth forms in the graph norm** ([Arnold2018], Ch. 7): if the
 point `σ` of the domain space `HΛᵏ(Q)` is a `C²` `k`-form `w` with `‖Dw‖ ≤ L` and `‖D dw‖ ≤ L'`
 on `cl Q`, then its graph-norm distance to the Whitney space is
-`≤ (A_k L + A_{k+1} L') h_N`: the hypotheses `hσ`, `hu`, `hB` of
-`SmoothingEstimates.norm_sub_le_meshSize` for smooth `σ`, `u`, `P_𝔅 u`. -/
+`≤ (A_k L + A_{k+1} L') h_N`. -/
 theorem infDist_domainSub_whitney_le (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2 w)
     (hdeg : ∀ x, IsDeg k (w x)) {L L' : ℝ} (hL0 : 0 ≤ L) (hL'0 : 0 ≤ L')
     (hL : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L)
@@ -549,21 +547,12 @@ theorem infDist_domainSub_whitney_le (N k : ℕ) {w : FormField n} (hw : ContDif
     _ = _ := by ring
 
 /-- **The harmonic forms are approximated by the Whitney spaces**: `dist(q, Vₕʲ) → 0` for every
-`q ∈ L²(Q; Λʲ)`, the hypothesis of `SmoothingEstimates.tendsto_harmonicGap`. -/
+`q ∈ L²(Q; Λʲ)`: the approximation property of the Whitney forms. -/
 theorem tendsto_infDist_whitney (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((whitney n N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
   tendsto_infDist_of_lt (S := fun N => whitney n N) q fun _ ha =>
     eventually_exists_whitney_lt j q ha
-
-/-- **The harmonic gap of the smoothed projections tends to zero**, under the smoothing estimates
-alone: the approximation hypothesis of `SmoothingEstimates.tendsto_harmonicGap` holds
-(`tendsto_infDist_whitney`). -/
-theorem SmoothingEstimates.tendsto_harmonicGap_whitney {p : ℕ → SmoothingParam (Fin n → ℝ)}
-    {C : ℝ} (hE : SmoothingEstimates n p C) {j : ℤ}
-    [FiniteDimensional ℝ ((complex n).harmonic j)] :
-    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
-  hE.tendsto_harmonicGap fun q _ => tendsto_infDist_whitney j q
 
 /-- **The Whitney windows approximate every point of the graph space** of the total
 differential of the window `HΛᵃ(Q) → ⋯ → HΛ^{a+m-1}(Q)`: the density hypothesis of
@@ -725,20 +714,13 @@ theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ (cubeDomain n) 
   eventually_exists_near_of_graph
     (fun k x hx _ hε => eventually_exists_whitneyMin_graph k x hx hε) i x hε
 
-/-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)`, the hypothesis of
-`SmoothingEstimatesMin.tendsto_harmonicGap`. -/
+/-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)`: the approximation property of the Whitney
+forms with vanishing boundary DOFs. -/
 theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((whitneyMin n N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
   tendsto_infDist_of_lt (S := fun N => whitneyMin n N) q fun _ ha =>
     eventually_exists_whitneyMin_lt j q ha
-
-/-- **The harmonic gap of `H̊Λ(Q)` tends to zero** under the smoothing estimates alone. -/
-theorem SmoothingEstimatesMin.tendsto_harmonicGap_whitney {p : ℕ → SmoothingParam (Fin n → ℝ)}
-    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {j : ℤ}
-    [FiniteDimensional ℝ ((complexMin n).harmonic j)] :
-    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
-  hE.tendsto_harmonicGap fun q _ => tendsto_infDist_whitneyMin j q
 
 /-- **The windows of the Whitney complexes with vanishing traces approximate every point of the
 graph space** of the total differential of every window of `H̊Λ(Q)`. -/

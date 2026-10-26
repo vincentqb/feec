@@ -2512,7 +2512,8 @@ theorem exists_uniform_cochainProjection :
     ∃ C : ℝ, ∀ N, ∃ π : (whitney n N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
   obtain ⟨p, C, hE⟩ := smoothingEstimates_exists (n := n)
-  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, hE.isGraphBounded_proj N⟩⟩
+  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, fun i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)⟩⟩
 
 /-- **Uniformly bounded cochain projections onto the Whitney complexes with vanishing boundary
 DOFs** (unconditionally), in `L²` and in the graph norms of `H̊Λ(Q)`. -/
@@ -2520,6 +2521,7 @@ theorem exists_uniform_cochainProjectionMin :
     ∃ C : ℝ, ∀ N, ∃ π : (whitneyMin n N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
   obtain ⟨p, C, hE⟩ := smoothingEstimatesMin_exists (n := n)
-  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, hE.isGraphBounded_proj N⟩⟩
+  exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, fun i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)⟩⟩
 
 end Feec.Models.Cube.FEM

@@ -4,6 +4,10 @@ import Feec.HilbertComplex.Approximation.RitzResolvent
 import Feec.HilbertComplex.Approximation.ApproxConforming
 import Feec.HilbertComplex.Approximation.FullyDiscrete
 import Feec.Models.Cube.InhomogeneousError
+import Feec.Models.Cube.SobolevRateHigh
+import Feec.Models.Cube.TangentialRate
+import Feec.Models.Parallelepiped.FiniteElement
+import Feec.Models.StarShaped.PolyFiniteElement
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -25,6 +29,24 @@ for conforming families, the fields of `ConformingFamily.StaticVerdict`. The the
 below state the old results verbatim (the old `HasUniformProj H S` is
 `Subcomplex.HasUniformProj atTop S`, `static_old_hasUniformProj`) and derive them from the new
 ones at `ℝ`, `ComplexShape.up ℤ` and `atTop`.
+
+## The static models
+
+The finite element theorems of the models (the Freudenthal meshes of the cube,
+`Feec.Models.Cube.FEM`; parallelepipeds, `Feec.Models.Parallelepiped`; domains star-shaped with
+respect to a ball, `Feec.Models.StarShaped`) were stated family by family: the discrete Poincaré
+inequality, well-posedness, quasi-optimality, the uniformly bounded projections with vanishing
+harmonic gap, and the rates, once with no hypothesis and once more under the smoothing estimates
+with explicit constants. They are now the static FEEC theorem
+(`ConformingFamily.staticFEEC`, `ConformingFamily.StaticVerdict.rate`, `ConformingFamily.rate`)
+for the conforming families of the models (`ConformingFamily.ofSmoothing` on the cube,
+`IsChainIso.comapFamily` on parallelepipeds, `ConformingFamily.ofExists` on star-shaped domains;
+`whitneyFamily`, `polyFamily` and their `Min` versions) with their Jackson estimates
+(`whitneyJackson`, `polyJackson`, `polyJacksonTr`, `sobolevJackson`, `sobolevHighJackson`). The
+theorems `cube_old_*`, `whitney_old_*`, `whitneyMin_old_*`, `poly_old_*`, `polyMin_old_*`,
+`parity_old_*`, `para_old_*` and `star_old_*` state the deleted results verbatim (the transported
+projections `Parallelepiped.proj` and their constant `projConst` with their definitions unfolded)
+and derive them from the new API.
 
 ## Ritz projections
 
@@ -164,6 +186,2152 @@ theorem static_old_rate {C : ℝ} (π : ∀ N, (S N).CochainProjection) (hC1 : 1
     (happ N) hs hσ hu hb hq
 
 end StaticOld
+
+
+section GraphBoundOld
+
+section Smoothed
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex 𝕜 c W} {S : H.Subcomplex} (Q : S.CommutingMap)
+  [∀ i, FiniteDimensional 𝕜 (S.V i)]
+
+/-- The old `Feec.HilbertComplex.Subcomplex.CommutingMap.norm_d_toCochainProjection_le`. -/
+theorem graph_old_norm_d_toCochainProjection_le {θ : ℝ} (hθ : θ < 1)
+    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} (x : (H.d i j).domain) :
+    ‖H.d i j ⟨(Q.toCochainProjection hθ hQ).π i x,
+        S.le_domain i j ((Q.toCochainProjection hθ hQ).mem i x)⟩‖ ≤
+      (1 - θ)⁻¹ * ‖Q.Q j (H.d i j x)‖ := by
+  rw [(Q.toCochainProjection hθ hQ).comm]
+  exact Q.norm_toCochainProjection_le_norm_Q hθ hQ j _
+
+omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+/-- The old `Feec.HilbertComplex.Subcomplex.CommutingMap.graph_le_of_norm_le`. -/
+theorem graph_old_graph_le_of_norm_le {i j : ι} {C : ℝ} (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖)
+    (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) (x : (H.d i j).domain) :
+    ‖Q.Q i x‖ ^ 2 + ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2 ≤
+      C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2) := by
+  rw [Q.comm]
+  have h1 := pow_le_pow_left₀ (norm_nonneg _) (hi x) 2
+  have h2 := pow_le_pow_left₀ (norm_nonneg _) (hj (H.d i j x)) 2
+  nlinarith
+
+/-- The old `Feec.HilbertComplex.Subcomplex.CommutingMap.isGraphBounded_toCochainProjection`. -/
+theorem graph_old_isGraphBounded_toCochainProjection {θ : ℝ} (hθ : θ < 1)
+    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} {C : ℝ}
+    (hC : ∀ x : (H.d i j).domain, ‖Q.Q i x‖ ^ 2 +
+      ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2 ≤
+        C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)) :
+    (Q.toCochainProjection hθ hQ).IsGraphBounded i j ((1 - θ)⁻¹ * C) := by
+  intro x
+  have ha := Q.norm_toCochainProjection_le_norm_Q hθ hQ i x
+  have hb := graph_old_norm_d_toCochainProjection_le Q hθ hQ x
+  rw [← Q.comm i j x] at hb
+  have hk : 0 ≤ (1 - θ)⁻¹ := inv_nonneg.2 (by linarith)
+  have ha2 := pow_le_pow_left₀ (norm_nonneg _) ha 2
+  have hb2 := pow_le_pow_left₀ (norm_nonneg _) hb 2
+  have := hC x
+  calc _ ≤ ((1 - θ)⁻¹ * ‖Q.Q i x‖) ^ 2 +
+        ((1 - θ)⁻¹ * ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖) ^ 2 := add_le_add ha2 hb2
+    _ = (1 - θ)⁻¹ ^ 2 * (‖Q.Q i x‖ ^ 2 +
+        ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2) := by ring
+    _ ≤ (1 - θ)⁻¹ ^ 2 * (C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)) :=
+        mul_le_mul_of_nonneg_left this (by positivity)
+    _ = _ := by ring
+
+/-- The old `Feec.HilbertComplex.Subcomplex.CommutingMap.isGraphBounded_toCochainProjection_of_norm_le`. -/
+theorem graph_old_isGraphBounded_toCochainProjection_of_norm_le {θ : ℝ} (hθ : θ < 1)
+    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} {C : ℝ}
+    (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) :
+    (Q.toCochainProjection hθ hQ).IsGraphBounded i j ((1 - θ)⁻¹ * C) :=
+  graph_old_isGraphBounded_toCochainProjection Q hθ hQ (graph_old_graph_le_of_norm_le Q hi hj)
+
+end Smoothed
+
+section ChainIso
+
+variable {ι : Type*} {c : ComplexShape ι} {W W' : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)] [∀ i, CompleteSpace (W' i)]
+  {H : HilbertComplex ℝ c W} {H' : HilbertComplex ℝ c W'} {e : ∀ i, W i ≃L[ℝ] W' i}
+  (hI : IsChainIso H H' e)
+include hI
+
+/-- The old `Feec.HilbertComplex.IsChainIso.isGraphBounded_comapProj`. -/
+theorem graph_old_isGraphBounded_comapProj {S' : H'.Subcomplex} (S : H.Subcomplex) (hS)
+    (P : S'.CochainProjection) {i j : ι}
+    {C M M' : ℝ} (h : P.IsGraphBounded i j C)
+    (hM : ∀ k, ‖(e k : W k →L[ℝ] W' k)‖ ≤ M)
+    (hM' : ∀ k, ‖((e k).symm : W' k →L[ℝ] W k)‖ ≤ M') :
+    (hI.comapProj S hS P).IsGraphBounded i j (M' * C * M) := by
+  intro x
+  have hx' : e i x ∈ (H'.d i j).domain := (hI.mem_domain_iff _ _ _).2 x.2
+  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM i)
+  have hM'0 : 0 ≤ M' := (norm_nonneg _).trans (hM' i)
+  have hb := h ⟨_, hx'⟩
+  set y : (H'.d i j).domain := ⟨P.π i (e i x), S'.le_domain i j (P.mem i _)⟩
+  have hd : H.d i j ⟨(hI.comapProj S hS P).π i x,
+      S.le_domain i j ((hI.comapProj S hS P).mem i x)⟩ = (e j).symm (H'.d i j y) :=
+    hI.comm_symm i j y _
+  have hdx : H'.d i j ⟨e i x, hx'⟩ = e j (H.d i j x) := hI.comm i j x hx'
+  rw [hd, IsChainIso.comapProj_π]
+  have n1 := ((e i).symm : W' i →L[ℝ] W i).le_of_opNorm_le (hM' i) (P.π i (e i x))
+  have n2 := ((e j).symm : W' j →L[ℝ] W j).le_of_opNorm_le (hM' j) (H'.d i j y)
+  have n3 := (e i : W i →L[ℝ] W' i).le_of_opNorm_le (hM i) x
+  have n4 := (e j : W j →L[ℝ] W' j).le_of_opNorm_le (hM j) (H.d i j x)
+  change ‖P.π i (e i x)‖ ^ 2 + ‖H'.d i j y‖ ^ 2 ≤
+    C ^ 2 * (‖e i x‖ ^ 2 + ‖H'.d i j ⟨e i x, hx'⟩‖ ^ 2) at hb
+  rw [hdx] at hb
+  have s1 : ‖(e i).symm (P.π i (e i x))‖ ^ 2 ≤ M' ^ 2 * ‖P.π i (e i x)‖ ^ 2 := by
+    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) n1 2
+  have s2 : ‖(e j).symm (H'.d i j y)‖ ^ 2 ≤ M' ^ 2 * ‖H'.d i j y‖ ^ 2 := by
+    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) n2 2
+  have s3 : ‖e i x‖ ^ 2 ≤ M ^ 2 * ‖(x : W i)‖ ^ 2 := by
+    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) n3 2
+  have s4 : ‖e j (H.d i j x)‖ ^ 2 ≤ M ^ 2 * ‖H.d i j x‖ ^ 2 := by
+    rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) n4 2
+  calc ‖(e i).symm (P.π i (e i x))‖ ^ 2 + ‖(e j).symm (H'.d i j y)‖ ^ 2
+      ≤ M' ^ 2 * (‖P.π i (e i x)‖ ^ 2 + ‖H'.d i j y‖ ^ 2) := by nlinarith
+    _ ≤ M' ^ 2 * (C ^ 2 * (‖e i x‖ ^ 2 + ‖e j (H.d i j x)‖ ^ 2)) := by gcongr
+    _ ≤ M' ^ 2 * (C ^ 2 * (M ^ 2 * ‖(x : W i)‖ ^ 2 + M ^ 2 * ‖H.d i j x‖ ^ 2)) := by gcongr
+    _ = (M' * C * M) ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2) := by ring
+
+end ChainIso
+
+end GraphBoundOld
+
+section CubeOld
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM
+
+variable {n : ℕ} [NeZero n]
+
+/-- The old `Models.Cube.FEM.inv_two_pi_le_one`. -/
+theorem cube_old_inv_two_pi_le_one : (2 * Real.pi)⁻¹ ≤ 1 :=
+  inv_le_one_of_one_le₀ (by nlinarith [Real.two_le_pi])
+
+omit [NeZero n] in
+/-- The old `Models.Cube.FEM.poincare`. -/
+theorem cube_old_poincare {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
+    (hcP : (2 * Real.pi)⁻¹ ≤ cP) :
+    ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖ := fun z hz =>
+  (norm_le_of_mem_orthogonal_cycles hij z hz).trans
+    (mul_le_mul_of_nonneg_right hcP (norm_nonneg _))
+
+omit [NeZero n] in
+/-- The old `Models.Cube.FEM.poincare_min`. -/
+theorem cube_old_poincare_min {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
+    (hcP : (2 * Real.pi)⁻¹ ≤ cP) :
+    ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖ := fun z hz =>
+  (norm_le_of_mem_orthogonal_cycles_min hij z hz).trans
+    (mul_le_mul_of_nonneg_right hcP (norm_nonneg _))
+
+variable {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} in
+/-- The old `Models.Cube.FEM.SmoothingEstimates.one_le_two_mul`. -/
+theorem whitney_old_one_le_two_mul (hE : SmoothingEstimates n p C) : 1 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+variable {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} in
+/-- The old `Models.Cube.FEM.SmoothingEstimatesMin.one_le_two_mul`. -/
+theorem whitneyMin_old_one_le_two_mul (hE : SmoothingEstimatesMin n p C) : 1 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} in
+/-- The old `Models.Cube.FEM.PolySmoothingEstimates.one_le_two_mul`. -/
+theorem poly_old_one_le_two_mul (hE : PolySmoothingEstimates n S p C) : 1 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} in
+/-- The old `Models.Cube.FEM.PolySmoothingEstimatesMin.one_le_two_mul`. -/
+theorem polyMin_old_one_le_two_mul (hE : PolySmoothingEstimatesMin n S p C) : 1 ≤ 2 * C := by
+  linarith [hE.half_le]
+
+/-- The old `Models.Cube.FEM.discretePoincare`. -/
+theorem cube_old_discretePoincare : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitney n N).V i),
+    (∀ y ∈ (whitney n N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complex n).d i j ⟨x, (whitney n N).le_domain i j hx⟩‖ :=
+  (Feec.Models.Cube.FEM.whitneyFamily n).hasUniformProj.discretePoincare fun _ _ hij => norm_le_of_mem_orthogonal_cycles hij
+
+/-- The old `Models.Cube.FEM.mixed_wellPosed`. -/
+theorem cube_old_mixed_wellPosed : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j →
+    (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (whitney n N).V j),
+    (∃! x, (whitney n N).toHilbertComplex.mixedForm i j k x =
+      (whitney n N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (whitney n N).toHilbertComplex.MixedSpace i j,
+      (whitney n N).toHilbertComplex.mixedForm i j k x =
+        (whitney n N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := (Feec.Models.Cube.FEM.whitneyFamily n).finiteDimensional
+  exact (Feec.Models.Cube.FEM.whitneyFamily n).hasUniformProj.mixed_wellPosed
+    (fun _ _ hij => cube_old_poincare hij cube_old_inv_two_pi_le_one) le_rfl
+
+/-- The old `Models.Cube.FEM.mixed_rate_smooth`. -/
+theorem cube_old_mixed_rate_smooth {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
+    (complex n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsC2Form i L ((complex n).domainIncl i σ) →
+    IsC2Form j L ((complex n).domainIncl j u) →
+    IsC2Form j L ((complex n).domainIncl j
+      ((complex n).boundaryPart j ((complex n).domainIncl j u))) →
+    IsC2Form j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      K * L * meshSize N :=
+  by
+  obtain ⟨K, hK⟩ := ((Feec.Models.Cube.FEM.whitneyFamily n).staticFEEC closedRangeAt j).rate (whitneyJackson n) () hij hjk
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL hσ hu hb hq N
+  simp only [whitneyFamily_V, whitneyJackson, Real.rpow_one] at h
+  exact h
+
+/-- The old `Models.Cube.FEM.smoothedProjection_uniform`. -/
+theorem cube_old_smoothedProjection_uniform : ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
+    (hE : SmoothingEstimates n p C),
+    (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧ (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
+    ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  let ⟨p, C, hE⟩ := smoothingEstimates_exists (n := n)
+  ⟨p, C, hE, hE.norm_proj_le, fun N i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j),
+    fun _ => hE.family.tendsto_harmonicGap⟩
+
+/-- The old `Models.Cube.FEM.mixed_quasiOptimal`. -/
+theorem cube_old_mixed_quasiOptimal : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
+    (complex n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((whitney n N).domainSub i) +
+        Metric.infDist u ((whitney n N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) +
+        μ j N * Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+          ((whitney n N).domainSub j)) := by
+  have := (Feec.Models.Cube.FEM.whitneyFamily n).finiteDimensional
+  exact (Feec.Models.Cube.FEM.whitneyFamily n).hasUniformProj.mixed_quasiOptimal fun _ _ hij => norm_le_of_mem_orthogonal_cycles hij
+
+/-- The old `Models.Cube.FEM.discretePoincare_min`. -/
+theorem cube_old_discretePoincare_min : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitneyMin n N).V i),
+    (∀ y ∈ (whitneyMin n N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complexMin n).d i j ⟨x, (whitneyMin n N).le_domain i j hx⟩‖ :=
+  (Feec.Models.Cube.FEM.whitneyFamilyMin n).hasUniformProj.discretePoincare fun _ _ hij => norm_le_of_mem_orthogonal_cycles_min hij
+
+/-- The old `Models.Cube.FEM.mixed_wellPosed_min`. -/
+theorem cube_old_mixed_wellPosed_min : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j →
+    (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (whitneyMin n N).V j),
+    (∃! x, (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (whitneyMin n N).toHilbertComplex.MixedSpace i j,
+      (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+        (whitneyMin n N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := (Feec.Models.Cube.FEM.whitneyFamilyMin n).finiteDimensional
+  exact (Feec.Models.Cube.FEM.whitneyFamilyMin n).hasUniformProj.mixed_wellPosed
+    (fun _ _ hij => cube_old_poincare_min hij cube_old_inv_two_pi_le_one) le_rfl
+
+/-- The old `Models.Cube.FEM.mixed_rate_smooth_min`. -/
+theorem cube_old_mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complexMin n).domainSpace i} {u : (complexMin n).domainSpace j}
+    {q : (complexMin n).harmonic j},
+    (complexMin n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsC2FormMin i L ((complexMin n).domainIncl i σ) →
+    IsC2FormMin j L ((complexMin n).domainIncl j u) →
+    IsC2FormMin j L ((complexMin n).domainIncl j
+      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))) →
+    IsC2FormMin j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
+            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      K * L * meshSize N :=
+  by
+  obtain ⟨K, hK⟩ := ((Feec.Models.Cube.FEM.whitneyFamilyMin n).staticFEEC closedRangeAt_min j).rate (whitneyJacksonMin n) () hij hjk
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL hσ hu hb hq N
+  simp only [whitneyFamilyMin_V, whitneyJacksonMin, Real.rpow_one] at h
+  exact h
+
+/-- The old `Models.Cube.FEM.smoothedProjection_uniform_min`. -/
+theorem cube_old_smoothedProjection_uniform_min : ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
+    (hE : SmoothingEstimatesMin n p C),
+    (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧ (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
+    ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  let ⟨p, C, hE⟩ := smoothingEstimatesMin_exists (n := n)
+  ⟨p, C, hE, hE.norm_proj_le, fun N i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j),
+    fun _ => hE.family.tendsto_harmonicGap⟩
+
+/-- The old `Models.Cube.FEM.mixed_quasiOptimal_min`. -/
+theorem cube_old_mixed_quasiOptimal_min : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j},
+    (complexMin n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
+            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((whitneyMin n N).domainSub i) +
+        Metric.infDist u ((whitneyMin n N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitneyMin n N).harmonicW j) +
+        μ j N * Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
+          ((whitneyMin n N).domainSub j)) := by
+  have := (Feec.Models.Cube.FEM.whitneyFamilyMin n).finiteDimensional
+  exact (Feec.Models.Cube.FEM.whitneyFamilyMin n).hasUniformProj.mixed_quasiOptimal fun _ _ hij => norm_le_of_mem_orthogonal_cycles_min hij
+
+/-- The old `Models.Cube.FEM.polySmoothedProjection_uniform`. -/
+theorem cube_old_polySmoothedProjection_uniform (S : PolySeq) :
+    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) (hE : PolySmoothingEstimates n S p C),
+      (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
+      (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
+      ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  let ⟨p, C, hE⟩ := polySmoothingEstimates_exists (n := n) S
+  ⟨p, C, hE, hE.norm_proj_le, fun N i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j),
+    fun _ => hE.family.tendsto_harmonicGap⟩
+
+/-- The old `Models.Cube.FEM.polySmoothedProjection_uniform_min`. -/
+theorem cube_old_polySmoothedProjection_uniform_min (S : PolySeq) :
+    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) (hE : PolySmoothingEstimatesMin n S p C),
+      (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
+      (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
+      ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  let ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
+  ⟨p, C, hE, hE.norm_proj_le, fun N i j =>
+    (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j),
+    fun _ => hE.family.tendsto_harmonicGap⟩
+
+/-- The old `Models.Cube.FEM.discretePoincare_poly`. -/
+theorem cube_old_discretePoincare_poly (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)}
+    (hx : x ∈ (poly n S N).V i), (∀ y ∈ (poly n S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complex n).d i j ⟨x, (poly n S N).le_domain i j hx⟩‖ :=
+  (polyFamily n S).hasUniformProj.discretePoincare fun _ _ hij => norm_le_of_mem_orthogonal_cycles hij
+
+/-- The old `Models.Cube.FEM.discretePoincare_polyMin`. -/
+theorem cube_old_discretePoincare_polyMin (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)}
+    (hx : x ∈ (polyMin n S N).V i), (∀ y ∈ (polyMin n S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complexMin n).d i j ⟨x, (polyMin n S N).le_domain i j hx⟩‖ :=
+  (polyFamilyMin n S).hasUniformProj.discretePoincare fun _ _ hij => norm_le_of_mem_orthogonal_cycles_min hij
+
+/-- The old `Models.Cube.FEM.mixed_wellPosed_poly`. -/
+theorem cube_old_mixed_wellPosed_poly (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (poly n S N).V j),
+    (∃! x, (poly n S N).toHilbertComplex.mixedForm i j k x =
+      (poly n S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (poly n S N).toHilbertComplex.MixedSpace i j,
+      (poly n S N).toHilbertComplex.mixedForm i j k x =
+        (poly n S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := (polyFamily n S).finiteDimensional
+  exact (polyFamily n S).hasUniformProj.mixed_wellPosed
+    (fun _ _ hij => cube_old_poincare hij cube_old_inv_two_pi_le_one) le_rfl
+
+/-- The old `Models.Cube.FEM.mixed_wellPosed_polyMin`. -/
+theorem cube_old_mixed_wellPosed_polyMin (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ)
+    (f : (polyMin n S N).V j),
+    (∃! x, (polyMin n S N).toHilbertComplex.mixedForm i j k x =
+      (polyMin n S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (polyMin n S N).toHilbertComplex.MixedSpace i j,
+      (polyMin n S N).toHilbertComplex.mixedForm i j k x =
+        (polyMin n S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := (polyFamilyMin n S).finiteDimensional
+  exact (polyFamilyMin n S).hasUniformProj.mixed_wellPosed
+    (fun _ _ hij => cube_old_poincare_min hij cube_old_inv_two_pi_le_one) le_rfl
+
+/-- The old `Models.Cube.FEM.mixed_quasiOptimal_poly`. -/
+theorem cube_old_mixed_quasiOptimal_poly (S : PolySeq) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
+    (complex n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).fst‖ +
+        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
+            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((poly n S N).domainSub i) +
+        Metric.infDist u ((poly n S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((poly n S N).harmonicW j) +
+        μ j N * Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+          ((poly n S N).domainSub j)) := by
+  have := (polyFamily n S).finiteDimensional
+  exact (polyFamily n S).hasUniformProj.mixed_quasiOptimal fun _ _ hij => norm_le_of_mem_orthogonal_cycles hij
+
+/-- The old `Models.Cube.FEM.mixed_quasiOptimal_polyMin`. -/
+theorem cube_old_mixed_quasiOptimal_polyMin (S : PolySeq) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j},
+    (complexMin n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).fst‖ +
+        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
+            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((polyMin n S N).domainSub i) +
+        Metric.infDist u ((polyMin n S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyMin n S N).harmonicW j) +
+        μ j N * Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
+          ((polyMin n S N).domainSub j)) := by
+  have := (polyFamilyMin n S).finiteDimensional
+  exact (polyFamilyMin n S).hasUniformProj.mixed_quasiOptimal fun _ _ hij => norm_le_of_mem_orthogonal_cycles_min hij
+
+
+end CubeOld
+
+section CubeTowerOld
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM
+
+variable {n : ℕ} [NeZero n]
+
+section Whitney
+
+variable {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
+
+section Max
+
+variable (hE : SmoothingEstimates n p C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.isGraphBounded_proj`. -/
+theorem whitney_old_isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) :=
+  (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_le_of_forall_inner_eq_zero`. -/
+theorem whitney_old_norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
+    (hP : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖)
+    (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitney n N).V i)
+    (hxo : ∀ y ∈ (whitney n N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * cP * ‖(complex n).d i j ⟨x, (whitney n N).le_domain i j hx⟩‖ :=
+  (hE.proj N).norm_le_of_forall_inner_eq_zero hij hP hE.two_mul_nonneg (hE.norm_proj_le N i) hx
+    hxo
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.existsUnique_mixed`. -/
+theorem whitney_old_existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hPi : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖)
+    (hPj : ∀ z : ((complex n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complex n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complex n).d j k z‖)
+    (N : ℕ) (f : (whitney n N).V j) :
+    ∃! x, (whitney n N).toHilbertComplex.mixedForm i j k x =
+      (whitney n N).toHilbertComplex.mixedRHS i j f :=
+  (hE.proj N).existsUnique_mixed hij hjk hcP (by linarith [hE.half_le]) hPi hPj (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) f
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_le_of_mixed`. -/
+theorem whitney_old_norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hPi : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖)
+    (hPj : ∀ z : ((complex n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complex n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complex n).d j k z‖)
+    (N : ℕ) {f : (whitney n N).V j} {x : (whitney n N).toHilbertComplex.MixedSpace i j}
+    (hx : (whitney n N).toHilbertComplex.mixedForm i j k x =
+      (whitney n N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * cP) ^ 2 * ‖f‖ :=
+  (hE.proj N).norm_le_of_mixed hij hjk hcP (by linarith [hE.half_le]) hPi hPj (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) hx
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_infDist`. -/
+theorem whitney_old_norm_sub_le_infDist {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
+    (hPi : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖)
+    (hPj : ∀ z : ((complex n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complex n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complex n).d j k z‖)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) (N : ℕ) :
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) *
+        (Metric.infDist σ ((whitney n N).domainSub i) + Metric.infDist u ((whitney n N).domainSub j) +
+          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) +
+          (hE.proj N).harmonicGap j *
+            Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+              ((whitney n N).domainSub j)) :=
+  (hE.proj N).norm_sub_le_infDist_harmonicGap hij hjk (by linarith [hE.half_le]) hPi hPj
+    (whitney_old_isGraphBounded_proj hE N i j) (whitney_old_isGraphBounded_proj hE N j k) hs
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_meshSize`. -/
+theorem whitney_old_norm_sub_le_meshSize {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
+    (hPi : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖)
+    (hPj : ∀ z : ((complex n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complex n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complex n).d j k z‖)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) {K : ℝ} (N : ℕ)
+    (hσ : Metric.infDist σ ((whitney n N).domainSub i) ≤ K * meshSize N)
+    (hu : Metric.infDist u ((whitney n N).domainSub j) ≤ K * meshSize N)
+    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) ≤
+      K * meshSize N)
+    (hB : Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+      ((whitney n N).domainSub j) ≤ K * meshSize N) :
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K * meshSize N := by
+  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
+  have h := (hE.proj N).norm_sub_le_infDist hij hjk (by linarith [hE.half_le]) hμ0 hPi hPj
+    (whitney_old_isGraphBounded_proj hE N i j) (whitney_old_isGraphBounded_proj hE N j k)
+    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
+      (whitney_old_isGraphBounded_proj hE N j k) hq') hs
+  refine h.trans ?_
+  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) := by
+    have := hE.two_mul_nonneg; positivity
+  have e : (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
+      meshSize N = (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) *
+        ((4 + 2 * C) * (K * meshSize N)) := by ring
+  rw [e]
+  refine mul_le_mul_of_nonneg_left ?_ hK0
+  have hB' := mul_le_mul_of_nonneg_left hB hμ0
+  have e' : (4 + 2 * C) * (K * meshSize N) =
+      3 * (K * meshSize N) + (1 + 2 * C) * (K * meshSize N) := by ring
+  rw [e']
+  linarith
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.tendsto_harmonicGap`. -/
+theorem whitney_old_tendsto_harmonicGap {j : ℤ} [FiniteDimensional ℝ ((complex n).harmonic j)]
+    (happrox : ∀ q ∈ (complex n).harmonic j,
+      Tendsto (fun N => Metric.infDist q ((whitney n N).V j :
+        Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0)) :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
+    (fun N x => hE.norm_proj_le N j x) happrox
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_le_of_forall_inner_eq_zero'`. -/
+theorem whitney_old_norm_le_of_forall_inner_eq_zero' {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitney n N).V i)
+    (hxo : ∀ y ∈ (whitney n N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
+      ‖(complex n).d i j ⟨x, (whitney n N).le_domain i j hx⟩‖ :=
+  whitney_old_norm_le_of_forall_inner_eq_zero hE hij (norm_le_of_mem_orthogonal_cycles hij) N hx hxo
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.existsUnique_mixed'`. -/
+theorem whitney_old_existsUnique_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (whitney n N).V j) :
+    ∃! x, (whitney n N).toHilbertComplex.mixedForm i j k x =
+      (whitney n N).toHilbertComplex.mixedRHS i j f :=
+  whitney_old_existsUnique_mixed hE hij hjk le_rfl (cube_old_poincare hij cube_old_inv_two_pi_le_one)
+    (cube_old_poincare hjk cube_old_inv_two_pi_le_one) N f
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_le_of_mixed'`. -/
+theorem whitney_old_norm_le_of_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (whitney n N).V j}
+    {x : (whitney n N).toHilbertComplex.MixedSpace i j}
+    (hx : (whitney n N).toHilbertComplex.mixedForm i j k x =
+      (whitney n N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
+  whitney_old_norm_le_of_mixed hE hij hjk le_rfl (cube_old_poincare hij cube_old_inv_two_pi_le_one)
+    (cube_old_poincare hjk cube_old_inv_two_pi_le_one) N hx
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_infDist'`. -/
+theorem whitney_old_norm_sub_le_infDist' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) (N : ℕ) :
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+        (Metric.infDist σ ((whitney n N).domainSub i) + Metric.infDist u ((whitney n N).domainSub j) +
+          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) +
+          (hE.proj N).harmonicGap j *
+            Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+              ((whitney n N).domainSub j)) :=
+  whitney_old_norm_sub_le_infDist hE hij hjk (norm_le_of_mem_orthogonal_cycles hij)
+    (norm_le_of_mem_orthogonal_cycles hjk) hs N
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_meshSize'`. -/
+theorem whitney_old_norm_sub_le_meshSize' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) {K : ℝ} (N : ℕ)
+    (hσ : Metric.infDist σ ((whitney n N).domainSub i) ≤ K * meshSize N)
+    (hu : Metric.infDist u ((whitney n N).domainSub j) ≤ K * meshSize N)
+    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) ≤
+      K * meshSize N)
+    (hB : Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+      ((whitney n N).domainSub j) ≤ K * meshSize N) :
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
+        meshSize N :=
+  whitney_old_norm_sub_le_meshSize hE hij hjk (norm_le_of_mem_orthogonal_cycles hij)
+    (norm_le_of_mem_orthogonal_cycles hjk) hs N hσ hu hq hB
+
+end Max
+
+section Min
+
+variable (hE : SmoothingEstimatesMin n p C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.isGraphBounded_proj`. -/
+theorem whitneyMin_old_isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) :=
+  (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_le_of_forall_inner_eq_zero`. -/
+theorem whitneyMin_old_norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
+    (hP : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitneyMin n N).V i)
+    (hxo : ∀ y ∈ (whitneyMin n N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * cP * ‖(complexMin n).d i j ⟨x, (whitneyMin n N).le_domain i j hx⟩‖ :=
+  (hE.proj N).norm_le_of_forall_inner_eq_zero hij hP hE.two_mul_nonneg (hE.norm_proj_le N i) hx
+    hxo
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.existsUnique_mixed`. -/
+theorem whitneyMin_old_existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complexMin n).d j k z‖)
+    (N : ℕ) (f : (whitneyMin n N).V j) :
+    ∃! x, (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f :=
+  (hE.proj N).existsUnique_mixed hij hjk hcP (by linarith [hE.half_le]) hPi hPj (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) f
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_le_of_mixed`. -/
+theorem whitneyMin_old_norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complexMin n).d j k z‖)
+    (N : ℕ) {f : (whitneyMin n N).V j} {x : (whitneyMin n N).toHilbertComplex.MixedSpace i j}
+    (hx : (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * cP) ^ 2 * ‖f‖ :=
+  (hE.proj N).norm_le_of_mixed hij hjk hcP (by linarith [hE.half_le]) hPi hPj (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) hx
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.tendsto_harmonicGap`. -/
+theorem whitneyMin_old_tendsto_harmonicGap {j : ℤ} [FiniteDimensional ℝ ((complexMin n).harmonic j)]
+    (happrox : ∀ q ∈ (complexMin n).harmonic j,
+      Tendsto (fun N => Metric.infDist q ((whitneyMin n N).V j :
+        Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0)) :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
+    (fun N x => hE.norm_proj_le N j x) happrox
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_le_of_forall_inner_eq_zero'`. -/
+theorem whitneyMin_old_norm_le_of_forall_inner_eq_zero' {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitneyMin n N).V i)
+    (hxo : ∀ y ∈ (whitneyMin n N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
+      ‖(complexMin n).d i j ⟨x, (whitneyMin n N).le_domain i j hx⟩‖ :=
+  whitneyMin_old_norm_le_of_forall_inner_eq_zero hE hij (norm_le_of_mem_orthogonal_cycles_min hij) N hx hxo
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.existsUnique_mixed'`. -/
+theorem whitneyMin_old_existsUnique_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (whitneyMin n N).V j) :
+    ∃! x, (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f :=
+  whitneyMin_old_existsUnique_mixed hE hij hjk le_rfl (cube_old_poincare_min hij cube_old_inv_two_pi_le_one)
+    (cube_old_poincare_min hjk cube_old_inv_two_pi_le_one) N f
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_le_of_mixed'`. -/
+theorem whitneyMin_old_norm_le_of_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (whitneyMin n N).V j}
+    {x : (whitneyMin n N).toHilbertComplex.MixedSpace i j}
+    (hx : (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin n N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
+  whitneyMin_old_norm_le_of_mixed hE hij hjk le_rfl (cube_old_poincare_min hij cube_old_inv_two_pi_le_one)
+    (cube_old_poincare_min hjk cube_old_inv_two_pi_le_one) N hx
+
+end Min
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_meshSize_smooth`. -/
+theorem whitney_old_norm_sub_le_meshSize_smooth {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimates n p C) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
+    (hPi : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complex n).d i j z‖)
+    (hPj : ∀ z : ((complex n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complex n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complex n).d j k z‖)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsC2Form i L ((complex n).domainIncl i σ))
+    (hu : IsC2Form j L ((complex n).domainIncl j u))
+    (hB : IsC2Form j L ((complex n).domainIncl j
+      ((complex n).boundaryPart j ((complex n).domainIncl j u))))
+    (hq : IsC2Form j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
+  have hC := hE.two_mul_nonneg
+  have hh := (meshSize_pos N).le
+  have hBi := interpBound_nonneg n i
+  have hBj := interpBound_nonneg n j
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hK : (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N =
+      (1 + 2 * C) * (interpBound n i * L * meshSize N) +
+        (1 + 2 * C) * (interpBound n j * L * meshSize N) := by ring
+  have hi : interpBound n i * L * meshSize N ≤
+      (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N := by
+    rw [hK]; nlinarith
+  have hj : interpBound n j * L * meshSize N ≤
+      (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N := by
+    rw [hK]; nlinarith
+  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
+      ((whitney n N).harmonicW j) ≤
+      (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N := by
+    refine ((hE.proj N).infDist_harmonicW_le hjk hC (whitney_old_isGraphBounded_proj hE N j k) q.2).trans ?_
+    have h := IsC2Form.infDist_domainSub_whitney_le
+      (σ := cyclesToDomainSpace ((complex n).harmonic_le_cycles j q.2)) hq hL0 N
+    rw [hK]
+    have : 0 ≤ 1 + 2 * C := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left h this]
+  exact whitney_old_norm_sub_le_meshSize hE hij hjk hPi hPj hs N
+    ((hσ.infDist_domainSub_whitney_le hL0 N).trans hi)
+    ((hu.infDist_domainSub_whitney_le hL0 N).trans hj) hq'
+    ((hB.infDist_domainSub_whitney_le hL0 N).trans hj)
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.tendsto_harmonicGap_whitney`. -/
+theorem whitney_old_tendsto_harmonicGap_whitney {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimates n p C) {j : ℤ}
+    [FiniteDimensional ℝ ((complex n).harmonic j)] :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  whitney_old_tendsto_harmonicGap hE fun q _ => tendsto_infDist_whitney j q
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_sub_le_meshSize`. -/
+theorem whitneyMin_old_norm_sub_le_meshSize {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
+    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complexMin n).d j k z‖)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {K : ℝ} (N : ℕ)
+    (hσ : Metric.infDist σ ((whitneyMin n N).domainSub i) ≤ K * meshSize N)
+    (hu : Metric.infDist u ((whitneyMin n N).domainSub j) ≤ K * meshSize N)
+    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitneyMin n N).harmonicW j) ≤
+      K * meshSize N)
+    (hB : Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
+      ((whitneyMin n N).domainSub j) ≤ K * meshSize N) :
+    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
+            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K * meshSize N := by
+  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
+  have h := (hE.proj N).norm_sub_le_infDist hij hjk (by linarith [hE.half_le]) hμ0 hPi hPj
+    (whitneyMin_old_isGraphBounded_proj hE N i j) (whitneyMin_old_isGraphBounded_proj hE N j k)
+    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
+      (whitneyMin_old_isGraphBounded_proj hE N j k) hq') hs
+  refine h.trans ?_
+  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) := by
+    have := hE.two_mul_nonneg; positivity
+  have e : (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
+      meshSize N = (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) *
+        ((4 + 2 * C) * (K * meshSize N)) := by ring
+  rw [e]
+  refine mul_le_mul_of_nonneg_left ?_ hK0
+  have hB' := mul_le_mul_of_nonneg_left hB hμ0
+  have e' : (4 + 2 * C) * (K * meshSize N) =
+      3 * (K * meshSize N) + (1 + 2 * C) * (K * meshSize N) := by ring
+  rw [e']
+  linarith
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_sub_le_meshSize_smooth`. -/
+theorem whitneyMin_old_norm_sub_le_meshSize_smooth {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
+    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
+      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
+        cP * ‖(complexMin n).d i j z‖)
+    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
+      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+        cP * ‖(complexMin n).d j k z‖)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsC2FormMin i L ((complexMin n).domainIncl i σ))
+    (hu : IsC2FormMin j L ((complexMin n).domainIncl j u))
+    (hB : IsC2FormMin j L ((complexMin n).domainIncl j
+      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
+    (hq : IsC2FormMin j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
+            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        (2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L)) * meshSize N := by
+  have hC := hE.two_mul_nonneg
+  have hh := (meshSize_pos N).le
+  have hBi := interpBound_nonneg n i
+  have hBj := interpBound_nonneg n j
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hK : 2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N =
+      2 * ((1 + 2 * C) * (interpBound n i * L * meshSize N)) +
+        2 * ((1 + 2 * C) * (interpBound n j * L * meshSize N)) := by ring
+  have hi : 2 * (interpBound n i * L * meshSize N) ≤
+      2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
+    rw [hK]; nlinarith
+  have hj : 2 * (interpBound n j * L * meshSize N) ≤
+      2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
+    rw [hK]; nlinarith
+  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
+      ((whitneyMin n N).harmonicW j) ≤
+      2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
+    refine ((hE.proj N).infDist_harmonicW_le hjk hC (whitneyMin_old_isGraphBounded_proj hE N j k) q.2).trans ?_
+    have h := IsC2FormMin.infDist_domainSub_whitneyMin_le
+      (σ := cyclesToDomainSpace ((complexMin n).harmonic_le_cycles j q.2)) hq hL0 N
+    rw [hK]
+    have : 0 ≤ 1 + 2 * C := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left h this]
+  exact whitneyMin_old_norm_sub_le_meshSize hE hij hjk hPi hPj hs N
+    ((hσ.infDist_domainSub_whitneyMin_le hL0 N).trans hi)
+    ((hu.infDist_domainSub_whitneyMin_le hL0 N).trans hj) hq'
+    ((hB.infDist_domainSub_whitneyMin_le hL0 N).trans hj)
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.tendsto_harmonicGap_whitney`. -/
+theorem whitneyMin_old_tendsto_harmonicGap_whitney {p : ℕ → SmoothingParam (Fin n → ℝ)}
+    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {j : ℤ}
+    [FiniteDimensional ℝ ((complexMin n).harmonic j)] :
+    Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  whitneyMin_old_tendsto_harmonicGap hE fun q _ => tendsto_infDist_whitneyMin j q
+
+section Max
+
+variable (hE : SmoothingEstimates n p C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_meshSize_smooth'`. -/
+theorem whitney_old_norm_sub_le_meshSize_smooth' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsC2Form i L ((complex n).domainIncl i σ))
+    (hu : IsC2Form j L ((complex n).domainIncl j u))
+    (hB : IsC2Form j L ((complex n).domainIncl j
+      ((complex n).boundaryPart j ((complex n).domainIncl j u))))
+    (hq : IsC2Form j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).fst‖ +
+        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
+            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N :=
+  whitney_old_norm_sub_le_meshSize_smooth hE hij hjk (norm_le_of_mem_orthogonal_cycles hij)
+    (norm_le_of_mem_orthogonal_cycles hjk) hs hL0 hσ hu hB hq N
+
+end Max
+
+section Min
+
+variable (hE : SmoothingEstimatesMin n p C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_sub_le_meshSize'`. -/
+theorem whitneyMin_old_norm_sub_le_meshSize' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {K : ℝ} (N : ℕ)
+    (hσ : Metric.infDist σ ((whitneyMin n N).domainSub i) ≤ K * meshSize N)
+    (hu : Metric.infDist u ((whitneyMin n N).domainSub j) ≤ K * meshSize N)
+    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitneyMin n N).harmonicW j) ≤
+      K * meshSize N)
+    (hB : Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
+      ((whitneyMin n N).domainSub j) ≤ K * meshSize N) :
+    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
+            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
+        meshSize N :=
+  whitneyMin_old_norm_sub_le_meshSize hE hij hjk (norm_le_of_mem_orthogonal_cycles_min hij)
+    (norm_le_of_mem_orthogonal_cycles_min hjk) hs N hσ hu hq hB
+
+/-- The old `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_sub_le_meshSize_smooth'`. -/
+theorem whitneyMin_old_norm_sub_le_meshSize_smooth' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsC2FormMin i L ((complexMin n).domainIncl i σ))
+    (hu : IsC2FormMin j L ((complexMin n).domainIncl j u))
+    (hB : IsC2FormMin j L ((complexMin n).domainIncl j
+      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
+    (hq : IsC2FormMin j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin n N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
+            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        (2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L)) * meshSize N :=
+  whitneyMin_old_norm_sub_le_meshSize_smooth hE hij hjk (norm_le_of_mem_orthogonal_cycles_min hij)
+    (norm_le_of_mem_orthogonal_cycles_min hjk) hs hL0 hσ hu hB hq N
+
+end Min
+
+end Whitney
+
+section Poly
+
+variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
+
+section Max
+
+variable (hE : PolySmoothingEstimates n S p C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.isGraphBounded_proj`. -/
+theorem poly_old_isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) :=
+  (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.norm_le_of_forall_inner_eq_zero`. -/
+theorem poly_old_norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (poly n S N).V i)
+    (hxo : ∀ y ∈ (poly n S N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ * ‖(complex n).d i j ⟨x, (poly n S N).le_domain i j hx⟩‖ :=
+  (hE.proj N).norm_le_of_forall_inner_eq_zero hij (norm_le_of_mem_orthogonal_cycles hij)
+    hE.two_mul_nonneg (hE.norm_proj_le N i) hx hxo
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.existsUnique_mixed`. -/
+theorem poly_old_existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (poly n S N).V j) :
+    ∃! x, (poly n S N).toHilbertComplex.mixedForm i j k x =
+      (poly n S N).toHilbertComplex.mixedRHS i j f :=
+  (hE.proj N).existsUnique_mixed hij hjk le_rfl (by linarith [hE.half_le])
+    (cube_old_poincare hij cube_old_inv_two_pi_le_one) (cube_old_poincare hjk cube_old_inv_two_pi_le_one) (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) f
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.norm_le_of_mixed`. -/
+theorem poly_old_norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (poly n S N).V j}
+    {x : (poly n S N).toHilbertComplex.MixedSpace i j}
+    (hx : (poly n S N).toHilbertComplex.mixedForm i j k x =
+      (poly n S N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
+  (hE.proj N).norm_le_of_mixed hij hjk le_rfl (by linarith [hE.half_le])
+    (cube_old_poincare hij cube_old_inv_two_pi_le_one) (cube_old_poincare hjk cube_old_inv_two_pi_le_one) (hE.norm_proj_le N i)
+    (hE.norm_proj_le N j) hx
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.norm_sub_le_infDist`. -/
+theorem poly_old_norm_sub_le_infDist {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) (N : ℕ) :
+    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).fst‖ +
+        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
+            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+        (Metric.infDist σ ((poly n S N).domainSub i) + Metric.infDist u ((poly n S N).domainSub j) +
+          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((poly n S N).harmonicW j) +
+          (hE.proj N).harmonicGap j *
+            Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+              ((poly n S N).domainSub j)) :=
+  (hE.proj N).norm_sub_le_infDist_harmonicGap hij hjk (by linarith [hE.half_le])
+    (norm_le_of_mem_orthogonal_cycles hij) (norm_le_of_mem_orthogonal_cycles hjk)
+    (poly_old_isGraphBounded_proj hE N i j) (poly_old_isGraphBounded_proj hE N j k) hs
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.norm_sub_le_of_infDist_le`. -/
+theorem poly_old_norm_sub_le_of_infDist_le {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) {K δ : ℝ} (N : ℕ)
+    (hσ : Metric.infDist σ ((poly n S N).domainSub i) ≤ K * δ)
+    (hu : Metric.infDist u ((poly n S N).domainSub j) ≤ K * δ)
+    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((poly n S N).harmonicW j) ≤
+      K * δ)
+    (hB : Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
+      ((poly n S N).domainSub j) ≤ K * δ) :
+    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).fst‖ +
+        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
+            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
+        δ := by
+  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
+  have h := (hE.proj N).norm_sub_le_infDist hij hjk (by linarith [hE.half_le]) hμ0
+    (norm_le_of_mem_orthogonal_cycles hij) (norm_le_of_mem_orthogonal_cycles hjk)
+    (poly_old_isGraphBounded_proj hE N i j) (poly_old_isGraphBounded_proj hE N j k)
+    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
+      (poly_old_isGraphBounded_proj hE N j k) hq') hs
+  refine h.trans ?_
+  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) := by
+    have := hE.two_mul_nonneg; positivity
+  have e : (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+      K * δ = (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+        ((4 + 2 * C) * (K * δ)) := by ring
+  rw [e]
+  refine mul_le_mul_of_nonneg_left ?_ hK0
+  have hB' := mul_le_mul_of_nonneg_left hB hμ0
+  have e' : (4 + 2 * C) * (K * δ) = 3 * (K * δ) + (1 + 2 * C) * (K * δ) := by ring
+  rw [e']
+  linarith
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.tendsto_harmonicGap`. -/
+theorem poly_old_tendsto_harmonicGap (j : ℤ) : Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
+    (fun N x => hE.norm_proj_le N j x) fun q _ => tendsto_infDist_poly S j q
+
+end Max
+
+section Min
+
+variable (hE : PolySmoothingEstimatesMin n S p C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.isGraphBounded_proj`. -/
+theorem polyMin_old_isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) :=
+  (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.norm_le_of_forall_inner_eq_zero`. -/
+theorem polyMin_old_norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
+    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (polyMin n S N).V i)
+    (hxo : ∀ y ∈ (polyMin n S N).cyclesW i, inner ℝ y x = 0) :
+    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
+      ‖(complexMin n).d i j ⟨x, (polyMin n S N).le_domain i j hx⟩‖ :=
+  (hE.proj N).norm_le_of_forall_inner_eq_zero hij (norm_le_of_mem_orthogonal_cycles_min hij)
+    hE.two_mul_nonneg (hE.norm_proj_le N i) hx hxo
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.existsUnique_mixed`. -/
+theorem polyMin_old_existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (polyMin n S N).V j) :
+    ∃! x, (polyMin n S N).toHilbertComplex.mixedForm i j k x =
+      (polyMin n S N).toHilbertComplex.mixedRHS i j f :=
+  (hE.proj N).existsUnique_mixed hij hjk le_rfl (by linarith [hE.half_le])
+    (cube_old_poincare_min hij cube_old_inv_two_pi_le_one) (cube_old_poincare_min hjk cube_old_inv_two_pi_le_one)
+    (hE.norm_proj_le N i) (hE.norm_proj_le N j) f
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.norm_le_of_mixed`. -/
+theorem polyMin_old_norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (polyMin n S N).V j}
+    {x : (polyMin n S N).toHilbertComplex.MixedSpace i j}
+    (hx : (polyMin n S N).toHilbertComplex.mixedForm i j k x =
+      (polyMin n S N).toHilbertComplex.mixedRHS i j f) :
+    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
+  (hE.proj N).norm_le_of_mixed hij hjk le_rfl (by linarith [hE.half_le])
+    (cube_old_poincare_min hij cube_old_inv_two_pi_le_one) (cube_old_poincare_min hjk cube_old_inv_two_pi_le_one)
+    (hE.norm_proj_le N i) (hE.norm_proj_le N j) hx
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.norm_sub_le_infDist`. -/
+theorem polyMin_old_norm_sub_le_infDist {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complexMin n).domainSpace i} {u : (complexMin n).domainSpace j}
+    {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) (N : ℕ) :
+    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).fst‖ +
+        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
+            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+        (Metric.infDist σ ((polyMin n S N).domainSub i) +
+          Metric.infDist u ((polyMin n S N).domainSub j) +
+          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyMin n S N).harmonicW j) +
+          (hE.proj N).harmonicGap j *
+            Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
+              ((polyMin n S N).domainSub j)) :=
+  (hE.proj N).norm_sub_le_infDist_harmonicGap hij hjk (by linarith [hE.half_le])
+    (norm_le_of_mem_orthogonal_cycles_min hij) (norm_le_of_mem_orthogonal_cycles_min hjk)
+    (polyMin_old_isGraphBounded_proj hE N i j) (polyMin_old_isGraphBounded_proj hE N j k) hs
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.norm_sub_le_of_infDist_le`. -/
+theorem polyMin_old_norm_sub_le_of_infDist_le {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
+    {σ : (complexMin n).domainSpace i} {u : (complexMin n).domainSpace j}
+    {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {K δ : ℝ} (N : ℕ)
+    (hσ : Metric.infDist σ ((polyMin n S N).domainSub i) ≤ K * δ)
+    (hu : Metric.infDist u ((polyMin n S N).domainSub j) ≤ K * δ)
+    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyMin n S N).harmonicW j) ≤
+      K * δ)
+    (hB : Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
+      ((polyMin n S N).domainSub j) ≤ K * δ) :
+    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).fst‖ +
+        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
+            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
+        δ := by
+  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
+  have h := (hE.proj N).norm_sub_le_infDist hij hjk (by linarith [hE.half_le]) hμ0
+    (norm_le_of_mem_orthogonal_cycles_min hij) (norm_le_of_mem_orthogonal_cycles_min hjk)
+    (polyMin_old_isGraphBounded_proj hE N i j) (polyMin_old_isGraphBounded_proj hE N j k)
+    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
+      (polyMin_old_isGraphBounded_proj hE N j k) hq') hs
+  refine h.trans ?_
+  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) := by
+    have := hE.two_mul_nonneg; positivity
+  have e : (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+      K * δ = (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
+        ((4 + 2 * C) * (K * δ)) := by ring
+  rw [e]
+  refine mul_le_mul_of_nonneg_left ?_ hK0
+  have hB' := mul_le_mul_of_nonneg_left hB hμ0
+  have e' : (4 + 2 * C) * (K * δ) = 3 * (K * δ) + (1 + 2 * C) * (K * δ) := by ring
+  rw [e']
+  linarith
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.tendsto_harmonicGap`. -/
+theorem polyMin_old_tendsto_harmonicGap (j : ℤ) : Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
+    (fun N x => hE.norm_proj_le N j x) fun q _ => tendsto_infDist_polyMin S j q
+
+end Min
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.norm_sub_le_meshSize_pow`. -/
+theorem poly_old_norm_sub_le_meshSize_pow {S : PolySeq}
+    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p C) {s : ℕ}
+    {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
+    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
+    (hs : (complex n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsCsForm s i L ((complex n).domainIncl i σ))
+    (hu : IsCsForm s j L ((complex n).domainIncl j u))
+    (hB : IsCsForm s j L ((complex n).domainIncl j
+      ((complex n).boundaryPart j ((complex n).domainIncl j u))))
+    (hq : IsCsForm s j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).fst‖ +
+        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
+            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L)) *
+          meshSize N ^ (s + 1) := by
+  have hC := hE.two_mul_nonneg
+  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
+  have hBi := polyInterpBound_nonneg (n := n) S i
+  have hBj := polyInterpBound_nonneg (n := n) S j
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hK : 2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+      meshSize N ^ (s + 1) =
+      2 * ((1 + 2 * C) * (polyInterpBound n S i * L * meshSize N ^ (s + 1))) +
+        2 * ((1 + 2 * C) * (polyInterpBound n S j * L * meshSize N ^ (s + 1))) := by ring
+  have hi : 2 * (polyInterpBound n S i * L * meshSize N ^ (s + 1)) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    rw [hK]; nlinarith
+  have hj : 2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    rw [hK]; nlinarith
+  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
+      ((poly n S N).harmonicW j) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    refine ((hE.proj N).infDist_harmonicW_le hjk hC (poly_old_isGraphBounded_proj hE N j k) q.2).trans ?_
+    have h := IsCsForm.infDist_domainSub_poly_le hSj
+      (σ := cyclesToDomainSpace ((complex n).harmonic_le_cycles j q.2)) hq hL0 N
+    rw [hK]
+    have : 0 ≤ 1 + 2 * C := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left h this]
+  exact poly_old_norm_sub_le_of_infDist_le hE hij hjk hs N
+    ((hσ.infDist_domainSub_poly_le hSi hL0 N).trans hi)
+    ((hu.infDist_domainSub_poly_le hSj hL0 N).trans hj) hq'
+    ((hB.infDist_domainSub_poly_le hSj hL0 N).trans hj)
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph`. -/
+theorem poly_old_infDist_domainSub_le_sobGraph {S : PolySeq}
+    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p C) {s L : ℝ}
+    (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) {j : ℤ} {σ : (complex n).domainSpace j}
+    (hσ : SobGraph n s L σ) :
+    Metric.infDist σ ((poly n S N).domainSub j) ≤
+      (1 + 2 * C) * (sobConstZ n S j + sobConstZ n S (j + 1)) * meshSize N ^ s * L := by
+  refine (infDist_domainSub_le_proj (hE.proj N) hE.two_mul_nonneg (hE.norm_proj_le N) j σ).trans ?_
+  have h1 := infDist_poly_le_sobAt S hs0 hs1 N hσ.1
+  have h2 := infDist_poly_le_sobAt S hs0 hs1 N hσ.2
+  have := hE.two_mul_nonneg
+  calc (1 + 2 * C) * (Metric.infDist ((complex n).domainIncl j σ) ((poly n S N).V j) +
+        Metric.infDist ((complex n).d j (j + 1) ((complex n).domainCoord j (j + 1) σ))
+          ((poly n S N).V (j + 1))) ≤
+      (1 + 2 * C) * (sobConstZ n S j * meshSize N ^ s * L +
+        sobConstZ n S (j + 1) * meshSize N ^ s * L) :=
+        mul_le_mul_of_nonneg_left (add_le_add h1 h2) (by linarith)
+    _ = _ := by ring
+
+omit [NeZero n] in
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high`. -/
+theorem poly_old_infDist_domainSub_le_sobGraph_high [NeZero n] {S : PolySeq}
+    {p' : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p' C)
+    {p : ℕ} (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
+    (hS0 : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
+    (hS1 : ∀ k : ℕ, (k : ℤ) = j + 1 → polySpace n p k ≤ S.space n k)
+    {σ : (complex n).domainSpace j} (hσ : SobGraph n s L σ) :
+    Metric.infDist σ ((poly n S N).domainSub j) ≤
+      (1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) *
+        meshSize N ^ min s (p + 1) * L := by
+  refine (infDist_domainSub_le_proj (hE.proj N) hE.two_mul_nonneg (hE.norm_proj_le N) j σ).trans ?_
+  have h1 := infDist_poly_le_sobAt_high S hns hs0 N hS0 hσ.1
+  have h2 := infDist_poly_le_sobAt_high S hns hs0 N hS1 hσ.2
+  have := hE.two_mul_nonneg
+  calc (1 + 2 * C) * (Metric.infDist ((complex n).domainIncl j σ) ((poly n S N).V j) +
+        Metric.infDist ((complex n).d j (j + 1) ((complex n).domainCoord j (j + 1) σ))
+          ((poly n S N).V (j + 1))) ≤
+      (1 + 2 * C) * (sobConstHighZ n S p j * meshSize N ^ min s (p + 1) * L +
+        sobConstHighZ n S p (j + 1) * meshSize N ^ min s (p + 1) * L) :=
+        mul_le_mul_of_nonneg_left (add_le_add h1 h2) (by linarith)
+    _ = _ := by ring
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.norm_sub_le_meshSize_pow`. -/
+theorem polyMin_old_norm_sub_le_meshSize_pow {S : PolySeq}
+    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimatesMin n S p C)
+    {s : ℕ} {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsCsFormMin s i L ((complexMin n).domainIncl i σ))
+    (hu : IsCsFormMin s j L ((complexMin n).domainIncl j u))
+    (hB : IsCsFormMin s j L ((complexMin n).domainIncl j
+      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
+    (hq : IsCsFormMin s j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).fst‖ +
+        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
+            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L)) *
+          meshSize N ^ (s + 1) := by
+  have hC := hE.two_mul_nonneg
+  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
+  have hBi := polyInterpBound_nonneg (n := n) S i
+  have hBj := polyInterpBound_nonneg (n := n) S j
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hK : 2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+      meshSize N ^ (s + 1) =
+      2 * ((1 + 2 * C) * (polyInterpBound n S i * L * meshSize N ^ (s + 1))) +
+        2 * ((1 + 2 * C) * (polyInterpBound n S j * L * meshSize N ^ (s + 1))) := by ring
+  have hi : 2 * (polyInterpBound n S i * L * meshSize N ^ (s + 1)) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    rw [hK]; nlinarith
+  have hj : 2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    rw [hK]; nlinarith
+  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
+      ((polyMin n S N).harmonicW j) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    refine ((hE.proj N).infDist_harmonicW_le hjk hC (polyMin_old_isGraphBounded_proj hE N j k) q.2).trans ?_
+    have h := IsCsFormMin.infDist_domainSub_polyMin_le hSj
+      (σ := cyclesToDomainSpace ((complexMin n).harmonic_le_cycles j q.2)) hq hL0 N
+    rw [hK]
+    have : 0 ≤ 1 + 2 * C := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left h this]
+  exact polyMin_old_norm_sub_le_of_infDist_le hE hij hjk hs N
+    ((hσ.infDist_domainSub_polyMin_le hSi hL0 N).trans hi)
+    ((hu.infDist_domainSub_polyMin_le hSj hL0 N).trans hj) hq'
+    ((hB.infDist_domainSub_polyMin_le hSj hL0 N).trans hj)
+
+/-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.norm_sub_le_meshSize_pow_tr`. -/
+theorem polyMin_old_norm_sub_le_meshSize_pow_tr {S : PolySeq}
+    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimatesMin n S p C)
+    {s : ℕ} {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
+    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
+    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
+    (hσ : IsCsFormTr s i L ((complexMin n).domainIncl i σ))
+    (hu : IsCsFormTr s j L ((complexMin n).domainIncl j u))
+    (hB : IsCsFormTr s j L ((complexMin n).domainIncl j
+      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
+    (hq : IsCsFormTr s j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
+    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).fst‖ +
+        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin n S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
+            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
+      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
+        (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L)) *
+          meshSize N ^ (s + 1) := by
+  have hC := hE.two_mul_nonneg
+  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
+  have hBi := polyInterpBound_nonneg (n := n) S i
+  have hBj := polyInterpBound_nonneg (n := n) S j
+  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
+  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
+  have hK : 2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+      meshSize N ^ (s + 1) =
+      2 * ((1 + 2 * C) * (polyInterpBound n S i * L * meshSize N ^ (s + 1))) +
+        2 * ((1 + 2 * C) * (polyInterpBound n S j * L * meshSize N ^ (s + 1))) := by ring
+  have hi : 2 * (polyInterpBound n S i * L * meshSize N ^ (s + 1)) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    rw [hK]; nlinarith
+  have hj : 2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    rw [hK]; nlinarith
+  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
+      ((polyMin n S N).harmonicW j) ≤
+      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
+        meshSize N ^ (s + 1) := by
+    refine ((hE.proj N).infDist_harmonicW_le hjk hC (polyMin_old_isGraphBounded_proj hE N j k) q.2).trans ?_
+    have h := IsCsFormTr.infDist_domainSub_polyMin_le hSj
+      (σ := cyclesToDomainSpace ((complexMin n).harmonic_le_cycles j q.2)) hq hL0 N
+    rw [hK]
+    have : 0 ≤ 1 + 2 * C := by linarith
+    nlinarith [mul_le_mul_of_nonneg_left h this]
+  exact polyMin_old_norm_sub_le_of_infDist_le hE hij hjk hs N
+    ((hσ.infDist_domainSub_polyMin_le hSi hL0 N).trans hi)
+    ((hu.infDist_domainSub_polyMin_le hSj hL0 N).trans hj) hq'
+    ((hB.infDist_domainSub_polyMin_le hSj hL0 N).trans hj)
+
+end Poly
+
+section Parity
+
+open Feec.Models.Cube.ParitySmoother
+
+variable {J : Finset (Fin n)} {S : PolySeq} {ρ : ℕ → ReflKernel n} {C : ℝ}
+  (hE : ParitySmoothingEstimates n J S ρ C)
+include hE
+
+/-- The old `Feec.Models.Cube.FEM.ParitySmoothingEstimates.isGraphBounded_proj`. -/
+theorem parity_old_isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) :=
+  (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)
+
+end Parity
+
+end CubeTowerOld
+
+section ParallelepipedOld
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube Feec.Models.Parallelepiped
+
+/-- The old `HilbertComplex.Subcomplex.CochainProjection.IsGraphBounded.mono'`. -/
+theorem para_old_isGraphBounded_mono
+    {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+    [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+    {H : HilbertComplex ℝ c W} {S : H.Subcomplex} {P : S.CochainProjection} {i j : ι} {C C' : ℝ}
+    (h : P.IsGraphBounded i j C) (hC : 0 ≤ C) (hCC : C ≤ C') : P.IsGraphBounded i j C' :=
+  fun x => (h x).trans (mul_le_mul_of_nonneg_right (pow_le_pow_left₀ hC hCC 2) (by positivity))
+
+section Generic
+
+variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
+  [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ (ComplexShape.up ℤ) W}
+
+/-- The old `Models.Parallelepiped.hasUniformProj_of_chainIso`. -/
+theorem para_old_hasUniformProj_of_chainIso {W' : ℤ → Type*} [∀ i, NormedAddCommGroup (W' i)]
+    [∀ i, InnerProductSpace ℝ (W' i)] [∀ i, CompleteSpace (W' i)]
+    {H' : HilbertComplex ℝ (ComplexShape.up ℤ) W'} {e : ∀ i, W i ≃L[ℝ] W' i}
+    (hI : IsChainIso H H' e) {M M' : ℝ} (hM : ∀ k, ‖(e k : W k →L[ℝ] W' k)‖ ≤ M)
+    (hM' : ∀ k, ‖((e k).symm : W' k →L[ℝ] W k)‖ ≤ M')
+    (hfin : ∀ j, FiniteDimensional ℝ (H'.harmonic j))
+    {S' : ℕ → H'.Subcomplex} {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)]
+    (hS : ∀ N k x, x ∈ (S N).V k ↔ e k x ∈ (S' N).V k) {C : ℝ} (hC : 0 ≤ C)
+    (P : ∀ N, (S' N).CochainProjection) (hb : ∀ N i x, ‖(P N).π i x‖ ≤ C * ‖x‖)
+    (hg : ∀ N i j, (P N).IsGraphBounded i j C)
+    (happ : ∀ j (x' : W' j), Tendsto (fun N => Metric.infDist x' ((S' N).V j : Set (W' j)))
+      atTop (𝓝 0)) :
+    Subcomplex.HasUniformProj atTop S := by
+  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0)
+  have hM'0 : 0 ≤ M' := (norm_nonneg _).trans (hM' 0)
+  set C₀ := max 1 (M' * C * M)
+  set π : ∀ N, (S N).CochainProjection := fun N => hI.comapProj (S N) (hS N) (P N)
+  have hbπ : ∀ N i x, ‖(π N).π i x‖ ≤ C₀ * ‖x‖ := fun N i x =>
+    (hI.norm_comapProj_le _ _ (P N) hC (hb N i) (hM i) (hM' i) x).trans
+      (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
+  refine ⟨C₀, π, le_max_left _ _, hbπ, fun N i j =>
+    para_old_isGraphBounded_mono (graph_old_isGraphBounded_comapProj hI _ _ (P N) (hg N i j) hM hM')
+      (mul_nonneg (mul_nonneg hM'0 hC) hM0) (le_max_right _ _), fun j => ?_⟩
+  have := hfin j
+  have := hI.finiteDimensional_harmonic j
+  exact Subcomplex.CochainProjection.tendsto_harmonicGap π (zero_le_one.trans (le_max_left _ _))
+    (fun N x => hbπ N j x) fun q _ => IsChainIso.tendsto_infDist_comapSub S hS (happ j) q
+
+end Generic
+
+variable {n : ℕ} (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
+
+/-- The old `Models.Parallelepiped.one_le_projConst`. -/
+theorem para_old_one_le_projConst (C : ℝ) : 1 ≤ max 1 (pullConst A⁻¹ * (2 * C) * pullConst A) :=
+  le_max_left _ _
+
+/-- The old `Models.Parallelepiped.one_le_poincareConst`. -/
+theorem para_old_one_le_poincareConst : 1 ≤ poincareConst A := le_max_left _ _
+
+variable [NeZero n] {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
+
+/-- The old `Models.Parallelepiped.norm_proj_le`. -/
+theorem para_old_norm_proj_le (hE : FEM.SmoothingEstimates n p C) (N : ℕ) (i : ℤ)
+    (x : L2F ℝ (domain A b) (formIdx n i)) :
+    ‖((isChainIso A hA b).comapProj (whitney A hA b N)
+      (fun i x => mem_whitney_V_iff A hA b N i x) (hE.proj N)).π i x‖ ≤ max 1 (pullConst A⁻¹ * (2 * C) * pullConst A) * ‖x‖ :=
+  ((isChainIso A hA b).norm_comapProj_le _ _ (hE.proj N) hE.two_mul_nonneg (hE.norm_proj_le N i)
+    (norm_pullEquiv_le A hA b i) (norm_pullEquiv_symm_le A hA b i) x).trans
+    (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
+
+/-- The old `Models.Parallelepiped.isGraphBounded_proj`. -/
+theorem para_old_isGraphBounded_proj (hE : FEM.SmoothingEstimates n p C) (N : ℕ) (i j : ℤ) :
+    ((isChainIso A hA b).comapProj (whitney A hA b N)
+      (fun i x => mem_whitney_V_iff A hA b N i x) (hE.proj N)).IsGraphBounded i j
+      (max 1 (pullConst A⁻¹ * (2 * C) * pullConst A)) :=
+  para_old_isGraphBounded_mono (graph_old_isGraphBounded_comapProj (isChainIso A hA b) _ _ (hE.proj N)
+    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j))
+    (norm_pullEquiv_le A hA b) (norm_pullEquiv_symm_le A hA b))
+    (mul_nonneg (mul_nonneg (pullConst_nonneg _) hE.two_mul_nonneg) (pullConst_nonneg _))
+    (le_max_right _ _)
+
+/-- The old `Models.Parallelepiped.norm_projMin_le`. -/
+theorem para_old_norm_projMin_le (hE : FEM.SmoothingEstimatesMin n p C) (N : ℕ) (i : ℤ)
+    (x : L2F ℝ (domain A b) (formIdx n i)) :
+    ‖((isChainIsoMin A hA b).comapProj (whitneyMin A hA b N)
+      (fun i x => mem_whitneyMin_V_iff A hA b N i x) (hE.proj N)).π i x‖ ≤ max 1 (pullConst A⁻¹ * (2 * C) * pullConst A) * ‖x‖ :=
+  ((isChainIsoMin A hA b).norm_comapProj_le _ _ (hE.proj N) hE.two_mul_nonneg
+    (hE.norm_proj_le N i) (norm_pullEquiv_le A hA b i) (norm_pullEquiv_symm_le A hA b i) x).trans
+    (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
+
+/-- The old `Models.Parallelepiped.isGraphBounded_projMin`. -/
+theorem para_old_isGraphBounded_projMin (hE : FEM.SmoothingEstimatesMin n p C) (N : ℕ) (i j : ℤ) :
+    ((isChainIsoMin A hA b).comapProj (whitneyMin A hA b N)
+      (fun i x => mem_whitneyMin_V_iff A hA b N i x) (hE.proj N)).IsGraphBounded i j
+      (max 1 (pullConst A⁻¹ * (2 * C) * pullConst A)) :=
+  para_old_isGraphBounded_mono (graph_old_isGraphBounded_comapProj (isChainIsoMin A hA b) _ _ (hE.proj N)
+    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j))
+    (norm_pullEquiv_le A hA b) (norm_pullEquiv_symm_le A hA b))
+    (mul_nonneg (mul_nonneg (pullConst_nonneg _) hE.two_mul_nonneg) (pullConst_nonneg _))
+    (le_max_right _ _)
+
+/-- The old `Models.Parallelepiped.tendsto_harmonicGap_proj`. -/
+theorem para_old_tendsto_harmonicGap_proj (hE : FEM.SmoothingEstimates n p C) (j : ℤ) :
+    Tendsto (fun N => ((isChainIso A hA b).comapProj (whitney A hA b N)
+      (fun i x => mem_whitney_V_iff A hA b N i x) (hE.proj N)).harmonicGap j) atTop (𝓝 0) := by
+  have := finiteDimensional_harmonic A hA b j
+  exact Subcomplex.CochainProjection.tendsto_harmonicGap (fun N => (isChainIso A hA b).comapProj (whitney A hA b N)
+      (fun i x => mem_whitney_V_iff A hA b N i x) (hE.proj N))
+    (zero_le_one.trans (para_old_one_le_projConst A C)) (fun N x => para_old_norm_proj_le A hA b hE N j x)
+    fun q _ => IsChainIso.tendsto_infDist_comapSub (whitney A hA b)
+      (fun N i x => mem_whitney_V_iff A hA b N i x) (fun x' => FEM.tendsto_infDist_whitney j x') q
+
+/-- The old `Models.Parallelepiped.tendsto_harmonicGap_projMin`. -/
+theorem para_old_tendsto_harmonicGap_projMin (hE : FEM.SmoothingEstimatesMin n p C) (j : ℤ) :
+    Tendsto (fun N => ((isChainIsoMin A hA b).comapProj (whitneyMin A hA b N)
+      (fun i x => mem_whitneyMin_V_iff A hA b N i x) (hE.proj N)).harmonicGap j) atTop (𝓝 0) := by
+  have := finiteDimensional_harmonic_min A hA b j
+  exact Subcomplex.CochainProjection.tendsto_harmonicGap (fun N => (isChainIsoMin A hA b).comapProj (whitneyMin A hA b N)
+      (fun i x => mem_whitneyMin_V_iff A hA b N i x) (hE.proj N))
+    (zero_le_one.trans (para_old_one_le_projConst A C)) (fun N x => para_old_norm_projMin_le A hA b hE N j x)
+    fun q _ => IsChainIso.tendsto_infDist_comapSub (whitneyMin A hA b)
+      (fun N i x => mem_whitneyMin_V_iff A hA b N i x)
+      (fun x' => FEM.tendsto_infDist_whitneyMin j x') q
+
+/-- The old `Models.Parallelepiped.smoothedProjection_uniform`. -/
+theorem para_old_smoothedProjection_uniform : ∃ (C : ℝ) (π : ∀ N, (whitney A hA b N).CochainProjection),
+    1 ≤ C ∧ (∀ N i x, ‖(π N).π i x‖ ≤ C * ‖x‖) ∧ (∀ N i j, (π N).IsGraphBounded i j C) ∧
+      ∀ j, Tendsto (fun N => (π N).harmonicGap j) atTop (𝓝 0) := by
+  have := finiteDimensional_harmonic A hA b
+  exact (whitneyFamily A hA b).hasUniformProj
+
+/-- The old `Models.Parallelepiped.smoothedProjection_uniform_min`. -/
+theorem para_old_smoothedProjection_uniform_min :
+    ∃ (C : ℝ) (π : ∀ N, (whitneyMin A hA b N).CochainProjection),
+    1 ≤ C ∧ (∀ N i x, ‖(π N).π i x‖ ≤ C * ‖x‖) ∧ (∀ N i j, (π N).IsGraphBounded i j C) ∧
+      ∀ j, Tendsto (fun N => (π N).harmonicGap j) atTop (𝓝 0) := by
+  have := finiteDimensional_harmonic_min A hA b
+  exact (whitneyFamilyMin A hA b).hasUniformProj
+
+/-- The old `Models.Parallelepiped.discretePoincare`. -/
+theorem para_old_discretePoincare : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+    {x : L2F ℝ (domain A b) (formIdx n i)} (hx : x ∈ (whitney A hA b N).V i),
+    (∀ y ∈ (whitney A hA b N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complex A b).d i j ⟨x, (whitney A hA b N).le_domain i j hx⟩‖ := by
+  have := finiteDimensional_harmonic A hA b
+  exact (whitneyFamily A hA b).hasUniformProj.discretePoincare (poincare A hA b)
+
+/-- The old `Models.Parallelepiped.discretePoincare_min`. -/
+theorem para_old_discretePoincare_min : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+    {x : L2F ℝ (domain A b) (formIdx n i)} (hx : x ∈ (whitneyMin A hA b N).V i),
+    (∀ y ∈ (whitneyMin A hA b N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complexMin A b).d i j ⟨x, (whitneyMin A hA b N).le_domain i j hx⟩‖ := by
+  have := finiteDimensional_harmonic_min A hA b
+  exact (whitneyFamilyMin A hA b).hasUniformProj.discretePoincare (poincare_min A hA b)
+
+/-- The old `Models.Parallelepiped.mixed_wellPosed`. -/
+theorem para_old_mixed_wellPosed : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j →
+    (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (whitney A hA b N).V j),
+    (∃! x, (whitney A hA b N).toHilbertComplex.mixedForm i j k x =
+      (whitney A hA b N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (whitney A hA b N).toHilbertComplex.MixedSpace i j,
+      (whitney A hA b N).toHilbertComplex.mixedForm i j k x =
+        (whitney A hA b N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := finiteDimensional_harmonic A hA b
+  have := (whitneyFamily A hA b).finiteDimensional
+  exact (whitneyFamily A hA b).hasUniformProj.mixed_wellPosed (poincare A hA b) (para_old_one_le_poincareConst A)
+
+/-- The old `Models.Parallelepiped.mixed_wellPosed_min`. -/
+theorem para_old_mixed_wellPosed_min : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j →
+    (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (whitneyMin A hA b N).V j),
+    (∃! x, (whitneyMin A hA b N).toHilbertComplex.mixedForm i j k x =
+      (whitneyMin A hA b N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (whitneyMin A hA b N).toHilbertComplex.MixedSpace i j,
+      (whitneyMin A hA b N).toHilbertComplex.mixedForm i j k x =
+        (whitneyMin A hA b N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := finiteDimensional_harmonic_min A hA b
+  have := (whitneyFamilyMin A hA b).finiteDimensional
+  exact (whitneyFamilyMin A hA b).hasUniformProj.mixed_wellPosed (poincare_min A hA b) (para_old_one_le_poincareConst A)
+
+/-- The old `Models.Parallelepiped.mixed_quasiOptimal`. -/
+theorem para_old_mixed_quasiOptimal : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complex A b).domainSpace i}
+    {u : (complex A b).domainSpace j} {q : (complex A b).harmonic j},
+    (complex A b).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (whitney A hA b N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney A hA b N) hij hjk f).fst‖ +
+        ‖u - (whitney A hA b N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney A hA b N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney A hA b N) hij hjk f).snd.snd :
+            (whitney A hA b N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((whitney A hA b N).domainSub i) +
+        Metric.infDist u ((whitney A hA b N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((whitney A hA b N).harmonicW j) +
+        μ j N * Metric.infDist ((complex A b).boundaryPart j ((complex A b).domainIncl j u))
+          ((whitney A hA b N).domainSub j)) := by
+  have := finiteDimensional_harmonic A hA b
+  have := (whitneyFamily A hA b).finiteDimensional
+  exact (whitneyFamily A hA b).hasUniformProj.mixed_quasiOptimal (poincare A hA b)
+
+/-- The old `Models.Parallelepiped.mixed_quasiOptimal_min`. -/
+theorem para_old_mixed_quasiOptimal_min : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complexMin A b).domainSpace i}
+    {u : (complexMin A b).domainSpace j} {q : (complexMin A b).harmonic j},
+    (complexMin A b).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (whitneyMin A hA b N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin A hA b N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin A hA b N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin A hA b N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin A hA b N) hij hjk
+            f).snd.snd : (whitneyMin A hA b N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((whitneyMin A hA b N).domainSub i) +
+        Metric.infDist u ((whitneyMin A hA b N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j))
+          ((whitneyMin A hA b N).harmonicW j) +
+        μ j N * Metric.infDist ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))
+          ((whitneyMin A hA b N).domainSub j)) := by
+  have := finiteDimensional_harmonic_min A hA b
+  have := (whitneyFamilyMin A hA b).finiteDimensional
+  exact (whitneyFamilyMin A hA b).hasUniformProj.mixed_quasiOptimal (poincare_min A hA b)
+
+/-- The old `Models.Parallelepiped.mixed_rate_smooth`. -/
+theorem para_old_mixed_rate_smooth {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)}
+    {σ : (complex A b).domainSpace i} {u : (complex A b).domainSpace j}
+    {q : (complex A b).harmonic j},
+    (complex A b).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsC2Form A hA b i L ((complex A b).domainIncl i σ) →
+    IsC2Form A hA b j L ((complex A b).domainIncl j u) →
+    IsC2Form A hA b j L ((complex A b).domainIncl j
+      ((complex A b).boundaryPart j ((complex A b).domainIncl j u))) →
+    IsC2Form A hA b j L (q : L2F ℝ (domain A b) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (whitney A hA b N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney A hA b N) hij hjk f).fst‖ +
+        ‖u - (whitney A hA b N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitney A hA b N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney A hA b N) hij hjk f).snd.snd :
+            (whitney A hA b N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * L * FEM.meshSize N := by
+  have := finiteDimensional_harmonic A hA b
+  obtain ⟨K, hK⟩ := ((whitneyFamily A hA b).staticFEEC (closedRangeAt A hA b) j).rate (whitneyJackson A hA b) () hij hjk
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL hσ hu hb hq N
+  simp only [whitneyFamily_V, whitneyJackson, Real.rpow_one] at h
+  exact h
+
+/-- The old `Models.Parallelepiped.mixed_rate_smooth_min`. -/
+theorem para_old_mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)}
+    {σ : (complexMin A b).domainSpace i} {u : (complexMin A b).domainSpace j}
+    {q : (complexMin A b).harmonic j},
+    (complexMin A b).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
+    IsC2FormMin A hA b i L ((complexMin A b).domainIncl i σ) →
+    IsC2FormMin A hA b j L ((complexMin A b).domainIncl j u) →
+    IsC2FormMin A hA b j L ((complexMin A b).domainIncl j
+      ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))) →
+    IsC2FormMin A hA b j L (q : L2F ℝ (domain A b) (formIdx n j)) → ∀ N : ℕ,
+    ‖σ - (whitneyMin A hA b N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin A hA b N) hij hjk f).fst‖ +
+        ‖u - (whitneyMin A hA b N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (whitneyMin A hA b N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin A hA b N) hij hjk
+            f).snd.snd : (whitneyMin A hA b N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * L * FEM.meshSize N := by
+  have := finiteDimensional_harmonic_min A hA b
+  obtain ⟨K, hK⟩ := ((whitneyFamilyMin A hA b).staticFEEC (closedRangeAt_min A hA b) j).rate (whitneyJacksonMin A hA b) () hij hjk
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL hσ hu hb hq N
+  simp only [whitneyFamilyMin_V, whitneyJacksonMin, Real.rpow_one] at h
+  exact h
+
+/-- The old `Models.Parallelepiped.polySmoothedProjection_uniform`. -/
+theorem para_old_polySmoothedProjection_uniform (S : PolySeq) :
+    Subcomplex.HasUniformProj atTop (poly A hA b S) := by
+  have := finiteDimensional_harmonic A hA b
+  exact (polyFamily A hA b S).hasUniformProj
+
+/-- The old `Models.Parallelepiped.polySmoothedProjection_uniform_min`. -/
+theorem para_old_polySmoothedProjection_uniform_min (S : PolySeq) :
+    Subcomplex.HasUniformProj atTop (polyMin A hA b S) := by
+  have := finiteDimensional_harmonic_min A hA b
+  exact (polyFamilyMin A hA b S).hasUniformProj
+
+/-- The old `Models.Parallelepiped.discretePoincare_poly`. -/
+theorem para_old_discretePoincare_poly (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (domain A b) (formIdx n i)}
+    (hx : x ∈ (poly A hA b S N).V i), (∀ y ∈ (poly A hA b S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complex A b).d i j ⟨x, (poly A hA b S N).le_domain i j hx⟩‖ := by
+  have := finiteDimensional_harmonic A hA b
+  exact (polyFamily A hA b S).hasUniformProj.discretePoincare (poincare A hA b)
+
+/-- The old `Models.Parallelepiped.discretePoincare_polyMin`. -/
+theorem para_old_discretePoincare_polyMin (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
+    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (domain A b) (formIdx n i)}
+    (hx : x ∈ (polyMin A hA b S N).V i),
+    (∀ y ∈ (polyMin A hA b S N).cyclesW i, inner ℝ y x = 0) →
+      ‖x‖ ≤ c * ‖(complexMin A b).d i j ⟨x, (polyMin A hA b S N).le_domain i j hx⟩‖ := by
+  have := finiteDimensional_harmonic_min A hA b
+  exact (polyFamilyMin A hA b S).hasUniformProj.discretePoincare (poincare_min A hA b)
+
+/-- The old `Models.Parallelepiped.mixed_wellPosed_poly`. -/
+theorem para_old_mixed_wellPosed_poly (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ)
+    (f : (poly A hA b S N).V j),
+    (∃! x, (poly A hA b S N).toHilbertComplex.mixedForm i j k x =
+      (poly A hA b S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (poly A hA b S N).toHilbertComplex.MixedSpace i j,
+      (poly A hA b S N).toHilbertComplex.mixedForm i j k x =
+        (poly A hA b S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := finiteDimensional_harmonic A hA b
+  have := (polyFamily A hA b S).finiteDimensional
+  exact (polyFamily A hA b S).hasUniformProj.mixed_wellPosed (poincare A hA b) (para_old_one_le_poincareConst A)
+
+/-- The old `Models.Parallelepiped.mixed_wellPosed_polyMin`. -/
+theorem para_old_mixed_wellPosed_polyMin (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
+    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ)
+    (f : (polyMin A hA b S N).V j),
+    (∃! x, (polyMin A hA b S N).toHilbertComplex.mixedForm i j k x =
+      (polyMin A hA b S N).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (polyMin A hA b S N).toHilbertComplex.MixedSpace i j,
+      (polyMin A hA b S N).toHilbertComplex.mixedForm i j k x =
+        (polyMin A hA b S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  have := finiteDimensional_harmonic_min A hA b
+  have := (polyFamilyMin A hA b S).finiteDimensional
+  exact (polyFamilyMin A hA b S).hasUniformProj.mixed_wellPosed (poincare_min A hA b) (para_old_one_le_poincareConst A)
+
+/-- The old `Models.Parallelepiped.mixed_quasiOptimal_poly`. -/
+theorem para_old_mixed_quasiOptimal_poly (S : PolySeq) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complex A b).domainSpace i}
+    {u : (complex A b).domainSpace j} {q : (complex A b).harmonic j},
+    (complex A b).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (poly A hA b S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly A hA b S N) hij hjk f).fst‖ +
+        ‖u - (poly A hA b S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (poly A hA b S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (poly A hA b S N) hij hjk
+            f).snd.snd : (poly A hA b S N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((poly A hA b S N).domainSub i) +
+        Metric.infDist u ((poly A hA b S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((poly A hA b S N).harmonicW j) +
+        μ j N * Metric.infDist ((complex A b).boundaryPart j ((complex A b).domainIncl j u))
+          ((poly A hA b S N).domainSub j)) := by
+  have := finiteDimensional_harmonic A hA b
+  have := (polyFamily A hA b S).finiteDimensional
+  exact (polyFamily A hA b S).hasUniformProj.mixed_quasiOptimal (poincare A hA b)
+
+/-- The old `Models.Parallelepiped.mixed_quasiOptimal_polyMin`. -/
+theorem para_old_mixed_quasiOptimal_polyMin (S : PolySeq) :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complexMin A b).domainSpace i}
+    {u : (complexMin A b).domainSpace j} {q : (complexMin A b).harmonic j},
+    (complexMin A b).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (polyMin A hA b S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin A hA b S N) hij hjk f).fst‖ +
+        ‖u - (polyMin A hA b S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
+          (polyMin A hA b S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (domain A b) (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin A hA b S N) hij hjk
+            f).snd.snd : (polyMin A hA b S N).V j) : L2F ℝ (domain A b) (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((polyMin A hA b S N).domainSub i) +
+        Metric.infDist u ((polyMin A hA b S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j))
+          ((polyMin A hA b S N).harmonicW j) +
+        μ j N * Metric.infDist ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))
+          ((polyMin A hA b S N).domainSub j)) := by
+  have := finiteDimensional_harmonic_min A hA b
+  have := (polyFamilyMin A hA b S).finiteDimensional
+  exact (polyFamilyMin A hA b S).hasUniformProj.mixed_quasiOptimal (poincare_min A hA b)
+
+end ParallelepipedOld
+
+section StarShapedOld
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube Feec.Models.StarShaped
+
+variable {n : ℕ} [NeZero n]
+
+section Whitney
+
+variable {D : StarDomain n} (F : MeshFamily D)
+
+/-- The old `Models.StarShaped.MeshFamily.smoothedProjection_uniform`. -/
+theorem star_old_smoothedProjection_uniform [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
+    Subcomplex.HasUniformProj atTop F.whitney :=
+  F.whitneyFamily.hasUniformProj
+
+/-- The old `Models.StarShaped.MeshFamily.discretePoincare`. -/
+theorem star_old_discretePoincare {cP : ℝ} (hP : HasPoincare D.complex cP) :
+    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.whitney N).V i),
+      (∀ y ∈ (F.whitney N).cyclesW i, inner ℝ y x = 0) →
+        ‖x‖ ≤ c * ‖D.complex.d i j ⟨x, (F.whitney N).le_domain i j hx⟩‖ :=
+  ⟨F.whitneyFamily.projBound * cP, fun {_ _} hij N _ hx hxo => (F.whitneyFamily.π N).norm_le_of_forall_inner_eq_zero hij
+    (hP _ _ hij) (zero_le_one.trans F.whitneyFamily.one_le_projBound) (F.whitneyFamily.norm_π_le N _) hx hxo⟩
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_wellPosed`. -/
+theorem star_old_mixed_wellPosed {cP : ℝ} (hP : HasPoincare D.complex cP) :
+    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
+      ∀ (N : ℕ) (f : (F.whitney N).V j),
+      (∃! x, (F.whitney N).toHilbertComplex.mixedForm i j k x =
+        (F.whitney N).toHilbertComplex.mixedRHS i j f) ∧
+      ∀ x : (F.whitney N).toHilbertComplex.MixedSpace i j,
+        (F.whitney N).toHilbertComplex.mixedForm i j k x =
+          (F.whitney N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  refine F.exists_uniform_proj.elim fun K hK => ?_
+  have hcP : 1 ≤ max 1 cP := le_max_left _ _
+  have hP' := hP.mono (le_max_right 1 cP)
+  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
+    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
+  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
+  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_quasiOptimal`. -/
+theorem star_old_mixed_quasiOptimal {cP : ℝ} (hP : HasPoincare D.complex cP)
+    [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i} {u : D.complex.domainSpace j}
+    {q : D.complex.harmonic j},
+    D.complex.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (F.whitney N).embD i
+        (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).fst‖ +
+        ‖u - (F.whitney N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
+          (F.whitney N) hij hjk f).snd.snd : (F.whitney N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((F.whitney N).domainSub i) +
+        Metric.infDist u ((F.whitney N).domainSub j) +
+        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.whitney N).harmonicW j) +
+        μ j N * Metric.infDist (D.complex.boundaryPart j (D.complex.domainIncl j u))
+          ((F.whitney N).domainSub j)) :=
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (star_old_smoothedProjection_uniform F)
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_rate_smooth`. -/
+theorem star_old_mixed_rate_smooth {cP : ℝ} (hP : HasPoincare D.complex cP) {i j k : ℤ}
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i} {u : D.complex.domainSpace j}
+    {q : D.complex.harmonic j} (hs : D.complex.IsMixedSolution i j k f σ u q) {L : ℝ}
+    (hL0 : 0 ≤ L) (hσ : D.IsC2Form i L (D.complex.domainIncl i σ))
+    (hu : D.IsC2Form j L (D.complex.domainIncl j u))
+    (hb : D.IsC2Form j L (D.complex.domainIncl j
+      (D.complex.boundaryPart j (D.complex.domainIncl j u))))
+    (hq : D.IsC2Form j L (q : L2F ℝ D.Ω (formIdx n j))) :
+    ∃ K : ℝ, ∀ N : ℕ,
+      ‖σ - (F.whitney N).embD i
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).fst‖ +
+        ‖u - (F.whitney N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
+          (F.whitney N) hij hjk f).snd.snd : (F.whitney N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
+      K * L * (F.mesh N).meshSize := by
+  obtain ⟨K, hK⟩ := F.whitneyFamily.rate F.whitneyJackson () hij hjk
+    ((D.complex.closedRangeAt_iff_poincare_of_rel hij).2 ⟨cP, hP i j hij⟩)
+    ((D.complex.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨cP, hP j k hjk⟩)
+  refine ⟨K, fun N => ?_⟩
+  have h := hK hs hL0 hσ hu hb hq N
+  simp only [MeshFamily.whitneyFamily_V, MeshFamily.whitneyJackson, Real.rpow_one] at h
+  exact h
+
+/-- The old `Models.StarShaped.MeshFamily.smoothedProjection_uniformMin`. -/
+theorem star_old_smoothedProjection_uniformMin [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
+    Subcomplex.HasUniformProj atTop F.whitneyMin :=
+  F.whitneyFamilyMin.hasUniformProj
+
+/-- The old `Models.StarShaped.MeshFamily.discretePoincareMin`. -/
+theorem star_old_discretePoincareMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
+    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.whitneyMin N).V i),
+      (∀ y ∈ (F.whitneyMin N).cyclesW i, inner ℝ y x = 0) →
+        ‖x‖ ≤ c * ‖D.complexMin.d i j ⟨x, (F.whitneyMin N).le_domain i j hx⟩‖ :=
+  ⟨F.whitneyFamilyMin.projBound * cP, fun {_ _} hij N _ hx hxo => (F.whitneyFamilyMin.π N).norm_le_of_forall_inner_eq_zero hij
+    (hP _ _ hij) (zero_le_one.trans F.whitneyFamilyMin.one_le_projBound) (F.whitneyFamilyMin.norm_π_le N _) hx hxo⟩
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_wellPosedMin`. -/
+theorem star_old_mixed_wellPosedMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
+    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
+      ∀ (N : ℕ) (f : (F.whitneyMin N).V j),
+      (∃! x, (F.whitneyMin N).toHilbertComplex.mixedForm i j k x =
+        (F.whitneyMin N).toHilbertComplex.mixedRHS i j f) ∧
+      ∀ x : (F.whitneyMin N).toHilbertComplex.MixedSpace i j,
+        (F.whitneyMin N).toHilbertComplex.mixedForm i j k x =
+          (F.whitneyMin N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  refine F.exists_uniform_projMin.elim fun K hK => ?_
+  have hcP : 1 ≤ max 1 cP := le_max_left _ _
+  have hP' := hP.mono (le_max_right 1 cP)
+  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
+    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
+  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
+  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_quasiOptimalMin`. -/
+theorem star_old_mixed_quasiOptimalMin {cP : ℝ} (hP : HasPoincare D.complexMin cP)
+    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i} {u : D.complexMin.domainSpace j}
+    {q : D.complexMin.harmonic j},
+    D.complexMin.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (F.whitneyMin N).embD i
+        (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).fst‖ +
+        ‖u - (F.whitneyMin N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
+          (F.whitneyMin N) hij hjk f).snd.snd : (F.whitneyMin N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((F.whitneyMin N).domainSub i) +
+        Metric.infDist u ((F.whitneyMin N).domainSub j) +
+        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.whitneyMin N).harmonicW j) +
+        μ j N * Metric.infDist (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))
+          ((F.whitneyMin N).domainSub j)) :=
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (star_old_smoothedProjection_uniformMin F)
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_rate_smoothMin`. -/
+theorem star_old_mixed_rate_smoothMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {i j k : ℤ}
+    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i} {u : D.complexMin.domainSpace j}
+    {q : D.complexMin.harmonic j} (hs : D.complexMin.IsMixedSolution i j k f σ u q) {L : ℝ}
+    (hL0 : 0 ≤ L) (hσ : D.IsC2FormMin i L (D.complexMin.domainIncl i σ))
+    (hu : D.IsC2FormMin j L (D.complexMin.domainIncl j u))
+    (hb : D.IsC2FormMin j L (D.complexMin.domainIncl j
+      (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))))
+    (hq : D.IsC2FormMin j L (q : L2F ℝ D.Ω (formIdx n j))) :
+    ∃ K : ℝ, ∀ N : ℕ,
+      ‖σ - (F.whitneyMin N).embD i
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).fst‖ +
+        ‖u - (F.whitneyMin N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
+          (F.whitneyMin N) hij hjk f).snd.snd : (F.whitneyMin N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
+      K * L * (F.mesh N).meshSize := by
+  obtain ⟨K, hK⟩ := F.whitneyFamilyMin.rate F.whitneyJacksonMin () hij hjk
+    ((D.complexMin.closedRangeAt_iff_poincare_of_rel hij).2 ⟨cP, hP i j hij⟩)
+    ((D.complexMin.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨cP, hP j k hjk⟩)
+  refine ⟨K, fun N => ?_⟩
+  have h := hK hs hL0 hσ hu hb hq N
+  simp only [MeshFamily.whitneyFamilyMin_V, MeshFamily.whitneyJacksonMin, Real.rpow_one] at h
+  exact h
+
+end Whitney
+
+section Poly
+
+variable {D : StarDomain n} (F : MeshFamily D) (S : PolySeq)
+
+/-- The old `Models.StarShaped.MeshFamily.polySmoothedProjection_uniform`. -/
+theorem star_old_polySmoothedProjection_uniform [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
+    Subcomplex.HasUniformProj atTop (F.poly S) :=
+  (F.polyFamily S).hasUniformProj
+
+/-- The old `Models.StarShaped.MeshFamily.discretePoincare_poly`. -/
+theorem star_old_discretePoincare_poly {cP : ℝ} (hP : HasPoincare D.complex cP) :
+    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.poly S N).V i),
+      (∀ y ∈ (F.poly S N).cyclesW i, inner ℝ y x = 0) →
+        ‖x‖ ≤ c * ‖D.complex.d i j ⟨x, (F.poly S N).le_domain i j hx⟩‖ :=
+  ⟨(F.polyFamily S).projBound * cP, fun {_ _} hij N _ hx hxo => ((F.polyFamily S).π N).norm_le_of_forall_inner_eq_zero hij
+    (hP _ _ hij) (zero_le_one.trans (F.polyFamily S).one_le_projBound) ((F.polyFamily S).norm_π_le N _) hx hxo⟩
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_wellPosed_poly`. -/
+theorem star_old_mixed_wellPosed_poly {cP : ℝ} (hP : HasPoincare D.complex cP) :
+    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
+      ∀ (N : ℕ) (f : (F.poly S N).V j),
+      (∃! x, (F.poly S N).toHilbertComplex.mixedForm i j k x =
+        (F.poly S N).toHilbertComplex.mixedRHS i j f) ∧
+      ∀ x : (F.poly S N).toHilbertComplex.MixedSpace i j,
+        (F.poly S N).toHilbertComplex.mixedForm i j k x =
+          (F.poly S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  refine (F.exists_uniform_polyProj S).elim fun K hK => ?_
+  have hcP : 1 ≤ max 1 cP := le_max_left _ _
+  have hP' := hP.mono (le_max_right 1 cP)
+  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
+    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
+  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
+  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_quasiOptimal_poly`. -/
+theorem star_old_mixed_quasiOptimal_poly {cP : ℝ} (hP : HasPoincare D.complex cP)
+    [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i} {u : D.complex.domainSpace j}
+    {q : D.complex.harmonic j},
+    D.complex.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (F.poly S N).embD i
+        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).fst‖ +
+        ‖u - (F.poly S N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
+          (F.poly S N) hij hjk f).snd.snd : (F.poly S N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((F.poly S N).domainSub i) +
+        Metric.infDist u ((F.poly S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.poly S N).harmonicW j) +
+        μ j N * Metric.infDist (D.complex.boundaryPart j (D.complex.domainIncl j u))
+          ((F.poly S N).domainSub j)) :=
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (star_old_polySmoothedProjection_uniform F S)
+
+/-- The old `Models.StarShaped.MeshFamily.polySmoothedProjection_uniformMin`. -/
+theorem star_old_polySmoothedProjection_uniformMin
+    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
+    Subcomplex.HasUniformProj atTop (F.polyMin S) :=
+  (F.polyFamilyMin S).hasUniformProj
+
+/-- The old `Models.StarShaped.MeshFamily.discretePoincare_polyMin`. -/
+theorem star_old_discretePoincare_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
+    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.polyMin S N).V i),
+      (∀ y ∈ (F.polyMin S N).cyclesW i, inner ℝ y x = 0) →
+        ‖x‖ ≤ c * ‖D.complexMin.d i j ⟨x, (F.polyMin S N).le_domain i j hx⟩‖ :=
+  ⟨(F.polyFamilyMin S).projBound * cP, fun {_ _} hij N _ hx hxo => ((F.polyFamilyMin S).π N).norm_le_of_forall_inner_eq_zero hij
+    (hP _ _ hij) (zero_le_one.trans (F.polyFamilyMin S).one_le_projBound) ((F.polyFamilyMin S).norm_π_le N _) hx hxo⟩
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_wellPosed_polyMin`. -/
+theorem star_old_mixed_wellPosed_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
+    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
+      ∀ (N : ℕ) (f : (F.polyMin S N).V j),
+      (∃! x, (F.polyMin S N).toHilbertComplex.mixedForm i j k x =
+        (F.polyMin S N).toHilbertComplex.mixedRHS i j f) ∧
+      ∀ x : (F.polyMin S N).toHilbertComplex.MixedSpace i j,
+        (F.polyMin S N).toHilbertComplex.mixedForm i j k x =
+          (F.polyMin S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
+  refine (F.exists_uniform_polyProjMin S).elim fun K hK => ?_
+  have hcP : 1 ≤ max 1 cP := le_max_left _ _
+  have hP' := hP.mono (le_max_right 1 cP)
+  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
+    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
+  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
+  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
+
+/-- The old `Models.StarShaped.MeshFamily.mixed_quasiOptimal_polyMin`. -/
+theorem star_old_mixed_quasiOptimal_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP)
+    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i}
+    {u : D.complexMin.domainSpace j} {q : D.complexMin.harmonic j},
+    D.complexMin.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
+    ‖σ - (F.polyMin S N).embD i
+        (Subcomplex.CochainProjection.discreteMixedSolution (F.polyMin S N) hij hjk f).fst‖ +
+        ‖u - (F.polyMin S N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.polyMin S N) hij hjk
+            f).snd.fst‖ +
+        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
+          (F.polyMin S N) hij hjk f).snd.snd : (F.polyMin S N).V j) :
+            L2F ℝ D.Ω (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((F.polyMin S N).domainSub i) +
+        Metric.infDist u ((F.polyMin S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.polyMin S N).harmonicW j) +
+        μ j N * Metric.infDist (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))
+          ((F.polyMin S N).domainSub j)) :=
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (star_old_polySmoothedProjection_uniformMin F S)
+
+end Poly
+
+section General
+
+variable (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
+  (F : MeshFamily (ParallelepipedWitness.starDomain A hA b)) (S : PolySeq)
+
+/-- The old `Models.StarShaped.Parallelepiped.discretePoincare_poly_general`. -/
+theorem star_old_discretePoincare_poly_general :
+    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
+      {x : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n i)}
+      (hx : x ∈ (F.poly S N).V i),
+      (∀ y ∈ (F.poly S N).cyclesW i, inner ℝ y x = 0) →
+        ‖x‖ ≤ c * ‖(ParallelepipedWitness.starDomain A hA b).complex.d i j
+          ⟨x, (F.poly S N).le_domain i j hx⟩‖ :=
+  star_old_discretePoincare_poly F S (Feec.Models.StarShaped.Parallelepiped.hasPoincare A hA b)
+
+/-- The old `Models.StarShaped.Parallelepiped.mixed_wellPosed_poly_general`. -/
+theorem star_old_mixed_wellPosed_poly_general :
+    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
+      ∀ (N : ℕ) (f : (F.poly S N).V j),
+      (∃! x, (F.poly S N).toHilbertComplex.mixedForm i j k x =
+        (F.poly S N).toHilbertComplex.mixedRHS i j f) ∧
+      ∀ x : (F.poly S N).toHilbertComplex.MixedSpace i j,
+        (F.poly S N).toHilbertComplex.mixedForm i j k x =
+          (F.poly S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
+  star_old_mixed_wellPosed_poly F S (Feec.Models.StarShaped.Parallelepiped.hasPoincare A hA b)
+
+/-- The old `Models.StarShaped.Parallelepiped.mixed_quasiOptimal_poly_general`. -/
+theorem star_old_mixed_quasiOptimal_poly_general :
+    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
+    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
+    {f : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)}
+    {σ : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace i}
+    {u : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace j}
+    {q : (ParallelepipedWitness.starDomain A hA b).complex.harmonic j},
+    (ParallelepipedWitness.starDomain A hA b).complex.IsMixedSolution i j k f σ u q →
+    ∀ N : ℕ,
+    ‖σ - (F.poly S N).embD i
+        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).fst‖ +
+        ‖u - (F.poly S N).embD j
+          (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.fst‖ +
+        ‖(q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)) -
+          (((Subcomplex.CochainProjection.discreteMixedSolution
+            (F.poly S N) hij hjk f).snd.snd : (F.poly S N).V j) :
+              L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j))‖ ≤
+      K * (Metric.infDist σ ((F.poly S N).domainSub i) +
+        Metric.infDist u ((F.poly S N).domainSub j) +
+        Metric.infDist (q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j))
+          ((F.poly S N).harmonicW j) +
+        μ j N * Metric.infDist ((ParallelepipedWitness.starDomain A hA b).complex.boundaryPart j
+          ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j u))
+          ((F.poly S N).domainSub j)) :=
+  star_old_mixed_quasiOptimal_poly F S (Feec.Models.StarShaped.Parallelepiped.hasPoincare A hA b)
+
+end General
+
+end StarShapedOld
 
 section Ritz
 

@@ -23,18 +23,10 @@ complex, `Feec.Models.Cube.DeRhamIdent`):
   `dim Hᵏ(H̊Λ(Q)) = [k = n]` (`finrank_cohomology`, `finrank_cohomology_min`);
 * **the compactness property** (`hasCompactProperty`, `hasCompactProperty_min`).
 
-Consequently the finite element results of `Feec.Models.Cube.FiniteElementMethod` hold with the
-Poincaré hypotheses discharged: the uniform discrete Poincaré inequality
-(`SmoothingEstimates.norm_le_of_forall_inner_eq_zero'`), uniform well-posedness and stability of
-the discrete mixed Hodge Laplacian (`SmoothingEstimates.existsUnique_mixed'`,
-`SmoothingEstimates.norm_le_of_mixed'`), quasi-optimality and the `O(h)` rate
-(`SmoothingEstimates.norm_sub_le_infDist'`, `SmoothingEstimates.norm_sub_le_meshSize'`), and the
-vanishing-trace versions (`SmoothingEstimatesMin.norm_le_of_forall_inner_eq_zero'`,
-`SmoothingEstimatesMin.existsUnique_mixed'`, `SmoothingEstimatesMin.norm_le_of_mixed'`); the
-finite-dimensionality of `ℌ` needed by `SmoothingEstimates.tendsto_harmonicGap` is an instance.
-These results keep `FEM.SmoothingEstimates` (resp. `FEM.SmoothingEstimatesMin`) as a hypothesis;
-the `O(h)` rates for `C²` solutions of `Feec.Models.Cube.WhitneyRate` with the Poincaré
-hypotheses discharged are in `Feec.Models.Cube.DeRhamIdentRate`.
+Closed range in every degree (`closedRangeAt`, `closedRangeAt_min`) and the finite-dimensionality
+of `ℌ` are the hypotheses of the static FEEC theorem
+(`Feec.HilbertComplex.ConformingFamily.staticFEEC`) for the finite element families of the cube
+(`Feec.Models.Cube.FiniteElementConvergence`, `Feec.Models.Cube.PolyFiniteElementConvergence`).
 
 ## References
 
@@ -92,27 +84,6 @@ theorem norm_le_of_mem_orthogonal_cycles_min {i j : ℤ} (hij : (ComplexShape.up
     rintro Ω rfl hΩ z hz
     exact DeRhamIdent.Hmin_norm_le hij z hz
   exact key _ (cubeDomain_eq_Q n) _ z hz
-
-/-- The Poincaré inequality of `HΛ(Q)` with any constant `c_P ≥ (2π)⁻¹`. -/
-theorem poincare {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
-    (hcP : (2 * Real.pi)⁻¹ ≤ cP) :
-    ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
-      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
-        cP * ‖(complex n).d i j z‖ := fun z hz =>
-  (norm_le_of_mem_orthogonal_cycles hij z hz).trans
-    (mul_le_mul_of_nonneg_right hcP (norm_nonneg _))
-
-/-- The Poincaré inequality of `H̊Λ(Q)` with any constant `c_P ≥ (2π)⁻¹`. -/
-theorem poincare_min {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) {cP : ℝ}
-    (hcP : (2 * Real.pi)⁻¹ ≤ cP) :
-    ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
-      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
-        cP * ‖(complexMin n).d i j z‖ := fun z hz =>
-  (norm_le_of_mem_orthogonal_cycles_min hij z hz).trans
-    (mul_le_mul_of_nonneg_right hcP (norm_nonneg _))
-
-theorem inv_two_pi_le_one : (2 * Real.pi)⁻¹ ≤ 1 :=
-  inv_le_one_of_one_le₀ (by nlinarith [Real.two_le_pi])
 
 /-- **Closed range of `HΛ(Q)` in every degree.** -/
 theorem closedRangeAt (j : ℤ) : (complex n).ClosedRangeAt j :=
@@ -245,114 +216,12 @@ namespace SmoothingEstimates
 variable {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : SmoothingEstimates n p C)
 include hE
 
-/-- **Uniform discrete Poincaré inequality** on the Freudenthal meshes of the cube, with the
-Poincaré constant of `HΛ(Q)`: `‖x‖ ≤ 2 C (2π)⁻¹ ‖d x‖` for `x ∈ Vₕⁱ ⊥ 𝔷ₕⁱ`. -/
-theorem norm_le_of_forall_inner_eq_zero' {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
-    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitney n N).V i)
-    (hxo : ∀ y ∈ (whitney n N).cyclesW i, inner ℝ y x = 0) :
-    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
-      ‖(complex n).d i j ⟨x, (whitney n N).le_domain i j hx⟩‖ :=
-  hE.norm_le_of_forall_inner_eq_zero hij (norm_le_of_mem_orthogonal_cycles hij) N hx hxo
-
-/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian** on the cube meshes. -/
-theorem existsUnique_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (whitney n N).V j) :
-    ∃! x, (whitney n N).toHilbertComplex.mixedForm i j k x =
-      (whitney n N).toHilbertComplex.mixedRHS i j f :=
-  hE.existsUnique_mixed hij hjk le_rfl (poincare hij inv_two_pi_le_one)
-    (poincare hjk inv_two_pi_le_one) N f
-
-/-- **Uniform stability of the discrete mixed Hodge Laplacian** on the cube meshes:
-`‖xₕ‖ ≤ 64 C² ‖fₕ‖`. -/
-theorem norm_le_of_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (whitney n N).V j}
-    {x : (whitney n N).toHilbertComplex.MixedSpace i j}
-    (hx : (whitney n N).toHilbertComplex.mixedForm i j k x =
-      (whitney n N).toHilbertComplex.mixedRHS i j f) :
-    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
-  hE.norm_le_of_mixed hij hjk le_rfl (poincare hij inv_two_pi_le_one)
-    (poincare hjk inv_two_pi_le_one) N hx
-
-/-- **Quasi-optimality of the mixed method on the cube meshes**, with the Poincaré constant
-`(2π)⁻¹` of `HΛ(Q)`. -/
-theorem norm_sub_le_infDist' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
-    (hs : (complex n).IsMixedSolution i j k f σ u q) (N : ℕ) :
-    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).fst‖ +
-        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
-            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-        (Metric.infDist σ ((whitney n N).domainSub i) + Metric.infDist u ((whitney n N).domainSub j) +
-          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) +
-          (hE.proj N).harmonicGap j *
-            Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
-              ((whitney n N).domainSub j)) :=
-  hE.norm_sub_le_infDist hij hjk (norm_le_of_mem_orthogonal_cycles hij)
-    (norm_le_of_mem_orthogonal_cycles hjk) hs N
-
-/-- **`O(h)` convergence of the mixed method on the cube meshes** for solutions approximable at
-rate `h`, with the Poincaré constant `(2π)⁻¹` of `HΛ(Q)`. -/
-theorem norm_sub_le_meshSize' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
-    (hs : (complex n).IsMixedSolution i j k f σ u q) {K : ℝ} (N : ℕ)
-    (hσ : Metric.infDist σ ((whitney n N).domainSub i) ≤ K * meshSize N)
-    (hu : Metric.infDist u ((whitney n N).domainSub j) ≤ K * meshSize N)
-    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) ≤
-      K * meshSize N)
-    (hB : Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
-      ((whitney n N).domainSub j) ≤ K * meshSize N) :
-    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).fst‖ +
-        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
-            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
-        meshSize N :=
-  hE.norm_sub_le_meshSize hij hjk (norm_le_of_mem_orthogonal_cycles hij)
-    (norm_le_of_mem_orthogonal_cycles hjk) hs N hσ hu hq hB
-
 end SmoothingEstimates
 
 namespace SmoothingEstimatesMin
 
 variable {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : SmoothingEstimatesMin n p C)
 include hE
-
-/-- **Uniform discrete Poincaré inequality** for the Whitney spaces with vanishing boundary DOFs,
-with the Poincaré constant of `H̊Λ(Q)`. -/
-theorem norm_le_of_forall_inner_eq_zero' {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
-    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitneyMin n N).V i)
-    (hxo : ∀ y ∈ (whitneyMin n N).cyclesW i, inner ℝ y x = 0) :
-    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
-      ‖(complexMin n).d i j ⟨x, (whitneyMin n N).le_domain i j hx⟩‖ :=
-  hE.norm_le_of_forall_inner_eq_zero hij (norm_le_of_mem_orthogonal_cycles_min hij) N hx hxo
-
-/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian with vanishing traces.** -/
-theorem existsUnique_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (whitneyMin n N).V j) :
-    ∃! x, (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
-      (whitneyMin n N).toHilbertComplex.mixedRHS i j f :=
-  hE.existsUnique_mixed hij hjk le_rfl (poincare_min hij inv_two_pi_le_one)
-    (poincare_min hjk inv_two_pi_le_one) N f
-
-/-- **Uniform stability of the discrete mixed problem with vanishing traces**:
-`‖xₕ‖ ≤ 64 C² ‖fₕ‖`. -/
-theorem norm_le_of_mixed' {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (whitneyMin n N).V j}
-    {x : (whitneyMin n N).toHilbertComplex.MixedSpace i j}
-    (hx : (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
-      (whitneyMin n N).toHilbertComplex.mixedRHS i j f) :
-    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
-  hE.norm_le_of_mixed hij hjk le_rfl (poincare_min hij inv_two_pi_le_one)
-    (poincare_min hjk inv_two_pi_le_one) N hx
 
 end SmoothingEstimatesMin
 

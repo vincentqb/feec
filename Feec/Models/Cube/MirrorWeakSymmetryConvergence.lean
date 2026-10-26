@@ -582,8 +582,10 @@ theorem mirrorFEM_compatible (N : ℕ) : (mirrorFEM hT hB N).Compatible := fun �
 
 /-- **Uniform bounds of the mirror projections**: `Discrete.Bounded (2C)` for every `N`. -/
 theorem mirrorFEM_bounded (N : ℕ) : (mirrorFEM hT hB N).Bounded (2 * C) :=
-  mirrorDiscrete_bounded hT.two_mul_nonneg (hT.norm_proj_le N 2) (hT.isGraphBounded_proj N 1 2)
-    fun a => (hB a).isGraphBounded_proj N 1 2
+  mirrorDiscrete_bounded hT.two_mul_nonneg (hT.norm_proj_le N 2)
+    ((hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N 1) (hT.norm_proj_le N 2))
+    fun a => ((hB a).proj N).isGraphBounded_of_norm_le ((hB a).norm_proj_le N 1)
+      ((hB a).norm_proj_le N 2)
 
 instance mirrorFEM_fd0 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).V0h :=
   WeakSymmetry.finiteDimensional_comap _ _

@@ -193,7 +193,6 @@ public import Feec.HilbertComplex.SecondOrder
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.ShortDual
 public import Feec.HilbertComplex.Total
-public import Feec.HilbertComplex.Total
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Instances.EinsteinBianchi
@@ -247,7 +246,6 @@ public import Feec.Models.Cube.DeRhamIdentExt
 public import Feec.Models.Cube.DeRhamIdentFEM
 public import Feec.Models.Cube.DeRhamIdentForms
 public import Feec.Models.Cube.DeRhamIdentPoincare
-public import Feec.Models.Cube.DeRhamIdentRate
 public import Feec.Models.Cube.DeRhamIdentTrunc
 public import Feec.Models.Cube.DeRhamPartial
 public import Feec.Models.Cube.DeRhamPartialFEM

@@ -455,7 +455,7 @@ theorem exists_staticError_le [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
   refine ⟨max K 0, le_max_right _ _, fun {L f} hL hf h => (hK (H.isMixedSolution_totalMixedSolution
     hcr f) hL hf.1 hf.2.1 hf.2.2.1 hf.2.2.2 h).trans ?_⟩
   exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right (le_max_left _ _) hL)
-    (pow_nonneg (J.meshSize_nonneg h) _)
+    (Real.rpow_nonneg (J.meshSize_nonneg h) _)
 
 /-- **The regular states of the heat rate**: `y ∈ D(Δ²)` such that `y`, `A y` and `A² y` (`A = -Δ`)
 have `s`-regular mixed solutions with bound `L`. -/
@@ -637,12 +637,11 @@ def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
     (fun _ hx => hx.1) J.meshSize J.meshSize_nonneg (J.ord s) (2 * K) (3 * K) (by positivity)
     (by positivity)
     (fun y hy h => by
-      show _ ≤ 2 * K * J.meshSize h ^ (J.ord s : ℝ) * L
-      rw [Real.rpow_natCast]
+      show _ ≤ 2 * K * J.meshSize h ^ J.ord s * L
       exact (F.norm_sub_ritzR_le hcr hK hL hy h).trans_eq (by ring))
     (fun y hy h => by
-      show _ + ‖(0 : PiLp 2 W × PiLp 2 W →L[𝕜] F.Xh h) _‖ ≤ 3 * K * J.meshSize h ^ (J.ord s : ℝ) * L
-      rw [Real.rpow_natCast, _root_.zero_apply, norm_zero, add_zero]
+      show _ + ‖(0 : PiLp 2 W × PiLp 2 W →L[𝕜] F.Xh h) _‖ ≤ 3 * K * J.meshSize h ^ J.ord s * L
+      rw [_root_.zero_apply, norm_zero, add_zero]
       exact (F.norm_ritzDefect_lift_le hcr hK hL hy h).trans_eq (by ring))
 
 /-- **The heat rate, from the static rate**: for `x ∈ D(Δ²)` whose orbit on `[0, T]` stays in the
@@ -665,10 +664,9 @@ theorem heat_rate_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplac
   rw [← hp]
   refine hr.trans ?_
   change (2 * K * 1 + ‖F.toHeat.incl h‖ * (3 * K * 1) * t) *
-    (J.meshSize h ^ (J.ord s : ℝ) * L) ≤ _
-  rw [Real.rpow_natCast]
+    (J.meshSize h ^ J.ord s * L) ≤ _
   have hι := F.norm_toHeat_incl_le h
-  have hm := pow_nonneg (J.meshSize_nonneg h) (J.ord s)
+  have hm := Real.rpow_nonneg (J.meshSize_nonneg h) (J.ord s)
   have h0 : ‖F.toHeat.incl h‖ * (3 * K * 1) * t ≤ 3 * K * t := by
     have := mul_le_mul_of_nonneg_right hι (mul_nonneg (by positivity) ht.1 : 0 ≤ 3 * K * 1 * t)
     nlinarith [norm_nonneg (F.toHeat.incl h)]

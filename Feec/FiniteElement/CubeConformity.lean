@@ -66,20 +66,18 @@ variable {n N : ℕ}
 
 /-! ### The cell fields in global coordinates -/
 
-/-- The scaling matrix `N I` of the local coordinates `y = N x - m` of the cells. -/
-def cellMatrix (n N : ℕ) : Fin n → Fin n → ℝ := fun i l => if i = l then (N : ℝ) else 0
-
 /-- The offset `-m` of the local coordinates of the cell `m`. -/
 def cellOffset (m : CubeCell fun _ : Fin n => N) : Fin n → ℝ := fun i => -((m i : ℕ) : ℝ)
 
-theorem affine_cellMatrix (m : CubeCell fun _ : Fin n => N) (x : Fin n → ℝ) (i : Fin n) :
-    affine (cellMatrix n N) (cellOffset m) x i = N * x i - m i := by
-  simp [affine_apply, cellMatrix, cellOffset, sub_eq_add_neg]
+theorem affine_cellOffset (m : CubeCell fun _ : Fin n => N) (x : Fin n → ℝ) (i : Fin n) :
+    affine (scalarMat n N) (cellOffset m) x i = N * x i - m i := by
+  simp [affine_scalarMat, cellOffset, sub_eq_add_neg]
 
-/-- The field of the cell `m` in the global coordinates: `ω_m` pulled back by `x ↦ N x - m`. -/
+/-- The field of the cell `m` in the global coordinates: `ω_m` pulled back by `x ↦ N x - m`
+(`scalarMat n N = N I`). -/
 def cellField (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
     (m : CubeCell fun _ : Fin n => N) : FormField n :=
-  affinePullback (cellMatrix n N) (cellOffset m) (evalForm n (ω m))
+  affinePullback (scalarMat n N) (cellOffset m) (evalForm n (ω m))
 
 theorem contDiff_cellField (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
     (m : CubeCell fun _ : Fin n => N) {r : WithTop ℕ∞} : ContDiff ℝ r (cellField ω m) := by
@@ -201,16 +199,16 @@ theorem tangentialTraceEq_cellField {ω : CubeCell (fun _ : Fin n => N) → Poly
   have hnone : ∀ j, g' j = none ↔ g j = none := fun j => by
     rcases commonFace_cases hadj j with ⟨h1, h2, -⟩ | ⟨h1, h2, -⟩ | ⟨h1, h2, -⟩ <;>
       simp [g, g', h1, h2]
-  have hy : ∀ j c, g j = some c → affine (cellMatrix n N) (cellOffset m) x j = c :=
-    fun j c hc => by rw [affine_cellMatrix]; exact localCoord_eq_of_commonFace hx hx' hc
-  have hy' : ∀ j c, g' j = some c → affine (cellMatrix n N) (cellOffset m') x j = c :=
-    fun j c hc => by rw [affine_cellMatrix]; exact localCoord_eq_of_commonFace hx' hx hc
-  have hyy : ∀ j, g' j = none → affine (cellMatrix n N) (cellOffset m) x j =
-      affine (cellMatrix n N) (cellOffset m') x j := fun j hj => by
+  have hy : ∀ j c, g j = some c → affine (scalarMat n N) (cellOffset m) x j = c :=
+    fun j c hc => by rw [affine_cellOffset]; exact localCoord_eq_of_commonFace hx hx' hc
+  have hy' : ∀ j c, g' j = some c → affine (scalarMat n N) (cellOffset m') x j = c :=
+    fun j c hc => by rw [affine_cellOffset]; exact localCoord_eq_of_commonFace hx' hx hc
+  have hyy : ∀ j, g' j = none → affine (scalarMat n N) (cellOffset m) x j =
+      affine (scalarMat n N) (cellOffset m') x j := fun j hj => by
     rcases commonFace_cases hadj j with ⟨-, h2, -⟩ | ⟨-, h2, -⟩ | ⟨-, -, h3⟩
     · simp [g', h2] at hj
     · simp [g', h2] at hj
-    · rw [affine_cellMatrix, affine_cellMatrix, h3]
+    · rw [affine_cellOffset, affine_cellOffset, h3]
   simp only [cellField, affinePullback_apply]
   rw [pullback_pullback, pullback_pullback, pullback_apply, pullback_apply]
   refine sum_congr rfl fun s _ => ?_
@@ -226,8 +224,8 @@ theorem tangentialTraceEq_cellField {ω : CubeCell (fun _ : Fin n => N) → Poly
       eval_faceSubst_congr hyy, eval_faceSubst hy']
   · push Not at hs
     obtain ⟨j, hj, hgj⟩ := hs
-    have hrow : (fun l => ∑ i, cellMatrix n N j i * V i l) = 0 := funext fun l => by
-      simp [cellMatrix, hzero j hgj l]
+    have hrow : (fun l => ∑ i, scalarMat n N j i * V i l) = 0 := funext fun l => by
+      simp [scalarMat, hzero j hgj l]
     rw [wedgeProd_eq_zero_of_mem hj hrow]
     simp
 
@@ -377,7 +375,7 @@ theorem evalForm_eq_affinePullback_cellField
       (fun i => ((m i : ℕ) : ℝ) / N) (cellField ω m) := by
   have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
   refine (affinePullback_affinePullback_of_comp_eq_id _ _ _ _ (fun y => funext fun i => ?_) _).symm
-  rw [affine_cellMatrix]
+  rw [affine_cellOffset]
   simp only [affine_apply, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
   field_simp
   ring
@@ -438,14 +436,14 @@ theorem cubeGlue_injective [NeZero n] (b : Fin n → ℕ) (k : ℕ) :
   set c : Fin n → ℝ := fun i => ((m i : ℕ) : ℝ) / N
   obtain ⟨x₀, hx₀⟩ := hUne
   refine eq_zero_of_eval_eq_zero_of_isOpen (U := affine C c ⁻¹' U)
-    (hU.preimage (continuous_affine C c)) (y₀ := affine (cellMatrix n N) (cellOffset m) x₀) ?_
+    (hU.preimage (continuous_affine C c)) (y₀ := affine (scalarMat n N) (cellOffset m) x₀) ?_
     fun y hy => ?_
-  · show affine C c (affine (cellMatrix n N) (cellOffset m) x₀) ∈ U
+  · show affine C c (affine (scalarMat n N) (cellOffset m) x₀) ∈ U
     convert hx₀ using 1
     have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
-    have hy : ∀ i, affine (cellMatrix n N) (cellOffset m) x₀ i = N * x₀ i - m i :=
-      affine_cellMatrix m x₀
-    generalize affine (cellMatrix n N) (cellOffset m) x₀ = y at hy ⊢
+    have hy : ∀ i, affine (scalarMat n N) (cellOffset m) x₀ i = N * x₀ i - m i :=
+      affine_cellOffset m x₀
+    generalize affine (scalarMat n N) (cellOffset m) x₀ = y at hy ⊢
     funext i
     simp only [affine_apply, C, c, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ,
       ↓reduceIte, hy]

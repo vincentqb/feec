@@ -67,6 +67,7 @@ public import Feec.FiniteElement.BrambleHilbertL2
 public import Feec.FiniteElement.Conformity
 public import Feec.FiniteElement.CubeConformity
 public import Feec.FiniteElement.CubeDof
+public import Feec.FiniteElement.CubeInterpolation
 public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.InterpolationError

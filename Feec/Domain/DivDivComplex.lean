@@ -25,11 +25,18 @@ constrained realizations on every open `Ω ⊆ ℝ³` (`divDivComplex`):
 
 No closed-range statement is made (it needs the regularity of `Ω`).
 
+**As a BGG complex.** The div-div complex is the output of the BGG construction
+(`Feec.BGG.Data.bgg`, `J = 2`) applied to the de Rham complex tensored with `ℝ³`,
+`ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, stacked over the de Rham complex `ℝ → ℝ³ → ℝ³ → ℝ`, linked by
+`ι` (scalar matrices), `-mskw` and `id`: the last two rows of [ArnoldHu2021], (32). The
+identification of `divDivComplex` with `Data.bgg` of these rows is not formalized here.
+
 ## References
 
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the div-div complex on general domains and its duality with the Hessian complex)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the div-div complex)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the div-div complex as the
+  BGG output of the last two rows of (32), `J = 2`), (7)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/

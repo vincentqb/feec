@@ -36,7 +36,7 @@ private def accentTable : List (String × List (Char × Char)) :=
   [("\\'", [('e', 'é'), ('a', 'á'), ('E', 'É'), ('o', 'ó'), ('i', 'í')]),
    ("\\\"", [('u', 'ü'), ('o', 'ö'), ('a', 'ä')]),
    ("\\`", [('e', 'è'), ('a', 'à')]),
-   ("\\v", [('s', 'š'), ('c', 'č'), ('r', 'ř'), ('z', 'ž')])]
+   ("\\v", [('s', 'š'), ('c', 'č'), ('C', 'Č'), ('r', 'ř'), ('z', 'ž')])]
 
 private def accent (m : Match) : Except String String := do
   let some tbl := accentTable.lookup (m.group 1) | throw s!"unknown accent {m.group 1}"

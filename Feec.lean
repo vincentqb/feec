@@ -91,6 +91,7 @@ public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
+public import Feec.ForMathlib.Homology.Subcomplex
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
 public import Feec.ForMathlib.LinearPMap.GraphSpace
@@ -145,6 +146,8 @@ public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.BGG.Basic
+public import Feec.HilbertComplex.BGG.Derived
+public import Feec.HilbertComplex.BGG.DomainData
 public import Feec.HilbertComplex.BGG.Discrete
 public import Feec.HilbertComplex.BGG.DiscreteWave
 public import Feec.HilbertComplex.BGG.EllipticProjection

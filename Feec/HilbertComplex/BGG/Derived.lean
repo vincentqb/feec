@@ -32,8 +32,8 @@ is the BGG complex of Arnold and Hu ([ArnoldHu2021], (24)–(26)):
 
 with differentials `d` (modulo `R(S)`), `σ ↦ d̃ (Sᴶ)⁻¹ dσ` at `J`, and `d̃`. The hypothesis
 `Data.InjSurj J` (`Sⁱ` injective for `i < J`, surjective for `i ≥ J`) is weaker than the
-`J`-injectivity/surjectivity condition [ArnoldHu2021], (23), which also asks `Sᴶ` injective; with it,
-`Υᴶ ≅ Vᴶ / R(Sᴶ⁻¹)` and the theorem is [ArnoldHu2021], §5.2 (the cohomology of the output complex is
+`J`-injectivity/surjectivity condition [ArnoldHu2021], (23), which also asks `Sᴶ` injective;
+with it, `Υᴶ ≅ Vᴶ / R(Sᴶ⁻¹)` and the theorem is [ArnoldHu2021], §5.2 (the cohomology of the output complex is
 that of the twisted complex). The complex with weak symmetries (5.1) of
 [QuennevilleBelair2015], §5.1 is the elimination of the one top space `V¹`: `Γ (· = j)` at the
 index before `j` is `Feec.BGG.Segment.Γ` (`Data.Γ_eq_segment_Γ`), and the regularity hypothesis
@@ -142,7 +142,7 @@ def rowBotπ : D.twistComplex ⟶ D.rowBot where
   comm' _ _ _ := ModuleCat.hom_ext (LinearMap.ext fun _ => rfl)
 
 /-- `0 → V → T → Ṽ → 0`: the twisted complex is an extension of the bottom row by the top row;
-its connecting map in cohomology is induced by `S` ([ArnoldHu2021], §5.1). -/
+its connecting map in cohomology is induced by `S` ([ArnoldHu2021], §5.1; not formalized here). -/
 def twistShortComplex : ShortComplex (HomologicalComplex (ModuleCat.{v} R) c) :=
   ShortComplex.mk D.rowTopι D.rowBotπ (by ext i σ; rfl)
 
@@ -210,7 +210,8 @@ theorem mem_Δ {i : ι} {x : V i × Vt i} :
         obtain ⟨_, ⟨ψ, rfl⟩, rfl⟩ := hb
         exact ⟨ψ, Or.inl hF, rfl⟩
       · rw [iSup_neg hF, Submodule.mem_bot] at hb
-        exact ⟨0, Or.inr rfl, by rw [hb, show ((0 : V (c.prev i)), (0 : Vt (c.prev i))) = 0 from rfl, map_zero]⟩
+        exact ⟨0, Or.inr rfl, by
+          rw [hb, show ((0 : V (c.prev i)), (0 : Vt (c.prev i))) = 0 from rfl, map_zero]⟩
     obtain ⟨φ, hφ, rfl⟩ := ha'
     obtain ⟨ψ, hψ, rfl⟩ := hb'
     exact ⟨φ, ψ, hφ, hψ, rfl⟩
@@ -333,8 +334,8 @@ theorem quasiIso_derived (h : D.Eliminates E F) : QuasiIso (D.derivedπ E F) := 
   rw [hxe]; simp
 
 /-- **BGG elimination: the derived complex has the cohomology of the twisted complex**, for BGG
-data of any length on any complex shape over any ring, under `Data.Eliminates`. With
-`Data.twistShortComplex_shortExact`, this computes it from the cohomology of the two rows.
+data of any length on any complex shape over any ring, under `Data.Eliminates`. The long exact
+sequence of `Data.twistShortComplex_shortExact` relates it to the cohomology of the two rows.
 [ArnoldHu2021], §5.2 (in the Hilbert setting, for the eliminations of `Data.bgg`). -/
 def derivedHomologyIso (h : D.Eliminates E F) (i : ι) :
     (D.derived E F).homology i ≅ D.twistComplex.homology i :=

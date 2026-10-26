@@ -3,6 +3,7 @@ module
 public import Feec.Models.Cube.Inhomogeneous
 public import Feec.Models.Cube.WhitneyRate
 public import Feec.FiniteElement.PolyComplex
+public import Feec.TimeStepping.Trajectory
 
 /-!
 # `O(h + Δt²)` error of the Crank–Nicolson Whitney scheme with Dirichlet DOFs
@@ -28,7 +29,7 @@ when the solution is TSD, and `V̊ₕ ≠ 0`.
   estimate (which would lose `h⁻¹`) is needed. The canonical interpolant alone gives only
   `|⟪U − Π U, D v⟫| ≤ ‖U − Π U‖ ‖D v‖`, which is `O(1) ‖v‖` after an inverse estimate; the
   correction is a partial elliptic projection that only acts on `D V̊ₕ` (`D q = 0`). With the
-  trapezoidal remainder `norm_trapezoid_le`, `‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`, hence
+  trapezoidal remainder `Feec.TimeStepping.norm_trapezoid_le`, `‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`, hence
   `‖u_M − ũ_M‖ ≤ ‖u₀ − w₀‖ + a + T (L₃ Δt² / 2 + 2 a)`.
 * **The setting on a subcomplex** (`dEmb`, `discreteD_mem_interior`, `discreteD_discreteD`,
   `inner_of_mem_graph_waveMax`, three rows: `dEmb3`, `discreteD3`, `inner3_of_mem_graph_waveMax`):
@@ -86,57 +87,6 @@ open scoped InnerProductSpace RealInnerProductSpace LinearPMap
 open Set Filter MeasureTheory
 
 namespace Feec.Models.Cube.Inhomogeneous
-
-section Taylor
-
-variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
-
-/-- **Trapezoidal (Crank–Nicolson) remainder**: for `f ∈ C³([a, b]; X)` with `‖f'''‖ ≤ L`,
-`‖f(b) − f(a) − (b − a)/2 (f'(b) + f'(a))‖ ≤ L (b − a)³ / 2`. -/
-theorem norm_trapezoid_le {f f₁ f₂ f₃ : ℝ → X} {a b L : ℝ} (hab : a ≤ b)
-    (h1 : ∀ t ∈ Icc a b, HasDerivWithinAt f (f₁ t) (Icc a b) t)
-    (h2 : ∀ t ∈ Icc a b, HasDerivWithinAt f₁ (f₂ t) (Icc a b) t)
-    (h3 : ∀ t ∈ Icc a b, HasDerivWithinAt f₂ (f₃ t) (Icc a b) t)
-    (hL : ∀ t ∈ Icc a b, ‖f₃ t‖ ≤ L) :
-    ‖f b - f a - ((b - a) / 2) • (f₁ b + f₁ a)‖ ≤ L * (b - a) ^ 3 / 2 := by
-  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hL a ⟨le_rfl, hab⟩)
-  set h : ℝ → X := fun t => (1 / 2 : ℝ) • (f₁ t - f₁ a) - ((t - a) / 2) • f₂ t
-  set g : ℝ → X := fun t => f t - f a - ((t - a) / 2) • (f₁ t + f₁ a)
-  have hc : ∀ t, HasDerivAt (fun t : ℝ => (t - a) / 2) (1 / 2) t := fun t => by
-    simpa using ((hasDerivAt_id t).sub_const a).div_const 2
-  have hh : ∀ t ∈ Icc a b, HasDerivWithinAt h (-(((t - a) / 2) • f₃ t)) (Icc a b) t := by
-    intro t ht
-    have e1 := ((h2 t ht).sub_const (f₁ a)).const_smul (1 / 2 : ℝ)
-    have e2 := (hc t).hasDerivWithinAt.smul (h3 t ht)
-    convert e1.sub e2 using 1
-    simp only [one_div]
-    module
-  have hg : ∀ t ∈ Icc a b, HasDerivWithinAt g (h t) (Icc a b) t := by
-    intro t ht
-    have e1 := ((h1 t ht).sub_const (f a))
-    have e2 := (hc t).hasDerivWithinAt.smul ((h2 t ht).add_const (f₁ a))
-    convert e1.sub e2 using 1
-    simp only [h]
-    module
-  have hbh : ∀ t ∈ Ico a b, ‖-(((t - a) / 2) • f₃ t)‖ ≤ (b - a) / 2 * L := by
-    intro t ht
-    rw [norm_neg, norm_smul, Real.norm_eq_abs, abs_of_nonneg (by linarith [ht.1])]
-    exact mul_le_mul (by linarith [ht.2]) (hL t (Ico_subset_Icc_self ht)) (norm_nonneg _)
-      (by linarith)
-  have hha : h a = 0 := by simp [h]
-  have hbg : ∀ t ∈ Ico a b, ‖h t‖ ≤ (b - a) / 2 * L * (b - a) := by
-    intro t ht
-    have := norm_image_sub_le_of_norm_deriv_le_segment' hh hbh t (Ico_subset_Icc_self ht)
-    rw [hha, sub_zero] at this
-    exact this.trans (mul_le_mul_of_nonneg_left (by linarith [ht.2])
-      (mul_nonneg (by linarith) hL0))
-  have := norm_image_sub_le_of_norm_deriv_le_segment' hg hbg b ⟨hab, le_rfl⟩
-  have hga : g a = 0 := by simp [g]
-  rw [hga, sub_zero] at this
-  refine this.trans (le_of_eq ?_)
-  ring
-
-end Taylor
 
 /-! ## The error of the Crank–Nicolson scheme with Dirichlet DOFs, abstractly -/
 
@@ -293,9 +243,20 @@ theorem exists_comparison_consistency (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x
   have htn' : ((n + 1 : ℕ) : ℝ) * Δt ∈ Icc 0 T := ⟨hn0.trans hn1, hn⟩
   have hsub : Icc ((n : ℝ) * Δt) (((n + 1 : ℕ) : ℝ) * Δt) ⊆ Icc 0 T :=
     Icc_subset_Icc hn0 hn
-  have hTay := norm_trapezoid_le (f := U) (f₁ := U₁) (f₂ := U₂) (f₃ := U₃) hn1
-    (fun t ht => (hU₁ t (hsub ht)).mono hsub) (fun t ht => (hU₂ t (hsub ht)).mono hsub)
-    (fun t ht => (hU₃ t (hsub ht)).mono hsub) (fun t ht => hL₃ t (hsub ht))
+  have hc : ∀ {g g' : ℝ → X}, (∀ t ∈ Icc 0 T, HasDerivWithinAt g (g' t) (Icc 0 T) t) →
+      ContinuousOn g (Icc ((n : ℝ) * Δt) (((n + 1 : ℕ) : ℝ) * Δt)) :=
+    fun hg t ht => (hg t (hsub ht)).continuousWithinAt.mono hsub
+  have hr : ∀ {g g' : ℝ → X}, (∀ t ∈ Icc 0 T, HasDerivWithinAt g (g' t) (Icc 0 T) t) →
+      ∀ t ∈ Ico ((n : ℝ) * Δt) (((n + 1 : ℕ) : ℝ) * Δt), HasDerivWithinAt g (g' t) (Ici t) t :=
+    fun hg t ht => (hg t (hsub (Ico_subset_Icc_self ht))).mono_of_mem_nhdsWithin
+      (mem_of_superset (Icc_mem_nhdsGE (ht.2.trans_le hn)) (Icc_subset_Icc_left (hn0.trans ht.1)))
+  have hTay : ‖U (((n + 1 : ℕ) : ℝ) * Δt) - U (n * Δt) -
+      ((((n + 1 : ℕ) : ℝ) * Δt - n * Δt) / 2) • (U₁ (((n + 1 : ℕ) : ℝ) * Δt) + U₁ (n * Δt))‖ ≤
+      L₃ * (((n + 1 : ℕ) : ℝ) * Δt - n * Δt) ^ 3 / 2 := by
+    refine (TimeStepping.norm_trapezoid_le hn1 (hc hU₁) (hc hU₂) (hc hU₃) (hr hU₁) (hr hU₂)
+      (hr hU₃) fun t ht => hL₃ t (hsub (Ico_subset_Icc_self ht))).trans ?_
+    have := pow_nonneg (sub_nonneg.2 hn1) 3
+    nlinarith [(norm_nonneg _).trans (hL₃ _ htn)]
   have hdt : ((n + 1 : ℕ) : ℝ) * Δt - n * Δt = Δt := by push_cast; ring
   rw [hdt] at hTay
   -- the key bound: `⟪z, v⟫ ≤ ε ‖v‖` on `V̊ₕ`

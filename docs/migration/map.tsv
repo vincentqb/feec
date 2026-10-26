@@ -5246,3 +5246,4 @@ Feec.Models.Parallelepiped.mixed_wellPosed_of	Feec.HilbertComplex.Subcomplex.Has
 Feec.Models.Parallelepiped.mixed_quasiOptimal_of	Feec.HilbertComplex.Subcomplex.HasUniformProj.mixed_quasiOptimal	generalize
 Feec.Models.Parallelepiped.mixed_rate_of	Feec.HilbertComplex.Subcomplex.CochainProjection.norm_sub_le_rate	generalize
 Feec.Models.Parallelepiped.infDist_domainSub_le_two_mul	Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_two_mul	generalize
+Feec.Models.Cube.Inhomogeneous.norm_trapezoid_le	Feec.TimeStepping.norm_trapezoid_le	generalize

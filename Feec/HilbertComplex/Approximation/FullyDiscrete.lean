@@ -1,7 +1,9 @@
 module
 
+public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.TimeStepping.Leapfrog
+public import Feec.TimeStepping.Trajectory
 
 /-!
 # The fully discrete FEEC theorem
@@ -32,12 +34,28 @@ besides the semidiscrete conclusions, at the time levels `tₙ = n τₕ ≤ T`,
    the time levels `tₙ ∈ [0, T]` (no smoothness of `vₕ`: the data are smoothed by time averages,
    `Feec.TimeStepping.timeAvg`);
 5. (**constraint residual**) for a kept `K`, `dist(ιₕ Pₕⁿ v, K) ≤ ‖S(tₙ) x - ιₕ Pₕⁿ v‖`, so it is
-   bounded by 3 and tends to `0` with 4.
+   bounded by 3 and tends to `0` with 4;
+6. (**rate from static estimates**, `TimeScheme.norm_S_sub_sol_le_of_smooth`) for a scheme
+   consistent along trajectories (`TimeScheme.IsTrajConsistent`, constant `K`) and a rate class
+   whose comparison is smooth of order `p + 1` (`DissipFEEC.Comparison.Smooth`: time derivatives
+   `D j`, the `(p + 1)`-st bounded by `B x` uniformly in `h`),
+   `‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ C hᵅ ‖x‖_c + ‖ιₕ‖ M(T) (‖pₕ(0) - v‖ + tₙ (K τₕᵖ B x + C' hᵅ ‖x‖_c))`.
+   The temporal term of 3, `‖Lₕ^{p+1} v‖`, is not uniform in `h` for the usual initial values
+   (for an elliptic or heat Ritz projection `Lₕ Rₕ ≠ Rₕ A`, and `‖Lₕ‖ → ∞`); here the scheme is
+   tested on the comparison trajectory instead (`norm_p_sub_pow_le`, the discrete Duhamel formula
+   `TimeStepping.norm_sub_le_of_step` with the local errors of `TimeStepping.IsTrajConsistent`).
+   **Ritz projections are smooth** (`DissipFEEC.Ritz.smooth`): `D j = Rₕ ℓ(S(t) Aʲ x)` on data
+   with `Aʲ x` in the lift for `j ≤ p`, `B x = C sup ‖ℓ(S(t) A^{p+1} x)‖`; for the identity lift
+   `B x = C ‖A^{p+1} x‖`, so the fully discrete error is `O(hᵅ + τₕᵖ)` in the graph norm of
+   `D(A^{p+1})` from the static estimates of the Ritz projection alone.
 
 **Schemes** (`DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`): the θ-scheme, `θ ≥ 1/2` real,
 `M = 1`, order `1`, `K = θ + 1/2` (implicit Euler `θ = 1`, `K = 3/2`), and Crank–Nicolson with
 `Pₕ = cayley(Lₕ, τₕ/2)` literally (`Feec.TimeStepping.cayley`), `M = 1`, order `2`, `K = 5/12`; both
-unconditionally stable (`TimeStepping.norm_thetaStep_le`). **Discrete constraint propagation**:
+unconditionally stable (`TimeStepping.norm_thetaStep_le`); along trajectories
+(`thetaScheme_isTrajConsistent`, `crankNicolson_isTrajConsistent`) the θ-scheme, `θ ≤ 1`, is
+consistent of order `1` with `K = θ + 1/2` and Crank–Nicolson of order `2` with the sharp
+`K = 1/12`. **Discrete constraint propagation**:
 `thetaScheme_pow_mem`, `crankNicolson_pow_mem`: a closed subspace `Kₕ ⊆ Xₕ` with `Lₕ Kₕ ⊆ Kₕ` is
 kept by every iterate. **Energy conservation**: for a skew FEEC discretization,
 `SkewFEEC.norm_crankNicolson_pow_apply`: `‖Pₕⁿ v‖ = ‖v‖`. **Explicit leapfrog** (a two-step scheme,
@@ -48,8 +66,10 @@ outside `TimeScheme`): `SkewFEEC.norm_S_sub_leapfrog_le` (any first step `u₁`)
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
-  (fully discrete schemes: spatial plus temporal error)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1 (the
+  Ritz projection of the exact solution as comparison), Ch. 7–9 (fully discrete schemes: spatial
+  plus temporal error)
+* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (time discretization of
   Hodge evolution problems)
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
@@ -102,6 +122,40 @@ variable {F}
 /-- The **fully discrete solution** `ιₕ Pₕⁿ v` at the time level `tₙ = n τₕ`. -/
 def TimeScheme.sol (Θ : F.TimeScheme) (h : κ) (v : F.X h) (n : ℕ) : E :=
   F.incl h ((Θ.P h ^ n) v)
+
+/-- The time scheme `Θ` is **consistent of order `p` along trajectories** with constant `K`,
+uniformly in `h` (`TimeStepping.IsTrajConsistent`). -/
+abbrev TimeScheme.IsTrajConsistent (Θ : F.TimeScheme) (K : ℝ) : Prop :=
+  ∀ h, TimeStepping.IsTrajConsistent (F.L h) (Θ.P h) (Θ.τ h) Θ.p K
+
+/-- A comparison `𝒞` on `[0, T]` is **smooth of order `q`** on the data `Data`: its trajectories
+have right derivatives of every order `< q`, `D j` the `j`-th (`D 0 = pₕ`, `D 1 = pₕ'`), and the
+`q`-th is bounded by `B x` uniformly in `h` and `t ∈ [0, T]`. -/
+structure Comparison.Smooth {T : ℝ} (𝒞 : F.Comparison T) (q : ℕ) where
+  /-- the smooth data -/
+  Data : Set E
+  /-- the time derivatives of the trajectories -/
+  D : ℕ → E → ∀ h, ℝ → F.X h
+  D_zero : ∀ x ∈ Data, ∀ h t, D 0 x h t = 𝒞.p x h t
+  D_one : ∀ x ∈ Data, ∀ h t, D 1 x h t = 𝒞.p' x h t
+  continuousOn : ∀ x ∈ Data, ∀ h, ∀ j < q, ContinuousOn (D j x h) (Icc 0 T)
+  hasDerivWithinAt : ∀ x ∈ Data, ∀ h, ∀ j < q, ∀ t ∈ Ico 0 T,
+    HasDerivWithinAt (D j x h) (D (j + 1) x h t) (Ici t) t
+  /-- the bound of the `q`-th derivative -/
+  B : E → ℝ
+  bound : ∀ x ∈ Data, ∀ h, ∀ t ∈ Icc 0 T, ‖D q x h t‖ ≤ B x
+
+/-- A smooth comparison stays smooth when restricted to part of its data. -/
+def Comparison.Smooth.restrict {T : ℝ} {𝒞 : F.Comparison T} {q : ℕ} (Sm : 𝒞.Smooth q)
+    (S : Set E) (hS : S ⊆ 𝒞.Data) : (𝒞.restrict S hS).Smooth q where
+  Data := Sm.Data
+  D := Sm.D
+  D_zero := Sm.D_zero
+  D_one := Sm.D_one
+  continuousOn := Sm.continuousOn
+  hasDerivWithinAt := Sm.hasDerivWithinAt
+  B := Sm.B
+  bound := Sm.bound
 
 namespace TimeScheme
 
@@ -315,9 +369,72 @@ theorem residual_tendsto (hK : F.Keeps F.K) (Z : F.Core) {x : E} (hxK : x ∈ F.
   filter_upwards [Θ.converges Z hx hv hτ T hε] with h hh n hn
   exact (Θ.infDist_sol_le hK hxK h (v h) n).trans_lt (hh n hn)
 
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- **The temporal error along a smooth comparison**: for a scheme consistent of order `p` along
+trajectories with constant `K` and a comparison smooth of order `p + 1` with defect `≤ δ` on
+`[0, T]`, `‖pₕ(tₙ) - Pₕⁿ v‖ ≤ M(T) (‖pₕ(0) - v‖ + tₙ (K τₕᵖ B x + δ))` for `tₙ ≤ T`: no power of
+`Lₕ` enters, only the time derivatives of the comparison. [Thomee2006], Ch. 1 and 7 -/
+theorem norm_p_sub_pow_le {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ} {𝒞 : F.Comparison T}
+    (Sm : 𝒞.Smooth (Θ.p + 1)) {x : E} (hx : x ∈ Sm.Data) (h : κ) (v : F.X h) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ≤ T) {δ : ℝ} (hδ : ∀ t ∈ Icc 0 T, ‖𝒞.defect x h t‖ ≤ δ) :
+    ‖𝒞.p x h (n * Θ.τ h) - (Θ.P h ^ n) v‖ ≤
+      Θ.M T * (‖𝒞.p x h 0 - v‖ + n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x + δ)) := by
+  have hτ := Θ.τ_pos h
+  have hT : 0 ≤ T := (mul_nonneg (Nat.cast_nonneg n) hτ.le).trans hn
+  have key := TimeStepping.norm_sub_le_of_step (P := Θ.P h) (U := fun k => (Θ.P h ^ k) v)
+    (g := fun _ => 0) (w := fun k => 𝒞.p x h (k * Θ.τ h)) (Θ.stable_le h hn)
+    (fun k => by rw [pow_succ', add_zero]; rfl)
+  simp only [pow_zero, one_apply_eq_self, Nat.cast_zero, zero_mul, sub_zero] at key
+  rw [norm_sub_rev]
+  refine key.trans (mul_le_mul_of_nonneg_left (add_le_add (by rw [norm_sub_rev]) ?_)
+    (Θ.M_nonneg hT h))
+  have hstep : ∀ k ∈ Finset.range n, ‖𝒞.p x h ((k + 1 : ℕ) * Θ.τ h) - Θ.P h (𝒞.p x h (k * Θ.τ h))‖
+      ≤ K * Θ.τ h ^ (Θ.p + 1) * Sm.B x + Θ.τ h * δ := fun k hk => by
+    have hk0 : (0 : ℝ) ≤ k * Θ.τ h := mul_nonneg (Nat.cast_nonneg k) hτ.le
+    have hk1 : (k : ℝ) * Θ.τ h + Θ.τ h ≤ T := by
+      have : ((k + 1 : ℕ) : ℝ) ≤ n := by exact_mod_cast Finset.mem_range.1 hk
+      push_cast at this
+      nlinarith
+    have hIcc : Icc ((k : ℝ) * Θ.τ h) (k * Θ.τ h + Θ.τ h) ⊆ Icc 0 T := Icc_subset_Icc hk0 hk1
+    have := hΘ h (fun j => Sm.D j x h) (k * Θ.τ h) (Sm.B x) δ
+      (fun j hj => (Sm.continuousOn x hx h j (Nat.lt_succ_of_le hj)).mono hIcc)
+      (fun j hj t ht => Sm.hasDerivWithinAt x hx h j (Nat.lt_succ_of_le hj) t
+        ⟨hk0.trans ht.1, ht.2.trans_le hk1⟩)
+      (fun t ht => Sm.bound x hx h t (hIcc (Ico_subset_Icc_self ht)))
+      (fun t ht => by
+        rw [Sm.D_one x hx, Sm.D_zero x hx]; exact hδ t (hIcc ht))
+    rw [Sm.D_zero x hx, Sm.D_zero x hx] at this
+    rwa [show ((k + 1 : ℕ) : ℝ) * Θ.τ h = k * Θ.τ h + Θ.τ h by push_cast; ring]
+  refine (Finset.sum_le_sum hstep).trans_eq ?_
+  rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  ring
+
+/-- **6. The fully discrete rate from static estimates**: for a scheme consistent of order `p`
+along trajectories with constant `K` (`thetaScheme_isTrajConsistent`,
+`crankNicolson_isTrajConsistent`) and a rate class whose comparison is smooth of order `p + 1`
+(`Ritz.smooth`), at `tₙ ∈ [0, T]`,
+`‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ C hᵅ ‖x‖_c + ‖ιₕ‖ M(T) (‖pₕ(0) - v‖ + tₙ (K τₕᵖ B x + C' hᵅ ‖x‖_c))`:
+`O(hᵅ + τₕᵖ)` uniformly in `h`, with no bound on `‖Lₕ^{p+1} v‖`. [Thomee2006], Ch. 1 and 7;
+[Wheeler1973] -/
+theorem norm_S_sub_sol_le_of_smooth {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ}
+    (R : F.RateClass T) (Sm : R.toComparison.Smooth (Θ.p + 1)) {x : E} (hx : x ∈ R.Data)
+    (hxs : x ∈ Sm.Data) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
+    ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤ R.C * R.meshSize h ^ R.α * R.classNorm x +
+      ‖F.incl h‖ * Θ.M T * (‖R.p x h 0 - v‖ +
+        n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x + R.C' * R.meshSize h ^ R.α * R.classNorm x)) := by
+  have h1 := R.approx x hx h _ hn
+  have h2 := Θ.norm_p_sub_pow_le hΘ Sm hxs h v hn.2 (fun t ht => R.consistency x hx h t ht)
+  calc _ ≤ ‖F.S (n * Θ.τ h) x - F.incl h (R.p x h (n * Θ.τ h))‖ +
+        ‖F.incl h (R.p x h (n * Θ.τ h)) - Θ.sol h v n‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ ≤ _ := by
+      refine add_le_add h1 ?_
+      rw [TimeScheme.sol, ← _root_.map_sub, mul_assoc]
+      exact ((F.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left h2 (norm_nonneg _))
+
 /-- The conclusions of the fully discrete FEEC theorem (`dissipFEEC_fullyDiscrete`) for the
 time scheme `Θ` and the core `Z`: the semidiscrete verdict, and stability, temporal error, rate,
-convergence and constraint residuals of the iterates `ιₕ Pₕⁿ v`. -/
+convergence and constraint residuals of the iterates `ιₕ Pₕⁿ v`, and their rate along smooth
+comparisons. -/
 structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
   /-- the iterates are stable on every horizon `[0, T]` -/
   stable_iterates {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
@@ -345,6 +462,13 @@ structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x)
     (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T → infDist (Θ.sol h (v h) n) F.K < ε
+  /-- the fully discrete rate along a smooth comparison: spatial rate plus `O(τₕᵖ)`, uniformly -/
+  rate_smooth_iterates {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ} (R : F.RateClass T)
+    (Sm : R.toComparison.Smooth (Θ.p + 1)) {x : E} (hx : x ∈ R.Data) (hxs : x ∈ Sm.Data) (h : κ)
+    (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
+    ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤ R.C * R.meshSize h ^ R.α * R.classNorm x +
+      ‖F.incl h‖ * Θ.M T * (‖R.p x h 0 - v‖ +
+        n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x + R.C' * R.meshSize h ^ R.α * R.classNorm x))
 
 end TimeScheme
 
@@ -354,7 +478,9 @@ of order `p ≥ 1` with constant `K`, uniformly in `h`): the semidiscrete verdic
 iterates `ιₕ Pₕⁿ v` are stable, have temporal error `‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, converge at
 the spatial rate plus the temporal error, converge on the closure of the core for every
 convergent family as `τₕ → 0`, and have constraint residuals bounded by the error and tending to
-`0`. [BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018], Ch. 8 -/
+`0`; for schemes consistent along trajectories and smooth comparisons, the rate is
+`O(hᵅ + τₕᵖ)` uniformly in `h`. [BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018],
+Ch. 8 -/
 theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [NormedSpace ℝ E]
     [IsScalarTower ℝ 𝕜 E] (Z : F.Core) (Θ : F.TimeScheme) : Θ.Verdict Z where
   toDissip := dissipFEEC F Z
@@ -365,6 +491,8 @@ theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [N
   residual_le_iterates := fun hK _ hxK h v n => Θ.infDist_sol_le hK hxK h v n
   residual_tendsto_iterates := fun hK _ hxK hx _ hv hτ T _ hε =>
     Θ.residual_tendsto hK Z hxK hx hv hτ T hε
+  rate_smooth_iterates := fun hΘ _ R Sm _ hx hxs h v _ hn =>
+    Θ.norm_S_sub_sol_le_of_smooth hΘ R Sm hx hxs h v hn
 
 /-! ### θ-schemes and Crank–Nicolson -/
 
@@ -433,6 +561,54 @@ theorem crankNicolson_pow_mem {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ)
     rw [TimeStepping.cayley_half_eq_thetaStep]
     exact TimeStepping.thetaStep_mem_of_mapsTo (F.dissipative h) hKc hLK
       (by rw [RCLike.ofReal_re]; norm_num) (hτ h) ih
+
+/-- **The θ-scheme is consistent of order `1` along trajectories** (`1/2 ≤ θ ≤ 1`) with constant
+`θ + 1/2`, uniformly in `h`. [Thomee2006], Ch. 1 -/
+theorem thetaScheme_isTrajConsistent {θ : ℝ} (hθ : 1 / 2 ≤ θ) (hθ1 : θ ≤ 1) {τ : κ → ℝ}
+    (hτ : ∀ h, 0 < τ h) : (F.thetaScheme θ hθ τ hτ).IsTrajConsistent (θ + 1 / 2) := fun h =>
+  TimeStepping.isTrajConsistent_thetaStep (F.dissipative h) (by linarith) hθ1 (hτ h)
+
+/-- **Crank–Nicolson is consistent of order `2` along trajectories** with constant `1/12`,
+uniformly in `h`. [Thomee2006], Ch. 1 -/
+theorem crankNicolson_isTrajConsistent {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) :
+    (F.crankNicolson τ hτ).IsTrajConsistent (1 / 12) := fun h => by
+  change TimeStepping.IsTrajConsistent _ (TimeStepping.cayley _ (τ h / 2)) _ 2 _
+  rw [TimeStepping.cayley_half_eq_thetaStep]
+  exact TimeStepping.isTrajConsistent_thetaStep_half (F.dissipative h) (hτ h)
+
+/-! ### Ritz projections are smooth comparisons -/
+
+section Ritz
+
+variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+  {G : Type*} [NormedAddCommGroup G] [NormedSpace 𝕜 G] [NormedSpace ℝ G] [IsScalarTower ℝ 𝕜 G]
+  {F} {Λ : F.Lift G}
+
+/-- **A Ritz projection is a smooth comparison**: on data `S` whose iterates `Aʲ x`, `j < q`, are
+data of the lift, the trajectory `pₕ(t) = Rₕ ℓ(S(t) x)` has the right derivatives
+`Rₕ ℓ(S(t) Aʲ x)`, and with `‖Rₕ‖ ≤ C` and `‖ℓ(S(t) A^q x)‖ ≤ B x` on `[0, T]` the `q`-th is
+bounded by `C B x`, uniformly in `h`. For the identity lift (`Lift.ofDomain`), `S = D(A^q)` and
+`B x = ‖A^q x‖` (`S(t)` is a contraction, `norm_S_apply_le`): the temporal error of
+`TimeScheme.norm_S_sub_sol_le_of_smooth` is `K τₕᵖ C ‖A^{p+1} x‖`. [Wheeler1973] -/
+def Ritz.smooth (𝓡 : F.Ritz Λ) (T : ℝ) (q : ℕ) (S : Set E)
+    (hS : ∀ x ∈ S, ∀ j < q, (genExt A)^[j] x ∈ Λ.Data) {C : ℝ} (hC : ∀ h, ‖𝓡.R h‖ ≤ C)
+    (B : E → ℝ) (hB : ∀ x ∈ S, ∀ t ∈ Icc 0 T, ‖Λ.lift (F.S t ((genExt A)^[q] x))‖ ≤ B x) :
+    (𝓡.cmp T).Smooth q where
+  Data := S
+  D j x h t := 𝓡.R h (Λ.lift (F.S t ((genExt A)^[j] x)))
+  D_zero _ _ _ _ := rfl
+  D_one _ _ _ _ := rfl
+  continuousOn x hx h j hj := (𝓡.R h).continuous.comp_continuousOn
+    ((Λ.continuousOn _ (hS x hx j hj)).mono Icc_subset_Ici_self)
+  hasDerivWithinAt x hx h j hj t ht := by
+    have hd := Λ.hasDerivWithinAt _ (hS x hx j hj) t ht.1
+    rw [← Function.iterate_succ_apply' (genExt A)] at hd
+    exact ((𝓡.R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t hd
+  B x := C * B x
+  bound x hx h t ht := ((𝓡.R h).le_opNorm _).trans
+    (mul_le_mul (hC h) (hB x hx t ht) (norm_nonneg _) ((norm_nonneg _).trans (hC h)))
+
+end Ritz
 
 end DissipFEEC
 

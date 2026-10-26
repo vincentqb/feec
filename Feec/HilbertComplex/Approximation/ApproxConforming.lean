@@ -20,7 +20,7 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
   (`ConstrainedFEEC.RateClass.toApprox`), giving the improved rate
   `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class` (`ConstrainedFEEC.rate_le`), which implies
   `constrainedFEEC_rate` since `1 + 2t ≤ (1 + t)²` (`ConstrainedFEEC.rate_le_constrainedFEEC`).
-  The full statement of `constrainedFEEC` is re-derived from `approxFEEC`
+  The full verdict of `constrainedFEEC` (`ConstrainedFEEC.Verdict`) is re-derived from `approxFEEC`
   (`ConstrainedFEEC.constrainedFEEC_of_approxFEEC`, from the verdict of `ConstrainedFEEC.toApprox`):
   it is the special case `ιₕ` = inclusion, `πₕ = Πₕ`. The consistency defect of this special case
   is in general not zero: by `ConstrainedFEEC.ellipticProj_defect` it is `Δₕ(L y) - Δₕ(y)` along
@@ -456,69 +456,14 @@ theorem tendsto_incl_ellipticProj (x : H.wave.domain) :
     ((F.isApproximating.tendstoUniformlyOn_ellipticProjection isCompact_singleton).tendsto_at
       (mem_singleton (waveLift H x)))
 
-/-- **The constrained FEEC theorem, re-derived from the approximating one**: the statement of
-`constrainedFEEC`, verbatim, proved from the verdict of `approxFEEC` for `toApprox` (the special
+/-- **The constrained FEEC theorem, re-derived from the approximating one**: the verdict
+`ConstrainedFEEC.Verdict` of `constrainedFEEC`, proved from the verdict of `approxFEEC` for
+`toApprox` (the special
 case `ιₕ` = inclusion, `πₕ = Πₕ`, core `D(L²)`). The bridges are `toApprox_sol` (the semi-discrete
 solutions of (4.10) from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`), `exists_eq_sol` (every
 semi-discrete solution is a discrete orbit), the density of the core (`mem_toCore_closure`),
 `tendsto_incl_ellipticProj`, and the rate comparison `rate_le_constrainedFEEC`. -/
-theorem constrainedFEEC_of_approxFEEC :
-    -- 1. well-posedness
-    (∀ x ∈ H.wave.domain, ∀ T : ℝ,
-      Evolution.IsClassicalSolution H.wave (Icc 0 T) 0 (fun t => H.waveGroup.S t x) ∧
-      (∀ U, U 0 = x → Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U →
-        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
-      (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
-        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
-      ∀ t, ‖H.waveGroup.S t x‖ = ‖x‖) ∧
-    -- 2. constraint propagation
-    (H.wave.IsReducing F.K ↔ ∀ t, ∀ x ∈ F.K, H.waveGroup.S t x ∈ F.K) ∧
-    -- 3. convergence, with rates
-    (∀ T : ℝ, (∀ x : H.wave.domain, TendstoUniformlyOn
-        (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
-        (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
-      ∀ x : PiLp 2 W,
-        (∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
-          (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
-          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
-          TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t))
-            (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
-        ∃ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
-          (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) ∧
-          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x)) ∧
-    (∀ (T : ℝ) (R : F.RateClass T) (x : PiLp 2 W) (hxR : x ∈ R.Data) (h : κ), ∀ t ∈ Icc 0 T,
-      ‖H.waveGroup.S t x -
-          H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
-        (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x)) ∧
-    -- 4. the constraint residual
-    (H.wave.IsReducing F.K → ∀ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K → ∀ T : ℝ,
-      (∀ h t, infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
-          (F.K : Set (PiLp 2 W)) ≤
-        ‖H.waveGroup.S t x - H.totalD.graphFst (F.discrete h (waveLift H x) t)‖) ∧
-      TendstoUniformlyOn
-        (fun h t => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
-          (F.K : Set (PiLp 2 W))) (fun _ => 0) F.l (Icc 0 T)) ∧
-    (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
-      ∃ Q : Submodule 𝕜 (PiLp 2 W), (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
-        H.waveGroup.S t x ∉ Q ∧ 0 < infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)) ∧
-        ∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
-          (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
-          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
-          Tendsto (fun h => infDist (H.totalD.graphFst (ξh h t)) (Q : Set (PiLp 2 W))) F.l
-            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))) ∧
-    (¬ H.wave.IsReducing F.K →
-      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) → ∀ T : ℝ, 0 < T →
-      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
-        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W))) ∧
-    (∀ p : ι → Bool, (∀ i j, c.Rel i j → p j ≠ p i) → (∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K) →
-      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) →
-      ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
-      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
-        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
-        Tendsto (fun h => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
-          (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
-        ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
-          infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))) := by
+theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
   have V := approxFEEC F.toApprox F.toCore
   have hS : ∀ t, 0 ≤ t → ∀ x, F.toApprox.S t x = H.waveGroup.S t x := fun t ht x => by
     rw [F.toApprox.S_eq_waveGroup ht]
@@ -564,8 +509,18 @@ theorem constrainedFEEC_of_approxFEEC :
     obtain ⟨v, hv0, hv⟩ := horb hT ξh ξh' hξh
     exact ((V3 T x (F.mem_toCore_closure x)).2 v (h0.congr fun h => (hv0 h).symm)).congr
       (Eventually.of_forall fun h t ht => (hv h t ht).symm)
-  refine ⟨V1, V.isReducing_iff_invariant, fun T => ⟨hconv T, fun x => ⟨hfam T x, ?_⟩⟩,
-    fun _ R _ hxR h _ ht => F.rate_le_constrainedFEEC R hxR h ht, ?_, ?_, ?_, ?_⟩
+  refine
+    { wellPosed := fun hx T => V1 _ hx T
+      propagates_iff := V.isReducing_iff_invariant
+      converges := fun x T => hconv T x
+      converges_of_tendsto := fun x _ ξh ξh' hξh h0 => hfam _ x ξh ξh' hξh h0
+      exists_tendsto := fun x T => ?_
+      rate := fun R _ hxR h _ ht => F.rate_le_constrainedFEEC R hxR h ht
+      residual_le := fun hK x hxK h t => ?_
+      residual_tendsto := fun hK x hxK T => ?_
+      leaves := fun hK _ hT => ?_
+      leaves_symm := fun hK hd _ hT => ?_
+      leaves_graded := fun hp hRK hdense hK _ hT => ?_ }
   · -- existence of a convergent family: the solutions from `Πₕ ξ₀`
     refine ⟨fun h => F.discrete h (F.liftXh h (F.piProjL h x)),
       fun h => F.discreteDeriv h (F.liftXh h (F.piProjL h x)),
@@ -574,17 +529,15 @@ theorem constrainedFEEC_of_approxFEEC :
     change ((F.piProjL h x : F.Xh h) : PiLp 2 W) =
       H.totalD.graphFst (F.discrete h (F.liftXh h (F.piProjL h x)) 0)
     rw [F.discrete_zero, ellipticProjection_of_mem _ (F.liftXh_mem _ _), graphFst_liftXh]
-  · -- reducing constraint
-    intro hK x hxK T
-    refine ⟨fun h t => ?_, ?_⟩
-    · rw [← F.toApprox_sol, norm_sub_rev, ← dist_eq_norm]
-      exact infDist_le_dist_of_mem (V.isReducing_iff_invariant.1 hK t x hxK)
-    · exact (V.residual_tendsto (V.isReducing_iff.1 hK).1 hxK (F.mem_toCore_closure x)
-        (F.tendsto_incl_ellipticProj x) T).congr
-        (Eventually.of_forall fun h t _ =>
-          congrArg (infDist · (F.K : Set (PiLp 2 W))) (F.toApprox_sol h _ t))
+  · -- reducing constraint: the residual bound
+    rw [← F.toApprox_sol, norm_sub_rev, ← dist_eq_norm]
+    exact infDist_le_dist_of_mem (V.isReducing_iff_invariant.1 hK t x hxK)
+  · -- reducing constraint: the residual tends to `0`
+    exact (V.residual_tendsto (V.isReducing_iff.1 hK).1 hxK (F.mem_toCore_closure x)
+      (F.tendsto_incl_ellipticProj x) T).congr
+      (Eventually.of_forall fun h t _ =>
+        congrArg (infDist · (F.K : Set (PiLp 2 W))) (F.toApprox_sol h _ t))
   · -- non-reducing constraint, data of `K` or `Kᗮ`
-    intro hK T hT
     obtain ⟨Q, hQ, x, hx, t, ht, hout⟩ :=
       dissipFEEC_leaves_of_not_isReducing F.toApprox.toDissipFEEC hK hT
     have hQc : IsClosed (Q : Set (PiLp 2 W)) := by
@@ -597,13 +550,11 @@ theorem constrainedFEEC_of_approxFEEC :
     exact (hdet (F.mem_toCore_closure x) v (h0.congr fun h => (hv0 h).symm)).1.congr fun h => by
       rw [hv h t ht]
   · -- non-reducing constraint, `D(L) ∩ K` dense in `K`: both time directions
-    intro hK hd T hT
     obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth_symm F.isClosed_K
       (fun h => hK (V.isReducing_iff_invariant.2 h)) hd hT
     exact ⟨⟨x, hxD⟩, hxK, t, ht, hout,
       (F.isClosed_K.notMem_iff_infDist_pos ⟨0, F.K.zero_mem⟩).1 hout⟩
   · -- graded complex
-    intro p hp hRK hdense hK T hT
     obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth F.isClosed_K
       (fun h => hK ((V.isReducing_iff_keeps hp hRK hdense).2 h)) hdense hT
     obtain ⟨hp0, hdet⟩ := V.detects F.isClosed_K ⟨0, F.K.zero_mem⟩ ht.1 hout

@@ -130,6 +130,7 @@ public import Feec.HilbertComplex.Approximation.ApproxFEEC
 public import Feec.HilbertComplex.Approximation.ApproxFEECWitness
 public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
 public import Feec.HilbertComplex.Approximation.CochainProjection
+public import Feec.HilbertComplex.Approximation.ConformingFamily
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
@@ -215,6 +216,7 @@ public import Feec.Models.BoundedDomain.SymDualGeneral
 public import Feec.Models.Box.EigenDense
 public import Feec.Models.Box.Mirror
 public import Feec.Models.Box.RowWise
+public import Feec.Models.ConformingFamilies
 public import Feec.Models.Cube.Absorbing
 public import Feec.Models.Cube.AbsorbingFiniteSpeed
 public import Feec.Models.Cube.AbsorbingGalerkin

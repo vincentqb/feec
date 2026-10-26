@@ -1,15 +1,19 @@
 import Feec.HilbertComplex.Approximation.ApproxFEEC
+import Feec.HilbertComplex.Approximation.ApproxConforming
 
 /-!
 # Regression tests: nothing is lost from the verdicts
 
 The verdicts `DissipFEEC.Verdict`, `SkewFEEC.Verdict` and `ApproxFEEC.Verdict` are structures
 whose fields are the conclusions of `dissipFEEC`, `skewFEEC` and `approxFEEC`, each extending the
-one below and stated at the most general layer where it is provable. Their earlier shape was one
-conjunction per theorem, with the flow of each theorem written out (the Lumer–Phillips semigroup
-`hA.semigroup.S` and the wave group `H.waveGroup.S`), convergence on the core from the comparison
-initial values, the residual bound for all `t` and the departures with their positive residual
-limits. The two theorems below derive those conjunctions, verbatim, from the new verdicts.
+one below and stated at the most general layer where it is provable; `ConstrainedFEEC.Verdict` is
+the structure of the conclusions of `constrainedFEEC` (and `constrainedFEEC_of_approxFEEC`).
+Their earlier shape was one conjunction per theorem, with the flow of each theorem written out
+(the Lumer–Phillips semigroup `hA.semigroup.S` and the wave group `H.waveGroup.S`), convergence on
+the core from the comparison initial values, the residual bound for all `t` and the departures
+with their positive residual limits. The theorems below derive those conjunctions, verbatim, from the new verdicts
+(`constrained_old`: the eight-part conjunction that `constrainedFEEC` stated before
+`ConstrainedFEEC.Verdict`).
 
 Two things did change besides the shape. The m-dissipativity of `A` is now a field
 `F.isMDissipative` of `F` rather than a parameter of its type: `hA` below is any proof of it, and
@@ -248,5 +252,86 @@ theorem approx_old {Z : F.Core} (V : F.Verdict Z) :
     exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hdet⟩
 
 end Approx
+
+section Constrained
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  {H : HilbertComplex 𝕜 c W} {κ : Type*} {F : ConstrainedFEEC H κ}
+
+/-- The conclusion of `constrainedFEEC` in its earlier shape (an eight-part conjunction), from
+`ConstrainedFEEC.Verdict`. -/
+theorem constrained_old (V : F.Verdict) :
+    -- 1. well-posedness
+    (∀ x ∈ H.wave.domain, ∀ T : ℝ,
+      Evolution.IsClassicalSolution H.wave (Icc 0 T) 0 (fun t => H.waveGroup.S t x) ∧
+      (∀ U, U 0 = x → Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U →
+        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
+      (∀ U, U 0 = x → HodgeWave.IsWeakSolution H (Icc 0 T) 0 U →
+        EqOn U (fun t => H.waveGroup.S t x) (Icc 0 T)) ∧
+      ∀ t, ‖H.waveGroup.S t x‖ = ‖x‖) ∧
+    -- 2. constraint propagation
+    (H.wave.IsReducing F.K ↔ ∀ t, ∀ x ∈ F.K, H.waveGroup.S t x ∈ F.K) ∧
+    -- 3. convergence, with rates
+    (∀ T : ℝ, (∀ x : H.wave.domain, TendstoUniformlyOn
+        (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
+        (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
+      ∀ x : PiLp 2 W,
+        (∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+          (∀ h, HodgeWave.IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
+          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
+          TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t))
+            (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
+        ∃ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+          (∀ h, HodgeWave.IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) ∧
+          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x)) ∧
+    (∀ (T : ℝ) (R : F.RateClass T) (x : PiLp 2 W) (hxR : x ∈ R.Data) (h : κ), ∀ t ∈ Icc 0 T,
+      ‖H.waveGroup.S t x -
+          H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
+        (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x)) ∧
+    -- 4. the constraint residual
+    (H.wave.IsReducing F.K → ∀ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K → ∀ T : ℝ,
+      (∀ h t, infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+          (F.K : Set (PiLp 2 W)) ≤
+        ‖H.waveGroup.S t x - H.totalD.graphFst (F.discrete h (waveLift H x) t)‖) ∧
+      TendstoUniformlyOn
+        (fun h t => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+          (F.K : Set (PiLp 2 W))) (fun _ => 0) F.l (Icc 0 T)) ∧
+    (¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      ∃ Q : Submodule 𝕜 (PiLp 2 W), (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
+        H.waveGroup.S t x ∉ Q ∧ 0 < infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)) ∧
+        ∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+          (∀ h, HodgeWave.IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
+          Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
+          Tendsto (fun h => infDist (H.totalD.graphFst (ξh h t)) (Q : Set (PiLp 2 W))) F.l
+            (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W))))) ∧
+    (¬ H.wave.IsReducing F.K →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W))) ∧
+    (∀ p : ι → Bool, (∀ i j, c.Rel i j → p j ≠ p i) → (∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K) →
+      (∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) →
+      ¬ H.wave.IsReducing F.K → ∀ T : ℝ, 0 < T →
+      ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
+        H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
+        Tendsto (fun h => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+          (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
+        ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
+          infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))) :=
+  ⟨fun _ hx T => V.wellPosed hx T, V.propagates_iff,
+    fun T => ⟨fun x => V.converges x T,
+      fun x => ⟨fun ξh ξh' hξh h0 => V.converges_of_tendsto x ξh ξh' hξh h0, V.exists_tendsto x T⟩⟩,
+    fun _ R _ hxR h _ ht => V.rate R hxR h ht,
+    fun hK x hxK _ => ⟨fun h t => V.residual_le hK x hxK h t, V.residual_tendsto hK x hxK _⟩,
+    fun hK _ hT => V.leaves hK hT, fun hK hD _ hT => V.leaves_symm hK hD hT,
+    fun _ hp hRK hD hK _ hT => V.leaves_graded hp hRK hD hK hT⟩
+
+/-- Both proofs of the constrained FEEC theorem give the verdict. -/
+example (F : ConstrainedFEEC H κ) : F.Verdict := constrainedFEEC F
+
+example (F : ConstrainedFEEC H κ) : F.Verdict := F.constrainedFEEC_of_approxFEEC
+
+end Constrained
 
 end FeecCheck.Verdicts

@@ -93,12 +93,12 @@ The "Verdict" column says which branch of item 4 holds. Lean names are relative 
 
 | Model | Domain / BCs, discretization | Constraint | Verdict | Rate | Lean name |
 |---|---|---|---|---|---|
-| Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus_approxFEEC` |
+| Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus`, `converges` |
 | Maxwell | `𝕋ᵈ`, spectral Galerkin | `E = 0`, `B = 0` (not reducing) | solutions and discrete limits leave `K` | — | M `torus_potential_residual_of_approxFEEC` |
 | Maxwell | `ℝᵈ`, frequencies `\|ξ\| ≤ N` | Gauss laws | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ` | B `maxwell_euclidean_band` |
-| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `cubePMC_approxFEEC`, `cubePMC_approx_rate` (PEC alike), `cubePMC_ofComplex`, `cubePMC_ofComplex_rate` |
-| Maxwell | parallelepipeds, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `paraPMC_approxFEEC`, `paraPMC_approx_rate` (PEC alike) |
-| Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits | M `starPMC_approxFEEC`, `starPMC_approx_rate` (PEC alike) |
+| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms and every admissible sequence `P_rΛ`/`P_r⁻Λ` | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits and sequences of order `s` | M `cubePMC_rate`, `cubePolyPMC_rate` (PEC alike), `cubePMC_ofComplex`, `cubePMC_ofComplex_rate` |
+| Maxwell | parallelepipeds, PMC / PEC, Whitney forms and every admissible sequence | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits | M `paraPMC_rate`, `paraPolyPMC_rate` (PEC alike) |
+| Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms and every admissible sequence | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits | M `starPMC_rate`, `starPolyPMC_rate` (PEC alike) |
 | linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_torus_approxFEEC`, `_sobolev` |
 | linearized Einstein–Bianchi | `ℝ³`, frequencies `\|ξ\| ≤ N` | TSD | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ`, exponent sharp | B `einsteinBianchi_euclidean_band` |
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |

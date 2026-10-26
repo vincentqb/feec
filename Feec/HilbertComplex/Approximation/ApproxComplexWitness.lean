@@ -367,7 +367,7 @@ theorem scaled_defect_ne_zero (T : ℝ) (n : ℕ) :
     rw [c0_idWave_firstDatum, _root_.map_zero, zero_mul, add_zero, sub_zero, mul_one, mul_one,
       sc_conj]
   rw [h1, h2, map_mul, sc_conj, map_one] at hL
-  exact sc_sq_ne_one (𝕜 := 𝕜) n (by rw [sq]; exact hL.symm)
+  exact sc_sq_ne_one (𝕜 := 𝕜) n (by rw [_root_.sq]; exact hL.symm)
 
 /-- **The scheme is inexact**: from `πₙ (0, 1, 0)` the discrete solution differs from the exact
 one at some time (`(iₙ Lₙ πₙ x)₀ = -cₙ² ≠ -1 = (L x)₀`). -/
@@ -393,7 +393,7 @@ theorem scaled_exists_sol_ne (n : ℕ) :
       rw [idWave_skew, neg_neg]
     rw [← inner_firstDatum_left, sk,
       inner_secondDatum_right, c1_idWave_firstDatum, map_one]
-  rw [a1, a2, mul_neg, neg_inj, ← sq] at he0
+  rw [a1, a2, mul_neg, neg_inj, ← _root_.sq] at he0
   exact sc_sq_ne_one n he0
 
 /-- **Non-vacuity of `ApproxFEEC.ofComplex` for a genuinely non-conforming discrete complex.**

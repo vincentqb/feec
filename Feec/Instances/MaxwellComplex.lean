@@ -17,9 +17,8 @@ started from the modified elliptic projection `Rₕ (x, 𝐝 x)` satisfy
 `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) h_N Λ`, linear in `t`
 (`cubePMC_ofComplex_rate`, `cubePEC_ofComplex_rate`); the constants do not depend on `T` or `Λ`
 (they take no `N` or `x`). This is an `O(h)` rate, as for the conforming
-routes (`Feec.Instances.Maxwell.cubePMC_approx_rate`, factor `(1 + C_P)(1 + 2t)`;
-`Feec.Instances.Maxwell.cubePMC_rate`, factor `(1 + C_P)(1 + t)²`), now from complex-level
-estimates, with larger constants.
+routes (`Feec.Instances.Maxwell.cubePMC_rate`, factor `(1 + C_P)(1 + 2t)`), now from
+complex-level estimates, with larger constants.
 
 ## References
 

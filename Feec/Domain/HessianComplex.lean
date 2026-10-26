@@ -30,9 +30,17 @@ adjoints are `div div`, `sym curl` and `-dev grad`, the operators of the div-div
 The duality with the div-div complex is in `Feec.Domain.DivDivComplex`. No closed-range statement
 is made (it needs the regularity of `Ω`).
 
+**As a BGG complex.** The Hessian complex is the output of the BGG construction
+(`Feec.BGG.Data.bgg`, `J = 0`) applied to the de Rham complex `ℝ → ℝ³ → ℝ³ → ℝ` stacked over the
+de Rham complex tensored with `ℝ³`, `ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, linked by `id`, `2 vskw` and
+`tr`: the first two rows of [ArnoldHu2021], (32). For such data `Feec.BGG.Data.bggHomologyIso`
+gives the cohomology of the output as that of the twisted complex; the identification of
+`hessianComplex` with `Data.bgg` of these rows is not formalized here.
+
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the Hessian complex)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the Hessian complex as the
+  BGG output of the first two rows of (32), `J = 0`), (6)
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the Hessian and div-div complexes on general domains and their duality)
 

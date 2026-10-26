@@ -30,12 +30,21 @@ symmetric fields, `div` on `Sym`), and as a complex of constrained realizations 
 
 No closed-range statement is made (it needs the regularity of `Ω`).
 
+**As a BGG complex.** The elasticity complex is the output of the BGG construction
+(`Feec.BGG.Data.bgg`, `J = 1`) applied to two copies of the de Rham complex tensored with `ℝ³`,
+`ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, linked by `-mskw`, `S u = uᵀ - tr(u) I` and `2 vskw`: the middle two rows
+of [ArnoldHu2021], (32); the construction goes back to [Eastwood2000] (the BGG resolution) and
+[AFW2006], §11. The identification of `elasticityComplex` with `Data.bgg` of these rows is not
+formalized here.
+
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §11 (the elasticity complex)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the elasticity complex from the
-  BGG construction)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the elasticity complex as the
+  BGG output of the middle two rows of (32), `J = 1`), (5)
+* [M. Eastwood, *A complex from linear elasticity*][Eastwood2000] (the elasticity complex from the
+  BGG resolution)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/

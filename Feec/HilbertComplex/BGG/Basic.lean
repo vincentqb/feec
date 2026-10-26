@@ -31,12 +31,15 @@ ring `R`, any complex shape, any length.
   `Segment.range_D1`.
 * `Data.twist_twist`: the twisted differential squares to zero, for any length.
 
+The derived (BGG) complex of `Data`, of any length, and its cohomology are in
+`Feec.HilbertComplex.BGG.Derived` (`Feec.BGG.Data.derived`, `Feec.BGG.Data.bgg`).
+
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.1 (BGG data, complex (5.1), Prop 5.1)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes from complexes: the BGG
-  construction)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (19)–(22) (BGG data),
+  §5.1, (58)–(59) (the twisted complex)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
   §3 (regularity hypothesis of `Segment.range_D1`)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
@@ -232,14 +235,14 @@ theorem twist_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.twist i j = 0 := by
   ext x <;> simp [D.shape_d i j h, D.shape_S i j h, D.shape_dt i j h]
 
 /-- **The twisted differential squares to zero**, for BGG data of any length:
-`d(dσ - Sφ) - S d̃φ = -(dS + S d̃)φ = 0`. -/
+`d(dσ - Sφ) - S d̃φ = -(dS + S d̃)φ = 0`. [ArnoldHu2021], §5.1 -/
 theorem twist_twist (i j k : ι) (x : V i × Vt i) : D.twist j k (D.twist i j x) = 0 := by
   simp [D.d_comp_d, D.dt_comp_dt, D.anticomm]
 
 section Complex
 
 /-- **The twisted complex** `(V × Ṽ, (σ, φ) ↦ (dσ - Sφ, d̃φ))` of BGG data of any length, as a
-homological complex of `R`-modules. -/
+homological complex of `R`-modules. [ArnoldHu2021], (59) -/
 def twistComplex : HomologicalComplex (ModuleCat.{v} R) c where
   X i := ModuleCat.of R (V i × Vt i)
   d i j := ModuleCat.ofHom (D.twist i j)

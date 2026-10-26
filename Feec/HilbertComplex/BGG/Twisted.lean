@@ -32,8 +32,8 @@ a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.1 (the connecting maps `S` and the complex (5.1))
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes from complexes: the BGG
-  construction)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5.1, (58)–(59) (the twisted
+  complex of bounded Hilbert complexes)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/

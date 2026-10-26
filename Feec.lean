@@ -244,7 +244,6 @@ public import Feec.Models.Cube.DeRhamIdentExt
 public import Feec.Models.Cube.DeRhamIdentFEM
 public import Feec.Models.Cube.DeRhamIdentForms
 public import Feec.Models.Cube.DeRhamIdentPoincare
-public import Feec.Models.Cube.DeRhamIdentRate
 public import Feec.Models.Cube.DeRhamIdentTrunc
 public import Feec.Models.Cube.DeRhamPartial
 public import Feec.Models.Cube.DeRhamPartialFEM

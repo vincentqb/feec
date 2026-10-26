@@ -28,8 +28,11 @@ closed range and `ℌʲ` is finite-dimensional, then at the degree `j` (and its 
   ([AFW2010], Thm 3.9);
 * `converges`: the discrete solutions converge to the solution of the mixed problem.
 
-With a Jackson estimate (`ConformingFamily.Jackson`) the error is `O(hᵒʳᵈ)` for regular solutions
-(`ConformingFamily.StaticVerdict.rate`), from `quasiOptimal`; with rates of the quantities `η`,
+With a Jackson estimate (`ConformingFamily.Jackson`, of any real order; from best approximation in
+`W` through the projections, `ConformingFamily.Jackson.ofInfDist`) the error is `O(hᵒʳᵈ)` for
+regular solutions (`ConformingFamily.StaticVerdict.rate`), from `quasiOptimal`; quasi-optimality and
+the rate need closed range in the degrees of the problem only (`ConformingFamily.quasiOptimal`,
+`ConformingFamily.rate`, no finite-dimensionality of `ℌ`); with rates of the quantities `η`,
 `δ`, `μ` of [AFW2010], §3.5 (elliptic regularity), the `L²` error of `u` is one order better
 (`ConformingFamily.rate_static_L2`, from the improved estimates of
 `Feec.HilbertComplex.Approximation.ImprovedEstimate`).
@@ -46,12 +49,14 @@ projections (`ConformingFamily.hasUniformProj`).
 * `Subcomplex.mixedError`: `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖`.
 * `Subcomplex.HasUniformProj l S`.
 * `ConformingFamily.StaticVerdict F j`.
+* `ConformingFamily.Jackson.ofInfDist`: a Jackson estimate from best approximation in `W`.
 
 ## Main results
 
 * **`ConformingFamily.staticFEEC`**, **`ConformingFamily.StaticVerdict.rate`**;
-  `ConformingFamily.rate_static_L2`, the improved `L²` rate of [AFW2010], Thm 3.11, conditional on
-  elliptic regularity (rates of `η`, `δ`, `μ`).
+  `ConformingFamily.quasiOptimal`, `ConformingFamily.rate` (closed range at `j`, `k` only),
+  `ConformingFamily.Jackson.approx_le`; `ConformingFamily.rate_static_L2`, the improved `L²` rate
+  of [AFW2010], Thm 3.11, conditional on elliptic regularity (rates of `η`, `δ`, `μ`).
 * `Subcomplex.CochainProjection.mixedApprox_le`, `Subcomplex.CochainProjection.norm_sub_le_rate`.
 * `ConformingFamily.isGraphBounded`, `ConformingFamily.infDist_domainSub_le`,
   `ConformingFamily.tendsto_infDist_domainSub`, `ConformingFamily.hasUniformProj`.
@@ -267,6 +272,24 @@ theorem hasUniformProj [∀ j, FiniteDimensional 𝕜 (H.harmonic j)] :
   ⟨F.projBound, F.π, F.one_le_projBound, F.norm_π_le, F.isGraphBounded,
     fun _ => F.tendsto_harmonicGap⟩
 
+/-- **Quasi-optimality of the mixed method** for a conforming family ([AFW2010], Thm 3.9), with
+closed range at `j` and `k` only (no finite-dimensionality of `ℌ`): the error of the mixed method
+is at most `K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`, with `K` independent of `h` and `μₕ` the
+harmonic gap of `πₕ`. -/
+theorem quasiOptimal {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
+    (hk : H.ClosedRangeAt k) : ∃ K : ℝ, 0 ≤ K ∧
+    ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
+    H.IsMixedSolution i j k f σ u p → ∀ h : κ,
+    (F.V h).mixedError hij hjk f σ u p ≤
+      K * (infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
+        infDist (p : W j) ((F.V h).harmonicW j) +
+        (F.π h).harmonicGap j * infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j)) := by
+  have hC := F.one_le_projBound
+  obtain ⟨cP, -, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj hk
+  exact ⟨_, by have := zero_le_one.trans hC; positivity, fun hs h =>
+    (F.π h).norm_sub_le_infDist_harmonicGap hij hjk hC hPi hPj (F.isGraphBounded h i j)
+      (F.isGraphBounded h j k) hs⟩
+
 /-! ### The static FEEC theorem -/
 
 /-- **The conclusions of the static FEEC theorem** (`staticFEEC`) for a conforming family `F` at
@@ -302,7 +325,73 @@ structure StaticVerdict (j : ι) : Prop where
     {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
     Tendsto (fun h => (F.V h).mixedError hij hjk f σ u p) F.l (𝓝 0)
 
-variable {F} in
+/-! ### Rates from Jackson estimates -/
+
+variable {F}
+
+/-- **The approximation terms of the quasi-optimal estimate from a Jackson estimate**: if `σ`,
+`u`, `P_𝔅 u` and `p` are `s`-regular with bound `L`, then
+`E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u) ≤ 2 (B_{s,i} + (3 + 2C) B_{s,j}) L hₕ^{ord s}`, `C` the
+bound of the projections (`Subcomplex.CochainProjection.mixedApprox_le`). -/
+theorem Jackson.approx_le {ρ : Type*} (J : F.Jackson ρ) (s : ρ) (h : κ) {i j k : ι}
+    (hij : c.Rel i j) (hjk : c.Rel j k) {L : ℝ} (hL : 0 ≤ L) {σ : H.domainSpace i}
+    {u : H.domainSpace j} {p : H.harmonic j} (hσ : J.Reg s i L (H.domainIncl i σ))
+    (hu : J.Reg s j L (H.domainIncl j u))
+    (hb : J.Reg s j L (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))))
+    (hp : J.Reg s j L (p : W j)) :
+    infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
+        infDist (p : W j) ((F.V h).harmonicW j) +
+        (F.π h).harmonicGap j * infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j) ≤
+      2 * (J.B s i + (3 + 2 * F.projBound) * J.B s j) * (L * J.meshSize h ^ J.ord s) := by
+  have hC : 0 ≤ F.projBound := zero_le_one.trans F.one_le_projBound
+  have hgap : (F.π h).harmonicGap j ≤ 1 + F.projBound := (F.π h).harmonicGap_le (by linarith)
+    fun _ hq => (F.π h).norm_sub_π_harmonic_le hjk hC (F.isGraphBounded h j k) hq
+  refine ((F.π h).mixedApprox_le hij hjk hC (F.isGraphBounded h j k)
+    (Reg := fun l x => J.Reg s l L x) (ε := fun l => J.B s l * (L * J.meshSize h ^ J.ord s))
+    (fun l x hx => J.jackson s h l x hL hx) hσ hu hb hp hgap).trans_eq ?_
+  ring
+
+/-- **A Jackson estimate from best approximation in `W`**: if every `s`-regular `x ∈ Wⁱ` with
+bound `L`, and `d x`, are within `B_{s,i} L hₕ^{ord s}` of `Vₕ`, then `F` has the Jackson estimate
+with the constants `(1 + C) B` (`C` the bound of the projections): `v = πₕ x` approximates `x`,
+`‖x - πₕ x‖ ≤ (1 + C) dist(x, Vₕⁱ)`, and `d x` (`d πₕ = πₕ d`). -/
+def Jackson.ofInfDist (F : ConformingFamily H κ) {ρ : Type*} (meshSize : κ → ℝ)
+    (meshSize_nonneg : ∀ h, 0 ≤ meshSize h) (tendsto_meshSize : Tendsto meshSize F.l (𝓝 0))
+    (Reg : ρ → ∀ i, ℝ → W i → Prop) (ord : ρ → ℝ) (B : ρ → ι → ℝ) (B_nonneg : ∀ s i, 0 ≤ B s i)
+    (happ : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x →
+      infDist x ((F.V h).V i : Set (W i)) ≤ B s i * (L * meshSize h ^ ord s) ∧
+      ∀ j, c.Rel i j → ∀ hx : x ∈ (H.d i j).domain,
+        infDist (H.d i j ⟨x, hx⟩) ((F.V h).V j : Set (W j)) ≤ B s i * (L * meshSize h ^ ord s)) :
+    F.Jackson ρ where
+  meshSize := meshSize
+  meshSize_nonneg := meshSize_nonneg
+  tendsto_meshSize := tendsto_meshSize
+  Reg := Reg
+  ord := ord
+  B s i := (1 + F.projBound) * B s i
+  B_nonneg s i := mul_nonneg (by linarith [F.one_le_projBound]) (B_nonneg s i)
+  jackson s h i L x hL hx := by
+    have hC : 0 ≤ F.projBound := zero_le_one.trans F.one_le_projBound
+    have hC1 : 0 ≤ 1 + F.projBound := by linarith
+    have hε : 0 ≤ (1 + F.projBound) * B s i * (L * meshSize h ^ ord s) :=
+      mul_nonneg (mul_nonneg hC1 (B_nonneg s i))
+        (mul_nonneg hL (Real.rpow_nonneg (meshSize_nonneg h) _))
+    obtain ⟨h0, h1⟩ := happ s h i x hL hx
+    refine ⟨(F.π h).π i x, (F.π h).mem i x, ?_, fun j hxj => ?_⟩
+    · rw [mul_assoc]
+      exact ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h i) x).trans
+        (mul_le_mul_of_nonneg_left h0 hC1)
+    by_cases hij : c.Rel i j
+    · have e : H.d i j ⟨x - (F.π h).π i x,
+          Submodule.sub_mem _ hxj ((F.V h).le_domain i j ((F.π h).mem i x))⟩ =
+          H.d i j ⟨x, hxj⟩ - (F.π h).π j (H.d i j ⟨x, hxj⟩) := by
+        rw [← (F.π h).comm i j ⟨x, hxj⟩, ← LinearPMap.map_sub]; rfl
+      rw [e, mul_assoc]
+      exact ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h j) _).trans
+        (mul_le_mul_of_nonneg_left (h1 j hij hxj) hC1)
+    · rw [H.apply_eq_zero_of_not_rel hij, norm_zero]
+      exact hε
+
 /-- **The rate of the static FEEC theorem** from quasi-optimality and a Jackson estimate
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): if the solution `(σ, u, p)` of the mixed problem, the
 boundary part of `u` and `p` are `s`-regular with bound `L`, the error of the mixed method is
@@ -316,19 +405,27 @@ theorem StaticVerdict.rate {j : ι} (V : F.StaticVerdict j) {ρ : Type*} (J : F.
     J.Reg s j L (p : W j) → ∀ h : κ,
     (F.V h).mixedError hij hjk f σ u p ≤ K * L * J.meshSize h ^ J.ord s := by
   obtain ⟨K, hK, hqo⟩ := V.quasiOptimal hij hjk
-  set C := F.projBound
-  have hC : 0 ≤ C := zero_le_one.trans F.one_le_projBound
-  refine ⟨K * (2 * (J.B s i + (3 + 2 * C) * J.B s j)),
-    fun {f σ u p} hs L hL hσ hu hb hp h => (hqo hs h).trans ?_⟩
-  have hgap : (F.π h).harmonicGap j ≤ 1 + C := (F.π h).harmonicGap_le (by linarith)
-    fun _ hq => (F.π h).norm_sub_π_harmonic_le hjk hC (F.isGraphBounded h j k) hq
-  have hA := (F.π h).mixedApprox_le hij hjk hC (F.isGraphBounded h j k)
-    (Reg := fun l x => J.Reg s l L x) (ε := fun l => J.B s l * (L * J.meshSize h ^ J.ord s))
-    (fun l x hx => J.jackson s h l x hL hx) hσ hu hb hp hgap
-  calc _ ≤ K * (2 * (J.B s i * (L * J.meshSize h ^ J.ord s) +
-        (3 + 2 * C) * (J.B s j * (L * J.meshSize h ^ J.ord s)))) :=
-        mul_le_mul_of_nonneg_left hA hK
-    _ = _ := by ring
+  exact ⟨K * (2 * (J.B s i + (3 + 2 * F.projBound) * J.B s j)), fun hs L hL hσ hu hb hp h =>
+    ((hqo hs h).trans (mul_le_mul_of_nonneg_left
+      (J.approx_le s h hij hjk hL hσ hu hb hp) hK)).trans_eq (by ring)⟩
+
+variable (F) in
+/-- **The rate of the mixed method** from a Jackson estimate, with closed range at `j` and `k`
+only (`StaticVerdict.rate` without the finite-dimensionality of `ℌʲ`). -/
+theorem rate {ρ : Type*} (J : F.Jackson ρ) (s : ρ) {i j k : ι} (hij : c.Rel i j)
+    (hjk : c.Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) :
+    ∃ K : ℝ, ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
+    H.IsMixedSolution i j k f σ u p → ∀ {L : ℝ}, 0 ≤ L →
+    J.Reg s i L (H.domainIncl i σ) → J.Reg s j L (H.domainIncl j u) →
+    J.Reg s j L (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))) →
+    J.Reg s j L (p : W j) → ∀ h : κ,
+    (F.V h).mixedError hij hjk f σ u p ≤ K * L * J.meshSize h ^ J.ord s := by
+  obtain ⟨K, hK, hqo⟩ := F.quasiOptimal hij hjk hj hk
+  exact ⟨K * (2 * (J.B s i + (3 + 2 * F.projBound) * J.B s j)), fun hs L hL hσ hu hb hp h =>
+    ((hqo hs h).trans (mul_le_mul_of_nonneg_left
+      (J.approx_le s h hij hjk hL hσ hu hb hp) hK)).trans_eq (by ring)⟩
+
+variable (F)
 
 /-- **The static FEEC theorem.** For a conforming family `F` of a Hilbert complex `H` with closed
 range, and a finite-dimensional `ℌʲ` (`StaticVerdict`), with constants independent of `h`:
@@ -347,18 +444,7 @@ theorem staticFEEC (hcr : ∀ i, H.ClosedRangeAt i) (j : ι) [FiniteDimensional 
     F.StaticVerdict j := by
   have hC := F.one_le_projBound
   have hgap : Tendsto (fun h => (F.π h).harmonicGap j) F.l (𝓝 0) := F.tendsto_harmonicGap
-  have hqo : ∀ {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k), ∃ K : ℝ, 0 ≤ K ∧
-      ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
-      H.IsMixedSolution i j k f σ u p → ∀ h : κ,
-      (F.V h).mixedError hij hjk f σ u p ≤
-        K * (infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
-          infDist (p : W j) ((F.V h).harmonicW j) + (F.π h).harmonicGap j *
-            infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j)) := by
-    intro i k hij hjk
-    obtain ⟨cP, -, hPi, hPj⟩ := H.exists_poincare_pair hij hjk (hcr j) (hcr k)
-    exact ⟨_, by have := zero_le_one.trans hC; positivity, fun hs h =>
-      (F.π h).norm_sub_le_infDist_harmonicGap hij hjk hC hPi hPj (F.isGraphBounded h i j)
-        (F.isGraphBounded h j k) hs⟩
+  have hqo {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) := F.quasiOptimal hij hjk (hcr j) (hcr k)
   refine ⟨fun {k} hjk => ?_, fun {i k} hij hjk => ?_, hgap,
     F.eventually_bijective_cohomologyMap (hcr j), hqo, fun {i k} hij hjk f σ u p hs => ?_⟩
   · obtain ⟨cP, -, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hcr k)

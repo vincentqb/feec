@@ -127,7 +127,8 @@ def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx 
 `IsCsForm`. Since the representative is `C^{s+2}` on `ℝⁿ`, this is flatness of order `s + 2` at
 `∂Q`, stronger than vanishing tangential traces (e.g. `∏ᵢ sin (2π xᵢ)` on `(0, ½)ⁿ` is excluded);
 the rates with vanishing traces below are stated for this class. The general case of `H̊Λ(Q)` is
-covered, without a rate, by the quasi-optimality `mixed_quasiOptimal_polyMin`. The class with
+covered, without a rate, by the quasi-optimality of the static FEEC theorem for `polyFamilyMin`
+(`Feec.HilbertComplex.ConformingFamily.StaticVerdict.quasiOptimal`). The class with
 vanishing tangential traces only, `FEM.IsCsFormTr` of `Feec.Models.Cube.TangentialRate`, contains
 this one with the same bound (`IsCsFormMin.isCsFormTr`) and carries the same rates. -/
 def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
@@ -304,123 +305,34 @@ theorem IsCsFormMin.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : �
 
 /-! ### Rates for the mixed Hodge Laplacian -/
 
-/-- **Convergence of order `h^{s+1}` of the mixed method for smooth solutions** ([AFW2010],
-Thm 3.9; [Arnold2018], Ch. 7), for a sequence of order `s` under its smoothing estimates: if
-`σ`, `u`, `P_𝔅 u` and the harmonic part `p` are `IsCsForm s` with bound `L`, the error is
-`≤ C' K h_N^{s+1}` with `K = 2 (1 + 2C)(B_i + B_j) L` (the harmonic term through
-`CochainProjection.infDist_harmonicW_le`). -/
-theorem PolySmoothingEstimates.norm_sub_le_meshSize_pow {S : PolySeq}
-    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p C) {s : ℕ}
-    {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
-    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
-    (hs : (complex n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
-    (hσ : IsCsForm s i L ((complex n).domainIncl i σ))
-    (hu : IsCsForm s j L ((complex n).domainIncl j u))
-    (hB : IsCsForm s j L ((complex n).domainIncl j
-      ((complex n).boundaryPart j ((complex n).domainIncl j u))))
-    (hq : IsCsForm s j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
-    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).fst‖ +
-        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
-            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-        (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L)) *
-          meshSize N ^ (s + 1) := by
-  have hC := hE.two_mul_nonneg
-  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
-  have hBi := polyInterpBound_nonneg (n := n) S i
-  have hBj := polyInterpBound_nonneg (n := n) S j
-  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
-  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
-  have hK : 2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-      meshSize N ^ (s + 1) =
-      2 * ((1 + 2 * C) * (polyInterpBound n S i * L * meshSize N ^ (s + 1))) +
-        2 * ((1 + 2 * C) * (polyInterpBound n S j * L * meshSize N ^ (s + 1))) := by ring
-  have hi : 2 * (polyInterpBound n S i * L * meshSize N ^ (s + 1)) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    rw [hK]; nlinarith
-  have hj : 2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    rw [hK]; nlinarith
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((poly n S N).harmonicW j) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    refine ((hE.proj N).infDist_harmonicW_le hjk hC (hE.isGraphBounded_proj N j k) q.2).trans ?_
-    have h := IsCsForm.infDist_domainSub_poly_le hSj
-      (σ := cyclesToDomainSpace ((complex n).harmonic_le_cycles j q.2)) hq hL0 N
-    rw [hK]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    nlinarith [mul_le_mul_of_nonneg_left h this]
-  exact hE.norm_sub_le_of_infDist_le hij hjk hs N
-    ((hσ.infDist_domainSub_poly_le hSi hL0 N).trans hi)
-    ((hu.infDist_domainSub_poly_le hSj hL0 N).trans hj) hq'
-    ((hB.infDist_domainSub_poly_le hSj hL0 N).trans hj)
+variable (n) in
+/-- **The Jackson estimate of the complexes of `S`**: for `s : ℕ`, the `C^{s+2}` forms
+(`IsCsForm s`) of the degrees where `S` reproduces `P_s` (`PolyOrderAt`) are approximated at the
+order `h_N^{s+1}` with the constants `polyInterpBound` (`IsCsForm.exists_mem_poly_le`). -/
+def polyJackson (S : PolySeq) : (polyFamily n S).Jackson ℕ where
+  meshSize := meshSize
+  meshSize_nonneg N := (meshSize_pos N).le
+  tendsto_meshSize := tendsto_meshSize
+  Reg s j L x := PolyOrderAt n S s j ∧ IsCsForm s j L x
+  ord s := ((s + 1 : ℕ) : ℝ)
+  B _ := polyInterpBound n S
+  B_nonneg _ := polyInterpBound_nonneg S
+  jackson s N _ _ _ hL hx := by
+    rw [Real.rpow_natCast, ← mul_assoc]; exact hx.2.exists_mem_poly_le hx.1 hL N
 
-/-- **Convergence of order `h^{s+1}` of the mixed method with vanishing traces for smooth
-solutions**, for a sequence of order `s` under its smoothing estimates (`H̊Λ(Q)`, data vanishing
-outside `Q`). -/
-theorem PolySmoothingEstimatesMin.norm_sub_le_meshSize_pow {S : PolySeq}
-    {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimatesMin n S p C)
-    {s : ℕ} {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
-    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
-    (hσ : IsCsFormMin s i L ((complexMin n).domainIncl i σ))
-    (hu : IsCsFormMin s j L ((complexMin n).domainIncl j u))
-    (hB : IsCsFormMin s j L ((complexMin n).domainIncl j
-      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
-    (hq : IsCsFormMin s j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-        (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L)) *
-          meshSize N ^ (s + 1) := by
-  have hC := hE.two_mul_nonneg
-  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
-  have hBi := polyInterpBound_nonneg (n := n) S i
-  have hBj := polyInterpBound_nonneg (n := n) S j
-  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
-  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
-  have hK : 2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-      meshSize N ^ (s + 1) =
-      2 * ((1 + 2 * C) * (polyInterpBound n S i * L * meshSize N ^ (s + 1))) +
-        2 * ((1 + 2 * C) * (polyInterpBound n S j * L * meshSize N ^ (s + 1))) := by ring
-  have hi : 2 * (polyInterpBound n S i * L * meshSize N ^ (s + 1)) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    rw [hK]; nlinarith
-  have hj : 2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    rw [hK]; nlinarith
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((polyMin n S N).harmonicW j) ≤
-      2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j) * L) *
-        meshSize N ^ (s + 1) := by
-    refine ((hE.proj N).infDist_harmonicW_le hjk hC (hE.isGraphBounded_proj N j k) q.2).trans ?_
-    have h := IsCsFormMin.infDist_domainSub_polyMin_le hSj
-      (σ := cyclesToDomainSpace ((complexMin n).harmonic_le_cycles j q.2)) hq hL0 N
-    rw [hK]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    nlinarith [mul_le_mul_of_nonneg_left h this]
-  exact hE.norm_sub_le_of_infDist_le hij hjk hs N
-    ((hσ.infDist_domainSub_polyMin_le hSi hL0 N).trans hi)
-    ((hu.infDist_domainSub_polyMin_le hSj hL0 N).trans hj) hq'
-    ((hB.infDist_domainSub_polyMin_le hSj hL0 N).trans hj)
+variable (n) in
+/-- **The Jackson estimate of the complexes of `S` with vanishing boundary DOFs**: the forms of
+class `IsCsFormMin s` at the order `h_N^{s+1}` (`IsCsFormMin.exists_mem_polyMin_le`). -/
+def polyJacksonMin (S : PolySeq) : (polyFamilyMin n S).Jackson ℕ where
+  meshSize := meshSize
+  meshSize_nonneg N := (meshSize_pos N).le
+  tendsto_meshSize := tendsto_meshSize
+  Reg s j L x := PolyOrderAt n S s j ∧ IsCsFormMin s j L x
+  ord s := ((s + 1 : ℕ) : ℝ)
+  B _ := polyInterpBound n S
+  B_nonneg _ := polyInterpBound_nonneg S
+  jackson s N _ _ _ hL hx := by
+    rw [Real.rpow_natCast, ← mul_assoc]; exact hx.2.exists_mem_polyMin_le hx.1 hL N
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method on the cube**, with no
 hypothesis beyond the data ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): for an admissible sequence
@@ -447,12 +359,12 @@ theorem mixed_rate_poly_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
           (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
             (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
       K * L * meshSize N ^ (s + 1) := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j))),
-    fun hs L hL0 hσ hu hB hq N => ?_⟩
-  refine (hE.norm_sub_le_meshSize_pow hSi hSj hij hjk hs hL0 hσ hu hB hq N).trans_eq ?_
-  ring
+  obtain ⟨K, hK⟩ := ((polyFamily n S).staticFEEC closedRangeAt j).rate (polyJackson n S) s hij hjk
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL ⟨hSi, hσ⟩ ⟨hSj, hu⟩ ⟨hSj, hb⟩ ⟨hSj, hq⟩ N
+  simp only [polyFamily_V] at h
+  rw [← Real.rpow_natCast]
+  exact h
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method on the cube** for a
 sequence of order `s` in every degree (`PolyOrder`); see `mixed_rate_poly_of_polyOrderAt` for
@@ -499,12 +411,13 @@ theorem mixed_rate_polyMin_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
           (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
             (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
       K * L * meshSize N ^ (s + 1) := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    (2 * ((1 + 2 * C) * (polyInterpBound n S i + polyInterpBound n S j))),
-    fun hs L hL0 hσ hu hB hq N => ?_⟩
-  refine (hE.norm_sub_le_meshSize_pow hSi hSj hij hjk hs hL0 hσ hu hB hq N).trans_eq ?_
-  ring
+  obtain ⟨K, hK⟩ := ((polyFamilyMin n S).staticFEEC closedRangeAt_min j).rate
+    (polyJacksonMin n S) s hij hjk
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL ⟨hSi, hσ⟩ ⟨hSj, hu⟩ ⟨hSj, hb⟩ ⟨hSj, hq⟩ N
+  simp only [polyFamilyMin_V] at h
+  rw [← Real.rpow_natCast]
+  exact h
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces** for
 a sequence of order `s` in every degree; see `mixed_rate_polyMin_of_polyOrderAt`. -/

@@ -1,46 +1,44 @@
 module
 
-public import Feec.Models.Cube.DeRhamIdentRate
+public import Feec.Models.Cube.DeRhamIdentFEM
+public import Feec.Models.Cube.WhitneyRate
 public import Feec.Models.Cube.SmoothingEstimates
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!
-# Convergence of the Whitney finite element method on the cube, with no hypotheses
+# The Whitney finite element method on the cube as a conforming family
 
 On the cube `Q = (0, ½)ⁿ` with the level-`(N + 1)` Freudenthal meshes (mesh size
 `h_N = FEM.meshSize N = 1 / (2 (N + 1))`) and their lowest-order Whitney complexes
-`FEM.whitney n N ⊆ HΛ(Q)` and `FEM.whitneyMin n N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), the three
-hypotheses of `Feec.Models.Cube.FiniteElementMethod` are theorems:
+`FEM.whitney n N ⊆ HΛ(Q)` and `FEM.whitneyMin n N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), the
+hypotheses of the static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.staticFEEC`) are
+theorems:
 
 * the smoothing estimates `FEM.SmoothingEstimates`, `FEM.SmoothingEstimatesMin`
   (`FEM.smoothingEstimates_exists`, `FEM.smoothingEstimatesMin_exists`,
-  `Feec.Models.Cube.SmoothingEstimates`);
-* the Poincaré inequalities of `HΛ(Q)` and `H̊Λ(Q)` with `c_P = (2π)⁻¹`
-  (`FEM.norm_le_of_mem_orthogonal_cycles`, `FEM.norm_le_of_mem_orthogonal_cycles_min`,
-  `Feec.Models.Cube.DeRhamIdentFEM`);
-* the Whitney interpolation error for `C²` forms (`Feec.Models.Cube.WhitneyRate`).
+  `Feec.Models.Cube.SmoothingEstimates`) make the Whitney complexes, with the smoothed projections
+  `π_N = J_N⁻¹ Q_N`, **conforming families** (`SmoothingEstimates.family`,
+  `SmoothingEstimatesMin.family`, `ConformingFamily.ofSmoothing`; with the estimates of
+  `smoothingEstimates_exists`, `whitneyFamily`, `whitneyFamilyMin`), the approximation property
+  being the density of the Whitney spaces (`tendsto_infDist_whitney`);
+* the closed range of `HΛ(Q)` and `H̊Λ(Q)` (`closedRangeAt`, `closedRangeAt_min`, Poincaré
+  constant `(2π)⁻¹`, `Feec.Models.Cube.DeRhamIdentFEM`) and the finite-dimensionality of their
+  harmonic forms;
+* the Whitney interpolation error for `C²` forms (`Feec.Models.Cube.WhitneyRate`) is a
+  **Jackson estimate** of order `h_N` (`whitneyJackson`, `whitneyJacksonMin`).
 
-Chaining them, this module states the finite element results with no hypothesis beyond the data
-of the problem, for both families:
+So `(whitneyFamily n).staticFEEC closedRangeAt j` gives, with no hypothesis beyond the data of
+the problem, the uniform discrete Poincaré inequality, the uniform well-posedness and stability of
+the discrete mixed Hodge Laplacian, the vanishing harmonic gap, the discrete cohomology,
+quasi-optimality and convergence, and its `rate` with `whitneyJackson n` the `O(h)` convergence
+of the mixed method for `C²` solutions; the same for `H̊Λ(Q)` with `whitneyFamilyMin`.
 
-* **uniformly bounded smoothed cochain projections with vanishing harmonic gap**: `‖π_N‖ ≤ 2C`
-  in `L²` and every graph norm, and `sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π_N q‖ → 0` in every degree
-  (`smoothedProjection_uniform`, `smoothedProjection_uniform_min`);
-* **uniform discrete Poincaré inequality** (`discretePoincare`, `discretePoincare_min`);
-* **uniform well-posedness and stability of the discrete mixed Hodge Laplacian**: for every `N`
-  and every `fₕ ∈ Vₕʲ` the discrete mixed problem has a unique solution, bounded by `C ‖fₕ‖` with
-  `C` independent of `N` (`mixed_wellPosed`, `mixed_wellPosed_min`);
-* **quasi-optimality**: error `≤ K (E(σ) + E(u) + E(q) + μ_j(N) E(P_𝔅 u))` with `μ_j(N) → 0`
-  (`mixed_quasiOptimal`, `mixed_quasiOptimal_min`);
-* **`O(h)` convergence** of the discrete mixed solution to the solution `(σ, u, q)` of the mixed
-  Hodge–Laplace problem when `σ`, `u`, its boundary part and `q` are `C²` with bound `L`
-  (vanishing outside `Q` for `H̊Λ(Q)`): error `≤ K L h_N` with `K` depending only on `n` and the
-  degrees (`mixed_rate_smooth`, `mixed_rate_smooth_min`);
-* **the semi-discrete Hodge wave equation** on every window: convergence for `D(L)` data
-  (`exists_tendstoUniformlyOn_window_whitney` in `Feec.Models.Cube.WhitneyApprox`;
-  `exists_tendstoUniformlyOn_windowMin_whitney` here) and the `O(h)` rate for `C²` solutions
-  (`norm_sub_le_meshSize_window_smooth`, `norm_sub_le_meshSize_windowMin_smooth` in
-  `Feec.Models.Cube.WhitneyRate`; these need no smoothed projection). Maxwell's equations (PMC and
-  PEC) are the instances of `Feec.Physics.Maxwell.CubeFEM`.
+The semi-discrete Hodge wave equation converges on every window: for `D(L)` data
+(`exists_tendstoUniformlyOn_window_whitney` in `Feec.Models.Cube.WhitneyApprox`;
+`exists_tendstoUniformlyOn_windowMin_whitney` here) and at the rate `O(h)` for `C²` solutions
+(`norm_sub_le_meshSize_window_smooth`, `norm_sub_le_meshSize_windowMin_smooth` in
+`Feec.Models.Cube.WhitneyRate`; these need no smoothed projection). Maxwell's equations (PMC and
+PEC) are the instances of `Feec.Physics.Maxwell.CubeFEM`.
 
 ## References
 
@@ -63,205 +61,66 @@ open Feec.Domain Feec.HilbertComplex Filter Topology
 
 variable {n : ℕ} [NeZero n]
 
-/-! ### The maximal family `HΛ(Q)` -/
+/-! ### The Whitney forms as conforming families -/
 
-/-- **Uniform discrete Poincaré inequality** on the Whitney complexes of the Freudenthal meshes
-of the cube ([AFW2010], Thm 3.6), unconditionally: `‖x‖ ≤ c ‖d x‖` for `x ∈ Vₕⁱ ⊥ 𝔷ₕⁱ`, with
-`c` independent of the mesh. -/
-theorem discretePoincare : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitney n N).V i),
-    (∀ y ∈ (whitney n N).cyclesW i, inner ℝ y x = 0) →
-      ‖x‖ ≤ c * ‖(complex n).d i j ⟨x, (whitney n N).le_domain i j hx⟩‖ := by
-  obtain ⟨p, C, hE⟩ := smoothingEstimates_exists (n := n)
-  exact ⟨2 * C * (2 * Real.pi)⁻¹, fun hij N _ hx hxo =>
-    hE.norm_le_of_forall_inner_eq_zero' hij N hx hxo⟩
+variable {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
 
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** on the
-Whitney complexes of the cube ([AFW2010], Thm 3.8), unconditionally: for every mesh and every
-`fₕ ∈ Vₕʲ` the discrete mixed problem has a unique solution `xₕ`, and `‖xₕ‖ ≤ C ‖fₕ‖` with `C`
-independent of the mesh. -/
-theorem mixed_wellPosed : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j →
-    (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (whitney n N).V j),
-    (∃! x, (whitney n N).toHilbertComplex.mixedForm i j k x =
-      (whitney n N).toHilbertComplex.mixedRHS i j f) ∧
-    ∀ x : (whitney n N).toHilbertComplex.MixedSpace i j,
-      (whitney n N).toHilbertComplex.mixedForm i j k x =
-        (whitney n N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  -- `obtain` on the existential times out here in `isDefEq`; eliminate it explicitly
-  refine (smoothingEstimates_exists (n := n)).elim fun p hp => hp.elim fun C hE => ?_
-  refine ⟨16 * (2 * C * 1) ^ 2, ?_⟩
-  intro i j k hij hjk N f
-  constructor
-  · exact hE.existsUnique_mixed' hij hjk N f
-  · intro x hx
-    exact hE.norm_le_of_mixed' hij hjk N hx
+/-- **The conforming family of the smoothing estimates `hE`** ([AFW2010], §5.5): the Whitney
+complexes of the Freudenthal meshes with the smoothed projections `π_N = J_N⁻¹ Q_N`
+(`SmoothingEstimates.proj`), a conforming family of `HΛ(Q)` (`ConformingFamily.ofSmoothing`). -/
+def SmoothingEstimates.family (hE : SmoothingEstimates n p C) : ConformingFamily (complex n) ℕ :=
+  .ofSmoothing atTop (whitney n) (fun N => smoothed n N (p N) (hE.isMaximal N))
+    (by norm_num : (1 / 2 : ℝ) < 1) hE.close hE.bound tendsto_infDist_whitney
 
-/-- **`O(h)` convergence of the Whitney finite element method for the mixed Hodge Laplacian on
-the cube** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), unconditionally: if the solution
-`(σ, u, q)` of the mixed problem with data `f`, the boundary part of `u`, and `q` are `C²` with
-bound `L`, the discrete mixed solution on the level-`(N + 1)` Freudenthal mesh satisfies
-`‖σ - σₕ‖ + ‖u - uₕ‖ + ‖q - qₕ‖ ≤ K L h_N`, with `K` depending only on `n` and the degrees. -/
-theorem mixed_rate_smooth {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
-    (complex n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    IsC2Form i L ((complex n).domainIncl i σ) →
-    IsC2Form j L ((complex n).domainIncl j u) →
-    IsC2Form j L ((complex n).domainIncl j
-      ((complex n).boundaryPart j ((complex n).domainIncl j u))) →
-    IsC2Form j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).fst‖ +
-        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
-            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N := by
-  obtain ⟨p, C, hE⟩ := smoothingEstimates_exists (n := n)
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    ((1 + 2 * C) * (interpBound n i + interpBound n j)), fun hs L hL0 hσ hu hB hq N => ?_⟩
-  refine (hE.norm_sub_le_meshSize_smooth' hij hjk hs hL0 hσ hu hB hq N).trans_eq ?_
-  ring
+/-- **The conforming family of the smoothing estimates `hE` with vanishing boundary DOFs**, a
+conforming family of `H̊Λ(Q)`. -/
+def SmoothingEstimatesMin.family (hE : SmoothingEstimatesMin n p C) :
+    ConformingFamily (complexMin n) ℕ :=
+  .ofSmoothing atTop (whitneyMin n) (fun N => smoothedMin n N (p N) (hE.isMinimal N))
+    (by norm_num : (1 / 2 : ℝ) < 1) hE.close hE.bound tendsto_infDist_whitneyMin
 
-/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** on the Whitney
-complexes of the cube ([AFW2010], §5.5, Thm 3.9), unconditionally: for the smoothed projections
-`π_N = J_N⁻¹ Q_N` of some admissible smoothing parameters (`SmoothingEstimates.proj`), `‖π_N‖ ≤ 2C`
-in `L²` and in every graph norm, uniformly in `N`, and the harmonic gap
-`sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π_N q‖` tends to `0` in every degree. -/
-theorem smoothedProjection_uniform : ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
-    (hE : SmoothingEstimates n p C),
-    (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧ (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
-    ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) := by
-  obtain ⟨p, C, hE⟩ := smoothingEstimates_exists (n := n)
-  exact ⟨p, C, hE, hE.norm_proj_le, hE.isGraphBounded_proj,
-    fun _ => hE.tendsto_harmonicGap_whitney⟩
+variable (n)
 
-/-- **Quasi-optimality of the Whitney method for the mixed Hodge Laplacian on the cube**
-([AFW2010], Thm 3.9), unconditionally: there are a constant `K` and weights `μ_j(N) → 0` (the
-harmonic gaps of the smoothed projections) such that for every solution `(σ, u, q)` of the mixed
-problem and every mesh,
-`‖σ - σₕ‖ + ‖u - uₕ‖ + ‖q - qₕ‖ ≤ K (E(σ) + E(u) + E(q) + μ_j(N) E(P_𝔅 u))`, where `E` is the
-graph-norm distance to the Whitney spaces (`L²` distance to `ℌₕ` for `q`). -/
-theorem mixed_quasiOptimal : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
-    {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
-    (complex n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).fst‖ +
-        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
-            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((whitney n N).domainSub i) +
-        Metric.infDist u ((whitney n N).domainSub j) +
-        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitney n N).harmonicW j) +
-        μ j N * Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
-          ((whitney n N).domainSub j)) := by
-  refine (smoothingEstimates_exists (n := n)).elim fun p hp => hp.elim fun C hE => ?_
-  exact ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C),
-    fun j N => (hE.proj N).harmonicGap j, fun _ => hE.tendsto_harmonicGap_whitney,
-    fun hij hjk _ _ _ _ hs N => hE.norm_sub_le_infDist' hij hjk hs N⟩
+/-- **The Whitney forms of the Freudenthal meshes of the cube** with the smoothed projections
+(`smoothingEstimates_exists`), a conforming family of `HΛ(Q)`. -/
+def whitneyFamily : ConformingFamily (complex n) ℕ :=
+  (smoothingEstimates_exists (n := n)).choose_spec.choose_spec.family
 
-/-! ### The minimal family `H̊Λ(Q)` -/
+/-- **The Whitney forms with vanishing boundary DOFs**, a conforming family of `H̊Λ(Q)`. -/
+def whitneyFamilyMin : ConformingFamily (complexMin n) ℕ :=
+  (smoothingEstimatesMin_exists (n := n)).choose_spec.choose_spec.family
 
-/-- **Uniform discrete Poincaré inequality** on the Whitney complexes with vanishing boundary
-DOFs ([AFW2010], Thm 3.6), unconditionally. -/
-theorem discretePoincare_min : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (whitneyMin n N).V i),
-    (∀ y ∈ (whitneyMin n N).cyclesW i, inner ℝ y x = 0) →
-      ‖x‖ ≤ c * ‖(complexMin n).d i j ⟨x, (whitneyMin n N).le_domain i j hx⟩‖ := by
-  obtain ⟨p, C, hE⟩ := smoothingEstimatesMin_exists (n := n)
-  exact ⟨2 * C * (2 * Real.pi)⁻¹, fun hij N _ hx hxo =>
-    hE.norm_le_of_forall_inner_eq_zero' hij N hx hxo⟩
+@[simp] theorem whitneyFamily_V : (whitneyFamily n).V = whitney n := rfl
 
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian with vanishing
-traces** on the cube ([AFW2010], Thm 3.8), unconditionally. -/
-theorem mixed_wellPosed_min : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j →
-    (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (whitneyMin n N).V j),
-    (∃! x, (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
-      (whitneyMin n N).toHilbertComplex.mixedRHS i j f) ∧
-    ∀ x : (whitneyMin n N).toHilbertComplex.MixedSpace i j,
-      (whitneyMin n N).toHilbertComplex.mixedForm i j k x =
-        (whitneyMin n N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  -- `obtain` on the existential times out here in `isDefEq`; eliminate it explicitly
-  refine (smoothingEstimatesMin_exists (n := n)).elim fun p hp => hp.elim fun C hE => ?_
-  refine ⟨16 * (2 * C * 1) ^ 2, ?_⟩
-  intro i j k hij hjk N f
-  constructor
-  · exact hE.existsUnique_mixed' hij hjk N f
-  · intro x hx
-    exact hE.norm_le_of_mixed' hij hjk N hx
+@[simp] theorem whitneyFamilyMin_V : (whitneyFamilyMin n).V = whitneyMin n := rfl
 
-/-- **`O(h)` convergence of the Whitney finite element method with vanishing traces** on the
-cube ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), unconditionally: for a solution of the mixed
-problem on `H̊Λ(Q)` whose components are `C²` forms vanishing outside `Q` with bound `L`, the
-error of the discrete mixed solution is `≤ K L h_N`. -/
-theorem mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) : ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complexMin n).domainSpace i} {u : (complexMin n).domainSpace j}
-    {q : (complexMin n).harmonic j},
-    (complexMin n).IsMixedSolution i j k f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    IsC2FormMin i L ((complexMin n).domainIncl i σ) →
-    IsC2FormMin j L ((complexMin n).domainIncl j u) →
-    IsC2FormMin j L ((complexMin n).domainIncl j
-      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))) →
-    IsC2FormMin j L (q : L2F ℝ (cubeDomain n) (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).fst‖ +
-        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
-            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * L * meshSize N := by
-  obtain ⟨p, C, hE⟩ := smoothingEstimatesMin_exists (n := n)
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-    (2 * ((1 + 2 * C) * (interpBound n i + interpBound n j))),
-    fun hs L hL0 hσ hu hB hq N => ?_⟩
-  refine (hE.norm_sub_le_meshSize_smooth' hij hjk hs hL0 hσ hu hB hq N).trans_eq ?_
-  ring
+/-- **The Jackson estimate of the Whitney forms**: `C²` forms (`IsC2Form`) are approximated at
+the order `h_N` with the constants `interpBound` (`IsC2Form.exists_mem_whitney_le`). -/
+def whitneyJackson : (whitneyFamily n).Jackson Unit where
+  meshSize := meshSize
+  meshSize_nonneg N := (meshSize_pos N).le
+  tendsto_meshSize := tendsto_meshSize
+  Reg _ := IsC2Form
+  ord _ := 1
+  B _ := interpBound n
+  B_nonneg _ := interpBound_nonneg n
+  jackson _ N _ _ _ hL hx := by
+    rw [Real.rpow_one, ← mul_assoc]; exact hx.exists_mem_whitney_le hL N
 
-/-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes with vanishing
-boundary DOFs, with vanishing harmonic gap** ([AFW2010], §5.5), unconditionally: as
-`smoothedProjection_uniform`, for `H̊Λ(Q)` and the projections `π̊_N = J_N⁻¹ Q̊_N`. -/
-theorem smoothedProjection_uniform_min : ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
-    (hE : SmoothingEstimatesMin n p C),
-    (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧ (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
-    ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) := by
-  obtain ⟨p, C, hE⟩ := smoothingEstimatesMin_exists (n := n)
-  exact ⟨p, C, hE, hE.norm_proj_le, hE.isGraphBounded_proj,
-    fun _ => hE.tendsto_harmonicGap_whitney⟩
+/-- **The Jackson estimate of the Whitney forms with vanishing boundary DOFs**: `C²` forms
+vanishing outside `Q` (`IsC2FormMin`) at the order `h_N`. -/
+def whitneyJacksonMin : (whitneyFamilyMin n).Jackson Unit where
+  meshSize := meshSize
+  meshSize_nonneg N := (meshSize_pos N).le
+  tendsto_meshSize := tendsto_meshSize
+  Reg _ := IsC2FormMin
+  ord _ := 1
+  B _ := interpBound n
+  B_nonneg _ := interpBound_nonneg n
+  jackson _ N _ _ _ hL hx := by
+    rw [Real.rpow_one, ← mul_assoc]; exact hx.exists_mem_whitneyMin_le hL N
 
-/-- **Quasi-optimality of the Whitney method with vanishing traces** ([AFW2010], Thm 3.9),
-unconditionally: as `mixed_quasiOptimal`, for the mixed problem on `H̊Λ(Q)` and the spaces
-`V̊ₕ`. -/
-theorem mixed_quasiOptimal_min : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j},
-    (complexMin n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).fst‖ +
-        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
-            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((whitneyMin n N).domainSub i) +
-        Metric.infDist u ((whitneyMin n N).domainSub j) +
-        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitneyMin n N).harmonicW j) +
-        μ j N * Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
-          ((whitneyMin n N).domainSub j)) := by
-  refine (smoothingEstimatesMin_exists (n := n)).elim fun p hp => hp.elim fun C hE => ?_
-  exact ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C),
-    fun j N => (hE.proj N).harmonicGap j, fun _ => hE.tendsto_harmonicGap_whitney,
-    fun hij hjk _ _ _ _ hs N => (hE.proj N).norm_sub_le_infDist_harmonicGap hij hjk
-      hE.one_le_two_mul (norm_le_of_mem_orthogonal_cycles_min hij)
-      (norm_le_of_mem_orthogonal_cycles_min hjk) (hE.isGraphBounded_proj N _ _)
-      (hE.isGraphBounded_proj N _ _) hs⟩
+variable {n}
 
 /-! ### The semi-discrete Hodge wave equation with vanishing traces -/
 
@@ -289,3 +148,4 @@ theorem exists_tendstoUniformlyOn_windowMin_whitney (a : ℤ) (m : ℕ) (t₀ t�
     (isApproximating_windowMin_whitney a m) t₀ t₁ x
 
 end Feec.Models.Cube.FEM
+

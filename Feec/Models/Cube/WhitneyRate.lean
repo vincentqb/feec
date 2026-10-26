@@ -3,13 +3,14 @@ module
 public import Feec.Models.Cube.WhitneyApprox
 
 /-!
-# `O(h)` convergence of the Whitney finite element method for smooth solutions
+# `O(h)` approximation of smooth forms by the Whitney forms of the cube
 
-On the Freudenthal meshes of `Q = (0, ½)ⁿ`, the rate theorems of
-`Feec.Models.Cube.FiniteElementMethod` take the approximation rates of the exact solution as
-hypotheses (`hσ`, `hu`, `hq`, `hB` of `FEM.SmoothingEstimates.norm_sub_le_meshSize`, `happ` of
-`FEM.norm_sub_le_meshSize_window`). This module proves them for smooth solutions, from the
-interpolation error of the Whitney interpolant (`FEM.exists_mem_whitney_le`, [Arnold2018], Ch. 7).
+On the Freudenthal meshes of `Q = (0, ½)ⁿ`, the rates of the finite element method follow from
+the approximation rates of the exact solution: the Jackson estimate of the Whitney forms
+(`FEM.whitneyJackson` in `Feec.Models.Cube.FiniteElementConvergence`) for the static problem, and
+`happ` of `FEM.norm_sub_le_meshSize_window` for the wave equation. This module proves them for
+smooth solutions, from the interpolation error of the Whitney interpolant
+(`FEM.exists_mem_whitney_le`, [Arnold2018], Ch. 7).
 
 * `FEM.IsC2Form j L x`: `x ∈ L²(Q; Λʲ)` is (the restriction of) a `C²` `j`-form `w` with
   `‖Dw‖ ≤ L` and `‖D dw‖ ≤ L` on `cl Q`; trivially true in negative degrees, where
@@ -19,24 +20,22 @@ interpolation error of the Whitney interpolant (`FEM.exists_mem_whitney_le`, [Ar
   `‖d (x - v)‖ ≤ B_j L h_N` (`IsC2Form.exists_mem_whitney_le`), and
   `dist_V(σ, Vₕʲ) ≤ B_j L h_N` in the graph norm (`IsC2Form.infDist_domainSub_whitney_le`),
   `B_j = interpBound n j = A_j + A_{j+1}` independent of `N`.
-* **Hodge–Laplace, mixed form** ([AFW2010], Thm 3.9): under the smoothing estimates, if `σ`, `u`,
-  `P_𝔅 u` and the harmonic part `p` are `C²` forms, the discrete mixed solutions converge at rate
-  `h_N` (`SmoothingEstimates.norm_sub_le_meshSize_smooth`). The harmonic term needs no separate
-  estimate: `dist(p, ℌₕ) ≤ (1 + 2C) dist_V(p, Vₕ)` (`CochainProjection.infDist_harmonicW_le`), and
-  `p` is a `C²` cycle.
+* **Hodge–Laplace, mixed form** ([AFW2010], Thm 3.9): the degreewise rate is the Jackson estimate
+  of the Whitney forms (`FEM.whitneyJackson`), so if `σ`, `u`, `P_𝔅 u` and the harmonic part `p`
+  are `C²` forms the discrete mixed solutions converge at rate `h_N`
+  (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.rate`).
 * **Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14): if every component of `ξ(s)` and
   `ξ'(s)` is a `C²` form with bound `L` on `[t₀, t₁]`, the semi-discrete Whitney solutions converge
   at rate `h_N` (`norm_sub_le_meshSize_window_smooth`), through the degreewise-to-total lemma
   `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`.
 * **Vanishing traces** (`H̊Λ(Q)`, Whitney spaces `V̊ₕ` with vanishing boundary DOFs): the same
-  three statements for `C²` forms vanishing outside `Q` (`FEM.IsC2FormMin`):
-  `SmoothingEstimatesMin.norm_sub_le_meshSize` (generic, as for `HΛ(Q)`),
-  `SmoothingEstimatesMin.norm_sub_le_meshSize_smooth` and
+  statements for `C²` forms vanishing outside `Q` (`FEM.IsC2FormMin`):
+  `IsC2FormMin.exists_mem_whitneyMin_le` (`FEM.whitneyJacksonMin`) and
   `norm_sub_le_meshSize_windowMin_smooth`. The `d_min` of such a form is computed by
   `complexMin_d_formL2` (`d_min ≤ d_max`). In the top degree `j = n` the harmonic forms of
-  `H̊Λⁿ(Q)` are the constants, which do not vanish outside `Q`; there `hq` of the smooth mixed
-  statement holds only for `p = 0`, and the generic statement with an explicit `dist(p, ℌ̊ₕ)` bound is
-  the one to use.
+  `H̊Λⁿ(Q)` are the constants, which do not vanish outside `Q`; there the smooth class contains
+  only `p = 0`, and the quasi-optimal estimate with an explicit `dist(p, ℌ̊ₕ)` bound is the one to
+  use.
 
 ## Main definitions
 
@@ -45,9 +44,9 @@ interpolation error of the Whitney interpolant (`FEM.exists_mem_whitney_le`, [Ar
 
 ## Main results
 
-* `Feec.Models.Cube.FEM.SmoothingEstimates.norm_sub_le_meshSize_smooth`
+* `Feec.Models.Cube.FEM.IsC2Form.exists_mem_whitney_le`,
+  `Feec.Models.Cube.FEM.IsC2FormMin.exists_mem_whitneyMin_le`
 * `Feec.Models.Cube.FEM.norm_sub_le_meshSize_window_smooth`
-* `Feec.Models.Cube.FEM.SmoothingEstimatesMin.norm_sub_le_meshSize_smooth`
 * `Feec.Models.Cube.FEM.norm_sub_le_meshSize_windowMin_smooth`
 
 ## References
@@ -154,69 +153,6 @@ theorem IsC2Form.infDist_domainSub_whitney_le {j : ℤ} {L : ℝ} {σ : (complex
     exact hB0
   refine (FEM.infDist_domainSub_whitney_le N k hw hdeg hL0 hL0 hL hL' σ he).trans (le_of_eq ?_)
   simp only [interpBound, Int.toNat_natCast]; ring
-
-/-- **`O(h)` convergence of the mixed method for smooth solutions** ([AFW2010], Thm 3.9;
-[Arnold2018], Ch. 7): under the smoothing estimates and the Poincaré inequalities, if `σ`, `u`,
-`P_𝔅 u` and the harmonic part `p` of the solution of the mixed Hodge–Laplace problem are `C²`
-forms with bound `L`, then the discrete Whitney solutions satisfy
-`‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ C' K h_N`, with `C'` the constant of `norm_sub_le_meshSize`
-and `K = (1 + 2C)(B_i + B_j) L`, both independent of `N`. All four approximation hypotheses of
-`norm_sub_le_meshSize` are discharged; the harmonic one by
-`CochainProjection.infDist_harmonicW_le`. -/
-theorem SmoothingEstimates.norm_sub_le_meshSize_smooth {p : ℕ → SmoothingParam (Fin n → ℝ)}
-    {C : ℝ} (hE : SmoothingEstimates n p C) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
-    (hPi : ∀ z : ((complex n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
-      ((complex n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
-        cP * ‖(complex n).d i j z‖)
-    (hPj : ∀ z : ((complex n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
-      ((complex n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-        cP * ‖(complex n).d j k z‖)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
-    {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
-    (hs : (complex n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
-    (hσ : IsC2Form i L ((complex n).domainIncl i σ))
-    (hu : IsC2Form j L ((complex n).domainIncl j u))
-    (hB : IsC2Form j L ((complex n).domainIncl j
-      ((complex n).boundaryPart j ((complex n).domainIncl j u))))
-    (hq : IsC2Form j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
-    ‖σ - (whitney n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).fst‖ +
-        ‖u - (whitney n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitney n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitney n N) hij hjk f).snd.snd :
-            (whitney n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-        ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
-  have hC := hE.two_mul_nonneg
-  have hh := (meshSize_pos N).le
-  have hBi := interpBound_nonneg n i
-  have hBj := interpBound_nonneg n j
-  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
-  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
-  have hK : (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N =
-      (1 + 2 * C) * (interpBound n i * L * meshSize N) +
-        (1 + 2 * C) * (interpBound n j * L * meshSize N) := by ring
-  have hi : interpBound n i * L * meshSize N ≤
-      (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N := by
-    rw [hK]; nlinarith
-  have hj : interpBound n j * L * meshSize N ≤
-      (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N := by
-    rw [hK]; nlinarith
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((whitney n N).harmonicW j) ≤
-      (1 + 2 * C) * (interpBound n i + interpBound n j) * L * meshSize N := by
-    refine ((hE.proj N).infDist_harmonicW_le hjk hC (hE.isGraphBounded_proj N j k) q.2).trans ?_
-    have h := IsC2Form.infDist_domainSub_whitney_le
-      (σ := cyclesToDomainSpace ((complex n).harmonic_le_cycles j q.2)) hq hL0 N
-    rw [hK]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    nlinarith [mul_le_mul_of_nonneg_left h this]
-  exact hE.norm_sub_le_meshSize hij hjk hPi hPj hs N
-    ((hσ.infDist_domainSub_whitney_le hL0 N).trans hi)
-    ((hu.infDist_domainSub_whitney_le hL0 N).trans hj) hq'
-    ((hB.infDist_domainSub_whitney_le hL0 N).trans hj)
 
 /-- **Graph-norm rate in the total space of a window**: if every component of `ζ ∈ Γ(𝐝)` (the
 window `HΛᵃ(Q) → ⋯ → HΛ^{a+m-1}(Q)`) is a `C²` form with bound `L`, some point of the Whitney
@@ -354,112 +290,6 @@ theorem IsC2FormMin.infDist_domainSub_whitneyMin_le {j : ℤ} {L : ℝ}
     rw [← LinearPMap.map_sub]; rfl
   rw [e, two_mul]
   exact add_le_add h1 (h2 (j + 1) ((complexMin n).domainCoord j (j + 1) σ).2)
-
-/-- **Generic rate on the vanishing-trace family**: as `SmoothingEstimates.norm_sub_le_meshSize`,
-for `H̊Λ(Q)`, the Whitney spaces with vanishing boundary DOFs and the projections `π̊_N`. -/
-theorem SmoothingEstimatesMin.norm_sub_le_meshSize {p : ℕ → SmoothingParam (Fin n → ℝ)}
-    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
-    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
-      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
-        cP * ‖(complexMin n).d i j z‖)
-    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
-      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-        cP * ‖(complexMin n).d j k z‖)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
-    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {K : ℝ} (N : ℕ)
-    (hσ : Metric.infDist σ ((whitneyMin n N).domainSub i) ≤ K * meshSize N)
-    (hu : Metric.infDist u ((whitneyMin n N).domainSub j) ≤ K * meshSize N)
-    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((whitneyMin n N).harmonicW j) ≤
-      K * meshSize N)
-    (hB : Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
-      ((whitneyMin n N).domainSub j) ≤ K * meshSize N) :
-    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).fst‖ +
-        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
-            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K * meshSize N := by
-  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
-  have h := (hE.proj N).norm_sub_le_infDist hij hjk hE.one_le_two_mul hμ0 hPi hPj
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j k)
-    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
-      (hE.isGraphBounded_proj N j k) hq') hs
-  refine h.trans ?_
-  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) := by
-    have := hE.two_mul_nonneg; positivity
-  have e : (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
-      meshSize N = (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) *
-        ((4 + 2 * C) * (K * meshSize N)) := by ring
-  rw [e]
-  refine mul_le_mul_of_nonneg_left ?_ hK0
-  have hB' := mul_le_mul_of_nonneg_left hB hμ0
-  have e' : (4 + 2 * C) * (K * meshSize N) =
-      3 * (K * meshSize N) + (1 + 2 * C) * (K * meshSize N) := by ring
-  rw [e']
-  linarith
-
-/-- **`O(h)` convergence of the mixed method with vanishing traces for smooth solutions**
-([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): as `SmoothingEstimates.norm_sub_le_meshSize_smooth`,
-for `H̊Λ(Q)`, when `σ`, `u`, `P_𝔅 u` and `p` are `C²` forms vanishing outside `Q`, with
-`K = 2 (1 + 2C)(B_i + B_j) L`. -/
-theorem SmoothingEstimatesMin.norm_sub_le_meshSize_smooth {p : ℕ → SmoothingParam (Fin n → ℝ)}
-    {C : ℝ} (hE : SmoothingEstimatesMin n p C) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {cP : ℝ}
-    (hPi : ∀ z : ((complexMin n).d i j).domain, (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈
-      ((complexMin n).cycles i)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n i))‖ ≤
-        cP * ‖(complexMin n).d i j z‖)
-    (hPj : ∀ z : ((complexMin n).d j k).domain, (z : L2F ℝ (cubeDomain n) (formIdx n j)) ∈
-      ((complexMin n).cycles j)ᗮ → ‖(z : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-        cP * ‖(complexMin n).d j k z‖)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j}
-    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {L : ℝ} (hL0 : 0 ≤ L)
-    (hσ : IsC2FormMin i L ((complexMin n).domainIncl i σ))
-    (hu : IsC2FormMin j L ((complexMin n).domainIncl j u))
-    (hB : IsC2FormMin j L ((complexMin n).domainIncl j
-      ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))))
-    (hq : IsC2FormMin j L (q : L2F ℝ (cubeDomain n) (formIdx n j))) (N : ℕ) :
-    ‖σ - (whitneyMin n N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).fst‖ +
-        ‖u - (whitneyMin n N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (whitneyMin n N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (whitneyMin n N) hij hjk f).snd.snd :
-            (whitneyMin n N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + cP ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-        (2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L)) * meshSize N := by
-  have hC := hE.two_mul_nonneg
-  have hh := (meshSize_pos N).le
-  have hBi := interpBound_nonneg n i
-  have hBj := interpBound_nonneg n j
-  have hiL := mul_nonneg (mul_nonneg hBi hL0) hh
-  have hjL := mul_nonneg (mul_nonneg hBj hL0) hh
-  have hK : 2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N =
-      2 * ((1 + 2 * C) * (interpBound n i * L * meshSize N)) +
-        2 * ((1 + 2 * C) * (interpBound n j * L * meshSize N)) := by ring
-  have hi : 2 * (interpBound n i * L * meshSize N) ≤
-      2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
-    rw [hK]; nlinarith
-  have hj : 2 * (interpBound n j * L * meshSize N) ≤
-      2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
-    rw [hK]; nlinarith
-  have hq' : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j))
-      ((whitneyMin n N).harmonicW j) ≤
-      2 * ((1 + 2 * C) * (interpBound n i + interpBound n j) * L) * meshSize N := by
-    refine ((hE.proj N).infDist_harmonicW_le hjk hC (hE.isGraphBounded_proj N j k) q.2).trans ?_
-    have h := IsC2FormMin.infDist_domainSub_whitneyMin_le
-      (σ := cyclesToDomainSpace ((complexMin n).harmonic_le_cycles j q.2)) hq hL0 N
-    rw [hK]
-    have : 0 ≤ 1 + 2 * C := by linarith
-    nlinarith [mul_le_mul_of_nonneg_left h this]
-  exact hE.norm_sub_le_meshSize hij hjk hPi hPj hs N
-    ((hσ.infDist_domainSub_whitneyMin_le hL0 N).trans hi)
-    ((hu.infDist_domainSub_whitneyMin_le hL0 N).trans hj) hq'
-    ((hB.infDist_domainSub_whitneyMin_le hL0 N).trans hj)
 
 instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((whitneyMin n N).window a m).V i) :=

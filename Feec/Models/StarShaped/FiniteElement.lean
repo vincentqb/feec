@@ -43,26 +43,25 @@ the `Min` versions for forms vanishing outside `Ω`), and with the density of sm
 (`StarDomain.exists_smooth_near`, `StarDomain.exists_smooth_near_min`) graph-norm density of the
 Whitney spaces (`MeshFamily.eventually_exists_whitney_near`, `..._whitneyMin_near`).
 
-**The finite element theorems** (`MeshFamily`, both families, `Min` for `H̊Λ(Ω)`):
-* `discretePoincare`: uniform discrete Poincaré inequality ([AFW2010], Thm 3.6);
-* `mixed_wellPosed`: uniform well-posedness and stability of the discrete mixed Hodge Laplacian
-  ([AFW2010], Thm 3.8);
-* `mixed_rate_smooth`: `O(h)` convergence for `C²` solutions (`StarDomain.IsC2Form`), error
-  `≤ K L h_N` ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7);
-* `mixed_quasiOptimal`, `smoothedProjection_uniform`: quasi-optimality with weights `μ_j(N) → 0`
-  and the vanishing of the harmonic gap;
-* `exists_tendstoUniformlyOn_window`: convergence of the semi-discrete Hodge wave equation on every
-  window ([QuennevilleBelair2015], Thm 4.14), with no hypothesis.
+**The finite element families** (`MeshFamily`, both families, `Min` for `H̊Λ(Ω)`): the Whitney
+complexes with the smoothed projections are **conforming families** (`MeshFamily.whitneyFamily`,
+`MeshFamily.whitneyFamilyMin`) with the **Jackson estimates** of order `h_N` for `C²` forms
+(`MeshFamily.whitneyJackson`, `MeshFamily.whitneyJacksonMin`; `StarDomain.IsC2Form`), so the
+static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.staticFEEC`: uniform discrete
+Poincaré inequality, well-posedness and stability, harmonic gap, cohomology, quasi-optimality,
+convergence) and its rates hold for them; the semi-discrete Hodge wave equation converges on
+every window with no hypothesis (`exists_tendstoUniformlyOn_window`; [QuennevilleBelair2015],
+Thm 4.14).
 
 **Remaining hypotheses.** The cochain projections, the approximation results and the wave
 convergence are proved with no hypothesis. The Poincaré inequality of `HΛ(Ω)`, resp. `H̊Λ(Ω)`
-(`HasPoincare`, equivalently closed range), is a hypothesis of `discretePoincare`,
-`mixed_wellPosed`, `mixed_rate_smooth` and `mixed_quasiOptimal`; it holds on every bounded
-Lipschitz domain (regularized Poincaré and Bogovskiĭ operators, [CostabelMcIntosh2010]), a
-theory absent from Mathlib, and is a theorem on the cube with
-`c_P = (2π)⁻¹` (`CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`) and on every
+(`HasPoincare`, equivalently closed range), is the hypothesis of the static theorems
+(`ConformingFamily.quasiOptimal` and `ConformingFamily.rate` need it only in the degrees of the
+problem); it holds on every bounded Lipschitz domain (regularized Poincaré and Bogovskiĭ
+operators, [CostabelMcIntosh2010]), a theory absent from Mathlib, and is a theorem on the cube
+with `c_P = (2π)⁻¹` (`CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`) and on every
 parallelepiped (`Feec.Models.Parallelepiped.poincare`). The finite-dimensionality of the harmonic
-forms is used only for the harmonic gap (`smoothedProjection_uniform`, `mixed_quasiOptimal`).
+forms is used only for the harmonic gap and the cohomology.
 **Non-vacuity**: the cube with its Freudenthal meshes is a `StarDomain` with a `MeshFamily`
 satisfying all these hypotheses (`CubeWitness.starDomain`, `CubeWitness.meshFamily`,
 `CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`), and so is every parallelepiped `A · Q + b` (every box) with its image
@@ -1265,16 +1264,13 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
         have := LocalElement.subsingleton_L2F_negSucc M.domain (n := n) k
         rw [Subsingleton.elim y 0, norm_zero]
       exact (h0 _).le.trans (by positivity)
-  refine ⟨Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc, fun i x => ?_, fun i j => ?_⟩
-  · have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
+  have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
+      max 1 (2 * K') * ‖x‖ := fun i x => by
+    have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
     have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
     rw [e] at h1
     exact h1.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-  · have h1 := Q.isGraphBounded_toCochainProjection_of_norm_le (θ := 1 / 2) (by norm_num) hQc
-      (hQb i) (hQb j)
-    have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
-    rw [e] at h1
-    exact h1.mono' (by positivity) (le_max_right _ _)
+  exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 /-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes with vanishing
 boundary DOFs** `V̊ₕ ⊆ H̊Λ(Ω)` of quasi-uniform shape-regular meshes of a domain star-shaped
@@ -1333,16 +1329,13 @@ theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤
         have := LocalElement.subsingleton_L2F_negSucc M.domain (n := n) k
         rw [Subsingleton.elim y 0, norm_zero]
       exact (h0 _).le.trans (by positivity)
-  refine ⟨Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc, fun i x => ?_, fun i j => ?_⟩
-  · have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
+  have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
+      max 1 (2 * K') * ‖x‖ := fun i x => by
+    have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
     have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
     rw [e] at h1
     exact h1.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-  · have h1 := Q.isGraphBounded_toCochainProjection_of_norm_le (θ := 1 / 2) (by norm_num) hQc
-      (hQb i) (hQb j)
-    have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
-    rw [e] at h1
-    exact h1.mono' (by positivity) (le_max_right _ _)
+  exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 end Estimates
 
@@ -1955,102 +1948,57 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((F.whitneyMin N).window a m).V i) :=
   inferInstanceAs (FiniteDimensional ℝ ((F.whitneyMin N).V (a + i)))
 
-/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
-Whitney complexes, when the harmonic forms of `HΛ(Ω)` are finite-dimensional. -/
-theorem smoothedProjection_uniform [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
-    Subcomplex.HasUniformProj atTop F.whitney := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_proj
-  choose π hb hg using hK
-  exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
-    (zero_le_one.trans hK1) (fun N x => hb N j x) fun q _ => F.tendsto_infDist_whitney j q⟩
+/-- **The Whitney forms of a shape-regular, quasi-uniform mesh family** of a domain star-shaped
+with respect to a ball, with the smoothed projections (`exists_uniform_proj`), a conforming
+family of `HΛ(Ω)`. -/
+def whitneyFamily : ConformingFamily D.complex ℕ :=
+  .ofExists atTop F.whitney
+    (by
+      obtain ⟨K, -, hK⟩ := F.exists_uniform_proj
+      choose π hb _ using hK
+      exact ⟨K, π, hb⟩)
+    F.tendsto_infDist_whitney
 
-/-- **Uniform discrete Poincaré inequality** on the Whitney complexes of the family
-([AFW2010], Thm 3.6), under the Poincaré inequality of `HΛ(Ω)`. -/
-theorem discretePoincare {cP : ℝ} (hP : HasPoincare D.complex cP) :
-    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.whitney N).V i),
-      (∀ y ∈ (F.whitney N).cyclesW i, inner ℝ y x = 0) →
-        ‖x‖ ≤ c * ‖D.complex.d i j ⟨x, (F.whitney N).le_domain i j hx⟩‖ := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_proj
-  refine ⟨K * cP, fun {i j} hij N x hx hxo => ?_⟩
-  obtain ⟨π, hb, -⟩ := hK N
-  exact π.norm_le_of_forall_inner_eq_zero hij (hP i j hij) (zero_le_one.trans hK1) (hb i) hx hxo
+/-- **The Whitney forms with vanishing boundary DOFs of the mesh family**, a conforming family of
+`H̊Λ(Ω)`. -/
+def whitneyFamilyMin : ConformingFamily D.complexMin ℕ :=
+  .ofExists atTop F.whitneyMin
+    (by
+      obtain ⟨K, -, hK⟩ := F.exists_uniform_projMin
+      choose π hb _ using hK
+      exact ⟨K, π, hb⟩)
+    F.tendsto_infDist_whitneyMin
 
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian**
-([AFW2010], Thm 3.8), under the Poincaré inequality of `HΛ(Ω)`. -/
-theorem mixed_wellPosed {cP : ℝ} (hP : HasPoincare D.complex cP) :
-    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
-      ∀ (N : ℕ) (f : (F.whitney N).V j),
-      (∃! x, (F.whitney N).toHilbertComplex.mixedForm i j k x =
-        (F.whitney N).toHilbertComplex.mixedRHS i j f) ∧
-      ∀ x : (F.whitney N).toHilbertComplex.MixedSpace i j,
-        (F.whitney N).toHilbertComplex.mixedForm i j k x =
-          (F.whitney N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  refine F.exists_uniform_proj.elim fun K hK => ?_
-  have hcP : 1 ≤ max 1 cP := le_max_left _ _
-  have hP' := hP.mono (le_max_right 1 cP)
-  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
-    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
-  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
-  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
+@[simp] theorem whitneyFamily_V : F.whitneyFamily.V = F.whitney := rfl
 
-/-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) with weights `μ_j(N) → 0`,
-under the Poincaré inequality and the finite-dimensionality of the harmonic forms of `HΛ(Ω)`. -/
-theorem mixed_quasiOptimal {cP : ℝ} (hP : HasPoincare D.complex cP)
-    [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i} {u : D.complex.domainSpace j}
-    {q : D.complex.harmonic j},
-    D.complex.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (F.whitney N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).fst‖ +
-        ‖u - (F.whitney N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
-          (F.whitney N) hij hjk f).snd.snd : (F.whitney N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((F.whitney N).domainSub i) +
-        Metric.infDist u ((F.whitney N).domainSub j) +
-        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.whitney N).harmonicW j) +
-        μ j N * Metric.infDist (D.complex.boundaryPart j (D.complex.domainIncl j u))
-          ((F.whitney N).domainSub j)) :=
-  Subcomplex.HasUniformProj.mixed_quasiOptimal hP F.smoothedProjection_uniform
+@[simp] theorem whitneyFamilyMin_V : F.whitneyFamilyMin.V = F.whitneyMin := rfl
 
-/-- **`O(h)` convergence of the mixed method for `C²` solutions** ([AFW2010], Thm 3.9;
-[Arnold2018], Ch. 7), under the Poincaré inequality of `HΛ(Ω)`: if `σ`, `u`, `P_𝔅 u` and the
-harmonic part `q` are `C²` forms with bound `L`, the error of the discrete Whitney solutions is
-`≤ K L h_N` with `K` independent of `N`. No finite-dimensionality of `ℌ` is needed. -/
-theorem mixed_rate_smooth {cP : ℝ} (hP : HasPoincare D.complex cP) {i j k : ℤ}
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i} {u : D.complex.domainSpace j}
-    {q : D.complex.harmonic j} (hs : D.complex.IsMixedSolution i j k f σ u q) {L : ℝ}
-    (hL0 : 0 ≤ L) (hσ : D.IsC2Form i L (D.complex.domainIncl i σ))
-    (hu : D.IsC2Form j L (D.complex.domainIncl j u))
-    (hb : D.IsC2Form j L (D.complex.domainIncl j
-      (D.complex.boundaryPart j (D.complex.domainIncl j u))))
-    (hq : D.IsC2Form j L (q : L2F ℝ D.Ω (formIdx n j))) :
-    ∃ K : ℝ, ∀ N : ℕ,
-      ‖σ - (F.whitney N).embD i
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).fst‖ +
-        ‖u - (F.whitney N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitney N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
-          (F.whitney N) hij hjk f).snd.snd : (F.whitney N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
-      K * L * (F.mesh N).meshSize := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_proj
-  choose π hπb hπg using hK
-  refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
-    (2 * (F.interpBound i + F.interpBound j) * (3 + 2 * K)), fun N => ?_⟩
-  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
-    (hπg N j k) (Reg := fun l x => D.IsC2Form l L x)
-    (B := fun l => F.interpBound l * L)
-    (fun l => mul_nonneg (F.interpBound_nonneg l) hL0) (r := (F.mesh N).meshSize)
-    (F.meshSize_pos N).le
-    (fun l x hx => by
-      obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_whitney_le_of_isC2Form hx hL0 N
-      exact ⟨v, hv, h1, h2⟩) hs hσ hu hb hq
-  refine h.trans (le_of_eq ?_)
-  ring
+/-- **The Jackson estimate of the Whitney forms of the mesh family**: `C²` forms on `cl Ω`
+(`StarDomain.IsC2Form`) at the order `h_N` with the constants `interpBound`
+(`exists_mem_whitney_le_of_isC2Form`). -/
+def whitneyJackson : F.whitneyFamily.Jackson Unit where
+  meshSize N := (F.mesh N).meshSize
+  meshSize_nonneg N := (F.meshSize_pos N).le
+  tendsto_meshSize := F.tendsto_meshSize
+  Reg _ := D.IsC2Form
+  ord _ := 1
+  B _ := F.interpBound
+  B_nonneg _ := F.interpBound_nonneg
+  jackson _ N _ _ _ hL hx := by
+    rw [Real.rpow_one, ← mul_assoc]; exact F.exists_mem_whitney_le_of_isC2Form hx hL N
+
+/-- **The Jackson estimate of the Whitney forms with vanishing boundary DOFs**: `C²` forms
+vanishing outside `Ω` (`StarDomain.IsC2FormMin`) at the order `h_N`. -/
+def whitneyJacksonMin : F.whitneyFamilyMin.Jackson Unit where
+  meshSize N := (F.mesh N).meshSize
+  meshSize_nonneg N := (F.meshSize_pos N).le
+  tendsto_meshSize := F.tendsto_meshSize
+  Reg _ := D.IsC2FormMin
+  ord _ := 1
+  B _ := F.interpBound
+  B_nonneg _ := F.interpBound_nonneg
+  jackson _ N _ _ _ hL hx := by
+    rw [Real.rpow_one, ← mul_assoc]; exact F.exists_mem_whitneyMin_le_of_isC2FormMin hx hL N
 
 /-- **Convergence of the semi-discrete Hodge wave equation** on every window of `HΛ(Ω)`
 ([QuennevilleBelair2015], Thm 4.14), with no hypothesis: the Whitney windows approximate every
@@ -2067,103 +2015,6 @@ theorem exists_tendstoUniformlyOn_window (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
         (fun t => (D.complex.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
   Parallelepiped.exists_tendstoUniformlyOn_window_of
     (fun i x _ hε => F.eventually_exists_whitney_near i x hε) a m t₀ t₁ x
-
-/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
-Whitney complexes, when the harmonic forms of `H̊Λ(Ω)` are finite-dimensional. -/
-theorem smoothedProjection_uniformMin [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
-    Subcomplex.HasUniformProj atTop F.whitneyMin := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_projMin
-  choose π hb hg using hK
-  exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
-    (zero_le_one.trans hK1) (fun N x => hb N j x) fun q _ => F.tendsto_infDist_whitneyMin j q⟩
-
-/-- **Uniform discrete Poincaré inequality** on the Whitney complexes of the family
-([AFW2010], Thm 3.6), under the Poincaré inequality of `H̊Λ(Ω)`. -/
-theorem discretePoincareMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
-    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.whitneyMin N).V i),
-      (∀ y ∈ (F.whitneyMin N).cyclesW i, inner ℝ y x = 0) →
-        ‖x‖ ≤ c * ‖D.complexMin.d i j ⟨x, (F.whitneyMin N).le_domain i j hx⟩‖ := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_projMin
-  refine ⟨K * cP, fun {i j} hij N x hx hxo => ?_⟩
-  obtain ⟨π, hb, -⟩ := hK N
-  exact π.norm_le_of_forall_inner_eq_zero hij (hP i j hij) (zero_le_one.trans hK1) (hb i) hx hxo
-
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian**
-([AFW2010], Thm 3.8), under the Poincaré inequality of `H̊Λ(Ω)`. -/
-theorem mixed_wellPosedMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
-    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
-      ∀ (N : ℕ) (f : (F.whitneyMin N).V j),
-      (∃! x, (F.whitneyMin N).toHilbertComplex.mixedForm i j k x =
-        (F.whitneyMin N).toHilbertComplex.mixedRHS i j f) ∧
-      ∀ x : (F.whitneyMin N).toHilbertComplex.MixedSpace i j,
-        (F.whitneyMin N).toHilbertComplex.mixedForm i j k x =
-          (F.whitneyMin N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  refine F.exists_uniform_projMin.elim fun K hK => ?_
-  have hcP : 1 ≤ max 1 cP := le_max_left _ _
-  have hP' := hP.mono (le_max_right 1 cP)
-  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
-    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
-  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
-  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
-
-/-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) with weights `μ_j(N) → 0`,
-under the Poincaré inequality and the finite-dimensionality of the harmonic forms of `H̊Λ(Ω)`. -/
-theorem mixed_quasiOptimalMin {cP : ℝ} (hP : HasPoincare D.complexMin cP)
-    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i} {u : D.complexMin.domainSpace j}
-    {q : D.complexMin.harmonic j},
-    D.complexMin.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (F.whitneyMin N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).fst‖ +
-        ‖u - (F.whitneyMin N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
-          (F.whitneyMin N) hij hjk f).snd.snd : (F.whitneyMin N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((F.whitneyMin N).domainSub i) +
-        Metric.infDist u ((F.whitneyMin N).domainSub j) +
-        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.whitneyMin N).harmonicW j) +
-        μ j N * Metric.infDist (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))
-          ((F.whitneyMin N).domainSub j)) :=
-  Subcomplex.HasUniformProj.mixed_quasiOptimal hP F.smoothedProjection_uniformMin
-
-/-- **`O(h)` convergence of the mixed method for `C²` solutions** ([AFW2010], Thm 3.9;
-[Arnold2018], Ch. 7), under the Poincaré inequality of `H̊Λ(Ω)`: if `σ`, `u`, `P_𝔅 u` and the
-harmonic part `q` are `C²` forms with bound `L`, the error of the discrete Whitney solutions is
-`≤ K L h_N` with `K` independent of `N`. No finite-dimensionality of `ℌ` is needed. -/
-theorem mixed_rate_smoothMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {i j k : ℤ}
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i} {u : D.complexMin.domainSpace j}
-    {q : D.complexMin.harmonic j} (hs : D.complexMin.IsMixedSolution i j k f σ u q) {L : ℝ}
-    (hL0 : 0 ≤ L) (hσ : D.IsC2FormMin i L (D.complexMin.domainIncl i σ))
-    (hu : D.IsC2FormMin j L (D.complexMin.domainIncl j u))
-    (hb : D.IsC2FormMin j L (D.complexMin.domainIncl j
-      (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))))
-    (hq : D.IsC2FormMin j L (q : L2F ℝ D.Ω (formIdx n j))) :
-    ∃ K : ℝ, ∀ N : ℕ,
-      ‖σ - (F.whitneyMin N).embD i
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).fst‖ +
-        ‖u - (F.whitneyMin N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.whitneyMin N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
-          (F.whitneyMin N) hij hjk f).snd.snd : (F.whitneyMin N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
-      K * L * (F.mesh N).meshSize := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_projMin
-  choose π hπb hπg using hK
-  refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
-    (2 * (F.interpBound i + F.interpBound j) * (3 + 2 * K)), fun N => ?_⟩
-  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
-    (hπg N j k) (Reg := fun l x => D.IsC2FormMin l L x)
-    (B := fun l => F.interpBound l * L)
-    (fun l => mul_nonneg (F.interpBound_nonneg l) hL0) (r := (F.mesh N).meshSize)
-    (F.meshSize_pos N).le
-    (fun l x hx => by
-      obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_whitneyMin_le_of_isC2FormMin hx hL0 N
-      exact ⟨v, hv, h1, h2⟩) hs hσ hu hb hq
-  refine h.trans (le_of_eq ?_)
-  ring
 
 /-- **Convergence of the semi-discrete Hodge wave equation** on every window of `H̊Λ(Ω)`
 ([QuennevilleBelair2015], Thm 4.14), with no hypothesis: the Whitney windows approximate every

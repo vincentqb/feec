@@ -42,7 +42,7 @@ every `S` and `J`: `polySmoothingEstimates_exists`, `paritySmoothing_exists`) as
   (`dist(y, Vₕᵏ) ≤ C h_N^{min(s, p+1)} ‖y‖_{Hˢ(Q)}`), **`infDist_polyPartial_le_sobolevPar_high`**
   (`HΛ_J(Q)`, every class `J`, `‖y‖_{s,J}`); in every degree `infDist_poly_le_sobAt_high`,
   `infDist_polyPartial_le_sobAtPar_high`.
-* **Graph norm**: `PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high`,
+* **Graph norm**: the Jackson estimate `sobolevHighJackson` (orders `h_N^{min(s, p+1)}`),
   `ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar_high`.
 * **Mixed Hodge–Laplace problem** ([AFW2010], Thm 3.9): **`mixed_rate_sobolevQ_high`**,
   **`mixed_rate_sobolevPar_high`** (error `≤ K L h_N^{min(s, p+1)}` for `S` reproducing `P_p` in
@@ -783,33 +783,31 @@ theorem infDist_poly_le_sobAt_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
     rw [Subsingleton.elim y 0, Metric.infDist_zero_of_mem (Submodule.zero_mem _)]
     simp [sobConstHighZ]
 
-/-- **Graph-norm best approximation for `Hˢ(Q)` data at the optimal rate**
-(`infDist_domainSub_le_sobGraph_high`) through the smoothed projections, for a sequence
-reproducing `P_p` in the degrees `j, j + 1` (e.g. `FEM.PolyOrderAt n S p j` for `j ≥ 0`). -/
-theorem PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high [NeZero n] {S : PolySeq}
-    {p' : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p' C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
-    (hS0 : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
-    (hS1 : ∀ k : ℕ, (k : ℤ) = j + 1 → polySpace n p k ≤ S.space n k)
-    {σ : (complex n).domainSpace j} (hσ : SobGraph n s L σ) :
-    Metric.infDist σ ((poly n S N).domainSub j) ≤
-      (1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) *
-        meshSize N ^ min s (p + 1) * L := by
-  refine (infDist_domainSub_le_proj (hE.proj N) hE.two_mul_nonneg (hE.norm_proj_le N) j σ).trans ?_
-  have h1 := infDist_poly_le_sobAt_high S hns hs0 N hS0 hσ.1
-  have h2 := infDist_poly_le_sobAt_high S hns hs0 N hS1 hσ.2
-  have := hE.two_mul_nonneg
-  calc (1 + 2 * C) * (Metric.infDist ((complex n).domainIncl j σ) ((poly n S N).V j) +
-        Metric.infDist ((complex n).d j (j + 1) ((complex n).domainCoord j (j + 1) σ))
-          ((poly n S N).V (j + 1))) ≤
-      (1 + 2 * C) * (sobConstHighZ n S p j * meshSize N ^ min s (p + 1) * L +
-        sobConstHighZ n S p (j + 1) * meshSize N ^ min s (p + 1) * L) :=
-        mul_le_mul_of_nonneg_left (add_le_add h1 h2) (by linarith)
-    _ = _ := by ring
-
 /-! ### The mixed Hodge Laplacian with `Hˢ(Q)` solutions, optimal rate -/
 
-set_option maxHeartbeats 400000 in
+variable (n) in
+/-- **The Jackson estimate of the complexes of `S` for `Hˢ(Q)` data at the optimal rate**, for a
+sequence reproducing `P_p` with `2 (p + 1) > n` in the degrees of the form and of its differential:
+`Hˢ(Q)` components (`SobComp`), `s ≥ 0`, at the order `h_N^{min(s, p + 1)}`, from the best
+approximation `infDist_poly_le_sobAt_high` through the projections
+(`ConformingFamily.Jackson.ofInfDist`). -/
+def sobolevHighJackson [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1)) :
+    (polyFamily n S).Jackson (Set.Ici (0 : ℝ)) :=
+  .ofInfDist _ meshSize (fun N => (meshSize_pos N).le) tendsto_meshSize
+    (fun s l L x => (∀ d : ℕ, (d : ℤ) = l ∨ (d : ℤ) = l + 1 → polySpace n p d ≤ S.space n d) ∧
+      SobComp n s L x) (fun s => min (s : ℝ) (p + 1))
+    (fun _ j => sobConstHighZ n S p j + sobConstHighZ n S p (j + 1))
+    (fun _ _ => add_nonneg (sobConstHighZ_nonneg S p _) (sobConstHighZ_nonneg S p _))
+    fun s N i L x hL hx => by
+      have h0 := sobConstHighZ_nonneg (n := n) S p i
+      have h1 := sobConstHighZ_nonneg (n := n) S p (i + 1)
+      have hh := mul_nonneg hL (Real.rpow_nonneg (meshSize_pos N).le (min (s : ℝ) (p + 1)))
+      refine ⟨(infDist_poly_le_sobAt_high S hns s.2 N (fun d hd => hx.1 d (.inl hd))
+        hx.2.1).trans (by nlinarith), fun j hij hxj => ?_⟩
+      obtain rfl : i + 1 = j := hij
+      exact (infDist_poly_le_sobAt_high S hns s.2 N (fun d hd => hx.1 d (.inr hd))
+        (hx.2.2 hxj)).trans (by nlinarith)
+
 /-- **Convergence of the mixed method at the optimal rate `h^{min(s, r_eff)}` for `Hˢ(Q)`
 solutions** (`mixed_rate_sobolevQ_high`; [AFW2010], Thm 3.9, with
 `infDist_poly_le_sobolevQ_high`; [Arnold2018], Ch. 7): for every admissible sequence `S` that
@@ -835,50 +833,16 @@ theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2
           (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
             (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
       K * L * meshSize N ^ min s (p + 1) := by
-  obtain ⟨p', C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  obtain rfl : j + 1 = k := hjk
+  obtain ⟨K, hK⟩ := ((polyFamily n S).staticFEEC closedRangeAt j).rate
+    (sobolevHighJackson n S hns) ⟨s, hs0⟩ hij hjk
   have hij' : i + 1 = j := hij
-  have hC := hE.two_mul_nonneg
-  obtain ⟨A, hA⟩ : ∃ A : ℝ, A = sobConstHighZ n S p i + sobConstHighZ n S p (i + 1) +
-      sobConstHighZ n S p j + sobConstHighZ n S p (j + 1) := ⟨_, rfl⟩
-  have hi := sobConstHighZ_nonneg (n := n) S p i
-  have hi1 := sobConstHighZ_nonneg (n := n) S p (i + 1)
-  have hj := sobConstHighZ_nonneg (n := n) S p j
-  have hj1 := sobConstHighZ_nonneg (n := n) S p (j + 1)
-  have hSσ0 : ∀ d : ℕ, (d : ℤ) = i → polySpace n p d ≤ S.space n d :=
-    fun d hd => hS d (by omega) (by omega)
-  have hSσ1 : ∀ d : ℕ, (d : ℤ) = i + 1 → polySpace n p d ≤ S.space n d :=
-    fun d hd => hS d (by omega) (by omega)
-  have hSu0 : ∀ d : ℕ, (d : ℤ) = j → polySpace n p d ≤ S.space n d :=
-    fun d hd => hS d (by omega) (by omega)
-  have hSu1 : ∀ d : ℕ, (d : ℤ) = j + 1 → polySpace n p d ≤ S.space n d :=
-    fun d hd => hS d (by omega) (by omega)
-  refine ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-    (4 + 2 * (2 * C)) * ((1 + 2 * C) * A), fun {f σ u q} hs {L} hL0 hσ hu hBu hq N => ?_⟩
-  have hδ : 0 ≤ meshSize N ^ min s (p + 1) * L :=
-    mul_nonneg (Real.rpow_nonneg (meshSize_pos N).le _) hL0
-  have hle : ∀ a b : ℝ, a + b ≤ A →
-      (1 + 2 * C) * (a + b) * meshSize N ^ min s (p + 1) * L ≤
-        (1 + 2 * C) * A * (meshSize N ^ min s (p + 1) * L) :=
-    fun a b hab => by
-      nlinarith [mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hab
-        (by linarith : (0 : ℝ) ≤ 1 + 2 * C)) hδ]
-  have hg : SobGraph n s L (HilbertComplex.cyclesToDomainSpace
-      ((complex n).harmonic_le_cycles j q.2)) :=
-    ⟨by rw [HilbertComplex.domainIncl_cyclesToDomainSpace]; exact hq,
-      by rw [HilbertComplex.d_domainCoord_cyclesToDomainSpace]; exact sobAt_zero hL0 _⟩
-  have h1 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSσ0 hSσ1 hσ).trans
-    (hle _ _ (by linarith))
-  have h2 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hu).trans
-    (hle _ _ (by linarith))
-  have h3 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hg).trans
-    (hle _ _ (by linarith))
-  have h4 := (hE.infDist_domainSub_le_sobGraph_high hns hs0 N hSu0 hSu1 hBu).trans
-    (hle _ _ (by linarith))
-  refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl hE.one_le_two_mul
-    (norm_le_of_mem_orthogonal_cycles hij) (norm_le_of_mem_orthogonal_cycles rfl)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j (j + 1)) hs h1 h2 h3 h4).trans
-    (le_of_eq (by ring))
+  have hi (d : ℕ) (hd : (d : ℤ) = i ∨ (d : ℤ) = i + 1) := hS d (by omega) (by omega)
+  have hj (d : ℕ) (hd : (d : ℤ) = j ∨ (d : ℤ) = j + 1) := hS d (by omega) (by omega)
+  refine ⟨K, fun {f σ u q} hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL ⟨hi, hσ.sobComp⟩ ⟨hj, hu.sobComp⟩ ⟨hj, hb.sobComp⟩
+    ⟨hj, hq.sobComp_of_mem_cycles hL ((complex n).harmonic_le_cycles j q.2)⟩ N
+  simp only [polyFamily_V] at h
+  exact h
 
 /-! ### The semi-discrete Hodge wave equation, optimal rate -/
 
@@ -1102,7 +1066,8 @@ theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
     (hle _ _ (by linarith))
   refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl (by linarith [hE.half_le])
     (norm_le_of_mem_orthogonal_cycles_part J hij) (norm_le_of_mem_orthogonal_cycles_part J rfl)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j (j + 1)) hs h1 h2 h3 h4).trans
+    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j))
+    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N j) (hE.norm_proj_le N (j + 1))) hs h1 h2 h3 h4).trans
     (le_of_eq (by ring))
 
 end Parity

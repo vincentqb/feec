@@ -21,10 +21,11 @@ outside `Ω`), and with the density of smooth forms the graph-norm density of th
 (`MeshFamily.eventually_exists_poly_near`, `MeshFamily.tendsto_infDist_poly`).
 
 **The finite element theorems** (`MeshFamily`, every `S`):
-* `discretePoincare_poly`: uniform discrete Poincaré inequality ([AFW2010], Thm 3.6);
-* `mixed_wellPosed_poly`: uniform well-posedness and stability of the discrete mixed Hodge
-  Laplacian ([AFW2010], Thm 3.8);
-* `mixed_quasiOptimal_poly`: quasi-optimality with weights `μ_j(N) → 0` ([AFW2010], Thm 3.9);
+* the complexes of `S` are **conforming families** (`MeshFamily.polyFamily`,
+  `MeshFamily.polyFamilyMin`) with the **Jackson estimates** of order `h_N^{s+1}`
+  (`MeshFamily.polyJackson`, `MeshFamily.polyJacksonMin`), so the static FEEC theorem
+  (`Feec.HilbertComplex.ConformingFamily.staticFEEC`: uniform discrete Poincaré inequality,
+  well-posedness and stability, harmonic gap, cohomology, quasi-optimality, convergence) holds;
 * **`mixed_rate_poly`**: error `≤ K L h_N^{s+1}` for solutions of class `IsCsForm s` and `S` of
   order `s` (`FEM.PolyOrder`), `K` independent of `N`, of the solution and of `L` ([AFW2010],
   Thm 3.9; [Arnold2018], Ch. 7), and the degreewise form `mixed_rate_poly_of_polyOrderAt`
@@ -36,12 +37,12 @@ outside `Ω`), and with the density of smooth forms the graph-norm density of th
 * the same with vanishing boundary DOFs (`..._polyMin`, `..._windowMin_poly...`).
 
 **Remaining hypotheses.** On a general star-shaped domain the only hypothesis is the Poincaré
-inequality of `HΛ(Ω)`, resp. `H̊Λ(Ω)` (`HasPoincare`, equivalently closed range), used by
-`discretePoincare_poly`, `mixed_wellPosed_poly`, `mixed_quasiOptimal_poly` and
-`mixed_rate_poly(_of_polyOrderAt)` (and their `Min` versions); it holds on every bounded Lipschitz
-domain through the regularized Poincaré and Bogovskiĭ operators ([CostabelMcIntosh2010]), a
-theory absent from Mathlib. `mixed_quasiOptimal_poly` also uses the finite-dimensionality of the
-harmonic forms (for the vanishing harmonic gap); the rate theorems do not. The cochain
+inequality of `HΛ(Ω)`, resp. `H̊Λ(Ω)` (`HasPoincare`, equivalently closed range), used by the
+static theorems and `mixed_rate_poly(_of_polyOrderAt)` (and their `Min` versions); it holds on
+every bounded Lipschitz domain through the regularized Poincaré and Bogovskiĭ operators
+([CostabelMcIntosh2010]), a theory absent from Mathlib. The harmonic gap and the cohomology also
+use the finite-dimensionality of the harmonic forms; the rate theorems do not
+(`ConformingFamily.rate`). The cochain
 projections, the approximation results and the wave convergence and rates are proved with no
 hypothesis.
 
@@ -49,11 +50,9 @@ hypothesis.
 **every** quasi-uniform shape-regular mesh family of it (not only the image Freudenthal meshes),
 the Poincaré inequalities are theorems (`Parallelepiped.hasPoincare`,
 `Parallelepiped.hasPoincareMin`, from `Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles`
-and `_min`), and so are the harmonic finite-dimensionality instances; hence
-**`Parallelepiped.mixed_rate_poly_general`** and its companions
-(`Parallelepiped.discretePoincare_poly_general`, `Parallelepiped.mixed_wellPosed_poly_general`,
-`Parallelepiped.mixed_quasiOptimal_poly_general`,
-`Parallelepiped.mixed_rate_poly_general_of_polyOrderAt`, the instance
+and `_min`), and so are the harmonic finite-dimensionality instances; hence the static FEEC
+theorem for `MeshFamily.polyFamily` and **`Parallelepiped.mixed_rate_poly_general`**
+(`Parallelepiped.mixed_rate_poly_general_of_polyOrderAt`, the instance
 `Parallelepiped.mixed_rate_lagrangeP2_general`: order `h²` of the bottom row on `1`-forms) hold
 unconditionally; with vanishing boundary DOFs `Parallelepiped.hasPoincareMin` discharges the
 hypothesis of the `Min` theorems. The discrete cohomology of these families is in
@@ -625,67 +624,57 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((F.polyMin S N).window a m).V i) :=
   inferInstanceAs (FiniteDimensional ℝ ((F.polyMin S N).V (a + i)))
 
-/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
-complexes of `S`, when the harmonic forms of `HΛ(Ω)` are finite-dimensional. -/
-theorem polySmoothedProjection_uniform [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
-    Subcomplex.HasUniformProj atTop (F.poly S) := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProj S
-  choose π hb hg using hK
-  exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
-    (zero_le_one.trans hK1) (fun N x => hb N j x) fun q _ => F.tendsto_infDist_poly S j q⟩
+/-- **The finite element complexes of an admissible sequence `S` on the mesh family**, with the
+smoothed projections (`exists_uniform_polyProj`), a conforming family of `HΛ(Ω)`. -/
+def polyFamily : ConformingFamily D.complex ℕ :=
+  .ofExists atTop (F.poly S)
+    (by
+      obtain ⟨K, -, hK⟩ := F.exists_uniform_polyProj S
+      choose π hb _ using hK
+      exact ⟨K, π, hb⟩)
+    (F.tendsto_infDist_poly S)
 
-/-- **Uniform discrete Poincaré inequality** on the complexes of `S` ([AFW2010], Thm 3.6), under
-the Poincaré inequality of `HΛ(Ω)`. -/
-theorem discretePoincare_poly {cP : ℝ} (hP : HasPoincare D.complex cP) :
-    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.poly S N).V i),
-      (∀ y ∈ (F.poly S N).cyclesW i, inner ℝ y x = 0) →
-        ‖x‖ ≤ c * ‖D.complex.d i j ⟨x, (F.poly S N).le_domain i j hx⟩‖ := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProj S
-  refine ⟨K * cP, fun {i j} hij N x hx hxo => ?_⟩
-  obtain ⟨π, hb, -⟩ := hK N
-  exact π.norm_le_of_forall_inner_eq_zero hij (hP i j hij) (zero_le_one.trans hK1) (hb i) hx hxo
+/-- **The finite element complexes of `S` with vanishing boundary DOFs on the mesh family**, a
+conforming family of `H̊Λ(Ω)`. -/
+def polyFamilyMin : ConformingFamily D.complexMin ℕ :=
+  .ofExists atTop (F.polyMin S)
+    (by
+      obtain ⟨K, -, hK⟩ := F.exists_uniform_polyProjMin S
+      choose π hb _ using hK
+      exact ⟨K, π, hb⟩)
+    (F.tendsto_infDist_polyMin S)
 
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** on the
-complexes of `S` ([AFW2010], Thm 3.8), under the Poincaré inequality of `HΛ(Ω)`. -/
-theorem mixed_wellPosed_poly {cP : ℝ} (hP : HasPoincare D.complex cP) :
-    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
-      ∀ (N : ℕ) (f : (F.poly S N).V j),
-      (∃! x, (F.poly S N).toHilbertComplex.mixedForm i j k x =
-        (F.poly S N).toHilbertComplex.mixedRHS i j f) ∧
-      ∀ x : (F.poly S N).toHilbertComplex.MixedSpace i j,
-        (F.poly S N).toHilbertComplex.mixedForm i j k x =
-          (F.poly S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  refine (F.exists_uniform_polyProj S).elim fun K hK => ?_
-  have hcP : 1 ≤ max 1 cP := le_max_left _ _
-  have hP' := hP.mono (le_max_right 1 cP)
-  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
-    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
-  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
-  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
+@[simp] theorem polyFamily_V : (F.polyFamily S).V = F.poly S := rfl
 
-/-- **Quasi-optimality of the mixed method** on the complexes of `S` ([AFW2010], Thm 3.9) with
-weights `μ_j(N) → 0`, under the Poincaré inequality and the finite-dimensionality of the harmonic
-forms of `HΛ(Ω)`. -/
-theorem mixed_quasiOptimal_poly {cP : ℝ} (hP : HasPoincare D.complex cP)
-    [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i} {u : D.complex.domainSpace j}
-    {q : D.complex.harmonic j},
-    D.complex.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (F.poly S N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).fst‖ +
-        ‖u - (F.poly S N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
-          (F.poly S N) hij hjk f).snd.snd : (F.poly S N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((F.poly S N).domainSub i) +
-        Metric.infDist u ((F.poly S N).domainSub j) +
-        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.poly S N).harmonicW j) +
-        μ j N * Metric.infDist (D.complex.boundaryPart j (D.complex.domainIncl j u))
-          ((F.poly S N).domainSub j)) :=
-  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (F.polySmoothedProjection_uniform S)
+@[simp] theorem polyFamilyMin_V : (F.polyFamilyMin S).V = F.polyMin S := rfl
+
+/-- **The Jackson estimate of the complexes of `S` on the mesh family**: for `s : ℕ`, the
+`C^{s+2}` forms on `cl Ω` (`StarDomain.IsCsForm s`) of the degrees where `S` reproduces `P_s`
+(`FEM.PolyOrderAt`) at the order `h_N^{s+1}` (`exists_mem_poly_le_of_isCsForm`). -/
+def polyJackson : (F.polyFamily S).Jackson ℕ where
+  meshSize N := (F.mesh N).meshSize
+  meshSize_nonneg N := (F.meshSize_pos N).le
+  tendsto_meshSize := F.tendsto_meshSize
+  Reg s j L x := FEM.PolyOrderAt n S s j ∧ D.IsCsForm s j L x
+  ord s := ((s + 1 : ℕ) : ℝ)
+  B _ := F.polyInterpBound S
+  B_nonneg _ := F.polyInterpBound_nonneg S
+  jackson s N _ _ _ hL hx := by
+    rw [Real.rpow_natCast, ← mul_assoc]; exact F.exists_mem_poly_le_of_isCsForm S hx.1 hx.2 hL N
+
+/-- **The Jackson estimate of the complexes of `S` with vanishing boundary DOFs**: the forms of
+class `StarDomain.IsCsFormMin s` at the order `h_N^{s+1}`. -/
+def polyJacksonMin : (F.polyFamilyMin S).Jackson ℕ where
+  meshSize N := (F.mesh N).meshSize
+  meshSize_nonneg N := (F.meshSize_pos N).le
+  tendsto_meshSize := F.tendsto_meshSize
+  Reg s j L x := FEM.PolyOrderAt n S s j ∧ D.IsCsFormMin s j L x
+  ord s := ((s + 1 : ℕ) : ℝ)
+  B _ := F.polyInterpBound S
+  B_nonneg _ := F.polyInterpBound_nonneg S
+  jackson s N _ _ _ hL hx := by
+    rw [Real.rpow_natCast, ← mul_assoc]
+    exact F.exists_mem_polyMin_le_of_isCsFormMin S hx.1 hx.2 hL N
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), degreewise form, under the Poincaré inequality of
@@ -711,23 +700,14 @@ theorem mixed_rate_poly_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex cP
       ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
         (F.poly S N) hij hjk f).snd.snd : (F.poly S N).V j) : L2F ℝ D.Ω (formIdx n j))‖ ≤
       K * L * (F.mesh N).meshSize ^ (s + 1) := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProj S
-  choose π hπb hπg using hK
-  refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
-    (2 * (F.polyInterpBound S i + F.polyInterpBound S j) * (3 + 2 * K)),
-    fun hs L hL0 hσ hu hb hq N => ?_⟩
-  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
-    (hπg N j k)
-    (Reg := fun l x => D.IsCsForm s l L x ∧ FEM.PolyOrderAt n S s l)
-    (B := fun l => F.polyInterpBound S l * L)
-    (fun l => mul_nonneg (F.polyInterpBound_nonneg S l) hL0)
-    (r := (F.mesh N).meshSize ^ (s + 1))
-    (pow_nonneg (F.meshSize_pos N).le _)
-    (fun l x hx => by
-      obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_poly_le_of_isCsForm S hx.2 hx.1 hL0 N
-      exact ⟨v, hv, h1, h2⟩) hs ⟨hσ, hSi⟩ ⟨hu, hSj⟩ ⟨hb, hSj⟩ ⟨hq, hSj⟩
-  refine h.trans (le_of_eq ?_)
-  ring
+  obtain ⟨K, hK⟩ := (F.polyFamily S).rate (F.polyJackson S) s hij hjk
+    ((D.complex.closedRangeAt_iff_poincare_of_rel hij).2 ⟨cP, hP i j hij⟩)
+    ((D.complex.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨cP, hP j k hjk⟩)
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL ⟨hSi, hσ⟩ ⟨hSj, hu⟩ ⟨hSj, hb⟩ ⟨hSj, hq⟩ N
+  simp only [polyFamily_V] at h
+  rw [← Real.rpow_natCast]
+  exact h
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), under the Poincaré inequality of `HΛ(Ω)`, for a
@@ -850,73 +830,6 @@ theorem norm_sub_le_window_poly_smooth {s : ℕ} (hS : FEM.PolyOrder n S s) (a :
 
 /-! #### Vanishing boundary DOFs -/
 
-/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
-complexes of `S` with vanishing boundary DOFs, when the harmonic forms of `H̊Λ(Ω)` are
-finite-dimensional. -/
-theorem polySmoothedProjection_uniformMin
-    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
-    Subcomplex.HasUniformProj atTop (F.polyMin S) := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProjMin S
-  choose π hb hg using hK
-  exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
-    (zero_le_one.trans hK1) (fun N x => hb N j x) fun q _ => F.tendsto_infDist_polyMin S j q⟩
-
-/-- **Uniform discrete Poincaré inequality** on the complexes of `S` with vanishing boundary DOFs
-([AFW2010], Thm 3.6), under the Poincaré inequality of `H̊Λ(Ω)`. -/
-theorem discretePoincare_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
-    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-      {x : L2F ℝ D.Ω (formIdx n i)} (hx : x ∈ (F.polyMin S N).V i),
-      (∀ y ∈ (F.polyMin S N).cyclesW i, inner ℝ y x = 0) →
-        ‖x‖ ≤ c * ‖D.complexMin.d i j ⟨x, (F.polyMin S N).le_domain i j hx⟩‖ := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProjMin S
-  refine ⟨K * cP, fun {i j} hij N x hx hxo => ?_⟩
-  obtain ⟨π, hb, -⟩ := hK N
-  exact π.norm_le_of_forall_inner_eq_zero hij (hP i j hij) (zero_le_one.trans hK1) (hb i) hx hxo
-
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** on the
-complexes of `S` with vanishing boundary DOFs ([AFW2010], Thm 3.8), under the Poincaré
-inequality of `H̊Λ(Ω)`. -/
-theorem mixed_wellPosed_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) :
-    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
-      ∀ (N : ℕ) (f : (F.polyMin S N).V j),
-      (∃! x, (F.polyMin S N).toHilbertComplex.mixedForm i j k x =
-        (F.polyMin S N).toHilbertComplex.mixedRHS i j f) ∧
-      ∀ x : (F.polyMin S N).toHilbertComplex.MixedSpace i j,
-        (F.polyMin S N).toHilbertComplex.mixedForm i j k x =
-          (F.polyMin S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  refine (F.exists_uniform_polyProjMin S).elim fun K hK => ?_
-  have hcP : 1 ≤ max 1 cP := le_max_left _ _
-  have hP' := hP.mono (le_max_right 1 cP)
-  refine ⟨16 * (K * max 1 cP) ^ 2, fun {i j k} hij hjk N f =>
-    (hK.2 N).elim fun π hπ => ⟨?_, fun x hx => ?_⟩⟩
-  · exact π.existsUnique_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) f
-  · exact π.norm_le_of_mixed hij hjk hcP hK.1 (hP' i j hij) (hP' j k hjk) (hπ.1 i) (hπ.1 j) hx
-
-/-- **Quasi-optimality of the mixed method** on the complexes of `S` with vanishing boundary DOFs
-([AFW2010], Thm 3.9), under the Poincaré inequality and the finite-dimensionality of the
-harmonic forms of `H̊Λ(Ω)`. -/
-theorem mixed_quasiOptimal_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP)
-    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i}
-    {u : D.complexMin.domainSpace j} {q : D.complexMin.harmonic j},
-    D.complexMin.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (F.polyMin S N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.polyMin S N) hij hjk f).fst‖ +
-        ‖u - (F.polyMin S N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.polyMin S N) hij hjk
-            f).snd.fst‖ +
-        ‖(q : L2F ℝ D.Ω (formIdx n j)) - (((Subcomplex.CochainProjection.discreteMixedSolution
-          (F.polyMin S N) hij hjk f).snd.snd : (F.polyMin S N).V j) :
-            L2F ℝ D.Ω (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((F.polyMin S N).domainSub i) +
-        Metric.infDist u ((F.polyMin S N).domainSub j) +
-        Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.polyMin S N).harmonicW j) +
-        μ j N * Metric.infDist (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))
-          ((F.polyMin S N).domainSub j)) :=
-  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (F.polySmoothedProjection_uniformMin S)
-
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing boundary
 DOFs for smooth solutions**, degreewise form, under the Poincaré inequality of `H̊Λ(Ω)`, for
 solutions of class `IsCsFormMin s` (`C^{s+2}`, vanishing outside `Ω`). -/
@@ -939,23 +852,14 @@ theorem mixed_rate_polyMin_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex
         (F.polyMin S N) hij hjk f).snd.snd : (F.polyMin S N).V j) :
           L2F ℝ D.Ω (formIdx n j))‖ ≤
       K * L * (F.mesh N).meshSize ^ (s + 1) := by
-  obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProjMin S
-  choose π hπb hπg using hK
-  refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
-    (2 * (F.polyInterpBound S i + F.polyInterpBound S j) * (3 + 2 * K)),
-    fun hs L hL0 hσ hu hb hq N => ?_⟩
-  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
-    (hπg N j k)
-    (Reg := fun l x => D.IsCsFormMin s l L x ∧ FEM.PolyOrderAt n S s l)
-    (B := fun l => F.polyInterpBound S l * L)
-    (fun l => mul_nonneg (F.polyInterpBound_nonneg S l) hL0)
-    (r := (F.mesh N).meshSize ^ (s + 1))
-    (pow_nonneg (F.meshSize_pos N).le _)
-    (fun l x hx => by
-      obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_polyMin_le_of_isCsFormMin S hx.2 hx.1 hL0 N
-      exact ⟨v, hv, h1, h2⟩) hs ⟨hσ, hSi⟩ ⟨hu, hSj⟩ ⟨hb, hSj⟩ ⟨hq, hSj⟩
-  refine h.trans (le_of_eq ?_)
-  ring
+  obtain ⟨K, hK⟩ := (F.polyFamilyMin S).rate (F.polyJacksonMin S) s hij hjk
+    ((D.complexMin.closedRangeAt_iff_poincare_of_rel hij).2 ⟨cP, hP i j hij⟩)
+    ((D.complexMin.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨cP, hP j k hjk⟩)
+  refine ⟨K, fun hs _ hL hσ hu hb hq N => ?_⟩
+  have h := hK hs hL ⟨hSi, hσ⟩ ⟨hSj, hu⟩ ⟨hSj, hb⟩ ⟨hSj, hq⟩ N
+  simp only [polyFamilyMin_V] at h
+  rw [← Real.rpow_natCast]
+  exact h
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing boundary
 DOFs** for a sequence of order `s` in every degree. -/
@@ -1065,58 +969,6 @@ instance (j : ℤ) :
   Feec.Models.Parallelepiped.finiteDimensional_harmonic_min A hA b j
 
 variable [NeZero n] (F : MeshFamily (ParallelepipedWitness.starDomain A hA b)) (S : PolySeq)
-
-/-- **Uniform discrete Poincaré inequality on the higher-order complexes of every quasi-uniform
-shape-regular mesh family of a parallelepiped** ([AFW2010], Thm 3.6), with no hypothesis. -/
-theorem discretePoincare_poly_general :
-    ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
-      {x : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n i)}
-      (hx : x ∈ (F.poly S N).V i),
-      (∀ y ∈ (F.poly S N).cyclesW i, inner ℝ y x = 0) →
-        ‖x‖ ≤ c * ‖(ParallelepipedWitness.starDomain A hA b).complex.d i j
-          ⟨x, (F.poly S N).le_domain i j hx⟩‖ :=
-  F.discretePoincare_poly S (hasPoincare A hA b)
-
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian on the
-higher-order complexes of every quasi-uniform shape-regular mesh family of a parallelepiped**
-([AFW2010], Thm 3.8), with no hypothesis. -/
-theorem mixed_wellPosed_poly_general :
-    ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k →
-      ∀ (N : ℕ) (f : (F.poly S N).V j),
-      (∃! x, (F.poly S N).toHilbertComplex.mixedForm i j k x =
-        (F.poly S N).toHilbertComplex.mixedRHS i j f) ∧
-      ∀ x : (F.poly S N).toHilbertComplex.MixedSpace i j,
-        (F.poly S N).toHilbertComplex.mixedForm i j k x =
-          (F.poly S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
-  F.mixed_wellPosed_poly S (hasPoincare A hA b)
-
-/-- **Quasi-optimality of the higher-order mixed method on every quasi-uniform shape-regular mesh
-family of a parallelepiped** ([AFW2010], Thm 3.9), with no hypothesis. -/
-theorem mixed_quasiOptimal_poly_general :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)}
-    {σ : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace i}
-    {u : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace j}
-    {q : (ParallelepipedWitness.starDomain A hA b).complex.harmonic j},
-    (ParallelepipedWitness.starDomain A hA b).complex.IsMixedSolution i j k f σ u q →
-    ∀ N : ℕ,
-    ‖σ - (F.poly S N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).fst‖ +
-        ‖u - (F.poly S N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution
-            (F.poly S N) hij hjk f).snd.snd : (F.poly S N).V j) :
-              L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((F.poly S N).domainSub i) +
-        Metric.infDist u ((F.poly S N).domainSub j) +
-        Metric.infDist (q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j))
-          ((F.poly S N).harmonicW j) +
-        μ j N * Metric.infDist ((ParallelepipedWitness.starDomain A hA b).complex.boundaryPart j
-          ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j u))
-          ((F.poly S N).domainSub j)) :=
-  F.mixed_quasiOptimal_poly S (hasPoincare A hA b)
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method on every quasi-uniform
 shape-regular mesh family of a parallelepiped** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7),

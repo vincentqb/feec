@@ -1,5 +1,6 @@
 module
 
+public import Feec.HilbertComplex.Approximation.ConformingFamily
 public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 
 /-!
@@ -17,9 +18,8 @@ and commutes with `d`, but is not a projection. If `Q` is close to the identity 
 `π = J⁻¹ Q`
 
 is a **cochain projection** onto `Vₕ` (`CommutingMap.toCochainProjection`), bounded in `W` by
-`(1 - θ)⁻¹ ‖Q‖` (`CommutingMap.norm_toCochainProjection_le`) and in the graph norm by
-`(1 - θ)⁻¹` times the graph bound of `Q` (`CommutingMap.isGraphBounded_toCochainProjection`):
-only the `W`-estimate on `Vₕ` is needed, because `d π x = J⁻¹ Q d x`. With `θ = ½` and
+`(1 - θ)⁻¹ ‖Q‖` (`CommutingMap.norm_toCochainProjection_le`), hence in every graph norm by the
+same constant (`Subcomplex.CochainProjection.isGraphBounded_of_norm_le`, since `d π = π d`). With `θ = ½` and
 `Q = Π_h R`, `‖R‖ ≤ C_R`, `‖Π_h‖ ≤ C_Π`, the bound is `‖π‖ ≤ 2 C_Π C_R`
 (`SmoothedInterpolant.norm_toCochainProjection_le_half`), and the discrete Poincaré inequality
 follows (`SmoothedInterpolant.norm_le_of_forall_inner_eq_zero_half`).
@@ -38,15 +38,16 @@ the cohomology.
 * `Subcomplex.SmoothedInterpolant`: a smoother `R : W → X` into a complex `X` of smooth fields
   and an interpolant `Π : X → Vₕ`, both commuting with the differentials;
   `SmoothedInterpolant.toCommutingMap`: `Q = Π R`.
+* `ConformingFamily.ofSmoothing`: the conforming family (`Feec.HilbertComplex.ConformingFamily`)
+  of the smoothed projections of commuting maps bounded and close to the identity uniformly in
+  `h`.
 
 ## Main results
 
 * `CommutingMap.norm_le_of_restrictV`: `‖v‖ ≤ (1 - θ)⁻¹ ‖J v‖`.
 * **`CommutingMap.toCochainProjection`**, `CommutingMap.toCochainProjection_π`,
-  **`CommutingMap.norm_toCochainProjection_le`**,
-  **`CommutingMap.isGraphBounded_toCochainProjection`**,
-  `CommutingMap.isGraphBounded_toCochainProjection_of_norm_le` (graph bound from `W`-bounds,
-  since `d Q = Q d`).
+  **`CommutingMap.norm_toCochainProjection_le`** (the graph bound follows,
+  `Subcomplex.CochainProjection.isGraphBounded_of_norm_le`, since `d π = π d`).
 * **`SmoothedInterpolant.norm_toCochainProjection_le_half`**: `‖π‖ ≤ 2 C_Π C_R`;
   `SmoothedInterpolant.norm_le_of_forall_inner_eq_zero_half`: the discrete Poincaré inequality
   `‖x‖ ≤ 2 C_Π C_R c_P ‖d x‖` on `Vₕ ⊥ 𝔷ₕ`.
@@ -201,60 +202,6 @@ theorem norm_toCochainProjection_le {θ : ℝ} (hθ : θ < 1)
   exact (Q.norm_toCochainProjection_le_norm_Q hθ hQ i x).trans
     (mul_le_mul_of_nonneg_left (hC x) (inv_nonneg.2 (by linarith)))
 
-/-- `d π x = J⁻¹ Q d x`, so `‖d π x‖ ≤ (1 - θ)⁻¹ ‖Q d x‖`. -/
-theorem norm_d_toCochainProjection_le {θ : ℝ} (hθ : θ < 1)
-    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} (x : (H.d i j).domain) :
-    ‖H.d i j ⟨(Q.toCochainProjection hθ hQ).π i x,
-        S.le_domain i j ((Q.toCochainProjection hθ hQ).mem i x)⟩‖ ≤
-      (1 - θ)⁻¹ * ‖Q.Q j (H.d i j x)‖ := by
-  rw [(Q.toCochainProjection hθ hQ).comm]
-  exact Q.norm_toCochainProjection_le_norm_Q hθ hQ j _
-
-/-- **Graph-norm bound of the smoothed projection**: if
-`‖Q x‖² + ‖d Q x‖² ≤ C² (‖x‖² + ‖d x‖²)`, then `π` is graph-bounded by `(1 - θ)⁻¹ C`. Only the
-`W`-estimate of `Q` on `Vₕ` (at both indices) is used. -/
-theorem isGraphBounded_toCochainProjection {θ : ℝ} (hθ : θ < 1)
-    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} {C : ℝ}
-    (hC : ∀ x : (H.d i j).domain, ‖Q.Q i x‖ ^ 2 +
-      ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2 ≤
-        C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)) :
-    (Q.toCochainProjection hθ hQ).IsGraphBounded i j ((1 - θ)⁻¹ * C) := by
-  intro x
-  have ha := Q.norm_toCochainProjection_le_norm_Q hθ hQ i x
-  have hb := Q.norm_d_toCochainProjection_le hθ hQ x
-  rw [← Q.comm i j x] at hb
-  have hk : 0 ≤ (1 - θ)⁻¹ := inv_nonneg.2 (by linarith)
-  have ha2 := pow_le_pow_left₀ (norm_nonneg _) ha 2
-  have hb2 := pow_le_pow_left₀ (norm_nonneg _) hb 2
-  have := hC x
-  calc _ ≤ ((1 - θ)⁻¹ * ‖Q.Q i x‖) ^ 2 +
-        ((1 - θ)⁻¹ * ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖) ^ 2 := add_le_add ha2 hb2
-    _ = (1 - θ)⁻¹ ^ 2 * (‖Q.Q i x‖ ^ 2 +
-        ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2) := by ring
-    _ ≤ (1 - θ)⁻¹ ^ 2 * (C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)) :=
-        mul_le_mul_of_nonneg_left this (by positivity)
-    _ = _ := by ring
-
-omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- A commuting map bounded by `C` in `W` at both ends of `i → j` is bounded by `C` in the graph
-norm: `d Q x = Q d x`. -/
-theorem graph_le_of_norm_le {i j : ι} {C : ℝ} (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖)
-    (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) (x : (H.d i j).domain) :
-    ‖Q.Q i x‖ ^ 2 + ‖H.d i j ⟨Q.Q i x, S.le_domain i j (Q.mem i x)⟩‖ ^ 2 ≤
-      C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2) := by
-  rw [Q.comm]
-  have h1 := pow_le_pow_left₀ (norm_nonneg _) (hi x) 2
-  have h2 := pow_le_pow_left₀ (norm_nonneg _) (hj (H.d i j x)) 2
-  nlinarith
-
-/-- **Graph bound of the smoothed projection from `W`-bounds**: `‖Q‖ ≤ C` at `i` and `j` gives
-`π` graph-bounded by `(1 - θ)⁻¹ C` at `i → j`. -/
-theorem isGraphBounded_toCochainProjection_of_norm_le {θ : ℝ} (hθ : θ < 1)
-    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} {C : ℝ}
-    (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) :
-    (Q.toCochainProjection hθ hQ).IsGraphBounded i j ((1 - θ)⁻¹ * C) :=
-  Q.isGraphBounded_toCochainProjection hθ hQ (Q.graph_le_of_norm_le hi hj)
-
 end CommutingMap
 
 /-! ### Smoother followed by an interpolant -/
@@ -338,5 +285,24 @@ theorem norm_le_of_forall_inner_eq_zero_half
 end SmoothedInterpolant
 
 end Subcomplex
+
+/-! ### Conforming families of smoothed projections -/
+
+/-- **A conforming family of smoothed projections** ([AFW2010], §5.5; [ChristiansenWinther2008]):
+finite-dimensional subcomplexes `Vₕ` refined along `l` with the approximation property, and
+commuting maps `Qₕ : W → Vₕ` bounded by `C` in `W` and close to the identity on `Vₕ`,
+`‖v - Qₕ v‖ ≤ θ ‖v‖` with `θ < 1`, uniformly in `h`. The projections are the smoothed projections
+`πₕ = Jₕ⁻¹ Qₕ` (`Subcomplex.CommutingMap.toCochainProjection`), bounded by `(1 - θ)⁻¹ C`. -/
+def ConformingFamily.ofSmoothing {κ : Type*} (l : Filter κ) (V : κ → H.Subcomplex)
+    [∀ h i, FiniteDimensional 𝕜 ((V h).V i)] (Q : ∀ h, (V h).CommutingMap) {θ : ℝ} (hθ : θ < 1)
+    (hQ : ∀ h i, ∀ v ∈ (V h).V i, ‖v - (Q h).Q i v‖ ≤ θ * ‖v‖) {C : ℝ}
+    (hC : ∀ h i x, ‖(Q h).Q i x‖ ≤ C * ‖x‖)
+    (happrox : ∀ i (w : W i), Tendsto (fun h => Metric.infDist w ((V h).V i : Set (W i))) l (𝓝 0)) :
+    ConformingFamily H κ where
+  l := l
+  V := V
+  π h := (Q h).toCochainProjection hθ (hQ h)
+  bound_π := ⟨(1 - θ)⁻¹ * C, fun h _ x => (Q h).norm_toCochainProjection_le hθ (hQ h) (hC h _) x⟩
+  approx := happrox
 
 end Feec.HilbertComplex

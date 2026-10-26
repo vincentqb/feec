@@ -1316,8 +1316,9 @@ theorem cubeFEM_compatible (N : ℕ) : (cubeFEM hT hB N).Compatible := fun ψ =>
 
 /-- **Uniform bounds of the projections of Table 5.1**: `Discrete.Bounded (2C)` for every `N`. -/
 theorem cubeFEM_bounded (N : ℕ) : (cubeFEM hT hB N).Bounded (2 * C) :=
-  bggDiscrete_bounded hT.two_mul_nonneg (hT.norm_proj_le N 2) (hT.isGraphBounded_proj N 1 2)
-    (hB.isGraphBounded_proj N 1 2)
+  bggDiscrete_bounded hT.two_mul_nonneg (hT.norm_proj_le N 2)
+    ((hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N 1) (hT.norm_proj_le N 2))
+    ((hB.proj N).isGraphBounded_of_norm_le (hB.norm_proj_le N 1) (hB.norm_proj_le N 2))
 
 /-- **Consistency of `S₀,ₕ = π¹S⁰`** ([QuennevilleBelair2015], Prop 5.9(1), transferred to the
 smoothed projection): `‖(I − π¹)S⁰ψ‖ ≤ C_app h ‖ψ‖_V` on `Ṽₕ⁰ = P₂Λ̊⁰ ⊗ ℝ³`, since

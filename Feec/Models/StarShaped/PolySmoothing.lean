@@ -1161,16 +1161,13 @@ theorem exists_uniform_polyCochainProjection [NeZero n] {C c q : ℝ} (hC : 0 �
         (polyGeomOK_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ)
         k u.1 u.2 (polySampleOK_of_isMaximal S hstar hp u.1)
     · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
-  refine ⟨Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc, fun i x => ?_, fun i j => ?_⟩
-  · have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
+  have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
+      max 1 (2 * K') * ‖x‖ := fun i x => by
+    have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
     have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
     rw [e] at h1
     exact h1.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-  · have h1 := Q.isGraphBounded_toCochainProjection_of_norm_le (θ := 1 / 2) (by norm_num) hQc
-      (hQb i) (hQb j)
-    have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
-    rw [e] at h1
-    exact h1.mono' (by positivity) (le_max_right _ _)
+  exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 /-- **Uniformly bounded smoothed cochain projections onto the complexes of an admissible sequence
 with vanishing boundary DOFs** `V̊ₕ(S, M) ⊆ H̊Λ(Ω)` on quasi-uniform shape-regular meshes of a
@@ -1224,16 +1221,13 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
         (polySampleOK_of_isMinimal S hM hq hC hstar hs₀ hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ
           u.2)
     · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
-  refine ⟨Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc, fun i x => ?_, fun i j => ?_⟩
-  · have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
+  have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
+      max 1 (2 * K') * ‖x‖ := fun i x => by
+    have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
     have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
     rw [e] at h1
     exact h1.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-  · have h1 := Q.isGraphBounded_toCochainProjection_of_norm_le (θ := 1 / 2) (by norm_num) hQc
-      (hQb i) (hQb j)
-    have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
-    rw [e] at h1
-    exact h1.mono' (by positivity) (le_max_right _ _)
+  exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 end Estimates
 

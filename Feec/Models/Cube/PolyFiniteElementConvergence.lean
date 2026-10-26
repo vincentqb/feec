@@ -5,7 +5,7 @@ public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 
 /-!
-# Convergence of the higher-order finite element methods on the cube, with no hypotheses
+# The higher-order finite element methods on the cube as conforming families
 
 For every admissible sequence `S` of `P_rΛᵏ` / `P_r⁻Λᵏ` families (`Feec.FiniteElement.PolySeq`) on
 the level-`(N + 1)` Freudenthal meshes of `Q = (0, ½)ⁿ`, with the complexes `FEM.poly n S N ⊆ HΛ(Q)`
@@ -24,15 +24,16 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
   semi-discrete Hodge wave equation converges on every window for `D(L)` data
   (`exists_tendstoUniformlyOn_window_poly`; [QuennevilleBelair2015], Thm 4.14).
 * Under the smoothing estimates (proved for all small `γ` in
-  `Feec.Models.Cube.PolySmoothingEstimates`), with the Poincaré constant `(2π)⁻¹` of
-  `Feec.Models.Cube.DeRhamIdentFEM`: **uniformly bounded cochain projections** `π_N = J_N⁻¹ Q_N`
-  with `‖π_N‖ ≤ 2C` in `L²` and every graph norm (`PolySmoothingEstimates.proj`), the **uniform
-  discrete Poincaré inequality** ([AFW2010], Thm 3.6), **uniform well-posedness and stability** of
-  the discrete mixed Hodge Laplacian ([AFW2010], Thm 3.8), **quasi-optimality** ([AFW2010],
-  Thm 3.9) and convergence at the approximation rate (`norm_sub_le_of_infDist_le`), and the
-  **vanishing harmonic gap** (`PolySmoothingEstimates.tendsto_harmonicGap`).
-* **Unconditional statements**: `polySmoothedProjection_uniform`, `discretePoincare_poly`,
-  `mixed_wellPosed_poly`, `mixed_quasiOptimal_poly` and their `Min` versions.
+  `Feec.Models.Cube.PolySmoothingEstimates`): **uniformly bounded cochain projections**
+  `π_N = J_N⁻¹ Q_N` with `‖π_N‖ ≤ 2C` in `L²` (`PolySmoothingEstimates.proj`,
+  `PolySmoothingEstimates.norm_proj_le`), so the complexes of `S` are **conforming families**
+  (`PolySmoothingEstimates.family`, `ConformingFamily.ofSmoothing`; with the estimates of
+  `polySmoothingEstimates_exists`, `polyFamily`, `polyFamilyMin`). With the closed range of
+  `HΛ(Q)`, `H̊Λ(Q)` (`Feec.Models.Cube.DeRhamIdentFEM`) the static FEEC theorem
+  (`Feec.HilbertComplex.ConformingFamily.staticFEEC`) gives, unconditionally, the uniform discrete
+  Poincaré inequality ([AFW2010], Thm 3.6), uniform well-posedness and stability of the discrete
+  mixed Hodge Laplacian (Thm 3.8), the vanishing harmonic gap, the discrete cohomology,
+  quasi-optimality (Thm 3.9) and convergence; the rates are in `Feec.Models.Cube.PolyRate`.
 * **The rows of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3) on `(0, ½)³` with
   vanishing boundary DOFs, the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (`PolySeq.lowestOrder`, and the
   Whitney complex) and the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (`PolySeq.lagrangeP2`), **share
@@ -659,9 +660,6 @@ def proj (hE : PolySmoothingEstimates n S p C) (N : ℕ) : (poly n S N).CochainP
 theorem two_mul_nonneg (hE : PolySmoothingEstimates n S p C) : 0 ≤ 2 * C := by
   linarith [hE.half_le]
 
-theorem one_le_two_mul (hE : PolySmoothingEstimates n S p C) : 1 ≤ 2 * C := by
-  linarith [hE.half_le]
-
 variable (hE : PolySmoothingEstimates n S p C)
 include hE
 
@@ -672,113 +670,6 @@ theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n 
     (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) x
   have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
   rwa [e] at h
-
-/-- **Uniform graph-norm bound**: `π_N` is bounded by `2 C` in the graph norm of every `d`. -/
-theorem isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) := by
-  have h := (polySmoothed n S N (p N) (hE.isMaximal N)).isGraphBounded_toCochainProjection_of_norm_le
-    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) (hE.bound N j)
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
-  rwa [e] at h
-
-/-- **Uniform discrete Poincaré inequality** ([AFW2010], Thm 3.6) for the complex of `S`:
-`‖x‖ ≤ 2 C (2π)⁻¹ ‖d x‖` for `x ∈ Vₕⁱ ⊥ 𝔷ₕⁱ`. -/
-theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
-    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (poly n S N).V i)
-    (hxo : ∀ y ∈ (poly n S N).cyclesW i, inner ℝ y x = 0) :
-    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ * ‖(complex n).d i j ⟨x, (poly n S N).le_domain i j hx⟩‖ :=
-  (hE.proj N).norm_le_of_forall_inner_eq_zero hij (norm_le_of_mem_orthogonal_cycles hij)
-    hE.two_mul_nonneg (hE.norm_proj_le N i) hx hxo
-
-/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian** ([AFW2010], Thm 3.8) for the
-complex of `S`. -/
-theorem existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (poly n S N).V j) :
-    ∃! x, (poly n S N).toHilbertComplex.mixedForm i j k x =
-      (poly n S N).toHilbertComplex.mixedRHS i j f :=
-  (hE.proj N).existsUnique_mixed hij hjk le_rfl hE.one_le_two_mul
-    (poincare hij inv_two_pi_le_one) (poincare hjk inv_two_pi_le_one) (hE.norm_proj_le N i)
-    (hE.norm_proj_le N j) f
-
-/-- **Uniform stability of the discrete mixed Hodge Laplacian**: `‖xₕ‖ ≤ 64 C² ‖fₕ‖`. -/
-theorem norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (poly n S N).V j}
-    {x : (poly n S N).toHilbertComplex.MixedSpace i j}
-    (hx : (poly n S N).toHilbertComplex.mixedForm i j k x =
-      (poly n S N).toHilbertComplex.mixedRHS i j f) :
-    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
-  (hE.proj N).norm_le_of_mixed hij hjk le_rfl hE.one_le_two_mul
-    (poincare hij inv_two_pi_le_one) (poincare hjk inv_two_pi_le_one) (hE.norm_proj_le N i)
-    (hE.norm_proj_le N j) hx
-
-/-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) for the complex of `S`. -/
-theorem norm_sub_le_infDist {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
-    (hs : (complex n).IsMixedSolution i j k f σ u q) (N : ℕ) :
-    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).fst‖ +
-        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
-            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-        (Metric.infDist σ ((poly n S N).domainSub i) + Metric.infDist u ((poly n S N).domainSub j) +
-          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((poly n S N).harmonicW j) +
-          (hE.proj N).harmonicGap j *
-            Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
-              ((poly n S N).domainSub j)) :=
-  (hE.proj N).norm_sub_le_infDist_harmonicGap hij hjk hE.one_le_two_mul
-    (norm_le_of_mem_orthogonal_cycles hij) (norm_le_of_mem_orthogonal_cycles hjk)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j k) hs
-
-/-- **Convergence at the approximation rate**: if the graph-norm distances of `σ`, `u`,
-`P_𝔅 u` to the spaces of `S` and the distance of `p` to `ℌₕ` are `≤ K δ`, then the error of the
-discrete mixed solution is `≤ (1 + 144 (2C √(1 + c_P²))²)(1 + 2C)(4 + 2C) K δ`, `c_P = (2π)⁻¹`
-(the harmonic gap is bounded by `1 + 2C`). -/
-theorem norm_sub_le_of_infDist_le {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complex n).domainSpace i} {u : (complex n).domainSpace j} {q : (complex n).harmonic j}
-    (hs : (complex n).IsMixedSolution i j k f σ u q) {K δ : ℝ} (N : ℕ)
-    (hσ : Metric.infDist σ ((poly n S N).domainSub i) ≤ K * δ)
-    (hu : Metric.infDist u ((poly n S N).domainSub j) ≤ K * δ)
-    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((poly n S N).harmonicW j) ≤
-      K * δ)
-    (hB : Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
-      ((poly n S N).domainSub j) ≤ K * δ) :
-    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).fst‖ +
-        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
-            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
-        δ := by
-  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
-  have h := (hE.proj N).norm_sub_le_infDist hij hjk hE.one_le_two_mul hμ0
-    (norm_le_of_mem_orthogonal_cycles hij) (norm_le_of_mem_orthogonal_cycles hjk)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j k)
-    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
-      (hE.isGraphBounded_proj N j k) hq') hs
-  refine h.trans ?_
-  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) := by
-    have := hE.two_mul_nonneg; positivity
-  have e : (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-      K * δ = (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-        ((4 + 2 * C) * (K * δ)) := by ring
-  rw [e]
-  refine mul_le_mul_of_nonneg_left ?_ hK0
-  have hB' := mul_le_mul_of_nonneg_left hB hμ0
-  have e' : (4 + 2 * C) * (K * δ) = 3 * (K * δ) + (1 + 2 * C) * (K * δ) := by ring
-  rw [e']
-  linarith
-
-/-- **The harmonic gap tends to zero** for the complex of `S`, with no further hypothesis
-(`ℌ(HΛ(Q))` is finite-dimensional and the spaces of `S` are dense, `tendsto_infDist_poly`). -/
-theorem tendsto_harmonicGap (j : ℤ) : Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
-  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
-    (fun N x => hE.norm_proj_le N j x) fun q _ => tendsto_infDist_poly S j q
 
 end PolySmoothingEstimates
 
@@ -795,9 +686,6 @@ def proj (hE : PolySmoothingEstimatesMin n S p C) (N : ℕ) : (polyMin n S N).Co
 theorem two_mul_nonneg (hE : PolySmoothingEstimatesMin n S p C) : 0 ≤ 2 * C := by
   linarith [hE.half_le]
 
-theorem one_le_two_mul (hE : PolySmoothingEstimatesMin n S p C) : 1 ≤ 2 * C := by
-  linarith [hE.half_le]
-
 variable (hE : PolySmoothingEstimatesMin n S p C)
 include hE
 
@@ -808,113 +696,6 @@ theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n 
     (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) x
   have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
   rwa [e] at h
-
-/-- **Uniform graph-norm bound** of `π̊_N` by `2 C`. -/
-theorem isGraphBounded_proj (N : ℕ) (i j : ℤ) : (hE.proj N).IsGraphBounded i j (2 * C) := by
-  have h := (polySmoothedMin n S N (p N) (hE.isMinimal N)).isGraphBounded_toCochainProjection_of_norm_le
-    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) (hE.bound N j)
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
-  rwa [e] at h
-
-/-- **Uniform discrete Poincaré inequality** for the complex of `S` with vanishing boundary DOFs. -/
-theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
-    {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (polyMin n S N).V i)
-    (hxo : ∀ y ∈ (polyMin n S N).cyclesW i, inner ℝ y x = 0) :
-    ‖x‖ ≤ 2 * C * (2 * Real.pi)⁻¹ *
-      ‖(complexMin n).d i j ⟨x, (polyMin n S N).le_domain i j hx⟩‖ :=
-  (hE.proj N).norm_le_of_forall_inner_eq_zero hij (norm_le_of_mem_orthogonal_cycles_min hij)
-    hE.two_mul_nonneg (hE.norm_proj_le N i) hx hxo
-
-/-- **Uniform well-posedness of the discrete mixed Hodge Laplacian with vanishing traces** for
-the complex of `S`. -/
-theorem existsUnique_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) (f : (polyMin n S N).V j) :
-    ∃! x, (polyMin n S N).toHilbertComplex.mixedForm i j k x =
-      (polyMin n S N).toHilbertComplex.mixedRHS i j f :=
-  (hE.proj N).existsUnique_mixed hij hjk le_rfl hE.one_le_two_mul
-    (poincare_min hij inv_two_pi_le_one) (poincare_min hjk inv_two_pi_le_one)
-    (hE.norm_proj_le N i) (hE.norm_proj_le N j) f
-
-/-- **Uniform stability with vanishing traces**: `‖xₕ‖ ≤ 64 C² ‖fₕ‖`. -/
-theorem norm_le_of_mixed {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) (N : ℕ) {f : (polyMin n S N).V j}
-    {x : (polyMin n S N).toHilbertComplex.MixedSpace i j}
-    (hx : (polyMin n S N).toHilbertComplex.mixedForm i j k x =
-      (polyMin n S N).toHilbertComplex.mixedRHS i j f) :
-    ‖x‖ ≤ 16 * (2 * C * 1) ^ 2 * ‖f‖ :=
-  (hE.proj N).norm_le_of_mixed hij hjk le_rfl hE.one_le_two_mul
-    (poincare_min hij inv_two_pi_le_one) (poincare_min hjk inv_two_pi_le_one)
-    (hE.norm_proj_le N i) (hE.norm_proj_le N j) hx
-
-/-- **Quasi-optimality of the mixed method with vanishing traces** for the complex of `S`. -/
-theorem norm_sub_le_infDist {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complexMin n).domainSpace i} {u : (complexMin n).domainSpace j}
-    {q : (complexMin n).harmonic j}
-    (hs : (complexMin n).IsMixedSolution i j k f σ u q) (N : ℕ) :
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-        (Metric.infDist σ ((polyMin n S N).domainSub i) +
-          Metric.infDist u ((polyMin n S N).domainSub j) +
-          Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyMin n S N).harmonicW j) +
-          (hE.proj N).harmonicGap j *
-            Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
-              ((polyMin n S N).domainSub j)) :=
-  (hE.proj N).norm_sub_le_infDist_harmonicGap hij hjk hE.one_le_two_mul
-    (norm_le_of_mem_orthogonal_cycles_min hij) (norm_le_of_mem_orthogonal_cycles_min hjk)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j k) hs
-
-/-- **Convergence at the approximation rate with vanishing traces** (as
-`PolySmoothingEstimates.norm_sub_le_of_infDist_le`). -/
-theorem norm_sub_le_of_infDist_le {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
-    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2F ℝ (cubeDomain n) (formIdx n j)}
-    {σ : (complexMin n).domainSpace i} {u : (complexMin n).domainSpace j}
-    {q : (complexMin n).harmonic j}
-    (hs : (complexMin n).IsMixedSolution i j k f σ u q) {K δ : ℝ} (N : ℕ)
-    (hσ : Metric.infDist σ ((polyMin n S N).domainSub i) ≤ K * δ)
-    (hu : Metric.infDist u ((polyMin n S N).domainSub j) ≤ K * δ)
-    (hq : Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyMin n S N).harmonicW j) ≤
-      K * δ)
-    (hB : Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
-      ((polyMin n S N).domainSub j) ≤ K * δ) :
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) * K *
-        δ := by
-  have hμ0 : 0 ≤ 1 + 2 * C := by linarith [hE.two_mul_nonneg]
-  have h := (hE.proj N).norm_sub_le_infDist hij hjk hE.one_le_two_mul hμ0
-    (norm_le_of_mem_orthogonal_cycles_min hij) (norm_le_of_mem_orthogonal_cycles_min hjk)
-    (hE.isGraphBounded_proj N i j) (hE.isGraphBounded_proj N j k)
-    (fun _ hq' => (hE.proj N).norm_sub_π_harmonic_le hjk hE.two_mul_nonneg
-      (hE.isGraphBounded_proj N j k) hq') hs
-  refine h.trans ?_
-  have hK0 : 0 ≤ (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) := by
-    have := hE.two_mul_nonneg; positivity
-  have e : (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) * (4 + 2 * C) *
-      K * δ = (1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C) *
-        ((4 + 2 * C) * (K * δ)) := by ring
-  rw [e]
-  refine mul_le_mul_of_nonneg_left ?_ hK0
-  have hB' := mul_le_mul_of_nonneg_left hB hμ0
-  have e' : (4 + 2 * C) * (K * δ) = 3 * (K * δ) + (1 + 2 * C) * (K * δ) := by ring
-  rw [e']
-  linarith
-
-/-- **The harmonic gap of `H̊Λ(Q)` tends to zero** for the complex of `S`. -/
-theorem tendsto_harmonicGap (j : ℤ) : Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) :=
-  Subcomplex.CochainProjection.tendsto_harmonicGap hE.proj hE.two_mul_nonneg
-    (fun N x => hE.norm_proj_le N j x) fun q _ => tendsto_infDist_polyMin S j q
 
 end PolySmoothingEstimatesMin
 
@@ -932,126 +713,48 @@ theorem polySmoothingEstimatesMin_exists (S : PolySeq) :
   obtain ⟨C, hC⟩ := h γ₀ hγ₀ le_rfl
   exact ⟨_, C, hC⟩
 
-/-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
-complexes of every admissible sequence `S` on the Freudenthal meshes of the cube ([AFW2010],
-§5.5, Thm 3.9), unconditionally: `‖π_N‖ ≤ 2C` in `L²` and in every graph norm, uniformly in `N`,
-and `sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π_N q‖ → 0` in every degree. -/
-theorem polySmoothedProjection_uniform (S : PolySeq) :
-    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) (hE : PolySmoothingEstimates n S p C),
-      (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
-      (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
-      ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  exact ⟨p, C, hE, hE.norm_proj_le, hE.isGraphBounded_proj, hE.tendsto_harmonicGap⟩
+/-! ### The higher-order families as conforming families -/
 
-/-- **Uniformly bounded smoothed cochain projections with vanishing boundary DOFs and vanishing
-harmonic gap** for every admissible sequence, unconditionally. -/
-theorem polySmoothedProjection_uniform_min (S : PolySeq) :
-    ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) (hE : PolySmoothingEstimatesMin n S p C),
-      (∀ N i x, ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖) ∧
-      (∀ N i j, (hE.proj N).IsGraphBounded i j (2 * C)) ∧
-      ∀ j, Tendsto (fun N => (hE.proj N).harmonicGap j) atTop (𝓝 0) := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
-  exact ⟨p, C, hE, hE.norm_proj_le, hE.isGraphBounded_proj, hE.tendsto_harmonicGap⟩
+section Family
 
-/-- **Uniform discrete Poincaré inequality** for the complexes of every admissible sequence on the
-Freudenthal meshes of the cube ([AFW2010], Thm 3.6), unconditionally. -/
-theorem discretePoincare_poly (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
-    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)}
-    (hx : x ∈ (poly n S N).V i), (∀ y ∈ (poly n S N).cyclesW i, inner ℝ y x = 0) →
-      ‖x‖ ≤ c * ‖(complex n).d i j ⟨x, (poly n S N).le_domain i j hx⟩‖ := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimates_exists (n := n) S
-  exact ⟨2 * C * (2 * Real.pi)⁻¹, fun hij N _ hx hxo =>
-    hE.norm_le_of_forall_inner_eq_zero hij N hx hxo⟩
+variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
 
-/-- **Uniform discrete Poincaré inequality with vanishing boundary DOFs** for every admissible
-sequence, unconditionally. -/
-theorem discretePoincare_polyMin (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
-    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (cubeDomain n) (formIdx n i)}
-    (hx : x ∈ (polyMin n S N).V i), (∀ y ∈ (polyMin n S N).cyclesW i, inner ℝ y x = 0) →
-      ‖x‖ ≤ c * ‖(complexMin n).d i j ⟨x, (polyMin n S N).le_domain i j hx⟩‖ := by
-  obtain ⟨p, C, hE⟩ := polySmoothingEstimatesMin_exists (n := n) S
-  exact ⟨2 * C * (2 * Real.pi)⁻¹, fun hij N _ hx hxo =>
-    hE.norm_le_of_forall_inner_eq_zero hij N hx hxo⟩
+/-- **The conforming family of the smoothing estimates `hE`** ([AFW2010], §5.5): the complexes of
+`S` on the Freudenthal meshes with the smoothed projections `π_N = J_N⁻¹ Q_N`
+(`PolySmoothingEstimates.proj`), a conforming family of `HΛ(Q)`
+(`ConformingFamily.ofSmoothing`). -/
+def PolySmoothingEstimates.family (hE : PolySmoothingEstimates n S p C) :
+    ConformingFamily (complex n) ℕ :=
+  .ofSmoothing atTop (poly n S) (fun N => polySmoothed n S N (p N) (hE.isMaximal N))
+    (by norm_num : (1 / 2 : ℝ) < 1) hE.close hE.bound (tendsto_infDist_poly S)
 
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** for the
-complexes of every admissible sequence ([AFW2010], Thm 3.8), unconditionally. -/
-theorem mixed_wellPosed_poly (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
-    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (poly n S N).V j),
-    (∃! x, (poly n S N).toHilbertComplex.mixedForm i j k x =
-      (poly n S N).toHilbertComplex.mixedRHS i j f) ∧
-    ∀ x : (poly n S N).toHilbertComplex.MixedSpace i j,
-      (poly n S N).toHilbertComplex.mixedForm i j k x =
-        (poly n S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  refine (polySmoothingEstimates_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
-  exact ⟨16 * (2 * C * 1) ^ 2, fun hij hjk N f =>
-    ⟨hE.existsUnique_mixed hij hjk N f, fun _ hx => hE.norm_le_of_mixed hij hjk N hx⟩⟩
+/-- **The conforming family of the smoothing estimates `hE` with vanishing boundary DOFs**, a
+conforming family of `H̊Λ(Q)`. -/
+def PolySmoothingEstimatesMin.family (hE : PolySmoothingEstimatesMin n S p C) :
+    ConformingFamily (complexMin n) ℕ :=
+  .ofSmoothing atTop (polyMin n S) (fun N => polySmoothedMin n S N (p N) (hE.isMinimal N))
+    (by norm_num : (1 / 2 : ℝ) < 1) hE.close hE.bound (tendsto_infDist_polyMin S)
 
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian with vanishing
-traces** for every admissible sequence, unconditionally. -/
-theorem mixed_wellPosed_polyMin (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
-    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ)
-    (f : (polyMin n S N).V j),
-    (∃! x, (polyMin n S N).toHilbertComplex.mixedForm i j k x =
-      (polyMin n S N).toHilbertComplex.mixedRHS i j f) ∧
-    ∀ x : (polyMin n S N).toHilbertComplex.MixedSpace i j,
-      (polyMin n S N).toHilbertComplex.mixedForm i j k x =
-        (polyMin n S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ := by
-  refine (polySmoothingEstimatesMin_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
-  exact ⟨16 * (2 * C * 1) ^ 2, fun hij hjk N f =>
-    ⟨hE.existsUnique_mixed hij hjk N f, fun _ hx => hE.norm_le_of_mixed hij hjk N hx⟩⟩
+variable (n)
 
-/-- **Quasi-optimality of the mixed method** for the complexes of every admissible sequence
-([AFW2010], Thm 3.9), unconditionally: there are a constant `K` and weights `μ_j(N) → 0` (the
-harmonic gaps) with
-`‖σ - σₕ‖ + ‖u - uₕ‖ + ‖q - qₕ‖ ≤ K (E(σ) + E(u) + E(q) + μ_j(N) E(P_𝔅 u))`. -/
-theorem mixed_quasiOptimal_poly (S : PolySeq) :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
-    {u : (complex n).domainSpace j} {q : (complex n).harmonic j},
-    (complex n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (poly n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).fst‖ +
-        ‖u - (poly n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (poly n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
-            (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((poly n S N).domainSub i) +
-        Metric.infDist u ((poly n S N).domainSub j) +
-        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((poly n S N).harmonicW j) +
-        μ j N * Metric.infDist ((complex n).boundaryPart j ((complex n).domainIncl j u))
-          ((poly n S N).domainSub j)) := by
-  refine (polySmoothingEstimates_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
-  exact ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C),
-    fun j N => (hE.proj N).harmonicGap j, fun j => hE.tendsto_harmonicGap j,
-    fun hij hjk _ _ _ _ hs N => hE.norm_sub_le_infDist hij hjk hs N⟩
+/-- **The finite element complexes of an admissible sequence `S` on the Freudenthal meshes of the
+cube** (every `P_rΛ`, `P_r⁻Λ` and mixed sequence) with the smoothed projections
+(`polySmoothingEstimates_exists`), a conforming family of `HΛ(Q)`. -/
+def polyFamily (S : PolySeq) : ConformingFamily (complex n) ℕ :=
+  (polySmoothingEstimates_exists (n := n) S).choose_spec.choose_spec.family
 
-/-- **Quasi-optimality of the mixed method with vanishing traces** for the complexes of every
-admissible sequence, unconditionally. -/
-theorem mixed_quasiOptimal_polyMin (S : PolySeq) :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
-    {u : (complexMin n).domainSpace j} {q : (complexMin n).harmonic j},
-    (complexMin n).IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (polyMin n S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).fst‖ +
-        ‖u - (polyMin n S N).embD j (Subcomplex.CochainProjection.discreteMixedSolution
-          (polyMin n S N) hij hjk f).snd.fst‖ +
-        ‖(q : L2F ℝ (cubeDomain n) (formIdx n j)) -
-          (((Subcomplex.CochainProjection.discreteMixedSolution (polyMin n S N) hij hjk f).snd.snd :
-            (polyMin n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
-      K * (Metric.infDist σ ((polyMin n S N).domainSub i) +
-        Metric.infDist u ((polyMin n S N).domainSub j) +
-        Metric.infDist (q : L2F ℝ (cubeDomain n) (formIdx n j)) ((polyMin n S N).harmonicW j) +
-        μ j N * Metric.infDist ((complexMin n).boundaryPart j ((complexMin n).domainIncl j u))
-          ((polyMin n S N).domainSub j)) := by
-  refine (polySmoothingEstimatesMin_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
-  exact ⟨(1 + 144 * (2 * C * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 2 * C),
-    fun j N => (hE.proj N).harmonicGap j, fun j => hE.tendsto_harmonicGap j,
-    fun hij hjk _ _ _ _ hs N => hE.norm_sub_le_infDist hij hjk hs N⟩
+/-- **The finite element complexes of `S` with vanishing boundary DOFs**, a conforming family of
+`H̊Λ(Q)`. -/
+def polyFamilyMin (S : PolySeq) : ConformingFamily (complexMin n) ℕ :=
+  (polySmoothingEstimatesMin_exists (n := n) S).choose_spec.choose_spec.family
+
+variable {n}
+
+@[simp] theorem polyFamily_V (S : PolySeq) : (polyFamily n S).V = poly n S := rfl
+
+@[simp] theorem polyFamilyMin_V (S : PolySeq) : (polyFamilyMin n S).V = polyMin n S := rfl
+
+end Family
 
 /-! ### The rows of Tables 5.1 and 6.1 with one smoother -/
 
@@ -1107,7 +810,9 @@ theorem tableRows_uniform_cochainProjection :
   obtain ⟨-, ⟨C₁, h₁⟩, ⟨C₂, h₂⟩⟩ := h γ₀ hγ₀ le_rfl
   have hT := h₁.mono (le_max_left C₁ C₂)
   have hB := h₂.mono (le_max_right C₁ C₂)
-  exact ⟨_, max C₁ C₂, hT, hB, hT.norm_proj_le, hT.isGraphBounded_proj, hB.norm_proj_le,
-    hB.isGraphBounded_proj, hT.tendsto_harmonicGap, hB.tendsto_harmonicGap⟩
+  exact ⟨_, max C₁ C₂, hT, hB, hT.norm_proj_le,
+    fun N i j => (hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N i) (hT.norm_proj_le N j), hB.norm_proj_le,
+    fun N i j => (hB.proj N).isGraphBounded_of_norm_le (hB.norm_proj_le N i) (hB.norm_proj_le N j),
+    fun _ => hT.family.tendsto_harmonicGap, fun _ => hB.family.tendsto_harmonicGap⟩
 
 end Feec.Models.Cube.FEM

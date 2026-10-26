@@ -33,6 +33,10 @@ outside `Ω`), and with the density of smooth forms the graph-norm density of th
 * `exists_tendstoUniformlyOn_window_poly`: convergence of the semi-discrete Hodge wave equation on
   every window ([QuennevilleBelair2015], Thm 4.14), and its rate `O(h_N^{s+1})` for smooth
   solutions (`norm_sub_le_window_poly_smooth`, `norm_sub_le_window_poly_smooth_of_polyOrderAt`);
+* **`eventually_finrank_cohomology_poly`**: the discrete cohomology is the cohomology of `HΛ(Ω)`
+  for `N` large ([AFW2010], Thm 3.4), and the same for the Whitney complexes
+  (`eventually_finrank_cohomology_whitney`), under closed range of `HΛ(Ω)` and
+  finite-dimensional harmonic forms;
 * the same with vanishing boundary DOFs (`..._polyMin`, `..._windowMin_poly...`).
 
 **Remaining hypotheses.** On a general star-shaped domain the only hypothesis is the Poincaré
@@ -53,9 +57,10 @@ and `_min`), and so are the harmonic finite-dimensionality instances; hence
 **`Parallelepiped.mixed_rate_poly_general`** and its companions
 (`Parallelepiped.discretePoincare_poly_general`, `Parallelepiped.mixed_wellPosed_poly_general`,
 `Parallelepiped.mixed_quasiOptimal_poly_general`,
-`Parallelepiped.mixed_rate_poly_general_of_polyOrderAt`, and the instance
-`Parallelepiped.mixed_rate_lagrangeP2_general`: order `h²` of the bottom row on `1`-forms) hold
-unconditionally; with vanishing boundary DOFs `Parallelepiped.hasPoincareMin` discharges the
+`Parallelepiped.mixed_rate_poly_general_of_polyOrderAt`, the instance
+`Parallelepiped.mixed_rate_lagrangeP2_general`: order `h²` of the bottom row on `1`-forms, and the
+discrete cohomology `Parallelepiped.eventually_finrank_cohomology_poly_general`:
+`dim Hᵏ(Vₕ) = [k = 0]`, `dim Hᵏ(V̊ₕ) = [k = n]` for `N` large) hold unconditionally; with vanishing boundary DOFs `Parallelepiped.hasPoincareMin` discharges the
 hypothesis of the `Min` theorems.
 
 **Non-vacuity.** The cube with its Freudenthal meshes (`CubeWitness.meshFamily`) and every
@@ -66,7 +71,7 @@ the hypotheses for the bottom row: `CubeWitness.mixed_rate_lagrangeP2`,
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (Thm 3.6), Thm 3.8, Thm 3.9, §5.4 (smoothed projections)
+  §3.3 (Thm 3.4, 3.6), Thm 3.8, Thm 3.9, §5.4 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1–3.2
   (shape-regular families, interpolation error)
@@ -1029,6 +1034,42 @@ theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
     ⟨F.exists_mem_windowMin_poly_le S hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       F.exists_mem_windowMin_poly_le S hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
 
+/-! #### Discrete cohomology -/
+
+/-- **The Whitney complexes have the cohomology of `HΛ(Ω)`** for `N` large ([AFW2010], Thm 3.4),
+when `HΛ(Ω)` has closed range at `k` and finite-dimensional harmonic forms. -/
+theorem eventually_finrank_cohomology_whitney [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)]
+    {k : ℤ} (hk : D.complex.ClosedRangeAt k) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((F.whitney N).toHilbertComplex.cohomology k) =
+      Module.finrank ℝ (D.complex.cohomology k) :=
+  F.smoothedProjection_uniform.eventually_finrank_cohomology_eq hk
+
+/-- **The Whitney complexes with vanishing boundary DOFs have the cohomology of `H̊Λ(Ω)`** for
+`N` large. -/
+theorem eventually_finrank_cohomology_whitneyMin
+    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] {k : ℤ}
+    (hk : D.complexMin.ClosedRangeAt k) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((F.whitneyMin N).toHilbertComplex.cohomology k) =
+      Module.finrank ℝ (D.complexMin.cohomology k) :=
+  F.smoothedProjection_uniformMin.eventually_finrank_cohomology_eq hk
+
+/-- **The complexes of every admissible sequence `S` have the cohomology of `HΛ(Ω)`** for `N`
+large ([AFW2010], Thm 3.4, §5.6). -/
+theorem eventually_finrank_cohomology_poly [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)]
+    {k : ℤ} (hk : D.complex.ClosedRangeAt k) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((F.poly S N).toHilbertComplex.cohomology k) =
+      Module.finrank ℝ (D.complex.cohomology k) :=
+  (F.polySmoothedProjection_uniform S).eventually_finrank_cohomology_eq hk
+
+/-- **The complexes of `S` with vanishing boundary DOFs have the cohomology of `H̊Λ(Ω)`** for `N`
+large. -/
+theorem eventually_finrank_cohomology_polyMin
+    [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] {k : ℤ}
+    (hk : D.complexMin.ClosedRangeAt k) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((F.polyMin S N).toHilbertComplex.cohomology k) =
+      Module.finrank ℝ (D.complexMin.cohomology k) :=
+  (F.polySmoothedProjection_uniformMin S).eventually_finrank_cohomology_eq hk
+
 end MeshFamily
 
 /-! ### Parallelepipeds: every quasi-uniform shape-regular mesh family, with no hypothesis -/
@@ -1214,6 +1255,25 @@ theorem mixed_rate_lagrangeP2_general :
       K * L * (F.mesh N).meshSize ^ (1 + 1) :=
   F.mixed_rate_poly_of_polyOrderAt PolySeq.lagrangeP2 (hasPoincare A hA b)
     FEM.lagrangeP2_polyOrderAt_zero FEM.lagrangeP2_polyOrderAt_one rfl rfl
+
+/-- **The higher-order complexes of every quasi-uniform shape-regular mesh family of a
+parallelepiped have the cohomology of `HΛ(Ω)`** for `N` large ([AFW2010], Thm 3.4), with no
+hypothesis: `dim Hᵏ(Vₕ) = [k = 0]`. -/
+theorem eventually_finrank_cohomology_poly_general (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((F.poly S N).toHilbertComplex.cohomology k) =
+      if k = 0 then 1 else 0 :=
+  (F.eventually_finrank_cohomology_poly S (Feec.Models.Parallelepiped.closedRangeAt A hA b k)).mono
+    fun _ h => h.trans (Feec.Models.Parallelepiped.finrank_cohomology A hA b k)
+
+/-- **The higher-order complexes with vanishing boundary DOFs of every quasi-uniform
+shape-regular mesh family of a parallelepiped have the cohomology of `H̊Λ(Ω)`** for `N` large:
+`dim Hᵏ(V̊ₕ) = [k = n]`. -/
+theorem eventually_finrank_cohomology_polyMin_general (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((F.polyMin S N).toHilbertComplex.cohomology k) =
+      if k = n then 1 else 0 :=
+  (F.eventually_finrank_cohomology_polyMin S
+    (Feec.Models.Parallelepiped.closedRangeAt_min A hA b k)).mono
+    fun _ h => h.trans (Feec.Models.Parallelepiped.finrank_cohomology_min A hA b k)
 
 end Parallelepiped
 

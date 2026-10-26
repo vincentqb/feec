@@ -20,6 +20,9 @@ gap between `ℌ` and `ℌₕ`.
 * `CochainProjection.norm_sub_starProjection_harmonicW_le`: the **harmonic gap**
   `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖` for `q ∈ ℌ`.
 
+The isomorphism `Hⁱ(H) ≅ Hⁱ(Vₕ)` induced by a cochain projection is in
+`Feec.HilbertComplex.Approximation.DiscreteCohomology`.
+
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],

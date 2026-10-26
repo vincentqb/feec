@@ -49,7 +49,7 @@ The isomorphism criterion itself (`CochainProjection.cohomologyMap_injective`) n
 * **`CochainProjection.eventually_finrank_cohomology_eq`**,
   `CochainProjection.eventually_finrank_harmonicW_eq`: along any filter on which the harmonic gap
   tends to zero.
-* **`ConformingFamily.eventually_bijective_cohomologyMap`**,
+* `ConformingFamily.tendsto_harmonicGap`, **`ConformingFamily.eventually_bijective_cohomologyMap`**,
   `ConformingFamily.eventually_finrank_cohomology_eq`,
   `ConformingFamily.eventually_finrank_harmonicW_eq`: every conforming family.
 
@@ -318,17 +318,19 @@ namespace ConformingFamily
 
 variable {κ : Type*} (F : ConformingFamily H κ) {i : ι} [FiniteDimensional 𝕜 (H.harmonic i)]
 
+/-- **The harmonic gap of a conforming family tends to zero** where `ℌⁱ` is finite-dimensional
+(`CochainProjection.tendsto_harmonicGap`). [AFW2010], Thm 3.5 -/
+theorem tendsto_harmonicGap : Tendsto (fun h => (F.π h).harmonicGap i) F.l (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap F.π (zero_le_one.trans F.one_le_projBound)
+    (fun h => F.norm_π_le h i) fun q _ => F.approx i q
+
 /-- For a conforming family and a finite-dimensional `ℌⁱ`, the strict gap
 `‖q - πₕ q‖ < ‖q‖` on `ℌⁱ \ 0` holds eventually: the harmonic gap tends to zero
-(`CochainProjection.tendsto_harmonicGap`). [AFW2010], Thm 3.5 -/
+(`tendsto_harmonicGap`). [AFW2010], Thm 3.5 -/
 theorem eventually_norm_sub_π_lt :
-    ∀ᶠ h in F.l, ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - (F.π h).π i q‖ < ‖q‖ := by
-  obtain ⟨C, hC⟩ := F.bound_π
-  have hπ : ∀ h x, ‖(F.π h).π i x‖ ≤ max C 0 * ‖x‖ := fun h x =>
-    (hC h i x).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-  exact Subcomplex.CochainProjection.eventually_norm_sub_π_lt F.π hπ
-    (Subcomplex.CochainProjection.tendsto_harmonicGap F.π (le_max_right _ _) hπ
-      fun q _ => F.approx i q)
+    ∀ᶠ h in F.l, ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - (F.π h).π i q‖ < ‖q‖ :=
+  Subcomplex.CochainProjection.eventually_norm_sub_π_lt F.π (fun h => F.norm_π_le h i)
+    F.tendsto_harmonicGap
 
 /-- **A conforming family eventually has the cohomology of the complex**: if `H` has closed range
 at `i` and `ℌⁱ` is finite-dimensional, the projections `πₕ` eventually induce isomorphisms

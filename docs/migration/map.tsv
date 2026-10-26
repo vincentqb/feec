@@ -5240,3 +5240,9 @@ Feec.isClassicalSolution_of_neg	-	deleted-helper
 Feec.lemma_4_12_sharp	le_add_half_integral_of_sq_deriv_le_mul_sharp	generalize
 Feec.norm_primitive_sub_le	-	deleted-helper
 Feec.vskw	Feec.MatrixSymbol.vskw	generalize
+Feec.Models.Parallelepiped.HasUniformProj	Feec.HilbertComplex.Subcomplex.HasUniformProj	generalize
+Feec.Models.Parallelepiped.discretePoincare_of	Feec.HilbertComplex.Subcomplex.HasUniformProj.discretePoincare	generalize
+Feec.Models.Parallelepiped.mixed_wellPosed_of	Feec.HilbertComplex.Subcomplex.HasUniformProj.mixed_wellPosed	generalize
+Feec.Models.Parallelepiped.mixed_quasiOptimal_of	Feec.HilbertComplex.Subcomplex.HasUniformProj.mixed_quasiOptimal	generalize
+Feec.Models.Parallelepiped.mixed_rate_of	Feec.HilbertComplex.Subcomplex.CochainProjection.norm_sub_le_rate	generalize
+Feec.Models.Parallelepiped.infDist_domainSub_le_two_mul	Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_two_mul	generalize

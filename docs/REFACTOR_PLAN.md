@@ -268,7 +268,8 @@ Feec/
 │   ├── Dirac.lean (dirac = d+d†, wave = d−d†)  HodgeLaplacian.lean  Mixed.lean  HodgeWave.lean
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,DiscreteCohomology,MixedError,SemidiscreteWave}.lean
-│   │   Approximation/ConformingFamily.lean -- AFW §3.3 data: subcomplexes, bounded cochain projections, windows
+│   │   Approximation/ConformingFamily.lean -- AFW §3.3 data: subcomplexes, bounded cochain projections, windows, Jackson estimates
+│   │   Approximation/StaticFEEC.lean -- the static FEEC theorem staticFEEC (StaticVerdict: AFW Thm 3.4–3.9), rates, uniform projections
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
 │   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean

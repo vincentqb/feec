@@ -628,7 +628,7 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
 /-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
 complexes of `S`, when the harmonic forms of `HΛ(Ω)` are finite-dimensional. -/
 theorem polySmoothedProjection_uniform [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
-    Parallelepiped.HasUniformProj D.complex (F.poly S) := by
+    Subcomplex.HasUniformProj atTop (F.poly S) := by
   obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProj S
   choose π hb hg using hK
   exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
@@ -685,7 +685,7 @@ theorem mixed_quasiOptimal_poly {cP : ℝ} (hP : HasPoincare D.complex cP)
         Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.poly S N).harmonicW j) +
         μ j N * Metric.infDist (D.complex.boundaryPart j (D.complex.domainIncl j u))
           ((F.poly S N).domainSub j)) :=
-  Parallelepiped.mixed_quasiOptimal_of hP (F.polySmoothedProjection_uniform S)
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (F.polySmoothedProjection_uniform S)
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), degreewise form, under the Poincaré inequality of
@@ -716,15 +716,16 @@ theorem mixed_rate_poly_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex cP
   refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
     (2 * (F.polyInterpBound S i + F.polyInterpBound S j) * (3 + 2 * K)),
     fun hs L hL0 hσ hu hb hq N => ?_⟩
-  have h := Parallelepiped.mixed_rate_of hP π hK1 hπg
+  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
+    (hπg N j k)
     (Reg := fun l x => D.IsCsForm s l L x ∧ FEM.PolyOrderAt n S s l)
     (B := fun l => F.polyInterpBound S l * L)
     (fun l => mul_nonneg (F.polyInterpBound_nonneg S l) hL0)
-    (r := fun N => (F.mesh N).meshSize ^ (s + 1))
-    (fun N => pow_nonneg (F.meshSize_pos N).le _)
-    (fun N l x hx => by
+    (r := (F.mesh N).meshSize ^ (s + 1))
+    (pow_nonneg (F.meshSize_pos N).le _)
+    (fun l x hx => by
       obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_poly_le_of_isCsForm S hx.2 hx.1 hL0 N
-      exact ⟨v, hv, h1, h2⟩) hij hjk hs ⟨hσ, hSi⟩ ⟨hu, hSj⟩ ⟨hb, hSj⟩ ⟨hq, hSj⟩ N
+      exact ⟨v, hv, h1, h2⟩) hs ⟨hσ, hSi⟩ ⟨hu, hSj⟩ ⟨hb, hSj⟩ ⟨hq, hSj⟩
   refine h.trans (le_of_eq ?_)
   ring
 
@@ -854,7 +855,7 @@ complexes of `S` with vanishing boundary DOFs, when the harmonic forms of `H̊Λ
 finite-dimensional. -/
 theorem polySmoothedProjection_uniformMin
     [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
-    Parallelepiped.HasUniformProj D.complexMin (F.polyMin S) := by
+    Subcomplex.HasUniformProj atTop (F.polyMin S) := by
   obtain ⟨K, hK1, hK⟩ := F.exists_uniform_polyProjMin S
   choose π hb hg using hK
   exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
@@ -914,7 +915,7 @@ theorem mixed_quasiOptimal_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP)
         Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.polyMin S N).harmonicW j) +
         μ j N * Metric.infDist (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))
           ((F.polyMin S N).domainSub j)) :=
-  Parallelepiped.mixed_quasiOptimal_of hP (F.polySmoothedProjection_uniformMin S)
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP (F.polySmoothedProjection_uniformMin S)
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing boundary
 DOFs for smooth solutions**, degreewise form, under the Poincaré inequality of `H̊Λ(Ω)`, for
@@ -943,15 +944,16 @@ theorem mixed_rate_polyMin_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex
   refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
     (2 * (F.polyInterpBound S i + F.polyInterpBound S j) * (3 + 2 * K)),
     fun hs L hL0 hσ hu hb hq N => ?_⟩
-  have h := Parallelepiped.mixed_rate_of hP π hK1 hπg
+  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
+    (hπg N j k)
     (Reg := fun l x => D.IsCsFormMin s l L x ∧ FEM.PolyOrderAt n S s l)
     (B := fun l => F.polyInterpBound S l * L)
     (fun l => mul_nonneg (F.polyInterpBound_nonneg S l) hL0)
-    (r := fun N => (F.mesh N).meshSize ^ (s + 1))
-    (fun N => pow_nonneg (F.meshSize_pos N).le _)
-    (fun N l x hx => by
+    (r := (F.mesh N).meshSize ^ (s + 1))
+    (pow_nonneg (F.meshSize_pos N).le _)
+    (fun l x hx => by
       obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_polyMin_le_of_isCsFormMin S hx.2 hx.1 hL0 N
-      exact ⟨v, hv, h1, h2⟩) hij hjk hs ⟨hσ, hSi⟩ ⟨hu, hSj⟩ ⟨hb, hSj⟩ ⟨hq, hSj⟩ N
+      exact ⟨v, hv, h1, h2⟩) hs ⟨hσ, hSi⟩ ⟨hu, hSj⟩ ⟨hb, hSj⟩ ⟨hq, hSj⟩
   refine h.trans (le_of_eq ?_)
   ring
 

@@ -31,7 +31,8 @@ and the second half of the gap estimate, `norm_sub_starProjection_harmonic_le`).
 ## Main definitions
 
 * `Subcomplex.embD`: the isometric embedding `Vₕⁱ → Vⁱ` of the discrete domain spaces.
-* `CochainProjection.IsGraphBounded`: the graph-norm bound `‖π x‖_V ≤ C ‖x‖_V`.
+* `CochainProjection.IsGraphBounded`: the graph-norm bound `‖π x‖_V ≤ C ‖x‖_V`, implied by the
+  same bound in `W` (`CochainProjection.isGraphBounded_of_norm_le`).
 * `CochainProjection.harmonicGap`: `μ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - π q‖`.
 * `CochainProjection.discreteMixedSolution`: `(σₕ, uₕ, pₕ)`, the solution of the mixed problem
   of the discrete complex with data `P_{Vₕ} f`.
@@ -147,6 +148,17 @@ variable {S} (P : S.CochainProjection)
 def IsGraphBounded (i j : ι) (C : ℝ) : Prop :=
   ∀ x : (H.d i j).domain, ‖P.π i x‖ ^ 2 +
     ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖ ^ 2 ≤ C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)
+
+/-- **A projection bounded in `W` is bounded in the graph norm**, with the same constant: `π`
+commutes with `d`, so `‖d π x‖ = ‖π d x‖ ≤ C ‖d x‖`. -/
+theorem isGraphBounded_of_norm_le {i j : ι} {C : ℝ} (hπi : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖)
+    (hπj : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) : P.IsGraphBounded i j C := fun x => by
+  have h1 := hπi x
+  have h2 := hπj (H.d i j x)
+  rw [← P.comm] at h2
+  have := norm_nonneg (P.π i x)
+  have := norm_nonneg (H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩)
+  nlinarith
 
 /-- `‖π (ι x)‖ ≤ C ‖x‖_V`. -/
 theorem norm_π_domainIncl_le {i j : ι} (hij : c.Rel i j) {C : ℝ} (hC : 0 ≤ C)

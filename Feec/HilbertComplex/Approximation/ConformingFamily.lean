@@ -29,7 +29,11 @@ parallelepipeds and domains star-shaped with respect to a ball) is one
 ## Main definitions
 
 * `Feec.HilbertComplex.ConformingFamily H κ`; the constructor `ConformingFamily.ofExists` from the
-  existence of uniformly bounded cochain projections.
+  existence of uniformly bounded cochain projections; `ConformingFamily.projBound`, a uniform bound
+  `≥ 1` of the projections.
+* `ConformingFamily.Jackson`: a Jackson estimate for `F`, data over the family (a mesh size
+  `hₕ → 0` and classes `Reg s` approximated at the orders `hₕ^{ord s}`), the hypothesis of the rates
+  of the static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.rate`).
 * `Subcomplex.window`, `Subcomplex.CochainProjection.window`, `ConformingFamily.window`: the window
   `Vₕᵃ → ⋯ → Vₕ^{a+m-1}` of a family of a complex on `ComplexShape.up α` (`α = ℕ, ℤ`), a family of
   the window `H.window a m`.
@@ -42,10 +46,10 @@ parallelepipeds and domains star-shaped with respect to a ball) is one
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (the approximation property, bounded cochain projections, in `V`), §5.5 (bounded smoothed
-  projections in `W`)
+  §3.3 (the approximation property, bounded cochain projections, in `V`), §3.4 (rates from
+  approximation estimates), §5.5 (bounded smoothed projections in `W`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5, Ch. 7 (rates)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   §3 (subcomplexes with bounded cochain projections)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -119,6 +123,38 @@ variable (F : ConformingFamily H κ)
 theorem eventually_exists_lt (i : ι) (w : W i) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∃ v ∈ (F.V h).V i, ‖w - v‖ < ε :=
   (tendsto_infDist_submodule_iff (fun h => (F.V h).V i) w).1 (F.approx i w) ε hε
+
+/-- A uniform bound `C ≥ 1` of the cochain projections in `W` (`norm_π_le`); `C ≥ 1` is the form
+of the constants of [AFW2010], §3.4. -/
+def projBound : ℝ := max F.bound_π.choose 1
+
+theorem one_le_projBound : 1 ≤ F.projBound := le_max_right _ _
+
+theorem norm_π_le (h : κ) (i : ι) (x : W i) : ‖(F.π h).π i x‖ ≤ F.projBound * ‖x‖ :=
+  (F.bound_π.choose_spec h i x).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
+
+/-- **A Jackson estimate** for a conforming family `F` (cf. [AFW2010], §3.4; [Arnold2018], Ch. 7): a
+mesh size `hₕ → 0` and, for every regularity index `s : ρ`, a class `Reg s` of forms with a bound
+`L` (`Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L`) approximated in `Vₕⁱ` in the graph
+norm at the order `hₕ^{ord s}`: `‖x - v‖, ‖d (x - v)‖ ≤ B_{s,i} L hₕ^{ord s}`. It is data over
+`F`, not a strengthening of it: one family carries Jackson estimates for several classes (`C²`
+forms at order `1`, `C^{s+2}` forms at order `s + 1`, …). -/
+structure Jackson (ρ : Type*) where
+  /-- the mesh size -/
+  meshSize : κ → ℝ
+  meshSize_nonneg : ∀ h, 0 ≤ meshSize h
+  tendsto_meshSize : Tendsto meshSize F.l (𝓝 0)
+  /-- `Reg s i L x`: the form `x ∈ Wⁱ` is `s`-regular with bound `L` -/
+  Reg : ρ → ∀ i, ℝ → W i → Prop
+  /-- the order of approximation of the class `s` -/
+  ord : ρ → ℕ
+  /-- the constants of the Jackson estimate -/
+  B : ρ → ι → ℝ
+  B_nonneg : ∀ s i, 0 ≤ B s i
+  jackson : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
+    ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
+      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
+        B s i * (L * meshSize h ^ ord s)
 
 end ConformingFamily
 

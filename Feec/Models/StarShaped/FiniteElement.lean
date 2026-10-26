@@ -1958,7 +1958,7 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
 /-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
 Whitney complexes, when the harmonic forms of `HΛ(Ω)` are finite-dimensional. -/
 theorem smoothedProjection_uniform [∀ j, FiniteDimensional ℝ (D.complex.harmonic j)] :
-    Parallelepiped.HasUniformProj D.complex F.whitney := by
+    Subcomplex.HasUniformProj atTop F.whitney := by
   obtain ⟨K, hK1, hK⟩ := F.exists_uniform_proj
   choose π hb hg using hK
   exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
@@ -2014,7 +2014,7 @@ theorem mixed_quasiOptimal {cP : ℝ} (hP : HasPoincare D.complex cP)
         Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.whitney N).harmonicW j) +
         μ j N * Metric.infDist (D.complex.boundaryPart j (D.complex.domainIncl j u))
           ((F.whitney N).domainSub j)) :=
-  Parallelepiped.mixed_quasiOptimal_of hP F.smoothedProjection_uniform
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP F.smoothedProjection_uniform
 
 /-- **`O(h)` convergence of the mixed method for `C²` solutions** ([AFW2010], Thm 3.9;
 [Arnold2018], Ch. 7), under the Poincaré inequality of `HΛ(Ω)`: if `σ`, `u`, `P_𝔅 u` and the
@@ -2041,13 +2041,14 @@ theorem mixed_rate_smooth {cP : ℝ} (hP : HasPoincare D.complex cP) {i j k : �
   choose π hπb hπg using hK
   refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
     (2 * (F.interpBound i + F.interpBound j) * (3 + 2 * K)), fun N => ?_⟩
-  have h := Parallelepiped.mixed_rate_of hP π hK1 hπg (Reg := fun l x => D.IsC2Form l L x)
+  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
+    (hπg N j k) (Reg := fun l x => D.IsC2Form l L x)
     (B := fun l => F.interpBound l * L)
-    (fun l => mul_nonneg (F.interpBound_nonneg l) hL0) (r := fun N => (F.mesh N).meshSize)
-    (fun N => (F.meshSize_pos N).le)
-    (fun N l x hx => by
+    (fun l => mul_nonneg (F.interpBound_nonneg l) hL0) (r := (F.mesh N).meshSize)
+    (F.meshSize_pos N).le
+    (fun l x hx => by
       obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_whitney_le_of_isC2Form hx hL0 N
-      exact ⟨v, hv, h1, h2⟩) hij hjk hs hσ hu hb hq N
+      exact ⟨v, hv, h1, h2⟩) hs hσ hu hb hq
   refine h.trans (le_of_eq ?_)
   ring
 
@@ -2070,7 +2071,7 @@ theorem exists_tendstoUniformlyOn_window (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
 /-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
 Whitney complexes, when the harmonic forms of `H̊Λ(Ω)` are finite-dimensional. -/
 theorem smoothedProjection_uniformMin [∀ j, FiniteDimensional ℝ (D.complexMin.harmonic j)] :
-    Parallelepiped.HasUniformProj D.complexMin F.whitneyMin := by
+    Subcomplex.HasUniformProj atTop F.whitneyMin := by
   obtain ⟨K, hK1, hK⟩ := F.exists_uniform_projMin
   choose π hb hg using hK
   exact ⟨K, π, hK1, hb, hg, fun j => Subcomplex.CochainProjection.tendsto_harmonicGap π
@@ -2126,7 +2127,7 @@ theorem mixed_quasiOptimalMin {cP : ℝ} (hP : HasPoincare D.complexMin cP)
         Metric.infDist (q : L2F ℝ D.Ω (formIdx n j)) ((F.whitneyMin N).harmonicW j) +
         μ j N * Metric.infDist (D.complexMin.boundaryPart j (D.complexMin.domainIncl j u))
           ((F.whitneyMin N).domainSub j)) :=
-  Parallelepiped.mixed_quasiOptimal_of hP F.smoothedProjection_uniformMin
+  Subcomplex.HasUniformProj.mixed_quasiOptimal hP F.smoothedProjection_uniformMin
 
 /-- **`O(h)` convergence of the mixed method for `C²` solutions** ([AFW2010], Thm 3.9;
 [Arnold2018], Ch. 7), under the Poincaré inequality of `H̊Λ(Ω)`: if `σ`, `u`, `P_𝔅 u` and the
@@ -2153,13 +2154,14 @@ theorem mixed_rate_smoothMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {i j 
   choose π hπb hπg using hK
   refine ⟨(1 + 144 * (K * √(1 + cP ^ 2)) ^ 2) * (1 + K) *
     (2 * (F.interpBound i + F.interpBound j) * (3 + 2 * K)), fun N => ?_⟩
-  have h := Parallelepiped.mixed_rate_of hP π hK1 hπg (Reg := fun l x => D.IsC2FormMin l L x)
+  have h := (π N).norm_sub_le_rate hij hjk hK1 (hP i j hij) (hP j k hjk) (hπg N i j)
+    (hπg N j k) (Reg := fun l x => D.IsC2FormMin l L x)
     (B := fun l => F.interpBound l * L)
-    (fun l => mul_nonneg (F.interpBound_nonneg l) hL0) (r := fun N => (F.mesh N).meshSize)
-    (fun N => (F.meshSize_pos N).le)
-    (fun N l x hx => by
+    (fun l => mul_nonneg (F.interpBound_nonneg l) hL0) (r := (F.mesh N).meshSize)
+    (F.meshSize_pos N).le
+    (fun l x hx => by
       obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_whitneyMin_le_of_isC2FormMin hx hL0 N
-      exact ⟨v, hv, h1, h2⟩) hij hjk hs hσ hu hb hq N
+      exact ⟨v, hv, h1, h2⟩) hs hσ hu hb hq
   refine h.trans (le_of_eq ?_)
   ring
 

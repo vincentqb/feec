@@ -138,6 +138,7 @@ public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 public import Feec.HilbertComplex.Approximation.DiscreteHodge
 public import Feec.HilbertComplex.Approximation.DissipFEEC
 public import Feec.HilbertComplex.Approximation.DissipGalerkin
+public import Feec.HilbertComplex.Approximation.FullyDiscrete
 public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
@@ -201,6 +202,7 @@ public import Feec.Instances.EinsteinBianchiGauss
 public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
+public import Feec.Instances.FullyDiscrete
 public import Feec.Instances.Maxwell
 public import Feec.Instances.MaxwellComplex
 public import Feec.Mesh.Basic

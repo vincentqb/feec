@@ -15,7 +15,11 @@ unbounded `A`. `θ = 1` is implicit Euler (`thetaStep_one`), `θ = 1/2` is Crank
 **`cayley_eq_thetaStep`**: the Cayley transform `cayley A s` of `Feec.TimeStepping.Cayley` is
 `thetaStep A (1/2) (2 s)` (`cayley_half_eq_thetaStep`: Crank–Nicolson with step `τ` is
 `r_{1/2}(τ A)`), and `isCNStep_iff_isThetaStep`; the `fem4gr` step without boundary degrees of
-freedom is the CN step (`isDirichletCNStep_top_iff`).
+freedom is the CN step (`isDirichletCNStep_top_iff`). The Crank–Nicolson results of
+`Feec.TimeStepping.Cayley` (`IsCNStep.norm_le`, `IsCNStep.norm_eq`, `IsCNStep.mem_of_isReducing`,
+`norm_cayley_apply`) are the `θ = 1/2` cases of `IsThetaStep.norm_le`, `IsThetaStep.norm_eq`,
+`thetaStep_mem_of_isReducing` and `norm_thetaStep_apply_eq` through these bridges; they stay in
+`Cayley`, which this file imports (and which the `fem4gr` three-field schemes use).
 
 ## Main results
 
@@ -56,7 +60,7 @@ factor.
 * [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
   (stability of A-stable rational approximations of semigroups)
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (A-stability, the θ-method, Padé approximations)
+  §IV.3 (A-stability, Padé approximations of the exponential)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.4 (resolvents of m-dissipative operators)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],

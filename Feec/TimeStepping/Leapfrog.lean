@@ -23,16 +23,15 @@ constants independent of `L`.
   `√(1 - c) ‖eₙ‖ ≤ √((1 + c) (‖e₀‖² + ‖e₁‖²)) + Σ_{k<n} ‖rₖ‖ / √(1 - c)`;
 * **`norm_leapfrog_sub_exp_le`** (second order): for leapfrog iterates `uₙ` and the exact flow
   `e^{tL} x`, at `t = n τ`,
-  `√(1 - c) ‖uₙ - e^{tL} x‖ ≤ √((1 + c) (‖u₀ - x‖² + ‖u₁ - e^{τL} x‖²)) + t τ² ‖L³ x‖ / (3 √(1 - c))`
+  `√(1 - c) ‖uₙ - e^{tL} x‖ ≤ √((1 + c) (‖u₀ - x‖² + ‖u₁ - e^{τL} x‖²))`
+  `+ t τ² ‖L³ x‖ / (3 √(1 - c))`
   (the residual of the exact orbit is `(e^{τL} - e^{-τL} - 2 τ L) e^{(k+1)τL} x = O(τ³ ‖L³ x‖)`,
   `norm_exp_sub_exp_neg_le`).
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–8
-  (stability of time discretizations, energy arguments)
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.2 (stability domains of explicit methods)
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
+  (leapfrog for second-order hyperbolic problems: discrete energy, CFL stability)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -50,7 +49,7 @@ variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpac
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 /-- `u` is a **leapfrog sequence** for `u' = L u` with time step `τ`:
-`uₙ₊₂ = uₙ + 2 τ L uₙ₊₁`. [HairerWanner1996], §IV.2 -/
+`uₙ₊₂ = uₙ + 2 τ L uₙ₊₁`. [Joly2003] -/
 def IsLeapfrog (L : X →L[𝕜] X) (τ : ℝ) (u : ℕ → X) : Prop :=
   ∀ n, u (n + 2) = u n + ((2 * τ : ℝ) : 𝕜) • L (u (n + 1))
 
@@ -121,7 +120,7 @@ private theorem le_add_of_sq_le {a b m : ℝ} (hb : 0 ≤ b) (hm : 0 ≤ m)
 
 /-- **Stability plus consistency for leapfrog** under the CFL condition `τ ‖L‖ ≤ c < 1`: for
 skew `L` and `eₙ₊₂ = eₙ + 2 τ L eₙ₊₁ + rₙ`,
-`√(1 - c) ‖eₙ‖ ≤ √((1 + c)(‖e₀‖² + ‖e₁‖²)) + Σ_{k<n} ‖rₖ‖ / √(1 - c)`. [Thomee2006], Ch. 7 -/
+`√(1 - c) ‖eₙ‖ ≤ √((1 + c)(‖e₀‖² + ‖e₁‖²)) + Σ_{k<n} ‖rₖ‖ / √(1 - c)`. [Joly2003] -/
 theorem norm_le_of_leapfrog (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ)
     (hc : τ * ‖L‖ ≤ c) (hc1 : c < 1) {e r : ℕ → X}
     (he : ∀ n, e (n + 2) = e n + ((2 * τ : ℝ) : 𝕜) • L (e (n + 1)) + r n) (n : ℕ) :
@@ -176,7 +175,7 @@ theorem norm_le_of_leapfrog (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 
 
 /-- **Stability of leapfrog** under the CFL condition `τ ‖L‖ ≤ c < 1`:
 `√(1 - c) ‖uₙ‖ ≤ √((1 + c)(‖u₀‖² + ‖u₁‖²))`, uniformly in `n` and in the skew `L`.
-[HairerWanner1996], §IV.2 -/
+[Joly2003] -/
 theorem norm_leapfrog_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ) (hc : τ * ‖L‖ ≤ c)
     (hc1 : c < 1) {u : ℕ → X} (hu : IsLeapfrog L τ u) (n : ℕ) :
     √(1 - c) * ‖u n‖ ≤ √((1 + c) * (‖u 0‖ ^ 2 + ‖u 1‖ ^ 2)) := by
@@ -230,7 +229,7 @@ theorem norm_exp_sub_exp_neg_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (h�
 /-- **Second-order convergence of leapfrog** under the CFL condition `τ ‖L‖ ≤ c < 1`: for skew
 `L`, leapfrog iterates `uₙ` and the exact flow, at `t = n τ`,
 `√(1 - c) ‖uₙ - e^{tL} x‖ ≤ √((1 + c)(‖u₀ - x‖² + ‖u₁ - e^{τL} x‖²)) + t τ² ‖L³ x‖ / (3 √(1 - c))`,
-uniformly in the skew `L`. [Thomee2006], Ch. 7; [HairerWanner1996], §IV.2 -/
+uniformly in the skew `L`. [Joly2003] -/
 theorem norm_leapfrog_sub_exp_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ)
     (hc : τ * ‖L‖ ≤ c) (hc1 : c < 1) {u : ℕ → X} (hu : IsLeapfrog L τ u) (x : X) (n : ℕ) :
     √(1 - c) * ‖u n - exp (((n * τ : ℝ) : 𝕜) • L) x‖ ≤
@@ -276,7 +275,8 @@ theorem norm_leapfrog_sub_exp_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (h
   have hsum : (∑ k ∈ range n, ‖r k‖) / √(1 - c) ≤ n * τ * τ ^ 2 * ‖(L ^ 3) x‖ / (3 * √(1 - c)) := by
     rw [div_le_div_iff₀ hs (by positivity)]
     have : ∑ k ∈ range n, ‖r k‖ ≤ n * (τ ^ 3 / 3 * ‖(L ^ 3) x‖) := by
-      calc ∑ k ∈ range n, ‖r k‖ ≤ ∑ _k ∈ range n, τ ^ 3 / 3 * ‖(L ^ 3) x‖ := sum_le_sum fun k _ => hr k
+      calc ∑ k ∈ range n, ‖r k‖ ≤ ∑ _k ∈ range n, τ ^ 3 / 3 * ‖(L ^ 3) x‖ :=
+            sum_le_sum fun k _ => hr k
         _ = _ := by rw [sum_const, card_range, nsmul_eq_mul]
     nlinarith
   linarith

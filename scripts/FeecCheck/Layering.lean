@@ -45,7 +45,10 @@ namespace FeecCheck.Layering
 * `Geometry → Algebra`: the Levi-Civita symbol and metrics;
 * `FiniteElement → Mesh`: finite elements live on simplicial meshes;
 * `TimeStepping → Semigroup`: one-step schemes approximate semigroups (resolvents of m-dissipative
-  generators, Taylor remainders of `e^{tL}`). -/
+  generators, Taylor remainders of `e^{tL}`);
+* `HilbertComplex → TimeStepping`: the fully discrete FEEC theorem
+  (`Feec.HilbertComplex.Approximation.FullyDiscrete`) composes the semidiscrete verdicts with
+  one-step schemes. -/
 def layerDeps : List (String × List String) :=
   [("ForMathlib", []),
    ("Mesh", []),
@@ -56,7 +59,7 @@ def layerDeps : List (String × List String) :=
    ("Evolution", ["Semigroup"]),
    ("Variational", ["Evolution"]),
    ("TimeStepping", ["Semigroup"]),
-   ("HilbertComplex", ["Variational"]),
+   ("HilbertComplex", ["Variational", "TimeStepping"]),
    ("Fourier", ["HilbertComplex", "Algebra"]),
    ("Domain", ["HilbertComplex", "Algebra"]),
    ("FiniteElement", ["Domain", "Mesh"]),

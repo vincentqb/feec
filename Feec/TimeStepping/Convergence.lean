@@ -21,7 +21,8 @@ layers.
   the Taylor remainder `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`
   (`norm_exp_sub_taylor_le`); a scheme `P` is **consistent of order `p` with constant `K`**
   (`IsConsistent`) if `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`, which follows from an expansion
-  `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀` (`isConsistent_of_eq`, `K = K₀ + 1/(p+1)!`);
+  `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀` (`isConsistent_of_eq`,
+  `K = K₀ + 1/(p+1)!`);
   and **`norm_pow_apply_sub_exp_le`**: stability and consistency of order `p` give the global error
   `‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`. All constants are independent of `L`: on finite
   element spaces they are uniform in the mesh.
@@ -30,12 +31,14 @@ layers.
 
 `ContinuousLinearMap.isMDissipative_toPMap_top`: a bounded dissipative operator on a Hilbert space
 is m-dissipative, so `Feec.TimeStepping.thetaStep` applies to it. For real `θ > 0` and `τ > 0`,
-`r_θ(τ L) = 1 + τ L + θ τ² W L²` with `W = (1 - θ τ L)⁻¹`, `‖W‖ ≤ 1` (`exists_thetaStep_apply_eq`); for
+`r_θ(τ L) = 1 + τ L + θ τ² W L²` with `W = (1 - θ τ L)⁻¹`, `‖W‖ ≤ 1`
+(`exists_thetaStep_apply_eq`); for
 `θ = 1/2`, `r_{1/2}(τ L) = 1 + τ L + τ²/2 L² + τ³/4 W L³` (`exists_thetaStep_half_apply_eq`). Hence
 (`isConsistent_thetaStep`, `isConsistent_thetaStep_half`) the θ-scheme is consistent of order `1`
 with `K = θ + 1/2`, and Crank–Nicolson of order `2` with `K = 5/12`, and:
 
-* **`norm_implicitEuler_pow_sub_exp_le`**: implicit Euler, `‖(1 - τ L)⁻ⁿ y - e^{tL} y‖ ≤ 3/2 t τ ‖L² y‖`;
+* **`norm_implicitEuler_pow_sub_exp_le`**: implicit Euler,
+  `‖(1 - τ L)⁻ⁿ y - e^{tL} y‖ ≤ 3/2 t τ ‖L² y‖`;
 * **`norm_cayley_pow_sub_exp_le`**: Crank–Nicolson (`cayley`),
   `‖cayley(L, τ/2)ⁿ y - e^{tL} y‖ ≤ 5/12 t τ² ‖L³ y‖`;
 * `norm_thetaStep_pow_sub_exp_le`: the θ-scheme, `re θ ≥ 1/2`, `‖·‖ ≤ (θ + 1/2) t τ ‖L² y‖`;
@@ -43,6 +46,14 @@ with `K = θ + 1/2`, and Crank–Nicolson of order `2` with `K = 5/12`, and:
 at `t = n τ`, for every bounded dissipative `L`, the rate of [BrennerThomee1979] (smooth data).
 `thetaStep_mem_of_mapsTo`: a closed subspace `K` with `L K ⊆ K` is kept by the θ-scheme (discrete
 constraint propagation, for instance for a discrete Gauss law).
+
+The constants come from bounding the two remainders separately and are not sharp: the leading
+error constant of Crank–Nicolson is `1/12` (`e^z - r_{1/2}(z) = -z³/12 + O(z⁴)`), not `5/12`.
+
+**Smoothing** (`timeAvg`, `norm_pow_timeAvg_iterate_le`, `norm_timeAvg_iterate_sub_le`): the time
+average `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds` satisfies `‖Lᵏ A_δᵏ y‖ ≤ (2/δ)ᵏ ‖y‖` and
+`‖A_δᵏ y - y‖ ≤ k sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L`; it turns the rate for smooth
+data into convergence for all data (`Feec.HilbertComplex.DissipFEEC.TimeScheme.converges`).
 
 ## References
 
@@ -257,6 +268,132 @@ theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P 
       ≤ M * ∑ _k ∈ range n, K * τ ^ (p + 1) * ‖(L ^ (p + 1)) y‖ :=
         mul_le_mul_of_nonneg_left (sum_le_sum fun k _ => hdef k) hM
     _ = _ := by rw [sum_const, card_range, nsmul_eq_mul]; ring
+
+/-! ### Smoothing by time averages -/
+
+/-- The **time average** `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds`: for bounded dissipative `L` a contraction
+with `L A_δ = δ⁻¹ (e^{δL} - 1)`, so `‖L A_δ‖ ≤ 2/δ` (`norm_apply_timeAvg_le`); `A_δ` smooths
+discrete data uniformly in `L`. -/
+def timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) : X :=
+  δ⁻¹ • ∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y
+
+omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
+theorem continuous_exp_apply (L : X →L[𝕜] X) (y : X) :
+    Continuous fun s : ℝ => exp ((s : 𝕜) • L) y :=
+  (C0Group.continuous_exp_ofReal_smul L).clm_apply continuous_const
+
+omit [IsScalarTower ℝ 𝕜 X] in
+theorem timeAvg_sub (L : X →L[𝕜] X) (δ : ℝ) (y z : X) :
+    timeAvg L δ (y - z) = timeAvg L δ y - timeAvg L δ z := by
+  unfold timeAvg
+  simp only [_root_.map_sub]
+  rw [intervalIntegral.integral_sub ((continuous_exp_apply L y).intervalIntegrable _ _)
+    ((continuous_exp_apply L z).intervalIntegrable _ _), smul_sub]
+
+/-- `L A_δ y = A_δ (L y)`. -/
+theorem apply_timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
+    L (timeAvg L δ y) = timeAvg L δ (L y) := by
+  unfold timeAvg
+  rw [L.map_smul_of_tower, ← ContinuousLinearMap.intervalIntegral_comp_comm L
+    ((continuous_exp_apply L y).intervalIntegrable _ _)]
+  congr 1
+  refine intervalIntegral.integral_congr fun s _ => ?_
+  exact congrArg (fun C : X →L[𝕜] X => C y) (C0Group.commute_exp_ofReal_smul L s).eq
+
+/-- `L A_δ y = δ⁻¹ (e^{δL} y - y)` (the fundamental theorem of calculus). -/
+theorem apply_timeAvg_eq (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
+    L (timeAvg L δ y) = δ⁻¹ • (exp ((δ : 𝕜) • L) y - y) := by
+  unfold timeAvg
+  rw [L.map_smul_of_tower, ← ContinuousLinearMap.intervalIntegral_comp_comm L
+    ((continuous_exp_apply L y).intervalIntegrable _ _),
+    intervalIntegral.integral_eq_sub_of_hasDerivAt
+      (fun s _ => C0Group.hasDerivAt_exp_ofReal_smul_apply L y s)
+      ((L.continuous.comp (continuous_exp_apply L y)).intervalIntegrable _ _)]
+  simp
+
+/-- `‖A_δ y‖ ≤ ‖y‖` for dissipative `L`, `δ > 0`. -/
+theorem norm_timeAvg_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ) (y : X) :
+    ‖timeAvg L δ y‖ ≤ ‖y‖ := by
+  unfold timeAvg
+  rw [norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
+  have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := δ)
+    (f := fun s : ℝ => exp ((s : 𝕜) • L) y) (C := ‖y‖) fun s hs => by
+      rw [Set.uIoc_of_le hδ.le] at hs
+      exact LumerPhillips.norm_exp_smul_apply_le hL hs.1.le y
+  rw [sub_zero, abs_of_pos hδ] at h
+  calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y‖ ≤ δ⁻¹ * (‖y‖ * δ) := by gcongr
+    _ = ‖y‖ := by field_simp
+
+omit [IsScalarTower ℝ 𝕜 X] in
+/-- `‖A_δ y - y‖ ≤ η` when `‖e^{sL} y - y‖ ≤ η` on `[0, δ]`. -/
+theorem norm_timeAvg_sub_le {δ η : ℝ} (hδ : 0 < δ) {y : X}
+    (h : ∀ s ∈ Set.Icc 0 δ, ‖exp ((s : 𝕜) • L) y - y‖ ≤ η) : ‖timeAvg L δ y - y‖ ≤ η := by
+  have e : timeAvg L δ y - y = δ⁻¹ • ∫ s in (0 : ℝ)..δ, (exp ((s : 𝕜) • L) y - y) := by
+    unfold timeAvg
+    rw [intervalIntegral.integral_sub ((continuous_exp_apply L y).intervalIntegrable _ _)
+      intervalIntegrable_const, intervalIntegral.integral_const, smul_sub, smul_smul,
+      sub_zero, inv_mul_cancel₀ hδ.ne', one_smul]
+  rw [e, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
+  have h2 := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := δ)
+    (f := fun s : ℝ => exp ((s : 𝕜) • L) y - y) (C := η) fun s hs => by
+      rw [Set.uIoc_of_le hδ.le] at hs
+      exact h s ⟨hs.1.le, hs.2⟩
+  rw [sub_zero, abs_of_pos hδ] at h2
+  calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, (exp ((s : 𝕜) • L) y - y)‖ ≤ δ⁻¹ * (η * δ) := by gcongr
+    _ = η := by field_simp
+
+/-- **Smoothing**: `‖Lᵏ A_δᵏ y‖ ≤ (2/δ)ᵏ ‖y‖`, uniformly in the bounded dissipative `L`. -/
+theorem norm_pow_timeAvg_iterate_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
+    (k : ℕ) (y : X) : ‖(L ^ k) ((timeAvg L δ)^[k] y)‖ ≤ (2 / δ) ^ k * ‖y‖ := by
+  have hcomm : ∀ j (u : X), L ((timeAvg L δ)^[j] u) = (timeAvg L δ)^[j] (L u) := by
+    intro j
+    induction j with
+    | zero => intro u; rfl
+    | succ j ih => intro u; rw [Function.iterate_succ_apply, Function.iterate_succ_apply, ih,
+        apply_timeAvg]
+  induction k generalizing y with
+  | zero => simp
+  | succ k ih =>
+    rw [Function.iterate_succ_apply]
+    change ‖(L ^ k) (L _)‖ ≤ (2 / δ) ^ (k + 1) * ‖y‖
+    rw [hcomm, pow_succ (2 / δ)]
+    refine (ih _).trans ?_
+    have h1 : ‖L (timeAvg L δ y)‖ ≤ 2 / δ * ‖y‖ := by
+      rw [apply_timeAvg_eq, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
+      have := norm_sub_le (exp ((δ : 𝕜) • L) y) y
+      have := LumerPhillips.norm_exp_smul_apply_le hL hδ.le y
+      calc δ⁻¹ * ‖exp ((δ : 𝕜) • L) y - y‖ ≤ δ⁻¹ * (2 * ‖y‖) := by gcongr; linarith
+        _ = _ := by ring
+    calc (2 / δ) ^ k * ‖L (timeAvg L δ y)‖ ≤ (2 / δ) ^ k * (2 / δ * ‖y‖) := by gcongr
+      _ = _ := by ring
+
+/-- `‖A_δᵏ y - y‖ ≤ k ‖A_δ y - y‖` (contraction and linearity). -/
+theorem norm_timeAvg_iterate_sub_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
+    (k : ℕ) (y : X) : ‖(timeAvg L δ)^[k] y - y‖ ≤ k * ‖timeAvg L δ y - y‖ := by
+  have hsub : ∀ j (a b : X), (timeAvg L δ)^[j] a - (timeAvg L δ)^[j] b =
+      (timeAvg L δ)^[j] (a - b) := by
+    intro j
+    induction j with
+    | zero => intro a b; rfl
+    | succ j ih => intro a b; rw [Function.iterate_succ_apply, Function.iterate_succ_apply,
+        Function.iterate_succ_apply, ih, timeAvg_sub]
+  have hnorm : ∀ j (a : X), ‖(timeAvg L δ)^[j] a‖ ≤ ‖a‖ := by
+    intro j
+    induction j with
+    | zero => intro a; rfl
+    | succ j ih => intro a; rw [Function.iterate_succ_apply]
+                   exact (ih _).trans (norm_timeAvg_le hL hδ a)
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [Function.iterate_succ_apply]
+    calc ‖(timeAvg L δ)^[k] (timeAvg L δ y) - y‖ ≤
+        ‖(timeAvg L δ)^[k] (timeAvg L δ y) - (timeAvg L δ)^[k] y‖ +
+          ‖(timeAvg L δ)^[k] y - y‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ ≤ ‖timeAvg L δ y - y‖ + k * ‖timeAvg L δ y - y‖ := by
+        gcongr
+        · rw [hsub]; exact hnorm _ _
+      _ = _ := by push_cast; ring
 
 /-! ### θ-schemes of bounded dissipative operators -/
 

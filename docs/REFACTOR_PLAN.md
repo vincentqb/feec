@@ -270,6 +270,7 @@ Feec/
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,DiscreteCohomology,MixedError,SemidiscreteWave}.lean
 │   │   Approximation/ConformingFamily.lean -- AFW §3.3 data: subcomplexes, bounded cochain projections, windows
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
+│   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,
@@ -314,7 +315,7 @@ match this list.
 | `Evolution` | `Semigroup` |
 | `Variational` | `Evolution` (the Galerkin error bound for evolution problems uses the energy method) |
 | `TimeStepping` | `Semigroup` (one-step schemes approximate semigroups) |
-| `HilbertComplex` | `Variational` |
+| `HilbertComplex` | `Variational`, `TimeStepping` (the fully discrete FEEC theorem) |
 | `Fourier`, `Domain` | `HilbertComplex`, `Algebra` |
 | `FiniteElement` | `Domain`, `Mesh` |
 | `Models` | `FiniteElement`, `Fourier`, `Geometry`, `TimeStepping` |
@@ -324,8 +325,8 @@ match this list.
 
 So `Fourier` and `Domain` are independent of each other and both sit above `Algebra`, which with
 `Geometry` sits beside the analytic chain `Operator` → `Semigroup` → `Evolution` → `Variational` →
-`HilbertComplex`; `TimeStepping` sits beside `Evolution` and `Variational` (no path joins them)
-and is independent of `HilbertComplex`; `Examples`
+`HilbertComplex`; `TimeStepping` sits beside `Evolution` and `Variational` (no path joins them),
+below `HilbertComplex`; `Examples`
 and `Numerics` are independent. Hard rules, which `feec-layering` also checks on the table itself:
 the graph has no cycle (sibling groups contracted); `ForMathlib` and `Mesh` import no other part
 of `Feec`; nothing below the top tier (`Models`, `Physics`, `Counterexamples`, `Examples`,

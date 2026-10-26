@@ -8,9 +8,9 @@ public import Feec.ForMathlib.LinearPMap.Bounded
 
 Lower-order terms (damping, absorption, zeroth-order coupling between the fields of a system)
 enter an evolution `u' = A u` as a bounded perturbation `A + B`. This file records the
-combination rule that lets the semidiscrete and fully discrete FEEC theorems
-(`Feec.HilbertComplex.DissipFEEC`, `Feec.HilbertComplex.Approximation.FullyDiscrete`) apply to
-`A + B`:
+generator-level combination rule by which the semidiscrete and fully discrete FEEC theorems
+(`Feec.HilbertComplex.DissipFEEC`, `Feec.HilbertComplex.Approximation.FullyDiscrete`), which take
+an m-dissipative generator, apply to `A + B`; no instance of the library uses it yet:
 
 * **`LinearPMap.IsMDissipative.vadd`**: if `A` is m-dissipative, `B` is bounded and `A + B`
   (domain `D(A)`, `B +ᵥ A`) is dissipative, then `A + B` is m-dissipative:
@@ -22,7 +22,8 @@ combination rule that lets the semidiscrete and fully discrete FEEC theorems
 ## References
 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.1 (Thm 1.1, Cor 3.3: bounded perturbations of generators)
+  §3.1 (Thm 1.1: bounded perturbations of generators), §3.3 (Cor 3.3: dissipative perturbations
+  of generators of contraction semigroups)
 * [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
   §III.1 (bounded perturbations)
 
@@ -41,7 +42,7 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 /-- **Dissipative bounded perturbations of m-dissipative operators are m-dissipative**: if `A` is
 m-dissipative, `B` bounded and `B +ᵥ A` dissipative, then `B +ᵥ A` is m-dissipative (for
-`μ = ‖B‖ + 1`, `μ - A - B = (1 - B R(μ))(μ - A)` with `‖B R(μ)‖ < 1`). [Pazy1983], §3.1 -/
+`μ = ‖B‖ + 1`, `μ - A - B = (1 - B R(μ))(μ - A)` with `‖B R(μ)‖ < 1`). [Pazy1983], §3.3 -/
 theorem IsMDissipative.vadd (hA : A.IsMDissipative) (B : E →L[𝕜] E)
     (hAB : ((B : E →ₗ[𝕜] E) +ᵥ A).IsDissipative) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsMDissipative := by
   set μ : ℝ := ‖B‖ + 1
@@ -68,7 +69,7 @@ theorem IsMDissipative.vadd (hA : A.IsMDissipative) (B : E →L[𝕜] E)
   abel
 
 /-- **Bounded dissipative perturbations** (damping, absorption): `A` m-dissipative and `B` bounded
-dissipative give `A + B` m-dissipative. [Pazy1983], §3.1 -/
+dissipative give `A + B` m-dissipative. [Pazy1983], §3.3 -/
 theorem IsMDissipative.vadd_of_dissipative (hA : A.IsMDissipative) {B : E →L[𝕜] E}
     (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsMDissipative :=
   hA.vadd B (hA.dissipative.vadd hB)

@@ -1,5 +1,6 @@
 module
 
+public import Feec.Algebra.CubicalForm
 public import Feec.Algebra.ExteriorFibre
 public import Feec.Algebra.Koszul
 public import Feec.Algebra.LeviCivita
@@ -64,6 +65,7 @@ public import Feec.FiniteElement.Assembly
 public import Feec.FiniteElement.BrambleHilbert
 public import Feec.FiniteElement.BrambleHilbertL2
 public import Feec.FiniteElement.Conformity
+public import Feec.FiniteElement.CubeDof
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.InterpolationError
 public import Feec.FiniteElement.InverseEstimate

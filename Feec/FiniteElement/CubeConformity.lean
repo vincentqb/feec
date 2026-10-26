@@ -1,8 +1,9 @@
 module
 
 public import Feec.FiniteElement.CubeMesh
-public import Feec.FiniteElement.Conformity
+public import Feec.FiniteElement.Assembly
 public import Feec.FiniteElement.LocalSpace
+public import Feec.FiniteElement.PolyInverseEstimate
 public import Feec.Mesh.Freudenthal
 
 /-!
@@ -26,7 +27,9 @@ those of the (equal) polynomial traces of `ω_m` and `ω_{m'}` (`tangentialTrace
 
 * `Feec.FiniteElement.cellField ω m`: the field of the cell `m` in global coordinates;
 * `Feec.FiniteElement.cubeRefinement n N`, `simplexCell`, `closedCell`: the Freudenthal
-  refinement and the cell of each of its simplices.
+  refinement and the cell of each of its simplices;
+* `Feec.FiniteElement.cubeGlue n N k`, `cubeV n N b k`, `cubeSubcomplex`: the gluing into
+  `L²((0, 1)ⁿ; Λᵏ)`, the glued spaces `Vₕᵏ` and the subcomplex they form.
 
 ## Main results
 
@@ -34,7 +37,11 @@ those of the (equal) polynomial traces of `ω_m` and `ω_{m'}` (`tangentialTrace
 * `tangentialTraceEq_cellField`: tangential continuity across common faces;
 * `cellField_mem_maximal_domain`: **`HΛᵏ`-conformity of tangentially continuous piecewise
   polynomial forms**, `d_max` being the piecewise `d`, and
-  `cellField_mem_maximal_domain_of_mem`: the global spaces `Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ((0, 1)ⁿ)`.
+  `cellField_mem_maximal_domain_of_mem`: the global spaces `Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ((0, 1)ⁿ)`;
+* `cubeSubcomplex`: **the glued spaces form a subcomplex of the maximal de Rham complex**
+  `HΛ((0, 1)ⁿ)`;
+* `cubeGlue_injective`, `finrank_cubeV`: the gluing is injective, so
+  **`dim Vₕᵏ = Σ_{#s = k} Πⱼ (N b_j + 1 - [j ∈ s])`**.
 
 ## References
 
@@ -275,5 +282,186 @@ theorem cellField_mem_maximal_domain_of_mem [NeZero n] {b : Fin n → ℕ} (k : 
       ((extDerivOp ℝ n k).maximal (cubeRefinement n N).domain).domain :=
   (cellField_mem_maximal_domain k (mem_cubeGlobalSpace.1 hω).1
     fun m => ((mem_cubeGlobalSpace.1 hω).2 m).1).1
+
+/-! ### The glued spaces form a subcomplex of `HΛ((0, 1)ⁿ)` -/
+
+omit [NeZero N] in
+theorem cellField_add (ω η : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
+    (m : CubeCell fun _ : Fin n => N) : cellField (ω + η) m = cellField ω m + cellField η m := by
+  funext x
+  simp [cellField, affinePullback_apply, map_add, pullback_add]
+
+omit [NeZero N] in
+theorem cellField_smul (c : ℝ) (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
+    (m : CubeCell fun _ : Fin n => N) : cellField (c • ω) m = c • cellField ω m := by
+  funext x
+  simp [cellField, affinePullback_apply, map_smul, pullback_smul]
+
+variable (n N) in
+/-- **Gluing** a piecewise polynomial form into `L²((0, 1)ⁿ; Λᵏ)`. -/
+def cubeGlue (k : ℤ) : (CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)) →ₗ[ℝ]
+    L2F ℝ (cubeRefinement n N).domain (formIdx n k) where
+  toFun ω := pieceL2 (cubeRefinement n N) (cubeRefinement n N).domain
+    (fun T => formComp (k := k) (cellField ω (simplexCell T)))
+    (fun _ _ s => continuous_formComp (contDiff_cellField ω _ (r := 0)).continuous s)
+  map_add' ω η := by
+    refine (pieceL2_congr _ _ _ _ fun T _ => ?_).trans (pieceL2_add _ _ _ _)
+    funext s x
+    simp [formComp, cellField_add]
+  map_smul' c ω := by
+    refine (pieceL2_congr _ _ _ _ fun T _ => ?_).trans (pieceL2_smul _ _ c _)
+    funext s x
+    simp [formComp, cellField_smul]
+
+variable (n N) in
+/-- The glued global spaces `Vₕᵏ = Q_b⁻Λᵏ(𝒯_h) ⊆ L²((0, 1)ⁿ; Λᵏ)`. -/
+def cubeV (b : Fin n → ℕ) (k : ℤ) : Submodule ℝ (L2F ℝ (cubeRefinement n N).domain (formIdx n k)) :=
+  LinearMap.range (cubeGlue n N k ∘ₗ (cubeGlobalSpace (fun _ : Fin n => N) b k.toNat).subtype)
+
+theorem cubeV_le_maximal_domain [NeZero n] (b : Fin n → ℕ) (i : ℤ) :
+    cubeV n N b i ≤ ((extDerivOp ℝ n i).maximal (cubeRefinement n N).domain).domain := by
+  rintro x ⟨u, rfl⟩
+  rcases i with k | k
+  · exact cellField_mem_maximal_domain_of_mem k u.2
+  · have := LocalElement.subsingleton_L2F_negSucc (cubeRefinement n N).domain (n := n) k
+    rw [Subsingleton.elim (LinearMap.comp _ _ u) 0]
+    exact Submodule.zero_mem _
+
+theorem maximal_apply_mem_cubeV [NeZero n] (b : Fin n → ℕ) (i : ℤ)
+    (y : ((extDerivOp ℝ n i).maximal (cubeRefinement n N).domain).domain)
+    (hy : (y : L2F ℝ (cubeRefinement n N).domain (formIdx n i)) ∈ cubeV n N b i) :
+    (extDerivOp ℝ n i).maximal (cubeRefinement n N).domain y ∈ cubeV n N b (i + 1) := by
+  obtain ⟨u, hu⟩ := hy
+  rcases i with k | k
+  · have hω := mem_cubeGlobalSpace.1 u.2
+    obtain ⟨h, hval⟩ := cellField_mem_maximal_domain k hω.1 fun m => (hω.2 m).1
+    have hy' : y = ⟨_, h⟩ := Subtype.ext hu.symm
+    show (extDerivOp ℝ n (k : ℤ)).maximal (cubeRefinement n N).domain y ∈ cubeV n N b ((k : ℤ) + 1)
+    rw [hy', hval]
+    exact ⟨⟨_, extDeriv_mem_cubeGlobalSpace u.2⟩, rfl⟩
+  · have := LocalElement.subsingleton_L2F_negSucc (cubeRefinement n N).domain (n := n) k
+    have : y = 0 := Subtype.ext (Subsingleton.elim _ _)
+    rw [this, LinearPMap.map_zero]
+    exact Submodule.zero_mem _
+
+/-- **The cubical finite element subcomplex** `Q_b⁻Λ(𝒯_h) ⊆ HΛ((0, 1)ⁿ)` of the maximal de Rham
+complex: the glued global spaces are finite-dimensional, lie in `D(d_max)`, and
+`d Vₕᵏ ⊆ Vₕᵏ⁺¹`. -/
+def cubeSubcomplex [NeZero n] (b : Fin n → ℕ) (hΩ : IsOpen (cubeRefinement n N).domain) :
+    ((deRham ℝ n).maximalComplex hΩ).Subcomplex where
+  V := cubeV n N b
+  le_domain i j := by
+    by_cases hij : i + 1 = j
+    · subst hij
+      rw [deRham_maximalComplex_d]
+      exact cubeV_le_maximal_domain b i
+    · rw [HilbertComplex.domain_eq_top_of_not_rel _ (by simpa using hij)]
+      exact le_top
+  mapsTo i j x hx := by
+    by_cases hij : i + 1 = j
+    · subst hij
+      exact LocalElement.apply_mem_of_eq (deRham_maximalComplex_d hΩ i) _ (· ∈ cubeV n N b (i + 1))
+        fun y' hy' => maximal_apply_mem_cubeV b i y' (hy' ▸ hx)
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hij)]
+      exact Submodule.zero_mem _
+
+theorem isOpen_cubeRefinement_domain : IsOpen (cubeRefinement n N).domain := by
+  rw [cubeRefinement_domain]; exact isOpen_set_pi Set.finite_univ fun _ _ => isOpen_Ioo
+
+/-! ### Injectivity of the gluing and the dimension of `Vₕᵏ` -/
+
+/-- The local coordinates back to the global ones, `y ↦ (y + m) / N`. -/
+theorem evalForm_eq_affinePullback_cellField
+    (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)) (m : CubeCell fun _ : Fin n => N) :
+    evalForm n (ω m) = affinePullback (fun i l => if i = l then (N : ℝ)⁻¹ else 0)
+      (fun i => ((m i : ℕ) : ℝ) / N) (cellField ω m) := by
+  have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
+  refine (affinePullback_affinePullback_of_comp_eq_id _ _ _ _ (fun y => funext fun i => ?_) _).symm
+  rw [affine_cellMatrix]
+  simp only [affine_apply, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte]
+  field_simp
+  ring
+
+/-- **The gluing is injective** on `Q_b⁻Λᵏ(𝒯_h)`. -/
+theorem cubeGlue_injective [NeZero n] (b : Fin n → ℕ) (k : ℕ) :
+    Function.Injective (cubeGlue n N k ∘ₗ
+      (cubeGlobalSpace (fun _ : Fin n => N) b k).subtype) := by
+  rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+  intro u hu
+  refine Subtype.ext (funext fun m => ?_)
+  set M := cubeRefinement n N
+  have hΩ := isOpen_cubeRefinement_domain (n := n) (N := N)
+  have hk : IsDeg k (u.1 m) := ((mem_cubeGlobalSpace.1 u.2).2 m).1
+  set T := mapEquiv (boxMap 0 (1 / N) (freudenthalScale_ne_zero one_pos N))
+    (freudenthalSimplex (finLattice m) 1)
+  have hT : T ∈ M.simplices := mem_freudenthalMesh_simplices.2 ⟨m, 1, rfl⟩
+  have hcell : simplexCell (N := N) T = m := simplexCell_freudenthal m 1
+  set U := interior T.closedInterior ∩ M.domain
+  have hU : IsOpen U := isOpen_interior.inter hΩ
+  have hUne : U.Nonempty := by
+    obtain ⟨z, hz⟩ := interior_closedInterior_nonempty T
+    have hz' : z ∈ closure M.domain := M.closedInterior_subset_closure hT (interior_subset hz)
+    obtain ⟨w, hw, hwΩ⟩ := mem_closure_iff.1 hz' _ isOpen_interior hz
+    exact ⟨w, hw, hwΩ⟩
+  -- the cell field vanishes on `U`
+  have hzero : ∀ x ∈ U, cellField u.1 m x = 0 := fun x hx => funext fun s => by
+    by_cases hs : #s = k
+    · set s' : formIdx n (k : ℤ) := ⟨s, by rw [hs]⟩
+      set f : (Fin n → ℝ) → ℝ := fun y => cellField u.1 m y s
+      have hf : Continuous f :=
+        (continuous_apply s).comp (contDiff_cellField u.1 m (r := 0)).continuous
+      have hcomp := coeFn_pieceL2 M M.domain
+        (fun T' => formComp (k := (k : ℤ)) (cellField u.1 (simplexCell T')))
+        (fun _ _ s => continuous_formComp (contDiff_cellField u.1 _ (r := 0)).continuous s) s'
+      have h0 : (cubeGlue n N k u.1) s' = 0 := by
+        have := congrArg (fun v : L2F ℝ M.domain (formIdx n (k : ℤ)) => v s') hu
+        simpa using this
+      have hae : f =ᵐ[MeasureTheory.volume.restrict U] 0 := by
+        have h1 : (fun y => pieceFun M
+            (fun T' => formComp (k := (k : ℤ)) (cellField u.1 (simplexCell T')) s') y)
+            =ᵐ[MeasureTheory.volume.restrict M.domain] 0 := by
+          refine hcomp.symm.trans ?_
+          have := MeasureTheory.Lp.coeFn_zero ℝ 2 (MeasureTheory.volume.restrict M.domain)
+          change ((cubeGlue n N k u.1) s' : (Fin n → ℝ) → ℝ) =ᵐ[_] 0
+          rw [h0]
+          exact this
+        have h2 := MeasureTheory.ae_restrict_of_ae_restrict_of_subset (s := U)
+          Set.inter_subset_right h1
+        filter_upwards [h2, MeasureTheory.ae_restrict_mem hU.measurableSet] with y hy hyU
+        rw [← hy, pieceFun_of_mem_interior M _ hT hyU.1]
+        simp [formComp, f, hcell, s']
+      exact MeasureTheory.Measure.eqOn_open_of_ae_eq hae hU hf.continuousOn continuousOn_const hx
+    · exact isDeg_cellField hk x s hs
+  -- hence `u_m` vanishes on an open set of local coordinates
+  funext s
+  set C : Fin n → Fin n → ℝ := fun i l => if i = l then (N : ℝ)⁻¹ else 0
+  set c : Fin n → ℝ := fun i => ((m i : ℕ) : ℝ) / N
+  obtain ⟨x₀, hx₀⟩ := hUne
+  refine eq_zero_of_eval_eq_zero_of_isOpen (U := affine C c ⁻¹' U)
+    (hU.preimage (continuous_affine C c)) (y₀ := affine (cellMatrix n N) (cellOffset m) x₀) ?_
+    fun y hy => ?_
+  · show affine C c (affine (cellMatrix n N) (cellOffset m) x₀) ∈ U
+    convert hx₀ using 1
+    have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
+    have hy : ∀ i, affine (cellMatrix n N) (cellOffset m) x₀ i = N * x₀ i - m i :=
+      affine_cellMatrix m x₀
+    generalize affine (cellMatrix n N) (cellOffset m) x₀ = y at hy ⊢
+    funext i
+    simp only [affine_apply, C, c, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ,
+      ↓reduceIte, hy]
+    field_simp
+    ring
+  · have := congrFun (congrFun (evalForm_eq_affinePullback_cellField u.1 m) y) s
+    rw [evalForm_apply] at this
+    rw [this, affinePullback_apply, hzero _ hy, pullback_zero]
+    rfl
+
+/-- **`dim Vₕᵏ = dim Q_b⁻Λᵏ(𝒯_h)`**: the glued spaces have the dimension of the global spaces,
+`Σ_{#s = k} Πⱼ (N b_j + 1 - [j ∈ s])`. -/
+theorem finrank_cubeV [NeZero n] {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℕ) :
+    Module.finrank ℝ (cubeV n N b k) =
+      ∑ s ∈ powersetCard k univ, ∏ j, (N * b j + 1 - if j ∈ s then 1 else 0) := by
+  exact (LinearMap.finrank_range_of_inj (cubeGlue_injective (N := N) b k)).trans
+    (finrank_cubeGlobalSpace (fun _ => Nat.one_le_iff_ne_zero.2 (NeZero.ne N)) hb)
 
 end Feec.FiniteElement

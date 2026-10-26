@@ -145,6 +145,7 @@ public import Feec.HilbertComplex.Approximation.DissipFEEC
 public import Feec.HilbertComplex.Approximation.DissipGalerkin
 public import Feec.HilbertComplex.Approximation.FullyDiscrete
 public import Feec.HilbertComplex.Approximation.GraphApprox
+public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
@@ -191,6 +192,8 @@ public import Feec.HilbertComplex.Reweight
 public import Feec.HilbertComplex.SecondOrder
 public import Feec.HilbertComplex.Short
 public import Feec.HilbertComplex.ShortDual
+public import Feec.HilbertComplex.Total
+public import Feec.HilbertComplex.Total
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Instances.EinsteinBianchi

@@ -272,6 +272,7 @@ Feec/
 │   │   Approximation/StaticFEEC.lean -- the static FEEC theorem staticFEEC (StaticVerdict: AFW Thm 3.4–3.9), rates, uniform projections
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
 │   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
+│   │   Approximation/{Ritz,RitzResolvent}.lean -- Ritz projections → cores, rate classes (regularity scales)
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,

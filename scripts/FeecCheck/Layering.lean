@@ -43,7 +43,9 @@ namespace FeecCheck.Layering
   (`Feec.Variational.GalerkinEvolution`) uses the energy method of `Feec.Evolution.Energy`;
 * `Fourier → Algebra`, `Domain → Algebra`: symbols and fibres of exterior algebra;
 * `Geometry → Algebra`: the Levi-Civita symbol and metrics;
-* `FiniteElement → Mesh`: finite elements live on simplicial meshes. -/
+* `FiniteElement → Mesh`: finite elements live on simplicial meshes;
+* `TimeStepping → Semigroup`: one-step schemes approximate semigroups (resolvents of m-dissipative
+  generators, Taylor remainders of `e^{tL}`). -/
 def layerDeps : List (String × List String) :=
   [("ForMathlib", []),
    ("Mesh", []),
@@ -53,7 +55,7 @@ def layerDeps : List (String × List String) :=
    ("Semigroup", ["Operator"]),
    ("Evolution", ["Semigroup"]),
    ("Variational", ["Evolution"]),
-   ("TimeStepping", ["Operator"]),
+   ("TimeStepping", ["Semigroup"]),
    ("HilbertComplex", ["Variational"]),
    ("Fourier", ["HilbertComplex", "Algebra"]),
    ("Domain", ["HilbertComplex", "Algebra"]),

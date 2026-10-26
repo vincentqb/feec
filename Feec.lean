@@ -341,6 +341,9 @@ public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Stone
 public import Feec.TimeStepping.BlockMatrix
 public import Feec.TimeStepping.Cayley
+public import Feec.TimeStepping.Convergence
+public import Feec.TimeStepping.Leapfrog
+public import Feec.TimeStepping.Theta
 public import Feec.Variational.BabuskaNecas
 public import Feec.Variational.Fortin
 public import Feec.Variational.Galerkin

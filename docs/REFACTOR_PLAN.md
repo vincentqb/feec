@@ -261,7 +261,7 @@ Feec/
 ├── Semigroup/{Basic,Stone,Perturbation,LumerPhillips,Invariance,Spectral}.lean  -- Feec.C0Group / Feec.C0Semigroup
 ├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained}.lean -- Feec.Evolution
 ├── Variational/{InfSup,BabuskaNecas,Galerkin,SaddlePoint,Fortin,GalerkinEvolution}.lean -- Feec.Variational
-├── TimeStepping/{Cayley,BlockMatrix}.lean                                   -- Feec.TimeStepping
+├── TimeStepping/{Cayley,BlockMatrix,Theta,Convergence,Leapfrog}.lean        -- Feec.TimeStepping
 ├── HilbertComplex/                                                          -- Feec.HilbertComplex
 │   ├── Basic.lean  Short.lean  Window.lean  Dual.lean  DomainComplex.lean
 │   ├── Hodge.lean (cohomology, harmonic, Hodge, Poincaré)  Compactness.lean
@@ -313,7 +313,7 @@ match this list.
 | `Semigroup` | `Operator` |
 | `Evolution` | `Semigroup` |
 | `Variational` | `Evolution` (the Galerkin error bound for evolution problems uses the energy method) |
-| `TimeStepping` | `Operator` |
+| `TimeStepping` | `Semigroup` (one-step schemes approximate semigroups) |
 | `HilbertComplex` | `Variational` |
 | `Fourier`, `Domain` | `HilbertComplex`, `Algebra` |
 | `FiniteElement` | `Domain`, `Mesh` |
@@ -324,7 +324,8 @@ match this list.
 
 So `Fourier` and `Domain` are independent of each other and both sit above `Algebra`, which with
 `Geometry` sits beside the analytic chain `Operator` → `Semigroup` → `Evolution` → `Variational` →
-`HilbertComplex`; `TimeStepping` is independent of `Variational` and `HilbertComplex`; `Examples`
+`HilbertComplex`; `TimeStepping` sits beside `Evolution` and `Variational` (no path joins them)
+and is independent of `HilbertComplex`; `Examples`
 and `Numerics` are independent. Hard rules, which `feec-layering` also checks on the table itself:
 the graph has no cycle (sibling groups contracted); `ForMathlib` and `Mesh` import no other part
 of `Feec`; nothing below the top tier (`Models`, `Physics`, `Counterexamples`, `Examples`,

@@ -5259,3 +5259,4 @@ Feec.HilbertComplex.forall_of_forall_Icc_neg	Feec.C0Group.forall_of_forall_Icc_n
 Feec.HilbertComplex.ConstrainedFEEC.rate_le_constrainedFEEC	Feec.HilbertComplex.constrainedFEEC_rate	rename
 Feec.HilbertComplex.DissipFEEC.Comparison.ofResolvent	Feec.HilbertComplex.DissipFEEC.Ritz.ofResolvent	dedup
 Feec.HilbertComplex.DissipFEEC.Ritz.ofResolvent_cmp_p	-	deleted-helper
+Feec.Models.Cube.Inhomogeneous.norm_trapezoid_le	Feec.TimeStepping.norm_trapezoid_le	generalize

@@ -2,6 +2,8 @@ import Feec.HilbertComplex.Approximation.StaticFEEC
 import Feec.HilbertComplex.Approximation.Ritz
 import Feec.HilbertComplex.Approximation.RitzResolvent
 import Feec.HilbertComplex.Approximation.ApproxConforming
+import Feec.HilbertComplex.Approximation.FullyDiscrete
+import Feec.Models.Cube.InhomogeneousError
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -47,6 +49,22 @@ elliptic projection), and the lemmas of the direct proof are gone. The theorems
 resolvent core is gone too: `DissipFEEC.Core.ofResolvent` is the core of the resolvent Ritz
 projection, and the trajectories of the deleted `DissipFEEC.Comparison.ofResolvent` are those of
 `Ritz.ofResolvent` (`resolvent_old_p`).
+
+## The fully discrete layer
+
+The temporal error of `DissipFEEC.TimeScheme.Verdict.rate_iterates` is `‖Lₕ^{p+1} v‖`, not
+uniform in `h`; `rate_smooth_iterates` replaces it by the `(p + 1)`-st time derivative of a smooth
+comparison (`DissipFEEC.Comparison.Smooth`), which for a Ritz projection (`DissipFEEC.Ritz.smooth`)
+is `Rₕ S(t) A^{p+1} x`. The example `ritz_crankNicolson` composes the Ritz rate class on
+`D(A³)` (`Ritz.toRateClass`, `RegScale.domainPow`) with Crank–Nicolson: the temporal error is
+`1/12 tₙ τₕ² C ‖A³ x‖`, from static estimates only. The trapezoidal remainder of the Dirichlet
+Crank–Nicolson estimate of `Feec.Models.Cube.InhomogeneousError` is now
+`Feec.TimeStepping.norm_trapezoid_le` (right derivatives, sharp constant `1/12`); `trapezoid_old`
+states the old remainder verbatim and derives it. The Dirichlet scheme itself (inhomogeneous
+boundary degrees of freedom, a weak solution against `V̊ₕ`) is not the orbit of a `DissipFEEC`, so
+its estimate is not a corollary of the fully discrete verdict: `cn_old` states the conclusion of
+`norm_cn_error_le` verbatim and derives it from the model theorem, which shares the trapezoidal
+engine.
 
 This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`) and fails that build if a conclusion is
@@ -184,7 +202,6 @@ example (hres : ∀ z, Tendsto (fun h => F.incl h (F.discreteRes h (F.proj h z))
   rfl
 
 end Ritz
-
 
 section ConstrainedOld
 
@@ -332,5 +349,88 @@ theorem resolvent_old_p (T : ℝ) {x : E} (hx : x ∈ resData (A := A)) (h : κ)
     (F.S_sub_genExt (mem_domain_of_mem_resData F.isMDissipative hx) ht)⟩
 
 end ResolventOld
+
+section FullyDiscrete
+
+open DissipFEEC
+
+variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E} {κ : Type*}
+  {F : DissipFEEC.{u} A κ}
+
+/-- **Ritz projection plus Crank–Nicolson**: for a Ritz projection of the identity lift with
+`‖Rₕ‖ ≤ C` and static estimates on `D(A³)`, at `tₙ = n τₕ ∈ [0, T]`, the error is the spatial
+rate plus `‖ιₕ‖ (‖Rₕ x - v‖ + tₙ (τₕ²/12 · C ‖A³ x‖ + C_d hᵅ ‖x‖_{D(A³)}))`. -/
+example (𝓡 : F.Ritz (Lift.ofDomain F)) {C : ℝ} (hC : ∀ h, ‖𝓡.R h‖ ≤ C) {T : ℝ} (D : Set E)
+    (meshSize : κ → ℝ) (hmesh : ∀ h, 0 ≤ meshSize h) (α Cs Cd : ℝ) (hCs : 0 ≤ Cs) (hCd : 0 ≤ Cd)
+    (happrox : ∀ y ∈ iterDomain A 3, ∀ h,
+      ‖y - F.incl h (𝓡.R h y)‖ ≤ Cs * meshSize h ^ α * iterDomainNorm A 3 y)
+    (hdefect : ∀ y ∈ iterDomain A 3, ∀ h, ‖𝓡.Δ h (genExt A y)‖ + ‖𝓡.Δ' h y‖ ≤
+      Cd * meshSize h ^ α * iterDomainNorm A 3 y)
+    {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) {x : E} (hx : x ∈ D ∩ iterDomain A 3) (h : κ) (v : F.X h)
+    {n : ℕ} (hn : (n : ℝ) * τ h ∈ Icc 0 T) :
+    ‖F.S (n * τ h) x - (F.crankNicolson τ hτ).sol h v n‖ ≤
+      Cs * 1 * meshSize h ^ α * iterDomainNorm A 3 x + ‖F.incl h‖ * 1 *
+        (‖𝓡.R h (F.S 0 x) - v‖ + n * τ h * (1 / 12 * τ h ^ 2 * (C * ‖(genExt A)^[3] x‖) +
+          Cd * 1 * meshSize h ^ α * iterDomainNorm A 3 x)) :=
+  (F.crankNicolson τ hτ).norm_S_sub_sol_le_of_smooth (F.crankNicolson_isTrajConsistent hτ)
+    (𝓡.toRateClass (RegScale.domainPow F T D 3) (fun _ hy => hy.2 0 (by norm_num)) meshSize
+      hmesh α Cs Cd hCs hCd happrox hdefect)
+    ((𝓡.smooth T 3 (iterDomain A 3) (fun _ hy => hy) hC (fun y => ‖(genExt A)^[3] y‖)
+      fun _ _ t ht => F.norm_S_apply_le ht.1 _).restrict (RegScale.domainPow F T D 3).Data
+      fun _ hy => hy.2 0 (by norm_num))
+    hx hx.2 h v hn
+
+variable {X : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X]
+
+/-- The old trapezoidal remainder of `Feec.Models.Cube.InhomogeneousError` (`norm_trapezoid_le`,
+derivatives within `[a, b]`, constant `1/2`), from `Feec.TimeStepping.norm_trapezoid_le`. -/
+theorem trapezoid_old {f f₁ f₂ f₃ : ℝ → X} {a b L : ℝ} (hab : a ≤ b)
+    (h1 : ∀ t ∈ Icc a b, HasDerivWithinAt f (f₁ t) (Icc a b) t)
+    (h2 : ∀ t ∈ Icc a b, HasDerivWithinAt f₁ (f₂ t) (Icc a b) t)
+    (h3 : ∀ t ∈ Icc a b, HasDerivWithinAt f₂ (f₃ t) (Icc a b) t)
+    (hL : ∀ t ∈ Icc a b, ‖f₃ t‖ ≤ L) :
+    ‖f b - f a - ((b - a) / 2) • (f₁ b + f₁ a)‖ ≤ L * (b - a) ^ 3 / 2 := by
+  have hc : ∀ {g g' : ℝ → X}, (∀ t ∈ Icc a b, HasDerivWithinAt g (g' t) (Icc a b) t) →
+      ContinuousOn g (Icc a b) := fun hg t ht => (hg t ht).continuousWithinAt
+  have hr : ∀ {g g' : ℝ → X}, (∀ t ∈ Icc a b, HasDerivWithinAt g (g' t) (Icc a b) t) →
+      ∀ t ∈ Ico a b, HasDerivWithinAt g (g' t) (Ici t) t := fun hg t ht =>
+    (hg t (Ico_subset_Icc_self ht)).mono_of_mem_nhdsWithin
+      (mem_of_superset (Icc_mem_nhdsGE ht.2) (Icc_subset_Icc_left ht.1))
+  refine (TimeStepping.norm_trapezoid_le hab (hc h1) (hc h2) (hc h3) (hr h1) (hr h2) (hr h3)
+    fun t ht => hL t (Ico_subset_Icc_self ht)).trans ?_
+  have := pow_nonneg (sub_nonneg.2 hab) 3
+  nlinarith [(norm_nonneg _).trans (hL a ⟨le_rfl, hab⟩)]
+
+open scoped RealInnerProductSpace in
+open Feec.Models.Cube.Inhomogeneous in
+/-- The conclusion of the Dirichlet Crank–Nicolson estimate `norm_cn_error_le`, verbatim. -/
+theorem cn_old {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
+    {emb : V →ₗ[ℝ] X} {D : V →ₗ[ℝ] V} {V₀ : Submodule ℝ V}
+    (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
+    (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
+    (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
+    {U U₁ U₂ U₃ DU : ℝ → X}
+    (hU₁ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U (U₁ t) (Icc 0 T) t)
+    (hU₂ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₁ (U₂ t) (Icc 0 T) t)
+    (hU₃ : ∀ t ∈ Icc 0 T, HasDerivWithinAt U₂ (U₃ t) (Icc 0 T) t)
+    (hL₃ : ∀ t ∈ Icc 0 T, ‖U₃ t‖ ≤ L₃)
+    (hweak : ∀ t ∈ Icc 0 T, ∀ v ∈ V₀, ⟪U₁ t, emb v⟫ = ⟪DU t, emb v⟫ - ⟪U t, emb (D v)⟫)
+    {w : ℕ → V}
+    (hA1 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (w n) - U (n * Δt)‖ ≤ a)
+    (hA2 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (D (w n)) - DU (n * Δt)‖ ≤ a)
+    (hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(emb (w (n + 1)) - U ((n + 1 : ℕ) * Δt)) - (emb (w n) - U (n * Δt))‖ ≤ a * Δt)
+    {M : ℕ} (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → V}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep V₀ A (Δt / 2) 0 (g (n + 1)) (u n)
+      (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - w (n + 1) ∈ V₀) (hu0 : u 0 - w 0 ∈ V₀) :
+    ∃ ũ : ℕ → V, (∀ n, ũ n - w n ∈ V₀) ∧
+      (∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (ũ n) - U (n * Δt)‖ ≤ a) ∧
+      ‖u M - ũ M‖ ≤ ‖u 0 - w 0‖ + a + T * (L₃ * Δt ^ 2 / 2 + 2 * a) ∧
+      ‖emb (u M) - U (M * Δt)‖ ≤ ‖u 0 - w 0‖ + 2 * a + T * (L₃ * Δt ^ 2 / 2 + 2 * a) :=
+  norm_cn_error_le hemb hD₀ hDD hA hΔt hU₁ hU₂ hU₃ hL₃ hweak hA1 hA2 hA3 hM hstep hg hu0
+
+end FullyDiscrete
 
 end FeecCheck.Crown

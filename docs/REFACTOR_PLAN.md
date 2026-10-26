@@ -261,7 +261,7 @@ Feec/
 ├── Semigroup/{Basic,Stone,Perturbation,LumerPhillips,Invariance,Spectral}.lean  -- Feec.C0Group / Feec.C0Semigroup
 ├── Evolution/{Solution,Energy,Forcing,Duhamel,WellPosed,Tangent,Constrained}.lean -- Feec.Evolution
 ├── Variational/{InfSup,BabuskaNecas,Galerkin,SaddlePoint,Fortin,GalerkinEvolution}.lean -- Feec.Variational
-├── TimeStepping/{Cayley,BlockMatrix,Theta,Convergence,Leapfrog}.lean        -- Feec.TimeStepping
+├── TimeStepping/{Cayley,BlockMatrix,Theta,Convergence,Trajectory,Leapfrog}.lean -- Feec.TimeStepping
 ├── HilbertComplex/                                                          -- Feec.HilbertComplex
 │   ├── Basic.lean  Short.lean  Window.lean  Dual.lean  DomainComplex.lean
 │   ├── Hodge.lean (cohomology, harmonic, Hodge, Poincaré)  Compactness.lean

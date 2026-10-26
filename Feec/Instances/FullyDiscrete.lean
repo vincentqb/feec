@@ -24,7 +24,9 @@ for the semidiscrete instances of the library, with any time steps `τₙ > 0` (
   `einsteinBianchi_mirror_crankNicolson_rate`: from the elliptic initialization (6.4), the error is
   the `O(h_N)` rate of `mirrorComplexRate` plus the temporal error `5/12 tₙ τ_N² ‖L_N³ Πₕ(0)‖`
   (a uniform-in-`N` bound of `‖L_N³ Πₕ(0)‖`, which would make this `O(h_N + τ_N²)`, is not
-  proved);
+  proved; `TimeScheme.Verdict.rate_smooth_iterates` gives `O(h_N + τ_N²)` without it once the
+  comparison of `mirrorComplexRate` is shown smooth of order `3`, `DissipFEEC.Comparison.Smooth`,
+  which is not done here);
 * `absorbing_implicitEuler`, `absorbing_crankNicolson`: the absorbing (Silver–Müller) boundary
   problem on the cube, dissipative, with implicit Euler (order `1`, `K = 3/2`) and Crank–Nicolson
   (order `2`, `K = 5/12`): the fully discrete verdict, contraction of the iterates, convergence for

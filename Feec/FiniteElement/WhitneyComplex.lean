@@ -38,11 +38,16 @@ therefore a Whitney form of the facet, determined by the DOFs of the faces of th
 
 * `whitneySpace_le_p1MinusForms`, `affinePullback_mem_p1MinusForms`,
   `p1MinusForms_le_whitneySpace_refVertex`: Whitney forms are trimmed linear forms, stable
-  under affine pullback.
+  under affine pullback; `whitneySpace_eq_p1MinusForms`: **`P₁⁻Λᵏ(T)` is the space of trimmed
+  linear forms** for every simplex (by a dimension count).
 * `isUnisolvent_whitneyFaceDof`, `tangentialTraceEq_of_whitneyFaceDof_eq`,
   `whitneyFaceDof_congr`, `whitneyFaceDof_comp_extDerivC1_mem_span`: the axioms of an element
   family.
 * `finrank_whitney_globalSpace`: **`dim = #{k-faces}`**.
+
+The Whitney element is the trimmed element `P₁⁻Λ` of `Feec.FiniteElement.PolySeq.trimmed 1`, with
+the same subcomplexes on every mesh (`whitneySubcomplex_eq_trimmed` in
+`Feec.FiniteElement.PolyComplex`).
 
 ## References
 
@@ -155,6 +160,18 @@ theorem affinePullback_mem_p1MinusForms (B : Fin n → Fin m → ℝ) (b : Fin n
     rw [affinePullback_add]; exact Submodule.add_mem _ hw hw'
   | smul c w _ hw =>
     rw [affinePullback_smul]; exact Submodule.smul_mem _ _ hw
+
+/-- **`P₁⁻Λᵏ(T)` is the space of trimmed linear forms** for every `n`-simplex `T` (dimension
+count: `P₁⁻Λᵏ(T) ⊆ P₁⁻Λᵏ ⊆ P₁⁻Λᵏ(T̂)`, and both ends have dimension `(n+1 choose k+1)`). -/
+theorem whitneySpace_eq_p1MinusForms (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
+    whitneySpace T.points k = p1MinusForms n k := by
+  have href : IsUnit (edgeMatrix (refVertex n)).det := by
+    rw [edgeMatrix_refVertex, Matrix.det_one]; exact isUnit_one
+  have hle := p1MinusForms_le_whitneySpace_refVertex (n := n) k
+  have : FiniteDimensional ℝ (p1MinusForms n k) := Submodule.finiteDimensional_of_le hle
+  refine Submodule.eq_of_le_of_finrank_le (whitneySpace_le_p1MinusForms _ k) ?_
+  rw [finrank_whitneySpace_simplex]
+  exact (Submodule.finrank_mono hle).trans (finrank_whitneySpace href k).le
 
 end Feec.FiniteElement
 

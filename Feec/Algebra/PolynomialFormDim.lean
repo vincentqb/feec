@@ -44,7 +44,8 @@ In characteristic zero:
 * `polyFormMinus_sup_map_extDeriv`, `disjoint_polyFormMinus_map_extDeriv`:
   `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ` (`r ≥ 1`), and `polyFormMinus_zero`:
   `P_r⁻Λ⁰ = P_rΛ⁰`;
-* `finrank_polyFormMinus`: `dim P_r⁻Λᵏ = (r + n choose r + k) (r + k - 1 choose k)` (`r ≥ 1`);
+* `finrank_polyFormMinus`: `dim P_r⁻Λᵏ = (r + n choose r + k) (r + k - 1 choose k)` (`r ≥ 1`),
+  and `polyFormMinus_top`: `P_r⁻Λⁿ = P_{r-1}Λⁿ` in the top degree;
 * **exactness**: `exists_extDeriv_eq_of_mem_polyForm` for
   `P_{r+1}Λᵏ → P_rΛ^{k+1} → P_{r-1}Λ^{k+2}`, `exists_extDeriv_eq_of_mem_polyFormMinus` for
   `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` (`r ≥ 1`), and in degree `0`
@@ -648,6 +649,14 @@ theorem finrank_polyFormMinus {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
   rw [h, show r + 1 + k - 1 = r + k by omega, show r + 1 + Fintype.card d =
     r + Fintype.card d + 1 by omega, show r + 1 + k = r + k + 1 by omega,
     Nat.choose_succ_succ', add_mul, show Fintype.card d + r = r + Fintype.card d by omega]
+
+/-- **`P_r⁻Λⁿ = P_{r-1}Λⁿ`** in the top degree `n = #d` (`r ≥ 1`): the Koszul part
+`κ H_{r-1}Λⁿ⁺¹` vanishes. [AFW2006], §3.3 -/
+theorem polyFormMinus_top {r : ℕ} (hr : 1 ≤ r) :
+    polyFormMinus K d r (Fintype.card d) = polyForm K d (r - 1) (Fintype.card d) := by
+  refine (Submodule.eq_of_le_of_finrank_eq (polyForm_le_polyFormMinus r _) ?_).symm
+  rw [finrank_polyForm, finrank_polyFormMinus hr, Nat.choose_self, Nat.choose_self,
+    show r - 1 + Fintype.card d = r + Fintype.card d - 1 by omega]
 
 end CharZero
 

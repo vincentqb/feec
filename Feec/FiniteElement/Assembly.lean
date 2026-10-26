@@ -37,7 +37,11 @@ Then
   of the minimal complex `H̊Λ(Ω)` (`LocalElement.subcomplexMin`, `Ω` strictly star-shaped);
 * the local and global canonical interpolants `Π_T`, `Π_h` (`localInterp`, `globalInterp`) are
   determined by the DOFs (`localDof_localInterp`, `globalInterp_piecewise`) and commute with `d`
-  on `C¹` forms (`localInterp_extDeriv`, `globalInterp_extDeriv`).
+  on `C¹` forms (`localInterp_extDeriv`, `globalInterp_extDeriv`);
+* **equivalent families** (`LocalElement.Equivalent`: the same local spaces, DOFs spanning the
+  same functionals on every face) assemble the same spaces `Vₕᵏ`, `V̊ₕᵏ` and the same subcomplexes
+  on every mesh (`Equivalent.V_eq`, `Equivalent.V₀_eq`, `Equivalent.subcomplex_eq`,
+  `Equivalent.subcomplexMin_eq`).
 
 ## References
 
@@ -47,6 +51,8 @@ Then
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
+  §3.4 (interpolation-equivalent elements)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -141,6 +147,16 @@ end PieceL2
 theorem TangentialTraceEq.mono {g F : Finset (Fin n → ℝ)} {k : ℕ} {α β : Finset (Fin n) → ℝ}
     (h : TangentialTraceEq F k α β) (hgF : g ⊆ F) : TangentialTraceEq g k α β :=
   fun V hV => h V fun l => vectorSpan_mono ℝ (Finset.coe_subset.2 hgF) (hV l)
+
+/-- A functional in the span of functionals agreeing at two points takes equal values there. -/
+theorem eq_of_mem_span_range {X ι' : Type*} [AddCommGroup X] [Module ℝ X] {m : ι' → X →ₗ[ℝ] ℝ}
+    {L : X →ₗ[ℝ] ℝ} (hL : L ∈ Submodule.span ℝ (Set.range m)) {x y : X} (h : ∀ i, m i x = m i y) :
+    L x = L y := by
+  induction hL using Submodule.span_induction with
+  | mem f hf => obtain ⟨i, rfl⟩ := hf; exact h i
+  | zero => simp
+  | add f f' _ _ hf hf' => simp [hf, hf']
+  | smul c f _ hf => simp [hf]
 
 namespace LocalElement
 
@@ -816,6 +832,86 @@ theorem finrank_V₀ (hΩ : IsOpen M.domain) (k : ℕ) :
     exact (E.glue_injective M hΩ k).comp Subtype.val_injective
   rw [V₀, LinearMap.finrank_range_of_inj hinj]
   exact finrank_globalSpace₀ E M k
+
+/-! ### Equivalent element families assemble the same spaces -/
+
+/-- **Equivalent element families** (interpolation-equivalent elements, [BrennerScott2008], §3.4):
+the same local spaces, and on every face the degrees of freedom span the same functionals. -/
+structure Equivalent (E E' : LocalElement n) : Prop where
+  space_eq : ∀ T k, E.space T k = E'.space T k
+  span_dof_eq : ∀ g k, Submodule.span ℝ (Set.range (E.dof g k)) =
+    Submodule.span ℝ (Set.range (E'.dof g k))
+
+namespace Equivalent
+
+variable {E E' : LocalElement n}
+
+theorem symm (h : E.Equivalent E') : E'.Equivalent E :=
+  ⟨fun T k => (h.space_eq T k).symm, fun g k => (h.span_dof_eq g k).symm⟩
+
+/-- The piecewise field of `E'` with the same pieces. -/
+def castPiecewise (h : E.Equivalent E') {k : ℕ} (u : E.Piecewise M k) : E'.Piecewise M k :=
+  fun T => ⟨u T, h.space_eq T k ▸ (u T).2⟩
+
+/-- Fields with equal `E`-DOFs on `g` have equal `E'`-DOFs on `g`. -/
+theorem dof_eq (h : E.Equivalent E') {g : Finset (Fin n → ℝ)} {k : ℕ} {a b : contForms n}
+    (hab : ∀ i, E.dof g k i a = E.dof g k i b) (i : E'.DofIdx g k) :
+    E'.dof g k i a = E'.dof g k i b :=
+  eq_of_mem_span_range ((h.span_dof_eq g k).symm ▸ Submodule.subset_span ⟨i, rfl⟩) hab
+
+theorem castPiecewise_mem_globalSpace (h : E.Equivalent E') {k : ℕ} {u : E.Piecewise M k}
+    (hu : u ∈ E.globalSpace M k) : h.castPiecewise M u ∈ E'.globalSpace M k :=
+  fun T T' g hg hg' => h.dof_eq fun i => hu T T' g hg hg' i
+
+theorem castPiecewise_mem_globalSpace₀ (h : E.Equivalent E') {k : ℕ} {u : E.Piecewise M k}
+    (hu : u ∈ E.globalSpace₀ M k) : h.castPiecewise M u ∈ E'.globalSpace₀ M k :=
+  ⟨h.castPiecewise_mem_globalSpace M hu.1, fun T F hF hFT g hg i =>
+    (h.dof_eq (b := 0) (fun j => (hu.2 T F hF hFT g hg j).trans (map_zero _).symm) i).trans
+      (map_zero _)⟩
+
+theorem glue_castPiecewise (h : E.Equivalent E') (k : ℤ) (u : E.Piecewise M k.toNat) :
+    E'.glue M k (h.castPiecewise M u) = E.glue M k u :=
+  pieceL2_congr M _
+    (fun T hT s => continuous_formComp (E'.contDiff_extendPW M _ hT).continuous s)
+    (fun T hT s => continuous_formComp (E.contDiff_extendPW M _ hT).continuous s)
+    fun T _ => by
+      unfold extendPW castPiecewise
+      split_ifs; rfl
+
+theorem V_le (h : E.Equivalent E') (k : ℤ) : E.V M k ≤ E'.V M k := by
+  rintro _ ⟨u, rfl⟩
+  exact ⟨⟨_, h.castPiecewise_mem_globalSpace M u.2⟩, h.glue_castPiecewise M k u⟩
+
+theorem V₀_le (h : E.Equivalent E') (k : ℤ) : E.V₀ M k ≤ E'.V₀ M k := by
+  rintro _ ⟨u, rfl⟩
+  exact ⟨⟨_, h.castPiecewise_mem_globalSpace₀ M u.2⟩, h.glue_castPiecewise M k u⟩
+
+/-- **Equivalent element families assemble the same global spaces** `Vₕᵏ`, on every mesh. -/
+theorem V_eq (h : E.Equivalent E') (k : ℤ) : E.V M k = E'.V M k :=
+  le_antisymm (h.V_le M k) (h.symm.V_le M k)
+
+/-- **Equivalent element families assemble the same global spaces with vanishing boundary DOFs**
+`V̊ₕᵏ`, on every mesh. -/
+theorem V₀_eq (h : E.Equivalent E') (k : ℤ) : E.V₀ M k = E'.V₀ M k :=
+  le_antisymm (h.V₀_le M k) (h.symm.V₀_le M k)
+
+/-- **Equivalent element families give the same finite element subcomplex** of `HΛ(Ω)`. -/
+theorem subcomplex_eq [NeZero n] (h : E.Equivalent E') (hΩ : IsOpen M.domain) :
+    E.subcomplex M hΩ = E'.subcomplex M hΩ := by
+  have key : ∀ S S' : ((deRham ℝ n).maximalComplex hΩ).Subcomplex, S.V = S'.V → S = S' := by
+    rintro ⟨V, _, _⟩ ⟨V', _, _⟩ rfl; rfl
+  exact key _ _ (funext (h.V_eq M))
+
+/-- **Equivalent element families give the same finite element subcomplex** of `H̊Λ(Ω)`. -/
+theorem subcomplexMin_eq [NeZero n] (h : E.Equivalent E') (hΩ : IsOpen M.domain)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
+    E.subcomplexMin M hΩ x₀ hstar = E'.subcomplexMin M hΩ x₀ hstar := by
+  have key : ∀ S S' : ((deRham ℝ n).minimalComplex hΩ).Subcomplex, S.V = S'.V → S = S' := by
+    rintro ⟨V, _, _⟩ ⟨V', _, _⟩ rfl; rfl
+  exact key _ _ (funext (h.V₀_eq M))
+
+end Equivalent
 
 end LocalElement
 

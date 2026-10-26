@@ -341,6 +341,36 @@ theorem faceSubst_zero (p : MvPolynomial d R) :
         rw [prod_eq_zero (mem_univ j) (zero_pow hj), ite_eq_right h, map_zero, map_zero]
   simpa using LinearMap.congr_fun this p
 
+/-- The substitution `x_j = c` does not change the values on the plane `{x_j = c}`. -/
+theorem eval_faceSubst {f : d → Option R} {y : d → R} (hy : ∀ j c, f j = some c → y j = c)
+    (p : MvPolynomial d R) : eval y (faceSubst f p) = eval y p := by
+  have : (aeval y).toLinearMap ∘ₗ faceSubst f = (aeval y).toLinearMap :=
+    (basisMonomials d R).ext fun γ => by
+      simp only [coe_basisMonomials, LinearMap.coe_comp, Function.comp_apply, faceSubst_monomial,
+        one_mul, AlgHom.toLinearMap_apply, aeval_monomial, Algebra.algebraMap_self,
+        RingHom.id_apply, faceWeight, Finsupp.prod_fintype _ _ (fun _ => pow_zero _), map_one,
+        ← prod_mul_distrib]
+      refine prod_congr rfl fun j _ => ?_
+      cases hf : f j with
+      | none => simp [hf]
+      | some c => simp [hf, hy j c hf]
+  simpa using LinearMap.congr_fun this p
+
+/-- After the substitution, the values only depend on the free coordinates. -/
+theorem eval_faceSubst_congr {f : d → Option R} {y y' : d → R} (h : ∀ j, f j = none → y j = y' j)
+    (p : MvPolynomial d R) : eval y (faceSubst f p) = eval y' (faceSubst f p) := by
+  have : (aeval y).toLinearMap ∘ₗ faceSubst f = (aeval y').toLinearMap ∘ₗ faceSubst f :=
+    (basisMonomials d R).ext fun γ => by
+      simp only [coe_basisMonomials, LinearMap.coe_comp, Function.comp_apply, faceSubst_monomial,
+        one_mul, AlgHom.toLinearMap_apply, aeval_monomial, Algebra.algebraMap_self,
+        RingHom.id_apply, Finsupp.prod_fintype _ _ (fun _ => pow_zero _)]
+      congr 1
+      refine prod_congr rfl fun j _ => ?_
+      cases hf : f j with
+      | none => simp [hf, h j hf]
+      | some c => simp [hf]
+  simpa using LinearMap.congr_fun this p
+
 variable [LinearOrder d]
 
 /-- The trace `tr_f` on the coordinate plane `{x_j = c : f j = some c}`: the components `dx_s`

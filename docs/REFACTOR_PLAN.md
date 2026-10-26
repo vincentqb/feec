@@ -283,7 +283,7 @@ Feec/
 ├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)
 ├── FiniteElement/{Dof,SmoothForm,SimplexIntegral,Stokes,MeshDivergence,LocalSpace,LocalDof,Whitney,
 │                  Assembly,Conformity,WhitneyComplex,BrambleHilbert,InterpolationError,SmoothedProjection,
-│                  WhitneyInterpolation,InverseEstimate,CubeDof}.lean
+│                  WhitneyInterpolation,InverseEstimate,CubeDof,CubeMesh}.lean
 ├── Models/                           -- INSTANCES ONLY; nothing generic may import Models
 │   ├── Torus/{DeRham,GradCurl,SymCurl,BGG}.lean     Euclidean/{DeRham,GradCurl,SymCurl,BGG}.lean
 │   ├── Cube/{Parity,Mirror,MirrorSym,MirrorBGG,Static}.lean        -- equivariant compressions of the torus

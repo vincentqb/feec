@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.Approximation.DissipFEEC
+public import Feec.HilbertComplex.HodgeLaplacian
 
 /-!
 # Ritz projections: one object for cores and rate classes
@@ -18,7 +19,9 @@ from it.
 * A **lift** (`DissipFEEC.Lift`) is the exact side: a subspace of data `D ⊆ D(A)` kept by `S(t)`,
   a lift `ℓ : E → G` along whose orbits `t ↦ ℓ(S(t) x)` is `C¹` with derivative `ℓ(S(t) A x)`,
   and a bounded reading `ρ : G → E` with `ρ ℓ = 1` on `D`. `Lift.ofDomain` is the identity lift
-  of `D(A)`.
+  of `D(A)`; `Lift.graph` is the graph lift `ℓ y = (y, A y)` of `D(A²)` (dense,
+  `LinearPMap.IsMDissipative.dense_sqDomain`), for Ritz projections that see `A y` (the heat
+  equation, `Feec.HilbertComplex.Approximation.HeatFEEC`).
 * A **Ritz projection** (`DissipFEEC.Ritz`, fields `R`, `Δ`, `Δ'`, `defect_eq`, `bound`) is the
   discrete side, uniformly bounded. Its comparison is `Ritz.cmp`, its consistency defect is
   `Δₕ ℓ(S(t) A x) + Δₕ' ℓ(S(t) x)` (`Ritz.cmp_defect`).
@@ -111,6 +114,74 @@ def Lift.ofDomain : F.Lift E where
   hasDerivWithinAt x hx _ ht := by
     have hd := F.isMDissipative.hasDerivWithinAt_semigroup ⟨x, hx⟩ ht
     rwa [← genExt_of_mem hx] at hd
+
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+theorem mem_sqDomain_iff {x : E} : x ∈ A.sqDomain ↔ x ∈ A.domain ∧ genExt A x ∈ A.domain :=
+  ⟨fun ⟨hx, h⟩ => ⟨hx, (genExt_of_mem hx).symm ▸ h⟩,
+    fun ⟨hx, h⟩ => ⟨hx, (genExt_of_mem hx) ▸ h⟩⟩
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- **`D(A²)` is dense** for an m-dissipative `A`: the resolvent `R = (1 - A)⁻¹` maps the dense
+`D(A)` into `D(A²)` and `E` onto `D(A)`. -/
+theorem _root_.LinearPMap.IsMDissipative.dense_sqDomain (hA : A.IsMDissipative) :
+    Dense (A.sqDomain : Set E) := by
+  have hR := hA.isResolvent_one
+  set R := Operator.resolvent A 1
+  have h1 : ∀ y ∈ A.domain, R y ∈ A.sqDomain := fun y hy => by
+    refine ⟨hR.mem_domain y, ?_⟩
+    have e : A ⟨R y, hR.mem_domain y⟩ = R y - y := by
+      have h := hR.sub_apply y
+      rw [one_smul] at h
+      exact (sub_sub_cancel _ _).symm.trans (congrArg (R y - ·) h)
+    rw [e]
+    exact sub_mem (hR.mem_domain y) hy
+  have h2 : (A.domain : Set E) ⊆ closure (A.sqDomain : Set E) := fun x hx => by
+    have e : x = R ((1 : 𝕜) • x - A ⟨x, hx⟩) := (hR.apply_sub ⟨x, hx⟩).symm
+    have hm : (1 : 𝕜) • x - A ⟨x, hx⟩ ∈ closure (A.domain : Set E) := by
+      rw [hA.dense_domain.closure_eq]; trivial
+    rw [e]
+    exact closure_mono (by rintro _ ⟨y, hy, rfl⟩; exact h1 y hy)
+      (image_closure_subset_closure_image R.continuous ⟨_, hm, rfl⟩)
+  rw [dense_iff_closure_eq, ← Set.univ_subset_iff, ← hA.dense_domain.closure_eq]
+  exact closure_minimal h2 isClosed_closure
+
+/-- The **graph lift** of `D(A²)`: `G = E × E`, `ℓ y = (y, A y)`, with a bounded reading `ρ`,
+`ρ (y, A y) = y` on `D(A²)` (e.g. `ρ = fst`). Along the orbits, `ℓ (S(t) x) = (S(t) x, S(t) A x)`
+has derivative `(S(t) A x, S(t) A² x)`. -/
+def Lift.graph (read : E × E →L[𝕜] E) (hread : ∀ y ∈ A.sqDomain, read (y, genExt A y) = y) :
+    F.Lift (E × E) where
+  Data := A.sqDomain
+  le_domain _ hx := hx.1
+  S_mem x hx t ht := by
+    obtain ⟨hx, hx'⟩ := mem_sqDomain_iff.1 hx
+    refine mem_sqDomain_iff.2 ⟨F.isMDissipative.semigroup_mem_domain ⟨x, hx⟩ ht, ?_⟩
+    rw [← F.S_genExt hx ht]
+    exact F.isMDissipative.semigroup_mem_domain ⟨_, hx'⟩ ht
+  lift y := (y, genExt A y)
+  read := read
+  read_lift := hread
+  continuousOn x hx := by
+    have hx := (mem_sqDomain_iff.1 hx).1
+    exact (F.isMDissipative.semigroup.strongCont x).prodMk
+      ((F.isMDissipative.semigroup.strongCont (genExt A x)).congr fun t ht =>
+        (F.S_genExt hx ht).symm)
+  continuousOn' x hx := by
+    have hx := (mem_sqDomain_iff.1 hx).2
+    exact (F.isMDissipative.semigroup.strongCont (genExt A x)).prodMk
+      ((F.isMDissipative.semigroup.strongCont (genExt A (genExt A x))).congr fun t ht =>
+        (F.S_genExt hx ht).symm)
+  hasDerivWithinAt x hx t ht := by
+    obtain ⟨hx, hx'⟩ := mem_sqDomain_iff.1 hx
+    have h2 := ((Lift.ofDomain F).hasDerivWithinAt _ hx' t ht).congr
+      (fun s hs => (F.S_genExt hx (ht.trans hs)).symm) (F.S_genExt hx ht).symm
+    rw [F.S_genExt hx' ht] at h2
+    exact ((Lift.ofDomain F).hasDerivWithinAt x hx t ht).prodMk h2
+
+@[simp] theorem Lift.graph_data {read : E × E →L[𝕜] E} {hread} :
+    (Lift.graph F read hread).Data = A.sqDomain := rfl
+
+@[simp] theorem Lift.graph_lift {read : E × E →L[𝕜] E} {hread} (y : E) :
+    (Lift.graph F read hread).lift y = (y, genExt A y) := rfl
 
 variable {F} in
 /-- A **Ritz projection** for the lift `Λ`: uniformly bounded `Rₕ : G → Xₕ` with a defect identity

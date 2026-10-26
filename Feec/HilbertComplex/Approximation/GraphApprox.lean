@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
+public import Feec.ForMathlib.Analysis.Inequalities
 
 /-!
 # Graph-norm approximation by subcomplexes, degree by degree
@@ -66,17 +67,6 @@ theorem norm_toGraphSpace_le (T : E →ₗ.[𝕜] F) (x : T.domain) :
   nlinarith [norm_nonneg (x : E), norm_nonneg (T x)]
 
 end LinearPMap
-
-namespace PiLp
-
-/-- `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`. -/
-theorem norm_le_sum_norm {ι : Type*} [Fintype ι] {β : ι → Type*}
-    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
-  refine (abs_le_of_sq_le_sq' ?_ (Finset.sum_nonneg fun _ _ => norm_nonneg _)).2
-  rw [PiLp.norm_sq_eq_of_L2]
-  exact Finset.sum_sq_le_sq_sum_of_nonneg fun _ _ => norm_nonneg _
-
-end PiLp
 
 namespace Feec.HilbertComplex.Subcomplex
 

@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Analysis.InnerProductSpace.Orthogonal
 public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+public import Mathlib.Analysis.Normed.Lp.PiLp
 
 /-!
 # Elementary inequalities used in a priori estimates
@@ -10,7 +11,8 @@ public import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 * `Finset.le_mul_sum_sq_of_mul_le_sum_mul`: the absorption step of an a priori estimate;
 * `norm_add_sq_le_two_mul`, `norm_sub_sq_le_two_mul`, `norm_add₃_sq_le_three_mul`: squared
   triangle inequalities;
-* `Submodule.norm_le_of_mem_orthogonal_of_sub_mem`: minimum-norm principle.
+* `Submodule.norm_le_of_mem_orthogonal_of_sub_mem`: minimum-norm principle;
+* `PiLp.norm_le_sum_norm`: `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`.
 
 ## References
 
@@ -95,3 +97,14 @@ theorem Submodule.norm_le_of_mem_orthogonal_of_sub_mem {𝕜 E : Type*} [RCLike 
   have hsq := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero u (u' - u) h0
   rw [add_sub_cancel] at hsq
   nlinarith [norm_nonneg u, norm_nonneg u', mul_self_nonneg ‖u' - u‖]
+
+namespace PiLp
+
+/-- `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`. -/
+theorem norm_le_sum_norm {ι : Type*} [Fintype ι] {β : ι → Type*}
+    [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
+  refine (abs_le_of_sq_le_sq' ?_ (Finset.sum_nonneg fun _ _ => norm_nonneg _)).2
+  rw [PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_sq_le_sq_sum_of_nonneg fun _ _ => norm_nonneg _
+
+end PiLp

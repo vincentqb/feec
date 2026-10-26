@@ -267,12 +267,14 @@ Feec/
 │   ├── Hodge.lean (cohomology, harmonic, Hodge, Poincaré)  Compactness.lean
 │   ├── Dirac.lean (dirac = d+d†, wave = d−d†)  HodgeLaplacian.lean  Mixed.lean  HodgeWave.lean
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
+│   ├── Total.lean (the total complex ⊕ Wⁱ →𝐝 ⊕ Wⁱ on one point; the Green operator of Δ)
 │   ├── Approximation/{Subcomplex,CochainProjection,DiscreteHodge,DiscreteCohomology,MixedError,SemidiscreteWave}.lean
 │   │   Approximation/ConformingFamily.lean -- AFW §3.3 data: subcomplexes, bounded cochain projections, windows, Jackson estimates
 │   │   Approximation/StaticFEEC.lean -- the static FEEC theorem staticFEEC (StaticVerdict: AFW Thm 3.4–3.9), rates, uniform projections
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
 │   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
 │   │   Approximation/{Ritz,RitzResolvent}.lean -- Ritz projections → cores, rate classes (regularity scales)
+│   │   Approximation/HeatFEEC.lean -- the Hodge heat equation: toHeat, the heat Ritz projection, heatFEEC_verdict, heat_rate
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,

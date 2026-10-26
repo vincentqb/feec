@@ -162,6 +162,12 @@ def solutionSigma : W j →L[𝕜] W i := (H.domainIncl i).comp (H.solutionSigma
 theorem solutionOp_apply (f : W j) :
     H.solutionOp hij hjk hj hk f = H.domainIncl j (H.solutionOpV hij hjk hj hk f) := rfl
 
+/-- `‖K f‖` is at most the norm of the mixed solution. -/
+theorem norm_solutionOp_le_norm_mixedSolution (f : W j) :
+    ‖H.solutionOp hij hjk hj hk f‖ ≤ ‖H.mixedSolution hij hjk hj hk f‖ :=
+  (H.norm_domainIncl_le j _).trans
+    ((WithLp.norm_fst_le (x := _)).trans (WithLp.norm_snd_le (x := _)))
+
 /-- The mixed solution is `(d† K f, K f, P_ℌ f)`. -/
 theorem harmonic_mixedSolution (f : W j) :
     ((H.mixedSolution hij hjk hj hk f).snd.snd : W j) = (H.harmonic j).starProjection f :=
@@ -768,15 +774,14 @@ private theorem apply_mk_sub {E F : Type*} [AddCommGroup E] [Module 𝕜 E] [Add
     (h : a - b ∈ T.domain) : T ⟨a - b, h⟩ = T ⟨a, ha⟩ - T ⟨b, hb⟩ := by
   rw [← T.map_sub]; rfl
 
-include hij hjk in
-/-- **The `j`-th component of the window Hodge Laplacian** `Δ = -L²` is the Hodge Laplacian
-`d d† + d† d` at `j`: for `x ∈ D(Δ)`, `x j ∈ D(d) ∩ D(d†)`, `d x j ∈ D(d†)`, `d† x j ∈ D(d)` and
-`(Δ x) j = d (d† x j) + d† (d x j)`. No closed range is needed. See [AFW2010], §3.2. -/
-theorem hodgeLaplacian_apply_of_rel (x : H.hodgeLaplacian.domain) :
-    ∃ (h₁ : (x : PiLp 2 W) j ∈ (H.d j k).domain) (h₂ : (x : PiLp 2 W) j ∈ ((H.d i j)†).domain)
-      (h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain)
-      (h₄ : ((H.d i j)† ⟨_, h₂⟩ : W i) ∈ (H.d i j).domain),
-      (H.hodgeLaplacian x) j = H.d i j ⟨_, h₄⟩ + (H.d j k)† ⟨_, h₃⟩ := by
+/-- **The Hodge Laplacian is `𝐝 𝐝* + 𝐝* 𝐝`**: for `x ∈ D(Δ)`, `x ∈ D(𝐝) ∩ D(𝐝*)`, `𝐝 x ∈ D(𝐝*)`,
+`𝐝* x ∈ D(𝐝)` and `Δ x = 𝐝 𝐝* x + 𝐝* 𝐝 x` (the terms `𝐝 𝐝`, `𝐝* 𝐝*` of `-L²` vanish). See
+[AFW2010], §3.2. -/
+theorem hodgeLaplacian_apply_eq (x : H.hodgeLaplacian.domain) :
+    ∃ (h₁ : (x : PiLp 2 W) ∈ H.totalD.domain) (h₂ : (x : PiLp 2 W) ∈ H.dual.totalD.domain)
+      (h₃ : (H.totalD ⟨_, h₁⟩ : PiLp 2 W) ∈ H.dual.totalD.domain)
+      (h₄ : (H.dual.totalD ⟨_, h₂⟩ : PiLp 2 W) ∈ H.totalD.domain),
+      H.hodgeLaplacian x = H.totalD ⟨_, h₄⟩ + H.dual.totalD ⟨_, h₃⟩ := by
   rcases x with ⟨x, hw, hLx⟩
   set X1 : H.totalD.domain := ⟨x, hw.1⟩
   set X2 : H.dual.totalD.domain := ⟨x, hw.2⟩
@@ -789,24 +794,37 @@ theorem hodgeLaplacian_apply_of_rel (x : H.hodgeLaplacian.domain) :
   have hd2' : (H.dual.totalD X2 : PiLp 2 W) ∈ H.totalD.domain := by
     have e : (H.dual.totalD X2 : PiLp 2 W) = H.totalD X1 - H.wave ⟨x, hw⟩ := by rw [hL]; abel
     rw [e]; exact sub_mem hd1 hLx.1
-  have hΔ : H.hodgeLaplacian ⟨x, hw, hLx⟩ = H.totalD ⟨_, hd2'⟩ + H.dual.totalD ⟨_, hd1'⟩ := by
-    have e1 : H.totalD ⟨_, hLx.1⟩ = H.totalD ⟨_, hd1⟩ - H.totalD ⟨_, hd2'⟩ := by
-      rw [← apply_mk_sub _ hd1 hd2' (by rw [← hL]; exact hLx.1)]
-      exact congrArg _ (Subtype.ext hL)
-    have e2 : H.dual.totalD ⟨_, hLx.2⟩ = H.dual.totalD ⟨_, hd1'⟩ - H.dual.totalD ⟨_, hd2⟩ := by
-      rw [← apply_mk_sub _ hd1' hd2 (by rw [← hL]; exact hLx.2)]
-      exact congrArg _ (Subtype.ext hL)
-    have z1 : H.totalD ⟨_, hd1⟩ = 0 := H.totalD_comp_totalD X1
-    have z2 : H.dual.totalD ⟨_, hd2⟩ = 0 := H.dual.totalD_comp_totalD X2
-    change -(H.totalD ⟨_, hLx.1⟩ - H.dual.totalD ⟨_, hLx.2⟩) = _
-    rw [e1, e2, z1, z2]; abel
-  have h₁ : x j ∈ (H.d j k).domain := hw.1 j k
-  have h₂ : x j ∈ ((H.d i j)†).domain := hw.2 j i
-  have ci : (H.dual.totalD X2 : PiLp 2 W) i = (H.d i j)† ⟨x j, h₂⟩ :=
+  refine ⟨hw.1, hw.2, hd1', hd2', ?_⟩
+  have e1 : H.totalD ⟨_, hLx.1⟩ = H.totalD ⟨_, hd1⟩ - H.totalD ⟨_, hd2'⟩ := by
+    rw [← apply_mk_sub _ hd1 hd2' (by rw [← hL]; exact hLx.1)]
+    exact congrArg _ (Subtype.ext hL)
+  have e2 : H.dual.totalD ⟨_, hLx.2⟩ = H.dual.totalD ⟨_, hd1'⟩ - H.dual.totalD ⟨_, hd2⟩ := by
+    rw [← apply_mk_sub _ hd1' hd2 (by rw [← hL]; exact hLx.2)]
+    exact congrArg _ (Subtype.ext hL)
+  have z1 : H.totalD ⟨_, hd1⟩ = 0 := H.totalD_comp_totalD X1
+  have z2 : H.dual.totalD ⟨_, hd2⟩ = 0 := H.dual.totalD_comp_totalD X2
+  change -(H.totalD ⟨_, hLx.1⟩ - H.dual.totalD ⟨_, hLx.2⟩) = _
+  rw [e1, e2, z1, z2]; abel
+
+include hij hjk in
+/-- **The `j`-th component of the window Hodge Laplacian** `Δ = -L²` is the Hodge Laplacian
+`d d† + d† d` at `j`: for `x ∈ D(Δ)`, `x j ∈ D(d) ∩ D(d†)`, `d x j ∈ D(d†)`, `d† x j ∈ D(d)` and
+`(Δ x) j = d (d† x j) + d† (d x j)`. No closed range is needed. See [AFW2010], §3.2. -/
+theorem hodgeLaplacian_apply_of_rel (x : H.hodgeLaplacian.domain) :
+    ∃ (h₁ : (x : PiLp 2 W) j ∈ (H.d j k).domain) (h₂ : (x : PiLp 2 W) j ∈ ((H.d i j)†).domain)
+      (h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain)
+      (h₄ : ((H.d i j)† ⟨_, h₂⟩ : W i) ∈ (H.d i j).domain),
+      (H.hodgeLaplacian x) j = H.d i j ⟨_, h₄⟩ + (H.d j k)† ⟨_, h₃⟩ := by
+  obtain ⟨hx1, hx2, hd1', hd2', hΔ⟩ := H.hodgeLaplacian_apply_eq x
+  set X1 : H.totalD.domain := ⟨x, hx1⟩
+  set X2 : H.dual.totalD.domain := ⟨x, hx2⟩
+  have h₁ : (x : PiLp 2 W) j ∈ (H.d j k).domain := hx1 j k
+  have h₂ : (x : PiLp 2 W) j ∈ ((H.d i j)†).domain := hx2 j i
+  have ci : (H.dual.totalD X2 : PiLp 2 W) i = (H.d i j)† ⟨_, h₂⟩ :=
     H.dual.totalD_apply_of_rel X2 (show c.symm.Rel j i from hij)
-  have ck : (H.totalD X1 : PiLp 2 W) k = H.d j k ⟨x j, h₁⟩ := H.totalD_apply_of_rel X1 hjk
-  have h₄ : ((H.d i j)† ⟨x j, h₂⟩ : W i) ∈ (H.d i j).domain := ci ▸ hd2' i j
-  have h₃ : H.d j k ⟨x j, h₁⟩ ∈ ((H.d j k)†).domain := ck ▸ hd1' k j
+  have ck : (H.totalD X1 : PiLp 2 W) k = H.d j k ⟨_, h₁⟩ := H.totalD_apply_of_rel X1 hjk
+  have h₄ : ((H.d i j)† ⟨_, h₂⟩ : W i) ∈ (H.d i j).domain := ci ▸ hd2' i j
+  have h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain := ck ▸ hd1' k j
   refine ⟨h₁, h₂, h₃, h₄, ?_⟩
   rw [hΔ, PiLp.add_apply, H.totalD_apply_of_rel _ hij,
     H.dual.totalD_apply_of_rel _ (show c.symm.Rel k j from hjk)]

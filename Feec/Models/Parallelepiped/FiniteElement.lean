@@ -3,6 +3,7 @@ module
 public import Feec.Domain.FormPullback
 public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.Models.Cube.PolyRate
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!
 # The finite element method on parallelepipeds
@@ -63,10 +64,11 @@ the data and smoothness.
   solutions and sequences of order `s` (`mixed_rate_poly`, `mixed_rate_polyMin`), the semi-discrete
   Hodge wave equation on every window (`exists_tendstoUniformlyOn_window_whitney`,
   `exists_tendstoUniformlyOn_window_poly`, `_min`) with the `O(h)` rate for `C²` solutions
-  (`norm_sub_le_meshSize_window_smooth`). The generic forms (`HasUniformProj`,
-  `discretePoincare_of`, `mixed_wellPosed_of`, `mixed_quasiOptimal_of`, `mixed_rate_of`,
-  `exists_tendstoUniformlyOn_window_of`) apply to any family of subcomplexes with uniformly bounded
-  cochain projections.
+  (`norm_sub_le_meshSize_window_smooth`). These are instances of the
+  theorems of `Feec.HilbertComplex.Approximation.StaticFEEC` for any family of subcomplexes with
+  uniformly bounded cochain projections (`Feec.HilbertComplex.Subcomplex.HasUniformProj`;
+  `hasUniformProj_of_chainIso` transfers it along `T^*`) and of
+  `exists_tendstoUniformlyOn_window_of` for the wave equation.
 
 Not covered here: the mixed boundary conditions of `Feec.Models.Cube.DeRhamPartial`.
 
@@ -1766,40 +1768,17 @@ theorem _root_.Feec.HilbertComplex.Subcomplex.CochainProjection.IsGraphBounded.m
     (h : P.IsGraphBounded i j C) (hC : 0 ≤ C) (hCC : C ≤ C') : P.IsGraphBounded i j C' :=
   fun x => (h x).trans (mul_le_mul_of_nonneg_right (pow_le_pow_left₀ hC hCC 2) (by positivity))
 
-/-- **Graph-norm distance from a degreewise approximation**: a `v ∈ Vₕʲ` within `ε` of `σ`, with
-`d (σ - v)` within `ε`, gives `dist_V(σ, Vₕʲ) ≤ 2 ε`. -/
-theorem infDist_domainSub_le_two_mul {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
-    [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
-    {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} (S : H.Subcomplex)
-    [∀ i, FiniteDimensional ℝ (S.V i)] {j : ℤ} (σ : H.domainSpace j) {v : W j} (hv : v ∈ S.V j)
-    {ε : ℝ} (h1 : ‖H.domainIncl j σ - v‖ ≤ ε)
-    (h2 : ∀ j' (hx : H.domainIncl j σ ∈ (H.d j j').domain),
-      ‖H.d j j' ⟨H.domainIncl j σ - v, Submodule.sub_mem _ hx (S.le_domain j j' hv)⟩‖ ≤ ε) :
-    Metric.infDist σ (S.domainSub j) ≤ 2 * ε := by
-  refine (Subcomplex.infDist_domainSub_le (S := S)
-    (rfl : (ComplexShape.up ℤ).Rel j (j + 1)) σ hv).trans ?_
-  have e : H.d j (j + 1) (H.domainCoord j (j + 1) σ) - H.d j (j + 1) ⟨v, S.le_domain j (j + 1) hv⟩ =
-      H.d j (j + 1) ⟨H.domainIncl j σ - v,
-        Submodule.sub_mem _ (H.domainCoord j (j + 1) σ).2 (S.le_domain j (j + 1) hv)⟩ := by
-    rw [← LinearPMap.map_sub]; rfl
-  rw [e, two_mul]
-  exact add_le_add h1 (h2 (j + 1) (H.domainCoord j (j + 1) σ).2)
+/-! ### Families with uniformly bounded projections
 
-/-! ### The finite element theorems for any family with uniformly bounded projections -/
+The finite element theorems for any family of subcomplexes with uniformly bounded cochain
+projections are those of `Feec.HilbertComplex.Approximation.StaticFEEC`
+(`Subcomplex.HasUniformProj.discretePoincare`, `.mixed_wellPosed`, `.mixed_quasiOptimal`,
+`Subcomplex.CochainProjection.norm_sub_le_rate`). -/
 
 section Generic
 
 variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
-  [∀ i, CompleteSpace (W i)] (H : HilbertComplex ℝ (ComplexShape.up ℤ) W)
-
-/-- **Uniformly bounded cochain projections with vanishing harmonic gap** onto a family of
-subcomplexes. -/
-def HasUniformProj (S : ℕ → H.Subcomplex) : Prop :=
-  ∃ (C : ℝ) (π : ∀ N, (S N).CochainProjection), 1 ≤ C ∧ (∀ N i x, ‖(π N).π i x‖ ≤ C * ‖x‖) ∧
-    (∀ N i j, (π N).IsGraphBounded i j C) ∧
-    ∀ j, Tendsto (fun N => (π N).harmonicGap j) atTop (𝓝 0)
-
-variable {H}
+  [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ (ComplexShape.up ℤ) W}
 
 /-- **Uniform projections transfer along an isomorphism of complexes** with bounded `e`, `e⁻¹`,
 provided the subcomplexes correspond and the target family approximates `L²`. -/
@@ -1815,7 +1794,7 @@ theorem hasUniformProj_of_chainIso {W' : ℤ → Type*} [∀ i, NormedAddCommGro
     (hg : ∀ N i j, (P N).IsGraphBounded i j C)
     (happ : ∀ j (x' : W' j), Tendsto (fun N => Metric.infDist x' ((S' N).V j : Set (W' j)))
       atTop (𝓝 0)) :
-    HasUniformProj H S := by
+    Subcomplex.HasUniformProj atTop S := by
   have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0)
   have hM'0 : 0 ≤ M' := (norm_nonneg _).trans (hM' 0)
   set C₀ := max 1 (M' * C * M)
@@ -1831,113 +1810,8 @@ theorem hasUniformProj_of_chainIso {W' : ℤ → Type*} [∀ i, NormedAddCommGro
   exact Subcomplex.CochainProjection.tendsto_harmonicGap π (zero_le_one.trans (le_max_left _ _))
     (fun N x => hbπ N j x) fun q _ => IsChainIso.tendsto_infDist_comapSub S hS (happ j) q
 
-variable {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)] {cP : ℝ}
-  (hcP : 1 ≤ cP)
-  (hP : ∀ i j, (ComplexShape.up ℤ).Rel i j → ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ →
-    ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
-include hcP hP
+variable {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)]
 
-omit [∀ N k, FiniteDimensional ℝ ((S N).V k)] hcP in
-/-- **Uniform discrete Poincaré inequality** ([AFW2010], Thm 3.6). -/
-theorem discretePoincare_of (h : HasUniformProj H S) : ∃ c : ℝ, ∀ {i j : ℤ},
-    (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : W i} (hx : x ∈ (S N).V i),
-    (∀ y ∈ (S N).cyclesW i, inner ℝ y x = 0) →
-      ‖x‖ ≤ c * ‖H.d i j ⟨x, (S N).le_domain i j hx⟩‖ := by
-  obtain ⟨C, π, hC, hπ, -, -⟩ := h
-  exact ⟨C * cP, fun {i j} hij N x hx hxo =>
-    (π N).norm_le_of_forall_inner_eq_zero hij (hP i j hij) (zero_le_one.trans hC) (hπ N i) hx hxo⟩
-
-/-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** ([AFW2010],
-Thm 3.8). -/
-theorem mixed_wellPosed_of (h : HasUniformProj H S) : ∃ C : ℝ, ∀ {i j k : ℤ},
-    (ComplexShape.up ℤ).Rel i j → (ComplexShape.up ℤ).Rel j k → ∀ (N : ℕ) (f : (S N).V j),
-    (∃! x, (S N).toHilbertComplex.mixedForm i j k x = (S N).toHilbertComplex.mixedRHS i j f) ∧
-    ∀ x : (S N).toHilbertComplex.MixedSpace i j,
-      (S N).toHilbertComplex.mixedForm i j k x = (S N).toHilbertComplex.mixedRHS i j f →
-        ‖x‖ ≤ C * ‖f‖ := by
-  refine h.elim fun C hC => hC.elim fun π hπ => ?_
-  obtain ⟨hC1, hb, -, -⟩ := hπ
-  refine ⟨16 * (C * cP) ^ 2, fun {i j k} hij hjk N f => ⟨?_, fun x hx => ?_⟩⟩
-  · exact (π N).existsUnique_mixed hij hjk hcP hC1 (hP i j hij) (hP j k hjk) (hb N i) (hb N j) f
-  · exact (π N).norm_le_of_mixed hij hjk hcP hC1 (hP i j hij) (hP j k hjk) (hb N i) (hb N j) hx
-
-omit hcP in
-/-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9) with weights `μ_j(N) → 0`. -/
-theorem mixed_quasiOptimal_of (h : HasUniformProj H S) :
-    ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
-    ∀ {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {q : H.harmonic j},
-    H.IsMixedSolution i j k f σ u q → ∀ N : ℕ,
-    ‖σ - (S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).fst‖ +
-        ‖u - (S N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).snd.fst‖ +
-        ‖(q : W j) - (((Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk
-          f).snd.snd : (S N).V j) : W j)‖ ≤
-      K * (Metric.infDist σ ((S N).domainSub i) + Metric.infDist u ((S N).domainSub j) +
-        Metric.infDist (q : W j) ((S N).harmonicW j) +
-        μ j N * Metric.infDist (H.boundaryPart j (H.domainIncl j u)) ((S N).domainSub j)) := by
-  refine h.elim fun C hC => hC.elim fun π hπ => ?_
-  obtain ⟨hC1, -, hg, hgap⟩ := hπ
-  exact ⟨(1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C), fun j N => (π N).harmonicGap j, hgap,
-    fun {i j k} hij hjk _ _ _ _ hs N => (π N).norm_sub_le_infDist_harmonicGap hij hjk hC1
-      (hP i j hij) (hP j k hjk) (hg N i j) (hg N j k) hs⟩
-
-omit hcP in
-/-- **Convergence at the approximation rate** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): if every
-form with the regularity `Reg` has a `v ∈ Vₕˡ` with `‖x - v‖, ‖d (x - v)‖ ≤ B_l r_N`, and the
-solution `(σ, u, q)`, the boundary part of `u` and `q` are regular, then the error of the discrete
-mixed solutions is `≤ K r_N` with `K` independent of `N`. -/
-theorem mixed_rate_of {C : ℝ} (π : ∀ N, (S N).CochainProjection) (hC1 : 1 ≤ C)
-    (hg : ∀ N i j, (π N).IsGraphBounded i j C) {Reg : ∀ l, W l → Prop} {B : ℤ → ℝ}
-    (hB : ∀ l, 0 ≤ B l) {r : ℕ → ℝ} (hr : ∀ N, 0 ≤ r N)
-    (happ : ∀ N l (x : W l), Reg l x → ∃ v, ∃ hv : v ∈ (S N).V l, ‖x - v‖ ≤ B l * r N ∧
-      ∀ j' (hx : x ∈ (H.d l j').domain),
-        ‖H.d l j' ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain l j' hv)⟩‖ ≤ B l * r N)
-    {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k)
-    {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {q : H.harmonic j}
-    (hs : H.IsMixedSolution i j k f σ u q) (hσ : Reg i (H.domainIncl i σ))
-    (hu : Reg j (H.domainIncl j u))
-    (hb : Reg j (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))))
-    (hq : Reg j (q : W j)) (N : ℕ) :
-    ‖σ - (S N).embD i (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).fst‖ +
-        ‖u - (S N).embD j
-          (Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk f).snd.fst‖ +
-        ‖(q : W j) - (((Subcomplex.CochainProjection.discreteMixedSolution (S N) hij hjk
-          f).snd.snd : (S N).V j) : W j)‖ ≤
-      (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C) * (2 * (B i + B j) * (3 + 2 * C)) * r N := by
-  set K₀ := (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C)
-  have hK₀ : 0 ≤ K₀ := by have := zero_le_one.trans hC1; positivity
-  have hmain := (π N).norm_sub_le_infDist hij hjk hC1 (by linarith : (0 : ℝ) ≤ 1 + C)
-    (hP i j hij) (hP j k hjk) (hg N i j) (hg N j k)
-    (fun _ hq' => (π N).norm_sub_π_harmonic_le hjk (by linarith) (hg N j k) hq') hs
-  have dist_of : ∀ {l : ℤ} {τ : H.domainSpace l}, Reg l (H.domainIncl l τ) →
-      Metric.infDist τ ((S N).domainSub l) ≤ 2 * (B l * r N) := fun {l τ} hτ => by
-    obtain ⟨v, hv, h1, h2⟩ := happ N l _ hτ
-    exact infDist_domainSub_le_two_mul (S N) τ hv h1 h2
-  have d1 := dist_of hσ
-  have d2 := dist_of hu
-  have d3 := dist_of hb
-  have d4 : Metric.infDist (q : W j) ((S N).harmonicW j) ≤ (1 + C) * (2 * (B j * r N)) :=
-    ((π N).infDist_harmonicW_le hjk (by linarith) (hg N j k) q.2).trans
-      (mul_le_mul_of_nonneg_left (dist_of (τ := cyclesToDomainSpace (H.harmonic_le_cycles j q.2))
-        hq) (by linarith))
-  refine hmain.trans ?_
-  have hi := mul_nonneg (hB i) (hr N)
-  have hj := mul_nonneg (hB j) (hr N)
-  have h3 := mul_le_mul_of_nonneg_left d3 (by linarith : (0 : ℝ) ≤ 1 + C)
-  have key : 2 * (B i + B j) * (3 + 2 * C) * r N = 2 * (B i * r N) + 2 * (B j * r N) +
-      (1 + C) * (2 * (B j * r N)) + (1 + C) * (2 * (B j * r N)) +
-      2 * (B i * r N) * (2 + 2 * C) := by ring
-  have hp : 0 ≤ 2 * (B i * r N) * (2 + 2 * C) := mul_nonneg (by linarith) (by linarith)
-  have hsum : Metric.infDist σ ((S N).domainSub i) + Metric.infDist u ((S N).domainSub j) +
-      Metric.infDist (q : W j) ((S N).harmonicW j) +
-      (1 + C) * Metric.infDist (H.boundaryPart j (H.domainIncl j u)) ((S N).domainSub j) ≤
-      2 * (B i + B j) * (3 + 2 * C) * r N := by
-    rw [key]; linarith
-  calc K₀ * _ ≤ K₀ * (2 * (B i + B j) * (3 + 2 * C) * r N) := mul_le_mul_of_nonneg_left hsum hK₀
-    _ = _ := by ring
-
-omit hcP hP in
 /-- **Convergence of the semi-discrete Hodge wave equation** on every window, for a family of
 subcomplexes approximating every point degreewise in the graph norm. -/
 theorem exists_tendstoUniformlyOn_window_of (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε →
@@ -2090,14 +1964,14 @@ theorem discretePoincare : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).R
     {x : L2F ℝ (domain A b) (formIdx n i)} (hx : x ∈ (whitney A hA b N).V i),
     (∀ y ∈ (whitney A hA b N).cyclesW i, inner ℝ y x = 0) →
       ‖x‖ ≤ c * ‖(complex A b).d i j ⟨x, (whitney A hA b N).le_domain i j hx⟩‖ :=
-  discretePoincare_of (poincare A hA b) (smoothedProjection_uniform A hA b)
+  Subcomplex.HasUniformProj.discretePoincare (poincare A hA b) (smoothedProjection_uniform A hA b)
 
 /-- **Uniform discrete Poincaré inequality** with vanishing boundary DOFs on `Ω`. -/
 theorem discretePoincare_min : ∃ c : ℝ, ∀ {i j : ℤ}, (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ)
     {x : L2F ℝ (domain A b) (formIdx n i)} (hx : x ∈ (whitneyMin A hA b N).V i),
     (∀ y ∈ (whitneyMin A hA b N).cyclesW i, inner ℝ y x = 0) →
       ‖x‖ ≤ c * ‖(complexMin A b).d i j ⟨x, (whitneyMin A hA b N).le_domain i j hx⟩‖ :=
-  discretePoincare_of (poincare_min A hA b) (smoothedProjection_uniform_min A hA b)
+  Subcomplex.HasUniformProj.discretePoincare (poincare_min A hA b) (smoothedProjection_uniform_min A hA b)
 
 /-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** on the
 Whitney complexes of `T(M_N)` ([AFW2010], Thm 3.8): unique discrete solutions, bounded by
@@ -2109,7 +1983,7 @@ theorem mixed_wellPosed : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up ℤ).
     ∀ x : (whitney A hA b N).toHilbertComplex.MixedSpace i j,
       (whitney A hA b N).toHilbertComplex.mixedForm i j k x =
         (whitney A hA b N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
-  mixed_wellPosed_of (one_le_poincareConst A) (poincare A hA b) (smoothedProjection_uniform A hA b)
+  Subcomplex.HasUniformProj.mixed_wellPosed (poincare A hA b) (one_le_poincareConst A) (smoothedProjection_uniform A hA b)
 
 /-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian with vanishing
 traces** on `Ω`. -/
@@ -2120,7 +1994,7 @@ theorem mixed_wellPosed_min : ∃ C : ℝ, ∀ {i j k : ℤ}, (ComplexShape.up �
     ∀ x : (whitneyMin A hA b N).toHilbertComplex.MixedSpace i j,
       (whitneyMin A hA b N).toHilbertComplex.mixedForm i j k x =
         (whitneyMin A hA b N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
-  mixed_wellPosed_of (one_le_poincareConst A) (poincare_min A hA b)
+  Subcomplex.HasUniformProj.mixed_wellPosed (poincare_min A hA b) (one_le_poincareConst A)
     (smoothedProjection_uniform_min A hA b)
 
 /-- **Quasi-optimality of the Whitney method for the mixed Hodge Laplacian on `Ω`** ([AFW2010],
@@ -2142,7 +2016,7 @@ theorem mixed_quasiOptimal : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, T
         Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((whitney A hA b N).harmonicW j) +
         μ j N * Metric.infDist ((complex A b).boundaryPart j ((complex A b).domainIncl j u))
           ((whitney A hA b N).domainSub j)) :=
-  mixed_quasiOptimal_of (poincare A hA b) (smoothedProjection_uniform A hA b)
+  Subcomplex.HasUniformProj.mixed_quasiOptimal (poincare A hA b) (smoothedProjection_uniform A hA b)
 
 /-- **Quasi-optimality of the Whitney method with vanishing traces on `Ω`.** -/
 theorem mixed_quasiOptimal_min : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ j, Tendsto (μ j) atTop (𝓝 0)) ∧
@@ -2163,7 +2037,7 @@ theorem mixed_quasiOptimal_min : ∃ (K : ℝ) (μ : ℤ → ℕ → ℝ), (∀ 
           ((whitneyMin A hA b N).harmonicW j) +
         μ j N * Metric.infDist ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))
           ((whitneyMin A hA b N).domainSub j)) :=
-  mixed_quasiOptimal_of (poincare_min A hA b) (smoothedProjection_uniform_min A hA b)
+  Subcomplex.HasUniformProj.mixed_quasiOptimal (poincare_min A hA b) (smoothedProjection_uniform_min A hA b)
 
 end WhitneyFEM
 
@@ -2365,11 +2239,12 @@ theorem mixed_rate_smooth {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
   refine ⟨(1 + 144 * (projConst A C * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + projConst A C) *
     (2 * (rateBound A i + rateBound A j) * (3 + 2 * projConst A C)),
     fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
-  refine (mixed_rate_of (poincare A hA b) (proj A hA b hE) (one_le_projConst A C)
-    (isGraphBounded_proj A hA b hE) (Reg := fun l x => IsC2Form A hA b l L x) (B := rateBound A)
-    (rateBound_nonneg A) (r := fun N => L * FEM.meshSize N)
-    (fun N => mul_nonneg hL0 (FEM.meshSize_pos N).le) (fun N l x hx => ?_) hij hjk hs hσ hu hb hq
-    N).trans (le_of_eq (by ring))
+  refine ((proj A hA b hE N).norm_sub_le_rate hij hjk (one_le_projConst A C)
+    (poincare A hA b i j hij) (poincare A hA b j k hjk) (isGraphBounded_proj A hA b hE N i j)
+    (isGraphBounded_proj A hA b hE N j k) (Reg := fun l x => IsC2Form A hA b l L x)
+    (B := rateBound A) (rateBound_nonneg A) (r := L * FEM.meshSize N)
+    (mul_nonneg hL0 (FEM.meshSize_pos N).le) (fun l x hx => ?_) hs hσ hu hb hq).trans
+    (le_of_eq (by ring))
   obtain ⟨v, hv, h1, h2⟩ := hx.exists_mem_whitney_le A hA b hL0 N
   exact ⟨v, hv, by rw [← mul_assoc]; exact h1, fun j' hxj => by rw [← mul_assoc]; exact h2 j' hxj⟩
 
@@ -2397,12 +2272,12 @@ theorem mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j
   refine ⟨(1 + 144 * (projConst A C * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + projConst A C) *
     (2 * (rateBound A i + rateBound A j) * (3 + 2 * projConst A C)),
     fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
-  refine (mixed_rate_of (poincare_min A hA b) (projMin A hA b hE) (one_le_projConst A C)
-    (isGraphBounded_projMin A hA b hE) (Reg := fun l x => IsC2FormMin A hA b l L x)
-    (B := rateBound A)
-    (rateBound_nonneg A) (r := fun N => L * FEM.meshSize N)
-    (fun N => mul_nonneg hL0 (FEM.meshSize_pos N).le) (fun N l x hx => ?_) hij hjk hs hσ hu hb hq
-    N).trans (le_of_eq (by ring))
+  refine ((projMin A hA b hE N).norm_sub_le_rate hij hjk (one_le_projConst A C)
+    (poincare_min A hA b i j hij) (poincare_min A hA b j k hjk)
+    (isGraphBounded_projMin A hA b hE N i j) (isGraphBounded_projMin A hA b hE N j k)
+    (Reg := fun l x => IsC2FormMin A hA b l L x) (B := rateBound A) (rateBound_nonneg A)
+    (r := L * FEM.meshSize N) (mul_nonneg hL0 (FEM.meshSize_pos N).le) (fun l x hx => ?_) hs hσ hu
+    hb hq).trans (le_of_eq (by ring))
   obtain ⟨v, hv, h1, h2⟩ := hx.exists_mem_whitneyMin_le A hA b hL0 N
   exact ⟨v, hv, by rw [← mul_assoc]; exact h1, fun j' hxj => by rw [← mul_assoc]; exact h2 j' hxj⟩
 
@@ -2643,7 +2518,7 @@ variable [NeZero n]
 /-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap onto the
 complexes of the admissible sequence `S`** on the meshes `T(M_N)` of `Ω`. -/
 theorem polySmoothedProjection_uniform (S : PolySeq) :
-    HasUniformProj (complex A b) (poly A hA b S) := by
+    Subcomplex.HasUniformProj atTop (poly A hA b S) := by
   refine (FEM.polySmoothingEstimates_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
   exact hasUniformProj_of_chainIso (isChainIso A hA b) (norm_pullEquiv_le A hA b)
     (norm_pullEquiv_symm_le A hA b) (fun j => inferInstance) (fun N k x => mem_poly_V_iff A hA b S N k x)
@@ -2653,7 +2528,7 @@ theorem polySmoothedProjection_uniform (S : PolySeq) :
 /-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` with vanishing
 boundary DOFs** on `Ω`. -/
 theorem polySmoothedProjection_uniform_min (S : PolySeq) :
-    HasUniformProj (complexMin A b) (polyMin A hA b S) := by
+    Subcomplex.HasUniformProj atTop (polyMin A hA b S) := by
   refine (FEM.polySmoothingEstimatesMin_exists (n := n) S).elim fun p hp => hp.elim fun C hE => ?_
   exact hasUniformProj_of_chainIso (isChainIsoMin A hA b) (norm_pullEquiv_le A hA b)
     (norm_pullEquiv_symm_le A hA b) (fun j => inferInstance)
@@ -2666,7 +2541,7 @@ theorem discretePoincare_poly (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
     (ComplexShape.up ℤ).Rel i j → ∀ (N : ℕ) {x : L2F ℝ (domain A b) (formIdx n i)}
     (hx : x ∈ (poly A hA b S N).V i), (∀ y ∈ (poly A hA b S N).cyclesW i, inner ℝ y x = 0) →
       ‖x‖ ≤ c * ‖(complex A b).d i j ⟨x, (poly A hA b S N).le_domain i j hx⟩‖ :=
-  discretePoincare_of (poincare A hA b)
+  Subcomplex.HasUniformProj.discretePoincare (poincare A hA b)
     (polySmoothedProjection_uniform A hA b S)
 
 theorem discretePoincare_polyMin (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
@@ -2674,7 +2549,7 @@ theorem discretePoincare_polyMin (S : PolySeq) : ∃ c : ℝ, ∀ {i j : ℤ},
     (hx : x ∈ (polyMin A hA b S N).V i),
     (∀ y ∈ (polyMin A hA b S N).cyclesW i, inner ℝ y x = 0) →
       ‖x‖ ≤ c * ‖(complexMin A b).d i j ⟨x, (polyMin A hA b S N).le_domain i j hx⟩‖ :=
-  discretePoincare_of (poincare_min A hA b)
+  Subcomplex.HasUniformProj.discretePoincare (poincare_min A hA b)
     (polySmoothedProjection_uniform_min A hA b S)
 
 /-- **Uniform well-posedness and stability of the discrete mixed Hodge Laplacian** for the
@@ -2687,7 +2562,7 @@ theorem mixed_wellPosed_poly (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
     ∀ x : (poly A hA b S N).toHilbertComplex.MixedSpace i j,
       (poly A hA b S N).toHilbertComplex.mixedForm i j k x =
         (poly A hA b S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
-  mixed_wellPosed_of (one_le_poincareConst A) (poincare A hA b)
+  Subcomplex.HasUniformProj.mixed_wellPosed (poincare A hA b) (one_le_poincareConst A)
     (polySmoothedProjection_uniform A hA b S)
 
 theorem mixed_wellPosed_polyMin (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
@@ -2698,7 +2573,7 @@ theorem mixed_wellPosed_polyMin (S : PolySeq) : ∃ C : ℝ, ∀ {i j k : ℤ},
     ∀ x : (polyMin A hA b S N).toHilbertComplex.MixedSpace i j,
       (polyMin A hA b S N).toHilbertComplex.mixedForm i j k x =
         (polyMin A hA b S N).toHilbertComplex.mixedRHS i j f → ‖x‖ ≤ C * ‖f‖ :=
-  mixed_wellPosed_of (one_le_poincareConst A) (poincare_min A hA b)
+  Subcomplex.HasUniformProj.mixed_wellPosed (poincare_min A hA b) (one_le_poincareConst A)
     (polySmoothedProjection_uniform_min A hA b S)
 
 /-- **Quasi-optimality of the higher-order mixed method on `Ω`** ([AFW2010], Thm 3.9). -/
@@ -2720,7 +2595,7 @@ theorem mixed_quasiOptimal_poly (S : PolySeq) :
         Metric.infDist (q : L2F ℝ (domain A b) (formIdx n j)) ((poly A hA b S N).harmonicW j) +
         μ j N * Metric.infDist ((complex A b).boundaryPart j ((complex A b).domainIncl j u))
           ((poly A hA b S N).domainSub j)) :=
-  mixed_quasiOptimal_of (poincare A hA b)
+  Subcomplex.HasUniformProj.mixed_quasiOptimal (poincare A hA b)
     (polySmoothedProjection_uniform A hA b S)
 
 theorem mixed_quasiOptimal_polyMin (S : PolySeq) :
@@ -2742,7 +2617,7 @@ theorem mixed_quasiOptimal_polyMin (S : PolySeq) :
           ((polyMin A hA b S N).harmonicW j) +
         μ j N * Metric.infDist ((complexMin A b).boundaryPart j ((complexMin A b).domainIncl j u))
           ((polyMin A hA b S N).domainSub j)) :=
-  mixed_quasiOptimal_of (poincare_min A hA b)
+  Subcomplex.HasUniformProj.mixed_quasiOptimal (poincare_min A hA b)
     (polySmoothedProjection_uniform_min A hA b S)
 
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
@@ -2950,11 +2825,11 @@ theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i j 
   refine ⟨(1 + 144 * (C * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + C) *
     (2 * (polyRateBound A S s i + polyRateBound A S s j) * (3 + 2 * C)),
     fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
-  have h := mixed_rate_of (poincare A hA b) π hC1 hg (Reg := fun l x => IsCsForm A hA b s l L x)
-    (B := polyRateBound A S s) (polyRateBound_nonneg A S s)
-    (r := fun N => L * FEM.meshSize N ^ (s + 1))
-    (fun N => mul_nonneg hL0 (pow_nonneg (FEM.meshSize_pos N).le _))
-    (fun N l x hx => hx.exists_mem_poly_le A hA b (hS.polyOrderAt l) hL0 N) hij hjk hs hσ hu hb hq N
+  have h := (π N).norm_sub_le_rate hij hjk hC1 (poincare A hA b i j hij) (poincare A hA b j k hjk)
+    (hg N i j) (hg N j k) (Reg := fun l x => IsCsForm A hA b s l L x)
+    (B := polyRateBound A S s) (polyRateBound_nonneg A S s) (r := L * FEM.meshSize N ^ (s + 1))
+    (mul_nonneg hL0 (pow_nonneg (FEM.meshSize_pos N).le _))
+    (fun l x hx => hx.exists_mem_poly_le A hA b (hS.polyOrderAt l) hL0 N) hs hσ hu hb hq
   refine h.trans (le_of_eq ?_)
   ring
 
@@ -2983,13 +2858,12 @@ theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i
   refine ⟨(1 + 144 * (C * √(1 + poincareConst A ^ 2)) ^ 2) * (1 + C) *
     (2 * (polyRateBound A S s i + polyRateBound A S s j) * (3 + 2 * C)),
     fun {f σ u q} hs L hL0 hσ hu hb hq N => ?_⟩
-  have h := mixed_rate_of (poincare_min A hA b) π hC1 hg
+  have h := (π N).norm_sub_le_rate hij hjk hC1 (poincare_min A hA b i j hij)
+    (poincare_min A hA b j k hjk) (hg N i j) (hg N j k)
     (Reg := fun l x => IsCsFormMin A hA b s l L x)
-    (B := polyRateBound A S s) (polyRateBound_nonneg A S s)
-    (r := fun N => L * FEM.meshSize N ^ (s + 1))
-    (fun N => mul_nonneg hL0 (pow_nonneg (FEM.meshSize_pos N).le _))
-    (fun N l x hx => hx.exists_mem_polyMin_le A hA b (hS.polyOrderAt l) hL0 N) hij hjk hs hσ hu
-    hb hq N
+    (B := polyRateBound A S s) (polyRateBound_nonneg A S s) (r := L * FEM.meshSize N ^ (s + 1))
+    (mul_nonneg hL0 (pow_nonneg (FEM.meshSize_pos N).le _))
+    (fun l x hx => hx.exists_mem_polyMin_le A hA b (hS.polyOrderAt l) hL0 N) hs hσ hu hb hq
   refine h.trans (le_of_eq ?_)
   ring
 

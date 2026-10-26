@@ -17,13 +17,15 @@ approximation theory of subcomplexes.
   (`Subcomplex.eventually_exists_graphSub_lt`, the hypothesis of `Subcomplex.isApproximating`).
 * **The discrete domain spaces** `Vₕⁱ ⊆ HΛⁱ`, measured in the graph norm (the quantities of the
   quasi-optimal estimate [AFW2010], Thm 3.9): `dist(σ, Vₕⁱ) ≤ ‖σ - v‖ + ‖d σ - d v‖`
-  (`Subcomplex.infDist_domainSub_le`).
+  (`Subcomplex.infDist_domainSub_le`), so `dist(σ, Vₕⁱ) ≤ 2 ε` from a degreewise approximation
+  within `ε` (`Subcomplex.infDist_domainSub_le_two_mul`).
 
 ## Main results
 
 * `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`
 * `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`
-* `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le`
+* `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le`,
+  `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_two_mul`
 
 ## References
 
@@ -170,5 +172,16 @@ theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i)
   refine (LinearPMap.norm_toGraphSpace_le _ _).trans (le_of_eq ?_)
   rw [LinearPMap.map_sub]
   rfl
+
+/-- **Graph-norm distance from a degreewise approximation**: a `v ∈ Vₕⁱ` within `ε` of `σ`, with
+`d (σ - v)` within `ε`, gives `dist_V(σ, Vₕⁱ) ≤ 2 ε`. -/
+theorem infDist_domainSub_le_two_mul {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) {v : W i}
+    (hv : v ∈ S.V i) {ε : ℝ} (h1 : ‖H.domainIncl i σ - v‖ ≤ ε)
+    (h2 : ∀ hx : H.domainIncl i σ ∈ (H.d i j).domain,
+      ‖H.d i j ⟨H.domainIncl i σ - v, Submodule.sub_mem _ hx (S.le_domain i j hv)⟩‖ ≤ ε) :
+    Metric.infDist σ (S.domainSub i) ≤ 2 * ε := by
+  refine (S.infDist_domainSub_le hij σ hv).trans ?_
+  rw [← LinearPMap.map_sub, two_mul]
+  exact add_le_add h1 (h2 (H.domainCoord i j σ).2)
 
 end Feec.HilbertComplex.Subcomplex

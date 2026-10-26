@@ -150,6 +150,7 @@ public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.SkewFEEC
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Derived

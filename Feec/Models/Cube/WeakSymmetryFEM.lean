@@ -17,7 +17,7 @@ with the thesis' boundary conditions (vanishing boundary DOFs in every row):
   (componentwise `FEM.polyMin 3 PolySeq.lagrangeP2 N`),
 
 as a `Feec.BGG.Discrete bggSegment` (`cubeFEM`), with **the smoothed cochain projections**
-`π = J⁻¹ Π_h R` ([AFW2010], §5.4; [ChristiansenWinther2008]) of **one common smoother** for both
+`π = J⁻¹ Π_h R` ([AFW2010], §5.5; [ChristiansenWinther2008]) of **one common smoother** for both
 rows (`FEM.tableRows_uniform_cochainProjection`). The method uses `S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹`:
 the canonical projections of the thesis are not bounded on `L²`, so `Discrete.Bounded` fails for
 them; on the discrete spaces both choices are defined, and Props 5.7–5.9 for the canonical maps
@@ -70,7 +70,7 @@ Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, (5.4), (5.7), Table 5.1, Props 5.4, 5.7–5.9, Thm 5.5
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections)
+  §5.5 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)

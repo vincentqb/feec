@@ -162,7 +162,8 @@ theorem affinePullback_mem_p1MinusForms (B : Fin n → Fin m → ℝ) (b : Fin n
     rw [affinePullback_smul]; exact Submodule.smul_mem _ _ hw
 
 /-- **`P₁⁻Λᵏ(T)` is the space of trimmed linear forms** for every `n`-simplex `T` (dimension
-count: `P₁⁻Λᵏ(T) ⊆ P₁⁻Λᵏ ⊆ P₁⁻Λᵏ(T̂)`, and both ends have dimension `(n+1 choose k+1)`). [AFW2006], §3–4 -/
+count: `P₁⁻Λᵏ(T) ⊆ P₁⁻Λᵏ ⊆ P₁⁻Λᵏ(T̂)`, and both ends have dimension `(n+1 choose k+1)`).
+[AFW2006], §3–4 -/
 theorem whitneySpace_eq_p1MinusForms (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     whitneySpace T.points k = p1MinusForms n k := by
   have href : IsUnit (edgeMatrix (refVertex n)).det := by

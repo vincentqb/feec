@@ -28,9 +28,10 @@ zero for uniformly `W`-bounded projections approximating a finite-dimensional `�
 (`CochainProjection.tendsto_harmonicGap`: `‖q - π q‖ ≤ (1 + C) dist(q, Vₕ)`, and a basis of `ℌ`
 makes the convergence uniform on the unit ball). So **every conforming family**
 (`Feec.HilbertComplex.ConformingFamily`: bounded commuting projections and the approximation
-property, [AFW2010], §3.3) has, wherever `H` has closed range and finite-dimensional harmonic
-forms, eventually the cohomology of `H`, through the isomorphisms induced by its projections
-(`ConformingFamily.eventually_bijective_cohomologyMap`).
+property in `W`, a strengthening of the `V`-bounds of [AFW2010], §3.3) has, wherever `H` has
+closed range and finite-dimensional harmonic forms, eventually the cohomology of `H`, through the
+isomorphisms induced by its projections (`ConformingFamily.eventually_bijective_cohomologyMap`).
+The isomorphism criterion itself (`CochainProjection.cohomologyMap_injective`) needs no bound.
 
 ## Main definitions
 
@@ -58,7 +59,7 @@ forms, eventually the cohomology of `H`, through the isomorphisms induced by its
   Thm 3.4 (a cochain projection with `‖q - π q‖ < ‖q‖` on `ℌ \ 0` induces an isomorphism on
   cohomology), Thm 3.5 (the gap between `ℌ` and `ℌₕ`), §5.6 (finite element de Rham complexes)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  (cochain projections onto the finite element de Rham complexes)
+  §5.2, §5.4 (canonical and smoothed cochain projections onto the finite element de Rham complexes)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -230,7 +231,6 @@ theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomple
   set m := Module.finrank 𝕜 (H.harmonic j)
   set coord : Fin m → H.harmonic j →L[𝕜] 𝕜 := fun k =>
     LinearMap.toContinuousLinearMap (b.coord k)
-  set A : ℝ := ∑ k, ‖coord k‖ * ‖((b k : H.harmonic j) : W j)‖
   -- the gap is bounded by `(1 + C) Σ_k ‖c_k‖ dist(b_k, Vₕ)`
   set g : κ → ℝ := fun h => (1 + C) * ∑ k, ‖coord k‖ *
     Metric.infDist ((b k : H.harmonic j) : W j) ((S h).V j : Set (W j))

@@ -14,9 +14,10 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
 
 * **The periodic table** ([ArnoldLogg2014]): `PolySeq.ofKinds n κ s` is the admissible sequence
   with the kinds `κ k` in the degrees `k < n` ending in `P_sΛⁿ` (`PolySeq.ofKinds_space_top`,
-  from `P_{s+1}⁻Λⁿ = P_sΛⁿ`, `polyMinusSpace_top`). Every admissible sequence ending in `P_sΛⁿ`
-  has this form, and as `P_r⁻Λ⁰ = P_rΛ⁰` (`polyMinusSpace_zero`) only `κ 1, …, κ (n-1)` matter:
-  `2ⁿ⁻¹` sequences for each `s` (this count is not formalized). Named corners:
+  from `P_{s+1}⁻Λⁿ = P_sΛⁿ`, `polyMinusSpace_top`): every choice of kinds gives an admissible
+  sequence. That every admissible sequence ending in `P_sΛⁿ` has, up to its spaces, this form is
+  not formalized; as `P_r⁻Λ⁰ = P_rΛ⁰` (`polyMinusSpace_zero`) only `κ 1, …, κ (n-1)` matter:
+  `2ⁿ⁻¹` sequences for each `s` (this count is not formalized either). Named corners:
   `PolySeq.trimmed r` (`P_r⁻Λ⁰ → ⋯ → P_r⁻Λⁿ`: Lagrange, Nédélec first kind [Nedelec1980],
   Raviart–Thomas–Nédélec [RaviartThomas1977], discontinuous `P_{r-1}`;
   `PolySeq.trimmed_eq_ofKinds`),
@@ -60,8 +61,8 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and their dimensions), §4 (degrees of freedom), §5 (assembly,
-  dimension counts, Thms 4.9, 4.13)
+  §3 (the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and their dimensions), §4 (degrees of freedom, Thms 4.9,
+  4.13), §5 (assembly, dimension counts)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.2
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7

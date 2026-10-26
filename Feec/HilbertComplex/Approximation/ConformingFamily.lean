@@ -6,11 +6,16 @@ public import Feec.HilbertComplex.Window
 /-!
 # Conforming families of subcomplexes
 
-A **conforming family** of a Hilbert complex `H` (`Feec.HilbertComplex.ConformingFamily`) is the
-data of the approximation theory of [AFW2010], §3.3: finite-dimensional subcomplexes `Vₕ`, indexed
-by any type `κ` and refined along a filter `l` (e.g. `h → 0` or `N → ∞`), with commuting cochain
-projections `πₕ` bounded in `W` uniformly in `h`, and the **approximation property**
-`dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ` in every degree. The complex is arbitrary: any scalar field,
+A **conforming family** of a Hilbert complex `H` (`Feec.HilbertComplex.ConformingFamily`) is
+finite-dimensional subcomplexes `Vₕ`, indexed by any type `κ` and refined along a filter `l`
+(e.g. `h → 0` or `N → ∞`), with commuting cochain projections `πₕ` bounded in `W` uniformly in
+`h`, and the **approximation property** `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ` in every degree.
+This strengthens the data of the approximation theory of [AFW2010], §3.3, whose projections are
+bounded and whose approximation holds in the graph norm of `V`: a commuting projection bounded in
+`W` is bounded in `V` (`‖d πₕ x‖ = ‖πₕ d x‖`), and with it approximation in `W` gives
+approximation in `V`. Projections bounded in `W` are the smoothed projections of [AFW2010], §5.5
+and [ChristiansenWinther2008]; the canonical interpolants, bounded in `V` on smooth subspaces
+only, are not. The complex is arbitrary: any scalar field,
 any `ComplexShape`, any index type (a whole complex on `ℤ`, a window on `Fin m`, a short complex).
 
 With a closed constraint a conforming family is a constrained FEEC discretization
@@ -37,7 +42,9 @@ parallelepipeds and domains star-shaped with respect to a ball) is one
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (the approximation property, bounded cochain projections)
+  §3.3 (the approximation property, bounded cochain projections, in `V`), §5.5 (bounded smoothed
+  projections in `W`)
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   §3 (subcomplexes with bounded cochain projections)
@@ -72,9 +79,10 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 /-- A **conforming family** of the Hilbert complex `H`: finite-dimensional subcomplexes `Vₕ`
 (`h : κ`, refined along the filter `l`) with commuting cochain projections `πₕ`, uniformly bounded
-in `W`, and the approximation property `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ`. These are the
-hypotheses of the approximation theory of [AFW2010], §3.3 (cf. [Arnold2018], Ch. 5,
-[HolstStern2012], §3, [QuennevilleBelair2015], §4.6). -/
+in `W`, and the approximation property `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ`. These strengthen
+the hypotheses of the approximation theory of [AFW2010], §3.3 (bounds and approximation in `V`)
+to bounds and approximation in `W`, as for the smoothed projections of [AFW2010], §5.5 (cf.
+[Arnold2018], Ch. 5, [HolstStern2012], §3, [QuennevilleBelair2015], §4.6). -/
 structure ConformingFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the filter along which the discretization is refined (e.g. `h → 0`) -/
   l : Filter κ

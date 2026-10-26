@@ -46,7 +46,7 @@ of the problem, for both families:
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3 (discrete Poincaré inequality, Thm 3.6), Thm 3.8 (stability), Thm 3.9
-  (quasi-optimality), §5.4 (smoothed projections)
+  (quasi-optimality), §5.5 (smoothed projections)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
   solutions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -125,7 +125,7 @@ theorem mixed_rate_smooth {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
   ring
 
 /-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** on the Whitney
-complexes of the cube ([AFW2010], §5.4, Thm 3.9), unconditionally: for the smoothed projections
+complexes of the cube ([AFW2010], §5.5, Thm 3.9), unconditionally: for the smoothed projections
 `π_N = J_N⁻¹ Q_N` of some admissible smoothing parameters (`SmoothingEstimates.proj`), `‖π_N‖ ≤ 2C`
 in `L²` and in every graph norm, uniformly in `N`, and the harmonic gap
 `sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π_N q‖` tends to `0` in every degree. -/
@@ -225,7 +225,7 @@ theorem mixed_rate_smooth_min {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j
   ring
 
 /-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes with vanishing
-boundary DOFs, with vanishing harmonic gap** ([AFW2010], §5.4), unconditionally: as
+boundary DOFs, with vanishing harmonic gap** ([AFW2010], §5.5), unconditionally: as
 `smoothedProjection_uniform`, for `H̊Λ(Q)` and the projections `π̊_N = J_N⁻¹ Q̊_N`. -/
 theorem smoothedProjection_uniform_min : ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
     (hE : SmoothingEstimatesMin n p C),

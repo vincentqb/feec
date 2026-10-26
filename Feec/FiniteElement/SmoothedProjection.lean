@@ -10,7 +10,7 @@ Let `Vₕ` be a finite-dimensional subcomplex of a Hilbert complex `H`. The cano
 it with a **smoother** `R` that commutes with `d` (mollification after a dilation, or a Fourier
 multiplier on a torus) gives a map `Q = Π_h R : W → Vₕ` that is defined and bounded on all of `W`
 and commutes with `d`, but is not a projection. If `Q` is close to the identity on `Vₕ`,
-`‖v - Q v‖ ≤ θ ‖v‖` for `v ∈ Vₕ` with `θ < 1` (in [AFW2010], §5.4 and
+`‖v - Q v‖ ≤ θ ‖v‖` for `v ∈ Vₕ` with `θ < 1` (in [AFW2010], §5.5 and
 [ChristiansenWinther2008], `θ = ½` for a smoothing parameter `ε = c h` with `c` small), then
 `J = Q|_{Vₕ}` is invertible with `‖J⁻¹‖ ≤ (1 - θ)⁻¹` and
 
@@ -25,8 +25,9 @@ only the `W`-estimate on `Vₕ` is needed, because `d π x = J⁻¹ Q d x`. With
 follows (`SmoothedInterpolant.norm_le_of_forall_inner_eq_zero_half`).
 
 Uniformly bounded smoothed projections of an approximating family have vanishing harmonic gap
-(`CochainProjection.tendsto_harmonicGap`, in `Feec.HilbertComplex.Approximation.DiscreteCohomology`),
-so the discrete cohomology is eventually the cohomology.
+(`CochainProjection.tendsto_harmonicGap`, in
+`Feec.HilbertComplex.Approximation.DiscreteCohomology`), so the discrete cohomology is eventually
+the cohomology.
 
 ## Main definitions
 
@@ -53,7 +54,7 @@ so the discrete cohomology is eventually the cohomology.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections; `J = Π_h R_ε|_{Vₕ}` and `π_h = J⁻¹ Π_h R_ε`)
+  §5.5 (smoothed projections; `J = Π_h R_ε|_{Vₕ}` and `π_h = J⁻¹ Π_h R_ε`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
   (the construction `π_h = J⁻¹ Π_h R_ε`)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
@@ -83,7 +84,7 @@ variable (S : H.Subcomplex)
 
 /-- A **commuting map into the subcomplex**: linear maps `Qⁱ : Wⁱ → Wⁱ` with values in `Vₕⁱ` and
 `d Qⁱ = Qʲ d` on `D(d i j)`; for instance `Q = Π_h R` with `R` a smoother and `Π_h` the
-canonical interpolant ([AFW2010], §5.4). Unlike a cochain projection, `Q` need not fix `Vₕ`. -/
+canonical interpolant ([AFW2010], §5.5). Unlike a cochain projection, `Q` need not fix `Vₕ`. -/
 structure CommutingMap where
   /-- the maps -/
   Q : ∀ i, W i →ₗ[𝕜] W i
@@ -154,7 +155,7 @@ theorem norm_restrictVEquiv_symm_le {θ : ℝ} (hθ : θ < 1)
   exact h
 
 /-- **The smoothed projection** `π = J⁻¹ Q`: a cochain projection onto `Vₕ` as soon as
-`‖v - Q v‖ ≤ θ ‖v‖` on `Vₕ` for some `θ < 1`. See [AFW2010], §5.4;
+`‖v - Q v‖ ≤ θ ‖v‖` on `Vₕ` for some `θ < 1`. See [AFW2010], §5.5;
 [ChristiansenWinther2008]. -/
 def toCochainProjection {θ : ℝ} (hθ : θ < 1)
     (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) : S.CochainProjection where
@@ -262,7 +263,7 @@ end CommutingMap
 differentials `d_X`, a **smoother** `R : W → X` with `R d = d_X R` on `D(d)`, and an
 **interpolant** `Π : X → Vₕ` with `d Π = Π d_X` (the canonical interpolant of a finite element
 space, defined on smooth fields only). Then `Q = Π R` is a commuting map
-(`SmoothedInterpolant.toCommutingMap`). See [AFW2010], §5.4; [ChristiansenWinther2008]. -/
+(`SmoothedInterpolant.toCommutingMap`). See [AFW2010], §5.5; [ChristiansenWinther2008]. -/
 structure SmoothedInterpolant (X : ι → Type*) [∀ i, AddCommGroup (X i)] [∀ i, Module 𝕜 (X i)]
     where
   /-- the differentials of the smooth complex -/
@@ -310,7 +311,7 @@ theorem norm_toCommutingMap_le {i : ι} {CR CI : ℝ}
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
 /-- **The smoothed projection `π_h = J⁻¹ Π_h R` is bounded by `2 C_Π C_R`** when
-`‖v - Π_h R v‖ ≤ ½ ‖v‖` on `Vₕ` ([AFW2010], §5.4; [ChristiansenWinther2008]). -/
+`‖v - Π_h R v‖ ≤ ½ ‖v‖` on `Vₕ` ([AFW2010], §5.5; [ChristiansenWinther2008]). -/
 theorem norm_toCochainProjection_le_half
     (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - P.interp i (P.R i v)‖ ≤ 1 / 2 * ‖v‖) {i : ι} {CR CI : ℝ}
     (hCI : 0 ≤ CI) (hR : ∀ x, ‖P.R i x‖ ≤ CR * ‖x‖) (hI : ∀ y, ‖P.interp i y‖ ≤ CI * ‖y‖)
@@ -323,7 +324,7 @@ theorem norm_toCochainProjection_le_half
 
 /-- **Discrete Poincaré inequality from a smoothed projection**: with `‖v - Π_h R v‖ ≤ ½ ‖v‖` on
 `Vₕ`, `‖R‖ ≤ C_R`, `‖Π_h‖ ≤ C_Π` and the Poincaré inequality `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ`,
-`‖x‖ ≤ 2 C_Π C_R c_P ‖d x‖` for `x ∈ Vₕⁱ ⊥ 𝔷ₕⁱ` ([AFW2010], Thm 3.6 and §5.4). -/
+`‖x‖ ≤ 2 C_Π C_R c_P ‖d x‖` for `x ∈ Vₕⁱ ⊥ 𝔷ₕⁱ` ([AFW2010], Thm 3.6 and §5.5). -/
 theorem norm_le_of_forall_inner_eq_zero_half
     (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - P.interp i (P.R i v)‖ ≤ 1 / 2 * ‖v‖) {i j : ι}
     (hij : c.Rel i j) {cP CR CI : ℝ} (hCI : 0 ≤ CI) (hCR : 0 ≤ CR)

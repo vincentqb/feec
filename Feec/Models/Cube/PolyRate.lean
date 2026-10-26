@@ -33,7 +33,7 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
   condition on the normal components) are `mixed_rate_polyTr`, `mixed_rate_lagrangeP2Tr`,
   `norm_sub_le_windowTr_poly_smooth`, `norm_sub_le_windowTr_lagrangeP2` in
   `Feec.Models.Cube.TangentialRate`.
-* **`H¹` approximation of the smoothed projections** ([AFW2010], §5.4; needed by the BGG
+* **`H¹` approximation of the smoothed projections** ([AFW2010], §5.5; needed by the BGG
   discretization): for `y ∈ L²(Q; Λᵏ)` whose coefficients `yₛ` (as `0`-forms, `coeffForm`) lie in
   the domain of the maximal gradient (`H¹(Q)`), resp. of the minimal gradient (`H¹₀(Q)`: the
   extension by zero is in `H¹(ℝⁿ)`), `‖y - π_N y‖ ≤ (1 + 2C) K_k h_N Σₛ ‖∇ yₛ‖` with `K_k`
@@ -51,7 +51,7 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality of the mixed method), §5.4 (smoothed projections)
+  Thm 3.9 (quasi-optimality of the mixed method), §5.5 (smoothed projections)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates, rates for smooth solutions)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],

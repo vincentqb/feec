@@ -11,7 +11,7 @@ For every admissible sequence `S` (`Feec.FiniteElement.PolySeq`: `P_{r_k}Λᵏ` 
 degree `k`) and the level-`(N + 1)` Freudenthal meshes `FEM.mesh n N` of `Q = (0, ½)ⁿ`
 (`h_N = 1 / (2 (N + 1))`), the smoothed canonical interpolants `Q_N = Π_h R_N` of the complexes
 `FEM.poly n S N ⊆ HΛ(Q)` and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs) satisfy the
-estimates of [AFW2010], §5.4 and [ChristiansenWinther2008], **for every `γ ∈ (0, γ₀]`**, `γ₀`
+estimates of [AFW2010], §5.5 and [ChristiansenWinther2008], **for every `γ ∈ (0, γ₀]`**, `γ₀`
 depending only on `n` and `S` (`FEM.polySmoothingEstimates_pMax`,
 `FEM.polySmoothingEstimatesMin_pMin`): the parameters `pMax γ` (dilation factor `1 - γ h_N`) and
 `pMin γ` (factor `1 + γ h_N`) of `Feec.Models.Cube.SmoothingEstimates` give uniformly
@@ -59,7 +59,7 @@ the polynomial ones of `Feec.FiniteElement.PolyInverseEstimate` and
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections: the estimates for `ε ≈ h`)
+  §5.5 (smoothed projections: the estimates for `ε ≈ h`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §4.5–4.6 (the moment degrees of freedom)
@@ -1067,7 +1067,7 @@ def polySmoothedMin (S : PolySeq) (N : ℕ) (p : SmoothingParam (Fin n → ℝ))
       (strictStar_mesh n N))
 
 variable (n) in
-/-- **The estimates of the smoothed interpolants of the complex of `S`** ([AFW2010], §5.4;
+/-- **The estimates of the smoothed interpolants of the complex of `S`** ([AFW2010], §5.5;
 [ChristiansenWinther2008]): for maximal-family parameters `p N`, uniform `L²` bounds of `Q_N`
 and `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`, normalized by `½ ≤ C` (the analogue of
 `FEM.SmoothingEstimates` for the Whitney complex). -/
@@ -1107,7 +1107,7 @@ theorem smoothedCommutingMapMin_Q_eq (E : LocalElement n) {M : SimplicialMesh n}
       E.smoothedInterp M p hΩo.measurableSet i := rfl
 
 /-- **The smoothed-projection estimates hold for every admissible sequence, for all small `γ`**
-([AFW2010], §5.4; [ChristiansenWinther2008]): there is `γ₀ ∈ (0, ½]` depending only on `n` and
+([AFW2010], §5.5; [ChristiansenWinther2008]): there is `γ₀ ∈ (0, ½]` depending only on `n` and
 `S` such that for **every** `γ ∈ (0, γ₀]` the parameters `pMax γ` (dilation factor
 `1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`) satisfy the estimates, with
 a constant `C` depending on `γ`. -/

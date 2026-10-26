@@ -20,7 +20,7 @@ of `Feec.Models.Cube.ParitySmoother`.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothing operators commuting with `d`)
+  §5.5 (smoothing operators commuting with `d`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10 (the cube by the method of images)

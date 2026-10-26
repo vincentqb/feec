@@ -175,7 +175,8 @@ def toConforming : ConformingFamily H ℕ where
     rw [one_mul]; exact Submodule.norm_starProjection_apply_le (S.B N i) x⟩
   approx i y := (tendsto_infDist_submodule_iff _ y).2 fun ε hε => by
     filter_upwards [Metric.tendsto_nhds.1 (S.tendsto i y) ε hε] with N hN
-    exact ⟨_, Submodule.starProjection_apply_mem (S.B N i) y, by rwa [dist_comm, dist_eq_norm] at hN⟩
+    exact ⟨_, Submodule.starProjection_apply_mem (S.B N i) y,
+      by rwa [dist_comm, dist_eq_norm] at hN⟩
 
 /-- **The constrained FEEC discretization of a spectral family** with a closed constraint `K`:
 `V_N = B_N`, `π_N` the orthogonal projections (norm `1`), along `N → ∞`. -/

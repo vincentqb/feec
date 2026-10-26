@@ -287,7 +287,7 @@ Feec/
 │   ├── Torus/{DeRham,GradCurl,SymCurl,BGG}.lean     Euclidean/{DeRham,GradCurl,SymCurl,BGG}.lean
 │   ├── Cube/{Parity,Mirror,MirrorSym,MirrorBGG,Static}.lean        -- equivariant compressions of the torus
 │   ├── BoundedDomain/{GradCurl,SymCurl,Hessian,BGG,Interior}.lean  -- minimal/maximal realizations
-│   └── ConformingFamilies.lean   -- Whitney and every PolySeq family (cube, parallelepiped, star-shaped) as conforming families
+│   └── ConformingFamilies.lean   -- Whitney and every PolySeq family (cube, parallelepiped, star-shaped) as conforming families; their discrete cohomology
 ├── Physics/{Maxwell,LinearizedGravity,EinsteinBianchi}/*.lean -- headline physical statements, no analysis (elasticity: Domain/Elasticity)
 ├── Counterexamples/{Ell2,Fredholm,NonClosedRangeEuclidean,BoundedDomainTSD,BoundedSymTSD,
 │                   BallSymTSD,CubeStationary,ConstrainedEvolution,ClassicalRegularity}.lean

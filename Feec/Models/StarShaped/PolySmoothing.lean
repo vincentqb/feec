@@ -39,7 +39,7 @@ Freudenthal meshes of the cube (`Feec.Models.Cube.PolySmoothingEstimates`) to ge
   quasi-uniform mesh (`InvBoundV`, `invBoundV_of`), and the mesh-level DOF estimate
   `abs_le_of_abs_polyDof_le`.
 
-**The smoothed-projection estimates** ([AFW2010], §5.4; [ChristiansenWinther2008]), for the
+**The smoothed-projection estimates** ([AFW2010], §5.5; [ChristiansenWinther2008]), for the
 smoothers `pMax`, `pMin` of `Feec.Models.StarShaped.FiniteElement` at scale `γ h`:
 * *uniform `L²` bound* of `Q = Π_h R` (`sum_integral_sq_polyInterp_le`,
   `exists_norm_polySmoothedInterp_le`): Jensen's inequality for the mollifier, the DOF stability,
@@ -70,7 +70,7 @@ are in `Feec.Models.StarShaped.PolyFiniteElement`.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections)
+  §5.5 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §4.5–4.6 (the moment degrees of freedom)
@@ -1114,7 +1114,7 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
 
 /-- **Uniformly bounded smoothed cochain projections onto the complexes of an admissible sequence
 on quasi-uniform shape-regular meshes of a domain star-shaped with respect to a ball**
-([AFW2010], §5.4; [ChristiansenWinther2008]): there is `K`, depending only on `n`, `S`, the
+([AFW2010], §5.5; [ChristiansenWinther2008]): there is `K`, depending only on `n`, `S`, the
 shape-regularity and quasi-uniformity constants, `s₀` and `R` (mathematically only on the ratio
 `s₀ / R`, which is not formalized here), such that every such mesh
 `M` of `Ω` (star-shaped with respect to `B(x₀, s₀)`, `cl Ω ⊆ B̄(x₀, R)`) carries a cochain
@@ -1262,7 +1262,7 @@ instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.polyMin S N).V k) :=
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
 /-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` on the family**,
-in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.4; [ChristiansenWinther2008]), with no
+in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.5; [ChristiansenWinther2008]), with no
 hypothesis beyond shape regularity and quasi-uniformity. -/
 theorem exists_uniform_polyProj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
     ∃ π : (F.poly S N).CochainProjection,

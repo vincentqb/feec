@@ -2,6 +2,7 @@ module
 
 public import Feec.Models.Cube.Sobolev
 public import Feec.Models.Cube.ParitySmoothingEstimates
+public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 
 /-!
 # Finite element rates in Sobolev norms on the cube
@@ -67,7 +68,7 @@ proved, `Feec.Models.Cube.RegularDecomposition`) are not restated here for Sobol
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality of the mixed method), §5.4 (smoothed projections)
+  Thm 3.9 (quasi-optimality of the mixed method), §5.5 (smoothed projections)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
@@ -386,15 +387,12 @@ variable {𝕜 : Type*} [RCLike 𝕜] {V : ℤ → Type*} [∀ i, NormedAddCommG
   [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
   {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) V} {S' : H.Subcomplex}
 
-/-- **A bounded cochain projection is quasi-optimal**: `‖y - π y‖ ≤ (1 + 2C) dist(y, Vₕ)`. -/
+/-- **A bounded cochain projection is quasi-optimal**: `‖y - π y‖ ≤ (1 + 2C) dist(y, Vₕ)`, the
+case `2C` of `Subcomplex.CochainProjection.norm_sub_π_le_infDist`. -/
 theorem norm_sub_π_le_infDist (P : S'.CochainProjection) {C : ℝ} (hC : 0 ≤ 2 * C) {i : ℤ}
     (hπ : ∀ x, ‖P.π i x‖ ≤ 2 * C * ‖x‖) (y : V i) :
-    ‖y - P.π i y‖ ≤ (1 + 2 * C) * Metric.infDist y (S'.V i) := by
-  have hpos : 0 < 1 + 2 * C := by linarith
-  rw [← div_le_iff₀' hpos]
-  refine (Metric.le_infDist ⟨0, Submodule.zero_mem _⟩).2 fun v hv => ?_
-  rw [div_le_iff₀' hpos, dist_eq_norm]
-  exact norm_sub_π_le_of_mem P hπ hv
+    ‖y - P.π i y‖ ≤ (1 + 2 * C) * Metric.infDist y (S'.V i) :=
+  P.norm_sub_π_le_infDist hC hπ y
 
 /-- **Graph-norm distance through a cochain projection**: for `σ ∈ D(dʲ)`,
 `dist_V(σ, Vₕʲ) ≤ (1 + 2C) (dist(σ, Vₕʲ) + dist(dσ, Vₕʲ⁺¹))` (`π` commutes with `d`). -/

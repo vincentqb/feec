@@ -12,7 +12,8 @@ public import Feec.HilbertComplex.InvariantCore
 A **constrained FEEC discretization** (`Feec.HilbertComplex.ConstrainedFEEC`) of a Hilbert
 complex `H` (any finite index type `ι`, any `ComplexShape`; e.g. a window of a complex on `ℤ` or
 a short complex on `Fin 3`) is a **conforming family** (`Feec.HilbertComplex.ConformingFamily`,
-the data of [AFW2010], §3.3) with a closed constraint (`ConformingFamily.withConstraint`):
+the data of [AFW2010], §3.3 with the bounds in `W`) with a closed constraint
+(`ConformingFamily.withConstraint`):
 
 * a family `Vₕ` (indexed by any type `κ`, along a filter `l`, e.g. `h → 0` or `N → ∞`) of
   finite-dimensional **subcomplexes** with **commuting cochain projections** `πₕ`, uniformly
@@ -97,7 +98,7 @@ does make `K` reducing (`ConstrainedFEEC.isReducing_of_forall_nonneg`).
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (approximation property, bounded cochain projections, Thm 3.4, Thm 3.6, Thm 3.9)
+  §3.3 (approximation property, bounded cochain projections, Thm 3.4, Thm 3.6), §3.4 (Thm 3.9)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (Thm 5.3)
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   §3 (approximation of Hilbert complexes by subcomplexes with bounded cochain projections)
@@ -561,6 +562,30 @@ structure ConstrainedFEEC.RateClass (F : ConstrainedFEEC H κ) (T : ℝ) where
     ∀ v : H.totalD.GraphSpace, H.totalD.graphFst v = H.waveGroup.S t (H.wave ⟨x, hx⟩) →
       ∃ w ∈ F.Kh h, ‖v - w‖ ≤ C * meshSize h ^ α * classNorm x
 
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- The approximation estimate behind `RateClass.ofDegreewise`: a graph-space point whose
+components are all `Reg`-regular is within `(m + m²) Σᵢ Bᵢ Λ r_h` of `Kₕ`. -/
+theorem ConstrainedFEEC.RateClass.exists_mem_Kh_le_of_degreewise (F : ConstrainedFEEC H κ)
+    {Reg : ∀ i, W i → Prop} {B : ι → ℝ} {r : κ → ℝ} {Λ : ℝ}
+    (happ : ∀ h i (x : W i), Reg i x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
+      ‖x - v‖ ≤ B i * Λ * r h ∧ ∀ j (hxj : x ∈ (H.d i j).domain),
+        ‖H.d i j ⟨x - v, Submodule.sub_mem _ hxj ((F.V h).le_domain i j hv)⟩‖ ≤ B i * Λ * r h)
+    (hB : ∀ i, 0 ≤ B i) (hΛ : 0 ≤ Λ) (hr : ∀ h, 0 ≤ r h) (h : κ) {z : PiLp 2 W}
+    (hz : ∀ i, Reg i (z i)) (v : H.totalD.GraphSpace) (hv : H.totalD.graphFst v = z) :
+    ∃ w ∈ F.Kh h, ‖v - w‖ ≤ ((Fintype.card ι : ℝ) + (Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) *
+      (∑ i, B i) * r h ^ (1 : ℝ) * Λ := by
+  obtain ⟨y, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq v
+  obtain ⟨w, hw, hle⟩ := Subcomplex.exists_mem_graphSub_le (F.V h) y
+    (ε := (∑ i, B i) * Λ * r h) fun i => by
+      rw [show (y : PiLp 2 W) = z from hv]
+      obtain ⟨u, hu, h1, h2⟩ := happ h _ _ (hz i)
+      have hle : B i * Λ * r h ≤ (∑ i, B i) * Λ * r h :=
+        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
+          (Finset.single_le_sum (f := B) (fun _ _ => hB _) (Finset.mem_univ i)) hΛ) (hr h)
+      exact ⟨u, hu, h1.trans hle, fun j hxj => (h2 j hxj).trans hle⟩
+  refine ⟨w, hw, hle.trans_eq ?_⟩
+  rw [Real.rpow_one]; ring
+
 /-- **The rate class of degreewise regular data**, from degreewise best-approximation estimates:
 data `x ∈ D(L²)` whose orbit `e^{tL} x` and derivative `e^{tL} L x` have components satisfying the
 degreewise regularity `Reg` for `t ∈ [0, T]`, when every `Reg`-regular `x ∈ Wⁱ` has some
@@ -582,30 +607,10 @@ def ConstrainedFEEC.RateClass.ofDegreewise (F : ConstrainedFEEC H κ) (T : ℝ)
   C := ((Fintype.card ι : ℝ) + (Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * ∑ i, B i
   mem_domain _ hx := hx.1
   mem_domain_sq _ _ hx := hx.2.1
-  approx x hx h t ht v hv := by
-    obtain ⟨y, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq v
-    obtain ⟨w, hw, hle⟩ := Subcomplex.exists_mem_graphSub_le (F.V h) y
-      (ε := (∑ i, B i) * Λ * r h) fun i => by
-        rw [show (y : PiLp 2 W) = H.waveGroup.S t x from hv]
-        obtain ⟨u, hu, h1, h2⟩ := happ h _ _ ((hx.2.2 t ht).1 i)
-        have hle : B i * Λ * r h ≤ (∑ i, B i) * Λ * r h :=
-          mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-            (Finset.single_le_sum (f := B) (fun _ _ => hB _) (Finset.mem_univ i)) hΛ) (hr h)
-        exact ⟨u, hu, h1.trans hle, fun j hxj => (h2 j hxj).trans hle⟩
-    refine ⟨w, hw, hle.trans_eq ?_⟩
-    rw [Real.rpow_one]; ring
-  approx_deriv x hx' hx h t ht v hv := by
-    obtain ⟨y, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq v
-    obtain ⟨w, hw, hle⟩ := Subcomplex.exists_mem_graphSub_le (F.V h) y
-      (ε := (∑ i, B i) * Λ * r h) fun i => by
-        rw [show (y : PiLp 2 W) = H.waveGroup.S t (H.wave ⟨x, hx'⟩) from hv]
-        obtain ⟨u, hu, h1, h2⟩ := happ h _ _ ((hx.2.2 t ht).2 i)
-        have hle : B i * Λ * r h ≤ (∑ i, B i) * Λ * r h :=
-          mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-            (Finset.single_le_sum (f := B) (fun _ _ => hB _) (Finset.mem_univ i)) hΛ) (hr h)
-        exact ⟨u, hu, h1.trans hle, fun j hxj => (h2 j hxj).trans hle⟩
-    refine ⟨w, hw, hle.trans_eq ?_⟩
-    rw [Real.rpow_one]; ring
+  approx _ hx h _ ht v hv :=
+    ConstrainedFEEC.RateClass.exists_mem_Kh_le_of_degreewise F happ hB hΛ hr h (hx.2.2 _ ht).1 v hv
+  approx_deriv _ _ hx h _ ht v hv :=
+    ConstrainedFEEC.RateClass.exists_mem_Kh_le_of_degreewise F happ hB hΛ hr h (hx.2.2 _ ht).2 v hv
 
 /-- **Non-vacuity of `RateClass.ofDegreewise`**: the zero datum lies in the class whenever the
 zero form is regular in every degree. -/
@@ -937,7 +942,7 @@ structure ConstrainedFEEC.Verdict (F : ConstrainedFEEC H κ) : Prop where
         infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))
   /-- (**discrete cohomology**) if `H` has closed range at `i` and `ℌⁱ` is finite-dimensional,
   the projections `πₕ` eventually induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`, `[z] ↦ [πₕ z]` -/
-  cohomology {i : ι} (hi : H.ClosedRangeAt i) (hfd : FiniteDimensional 𝕜 (H.harmonic i)) :
+  cohomology {i : ι} [FiniteDimensional 𝕜 (H.harmonic i)] (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap i)
 
 /-- **The constrained FEEC theorem.** For a constrained FEEC discretization `F` (a Hilbert complex
@@ -980,7 +985,7 @@ theorem constrainedFEEC : F.Verdict where
   leaves_symm hK hD _ hT := constrainedFEEC_residual_not_isReducing_symm F hK hD hT
   leaves_graded hp hRK hD hK _ hT :=
     constrainedFEEC_residual_not_isReducing_of_grading F hp hRK hD hK hT
-  cohomology hi hfd := haveI := hfd; F.eventually_bijective_cohomologyMap hi
+  cohomology hi := F.eventually_bijective_cohomologyMap hi
 
 end Main
 

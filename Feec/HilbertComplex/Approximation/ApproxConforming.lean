@@ -457,12 +457,13 @@ theorem tendsto_incl_ellipticProj (x : H.wave.domain) :
       (mem_singleton (waveLift H x)))
 
 /-- **The constrained FEEC theorem, re-derived from the approximating one**: the verdict
-`ConstrainedFEEC.Verdict` of `constrainedFEEC`, proved from the verdict of `approxFEEC` for
-`toApprox` (the special
-case `ιₕ` = inclusion, `πₕ = Πₕ`, core `D(L²)`). The bridges are `toApprox_sol` (the semi-discrete
-solutions of (4.10) from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`), `exists_eq_sol` (every
-semi-discrete solution is a discrete orbit), the density of the core (`mem_toCore_closure`),
-`tendsto_incl_ellipticProj`, and the rate comparison `rate_le_constrainedFEEC`. -/
+`ConstrainedFEEC.Verdict` of `constrainedFEEC`, items 1–4 proved from the verdict of `approxFEEC`
+for `toApprox` (the special case `ιₕ` = inclusion, `πₕ = Πₕ`, core `D(L²)`), the cohomology field
+directly (`ConformingFamily.eventually_bijective_cohomologyMap`, as in `constrainedFEEC`). The
+bridges are `toApprox_sol` (the semi-discrete solutions of (4.10) from `Pₕ ξ₀` are the discrete
+orbits from `Rₕ ξ₀`), `exists_eq_sol` (every semi-discrete solution is a discrete orbit), the
+density of the core (`mem_toCore_closure`), `tendsto_incl_ellipticProj`, and the rate comparison
+`rate_le_constrainedFEEC`. -/
 theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
   have V := approxFEEC F.toApprox F.toCore
   have hS : ∀ t, 0 ≤ t → ∀ x, F.toApprox.S t x = H.waveGroup.S t x := fun t ht x => by
@@ -521,7 +522,7 @@ theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
       leaves := fun hK _ hT => ?_
       leaves_symm := fun hK hd _ hT => ?_
       leaves_graded := fun hp hRK hdense hK _ hT => ?_
-      cohomology := fun hi hfd => haveI := hfd; F.eventually_bijective_cohomologyMap hi }
+      cohomology := fun hi => F.eventually_bijective_cohomologyMap hi }
   · -- existence of a convergent family: the solutions from `Πₕ ξ₀`
     refine ⟨fun h => F.discrete h (F.liftXh h (F.piProjL h x)),
       fun h => F.discreteDeriv h (F.liftXh h (F.piProjL h x)),

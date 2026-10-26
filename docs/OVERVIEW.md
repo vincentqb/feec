@@ -551,7 +551,7 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
   the Whitney complex on every conforming simplicial mesh is a subcomplex of `HΛ(Ω)` (of `H̊Λ(Ω)`
   with vanishing boundary DOFs, for strictly star-shaped `Ω`), and the smoothed interpolant
   `Π_h R` is a commuting map into it. On the Freudenthal meshes of `(0, ½)ⁿ` the three inputs
-  of the finite element method are theorems: the estimates of [AFW2010] §5.4 that make
+  of the finite element method are theorems: the estimates of [AFW2010] §5.5 that make
   `J⁻¹ Π_h R` a uniformly bounded cochain projection (`Feec.Models.Cube.SmoothingEstimates`, from
   the inverse estimates of `Feec.FiniteElement.InverseEstimate`), the Poincaré inequalities of
   `HΛ` and `H̊Λ` (`Feec.Models.Cube.DeRhamIdentFEM`) and the Whitney interpolation error

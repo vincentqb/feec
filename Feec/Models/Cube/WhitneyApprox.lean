@@ -26,7 +26,7 @@ the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)`
   solutions) are in `Feec.Models.Cube.WhitneyRate`.
 * **Smooth forms are dense in the graph norms** of `HΛ(Q)` and `H̊Λ(Q)` (`exists_smooth_near`,
   `exists_smooth_near_min`): the smoothed forms `Feec.FiniteElement.smoothForm` of [AFW2010],
-  §5.4, with dilation factor `c → 1` and bump radius `→ 0`, are the field smoothers
+  §5.5, with dilation factor `c → 1` and bump radius `→ 0`, are the field smoothers
   `R_{cᵏ} u` (`formL2_smoothForm`), which converge strongly
   (`Feec.Domain.exists_norm_smoothField_sub_lt`) and commute with `d`.
 * **Density of the Whitney complexes**: every `x ∈ D(d)` is a graph-norm limit of the Whitney
@@ -53,7 +53,7 @@ The subcomplexes `FEM.whitney N` are transported from the mesh domain to `Q` alo
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
   estimates, density of the finite element spaces)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothing by dilation and mollification)
+  §5.5 (smoothing by dilation and mollification)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.6, Thm 4.14 (approximating subcomplexes, convergence of the semi-discrete Hodge wave
   equation)
@@ -330,7 +330,7 @@ theorem exists_smooth_near_min_of_starBall {Ω : Set (Fin n → ℝ)} (hΩ : IsO
     rw [show ((k : ℤ) + 1) = ((k + 1 : ℕ) : ℤ) by push_cast; ring, zpow_natCast]
     exact hc₂ _ hcδ₂
 
-/-- **Smooth forms are dense in `HΛᵏ(Q)`** ([AFW2010], §5.4: the smoother `R` with dilation
+/-- **Smooth forms are dense in `HΛᵏ(Q)`** ([AFW2010], §5.5: the smoother `R` with dilation
 factor `c → 1` and bump radius `→ 0`): for `u ∈ D(d_max)` and `ε > 0` there is a `C^∞` `k`-form
 `w` on `ℝⁿ` with `‖u - w‖ < ε` and `‖d u - d w‖ < ε` in `L²(Q)`. -/
 theorem exists_smooth_near (k : ℕ) (u : ((complex n).d k (k + 1)).domain) {ε : ℝ}
@@ -661,7 +661,7 @@ theorem exists_mem_whitneyMin_le (N k : ℕ) {w : FormField n} (hw : ContDiff �
 
 omit [NeZero n] in
 /-- **Smooth forms with compact support in `Q` are dense in `H̊Λᵏ(Q)`** (the smoother with
-dilation towards the centre, `c > 1`, [AFW2010], §5.4). -/
+dilation towards the centre, `c > 1`, [AFW2010], §5.5). -/
 theorem exists_smooth_near_min (k : ℕ) (u : ((complexMin n).d k (k + 1)).domain) {ε : ℝ}
     (hε : 0 < ε) :
     ∃ w : FormField n, ∃ hw : ContDiff ℝ ∞ w, (∀ x ∉ cubeDomain n, w x = 0) ∧

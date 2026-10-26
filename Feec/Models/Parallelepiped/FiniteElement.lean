@@ -63,10 +63,7 @@ the data and smoothness.
   solutions and sequences of order `s` (`mixed_rate_poly`, `mixed_rate_polyMin`), the semi-discrete
   Hodge wave equation on every window (`exists_tendstoUniformlyOn_window_whitney`,
   `exists_tendstoUniformlyOn_window_poly`, `_min`) with the `O(h)` rate for `C²` solutions
-  (`norm_sub_le_meshSize_window_smooth`), and the discrete cohomology: `dim Hᵏ(Vₕ) = [k = 0]`,
-  `dim Hᵏ(V̊ₕ) = [k = n]` for `N` large (`eventually_finrank_cohomology_whitney`,
-  `eventually_finrank_cohomology_poly`, `_whitneyMin`, `_polyMin`; [AFW2010], Thm 3.4). The
-  generic forms (`HasUniformProj`, `HasUniformProj.eventually_finrank_cohomology_eq`,
+  (`norm_sub_le_meshSize_window_smooth`). The generic forms (`HasUniformProj`,
   `discretePoincare_of`, `mixed_wellPosed_of`, `mixed_quasiOptimal_of`, `mixed_rate_of`,
   `exists_tendstoUniformlyOn_window_of`) apply to any family of subcomplexes with uniformly bounded
   cochain projections.
@@ -78,7 +75,7 @@ Not covered here: the mixed boundary conditions of `Feec.Models.Cube.DeRhamParti
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
   (affine-equivalent families of finite elements)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (Thm 3.4, 3.6, 3.8, 3.9), §5.4 (smoothed projections)
+  §3.3 (Thm 3.4, 3.6), §3.4 (Thm 3.8, 3.9), §5.5 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §4–5 (pullback of the spaces and degrees of freedom)
@@ -1723,6 +1720,7 @@ constants; `Ω` is contractible). -/
 theorem finiteDimensional_harmonic (k : ℤ) : FiniteDimensional ℝ ((complex A b).harmonic k) :=
   (isChainIso A hA b).finiteDimensional_harmonic k
 
+/-- **The harmonic forms of `HΛ(Ω)`**: `dim ℌᵏ = [k = 0]` (`IsChainIso.finrank_harmonic_eq`). -/
 theorem finrank_harmonic (k : ℤ) :
     Module.finrank ℝ ((complex A b).harmonic k) = if k = 0 then 1 else 0 := by
   rw [(isChainIso A hA b).finrank_harmonic_eq k, FEM.finrank_harmonic]
@@ -1738,6 +1736,7 @@ theorem finiteDimensional_harmonic_min (k : ℤ) :
     FiniteDimensional ℝ ((complexMin A b).harmonic k) :=
   (isChainIsoMin A hA b).finiteDimensional_harmonic k
 
+/-- **The harmonic forms of `H̊Λ(Ω)`**: `dim ℌᵏ = [k = n]`. -/
 theorem finrank_harmonic_min (k : ℤ) :
     Module.finrank ℝ ((complexMin A b).harmonic k) = if k = n then 1 else 0 := by
   rw [(isChainIsoMin A hA b).finrank_harmonic_eq k, FEM.finrank_harmonic_min]
@@ -1831,18 +1830,6 @@ theorem hasUniformProj_of_chainIso {W' : ℤ → Type*} [∀ i, NormedAddCommGro
   have := hI.finiteDimensional_harmonic j
   exact Subcomplex.CochainProjection.tendsto_harmonicGap π (zero_le_one.trans (le_max_left _ _))
     (fun N x => hbπ N j x) fun q _ => IsChainIso.tendsto_infDist_comapSub S hS (happ j) q
-
-/-- **The discrete cohomology is eventually the cohomology** for any family with uniformly
-bounded projections ([AFW2010], Thm 3.4): if `H` has closed range at `j`,
-`dim Hʲ(Vₕ) = dim Hʲ(H)` for `N` large. -/
-theorem HasUniformProj.eventually_finrank_cohomology_eq {S : ℕ → H.Subcomplex}
-    [∀ N k, FiniteDimensional ℝ ((S N).V k)] (h : HasUniformProj H S) {j : ℤ}
-    (hj : H.ClosedRangeAt j) :
-    ∀ᶠ N in atTop, Module.finrank ℝ ((S N).toHilbertComplex.cohomology j) =
-      Module.finrank ℝ (H.cohomology j) := by
-  obtain ⟨C, π, -, hb, -, hgap⟩ := h
-  exact Subcomplex.CochainProjection.eventually_finrank_cohomology_eq π (fun N => hb N j)
-    (hgap j) hj
 
 variable {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)] {cP : ℝ}
   (hcP : 1 ≤ cP)
@@ -2077,7 +2064,7 @@ end Estimates
 /-! #### The finite element theorems on `Ω = A · Q + b`, with no hypothesis -/
 
 /-- **Uniformly bounded smoothed cochain projections with vanishing harmonic gap** onto the
-Whitney complexes of the image Freudenthal meshes of the parallelepiped `Ω` ([AFW2010], §5.4):
+Whitney complexes of the image Freudenthal meshes of the parallelepiped `Ω` ([AFW2010], §5.5):
 `‖π_N‖ ≤ C` in `L²` and in every graph norm, uniformly in `N`, and
 `sup_{q ∈ ℌʲ(Ω), ‖q‖ ≤ 1} ‖q - π_N q‖ → 0`. -/
 theorem smoothedProjection_uniform : ∃ (C : ℝ) (π : ∀ N, (whitney A hA b N).CochainProjection),
@@ -2781,38 +2768,6 @@ theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) 
   exists_tendstoUniformlyOn_window_of ((isChainIso A hA b).eventually_near_comapSub
     (poly A hA b S) (fun N i x => mem_poly_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b)
     fun i x' _ hε => FEM.eventually_exists_poly_near S i x' hε) a m t₀ t₁ x
-
-/-- **The Whitney complexes of `T(M_N)` have the cohomology of `HΛ(Ω)`** for `N` large
-([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`. -/
-theorem eventually_finrank_cohomology_whitney (k : ℤ) :
-    ∀ᶠ N in atTop, Module.finrank ℝ ((whitney A hA b N).toHilbertComplex.cohomology k) =
-      if k = 0 then 1 else 0 :=
-  (HasUniformProj.eventually_finrank_cohomology_eq (smoothedProjection_uniform A hA b)
-    (closedRangeAt A hA b k)).mono fun _ h => h.trans (finrank_cohomology A hA b k)
-
-/-- **The Whitney complexes with vanishing boundary DOFs have the cohomology of `H̊Λ(Ω)`** for
-`N` large: `dim Hᵏ(V̊ₕ) = [k = n]`. -/
-theorem eventually_finrank_cohomology_whitneyMin (k : ℤ) :
-    ∀ᶠ N in atTop, Module.finrank ℝ ((whitneyMin A hA b N).toHilbertComplex.cohomology k) =
-      if k = n then 1 else 0 :=
-  (HasUniformProj.eventually_finrank_cohomology_eq (smoothedProjection_uniform_min A hA b)
-    (closedRangeAt_min A hA b k)).mono fun _ h => h.trans (finrank_cohomology_min A hA b k)
-
-/-- **The complexes of every admissible sequence `S` on `T(M_N)` have the cohomology of `HΛ(Ω)`**
-for `N` large ([AFW2010], Thm 3.4, §5.6): `dim Hᵏ(Vₕ) = [k = 0]`. -/
-theorem eventually_finrank_cohomology_poly (S : PolySeq) (k : ℤ) :
-    ∀ᶠ N in atTop, Module.finrank ℝ ((poly A hA b S N).toHilbertComplex.cohomology k) =
-      if k = 0 then 1 else 0 :=
-  ((polySmoothedProjection_uniform A hA b S).eventually_finrank_cohomology_eq
-    (closedRangeAt A hA b k)).mono fun _ h => h.trans (finrank_cohomology A hA b k)
-
-/-- **The complexes of `S` with vanishing boundary DOFs have the cohomology of `H̊Λ(Ω)`** for `N`
-large: `dim Hᵏ(V̊ₕ) = [k = n]`. -/
-theorem eventually_finrank_cohomology_polyMin (S : PolySeq) (k : ℤ) :
-    ∀ᶠ N in atTop, Module.finrank ℝ ((polyMin A hA b S N).toHilbertComplex.cohomology k) =
-      if k = n then 1 else 0 :=
-  ((polySmoothedProjection_uniform_min A hA b S).eventually_finrank_cohomology_eq
-    (closedRangeAt_min A hA b k)).mono fun _ h => h.trans (finrank_cohomology_min A hA b k)
 
 end PolyFEM
 

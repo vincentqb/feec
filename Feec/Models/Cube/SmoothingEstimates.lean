@@ -14,7 +14,7 @@ public import Feec.Models.Cube.FiniteElementMethod
 depending only on `n`, the smoothed canonical interpolants `Q_N = Π_h R_N` of the Whitney
 complexes of the level-`(N + 1)` Freudenthal meshes (with vanishing boundary DOFs for `pMin`) are
 bounded in `L²` uniformly in `N` and satisfy `‖v - Q_N v‖ ≤ ½ ‖v‖` on the Whitney spaces
-([AFW2010], §5.4; [ChristiansenWinther2008]). All the consequences proved under these estimates in
+([AFW2010], §5.5; [ChristiansenWinther2008]). All the consequences proved under these estimates in
 `Feec.Models.Cube.FiniteElementMethod` therefore hold unconditionally for these parameters, for
 instance uniformly bounded cochain projections (`exists_uniform_cochainProjection`,
 `exists_uniform_cochainProjectionMin`).
@@ -53,7 +53,7 @@ families are treated at once through the admissible parameters `IsAdm` (centre o
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections: the estimates for `ε ≈ h`)
+  §5.5 (smoothed projections: the estimates for `ε ≈ h`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
@@ -2412,7 +2412,7 @@ theorem commutingMapOfEqMin_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = �
 variable [NeZero n]
 
 /-- **The smoothed-projection estimates hold on the Freudenthal meshes of the cube**
-([AFW2010], §5.4; [ChristiansenWinther2008]): for the parameters `pMax γ` (dilation factor
+([AFW2010], §5.5; [ChristiansenWinther2008]): for the parameters `pMax γ` (dilation factor
 `1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`) with `γ` small depending only on
 `n`, the smoothed interpolants `Q_N = Π_h R_N` are bounded in `L²` uniformly in `N`, and
 `‖v - Q_N v‖ ≤ ½ ‖v‖` on the Whitney spaces. -/
@@ -2457,7 +2457,7 @@ theorem smoothingEstimates_exists :
 
 
 /-- **The smoothed-projection estimates with vanishing boundary DOFs hold on the Freudenthal
-meshes of the cube** ([AFW2010], §5.4; [ChristiansenWinther2008]): for the parameters `pMin γ`
+meshes of the cube** ([AFW2010], §5.5; [ChristiansenWinther2008]): for the parameters `pMin γ`
 (dilation factor `1 + γ h_N` towards the centre, bump radii `γ h_N / 64 < γ h_N / 32`) with `γ`
 small depending only on `n`, the smoothed interpolants `Q̊_N = Π_h R_N` of the Whitney complexes
 with vanishing boundary DOFs are bounded in `L²` uniformly in `N`, and `‖v - Q̊_N v‖ ≤ ½ ‖v‖`
@@ -2507,7 +2507,7 @@ theorem smoothingEstimatesMin_exists :
 /-- **Uniformly bounded cochain projections onto the Whitney complexes of the cube**
 (unconditionally): there is `C` such that for every `N` the Whitney complex of the
 level-`(N + 1)` Freudenthal mesh carries a cochain projection bounded by `C` in `L²` and in the
-graph norms ([AFW2010], §5.4). -/
+graph norms ([AFW2010], §5.5). -/
 theorem exists_uniform_cochainProjection :
     ∃ C : ℝ, ∀ N, ∃ π : (whitney n N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by

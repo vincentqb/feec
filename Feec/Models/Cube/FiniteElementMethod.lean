@@ -29,7 +29,7 @@ bump radius `< s₀ (1 - c) / 4`, `Feec.Domain.SmoothingParam.IsMaximal`):
 `h_N = 1 / (2 (N + 1))`, `FEM.meshSize`), the Whitney complexes `FEM.whitney N` (Lagrange `P₁`,
 Nédélec, Raviart–Thomas, piecewise constants; transported to one Hilbert complex
 `FEM.complex = HΛ(Q)`) carry the concrete smoothed interpolants `FEM.smoothed N p`. Under the
-**estimates of [AFW2010], §5.4 and [ChristiansenWinther2008]** for these maps (uniform `L²`
+**estimates of [AFW2010], §5.5 and [ChristiansenWinther2008]** for these maps (uniform `L²`
 bound `C` and `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`; the structure `FEM.SmoothingEstimates`, taken as a
 hypothesis here and proved for explicit parameters in `Feec.Models.Cube.SmoothingEstimates`),
 every consequence is proved:
@@ -83,7 +83,7 @@ the vanishing of the harmonic gap.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections), Thm 3.6, Thm 3.8, Thm 3.9
+  §5.5 (smoothed projections), Thm 3.6, Thm 3.8, Thm 3.9
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §5 (canonical interpolants, Whitney forms)
@@ -250,7 +250,7 @@ theorem globalInterp_congr (k : ℕ) {w w' : contForms n}
 variable (p : SmoothingParam (Fin n → ℝ))
 
 /-- **The smoothed canonical interpolant** `Q = Π_h R : L²(Ω; Λᵏ) → Vₕᵏ`: glue the canonical
-interpolant of the smoothed form ([AFW2010], §5.4); zero in negative degrees. -/
+interpolant of the smoothed form ([AFW2010], §5.5); zero in negative degrees. -/
 def smoothedInterp (p : SmoothingParam (Fin n → ℝ)) (hΩ : MeasurableSet M.domain) : ∀ k : ℤ, L2F ℝ M.domain (formIdx n k) →ₗ[ℝ] L2F ℝ M.domain (formIdx n k)
   | Int.ofNat k => E.glue M k ∘ₗ (E.globalSpace M k).subtype ∘ₗ E.globalInterp M k ∘ₗ
       Submodule.inclusion c1Forms_le_contForms ∘ₗ smoothForm p hΩ k
@@ -630,7 +630,7 @@ def smoothed (N : ℕ) (p : SmoothingParam (Fin n → ℝ)) (hp : p.IsMaximal (c
 
 variable (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ)
 
-/-- **The estimates of the smoothed canonical interpolants** ([AFW2010], §5.4;
+/-- **The estimates of the smoothed canonical interpolants** ([AFW2010], §5.5;
 [ChristiansenWinther2008]): for maximal-family smoothing parameters `p N` (any
 `IsMaximal` parameters; the structure imposes no scaling), the smoothed interpolants
 `Q_N = Π_h R` of the Whitney complexes are bounded in `L²` uniformly in `N`, and close to the
@@ -863,7 +863,7 @@ def smoothedMin (N : ℕ) (p : SmoothingParam (Fin n → ℝ)) (hp : p.IsMinimal
       (strictStar_mesh n N))
 
 /-- **The estimates of the smoothed interpolants with vanishing boundary DOFs** ([AFW2010],
-§5.4, [ChristiansenWinther2008]; a hypothesis of the results below, as `SmoothingEstimates`,
+§5.5, [ChristiansenWinther2008]; a hypothesis of the results below, as `SmoothingEstimates`,
 proved for the parameters `FEM.pMin γ` in `Feec.Models.Cube.SmoothingEstimates`,
 `FEM.smoothingEstimatesMin_pMin`): for minimal-family parameters `p N`, uniform `L²` bounds of
 `Q̊_N` and `‖v - Q̊_N v‖ ≤ ½ ‖v‖` on `V̊ₕ`; normalized by `½ ≤ C`. -/

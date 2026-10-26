@@ -31,7 +31,7 @@ componentwise gluing (`LocalElement.tensorGlue`) maps it into `L²(Ω; Λᵏ)ᵐ
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, Table 5.1 (the spaces `P₂Λ⁰ ⊗ V`, `P₂⁻Λ¹ ⊗ V`, `P₁Λ² ⊗ V`)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (subcomplexes, bounded cochain projections), §5.4 (smoothed projections)
+  §3.3 (subcomplexes, bounded cochain projections), §5.5 (smoothed projections)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (vector-valued finite element spaces)
 

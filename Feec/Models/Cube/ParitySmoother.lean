@@ -19,7 +19,7 @@ normal to `e_j`, `j ∈ J`), the **parity smoother** is `R^J_ρ u = (ρ ⋆ ext_
 `u_s` of a `k`-form is extended to `ℝⁿ` by reflections across the faces of `Q`, odd across the
 faces where it must vanish and even across the others (the parity vector `c(J, s)`, `pvec`), and
 then mollified by a reflection-invariant kernel `ρ` of radius `< ½`. In contrast with the smoothers
-of [ChristiansenWinther2008] and [AFW2010], §5.4, no dilation is needed: the reflected extension
+of [ChristiansenWinther2008] and [AFW2010], §5.5, no dilation is needed: the reflected extension
 already lies in the class `J`, so `R` commutes with `d_J` exactly, with the same smoother for all
 classes and both rows of the BGG complex.
 
@@ -53,7 +53,7 @@ classes and both rows of the BGG complex.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.4
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.5
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011], §9.2
 
@@ -2571,7 +2571,7 @@ theorem seg_mem_bigCube {r : ℝ} (hr : r < 1 / 2) {x : Fin n → ℝ} (hx : x �
   simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
   constructor <;> linarith [hxj.1, hxj.2, hτu.1, hτu.2]
 
-/-- **The high-order estimate of the parity smoother** ([AFW2010], §5.4; [Brezis2011], §9.2): for a
+/-- **The high-order estimate of the parity smoother** ([AFW2010], §5.5; [Brezis2011], §9.2): for a
 kernel with vanishing moments of the orders `1, …, m - 1` and the parity extension `G = ext_c u`
 of a function `u` on `Q` which is `Cᵐ` on `ℝⁿ` (`G` symmetric of parity `c`; this requires the
 reflection compatibility conditions of `u` on `∂Q`),

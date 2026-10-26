@@ -67,7 +67,7 @@ theorems of this file with it discharged are `staticFEM_cube`, `staticFEM_nonvac
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3, (5.3), (5.6), (5.7), Table 5.1, Props 5.2, 5.4, 5.7–5.9, Thm 5.5
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections)
+  §5.5 (smoothed projections)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
 * [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],

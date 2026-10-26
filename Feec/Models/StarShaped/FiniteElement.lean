@@ -15,7 +15,7 @@ finite element theory of the Freudenthal meshes of the cube (`Feec.Models.Cube.S
 `Feec.Models.Cube.FiniteElementConvergence`) holds for the lowest-order Whitney complexes of
 `M_N`, with both boundary conditions.
 
-**The smoothed-projection estimates, unconditionally** ([AFW2010], §5.4;
+**The smoothed-projection estimates, unconditionally** ([AFW2010], §5.5;
 [ChristiansenWinther2008]). For the parameters `pMax` (dilation factor `1 - γ h / R` about `x₀`)
 and `pMin` (factor `1 + γ h / R`), bump radii `γ h σ / 2 < γ h σ`, `σ = min 1 (s₀ / (16 R))`
 (`sigmaOf`), and `γ` depending only on `n, C, c, q` (`exists_gamma`):
@@ -78,7 +78,7 @@ respect to a ball are preserved by affine equivalences, `isShapeRegular_image`,
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (Thm 3.6), Thm 3.8, Thm 3.9, §5.4 (smoothed projections)
+  §3.3 (Thm 3.6), Thm 3.8, Thm 3.9, §5.5 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
   (shape-regular and quasi-uniform families)
@@ -1215,7 +1215,7 @@ theorem sigmaOf_lt {s₀ R : ℝ} (hs₀ : 0 < s₀) (hR : 0 < R) : sigmaOf s₀
 
 /-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes of
 quasi-uniform shape-regular meshes of a domain star-shaped with respect to a ball**
-([AFW2010], §5.4; [ChristiansenWinther2008]): there is `K`, depending only on `n`, the
+([AFW2010], §5.5; [ChristiansenWinther2008]): there is `K`, depending only on `n`, the
 shape-regularity and quasi-uniformity constants and the ratio `s₀ / R`, such that every such
 mesh `M` of `Ω` (star-shaped with respect to `B(x₀, s₀)`, `cl Ω ⊆ B̄(x₀, R)`) carries a cochain
 projection onto its Whitney complex `Vₕ ⊆ HΛ(Ω)` bounded by `K` in `L²` and in every graph norm. -/
@@ -1439,7 +1439,7 @@ instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.whitneyMin N).V k) :=
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
 /-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes of the family**
-in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.4; [ChristiansenWinther2008]), with no
+in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.5; [ChristiansenWinther2008]), with no
 hypothesis beyond shape regularity and quasi-uniformity. -/
 theorem exists_uniform_proj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N, ∃ π : (F.whitney N).CochainProjection,
     (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
@@ -1619,7 +1619,7 @@ theorem exists_bound_fderiv {w : FormField n} (hw : ContDiff ℝ 1 w) :
     (hw.continuous_fderiv one_ne_zero).continuousOn
   exact ⟨max L 0, le_max_right _ _, fun y hy => (hL y hy).trans (le_max_left _ _)⟩
 
-/-- **Smooth forms are dense in `HΛᵏ(Ω)`** ([AFW2010], §5.4: the smoother with dilation factor
+/-- **Smooth forms are dense in `HΛᵏ(Ω)`** ([AFW2010], §5.5: the smoother with dilation factor
 `c → 1` and bump radius `→ 0`). -/
 theorem exists_smooth_near (k : ℕ) (u : (D.complex.d k (k + 1)).domain) {ε : ℝ}
     (hε : 0 < ε) :

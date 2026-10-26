@@ -206,6 +206,7 @@ instance finiteDimensional_harmonic_min (k : ℤ) :
   · subst hk; rw [harmonic_top_eq_span_min]; infer_instance
   · rw [harmonic_eq_bot_min hk]; infer_instance
 
+/-- **The harmonic forms of `HΛ(Q)`**: `dim ℌᵏ = [k = 0]`, the constants. -/
 theorem finrank_harmonic (k : ℤ) :
     Module.finrank ℝ ((complex n).harmonic k) = if k = 0 then 1 else 0 := by
   by_cases hk : k = 0
@@ -217,9 +218,12 @@ theorem finrank_cohomology (k : ℤ) :
     Module.finrank ℝ ((complex n).cohomology k) = if k = 0 then 1 else 0 := by
   rw [((complex n).cohomologyEquivHarmonic (closedRangeAt k)).finrank_eq, finrank_harmonic]
 
+/-- The constant volume form of `Q` is not zero in `L²`. -/
 theorem volForm_ne_zero : volForm n ≠ 0 :=
   DeRhamIdent.constForm_ne_zero _ _ (by rw [cubeDomain_eq_Q]; exact DeRhamIdent.volume_Q_ne_zero) _
 
+/-- **The harmonic forms of `H̊Λ(Q)`**: `dim ℌᵏ = [k = n]`, the constant multiples of the volume
+form. -/
 theorem finrank_harmonic_min (k : ℤ) :
     Module.finrank ℝ ((complexMin n).harmonic k) = if k = n then 1 else 0 := by
   by_cases hk : k = n

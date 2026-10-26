@@ -43,9 +43,10 @@ theorem `Feec.HilbertComplex.constrainedFEEC`.
   is dense in it (`dense_potential`).
 
 Every verdict of the approximating FEEC theorem `Feec.HilbertComplex.approxFEEC` holds for every
-Maxwell discretization (`(feec F a).toApprox`, core `(feec F a).toCore`); on the torus it is
-used with the non-reducing vanishing-field constraint (`torus_potential_approxFEEC`, whose graded
-departure clause `torus_potential_residual_of_approxFEEC` reads off).
+Maxwell discretization (`approxFEEC (feec F a).toApprox (feec F a).toCore`; the concrete instances
+below are pinned in the regression tests `scripts/FeecCheck/MaxwellInstances.lean`); on the
+torus it is used with the non-reducing vanishing-field constraint (`torus_potential_approxFEEC`,
+whose graded departure clause `torus_potential_residual_of_approxFEEC` reads off).
 
 **Through the discrete complex.** Every Maxwell discretization is also an instance of the
 complex-level front end `Feec.HilbertComplex.ApproxFEEC.ofComplex`
@@ -98,7 +99,7 @@ constraints) concern other constraints, such as the vanishing-field constraint
   §4.4 (Thms 4.6, 4.7), §4.6 (Thm 4.14), §4.9 (Prop. 4.16), §4.10 (Prop. 4.17)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3 (approximation property, bounded cochain projections, Thm 3.6), §5 (the spaces `P_rΛ`,
-  `P_r⁻Λ`), §5.4 (smoothed projections)
+  `P_r⁻Λ`), §5.5 (smoothed projections)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
   solutions), Ch. 8 (evolution problems)
 

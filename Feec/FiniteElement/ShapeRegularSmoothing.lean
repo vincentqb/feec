@@ -6,7 +6,7 @@ public import Feec.FiniteElement.ShapeRegularInverse
 # Mesh geometry for smoothed projections on shape-regular meshes
 
 The geometric and measure-theoretic ingredients of the smoothed-projection estimates
-([AFW2010], §5.4; [ChristiansenWinther2008]) on a general conforming simplicial mesh `M` of
+([AFW2010], §5.5; [ChristiansenWinther2008]) on a general conforming simplicial mesh `M` of
 `Ω ⊆ ℝⁿ`, replacing the lattice arguments used for the Freudenthal meshes of the cube
 (`Feec.Models.Cube.SmoothingEstimates`).
 
@@ -47,7 +47,7 @@ The estimates themselves need the smoother of `Feec.Models.Cube.FiniteElementMet
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothed projections)
+  §5.5 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
   (shape-regular and quasi-uniform families)
@@ -234,7 +234,7 @@ theorem mem_starSet_of_segment {L θ : ℝ} (hL : CoordLip M L) {g : Finset (Fin
     (left_mem_segment ℝ z w) hz (right_mem_segment ℝ z w)
 
 /-- **Samples near a face point lie in simplices containing the face** (the geometric lemma of
-the smoothed-projection estimates, [AFW2010], §5.4): if `t` lies in the interior of `T'` and
+the smoothed-projection estimates, [AFW2010], §5.5): if `t` lies in the interior of `T'` and
 is joined to the face point `x` by two segments in `cl Ω` near `x`, then `g` is a face of `T'`. -/
 theorem subset_vertexSet_of_segments {L θ : ℝ} (hL : CoordLip M L) {g : Finset (Fin n → ℝ)}
     {x : Fin n → ℝ} (hx : IsFacePoint M g θ x) (hxs : x ∈ starSet M g) {y t : Fin n → ℝ}

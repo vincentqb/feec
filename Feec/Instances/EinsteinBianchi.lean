@@ -328,7 +328,8 @@ statement of `constrainedFEEC`, derived from `approxFEEC`). [QuennevilleBelair20
 Thm 4.14, Prop 4.17 (corrected), Ch. 6 -/
 theorem einsteinBianchi_mirror_constrainedFEEC : MirrorVerdict := by
   have V := mirrorFEEC.constrainedFEEC_of_approxFEEC
-  exact ⟨mirrorFEEC_isReducing, V.propagates_iff.1 mirrorFEEC_isReducing, fun T x => V.converges x T,
+  exact ⟨mirrorFEEC_isReducing, V.propagates_iff.1 mirrorFEEC_isReducing,
+    fun T x => V.converges x T,
     fun x hx T => ⟨V.residual_le mirrorFEEC_isReducing x hx,
       V.residual_tendsto mirrorFEEC_isReducing x hx T⟩,
     fun α T x hx N t ht => ⟨V.rate (mirrorRate α T) hx N ht,

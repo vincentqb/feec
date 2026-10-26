@@ -55,7 +55,7 @@ itself.
 so for finitely many components `(u_c)_c` (e.g. `P_rΛᵏ ⊗ ℝ^N`) they hold componentwise and
 summing them over the components gives the vector-valued versions.
 
-These are the inverse and scaling tools behind the smoothed projections of [AFW2010], §5.4
+These are the inverse and scaling tools behind the smoothed projections of [AFW2010], §5.5
 ([ChristiansenWinther2008]) for the higher-order families, and the corrected forms of the norm
 equivalences of [QuennevilleBelair2015], Prop 5.8 (whose global `ℓ¹` sums of DOFs are not
 uniformly equivalent to the `L²` norm; the local `ℓ²` scaling above, summed over the simplices,
@@ -66,7 +66,7 @@ the constants are uniform without a shape-regularity argument.
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (inverse estimates for the smoothed projection)
+  §5.5 (inverse estimates for the smoothed projection)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §4.5–4.6 (the moment degrees of freedom)
@@ -469,7 +469,7 @@ variable {r k : ℕ} {V : Submodule ℝ (FormField n)}
 /-- **Local inverse estimates on homothetic simplices** for polynomial forms: for `T = t + h K`
 and `u ∈ V ≤ P_rΛᵏ` (`V` stable under homotheties),
 `h^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h^{n/2} h Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with `A`
-depending only on `K` and `V` ([Ciarlet2002], §3.2; [AFW2010], §5.4). -/
+depending only on `K` and `V` ([Ciarlet2002], §3.2; [AFW2010], §5.5). -/
 theorem exists_local_inverse_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
     (K : Affine.Simplex ℝ (Fin n → ℝ) n) :

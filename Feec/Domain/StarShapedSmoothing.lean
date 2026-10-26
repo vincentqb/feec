@@ -34,7 +34,7 @@ For the de Rham complex (`Feec.Domain.deRham`), `d` is homogeneous of order one,
 **pullback of `k`-forms by the dilation** `x ↦ x₀ + c (x - x₀)`, which multiplies the
 coefficients of a `k`-form by `cᵏ`, commutes **exactly** with `d`: the weights `cᵏ` on `k`-forms
 give `d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` (`deRham_minimal_smoothField`) and likewise for
-`d_max` (`deRham_maximal_smoothField`). These are the smoothers `R_ε` of [AFW2010], §5.4 and
+`d_max` (`deRham_maximal_smoothField`). These are the smoothers `R_ε` of [AFW2010], §5.5 and
 [ChristiansenWinther2008] in the case of a domain star-shaped with respect to a ball (cubes,
 convex domains).
 
@@ -56,7 +56,7 @@ convex domains).
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (smoothing by dilation and mollification; pullbacks commute with `d`)
+  §5.5 (smoothing by dilation and mollification; pullbacks commute with `d`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   Ch. 4 (convolution and mollifiers)
@@ -671,7 +671,7 @@ theorem factor_zpow_mul_factor (k : ℤ) :
 
 /-- **The pullback of `k`-forms by the dilation commutes exactly with `d_min`**: with the
 weights `cᵏ` on `k`-forms (`ω ↦ cᵏ (ω ∘ dil)` is the pullback of `ω` by `x ↦ x₀ + c (x - x₀)`),
-`d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` on `H̊Λᵏ(Ω)` ([AFW2010], §5.4). -/
+`d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` on `H̊Λᵏ(Ω)` ([AFW2010], §5.5). -/
 theorem deRham_minimal_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMinimal x₀ s)
     (k : ℤ) (u : ((extDerivOp ℝ n k).minimal Ω).domain) :

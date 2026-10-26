@@ -19,7 +19,7 @@ relative class (it couples components of opposite parities). For `s < ½` the cl
 trace condition (`Hˢ` has no traces there); "vanishing tangential traces" is meant for `s > ½`.
 
 **Rates.** The relative-class best approximation `infDist_polyPartial_le_sobolevPar_min` and the
-uniformly bounded smoothed projections ([AFW2010], §5.4) give `CubeClose` with `h^{min(s,1)}`
+uniformly bounded smoothed projections ([AFW2010], §5.5) give `CubeClose` with `h^{min(s,1)}`
 (`cubeClose_of_isSobolevStateTr`), hence the static rate `staticFEM_rate_sobolev` (Thm 5.5) and the
 rate `cubeWave_rate_sobolev` of (6.5), `K L (1 + t) h^{min(s,1)}`. The exponent `min(s, 1)` is
 optimal for these elements: `P₁⁻Λ̊²` reproduces only constants (`r_eff = 1`); the lower bounds are
@@ -328,7 +328,7 @@ solution, such that for every `s ≥ 0`, every solution `(σ, φ, u, λ)` of (5.
 with `‖λ‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖` (`S¹u ∈ D(d¹*)`), every discrete solution of (5.6)
 satisfies `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N^{min(s,1)})²`. The projection
 errors are those of `cubeClose_of_isSobolevStateTr` (quasi-optimality of the uniformly bounded
-smoothed projections, [AFW2010], §5.4, with the relative-class best approximation
+smoothed projections, [AFW2010], §5.5, with the relative-class best approximation
 `infDist_polyPartial_le_sobolevPar_min`); the consistency terms are `O(h_N) ≤ O(h_N^{min(s,1)})`. -/
 theorem staticFEM_rate_sobolev :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}

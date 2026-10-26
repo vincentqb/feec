@@ -57,6 +57,10 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
   the twisted complex**, any length, any shape, any ring.
 * `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021].
 * `Data.Γ_eq_segment_Γ`, `Segment.sup_range_eq_top`: the complex (5.1) as an elimination.
+* `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
+  the condition at every `J`. No de Rham or Sobolev instance of `Data.InjSurj` is formalized: on
+  the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto, and [ArnoldHu2021] use rows of shifted
+  regularity.
 
 ## References
 
@@ -408,7 +412,7 @@ theorem mem_bgg_Γ_self {J : ℤ} {x : V J × Vt J} :
 
 variable (D) in
 /-- After `J`: `Γⁱ = 0 × N(Sⁱ)`. -/
-theorem mem_bgg_Γ_of_lt {J i : ℤ} (hi : J < i) {x : V i × Vt i} :
+theorem mem_bgg_Γ_of_gt {J i : ℤ} (hi : J < i) {x : V i × Vt i} :
     x ∈ D.Γ (J < ·) i ↔ x.1 = 0 ∧ D.S i (i + 1) x.2 = 0 := by
   rw [mem_Γ, CochainComplex.next]
   simp only [hi, true_implies, twist_apply, show J < i + 1 by omega]
@@ -432,7 +436,7 @@ theorem mem_bgg_Δ_of_le {J i : ℤ} (hi : i ≤ J) {x : V i × Vt i} :
 variable (D) in
 /-- After `J`, nothing is eliminated from the bottom: `Δⁱ = 0`, so the derived space is
 `Γⁱ = 0 × N(Sⁱ)`. -/
-theorem bgg_Δ_of_lt {J i : ℤ} (hi : J < i) : D.Δ (· < J) i = ⊥ :=
+theorem bgg_Δ_of_gt {J i : ℤ} (hi : J < i) : D.Δ (· < J) i = ⊥ :=
   eq_bot_iff.2 fun x hx => by
     obtain ⟨φ, ψ, hφ, hψ, rfl⟩ := (D.mem_Δ _).1 hx
     obtain rfl : φ = 0 := hφ.resolve_left (by omega)
@@ -449,6 +453,31 @@ def bggHomologyIso {J : ℤ} (h : D.InjSurj J) (i : ℤ) :
 theorem bgg_acyclic {J : ℤ} (h : D.InjSurj J) (hV : D.rowTop.Acyclic) (hVt : D.rowBot.Acyclic) :
     (D.bgg J).Acyclic :=
   derived_acyclic h.eliminates hV hVt
+
+/-! ### Non-vacuity -/
+
+variable (R) in
+/-- **Two copies of the zero complex `R` on `ℤ`, connected by the identity** `Sⁱ = id : Ṽⁱ → Vⁱ⁺¹`:
+BGG data with nonzero connecting maps, satisfying the injectivity/surjectivity condition at every
+`J` (`injSurj_idShift`). -/
+def idShift : Data R (ComplexShape.up ℤ) (fun _ => R) (fun _ => R) where
+  d _ _ := 0
+  dt _ _ := 0
+  S i j := if i + 1 = j then LinearMap.id else 0
+  shape_d _ _ _ := rfl
+  shape_dt _ _ _ := rfl
+  shape_S _ _ h := ite_eq_right h
+  d_comp_d _ _ _ _ := rfl
+  dt_comp_dt _ _ _ _ := rfl
+  anticomm _ _ _ _ := by simp
+
+variable (R) in
+/-- **`idShift` satisfies the injectivity/surjectivity condition at every `J`**, so its BGG
+complexes `(idShift R).bgg J` have the cohomology of its twisted complex (`bggHomologyIso`). -/
+theorem injSurj_idShift (J : ℤ) : (idShift R).InjSurj J := by
+  have h : ∀ i : ℤ, (idShift R).S i (i + 1) = LinearMap.id := fun _ => ite_eq_left rfl
+  exact ⟨fun i _ => by rw [h]; exact Function.injective_id,
+    fun i _ => by rw [h]; exact Function.surjective_id⟩
 
 end Up
 

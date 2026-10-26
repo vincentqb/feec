@@ -11,8 +11,8 @@ the structure of the conclusions of `constrainedFEEC` (and `constrainedFEEC_of_a
 Their earlier shape was one conjunction per theorem, with the flow of each theorem written out
 (the Lumer–Phillips semigroup `hA.semigroup.S` and the wave group `H.waveGroup.S`), convergence on
 the core from the comparison initial values, the residual bound for all `t` and the departures
-with their positive residual limits. The theorems below derive those conjunctions, verbatim, from the new verdicts
-(`constrained_old`: the eight-part conjunction that `constrainedFEEC` stated before
+with their positive residual limits. The theorems below derive those conjunctions, verbatim, from
+the new verdicts (`constrained_old`: the eight-part conjunction that `constrainedFEEC` stated before
 `ConstrainedFEEC.Verdict`).
 
 Two things did change besides the shape. The m-dissipativity of `A` is now a field

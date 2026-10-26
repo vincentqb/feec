@@ -27,7 +27,7 @@ orientation; `integral_closedInterior_mapEquiv_boxMap`: `∫_T f = hⁿ ∫_K f(
 * **the local inverse estimates** `h^{n/2} sup_T |u| ≲ ‖u‖_{L²(T)}` and
   `h^{n/2} h Lip(u) ≲ ‖u‖_{L²(T)}` (`exists_local_inverse_bound`).
 
-These are the inverse estimates behind the smoothed projections of [AFW2010], §5.4 and
+These are the inverse estimates behind the smoothed projections of [AFW2010], §5.5 and
 [ChristiansenWinther2008]; on meshes whose simplices are homothetic to finitely many reference
 simplices (Freudenthal meshes) they hold uniformly without a shape-regularity argument. The
 module also records the minor bound `Σₛ |minorₛ| ≤ 2ⁿ k! aᵏ` for faces with edges bounded by `a`
@@ -38,7 +38,7 @@ norms (`norm_sq_pieceL2_le`).
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.4 (inverse estimates for the smoothed projection)
+  §5.5 (inverse estimates for the smoothed projection)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3–5 (trimmed linear forms, Whitney forms and their degrees of freedom)

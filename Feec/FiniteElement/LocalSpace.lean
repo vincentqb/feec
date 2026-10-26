@@ -418,7 +418,8 @@ theorem polySpace_le_polyMinusSpace (r k : ℕ) :
     polySpace n (r - 1) k ≤ polyMinusSpace n r k :=
   Submodule.map_mono (Koszul.polyForm_le_polyFormMinus r k)
 
-/-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions. [AFW2006], §3 -/
+/-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions.
+[AFW2006], §3 -/
 theorem polyMinusSpace_zero {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r 0 = polySpace n r 0 := by
   rw [polyMinusSpace, polySpace, Koszul.polyFormMinus_zero hr]
 

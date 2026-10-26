@@ -11,7 +11,7 @@ interpolant `Π_h` of the polynomial families `S` gives commuting maps `Q_N = Π
 discrete partially-homogeneous complexes `V_{h,Γ_J} = polyPartial n S N J ⊆ HΛ_J(Q)`. For kernels
 of radius `γ h_N / 32` they are bounded uniformly in `N` and close to the identity on
 `V_{h,Γ_J}`, hence yield uniformly bounded cochain projections `π_N = J_N⁻¹ Q_N`
-([AFW2010], §5.4; [ChristiansenWinther2008]) for every class `J`, without dilations.
+([AFW2010], §5.5; [ChristiansenWinther2008]) for every class `J`, without dilations.
 
 ## Main definitions
 
@@ -38,7 +38,7 @@ of radius `γ h_N / 32` they are bounded uniformly in `N` and close to the ident
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.4
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.5
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 
@@ -1091,7 +1091,7 @@ def paritySmoothed (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (ρ : ReflKernel
     ((polyElement n S).paritySmoothedCommutingMap (mesh n N) ρ J (mesh_domain_eq_Q N))
 
 variable (n) in
-/-- **The parity smoothing estimates** ([AFW2010], §5.4; [ChristiansenWinther2008]) for the class
+/-- **The parity smoothing estimates** ([AFW2010], §5.5; [ChristiansenWinther2008]) for the class
 `J` and the admissible sequence `S`: for the kernels `ρ N`, the parity-smoothed interpolants
 `Q_N = Π_h R^J_{ρ N}` of `V_{h,Γ_J} = polyPartial n S N J` are bounded in `L²` uniformly in `N`, and
 `‖v - Q_N v‖ ≤ ½ ‖v‖` on `V_{h,Γ_J}`. -/
@@ -1576,7 +1576,7 @@ theorem exists_mem_polyPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k
   exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n)
     (isBounded_cubeDomain n)
 
-/-- **The high-order rate of the parity-smoothed projections** ([AFW2010], §5.4; [Arnold2018],
+/-- **The high-order rate of the parity-smoothed projections** ([AFW2010], §5.5; [Arnold2018],
 Ch. 7): under `ParitySmoothingEstimates`, for a `C^{s+1}` degree-`k` form `w` whose tangential
 components vanish on the faces normal to `J` (e.g. coefficients `wₜ` symmetric of the parity
 `c(J, t)` on `ℝⁿ`), with `‖D^{s+1} w‖ ≤ L` on `cl Q` and

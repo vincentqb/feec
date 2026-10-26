@@ -448,7 +448,7 @@ theorem rate_regRate {T : ℝ} {Reg : ∀ k, V k → Prop} {B : α → ℝ} {r :
     (hx : x ∈ (regRate F a T Reg B r Λ happ hB hΛ hr).Data) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖(H.window a 3).waveGroup.S t x - (H.window a 3).totalD.graphFst
-        ((feec F a).discrete h (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+        ((feec F a).discrete h (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst (H.window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, B (a + i)) * r h * Λ) := by
   refine (rate F a _ hx h ht).trans_eq ?_
@@ -626,7 +626,7 @@ theorem cubePMC_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
     (hx : x ∈ (cubePMCRate n a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖((FEM.complex n).window a 3).waveGroup.S t x -
         ((FEM.complex n).window a 3).totalD.graphFst
-          ((cubePMC n a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((cubePMC n a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((FEM.complex n).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, FEM.interpBound n (a + i)) * FEM.meshSize N * Λ) :=
   rate_regRate hx N ht
@@ -639,7 +639,7 @@ theorem cubePEC_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
     (hx : x ∈ (cubePECRate n a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖((FEM.complexMin n).window a 3).waveGroup.S t x -
         ((FEM.complexMin n).window a 3).totalD.graphFst
-          ((cubePEC n a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((cubePEC n a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((FEM.complexMin n).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, FEM.interpBound n (a + i)) * FEM.meshSize N * Λ) :=
   rate_regRate hx N ht
@@ -652,7 +652,7 @@ theorem cubePolyPMC_rate {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T �
     {x} (hx : x ∈ (cubePolyPMCRate n S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖((FEM.complex n).window a 3).waveGroup.S t x -
         ((FEM.complex n).window a 3).totalD.graphFst
-          ((cubePolyPMC n S a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((cubePolyPMC n S a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((FEM.complex n).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, FEM.polyInterpBound n S (a + i)) * FEM.meshSize N ^ (s + 1) * Λ) :=
   rate_regRate hx N ht
@@ -664,7 +664,7 @@ theorem cubePolyPEC_rate {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T �
     {x} (hx : x ∈ (cubePolyPECRate n S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖((FEM.complexMin n).window a 3).waveGroup.S t x -
         ((FEM.complexMin n).window a 3).totalD.graphFst
-          ((cubePolyPEC n S a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((cubePolyPEC n S a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((FEM.complexMin n).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, FEM.polyInterpBound n S (a + i)) * FEM.meshSize N ^ (s + 1) * Λ) :=
   rate_regRate hx N ht
@@ -783,7 +783,7 @@ theorem paraPMC_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
     (hx : x ∈ (paraPMCRate A hA b a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖((complex A b).window a 3).waveGroup.S t x -
         ((complex A b).window a 3).totalD.graphFst
-          ((paraPMC A hA b a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((paraPMC A hA b a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((complex A b).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, rateBound A (a + i)) * FEM.meshSize N * Λ) :=
   rate_regRate hx N ht
@@ -797,7 +797,7 @@ theorem paraPEC_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
     (hx : x ∈ (paraPECRate A hA b a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖((complexMin A b).window a 3).waveGroup.S t x -
         ((complexMin A b).window a 3).totalD.graphFst
-          ((paraPEC A hA b a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((paraPEC A hA b a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((complexMin A b).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, rateBound A (a + i)) * FEM.meshSize N * Λ) :=
   rate_regRate hx N ht
@@ -811,7 +811,7 @@ theorem paraPolyPMC_rate {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T �
     (ht : t ∈ Icc 0 T) :
     ‖((complex A b).window a 3).waveGroup.S t x -
         ((complex A b).window a 3).totalD.graphFst
-          ((paraPolyPMC A hA b S a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((paraPolyPMC A hA b S a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((complex A b).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, polyRateBound A S s (a + i)) * FEM.meshSize N ^ (s + 1) * Λ) :=
   rate_regRate hx N ht
@@ -824,7 +824,7 @@ theorem paraPolyPEC_rate {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T �
     (ht : t ∈ Icc 0 T) :
     ‖((complexMin A b).window a 3).waveGroup.S t x -
         ((complexMin A b).window a 3).totalD.graphFst
-          ((paraPolyPEC A hA b S a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((paraPolyPEC A hA b S a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst ((complexMin A b).window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, polyRateBound A S s (a + i)) * FEM.meshSize N ^ (s + 1) * Λ) :=
   rate_regRate hx N ht
@@ -920,7 +920,7 @@ theorem starPMC_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
     (hx : x ∈ (starPMCRate M a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(D.complex.window a 3).waveGroup.S t x -
         (D.complex.window a 3).totalD.graphFst
-          ((starPMC M a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((starPMC M a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst (D.complex.window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, M.interpBound (a + i)) * (M.mesh N).meshSize * Λ) :=
   rate_regRate hx N ht
@@ -934,7 +934,7 @@ theorem starPEC_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
     (hx : x ∈ (starPECRate M a T Λ hΛ).Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(D.complexMin.window a 3).waveGroup.S t x -
         (D.complexMin.window a 3).totalD.graphFst
-          ((starPEC M a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((starPEC M a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst (D.complexMin.window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, M.interpBound (a + i)) * (M.mesh N).meshSize * Λ) :=
   rate_regRate hx N ht
@@ -948,7 +948,7 @@ theorem starPolyPMC_rate {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T �
     (ht : t ∈ Icc 0 T) :
     ‖(D.complex.window a 3).waveGroup.S t x -
         (D.complex.window a 3).totalD.graphFst
-          ((starPolyPMC M S a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((starPolyPMC M S a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst (D.complex.window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, M.polyInterpBound S (a + i)) * (M.mesh N).meshSize ^ (s + 1) * Λ) :=
   rate_regRate hx N ht
@@ -961,7 +961,7 @@ theorem starPolyPEC_rate {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T �
     (ht : t ∈ Icc 0 T) :
     ‖(D.complexMin.window a 3).waveGroup.S t x -
         (D.complexMin.window a 3).totalD.graphFst
-          ((starPolyPEC M S a).discrete N (waveLift _ ⟨x, hx.1⟩) t)‖ ≤
+          ((starPolyPEC M S a).discrete N (waveLift _ ⟨x, LinearPMap.domainSq_le_domain hx.1⟩) t)‖ ≤
       (1 + ellipticConst (D.complexMin.window a 3)) * (1 + 2 * t) *
         (12 * (∑ i : Fin 3, M.polyInterpBound S (a + i)) * (M.mesh N).meshSize ^ (s + 1) * Λ) :=
   rate_regRate hx N ht

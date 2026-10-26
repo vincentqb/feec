@@ -1,20 +1,25 @@
 module
 
 public import Feec.HilbertComplex.Approximation.Ritz
-public import Feec.HilbertComplex.Approximation.DissipGalerkin
+public import Feec.ForMathlib.LinearPMap.Bounded
+public import Feec.Semigroup.DomainSq
 
 /-!
-# The discrete resolvent as a Ritz projection
+# Trotter–Kato from resolvent consistency: the discrete resolvent as a Ritz projection
 
-The Trotter–Kato core of `Feec.HilbertComplex.DissipGalerkin` (`DissipFEEC.Core.ofResolvent`,
-comparison trajectories `pₕ(t) = (1 - Lₕ)⁻¹ πₕ (1 - A) S(t) x` on `D(A²) = (1 - A)⁻¹ D(A)`) is a
-Ritz projection (`Feec.HilbertComplex.DissipFEEC.Ritz`) for the **resolvent lift**
-(`DissipFEEC.Lift.resolvent`): `G = E`, `ℓ = 1 - A`, read back by `ρ = (1 - A)⁻¹`. The projection
-is `Rₕ = (1 - Lₕ)⁻¹ πₕ`, and with `Dₕ = πₕ (1 - A)⁻¹ - (1 - Lₕ)⁻¹ πₕ` the defect identity holds with
-`Δₕ = -Dₕ`, `Δₕ' = Dₕ` (`DissipFEEC.Ritz.ofResolvent`). Resolvent consistency
-`ιₕ (1 - Lₕ)⁻¹ πₕ → (1 - A)⁻¹` and `ιₕ πₕ → 1` are exactly the hypotheses of `Ritz.toCore`
-(`Ritz.tendsto_ofResolvent`), and the comparison trajectories are those of
-`Comparison.ofResolvent` (`Ritz.ofResolvent_cmp_p`).
+For a dissipative FEEC discretization `F` (`Feec.HilbertComplex.DissipFEEC`) of an m-dissipative
+`A`, the discrete resolvents `(1 - Lₕ)⁻¹` exist and are contractions (`discreteRes`,
+`norm_discreteRes_apply_le`: a bounded dissipative operator is m-dissipative,
+`isMDissipative_boundedPMap`). The discrete resolvent is a Ritz projection
+(`Feec.HilbertComplex.DissipFEEC.Ritz`) for the **resolvent lift** (`DissipFEEC.Lift.resolvent`):
+data `D(A²) = (1 - A)⁻¹ D(A)` (`resData`, dense: `DissipFEEC.resData_closure`), `G = E`,
+`ℓ = 1 - A`, read back by `ρ = (1 - A)⁻¹`. The projection is `Rₕ = (1 - Lₕ)⁻¹ πₕ`, and with
+`Dₕ = πₕ (1 - A)⁻¹ - (1 - Lₕ)⁻¹ πₕ` the defect identity holds with `Δₕ = -Dₕ`, `Δₕ' = Dₕ`
+(`DissipFEEC.Ritz.ofResolvent`). Resolvent consistency `ιₕ (1 - Lₕ)⁻¹ πₕ → (1 - A)⁻¹` and
+`ιₕ πₕ → 1` are exactly the hypotheses of `Ritz.toCore` (`Ritz.tendsto_ofResolvent`): its core is
+the **Trotter–Kato core** `DissipFEEC.Core.ofResolvent`, with the comparison trajectories
+`pₕ(t) = (1 - Lₕ)⁻¹ πₕ (1 - A) S(t) x`. This is the Trotter–Kato theorem (resolvent form) for
+contraction semigroups, in the orbit form used by `dissipFEEC`.
 
 Unlike the wave, whose Ritz projection is the elliptic projection on the graph space of `𝐝`, the
 resolvent lift reads lifted states through `(1 - A)⁻¹`, not through an inclusion.
@@ -22,17 +27,167 @@ resolvent lift reads lifted states through `(1 - A)⁻¹`, not through an inclus
 ## References
 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.4 (Thm 4.2, Trotter–Kato, resolvent form)
+  §3.4 (Thm 4.2, Trotter–Kato, resolvent form; here with variable spaces `Xₕ`)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
-open Set Filter Topology
+open Set Filter Topology Metric
 
 @[expose] public noncomputable section
 
 universe u
+
+namespace Feec.HilbertComplex
+
+/-! ### Discrete resolvents -/
+
+section Res
+
+variable {𝕜 : Type*} [RCLike 𝕜] {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
+  [CompleteSpace X]
+
+/-- A bounded operator as an operator with full domain. -/
+abbrev boundedPMap (L : X →L[𝕜] X) : X →ₗ.[𝕜] X := (L : X →ₗ[𝕜] X).toPMap ⊤
+
+/-- **A bounded dissipative operator is m-dissipative**: `1 - L` is bounded below, and a vector
+orthogonal to its range is `0` (test against itself). -/
+theorem isMDissipative_boundedPMap {L : X →L[𝕜] X} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) :
+    (boundedPMap L).IsMDissipative := by
+  refine LinearPMap.IsDissipative.isMDissipative_of_orthogonal (fun x => hL x)
+    (ContinuousLinearMap.isClosed_toPMap_top L) fun y hy => ?_
+  have h := hy ⟨y, trivial⟩
+  change ⟪y - L y, y⟫_𝕜 = 0 at h
+  rw [inner_sub_left, sub_eq_zero] at h
+  have h1 : ‖y‖ ^ 2 ≤ 0 := by
+    have := hL y
+    rw [← h, inner_self_eq_norm_sq] at this
+    exact this
+  exact norm_eq_zero.1 (by nlinarith [norm_nonneg y])
+
+/-- **The discrete resolvent** `(1 - L)⁻¹` of a bounded dissipative operator. -/
+def boundedRes (L : X →L[𝕜] X) : X →L[𝕜] X := Operator.resolvent (boundedPMap L) 1
+
+theorem boundedRes_sub {L : X →L[𝕜] X} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) (y : X) :
+    boundedRes L y - L (boundedRes L y) = y := by
+  have h := ((isMDissipative_boundedPMap hL).isResolvent_one).sub_apply y
+  simpa [boundedRes] using h
+
+theorem boundedRes_apply_sub {L : X →L[𝕜] X} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) (x : X) :
+    boundedRes L (x - L x) = x := by
+  have h := ((isMDissipative_boundedPMap hL).isResolvent_one).apply_sub ⟨x, trivial⟩
+  simpa [boundedRes] using h
+
+theorem norm_boundedRes_apply_le {L : X →L[𝕜] X} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) (y : X) :
+    ‖boundedRes L y‖ ≤ ‖y‖ := by
+  have := (isMDissipative_boundedPMap hL).norm_resolvent_apply_le one_pos y
+  simpa [boundedRes] using this
+
+end Res
+
+/-! ### The Trotter–Kato core -/
+
+section TrotterKato
+
+variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+  {A : E →ₗ.[𝕜] E} {κ : Type*}
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- `R(1) (y - A y) = y` and `R(1) y - A R(1) y = y`, with `R(1) = (1 - A)⁻¹`. -/
+theorem resolvent_one_apply_sub (hA : A.IsMDissipative) (x : A.domain) :
+    Operator.resolvent A 1 ((x : E) - A x) = x := by
+  simpa using hA.isResolvent_one.apply_sub x
+
+/-- **The resolvent commutes with the semigroup**: `R(1) S(t) = S(t) R(1)` for `t ≥ 0`. -/
+theorem resolvent_semigroup_comm (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) (y : E) :
+    Operator.resolvent A 1 (hA.semigroup.S t y) = hA.semigroup.S t (Operator.resolvent A 1 y) := by
+  have hR := hA.isResolvent_one
+  set x : A.domain := hR.toDomain y
+  have hx : (x : E) - A x = y := by
+    have h := hR.sub_apply_toDomain y
+    rw [one_smul] at h
+    exact h
+  have hSx := hA.semigroup_mem_domain x ht
+  have h1 : hA.semigroup.S t (x : E) - A ⟨_, hSx⟩ = hA.semigroup.S t y := by
+    rw [hA.apply_semigroup x ht, ← _root_.map_sub, hx]
+  rw [← h1, resolvent_one_apply_sub hA ⟨_, hSx⟩]
+  rfl
+
+namespace DissipFEEC
+
+variable (F : DissipFEEC.{u} A κ)
+
+/-- The discrete resolvent `(1 - Lₕ)⁻¹`. -/
+def discreteRes (h : κ) : F.X h →L[𝕜] F.X h := boundedRes (F.L h)
+
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+theorem norm_discreteRes_apply_le (h : κ) (y : F.X h) : ‖F.discreteRes h y‖ ≤ ‖y‖ :=
+  norm_boundedRes_apply_le (F.dissipative h) y
+
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+theorem discreteRes_sub (h : κ) (y : F.X h) :
+    F.discreteRes h y - F.L h (F.discreteRes h y) = y :=
+  boundedRes_sub (F.dissipative h) y
+
+/-- `R(1) S(t) = S(t) R(1)` for the exact flow of `F` (`resolvent_semigroup_comm`). -/
+theorem resolvent_S {t : ℝ} (ht : 0 ≤ t) (y : E) :
+    Operator.resolvent A 1 (F.S t y) = F.S t (Operator.resolvent A 1 y) :=
+  resolvent_semigroup_comm F.isMDissipative ht y
+
+/-- The data of the resolvent core: `R(1) D(A) = D(A²)`. -/
+def resData : Submodule 𝕜 E := A.domain.map (Operator.resolvent A 1).toLinearMap
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+theorem mem_domain_of_mem_resData (hA : A.IsMDissipative) {x : E} (hx : x ∈ resData (A := A)) :
+    x ∈ A.domain := by
+  obtain ⟨u, -, rfl⟩ := hx
+  exact hA.isResolvent_one.mem_domain u
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- For `x = R(1) u`, `u = x - A x ∈ D(A)`. -/
+theorem sub_genExt_mem_domain (hA : A.IsMDissipative) {x : E} (hx : x ∈ resData (A := A)) :
+    x - genExt A x ∈ A.domain := by
+  obtain ⟨u, hu, rfl⟩ := hx
+  have hR := hA.isResolvent_one
+  have e : Operator.resolvent A 1 u - genExt A (Operator.resolvent A 1 u) = u := by
+    rw [genExt_of_mem (hR.mem_domain u)]
+    have h := hR.sub_apply u
+    rw [one_smul] at h
+    exact h
+  have e' : ((Operator.resolvent A 1 : E →L[𝕜] E) : E →ₗ[𝕜] E) u -
+      genExt A (((Operator.resolvent A 1 : E →L[𝕜] E) : E →ₗ[𝕜] E) u) = u := e
+  rw [e']; exact hu
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+theorem resolvent_sub_genExt (hA : A.IsMDissipative) {x : E} (hx : x ∈ resData (A := A)) :
+    Operator.resolvent A 1 (x - genExt A x) = x := by
+  have hd := mem_domain_of_mem_resData hA hx
+  rw [genExt_of_mem hd]
+  exact resolvent_one_apply_sub hA ⟨x, hd⟩
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- **The resolvent core is dense**: `R(1) D(A)` is dense, `R(1)` being continuous with range
+`D(A)` and `D(A)` dense. -/
+theorem resData_closure (hA : A.IsMDissipative) : (resData (A := A)).topologicalClosure = ⊤ := by
+  rw [← Submodule.dense_iff_topologicalClosure_eq_top]
+  have hR := hA.isResolvent_one
+  have hD := hA.dense_domain
+  have hsub : (A.domain : Set E) ⊆ closure (resData (A := A) : Set E) := by
+    intro x hx
+    have e : x = Operator.resolvent A 1 (x - A ⟨x, hx⟩) :=
+      (resolvent_one_apply_sub hA ⟨x, hx⟩).symm
+    rw [e]
+    refine map_mem_closure (Operator.resolvent A 1).continuous (hD _) fun z hz => ⟨z, hz, rfl⟩
+  intro y
+  exact closure_minimal hsub isClosed_closure (hD y)
+
+end DissipFEEC
+
+end TrotterKato
+
+end Feec.HilbertComplex
 
 namespace Feec.HilbertComplex.DissipFEEC
 
@@ -56,6 +211,13 @@ theorem genExt_mem_domain_of_mem_resData {x : E} (hx : x ∈ resData (A := A))
     (hA : A.IsMDissipative) : genExt A x ∈ A.domain := by
   have h := A.domain.sub_mem (mem_domain_of_mem_resData hA hx) (sub_genExt_mem_domain hA hx)
   rwa [sub_sub_cancel] at h
+
+omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- `D(A²) ⊆ R(1) D(A)`: `x = R(1) (x - A x)`. -/
+theorem domainSq_le_resData (hA : A.IsMDissipative) : A.domainSq ≤ resData (A := A) :=
+  fun x hx => by
+    obtain ⟨hx1, hx2⟩ := LinearPMap.mem_domainSq.1 hx
+    exact ⟨x - A ⟨x, hx1⟩, A.domain.sub_mem hx1 hx2, resolvent_one_apply_sub hA ⟨x, hx1⟩⟩
 
 /-- The **resolvent lift**: data `D(A²) = (1 - A)⁻¹ D(A)`, `ℓ = 1 - A`, read back by
 `ρ = (1 - A)⁻¹`. -/
@@ -161,11 +323,19 @@ theorem Ritz.tendsto_ofResolvent
   ⟨fun g => (F.tendsto_norm_resDefect hres happ g).congr fun h => (norm_neg (F.resDefect h g)).symm,
     F.tendsto_norm_resDefect hres happ⟩
 
-/-- **The resolvent Ritz projection has the trajectories of `Comparison.ofResolvent`**: on the
-data `D(A²)`, `(1 - Lₕ)⁻¹ πₕ ℓ(S(t) x) = (1 - Lₕ)⁻¹ πₕ S(t) (1 - A) x` for `t ≥ 0`. -/
-theorem Ritz.ofResolvent_cmp_p {T : ℝ} {x : E} (hx : x ∈ resData (A := A)) (h : κ) {t : ℝ}
-    (ht : 0 ≤ t) : ((Ritz.ofResolvent F).cmp T).p x h t = (Comparison.ofResolvent F T).p x h t :=
-  congrArg (fun z => F.discreteRes h (F.proj h z))
-    (F.S_sub_genExt (mem_domain_of_mem_resData F.isMDissipative hx) ht)
+/-- **The Trotter–Kato core** (resolvent form): consistent discrete resolvents,
+`ιₕ (1 - Lₕ)⁻¹ πₕ z → (1 - A)⁻¹ z`, and `ιₕ πₕ z → z` give the core `R(1) D(A) = D(A²)`: the core
+of the resolvent Ritz projection (`Ritz.toCore`, `Ritz.tendsto_ofResolvent`), with the comparison
+trajectories `pₕ(t) = (1 - Lₕ)⁻¹ πₕ (1 - A) S(t) x`. [Pazy1983], §3.4 (Thm 4.2) -/
+def Core.ofResolvent
+    (hres : ∀ z, Tendsto (fun h => F.incl h (F.discreteRes h (F.proj h z))) F.l
+      (𝓝 (Operator.resolvent A 1 z)))
+    (happ : ∀ z, Tendsto (fun h => F.incl h (F.proj h z)) F.l (𝓝 z)) : F.Core :=
+  (Ritz.ofResolvent F).toCore hres (Ritz.tendsto_ofResolvent F hres happ).1
+    (Ritz.tendsto_ofResolvent F hres happ).2
+
+@[simp] theorem Core.ofResolvent_data (hres happ) :
+    (Core.ofResolvent F hres happ).Data = resData (A := A) :=
+  rfl
 
 end Feec.HilbertComplex.DissipFEEC

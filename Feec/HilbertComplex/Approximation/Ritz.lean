@@ -25,8 +25,11 @@ from it.
 * **Cores** (`Ritz.toCore`): `ιₕ Rₕ → ρ` and `Δₕ, Δₕ' → 0` strongly give the core `D`
   (uniformity on `[0, T]` from the compactness of the lifted orbits); for the identity lift this
   is the Trotter–Kato bridge `DissipFEEC.Core.ofOperator` (`Ritz.ofOperator`).
-* **Rate classes** (`Ritz.toRateClass`): a **regularity scale** (`DissipFEEC.RegScale`: regular
-  states `𝒮` with a norm `‖·‖_𝒮`, data whose orbits stay in `𝒮` with
+* **Rate classes** (`Ritz.orbitRateClass`): estimates of `‖S(t) x - ιₕ Rₕ ℓ(S(t) x)‖` and of the
+  defects along the orbits of the data give a rate class with the comparison `Ritz.cmp`; the
+  conforming rate classes of the wave and the crime rate classes are of this form. From static
+  estimates (`Ritz.toRateClass`): a **regularity scale** (`DissipFEEC.RegScale`: regular states
+  `𝒮` with a norm `‖·‖_𝒮`, data whose orbits stay in `𝒮` with
   `‖S(t) x‖_𝒮 ≤ M ‖x‖_c` on `[0, T]`) and **static** estimates on `𝒮`,
   `‖y - ιₕ Rₕ ℓ y‖ ≤ C_s hᵅ ‖y‖_𝒮` and `‖Δₕ ℓ(A y)‖ + ‖Δₕ' ℓ y‖ ≤ C_d hᵅ ‖y‖_𝒮`, give a rate class
   with `C = C_s M`, `C' = C_d M`: the dynamic rate is the static one along the orbit. Two scales:
@@ -36,7 +39,7 @@ from it.
 
 ## Main results
 
-* `DissipFEEC.Ritz.toCore`, `DissipFEEC.Ritz.toRateClass`;
+* `DissipFEEC.Ritz.toCore`, `DissipFEEC.Ritz.orbitRateClass`, `DissipFEEC.Ritz.toRateClass`;
 * `DissipFEEC.RegScale.domainPow`: `D(Aᵏ)` with its graph norm is a regularity scale with `M = 1`.
 
 ## References
@@ -113,6 +116,21 @@ def Lift.ofDomain : F.Lift E where
     rwa [← genExt_of_mem hx] at hd
 
 variable {F} in
+/-- The comparison trajectories `pₕ(t) = Rₕ ℓ(S(t) x)` of bounded `Rₕ : G → Xₕ` on the data of the
+lift, with derivatives `Rₕ ℓ(S(t) A x)`. -/
+def Lift.cmp (Λ : F.Lift G) (R : ∀ h, G →L[𝕜] F.X h) (T : ℝ) : F.Comparison T where
+  Data := Λ.Data
+  p x h t := R h (Λ.lift (F.S t x))
+  p' x h t := R h (Λ.lift (F.S t (genExt A x)))
+  continuousOn x hx h :=
+    (R h).continuous.comp_continuousOn ((Λ.continuousOn x hx).mono Icc_subset_Ici_self)
+  continuousOn' x hx h :=
+    (R h).continuous.comp_continuousOn ((Λ.continuousOn' x hx).mono Icc_subset_Ici_self)
+  hasDerivWithinAt x hx h t ht :=
+    ((R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t
+      (Λ.hasDerivWithinAt x hx t ht.1)
+
+variable {F} in
 /-- A **Ritz projection** for the lift `Λ`: uniformly bounded `Rₕ : G → Xₕ` with a defect identity
 `Rₕ ℓ(A y) - Lₕ Rₕ ℓ(y) = Δₕ ℓ(A y) + Δₕ' ℓ(y)` on the data, `Δₕ`, `Δₕ'` uniformly bounded.
 [Wheeler1973]; [Pazy1983], §3.4 -/
@@ -142,18 +160,8 @@ theorem bound_Δ : ∃ C, ∀ h, ‖𝓡.Δ h‖ ≤ C ∧ ‖𝓡.Δ' h‖ ≤ 
   ⟨C, fun h => (hC h).2⟩
 
 /-- The comparison trajectories `pₕ(t) = Rₕ ℓ(S(t) x)` of a Ritz projection, with derivatives
-`Rₕ ℓ(S(t) A x)`, on the data of the lift. -/
-def cmp (T : ℝ) : F.Comparison T where
-  Data := Λ.Data
-  p x h t := 𝓡.R h (Λ.lift (F.S t x))
-  p' x h t := 𝓡.R h (Λ.lift (F.S t (genExt A x)))
-  continuousOn x hx h :=
-    (𝓡.R h).continuous.comp_continuousOn ((Λ.continuousOn x hx).mono Icc_subset_Ici_self)
-  continuousOn' x hx h :=
-    (𝓡.R h).continuous.comp_continuousOn ((Λ.continuousOn' x hx).mono Icc_subset_Ici_self)
-  hasDerivWithinAt x hx h t ht :=
-    ((𝓡.R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t
-      (Λ.hasDerivWithinAt x hx t ht.1)
+`Rₕ ℓ(S(t) A x)`, on the data of the lift (`Lift.cmp`). -/
+def cmp (T : ℝ) : F.Comparison T := Λ.cmp 𝓡.R T
 
 /-- **The consistency defect of a Ritz projection** is `Δₕ ℓ(S(t) A x) + Δₕ' ℓ(S(t) x)`. -/
 theorem cmp_defect (T : ℝ) {x : E} (hx : x ∈ Λ.Data) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
@@ -277,36 +285,52 @@ def RegScale.domainPow (T : ℝ) (D : Set E) (k : ℕ) : F.RegScale T where
 
 variable {F} {Λ : F.Lift G}
 
-/-- **The rate class of a Ritz projection**: static estimates on the regular states of a scale,
-`‖y - ιₕ Rₕ ℓ y‖ ≤ C_s hᵅ ‖y‖_𝒮` and `‖Δₕ ℓ(A y)‖ + ‖Δₕ' ℓ y‖ ≤ C_d hᵅ ‖y‖_𝒮`, give a rate class
-on the data of the scale, with `C = C_s M` and `C' = C_d M`. -/
+/-- **The rate class of a Ritz projection**, from estimates along the orbits: on data `D` of the
+lift, `‖S(t) x - ιₕ Rₕ ℓ(S(t) x)‖ ≤ C hᵅ ‖x‖_c` and
+`‖Δₕ ℓ(S(t) A x)‖ + ‖Δₕ' ℓ(S(t) x)‖ ≤ C' hᵅ ‖x‖_c` on `[0, T]` give a rate class with the
+comparison `Ritz.cmp` (its consistency defect is `Ritz.cmp_defect`). -/
+def Ritz.orbitRateClass (𝓡 : F.Ritz Λ) {T : ℝ} (D : Set E) (hD : D ⊆ Λ.Data)
+    (classNorm : E → ℝ) (meshSize : κ → ℝ) (α C C' : ℝ)
+    (happrox : ∀ x ∈ D, ∀ h, ∀ t ∈ Icc 0 T,
+      ‖F.S t x - F.incl h (𝓡.R h (Λ.lift (F.S t x)))‖ ≤ C * meshSize h ^ α * classNorm x)
+    (hdefect : ∀ x ∈ D, ∀ h, ∀ t ∈ Icc 0 T,
+      ‖𝓡.Δ h (Λ.lift (F.S t (genExt A x)))‖ + ‖𝓡.Δ' h (Λ.lift (F.S t x))‖ ≤
+        C' * meshSize h ^ α * classNorm x) : F.RateClass T where
+  toComparison := (𝓡.cmp T).restrict D hD
+  classNorm := classNorm
+  meshSize := meshSize
+  α := α
+  C := C
+  C' := C'
+  approx := happrox
+  consistency x hx h t ht := by
+    have e : ((𝓡.cmp T).restrict D hD).defect x h t = (𝓡.cmp T).defect x h t := rfl
+    rw [e, 𝓡.cmp_defect T (hD hx) h ht.1]
+    exact (norm_add_le _ _).trans (hdefect x hx h t ht)
+
+/-- **The rate class of a Ritz projection on a regularity scale**: static estimates on the regular
+states, `‖y - ιₕ Rₕ ℓ y‖ ≤ C_s hᵅ ‖y‖_𝒮` and `‖Δₕ ℓ(A y)‖ + ‖Δₕ' ℓ y‖ ≤ C_d hᵅ ‖y‖_𝒮`, give a
+rate class on the data of the scale (`Ritz.orbitRateClass`), with `C = C_s M` and `C' = C_d M`. -/
 def Ritz.toRateClass (𝓡 : F.Ritz Λ) {T : ℝ} (𝒮 : F.RegScale T) (hD : 𝒮.Data ⊆ Λ.Data)
     (meshSize : κ → ℝ) (hmesh : ∀ h, 0 ≤ meshSize h) (α Cs Cd : ℝ) (hCs : 0 ≤ Cs)
     (hCd : 0 ≤ Cd)
     (happrox : ∀ y ∈ 𝒮.Reg, ∀ h,
       ‖y - F.incl h (𝓡.R h (Λ.lift y))‖ ≤ Cs * meshSize h ^ α * 𝒮.regNorm y)
     (hdefect : ∀ y ∈ 𝒮.Reg, ∀ h, ‖𝓡.Δ h (Λ.lift (genExt A y))‖ + ‖𝓡.Δ' h (Λ.lift y)‖ ≤
-      Cd * meshSize h ^ α * 𝒮.regNorm y) : F.RateClass T where
-  toComparison := (𝓡.cmp T).restrict 𝒮.Data hD
-  classNorm := 𝒮.classNorm
-  meshSize := meshSize
-  α := α
-  C := Cs * 𝒮.M
-  C' := Cd * 𝒮.M
-  approx x hx h t ht := by
-    have hr := 𝒮.regNorm_le x hx t ht
-    have hc : 0 ≤ Cs * meshSize h ^ α := mul_nonneg hCs (Real.rpow_nonneg (hmesh h) _)
-    calc _ ≤ Cs * meshSize h ^ α * 𝒮.regNorm (F.S t x) := happrox _ (𝒮.mem x hx t ht) h
-      _ ≤ Cs * meshSize h ^ α * (𝒮.M * 𝒮.classNorm x) := mul_le_mul_of_nonneg_left hr hc
-      _ = _ := by ring
-  consistency x hx h t ht := by
-    have hr := 𝒮.regNorm_le x hx t ht
-    have hc : 0 ≤ Cd * meshSize h ^ α := mul_nonneg hCd (Real.rpow_nonneg (hmesh h) _)
-    have e : ((𝓡.cmp T).restrict 𝒮.Data hD).defect x h t = (𝓡.cmp T).defect x h t := rfl
-    rw [e, 𝓡.cmp_defect T (hD hx) h ht.1, F.S_genExt (Λ.le_domain (hD hx)) ht.1]
-    calc _ ≤ _ := norm_add_le _ _
-      _ ≤ Cd * meshSize h ^ α * 𝒮.regNorm (F.S t x) := hdefect _ (𝒮.mem x hx t ht) h
-      _ ≤ Cd * meshSize h ^ α * (𝒮.M * 𝒮.classNorm x) := mul_le_mul_of_nonneg_left hr hc
-      _ = _ := by ring
+      Cd * meshSize h ^ α * 𝒮.regNorm y) : F.RateClass T :=
+  𝓡.orbitRateClass 𝒮.Data hD 𝒮.classNorm meshSize α (Cs * 𝒮.M) (Cd * 𝒮.M)
+    (fun x hx h t ht => by
+      have hc : 0 ≤ Cs * meshSize h ^ α := mul_nonneg hCs (Real.rpow_nonneg (hmesh h) _)
+      calc _ ≤ Cs * meshSize h ^ α * 𝒮.regNorm (F.S t x) := happrox _ (𝒮.mem x hx t ht) h
+        _ ≤ Cs * meshSize h ^ α * (𝒮.M * 𝒮.classNorm x) :=
+          mul_le_mul_of_nonneg_left (𝒮.regNorm_le x hx t ht) hc
+        _ = _ := by ring)
+    (fun x hx h t ht => by
+      have hc : 0 ≤ Cd * meshSize h ^ α := mul_nonneg hCd (Real.rpow_nonneg (hmesh h) _)
+      rw [F.S_genExt (Λ.le_domain (hD hx)) ht.1]
+      calc _ ≤ Cd * meshSize h ^ α * 𝒮.regNorm (F.S t x) := hdefect _ (𝒮.mem x hx t ht) h
+        _ ≤ Cd * meshSize h ^ α * (𝒮.M * 𝒮.classNorm x) :=
+          mul_le_mul_of_nonneg_left (𝒮.regNorm_le x hx t ht) hc
+        _ = _ := by ring)
 
 end Feec.HilbertComplex.DissipFEEC

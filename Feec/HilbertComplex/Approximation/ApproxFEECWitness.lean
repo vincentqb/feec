@@ -357,7 +357,7 @@ theorem perturbed_nonvacuous :
     · exact idWave_firstDatum_ne_zero h3
   · exact isReducingPair_top _
   · obtain ⟨x, hxK, t, ht, hout, hpos, -⟩ :=
-      constrainedFEEC_residual_not_isReducing_of_grading (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub)
+      (constrainedFEEC (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub)).leaves_graded
         (p := fun i : Fin 3 => decide (Odd i.val))
         (fun _ _ h => ComplexShape.window_parity h)
         (fun x hx => reversal_mem_totalSub hx)

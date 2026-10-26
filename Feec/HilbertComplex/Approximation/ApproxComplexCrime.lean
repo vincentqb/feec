@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.ApproxComplex
 public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
+public import Feec.HilbertComplex.Approximation.RitzResolvent
 
 /-!
 # Approximating families of discrete differential spaces with a cochain defect
@@ -33,9 +34,12 @@ norm, `|⟪κₕ(y), v⟫| ≤ δ (‖v‖ + ‖𝐝ₕ v‖)`.
 The comparison is the **exact-load modified elliptic projection** `Rₕ y = (1 - Lₕ)⁻¹ iₕ* (1 - L) y`
 of `y ∈ D(L)` (`load` applied to `y - L y`). It needs `L y`, not only `(y, 𝐝 y)`: with a cochain
 defect the load of `ApproxComplex.Family.ellProj` (defined on `Γ(𝐝)`) differs from `iₕ*(1 - L)`
-on `D(L)` by `κₕ`, which is not a bounded function of `(y, 𝐝 y)`. So the Trotter–Kato bridge
-`ApproxFEEC.Core.ofOperator` is restated on pairs `(y, L y)` (`ApproxFEEC.ofComplexCrimeCore`),
-and its hypotheses (uniform bound, approximation, defect identity, vanishing defects) are derived.
+on `D(L)` by `κₕ`, which is not a bounded function of `(y, 𝐝 y)`. So the comparison is the
+**load Ritz projection** `ApproxFEEC.loadRitz` (a `DissipFEEC.Ritz` of the resolvent lift
+`ℓ = 1 - L`, `DissipFEEC.Lift.resolvent`, with `Δₕ = Bₕ - iₕ* (1 - L)⁻¹`, `Δₕ' = -Δₕ`), restricted
+to the core (`ApproxFEEC.crimeCmp`, `ApproxFEEC.ofComplexCrimeCore`), and the hypotheses of the
+core (approximation, vanishing defects, uniformly on `[0, T]`) are derived on the admissible
+states.
 
 **The approximating family** (`ApproxComplexCrime`) adds a constraint `K`, a filter, a set
 `A ⊆ D(L)` of admissible states and a core `Z ≤ D(L²)` whose forward orbits (and those of `L Z`)
@@ -80,7 +84,8 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative). Complexification of a
   differential and of Galerkin identities: `ApproxFEEC.complexifyD`,
   `ApproxFEEC.complexify_L_eq_diffWave`, `ApproxFEEC.complexify_galerkin`.
-* **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`): approximants along the
+* **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`, the rate class of the
+  load Ritz projection, `DissipFEEC.Ritz.orbitRateClass`): approximants along the
   trajectory with approximation, inner-product defect `‖(1 - Jₕ) w‖` and residual `O(m(h)ᵅ)` give
   a `DissipFEEC.RateClass` with `C = (1 + 8 C_ι) Cₐ`,
   `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`, hence
@@ -737,23 +742,6 @@ end ApproxComplexCrime
 
 section OfComplexCrime
 
-/-- `L e^{tL} x = e^{tL} L x` on `D(L)`, for the extension `waveExt` of `L`. -/
-theorem waveExt_waveGroup (H : HilbertComplex 𝕜 c W) {x : PiLp 2 W} (hx : x ∈ H.wave.domain)
-    (t : ℝ) : waveExt H (H.waveGroup.S t x) = H.waveGroup.S t (waveExt H x) := by
-  rw [waveExt_of_mem (waveGroup_mem_domain H hx t), waveExt_of_mem hx]
-  exact wave_waveGroup hx t
-
-omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-theorem waveExt_mem_domain (H : HilbertComplex 𝕜 c W) {x : PiLp 2 W}
-    (hx : x ∈ H.wave.domainSq) : waveExt H x ∈ H.wave.domain := by
-  rw [waveExt_of_mem (domainSq_le_domain hx)]; exact (mem_domainSq.1 hx).2
-
-/-- The derivative of the orbit of `x ∈ D(L)` is the orbit of `L x`. -/
-theorem hasDerivAt_waveGroup_waveExt (H : HilbertComplex 𝕜 c W) {x : PiLp 2 W}
-    (hx : x ∈ H.wave.domain) (t : ℝ) :
-    HasDerivAt (fun s => H.waveGroup.S s x) (H.waveGroup.S t (waveExt H x)) t := by
-  rw [waveExt_of_mem hx]; exact hasDerivAt_waveGroup H hx t
-
 namespace ApproxFEEC
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
@@ -778,45 +766,114 @@ theorem ofComplexCrime_L (h : κ) :
     (ofComplexCrime F).L h = F.toFamily.D h - (F.toFamily.D h).adjoint :=
   rfl
 
-/-- **The comparison of `ofComplexCrime`** on `[0, T]`: data the core `Z`, trajectory
-`pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x) = Rₕ (e^{tL} x)` (the exact-load modified elliptic projection
-of the exact orbit) with derivative `Rₕ (e^{tL} L x)`. -/
-def crimeCmp (T : ℝ) : (ofComplexCrime F).Comparison T where
-  Data := F.Z
-  p x h t := F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x))
-  p' x h t := F.toFamily.load h
-    (H.waveGroup.S t (waveExt H x) - H.waveGroup.S t (waveExt H (waveExt H x)))
-  continuousOn _ _ h := ((F.toFamily.load h).continuous.comp
-    ((H.waveGroup.strongCont _).sub (H.waveGroup.strongCont _))).continuousOn
-  continuousOn' _ _ h := ((F.toFamily.load h).continuous.comp
-    ((H.waveGroup.strongCont _).sub (H.waveGroup.strongCont _))).continuousOn
-  hasDerivWithinAt x hx h t _ := by
-    have hx2 := F.Z_le hx
-    have h1 := hasDerivAt_waveGroup_waveExt H (domainSq_le_domain hx2) t
-    have h2 := hasDerivAt_waveGroup_waveExt H (waveExt_mem_domain H hx2) t
-    exact (((F.toFamily.load h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt t
-      (h1.sub h2)).hasDerivWithinAt
+/-- The defect `Δₕ = Bₕ - iₕ* (1 - L)⁻¹` of the exact-load elliptic projection on lifted states:
+`Δₕ (y - L y) = Bₕ (y - L y) - iₕ* y` (`loadDefect_apply`). -/
+def loadDefect (h : κ) : PiLp 2 W →L[𝕜] F.toFamily.X h :=
+  F.toFamily.load h - (F.toFamily.incl h).adjoint ∘L Operator.resolvent H.wave 1
 
-theorem crimeCmp_p (T : ℝ) (x : PiLp 2 W) (h : κ) (t : ℝ) :
+theorem loadDefect_apply (h : κ) {y : PiLp 2 W} (hy : y ∈ H.wave.domain) :
+    loadDefect F h (y - waveExt H y) =
+      F.toFamily.load h (y - waveExt H y) - (F.toFamily.incl h).adjoint y := by
+  have e : Operator.resolvent H.wave (1 : 𝕜) (y - waveExt H y) = y := by
+    rw [waveExt_of_mem hy]
+    exact resolvent_one_apply_sub (ofComplexCrime F).isMDissipative ⟨y, hy⟩
+  change F.toFamily.load h _ - (F.toFamily.incl h).adjoint
+    (Operator.resolvent H.wave (1 : 𝕜) (y - waveExt H y)) = _
+  rw [e]
+
+/-- **The load Ritz projection**: the exact-load modified elliptic projection `Rₕ = Bₕ` on the
+resolvent lift `ℓ = 1 - L` (`DissipFEEC.Lift.resolvent`, data `D(L²)`), with `Δₕ = loadDefect`,
+`Δₕ' = -Δₕ` (the defect identity `Family.load_defect`). -/
+def loadRitz : DissipFEEC.Ritz (DissipFEEC.Lift.resolvent (ofComplexCrime F).toDissipFEEC) where
+  R := F.toFamily.load
+  Δ := loadDefect F
+  Δ' h := -loadDefect F h
+  defect_eq h y hy := by
+    have hA := (ofComplexCrime F).isMDissipative
+    have hy1 := DissipFEEC.mem_domain_of_mem_resData hA hy
+    have hy2 := DissipFEEC.genExt_mem_domain_of_mem_resData hy hA
+    change F.toFamily.load h (DissipFEEC.genExt H.wave y -
+        DissipFEEC.genExt H.wave (DissipFEEC.genExt H.wave y)) -
+      F.toFamily.L h (F.toFamily.load h (y - DissipFEEC.genExt H.wave y)) =
+      loadDefect F h (DissipFEEC.genExt H.wave y -
+        DissipFEEC.genExt H.wave (DissipFEEC.genExt H.wave y)) +
+      -loadDefect F h (y - DissipFEEC.genExt H.wave y)
+    rw [← waveExt_eq_genExt] at hy2 ⊢
+    rw [loadDefect_apply F h hy1, loadDefect_apply F h hy2, F.toFamily.load_defect]
+    abel
+  bound := by
+    set C := F.toFamily.boundConst
+    have hC := F.toFamily.boundConst_nonneg
+    have hD : ∀ h, ‖loadDefect F h‖ ≤ 2 * C := fun h =>
+      ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun y => by
+        have h1 := F.toFamily.norm_load_apply_le h y
+        have h2 := F.toFamily.norm_adjoint_incl_apply_le h (Operator.resolvent H.wave (1 : 𝕜) y)
+        have h3 : ‖Operator.resolvent H.wave (1 : 𝕜) y‖ ≤ ‖y‖ := by
+          simpa using (ofComplexCrime F).isMDissipative.norm_resolvent_apply_le one_pos y
+        have e : loadDefect F h y = F.toFamily.load h y -
+            (F.toFamily.incl h).adjoint (Operator.resolvent H.wave (1 : 𝕜) y) := rfl
+        rw [e]
+        refine (norm_sub_le _ _).trans ?_
+        nlinarith [mul_le_mul_of_nonneg_left h3 hC]
+    exact ⟨2 * C, fun h => ⟨(ContinuousLinearMap.opNorm_le_bound _ hC
+      (F.toFamily.norm_load_apply_le h)).trans (by linarith), hD h,
+      (norm_neg (loadDefect F h)).trans_le (hD h)⟩⟩
+
+/-- **The comparison of `ofComplexCrime`** on `[0, T]`: the comparison of the load Ritz projection
+on the core `Z`, `pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x) = Rₕ (e^{tL} x)` (`crimeCmp_p`: the
+exact-load modified elliptic projection of the exact orbit), with derivative `Rₕ (e^{tL} L x)`. -/
+def crimeCmp (T : ℝ) : (ofComplexCrime F).Comparison T :=
+  ((loadRitz F).cmp T).restrict F.Z fun _ hx =>
+    DissipFEEC.domainSq_le_resData (ofComplexCrime F).isMDissipative (F.Z_le hx)
+
+/-- The comparison trajectories of the load Ritz projection:
+`pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x)` for `t ≥ 0`. -/
+theorem loadRitz_cmp_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) {t : ℝ}
+    (ht : 0 ≤ t) :
+    ((loadRitz F).cmp T).p x h t =
+      F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x)) := by
+  change F.toFamily.load h ((ofComplexCrime F).S t x -
+    DissipFEEC.genExt H.wave ((ofComplexCrime F).S t x)) = _
+  rw [(ofComplexCrime F).S_eq_waveGroup ht, ← waveExt_eq_genExt, waveExt_waveGroup H hx]
+
+theorem crimeCmp_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) {t : ℝ}
+    (ht : 0 ≤ t) :
     (crimeCmp F T).p x h t =
-      F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x)) := rfl
+      F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x)) :=
+  loadRitz_cmp_p F T hx h ht
 
 /-- On the core, the comparison is the exact-load elliptic projection of the exact state:
 `pₕ(t) = Bₕ (y - L y)`, `y = e^{tL} x`. -/
-theorem crimeCmp_p_eq (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) (h : κ) (t : ℝ) :
+theorem crimeCmp_p_eq (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     (crimeCmp F T).p x h t = F.toFamily.load h (H.waveGroup.S t x -
       waveExt H (H.waveGroup.S t x)) := by
-  rw [crimeCmp_p, waveExt_waveGroup H (domainSq_le_domain (F.Z_le hx))]
+  rw [crimeCmp_p F T (domainSq_le_domain (F.Z_le hx)) h ht,
+    waveExt_waveGroup H (domainSq_le_domain (F.Z_le hx))]
 
-/-- The consistency defect of the comparison is `Δₕ (L y) - Δₕ y` along the orbit. -/
-theorem crimeCmp_defect (T : ℝ) (x : PiLp 2 W) (h : κ) (t : ℝ) :
+/-- The consistency defect of the comparison is `Δₕ (L y) - Δₕ y` along the orbit
+(`DissipFEEC.Ritz.cmp_defect`). -/
+theorem crimeCmp_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     (crimeCmp F T).defect x h t =
       (F.toFamily.load h (H.waveGroup.S t (waveExt H x) -
           H.waveGroup.S t (waveExt H (waveExt H x))) -
         (F.toFamily.incl h).adjoint (H.waveGroup.S t (waveExt H x))) -
       (F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x)) -
-        (F.toFamily.incl h).adjoint (H.waveGroup.S t x)) :=
-  F.toFamily.load_defect h _ _ _
+        (F.toFamily.incl h).adjoint (H.waveGroup.S t x)) := by
+  have hx2 := F.Z_le hx
+  have hx1 := domainSq_le_domain hx2
+  have hLx := waveExt_mem_domain H hx2
+  change ((loadRitz F).cmp T).defect x h t = _
+  rw [(loadRitz F).cmp_defect T
+    (DissipFEEC.domainSq_le_resData (ofComplexCrime F).isMDissipative hx2) h ht]
+  change loadDefect F h ((ofComplexCrime F).S t (DissipFEEC.genExt H.wave x) -
+      DissipFEEC.genExt H.wave ((ofComplexCrime F).S t (DissipFEEC.genExt H.wave x))) +
+    -loadDefect F h ((ofComplexCrime F).S t x -
+      DissipFEEC.genExt H.wave ((ofComplexCrime F).S t x)) = _
+  rw [(ofComplexCrime F).S_eq_waveGroup ht, ← waveExt_eq_genExt,
+    loadDefect_apply F h (waveGroup_mem_domain H hLx t),
+    loadDefect_apply F h (waveGroup_mem_domain H hx1 t), waveExt_waveGroup H hLx,
+    waveExt_waveGroup H hx1]
+  abel
 
 /-- The orbit pairs `(e^{tL} x, e^{tL} L x)`, `t ∈ [0, T]`, form a compact set. -/
 theorem isCompact_orbitPair (x : PiLp 2 W) (T : ℝ) :
@@ -882,7 +939,8 @@ theorem crimeCmp_tendsto_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) :
   rw [Metric.tendstoUniformlyOn_iff]
   intro ε hε
   filter_upwards [hev1 _ (half_pos hε), hev2 _ (half_pos hε)] with h h1 h2 t ht
-  rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _), crimeCmp_defect]
+  rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _),
+    crimeCmp_defect F T hx h ht.1]
   refine (norm_sub_le _ _).trans_lt ?_
   have a1 : ‖F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x)) -
       (F.toFamily.incl h).adjoint (H.waveGroup.S t x)‖ < ε / 2 :=
@@ -893,16 +951,18 @@ theorem crimeCmp_tendsto_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) :
     h2 (H.waveGroup.S t (waveExt H x), H.waveGroup.S t (waveExt H (waveExt H x))) ⟨t, ht, rfl⟩
   exact lt_of_lt_of_eq (add_lt_add a2 a1) (add_halves ε)
 
-/-- **The core of `ofComplexCrime`**: data `Z`, comparison `crimeCmp`. Its two hypotheses
-(uniform approximation of the orbit, uniform vanishing of the consistency defect; the
-hypotheses of the Trotter–Kato bridge `ApproxFEEC.Core.ofOperator`, restated on pairs
-`(y, L y)`) are derived from the Strang lemma and the defect identity, by compactness of the
-orbits (`crimeCmp_tendsto_approx`, `crimeCmp_tendsto_defect`). -/
+/-- **The core of `ofComplexCrime`**: data `Z`, comparison `crimeCmp` (the load Ritz projection
+on `Z`). Its two hypotheses (uniform approximation of the orbit, uniform vanishing of the
+consistency defect) are derived from the Strang lemma and the defect identity at the admissible
+states only, by compactness of the orbits (`crimeCmp_tendsto_approx`, `crimeCmp_tendsto_defect`):
+the pointwise hypotheses of `DissipFEEC.Ritz.toCore` on all states are not available. -/
 def ofComplexCrimeCore : (ofComplexCrime F).Core where
   Data := F.Z
   cmp T := crimeCmp F T
   data_eq _ := rfl
-  tendsto_approx T _ hx := (crimeCmp_tendsto_approx F T hx).congr_right
+  tendsto_approx T _ hx := ((crimeCmp_tendsto_approx F T hx).congr
+    (Eventually.of_forall fun h _ ht => congrArg (F.toFamily.incl h)
+      (crimeCmp_p F T (domainSq_le_domain (F.Z_le hx)) h ht.1).symm)).congr_right
     fun _ ht => (DFunLike.congr_fun ((ofComplexCrime F).S_eq_waveGroup ht.1) _).symm
   tendsto_defect T _ hx := crimeCmp_tendsto_defect F T hx
 
@@ -1169,10 +1229,10 @@ theorem ofComplexCrime_toCrime : ofComplexCrime F.toCrime = ofComplex F := rfl
 /-- **The comparisons agree on `D(L²)`**: the trajectory of `ofComplexCrimeCore F.toCrime` is the
 modified elliptic projection `Rₕ (e^{tL} x, 𝐝 e^{tL} x)` of `ofComplexCore F`. -/
 theorem ofComplexCrimeCore_toCrime_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq)
-    (h : κ) (t : ℝ) :
+    (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     ((ofComplexCrimeCore F.toCrime).cmp T).p x h t = ((ofComplexCore F).cmp T).p x h t := by
   have hx1 := domainSq_le_domain hx
-  rw [ofComplexCrimeCore_cmp, crimeCmp_p_eq F.toCrime T hx, ofComplexCore_cmp_p,
+  rw [ofComplexCrimeCore_cmp, crimeCmp_p_eq F.toCrime T hx h ht, ofComplexCore_cmp_p F T hx1 h ht,
     waveOrbit_of_mem H hx1, F.toFamily.ellProj_waveLift_eq_load,
     waveExt_of_mem (waveGroup_mem_domain H hx1 t)]
   rfl
@@ -1277,8 +1337,9 @@ open ApproxFEEC in
 /-- **A rate class from complex-level rate data**. Data `Dc ⊆ Z` with a class norm `‖·‖_c`, a mesh
 size `m` and an order `α`: if along the exact trajectory, for `y = e^{tL} x` and `y = e^{tL} L x`,
 `t ∈ [0, T]`, there are approximants `w` with `‖y - iₕ w‖`, `‖(1 - Jₕ) w‖` and the residual (dual
-discrete graph norm) all `≤ Cₐ m(h)ᵅ ‖x‖_c`, then the comparison of `ofComplexCrimeCore` restricted
-to `Dc` is a rate class with `C = (1 + 8 C_ι) Cₐ` and
+discrete graph norm) all `≤ Cₐ m(h)ᵅ ‖x‖_c`, then the load Ritz projection on `Dc` gives a rate
+class (`DissipFEEC.Ritz.orbitRateClass`, with the Strang lemma and the defect bound along the
+orbit) with `C = (1 + 8 C_ι) Cₐ` and
 `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. The data can be assembled from graph-norm best
 approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`, at order
 `min(α, β, γ)`, by `rateClass_of_split` (through `rateData_of_split` and `add_rpow_le_rpow_min`). -/
@@ -1290,38 +1351,36 @@ def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W
       ‖(1 - F.toFamily.J h) w‖ ≤ Ca * m h ^ α * cn x ∧
       ∀ v, ‖⟪w - F.toFamily.L h w, v⟫_𝕜 - ⟪y - waveExt H y, F.toFamily.incl h v⟫_𝕜‖ ≤
         Ca * m h ^ α * cn x * (‖v‖ + ‖F.toFamily.D h v‖)) :
-    (ofComplexCrime F).RateClass T where
-  toComparison := (crimeCmp F T).restrict Dc hDc
-  classNorm := cn
-  meshSize := m
-  α := α
-  C := F.toFamily.rateConstA * Ca
-  C' := 2 * F.toFamily.rateConstD * Ca
-  approx x hx h t ht := by
-    obtain ⟨w, hw, -, hres⟩ := hrate x hx h t ht _ (Set.mem_insert _ _)
-    have e := crimeCmp_p_eq F T (hDc hx) h t
-    rw [ApproxFEEC.S_eq_waveGroup _ ht.1]
-    change ‖H.waveGroup.S t x - F.toFamily.incl h ((crimeCmp F T).p x h t)‖ ≤ _
-    rw [e]
-    have := F.toFamily.norm_sub_incl_load_le_of_rate h _ _ w hw hres
-    calc _ ≤ _ := this
-      _ = _ := by ring
-  consistency x hx h t ht := by
-    have hx2 := F.Z_le (hDc hx)
-    have hx1 := domainSq_le_domain hx2
-    obtain ⟨w, hw, hJw, hres⟩ := hrate x hx h t ht _ (Set.mem_insert _ _)
-    obtain ⟨w', hw', hJw', hres'⟩ := hrate x hx h t ht _
-      (Set.mem_insert_of_mem _ (Set.mem_singleton _))
-    have d1 := F.toFamily.norm_load_sub_adjoint_le_of_rate h _ _ w hw hJw hres
-    have d2 := F.toFamily.norm_load_sub_adjoint_le_of_rate h _ _ w' hw' hJw' hres'
-    rw [waveExt_waveGroup H hx1] at d1
-    rw [waveExt_waveGroup H (waveExt_mem_domain H hx2)] at d2
-    change ‖(crimeCmp F T).defect x h t‖ ≤ _
-    rw [crimeCmp_defect]
-    refine (norm_sub_le _ _).trans ?_
-    calc _ ≤ F.toFamily.rateConstD * (Ca * m h ^ α * cn x) +
-          F.toFamily.rateConstD * (Ca * m h ^ α * cn x) := add_le_add d2 d1
-      _ = _ := by ring
+    (ofComplexCrime F).RateClass T :=
+  (loadRitz F).orbitRateClass Dc (fun _ hx =>
+      DissipFEEC.domainSq_le_resData (ofComplexCrime F).isMDissipative (F.Z_le (hDc hx)))
+    cn m α (F.toFamily.rateConstA * Ca) (2 * F.toFamily.rateConstD * Ca)
+    (fun x hx h t ht => by
+      obtain ⟨w, hw, -, hres⟩ := hrate x hx h t ht _ (Set.mem_insert _ _)
+      change ‖(ofComplexCrime F).S t x - F.toFamily.incl h (F.toFamily.load h
+        ((ofComplexCrime F).S t x - DissipFEEC.genExt H.wave ((ofComplexCrime F).S t x)))‖ ≤ _
+      rw [(ofComplexCrime F).S_eq_waveGroup ht.1, ← waveExt_eq_genExt]
+      calc _ ≤ _ := F.toFamily.norm_sub_incl_load_le_of_rate h _ _ w hw hres
+        _ = _ := by ring)
+    (fun x hx h t ht => by
+      have hx2 := F.Z_le (hDc hx)
+      have hx1 := domainSq_le_domain hx2
+      have hLx := waveExt_mem_domain H hx2
+      obtain ⟨w, hw, hJw, hres⟩ := hrate x hx h t ht _ (Set.mem_insert _ _)
+      obtain ⟨w', hw', hJw', hres'⟩ := hrate x hx h t ht _
+        (Set.mem_insert_of_mem _ (Set.mem_singleton _))
+      have d1 := F.toFamily.norm_load_sub_adjoint_le_of_rate h _ _ w hw hJw hres
+      have d2 := F.toFamily.norm_load_sub_adjoint_le_of_rate h _ _ w' hw' hJw' hres'
+      change ‖loadDefect F h ((ofComplexCrime F).S t (DissipFEEC.genExt H.wave x) -
+          DissipFEEC.genExt H.wave ((ofComplexCrime F).S t (DissipFEEC.genExt H.wave x)))‖ +
+        ‖-loadDefect F h ((ofComplexCrime F).S t x -
+          DissipFEEC.genExt H.wave ((ofComplexCrime F).S t x))‖ ≤ _
+      rw [(ofComplexCrime F).S_eq_waveGroup ht.1, ← waveExt_eq_genExt, norm_neg,
+        loadDefect_apply F h (waveGroup_mem_domain H hLx t),
+        loadDefect_apply F h (waveGroup_mem_domain H hx1 t)]
+      calc _ ≤ F.toFamily.rateConstD * (Ca * m h ^ α * cn x) +
+            F.toFamily.rateConstD * (Ca * m h ^ α * cn x) := add_le_add d2 d1
+        _ = _ := by ring)
 
 /-- **The error bound of a rate class of `ofComplexCrime`** (the rate clause of the verdict,
 `dissipFEEC_rate`, from the comparison initial value): `‖e^{tL} x - iₕ e^{tLₕ} pₕ(0)‖ ≤
@@ -1701,7 +1760,8 @@ theorem galerkinRateClass_p (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α C
     {x : PiLp 2 W} (hx : x ∈ Dc) (h : κ) {t : ℝ} (ht : t ∈ Ico 0 (T + 1)) :
     (galerkinRateClass F hF D hDD hL Z0 hZ hgal hcl T Dc hDc cn m α Ca happ).p x h t =
       (Z0.cmp (T + 1)).p x h t :=
-  (galerkin_p_eq F D hDD hL Z0 hgal (hDc hx) h ht).symm
+  (ApproxFEEC.loadRitz_cmp_p _ T (domainSq_le_domain (hZ (hDc hx))) h ht.1).trans
+    (galerkin_p_eq F D hDD hL Z0 hgal (hDc hx) h ht).symm
 
 end Bridge
 

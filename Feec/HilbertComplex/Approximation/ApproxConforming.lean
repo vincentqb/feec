@@ -12,21 +12,23 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
   subcomplexes with bounded commuting cochain projections): `ConstrainedFEEC.toApprox` has
   `Xₕ = ∏ Vₕⁱ ⊆ W` with the `W` inner product, the discrete wave operator `Lₕ` of (4.10)
   (`ConstrainedFEEC.discreteWave`, `⟪Lₕ x, ψ⟫ = ⟪𝐝 x, ψ⟫ - ⟪x, 𝐝 ψ⟫`), `ιₕ` the inclusion and
-  `πₕ = Πₕ`. Its core `ConstrainedFEEC.toCore` (data `D(L²)`, dense) is the Trotter–Kato bridge
-  with `Rₕ` the elliptic projection (4.11) and the defect identity
-  `Rₕ (L y) - Lₕ Rₕ y = Qₕ (Pₕ - 1)(L y) - Qₕ (Pₕ - 1) y` (`Qₕ` the orthogonal projection onto
-  `Xₕ`; `ConstrainedFEEC.ellipticProj_defect`). The discrete solutions are those of (4.10)
-  (`ConstrainedFEEC.toApprox_sol`, `ConstrainedFEEC.exists_eq_sol`), and rate classes transfer
-  (`ConstrainedFEEC.RateClass.toApprox`), giving the improved rate
-  `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class` (`ConstrainedFEEC.rate_le`), which implies
-  `constrainedFEEC_rate` since `1 + 2t ≤ (1 + t)²` (`ConstrainedFEEC.rate_le_constrainedFEEC`).
-  The full verdict of `constrainedFEEC` (`ConstrainedFEEC.Verdict`) is re-derived from `approxFEEC`
-  (`ConstrainedFEEC.constrainedFEEC_of_approxFEEC`, from the verdict of `ConstrainedFEEC.toApprox`):
-  it is the special case `ιₕ` = inclusion, `πₕ = Πₕ`. The consistency defect of this special case
-  is in general not zero: by `ConstrainedFEEC.ellipticProj_defect` it is `Δₕ(L y) - Δₕ(y)` along
-  the orbit,
-  which tends to `0` (the conforming discretization commits no variational crime, but `Rₕ` does not
-  commute with `L`). `constrainedFEEC` itself keeps its direct proof.
+  `πₕ = Πₕ`. Its **wave Ritz projection** (`ConstrainedFEEC.waveRitz`, a
+  `DissipFEEC.Ritz` of the graph lift `ApproxFEEC.graphLift`) is the elliptic projection (4.11),
+  with the defect identity `Rₕ (L y) - Lₕ Rₕ y = Qₕ (Pₕ - 1)(L y) - Qₕ (Pₕ - 1) y` (`Qₕ` the
+  orthogonal projection onto `Xₕ`; `ConstrainedFEEC.ellipticProj_defect`). Its core
+  `ConstrainedFEEC.toCore` (data `D(L²)`, dense) is the core of the wave Ritz projection, and the
+  conforming rate classes are its rate classes (`ConstrainedFEEC.RateClass.toApprox`, through the
+  static estimates of the elliptic projection along the orbit; for degreewise regular data along
+  the trajectory, `ConstrainedFEEC.RateClass.ofDegreewise`). The discrete solutions are those of
+  (4.10) (`ConstrainedFEEC.toApprox_sol`, `ConstrainedFEEC.exists_eq_sol`), which gives the
+  improved rate `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class` (`ConstrainedFEEC.rate_le`) and the rate
+  `(1 + C_P)(1 + t)²` of `constrainedFEEC_rate` (`1 + 2t ≤ (1 + t)²`). **The constrained FEEC
+  theorem** `constrainedFEEC` (`ConstrainedFEEC.Verdict`) is proved here from the verdict of
+  `approxFEEC` for `toApprox`: it is the special case `ιₕ` = inclusion, `πₕ = Πₕ`. The consistency
+  defect of this special case is in general not zero: by `ConstrainedFEEC.ellipticProj_defect` it
+  is `Δₕ(L y) - Δₕ(y)` along the orbit, which tends to `0` (the conforming discretization commits
+  no variational crime, but `Rₕ` does not commute with `L`). Non-vacuity:
+  `constrainedFEEC_nonvacuous`.
 * **Reducing families** (`Feec.HilbertComplex.ReducingFamily`): closed reducing subspaces
   `B_N ⊆ D(L)` (not necessarily finite-dimensional) on which `L` is bounded, with projections
   converging strongly to `1`: spectral Galerkin methods, exact on the bands
@@ -36,9 +38,11 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 ((4.10), (4.11), Prop. 4.13, Thm 4.14), §4.12–4.13
+  §4.4 (Thms 4.6, 4.7), §4.6 ((4.10), (4.11), Prop. 4.13, Thm 4.14), §4.10 (Prop. 4.17),
+  §4.12–4.13
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3
+  §3.3 (Thm 3.4)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -226,6 +230,21 @@ theorem ellipticProj_defect (h : κ) (y : H.wave.domain) (hLy : H.wave y ∈ H.w
     F.ellipticDefect_apply, graphFst_waveLift, graphFst_waveLift]
   abel
 
+/-- **The static estimates of the elliptic projection**: for every `w ∈ Kₕ`,
+`‖graphFst ζ - Pₕ ζ‖ ≤ (1 + C_P) ‖ζ - w‖` (quasi-optimality, `norm_sub_ellipticProjection_le`). -/
+theorem norm_graphFst_sub_ellipticProj_le (h : κ) (ζ : H.totalD.GraphSpace)
+    {w : H.totalD.GraphSpace} (hw : w ∈ F.Kh h) :
+    ‖H.totalD.graphFst ζ - (F.ellipticProj h ζ : PiLp 2 W)‖ ≤ (1 + ellipticConst H) * ‖ζ - w‖ := by
+  rw [coe_ellipticProj, ← H.totalD.graphFst.map_sub]
+  exact (norm_graphFst_le _).trans (F.norm_sub_ellipticProjection_le h ζ hw)
+
+/-- The defect `Δₕ ζ` is at most `(1 + C_P) ‖ζ - w‖` for every `w ∈ Kₕ`. -/
+theorem norm_ellipticDefect_le_of_mem (h : κ) (ζ : H.totalD.GraphSpace)
+    {w : H.totalD.GraphSpace} (hw : w ∈ F.Kh h) :
+    ‖F.ellipticDefect h ζ‖ ≤ (1 + ellipticConst H) * ‖ζ - w‖ :=
+  (F.norm_ellipticDefect_apply_le h ζ).trans (by
+    rw [norm_sub_rev]; exact F.norm_sub_ellipticProjection_le h ζ hw)
+
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **Every constrained FEEC discretization is an approximating one**: `Xₕ = ∏ Vₕⁱ`, `ιₕ` the
@@ -251,17 +270,23 @@ def toApprox : ApproxFEEC H κ where
 theorem norm_toApprox_incl_le (h : κ) : ‖F.toApprox.incl h‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [one_mul]; exact le_rfl
 
-/-- Its core: the Trotter–Kato bridge with `Rₕ = ellipticProj`, `Δₕ = Qₕ graphFst (Pₕ - 1)`,
-`Δₕ' = -Δₕ`; data `D(L²)`. -/
-def toCore : F.toApprox.Core :=
-  ApproxFEEC.Core.ofOperator F.toApprox F.ellipticProj ⟨_, F.norm_ellipticProj_le⟩
-    (fun ζ => H.totalD.graphFst.continuous.continuousAt.tendsto.comp
-      ((F.isApproximating.tendstoUniformlyOn_ellipticProjection isCompact_singleton).tendsto_at
-        (mem_singleton ζ)))
-    F.ellipticDefect (fun h => -F.ellipticDefect h)
+/-- **The wave Ritz projection**: the elliptic projection `Rₕ = Pₕ` (4.11) on the graph lift
+(`ApproxFEEC.graphRitz`), with the defect identity `ellipticProj_defect`:
+`Δₕ = Qₕ graphFst (Pₕ - 1)`, `Δₕ' = -Δₕ`. [QuennevilleBelair2015], (4.11) -/
+def waveRitz : DissipFEEC.Ritz (ApproxFEEC.graphLift F.toApprox) :=
+  ApproxFEEC.graphRitz F.toApprox F.ellipticProj F.ellipticDefect (fun h => -F.ellipticDefect h)
+    ⟨_, F.norm_ellipticProj_le⟩
     ⟨_, fun h => ⟨F.norm_ellipticDefect_le h,
       (norm_neg (F.ellipticDefect h)).trans_le (F.norm_ellipticDefect_le h)⟩⟩
     F.ellipticProj_defect
+
+/-- Its core: the core of the wave Ritz projection (`DissipFEEC.Ritz.toCore`), data `D(L²)`;
+`ιₕ Pₕ ζ → graphFst ζ` and `Δₕ ζ → 0` by the approximation property. -/
+def toCore : F.toApprox.Core :=
+  F.waveRitz.toCore
+    (fun ζ => H.totalD.graphFst.continuous.continuousAt.tendsto.comp
+      ((F.isApproximating.tendstoUniformlyOn_ellipticProjection isCompact_singleton).tendsto_at
+        (mem_singleton ζ)))
     (fun ζ => squeeze_zero (fun _ => norm_nonneg _) (fun h => F.norm_ellipticDefect_apply_le h ζ)
       (by
         have := (F.isApproximating.tendstoUniformlyOn_ellipticProjection
@@ -351,64 +376,52 @@ theorem exists_eq_sol {T : ℝ} (hT : 0 ≤ T) {h : κ} {ξh ξh' : ℝ → H.to
   rfl
 
 variable {F} in
-/-- **Rate classes transfer**, with `C ↦ (1 + C_P) C`, `C' ↦ 2 (1 + C_P) C`. -/
-def RateClass.toApprox {T : ℝ} (R : F.RateClass T) : F.toApprox.RateClass T where
-  toComparison := (ApproxFEEC.Comparison.ofOperator F.toApprox F.ellipticProj T).restrict R.Data
-    fun x hx => mem_domainSq.2 ⟨R.mem_domain x hx, R.mem_domain_sq x _ hx⟩
-  classNorm := R.classNorm
-  meshSize := R.meshSize
-  α := R.α
-  C := (1 + ellipticConst H) * R.C
-  C' := 2 * ((1 + ellipticConst H) * R.C)
-  approx x hx h t ht := by
-    have hx1 := R.mem_domain x hx
-    rw [F.toApprox.S_eq_waveGroup ht.1]
-    change ‖H.waveGroup.S t x - ((F.ellipticProj h (waveOrbit H x t) : F.Xh h) : PiLp 2 W)‖ ≤ _
-    obtain ⟨w, hw, hwb⟩ := R.approx x hx h t ht (waveOrbit H x t) (graphFst_waveOrbit H hx1 t)
-    rw [coe_ellipticProj, ← graphFst_waveOrbit H hx1 t, ← H.totalD.graphFst.map_sub]
-    refine (norm_graphFst_le _).trans ((F.norm_sub_ellipticProjection_le h _ hw).trans ?_)
-    calc (1 + ellipticConst H) * ‖waveOrbit H x t - w‖ ≤
-        (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
-          mul_le_mul_of_nonneg_left hwb (by linarith [ellipticConst_nonneg H])
-      _ = _ := by ring
-  consistency x hx h t ht := by
-    have hx1 := R.mem_domain x hx
-    have hx2 := R.mem_domain_sq x hx1 hx
-    have hxs : x ∈ H.wave.domainSq := mem_domainSq.2 ⟨hx1, hx2⟩
-    have hy := waveGroup_mem_domain H hx1 t
-    have hLy : H.wave ⟨_, hy⟩ ∈ H.wave.domain := by
-      rw [wave_waveGroup hx1 t]; exact waveGroup_mem_domain H hx2 t
-    change ‖F.ellipticProj h (waveOrbit H (waveExt H x) t) -
-      F.discreteWave h (F.ellipticProj h (waveOrbit H x t))‖ ≤ _
-    rw [waveOrbit_waveExt H hxs, waveOrbit_of_mem H hx1, F.ellipticProj_defect h ⟨_, hy⟩ hLy,
-      _root_.neg_apply]
-    refine (norm_add_le _ _).trans ?_
-    rw [norm_neg]
-    have hb : ∀ v : H.totalD.GraphSpace, (H.totalD.graphFst v = H.waveGroup.S t x ∨
-        H.totalD.graphFst v = H.waveGroup.S t (H.wave ⟨x, hx1⟩)) →
-        ‖F.ellipticDefect h v‖ ≤ (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α *
-          R.classNorm x) := fun v hv => by
-      obtain ⟨w, hw, hwb⟩ : ∃ w ∈ F.Kh h, ‖v - w‖ ≤ R.C * R.meshSize h ^ R.α * R.classNorm x := by
-        rcases hv with hv | hv
-        exacts [R.approx x hx h t ht v hv, R.approx_deriv x hx1 hx h t ht v hv]
-      refine (F.norm_ellipticDefect_apply_le h v).trans ?_
-      rw [norm_sub_rev]
-      exact (F.norm_sub_ellipticProjection_le h v hw).trans
-        (mul_le_mul_of_nonneg_left hwb (by linarith [ellipticConst_nonneg H]))
-    have h1 := hb (waveLift H ⟨_, hLy⟩) (Or.inr (wave_waveGroup hx1 t))
-    have h2 := hb (waveLift H ⟨_, hy⟩) (Or.inl rfl)
-    calc _ ≤ (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α * R.classNorm x) +
-          (1 + ellipticConst H) * (R.C * R.meshSize h ^ R.α * R.classNorm x) := add_le_add h1 h2
-      _ = _ := by ring
+/-- **Rate classes transfer**, with `C ↦ (1 + C_P) C`, `C' ↦ 2 (1 + C_P) C`: the rate class of the
+wave Ritz projection (`DissipFEEC.Ritz.orbitRateClass`), from the static estimates of the elliptic
+projection along the orbit. -/
+def RateClass.toApprox {T : ℝ} (R : F.RateClass T) : F.toApprox.RateClass T :=
+  F.waveRitz.orbitRateClass R.Data
+    (fun x hx => mem_domainSq.2 ⟨R.mem_domain x hx, R.mem_domain_sq x _ hx⟩) R.classNorm
+    R.meshSize R.α ((1 + ellipticConst H) * R.C) (2 * ((1 + ellipticConst H) * R.C))
+    (fun x hx h t ht => by
+      have hy := waveGroup_mem_domain H (R.mem_domain x hx) t
+      obtain ⟨w, hw, hwb⟩ := R.approx x hx h t ht (graphOf H _) (graphFst_graphOf H hy)
+      rw [F.toApprox.S_eq_waveGroup ht.1]
+      change ‖H.waveGroup.S t x - (F.ellipticProj h (graphOf H (H.waveGroup.S t x)) : PiLp 2 W)‖ ≤ _
+      have hP := F.norm_graphFst_sub_ellipticProj_le h (graphOf H (H.waveGroup.S t x)) hw
+      rw [graphFst_graphOf H hy] at hP
+      refine hP.trans ?_
+      rw [mul_assoc, mul_assoc, ← mul_assoc R.C]
+      exact mul_le_mul_of_nonneg_left hwb (by linarith [ellipticConst_nonneg H]))
+    (fun x hx h t ht => by
+      have hx1 := R.mem_domain x hx
+      have hLx : waveExt H x ∈ H.wave.domain := by
+        rw [waveExt_of_mem hx1]; exact R.mem_domain_sq x hx1 hx
+      have hb : ∀ y ∈ H.wave.domain, (y = H.waveGroup.S t x ∨
+          y = H.waveGroup.S t (H.wave ⟨x, hx1⟩)) → ‖F.ellipticDefect h (graphOf H y)‖ ≤
+            (1 + ellipticConst H) * R.C * R.meshSize h ^ R.α * R.classNorm x := fun y hy hy' => by
+        obtain ⟨w, hw, hwb⟩ : ∃ w ∈ F.Kh h, ‖graphOf H y - w‖ ≤
+            R.C * R.meshSize h ^ R.α * R.classNorm x := by
+          rcases hy' with rfl | rfl
+          exacts [R.approx x hx h t ht _ (graphFst_graphOf H hy),
+            R.approx_deriv x hx1 hx h t ht _ (graphFst_graphOf H hy)]
+        refine (F.norm_ellipticDefect_le_of_mem h _ hw).trans ?_
+        rw [mul_assoc, mul_assoc, ← mul_assoc R.C]
+        exact mul_le_mul_of_nonneg_left hwb (by linarith [ellipticConst_nonneg H])
+      rw [F.toApprox.S_eq_waveGroup ht.1, ← waveExt_eq_genExt]
+      change ‖F.ellipticDefect h (graphOf H (H.waveGroup.S t (waveExt H x)))‖ +
+        ‖-F.ellipticDefect h (graphOf H (H.waveGroup.S t x))‖ ≤ _
+      rw [norm_neg]
+      have h1 := hb _ (waveGroup_mem_domain H hLx t) (Or.inr (by rw [waveExt_of_mem hx1]))
+      have h2 := hb _ (waveGroup_mem_domain H hx1 t) (Or.inl rfl)
+      linarith)
 
 variable {F} in
 theorem RateClass.toApprox_p {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hx : x ∈ R.Data)
     (h : κ) :
     R.toApprox.p x h 0 = F.ellipticProj h (waveLift H ⟨x, R.mem_domain x hx⟩) := by
-  change F.ellipticProj h (waveOrbit H x 0) = _
-  rw [waveOrbit_of_mem H (R.mem_domain x hx)]
-  congr 2
-  exact Subtype.ext (C0Group.S_zero_apply _ x)
+  change F.ellipticProj h (graphOf H (F.toApprox.S 0 x)) = _
+  rw [F.toApprox.S_eq_waveGroup le_rfl, C0Group.S_zero_apply, graphOf_eq_waveLift]
 
 /-- **The improved conforming rate** `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class`, from
 `dissipFEEC_rate`. -/
@@ -430,14 +443,19 @@ theorem rate_le {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR : x ∈ R.Data
       (R.toApprox.meshSize h ^ R.toApprox.α * R.toApprox.classNorm x) =
       (1 + ellipticConst H) * (1 + 2 * ‖F.toApprox.incl h‖ * t) *
         (R.C * R.meshSize h ^ R.α * R.classNorm x) := by
-    simp only [RateClass.toApprox]; ring
+    change ((1 + ellipticConst H) * R.C + ‖F.toApprox.incl h‖ *
+      (2 * ((1 + ellipticConst H) * R.C)) * t) * (R.meshSize h ^ R.α * R.classNorm x) = _
+    ring
   rw [e]
   refine mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left ?_ (by linarith)) hδ
   nlinarith [ht.1]
 
-/-- The improved rate implies the rate `(1 + C_P)(1 + t)²` of `constrainedFEEC_rate`. -/
-theorem rate_le_constrainedFEEC {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR : x ∈ R.Data)
-    (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+/-- **The rate of the constrained FEEC discretization** for data in a rate class on `[0, T]`:
+`‖e^{tL} ξ₀ - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`, with
+`ξₕ(0) = Pₕ ξ₀` and `C_P = √12 ‖A‖` (`ellipticConst`); implied by the improved rate `rate_le`
+since `1 + 2t ≤ (1 + t)²`. [QuennevilleBelair2015], Prop. 4.13, Thm 4.14 -/
+theorem _root_.Feec.HilbertComplex.constrainedFEEC_rate {T : ℝ} (R : F.RateClass T)
+    {x : PiLp 2 W} (hxR : x ∈ R.Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x -
         H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
       (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x) := by
@@ -456,15 +474,43 @@ theorem tendsto_incl_ellipticProj (x : H.wave.domain) :
     ((F.isApproximating.tendstoUniformlyOn_ellipticProjection isCompact_singleton).tendsto_at
       (mem_singleton (waveLift H x)))
 
-/-- **The constrained FEEC theorem, re-derived from the approximating one**: the verdict
-`ConstrainedFEEC.Verdict` of `constrainedFEEC`, items 1–4 proved from the verdict of `approxFEEC`
-for `toApprox` (the special case `ιₕ` = inclusion, `πₕ = Πₕ`, core `D(L²)`), the cohomology field
-directly (`ConformingFamily.eventually_bijective_cohomologyMap`, as in `constrainedFEEC`). The
-bridges are `toApprox_sol` (the semi-discrete solutions of (4.10) from `Pₕ ξ₀` are the discrete
-orbits from `Rₕ ξ₀`), `exists_eq_sol` (every semi-discrete solution is a discrete orbit), the
-density of the core (`mem_toCore_closure`), `tendsto_incl_ellipticProj`, and the rate comparison
-`rate_le_constrainedFEEC`. -/
-theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
+/-- **The constrained FEEC theorem**, the special case `ιₕ` = inclusion, `πₕ = Πₕ` of the
+approximating one. For a constrained FEEC discretization `F` (a Hilbert complex on any finite
+window, a closed constraint `K`, finite-dimensional subcomplexes `Vₕ` with uniformly bounded
+commuting cochain projections and the approximation property) of the Hodge wave equation
+`ξ' = L ξ` (`ConstrainedFEEC.Verdict`):
+
+1. (**well-posedness**, Stone) for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution on
+   `[0, T]`, the only strong and the only weak solution, and conserves energy;
+2. (**propagation**) `K` reduces `L` iff `e^{tL} K ⊆ K` for all `t ∈ ℝ` (both time directions);
+3. (**convergence**) the semi-discrete solutions `ξₕ` with `ξₕ(0) = Pₕ ξ₀` converge to
+   `e^{tL} ξ₀` uniformly on `[0, T]` for `ξ₀ ∈ D(L)`; for `ξ₀ ∈ W`, every family with
+   `ξₕ(0) → ξ₀` converges uniformly on `[0, T]`, and such families exist; for data in a rate class
+   on `[0, T]`, `‖ξ(t) - ξₕ(t)‖ ≤ (1 + C_P) (1 + t)² C hᵅ ‖ξ₀‖_class` for `t ∈ [0, T]`
+   (`constrainedFEEC_rate`; the improved `(1 + C_P)(1 + 2t)` is `rate_le`);
+4. (**constraint residual**) if `K` reduces `L`, then for `ξ₀ ∈ D(L) ∩ K`,
+   `dist(ξₕ(t), K) ≤ ‖e^{tL} ξ₀ - ξₕ(t)‖ → 0` uniformly on `[0, T]`; if `K` does not reduce `L`,
+   then for every `T > 0`:
+   (a) some datum of `K` (or of `Kᗮ`) leaves the constraint at some `t ∈ [0, T]`, and the
+   residuals of every convergent discretization tend to a positive limit;
+   (b) if `D(L) ∩ K` is dense in `K`, some `ξ₀ ∈ D(L) ∩ K` has `e^{tL} ξ₀ ∉ K` for some
+   `t ∈ [-T, T]`;
+   (c) on a graded complex, for an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, some
+   `ξ₀ ∈ D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), K)` of the
+   discrete solutions with `ξₕ(0) = Pₕ ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`;
+5. (**discrete cohomology**) where `H` has closed range and finite-dimensional harmonic forms,
+   `πₕ` eventually induces isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`.
+
+Items 1–4 are read off the verdict of `approxFEEC` for `toApprox` with the core `toCore` of the
+wave Ritz projection (data `D(L²)`, dense); the cohomology field is
+`ConformingFamily.eventually_bijective_cohomologyMap`. The bridges are `toApprox_sol` (the
+semi-discrete solutions of (4.10) from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`),
+`exists_eq_sol` (every semi-discrete solution is a discrete orbit), the density of the core
+(`mem_toCore_closure`), `tendsto_incl_ellipticProj`, and `constrainedFEEC_rate`.
+
+[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [AFW2010], §3.3, Thm 3.4;
+[Arnold2018], Ch. 5 -/
+theorem _root_.Feec.HilbertComplex.constrainedFEEC : F.Verdict := by
   have V := approxFEEC F.toApprox F.toCore
   have hS : ∀ t, 0 ≤ t → ∀ x, F.toApprox.S t x = H.waveGroup.S t x := fun t ht x => by
     rw [F.toApprox.S_eq_waveGroup ht]
@@ -516,7 +562,7 @@ theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
       converges := fun x T => hconv T x
       converges_of_tendsto := fun x _ ξh ξh' hξh h0 => hfam _ x ξh ξh' hξh h0
       exists_tendsto := fun x T => ?_
-      rate := fun R _ hxR h _ ht => F.rate_le_constrainedFEEC R hxR h ht
+      rate := fun R _ hxR h _ ht => constrainedFEEC_rate F R hxR h ht
       residual_le := fun hK x hxK h t => ?_
       residual_tendsto := fun hK x hxK T => ?_
       leaves := fun hK _ hT => ?_
@@ -564,6 +610,82 @@ theorem constrainedFEEC_of_approxFEEC : F.Verdict := by
     rw [F.toApprox.S_eq_waveGroup ht.1] at hout hp0 hl hev
     simp only [F.toApprox_sol] at hl hev
     exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hp0, hl, hev⟩
+
+/-- The constrained FEEC theorem as the special case of `approxFEEC` (`constrainedFEEC`). -/
+alias constrainedFEEC_of_approxFEEC := constrainedFEEC
+
+/-- **The rate class of degreewise regular data**, from degreewise best-approximation estimates:
+the data of the trajectory scale (`DissipFEEC.RegScale.trajectory`, class norm `Λ`) of the states
+whose components and those of `L y` satisfy the degreewise regularity `Reg`, for data in
+`D(L²)`, when every `Reg`-regular `x ∈ Wⁱ` has some `v ∈ Vₕⁱ` with `‖x - v‖, ‖d (x - v)‖ ≤ Bᵢ Λ r_h`
+(`RateClass.exists_mem_Kh_le_of_degreewise`). The constant is `(m + m²) Σᵢ Bᵢ` (`m` the number of
+degrees), the order `1` in `r_h`, the class norm `Λ`; interpolation estimates of order `hˢ` enter
+with `r_h = hˢ`. Its rate class of `toApprox` (`RateClass.toApprox`) is the wave Ritz projection
+on these data. [AFW2010], §3.3; [QuennevilleBelair2015], Thm 4.14 -/
+def RateClass.ofDegreewise (T : ℝ) (Reg : ∀ i, W i → Prop) (B : ι → ℝ) (r : κ → ℝ) (Λ : ℝ)
+    (happ : ∀ h i (x : W i), Reg i x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
+      ‖x - v‖ ≤ B i * Λ * r h ∧ ∀ j (hxj : x ∈ (H.d i j).domain),
+        ‖H.d i j ⟨x - v, Submodule.sub_mem _ hxj ((F.V h).le_domain i j hv)⟩‖ ≤ B i * Λ * r h)
+    (hB : ∀ i, 0 ≤ B i) (hΛ : 0 ≤ Λ) (hr : ∀ h, 0 ≤ r h) : F.RateClass T where
+  Data := (DissipFEEC.RegScale.trajectory F.toApprox.toDissipFEEC T H.wave.domainSq
+    {y | (∀ i, Reg i (y i)) ∧ ∀ i, Reg i (waveExt H y i)} (fun _ => Λ) (fun _ => Λ)).Data
+  classNorm _ := Λ
+  meshSize := r
+  α := 1
+  C := ((Fintype.card ι : ℝ) + (Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * ∑ i, B i
+  mem_domain _ hx := domainSq_le_domain hx.1
+  mem_domain_sq _ _ hx := (mem_domainSq.1 hx.1).2
+  approx x hx h t ht v hv := by
+    have hreg := (hx.2 t ht).1.1
+    rw [F.toApprox.S_eq_waveGroup ht.1] at hreg
+    exact RateClass.exists_mem_Kh_le_of_degreewise F happ hB hΛ hr h hreg v hv
+  approx_deriv x hx1 hx h t ht v hv := by
+    have hreg := (hx.2 t ht).1.2
+    rw [F.toApprox.S_eq_waveGroup ht.1, waveExt_waveGroup H hx1, waveExt_of_mem hx1] at hreg
+    exact RateClass.exists_mem_Kh_le_of_degreewise F happ hB hΛ hr h hreg v hv
+
+/-- **Non-vacuity of `RateClass.ofDegreewise`**: the zero datum lies in the class whenever the
+zero form is regular in every degree. -/
+theorem RateClass.zero_mem_ofDegreewise {F : ConstrainedFEEC H κ} {T : ℝ}
+    {Reg : ∀ i, W i → Prop} {B : ι → ℝ} {r : κ → ℝ} {Λ : ℝ} {happ hB hΛ hr} (h0 : ∀ i, Reg i 0) :
+    (0 : PiLp 2 W) ∈ (RateClass.ofDegreewise F T Reg B r Λ happ hB hΛ hr).Data := by
+  have e : waveExt H 0 = 0 := by
+    rw [waveExt_of_mem H.wave.domain.zero_mem]; exact H.wave.toFun.map_zero
+  refine ⟨H.wave.domainSq.zero_mem, fun s _ => ⟨⟨fun i => ?_, fun i => ?_⟩, le_rfl⟩⟩
+  · rw [_root_.map_zero]; exact h0 _
+  · rw [_root_.map_zero, e]; exact h0 _
+
+open ShortHilbertComplex in
+/-- **Non-vacuity of the constrained FEEC theorem**: on `𝕜 --id--> 𝕜 → 0` with `Vₕ = W` and
+`πₕ = id` (all hypotheses of `ConstrainedFEEC` hold), both branches of item 4 occur. The constraint
+`K = W` reduces `L`; the constraint `K = 𝕜 × 0 × 0` is closed, invariant under the grading, with
+`D(L) ∩ K = K`, and does not reduce `L`; so for every `T > 0` some datum of `D(L) ∩ K` leaves `K`
+at some `t ∈ [0, T]` and the discrete residuals tend to a positive limit. For every horizon `T`,
+a rate class with `α = 1`, `h = 1/(N+1)`, contains all of `D(L²) = W`. -/
+theorem _root_.Feec.HilbertComplex.constrainedFEEC_nonvacuous :
+    (idComplex 𝕜).wave.IsReducing (idFEEC 𝕜 ⊤ (by rw [Submodule.top_coe]; exact isClosed_univ)).K ∧
+    ¬ (idComplex 𝕜).wave.IsReducing (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).K ∧
+    (∀ T : ℝ, 0 < T → ∃ x : (idComplex 𝕜).wave.domain, (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) ∈ firstSub 𝕜 ∧
+      ∃ t ∈ Icc 0 T, (idComplex 𝕜).waveGroup.S t x ∉ firstSub 𝕜 ∧
+        0 < infDist ((idComplex 𝕜).waveGroup.S t x) (firstSub 𝕜 : Set (PiLp 2 (W3 𝕜 𝕜 PUnit))) ∧
+        Tendsto (fun N => infDist ((idComplex 𝕜).totalD.graphFst
+            ((idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).discrete N (waveLift _ x) t))
+            (firstSub 𝕜 : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) atTop
+          (𝓝 (infDist ((idComplex 𝕜).waveGroup.S t x)
+            (firstSub 𝕜 : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))))) ∧
+    ∀ T : ℝ, ∃ R : (idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub).RateClass T,
+      R.Data = univ ∧ R.α = 1 ∧ ∀ N, R.meshSize N = 1 / ((N : ℝ) + 1) := by
+  set F := idFEEC 𝕜 (firstSub 𝕜) isClosed_totalSub
+  refine ⟨(constrainedFEEC_propagates_iff _).2 fun _ _ _ => Submodule.mem_top,
+    not_isReducing_firstSub, fun T hT => ?_, ?_⟩
+  · obtain ⟨x, hxK, t, ht, hout, hpos, hlim, -⟩ :=
+      (constrainedFEEC F).leaves_graded (p := fun i : Fin 3 => decide (Odd i.val))
+        (fun _ _ h => ComplexShape.window_parity h)
+        (fun x hx => reversal_mem_totalSub hx)
+        (fun k hk => subset_closure ⟨mem_idComplex_wave_domain k, hk⟩) not_isReducing_firstSub hT
+    exact ⟨x, hxK, t, ht, hout, hpos, hlim⟩
+  · exact fun T => ⟨idRate T, rfl, rfl, fun _ => rfl⟩
+
 
 end ConstrainedFEEC
 

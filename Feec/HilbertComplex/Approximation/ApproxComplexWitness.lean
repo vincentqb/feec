@@ -334,10 +334,10 @@ theorem scaled_defect_ne_zero (T : ℝ) (n : ℕ) :
   have hy := mem_idComplex_wave_domain ((idComplex 𝕜).wave y)
   have e : ((ofComplexCore (scaled 𝕜 Q hQ)).cmp T).defect (firstDatum 𝕜) n 0 =
       S.ellProj n (waveLift (idComplex 𝕜) ⟨_, hy⟩) - S.L n (S.ellProj n (waveLift _ y)) := by
-    change S.ellProj n (waveOrbit _ (waveExt _ (firstDatum 𝕜)) 0) -
-      S.L n (S.ellProj n (waveOrbit _ (firstDatum 𝕜) 0)) = _
-    rw [waveOrbit_zero hx]
-    rw [waveExt_of_mem hx, waveOrbit_zero hy]
+    have hx2 : firstDatum 𝕜 ∈ (idComplex 𝕜).wave.domainSq := mem_domainSq.2 ⟨hx, hy⟩
+    rw [DissipFEEC.Comparison.defect, ofComplexCore_cmp_p' _ T hx2 n le_rfl,
+      ofComplexCore_cmp_p _ T hx n le_rfl, waveOrbit_zero hx, waveExt_of_mem hx, waveOrbit_zero hy]
+    rfl
   rw [e]
   intro h00
   have h0 : S.ellProj n (waveLift (idComplex 𝕜) ⟨_, hy⟩) =

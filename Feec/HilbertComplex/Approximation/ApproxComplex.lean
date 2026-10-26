@@ -842,8 +842,14 @@ def ofComplexCore : (ofComplex F).Core :=
 theorem dense_ofComplexCore_data : Dense ((ofComplexCore F).Data : Set (PiLp 2 W)) :=
   H.isSkewAdjoint_wave.dense_domainSq
 
-theorem ofComplexCore_cmp_p (T : ℝ) (x : PiLp 2 W) (h : κ) (t : ℝ) :
-    ((ofComplexCore F).cmp T).p x h t = F.toFamily.ellProj h (waveOrbit H x t) := rfl
+theorem ofComplexCore_cmp_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) {t : ℝ}
+    (ht : 0 ≤ t) : ((ofComplexCore F).cmp T).p x h t = F.toFamily.ellProj h (waveOrbit H x t) :=
+  Comparison.ofOperator_p _ _ T hx h ht
+
+theorem ofComplexCore_cmp_p' (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) (h : κ) {t : ℝ}
+    (ht : 0 ≤ t) :
+    ((ofComplexCore F).cmp T).p' x h t = F.toFamily.ellProj h (waveOrbit H (waveExt H x) t) :=
+  Comparison.ofOperator_p' _ _ T hx h ht
 
 end ApproxFEEC
 

@@ -420,7 +420,7 @@ theorem scaled_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : �
     ((scaledRate Q hQ T).p x n 0) ht
   rw [ApproxFEEC.S_eq_waveGroup _ ht.1, sub_self, norm_zero, mul_zero, add_zero] at h
   have hp : (scaledRate Q hQ T).p x n 0 = ((ofComplexCore (scaled 𝕜 Q hQ)).cmp T).p x n 0 :=
-    ofComplexCrimeCore_toCrime_p (scaled 𝕜 Q hQ) T (mem_idComplex_domainSq x) n 0
+    ofComplexCrimeCore_toCrime_p (scaled 𝕜 Q hQ) T (mem_idComplex_domainSq x) n le_rfl
   rw [hp] at h
   refine h.trans_eq ?_
   change _ * ((perturbScale n ^ 2 - 1) ^ (1 : ℝ) * l2Norm x) = _

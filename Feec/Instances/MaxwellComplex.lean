@@ -59,7 +59,7 @@ theorem cubePMC_ofComplex_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
       (cubePMCRate n a T Λ hΛ).mem_domain_sq x _ hx⟩
   have h := (cubePMC n a).toComplex.toCrime.error_le_of_rateClass R hx N ht
   have hp : R.p x N 0 = ((ApproxFEEC.ofComplexCore (cubePMC n a).toComplex).cmp T).p x N 0 :=
-    ApproxFEEC.ofComplexCrimeCore_toCrime_p (cubePMC n a).toComplex T hx2 N 0
+    ApproxFEEC.ofComplexCrimeCore_toCrime_p (cubePMC n a).toComplex T hx2 N le_rfl
   rw [hp] at h
   refine h.trans_eq ?_
   change _ * (FEM.meshSize N ^ (1 : ℝ) * Λ) = _
@@ -81,7 +81,7 @@ theorem cubePEC_ofComplex_rate {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
       (cubePECRate n a T Λ hΛ).mem_domain_sq x _ hx⟩
   have h := (cubePEC n a).toComplex.toCrime.error_le_of_rateClass R hx N ht
   have hp : R.p x N 0 = ((ApproxFEEC.ofComplexCore (cubePEC n a).toComplex).cmp T).p x N 0 :=
-    ApproxFEEC.ofComplexCrimeCore_toCrime_p (cubePEC n a).toComplex T hx2 N 0
+    ApproxFEEC.ofComplexCrimeCore_toCrime_p (cubePEC n a).toComplex T hx2 N le_rfl
   rw [hp] at h
   refine h.trans_eq ?_
   change _ * (FEM.meshSize N ^ (1 : ℝ) * Λ) = _

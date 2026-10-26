@@ -1,6 +1,7 @@
 import Feec.HilbertComplex.Approximation.StaticFEEC
 import Feec.HilbertComplex.Approximation.Ritz
 import Feec.HilbertComplex.Approximation.RitzResolvent
+import Feec.HilbertComplex.Approximation.ApproxConforming
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -28,9 +29,24 @@ ones at `ℝ`, `ComplexShape.up ℤ` and `atTop`.
 The Trotter–Kato bridge of `Feec.HilbertComplex.DissipFEEC` (`DissipFEEC.Comparison.ofOperator`,
 `DissipFEEC.Core.ofOperator`) is the Ritz projection of the identity lift
 (`DissipFEEC.Ritz.ofOperator`): its comparison is `Ritz.cmp` and its core is `Ritz.toCore`, both
-by definition (`rfl`). The resolvent core of `Feec.HilbertComplex.DissipGalerkin`
-(`DissipFEEC.Core.ofResolvent`) has the data of the resolvent Ritz projection
-(`DissipFEEC.Ritz.ofResolvent`), whose hypotheses its own imply.
+by definition (`rfl`). The resolvent core (`DissipFEEC.Core.ofResolvent`) is, by definition, the
+core of the resolvent Ritz projection (`DissipFEEC.Ritz.ofResolvent`), whose hypotheses its own
+imply; likewise the graph-space bridge `ApproxFEEC.Core.ofOperator` is the core of the graph Ritz
+projection `ApproxFEEC.graphRitz`.
+
+## The dynamic duplicates, collapsed onto Ritz projections
+
+The conforming wave discretizations (`ConstrainedFEEC`) had a direct proof of the constrained FEEC
+theorem next to its re-derivation from `approxFEEC`; `constrainedFEEC` is now the re-derivation
+(the core and the rate classes of the wave Ritz projection `ConstrainedFEEC.waveRitz`, the
+elliptic projection), and the lemmas of the direct proof are gone. The theorems
+`constrained_old_*` below state them verbatim and derive them from the verdict
+`constrainedFEEC F` (and, for the propagation facts, from the verdict of `approxFEEC` on
+`F.toApprox`); `constrained_old_rate_le` is the old `ConstrainedFEEC.rate_le_constrainedFEEC`, the
+`(1 + C_P)(1 + t)²` bound, now `constrainedFEEC_rate`. The direct Trotter–Kato proof of the
+resolvent core is gone too: `DissipFEEC.Core.ofResolvent` is the core of the resolvent Ritz
+projection, and the trajectories of the deleted `DissipFEEC.Comparison.ofResolvent` are those of
+`Ritz.ofResolvent` (`resolvent_old_p`).
 
 This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`) and fails that build if a conclusion is
@@ -158,16 +174,163 @@ example (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
       Core.ofOperator F R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0 :=
   rfl
 
-/-- The hypotheses of `Core.ofResolvent` give the core of the resolvent Ritz projection, with
-the same data `D(A²)`. -/
+/-- The hypotheses of `Core.ofResolvent` give the core of the resolvent Ritz projection, which
+is `Core.ofResolvent`, with data `D(A²)`. -/
 example (hres : ∀ z, Tendsto (fun h => F.incl h (F.discreteRes h (F.proj h z))) F.l
       (𝓝 (Operator.resolvent A 1 z)))
     (happ : ∀ z, Tendsto (fun h => F.incl h (F.proj h z)) F.l (𝓝 z)) :
-    ((Ritz.ofResolvent F).toCore hres (Ritz.tendsto_ofResolvent F hres happ).1
-      (Ritz.tendsto_ofResolvent F hres happ).2).Data =
-      (Core.ofResolvent F hres happ).Data :=
+    (Ritz.ofResolvent F).toCore hres (Ritz.tendsto_ofResolvent F hres happ).1
+      (Ritz.tendsto_ofResolvent F hres happ).2 = Core.ofResolvent F hres happ :=
   rfl
 
 end Ritz
+
+
+section ConstrainedOld
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
+
+open HodgeWave Metric
+
+/-- The old `forall_nonneg_of_forall_Icc` (on the wave group). -/
+theorem constrained_old_forall_nonneg_of_forall_Icc {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
+    (hP : ∀ x ∈ P, ∀ s ∈ Icc 0 T, H.waveGroup.S s x ∈ P) :
+    ∀ x ∈ P, ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ P :=
+  H.waveGroup.toC0Semigroup.forall_nonneg_of_forall_Icc hT hP
+
+/-- The old `forall_of_forall_Icc_neg` (on the wave group). -/
+theorem constrained_old_forall_of_forall_Icc_neg {P : Set (PiLp 2 W)} {T : ℝ} (hT : 0 < T)
+    (hP : ∀ x ∈ P, ∀ s ∈ Icc (-T) T, H.waveGroup.S s x ∈ P) :
+    ∀ x ∈ P, ∀ t, H.waveGroup.S t x ∈ P :=
+  H.waveGroup.forall_of_forall_Icc_neg hT hP
+
+/-- The old `constrainedFEEC_converges`. -/
+theorem constrained_old_converges (T : ℝ) :
+    (∀ x : H.wave.domain, TendstoUniformlyOn
+      (fun h t => H.totalD.graphFst (F.discrete h (waveLift H x) t))
+      (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
+    ∀ x : PiLp 2 W,
+      (∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+        (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
+        Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
+        TendstoUniformlyOn (fun h t => H.totalD.graphFst (ξh h t))
+          (fun t => H.waveGroup.S t x) F.l (Icc 0 T)) ∧
+      ∃ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+        (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) ∧
+        Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) :=
+  ⟨fun x => (constrainedFEEC F).converges x T, fun x =>
+    ⟨fun ξh ξh' hξh h0 => (constrainedFEEC F).converges_of_tendsto x ξh ξh' hξh h0,
+      (constrainedFEEC F).exists_tendsto x T⟩⟩
+
+/-- The old `ConstrainedFEEC.rate_le_constrainedFEEC`, now `constrainedFEEC_rate`. -/
+theorem constrained_old_rate_le {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR : x ∈ R.Data)
+    (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖H.waveGroup.S t x -
+        H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t)‖ ≤
+      (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
+  (constrainedFEEC F).rate R hxR h ht
+
+/-- The old `constrainedFEEC_residual`. -/
+theorem constrained_old_residual (hK : H.wave.IsReducing F.K) (x : H.wave.domain)
+    (hxK : (x : PiLp 2 W) ∈ F.K) (T : ℝ) :
+    (∀ h t, infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W)) ≤
+      ‖H.waveGroup.S t x - H.totalD.graphFst (F.discrete h (waveLift H x) t)‖) ∧
+    TendstoUniformlyOn
+      (fun h t => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+        (F.K : Set (PiLp 2 W))) (fun _ => 0) F.l (Icc 0 T) :=
+  ⟨(constrainedFEEC F).residual_le hK x hxK, (constrainedFEEC F).residual_tendsto hK x hxK T⟩
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- The old `ConstrainedFEEC.tendsto_infDist`. -/
+theorem constrained_old_tendsto_infDist {Q : Set (PiLp 2 W)} {y : PiLp 2 W} {f : κ → PiLp 2 W}
+    (hf : Tendsto f F.l (𝓝 y)) : Tendsto (fun h => infDist (f h) Q) F.l (𝓝 (infDist y Q)) :=
+  ((continuous_infDist_pt Q).tendsto y).comp hf
+
+/-- The old `ConstrainedFEEC.isReducing_of_forall_nonneg`, from `DissipFEEC.Verdict.isReducing_iff`
+for `F.toApprox`. -/
+theorem constrained_old_isReducing_of_forall_nonneg
+    (h1 : ∀ x ∈ F.K, ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ F.K)
+    (h2 : ∀ x ∈ F.Kᗮ, ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ F.Kᗮ) : H.wave.IsReducing F.K :=
+  (approxFEEC F.toApprox F.toCore).isReducing_iff.2
+    ⟨fun t ht x hx => by rw [F.toApprox.S_eq_waveGroup ht]; exact h1 x hx t ht,
+      fun t ht x hx => by rw [F.toApprox.S_eq_waveGroup ht]; exact h2 x hx t ht⟩
+
+/-- The old `ConstrainedFEEC.exists_not_mem_of_not_isReducing`. -/
+theorem constrained_old_exists_not_mem_of_not_isReducing (hK : ¬ H.wave.IsReducing F.K) {T : ℝ}
+    (hT : 0 < T) :
+    (∃ x ∈ F.K, ∃ t ∈ Icc 0 T, H.waveGroup.S t x ∉ F.K) ∨
+      ∃ x ∈ F.Kᗮ, ∃ t ∈ Icc 0 T, H.waveGroup.S t x ∉ F.Kᗮ := by
+  by_contra hc
+  simp only [not_or, not_exists, not_and, not_not] at hc
+  exact hK (constrained_old_isReducing_of_forall_nonneg F
+    (H.waveGroup.toC0Semigroup.forall_nonneg_of_forall_Icc hT (P := F.K) hc.1)
+    (H.waveGroup.toC0Semigroup.forall_nonneg_of_forall_Icc hT (P := F.Kᗮ) hc.2))
+
+/-- The old `constrainedFEEC_residual_not_isReducing`. -/
+theorem constrained_old_residual_not_isReducing (hK : ¬ H.wave.IsReducing F.K) {T : ℝ}
+    (hT : 0 < T) :
+    ∃ Q : Submodule 𝕜 (PiLp 2 W), (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
+      H.waveGroup.S t x ∉ Q ∧ 0 < infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)) ∧
+      ∀ ξh ξh' : κ → ℝ → H.totalD.GraphSpace,
+        (∀ h, IsSemidiscreteSolution (F.Kh h) (Icc 0 T) (ξh h) (ξh' h)) →
+        Tendsto (fun h => H.totalD.graphFst (ξh h 0)) F.l (𝓝 x) →
+        Tendsto (fun h => infDist (H.totalD.graphFst (ξh h t)) (Q : Set (PiLp 2 W))) F.l
+          (𝓝 (infDist (H.waveGroup.S t x) (Q : Set (PiLp 2 W)))) :=
+  (constrainedFEEC F).leaves hK hT
+
+/-- The old `constrainedFEEC_residual_not_isReducing_of_grading`. -/
+theorem constrained_old_residual_not_isReducing_of_grading {p : ι → Bool}
+    (hp : ∀ i j, c.Rel i j → p j ≠ p i) (hRK : ∀ x ∈ F.K, reversal 𝕜 p x ∈ F.K)
+    (hdense : ∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K))
+    (hK : ¬ H.wave.IsReducing F.K) {T : ℝ} (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc 0 T,
+      H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) ∧
+      Tendsto (fun h => infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t))
+        (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
+      ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
+        infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W)) :=
+  (constrainedFEEC F).leaves_graded hp hRK hdense hK hT
+
+/-- The old `constrainedFEEC_residual_not_isReducing_symm`. -/
+theorem constrained_old_residual_not_isReducing_symm (hK : ¬ H.wave.IsReducing F.K)
+    (hdense : ∀ k ∈ F.K, k ∈ closure ((H.wave.domain : Set (PiLp 2 W)) ∩ F.K)) {T : ℝ}
+    (hT : 0 < T) :
+    ∃ x : H.wave.domain, (x : PiLp 2 W) ∈ F.K ∧ ∃ t ∈ Icc (-T) T,
+      H.waveGroup.S t x ∉ F.K ∧ 0 < infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) :=
+  (constrainedFEEC F).leaves_symm hK hdense hT
+
+/-- The core of the constrained FEEC discretization is the core of its wave Ritz projection, and
+its rate classes are rate classes of that projection (`Ritz.orbitRateClass`). -/
+example : F.toCore.cmp = F.waveRitz.cmp := rfl
+
+example {T : ℝ} (R : F.RateClass T) : R.toApprox.toComparison =
+    (F.waveRitz.cmp T).restrict R.Data
+      (fun x hx => LinearPMap.mem_domainSq.2 ⟨R.mem_domain x hx, R.mem_domain_sq x _ hx⟩) :=
+  rfl
+
+end ConstrainedOld
+
+section ResolventOld
+
+open DissipFEEC
+
+variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+  {A : E →ₗ.[𝕜] E} {κ : Type*} (F : DissipFEEC.{u} A κ)
+
+/-- The comparison of the deleted `DissipFEEC.Comparison.ofResolvent` (data `R(1) D(A)`,
+trajectories `pₕ(t) = (1 - Lₕ)⁻¹ πₕ S(t) (1 - A) x`) is that of the resolvent Ritz projection
+(the old `Ritz.ofResolvent_cmp_p`). -/
+theorem resolvent_old_p (T : ℝ) {x : E} (hx : x ∈ resData (A := A)) (h : κ) {t : ℝ}
+    (ht : 0 ≤ t) : ((Ritz.ofResolvent F).cmp T).Data = resData (A := A) ∧
+      ((Ritz.ofResolvent F).cmp T).p x h t =
+        F.discreteRes h (F.proj h (F.S t (x - genExt A x))) :=
+  ⟨rfl, congrArg (fun z => F.discreteRes h (F.proj h z))
+    (F.S_sub_genExt (mem_domain_of_mem_resData F.isMDissipative hx) ht)⟩
+
+end ResolventOld
 
 end FeecCheck.Crown

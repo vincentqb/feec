@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
+public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.Semigroup.DomainSq
 
@@ -41,11 +42,13 @@ theorem `dissipFEEC`), together with the conclusions specific to Hilbert complex
    `DissipFEEC.Verdict.detects`, a non-reducing such `K` is left by a datum of `D(L) ∩ K` forward
    in time, with residuals of positive limit.
 
-Constructions of cores: `ApproxFEEC.Core.ofOperator` (the Trotter–Kato bridge on the graph space:
-an operator `Rₕ : Γ(𝐝) → Xₕ` with `ιₕ Rₕ → graphFst` pointwise and a defect identity on `D(L²)`
-with uniformly bounded defect operators tending to `0` pointwise; uniformity on `[0, T]` comes
-from the compactness of the orbits `waveOrbit`), and `ApproxFEEC.complexify` runs a real scheme on
-real and imaginary parts.
+Constructions of cores: the **graph lift** `ApproxFEEC.graphLift` (data `D(L²)`, lifted into the
+graph space `Γ(𝐝)` by `y ↦ (y, 𝐝 y)`, `graphOf`) and its Ritz projections `ApproxFEEC.graphRitz`
+(`Feec.HilbertComplex.DissipFEEC.Ritz`: an operator `Rₕ : Γ(𝐝) → Xₕ` with a defect identity on
+`D(L²)`); `ApproxFEEC.Core.ofOperator` is the Trotter–Kato bridge on the graph space, the core
+of such a Ritz projection when `ιₕ Rₕ → graphFst` pointwise and the uniformly bounded defect
+operators tend to `0` pointwise (uniformity on `[0, T]` comes from the compactness of the orbits
+`waveOrbit`). `ApproxFEEC.complexify` runs a real scheme on real and imaginary parts.
 
 ## References
 
@@ -170,6 +173,66 @@ theorem isCompact_waveOrbit {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) (T : ℝ
   ⟨isCompact_Icc.image_of_continuousOn (waveOrbit_isC1' H hx T).1,
     isCompact_Icc.image_of_continuousOn (waveOrbit_isC1' H hx T).2.1⟩
 
+/-- `L e^{tL} x = e^{tL} L x` on `D(L)`, for the extension `waveExt` of `L`. -/
+theorem waveExt_waveGroup {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (t : ℝ) :
+    waveExt H (H.waveGroup.S t x) = H.waveGroup.S t (waveExt H x) := by
+  rw [waveExt_of_mem (waveGroup_mem_domain H hx t), waveExt_of_mem hx]
+  exact wave_waveGroup hx t
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+theorem waveExt_mem_domain {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) :
+    waveExt H x ∈ H.wave.domain := by
+  rw [waveExt_of_mem (domainSq_le_domain hx)]; exact (mem_domainSq.1 hx).2
+
+/-- The derivative of the orbit of `x ∈ D(L)` is the orbit of `L x`. -/
+theorem hasDerivAt_waveGroup_waveExt {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (t : ℝ) :
+    HasDerivAt (fun s => H.waveGroup.S s x) (H.waveGroup.S t (waveExt H x)) t := by
+  rw [waveExt_of_mem hx]; exact hasDerivAt_waveGroup H hx t
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- `waveExt` is the extension `DissipFEEC.genExt` of the generator `L`. -/
+theorem waveExt_eq_genExt : waveExt H = DissipFEEC.genExt H.wave := rfl
+
+/-- The wave group keeps `D(L²)`. -/
+theorem waveGroup_mem_domainSq {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) (t : ℝ) :
+    H.waveGroup.S t x ∈ H.wave.domainSq := by
+  have hx1 := domainSq_le_domain hx
+  refine mem_domainSq.2 ⟨waveGroup_mem_domain H hx1 t, ?_⟩
+  rw [wave_waveGroup hx1 t]
+  exact waveGroup_mem_domain H (mem_domainSq.1 hx).2 t
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+open scoped Classical in
+/-- The graph-space lift `y ↦ (y, 𝐝 y)` of `y ∈ D(𝐝)` (`0` off `D(𝐝)`). -/
+def graphOf (y : PiLp 2 W) : H.totalD.GraphSpace :=
+  if hy : y ∈ H.totalD.domain then H.totalD.toGraphSpace ⟨y, hy⟩ else 0
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+theorem graphOf_eq_waveLift {y : PiLp 2 W} (hy : y ∈ H.wave.domain) :
+    graphOf H y = waveLift H ⟨y, hy⟩ := by
+  have h : y ∈ H.totalD.domain := (H.mem_wave_domain.1 hy).1
+  unfold graphOf; simp only [h, dite_true]; rfl
+
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+theorem graphFst_graphOf {y : PiLp 2 W} (hy : y ∈ H.wave.domain) :
+    H.totalD.graphFst (graphOf H y) = y := by
+  rw [graphOf_eq_waveLift H hy, graphFst_waveLift]
+
+/-- The graph-space orbit is the graph lift of the orbit. -/
+theorem waveOrbit_eq_graphOf {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (t : ℝ) :
+    waveOrbit H x t = graphOf H (H.waveGroup.S t x) := by
+  rw [waveOrbit_of_mem H hx, graphOf_eq_waveLift]
+
+/-- The graph-space orbit of `x ∈ D(L²)` is continuous on `[0, ∞)`. -/
+theorem continuousOn_waveOrbit {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) :
+    ContinuousOn (waveOrbit H x) (Ici 0) ∧ ContinuousOn (waveOrbit H (waveExt H x)) (Ici 0) := by
+  have key : ∀ f : ℝ → H.totalD.GraphSpace, (∀ b : ℝ, 0 < b → ContinuousOn f (Icc 0 b)) →
+      ContinuousOn f (Ici 0) := fun f hf t ht =>
+    ((hf (t + 1) (by linarith [mem_Ici.1 ht])) t ⟨ht, by linarith⟩).mono_of_mem_nhdsWithin
+      (mem_nhdsWithin.2 ⟨Iio (t + 1), isOpen_Iio, by simp, fun s hs => ⟨hs.2, hs.1.le⟩⟩)
+  exact ⟨key _ fun b hb => (waveOrbit_isC1 H hx hb).1,
+    key _ fun b hb => (waveOrbit_isC1 H hx hb).2.1⟩
+
 end Orbit
 
 /-! ### Approximating FEEC discretizations -/
@@ -196,26 +259,81 @@ theorem U_eq_waveGroup (t : ℝ) : F.U t = H.waveGroup.S t := rfl
 (`SkewFEEC.S_eq_U`). -/
 theorem S_eq_waveGroup {t : ℝ} (ht : 0 ≤ t) : F.S t = H.waveGroup.S t := F.S_eq_U ht
 
-/-! ### The Trotter–Kato bridge -/
+/-! ### The graph lift and the Trotter–Kato bridge -/
+
+/-- The **graph lift** of an approximating FEEC discretization: data `D(L²)`, lifted into the
+graph space `Γ(𝐝)` by `y ↦ (y, 𝐝 y)` (`graphOf`) and read back by `graphFst`; the lifted orbits
+are the graph-space orbits `waveOrbit`. -/
+def graphLift : F.Lift H.totalD.GraphSpace where
+  Data := H.wave.domainSq
+  le_domain := domainSq_le_domain
+  S_mem x hx t ht := by rw [F.S_eq_waveGroup ht]; exact waveGroup_mem_domainSq H hx t
+  lift := graphOf H
+  read := H.totalD.graphFst
+  read_lift y hy := graphFst_graphOf H (domainSq_le_domain hy)
+  continuousOn x hx := (continuousOn_waveOrbit H hx).1.congr fun t ht => by
+    rw [F.S_eq_waveGroup ht, waveOrbit_eq_graphOf H (domainSq_le_domain hx)]
+  continuousOn' x hx := (continuousOn_waveOrbit H hx).2.congr fun t ht => by
+    rw [F.S_eq_waveGroup ht, ← waveExt_eq_genExt, waveOrbit_eq_graphOf H (waveExt_mem_domain H hx)]
+  hasDerivWithinAt x hx t ht := by
+    have e : ∀ s, 0 ≤ s → graphOf H (F.S s x) = waveOrbit H x s := fun s hs => by
+      rw [F.S_eq_waveGroup hs, waveOrbit_eq_graphOf H (domainSq_le_domain hx)]
+    rw [F.S_eq_waveGroup ht, ← waveExt_eq_genExt, ← waveOrbit_eq_graphOf H (waveExt_mem_domain H hx)]
+    exact ((waveOrbit_isC1' H hx (t + 1)).2.2 t ⟨ht, by linarith⟩).congr
+      (fun s hs => e s (ht.trans hs)) (e t ht)
+
+/-- The **Ritz projection of the graph lift**: bounded `Rₕ : Γ(𝐝) → Xₕ` with a defect identity on
+`D(L²)`, `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) + Δₕ' y` (lifted to `Γ(𝐝)`), with uniformly bounded
+`Δₕ`, `Δₕ'`. -/
+def graphRitz (R Δ Δ' : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
+    (hΔ : ∃ C, ∀ h, ‖Δ h‖ ≤ C ∧ ‖Δ' h‖ ≤ C)
+    (hdef : ∀ h (y : H.wave.domain) (hLy : H.wave y ∈ H.wave.domain),
+      R h (waveLift H ⟨_, hLy⟩) - F.L h (R h (waveLift H y)) =
+        Δ h (waveLift H ⟨_, hLy⟩) + Δ' h (waveLift H y)) : F.Ritz (graphLift F) where
+  R := R
+  Δ := Δ
+  Δ' := Δ'
+  defect_eq h y hy := by
+    have hy1 := domainSq_le_domain hy
+    have hLy := waveExt_mem_domain H hy
+    change R h (graphOf H (DissipFEEC.genExt H.wave y)) - F.L h (R h (graphOf H y)) =
+      Δ h (graphOf H (DissipFEEC.genExt H.wave y)) + Δ' h (graphOf H y)
+    rw [← waveExt_eq_genExt, graphOf_eq_waveLift H hy1, graphOf_eq_waveLift H hLy]
+    have e : (⟨waveExt H y, hLy⟩ : H.wave.domain) =
+        ⟨H.wave ⟨y, hy1⟩, by rw [← waveExt_of_mem hy1]; exact hLy⟩ :=
+      Subtype.ext (waveExt_of_mem hy1)
+    rw [e]
+    exact hdef h ⟨y, hy1⟩ _
+  bound :=
+    let ⟨C₁, h₁⟩ := hR
+    let ⟨C₂, h₂⟩ := hΔ
+    ⟨max C₁ C₂, fun h => ⟨(h₁ h).trans (le_max_left _ _), (h₂ h).1.trans (le_max_right _ _),
+      (h₂ h).2.trans (le_max_right _ _)⟩⟩
 
 /-- Comparison trajectories `pₕ(t) = Rₕ (e^{tL} x, 𝐝 e^{tL} x)` of an operator
-`Rₕ : Γ(𝐝) → Xₕ`, on `D(L²)`, with derivatives `pₕ'(t) = Rₕ (L e^{tL} x, 𝐝 L e^{tL} x)`. -/
+`Rₕ : Γ(𝐝) → Xₕ`, on `D(L²)`, with derivatives `pₕ'(t) = Rₕ (L e^{tL} x, 𝐝 L e^{tL} x)`: those of
+the graph lift (`DissipFEEC.Lift.cmp`). -/
 def Comparison.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T : ℝ) :
-    F.Comparison T where
-  Data := H.wave.domainSq
-  p x h t := R h (waveOrbit H x t)
-  p' x h t := R h (waveOrbit H (waveExt H x) t)
-  continuousOn _ hx h := (R h).continuous.comp_continuousOn (waveOrbit_isC1' H hx T).1
-  continuousOn' _ hx h := (R h).continuous.comp_continuousOn (waveOrbit_isC1' H hx T).2.1
-  hasDerivWithinAt _ hx h t ht :=
-    ((R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t
-      ((waveOrbit_isC1' H hx T).2.2 t ht)
+    F.Comparison T :=
+  (graphLift F).cmp R T
+
+theorem Comparison.ofOperator_p (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T : ℝ)
+    {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
+    (Comparison.ofOperator F R T).p x h t = R h (waveOrbit H x t) := by
+  change R h (graphOf H (F.S t x)) = _
+  rw [F.S_eq_waveGroup ht, waveOrbit_eq_graphOf H hx]
+
+theorem Comparison.ofOperator_p' (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h) (T : ℝ)
+    {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
+    (Comparison.ofOperator F R T).p' x h t = R h (waveOrbit H (waveExt H x) t) := by
+  change R h (graphOf H (F.S t (DissipFEEC.genExt H.wave x))) = _
+  rw [F.S_eq_waveGroup ht, ← waveExt_eq_genExt, waveOrbit_eq_graphOf H (waveExt_mem_domain H hx)]
 
 /-- **The Trotter–Kato bridge**: an operator `Rₕ : Γ(𝐝) → Xₕ`, uniformly bounded, with
 `ιₕ Rₕ ζ → graphFst ζ`, and a defect identity on `D(L²)`,
 `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) + Δₕ' y` (lifted to `Γ(𝐝)`), with uniformly bounded `Δₕ`, `Δₕ'`
-tending to `0` pointwise, give a core `D(L²)`; uniformity on `[0, T]` comes from the compactness
-of the orbits. [Pazy1983], §3.4 -/
+tending to `0` pointwise, give a core `D(L²)`: the core of the Ritz projection `graphRitz`
+(`DissipFEEC.Ritz.toCore`). [Pazy1983], §3.4 -/
 def Core.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h)
     (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
     (happrox : ∀ ζ, Tendsto (fun h => F.incl h (R h ζ)) F.l (𝓝 (H.totalD.graphFst ζ)))
@@ -224,22 +342,16 @@ def Core.ofOperator (R : ∀ h, H.totalD.GraphSpace →L[𝕜] F.X h)
       R h (waveLift H ⟨_, hLy⟩) - F.L h (R h (waveLift H y)) =
         Δ h (waveLift H ⟨_, hLy⟩) + Δ' h (waveLift H y))
     (hΔ0 : ∀ ζ, Tendsto (fun h => ‖Δ h ζ‖) F.l (𝓝 0))
-    (hΔ'0 : ∀ ζ, Tendsto (fun h => ‖Δ' h ζ‖) F.l (𝓝 0)) : F.Core where
-  Data := H.wave.domainSq
-  cmp T := Comparison.ofOperator F R T
-  data_eq _ := rfl
-  tendsto_approx T x hx := (tendstoUniformlyOn_apply_of_tendsto (P₀ := H.totalD.graphFst)
-    (F.bound_incl_comp hR) happrox (isCompact_waveOrbit H hx T).1).congr_right fun t ht =>
-      (graphFst_waveOrbit H (domainSq_le_domain hx) t).trans
-        (DFunLike.congr_fun (F.S_eq_waveGroup ht.1) x).symm
-  tendsto_defect T x hx := tendstoUniformlyOn_norm_of_le hΔ hΔ0 hΔ'0
-    (isCompact_waveOrbit H hx T).2 (isCompact_waveOrbit H hx T).1 fun h t _ => by
-      have hx1 := domainSq_le_domain hx
-      have e := hdef h ⟨H.waveGroup.S t x, waveGroup_mem_domain H hx1 t⟩ (by
-        rw [wave_waveGroup hx1 t]; exact waveGroup_mem_domain H (mem_domainSq.1 hx).2 t)
-      change ‖R h (waveOrbit H (waveExt H x) t) - F.L h (R h (waveOrbit H x t))‖ ≤ _
-      rw [waveOrbit_waveExt H (SetLike.mem_coe.1 hx), waveOrbit_of_mem H hx1, e]
-      exact norm_add_le _ _
+    (hΔ'0 : ∀ ζ, Tendsto (fun h => ‖Δ' h ζ‖) F.l (𝓝 0)) : F.Core :=
+  (graphRitz F R Δ Δ' hR hΔ hdef).toCore happrox hΔ0 hΔ'0
+
+@[simp] theorem Core.ofOperator_data (R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0) :
+    (Core.ofOperator F R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0).Data = H.wave.domainSq :=
+  rfl
+
+theorem Core.ofOperator_cmp (R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0) (T : ℝ) :
+    (Core.ofOperator F R hR happrox Δ Δ' hΔ hdef hΔ0 hΔ'0).cmp T = Comparison.ofOperator F R T :=
+  rfl
 
 /-! ### Complexification (real schemes for complex data: real and imaginary parts) -/
 

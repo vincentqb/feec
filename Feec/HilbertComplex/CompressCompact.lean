@@ -17,7 +17,8 @@ Hodge-theoretic and spectral properties of `H` pass to the compression:
   subspace; more generally compactness pulls back along closed embeddings with bounded
   distortion of `d` and `d†` (`HasCompactPropertyAt.of_isClosedEmbedding`), e.g. along
   transport (`hasCompactPropertyAt_transport`) and compression along scaled isometries
-  (`hasCompactPropertyAt_compress`);
+  (`hasCompactPropertyAt_compress`), and to the windows of a complex on `ℤ` whose spaces just
+  outside the window are zero (`hasCompactProperty_window`);
 * **closed range** and the **Poincaré inequality** with the same constant
   (`ReducingSubcomplex.norm_le_of_mem_orthogonal`): `R(d|_S) = R(d) ∩ S` and
   `N(d|_S)ᗮ ⊆ N(d)ᗮ`;
@@ -149,6 +150,81 @@ theorem HasCompactPropertyAt.of_isClosedEmbedding {i : ι} {i' : ι'}
   · exact (mul_le_of_le_one_right hC' h3).trans ((le_max_left _ _).trans (le_max_right _ _))
 
 end Embedding
+
+/-! ### Windows -/
+
+section Window
+
+/-- A closed densely defined operator into a zero space is everywhere defined. -/
+theorem _root_.LinearPMap.domain_eq_top_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
+    [NormedSpace 𝕜 E] [NormedAddCommGroup F] [NormedSpace 𝕜 F] [Subsingleton F]
+    {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) (hd : Dense (T.domain : Set E)) : T.domain = ⊤ := by
+  have hD : IsClosed (T.domain : Set E) := by
+    have e : (T.domain : Set E) = (fun x : E => (x, (0 : F))) ⁻¹' (T.graph : Set (E × F)) := by
+      ext x
+      simp only [Set.mem_preimage, SetLike.mem_coe, mem_graph_iff]
+      exact ⟨fun hx => ⟨⟨x, hx⟩, rfl, Subsingleton.elim _ _⟩, fun ⟨y, hy, _⟩ => hy ▸ y.2⟩
+    rw [e]
+    exact hc.preimage (continuous_id.prodMk continuous_const)
+  exact SetLike.coe_injective (by rw [Submodule.top_coe, ← hd.closure_eq, hD.closure_eq])
+
+/-- The adjoint of an operator out of a zero space is everywhere defined. -/
+theorem _root_.LinearPMap.mem_adjoint_domain_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [CompleteSpace E] [Subsingleton E] [NormedAddCommGroup F]
+    [InnerProductSpace 𝕜 F] (T : E →ₗ.[𝕜] F) (y : F) : y ∈ T†.domain :=
+  mem_adjoint_domain_of_exists _ ⟨0, fun x => by
+    rw [Subsingleton.elim (x : E) 0, inner_zero_right, show T x = 0 by
+      rw [show x = 0 from Subsingleton.elim _ _, T.map_zero], inner_zero_right]⟩
+
+variable {V : ℤ → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) V}
+
+/-- **The compactness property of a window** `a, …, a + m - 1` of a complex on `ℤ` with the
+compactness property, when the spaces `V (a - 1)` and `V (a + m)` just outside it are zero. -/
+theorem hasCompactProperty_window (hH : H.HasCompactProperty) (a : ℤ) (m : ℕ)
+    (hlow : Subsingleton (V (a - 1))) (hhigh : Subsingleton (V (a + m))) :
+    (H.window a m).HasCompactProperty := by
+  intro j
+  have tr : ∀ {i k k' : ℤ}, k = k' → ∀ x : (H.d i k').domain,
+      ∃ hx : (x : V i) ∈ (H.d i k).domain, ‖H.d i k ⟨x, hx⟩‖ ≤ 1 * ‖H.d i k' x‖ := by
+    rintro i k _ rfl x; exact ⟨x.2, by rw [one_mul]⟩
+  have tr' : ∀ {i i' k : ℤ}, i = i' → ∀ x : ((H.d i' k)†).domain,
+      ∃ hx : (x : V k) ∈ ((H.d i k)†).domain, ‖(H.d i k)† ⟨x, hx⟩‖ ≤ 1 * ‖(H.d i' k)† x‖ := by
+    rintro i _ k rfl x; exact ⟨x.2, by rw [one_mul]⟩
+  have hnext : (ComplexShape.up ℤ).next (a + (j : ℤ)) = a + (j : ℤ) + 1 :=
+    (ComplexShape.up ℤ).next_eq' rfl
+  have hprev : (ComplexShape.up ℤ).prev (a + (j : ℤ)) = a + (j : ℤ) - 1 :=
+    (ComplexShape.up ℤ).prev_eq' (by change a + (j : ℤ) - 1 + 1 = _; ring)
+  refine (hH (a + (j : ℤ))).of_isClosedEmbedding (ContinuousLinearMap.id 𝕜 _)
+    Topology.IsClosedEmbedding.id zero_le_one zero_le_one ?_ ?_
+  · by_cases hj : (j : ℕ) + 1 < m
+    · have hn : (ComplexShape.window m).next j = ⟨(j : ℕ) + 1, hj⟩ :=
+        (ComplexShape.window m).next_eq' rfl
+      exact tr (k' := a + (((ComplexShape.window m).next j : ℕ) : ℤ))
+        (by rw [hnext, hn]; push_cast; ring)
+    · have h0 : (H.window a m).d j ((ComplexShape.window m).next j) = 0 :=
+        (H.window a m).shape _ _ fun h => by
+          have := ((ComplexShape.window m).next j).2
+          change (j : ℕ) + 1 = _ at h; omega
+      have : Subsingleton (V ((ComplexShape.up ℤ).next (a + (j : ℤ)))) := by
+        rw [hnext, show a + (j : ℤ) + 1 = a + m by have := j.2; omega]; exact hhigh
+      intro x
+      refine ⟨by rw [domain_eq_top_of_subsingleton (H.closed _ _) (H.dense _ _)]; trivial, ?_⟩
+      rw [Subsingleton.elim (H.d _ _ _) 0, norm_zero]
+      positivity
+  · by_cases hj : 0 < (j : ℕ)
+    · have hp : (ComplexShape.window m).prev j = ⟨(j : ℕ) - 1, by omega⟩ :=
+        (ComplexShape.window m).prev_eq' (by change (j : ℕ) - 1 + 1 = (j : ℕ); omega)
+      exact tr' (i' := a + (((ComplexShape.window m).prev j : ℕ) : ℤ))
+        (by rw [hprev, hp]; push_cast [Nat.cast_sub (show 1 ≤ (j : ℕ) by omega)]; ring)
+    · have : Subsingleton (V ((ComplexShape.up ℤ).prev (a + (j : ℤ)))) := by
+        rw [hprev, show a + (j : ℤ) - 1 = a - 1 by omega]; exact hlow
+      intro x
+      refine ⟨mem_adjoint_domain_of_subsingleton _ _, ?_⟩
+      rw [Subsingleton.elim ((H.d _ _)† _) 0, norm_zero]
+      positivity
+
+end Window
 
 /-! ### Compression onto a reducing subcomplex -/
 

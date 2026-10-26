@@ -255,6 +255,7 @@ public import Feec.Models.Cube.DeRhamPartialIdent
 public import Feec.Models.Cube.EigenDense
 public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.Models.Cube.FiniteElementMethod
+public import Feec.Models.Cube.HeatFEM
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Inhomogeneous
 public import Feec.Models.Cube.InhomogeneousError

@@ -294,6 +294,7 @@ Feec/
 │       BGG/Analytic.lean -- bounded BGG data: the derived complex as a closed Hilbert complex, closed range, dim H ≤ rows
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
+│   Domain/{BGG,HessianBGG}.lean -- BGG data of constant-coefficient operators; the Hessian complex as bgg 0 of stacked de Rham
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3,CubicalForm}.lean
 ├── Geometry/{AlgebraicCurvature,Bivector,Hodge2,WeylDecomposition}.lean
 ├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)

@@ -30,6 +30,7 @@ ring `R`, any complex shape, any length.
   when both rows are exact at the middle; `Segment.range_D0`, `Segment.D0_injective`,
   `Segment.range_D1`.
 * `Data.twist_twist`: the twisted differential squares to zero, for any length.
+* `Data.ofSucc`: BGG data on `ComplexShape.up α` from successive maps.
 
 The derived (BGG) complex of `Data`, of any length, and its cohomology are in
 `Feec.HilbertComplex.BGG.Derived` (`Feec.BGG.Data.derived`, `Feec.BGG.Data.bgg`).
@@ -250,6 +251,66 @@ def twistComplex : HomologicalComplex (ModuleCat.{v} R) c where
   d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => D.twist_twist i j k x)
 
 end Complex
+
+/-! ### Data on `ComplexShape.up α` from successive maps -/
+
+section OfSucc
+
+variable {α : Type*} [Add α] [One α] [DecidableEq α] {R : Type*} [Ring R]
+
+/-- `f i : Xⁱ → Yⁱ⁺¹` transported along `i + 1 = j`, and `0` otherwise. -/
+def succMap {X Y : α → Type*} [∀ i, AddCommGroup (X i)] [∀ i, Module R (X i)]
+    [∀ i, AddCommGroup (Y i)] [∀ i, Module R (Y i)] (f : ∀ i, X i →ₗ[R] Y (i + 1)) (i j : α) :
+    X i →ₗ[R] Y j :=
+  if h : i + 1 = j then h ▸ f i else 0
+
+variable {X Y : α → Type*} [∀ i, AddCommGroup (X i)] [∀ i, Module R (X i)]
+  [∀ i, AddCommGroup (Y i)] [∀ i, Module R (Y i)] (f : ∀ i, X i →ₗ[R] Y (i + 1))
+
+@[simp] theorem succMap_succ (i : α) : succMap f i (i + 1) = f i := by simp [succMap]
+
+theorem succMap_of_ne {i j : α} (h : i + 1 ≠ j) : succMap f i j = 0 := by simp [succMap, h]
+
+variable {V Vt : α → Type*} [∀ i, AddCommGroup (V i)] [∀ i, Module R (V i)]
+  [∀ i, AddCommGroup (Vt i)] [∀ i, Module R (Vt i)]
+
+/-- **BGG data on `ComplexShape.up α`** (`α = ℕ, ℤ, …`) from the successive maps
+`d i : Vⁱ → Vⁱ⁺¹`, `d̃ i : Ṽⁱ → Ṽⁱ⁺¹`, `S i : Ṽⁱ → Vⁱ⁺¹` with `d d = 0`, `d̃ d̃ = 0`,
+`d S = -S d̃`. -/
+def ofSucc [IsRightCancelAdd α] (d : ∀ i, V i →ₗ[R] V (i + 1)) (dt : ∀ i, Vt i →ₗ[R] Vt (i + 1))
+    (S : ∀ i, Vt i →ₗ[R] V (i + 1)) (d_comp_d : ∀ i x, d (i + 1) (d i x) = 0)
+    (dt_comp_dt : ∀ i x, dt (i + 1) (dt i x) = 0)
+    (anticomm : ∀ i φ, d (i + 1) (S i φ) = -S (i + 1) (dt i φ)) :
+    Data R (ComplexShape.up α) V Vt where
+  d := succMap d
+  dt := succMap dt
+  S := succMap S
+  shape_d _ _ h := succMap_of_ne d h
+  shape_dt _ _ h := succMap_of_ne dt h
+  shape_S _ _ h := succMap_of_ne S h
+  d_comp_d i j k x := by
+    by_cases h : i + 1 = j
+    · subst h
+      by_cases h' : i + 1 + 1 = k
+      · subst h'; simp [d_comp_d]
+      · simp [succMap_of_ne d h']
+    · simp [succMap_of_ne d h]
+  dt_comp_dt i j k x := by
+    by_cases h : i + 1 = j
+    · subst h
+      by_cases h' : i + 1 + 1 = k
+      · subst h'; simp [dt_comp_dt]
+      · simp [succMap_of_ne dt h']
+    · simp [succMap_of_ne dt h]
+  anticomm i j k φ := by
+    by_cases h : i + 1 = j
+    · subst h
+      by_cases h' : i + 1 + 1 = k
+      · subst h'; simp [anticomm]
+      · simp [succMap_of_ne d h', succMap_of_ne S h']
+    · simp [succMap_of_ne S h, succMap_of_ne dt h]
+
+end OfSucc
 
 end Data
 

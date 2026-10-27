@@ -31,6 +31,7 @@ public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
 public import Feec.Domain.Affine
+public import Feec.Domain.BGG
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
@@ -42,6 +43,7 @@ public import Feec.Domain.DivDivComplex
 public import Feec.Domain.Elasticity
 public import Feec.Domain.FiniteSpeed
 public import Feec.Domain.FormPullback
+public import Feec.Domain.HessianBGG
 public import Feec.Domain.HessianComplex
 public import Feec.Domain.L2Field
 public import Feec.Domain.LipschitzPullback

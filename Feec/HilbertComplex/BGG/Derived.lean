@@ -62,9 +62,10 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
 * `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021].
 * `Data.Γ_eq_segment_Γ`, `Segment.sup_range_eq_top`: the complex (5.1) as an elimination.
 * `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
-  the condition at every `J`. No de Rham or Sobolev instance of `Data.InjSurj` is formalized: on
-  the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto, and [ArnoldHu2021] use rows of shifted
-  regularity.
+  the condition at every `J`. The de Rham instance is the Hessian diagram on smooth fields
+  (`Feec.Domain.injSurj_hessianBGG`, whose BGG complex is the Hessian complex,
+  `Feec.Domain.hessianBGGIso`). On the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto;
+  [ArnoldHu2021] use rows of shifted regularity (not formalized).
 
 ## References
 
@@ -278,6 +279,11 @@ quotiented. -/
 def derived : HomologicalComplex (ModuleCat.{v} R) c :=
   (D.ΓComplex E).quo (fun i => (D.Δ F i).comap (D.Γ E i).subtype) fun i j _ hx =>
     D.twist_mem_Δ F i j hx
+
+/-- Where the exact part vanishes, the derived space `Γⁱ / Δⁱ` is `Γⁱ`. -/
+def derivedXEquiv {i : ι} (h : D.Δ F i = ⊥) :
+    (D.Γ E i ⧸ (D.Δ F i).comap (D.Γ E i).subtype) ≃ₗ[R] D.Γ E i :=
+  Submodule.quotEquivOfEqBot _ (by rw [h, Submodule.comap_bot, Submodule.ker_subtype])
 
 /-- The projection `Γ E → derived E F`. -/
 def derivedπ : D.ΓComplex E ⟶ D.derived E F := HomologicalComplex.quoπ _ _ _
@@ -494,6 +500,31 @@ theorem bgg_Δ_of_gt {J i : ℤ} (hi : J < i) : D.Δ (· < J) i = ⊥ :=
     obtain rfl : φ = 0 := hφ.resolve_left (by omega)
     obtain rfl : ψ = 0 := hψ.resolve_left (by rw [CochainComplex.prev]; omega)
     simp
+
+variable (D) in
+/-- After `J`, `Γⁱ = 0 × N(Sⁱ)` is `N(Sⁱ)`: `x ↦ x₂`. -/
+def bggΓEquivKer {J i : ℤ} (hi : J < i) : D.Γ (J < ·) i ≃ₗ[R] LinearMap.ker (D.S i (i + 1)) where
+  toFun x := ⟨(x : V i × Vt i).2, ((D.mem_bgg_Γ_of_gt hi).1 x.2).2⟩
+  invFun u := ⟨(0, u), (D.mem_bgg_Γ_of_gt hi).2 ⟨rfl, u.2⟩⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv x := Subtype.ext (Prod.ext ((D.mem_bgg_Γ_of_gt hi).1 x.2).1.symm rfl)
+  right_inv _ := rfl
+
+variable (D) in
+/-- At `J`, when `Sᴶ` is bijective, `Γᴶ = {(σ, (Sᴶ)⁻¹ dσ)}` is `Vᴶ`: `x ↦ x₁`. -/
+def bggΓEquivOfBijective {J : ℤ} (hS : Function.Bijective (D.S J (J + 1))) :
+    D.Γ (J < ·) J ≃ₗ[R] V J where
+  toFun x := (x : V J × Vt J).1
+  invFun σ := ⟨(σ, (LinearEquiv.ofBijective _ hS).symm (D.d J (J + 1) σ)),
+    (D.mem_bgg_Γ_self).2 ((LinearEquiv.ofBijective _ hS).apply_symm_apply _).symm⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv x := Subtype.ext (Prod.ext rfl (by
+    change (LinearEquiv.ofBijective _ hS).symm (D.d J (J + 1) (x : V J × Vt J).1) = _
+    rw [(D.mem_bgg_Γ_self).1 x.2]
+    exact (LinearEquiv.ofBijective _ hS).symm_apply_apply _))
+  right_inv _ := rfl
 
 /-- **The BGG complex has the cohomology of the twisted complex** [ArnoldHu2021], §5.2, under
 the injectivity/surjectivity condition at `J`. -/

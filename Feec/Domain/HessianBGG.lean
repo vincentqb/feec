@@ -375,7 +375,8 @@ def hessianBGGEquiv : ∀ k : ℤ, ((hessianBGG 𝕜).smoothData.bgg 0).X k ≃�
 
 theorem hessianBGGEquiv_comm_zero :
     (hessianBGGEquiv 0).toModuleIso.hom ≫ (hessianSmoothComplex 𝕜).d 0 (0 + 1) =
-      ((hessianBGG 𝕜).smoothData.bgg 0).d 0 (0 + 1) ≫ (hessianBGGEquiv (0 + 1)).toModuleIso.hom := by
+      ((hessianBGG 𝕜).smoothData.bgg 0).d 0 (0 + 1) ≫
+        (hessianBGGEquiv (0 + 1)).toModuleIso.hom := by
   refine ModuleCat.hom_ext (LinearMap.ext fun q => ?_)
   obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
   obtain ⟨⟨σ, φ⟩, hx⟩ := (x : (hessianBGG 𝕜).smoothData.Γ (0 < ·) 0)
@@ -390,7 +391,8 @@ theorem hessianBGGEquiv_comm_zero :
 
 theorem hessianBGGEquiv_comm_one :
     (hessianBGGEquiv 1).toModuleIso.hom ≫ (hessianSmoothComplex 𝕜).d 1 (1 + 1) =
-      ((hessianBGG 𝕜).smoothData.bgg 0).d 1 (1 + 1) ≫ (hessianBGGEquiv (1 + 1)).toModuleIso.hom := by
+      ((hessianBGG 𝕜).smoothData.bgg 0).d 1 (1 + 1) ≫
+        (hessianBGGEquiv (1 + 1)).toModuleIso.hom := by
   refine ModuleCat.hom_ext (LinearMap.ext fun q => ?_)
   obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
   obtain ⟨⟨σ, u⟩, hx⟩ := (x : (hessianBGG 𝕜).smoothData.Γ (0 < ·) 1)
@@ -406,7 +408,8 @@ theorem hessianBGGEquiv_comm_one :
 
 theorem hessianBGGEquiv_comm_two :
     (hessianBGGEquiv 2).toModuleIso.hom ≫ (hessianSmoothComplex 𝕜).d 2 (2 + 1) =
-      ((hessianBGG 𝕜).smoothData.bgg 0).d 2 (2 + 1) ≫ (hessianBGGEquiv (2 + 1)).toModuleIso.hom := by
+      ((hessianBGG 𝕜).smoothData.bgg 0).d 2 (2 + 1) ≫
+        (hessianBGGEquiv (2 + 1)).toModuleIso.hom := by
   refine ModuleCat.hom_ext (LinearMap.ext fun q => ?_)
   obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
   obtain ⟨⟨σ, u⟩, hx⟩ := (x : (hessianBGG 𝕜).smoothData.Γ (0 < ·) 2)
@@ -428,7 +431,8 @@ theorem subsingleton_hessianBGG_bgg_X {k : ℤ} (hk : k < 0 ∨ 3 < k) :
 
 theorem hessianBGGEquiv_comm (i : ℤ) :
     (hessianBGGEquiv i).toModuleIso.hom ≫ (hessianSmoothComplex 𝕜).d i (i + 1) =
-      ((hessianBGG 𝕜).smoothData.bgg 0).d i (i + 1) ≫ (hessianBGGEquiv (i + 1)).toModuleIso.hom := by
+      ((hessianBGG 𝕜).smoothData.bgg 0).d i (i + 1) ≫
+        (hessianBGGEquiv (i + 1)).toModuleIso.hom := by
   rcases (by omega : i = 0 ∨ i = 1 ∨ i = 2 ∨ i < 0 ∨ 2 < i) with rfl | rfl | rfl | hi | hi
   · exact hessianBGGEquiv_comm_zero
   · exact hessianBGGEquiv_comm_one

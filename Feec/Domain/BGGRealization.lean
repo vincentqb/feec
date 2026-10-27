@@ -13,32 +13,44 @@ the maximal (weak) realizations of the two complexes on every open `Ω`
 (**`ConstCoeffBGG.maximalData`**): a constant matrix maps `D(B_max)` into `D(A_max)` when
 `A M = -M' B` on smooth fields, with `A_max (M u) = -M' (B_max u)`
 (`ConstCoeffOp.maximal_ofMatrixCLM`; the identity passes to the formal adjoints by Green's
-formula against test fields). Hence the analytic BGG theorem
-(`Feec.BGG.HilbertData.derivedVerdict`) applies to the Hessian, elasticity and div-div diagrams
-on every open `Ω ⊆ ℝ³` (`hessianMaximalData_derivedVerdict`,
-`elasticityMaximalData_derivedVerdict`, `divDivMaximalData_derivedVerdict`): **wherever the two
-`L²` de Rham complexes of `Ω` have finite-dimensional cohomology, and the elimination hypotheses
-hold between their domains (with closed exact part), the derived complex is a closed Hilbert
-complex with closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`**. The elimination hypotheses
-`R(d) + R(S) = D(d)` are regular decompositions of `H(curl)`, `H(div)` (for Lipschitz `Ω`,
-[ArnoldHu2021], §5, [CapHu2024]); they are not formalized here.
+formula against test fields). A matrix with a left inverse is bounded below on `L²` fields
+(`L2F.antilipschitz_ofMatrixCLM`), so the analytic BGG theorem for the BGG complex
+(`Feec.BGG.HilbertData.bggVerdict`) applies once the matrices up to `J` have left inverses
+(`ConstCoeffBGG.maximalData_bggVerdict`): the exact part is closed and the injectivity
+hypotheses hold, and **the only hypotheses left are the regular decompositions after `J`**
+(`Feec.BGG.HilbertData.RegularDecomposition`) and finite-dimensional cohomology of the rows.
+
+This is the case of the Hessian, elasticity and div-div diagrams on every open `Ω ⊆ ℝ³`
+(`hessianMaximalData_derivedVerdict`, `elasticityMaximalData_derivedVerdict`,
+`divDivMaximalData_derivedVerdict`): **wherever the two `L²` de Rham complexes of `Ω` have
+finite-dimensional cohomology and the regular decompositions `R(d) + R(S) = D(d)` hold after `J`,
+the BGG complex has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`**. The regular
+decompositions of `H(curl)`, `H(div)` hold on bounded Lipschitz domains ([ArnoldHu2021], §2,
+Theorem 3; [CapHu2024]) and are not formalized for the maximal realizations: the cube result
+`Feec.Models.Cube.WeakSymmetry.curlPotential` is the regular decomposition of `H̊(curl)` on
+`Q = (0, ½)³`, for the minimal complex in form proxies (`deRham`), and the decomposition of
+`H(div)` has no counterpart. The finite-dimensionality of the cohomology of `deRhamVec m` is not
+derived from the cube results on `deRham` either (no identification of the vector proxies with the
+forms is formalized).
 
 ## Main definitions
 
-* `Feec.Domain.L2F.ofMatrixCLM M`: a constant matrix acting on `L²(Ω; 𝕜^ι)`.
+* `Feec.Domain.L2F.ofMatrixCLM M`: a constant matrix acting on `L²(Ω; 𝕜^ι)`;
+  `L2F.antilipschitz_ofMatrixCLM`: bounded below when `M` has a left inverse.
 * `Feec.Domain.ConstCoeffBGG.maximalData`: the analytic BGG data of the maximal realizations.
 * `hessianMaximalData`, `elasticityMaximalData`, `divDivMaximalData`.
 
 ## Main results
 
 * `ConstCoeffOp.maximal_ofMatrixCLM`.
+* `ConstCoeffBGG.maximalData_bggVerdict`.
 * `hessianMaximalData_derivedVerdict`, `elasticityMaximalData_derivedVerdict`,
   `divDivMaximalData_derivedVerdict`.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5 (bounded Hilbert complexes
-  and the analytic BGG construction)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
+  and linking maps, Theorem 6), §2 (regular decompositions, Theorem 3)
 * [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
   sequences of Sobolev spaces)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (the maximal realizations)
@@ -81,7 +93,8 @@ theorem ofMatrixCLM_testField (M : Matrix κ ι 𝕜) {φ : ι → E → 𝕜} (
   rw [ofMatrixCLM_apply]
   have h1 := Lp.coeFn_fun_finsetSum (μ := volume.restrict Ω) Finset.univ
     (fun i => M j i • testField hφ i)
-  filter_upwards [h1, coeFn_testField ((ConstCoeffOp.ofMatrix M : ConstCoeffOp E 𝕜 ι κ).isTestField_apply hφ) j,
+  filter_upwards [h1,
+    coeFn_testField ((ConstCoeffOp.ofMatrix M : ConstCoeffOp E 𝕜 ι κ).isTestField_apply hφ) j,
     ae_all_iff.2 fun i => Lp.coeFn_smul (M j i) (testField hφ i),
     ae_all_iff.2 fun i => coeFn_testField hφ i] with x h1 h2 h3 h4
   rw [h1, h2, ConstCoeffOp.ofMatrix_apply]
@@ -98,6 +111,35 @@ theorem inner_ofMatrixCLM (M : Matrix κ ι 𝕜) (u : L2F 𝕜 Ω ι) (v : L2F 
     Matrix.conjTranspose_apply]
   rw [Finset.sum_comm]
   rfl
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
+  [(volume : Measure E).IsAddHaarMeasure] in
+theorem ofMatrixCLM_ofMatrixCLM {μ : Type*} [Fintype μ] (N : Matrix μ κ 𝕜) (M : Matrix κ ι 𝕜)
+    (u : L2F 𝕜 Ω ι) : ofMatrixCLM N (ofMatrixCLM M u) = ofMatrixCLM (N * M) u := by
+  refine (WithLp.ext_iff 2).2 (funext fun l => ?_)
+  change ofMatrixCLM N (ofMatrixCLM M u) l = ofMatrixCLM (N * M) u l
+  simp only [ofMatrixCLM_apply, Matrix.mul_apply, Finset.smul_sum, Finset.sum_smul, smul_smul]
+  exact Finset.sum_comm
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
+  [(volume : Measure E).IsAddHaarMeasure] [Fintype κ] in
+theorem ofMatrixCLM_one [DecidableEq ι] (u : L2F 𝕜 Ω ι) : ofMatrixCLM (1 : Matrix ι ι 𝕜) u = u := by
+  refine (WithLp.ext_iff 2).2 (funext fun l => ?_)
+  change ofMatrixCLM 1 u l = u l
+  simp [ofMatrixCLM_apply, Matrix.one_apply]
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
+  [(volume : Measure E).IsAddHaarMeasure] in
+/-- **A matrix with a left inverse is bounded below on `L²` fields**: `‖u‖ ≤ ‖N‖ ‖M u‖` when
+`N M = 1`. -/
+theorem antilipschitz_ofMatrixCLM [DecidableEq ι] {M : Matrix κ ι 𝕜} {N : Matrix ι κ 𝕜}
+    (h : N * M = 1) :
+    AntilipschitzWith ‖(ofMatrixCLM N : L2F 𝕜 Ω κ →L[𝕜] L2F 𝕜 Ω ι)‖₊
+      (ofMatrixCLM M : L2F 𝕜 Ω ι →L[𝕜] L2F 𝕜 Ω κ) :=
+  (ofMatrixCLM M).antilipschitz_of_bound fun u => by
+    calc ‖u‖ = ‖ofMatrixCLM N (ofMatrixCLM M u)‖ := by
+          rw [ofMatrixCLM_ofMatrixCLM, h, ofMatrixCLM_one]
+      _ ≤ _ := (ofMatrixCLM N).le_opNorm _
 
 end L2F
 
@@ -172,23 +214,38 @@ def maximalData (hΩ : IsOpen Ω) :
   BGG.HilbertData.ofSucc (B.top.maximalComplex hΩ) (B.bot.maximalComplex hΩ)
     (fun k => L2F.ofMatrixCLM (M k))
     (fun k φ => by
-      have key : ∀ x : L2F 𝕜 Ω (B.bot.ι k),
-          x ∈ ((B.bot.maximalComplex hΩ).d k (k + 1)).domain →
-            x ∈ ((B.bot.A k).maximal Ω).domain := fun x hx => by
-        rwa [ConstCoeffComplex.maximalComplex_d] at hx
-      have hφ := key _ φ.2
       rw [ConstCoeffComplex.maximalComplex_d]
-      exact (ConstCoeffOp.maximal_ofMatrixCLM hΩ (B.anticomm_ofMatrix M hM k) ⟨_, hφ⟩).1)
+      exact (ConstCoeffOp.maximal_ofMatrixCLM hΩ (B.anticomm_ofMatrix M hM k)
+        ⟨φ, B.bot.maximalComplex_d hΩ k ▸ φ.2⟩).1)
     (fun k φ => by
-      have key : ∀ x : L2F 𝕜 Ω (B.bot.ι k),
-          x ∈ ((B.bot.maximalComplex hΩ).d k (k + 1)).domain →
-            x ∈ ((B.bot.A k).maximal Ω).domain := fun x hx => by
-        rwa [ConstCoeffComplex.maximalComplex_d] at hx
-      have hφ := key _ φ.2
       obtain ⟨hu, he⟩ := ConstCoeffOp.maximal_ofMatrixCLM hΩ (B.anticomm_ofMatrix M hM k)
-        ⟨_, hφ⟩
+        ⟨φ, B.bot.maximalComplex_d hΩ k ▸ φ.2⟩
       rw [LinearPMap.apply_eq_of_eq (B.top.maximalComplex_d hΩ (k + 1)) _ ⟨_, hu⟩ rfl, he,
-        LinearPMap.apply_eq_of_eq (B.bot.maximalComplex_d hΩ k).symm ⟨_, hφ⟩ φ rfl])
+        LinearPMap.apply_eq_of_eq (B.bot.maximalComplex_d hΩ k).symm _ φ rfl])
+
+theorem maximalData_S (hΩ : IsOpen Ω) (k : ℤ) :
+    (B.maximalData M hM hΩ).S k (k + 1) = L2F.ofMatrixCLM (M k) :=
+  BGG.HilbertData.succCLM_succ (X := fun k => L2F 𝕜 Ω (B.bot.ι k))
+    (Y := fun k => L2F 𝕜 Ω (B.top.ι k)) (fun k => L2F.ofMatrixCLM (M k)) k
+
+/-- **Analytic BGG for the maximal realizations**: if the matrices `M k`, `k ≤ J`, have left
+inverses, then wherever the maximal complexes of the two rows have finite-dimensional cohomology
+and the regular decompositions after `J` hold, the BGG complex `bgg J` of their domain complexes
+has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
+theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen Ω) {J : ℤ}
+    (hN : ∀ k ≤ J, ∃ N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜, N * M k = 1)
+    (htop : (B.maximalData M hM hΩ).RegularDecomposition J)
+    (i : ℤ) [FiniteDimensional 𝕜 ((B.top.maximalComplex hΩ).cohomology i)]
+    [FiniteDimensional 𝕜 ((B.bot.maximalComplex hΩ).cohomology i)] :
+    (B.maximalData M hM hΩ).DerivedVerdict (J < ·) (· < J) i :=
+  have : FiniteDimensional 𝕜 ((B.maximalData M hM hΩ).H.cohomology i) :=
+    ‹FiniteDimensional 𝕜 ((B.top.maximalComplex hΩ).cohomology i)›
+  have : FiniteDimensional 𝕜 ((B.maximalData M hM hΩ).Ht.cohomology i) :=
+    ‹FiniteDimensional 𝕜 ((B.bot.maximalComplex hΩ).cohomology i)›
+  (B.maximalData M hM hΩ).bggVerdict (fun k hk => by
+    obtain ⟨N, hN⟩ := hN k hk
+    rw [maximalData_S]
+    exact ⟨_, L2F.antilipschitz_ofMatrixCLM hN⟩) htop i
 
 end ConstCoeffBGG
 
@@ -267,45 +324,62 @@ and `𝕜`, linked by `· I`, `-mskw`, `I`. -/
 abbrev divDivMaximalData (hΩ : IsOpen Ω) :=
   (divDivBGG 𝕜).maximalData divDivSMat divDivS_apply_eq hΩ
 
+/-- `I` has a left inverse (and the connecting matrices before it act on zero spaces). -/
+theorem hessianSMat_leftInv :
+    ∀ k : ℤ, k ≤ 0 → ∃ N : Matrix (vecIdx 3 k) (vecIdx 1 (k + 1)) 𝕜,
+      N * (hessianSMat k : Matrix _ _ 𝕜) = 1
+  | .ofNat 0, _ => ⟨hessN0, hessN0_mul_hessS0⟩
+  | .ofNat (_ + 1), h => absurd h (by simp only [Int.ofNat_eq_natCast] at h ⊢; omega)
+  | .negSucc _, _ => ⟨0, Matrix.ext fun i => isEmptyElim (α := Empty) i⟩
+
+/-- `-mskw` and `T - tr` have left inverses. -/
+theorem elasticitySMat_leftInv :
+    ∀ k : ℤ, k ≤ 1 → ∃ N : Matrix (vecIdx 3 k) (vecIdx 3 (k + 1)) 𝕜,
+      N * (elasticitySMat k : Matrix _ _ 𝕜) = 1
+  | .ofNat 0, _ => ⟨elN0, elN0_mul_elS0⟩
+  | .ofNat 1, _ => ⟨elN1, elN1_mul_elS1⟩
+  | .ofNat (_ + 2), h => absurd h (by simp only [Int.ofNat_eq_natCast] at h ⊢; omega)
+  | .negSucc _, _ => ⟨0, Matrix.ext fun i => isEmptyElim (α := Empty) i⟩
+
+/-- `· I`, `-mskw` and `I` have left inverses. -/
+theorem divDivSMat_leftInv :
+    ∀ k : ℤ, k ≤ 2 → ∃ N : Matrix (vecIdx 1 k) (vecIdx 3 (k + 1)) 𝕜,
+      N * (divDivSMat k : Matrix _ _ 𝕜) = 1
+  | .ofNat 0, _ => ⟨ddN0, ddN0_mul_ddS0⟩
+  | .ofNat 1, _ => ⟨ddN1, ddN1_mul_ddS1⟩
+  | .ofNat 2, _ => ⟨ddN2, ddN2_mul_ddS2⟩
+  | .ofNat (_ + 3), h => absurd h (by simp only [Int.ofNat_eq_natCast] at h ⊢; omega)
+  | .negSucc _, _ => ⟨0, Matrix.ext fun i => isEmptyElim (α := Empty) i⟩
+
 /-- **The analytic BGG theorem for the Hessian diagram on `Ω`**: wherever the scalar and
-`𝕜³`-valued `L²` de Rham complexes of `Ω` have finite-dimensional cohomology (and the eliminations
-hold between their domains, with closed exact part), the Hessian BGG complex is a closed Hilbert
-complex with closed range at `i`, its cohomology of dimension at most the sum of those of the two
-rows. -/
+`𝕜³`-valued `L²` de Rham complexes of `Ω` have finite-dimensional cohomology and the regular
+decompositions of `H(curl)`, `H(div)`, `L²` after `0` hold, the Hessian BGG complex has closed
+range at `i`, its cohomology of dimension at most the sum of those of the two rows. -/
 theorem hessianMaximalData_derivedVerdict (hΩ : IsOpen Ω)
-    (hΔ : ∀ i, IsClosed ((hessianMaximalData 𝕜 hΩ).domainData.Δ (· < 0) i :
-      Set ((hessianMaximalData 𝕜 hΩ).H.domainSpace i × (hessianMaximalData 𝕜 hΩ).Ht.domainSpace i)))
-    (h : (hessianMaximalData 𝕜 hΩ).domainData.Eliminates (0 < ·) (· < 0)) (i : ℤ)
-    [h₁ : FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)]
-    [h₃ : FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
+    (htop : (hessianMaximalData 𝕜 hΩ).RegularDecomposition 0) (i : ℤ)
+    [FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)]
+    [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
     (hessianMaximalData 𝕜 hΩ).DerivedVerdict (0 < ·) (· < 0) i :=
-  have : FiniteDimensional 𝕜 ((hessianMaximalData 𝕜 hΩ).H.cohomology i) := h₁
-  have : FiniteDimensional 𝕜 ((hessianMaximalData 𝕜 hΩ).Ht.cohomology i) := h₃
-  (hessianMaximalData 𝕜 hΩ).derivedVerdict hΔ h i
+  (hessianBGG 𝕜).maximalData_bggVerdict hessianSMat hessianS_apply_eq hΩ hessianSMat_leftInv
+    htop i
 
-/-- **The analytic BGG theorem for the elasticity diagram on `Ω`.** -/
+/-- **The analytic BGG theorem for the elasticity diagram on `Ω`**, under the regular
+decompositions after `1`. -/
 theorem elasticityMaximalData_derivedVerdict (hΩ : IsOpen Ω)
-    (hΔ : ∀ i, IsClosed ((elasticityMaximalData 𝕜 hΩ).domainData.Δ (· < 1) i :
-      Set ((elasticityMaximalData 𝕜 hΩ).H.domainSpace i ×
-        (elasticityMaximalData 𝕜 hΩ).Ht.domainSpace i)))
-    (h : (elasticityMaximalData 𝕜 hΩ).domainData.Eliminates (1 < ·) (· < 1)) (i : ℤ)
-    [h₃ : FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
+    (htop : (elasticityMaximalData 𝕜 hΩ).RegularDecomposition 1) (i : ℤ)
+    [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
     (elasticityMaximalData 𝕜 hΩ).DerivedVerdict (1 < ·) (· < 1) i :=
-  have : FiniteDimensional 𝕜 ((elasticityMaximalData 𝕜 hΩ).H.cohomology i) := h₃
-  have : FiniteDimensional 𝕜 ((elasticityMaximalData 𝕜 hΩ).Ht.cohomology i) := h₃
-  (elasticityMaximalData 𝕜 hΩ).derivedVerdict hΔ h i
+  (elasticityBGG 𝕜).maximalData_bggVerdict elasticitySMat elasticityS_apply_eq hΩ
+    elasticitySMat_leftInv htop i
 
-/-- **The analytic BGG theorem for the div-div diagram on `Ω`.** -/
+/-- **The analytic BGG theorem for the div-div diagram on `Ω`**, under the regular decompositions
+after `2`. -/
 theorem divDivMaximalData_derivedVerdict (hΩ : IsOpen Ω)
-    (hΔ : ∀ i, IsClosed ((divDivMaximalData 𝕜 hΩ).domainData.Δ (· < 2) i :
-      Set ((divDivMaximalData 𝕜 hΩ).H.domainSpace i × (divDivMaximalData 𝕜 hΩ).Ht.domainSpace i)))
-    (h : (divDivMaximalData 𝕜 hΩ).domainData.Eliminates (2 < ·) (· < 2)) (i : ℤ)
-    [h₃ : FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)]
-    [h₁ : FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)] :
+    (htop : (divDivMaximalData 𝕜 hΩ).RegularDecomposition 2) (i : ℤ)
+    [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)]
+    [FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)] :
     (divDivMaximalData 𝕜 hΩ).DerivedVerdict (2 < ·) (· < 2) i :=
-  have : FiniteDimensional 𝕜 ((divDivMaximalData 𝕜 hΩ).H.cohomology i) := h₃
-  have : FiniteDimensional 𝕜 ((divDivMaximalData 𝕜 hΩ).Ht.cohomology i) := h₁
-  (divDivMaximalData 𝕜 hΩ).derivedVerdict hΔ h i
+  (divDivBGG 𝕜).maximalData_bggVerdict divDivSMat divDivS_apply_eq hΩ divDivSMat_leftInv htop i
 
 end Instances
 

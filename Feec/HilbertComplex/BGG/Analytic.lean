@@ -9,13 +9,15 @@ public import Mathlib.Analysis.InnerProductSpace.ProdL2
 
 **Bounded BGG data** (`Feec.BGG.BoundedData`) are BGG data `Feec.BGG.Data` on Hilbert spaces whose
 differentials `d`, `d̃` and connecting maps `S` are bounded: the setting of the bounded Hilbert
-complexes (domain complexes) of [ArnoldHu2021], §5, and of the Sobolev BGG sequences of
-[CapHu2024]. The algebraic eliminations `Γ E ⊇ Δ F` of `Feec.HilbertComplex.BGG.Derived` are
-then subspaces of `Vⁱ ⊕ Ṽⁱ` (`ℓ²` product), `Γ E` closed, and the derived complex `Γ E / Δ F` is
+complexes (domain complexes) and bounded linking maps of [ArnoldHu2021], §3, (19), and of the
+Sobolev BGG sequences of [CapHu2024]. The algebraic eliminations `Γ E ⊇ Δ F` of
+`Feec.HilbertComplex.BGG.Derived` are then subspaces of `Vⁱ ⊕ Ṽⁱ` (`ℓ²` product), `Γ E` closed,
+and the derived complex `Γ E / Δ F` is
 realized as the Hilbert complex (`BoundedData.derivedComplex`) of the spaces
 `Υⁱ = Γⁱ ⊖ Δⁱ` with the compressed differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. It exists for
-all data; when `Δ F` is closed it is isomorphic, as a complex, to `derived E F`
-(`BoundedData.derivedComplexIso`). Hence:
+all data, as a complex of bounded operators; when `Δ F` is closed it is isomorphic, as a complex,
+to `derived E F` (`BoundedData.derivedComplexIso`). Hence, **for closed `Δ F` and under the
+elimination hypotheses `Data.Eliminates E F`**:
 
 * **the cohomology of the derived Hilbert complex is that of the twisted complex** under the
   elimination hypotheses (`BoundedData.derivedComplexCohomologyEquiv`), so by the long exact
@@ -25,13 +27,16 @@ all data; when `Δ F` is closed it is isomorphic, as a complex, to `derived E F`
   `BoundedData.finrank_derivedComplex_cohomology_le`);
 * finite-dimensional cohomology of a bounded complex forces closed range
   (`Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`), so **the derived
-  complex is a closed Hilbert complex with closed range** at every index where the rows have
-  finite-dimensional cohomology (`BoundedData.derivedComplex_closedRangeAt`), and **exact**
-  where both rows are exact (`BoundedData.derivedComplex_boundaries_eq`).
+  complex has closed range** at every index where the rows have finite-dimensional cohomology
+  (`BoundedData.derivedComplex_closedRangeAt`), and is **exact** where both rows are exact
+  (`BoundedData.derivedComplex_boundaries_eq`).
 
-For the BGG complexes `Data.bgg J` of [ArnoldHu2021] this is the analytic part of their §5 (and of
-[CapHu2024] for Sobolev rows): closed range and finite-dimensional cohomology pass from the input
-rows to the output complex. The rows enter only through their cohomology, as complexes of
+For the BGG complexes `Data.bgg J` of [ArnoldHu2021] this is their Theorem 6 (and [CapHu2024] for
+Sobolev rows): closed range and finite-dimensional cohomology pass from the input rows to the
+output complex. Both hypotheses follow from the connecting maps: if the `Sⁱ` before `J` are
+bounded below, the exact part `Δ (· < J)` is closed (`BoundedData.isClosed_bgg_Δ`) and they are
+one-to-one, so of the elimination hypotheses only the onto-modulo-`d` conditions after `J` remain
+(`Data.eliminates_bgg`). The rows enter only through their cohomology, as complexes of
 bounded operators (`BoundedData.rowTopComplex`, `BoundedData.rowBotComplex`); for the domain
 complexes of two Hilbert complexes (`Feec.BGG.HilbertData.domainData`) this is the cohomology of
 the Hilbert complexes (`Feec.HilbertComplex.domainComplexCohomologyEquiv`), finite-dimensional
@@ -49,16 +54,20 @@ for instance under the compactness property
 ## Main results
 
 * `BoundedData.derivedComplexIso`: `derivedComplex` is `derived E F` (closed `Δ F`).
+* `BoundedData.isClosed_bgg_Δ`: the exact part of the BGG complex is closed when the connecting
+  maps before `J` are bounded below.
 * `BoundedData.derivedComplexCohomologyEquiv`: its cohomology is that of the twisted complex.
 * **`BoundedData.derivedComplex_closedRangeAt`**,
   `BoundedData.finiteDimensional_derivedComplex_cohomology`,
   `BoundedData.finrank_derivedComplex_cohomology_le`,
   `BoundedData.derivedComplex_boundaries_eq`.
+* `BoundedData.idShift_derivedComplex_closedRangeAt`: non-vacuity (`BoundedData.idShift`).
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5 (bounded Hilbert complexes,
-  the twisted complex and the output complex, closed range and cohomology)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
+  and linking maps, the output complex, Theorem 6: dimension of its cohomology), §5 (its proof:
+  the twisted complex and the output complex)
 * [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
   sequences of Sobolev spaces, their cohomology and closed range)
 * [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
@@ -78,7 +87,7 @@ universe u
 namespace Feec.BGG
 
 /-- **Bounded BGG data**: BGG data on Hilbert spaces whose differentials `d`, `d̃` and connecting
-maps `S` are bounded. [ArnoldHu2021], §5 -/
+maps `S` are bounded. [ArnoldHu2021], §3, (19) -/
 structure BoundedData (𝕜 : Type*) [RCLike 𝕜] {ι : Type*} (c : ComplexShape ι) (V Vt : ι → Type u)
     [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
     [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
@@ -253,7 +262,7 @@ theorem derivedD_derivedD (i j k : ι) (y : D.derivedSpace E F i) :
   rwa [map_sub, D.twistL_twistL, zero_sub, neg_mem_iff] at h
 
 /-- **The derived complex as a Hilbert complex**: the spaces `Υⁱ = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)` with the
-bounded differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. [ArnoldHu2021], §5 -/
+bounded differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. [ArnoldHu2021], Theorem 6 -/
 def derivedComplex : HilbertComplex 𝕜 c (fun i => D.derivedSpace E F i) :=
   HilbertComplex.ofBounded (D.derivedD E F) (fun _ _ h => D.derivedD_eq_zero E F h)
     (D.derivedD_derivedD E F)
@@ -359,7 +368,7 @@ theorem finiteDimensional_derivedComplex_cohomology :
   have := D.finiteDimensional_derived_homology i h
   (D.derivedComplexCohomologyEquivDerived E hΔ i).symm.finiteDimensional
 
-/-- **`dim Hⁱ(Υ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], §5.2 -/
+/-- **`dim Hⁱ(Υ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], Theorem 6 -/
 theorem finrank_derivedComplex_cohomology_le :
     finrank 𝕜 ((D.derivedComplex E F).cohomology i) ≤
       finrank 𝕜 (D.rowTopComplex.cohomology i) + finrank 𝕜 (D.rowBotComplex.cohomology i) := by
@@ -369,8 +378,9 @@ theorem finrank_derivedComplex_cohomology_le :
     (D.rowTopCohomologyEquiv i).finrank_eq, (D.rowBotCohomologyEquiv i).finrank_eq]
   exact D.finrank_derived_homology_le i h
 
-/-- **The derived complex is a closed Hilbert complex with closed range** at every index where
-the rows have finite-dimensional cohomology. [ArnoldHu2021], §5; [CapHu2024] -/
+/-- **The derived complex has closed range** at every index where the rows have
+finite-dimensional cohomology (closed `Δ F`, under the elimination hypotheses).
+[ArnoldHu2021], Theorem 6; [CapHu2024] -/
 theorem derivedComplex_closedRangeAt : (D.derivedComplex E F).ClosedRangeAt i :=
   have := D.finiteDimensional_derivedComplex_cohomology hΔ h i
   HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology _ i
@@ -390,6 +400,84 @@ theorem derivedComplex_boundaries_eq [Subsingleton (D.rowTopComplex.cohomology i
   have := hs.elim (Submodule.Quotient.mk (p := ((D.derivedComplex E F).boundaries i).comap
     ((D.derivedComplex E F).cycles i).subtype) ⟨z, hz⟩) 0
   rwa [Submodule.Quotient.mk_eq_zero] at this
+
+end BoundedData
+
+/-! ### The BGG complex on `ComplexShape.up ℤ` -/
+
+namespace BoundedData
+
+variable {𝕜 : Type*} [RCLike 𝕜] {V Vt : ℤ → Type u} [∀ i, NormedAddCommGroup (V i)]
+  [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, NormedAddCommGroup (Vt i)]
+  [∀ i, InnerProductSpace 𝕜 (Vt i)] [∀ i, CompleteSpace (Vt i)]
+  (D : BoundedData 𝕜 (ComplexShape.up ℤ) V Vt)
+
+/-- **The exact part of the BGG complex is closed** when the connecting maps `Sⁱ` before `J` are
+bounded below: before `J` it is `R(Sⁱ⁻¹) × Ṽⁱ`, at `J` the range of the map `ψ ↦ (-Sψ, d̃ψ)`,
+bounded below with `S`, after `J` it is `0`. -/
+theorem isClosed_bgg_Δ {J : ℤ} (hS : ∀ i < J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (i : ℤ) :
+    IsClosed (D.Δ (· < J) i : Set (V i × Vt i)) := by
+  rcases lt_trichotomy i J with hi | rfl | hi
+  · obtain ⟨K, hK⟩ := hS (i - 1) (by omega)
+    rw [sub_add_cancel] at hK
+    have : (D.Δ (· < J) i : Set (V i × Vt i)) = Prod.fst ⁻¹' Set.range (D.S (i - 1) i) := by
+      ext x
+      rw [SetLike.mem_coe, D.mem_bgg_Δ_of_le hi.le]
+      constructor
+      · rintro ⟨φ, ψ, -, rfl⟩
+        exact ⟨-ψ, map_neg _ _⟩
+      · rintro ⟨ψ, hψ⟩
+        exact ⟨x.2 + D.dt (i - 1) i ψ, -ψ, Or.inl hi, by simp [hψ]⟩
+    rw [this]
+    exact (hK.isClosed_range (⟨D.S (i - 1) i, D.continuous_S _ _⟩ :
+      Vt (i - 1) →L[𝕜] V i).uniformContinuous).preimage continuous_fst
+  · obtain ⟨K, hK⟩ := hS (i - 1) (by omega)
+    rw [sub_add_cancel] at hK
+    let S : Vt (i - 1) →L[𝕜] V i := ⟨D.S (i - 1) i, D.continuous_S _ _⟩
+    let g : Vt (i - 1) →L[𝕜] V i × Vt i := (-S).prod ⟨D.dt (i - 1) i, D.continuous_dt _ _⟩
+    have : (D.Δ (· < i) i : Set (V i × Vt i)) = Set.range g := by
+      ext x
+      rw [SetLike.mem_coe, D.mem_bgg_Δ_of_le le_rfl]
+      constructor
+      · rintro ⟨φ, ψ, hφ, rfl⟩
+        obtain rfl : φ = 0 := hφ.resolve_left (lt_irrefl i)
+        exact ⟨ψ, by simp [g, S]⟩
+      · rintro ⟨ψ, rfl⟩
+        exact ⟨0, ψ, Or.inr rfl, by simp [g, S]⟩
+    rw [this]
+    refine (g.antilipschitz_of_bound (K := K) fun ψ =>
+      (S.bound_of_antilipschitz hK ψ).trans ?_).isClosed_range g.uniformContinuous
+    gcongr
+    exact (norm_neg (S ψ)).symm.le.trans (norm_fst_le (g ψ))
+  · rw [D.bgg_Δ_of_gt hi, Submodule.bot_coe]
+    exact isClosed_singleton
+
+variable (𝕜) in
+/-- `Data.idShift` on `𝕜` (`Sⁱ = id`), as bounded data. -/
+def idShift : BoundedData 𝕜 (ComplexShape.up ℤ) (fun _ => 𝕜) (fun _ => 𝕜) where
+  toData := Data.idShift 𝕜
+  continuous_d _ _ := LinearMap.continuous_of_finiteDimensional _
+  continuous_dt _ _ := LinearMap.continuous_of_finiteDimensional _
+  continuous_S _ _ := LinearMap.continuous_of_finiteDimensional _
+
+variable (𝕜) in
+/-- **Non-vacuity of the analytic BGG theorem**: the derived Hilbert complexes of `idShift` (every
+`J`) have closed range, their cohomology finite-dimensional of dimension at most `2`. -/
+theorem idShift_derivedComplex_closedRangeAt (J i : ℤ) :
+    ((idShift 𝕜).derivedComplex (J < ·) (· < J)).ClosedRangeAt i ∧
+      Module.finrank 𝕜 (((idShift 𝕜).derivedComplex (J < ·) (· < J)).cohomology i) ≤ 2 := by
+  have hΔ : ∀ i, IsClosed ((idShift 𝕜).Δ (· < J) i : Set (𝕜 × 𝕜)) :=
+    fun i => Submodule.closed_of_finiteDimensional _
+  have h := (Data.injSurj_idShift 𝕜 J).eliminates
+  refine ⟨(idShift 𝕜).derivedComplex_closedRangeAt hΔ h i,
+    ((idShift 𝕜).finrank_derivedComplex_cohomology_le hΔ h i).trans ?_⟩
+  have h₁ : Module.finrank 𝕜 ((idShift 𝕜).rowTopComplex.cohomology i) ≤ 1 :=
+    (Submodule.finrank_quotient_le _).trans ((Submodule.finrank_le _).trans_eq
+      (Module.finrank_self 𝕜))
+  have h₂ : Module.finrank 𝕜 ((idShift 𝕜).rowBotComplex.cohomology i) ≤ 1 :=
+    (Submodule.finrank_quotient_le _).trans ((Submodule.finrank_le _).trans_eq
+      (Module.finrank_self 𝕜))
+  omega
 
 end BoundedData
 

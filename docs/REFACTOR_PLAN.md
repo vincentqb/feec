@@ -237,6 +237,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > `MirrorFEMApprox.Verdict`, `StandardCubeApprox.Verdict` and `EuclideanBand.EuclideanEBVerdict`
 > are.
 
+> **Status (2026-10-27): analytic BGG on `L²`, open item.** The Hessian, elasticity and div-div
+> verdicts (`Feec.Domain.BGGRealization`) assume only the regular decompositions after `J`
+> (`HilbertData.RegularDecomposition`) and finite-dimensional cohomology of the `L²` de Rham rows
+> `deRhamVec 1`, `deRhamVec 3`. Neither is discharged on any nonempty `Ω`: the cube regular
+> decomposition (`Feec.Models.Cube.WeakSymmetry.curlPotential`) is for `H̊(curl)` (minimal
+> complex, form proxies), `H(div)` has none, and `deRhamVec m` is not identified with `deRham 3`
+> (whose cube cohomology is known, `Feec.Models.Cube.DeRhamIdentFEM`).
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.
@@ -291,12 +299,13 @@ Feec/
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,
 │   │                                 -- ofComplex, ofComplexCrime (cochain defect), complex-level rates
 │   └── BGG/{Basic,Derived,DomainData,ToComplex,WeakSymmetry,Discrete}.lean -- Derived: BGG complex, any length
-│       BGG/Analytic.lean -- bounded BGG data: the derived complex as a closed Hilbert complex, closed range, dim H ≤ rows
+│       BGG/Analytic.lean -- bounded BGG data: the derived complex as a Hilbert complex; closed range, dim H ≤ rows
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
 │   Domain/{BGG,HessianBGG,ElasticityBGG,DivDivBGG}.lean -- BGG data of constant-coefficient operators;
 │                                 -- the Hessian, elasticity, div-div complexes as bgg 0, 1, 2 of stacked de Rham
 │   Domain/BGGRealization.lean -- their L² (maximal) realizations as HilbertData; the analytic BGG verdicts on Ω
+│                                 -- (only the regular decompositions after J assumed)
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3,CubicalForm}.lean
 ├── Geometry/{AlgebraicCurvature,Bivector,Hodge2,WeylDecomposition}.lean
 ├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)

@@ -25,12 +25,16 @@ domain complexes are.
 * `HilbertData.domainIncl_domainS`: `ι (S v) = S (ι v)`.
 * `HilbertData.domainBggHomologyIso`, `HilbertData.domainBgg_acyclic`.
 * `HilbertData.DerivedVerdict`, **`HilbertData.derivedVerdict`**: the analytic BGG theorem for
-  Hilbert complexes.
+  Hilbert complexes (closed exact part, elimination hypotheses).
+* `HilbertData.antilipschitz_domainS`: `S` bounded below is bounded below between the domains.
+* **`HilbertData.bggVerdict`**: the analytic BGG theorem for the BGG complex `bgg J`, from the
+  connecting maps up to `J` bounded below and the regular decompositions after `J`
+  (`HilbertData.RegularDecomposition`).
 
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
-  and linking maps)
+  and linking maps, Theorem 6), §2 (regular decompositions)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1.2 (domain complex)
 * [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
@@ -144,8 +148,8 @@ include hΔ h
 connecting maps, the derived complex of their domain complexes is a closed Hilbert complex with
 closed range and finite-dimensional cohomology, of dimension at most
 `dim Hⁱ(W) + dim Hⁱ(W̃)`, at every index where the two complexes have finite-dimensional
-cohomology (and the eliminations hold, with closed exact part). [ArnoldHu2021], §5;
-[CapHu2024] -/
+cohomology, provided the exact part is closed and the elimination hypotheses hold.
+[ArnoldHu2021], Theorem 6; [CapHu2024] -/
 theorem derivedVerdict : D.DerivedVerdict E F i := by
   have := (D.domainRowTopCohomologyEquiv i).symm.finiteDimensional
   have := (D.domainRowBotCohomologyEquiv i).symm.finiteDimensional
@@ -154,5 +158,64 @@ theorem derivedVerdict : D.DerivedVerdict E F i := by
   rw [← (D.domainRowTopCohomologyEquiv i).finrank_eq,
     ← (D.domainRowBotCohomologyEquiv i).finrank_eq]
   exact D.domainData.finrank_derivedComplex_cohomology_le hΔ h i
+
+omit hΔ h in
+/-- **`S` bounded below is bounded below between the domains**: `‖φ‖ ≤ K₁ ‖Sⁱφ‖` on `W̃ⁱ` and
+`‖ψ‖ ≤ K₂ ‖Sʲψ‖` on `W̃ʲ` give `‖φ‖ ≤ max K₁ K₂ ‖Sⁱφ‖` in the graph norms, since
+`d Sⁱ φ = -Sʲ d̃ φ`. -/
+theorem antilipschitz_domainS {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {K₁ K₂ : NNReal}
+    (h₁ : AntilipschitzWith K₁ (D.S i j)) (h₂ : AntilipschitzWith K₂ (D.S j k)) :
+    AntilipschitzWith (max K₁ K₂) (D.domainS i j) := by
+  obtain rfl := c.next_eq' hij
+  obtain rfl := c.next_eq' hjk
+  refine (D.domainS i _).antilipschitz_of_bound fun φ => ?_
+  have e : D.H.d (c.next i) (c.next (c.next i)) (D.H.domainCoord _ _ (D.domainS i _ φ)) =
+      -D.S (c.next i) _ (D.Ht.d i (c.next i) (D.Ht.domainCoord i _ φ)) :=
+    D.anticomm i _ _ (D.Ht.domainCoord i _ φ)
+  have hSφ := D.H.norm_sq_domainSpace (c.next i) (D.domainS i (c.next i) φ)
+  rw [e, norm_neg, domainIncl_domainS] at hSφ
+  have b₁ := ((D.S i _).bound_of_antilipschitz h₁ (D.Ht.domainIncl i φ)).trans
+    (mul_le_mul_of_nonneg_right (NNReal.coe_le_coe.2 (le_max_left K₁ K₂)) (norm_nonneg _))
+  have b₂ := ((D.S (c.next i) _).bound_of_antilipschitz h₂
+    (D.Ht.d i (c.next i) (D.Ht.domainCoord i _ φ))).trans
+    (mul_le_mul_of_nonneg_right (NNReal.coe_le_coe.2 (le_max_right K₁ K₂)) (norm_nonneg _))
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
+  rw [D.Ht.norm_sq_domainSpace i φ, mul_pow, hSφ, mul_add, ← mul_pow, ← mul_pow]
+  exact add_le_add (pow_le_pow_left₀ (norm_nonneg _) b₁ 2) (pow_le_pow_left₀ (norm_nonneg _) b₂ 2)
+
+end Feec.BGG.HilbertData
+
+/-! ### The BGG complex of two Hilbert complexes -/
+
+namespace Feec.BGG.HilbertData
+
+variable {𝕜 : Type*} [RCLike 𝕜] {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
+  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] [∀ i, NormedAddCommGroup (Wt i)]
+  [∀ i, InnerProductSpace 𝕜 (Wt i)] [∀ i, CompleteSpace (Wt i)]
+  (D : HilbertData 𝕜 (ComplexShape.up ℤ) W Wt)
+
+/-- **The regular decompositions after `J`**: `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` between the domains for
+`j > J`, the onto-modulo-`d` hypotheses of the BGG complex `bgg J` (`Data.eliminates_bgg`). For
+the `L²` de Rham complexes these are the regular decompositions of [ArnoldHu2021], §2,
+Theorem 3. -/
+def RegularDecomposition (J : ℤ) : Prop :=
+  ∀ j, J < j → LinearMap.range (D.domainData.d (j - 1) j) ⊔
+    LinearMap.range (D.domainData.S (j - 1) j) = ⊤
+
+/-- **Analytic BGG for the BGG complex of two Hilbert complexes**: if the connecting maps `Sⁱ`,
+`i ≤ J`, are bounded below and the regular decompositions after `J` hold, then wherever the two
+complexes have finite-dimensional cohomology the BGG complex `bgg J` of their domain complexes has
+closed range and finite-dimensional cohomology of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`. The
+exact part is closed and the other elimination hypotheses hold by `S` bounded below
+(`BoundedData.isClosed_bgg_Δ`, `antilipschitz_domainS`). [ArnoldHu2021], Theorem 6 -/
+theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
+    (htop : D.RegularDecomposition J) (i : ℤ) [FiniteDimensional 𝕜 (D.H.cohomology i)]
+    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i := by
+  have hS' : ∀ i < J, ∃ K, AntilipschitzWith K (D.domainData.S i (i + 1)) := fun i hi => by
+    obtain ⟨K₁, h₁⟩ := hS i hi.le
+    obtain ⟨K₂, h₂⟩ := hS (i + 1) (by omega)
+    exact ⟨_, D.antilipschitz_domainS rfl rfl h₁ h₂⟩
+  exact D.derivedVerdict (D.domainData.isClosed_bgg_Δ hS')
+    (Data.eliminates_bgg (fun i hi => (hS' i hi).choose_spec.injective) htop) i
 
 end Feec.BGG.HilbertData

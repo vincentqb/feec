@@ -34,8 +34,8 @@ the cohomology of the twisted de Rham complex (`elasticitySmoothComplexHomologyI
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.2 (the elasticity complex,
-  `J = 1`)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1, (32) (the elasticity
+  complex, `J = 1`)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §11 (the elasticity complex from two de Rham complexes)
 * [M. Eastwood, *A complex from linear elasticity*][Eastwood2000] (the elasticity complex from the
@@ -146,7 +146,7 @@ theorem elasticityS_anticomm (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ) → �
 
 variable (𝕜) in
 /-- **The BGG diagram of the elasticity complex**: the de Rham complex with values in `𝕜³` over
-itself, linked by `-mskw`, `T - tr`, `2 vskw`. [ArnoldHu2021], §4.2 -/
+itself, linked by `-mskw`, `T - tr`, `2 vskw`. [ArnoldHu2021], §4.1, (32) -/
 abbrev elasticityBGG : ConstCoeffBGG (Fin 3 → ℝ) 𝕜 where
   top := deRhamVec 𝕜 3
   bot := deRhamVec 𝕜 3
@@ -184,7 +184,7 @@ theorem elS2_mul_elN2 : elS2 * elN2 = (1 : Matrix (Fin 3) (Fin 3) 𝕜) := by
     simp [Matrix.mul_apply, elS2, elN2]
 
 /-- **The elasticity diagram satisfies the injectivity/surjectivity condition at `J = 1`**:
-`-mskw` is one-to-one, `T - tr` and `2 vskw` are onto. [ArnoldHu2021], (23), §4.2 -/
+`-mskw` is one-to-one, `T - tr` and `2 vskw` are onto. [ArnoldHu2021], (23), §4.1 -/
 theorem injSurj_elasticityBGG : (elasticityBGG 𝕜).smoothData.InjSurj 1 := by
   refine ⟨fun i hi => ?_, fun i hi => ?_⟩
   · rw [ConstCoeffBGG.smoothData_S]
@@ -352,10 +352,11 @@ def symSmoothMap : smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) →ₗ[�
 theorem symSmoothMap_surjective : Function.Surjective (symSmoothMap (𝕜 := 𝕜)) := fun s =>
   ⟨⟨s, s.2.1⟩, Subtype.ext s.2.2⟩
 
-/-- The kernel of `sym` is the range of `S⁰ = -mskw`. -/
+/-- The kernel of `sym` is the range of `-mskw` (`S⁰` of the elasticity diagram, `S¹` of the
+div-div diagram). -/
 theorem ker_symSmoothMap :
     LinearMap.ker (symSmoothMap (𝕜 := 𝕜)) =
-      LinearMap.range ((elasticityBGG 𝕜).smoothData.S (1 - 1) 1) := by
+      LinearMap.range (ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).smoothMap := by
   ext σ
   rw [LinearMap.mem_ker, LinearMap.mem_range]
   constructor
@@ -367,11 +368,12 @@ theorem ker_symSmoothMap :
     exact Subtype.ext (matMulField_symMat_elS0
       (Subtype.val (p := fun f => f ∈ smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3)) ψ))
 
-/-- `𝕜^{3×3} / skew ≃ Sym`, `[σ] ↦ sym σ`. -/
-def symQuotEquiv : (smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) ⧸
-      LinearMap.range ((elasticityBGG 𝕜).smoothData.S (1 - 1) 1)) ≃ₗ[𝕜]
-    smoothFieldsIn (Fin 3 → ℝ) (symMat 3 : _ → _ → 𝕜) :=
-  (Submodule.quotEquivOfEq _ _ ker_symSmoothMap.symm).trans
+/-- `𝕜^{3×3} / skew ≃ Sym`, `[σ] ↦ sym σ`, for any presentation `p` of the skew fields. -/
+def symQuotEquiv {p : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3))}
+    (hp : p = LinearMap.range (ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).smoothMap) :
+    (smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) ⧸ p) ≃ₗ[𝕜]
+      smoothFieldsIn (Fin 3 → ℝ) (symMat 3 : _ → _ → 𝕜) :=
+  (Submodule.quotEquivOfEq _ _ (hp.trans ker_symSmoothMap.symm)).trans
     (LinearMap.quotKerEquivOfSurjective _ symSmoothMap_surjective)
 
 /-- The kernel of `S² = 2 vskw` is the symmetric constraint. -/
@@ -429,7 +431,7 @@ def elasticityBGGEquiv : ∀ k : ℤ, ((elasticityBGG 𝕜).smoothData.bgg 1).X 
   | .ofNat 0 => ((elasticityBGG 𝕜).smoothData.bggXEquivOfLt (J := 1) (i := 0) one_pos).trans
       ((Submodule.quotEquivOfEqBot _ range_elasticityBGG_S_neg_one).trans smoothFieldsEquivIdMat)
   | .ofNat 1 => ((elasticityBGG 𝕜).smoothData.bggXEquivOfBijective
-      bijective_elasticityBGG_S_one).trans symQuotEquiv
+      bijective_elasticityBGG_S_one).trans (symQuotEquiv rfl)
   | .ofNat 2 => ((elasticityBGG 𝕜).smoothData.derivedXEquiv (1 < ·) (· < 1)
       (elasticityBGG_Δ_eq_bot (Or.inr one_lt_two))).trans
       (((elasticityBGG 𝕜).smoothData.bggΓEquivKer (J := 1) (i := 2) one_lt_two).trans
@@ -536,7 +538,7 @@ theorem elasticityBGGEquiv_comm (i : ℤ) :
 
 /-- **The BGG complex of the elasticity diagram is the elasticity complex**: `bgg 1` of
 `elasticityBGG` is isomorphic to the smooth elasticity complex `sym grad → inc → div` on symmetric
-fields of `Feec.Domain.Elasticity` (`elasticityOp`, `elasticityMat`). [ArnoldHu2021], §4.2 -/
+fields of `Feec.Domain.Elasticity` (`elasticityOp`, `elasticityMat`). [ArnoldHu2021], §4.1, (32) -/
 def elasticityBGGIso : (elasticityBGG 𝕜).smoothData.bgg 1 ≅ elasticitySmoothComplex 𝕜 :=
   HomologicalComplex.Hom.isoOfComponents (fun k => (elasticityBGGEquiv k).toModuleIso)
     fun i j hij => by

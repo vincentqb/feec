@@ -30,7 +30,7 @@ twisted de Rham complex (`divDivSmoothComplexHomologyIso`).
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.3 (the div-div complex,
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1, (32) (the div-div complex,
   `J = 2`)
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the div-div complex)
@@ -125,7 +125,7 @@ theorem divDivS_anticomm (k : ℤ) (f : vecIdx 1 k → (Fin 3 → ℝ) → 𝕜)
 
 variable (𝕜) in
 /-- **The BGG diagram of the div-div complex**: the de Rham complex with values in `𝕜³` over the
-scalar de Rham complex, linked by `ψ ↦ ψ I`, `-mskw`, `I`. [ArnoldHu2021], §4.3 -/
+scalar de Rham complex, linked by `ψ ↦ ψ I`, `-mskw`, `I`. [ArnoldHu2021], §4.1, (32) -/
 abbrev divDivBGG : ConstCoeffBGG (Fin 3 → ℝ) 𝕜 where
   top := deRhamVec 𝕜 3
   bot := deRhamVec 𝕜 1
@@ -163,7 +163,7 @@ theorem ddN2_mul_ddS2 : ddN2 * ddS2 = (1 : Matrix (Fin 1 × Fin 3) (Fin 1 × Fin
   fin_cases l <;> fin_cases l' <;> simp [Matrix.mul_apply, ddS2, ddN2]
 
 /-- **The div-div diagram satisfies the injectivity/surjectivity condition at `J = 2`**:
-`ψ ↦ ψ I` and `-mskw` are one-to-one, `I` is onto. [ArnoldHu2021], (23), §4.3 -/
+`ψ ↦ ψ I` and `-mskw` are one-to-one, `I` is onto. [ArnoldHu2021], (23), §4.1 -/
 theorem injSurj_divDivBGG : (divDivBGG 𝕜).smoothData.InjSurj 2 := by
   refine ⟨fun i hi => ?_, fun i hi => ?_⟩
   · rw [ConstCoeffBGG.smoothData_S]
@@ -287,35 +287,23 @@ def devQuotEquiv : (smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) ⧸
   (Submodule.quotEquivOfEq _ _ ker_devSmoothMap.symm).trans
     (LinearMap.quotKerEquivOfSurjective _ devSmoothMap_surjective)
 
-/-- The kernel of `sym` is the range of `S¹ = -mskw`. -/
-theorem ker_symSmoothMap_divDiv :
-    LinearMap.ker (symSmoothMap (𝕜 := 𝕜)) =
-      LinearMap.range ((divDivBGG 𝕜).smoothData.S (2 - 1) 2) := by
+/-- The range of `S¹ = -mskw` is that of `-mskw` on `𝕜³`-valued fields, the skew fields. -/
+theorem range_divDivBGG_S_one :
+    LinearMap.range ((divDivBGG 𝕜).smoothData.S (2 - 1) 2) =
+      LinearMap.range (ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).smoothMap := by
   ext σ
-  rw [LinearMap.mem_ker, LinearMap.mem_range]
   constructor
-  · intro h
-    have h' : matMulField (symMat 3) (σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) = 0 :=
-      congrArg Subtype.val h
-    refine ⟨⟨fun a => (ofMatrix elN0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
-      (σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) a.2,
-      fun a => (ofMatrix elN0).contDiff_apply σ.2 a.2⟩, Subtype.ext ?_⟩
+  · rintro ⟨ψ, rfl⟩
+    refine ⟨⟨fun l => (ψ.1 : Fin 1 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (0, l), fun l => ψ.2 (0, l)⟩,
+      Subtype.ext ?_⟩
+    change _ = (ofMatrix ddS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply _
+    rw [ofMatrix_ddS1_apply]
+    rfl
+  · rintro ⟨ψ, rfl⟩
+    refine ⟨⟨fun a => (ψ : Fin 3 → (Fin 3 → ℝ) → 𝕜) a.2, fun a => ψ.2 a.2⟩, Subtype.ext ?_⟩
     change (ofMatrix ddS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply _ = _
     rw [ofMatrix_ddS1_apply]
-    exact elS0_elN0_of_skew h'
-  · rintro ⟨ψ, rfl⟩
-    refine Subtype.ext ?_
-    change matMulField (symMat 3) ((ofMatrix ddS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
-      (Subtype.val (p := fun f => f ∈ smoothFields (Fin 3 → ℝ) 𝕜 (Fin 1 × Fin 3)) ψ)) = 0
-    rw [ofMatrix_ddS1_apply]
-    exact matMulField_symMat_elS0 _
-
-/-- `𝕜^{3×3} / skew ≃ Sym`, `[σ] ↦ sym σ`. -/
-def symQuotEquivDivDiv : (smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) ⧸
-      LinearMap.range ((divDivBGG 𝕜).smoothData.S (2 - 1) 2)) ≃ₗ[𝕜]
-    smoothFieldsIn (Fin 3 → ℝ) (symMat 3 : _ → _ → 𝕜) :=
-  (Submodule.quotEquivOfEq _ _ ker_symSmoothMap_divDiv.symm).trans
-    (LinearMap.quotKerEquivOfSurjective _ symSmoothMap_surjective)
+    rfl
 
 /-- The kernel of `S³ = 0` is all of `Ṽ³`, the scalars. -/
 def kerDD3Equiv : LinearMap.ker ((divDivBGG 𝕜).smoothData.S 3 (3 + 1)) ≃ₗ[𝕜]
@@ -344,7 +332,7 @@ def divDivBGGEquiv : ∀ k : ℤ, ((divDivBGG 𝕜).smoothData.bgg 2).X k ≃ₗ
   | .ofNat 1 => ((divDivBGG 𝕜).smoothData.bggXEquivOfLt (J := 2) (i := 1) one_lt_two).trans
       devQuotEquiv
   | .ofNat 2 => ((divDivBGG 𝕜).smoothData.bggXEquivOfBijective
-      bijective_divDivBGG_S_two).trans symQuotEquivDivDiv
+      bijective_divDivBGG_S_two).trans (symQuotEquiv range_divDivBGG_S_one)
   | .ofNat 3 => ((divDivBGG 𝕜).smoothData.derivedXEquiv (2 < ·) (· < 2)
       (divDivBGG_Δ_eq_bot (Or.inr (by norm_num)))).trans
       (((divDivBGG 𝕜).smoothData.bggΓEquivKer (J := 2) (i := 3) (by norm_num)).trans
@@ -486,7 +474,7 @@ theorem divDivBGGEquiv_comm (i : ℤ) :
 /-- **The BGG complex of the div-div diagram is the div-div complex**: `bgg 2` of `divDivBGG`
 is isomorphic to the smooth div-div complex `dev grad → sym curl → div div` on trace-free and
 symmetric fields of `Feec.Domain.DivDivComplex` (`divDivOp`, `divDivMat`).
-[ArnoldHu2021], §4.3 -/
+[ArnoldHu2021], §4.1, (32) -/
 def divDivBGGIso : (divDivBGG 𝕜).smoothData.bgg 2 ≅ divDivSmoothComplex 𝕜 :=
   HomologicalComplex.Hom.isoOfComponents (fun k => (divDivBGGEquiv k).toModuleIso)
     fun i j hij => by

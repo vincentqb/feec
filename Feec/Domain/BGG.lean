@@ -18,7 +18,8 @@ complex (`Data.bggHomologyIso`).
 The de Rham complex of `ℝ³` with values in `𝕜ᵐ` is `deRhamVec m`, in vector proxies
 `𝕜ᵐ --grad--> 𝕜^{m×3} --curl--> 𝕜^{m×3} --div--> 𝕜ᵐ` (row-wise operators); stacked de Rham
 diagrams of this kind give the Hessian, elasticity and div-div complexes
-(`Feec.Domain.HessianBGG`, `Feec.Domain.ElasticityBGG`, `Feec.Domain.DivDivBGG`). A pointwise-constrained complex of constant-coefficient operators
+(`Feec.Domain.HessianBGG`, `Feec.Domain.ElasticityBGG`, `Feec.Domain.DivDivBGG`). A
+pointwise-constrained complex of constant-coefficient operators
 (`Feec.Domain.ConstrainedComplex.ofMatrices`) has a smooth version
 (`ConstCoeffComplex.smoothComplex`), the target of the identifications.
 
@@ -158,7 +159,8 @@ def smoothFieldsEquivIdMat [DecidableEq ι] :
   right_inv _ := rfl
 
 /-- Scalar fields indexed by `Fin 1` are scalar fields indexed by `Unit`. -/
-def scalarFieldsEquiv : smoothFields E 𝕜 (Fin 1) ≃ₗ[𝕜] smoothFieldsIn E (idMat Unit : _ → _ → 𝕜) where
+def scalarFieldsEquiv :
+    smoothFields E 𝕜 (Fin 1) ≃ₗ[𝕜] smoothFieldsIn E (idMat Unit : _ → _ → 𝕜) where
   toFun f := ⟨fun _ => (f : Fin 1 → E → 𝕜) 0, fun _ => f.2 0, matMulField_idMat _⟩
   invFun g := ⟨fun _ => (g : Unit → E → 𝕜) (), fun _ => g.2.1 ()⟩
   map_add' _ _ := rfl

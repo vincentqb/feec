@@ -24,7 +24,8 @@ bottom spaces, `N(d̃) ∩ N(S) = 0`, and no `S` is used twice, then `T / Γ E` 
 The cohomology of the twisted complex comes from the rows through the long exact sequence of
 `0 → V → T → Ṽ → 0` (`Data.twistShortComplex_shortExact`); in particular the derived complex is
 exact when both rows are (`Data.derived_acyclic`). For bounded data on Hilbert spaces the derived
-complex is a closed Hilbert complex with closed range wherever the rows have finite-dimensional
+complex is a Hilbert complex of bounded operators; when moreover `Δ F` is closed and the
+elimination hypotheses hold, it has closed range wherever the rows have finite-dimensional
 cohomology (`Feec.HilbertComplex.BGG.Analytic`).
 
 On `ComplexShape.up ℤ`, eliminating the top spaces after `J` and the bottom spaces before `J`
@@ -59,7 +60,9 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
   the twisted complex**, any length, any shape, any ring.
 * `Data.finiteDimensional_derived_homology`, `Data.finrank_derived_homology_le`: over a field,
   `dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)` (through `Data.finrank_twistComplex_homology_le`).
-* `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021].
+* `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021];
+  `Data.eliminates_bgg`: its elimination hypotheses from `Sⁱ` one-to-one before `J` and onto
+  modulo `d` after `J`.
 * `Data.bggXEquivOfLt`, `Data.bggXEquivOfBijective`, `Data.bggΓEquivKer`: its spaces
   `Vⁱ / R(Sⁱ⁻¹)` before `J`, `Vᴶ / R(Sᴶ⁻¹)` at `J` (`Sᴶ` bijective) and `N(Sⁱ)` after `J`
   ([ArnoldHu2021], (24)–(26)).
@@ -405,7 +408,7 @@ theorem finiteDimensional_derived_homology : FiniteDimensional K ((D.derived E F
   have := D.finiteDimensional_twistComplex_homology i
   (D.derivedHomologyIso h i).toLinearEquiv.symm.finiteDimensional
 
-/-- **`dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], §5.2 -/
+/-- **`dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], Theorem 6 -/
 theorem finrank_derived_homology_le :
     finrank K ((D.derived E F).homology i) ≤
       finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) := by
@@ -445,17 +448,26 @@ abbrev bgg (J : ℤ) : CochainComplex (ModuleCat.{v} R) ℤ := D.derived (J < ·
 
 variable {D}
 
-theorem InjSurj.eliminates {J : ℤ} (h : D.InjSurj J) : D.Eliminates (J < ·) (· < J) where
+/-- **The elimination hypotheses of the BGG complex** reduce to the onto-modulo-`d` conditions
+after `J`, `R(dʲ⁻¹) + R(Sʲ⁻¹) = Vʲ` (regular decompositions, in the Sobolev setting), once the `Sⁱ`
+before `J` are one-to-one. -/
+theorem eliminates_bgg {J : ℤ} (hinj : ∀ i < J, Function.Injective (D.S i (i + 1)))
+    (htop : ∀ j, J < j → LinearMap.range (D.d (j - 1) j) ⊔ LinearMap.range (D.S (j - 1) j) = ⊤) :
+    D.Eliminates (J < ·) (· < J) where
   top j hj := by
     rw [CochainComplex.prev]
-    have := h.2 (j - 1) (by omega)
-    rw [sub_add_cancel] at this
-    rw [LinearMap.range_eq_top.2 this, sup_top_eq]
+    exact htop j hj
   bot i hi := by
-    rw [CochainComplex.next, LinearMap.ker_eq_bot.2 (h.1 i hi), inf_bot_eq]
+    rw [CochainComplex.next, LinearMap.ker_eq_bot.2 (hinj i hi), inf_bot_eq]
   disjoint i j hij hi hj := by
     change i + 1 = j at hij
     omega
+
+theorem InjSurj.eliminates {J : ℤ} (h : D.InjSurj J) : D.Eliminates (J < ·) (· < J) :=
+  eliminates_bgg h.1 fun j hj => by
+    have := h.2 (j - 1) (by omega)
+    rw [sub_add_cancel] at this
+    rw [LinearMap.range_eq_top.2 this, sup_top_eq]
 
 variable (D) in
 /-- Before `J`, nothing is eliminated from the top: `Γⁱ = Vⁱ × Ṽⁱ`. -/

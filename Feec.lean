@@ -215,7 +215,6 @@ public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.FullyDiscrete
 public import Feec.Instances.Maxwell
-public import Feec.Instances.MaxwellComplex
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal
 public import Feec.Mesh.Kuhn
@@ -337,7 +336,6 @@ public import Feec.Physics.LinearizedGravity.Gauge
 public import Feec.Physics.LinearizedGravity.PlaneWave
 public import Feec.Physics.Maxwell.Coefficients
 public import Feec.Physics.Maxwell.Constraints
-public import Feec.Physics.Maxwell.CubeFEM
 public import Feec.Physics.Maxwell.Forms
 public import Feec.Physics.Maxwell.Media
 public import Feec.Physics.Maxwell.Ohmic

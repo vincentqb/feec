@@ -160,8 +160,8 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > `Feec.Models.Cube.DeRhamIdent{Ext,Cutoff,Forms,Trunc,Poincare,FEM,Rate}`), and the Whitney
 > interpolation error (`Feec.FiniteElement.WhitneyInterpolation`,
 > `Feec.HilbertComplex.Approximation.GraphApprox`, `Feec.Models.Cube.{WhitneyApprox,WhitneyRate}`).
-> `Feec.Models.Cube.FiniteElementConvergence` and `Feec.Physics.Maxwell.CubeFEM` state the
-> results with no hypothesis. All are imported by `Feec.lean` and the full gate passes.
+> `Feec.Models.Cube.FiniteElementConvergence` and the Maxwell instances (now in
+> `Feec.Instances.Maxwell`) state the results with no hypothesis. All are imported by `Feec.lean` and the full gate passes.
 
 > **Status (2026-10-19): thesis-fem gated.** 19 new modules give the higher-order and the BGG
 > finite elements on the Freudenthal meshes of `(0, ½)³` and the Ch. 5–6 finite element claims:
@@ -299,7 +299,7 @@ Feec/
 │                   BallSymTSD,CubeStationary,ConstrainedEvolution,ClassicalRegularity}.lean
 ├── Examples/NonVacuity.lean          -- bddOp, rotGen, idComplex witnesses
 ├── Numerics/CrankNicolsonTable.lean  -- plane-wave check and the step-count table (descriptive names)
-└── Instances/{Maxwell,MaxwellComplex,EuclideanBand,EinsteinBianchi*}.lean  -- Feec.Instances: models as instances of approxFEEC;
+└── Instances/{Maxwell,EuclideanBand,EinsteinBianchi*}.lean  -- Feec.Instances: models as instances of approxFEEC;
                                       -- top layer, imported only by Feec.lean, adds no names to lower namespaces
 docs/THESIS_MAP.md  docs/migration/{old_theorems.tsv,map.tsv}  scripts/FeecCheck/*.lean (the gate, `lake exe feec-gate`)
 ```

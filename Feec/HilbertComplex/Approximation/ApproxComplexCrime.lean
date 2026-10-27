@@ -96,7 +96,7 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   approximants in the discrete graph norm; through `Family.rateData_of_split` and
   `add_rpow_le_rpow_min`), and `error_le_of_split`; `galerkinRateClass` for Galerkin cores;
   `ConstrainedFEEC.RateClass.toCrimeRate`: the conforming rate classes give rate classes of
-  `ofComplex` (factor `C + C_ι C' t`).
+  `ofComplex` (factor `C + C_ι C' t`, `ConstrainedFEEC.RateClass.norm_sub_ofComplex_le`).
 
 Non-vacuity, with a nonzero cochain defect and a non-cochain isometric reading map:
 `Feec.HilbertComplex.ApproxComplexCrime.shifted_nonvacuous`
@@ -104,8 +104,8 @@ Non-vacuity, with a nonzero cochain defect and a non-cochain isometric reading m
 `rateClass_of_split` (inner-product defect `O(h)`, cochain defect and graph-norm error `O(h²)`,
 rate class of order `1`): `Feec.HilbertComplex.ApproxComplexCrime.mixed_nonvacuous`. Instances: the
 scheme (6.5) of [QuennevilleBelair2015] with both boundary conditions
-(`Feec.Instances.EinsteinBianchiFEMComplex`) and the Whitney discretizations of Maxwell on the cube
-(`Feec.Instances.MaxwellComplex`).
+(`Feec.Instances.EinsteinBianchiFEMComplex`) and the Maxwell discretizations
+(`Feec.Instances.Maxwell.cubePMC_ofComplex`).
 
 ## References
 
@@ -1494,6 +1494,22 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
             change H.waveGroup.S t (waveExt H x) = _
             rw [waveExt_of_mem hx1])
         exact key ⟨_, waveGroup_mem_domain H hLx t⟩ w hw hle
+
+variable {F} in
+/-- **The rate of a constrained FEEC discretization through the discrete complex**: for data in a
+rate class `R` on `[0, T]`, the discrete solution of `ofComplex F.toComplex` from the modified
+elliptic projection `Rₕ (x, 𝐝 x)` of the datum (the comparison of `ofComplexCore`) satisfies
+`‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) hᵅ ‖x‖_class`, with the constants of
+`RateClass.toCrimeRate` (`error_le_of_rateClass`, `ofComplexCrimeCore_toCrime_p`). -/
+theorem RateClass.norm_sub_ofComplex_le {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W}
+    (hx : x ∈ R.Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖H.waveGroup.S t x - (ApproxFEEC.ofComplex F.toComplex).sol h
+        (((ApproxFEEC.ofComplexCore F.toComplex).cmp T).p x h 0) t‖ ≤
+      (R.toCrimeRate.C + F.toComplex.toCrime.toFamily.boundConst * R.toCrimeRate.C' * t) *
+        (R.meshSize h ^ R.α * R.classNorm x) := by
+  rw [← ApproxFEEC.ofComplexCrimeCore_toCrime_p F.toComplex T
+    (mem_domainSq.2 ⟨R.mem_domain x hx, R.mem_domain_sq x _ hx⟩) h le_rfl]
+  exact F.toComplex.toCrime.error_le_of_rateClass R.toCrimeRate hx h ht
 
 end ConstrainedFEEC
 

@@ -41,7 +41,8 @@ The regression tests `scripts/FeecCheck/Verdicts.lean` derive from the verdicts 
 longer conjunctions (with the semigroup and the wave group written out, convergence on the core,
 the departures with their residual limits), so the structured statement loses nothing;
 `scripts/FeecCheck/MaxwellInstances.lean` pins the verdicts of the concrete Maxwell
-discretizations (torus, cube, parallelepipeds, star-shaped domains).
+discretizations (torus, cube, parallelepipeds, star-shaped domains) and derives the per-instance
+rates of earlier versions from the FEEC theorem.
 
 Take a Hilbert complex `W` (any finite window of any `ComplexShape`, over `ℝ` or `ℂ`), its
 Hodge wave equation `ξ' = Lξ` with `L = d − d†`, and a closed constraint subspace `K`. A
@@ -112,12 +113,12 @@ The "Verdict" column says which branch of item 4 holds. Lean names are relative 
 
 | Model | Domain / BCs, discretization | Constraint | Verdict | Rate | Lean name |
 |---|---|---|---|---|---|
-| Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus`, `converges` |
+| Maxwell | `𝕋ᵈ`, spectral Galerkin | Gauss laws | converges to the constrained solution | none stated | M `torus`, `maxwellFEEC` |
 | Maxwell | `𝕋ᵈ`, spectral Galerkin | `E = 0`, `B = 0` (not reducing) | solutions and discrete limits leave `K` | — | M `torus_potential_residual_of_approxFEEC` |
 | Maxwell | `ℝᵈ`, frequencies `\|ξ\| ≤ N` | Gauss laws | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ` | B `maxwell_euclidean_band` |
-| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms and every admissible sequence `P_rΛ`/`P_r⁻Λ` | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits and sequences of order `s` | M `cubePMC_rate`, `cubePolyPMC_rate` (PEC alike), `cubePMC_ofComplex`, `cubePMC_ofComplex_rate` |
-| Maxwell | parallelepipeds, PMC / PEC, Whitney forms and every admissible sequence | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits | M `paraPMC_rate`, `paraPolyPMC_rate` (PEC alike) |
-| Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms and every admissible sequence | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits | M `starPMC_rate`, `starPolyPMC_rate` (PEC alike) |
+| Maxwell | cube `(0,½)ⁿ`, PMC / PEC, Whitney forms and every admissible sequence `P_rΛ`/`P_r⁻Λ` | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits and sequences of order `s` | M `cubePMC`, `cubePolyPMC` (PEC alike), `maxwellFEEC` with `ConformingFamily.feec_rated` (Jackson estimates `FEM.whitneyJackson`, `FEM.polyJackson`), `cubePMC_ofComplex` |
+| Maxwell | parallelepipeds, PMC / PEC, Whitney forms and every admissible sequence | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits | M `paraPMC`, `paraPolyPMC` (PEC alike), `maxwellFEEC` with `ConformingFamily.feec_rated` |
+| Maxwell | star-shaped w.r.t. a ball, PMC / PEC, Whitney forms and every admissible sequence | Gauss laws | converges to the constrained solution | `(1 + C_P)(1 + 2t) O(h)` for `C²` orbits; `O(h^{s+1})` for `C^{s+2}` orbits | M `starPMC`, `starPolyPMC` (PEC alike), `maxwellFEEC` with `ConformingFamily.feec_rated` |
 | linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_torus_approxFEEC`, `_sobolev` |
 | linearized Einstein–Bianchi | `ℝ³`, frequencies `\|ξ\| ≤ N` | TSD | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ`, exponent sharp | B `einsteinBianchi_euclidean_band` |
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |

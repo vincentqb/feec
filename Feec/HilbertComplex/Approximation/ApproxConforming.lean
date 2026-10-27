@@ -19,7 +19,8 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
   `ConstrainedFEEC.toCore` (data `D(L²)`, dense) is the core of the wave Ritz projection, and the
   conforming rate classes are its rate classes (`ConstrainedFEEC.RateClass.toApprox`, through the
   static estimates of the elliptic projection along the orbit; for degreewise regular data along
-  the trajectory, `ConstrainedFEEC.RateClass.ofDegreewise`). The discrete solutions are those of
+  the trajectory, `ConstrainedFEEC.RateClass.ofDegreewise`, and for the classes of a Jackson
+  estimate, `ConstrainedFEEC.RateClass.ofJackson`). The discrete solutions are those of
   (4.10) (`ConstrainedFEEC.toApprox_sol`, `ConstrainedFEEC.exists_eq_sol`), which gives the
   improved rate `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class` (`ConstrainedFEEC.rate_le`) and the rate
   `(1 + C_P)(1 + t)²` of `constrainedFEEC_rate` (`1 + 2t ≤ (1 + t)²`). **The constrained FEEC
@@ -654,6 +655,19 @@ theorem RateClass.zero_mem_ofDegreewise {F : ConstrainedFEEC H κ} {T : ℝ}
   refine ⟨H.wave.domainSq.zero_mem, fun s _ => ⟨⟨fun i => ?_, fun i => ?_⟩, le_rfl⟩⟩
   · rw [_root_.map_zero]; exact h0 _
   · rw [_root_.map_zero, e]; exact h0 _
+
+/-- **The rate class of a Jackson estimate** (`ConformingFamily.Jackson`) of the conforming
+family: `RateClass.ofDegreewise` for the `s`-regular forms with bound `L`, so the data are the
+`ξ₀ ∈ D(L²)` whose trajectory and that of `L ξ₀` stay `s`-regular with bound `L` on `[0, T]`, the
+constant is `(m + m²) Σᵢ B_{s,i}`, the order `hₕ^{ord s}` and the class norm `L`.
+[AFW2010], §3.4; [QuennevilleBelair2015], Thm 4.14 -/
+def RateClass.ofJackson {ρ : Type*} (J : F.Jackson ρ) (T : ℝ) (s : ρ) {L : ℝ} (hL : 0 ≤ L) :
+    F.RateClass T :=
+  RateClass.ofDegreewise F T (fun i => J.Reg s i L) (J.B s) (fun h => J.meshSize h ^ J.ord s) L
+    (fun h i x hx => by
+      obtain ⟨v, hv, h1, h2⟩ := J.jackson s h i x hL hx
+      exact ⟨v, hv, h1.trans_eq (by ring), fun j hxj => (h2 j hxj).trans_eq (by ring)⟩)
+    (J.B_nonneg s) hL fun h => Real.rpow_nonneg (J.meshSize_nonneg h) _
 
 open ShortHilbertComplex in
 /-- **Non-vacuity of the constrained FEEC theorem**: on `𝕜 --id--> 𝕜 → 0` with `Vₕ = W` and

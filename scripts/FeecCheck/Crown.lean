@@ -3,6 +3,8 @@ import Feec.HilbertComplex.Approximation.Ritz
 import Feec.HilbertComplex.Approximation.RitzResolvent
 import Feec.HilbertComplex.Approximation.ApproxConforming
 import Feec.HilbertComplex.Approximation.FullyDiscrete
+import Feec.HilbertComplex.Approximation.Crown
+import Feec.Models.Cube.HeatFEM
 import Feec.Models.Cube.InhomogeneousError
 import Feec.Models.Cube.SobolevRateHigh
 import Feec.Models.Cube.TangentialRate
@@ -87,6 +89,17 @@ boundary degrees of freedom, a weak solution against `V̊ₕ`) is not the orbit 
 its estimate is not a corollary of the fully discrete verdict: `cn_old` states the conclusion of
 `norm_cn_error_le` verbatim and derives it from the model theorem, which shares the trapezoidal
 engine.
+
+## The crown
+
+The fields of the FEEC theorem (`ConformingFamily.feec`, `ConformingFamily.Verdict`) and of its
+rated form (`ConformingFamily.feec_rated`) are the verdicts of the layer theorems: the examples
+of the section on the crown fields check, by `type_of%`, that the type of each field is, definitionally, the statement
+of the layer theorem it is read from (`staticFEEC`, `approxFEEC`, `constrainedFEEC`,
+`heatFEEC_verdict`, `dissipFEEC_fullyDiscrete` for the θ-schemes, Crank–Nicolson and every time
+scheme, `SkewFEEC.norm_S_sub_leapfrog_le`; `ConformingFamily.rate`, `ConstrainedFEEC.rate_le`,
+`ConstrainedFEEC.heat_rate`, `rate_smooth_iterates`). On the cube, the heat verdict of
+`Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of `FEM.polyFamily`.
 
 This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`) and fails that build if a conclusion is
@@ -2600,5 +2613,103 @@ theorem cn_old {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [Fin
   norm_cn_error_le hemb hD₀ hDD hA hΔt hU₁ hU₂ hU₃ hL₃ hweak hA1 hA2 hA3 hM hstep hg hu0
 
 end FullyDiscrete
+
+section CrownFields
+
+/-! ### The crown fields: every field of the crown is the layer verdict -/
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α]
+  {V : α → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
+  {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {κ : Type*} (F : ConformingFamily H κ) (a : α)
+  (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+  (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+
+example (hcr : ∀ i, H.ClosedRangeAt i) (j : α) [FiniteDimensional 𝕜 (H.harmonic j)] :
+    type_of% (F.staticFEEC hcr j) :=
+  F.feec.static hcr j
+
+example : type_of% (approxFEEC _ (F.windowFEEC a m K hK).toCore) := F.feec.wave a m K hK
+
+example : type_of% (constrainedFEEC (F.windowFEEC a m K hK)) := F.feec.constrained a m K hK
+
+example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
+    type_of% ((F.windowFEEC a m K hK).heatFEEC_verdict hcr) :=
+  F.feec.heat a m K hK hcr
+
+example (Θ : (F.windowFEEC a m K hK).toApprox.TimeScheme) :
+    type_of% (dissipFEEC_fullyDiscrete (F.windowFEEC a m K hK).toCore Θ) :=
+  (F.feec.full a m K hK).wave Θ
+
+example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)]
+    (Θ : (F.windowFEEC a m K hK).toHeat.TimeScheme) :
+    type_of% (dissipFEEC_fullyDiscrete ((F.windowFEEC a m K hK).heatCore hcr) Θ) :=
+  (F.feec.full a m K hK).heat hcr Θ
+
+/-- The θ-schemes (`θ ≥ 1/2`; implicit Euler at `θ = 1`) and Crank–Nicolson are time schemes of
+the wave and heat discretizations, so their fully discrete verdicts are fields of the crown. -/
+example (θ : ℝ) (hθ : 1 / 2 ≤ θ) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h)
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
+    ((F.windowFEEC a m K hK).toApprox.thetaScheme θ hθ τ hτ).Verdict
+        (F.windowFEEC a m K hK).toCore ∧
+      ((F.windowFEEC a m K hK).toApprox.crankNicolson τ hτ).Verdict
+        (F.windowFEEC a m K hK).toCore ∧
+      ((F.windowFEEC a m K hK).toHeat.thetaScheme θ hθ τ hτ).Verdict
+        ((F.windowFEEC a m K hK).heatCore hcr) ∧
+      ((F.windowFEEC a m K hK).toHeat.crankNicolson τ hτ).Verdict
+        ((F.windowFEEC a m K hK).heatCore hcr) :=
+  ⟨(F.feec.full a m K hK).wave _, (F.feec.full a m K hK).wave _,
+    (F.feec.full a m K hK).heat hcr _, (F.feec.full a m K hK).heat hcr _⟩
+
+example {T : ℝ} (R : (F.windowFEEC a m K hK).toApprox.RateClass T)
+    {x : PiLp 2 fun i : Fin m => V (a + i)} (hx : x ∈ R.Data) (h : κ)
+    (v : (F.windowFEEC a m K hK).toApprox.X h) {τ c : ℝ} (hτ : 0 ≤ τ)
+    (hc : τ * ‖(F.windowFEEC a m K hK).toApprox.L h‖ ≤ c) (hc1 : c < 1)
+    {w : ℕ → (F.windowFEEC a m K hK).toApprox.X h}
+    (hw : TimeStepping.IsLeapfrog ((F.windowFEEC a m K hK).toApprox.L h) τ w) (h0 : w 0 = v)
+    {n : ℕ} (hn : (n : ℝ) * τ ∈ Icc 0 T) :
+    type_of% ((F.windowFEEC a m K hK).toApprox.norm_S_sub_leapfrog_le R hx h v hτ hc hc1 hw h0
+      hn) :=
+  (F.feec.full a m K hK).leapfrog R hx h v hτ hc hc1 hw h0 hn
+
+variable {ρ : Type*} (J : F.Jackson ρ)
+
+example (s : ρ) {i j k : α} (hij : (ComplexShape.up α).Rel i j)
+    (hjk : (ComplexShape.up α).Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) :
+    type_of% (F.rate J s hij hjk hj hk) :=
+  (F.feec_rated J).rate_static s hij hjk hj hk
+
+example {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) {x : PiLp 2 fun i : Fin m => V (a + i)}
+    (hx : x ∈ (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+      hL).Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    type_of% ((F.windowFEEC a m K hK).rate_le
+      (ConstrainedFEEC.RateClass.ofJackson _ (J.window a m) T s hL) hx h ht) :=
+  (F.feec_rated J).rate_wave a m K hK s hL hx h ht
+
+example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] (s : ρ) :
+    type_of% ((F.windowFEEC a m K hK).heat_rate hcr
+      ((F.windowFEEC a m K hK).totalJackson (J.window a m)) s) :=
+  (F.feec_rated J).rate_heat a m K hK hcr s
+
+example : type_of% (constrainedFEEC_fullRate (F.windowFEEC a m K hK) (J.window a m)) :=
+  (F.feec_rated J).rate_full a m K hK
+
+end CrownFields
+
+section CrownCube
+
+open Feec.Models.Cube.FEM in
+/-- On the cube, the heat verdict of `crown_heat_nonvacuous` (a nonzero datum in its core) is the
+field `heat` of the crown of the finite element family of every admissible sequence, on the
+window `HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` with the trivial constraint. -/
+example (n : ℕ) [NeZero n] (S : FiniteElement.PolySeq) :
+    (heatFamily n S).toHeat.Verdict ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) :=
+  (polyFamily n S).feec.heat 0 (n + 1) ⊤ _ (closedRangeAt_heatWindow n)
+
+end CrownCube
 
 end FeecCheck.Crown

@@ -275,6 +275,7 @@ Feec/
 │   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
 │   │   Approximation/{Ritz,RitzResolvent}.lean -- Ritz projections → cores, rate classes (regularity scales)
 │   │   Approximation/HeatFEEC.lean -- the Hodge heat equation: toHeat, the heat Ritz projection, heatFEEC_verdict, heat_rate
+│   │   Approximation/Crown.lean -- the FEEC theorem feec (Verdict: static, wave, heat, fully discrete on every window) and feec_rated
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,

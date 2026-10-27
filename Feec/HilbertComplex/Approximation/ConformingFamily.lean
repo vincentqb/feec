@@ -36,7 +36,7 @@ parallelepipeds and domains star-shaped with respect to a ball) is one
   of the static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.rate`).
 * `Subcomplex.window`, `Subcomplex.CochainProjection.window`, `ConformingFamily.window`: the window
   `Vₕᵃ → ⋯ → Vₕ^{a+m-1}` of a family of a complex on `ComplexShape.up α` (`α = ℕ, ℤ`), a family of
-  the window `H.window a m`.
+  the window `H.window a m`; `ConformingFamily.Jackson.window`, the Jackson estimate of the window.
 
 ## Main results
 
@@ -196,6 +196,22 @@ def ConformingFamily.window (F : ConformingFamily H κ) (a : α) (m : ℕ) :
     obtain ⟨C, hC⟩ := F.bound_π
     exact ⟨C, fun h i x => hC h _ x⟩
   approx i w := F.approx (a + i) w
+
+/-- **The window of a Jackson estimate**: a Jackson estimate of `F`, read in the degrees
+`a, …, a + m - 1`, is a Jackson estimate of the window `F.window a m`, with the same mesh size,
+classes, orders and constants. -/
+def ConformingFamily.Jackson.window {F : ConformingFamily H κ} {ρ : Type*} (J : F.Jackson ρ)
+    (a : α) (m : ℕ) : (F.window a m).Jackson ρ where
+  meshSize := J.meshSize
+  meshSize_nonneg := J.meshSize_nonneg
+  tendsto_meshSize := J.tendsto_meshSize
+  Reg s i := J.Reg s (a + i)
+  ord := J.ord
+  B s i := J.B s (a + i)
+  B_nonneg s i := J.B_nonneg s (a + i)
+  jackson s h i _ x hL hx := by
+    obtain ⟨v, hv, h1, h2⟩ := J.jackson s h (a + i) x hL hx
+    exact ⟨v, hv, h1, fun j hxj => h2 (a + j) hxj⟩
 
 end Window
 

@@ -47,6 +47,8 @@ the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
 
 * `ConstrainedFEEC.toHeat`, `ConstrainedFEEC.heatRitz`, `ConstrainedFEEC.heatCore`;
 * **`ConstrainedFEEC.heatFEEC_verdict`**, **`ConstrainedFEEC.heat_rate`**;
+  `ConstrainedFEEC.totalJackson` (the Jackson estimate of the total family from one of the
+  family), `ConstrainedFEEC.jacksonHeatRateClass`;
 * `ConstrainedFEEC.ritzR_lift`, `ConstrainedFEEC.heatRitz_defect_eq`,
   `ConstrainedFEEC.heatGen_ritzR`, `ConstrainedFEEC.ritzDefect_lift`.
 
@@ -195,6 +197,41 @@ def totalFamily : ConformingFamily H.total κ where
   π := F.totalProjection
   bound_π := ⟨F.projConst, fun h _ x => F.norm_piProj_le h x⟩
   approx _ w := (tendsto_infDist_submodule_iff _ w).2 fun ε hε => F.dense w ε hε
+
+/-- **The total Jackson estimate**: a Jackson estimate of the family is one of the total family
+(`totalFamily`), for the forms of `D(𝐝)` whose components are `s`-regular with bound `L`, with the
+constant `(m + m²) Σᵢ B_{s,i}`, `m` the number of degrees (`Subcomplex.exists_mem_graphSub_le`). -/
+def totalJackson {ρ : Type*} (J : F.Jackson ρ) : F.totalFamily.Jackson ρ where
+  meshSize := J.meshSize
+  meshSize_nonneg := J.meshSize_nonneg
+  tendsto_meshSize := J.tendsto_meshSize
+  Reg s _ L x := x ∈ H.totalD.domain ∧ ∀ i, J.Reg s i L (x i)
+  ord := J.ord
+  B s _ := ((Fintype.card ι : ℝ) + (Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * ∑ i, J.B s i
+  B_nonneg s _ := mul_nonneg (by positivity) (Finset.sum_nonneg fun i _ => J.B_nonneg s i)
+  jackson s h _ L x hL hx := by
+    have hr : 0 ≤ L * J.meshSize h ^ J.ord s :=
+      mul_nonneg hL (Real.rpow_nonneg (J.meshSize_nonneg h) _)
+    obtain ⟨w, hw, hle⟩ := (F.V h).exists_mem_graphSub_le ⟨x, hx.1⟩
+      (ε := (∑ i, J.B s i) * (L * J.meshSize h ^ J.ord s)) fun i => by
+        obtain ⟨v, hv, h1, h2⟩ := J.jackson s h i (x i) hL (hx.2 i)
+        have hB : J.B s i * (L * J.meshSize h ^ J.ord s) ≤
+            (∑ i, J.B s i) * (L * J.meshSize h ^ J.ord s) :=
+          mul_le_mul_of_nonneg_right
+            (Finset.single_le_sum (fun i _ => J.B_nonneg s i) (Finset.mem_univ i)) hr
+        exact ⟨v, hv, h1.trans hB, fun j hxj => (h2 j hxj).trans hB⟩
+    obtain ⟨y, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq w
+    rw [← LinearPMap.toGraphSpace_sub, ← mul_assoc] at hle
+    have hsq := _root_.Feec.HodgeWave.norm_sq_graphSpace (H.totalD.toGraphSpace (⟨x, hx.1⟩ - y))
+    rw [graphFst_toGraphSpace, graphSnd_toGraphSpace] at hsq
+    have hN := norm_nonneg (H.totalD.toGraphSpace (⟨x, hx.1⟩ - y))
+    refine ⟨y, hw, ?_, fun _ _ => ?_⟩
+    · change ‖((⟨x, hx.1⟩ - y : H.totalD.domain) : PiLp 2 W)‖ ≤ _
+      nlinarith [norm_nonneg ((⟨x, hx.1⟩ - y : H.totalD.domain) : PiLp 2 W),
+        norm_nonneg (H.totalD (⟨x, hx.1⟩ - y))]
+    · change ‖H.totalD (⟨x, hx.1⟩ - y)‖ ≤ _
+      nlinarith [norm_nonneg ((⟨x, hx.1⟩ - y : H.totalD.domain) : PiLp 2 W),
+        norm_nonneg (H.totalD (⟨x, hx.1⟩ - y))]
 
 /-! ### The discrete heat equation -/
 
@@ -688,6 +725,14 @@ theorem heat_rate {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
   obtain ⟨K, hK0, hK⟩ := F.exists_staticError_le hcr J s
   exact ⟨K, hK0, fun {_} hL {_ _} hx hreg h _ ht =>
     F.heat_rate_of_static hcr hK0 hK hL hx hreg h ht⟩
+
+/-- **The heat rate class of a Jackson estimate** `J` of the total family: `heatRateClass` with
+the constant `K` of the static rate (`exists_staticError_le`), approximation constant `2K` and
+consistency constant `3K`. -/
+def jacksonHeatRateClass {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) {L : ℝ} (hL : 0 ≤ L)
+    (T : ℝ) : F.toHeat.RateClass T :=
+  F.heatRateClass hcr (F.exists_staticError_le hcr J s).choose_spec.1
+    (F.exists_staticError_le hcr J s).choose_spec.2 hL T
 
 end Heat
 

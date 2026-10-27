@@ -5,6 +5,17 @@ wave equations, following the thesis *A New Approach to Finite Element Simulatio
 Relativity* (Quenneville-Bélair, 2015). There is no `sorry`, `admit` or `axiom`, and every
 theorem depends only on `propext`, `Classical.choice` and `Quot.sound`.
 
+## The FEEC theorem
+
+`Feec.HilbertComplex.ConformingFamily.feec : F.Verdict` (`Approximation/Crown.lean`) collects the
+approximation theory in one statement, for every conforming family `F` of a Hilbert complex on
+`ℕ` or `ℤ`: the static FEEC theorem in every degree (Arnold–Falk–Winther 2010, Thms 3.4–3.9), and
+on every window with every closed constraint the semidiscrete wave and heat FEEC theorems and
+the fully discrete ones for every time scheme (θ-schemes, Crank–Nicolson) and for leapfrog under
+the CFL condition. Each field is the verdict of the layer theorem below.
+`Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` (and `O(hᵒʳᵈ + τᵖ)`)
+of a Jackson estimate; `docs/crown.pdf` renders the module.
+
 ## The approximating FEEC theorem
 
 The master theorem is a tower of three, each a structure of named conclusions extending the one

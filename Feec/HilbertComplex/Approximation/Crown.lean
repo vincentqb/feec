@@ -1,0 +1,348 @@
+-- leantex: show = prose
+module
+
+public import Feec.HilbertComplex.Approximation.FullyDiscrete
+public import Feec.HilbertComplex.Approximation.HeatFEEC
+
+/-!
+# The FEEC theorem
+
+One theorem collects the approximation theory of the library: static and time-dependent,
+semidiscrete and fully discrete, for every conforming family of every Hilbert complex.
+
+**The FEEC theorem** (`ConformingFamily.feec`, statement `ConformingFamily.Verdict`). Let `H` be a
+Hilbert complex over `𝕜 = ℝ` or `ℂ` on `ℕ` or `ℤ` (the de Rham complex `HΛ(Ω)`, its versions
+with boundary conditions, an elasticity or Hessian complex, …) and let `Vₕ` be a conforming family
+of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting cochain projections
+`πₕ` bounded in `L²` uniformly in `h` and the approximation property `dist(w, Vₕ) → 0`
+([AFW2010], §3.3, §5.5; [AFW2006]; [HolstStern2012], §3). Then:
+
+1. (**static**, `static`) if `H` has closed range and `ℌʲ` is finite-dimensional, the discrete
+   Poincaré inequality holds uniformly in `h`, the discrete mixed Hodge Laplacian is uniformly
+   well-posed, the harmonic gap tends to `0`, `πₕ` eventually induces isomorphisms
+   `Hʲ(H) ≅ Hʲ(Vₕ)`, the mixed method is quasi-optimal and converges ([AFW2010], Thms 3.4, 3.5,
+   3.6, 3.8, 3.9);
+2. (**wave**, `wave`, `constrained`) on every window `Wᵃ → ⋯ → W^{a+m-1}` and for every closed
+   constraint `K`, the semidiscrete Hodge wave equation `ξₕ' = Lₕ ξₕ` is well-posed, conserves
+   energy, converges uniformly on bounded time intervals for every convergent family of initial
+   values, at the rate `(1 + C_P)(1 + t)² C hᵅ ‖ξ₀‖` on every rate class; `K` propagates iff it
+   reduces `L`, the constraint residual then tends to `0`, and otherwise some datum leaves `K`
+   with a positive residual in the limit ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14,
+   Prop. 4.17); these are the conclusions of the skew-adjoint and dissipative FEEC theorems for
+   the wave operator ([HolstStern2012], Thms 3.9, 3.10 for the elliptic analogues);
+3. (**heat**, `heat`) on every window with closed range and finite-dimensional harmonic forms, the
+   semidiscrete Hodge heat equation `uₕ' = -Δₕ uₕ` is well-posed, dissipates energy and converges
+   for every datum, with the heat Ritz projection `Rₕ = Gₕ Qₕ Δ + P_ℌₕ Qₕ` built from the static
+   mixed method ([AFW2010], Thm 3.9; [Wheeler1973]; [GilletteHolstZhu2017]);
+4. (**fully discrete**, `full`) for every time scheme, power bounded and consistent of order `p`
+   uniformly in `h` (the θ-schemes `θ ≥ ½`, implicit Euler and Crank–Nicolson are ones,
+   `DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`), the iterates of the wave and heat
+   discretizations are stable and converge as `h, τ → 0` at the spatial rate plus the temporal
+   error `O(τᵖ)` ([BrennerThomee1979]; [Thomee2006], Ch. 7–9); the explicit leapfrog scheme for
+   the wave equation does so under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
+
+**With a Jackson estimate** (`ConformingFamily.feec_rated`, statement
+`ConformingFamily.Verdict.Rated`: classes `Reg s` approximated in `Vₕ` at the order `hᵒʳᵈ⁽ˢ⁾` in the
+graph norm, [AFW2010], §3.4; [Arnold2018], Ch. 7) all errors are `O(hᵒʳᵈ⁽ˢ⁾)` for regular data:
+the mixed method (`rate_static`, [AFW2010], Thm 3.9), the semidiscrete wave equation
+(`rate_wave`, `(1 + C_P)(1 + 2t) C L hᵒʳᵈ⁽ˢ⁾`, [QuennevilleBelair2015], Thm 4.14), the heat equation
+(`rate_heat`, `(2 + 3t) K L hᵒʳᵈ⁽ˢ⁾` with `K` the constant of the static rate), and the fully
+discrete schemes (`rate_full`, `O(hᵒʳᵈ⁽ˢ⁾ + τᵖ)` along smooth comparisons for schemes consistent
+along trajectories).
+
+The crown is assembled from the layer theorems: `ConformingFamily.staticFEEC`, `approxFEEC` and
+`constrainedFEEC` for the conforming windows (`ConstrainedFEEC.toApprox` with the core of the wave
+Ritz projection), `ConstrainedFEEC.heatFEEC_verdict`, and `dissipFEEC_fullyDiscrete` with
+`SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`); each field is the layer
+verdict itself. Every finite element family with bounded smoothed projections is a conforming
+family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
+`P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains), so the crown holds for each.
+
+**Outside the crown.**
+
+* The analytic part of the static BGG theory: discrete BGG complexes (`BGG.Discrete`) are
+  algebraic; they are not yet subcomplexes with bounded cochain projections of a Hilbert complex,
+  so the static theorem does not reach elasticity or Hessian discretizations built by BGG.
+* The improved `L²` rate is conditional on rates of the elliptic quantities `η`, `δ`, `μ`
+  (`ConformingFamily.rate_static_L2`, [AFW2010], Thm 3.11).
+* Impedance (absorbing) boundary conditions: their discretizations are dissipative FEEC
+  discretizations with their own Ritz projections, not conforming windows, and carry no rate.
+* Perturbations: dissipative bounded perturbations `A + B` are m-dissipative
+  (`Feec.Semigroup.DissipativePerturbation`), but damped, Ohmic and forced (Duhamel) problems have
+  no conforming verdict in the crown.
+* No-slip Stokes and conforming elastodynamics (no conforming family of their complexes).
+* General A-stable rational schemes `r(τ Lₕ)` and Runge–Kutta methods: only the θ-schemes,
+  Crank–Nicolson and leapfrog are built; the CFL condition of leapfrog is a hypothesis (no global
+  inverse estimate `‖Lₕ‖ ≲ h⁻¹`).
+* The uniform temporal bound of `rate_full` holds along a smooth comparison of order `p + 1`
+  (`DissipFEEC.Comparison.Smooth`, supplied by `DissipFEEC.Ritz.smooth` from a bound of the lifted
+  orbit); the bound of the lifted wave and heat orbits is not packaged here.
+
+## Main definitions
+
+* `ConformingFamily.windowFEEC`: the conforming window with a constraint.
+* `ConstrainedFEEC.FullVerdict`, `ConstrainedFEEC.FullRate`; `ConstrainedFEEC.jacksonWaveRateClass`.
+* `ConformingFamily.Verdict`, `ConformingFamily.Verdict.Rated`.
+
+## Main results
+
+* **`ConformingFamily.feec`**, **`ConformingFamily.feec_rated`**;
+  `constrainedFEEC_fullyDiscrete`, `constrainedFEEC_fullRate`.
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3–§3.5, §5.5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5, Ch. 7, Ch. 8
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
+  §3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §4.4, §4.6, §4.10, Ch. 7
+* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
+* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
+
+Bibliography: [references.bib](../../../docs/references.bib)
+-/
+
+open Set Filter Topology Metric NormedSpace
+
+@[expose] public noncomputable section
+
+namespace Feec.HilbertComplex
+
+/-! ### The fully discrete verdict of a constrained FEEC discretization -/
+
+section Full
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] {H : HilbertComplex 𝕜 c W}
+  {κ : Type*}
+
+/-- **The fully discrete verdict** of a constrained FEEC discretization `G`: the fully discrete
+FEEC theorem (`dissipFEEC_fullyDiscrete`) for every time scheme of the wave discretization (with
+the core of the wave Ritz projection) and of the heat discretization (with the heat core), and
+the error of explicit leapfrog for the wave discretization under the CFL condition. -/
+structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
+  /-- the fully discrete wave equation, for every time scheme -/
+  wave (Θ : G.toApprox.TimeScheme) : Θ.Verdict G.toCore
+  /-- the fully discrete heat equation, for every time scheme -/
+  heat (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)]
+    (Θ : G.toHeat.TimeScheme) : Θ.Verdict (G.heatCore hcr)
+  /-- explicit leapfrog for the wave equation under the CFL condition `τ ‖Lₕ‖ ≤ c < 1`: the
+  semidiscrete rate plus the error of the first step and a second-order temporal error -/
+  leapfrog {T : ℝ} (R : G.toApprox.RateClass T) {x : PiLp 2 W} (hx : x ∈ R.Data) (h : κ)
+    (v : G.toApprox.X h) {τ c : ℝ} (hτ : 0 ≤ τ) (hc : τ * ‖G.toApprox.L h‖ ≤ c) (hc1 : c < 1)
+    {w : ℕ → G.toApprox.X h} (hw : TimeStepping.IsLeapfrog (G.toApprox.L h) τ w) (h0 : w 0 = v)
+    {n : ℕ} (hn : (n : ℝ) * τ ∈ Icc 0 T) :
+    ‖G.toApprox.S (n * τ) x - G.toApprox.incl h (w n)‖ ≤
+      (R.C + ‖G.toApprox.incl h‖ * R.C' * (n * τ)) * (R.meshSize h ^ R.α * R.classNorm x) +
+        ‖G.toApprox.incl h‖ * ‖R.p x h 0 - v‖ +
+        ‖G.toApprox.incl h‖ * (√(1 + c) * ‖w 1 - exp ((τ : 𝕜) • G.toApprox.L h) v‖ / √(1 - c) +
+          n * τ * τ ^ 2 * ‖(G.toApprox.L h ^ 3) v‖ / (3 * (1 - c)))
+
+/-- **The fully discrete FEEC theorem for a constrained FEEC discretization**: wave and heat, every
+time scheme, and leapfrog under the CFL condition. -/
+theorem constrainedFEEC_fullyDiscrete (G : ConstrainedFEEC H κ) : G.FullVerdict :=
+  ⟨fun Θ => dissipFEEC_fullyDiscrete G.toCore Θ,
+    fun hcr _ Θ => dissipFEEC_fullyDiscrete (G.heatCore hcr) Θ,
+    G.toApprox.norm_S_sub_leapfrog_le⟩
+
+variable {ρ : Type*}
+
+/-- **The wave rate class of a Jackson estimate**: the rate class of the wave Ritz projection
+(`ConstrainedFEEC.RateClass.toApprox`) on the data of `ConstrainedFEEC.RateClass.ofJackson`. -/
+abbrev ConstrainedFEEC.jacksonWaveRateClass (G : ConstrainedFEEC H κ) (J : G.Jackson ρ) (T : ℝ)
+    (s : ρ) {L : ℝ} (hL : 0 ≤ L) : G.toApprox.RateClass T :=
+  (ConstrainedFEEC.RateClass.ofJackson G J T s hL).toApprox
+
+/-- **The fully discrete rates of a Jackson estimate** `J` of a constrained FEEC discretization
+`G`: for every time scheme consistent of order `p` along trajectories and every smooth
+comparison of order `p + 1` of the wave rate class (`jacksonWaveRateClass`) or of the heat rate
+class (`ConstrainedFEEC.jacksonHeatRateClass` of the total Jackson estimate), the fully discrete
+error is the spatial rate plus `O(τₕᵖ)`, uniformly in `h`. -/
+structure ConstrainedFEEC.FullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ) : Prop where
+  /-- the fully discrete wave equation -/
+  wave {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) (Θ : G.toApprox.TimeScheme) {K : ℝ}
+    (hΘ : Θ.IsTrajConsistent K)
+    (Sm : (G.jacksonWaveRateClass J T s hL).toComparison.Smooth (Θ.p + 1)) {x : PiLp 2 W}
+    (hx : x ∈ (G.jacksonWaveRateClass J T s hL).Data) (hxs : x ∈ Sm.Data) (h : κ)
+    (v : G.toApprox.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
+    ‖G.toApprox.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      (G.jacksonWaveRateClass J T s hL).C * (G.jacksonWaveRateClass J T s hL).meshSize h ^
+          (G.jacksonWaveRateClass J T s hL).α * (G.jacksonWaveRateClass J T s hL).classNorm x +
+        ‖G.toApprox.incl h‖ * Θ.M T * (‖(G.jacksonWaveRateClass J T s hL).p x h 0 - v‖ +
+          n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x + (G.jacksonWaveRateClass J T s hL).C' *
+            (G.jacksonWaveRateClass J T s hL).meshSize h ^ (G.jacksonWaveRateClass J T s hL).α *
+              (G.jacksonWaveRateClass J T s hL).classNorm x))
+  /-- the fully discrete heat equation -/
+  heat (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] {T : ℝ} (s : ρ)
+    {L : ℝ} (hL : 0 ≤ L) (Θ : G.toHeat.TimeScheme) {K : ℝ} (hΘ : Θ.IsTrajConsistent K)
+    (Sm : (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).toComparison.Smooth (Θ.p + 1))
+    {x : PiLp 2 W} (hx : x ∈ (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).Data)
+    (hxs : x ∈ Sm.Data) (h : κ) (v : G.toHeat.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
+    ‖G.toHeat.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C *
+          (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
+            (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
+          (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x +
+        ‖G.toHeat.incl h‖ * Θ.M T *
+          (‖(G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).p x h 0 - v‖ +
+            n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x +
+              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C' *
+                (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
+                  (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
+                (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x))
+
+/-- **The fully discrete rates of a Jackson estimate** (`ConstrainedFEEC.FullRate`), the field
+`rate_smooth_iterates` of the fully discrete verdicts at the Jackson rate classes. -/
+theorem constrainedFEEC_fullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ) : G.FullRate J :=
+  ⟨fun _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
+      ((constrainedFEEC_fullyDiscrete G).wave Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn,
+    fun hcr _ _ _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
+      ((constrainedFEEC_fullyDiscrete G).heat hcr Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn⟩
+
+end Full
+
+/-! ### The crown -/
+
+section Crown
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α]
+  {V : α → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
+  {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {κ : Type*}
+
+namespace ConformingFamily
+
+/-- **The conforming window with a constraint**: the window `Vₕᵃ → ⋯ → Vₕ^{a+m-1}` of `F`
+(`ConformingFamily.window`) with the closed constraint `K`, a constrained FEEC discretization of
+the window `H.window a m`. -/
+abbrev windowFEEC (F : ConformingFamily H κ) (a : α) (m : ℕ)
+    (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    ConstrainedFEEC (H.window a m) κ :=
+  (F.window a m).withConstraint K hK
+
+/-- **The conclusions of the FEEC theorem** (`feec`) for a conforming family `F`: the static FEEC
+theorem in every degree, and on every window with every closed constraint the semidiscrete wave
+and heat FEEC theorems and the fully discrete ones. -/
+structure Verdict (F : ConformingFamily H κ) : Prop where
+  /-- the static FEEC theorem in every degree with finite-dimensional harmonic forms
+  ([AFW2010], Thms 3.4–3.9) -/
+  static (hcr : ∀ i, H.ClosedRangeAt i) (j : α) [FiniteDimensional 𝕜 (H.harmonic j)] :
+    F.StaticVerdict j
+  /-- the approximating FEEC theorem for the wave equation on every window with every closed
+  constraint, hence the skew-adjoint and dissipative ones -/
+  wave (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).toApprox.Verdict (F.windowFEEC a m K hK).toCore
+  /-- the constrained FEEC theorem on every window with every closed constraint
+  ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17) -/
+  constrained (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).Verdict
+  /-- the heat FEEC theorem on every window with closed range and finite-dimensional harmonic
+  forms, with every closed constraint -/
+  heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
+    (F.windowFEEC a m K hK).toHeat.Verdict ((F.windowFEEC a m K hK).heatCore hcr)
+  /-- the fully discrete wave and heat FEEC theorems on every window with every closed
+  constraint, for every time scheme, and leapfrog under the CFL condition -/
+  full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).FullVerdict
+
+/-- **The FEEC theorem.** For every conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
+the static FEEC theorem in every degree (closed range, finite-dimensional harmonic forms), and on
+every window with every closed constraint the semidiscrete wave FEEC theorem (approximating and
+constrained), the heat FEEC theorem (closed range and finite-dimensional harmonic forms of the
+window), and the fully discrete theorems for every time scheme and for leapfrog under the CFL
+condition. [AFW2010], Thms 3.4–3.9; [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17;
+[BrennerThomee1979] -/
+theorem feec (F : ConformingFamily H κ) : F.Verdict :=
+  ⟨fun hcr j _ => F.staticFEEC hcr j,
+    fun a m K hK => approxFEEC _ (F.windowFEEC a m K hK).toCore,
+    fun a m K hK => constrainedFEEC (F.windowFEEC a m K hK),
+    fun a m K hK hcr _ => (F.windowFEEC a m K hK).heatFEEC_verdict hcr,
+    fun a m K hK => constrainedFEEC_fullyDiscrete (F.windowFEEC a m K hK)⟩
+
+variable {ρ : Type*}
+
+/-- **The rated conclusions of the FEEC theorem** (`feec_rated`) for a conforming family `F` with
+a Jackson estimate `J`: those of the FEEC theorem, and the rates `hᵒʳᵈ⁽ˢ⁾` of the mixed method, of the
+semidiscrete wave and heat equations and of the fully discrete schemes for `s`-regular data. -/
+structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
+    extends F.Verdict where
+  /-- the rate of the mixed method, with closed range in the degrees of the problem
+  ([AFW2010], Thm 3.9) -/
+  rate_static (s : ρ) {i j k : α} (hij : (ComplexShape.up α).Rel i j)
+    (hjk : (ComplexShape.up α).Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) :
+    ∃ K : ℝ, ∀ {f : V j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
+    H.IsMixedSolution i j k f σ u p → ∀ {L : ℝ}, 0 ≤ L →
+    J.Reg s i L (H.domainIncl i σ) → J.Reg s j L (H.domainIncl j u) →
+    J.Reg s j L (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))) →
+    J.Reg s j L (p : V j) → ∀ h : κ,
+    (F.V h).mixedError hij hjk f σ u p ≤ K * L * J.meshSize h ^ J.ord s
+  /-- the rate `(1 + C_P)(1 + 2t) C L hᵒʳᵈ⁽ˢ⁾` of the semidiscrete wave equation on every window
+  ([QuennevilleBelair2015], Thm 4.14) -/
+  rate_wave (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) {T : ℝ} (s : ρ) {L : ℝ}
+    (hL : 0 ≤ L) {x : PiLp 2 fun i : Fin m => V (a + i)}
+    (hx : x ∈ (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+      hL).Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖(H.window a m).waveGroup.S t x - (H.window a m).totalD.graphFst
+        ((F.windowFEEC a m K hK).discrete h (waveLift (H.window a m)
+          ⟨x, (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+            hL).mem_domain x hx⟩) t)‖ ≤
+      (1 + ellipticConst (H.window a m)) * (1 + 2 * t) *
+        ((ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s hL).C *
+          (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+            hL).meshSize h ^
+            (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s hL).α *
+          (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+            hL).classNorm x)
+  /-- the rate `(2 + 3t) K L hᵒʳᵈ⁽ˢ⁾` of the semidiscrete heat equation on every window, `K` the
+  constant of the static rate ([AFW2010], Thm 3.9 along the heat flow) -/
+  rate_heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] (s : ρ) :
+    ∃ C, 0 ≤ C ∧ ∀ {L : ℝ}, 0 ≤ L →
+    ∀ {T : ℝ} {x : PiLp 2 fun i : Fin m => V (a + i)},
+      x ∈ (-(H.window a m).hodgeLaplacian).sqDomain →
+      (∀ t ∈ Icc 0 T, (F.windowFEEC a m K hK).toHeat.S t x ∈
+        (F.windowFEEC a m K hK).heatReg hcr ((F.windowFEEC a m K hK).totalJackson (J.window a m))
+          s L) → ∀ (h : κ), ∀ t ∈ Icc 0 T,
+    ‖(F.windowFEEC a m K hK).toHeat.S t x - (F.windowFEEC a m K hK).toHeat.sol h
+        ((F.windowFEEC a m K hK).ritzR h (x, DissipFEEC.genExt (-(H.window a m).hodgeLaplacian) x))
+          t‖ ≤
+      (2 + 3 * t) * C * L * J.meshSize h ^ J.ord s
+  /-- the fully discrete rates on every window: the spatial rate plus `O(τᵖ)` -/
+  rate_full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).FullRate (J.window a m)
+
+/-- **The FEEC theorem with rates.** For every conforming family `F` of a Hilbert complex on `ℕ`
+or `ℤ` with a Jackson estimate `J`: the FEEC theorem (`feec`), and for `s`-regular data with
+bound `L` the errors of the mixed method, of the semidiscrete wave and heat equations on every
+window and of the fully discrete schemes are `O(L hᵒʳᵈ⁽ˢ⁾)`, plus `O(τᵖ)` for the fully discrete
+ones. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979] -/
+theorem feec_rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Verdict.Rated F J :=
+  ⟨F.feec, fun s _ _ _ hij hjk hj hk => F.rate J s hij hjk hj hk,
+    fun a m K hK _ s _ hL _ hx h _ ht => (F.windowFEEC a m K hK).rate_le
+      (ConstrainedFEEC.RateClass.ofJackson _ (J.window a m) _ s hL) hx h ht,
+    fun a m K hK hcr _ s => (F.windowFEEC a m K hK).heat_rate hcr _ s,
+    fun a m K hK => constrainedFEEC_fullRate (F.windowFEEC a m K hK) (J.window a m)⟩
+
+end ConformingFamily
+
+end Crown
+
+end Feec.HilbertComplex

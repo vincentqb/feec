@@ -32,9 +32,11 @@ all data; when `Δ F` is closed it is isomorphic, as a complex, to `derived E F`
 For the BGG complexes `Data.bgg J` of [ArnoldHu2021] this is the analytic part of their §5 (and of
 [CapHu2024] for Sobolev rows): closed range and finite-dimensional cohomology pass from the input
 rows to the output complex. The rows enter only through their cohomology, as complexes of
-bounded operators (`BoundedData.rowTopComplex`, `BoundedData.rowBotComplex`; for a closed Hilbert
-complex with compact resolvent this is
-`Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm` on its domain complex).
+bounded operators (`BoundedData.rowTopComplex`, `BoundedData.rowBotComplex`); for the domain
+complexes of two Hilbert complexes (`Feec.BGG.HilbertData.domainData`) this is the cohomology of
+the Hilbert complexes (`Feec.HilbertComplex.domainComplexCohomologyEquiv`), finite-dimensional
+for instance under the compactness property
+(`Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`).
 
 ## Main definitions
 

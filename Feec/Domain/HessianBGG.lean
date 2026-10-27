@@ -27,7 +27,7 @@ Hence the smooth Hessian complex has the cohomology of the twisted de Rham compl
 
 ## Main results
 
-* **`injSurj_hessianBGG`**, `hessianBGG_bggHomologyIso`.
+* **`injSurj_hessianBGG`**, `hessianBGGHomologyIso`.
 * **`hessianBGGIso`**, `hessianSmoothComplexHomologyIso`.
 
 ## References
@@ -197,7 +197,7 @@ theorem injSurj_hessianBGG : (hessianBGG 𝕜).smoothData.InjSurj 0 := by
 
 /-- **The Hessian BGG complex has the cohomology of the twisted de Rham complex.**
 [ArnoldHu2021], §5.2 -/
-def hessianBGG_bggHomologyIso (i : ℤ) :
+def hessianBGGHomologyIso (i : ℤ) :
     ((hessianBGG 𝕜).smoothData.bgg 0).homology i ≅
       (hessianBGG 𝕜).smoothData.twistComplex.homology i :=
   BGG.Data.bggHomologyIso injSurj_hessianBGG i
@@ -456,7 +456,7 @@ def hessianSmoothComplexHomologyIso (i : ℤ) :
     (hessianSmoothComplex 𝕜).homology i ≅
       (hessianBGG 𝕜).smoothData.twistComplex.homology i :=
   ((HomologicalComplex.homologyFunctor _ _ i).mapIso hessianBGGIso).symm ≪≫
-    hessianBGG_bggHomologyIso i
+    hessianBGGHomologyIso i
 
 end Hessian
 

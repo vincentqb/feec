@@ -25,7 +25,7 @@ twisted de Rham complex (`divDivSmoothComplexHomologyIso`).
 
 ## Main results
 
-* **`injSurj_divDivBGG`**, `divDivBGG_bggHomologyIso`.
+* **`injSurj_divDivBGG`**, `divDivBGGHomologyIso`.
 * **`divDivBGGIso`**, `divDivSmoothComplexHomologyIso`.
 
 ## References
@@ -189,7 +189,7 @@ theorem injSurj_divDivBGG : (divDivBGG 𝕜).smoothData.InjSurj 2 := by
 
 /-- **The div-div BGG complex has the cohomology of the twisted de Rham complex.**
 [ArnoldHu2021], §5.2 -/
-def divDivBGG_bggHomologyIso (i : ℤ) :
+def divDivBGGHomologyIso (i : ℤ) :
     ((divDivBGG 𝕜).smoothData.bgg 2).homology i ≅
       (divDivBGG 𝕜).smoothData.twistComplex.homology i :=
   BGG.Data.bggHomologyIso injSurj_divDivBGG i
@@ -499,7 +499,7 @@ def divDivSmoothComplexHomologyIso (i : ℤ) :
     (divDivSmoothComplex 𝕜).homology i ≅
       (divDivBGG 𝕜).smoothData.twistComplex.homology i :=
   ((HomologicalComplex.homologyFunctor _ _ i).mapIso divDivBGGIso).symm ≪≫
-    divDivBGG_bggHomologyIso i
+    divDivBGGHomologyIso i
 
 end DivDiv
 

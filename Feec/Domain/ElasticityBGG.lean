@@ -29,7 +29,7 @@ the cohomology of the twisted de Rham complex (`elasticitySmoothComplexHomologyI
 
 ## Main results
 
-* **`injSurj_elasticityBGG`**, `elasticityBGG_bggHomologyIso`.
+* **`injSurj_elasticityBGG`**, `elasticityBGGHomologyIso`.
 * **`elasticityBGGIso`**, `elasticitySmoothComplexHomologyIso`.
 
 ## References
@@ -210,7 +210,7 @@ theorem injSurj_elasticityBGG : (elasticityBGG 𝕜).smoothData.InjSurj 1 := by
 
 /-- **The elasticity BGG complex has the cohomology of the twisted de Rham complex.**
 [ArnoldHu2021], §5.2 -/
-def elasticityBGG_bggHomologyIso (i : ℤ) :
+def elasticityBGGHomologyIso (i : ℤ) :
     ((elasticityBGG 𝕜).smoothData.bgg 1).homology i ≅
       (elasticityBGG 𝕜).smoothData.twistComplex.homology i :=
   BGG.Data.bggHomologyIso injSurj_elasticityBGG i
@@ -260,11 +260,6 @@ theorem elS0_elN0_of_skew {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     | linear_combination -h' 0 2 x | linear_combination -h' 2 0 x
     | linear_combination -h' 1 2 x
 
-theorem ConstCoeffOp.apply_neg' {ι κ : Type*} [Fintype ι] (A : ConstCoeffOp (Fin 3 → ℝ) 𝕜 ι κ)
-    {f : ι → (Fin 3 → ℝ) → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) : A.apply (-f) = -A.apply f := by
-  have := A.apply_smul (-1) hf
-  simpa using this
-
 /-- **`curl (S¹)⁻¹ curl σ = inc (sym σ)`**: the differential in degree `1` of the elasticity BGG
 complex is the incompatibility operator on the symmetric part. -/
 theorem curlOp_elN1_curlOp {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hσ : ∀ i, ContDiff ℝ ∞ (σ i)) :
@@ -293,10 +288,10 @@ theorem curlOp_elN1_curlOp {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (h
   have hψ : ∀ i, ContDiff ℝ ∞ (ψ i) := (ofMatrix elN0).contDiff_apply hw
   have hw0 : (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
       ((ofMatrix elN1).apply ((curlOp 3).apply w)) = 0 := by
-    rw [← elS0_elN0_of_skew hskew, curlOp_elS0, (ofMatrix elN1).apply_neg'
+    rw [← elS0_elN0_of_skew hskew, curlOp_elS0, (ofMatrix elN1).apply_neg
       ((ofMatrix elS1).contDiff_apply ((gradOp 3 3).contDiff_apply hψ)),
       ofMatrix_apply_ofMatrix, elN1_mul_elS1, ofMatrix_one_apply,
-      (curlOp 3).apply_neg' ((gradOp 3 3).contDiff_apply hψ), isComplexPair_grad_curl ψ hψ,
+      (curlOp 3).apply_neg ((gradOp 3 3).contDiff_apply hψ), isComplexPair_grad_curl ψ hψ,
       neg_zero]
   rw [hw0, add_zero]
   -- the symmetric part: `(S¹)⁻¹ curl s = (curl s)ᵀ`
@@ -554,7 +549,7 @@ def elasticitySmoothComplexHomologyIso (i : ℤ) :
     (elasticitySmoothComplex 𝕜).homology i ≅
       (elasticityBGG 𝕜).smoothData.twistComplex.homology i :=
   ((HomologicalComplex.homologyFunctor _ _ i).mapIso elasticityBGGIso).symm ≪≫
-    elasticityBGG_bggHomologyIso i
+    elasticityBGGHomologyIso i
 
 end Elasticity
 

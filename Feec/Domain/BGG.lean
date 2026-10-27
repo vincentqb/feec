@@ -85,6 +85,10 @@ def smoothMap (A : ConstCoeffOp E 𝕜 ι κ) : smoothFields E 𝕜 ι →ₗ[�
 @[simp] theorem coe_smoothMap (A : ConstCoeffOp E 𝕜 ι κ) (f : smoothFields E 𝕜 ι) :
     (A.smoothMap f : κ → E → 𝕜) = A.apply f := rfl
 
+theorem apply_neg (A : ConstCoeffOp E 𝕜 ι κ) {f : ι → E → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
+    A.apply (-f) = -A.apply f := by
+  simpa using A.apply_smul (-1) hf
+
 /-- The zeroth-order operator of a constant matrix, `(M f)ⱼ = Σᵢ M j i fᵢ`. -/
 def ofMatrix (M : Matrix κ ι 𝕜) : ConstCoeffOp E 𝕜 ι κ where
   coeff j i := [([], M j i)]

@@ -60,6 +60,9 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
 * `Data.finiteDimensional_derived_homology`, `Data.finrank_derived_homology_le`: over a field,
   `dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)` (through `Data.finrank_twistComplex_homology_le`).
 * `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021].
+* `Data.bggXEquivOfLt`, `Data.bggXEquivOfBijective`, `Data.bggΓEquivKer`: its spaces
+  `Vⁱ / R(Sⁱ⁻¹)` before `J`, `Vᴶ / R(Sᴶ⁻¹)` at `J` (`Sᴶ` bijective) and `N(Sⁱ)` after `J`
+  ([ArnoldHu2021], (24)–(26)).
 * `Data.Γ_eq_segment_Γ`, `Segment.sup_range_eq_top`: the complex (5.1) as an elimination.
 * `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
   the condition at every `J`. The de Rham instance is the Hessian diagram on smooth fields

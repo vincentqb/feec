@@ -21,12 +21,11 @@ boundary conditions), with the TSD constraint
   `Feec.EinsteinBianchi.MatrixModel.Γbar_eq_top`) and transported to the matrix model
   (`totalE`); isometric, `πₙ = ιₙ*`.
 
-The core `standardCubeCore` is `D(L²)` (dense) with the orbit comparison; its approximation
-hypothesis is the model convergence theorem `Feec.Models.Cube.WeakSymmetry.cubeWave_converges`
-(through `Feec.EinsteinBianchi.BoundedConvergence.exactOfStrong`). The constraint does not reduce
-`L` (`Feec.Instances.EinsteinBianchi.not_isReducing_thesisTSD`), and by the converse part of the
-approximating FEEC theorem the residuals of the discrete solutions from the TSD datum
-`(0, 0, (0, β))` tend to a positive limit (`standardCube_residual_not_mem`).
+The discrete solutions are the scheme (6.5) without source (`standardCube_sol_eq_scheme`). The
+core is the elliptic core `standardCubeEllCore` (`Feec.Instances.EinsteinBianchiFEMCubeEll`). The
+constraint does not reduce `L` (`Feec.Instances.EinsteinBianchi.not_isReducing_thesisTSD`), and by
+the converse part of the approximating FEEC theorem the residuals of the discrete solutions from
+the TSD datum `(0, 0, (0, β))` tend to a positive limit (`standardCube_residual_not_mem`).
 
 **Faithfulness caveat.** The instance is faithful to `cubeWave` (the scheme (6.5) of
 `Feec.Models.Cube.WeakSymmetry`, `S₀,ₕ = π¹S⁰` for the smoothed projections), not to the variant
@@ -195,6 +194,16 @@ theorem norm_cubeEmb_le (N : ℕ) : ‖cubeEmb hT hB N‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun v =>
     (norm_cubeEmb hT hB N v).trans_le (one_mul _).ge
 
+/-- The matrix-model orbit read in the forms model is the forms-model orbit. -/
+theorem totalE_symm_waveGroup (t : ℝ) (x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
+    (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))) :
+    totalE.symm (matrixComplex.waveGroup.S t x) = formsComplex.waveGroup.S t (totalE.symm x) := by
+  have h := waveGroup_conj t (totalE.symm x)
+  have h' : matrixComplex.waveGroup.S t x =
+      totalE (formsComplex.waveGroup.S t (totalE.symm x)) :=
+    (congrArg (matrixComplex.waveGroup.S t) (totalE.apply_symm_apply x).symm).trans h.symm
+  exact (congrArg totalE.symm h').trans (totalE.symm_apply_apply _)
+
 /-! ### The thesis' scheme as an approximating FEEC discretization -/
 
 /-- **The thesis' scheme (6.5) on the cube as an approximating FEEC discretization** of the matrix
@@ -223,16 +232,6 @@ def standardCubeApprox : ApproxFEEC matrixComplex ℕ where
 theorem standardCubeApprox_isOrthogonal : ApproxFEEC.IsOrthogonal (standardCubeApprox hT hB) where
   inner_incl N a b := inner_cubeEmb hT hB N a b
   inner_incl_left _ a y := (ContinuousLinearMap.adjoint_inner_right _ a y).symm
-
-theorem cubeSource_zero (N : ℕ) (t : ℝ) : cubeSource hT hB N 0 t = 0 :=
-  ext_inner_right ℝ fun v => (inner_cubeSource hT hB N 0 t v).trans
-    ((inner_zero_left (incl1 (v : Wv U1))).trans (inner_zero_left v).symm)
-
-/-- A solution of (6.5) with the (vanishing) projected source as a solution without source. -/
-def cubeSourceFree (N : ℕ) {T : ℝ}
-    (s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0)) :
-    Feec.BGG.DiscreteSolution (cubeWave hT hB N) T 0 :=
-  s.ofEqOn fun t _ => (cubeSource_zero hT hB N t).symm
 
 /-- The discrete forms state of a solution of (6.5) read as a continuous forms state. -/
 abbrev cState (N : ℕ) {T : ℝ} {g : ℝ → (cubeFEM hT hB N).Vt1h}

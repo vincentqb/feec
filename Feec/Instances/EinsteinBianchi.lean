@@ -71,19 +71,18 @@ subspaces). On `ℝ³` only items 1–2 are stated.
 theorem proves one of them.
 
 **The scheme (6.5) as an approximating FEEC discretization.** Both finite element rows are
-instances of the approximating FEEC theorem `Feec.HilbertComplex.approxFEEC`, in
-`Feec.Instances.EinsteinBianchiFEM`: `MirrorFEMApproxVerdict` (convergence to the TSD solution for
-every TSD datum and every convergent family of discrete initial values, the `O(h)` and `O(hˢ)`
-rates, residual `→ 0`) and `StandardCubeApproxVerdict` (convergence for every datum; from
-`(0, 0, (0, β))` the residuals tend to a positive limit); `einsteinBianchi_summary` there extends
+instances of the approximating FEEC theorem, in `Feec.Instances.EinsteinBianchiFEM`, through one
+crime front each (`ofComplexCrime` of the Galerkin family of the elliptic core:
+`mirrorEllCore`, `standardCubeEllCore`, the elliptic projection (6.4) as comparison trajectory,
+from the Strang bound of (6.4) alone, without the model convergence theorems):
+`MirrorFEMApprox.Verdict` (convergence to the TSD solution for every TSD datum and every
+convergent family of discrete initial values, the `O(h)` and `O(hˢ)` rates, residual `→ 0`) and
+`StandardCubeApprox.Verdict` (convergence for every datum; from `(0, 0, (0, β))` the residuals
+tend to a positive limit); `einsteinBianchi_summary` there extends
 `einsteinBianchi_constrainedFEEC_summary` by these two verdicts, with the `ℝ³` row
 `EuclideanVerdict` replaced by the approximating FEEC verdict of the frequency truncation
-(`Feec.Instances.EuclideanBand.EuclideanEBVerdict`). Their elliptic cores
-(`mirrorEllCore`, `standardCubeEllCore`: the elliptic projection (6.4) as comparison trajectory,
-with a consistency defect) derive the convergence from the Strang bound of (6.4) alone, without
-the model convergence theorems; their orbit cores restate the model theorems. `MirrorFEMVerdict`
-and `StandardCubeVerdict` are kept (and `StandardCubeVerdict` is part of
-`StandardCubeApproxVerdict`).
+(`Feec.Instances.EuclideanBand.EuclideanEBVerdict`). `MirrorFEMVerdict` and `StandardCubeVerdict`
+are kept.
 
 ## References
 

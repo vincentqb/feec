@@ -1,6 +1,6 @@
 module
 
-public import Feec.Instances.EinsteinBianchiFEMCubeCore
+public import Feec.Instances.EinsteinBianchiFEMCube
 public import Feec.Instances.EinsteinBianchiFEMElliptic
 
 /-!
@@ -19,7 +19,8 @@ Strang bound of (6.4) (`norm_sub_ellTraj_le`, with `Feec.BGG.Stability` of the c
 `eventually_cubeFEM_K1`); the model convergence theorem `cubeWave_converges` is not used. The
 comparison of a datum on `[0, T]` uses the orbit on the horizon `T + 1`.
 
-`einsteinBianchi_standardCube_approxFEEC_elliptic` is the verdict on this core.
+The verdict of the approximating FEEC theorem on this core is read through the complex-level front
+end (`Feec.Instances.EinsteinBianchiFEMComplex`, `standardCubeComplex`).
 
 **Faithfulness caveat.** As for `standardCubeApprox`: faithful to `cubeWave` (`S₀,ₕ = π¹S⁰` with
 the smoothed projections), not to the canonical-interpolant variant. That the defect is nonzero
@@ -369,12 +370,5 @@ theorem dense_standardCubeEllCore : Dense ((standardCubeEllCore hT hB).Data : Se
     (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
       (W2B ℝ (cubeDomain 3))))) :=
   matrixComplex.isSkewAdjoint_wave.dense_domainSq
-
-/-- **The thesis' scheme (6.5) is an instance of the approximating FEEC theorem with the elliptic
-core**: convergence from best approximation plus consistency, for every datum (the core is
-dense). -/
-theorem einsteinBianchi_standardCube_approxFEEC_elliptic :
-    (standardCubeApprox hT hB).Verdict (standardCubeEllCore hT hB) :=
-  approxFEEC _ _
 
 end Feec.Instances.EinsteinBianchi.FEM

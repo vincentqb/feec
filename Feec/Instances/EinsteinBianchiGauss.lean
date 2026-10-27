@@ -60,8 +60,9 @@ to `hiddenGauss` with `K = tsdQℝ`.
 `eventually_abs_inner_cubeFE_le`, `tendstoUniformly_inner_cubeEmb_group`, and
 `standardCube_waveGroup_mem_cubeGauss`: if `ιₙ vₙ → ξ₀` with `vₙ ∈ hiddenGauss`, the exact solution
 `e^{tL} ξ₀` lies in the continuous Gauss constraint for every `t ≥ 0` (through the convergence of
-the scheme for every datum, `einsteinBianchi_standardCube_converges`). The failure of TSD
-propagation for these boundary conditions is not a failure of its degree-`0` part along such data.
+the scheme for every datum, from the verdict of the crime front
+`ofComplexCrime (standardCubeComplex)`). The failure of TSD propagation for these boundary
+conditions is not a failure of its degree-`0` part along such data.
 
 **Not shown.** The convergence is weak: `dist(ιₙ x, gaussSub) → 0` uniformly on bounded subsets
 of `hiddenGauss` would need a discrete compactness property, not formalized. Whether the datum
@@ -899,8 +900,8 @@ theorem eventually_mirrorHiddenGauss_ne_bot : ∀ᶠ N in atTop, mirrorHiddenGau
 for every TSD datum and every family of discrete initial values of the mirror scheme read
 convergent to it, the Gauss residuals `dist(Re ξₙ(t), mirrorGauss)` and
 `dist(Re(-i ξₙ(t)), mirrorGauss)` of the real and imaginary parts of the discrete solutions tend
-to `0` uniformly on `[0, T]` (they are bounded by the TSD residual of
-`einsteinBianchi_mirrorFEM_ofComplexCrime`). -/
+to `0` uniformly on `[0, T]` (they are bounded by the TSD residual, which tends to `0` by the
+verdict of the crime front `ofComplexCrime (mirrorComplex)`). -/
 theorem einsteinBianchi_mirrorFEM_gaussResidual {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ) (T : ℝ)
     (v : ∀ N, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).X N)
     (hv : Tendsto (fun N => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).incl N (v N)) atTop
@@ -911,7 +912,9 @@ theorem einsteinBianchi_mirrorFEM_gaussResidual {x : PiLp 2 SpaceQ} (hx : x ∈ 
     TendstoUniformlyOn (fun N t => infDist
         (mirrorRe (-Complex.I • (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t))
         (mirrorGauss : Set REnergy)) (fun _ => 0) atTop (Icc 0 T) := by
-  have h := ((einsteinBianchi_mirrorFEM_ofComplexCrime hT hB).2.2.2.2 x hx T v hv).2
+  have V := (approxFEEC_ofComplexCrime (mirrorComplex hT hB)).1
+  have h := V.residual_tendsto (V.isReducing_iff.1 isReducing_tsdQℝ).1 hx
+    ((mirrorEllCore_closure hT hB).ge hx) hv T
   exact ⟨tendstoUniformlyOn_zero_of_le h (fun _ _ => infDist_nonneg)
       (fun _ _ => (infDist_mirrorRe_le _).1),
     tendstoUniformlyOn_zero_of_le h (fun _ _ => infDist_nonneg)
@@ -987,12 +990,15 @@ theorem standardCube_waveGroup_mem_cubeGauss {x : PiLp 2 (ShortHilbertComplex.W3
     {v : ∀ N, cubeHidden hT hB N} (hv : ∀ N, v N ∈ cubeHiddenGauss hT hB N)
     (hconv : Tendsto (fun N => cubeEmb hT hB N (v N)) atTop (𝓝 x)) {t : ℝ} (ht : 0 ≤ t) :
     cubeRead (matrixComplex.waveGroup.S t x) ∈ cubeGauss := by
-  have hsol := ((einsteinBianchi_standardCube_converges hT hB x t).2 v hconv).tendsto_at
+  have hsol := ((approxFEEC_ofComplexCrime (standardCubeComplex hT hB)).1.converges
+    ((standardCubeEllCore_closure hT hB).ge Submodule.mem_top) (v := v) hconv t).tendsto_at
     ⟨ht, le_rfl⟩
+  rw [ApproxFEEC.S_eq_waveGroup _ ht] at hsol
   have hX : Tendsto (fun N => cubeEmb hT hB N ((discreteGroup (cubeFEM hT hB N)
       (cubeWave_dt0_injective hT hB N) (cubeWave_S0_surjective hT hB N)).S t (v N))) atTop
       (𝓝 (matrixComplex.waveGroup.S t x)) :=
-    hsol.congr fun N => standardCubeApprox_sol_eq hT hB N (v N) t
+    hsol.congr fun N => (standardCubeComplex_sol hT hB N (v N) t).trans
+      (standardCubeApprox_sol_eq hT hB N (v N) t)
   have hb : ∀ᶠ N in atTop, ‖(discreteGroup (cubeFEM hT hB N) (cubeWave_dt0_injective hT hB N)
       (cubeWave_S0_surjective hT hB N)).S t (v N)‖ ≤ ‖x‖ + 1 := by
     filter_upwards [hconv.norm.eventually (gt_mem_nhds (lt_add_one ‖x‖))] with N hN

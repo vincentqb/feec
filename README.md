@@ -121,7 +121,7 @@ The "Verdict" column says which branch of item 4 holds. Lean names are relative 
 | linearized Einstein–Bianchi | `𝕋³`, Fourier spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_torus_approxFEEC`, `_sobolev` |
 | linearized Einstein–Bianchi | `ℝ³`, frequencies `\|ξ\| ≤ N` | TSD | converges; residual exactly `0` | `(N+1)^{-s}` on `Hˢ`, exponent sharp | B `einsteinBianchi_euclidean_band` |
 | linearized Einstein–Bianchi | cube, mirror BCs, cosine–sine spectral | TSD | converges to the constrained solution | `(N+1)^{-s}` on `Hˢ`, all `t ≥ 0` | EB `einsteinBianchi_mirror_approxFEEC`, `_sobolev` |
-| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `(4K + 8Kt) h` for `D(L³)`, `(6K + 12Kt) hˢ` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMApproxVerdict`; `FEM.einsteinBianchi_mirrorFEM_ofComplexCrime`, `_rate`, `_rate_sobolev`; `FEM.einsteinBianchi_mirrorFEM_ofCochainDefect` |
+| linearized Einstein–Bianchi | cube, mirror BCs, scheme (6.5) | TSD | converges to the constrained solution | `(4K + 8Kt) h` for `D(L³)`, `(6K + 12Kt) hˢ` for `H^{2+s}`, `s ≤ 1` | EB `mirrorFEMApproxVerdict`; `FEM.einsteinBianchi_mirrorFEM_ofComplexCrime`, `_rate`, `_rate_sobolev` |
 | linearized Einstein–Bianchi | cube, thesis BCs, scheme (6.5) | TSD (not reducing) | converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `standardCubeApproxVerdict`; `FEM.einsteinBianchi_standardCube_ofComplexCrime` |
 | linearized Einstein–Bianchi | cube, absorbing BCs `n × Eᵢ + (Bᵢ)_τ = 0`, Galerkin with boundary term (dense-sequence spaces) | TSD (not invariant) | well posed, radiates; converges to a solution that leaves TSD; residuals tend to a positive limit | — | EB `absorbingVerdict` |
 
@@ -133,10 +133,9 @@ formalized through `ofComplexCrime` (via `ofGalerkinCore`): this re-derives the 
 (6.4) cores and adds an exactly preserved discrete Gauss constraint (`FEM.hiddenGauss`; that it
 lies in TSD is not shown). The cochain defect of (6.5) is
 the pair of consistency functionals `ℓ((I − π¹)S⁰·)`, `⟪M, (I − π²)S¹·⟫` of the Strang bound of (6.4)
-(`FEM.cochainDefectForm_eq`); for mirror BCs it vanishes on TSD states, and the mirror convergence verdict
-(without rates) also follows through `ofCochainDefect` from graph-norm approximation, independently of (6.4): its
-family `FEM.mirrorFamily` is built directly from the discretization, and neither the elliptic core
-nor the Strang theorem is in the dependency closure (`FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`).
+(`FEM.cochainDefectForm_eq`); it is `O(h)` for the thesis' BCs (`FEM.exists_standardCube_cochainDefect_le_mesh`,
+regularity of `ℓ(t)` and `M(t)` assumed) and vanishes on TSD states for mirror BCs
+(`FEM.mirrorComplex_cochainDefect_eq_zero`).
 That the cochain defect is nonzero for some mesh and datum is not proved, and the split rate
 `rateClass_of_split` is exercised only by an abstract witness (limits in `docs/OVERVIEW.md`).
 On `ℝ³` and `ℝᵈ` the Sobolev classes are defined on the Fourier side, and the truncation is a semi-discretization in frequency.

@@ -10,6 +10,7 @@ import Feec.Models.Cube.SobolevRateHigh
 import Feec.Models.Cube.TangentialRate
 import Feec.Models.Parallelepiped.FiniteElement
 import Feec.Models.StarShaped.PolyFiniteElement
+import Feec.Instances.EinsteinBianchiFEMDefect
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -89,6 +90,17 @@ boundary degrees of freedom, a weak solution against `V̊ₕ`) is not the orbit 
 its estimate is not a corollary of the fully discrete verdict: `cn_old` states the conclusion of
 `norm_cn_error_le` verbatim and derives it from the model theorem, which shares the trapezoidal
 engine.
+
+## The Einstein–Bianchi scheme (6.5)
+
+The scheme (6.5) of [QuennevilleBelair2015] is one crime front, `ofComplexCrime` of the Galerkin
+family of its elliptic core (`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex`,
+`Feec.Instances.EinsteinBianchi.FEM.standardCubeComplex`). The second route to the mirror verdict,
+through `ApproxComplexCrime.ofCochainDefect` with the hidden interpolants
+(`mirrorSplitComplex`), is gone: its discretization and core were, by definition, those of
+`mirrorComplex` (the same family `mirrorFamily`, constraint, filter and core data; checked by
+`rfl` before the deletion), so `eb_old_mirrorFEM_ofCochainDefect` states its verdict verbatim with
+`mirrorSplitComplex` unfolded to `mirrorComplex` and derives it.
 
 ## The crown
 
@@ -2711,5 +2723,47 @@ example (n : ℕ) [NeZero n] (S : FiniteElement.PolySeq) :
   (polyFamily n S).feec.heat 0 (n + 1) ⊤ _ (closedRangeAt_heatWindow n)
 
 end CrownCube
+
+section EinsteinBianchiOld
+
+open Feec.Instances.EinsteinBianchi.FEM Metric
+open Feec.Models.Cube.MirrorBGG (SpaceQ)
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+section Mirror
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅
+    Feec.FiniteElement.PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3,
+    Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
+
+/-- The old `einsteinBianchi_mirrorFEM_ofCochainDefect` (the split route), with
+`mirrorSplitComplex` unfolded to `mirrorComplex`. -/
+theorem eb_old_mirrorFEM_ofCochainDefect :
+    (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).Verdict
+      (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)) ∧
+    (∀ N v t, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N v t =
+      (mirrorFEMApprox hT hB).sol N v t) ∧
+    (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)).Data.topologicalClosure = tsdQℝ ∧
+    (∀ x ∈ tsdQℝ, ∀ T : ℝ, ∀ v : ∀ N, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).X N,
+      Tendsto (fun N => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).incl N (v N)) atTop
+        (𝓝 x) →
+      TendstoUniformlyOn
+        (fun N t => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t)
+        (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
+      TendstoUniformlyOn (fun N t => infDist
+        ((ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t) (tsdQℝ : Set _))
+        (fun _ => 0) atTop (Icc 0 T)) ∧
+    (∀ N (y : complexQℝ.wave.domain), (y : PiLp 2 SpaceQ) ∈ tsdQℝ →
+      (mirrorComplex hT hB).toFamily.cochainDefect N y = 0) :=
+  have V := einsteinBianchi_mirrorFEM_ofComplexCrime hT hB
+  ⟨V.1, V.2.1, V.2.2.2.1, V.2.2.2.2, mirrorComplex_cochainDefect_eq_zero hT hB⟩
+
+end Mirror
+
+end EinsteinBianchiOld
 
 end FeecCheck.Crown

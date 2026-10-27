@@ -326,6 +326,12 @@ theorem cubeFieldInterp_evalForm (hb : ∀ j, 1 ≤ b j) {ω : PolyForm ℝ (Fin
     funext fun i => fieldDof_evalForm i ω
   rw [cubeFieldInterp, this, LinearEquiv.symm_apply_apply]
 
+theorem isDeg_cubeFieldInterp (hb : ∀ j, 1 ≤ b j) (w : FormField n) (z : Fin n → ℝ) :
+    IsDeg k (cubeFieldInterp k hb w z) := fun s hs => by
+  simp only [cubeFieldInterp, evalForm_apply]
+  rw [(Subtype.prop ((isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv.symm
+    fun i => fieldDof i w)).1 s hs, map_zero]
+
 theorem cubeFieldInterp_sub (hb : ∀ j, 1 ≤ b j) {w w' : FormField n}
     (hw : ContinuousOn w (closedCube n)) (hw' : ContinuousOn w' (closedCube n)) :
     cubeFieldInterp k hb (w - w') = cubeFieldInterp k hb w - cubeFieldInterp k hb w' := by
@@ -519,8 +525,8 @@ theorem closure_cubeRefinement_domain :
   simp only [closure_Ioo (Fact.out : 0 < L).ne]
 
 /-- **The canonical interpolant on the cell `m`**: `Π_m w = F_m^{-*} Π̂ F_m^* w`. -/
-def cellInterp (L : ℝ) (k : ℕ) (hb : ∀ j, 1 ≤ b j) (m : CubeCell fun _ : Fin n => N) (w : FormField n) :
-    FormField n :=
+def cellInterp (L : ℝ) (k : ℕ) (hb : ∀ j, 1 ≤ b j) (m : CubeCell fun _ : Fin n => N)
+    (w : FormField n) : FormField n :=
   affinePullback (scalarMat n (N / L)) (cellOffset m) (cubeFieldInterp k hb (cellPullback L m w))
 
 /-- **Local interpolation error on the cells**: for a `C^r` `k`-form field near the cell `m` of
@@ -589,12 +595,7 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
   set y := affine (scalarMat n (N / L)) (cellOffset m) x
   have hy : y ∈ closedCube n := affine_cellOffset_mem_closedCube hx
   have hdeg' : ∀ z, IsDeg k ((wh - cubeFieldInterp k hb wh) z) := fun z s hs => by
-    have h1 := hdeg z s hs
-    have h2 : cubeFieldInterp k hb wh z s = 0 := by
-      simp only [cubeFieldInterp, evalForm_apply]
-      rw [(Subtype.prop ((isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv.symm
-        fun i => fieldDof i wh)).1 s hs, map_zero]
-    simp [h1, h2]
+    simp [hdeg z s hs, isDeg_cubeFieldInterp hb wh z s hs]
   have hsplit : w x - cellInterp L k hb m w x =
       affinePullback (scalarMat n (N / L)) (cellOffset m) (wh - cubeFieldInterp k hb wh) x := by
     have e : w x = affinePullback (scalarMat n (N / L)) (cellOffset m) wh x := by

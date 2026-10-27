@@ -582,8 +582,10 @@ theorem zero_mem_cubePEC_ofJackson {T Λ : ℝ} (hΛ : 0 ≤ Λ) :
 /-- **The FEEC theorem for Maxwell's equations on the cubical meshes of the cube**, with the
 cubical elements `Q_b⁻Λ` (`cubeQMinusPMC`; `Q_r⁻Λ`, Nédélec's first-kind edge elements on
 hexahedra in degree `1`): the Maxwell verdict (`maxwellFEEC`) and the rated FEEC theorem
-(`ConformingFamily.feec_rated`) for the Jackson estimate `FEM.qMinusJackson`, so the semidiscrete,
-heat and fully discrete errors are `O(h^{s+1})` along `IsCsForm s` orbits for `s + 1 ≤ min b`. -/
+(`ConformingFamily.feec_rated`) for the Jackson estimate `FEM.qMinusJackson`: the static,
+semidiscrete and heat errors are `O(h^{s+1})` along `IsCsForm s` orbits for `s + 1 ≤ min b`, and
+the fully discrete errors `O(h^{s+1} + τᵖ)` along smooth comparisons of order `p + 1` (temporal
+error `τᵖ ‖Lₕ^{p+1} v‖`, `ConformingFamily.Verdict.Rated.rate_full`). -/
 theorem cubeQMinus_maxwellFEEC {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) :
     Verdict (FEM.qMinusFamily n hb) a ∧
       ConformingFamily.Verdict.Rated (FEM.qMinusFamily n hb) (FEM.qMinusJackson n hb) :=

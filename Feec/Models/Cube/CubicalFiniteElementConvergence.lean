@@ -60,7 +60,8 @@ theorem norm_formL2_sub_cubeGlue_le_of_forall {L : ℝ} [Fact (0 < L)] {N : ℕ}
         |(w : FormField n) x s - cellField L u (simplexCell L T) x s| ≤ B) :
     ‖formL2 (isOpen_cubeRefinement_domain (n := n) (L := L) (N := N)).measurableSet
         (cubeRefinement n L N).isBounded_domain k w - cubeGlue n L N k u‖ ≤
-      Fintype.card (formIdx n k) * (volume.real (cubeRefinement n L N).domain ^ (1 / 2 : ℝ) * B) := by
+      Fintype.card (formIdx n k) *
+        (volume.real (cubeRefinement n L N).domain ^ (1 / 2 : ℝ) * B) := by
   set M := cubeRefinement n L N
   have hΩ := (isOpen_cubeRefinement_domain (n := n) (L := L) (N := N)).measurableSet
   have : IsFiniteMeasure (volume.restrict M.domain) :=

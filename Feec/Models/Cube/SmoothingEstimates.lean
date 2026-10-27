@@ -1949,20 +1949,25 @@ theorem exists_gamma :
   have hxk : x k ≤ S := Finset.single_le_sum (fun k _ => hx0 k) (Finset.mem_range.2 (by omega))
   exact norm_sub_smoothedInterp_le_half (hA0 k) (hA k) (hB0 k) (hB k) hS hxk rfl hγe hp hγ2 hu hs
 
-/-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
-field. -/
+/-- **The maximal family samples only inside `Ω`**: every sample `t` of the smoother at a point
+`x` of `Ω̄` lies in `Ω`. -/
+theorem pMax_samples_mem (N : ℕ) :
+    ∀ x ∈ closure (mesh n N).domain, ∀ t, dist t ((pMax (n := n) γ hγ hγ1 N).center +
+      (pMax (n := n) γ hγ hγ1 N).factor • (x - (pMax (n := n) γ hγ hγ1 N).center)) <
+        (pMax (n := n) γ hγ hγ1 N).bump.rOut → t ∈ (mesh n N).domain := fun x hx t ht => by
+  have hp := pMax_isMaximal (n := n) (γ := γ) (hγ := hγ) (hγ1 := hγ1) N
+  have := closedBall_dil_subset_of_starBall (starBall_mesh n N)
+    (pMax (n := n) γ hγ hγ1 N).half_le_factor hp.factor_lt_one hp.rOut_lt hx
+  rw [← hp.center_eq] at this
+  exact this (Metric.mem_closedBall.2 ht.le)
+
+/-- **The sampling condition holds for every field** of the maximal family
+(`pMax_samples_mem`). -/
 theorem sampleOK_pMax {N k : ℕ} (u : (whitneyElement n).Piecewise (mesh n N) k) :
     SampleOK γ (pMax (n := n) γ hγ hγ1 N) u := by
   intro T g hgT hg ξ hξ _ t ht htΩ
-  exfalso
-  have hxT := simplexMap_faceEnum_mem hgT hg hξ
-  have hxc : simplexMap (faceEnum g (k + 1)) ξ ∈ closure (mesh n N).domain :=
-    (mesh n N).closedInterior_subset_closure T.2 hxT
-  have hp := pMax_isMaximal (n := n) (γ := γ) (hγ := hγ) (hγ1 := hγ1) N
-  have := closedBall_dil_subset_of_starBall (starBall_mesh n N)
-    (pMax (n := n) γ hγ hγ1 N).half_le_factor hp.factor_lt_one hp.rOut_lt hxc
-  rw [← hp.center_eq] at this
-  exact htΩ (this (Metric.mem_closedBall.2 ht.le))
+  exact absurd (pMax_samples_mem N _ ((mesh n N).closedInterior_subset_closure T.2
+    (simplexMap_faceEnum_mem hgT hg hξ)) t ht) htΩ
 
 /-! ### The minimal family: boundary faces -/
 

@@ -193,6 +193,33 @@ theorem simplexCell_closedInterior_subset {T : Affine.Simplex ℝ (Fin n → ℝ
   rw [show (N / L : ℝ) * (L / N * x j) = x j by field_simp]
   constructor <;> linarith [this.1, this.2]
 
+omit [NeZero N] in
+/-- The closed cell as a product of intervals. -/
+theorem closedCell_eq_pi (m : CubeCell fun _ : Fin n => N) :
+    closedCell L m = Set.univ.pi fun j =>
+      Set.Icc (L / N * ((m j : ℕ) : ℝ)) (L / N * (((m j : ℕ) : ℝ) + 1)) := by
+  have hL : 0 < L := Fact.out
+  ext x
+  simp only [closedCell, Set.mem_ofPred_eq, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Icc]
+  refine forall_congr' fun j => ?_
+  rcases Nat.eq_zero_or_pos N with hN | hN
+  · subst hN; exact absurd (m j).isLt (by simp)
+  have hN' : (0 : ℝ) < N := Nat.cast_pos.2 hN
+  rw [div_mul_eq_mul_div, div_mul_eq_mul_div, le_div_iff₀ hL, div_le_iff₀ hL, div_mul_eq_mul_div,
+    div_le_iff₀ hN', le_div_iff₀ hN']
+  constructor <;> rintro ⟨h1, h2⟩ <;> constructor <;> linarith
+
+omit [NeZero N] in
+/-- Two points of a closed cell are within the cell size `h = L / N` (in the sup norm). -/
+theorem dist_le_of_mem_closedCell {m : CubeCell fun _ : Fin n => N} {x z : Fin n → ℝ}
+    (hx : x ∈ closedCell L m) (hz : z ∈ closedCell L m) : dist x z ≤ L / N := by
+  rw [closedCell_eq_pi] at hx hz
+  refine (dist_pi_le_iff (div_nonneg (Fact.out : 0 < L).le (Nat.cast_nonneg N))).2 fun j => ?_
+  have h1 := hx j (Set.mem_univ j)
+  have h2 := hz j (Set.mem_univ j)
+  rw [Real.dist_eq, abs_le]
+  constructor <;> nlinarith [h1.1, h1.2, h2.1, h2.2]
+
 omit [Fact (0 < L)] [NeZero N] in
 /-- A point of two closed cells: the cells meet. -/
 theorem adj_of_mem_closedCell {m m' : CubeCell fun _ : Fin n => N} {x : Fin n → ℝ}
@@ -359,6 +386,13 @@ theorem cellField_smul (c : ℝ) (ω : CubeCell (fun _ : Fin n => N) → PolyFor
   funext x
   simp [cellField, affinePullback_apply, map_smul, pullback_smul]
 
+omit [Fact (0 < L)] [NeZero N] in
+theorem cellField_sub (ω η : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
+    (m : CubeCell fun _ : Fin n => N) :
+    cellField L (ω - η) m = cellField L ω m - cellField L η m := by
+  funext x
+  simp [cellField, affinePullback_apply, map_sub, pullback_sub]
+
 variable (n L N) in
 /-- **Gluing** a piecewise polynomial form into `L²((0, L)ⁿ; Λᵏ)`. -/
 def cubeGlue (k : ℤ) : (CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)) →ₗ[ℝ]
@@ -435,6 +469,10 @@ def cubeSubcomplex [NeZero n] (b : Fin n → ℕ) :
         fun y' hy' => maximal_apply_mem_cubeV b i y' (hy' ▸ hx)
     · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hij)]
       exact Submodule.zero_mem _
+
+instance (b : Fin n → ℕ) (k : ℤ) [NeZero n] :
+    FiniteDimensional ℝ ((cubeSubcomplex n L N b).V k) :=
+  inferInstanceAs (FiniteDimensional ℝ (cubeV n L N b k))
 
 /-! ### Injectivity of the gluing and the dimension of `Vₕᵏ` -/
 

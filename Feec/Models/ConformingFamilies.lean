@@ -45,8 +45,8 @@ each family eventually has the cohomology of its complex. On the cube and on par
 `dim Hᵏ(Vₕ) = [k = 0]` and `dim Hᵏ(V̊ₕ) = [k = n]` for `N` large
 (**`Cube.FEM.eventually_finrank_cohomology_poly`**, `_polyMin`, `_whitney`, `_whitneyMin`, and
 the same in `Parallelepiped`), and the projections induce the isomorphisms
-(`Cube.FEM.eventually_bijective_cohomologyMap_poly`, `_polyMin`; for the cubical elements
-`Cube.FEM.eventually_finrank_cohomology_qMinus`); on a star-shaped domain,
+(`Cube.FEM.eventually_bijective_cohomologyMap_poly`, `_polyMin`, `_qMinus`; the cubical
+elements also have `Cube.FEM.eventually_finrank_cohomology_qMinus`); on a star-shaped domain,
 `dim Hᵏ(Vₕ) = dim Hᵏ(Ω)` in every degree `k` with closed range and finite-dimensional harmonic
 forms (`StarShaped.MeshFamily.eventually_finrank_cohomology_poly` and the others), with no
 hypothesis on every mesh family of a parallelepiped
@@ -95,6 +95,13 @@ theorem eventually_bijective_cohomologyMap_polyMin (S : PolySeq) (k : ℤ) :
       Function.Bijective (((polyFamilyMin n S).π N).cohomologyMap k) :=
   (polyFamilyMin n S).eventually_bijective_cohomologyMap (closedRangeAt_min k)
 
+/-- **The projections of the cubical elements `Q_b⁻Λ` induce `Hᵏ(HΛ(Q)) ≅ Hᵏ(Vₕ)`** for `N`
+large ([AFW2010], Thm 3.4). -/
+theorem eventually_bijective_cohomologyMap_qMinus {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℤ) :
+    ∀ᶠ N in atTop, haveI := (qMinusFamily n hb).finiteDimensional N
+      Function.Bijective (((qMinusFamily n hb).π N).cohomologyMap k) :=
+  (qMinusFamily n hb).eventually_bijective_cohomologyMap (closedRangeAt k)
+
 /-- **The Whitney complexes of the cube have the cohomology of `HΛ(Q)`** for `N` large
 ([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`. -/
 theorem eventually_finrank_cohomology_whitney (k : ℤ) :
@@ -128,8 +135,7 @@ theorem eventually_finrank_cohomology_polyMin (S : PolySeq) (k : ℤ) :
     h.trans (finrank_cohomology_min k)
 
 /-- **The cubical complexes `Q_b⁻Λ` of the cube have the cohomology of `HΛ(Q)`** for `N` large
-([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`, and the projections induce the isomorphisms
-(`ConformingFamily.eventually_bijective_cohomologyMap`). -/
+([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`. -/
 theorem eventually_finrank_cohomology_qMinus {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℤ) :
     ∀ᶠ N in atTop, Module.finrank ℝ ((qMinus n b N).toHilbertComplex.cohomology k) =
       if k = 0 then 1 else 0 :=

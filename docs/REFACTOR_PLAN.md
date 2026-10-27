@@ -245,6 +245,18 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > complex, form proxies), `H(div)` has none, and `deRhamVec m` is not identified with `deRham 3`
 > (whose cube cohomology is known, `Feec.Models.Cube.DeRhamIdentFEM`).
 
+> **Status (2026-10-27): open items after the five crown extensions.** Proved: the fully discrete
+> error `O(hᵅ + τ^{p/(p+2)})` uniformly in `h` for every one-step `TimeScheme` and every rate-class
+> datum in `D(A)` (`Feec.HilbertComplex.DissipFEEC.TimeScheme.norm_S_sub_sol_le_uniform`, crown
+> fields `rate_uniform_iterates`, `wave_uniform`, `heat_uniform`); the cubical `Q_b⁻Λ` conforming
+> family with Jackson rates (`Feec.Models.Cube.FEM.qMinusFamily`); a nonzero velocity in `ker 𝐝†`
+> for slip Stokes on the cube (`Feec.Instances.Corollaries.Cube.FEM.slipStokes`); A-stable rational
+> schemes and implicit Runge–Kutta methods as `TimeScheme`s by von Neumann's inequality
+> (`Feec.HilbertComplex.DissipFEEC.rationalScheme`). Open: the sharp uniform order `τᵖ` on all
+> Jackson data, parabolic nonsmooth-data smoothing; `Q_b⁻Λ` in `H̊Λ` (PEC), serendipity elements, a
+> non-vacuity witness for `qMinusJackson`; a closed-form slip velocity in `D(Δ)`; explicit
+> Runge–Kutta under a CFL condition, trajectory consistency of general rational schemes.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

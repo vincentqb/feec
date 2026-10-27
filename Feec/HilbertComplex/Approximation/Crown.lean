@@ -66,13 +66,16 @@ Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` wit
 `SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`); each field is the layer
 verdict itself. Every finite element family with bounded smoothed projections is a conforming
 family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
-`P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains), so the crown holds for each.
+`P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the
+cube, `FEM.qMinusFamily`), so the crown holds for each.
 
 **Outside the crown.**
 
-* The analytic part of the static BGG theory: discrete BGG complexes (`BGG.Discrete`) are
-  algebraic; they are not yet subcomplexes with bounded cochain projections of a Hilbert complex,
-  so the static theorem does not reach elasticity or Hessian discretizations built by BGG.
+* BGG discretizations: the derived complex of bounded BGG data is a Hilbert complex
+  (`BGG.BoundedData.derivedComplex`, closed range where the rows have finite-dimensional
+  cohomology), but discrete BGG complexes (`BGG.Discrete`) are not yet subcomplexes with bounded
+  cochain projections of it, so the static theorem does not reach elasticity or Hessian
+  discretizations built by BGG.
 * The improved `L²` rate is conditional on rates of the elliptic quantities `η`, `δ`, `μ`
   (`ConformingFamily.rate_static_L2`, [AFW2010], Thm 3.11).
 * Impedance (absorbing) boundary conditions: their discretizations are dissipative FEEC

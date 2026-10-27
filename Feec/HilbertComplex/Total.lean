@@ -25,6 +25,10 @@ too (where a degree has no neighbour, `H` itself has no mixed problem).
   `H.total`), with `Δ G f = f - P_ℌ f` in its strong form and **the Hodge decomposition**
   `G (Δ x) = x - P_ℌ x` on `D(Δ)` (`greenOp_hodgeLaplacian`); `Δ x ⊥ ℌ`
   (`starProjection_harmonic_total_hodgeLaplacian`).
+* `HilbertComplex.isReducing_hodgeLaplacian_ker_adjoint`: `ker 𝐝†` reduces `Δ`, with no closed
+  range (in degree `1` of the de Rham complex: Hodge heat on divergence-free fields is unsteady
+  Stokes flow with slip boundary conditions); `exists_hodgeLaplacian_eq_adjoint`, the domain of
+  `Δ` in terms of `𝐝` and `𝐝†`.
 
 ## References
 
@@ -148,6 +152,87 @@ theorem starProjection_harmonic_total_hodgeLaplacian (x : H.hodgeLaplacian.domai
     (H.total.harmonic ()).starProjection (H.hodgeLaplacian x) = 0 :=
   (Submodule.starProjection_apply_eq_zero_iff _).2
     (H.hodgeLaplacian_mem_orthogonal_harmonic_total x)
+
+/-! ### `ker 𝐝†` reduces the Hodge Laplacian -/
+
+/-- **The domain of the Hodge Laplacian** (the converse of `hodgeLaplacian_apply_eq_adjoint`):
+`x ∈ D(𝐝) ∩ D(𝐝†)` with `𝐝 x ∈ D(𝐝†)` and `𝐝† x ∈ D(𝐝)` is in `D(Δ)`, and
+`Δ x = 𝐝 𝐝† x + 𝐝† 𝐝 x`. -/
+theorem exists_hodgeLaplacian_eq_adjoint {x : PiLp 2 W} (h₁ : x ∈ H.totalD.domain)
+    (h₂ : x ∈ H.totalD†.domain) (h₃ : (H.totalD ⟨x, h₁⟩ : PiLp 2 W) ∈ H.totalD†.domain)
+    (h₄ : (H.totalD† ⟨x, h₂⟩ : PiLp 2 W) ∈ H.totalD.domain) :
+    ∃ hx : x ∈ H.hodgeLaplacian.domain,
+      H.hodgeLaplacian ⟨x, hx⟩ = H.totalD ⟨_, h₄⟩ + H.totalD† ⟨_, h₃⟩ := by
+  revert h₂ h₃ h₄
+  rw [adjoint_totalD]
+  intro h₂ h₃ h₄
+  have hd1 := H.totalD_mapsTo ⟨x, h₁⟩
+  have hd2 := H.dual.totalD_mapsTo ⟨x, h₂⟩
+  have hL : x ∈ H.wave.sqDomain := ⟨⟨h₁, h₂⟩, sub_mem hd1 h₄, sub_mem h₃ hd2⟩
+  refine ⟨hL, ?_⟩
+  change -(H.totalD ⟨_, hL.2.1⟩ - H.dual.totalD ⟨_, hL.2.2⟩) = _
+  have e1 : H.totalD ⟨_, hL.2.1⟩ = H.totalD ⟨_, hd1⟩ - H.totalD ⟨_, h₄⟩ := by
+    rw [← LinearPMap.map_sub]; rfl
+  have e2 : H.dual.totalD ⟨_, hL.2.2⟩ = H.dual.totalD ⟨_, h₃⟩ - H.dual.totalD ⟨_, hd2⟩ := by
+    rw [← LinearPMap.map_sub]; rfl
+  rw [e1, e2, H.totalD_comp_totalD, H.dual.totalD_comp_totalD]
+  abel
+
+/-- `ker 𝐝†` is closed (`𝐝†` is closed), so it has an orthogonal projection. -/
+instance : (H.totalD†).ker.HasOrthogonalProjection :=
+  hasOrthogonalProjection_ker _ (adjoint_isClosed H.dense_totalD_domain)
+
+/-- **`ker 𝐝†` reduces the Hodge Laplacian** of every finite Hilbert complex, with no closed-range
+hypothesis. For `x ∈ D(Δ)` and `P` the projection onto `ker 𝐝†`, `x - P x ∈ (ker 𝐝†)ᗮ ⊆ ker 𝐝`, so
+`P x ∈ D(Δ)` and `Δ P x = 𝐝† 𝐝 x = P Δ x` (`𝐝 𝐝† x ∈ R(𝐝) ⊥ ker 𝐝†` and `𝐝† 𝐝 x ∈ ker 𝐝†`). In
+degree `1` of `HΛ(Ω)` the forms of `ker 𝐝†` are the divergence-free fields with vanishing normal
+trace, and the Hodge heat flow on them is the unsteady Stokes flow with slip boundary conditions.
+[AFW2010], §3.2 -/
+theorem isReducing_hodgeLaplacian_ker_adjoint :
+    H.hodgeLaplacian.IsReducing (H.totalD†).ker := by
+  set K := (H.totalD†).ker
+  have key : ∀ x : H.hodgeLaplacian.domain, ∃ hz : K.starProjection (x : PiLp 2 W) ∈
+      H.hodgeLaplacian.domain, H.hodgeLaplacian ⟨_, hz⟩ = K.starProjection (H.hodgeLaplacian x) := by
+    intro x
+    obtain ⟨h₁, h₂, h₃, h₄, hΔ⟩ := H.hodgeLaplacian_apply_eq_adjoint x
+    have hy : (x : PiLp 2 W) - K.starProjection x ∈ H.totalD.ker :=
+      H.total.orthogonal_ker_adjoint_le_ker () () () (K.sub_starProjection_mem_orthogonal _)
+    obtain ⟨y, hyx, hy0⟩ := mem_ker_iff.1 hy
+    obtain ⟨z, hzx, hz0⟩ := mem_ker_iff.1 (K.starProjection_apply_mem (x : PiLp 2 W))
+    have hz₁ : K.starProjection (x : PiLp 2 W) ∈ H.totalD.domain := by
+      rw [show K.starProjection (x : PiLp 2 W) = x - (x - K.starProjection x) by abel, hyx]
+      exact sub_mem h₁ y.2
+    have hDz : H.totalD ⟨_, hz₁⟩ = H.totalD ⟨_, h₁⟩ := by
+      have e : (⟨_, hz₁⟩ : H.totalD.domain) = ⟨_, h₁⟩ - y :=
+        Subtype.ext (by rw [Submodule.coe_sub, ← hyx]; abel)
+      rw [e, LinearPMap.map_sub, hy0, sub_zero]
+    have hz₂ : K.starProjection (x : PiLp 2 W) ∈ H.totalD†.domain := hzx ▸ z.2
+    have hA0 : H.totalD† ⟨_, hz₂⟩ = 0 := (congrArg _ (Subtype.ext hzx)).trans hz0
+    obtain ⟨hz, hΔz⟩ := H.exists_hodgeLaplacian_eq_adjoint hz₁ hz₂ (by rw [hDz]; exact h₃)
+      (by rw [hA0]; exact zero_mem _)
+    refine ⟨hz, hΔz.trans ?_⟩
+    have hR : ∀ w : H.totalD.domain, K.starProjection (H.totalD w) = 0 := fun w =>
+      (Submodule.starProjection_apply_eq_zero_iff K).2 (by
+        change _ ∈ (H.totalD†).kerᗮ
+        rw [← orthogonal_range_eq_ker_adjoint _ H.dense_totalD_domain]
+        exact Submodule.le_orthogonal_orthogonal _ ⟨w, rfl⟩)
+    have hA : ∀ w : H.totalD†.domain, K.starProjection (H.totalD† w) = H.totalD† w := fun w =>
+      (K.starProjection_eq_self_iff).2 (mem_ker_iff.2
+        ⟨⟨_, H.total.adjoint_mapsTo () () () w⟩, rfl, H.total.adjoint_comp_eq_zero () () () w⟩)
+    rw [hΔ, _root_.map_add, hR, zero_add, hA, apply_mk_eq_zero _ _ hA0, zero_add]
+    exact congrArg _ (Subtype.ext hDz)
+  exact ⟨fun x => (key x).1, fun x => (key x).2⟩
+
+/-- **A form in a degree that no differential reaches is in `ker 𝐝†`**: if `¬ c.Rel j i` for
+every `j` (the first degree of a window), then `single i v ⊥ R(𝐝)`. -/
+theorem single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (hi : ∀ j, ¬ c.Rel j i)
+    (v : W i) : PiLp.single 2 i v ∈ (H.totalD†).ker := by
+  rw [← orthogonal_range_eq_ker_adjoint _ H.dense_totalD_domain, Submodule.mem_orthogonal]
+  rintro _ ⟨w, rfl⟩
+  change ⟪H.totalD w, _⟫ = 0
+  rw [PiLp.inner_apply, Finset.sum_eq_single i (fun j _ hj => by simp [hj]) (by simp),
+    PiLp.single_eq_same, totalD_apply,
+    Finset.sum_eq_zero fun j _ => H.apply_eq_zero_of_not_rel (hi j) _, inner_zero_left]
 
 /-- The solution `(σ, u, p)` of the mixed problem of the total complex with data `f`. -/
 def totalMixedSolution (hcr : ∀ i, H.ClosedRangeAt i) :

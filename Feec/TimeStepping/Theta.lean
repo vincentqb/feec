@@ -49,9 +49,9 @@ freedom is the CN step (`isDirichletCNStep_top_iff`). The Crank–Nicolson resul
 
 On a Hilbert space, A-stability of a general rational `r` (`|r| ≤ 1` on `re z ≤ 0`) gives
 `‖r(τ A)‖ ≤ 1` for every m-dissipative `A` by von Neumann's inequality for the contraction
-`(1 + A)(1 - A)⁻¹` (cf. [CrouzeixLarssonPiskarevThomee1993]); that inequality is not formalized
-here, and the product form above is the part of it obtained from the energy identity of each
-factor.
+`(1 + A)(1 - A)⁻¹` (cf. [CrouzeixLarssonPiskarevThomee1993]): this is
+`Feec.TimeStepping.RationalScheme.norm_step_le` (`Feec.TimeStepping.Rational`); the product form
+above is the part of it obtained from the energy identity of each factor.
 
 ## References
 

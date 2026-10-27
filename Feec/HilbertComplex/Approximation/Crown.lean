@@ -3,6 +3,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.FullyDiscrete
 public import Feec.HilbertComplex.Approximation.HeatFEEC
+public import Feec.HilbertComplex.Approximation.RationalScheme
 
 /-!
 # The FEEC theorem
@@ -36,7 +37,9 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    mixed method ([AFW2010], Thm 3.9; [Wheeler1973]; [GilletteHolstZhu2017]);
 4. (**fully discrete**, `full`) for every time scheme, power bounded and consistent of order `p`
    uniformly in `h` (the θ-schemes `θ ≥ ½`, implicit Euler and Crank–Nicolson are ones,
-   `DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`), the iterates of the wave and heat
+   `DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`, and so is every A-stable rational scheme
+   and A-stable Runge–Kutta method by von Neumann's inequality, `DissipFEEC.rationalScheme`,
+   `DissipFEEC.gaussLegendre2`, `DissipFEEC.radauIIA2`, `DissipFEEC.sdirk2`), the iterates of the wave and heat
    discretizations are stable and converge as `h, τ → 0`, with error at most the spatial rate
    plus the temporal error `τᵖ ‖Lₕ^{p+1} v‖`, which is `O(τᵖ)` uniformly in `h` along smooth
    comparisons for schemes consistent along trajectories ([BrennerThomee1979]; [Thomee2006],
@@ -73,9 +76,10 @@ family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible seq
   (`Feec.Semigroup.DissipativePerturbation`), but damped, Ohmic and forced (Duhamel) problems have
   no conforming verdict in the crown.
 * No-slip Stokes and conforming elastodynamics (no conforming family of their complexes).
-* General A-stable rational schemes `r(τ Lₕ)` and Runge–Kutta methods: only the θ-schemes,
-  Crank–Nicolson and leapfrog are built; the CFL condition of leapfrog is a hypothesis (no global
-  inverse estimate `‖Lₕ‖ ≲ h⁻¹`).
+* Explicit Runge–Kutta methods (polynomial stability functions, not bounded on the imaginary
+  axis) and the uniform-in-`h` temporal bound along trajectories for general rational schemes
+  (`TimeScheme.IsTrajConsistent` is proved for the θ-schemes only); the CFL condition of leapfrog
+  is a hypothesis (no global inverse estimate `‖Lₕ‖ ≲ h⁻¹`).
 * The uniform temporal bound of `rate_full` holds along a smooth comparison of order `p + 1`
   (`DissipFEEC.Comparison.Smooth`, supplied by `DissipFEEC.Ritz.smooth` from a bound of the lifted
   orbit); the bound of the lifted wave and heat orbits is not packaged here.

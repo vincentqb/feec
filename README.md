@@ -201,29 +201,64 @@ LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-g
   year    = {2026},
   url     = {https://github.com/vincentqb/feec}
 }
-```
 
-## References
-
-```bibtex
 @phdthesis{QuennevilleBelair2015,
   author  = {Quenneville-B{\'e}lair, Vincent},
   title   = {A New Approach to Finite Element Simulations of General Relativity},
   school  = {University of Minnesota},
   year    = {2015},
-  month   = jun,
   url     = {http://hdl.handle.net/11299/175309}
 }
-
-@book{Arnold2018FEEC,
-  author    = {Arnold, Douglas N.},
-  title     = {Finite Element Exterior Calculus},
-  series    = {CBMS-NSF Regional Conference Series in Applied Mathematics},
-  volume    = {93},
-  publisher = {Society for Industrial and Applied Mathematics},
-  address   = {Philadelphia, PA},
-  year      = {2018},
-  doi       = {10.1137/1.9781611975543},
-  isbn      = {978-1-611975-53-6}
-}
 ```
+
+## Related work
+
+Every work cited in the Lean docstrings, and those below, has an entry in
+[`docs/references.bib`](docs/references.bib).
+
+**Papers.**
+
+* FEEC: Arnold–Falk–Winther, [*Acta Numerica* 2006](https://doi.org/10.1017/S0962492906210018)
+  and [*Bull. AMS* 2010](https://doi.org/10.1090/S0273-0979-10-01278-4); Arnold,
+  [*Finite Element Exterior Calculus*](https://doi.org/10.1137/1.9781611975543) (SIAM, 2018);
+  variational crimes, Holst–Stern [2012](https://doi.org/10.1007/s10208-012-9119-7); evolution
+  problems, Gillette–Holst–Zhu [2017](https://doi.org/10.4208/jcm.1610-m2015-0319).
+* Finite element spaces: Arnold–Logg, [*Periodic table of the finite
+  elements*](https://www-users.cse.umn.edu/~arnold/papers/periodic-table.pdf) (2014); cubical
+  meshes, Arnold–Awanou [2014](https://doi.org/10.1090/S0025-5718-2013-02783-4),
+  Arnold–Boffi–Bonizzoni [2015](https://doi.org/10.1007/s00211-014-0631-3) and
+  Gillette–Kloefkorn [2019](https://doi.org/10.1090/mcom/3354).
+* BGG construction: Arnold–Hu, [*Complexes from complexes*](https://doi.org/10.1007/s10208-021-09498-9)
+  (2021); Čap–Hu [2024](https://doi.org/10.1007/s10208-023-09608-9).
+* Time stepping: Pazy, [*Semigroups of Linear Operators*](https://doi.org/10.1007/978-1-4612-5561-1)
+  (1983); Brenner–Thomée [1979](https://doi.org/10.1137/0716051) (rational approximation of
+  semigroups); Thomée, [*Galerkin Finite Element Methods for Parabolic
+  Problems*](https://doi.org/10.1007/3-540-33122-0) (2006).
+* Formal proofs for numerical PDEs (Coq): a finite difference scheme for the wave equation down to
+  its C program, Boldo et al. [2014](https://doi.org/10.1016/j.camwa.2014.06.004); the Lax–Milgram
+  theorem, Boldo et al. [2017](https://doi.org/10.1145/3018610.3018625).
+
+**Finite element software.**
+
+* [fem4gr](https://github.com/vincentqb/fem4gr): the FEniCS implementation of the thesis'
+  Crank–Nicolson experiments (Ch. 7), whose step is formalized in `Feec.TimeStepping.Cayley`.
+* [FIAT](https://github.com/firedrakeproject/fiat) (Kirby, [2004](https://doi.org/10.1145/1039813.1039820)):
+  finite element bases, among them the Lagrange, Raviart–Thomas, Nédélec and BDM elements of the
+  periodic table and the trimmed serendipity forms on cubes.
+* [FEniCS](https://fenicsproject.org) ([book, 2012](https://doi.org/10.1007/978-3-642-23099-8);
+  [DOLFINx](https://github.com/FEniCS/dolfinx), [Basix](https://github.com/FEniCS/basix)) and
+  [Firedrake](https://github.com/firedrakeproject/firedrake) (Rathgeber et al.,
+  [2017](https://doi.org/10.1145/2998441)): finite element solvers generated from variational forms.
+* [PyDEC](https://github.com/hirani/pydec) (Bell–Hirani, [2012](https://doi.org/10.1145/2382585.2382588)):
+  discrete exterior calculus and lowest-order Whitney forms on simplicial and cubical complexes.
+
+**Lean 4.**
+
+* [Mathlib](https://github.com/leanprover-community/mathlib4)
+  ([CPP 2020](https://doi.org/10.1145/3372885.3373824)): the library this project builds on
+  (Hilbert spaces, unbounded operators, homological algebra, measure theory).
+* [PhysLib](https://github.com/leanprover-community/physlib) (formerly PhysLean): physics in
+  Lean, including electromagnetism and relativity.
+* [SciLean](https://github.com/lecopivo/SciLean): scientific computing in Lean.
+* [Carleson](https://github.com/fpvandoorn/carleson): a formalization of Carleson's theorem on
+  Fourier series, a large harmonic analysis project on Mathlib.

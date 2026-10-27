@@ -184,25 +184,23 @@ scheme (6.5) (`Feec.Instances.EinsteinBianchiFEM`) is not a discretization by su
 of the exact solution as comparison (`Feec.Instances.EinsteinBianchi.FEM.mirrorEllCore`,
 `Feec.Instances.EinsteinBianchi.FEM.standardCubeEllCore`), without the model convergence theorems
 of (6.5). The model verdict of the mirror scheme is a corollary
-(`Feec.Instances.EinsteinBianchi.mirrorFEMVerdict_of_approxFEEC`). It also goes through the front
-end with a cochain defect (`Feec.Instances.EinsteinBianchiFEMComplex`): the generator of (6.5) is
-`𝐝ₕ − 𝐝ₕ*` for the discrete BGG differential `𝐝ₕ(σ, u, M, ρ) = (0, −d̃Φ(σ, 0), S₁,ₕu, d̃u)` on the
-hidden space (`Feec.Instances.EinsteinBianchi.FEM.waveGen_eq_diffWave`,
+(`Feec.Instances.EinsteinBianchi.mirrorFEMVerdict_of_approxFEEC`). The scheme is one crime front,
+through the front end with a cochain defect (`Feec.Instances.EinsteinBianchiFEMComplex`): the
+generator of (6.5) is `𝐝ₕ − 𝐝ₕ*` for the discrete BGG differential
+`𝐝ₕ(σ, u, M, ρ) = (0, −d̃Φ(σ, 0), S₁,ₕu, d̃u)` on the hidden space
+(`Feec.Instances.EinsteinBianchi.FEM.waveGen_eq_diffWave`,
 `Feec.Instances.EinsteinBianchi.FEM.diffGen_diffGen`), and the elliptic projection (6.4) is a
 Galerkin projection (`Feec.Instances.EinsteinBianchi.FEM.mEll_galerkin`,
 `Feec.Instances.EinsteinBianchi.FEM.cEll_galerkin`, from `inner_ellDefect` and the identification
-of the continuous forms state by polarization), so `ofGalerkinCore` applies to the existing
-elliptic cores. The convergence verdicts below therefore re-derive, through the complex-level
-theorem, the verdicts of `Feec.Instances.EinsteinBianchiFEM`; what is new is the discrete
-differential, the exactly preserved discrete Gauss constraint and the rates through `rateClass`:
-`Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofComplexCrime` (mirror BCs:
-convergence to the TSD solution and TSD residual `→ 0` on the closure `tsdQℝ`; rates
-`Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofComplexCrime_rate`, `O(h)` for TSD
-data of `D(L³)`, and `einsteinBianchi_mirrorFEM_ofComplexCrime_rate_sobolev`, `O(hˢ)` for `H^{2+s}`, both from the initialization (6.4)
-and linear in `t`) and
-`Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_standardCube_ofComplexCrime` (thesis' BCs:
-convergence for every datum, and from `(0, 0, (0, β)) ∈ thesisTSD` TSD residuals tending to a
-positive limit). With `𝐝ₕ` identified the discrete Gauss (divergence) constraint `σₕ = 0`,
+of the continuous forms state by polarization), so `ofGalerkinCore` applies to the elliptic cores.
+The verdicts are structures extending the verdict of the approximating FEEC theorem for
+`ofComplexCrime` of these families by the instance-only fields:
+`Feec.Instances.EinsteinBianchi.MirrorFEMApprox.Verdict` (mirror BCs: the closure `tsdQℝ` of the
+core, which reduces `L`; the discrete solutions are (6.5); the discrete Gauss constraint is
+preserved; the `O(h)` and `O(hˢ)` rates from the initialization (6.4), linear in `t`) and
+`Feec.Instances.EinsteinBianchi.StandardCubeApprox.Verdict` (thesis' BCs: dense core, (6.5), the
+preserved discrete Gauss constraint, and from `(0, 0, (0, β)) ∈ thesisTSD` TSD residuals tending
+to a positive limit). With `𝐝ₕ` identified the discrete Gauss (divergence) constraint `σₕ = 0`,
 `uₕ ⊥ d̃Φ(Vₕ⁰, 0)`, a discrete analogue of part of TSD,
 (`Feec.Instances.EinsteinBianchi.FEM.hiddenGauss`) is invariant under `Lₕ` and preserved exactly by
 the discrete solutions of both instances
@@ -218,14 +216,7 @@ dual discrete graph norm when `ℓ(t)` is an `L²` functional and `M(t) ∈ D(d�
 (`Feec.Instances.EinsteinBianchi.FEM.exists_standardCube_cochainDefect_le_mesh`, regularity
 assumed) and tends to `0` for every datum of `D(L²)`. For mirror boundary conditions it vanishes
 at every TSD state of `D(L)` (`Feec.Instances.EinsteinBianchi.FEM.mirrorFamily_cochainDefect_eq_zero`,
-`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex_cochainDefect_eq_zero`),
-which gives a second route to the mirror verdict, through `ofCochainDefect` with hidden
-interpolants `(0, Π̃¹u − P_K Π̃¹u, 0, Π̃²ρ)`, `K = d̃(ker S₀,ₕ)`, and without (6.4)
-(`Feec.Instances.EinsteinBianchi.FEM.einsteinBianchi_mirrorFEM_ofCochainDefect`): its family
-`Feec.Instances.EinsteinBianchi.FEM.mirrorFamily` is built from the discretization by
-`ApproxComplexCrime.Family.ofApproxFEEC`, and neither the elliptic core, its Galerkin identity,
-`ofGalerkinCore` nor the Strang theorem of (6.4) is in the dependency closure of the theorem (only
-the projection-error functional `strangData`, through `mirrorFEM_strangData_le_of_close`). That the cochain
+`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex_cochainDefect_eq_zero`). That the cochain
 defect is nonzero for some mesh and datum is not proved.
 
 Limits.
@@ -244,9 +235,7 @@ Limits.
   (`Feec.Instances.EinsteinBianchiFEMDefect`; the `O(h)` bound for the thesis' boundary conditions
   assumes `ℓ(t) ∈ L²` and `M(t) ∈ D(d₁*)`), and for mirror boundary conditions it vanishes on TSD
   states; that it is nonzero for some mesh and datum is not proved, so a nonzero cochain defect
-  is exercised only by the witness `shifted`. The second route through `ofCochainDefect` is done
-  for mirror boundary conditions only: for the thesis' boundary conditions graph-norm
-  approximation would need `P_{d̃(ker S₀,ₕ)} d̃φ → 0`, not controlled here. The rates of (6.5) through `ofComplexCrime` have larger constants than
+  is exercised only by the witness `shifted`. The rates of (6.5) through `ofComplexCrime` have larger constants than
   the elliptic rate classes (`(4K + 8Kt) h`), with the same orders. The only non-conforming
   instance of `ofComplex` is the abstract witness, whose crime is the inner product alone; a
   nonzero commutation defect of `πₕ` is exercised by no instance (remark, not formalized: in
@@ -255,8 +244,7 @@ Limits.
 - The split rate `rateClass_of_split` (order `min(α, β, γ)`, measure `0 ≤ m ≤ 1`) is exercised
   only by the witness `mixed`. The rates of (6.5) go through
   `Feec.HilbertComplex.galerkinRateClass`, with the elliptic projection (6.4) as approximant
-  (residual `0`), not through the split; the `ofCochainDefect` route of the mirror scheme states
-  no rate.
+  (residual `0`), not through the split.
 - Rate classes and cores are hypotheses on the data that each instance must supply. The
   conforming rate carries `(1 + C_P)(1 + t)²`, where the model theorems have `(1 + t)`; through
   `ofComplex` (`ConstrainedFEEC.RateClass.toCrimeRate`) it is `C + C_ι C' t`.

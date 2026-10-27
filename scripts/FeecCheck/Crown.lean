@@ -10,6 +10,8 @@ import Feec.Models.Cube.SobolevRateHigh
 import Feec.Models.Cube.TangentialRate
 import Feec.Models.Parallelepiped.FiniteElement
 import Feec.Models.StarShaped.PolyFiniteElement
+import Feec.Instances.EinsteinBianchiFEM
+import Feec.Instances.EinsteinBianchiFEMDefect
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -89,6 +91,35 @@ boundary degrees of freedom, a weak solution against `V̊ₕ`) is not the orbit 
 its estimate is not a corollary of the fully discrete verdict: `cn_old` states the conclusion of
 `norm_cn_error_le` verbatim and derives it from the model theorem, which shares the trapezoidal
 engine.
+
+## The Einstein–Bianchi scheme (6.5)
+
+The scheme (6.5) of [QuennevilleBelair2015] is one crime front: `ofComplexCrime` of the Galerkin
+family of its elliptic core (`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex`,
+`Feec.Instances.EinsteinBianchi.FEM.standardCubeComplex`), with the verdicts
+`Feec.Instances.EinsteinBianchi.MirrorFEMApprox.Verdict` and
+`Feec.Instances.EinsteinBianchi.StandardCubeApprox.Verdict` (structures extending the verdict of
+the approximating FEEC theorem by the instance-only fields). Gone are:
+
+* the orbit cores `mirrorFEMCore`, `standardCubeCore` (the model convergence theorems read on the
+  discretization, `mirrorFEM_hconv`, `standardCube_hconv`) and the orbit rate classes
+  `mirrorFEMRate`, `mirrorFEMRateSobolev` (constants of the model rate theorems);
+* the second route to the mirror verdict, through `ApproxComplexCrime.ofCochainDefect` with the
+  hidden interpolants (`mirrorSplitComplex`): its discretization and core were, by definition,
+  those of `mirrorComplex` (the same family `mirrorFamily`, constraint, filter and core data;
+  checked by `rfl` before the deletion);
+* the direct verdicts on the elliptic cores and the per-instance restatements of the verdict
+  (`einsteinBianchi_mirrorFEM_converges`, `einsteinBianchi_standardCube_converges`, the crime
+  front conjunctions and their rates), and the `Prop` abbreviations `MirrorFEMApproxVerdict`,
+  `StandardCubeApproxVerdict` (with the `maxHeartbeats 2000000` of their proof).
+
+The theorems `eb_old_*` state them verbatim, with the deleted definitions restated here with their
+definitions unfolded (`mirrorFEMCore`, `standardCubeCore`: the orbit cores of
+`ApproxFEEC.orbitCore`, whose model convergence hypothesis is now derived from the verdict,
+`eb_old_mirrorFEM_hconv`, `eb_old_standardCube_hconv`; the orbit rate classes with the constants of
+`Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain` and
+`mirror_waveFEM_rate_sobolev_of_add_two`, private), and `mirrorSplitComplex` unfolded to
+`mirrorComplex` in `eb_old_mirrorFEM_ofCochainDefect`.
 
 ## The crown
 
@@ -2711,5 +2742,665 @@ example (n : ℕ) [NeZero n] (S : FiniteElement.PolySeq) :
   (polyFamily n S).feec.heat 0 (n + 1) ⊤ _ (closedRangeAt_heatWindow n)
 
 end CrownCube
+
+noncomputable section EinsteinBianchiOld
+
+open Feec.Instances Feec.Instances.EinsteinBianchi Feec.Instances.EinsteinBianchi.FEM Metric
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+/-! ### Mirror boundary conditions -/
+
+section Mirror
+
+open Feec.Models.Cube.MirrorWeakSymmetry
+open Feec.Models.Cube.FEM (ParitySmoothingEstimates meshSize meshSize_pos)
+open Feec.FiniteElement (PolySeq)
+open Feec.Models.Cube.MirrorBGG (SpaceQ complexQ tsdQ)
+
+variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+  (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+  (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
+
+/-- The old `mirrorFEM_hconv` (model convergence read on `mirrorFEMApprox`), from the verdict: the
+discrete solutions from `π' ξ₀` converge. -/
+theorem eb_old_mirrorFEM_hconv : ∀ x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq, ∀ T : ℝ, 0 < T →
+    ∀ ε : ℝ, 0 < ε → ∀ᶠ N in atTop, ∃ v : (mirrorFEMApprox hT hB).X N,
+      ∀ t ∈ Icc 0 T, ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤ ε := by
+  intro x hx T _ ε hε
+  have V := mirrorFEMApprox_verdict hT hB
+  have hxc := V.closure.ge hx.1
+  have hc := V.converges hxc (V.tendsto_incl_proj hxc) T
+  rw [Metric.tendstoUniformlyOn_iff] at hc
+  filter_upwards [hc ε hε] with N hN
+  refine ⟨(mirrorFEMApprox hT hB).proj N x, fun t ht => ?_⟩
+  have h := hN t ht
+  rw [dist_eq_norm, ApproxFEEC.S_eq_waveGroup _ ht.1] at h
+  rw [← V.sol]
+  exact h.le
+
+/-- The old orbit core `mirrorFEMCore`, with its definition unfolded. -/
+abbrev mirrorFEMCore : (mirrorFEMApprox hT hB).Core :=
+  ApproxFEEC.orbitCore (mirrorFEMApprox_isOrthogonal hT hB) (tsdQℝ ⊓ complexQℝ.wave.domainSq)
+    (eb_old_mirrorFEM_hconv hT hB)
+
+/-- The old helpers of the orbit rate classes (`mirrorSource_zero`, `toSourceFree`, `pairInit`,
+`mirrorFEMApprox_sol_pairInit`, `norm_sub_sol_pairInit_le`), verbatim. -/
+private theorem mirrorSource_zero (N : ℕ) (t : ℝ) : mirrorSource hT hB N 0 t = 0 :=
+  ext_inner_right ℝ fun v => by
+    rw [inner_mirrorSource, Pi.zero_apply, inner_zero_left, inner_zero_left]
+
+/-- A solution of (6.5) with the (vanishing) projected source as a solution without source. -/
+private def toSourceFree (N : ℕ) {T : ℝ}
+    (s : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) :
+    Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T 0 :=
+  s.ofEqOn fun t _ => (mirrorSource_zero hT hB N t).symm
+
+/-- The discrete initial value of a pair of solutions of (6.5) (real and imaginary parts). -/
+private def pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
+    (s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) :
+    (mirrorFEMApprox hT hB).X N :=
+  WithLp.toLp 2 (DiscreteSolution.hiddenInit hT0 (toSourceFree hT hB N s),
+    DiscreteSolution.hiddenInit hT0 (toSourceFree hT hB N s'))
+
+/-- **The complex discrete solution from a pair of solutions of (6.5)**:
+`ι' e^{tL'}(v, v') = Rt(state of s)(t) + i Rt(state of s')(t)`. -/
+private theorem mirrorFEMApprox_sol_pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
+    (s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    (mirrorFEMApprox hT hB).sol N (pairInit hT hB N hT0 s s') t =
+      mirrorReEmb (dState hT hB N (toSourceFree hT hB N s) t) +
+        mulI (mirrorReEmb (dState hT hB N (toSourceFree hT hB N s') t)) :=
+  (mirrorFEMApprox_sol hT hB N _ _ t).trans (congrArg₂ (· + ·)
+    (mirrorFEMReal_sol_eq hT hB N hT0 _ ht) (congrArg mulI (mirrorFEMReal_sol_eq hT hB N hT0 _ ht)))
+
+/-- **The error of a pair of solutions of (6.5)** against the TSD solution: at most the error of
+the real part plus the error of the imaginary part, each being the quantity of
+`mirror_waveFEM` for the data `ξ₀` and `-i ξ₀`. -/
+private theorem norm_sub_sol_pairInit_le (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
+    (s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) {t : ℝ}
+    (ht : t ∈ Icc 0 T) {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ) :
+    ‖y - (mirrorFEMApprox hT hB).sol N (pairInit hT hB N hT0 s s') t‖ ≤
+      tsdErr y (dState hT hB N (toSourceFree hT hB N s) t) +
+        tsdErr (-Complex.I • y) (dState hT hB N (toSourceFree hT hB N s') t) := by
+  rw [mirrorFEMApprox_sol_pairInit hT hB N hT0 s s' ht, mulI_apply, ← sub_sub]
+  exact norm_sub_mirrorReEmb_le hy _ _
+
+/-- The constant of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain`. -/
+private def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose
+
+private theorem mirrorRateK_nonneg : 0 ≤ mirrorRateK hT hB :=
+  (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.1
+
+set_option maxHeartbeats 400000 in
+/-- The model rate (`mirror_waveFEM_rate_of_mem_domain`) for one TSD datum of `D(L³)`. -/
+private theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq)
+    (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) {T : ℝ} (hT0 : 0 < T) :
+    ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
+      ∀ t ∈ Icc 0 T, tsdErr ((tsdDatumOf hx).U t) (dState hT hB N (toSourceFree hT hB N sh) t) ≤
+        mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + t) * meshSize N := by
+  obtain ⟨sh, -, hsh⟩ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.2 N
+    (tsdDatumOf hx) h3 hT0
+    (tsdDatumOf hx).U_zero ((tsdDatumOf hx).isStrongSolution T)
+  exact ⟨sh, hsh⟩
+/-- **The model rate of the mirror scheme for TSD data of `D(L³)`**
+(`mirror_waveFEM_rate_of_mem_domain` for `ξ₀` and `-i ξ₀`): for every `N`, some discrete initial
+value gives `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_N ‖ξ₀‖_{L³}` on `[0, T]`. -/
+private theorem mirrorFEM_hrate {T : ℝ} (hT0 : 0 < T) :
+    ∀ x ∈ mirrorL3Data, ∀ N, ∃ v : (mirrorFEMApprox hT hB).X N, ∀ t ∈ Icc 0 T,
+      ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
+        2 * mirrorRateK hT hB * (1 + T) * meshSize N ^ (1 : ℝ) * mirrorL3Norm x := by
+  rintro x ⟨hx, h3⟩ N
+  obtain ⟨sh, hsh⟩ := mirrorFEM_rate_datum hT hB N hx h3 hT0
+  obtain ⟨sh', hsh'⟩ := mirrorFEM_rate_datum hT hB N (neg_I_smul_mem hx) (mem_LLU₀_negI hx h3) hT0
+  refine ⟨pairInit hT hB N hT0.le sh sh', fun t ht => ?_⟩
+  have hyU : complexQℝ.waveGroup.S t x = (tsdDatumOf hx).U t := complexQℝ_waveGroup ht.1 x
+  have hyU' : (tsdDatumOf (neg_I_smul_mem hx)).U t = -Complex.I • (tsdDatumOf hx).U t :=
+    (complexQ.waveGroup.S t).map_smul (-Complex.I) x
+  have hb := norm_sub_sol_pairInit_le hT hB N hT0.le sh sh' ht ((tsdDatumOf hx).U_tsd t)
+  have e1 := hsh t ht
+  have e2 := hsh' t ht
+  rw [hyU', l3Norm_negI hx h3] at e2
+  rw [hyU, mirrorL3Norm_of_mem hx h3, Real.rpow_one]
+  have hc := l3Norm_nonneg (tsdDatumOf hx) h3
+  have hm := (meshSize_pos N).le
+  have hK := mirrorRateK_nonneg hT hB
+  have h1t : (1 + t) ≤ (1 + T) := by linarith [ht.2]
+  have h4 : mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + t) * meshSize N ≤
+      mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + T) * meshSize N :=
+    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left h1t (mul_nonneg hK hc)) hm
+  have h5 : mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + T) * meshSize N * 2 =
+      2 * mirrorRateK hT hB * (1 + T) * meshSize N * l3Norm (tsdDatumOf hx) h3 := by ring
+  linarith
+/-- **The rate class of order `1`**: TSD data of `D(L³)` with the norm
+`‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`, `C = 6 K (1 + T)` and `C' = 0` (orbit comparison). -/
+private def mirrorFEMRate (T : ℝ) (hT0 : 0 < T) : (mirrorFEMApprox hT hB).RateClass T :=
+  ApproxFEEC.orbitRate (mirrorFEMApprox_isOrthogonal hT hB) mirrorL3Data mirrorL3Norm meshSize 1
+    (2 * mirrorRateK hT hB * (1 + T)) (mirrorFEM_hrate hT hB hT0)
+
+/-- The constant of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_sobolev_of_add_two`. -/
+private def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose
+
+private theorem mirrorSobK_nonneg : 0 ≤ mirrorSobK hT hB :=
+  (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose_spec.1
+
+set_option maxHeartbeats 400000 in
+/-- The model Sobolev rate (`mirror_waveFEM_rate_sobolev_of_add_two`) for one TSD datum. -/
+private theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
+    (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
+    (h : MemSobState (2 + s) x) {T : ℝ} (hT0 : 0 < T) :
+    ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
+      ∀ t ∈ Icc 0 T, tsdErr ((tsdDatumOf hx).U t) (dState hT hB N (toSourceFree hT hB N sh) t) ≤
+        mirrorSobK hT hB * √(sobState (2 + s) x) * (1 + t) * meshSize N ^ s := by
+  obtain ⟨sh, -, hsh⟩ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose_spec.2 N
+    (tsdDatumOf hx) hs0 hs1 h hT0 (tsdDatumOf hx).U_zero ((tsdDatumOf hx).isStrongSolution T)
+  exact ⟨sh, hsh⟩
+
+/-- **The model Sobolev rate of the mirror scheme** (`mirror_waveFEM_rate_sobolev_of_add_two` for
+`ξ₀` and `-i ξ₀`): `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_Nˢ ‖ξ₀‖_{2+s}` on `[0, T]`. -/
+private theorem mirrorFEM_hrate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    ∀ x ∈ mirrorSobData s, ∀ N, ∃ v : (mirrorFEMApprox hT hB).X N, ∀ t ∈ Icc 0 T,
+      ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
+        2 * mirrorSobK hT hB * (1 + T) * meshSize N ^ s * √(sobState (2 + s) x) := by
+  rintro x ⟨hx, h⟩ N
+  obtain ⟨sh, hsh⟩ := mirrorFEM_sobolev_datum hT hB N hx hs0 hs1 h hT0
+  obtain ⟨sh', hsh'⟩ := mirrorFEM_sobolev_datum hT hB N (neg_I_smul_mem hx) hs0 hs1
+    (memSobState_negI h) hT0
+  refine ⟨pairInit hT hB N hT0.le sh sh', fun t ht => ?_⟩
+  have hyU : complexQℝ.waveGroup.S t x = (tsdDatumOf hx).U t := complexQℝ_waveGroup ht.1 x
+  have hyU' : (tsdDatumOf (neg_I_smul_mem hx)).U t = -Complex.I • (tsdDatumOf hx).U t :=
+    (complexQ.waveGroup.S t).map_smul (-Complex.I) x
+  have hb := norm_sub_sol_pairInit_le hT hB N hT0.le sh sh' ht ((tsdDatumOf hx).U_tsd t)
+  have e1 := hsh t ht
+  have e2 := hsh' t ht
+  rw [hyU', sobState_negI] at e2
+  rw [hyU]
+  have hc := Real.sqrt_nonneg (sobState (2 + s) x)
+  have hm : 0 ≤ meshSize N ^ s := Real.rpow_nonneg (meshSize_pos N).le s
+  have hK := mirrorSobK_nonneg hT hB
+  have h1t : (1 + t) ≤ (1 + T) := by linarith [ht.2]
+  have h4 : mirrorSobK hT hB * √(sobState (2 + s) x) * (1 + t) * meshSize N ^ s ≤
+      mirrorSobK hT hB * √(sobState (2 + s) x) * (1 + T) * meshSize N ^ s :=
+    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left h1t (mul_nonneg hK hc)) hm
+  have h5 : mirrorSobK hT hB * √(sobState (2 + s) x) * (1 + T) * meshSize N ^ s * 2 =
+      2 * mirrorSobK hT hB * (1 + T) * meshSize N ^ s * √(sobState (2 + s) x) := by ring
+  linarith
+
+/-- **The rate class of order `s ∈ [0, 1]`**: TSD data with mirror extension in `H^{2+s}`, norm
+`‖ξ₀‖_{2+s}`, `C = 6 K (1 + T)` and `C' = 0`. -/
+private def mirrorFEMRateSobolev (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    (mirrorFEMApprox hT hB).RateClass T :=
+  ApproxFEEC.orbitRate (mirrorFEMApprox_isOrthogonal hT hB) (mirrorSobData s)
+    (fun x => √(sobState (2 + s) x)) meshSize s (2 * mirrorSobK hT hB * (1 + T))
+    (mirrorFEM_hrate_sobolev hT hB hT0 hs0 hs1)
+
+/-- The old `einsteinBianchi_mirrorFEM_approxFEEC` (the orbit core). -/
+theorem eb_old_mirrorFEM_approxFEEC :
+    (mirrorFEMApprox hT hB).Verdict (mirrorFEMCore hT hB) :=
+  approxFEEC _ _
+
+/-- The old `einsteinBianchi_mirrorFEM_converges`, from `MirrorFEMApprox.Verdict`. -/
+theorem eb_old_mirrorFEM_converges {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ) (T : ℝ) :
+    (∀ t, complexQℝ.waveGroup.S t x ∈ tsdQℝ) ∧
+    Tendsto (fun N => (mirrorFEMApprox hT hB).incl N ((mirrorFEMApprox hT hB).proj N x)) atTop
+      (𝓝 x) ∧
+    ∀ v : ∀ N, (mirrorFEMApprox hT hB).X N,
+      Tendsto (fun N => (mirrorFEMApprox hT hB).incl N (v N)) atTop (𝓝 x) →
+      TendstoUniformlyOn (fun N t => (mirrorFEMApprox hT hB).sol N (v N) t)
+        (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
+      TendstoUniformlyOn (fun N t => infDist ((mirrorFEMApprox hT hB).sol N (v N) t)
+        (tsdQℝ : Set (PiLp 2 SpaceQ))) (fun _ => 0) atTop (Icc 0 T) := by
+  have V := mirrorFEMApprox_verdict hT hB
+  have hxc := V.closure.ge hx
+  have hsol : ∀ (v : ∀ N, (mirrorFEMApprox hT hB).X N), ∀ᶠ N in atTop, EqOn
+      (fun t => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t)
+      (fun t => (mirrorFEMApprox hT hB).sol N (v N) t) (Icc 0 T) := fun v =>
+    Eventually.of_forall fun N t _ => V.sol N (v N) t
+  refine ⟨fun t => V.isReducing_iff_invariant.1 V.isReducing t x hx, V.tendsto_incl_proj hxc,
+    fun v hv => ⟨((V.converges hxc hv T).congr (hsol v)).congr_right fun t ht =>
+      DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup _ ht.1) x,
+      (V.residual_tendsto (V.isReducing_iff.1 V.isReducing).1 hx hxc hv T).congr
+        ((hsol v).mono fun N hN t ht => congrArg (infDist · _) (hN ht))⟩⟩
+
+/-- The old `einsteinBianchi_mirrorFEM_rate` (the orbit rate class), verbatim. -/
+theorem eb_old_mirrorFEM_rate {T : ℝ} (hT0 : 0 < T) {x : PiLp 2 SpaceQ}
+    (hx : x ∈ mirrorL3Data) (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
+      3 * (2 * mirrorRateK hT hB * (1 + T)) * (meshSize N * mirrorL3Norm x) +
+        ‖(mirrorFEMApprox hT hB).proj N x - v‖ := by
+  have h := (eb_old_mirrorFEM_approxFEEC hT hB).rate (mirrorFEMRate hT hB T hT0) hx N v ht
+  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
+  have hp : (mirrorFEMRate hT hB T hT0).p x N 0 = (mirrorFEMApprox hT hB).proj N x :=
+    C0Group.S_zero_apply _ _
+  have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
+  have hC : (mirrorFEMRate hT hB T hT0).C = 3 * (2 * mirrorRateK hT hB * (1 + T)) := rfl
+  have hC' : (mirrorFEMRate hT hB T hT0).C' = 0 := rfl
+  have hm : (mirrorFEMRate hT hB T hT0).meshSize N ^ (mirrorFEMRate hT hB T hT0).α *
+      (mirrorFEMRate hT hB T hT0).classNorm x = meshSize N * mirrorL3Norm x := by
+    change meshSize N ^ (1 : ℝ) * mirrorL3Norm x = _
+    rw [Real.rpow_one]
+  simp only [hC, hC', hm, hp, mul_zero, zero_mul, add_zero] at h
+  have hn := norm_nonneg ((mirrorFEMApprox hT hB).proj N x - v)
+  linarith [mul_le_of_le_one_left hn hι]
+
+/-- The old `einsteinBianchi_mirrorFEM_rate_sobolev` (the orbit rate class), verbatim. -/
+theorem eb_old_mirrorFEM_rate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 0 ≤ s)
+    (hs1 : s ≤ 1) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ)
+    (v : (mirrorFEMApprox hT hB).X N) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
+      3 * (2 * mirrorSobK hT hB * (1 + T)) * (meshSize N ^ s * √(sobState (2 + s) x)) +
+        ‖(mirrorFEMApprox hT hB).proj N x - v‖ := by
+  have h := (eb_old_mirrorFEM_approxFEEC hT hB).rate
+    (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1) hx N v ht
+  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
+  have hp : (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).p x N 0 =
+      (mirrorFEMApprox hT hB).proj N x := C0Group.S_zero_apply _ _
+  have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
+  have hC : (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).C =
+      3 * (2 * mirrorSobK hT hB * (1 + T)) := rfl
+  have hC' : (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).C' = 0 := rfl
+  have hm : (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).meshSize N ^
+      (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).α *
+      (mirrorFEMRateSobolev hT hB T s hT0 hs0 hs1).classNorm x =
+        meshSize N ^ s * √(sobState (2 + s) x) := rfl
+  simp only [hC, hC', hm, hp, mul_zero, zero_mul, add_zero] at h
+  have hn := norm_nonneg ((mirrorFEMApprox hT hB).proj N x - v)
+  linarith [mul_le_of_le_one_left hn hι]
+
+/-- The old `einsteinBianchi_mirrorFEM_approxFEEC_elliptic` (the direct verdict on the elliptic
+core). -/
+theorem eb_old_mirrorFEM_approxFEEC_elliptic :
+    (mirrorFEMApprox hT hB).Verdict (mirrorEllCore hT hB) :=
+  approxFEEC _ _
+
+/-- The old `einsteinBianchi_mirrorFEM_rate_elliptic`, from `MirrorFEMApprox.Verdict` (the comparison initial value does not
+depend on the horizon). -/
+theorem eb_old_mirrorFEM_rate_elliptic {T : ℝ} {x : PiLp 2 SpaceQ}
+    (hx : x ∈ mirrorL3Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖complexQℝ.waveGroup.S t x -
+        (mirrorFEMApprox hT hB).sol N ((mirrorEllCmp hT hB T).p x N 0) t‖ ≤
+      (4 * mirrorEllK (C := C) + 8 * mirrorEllK (C := C) * t) *
+        (meshSize N * mirrorL3Norm x) := by
+  rw [mirrorEllCmp_p_zero_eq_init hT hB T]
+  exact (mirrorFEMApprox_verdict hT hB).rate_init hx N ht.1
+
+/-- The old `einsteinBianchi_mirrorFEM_rate_sobolev_elliptic`, from `MirrorFEMApprox.Verdict` (the comparison initial value does not
+depend on the horizon). -/
+theorem eb_old_mirrorFEM_rate_sobolev_elliptic {T s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
+    {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖complexQℝ.waveGroup.S t x -
+        (mirrorFEMApprox hT hB).sol N ((mirrorEllCmp hT hB T).p x N 0) t‖ ≤
+      (6 * mirrorEllK (C := C) + 12 * mirrorEllK (C := C) * t) *
+        (meshSize N ^ s * √(sobState (2 + s) x)) := by
+  rw [mirrorEllCmp_p_zero_eq_init hT hB T]
+  exact (mirrorFEMApprox_verdict hT hB).rate_sobolev_init hs0 hs1 hx N ht.1
+
+/-- The old `einsteinBianchi_mirrorFEM_ofComplexCrime`, from `MirrorFEMApprox.Verdict`. -/
+theorem eb_old_mirrorFEM_ofComplexCrime :
+    (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).Verdict
+      (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)) ∧
+    (∀ N v t, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N v t =
+      (mirrorFEMApprox hT hB).sol N v t) ∧
+    (∀ N, (mirrorFEMApprox hT hB).L N = diffWave (mirrorD hT hB N)) ∧
+    (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)).Data.topologicalClosure = tsdQℝ ∧
+    (∀ x ∈ tsdQℝ, ∀ T : ℝ, ∀ v : ∀ N, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).X N,
+      Tendsto (fun N => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).incl N (v N)) atTop
+        (𝓝 x) →
+      TendstoUniformlyOn
+        (fun N t => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t)
+        (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
+      TendstoUniformlyOn (fun N t => infDist
+        ((ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t) (tsdQℝ : Set _))
+        (fun _ => 0) atTop (Icc 0 T)) := by
+  have V := mirrorFEMApprox_verdict hT hB
+  refine ⟨V.toApprox, V.sol, mirrorFEMApprox_L_eq hT hB, V.closure, fun x hx T v hv => ?_⟩
+  have hxc := V.closure.ge hx
+  exact ⟨(V.converges hxc hv T).congr_right fun t ht =>
+    DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup _ ht.1) x,
+    V.residual_tendsto (V.isReducing_iff.1 V.isReducing).1 hx hxc hv T⟩
+
+/-- The old `einsteinBianchi_mirrorFEM_ofComplexCrime_rate` (the crime rate class), verbatim. -/
+theorem eb_old_mirrorFEM_ofComplexCrime_rate {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data)
+    (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
+      ((mirrorComplex hT hB).toFamily.rateConstA * (4 * mirrorEllK (C := C)) +
+        (mirrorComplex hT hB).toFamily.boundConst *
+          (2 * (mirrorComplex hT hB).toFamily.rateConstD * (4 * mirrorEllK (C := C))) * t) *
+        (meshSize N * mirrorL3Norm x) := by
+  have h := (mirrorComplex hT hB).error_le_of_rateClass (mirrorComplexRate hT hB t) hx N
+    ⟨ht, le_rfl⟩
+  have hp : (mirrorComplexRate hT hB t).p x N 0 = mirrorEllInit hT hB x N :=
+    (galerkinRateClass_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ _ _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
+      (mirrorEllCmp_p_zero_eq_init hT hB (t + 1) x N)
+  rw [hp, mirrorComplex_sol] at h
+  refine h.trans_eq ?_
+  change _ * (meshSize N ^ (1 : ℝ) * mirrorL3Norm x) = _
+  rw [Real.rpow_one]
+  rfl
+
+/-- The old `einsteinBianchi_mirrorFEM_ofComplexCrime_rate_sobolev` (the crime rate class), verbatim. -/
+theorem eb_old_mirrorFEM_ofComplexCrime_rate_sobolev {s : ℝ} (hs0 : 0 ≤ s)
+    (hs1 : s ≤ 1) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
+      ((mirrorComplex hT hB).toFamily.rateConstA * (6 * mirrorEllK (C := C)) +
+        (mirrorComplex hT hB).toFamily.boundConst *
+          (2 * (mirrorComplex hT hB).toFamily.rateConstD * (6 * mirrorEllK (C := C))) * t) *
+        (meshSize N ^ s * √(sobState (2 + s) x)) := by
+  have h := (mirrorComplex hT hB).error_le_of_rateClass
+    (mirrorComplexRateSobolev hT hB t s hs0 hs1) hx N ⟨ht, le_rfl⟩
+  have hp : (mirrorComplexRateSobolev hT hB t s hs0 hs1).p x N 0 = mirrorEllInit hT hB x N :=
+    (galerkinRateClass_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ _ _ _ _ _ _ _ _ _
+      _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
+      (mirrorEllCmp_p_zero_eq_init hT hB (t + 1) x N)
+  rw [hp, mirrorComplex_sol] at h
+  exact h
+
+/-- The old `MirrorFEMApproxVerdict`, verbatim (the orbit core and rate classes as above). -/
+abbrev MirrorFEMApproxVerdict : Prop :=
+  (∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),
+      ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C ∧
+        ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) ∧
+    (cosDatum.U₀ ∈ mirrorL3Data ∧ (∀ s, cosDatum.U₀ ∈ mirrorSobData s) ∧
+      cosDatum.U₀ ∉ Feec.Models.Cube.MirrorBGG.complexQ.waveGroup.stationary) ∧
+    -- the model verdict, as a corollary of the elliptic instance
+    MirrorFEMVerdict ∧
+    ∀ {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+      (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+      (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C),
+      -- 1. the verdict
+      (mirrorFEMApprox hT hB).Verdict (mirrorFEMCore hT hB) ∧
+      -- 2. the closure of the core, the reducing constraint
+      (mirrorFEMCore hT hB).Data.topologicalClosure = tsdQℝ ∧ complexQℝ.wave.IsReducing tsdQℝ ∧
+      -- 3. convergence to the TSD solution, residual → 0
+      (∀ x ∈ tsdQℝ, ∀ T : ℝ, (∀ t, complexQℝ.waveGroup.S t x ∈ tsdQℝ) ∧
+        Tendsto (fun N => (mirrorFEMApprox hT hB).incl N ((mirrorFEMApprox hT hB).proj N x))
+          atTop (𝓝 x) ∧
+        ∀ v : ∀ N, (mirrorFEMApprox hT hB).X N,
+          Tendsto (fun N => (mirrorFEMApprox hT hB).incl N (v N)) atTop (𝓝 x) →
+          TendstoUniformlyOn (fun N t => (mirrorFEMApprox hT hB).sol N (v N) t)
+            (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
+          TendstoUniformlyOn (fun N t => infDist ((mirrorFEMApprox hT hB).sol N (v N) t)
+            (tsdQℝ : Set (PiLp 2 SpaceQ))) (fun _ => 0) atTop (Icc 0 T)) ∧
+      -- 4. orbit rates
+      (∀ {T : ℝ}, 0 < T → ∀ x ∈ mirrorL3Data, ∀ (N : ℕ) (v : (mirrorFEMApprox hT hB).X N),
+        ∀ t ∈ Icc 0 T, ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
+          3 * (2 * mirrorRateK hT hB * (1 + T)) * (meshSize N * mirrorL3Norm x) +
+            ‖(mirrorFEMApprox hT hB).proj N x - v‖) ∧
+      (∀ {T s : ℝ}, 0 < T → 0 ≤ s → s ≤ 1 → ∀ x ∈ mirrorSobData s, ∀ (N : ℕ)
+        (v : (mirrorFEMApprox hT hB).X N), ∀ t ∈ Icc 0 T,
+        ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
+          3 * (2 * mirrorSobK hT hB * (1 + T)) * (meshSize N ^ s * √(sobState (2 + s) x)) +
+            ‖(mirrorFEMApprox hT hB).proj N x - v‖) ∧
+      -- 5. the discrete solutions are (6.5)
+      (∀ (N : ℕ) {T : ℝ} (hT0 : 0 < T) (a b : mirrorHidden hT hB N),
+        ∃ s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T 0,
+          DiscreteSolution.hiddenInit hT0.le s = a ∧ DiscreteSolution.hiddenInit hT0.le s' = b ∧
+          ∀ t ∈ Icc 0 T, (mirrorFEMApprox hT hB).sol N (WithLp.toLp 2 (a, b)) t =
+            mirrorReEmb (dState hT hB N s t) + mulI (mirrorReEmb (dState hT hB N s' t))) ∧
+      -- 6. the elliptic core
+      (mirrorFEMApprox hT hB).Verdict (mirrorEllCore hT hB) ∧
+      (mirrorEllCore hT hB).Data.topologicalClosure = tsdQℝ ∧
+      -- 7. the elliptic rates from the horizon-free initialization (6.4)
+      (∀ {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) (N : ℕ),
+        (∀ T : ℝ, (mirrorEllCmp hT hB T).p x N 0 = mirrorEllInit hT hB x N) ∧
+        mirrorEllInit hT hB x N = WithLp.toLp 2 (mEll hT hB N (tsdDatumOf hx) 0 0,
+          mEll hT hB N (tsdDatumOf (neg_I_smul_mem hx)) 0 0)) ∧
+      (∀ (N : ℕ) (D : TSDDatum) {T : ℝ}, 0 ≤ T →
+        (mEll hT hB N D 0 0).toEState = EState.mkL (Feec.BGG.ellipticProjection
+          (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
+          (Feec.BGG.exists_sub_eq_of_surjective (mirrorWave_S0_surjective hT hB N))
+          (Feec.BGG.ellipticRhs ((mirrorFEM hT hB N).ellipticDataH ((D.exactWave T).σ 0)
+            ((D.exactWave T).φ 0) ((D.exactWave T).u 0) ((D.exactWave T).M 0)
+            ((D.exactWave T).ρ 0) ((D.exactWave T).ℓ 0)) 0)).1.1) ∧
+      (∀ {x : PiLp 2 SpaceQ}, x ∈ mirrorL3Data → ∀ (N : ℕ) {t : ℝ}, 0 ≤ t →
+        ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
+          (4 * mirrorEllK (C := C) + 8 * mirrorEllK (C := C) * t) *
+            (meshSize N * mirrorL3Norm x)) ∧
+      (∀ {s : ℝ}, 0 ≤ s → s ≤ 1 → ∀ {x : PiLp 2 SpaceQ}, x ∈ mirrorSobData s → ∀ (N : ℕ)
+        {t : ℝ}, 0 ≤ t →
+        ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
+          (6 * mirrorEllK (C := C) + 12 * mirrorEllK (C := C) * t) *
+            (meshSize N ^ s * √(sobState (2 + s) x)))
+
+-- The orbit rate items of the old statement elaborate the arithmetic of their bounds with other
+-- instance paths than the theorems they bundle, so the unifier unfolds the scheme; the deleted
+-- `mirrorFEMApproxVerdict` carried the same override (`2000000`).
+set_option maxHeartbeats 1000000 in
+/-- The old `mirrorFEMApproxVerdict`. -/
+theorem eb_old_mirrorFEMApproxVerdict : MirrorFEMApproxVerdict := by
+  refine ⟨exists_mirror_estimates, ⟨cosDatum_mem_mirrorL3Data, cosDatum_mem_mirrorSobData,
+    cosDatum_not_stationary⟩, mirrorFEMVerdict_of_approxFEEC, fun hT hB => ?_⟩
+  have V := mirrorFEMApprox_verdict hT hB
+  refine ⟨eb_old_mirrorFEM_approxFEEC hT hB, topologicalClosure_tsdQℝ_inf_domainSq, V.isReducing,
+    fun _ hx T => eb_old_mirrorFEM_converges hT hB hx T,
+    ?_, ?_, V.sol_eq_scheme, eb_old_mirrorFEM_approxFEEC_elliptic hT hB, mirrorEllCore_closure hT hB,
+    fun hx N => ⟨fun T => mirrorEllCmp_p_zero_eq_init hT hB T _ N, V.init hx N⟩,
+    V.init_toEState, V.rate_init, V.rate_sobolev_init⟩
+  · intro T hT0 x hx N v t ht
+    exact eb_old_mirrorFEM_rate hT hB hT0 hx N v ht
+  · intro T s hT0 hs0 hs1 x hx N v t ht
+    exact eb_old_mirrorFEM_rate_sobolev hT hB hT0 hs0 hs1 hx N v ht
+
+/-- The old `einsteinBianchi_mirrorFEM_ofCochainDefect` (the split route), with
+`mirrorSplitComplex` unfolded to `mirrorComplex`. -/
+theorem eb_old_mirrorFEM_ofCochainDefect :
+    (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).Verdict
+      (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)) ∧
+    (∀ N v t, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N v t =
+      (mirrorFEMApprox hT hB).sol N v t) ∧
+    (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)).Data.topologicalClosure = tsdQℝ ∧
+    (∀ x ∈ tsdQℝ, ∀ T : ℝ, ∀ v : ∀ N, (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).X N,
+      Tendsto (fun N => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).incl N (v N)) atTop
+        (𝓝 x) →
+      TendstoUniformlyOn
+        (fun N t => (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t)
+        (fun t => complexQℝ.waveGroup.S t x) atTop (Icc 0 T) ∧
+      TendstoUniformlyOn (fun N t => infDist
+        ((ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t) (tsdQℝ : Set _))
+        (fun _ => 0) atTop (Icc 0 T)) ∧
+    (∀ N (y : complexQℝ.wave.domain), (y : PiLp 2 SpaceQ) ∈ tsdQℝ →
+      (mirrorComplex hT hB).toFamily.cochainDefect N y = 0) :=
+  have V := eb_old_mirrorFEM_ofComplexCrime hT hB
+  ⟨V.1, V.2.1, V.2.2.2.1, V.2.2.2.2, mirrorComplex_cochainDefect_eq_zero hT hB⟩
+
+end Mirror
+
+/-! ### The thesis' boundary conditions -/
+
+section Cube
+
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry
+  Feec.Models.BoundedDomain Feec.EinsteinBianchi.WaveFEM Feec.EinsteinBianchi.MatrixModel
+  Feec.EinsteinBianchi.BoundedFailure Feec.EinsteinBianchi.BoundedConvergence
+
+variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+  (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+  (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
+
+/-- The old `standardCube_hconv` (model convergence read on `standardCubeApprox`), from the verdict:
+the discrete solutions from `π ξ₀` converge. -/
+theorem eb_old_standardCube_hconv : ∀ x ∈ matrixComplex.wave.domainSq, ∀ T : ℝ, 0 < T →
+    ∀ ε : ℝ, 0 < ε → ∀ᶠ N in atTop, ∃ v : (standardCubeApprox hT hB).X N,
+      ∀ t ∈ Icc 0 T,
+        ‖matrixComplex.waveGroup.S t x - (standardCubeApprox hT hB).sol N v t‖ ≤ ε := by
+  intro x _ T _ ε hε
+  have V := standardCubeApprox_verdict hT hB
+  have hxc : x ∈ (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)).Data.topologicalClosure :=
+    (standardCubeEllCore_closure hT hB).ge Submodule.mem_top
+  have hc := V.converges hxc (V.tendsto_incl_proj hxc) T
+  rw [Metric.tendstoUniformlyOn_iff] at hc
+  filter_upwards [hc ε hε] with N hN
+  refine ⟨(standardCubeApprox hT hB).proj N x, fun t ht => ?_⟩
+  have h := hN t ht
+  rw [dist_eq_norm, ApproxFEEC.S_eq_waveGroup _ ht.1] at h
+  rw [← V.sol]
+  exact h.le
+
+/-- The old orbit core `standardCubeCore`, with its definition unfolded. -/
+abbrev standardCubeCore : (standardCubeApprox hT hB).Core :=
+  ApproxFEEC.orbitCore (standardCubeApprox_isOrthogonal hT hB) matrixComplex.wave.domainSq
+    (eb_old_standardCube_hconv hT hB)
+
+/-- The old `dense_standardCubeCore`. -/
+theorem eb_old_dense_standardCubeCore : Dense ((standardCubeCore hT hB).Data : Set (PiLp 2
+    (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
+      (W2B ℝ (cubeDomain 3))))) :=
+  matrixComplex.isSkewAdjoint_wave.dense_domainSq
+
+/-- The old `einsteinBianchi_standardCube_approxFEEC` (the orbit core). -/
+theorem eb_old_standardCube_approxFEEC :
+    (standardCubeApprox hT hB).Verdict (standardCubeCore hT hB) :=
+  approxFEEC _ _
+
+/-- The old `einsteinBianchi_standardCube_approxFEEC_elliptic` (the direct verdict on the
+elliptic core). -/
+theorem eb_old_standardCube_approxFEEC_elliptic :
+    (standardCubeApprox hT hB).Verdict (standardCubeEllCore hT hB) :=
+  approxFEEC _ _
+
+/-- The old `einsteinBianchi_standardCube_converges`, from `StandardCubeApprox.Verdict`. -/
+theorem eb_old_standardCube_converges (x : PiLp 2 (ShortHilbertComplex.W3
+    (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))) (T : ℝ) :
+    Tendsto (fun N => (standardCubeApprox hT hB).incl N ((standardCubeApprox hT hB).proj N x))
+      atTop (𝓝 x) ∧
+    ∀ v : ∀ N, (standardCubeApprox hT hB).X N,
+      Tendsto (fun N => (standardCubeApprox hT hB).incl N (v N)) atTop (𝓝 x) →
+      TendstoUniformlyOn (fun N t => (standardCubeApprox hT hB).sol N (v N) t)
+        (fun t => matrixComplex.waveGroup.S t x) atTop (Icc 0 T) := by
+  have V := standardCubeApprox_verdict hT hB
+  have hxc : x ∈ (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)).Data.topologicalClosure :=
+    (standardCubeEllCore_closure hT hB).ge Submodule.mem_top
+  exact ⟨V.tendsto_incl_proj hxc, fun v hv =>
+    ((V.converges hxc hv T).congr (Eventually.of_forall fun N t _ => V.sol N (v N) t)).congr_right
+      fun t ht => DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup _ ht.1) x⟩
+
+/-- The old `einsteinBianchi_standardCube_ofComplexCrime`, from `StandardCubeApprox.Verdict`. -/
+theorem eb_old_standardCube_ofComplexCrime :
+    (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).Verdict
+      (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)) ∧
+    (∀ N v t, (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).sol N v t =
+      (standardCubeApprox hT hB).sol N v t) ∧
+    (∀ N, (standardCubeApprox hT hB).L N = diffWave (cubeD hT hB N)) ∧
+    (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)).Data.topologicalClosure = ⊤ ∧
+    (∀ x T, ∀ v : ∀ N, (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).X N,
+      Tendsto (fun N => (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).incl N (v N))
+        atTop (𝓝 x) →
+      TendstoUniformlyOn
+        (fun N t => (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).sol N (v N) t)
+        (fun t => matrixComplex.waveGroup.S t x) atTop (Icc 0 T)) ∧
+    betaDatum ∈ thesisTSD ∧
+    (∀ T : ℝ, 0 < T → ∃ t ∈ Icc 0 T, matrixComplex.waveGroup.S t betaDatum ∉ thesisTSD ∧
+      0 < infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _) ∧
+      ∀ v : ∀ N, (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).X N,
+        Tendsto (fun N => (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).incl N (v N))
+          atTop (𝓝 betaDatum) →
+        Tendsto (fun N => infDist
+          ((ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).sol N (v N) t)
+            (thesisTSD : Set _))
+          atTop (𝓝 (infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _)))) := by
+  have V := standardCubeApprox_verdict hT hB
+  have hcl : (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)).Data.topologicalClosure =
+      ⊤ := standardCubeEllCore_closure hT hB
+  refine ⟨V.toApprox, V.sol, standardCubeApprox_L_eq hT hB, hcl, fun x T v hv => ?_,
+    betaDatum_mem_thesisTSD, fun T hT0 => ?_⟩
+  · exact (V.converges (hcl.ge Submodule.mem_top) hv T).congr_right fun t ht =>
+      DFunLike.congr_fun (ApproxFEEC.S_eq_waveGroup _ ht.1) x
+  · obtain ⟨t, ht, hout, hpos, -⟩ := V.residual_not_mem hT0
+    refine ⟨t, ht, hout, hpos, fun v hv => ?_⟩
+    have h := V.tendsto_infDist (thesisTSD : Set _) (hcl.ge Submodule.mem_top) hv ht.1
+    rwa [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
+
+/-- The old `StandardCubeApproxVerdict`, verbatim (the orbit core as above). -/
+abbrev StandardCubeApproxVerdict : Prop :=
+  (betaDatum ∈ thesisTSD ∧ ¬ matrixComplex.wave.IsReducing thesisTSD) ∧
+    -- the model verdict (componentwise discrete failure of TSD, explicit projected data)
+    StandardCubeVerdict ∧
+    (∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ),
+      PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C ∧
+        PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) ∧
+    ∀ {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+      (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+      (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C),
+      -- 1. the verdict, dense core
+      (standardCubeApprox hT hB).Verdict (standardCubeCore hT hB) ∧
+      Dense ((standardCubeCore hT hB).Data : Set (PiLp 2 (ShortHilbertComplex.W3
+        (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) ∧
+      -- 2. the discrete solutions are (6.5)
+      (∀ (N : ℕ) {T : ℝ} (hT0 : 0 < T) (v : cubeHidden hT hB N),
+        ∃ s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T 0,
+          DiscreteSolution.hiddenInit hT0.le s = v ∧
+          ∀ t ∈ Icc 0 T, (standardCubeApprox hT hB).sol N v t =
+            totalE (vecInv (cState hT hB N s t))) ∧
+      -- 3. convergence for every datum
+      (∀ (x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
+          (W2B ℝ (cubeDomain 3)))) (T : ℝ),
+        Tendsto (fun N => (standardCubeApprox hT hB).incl N ((standardCubeApprox hT hB).proj N x))
+          atTop (𝓝 x) ∧
+        ∀ v : ∀ N, (standardCubeApprox hT hB).X N,
+          Tendsto (fun N => (standardCubeApprox hT hB).incl N (v N)) atTop (𝓝 x) →
+          TendstoUniformlyOn (fun N t => (standardCubeApprox hT hB).sol N (v N) t)
+            (fun t => matrixComplex.waveGroup.S t x) atTop (Icc 0 T)) ∧
+      -- 4. the residual from `(0, 0, (0, β))` tends to a positive limit
+      (∀ {T : ℝ}, 0 < T →
+        ∃ t ∈ Icc 0 T, matrixComplex.waveGroup.S t betaDatum ∉ thesisTSD ∧
+          0 < infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _) ∧
+          ∀ v : ∀ N, (standardCubeApprox hT hB).X N,
+            Tendsto (fun N => (standardCubeApprox hT hB).incl N (v N)) atTop (𝓝 betaDatum) →
+            Tendsto (fun N => infDist ((standardCubeApprox hT hB).sol N (v N) t)
+              (thesisTSD : Set _)) atTop
+              (𝓝 (infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _))) ∧
+            ∀ᶠ N in atTop, infDist (matrixComplex.waveGroup.S t betaDatum) (thesisTSD : Set _) / 2 <
+              infDist ((standardCubeApprox hT hB).sol N (v N) t) (thesisTSD : Set _)) ∧
+      -- 5. the elliptic core (dense), and the converse part from `¬ IsReducing` alone
+      (standardCubeApprox hT hB).Verdict (standardCubeEllCore hT hB) ∧
+      Dense ((standardCubeEllCore hT hB).Data : Set (PiLp 2 (ShortHilbertComplex.W3
+        (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) ∧
+      (∀ {T : ℝ}, 0 < T →
+        ∃ Q : Submodule ℝ (PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
+            (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))),
+          (Q = thesisTSD ∨ Q = thesisTSDᗮ) ∧ ∃ x ∈ Q, ∃ t ∈ Icc 0 T,
+            matrixComplex.waveGroup.S t x ∉ Q ∧
+            0 < infDist (matrixComplex.waveGroup.S t x) (Q : Set _) ∧
+            ∀ v : ∀ N, (standardCubeApprox hT hB).X N,
+              Tendsto (fun N => (standardCubeApprox hT hB).incl N (v N)) atTop (𝓝 x) →
+              Tendsto (fun N => infDist ((standardCubeApprox hT hB).sol N (v N) t) (Q : Set _))
+                atTop (𝓝 (infDist (matrixComplex.waveGroup.S t x) (Q : Set _)))) ∧
+      -- 6. the density hypothesis of the `D(L) ∩ K` clauses fails
+      ¬ ∀ k ∈ (standardCubeApprox hT hB).K, k ∈ closure ((matrixComplex.wave.domain :
+        Set (PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
+          (W2B ℝ (cubeDomain 3))))) ∩ (standardCubeApprox hT hB).K)
+
+/-- The old `standardCubeApproxVerdict`. -/
+theorem eb_old_standardCubeApproxVerdict : StandardCubeApproxVerdict := by
+  refine ⟨⟨betaDatum_mem_thesisTSD, not_isReducing_thesisTSD⟩, standardCubeVerdict, ?_,
+    fun hT hB =>
+    ⟨eb_old_standardCube_approxFEEC hT hB, eb_old_dense_standardCubeCore hT hB,
+      fun N _ hT0 v => standardCube_sol_eq_scheme hT hB N hT0 v,
+      fun x T => eb_old_standardCube_converges hT hB x T,
+      fun hT0 => standardCube_residual_not_mem hT hB hT0,
+      eb_old_standardCube_approxFEEC_elliptic hT hB, dense_standardCubeEllCore hT hB,
+      fun hT0 => standardCube_residual_not_isReducing hT hB hT0,
+      not_forall_mem_closure_domain_inf_thesisTSD⟩⟩
+  obtain ⟨p, C, hT, hB, -⟩ := Feec.Models.Cube.FEM.tableRows_H1
+  exact ⟨p, C, hT, hB⟩
+
+end Cube
+
+/-- The old `einsteinBianchi_summary`, verbatim. -/
+theorem eb_old_summary :
+    -- the constrained FEEC verdicts, with the approximating `ℝ³` row
+    ((TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧ EuclideanBand.EuclideanEBVerdict ∧
+      (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧ MirrorFEMVerdict ∧
+      StandardCubeVerdict) ∧
+    -- the scheme (6.5) as an approximating FEEC discretization
+    MirrorFEMApproxVerdict ∧ StandardCubeApproxVerdict :=
+  have h := einsteinBianchi_constrainedFEEC_summary
+  ⟨⟨h.1, EuclideanBand.einsteinBianchi_euclidean_band, h.2.2.1, mirrorFEMVerdict_of_approxFEEC,
+    h.2.2.2.2⟩, eb_old_mirrorFEMApproxVerdict, eb_old_standardCubeApproxVerdict⟩
+
+end EinsteinBianchiOld
 
 end FeecCheck.Crown

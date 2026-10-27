@@ -28,7 +28,14 @@ The real-part maps `Re` (componentwise `re0`, `rowsW1L`, `reM`, `rowsW2L`) and t
 `Rt = mirrorReEmb` satisfy the **error identity** `norm_sq_sub_mirrorReEmb`:
 `‖y - Rt a - i Rt b‖² = ‖Re y - a‖² + ‖Re(-i y) - b‖²`; for a TSD state `y` the two terms are
 the error quantities of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` for the data `y` and
-`-i y`.
+`-i y` (`tsdErr`, `norm_sub_mirrorReEmb_le`, `tsdErr_le_norm_sub_mirrorReEmb`).
+
+**The discrete solutions are the scheme (6.5)** (`mirrorFEMApprox_sol_eq_scheme`): from every
+discrete initial value `(a, b)`, `ι' e^{tL'}(a, b)` is the pair of solutions of (6.5) without source
+from `a` and `b`, read through `Rt`. The TSD data of `D(L²)` (`tsdDatumOf`) are dense in the TSD
+constraint (`topologicalClosure_tsdQℝ_inf_domainSq`); the data of the rate classes are the TSD data
+of `D(L³)` (`mirrorL3Data`, norm `‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`) and those in `H^{2+s}`
+(`mirrorSobData`).
 
 **Faithfulness caveat.** The instance is faithful to `mirrorWave` (the scheme (6.5) of
 `Feec.Models.Cube.MirrorWeakSymmetry`, with `S₀,ₕ = π¹S⁰` for the parity-smoothed cochain
@@ -648,5 +655,203 @@ theorem mirrorFEMReal_sol_eq (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (mirrorFEM hT hB N).W2h.subtypeL (mirrorFEM hT hB N).Wt2h.subtypeL)
     (DiscreteSolution.eq_group (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) hT0 s t ht))
+
+
+/-! ### The error of a TSD state -/
+
+/-- The four-term error of a real forms state `a` against the real part of a state `y`, the
+quantity of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` (with `σ = M = 0`). -/
+def tsdErr (y : PiLp 2 SpaceQ) (a : REnergy) : ℝ :=
+  √(‖a.σ‖ ^ 2 + ‖rowsW1L (slot1 y) - a.u‖ ^ 2 + ‖a.M‖ ^ 2 + ‖rowsW2L (slotB y) - a.ρ‖ ^ 2)
+
+theorem tsdErr_nonneg (y : PiLp 2 SpaceQ) (a : REnergy) : 0 ≤ tsdErr y a := Real.sqrt_nonneg _
+
+set_option maxHeartbeats 1000000 in
+/-- **The error of a TSD state** `y` against `Rt a + i Rt b`: at most the error of the real part
+plus the error of the imaginary part. -/
+theorem norm_sub_mirrorReEmb_le {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ) (a b : REnergy) :
+    ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ ≤ tsdErr y a + tsdErr (-Complex.I • y) b := by
+  obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hy
+  have e0 : slot0 y = 0 := h0
+  have eM : slotM y = 0 := hM
+  have h := norm_sq_sub_mirrorReEmb y a b
+  rw [e0, eM, smul_zero, smul_zero, map_zero, map_zero, zero_sub, zero_sub, zero_sub, zero_sub,
+    norm_neg, norm_neg, norm_neg, norm_neg] at h
+  have hA : tsdErr y a ^ 2 = ‖a.σ‖ ^ 2 + ‖rowsW1L (slot1 y) - a.u‖ ^ 2 + ‖a.M‖ ^ 2 +
+      ‖rowsW2L (slotB y) - a.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
+  have hB : tsdErr (-Complex.I • y) b ^ 2 = ‖b.σ‖ ^ 2 +
+      ‖rowsW1L (-Complex.I • slot1 y) - b.u‖ ^ 2 + ‖b.M‖ ^ 2 +
+      ‖rowsW2L (-Complex.I • slotB y) - b.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
+  have hsq : ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ ^ 2 ≤
+      (tsdErr y a + tsdErr (-Complex.I • y) b) ^ 2 := by
+    rw [h, add_sq, hA, hB]
+    nlinarith [tsdErr_nonneg y a, tsdErr_nonneg (-Complex.I • y) b]
+  exact le_of_pow_le_pow_left₀ two_ne_zero
+    (add_nonneg (tsdErr_nonneg _ _) (tsdErr_nonneg _ _)) hsq
+
+set_option maxHeartbeats 1000000 in
+/-- **The error of the real part is at most the full error**: for a TSD state `y`,
+`tsdErr y a ≤ ‖y - Rt a - i Rt b‖` (the converse of `norm_sub_mirrorReEmb_le`). -/
+theorem tsdErr_le_norm_sub_mirrorReEmb {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ)
+    (a b : REnergy) : tsdErr y a ≤ ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ := by
+  obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hy
+  have e0 : slot0 y = 0 := h0
+  have eM : slotM y = 0 := hM
+  have h := norm_sq_sub_mirrorReEmb y a b
+  rw [e0, eM, smul_zero, smul_zero, map_zero, map_zero, zero_sub, zero_sub, zero_sub, zero_sub,
+    norm_neg, norm_neg, norm_neg, norm_neg] at h
+  have hA : tsdErr y a ^ 2 = ‖a.σ‖ ^ 2 + ‖rowsW1L (slot1 y) - a.u‖ ^ 2 + ‖a.M‖ ^ 2 +
+      ‖rowsW2L (slotB y) - a.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
+  have hB : tsdErr (-Complex.I • y) b ^ 2 = ‖b.σ‖ ^ 2 +
+      ‖rowsW1L (-Complex.I • slot1 y) - b.u‖ ^ 2 + ‖b.M‖ ^ 2 +
+      ‖rowsW2L (-Complex.I • slotB y) - b.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
+  have hsq : tsdErr y a ^ 2 ≤ ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ ^ 2 := by
+    rw [h]
+    nlinarith [sq_nonneg (tsdErr (-Complex.I • y) b)]
+  exact le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg _) hsq
+
+/-! ### TSD data -/
+
+/-- The TSD datum of a TSD state of `D(L²)` of the real mirror complex. -/
+def tsdDatumOf {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) : TSDDatum where
+  U₀ := x
+  mem := mem_complexQℝ_domain.1 (LinearPMap.mem_domainSq.1 hx.2).1
+  mem₂ := by
+    obtain ⟨h1, h2⟩ := LinearPMap.mem_domainSq.1 hx.2
+    have e := complexQℝ_wave_apply ⟨x, h1⟩
+    exact mem_complexQℝ_domain.1 (e ▸ h2)
+  tsd := hx.1
+
+theorem neg_I_smul_mem {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) :
+    -Complex.I • x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq := by
+  obtain ⟨h1, h2⟩ := LinearPMap.mem_domainSq.1 hx.2
+  have h1' := mem_complexQℝ_domain.1 h1
+  have h2' : complexQ.wave ⟨x, h1'⟩ ∈ complexQ.wave.domain := by
+    have e := complexQℝ_wave_apply ⟨x, h1⟩
+    exact mem_complexQℝ_domain.1 (e ▸ h2)
+  have hs : -Complex.I • x ∈ complexQ.wave.domain := complexQ.wave.domain.smul_mem _ h1'
+  have e : complexQ.wave ⟨-Complex.I • x, hs⟩ = -Complex.I • complexQ.wave ⟨x, h1'⟩ :=
+    complexQ.wave.map_smul (-Complex.I) ⟨x, h1'⟩
+  refine ⟨(totalSub tsdQ).smul_mem (-Complex.I) hx.1, LinearPMap.mem_domainSq.2
+    ⟨mem_complexQℝ_domain.2 hs, ?_⟩⟩
+  rw [complexQℝ_wave_apply]
+  refine mem_complexQℝ_domain.2 ?_
+  change complexQ.wave ⟨-Complex.I • x, hs⟩ ∈ _
+  rw [e]
+  exact complexQ.wave.domain.smul_mem _ h2'
+
+/-! ### The discrete solutions are the scheme (6.5) -/
+
+/-- The TSD data of `D(L²)` are dense in the TSD constraint (`D(L²) ∩ K` is dense in the reducing
+`K`). -/
+theorem topologicalClosure_tsdQℝ_inf_domainSq :
+    (tsdQℝ ⊓ complexQℝ.wave.domainSq).topologicalClosure = tsdQℝ := by
+  refine le_antisymm ((tsdQℝ ⊓ complexQℝ.wave.domainSq).topologicalClosure_minimal inf_le_left
+    isClosed_totalSub) fun k hk => ?_
+  have h := complexQℝ.isSkewAdjoint_wave.subset_closure_domainSq_inf isReducing_tsdQℝ hk
+  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe, inf_comm]
+  exact h
+
+set_option maxHeartbeats 4000000 in
+/-- **The discrete solutions of `mirrorFEMApprox` are the scheme (6.5)**: from every discrete
+initial value `(a, b)`, `ι' e^{tL'}(a, b) = Rt(σₕ, uₕ, Mₕ, ρₕ)(t) + i Rt(σₕ', uₕ', Mₕ', ρₕ')(t)` for
+the solutions `s`, `s'` of (6.5) without source with initial states `a`, `b`. -/
+theorem mirrorFEMApprox_sol_eq_scheme (N : ℕ) {T : ℝ} (hT0 : 0 < T) (a b : mirrorHidden hT hB N) :
+    ∃ s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T 0,
+      DiscreteSolution.hiddenInit hT0.le s = a ∧ DiscreteSolution.hiddenInit hT0.le s' = b ∧
+      ∀ t ∈ Icc 0 T, (mirrorFEMApprox hT hB).sol N (WithLp.toLp 2 (a, b)) t =
+        mirrorReEmb (dState hT hB N s t) + mulI (mirrorReEmb (dState hT hB N s' t)) := by
+  obtain ⟨s, hs, -⟩ := exists_discreteSolution_group (mirrorWave_dt0_injective hT hB N)
+    (mirrorWave_S0_surjective hT hB N) hT0 a
+  obtain ⟨s', hs', -⟩ := exists_discreteSolution_group (mirrorWave_dt0_injective hT hB N)
+    (mirrorWave_S0_surjective hT hB N) hT0 b
+  subst hs hs'
+  exact ⟨s, s', rfl, rfl, fun t ht => (mirrorFEMApprox_sol hT hB N _ _ t).trans
+    (congrArg₂ (· + ·) (mirrorFEMReal_sol_eq hT hB N hT0.le s ht)
+      (congrArg mulI (mirrorFEMReal_sol_eq hT hB N hT0.le s' ht)))⟩
+
+/-! ### TSD data of `D(L³)` and of `H^{2+s}` -/
+
+theorem LU₀_negI {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) :
+    (tsdDatumOf (neg_I_smul_mem hx)).LU₀ = -Complex.I • (tsdDatumOf hx).LU₀ :=
+  complexQ.wave.map_smul (-Complex.I) ⟨x, (tsdDatumOf hx).mem⟩
+
+theorem LLU₀_negI {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) :
+    (tsdDatumOf (neg_I_smul_mem hx)).LLU₀ = -Complex.I • (tsdDatumOf hx).LLU₀ := by
+  change complexQ.wave ⟨(tsdDatumOf (neg_I_smul_mem hx)).LU₀, _⟩ = _
+  have e : (⟨(tsdDatumOf (neg_I_smul_mem hx)).LU₀, (tsdDatumOf (neg_I_smul_mem hx)).mem₂⟩ :
+      complexQ.wave.domain) = -Complex.I • ⟨(tsdDatumOf hx).LU₀, (tsdDatumOf hx).mem₂⟩ :=
+    Subtype.ext (LU₀_negI hx)
+  rw [e]
+  exact complexQ.wave.map_smul _ _
+
+/-- The norm `‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖` of the `D(L³)` rate class. -/
+def l3Norm (D : TSDDatum) (h3 : D.LLU₀ ∈ complexQ.wave.domain) : ℝ :=
+  ‖D.U₀‖ + ‖D.LU₀‖ + ‖D.LLU₀‖ + ‖complexQ.wave ⟨D.LLU₀, h3⟩‖
+
+theorem l3Norm_nonneg (D : TSDDatum) (h3 : D.LLU₀ ∈ complexQ.wave.domain) : 0 ≤ l3Norm D h3 := by
+  unfold l3Norm; positivity
+
+theorem mem_LLU₀_negI {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq)
+    (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) :
+    (tsdDatumOf (neg_I_smul_mem hx)).LLU₀ ∈ complexQ.wave.domain := by
+  rw [LLU₀_negI hx]; exact complexQ.wave.domain.smul_mem _ h3
+
+theorem l3Norm_negI {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq)
+    (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) :
+    l3Norm (tsdDatumOf (neg_I_smul_mem hx)) (mem_LLU₀_negI hx h3) = l3Norm (tsdDatumOf hx) h3 := by
+  have e : complexQ.wave ⟨(tsdDatumOf (neg_I_smul_mem hx)).LLU₀, mem_LLU₀_negI hx h3⟩ =
+      -Complex.I • complexQ.wave ⟨(tsdDatumOf hx).LLU₀, h3⟩ := by
+    have e' : (⟨(tsdDatumOf (neg_I_smul_mem hx)).LLU₀, mem_LLU₀_negI hx h3⟩ :
+        complexQ.wave.domain) = -Complex.I • ⟨(tsdDatumOf hx).LLU₀, h3⟩ :=
+      Subtype.ext (LLU₀_negI hx)
+    rw [e']; exact complexQ.wave.map_smul _ _
+  have hn : ∀ z : PiLp 2 SpaceQ, ‖-Complex.I • z‖ = ‖z‖ := fun z => by
+    rw [norm_smul, norm_neg, Complex.norm_I, one_mul]
+  have a : (tsdDatumOf (neg_I_smul_mem hx)).U₀ = -Complex.I • (tsdDatumOf hx).U₀ := rfl
+  unfold l3Norm
+  rw [e, a, LU₀_negI hx, LLU₀_negI hx, hn, hn, hn, hn]
+
+/-- The TSD data of `D(L³)`. -/
+def mirrorL3Data : Set (PiLp 2 SpaceQ) :=
+  {x | ∃ hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq, (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain}
+
+open Classical in
+/-- The class norm of `mirrorL3Data`: `‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`. -/
+def mirrorL3Norm (x : PiLp 2 SpaceQ) : ℝ :=
+  if h : x ∈ mirrorL3Data then l3Norm (tsdDatumOf h.choose) h.choose_spec else 0
+
+theorem mirrorL3Norm_of_mem {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq)
+    (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) :
+    mirrorL3Norm x = l3Norm (tsdDatumOf hx) h3 := by
+  have hm : x ∈ mirrorL3Data := ⟨hx, h3⟩
+  rw [mirrorL3Norm, dite_eq_left_of_eq_true (eq_true hm)]
+
+theorem fibreEnergy_smul (c : ℂ) (X : PiLp 2 Feec.Models.Torus.BGG.Space) (m : Fin 3 → ℤ) :
+    fibreEnergy (c • X) m = ‖c‖ ^ 2 * fibreEnergy X m := by
+  unfold fibreEnergy
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  have h := Measure.ae_count_iff.1 (Lp.coeFn_smul c (X i)) m
+  change ‖((c • X i : Feec.Models.Torus.BGG.Space i) : (Fin 3 → ℤ) → _) m‖ ^ 2 = _
+  rw [h, Pi.smul_apply, norm_smul, mul_pow]
+
+theorem fibreEnergy_extState_negI (x : PiLp 2 SpaceQ) (m : Fin 3 → ℤ) :
+    fibreEnergy (extState (-Complex.I • x)) m = fibreEnergy (extState x) m := by
+  rw [extState, map_smul, fibreEnergy_smul, norm_neg, Complex.norm_I, one_pow, one_mul]
+
+theorem memSobState_negI {s : ℝ} {x : PiLp 2 SpaceQ} (h : MemSobState s x) :
+    MemSobState s (-Complex.I • x) := by
+  unfold MemSobState
+  simp only [fibreEnergy_extState_negI]
+  exact h
+
+theorem sobState_negI (s : ℝ) (x : PiLp 2 SpaceQ) : sobState s (-Complex.I • x) = sobState s x := by
+  unfold sobState
+  simp only [fibreEnergy_extState_negI]
+
+/-- The TSD data of `D(L²)` whose mirror extension lies in `H^{2+s}`. -/
+def mirrorSobData (s : ℝ) : Set (PiLp 2 SpaceQ) :=
+  {x | x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq ∧ MemSobState (2 + s) x}
 
 end Feec.Instances.EinsteinBianchi.FEM

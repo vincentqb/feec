@@ -1,6 +1,6 @@
 module
 
-public import Feec.Instances.EinsteinBianchiFEMMirrorCore
+public import Feec.Instances.EinsteinBianchiFEMMirror
 public import Feec.Instances.EinsteinBianchiFEMElliptic
 
 /-!
@@ -27,15 +27,14 @@ errors `eventually_mirrorClose`, and the Sobolev projection errors
 The comparison of a datum on `[0, T]` uses the exact TSD solution on the horizon `T + 1`, so that
 the exact equations hold at `t = T`.
 
-* `einsteinBianchi_mirrorFEM_approxFEEC_elliptic`: the verdict on `mirrorEllCore`;
 * `mirrorEllCmp_p_horizon`, `mirrorEllInit`: the comparison trajectory, hence its initial value,
-  does not depend on the horizon `T`;
-* `einsteinBianchi_mirrorFEM_rate_init`, `einsteinBianchi_mirrorFEM_rate_sobolev_init`: the same
-  rates for all `t ≥ 0` from the horizon-free initialization `mirrorEllInit`;
-* `einsteinBianchi_mirrorFEM_rate_elliptic`, `einsteinBianchi_mirrorFEM_rate_sobolev_elliptic`: from
-  the elliptic projection (6.4) of the initial data (`mirrorEllCmp_p_zero`, `mEll_zero_toEState`,
-  the thesis' initialization), `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (C + C' t) hᵅ ‖ξ₀‖_c` with
-  `C' = 2C`, constants independent of `T`.
+  does not depend on the horizon `T`; it is the elliptic projection (6.4) of the initial data
+  (`mirrorEllCmp_p_zero`, `mEll_zero_toEState`, the thesis' initialization);
+* `einsteinBianchi_mirrorFEM_rate_init`, `einsteinBianchi_mirrorFEM_rate_sobolev_init`: from it, for
+  all `t ≥ 0`, `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (C + C' t) hᵅ ‖ξ₀‖_c` with `C' = 2C`.
+
+The verdict of the approximating FEEC theorem on this core is read through the complex-level front
+end (`Feec.Instances.EinsteinBianchiFEMComplex`, `mirrorComplex`).
 
 **Faithfulness caveat.** As for `mirrorFEMApprox`: faithful to `mirrorWave` (`S₀,ₕ = π¹S⁰` with
 parity-smoothed projections), not to the canonical-interpolant variant. That the defect is
@@ -354,12 +353,6 @@ def mirrorEllCore : (mirrorFEMApprox hT hB).Core where
 theorem mirrorEllCore_closure : (mirrorEllCore hT hB).Data.topologicalClosure = tsdQℝ :=
   topologicalClosure_tsdQℝ_inf_domainSq
 
-/-- **The mirror scheme (6.5) is an instance of the approximating FEEC theorem with the elliptic
-core**: convergence from best approximation plus consistency. -/
-theorem einsteinBianchi_mirrorFEM_approxFEEC_elliptic :
-    (mirrorFEMApprox hT hB).Verdict (mirrorEllCore hT hB) :=
-  approxFEEC _ _
-
 /-! ### Rates -/
 
 /-- The rate constant `√(2 (C_p + 1)) · √(closeConst) · sobConst` of the elliptic projection. -/
@@ -566,86 +559,64 @@ theorem mirrorEllCmp_p_zero_eq_init (T : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) :
   mirrorEllCmp_p_horizon hT hB T 0 x N 0
 
 set_option maxHeartbeats 1000000 in
-/-- **The `O(h)` rate of the mirror scheme (6.5) from the elliptic projection (6.4)**, for TSD data
-of `D(L³)` (the rate clause of the verdict for `mirrorEllRate`, initial value `Πₕ(0)`):
-`‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (4K + 8K t) h_N ‖ξ₀‖_{L³}` on `[0, T]`, `K = mirrorEllK`,
-independent of `T` (cf. `K L (1 + t) h_N` of
+/-- **The `O(h)` rate of the mirror scheme (6.5) from the thesis' initialization (6.4)**, for TSD
+data of `D(L³)` and all `t ≥ 0` (the rate clause of the verdict for `mirrorEllRate` on the horizon
+`t`, initial value `Πₕ(0)`): `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (4K + 8K t) h_N ‖ξ₀‖_{L³}`,
+`K = mirrorEllK` (cf. `K L (1 + t) h_N` of
 `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain`). -/
-theorem einsteinBianchi_mirrorFEM_rate_elliptic {T : ℝ} {x : PiLp 2 SpaceQ}
-    (hx : x ∈ mirrorL3Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
-    ‖complexQℝ.waveGroup.S t x -
-        (mirrorFEMApprox hT hB).sol N ((mirrorEllCmp hT hB T).p x N 0) t‖ ≤
+theorem einsteinBianchi_mirrorFEM_rate_init {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data) (N : ℕ)
+    {t : ℝ} (ht : 0 ≤ t) :
+    ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
       (4 * mirrorEllK (C := C) + 8 * mirrorEllK (C := C) * t) *
         (meshSize N * mirrorL3Norm x) := by
-  have h := dissipFEEC_rate _ (mirrorEllRate hT hB T) hx N
-    ((mirrorEllCmp hT hB T).p x N 0) ht
-  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
+  have h := dissipFEEC_rate _ (mirrorEllRate hT hB t) hx N (mirrorEllInit hT hB x N) ⟨ht, le_rfl⟩
+  rw [ApproxFEEC.S_eq_waveGroup _ ht] at h
   have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
-  have hp : (mirrorEllRate hT hB T).p x N 0 = (mirrorEllCmp hT hB T).p x N 0 := rfl
+  have hp : (mirrorEllRate hT hB t).p x N 0 = mirrorEllInit hT hB x N :=
+    mirrorEllCmp_p_zero_eq_init hT hB t x N
   rw [hp, sub_self, norm_zero, mul_zero, add_zero] at h
-  have hm : (mirrorEllRate hT hB T).meshSize N ^ (mirrorEllRate hT hB T).α *
-      (mirrorEllRate hT hB T).classNorm x = meshSize N * mirrorL3Norm x := by
+  have hm : (mirrorEllRate hT hB t).meshSize N ^ (mirrorEllRate hT hB t).α *
+      (mirrorEllRate hT hB t).classNorm x = meshSize N * mirrorL3Norm x := by
     change meshSize N ^ (1 : ℝ) * mirrorL3Norm x = _
     rw [Real.rpow_one]
-  have hC : (mirrorEllRate hT hB T).C = 4 * mirrorEllK (C := C) := rfl
-  have hC' : (mirrorEllRate hT hB T).C' = 8 * mirrorEllK (C := C) := rfl
+  have hC : (mirrorEllRate hT hB t).C = 4 * mirrorEllK (C := C) := rfl
+  have hC' : (mirrorEllRate hT hB t).C' = 8 * mirrorEllK (C := C) := rfl
   rw [hm, hC, hC'] at h
   refine h.trans (mul_le_mul_of_nonneg_right ?_ (mul_nonneg (meshSize_pos N).le ?_))
   · have hK := mirrorEllK_nonneg hT (C := C)
-    have h8 : 0 ≤ 8 * mirrorEllK (C := C) * t := by have := ht.1; positivity
+    have h8 : 0 ≤ 8 * mirrorEllK (C := C) * t := by positivity
     nlinarith [mul_le_of_le_one_left h8 hι]
   · obtain ⟨hx1, h3⟩ := hx
     rw [mirrorL3Norm_of_mem hx1 h3]
     exact l3Norm_nonneg _ _
 
 set_option maxHeartbeats 1000000 in
-/-- **The `O(hˢ)` rate of the mirror scheme (6.5) from the elliptic projection (6.4)**, for TSD data
-in `H^{2+s}`, `0 ≤ s ≤ 1`: `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (6K + 12K t) h_Nˢ ‖ξ₀‖_{2+s}`. -/
-theorem einsteinBianchi_mirrorFEM_rate_sobolev_elliptic {T s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
-    {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
-    ‖complexQℝ.waveGroup.S t x -
-        (mirrorFEMApprox hT hB).sol N ((mirrorEllCmp hT hB T).p x N 0) t‖ ≤
-      (6 * mirrorEllK (C := C) + 12 * mirrorEllK (C := C) * t) *
-        (meshSize N ^ s * √(sobState (2 + s) x)) := by
-  have h := dissipFEEC_rate _ (mirrorEllRateSobolev hT hB T s hs0 hs1) hx N
-    ((mirrorEllCmp hT hB T).p x N 0) ht
-  rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
-  have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
-  have hp : (mirrorEllRateSobolev hT hB T s hs0 hs1).p x N 0 =
-      (mirrorEllCmp hT hB T).p x N 0 := rfl
-  rw [hp, sub_self, norm_zero, mul_zero, add_zero] at h
-  have hm : (mirrorEllRateSobolev hT hB T s hs0 hs1).meshSize N ^
-      (mirrorEllRateSobolev hT hB T s hs0 hs1).α *
-      (mirrorEllRateSobolev hT hB T s hs0 hs1).classNorm x =
-        meshSize N ^ s * √(sobState (2 + s) x) := rfl
-  have hC : (mirrorEllRateSobolev hT hB T s hs0 hs1).C = 6 * mirrorEllK (C := C) := rfl
-  have hC' : (mirrorEllRateSobolev hT hB T s hs0 hs1).C' = 12 * mirrorEllK (C := C) := rfl
-  rw [hm, hC, hC'] at h
-  refine h.trans (mul_le_mul_of_nonneg_right ?_
-    (mul_nonneg (Real.rpow_nonneg (meshSize_pos N).le s) (Real.sqrt_nonneg _)))
-  have hK := mirrorEllK_nonneg hT (C := C)
-  have h12 : 0 ≤ 12 * mirrorEllK (C := C) * t := by have := ht.1; positivity
-  nlinarith [mul_le_of_le_one_left h12 hι]
-
-/-- **The `O(h)` rate from the thesis' initialization, for all `t ≥ 0`** (horizon-free form of
-`einsteinBianchi_mirrorFEM_rate_elliptic`, with `T = t`):
-`‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (4K + 8K t) h_N ‖ξ₀‖_{L³}` for TSD data of `D(L³)`. -/
-theorem einsteinBianchi_mirrorFEM_rate_init {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data) (N : ℕ)
-    {t : ℝ} (ht : 0 ≤ t) :
-    ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
-      (4 * mirrorEllK (C := C) + 8 * mirrorEllK (C := C) * t) *
-        (meshSize N * mirrorL3Norm x) := by
-  rw [← mirrorEllCmp_p_zero_eq_init hT hB t]
-  exact einsteinBianchi_mirrorFEM_rate_elliptic hT hB hx N ⟨ht, le_rfl⟩
-
-/-- **The `O(hˢ)` rate from the thesis' initialization, for all `t ≥ 0`** (horizon-free form of
-`einsteinBianchi_mirrorFEM_rate_sobolev_elliptic`). -/
+/-- **The `O(hˢ)` rate of the mirror scheme (6.5) from the thesis' initialization (6.4)**, for TSD
+data in `H^{2+s}`, `0 ≤ s ≤ 1`, and all `t ≥ 0`:
+`‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (6K + 12K t) h_Nˢ ‖ξ₀‖_{2+s}`. -/
 theorem einsteinBianchi_mirrorFEM_rate_sobolev_init {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
       (6 * mirrorEllK (C := C) + 12 * mirrorEllK (C := C) * t) *
         (meshSize N ^ s * √(sobState (2 + s) x)) := by
-  rw [← mirrorEllCmp_p_zero_eq_init hT hB t]
-  exact einsteinBianchi_mirrorFEM_rate_sobolev_elliptic hT hB hs0 hs1 hx N ⟨ht, le_rfl⟩
+  have h := dissipFEEC_rate _ (mirrorEllRateSobolev hT hB t s hs0 hs1) hx N
+    (mirrorEllInit hT hB x N) ⟨ht, le_rfl⟩
+  rw [ApproxFEEC.S_eq_waveGroup _ ht] at h
+  have hι := (mirrorFEMApprox_isOrthogonal hT hB).norm_incl_le_one N
+  have hp : (mirrorEllRateSobolev hT hB t s hs0 hs1).p x N 0 = mirrorEllInit hT hB x N :=
+    mirrorEllCmp_p_zero_eq_init hT hB t x N
+  rw [hp, sub_self, norm_zero, mul_zero, add_zero] at h
+  have hm : (mirrorEllRateSobolev hT hB t s hs0 hs1).meshSize N ^
+      (mirrorEllRateSobolev hT hB t s hs0 hs1).α *
+      (mirrorEllRateSobolev hT hB t s hs0 hs1).classNorm x =
+        meshSize N ^ s * √(sobState (2 + s) x) := rfl
+  have hC : (mirrorEllRateSobolev hT hB t s hs0 hs1).C = 6 * mirrorEllK (C := C) := rfl
+  have hC' : (mirrorEllRateSobolev hT hB t s hs0 hs1).C' = 12 * mirrorEllK (C := C) := rfl
+  rw [hm, hC, hC'] at h
+  refine h.trans (mul_le_mul_of_nonneg_right ?_
+    (mul_nonneg (Real.rpow_nonneg (meshSize_pos N).le s) (Real.sqrt_nonneg _)))
+  have hK := mirrorEllK_nonneg hT (C := C)
+  have h12 : 0 ≤ 12 * mirrorEllK (C := C) * t := by positivity
+  nlinarith [mul_le_of_le_one_left h12 hι]
 
 end Feec.Instances.EinsteinBianchi.FEM

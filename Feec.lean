@@ -201,13 +201,11 @@ public import Feec.Instances.EinsteinBianchiAbsorbing
 public import Feec.Instances.EinsteinBianchiFEM
 public import Feec.Instances.EinsteinBianchiFEMComplex
 public import Feec.Instances.EinsteinBianchiFEMCube
-public import Feec.Instances.EinsteinBianchiFEMCubeCore
 public import Feec.Instances.EinsteinBianchiFEMCubeEll
 public import Feec.Instances.EinsteinBianchiFEMDefect
 public import Feec.Instances.EinsteinBianchiFEMElliptic
 public import Feec.Instances.EinsteinBianchiFEMGenerator
 public import Feec.Instances.EinsteinBianchiFEMMirror
-public import Feec.Instances.EinsteinBianchiFEMMirrorCore
 public import Feec.Instances.EinsteinBianchiFEMMirrorEll
 public import Feec.Instances.EinsteinBianchiGauss
 public import Feec.Instances.EinsteinBianchiSobolev

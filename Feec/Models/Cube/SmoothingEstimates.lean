@@ -957,15 +957,14 @@ theorem sum_integral_sq_le_of_abs_le {N k : ℕ} {T : Affine.Simplex ℝ (Fin n 
     _ ≤ 2 ^ n * (hN N ^ n * K ^ 2) :=
         mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
 
-/-- **The smoothed field on a simplex is bounded by the local mass**:
-`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` on `T`. -/
-theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
+/-- **The smoothed field near a simplex is bounded by the local mass**:
+`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` at every point `y ∈ cl Q` within `h_N` of `T`. -/
+theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
     (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (x : L2F ℝ (mesh n N).domain (formIdx n k))
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) :
-    ∀ y ∈ T.closedInterior, ∀ s,
-      |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
-        2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := by
-  intro y hy s
+    (T : Affine.Simplex ℝ (Fin n → ℝ) n) {y z : Fin n → ℝ} (hyc : y ∈ closure (cubeDomain n))
+    (hz : z ∈ T.closedInterior) (hyz : dist y z ≤ hN N) (s : Finset (Fin n)) :
+    |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
+      2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := by
   have hh := hN_pos N
   have hγ0 := hp.gamma_pos
   have hMρ : 1 / volume.real (Metric.closedBall (0 : Fin n → ℝ) p.bump.rIn) =
@@ -981,16 +980,28 @@ theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n �
     (by positivity))
   refine setIntegral_mono_set (integrable_sq_indicator _).integrableOn
     (Eventually.of_forall fun _ => sq_nonneg _) (Eventually.of_forall fun t ht => ?_)
-  have hyc : y ∈ closure (cubeDomain n) := by
-    rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure hT hy
   have h1 := hp.norm_dil_sub_le hyc
   have h2 : dist t (p.center + p.factor • (y - p.center)) ≤ γ * hN N / 32 := by
     have := Metric.mem_closedBall.1 ht; rwa [hp.rOut_eq] at this
-  refine Metric.mem_cthickening_of_dist_le t y _ _ hy ?_
-  calc dist t y ≤ dist t (p.center + p.factor • (y - p.center)) +
-        dist (p.center + p.factor • (y - p.center)) y := dist_triangle _ _ _
-    _ ≤ γ * hN N / 32 + γ * hN N / 4 := add_le_add h2 (by rw [dist_eq_norm]; exact h1)
+  refine Metric.mem_cthickening_of_dist_le t z _ _ hz ?_
+  calc dist t z ≤ dist t (p.center + p.factor • (y - p.center)) +
+        dist (p.center + p.factor • (y - p.center)) y + dist y z := dist_triangle4 _ _ _ _
+    _ ≤ γ * hN N / 32 + γ * hN N / 4 + hN N :=
+        add_le_add (add_le_add h2 (by rw [dist_eq_norm]; exact h1)) hyz
     _ ≤ 2 * hN N := by nlinarith
+
+/-- **The smoothed field on a simplex is bounded by the local mass**:
+`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` on `T`. -/
+theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
+    (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (x : L2F ℝ (mesh n N).domain (formIdx n k))
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) :
+    ∀ y ∈ T.closedInterior, ∀ s,
+      |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
+        2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := fun y hy s => by
+  have hyc : y ∈ closure (cubeDomain n) := by
+    rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure hT hy
+  exact hp.abs_smoothForm_le_locMass_of_near hγ1 x T hyc hy (by rw [dist_self]; exact
+    (hN_pos N).le) s
 
 /-- **The local `L²` bound of `Q_N = Π_h R`** on a simplex: `‖Q_N x‖²_{L²(T)} ≲ m_T(x)`. -/
 theorem sum_integral_sq_interp_le {N k : ℕ} {B : ℝ} (hB : DofBound n k B)
@@ -1938,20 +1949,25 @@ theorem exists_gamma :
   have hxk : x k ≤ S := Finset.single_le_sum (fun k _ => hx0 k) (Finset.mem_range.2 (by omega))
   exact norm_sub_smoothedInterp_le_half (hA0 k) (hA k) (hB0 k) (hB k) hS hxk rfl hγe hp hγ2 hu hs
 
-/-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
-field. -/
+/-- **The maximal family samples only inside `Ω`**: every sample `t` of the smoother at a point
+`x` of `Ω̄` lies in `Ω`. -/
+theorem pMax_samples_mem (N : ℕ) :
+    ∀ x ∈ closure (mesh n N).domain, ∀ t, dist t ((pMax (n := n) γ hγ hγ1 N).center +
+      (pMax (n := n) γ hγ hγ1 N).factor • (x - (pMax (n := n) γ hγ hγ1 N).center)) <
+        (pMax (n := n) γ hγ hγ1 N).bump.rOut → t ∈ (mesh n N).domain := fun x hx t ht => by
+  have hp := pMax_isMaximal (n := n) (γ := γ) (hγ := hγ) (hγ1 := hγ1) N
+  have := closedBall_dil_subset_of_starBall (starBall_mesh n N)
+    (pMax (n := n) γ hγ hγ1 N).half_le_factor hp.factor_lt_one hp.rOut_lt hx
+  rw [← hp.center_eq] at this
+  exact this (Metric.mem_closedBall.2 ht.le)
+
+/-- **The sampling condition holds for every field** of the maximal family
+(`pMax_samples_mem`). -/
 theorem sampleOK_pMax {N k : ℕ} (u : (whitneyElement n).Piecewise (mesh n N) k) :
     SampleOK γ (pMax (n := n) γ hγ hγ1 N) u := by
   intro T g hgT hg ξ hξ _ t ht htΩ
-  exfalso
-  have hxT := simplexMap_faceEnum_mem hgT hg hξ
-  have hxc : simplexMap (faceEnum g (k + 1)) ξ ∈ closure (mesh n N).domain :=
-    (mesh n N).closedInterior_subset_closure T.2 hxT
-  have hp := pMax_isMaximal (n := n) (γ := γ) (hγ := hγ) (hγ1 := hγ1) N
-  have := closedBall_dil_subset_of_starBall (starBall_mesh n N)
-    (pMax (n := n) γ hγ hγ1 N).half_le_factor hp.factor_lt_one hp.rOut_lt hxc
-  rw [← hp.center_eq] at this
-  exact htΩ (this (Metric.mem_closedBall.2 ht.le))
+  exact absurd (pMax_samples_mem N _ ((mesh n N).closedInterior_subset_closure T.2
+    (simplexMap_faceEnum_mem hgT hg hξ)) t ht) htΩ
 
 /-! ### The minimal family: boundary faces -/
 

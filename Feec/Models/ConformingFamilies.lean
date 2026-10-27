@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.ConformingFamily
 public import Feec.HilbertComplex.Approximation.DiscreteCohomology
+public import Feec.Models.Cube.CubicalFiniteElementConvergence
 public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.Models.Cube.PolyFiniteElementConvergence
 public import Feec.Models.Parallelepiped.FiniteElement
@@ -20,6 +21,10 @@ model:
 * **the lowest-order Whitney forms** (`Cube.FEM.whitneyFamily`, `whitneyFamilyMin`);
 * **every admissible sequence** `S : PolySeq` of the periodic table (every `P_rΛᵏ`, `P_r⁻Λᵏ` and the
   mixed sequences, any degree `r ≥ 1`; `Cube.FEM.polyFamily`, `polyFamilyMin`);
+* on the cube, **the cubical elements `Q_b⁻Λᵏ`** of [ArnoldBoffiBonizzoni2015] on the uniform
+  cubical meshes (`Q_r⁻Λᵏ` for `b = fun _ => r`, any `b_j ≥ 1`; `Cube.FEM.qMinusFamily`, with the
+  smoothed projections of `Feec.Models.Cube.CubicalSmoothingEstimates` and the Jackson estimate
+  `Cube.FEM.qMinusJackson` at every order `h^{s+1}`, `s + 1 ≤ min b`);
 
 on **the Freudenthal meshes of the cube** `Q = (0, ½)ⁿ` (`Cube.FEM`, `ConformingFamily.ofSmoothing`
 in `Feec.Models.Cube.FiniteElementConvergence` and `Feec.Models.Cube.PolyFiniteElementConvergence`),
@@ -40,7 +45,8 @@ each family eventually has the cohomology of its complex. On the cube and on par
 `dim Hᵏ(Vₕ) = [k = 0]` and `dim Hᵏ(V̊ₕ) = [k = n]` for `N` large
 (**`Cube.FEM.eventually_finrank_cohomology_poly`**, `_polyMin`, `_whitney`, `_whitneyMin`, and
 the same in `Parallelepiped`), and the projections induce the isomorphisms
-(`Cube.FEM.eventually_bijective_cohomologyMap_poly`, `_polyMin`); on a star-shaped domain,
+(`Cube.FEM.eventually_bijective_cohomologyMap_poly`, `_polyMin`, `_qMinus`; the cubical
+elements also have `Cube.FEM.eventually_finrank_cohomology_qMinus`); on a star-shaped domain,
 `dim Hᵏ(Vₕ) = dim Hᵏ(Ω)` in every degree `k` with closed range and finite-dimensional harmonic
 forms (`StarShaped.MeshFamily.eventually_finrank_cohomology_poly` and the others), with no
 hypothesis on every mesh family of a parallelepiped
@@ -54,6 +60,8 @@ hypothesis on every mesh family of a parallelepiped
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3–§5 (the periodic table of the spaces `P_rΛ`, `P_r⁻Λ`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
+  §3 (the spaces `Q_r⁻Λᵏ`)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -87,6 +95,13 @@ theorem eventually_bijective_cohomologyMap_polyMin (S : PolySeq) (k : ℤ) :
       Function.Bijective (((polyFamilyMin n S).π N).cohomologyMap k) :=
   (polyFamilyMin n S).eventually_bijective_cohomologyMap (closedRangeAt_min k)
 
+/-- **The projections of the cubical elements `Q_b⁻Λ` induce `Hᵏ(HΛ(Q)) ≅ Hᵏ(Vₕ)`** for `N`
+large ([AFW2010], Thm 3.4). -/
+theorem eventually_bijective_cohomologyMap_qMinus {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℤ) :
+    ∀ᶠ N in atTop, haveI := (qMinusFamily n hb).finiteDimensional N
+      Function.Bijective (((qMinusFamily n hb).π N).cohomologyMap k) :=
+  (qMinusFamily n hb).eventually_bijective_cohomologyMap (closedRangeAt k)
+
 /-- **The Whitney complexes of the cube have the cohomology of `HΛ(Q)`** for `N` large
 ([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`. -/
 theorem eventually_finrank_cohomology_whitney (k : ℤ) :
@@ -118,6 +133,14 @@ theorem eventually_finrank_cohomology_polyMin (S : PolySeq) (k : ℤ) :
       if k = n then 1 else 0 :=
   ((polyFamilyMin n S).eventually_finrank_cohomology_eq (closedRangeAt_min k)).mono fun _ h =>
     h.trans (finrank_cohomology_min k)
+
+/-- **The cubical complexes `Q_b⁻Λ` of the cube have the cohomology of `HΛ(Q)`** for `N` large
+([AFW2010], Thm 3.4): `dim Hᵏ(Vₕ) = [k = 0]`. -/
+theorem eventually_finrank_cohomology_qMinus {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℤ) :
+    ∀ᶠ N in atTop, Module.finrank ℝ ((qMinus n b N).toHilbertComplex.cohomology k) =
+      if k = 0 then 1 else 0 :=
+  ((qMinusFamily n hb).eventually_finrank_cohomology_eq (closedRangeAt k)).mono fun _ h =>
+    h.trans (finrank_cohomology k)
 
 end Cube.FEM
 

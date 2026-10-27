@@ -239,6 +239,8 @@ public import Feec.Models.Cube.AbsorbingGalerkin
 public import Feec.Models.Cube.AbsorbingTSD
 public import Feec.Models.Cube.AbsorbingTrace
 public import Feec.Models.Cube.Basic
+public import Feec.Models.Cube.CubicalFiniteElementConvergence
+public import Feec.Models.Cube.CubicalSmoothingEstimates
 public import Feec.Models.Cube.DeRham
 public import Feec.Models.Cube.DeRhamIdent
 public import Feec.Models.Cube.DeRhamIdentCutoff

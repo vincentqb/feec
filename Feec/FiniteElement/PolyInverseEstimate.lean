@@ -414,14 +414,23 @@ theorem affinePullback_scalarMat_apply_of_isDeg {k : ℕ} {h : ℝ} {t : Fin n �
     affinePullback (scalarMat n h) t u y = h ^ k • u (t + h • y) := by
   rw [affinePullback_scalarMat h t hu y, add_comm]
 
+/-- `‖H^* u‖²_{L²(S)} = h^{2k - n} ‖u‖²_{L²(H S)}` for a `k`-form, a measurable set `S` and the
+homothety `H y = t + h y`. -/
+theorem formL2Sq_image_affinePullback_scalarMat {S : Set (Fin n → ℝ)} (hS : MeasurableSet S)
+    {k : ℕ} {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
+    h ^ n * formL2Sq S (affinePullback (scalarMat n h) t u) =
+      (h ^ k) ^ 2 * formL2Sq ((fun y => t + h • y) '' S) u := by
+  simp only [formL2Sq, affinePullback_scalarMat_apply_of_isDeg hu, Pi.smul_apply, smul_eq_mul,
+    setIntegral_image_add_smul hS t hh, mul_pow, integral_const_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun s _ => by ring
+
 /-- `‖H^* u‖²_{L²(K)} = h^{2k - n} ‖u‖²_{L²(T)}` for a `k`-form and `T = t + h K`. -/
 theorem formL2Sq_affinePullback_scalarMat (K : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
     h ^ n * formL2Sq K.closedInterior (affinePullback (scalarMat n h) t u) =
       (h ^ k) ^ 2 * formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u := by
-  simp only [formL2Sq, affinePullback_scalarMat_apply_of_isDeg hu, Pi.smul_apply, smul_eq_mul,
-    integral_closedInterior_mapEquiv_boxMap K t hh, mul_pow, integral_const_mul, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun s _ => by ring
+  rw [closedInterior_mapEquiv_boxMap]
+  exact formL2Sq_image_affinePullback_scalarMat K.isClosed_closedInterior.measurableSet hh t hu
 
 /-- Chain rule for the pullback of a `k`-form by `y ↦ t + h y`:
 `∂ⱼ (H^* u)_s (y) = h^{k+1} (∂ⱼ u_s)(t + h y)`. -/
@@ -466,6 +475,55 @@ theorem mem_mapEquiv_boxMap {K : Affine.Simplex ℝ (Fin n → ℝ) n} {h : ℝ}
 
 variable {r k : ℕ} {V : Submodule ℝ (FormField n)}
 
+/-- **Local inverse estimates on homothetic copies** of a compact convex reference set `S` with
+nonempty interior (a simplex, a cube) for polynomial forms: for `T = t + h S` and
+`u ∈ V ≤ P_rΛᵏ` (`V` stable under homotheties), `h^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and
+`h^{n/2} h Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with `A` depending only on `S` and `V` ([Ciarlet2002], §3.2;
+[AFW2010], §5.5). -/
+theorem exists_inverse_bound_image_of_le_polySpace (hV : V ≤ polySpace n r k)
+    (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
+    {S : Set (Fin n → ℝ)} (hS : IsCompact S) (hSi : (interior S).Nonempty) (hSc : Convex ℝ S) :
+    ∃ A, 0 ≤ A ∧ ∀ {h : ℝ} (_ : 0 < h) (t : Fin n → ℝ), ∀ u ∈ V,
+      (∀ x ∈ (fun y => t + h • y) '' S,
+        √h ^ n * ‖u x‖ ≤ A * √(formL2Sq ((fun y => t + h • y) '' S) u)) ∧
+      (∀ x ∈ (fun y => t + h • y) '' S, ∀ x' ∈ (fun y => t + h • y) '' S,
+        √h ^ n * h * ‖u x - u x'‖ ≤ A * ‖x - x'‖ * √(formL2Sq ((fun y => t + h • y) '' S) u)) := by
+  obtain ⟨A, hA0, hA⟩ := exists_norm_le_sqrt_formL2Sq hV hS hSi hSc
+  refine ⟨A, hA0, fun {h} hh t u hu => ?_⟩
+  set T := (fun y => t + h • y) '' S
+  set v := affinePullback (scalarMat n h) t u
+  have hdeg := isDeg_of_mem_polySpace (hV hu)
+  have hv : ∀ y, v y = h ^ k • u (t + h • y) := affinePullback_scalarMat_apply_of_isDeg hdeg
+  obtain ⟨hA1, hA2⟩ := hA v (hVH h t u hu)
+  have hhk : 0 < h ^ k := pow_pos hh k
+  have hsq : 0 ≤ √h ^ n := pow_nonneg (Real.sqrt_nonneg _) n
+  have hkey : √h ^ n * √(formL2Sq S v) = h ^ k * √(formL2Sq T u) := by
+    rw [← sqrt_pow_eq hh.le]
+    exact sqrt_mul_sqrt_eq_of_mul_eq (pow_nonneg hh.le n) hhk.le
+      (formL2Sq_image_affinePullback_scalarMat hS.measurableSet hh t hdeg)
+  constructor
+  · rintro _ ⟨y, hy, rfl⟩
+    have h1 := hA1 y hy
+    rw [hv, norm_smul, Real.norm_of_nonneg hhk.le] at h1
+    refine le_of_mul_le_mul_left ?_ hhk
+    calc h ^ k * (√h ^ n * ‖u (t + h • y)‖) = √h ^ n * (h ^ k * ‖u (t + h • y)‖) := by ring
+      _ ≤ √h ^ n * (A * √(formL2Sq S v)) := mul_le_mul_of_nonneg_left h1 hsq
+      _ = A * (√h ^ n * √(formL2Sq S v)) := by ring
+      _ = h ^ k * (A * √(formL2Sq T u)) := by rw [hkey]; ring
+  · rintro _ ⟨y, hy, rfl⟩ _ ⟨y', hy', rfl⟩
+    have h2 := hA2 y hy y' hy'
+    rw [hv, hv, ← smul_sub, norm_smul, Real.norm_of_nonneg hhk.le] at h2
+    have hyy : ‖t + h • y - (t + h • y')‖ = h * ‖y - y'‖ := by
+      rw [add_sub_add_left_eq_sub, ← smul_sub, norm_smul, Real.norm_of_nonneg hh.le]
+    rw [hyy]
+    refine le_of_mul_le_mul_left ?_ hhk
+    calc h ^ k * (√h ^ n * h * ‖u (t + h • y) - u (t + h • y')‖)
+        = √h ^ n * h * (h ^ k * ‖u (t + h • y) - u (t + h • y')‖) := by ring
+      _ ≤ √h ^ n * h * (A * ‖y - y'‖ * √(formL2Sq S v)) :=
+          mul_le_mul_of_nonneg_left h2 (mul_nonneg hsq hh.le)
+      _ = A * (h * ‖y - y'‖) * (√h ^ n * √(formL2Sq S v)) := by ring
+      _ = h ^ k * (A * (h * ‖y - y'‖) * √(formL2Sq T u)) := by rw [hkey]; ring
+
 /-- **Local inverse estimates on homothetic simplices** for polynomial forms: for `T = t + h K`
 and `u ∈ V ≤ P_rΛᵏ` (`V` stable under homotheties),
 `h^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h^{n/2} h Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with `A`
@@ -480,45 +538,11 @@ theorem exists_local_inverse_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
         ∀ x' ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
         √h ^ n * h * ‖u x - u x'‖ ≤
           A * ‖x - x'‖ * √(formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u)) := by
-  obtain ⟨A, hA0, hA⟩ := exists_norm_le_sqrt_formL2Sq hV K.isCompact_closedInterior
-    (interior_closedInterior_nonempty K) (convex_closedInterior K)
+  obtain ⟨A, hA0, hA⟩ := exists_inverse_bound_image_of_le_polySpace hV hVH
+    K.isCompact_closedInterior (interior_closedInterior_nonempty K) (convex_closedInterior K)
   refine ⟨A, hA0, fun {h} hh t u hu => ?_⟩
-  set T := mapEquiv (boxMap t h hh.ne') K
-  set v := affinePullback (scalarMat n h) t u
-  have hdeg := isDeg_of_mem_polySpace (hV hu)
-  have hv : ∀ y, v y = h ^ k • u (t + h • y) := affinePullback_scalarMat_apply_of_isDeg hdeg
-  obtain ⟨hA1, hA2⟩ := hA v (hVH h t u hu)
-  have hhk : 0 < h ^ k := pow_pos hh k
-  have hsq : 0 ≤ √h ^ n := pow_nonneg (Real.sqrt_nonneg _) n
-  have hkey : √h ^ n * √(formL2Sq K.closedInterior v) = h ^ k * √(formL2Sq T.closedInterior u) := by
-    rw [← sqrt_pow_eq hh.le]
-    exact sqrt_mul_sqrt_eq_of_mul_eq (pow_nonneg hh.le n) hhk.le
-      (formL2Sq_affinePullback_scalarMat K hh t hdeg)
-  constructor
-  · intro x hx
-    obtain ⟨y, hy, rfl⟩ := mem_mapEquiv_boxMap hh.ne' hx
-    have h1 := hA1 y hy
-    rw [hv, norm_smul, Real.norm_of_nonneg hhk.le] at h1
-    refine le_of_mul_le_mul_left ?_ hhk
-    calc h ^ k * (√h ^ n * ‖u (t + h • y)‖) = √h ^ n * (h ^ k * ‖u (t + h • y)‖) := by ring
-      _ ≤ √h ^ n * (A * √(formL2Sq K.closedInterior v)) := mul_le_mul_of_nonneg_left h1 hsq
-      _ = A * (√h ^ n * √(formL2Sq K.closedInterior v)) := by ring
-      _ = h ^ k * (A * √(formL2Sq T.closedInterior u)) := by rw [hkey]; ring
-  · intro x hx x' hx'
-    obtain ⟨y, hy, rfl⟩ := mem_mapEquiv_boxMap hh.ne' hx
-    obtain ⟨y', hy', rfl⟩ := mem_mapEquiv_boxMap hh.ne' hx'
-    have h2 := hA2 y hy y' hy'
-    rw [hv, hv, ← smul_sub, norm_smul, Real.norm_of_nonneg hhk.le] at h2
-    have hyy : ‖t + h • y - (t + h • y')‖ = h * ‖y - y'‖ := by
-      rw [add_sub_add_left_eq_sub, ← smul_sub, norm_smul, Real.norm_of_nonneg hh.le]
-    rw [hyy]
-    refine le_of_mul_le_mul_left ?_ hhk
-    calc h ^ k * (√h ^ n * h * ‖u (t + h • y) - u (t + h • y')‖)
-        = √h ^ n * h * (h ^ k * ‖u (t + h • y) - u (t + h • y')‖) := by ring
-      _ ≤ √h ^ n * h * (A * ‖y - y'‖ * √(formL2Sq K.closedInterior v)) :=
-          mul_le_mul_of_nonneg_left h2 (mul_nonneg hsq hh.le)
-      _ = A * (h * ‖y - y'‖) * (√h ^ n * √(formL2Sq K.closedInterior v)) := by ring
-      _ = h ^ k * (A * (h * ‖y - y'‖) * √(formL2Sq T.closedInterior u)) := by rw [hkey]; ring
+  simp only [closedInterior_mapEquiv_boxMap]
+  exact hA hh t u hu
 
 /-- **Local DOF estimate on homothetic simplices**: for a unisolvent family `ℓⱼ` on `V` (the
 DOFs on `K`) and `T = t + h K`, `hᵏ sup_T ‖u‖ ≤ B Σⱼ |ℓⱼ(H^* u)|`, `H y = t + h y`, with `B`

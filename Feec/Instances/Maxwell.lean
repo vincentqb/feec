@@ -73,7 +73,9 @@ the magnetic component read in `W` in `Y` (`discreteGauss_propagates`); for the 
   `zero_mem_cubePEC_ofJackson`), and **at every polynomial order**, with the finite element
   complexes of every admissible sequence `S` of the periodic table (`cubePolyPMC`,
   `cubePolyPEC`), with `O(h^{s+1})` rates for `C^{s+2}` orbits and sequences of order `s`
-  (`FEM.polyJackson`, `FEM.polyJacksonMin`).
+  (`FEM.polyJackson`, `FEM.polyJacksonMin`), and with the cubical elements `Q_b⁻Λ` of the
+  uniform cubical meshes (perfect magnetic conductor, `cubeQMinusPMC`, `cubeQMinus_maxwellFEEC`;
+  rates `O(h^{s+1})`, `s + 1 ≤ min b`, `FEM.qMinusJackson`).
 * **Parallelepipeds `Ω = A · Q + b`** (every box), with the image Freudenthal meshes, both boundary
   conditions, Whitney forms and every admissible sequence (`paraPMC`, `paraPEC`, `paraPolyPMC`,
   `paraPolyPEC`; Jackson estimates `Parallelepiped.whitneyJackson`, `Parallelepiped.polyJackson`
@@ -526,6 +528,14 @@ order** (`FEM.polyFamilyMin`). -/
 def cubePolyPEC (S : PolySeq) (a : ℤ) : ConstrainedFEEC ((FEM.complexMin n).window a 3) ℕ :=
   feec (FEM.polyFamilyMin n S) a
 
+/-- **Maxwell's equations with a perfect magnetic conductor on the cube with the cubical elements**
+`Q_b⁻Λ` of the uniform cubical meshes (`FEM.qMinusFamily`; for `b = fun _ => r`, `Q_r⁻Λ`: in the
+degrees `0, 1, 2` of `n = 3`, the tensor-product Lagrange, the first-kind Nédélec edge and
+Raviart–Thomas face elements of hexahedra). -/
+def cubeQMinusPMC {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (a : ℤ) :
+    ConstrainedFEEC ((FEM.complex n).window a 3) ℕ :=
+  feec (FEM.qMinusFamily n hb) a
+
 variable {n} {a : ℤ}
 
 omit [NeZero n] in
@@ -568,6 +578,18 @@ theorem zero_mem_cubePEC_ofJackson {T Λ : ℝ} (hΛ : 0 ≤ Λ) :
     (0 : PiLp 2 _) ∈ (ConstrainedFEEC.RateClass.ofJackson (cubePEC n a)
       ((FEM.whitneyJacksonMin n).window a 3) T () hΛ).Data :=
   ConstrainedFEEC.RateClass.zero_mem_ofDegreewise fun _ => isC2FormMin_zero _ hΛ
+
+/-- **The FEEC theorem for Maxwell's equations on the cubical meshes of the cube**, with the
+cubical elements `Q_b⁻Λ` (`cubeQMinusPMC`; `Q_r⁻Λ`, Nédélec's first-kind edge elements on
+hexahedra in degree `1`): the Maxwell verdict (`maxwellFEEC`) and the rated FEEC theorem
+(`ConformingFamily.feec_rated`) for the Jackson estimate `FEM.qMinusJackson`: the static,
+semidiscrete and heat errors are `O(h^{s+1})` along `IsCsForm s` orbits for `s + 1 ≤ min b`, and
+the fully discrete errors `O(h^{s+1} + τᵖ)` along smooth comparisons of order `p + 1` (temporal
+error `τᵖ ‖Lₕ^{p+1} v‖`, `ConformingFamily.Verdict.Rated.rate_full`). -/
+theorem cubeQMinus_maxwellFEEC {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) :
+    Verdict (FEM.qMinusFamily n hb) a ∧
+      ConformingFamily.Verdict.Rated (FEM.qMinusFamily n hb) (FEM.qMinusJackson n hb) :=
+  ⟨maxwellFEEC _ a, (FEM.qMinusFamily n hb).feec_rated _⟩
 
 end Cube
 

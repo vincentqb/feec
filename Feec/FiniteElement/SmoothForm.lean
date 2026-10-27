@@ -775,6 +775,10 @@ theorem affinePullback_add (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (ω
     affinePullback B b (ω + η) = affinePullback B b ω + affinePullback B b η := by
   funext x; simp [affinePullback_apply, pullback_add]
 
+theorem affinePullback_sub (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (ω η : FormField n) :
+    affinePullback B b (ω - η) = affinePullback B b ω - affinePullback B b η := by
+  funext x; simp [affinePullback_apply, pullback_sub]
+
 theorem affinePullback_smul (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (c : ℝ) (ω : FormField n) :
     affinePullback B b (c • ω) = c • affinePullback B b ω := by
   funext x; simp [affinePullback_apply, pullback_smul]

@@ -153,6 +153,15 @@ theorem mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d} :
     ω ∈ cubeFormMinus R b k ↔ IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (cubeSupport b s) :=
   Iff.rfl
 
+/-- **`Q_b⁻Λᵏ ⊆ P_{Σ b}Λᵏ`**: a coefficient of degree `≤ b_j` in each variable `x_j` has total
+degree `≤ Σⱼ b_j`. -/
+theorem cubeFormMinus_le_polyForm [Fintype d] (b : d → ℕ) (k : ℕ) :
+    cubeFormMinus R b k ≤ polyForm R d (∑ j, b j) k := fun ω hω =>
+  ⟨hω.1, fun s => Finset.sup_le fun α hα => by
+    have hα' : α ∈ cubeSupport b s := (mem_restrictSupport_iff R).1 (hω.2 s) hα
+    rw [Finsupp.sum_fintype _ _ fun _ => rfl]
+    exact sum_le_sum fun j _ => (Nat.le_add_right _ _).trans (hα' j)⟩
+
 /-- **`d Q_b⁻Λᵏ ⊆ Q_b⁻Λ^{k+1}`**: `∂ⱼ` lowers the degree in `x_j` exactly where `dx_j` is added.
 [ArnoldBoffiBonizzoni2015], §3 -/
 theorem extDeriv_mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d}

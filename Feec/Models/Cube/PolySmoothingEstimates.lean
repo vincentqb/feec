@@ -966,21 +966,14 @@ theorem exists_gamma₀_whitney :
 
 /-! ### The sampling condition for both families -/
 
-/-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
-field. -/
+/-- **The maximal family samples only inside `Ω`** (`pMax_samples_mem`), so the sampling
+condition holds for every field. -/
 theorem sampleOK_pMax {γ : ℝ} {hγ : 0 < γ} {hγ1 : γ ≤ 1} {N k : ℕ}
     (u : (polyElement n S).Piecewise (mesh n N) k) :
     SampleOK S γ (pMax (n := n) γ hγ hγ1 N) u := by
   intro T g hgT m hg ξ hξ _ t ht htΩ
-  exfalso
-  have hxT := simplexMap_lexEnum_mem hgT hg hξ
-  have hxc : simplexMap (lexEnum g m) ξ ∈ closure (mesh n N).domain :=
-    (mesh n N).closedInterior_subset_closure T.2 hxT
-  have hp := pMax_isMaximal (n := n) (γ := γ) (hγ := hγ) (hγ1 := hγ1) N
-  have := closedBall_dil_subset_of_starBall (starBall_mesh n N)
-    (pMax (n := n) γ hγ hγ1 N).half_le_factor hp.factor_lt_one hp.rOut_lt hxc
-  rw [← hp.center_eq] at this
-  exact htΩ (this (Metric.mem_closedBall.2 ht.le))
+  exact absurd (pMax_samples_mem N _ ((mesh n N).closedInterior_subset_closure T.2
+    (simplexMap_lexEnum_mem hgT hg hξ)) t ht) htΩ
 
 /-- **The minimal family satisfies the sampling condition on `V̊ₕ`** (higher-order families): a
 sample outside `Ω` near a point of a face with weights `≥ γ` forces the face to lie in a boundary

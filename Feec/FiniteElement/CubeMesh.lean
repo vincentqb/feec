@@ -466,6 +466,21 @@ theorem cubeDof_ofGlobalDof (v : CubeGlobalIdx N b k → ℝ) (m : CubeCell N) (
     cubeDof (fun _ => none) i (ofGlobalDof hb v m) = v (toGlobal m i) :=
   (isUnisolvent_cubeDof (isFaceDeg_none hb) k).dof_equiv_symm _ i
 
+theorem ofGlobalDof_add (v v' : CubeGlobalIdx N b k → ℝ) :
+    ofGlobalDof hb (v + v') = ofGlobalDof hb v + ofGlobalDof hb v' := by
+  funext m
+  simp only [ofGlobalDof, Pi.add_apply]
+  rw [show (fun i => v (toGlobal m i) + v' (toGlobal m i)) =
+    (fun i => v (toGlobal m i)) + fun i => v' (toGlobal m i) from rfl, map_add]
+  rfl
+
+theorem ofGlobalDof_smul (c : ℝ) (v : CubeGlobalIdx N b k → ℝ) :
+    ofGlobalDof hb (c • v) = c • ofGlobalDof hb v := by
+  funext m
+  simp only [ofGlobalDof, Pi.smul_apply]
+  rw [show (fun i => c • v (toGlobal m i)) = c • fun i => v (toGlobal m i) from rfl, map_smul]
+  rfl
+
 omit [LinearOrder d] [Fintype d] in
 theorem faceDeg_commonFace (b : d → ℕ) (m m' : CubeCell N) (hadj : CubeCell.Adj N m m') :
     faceDeg b (commonFace N m' m) = faceDeg b (commonFace N m m') := by

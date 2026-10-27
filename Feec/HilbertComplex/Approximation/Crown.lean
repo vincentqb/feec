@@ -40,7 +40,10 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    discretizations are stable and converge as `h, τ → 0`, with error at most the spatial rate
    plus the temporal error `τᵖ ‖Lₕ^{p+1} v‖`, which is `O(τᵖ)` uniformly in `h` along smooth
    comparisons for schemes consistent along trajectories ([BrennerThomee1979]; [Thomee2006],
-   Ch. 7–9); the explicit leapfrog scheme for the wave equation does so under the CFL condition
+   Ch. 7–9), and for every scheme and every datum of a rate class in `D(L)` the error from the
+   comparison initial value is the spatial rate plus `O(τ^{p/(p+2)})` uniformly in `h` (the
+   scheme is tested on data smoothed by time averages, `TimeScheme.norm_S_sub_sol_le_uniform`);
+   the explicit leapfrog scheme for the wave equation does so under the CFL condition
    `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
 
 **With a Jackson estimate** (`ConformingFamily.feec_rated`, statement
@@ -50,7 +53,8 @@ the mixed method (`rate_static`, [AFW2010], Thm 3.9), the semidiscrete wave equa
 (`rate_wave`, `(1 + C_P)(1 + 2t) C L hᵒʳᵈ⁽ˢ⁾`, [QuennevilleBelair2015], Thm 4.14), the heat equation
 (`rate_heat`, `(2 + 3t) K L hᵒʳᵈ⁽ˢ⁾` with `K` the constant of the static rate), and the fully
 discrete schemes (`rate_full`, `O(hᵒʳᵈ⁽ˢ⁾ + τᵖ)` along smooth comparisons for schemes consistent
-along trajectories).
+along trajectories, and `O(hᵒʳᵈ⁽ˢ⁾ + τ^{p/(p+2)})` for every datum of the Jackson classes and every
+scheme, `FullRate.wave_uniform`, `FullRate.heat_uniform`).
 
 The crown is assembled from the layer theorems: `ConformingFamily.staticFEEC`, `approxFEEC` and
 `constrainedFEEC` for the conforming windows (`ConstrainedFEEC.toApprox` with the core of the wave
@@ -76,9 +80,12 @@ family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible seq
 * General A-stable rational schemes `r(τ Lₕ)` and Runge–Kutta methods: only the θ-schemes,
   Crank–Nicolson and leapfrog are built; the CFL condition of leapfrog is a hypothesis (no global
   inverse estimate `‖Lₕ‖ ≲ h⁻¹`).
-* The uniform temporal bound of `rate_full` holds along a smooth comparison of order `p + 1`
-  (`DissipFEEC.Comparison.Smooth`, supplied by `DissipFEEC.Ritz.smooth` from a bound of the lifted
-  orbit); the bound of the lifted wave and heat orbits is not packaged here.
+* The sharp uniform temporal order `τᵖ` of `rate_full` holds along a smooth comparison of order
+  `p + 1` (`DissipFEEC.Comparison.Smooth`, supplied by `DissipFEEC.Ritz.smooth` from a bound of
+  the lifted orbit); the bound of the lifted wave and heat orbits is not packaged here, and for
+  all Jackson data the uniform order is `τ^{p/(p+2)}`. The nonsmooth-data estimates of parabolic
+  smoothing (heat: self-adjoint `Lₕ ≤ 0`, strongly A-stable schemes, `O(τᵖ/tᵖ)`) are not
+  formalized.
 
 ## Main definitions
 
@@ -166,7 +173,8 @@ abbrev ConstrainedFEEC.jacksonWaveRateClass (G : ConstrainedFEEC H κ) (J : G.Ja
 `G`: for every time scheme consistent of order `p` along trajectories and every smooth
 comparison of order `p + 1` of the wave rate class (`jacksonWaveRateClass`) or of the heat rate
 class (`ConstrainedFEEC.jacksonHeatRateClass` of the total Jackson estimate), the fully discrete
-error is the spatial rate plus `O(τₕᵖ)`, uniformly in `h`. -/
+error is the spatial rate plus `O(τₕᵖ)`, uniformly in `h`; for every time scheme and every datum
+of these classes, it is the spatial rate plus `O(τₕ^{p/(p+2)})`, uniformly in `h`. -/
 structure ConstrainedFEEC.FullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ) : Prop where
   /-- the fully discrete wave equation -/
   wave {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) (Θ : G.toApprox.TimeScheme) {K : ℝ}
@@ -199,6 +207,49 @@ structure ConstrainedFEEC.FullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ)
                 (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
                   (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
                 (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x))
+  /-- the fully discrete wave equation for every datum of the Jackson class and every time
+  scheme: the spatial rate plus `O(τₕ^{p/(p+2)})`, uniformly in `h` -/
+  wave_uniform {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) (Θ : G.toApprox.TimeScheme) {x : PiLp 2 W}
+    (hx : x ∈ (G.jacksonWaveRateClass J T s hL).Data) (h : κ) (v : G.toApprox.X h) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
+    ‖G.toApprox.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      ((G.jacksonWaveRateClass J T s hL).C +
+          ‖G.toApprox.incl h‖ * (G.jacksonWaveRateClass J T s hL).C' * (n * Θ.τ h)) *
+          ((G.jacksonWaveRateClass J T s hL).meshSize h ^ (G.jacksonWaveRateClass J T s hL).α *
+            (G.jacksonWaveRateClass J T s hL).classNorm x) +
+        ‖G.toApprox.incl h‖ * (Θ.M T * ‖(G.jacksonWaveRateClass J T s hL).p x h 0 - v‖ +
+          (1 + Θ.M T) * (Θ.p + 1) * G.toApprox.boundConst *
+            (2 * (G.jacksonWaveRateClass J T s hL).C +
+              ‖G.toApprox.incl h‖ * (G.jacksonWaveRateClass J T s hL).C' * T) *
+            ((G.jacksonWaveRateClass J T s hL).meshSize h ^ (G.jacksonWaveRateClass J T s hL).α *
+              (G.jacksonWaveRateClass J T s hL).classNorm x) +
+          Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * G.toApprox.boundConst *
+            ‖DissipFEEC.genExt H.wave x‖ + Θ.M T * Θ.K * (n * Θ.τ h) * 2 ^ (Θ.p + 1) *
+              ‖(G.jacksonWaveRateClass J T s hL).p x h 0‖))
+  /-- the fully discrete heat equation for every datum of the Jackson class and every time
+  scheme: the spatial rate plus `O(τₕ^{p/(p+2)})`, uniformly in `h` -/
+  heat_uniform (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] {T : ℝ}
+    (s : ρ) {L : ℝ} (hL : 0 ≤ L) (Θ : G.toHeat.TimeScheme) {x : PiLp 2 W}
+    (hx : x ∈ (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).Data) (h : κ)
+    (v : G.toHeat.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T)
+    (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
+    ‖G.toHeat.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      ((G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C + ‖G.toHeat.incl h‖ *
+          (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C' * (n * Θ.τ h)) *
+          ((G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
+              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
+            (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x) +
+        ‖G.toHeat.incl h‖ * (Θ.M T *
+            ‖(G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).p x h 0 - v‖ +
+          (1 + Θ.M T) * (Θ.p + 1) * G.toHeat.boundConst *
+            (2 * (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C + ‖G.toHeat.incl h‖ *
+              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C' * T) *
+            ((G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
+                (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
+              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x) +
+          Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * G.toHeat.boundConst *
+            ‖DissipFEEC.genExt (-H.hodgeLaplacian) x‖ + Θ.M T * Θ.K * (n * Θ.τ h) *
+              2 ^ (Θ.p + 1) * ‖(G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).p x h 0‖))
 
 /-- **The fully discrete rates of a Jackson estimate** (`ConstrainedFEEC.FullRate`), the field
 `rate_smooth_iterates` of the fully discrete verdicts at the Jackson rate classes. -/
@@ -206,7 +257,11 @@ theorem constrainedFEEC_fullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ) :
   ⟨fun _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
       ((constrainedFEEC_fullyDiscrete G).wave Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn,
     fun hcr _ _ _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
-      ((constrainedFEEC_fullyDiscrete G).heat hcr Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn⟩
+      ((constrainedFEEC_fullyDiscrete G).heat hcr Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn,
+    fun s _ hL Θ _ hx h v _ hn hτT => ((constrainedFEEC_fullyDiscrete G).wave Θ).rate_uniform_iterates
+      _ hx ((ConstrainedFEEC.RateClass.ofJackson G J _ s hL).mem_domain _ hx) h v hn hτT,
+    fun hcr _ _ _ _ _ Θ _ hx h v _ hn hτT =>
+      ((constrainedFEEC_fullyDiscrete G).heat hcr Θ).rate_uniform_iterates _ hx hx.1.1 h v hn hτT⟩
 
 end Full
 
@@ -327,7 +382,7 @@ structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
           t‖ ≤
       (2 + 3 * t) * C * L * J.meshSize h ^ J.ord s
   /-- the fully discrete rates on every window: the spatial rate plus `O(τᵖ)` along smooth
-  comparisons -/
+  comparisons, and plus `O(τ^{p/(p+2)})` for every Jackson datum -/
   rate_full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
     (F.windowFEEC a m K hK).FullRate (J.window a m)
@@ -336,7 +391,7 @@ structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
 or `ℤ` with a Jackson estimate `J`: the FEEC theorem (`feec`), and for `s`-regular data with
 bound `L` the errors of the mixed method, of the semidiscrete wave and heat equations on every
 window and of the fully discrete schemes are `O(L hᵒʳᵈ⁽ˢ⁾)`, plus `O(τᵖ)` for the fully discrete
-ones along smooth comparisons. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979] -/
+ones along smooth comparisons and `O(τ^{p/(p+2)})` for every datum. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979] -/
 theorem feec_rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Verdict.Rated F J :=
   ⟨F.feec, fun s _ _ _ hij hjk hj hk => F.rate J s hij hjk hj hk,
     fun a m K hK _ s _ hL _ hx h _ ht => (F.windowFEEC a m K hK).rate_le

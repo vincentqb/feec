@@ -84,7 +84,10 @@ uniform in `h`; `rate_smooth_iterates` replaces it by the `(p + 1)`-st time deri
 comparison (`DissipFEEC.Comparison.Smooth`), which for a Ritz projection (`DissipFEEC.Ritz.smooth`)
 is `Rₕ S(t) A^{p+1} x`. The example `ritz_crankNicolson` composes the Ritz rate class on
 `D(A³)` (`Ritz.toRateClass`, `RegScale.domainPow`) with Crank–Nicolson: the temporal error is
-`1/12 tₙ τₕ² C ‖A³ x‖`, from static estimates only. The trapezoidal remainder of the Dirichlet
+`1/12 tₙ τₕ² C ‖A³ x‖`, from static estimates only. `rate_uniform_iterates` needs no smooth
+comparison: for every datum of a rate class in `D(A)` the error from `pₕ(0)` is the spatial rate
+plus `O(τₕ^{p/(p+2)})` uniformly in `h` (the Crank–Nicolson example below: `τₕ^{1/2}`). The
+trapezoidal remainder of the Dirichlet
 Crank–Nicolson estimate of `Feec.Models.Cube.InhomogeneousError` is now
 `Feec.TimeStepping.norm_trapezoid_le` (right derivatives, sharp constant `1/12`); `trapezoid_old`
 states the old remainder verbatim and derives it. The Dirichlet scheme itself (inhomogeneous
@@ -2605,6 +2608,30 @@ example (𝓡 : F.Ritz (Lift.ofDomain F)) {C : ℝ} (hC : ∀ h, ‖𝓡.R h‖ 
       fun _ _ t ht => F.norm_S_apply_le ht.1 _).restrict (RegScale.domainPow F T D 3).Data
       fun _ hy => hy.2 0 (by norm_num))
     hx hx.2 h v hn
+
+/-- **Crank–Nicolson for every datum of a rate class in `D(A)`**: from `v = pₕ(0)` the error is
+the spatial rate plus `‖ιₕ‖ (6 C_F (2C + ‖ιₕ‖ C' T) hᵅ ‖x‖_c + τₕ^{1/2} (6 C_F ‖A x‖ +
+10/3 tₙ ‖pₕ(0)‖))`: `O(hᵅ + τₕ^{1/2})` uniformly in `h` (`p = 2`, `M = 1`, `K = 5/12`). -/
+example {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (hxA : x ∈ A.domain)
+    {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : ℕ} (hn : (n : ℝ) * τ h ∈ Icc 0 T)
+    (hτT : τ h ^ (1 / 2 : ℝ) ≤ T) :
+    ‖F.S (n * τ h) x - (F.crankNicolson τ hτ).sol h (R.p x h 0) n‖ ≤
+      (R.C + ‖F.incl h‖ * R.C' * (n * τ h)) * (R.meshSize h ^ R.α * R.classNorm x) +
+        ‖F.incl h‖ * (6 * F.boundConst * (2 * R.C + ‖F.incl h‖ * R.C' * T) *
+            (R.meshSize h ^ R.α * R.classNorm x) +
+          τ h ^ (1 / 2 : ℝ) * (6 * F.boundConst * ‖genExt A x‖ +
+            10 / 3 * (n * τ h) * ‖R.p x h 0‖)) := by
+  have e : ((2 : ℕ) : ℝ) / ((2 : ℕ) + 2) = 1 / 2 := by norm_num
+  have key := (F.crankNicolson τ hτ).norm_S_sub_sol_le_uniform R hx hxA h (R.p x h 0) hn
+    (by change τ h ^ (((2 : ℕ) : ℝ) / ((2 : ℕ) + 2)) ≤ T; rwa [e])
+  change _ ≤ _ + ‖F.incl h‖ * (1 * _ + (1 + 1) * (((2 : ℕ) : ℝ) + 1) * _ * _ * _ +
+    τ h ^ (((2 : ℕ) : ℝ) / ((2 : ℕ) + 2)) * ((1 + 1) * (((2 : ℕ) : ℝ) + 1) * _ * _ +
+      1 * (5 / 12) * _ * 2 ^ (2 + 1) * _)) at key
+  rw [e, sub_self, norm_zero, mul_zero, zero_add,
+    show (F.crankNicolson τ hτ).τ h = τ h from rfl] at key
+  refine key.trans_eq ?_
+  push_cast
+  ring
 
 variable {X : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X]
 

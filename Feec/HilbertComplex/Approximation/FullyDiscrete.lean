@@ -48,6 +48,15 @@ besides the semidiscrete conclusions, at the time levels `tₙ = n τₕ ≤ T`,
    with `Aʲ x` in the lift for `j ≤ p`, `B x = C sup ‖ℓ(S(t) A^{p+1} x)‖`; for the identity lift
    `B x = C ‖A^{p+1} x‖`, so the fully discrete error is `O(hᵅ + τₕᵖ)` in the graph norm of
    `D(A^{p+1})` from the static estimates of the Ritz projection alone.
+7. (**rate for every datum, uniform in `h`**, `TimeScheme.norm_S_sub_sol_le_uniform`) for every
+   time scheme (consistency in the sense of `TimeStepping.IsConsistent` suffices) and every datum
+   `x ∈ D(A)` of a rate class, from `v = pₕ(0)`,
+   `‖S(tₙ) x - ιₕ Pₕⁿ pₕ(0)‖ = O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h`. The scheme is tested on the
+   smoothed `A_δ^{p+1} pₕ(0)` (`TimeScheme.norm_exp_sub_pow_le_of_timeAvg`,
+   `‖Lₕ^{p+1} A_δ^{p+1}‖ ≤ (2/δ)^{p+1}`), which is `O(hᵅ + δ ‖A x‖)`-close to `pₕ(0)` because the
+   semidiscrete orbit from `pₕ(0)` is `O(hᵅ)`-close to the exact one
+   (`TimeScheme.norm_S_sub_sol_le_of_timeAvg`); `δ = τₕ^{p/(p+2)}` balances `δ` against
+   `τₕᵖ δ^{-(p+1)}`. The order in `τ` is not sharp: 6 gives `τₕᵖ` for smoother data.
 
 **Schemes** (`DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`): the θ-scheme, `θ ≥ 1/2` real,
 `M = 1`, order `1`, `K = θ + 1/2` (implicit Euler `θ = 1`, `K = 3/2`), and Crank–Nicolson with
@@ -201,6 +210,28 @@ theorem norm_exp_sub_pow_le {T : ℝ} (h : κ) (v w : F.X h) {n : ℕ}
     ((Θ.P h ^ n) w - exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) w)
   linarith
 
+/-- **The temporal error of a slowly varying datum**: if `‖e^{sLₕ} u - u‖ ≤ η` for `s ∈ [0, δ]`,
+then `‖e^{tₙ Lₕ} u - Pₕⁿ u‖ ≤ (1 + M(T)) (p + 1) η + M(T) K tₙ τₕᵖ (2/δ)^{p+1} ‖u‖` for `tₙ ≤ T`:
+`u` is compared with the smoothed `A_δ^{p+1} u` (`TimeStepping.timeAvg`), so no power of `Lₕ`
+enters. [BrennerThomee1979] -/
+theorem norm_exp_sub_pow_le_of_timeAvg {T δ η : ℝ} (h : κ) (u : F.X h) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ≤ T) (hδ : 0 < δ)
+    (hη : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • F.L h) u - u‖ ≤ η) :
+    ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) u - (Θ.P h ^ n) u‖ ≤
+      (1 + Θ.M T) * ((Θ.p + 1) * η) +
+        Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ((2 / δ) ^ (Θ.p + 1) * ‖u‖) := by
+  have hM := Θ.M_nonneg ((mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le).trans hn) h
+  have := Θ.K_nonneg
+  have := (Θ.τ_pos h).le
+  refine (Θ.norm_exp_sub_pow_le h u ((TimeStepping.timeAvg (F.L h) δ)^[Θ.p + 1] u) hn).trans ?_
+  gcongr
+  · rw [norm_sub_rev]
+    refine (TimeStepping.norm_timeAvg_iterate_sub_le (F.dissipative h) hδ _ u).trans ?_
+    push_cast
+    gcongr
+    exact TimeStepping.norm_timeAvg_sub_le hδ hη
+  · exact TimeStepping.norm_pow_timeAvg_iterate_le (F.dissipative h) hδ _ u
+
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
@@ -290,7 +321,6 @@ theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v
     rw [← dist_eq_norm] at this
     linarith [h3]
   -- the smoothed datum
-  set w := (TimeStepping.timeAvg (F.L h) δ)^[k] (v h)
   have hcl : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • F.L h) (v h) - v h‖ ≤ C * (3 * β) := by
     intro s hs
     refine (F.norm_le_norm_incl h _).trans (mul_le_mul_of_nonneg_left ?_ hC)
@@ -305,23 +335,16 @@ theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v
     refine (norm_add₃_le).trans ?_
     rw [norm_neg]
     linarith [a1.trans_le (min_le_right _ _)]
-  have hvw : ‖v h - w‖ ≤ k * (C * (3 * β)) := by
-    rw [norm_sub_rev]
-    exact (TimeStepping.norm_timeAvg_iterate_sub_le (F.dissipative h) hδ k (v h)).trans
-      (mul_le_mul_of_nonneg_left (TimeStepping.norm_timeAvg_sub_le hδ hcl) (Nat.cast_nonneg _))
-  have hLw : ‖(F.L h ^ k) w‖ ≤ G * (C * (‖x‖ + 1)) :=
-    (TimeStepping.norm_pow_timeAvg_iterate_le (F.dissipative h) hδ k (v h)).trans
-      (mul_le_mul_of_nonneg_left hvb hG)
   -- the temporal error
   have e2 : ‖F.sol h (v h) (n * Θ.τ h) - Θ.sol h (v h) n‖ < ε / 2 := by
     rw [hsol, TimeScheme.sol, ← _root_.map_sub]
     refine ((F.incl h).le_opNorm _).trans_lt ?_
-    have hX := Θ.norm_exp_sub_pow_le h (v h) w hn.2
+    have hX := Θ.norm_exp_sub_pow_le_of_timeAvg h (v h) hn.2 hδ hcl
     have ht : (n : ℝ) * Θ.τ h ≤ max T 0 := hn.2.trans (le_max_left _ _)
     have hτp : 0 ≤ Θ.τ h ^ Θ.p := pow_nonneg (Θ.τ_pos h).le _
-    have b1 : (1 + Θ.M T) * ‖v h - w‖ ≤ (1 + M) * (k * (C * (3 * β))) :=
-      mul_le_mul (by linarith) hvw (norm_nonneg _) (by linarith)
-    have b2 : Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) w‖ ≤
+    have b1 : (1 + Θ.M T) * ((Θ.p + 1) * (C * (3 * β))) ≤ (1 + M) * (k * (C * (3 * β))) := by
+      push_cast [k]; gcongr
+    have b2 : Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * (G * ‖v h‖) ≤
         M * Θ.K * max T 0 * γ * (G * (C * (‖x‖ + 1))) := by
       have hK := Θ.K_nonneg
       have c1 : Θ.M T * Θ.K ≤ M * Θ.K := mul_le_mul_of_nonneg_right hMT hK
@@ -329,12 +352,9 @@ theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v
         mul_le_mul c1 ht hn.1 (mul_nonneg hM0 hK)
       have c3 : Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p ≤ M * Θ.K * max T 0 * γ :=
         mul_le_mul c2 h4.le hτp (mul_nonneg (mul_nonneg hM0 hK) (le_max_right _ _))
-      exact mul_le_mul c3 hLw (norm_nonneg _)
+      exact mul_le_mul c3 (mul_le_mul_of_nonneg_left hvb hG) (by positivity)
         (mul_nonneg (mul_nonneg (mul_nonneg hM0 hK) (le_max_right _ _)) hγ.le)
     have hι := F.norm_incl_le h
-    have hsum : 0 ≤ (1 + Θ.M T) * ‖v h - w‖ +
-        Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) w‖ :=
-      (norm_nonneg _).trans hX
     calc ‖F.incl h‖ * ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) (v h) - (Θ.P h ^ n) (v h)‖
         ≤ C * ((1 + M) * (k * (C * (3 * β))) +
             M * Θ.K * max T 0 * γ * (G * (C * (‖x‖ + 1)))) :=
@@ -431,10 +451,132 @@ theorem norm_S_sub_sol_le_of_smooth {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T :
       rw [TimeScheme.sol, ← _root_.map_sub, mul_assoc]
       exact ((F.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left h2 (norm_nonneg _))
 
+/-- **7. The fully discrete rate for every datum of a rate class in `D(A)`, by smoothing**: for
+`0 < δ ≤ T` and `tₙ ∈ [0, T]`, with `e = hᵅ ‖x‖_c`, `C_F` the uniform bound of `F`
+(`DissipFEEC.boundConst`) and `pₕ = pₕ(0)`,
+`‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ (C + ‖ιₕ‖ C' tₙ) e + ‖ιₕ‖ (M(T) ‖pₕ - v‖`
+`+ (1 + M(T)) (p + 1) C_F ((2C + ‖ιₕ‖ C' δ) e + δ ‖A x‖) + M(T) K tₙ τₕᵖ (2/δ)^{p+1} ‖pₕ‖)`.
+The scheme is tested on `A_δ^{p+1} pₕ` (`norm_exp_sub_pow_le_of_timeAvg`); the semidiscrete
+orbit from `pₕ` moves by at most `C_F ((2C + ‖ιₕ‖ C' δ) e + δ ‖A x‖)` on `[0, δ]` because it is
+`O(e)`-close to `S(s) x` and `‖S(s) x - x‖ ≤ s ‖A x‖`. Every term is uniform in `h`: no power
+of `Lₕ` and no smoothness of the comparison enter. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+theorem norm_S_sub_sol_le_of_timeAvg {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data)
+    (hxA : x ∈ A.domain) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) {δ : ℝ}
+    (hδ : 0 < δ) (hδT : δ ≤ T) :
+    ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      (R.C + ‖F.incl h‖ * R.C' * (n * Θ.τ h)) * (R.meshSize h ^ R.α * R.classNorm x) +
+        ‖F.incl h‖ * (Θ.M T * ‖R.p x h 0 - v‖ +
+          (1 + Θ.M T) * ((Θ.p + 1) * (F.boundConst *
+            ((2 * R.C + ‖F.incl h‖ * R.C' * δ) * (R.meshSize h ^ R.α * R.classNorm x) +
+              δ * ‖genExt A x‖))) +
+          Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ((2 / δ) ^ (Θ.p + 1) * ‖R.p x h 0‖)) := by
+  set u := R.p x h 0
+  set e := R.meshSize h ^ R.α * R.classNorm x
+  have hT : 0 ≤ T := hδ.le.trans hδT
+  have hM := Θ.M_nonneg hT h
+  have hι := norm_nonneg (F.incl h)
+  have hC'e : 0 ≤ R.C' * e := by
+    have := (norm_nonneg _).trans (R.consistency x hx h 0 ⟨le_rfl, hT⟩)
+    rwa [mul_assoc] at this
+  have hS0 : F.S 0 x = x := by rw [S_def, C0Semigroup.S_zero_apply]
+  have hu : ‖x - F.incl h u‖ ≤ R.C * e := by
+    have := R.approx x hx h 0 ⟨le_rfl, hT⟩
+    rwa [hS0, mul_assoc] at this
+  -- the semidiscrete orbit from `pₕ(0)` moves slowly on `[0, δ]`
+  have hη : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • F.L h) u - u‖ ≤
+      F.boundConst * ((2 * R.C + ‖F.incl h‖ * R.C' * δ) * e + δ * ‖genExt A x‖) := by
+    intro s hs
+    refine (F.norm_le_norm_incl h _).trans (mul_le_mul_of_nonneg_left ?_ F.boundConst_nonneg)
+    have a1 := dissipFEEC_rate F R hx h u ⟨hs.1, hs.2.trans hδT⟩
+    rw [sub_self, norm_zero, mul_zero, add_zero] at a1
+    have a2 : ‖F.S s x - x‖ ≤ s * ‖genExt A x‖ := by
+      have := LumerPhillips.norm_lpS_sub_le_of_le F.isMDissipative ⟨x, hxA⟩ le_rfl hs.1
+      rwa [LumerPhillips.lpS_zero, sub_zero, ← genExt_of_mem hxA] at this
+    have e1 : F.incl h (exp ((s : 𝕜) • F.L h) u - u) =
+        -(F.S s x - F.sol h u s) + (F.S s x - x) + (x - F.incl h u) := by
+      rw [_root_.map_sub, show F.sol h u s = F.incl h (exp ((s : 𝕜) • F.L h) u) from rfl]; abel
+    rw [e1]
+    refine (norm_add₃_le).trans ?_
+    rw [norm_neg]
+    have b1 : ‖F.incl h‖ * R.C' * s * e ≤ ‖F.incl h‖ * R.C' * δ * e := by
+      have := mul_le_mul_of_nonneg_left hs.2 (mul_nonneg hι hC'e)
+      linarith
+    have b2 := mul_le_mul_of_nonneg_right hs.2 (norm_nonneg (genExt A x))
+    nlinarith
+  have h1 := dissipFEEC_rate F R hx h u hn
+  rw [sub_self, norm_zero, mul_zero, add_zero] at h1
+  have h2 := Θ.norm_exp_sub_pow_le_of_timeAvg h u hn.2 hδ hη
+  have h3 : ‖(Θ.P h ^ n) (u - v)‖ ≤ Θ.M T * ‖u - v‖ :=
+    ((Θ.P h ^ n).le_opNorm _).trans
+      (mul_le_mul_of_nonneg_right (Θ.stable T h n hn.2) (norm_nonneg _))
+  have e2 : F.S (n * Θ.τ h) x - Θ.sol h v n = (F.S (n * Θ.τ h) x - F.sol h u (n * Θ.τ h)) +
+      F.incl h (exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) u - (Θ.P h ^ n) u + (Θ.P h ^ n) (u - v)) := by
+    rw [_root_.map_add, _root_.map_sub, _root_.map_sub (Θ.P h ^ n), TimeScheme.sol,
+      show F.sol h u (n * Θ.τ h) = F.incl h (exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) u) from rfl]
+    simp only [_root_.map_sub]
+    abel
+  rw [e2]
+  refine (norm_add_le _ _).trans (add_le_add h1 ?_)
+  refine ((F.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left ?_ hι)
+  refine (norm_add_le _ _).trans ?_
+  linarith
+
+/-- **7. The fully discrete rate, uniform in `h`, for every datum of a rate class in `D(A)`**:
+`norm_S_sub_sol_le_of_timeAvg` at `δ = τₕ^θ`, `θ = p/(p + 2)`: for `τₕ^θ ≤ T` and
+`tₙ ∈ [0, T]`, with `e = hᵅ ‖x‖_c` and `pₕ = pₕ(0)`,
+`‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ (C + ‖ιₕ‖ C' tₙ) e + ‖ιₕ‖ (M(T) ‖pₕ - v‖`
+`+ (1 + M(T)) (p + 1) C_F (2C + ‖ιₕ‖ C' T) e`
+`+ τₕ^θ ((1 + M(T)) (p + 1) C_F ‖A x‖ + M(T) K tₙ 2^{p+1} ‖pₕ‖))`,
+so `O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h` from `v = pₕ(0)` (`‖ιₕ‖ ≤ C_F`, `‖pₕ(0)‖` is bounded
+by `C_F (‖x‖ + C e)`): for every time scheme, with no smoothness beyond `x ∈ D(A)`. The order
+`p/(p + 2)` is not sharp. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+theorem norm_S_sub_sol_le_uniform {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data)
+    (hxA : x ∈ A.domain) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T)
+    (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
+    ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      (R.C + ‖F.incl h‖ * R.C' * (n * Θ.τ h)) * (R.meshSize h ^ R.α * R.classNorm x) +
+        ‖F.incl h‖ * (Θ.M T * ‖R.p x h 0 - v‖ +
+          (1 + Θ.M T) * (Θ.p + 1) * F.boundConst * (2 * R.C + ‖F.incl h‖ * R.C' * T) *
+            (R.meshSize h ^ R.α * R.classNorm x) +
+          Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * F.boundConst *
+            ‖genExt A x‖ + Θ.M T * Θ.K * (n * Θ.τ h) * 2 ^ (Θ.p + 1) * ‖R.p x h 0‖)) := by
+  set θ : ℝ := (Θ.p : ℝ) / (Θ.p + 2)
+  set δ := Θ.τ h ^ θ
+  have hτ := Θ.τ_pos h
+  have hδ : 0 < δ := Real.rpow_pos_of_pos hτ θ
+  have hT : 0 ≤ T := hδ.le.trans hτT
+  have key := Θ.norm_S_sub_sol_le_of_timeAvg R hx hxA h v hn hδ hτT
+  -- `τᵖ (2/δ)^{p+1} = 2^{p+1} τ^θ`
+  have hpow : Θ.τ h ^ Θ.p * (2 / δ) ^ (Θ.p + 1) = 2 ^ (Θ.p + 1) * δ := by
+    have hp2 : (Θ.p : ℝ) + 2 ≠ 0 := by positivity
+    have e : (Θ.p : ℝ) = θ * (Θ.p + 1 : ℕ) + θ := by
+      simp only [θ]; push_cast; field_simp; ring
+    rw [div_pow, ← Real.rpow_natCast (Θ.τ h) Θ.p, ← Real.rpow_natCast δ, ← Real.rpow_mul hτ.le,
+      e, Real.rpow_add hτ]
+    field_simp
+    rfl
+  have hC'e : 0 ≤ R.C' * (R.meshSize h ^ R.α * R.classNorm x) := by
+    have := (norm_nonneg _).trans (R.consistency x hx h 0 ⟨le_rfl, hT⟩)
+    rwa [mul_assoc] at this
+  have hM := Θ.M_nonneg hT h
+  have hι := norm_nonneg (F.incl h)
+  have hF := F.boundConst_nonneg
+  refine key.trans (add_le_add le_rfl (mul_le_mul_of_nonneg_left ?_ hι))
+  have b1 : ‖F.incl h‖ * R.C' * δ * (R.meshSize h ^ R.α * R.classNorm x) ≤
+      ‖F.incl h‖ * R.C' * T * (R.meshSize h ^ R.α * R.classNorm x) := by
+    have := mul_le_mul_of_nonneg_left hτT (mul_nonneg hι hC'e)
+    linarith
+  have b2 := mul_le_mul_of_nonneg_left b1
+    (mul_nonneg (mul_nonneg (by linarith : (0 : ℝ) ≤ 1 + Θ.M T) (by positivity : (0 : ℝ) ≤ Θ.p + 1)) hF)
+  have e3 : Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ((2 / δ) ^ (Θ.p + 1) * ‖R.p x h 0‖) =
+      Θ.M T * Θ.K * (n * Θ.τ h) * ‖R.p x h 0‖ * (Θ.τ h ^ Θ.p * (2 / δ) ^ (Θ.p + 1)) := by ring
+  rw [e3, hpow]
+  nlinarith
+
 /-- The conclusions of the fully discrete FEEC theorem (`dissipFEEC_fullyDiscrete`) for the
 time scheme `Θ` and the core `Z`: the semidiscrete verdict, and stability, temporal error, rate,
 convergence and constraint residuals of the iterates `ιₕ Pₕⁿ v`, and their rate along smooth
-comparisons. -/
+comparisons and, uniformly in `h`, for every datum of a rate class in `D(A)`. -/
 structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
   /-- the iterates are stable on every horizon `[0, T]` -/
   stable_iterates {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
@@ -469,6 +611,18 @@ structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
     ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤ R.C * R.meshSize h ^ R.α * R.classNorm x +
       ‖F.incl h‖ * Θ.M T * (‖R.p x h 0 - v‖ +
         n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x + R.C' * R.meshSize h ^ R.α * R.classNorm x))
+  /-- the fully discrete rate for every datum of a rate class in `D(A)`: spatial rate plus
+  `O(τₕ^{p/(p+2)})`, uniformly in `h`, for every time scheme -/
+  rate_uniform_iterates {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data)
+    (hxA : x ∈ A.domain) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T)
+    (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
+    ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
+      (R.C + ‖F.incl h‖ * R.C' * (n * Θ.τ h)) * (R.meshSize h ^ R.α * R.classNorm x) +
+        ‖F.incl h‖ * (Θ.M T * ‖R.p x h 0 - v‖ +
+          (1 + Θ.M T) * (Θ.p + 1) * F.boundConst * (2 * R.C + ‖F.incl h‖ * R.C' * T) *
+            (R.meshSize h ^ R.α * R.classNorm x) +
+          Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * F.boundConst *
+            ‖genExt A x‖ + Θ.M T * Θ.K * (n * Θ.τ h) * 2 ^ (Θ.p + 1) * ‖R.p x h 0‖))
 
 end TimeScheme
 
@@ -479,7 +633,8 @@ iterates `ιₕ Pₕⁿ v` are stable, have temporal error `‖ιₕ‖ M(T) K t
 the spatial rate plus the temporal error, converge on the closure of the core for every
 convergent family as `τₕ → 0`, and have constraint residuals bounded by the error and tending to
 `0`; for schemes consistent along trajectories and smooth comparisons, the rate is
-`O(hᵅ + τₕᵖ)` uniformly in `h`. [BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018],
+`O(hᵅ + τₕᵖ)` uniformly in `h`, and for every scheme and every datum of a rate class in `D(A)` it
+is `O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h`. [BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018],
 Ch. 8 -/
 theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [NormedSpace ℝ E]
     [IsScalarTower ℝ 𝕜 E] (Z : F.Core) (Θ : F.TimeScheme) : Θ.Verdict Z where
@@ -493,6 +648,8 @@ theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [N
     Θ.residual_tendsto hK Z hxK hx hv hτ T hε
   rate_smooth_iterates := fun hΘ _ R Sm _ hx hxs h v _ hn =>
     Θ.norm_S_sub_sol_le_of_smooth hΘ R Sm hx hxs h v hn
+  rate_uniform_iterates := fun R _ hx hxA h v _ hn hτT =>
+    Θ.norm_S_sub_sol_le_uniform R hx hxA h v hn hτT
 
 /-! ### θ-schemes and Crank–Nicolson -/
 

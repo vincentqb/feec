@@ -30,7 +30,8 @@ for the semidiscrete instances of the library, with any time steps `τₙ > 0` (
   (a uniform-in-`N` bound of `‖L_N³ Πₕ(0)‖`, which would make this `O(h_N + τ_N²)`, is not
   proved; `TimeScheme.Verdict.rate_smooth_iterates` gives `O(h_N + τ_N²)` without it once the
   comparison of `mirrorComplexRate` is shown smooth of order `3`, `DissipFEEC.Comparison.Smooth`,
-  which is not done here);
+  which is not done here), and by `TimeScheme.Verdict.rate_uniform_iterates` (the data lie in
+  `D(L)`) the error is `O(h_N + τ_N^{1/2})` uniformly in `N`;
 * `absorbing_implicitEuler`, `absorbing_crankNicolson`: the absorbing (Silver–Müller) boundary
   problem on the cube, dissipative, with implicit Euler (order `1`, `K = 3/2`) and Crank–Nicolson
   (order `2`, `K = 5/12`): the fully discrete verdict, contraction of the iterates, convergence for
@@ -141,7 +142,9 @@ Crank–Nicolson: the fully discrete verdict on its core, and the comparison ini
 `tₙ = n τ_N ∈ [0, T]`:
 `‖S(tₙ) x - ι_N P_Nⁿ Πₕ(0)‖ ≤ (C + ‖ι_N‖ C' tₙ) h_N ‖x‖_{L³} + ‖ι_N‖ 5/12 tₙ τ_N² ‖L_N³ Πₕ(0)‖`.
 This is `O(h_N + τ_N²)` only given a bound on `‖L_N³ Πₕ(0)‖` uniform in `N`, which is not proved
-here. [QuennevilleBelair2015], Ch. 7 -/
+here; without it, `TimeScheme.Verdict.rate_uniform_iterates` of the first conjunct (with
+`v = Πₕ(0)`, the data lying in `D(L)`) bounds the error by the spatial rate plus
+`O(τ_N^{1/2})`, uniformly in `N`. [QuennevilleBelair2015], Ch. 7 -/
 theorem einsteinBianchi_mirror_crankNicolson_rate :
     ((ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).crankNicolson τ hτ).Verdict
         (ApproxFEEC.ofComplexCrimeCore (mirrorComplex hT hB)) ∧

@@ -125,13 +125,14 @@ definitions unfolded (`mirrorFEMCore`, `standardCubeCore`: the orbit cores of
 ## The crown
 
 The fields of the FEEC theorem (`ConformingFamily.feec`, `ConformingFamily.Verdict`) and of its
-rated form (`ConformingFamily.feec_rated`) are the verdicts of the layer theorems: the examples
-of the section on the crown fields check, by `type_of%`, that the type of each field is, definitionally, the statement
-of the layer theorem it is read from (`staticFEEC`, `approxFEEC`, `constrainedFEEC`,
-`heatFEEC_verdict`, `dissipFEEC_fullyDiscrete` for the θ-schemes, Crank–Nicolson and every time
-scheme, `SkewFEEC.norm_S_sub_leapfrog_le`; `ConformingFamily.rate`, `ConstrainedFEEC.rate_le`,
-`ConstrainedFEEC.heat_rate`, `rate_smooth_iterates`). On the cube, the heat verdict of
-`Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of `FEM.polyFamily`.
+rated form (`ConformingFamily.feec_rated`) are the verdicts of the layer theorems: the examples of
+the section on the crown fields check, by `type_of%`, that the type of each field is,
+definitionally, the statement of the layer theorem it is read from (`staticFEEC`, `approxFEEC`,
+`constrainedFEEC`, `heatFEEC`, `dissipFEEC_fullyDiscrete` for the θ-schemes, Crank–Nicolson and
+every time scheme, `SkewFEEC.norm_S_sub_leapfrog_le`; `ConformingFamily.rate`,
+`ConstrainedFEEC.rate_le`, `ConstrainedFEEC.rate_heat`, `rate_smooth_iterates`). On the cube, the
+heat verdict of `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of
+`FEM.polyFamily`.
 
 ## Spectral methods
 
@@ -295,7 +296,8 @@ theorem graph_old_isGraphBounded_toCochainProjection {θ : ℝ} (hθ : θ < 1)
         mul_le_mul_of_nonneg_left this (by positivity)
     _ = _ := by ring
 
-/-- The old `Feec.HilbertComplex.Subcomplex.CommutingMap.isGraphBounded_toCochainProjection_of_norm_le`. -/
+/-- The old
+`Feec.HilbertComplex.Subcomplex.CommutingMap.isGraphBounded_toCochainProjection_of_norm_le`. -/
 theorem graph_old_isGraphBounded_toCochainProjection_of_norm_le {θ : ℝ} (hθ : θ < 1)
     (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) {i j : ι} {C : ℝ}
     (hi : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (hj : ∀ x, ‖Q.Q j x‖ ≤ C * ‖x‖) :
@@ -2937,7 +2939,7 @@ example : type_of% (constrainedFEEC (F.windowFEEC a m K hK)) := F.feec.constrain
 
 example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
-    type_of% ((F.windowFEEC a m K hK).heatFEEC_verdict hcr) :=
+    type_of% ((F.windowFEEC a m K hK).heatFEEC hcr) :=
   F.feec.heat a m K hK hcr
 
 example (Θ : (F.windowFEEC a m K hK).toApprox.TimeScheme) :
@@ -2993,7 +2995,7 @@ example {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) {x : PiLp 2 fun i : Fin m =>
 
 example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] (s : ρ) :
-    type_of% ((F.windowFEEC a m K hK).heat_rate hcr
+    type_of% ((F.windowFEEC a m K hK).rate_heat hcr
       ((F.windowFEEC a m K hK).totalJackson (J.window a m)) s) :=
   (F.feec_rated J).rate_heat a m K hK hcr s
 
@@ -3104,10 +3106,12 @@ private def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choos
 private theorem mirrorRateK_nonneg : 0 ≤ mirrorRateK hT hB :=
   (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.1
 
+-- the budget of the deleted `EinsteinBianchiFEMMirrorCore` (main): obtaining the discrete
+-- solution of the model rate unfolds the mirror scheme `mirrorWave`
 set_option maxHeartbeats 400000 in
 /-- The model rate (`mirror_waveFEM_rate_of_mem_domain`) for one TSD datum of `D(L³)`. -/
-private theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq)
-    (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) {T : ℝ} (hT0 : 0 < T) :
+private theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ}
+    (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) {T : ℝ} (hT0 : 0 < T) :
     ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
       ∀ t ∈ Icc 0 T, tsdErr ((tsdDatumOf hx).U t) (dState hT hB N (toSourceFree hT hB N sh) t) ≤
         mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + t) * meshSize N := by
@@ -3115,6 +3119,7 @@ private theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ} (hx : x ∈ t
     (tsdDatumOf hx) h3 hT0
     (tsdDatumOf hx).U_zero ((tsdDatumOf hx).isStrongSolution T)
   exact ⟨sh, hsh⟩
+
 /-- **The model rate of the mirror scheme for TSD data of `D(L³)`**
 (`mirror_waveFEM_rate_of_mem_domain` for `ξ₀` and `-i ξ₀`): for every `N`, some discrete initial
 value gives `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_N ‖ξ₀‖_{L³}` on `[0, T]`. -/
@@ -3144,6 +3149,7 @@ private theorem mirrorFEM_hrate {T : ℝ} (hT0 : 0 < T) :
   have h5 : mirrorRateK hT hB * l3Norm (tsdDatumOf hx) h3 * (1 + T) * meshSize N * 2 =
       2 * mirrorRateK hT hB * (1 + T) * meshSize N * l3Norm (tsdDatumOf hx) h3 := by ring
   linarith
+
 /-- **The rate class of order `1`**: TSD data of `D(L³)` with the norm
 `‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`, `C = 6 K (1 + T)` and `C' = 0` (orbit comparison). -/
 private def mirrorFEMRate (T : ℝ) (hT0 : 0 < T) : (mirrorFEMApprox hT hB).RateClass T :=
@@ -3156,6 +3162,8 @@ private def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).c
 private theorem mirrorSobK_nonneg : 0 ≤ mirrorSobK hT hB :=
   (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose_spec.1
 
+-- the budget of the deleted `EinsteinBianchiFEMMirrorCore` (main): obtaining the discrete
+-- solution of the model rate unfolds the mirror scheme `mirrorWave`
 set_option maxHeartbeats 400000 in
 /-- The model Sobolev rate (`mirror_waveFEM_rate_sobolev_of_add_two`) for one TSD datum. -/
 private theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
@@ -3286,8 +3294,8 @@ theorem eb_old_mirrorFEM_approxFEEC_elliptic :
     (mirrorFEMApprox hT hB).Verdict (mirrorEllCore hT hB) :=
   approxFEEC _ _
 
-/-- The old `einsteinBianchi_mirrorFEM_rate_elliptic`, from `MirrorFEMApprox.Verdict` (the comparison initial value does not
-depend on the horizon). -/
+/-- The old `einsteinBianchi_mirrorFEM_rate_elliptic`, from `MirrorFEMApprox.Verdict` (the
+comparison initial value does not depend on the horizon). -/
 theorem eb_old_mirrorFEM_rate_elliptic {T : ℝ} {x : PiLp 2 SpaceQ}
     (hx : x ∈ mirrorL3Data) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖complexQℝ.waveGroup.S t x -
@@ -3297,8 +3305,8 @@ theorem eb_old_mirrorFEM_rate_elliptic {T : ℝ} {x : PiLp 2 SpaceQ}
   rw [mirrorEllCmp_p_zero_eq_init hT hB T]
   exact (mirrorFEMApprox_verdict hT hB).rate_init hx N ht.1
 
-/-- The old `einsteinBianchi_mirrorFEM_rate_sobolev_elliptic`, from `MirrorFEMApprox.Verdict` (the comparison initial value does not
-depend on the horizon). -/
+/-- The old `einsteinBianchi_mirrorFEM_rate_sobolev_elliptic`, from `MirrorFEMApprox.Verdict` (the
+comparison initial value does not depend on the horizon). -/
 theorem eb_old_mirrorFEM_rate_sobolev_elliptic {T s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖complexQℝ.waveGroup.S t x -
@@ -3352,7 +3360,8 @@ theorem eb_old_mirrorFEM_ofComplexCrime_rate {x : PiLp 2 SpaceQ} (hx : x ∈ mir
   rw [Real.rpow_one]
   rfl
 
-/-- The old `einsteinBianchi_mirrorFEM_ofComplexCrime_rate_sobolev` (the crime rate class), verbatim. -/
+/-- The old `einsteinBianchi_mirrorFEM_ofComplexCrime_rate_sobolev` (the crime rate class),
+verbatim. -/
 theorem eb_old_mirrorFEM_ofComplexCrime_rate_sobolev {s : ℝ} (hs0 : 0 ≤ s)
     (hs1 : s ≤ 1) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
@@ -3660,16 +3669,18 @@ theorem eb_old_standardCubeApproxVerdict : StandardCubeApproxVerdict := by
 
 end Cube
 
-/-- The old `einsteinBianchi_summary`, verbatim. -/
+/-- The old `einsteinBianchi_summary`, verbatim; its `ℝ³` row is the old conjunction
+`EuclideanEBVerdict` (`band_old_einsteinBianchi_euclidean_band`). -/
 theorem eb_old_summary :
     -- the constrained FEEC verdicts, with the approximating `ℝ³` row
-    ((TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧ EuclideanBand.EuclideanEBVerdict ∧
+    ((TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧
+      type_of% band_old_einsteinBianchi_euclidean_band ∧
       (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧ MirrorFEMVerdict ∧
       StandardCubeVerdict) ∧
     -- the scheme (6.5) as an approximating FEEC discretization
     MirrorFEMApproxVerdict ∧ StandardCubeApproxVerdict :=
   have h := einsteinBianchi_constrainedFEEC_summary
-  ⟨⟨h.1, EuclideanBand.einsteinBianchi_euclidean_band, h.2.1, mirrorFEMVerdict_of_approxFEEC,
+  ⟨⟨h.1, band_old_einsteinBianchi_euclidean_band, h.2.1, mirrorFEMVerdict_of_approxFEEC,
     h.2.2.2⟩, eb_old_mirrorFEMApproxVerdict, eb_old_standardCubeApproxVerdict⟩
 
 end EinsteinBianchiOld

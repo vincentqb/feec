@@ -278,7 +278,8 @@ def graphLift : F.Lift H.totalD.GraphSpace where
   hasDerivWithinAt x hx t ht := by
     have e : ∀ s, 0 ≤ s → graphOf H (F.S s x) = waveOrbit H x s := fun s hs => by
       rw [F.S_eq_waveGroup hs, waveOrbit_eq_graphOf H (domainSq_le_domain hx)]
-    rw [F.S_eq_waveGroup ht, ← waveExt_eq_genExt, ← waveOrbit_eq_graphOf H (waveExt_mem_domain H hx)]
+    rw [F.S_eq_waveGroup ht, ← waveExt_eq_genExt,
+      ← waveOrbit_eq_graphOf H (waveExt_mem_domain H hx)]
     exact ((waveOrbit_isC1' H hx (t + 1)).2.2 t ⟨ht, by linarith⟩).congr
       (fun s hs => e s (ht.trans hs)) (e t ht)
 

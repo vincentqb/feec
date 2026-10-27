@@ -296,8 +296,8 @@ structure MirrorFEMApprox.Verdict : Prop extends
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
       (4 * mirrorEllK (C := C) + 8 * mirrorEllK (C := C) * t) * (meshSize N * mirrorL3Norm x)
   /-- the `O(hˢ)` rate from it, for TSD data in `H^{2+s}`, `0 ≤ s ≤ 1`, and all `t ≥ 0` -/
-  rate_sobolev_init {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s)
-    (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+  rate_sobolev_init {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) {x : PiLp 2 SpaceQ}
+    (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
       (6 * mirrorEllK (C := C) + 12 * mirrorEllK (C := C) * t) *
         (meshSize N ^ s * √(sobState (2 + s) x))
@@ -403,8 +403,9 @@ theorem standardCube_residual_not_isReducing {T : ℝ} (hT0 : 0 < T) :
     rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe,
       (dense_standardCubeEllCore hT hB).closure_eq]
     trivial
-  obtain ⟨hpos, hdet⟩ := (approxFEEC (standardCubeApprox hT hB) (standardCubeEllCore hT hB)).detects hQc
-    ⟨0, Q.zero_mem⟩ ht.1 hout
+  obtain ⟨hpos, hdet⟩ :=
+    (approxFEEC (standardCubeApprox hT hB) (standardCubeEllCore hT hB)).detects hQc
+      ⟨0, Q.zero_mem⟩ ht.1 hout
   rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at hout hpos hdet
   exact ⟨Q, hQ, x, hx, t, ht, hout, hpos, fun v hv => (hdet hxc v hv).1⟩
 
@@ -568,8 +569,8 @@ theorem einsteinBianchi_summary :
         (hB : ∀ a : Fin 3, Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a}
           Feec.FiniteElement.PolySeq.lagrangeP2 ρ C), MirrorFEMApprox.Verdict hT hB) ∧
     -- the scheme (6.5) with the thesis' boundary conditions
-    ((Feec.EinsteinBianchi.BoundedFailure.betaDatum ∈ thesisTSD ∧ ¬ Feec.EinsteinBianchi.MatrixModel.matrixComplex.wave.IsReducing
-        thesisTSD) ∧
+    ((Feec.EinsteinBianchi.BoundedFailure.betaDatum ∈ thesisTSD ∧
+        ¬ Feec.EinsteinBianchi.MatrixModel.matrixComplex.wave.IsReducing thesisTSD) ∧
       (∃ (p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)) (C : ℝ),
         Feec.Models.Cube.FEM.PolySmoothingEstimatesMin 3 Feec.FiniteElement.PolySeq.lowestOrder
           p C ∧ Feec.Models.Cube.FEM.PolySmoothingEstimatesMin 3

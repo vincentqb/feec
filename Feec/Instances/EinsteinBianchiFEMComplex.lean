@@ -17,15 +17,15 @@ differential space**: `Lₕ = 𝐝ₕ - 𝐝ₕ*` (`waveGen_eq_diffWave`) for th
 cochain maps, and (6.5) is not formalized as an instance of
 `Feec.HilbertComplex.ApproxFEEC.ofComplex`. It is the **crime front** of the approximating FEEC
 theorem, `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime`, of the family of discrete differential
-spaces of its **elliptic core**, through `Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`: the
-elliptic projection (6.4) of the exact solution is a Galerkin projection,
-`(1 - Lₕ) Πₕ(t) = ιₕ* (1 - L) ξ(t)` (`mEll_galerkin`, `cEll_galerkin`, from `inner_ellDefect` and the
-identification of the continuous forms state with the read state), so it is the approximant of the
-consistent-approximation hypothesis (residual `0`), and its convergence is the Strang bound of
+spaces of its **elliptic core**, through `Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`:
+the elliptic projection (6.4) of the exact solution is a Galerkin projection,
+`(1 - Lₕ) Πₕ(t) = ιₕ* (1 - L) ξ(t)` (`mEll_galerkin`, `cEll_galerkin`, from `inner_ellDefect` and
+the identification of the continuous forms state with the read state), so it is the approximant of
+the consistent-approximation hypothesis (residual `0`), and its convergence is the Strang bound of
 (6.4) with the weak consistency constants `K₀`, `K₁`
-(`Feec.Instances.EinsteinBianchi.FEM.norm_sub_ellTraj_le`). The cochain defect of (6.5) is absorbed by
-the Galerkin identity; it is computed in `Feec.Instances.EinsteinBianchiFEMDefect` (`O(h)` for the
-thesis' boundary conditions, `0` on TSD states for mirror boundary conditions).
+(`Feec.Instances.EinsteinBianchi.FEM.norm_sub_ellTraj_le`). The cochain defect of (6.5) is absorbed
+by the Galerkin identity; it is computed in `Feec.Instances.EinsteinBianchiFEMDefect` (`O(h)` for
+the thesis' boundary conditions, `0` on TSD states for mirror boundary conditions).
 
 * **Mirror boundary conditions** (`mirrorComplex`, on `complexQℝ`, constraint `tsdQℝ`): the
   discrete solutions are those of `mirrorFEMApprox` (`mirrorComplex_sol`, the scheme (6.5)); the

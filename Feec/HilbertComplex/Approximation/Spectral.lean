@@ -31,14 +31,14 @@ strongly to `1` (the Fourier bands of a symbol complex on a torus). It has two r
 * a reducing family (`ReducingFamily.ofSpectral`: a finite-dimensional reducing subspace lies in
   the domain, `LinearPMap.IsReducingPair.le_domain`, and `L` is bounded on it), so the FEEC
   theorem for reducing families applies;
-* a conforming family (`ConformingFamily.ofSpectral`: `V_N = B_N`, `π_N` the orthogonal
-  projections, commuting with `d` and of norm `1`), so the constrained FEEC theorem applies
+* a conforming family (`ConformingFamily.ofSpectral`: `V_N = B_N`, `π_N` the orthogonal projections,
+  commuting with `d` and of norm `1`), so the constrained FEEC theorem applies
   (`SpectralFamily.toFEEC`), and on complexes over `ℕ` or `ℤ` the FEEC theorem
-  (`Feec.HilbertComplex.ConformingFamily.feec`); there `P_N` commutes with `L` and `e^{tL}`, so the graph-norm
-  truncation errors of the orbit are those of the datum (`SpectralFamily.exists_mem_graphSub_le`),
-  and the data whose truncation errors of `x`, `L x`, `L² x` decay like `(N + 1)^{-α}` form rate
-  classes on every horizon (`SpectralFamily.rateClass`), containing every band-limited datum
-  (`SpectralFamily.mem_rateData_of_mem`).
+  (`Feec.HilbertComplex.ConformingFamily.feec`); there `P_N` commutes with `L` and `e^{tL}`, so the
+  graph-norm truncation errors of the orbit are those of the datum
+  (`SpectralFamily.exists_mem_graphSub_le`), and the data whose truncation errors of `x`, `L x`,
+  `L² x` decay like `(N + 1)^{-α}` form rate classes on every horizon (`SpectralFamily.rateClass`),
+  containing every band-limited datum (`SpectralFamily.mem_rateData_of_mem`).
 
 Spectral families pull back along scaled embeddings whose range the projections preserve
 (`SpectralFamily.comap`).

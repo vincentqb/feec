@@ -229,6 +229,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > hypothesis (`Feec.Models.Cube.MirrorWaveRegularity`). `docs/OVERVIEW.md` lists what remains.
 > All are imported by `Feec.lean` and the full gate passes.
 
+> **Status (2026-10-27): the FEEC theorem (crown), open item.** The verdicts of the Einstein–Bianchi
+> rows `TorusVerdict`, `TorusSobolevVerdict`, `MirrorVerdict`, `MirrorSobolevVerdict`,
+> `MirrorFEMVerdict`, `StandardCubeVerdict` (`Feec.Instances.EinsteinBianchi`) and
+> `AbsorbingVerdict` (`Feec.Instances.EinsteinBianchiAbsorbing`) are still `Prop` conjunctions,
+> not structures extending the verdict of the layer theorem they read; only
+> `MirrorFEMApprox.Verdict`, `StandardCubeApprox.Verdict` and `EuclideanBand.EuclideanEBVerdict`
+> are.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.
@@ -274,7 +282,7 @@ Feec/
 │   │   Approximation/{DissipFEEC,SkewFEEC,ApproxFEEC}.lean -- the tower dissipFEEC → skewFEEC → approxFEEC
 │   │   Approximation/FullyDiscrete.lean -- the tower × one-step schemes (fully discrete verdict)
 │   │   Approximation/{Ritz,RitzResolvent}.lean -- Ritz projections → cores, rate classes (regularity scales)
-│   │   Approximation/HeatFEEC.lean -- the Hodge heat equation: toHeat, the heat Ritz projection, heatFEEC_verdict, heat_rate
+│   │   Approximation/HeatFEEC.lean -- the Hodge heat equation: toHeat, the heat Ritz projection, heatFEEC, rate_heat
 │   │   Approximation/Crown.lean -- the FEEC theorem feec (Verdict: static, wave, heat, fully discrete on every window) and feec_rated
 │   │   Approximation/Spectral.lean -- reducing families (ReducingFamily.feec: exact on the bands, error = truncation error), spectral families (ofSpectral)
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean

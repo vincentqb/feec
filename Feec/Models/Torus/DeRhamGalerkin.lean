@@ -8,14 +8,13 @@ public import Feec.HilbertComplex.Approximation.QuasiOptimal
 
 The band-limited forms `|n|_∞ ≤ N` (`Fourier.Torus.bandN N`) of the `L²` de Rham complex of the
 torus form a finite-dimensional subcomplex `bandSubcomplex d N` (a finite-dimensional reducing
-subspace lies in the domain, `LinearPMap.IsReducingPair.le_domain`), with the Fourier truncation
-as a cochain projection (`bandProj d N`) of graph norm `1`. The harmonic forms (the constant forms) are
-band-limited for every `N`, so the harmonic gap `μ` vanishes. The abstract quasi-optimal estimate
-of the mixed Hodge Laplacian (`Subcomplex.CochainProjection.norm_sub_le_infDist`, [AFW2010],
-Thm 3.9) then applies with the constants `C = 1`, `c_P = (2π)⁻¹`, `μ = 0`, and the spectral Galerkin
-solutions converge to the solution of the mixed problem as `N → ∞` (`tendsto_bandGalerkin`).
-This shows the hypotheses of the abstract theory are satisfiable by a nontrivial family of
-subcomplexes.
+subspace lies in the domain, `LinearPMap.IsReducingPair.le_domain`), with the Fourier truncation as
+a cochain projection (`bandProj d N`) of graph norm `1`. The harmonic forms (the constant forms) are
+band-limited for every `N`, so the harmonic gap `μ` vanishes. The abstract quasi-optimal estimate of
+the mixed Hodge Laplacian (`Subcomplex.CochainProjection.norm_sub_le_infDist`, [AFW2010], Thm 3.9)
+then applies with the constants `C = 1`, `c_P = (2π)⁻¹`, `μ = 0`, and the spectral Galerkin
+solutions converge to the solution of the mixed problem as `N → ∞` (`tendsto_bandGalerkin`). This
+shows the hypotheses of the abstract theory are satisfiable by a nontrivial family of subcomplexes.
 
 ## Main results
 

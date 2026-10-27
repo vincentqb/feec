@@ -283,7 +283,8 @@ theorem quasiOptimal {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.Cl
     (F.V h).mixedError hij hjk f σ u p ≤
       K * (infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
         infDist (p : W j) ((F.V h).harmonicW j) +
-        (F.π h).harmonicGap j * infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j)) := by
+        (F.π h).harmonicGap j *
+          infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j)) := by
   have hC := F.one_le_projBound
   obtain ⟨cP, -, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj hk
   exact ⟨_, by have := zero_le_one.trans hC; positivity, fun hs h =>
@@ -341,7 +342,8 @@ theorem Jackson.approx_le {ρ : Type*} (J : F.Jackson ρ) (s : ρ) (h : κ) {i j
     (hp : J.Reg s j L (p : W j)) :
     infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
         infDist (p : W j) ((F.V h).harmonicW j) +
-        (F.π h).harmonicGap j * infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j) ≤
+        (F.π h).harmonicGap j *
+          infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j) ≤
       2 * (J.B s i + (3 + 2 * F.projBound) * J.B s j) * (L * J.meshSize h ^ J.ord s) := by
   have hC : 0 ≤ F.projBound := zero_le_one.trans F.one_le_projBound
   have hgap : (F.π h).harmonicGap j ≤ 1 + F.projBound := (F.π h).harmonicGap_le (by linarith)

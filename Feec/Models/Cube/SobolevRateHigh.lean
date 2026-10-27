@@ -1067,7 +1067,8 @@ theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
   refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl (by linarith [hE.half_le])
     (norm_le_of_mem_orthogonal_cycles_part J hij) (norm_le_of_mem_orthogonal_cycles_part J rfl)
     ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j))
-    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N j) (hE.norm_proj_le N (j + 1))) hs h1 h2 h3 h4).trans
+    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N j) (hE.norm_proj_le N (j + 1)))
+      hs h1 h2 h3 h4).trans
     (le_of_eq (by ring))
 
 end Parity

@@ -38,8 +38,8 @@ The semi-discrete Hodge wave equation converges on every window: for `D(L)` data
 `exists_tendstoUniformlyOn_windowMin_whitney` here) and at the rate `O(h)` for `C²` solutions
 (`norm_sub_le_meshSize_window_smooth`, `norm_sub_le_meshSize_windowMin_smooth` in
 `Feec.Models.Cube.WhitneyRate`; these need no smoothed projection). Maxwell's equations (PMC and
-PEC) are the instances `Feec.Instances.Maxwell.cubePMC`, `Feec.Instances.Maxwell.cubePEC` of the FEEC
-theorem.
+PEC) are the instances `Feec.Instances.Maxwell.cubePMC`, `Feec.Instances.Maxwell.cubePEC` of the
+FEEC theorem.
 
 ## References
 

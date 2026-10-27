@@ -13,17 +13,17 @@ on `Xₕ = ι Vₕ ⊕₂ Wₕ`:
 
   `⟪Ėₕ, ι v'⟫ = -⟪Pₕ, c v'⟫ - ⟪γ vₕ, γ v'⟫` for `v' ∈ Vₕ`, `Ṗₕ = c vₕ`, `Eₕ = ι vₕ`,
 
-whose bilinear form carries the boundary term `⟪γ vₕ, γ v'⟫`: the discrete generator is
-dissipative, `⟪Lₕ x, x⟫ = -‖γ vₕ‖²` (`inner_Lh`), so the discrete energy decreases by twice the
-integrated discrete outgoing flux (`norm_sq_galerkin_sol`). Its discrete resolvent is the Galerkin
-solution built on the `V`-orthogonal projection of the exact one (Céa's lemma with constant `1`,
+whose bilinear form carries the boundary term `⟪γ vₕ, γ v'⟫`: the discrete generator is dissipative,
+`⟪Lₕ x, x⟫ = -‖γ vₕ‖²` (`inner_Lh`), so the discrete energy decreases by twice the integrated
+discrete outgoing flux (`norm_sq_galerkin_sol`). Its discrete resolvent is the Galerkin solution
+built on the `V`-orthogonal projection of the exact one (Céa's lemma with constant `1`,
 `discreteRes_galerkin`, `norm_incl_galerkinRes_sub_le`), so under the approximation property
-(`Approximates`: `Vₕ` approximates `V`, `Wₕ` approximates `H₂`) the scheme is consistent, its
-core is the Trotter–Kato core of the discrete resolvent (`DissipFEEC.Core.ofResolvent`,
-`Feec.HilbertComplex.Approximation.RitzResolvent`), and **`galerkin_verdict`** gives the full `dissipFEEC` verdict with a dense core: convergence for
-every datum, the rate bound for every rate class, the constraint residual in both directions. For
-separable `V`, `H₂`, dense-sequence spaces (`ofDenseSeq`) are an approximating family
-(`approximates_ofDenseSeq`).
+(`Approximates`: `Vₕ` approximates `V`, `Wₕ` approximates `H₂`) the scheme is consistent, its core
+is the Trotter–Kato core of the discrete resolvent (`DissipFEEC.Core.ofResolvent`,
+`Feec.HilbertComplex.Approximation.RitzResolvent`), and **`galerkin_verdict`** gives the full
+`dissipFEEC` verdict with a dense core: convergence for every datum, the rate bound for every rate
+class, the constraint residual in both directions. For separable `V`, `H₂`, dense-sequence spaces
+(`ofDenseSeq`) are an approximating family (`approximates_ofDenseSeq`).
 
 ## References
 

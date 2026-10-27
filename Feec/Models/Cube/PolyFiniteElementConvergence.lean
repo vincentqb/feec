@@ -811,7 +811,8 @@ theorem tableRows_uniform_cochainProjection :
   have hT := h₁.mono (le_max_left C₁ C₂)
   have hB := h₂.mono (le_max_right C₁ C₂)
   exact ⟨_, max C₁ C₂, hT, hB, hT.norm_proj_le,
-    fun N i j => (hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N i) (hT.norm_proj_le N j), hB.norm_proj_le,
+    fun N i j => (hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N i) (hT.norm_proj_le N j),
+    hB.norm_proj_le,
     fun N i j => (hB.proj N).isGraphBounded_of_norm_le (hB.norm_proj_le N i) (hB.norm_proj_le N j),
     fun _ => hT.family.tendsto_harmonicGap, fun _ => hB.family.tendsto_harmonicGap⟩
 

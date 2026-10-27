@@ -1152,11 +1152,6 @@ theorem einsteinBianchi_euclidean_band : EuclideanEBVerdict :=
     fun hs _ hx N => norm_sub_starProjection_le_of_mem_sobolev _ hs hx N,
     einsteinBianchi_euclidean_rate_optimal⟩
 
-/-! #### A non-reducing constraint on `ℝ³` -/
-
-open Feec.Instances.Maxwell (potential isClosed_potential not_isReducing_potential
-  dense_potential)
-
 end EinsteinBianchi
 
 /-! ### Maxwell's equations on `ℝᵈ` -/

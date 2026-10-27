@@ -18,9 +18,9 @@ and commutes with `d`, but is not a projection. If `Q` is close to the identity 
 `π = J⁻¹ Q`
 
 is a **cochain projection** onto `Vₕ` (`CommutingMap.toCochainProjection`), bounded in `W` by
-`(1 - θ)⁻¹ ‖Q‖` (`CommutingMap.norm_toCochainProjection_le`), hence in every graph norm by the
-same constant (`Subcomplex.CochainProjection.isGraphBounded_of_norm_le`, since `d π = π d`). With `θ = ½` and
-`Q = Π_h R`, `‖R‖ ≤ C_R`, `‖Π_h‖ ≤ C_Π`, the bound is `‖π‖ ≤ 2 C_Π C_R`
+`(1 - θ)⁻¹ ‖Q‖` (`CommutingMap.norm_toCochainProjection_le`), hence in every graph norm by the same
+constant (`Subcomplex.CochainProjection.isGraphBounded_of_norm_le`, since `d π = π d`). With `θ = ½`
+and `Q = Π_h R`, `‖R‖ ≤ C_R`, `‖Π_h‖ ≤ C_Π`, the bound is `‖π‖ ≤ 2 C_Π C_R`
 (`SmoothedInterpolant.norm_toCochainProjection_le_half`), and the discrete Poincaré inequality
 follows (`SmoothedInterpolant.norm_le_of_forall_inner_eq_zero_half`).
 

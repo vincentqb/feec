@@ -37,9 +37,11 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
 4. (**fully discrete**, `full`) for every time scheme, power bounded and consistent of order `p`
    uniformly in `h` (the θ-schemes `θ ≥ ½`, implicit Euler and Crank–Nicolson are ones,
    `DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`), the iterates of the wave and heat
-   discretizations are stable and converge as `h, τ → 0` at the spatial rate plus the temporal
-   error `O(τᵖ)` ([BrennerThomee1979]; [Thomee2006], Ch. 7–9); the explicit leapfrog scheme for
-   the wave equation does so under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
+   discretizations are stable and converge as `h, τ → 0`, with error at most the spatial rate
+   plus the temporal error `τᵖ ‖Lₕ^{p+1} v‖`, which is `O(τᵖ)` uniformly in `h` along smooth
+   comparisons for schemes consistent along trajectories ([BrennerThomee1979]; [Thomee2006],
+   Ch. 7–9); the explicit leapfrog scheme for the wave equation does so under the CFL condition
+   `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
 
 **With a Jackson estimate** (`ConformingFamily.feec_rated`, statement
 `ConformingFamily.Verdict.Rated`: classes `Reg s` approximated in `Vₕ` at the order `hᵒʳᵈ⁽ˢ⁾` in the
@@ -52,7 +54,7 @@ along trajectories).
 
 The crown is assembled from the layer theorems: `ConformingFamily.staticFEEC`, `approxFEEC` and
 `constrainedFEEC` for the conforming windows (`ConstrainedFEEC.toApprox` with the core of the wave
-Ritz projection), `ConstrainedFEEC.heatFEEC_verdict`, and `dissipFEEC_fullyDiscrete` with
+Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` with
 `SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`); each field is the layer
 verdict itself. Every finite element family with bounded smoothed projections is a conforming
 family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
@@ -270,13 +272,13 @@ theorem feec (F : ConformingFamily H κ) : F.Verdict :=
   ⟨fun hcr j _ => F.staticFEEC hcr j,
     fun a m K hK => approxFEEC _ (F.windowFEEC a m K hK).toCore,
     fun a m K hK => constrainedFEEC (F.windowFEEC a m K hK),
-    fun a m K hK hcr _ => (F.windowFEEC a m K hK).heatFEEC_verdict hcr,
+    fun a m K hK hcr _ => (F.windowFEEC a m K hK).heatFEEC hcr,
     fun a m K hK => constrainedFEEC_fullyDiscrete (F.windowFEEC a m K hK)⟩
 
 variable {ρ : Type*}
 
-/-- **The rated conclusions of the FEEC theorem** (`feec_rated`) for a conforming family `F` with
-a Jackson estimate `J`: those of the FEEC theorem, and the rates `hᵒʳᵈ⁽ˢ⁾` of the mixed method, of the
+/-- **The rated conclusions of the FEEC theorem** (`feec_rated`) for a conforming family `F` with a
+Jackson estimate `J`: those of the FEEC theorem, and the rates `hᵒʳᵈ⁽ˢ⁾` of the mixed method, of the
 semidiscrete wave and heat equations and of the fully discrete schemes for `s`-regular data. -/
 structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
     extends F.Verdict where
@@ -324,7 +326,8 @@ structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
         ((F.windowFEEC a m K hK).ritzR h (x, DissipFEEC.genExt (-(H.window a m).hodgeLaplacian) x))
           t‖ ≤
       (2 + 3 * t) * C * L * J.meshSize h ^ J.ord s
-  /-- the fully discrete rates on every window: the spatial rate plus `O(τᵖ)` -/
+  /-- the fully discrete rates on every window: the spatial rate plus `O(τᵖ)` along smooth
+  comparisons -/
   rate_full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
     (F.windowFEEC a m K hK).FullRate (J.window a m)
@@ -333,12 +336,12 @@ structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
 or `ℤ` with a Jackson estimate `J`: the FEEC theorem (`feec`), and for `s`-regular data with
 bound `L` the errors of the mixed method, of the semidiscrete wave and heat equations on every
 window and of the fully discrete schemes are `O(L hᵒʳᵈ⁽ˢ⁾)`, plus `O(τᵖ)` for the fully discrete
-ones. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979] -/
+ones along smooth comparisons. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979] -/
 theorem feec_rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Verdict.Rated F J :=
   ⟨F.feec, fun s _ _ _ hij hjk hj hk => F.rate J s hij hjk hj hk,
     fun a m K hK _ s _ hL _ hx h _ ht => (F.windowFEEC a m K hK).rate_le
       (ConstrainedFEEC.RateClass.ofJackson _ (J.window a m) _ s hL) hx h ht,
-    fun a m K hK hcr _ s => (F.windowFEEC a m K hK).heat_rate hcr _ s,
+    fun a m K hK hcr _ s => (F.windowFEEC a m K hK).rate_heat hcr _ s,
     fun a m K hK => constrainedFEEC_fullRate (F.windowFEEC a m K hK) (J.window a m)⟩
 
 end ConformingFamily

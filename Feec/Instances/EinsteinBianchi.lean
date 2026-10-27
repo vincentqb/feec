@@ -49,13 +49,12 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
   `StandardCubeVerdict`): the TSD constraint `thesisTSD = {0} × L²(TSD) × ({0} × L²(TSD))` of the
   matrix model contains the datum `(0, 0, (0, β))` and does not reduce `L`
   (`not_isReducing_thesisTSD`); more generally every closed subspace containing the datum and
-  imposing `E ∈ L²(TSD)` fails to reduce `L` (`not_isReducing_thesisCube`);
-  the scheme (6.5) of the thesis converges to the exact solution, which leaves TSD, and the
-  discrete fields leave TSD for all large `N`
-  (`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`): the failure half of
-  item 4. This half is read on the finite element scheme, not through `ConstrainedFEEC`: no
-  family of finite-dimensional subcomplexes of the thesis' complex with commuting projections is
-  constructed here.
+  imposing `E ∈ L²(TSD)` fails to reduce `L` (`not_isReducing_thesisCube`); the scheme (6.5) of the
+  thesis converges to the exact solution, which leaves TSD, and the discrete fields leave TSD for
+  all large `N` (`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`): the
+  failure half of item 4 of the constrained FEEC theorem. This half is read on the finite element
+  scheme, not through `ConstrainedFEEC`: no family of finite-dimensional subcomplexes of the thesis'
+  complex with commuting projections is constructed here.
 
 **Scope.** The spectral rate classes are approximation classes (truncation errors of
 `ξ₀, L ξ₀, L² ξ₀` of order `(N + 1)^{-α}`); they contain the TSD Sobolev data on `𝕋³` and on the
@@ -63,12 +62,12 @@ mirror cube. The generic rate keeps the factor `(1 + C_P)(1 + t)²` of `constrai
 finite element statements and the thesis-BC failure are not applications of `constrainedFEEC`:
 they are the model theorems with the exact solution `e^{tL} ξ₀` (the thesis-BC non-reduction is
 proved from the explicit solution of the datum `(0, 0, (0, β))` and the propagation of reducing
-subspaces). On `ℝ³` only items 1–2 are stated.
+subspaces). The `ℝ³` row is in `Feec.Instances.EuclideanBand` (`EuclideanEBVerdict`).
 
 `einsteinBianchi_constrainedFEEC_summary` is the conjunction of the full verdicts (`TorusVerdict`,
-`TorusSobolevVerdict`, `TorusNonvacuous`, `MirrorVerdict`,
-`MirrorSobolevVerdict`, `MirrorNonvacuous`, `MirrorFEMVerdict`, `StandardCubeVerdict`); each headline
-theorem proves one of them.
+`TorusSobolevVerdict`, `TorusNonvacuous`, `MirrorVerdict`, `MirrorSobolevVerdict`,
+`MirrorNonvacuous`, `MirrorFEMVerdict`, `StandardCubeVerdict`); each headline theorem proves one
+of them.
 
 **The scheme (6.5) as an approximating FEEC discretization.** Both finite element rows are
 instances of the approximating FEEC theorem, in `Feec.Instances.EinsteinBianchiFEM`, through one
@@ -639,7 +638,8 @@ end StandardBoundary
    `H^{2+s}`, `0 ≤ s ≤ 1`;
 4. the cube with the thesis' boundary conditions (`StandardCubeVerdict`): the TSD constraint
    `thesisTSD` does not reduce `L`, and the thesis' scheme (6.5) converges to the exact solution,
-   which leaves TSD, so its discrete fields leave TSD (the failure half of item 4). -/
+   which leaves TSD, so its discrete fields leave TSD (the failure half of item 4 of the
+   constrained FEEC theorem). -/
 theorem einsteinBianchi_constrainedFEEC_summary :
     -- 1. `𝕋³`
     (TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧

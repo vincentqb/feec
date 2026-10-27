@@ -37,16 +37,16 @@ the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
   `P_ℌ A y = 0` and `G A² y = -A y`), bounded by `2 e((1 - P_ℌ) y) + e(z)` (`norm_ritzDefect_le`).
 * **Convergence**: the static errors tend to `0` (the static FEEC theorem, [AFW2010], Thm 3.9),
   so the heat Ritz projection gives a core (`heatCore`, data `D(Δ²)`, dense) and the full
-  `DissipFEEC.Verdict` (`heatFEEC_verdict`).
+  `DissipFEEC.Verdict` (`heatFEEC`).
 * **Rates**: with a Jackson estimate, the static rate `e(f) ≤ K L hᵒʳᵈ` ([AFW2010], Thm 3.9,
   `ConformingFamily.StaticVerdict.rate`) along the orbit gives
-  `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ` (`heat_rate_of_static`, `heat_rate`): the
+  `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ` (`rate_heat_of_static`, `rate_heat`): the
   static constant enters the dynamic bound.
 
 ## Main results
 
 * `ConstrainedFEEC.toHeat`, `ConstrainedFEEC.heatRitz`, `ConstrainedFEEC.heatCore`;
-* **`ConstrainedFEEC.heatFEEC_verdict`**, **`ConstrainedFEEC.heat_rate`**;
+* **`ConstrainedFEEC.heatFEEC`**, **`ConstrainedFEEC.rate_heat`**;
   `ConstrainedFEEC.totalJackson` (the Jackson estimate of the total family from one of the
   family), `ConstrainedFEEC.jacksonHeatRateClass`;
 * `ConstrainedFEEC.ritzR_lift`, `ConstrainedFEEC.heatRitz_defect_eq`,
@@ -653,8 +653,8 @@ theorem dense_heatCore_data : (F.heatCore hcr).Data.topologicalClosure = ⊤ :=
 /-- **The heat FEEC theorem** (`DissipFEEC.Verdict` of the heat FEEC discretization with the heat
 core): well-posedness and the energy identity, propagation of `K`, convergence of the discrete
 heat flows from every convergent family of discrete data (every datum: `dense_heatCore_data`),
-rates for every rate class (`heat_rate`), the constraint residual. -/
-theorem heatFEEC_verdict : F.toHeat.Verdict (F.heatCore hcr) :=
+rates for every rate class (`rate_heat`), the constraint residual. -/
+theorem heatFEEC : F.toHeat.Verdict (F.heatCore hcr) :=
   dissipFEEC F.toHeat (F.heatCore hcr)
 
 section Rate
@@ -685,7 +685,7 @@ def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
 regular states with bound `L`, `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ`, for every
 constant `K` of the static rate `e(f) ≤ K L hᵒʳᵈ` ([AFW2010], Thm 3.9): the static estimate enters
 the dynamic one directly. -/
-theorem heat_rate_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
+theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
     (hreg : ∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ F.heatReg hcr J s L) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖F.toHeat.S t x - F.toHeat.sol h (F.ritzR h (x, DissipFEEC.genExt (-H.hodgeLaplacian) x)) t‖ ≤
@@ -716,7 +716,7 @@ end Rate
 constant of the static rate of the total family (`exists_staticError_le`), such that for
 `x ∈ D(Δ²)` whose orbit on `[0, T]` stays in the regular states with bound `L`,
 `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ`. -/
-theorem heat_rate {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
+theorem rate_heat {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
     ∃ K, 0 ≤ K ∧ ∀ {L : ℝ}, 0 ≤ L →
     ∀ {T : ℝ} {x : PiLp 2 W}, x ∈ (-H.hodgeLaplacian).sqDomain →
     (∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ F.heatReg hcr J s L) → ∀ (h : κ), ∀ t ∈ Icc 0 T,
@@ -724,7 +724,7 @@ theorem heat_rate {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
       (2 + 3 * t) * K * L * J.meshSize h ^ J.ord s := by
   obtain ⟨K, hK0, hK⟩ := F.exists_staticError_le hcr J s
   exact ⟨K, hK0, fun {_} hL {_ _} hx hreg h _ ht =>
-    F.heat_rate_of_static hcr hK0 hK hL hx hreg h ht⟩
+    F.rate_heat_of_static hcr hK0 hK hL hx hreg h ht⟩
 
 /-- **The heat rate class of a Jackson estimate** `J` of the total family: `heatRateClass` with
 the constant `K` of the static rate (`exists_staticError_le`), approximation constant `2K` and

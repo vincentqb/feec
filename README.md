@@ -13,8 +13,10 @@ approximation theory in one statement, for every conforming family `F` of a Hilb
 on every window with every closed constraint the semidiscrete wave and heat FEEC theorems and
 the fully discrete ones for every time scheme (θ-schemes, Crank–Nicolson) and for leapfrog under
 the CFL condition. Each field is the verdict of the layer theorem below.
-`Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` (and `O(hᵒʳᵈ + τᵖ)`)
-of a Jackson estimate; `docs/crown.pdf` renders the module.
+`Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
+estimate, and `O(hᵒʳᵈ + τᵖ)` for the fully discrete schemes along a smooth comparison of order
+`p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate
+classes); `docs/crown.pdf` renders the module.
 
 ## The approximating FEEC theorem
 

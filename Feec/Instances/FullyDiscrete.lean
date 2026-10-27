@@ -16,7 +16,11 @@ for the semidiscrete instances of the library, with any time steps `τₙ > 0` (
   Freudenthal meshes, smoothed projections), Crank–Nicolson in time: the fully discrete verdict
   (stability, temporal error `5/12 tₖ τₙ² ‖Lₙ³ v‖`, spatial plus temporal rate, convergence as
   `τₙ → 0`, Gauss-law residuals bounded by the error and tending to `0`) and exact energy
-  conservation `‖Pₙᵏ v‖ = ‖v‖`;
+  conservation `‖Pₙᵏ v‖ = ‖v‖`, read through the discrete complex (`ApproxFEEC.ofComplex`); the
+  reading through the conforming family, at every polynomial order and for the θ-schemes, is
+  `Feec.Instances.Corollaries.maxwell_fullyDiscrete`
+  (`Feec.Instances.Corollaries.Cube.FEM.maxwell_crankNicolson`), and the two solutions agree
+  (`Feec.Instances.Maxwell.cubePMC_ofComplex`);
 * `einsteinBianchi_mirror_crankNicolson`: the mirror scheme (6.5) for the linearized
   Einstein–Bianchi system with Crank–Nicolson (the time discretization of [QuennevilleBelair2015],
   Ch. 7): the fully discrete verdict on the elliptic core (dense in the TSD states), energy

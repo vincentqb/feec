@@ -501,10 +501,10 @@ open Models.Cube Feec.Domain Feec.ExteriorFibre
 
 variable (n : ℕ) [NeZero n]
 
-/-- **Maxwell's equations with a perfect magnetic conductor on the cube** `Q = (0, ½)ⁿ`
-(degree `a`; `n = 3`, `a = 0` is the system `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)`), discretized by the
-lowest-order Whitney forms of the Freudenthal meshes with the smoothed projections (`FEM.whitneyFamily`), as a constrained FEEC discretization with the
-Gauss laws. -/
+/-- **Maxwell's equations with a perfect magnetic conductor on the cube** `Q = (0, ½)ⁿ` (degree `a`;
+`n = 3`, `a = 0` is the system `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)`), discretized by the lowest-order Whitney
+forms of the Freudenthal meshes with the smoothed projections (`FEM.whitneyFamily`), as a
+constrained FEEC discretization with the Gauss laws. -/
 def cubePMC (a : ℤ) : ConstrainedFEEC ((FEM.complex n).window a 3) ℕ :=
   feec (FEM.whitneyFamily n) a
 
@@ -606,18 +606,15 @@ def paraPolyPEC (S : PolySeq) (a : ℤ) : ConstrainedFEEC ((complexMin A b).wind
 
 end Parallelepiped
 
-/-! ### Domains star-shaped with respect to a ball -/
-
-section StarShaped
-
-open Models.Cube Models.StarShaped Feec.Domain Feec.ExteriorFibre
+/-! ### The Poincaré inequality of a Maxwell window -/
 
 /-- **The Poincaré inequality of a complex gives that of its Maxwell window**, in the form of
 the discrete Poincaré theorem `constrainedFEEC_discretePoincare`. -/
 theorem window_poincare {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
-    {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} {cP : ℝ} (hP : HasPoincare H cP) (a : ℤ)
-    {i j : Fin 3} (hij : (ComplexShape.window 3).Rel i j) (z : ((H.window a 3).d i j).domain)
+    {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} {cP : ℝ}
+    (hP : Models.StarShaped.HasPoincare H cP) (a : ℤ) {i j : Fin 3}
+    (hij : (ComplexShape.window 3).Rel i j) (z : ((H.window a 3).d i j).domain)
     (hz : (z : W (a + i)) ∈ ((H.window a 3).cycles i)ᗮ) :
     ‖(z : W (a + i))‖ ≤ cP * ‖(H.window a 3).d i j z‖ := by
   have hrel : (ComplexShape.up ℤ).Rel (a + (i : ℕ)) (a + (j : ℕ)) := by
@@ -627,6 +624,12 @@ theorem window_poincare {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
     unfold HilbertComplex.cycles
     rw [ComplexShape.next_eq' _ hij, ComplexShape.next_eq' _ hrel]; rfl
   exact hP _ _ hrel z (e ▸ hz)
+
+/-! ### Domains star-shaped with respect to a ball -/
+
+section StarShaped
+
+open Models.Cube Models.StarShaped Feec.Domain Feec.ExteriorFibre
 
 variable {n : ℕ} [NeZero n] {D : StarDomain n} (M : MeshFamily D)
 
@@ -675,7 +678,15 @@ theorem starPEC_discretePoincare {cP : ℝ} (hP : HasPoincare D.complexMin cP) {
           ‖(D.complexMin.window a 3).d i j ⟨x, ((starPEC M a).V N).le_domain i j hx⟩‖ :=
   constrainedFEEC_discretePoincare (starPEC M a) hij (window_poincare hP a hij)
 
-/-! #### Unconditional discrete Poincaré inequalities -/
+end StarShaped
+
+/-! ### Unconditional discrete Poincaré inequalities: the cube and parallelepipeds -/
+
+section UnconditionalPoincare
+
+open Models.Cube Models.StarShaped Feec.Domain Feec.ExteriorFibre
+
+variable {n : ℕ} [NeZero n] {a : ℤ}
 
 /-- **The uniform discrete Poincaré inequality on the cube** (perfect magnetic conductor), with
 `c_P = (2π)⁻¹` (`CubeWitness.hasPoincare`). [AFW2010], Thm 3.6 -/
@@ -721,7 +732,7 @@ theorem paraPEC_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A
   constrainedFEEC_discretePoincare (paraPEC A hA b a) hij
     (window_poincare (Feec.Models.Parallelepiped.poincare_min A hA b) a hij)
 
-end StarShaped
+end UnconditionalPoincare
 
 /-! ### A non-reducing constraint on the torus, through the approximating FEEC theorem -/
 
@@ -731,11 +742,12 @@ open Models.Torus.DeRham
 
 variable {d : Type*} [Fintype d] [LinearOrder d] {a : ℕ}
 
-/-- **The vanishing-field constraint on `𝕋ᵈ` through the approximating FEEC theorem**: the
-verdict for the spectral Galerkin discretization with the constraint `E = 0`, `B = 0` (the field
-`wave` of the FEEC theorem `ConformingFamily.feec` at this constraint), together with the fact that the constraint does not reduce `L`
-(`torus_not_isReducing_potential`), so the non-reducing departure clauses of the verdict are
-not vacuous; `torus_potential_residual_of_approxFEEC` discharges the graded one. -/
+/-- **The vanishing-field constraint on `𝕋ᵈ` through the approximating FEEC theorem**: the verdict
+for the spectral Galerkin discretization with the constraint `E = 0`, `B = 0` (the field `wave` of
+the FEEC theorem `ConformingFamily.feec` at this constraint), together with the fact that the
+constraint does not reduce `L` (`torus_not_isReducing_potential`), so the non-reducing departure
+clauses of the verdict are not vacuous; `torus_potential_residual_of_approxFEEC` discharges the
+graded one. -/
 theorem torus_potential_approxFEEC [Nonempty d] :
     ((torus d 0).withConstraint (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
         isClosed_potential).toApprox.Verdict

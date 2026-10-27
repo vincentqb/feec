@@ -192,7 +192,8 @@ theorem isReducing_hodgeLaplacian_ker_adjoint :
     H.hodgeLaplacian.IsReducing (H.totalD†).ker := by
   set K := (H.totalD†).ker
   have key : ∀ x : H.hodgeLaplacian.domain, ∃ hz : K.starProjection (x : PiLp 2 W) ∈
-      H.hodgeLaplacian.domain, H.hodgeLaplacian ⟨_, hz⟩ = K.starProjection (H.hodgeLaplacian x) := by
+      H.hodgeLaplacian.domain,
+        H.hodgeLaplacian ⟨_, hz⟩ = K.starProjection (H.hodgeLaplacian x) := by
     intro x
     obtain ⟨h₁, h₂, h₃, h₄, hΔ⟩ := H.hodgeLaplacian_apply_eq_adjoint x
     have hy : (x : PiLp 2 W) - K.starProjection x ∈ H.totalD.ker :=

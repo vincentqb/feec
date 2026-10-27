@@ -30,7 +30,8 @@ equation ([QuennevilleBelair2015], Thm 4.14).
   `infDist_polyPartial_le_sobolevPar_min`.
 * **Graph norm**: the Jackson estimate `sobolevJackson` of the complexes of `S` for `Hˢ(Q)`
   components (`SobComp`, from `SobGraph`), through the projections
-  (`ConformingFamily.Jackson.ofInfDist`); `ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar`
+  (`ConformingFamily.Jackson.ofInfDist`);
+  `ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar`
   (`σ, dσ ∈ Hˢ`, `SobGraphPar`; degrees in `ℤ`, `SobAt`, `SobAtPar`).
 * **Mixed Hodge–Laplace problem**: **`mixed_rate_sobolevQ`** (`HΛ(Q)`) and
   **`mixed_rate_sobolevPar`** (`HΛ_J(Q)`, in particular `H̊Λ(Q)` for `J = univ`):
@@ -543,7 +544,8 @@ components (`SobComp`) at the order `h_N^s`, from the best approximation `infDis
 through the projections (`ConformingFamily.Jackson.ofInfDist`). -/
 def sobolevJackson (S : PolySeq) : (polyFamily n S).Jackson (Set.Icc (0 : ℝ) 1) :=
   .ofInfDist _ meshSize (fun N => (meshSize_pos N).le) tendsto_meshSize
-    (fun s _ L x => SobComp n s L x) (fun s => s) (fun _ j => sobConstZ n S j + sobConstZ n S (j + 1))
+    (fun s _ L x => SobComp n s L x) (fun s => s)
+    (fun _ j => sobConstZ n S j + sobConstZ n S (j + 1))
     (fun _ _ => add_nonneg (sobConstZ_nonneg S _) (sobConstZ_nonneg S _))
     fun s N i L x hL hx => by
       have h0 := sobConstZ_nonneg (n := n) S i
@@ -790,7 +792,8 @@ theorem mixed_rate_sobolevPar (S : PolySeq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s �
   refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl (by linarith [hE.half_le])
     (norm_le_of_mem_orthogonal_cycles_part J hij) (norm_le_of_mem_orthogonal_cycles_part J rfl)
     ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j))
-    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N j) (hE.norm_proj_le N (j + 1))) hs h1 h2 h3 h4).trans
+    ((hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N j) (hE.norm_proj_le N (j + 1)))
+      hs h1 h2 h3 h4).trans
     (le_of_eq (by ring))
 
 omit [NeZero n] in

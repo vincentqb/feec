@@ -14,7 +14,7 @@ The window `HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` of the de Rham complex of the cube 
 forms in every degree. The finite element complexes of every admissible sequence `S` on the
 Freudenthal meshes (`FEM.polyFamily`), restricted to the window, are a constrained FEEC
 discretization (`FEM.heatFamily n S`, constraint `⊤`), so the heat FEEC theorem
-(`ConstrainedFEEC.heatFEEC_verdict`) holds for the Hodge heat equation on the cube, and it is not
+(`ConstrainedFEEC.heatFEEC`) holds for the Hodge heat equation on the cube, and it is not
 vacuous: its core `D(Δ²)` contains nonzero data (`crown_heat_nonvacuous`).
 
 ## References
@@ -66,7 +66,7 @@ core `D(Δ²)` contains a nonzero datum. -/
 theorem crown_heat_nonvacuous (S : PolySeq) :
     (heatFamily n S).toHeat.Verdict ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) ∧
       ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)).Data, x ≠ 0 := by
-  refine ⟨(heatFamily n S).heatFEEC_verdict _, ?_⟩
+  refine ⟨(heatFamily n S).heatFEEC _, ?_⟩
   have hd : Dense (((heatFamily n S).heatCore (closedRangeAt_heatWindow n)).Data :
       Set (PiLp 2 fun i : Fin (n + 1) => L2F ℝ (cubeDomain n) (formIdx n (0 + ((i : ℕ) : ℤ))))) :=
     Submodule.dense_iff_topologicalClosure_eq_top.2 ((heatFamily n S).dense_heatCore_data _)

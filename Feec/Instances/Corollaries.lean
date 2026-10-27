@@ -29,11 +29,13 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
   constraint residuals tending to `0`. In degree `1` of `HΛ(Ω)`, `ker 𝐝†` is the divergence-free
   fields with `u · ν = 0` and the Hodge heat flow on them is the unsteady Stokes flow with slip
   boundary conditions `u · ν = 0`, `curl u × ν = 0` ([GiraultRaviart1986]); on the cube
-  (`Cube.FEM.slipStokes`), with a nonzero datum in the constraint;
+  (`Cube.FEM.slipStokes`), with a nonzero datum in the constraint in degree `0` (the constant
+  `0`-form, harmonic and stationary; no nonzero degree-`1` datum, a velocity field, is exhibited);
 * **Crank–Nicolson and the θ-schemes** for Maxwell's equations (`maxwell_fullyDiscrete`: the
   fully discrete verdicts, exact energy conservation of Crank–Nicolson, Gauss-law residuals
   tending to `0` as `h, τ → 0`; on the cube at every polynomial order,
-  `Cube.FEM.maxwell_crankNicolson`) and for the Hodge heat equation (`heat_fullyDiscrete`; on the
+  `Cube.FEM.maxwell_crankNicolson`; the reading through the discrete complex of the Whitney
+  scheme is `Feec.Instances.FullyDiscrete.maxwell_cubePMC_crankNicolson`) and for the Hodge heat equation (`heat_fullyDiscrete`; on the
   cube with a nonzero datum, `Cube.FEM.heat_crankNicolson`), read from the field `full` of the
   FEEC theorem;
 * **magnetostatics** (`Cube.FEM.magnetostatic`, `Parallelepiped.magnetostatic`): the static FEEC
@@ -194,7 +196,8 @@ theorem exists_ne_zero_window (m : ℕ) :
 
 /-- **Slip Stokes flow on the cube**: the conclusions of `slipStokes` for the window
 `HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` (`heatWindow`) and every admissible sequence `S`, and the constraint
-`ker 𝐝†` contains a nonzero datum (the constant `0`-form). -/
+`ker 𝐝†` contains a nonzero datum: the constant `0`-form, in degree `0`, which the heat flow
+leaves stationary (not a velocity field of degree `1`). -/
 theorem slipStokes (S : PolySeq) :
     ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Verdict
         ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)) ∧
@@ -236,8 +239,7 @@ theorem heat_crankNicolson (S : PolySeq) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : �
 
 /-- **Magnetostatics on the cube** `(0, ½)³` for every admissible sequence `S`: the static FEEC
 verdict of `HΛ` and `H̊Λ` in degrees `1` and `2`, the mixed formulations of
-`curl curl u - grad div u = f` with natural and essential boundary conditions (with
-`mixed_converges`: the discrete mixed solutions of every source converge). [AFW2010],
+`curl curl u - grad div u = f` with natural and essential boundary conditions. [AFW2010],
 Thms 3.4–3.9; [Monk2003] -/
 theorem magnetostatic (S : PolySeq) :
     (polyFamily 3 S).StaticVerdict 1 ∧ (polyFamily 3 S).StaticVerdict 2 ∧

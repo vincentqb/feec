@@ -86,10 +86,10 @@ thesis' boundary conditions (`Eₕ ∉ L²(TSD)`, `Bₕ` not symmetric) enters t
 
 `einsteinBianchi_summary` is the statement of
 `Feec.Instances.EinsteinBianchi.einsteinBianchi_constrainedFEEC_summary` (with its mirror finite
-element row proved by `mirrorFEMVerdict_of_approxFEEC`, and its propagation-only `ℝ³` row
-`EuclideanVerdict` replaced by the approximating FEEC verdict of the frequency truncation,
-`Feec.Instances.EuclideanBand.EuclideanEBVerdict`, from `einsteinBianchi_euclidean_band`) together
-with `MirrorFEMApproxVerdict` and `StandardCubeApproxVerdict`.
+element row proved by `mirrorFEMVerdict_of_approxFEEC`) with the `ℝ³` row, the verdict of the
+frequency truncation (`Feec.Instances.EuclideanBand.EuclideanEBVerdict`, from
+`einsteinBianchi_euclidean_band`), together with `MirrorFEMApproxVerdict` and
+`StandardCubeApproxVerdict`.
 
 ## References
 
@@ -734,9 +734,9 @@ end StandardBoundary
 Ch. 4–6): the constrained FEEC verdicts on `𝕋³`, the mirror cube (spectral) and the model
 verdicts of the scheme (6.5) (as in `einsteinBianchi_constrainedFEEC_summary`, the mirror finite
 element row `MirrorFEMVerdict` proved from the approximating FEEC theorem,
-`mirrorFEMVerdict_of_approxFEEC`); on `ℝ³` the approximating FEEC verdict of the frequency
-truncation `|ξ| ≤ N` (`EuclideanBand.EuclideanEBVerdict`: the full `ApproxFEEC.Verdict`, the error
-equal to the truncation error, `Hˢ` rates with sharp exponent, TSD preserved exactly); and the
+`mirrorFEMVerdict_of_approxFEEC`); on `ℝ³` the verdict of the frequency truncation `|ξ| ≤ N`
+(`EuclideanBand.EuclideanEBVerdict`: the verdict of the FEEC theorem for reducing families, the
+error equal to the truncation error, `Hˢ` rates with sharp exponent, TSD preserved exactly); and the
 approximating FEEC verdicts of the scheme (6.5) with mirror boundary conditions
 (`MirrorFEMApproxVerdict`) and with the thesis' boundary conditions (`StandardCubeApproxVerdict`).
 -/
@@ -748,7 +748,7 @@ theorem einsteinBianchi_summary :
     -- the scheme (6.5) as an approximating FEEC discretization
     MirrorFEMApproxVerdict ∧ StandardCubeApproxVerdict :=
   have h := einsteinBianchi_constrainedFEEC_summary
-  ⟨⟨h.1, EuclideanBand.einsteinBianchi_euclidean_band, h.2.2.1, mirrorFEMVerdict_of_approxFEEC,
-    h.2.2.2.2⟩, mirrorFEMApproxVerdict, standardCubeApproxVerdict⟩
+  ⟨⟨h.1, EuclideanBand.einsteinBianchi_euclidean_band, h.2.1, mirrorFEMVerdict_of_approxFEEC,
+    h.2.2.2⟩, mirrorFEMApproxVerdict, standardCubeApproxVerdict⟩
 
 end Feec.Instances.EinsteinBianchi

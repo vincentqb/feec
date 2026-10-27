@@ -24,13 +24,13 @@ bound through the mirror extension), and a TSD datum in `H^{2+s}` lies in the cl
 with norm at most `3 ‖ξ₀‖_{2+s}` (`mem_rateData_of_memSobState`, from
 `TSDDatum.memSobState_of_add_two`).
 
-**Through the approximating FEEC theorem.** The truncation bounds give rate classes of the
-spectral approximating FEEC discretizations `torusApprox`, `mirrorApprox`
-(`torusSobolevRate`, `mirrorSobolevRate`: `Hˢ` states, order `s`, `C = 1`, `C' = 0`), hence the
-**time-uniform** Sobolev rates `‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ ≤ (N + 1)^{-s} ‖ξ₀‖_s` for all
-`t ≥ 0` and every `ξ₀ ∈ Hˢ`, with the same bound for the TSD residual of TSD data
-(`einsteinBianchi_torus_approxFEEC_sobolev`, `einsteinBianchi_mirror_approxFEEC_sobolev`); no TSD
-or `D(L)` condition, no factor `(1 + C_P)(1 + t)² · 3`. Non-vacuity: `decayState ∈ H³` is TSD, in
+**Through the FEEC theorem for reducing families.** The error of the spectral discretizations
+`torusApprox`, `mirrorApprox` is the truncation error of the datum at every time
+(`ReducingFamily.feec`), so the truncation bounds are the **time-uniform** Sobolev rates
+`‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ ≤ (N + 1)^{-s} ‖ξ₀‖_s` for all `t ≥ 0` and every `ξ₀ ∈ Hˢ`,
+with the same bound for the TSD residual of TSD data (`einsteinBianchi_torus_approxFEEC_sobolev`,
+`einsteinBianchi_mirror_approxFEEC_sobolev`); no TSD or `D(L)` condition, no factor
+`(1 + C_P)(1 + t)² · 3`. Non-vacuity: `decayState ∈ H³` is TSD, in
 `D(L)`, not stationary and not band-limited for any `N` (`decayState_nonvacuous`).
 
 ## References
@@ -568,14 +568,6 @@ open Metric
 open Models.Torus.BGG (complex constraint Space)
 open Models.Cube.MirrorBGG (complexQ tsdQ SpaceQ)
 
-/-- **`Hˢ` states on `𝕋³` as a rate class of the approximating FEEC discretization
-`torusApprox`** (no TSD or domain condition): `h_N = 1/(N + 1)`, order `s`, `C = 1`, `C' = 0`,
-class norm `‖X‖_s` (`norm_sub_P_le_sobStateT`). -/
-def torusSobolevRate {s : ℝ} (hs : 0 ≤ s) (T : ℝ) : torusApprox.RateClass T :=
-  torusBands.rateClass _ _ T {X | MemSobStateT s X} (fun X => √(sobStateT s X))
-    (fun N => 1 / ((N : ℝ) + 1)) s 1 fun _ hX N => by
-      rw [one_mul]; exact norm_sub_P_le_sobStateT hs hX N
-
 /-- **The time-uniform Sobolev rate on `𝕋³`**: for every state `X ∈ Hˢ(𝕋³)`, `s ≥ 0`, the error of
 the Fourier spectral solution from `π_N X` is `≤ (N + 1)^{-s} ‖X‖_s` for all `t ≥ 0`, and so is
 its TSD residual when `X` is TSD. -/
@@ -588,29 +580,15 @@ abbrev TorusSobolevApproxRate : Prop :=
             (totalSub constraint : Set (PiLp 2 Space)) ≤
           (1 / ((N : ℝ) + 1)) ^ s * √(sobStateT s X))
 
-/-- `TorusSobolevApproxRate`, from the rate and the residual bound of `approxFEEC`
-(`norm_sub_sol_le_of_truncation`, `infDist_sol_le_of_truncation`). -/
+/-- `TorusSobolevApproxRate`, from the error identity of `ReducingFamily.feec` (the error is the
+truncation error of the datum) and the residual bound of `approxFEEC`. -/
 theorem einsteinBianchi_torus_approxFEEC_sobolev : TorusSobolevApproxRate := by
   intro s hs X hX N t ht
-  have hrate : ∀ Y ∈ {Y | MemSobStateT s Y}, ∀ M : ℕ,
-      ‖Y - (torusBands.B M).starProjection Y‖ ≤
-        1 * (1 / ((M : ℝ) + 1)) ^ s * √(sobStateT s Y) := fun _ hY M => by
-    rw [one_mul]; exact norm_sub_P_le_sobStateT hs hY M
-  have h1 := norm_sub_sol_le_of_truncation torusBands (totalSub constraint) isClosed_totalSub
-    hrate hX N ht
-  rw [one_mul] at h1
-  refine ⟨h1, fun hXK => ?_⟩
-  have h2 := infDist_sol_le_of_truncation torusBands (totalSub constraint) isClosed_totalSub
-    torusApprox_isReducing
-    hrate hX hXK N ht
-  rwa [one_mul] at h2
-
-/-- **`Hˢ` states on the mirror cube as a rate class of `mirrorApprox`**: `h_N = 1/(N + 1)`, order
-`s`, `C = 1`, `C' = 0`, class norm `‖x‖_s` (`norm_sub_P_le_sobState`). -/
-def mirrorSobolevRate {s : ℝ} (hs : 0 ≤ s) (T : ℝ) : mirrorApprox.RateClass T :=
-  mirrorBands.rateClass _ _ T {x | MemSobState s x} (fun x => √(sobState s x))
-    (fun N => 1 / ((N : ℝ) + 1)) s 1 fun _ hx N => by
-      rw [one_mul]; exact norm_sub_P_le_sobState hs hx N
+  have V := einsteinBianchi_torus_approxFEEC
+  have h := (V.norm_sub_sol N X t).trans_le (norm_sub_P_le_sobStateT hs hX N)
+  refine ⟨h, fun hXK => (V.residual_le (V.isReducing_iff.1 torusApprox_isReducing).1 hXK N _
+    ht).trans ?_⟩
+  rwa [ApproxFEEC.S_eq_waveGroup _ ht]
 
 /-- **The time-uniform Sobolev rate on the mirror cube**: for every state `x` with mirror
 extension in `Hˢ`, `s ≥ 0`, the error of the cosine–sine spectral solution from `π_N x` is
@@ -627,18 +605,11 @@ abbrev MirrorSobolevApproxRate : Prop :=
 
 theorem einsteinBianchi_mirror_approxFEEC_sobolev : MirrorSobolevApproxRate := by
   intro s hs x hx N t ht
-  have hrate : ∀ y ∈ {y | MemSobState s y}, ∀ M : ℕ,
-      ‖y - (mirrorBands.B M).starProjection y‖ ≤
-        1 * (1 / ((M : ℝ) + 1)) ^ s * √(sobState s y) := fun _ hy M => by
-    rw [one_mul]; exact norm_sub_P_le_sobState hs hy M
-  have h1 := norm_sub_sol_le_of_truncation mirrorBands (totalSub tsdQ) isClosed_totalSub
-    hrate hx N ht
-  rw [one_mul] at h1
-  refine ⟨h1, fun hxK => ?_⟩
-  have h2 := infDist_sol_le_of_truncation mirrorBands (totalSub tsdQ) isClosed_totalSub
-    mirrorApprox_isReducing
-    hrate hx hxK N ht
-  rwa [one_mul] at h2
+  have V := einsteinBianchi_mirror_approxFEEC
+  have h := (V.norm_sub_sol N x t).trans_le (norm_sub_P_le_sobState hs hx N)
+  refine ⟨h, fun hxK => (V.residual_le (V.isReducing_iff.1 mirrorApprox_isReducing).1 hxK N _
+    ht).trans ?_⟩
+  rwa [ApproxFEEC.S_eq_waveGroup _ ht]
 
 end Approx
 

@@ -276,6 +276,7 @@ Feec/
 │   │   Approximation/{Ritz,RitzResolvent}.lean -- Ritz projections → cores, rate classes (regularity scales)
 │   │   Approximation/HeatFEEC.lean -- the Hodge heat equation: toHeat, the heat Ritz projection, heatFEEC_verdict, heat_rate
 │   │   Approximation/Crown.lean -- the FEEC theorem feec (Verdict: static, wave, heat, fully discrete on every window) and feec_rated
+│   │   Approximation/Spectral.lean -- reducing families (ReducingFamily.feec: exact on the bands, error = truncation error), spectral families (ofSpectral)
 │   │   Approximation/{ConstrainedFEEC,ApproxConforming,ApproxOrthogonal,ApproxFEECWitness,DissipGalerkin}.lean
 │   │   Approximation/{ApproxComplex,ApproxComplexWitness,ApproxComplexCrime,ApproxComplexCrimeWitness}.lean
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,

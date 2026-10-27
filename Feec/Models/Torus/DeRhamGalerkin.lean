@@ -7,8 +7,9 @@ public import Feec.HilbertComplex.Approximation.QuasiOptimal
 # Spectral Galerkin approximation of the torus de Rham complex
 
 The band-limited forms `|n|_∞ ≤ N` (`Fourier.Torus.bandN N`) of the `L²` de Rham complex of the
-torus form a finite-dimensional subcomplex `bandSubcomplex d N`, with the Fourier truncation as a
-cochain projection (`bandProj d N`) of graph norm `1`. The harmonic forms (the constant forms) are
+torus form a finite-dimensional subcomplex `bandSubcomplex d N` (a finite-dimensional reducing
+subspace lies in the domain, `LinearPMap.IsReducingPair.le_domain`), with the Fourier truncation
+as a cochain projection (`bandProj d N`) of graph norm `1`. The harmonic forms (the constant forms) are
 band-limited for every `N`, so the harmonic gap `μ` vanishes. The abstract quasi-optimal estimate
 of the mixed Hodge Laplacian (`Subcomplex.CochainProjection.norm_sub_le_infDist`, [AFW2010],
 Thm 3.9) then applies with the constants `C = 1`, `c_P = (2π)⁻¹`, `μ = 0`, and the spectral Galerkin
@@ -18,7 +19,6 @@ subcomplexes.
 
 ## Main results
 
-* `le_domain_of_isReducingPair`: a finite-dimensional reducing subspace lies in the domain.
 * `bandSubcomplex`, `bandProj`, `isGraphBounded_bandProj`, `bandProj_harmonic`.
 * `norm_sub_le_bandGalerkin`: the quasi-optimal estimate for the spectral Galerkin method.
 * **`tendsto_bandGalerkin`**: convergence of the discrete mixed solutions.
@@ -42,30 +42,6 @@ open MeasureTheory LinearPMap Filter Feec.Fourier Feec.Fourier.Exterior
 
 namespace Feec.Models.Torus.DeRham
 
-/-- **A finite-dimensional reducing subspace lies in the domain**: if `K` reduces a densely
-defined `T` and `dim K < ∞`, then `K ⊆ D(T)` (`P_K D(T)` is dense in `K`, finite-dimensional and
-contained in `D(T)`). -/
-theorem le_domain_of_isReducingPair {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
-    [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {T : E →ₗ.[𝕜] F}
-    {K : Submodule 𝕜 E} {L : Submodule 𝕜 F} [K.HasOrthogonalProjection] [L.HasOrthogonalProjection]
-    [FiniteDimensional 𝕜 K] (h : T.IsReducingPair K L) (hT : Dense (T.domain : Set E)) :
-    K ≤ T.domain := by
-  set M := T.domain.map (K.starProjection : E →ₗ[𝕜] E)
-  have hMK : M ≤ K := by
-    rintro _ ⟨x, -, rfl⟩; exact Submodule.starProjection_apply_mem K x
-  have hMD : M ≤ T.domain := by
-    rintro _ ⟨x, hx, rfl⟩; exact h.proj_mem ⟨x, hx⟩
-  have : FiniteDimensional 𝕜 M := Submodule.finiteDimensional_of_le hMK
-  have hclosed : IsClosed (M : Set E) := Submodule.closed_of_finiteDimensional M
-  intro x hx
-  have hxc : K.starProjection x ∈ closure (M : Set E) := by
-    have h1 := image_closure_subset_closure_image (f := K.starProjection)
-      (s := (T.domain : Set E)) K.starProjection.continuous
-    rw [hT.closure_eq] at h1
-    exact h1 ⟨x, Set.mem_univ _, rfl⟩
-  rw [hclosed.closure_eq, Submodule.starProjection_eq_self_iff.2 hx] at hxc
-  exact hMD hxc
-
 variable {d : Type*} [Fintype d] [LinearOrder d]
 
 /-- The band-limited `k`-forms `|n|_∞ ≤ N`. -/
@@ -86,7 +62,7 @@ variable (d) in
 def bandSubcomplex (N : ℕ) : (complex d).Subcomplex where
   V := band N
   le_domain k j :=
-    le_domain_of_isReducingPair ((reducingSubcomplex_band N).reduces k j) ((complex d).dense k j)
+    ((reducingSubcomplex_band N).reduces k j).le_domain ((complex d).dense k j)
   mapsTo _ _ x hx := (reducingSubcomplex_band N).mapsTo ⟨x, _⟩ hx
 
 instance (N k : ℕ) : FiniteDimensional ℂ ((bandSubcomplex d N).V k) :=

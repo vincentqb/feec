@@ -10,6 +10,7 @@ import Feec.Models.Cube.SobolevRateHigh
 import Feec.Models.Cube.TangentialRate
 import Feec.Models.Parallelepiped.FiniteElement
 import Feec.Models.StarShaped.PolyFiniteElement
+import Feec.Instances.EuclideanBand
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -100,6 +101,16 @@ of the layer theorem it is read from (`staticFEEC`, `approxFEEC`, `constrainedFE
 scheme, `SkewFEEC.norm_S_sub_leapfrog_le`; `ConformingFamily.rate`, `ConstrainedFEEC.rate_le`,
 `ConstrainedFEEC.heat_rate`, `rate_smooth_iterates`). On the cube, the heat verdict of
 `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of `FEM.polyFamily`.
+
+## Spectral methods
+
+The time-uniform truncation rates of reducing families and of spectral families, the
+frequency-truncation theorems of `ℝᵈ` and the propagation-only `ℝ³` verdict `EuclideanVerdict` of
+the Einstein–Bianchi system are the fields of the FEEC theorem for reducing families
+(`ReducingFamily.feec`, `ReducingFamily.Verdict`: exactness on the bands, error = truncation error
+of the datum, exact preservation of reducing constraints) and of the instance verdicts
+`EuclideanBand.EuclideanEBVerdict`, `EuclideanBand.EuclideanMaxwellVerdict` that extend it; the
+theorems `spectral_old_*` and `band_old_*` state the deleted results verbatim and derive them.
 
 This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`) and fails that build if a conclusion is
@@ -2613,6 +2624,266 @@ theorem cn_old {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [Fin
   norm_cn_error_le hemb hD₀ hDD hA hΔt hU₁ hU₂ hU₃ hL₃ hweak hA1 hA2 hA3 hM hstep hg hu0
 
 end FullyDiscrete
+
+section SpectralOld
+
+/-! ### Spectral methods: the FEEC theorem for reducing families
+
+The truncation rates of reducing families (`norm_sub_sol_le_of_truncation`,
+`infDist_sol_le_of_truncation`, `SpectralFamily.norm_sub_sol_le`), the frequency-truncation
+theorems of `ℝᵈ` (`bandApprox_*`, `ebApprox_*`, `maxwellApprox_*` and the approximating FEEC
+headlines) and the propagation-only `ℝ³` verdict `EuclideanVerdict` are now the fields of
+`ReducingFamily.Verdict` (`ReducingFamily.feec`) and of the instance verdicts
+`EuclideanEBVerdict`, `EuclideanMaxwellVerdict` that extend it. The theorems `spectral_old_*` and
+`band_old_*` state the deleted results verbatim (the deleted abbreviations `bandApprox`,
+`bandCore`, `ebCore`, `maxwellCore`, `maxwellPotentialCore` and `EuclideanVerdict` unfolded;
+`SpectralFamily.toReducingFamily` is `ReducingFamily.ofSpectral`) and derive them from the new
+API. -/
+
+section Reducing
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] {H : HilbertComplex 𝕜 c W}
+  {κ : Type*} (S : ReducingFamily H κ) (K : Submodule 𝕜 (PiLp 2 W))
+  (hK : IsClosed (K : Set (PiLp 2 W)))
+
+theorem spectral_old_norm_sub_sol_le_of_truncation {Data : Set (PiLp 2 W)}
+    {classNorm : PiLp 2 W → ℝ} {meshSize : κ → ℝ} {α C : ℝ}
+    (hrate : ∀ x ∈ Data, ∀ N, ‖x - (S.B N).starProjection x‖ ≤ C * meshSize N ^ α * classNorm x)
+    {x : PiLp 2 W} (hx : x ∈ Data) (N : κ) {t : ℝ} (_ht : 0 ≤ t) :
+    ‖H.waveGroup.S t x - (S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t‖ ≤
+      C * meshSize N ^ α * classNorm x :=
+  ((S.feec K hK).norm_sub_sol N x t).trans_le (hrate x hx N)
+
+theorem spectral_old_infDist_sol_le_of_truncation (hKr : H.wave.IsReducing K)
+    {Data : Set (PiLp 2 W)} {classNorm : PiLp 2 W → ℝ} {meshSize : κ → ℝ} {α C : ℝ}
+    (hrate : ∀ x ∈ Data, ∀ N, ‖x - (S.B N).starProjection x‖ ≤ C * meshSize N ^ α * classNorm x)
+    {x : PiLp 2 W} (hx : x ∈ Data) (hxK : x ∈ K) (N : κ) {t : ℝ} (ht : 0 ≤ t) :
+    Metric.infDist ((S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t)
+        (K : Set (PiLp 2 W)) ≤ C * meshSize N ^ α * classNorm x := by
+  have V := S.feec K hK
+  refine (V.residual_le (V.isReducing_iff.1 hKr).1 hxK N _ ht).trans ?_
+  rw [ApproxFEEC.S_eq_waveGroup _ ht]
+  exact (V.norm_sub_sol N x t).trans_le (hrate x hx N)
+
+end Reducing
+
+section Spectral
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] {H : HilbertComplex 𝕜 c W}
+  (S : SpectralFamily H)
+
+theorem spectral_old_norm_sub_sol_le (K : Submodule 𝕜 (PiLp 2 W))
+    (hK : IsClosed (K : Set (PiLp 2 W))) {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ)
+    {t : ℝ} (_ht : 0 ≤ t) :
+    ‖H.waveGroup.S t x - ((ReducingFamily.ofSpectral S).toApprox K hK).sol N
+        (((ReducingFamily.ofSpectral S).B N).orthogonalProjectionOnto x) t‖ ≤
+      (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x := by
+  have h := S.norm_sub_P_le_rateNorm hx N
+  rw [one_mul] at h
+  exact (((ReducingFamily.ofSpectral S).feec K hK).norm_sub_sol N x t).trans_le h
+
+end Spectral
+
+theorem spectral_old_le_domain_of_isReducingPair {𝕜 E F : Type*} [RCLike 𝕜]
+    [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+    {T : E →ₗ.[𝕜] F} {K : Submodule 𝕜 E} {L : Submodule 𝕜 F} [K.HasOrthogonalProjection]
+    [L.HasOrthogonalProjection] [FiniteDimensional 𝕜 K] (h : T.IsReducingPair K L)
+    (hT : Dense (T.domain : Set E)) : K ≤ T.domain :=
+  h.le_domain hT
+
+section EinsteinBianchiSpectral
+
+open Feec.Instances.EinsteinBianchi
+
+theorem spectral_old_einsteinBianchi_torus_approxFEEC : torusApprox.Verdict torusCore :=
+  einsteinBianchi_torus_approxFEEC.toApprox
+
+theorem spectral_old_einsteinBianchi_mirror_approxFEEC : mirrorApprox.Verdict mirrorCore :=
+  einsteinBianchi_mirror_approxFEEC.toApprox
+
+end EinsteinBianchiSpectral
+
+section Band
+
+open MeasureTheory Feec.Fourier Feec.Instances.EuclideanBand
+
+variable {𝕜 : Type*} [RCLike 𝕜] {d : Type*} [Fintype d] {ι : Type*} [Fintype ι]
+  {c : ComplexShape ι} {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)]
+  [∀ i, InnerProductSpace 𝕜 (E i)] [∀ i, CompleteSpace (E i)] [∀ i, NormedSpace ℝ (E i)]
+  [∀ i, IsScalarTower ℝ 𝕜 (E i)]
+  (S : SymbolComplex 𝕜 (volume : Measure (EuclideanSpace ℝ d)) c E)
+  (hS : ∀ i j, Continuous (S.m i j))
+  (K : Submodule 𝕜 (PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))))
+  (hK : IsClosed (K : Set (PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d)))))
+
+theorem band_old_bandCore_data : ((bands S hS).toCore K hK).Data = ⊤ := rfl
+
+theorem band_old_bandApprox_verdict :
+    ((bands S hS).toApprox K hK).Verdict ((bands S hS).toCore K hK) :=
+  ((bands S hS).feec K hK).toApprox
+
+theorem band_old_bandApprox_sol (N : ℕ) (x : PiLp 2 fun i => Lp (E i) 2 volume) (t : ℝ) :
+    ((bands S hS).toApprox K hK).sol N (((bands S hS).toApprox K hK).proj N x) t =
+      (totalSub (S.band (freqBall N))).starProjection (S.toHilbertComplex.waveGroup.S t x) :=
+  ((bands S hS).feec K hK).sol_eq N x t
+
+theorem band_old_bandApprox_rate {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 fun i => Lp (E i) 2 volume}
+    (hx : x ∈ sobolev 𝕜 E s) (N : ℕ) {t : ℝ} (_ht : 0 ≤ t) :
+    ‖S.toHilbertComplex.waveGroup.S t x -
+        ((bands S hS).toApprox K hK).sol N (((bands S hS).toApprox K hK).proj N x) t‖ ≤
+      (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm 𝕜 s x :=
+  (((bands S hS).feec K hK).norm_sub_sol N x t).trans_le
+    (norm_sub_starProjection_le_of_mem_sobolev S hs hx N)
+
+theorem band_old_bandApprox_norm_sub_sol (N : ℕ) (x : PiLp 2 fun i => Lp (E i) 2 volume)
+    (t : ℝ) :
+    ‖S.toHilbertComplex.waveGroup.S t x -
+        ((bands S hS).toApprox K hK).sol N (((bands S hS).toApprox K hK).proj N x) t‖ =
+      ‖x - (totalSub (S.band (freqBall N))).starProjection x‖ :=
+  ((bands S hS).feec K hK).norm_sub_sol N x t
+
+theorem band_old_bandApprox_sol_mem (hKr : S.toHilbertComplex.wave.IsReducing K)
+    (hP : ∀ N, ∀ x ∈ K, (totalSub (S.band (freqBall N))).starProjection x ∈ K)
+    {x : PiLp 2 fun i => Lp (E i) 2 volume} (hxK : x ∈ K) (N : ℕ) (t : ℝ) :
+    ((bands S hS).toApprox K hK).sol N (((bands S hS).toApprox K hK).proj N x) t ∈ K :=
+  ((bands S hS).feec K hK).sol_mem hKr hP hxK N t
+
+end Band
+
+section BandEB
+
+open MeasureTheory Feec.Fourier Feec.Instances.EuclideanBand Feec.Models.Euclidean.BGG
+  Feec.Fourier.BGG Feec.Fourier.GradCurl Feec.Fourier.SymCurl Feec.ShortHilbertComplex
+
+theorem band_old_einsteinBianchi_euclidean_approxFEEC :
+    ebApprox.Verdict (ebBands.toCore (totalSub constraint) isClosed_totalSub) :=
+  einsteinBianchi_euclidean_band.toApprox
+
+theorem band_old_ebApprox_norm_sub_sol (x : PiLp 2 Space) (N : ℕ) (t : ℝ) :
+    ‖complex.waveGroup.S t x - ebApprox.sol N (ebApprox.proj N x) t‖ =
+      ‖x - (totalSub ((Euclidean.symbolComplex bggFamily).band (freqBall N))).starProjection x‖ :=
+  einsteinBianchi_euclidean_band.norm_sub_sol N x t
+
+theorem band_old_ebApprox_sol_mem {x : PiLp 2 Space} (hx : x ∈ totalSub constraint) (N : ℕ)
+    (t : ℝ) : ebApprox.sol N (ebApprox.proj N x) t ∈ totalSub constraint :=
+  have V := einsteinBianchi_euclidean_band
+  V.sol_mem V.isReducing (fun N _ hx => V.starProjection_mem N hx) hx N t
+
+/-- The old `EuclideanEBVerdict`, a conjunction. -/
+theorem band_old_einsteinBianchi_euclidean_band :
+    ebApprox.Verdict (ebBands.toCore (totalSub constraint) isClosed_totalSub) ∧
+    complex.wave.IsReducing (totalSub constraint) ∧
+    (∀ (x : PiLp 2 Space) (N : ℕ) (t : ℝ),
+      ‖complex.waveGroup.S t x - ebApprox.sol N (ebApprox.proj N x) t‖ =
+        ‖x - (totalSub ((Euclidean.symbolComplex bggFamily).band (freqBall N))).starProjection
+          x‖) ∧
+    (∀ s : ℝ, 0 ≤ s → ∀ x ∈ sobolev ℂ (W3 ℂ Mat VM) s, ∀ (N : ℕ) (t : ℝ), 0 ≤ t →
+      ‖complex.waveGroup.S t x - ebApprox.sol N (ebApprox.proj N x) t‖ ≤
+        (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm ℂ s x) ∧
+    (∀ s s' : ℝ, 0 ≤ s → s < s' → ∀ t : ℝ, ¬ ∃ C : ℝ, ∀ (N : ℕ), ∀ x ∈ totalSub constraint,
+      x ∈ sobolev ℂ (W3 ℂ Mat VM) s →
+      ‖complex.waveGroup.S t x - ebApprox.sol N (ebApprox.proj N x) t‖ ≤
+        C * (1 / ((N : ℝ) + 1)) ^ s' * sobolevNorm ℂ s x) ∧
+    (∀ x ∈ totalSub constraint, ∀ (N : ℕ) (t : ℝ),
+      ebApprox.sol N (ebApprox.proj N x) t ∈ totalSub constraint) :=
+  have V := einsteinBianchi_euclidean_band
+  ⟨V.toApprox, V.isReducing, fun x N t => V.norm_sub_sol N x t,
+    fun _ hs _ hx N t _ => (V.norm_sub_sol N _ t).trans_le (V.norm_sub_starProjection_le hs hx N),
+    fun _ _ hs hss t => V.rate_optimal hs hss t, fun _ hx N t => band_old_ebApprox_sol_mem hx N t⟩
+
+/-- The old `EuclideanVerdict` of `Feec.Instances.EinsteinBianchi` (well-posedness and
+propagation on `ℝ³`), with `constrainedFEEC_wellPosed` and the reducing constraint of
+`EuclideanEBVerdict`. -/
+theorem spectral_old_einsteinBianchi_euclidean :
+    (∀ x ∈ complex.wave.domain, ∀ T : ℝ,
+      Evolution.IsClassicalSolution complex.wave (Icc 0 T) 0 (fun t => complex.waveGroup.S t x) ∧
+      (∀ U, U 0 = x → Evolution.IsStrongSolution complex.wave (Icc 0 T) 0 U →
+        EqOn U (fun t => complex.waveGroup.S t x) (Icc 0 T)) ∧
+      ∀ t, ‖complex.waveGroup.S t x‖ = ‖x‖) ∧
+    complex.wave.IsReducing (totalSub constraint) ∧
+    ∀ t, ∀ x ∈ totalSub constraint, complex.waveGroup.S t x ∈ totalSub constraint :=
+  ⟨fun _ hx T => have h := constrainedFEEC_wellPosed hx T; ⟨h.1, h.2.1, h.2.2.2⟩,
+    einsteinBianchi_euclidean_band.isReducing, fun t _ hx => C0Group.map_le_iff_forall.1
+      ((complex.isReducing_iff_waveGroup_invariant _).1 einsteinBianchi_euclidean_band.isReducing)
+      t _ hx⟩
+
+/-- The old `einsteinBianchi_constrainedFEEC_summary`, with its `ℝ³` row `EuclideanVerdict`. -/
+theorem spectral_old_einsteinBianchi_constrainedFEEC_summary :
+    (Instances.EinsteinBianchi.TorusVerdict ∧ Instances.EinsteinBianchi.TorusSobolevVerdict ∧
+      Instances.EinsteinBianchi.TorusNonvacuous) ∧
+    ((∀ x ∈ complex.wave.domain, ∀ T : ℝ,
+      Evolution.IsClassicalSolution complex.wave (Icc 0 T) 0 (fun t => complex.waveGroup.S t x) ∧
+      (∀ U, U 0 = x → Evolution.IsStrongSolution complex.wave (Icc 0 T) 0 U →
+        EqOn U (fun t => complex.waveGroup.S t x) (Icc 0 T)) ∧
+      ∀ t, ‖complex.waveGroup.S t x‖ = ‖x‖) ∧
+    complex.wave.IsReducing (totalSub constraint) ∧
+    ∀ t, ∀ x ∈ totalSub constraint, complex.waveGroup.S t x ∈ totalSub constraint) ∧
+    (Instances.EinsteinBianchi.MirrorVerdict ∧ Instances.EinsteinBianchi.MirrorSobolevVerdict ∧
+      Instances.EinsteinBianchi.MirrorNonvacuous) ∧
+    Instances.EinsteinBianchi.MirrorFEMVerdict ∧ Instances.EinsteinBianchi.StandardCubeVerdict :=
+  have h := Instances.EinsteinBianchi.einsteinBianchi_constrainedFEEC_summary
+  ⟨h.1, spectral_old_einsteinBianchi_euclidean, h.2⟩
+
+end BandEB
+
+section BandMaxwell
+
+open MeasureTheory Feec.Fourier Feec.Instances.EuclideanBand Feec.Models.Euclidean.DeRham
+  Feec.Instances.Maxwell Feec.Fourier.Exterior
+
+variable (d : Type*) [Fintype d] [LinearOrder d] (a : ℕ)
+
+theorem band_old_maxwell_euclidean_approxFEEC :
+    (maxwellApprox d a).Verdict
+      ((maxwellBands d a).toCore (windowGauss (complex d) a) (isClosed_gauss _ _)) :=
+  (maxwell_euclidean_band d a).toApprox
+
+theorem band_old_maxwellApprox_sol_mem {x : PiLp 2 fun i : Fin 3 => L2Form d (a + i)}
+    (hx : x ∈ windowGauss (complex d) a) (N : ℕ) (t : ℝ) :
+    (maxwellApprox d a).sol N ((maxwellApprox d a).proj N x) t ∈ windowGauss (complex d) a :=
+  have V := maxwell_euclidean_band d a
+  V.sol_mem V.isReducing (fun N _ hx => V.starProjection_mem N hx) hx N t
+
+theorem band_old_maxwellApprox_norm_sub_sol (x : PiLp 2 fun i : Fin 3 => L2Form d (a + i))
+    (N : ℕ) (t : ℝ) :
+    ‖((complex d).window a 3).waveGroup.S t x -
+        (maxwellApprox d a).sol N ((maxwellApprox d a).proj N x) t‖ =
+      ‖x - (totalSub ((maxwellSymbol d a).band (freqBall N))).starProjection x‖ :=
+  (maxwell_euclidean_band d a).norm_sub_sol N x t
+
+/-- The old `EuclideanMaxwellVerdict`, a conjunction. -/
+theorem band_old_maxwell_euclidean_band :
+    (maxwellApprox d a).Verdict
+      ((maxwellBands d a).toCore (windowGauss (complex d) a) (isClosed_gauss _ _)) ∧
+    ((complex d).window a 3).wave.IsReducing (windowGauss (complex d) a) ∧
+    (∀ (x : PiLp 2 fun i : Fin 3 => L2Form d (a + i)) (N : ℕ) (t : ℝ),
+      ‖((complex d).window a 3).waveGroup.S t x -
+          (maxwellApprox d a).sol N ((maxwellApprox d a).proj N x) t‖ =
+        ‖x - (totalSub ((maxwellSymbol d a).band (freqBall N))).starProjection x‖) ∧
+    (∀ s : ℝ, 0 ≤ s → ∀ x ∈ sobolev ℂ (fun i : Fin 3 => Form ℂ d (a + i)) s,
+      ∀ (N : ℕ) (t : ℝ), 0 ≤ t →
+      ‖((complex d).window a 3).waveGroup.S t x -
+          (maxwellApprox d a).sol N ((maxwellApprox d a).proj N x) t‖ ≤
+        (1 / ((N : ℝ) + 1)) ^ s * sobolevNorm ℂ s x) ∧
+    (∀ x ∈ windowGauss (complex d) a, ∀ (N : ℕ) (t : ℝ),
+      (maxwellApprox d a).sol N ((maxwellApprox d a).proj N x) t ∈ windowGauss (complex d) a) :=
+  have V := maxwell_euclidean_band d a
+  ⟨V.toApprox, V.isReducing, fun x N t => V.norm_sub_sol N x t,
+    fun _ hs _ hx N t _ => (V.norm_sub_sol N _ t).trans_le (V.norm_sub_starProjection_le hs hx N),
+    fun _ hx N t => band_old_maxwellApprox_sol_mem d a hx N t⟩
+
+theorem band_old_maxwell_euclidean_potential_approxFEEC :
+    (maxwellPotentialApprox d a).Verdict ((maxwellBands d a).toCore
+      (potential ℂ fun i : Fin 3 => L2Form d (a + i)) isClosed_potential) :=
+  ((maxwellBands d a).feec _ _).toApprox
+
+end BandMaxwell
+
+end SpectralOld
 
 section CrownFields
 

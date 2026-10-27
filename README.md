@@ -16,8 +16,8 @@ the CFL condition. Each field is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate
-classes) and `O(hᵒʳᵈ + τ^{p/(p+2)})` uniformly in `h` for every Jackson datum and every scheme
-(smoothing by time averages); `docs/crown.pdf` renders the module.
+classes) and `O(hᵒʳᵈ + τ^{p/(p+2)})` uniformly in `h` for every Jackson datum and every one-step
+`TimeScheme` (smoothing by time averages; not leapfrog); `docs/crown.pdf` renders the module.
 
 ## The approximating FEEC theorem
 

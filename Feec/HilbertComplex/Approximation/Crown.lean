@@ -40,11 +40,11 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    discretizations are stable and converge as `h, τ → 0`, with error at most the spatial rate
    plus the temporal error `τᵖ ‖Lₕ^{p+1} v‖`, which is `O(τᵖ)` uniformly in `h` along smooth
    comparisons for schemes consistent along trajectories ([BrennerThomee1979]; [Thomee2006],
-   Ch. 7–9), and for every scheme and every datum of a rate class in `D(L)` the error from the
-   comparison initial value is the spatial rate plus `O(τ^{p/(p+2)})` uniformly in `h` (the
-   scheme is tested on data smoothed by time averages, `TimeScheme.norm_S_sub_sol_le_uniform`);
-   the explicit leapfrog scheme for the wave equation does so under the CFL condition
-   `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
+   Ch. 7–9), and for every scheme (one-step `TimeScheme`s) and every datum of a rate class in
+   `D(L)` the error from the comparison initial value is the spatial rate plus `O(τ^{p/(p+2)})`
+   uniformly in `h` (the scheme is tested on data smoothed by time averages,
+   `TimeScheme.norm_S_sub_sol_le_uniform`); the explicit leapfrog scheme for the wave equation
+   converges under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
 
 **With a Jackson estimate** (`ConformingFamily.feec_rated`, statement
 `ConformingFamily.Verdict.Rated`: classes `Reg s` approximated in `Vₕ` at the order `hᵒʳᵈ⁽ˢ⁾` in the

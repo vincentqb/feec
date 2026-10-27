@@ -451,6 +451,13 @@ theorem norm_S_sub_sol_le_of_smooth {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T :
       rw [TimeScheme.sol, ← _root_.map_sub, mul_assoc]
       exact ((F.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left h2 (norm_nonneg _))
 
+/-- The consistency bound of a rate class is nonnegative on its data. -/
+theorem _root_.Feec.HilbertComplex.DissipFEEC.RateClass.C'_mul_nonneg {T : ℝ} (R : F.RateClass T)
+    (hT : 0 ≤ T) {x : E} (hx : x ∈ R.Data) (h : κ) :
+    0 ≤ R.C' * (R.meshSize h ^ R.α * R.classNorm x) := by
+  have := (norm_nonneg _).trans (R.consistency x hx h 0 ⟨le_rfl, hT⟩)
+  rwa [mul_assoc] at this
+
 /-- **7. The fully discrete rate for every datum of a rate class in `D(A)`, by smoothing**: for
 `0 < δ ≤ T` and `tₙ ∈ [0, T]`, with `e = hᵅ ‖x‖_c`, `C_F` the uniform bound of `F`
 (`DissipFEEC.boundConst`) and `pₕ = pₕ(0)`,
@@ -475,9 +482,7 @@ theorem norm_S_sub_sol_le_of_timeAvg {T : ℝ} (R : F.RateClass T) {x : E} (hx :
   have hT : 0 ≤ T := hδ.le.trans hδT
   have hM := Θ.M_nonneg hT h
   have hι := norm_nonneg (F.incl h)
-  have hC'e : 0 ≤ R.C' * e := by
-    have := (norm_nonneg _).trans (R.consistency x hx h 0 ⟨le_rfl, hT⟩)
-    rwa [mul_assoc] at this
+  have hC'e : 0 ≤ R.C' * e := R.C'_mul_nonneg hT hx h
   have hS0 : F.S 0 x = x := by rw [S_def, C0Semigroup.S_zero_apply]
   have hu : ‖x - F.incl h u‖ ≤ R.C * e := by
     have := R.approx x hx h 0 ⟨le_rfl, hT⟩
@@ -555,9 +560,7 @@ theorem norm_S_sub_sol_le_uniform {T : ℝ} (R : F.RateClass T) {x : E} (hx : x 
       e, Real.rpow_add hτ]
     field_simp
     rfl
-  have hC'e : 0 ≤ R.C' * (R.meshSize h ^ R.α * R.classNorm x) := by
-    have := (norm_nonneg _).trans (R.consistency x hx h 0 ⟨le_rfl, hT⟩)
-    rwa [mul_assoc] at this
+  have hC'e := R.C'_mul_nonneg hT hx h
   have hM := Θ.M_nonneg hT h
   have hι := norm_nonneg (F.incl h)
   have hF := F.boundConst_nonneg

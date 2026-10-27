@@ -16,7 +16,8 @@ For `T : E →ₗ.[𝕜] F` and closed subspaces `K ⊆ E`, `L ⊆ F` with ortho
 ## Main results
 
 * `IsReducingPair.mapsTo`, `.map_orthogonal_mem`, `.orthogonal` (`(Kᗮ, Lᗮ)` reduces `T`),
-  `.adjoint` (`(L, K)` reduces `T†`), `isReducingPair_top`.
+  `.adjoint` (`(L, K)` reduces `T†`), `isReducingPair_top`; `IsReducingPair.le_domain`: a
+  finite-dimensional reducing subspace of a densely defined operator lies in its domain.
 * `IsSkewSymmetric.isReducing_iff`, `IsSkewAdjoint.isReducing_iff`: for a densely defined
   skew-symmetric operator, `K` reduces `A` iff `P_K D(A) ⊆ D(A)` and `A (D(A) ∩ K) ⊆ K`
   (`IsSkewSymmetric.commute_proj`).
@@ -104,6 +105,27 @@ theorem IsReducingPair.adjoint [CompleteSpace E] (h : T.IsReducingPair K L)
   have hmem : ∀ y : T†.domain, L.starProjection (y : F) ∈ T†.domain := fun y =>
     mem_adjoint_domain_of_exists _ ⟨_, key y⟩
   exact ⟨hmem, fun y => adjoint_apply_eq hd ⟨_, hmem y⟩ (key y)⟩
+
+/-- **A finite-dimensional reducing subspace lies in the domain**: if `(K, L)` reduces a densely
+defined `T` and `dim K < ∞`, then `K ⊆ D(T)` (`P_K D(T)` is dense in `K`, finite-dimensional and
+contained in `D(T)`). -/
+theorem IsReducingPair.le_domain [FiniteDimensional 𝕜 K] (h : T.IsReducingPair K L)
+    (hT : Dense (T.domain : Set E)) : K ≤ T.domain := by
+  set M := T.domain.map (K.starProjection : E →ₗ[𝕜] E)
+  have hMK : M ≤ K := by
+    rintro _ ⟨x, -, rfl⟩; exact Submodule.starProjection_apply_mem K x
+  have hMD : M ≤ T.domain := by
+    rintro _ ⟨x, hx, rfl⟩; exact h.proj_mem ⟨x, hx⟩
+  have : FiniteDimensional 𝕜 M := Submodule.finiteDimensional_of_le hMK
+  have hclosed : _root_.IsClosed (M : Set E) := Submodule.closed_of_finiteDimensional M
+  intro x hx
+  have hxc : K.starProjection x ∈ _root_.closure (M : Set E) := by
+    have h1 := image_closure_subset_closure_image (f := K.starProjection)
+      (s := (T.domain : Set E)) K.starProjection.continuous
+    rw [hT.closure_eq] at h1
+    exact h1 ⟨x, Set.mem_univ _, rfl⟩
+  rw [hclosed.closure_eq, Submodule.starProjection_eq_self_iff.2 hx] at hxc
+  exact hMD hxc
 
 end IsReducingPair
 

@@ -1,7 +1,6 @@
 module
 
 public import Feec.Instances.EinsteinBianchiSobolev
-public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Cube.MirrorWaveRegularity
 public import Feec.Physics.EinsteinBianchi.BoundedConvergence
 
@@ -25,10 +24,11 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
   through `mem_rateData_of_memSobStateT`). Non-vacuity (`torus_nonvacuous`): a band-limited
   non-stationary TSD datum lies in every class, and the TSD datum `decayState`, in `H³` but not
   band-limited for any `N`, lies in the class of order `1`.
-* **`ℝ³`** (`einsteinBianchi_euclidean`): well-posedness and propagation (`K` reduces `L`). The
-  constrained FEEC theorem needs a family of finite-dimensional subcomplexes with uniformly
-  bounded commuting projections approximating `L²(ℝ³)`; no such family is constructed here (the
-  Fourier bands of `ℝ³` are infinite-dimensional), so items 3–4 are not stated on `ℝ³`.
+* **`ℝ³`**: the constrained FEEC theorem needs a family of finite-dimensional subcomplexes with
+  uniformly bounded commuting projections approximating `L²(ℝ³)`; no such family is constructed
+  here (the Fourier bands of `ℝ³` are infinite-dimensional). The frequency truncation of `ℝ³` is
+  a reducing family instead, read through the FEEC theorem for reducing families in
+  `Feec.Instances.EuclideanBand` (`EuclideanEBVerdict`).
 * **The cube `Q = (0, ½)³` with mirror boundary conditions**:
   - the cosine–sine spectral discretization `mirrorFEEC` (`bandFamilyQ`)
     is a constrained FEEC discretization of `MirrorBGG.complexQ` with the reducing constraint
@@ -66,7 +66,7 @@ proved from the explicit solution of the datum `(0, 0, (0, β))` and the propaga
 subspaces). On `ℝ³` only items 1–2 are stated.
 
 `einsteinBianchi_constrainedFEEC_summary` is the conjunction of the full verdicts (`TorusVerdict`,
-`TorusSobolevVerdict`, `TorusNonvacuous`, `EuclideanVerdict`, `MirrorVerdict`,
+`TorusSobolevVerdict`, `TorusNonvacuous`, `MirrorVerdict`,
 `MirrorSobolevVerdict`, `MirrorNonvacuous`, `MirrorFEMVerdict`, `StandardCubeVerdict`); each headline
 theorem proves one of them.
 
@@ -79,10 +79,9 @@ from the Strang bound of (6.4) alone, without the model convergence theorems):
 convergent family of discrete initial values, the `O(h)` and `O(hˢ)` rates, residual `→ 0`) and
 `StandardCubeApprox.Verdict` (convergence for every datum; from `(0, 0, (0, β))` the residuals
 tend to a positive limit); `einsteinBianchi_summary` there extends
-`einsteinBianchi_constrainedFEEC_summary` by these two verdicts, with the `ℝ³` row
-`EuclideanVerdict` replaced by the approximating FEEC verdict of the frequency truncation
-(`Feec.Instances.EuclideanBand.EuclideanEBVerdict`). `MirrorFEMVerdict` and `StandardCubeVerdict`
-are kept.
+`einsteinBianchi_constrainedFEEC_summary` by these two verdicts and the `ℝ³` row, the verdict of
+the frequency truncation (`Feec.Instances.EuclideanBand.EuclideanEBVerdict`). `MirrorFEMVerdict`
+and `StandardCubeVerdict` are kept.
 
 ## References
 
@@ -241,32 +240,6 @@ theorem torus_nonvacuous : TorusNonvacuous := by
   exact ⟨decayState, hK, hS, (mem_rateData_of_memSobStateT hK zero_le_one hS).1, hband, hL⟩
 
 end Torus
-
-/-! ### `ℝ³` -/
-
-section Euclidean
-
-open Feec.Models.Euclidean.BGG
-
-/-- **The verdict on `ℝ³`**: well-posed for data in `D(L)` (Stone), and the TSD constraint
-reduces `L`, so TSD data stay TSD for all `t ∈ ℝ`. -/
-abbrev EuclideanVerdict : Prop :=
-    (∀ x ∈ complex.wave.domain, ∀ T : ℝ,
-      Evolution.IsClassicalSolution complex.wave (Icc 0 T) 0 (fun t => complex.waveGroup.S t x) ∧
-      (∀ U, U 0 = x → Evolution.IsStrongSolution complex.wave (Icc 0 T) 0 U →
-        EqOn U (fun t => complex.waveGroup.S t x) (Icc 0 T)) ∧
-      ∀ t, ‖complex.waveGroup.S t x‖ = ‖x‖) ∧
-    complex.wave.IsReducing (totalSub constraint) ∧
-    ∀ t, ∀ x ∈ totalSub constraint, complex.waveGroup.S t x ∈ totalSub constraint
-
-/-- **The EB system on `ℝ³`**: `EuclideanVerdict` (items 1–2 of the constrained FEEC theorem,
-`constrainedFEEC_wellPosed` and the reducing subcomplex). [QuennevilleBelair2015], Thm 4.6,
-Prop 4.17, Ch. 6 -/
-theorem einsteinBianchi_euclidean : EuclideanVerdict :=
-  ⟨fun _ hx T => have h := constrainedFEEC_wellPosed hx T; ⟨h.1, h.2.1, h.2.2.2⟩,
-    reducingSubcomplex.isReducing_wave, fun t _ hx => waveGroup_mem t hx⟩
-
-end Euclidean
 
 /-! ### The cube with mirror boundary conditions -/
 
@@ -657,31 +630,27 @@ end StandardBoundary
    approximation classes; and (`TorusSobolevVerdict`) `≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}`
    for TSD data in `H^{2+s}`; non-vacuity (`TorusNonvacuous`) by a band-limited and a
    non-band-limited non-stationary TSD datum;
-2. `ℝ³` (`EuclideanVerdict`): well-posedness and propagation (`K` reduces `L`);
-3. the cube with mirror boundary conditions, cosine–sine spectral method (`MirrorVerdict`,
+2. the cube with mirror boundary conditions, cosine–sine spectral method (`MirrorVerdict`,
    `MirrorSobolevVerdict`, `MirrorNonvacuous`): the same conclusions as on `𝕋³`, with the
    Sobolev rate for TSD data with mirror extension in `H^{2+s}`;
-4. the mirror finite element scheme (6.5) (`MirrorFEMVerdict`): admissible smoothers exist, and
+3. the mirror finite element scheme (6.5) (`MirrorFEMVerdict`): admissible smoothers exist, and
    for each of them the scheme, started from the elliptic projection (6.4), converges to the TSD
    solution `e^{tL} ξ₀`, at the rate `O(h)` for TSD data in `D(L³)` and `O(hˢ)` for TSD data in
    `H^{2+s}`, `0 ≤ s ≤ 1`;
-5. the cube with the thesis' boundary conditions (`StandardCubeVerdict`): the TSD constraint
+4. the cube with the thesis' boundary conditions (`StandardCubeVerdict`): the TSD constraint
    `thesisTSD` does not reduce `L`, and the thesis' scheme (6.5) converges to the exact solution,
    which leaves TSD, so its discrete fields leave TSD (the failure half of item 4). -/
 theorem einsteinBianchi_constrainedFEEC_summary :
     -- 1. `𝕋³`
     (TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧
-    -- 2. `ℝ³`
-    EuclideanVerdict ∧
-    -- 3. the mirror cube, spectral
+    -- 2. the mirror cube, spectral
     (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧
-    -- 4. the mirror cube, finite elements
+    -- 3. the mirror cube, finite elements
     MirrorFEMVerdict ∧
-    -- 5. the cube with the thesis' boundary conditions
+    -- 4. the cube with the thesis' boundary conditions
     StandardCubeVerdict :=
   ⟨⟨einsteinBianchi_torus_constrainedFEEC, einsteinBianchi_torus_constrainedFEEC_sobolev,
       torus_nonvacuous⟩,
-    einsteinBianchi_euclidean,
     ⟨einsteinBianchi_mirror_constrainedFEEC, einsteinBianchi_mirror_constrainedFEEC_sobolev,
       mirror_nonvacuous⟩,
     mirrorFEMVerdict, standardCubeVerdict⟩

@@ -15,8 +15,9 @@ The degrees of freedom of `Q_b⁻Λᵏ` (`Feec.FiniteElement.CubeDof`) are momen
 reproduces `Q_b⁻Λᵏ ⊇ P_{r-1}Λᵏ` (`1 ≤ r ≤ b_j`) and is bounded in `C⁰`; the Bramble–Hilbert
 argument with the Taylor polynomial at the centre of the cube
 (`Feec.FiniteElement.norm_iteratedFDeriv_sub_taylorPoly_le`) gives the reference estimate, which
-the homotheties `F_m(y) = (y + m)/N` transport to the cells (`cellInterp`): the error is
-`O(hʳ)`, `h = 1/N` ([ArnoldBoffiBonizzoni2015], §4; [Ciarlet2002], Thm 3.1.4). The field degrees
+the homotheties `F_m(y) = h (y + m)` of the mesh of `(0, L)ⁿ` transport to the cells
+(`cellInterp`): the error is `O(hʳ)`, `h = L/N` ([ArnoldBoffiBonizzoni2015], §4;
+[Ciarlet2002], Thm 3.1.4). The field degrees
 of freedom are single-valued on the mesh, so the local interpolants glue into the global
 canonical interpolant `Π_h w ∈ Q_b⁻Λᵏ(𝒯_h)` (`cubeFieldGlobalInterp`); as in
 `Feec.FiniteElement.CubeConformity`, the coordinates are `Fin n` and the mesh is isotropic.
@@ -37,8 +38,10 @@ with `d` (`cubeGlue_cubeFieldGlobalInterp_extDeriv`).
 
 ## Main results
 
-* `cubeFieldInterp_evalForm`, `cubeFieldInterp_sub`, `exists_norm_cubeFieldInterp_le`:
-  reproduction of `Q_b⁻Λᵏ`, additivity and `C⁰`-stability of `Π̂`;
+* `cubeFieldInterp_evalForm`, `cubeFieldInterp_sub`, `exists_norm_cubeFieldInterp_le`,
+  `exists_norm_cubeFieldInterp_le_sum_dof`: reproduction of `Q_b⁻Λᵏ`, additivity, `C⁰`-stability
+  of `Π̂` and its stability in the degrees of freedom; `fieldMoment_eq_integral`: a moment is the
+  integral of the tangential components against the coefficients `momentCoeff`;
 * `exists_norm_sub_cubeFieldInterp_le`: **`sup ‖w - Π̂ w‖ ≤ C sup ‖Dʳ w‖` on `[0, 1]ⁿ`**;
 * `exists_norm_sub_cellInterp_le`: **`sup_m ‖w - Π_m w‖ ≤ C hʳ sup_m ‖Dʳ w‖` on each cell**, `C`
   independent of `h`;
@@ -46,12 +49,16 @@ with `d` (`cubeGlue_cubeFieldGlobalInterp_extDeriv`).
   `cellField_cubeFieldGlobalInterp`: the global interpolant is tangentially continuous (it lies
   in `Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ`) and is the local interpolant on each cell;
 * `exists_norm_sub_cubeFieldGlobalInterp_le`: **`sup ‖w - Π_h w‖ ≤ C hʳ sup ‖Dʳ w‖` on the
-  mesh**;
+  mesh**, `C` independent of `L` and `N`;
+* `exists_cell_inverse_bound`: **inverse estimates on the cells** `h^{n/2} sup ‖u‖ ≲ ‖u‖_{L²}`,
+  `h^{n/2} h Lip(u) ≲ ‖u‖_{L²}` for the cell fields, from `Q_b⁻Λᵏ ⊆ P_{Σ b}Λᵏ`
+  (`cellField_mem_polySpace`) and the inverse estimates on homothetic copies of the unit cube;
 * `setIntegral_closedCube_partialDeriv`: the fundamental theorem of calculus on `[0, 1]ⁿ` in one
   direction;
-* `cubeFieldInterp_extDeriv`: **`Π̂ (d w) = d (Π̂ w)`** for `w` of class `C¹` near `[0, 1]ⁿ`.
+* `cubeFieldInterp_extDeriv`: **`Π̂ (d w) = d (Π̂ w)`** for `w` of class `C¹` near `[0, 1]ⁿ`;
 * `cellInterp_extDeriv`, `cubeFieldGlobalInterp_extDeriv`,
-  `cubeGlue_cubeFieldGlobalInterp_extDeriv`: **`Π_h (d w) = d_max (Π_h w)`** on the mesh.
+  `cubeGlue_cubeFieldGlobalInterp_extDeriv`: **`Π_h (d w) = d_max (Π_h w)`** on the mesh, and
+  `Π_h` only sees `[0, L]ⁿ` (`cubeFieldGlobalInterp_congr`).
 
 ## References
 
@@ -165,6 +172,65 @@ theorem fieldMoment_sub {g : Fin n → Option ℝ}
   refine sum_congr rfl fun t _ => ?_
   split_ifs <;> ring
 
+theorem fieldMoment_add {g : Fin n → Option ℝ}
+    (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) (η : PolyForm ℝ (Fin n))
+    {w w' : FormField n} (hw : ContinuousOn w (closedCube n))
+    (hw' : ContinuousOn w' (closedCube n)) :
+    fieldMoment g η (w + w') = fieldMoment g η w + fieldMoment g η w' := by
+  have h := fieldMoment_sub hg η (hw.add hw') hw'
+  rw [add_sub_cancel_right] at h
+  linarith
+
+theorem fieldMoment_smul (g : Fin n → Option ℝ) (η : PolyForm ℝ (Fin n)) (c : ℝ)
+    (w : FormField n) : fieldMoment g η (c • w) = c * fieldMoment g η w := by
+  rw [fieldMoment, fieldMoment, ← MeasureTheory.integral_const_mul]
+  refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+  simp only [fieldTrace, wedgeForm_apply, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+  refine sum_congr rfl fun t _ => ?_
+  split_ifs <;> ring
+
+/-- The coefficients of a moment: `∫_g tr_g w ∧ η = ∫_{[0,1]ⁿ} Σₛ w(y_g)ₛ cₛ(y)`
+(`fieldMoment_eq_integral`), `y_g = planePoint g y`, with `cₛ = ± η_{G ∖ s}` for `s ⊆ G` the free
+directions and `0` otherwise: only the tangential components of `w` enter. -/
+def momentCoeff (g : Fin n → Option ℝ) (η : PolyForm ℝ (Fin n)) (y : Fin n → ℝ)
+    (s : Finset (Fin n)) : ℝ :=
+  if s ⊆ freeSet g then shuffleSgn s (freeSet g \ s) * evalForm n η y (freeSet g \ s) else 0
+
+theorem momentCoeff_eq_zero {g : Fin n → Option ℝ} (η : PolyForm ℝ (Fin n)) (y : Fin n → ℝ)
+    {s : Finset (Fin n)} (hs : ¬ s ⊆ freeSet g) : momentCoeff g η y s = 0 := ite_eq_right hs
+
+/-- **A moment as an integral of the values**: `∫_g tr_g w ∧ η = ∫_{[0,1]ⁿ} Σₛ w(y_g)ₛ cₛ(y)`. -/
+theorem fieldMoment_eq_integral (g : Fin n → Option ℝ) (η : PolyForm ℝ (Fin n))
+    (w : FormField n) :
+    fieldMoment g η w =
+      ∫ y in closedCube n, ∑ s, w (planePoint g y) s * momentCoeff g η y s := by
+  rw [fieldMoment]
+  refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+  simp only [wedgeForm_apply, momentCoeff, mul_ite, mul_zero]
+  rw [← Finset.sum_filter, show (univ.filter fun t => t ⊆ freeSet g) = (freeSet g).powerset by
+    ext; simp]
+  refine sum_congr rfl fun t ht => ?_
+  have hfree : ∀ j ∈ t, (g j).isNone := fun j hj => mem_freeSet.1 ((mem_powerset.1 ht) hj)
+  simp only [fieldTrace, ite_eq_left hfree]
+  ring
+
+/-- The coefficients of a moment are bounded on the unit cube. -/
+theorem exists_sum_abs_momentCoeff_le (g : Fin n → Option ℝ) (η : PolyForm ℝ (Fin n)) :
+    ∃ C, 0 ≤ C ∧ ∀ y ∈ closedCube n, ∑ s, |momentCoeff g η y s| ≤ C := by
+  obtain ⟨A, hA⟩ := (isCompact_univ_pi fun _ : Fin n => isCompact_Icc (a := (0 : ℝ)) (b := 1)
+    ).exists_bound_of_continuousOn (contDiff_evalForm η (r := 0)).continuous.continuousOn
+  refine ⟨Fintype.card (Finset (Fin n)) * max A 0, by positivity, fun y hy => ?_⟩
+  have h1 : ∀ s, |momentCoeff g η y s| ≤ max A 0 := fun s => by
+    unfold momentCoeff
+    split_ifs
+    · rw [abs_mul, show |(shuffleSgn s (freeSet g \ s) : ℝ)| = 1 by
+        rcases mul_self_eq_one_iff.1 (shuffleSgn_mul_self (R := ℝ) s (freeSet g \ s)) with
+          h | h <;> simp [h], one_mul]
+      exact ((norm_le_pi_norm (evalForm n η y) _).trans (hA y hy)).trans (le_max_left _ _)
+    · simp
+  calc ∑ s, |momentCoeff g η y s| ≤ ∑ _s : Finset (Fin n), max A 0 := sum_le_sum fun s _ => h1 s
+    _ = _ := by rw [sum_const, card_univ, nsmul_eq_mul]
+
 /-- The moments are bounded in `C⁰([0, 1]ⁿ)` (on faces of the cube). -/
 theorem exists_abs_fieldMoment_le {g : Fin n → Option ℝ}
     (hg : ∀ j c, g j = some c → c ∈ Set.Icc (0 : ℝ) 1) (η : PolyForm ℝ (Fin n)) :
@@ -268,23 +334,18 @@ theorem cubeFieldInterp_sub (hb : ∀ j, 1 ≤ b j) {w w' : FormField n}
     funext fun i => fieldDof_sub i hw hw'
   simp only [cubeFieldInterp, this, map_sub, Submodule.coe_sub]
 
-/-- **Stability of `Π` in `C⁰([0, 1]ⁿ)`**. -/
-theorem exists_norm_cubeFieldInterp_le (hb : ∀ j, 1 ≤ b j) :
-    ∃ C, ∀ (w : FormField n) (B : ℝ), (∀ y ∈ closedCube n, ‖w y‖ ≤ B) →
-      ∀ x ∈ closedCube n, ‖cubeFieldInterp k hb w x‖ ≤ C * B := by
+/-- **Stability of `Π` by its degrees of freedom**: `sup_{[0,1]ⁿ} ‖Π w‖ ≤ A Σᵢ |ℓᵢ(w)|`. -/
+theorem exists_norm_cubeFieldInterp_le_sum_dof (hb : ∀ j, 1 ≤ b j) :
+    ∃ A, 0 ≤ A ∧ ∀ (w : FormField n), ∀ x ∈ closedCube n,
+      ‖cubeFieldInterp k hb w x‖ ≤ A * ∑ i : CubeDofIdx b k, |fieldDof i w| := by
   set e := (isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv
   set φ : CubeDofIdx b k → FormField n := fun i =>
     evalForm n (e.symm (Pi.single i 1) : PolyForm ℝ (Fin n))
-  have hC : ∀ i : CubeDofIdx b k, ∃ C, ∀ (w : FormField n) (B : ℝ),
-      (∀ y ∈ closedCube n, ‖w y‖ ≤ B) → |fieldDof i w| ≤ C * B :=
-    fun i => exists_abs_fieldMoment_le (dofFace_mem_Icc _ _) _
-  choose C hC using hC
   have hA : ∀ i, ∃ A, ∀ x ∈ closedCube n, ‖φ i x‖ ≤ A := fun i =>
     (isCompact_univ_pi fun _ : Fin n => isCompact_Icc (a := (0 : ℝ)) (b := 1)
       ).exists_bound_of_continuousOn (contDiff_evalForm _ (r := 0)).continuous.continuousOn
   choose A hA using hA
-  refine ⟨∑ i, max (C i) 0 * max (A i) 0, fun w B hB x hx => ?_⟩
-  have hB0 : 0 ≤ B := (norm_nonneg _).trans (hB x hx)
+  refine ⟨∑ i, max (A i) 0, sum_nonneg fun i _ => le_max_right _ _, fun w x hx => ?_⟩
   have hdecomp : cubeFieldInterp k hb w x = ∑ i, fieldDof i w • φ i x := by
     have : (fun i => fieldDof i w) = ∑ i, fieldDof i w • (Pi.single i 1 : CubeDofIdx b k → ℝ) := by
       funext j; simp [Pi.single_apply]
@@ -292,14 +353,31 @@ theorem exists_norm_cubeFieldInterp_le (hb : ∀ j, 1 ≤ b j) :
     simp only [map_smul, Submodule.coe_sum, Submodule.coe_smul, map_sum, map_smul,
       Finset.sum_apply, Pi.smul_apply, φ]
     rfl
-  rw [hdecomp, Finset.sum_mul]
-  refine (norm_sum_le _ _).trans (sum_le_sum fun i _ => ?_)
-  rw [norm_smul, Real.norm_eq_abs]
-  calc |fieldDof i w| * ‖φ i x‖ ≤ (max (C i) 0 * B) * max (A i) 0 :=
-        mul_le_mul ((hC i w B hB).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) hB0))
-          ((hA i x hx).trans (le_max_left _ _)) (norm_nonneg _)
-          (mul_nonneg (le_max_right _ _) hB0)
-    _ = max (C i) 0 * max (A i) 0 * B := by ring
+  rw [hdecomp]
+  refine (norm_sum_le _ _).trans ?_
+  calc ∑ i, ‖fieldDof i w • φ i x‖ ≤ ∑ i, (∑ i, max (A i) 0) * |fieldDof i w| :=
+        sum_le_sum fun i _ => by
+          rw [norm_smul, Real.norm_eq_abs, mul_comm]
+          exact mul_le_mul_of_nonneg_right (((hA i x hx).trans (le_max_left _ _)).trans
+            (single_le_sum (f := fun i => max (A i) 0) (fun i _ => le_max_right _ _)
+              (mem_univ i))) (abs_nonneg _)
+    _ = _ := by rw [← mul_sum]
+
+/-- **Stability of `Π` in `C⁰([0, 1]ⁿ)`**. -/
+theorem exists_norm_cubeFieldInterp_le (hb : ∀ j, 1 ≤ b j) :
+    ∃ C, ∀ (w : FormField n) (B : ℝ), (∀ y ∈ closedCube n, ‖w y‖ ≤ B) →
+      ∀ x ∈ closedCube n, ‖cubeFieldInterp k hb w x‖ ≤ C * B := by
+  obtain ⟨A, hA0, hA⟩ := exists_norm_cubeFieldInterp_le_sum_dof (k := k) hb
+  have hC : ∀ i : CubeDofIdx b k, ∃ C, ∀ (w : FormField n) (B : ℝ),
+      (∀ y ∈ closedCube n, ‖w y‖ ≤ B) → |fieldDof i w| ≤ C * B :=
+    fun i => exists_abs_fieldMoment_le (dofFace_mem_Icc _ _) _
+  choose C hC using hC
+  refine ⟨A * ∑ i, max (C i) 0, fun w B hB x hx => ?_⟩
+  have hB0 : 0 ≤ B := (norm_nonneg _).trans (hB x hx)
+  refine (hA w x hx).trans ?_
+  rw [mul_assoc, sum_mul]
+  exact mul_le_mul_of_nonneg_left (sum_le_sum fun i _ =>
+    (hC i w B hB).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) hB0)) hA0
 
 /-! ### The interpolation error on the reference cube -/
 
@@ -390,72 +468,88 @@ theorem exists_norm_sub_cubeFieldInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j
 
 /-! ### The local interpolants on the cells of the mesh -/
 
-variable {N : ℕ} [NeZero N]
+variable {N : ℕ} {L : ℝ}
 
-/-- The pullback `ŵ = F_m^* w` of a form field to the local coordinates of the cell `m`,
-`F_m(y) = (y + m) / N`. -/
-def cellPullback (m : CubeCell fun _ : Fin n => N) (w : FormField n) : FormField n :=
-  affinePullback (scalarMat n (N : ℝ)⁻¹) (fun i => ((m i : ℕ) : ℝ) / N) w
+/-- The closed cube `[0, L]ⁿ`. -/
+abbrev closedBox (n : ℕ) (L : ℝ) : Set (Fin n → ℝ) := Set.univ.pi fun _ => Set.Icc 0 L
+
+variable [Fact (0 < L)] [NeZero N]
 
 /-- `F_m` maps the closed unit cube onto the closed cell `m`. -/
 theorem cellMap_mem_closedCell (m : CubeCell fun _ : Fin n => N) {y : Fin n → ℝ}
     (hy : y ∈ closedCube n) :
-    affine (scalarMat n (N : ℝ)⁻¹) (fun i => ((m i : ℕ) : ℝ) / N) y ∈ closedCell m := fun j => by
+    affine (scalarMat n (L / N)) (fun i => L / N * ((m i : ℕ) : ℝ)) y ∈ closedCell L m :=
+  fun j => by
   have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
+  have hL : L ≠ 0 := (Fact.out : 0 < L).ne'
   have := hy j (Set.mem_univ j)
   simp only [Set.mem_Icc] at this
   rw [affine_scalarMat, Pi.add_apply, Pi.smul_apply, smul_eq_mul,
-    show (N : ℝ) * ((N : ℝ)⁻¹ * y j + ((m j : ℕ) : ℝ) / N) = y j + (m j : ℕ) by field_simp]
+    show (N : ℝ) / L * (L / N * y j + L / N * ((m j : ℕ) : ℝ)) = y j + (m j : ℕ) by
+      field_simp]
   constructor <;> linarith [this.1, this.2]
 
-theorem closedCell_subset_closedCube (m : CubeCell fun _ : Fin n => N) :
-    closedCell m ⊆ closedCube n := fun y hy j _ => by
+omit [Fact (0 < L)] [NeZero N] in
+/-- The local coordinates of a point of the closed cell `m` lie in the closed unit cube. -/
+theorem affine_cellOffset_mem_closedCube {m : CubeCell fun _ : Fin n => N} {x : Fin n → ℝ}
+    (hx : x ∈ closedCell L m) : affine (scalarMat n (N / L)) (cellOffset m) x ∈ closedCube n :=
+  fun j _ => by
+  have := hx j
+  rw [affine_cellOffset]
+  constructor <;> linarith [this.1, this.2]
+
+theorem closedCell_subset_closedBox (m : CubeCell fun _ : Fin n => N) :
+    closedCell L m ⊆ closedBox n L := fun y hy j _ => by
   have hN0 : (0 : ℝ) < N := Nat.cast_pos.2 (Nat.pos_of_ne_zero (NeZero.ne N))
+  have hL0 : 0 < L := Fact.out
   have := hy j
   have hm' : ((m j : ℕ) : ℝ) + 1 ≤ N := by exact_mod_cast (m j).isLt
+  have hNL : 0 < (N : ℝ) / L := div_pos hN0 hL0
   constructor
-  · nlinarith [this.1, (Nat.cast_nonneg (m j : ℕ) : (0 : ℝ) ≤ (m j : ℕ))]
-  · nlinarith [this.2]
+  · have h0 : 0 ≤ (N : ℝ) / L * y j :=
+      (Nat.cast_nonneg (m j : ℕ)).trans this.1
+    exact nonneg_of_mul_nonneg_right (by linarith) hNL
+  · have h1 : (N : ℝ) / L * y j ≤ N / L * L := by
+      rw [div_mul_cancel₀ _ hL0.ne']; linarith [this.2]
+    exact le_of_mul_le_mul_left h1 hNL
 
-variable (k) in
+theorem closure_cubeRefinement_domain :
+    closure (cubeRefinement n L N).domain = closedBox n L := by
+  rw [cubeRefinement_domain, closure_pi_set]
+  simp only [closure_Ioo (Fact.out : 0 < L).ne]
+
 /-- **The canonical interpolant on the cell `m`**: `Π_m w = F_m^{-*} Π̂ F_m^* w`. -/
-def cellInterp (hb : ∀ j, 1 ≤ b j) (m : CubeCell fun _ : Fin n => N) (w : FormField n) :
+def cellInterp (L : ℝ) (k : ℕ) (hb : ∀ j, 1 ≤ b j) (m : CubeCell fun _ : Fin n => N) (w : FormField n) :
     FormField n :=
-  affinePullback (scalarMat n N) (cellOffset m) (cubeFieldInterp k hb (cellPullback m w))
-
-theorem affinePullback_cellPullback (m : CubeCell fun _ : Fin n => N) (w : FormField n) :
-    affinePullback (scalarMat n N) (cellOffset m) (cellPullback m w) = w := by
-  have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
-  refine affinePullback_affinePullback_of_comp_eq_id _ _ _ _ (fun x => funext fun i => ?_) w
-  rw [affine_scalarMat, Pi.add_apply, Pi.smul_apply, affine_cellOffset, smul_eq_mul]
-  field_simp
-  ring
+  affinePullback (scalarMat n (N / L)) (cellOffset m) (cubeFieldInterp k hb (cellPullback L m w))
 
 /-- **Local interpolation error on the cells**: for a `C^r` `k`-form field near the cell `m` of
-the mesh with `N` cells per direction (`1 ≤ r ≤ b_j`),
-`sup_m ‖w - Π_m w‖ ≤ C hʳ sup_m ‖Dʳ w‖`, `h = 1/N`, with `C` independent of `N`, `m` and `w`.
+the mesh of `(0, L)ⁿ` with `N` cells per direction (`1 ≤ r ≤ b_j`),
+`sup_m ‖w - Π_m w‖ ≤ C hʳ sup_m ‖Dʳ w‖`, `h = L/N`, with `C` independent of `L`, `N`, `m` and `w`.
 [ArnoldBoffiBonizzoni2015], §4 -/
 theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r ≤ b j) :
-    ∃ C, ∀ (N : ℕ) [NeZero N] (m : CubeCell fun _ : Fin n => N) (w : FormField n)
-      (U : Set (Fin n → ℝ)), IsOpen U → closedCell m ⊆ U → ContDiffOn ℝ r w U →
-      (∀ x, IsDeg k (w x)) → ∀ M : ℝ, (∀ x ∈ closedCell m, ‖iteratedFDeriv ℝ r w x‖ ≤ M) →
-      ∀ x ∈ closedCell m,
-        ‖w x - cellInterp k (fun j => hr.trans (hrb j)) m w x‖ ≤ C * ((N : ℝ)⁻¹) ^ r * M := by
+    ∃ C, ∀ (L : ℝ) [Fact (0 < L)] (N : ℕ) [NeZero N] (m : CubeCell fun _ : Fin n => N)
+      (w : FormField n)
+      (U : Set (Fin n → ℝ)), IsOpen U → closedCell L m ⊆ U → ContDiffOn ℝ r w U →
+      (∀ x, IsDeg k (w x)) → ∀ M : ℝ, (∀ x ∈ closedCell L m, ‖iteratedFDeriv ℝ r w x‖ ≤ M) →
+      ∀ x ∈ closedCell L m,
+        ‖w x - cellInterp L k (fun j => hr.trans (hrb j)) m w x‖ ≤ C * (L / N) ^ r * M := by
   set hb : ∀ j, 1 ≤ b j := fun j => hr.trans (hrb j)
   obtain ⟨C, hC⟩ := exists_norm_sub_cubeFieldInterp_le (k := k) hr hrb
-  refine ⟨C, fun N _ m w U hU hKU hw hk M hM x hx => ?_⟩
+  refine ⟨C, fun L _ N _ m w U hU hKU hw hk M hM x hx => ?_⟩
   have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
   have hN0 : (0 : ℝ) < N := by positivity
-  set h : ℝ := (N : ℝ)⁻¹
-  have hh : 0 < h := inv_pos.2 hN0
-  set t : Fin n → ℝ := fun i => ((m i : ℕ) : ℝ) / N
+  have hL0 : 0 < L := Fact.out
+  set h : ℝ := L / N
+  have hh : 0 < h := div_pos hL0 hN0
+  set t : Fin n → ℝ := fun i => L / N * ((m i : ℕ) : ℝ)
   set A := affine (scalarMat n h) t
   have hA : ∀ y, A y = h • y + t := affine_scalarMat h t
-  set wh := cellPullback m w
+  set wh := cellPullback L m w
   have hwh : ∀ y, wh y = h ^ k • w (A y) := fun y => by
     rw [hA]; exact affinePullback_scalarMat h t hk y
   -- the cell is the image of the unit cube
-  have hcube : ∀ y ∈ closedCube n, A y ∈ closedCell m := fun _ hy => cellMap_mem_closedCell m hy
+  have hcube : ∀ y ∈ closedCube n, A y ∈ closedCell L m := fun _ hy => cellMap_mem_closedCell m hy
   have hU' : IsOpen (A ⁻¹' U) := hU.preimage (continuous_affine _ _)
   have hKU' : closedCube n ⊆ A ⁻¹' U := fun y hy => hKU (hcube y hy)
   have hcd : ContDiffOn ℝ r wh (A ⁻¹' U) := by
@@ -465,12 +559,12 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
   have hdeg : ∀ y, IsDeg k (wh y) := fun y => IsDeg.affinePullback hk _ _ y
   -- the derivatives scale like `h^{k+r}`
   have hD : ∀ y ∈ closedCube n, ‖iteratedFDeriv ℝ r wh y‖ ≤ h ^ k * h ^ r * M := fun y hy => by
-    set L : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ) :=
+    set L' : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ) :=
       (LinearEquiv.smulOfNeZero ℝ (Fin n → ℝ) h hh.ne').toContinuousLinearEquiv
     set Φ : (Finset (Fin n) → ℝ) ≃L[ℝ] (Finset (Fin n) → ℝ) :=
       (LinearEquiv.smulOfNeZero ℝ (Finset (Fin n) → ℝ) (h ^ k) (pow_ne_zero _ hh.ne')
         ).toContinuousLinearEquiv
-    have hwh' : wh = Φ ∘ fun y => w (L y + t) := funext fun y => by
+    have hwh' : wh = Φ ∘ fun y => w (L' y + t) := funext fun y => by
       rw [hwh, hA]; rfl
     rw [hwh', ContinuousLinearEquiv.iteratedFDeriv_comp_left, iteratedFDeriv_comp_affine]
     refine (ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _).trans ?_
@@ -478,12 +572,12 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
       ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun v => by
         change ‖h ^ k • v‖ ≤ _
         rw [norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity)]
-    have hL : ‖(L : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ≤ h :=
+    have hL : ‖(L' : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ≤ h :=
       ContinuousLinearMap.opNorm_le_bound _ hh.le fun v => by
         change ‖h • v‖ ≤ _
         rw [norm_smul, Real.norm_eq_abs, abs_of_pos hh]
-    have hDw : ‖(iteratedFDeriv ℝ r w (L y + t)).compContinuousLinearMap
-        fun _ => (L : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ≤ h ^ r * M := by
+    have hDw : ‖(iteratedFDeriv ℝ r w (L' y + t)).compContinuousLinearMap
+        fun _ => (L' : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ≤ h ^ r * M := by
       refine (ContinuousMultilinearMap.norm_compContinuousLinearMap_le _ _).trans ?_
       rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin, mul_comm]
       have hML := hM _ (by have := hcube y hy; rwa [hA] at this)
@@ -492,11 +586,8 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
     calc _ ≤ h ^ k * (h ^ r * M) := mul_le_mul hΦ hDw (norm_nonneg _) (by positivity)
       _ = _ := by ring
   -- back to the cell
-  set y := affine (scalarMat n N) (cellOffset m) x
-  have hy : y ∈ closedCube n := fun j _ => by
-    have := hx j
-    simp only [y, affine_cellOffset]
-    constructor <;> linarith [this.1, this.2]
+  set y := affine (scalarMat n (N / L)) (cellOffset m) x
+  have hy : y ∈ closedCube n := affine_cellOffset_mem_closedCube hx
   have hdeg' : ∀ z, IsDeg k ((wh - cubeFieldInterp k hb wh) z) := fun z s hs => by
     have h1 := hdeg z s hs
     have h2 : cubeFieldInterp k hb wh z s = 0 := by
@@ -504,34 +595,91 @@ theorem exists_norm_sub_cellInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r �
       rw [(Subtype.prop ((isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv.symm
         fun i => fieldDof i wh)).1 s hs, map_zero]
     simp [h1, h2]
-  have hsplit : w x - cellInterp k hb m w x =
-      affinePullback (scalarMat n N) (cellOffset m) (wh - cubeFieldInterp k hb wh) x := by
-    have e : w x = affinePullback (scalarMat n N) (cellOffset m) wh x := by
+  have hsplit : w x - cellInterp L k hb m w x =
+      affinePullback (scalarMat n (N / L)) (cellOffset m) (wh - cubeFieldInterp k hb wh) x := by
+    have e : w x = affinePullback (scalarMat n (N / L)) (cellOffset m) wh x := by
       rw [affinePullback_cellPullback]
     rw [e]
     simp only [cellInterp, affinePullback_apply, ← pullback_sub]
     rfl
-  rw [hsplit, show affinePullback (scalarMat n N) (cellOffset m) (wh - cubeFieldInterp k hb wh) x
-      = (N : ℝ) ^ k • (wh - cubeFieldInterp k hb wh) y by
+  rw [hsplit, show affinePullback (scalarMat n (N / L)) (cellOffset m)
+      (wh - cubeFieldInterp k hb wh) x = ((N : ℝ) / L) ^ k • (wh - cubeFieldInterp k hb wh) y by
     rw [affinePullback_apply, pullback_scalarMat _ (hdeg' _)], norm_smul, Real.norm_eq_abs,
     abs_of_pos (by positivity)]
   have hest := hC wh _ hU' hKU' hcd hdeg _ hD y hy
-  calc (N : ℝ) ^ k * ‖(wh - cubeFieldInterp k hb wh) y‖
-      ≤ (N : ℝ) ^ k * (C * (h ^ k * h ^ r * M)) := by
+  calc ((N : ℝ) / L) ^ k * ‖(wh - cubeFieldInterp k hb wh) y‖
+      ≤ ((N : ℝ) / L) ^ k * (C * (h ^ k * h ^ r * M)) := by
         gcongr
         exact hest
     _ = C * h ^ r * M := by
-        rw [show (N : ℝ) ^ k * (C * (h ^ k * h ^ r * M)) = ((N : ℝ) * h) ^ k * (C * h ^ r * M) by
-          ring, show (N : ℝ) * h = 1 from mul_inv_cancel₀ hN, one_pow, one_mul]
+        rw [show ((N : ℝ) / L) ^ k * (C * (h ^ k * h ^ r * M)) =
+            ((N : ℝ) / L * h) ^ k * (C * h ^ r * M) by ring,
+          show (N : ℝ) / L * h = 1 by simp only [h]; field_simp, one_pow, one_mul]
+
+/-! ### Inverse estimates on the cells -/
+
+/-- The closed cell `m` is the homothetic image `h m + h [0, 1]ⁿ` of the unit cube. -/
+theorem closedCell_eq_image (m : CubeCell fun _ : Fin n => N) :
+    closedCell L m =
+      (fun y => (fun i => L / N * ((m i : ℕ) : ℝ)) + (L / N) • y) '' closedCube n := by
+  have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
+  have hL : L ≠ 0 := (Fact.out : 0 < L).ne'
+  ext x
+  constructor
+  · intro hx
+    refine ⟨affine (scalarMat n (N / L)) (cellOffset m) x, affine_cellOffset_mem_closedCube hx,
+      funext fun i => ?_⟩
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, affine_cellOffset]
+    field_simp
+    ring
+  · rintro ⟨y, hy, rfl⟩
+    have := cellMap_mem_closedCell (L := L) m hy
+    rwa [affine_cellPullback] at this
+
+omit [Fact (0 < L)] [NeZero N] in
+/-- The cell fields of `Q_b⁻Λᵏ` are polynomial `k`-forms of degree `≤ Σⱼ b_j`. -/
+theorem cellField_mem_polySpace {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
+    {m : CubeCell fun _ : Fin n => N} (hω : ω m ∈ cubeFormMinus ℝ b k) :
+    cellField L ω m ∈ polySpace n (∑ j, b j) k :=
+  affinePullback_mem_polySpace_scalarMat _ _
+    (Submodule.mem_map_of_mem (cubeFormMinus_le_polyForm b k hω))
+
+variable (b k) in
+/-- **Inverse estimates on the cells** for `Q_b⁻Λᵏ`, uniformly in the side `L`, the number of cells
+`N` and the cell: `h^{n/2} sup_m ‖u‖ ≤ A ‖u‖_{L²(m)}` and `h^{n/2} h Lip_m(u) ≤ A ‖u‖_{L²(m)}`,
+`h = L / N`, for every cell field `u` (from the inverse estimates of `P_{Σ b}Λᵏ` on homothetic
+copies of the unit cube, `exists_inverse_bound_image_of_le_polySpace`). -/
+theorem exists_cell_inverse_bound :
+    ∃ A, 0 ≤ A ∧ ∀ (L : ℝ) [Fact (0 < L)] (N : ℕ) [NeZero N]
+      (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)) (m : CubeCell fun _ : Fin n => N),
+      ω m ∈ cubeFormMinus ℝ b k →
+      (∀ x ∈ closedCell L m, √(L / N) ^ n * ‖cellField L ω m x‖ ≤
+        A * √(formL2Sq (closedCell L m) (cellField L ω m))) ∧
+      (∀ x ∈ closedCell L m, ∀ x' ∈ closedCell L m,
+        √(L / N) ^ n * (L / N) * ‖cellField L ω m x - cellField L ω m x'‖ ≤
+          A * ‖x - x'‖ * √(formL2Sq (closedCell L m) (cellField L ω m))) := by
+  obtain ⟨A, hA0, hA⟩ := exists_inverse_bound_image_of_le_polySpace
+    (le_refl (polySpace n (∑ j, b j) k))
+    (fun h t _ hu => affinePullback_mem_polySpace_scalarMat h t hu)
+    (isCompact_univ_pi fun _ => isCompact_Icc) (by
+      rw [interior_pi_set Set.finite_univ]
+      exact ⟨fun _ => 1 / 2, fun _ _ => by simp; norm_num⟩)
+    (convex_pi fun _ _ => convex_Icc (0 : ℝ) 1)
+  refine ⟨A, hA0, fun L _ N _ ω m hω => ?_⟩
+  have hh : 0 < L / N :=
+    div_pos Fact.out (Nat.cast_pos.2 (Nat.pos_of_ne_zero (NeZero.ne N)))
+  rw [closedCell_eq_image]
+  exact hA hh _ _ (cellField_mem_polySpace hω)
 
 /-! ### The global canonical interpolant of a form field -/
 
+omit [Fact (0 < L)] [NeZero N] in
 /-- **Field degrees of freedom are single-valued**: local degrees of freedom of two cells with the
 same global number take the same value on the pullbacks of a form field (they are the same
 moment on the common face). -/
 theorem fieldDof_cellPullback_eq_of_toGlobal_eq {m m' : CubeCell fun _ : Fin n => N}
     {i i' : CubeDofIdx b k} (h : toGlobal m i = toGlobal m' i') (w : FormField n) :
-    fieldDof i (cellPullback m w) = fieldDof i' (cellPullback m' w) := by
+    fieldDof i (cellPullback L m w) = fieldDof i' (cellPullback L m' w) := by
   obtain ⟨s, α⟩ := i
   obtain ⟨s', α'⟩ := i'
   obtain rfl : s = s' := Subtype.ext (congrArg (fun A => A.1.1) h)
@@ -551,77 +699,99 @@ theorem fieldDof_cellPullback_eq_of_toGlobal_eq {m m' : CubeCell fun _ : Fin n =
     · simp [dofTest, hjs, h2, h3]
     · simp [dofTest, hjs, h2, h3]
   -- the traces agree: the points of the two faces are the same points of the mesh
-  have hpt : ∀ y, (fun i => ((m i : ℕ) : ℝ) / N) +
-        (N : ℝ)⁻¹ • planePoint (dofFace (fun _ => none) s.1 α.1) y =
-      (fun i => ((m' i : ℕ) : ℝ) / N) +
-        (N : ℝ)⁻¹ • planePoint (dofFace (fun _ => none) s.1 α'.1) y := fun y => funext fun j => by
-    have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 (NeZero.ne N)
+  have hpt : ∀ y, (fun i => L / N * ((m i : ℕ) : ℝ)) +
+        (L / N) • planePoint (dofFace (fun _ => none) s.1 α.1) y =
+      (fun i => L / N * ((m' i : ℕ) : ℝ)) +
+        (L / N) • planePoint (dofFace (fun _ => none) s.1 α'.1) y := fun y => funext fun j => by
     simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, planePoint]
     rcases tri j with ⟨h1, h2⟩ | ⟨hjs, h1, h2, h3⟩ | ⟨hjs, h1, h2, h3⟩
     · rw [h1, dofFace, dofFace, h2]
     · simp only [dofFace, hjs, h2, h3, Option.none_or, false_or]
       norm_num
       have : ((m' j : ℕ) : ℝ) = (m j : ℕ) + 1 := by exact_mod_cast h1
-      rw [this]; field_simp
+      rw [this]; ring
     · simp only [dofFace, hjs, h2, h3, Option.none_or, false_or]
       norm_num
       have : ((m j : ℕ) : ℝ) = (m' j : ℕ) + 1 := by exact_mod_cast h1
-      rw [this]; field_simp
-  have htr : ∀ y, fieldTrace (dofFace (fun _ => none) s.1 α.1) (cellPullback m w) y =
-      fieldTrace (dofFace (fun _ => none) s.1 α'.1) (cellPullback m' w) y := fun y => by
+      rw [this]; ring
+  have htr : ∀ y, fieldTrace (dofFace (fun _ => none) s.1 α.1) (cellPullback L m w) y =
+      fieldTrace (dofFace (fun _ => none) s.1 α'.1) (cellPullback L m' w) y := fun y => by
     funext t
     simp only [fieldTrace, hnone, cellPullback, affinePullback_apply, affine_scalarMat]
     rw [add_comm, hpt y, add_comm]
   simp only [fieldDof, fieldDofAt, fieldMoment, hfree, htest, htr]
 
-variable (k) in
 /-- **The global canonical interpolant of a form field**: the global degrees of freedom of `w`,
 read in the cells, glued into `Q_b⁻Λᵏ(𝒯_h)`. -/
-def cubeFieldGlobalInterp (hb : ∀ j, 1 ≤ b j) (w : FormField n) :
+def cubeFieldGlobalInterp (L : ℝ) (k : ℕ) (hb : ∀ j, 1 ≤ b j) (w : FormField n) :
     CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n) :=
   ofGlobalDof (k := k) hb fun A => fieldDof (globalLocal
     (fun _ => Nat.one_le_iff_ne_zero.2 (NeZero.ne N)) hb A)
-    (cellPullback (globalCell (fun _ => Nat.one_le_iff_ne_zero.2 (NeZero.ne N)) A) w)
+    (cellPullback L (globalCell (fun _ => Nat.one_le_iff_ne_zero.2 (NeZero.ne N)) A) w)
 
+omit [Fact (0 < L)] in
 /-- `Π_h w` is tangentially continuous: it lies in `Q_b⁻Λᵏ(𝒯_h)` (hence in `HΛᵏ`). -/
 theorem cubeFieldGlobalInterp_mem (hb : ∀ j, 1 ≤ b j) (w : FormField n) :
-    cubeFieldGlobalInterp (N := N) k hb w ∈ cubeGlobalSpace (fun _ : Fin n => N) b k :=
+    cubeFieldGlobalInterp (N := N) L k hb w ∈ cubeGlobalSpace (fun _ : Fin n => N) b k :=
   ofGlobalDof_mem hb _
 
+omit [Fact (0 < L)] in
+theorem cubeFieldGlobalInterp_add (hb : ∀ j, 1 ≤ b j) {w w' : FormField n} (hw : Continuous w)
+    (hw' : Continuous w') :
+    cubeFieldGlobalInterp (N := N) L k hb (w + w') =
+      cubeFieldGlobalInterp L k hb w + cubeFieldGlobalInterp L k hb w' := by
+  rw [cubeFieldGlobalInterp, cubeFieldGlobalInterp, cubeFieldGlobalInterp, ← ofGlobalDof_add]
+  congr 1
+  funext A
+  simp only [cellPullback, affinePullback_add, Pi.add_apply]
+  exact fieldMoment_add (dofFace_mem_Icc _ _) _
+    (continuous_affinePullback _ _ hw).continuousOn (continuous_affinePullback _ _ hw').continuousOn
+
+omit [Fact (0 < L)] in
+theorem cubeFieldGlobalInterp_smul (hb : ∀ j, 1 ≤ b j) (c : ℝ) (w : FormField n) :
+    cubeFieldGlobalInterp (N := N) L k hb (c • w) = c • cubeFieldGlobalInterp L k hb w := by
+  rw [cubeFieldGlobalInterp, cubeFieldGlobalInterp, ← ofGlobalDof_smul]
+  congr 1
+  funext A
+  simp only [cellPullback, affinePullback_smul, Pi.smul_apply, smul_eq_mul]
+  exact fieldMoment_smul _ _ c _
+
+omit [Fact (0 < L)] in
 /-- On each cell, `Π_h w` is the local canonical interpolant. -/
 theorem cellField_cubeFieldGlobalInterp (hb : ∀ j, 1 ≤ b j) (w : FormField n)
     (m : CubeCell fun _ : Fin n => N) :
-    cellField (cubeFieldGlobalInterp k hb w) m = cellInterp k hb m w := by
+    cellField L (cubeFieldGlobalInterp L k hb w) m = cellInterp L k hb m w := by
   have hN : ∀ j : Fin n, 1 ≤ (fun _ => N) j := fun _ => Nat.one_le_iff_ne_zero.2 (NeZero.ne N)
   set e := (isUnisolvent_cubeDof (isFaceDeg_none hb) k).equiv
-  have hloc : (⟨cubeFieldGlobalInterp k hb w m, Subtype.prop _⟩ : cubeFormMinus ℝ b k) =
-      e.symm fun i => fieldDof i (cellPullback m w) := by
+  have hloc : (⟨cubeFieldGlobalInterp L k hb w m, Subtype.prop _⟩ : cubeFormMinus ℝ b k) =
+      e.symm fun i => fieldDof i (cellPullback L m w) := by
     refine (isUnisolvent_cubeDof (isFaceDeg_none hb) k).ext fun i => ?_
     change cubeDof (fun _ => none) i (ofGlobalDof hb _ m) = cubeDof (fun _ => none) i
-      (e.symm fun i => fieldDof i (cellPullback m w) : PolyForm ℝ (Fin n))
+      (e.symm fun i => fieldDof i (cellPullback L m w) : PolyForm ℝ (Fin n))
     rw [cubeDof_ofGlobalDof, fieldDof_cellPullback_eq_of_toGlobal_eq
       (toGlobal_globalLocal hN hb (toGlobal m i))]
     exact ((isUnisolvent_cubeDof (isFaceDeg_none hb) k).dof_equiv_symm
-      (fun i => fieldDof i (cellPullback m w)) i).symm
+      (fun i => fieldDof i (cellPullback L m w)) i).symm
   simp only [cellField, cellInterp, cubeFieldInterp]
   rw [← hloc]
 
-/-- **Interpolation error of the global interpolant**: on the mesh with `N` cells per direction,
-`sup_{[0,1]ⁿ} ‖w - Π_h w‖ ≤ C hʳ sup_{[0,1]ⁿ} ‖Dʳ w‖`, `h = 1/N`, for `C^r` `k`-form fields near the
-closed unit cube (`1 ≤ r ≤ b_j`), with `C` independent of `N` and `w`: the cell fields of
-`Π_h w ∈ Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ` approximate `w` on each cell. [ArnoldBoffiBonizzoni2015], §4 -/
+/-- **Interpolation error of the global interpolant**: on the mesh of `(0, L)ⁿ` with `N` cells per
+direction, `sup_{[0,L]ⁿ} ‖w - Π_h w‖ ≤ C hʳ sup_{[0,L]ⁿ} ‖Dʳ w‖`, `h = L/N`, for `C^r` `k`-form
+fields near the closed cube (`1 ≤ r ≤ b_j`), with `C` independent of `L`, `N` and `w`: the cell
+fields of `Π_h w ∈ Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ` approximate `w` on each cell.
+[ArnoldBoffiBonizzoni2015], §4 -/
 theorem exists_norm_sub_cubeFieldGlobalInterp_le {r : ℕ} (hr : 1 ≤ r) (hrb : ∀ j, r ≤ b j) :
-    ∃ C, ∀ (N : ℕ) [NeZero N] (w : FormField n) (U : Set (Fin n → ℝ)), IsOpen U →
-      closedCube n ⊆ U → ContDiffOn ℝ r w U → (∀ x, IsDeg k (w x)) → ∀ M : ℝ,
-      (∀ x ∈ closedCube n, ‖iteratedFDeriv ℝ r w x‖ ≤ M) →
-      ∀ (m : CubeCell fun _ : Fin n => N), ∀ x ∈ closedCell m,
-        ‖w x - cellField (cubeFieldGlobalInterp k (fun j => hr.trans (hrb j)) w) m x‖ ≤
-          C * ((N : ℝ)⁻¹) ^ r * M := by
+    ∃ C, ∀ (L : ℝ) [Fact (0 < L)] (N : ℕ) [NeZero N] (w : FormField n) (U : Set (Fin n → ℝ)),
+      IsOpen U → closedBox n L ⊆ U → ContDiffOn ℝ r w U → (∀ x, IsDeg k (w x)) → ∀ M : ℝ,
+      (∀ x ∈ closedBox n L, ‖iteratedFDeriv ℝ r w x‖ ≤ M) →
+      ∀ (m : CubeCell fun _ : Fin n => N), ∀ x ∈ closedCell L m,
+        ‖w x - cellField L (cubeFieldGlobalInterp L k (fun j => hr.trans (hrb j)) w) m x‖ ≤
+          C * (L / N) ^ r * M := by
   obtain ⟨C, hC⟩ := exists_norm_sub_cellInterp_le (k := k) hr hrb
-  refine ⟨C, fun N _ w U hU hKU hw hk M hM m x hx => ?_⟩
-  have hcell := closedCell_subset_closedCube m
+  refine ⟨C, fun L _ N _ w U hU hKU hw hk M hM m x hx => ?_⟩
+  have hcell := closedCell_subset_closedBox (L := L) m
   rw [cellField_cubeFieldGlobalInterp]
-  exact hC N m w U hU (hcell.trans hKU) hw hk M (fun y hy => hM y (hcell hy)) x hx
+  exact hC L N m w U hU (hcell.trans hKU) hw hk M (fun y hy => hM y (hcell hy)) x hx
 
 /-! ### Integration by parts on the unit cube -/
 
@@ -1020,57 +1190,72 @@ theorem cubeFieldInterp_congr_on (hb : ∀ j, 1 ≤ b j) {w w' : FormField n}
     MeasureTheory.setIntegral_congr_fun (MeasurableSet.univ_pi fun _ => measurableSet_Icc)
       fun _ hy => by rw [fieldTrace_congr (dofFace_mem_Icc _ _) h hy]
 
+/-- `Π_h` only sees the values on the closed cube `[0, L]ⁿ`. -/
+theorem cubeFieldGlobalInterp_congr (hb : ∀ j, 1 ≤ b j) {w w' : FormField n}
+    (h : ∀ x ∈ closedBox n L, w x = w' x) :
+    cubeFieldGlobalInterp (N := N) L k hb w = cubeFieldGlobalInterp L k hb w' := by
+  simp only [cubeFieldGlobalInterp]
+  congr 1
+  funext A
+  simp only [fieldDof, fieldDofAt, fieldMoment]
+  refine MeasureTheory.setIntegral_congr_fun (MeasurableSet.univ_pi fun _ => measurableSet_Icc)
+    fun y hy => ?_
+  rw [fieldTrace_congr (dofFace_mem_Icc _ _) (fun z hz => by
+    simp only [cellPullback, affinePullback_apply]
+    rw [h _ (closedCell_subset_closedBox _ (cellMap_mem_closedCell _ hz))]) hy]
+  rfl
+
 /-- **The cell interpolants commute with `d`**: `Π_m (d w) = d (Π_m w)` for `w` of class `C¹`
-near the closed unit cube. -/
+near the closed cube `[0, L]ⁿ`. -/
 theorem cellInterp_extDeriv (hb : ∀ j, 1 ≤ b j) (m : CubeCell fun _ : Fin n => N)
-    {w : FormField n} {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedCube n ⊆ U)
+    {w : FormField n} {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedBox n L ⊆ U)
     (hw : ContDiffOn ℝ 1 w U) :
-    cellInterp (k + 1) hb m (extDeriv w) = extDeriv (cellInterp k hb m w) := by
-  set A := affine (scalarMat n (N : ℝ)⁻¹) (fun i => ((m i : ℕ) : ℝ) / N)
+    cellInterp L (k + 1) hb m (extDeriv w) = extDeriv (cellInterp L k hb m w) := by
+  set A := affine (scalarMat n (L / N)) (fun i => L / N * ((m i : ℕ) : ℝ))
   have hmem : ∀ y ∈ closedCube n, A y ∈ U := fun _ hy =>
-    hKU (closedCell_subset_closedCube m (cellMap_mem_closedCell m hy))
-  have hd : ∀ y ∈ closedCube n, extDeriv (cellPullback m w) y = cellPullback m (extDeriv w) y :=
+    hKU (closedCell_subset_closedBox m (cellMap_mem_closedCell m hy))
+  have hd : ∀ y ∈ closedCube n,
+      extDeriv (cellPullback L m w) y = cellPullback L m (extDeriv w) y :=
     fun y hy => extDeriv_affinePullback_apply _ _
       (((hw.differentiableOn one_ne_zero) _ (hmem y hy)).differentiableAt
         (hU.mem_nhds (hmem y hy)))
   have hI := cubeFieldInterp_extDeriv (k := k) hb (hU.preimage (continuous_affine _ _)) hmem
     (contDiffOn_affinePullback _ _ hw)
-  change cubeFieldInterp (k + 1) hb (extDeriv (cellPullback m w)) =
-    extDeriv (cubeFieldInterp k hb (cellPullback m w)) at hI
+  change cubeFieldInterp (k + 1) hb (extDeriv (cellPullback L m w)) =
+    extDeriv (cubeFieldInterp k hb (cellPullback L m w)) at hI
   rw [cubeFieldInterp_congr_on hb hd] at hI
   funext x
   rw [cellInterp, cellInterp, hI]
-  exact (extDeriv_affinePullback_apply (ω := cubeFieldInterp k hb (cellPullback m w)) _ _
+  exact (extDeriv_affinePullback_apply (ω := cubeFieldInterp k hb (cellPullback L m w)) _ _
     ((contDiff_evalForm _ (r := 1)).differentiable one_ne_zero _)).symm
 
 /-- **The global interpolant commutes with `d`**: `Π_h (d w) = d (Π_h w)` cellwise, for `w` of
-class `C¹` near `[0, 1]ⁿ`. -/
+class `C¹` near `[0, L]ⁿ`. -/
 theorem cubeFieldGlobalInterp_extDeriv (hb : ∀ j, 1 ≤ b j) {w : FormField n}
-    {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedCube n ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
-    cubeFieldGlobalInterp (N := N) (k + 1) hb (extDeriv w) =
-      fun m => Koszul.extDeriv (cubeFieldGlobalInterp k hb w m) := by
+    {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedBox n L ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
+    cubeFieldGlobalInterp (N := N) L (k + 1) hb (extDeriv w) =
+      fun m => Koszul.extDeriv (cubeFieldGlobalInterp L k hb w m) := by
   funext m
-  have h : cellField (cubeFieldGlobalInterp (N := N) (k + 1) hb (extDeriv w)) m =
-      cellField (fun m => Koszul.extDeriv (cubeFieldGlobalInterp k hb w m)) m := by
+  have h : cellField L (cubeFieldGlobalInterp (N := N) L (k + 1) hb (extDeriv w)) m =
+      cellField L (fun m => Koszul.extDeriv (cubeFieldGlobalInterp L k hb w m)) m := by
     rw [cellField_cubeFieldGlobalInterp, cellInterp_extDeriv hb m hU hKU hw,
       ← cellField_cubeFieldGlobalInterp, extDeriv_cellField]
-  have h' := congrArg (affinePullback (fun i l => if i = l then (N : ℝ)⁻¹ else 0)
-    (fun i => ((m i : ℕ) : ℝ) / N)) h
-  rw [← evalForm_eq_affinePullback_cellField, ← evalForm_eq_affinePullback_cellField] at h'
+  have h' := congrArg (cellPullback L m) h
+  rw [cellPullback_cellField, cellPullback_cellField] at h'
   exact evalForm_injective h'
 
 open Feec.Domain in
 /-- **Commuting diagram on the mesh**: `Π_h w ∈ D(d_max)` and `d_max (Π_h w) = Π_h (d w)` in
-`L²((0, 1)ⁿ; Λ^{k+1})`, for `w` of class `C¹` near `[0, 1]ⁿ`. -/
+`L²((0, L)ⁿ; Λ^{k+1})`, for `w` of class `C¹` near `[0, L]ⁿ`. -/
 theorem cubeGlue_cubeFieldGlobalInterp_extDeriv [NeZero n] (hb : ∀ j, 1 ≤ b j)
-    {w : FormField n} {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedCube n ⊆ U)
+    {w : FormField n} {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hKU : closedBox n L ⊆ U)
     (hw : ContDiffOn ℝ 1 w U) :
-    ∃ h : cubeGlue n N k (cubeFieldGlobalInterp k hb w) ∈
-        ((extDerivOp ℝ n k).maximal (cubeRefinement n N).domain).domain,
-      (extDerivOp ℝ n k).maximal (cubeRefinement n N).domain ⟨_, h⟩ =
-        cubeGlue n N ((k : ℤ) + 1) (cubeFieldGlobalInterp (k + 1) hb (extDeriv w)) := by
-  have hω := mem_cubeGlobalSpace.1 (cubeFieldGlobalInterp_mem (N := N) (k := k) hb w)
-  obtain ⟨h, hval⟩ := cellField_mem_maximal_domain k hω.1 fun m => (hω.2 m).1
+    ∃ h : cubeGlue n L N k (cubeFieldGlobalInterp L k hb w) ∈
+        ((extDerivOp ℝ n k).maximal (cubeRefinement n L N).domain).domain,
+      (extDerivOp ℝ n k).maximal (cubeRefinement n L N).domain ⟨_, h⟩ =
+        cubeGlue n L N ((k : ℤ) + 1) (cubeFieldGlobalInterp L (k + 1) hb (extDeriv w)) := by
+  have hω := mem_cubeGlobalSpace.1 (cubeFieldGlobalInterp_mem (N := N) (L := L) (k := k) hb w)
+  obtain ⟨h, hval⟩ := cellField_mem_maximal_domain (L := L) k hω.1 fun m => (hω.2 m).1
   refine ⟨h, hval.trans ?_⟩
   rw [cubeFieldGlobalInterp_extDeriv hb hU hKU hw]
   rfl

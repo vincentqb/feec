@@ -244,6 +244,20 @@ theorem pullback_scalarMat {k : ℕ} (h : ℝ) {α : Finset (Fin n) → ℝ} (h�
   · rw [hs, mul_comm]
   · rw [hα s hs]; simp
 
+/-- The pullback by `h I` scales the component `dx_s` by `h^{#s}`. -/
+theorem pullback_scalarMat_apply (h : ℝ) (α : Finset (Fin n) → ℝ) (s : Finset (Fin n)) :
+    pullback (scalarMat n h) α s = h ^ #s * α s := by
+  have hα : IsDeg #s (fun t => if #t = #s then α t else 0) := fun t ht => ite_eq_right ht
+  have e : pullback (scalarMat n h) α s =
+      pullback (scalarMat n h) (fun t => if #t = #s then α t else 0) s := by
+    simp only [pullback_apply]
+    refine Finset.sum_congr rfl fun t _ => ?_
+    by_cases ht : #t = #s
+    · rw [ite_eq_left ht]
+    · rw [ite_eq_right ht, zero_mul, (isDeg_wedgeProd (scalarMat n h) t) s (Ne.symm ht), mul_zero]
+  rw [e, pullback_scalarMat h hα]
+  simp
+
 /-- **Pullback of a `k`-form by the homothety `y ↦ h y + t`**: `(F^* ω)(y) = hᵏ ω(h y + t)`. -/
 theorem affinePullback_scalarMat {k : ℕ} (h : ℝ) (t : Fin n → ℝ) {ω : FormField n}
     (hω : ∀ x, IsDeg k (ω x)) (y : Fin n → ℝ) :
@@ -481,26 +495,32 @@ theorem closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n
     (mapEquiv (boxMap t h hh) K).closedInterior = (fun y => t + h • y) '' K.closedInterior := by
   rw [closedInterior_mapEquiv, coe_boxMap]
 
-/-- **Change of variables** for the homothety `y ↦ t + h y`, `h > 0`. -/
-theorem integral_closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n)
+/-- **Change of variables under a homothety** `H y = t + h y`, `h > 0`, on a measurable set:
+`∫_{H S} f = hⁿ ∫_S f ∘ H`. -/
+theorem setIntegral_image_add_smul {S : Set (Fin n → ℝ)} (hS : MeasurableSet S)
     (t : Fin n → ℝ) {h : ℝ} (hh : 0 < h) (f : (Fin n → ℝ) → ℝ) :
-    ∫ x in (mapEquiv (boxMap t h hh.ne') K).closedInterior, f x =
-      h ^ n * ∫ y in K.closedInterior, f (t + h • y) := by
-  rw [closedInterior_mapEquiv_boxMap]
-  have hinj : Set.InjOn (fun y : Fin n → ℝ => t + h • y) K.closedInterior := fun y _ y' _ e => by
+    ∫ x in (fun y => t + h • y) '' S, f x = h ^ n * ∫ y in S, f (t + h • y) := by
+  have hinj : Set.InjOn (fun y : Fin n → ℝ => t + h • y) S := fun y _ y' _ e => by
     have : h • y = h • y' := by simpa using e
     exact smul_right_injective _ hh.ne' this
-  have hd : ∀ y ∈ K.closedInterior, HasFDerivWithinAt (fun y : Fin n → ℝ => t + h • y)
-      (h • ContinuousLinearMap.id ℝ (Fin n → ℝ)) K.closedInterior y := fun y _ =>
+  have hd : ∀ y ∈ S, HasFDerivWithinAt (fun y : Fin n → ℝ => t + h • y)
+      (h • ContinuousLinearMap.id ℝ (Fin n → ℝ)) S y := fun y _ =>
     (((hasFDerivAt_id y).const_smul h).const_add t).hasFDerivWithinAt
-  rw [integral_image_eq_integral_abs_det_fderiv_smul volume
-    K.isClosed_closedInterior.measurableSet hd hinj]
+  rw [integral_image_eq_integral_abs_det_fderiv_smul volume hS hd hinj]
   have hdet : |(h • ContinuousLinearMap.id ℝ (Fin n → ℝ)).det| = h ^ n := by
     rw [ContinuousLinearMap.det, ContinuousLinearMap.toLinearMap_smul, LinearMap.det_smul,
       ContinuousLinearMap.coe_id, LinearMap.det_id, mul_one, Module.finrank_fin_fun,
       abs_of_pos (pow_pos hh n)]
   simp_rw [hdet, smul_eq_mul]
   rw [integral_const_mul]
+
+/-- **Change of variables** for the homothety `y ↦ t + h y`, `h > 0`, on a simplex. -/
+theorem integral_closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n)
+    (t : Fin n → ℝ) {h : ℝ} (hh : 0 < h) (f : (Fin n → ℝ) → ℝ) :
+    ∫ x in (mapEquiv (boxMap t h hh.ne') K).closedInterior, f x =
+      h ^ n * ∫ y in K.closedInterior, f (t + h • y) := by
+  rw [closedInterior_mapEquiv_boxMap]
+  exact setIntegral_image_add_smul K.isClosed_closedInterior.measurableSet t hh f
 
 
 theorem exists_norm_le_of_mem_closedInterior (K : Affine.Simplex ℝ (Fin n → ℝ) n) :

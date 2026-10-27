@@ -957,15 +957,14 @@ theorem sum_integral_sq_le_of_abs_le {N k : ℕ} {T : Affine.Simplex ℝ (Fin n 
     _ ≤ 2 ^ n * (hN N ^ n * K ^ 2) :=
         mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
 
-/-- **The smoothed field on a simplex is bounded by the local mass**:
-`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` on `T`. -/
-theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
+/-- **The smoothed field near a simplex is bounded by the local mass**:
+`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` at every point `y ∈ cl Q` within `h_N` of `T`. -/
+theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
     (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (x : L2F ℝ (mesh n N).domain (formIdx n k))
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) :
-    ∀ y ∈ T.closedInterior, ∀ s,
-      |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
-        2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := by
-  intro y hy s
+    (T : Affine.Simplex ℝ (Fin n → ℝ) n) {y z : Fin n → ℝ} (hyc : y ∈ closure (cubeDomain n))
+    (hz : z ∈ T.closedInterior) (hyz : dist y z ≤ hN N) (s : Finset (Fin n)) :
+    |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
+      2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := by
   have hh := hN_pos N
   have hγ0 := hp.gamma_pos
   have hMρ : 1 / volume.real (Metric.closedBall (0 : Fin n → ℝ) p.bump.rIn) =
@@ -981,16 +980,28 @@ theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n �
     (by positivity))
   refine setIntegral_mono_set (integrable_sq_indicator _).integrableOn
     (Eventually.of_forall fun _ => sq_nonneg _) (Eventually.of_forall fun t ht => ?_)
-  have hyc : y ∈ closure (cubeDomain n) := by
-    rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure hT hy
   have h1 := hp.norm_dil_sub_le hyc
   have h2 : dist t (p.center + p.factor • (y - p.center)) ≤ γ * hN N / 32 := by
     have := Metric.mem_closedBall.1 ht; rwa [hp.rOut_eq] at this
-  refine Metric.mem_cthickening_of_dist_le t y _ _ hy ?_
-  calc dist t y ≤ dist t (p.center + p.factor • (y - p.center)) +
-        dist (p.center + p.factor • (y - p.center)) y := dist_triangle _ _ _
-    _ ≤ γ * hN N / 32 + γ * hN N / 4 := add_le_add h2 (by rw [dist_eq_norm]; exact h1)
+  refine Metric.mem_cthickening_of_dist_le t z _ _ hz ?_
+  calc dist t z ≤ dist t (p.center + p.factor • (y - p.center)) +
+        dist (p.center + p.factor • (y - p.center)) y + dist y z := dist_triangle4 _ _ _ _
+    _ ≤ γ * hN N / 32 + γ * hN N / 4 + hN N :=
+        add_le_add (add_le_add h2 (by rw [dist_eq_norm]; exact h1)) hyz
     _ ≤ 2 * hN N := by nlinarith
+
+/-- **The smoothed field on a simplex is bounded by the local mass**:
+`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` on `T`. -/
+theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
+    (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (x : L2F ℝ (mesh n N).domain (formIdx n k))
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) :
+    ∀ y ∈ T.closedInterior, ∀ s,
+      |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
+        2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := fun y hy s => by
+  have hyc : y ∈ closure (cubeDomain n) := by
+    rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure hT hy
+  exact hp.abs_smoothForm_le_locMass_of_near hγ1 x T hyc hy (by rw [dist_self]; exact
+    (hN_pos N).le) s
 
 /-- **The local `L²` bound of `Q_N = Π_h R`** on a simplex: `‖Q_N x‖²_{L²(T)} ≲ m_T(x)`. -/
 theorem sum_integral_sq_interp_le {N k : ℕ} {B : ℝ} (hB : DofBound n k B)

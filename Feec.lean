@@ -272,6 +272,8 @@ public import Feec.Models.Cube.MirrorWeakSymmetryTSD
 public import Feec.Models.Cube.Parity
 public import Feec.Models.Cube.ParitySmoother
 public import Feec.Models.Cube.ParitySmoothingEstimates
+public import Feec.Models.Cube.CubicalFiniteElementConvergence
+public import Feec.Models.Cube.CubicalSmoothingEstimates
 public import Feec.Models.Cube.PolyFiniteElementConvergence
 public import Feec.Models.Cube.PolyRate
 public import Feec.Models.Cube.PolySmoothingEstimates

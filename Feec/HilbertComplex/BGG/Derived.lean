@@ -23,7 +23,9 @@ bottom spaces, `N(d̃) ∩ N(S) = 0`, and no `S` is used twice, then `T / Γ E` 
 **the derived complex has the cohomology of the twisted complex** (`Data.derivedHomologyIso`).
 The cohomology of the twisted complex comes from the rows through the long exact sequence of
 `0 → V → T → Ṽ → 0` (`Data.twistShortComplex_shortExact`); in particular the derived complex is
-exact when both rows are (`Data.derived_acyclic`).
+exact when both rows are (`Data.derived_acyclic`). For bounded data on Hilbert spaces the derived
+complex is a closed Hilbert complex with closed range wherever the rows have finite-dimensional
+cohomology (`Feec.HilbertComplex.BGG.Analytic`).
 
 On `ComplexShape.up ℤ`, eliminating the top spaces after `J` and the bottom spaces before `J`
 is the BGG complex of Arnold and Hu ([ArnoldHu2021], (24)–(26)):
@@ -55,6 +57,8 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
 * `Data.quasiIso_Γ`, `Data.quasiIso_derived`: the two eliminations are quasi-isomorphisms.
 * `Data.derivedHomologyIso`, `Data.derived_acyclic`: **the derived complex has the cohomology of
   the twisted complex**, any length, any shape, any ring.
+* `Data.finiteDimensional_derived_homology`, `Data.finrank_derived_homology_le`: over a field,
+  `dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)` (through `Data.finrank_twistComplex_homology_le`).
 * `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021].
 * `Data.Γ_eq_segment_Γ`, `Segment.sup_range_eq_top`: the complex (5.1) as an elimination.
 * `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
@@ -352,6 +356,54 @@ theorem derived_acyclic (h : D.Eliminates E F) (hV : D.rowTop.Acyclic) (hVt : D.
     (D.derived E F).Acyclic := fun i => by
   rw [HomologicalComplex.exactAt_iff_isZero_homology]
   exact ((D.twistComplex_acyclic hV hVt) i).isZero_homology.of_iso (D.derivedHomologyIso h i)
+
+/-! ## Finite-dimensional cohomology -/
+
+section Field
+
+variable {K : Type u} [Field K] {V Vt : ι → Type v} [∀ i, AddCommGroup (V i)]
+  [∀ i, Module K (V i)] [∀ i, AddCommGroup (Vt i)] [∀ i, Module K (Vt i)]
+  (D : Data K c V Vt) (i : ι) [FiniteDimensional K (D.rowTop.homology i)]
+  [FiniteDimensional K (D.rowBot.homology i)]
+
+open Module
+
+/-- **The twisted complex has finite-dimensional cohomology where both rows do**, through the
+long exact sequence of `0 → V → T → Ṽ → 0`. -/
+theorem finiteDimensional_twistComplex_homology :
+    FiniteDimensional K (D.twistComplex.homology i) :=
+  have : FiniteDimensional K (D.twistShortComplex.X₁.homology i) :=
+    ‹FiniteDimensional K (D.rowTop.homology i)›
+  have : FiniteDimensional K (D.twistShortComplex.X₃.homology i) :=
+    ‹FiniteDimensional K (D.rowBot.homology i)›
+  D.twistShortComplex_shortExact.finiteDimensional_homology₂ i
+
+/-- `dim Hⁱ(T) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
+theorem finrank_twistComplex_homology_le :
+    finrank K (D.twistComplex.homology i) ≤
+      finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) :=
+  have : FiniteDimensional K (D.twistShortComplex.X₁.homology i) :=
+    ‹FiniteDimensional K (D.rowTop.homology i)›
+  have : FiniteDimensional K (D.twistShortComplex.X₃.homology i) :=
+    ‹FiniteDimensional K (D.rowBot.homology i)›
+  D.twistShortComplex_shortExact.finrank_homology₂_le i
+
+variable {D} {E F : ι → Prop} (h : D.Eliminates E F)
+include h
+
+/-- **The derived complex has finite-dimensional cohomology where both rows do.** -/
+theorem finiteDimensional_derived_homology : FiniteDimensional K ((D.derived E F).homology i) :=
+  have := D.finiteDimensional_twistComplex_homology i
+  (D.derivedHomologyIso h i).toLinearEquiv.symm.finiteDimensional
+
+/-- **`dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], §5.2 -/
+theorem finrank_derived_homology_le :
+    finrank K ((D.derived E F).homology i) ≤
+      finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) := by
+  rw [(D.derivedHomologyIso h i).toLinearEquiv.finrank_eq]
+  exact D.finrank_twistComplex_homology_le i
+
+end Field
 
 /-! ## The complex with weak symmetries (5.1) -/
 

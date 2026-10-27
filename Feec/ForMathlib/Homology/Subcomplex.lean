@@ -5,6 +5,7 @@ public import Mathlib.Algebra.Homology.HomologicalComplexAbelian
 public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.Algebra.Homology.ShortComplex.ModuleCat
+public import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 
 /-!
 # Subcomplexes and quotient complexes of complexes of modules
@@ -29,6 +30,8 @@ BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact
   acyclic, `g` if the first is.
 * `HomologicalComplex.quo_acyclic`, `HomologicalComplex.sub_acyclic`: elementwise criteria.
 * `HomologicalComplex.quasiIso_subι`, `HomologicalComplex.quasiIso_quoπ`.
+* `CategoryTheory.ShortComplex.ShortExact.finiteDimensional_homology₂`, `…finrank_homology₂_le`:
+  over a field, `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes.
 
 ## References
 
@@ -180,3 +183,41 @@ theorem quasiIso_quoπ (h : (K.sub P hP).Acyclic) : QuasiIso (K.quoπ P hP) :=
   (K.subQuo_shortExact P hP).quasiIso_g h
 
 end HomologicalComplex
+
+/-! ### Finite-dimensional homology in a short exact sequence -/
+
+namespace CategoryTheory.ShortComplex.ShortExact
+
+open Module
+
+variable {K : Type u} [Field K] {ι : Type*} {c : ComplexShape ι}
+  {S : ShortComplex (HomologicalComplex (ModuleCat.{v} K) c)}
+
+/-- In a short exact sequence `0 → X₁ → X₂ → X₃ → 0` of complexes of vector spaces, the homology
+of `X₂` at `i` is finite-dimensional when those of `X₁` and `X₃` are: `H(X₁) → H(X₂) → H(X₃)`
+is exact. -/
+theorem finiteDimensional_homology₂ (hS : S.ShortExact) (i : ι)
+    [FiniteDimensional K (S.X₁.homology i)] [FiniteDimensional K (S.X₃.homology i)] :
+    FiniteDimensional K (S.X₂.homology i) := by
+  have he := (hS.homology_exact₂ i).moduleCat_range_eq_ker
+  set g := (HomologicalComplex.homologyMap S.g i).hom
+  have : FiniteDimensional K (LinearMap.ker g) := by
+    rw [← he]; exact LinearMap.finiteDimensional_range _
+  have : FiniteDimensional K (S.X₂.homology i ⧸ LinearMap.ker g) :=
+    g.quotKerEquivRange.symm.finiteDimensional
+  exact Module.Finite.of_submodule_quotient (LinearMap.ker g)
+
+/-- `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes of vector spaces. -/
+theorem finrank_homology₂_le (hS : S.ShortExact) (i : ι)
+    [FiniteDimensional K (S.X₁.homology i)] [FiniteDimensional K (S.X₃.homology i)] :
+    finrank K (S.X₂.homology i) ≤ finrank K (S.X₁.homology i) + finrank K (S.X₃.homology i) := by
+  have := hS.finiteDimensional_homology₂ i
+  have he := (hS.homology_exact₂ i).moduleCat_range_eq_ker
+  set g := (HomologicalComplex.homologyMap S.g i).hom
+  have h1 : finrank K (LinearMap.ker g) ≤ finrank K (S.X₁.homology i) := by
+    rw [← he]; exact LinearMap.finrank_range_le _
+  have h3 : finrank K (LinearMap.range g) ≤ finrank K (S.X₃.homology i) := Submodule.finrank_le _
+  have := LinearMap.finrank_range_add_finrank_ker g
+  omega
+
+end CategoryTheory.ShortComplex.ShortExact

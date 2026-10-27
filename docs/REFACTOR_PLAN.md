@@ -273,6 +273,7 @@ Feec/
 ├── HilbertComplex/                                                          -- Feec.HilbertComplex
 │   ├── Basic.lean  Short.lean  Window.lean  Dual.lean  DomainComplex.lean
 │   ├── Hodge.lean (cohomology, harmonic, Hodge, Poincaré)  Compactness.lean
+│   ├── Homology.lean (cohomology = Mathlib homology of the complex of domains)
 │   ├── Dirac.lean (dirac = d+d†, wave = d−d†)  HodgeLaplacian.lean  Mixed.lean  HodgeWave.lean
 │   ├── Reducing.lean  Transport.lean  Equivariant.lean  Reality.lean
 │   ├── Total.lean (the total complex ⊕ Wⁱ →𝐝 ⊕ Wⁱ on one point; the Green operator of Δ)
@@ -290,6 +291,7 @@ Feec/
 │   │                                 -- constrainedFEEC; approxFEEC (variational crimes), its conforming case,
 │   │                                 -- ofComplex, ofComplexCrime (cochain defect), complex-level rates
 │   └── BGG/{Basic,Derived,DomainData,ToComplex,WeakSymmetry,Discrete}.lean -- Derived: BGG complex, any length
+│       BGG/Analytic.lean -- bounded BGG data: the derived complex as a closed Hilbert complex, closed range, dim H ≤ rows
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3,CubicalForm}.lean

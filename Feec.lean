@@ -157,6 +157,7 @@ public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Spectral
 public import Feec.HilbertComplex.Approximation.StaticFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
+public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Derived
 public import Feec.HilbertComplex.BGG.DomainData
@@ -183,6 +184,7 @@ public import Feec.HilbertComplex.HodgeHeat
 public import Feec.HilbertComplex.HodgeLaplacian
 public import Feec.HilbertComplex.HodgeSolution
 public import Feec.HilbertComplex.HodgeWave
+public import Feec.HilbertComplex.Homology
 public import Feec.HilbertComplex.InvariantCore
 public import Feec.HilbertComplex.InvariantCoreSpectral
 public import Feec.HilbertComplex.Mixed

@@ -17,6 +17,7 @@ the Hodge decomposition of `domainComplex` is the `V`-level Hodge decomposition.
 * `HilbertComplex.domainSpace i`: `Vⁱ` as the graph space of `d i (c.next i)`.
 * `HilbertComplex.domainIncl i : Vⁱ →L Wⁱ`: the inclusion.
 * `HilbertComplex.domainD i j : Vⁱ →L Vʲ`: the bounded differentials, `(x, d x) ↦ (d x, 0)`.
+* `HilbertComplex.ofBounded`: the Hilbert complex of a complex of bounded operators.
 * `HilbertComplex.domainComplex`: the domain complex.
 
 ## Main results
@@ -66,6 +67,19 @@ theorem graphFst_injective (T : E →ₗ.[𝕜] F) : Function.Injective T.graphF
 end LinearPMap
 
 namespace Feec.HilbertComplex
+
+/-- **The Hilbert complex of a complex of bounded operators** `δ i j : Xⁱ → Xʲ` (zero off the
+relation, `δ δ = 0`), with full domains. -/
+def ofBounded {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {X : ι → Type*}
+    [∀ i, NormedAddCommGroup (X i)] [∀ i, InnerProductSpace 𝕜 (X i)] [∀ i, CompleteSpace (X i)]
+    (δ : ∀ i j, X i →L[𝕜] X j) (shape : ∀ i j, ¬ c.Rel i j → δ i j = 0)
+    (comp : ∀ i j k x, δ j k (δ i j x) = 0) : HilbertComplex 𝕜 c X where
+  d i j := (δ i j : X i →ₗ[𝕜] X j).toPMap ⊤
+  shape i j h := by rw [shape i j h]; rfl
+  dense _ _ := by simp
+  closed i j := ContinuousLinearMap.isClosed_toPMap_top (δ i j)
+  mapsTo _ _ _ _ := Submodule.mem_top
+  d_comp_d i j k x := comp i j k x
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
@@ -163,13 +177,8 @@ theorem domainD_comp_domainD (i j k : ι) (v : H.domainSpace i) :
 /-- **The domain complex**: the spaces `Vⁱ` with the bounded differentials `domainD`, as a
 Hilbert complex on the same shape. [QuennevilleBelair2015], §4.2; see [BruningLesch1992], §2
 and [AFW2010], §3.1.2. -/
-def domainComplex : HilbertComplex 𝕜 c H.domainSpace where
-  d i j := (H.domainD i j : H.domainSpace i →ₗ[𝕜] H.domainSpace j).toPMap ⊤
-  shape i j h := by rw [H.domainD_eq_zero_of_not_rel h]; rfl
-  dense _ _ := by simp
-  closed i j := ContinuousLinearMap.isClosed_toPMap_top (H.domainD i j)
-  mapsTo _ _ _ _ := Submodule.mem_top
-  d_comp_d i j k x := H.domainD_comp_domainD i j k x
+def domainComplex : HilbertComplex 𝕜 c H.domainSpace :=
+  ofBounded H.domainD (fun _ _ h => H.domainD_eq_zero_of_not_rel h) H.domainD_comp_domainD
 
 theorem range_domainComplex_d (i j : ι) :
     LinearMap.range (H.domainComplex.d i j).toFun =

@@ -23,7 +23,10 @@ bottom spaces, `N(d̃) ∩ N(S) = 0`, and no `S` is used twice, then `T / Γ E` 
 **the derived complex has the cohomology of the twisted complex** (`Data.derivedHomologyIso`).
 The cohomology of the twisted complex comes from the rows through the long exact sequence of
 `0 → V → T → Ṽ → 0` (`Data.twistShortComplex_shortExact`); in particular the derived complex is
-exact when both rows are (`Data.derived_acyclic`).
+exact when both rows are (`Data.derived_acyclic`). For bounded data on Hilbert spaces the derived
+complex is a Hilbert complex of bounded operators; when moreover `Δ F` is closed and the
+elimination hypotheses hold, it has closed range wherever the rows have finite-dimensional
+cohomology (`Feec.HilbertComplex.BGG.Analytic`).
 
 On `ComplexShape.up ℤ`, eliminating the top spaces after `J` and the bottom spaces before `J`
 is the BGG complex of Arnold and Hu ([ArnoldHu2021], (24)–(26)):
@@ -55,12 +58,20 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
 * `Data.quasiIso_Γ`, `Data.quasiIso_derived`: the two eliminations are quasi-isomorphisms.
 * `Data.derivedHomologyIso`, `Data.derived_acyclic`: **the derived complex has the cohomology of
   the twisted complex**, any length, any shape, any ring.
-* `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021].
+* `Data.finiteDimensional_derived_homology`, `Data.finrank_derived_homology_le`: over a field,
+  `dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)` (through `Data.finrank_twistComplex_homology_le`).
+* `Data.bggHomologyIso`, `Data.bgg_acyclic`: the BGG complex of [ArnoldHu2021];
+  `Data.eliminates_bgg`: its elimination hypotheses from `Sⁱ` one-to-one before `J` and onto
+  modulo `d` after `J`.
+* `Data.bggXEquivOfLt`, `Data.bggXEquivOfBijective`, `Data.bggΓEquivKer`: its spaces
+  `Vⁱ / R(Sⁱ⁻¹)` before `J`, `Vᴶ / R(Sᴶ⁻¹)` at `J` (`Sᴶ` bijective) and `N(Sⁱ)` after `J`
+  ([ArnoldHu2021], (24)–(26)).
 * `Data.Γ_eq_segment_Γ`, `Segment.sup_range_eq_top`: the complex (5.1) as an elimination.
 * `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
-  the condition at every `J`. No de Rham or Sobolev instance of `Data.InjSurj` is formalized: on
-  the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto, and [ArnoldHu2021] use rows of shifted
-  regularity.
+  the condition at every `J`. The de Rham instance is the Hessian diagram on smooth fields
+  (`Feec.Domain.injSurj_hessianBGG`, whose BGG complex is the Hessian complex,
+  `Feec.Domain.hessianBGGIso`). On the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto;
+  [ArnoldHu2021] use rows of shifted regularity (not formalized).
 
 ## References
 
@@ -275,6 +286,11 @@ def derived : HomologicalComplex (ModuleCat.{v} R) c :=
   (D.ΓComplex E).quo (fun i => (D.Δ F i).comap (D.Γ E i).subtype) fun i j _ hx =>
     D.twist_mem_Δ F i j hx
 
+/-- Where the exact part vanishes, the derived space `Γⁱ / Δⁱ` is `Γⁱ`. -/
+def derivedXEquiv {i : ι} (h : D.Δ F i = ⊥) :
+    (D.Γ E i ⧸ (D.Δ F i).comap (D.Γ E i).subtype) ≃ₗ[R] D.Γ E i :=
+  Submodule.quotEquivOfEqBot _ (by rw [h, Submodule.comap_bot, Submodule.ker_subtype])
+
 /-- The projection `Γ E → derived E F`. -/
 def derivedπ : D.ΓComplex E ⟶ D.derived E F := HomologicalComplex.quoπ _ _ _
 
@@ -353,6 +369,54 @@ theorem derived_acyclic (h : D.Eliminates E F) (hV : D.rowTop.Acyclic) (hVt : D.
   rw [HomologicalComplex.exactAt_iff_isZero_homology]
   exact ((D.twistComplex_acyclic hV hVt) i).isZero_homology.of_iso (D.derivedHomologyIso h i)
 
+/-! ## Finite-dimensional cohomology -/
+
+section Field
+
+variable {K : Type u} [Field K] {V Vt : ι → Type v} [∀ i, AddCommGroup (V i)]
+  [∀ i, Module K (V i)] [∀ i, AddCommGroup (Vt i)] [∀ i, Module K (Vt i)]
+  (D : Data K c V Vt) (i : ι) [FiniteDimensional K (D.rowTop.homology i)]
+  [FiniteDimensional K (D.rowBot.homology i)]
+
+open Module
+
+/-- **The twisted complex has finite-dimensional cohomology where both rows do**, through the
+long exact sequence of `0 → V → T → Ṽ → 0`. -/
+theorem finiteDimensional_twistComplex_homology :
+    FiniteDimensional K (D.twistComplex.homology i) :=
+  have : FiniteDimensional K (D.twistShortComplex.X₁.homology i) :=
+    ‹FiniteDimensional K (D.rowTop.homology i)›
+  have : FiniteDimensional K (D.twistShortComplex.X₃.homology i) :=
+    ‹FiniteDimensional K (D.rowBot.homology i)›
+  D.twistShortComplex_shortExact.finiteDimensional_homology₂ i
+
+/-- `dim Hⁱ(T) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
+theorem finrank_twistComplex_homology_le :
+    finrank K (D.twistComplex.homology i) ≤
+      finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) :=
+  have : FiniteDimensional K (D.twistShortComplex.X₁.homology i) :=
+    ‹FiniteDimensional K (D.rowTop.homology i)›
+  have : FiniteDimensional K (D.twistShortComplex.X₃.homology i) :=
+    ‹FiniteDimensional K (D.rowBot.homology i)›
+  D.twistShortComplex_shortExact.finrank_homology₂_le i
+
+variable {D} {E F : ι → Prop} (h : D.Eliminates E F)
+include h
+
+/-- **The derived complex has finite-dimensional cohomology where both rows do.** -/
+theorem finiteDimensional_derived_homology : FiniteDimensional K ((D.derived E F).homology i) :=
+  have := D.finiteDimensional_twistComplex_homology i
+  (D.derivedHomologyIso h i).toLinearEquiv.symm.finiteDimensional
+
+/-- **`dim Hⁱ(derived) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], Theorem 6 -/
+theorem finrank_derived_homology_le :
+    finrank K ((D.derived E F).homology i) ≤
+      finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) := by
+  rw [(D.derivedHomologyIso h i).toLinearEquiv.finrank_eq]
+  exact D.finrank_twistComplex_homology_le i
+
+end Field
+
 /-! ## The complex with weak symmetries (5.1) -/
 
 variable (D)
@@ -384,17 +448,26 @@ abbrev bgg (J : ℤ) : CochainComplex (ModuleCat.{v} R) ℤ := D.derived (J < ·
 
 variable {D}
 
-theorem InjSurj.eliminates {J : ℤ} (h : D.InjSurj J) : D.Eliminates (J < ·) (· < J) where
+/-- **The elimination hypotheses of the BGG complex** reduce to the onto-modulo-`d` conditions
+after `J`, `R(dʲ⁻¹) + R(Sʲ⁻¹) = Vʲ` (regular decompositions, in the Sobolev setting), once the `Sⁱ`
+before `J` are one-to-one. -/
+theorem eliminates_bgg {J : ℤ} (hinj : ∀ i < J, Function.Injective (D.S i (i + 1)))
+    (htop : ∀ j, J < j → LinearMap.range (D.d (j - 1) j) ⊔ LinearMap.range (D.S (j - 1) j) = ⊤) :
+    D.Eliminates (J < ·) (· < J) where
   top j hj := by
     rw [CochainComplex.prev]
-    have := h.2 (j - 1) (by omega)
-    rw [sub_add_cancel] at this
-    rw [LinearMap.range_eq_top.2 this, sup_top_eq]
+    exact htop j hj
   bot i hi := by
-    rw [CochainComplex.next, LinearMap.ker_eq_bot.2 (h.1 i hi), inf_bot_eq]
+    rw [CochainComplex.next, LinearMap.ker_eq_bot.2 (hinj i hi), inf_bot_eq]
   disjoint i j hij hi hj := by
     change i + 1 = j at hij
     omega
+
+theorem InjSurj.eliminates {J : ℤ} (h : D.InjSurj J) : D.Eliminates (J < ·) (· < J) :=
+  eliminates_bgg h.1 fun j hj => by
+    have := h.2 (j - 1) (by omega)
+    rw [sub_add_cancel] at this
+    rw [LinearMap.range_eq_top.2 this, sup_top_eq]
 
 variable (D) in
 /-- Before `J`, nothing is eliminated from the top: `Γⁱ = Vⁱ × Ṽⁱ`. -/
@@ -442,6 +515,97 @@ theorem bgg_Δ_of_gt {J i : ℤ} (hi : J < i) : D.Δ (· < J) i = ⊥ :=
     obtain rfl : φ = 0 := hφ.resolve_left (by omega)
     obtain rfl : ψ = 0 := hψ.resolve_left (by rw [CochainComplex.prev]; omega)
     simp
+
+variable (D) in
+/-- After `J`, `Γⁱ = 0 × N(Sⁱ)` is `N(Sⁱ)`: `x ↦ x₂`. -/
+def bggΓEquivKer {J i : ℤ} (hi : J < i) : D.Γ (J < ·) i ≃ₗ[R] LinearMap.ker (D.S i (i + 1)) where
+  toFun x := ⟨(x : V i × Vt i).2, ((D.mem_bgg_Γ_of_gt hi).1 x.2).2⟩
+  invFun u := ⟨(0, u), (D.mem_bgg_Γ_of_gt hi).2 ⟨rfl, u.2⟩⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv x := Subtype.ext (Prod.ext ((D.mem_bgg_Γ_of_gt hi).1 x.2).1.symm rfl)
+  right_inv _ := rfl
+
+variable (D) in
+/-- At `J`, when `Sᴶ` is bijective, `Γᴶ = {(σ, (Sᴶ)⁻¹ dσ)}` is `Vᴶ`: `x ↦ x₁`. -/
+def bggΓEquivOfBijective {J : ℤ} (hS : Function.Bijective (D.S J (J + 1))) :
+    D.Γ (J < ·) J ≃ₗ[R] V J where
+  toFun x := (x : V J × Vt J).1
+  invFun σ := ⟨(σ, (LinearEquiv.ofBijective _ hS).symm (D.d J (J + 1) σ)),
+    (D.mem_bgg_Γ_self).2 ((LinearEquiv.ofBijective _ hS).apply_symm_apply _).symm⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv x := Subtype.ext (Prod.ext rfl (by
+    change (LinearEquiv.ofBijective _ hS).symm (D.d J (J + 1) (x : V J × Vt J).1) = _
+    rw [(D.mem_bgg_Γ_self).1 x.2]
+    exact (LinearEquiv.ofBijective _ hS).symm_apply_apply _))
+  right_inv _ := rfl
+
+variable (D) in
+/-- Before `J`: `x ∈ Δⁱ` iff `x₁ ∈ R(Sⁱ⁻¹)`. -/
+theorem mem_bgg_Δ_of_lt {J i : ℤ} (hi : i < J) {x : V i × Vt i} :
+    x ∈ D.Δ (· < J) i ↔ x.1 ∈ LinearMap.range (D.S (i - 1) i) := by
+  rw [D.mem_bgg_Δ_of_le hi.le]
+  constructor
+  · rintro ⟨φ, ψ, -, rfl⟩
+    exact ⟨-ψ, by simp⟩
+  · rintro ⟨ψ, hψ⟩
+    refine ⟨x.2 - D.dt (i - 1) i (-ψ), -ψ, Or.inl hi, Prod.ext ?_ ?_⟩
+    · simp [hψ]
+    · simp
+
+variable (D) in
+/-- **Before `J` the derived space is `Vⁱ / R(Sⁱ⁻¹)`**, `[(σ, φ)] ↦ [σ]`. [ArnoldHu2021], (24) -/
+def bggXEquivOfLt {J i : ℤ} (hi : i < J) :
+    (D.Γ (J < ·) i ⧸ (D.Δ (· < J) i).comap (D.Γ (J < ·) i).subtype) ≃ₗ[R]
+      (V i ⧸ LinearMap.range (D.S (i - 1) i)) :=
+  (Submodule.quotEquivOfEq _ _ (by
+      ext x
+      rw [Submodule.mem_comap, LinearMap.mem_ker, LinearMap.comp_apply, Submodule.mkQ_apply,
+        Submodule.Quotient.mk_eq_zero, Submodule.subtype_apply, D.mem_bgg_Δ_of_lt hi]
+      rfl)).trans
+    (LinearMap.quotKerEquivOfSurjective
+      ((LinearMap.range (D.S (i - 1) i)).mkQ ∘ₗ LinearMap.fst R (V i) (Vt i) ∘ₗ
+        (D.Γ (J < ·) i).subtype)
+      fun q => by
+        obtain ⟨σ, rfl⟩ := Submodule.mkQ_surjective _ q
+        exact ⟨⟨(σ, 0), by rw [D.bgg_Γ_of_lt hi]; trivial⟩, rfl⟩)
+
+theorem bggXEquivOfLt_mk {J i : ℤ} (hi : i < J) (x : D.Γ (J < ·) i) :
+    D.bggXEquivOfLt hi (Submodule.Quotient.mk x) =
+      Submodule.Quotient.mk (x : V i × Vt i).1 := rfl
+
+variable (D) in
+/-- **At `J`, when `Sᴶ` is bijective, the derived space is `Vᴶ / R(Sᴶ⁻¹)`**,
+`[(σ, (Sᴶ)⁻¹ dσ)] ↦ [σ]`. [ArnoldHu2021], (25) -/
+def bggXEquivOfBijective {J : ℤ} (hS : Function.Bijective (D.S J (J + 1))) :
+    (D.Γ (J < ·) J ⧸ (D.Δ (· < J) J).comap (D.Γ (J < ·) J).subtype) ≃ₗ[R]
+      (V J ⧸ LinearMap.range (D.S (J - 1) J)) :=
+  Submodule.Quotient.equiv _ _ (D.bggΓEquivOfBijective hS) (by
+    ext σ
+    simp only [Submodule.mem_map, Submodule.mem_comap, Submodule.subtype_apply]
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      obtain ⟨φ, ψ, hφ, hx⟩ := (D.mem_bgg_Δ_of_le le_rfl).1 hx
+      refine ⟨-ψ, ?_⟩
+      change _ = (x : V J × Vt J).1
+      rw [hx]
+      simp
+    · rintro ⟨ψ, rfl⟩
+      refine ⟨(D.bggΓEquivOfBijective hS).symm (D.S (J - 1) J ψ), ?_,
+        (D.bggΓEquivOfBijective hS).apply_symm_apply _⟩
+      rw [D.mem_bgg_Δ_of_le le_rfl]
+      refine ⟨0, -ψ, Or.inr rfl, Prod.ext (by simp; rfl) ?_⟩
+      change (LinearEquiv.ofBijective _ hS).symm (D.d J (J + 1) (D.S (J - 1) J ψ)) = _
+      rw [(LinearEquiv.ofBijective _ hS).symm_apply_eq]
+      have := D.anticomm (J - 1) J (J + 1) ψ
+      simp only [LinearEquiv.ofBijective_apply, zero_add, map_neg]
+      rw [this])
+
+theorem bggXEquivOfBijective_mk {J : ℤ} (hS : Function.Bijective (D.S J (J + 1)))
+    (x : D.Γ (J < ·) J) :
+    D.bggXEquivOfBijective hS (Submodule.Quotient.mk x) =
+      Submodule.Quotient.mk (x : V J × Vt J).1 := rfl
 
 /-- **The BGG complex has the cohomology of the twisted complex** [ArnoldHu2021], §5.2, under
 the injectivity/surjectivity condition at `J`. -/

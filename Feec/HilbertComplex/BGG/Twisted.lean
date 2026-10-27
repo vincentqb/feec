@@ -20,7 +20,8 @@ a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
 ## Main definitions
 
 * `LinearPMap.prodL2 T₁ T₂`: the direct sum of two partial maps on `WithLp 2` products.
-* `Feec.BGG.HilbertData 𝕜 c W Wt`: analytic BGG data of any length.
+* `Feec.BGG.HilbertData 𝕜 c W Wt`: analytic BGG data of any length; `HilbertData.ofSucc`: on
+  `ComplexShape.up α` from successive connecting maps.
 * `HilbertData.twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i))`.
 
 ## Main results
@@ -255,6 +256,77 @@ def twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i)) where
       simp only [twistD_apply_snd]
       exact sub_self _
     · rw [twistD_apply_snd, WithLp.zero_snd, key2 _ (by simp only [twistD_apply_snd]; rfl)]
+
+
+end HilbertData
+
+namespace HilbertData
+
+/-! ### Analytic BGG data on `ComplexShape.up α` from successive connecting maps -/
+
+section OfSucc
+
+variable {α : Type*} [AddRightCancelSemigroup α] [One α] [DecidableEq α]
+
+/-- `f i : Xⁱ → Yⁱ⁺¹` transported along `i + 1 = j`, and `0` otherwise. -/
+def succCLM {X Y : α → Type*} [∀ i, NormedAddCommGroup (X i)] [∀ i, NormedSpace 𝕜 (X i)]
+    [∀ i, NormedAddCommGroup (Y i)] [∀ i, NormedSpace 𝕜 (Y i)] (f : ∀ i, X i →L[𝕜] Y (i + 1))
+    (i j : α) : X i →L[𝕜] Y j :=
+  if h : i + 1 = j then h ▸ f i else 0
+
+variable {X Y : α → Type*} [∀ i, NormedAddCommGroup (X i)] [∀ i, NormedSpace 𝕜 (X i)]
+  [∀ i, NormedAddCommGroup (Y i)] [∀ i, NormedSpace 𝕜 (Y i)] (f : ∀ i, X i →L[𝕜] Y (i + 1))
+
+@[simp] theorem succCLM_succ (i : α) : succCLM f i (i + 1) = f i := by simp [succCLM]
+
+theorem succCLM_of_ne {i j : α} (h : i + 1 ≠ j) : succCLM f i j = 0 := by simp [succCLM, h]
+
+variable {U Ut : α → Type*} [∀ i, NormedAddCommGroup (U i)] [∀ i, InnerProductSpace 𝕜 (U i)]
+  [∀ i, CompleteSpace (U i)] [∀ i, NormedAddCommGroup (Ut i)] [∀ i, InnerProductSpace 𝕜 (Ut i)]
+  [∀ i, CompleteSpace (Ut i)]
+
+/-- **Analytic BGG data on `ComplexShape.up α`** from two Hilbert complexes and successive bounded
+connecting maps `S i : W̃ⁱ → Wⁱ⁺¹` with `S D(d̃) ⊆ D(d)` and `d S = -S d̃`. -/
+def ofSucc (H : HilbertComplex 𝕜 (ComplexShape.up α) U)
+    (Ht : HilbertComplex 𝕜 (ComplexShape.up α) Ut) (S : ∀ i, Ut i →L[𝕜] U (i + 1))
+    (mapsTo : ∀ i (φ : (Ht.d i (i + 1)).domain), S i φ ∈ (H.d (i + 1) (i + 1 + 1)).domain)
+    (anticomm : ∀ i (φ : (Ht.d i (i + 1)).domain),
+      H.d (i + 1) (i + 1 + 1) ⟨S i φ, mapsTo i φ⟩ = -S (i + 1) (Ht.d i (i + 1) φ)) :
+    HilbertData 𝕜 (ComplexShape.up α) U Ut where
+  H := H
+  Ht := Ht
+  S := succCLM S
+  shape_S _ _ h := succCLM_of_ne S h
+  S_mapsTo i j k φ := by
+    by_cases hij : i + 1 = j
+    · subst hij
+      by_cases hk : i + 1 + 1 = k
+      · subst hk
+        rw [succCLM_succ]
+        exact mapsTo i φ
+      · rw [H.domain_eq_top_of_not_rel hk]
+        exact Submodule.mem_top
+    · rw [succCLM_of_ne S hij]
+      exact Submodule.zero_mem _
+  anticomm i j k φ := by
+    by_cases hij : i + 1 = j
+    · subst hij
+      by_cases hk : i + 1 + 1 = k
+      · subst hk
+        conv_rhs => rw [succCLM_succ]
+        rw [← anticomm i φ]
+        exact congrArg _ (Subtype.ext (show succCLM S i (i + 1) (φ : Ut i) = S i φ by
+          rw [succCLM_succ]))
+      · rw [H.apply_eq_zero_of_not_rel hk, succCLM_of_ne S hk]
+        simp
+    · rw [Ht.apply_eq_zero_of_not_rel hij, map_zero, neg_zero]
+      have h0 : ∀ y : (H.d j k).domain, (y : U j) = succCLM S i j φ → H.d j k y = 0 :=
+        fun y hy => by
+          have : y = 0 := Subtype.ext (by rw [hy, succCLM_of_ne S hij]; rfl)
+          rw [this, LinearPMap.map_zero]
+      exact h0 _ rfl
+
+end OfSucc
 
 end HilbertData
 

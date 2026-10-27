@@ -33,9 +33,11 @@ is made (it needs the regularity of `Ω`).
 **As a BGG complex.** The Hessian complex is the output of the BGG construction
 (`Feec.BGG.Data.bgg`, `J = 0`) applied to the de Rham complex `ℝ → ℝ³ → ℝ³ → ℝ` stacked over the
 de Rham complex tensored with `ℝ³`, `ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, linked by `id`, `2 vskw` and
-`tr`: the first two rows of [ArnoldHu2021], (32). For such data `Feec.BGG.Data.bggHomologyIso`
-gives the cohomology of the output as that of the twisted complex; the identification of
-`hessianComplex` with `Data.bgg` of these rows is not formalized here.
+`tr`: the first two rows of [ArnoldHu2021], (32). On smooth fields this is formalized in
+`Feec.Domain.HessianBGG`: the diagram satisfies the injectivity/surjectivity condition at `J = 0`
+and its BGG complex is the smooth version of `hessianComplex` (same operators, same constraints),
+which therefore has the cohomology of the twisted de Rham complex. The identification of the `L²`
+realizations is not formalized.
 
 ## References
 

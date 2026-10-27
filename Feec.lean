@@ -31,6 +31,8 @@ public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
 public import Feec.Domain.Affine
+public import Feec.Domain.BGG
+public import Feec.Domain.BGGRealization
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained
@@ -38,10 +40,13 @@ public import Feec.Domain.ConstrainedComplex
 public import Feec.Domain.Cutoff
 public import Feec.Domain.DeRham
 public import Feec.Domain.DiagonalPullback
+public import Feec.Domain.DivDivBGG
 public import Feec.Domain.DivDivComplex
 public import Feec.Domain.Elasticity
+public import Feec.Domain.ElasticityBGG
 public import Feec.Domain.FiniteSpeed
 public import Feec.Domain.FormPullback
+public import Feec.Domain.HessianBGG
 public import Feec.Domain.HessianComplex
 public import Feec.Domain.L2Field
 public import Feec.Domain.LipschitzPullback
@@ -157,6 +162,7 @@ public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Spectral
 public import Feec.HilbertComplex.Approximation.StaticFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
+public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Derived
 public import Feec.HilbertComplex.BGG.DomainData
@@ -183,6 +189,7 @@ public import Feec.HilbertComplex.HodgeHeat
 public import Feec.HilbertComplex.HodgeLaplacian
 public import Feec.HilbertComplex.HodgeSolution
 public import Feec.HilbertComplex.HodgeWave
+public import Feec.HilbertComplex.Homology
 public import Feec.HilbertComplex.InvariantCore
 public import Feec.HilbertComplex.InvariantCoreSpectral
 public import Feec.HilbertComplex.Mixed

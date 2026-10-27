@@ -28,8 +28,11 @@ No closed-range statement is made (it needs the regularity of `Ω`).
 **As a BGG complex.** The div-div complex is the output of the BGG construction
 (`Feec.BGG.Data.bgg`, `J = 2`) applied to the de Rham complex tensored with `ℝ³`,
 `ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, stacked over the de Rham complex `ℝ → ℝ³ → ℝ³ → ℝ`, linked by
-`ι` (scalar matrices), `-mskw` and `id`: the last two rows of [ArnoldHu2021], (32). The
-identification of `divDivComplex` with `Data.bgg` of these rows is not formalized here.
+`ι` (scalar matrices), `-mskw` and `id`: the last two rows of [ArnoldHu2021], (32). On smooth
+fields this is formalized in `Feec.Domain.DivDivBGG`: the diagram satisfies the
+injectivity/surjectivity condition at `J = 2` and its BGG complex is the smooth version of
+`divDivComplex` (same operators, same constraints). The identification of the `L²` realizations is
+not formalized.
 
 ## References
 

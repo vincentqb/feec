@@ -6,7 +6,7 @@ import Feec.Instances.Corollaries
 The cube instance of slip Stokes flow (`Feec.Instances.Corollaries.Cube.FEM.slipStokes`) exhibited
 a nonzero datum of the constraint `ker 𝐝†` only in degree `0` (the constant `0`-form, through the
 helper `exists_ne_zero_window`); it now exhibits a nonzero velocity field in degree `1` for
-`n ≥ 2` (`Feec.HilbertComplex.exists_single_mem_ker_adjoint_totalD`,
+`n ≥ 2` (`Feec.HilbertComplex.exists_mem_orthogonal_cycles_inf_domain`,
 `Feec.Domain.maximalComplex_cycles_one_ne_top`). The theorems `slip_old_*` state the deleted
 results verbatim and derive them from the new API.
 

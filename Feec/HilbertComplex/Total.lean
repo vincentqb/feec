@@ -30,9 +30,8 @@ too (where a degree has no neighbour, `H` itself has no mixed problem).
   Stokes flow with slip boundary conditions); `exists_hodgeLaplacian_eq_adjoint`, the domain of
   `Δ` in terms of `𝐝` and `𝐝†`.
 * `HilbertComplex.single_mem_ker_adjoint_totalD_of_mem_orthogonal`: a form of degree `i`
-  orthogonal to `𝔅ⁱ` is in `ker 𝐝†`; `HilbertComplex.exists_single_mem_ker_adjoint_totalD`:
-  `ker 𝐝†` has a nonzero form of degree `i` whenever `𝔷ⁱ ≠ Wⁱ` (in degree `1`, a nonzero
-  divergence-free velocity with vanishing normal trace).
+  orthogonal to `𝔅ⁱ` is in `ker 𝐝†` (in degree `1`, a divergence-free velocity with vanishing
+  normal trace).
 
 ## References
 
@@ -252,17 +251,6 @@ theorem single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (hi : ∀ j, ¬ 
     rintro _ ⟨w, rfl⟩
     change ⟪H.d _ i w, v⟫ = 0
     rw [H.apply_eq_zero_of_not_rel (hi _), inner_zero_left]
-
-/-- **`ker 𝐝†` is nontrivial in every degree that `d` leaves nontrivially**: if `𝔷ⁱ ≠ Wⁱ`, then
-some nonzero `v ∈ (𝔷ⁱ)ᗮ ⊆ (𝔅ⁱ)ᗮ` has `single i v ∈ ker 𝐝†`. In degree `1` of `HΛ(Ω)`: a nonzero
-divergence-free field with vanishing normal trace, as soon as some `1`-form is not closed.
-[AFW2010], §3.2 -/
-theorem exists_single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (h : H.cycles i ≠ ⊤) :
-    ∃ v : W i, v ≠ 0 ∧ PiLp.single 2 i v ∈ (H.totalD†).ker := by
-  have : CompleteSpace (H.cycles i) := (H.isClosed_cycles i).completeSpace_coe
-  obtain ⟨v, hv, hv0⟩ := (Submodule.ne_bot_iff _).1 (mt Submodule.orthogonal_eq_bot_iff.1 h)
-  exact ⟨v, hv0, H.single_mem_ker_adjoint_totalD_of_mem_orthogonal
-    (Submodule.orthogonal_le (H.boundaries_le_cycles i) hv)⟩
 
 /-- The solution `(σ, u, p)` of the mixed problem of the total complex with data `f`. -/
 def totalMixedSolution (hcr : ∀ i, H.ClosedRangeAt i) :

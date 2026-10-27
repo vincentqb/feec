@@ -5485,4 +5485,4 @@ Feec.Instances.EinsteinBianchi.EuclideanVerdict	Feec.Instances.EuclideanBand.Euc
 Feec.Instances.EinsteinBianchi.einsteinBianchi_euclidean	Feec.Instances.EuclideanBand.einsteinBianchi_euclidean_band	generalize
 Feec.Instances.EinsteinBianchi.torusSobolevRate	-	deleted-helper
 Feec.Instances.EinsteinBianchi.mirrorSobolevRate	-	deleted-helper
-Feec.Instances.Corollaries.Cube.FEM.exists_ne_zero_window	Feec.HilbertComplex.exists_single_mem_ker_adjoint_totalD	generalize
+Feec.Instances.Corollaries.Cube.FEM.exists_ne_zero_window	-	deleted-helper

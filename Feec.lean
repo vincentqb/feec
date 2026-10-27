@@ -39,8 +39,10 @@ public import Feec.Domain.ConstrainedComplex
 public import Feec.Domain.Cutoff
 public import Feec.Domain.DeRham
 public import Feec.Domain.DiagonalPullback
+public import Feec.Domain.DivDivBGG
 public import Feec.Domain.DivDivComplex
 public import Feec.Domain.Elasticity
+public import Feec.Domain.ElasticityBGG
 public import Feec.Domain.FiniteSpeed
 public import Feec.Domain.FormPullback
 public import Feec.Domain.HessianBGG

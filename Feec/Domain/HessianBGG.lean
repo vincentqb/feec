@@ -233,29 +233,12 @@ theorem hessianBGG_Δ_eq_bot (i : ℤ) : (hessianBGG 𝕜).smoothData.Δ (· < 0
     simp
   · exact (hessianBGG 𝕜).smoothData.bgg_Δ_of_gt hi
 
-/-- Scalar fields indexed by `Fin 1` are scalar fields indexed by `Unit`. -/
-def scalarFieldsEquiv : smoothFields E 𝕜 (Fin 1) ≃ₗ[𝕜] smoothFieldsIn E (idMat Unit : _ → _ → 𝕜) where
-  toFun f := ⟨fun _ => (f : Fin 1 → E → 𝕜) 0, fun _ => f.2 0, matMulField_idMat _⟩
-  invFun g := ⟨fun _ => (g : Unit → E → 𝕜) (), fun _ => g.2.1 ()⟩
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-  left_inv f := Subtype.ext (funext fun i => by rw [Subsingleton.elim i 0])
-  right_inv _ := rfl
-
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
 /-- `S¹ u = 0` iff `u` is symmetric. -/
 theorem hessS1_apply_eq_zero_iff {u : Fin 3 × Fin 3 → E → 𝕜} :
     (∀ a : Fin 1 × Fin 3, u (a.2 + 1, a.2 + 2) - u (a.2 + 2, a.2 + 1) = 0) ↔
-      ∀ i j, u (i, j) = u (j, i) := by
-  constructor
-  · intro h i j
-    have h0 := sub_eq_zero.1 (h (0, 0))
-    have h1 := sub_eq_zero.1 (h (0, 1))
-    have h2 := sub_eq_zero.1 (h (0, 2))
-    simp only [Fin.isValue, Fin.reduceAdd, zero_add] at h0 h1 h2
-    fin_cases i <;> fin_cases j <;> simp_all
-  · intro h a
-    rw [h, sub_self]
+      ∀ i j, u (i, j) = u (j, i) :=
+  ⟨fun h => vskw_eq_zero_iff.1 fun k => h (0, k), fun h a => vskw_eq_zero_iff.2 h a.2⟩
 
 /-- The kernel of `S¹` is the symmetric constraint of the Hessian complex. -/
 def kerHessS1Equiv : LinearMap.ker ((hessianBGG 𝕜).smoothData.S 1 (1 + 1)) ≃ₗ[𝕜]

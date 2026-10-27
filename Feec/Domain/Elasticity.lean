@@ -34,8 +34,10 @@ No closed-range statement is made (it needs the regularity of `Ω`).
 (`Feec.BGG.Data.bgg`, `J = 1`) applied to two copies of the de Rham complex tensored with `ℝ³`,
 `ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, linked by `-mskw`, `S u = uᵀ - tr(u) I` and `2 vskw`: the middle two rows
 of [ArnoldHu2021], (32); the construction goes back to [Eastwood2000] (the BGG resolution) and
-[AFW2006], §11. The identification of `elasticityComplex` with `Data.bgg` of these rows is not
-formalized here.
+[AFW2006], §11. On smooth fields this is formalized in `Feec.Domain.ElasticityBGG`: the diagram
+satisfies the injectivity/surjectivity condition at `J = 1` and its BGG complex is the smooth
+version of `elasticityComplex` (same operators, same constraints). The identification of the `L²`
+realizations is not formalized.
 
 ## References
 

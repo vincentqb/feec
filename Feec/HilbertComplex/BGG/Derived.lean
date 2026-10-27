@@ -526,6 +526,72 @@ def bggΓEquivOfBijective {J : ℤ} (hS : Function.Bijective (D.S J (J + 1))) :
     exact (LinearEquiv.ofBijective _ hS).symm_apply_apply _))
   right_inv _ := rfl
 
+variable (D) in
+/-- Before `J`: `x ∈ Δⁱ` iff `x₁ ∈ R(Sⁱ⁻¹)`. -/
+theorem mem_bgg_Δ_of_lt {J i : ℤ} (hi : i < J) {x : V i × Vt i} :
+    x ∈ D.Δ (· < J) i ↔ x.1 ∈ LinearMap.range (D.S (i - 1) i) := by
+  rw [D.mem_bgg_Δ_of_le hi.le]
+  constructor
+  · rintro ⟨φ, ψ, -, rfl⟩
+    exact ⟨-ψ, by simp⟩
+  · rintro ⟨ψ, hψ⟩
+    refine ⟨x.2 - D.dt (i - 1) i (-ψ), -ψ, Or.inl hi, Prod.ext ?_ ?_⟩
+    · simp [hψ]
+    · simp
+
+variable (D) in
+/-- **Before `J` the derived space is `Vⁱ / R(Sⁱ⁻¹)`**, `[(σ, φ)] ↦ [σ]`. [ArnoldHu2021], (24) -/
+def bggXEquivOfLt {J i : ℤ} (hi : i < J) :
+    (D.Γ (J < ·) i ⧸ (D.Δ (· < J) i).comap (D.Γ (J < ·) i).subtype) ≃ₗ[R]
+      (V i ⧸ LinearMap.range (D.S (i - 1) i)) :=
+  (Submodule.quotEquivOfEq _ _ (by
+      ext x
+      rw [Submodule.mem_comap, LinearMap.mem_ker, LinearMap.comp_apply, Submodule.mkQ_apply,
+        Submodule.Quotient.mk_eq_zero, Submodule.subtype_apply, D.mem_bgg_Δ_of_lt hi]
+      rfl)).trans
+    (LinearMap.quotKerEquivOfSurjective
+      ((LinearMap.range (D.S (i - 1) i)).mkQ ∘ₗ LinearMap.fst R (V i) (Vt i) ∘ₗ
+        (D.Γ (J < ·) i).subtype)
+      fun q => by
+        obtain ⟨σ, rfl⟩ := Submodule.mkQ_surjective _ q
+        exact ⟨⟨(σ, 0), by rw [D.bgg_Γ_of_lt hi]; trivial⟩, rfl⟩)
+
+theorem bggXEquivOfLt_mk {J i : ℤ} (hi : i < J) (x : D.Γ (J < ·) i) :
+    D.bggXEquivOfLt hi (Submodule.Quotient.mk x) =
+      Submodule.Quotient.mk (x : V i × Vt i).1 := rfl
+
+variable (D) in
+/-- **At `J`, when `Sᴶ` is bijective, the derived space is `Vᴶ / R(Sᴶ⁻¹)`**,
+`[(σ, (Sᴶ)⁻¹ dσ)] ↦ [σ]`. [ArnoldHu2021], (25) -/
+def bggXEquivOfBijective {J : ℤ} (hS : Function.Bijective (D.S J (J + 1))) :
+    (D.Γ (J < ·) J ⧸ (D.Δ (· < J) J).comap (D.Γ (J < ·) J).subtype) ≃ₗ[R]
+      (V J ⧸ LinearMap.range (D.S (J - 1) J)) :=
+  Submodule.Quotient.equiv _ _ (D.bggΓEquivOfBijective hS) (by
+    ext σ
+    simp only [Submodule.mem_map, Submodule.mem_comap, Submodule.subtype_apply]
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      obtain ⟨φ, ψ, hφ, hx⟩ := (D.mem_bgg_Δ_of_le le_rfl).1 hx
+      refine ⟨-ψ, ?_⟩
+      change _ = (x : V J × Vt J).1
+      rw [hx]
+      simp
+    · rintro ⟨ψ, rfl⟩
+      refine ⟨(D.bggΓEquivOfBijective hS).symm (D.S (J - 1) J ψ), ?_,
+        (D.bggΓEquivOfBijective hS).apply_symm_apply _⟩
+      rw [D.mem_bgg_Δ_of_le le_rfl]
+      refine ⟨0, -ψ, Or.inr rfl, Prod.ext (by simp; rfl) ?_⟩
+      change (LinearEquiv.ofBijective _ hS).symm (D.d J (J + 1) (D.S (J - 1) J ψ)) = _
+      rw [(LinearEquiv.ofBijective _ hS).symm_apply_eq]
+      have := D.anticomm (J - 1) J (J + 1) ψ
+      simp only [LinearEquiv.ofBijective_apply, zero_add, map_neg]
+      rw [this])
+
+theorem bggXEquivOfBijective_mk {J : ℤ} (hS : Function.Bijective (D.S J (J + 1)))
+    (x : D.Γ (J < ·) J) :
+    D.bggXEquivOfBijective hS (Submodule.Quotient.mk x) =
+      Submodule.Quotient.mk (x : V J × Vt J).1 := rfl
+
 /-- **The BGG complex has the cohomology of the twisted complex** [ArnoldHu2021], §5.2, under
 the injectivity/surjectivity condition at `J`. -/
 def bggHomologyIso {J : ℤ} (h : D.InjSurj J) (i : ℤ) :

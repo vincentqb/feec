@@ -26,7 +26,8 @@ index, `𝕜 = ℝ` or `ℂ`), at every index `i`:
 * `HilbertComplex.closure_boundaries_sup_harmonic`: `cl 𝔅ⁱ ⊕ ℌⁱ = 𝔷ⁱ`.
 * `HilbertComplex.hodge`, `HilbertComplex.hodge_of_closedRangeAt`, `HilbertComplex.hodge_unique`
   (the three components are unique).
-* `HilbertComplex.hodge_domain`, `HilbertComplex.hodge_domain_of_closedRangeAt`.
+* `HilbertComplex.hodge_domain`, `HilbertComplex.hodge_domain_of_closedRangeAt`;
+  `HilbertComplex.exists_mem_orthogonal_cycles_inf_domain`: `Vⁱ ∩ (𝔷ⁱ)ᗮ ≠ 0` when `𝔷ⁱ ≠ Wⁱ`.
 * `HilbertComplex.closedRangeAt_iff_poincare`, `HilbertComplex.closedRangeAt_iff_poincare_adjoint`,
   `HilbertComplex.dual_closedRangeAt_iff`.
 * `HilbertComplex.cohomologyEquivHarmonic`,
@@ -307,6 +308,19 @@ theorem cycles_le_domain (i : ι) : H.cycles i ≤ (H.d i (c.next i)).domain :=
 theorem domain_eq_cycles_sup (i : ι) :
     (H.d i (c.next i)).domain = H.cycles i ⊔ (H.cycles i)ᗮ ⊓ (H.d i (c.next i)).domain :=
   (Submodule.sup_orthogonal_inf_of_hasOrthogonalProjection (H.cycles_le_domain i)).symm
+
+/-- **`Vⁱ ∩ (𝔷ⁱ)ᗮ ≠ 0` when `𝔷ⁱ ≠ Wⁱ`**: at a related pair `i → j`, if `dⁱ ≠ 0` then some nonzero
+`v ∈ D(d i j)` is orthogonal to the cycles (the domain is dense and `𝔷ⁱ` is closed). In degree `1`
+of `HΛ(Ω)`: a nonzero `u ∈ H(curl) ∩ (𝔷¹)ᗮ`, so `div u = 0` and `u · ν = 0`. -/
+theorem exists_mem_orthogonal_cycles_inf_domain {i j : ι} (hij : c.Rel i j)
+    (h : H.cycles i ≠ ⊤) : ∃ v ∈ (H.cycles i)ᗮ ⊓ (H.d i j).domain, v ≠ 0 := by
+  obtain rfl := c.next_eq' hij
+  by_contra! h0
+  have hdom := H.domain_eq_cycles_sup i
+  rw [(Submodule.eq_bot_iff _).2 h0, sup_bot_eq] at hdom
+  refine h (Submodule.eq_top_iff'.2 fun x => ?_)
+  have hx := H.dense i (c.next i) x
+  rwa [hdom, (H.isClosed_cycles i).closure_eq] at hx
 
 /-- **Hodge decomposition of the domain** (`V`-level, no closed range):
 `Vⁱ = cl 𝔅ⁱ ⊕ ℌⁱ ⊕ (Vⁱ ∩ cl 𝔅*ᵢ)`, pairwise orthogonal in `Wⁱ`; since the first two summands

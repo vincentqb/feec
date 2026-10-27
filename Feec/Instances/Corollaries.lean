@@ -22,15 +22,19 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
   of `H̊Λ` the other way round. The constrained FEEC verdict holds: well-posedness, energy
   conservation, convergence from every datum in `L²`, the rates (`Cube.FEM.acoustic`,
   `Parallelepiped.acoustic`, `StarShaped.MeshFamily.acoustic`);
-* **the Hodge heat equation on `ker 𝐝†` and slip Stokes flow** (`slipStokes`): `ker 𝐝†` reduces
-  the Hodge Laplacian (`HilbertComplex.isReducing_hodgeLaplacian_ker_adjoint`), so the heat
-  verdict of the window with the constraint `ker 𝐝†` (`slipStokesFEEC`) has a kept constraint: the
-  discrete heat flows from every convergent family of discrete data of a datum in `ker 𝐝†` have
-  constraint residuals tending to `0`. In degree `1` of `HΛ(Ω)`, `ker 𝐝†` is the divergence-free
-  fields with `u · ν = 0` and the Hodge heat flow on them is the unsteady Stokes flow with slip
-  boundary conditions `u · ν = 0`, `curl u × ν = 0` ([GiraultRaviart1986]); on the cube
-  (`Cube.FEM.slipStokes`), with a nonzero datum in the constraint in degree `0` (the constant
-  `0`-form, harmonic and stationary; no nonzero degree-`1` datum, a velocity field, is exhibited);
+* **unsteady Stokes flow with slip boundary conditions** (`slipStokes`): the Hodge heat equation
+  of a window with the constraint `ker 𝐝†` (`slipStokesFEEC`). In degree `1` of `HΛ(Ω)` a
+  velocity `u` orthogonal to the gradients (`div u = 0` and `u · ν = 0`) is a datum
+  `single 1 u ∈ ker 𝐝†` (`HilbertComplex.single_mem_ker_adjoint_totalD_of_mem_orthogonal`).
+  `ker 𝐝†` reduces the Hodge Laplacian (`HilbertComplex.isReducing_hodgeLaplacian_ker_adjoint`),
+  so on these fields `Δ` is the Stokes operator: the pressure gradient, the part of `Δ u` along
+  the gradients, vanishes, and the Hodge heat flow is `∂ₜ u + d†d u = 0` (`curl curl u` in `ℝ³`),
+  `div u = 0`, with the slip conditions `u · ν = 0`, `curl u × ν = 0` ([GiraultRaviart1986],
+  Ch. I; [Arnold2018], Ch. 4, Ch. 6). The heat verdict has a kept constraint: the discrete heat
+  flows from every convergent family of discrete data of a datum in `ker 𝐝†` have constraint
+  residuals tending to `0`. On the cube, `n ≥ 2` (`Cube.FEM.slipStokes`), a nonzero velocity `u ∈ HΛ¹ ∩ (𝔷¹)ᗮ` lies
+  in the constraint (`HilbertComplex.exists_mem_orthogonal_cycles_inf_domain`, since `x₀ dx₁` is
+  not closed), and the residuals of the discrete flows from its projections tend to `0`;
 * **Crank–Nicolson and the θ-schemes** for Maxwell's equations (`maxwell_fullyDiscrete`: the
   fully discrete verdicts, exact energy conservation of Crank–Nicolson, Gauss-law residuals
   tending to `0` as `h, τ → 0`; on the cube at every polynomial order,
@@ -51,7 +55,10 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thms 4.6, 4.7, 4.14, Prop. 4.17
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986]
+* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
+  Ch. I (the Stokes problem)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4 (the Hodge Laplacian),
+  Ch. 6 (the de Rham complex with boundary conditions)
 * [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
@@ -94,11 +101,13 @@ abbrev slipStokesFEEC (a : α) (m : ℕ) : ConstrainedFEEC (H.window a m) κ :=
   F.windowFEEC a m ((H.window a m).totalD†).ker
     (isClosed_ker (adjoint_isClosed (H.window a m).dense_totalD_domain))
 
-/-- **The Hodge heat equation on `ker 𝐝†` (slip Stokes flow)**: the heat FEEC verdict of the
-window with the constraint `ker 𝐝†`, the constraint is kept by the heat flow (it reduces `-Δ`,
-`isReducing_hodgeLaplacian_ker_adjoint`), and for every datum `x ∈ ker 𝐝†` and every family of
-discrete data with `ιₕ vₕ → x` the constraint residuals of the discrete heat flows tend to `0`
-uniformly on `[0, T]`. [AFW2010], §3.2; [GiraultRaviart1986] -/
+/-- **Unsteady Stokes flow with slip boundary conditions**, the Hodge heat equation on `ker 𝐝†`:
+the heat FEEC verdict of the window with the constraint `ker 𝐝†`, the constraint is kept by the
+heat flow (it reduces `-Δ`, `isReducing_hodgeLaplacian_ker_adjoint`, so the pressure is
+eliminated), and for every datum `x ∈ ker 𝐝†` (in degree `1` of `HΛ(Ω)`, a velocity with
+`div u = 0`, `u · ν = 0`) and every family of discrete data with `ιₕ vₕ → x` the constraint
+residuals of the discrete heat flows tend to `0` uniformly on `[0, T]`. [AFW2010], §3.2;
+[GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4, Ch. 6 -/
 theorem slipStokes (a : α) (m : ℕ) (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
     (slipStokesFEEC F a m).toHeat.Verdict ((slipStokesFEEC F a m).heatCore hcr) ∧
@@ -187,30 +196,48 @@ theorem acoustic (S : PolySeq) :
   ⟨(Corollaries.acoustic (polyFamily n S) 0).1, (Corollaries.acoustic (polyFamily n S) _).1,
     (Corollaries.acoustic (polyFamilyMin n S) 0).1, (Corollaries.acoustic (polyFamilyMin n S) _).1⟩
 
-omit [NeZero n] in
-/-- **The constant `0`-form**, nonzero, in the first degree of a window `HΛ⁰(Q) → ⋯`. -/
-theorem exists_ne_zero_window (m : ℕ) :
-    ∃ v : L2F ℝ (cubeDomain n) (formIdx n (0 + (((0 : Fin (m + 1)) : ℕ) : ℤ))), v ≠ 0 := by
-  rw [show (0 : ℤ) + (((0 : Fin (m + 1)) : ℕ) : ℤ) = 0 by simp]
-  exact ⟨oneForm n, oneForm_ne_zero⟩
-
-/-- **Slip Stokes flow on the cube**: the conclusions of `slipStokes` for the window
-`HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` (`heatWindow`) and every admissible sequence `S`, and the constraint
-`ker 𝐝†` contains a nonzero datum: the constant `0`-form, in degree `0`, which the heat flow
-leaves stationary (not a velocity field of degree `1`). -/
-theorem slipStokes (S : PolySeq) :
+/-- **Unsteady Stokes flow with slip boundary conditions on the cube** `Q = (0, ½)ⁿ`, `n ≥ 2`, for
+every admissible sequence `S`: the conclusions of `slipStokes` for the window
+`HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` (`heatWindow`), and a nonzero velocity field `u ∈ HΛ¹(Q)` (`H(curl)` in
+`ℝ³`) orthogonal to the closed `1`-forms, hence to the gradients of `H¹(Q)` (`div u = 0`,
+`u · ν = 0`), whose datum `single 1 u` lies in the constraint `ker 𝐝†`
+(`exists_mem_orthogonal_cycles_inf_domain`: `x₀ dx₁` is not closed,
+`Feec.Domain.maximalComplex_cycles_one_ne_top`); the discrete heat flows from its projections
+`Πₕ (single 1 u)` have constraint residuals tending to `0` uniformly on every `[0, T]`. The
+field `u` is not given in closed form, and `u ∈ D(Δ)` is not claimed: the slip condition
+`curl u × ν = 0` is the natural boundary condition of `Δ`, not a condition on the datum. For
+`n = 1`, `HΛ¹(Q)` has no nonzero divergence-free field with `u · ν = 0`; the heat verdict of the
+window still holds (`Corollaries.slipStokes`). [GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4, Ch. 6 -/
+theorem slipStokes (S : PolySeq) (hn : 2 ≤ n) :
     ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Verdict
         ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)) ∧
       (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Keeps
         (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.K) ∧
-      ∃ x ∈ ((heatWindow n).totalD†).ker, x ≠ 0 := by
+      ∃ u : L2F ℝ (cubeDomain n) (formIdx n 1), u ≠ 0 ∧
+        u ∈ ((heatWindow n).cycles ⟨1, by omega⟩)ᗮ ⊓ ((heatWindow n).d _ ⟨2, by omega⟩).domain ∧
+        PiLp.single 2 (⟨1, by omega⟩ : Fin (n + 1)) u ∈ ((heatWindow n).totalD†).ker ∧
+        ∀ T, TendstoUniformlyOn (fun N t => infDist
+          ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.sol N
+            ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.proj N
+              (PiLp.single 2 ⟨1, by omega⟩ u)) t)
+          (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.K) (fun _ => 0)
+          (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.l (Icc 0 T) := by
   classical
-  obtain ⟨V, hK, -⟩ := Corollaries.slipStokes (polyFamily n S) 0 (n + 1)
+  obtain ⟨V, hK, hres⟩ := Corollaries.slipStokes (polyFamily n S) 0 (n + 1)
     (closedRangeAt_heatWindow n)
-  obtain ⟨v, hv⟩ := exists_ne_zero_window n n
-  refine ⟨⟨V, hK⟩, PiLp.single 2 0 v,
-    (heatWindow n).single_mem_ker_adjoint_totalD (fun j => by simp) v, fun h => hv ?_⟩
-  simpa using congrArg (fun z => z 0) h
+  have hcyc : (heatWindow n).cycles ⟨1, by omega⟩ ≠ ⊤ :=
+    ((heatWindow n).cycles_eq (show (ComplexShape.window (n + 1)).Rel ⟨1, by omega⟩ ⟨2, by omega⟩
+      from rfl)).symm ▸ ((complex n).cycles_eq (show (ComplexShape.up ℤ).Rel (1 : ℤ) (1 + 1)
+        from rfl)) ▸ Feec.Domain.maximalComplex_cycles_one_ne_top (isOpen_cubeDomain n)
+          (isBounded_cubeDomain n) ⟨center n, center_mem_cubeDomain n⟩ hn
+  obtain ⟨u, hu, hu0⟩ := (heatWindow n).exists_mem_orthogonal_cycles_inf_domain
+    (show (ComplexShape.window (n + 1)).Rel ⟨1, by omega⟩ ⟨2, by omega⟩ from rfl) hcyc
+  have hK0 := (heatWindow n).single_mem_ker_adjoint_totalD_of_mem_orthogonal
+    (Submodule.orthogonal_le ((heatWindow n).boundaries_le_cycles _) hu.1)
+  refine ⟨⟨V, hK⟩, u, hu0, hu, hK0, hres hK0 (DissipFEEC.tendsto_incl_proj _
+    ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)) ?_)⟩
+  rw [ConstrainedFEEC.dense_heatCore_data]
+  exact Submodule.mem_top
 
 /-- **Crank–Nicolson for Maxwell's equations on the cube at every polynomial order**
 (`Feec.Instances.Maxwell.cubePolyPMC`, `cubePolyPEC`): the conclusions of

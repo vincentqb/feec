@@ -5487,3 +5487,4 @@ Feec.Instances.EinsteinBianchi.torusSobolevRate	-	deleted-helper
 Feec.Instances.EinsteinBianchi.mirrorSobolevRate	-	deleted-helper
 Feec.FiniteElement.Cube.evalForm_eq_affinePullback_cellField	Feec.FiniteElement.Cube.cellPullback_cellField	rename
 Feec.FiniteElement.Cube.closedCell_subset_closedCube	Feec.FiniteElement.Cube.closedCell_subset_closedBox	generalize
+Feec.Instances.Corollaries.Cube.FEM.exists_ne_zero_window	-	deleted-helper

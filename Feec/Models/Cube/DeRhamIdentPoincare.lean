@@ -603,23 +603,8 @@ def constForm {Ω : Set (Fin n → ℝ)} (hΩm : MeasurableSet Ω) (hb : Bornolo
 
 theorem constForm_ne_zero {Ω : Set (Fin n → ℝ)} (hΩm : MeasurableSet Ω)
     (hb : Bornology.IsBounded Ω) (hpos : volume Ω ≠ 0) {k : ℤ} (s₀ : formIdx n k) :
-    constForm hΩm hb s₀ ≠ 0 := by
-  intro h
-  have h1 := congrArg (fun v : L2F ℝ Ω (formIdx n k) => (v s₀ : (Fin n → ℝ) → ℝ)) h
-  have hae : (fun _ : Fin n → ℝ => (1 : ℝ)) =ᵐ[volume.restrict Ω] 0 := by
-    have e1 := MemLp.coeFn_toLp (memLp_constFun hΩm hb s₀ s₀)
-    have e2 := Lp.coeFn_zero ℝ 2 (volume.restrict Ω)
-    simp only [PiLp.zero_apply] at h1
-    change ((memLp_constFun hΩm hb s₀ s₀).toLp _ : (Fin n → ℝ) → ℝ) = _ at h1
-    filter_upwards [e1, e2] with y hy1 hy2
-    have := congrFun h1 y
-    rw [hy1] at this
-    simp only [constFun, ite_true] at this
-    rw [this, hy2]
-  rw [Filter.EventuallyEq, ae_iff] at hae
-  simp only [Pi.zero_apply, one_ne_zero, not_false_eq_true, ofPred_true] at hae
-  rw [Measure.restrict_apply_univ] at hae
-  exact hpos hae
+    constForm hΩm hb s₀ ≠ 0 :=
+  Feec.Domain.toL2F_ne_zero _ hpos (i := s₀) fun _ => by simp [constFun]
 
 theorem volume_Q_ne_zero : volume (Q (Fin n)) ≠ 0 :=
   (isOpen_Q.measure_pos volume ⟨fun _ => 1 / 4, mem_Q.2 fun _ => by norm_num⟩).ne'

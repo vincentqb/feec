@@ -20,7 +20,7 @@ declaration is listed under a thesis id when
 Every backticked name in a list item below is checked by `lake exe feec-mapcheck`
 (the declaration must exist).
 
-Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1007 distinct declarations (133 current homes of thesis-numbered old names).
+Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1009 distinct declarations (133 current homes of thesis-numbered old names).
 
 ## Results
 
@@ -204,8 +204,8 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 
 - named: `Feec.Models.BoundedDomain.hessCurl_existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.divFree_propagates_neg`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`
 - old: Feec.BoundedSym.symComplexB_prop_4_18, Feec.Constraints.prop_4_18, Feec.Constraints.prop_4_18_i, Feec.Constraints.prop_4_18_ii, Feec.Constraints.prop_4_18_unconditional
-- cited: `Feec.HilbertComplex.DissipFEEC.crankNicolson_pow_mem`, `Feec.HilbertComplex.DissipFEEC.thetaScheme_pow_mem`, `Feec.Models.BoundedDomain.hessCurl_existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isReducedSolution_of_isStrongSolution`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`, `Feec.TimeStepping.IsCNStep.mem_of_isReducing`, `Feec.TimeStepping.IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`, `Feec.TimeStepping.IsReducedCNStep.isFullCNStep_zero`, `Feec.TimeStepping.mem_of_forall_isCNStep`, `Feec.TimeStepping.thetaStep_mem_of_isReducing`, `Feec.TimeStepping.thetaStep_mem_of_keeps`, `Feec.TimeStepping.thetaStep_mem_of_mapsTo`
-- modules: Feec.HilbertComplex.Approximation.FullyDiscrete, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.ReducedSystem, Feec.HilbertComplex.Reducing, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.SymCurl, Feec.TimeStepping.Cayley, Feec.TimeStepping.Convergence, Feec.TimeStepping.Theta
+- cited: `Feec.HilbertComplex.DissipFEEC.crankNicolson_pow_mem`, `Feec.HilbertComplex.DissipFEEC.rationalScheme_pow_mem`, `Feec.HilbertComplex.DissipFEEC.thetaScheme_pow_mem`, `Feec.Models.BoundedDomain.hessCurl_existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.IsReducedSolution.mem_ker_adjoint`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution`, `Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`, `Feec.ShortHilbertComplex.isReducedSolution_of_isStrongSolution`, `Feec.ShortHilbertComplex.isStrongSolution_of_isReducedSolution`, `Feec.ShortHilbertComplex.reducedSolution_of_exists`, `Feec.TimeStepping.IsCNStep.mem_of_isReducing`, `Feec.TimeStepping.IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep`, `Feec.TimeStepping.IsReducedCNStep.isFullCNStep_zero`, `Feec.TimeStepping.RationalScheme.apply_mem_of_mapsTo`, `Feec.TimeStepping.mem_of_forall_isCNStep`, `Feec.TimeStepping.thetaStep_mem_of_isReducing`, `Feec.TimeStepping.thetaStep_mem_of_keeps`, `Feec.TimeStepping.thetaStep_mem_of_mapsTo`
+- modules: Feec.HilbertComplex.Approximation.FullyDiscrete, Feec.HilbertComplex.Approximation.RationalScheme, Feec.HilbertComplex.InvariantCore, Feec.HilbertComplex.InvariantCoreSpectral, Feec.HilbertComplex.ReducedSystem, Feec.HilbertComplex.Reducing, Feec.Models.BoundedDomain.Interior, Feec.Models.BoundedDomain.SymCurl, Feec.TimeStepping.Cayley, Feec.TimeStepping.Convergence, Feec.TimeStepping.Rational, Feec.TimeStepping.Theta
 
 ### Prop 4.19
 

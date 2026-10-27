@@ -1,0 +1,638 @@
+module
+
+public import Feec.ForMathlib.InnerProductSpace.VonNeumann
+public import Feec.TimeStepping.Convergence
+
+/-!
+# A-stable rational schemes
+
+A **rational scheme** (`RationalScheme`) is a real rational function `r = n/d`, bounded at
+infinity (`deg n ≤ deg d`) and without poles in the closed left half-plane; it approximates the
+exponential by the one-step scheme `u ↦ r(τ A) u` for `u' = A u`. It is **A-stable**
+(`RationalScheme.IsAStable`) if `|r(iy)| ≤ 1` on the imaginary axis (by the maximum principle this
+is the usual condition on the closed left half-plane, [HairerWanner1996], §IV.3; only the
+imaginary axis is used here, and the equivalence is not formalized), **L-stable**
+(`RationalScheme.IsLStable`) if moreover `r(∞) = 0`, i.e. `deg n < deg d`, and of **order `p`**
+(`RationalScheme.HasOrder`) if `r(z) - e^z = O(z^{p+1})`, i.e. `X^{p+1}` divides `n - d Tₚ` with
+`Tₚ = ∑_{j≤p} Xʲ/j!` (`expTaylor`).
+
+**The operator `r(τ A)` for every m-dissipative `A`** (`RationalScheme.step`, possibly unbounded,
+over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ A)⁻¹`
+(`Feec.TimeStepping.cayley`), a contraction, and the **Cayley transform of polynomials**
+(`cayleyPoly`, `q̃(w) = (w + 1)ᴺ q((w - 1)/(w + 1))`), `r(τ A) = ñ(C) d̃(C)⁻¹`; the poles of
+`ñ/d̃` lie outside the closed unit disc. For a bounded `L` this is `n(τ L) d(τ L)⁻¹`
+(`RationalScheme.step_toPMap`, `RationalScheme.apply`), since `ñ(C) = 2ᴺ Sᴺ n(τ L)` with
+`S = (1 - τ L)⁻¹` (`aeval_cayleyPoly`).
+
+## Main results
+
+* **`RationalScheme.norm_step_le`** (von Neumann's inequality in the half-plane): for every
+  m-dissipative `A` and `τ > 0`, `‖r(τ A)‖ ≤ sup_{y ∈ ℝ} |r(iy)|` (`RationalScheme.supNorm`,
+  finite: `RationalScheme.bddAbove`), uniformly in `A`; for an A-stable scheme `‖r(τ A)‖ ≤ 1`
+  (`norm_step_le_one`). This is `ContinuousLinearMap.norm_aeval_map_mul_inverse_le` for the
+  contraction `C`; it is a theorem for every Hilbert space, not only finite-dimensional ones.
+  For bounded dissipative `L`: `isUnit_aeval_den`, `norm_apply_le`, `norm_apply_le_one`.
+* **Consistency** (`RationalScheme.isConsistent`): a scheme of order `p` is consistent of order
+  `p` with every bounded dissipative `L`, with constant
+  `K = sup_y |(r(iy) - Tₚ(iy))/(iy)^{p+1}| + 1/(p+1)!`: `r = Tₚ + X^{p+1} ρ` with `ρ` the
+  remainder scheme (`RationalScheme.remainder`, same denominator), whose norm at `τ L` is bounded
+  by von Neumann's inequality again (`apply_eq_add`).
+* **`RationalScheme.norm_apply_pow_sub_exp_le`** (Brenner–Thomée): at `t = n τ`,
+  `‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵖ ‖L^{p+1} y‖` for every bounded dissipative `L`.
+* **Discrete constraint propagation** (`RationalScheme.apply_mem_of_mapsTo`): a closed subspace
+  `K` with `L K ⊆ K` is kept by `r(L)`.
+* **Symmetric schemes** (`RationalScheme.IsSymmetric`, `n(z) = d(-z)`: the diagonal Padé and
+  Gauss methods): `|r(iy)| = 1`, so they are A-stable (`IsSymmetric.isAStable`), and
+  `r(L)` is an isometry for skew `L` (`IsSymmetric.norm_apply_apply`).
+* **The θ-schemes** (`RationalScheme.theta`): A-stable for `θ ≥ 1/2`, order `1`, and
+  Crank–Nicolson (`θ = 1/2`) symmetric of order `2`; `r_θ(τ L)` is the θ-step
+  `Feec.TimeStepping.thetaStep` (`RationalScheme.apply_theta`).
+
+## References
+
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
+  §IV.3 (stability functions, A- and L-stability, Padé approximations)
+* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
+  (A-stable rational approximations are contractive on Hilbert spaces through von Neumann's
+  inequality)
+* [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Prop 4.18 (constraint propagation, here at the discrete level)
+
+Bibliography: [references.bib](../../docs/references.bib)
+-/
+
+open scoped InnerProductSpace ComplexConjugate
+open Polynomial Finset Feec.Operator NormedSpace
+
+@[expose] public noncomputable section
+
+namespace Feec.TimeStepping
+
+/-! ### The Cayley transform of polynomials -/
+
+section CayleyPoly
+
+variable {R A : Type*} [CommRing R] [Ring A] [Algebra R A]
+
+/-- The **Cayley transform** of a polynomial `q` to degree `N`:
+`q̃(w) = ∑_{k ≤ N} qₖ (w - 1)ᵏ (w + 1)^{N-k} = (w + 1)ᴺ q((w - 1)/(w + 1))`. -/
+def cayleyPoly (N : ℕ) (q : R[X]) : R[X] :=
+  ∑ k ∈ range (N + 1), C (q.coeff k) * (X - 1) ^ k * (X + 1) ^ (N - k)
+
+theorem cayleyPoly_map {R' : Type*} [CommRing R'] (f : R →+* R') (N : ℕ) (q : R[X]) :
+    (cayleyPoly N q).map f = cayleyPoly N (q.map f) := by
+  simp [cayleyPoly, Polynomial.map_sum, coeff_map]
+
+/-- A polynomial commutes with everything its variable commutes with. -/
+theorem commute_aeval {a b : A} (h : Commute a b) (q : R[X]) : Commute (aeval a q) b := by
+  rw [aeval_eq_sum_range]
+  exact Commute.sum_left _ _ _ fun i _ => (h.pow_left i).smul_left _
+
+/-- **The Cayley transform at `2 S - 1`**: if `S (1 - L) = 1` and `S L = L S`, then
+`q̃(2 S - 1) = (2 S)ᴺ q(L)` for `deg q ≤ N`. -/
+theorem aeval_cayleyPoly {S L : A} (hS : S * (1 - L) = 1) (hc : Commute S L) {N : ℕ}
+    {q : R[X]} (hq : q.natDegree ≤ N) :
+    aeval (2 * S - 1) (cayleyPoly N q) = (2 * S) ^ N * aeval L q := by
+  have hU : Commute (2 * S) L := (Commute.ofNat_left 2 L).mul_left hc
+  have h1 : 2 * S - 1 - 1 = 2 * S * L := by
+    calc 2 * S - 1 - 1 = 2 * (S - S * (1 - L)) := by rw [hS]; noncomm_ring
+      _ = 2 * S * L := by noncomm_ring
+  simp only [cayleyPoly, map_sum, map_mul, map_pow, map_sub, map_add, aeval_X, aeval_C, map_one,
+    h1, sub_add_cancel]
+  rw [aeval_eq_sum_range' (Nat.lt_succ_of_le hq), mul_sum]
+  refine sum_congr rfl fun k hk => ?_
+  have hk' : k ≤ N := Nat.lt_succ_iff.1 (mem_range.1 hk)
+  rw [hU.mul_pow, Algebra.smul_def, mul_assoc, mul_assoc, (hU.pow_pow (N - k) k).symm.eq,
+    ← mul_assoc ((2 * S) ^ k), ← pow_add, Nat.add_sub_cancel' hk', ← mul_assoc,
+    Algebra.commutes, mul_assoc]
+
+/-- The scalar Cayley transform: `q̃(w) = (w + 1)ᴺ q((w - 1)/(w + 1))` for `w ≠ -1`. -/
+theorem aeval_cayleyPoly_complex {q : ℝ[X]} {N : ℕ} (hq : q.natDegree ≤ N) {w : ℂ}
+    (hw : w ≠ -1) :
+    aeval w (cayleyPoly N q) = (w + 1) ^ N * aeval ((w - 1) / (w + 1)) q := by
+  have hw1 : w + 1 ≠ 0 := fun h => hw (eq_neg_of_add_eq_zero_left h)
+  have := aeval_cayleyPoly (R := ℝ) (S := (w + 1) / 2) (L := (w - 1) / (w + 1))
+    (by field_simp; ring) (Commute.all _ _) hq
+  rwa [show 2 * ((w + 1) / 2) - 1 = w by ring, show 2 * ((w + 1) / 2) = w + 1 by ring] at this
+
+/-- `q̃(-1) = q_N (-2)ᴺ`. -/
+theorem aeval_neg_one_cayleyPoly (q : ℝ[X]) (N : ℕ) :
+    aeval (-1 : ℂ) (cayleyPoly N q) = q.coeff N * (-2) ^ N := by
+  simp only [cayleyPoly, map_sum, map_mul, map_pow, map_sub, map_add, aeval_X, aeval_C, map_one,
+    sum_range_succ, Nat.sub_self, pow_zero, mul_one, neg_add_cancel]
+  rw [sum_eq_zero fun k hk => by
+    rw [zero_pow (by have := mem_range.1 hk; omega), mul_zero], zero_add]
+  norm_num
+
+/-- `re ((w - 1)/(w + 1)) = (|w|² - 1)/|w + 1|²`. -/
+theorem re_cayley_inv (w : ℂ) : ((w - 1) / (w + 1)).re = (‖w‖ ^ 2 - 1) / ‖w + 1‖ ^ 2 := by
+  rw [Complex.div_re, ← Complex.normSq_eq_norm_sq, ← Complex.normSq_eq_norm_sq,
+    Complex.normSq_apply, Complex.normSq_apply]
+  simp only [Complex.sub_re, Complex.one_re, Complex.add_re, Complex.sub_im, Complex.one_im,
+    sub_zero, Complex.add_im, add_zero]
+  ring
+
+end CayleyPoly
+
+/-! ### Rational schemes -/
+
+/-- A **rational scheme**: a real rational function `r = n/d`, bounded at infinity
+(`deg n ≤ deg d`), without poles in the closed left half-plane. [HairerWanner1996], §IV.3 -/
+@[ext] structure RationalScheme where
+  /-- the numerator -/
+  num : ℝ[X]
+  /-- the denominator -/
+  den : ℝ[X]
+  natDegree_num_le : num.natDegree ≤ den.natDegree
+  aeval_den_ne_zero : ∀ z : ℂ, z.re ≤ 0 → aeval z den ≠ 0
+
+/-- The Taylor polynomial `Tₚ = ∑_{j ≤ p} Xʲ/j!` of the exponential. -/
+def expTaylor (p : ℕ) : ℝ[X] := ∑ j ∈ range (p + 1), C (1 / (j.factorial : ℝ)) * X ^ j
+
+namespace RationalScheme
+
+variable (r : RationalScheme)
+
+/-- The value `r(z) = n(z)/d(z)`. -/
+def eval (z : ℂ) : ℂ := aeval z r.num / aeval z r.den
+
+/-- **A-stability**: `|r(iy)| ≤ 1` on the imaginary axis (with no poles in the closed left
+half-plane, the usual condition on `re z ≤ 0` by the maximum principle). [HairerWanner1996],
+§IV.3 -/
+def IsAStable : Prop := ∀ y : ℝ, ‖r.eval (y * Complex.I)‖ ≤ 1
+
+/-- **L-stability**: A-stable with `r(∞) = 0`, i.e. `deg n < deg d`. [HairerWanner1996], §IV.3 -/
+def IsLStable : Prop := r.IsAStable ∧ r.num.degree < r.den.degree
+
+/-- The supremum `sup_{y ∈ ℝ} |r(iy)|` (finite, `bddAbove`). -/
+def supNorm : ℝ := ⨆ y : ℝ, ‖r.eval (y * Complex.I)‖
+
+/-- **Order `p`**: `r(z) - e^z = O(z^{p+1})`, i.e. `X^{p+1} ∣ n - d Tₚ`. [HairerWanner1996],
+§IV.3 -/
+def HasOrder (p : ℕ) : Prop := X ^ (p + 1) ∣ r.num - r.den * expTaylor p
+
+/-- The Cayley transform `ñ` of the numerator, to the degree of the denominator. -/
+def cnum : ℝ[X] := cayleyPoly r.den.natDegree r.num
+
+/-- The Cayley transform `d̃` of the denominator. -/
+def cden : ℝ[X] := cayleyPoly r.den.natDegree r.den
+
+theorem den_ne_zero : r.den ≠ 0 := fun h => r.aeval_den_ne_zero 0 (by simp) (by simp [h])
+
+/-- `d̃` has no zero in the closed unit disc. -/
+theorem aeval_cden_ne_zero {w : ℂ} (hw : ‖w‖ ≤ 1) : aeval w r.cden ≠ 0 := by
+  rcases eq_or_ne w (-1) with rfl | hw1
+  · rw [cden, aeval_neg_one_cayleyPoly, ← leadingCoeff]
+    exact mul_ne_zero (by exact_mod_cast leadingCoeff_ne_zero.2 r.den_ne_zero)
+      (pow_ne_zero _ (by norm_num))
+  have hw0 : w + 1 ≠ 0 := fun h => hw1 (eq_neg_of_add_eq_zero_left h)
+  rw [cden, aeval_cayleyPoly_complex le_rfl hw1]
+  refine mul_ne_zero (pow_ne_zero _ hw0) (r.aeval_den_ne_zero _ ?_)
+  rw [re_cayley_inv]
+  exact div_nonpos_of_nonpos_of_nonneg (by nlinarith [norm_nonneg w]) (by positivity)
+
+/-- On the unit circle (without `-1`), `ñ/d̃` is `r` on the imaginary axis. -/
+theorem eval_cayley {ζ : ℂ} (hζ : ‖ζ‖ = 1) (hζ1 : ζ ≠ -1) :
+    aeval ζ r.cnum / aeval ζ r.cden = r.eval (((ζ - 1) / (ζ + 1)).im * Complex.I) := by
+  have hζ0 : ζ + 1 ≠ 0 := fun h => hζ1 (eq_neg_of_add_eq_zero_left h)
+  have hre : ((ζ - 1) / (ζ + 1)).re = 0 := by rw [re_cayley_inv, hζ]; simp
+  have e : ((ζ - 1) / (ζ + 1)).im * Complex.I = (ζ - 1) / (ζ + 1) := by
+    conv_rhs => rw [← Complex.re_add_im ((ζ - 1) / (ζ + 1)), hre]
+    simp
+  rw [e, cnum, cden, aeval_cayleyPoly_complex r.natDegree_num_le hζ1,
+    aeval_cayleyPoly_complex le_rfl hζ1, mul_div_mul_left _ _ (pow_ne_zero _ hζ0), eval]
+
+/-- `r` is bounded on the imaginary axis (`ñ/d̃` is continuous on the unit circle). -/
+theorem bddAbove : BddAbove (Set.range fun y : ℝ => ‖r.eval (y * Complex.I)‖) := by
+  obtain ⟨K, hK⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
+    (f := fun w : ℂ => aeval w r.cnum / aeval w r.cden)
+    ((Polynomial.continuous_aeval _).continuousOn.div
+      (Polynomial.continuous_aeval _).continuousOn fun w hw =>
+        r.aeval_cden_ne_zero (mem_sphere_zero_iff_norm.1 hw).le)
+  refine ⟨K, ?_⟩
+  rintro _ ⟨y, rfl⟩
+  have h1 : (1 : ℂ) - y * Complex.I ≠ 0 := fun h => by
+    simpa using congrArg Complex.re h
+  set ζ := (1 + y * Complex.I) / (1 - y * Complex.I)
+  have hn : ‖(1 : ℂ) + y * Complex.I‖ = ‖(1 : ℂ) - y * Complex.I‖ := by
+    rw [← Complex.norm_conj]; congr 1; simp [Complex.ext_iff]
+  have hζ : ‖ζ‖ = 1 := by rw [norm_div, hn, div_self (norm_ne_zero_iff.2 h1)]
+  have hζ1 : ζ ≠ -1 := fun h => by
+    rw [div_eq_iff h1] at h
+    have := congrArg Complex.re h
+    norm_num at this
+  have e : (ζ - 1) / (ζ + 1) = y * Complex.I := by
+    have h2 : (1 : ℂ) + y * Complex.I + (1 - y * Complex.I) = 2 := by ring
+    simp only [ζ]
+    field_simp
+    rw [h2]; ring
+  have := hK ζ (mem_sphere_zero_iff_norm.2 hζ)
+  rw [r.eval_cayley hζ hζ1, e] at this
+  simpa using this
+
+theorem norm_eval_le_supNorm (y : ℝ) : ‖r.eval (y * Complex.I)‖ ≤ r.supNorm :=
+  le_ciSup r.bddAbove y
+
+theorem supNorm_nonneg : 0 ≤ r.supNorm := (norm_nonneg _).trans (r.norm_eval_le_supNorm 0)
+
+theorem isAStable_iff : r.IsAStable ↔ r.supNorm ≤ 1 :=
+  ⟨fun h => ciSup_le h, fun h y => (r.norm_eval_le_supNorm y).trans h⟩
+
+/-! ### The operators `r(τ A)` -/
+
+variable {𝕜 V : Type*} [RCLike 𝕜] [NormedAddCommGroup V] [InnerProductSpace 𝕜 V]
+
+/-- **`r(L) = n(L) d(L)⁻¹`** for a bounded operator `L`. -/
+def apply (L : V →L[𝕜] V) : V →L[𝕜] V :=
+  aeval L (r.num.map (algebraMap ℝ 𝕜)) * Ring.inverse (aeval L (r.den.map (algebraMap ℝ 𝕜)))
+
+/-- **`r(τ A) = ñ(C) d̃(C)⁻¹`** for an m-dissipative, possibly unbounded, `A`, with the Cayley
+transform `C = (1 + τ A)(1 - τ A)⁻¹`. -/
+def step (A : V →ₗ.[𝕜] V) (τ : ℝ) : V →L[𝕜] V :=
+  aeval (cayley A τ) (r.cnum.map (algebraMap ℝ 𝕜)) *
+    Ring.inverse (aeval (cayley A τ) (r.cden.map (algebraMap ℝ 𝕜)))
+
+variable [CompleteSpace V]
+
+/-- **Von Neumann's inequality in the half-plane**: for every m-dissipative `A` and `τ > 0`,
+`d̃(C)` is invertible and `‖r(τ A)‖ ≤ sup_y |r(iy)|`, uniformly in `A`. [VonNeumann1951];
+[CrouzeixLarssonPiskarevThomee1993] -/
+theorem norm_step_le {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) :
+    IsUnit (aeval (cayley A τ) (r.cden.map (algebraMap ℝ 𝕜))) ∧ ‖r.step A τ‖ ≤ r.supNorm := by
+  have hC : ‖cayley A τ‖ ≤ 1 := by
+    rw [show τ = 2 * τ / 2 by ring, cayley_half_eq_thetaStep]
+    exact norm_thetaStep_le hA (by rw [RCLike.ofReal_re]) (by linarith)
+  exact ContinuousLinearMap.norm_aeval_map_mul_inverse_le hC (fun w hw => r.aeval_cden_ne_zero hw)
+    fun ζ hζ hζ1 => by rw [r.eval_cayley hζ hζ1]; exact r.norm_eval_le_supNorm _
+
+/-- An A-stable scheme is a contraction: `‖r(τ A)‖ ≤ 1`. -/
+theorem norm_step_le_one {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ)
+    (hr : r.IsAStable) : ‖r.step A τ‖ ≤ 1 :=
+  (r.norm_step_le hA hτ).2.trans (r.isAStable_iff.1 hr)
+
+omit [CompleteSpace V] in
+private theorem commute_ringInverse {M : Type*} [MonoidWithZero M] {a b : M} (h : Commute a b) :
+    Commute a (Ring.inverse b) := by
+  by_cases hb : IsUnit b
+  · obtain ⟨u, rfl⟩ := hb
+    rw [Ring.inverse_unit]; exact h.units_inv_right
+  · rw [Ring.inverse_non_unit _ hb]; exact Commute.zero_right a
+
+omit [CompleteSpace V] in
+private theorem mul_inverse_mul_of_commute {M : Type*} [MonoidWithZero M] {U n d : M}
+    (hU : IsUnit U) (hn : Commute U n) (hd : Commute U d) :
+    U * n * Ring.inverse (U * d) = n * Ring.inverse d := by
+  rw [Ring.mul_inverse_rev' hd, hn.eq, mul_assoc, ← mul_assoc U, (commute_ringInverse hd).eq,
+    mul_assoc, Ring.mul_inverse_cancel _ hU, mul_one]
+
+/-- For bounded dissipative `L`, the resolvent `S = (1 - τ L)⁻¹` (`τ > 0`) inverts `1 - τ L` on
+both sides, commutes with `L`, and `C = 2 S - 1`. -/
+private theorem exists_cayley_eq {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ}
+    (hτ : 0 < τ) : ∃ S : V →L[𝕜] V, S * (1 - (τ : 𝕜) • L) = 1 ∧ (1 - (τ : 𝕜) • L) * S = 1 ∧
+      Commute S L ∧ cayley ((L : V →ₗ[𝕜] V).toPMap ⊤) τ = 2 * S - 1 ∧
+      S = (τ : 𝕜)⁻¹ • resolvent ((L : V →ₗ[𝕜] V).toPMap ⊤) (τ : 𝕜)⁻¹ := by
+  have hA := L.isMDissipative_toPMap_top hL
+  set μ : 𝕜 := (τ : 𝕜)⁻¹
+  set R := resolvent ((L : V →ₗ[𝕜] V).toPMap ⊤) μ
+  have hR : IsResolvent ((L : V →ₗ[𝕜] V).toPMap ⊤) μ R := by
+    simp only [μ, R, ← RCLike.ofReal_inv]; exact hA.isResolvent (inv_pos.2 hτ)
+  have hτ' : (τ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hτ.ne'
+  have h1 : ∀ y, μ • R y - L (R y) = y := hR.sub_apply
+  have h2 : ∀ y, R (μ • y - L y) = y := fun y => hR.apply_sub ⟨y, trivial⟩
+  have hRL : ∀ y, R (L y) = L (R y) := fun y => by
+    have := h2 y
+    rw [map_sub, map_smul] at this
+    exact sub_right_injective (this.trans (h1 y).symm)
+  refine ⟨μ • R, ?_, ?_, ?_, ?_, rfl⟩
+  · ext y
+    change μ • R (y - (τ : 𝕜) • L y) = y
+    have e : y - (τ : 𝕜) • L y = (τ : 𝕜) • (μ • y - L y) := by
+      rw [smul_sub, smul_smul, mul_inv_cancel₀ hτ', one_smul]
+    rw [e, map_smul, h2, smul_smul, inv_mul_cancel₀ hτ', one_smul]
+  · ext y
+    change μ • R y - (τ : 𝕜) • L (μ • R y) = y
+    rw [map_smul, smul_smul, mul_inv_cancel₀ hτ', one_smul]
+    exact h1 y
+  · ext y
+    change μ • R (L y) = L (μ • R y)
+    rw [hRL, map_smul]
+  · show (2 * μ) • R - 1 = 2 * (μ • R) - 1
+    rw [two_mul (μ • R), two_mul μ, add_smul]
+
+/-- **For bounded `L`, `r(τ A)` is `n(τ L) d(τ L)⁻¹`**. -/
+theorem step_toPMap {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ} (hτ : 0 < τ) :
+    r.step ((L : V →ₗ[𝕜] V).toPMap ⊤) τ = r.apply ((τ : 𝕜) • L) := by
+  obtain ⟨S, hS, hS', hSL, hC, -⟩ := exists_cayley_eq hL hτ
+  have hSτ : Commute S ((τ : 𝕜) • L) := hSL.smul_right _
+  have h2 : IsUnit (2 : V →L[𝕜] V) := by
+    have := (isUnit_iff_ne_zero.2 (two_ne_zero : (2 : 𝕜) ≠ 0)).map (algebraMap 𝕜 (V →L[𝕜] V))
+    rwa [map_ofNat] at this
+  have hU : IsUnit ((2 * S) ^ r.den.natDegree) :=
+    (h2.mul ⟨⟨S, 1 - (τ : 𝕜) • L, hS, hS'⟩, rfl⟩).pow _
+  have hc : Commute ((2 * S) ^ r.den.natDegree) ((τ : 𝕜) • L) :=
+    ((Commute.ofNat_left 2 _).mul_left hSτ).pow_left _
+  rw [step, apply, hC, cnum, cden, cayleyPoly_map, cayleyPoly_map,
+    aeval_cayleyPoly hS hSτ ((natDegree_map_le).trans r.natDegree_num_le),
+    aeval_cayleyPoly hS hSτ (natDegree_map_le)]
+  exact mul_inverse_mul_of_commute hU (commute_aeval hc.symm _).symm
+    (commute_aeval hc.symm _).symm
+
+omit [CompleteSpace V] in
+theorem dissipative_smul {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ}
+    (hτ : 0 ≤ τ) (x : V) : RCLike.re ⟪((τ : 𝕜) • L) x, x⟫_𝕜 ≤ 0 := by
+  rw [smul_apply, inner_smul_left, RCLike.conj_ofReal, RCLike.re_ofReal_mul]
+  exact mul_nonpos_of_nonneg_of_nonpos hτ (hL x)
+
+theorem apply_eq_step {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) :
+    r.apply L = r.step ((L : V →ₗ[𝕜] V).toPMap ⊤) 1 := by
+  rw [r.step_toPMap hL one_pos]; simp
+
+/-- **`d(L)` is invertible** for every bounded dissipative `L`. -/
+theorem isUnit_aeval_den {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) :
+    IsUnit (aeval L (r.den.map (algebraMap ℝ 𝕜))) := by
+  obtain ⟨S, hS, -, hSL, hC, -⟩ := exists_cayley_eq hL one_pos
+  simp only [RCLike.ofReal_one, one_smul] at hS
+  have h := (r.norm_step_le (L.isMDissipative_toPMap_top hL) one_pos).1
+  rw [hC, cden, cayleyPoly_map, aeval_cayleyPoly hS hSL natDegree_map_le] at h
+  have hc : Commute ((2 * S) ^ r.den.natDegree) L :=
+    ((Commute.ofNat_left 2 L).mul_left hSL).pow_left _
+  exact ((commute_aeval hc.symm _).symm.isUnit_mul_iff.1 h).2
+
+/-- **Von Neumann's inequality for bounded dissipative `L`**: `‖r(L)‖ ≤ sup_y |r(iy)|`. -/
+theorem norm_apply_le {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) :
+    ‖r.apply L‖ ≤ r.supNorm := by
+  rw [r.apply_eq_step hL]; exact (r.norm_step_le (L.isMDissipative_toPMap_top hL) one_pos).2
+
+/-- An A-stable scheme of a bounded dissipative `L` is a contraction. -/
+theorem norm_apply_le_one {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0)
+    (hr : r.IsAStable) : ‖r.apply L‖ ≤ 1 :=
+  (r.norm_apply_le hL).trans (r.isAStable_iff.1 hr)
+
+/-! ### Consistency -/
+
+theorem natDegree_expTaylor_le (p : ℕ) : (expTaylor p).natDegree ≤ p :=
+  natDegree_sum_le_of_forall_le _ _ fun _ hj =>
+    (natDegree_C_mul_X_pow_le _ _).trans (Nat.lt_succ_iff.1 (mem_range.1 hj))
+
+/-- The **remainder** `ρ = (r - Tₚ)/X^{p+1}`, with numerator `(n - d Tₚ) /ₘ X^{p+1}` and the same
+denominator. -/
+def remainder (p : ℕ) : RationalScheme where
+  num := (r.num - r.den * expTaylor p) /ₘ X ^ (p + 1)
+  den := r.den
+  natDegree_num_le := by
+    rw [natDegree_divByMonic _ (monic_X_pow _), natDegree_X_pow]
+    have h1 := natDegree_sub_le r.num (r.den * expTaylor p)
+    have h2 := natDegree_mul_le (p := r.den) (q := expTaylor p)
+    have h3 := natDegree_expTaylor_le p
+    have h4 := r.natDegree_num_le
+    omega
+  aeval_den_ne_zero := r.aeval_den_ne_zero
+
+theorem num_eq_add {p : ℕ} (hp : r.HasOrder p) :
+    r.num = r.den * expTaylor p + X ^ (p + 1) * (r.remainder p).num := by
+  have h := modByMonic_add_div (r.num - r.den * expTaylor p) (X ^ (p + 1))
+  rw [(modByMonic_eq_zero_iff_dvd (monic_X_pow _)).2 hp, zero_add] at h
+  simp only [remainder]; rw [h]; ring
+
+/-- **`r = Tₚ + X^{p+1} ρ`** at a bounded dissipative `L`: `r(L) = Tₚ(L) + L^{p+1} ρ(L)`. -/
+theorem apply_eq_add {p : ℕ} (hp : r.HasOrder p) {L : V →L[𝕜] V}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) :
+    r.apply L = aeval L ((expTaylor p).map (algebraMap ℝ 𝕜)) +
+      L ^ (p + 1) * (r.remainder p).apply L := by
+  have hD := r.isUnit_aeval_den hL
+  have hn : aeval L (r.num.map (algebraMap ℝ 𝕜)) = aeval L (r.den.map (algebraMap ℝ 𝕜)) *
+      aeval L ((expTaylor p).map (algebraMap ℝ 𝕜)) +
+        L ^ (p + 1) * aeval L ((r.remainder p).num.map (algebraMap ℝ 𝕜)) := by
+    conv_lhs => rw [r.num_eq_add hp]
+    simp only [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_pow, map_X, map_add,
+      map_mul, map_pow, aeval_X]
+  rw [apply, apply, hn, add_mul, ((Commute.all (r.den.map (algebraMap ℝ 𝕜))
+    ((expTaylor p).map (algebraMap ℝ 𝕜))).map (aeval L)).eq,
+    Ring.mul_inverse_cancel_right _ _ hD, mul_assoc]
+  rfl
+
+omit [CompleteSpace V] in
+private theorem commute_apply {L : V →L[𝕜] V} {B : V →L[𝕜] V} (h : Commute B L) :
+    Commute (r.apply B) L :=
+  (commute_aeval h _).mul_left (commute_ringInverse (commute_aeval h _).symm).symm
+
+/-- **Consistency of an order-`p` scheme**: `r(τ L)` is consistent of order `p` with every bounded
+dissipative `L`, with the constant `sup_y |ρ(iy)| + 1/(p+1)!` (`ρ` the remainder), uniformly in
+`L`. [BrennerThomee1979]; [HairerWanner1996], §IV.3 -/
+theorem isConsistent [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V] {L : V →L[𝕜] V}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 ≤ τ) :
+    IsConsistent L (r.apply ((τ : 𝕜) • L)) τ p
+      ((r.remainder p).supNorm + 1 / (p + 1).factorial) := by
+  have hτL := dissipative_smul hL hτ
+  refine isConsistent_of_eq hL hτ ((r.remainder p).norm_apply_le hτL) fun y => ?_
+  have hc : Commute ((r.remainder p).apply ((τ : 𝕜) • L)) (L ^ (p + 1)) :=
+    ((r.remainder p).commute_apply ((Commute.refl L).smul_left _)).pow_right _
+  rw [r.apply_eq_add hp hτL, add_apply, smul_pow, smul_mul_assoc, smul_apply, ← mul_apply_eq_comp,
+    hc.eq, mul_apply_eq_comp]
+  congr 1
+  · simp only [expTaylor, Polynomial.map_sum, Polynomial.map_mul, map_C, Polynomial.map_pow,
+      map_X, map_sum, map_mul, aeval_C, map_pow, aeval_X, _root_.sum_apply]
+    refine sum_congr rfl fun j _ => ?_
+    rw [smul_pow, mul_smul_comm, ← Algebra.smul_def, smul_smul, smul_apply,
+      RCLike.real_smul_eq_coe_smul (K := 𝕜)]
+    congr 1
+    simp [div_eq_inv_mul, mul_comm]
+  · rw [RCLike.real_smul_eq_coe_smul (K := 𝕜)]; push_cast; rfl
+
+/-- **The Brenner–Thomée error of an A-stable scheme of order `p`**: at `t = n τ`,
+`‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵖ ‖L^{p+1} y‖` with `K = sup_y |ρ(iy)| + 1/(p+1)!`, for every
+bounded dissipative `L`. [BrennerThomee1979] -/
+theorem norm_apply_pow_sub_exp_le [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V] {L : V →L[𝕜] V}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
+    (hτ : 0 ≤ τ) (n : ℕ) (y : V) :
+    ‖(r.apply ((τ : 𝕜) • L) ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤
+      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p *
+        ‖(L ^ (p + 1)) y‖ := by
+  have := norm_pow_apply_sub_exp_le hL (M := 1) (n := n)
+    (fun k _ => norm_pow_le_one (r.norm_apply_le_one (dissipative_smul hL hτ) hr) k) hτ
+    (add_nonneg (r.remainder p).supNorm_nonneg (by positivity)) (r.isConsistent hL hp hτ) y
+  simpa using this
+
+/-! ### Discrete constraint propagation -/
+
+omit [CompleteSpace V] in
+/-- On an `L`-invariant subspace `K`, a polynomial in `L` acts as the polynomial in the part
+`L_K` of `L` in `K`. -/
+private theorem aeval_coe {L : V →L[𝕜] V} {K : Submodule 𝕜 V} (hLK : ∀ x ∈ K, L x ∈ K)
+    (q : 𝕜[X]) (x : K) :
+    aeval L q (x : V) = (aeval ((L.comp K.subtypeL).codRestrict K fun x => hLK x x.2) q x : K) := by
+  set LK : K →L[𝕜] K := (L.comp K.subtypeL).codRestrict K fun x => hLK x x.2
+  have hpow : ∀ j (x : K), (L ^ j) (x : V) = ((LK ^ j) x : K) := by
+    intro j
+    induction j with
+    | zero => intro x; rfl
+    | succ j ih =>
+      intro x
+      rw [pow_succ', pow_succ']
+      change L ((L ^ j) (x : V)) = (LK ((LK ^ j) x) : V)
+      rw [ih]; rfl
+  simp only [aeval_eq_sum_range, _root_.sum_apply, smul_apply, Submodule.coe_sum,
+    Submodule.coe_smul, hpow]
+
+/-- **Discrete constraint propagation**: a closed subspace `K` with `L K ⊆ K` is kept by `r(L)`
+for bounded dissipative `L` (the part of `L` in `K` is dissipative, so `d(L)` is invertible on
+`K`). [QuennevilleBelair2015], Prop 4.18 -/
+theorem apply_mem_of_mapsTo {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0)
+    {K : Submodule 𝕜 V} (hKc : IsClosed (K : Set V)) (hLK : ∀ x ∈ K, L x ∈ K) {u : V}
+    (hu : u ∈ K) : r.apply L u ∈ K := by
+  have : CompleteSpace K := hKc.completeSpace_coe
+  set LK : K →L[𝕜] K := (L.comp K.subtypeL).codRestrict K fun x => hLK x x.2
+  have hLK' : ∀ x : K, RCLike.re ⟪LK x, x⟫_𝕜 ≤ 0 := fun x => by
+    rw [Submodule.coe_inner]; exact hL x
+  obtain ⟨w, hw⟩ := (r.isUnit_aeval_den hLK').exists_right_inv
+  have hDv : aeval L (r.den.map (algebraMap ℝ 𝕜)) (w ⟨u, hu⟩ : V) = u := by
+    rw [aeval_coe hLK, ← mul_apply_eq_comp, hw]; rfl
+  have hinv : Ring.inverse (aeval L (r.den.map (algebraMap ℝ 𝕜))) u = w ⟨u, hu⟩ := by
+    conv_lhs => rw [← hDv]
+    rw [← mul_apply_eq_comp, Ring.inverse_mul_cancel _ (r.isUnit_aeval_den hL),
+      one_apply_eq_self]
+  rw [apply, mul_apply_eq_comp, hinv, aeval_coe hLK]
+  exact Submodule.coe_mem _
+
+/-! ### Symmetric schemes -/
+
+/-- A **symmetric** scheme, `n(z) = d(-z)`, so `r(-z) = 1/r(z)` (the diagonal Padé
+approximations, Gauss methods). [HairerWanner1996], §IV.3, §IV.5 -/
+def IsSymmetric : Prop := r.num = r.den.comp (-X)
+
+/-- A symmetric scheme has `|r(iy)| = 1`. -/
+theorem IsSymmetric.norm_eval {r : RationalScheme} (h : r.IsSymmetric) (y : ℝ) :
+    ‖r.eval (y * Complex.I)‖ = 1 := by
+  have hd : aeval ((y : ℂ) * Complex.I) r.den ≠ 0 := r.aeval_den_ne_zero _ (by simp)
+  rw [eval, h, aeval_comp, map_neg, aeval_X,
+    show -((y : ℂ) * Complex.I) = conj ((y : ℂ) * Complex.I) by simp, aeval_conj, norm_div,
+    Complex.norm_conj, div_self (norm_ne_zero_iff.2 hd)]
+
+theorem IsSymmetric.isAStable {r : RationalScheme} (h : r.IsSymmetric) : r.IsAStable :=
+  fun y => (h.norm_eval y).le
+
+/-- **A symmetric scheme of a skew operator is an isometry**: `‖r(L) x‖ = ‖x‖` when
+`re ⟪L x, x⟫ = 0`. -/
+theorem IsSymmetric.norm_apply_apply {r : RationalScheme} (h : r.IsSymmetric) {L : V →L[𝕜] V}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 = 0) (x : V) : ‖r.apply L x‖ = ‖x‖ := by
+  have h1 : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0 := fun x => (hL x).le
+  have h2 : ∀ x, RCLike.re ⟪(-L) x, x⟫_𝕜 ≤ 0 := fun x => by simp [inner_neg_left, hL x]
+  have hcomp : ∀ q : ℝ[X], aeval (-L) ((q.comp (-X)).map (algebraMap ℝ 𝕜)) =
+      aeval L (q.map (algebraMap ℝ 𝕜)) := fun q => by
+    rw [Polynomial.map_comp, aeval_comp]; simp
+  have hden : r.den = r.num.comp (-X) := by rw [h, comp_assoc]; simp
+  have hn : IsUnit (aeval L (r.num.map (algebraMap ℝ 𝕜))) := by
+    have := r.isUnit_aeval_den h2; rwa [hden, hcomp] at this
+  have e1 : aeval (-L) (r.num.map (algebraMap ℝ 𝕜)) = aeval L (r.den.map (algebraMap ℝ 𝕜)) := by
+    rw [h, hcomp]
+  have e2 : aeval (-L) (r.den.map (algebraMap ℝ 𝕜)) = aeval L (r.num.map (algebraMap ℝ 𝕜)) := by
+    rw [hden, hcomp]
+  have hinv : r.apply (-L) * r.apply L = 1 := by
+    rw [apply, apply, e1, e2, mul_assoc, ← mul_assoc (Ring.inverse _),
+      Ring.inverse_mul_cancel _ hn, one_mul, Ring.mul_inverse_cancel _ (r.isUnit_aeval_den h1)]
+  refine le_antisymm (((r.apply L).le_of_opNorm_le (r.norm_apply_le_one h1 h.isAStable) x).trans_eq
+    (one_mul _)) ?_
+  calc ‖x‖ = ‖r.apply (-L) (r.apply L x)‖ := by
+        rw [← mul_apply_eq_comp (r.apply (-L)) (r.apply L) x, hinv, one_apply_eq_self]
+    _ ≤ 1 * ‖r.apply L x‖ := (r.apply (-L)).le_of_opNorm_le (r.norm_apply_le_one h2 h.isAStable) _
+    _ = ‖r.apply L x‖ := one_mul _
+
+/-! ### The θ-schemes -/
+
+/-- `‖1 + a i y‖ ≤ ‖1 - b i y‖` from `a² ≤ b²`. -/
+theorem norm_one_add_le {a b y : ℝ} (h : a ^ 2 ≤ b ^ 2) :
+    ‖(1 : ℂ) + a * (y * Complex.I)‖ ≤ ‖(1 : ℂ) - b * (y * Complex.I)‖ := by
+  refine (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 ?_
+  rw [Complex.sq_norm, Complex.sq_norm, Complex.normSq_apply, Complex.normSq_apply]
+  simp only [Complex.add_re, Complex.one_re, Complex.mul_re, Complex.ofReal_re, Complex.I_re,
+    mul_zero, Complex.ofReal_im, Complex.I_im, mul_one, sub_self, add_zero, Complex.add_im,
+    Complex.one_im, Complex.mul_im, zero_add, Complex.sub_re, Complex.sub_im, zero_sub]
+  nlinarith [sq_nonneg y, mul_nonneg (sq_nonneg y) (sub_nonneg.2 h)]
+
+/-- **The θ-scheme** `r_θ(z) = (1 + (1 - θ) z)/(1 - θ z)`, `θ > 0` (`θ = 1`: implicit Euler,
+`θ = 1/2`: Crank–Nicolson, the implicit midpoint rule). [HairerWanner1996], §IV.3 -/
+def theta (θ : ℝ) (hθ : 0 < θ) : RationalScheme where
+  num := 1 + C (1 - θ) * X
+  den := 1 - C θ * X
+  natDegree_num_le := by
+    have hd : (1 - C θ * X : ℝ[X]) = C (-θ) * X + C 1 := by rw [C_neg, C_1]; ring
+    rw [hd, natDegree_linear (neg_ne_zero.2 hθ.ne')]
+    exact (natDegree_add_le _ _).trans
+      (max_le (by simp) ((natDegree_C_mul_le _ _).trans natDegree_X_le))
+  aeval_den_ne_zero z hz h := by
+    have := congrArg Complex.re h
+    simp only [map_sub, map_one, map_mul, aeval_C, aeval_X, Complex.sub_re, Complex.one_re,
+      Complex.mul_re, Complex.zero_re, Complex.coe_algebraMap, Complex.ofReal_re,
+      Complex.ofReal_im, zero_mul, sub_zero] at this
+    nlinarith
+
+/-- The θ-scheme is A-stable for `θ ≥ 1/2`. -/
+theorem isAStable_theta {θ : ℝ} (hθ : 1 / 2 ≤ θ) : (theta θ (by linarith)).IsAStable := by
+  intro y
+  have hd := (theta θ (by linarith)).aeval_den_ne_zero (y * Complex.I) (by simp)
+  simp only [eval, theta, map_add, map_one, map_mul, aeval_C, aeval_X, map_sub,
+    Complex.coe_algebraMap] at hd ⊢
+  rw [norm_div, div_le_one (norm_pos_iff.2 hd)]
+  have := norm_one_add_le (a := 1 - θ) (b := θ) (y := y) (by nlinarith)
+  push_cast at this
+  exact this
+
+/-- The θ-scheme has order `1`. -/
+theorem hasOrder_theta {θ : ℝ} (hθ : 0 < θ) : (theta θ hθ).HasOrder 1 :=
+  ⟨C θ, Polynomial.funext fun x => by
+    simp [theta, expTaylor, sum_range_succ]; ring⟩
+
+/-- Crank–Nicolson (`θ = 1/2`) has order `2`. -/
+theorem hasOrder_theta_half : (theta (1 / 2) (by norm_num)).HasOrder 2 :=
+  ⟨C (1 / 4), Polynomial.funext fun x => by
+    simp [theta, expTaylor, sum_range_succ, Nat.factorial]; ring⟩
+
+/-- Crank–Nicolson is symmetric. -/
+theorem isSymmetric_theta_half : (theta (1 / 2) (by norm_num)).IsSymmetric :=
+  Polynomial.funext fun x => by
+    simp only [theta, eval_comp, eval_add, eval_sub, eval_one, eval_mul, eval_C, eval_X, eval_neg]
+    ring
+
+/-- **The θ-schemes are rational schemes**: `r_θ(τ L) = thetaStep L θ τ`
+(`Feec.TimeStepping.thetaStep`) for bounded dissipative `L`, `θ > 0` and `τ > 0`. -/
+theorem apply_theta {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {θ : ℝ}
+    (hθ : 0 < θ) {τ : ℝ} (hτ : 0 < τ) :
+    (theta θ hθ).apply ((τ : 𝕜) • L) = thetaStep ((L : V →ₗ[𝕜] V).toPMap ⊤) θ τ := by
+  obtain ⟨S, hS, hS', -, -, hSR⟩ := exists_cayley_eq hL (mul_pos hθ hτ)
+  have hθ' : (θ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hθ.ne'
+  have hτ' : (τ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hτ.ne'
+  have hden : aeval ((τ : 𝕜) • L) ((theta θ hθ).den.map (algebraMap ℝ 𝕜)) =
+      1 - ((θ * τ : ℝ) : 𝕜) • L := by
+    simp only [theta, Polynomial.map_sub, Polynomial.map_one, Polynomial.map_mul,
+      Polynomial.map_C, Polynomial.map_X, map_sub, map_one, map_mul, aeval_C, aeval_X,
+      ← Algebra.smul_def, RCLike.algebraMap_eq_ofReal, smul_smul]
+  have hinv : Ring.inverse (aeval ((τ : 𝕜) • L) ((theta θ hθ).den.map (algebraMap ℝ 𝕜))) = S := by
+    rw [hden]
+    exact Ring.inverse_unit ⟨_, S, hS', hS⟩
+  have hnum : aeval ((τ : 𝕜) • L) ((theta θ hθ).num.map (algebraMap ℝ 𝕜)) =
+      1 + ((1 - θ : ℝ) : 𝕜) • (τ : 𝕜) • L := by
+    simp only [theta, Polynomial.map_add, Polynomial.map_one, Polynomial.map_mul,
+      Polynomial.map_C, Polynomial.map_X, map_add, map_one, map_mul, aeval_C, aeval_X,
+      ← Algebra.smul_def, RCLike.algebraMap_eq_ofReal]
+  have hLS : ((θ * τ : ℝ) : 𝕜) • (L * S) = S - 1 := by
+    have h := hS'
+    rw [sub_mul, one_mul, smul_mul_assoc] at h
+    calc ((θ * τ : ℝ) : 𝕜) • (L * S) = S - (S - ((θ * τ : ℝ) : 𝕜) • (L * S)) := by abel
+      _ = S - 1 := by rw [h]
+  have hc : (θ : 𝕜) * (τ : 𝕜) ≠ 0 := mul_ne_zero hθ' hτ'
+  have hR : resolvent ((L : V →ₗ[𝕜] V).toPMap ⊤) ((θ : 𝕜) * (τ : 𝕜))⁻¹ =
+      ((θ : 𝕜) * (τ : 𝕜)) • S := by
+    rw [hSR]; push_cast; rw [smul_smul, mul_inv_cancel₀ hc, one_smul]
+  have hLS' : L * S = ((θ : 𝕜) * (τ : 𝕜))⁻¹ • (S - 1) := by
+    rw [← hLS]; push_cast; rw [smul_smul, inv_mul_cancel₀ hc, one_smul]
+  rw [apply, hnum, hinv, thetaStep, hR, add_mul, one_mul, smul_mul_assoc, smul_mul_assoc, hLS']
+  simp only [smul_smul, smul_sub]
+  push_cast
+  match_scalars <;> field_simp
+  ring
+
+end RationalScheme
+
+end Feec.TimeStepping

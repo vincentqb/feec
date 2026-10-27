@@ -102,6 +102,8 @@ public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Homology.Subcomplex
+public import Feec.ForMathlib.InnerProductSpace.Complexification
+public import Feec.ForMathlib.InnerProductSpace.VonNeumann
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
 public import Feec.ForMathlib.LinearPMap.GraphSpace
@@ -155,6 +157,7 @@ public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
+public import Feec.HilbertComplex.Approximation.RationalScheme
 public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.RitzResolvent
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
@@ -222,6 +225,7 @@ public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.FullyDiscrete
 public import Feec.Instances.Maxwell
+public import Feec.Instances.RungeKutta
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal
 public import Feec.Mesh.Kuhn
@@ -363,6 +367,8 @@ public import Feec.TimeStepping.BlockMatrix
 public import Feec.TimeStepping.Cayley
 public import Feec.TimeStepping.Convergence
 public import Feec.TimeStepping.Leapfrog
+public import Feec.TimeStepping.Rational
+public import Feec.TimeStepping.RungeKutta
 public import Feec.TimeStepping.Theta
 public import Feec.TimeStepping.Trajectory
 public import Feec.Variational.BabuskaNecas

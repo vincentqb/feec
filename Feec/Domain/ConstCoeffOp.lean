@@ -477,6 +477,18 @@ theorem _root_.Feec.Domain.inner_toL2F (u : L2F 𝕜 Ω ι) {ψ : ι → E → �
   rw [L2F.inner_def]
   exact Finset.sum_congr rfl fun i _ => inner_toLp _ (hψ i)
 
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
+  [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] in
+/-- A field with a component that vanishes nowhere is nonzero in `L²(Ω)` when `|Ω| ≠ 0`. -/
+theorem _root_.Feec.Domain.toL2F_ne_zero {ψ : ι → E → 𝕜}
+    (hψ : ∀ i, MemLp (ψ i) 2 (volume.restrict Ω)) (hΩ : volume Ω ≠ 0) {i : ι}
+    (hi : ∀ x, ψ i x ≠ 0) : toL2F hψ ≠ 0 := fun h => hΩ <| by
+  have h0 : (hψ i).toLp (ψ i) = 0 := congrArg (fun v : L2F 𝕜 Ω ι => v i) h
+  have hae : ∀ᵐ x ∂volume.restrict Ω, False := by
+    filter_upwards [(hψ i).coeFn_toLp, Lp.coeFn_zero 𝕜 2 (volume.restrict Ω)] with x h1 h2
+    exact hi x (by rw [← h1, h0, h2]; rfl)
+  rwa [Filter.eventually_false_iff_eq_bot, ae_eq_bot, Measure.restrict_eq_zero] at hae
+
 omit [FiniteDimensional ℝ E] in
 /-- `⟪φ, ψ⟫_{L²(Ω)} = Σᵢ ∫_E conj φᵢ ψᵢ` for a test field `φ` (the integrand vanishes off `Ω`). -/
 theorem _root_.Feec.Domain.inner_testField_toL2F {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ)

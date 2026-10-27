@@ -29,6 +29,10 @@ too (where a degree has no neighbour, `H` itself has no mixed problem).
   range (in degree `1` of the de Rham complex: Hodge heat on divergence-free fields is unsteady
   Stokes flow with slip boundary conditions); `exists_hodgeLaplacian_eq_adjoint`, the domain of
   `Δ` in terms of `𝐝` and `𝐝†`.
+* `HilbertComplex.single_mem_ker_adjoint_totalD_of_mem_orthogonal`: a form of degree `i`
+  orthogonal to `𝔅ⁱ` is in `ker 𝐝†`; `HilbertComplex.exists_single_mem_ker_adjoint_totalD`:
+  `ker 𝐝†` has a nonzero form of degree `i` whenever `𝔷ⁱ ≠ Wⁱ` (in degree `1`, a nonzero
+  divergence-free velocity with vanishing normal trace).
 
 ## References
 
@@ -224,16 +228,41 @@ theorem isReducing_hodgeLaplacian_ker_adjoint :
     exact congrArg _ (Subtype.ext hDz)
   exact ⟨fun x => (key x).1, fun x => (key x).2⟩
 
-/-- **A form in a degree that no differential reaches is in `ker 𝐝†`**: if `¬ c.Rel j i` for
-every `j` (the first degree of a window), then `single i v ⊥ R(𝐝)`. -/
-theorem single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (hi : ∀ j, ¬ c.Rel j i)
-    (v : W i) : PiLp.single 2 i v ∈ (H.totalD†).ker := by
+/-- **A form orthogonal to the boundaries is in `ker 𝐝†`**: if `v ⊥ 𝔅ⁱ`, then
+`single i v ⊥ R(𝐝)`. In degree `1` of `HΛ(Ω)`: a field orthogonal to the gradients, divergence-free
+with vanishing normal trace. -/
+theorem single_mem_ker_adjoint_totalD_of_mem_orthogonal [DecidableEq ι] {i : ι} {v : W i}
+    (hv : v ∈ (H.boundaries i)ᗮ) : PiLp.single 2 i v ∈ (H.totalD†).ker := by
   rw [← orthogonal_range_eq_ker_adjoint _ H.dense_totalD_domain, Submodule.mem_orthogonal]
   rintro _ ⟨w, rfl⟩
   change ⟪H.totalD w, _⟫ = 0
   rw [PiLp.inner_apply, Finset.sum_eq_single i (fun j _ hj => by simp [hj]) (by simp),
-    PiLp.single_eq_same, totalD_apply,
-    Finset.sum_eq_zero fun j _ => H.apply_eq_zero_of_not_rel (hi j) _, inner_zero_left]
+    PiLp.single_eq_same, totalD_apply, sum_inner]
+  refine Finset.sum_eq_zero fun j _ => ?_
+  by_cases hj : c.Rel j i
+  · obtain rfl := c.prev_eq' hj
+    exact Submodule.inner_right_of_mem_orthogonal (K := H.boundaries _) ⟨_, rfl⟩ hv
+  · rw [H.apply_eq_zero_of_not_rel hj, inner_zero_left]
+
+/-- **A form in a degree that no differential reaches is in `ker 𝐝†`**: if `¬ c.Rel j i` for
+every `j` (the first degree of a window), then `single i v ⊥ R(𝐝)`. -/
+theorem single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (hi : ∀ j, ¬ c.Rel j i)
+    (v : W i) : PiLp.single 2 i v ∈ (H.totalD†).ker :=
+  H.single_mem_ker_adjoint_totalD_of_mem_orthogonal <| by
+    rintro _ ⟨w, rfl⟩
+    change ⟪H.d _ i w, v⟫ = 0
+    rw [H.apply_eq_zero_of_not_rel (hi _), inner_zero_left]
+
+/-- **`ker 𝐝†` is nontrivial in every degree that `d` leaves nontrivially**: if `𝔷ⁱ ≠ Wⁱ`, then
+some nonzero `v ∈ (𝔷ⁱ)ᗮ ⊆ (𝔅ⁱ)ᗮ` has `single i v ∈ ker 𝐝†`. In degree `1` of `HΛ(Ω)`: a nonzero
+divergence-free field with vanishing normal trace, as soon as some `1`-form is not closed.
+[AFW2010], §3.2 -/
+theorem exists_single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (h : H.cycles i ≠ ⊤) :
+    ∃ v : W i, v ≠ 0 ∧ PiLp.single 2 i v ∈ (H.totalD†).ker := by
+  have : CompleteSpace (H.cycles i) := (H.isClosed_cycles i).completeSpace_coe
+  obtain ⟨v, hv, hv0⟩ := (Submodule.ne_bot_iff _).1 (mt Submodule.orthogonal_eq_bot_iff.1 h)
+  exact ⟨v, hv0, H.single_mem_ker_adjoint_totalD_of_mem_orthogonal
+    (Submodule.orthogonal_le (H.boundaries_le_cycles i) hv)⟩
 
 /-- The solution `(σ, u, p)` of the mixed problem of the total complex with data `f`. -/
 def totalMixedSolution (hcr : ∀ i, H.ClosedRangeAt i) :

@@ -25,7 +25,9 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
 * the components in low degree: `(d f)_{j} = ∂_j f` (`extDerivOp_zero_apply`),
   `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (`extDerivOp_one_apply_pair`) and
   `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l`
-  (`extDerivOp_two_apply_triple`).
+  (`extDerivOp_two_apply_triple`);
+* **a `1`-form that is not closed** on every nonempty bounded open `Ω ⊆ ℝⁿ`, `n ≥ 2`:
+  `d (x₀ dx₁) = dx₀ ∧ dx₁` (`maximalComplex_cycles_one_ne_top`).
 
 ## Implementation notes
 
@@ -404,5 +406,41 @@ theorem extDerivOp_smooth_mem_maximal_domain (hΩ : IsOpen Ω) {k : ℤ}
     ∃ h : toL2F hw ∈ ((extDerivOp 𝕜 n k).maximal Ω).domain,
       (extDerivOp 𝕜 n k).maximal Ω ⟨_, h⟩ = toL2F hdw :=
   (extDerivOp 𝕜 n k).smooth_mem_maximal_domain hΩ (extDerivOp_isOrderLE k) hws hw hdw
+
+/-- **A `1`-form that is not closed**: on a nonempty bounded open `Ω ⊆ ℝⁿ`, `n ≥ 2`, the form
+`x₀ dx₁ ∈ HΛ¹(Ω)` has `d (x₀ dx₁) = dx₀ ∧ dx₁ ≠ 0`, so the cycles of `HΛ¹(Ω)` are a proper
+subspace of `L²Λ¹(Ω)`. -/
+theorem maximalComplex_cycles_one_ne_top (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) (hn : 2 ≤ n) : ((deRham ℝ n).maximalComplex hΩ).cycles 1 ≠ ⊤ := by
+  set i₀ : Fin n := ⟨0, by omega⟩
+  set i₁ : Fin n := ⟨1, by omega⟩
+  have h01 : i₀ < i₁ := Fin.mk_lt_mk.2 zero_lt_one
+  set w : formIdx n 1 → (Fin n → ℝ) → ℝ := fun s x => if s.1 = {i₁} then x i₀ else 0
+  have hws : ∀ s, ContDiff ℝ 1 (w s) := fun s => by
+    by_cases hs : s.1 = {i₁}
+    · simp only [w, hs, ite_true]; exact contDiff_pi.1 contDiff_id i₀
+    · simp only [w, hs, ite_false]; exact contDiff_const
+  have hw : ∀ s, MemLp (w s) 2 (volume.restrict Ω) := fun s =>
+    memLp_of_continuous hΩ.measurableSet hb (hws s).continuous
+  have hdw : ∀ t, MemLp ((extDerivOp ℝ n 1).apply w t) 2 (volume.restrict Ω) := fun t =>
+    memLp_of_continuous hΩ.measurableSet hb
+      ((extDerivOp ℝ n 1).continuous_apply (extDerivOp_isOrderLE 1) hws t)
+  obtain ⟨h, e⟩ := extDerivOp_smooth_mem_maximal_domain hΩ hws hw hdw
+  intro htop
+  have hk : toL2F hw ∈ ((extDerivOp ℝ n 1).maximal Ω).ker :=
+    (((deRham ℝ n).maximalComplex hΩ).cycles_eq
+      (show (ComplexShape.up ℤ).Rel (1 : ℤ) (1 + 1) from rfl)).trans
+      (congrArg LinearPMap.ker (deRham_maximalComplex_d hΩ 1)) ▸ Submodule.eq_top_iff'.1 htop _
+  obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 hk
+  refine toL2F_ne_zero hdw (hΩ.measure_ne_zero volume hne)
+    (i := ⟨{i₀, i₁}, by rw [card_pair h01.ne]; norm_num⟩) (fun x => ?_) ?_
+  · have e1 : w ⟨{i₁}, by simp⟩ = fun x => x i₀ := funext fun x => ite_eq_left rfl
+    have e0 : w ⟨{i₀}, by simp⟩ = fun _ => 0 :=
+      funext fun x => ite_eq_right (by simpa using h01.ne)
+    rw [extDerivOp_one_apply_pair w h01 x, e1, e0, (hasFDerivAt_apply i₀ x).fderiv,
+      fderiv_const_apply]
+    simp
+  · rw [← e]
+    exact (congrArg _ (Subtype.ext hy)).trans hy0
 
 end Feec.Domain

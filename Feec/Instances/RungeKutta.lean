@@ -19,7 +19,8 @@ conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
   (order `4`): the fully discrete verdict, exact energy conservation of the iterates, and the
   Gauss-law residuals tending to `0` as `h, τ → 0`;
 * `heat_radauIIA2`: **the Hodge heat equation with the L-stable Radau IIA and SDIRK methods**
-  (orders `3` and `2`): the fully discrete verdicts;
+  (orders `3` and `2`; L-stability is `RationalScheme.isLStable_radauIIA2`, `isLStable_sdirk2`):
+  the fully discrete verdicts;
 
 and on the cube, at every polynomial order of the periodic table (`Cube.FEM.maxwell_gaussLegendre2`,
 `Cube.FEM.heat_radauIIA2`).
@@ -29,8 +30,6 @@ and on the cube, at every polynomial order of the periodic table (`Cube.FEM.maxw
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
   §IV.5, §IV.6
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (time discretization of the Einstein–Bianchi system)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -115,15 +114,18 @@ open Feec.Models.Cube.FEM Feec.FiniteElement
 variable (n : ℕ) [NeZero n]
 
 /-- **Maxwell's equations on the cube with the Gauss–Legendre method** at every polynomial order
-(`Feec.Instances.Maxwell.cubePolyPMC`, `cubePolyPEC`): the fully discrete verdicts and exact energy
-conservation (`maxwell_gaussLegendre2`). -/
+(`Feec.Instances.Maxwell.cubePolyPMC`, `cubePolyPEC`): for both, the fully discrete verdict and
+exact energy conservation of the iterates (`maxwell_gaussLegendre2`). -/
 theorem maxwell_gaussLegendre2 (S : PolySeq) (a : ℤ) {τ : ℕ → ℝ} (hτ : ∀ N, 0 < τ N) :
-    ((Maxwell.cubePolyPMC n S a).toApprox.gaussLegendre2 τ hτ).Verdict
+    (((Maxwell.cubePolyPMC n S a).toApprox.gaussLegendre2 τ hτ).Verdict
         (Maxwell.cubePolyPMC n S a).toCore ∧
-      ((Maxwell.cubePolyPEC n S a).toApprox.gaussLegendre2 τ hτ).Verdict
-        (Maxwell.cubePolyPEC n S a).toCore :=
-  ⟨(RungeKutta.maxwell_gaussLegendre2 (polyFamily n S) a hτ).1,
-    (RungeKutta.maxwell_gaussLegendre2 (polyFamilyMin n S) a hτ).1⟩
+      ∀ N v k, ‖(((Maxwell.cubePolyPMC n S a).toApprox.gaussLegendre2 τ hτ).P N ^ k) v‖ = ‖v‖) ∧
+    (((Maxwell.cubePolyPEC n S a).toApprox.gaussLegendre2 τ hτ).Verdict
+        (Maxwell.cubePolyPEC n S a).toCore ∧
+      ∀ N v k, ‖(((Maxwell.cubePolyPEC n S a).toApprox.gaussLegendre2 τ hτ).P N ^ k) v‖ = ‖v‖) :=
+  have hPMC := RungeKutta.maxwell_gaussLegendre2 (polyFamily n S) a hτ
+  have hPEC := RungeKutta.maxwell_gaussLegendre2 (polyFamilyMin n S) a hτ
+  ⟨⟨hPMC.1, hPMC.2.1⟩, ⟨hPEC.1, hPEC.2.1⟩⟩
 
 /-- **The Hodge heat equation on the cube with Radau IIA and SDIRK** (`heatFamily`, every
 admissible sequence `S`): the fully discrete verdicts, with a nonzero datum in the core. -/

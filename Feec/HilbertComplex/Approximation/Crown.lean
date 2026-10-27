@@ -38,8 +38,9 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
 4. (**fully discrete**, `full`) for every time scheme, power bounded and consistent of order `p`
    uniformly in `h` (the θ-schemes `θ ≥ ½`, implicit Euler and Crank–Nicolson are ones,
    `DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`, and so is every A-stable rational scheme
-   and A-stable Runge–Kutta method by von Neumann's inequality, `DissipFEEC.rationalScheme`,
-   `DissipFEEC.gaussLegendre2`, `DissipFEEC.radauIIA2`, `DissipFEEC.sdirk2`), the iterates of the wave and heat
+   of order `p ≥ 1` by von Neumann's inequality, `DissipFEEC.rationalScheme`, among them the
+   stability functions of A-stable implicit Runge–Kutta methods, `DissipFEEC.gaussLegendre2`,
+   `DissipFEEC.radauIIA2`, `DissipFEEC.sdirk2`), the iterates of the wave and heat
    discretizations are stable and converge as `h, τ → 0`, with error at most the spatial rate
    plus the temporal error `τᵖ ‖Lₕ^{p+1} v‖`, which is `O(τᵖ)` uniformly in `h` along smooth
    comparisons for schemes consistent along trajectories ([BrennerThomee1979]; [Thomee2006],

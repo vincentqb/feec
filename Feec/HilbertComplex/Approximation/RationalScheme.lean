@@ -121,7 +121,7 @@ abbrev sdirk2 (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme :=
 end DissipFEEC
 
 /-- **Energy conservation of symmetric schemes** (the Gauss methods) for a skew FEEC
-discretization: `‖Pₕⁿ v‖ = ‖v‖`. [HairerWanner1996], §IV.4 -/
+discretization: `‖Pₕⁿ v‖ = ‖v‖`. [HairerWanner1996], §IV.3 -/
 theorem SkewFEEC.norm_rationalScheme_pow_apply [CompleteSpace E] (F : SkewFEEC.{u} A κ)
     {r : RationalScheme} (hr : r.IsSymmetric) {p : ℕ} (hp : r.HasOrder p) (hp0 : 0 < p) {τ : κ → ℝ}
     (hτ : ∀ h, 0 < τ h) (h : κ) (v : F.X h) (n : ℕ) :

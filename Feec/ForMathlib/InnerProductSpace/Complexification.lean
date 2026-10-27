@@ -21,7 +21,7 @@ A bounded operator `T` of `V` acts componentwise, `T_ℂ (x, y) = (T x, T y)`
 * `re_inner_complexification`: `re ⟪T_ℂ (x, y), (x, y)⟫ = re ⟪T x, x⟫ + re ⟪T y, y⟫`, so `T_ℂ` is
   dissipative when `T` is;
 * `complexification_aeval`: `p(T)_ℂ = p(T_ℂ)` for every real polynomial `p`;
-* `isUnit_of_isUnit_complexification`: `T` is invertible when `T_ℂ` is (`V` complete), and
+* `isUnit_of_isUnit_complexification`: `T` is invertible when `T_ℂ` is, and
   `complexification_ringInverse`: then `(T⁻¹)_ℂ = T_ℂ⁻¹`.
 
 This is how statements about complex Hilbert spaces (von Neumann's inequality,
@@ -253,25 +253,30 @@ theorem complexification_aeval (T : V →L[𝕜] V) (p : ℝ[X]) :
   · change (r : 𝕜) • q.im = ((r : ℂ).im : 𝕜) • q.re + ((r : ℂ).re : 𝕜) • q.im
     simp
 
-/-- **An operator is invertible when its complexification is** (`V` complete): `T` is then
-injective and surjective. -/
-theorem isUnit_of_isUnit_complexification [CompleteSpace V] {T : V →L[𝕜] V}
-    (h : IsUnit T.complexification) : IsUnit T := by
+/-- **An operator is invertible when its complexification is**: the inverse is
+`x ↦ re (T_ℂ⁻¹ (x, 0))`. -/
+theorem isUnit_of_isUnit_complexification {T : V →L[𝕜] V} (h : IsUnit T.complexification) :
+    IsUnit T := by
   obtain ⟨u, hu⟩ := h
   have hl : ∀ p, u.inv (T.complexification p) = p := fun p => by
     rw [← hu]; exact congrArg (fun C : Complexification 𝕜 V →L[ℂ] _ => C p) u.inv_val
   have hr : ∀ p, T.complexification (u.inv p) = p := fun p => by
     rw [← hu]; exact congrArg (fun C : Complexification 𝕜 V →L[ℂ] _ => C p) u.val_inv
-  have hinj : (T : V →ₗ[𝕜] V).ker = ⊥ := LinearMap.ker_eq_bot.2 fun x y hxy => by
-    have e : T.complexification (Complexification.mk x 0) =
-        T.complexification (Complexification.mk y 0) := by
-      ext <;> simp [show T x = T y from hxy]
-    have := congrArg (fun p => (u.inv p).re) e
-    rwa [hl, hl, re_mk, re_mk] at this
-  have hsurj : (T : V →ₗ[𝕜] V).range = ⊤ := LinearMap.range_eq_top.2 fun y =>
-    ⟨(u.inv (Complexification.mk y 0)).re, by
-      simpa using congrArg Complexification.re (hr (Complexification.mk y 0))⟩
-  exact ⟨(ContinuousLinearEquiv.ofBijective T hinj hsurj).toUnit, rfl⟩
+  let s : V → V := fun x => (u.inv (Complexification.mk x 0)).re
+  have hTs : ∀ x, T (s x) = x := fun x => by
+    have := congrArg Complexification.re (hr (Complexification.mk x 0))
+    rwa [complexification_re, re_mk] at this
+  have hsT : ∀ x, s (T x) = x := fun x => by
+    have e : T.complexification (Complexification.mk x 0) = Complexification.mk (T x) 0 := by
+      ext <;> simp
+    simp only [s, ← e, hl, re_mk]
+  let S : V →L[𝕜] V := LinearMap.mkContinuous
+    { toFun := s
+      map_add' := fun x y => by conv_lhs => rw [← hTs x, ← hTs y, ← map_add, hsT]
+      map_smul' := fun c x => by
+        rw [RingHom.id_apply]; conv_lhs => rw [← hTs x, ← T.map_smul, hsT] }
+    ‖u.inv‖ fun x => (norm_re_le _).trans ((u.inv.le_opNorm _).trans_eq (by rw [norm_mk_zero]))
+  exact ⟨⟨T, S, ContinuousLinearMap.ext hTs, ContinuousLinearMap.ext hsT⟩, rfl⟩
 
 /-- The complexification of the inverse is the inverse of the complexification. -/
 theorem complexification_ringInverse {T : V →L[𝕜] V} (h : IsUnit T) :

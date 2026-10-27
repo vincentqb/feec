@@ -26,9 +26,8 @@ Each tableau below gives a rational scheme of the same name in `RationalScheme`,
   Crank–Nicolson scheme (`implicitMidpoint_eq_theta`);
 * `gaussLegendre2`: `R(z) = (1 + z/2 + z²/12)/(1 - z/2 + z²/12)`, the `(2, 2)` Padé approximation,
   order `4`, symmetric;
-* `radauIIA2`: `R(z) = (1 + z/3)/(1 - 2z/3 + z²/6)`, order `3`, A-stable (and L-stable);
-* `sdirk2` (`γ = 1 - √2/2`): `R(z) = (1 + (1 - 2γ) z)/(1 - γ z)²`, order `2`, A-stable (and
-  L-stable).
+* `radauIIA2`: `R(z) = (1 + z/3)/(1 - 2z/3 + z²/6)`, order `3`, L-stable (`IsLStable`);
+* `sdirk2` (`γ = 1 - √2/2`): `R(z) = (1 + (1 - 2γ) z)/(1 - γ z)²`, order `2`, L-stable.
 
 The symmetric (Gauss) methods are isometries for skew generators
 (`RationalScheme.IsSymmetric.norm_apply_apply`). Explicit methods (`A` strictly lower
@@ -220,6 +219,11 @@ theorem radauIIA2_stabilityDen :
     simp [radauIIA2]
     ring
 
+theorem natDegree_radauIIA2_stabilityDen : radauIIA2.stabilityDen.natDegree = 2 := by
+  rw [radauIIA2_stabilityDen, show (1 - C (2 / 3 : ℝ) * X + C (1 / 6) * X ^ 2) =
+    C (1 / 6) * X ^ 2 + C (-(2 / 3)) * X + C 1 by rw [C_neg, C_1]; ring]
+  exact natDegree_quadratic (by norm_num)
+
 /-! ### The two-stage SDIRK method -/
 
 /-- The diagonal coefficient `γ = 1 - √2/2` of `sdirk2`. -/
@@ -253,6 +257,11 @@ theorem sdirk2_stabilityDen :
     rw [eval_stabilityDen, det_fin_two]
     simp [sdirk2]
     ring
+
+theorem natDegree_sdirk2_stabilityDen : sdirk2.stabilityDen.natDegree = 2 := by
+  rw [sdirk2_stabilityDen, show (1 - C (2 * sdirk2Coeff) * X + C (sdirk2Coeff ^ 2) * X ^ 2) =
+    C (sdirk2Coeff ^ 2) * X ^ 2 + C (-(2 * sdirk2Coeff)) * X + C 1 by rw [C_neg, C_1]; ring]
+  exact natDegree_quadratic (pow_pos sdirk2Coeff_pos 2).ne'
 
 end ButcherTableau
 
@@ -329,13 +338,7 @@ theorem hasOrder_gaussLegendre2 : gaussLegendre2.HasOrder 4 := by
 /-- The rational scheme of the two-stage Radau IIA method, `r(z) = (1 + z/3)/(1 - 2z/3 + z²/6)`. -/
 def radauIIA2 : RationalScheme :=
   ButcherTableau.radauIIA2.toRationalScheme
-    (by
-      rw [radauIIA2_stabilityNum, radauIIA2_stabilityDen]
-      have : (1 - C (2 / 3 : ℝ) * X + C (1 / 6) * X ^ 2).natDegree = 2 := by
-        rw [show (1 - C (2 / 3 : ℝ) * X + C (1 / 6) * X ^ 2) =
-          C (1 / 6) * X ^ 2 + C (-(2 / 3)) * X + C 1 by rw [C_neg, C_1]; ring]
-        exact natDegree_quadratic (by norm_num)
-      rw [this]; compute_degree!)
+    (by rw [natDegree_radauIIA2_stabilityDen, radauIIA2_stabilityNum]; compute_degree!)
     (by
       rw [radauIIA2_stabilityDen]
       intro z hz
@@ -358,6 +361,14 @@ theorem isAStable_radauIIA2 : radauIIA2.IsAStable := fun y => by
   rw [e1, e2, norm_sq_quadratic, norm_sq_quadratic]
   nlinarith [sq_nonneg (y ^ 2)]
 
+/-- **The Radau IIA method is L-stable**: `r(∞) = 0`. [HairerWanner1996], §IV.3 -/
+theorem isLStable_radauIIA2 : radauIIA2.IsLStable := by
+  refine ⟨isAStable_radauIIA2, degree_lt_degree ?_⟩
+  change ButcherTableau.radauIIA2.stabilityNum.natDegree <
+    ButcherTableau.radauIIA2.stabilityDen.natDegree
+  rw [natDegree_radauIIA2_stabilityDen, radauIIA2_stabilityNum]
+  exact lt_of_le_of_lt (b := 1) (by compute_degree!) one_lt_two
+
 /-- **The Radau IIA method has order `3`**. [HairerWanner1996], §IV.5 -/
 theorem hasOrder_radauIIA2 : radauIIA2.HasOrder 3 := by
   change X ^ 4 ∣ ButcherTableau.radauIIA2.stabilityNum -
@@ -369,14 +380,7 @@ theorem hasOrder_radauIIA2 : radauIIA2.HasOrder 3 := by
 /-- The rational scheme of `sdirk2`, `r(z) = (1 + (1 - 2γ) z)/(1 - γ z)²`. -/
 def sdirk2 : RationalScheme :=
   ButcherTableau.sdirk2.toRationalScheme
-    (by
-      rw [sdirk2_stabilityNum, sdirk2_stabilityDen]
-      have hγ := sdirk2Coeff_pos
-      have : (1 - C (2 * sdirk2Coeff) * X + C (sdirk2Coeff ^ 2) * X ^ 2).natDegree = 2 := by
-        rw [show (1 - C (2 * sdirk2Coeff) * X + C (sdirk2Coeff ^ 2) * X ^ 2) =
-          C (sdirk2Coeff ^ 2) * X ^ 2 + C (-(2 * sdirk2Coeff)) * X + C 1 by rw [C_neg, C_1]; ring]
-        exact natDegree_quadratic (by positivity)
-      rw [this]; compute_degree!)
+    (by rw [natDegree_sdirk2_stabilityDen, sdirk2_stabilityNum]; compute_degree!)
     (by
       rw [sdirk2_stabilityDen]
       intro z hz
@@ -404,6 +408,13 @@ theorem isAStable_sdirk2 : sdirk2.IsAStable := fun y => by
   rw [e1, e2, norm_sq_quadratic, norm_sq_quadratic]
   have hγ := sdirk2Coeff_sq
   nlinarith [sq_nonneg (sdirk2Coeff ^ 2 * y ^ 2)]
+
+/-- **`sdirk2` is L-stable**: `r(∞) = 0`. [HairerWanner1996], §IV.6 -/
+theorem isLStable_sdirk2 : sdirk2.IsLStable := by
+  refine ⟨isAStable_sdirk2, degree_lt_degree ?_⟩
+  change ButcherTableau.sdirk2.stabilityNum.natDegree < ButcherTableau.sdirk2.stabilityDen.natDegree
+  rw [natDegree_sdirk2_stabilityDen, sdirk2_stabilityNum]
+  exact lt_of_le_of_lt (b := 1) (by compute_degree!) one_lt_two
 
 /-- **`sdirk2` has order `2`**. [HairerWanner1996], §IV.6 -/
 theorem hasOrder_sdirk2 : sdirk2.HasOrder 2 := by

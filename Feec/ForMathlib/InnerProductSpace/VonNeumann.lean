@@ -54,10 +54,7 @@ local notation "⟪" x ", " y "⟫" => inner ℂ x y
 /-- The form `B(u, v) = ⟪u, v⟫ - ⟪S u, S v⟫` of a contraction `S`. -/
 private def formB (S : E →L[ℂ] E) (u v : E) : ℂ := ⟪u, v⟫ - ⟪S u, S v⟫
 
-private theorem norm_apply_le_of_norm_le_one {S : E →L[ℂ] E} (hS : ‖S‖ ≤ 1) (u : E) :
-    ‖S u‖ ≤ ‖u‖ :=
-  (S.le_opNorm u).trans (by simpa using mul_le_mul_of_nonneg_right hS (norm_nonneg u))
-
+/-- `‖Sᵏ u‖ ≤ ‖S‖ᵏ ‖u‖` (`norm_pow_le` needs `E` nontrivial at `k = 0`). -/
 private theorem norm_pow_apply_le (S : E →L[ℂ] E) (k : ℕ) (u : E) :
     ‖(S ^ k) u‖ ≤ ‖S‖ ^ k * ‖u‖ := by
   induction k with
@@ -78,7 +75,7 @@ private theorem formB_self (S : E →L[ℂ] E) (u : E) :
 private theorem norm_formB_le {S : E →L[ℂ] E} (hS : ‖S‖ ≤ 1) (u v : E) :
     ‖formB S u v‖ ≤ ((‖u‖ ^ 2 - ‖S u‖ ^ 2) + (‖v‖ ^ 2 - ‖S v‖ ^ 2)) / 2 := by
   have hsq : ∀ w, ‖S w‖ ^ 2 ≤ ‖w‖ ^ 2 := fun w =>
-    pow_le_pow_left₀ (norm_nonneg _) (norm_apply_le_of_norm_le_one hS w) 2
+    pow_le_pow_left₀ (norm_nonneg _) ((S.le_of_opNorm_le hS w).trans_eq (one_mul _)) 2
   set β := formB S u v
   rcases eq_or_ne β 0 with h | h
   · rw [h, norm_zero]; linarith [hsq u, hsq v]

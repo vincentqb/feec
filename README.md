@@ -12,8 +12,9 @@ approximation theory in one statement, for every conforming family `F` of a Hilb
 `ℕ` or `ℤ`: the static FEEC theorem in every degree (Arnold–Falk–Winther 2010, Thms 3.4–3.9), and
 on every window with every closed constraint the semidiscrete wave and heat FEEC theorems and
 the fully discrete ones for every time scheme (θ-schemes, Crank–Nicolson, and every A-stable
-rational scheme and Runge–Kutta method, contractive by von Neumann's inequality,
-`Feec.TimeStepping.RationalScheme.norm_step_le`) and for leapfrog under the CFL condition. Each field is the verdict of the layer theorem below.
+rational scheme of order `p ≥ 1`, among them the Gauss–Legendre, Radau IIA and SDIRK Runge–Kutta
+methods, contractive by von Neumann's inequality, `Feec.TimeStepping.RationalScheme.norm_step_le`)
+and for leapfrog under the CFL condition. Each field is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and `O(hᵒʳᵈ + τᵖ)` for the fully discrete schemes along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate

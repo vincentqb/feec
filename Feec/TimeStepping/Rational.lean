@@ -11,7 +11,8 @@ infinity (`deg n ≤ deg d`) and without poles in the closed left half-plane; it
 exponential by the one-step scheme `u ↦ r(τ A) u` for `u' = A u`. It is **A-stable**
 (`RationalScheme.IsAStable`) if `|r(iy)| ≤ 1` on the imaginary axis (by the maximum principle this
 is the usual condition on the closed left half-plane, [HairerWanner1996], §IV.3; only the
-imaginary axis is used here, and the equivalence is not formalized), and of **order `p`**
+imaginary axis is used here, and the equivalence is not formalized), **L-stable**
+(`RationalScheme.IsLStable`) if moreover `r(∞) = 0`, i.e. `deg n < deg d`, and of **order `p`**
 (`RationalScheme.HasOrder`) if `r(z) - e^z = O(z^{p+1})`, i.e. `X^{p+1}` divides `n - d Tₚ` with
 `Tₚ = ∑_{j≤p} Xʲ/j!` (`expTaylor`).
 
@@ -50,7 +51,7 @@ over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (stability functions, A-stability), §IV.4 (Padé approximations)
+  §IV.3 (stability functions, A- and L-stability, Padé approximations)
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
   (A-stable rational approximations are contractive on Hilbert spaces through von Neumann's
@@ -161,6 +162,9 @@ def eval (z : ℂ) : ℂ := aeval z r.num / aeval z r.den
 half-plane, the usual condition on `re z ≤ 0` by the maximum principle). [HairerWanner1996],
 §IV.3 -/
 def IsAStable : Prop := ∀ y : ℝ, ‖r.eval (y * Complex.I)‖ ≤ 1
+
+/-- **L-stability**: A-stable with `r(∞) = 0`, i.e. `deg n < deg d`. [HairerWanner1996], §IV.3 -/
+def IsLStable : Prop := r.IsAStable ∧ r.num.degree < r.den.degree
 
 /-- The supremum `sup_{y ∈ ℝ} |r(iy)|` (finite, `bddAbove`). -/
 def supNorm : ℝ := ⨆ y : ℝ, ‖r.eval (y * Complex.I)‖
@@ -495,7 +499,7 @@ theorem apply_mem_of_mapsTo {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, 
 /-! ### Symmetric schemes -/
 
 /-- A **symmetric** scheme, `n(z) = d(-z)`, so `r(-z) = 1/r(z)` (the diagonal Padé
-approximations, Gauss methods). [HairerWanner1996], §IV.4 -/
+approximations, Gauss methods). [HairerWanner1996], §IV.3, §IV.5 -/
 def IsSymmetric : Prop := r.num = r.den.comp (-X)
 
 /-- A symmetric scheme has `|r(iy)| = 1`. -/
@@ -528,12 +532,12 @@ theorem IsSymmetric.norm_apply_apply {r : RationalScheme} (h : r.IsSymmetric) {L
   have hinv : r.apply (-L) * r.apply L = 1 := by
     rw [apply, apply, e1, e2, mul_assoc, ← mul_assoc (Ring.inverse _),
       Ring.inverse_mul_cancel _ hn, one_mul, Ring.mul_inverse_cancel _ (r.isUnit_aeval_den h1)]
-  have hle : ∀ (M : V →L[𝕜] V), ‖M‖ ≤ 1 → ∀ z, ‖M z‖ ≤ ‖z‖ := fun M hM z =>
-    (M.le_opNorm z).trans (by simpa using mul_le_mul_of_nonneg_right hM (norm_nonneg z))
-  refine le_antisymm (hle _ (r.norm_apply_le_one h1 h.isAStable) x) ?_
+  refine le_antisymm (((r.apply L).le_of_opNorm_le (r.norm_apply_le_one h1 h.isAStable) x).trans_eq
+    (one_mul _)) ?_
   calc ‖x‖ = ‖r.apply (-L) (r.apply L x)‖ := by
         rw [← mul_apply_eq_comp (r.apply (-L)) (r.apply L) x, hinv, one_apply_eq_self]
-    _ ≤ ‖r.apply L x‖ := hle _ (r.norm_apply_le_one h2 h.isAStable) _
+    _ ≤ 1 * ‖r.apply L x‖ := (r.apply (-L)).le_of_opNorm_le (r.norm_apply_le_one h2 h.isAStable) _
+    _ = ‖r.apply L x‖ := one_mul _
 
 /-! ### The θ-schemes -/
 

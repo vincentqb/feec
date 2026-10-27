@@ -27,7 +27,7 @@ all data; when `Δ F` is closed it is isomorphic, as a complex, to `derived E F`
   (`Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`), so **the derived
   complex is a closed Hilbert complex with closed range** at every index where the rows have
   finite-dimensional cohomology (`BoundedData.derivedComplex_closedRangeAt`), and **exact**
-  where both rows are exact (`BoundedData.derivedComplex_cohomology_eq_bot`).
+  where both rows are exact (`BoundedData.derivedComplex_boundaries_eq`).
 
 For the BGG complexes `Data.bgg J` of [ArnoldHu2021] this is the analytic part of their §5 (and of
 [CapHu2024] for Sobolev rows): closed range and finite-dimensional cohomology pass from the input
@@ -53,7 +53,7 @@ for instance under the compactness property
 * **`BoundedData.derivedComplex_closedRangeAt`**,
   `BoundedData.finiteDimensional_derivedComplex_cohomology`,
   `BoundedData.finrank_derivedComplex_cohomology_le`,
-  `BoundedData.derivedComplex_cohomology_eq_bot`.
+  `BoundedData.derivedComplex_boundaries_eq`.
 
 ## References
 

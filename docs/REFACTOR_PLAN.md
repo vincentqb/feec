@@ -296,6 +296,7 @@ Feec/
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
 │   Domain/{BGG,HessianBGG,ElasticityBGG,DivDivBGG}.lean -- BGG data of constant-coefficient operators;
 │                                 -- the Hessian, elasticity, div-div complexes as bgg 0, 1, 2 of stacked de Rham
+│   Domain/BGGRealization.lean -- their L² (maximal) realizations as HilbertData; the analytic BGG verdicts on Ω
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3,CubicalForm}.lean
 ├── Geometry/{AlgebraicCurvature,Bivector,Hodge2,WeylDecomposition}.lean
 ├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)

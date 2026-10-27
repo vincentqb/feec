@@ -24,8 +24,8 @@ domain complexes are.
 
 * `HilbertData.domainIncl_domainS`: `ι (S v) = S (ι v)`.
 * `HilbertData.domainBggHomologyIso`, `HilbertData.domainBgg_acyclic`.
-* **`HilbertData.derivedComplex_closedRangeAt_finrank_le`**: the analytic BGG theorem for Hilbert
-  complexes.
+* `HilbertData.DerivedVerdict`, **`HilbertData.derivedVerdict`**: the analytic BGG theorem for
+  Hilbert complexes.
 
 ## References
 
@@ -125,6 +125,15 @@ def domainRowBotCohomologyEquiv (i : ι) :
     D.domainData.rowBotComplex.cohomology i ≃ₗ[𝕜] D.Ht.cohomology i :=
   D.Ht.domainComplexCohomologyEquiv i
 
+variable (E F : ι → Prop) in
+/-- **The analytic BGG verdict at `i`**: the derived complex of the domain complexes has closed
+range at `i` and finite-dimensional cohomology, of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`. -/
+structure DerivedVerdict (i : ι) : Prop where
+  closedRangeAt : (D.domainData.derivedComplex E F).ClosedRangeAt i
+  finiteDimensional : FiniteDimensional 𝕜 ((D.domainData.derivedComplex E F).cohomology i)
+  finrank_le : Module.finrank 𝕜 ((D.domainData.derivedComplex E F).cohomology i) ≤
+    Module.finrank 𝕜 (D.H.cohomology i) + Module.finrank 𝕜 (D.Ht.cohomology i)
+
 variable {E F : ι → Prop}
   (hΔ : ∀ i, IsClosed (D.domainData.Δ F i : Set (D.H.domainSpace i × D.Ht.domainSpace i)))
   (h : D.domainData.Eliminates E F) (i : ι) [FiniteDimensional 𝕜 (D.H.cohomology i)]
@@ -135,12 +144,9 @@ include hΔ h
 connecting maps, the derived complex of their domain complexes is a closed Hilbert complex with
 closed range and finite-dimensional cohomology, of dimension at most
 `dim Hⁱ(W) + dim Hⁱ(W̃)`, at every index where the two complexes have finite-dimensional
-cohomology. [ArnoldHu2021], §5; [CapHu2024] -/
-theorem derivedComplex_closedRangeAt_finrank_le :
-    (D.domainData.derivedComplex E F).ClosedRangeAt i ∧
-      FiniteDimensional 𝕜 ((D.domainData.derivedComplex E F).cohomology i) ∧
-      Module.finrank 𝕜 ((D.domainData.derivedComplex E F).cohomology i) ≤
-        Module.finrank 𝕜 (D.H.cohomology i) + Module.finrank 𝕜 (D.Ht.cohomology i) := by
+cohomology (and the eliminations hold, with closed exact part). [ArnoldHu2021], §5;
+[CapHu2024] -/
+theorem derivedVerdict : D.DerivedVerdict E F i := by
   have := (D.domainRowTopCohomologyEquiv i).symm.finiteDimensional
   have := (D.domainRowBotCohomologyEquiv i).symm.finiteDimensional
   refine ⟨D.domainData.derivedComplex_closedRangeAt hΔ h i,

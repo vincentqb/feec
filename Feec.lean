@@ -32,6 +32,7 @@ public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
 public import Feec.Domain.Affine
 public import Feec.Domain.BGG
+public import Feec.Domain.BGGRealization
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
 public import Feec.Domain.Constrained

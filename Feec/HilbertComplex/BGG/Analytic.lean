@@ -202,8 +202,12 @@ variable [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)]
 def derivedSpace (i : ι) : Submodule 𝕜 (WithLp 2 (V i × Vt i)) :=
   D.ΓL E i ⊓ (D.ΔL E F i)ᗮ
 
-/-- The inner product of `Υⁱ`, declared on `derivedSpace` itself so that it is found for every
-instance of the data (e.g. on graph spaces, where the generic submodule instance is not). -/
+/-- The norm of `Υⁱ`, declared on `derivedSpace` itself (with its inner product and completeness)
+so that instances of the data (e.g. on graph spaces of `L²` fields) find these instances
+syntactically instead of unfolding the generic submodule instances. -/
+instance (i : ι) : NormedAddCommGroup (D.derivedSpace E F i) := Submodule.normedAddCommGroup _
+
+/-- The inner product of `Υⁱ`. -/
 instance (i : ι) : InnerProductSpace 𝕜 (D.derivedSpace E F i) := Submodule.innerProductSpace _
 
 instance (i : ι) : CompleteSpace (D.derivedSpace E F i) :=

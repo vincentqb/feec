@@ -29,7 +29,9 @@ public import Feec.Counterexamples.Fredholm
 public import Feec.Counterexamples.LinearizedGravity
 public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
+public import Feec.Counterexamples.PeriodicFamily
 public import Feec.Counterexamples.PolynomialForms
+public import Feec.Counterexamples.Sharpness
 public import Feec.Domain.Affine
 public import Feec.Domain.BGG
 public import Feec.Domain.BGGRealization
@@ -212,6 +214,7 @@ public import Feec.HilbertComplex.Total
 public import Feec.HilbertComplex.Transport
 public import Feec.HilbertComplex.Window
 public import Feec.Instances.Corollaries
+public import Feec.Instances.CrownNonVacuity
 public import Feec.Instances.EinsteinBianchi
 public import Feec.Instances.EinsteinBianchiAbsorbing
 public import Feec.Instances.EinsteinBianchiFEM

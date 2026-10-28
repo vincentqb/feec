@@ -84,6 +84,15 @@ bounded condition numbers), so the crown holds for them as well, e.g. for Maxwel
 every linear medium given by factors `ε = e† e`, `μ = m† m`, in particular isotropic media
 (`Feec.Instances.MaxwellMedia`; anisotropic media once real factors are supplied).
 
+**Sharpness and non-vacuity.** Closed range of `𝔅ᵏ` is necessary for the static verdict at
+`j → k` (`ConformingFamily.StaticVerdict.closedRangeAt`; the periodic complex has `ℌ = 0`, a
+conforming family and no static verdict). `Feec.Counterexamples.Sharpness` (`crownSharpness`)
+collects this with the counterexamples showing that the reducing hypothesis fails for the TSD
+constraint (only `leaves` applies to it) and the subcomplex hypothesis for non-matching
+polynomial pairs. `Feec.Instances.CrownNonVacuity` (`crownNonVacuity`) instantiates the rated
+crown on the Whitney forms of the cube: closed range with `ℌ⁰ ≠ 0`, a non-reducing constraint for
+which `leaves` fires, and a nonzero heat datum.
+
 **Outside the crown.**
 
 * BGG discretizations: the derived complex of bounded BGG data is a Hilbert complex

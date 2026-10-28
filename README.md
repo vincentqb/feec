@@ -23,6 +23,17 @@ estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smoo
 classes) and `O(hᵒʳᵈ + τ^{p/(p+2)})` uniformly in `h` for every Jackson datum and every one-step
 `TimeScheme` (smoothing by time averages; not leapfrog); `docs/crown.pdf` renders the module.
 
+Closed range of `𝔅ᵏ` is necessary for the static clause at `j → k` (the uniform discrete
+Poincaré inequality forces it, `ConformingFamily.StaticVerdict.closedRangeAt`; the periodic
+complex has `ℌ = 0`, a conforming family and no static verdict).
+`Feec.Counterexamples.crownSharpness` (`Counterexamples/Sharpness.lean`) collects this with the
+counterexamples showing that the TSD constraint is not reducing on bounded domains (so only the
+departure clause applies to it) and that `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not a subcomplex.
+`Feec.Instances.crownNonVacuity` (`Instances/CrownNonVacuity.lean`) instantiates the rated crown
+on the Whitney forms of the cube, with closed range and `ℌ⁰ ≠ 0`, a non-reducing constraint for
+which the departure clause fires, and a nonzero heat datum, and collects the non-vacuity
+witnesses of the layers.
+
 ## The approximating FEEC theorem
 
 The master theorem is a tower of three, each a structure of named conclusions extending the one

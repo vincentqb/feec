@@ -650,6 +650,11 @@ theorem heatCore_data : (F.heatCore hcr).Data = (-H.hodgeLaplacian).sqDomain := 
 theorem dense_heatCore_data : (F.heatCore hcr).Data.topologicalClosure = ⊤ :=
   Submodule.dense_iff_topologicalClosure_eq_top.1 H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain
 
+/-- **The heat core has nonzero data** as soon as the window is nonzero (`dense_heatCore_data`). -/
+theorem exists_mem_heatCore_data_ne_zero [Nontrivial (PiLp 2 W)] :
+    ∃ x ∈ (F.heatCore hcr).Data, x ≠ 0 :=
+  H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain.exists_mem_open isOpen_ne (exists_ne 0)
+
 /-- **The heat FEEC theorem** (`DissipFEEC.Verdict` of the heat FEEC discretization with the heat
 core): well-posedness and the energy identity, propagation of `K`, convergence of the discrete
 heat flows from every convergent family of discrete data (every datum: `dense_heatCore_data`),

@@ -23,7 +23,21 @@ the parity of the form degree, then `diag(ε) (M + s K)` is symmetric and has th
 * `TimeStepping.isSymm_diagonal_mul_add_smul`: `diag(ε) (M + s K)` is symmetric.
 * `TimeStepping.mulVec_diagonal_mul_iff`: the signed system has the same solutions.
 
-This holds for any number of blocks (any length of the complex) and any commutative ring.
+This holds for any number of blocks (any length of the complex) and any commutative ring;
+`TimeStepping.isHermitian_diagonal_mul_add_smul` is the Hermitian form over a star ring.
+
+## Crank–Nicolson for a bounded generator in a basis
+
+For a basis `b` of an inner product space over `ℝ` or `ℂ`, with Gram (mass) matrix `M` and
+stiffness `K i j = -⟪bᵢ, T bⱼ⟫` (`stiffness`) of a linear map `T`:
+
+* `isCNStep_iff_mulVec`: `u'` is a CN step from `u` for `u' = T u` iff
+  `(M + sK) c(u') = (M - sK) c(u)`;
+* `diagonal_mul_mulVec_iff_isCNStep`: the signed system `diag(ε) (M + sK) w = diag(ε) (M - sK) c(u)`
+  has the CN steps as solutions;
+* `isHermitian_signed_cn`: for a skew `T` and signs adapted to `b`, `diag(ε) (M + sK)` is
+  Hermitian. The crown's fully discrete Crank–Nicolson scheme reads through these
+  (`Feec.HilbertComplex.SkewFEEC.crankNicolson_signed`).
 
 ## Three-block systems of the Einstein–Bianchi scheme (thesis Ch. 7)
 
@@ -93,6 +107,143 @@ theorem mulVec_diagonal_mul_iff (ε : n → R) (hε : ∀ i, ε i * ε i = 1) (A
     have := congrArg (diagonal ε *ᵥ ·) h
     simpa [mulVec_mulVec, ← Matrix.mul_assoc, hεε] using this
   · intro h; rw [← mulVec_mulVec, h]
+
+/-- **Signed Hermitian symmetrization**: if `M` is Hermitian and couples only unknowns with equal
+signs, `K` is skew-Hermitian and couples only unknowns with opposite signs, and the signs and `s`
+are self-adjoint, then `diag(ε) (M + s K)` is Hermitian (the complex form of
+`isSymm_diagonal_mul_add_smul`). [QuennevilleBelair2015], Ch. 7 -/
+theorem isHermitian_diagonal_mul_add_smul [StarRing R] (ε : n → R) {M K : Matrix n n R}
+    (hM : M.IsHermitian) (hK : Kᴴ = -K) (hε : ∀ i, star (ε i) = ε i)
+    (hMε : ∀ i j, M i j ≠ 0 → ε i = ε j) (hKε : ∀ i j, K i j ≠ 0 → ε i = -ε j) {s : R}
+    (hs : star s = s) : (diagonal ε * (M + s • K)).IsHermitian := by
+  refine Matrix.IsHermitian.ext fun i j => ?_
+  simp only [diagonal_mul, Matrix.add_apply, Matrix.smul_apply, smul_eq_mul, star_mul',
+    star_add, hε, hs, hM.apply]
+  have hKji : star (K j i) = -K i j := by simpa using congrFun (congrFun hK i) j
+  rw [hKji]
+  have e1 : ε j * M i j = ε i * M i j := by
+    by_cases h : M i j = 0
+    · rw [h, mul_zero, mul_zero]
+    · rw [hMε i j h]
+  have e2 : ε j * (s * -K i j) = ε i * (s * K i j) := by
+    by_cases h : K i j = 0
+    · simp [h]
+    · rw [hKε i j h]; ring
+  linear_combination e1 + e2
+
+/-! ### Crank–Nicolson for a bounded generator in a basis -/
+
+section Generator
+
+open scoped InnerProductSpace
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+
+omit [DecidableEq n] in
+/-- Expansion of `⟪w, y⟫` in the coordinates of `y`. -/
+theorem inner_eq_sum_repr (b : Module.Basis n 𝕜 E) (w y : E) :
+    ⟪w, y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, b j⟫_𝕜 := by
+  conv_lhs => rw [← b.sum_repr y]
+  rw [inner_sum]
+  simp [inner_smul_right]
+
+omit [DecidableEq n] in
+/-- Testing against a basis determines a vector. -/
+theorem eq_of_inner_basis (b : Module.Basis n 𝕜 E) {y y' : E}
+    (h : ∀ i, ⟪b i, y⟫_𝕜 = ⟪b i, y'⟫_𝕜) : y = y' := by
+  refine ext_inner_left 𝕜 fun w => ?_
+  rw [← b.sum_repr w, sum_inner, sum_inner]
+  simp [inner_smul_left, h]
+
+/-- The **stiffness matrix** `K i j = -⟪bᵢ, T bⱼ⟫` of `T` in the basis `b`: tested against `b`,
+`u' = T u` reads `M c' = -K c` with the Gram (mass) matrix `M` and the coefficients `c` of `u`. -/
+def stiffness (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) : Matrix n n 𝕜 :=
+  Matrix.of fun i j => -⟪b i, T (b j)⟫_𝕜
+
+omit [DecidableEq n] in
+/-- Testing in coordinates: `(⟪bᵢ, y⟫)ᵢ = M c(y)`. -/
+theorem inner_basis_eq_gram_mulVec (b : Module.Basis n 𝕜 E) (y : E) :
+    (fun i => ⟪b i, y⟫_𝕜) = Matrix.gram 𝕜 b *ᵥ b.equivFun y := by
+  funext i
+  rw [inner_eq_sum_repr b]
+  simp [mulVec, dotProduct, Matrix.gram_apply, mul_comm]
+
+omit [DecidableEq n] in
+/-- Testing `T y` in coordinates: `(⟪bᵢ, T y⟫)ᵢ = -K c(y)`. -/
+theorem inner_basis_apply_eq_neg_stiffness_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E)
+    (y : E) : (fun i => ⟪b i, T y⟫_𝕜) = -(stiffness b T *ᵥ b.equivFun y) := by
+  funext i
+  have e : ⟪b i, T y⟫_𝕜 = ∑ j, b.repr y j * ⟪b i, T (b j)⟫_𝕜 := by
+    conv_lhs => rw [← b.sum_repr y, map_sum, inner_sum]
+    simp only [map_smul, inner_smul_right]
+  simp [e, mulVec, dotProduct, stiffness, mul_comm]
+
+omit [DecidableEq n] in
+/-- **A Crank–Nicolson step is the assembled system**: `u'` is a CN step from `u` with half step
+`s` for `u' = T u` iff `(M + sK) c(u') = (M - sK) c(u)` (Gram matrix `M`, stiffness `K`).
+[QuennevilleBelair2015], Ch. 7 -/
+theorem isCNStep_iff_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) (s : ℝ) (u u' : E) :
+    IsCNStep (T.toPMap ⊤) s u u' ↔
+      (Matrix.gram 𝕜 b + (s : 𝕜) • stiffness b T) *ᵥ b.equivFun u' =
+        (Matrix.gram 𝕜 b - (s : 𝕜) • stiffness b T) *ᵥ b.equivFun u := by
+  have hC : IsCNStep (T.toPMap ⊤) s u u' ↔ u' - (s : 𝕜) • T u' = u + (s : 𝕜) • T u := by
+    refine ⟨fun ⟨_, e⟩ => ?_, fun e => ⟨Submodule.mem_top, ?_⟩⟩
+    · change u' - u = (s : 𝕜) • T (u' + u) at e
+      rw [map_add] at e
+      linear_combination (norm := module) e
+    · change u' - u = (s : 𝕜) • T (u' + u)
+      rw [map_add]
+      linear_combination (norm := module) e
+  have hK : ∀ y, stiffness b T *ᵥ b.equivFun y = -fun i => ⟪b i, T y⟫_𝕜 := fun y => by
+    rw [inner_basis_apply_eq_neg_stiffness_mulVec, neg_neg]
+  rw [hC, add_mulVec, sub_mulVec, smul_mulVec, smul_mulVec, ← inner_basis_eq_gram_mulVec,
+    ← inner_basis_eq_gram_mulVec, hK, hK]
+  refine ⟨fun e => funext fun i => ?_, fun e => eq_of_inner_basis b fun i => ?_⟩
+  · have := congrArg (⟪b i, ·⟫_𝕜) e
+    simp only [inner_sub_right, inner_add_right, inner_smul_right] at this
+    simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, Pi.neg_apply, smul_eq_mul]
+    linear_combination this
+  · have := congrFun e i
+    simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, Pi.neg_apply, smul_eq_mul] at this
+    simp only [inner_sub_right, inner_add_right, inner_smul_right]
+    linear_combination this
+
+omit [Fintype n] [DecidableEq n] in
+/-- `K` is skew-Hermitian for a skew `T`. -/
+theorem conjTranspose_stiffness (b : Module.Basis n 𝕜 E) {T : E →ₗ[𝕜] E}
+    (hT : ∀ x y, ⟪T x, y⟫_𝕜 = -⟪x, T y⟫_𝕜) : (stiffness b T)ᴴ = -stiffness b T := by
+  ext i j
+  simp only [conjTranspose_apply, stiffness, Matrix.of_apply, Matrix.neg_apply, star_neg,
+    neg_neg, ← inner_conj_symm (b j), RCLike.star_def, RingHomCompTriple.comp_apply,
+    RingHom.id_apply, hT]
+
+/-- **The signed Crank–Nicolson system is Hermitian** for a skew `T` and real signs `ε i = ±1`
+such that the basis functions with different signs are orthogonal and `T` couples only basis
+functions with opposite signs (a basis adapted to a grading by the parity of the degree):
+`diag(ε) (M + sK)` is Hermitian, so MINRES applies to it. [QuennevilleBelair2015], Ch. 7;
+[PaigeSaunders1975] -/
+theorem isHermitian_signed_cn (b : Module.Basis n 𝕜 E) {T : E →ₗ[𝕜] E}
+    (hT : ∀ x y, ⟪T x, y⟫_𝕜 = -⟪x, T y⟫_𝕜) (ε : n → ℝ)
+    (hMε : ∀ i j, ⟪b i, b j⟫_𝕜 ≠ 0 → ε i = ε j) (hKε : ∀ i j, ⟪b i, T (b j)⟫_𝕜 ≠ 0 → ε i = -ε j)
+    (s : ℝ) :
+    (diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b + (s : 𝕜) • stiffness b T)).IsHermitian :=
+  isHermitian_diagonal_mul_add_smul _ (Matrix.isHermitian_gram 𝕜 b) (conjTranspose_stiffness b hT)
+    (fun _ => RCLike.conj_ofReal _) (fun i j hij => by rw [hMε i j hij])
+    (fun i j hij => by rw [hKε i j (by simpa [stiffness] using hij), RCLike.ofReal_neg])
+    (RCLike.conj_ofReal s)
+
+/-- **The signed system has the CN steps as solutions**: for signs with `ε i² = 1`, `w` solves
+`diag(ε) (M + sK) w = diag(ε) (M - sK) c(u)` iff `b.equivFun.symm w` is a CN step from `u`.
+[QuennevilleBelair2015], Ch. 7 -/
+theorem diagonal_mul_mulVec_iff_isCNStep (b : Module.Basis n 𝕜 E)
+    (T : E →ₗ[𝕜] E) (s : ℝ) (ε : n → 𝕜) (hε : ∀ i, ε i * ε i = 1) (u : E) (w : n → 𝕜) :
+    (diagonal ε * (Matrix.gram 𝕜 b + (s : 𝕜) • stiffness b T)) *ᵥ w =
+        (diagonal ε * (Matrix.gram 𝕜 b - (s : 𝕜) • stiffness b T)) *ᵥ b.equivFun u ↔
+      IsCNStep (T.toPMap ⊤) s u (b.equivFun.symm w) := by
+  rw [← mulVec_mulVec (b.equivFun u) (diagonal ε), mulVec_diagonal_mul_iff ε hε,
+    isCNStep_iff_mulVec b, LinearEquiv.apply_symm_apply]
+
+end Generator
 
 /-! ### Three-block Crank–Nicolson matrices (thesis Ch. 7) -/
 
@@ -535,25 +686,6 @@ def blockCoord (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ
 def blockLoad (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ V₁)
     (b₂ : Module.Basis n₂ ℝ V₂) (y : V₀ × V₁ × V₂) : BlockIdx n₀ n₁ n₂ → ℝ :=
   Sum.elim (fun i => ⟪b₀ i, y.1⟫) (Sum.elim (fun i => ⟪b₁ i, y.2.1⟫) fun i => ⟪b₂ i, y.2.2⟫)
-
-omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂] [Fintype n₀]
-  [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-theorem inner_eq_sum_repr {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
-    {m : Type*} [Fintype m] (b : Module.Basis m ℝ W) (w y : W) :
-    ⟪w, y⟫ = ∑ j, b.repr y j * ⟪w, b j⟫ := by
-  conv_lhs => rw [← b.sum_repr y]
-  rw [inner_sum]
-  simp [inner_smul_right]
-
-omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂] [Fintype n₀]
-  [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- Testing against a basis determines a vector. -/
-theorem eq_of_inner_basis {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
-    {m : Type*} [Fintype m] (b : Module.Basis m ℝ W) {y y' : W}
-    (h : ∀ i, ⟪b i, y⟫ = ⟪b i, y'⟫) : y = y' := by
-  refine ext_inner_left ℝ fun w => ?_
-  rw [← b.sum_repr w, sum_inner, sum_inner]
-  simp [inner_smul_left, h]
 
 omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂]
   [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in

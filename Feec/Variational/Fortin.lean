@@ -7,8 +7,8 @@ public import Feec.Variational.SaddlePoint
 
 A Fortin operator for a constraint form `b : X →L[𝕜] Y →SL[σ] 𝕜` and discrete spaces
 `Xₕ ⊆ X`, `Yₕ ⊆ Y` is a map `P : X → Xₕ` with `b (P v) q = b v q` for `q ∈ Yₕ` and
-`‖P v‖ ≤ C ‖v‖`. It transfers the continuous inf-sup condition of `b` (inf over `q`) to the
-discrete one with constant `β / C`.
+`‖P v‖ ≤ C ‖v‖`. It transfers the continuous inf-sup condition of `b` (inf over `q ∈ Yₕ`) to
+the discrete one with constant `β / C`.
 
 ## Main results
 
@@ -53,9 +53,9 @@ variable {b : X →L[𝕜] Y →SL[σ] 𝕜} {Xh : Submodule 𝕜 X} {Yh : Submo
   {C β : ℝ}
 
 /-- **Fortin's lemma**: a Fortin operator with bound `C` transfers the inf-sup condition
-`β ‖q‖ ≤ sup_v |b v q| / ‖v‖` to `Yₕ` with the sup over `Xₕ` and constant `β / C`. -/
+`β ‖q‖ ≤ sup_v |b v q| / ‖v‖`, needed on `Yₕ` only, to the sup over `Xₕ` with constant `β / C`. -/
 theorem IsFortinOperator.discrete_infSup (hP : IsFortinOperator b Xh Yh P C) (hC : 0 < C)
-    (hb : ∀ q, β * ‖q‖ ≤ ‖b.flip q‖) :
+    (hb : ∀ q ∈ Yh, β * ‖q‖ ≤ ‖b.flip q‖) :
     ∀ q ∈ Yh, β / C * ‖q‖ ≤ ‖(b.flip q).comp Xh.subtypeL‖ := by
   intro q hq
   have key : ‖b.flip q‖ ≤ C * ‖(b.flip q).comp Xh.subtypeL‖ := by
@@ -66,7 +66,7 @@ theorem IsFortinOperator.discrete_infSup (hP : IsFortinOperator b Xh Yh P C) (hC
       _ ≤ ‖(b.flip q).comp Xh.subtypeL‖ * (C * ‖v‖) := by gcongr; exact hP.norm_le v
       _ = _ := by ring
   rw [div_mul_eq_mul_div, div_le_iff₀ hC]
-  nlinarith [hb q]
+  nlinarith [hb q hq]
 
 end Normed
 
@@ -80,13 +80,13 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
 
 /-- **Discrete Brezzi via Fortin.** On complete (e.g. closed or finite-dimensional) discrete spaces `Xₕ`, `Yₕ`, let `Bₕ` be the
 discrete constraint operator of `b` (`b vₕ qₕ = ⟪qₕ, Bₕ vₕ⟫`). If `b` has the continuous inf-sup
-property (inf over `q`), a Fortin operator with bound `C` exists, and `a` has the inf-sup property
+property (inf over `q ∈ Yₕ`), a Fortin operator with bound `C` exists, and `a` has the inf-sup property
 and separates on the discrete kernel `ker Bₕ`, then the discrete saddle point problem is uniquely
 solvable for all discrete data. [QuennevilleBelair2015], Thm 4.11 (discrete form); the discrete
 conditions go back to [Brezzi1974]. -/
 theorem existsUnique_discrete_isSaddleSolution [CompleteSpace Xh] [CompleteSpace Yh]
     (hP : IsFortinOperator b Xh Yh P C) (hC : 0 < C) (hβ : 0 < β)
-    (hb : ∀ q, β * ‖q‖ ≤ ‖b.flip q‖)
+    (hb : ∀ q ∈ Yh, β * ‖q‖ ≤ ‖b.flip q‖)
     (hZ : InfSup (restrict (restrict a Xh Xh) (rieszOp (restrict b Xh Yh)).ker
       (rieszOp (restrict b Xh Yh)).ker) γ)
     (hZs : SeparatingRight (restrict (restrict a Xh Xh) (rieszOp (restrict b Xh Yh)).ker

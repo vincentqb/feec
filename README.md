@@ -37,14 +37,14 @@ on the Whitney forms of the cube, with closed range and `ℌ⁰ ≠ 0`, a non-re
 which the departure clause fires, and a nonzero heat datum, and collects the non-vacuity
 witnesses of the layers.
 
-All but 14 of the 392 modules feed the crown: each is imported, transitively, by `Crown.lean` or
-by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 14
+All but 12 of the 392 modules feed the crown: each is imported, transitively, by `Crown.lean` or
+by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 12
 are thesis corrections outside the crown's hypotheses
 (`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`,
 with `HilbertComplex.SecondOrder`), the weak-symmetry scheme (6.5) and its rates, which is not a
 conforming family (`Instances.EinsteinBianchi{FEMDefect, Gauss}`,
 `Models.Cube.WeakSymmetrySobolevRate`, `EinsteinBianchi.{Unconditional, WaveFEMRegularity}`), and
-`Algebra.Proxy3`, `TimeStepping.BlockMatrix`, `Variational.Fortin`, which no verdict uses.
+`Algebra.Proxy3`, which no verdict uses.
 
 ## The approximating FEEC theorem
 

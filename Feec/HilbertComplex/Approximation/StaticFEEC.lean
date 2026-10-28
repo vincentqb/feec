@@ -3,6 +3,7 @@ module
 public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
+public import Feec.Variational.Fortin
 
 /-!
 # The static FEEC theorem
@@ -26,7 +27,13 @@ closed range and `ℌʲ` is finite-dimensional, then at the degree `j` (and its 
 * `cohomology`: `πₕ` eventually induces isomorphisms `Hʲ(H) ≅ Hʲ(Vₕ)` ([AFW2010], Thm 3.4);
 * `quasiOptimal`: `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`
   ([AFW2010], Thm 3.9);
-* `converges`: the discrete solutions converge to the solution of the mixed problem.
+* `converges`: the discrete solutions converge to the solution of the mixed problem;
+* `infSup`: the uniform discrete inf-sup condition of `d` on `𝔅ₕᵏ` (the condition of the discrete
+  Brezzi theory, [BoffiBrezziFortin2013], §5.4), by Fortin's criterion: the projections give
+  Fortin operators `Π τ = πʲ ρ`, `ρ` the Poincaré lift of the projection of `d τ` onto `𝔅ₕᵏ`
+  (`Subcomplex.CochainProjection.exists_isFortinOperator`), which transfer the continuous inf-sup
+  condition (`norm_le_norm_constraintForm_flip`) with a constant independent of `h`
+  (`Subcomplex.CochainProjection.infSup`, from `Variational.IsFortinOperator.discrete_infSup`).
 
 With a Jackson estimate (`ConformingFamily.Jackson`, of any real order; from best approximation in
 `W` through the projections, `ConformingFamily.Jackson.ofInfDist`) the error is `O(hᵒʳᵈ)` for
@@ -58,6 +65,8 @@ projections (`ConformingFamily.hasUniformProj`).
   `ConformingFamily.Jackson.approx_le`; `ConformingFamily.rate_static_L2`, the improved `L²` rate
   of [AFW2010], Thm 3.11, conditional on elliptic regularity (rates of `η`, `δ`, `μ`).
 * `Subcomplex.CochainProjection.mixedApprox_le`, `Subcomplex.CochainProjection.norm_sub_le_rate`.
+* `constraintForm`, `norm_le_norm_constraintForm_flip`,
+  `Subcomplex.CochainProjection.exists_isFortinOperator`, `Subcomplex.CochainProjection.infSup`.
 * `ConformingFamily.closedRangeAt_of_discretePoincare`,
   `ConformingFamily.StaticVerdict.closedRangeAt`: an eventual uniform discrete Poincaré inequality
   at `j → k` forces `𝔅ᵏ` closed, so closed range in the degree after `j` cannot be dropped from
@@ -71,6 +80,9 @@ projections (`ConformingFamily.hasUniformProj`).
   §3.3 (Thm 3.4, 3.5, 3.6), §3.4 (Thm 3.8, 3.9), §3.5 (Thm 3.11)
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (Thm 5.3, 5.5), Ch. 7
   (rates for smooth solutions)
+* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
+  Ch. 4, §5.4 (inf-sup conditions, Fortin's criterion)
+* [M. Fortin, *An analysis of the convergence of mixed finite element methods*][Fortin1977]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -85,6 +97,42 @@ namespace Feec.HilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex 𝕜 c W}
+
+/-! ### The constraint form and its continuous inf-sup condition -/
+
+variable (H) in
+/-- The **constraint form** `b(τ, q) = ⟪q, d τ⟫` of the mixed method on `Vʲ × Wᵏ` (graph norm on
+`Vʲ`). -/
+def constraintForm (j k : ι) : H.domainSpace j →L[𝕜] W k →L⋆[𝕜] 𝕜 :=
+  innerSLFlip 𝕜 ∘L (H.domainIncl k ∘L H.domainD j k)
+
+theorem constraintForm_apply (j k : ι) (τ : H.domainSpace j) (q : W k) :
+    H.constraintForm j k τ q = ⟪q, H.d j k (H.domainCoord j k τ)⟫_𝕜 := rfl
+
+/-- **The continuous inf-sup condition of `d` on `𝔅ᵏ`**: under the Poincaré inequality
+`‖z‖ ≤ c_P ‖d z‖` on `(𝔷ʲ)ᗮ`, `‖q‖ ≤ (c_P + 1) sup_τ |⟪q, d τ⟫| / ‖τ‖_V` for `q ∈ 𝔅ᵏ` (test with
+the Poincaré preimage of `q`). [BoffiBrezziFortin2013], Ch. 4 -/
+theorem norm_le_norm_constraintForm_flip {j k : ι} (hjk : c.Rel j k) {cP : ℝ} (hcP : 0 ≤ cP)
+    (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+    {q : W k} (hq : q ∈ H.boundaries k) :
+    ‖q‖ ≤ (cP + 1) * ‖(H.constraintForm j k).flip q‖ := by
+  obtain ⟨ρ, -, hdρ, hρ⟩ := H.exists_poincare_preimage hjk hP hq
+  obtain rfl := c.next_eq' hjk
+  set τ := (H.d j (c.next j)).toGraphSpace ρ
+  have hτ : ‖τ‖ ≤ (cP + 1) * ‖q‖ := by
+    have := LinearPMap.norm_toGraphSpace_le _ ρ
+    rw [hdρ] at this
+    linarith
+  have hb : (H.constraintForm j (c.next j)).flip q τ = ⟪q, q⟫_𝕜 := by
+    rw [ContinuousLinearMap.flip_apply, constraintForm_apply, ← hdρ]; rfl
+  have h1 : ‖q‖ ^ 2 ≤ ‖(H.constraintForm j (c.next j)).flip q‖ * ((cP + 1) * ‖q‖) := by
+    calc ‖q‖ ^ 2 = ‖(H.constraintForm j (c.next j)).flip q τ‖ := by
+          rw [hb, inner_self_eq_norm_sq_to_K, norm_pow, RCLike.norm_ofReal, abs_norm]
+      _ ≤ ‖(H.constraintForm j (c.next j)).flip q‖ * ‖τ‖ := ContinuousLinearMap.le_opNorm _ _
+      _ ≤ _ := by gcongr
+  rcases (norm_nonneg q).eq_or_lt with h0 | h0
+  · rw [← h0]; positivity
+  · nlinarith [norm_nonneg ((H.constraintForm j (c.next j)).flip q)]
 
 namespace Subcomplex
 
@@ -172,6 +220,61 @@ theorem norm_sub_le_rate {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C 
   calc _ ≤ (1 + 144 * (C * √(1 + cP ^ 2)) ^ 2) * (1 + C) * (2 * (B i + B j) * (3 + 2 * C) * r) :=
         mul_le_mul_of_nonneg_left (h.trans this) hK
     _ = _ := by ring
+
+/-! ### Fortin operators from the cochain projections -/
+
+/-- **The cochain projections give Fortin operators** for the constraint form `⟪q, d τ⟫` on
+`Vʲ × Wᵏ`, relative to the discrete spaces `Vₕʲ ⊆ Vʲ` and `𝔅ₕᵏ ⊆ Wᵏ`: for `τ ∈ Vʲ`, lift the
+orthogonal projection of `d τ` onto `𝔅ₕᵏ` to `ρ ⊥ 𝔷ʲ` with `‖ρ‖ ≤ c_P ‖d τ‖` and set
+`Π τ = πʲ ρ`; then `d Π τ = πᵏ d ρ = P_{𝔅ₕ} d τ`, so `b(Π τ, q) = b(τ, q)` on `𝔅ₕᵏ`, and
+`‖Π τ‖_V ≤ (C c_P + 1) ‖τ‖_V`. [BoffiBrezziFortin2013], §5.4; [AFW2010], Thm 3.6 -/
+theorem exists_isFortinOperator {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP : 0 ≤ cP)
+    (hC : 0 ≤ C)
+    (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+    (hπ : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) :
+    ∃ Pf : H.domainSpace j → H.domainSpace j, Variational.IsFortinOperator
+      (H.constraintForm j k) (S.domainSub j) (S.boundariesW k) Pf (C * cP + 1) := by
+  have : FiniteDimensional 𝕜 (S.boundariesW k) :=
+    Submodule.finiteDimensional_of_le (S.boundariesW_le_V k)
+  set D : H.domainSpace j → W k := fun τ => H.d j k (H.domainCoord j k τ)
+  set Q := (S.boundariesW k).starProjection
+  choose ρ _ hdρ hρ using fun τ => H.exists_poincare_preimage hjk hP
+    (S.boundariesW_le k (Submodule.starProjection_apply_mem _ (D τ)))
+  obtain rfl := c.next_eq' hjk
+  have hd : ∀ τ, H.d j (c.next j) ⟨P.π j (ρ τ), S.le_domain j _ (P.mem j _)⟩ = Q (D τ) :=
+    fun τ => by
+      rw [P.comm, hdρ, P.proj _ _ (S.boundariesW_le_V _ (Submodule.starProjection_apply_mem _ _))]
+  refine ⟨fun τ => (H.d j (c.next j)).toGraphSpace ⟨P.π j (ρ τ), S.le_domain j _ (P.mem j _)⟩,
+    ⟨fun τ => ⟨(S.toHilbertComplex.d j (c.next j)).toGraphSpace
+      ⟨⟨P.π j (ρ τ), P.mem j _⟩, Submodule.mem_top⟩, rfl⟩, fun τ q hq => ?_, fun τ => ?_⟩⟩
+  · change ⟪q, H.d j (c.next j) ⟨P.π j (ρ τ), _⟩⟫_𝕜 = ⟪q, D τ⟫_𝕜
+    rw [hd, ← Submodule.inner_starProjection_left_eq_right, Submodule.starProjection_eq_self_iff.2 hq]
+  · refine (LinearPMap.norm_toGraphSpace_le _ _).trans ?_
+    rw [hd]
+    have h1 := hπ (ρ τ)
+    have h2 := hρ τ
+    have h3 := (S.boundariesW _).norm_starProjection_apply_le (D τ)
+    have h4 := H.norm_d_domainCoord_le j (c.next j) τ
+    calc ‖P.π j (ρ τ)‖ + ‖Q (D τ)‖ ≤ C * (cP * ‖Q (D τ)‖) + ‖Q (D τ)‖ :=
+          add_le_add_left (h1.trans (mul_le_mul_of_nonneg_left h2 hC)) _
+      _ = (C * cP + 1) * ‖Q (D τ)‖ := by ring
+      _ ≤ (C * cP + 1) * ‖τ‖ := by gcongr; exact h3.trans h4
+
+/-- **The uniform discrete inf-sup condition through Fortin's criterion**: with the Fortin
+operators of `exists_isFortinOperator` and the continuous inf-sup condition
+`norm_le_norm_constraintForm_flip`, `β ‖q‖ ≤ sup_{τ ∈ Vₕʲ} |⟪q, d τ⟫| / ‖τ‖_V` on `𝔅ₕᵏ` with
+`β = ((c_P + 1)(C c_P + 1))⁻¹`, depending on the subcomplex only through the bound `C` of `π`
+(`Variational.IsFortinOperator.discrete_infSup`). [BoffiBrezziFortin2013], §5.4; [Fortin1977] -/
+theorem infSup {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP : 0 ≤ cP) (hC : 0 ≤ C)
+    (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+    (hπ : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) {q : W k} (hq : q ∈ S.boundariesW k) :
+    ((cP + 1) * (C * cP + 1))⁻¹ * ‖q‖ ≤
+      ‖((H.constraintForm j k).flip q).comp (S.domainSub j).subtypeL‖ := by
+  obtain ⟨Pf, hPf⟩ := P.exists_isFortinOperator hjk hcP hC hP hπ
+  have h := hPf.discrete_infSup (by positivity) (β := (cP + 1)⁻¹) (fun q hq => by
+    rw [inv_mul_le_iff₀ (by positivity)]
+    exact norm_le_norm_constraintForm_flip hjk hcP hP (S.boundariesW_le k hq)) q hq
+  rwa [mul_inv, ← div_eq_mul_inv]
 
 end CochainProjection
 
@@ -329,6 +432,11 @@ structure StaticVerdict (j : ι) : Prop where
   converges {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {f : W j} {σ : H.domainSpace i}
     {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
     Tendsto (fun h => (F.V h).mixedError hij hjk f σ u p) F.l (𝓝 0)
+  /-- the uniform discrete inf-sup condition of `d` on `𝔅ₕᵏ`,
+  `β ‖q‖ ≤ sup_{τ ∈ Vₕʲ} |⟪q, d τ⟫| / ‖τ‖_V`, by Fortin's criterion with the Fortin operators of
+  the projections ([BoffiBrezziFortin2013], §5.4) -/
+  infSup {k : ι} (hjk : c.Rel j k) : ∃ β : ℝ, 0 < β ∧ ∀ (h : κ), ∀ q ∈ (F.V h).boundariesW k,
+    β * ‖q‖ ≤ ‖((H.constraintForm j k).flip q).comp ((F.V h).domainSub j).subtypeL‖
 
 /-! ### Rates from Jackson estimates -/
 
@@ -452,7 +560,8 @@ theorem staticFEEC (hcr : ∀ i, H.ClosedRangeAt i) (j : ι) [FiniteDimensional 
   have hgap : Tendsto (fun h => (F.π h).harmonicGap j) F.l (𝓝 0) := F.tendsto_harmonicGap
   have hqo {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) := F.quasiOptimal hij hjk (hcr j) (hcr k)
   refine ⟨fun {k} hjk => ?_, fun {i k} hij hjk => ?_, hgap,
-    F.eventually_bijective_cohomologyMap (hcr j), hqo, fun {i k} hij hjk f σ u p hs => ?_⟩
+    F.eventually_bijective_cohomologyMap (hcr j), hqo, fun {i k} hij hjk f σ u p hs => ?_,
+    fun {k} hjk => ?_⟩
   · obtain ⟨cP, -, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hcr k)
     exact ⟨F.projBound * cP, fun h x hx hxo => (F.π h).norm_le_of_forall_inner_eq_zero hjk hP
       (zero_le_one.trans hC) (F.norm_π_le h j) hx hxo⟩
@@ -474,6 +583,10 @@ theorem staticFEEC (hcr : ∀ i, H.ClosedRangeAt i) (j : ι) [FiniteDimensional 
         (H.boundaryPart j (H.domainIncl j u))))).const_mul K
     simp only [add_zero, mul_zero] at h0
     exact squeeze_zero (fun h => (F.V h).mixedError_nonneg hij hjk f σ u p) (fun h => hK hs h) h0
+  · -- Fortin's criterion with the Fortin operators of the projections
+    obtain ⟨cP, hcP, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hcr k)
+    exact ⟨_, by positivity, fun h q hq => (F.π h).infSup hjk (by linarith)
+      (zero_le_one.trans hC) hP (F.norm_π_le h j) hq⟩
 
 /-! ### Closed range is necessary -/
 

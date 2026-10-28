@@ -27,9 +27,9 @@ differential and keeps the eliminations `Γ E`, `Δ F` and the closure of `Δ F`
 For two Hilbert complexes linked by bounded connecting maps (`Feec.BGG.HilbertData`), stacked
 conforming families in `L²` (`HilbertData.StackedFamily`) give conforming families of the domain
 complexes in the graph norms (`ConformingFamily.domain`: `‖πₕ v‖_V ≤ C ‖v‖_V` since
-`d πₕ = πₕ d`), so stacked families of the bounded data `HilbertData.domainData`
-(`HilbertData.StackedFamily.toDomain`) and a conforming family of the derived complex of the
-domain complexes; the discrete twisted complexes `Vₕ × Ṽₕ` are moreover a conforming family of
+`d πₕ = πₕ d`), so they give stacked families of the bounded data `HilbertData.domainData`
+(`HilbertData.StackedFamily.toDomain`) and hence a conforming family of the derived complex of
+the domain complexes; the discrete twisted complexes `Vₕ × Ṽₕ` are moreover a conforming family of
 the `L²` twisted complex (`HilbertData.StackedFamily.twist`). With the analytic BGG theorem
 (`HilbertData.derivedVerdict`, `HilbertData.bggVerdict`) this is
 `HilbertData.StackedFamily.feecVerdict` and, for the BGG complexes `bgg J` of [ArnoldHu2021] with
@@ -44,6 +44,13 @@ operators is not formalized. The weak-symmetry discretizations of
 `Πₕ S` (the compatibility condition `Discrete.Compatible`), not `S`, so their discrete complexes are
 not subcomplexes of the derived complex.
 
+The stacking conditions are strong: where `Sⁱ` is onto, `πₕ S = S π̃ₕ` forces
+`Vₕʲ = πₕ (S W̃ⁱ) = S Ṽₕⁱ` and fixes `πₕʲ` on `Wʲ = S W̃ⁱ`, and in every degree `π̃ₕ` preserves
+`ker S`. The only stacked families constructed here are the full families of finite-dimensional
+data (`πₕ = id`, `BoundedData.StackedFamily.full`, `HilbertData.StackedFamily.full`); finite
+element stacked families (e.g. the tensor-product splines of [BonizzoniHuKanschatSap2024]) are
+not constructed.
+
 ## Main definitions
 
 * `HilbertComplex.Subcomplex.domain`, `CochainProjection.domain`, **`ConformingFamily.domain`**:
@@ -52,8 +59,9 @@ not subcomplexes of the derived complex.
 * `Feec.BGG.BoundedData.StackedFamily`: stacked conforming families of bounded BGG data;
   `StackedFamily.twistπL`, `StackedFamily.derivedπ`, `StackedFamily.derivedSubcomplex`,
   **`StackedFamily.derived`**; `StackedFamily.full`.
+* `Feec.BGG.BoundedData.toHilbertData`: bounded BGG data as analytic BGG data.
 * `Feec.BGG.HilbertData.StackedFamily`, `StackedFamily.toDomain`, `StackedFamily.derived`,
-  **`StackedFamily.twist`**.
+  **`StackedFamily.twist`**; `StackedFamily.full`.
 * `BoundedData.StackedFamily.Verdict`, `HilbertData.StackedFamily.Verdict`.
 
 ## Main results
@@ -62,8 +70,10 @@ not subcomplexes of the derived complex.
   cochain projection; `mem_derivedSubcomplex_iff`: its range is `P_{(Δⁱ)ᗮ} (Γⁱ ∩ (Vₕⁱ × Ṽₕⁱ))`.
 * **`BoundedData.StackedFamily.feecVerdict`**, **`HilbertData.StackedFamily.feecVerdict`**,
   **`HilbertData.StackedFamily.bggVerdict`**: the FEEC theorem for discrete BGG complexes.
-* `HilbertData.finiteDimensional_derivedComplex_harmonic`.
-* `BoundedData.idShift_feecVerdict`: non-vacuity (`BoundedData.idShift`, the full family).
+* `BoundedData.StackedFamily.Verdict.static`, `HilbertData.StackedFamily.Verdict.static`: the
+  static FEEC theorem in every degree.
+* `BoundedData.idShift_feecVerdict`, `BoundedData.idShift_toHilbertData_bggVerdict`: non-vacuity
+  (`BoundedData.idShift`, the full families).
 
 ## References
 
@@ -177,7 +187,8 @@ theorem norm_domainπ_le {C : ℝ} (hC : 0 ≤ C) (hπ : ∀ i x, ‖P.π i x‖
 /-- `‖v - π v‖_V ≤ ‖x - π x‖ + ‖d x - π d x‖` for `x = ι v`. -/
 theorem norm_sub_domainπ_le (i : ι) (v : H.domainSpace i) :
     ‖v - P.domainπ i v‖ ≤ ‖H.domainIncl i v - P.π i (H.domainIncl i v)‖ +
-      ‖H.d i (c.next i) (H.domainCoord i _ v) - P.π _ (H.d i (c.next i) (H.domainCoord i _ v))‖ := by
+      ‖H.d i (c.next i) (H.domainCoord i _ v) -
+        P.π _ (H.d i (c.next i) (H.domainCoord i _ v))‖ := by
   refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
   rw [H.norm_sq_domainSpace, map_sub, map_sub, LinearPMap.map_sub, domainIncl_domainπ,
     d_domainCoord_domainπ, add_sq]
@@ -525,6 +536,25 @@ end Feec.BGG.BoundedData
 
 /-! ### Stacked conforming families of two Hilbert complexes -/
 
+namespace Feec.BGG.BoundedData
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {V Vt : ι → Type u}
+  [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
+  [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
+  [∀ i, CompleteSpace (Vt i)] (D : BoundedData 𝕜 c V Vt)
+
+/-- Bounded BGG data as analytic BGG data: the rows `rowTopComplex`, `rowBotComplex` (full
+domains) linked by `S`. -/
+def toHilbertData : HilbertData 𝕜 c V Vt where
+  H := D.rowTopComplex
+  Ht := D.rowBotComplex
+  S i j := ⟨D.S i j, D.continuous_S i j⟩
+  shape_S i j h := ContinuousLinearMap.coe_injective (D.shape_S i j h)
+  S_mapsTo _ _ _ _ := Submodule.mem_top
+  anticomm i j k φ := D.anticomm i j k φ
+
+end Feec.BGG.BoundedData
+
 namespace Feec.BGG.HilbertData
 
 open HilbertComplex
@@ -649,16 +679,18 @@ abbrev derived : ConformingFamily (D.domainData.derivedComplex E F) κ := G.toDo
 
 end StackedFamily
 
-/-- **The harmonic forms of the derived complex are finite-dimensional** under the hypotheses of
-the analytic BGG theorem (`derivedVerdict`). -/
-theorem finiteDimensional_derivedComplex_harmonic {E F : ι → Prop}
-    (hΔ : ∀ i, IsClosed (D.domainData.Δ F i : Set (D.H.domainSpace i × D.Ht.domainSpace i)))
-    (he : D.domainData.Eliminates E F) (i : ι) [FiniteDimensional 𝕜 (D.H.cohomology i)]
-    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] :
-    FiniteDimensional 𝕜 ((D.domainData.derivedComplex E F).harmonic i) :=
-  have := (D.derivedVerdict hΔ he i).finiteDimensional
-  ((D.domainData.derivedComplex E F).finiteDimensional_harmonic_iff
-    (D.derivedVerdict hΔ he i).closedRangeAt).2 this
+/-- **The full stacked family** of bounded BGG data of finite-dimensional spaces, as analytic BGG
+data (`BoundedData.toHilbertData`), along any filter. -/
+def StackedFamily.full {V Vt : ι → Type v} [∀ i, NormedAddCommGroup (V i)]
+    [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)] [∀ i, FiniteDimensional 𝕜 (V i)]
+    [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
+    [∀ i, CompleteSpace (Vt i)] [∀ i, FiniteDimensional 𝕜 (Vt i)] (D : BoundedData 𝕜 c V Vt)
+    (l : Filter κ) : D.toHilbertData.StackedFamily κ where
+  top := (BoundedData.StackedFamily.full D l).top
+  bot := (BoundedData.StackedFamily.full D l).bot
+  l_eq := rfl
+  S_mem _ _ _ _ _ := Submodule.mem_top
+  S_comm _ _ _ _ := rfl
 
 end Feec.BGG.HilbertData
 
@@ -677,19 +709,24 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [Is
   (E F : α → Prop)
 
 /-- **The conclusions of the FEEC theorem for a discrete BGG complex** (`feecVerdict`): the
-derived complex has closed range in every degree, the static FEEC theorem holds in every degree
-with finite-dimensional harmonic forms, and the FEEC theorem (`ConformingFamily.Verdict`) holds
-for the conforming family of the derived complex. -/
+derived complex has closed range in every degree, and the FEEC theorem (`ConformingFamily.Verdict`)
+holds for the conforming family of the derived complex, so the static FEEC theorem holds in every
+degree with finite-dimensional harmonic forms (`Verdict.static`). -/
 structure Verdict : Prop where
   /-- the derived complex has closed range ([ArnoldHu2021], Theorem 6) -/
   closedRangeAt (i : α) : (D.derivedComplex E F).ClosedRangeAt i
-  /-- the static FEEC theorem in every degree ([AFW2010], Thms 3.4–3.9) -/
-  static (j : α) [FiniteDimensional 𝕜 ((D.derivedComplex E F).harmonic j)] :
-    (G.derived E F).StaticVerdict j
   /-- the FEEC theorem for the derived complex -/
   feec : (G.derived E F).Verdict
 
-variable {E F}
+variable {G E F}
+
+/-- The static FEEC theorem for a discrete BGG complex in every degree with finite-dimensional
+harmonic forms. [AFW2010], Thms 3.4–3.9 -/
+theorem Verdict.static (v : G.Verdict E F) (j : α)
+    [FiniteDimensional 𝕜 ((D.derivedComplex E F).harmonic j)] : (G.derived E F).StaticVerdict j :=
+  v.feec.static v.closedRangeAt j
+
+variable (G)
 
 /-- **The FEEC theorem for discrete BGG complexes of bounded data.** If the exact part is closed,
 the elimination hypotheses hold and the rows have finite-dimensional cohomology, then for stacked
@@ -699,8 +736,7 @@ derived complexes. [ArnoldHu2021], Theorem 6; [AFW2010], Thms 3.4–3.9 -/
 theorem feecVerdict (hΔ : ∀ i, IsClosed (D.Δ F i : Set (V i × Vt i))) (he : D.Eliminates E F)
     [∀ i, FiniteDimensional 𝕜 (D.rowTopComplex.cohomology i)]
     [∀ i, FiniteDimensional 𝕜 (D.rowBotComplex.cohomology i)] : G.Verdict E F :=
-  have hcr := fun i => D.derivedComplex_closedRangeAt hΔ he i
-  ⟨hcr, fun j _ => (G.derived E F).staticFEEC hcr j, (G.derived E F).feec⟩
+  ⟨fun i => D.derivedComplex_closedRangeAt hΔ he i, (G.derived E F).feec⟩
 
 end Feec.BGG.BoundedData.StackedFamily
 
@@ -741,7 +777,18 @@ structure Verdict : Prop extends G.toDomain.Verdict E F where
   /-- the FEEC theorem for the discrete `L²` twisted complexes `Vₕ × Ṽₕ` -/
   twist : G.twist.Verdict
 
-variable {E F}
+variable {G E F}
+
+/-- **The static FEEC theorem for a discrete BGG complex in every degree**: the harmonic forms of
+the derived complex are finite-dimensional by the analytic BGG verdict (`derived`).
+[AFW2010], Thms 3.4–3.9 -/
+theorem Verdict.static (v : G.Verdict E F) (j : α) : (G.derived E F).StaticVerdict j :=
+  have := (v.derived j).finiteDimensional
+  have := ((D.domainData.derivedComplex E F).finiteDimensional_harmonic_iff
+    (v.derived j).closedRangeAt).2 this
+  v.toVerdict.static j
+
+variable (G)
 
 /-- **The FEEC theorem for discrete BGG complexes.** For two Hilbert complexes linked by bounded
 connecting maps with closed exact part and the elimination hypotheses, whose cohomology is
@@ -774,14 +821,29 @@ finite-dimensional cohomology, then for stacked conforming families the FEEC the
 the discrete BGG complexes (`feecVerdict`). [ArnoldHu2021], Theorem 6 -/
 theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
     (htop : D.RegularDecomposition J) [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)]
-    [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)] : G.Verdict (J < ·) (· < J) := by
-  have hS' : ∀ i < J, ∃ K, AntilipschitzWith K (D.domainData.S i (i + 1)) := fun i hi => by
-    obtain ⟨K₁, h₁⟩ := hS i hi.le
-    obtain ⟨K₂, h₂⟩ := hS (i + 1) (by omega)
-    exact ⟨_, D.antilipschitz_domainS rfl rfl h₁ h₂⟩
-  exact G.feecVerdict (D.domainData.isClosed_bgg_Δ hS')
-    (Data.eliminates_bgg (fun i hi => (hS' i hi).choose_spec.injective) htop)
+    [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)] : G.Verdict (J < ·) (· < J) :=
+  have h := D.isClosed_Δ_and_eliminates_bgg hS htop
+  G.feecVerdict h.1 h.2
 
 end BGG
 
 end Feec.BGG.HilbertData.StackedFamily
+
+namespace Feec.BGG.BoundedData
+
+variable (𝕜 : Type*) [RCLike 𝕜]
+
+/-- **Non-vacuity of the FEEC theorem for discrete BGG complexes of two Hilbert complexes**: the
+full stacked family of `idShift` as analytic BGG data, along `atTop`, for every `J` (`Sⁱ = id` is
+bounded below and onto, so the regular decompositions hold). -/
+theorem idShift_toHilbertData_bggVerdict (J : ℤ) :
+    (HilbertData.StackedFamily.full (idShift 𝕜) (κ := ℕ) atTop).Verdict (J < ·) (· < J) := by
+  have hS (i j : ℤ) (hij : i + 1 = j) (x : 𝕜) : (idShift 𝕜).toHilbertData.S i j x = x := by
+    simp [toHilbertData, idShift, Data.idShift, hij]
+  refine HilbertData.StackedFamily.bggVerdict _
+    (fun i _ => ⟨1, AntilipschitzWith.of_le_mul_dist fun x y => by
+      rw [hS i _ rfl, hS i _ rfl, NNReal.coe_one, one_mul]⟩)
+    fun j _ => eq_top_iff.2 fun y _ => Submodule.mem_sup_right
+      ⟨((idShift 𝕜).toHilbertData.Ht.d (j - 1) _).toGraphSpace
+        ⟨(idShift 𝕜).toHilbertData.H.domainIncl j y, Submodule.mem_top⟩,
+        (idShift 𝕜).toHilbertData.H.domainIncl_injective j (hS _ _ (by omega) _)⟩

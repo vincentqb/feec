@@ -79,7 +79,8 @@ closed range under the hypotheses of the analytic BGG theorem
 * BGG discretizations: the BGG verdicts are in the graph norms of the domain complexes (the `L²`
   realization of the derived complex is not formalized); the regular decompositions and the
   finite-dimensional cohomology of the vector-valued de Rham complexes are hypotheses, no finite
-  element family with `S Ṽₕ ⊆ Vₕ` is constructed, and the weak-symmetry elements
+  element family with `S Ṽₕ ⊆ Vₕ` is constructed (the only instances are the full families of
+  finite-dimensional data, `πₕ = id`), and the weak-symmetry elements
   (`BGG.Discrete`, discrete connecting maps `Πₕ S`) are not stacked families.
 * The improved `L²` rate is conditional on rates of the elliptic quantities `η`, `δ`, `μ`
   (`ConformingFamily.rate_static_L2`, [AFW2010], Thm 3.11).

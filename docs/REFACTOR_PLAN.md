@@ -265,7 +265,8 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > (`Feec.BGG.HilbertData.StackedFamily.bggVerdict`; `Feec.Domain.hessianFEEC`,
 > `Feec.Domain.elasticityFEEC`, `Feec.Domain.divDivFEEC`). Open: the regular decompositions and the
 > cohomology of `deRhamVec m` (as above), the `L²` realization of the derived complex (the verdicts
-> are in graph norms), a finite element stacked family, and the weak-symmetry elements
+> are in graph norms), a finite element stacked family (only the full families, `πₕ = id`, are
+> constructed), and the weak-symmetry elements
 > (`Feec.HilbertComplex.BGG.Discrete`, discrete connecting maps `Πₕ S`), hence elastodynamics with them.
 
 ## 0. Decisions

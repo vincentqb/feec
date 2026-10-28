@@ -59,9 +59,9 @@ projections (`ConformingFamily.hasUniformProj`).
   of [AFW2010], Thm 3.11, conditional on elliptic regularity (rates of `η`, `δ`, `μ`).
 * `Subcomplex.CochainProjection.mixedApprox_le`, `Subcomplex.CochainProjection.norm_sub_le_rate`.
 * `ConformingFamily.closedRangeAt_of_discretePoincare`,
-  `ConformingFamily.StaticVerdict.closedRangeAt`: the uniform discrete Poincaré inequality forces
-  closed range, so the closed-range hypothesis of `staticFEEC` cannot be dropped
-  (`Feec.Counterexamples.Sharpness`); `ConformingFamily.tendsto_π`.
+  `ConformingFamily.StaticVerdict.closedRangeAt`: an eventual uniform discrete Poincaré inequality
+  at `j → k` forces `𝔅ᵏ` closed, so closed range in the degree after `j` cannot be dropped from
+  the static verdict at `j` (`Feec.Counterexamples.Sharpness`); `ConformingFamily.tendsto_π`.
 * `ConformingFamily.isGraphBounded`, `ConformingFamily.infDist_domainSub_le`,
   `ConformingFamily.tendsto_infDist_domainSub`, `ConformingFamily.hasUniformProj`.
 
@@ -488,20 +488,21 @@ theorem tendsto_π (i : ι) (w : W i) : Tendsto (fun h => (F.π h).π i w) F.l (
   exact (F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h i) w
 
 /-- **The uniform discrete Poincaré inequality forces closed range**: if
-`‖x‖ ≤ C ‖d x‖` for every `h` and every `x ∈ Vₕʲ` orthogonal to the discrete cycles `𝔷ₕʲ`, then
-`‖z‖ ≤ C ‖d z‖` on `D(d) ∩ (𝔷ʲ)ᗮ`, so `𝔅ᵏ` is closed. For `z ⊥ 𝔷ʲ`, the part of `πₕ z`
+`‖x‖ ≤ C ‖d x‖` for eventually every `h` and every `x ∈ Vₕʲ` orthogonal to the discrete cycles
+`𝔷ₕʲ`, then `‖z‖ ≤ C ‖d z‖` on `D(d) ∩ (𝔷ʲ)ᗮ`, so `𝔅ᵏ` is closed. For `z ⊥ 𝔷ʲ`, the part of `πₕ z`
 orthogonal to `𝔷ₕʲ` has the differential `πₕ d z`, and its discrete cycle part `P_{𝔷ₕ} πₕ z =
-P_{𝔷ₕ} (πₕ z - z)` (`𝔷ₕʲ ⊆ 𝔷ʲ ⊥ z`) tends to `0`. The closed-range hypothesis of the static FEEC
-theorem is therefore necessary for its `poincare` clause (`StaticVerdict.closedRangeAt`): this
+P_{𝔷ₕ} (πₕ z - z)` (`𝔷ₕʲ ⊆ 𝔷ʲ ⊥ z`) tends to `0`. Closed range of `𝔅ᵏ` is therefore necessary
+for the `poincare` clause of the static FEEC theorem at `j → k` (`StaticVerdict.closedRangeAt`): this
 is the converse of the discrete Poincaré inequality of [AFW2010], Thm 3.6 ([Arnold2018],
 Thm 5.3). -/
 theorem closedRangeAt_of_discretePoincare [F.l.NeBot] {j k : ι} (hjk : c.Rel j k) {C : ℝ}
-    (hC : ∀ (h : κ) {x : W j} (hx : x ∈ (F.V h).V j), (∀ y ∈ (F.V h).cyclesW j, ⟪y, x⟫_𝕜 = 0) →
+    (hC : ∀ᶠ h in F.l, ∀ {x : W j} (hx : x ∈ (F.V h).V j),
+      (∀ y ∈ (F.V h).cyclesW j, ⟪y, x⟫_𝕜 = 0) →
       ‖x‖ ≤ C * ‖H.d j k ⟨x, (F.V h).le_domain j k hx⟩‖) :
     H.ClosedRangeAt k := by
   refine (H.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨C, fun z hz => ?_⟩
-  have key : ∀ h, ‖(z : W j)‖ ≤
-      2 * ‖(z : W j) - (F.π h).π j z‖ + C * ‖(F.π h).π k (H.d j k z)‖ := fun h => by
+  have key : ∀ᶠ h in F.l, ‖(z : W j)‖ ≤
+      2 * ‖(z : W j) - (F.π h).π j z‖ + C * ‖(F.π h).π k (H.d j k z)‖ := hC.mono fun h hCh => by
     set Z := (F.V h).cyclesW j
     set x := (F.π h).π j z
     have hx : x ∈ (F.V h).V j := (F.π h).mem j z
@@ -524,7 +525,7 @@ theorem closedRangeAt_of_discretePoincare [F.l.NeBot] {j k : ι} (hjk : c.Rel j 
       calc ‖Z.starProjection x‖ = ‖Z.starProjection (x - z)‖ := by rw [map_sub, hzZ, sub_zero]
         _ ≤ ‖x - z‖ := Z.norm_starProjection_apply_le _
         _ = _ := norm_sub_rev _ _
-    have hyn := hC h hy fun q hq =>
+    have hyn := hCh hy fun q hq =>
       Submodule.inner_right_of_mem_orthogonal hq (Z.sub_starProjection_mem_orthogonal x)
     rw [hdy] at hyn
     calc ‖(z : W j)‖ ≤ ‖(z : W j) - (x - Z.starProjection x)‖ + ‖x - Z.starProjection x‖ :=
@@ -537,15 +538,16 @@ theorem closedRangeAt_of_discretePoincare [F.l.NeBot] {j k : ι} (hjk : c.Rel j 
     have h1 := ((tendsto_iff_norm_sub_tendsto_zero.1 (F.tendsto_π j z)).const_mul 2)
     have h2 := ((F.tendsto_π k (H.d j k z)).norm).const_mul C
     simpa [norm_sub_rev] using h1.add h2
-  exact ge_of_tendsto hlim (Eventually.of_forall key)
+  exact ge_of_tendsto hlim key
 
-/-- **The closed-range hypothesis of the static FEEC theorem is necessary**: if the static verdict
-holds at `j` (along a nontrivial filter), its `poincare` clause forces `𝔅ᵏ` closed at every
-`j → k` (`closedRangeAt_of_discretePoincare`). -/
+/-- **Closed range of `𝔅ᵏ` is necessary for the static verdict at `j → k`**: if the static
+verdict holds at `j` (along a nontrivial filter), its `poincare` clause forces `𝔅ᵏ` closed
+(`closedRangeAt_of_discretePoincare`). Only the degree `k` after `j` is forced; the static clause
+of the crown assumes closed range in every degree. -/
 theorem StaticVerdict.closedRangeAt {F : ConformingFamily H κ} [F.l.NeBot] {j : ι}
     (hV : F.StaticVerdict j) {k : ι} (hjk : c.Rel j k) : H.ClosedRangeAt k := by
   obtain ⟨C, hC⟩ := hV.poincare hjk
-  exact F.closedRangeAt_of_discretePoincare hjk hC
+  exact F.closedRangeAt_of_discretePoincare hjk (Eventually.of_forall hC)
 
 /-! ### The improved `L²` rate, conditional on elliptic regularity -/
 

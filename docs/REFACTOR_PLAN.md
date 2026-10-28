@@ -257,6 +257,17 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > non-vacuity witness for `qMinusJackson`; a closed-form slip velocity in `D(Δ)`; explicit
 > Runge–Kutta under a CFL condition, trajectory consistency of general rational schemes.
 
+> **Status (2026-10-28): discrete BGG tied to the crown.** Stacked conforming families
+> (`Feec.BGG.HilbertData.StackedFamily`: families of the two rows with `S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`)
+> give conforming families of the derived complex of the domain complexes
+> (`Feec.BGG.BoundedData.StackedFamily.derived`, through `Feec.HilbertComplex.ConformingFamily.domain`)
+> and of the `L²` twisted complex (`Feec.BGG.HilbertData.StackedFamily.twist`), so the crown applies
+> (`Feec.BGG.HilbertData.StackedFamily.bggVerdict`; `Feec.Domain.hessianFEEC`,
+> `Feec.Domain.elasticityFEEC`, `Feec.Domain.divDivFEEC`). Open: the regular decompositions and the
+> cohomology of `deRhamVec m` (as above), the `L²` realization of the derived complex (the verdicts
+> are in graph norms), a finite element stacked family, and the weak-symmetry elements
+> (`Feec.HilbertComplex.BGG.Discrete`, discrete connecting maps `Πₕ S`), hence elastodynamics with them.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.
@@ -312,12 +323,14 @@ Feec/
 │   │                                 -- ofComplex, ofComplexCrime (cochain defect), complex-level rates
 │   └── BGG/{Basic,Derived,DomainData,ToComplex,WeakSymmetry,Discrete}.lean -- Derived: BGG complex, any length
 │       BGG/Analytic.lean -- bounded BGG data: the derived complex as a Hilbert complex; closed range, dim H ≤ rows
+│       BGG/Conforming.lean -- stacked conforming families: conforming families of the derived complex, the crown
 ├── Fourier/{SymbolComplex,FibreReducing,ClosedRange,Torus,Euclidean,Weak,Reality,SpectralGalerkin}.lean
 ├── Domain/{L2Field,Mollify,ConstCoeffOp,Complexes,Obstruction,FiniteSpeed}.lean   -- open Ω ⊆ ℝⁿ, no traces
 │   Domain/{BGG,HessianBGG,ElasticityBGG,DivDivBGG}.lean -- BGG data of constant-coefficient operators;
 │                                 -- the Hessian, elasticity, div-div complexes as bgg 0, 1, 2 of stacked de Rham
 │   Domain/BGGRealization.lean -- their L² (maximal) realizations as HilbertData; the analytic BGG verdicts on Ω
 │                                 -- (only the regular decompositions after J assumed)
+│   Domain/BGGFEEC.lean -- the FEEC theorem for discrete Hessian, elasticity, div-div complexes
 ├── Algebra/{LeviCivita,Metric,ExteriorFibre,MatrixSymbol,TransverseTraceless,Koszul,PolynomialForm,Proxy3,CubicalForm}.lean
 ├── Geometry/{AlgebraicCurvature,Bivector,Hodge2,WeylDecomposition}.lean
 ├── Mesh/{Basic,Kuhn,Freudenthal,ShapeRegular}.lean   -- simplicial meshes; imports only Mathlib (added in W8)

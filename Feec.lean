@@ -32,6 +32,7 @@ public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PolynomialForms
 public import Feec.Domain.Affine
 public import Feec.Domain.BGG
+public import Feec.Domain.BGGFEEC
 public import Feec.Domain.BGGRealization
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp
@@ -167,6 +168,7 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.Basic
+public import Feec.HilbertComplex.BGG.Conforming
 public import Feec.HilbertComplex.BGG.Derived
 public import Feec.HilbertComplex.BGG.DomainData
 public import Feec.HilbertComplex.BGG.Discrete

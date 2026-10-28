@@ -30,8 +30,9 @@ Theorem 3; [CapHu2024]) and are not formalized for the maximal realizations: the
 `Feec.Models.Cube.WeakSymmetry.curlPotential` is the regular decomposition of `H̊(curl)` on
 `Q = (0, ½)³`, for the minimal complex in form proxies (`deRham`), and the decomposition of
 `H(div)` has no counterpart. The finite-dimensionality of the cohomology of `deRhamVec m` is not
-derived from the cube results on `deRham` either (no identification of the vector proxies with the
-forms is formalized).
+derived from the cube results on `deRham` either (the vector proxies identify the maximal
+complexes of `deRhamVec 1` and `deRham` on every open `Ω ⊆ ℝ³`,
+`Feec.Domain.deRhamVec_maximalComplex_eq_map`, but the cohomology is not transported).
 
 ## Main definitions
 

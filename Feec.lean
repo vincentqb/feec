@@ -58,6 +58,7 @@ public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
 public import Feec.Domain.Rellich
 public import Feec.Domain.StarShapedSmoothing
+public import Feec.Domain.VectorProxy
 public import Feec.Domain.WholeSpace
 public import Feec.Evolution.BoundaryLifting
 public import Feec.Evolution.Constrained

@@ -15,8 +15,11 @@ the fully discrete ones for every time scheme (θ-schemes, Crank–Nicolson, and
 rational scheme of order `p ≥ 1`, among them the Gauss–Legendre, Radau IIA and SDIRK Runge–Kutta
 methods, contractive by von Neumann's inequality, `Feec.TimeStepping.RationalScheme.norm_step_le`)
 and for leapfrog under the CFL condition, and the perturbed theorems for every bounded
-dissipative perturbation `B` (damping, Ohmic loss), discretized by `Lₕ + Pₕ B ιₕ`. Each field is
-the verdict of the layer theorem below.
+dissipative perturbation `B` (damping, Ohmic loss), discretized by `Lₕ + Pₕ B ιₕ`; the fully
+discrete verdicts include forced iterates (the discrete Duhamel formula; stability against every
+comparison, no forced rate) and inhomogeneous boundary data by a lifting; the Crank–Nicolson runs
+of thesis Ch. 7 have the same structure (`Feec.Instances.Lifting`; their identification with a
+crown scheme is open). Each field is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate

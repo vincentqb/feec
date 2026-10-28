@@ -233,6 +233,7 @@ public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.FullyDiscrete
+public import Feec.Instances.Lifting
 public import Feec.Instances.Maxwell
 public import Feec.Instances.MaxwellForms
 public import Feec.Instances.MaxwellMedia
@@ -377,6 +378,7 @@ public import Feec.Semigroup.Stone
 public import Feec.TimeStepping.BlockMatrix
 public import Feec.TimeStepping.Cayley
 public import Feec.TimeStepping.Convergence
+public import Feec.TimeStepping.Forced
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Rational
 public import Feec.TimeStepping.RungeKutta

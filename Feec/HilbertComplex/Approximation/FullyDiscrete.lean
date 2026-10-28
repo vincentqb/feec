@@ -4,6 +4,8 @@ public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Trajectory
+public import Feec.TimeStepping.Forced
+public import Feec.Evolution.BoundaryLifting
 
 /-!
 # The fully discrete FEEC theorem
@@ -57,6 +59,22 @@ besides the semidiscrete conclusions, at the time levels `tₙ = n τₕ ≤ T`,
    semidiscrete orbit from `pₕ(0)` is `O(hᵅ)`-close to the exact one
    (`TimeScheme.norm_S_sub_sol_le_of_timeAvg`); `δ = τₕ^{p/(p+2)}` balances `δ` against
    `τₕᵖ δ^{-(p+1)}`. The order in `τ` is not sharp: 6 gives `τₕᵖ` for smoother data.
+8. (**forcing**, `TimeScheme.norm_sub_forcedSol_le`) the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ`
+   (`TimeScheme.forcedSol`, `Feec.TimeStepping.forcedIter`) satisfy, for every target `y` and
+   every comparison `wₖ`, `‖y - ιₕ Wₙ‖ ≤ ‖y - ιₕ wₙ‖ + ‖ιₕ‖ M(T) (‖v - w₀‖ + Σ_{k<n} ‖dₖ‖)`,
+   `dₖ = wₖ₊₁ - Pₕ wₖ - gₖ` (the discrete Duhamel formula);
+9. (**inhomogeneous boundary data**, `TimeScheme.norm_sub_lifted_le`) for `A ≤ A_max` and a
+   lifting `G`, the solution with the boundary values of `G` is `G` plus the mild solution with
+   the forcing `f - G' + A_max G` (`Feec.Evolution.IsBoundarySolution.eq_add_mild`), and the
+   lifted iterates `Gₕ,ₙ + ιₕ Wₙ` have error at most `‖G(tₙ) - Gₕ,ₙ‖` plus the error of 8 for
+   the mild solution. The Crank–Nicolson scheme with prescribed boundary DOFs of the thesis has
+   the same structure, a forced Crank–Nicolson scheme of a compression
+   (`Feec.TimeStepping.eq_add_forcedIter_of_isDirichletCNStep`); its identification with a
+   time scheme of a conforming window is open.
+
+   8 and 9 are stability statements against arbitrary comparisons: no consistency bound for a
+   discretized load (e.g. `gₖ ≈ τ Πₕ f(tₖ)`) is proved, so forced problems carry no rate, fully
+   discrete or semidiscrete.
 
 **Schemes** (`DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`): the θ-scheme, `θ ≥ 1/2` real,
 `M = 1`, order `1`, `K = θ + 1/2` (implicit Euler `θ = 1`, `K = 3/2`), and Crank–Nicolson with
@@ -576,10 +594,63 @@ theorem norm_S_sub_sol_le_uniform {T : ℝ} (R : F.RateClass T) {x : E} (hx : x 
   rw [e3, hpow]
   nlinarith
 
+/-- The **forced fully discrete solution** `ιₕ Wₙ`: the forced iterates `W₀ = v`,
+`Wₙ₊₁ = Pₕ Wₙ + gₙ` (`TimeStepping.forcedIter`) of the scheme with the load `g`. -/
+def forcedSol (h : κ) (v : F.X h) (g : ℕ → F.X h) (n : ℕ) : E :=
+  F.incl h (TimeStepping.forcedIter (Θ.P h) v g n)
+
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- Without load, the forced solution is the fully discrete solution. -/
+@[simp] theorem forcedSol_zero_load (h : κ) (v : F.X h) (n : ℕ) :
+    Θ.forcedSol h v 0 n = Θ.sol h v n := by
+  simp [forcedSol, sol]
+
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- **8. Forced iterates**: for every target `y` (the exact value at `tₙ`) and every comparison
+sequence `wₖ` in `Xₕ`,
+`‖y - ιₕ Wₙ‖ ≤ ‖y - ιₕ wₙ‖ + ‖ιₕ‖ M(T) (‖v - w₀‖ + Σ_{k<n} ‖wₖ₊₁ - Pₕ wₖ - gₖ‖)` for
+`tₙ ≤ T` (the discrete Duhamel formula, `TimeStepping.norm_forcedIter_sub_le`). This is
+stability only: the load `g` is arbitrary, and no consistency bound ties it to a forcing.
+[Thomee2006], Ch. 8 -/
+theorem norm_sub_forcedSol_le {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X h) (y : E) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ≤ T) :
+    ‖y - Θ.forcedSol h v g n‖ ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h‖ *
+      (Θ.M T * (‖v - w 0‖ + ∑ k ∈ Finset.range n, ‖w (k + 1) - Θ.P h (w k) - g k‖)) := by
+  have h1 := TimeStepping.norm_forcedIter_sub_le (v := v) (g := g) (Θ.stable_le h hn) w
+  have h2 : ‖F.incl h (w n) - Θ.forcedSol h v g n‖ ≤
+      ‖F.incl h‖ * ‖TimeStepping.forcedIter (Θ.P h) v g n - w n‖ := by
+    rw [forcedSol, ← _root_.map_sub, norm_sub_rev]
+    exact (F.incl h).le_opNorm _
+  calc ‖y - Θ.forcedSol h v g n‖
+      ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h (w n) - Θ.forcedSol h v g n‖ :=
+        norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ ≤ _ := by gcongr; exact h2.trans (mul_le_mul_of_nonneg_left h1 (norm_nonneg _))
+
+/-- **9. Inhomogeneous boundary data**: for `A ≤ A_max`, a lifting `G` (`G' = DG`,
+`A_max G = AG`) on `[0, T]` and a solution `U` of `U' = A_max U + f` with the boundary values of
+`G` and continuous `f - G' + A_max G`, the lifted iterates `Gₕ,ₙ + ιₕ Wₙ` (any discrete lifting
+`Gₕ,ₙ`, `Wₙ` forced by `g`) satisfy
+`‖U(tₙ) - (Gₕ,ₙ + ιₕ Wₙ)‖ ≤ ‖G(tₙ) - Gₕ,ₙ‖ + (forced error of 8)` for the mild solution
+`U - G = S(·)(U(0) - G(0)) + ∫₀^· S(· - s)(f - G' + A_max G)(s) ds`
+(`Feec.Evolution.IsBoundarySolution.eq_add_mild`). [QuennevilleBelair2015], Ch. 7 -/
+theorem norm_sub_lifted_le {Amax : E →ₗ.[𝕜] E} (hle : A ≤ Amax) {T : ℝ} {G DG AG f U : ℝ → E}
+    (hG : Evolution.IsLifting Amax (Icc 0 T) G DG AG)
+    (hU : Evolution.IsBoundarySolution Amax A (Icc 0 T) f G U)
+    (hc : ContinuousOn (f - DG + AG) (Icc 0 T)) (h : κ) (Gh : ℕ → E) (v : F.X h)
+    (g w : ℕ → F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
+    ‖U (n * Θ.τ h) - (Gh n + Θ.forcedSol h v g n)‖ ≤ ‖G (n * Θ.τ h) - Gh n‖ +
+      (‖Evolution.mild F.S 0 (U 0 - G 0) (f - DG + AG) (n * Θ.τ h) - F.incl h (w n)‖ +
+        ‖F.incl h‖ * (Θ.M T * (‖v - w 0‖ +
+          ∑ k ∈ Finset.range n, ‖w (k + 1) - Θ.P h (w k) - g k‖))) := by
+  rw [hU.eq_add_mild F.isMDissipative.semigroup F.isMDissipative.generator_semigroup hle hG hc _
+    hn, add_sub_add_comm]
+  exact (norm_add_le _ _).trans (add_le_add le_rfl (Θ.norm_sub_forcedSol_le h v g w _ hn.2))
+
 /-- The conclusions of the fully discrete FEEC theorem (`dissipFEEC_fullyDiscrete`) for the
 time scheme `Θ` and the core `Z`: the semidiscrete verdict, and stability, temporal error, rate,
 convergence and constraint residuals of the iterates `ιₕ Pₕⁿ v`, and their rate along smooth
-comparisons and, uniformly in `h`, for every datum of a rate class in `D(A)`. -/
+comparisons and, uniformly in `h`, for every datum of a rate class in `D(A)`; the error of
+forced iterates and of lifted iterates for inhomogeneous boundary data. -/
 structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
   /-- the iterates are stable on every horizon `[0, T]` -/
   stable_iterates {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
@@ -626,6 +697,25 @@ structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
             (R.meshSize h ^ R.α * R.classNorm x) +
           Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * F.boundConst *
             ‖genExt A x‖ + Θ.M T * Θ.K * (n * Θ.τ h) * 2 ^ (Θ.p + 1) * ‖R.p x h 0‖))
+  /-- the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` against every comparison sequence: the comparison
+  error plus the stability constant times the initial and the summed consistency errors
+  (stability only; no rate for a discretized load) -/
+  forced_iterates {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X h) (y : E) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ≤ T) :
+    ‖y - Θ.forcedSol h v g n‖ ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h‖ *
+      (Θ.M T * (‖v - w 0‖ + ∑ k ∈ Finset.range n, ‖w (k + 1) - Θ.P h (w k) - g k‖))
+  /-- inhomogeneous boundary data: the solution is the lifting plus the mild solution with the
+  forcing `f - G' + A_max G`, and the lifted iterates have the lifting error plus the forced
+  error -/
+  lifted_iterates {Amax : E →ₗ.[𝕜] E} (hle : A ≤ Amax) {T : ℝ} {G DG AG f U : ℝ → E}
+    (hG : Evolution.IsLifting Amax (Icc 0 T) G DG AG)
+    (hU : Evolution.IsBoundarySolution Amax A (Icc 0 T) f G U)
+    (hc : ContinuousOn (f - DG + AG) (Icc 0 T)) (h : κ) (Gh : ℕ → E) (v : F.X h)
+    (g w : ℕ → F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
+    ‖U (n * Θ.τ h) - (Gh n + Θ.forcedSol h v g n)‖ ≤ ‖G (n * Θ.τ h) - Gh n‖ +
+      (‖Evolution.mild F.S 0 (U 0 - G 0) (f - DG + AG) (n * Θ.τ h) - F.incl h (w n)‖ +
+        ‖F.incl h‖ * (Θ.M T * (‖v - w 0‖ +
+          ∑ k ∈ Finset.range n, ‖w (k + 1) - Θ.P h (w k) - g k‖)))
 
 end TimeScheme
 
@@ -637,7 +727,9 @@ the spatial rate plus the temporal error, converge on the closure of the core fo
 convergent family as `τₕ → 0`, and have constraint residuals bounded by the error and tending to
 `0`; for schemes consistent along trajectories and smooth comparisons, the rate is
 `O(hᵅ + τₕᵖ)` uniformly in `h`, and for every scheme and every datum of a rate class in `D(A)` it
-is `O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h`. [BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018],
+is `O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h`; forced iterates have the comparison error plus the
+summed consistency defects, and inhomogeneous boundary data reduce to forcing by a lifting.
+[BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018],
 Ch. 8 -/
 theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [NormedSpace ℝ E]
     [IsScalarTower ℝ 𝕜 E] (Z : F.Core) (Θ : F.TimeScheme) : Θ.Verdict Z where
@@ -653,6 +745,9 @@ theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [N
     Θ.norm_S_sub_sol_le_of_smooth hΘ R Sm hx hxs h v hn
   rate_uniform_iterates := fun R _ hx hxA h v _ hn hτT =>
     Θ.norm_S_sub_sol_le_uniform R hx hxA h v hn hτT
+  forced_iterates := fun h v g w y _ hn => Θ.norm_sub_forcedSol_le h v g w y hn
+  lifted_iterates := fun hle _ _ _ _ _ _ hG hU hc h Gh v g w _ hn =>
+    Θ.norm_sub_lifted_le hle hG hU hc h Gh v g w hn
 
 /-! ### θ-schemes and Crank–Nicolson -/
 

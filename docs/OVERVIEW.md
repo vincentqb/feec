@@ -7,8 +7,8 @@ equation and section of the thesis, the declarations that formalize it, and
 (the chapter-ordered modules and the real-scalar layer that remained of them; see
 [The pre-refactor tree](#the-pre-refactor-tree)).
 [`docs/THESIS_REFERENCES.md`](THESIS_REFERENCES.md) lists, for each entry [1]–[28] of the thesis
-bibliography, where the thesis and the code cite it. Every module but the 14 listed in the
-README feeds the crown `Feec.HilbertComplex.ConformingFamily.feec` through imports.
+bibliography, where the thesis and the code cite it. Every module feeds the crown
+`Feec.HilbertComplex.ConformingFamily.feec` through imports (README).
 
 ## Module map
 

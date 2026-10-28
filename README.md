@@ -32,6 +32,13 @@ complex has `ℌ = 0`, a conforming family and no static verdict).
 `Feec.Counterexamples.crownSharpness` (`Counterexamples/Sharpness.lean`) collects this with the
 counterexamples showing that the TSD constraint is not reducing on bounded domains (so only the
 departure clause applies to it) and that `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not a subcomplex.
+`Feec.Counterexamples.crownCorrections` (same file) collects, by reference, the thesis
+corrections bearing on the crown (the statements involve no crown object; the tie is documentary):
+the weak-symmetry discretization, not a stacked BGG family, has no uniqueness without exactness at
+`V_h¹` and no solution for some data (Props 5.3–5.4, 6.2); continuous second-order and mixed
+(first-order) wave solutions agree exactly under a compatibility condition (§4.8); Lorentz-gauge
+plane waves reach the TT waves of the Einstein–Bianchi instance by the corrected gauge of Prop 2.6,
+and two printed identities of §2.8 are false; `G = 0 ⇔ Ric = 0` fails in dimension `2` (§2.4).
 `Feec.Instances.crownNonVacuity` (`Instances/CrownNonVacuity.lean`) instantiates the rated crown
 on the Whitney forms of the cube, with closed range and `ℌ⁰ ≠ 0`, a non-reducing constraint for
 which the departure clause fires, and a nonzero heat datum, and collects the non-vacuity
@@ -46,12 +53,16 @@ on conforming windows the field adds the Strang, residual and defect estimates).
 scheme (6.5) of the thesis applies the crime theorem under both boundary conditions, with its rates
 (`Feec.Instances.EinsteinBianchiFEMCrown`).
 
-All but 6 of the 394 modules feed the crown: each is imported, transitively, by `Crown.lean` or
-by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 6
-are thesis corrections outside the crown's hypotheses
-(`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`,
-with `HilbertComplex.SecondOrder`). `Algebra.Proxy3` reaches the crown through Maxwell's
-equations in vector proxies (`Domain.VectorProxy`, `Instances.Maxwell.vec_maxwellFEEC`).
+Every one of the 394 modules is on the crown's tree: each is imported, transitively, by
+`Crown.lean` or by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity
+companions), and is used there. The last ones tied: the scheme (6.5) and its rates (above),
+`TimeStepping.BlockMatrix` (the Hermitian signed Crank–Nicolson systems, the last field
+`crankNicolson_signed` of the fully discrete verdict), `Variational.Fortin` (the uniform discrete
+inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the cochain projections),
+`Algebra.Proxy3` (Maxwell's equations in vector proxies, `Domain.VectorProxy`,
+`Instances.Maxwell.vec_maxwellFEEC`), and the thesis corrections, by reference only
+(`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`
+and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 
 ## The approximating FEEC theorem
 

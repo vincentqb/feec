@@ -119,7 +119,9 @@ instances read through the crown: the Einstein–Bianchi systems (4.14), (4.16) 
 cubes and boxes, with the TT plane waves as exact modes (`Feec.Instances.EinsteinBianchiGradCurl`),
 damped waves and Ohmic loss (`Feec.Instances.Perturbed`), and, for every discretization (none is
 constructed yet), the TSD residuals on bounded domains and Maxwell's equations for forms
-(`Feec.Instances.EinsteinBianchiBounded`, `Feec.Instances.MaxwellForms`).
+(`Feec.Instances.EinsteinBianchiBounded`, `Feec.Instances.MaxwellForms`), and Maxwell's
+equations in vector proxies on `H¹ → H(curl) → H(div) → L²` (`Feec.Instances.Maxwell.vecFamily`,
+`vec_maxwellFEEC`, through `Feec.Domain.deRhamVec_maximalComplex_eq_map`).
 
 **Sharpness and non-vacuity.** Closed range of `𝔅ᵏ` is necessary for the static verdict at
 `j → k` (`ConformingFamily.StaticVerdict.closedRangeAt`; the periodic complex has `ℌ = 0`, a
@@ -128,7 +130,10 @@ collects this with the counterexamples showing that the reducing hypothesis fail
 constraint (only `leaves` applies to it) and the subcomplex hypothesis for non-matching
 polynomial pairs. `Feec.Instances.CrownNonVacuity` (`crownNonVacuity`) instantiates the rated
 crown on the Whitney forms of the cube: closed range with `ℌ⁰ ≠ 0`, a non-reducing constraint for
-which `leaves` fires, and a nonzero heat datum.
+which `leaves` fires, and a nonzero heat datum. `Feec.Counterexamples.Sharpness`
+(`crownCorrections`) also collects, by reference, the thesis corrections bearing on the crown
+(stacked BGG and (6.3), the second-order wave form, linearized gravity; no crown object occurs in
+them).
 
 **Outside the crown.**
 

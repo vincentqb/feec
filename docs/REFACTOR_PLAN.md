@@ -303,6 +303,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > `EinsteinBianchi.{Unconditional, WaveFEMRegularity}` to the crown. Open: a non-stationary datum in
 > the Sobolev rate class of the thesis' boundary conditions.
 
+> **Status (2026-10-28): every module on the crown's tree.** With the crime crown, the signed
+> Crank–Nicolson systems (`FullVerdict.crankNicolson_signed`, from `TimeStepping.BlockMatrix`),
+> the discrete inf-sup by Fortin operators (`StaticVerdict.infSup`), the vector-proxy Maxwell
+> verdict (`Instances.Maxwell.vec_maxwellFEEC`, from `Algebra.Proxy3`) and the by-reference
+> `crownCorrections`, 0 of 394 modules are off the tree (14 of 392 before). Open: a basis adapted
+> to the parity grading in an instance; the three-block `IsFullCNStep` against `Lₕ`; the PEC side
+> of the proxies; a bridge from the wave-group orbits to `IsMixedWeak`.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

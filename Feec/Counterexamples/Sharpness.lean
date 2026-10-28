@@ -4,8 +4,13 @@ public import Feec.HilbertComplex.Approximation.Crown
 public import Feec.Counterexamples.BallEigenDense
 public import Feec.Counterexamples.BoundedBGG
 public import Feec.Counterexamples.BoxStationary
+public import Feec.Counterexamples.ConstrainedEvolution
 public import Feec.Counterexamples.CubeStationary
+public import Feec.Counterexamples.Curvature
+public import Feec.Counterexamples.DiscreteBGG
 public import Feec.Counterexamples.EveryBallSymTSD
+public import Feec.Counterexamples.LinearizedGravity
+public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PeriodicFamily
 public import Feec.Counterexamples.PolynomialForms
@@ -48,18 +53,64 @@ give the corresponding conclusions there.
 * **Subcomplexes** (a conforming family consists of subcomplexes): the natural pairs
   `P_{r+1}Λ⁰ × P_r⁻Λ¹` are not (`PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus`).
 
+## Thesis corrections
+
+`CrownCorrections` (proved by `crownCorrections`) collects the thesis claims that the crown
+corrects or avoids, each by reference. The statements involve no crown object (no
+`ConformingFamily`, `Verdict` or `StackedFamily`): the tie to the clause of the crown each bears
+on is documentary, stated below.
+
+* **Stacked BGG families** (the discrete BGG complexes of the crown are those of stacked
+  conforming families, `S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`, `BGG.HilbertData.StackedFamily.bggVerdict`).
+  The weak-symmetry discretization, with the discrete connecting map `Πₕ S`, is not one, and it
+  is not covered by it: uniqueness for its discrete mixed system (5.6) needs exactness at
+  `V_h¹`, which Props 5.3–5.4 assume but do not use
+  (`DiscreteBGG.mixed_not_unique_of_not_exactTop`; for a conforming family with closed range and
+  finite-dimensional `ℌʲ`, `Verdict.static` gives `Hʲ(Vₕ) ≅ Hʲ`, so discrete exactness where the
+  continuous complex is exact, and well-posedness of its own mixed Hodge Laplacian, not of (5.6)),
+  and its semidiscrete system (6.3) has no
+  solution for some data (`ConstrainedEvolution.not_forall_exists_discreteSolution`, Prop 6.2
+  refuted; corrected by `Feec.BGG.exists_discreteSolution_iff`), whereas `Verdict.wave` is
+  well-posed for every datum.
+* **The wave formulation** (`Verdict.wave` discretizes the first-order Hodge wave equation
+  `ξ' = L ξ`, whose weak form is the mixed system `(u̇, v) = -(ρ, d v)`, `(ρ̇, μ) = (d u, μ)`; that
+  the strong orbits of the crown's wave group satisfy it is not proved here). For continuous weak
+  solutions, the second-order form `(ü, v) = -(d u, d v)` and the mixed form agree exactly under
+  the compatibility condition `u̇(a) = -d* ρ₀` (§4.8, corrected): its solutions satisfying it are
+  the `u` of mixed solutions (`HodgeWave.IsSecondOrderWeak.exists_isMixedWeak`), those violating
+  it on `ker d` are not (`HodgeWave.not_isMixedWeak_of_inner_ne_zero`), and if `ker d ≠ 0` such
+  solutions exist (`MixedWave.not_isMixedWeak`). The mixed form is the one whose discretization
+  `Verdict.wave` covers; nothing here transfers its conclusions to a Lagrange discretization of
+  the second-order form.
+* **The TT plane waves** (the exact modes of the Einstein–Bianchi instance on `𝕋³`,
+  `Feec.Instances.EinsteinBianchi.GradCurl.planeWave_verdict`, are the TT waves `ttAmp f(k·x)`).
+  A Lorentz-gauge plane wave reaches them by the gauge vector of
+  `Feec.LinearizedGravity.exists_ttGauge`
+  (Prop 2.6, corrected), not by the printed one
+  (`LinearizedGravity.not_isTT_gaugeAmp_printed`, `not_isTT_gaugeAmp_printed_contra`); the field
+  equation of Prop 2.4(b) on which Prop 2.5 rests is false as printed
+  (`LinearizedGravity.not_Hjet_eq_neg_boxJ`, corrected by `Feec.LinearizedGravity.Hsym_lorentz`);
+  and the tidal accelerations `aⁱ = -R^i₀ⱼ₀ vʲ` of the electric field `E` that the instance
+  evolves are not those printed after (2.15) (`LinearizedGravity.not_accel_printed`).
+
+* **The vacuum equation** (the TT plane waves solve `H = 0`, the linearized vacuum `G = 0`, by
+  `Feec.LinearizedGravity.exists_ttGauge` and `Feec.LinearizedGravity.Hjet_eq_einstein`).
+  `G = 0 ⇔ Ric = 0` holds in every dimension `n ≠ 2` (`Feec.CurvatureTensor.einstein_eq_zero_iff`)
+  and the hypothesis is sharp: it fails in dimension `2`
+  (`Curvature.exists_einstein_eq_zero_ne_zero_two`). The crown's physics is four-dimensional.
+
 ## Main definitions
 
-* `CrownSharpness`.
+* `CrownSharpness`, `CrownCorrections`.
 
 ## Main results
 
-* **`crownSharpness`**; `deRham_not_staticVerdict`.
+* **`crownSharpness`**, **`crownCorrections`**; `deRham_not_staticVerdict`.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2, §4.6, §4.10–4.11
+  §2.4, §2.8, §4.2, §4.6, §4.8, §4.10–4.11, §5.2, §6.2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
@@ -88,7 +139,7 @@ theorem deRham_not_staticVerdict (d : Type*) [Fintype d] [LinearOrder d] [Nonemp
 
 /-! ### The sharpness of the crown -/
 
-universe u v
+universe u v w
 
 /-- **What the counterexamples show about the crown's hypotheses** (`ConformingFamily.Verdict`):
 closed range is necessary for the static verdict; the reducing hypothesis of the residual clauses
@@ -133,5 +184,54 @@ theorem crownSharpness : CrownSharpness.{u, v} :=
     BoundedBGG.bggComplex_verdict, CubeStationary.mem_invariantCore_tsd_iff,
     BoxStationary.mem_invariantCore_tsd_iff_box, BallEigenDense.coreSub_le_stationary_ball3_iff,
     PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus⟩
+
+/-! ### Thesis corrections -/
+
+/-- **What the thesis corrections show next to the crown** (`ConformingFamily.Verdict`): the
+weak-symmetry discretization, which is not a stacked BGG family, has neither uniqueness without
+exactness at `V_h¹` nor existence for every datum; the second-order wave form is not equivalent to
+the first-order one of `Verdict.wave`, except under a compatibility condition; the TT plane waves
+of the Einstein–Bianchi instance are reached by a corrected gauge, and the printed field equation
+and tidal accelerations of §2.8 are false; `G = 0 ⇔ Ric = 0` fails in dimension `2`. Each field
+is the statement of the named theorem; none involves a crown object. -/
+structure CrownCorrections : Prop where
+  /-- stacked BGG families: without exactness at `V_h¹` the discrete mixed system (5.6) of the
+  weak-symmetry complex is not uniquely solvable (Props 5.3–5.4) -/
+  stacked_exact : type_of% @DiscreteBGG.mixed_not_unique_of_not_exactTop
+  /-- stacked BGG families: the semidiscrete weak-symmetry system (6.3) has no solution for some
+  data (Prop 6.2 refuted) -/
+  stacked_wellPosed : type_of% @ConstrainedEvolution.not_forall_exists_discreteSolution
+  /-- `Verdict.wave`, formulation: the second-order weak form has solutions that are the `u` of
+  no mixed (first-order) solution when `ker d ≠ 0` (§4.8 refuted) -/
+  wave_secondOrder : type_of% @MixedWave.not_isMixedWeak.{u, v, w}
+  /-- `Verdict.wave`, formulation: second-order solutions with `u̇(a) = -d* ρ₀` weakly are the `u`
+  of mixed solutions (§4.8, corrected) -/
+  wave_secondOrder_compatible : type_of% @HodgeWave.IsSecondOrderWeak.exists_isMixedWeak.{u, v, w}
+  /-- TT plane waves: the corrected gauge vector takes a Lorentz-gauge plane wave to a TT one
+  (Prop 2.6, corrected) -/
+  tt_gauge : type_of% @Feec.LinearizedGravity.exists_ttGauge
+  /-- TT plane waves: the printed gauge vector (covariant reading) does not (Prop 2.6) -/
+  tt_gauge_printed : type_of% @LinearizedGravity.not_isTT_gaugeAmp_printed
+  /-- TT plane waves: nor does its contravariant reading (Prop 2.6) -/
+  tt_gauge_printed_contra : type_of% @LinearizedGravity.not_isTT_gaugeAmp_printed_contra
+  /-- TT plane waves: `H = -□h̄` in Lorentz gauge is false (Prop 2.4(b)) -/
+  lorentz_printed : type_of% @LinearizedGravity.not_Hjet_eq_neg_boxJ
+  /-- TT plane waves: the tidal accelerations printed after (2.15) are wrong -/
+  accel_printed : type_of% @LinearizedGravity.not_accel_printed
+  /-- `Verdict.wave`, formulation: the compatibility condition is necessary, a second-order
+  solution with `(u̇(a), z) ≠ 0` for some `z ∈ ker d` is the `u` of no mixed solution (§4.8) -/
+  wave_secondOrder_necessary : type_of% @HodgeWave.not_isMixedWeak_of_inner_ne_zero.{u, v, w}
+  /-- the vacuum equation: `G = 0 ⇔ Ric = 0` fails in dimension `2` (§2.4) -/
+  vacuum_dim_two : type_of% @Curvature.exists_einstein_eq_zero_ne_zero_two.{u}
+
+/-- **What the thesis corrections show next to the crown** (`CrownCorrections`). -/
+theorem crownCorrections : CrownCorrections.{u, v, w} :=
+  ⟨DiscreteBGG.mixed_not_unique_of_not_exactTop,
+    ConstrainedEvolution.not_forall_exists_discreteSolution, MixedWave.not_isMixedWeak,
+    HodgeWave.IsSecondOrderWeak.exists_isMixedWeak, Feec.LinearizedGravity.exists_ttGauge,
+    LinearizedGravity.not_isTT_gaugeAmp_printed,
+    LinearizedGravity.not_isTT_gaugeAmp_printed_contra, LinearizedGravity.not_Hjet_eq_neg_boxJ,
+    LinearizedGravity.not_accel_printed, HodgeWave.not_isMixedWeak_of_inner_ne_zero,
+    Curvature.exists_einstein_eq_zero_ne_zero_two⟩
 
 end Feec.Counterexamples

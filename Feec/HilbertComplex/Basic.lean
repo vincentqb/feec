@@ -95,6 +95,12 @@ theorem _root_.LinearPMap.apply_eq_zero_of_eq_zero {R E F : Type*} [Ring R] [Add
     T x = 0 := by
   subst hT; rfl
 
+/-- A partial map equal to an everywhere-defined linear map `g` acts as `g`. -/
+theorem _root_.LinearPMap.apply_of_eq_toPMap {R E F : Type*} [Ring R] [AddCommGroup E]
+    [Module R E] [AddCommGroup F] [Module R F] {T : E →ₗ.[R] F} {g : E →ₗ[R] F}
+    (h : T = g.toPMap ⊤) (x : T.domain) : T x = g x := by
+  subst h; rfl
+
 theorem apply_eq_zero_of_not_rel {i j : ι} (h : ¬ c.Rel i j) (x : (H.d i j).domain) :
     H.d i j x = 0 :=
   apply_eq_zero_of_eq_zero (H.shape i j h) x

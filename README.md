@@ -21,6 +21,15 @@ estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smoo
 classes) and `O(hᵒʳᵈ + τ^{p/(p+2)})` uniformly in `h` for every Jackson datum and every one-step
 `TimeScheme` (smoothing by time averages; not leapfrog); `docs/crown.pdf` renders the module.
 
+The hypotheses are needed and satisfiable. Closed range is necessary for the static clause (the
+uniform discrete Poincaré inequality forces it, `ConformingFamily.StaticVerdict.closedRangeAt`);
+`Feec.Counterexamples.crownSharpness` (`Counterexamples/Sharpness.lean`) collects, hypothesis by
+hypothesis, the counterexamples that show what cannot be dropped (no closed range although
+`ℌ = 0`, non-reducing TSD constraints on bounded domains, `D(L)` data without the regularity of
+the rates, non-subcomplex pairs, …), and `Feec.Examples.crownNonVacuity`
+(`Examples/CrownNonVacuity.lean`) a conforming family meeting every clause with nonzero data,
+with the non-vacuity witnesses of the layers.
+
 ## The approximating FEEC theorem
 
 The master theorem is a tower of three, each a structure of named conclusions extending the one

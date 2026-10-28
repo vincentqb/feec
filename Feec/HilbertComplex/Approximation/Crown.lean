@@ -69,6 +69,12 @@ family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible seq
 `P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the
 cube, `FEM.qMinusFamily`), so the crown holds for each.
 
+**Sharpness and non-vacuity.** The closed-range hypothesis of `static` is necessary
+(`ConformingFamily.StaticVerdict.closedRangeAt`); `Feec.Counterexamples.Sharpness` collects,
+hypothesis by hypothesis, the counterexamples showing what cannot be dropped (`crownSharpness`),
+and `Feec.Examples.CrownNonVacuity` a conforming family meeting every hypothesis with nonzero
+data (`crownNonVacuity`).
+
 **Outside the crown.**
 
 * BGG discretizations: the derived complex of bounded BGG data is a Hilbert complex

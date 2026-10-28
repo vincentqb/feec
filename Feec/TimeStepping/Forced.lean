@@ -26,17 +26,18 @@ e.g. the interpolant of the exact solution) and `Wₙ ∈ V₀`. Then
 the forced iterates of the Crank–Nicolson step `cayley(A₀, s)` (`compressCN`) of the
 **compression** `A₀ = P_{V₀} A|_{V₀}` (`compress`), the operator of the scheme on the fields with
 vanishing boundary DOFs, with the load `bₙ ∈ V₀` the interior part of the Dirichlet step taken from
-the lifting itself (`gₙ ↦ gₙ₊₁ + bₙ`; it exists by `existsUnique_isDirichletCNStep`). This is the
-step `cayley(Lₕ, τ/2)` of `Feec.HilbertComplex.DissipFEEC.crankNicolson` for the discrete
-generator `Lₕ = A₀`; for the Whitney spaces of the thesis `A₀` is `𝐝ₕ − 𝐝ₕ*` on the subcomplex
-`V̊ₕ` (the identification with the generator of the conforming window is not formalized).
+the lifting itself (`gₙ ↦ gₙ₊₁ + bₙ`; it exists by `existsUnique_isDirichletCNStep`). This has
+the form of the step `cayley(Lₕ, τ/2)` of `Feec.HilbertComplex.DissipFEEC.crankNicolson` with
+`A₀` in place of the discrete generator `Lₕ`; for the Whitney spaces of the thesis `A₀` should be
+`𝐝ₕ − 𝐝ₕ*` on the subcomplex `V̊ₕ`, but its identification with the generator of a conforming
+window is open.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 7 (Crank–Nicolson with the boundary data of the exact solution)
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
-  (single step methods with a load: stability and consistency)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 8
+  (single step methods for the inhomogeneous equation: stability and consistency)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/

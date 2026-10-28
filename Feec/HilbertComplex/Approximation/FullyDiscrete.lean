@@ -67,8 +67,14 @@ besides the semidiscrete conclusions, at the time levels `tₙ = n τₕ ≤ T`,
    lifting `G`, the solution with the boundary values of `G` is `G` plus the mild solution with
    the forcing `f - G' + A_max G` (`Feec.Evolution.IsBoundarySolution.eq_add_mild`), and the
    lifted iterates `Gₕ,ₙ + ιₕ Wₙ` have error at most `‖G(tₙ) - Gₕ,ₙ‖` plus the error of 8 for
-   the mild solution. The Crank–Nicolson scheme with prescribed boundary DOFs of the thesis is of
-   this form (`Feec.TimeStepping.eq_add_forcedIter_of_isDirichletCNStep`).
+   the mild solution. The Crank–Nicolson scheme with prescribed boundary DOFs of the thesis has
+   the same structure, a forced Crank–Nicolson scheme of a compression
+   (`Feec.TimeStepping.eq_add_forcedIter_of_isDirichletCNStep`); its identification with a
+   time scheme of a conforming window is open.
+
+   8 and 9 are stability statements against arbitrary comparisons: no consistency bound for a
+   discretized load (e.g. `gₖ ≈ τ Πₕ f(tₖ)`) is proved, so forced problems carry no rate, fully
+   discrete or semidiscrete.
 
 **Schemes** (`DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`): the θ-scheme, `θ ≥ 1/2` real,
 `M = 1`, order `1`, `K = θ + 1/2` (implicit Euler `θ = 1`, `K = 3/2`), and Crank–Nicolson with
@@ -595,15 +601,17 @@ def forcedSol (h : κ) (v : F.X h) (g : ℕ → F.X h) (n : ℕ) : E :=
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- Without load, the forced solution is the fully discrete solution. -/
-@[simp] theorem forcedSol_zero (h : κ) (v : F.X h) (n : ℕ) :
+@[simp] theorem forcedSol_zero_load (h : κ) (v : F.X h) (n : ℕ) :
     Θ.forcedSol h v 0 n = Θ.sol h v n := by
   simp [forcedSol, sol]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- **8. Forced iterates**: for every target `y` (the exact value at `tₙ`) and every comparison
 sequence `wₖ` in `Xₕ`,
-`‖y - ιₕ Wₙ‖ ≤ ‖y - ιₕ wₙ‖ + ‖ιₕ‖ M(T) (‖v - w₀‖ + Σ_{k<n} ‖wₖ₊₁ - Pₕ wₖ - gₖ‖)` for `tₙ ≤ T` (the discrete Duhamel formula, `TimeStepping.norm_forcedIter_sub_le`).
-[Thomee2006], Ch. 7 -/
+`‖y - ιₕ Wₙ‖ ≤ ‖y - ιₕ wₙ‖ + ‖ιₕ‖ M(T) (‖v - w₀‖ + Σ_{k<n} ‖wₖ₊₁ - Pₕ wₖ - gₖ‖)` for
+`tₙ ≤ T` (the discrete Duhamel formula, `TimeStepping.norm_forcedIter_sub_le`). This is
+stability only: the load `g` is arbitrary, and no consistency bound ties it to a forcing.
+[Thomee2006], Ch. 8 -/
 theorem norm_sub_forcedSol_le {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X h) (y : E) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖y - Θ.forcedSol h v g n‖ ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h‖ *
@@ -690,7 +698,8 @@ structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
           Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * F.boundConst *
             ‖genExt A x‖ + Θ.M T * Θ.K * (n * Θ.τ h) * 2 ^ (Θ.p + 1) * ‖R.p x h 0‖))
   /-- the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` against every comparison sequence: the comparison
-  error plus the stability constant times the initial and the summed consistency errors -/
+  error plus the stability constant times the initial and the summed consistency errors
+  (stability only; no rate for a discretized load) -/
   forced_iterates {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X h) (y : E) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖y - Θ.forcedSol h v g n‖ ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h‖ *

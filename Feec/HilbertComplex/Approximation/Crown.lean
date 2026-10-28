@@ -55,7 +55,8 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    boundary conditions and a lifting `G` of the boundary data the solution is `G` plus the mild
    solution with the forcing `f − G' + L_max G`, approximated by the lifted iterates
    `Gₕ,ₙ + ιₕ Wₙ` (`lifted_iterates`; the Crank–Nicolson runs of [QuennevilleBelair2015], Ch. 7,
-   are of this form, `Feec.Instances.Lifting`).
+   have the same structure, forced Crank–Nicolson of a compression, `Feec.Instances.Lifting`; their
+   identification with a time scheme of the crown is open).
 
 **With a Jackson estimate** (`ConformingFamily.feec_rated`, statement
 `ConformingFamily.Verdict.Rated`: classes `Reg s` approximated in `Vₕ` at the order `hᵒʳᵈ⁽ˢ⁾` in the
@@ -89,8 +90,9 @@ cube, `FEM.qMinusFamily`), so the crown holds for each.
   discretizations with their own Ritz projections, not conforming windows, and carry no rate.
 * Perturbations: dissipative bounded perturbations `A + B` are m-dissipative
   (`Feec.Semigroup.DissipativePerturbation`), but damped and Ohmic problems have no conforming
-  verdict in the crown, and forced (Duhamel) problems have no semidiscrete rate (the fully
-  discrete field bounds forced iterates against every comparison).
+  verdict in the crown, and forced (Duhamel) problems have no rate, semidiscrete or fully
+  discrete (the fully discrete field bounds forced iterates against every comparison by
+  stability; no consistency bound for a discretized load is proved).
 * No-slip Stokes and conforming elastodynamics (no conforming family of their complexes).
 * Explicit Runge–Kutta methods (polynomial stability functions, not bounded on the imaginary
   axis) and the sharp uniform-in-`h` order `τᵖ` along trajectories for general rational schemes

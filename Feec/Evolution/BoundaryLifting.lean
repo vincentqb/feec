@@ -35,7 +35,8 @@ inhomogeneous problem from Duhamel's formula for the homogeneous one, for every 
   `W = U − G` exists for `U(a) − G(a) ∈ D(A)` and admissible `F − G' + A_max G`, and it is unique.
 * `IsBoundarySolution.eq_add_mild`: the lifted Duhamel formula
   `U(t) = G(t) + S(t − a)(U(a) − G(a)) + ∫ₐᵗ S(t − s)(F − G' + A_max G)(s) ds`; the fully discrete
-  FEEC theorem approximates the second summand with forcing
+  FEEC theorem approximates the mild solution `U − G` (the last two summands, the forcing entering
+  through the integral) by forced iterates
   (`Feec.HilbertComplex.DissipFEEC.TimeScheme.Verdict.lifted_iterates`).
 * `IsBoundarySolution.norm_sub_le`, `IsBoundarySolution.norm_le`: energy estimates.
 * `IsBoundarySolution.hasDerivWithinAt_norm_sq`: the energy identity

@@ -11,16 +11,16 @@ public import Feec.Semigroup.Invariance
 Small general statements about the constructions behind the mirror cube complexes
 (`Feec.Models.Cube.Mirror`, `MirrorSym`, `MirrorBGG`): projections onto action-invariant
 subspaces preserve the fixed vectors, the inverse of a transport is a scaled embedding, the wave
-domains of compressions and of transports along uniformly scaled isometries, the components of
-the wave operator of a window complex `W₀ → W₁ → W₂`, and the fact that vectors not killed by the
-wave operator are not stationary for the wave group.
+domains of compressions and of transports along uniformly scaled isometries, and the fact that
+vectors not killed by the wave operator are not stationary for the wave group. (The components of
+the wave operator of a window complex `W₀ → W₁ → W₂`, `Feec.HilbertComplex.wave_apply_fin3_zero`,
+… are in `Feec.HilbertComplex.Dirac`.)
 
 ## Main results
 
 * `Feec.HilbertComplex.Action.starProjection_mem_fixed`.
 * `Feec.HilbertComplex.ScaledEmbedding.ofTransportSymm`: `e⁻¹` embeds `H.transport e κ` in `H`.
 * `Feec.HilbertComplex.mem_wave_domain_compress_iff`, `mem_wave_domain_transport_iff`.
-* `Feec.HilbertComplex.wave_apply_fin3_zero`, `_one`, `_two`.
 * `Feec.HilbertComplex.not_mem_stationary_of_wave_ne_zero`.
 
 ## References
@@ -157,79 +157,6 @@ theorem ReducingSubcomplex.mem_wave_domain_iff {S : ∀ i, Submodule 𝕜 (W i)}
   · change y j ∈ (h.toHilbertComplex.dual.d j i).domain ↔ _
     rw [h.dual_toHilbertComplex_d]
     exact (h.dual.reduces j i).mem_part_domain
-
-/-! ### Window complexes `W₀ → W₁ → W₂` -/
-
-section Fin3
-
-variable {W : Fin 3 → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
-  [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 ComplexShape.fin3 W)
-
-/-- `(L x)₀ = -d₀† x₁`. -/
-theorem wave_apply_fin3_zero (x : H.wave.domain) :
-    (H.wave x) 0 = -(H.d 0 1)† ⟨(x : PiLp 2 W) 1, x.2.2 1 0⟩ := by
-  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
-    H.apply_eq_zero_of_not_rel (i := 0) (j := 0) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 1) (j := 0) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 2) (j := 0) (by simp),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 0 0 (by simp)),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 0 2 (by simp))]
-  simp
-
-/-- `(L x)₁ = d₀ x₀ - d₁† x₂`. -/
-theorem wave_apply_fin3_one (x : H.wave.domain) :
-    (H.wave x) 1 = H.d 0 1 ⟨(x : PiLp 2 W) 0, x.2.1 0 1⟩ -
-      (H.d 1 2)† ⟨(x : PiLp 2 W) 2, x.2.2 2 1⟩ := by
-  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
-    H.apply_eq_zero_of_not_rel (i := 1) (j := 1) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 2) (j := 1) (by simp),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 1 0 (by simp)),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 1 1 (by simp))]
-  simp
-
-/-- `(L x)₂ = d₁ x₁`. -/
-theorem wave_apply_fin3_two (x : H.wave.domain) :
-    (H.wave x) 2 = H.d 1 2 ⟨(x : PiLp 2 W) 1, x.2.1 1 2⟩ := by
-  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
-    H.apply_eq_zero_of_not_rel (i := 0) (j := 2) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 2) (j := 2) (by simp),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 2 0 (by simp)),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 2 1 (by simp)),
-    adjoint_apply_eq_zero_of_eq_zero (H.shape 2 2 (by simp))]
-  simp
-
-/-- **Membership in the wave domain of a window complex**: `x₀ ∈ D(d₀)`, `x₁ ∈ D(d₁) ∩ D(d₀†)`,
-`x₂ ∈ D(d₁†)`. -/
-theorem mem_wave_domain_fin3 {x : PiLp 2 W} (h0 : x 0 ∈ (H.d 0 1).domain)
-    (h1 : x 1 ∈ (H.d 1 2).domain) (h1' : x 1 ∈ ((H.d 0 1)†).domain)
-    (h2 : x 2 ∈ ((H.d 1 2)†).domain) : x ∈ H.wave.domain := by
-  have htop : ∀ {i j : Fin 3}, ¬ ComplexShape.fin3.Rel i j → ∀ v, v ∈ (H.d i j).domain :=
-    fun h v => H.domain_eq_top_of_not_rel h ▸ Submodule.mem_top
-  have htop' : ∀ {i j : Fin 3}, ¬ ComplexShape.fin3.Rel i j → ∀ v, v ∈ ((H.d i j)†).domain :=
-    fun h v => by rw [H.shape _ _ h, adjoint_zero]; exact Submodule.mem_top
-  refine (mem_wave_domain _).2 ⟨fun i j => ?_, fun i j => ?_⟩
-  · fin_cases i <;> fin_cases j
-    · exact htop (by simp) _
-    · exact h0
-    · exact htop (by simp) _
-    · exact htop (by simp) _
-    · exact htop (by simp) _
-    · exact h1
-    · exact htop (by simp) _
-    · exact htop (by simp) _
-    · exact htop (by simp) _
-  · fin_cases i <;> fin_cases j
-    · exact htop' (by simp) _
-    · exact h1'
-    · exact htop' (by simp) _
-    · exact htop' (by simp) _
-    · exact htop' (by simp) _
-    · exact h2
-    · exact htop' (by simp) _
-    · exact htop' (by simp) _
-    · exact htop' (by simp) _
-
-end Fin3
 
 /-! ### Non-stationary vectors -/
 

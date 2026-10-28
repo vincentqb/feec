@@ -48,12 +48,13 @@ Hilbert complex, with the **Gauss laws** `σ = 0`, `d†E = 0`, `dB = 0` as cons
 unitary isomorphism of `HΛ(Ω)` onto `H¹(Ω) --grad--> H(curl, Ω) --curl--> H(div, Ω) --div--> L²(Ω)`
 (`Feec.Domain.deRhamVec_maximalComplex_eq_map`, `isChainIso_proxy`), carrying every conforming
 family `F` of `HΛ(Ω)` to one of the vector complex (`vecFamily`; for the Whitney forms, the
-Lagrange, Nédélec edge and Raviart–Thomas face elements). The window at `a = 0` is
-`H¹ → H(curl) → L²(Ω; ℝ³)` (`vecWindow_d_zero`, `vecWindow_d_one`), its magnetic Gauss law is
-`div B = 0` (`vec_magnetic`), and its wave operator is Maxwell's operator in vector form
-`L (σ, E, B) = (-grad†E, grad σ - curl†B, curl E)` (`wave_apply_zero`, `wave_apply_one`,
-`wave_apply_two`), the proxy of the forms one (`vec_wave_intertwines`). The FEEC theorem for
-Maxwell's equations holds in this form (`vec_maxwellFEEC`; on the cube `cubeVec_maxwellFEEC`).
+vector proxies of the Whitney forms, classically the Lagrange, Nédélec edge and Raviart–Thomas
+face elements). The window at `a = 0` is `H¹ → H(curl) → L²(Ω; ℝ³)` (`vecWindow_d_zero`,
+`vecWindow_d_one`), its magnetic Gauss law is `div B = 0` (`vec_magnetic`), and its wave operator
+is Maxwell's operator in vector form `L (σ, E, B) = (-grad†E, grad σ - curl†B, curl E)` for the
+weak `grad` and `curl` (`vec_wave_apply`), the proxy of the forms one (`vec_wave_intertwines`).
+The FEEC theorem for Maxwell's equations holds in this form (`vec_maxwellFEEC`; on the cube
+`cubeVec_maxwellFEEC`).
 
 The concrete instances below are pinned in the regression tests
 `scripts/FeecCheck/MaxwellInstances.lean`, which also derive the per-instance rate statements of
@@ -119,8 +120,8 @@ vanishing-field constraint (`torus_potential_residual_of_approxFEEC`).
   solutions), Ch. 8 (evolution problems)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §2 (vector proxies)
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], Ch. 1 (Maxwell's
-  equations in `(E, H)` form), Ch. 5, Ch. 6 (Raviart–Thomas and Nédélec elements)
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003] (Maxwell's equations in
+  `(E, H)` form; the Raviart–Thomas and Nédélec elements)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -909,49 +910,6 @@ theorem cubePMC_ofComplex :
 
 end CubeComplex
 
-/-! ### Maxwell's system of a short complex -/
-
-section System
-
-variable {𝕜 : Type*} [RCLike 𝕜] {W : Fin 3 → Type*}
-  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
-  (H : HilbertComplex 𝕜 ComplexShape.fin3 W) (x : H.wave.domain)
-
-/-- **Maxwell's system**, the potential row: `(L (σ, E, B))₀ = -d₀†E`. -/
-theorem wave_apply_zero :
-    (H.wave x) 0 = -(H.d 0 1)† ⟨(x : PiLp 2 W) 1, x.2.2 1 0⟩ := by
-  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three]
-  simp only [H.apply_eq_zero_of_not_rel (i := 0) (j := 0) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 1) (j := 0) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 2) (j := 0) (by simp),
-    ← dual_d, H.dual.apply_eq_zero_of_not_rel (i := 0) (j := 0) (by simp),
-    H.dual.apply_eq_zero_of_not_rel (i := 2) (j := 0) (by simp)]
-  simp
-
-/-- **Maxwell's system**, Ampère's law: `(L (σ, E, B))₁ = d₀σ - d₁†B`. -/
-theorem wave_apply_one :
-    (H.wave x) 1 = H.d 0 1 ⟨(x : PiLp 2 W) 0, x.2.1 0 1⟩ -
-      (H.d 1 2)† ⟨(x : PiLp 2 W) 2, x.2.2 2 1⟩ := by
-  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three]
-  simp only [H.apply_eq_zero_of_not_rel (i := 1) (j := 1) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 2) (j := 1) (by simp),
-    ← dual_d, H.dual.apply_eq_zero_of_not_rel (i := 0) (j := 1) (by simp),
-    H.dual.apply_eq_zero_of_not_rel (i := 1) (j := 1) (by simp)]
-  simp
-
-/-- **Maxwell's system**, Faraday's law: `(L (σ, E, B))₂ = d₁E`. -/
-theorem wave_apply_two :
-    (H.wave x) 2 = H.d 1 2 ⟨(x : PiLp 2 W) 1, x.2.1 1 2⟩ := by
-  rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three]
-  simp only [H.apply_eq_zero_of_not_rel (i := 0) (j := 2) (by simp),
-    H.apply_eq_zero_of_not_rel (i := 2) (j := 2) (by simp),
-    ← dual_d, H.dual.apply_eq_zero_of_not_rel (i := 0) (j := 2) (by simp),
-    H.dual.apply_eq_zero_of_not_rel (i := 1) (j := 2) (by simp),
-    H.dual.apply_eq_zero_of_not_rel (i := 2) (j := 2) (by simp)]
-  simp
-
-end System
-
 /-! ### Maxwell's equations in vector proxies -/
 
 section VectorProxy
@@ -970,13 +928,13 @@ theorem isChainIso_proxy :
 
 /-- **The vector proxies of a conforming family** `F` of `HΛ(Ω)`: the subcomplexes
 `P Vₕ ⊆ H¹(Ω) × H(curl, Ω) × H(div, Ω) × L²(Ω)` with the cochain projections `P πₕ P⁻¹`. For the
-Whitney forms these are the Lagrange `P₁`, the Nédélec edge, the Raviart–Thomas face and the
-piecewise constant elements. [AFW2006], §2; [Monk2003], Ch. 5, Ch. 6 -/
+Whitney forms these are their vector proxies (classically, the Lagrange `P₁`, Nédélec edge,
+Raviart–Thomas face and piecewise constant elements; not formalized here). [AFW2006], §2 -/
 def vecFamily (F : ConformingFamily ((deRham ℝ 3).maximalComplex hΩ) κ) :
     ConformingFamily ((deRhamVec ℝ 1).maximalComplex hΩ) κ :=
   haveI : ∀ h i, FiniteDimensional ℝ (((isChainIso_proxy hΩ).comapSub (F.V h)).V i) :=
     fun h i => haveI := F.finiteDimensional h
-      IsChainIso.instFiniteDimensionalRealSubtypeMemSubmoduleVComapSub (isChainIso_proxy hΩ) _ i
+      (isChainIso_proxy hΩ).finiteDimensional_comapSub _ i
   (isChainIso_proxy hΩ).comapFamily F (fun h => (isChainIso_proxy hΩ).comapSub (F.V h))
     (fun _ _ _ => Iff.rfl) (M := 1) (M' := 1)
     (fun k => (proxy k).symm.toLinearIsometry.norm_toContinuousLinearMap_le)
@@ -1002,10 +960,34 @@ theorem vec_magnetic :
     magnetic ((deRhamVec ℝ 1).maximalComplex hΩ) 0 = ((divOp 3 1).maximal Ω).ker :=
   congrArg LinearPMap.ker ((deRhamVec ℝ 1).maximalComplex_d hΩ 2)
 
+private theorem apply_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
+    [Module ℝ F] {T S : E →ₗ.[ℝ] F} (e : T = S) {v : E} (h : v ∈ T.domain) :
+    T ⟨v, h⟩ = S ⟨v, e ▸ h⟩ := by
+  subst e; rfl
+
+/-- **Maxwell's operator in vector form** on the window `H¹(Ω) → H(curl, Ω) → L²(Ω; ℝ³)`:
+`L (σ, E, B) = (-grad†E, grad σ - curl†B, curl E)` for the weak `grad` and `curl`
+(`wave_apply_fin3_zero`, `_one`, `_two` with `vecWindow_d_zero`, `vecWindow_d_one`). Informally,
+with `B = -H` and `curl† = curl` on `H̊(curl)` this is `Ė = curl H`, `Ḣ = -curl E`. -/
+theorem vec_wave_apply (x : (((deRhamVec ℝ 1).maximalComplex hΩ).window 0 3).wave.domain) :
+    ((((deRhamVec ℝ 1).maximalComplex hΩ).window 0 3).wave x) 0 =
+        -((gradOp 3 1).maximal Ω)† ⟨x.1 1, by rw [← vecWindow_d_zero hΩ]; exact x.2.2 1 0⟩ ∧
+      ((((deRhamVec ℝ 1).maximalComplex hΩ).window 0 3).wave x) 1 =
+        (gradOp 3 1).maximal Ω ⟨x.1 0, by rw [← vecWindow_d_zero hΩ]; exact x.2.1 0 1⟩ -
+          ((curlOp 1).maximal Ω)† ⟨x.1 2, by rw [← vecWindow_d_one hΩ]; exact x.2.2 2 1⟩ ∧
+      ((((deRhamVec ℝ 1).maximalComplex hΩ).window 0 3).wave x) 2 =
+        (curlOp 1).maximal Ω ⟨x.1 1, by rw [← vecWindow_d_one hΩ]; exact x.2.1 1 2⟩ := by
+  refine ⟨?_, ?_, ?_⟩
+  · rw [wave_apply_fin3_zero]
+    exact congrArg Neg.neg (apply_of_eq (congrArg (·†) (vecWindow_d_zero hΩ)) _)
+  · rw [wave_apply_fin3_one]
+    exact congrArg₂ (· - ·) (apply_of_eq (vecWindow_d_zero hΩ) _)
+      (apply_of_eq (congrArg (·†) (vecWindow_d_one hΩ)) _)
+  · rw [wave_apply_fin3_two]
+    exact apply_of_eq (vecWindow_d_one hΩ) _
+
 /-- **The vector proxies carry the forms Maxwell operator to Maxwell's operator in vector form**
-`L (σ, E, B) = (-grad†E, grad σ - curl†B, curl E)` (`wave_apply_zero`, `wave_apply_one`,
-`wave_apply_two` with `vecWindow_d_zero`, `vecWindow_d_one`; `B = -H` gives Maxwell's
-`Ė = curl H`, `Ḣ = -curl E`): `L_vec (P x) = P (L x)`. [Monk2003], Ch. 1 -/
+(`vec_wave_apply`): `L_vec (P x) = P (L x)`. -/
 theorem vec_wave_intertwines :
     LinearPMap.Intertwines
       (totalMap fun i : Fin 3 => (proxy (Ω := Ω) (0 + (i : ℤ))).toContinuousLinearEquiv)
@@ -1029,16 +1011,16 @@ theorem vec_maxwellFEEC (F : ConformingFamily ((deRham ℝ 3).maximalComplex hΩ
   maxwellFEEC _ 0
 
 /-- **Maxwell's equations with a perfect magnetic conductor on the cube in vector proxies**:
-`H¹(Q) → H(curl, Q) → L²(Q; ℝ³)` (`cubePMC 3 0` in proxies), discretized by the Lagrange,
-Nédélec edge and Raviart–Thomas face elements of the Freudenthal meshes (the proxies of the
-Whitney forms, `FEM.whitneyFamily`). -/
+`H¹(Q) → H(curl, Q) → L²(Q; ℝ³)` (`cubePMC 3 0` in proxies), discretized by the vector proxies
+of the Whitney forms of the Freudenthal meshes (`FEM.whitneyFamily`; classically, the Lagrange,
+Nédélec edge and Raviart–Thomas face elements). -/
 def cubeVecPMC : ConstrainedFEEC
     (((deRhamVec ℝ 1).maximalComplex (Models.Cube.FEM.isOpen_cubeDomain 3)).window 0 3) ℕ :=
   vecFEEC _ (Models.Cube.FEM.whitneyFamily 3)
 
 /-- **The FEEC theorem for Maxwell's equations on the cube in vector proxies** (`cubeVecPMC`):
 well-posedness, convergence and rates, the propagation of the Gauss laws and their residual, for
-the Lagrange/Nédélec/Raviart–Thomas discretization of `H¹ → H(curl) → L²`. -/
+the vector-proxy Whitney discretization of `H¹ → H(curl) → L²`. -/
 theorem cubeVec_maxwellFEEC :
     Verdict (vecFamily (Models.Cube.FEM.isOpen_cubeDomain 3) (Models.Cube.FEM.whitneyFamily 3)) 0 :=
   vec_maxwellFEEC _ _

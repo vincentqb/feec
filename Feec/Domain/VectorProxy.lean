@@ -3,6 +3,7 @@ module
 public import Feec.Algebra.Proxy3
 public import Feec.Domain.BGGRealization
 public import Feec.Domain.FormPullback
+public import Feec.ForMathlib.Calculus.Partial
 
 /-!
 # Vector proxies: the `L²` de Rham complex of `ℝ³` is `H¹ → H(curl) → H(div) → L²`
@@ -34,8 +35,8 @@ and vector fields: `f = ω_∅`, `v_j = ω_{j}`, `u_k = ±ω_{{k}ᶜ}` (`u = (ω
   §2 (vector proxies of the de Rham complex in three dimensions)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §4 (the `L²` de Rham complex; in vector proxies `H¹`, `H(curl)`, `H(div)`, `L²`)
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], Ch. 3 (the spaces
-  `H(curl)`, `H(div)`)
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003] (the spaces `H(curl)`,
+  `H(div)`)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -190,19 +191,10 @@ end Intertwining
 
 open Feec.Koszul.Proxy3 Feec.ExteriorFibre
 
-/-- The coordinate partial derivatives `∂_j f = fderiv f · e_j` of functions on `ℝⁿ`. -/
-def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) : (Fin n → ℝ) → ℝ :=
-  fun x => fderiv ℝ f x (coordDir j)
-
-theorem partialDeriv_neg {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) :
-    partialDeriv j (-f) = -partialDeriv j f := by
-  funext x
-  simp [partialDeriv, fderiv_neg]
-
 /-- **The exterior derivative of fields is the coordinate exterior derivative** of
-`Feec.Koszul.Proxy3` for the partial derivatives `∂_j`. -/
+`Feec.Koszul.Proxy3` for the partial derivatives `∂_j` (`_root_.partialDeriv`). -/
 theorem extD_eq_coordD (F : Finset (Fin 3) → (Fin 3 → ℝ) → ℝ) (s : Finset (Fin 3)) :
-    extD F s = coordD partialDeriv F s := by
+    extD F s = coordD (partialDeriv (𝕜 := ℝ)) F s := by
   funext x
   simp only [extD, coordD, Finset.sum_apply, zsmul_eq_mul, sgn]
   push_cast
@@ -326,7 +318,7 @@ theorem gradOp_proxyMat (f : formIdx 3 0 → (Fin 3 → ℝ) → ℝ) :
   rw [ofMatrix_proxyMat_zero, ofMatrix_proxyMat_one]
   funext v x
   rw [gradOp_apply]
-  have h := congrFun (vec1_coordD partialDeriv (formExt f)) v.2
+  have h := congrFun (vec1_coordD (partialDeriv (𝕜 := ℝ)) (formExt f)) v.2
   simp only [vec1, gradOf, ← extD_eq_coordD] at h
   rw [vec1, formExt_extDerivOp_apply f (by simp), h]
   rfl
@@ -338,7 +330,8 @@ theorem curlOp_proxyMat (f : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) :
   rw [ofMatrix_proxyMat_one, ofMatrix_proxyMat_two]
   funext ⟨i, k⟩ x
   rw [curlOp_apply]
-  have h : vec2 (formExt ((extDerivOp ℝ 3 1).apply f)) = curlOf partialDeriv (vec1 (formExt f)) := by
+  have h : vec2 (formExt ((extDerivOp ℝ 3 1).apply f)) =
+      curlOf (partialDeriv (𝕜 := ℝ)) (vec1 (formExt f)) := by
     rw [← vec2_coordD]
     funext j
     rw [vec2_apply, vec2_apply, formExt_extDerivOp_apply f (by rw [Finset.card_compl]; simp),
@@ -353,8 +346,8 @@ theorem divOp_proxyMat (f : formIdx 3 2 → (Fin 3 → ℝ) → ℝ) :
   rw [ofMatrix_proxyMat_two, ofMatrix_proxyMat_three]
   funext v x
   rw [divOp_apply, vol, formExt_extDerivOp_apply f (by decide), extD_eq_coordD]
-  change _ = vol (coordD partialDeriv (formExt f)) x
-  rw [vol_coordD partialDeriv partialDeriv_neg]
+  change _ = vol (coordD (partialDeriv (𝕜 := ℝ)) (formExt f)) x
+  rw [vol_coordD _ fun j m => funext (partialDeriv_neg m j)]
   simp [divOf, partialDeriv]
 
 /-- **The vector proxies intertwine `d` with `grad`, `curl`, `div`** on all fields, in every

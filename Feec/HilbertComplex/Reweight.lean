@@ -165,6 +165,17 @@ theorem mem_conj_graph_iff {p : E' × F'} :
     rw [conj_apply, ← (b.apply_symm_apply p.2), ← show T x = b.symm p.2 from hx2]
     exact congrArg b (apply_congr' _ _ _ hx1'.symm)
 
+/-- `N(b T a⁻¹) = a N(T)`. -/
+theorem mem_ker_conj_iff {y : E'} : y ∈ (T.conj a b).ker ↔ a.symm y ∈ T.ker := by
+  simp only [mem_ker_iff]
+  constructor
+  · rintro ⟨z, rfl, hz⟩
+    exact ⟨⟨_, z.2⟩, rfl, b.map_eq_zero_iff.1 hz⟩
+  · rintro ⟨z, hz, h0⟩
+    refine ⟨⟨y, show a.symm y ∈ T.domain from hz ▸ z.2⟩, rfl, ?_⟩
+    rw [conj_apply, ← b.map_zero, ← h0]
+    exact congrArg b (apply_congr' _ _ _ hz)
+
 /-- The conjugate of a closed operator is closed. -/
 theorem isClosed_conj (hT : T.IsClosed) : (T.conj a b).IsClosed := by
   have hg : ((T.conj a b).graph : Set (E' × F')) =

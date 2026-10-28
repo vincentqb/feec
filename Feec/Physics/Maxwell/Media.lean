@@ -47,6 +47,9 @@ skew-adjoint. This gives:
 * `Medium.gauss_propagates`, `Medium.gauss_existsUnique`: **the weighted Gauss laws
   propagate**.
 
+The finite element discretizations of Maxwell's equations in a medium, and their FEEC verdicts,
+are in `Feec.Instances.MaxwellMedia` (the conforming families of the reweighted complex).
+
 ## References
 
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (evolution problems:

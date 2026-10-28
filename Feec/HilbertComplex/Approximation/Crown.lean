@@ -72,9 +72,9 @@ scheme, `FullRate.wave_uniform`, `FullRate.heat_uniform`).
 The crown is assembled from the layer theorems: `ConformingFamily.staticFEEC`, `approxFEEC` and
 `constrainedFEEC` for the conforming windows (`ConstrainedFEEC.toApprox` with the core of the wave
 Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` with
-`SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`), and `constrainedFEEC_perturbed`; each field is
-the layer verdict itself. Every finite element family with bounded smoothed projections is a conforming
-family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
+`SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`), and
+`constrainedFEEC_perturbed`; each field is the layer verdict itself. Every finite element family
+with bounded smoothed projections is a conforming family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
 `P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the
 cube, `FEM.qMinusFamily`), so the crown holds for each.
 
@@ -309,7 +309,8 @@ abbrev windowFEEC (F : ConformingFamily H κ) (a : α) (m : ℕ)
 
 /-- **The conclusions of the FEEC theorem** (`feec`) for a conforming family `F`: the static FEEC
 theorem in every degree, and on every window with every closed constraint the semidiscrete wave
-and heat FEEC theorems and the fully discrete ones. -/
+and heat FEEC theorems, the fully discrete ones, and the perturbed ones for every bounded
+dissipative `B`. -/
 structure Verdict (F : ConformingFamily H κ) : Prop where
   /-- the static FEEC theorem in every degree with finite-dimensional harmonic forms
   ([AFW2010], Thms 3.4–3.9) -/
@@ -349,8 +350,9 @@ the static FEEC theorem in every degree (closed range, finite-dimensional harmon
 every window with every closed constraint the semidiscrete wave FEEC theorem (approximating and
 constrained), the heat FEEC theorem (closed range and finite-dimensional harmonic forms of the
 window), the fully discrete theorems for every time scheme and for leapfrog under the CFL
-condition, and the perturbed theorems for every bounded dissipative perturbation. [AFW2010], Thms 3.4–3.9; [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17;
-[BrennerThomee1979] -/
+condition, and the perturbed theorems for every bounded dissipative perturbation. [AFW2010],
+Thms 3.4–3.9; [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [BrennerThomee1979];
+[Pazy1983], §3.1, §3.3, §3.4 -/
 theorem feec (F : ConformingFamily H κ) : F.Verdict :=
   ⟨fun hcr j _ => F.staticFEEC hcr j,
     fun a m K hK => approxFEEC _ (F.windowFEEC a m K hK).toCore,

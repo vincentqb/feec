@@ -5,6 +5,7 @@ public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.DissipGalerkin
 public import Feec.Semigroup.DissipativePerturbation
 public import Feec.Evolution.Perturbation
+public import Feec.ForMathlib.InnerProductSpace.Isometry
 
 /-!
 # The perturbed FEEC theorem
@@ -15,8 +16,9 @@ dissipative FEEC discretization (`Feec.HilbertComplex.DissipFEEC`) with a dense 
 under such a perturbation, with its full verdict, semidiscrete and fully discrete.
 
 * **Laplace identity** (`DissipFEEC.resolvent_eq_integral_add`,
-  `DissipFEEC.discreteRes_eq_integral_add`): `(1 - A)⁻¹ z = ∫₀ᵀ e⁻ˢ S(s) z ds + e⁻ᵀ S(T) (1 - A)⁻¹ z`
-  for every `T ≥ 0`, exact and discrete.
+  `DissipFEEC.discreteRes_eq_integral_add`):
+  `(1 - A)⁻¹ z = ∫₀ᵀ e⁻ˢ S(s) z ds + e⁻ᵀ S(T) (1 - A)⁻¹ z` for every `T ≥ 0`, exact and discrete
+  (from `integral_exp_neg_smul_sub_eq`).
 * **Trotter–Kato, the converse direction** (`DissipFEEC.tendsto_incl_discreteRes`): a dissipative
   FEEC discretization with a dense core has consistent discrete resolvents,
   `ιₕ (1 - Lₕ)⁻¹ πₕ z → (1 - A)⁻¹ z` for every `z` (the Laplace identity on `[0, T]` and the
@@ -63,35 +65,6 @@ open Set Filter Topology Metric
 universe u
 
 namespace Feec.HilbertComplex
-
-/-! ### The Laplace identity on a bounded interval -/
-
-section Laplace
-
-variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [CompleteSpace E]
-
-/-- **The Laplace identity on `[0, T]`**: for `u` continuous on `[0, T]` with continuous right
-derivative `w`, `∫₀ᵀ e⁻ˢ (u s - w s) ds = u 0 - e⁻ᵀ u T` (`e⁻ˢ u` has derivative
-`-e⁻ˢ (u - w)`). -/
-theorem integral_exp_neg_smul_sub_eq {u w : ℝ → E} {T : ℝ} (hT : 0 ≤ T)
-    (hu : ContinuousOn u (Icc 0 T)) (hw : ContinuousOn w (Icc 0 T))
-    (hd : ∀ s ∈ Ico 0 T, HasDerivWithinAt u (w s) (Ici s) s) :
-    ∫ s in (0 : ℝ)..T, Real.exp (-s) • (u s - w s) = u 0 - Real.exp (-T) • u T := by
-  have he : Continuous fun s : ℝ => Real.exp (-s) := Real.continuous_exp.comp continuous_neg
-  have hf : ∀ s ∈ Ioo 0 T, HasDerivWithinAt (fun s => Real.exp (-s) • u s)
-      (-(Real.exp (-s) • (u s - w s))) (Ioi s) s := fun s hs => by
-    have h1 : HasDerivAt (fun s : ℝ => Real.exp (-s)) (-Real.exp (-s)) s := by
-      simpa using (hasDerivAt_neg s).exp
-    convert h1.hasDerivWithinAt.smul ((hd s ⟨hs.1.le, hs.2⟩).mono Ioi_subset_Ici_self) using 1
-    module
-  have hint := intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le hT
-    (he.continuousOn.smul hu) hf
-    ((he.continuousOn.smul (hu.sub hw)).neg.intervalIntegrable_of_Icc hT)
-  rw [intervalIntegral.integral_neg, neg_eq_iff_eq_neg] at hint
-  rw [hint]
-  simp only [Pi.smul_apply', neg_zero, Real.exp_zero, one_smul, neg_sub]
-
-end Laplace
 
 /-! ### Laplace identities of the resolvents, Trotter–Kato -/
 
@@ -186,7 +159,8 @@ theorem tendsto_incl_discreteRes (Z : F.Core) (hZ : Z.Data.topologicalClosure = 
     have := ((F.incl h).restrictScalars ℝ).intervalIntegral_comp_comm hi
     nth_rw 1 [F.discreteRes_eq_integral_add h v hT0]
     rw [_root_.map_add, ContinuousLinearMap.map_smul_of_tower]
-    simp only [ContinuousLinearMap.coe_restrictScalars', ContinuousLinearMap.map_smul_of_tower] at this
+    simp only [ContinuousLinearMap.coe_restrictScalars', ContinuousLinearMap.map_smul_of_tower]
+      at this
     rw [← this]
     rfl
   have hint : ‖(∫ s in (0 : ℝ)..T, Real.exp (-s) • F.sol h v s) -
@@ -225,41 +199,6 @@ theorem tendsto_incl_discreteRes (Z : F.Core) (hZ : Z.Data.topologicalClosure = 
 end DissipFEEC
 
 end TrotterKato
-
-/-! ### Orthogonal projections onto isometric images -/
-
-section Isometry
-
-variable {𝕜 : Type*} [RCLike 𝕜] {X E : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
-  [CompleteSpace X] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
-
-/-- **Best approximation by an isometric image**: for an isometry `ι : X → E`, `ι ι*` is the
-orthogonal projection onto `ι X`: `‖y - ι ι* y‖ ≤ ‖y - ι v‖` for every `v` (Pythagoras, as
-`y - ι ι* y ⊥ ι X` by `ι* ι = 1`). -/
-theorem norm_sub_incl_adjoint_le {ι : X →L[𝕜] E} (hι : ∀ v, ‖ι v‖ = ‖v‖) (y : E) (v : X) :
-    ‖y - ι (ContinuousLinearMap.adjoint ι y)‖ ≤ ‖y - ι v‖ := by
-  have hι' := (ContinuousLinearMap.norm_map_iff_adjoint_comp_self ι).1 hι
-  have h0 : ⟪y - ι (ContinuousLinearMap.adjoint ι y),
-      ι (ContinuousLinearMap.adjoint ι y - v)⟫_𝕜 = 0 := by
-    rw [← ContinuousLinearMap.adjoint_inner_left, _root_.map_sub, ← ContinuousLinearMap.comp_apply,
-      hι', one_apply_eq_self, sub_self, inner_zero_left]
-  have e : y - ι v = (y - ι (ContinuousLinearMap.adjoint ι y)) +
-      ι (ContinuousLinearMap.adjoint ι y - v) := by rw [_root_.map_sub]; abel
-  have hp := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero _ _ h0
-  rw [← e] at hp
-  nlinarith [norm_nonneg (y - ι v), norm_nonneg (y - ι (ContinuousLinearMap.adjoint ι y)),
-    mul_self_nonneg ‖ι (ContinuousLinearMap.adjoint ι y - v)‖]
-
-/-- `‖ι ι* y‖ ≤ ‖y‖` for an isometry `ι`. -/
-theorem norm_incl_adjoint_le {ι : X →L[𝕜] E} (hι : ∀ v, ‖ι v‖ = ‖v‖) (y : E) :
-    ‖ι (ContinuousLinearMap.adjoint ι y)‖ ≤ ‖y‖ := by
-  rw [hι]
-  refine ((ContinuousLinearMap.adjoint ι).le_opNorm y).trans
-    (mul_le_of_le_one_left (norm_nonneg _) ?_)
-  rw [LinearIsometryEquiv.norm_map]
-  exact ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun v => by rw [hι, one_mul]
-
-end Isometry
 
 /-! ### Bounded perturbations of dissipative FEEC discretizations -/
 
@@ -375,11 +314,12 @@ theorem tendsto_incl_discreteRes
     simpa [_root_.map_sub] using F.norm_le_norm_incl h (w h - F.proj h u)
   · simpa [_root_.map_sub] using F.norm_le_norm_incl h (P.Bh h (F.proj h u) - F.proj h (P.B u))
 
+open ContinuousLinearMap in
 /-- **The Galerkin perturbation** of a bounded dissipative `B` (`re ⟪B x, x⟫ ≤ 0`: damping,
 Ohmic loss, absorption) for isometric reading maps (conforming spaces) along which `ιₕ πₕ → 1`:
 `Bₕ = ιₕ* B ιₕ`, the orthogonal projection of `B` onto the discrete space, so that
 `re ⟪Bₕ v, v⟫ = re ⟪B ιₕ v, ιₕ v⟫ ≤ 0`; it is consistent since `ιₕ ιₕ*` is the orthogonal
-projection onto `ιₕ Xₕ` (`norm_sub_incl_adjoint_le`). -/
+projection onto `ιₕ Xₕ` (`ContinuousLinearMap.norm_sub_apply_adjoint_apply_le`). -/
 def galerkin (B : E →L[𝕜] E) (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0)
     (hι : ∀ h v, ‖F.incl h v‖ = ‖v‖)
     (happ : ∀ z, Tendsto (fun h => F.incl h (F.proj h z)) F.l (𝓝 z)) : F.Perturbation where
@@ -414,13 +354,12 @@ def galerkin (B : E →L[𝕜] E) (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0
     refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) h0
     set ι := F.incl h
     set y := B (ι (F.proj h z))
-    change ‖ι (ContinuousLinearMap.adjoint ι y) - B z‖ ≤ ‖y - B z‖ + ‖B z - ι (F.proj h (B z))‖
-    have e : ι (ContinuousLinearMap.adjoint ι y) - B z =
-        ι (ContinuousLinearMap.adjoint ι (y - B z)) - (B z - ι (ContinuousLinearMap.adjoint ι (B z))) := by
+    change ‖ι (adjoint ι y) - B z‖ ≤ ‖y - B z‖ + ‖B z - ι (F.proj h (B z))‖
+    have e : ι (adjoint ι y) - B z = ι (adjoint ι (y - B z)) - (B z - ι (adjoint ι (B z))) := by
       simp only [_root_.map_sub]; abel
     rw [e]
-    exact (norm_sub_le _ _).trans (add_le_add (norm_incl_adjoint_le (hι h) _)
-      (norm_sub_incl_adjoint_le (hι h) _ _))
+    exact (norm_sub_le _ _).trans (add_le_add (norm_apply_adjoint_apply_le (hι h) _)
+      (norm_sub_apply_adjoint_apply_le (hι h) _ _))
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
@@ -457,11 +396,13 @@ core and a perturbation `P` (bounded `B`, discrete `Bₕ`), the discretization `
 `A + B` satisfies the perturbed verdict with the perturbed core: its exact flow is the
 Dyson–Phillips perturbation of that of `A`, and the dissipative and fully discrete FEEC theorems
 hold, with convergence for every datum. [Pazy1983], §3.1, §3.3, §3.4 -/
-theorem _root_.Feec.HilbertComplex.perturbFEEC (Z : F.Core) (hZ : Z.Data.topologicalClosure = ⊤) (P : F.Perturbation) :
+theorem _root_.Feec.HilbertComplex.perturbFEEC (Z : F.Core) (hZ : Z.Data.topologicalClosure = ⊤)
+    (P : F.Perturbation) :
     P.Verdict (P.core Z hZ) where
   eq_perturb t ht := by
     refine C0Semigroup.eqOn_perturb _ P.B (G' := (F.perturb P).isMDissipative.semigroup) ?_ ht
-    rw [LinearPMap.IsMDissipative.generator_semigroup, LinearPMap.IsMDissipative.generator_semigroup]
+    rw [LinearPMap.IsMDissipative.generator_semigroup,
+      LinearPMap.IsMDissipative.generator_semigroup]
   dense := resData_closure (F.perturb P).isMDissipative
   semidiscrete := dissipFEEC (F.perturb P) (P.core Z hZ)
   full Θ := dissipFEEC_fullyDiscrete (P.core Z hZ) Θ
@@ -479,32 +420,13 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] {H : HilbertComplex 𝕜 c W}
   {κ : Type*}
 
-/-- The **diagonal operator** `(xᵢ) ↦ (σᵢ xᵢ)` on `⊕₂ Wᵢ` (a conductivity or a damping acting on
-some of the fields). -/
-def diagOp (σ : ∀ i, W i →L[𝕜] W i) : PiLp 2 W →L[𝕜] PiLp 2 W :=
-  (PiLp.continuousLinearEquiv 2 𝕜 W).symm.toContinuousLinearMap ∘L
-    (ContinuousLinearMap.pi fun i => σ i ∘L ContinuousLinearMap.proj i) ∘L
-      (PiLp.continuousLinearEquiv 2 𝕜 W).toContinuousLinearMap
-
-omit [Fintype ι] [∀ i, CompleteSpace (W i)] [∀ i, NormedSpace ℝ (W i)]
-  [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-@[simp] theorem diagOp_apply (σ : ∀ i, W i →L[𝕜] W i) (x : PiLp 2 W) (i : ι) :
-    diagOp σ x i = σ i (x i) := rfl
-
-omit [∀ i, CompleteSpace (W i)] [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- A diagonal operator with dissipative entries is dissipative. -/
-theorem re_inner_diagOp_le {σ : ∀ i, W i →L[𝕜] W i} (hσ : ∀ i y, RCLike.re ⟪σ i y, y⟫_𝕜 ≤ 0)
-    (x : PiLp 2 W) : RCLike.re ⟪diagOp σ x, x⟫_𝕜 ≤ 0 := by
-  rw [PiLp.inner_apply, map_sum]
-  exact Finset.sum_nonpos fun i _ => hσ i (x i)
-
 namespace ConstrainedFEEC
 
 variable (G : ConstrainedFEEC H κ) (B : PiLp 2 W →L[𝕜] PiLp 2 W)
   (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0)
 
 /-- The data `D(L²)` of the wave core are dense. -/
-theorem toCore_closure : G.toCore.Data.topologicalClosure = ⊤ :=
+theorem toCore_closure_eq_top : G.toCore.Data.topologicalClosure = ⊤ :=
   Submodule.eq_top_iff'.2 G.mem_toCore_closure
 
 /-- **The perturbed wave discretization**: the Galerkin perturbation `Lₕ + Pₕ B ιₕ` of the wave
@@ -519,7 +441,8 @@ discretization by a bounded dissipative `B`, a discretization of `u' = (-Δ + B)
 def heatPerturbation (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
     G.toHeat.Perturbation :=
   DissipFEEC.Perturbation.galerkin B hB (fun _ _ => rfl)
-    fun _ => DissipFEEC.tendsto_incl_proj _ (G.heatCore hcr) (G.dense_heatCore_data hcr ▸ Submodule.mem_top)
+    fun _ => DissipFEEC.tendsto_incl_proj _ (G.heatCore hcr)
+      (G.dense_heatCore_data hcr ▸ Submodule.mem_top)
 
 /-- **The perturbed verdict of a constrained FEEC discretization** for a bounded dissipative `B`:
 the perturbed verdicts (`DissipFEEC.Perturbation.Verdict`) of the wave discretization of `L + B`
@@ -527,7 +450,8 @@ with the perturbation of the wave core, and of the heat discretization of `-Δ +
 perturbation of the heat core (closed range, finite-dimensional harmonic forms). -/
 structure PerturbedVerdict : Prop where
   /-- the damped wave equation `ξ' = (L + B) ξ` -/
-  wave : (G.wavePerturbation B hB).Verdict ((G.wavePerturbation B hB).core G.toCore G.toCore_closure)
+  wave : (G.wavePerturbation B hB).Verdict
+    ((G.wavePerturbation B hB).core G.toCore G.toCore_closure_eq_top)
   /-- the perturbed heat equation `u' = (-Δ + B) u` -/
   heat (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
     (G.heatPerturbation B hB hcr).Verdict
@@ -540,7 +464,7 @@ dissipative `B` (damping, Ohmic loss, absorption), the Galerkin discretizations 
 the perturbed wave and heat equations satisfy the perturbed verdict (`perturbFEEC`). -/
 theorem constrainedFEEC_perturbed (G : ConstrainedFEEC H κ) (B : PiLp 2 W →L[𝕜] PiLp 2 W)
     (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : G.PerturbedVerdict B hB :=
-  ⟨perturbFEEC _ G.toCore_closure _,
+  ⟨perturbFEEC _ G.toCore_closure_eq_top _,
     fun hcr _ => perturbFEEC _ (G.dense_heatCore_data hcr) _⟩
 
 end Conforming

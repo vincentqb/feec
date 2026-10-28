@@ -19,17 +19,20 @@ by `Lₕ + Pₕ B ιₕ`):
   for a conductivity `σ` on `Vᵃ` with `re ⟪σ E, E⟫ ≥ 0` (`ohmicLoss`); on the de Rham complex
   of a domain of `ℝ³`, `a = 1` is `E' = curl H - σ E`, `H' = -curl E` up to the sign of `H`
   (`Feec.Physics.Maxwell.Ohmic`). The cube with Whitney forms (`cube_ohmic`) is an instance;
-* **Ohmic loss in a medium** (`Maxwell.Medium.ohmicFEEC`): every constrained FEEC discretization of
-  the field complex of a medium (`Maxwell.Medium.complex`, `Maxwell.fields`) discretizes the Ohmic
-  generator `L' - Σ` (`Maxwell.Medium.ohmicGen`) by `Lₕ - Pₕ Σ ιₕ`, with the perturbed verdict, and
-  its exact flow is the Ohmic semigroup `Maxwell.Medium.ohmicSemigroup`;
+* **Ohmic loss in a medium** (`Maxwell.Medium.ohmicSemigroup_eq_perturb`): for every constrained
+  FEEC discretization `G` of the field complex of a medium (`Maxwell.Medium.complex`,
+  `Maxwell.fields`), the Galerkin perturbation `Lₕ - Pₕ Σ ιₕ`, which has the perturbed verdict
+  (`constrainedFEEC_perturbed`), discretizes the Ohmic semigroup `Maxwell.Medium.ohmicSemigroup`
+  (generator `L' - Σ`, `Maxwell.Medium.ohmicGen`). The library has no constrained FEEC
+  discretization of that field complex yet, so this is a bridge without an instance;
 * **the damped absorbing problem** (`absorbing_perturbed`): the linearized Einstein–Bianchi
   system on the cube with the absorbing boundary condition (`Feec.Instances.EinsteinBianchi`) and
   a bounded dissipative lower-order term `B` (e.g. damping), with the dense-sequence Galerkin
   scheme `Lₙ + Pₙ B ιₙ`: the perturbed verdict, whose exact flow is the Dyson–Phillips
   perturbation of the absorbing semigroup (`Feec.Models.Cube.Absorbing.absorbingSemigroup`). With
   `B = 0` the flow is the absorbing semigroup itself, which has finite speed of propagation
-  (`absorbing_perturbed_zero`, `Feec.Models.Cube.Absorbing.absorbingSemigroup_eq_depDomain`).
+  (`absorbing_perturbed_zero`, `Feec.Models.Cube.Absorbing.absorbingSemigroup_eq_depDomain`);
+  finite speed of propagation for `B ≠ 0` (a local `B`) is not formalized.
 
 ## References
 
@@ -68,7 +71,8 @@ theorem re_inner_damping_le {E : Type*} [NormedAddCommGroup E] [InnerProductSpac
 
 /-- **Damped waves and damped heat flow**: on every window of a conforming family, with every
 closed constraint, `ξ' = (L - γ) ξ` and `u' = (-Δ - γ) u` (`γ ≥ 0`) satisfy the perturbed verdict
-with the discretizations `Lₕ - γ`, `-Δₕ - γ`. -/
+with the Galerkin discretizations `Lₕ + Pₕ (-γ) ιₕ`, `-Δₕ + Pₕ (-γ) ιₕ`; these are `Lₕ - γ`,
+`-Δₕ - γ`, as `Pₕ ιₕ = ιₕ* ιₕ = 1` for the isometric `ιₕ`. -/
 theorem damped (F : ConformingFamily H κ) (a : α) (m : ℕ)
     (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) {γ : ℝ} (hγ : 0 ≤ γ) :
@@ -81,15 +85,15 @@ theorem damped (F : ConformingFamily H κ) (a : α) (m : ℕ)
 `σ` on the electric space `Vᵃ`. -/
 def ohmicLoss (a : α) (σ : V (a + ((0 : Fin 2) : ℕ)) →L[𝕜] V (a + ((0 : Fin 2) : ℕ))) :
     (PiLp 2 fun i : Fin 2 => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin 2 => V (a + i) :=
-  diagOp (Pi.single 0 (-σ))
+  PiLp.diagOp (Pi.single 0 (-σ))
 
 omit [IsCancelAdd α] [CharZero α] [∀ i, CompleteSpace (V i)] [∀ i, NormedSpace ℝ (V i)]
   [∀ i, IsScalarTower ℝ 𝕜 (V i)] in
 /-- Ohm's loss is dissipative for `re ⟪σ E, E⟫ ≥ 0`. -/
-theorem re_inner_ohmicLoss_le {a : α} {σ : V (a + ((0 : Fin 2) : ℕ)) →L[𝕜] V (a + ((0 : Fin 2) : ℕ))}
-    (hσ : ∀ E, 0 ≤ RCLike.re ⟪σ E, E⟫_𝕜) (x : PiLp 2 fun i : Fin 2 => V (a + i)) :
+theorem re_inner_ohmicLoss_le {a : α}
+    {σ : V (a + ((0 : Fin 2) : ℕ)) →L[𝕜] V (a + ((0 : Fin 2) : ℕ))} (hσ : ∀ E, 0 ≤ RCLike.re ⟪σ E, E⟫_𝕜) (x : PiLp 2 fun i : Fin 2 => V (a + i)) :
     RCLike.re ⟪ohmicLoss a σ x, x⟫_𝕜 ≤ 0 :=
-  re_inner_diagOp_le (fun i y => by
+  PiLp.re_inner_diagOp_le (fun i y => by
     fin_cases i
     · simpa [inner_neg_left] using hσ y
     · simp) x
@@ -116,7 +120,8 @@ open Models.Cube
 variable (n : ℕ) [NeZero n]
 
 /-- **Maxwell's equations with Ohmic loss on the cube** `Q = (0, ½)ⁿ` (perfect magnetic
-conductor, `n = 3`, `a = 1`: `E ∈ HΛ¹(Q)`, `H ∈ HΛ²(Q)`), discretized by the lowest-order Whitney
+conductor, `n = 3`, `a = 1`: `E ∈ HΛ¹(Q)`, `H ∈ L²Λ²(Q)` in the domain `D(d₁*)`, as the window
+drops `d₂`), discretized by the lowest-order Whitney
 forms of the Freudenthal meshes (`FEM.whitneyFamily`): the perturbed verdict for every
 conductivity `σ` with `⟪σ E, E⟫ ≥ 0` (`ohmic`). -/
 theorem cube_ohmic (a : ℤ)
@@ -155,23 +160,18 @@ theorem re_inner_neg_loss_le (hσ : ∀ E, 0 ≤ RCLike.re ⟪σ E, E⟫_𝕜)
   rw [_root_.neg_apply, inner_neg_left, map_neg, neg_nonpos, M.inner_loss_apply]
   exact hσ _
 
-/-- **The Ohmic FEEC theorem in a medium**: every constrained FEEC discretization `G` of the field
-complex of the medium (`0 → W₁ → W₂`, conjugated by `ε`, `μ`) discretizes Maxwell's equations with
-Ohmic loss by `Lₕ - Pₕ Σ ιₕ`, a dissipative FEEC discretization of the Ohmic generator `L' - Σ`
-(`Maxwell.Medium.ohmicGen`) with the perturbed verdict, whose exact flow is the Ohmic semigroup
-(`Maxwell.Medium.ohmicSemigroup`). -/
-theorem _root_.Feec.Maxwell.Medium.ohmicFEEC
+/-- **The Ohmic semigroup is the flow of the perturbed wave discretization**: for every
+constrained FEEC discretization `G` of the field complex of the medium (`0 → W₁ → W₂`, conjugated
+by `ε`, `μ`), the Galerkin perturbation `Lₕ - Pₕ Σ ιₕ` of its wave discretization, which has the
+perturbed verdict (`constrainedFEEC_perturbed`), is a discretization of the Ohmic semigroup
+(`Maxwell.Medium.ohmicSemigroup`, generated by `L' - Σ`, `Maxwell.Medium.ohmicGen`). -/
+theorem _root_.Feec.Maxwell.Medium.ohmicSemigroup_eq_perturb
     (G : ConstrainedFEEC (M.complex (fields S)).toHilbertComplex κ)
-    (hσ : ∀ E, 0 ≤ RCLike.re ⟪σ E, E⟫_𝕜) :
-    (G.wavePerturbation (-M.loss σ) (re_inner_neg_loss_le M hσ)).Verdict
-        ((G.wavePerturbation (-M.loss σ) (re_inner_neg_loss_le M hσ)).core G.toCore
-          G.toCore_closure) ∧
-      ∀ t, 0 ≤ t →
-        (G.toApprox.perturb (G.wavePerturbation (-M.loss σ) (re_inner_neg_loss_le M hσ))).S t =
-          (M.ohmicSemigroup S σ).S t :=
-  ⟨(constrainedFEEC_perturbed G _ _).wave, fun _ ht =>
-    C0Semigroup.eqOn_of_generator_eq (G := M.ohmicSemigroup S σ) (by
-      rw [LinearPMap.IsMDissipative.generator_semigroup, M.generator_ohmicSemigroup]; rfl) ht⟩
+    (hσ : ∀ E, 0 ≤ RCLike.re ⟪σ E, E⟫_𝕜) {t : ℝ} (ht : 0 ≤ t) :
+    (M.ohmicSemigroup S σ).S t =
+      (G.toApprox.perturb (G.wavePerturbation (-M.loss σ) (re_inner_neg_loss_le M hσ))).S t :=
+  (C0Semigroup.eqOn_of_generator_eq (G := M.ohmicSemigroup S σ) (by
+    rw [LinearPMap.IsMDissipative.generator_semigroup, M.generator_ohmicSemigroup]; rfl) ht).symm
 
 end Medium
 
@@ -190,16 +190,13 @@ abbrev absorbingPerturbation : absorbingGalerkin.Perturbation :=
 
 /-- **The damped absorbing problem**: the linearized Einstein–Bianchi system on the cube with the
 absorbing boundary condition and a bounded dissipative term `B`, discretized by `Lₙ + Pₙ B ιₙ`,
-satisfies the perturbed verdict (convergence for every datum, semidiscrete and with every time
-scheme), and its exact flow is the Dyson–Phillips perturbation of the absorbing semigroup by `B`.
--/
+satisfies the perturbed verdict: its exact flow is the Dyson–Phillips perturbation
+`absorbingSemigroup.perturb B` of the absorbing semigroup (`eq_perturb`), with convergence for
+every datum, semidiscrete and with every time scheme. -/
 theorem absorbing_perturbed :
     (absorbingPerturbation B hB).Verdict
-        ((absorbingPerturbation B hB).core absorbingGalerkinCore absorbingGalerkin_verdict.1) ∧
-      ∀ t, 0 ≤ t → (absorbingGalerkin.perturb (absorbingPerturbation B hB)).S t =
-        (absorbingSemigroup.perturb B).S t :=
-  ⟨ImpedanceTriple.GalerkinData.perturbed_verdict _ _ _ _ _,
-    (ImpedanceTriple.GalerkinData.perturbed_verdict _ _ _ _ _).eq_perturb⟩
+      ((absorbingPerturbation B hB).core absorbingGalerkinCore absorbingGalerkin_verdict.1) :=
+  ImpedanceTriple.GalerkinData.perturbed_verdict _ _ _ _ _
 
 /-- **With `B = 0`, finite speed of propagation**: the exact flow of the perturbed absorbing
 problem with `B = 0` is the absorbing semigroup, which equals every weak solution of the system

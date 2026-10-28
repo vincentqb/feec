@@ -103,6 +103,8 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Homology.Subcomplex
 public import Feec.ForMathlib.InnerProductSpace.Complexification
+public import Feec.ForMathlib.InnerProductSpace.Diagonal
+public import Feec.ForMathlib.InnerProductSpace.Isometry
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange

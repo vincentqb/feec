@@ -132,7 +132,8 @@ rated form (`ConformingFamily.feec_rated`) are the verdicts of the layer theorem
 the section on the crown fields check, by `type_of%`, that the type of each field is,
 definitionally, the statement of the layer theorem it is read from (`staticFEEC`, `approxFEEC`,
 `constrainedFEEC`, `heatFEEC`, `dissipFEEC_fullyDiscrete` for the θ-schemes, Crank–Nicolson and
-every time scheme, `SkewFEEC.norm_S_sub_leapfrog_le`; `ConformingFamily.rate`,
+every time scheme, `SkewFEEC.norm_S_sub_leapfrog_le`, `constrainedFEEC_perturbed`;
+`ConformingFamily.rate`,
 `ConstrainedFEEC.rate_le`, `ConstrainedFEEC.rate_heat`, `rate_smooth_iterates`). On the cube, the
 heat verdict of `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of
 `FEM.polyFamily`.
@@ -3005,6 +3006,12 @@ example {T : ℝ} (R : (F.windowFEEC a m K hK).toApprox.RateClass T)
     type_of% ((F.windowFEEC a m K hK).toApprox.norm_S_sub_leapfrog_le R hx h v hτ hc hc1 hw h0
       hn) :=
   (F.feec.full a m K hK).leapfrog R hx h v hτ hc hc1 hw h0 hn
+
+open scoped InnerProductSpace in
+example (B : (PiLp 2 fun i : Fin m => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin m => V (a + i))
+    (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) :
+    type_of% (constrainedFEEC_perturbed (F.windowFEEC a m K hK) B hB) :=
+  F.feec.perturbed a m K hK B hB
 
 variable {ρ : Type*} (J : F.Jackson ρ)
 

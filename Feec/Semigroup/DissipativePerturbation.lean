@@ -10,7 +10,8 @@ Lower-order terms (damping, absorption, zeroth-order coupling between the fields
 enter an evolution `u' = A u` as a bounded perturbation `A + B`. This file records the
 generator-level combination rule by which the semidiscrete and fully discrete FEEC theorems
 (`Feec.HilbertComplex.DissipFEEC`, `Feec.HilbertComplex.Approximation.FullyDiscrete`), which take
-an m-dissipative generator, apply to `A + B`; no instance of the library uses it yet:
+an m-dissipative generator, apply to `A + B` (the perturbed FEEC theorem
+`Feec.HilbertComplex.perturbFEEC`, `Feec.HilbertComplex.Approximation.PerturbFEEC`):
 
 * **`LinearPMap.IsMDissipative.vadd`**: if `A` is m-dissipative, `B` is bounded and `A + B`
   (domain `D(A)`, `B +ᵥ A`) is dissipative, then `A + B` is m-dissipative:

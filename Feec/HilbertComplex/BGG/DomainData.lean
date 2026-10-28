@@ -27,9 +27,9 @@ domain complexes are.
 * `HilbertData.DerivedVerdict`, **`HilbertData.derivedVerdict`**: the analytic BGG theorem for
   Hilbert complexes (closed exact part, elimination hypotheses).
 * `HilbertData.antilipschitz_domainS`: `S` bounded below is bounded below between the domains.
-* **`HilbertData.bggVerdict`**: the analytic BGG theorem for the BGG complex `bgg J`, from the
-  connecting maps up to `J` bounded below and the regular decompositions after `J`
-  (`HilbertData.RegularDecomposition`).
+* `HilbertData.isClosed_Δ_and_eliminates_bgg`, **`HilbertData.bggVerdict`**: the analytic BGG
+  theorem for the BGG complex `bgg J`, from the connecting maps up to `J` bounded below and the
+  regular decompositions after `J` (`HilbertData.RegularDecomposition`).
 
 ## References
 
@@ -202,6 +202,21 @@ def RegularDecomposition (J : ℤ) : Prop :=
   ∀ j, J < j → LinearMap.range (D.domainData.d (j - 1) j) ⊔
     LinearMap.range (D.domainData.S (j - 1) j) = ⊤
 
+/-- **The hypotheses of the analytic BGG theorem for `bgg J`**: if the connecting maps `Sⁱ`,
+`i ≤ J`, are bounded below and the regular decompositions after `J` hold, the exact part of the
+domain complexes is closed (`BoundedData.isClosed_bgg_Δ`, `S` bounded below between the domains
+by `antilipschitz_domainS`) and the elimination hypotheses hold (`Data.eliminates_bgg`). -/
+theorem isClosed_Δ_and_eliminates_bgg {J : ℤ}
+    (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (htop : D.RegularDecomposition J) :
+    (∀ i, IsClosed (D.domainData.Δ (· < J) i : Set (D.H.domainSpace i × D.Ht.domainSpace i))) ∧
+      D.domainData.Eliminates (J < ·) (· < J) := by
+  have hS' : ∀ i < J, ∃ K, AntilipschitzWith K (D.domainData.S i (i + 1)) := fun i hi => by
+    obtain ⟨K₁, h₁⟩ := hS i hi.le
+    obtain ⟨K₂, h₂⟩ := hS (i + 1) (by omega)
+    exact ⟨_, D.antilipschitz_domainS rfl rfl h₁ h₂⟩
+  exact ⟨D.domainData.isClosed_bgg_Δ hS',
+    Data.eliminates_bgg (fun i hi => (hS' i hi).choose_spec.injective) htop⟩
+
 /-- **Analytic BGG for the BGG complex of two Hilbert complexes**: if the connecting maps `Sⁱ`,
 `i ≤ J`, are bounded below and the regular decompositions after `J` hold, then wherever the two
 complexes have finite-dimensional cohomology the BGG complex `bgg J` of their domain complexes has
@@ -210,12 +225,8 @@ exact part is closed and the other elimination hypotheses hold by `S` bounded be
 (`BoundedData.isClosed_bgg_Δ`, `antilipschitz_domainS`). [ArnoldHu2021], Theorem 6 -/
 theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
     (htop : D.RegularDecomposition J) (i : ℤ) [FiniteDimensional 𝕜 (D.H.cohomology i)]
-    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i := by
-  have hS' : ∀ i < J, ∃ K, AntilipschitzWith K (D.domainData.S i (i + 1)) := fun i hi => by
-    obtain ⟨K₁, h₁⟩ := hS i hi.le
-    obtain ⟨K₂, h₂⟩ := hS (i + 1) (by omega)
-    exact ⟨_, D.antilipschitz_domainS rfl rfl h₁ h₂⟩
-  exact D.derivedVerdict (D.domainData.isClosed_bgg_Δ hS')
-    (Data.eliminates_bgg (fun i hi => (hS' i hi).choose_spec.injective) htop) i
+    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i :=
+  have h := D.isClosed_Δ_and_eliminates_bgg hS htop
+  D.derivedVerdict h.1 h.2 i
 
 end Feec.BGG.HilbertData

@@ -85,7 +85,12 @@ Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` wit
 `constrainedFEEC_perturbed`; each field is the layer verdict itself. Every finite element family
 with bounded smoothed projections is a conforming family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
 `P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the
-cube, `FEM.qMinusFamily`), so the crown holds for each. Conforming families and their Jackson
+cube, `FEM.qMinusFamily`), so the crown holds for each. So is every discrete BGG complex of
+stacked conforming families (`S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`): the discrete derived complexes are a
+conforming family of the derived complex (`BGG.BoundedData.StackedFamily.derived`), which has
+closed range under the hypotheses of the analytic BGG theorem
+(`BGG.HilbertData.StackedFamily.bggVerdict`; the Hessian, elasticity and div-div complexes,
+`Feec.Domain.hessianFEEC`, `Feec.Domain.elasticityFEEC`, `Feec.Domain.divDivFEEC`). Conforming families and their Jackson
 estimates transfer to every reweighted complex `H.conj a` (weighted inner products, variable
 coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with uniformly
 bounded condition numbers), so the crown holds for them as well, e.g. for Maxwell's equations in
@@ -103,11 +108,12 @@ which `leaves` fires, and a nonzero heat datum.
 
 **Outside the crown.**
 
-* BGG discretizations: the derived complex of bounded BGG data is a Hilbert complex
-  (`BGG.BoundedData.derivedComplex`, closed range where the rows have finite-dimensional
-  cohomology), but discrete BGG complexes (`BGG.Discrete`) are not yet subcomplexes with bounded
-  cochain projections of it, so the static theorem does not reach elasticity or Hessian
-  discretizations built by BGG.
+* BGG discretizations: the BGG verdicts are in the graph norms of the domain complexes (the `L²`
+  realization of the derived complex is not formalized); the regular decompositions and the
+  finite-dimensional cohomology of the vector-valued de Rham complexes are hypotheses, no finite
+  element family with `S Ṽₕ ⊆ Vₕ` is constructed (the only instances are the full families of
+  finite-dimensional data, `πₕ = id`), and the weak-symmetry elements
+  (`BGG.Discrete`, discrete connecting maps `Πₕ S`) are not stacked families.
 * The improved `L²` rate is conditional on rates of the elliptic quantities `η`, `δ`, `μ`
   (`ConformingFamily.rate_static_L2`, [AFW2010], Thm 3.11).
 * Impedance (absorbing) boundary conditions: their discretizations are dissipative FEEC

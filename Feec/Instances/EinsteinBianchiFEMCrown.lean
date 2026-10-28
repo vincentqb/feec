@@ -10,16 +10,19 @@ public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
 # The weak-symmetry scheme (6.5) under the crown
 
 The semi-discrete scheme (6.5) of [QuennevilleBelair2015], §6.3, for the Einstein–Bianchi system
-with weakly imposed symmetry (Table 6.1) is not a conforming family: its discrete BGG differential
-`𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` uses `S₀,ₕ = π¹S⁰` and `S₁,ₕ = π²S¹`, so its
-reading maps are not cochain maps. It is an approximating family of discrete differential spaces
-with a cochain defect in the sense of [HolstStern2012], §3
+with weakly imposed symmetry (Table 6.1) is not read as a conforming family: its discrete BGG
+differential `𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` uses `S₀,ₕ = π¹S⁰` and
+`S₁,ₕ = π²S¹`, so its reading maps are not shown to be cochain maps. It is an approximating family
+of discrete differential spaces with a cochain defect in the sense of [HolstStern2012], §3
 (`Feec.Instances.EinsteinBianchi.FEM.mirrorComplex`, `standardCubeComplex`), and so an instance
 of the FEEC theorem for approximating families (`Feec.HilbertComplex.ApproxComplexCrime.feec`,
-the crime crown, of which the conforming crown `ConformingFamily.feec` is the zero-defect case).
-This file reads the scheme through the crime crown under both boundary conditions, with rates.
+which the crown `ConformingFamily.feec` consumes on its zero-defect instance, the field `crime`).
+This file applies it to the scheme under both boundary conditions, with rates, and carries the
+verdicts identifying the crime front with (6.5) (`MirrorFEMApprox.Verdict`,
+`StandardCubeApprox.Verdict`: the discrete solutions are those of (6.5)).
 
-**Mirror boundary conditions** (`MirrorComplex.Verdict`, `mirrorComplex_verdict`): the crown,
+**Mirror boundary conditions** (`MirrorComplex.Verdict`, `mirrorComplex_verdict`): the verdict
+of the crime theorem and that of (6.5),
 the inner-product defect `0` (orthogonal reading maps), the cochain defect `0` at every TSD state
 (`mirrorComplex_cochainDefect_eq_zero`), so that by the residual splitting of the crown
 consistent approximation at TSD states is graph-norm approximation
@@ -30,7 +33,8 @@ and the Gauss residuals of the discrete solutions tend to `0`
 (`einsteinBianchi_mirrorFEM_gaussResidual`).
 
 **The thesis' boundary conditions** (`StandardCubeComplex.Verdict`, `standardCubeComplex_verdict`):
-the crown with a dense core (so the perturbed field applies), the inner-product defect `0`, the
+the verdict of the crime theorem and that of (6.5) (with a dense core, so the perturbed field
+applies), the inner-product defect `0`, the
 cochain defect `O(h)` in the dual discrete graph norm at the exact states
 (`exists_standardCube_cochainDefect_le_mesh`), so the residual of every approximant is its
 graph-norm error plus `O(h)` (`StandardCubeComplex.Verdict.residual_le_mesh`); the **rate class of
@@ -72,15 +76,10 @@ namespace Feec.Instances.EinsteinBianchi.FEM
 
 open Feec.HilbertComplex
 
-/-- Over `ℝ`, the normed space structure of the discrete spaces is that of their inner product, the
-one of `Lₕ`, `ιₕ`, `πₕ` (as in `Feec.HilbertComplex.ApproxFEEC.complexify`). -/
-local instance (priority := high) instNormedSpaceRealOfInner {ι : Type*} [Fintype ι]
-    {c : ComplexShape ι} {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)]
-    [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ c W}
-    {κ : Type*} (F : ApproxFEEC H κ) (h : κ) : NormedSpace ℝ (F.X h) :=
-  (F.innerProductSpace h).toNormedSpace
+attribute [local instance high] ApproxFEEC.instNormedSpaceRealOfInner
 
-/-- The same for families of discrete differential spaces. -/
+/-- Over `ℝ`, the normed space structure of discrete differential spaces is that of their inner
+product, as for `ApproxFEEC.instNormedSpaceRealOfInner`. -/
 local instance (priority := high) instNormedSpaceRealOfInnerFamily {ι : Type*} [Fintype ι]
     {c : ComplexShape ι} {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ c W}
@@ -111,9 +110,10 @@ theorem mirrorComplex_J (N : ℕ) : (mirrorComplex hT hB).toFamily.J N = 1 :=
     rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
     exact (mirrorFEMApprox_isOrthogonal hT hB).inner_incl N v w
 
-/-- **The verdict of the scheme (6.5) with mirror boundary conditions**: the crime crown of
-`mirrorComplex`, with both Holst–Stern defects zero on TSD states, the rates of its two rate
-classes, and the Gauss residuals. -/
+/-- **The verdict of the scheme (6.5) with mirror boundary conditions**: the verdict of the crime
+theorem for `mirrorComplex`, with both Holst–Stern defects zero on TSD states, the rates of its two
+rate classes from every discrete initial value, the Gauss residuals, and the verdict of (6.5)
+identifying the crime front with the scheme (`MirrorFEMApprox.Verdict`). -/
 structure MirrorComplex.Verdict : Prop extends (mirrorComplex hT hB).Verdict where
   /-- the inner-product defect is `0` -/
   J_eq_one (N : ℕ) : (mirrorComplex hT hB).toFamily.J N = 1
@@ -166,6 +166,9 @@ structure MirrorComplex.Verdict : Prop extends (mirrorComplex hT hB).Verdict whe
     TendstoUniformlyOn (fun N t => infDist
         (mirrorRe (-Complex.I • (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N (v N) t))
         (mirrorGauss : Set REnergy)) (fun _ => 0) atTop (Icc 0 T)
+  /-- the verdict of (6.5): the discrete solutions of the crime front are those of (6.5), with the
+  thesis' initialization and its rates -/
+  scheme : MirrorFEMApprox.Verdict hT hB
 
 set_option maxHeartbeats 1000000 in
 /-- **The scheme (6.5) with mirror boundary conditions is an instance of the crime crown**
@@ -188,6 +191,7 @@ theorem mirrorComplex_verdict : MirrorComplex.Verdict hT hB where
       N v ht
     rwa [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
   gaussResidual hx T v hv := einsteinBianchi_mirrorFEM_gaussResidual hT hB hx T v hv
+  scheme := mirrorFEMApprox_verdict hT hB
 
 end Mirror
 
@@ -285,11 +289,6 @@ theorem cErr_le_of_isCubeSob (N : ℕ) {T s L : ℝ} (hs0 : 0 ≤ s) (hL : 0 ≤
     rw [hb _ rfl] at h
     with_reducible_and_instances exact h
 
-/-- The generator of the crime front of the thesis' scheme is that of (6.5). -/
-theorem standardCubeComplex_L (N : ℕ) :
-    (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).L N = (standardCubeApprox hT hB).L N :=
-  (standardCubeApprox_L_eq hT hB N).symm
-
 set_option maxHeartbeats 600000 in
 /-- **The rate class of relative-class Sobolev data of the thesis' scheme** through the crime
 front, of order `min(s, 1)` in `h_N`: data `cubeSobData T s L`, class norm `L`, the elliptic
@@ -320,7 +319,8 @@ def cubeSobRate (T s L : ℝ) (hs0 : 0 ≤ s) (hL : 0 ≤ L) :
     have h1 := norm_cubeEllCmp_defect_le hT hB T hx2 N ht
     obtain ⟨h2, h3⟩ := cErr_le_of_isCubeSob hT hB N hs0 hL hd ht
     unfold DissipFEEC.Comparison.defect
-    rw [standardCubeComplex_L]
+    rw [show (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).L N =
+      (standardCubeApprox hT hB).L N from (standardCubeApprox_L_eq hT hB N).symm]
     exact h1.trans (by linarith)
 
 /-! #### Data of `D(L³)` -/
@@ -402,14 +402,13 @@ theorem standardCubeComplex_J (N : ℕ) : (standardCubeComplex hT hB).toFamily.J
     rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
     exact (standardCubeApprox_isOrthogonal hT hB).inner_incl N v w
 
-/-- **The verdict of the scheme (6.5) with the thesis' boundary conditions**: the crime crown of
-`standardCubeComplex` with a dense core, the inner-product defect `0`, the residual at the exact
+/-- **The verdict of the scheme (6.5) with the thesis' boundary conditions**: the verdict of the
+crime theorem for `standardCubeComplex`, the inner-product defect `0`, the residual at the exact
 states equal to the graph-norm error plus the `O(h)` cochain defect, the rates `O(h^{min(s,1)})`
-on the Sobolev classes and `O(h)` for data of `D(L³)`, and the Gauss constraint of the limits of
-read discrete Gauss data. -/
+on the Sobolev classes and `O(h)` for data of `D(L³)`, the Gauss constraint of the limits of read
+discrete Gauss data, and the verdict of (6.5) identifying the crime front with the scheme, with a
+dense core (`StandardCubeApprox.Verdict`). -/
 structure StandardCubeComplex.Verdict : Prop extends (standardCubeComplex hT hB).Verdict where
-  /-- the core is dense (the perturbed field applies) -/
-  dense : (ApproxFEEC.ofComplexCrimeCore (standardCubeComplex hT hB)).Data.topologicalClosure = ⊤
   /-- the inner-product defect is `0` -/
   J_eq_one (N : ℕ) : (standardCubeComplex hT hB).toFamily.J N = 1
   /-- the residual of every approximant at an exact state is its graph-norm error plus
@@ -471,6 +470,9 @@ structure StandardCubeComplex.Verdict : Prop extends (standardCubeComplex hT hB)
   gauss {x : MS} {v : ∀ N, cubeHidden hT hB N} (hv : ∀ N, v N ∈ cubeHiddenGauss hT hB N)
     (hconv : Tendsto (fun N => cubeEmb hT hB N (v N)) atTop (𝓝 x)) {t : ℝ} (ht : 0 ≤ t) :
     cubeRead (matrixComplex.waveGroup.S t x) ∈ cubeGauss
+  /-- the verdict of (6.5): the discrete solutions of the crime front are those of (6.5), the core
+  is dense (so the field `perturbed` applies), and `thesisTSD` is not reducing -/
+  scheme : StandardCubeApprox.Verdict hT hB
 
 set_option maxHeartbeats 1200000 in
 /-- **The scheme (6.5) with the thesis' boundary conditions is an instance of the crime crown**
@@ -478,7 +480,6 @@ set_option maxHeartbeats 1200000 in
 `O(h^{min(s,1)})`. [QuennevilleBelair2015], §6.3, (6.5), Table 6.1; [HolstStern2012], §3 -/
 theorem standardCubeComplex_verdict : StandardCubeComplex.Verdict hT hB where
   toVerdict := (standardCubeComplex hT hB).feec
-  dense := standardCubeEllCore_closure hT hB
   J_eq_one := standardCubeComplex_J hT hB
   residual_le_mesh := by
     obtain ⟨C₀, K, hC₀, hK, hd⟩ := exists_standardCube_cochainDefect_le_mesh hT hB
@@ -500,6 +501,7 @@ theorem standardCubeComplex_verdict : StandardCubeComplex.Verdict hT hB where
       (meshSize N ^ min (1 : ℝ) 1 * _) + _ at h
     rwa [e] at h
   gauss hv hconv _ ht := standardCube_waveGroup_mem_cubeGauss hT hB hv hconv ht
+  scheme := standardCubeApprox_verdict hT hB
 
 end Cube
 
@@ -509,16 +511,18 @@ set_option maxHeartbeats 800000 in
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry in
 /-- **The scheme (6.5) under the crown** ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1): with
 mirror boundary conditions, admissible parity smoothers exist, the non-stationary TSD datum
-`cosDatum` lies in the `O(h)` rate class, and for each smoother the scheme satisfies
-`MirrorComplex.Verdict`; with the thesis' boundary conditions, smoothers for Table 6.1 exist with
-(5.4), uniform bounds `2C`, `d̃⁰` injective and `S₀,ₕ` onto (`WaveFEM.waveFEM_cube`, unconditional
-in the regularity hypothesis), and for each smoother the scheme satisfies
-`StandardCubeComplex.Verdict`. Both are instances of the crime crown `ApproxComplexCrime.feec`. -/
+`cosDatum` lies in the `O(h)` rate class and in every `O(hˢ)` rate class, and for each smoother
+the scheme satisfies `MirrorComplex.Verdict`; with the thesis' boundary conditions, smoothers for
+Table 6.1 exist with (5.4), uniform bounds `2C`, `d̃⁰` injective and `S₀,ₕ` onto
+(`WaveFEM.waveFEM_cube`, unconditional in the regularity hypothesis), and for each smoother the
+scheme satisfies `StandardCubeComplex.Verdict` (its rate classes are not shown to contain a
+non-stationary datum). Both apply the crime theorem `ApproxComplexCrime.feec`. -/
 theorem einsteinBianchiFEM_crown :
     ((∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),
         ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C ∧
           ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) ∧
       Feec.Models.Cube.MirrorWeakSymmetry.cosDatum.U₀ ∈ mirrorL3Data ∧
+      (∀ s, Feec.Models.Cube.MirrorWeakSymmetry.cosDatum.U₀ ∈ mirrorSobData s) ∧
       ∀ {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
         (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
         (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C),
@@ -535,7 +539,7 @@ theorem einsteinBianchiFEM_crown :
         StandardCubeComplex.Verdict hT hB) := by
   obtain ⟨p, C, hT, hB, h1, h2, -⟩ := Feec.EinsteinBianchi.WaveFEM.waveFEM_cube
   exact ⟨⟨Feec.Models.Cube.MirrorWeakSymmetry.exists_mirror_estimates, cosDatum_mem_mirrorL3Data,
-      fun hT hB => mirrorComplex_verdict hT hB⟩,
+      cosDatum_mem_mirrorSobData, fun hT hB => mirrorComplex_verdict hT hB⟩,
     ⟨⟨p, C, hT, hB, h1, h2⟩, fun hT hB => standardCubeComplex_verdict hT hB⟩⟩
 
 end Feec.Instances.EinsteinBianchi.FEM

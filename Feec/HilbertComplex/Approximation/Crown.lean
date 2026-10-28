@@ -86,26 +86,29 @@ with inner-product defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximat
 (the cochain defect `⟪𝐝ₕ* iₕ* y - iₕ* 𝐝* y, v⟫` enters the consistency residual): the approximating,
 fully discrete (every time scheme, leapfrog) and perturbed (dense core) FEEC theorems on the
 core, exact preservation of discrete constraints, and the Strang, residual-splitting and defect
-estimates of the exact-load projection; the rates are those of its rate classes. A conforming
-family is the case of zero defects (`ConstrainedFEEC.toCrime`): on every window the crown
-contains the crime crown of the window (`crime`, `windowCrime`). The weak-symmetry scheme (6.5)
-of [QuennevilleBelair2015], Ch. 6 is an instance under both boundary conditions, with its rates
-(`Feec.Instances.EinsteinBianchiFEMCrown`).
+estimates of the exact-load projection; the rates are those of its rate classes. The crown
+consumes it on the zero-defect instance: every conforming window read as an approximating family
+(`ConstrainedFEEC.toCrime`, `windowCrime`, with `Jₕ = 1`, zero cochain defect and the discrete
+solutions of the window) satisfies it (`crime`). This identification is at the level of data;
+on a conforming window the field `crime` adds to `wave`, `full` and `perturbed` (stated there on
+the subcomplex front and its Ritz core) the Strang, residual and defect estimates. The
+weak-symmetry scheme (6.5) of [QuennevilleBelair2015], Ch. 6 applies `ApproxComplexCrime.feec`
+under both boundary conditions, with its rates (`Feec.Instances.EinsteinBianchiFEMCrown`).
 
 The crown is assembled from the layer theorems: `ConformingFamily.staticFEEC`, `approxFEEC` and
 `constrainedFEEC` for the conforming windows (`ConstrainedFEEC.toApprox` with the core of the wave
 Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` with
 `SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`), and
 `constrainedFEEC_perturbed`, and `ApproxComplexCrime.feec` (from `approxFEEC_ofComplexCrime`,
-`dissipFEEC_fullyDiscrete` and `perturbFEEC`); each field is the layer verdict itself. Every finite element family
-with bounded smoothed projections is a conforming family (`Feec.Models.ConformingFamilies`:
-Whitney forms and every admissible sequence `P_rΛ`, `P_r⁻Λ` on the cube, parallelepipeds and
-star-shaped domains, and the cubical `Q_b⁻Λ` on the cube, `FEM.qMinusFamily`), so the crown holds
-for each. It also holds for every discrete BGG complex of stacked conforming families
-(`S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`): the discrete derived complexes are a conforming family of the
-derived complex (`BGG.BoundedData.StackedFamily.derived`), which has closed range under the
-hypotheses of the analytic BGG theorem (`BGG.HilbertData.StackedFamily.bggVerdict`; the
-Hessian, elasticity and div-div complexes, `Feec.Domain.hessianFEEC`,
+`dissipFEEC_fullyDiscrete` and `perturbFEEC`); each field is the layer verdict itself. Every finite
+element family with bounded smoothed projections is a conforming family
+(`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`, `P_r⁻Λ` on
+the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the cube,
+`FEM.qMinusFamily`), so the crown holds for each. It also holds for every discrete BGG complex of
+stacked conforming families (`S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`): the discrete derived complexes are a
+conforming family of the derived complex (`BGG.BoundedData.StackedFamily.derived`), which has closed
+range under the hypotheses of the analytic BGG theorem (`BGG.HilbertData.StackedFamily.bggVerdict`;
+the Hessian, elasticity and div-div complexes, `Feec.Domain.hessianFEEC`,
 `Feec.Domain.elasticityFEEC`, `Feec.Domain.divDivFEEC`). Conforming families and their Jackson
 estimates transfer to every reweighted complex `H.conj a` (weighted inner products, variable
 coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with
@@ -358,7 +361,8 @@ open ApproxFEEC
 /-- **The conclusions of the FEEC theorem for approximating families** (`ApproxComplexCrime.feec`)
 of discrete differential spaces `(Xₕ, 𝐝ₕ)` with reading maps `iₕ` that need not be cochain maps
 nor isometric ([HolstStern2012], §3): the approximating, fully discrete and perturbed FEEC
-theorems of the crime front `ofComplexCrime F` on its core, the discrete constraints, and the
+theorems of the crime front `ofComplexCrime F` on its core, the discrete generator, the discrete
+constraints, and the
 complex-level estimates of the exact-load projection `Rₕ y = (1 - Lₕ)⁻¹ iₕ* (1 - L) y` (Strang
 lemma, residual splitting into the inner-product defect, the graph-norm approximation error and
 the cochain defect, defect bound, and their limits). The rates are the fields `wave.rate` and
@@ -422,16 +426,20 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
   tendsto_defect {y : PiLp 2 W} (hy : y ∈ F.A) :
     Tendsto (fun h => ‖F.toFamily.load h (y - waveExt H y) - (F.toFamily.incl h).adjoint y‖) F.l
       (𝓝 0)
+  /-- the discrete generator is `Lₕ = 𝐝ₕ - 𝐝ₕ*` -/
+  generator (h : κ) : (ofComplexCrime F).L h = F.toFamily.D h - (F.toFamily.D h).adjoint
 
-/-- **The FEEC theorem for approximating families with variational crimes.** For every
-approximating family `F` of discrete differential spaces of a Hilbert complex (`ApproxComplexCrime`:
-inner-product defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximation on the admissible states, the
-reading maps need not be cochain maps): the approximating FEEC theorem on the core, the fully
-discrete theorems for every time scheme and for leapfrog under the CFL condition, the perturbed
-theorems for every bounded perturbation (dense core), exact preservation of discrete
-constraints, and the Strang, residual and defect estimates with their limits. The conforming
-families are the case of zero defects (`ConstrainedFEEC.toCrime`, `ConformingFamily.Verdict.crime`).
-[HolstStern2012], §3; [QuennevilleBelair2015], Ch. 6; [BrennerThomee1979]; [Pazy1983], §3.4 -/
+/-- **The FEEC theorem for approximating families with variational crimes.** For every approximating
+family `F` of discrete differential spaces of a Hilbert complex (`ApproxComplexCrime`: inner-product
+defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximation on the admissible states, the reading maps
+need not be cochain maps): the approximating FEEC theorem on the core, the discrete generator
+`𝐝ₕ - 𝐝ₕ*`, the fully discrete theorems for every time scheme and for leapfrog under the CFL
+condition, the perturbed theorems for every bounded perturbation (dense core), exact preservation of
+discrete constraints, and the Strang, residual and defect estimates with their limits. The
+conforming windows give the zero-defect instance (`ConstrainedFEEC.toCrime`,
+`ConformingFamily.Verdict.crime`); scheme (6.5) is an instance
+(`Feec.Instances.EinsteinBianchiFEMCrown`). [HolstStern2012], §3; [BrennerThomee1979]; [Pazy1983],
+§3.4 -/
 theorem feec (F : ApproxComplexCrime H κ) : F.Verdict :=
   ⟨(approxFEEC_ofComplexCrime F).1, fun Θ => dissipFEEC_fullyDiscrete _ Θ,
     fun R _ hx h v _ _ hτ hc hc1 _ hw h0 _ hn =>
@@ -443,7 +451,8 @@ theorem feec (F : ApproxComplexCrime H κ) : F.Verdict :=
     fun h y w _ hδ v => (approxFEEC_ofComplexCrime F).2.2.2.2.2.1 h y w _ hδ v,
     (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.1,
     fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.1 _ hy,
-    fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.2 _ hy⟩
+    fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.2 _ hy,
+    (approxFEEC_ofComplexCrime F).2.1⟩
 
 end ApproxComplexCrime
 
@@ -515,9 +524,9 @@ structure Verdict (F : ConformingFamily H κ) : Prop where
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
     (B : (PiLp 2 fun i : Fin m => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin m => V (a + i))
     (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : (F.windowFEEC a m K hK).PerturbedVerdict B hB
-  /-- the FEEC theorem for approximating families (`ApproxComplexCrime.feec`) on every window
-  with every closed constraint, read as the approximating family with zero defects
-  (`windowCrime`; [HolstStern2012], §3) -/
+  /-- the zero-defect instance of the FEEC theorem for approximating families
+  (`ApproxComplexCrime.feec`): every window with every closed constraint, read as an approximating
+  family with zero defects (`windowCrime`; [HolstStern2012], §3) -/
   crime (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
     (F.windowCrime a m K hK).Verdict

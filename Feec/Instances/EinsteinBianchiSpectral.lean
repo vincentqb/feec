@@ -20,13 +20,16 @@ of `Feec.Instances.EinsteinBianchi`.
 
 **Instances** (namespace `Feec.Instances.EinsteinBianchi`).
 
-* `bandFamily`: the Fourier bands `|n|_∞ ≤ N` of the periodic BGG complex (5.1) on `𝕋³` (the
-  Fourier spectral method); `torusBands`, `torusApprox`, `torusCore` and the headline
+* `bandSpectralFamily`: the Fourier bands `|n|_∞ ≤ N` of every symbol complex on `ℤᵈ` (every
+  constant-coefficient complex on `𝕋ᵈ` and its anisotropic versions);
+* `bandFamily`: these bands for the periodic BGG complex (5.1) on `𝕋³` (the Fourier spectral
+  method); `torusBands`, `torusApprox`, `torusCore` and the headline
   `einsteinBianchi_torus_approxFEEC` (the discretization `torusFEEC` of
   `Feec.Instances.EinsteinBianchi` is `bandFamily.toFEEC (totalSub constraint) isClosed_totalSub`);
 * `bandFamilyQ`: their pull-back to the BGG complex on the cube `Q = (0, ½)³` with mirror boundary
   conditions (cosine–sine bands, through the mirror extensions: the mirror action preserves the
-  bands, `act_mem_band`); `mirrorBands`, `mirrorApprox`, `mirrorCore`,
+  bands, `act_mem_torusBand`; `mirrorSpectralFamily` for every complex embedded onto the fields of
+  a symbol complex on `ℤ³` fixed by the mirror flips); `mirrorBands`, `mirrorApprox`, `mirrorCore`,
   `einsteinBianchi_mirror_approxFEEC` (`mirrorFEEC`).
 
 ## References
@@ -48,6 +51,36 @@ namespace Feec.Instances.EinsteinBianchi
 
 open Feec.HilbertComplex
 
+/-! ### The Fourier bands of a constant-coefficient complex on the torus -/
+
+section TorusBands
+
+open Feec.Fourier
+
+variable {d : Type*} [Fintype d] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {E : ι → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)]
+  [∀ i, FiniteDimensional ℂ (E i)] [∀ i, CompleteSpace (E i)]
+  (S : SymbolComplex ℂ (Measure.count : Measure (d → ℤ)) c E)
+
+/-- **The Fourier spectral family of a symbol complex on `ℤᵈ`** (the Fourier side of a
+constant-coefficient complex on `𝕋ᵈ`, `Fourier.Torus.symbolComplex`, or of its anisotropic
+versions): the bands `|n|_∞ ≤ N`, finite-dimensional, reducing, increasing and exhausting. -/
+def bandSpectralFamily : SpectralFamily S.toHilbertComplex :=
+  haveI := fun N i =>
+    Fourier.hasOrthogonalProjection_band S (Fourier.Torus.finite_bandN (d := d) N).measurableSet i
+  { B N := S.band (Fourier.Torus.bandN N)
+    finiteDimensional N i := Fourier.finiteDimensional_band _ (Fourier.Torus.finite_bandN N) i
+    mono N M h i u hu := by
+      rw [Fourier.mem_band_iff] at hu ⊢
+      filter_upwards [hu] with a ha hM
+      exact ha fun hN => hM (Fourier.Torus.bandN_mono h hN)
+    reducing N := Fourier.reducingSubcomplex_band _ (Fourier.Torus.finite_bandN N).measurableSet
+    tendsto i x := Fourier.tendsto_starProjection_band _
+      (fun N => (Fourier.Torus.finite_bandN N).measurableSet) Fourier.Torus.bandN_mono
+      Fourier.Torus.exists_mem_bandN i x }
+
+end TorusBands
+
 /-! ### The Fourier bands of the periodic BGG complex -/
 
 section Torus
@@ -62,25 +95,16 @@ instance (N : ℕ) (i : Fin 3) : (band N i).HasOrthogonalProjection :=
   Fourier.hasOrthogonalProjection_band _ (Fourier.Torus.finite_bandN N).measurableSet i
 
 /-- **The Fourier spectral family of the periodic BGG complex** (5.1): the bands `|n|_∞ ≤ N`. -/
-def bandFamily : SpectralFamily complex where
-  B := band
-  finiteDimensional N i := Fourier.finiteDimensional_band _ (Fourier.Torus.finite_bandN N) i
-  mono N M h i u hu := by
-    rw [Fourier.mem_band_iff] at hu ⊢
-    filter_upwards [hu] with a ha hM
-    exact ha fun hN => hM (Fourier.Torus.bandN_mono h hN)
-  reducing N := Fourier.reducingSubcomplex_band _ (Fourier.Torus.finite_bandN N).measurableSet
-  tendsto i x := Fourier.tendsto_starProjection_band _
-    (fun N => (Fourier.Torus.finite_bandN N).measurableSet) Fourier.Torus.bandN_mono
-    Fourier.Torus.exists_mem_bandN i x
+def bandFamily : SpectralFamily complex :=
+  bandSpectralFamily (Fourier.Torus.symbolComplex bggFamily)
 
 end Torus
 
-/-! ### The cosine–sine bands of the mirror BGG complex on the cube -/
+/-! ### The cosine–sine bands of the mirror complexes on the cube -/
 
-section Mirror
+section MirrorBands
 
-open Feec.Fourier Feec.Fourier.GradCurl Feec.Fourier.BGG Feec.Models.Cube.MirrorBGG
+open Feec.Fourier
 
 theorem flipAt_mem_bandN {k : Fin 3} {n : Fin 3 → ℤ} {N : ℕ} :
     Models.Cube.MirrorExt.flipAt k n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by
@@ -88,32 +112,64 @@ theorem flipAt_mem_bandN {k : Fin 3} {n : Fin 3 → ℤ} {N : ℕ} :
   refine forall_congr' fun j => ?_
   split_ifs <;> simp
 
-/-- **The mirror action preserves the Fourier bands** (`|flip_k n|_∞ = |n|_∞`). -/
-theorem act_mem_band (N : ℕ) (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3)
-    {x : Feec.Models.Torus.BGG.Space i} (hx : x ∈ band N i) : action.act g i x ∈ band N i := by
-  refine symmetries.act_mem_fibreSub
-    (K := fun i n => bandFibre (𝕜 := ℂ) (E := ShortHilbertComplex.W3 ℂ Mat VM)
-      (Fourier.Torus.bandN N) i n) (fun k i n v hv => ?_) g i hx
-  change v ∈ bandFibre _ i (Models.Cube.MirrorExt.flipAt k n) at hv
+variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {E : ι → Type*}
+  [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)]
+  [∀ i, FiniteDimensional ℂ (E i)] [∀ i, CompleteSpace (E i)]
+  {S : SymbolComplex ℂ (Measure.count : Measure (Fin 3 → ℤ)) c E} (Y : S.Symmetries (Fin 3))
+
+omit [Fintype ι] in
+/-- **A mirror action preserves the Fourier bands** (`|flip_k n|_∞ = |n|_∞`): for symmetries of a
+torus complex whose frequency reflections are the mirror flips `n ↦ flip_k n`. -/
+theorem act_mem_torusBand (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n) (N : ℕ)
+    (g : Multiplicative (Fin 3 → ZMod 2)) (i : ι)
+    {x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))} (hx : x ∈ (bandSpectralFamily S).B N i) :
+    Y.toAction.act g i x ∈ (bandSpectralFamily S).B N i := by
+  refine Y.act_mem_fibreSub
+    (K := fun i n => bandFibre (𝕜 := ℂ) (E := E) (Fourier.Torus.bandN N) i n)
+    (fun k i n v hv => ?_) g i hx
+  rw [hY] at hv
   by_cases hn : n ∈ Fourier.Torus.bandN N
   · simp [bandFibre, hn]
   · have hn' : Models.Cube.MirrorExt.flipAt k n ∉ Fourier.Torus.bandN N := flipAt_mem_bandN.not.2 hn
     have hv0 : v = 0 := by simpa [bandFibre, hn'] using hv
     simp [bandFibre, hn, hv0]
 
-/-- The band projections preserve the range of the mirror extensions (the fixed fields). -/
-theorem exists_J_eq_starProjection_band (N : ℕ) (i : Fin 3) (x : SpaceQ i) :
-    ∃ y, embeddingQ.J i y = (band N i).starProjection (embeddingQ.J i x) := by
-  have hx : J i x ∈ action.fixed i := range_J i ▸ LinearMap.mem_range_self _ x
-  have h := action.starProjection_mem_fixed (fun g y hy => act_mem_band N g i hy) hx
-  rw [← range_J] at h
+variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℂ (W' i)]
+  [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex ℂ c W'}
+
+omit [Fintype ι] in
+/-- **The band projections preserve the fixed fields** of a mirror action, i.e. the range of an
+embedding onto them (the method of images). -/
+theorem exists_J_eq_starProjection_torusBand
+    (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n)
+    (e : ScaledEmbedding H' S.toHilbertComplex)
+    (he : ∀ i, LinearMap.range (e.J i : W' i →ₗ[ℂ] _) = Y.toAction.fixed i) (N : ℕ) (i : ι)
+    (x : W' i) : ∃ y, e.J i y = ((bandSpectralFamily S).B N i).starProjection (e.J i x) := by
+  have hx : e.J i x ∈ Y.toAction.fixed i := he i ▸ LinearMap.mem_range_self _ x
+  have h := Y.toAction.starProjection_mem_fixed (fun g y hy => act_mem_torusBand Y hY N g i hy) hx
+  rw [← he] at h
   obtain ⟨y, hy⟩ := h
   exact ⟨y, hy⟩
+
+/-- **The cosine–sine spectral family of a mirror complex**: for a complex `H'` embedded (with a
+scaling) in a torus complex onto the fields fixed by a mirror action (`e.J` onto `Y.toAction.fixed`,
+the method of images), the pull-back of the Fourier bands `|n|_∞ ≤ N` (the action preserves them,
+`act_mem_torusBand`, so their projections preserve the fixed fields). -/
+def mirrorSpectralFamily (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n)
+    (e : ScaledEmbedding H' S.toHilbertComplex)
+    (he : ∀ i, LinearMap.range (e.J i : W' i →ₗ[ℂ] _) = Y.toAction.fixed i) : SpectralFamily H' :=
+  (bandSpectralFamily S).comap e (exists_J_eq_starProjection_torusBand Y hY e he)
+
+end MirrorBands
+
+section Mirror
+
+open Feec.Models.Cube.MirrorBGG
 
 /-- **The cosine–sine spectral family of the mirror BGG complex on `Q`**: the pull-back of the
 Fourier bands along the mirror extensions. -/
 def bandFamilyQ : SpectralFamily complexQ :=
-  bandFamily.comap embeddingQ exists_J_eq_starProjection_band
+  mirrorSpectralFamily symmetries (fun _ _ => rfl) embeddingQ range_J
 
 end Mirror
 

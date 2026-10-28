@@ -45,9 +45,10 @@ through the orbit defect `pₕ' - Lₕ pₕ`.
 The **dissipative FEEC theorem** `dissipFEEC` (statement `DissipFEEC.Verdict`, a structure whose
 fields are the conclusions) bundles the following results; `dissipFEEC_converges_core` and
 `dissipFEEC_leaves_of_not_isReducing` are not fields, being the cases `vₕ = pₕ(0)` of
-`converges` and `Q ∈ {K, Kᗮ}` of `leaves`, nor is `DissipFEEC.Verdict.detects` (a departure
-from a closed set has residuals of positive limit, eventually above half of it), a corollary of
-`tendsto_infDist`:
+`converges` and `Q ∈ {K, Kᗮ}` of `leaves`, nor are `DissipFEEC.Verdict.detects` (a departure
+from a closed set has residuals of positive limit, eventually above half of it) and
+`DissipFEEC.Verdict.tendsto_infDist_zero_iff` (the residuals tend to `0` at all times iff the
+solution stays in the set), corollaries of `tendsto_infDist`:
 
 1. well-posedness (Lumer–Phillips, `dissipFEEC_wellPosed`): for `ξ₀ ∈ D(A)`, `t ↦ S(t) ξ₀` is a
    classical solution and the only strong one, with the energy identity
@@ -939,6 +940,21 @@ theorem DissipFEEC.Verdict.detects {Z : F.Core} (V : F.Verdict Z) {Q : Set E} (h
   refine ⟨hpos, fun hx v hv => ?_⟩
   have hlim := V.tendsto_infDist Q hx hv ht
   exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
+
+variable {F} in
+/-- **The residuals vanish in the limit exactly along the data that stay** (a corollary of the
+verdict, not a field): for a closed nonempty `Q`, a datum `x` in the closure of the core and a
+family `ιₕ vₕ → x`, the residuals `dist(ιₕ e^{tLₕ} vₕ, Q)` tend to `0` at every `t ≥ 0` iff
+`S(t) x ∈ Q` for every `t ≥ 0` (`tendsto_infDist`; limits are unique along a nontrivial filter). -/
+theorem DissipFEEC.Verdict.tendsto_infDist_zero_iff {Z : F.Core} (V : F.Verdict Z) [F.l.NeBot]
+    {Q : Set E} (hQc : IsClosed Q) (hQ : Q.Nonempty) {x : E}
+    (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x) :
+    (∀ t, 0 ≤ t → Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l (𝓝 0)) ↔
+      ∀ t, 0 ≤ t → F.S t x ∈ Q := by
+  refine forall₂_congr fun t ht => ?_
+  rw [hQc.mem_iff_infDist_zero hQ]
+  exact ⟨fun h => tendsto_nhds_unique (V.tendsto_infDist Q hx hv ht) h,
+    fun h => h ▸ V.tendsto_infDist Q hx hv ht⟩
 
 end Main
 

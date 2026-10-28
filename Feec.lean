@@ -217,6 +217,7 @@ public import Feec.Instances.Corollaries
 public import Feec.Instances.CrownNonVacuity
 public import Feec.Instances.EinsteinBianchi
 public import Feec.Instances.EinsteinBianchiAbsorbing
+public import Feec.Instances.EinsteinBianchiBounded
 public import Feec.Instances.EinsteinBianchiFEM
 public import Feec.Instances.EinsteinBianchiFEMComplex
 public import Feec.Instances.EinsteinBianchiFEMCube
@@ -227,11 +228,13 @@ public import Feec.Instances.EinsteinBianchiFEMGenerator
 public import Feec.Instances.EinsteinBianchiFEMMirror
 public import Feec.Instances.EinsteinBianchiFEMMirrorEll
 public import Feec.Instances.EinsteinBianchiGauss
+public import Feec.Instances.EinsteinBianchiGradCurl
 public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.FullyDiscrete
 public import Feec.Instances.Maxwell
+public import Feec.Instances.MaxwellForms
 public import Feec.Instances.MaxwellMedia
 public import Feec.Instances.Perturbed
 public import Feec.Instances.RungeKutta
@@ -301,7 +304,6 @@ public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.RegularDecomposition
 public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Models.Cube.ShellExtension
-public import Feec.Models.Cube.Smoothing
 public import Feec.Models.Cube.SmoothingEstimates
 public import Feec.Models.Cube.Sobolev
 public import Feec.Models.Cube.SobolevRate

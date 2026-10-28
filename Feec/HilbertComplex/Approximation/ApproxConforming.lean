@@ -356,6 +356,26 @@ theorem toApprox_sol (h : κ) (ζ : H.totalD.GraphSpace) (t : ℝ) :
       rw [← e', ← C0Group.map_add_apply, add_neg_cancel, C0Group.S_zero_apply]
     rw [this]
 
+/-- **The method is exact on the eigenvectors of `L` in `Vₕ`**: if `x ∈ ∏ Vₕⁱ` and `L x = c x`,
+the discrete solution from `(x, 𝐝 x)` is `e^{tc} x` (`Pₕ (x, 𝐝 x) = (x, 𝐝 x)`,
+`Lₕ x = Qₕ L x = c x`). -/
+theorem graphFst_discrete_of_wave_eq_smul (h : κ) {x : H.wave.domain}
+    (hx : (x : PiLp 2 W) ∈ totalSub (F.V h).V) {c : 𝕜} (e : H.wave x = c • (x : PiLp 2 W))
+    (t : ℝ) :
+    H.totalD.graphFst (F.discrete h (waveLift H x) t) =
+      NormedSpace.exp (t • c) • (x : PiLp 2 W) := by
+  set v : F.Xh h := ⟨x, hx⟩
+  have hv : F.ellipticProj h (waveLift H x) = v :=
+    Subtype.ext (by rw [coe_ellipticProj, ellipticProjection_of_mem _ hx]; rfl)
+  have hw : F.discreteWave h v = c • v := by
+    rw [← hv, F.discreteWave_ellipticProj, hv, e, _root_.map_smul,
+      Submodule.orthogonalProjectionOnto_mem_subspace_eq_self v, sub_self, zero_add]
+  rw [← F.toApprox_sol, hv, toApprox_sol_eq,
+    (C0Group.isIsometric_ofBounded (F.discreteWave_skew h)).S_eq_of_generator_eq_smul
+      (C0Group.mem_domain_generator_ofBounded _ v)
+      (by rw [C0Group.generator_ofBounded_apply]; exact hw)]
+  rfl
+
 /-- **Every semi-discrete solution is a discrete orbit**: on `[0, T]` (`T ≥ 0`), a solution of
 (4.10) is `ιₕ e^{tLₕ} v` with `ιₕ v = ξₕ(0)`. -/
 theorem exists_eq_sol {T : ℝ} (hT : 0 ≤ T) {h : κ} {ξh ξh' : ℝ → H.totalD.GraphSpace}
@@ -612,6 +632,20 @@ theorem _root_.Feec.HilbertComplex.constrainedFEEC : F.Verdict := by
 
 /-- The constrained FEEC theorem as the special case of `approxFEEC` (`constrainedFEEC`). -/
 alias constrainedFEEC_of_approxFEEC := constrainedFEEC
+
+/-- **The residuals vanish in the limit exactly along the data that keep the constraint** (a
+corollary of the verdict of `approxFEEC` with the dense core, for every closed `K`, reducing or
+not): for every `x ∈ W` and every family `ιₕ vₕ → x`, the residuals `dist(ιₕ e^{tLₕ} vₕ, K)` tend to
+`0` at every `t ≥ 0` iff `e^{tL} x ∈ K` for every `t ≥ 0`
+(`DissipFEEC.Verdict.tendsto_infDist_zero_iff`). -/
+theorem tendsto_infDist_zero_iff [F.l.NeBot] {x : PiLp 2 W} {v : ∀ h, F.toApprox.X h}
+    (hv : F.toApprox.Converges v x) :
+    (∀ t, 0 ≤ t → Tendsto (fun h => infDist (F.toApprox.sol h (v h) t) (F.K : Set (PiLp 2 W)))
+      F.l (𝓝 0)) ↔ ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ F.K := by
+  have : F.toApprox.l.NeBot := ‹F.l.NeBot›
+  refine ((approxFEEC F.toApprox F.toCore).tendsto_infDist_zero_iff F.isClosed_K
+    ⟨0, F.K.zero_mem⟩ (F.mem_toCore_closure x) hv).trans ?_
+  exact forall₂_congr fun t ht => by rw [F.toApprox.S_eq_waveGroup ht]; rfl
 
 /-- **The rate class of degreewise regular data**, from degreewise best-approximation estimates:
 the data of the trajectory scale (`DissipFEEC.RegScale.trajectory`, class norm `Λ`) of the states

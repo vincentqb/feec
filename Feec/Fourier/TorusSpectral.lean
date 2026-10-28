@@ -37,6 +37,10 @@ eigenvalue `-ω²` is, at every frequency, an eigenvector of `W(a)²`
   `Torus.mem_invariantCore_of_forward_invariant`: every constant-coefficient complex on `𝕋ᵈ`.
 * `SymbolComplex.waveSym`, `SymbolComplex.wave_apply_count`,
   `SymbolComplex.waveSym_sq_of_isEigenSq`.
+* `SymbolComplex.modeField`, `SymbolComplex.wave_modeField`,
+  **`SymbolComplex.waveGroup_modeField`**: a single Fourier mode `δ_k v` (a plane wave) whose
+  amplitude is an eigenvector of the wave symbol, `W(k) v = c v`, evolves by
+  `e^{tL} δ_k v = exp(t c) δ_k v` (`HilbertComplex.waveGroup_S_eq_of_wave_eq_smul`).
 
 ## References
 
@@ -86,6 +90,18 @@ theorem eigenDense_waveGroup_of_reducing {κ : Type*} (B : κ → ∀ i, Submodu
   exact H.isSkewAdjoint_wave.isSkewSymmetric.dense_span_isEigenSq_of_reducing
     H.isSkewAdjoint_wave.dense_domain (fun n => totalSub (B n))
     (fun n => (hB n).isReducing_wave) hspan
+
+/-- **The orbit of an eigenvector of the wave operator**: if `L x = c x`, then
+`e^{tL} x = exp(t c) x` (`C0Group.IsIsometric.S_eq_of_generator_eq_smul`). -/
+theorem waveGroup_S_eq_of_wave_eq_smul {x : PiLp 2 W} (hx : x ∈ H.wave.domain) {c : 𝕜}
+    (e : H.wave ⟨x, hx⟩ = c • x) (t : ℝ) :
+    H.waveGroup.S t x = NormedSpace.exp (t • c) • x := by
+  have key : ∀ A : PiLp 2 W →ₗ.[𝕜] PiLp 2 W, H.waveGroup.toC0Semigroup.generator = A →
+      ∀ hA : x ∈ A.domain, A ⟨x, hA⟩ = c • x →
+        H.waveGroup.S t x = NormedSpace.exp (t • c) • x := by
+    rintro _ rfl hA e
+    exact H.isIsometric_waveGroup.S_eq_of_generator_eq_smul hA e t
+  exact key _ H.generator_waveGroup hx e
 
 end Feec.HilbertComplex
 
@@ -142,6 +158,42 @@ theorem ext_fibre {x y : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)
     (h : ∀ a, fibre x a = fibre y a) : x = y :=
   PiLp.ext fun i => Lp.ext_count fun a => congrArg (fun v : PiLp 2 E => v i) (h a)
 
+theorem fibre_smul (r : 𝕜) (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β) :
+    fibre (r • x) a = r • fibre x a := by
+  ext i
+  exact Measure.ae_count_iff.1 (Lp.coeFn_smul r (x i)) a
+
+variable [MeasurableSingletonClass β] [Countable β] [DecidableEq β]
+
+omit [∀ i, InnerProductSpace 𝕜 (E i)] in
+/-- A single Fourier coefficient is square-summable. -/
+theorem memLp_single {i : ι} (k : β) (v : E i) :
+    MemLp (Pi.single k v : β → E i) 2 (Measure.count : Measure β) :=
+  (memLp_count_iff two_ne_zero).2 (memℓp_gen (summable_of_ne_finset_zero (s := {k}) fun a ha => by
+    simp [Finset.mem_singleton.not.1 ha]))
+
+/-- **The single-mode field** `δ_k v` (a plane wave `e^{2πi k·x} v` on the torus): its only
+nonzero fibre is `v`, at the frequency `k`. -/
+def modeField (k : β) (v : PiLp 2 E) : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β) :=
+  WithLp.toLp 2 fun i => (memLp_single k (v i)).toLp _
+
+theorem coe_modeField (k : β) (v : PiLp 2 E) (i : ι) :
+    ((modeField k v i : Lp (E i) 2 (Measure.count : Measure β)) : β → E i) =
+      Pi.single k (v i) :=
+  (memLp_single k (v i)).coeFn_toLp_count
+
+theorem fibre_modeField (k : β) (v : PiLp 2 E) (a : β) :
+    fibre (modeField k v) a = if a = k then v else 0 := by
+  ext i
+  rw [fibre_apply, coe_modeField, Pi.single_apply]
+  split_ifs <;> rfl
+
+theorem modeField_smul (k : β) (r : 𝕜) (v : PiLp 2 E) :
+    modeField k (r • v) = r • modeField k v :=
+  ext_fibre fun a => by
+    rw [fibre_smul, fibre_modeField, fibre_modeField]
+    split_ifs <;> simp
+
 end Fibre
 
 variable [∀ i, CompleteSpace (E i)] [Fintype ι]
@@ -173,6 +225,47 @@ theorem wave_apply_count (x : S.toHilbertComplex.wave.domain) (a : β) :
     exact Finset.sum_congr rfl fun i _ => coeFn_d_count S ⟨_, x.2.1 i j⟩ a
   · rw [Measure.ae_count_iff.1 (Lp.coeFn_finsetSum _ _) a, Finset.sum_apply]
     exact Finset.sum_congr rfl fun k _ => coeFn_adjoint_d_count S ⟨_, x.2.2 k j⟩ a
+
+section Mode
+
+variable [MeasurableSingletonClass β] [Countable β] [DecidableEq β]
+
+/-- Single-mode fields lie in `D(L)`. -/
+theorem modeField_mem_wave_domain (k : β) (v : PiLp 2 E) :
+    modeField k v ∈ S.toHilbertComplex.wave.domain := by
+  have hm : ∀ {i j : ι} (m : β → E i →L[𝕜] E j),
+      MemLp (fun a => m a ((modeField k v i : Lp (E i) 2 (Measure.count : Measure β)) a)) 2
+        Measure.count := fun {i j} m => by
+    convert memLp_single k (m k (v i)) using 1
+    funext a
+    rw [coe_modeField, Pi.single_apply, Pi.single_apply]
+    split_ifs with h
+    · rw [h]
+    · exact map_zero _
+  refine (HilbertComplex.mem_wave_domain _).2 ⟨fun i j => hm (S.m i j), fun i j => ?_⟩
+  rw [adjoint_d]
+  exact hm fun a => ContinuousLinearMap.adjoint (S.m i j a)
+
+/-- **The wave operator on a single mode** is the wave symbol at its frequency:
+`L (δ_k v) = δ_k (W(k) v)`. -/
+theorem wave_modeField (k : β) (v : PiLp 2 E) :
+    S.toHilbertComplex.wave ⟨modeField k v, S.modeField_mem_wave_domain k v⟩ =
+      modeField k (S.waveSym k v) :=
+  ext_fibre fun a => by
+    rw [wave_apply_count, fibre_modeField, fibre_modeField]
+    split_ifs with h
+    · rw [h]
+    · exact map_zero _
+
+/-- **Plane waves**: if `v` is an eigenvector of the wave symbol, `W(k) v = c v`, the orbit of the
+single mode `δ_k v` is `e^{tL} δ_k v = exp(t c) δ_k v`. -/
+theorem waveGroup_modeField [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)] (k : β)
+    {v : PiLp 2 E} {c : 𝕜} (h : S.waveSym k v = c • v) (t : ℝ) :
+    S.toHilbertComplex.waveGroup.S t (modeField k v) = NormedSpace.exp (t • c) • modeField k v :=
+  S.toHilbertComplex.waveGroup_S_eq_of_wave_eq_smul (S.modeField_mem_wave_domain k v)
+    (by rw [wave_modeField, h, modeField_smul]) t
+
+end Mode
 
 /-- **Fibrewise annihilated fields are harmonic**: if every symbol and every adjoint symbol kills
 the fibres of `x`, then `x ∈ D(L)` and `L x = 0`. -/

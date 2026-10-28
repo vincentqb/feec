@@ -28,7 +28,8 @@ Mathlib's `UnitAddTorus.mFourierBasis`) identifies the model with fields on the 
   model (hence constraint propagation, `Feec.Fourier.FibreReducing.propagates`).
 * `Torus.closedRangeAt_of_gap`, `Torus.dual_closedRangeAt_of_gap`.
 * `Torus.fieldFourier`, `Torus.fieldFourier_apply` (the entries are the Fourier coefficients
-  `mFourierCoeff`).
+  `mFourierCoeff`); `Torus.coe_fieldFourier_mFourierLp` (a plane wave `e^{2πi k·x} v` has the
+  coefficients `δ_k v`).
 
 ## References
 
@@ -223,6 +224,21 @@ theorem fieldFourier_apply (f : PiLp 2 fun _ : P => Lp ℂ 2 (volume : Measure (
     (fieldFourier d P f : (d → ℤ) → EuclideanSpace ℂ P) k p =
       UnitAddTorus.mFourierCoeff (f p) k := by
   simp [fieldFourier, LinearIsometryEquiv.piLpCongrRight_apply, UnitAddTorus.mFourierBasis_repr]
+
+/-- **A plane wave has a single Fourier coefficient**: the field `e^{2πi k·x} v` has the
+coefficients `δ_k v`. -/
+theorem coe_fieldFourier_mFourierLp [DecidableEq (d → ℤ)] (k : d → ℤ) (v : EuclideanSpace ℂ P) :
+    ⇑(fieldFourier d P (WithLp.toLp 2 fun p => v p • UnitAddTorus.mFourierLp 2 k)) =
+      Pi.single k v := by
+  have e : ∀ a, UnitAddTorus.mFourierBasis.repr (UnitAddTorus.mFourierLp 2 k) a =
+      if a = k then 1 else 0 := fun a => by
+    rw [← UnitAddTorus.coe_mFourierBasis, HilbertBasis.repr_self, lp.single_apply, Pi.single_apply]
+  funext a
+  ext p
+  simp only [fieldFourier, LinearIsometryEquiv.trans_apply, lp.coeFn_equivLpCount, swapL2_apply,
+    LinearIsometryEquiv.piLpCongrRight_apply, LinearIsometryEquiv.map_smul, lp.coeFn_smul,
+    Pi.smul_apply, e, Pi.single_apply]
+  split_ifs <;> simp
 
 end Coefficients
 

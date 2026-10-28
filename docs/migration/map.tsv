@@ -5488,3 +5488,10 @@ Feec.Instances.EinsteinBianchi.mirrorSobolevRate	-	deleted-helper
 Feec.FiniteElement.Cube.evalForm_eq_affinePullback_cellField	Feec.FiniteElement.Cube.cellPullback_cellField	rename
 Feec.FiniteElement.Cube.closedCell_subset_closedCube	Feec.FiniteElement.Cube.closedCell_subset_closedBox	generalize
 Feec.Instances.Corollaries.Cube.FEM.exists_ne_zero_window	-	deleted-helper
+Feec.Instances.EinsteinBianchi.act_mem_band	Feec.Instances.EinsteinBianchi.act_mem_torusBand	generalize
+Feec.Instances.EinsteinBianchi.exists_J_eq_starProjection_band	Feec.Instances.EinsteinBianchi.exists_J_eq_starProjection_torusBand	generalize
+Feec.Models.Cube.DeRham.EvenMultiplier	-	deleted-helper
+Feec.Models.Cube.DeRham.EvenMultiplier.symbol	-	deleted-helper
+Feec.Models.Cube.DeRham.box	Feec.Fourier.Torus.bandN	dedup
+Feec.Models.Cube.DeRham.mem_box	Feec.Fourier.Torus.mem_bandN	dedup
+Feec.Models.Cube.DeRham.summable_norm_sq_count	Feec.Fourier.hasSum_norm_sq_count	dedup

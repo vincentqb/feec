@@ -515,7 +515,8 @@ theorem norm_sub_P_le_sobState {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 Models.Cube.
       totalSub_starProjection_apply]
     congr 1
     exact Models.Cube.MirrorBGG.embeddingQ.starProjection_comap _
-      (exists_J_eq_starProjection_band N i) (x i)
+      (exists_J_eq_starProjection_torusBand Models.Cube.MirrorBGG.symmetries (fun _ _ => rfl)
+        Models.Cube.MirrorBGG.embeddingQ Models.Cube.MirrorBGG.range_J N i) (x i)
   have hT := norm_sub_P_le_sobStateT hs (X := extState x) hx N
   have hS := sobStateT_nonneg s (extState x)
   have e : sobState s x = 8⁻¹ * sobStateT s (extState x) := rfl

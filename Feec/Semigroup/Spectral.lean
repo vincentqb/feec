@@ -25,7 +25,8 @@ For an isometric group `G` with generator `A` on a Hilbert space over `𝕜 = �
   forward invariance of a closed `K` (`S t x ∈ K` for `t ≥ 0`) gives `x ∈ invariantCore G K`
   (invariance for all `t ∈ ℝ`). Without a spectral hypothesis this is false (transport).
 * `C0Group.IsIsometric.S_eq_of_isEigenSq`: the orbit of an eigenvector of `A²` is
-  `cos(ωt) v + (sin(ωt)/ω) A v`; hence `isPurePoint_of_eigenDense`.
+  `cos(ωt) v + (sin(ωt)/ω) A v`; hence `isPurePoint_of_eigenDense`;
+  `C0Group.IsIsometric.S_eq_of_generator_eq_smul`: that of an eigenvector of `A` is `exp(t c) v`.
 * `LinearPMap.IsSkewSymmetric.exists_isEigenSq`: an eigenvector of `A²` of a skew-symmetric `A`
   has eigenvalue `-ω²`, `ω` real.
 * **`LinearPMap.IsSkewAdjoint.dense_span_isEigenSq`** and
@@ -298,6 +299,32 @@ theorem IsIsometric.S_eq_of_isEigenSq (hG : G.IsIsometric) {ω : ℝ} (hω : 0 <
     refine hd.congr_deriv ?_
     rw [mul_div_cancel_right₀ _ hω.ne']
     module
+  set f : ℝ → E := fun s => G.S s v - y s
+  have hm1 : ∀ s, G.S s v ∈ A.domain := fun s => G.mapsTo_domain ⟨v, h⟩ s
+  have hfm : ∀ s, f s ∈ A.domain := fun s => A.domain.sub_mem (hm1 s) (hm s)
+  have hdf : ∀ s, HasDerivAt f (A ⟨f s, hfm s⟩) s := by
+    intro s
+    have e1 : (⟨f s, hfm s⟩ : A.domain) = ⟨G.S s v, hm1 s⟩ - ⟨y s, hm s⟩ := rfl
+    rw [e1, LinearPMap.map_sub]
+    exact (G.hasDerivAt_apply' ⟨v, h⟩ s).sub (hdy s)
+  have h0 := hG.isSkewSymmetric_generator.eq_zero_of_hasDerivAt hfm hdf (by simp [f, y]) t
+  exact sub_eq_zero.1 h0
+
+/-- **The orbit of an eigenvector of the generator**: if `A v = c v`, then `S t v = exp(t c) v`
+(both sides solve `u' = A u`). -/
+theorem IsIsometric.S_eq_of_generator_eq_smul (hG : G.IsIsometric) {v : E}
+    (h : v ∈ G.generator.domain) {c : 𝕜} (e : G.generator ⟨v, h⟩ = c • v) (t : ℝ) :
+    G.S t v = NormedSpace.exp (t • c) • v := by
+  set A := G.generator
+  let y : ℝ → E := fun s => NormedSpace.exp (s • c) • v
+  have hm : ∀ s, y s ∈ A.domain := fun s => A.domain.smul_mem _ h
+  have hdy : ∀ s, HasDerivAt y (A ⟨y s, hm s⟩) s := by
+    intro s
+    have e1 : A ⟨y s, hm s⟩ = (NormedSpace.exp (s • c) * c) • v := by
+      rw [show (⟨y s, hm s⟩ : A.domain) = NormedSpace.exp (s • c) • (⟨v, h⟩ : A.domain) from rfl,
+        A.map_smul, e, smul_smul]
+    rw [e1]
+    exact (hasDerivAt_exp_smul_const (𝕂 := ℝ) c s).smul_const v
   set f : ℝ → E := fun s => G.S s v - y s
   have hm1 : ∀ s, G.S s v ∈ A.domain := fun s => G.mapsTo_domain ⟨v, h⟩ s
   have hfm : ∀ s, f s ∈ A.domain := fun s => A.domain.sub_mem (hm1 s) (hm s)

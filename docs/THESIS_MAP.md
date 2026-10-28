@@ -521,7 +521,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 ### Sec §2.4
 
 - cited: `Feec.Counterexamples.Curvature.exists_einstein_eq_zero_ne_zero_two`, `Feec.CurvatureTensor.einstein_eq_zero_iff`, `Feec.LinearizedGravity.einstein_const_bounds`
-- modules: Feec.Counterexamples.Curvature, Feec.Geometry.AlgebraicCurvature, Feec.Physics.LinearizedGravity.PlaneWave
+- modules: Feec.Counterexamples.Curvature, Feec.Counterexamples.Sharpness, Feec.Geometry.AlgebraicCurvature, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §2.7
 

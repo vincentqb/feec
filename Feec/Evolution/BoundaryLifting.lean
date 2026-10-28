@@ -33,6 +33,10 @@ inhomogeneous problem from Duhamel's formula for the homogeneous one, for every 
 * `existsUnique_isBoundarySolution` (skew-adjoint `A`, Stone's group),
   `C0Semigroup.existsUnique_isBoundarySolution` (any semigroup generator): a classical solution
   `W = U − G` exists for `U(a) − G(a) ∈ D(A)` and admissible `F − G' + A_max G`, and it is unique.
+* `IsBoundarySolution.eq_add_mild`: the lifted Duhamel formula
+  `U(t) = G(t) + S(t − a)(U(a) − G(a)) + ∫ₐᵗ S(t − s)(F − G' + A_max G)(s) ds`; the fully discrete
+  FEEC theorem approximates the second summand with forcing
+  (`Feec.HilbertComplex.DissipFEEC.TimeScheme.Verdict.lifted_iterates`).
 * `IsBoundarySolution.norm_sub_le`, `IsBoundarySolution.norm_le`: energy estimates.
 * `IsBoundarySolution.hasDerivWithinAt_norm_sq`: the energy identity
   `d/dt ‖U‖² = 2 re ⟪A_max U + F, U⟫`; the boundary flux `re ⟪A_max U, U⟫` vanishes when `U(t)`
@@ -232,6 +236,20 @@ theorem _root_.Feec.C0Semigroup.existsUnique_isBoundarySolution (S : C0Semigroup
   have := S.isStrongSolution_unique hd IsStrongSolution.zero continuousOn_const (by simpa using h0)
     ht
   simpa [sub_eq_zero] using this
+
+/-- **The lifted Duhamel formula**: for a semigroup generator `A ≤ A_max` and a lifting `G`, a
+solution `U` of `U' = A_max U + F` with the boundary values of `G` and continuous
+`f = F − G' + A_max G` is `G` plus the mild solution of the homogeneous problem with forcing `f`:
+`U(t) = G(t) + S(t − a)(U(a) − G(a)) + ∫ₐᵗ S(t − s) f(s) ds`. -/
+theorem IsBoundarySolution.eq_add_mild (S : C0Semigroup 𝕜 E) (hgen : S.generator = A)
+    (hle : A ≤ Amax) (hG : IsLifting Amax (Icc a b) G DG AG) {U : ℝ → E}
+    (hU : IsBoundarySolution Amax A (Icc a b) F G U) (hc : ContinuousOn (F - DG + AG) (Icc a b)) :
+    ∀ t ∈ Icc a b, U t = G t + mild S.S a (U a - G a) (F - DG + AG) t := by
+  subst hgen
+  intro t ht
+  have e := ((isBoundarySolution_iff hle hG).1 hU).eq_mild hc t ht
+  simp only [Pi.sub_apply] at e
+  rw [← e, add_sub_cancel]
 
 /-- **Existence and uniqueness for a skew-adjoint `A ≤ A_max`** (Stone's group): the
 inhomogeneous boundary value problem `U' = A_max U + F`, `U(t) − G(t) ∈ D(A)`, `U(a) = U₀` with

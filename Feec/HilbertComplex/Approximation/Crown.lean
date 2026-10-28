@@ -48,7 +48,14 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    `D(L)` the error from the comparison initial value is the spatial rate plus `O(τ^{p/(p+2)})`
    uniformly in `h` (the scheme is tested on data smoothed by time averages,
    `TimeScheme.norm_S_sub_sol_le_uniform`); the explicit leapfrog scheme for the wave equation
-   converges under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]).
+   converges under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]); the field carries
+   **forcing and inhomogeneous boundary data**: the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` have the
+   comparison error plus the summed consistency defects (the discrete Duhamel formula,
+   `DissipFEEC.TimeScheme.Verdict.forced_iterates`), and for an operator `L_max ≥ L` without
+   boundary conditions and a lifting `G` of the boundary data the solution is `G` plus the mild
+   solution with the forcing `f − G' + L_max G`, approximated by the lifted iterates
+   `Gₕ,ₙ + ιₕ Wₙ` (`lifted_iterates`; the Crank–Nicolson runs of [QuennevilleBelair2015], Ch. 7,
+   are of this form, `Feec.Instances.Lifting`).
 
 **With a Jackson estimate** (`ConformingFamily.feec_rated`, statement
 `ConformingFamily.Verdict.Rated`: classes `Reg s` approximated in `Vₕ` at the order `hᵒʳᵈ⁽ˢ⁾` in the
@@ -81,8 +88,9 @@ cube, `FEM.qMinusFamily`), so the crown holds for each.
 * Impedance (absorbing) boundary conditions: their discretizations are dissipative FEEC
   discretizations with their own Ritz projections, not conforming windows, and carry no rate.
 * Perturbations: dissipative bounded perturbations `A + B` are m-dissipative
-  (`Feec.Semigroup.DissipativePerturbation`), but damped, Ohmic and forced (Duhamel) problems have
-  no conforming verdict in the crown.
+  (`Feec.Semigroup.DissipativePerturbation`), but damped and Ohmic problems have no conforming
+  verdict in the crown, and forced (Duhamel) problems have no semidiscrete rate (the fully
+  discrete field bounds forced iterates against every comparison).
 * No-slip Stokes and conforming elastodynamics (no conforming family of their complexes).
 * Explicit Runge–Kutta methods (polynomial stability functions, not bounded on the imaginary
   axis) and the sharp uniform-in-`h` order `τᵖ` along trajectories for general rational schemes

@@ -497,7 +497,10 @@ covers the thesis's full forcing class `C([0,T];X) ∩ (W^{1,1}(0,T;X) ∪ L¹(0
 `W^{1,1}` in integral form; its equivalence with "absolutely continuous with an integrable
 derivative" is not formalized. Bounded perturbations (Dyson–Phillips) and the Lumer–Phillips theorem
 (`LinearPMap.isMDissipative_iff_exists_contraction`) are covered; the latter gives the Hodge heat
-equation of every Hilbert complex (`Feec.HilbertComplex.heatSemigroup`). Semi-discrete convergence holds for every datum in `W`, and in the
+equation of every Hilbert complex (`Feec.HilbertComplex.heatSemigroup`). Bounded dissipative
+perturbations of every dissipative FEEC discretization with a dense core keep its verdict
+(`Feec.HilbertComplex.perturbFEEC`; damped waves and Ohmic loss on every conforming window,
+`Feec.HilbertComplex.ConformingFamily.Verdict.perturbed`). Semi-discrete convergence holds for every datum in `W`, and in the
 thesis's form for `ξ₀ ∈ D(L)`; the error bound of Thm 4.14 needs `C¹(V)` solutions, which exist
 for `ξ₀ ∈ D(L²)`, and no rate is formalized for `D(L)` or `W` data.
 

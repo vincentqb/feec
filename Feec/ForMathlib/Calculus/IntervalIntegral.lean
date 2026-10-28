@@ -2,14 +2,17 @@ module
 
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Mathlib.MeasureTheory.Integral.Prod
+public import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
 /-!
-# Interval integrals: Fubini on a triangle, primitives on `[a,b]`
+# Interval integrals: Fubini on a triangle, primitives on `[a,b]`, the Laplace identity
 
 * `integral_integral_triangle_swap`: `∫ₐᵗ ∫ₐˢ k s r dr ds = ∫ₐᵗ ∫ᵣᵗ k s r ds dr` for `k` dominated
   by an integrable function of `r`.
 * `hasDerivWithinAt_integral_of_continuousOn`: the primitive of a function continuous on `[a,b]`
   has derivative within `[a,b]`.
+* `integral_exp_neg_smul_sub_eq`: the Laplace identity on `[0,T]`,
+  `∫₀ᵀ e⁻ˢ (u s - u' s) ds = u 0 - e⁻ᵀ u T`.
 
 ## References
 
@@ -84,3 +87,24 @@ theorem hasDerivWithinAt_integral_of_continuousOn {W : ℝ → E} {a b t : ℝ}
   have hd := ((hW'.integral_hasStrictDerivAt a t).hasDerivAt).hasDerivWithinAt (s := Icc a b)
   rw [show W' t = W t by simp [W', projIcc_of_mem hab ht]] at hd
   exact hd.congr_of_mem e ht
+
+/-- **The Laplace identity on `[0, T]`**: for `u` continuous on `[0, T]` with continuous right
+derivative `w`, `∫₀ᵀ e⁻ˢ (u s - w s) ds = u 0 - e⁻ᵀ u T` (`e⁻ˢ u` has derivative
+`-e⁻ˢ (u - w)`). -/
+theorem integral_exp_neg_smul_sub_eq {u w : ℝ → E} {T : ℝ} (hT : 0 ≤ T)
+    (hu : ContinuousOn u (Icc 0 T)) (hw : ContinuousOn w (Icc 0 T))
+    (hd : ∀ s ∈ Ico 0 T, HasDerivWithinAt u (w s) (Ici s) s) :
+    ∫ s in (0 : ℝ)..T, Real.exp (-s) • (u s - w s) = u 0 - Real.exp (-T) • u T := by
+  have he : Continuous fun s : ℝ => Real.exp (-s) := Real.continuous_exp.comp continuous_neg
+  have hf : ∀ s ∈ Ioo 0 T, HasDerivWithinAt (fun s => Real.exp (-s) • u s)
+      (-(Real.exp (-s) • (u s - w s))) (Ioi s) s := fun s hs => by
+    have h1 : HasDerivAt (fun s : ℝ => Real.exp (-s)) (-Real.exp (-s)) s := by
+      simpa using (hasDerivAt_neg s).exp
+    convert h1.hasDerivWithinAt.smul ((hd s ⟨hs.1.le, hs.2⟩).mono Ioi_subset_Ici_self) using 1
+    module
+  have hint := intervalIntegral.integral_eq_sub_of_hasDeriv_right_of_le hT
+    (he.continuousOn.smul hu) hf
+    ((he.continuousOn.smul (hu.sub hw)).neg.intervalIntegrable_of_Icc hT)
+  rw [intervalIntegral.integral_neg, neg_eq_iff_eq_neg] at hint
+  rw [hint]
+  simp only [Pi.smul_apply', neg_zero, Real.exp_zero, one_smul, neg_sub]

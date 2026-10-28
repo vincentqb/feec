@@ -3,6 +3,7 @@ module
 public import Feec.Physics.Maxwell.Media
 public import Feec.Semigroup.Perturbation
 public import Feec.Evolution.WellPosed
+public import Feec.ForMathlib.InnerProductSpace.Diagonal
 
 /-!
 # Maxwell's equations with Ohmic loss
@@ -94,11 +95,7 @@ def lossW : ∀ i : Fin 3, W3 PUnit.{u + 1} W₁ W₂ i →L[𝕜] W3 PUnit.{u +
 
 /-- The conjugated **loss operator** `Σ = diag(0, e⁻† σ e⁻¹, 0)`. -/
 def loss : PiLp 2 (W3 PUnit.{u + 1} W₁ W₂) →L[𝕜] PiLp 2 (W3 PUnit.{u + 1} W₁ W₂) :=
-  ((PiLp.continuousLinearEquiv 2 𝕜 (W3 PUnit.{u + 1} W₁ W₂)).symm :
-      (∀ i, W3 PUnit.{u + 1} W₁ W₂ i) →L[𝕜] PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)).comp
-    ((ContinuousLinearMap.pi fun i => (M.lossW σ i).comp (ContinuousLinearMap.proj i)).comp
-      (PiLp.continuousLinearEquiv 2 𝕜 (W3 PUnit.{u + 1} W₁ W₂) :
-        PiLp 2 (W3 PUnit.{u + 1} W₁ W₂) →L[𝕜] ∀ i, W3 PUnit.{u + 1} W₁ W₂ i))
+  PiLp.diagOp (M.lossW σ)
 
 omit [CompleteSpace W₀] [CompleteSpace W₂] in
 theorem electric_loss (x : PiLp 2 (W3 PUnit.{u + 1} W₁ W₂)) :

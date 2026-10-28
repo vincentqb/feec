@@ -103,6 +103,8 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Homology.Subcomplex
 public import Feec.ForMathlib.InnerProductSpace.Complexification
+public import Feec.ForMathlib.InnerProductSpace.Diagonal
+public import Feec.ForMathlib.InnerProductSpace.Isometry
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
@@ -156,6 +158,7 @@ public import Feec.HilbertComplex.Approximation.GraphApprox
 public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError
+public import Feec.HilbertComplex.Approximation.PerturbFEEC
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
 public import Feec.HilbertComplex.Approximation.RationalScheme
 public import Feec.HilbertComplex.Approximation.Ritz
@@ -225,6 +228,7 @@ public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.FullyDiscrete
 public import Feec.Instances.Maxwell
+public import Feec.Instances.Perturbed
 public import Feec.Instances.RungeKutta
 public import Feec.Mesh.Basic
 public import Feec.Mesh.Freudenthal

@@ -83,6 +83,13 @@ theorem inner_adjoint_symm_apply (a : E ≃L[𝕜] F) (x : E) (y : F) :
     ⟪a.adjoint.symm x, y⟫_𝕜 = ⟪x, a.symm y⟫_𝕜 :=
   ContinuousLinearMap.adjoint_inner_left _ _ _
 
+theorem norm_adjoint (a : E ≃L[𝕜] F) : ‖(a.adjoint : F →L[𝕜] E)‖ = ‖(a : E →L[𝕜] F)‖ :=
+  ContinuousLinearMap.adjoint.norm_map _
+
+theorem norm_adjoint_symm (a : E ≃L[𝕜] F) :
+    ‖(a.adjoint.symm : E →L[𝕜] F)‖ = ‖(a.symm : F →L[𝕜] E)‖ :=
+  ContinuousLinearMap.adjoint.norm_map _
+
 /-- `a†† = a`. -/
 theorem adjoint_adjoint (a : E ≃L[𝕜] F) : a.adjoint.adjoint = a := by
   ext x

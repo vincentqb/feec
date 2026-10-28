@@ -72,7 +72,8 @@ cube, `FEM.qMinusFamily`), so the crown holds for each. Conforming families and 
 estimates transfer to every reweighted complex `H.conj a` (weighted inner products, variable
 coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with uniformly
 bounded condition numbers), so the crown holds for them as well, e.g. for Maxwell's equations in
-linear isotropic and anisotropic media (`Feec.Instances.MaxwellMedia`).
+every linear medium given by factors `ε = e† e`, `μ = m† m`, in particular isotropic media
+(`Feec.Instances.MaxwellMedia`; anisotropic media once real factors are supplied).
 
 **Outside the crown.**
 

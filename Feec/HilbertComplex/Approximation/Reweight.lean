@@ -11,14 +11,15 @@ For bounded isomorphisms `a i : W i ≃L[𝕜] W' i` (the **weights**) the conju
 on the standard spaces: for `W' = W` and `G = a† a` (e.g. `a = ε^{1/2}`, `G = ε` the permittivity
 of a medium) the standard inner product of `a x` is the weighted inner product `⟪G x, x⟫`. A
 Galerkin method on `Vₕ` with the weighted inner product is therefore the Galerkin method on
-`a Vₕ` for `H.conj a` ([AFW2010], §3.1: weighted inner products give equivalent complexes;
-[Monk2003] for Maxwell's equations with variable coefficients).
+`a Vₕ` for `H.conj a` ([AFW2010], §6.1: variable coefficients, the same finite element
+subcomplexes and bounded cochain projections; [Monk2003] for Maxwell's equations with variable
+coefficients).
 
 **A conforming family of `H` is one of `H.conj a`** (`ConformingFamily.conj`): the images
 `a Vₕ` are finite-dimensional subcomplexes of `H.conj a`, the conjugated projections
-`a πₕ a⁻¹` commute with `d'` and are bounded by `κ(a) C`, `κ(a) = sup_i ‖a i‖ ‖(a i)⁻¹‖` the
-condition number of the weights (for `a = ε^{1/2}`, `κ(a) ≤ √(Λ / λ)` with the ellipticity bounds
-`λ ≤ ε ≤ Λ`), and the approximation property transfers degreewise. A Jackson estimate transfers
+`a πₕ a⁻¹` commute with `d'` and are bounded in degree `i` by `‖a i‖ ‖(a i)⁻¹‖ C`, the condition
+number of the weight times the bound `C` of `πₕ` (`ConformingFamily.norm_conj_π_le`), and the
+approximation property transfers degreewise. A Jackson estimate transfers
 with the constants multiplied by `max ‖a i‖ ‖a (i + 1)‖` (`ConformingFamily.Jackson.conj`), on the
 classes of forms `x'` whose unweighted form `a⁻¹ x'` is regular. Hence the FEEC theorem
 (`ConformingFamily.feec`, `ConformingFamily.feec_rated`) holds for every reweighted complex.
@@ -30,10 +31,14 @@ classes of forms `x'` whose unweighted form `a⁻¹ x'` is regular. Hence the FE
 * `ConformingFamily.conj`: the conforming family `a Vₕ` of `H.conj a`.
 * `ConformingFamily.Jackson.conj`: its Jackson estimate.
 
+## Main statements
+
+* `ConformingFamily.norm_conj_π_le`: the bound of the conjugated projections.
+
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (weighted inner products), §3.3 (bounded cochain projections)
+  §3.3 (bounded cochain projections), §6.1 (variable coefficients)
 * [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003] (variable coefficients
   `ε`, `μ`)
 
@@ -80,6 +85,19 @@ theorem Subcomplex.CochainProjection.conj_π_apply {S : H.Subcomplex}
     (P : S.CochainProjection) (i : ι) (x : W' i) :
     (P.conj a).π i x = a i (P.π i ((a i).symm x)) := rfl
 
+/-- **The bound of the conjugated projection**: if `‖π x‖ ≤ C ‖x‖` in degree `i`, then
+`‖a π a⁻¹ x‖ ≤ ‖a i‖ ‖(a i)⁻¹‖ C ‖x‖`. -/
+theorem Subcomplex.CochainProjection.norm_conj_π_le {S : H.Subcomplex} (P : S.CochainProjection)
+    {i : ι} {C : ℝ} (hC : 0 ≤ C) (hP : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) (x : W' i) :
+    ‖(P.conj a).π i x‖ ≤
+      ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ * C * ‖x‖ := by
+  rw [conj_π_apply]
+  calc ‖a i (P.π i ((a i).symm x))‖
+      ≤ ‖(a i : W i →L[𝕜] W' i)‖ * (C * (‖((a i).symm : W' i →L[𝕜] W i)‖ * ‖x‖)) :=
+        (a i : W i →L[𝕜] W' i).le_opNorm_of_le ((hP _).trans
+          (mul_le_mul_of_nonneg_left (((a i).symm : W' i →L[𝕜] W i).le_opNorm x) hC))
+    _ = _ := by ring
+
 namespace ConformingFamily
 
 variable {κ : Type*}
@@ -87,7 +105,7 @@ variable {κ : Type*}
 /-- **A conforming family of the reweighted complex**: the images `a Vₕ` with the conjugated
 projections `a πₕ a⁻¹`, a conforming family of `H.conj a` whenever the condition numbers
 `‖a i‖ ‖(a i)⁻¹‖` of the weights are bounded uniformly in `i` (`ha`); the projections are bounded
-by that bound times the bound of `πₕ` ([AFW2010], §3.1, §3.3). -/
+by that bound times the bound of `πₕ` (`norm_conj_π_le`; [AFW2010], §3.3, §6.1). -/
 def conj (F : ConformingFamily H κ)
     (ha : ∃ M, ∀ i, ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ ≤ M) :
     ConformingFamily (H.conj a) κ where
@@ -97,15 +115,10 @@ def conj (F : ConformingFamily H κ)
   bound_π := by
     obtain ⟨M, hM⟩ := ha
     refine ⟨M * F.projBound, fun h i x => ?_⟩
-    rw [Subcomplex.CochainProjection.conj_π_apply]
-    calc ‖a i (((F.π h).π i) ((a i).symm x))‖
-        ≤ ‖(a i : W i →L[𝕜] W' i)‖ * (F.projBound * (‖((a i).symm : W' i →L[𝕜] W i)‖ * ‖x‖)) :=
-          (a i : W i →L[𝕜] W' i).le_opNorm_of_le ((F.norm_π_le h i _).trans
-            (mul_le_mul_of_nonneg_left (((a i).symm : W' i →L[𝕜] W i).le_opNorm x)
-              (zero_le_one.trans F.one_le_projBound)))
-      _ = ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ * F.projBound * ‖x‖ := by
-          ring
-      _ ≤ M * F.projBound * ‖x‖ := by gcongr; exacts [zero_le_one.trans F.one_le_projBound, hM i]
+    have hC := zero_le_one.trans F.one_le_projBound
+    refine ((F.π h).norm_conj_π_le a hC (F.norm_π_le h i) x).trans ?_
+    gcongr
+    exact hM i
   approx i w := by
     refine (tendsto_infDist_submodule_iff _ w).2 fun ε hε => ?_
     have hn : 0 < ‖(a i : W i →L[𝕜] W' i)‖ + 1 := by positivity
@@ -119,6 +132,13 @@ def conj (F : ConformingFamily H κ)
           nlinarith
 
 variable {a} {ha : ∃ M, ∀ i, ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ ≤ M}
+
+/-- **The projections of the reweighted family** are bounded in degree `i` by the condition number
+`‖a i‖ ‖(a i)⁻¹‖` of the weight times the bound `projBound` of the projections of `F`. -/
+theorem norm_conj_π_le (F : ConformingFamily H κ) (h : κ) (i : ι) (x : W' i) :
+    ‖((F.conj a ha).π h).π i x‖ ≤
+      ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ * F.projBound * ‖x‖ :=
+  (F.π h).norm_conj_π_le a (zero_le_one.trans F.one_le_projBound) (F.norm_π_le h i) x
 
 /-- **The Jackson estimate of the reweighted family**: a Jackson estimate of `F`, on the classes
 of the forms `x'` whose unweighted form `a⁻¹ x'` is regular, with the constants multiplied by

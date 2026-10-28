@@ -30,8 +30,8 @@ skew-adjoint. This gives:
 
 ## Main definitions
 
-* `Maxwell.Medium`: the factors `e`, `m`; `Medium.ε`, `Medium.μ`; `Medium.state`: the change of
-  variables `(σ, E, H) ↦ (σ, e E, m H)`.
+* `Maxwell.Medium`: the factors `e`, `m`; `Medium.ε`, `Medium.μ`; `Medium.cond`, the condition
+  number; `Medium.state`: the change of variables `(σ, E, H) ↦ (σ, e E, m H)`.
 * `Medium.maxwell S`: the Maxwell operator of the medium on `W₀ × W₁ × W₂`, with domain and
   action `mem_maxwell_domain`, `ε_electric_maxwell_apply`, `μ_magnetic_maxwell_apply`.
 * `Medium.energy`: `½ (‖σ‖² + ⟪ε E, E⟫ + ⟪μ H, H⟫)`; `Medium.gauss S Y`: the weighted Gauss
@@ -107,6 +107,12 @@ section Coefficients
 variable {𝕜 : Type*} [RCLike 𝕜] {W₁ W₂ : Type*}
   [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [NormedAddCommGroup W₂]
   [InnerProductSpace 𝕜 W₂] (M : Medium 𝕜 W₁ W₂)
+
+/-- **The condition number of a medium**, `max (‖e‖ ‖e⁻¹‖) (‖m‖ ‖m⁻¹‖)`: for `e = ε^{1/2}`,
+`m = μ^{1/2}` with `λ ≤ ε, μ ≤ Λ` at most `√(Λ / λ)`. -/
+def cond : ℝ :=
+  max (‖(M.e : W₁ →L[𝕜] W₁)‖ * ‖(M.e.symm : W₁ →L[𝕜] W₁)‖)
+    (‖(M.m : W₂ →L[𝕜] W₂)‖ * ‖(M.m.symm : W₂ →L[𝕜] W₂)‖)
 
 section Permittivity
 

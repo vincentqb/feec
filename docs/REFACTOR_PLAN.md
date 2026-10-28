@@ -285,6 +285,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > constructed), and the weak-symmetry elements
 > (`Feec.HilbertComplex.BGG.Discrete`, discrete connecting maps `Πₕ S`), hence elastodynamics with them.
 
+> **Status (2026-10-28): every result tied to the crown.** After the perturbation, reweighting,
+> sharpness, physics-bridge, lifting and discrete-BGG rounds, 14 of 392 modules feed nothing that
+> reaches `Crown.lean` through imports (96 of 377 before); the README lists them. Open across the
+> rounds: rates for perturbed and forced problems; a discretization of the thesis' complex on
+> bounded domains and of `pecForms`; a finite element stacked BGG family and the weak-symmetry
+> bridge (scheme (6.5)); real anisotropic medium factors; the identification of the Ch. 7
+> compression with the crown's `Lₕ`; finite speed of propagation for damped absorbing problems.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

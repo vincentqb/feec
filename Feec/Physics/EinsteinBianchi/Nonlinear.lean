@@ -38,7 +38,8 @@ derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection c
 * `linearization_nonlinearEB`:
   **the linearization at Minkowski space is exactly the linearized EB system** `EBJet` of
   `Feec.Physics.EinsteinBianchi.System` (equivalently, by `linBianchi_iff`, the linearized Bianchi
-  identity of Prop 3.4).
+  identity of Prop 3.4); `ebJet_of_nonlinearEB`: the first variation of every family of solutions
+  through Minkowski space (of vacuum metrics, by `vacuum_nonlinearEB`) solves it.
 * `nonlinearEB_iff_extrinsicEB`, `vacuum_extrinsicEB`: for a hypersurface-orthogonal normal (symmetric
   `K`) the system is the thesis' one, with spatial covariant derivatives `D`, the Lie derivative
   `L_n`, `K_ij = g(∇_{e_i} n, e_j)` and `a = ∇_n n`:
@@ -386,6 +387,31 @@ theorem linearization_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix
   · simpa [lotE] using
       ((hdE 0 a b).fun_add (hasDerivAt_curl hdB a b)).fun_add (hL 0 _ _ _ _).fun_neg
   · simpa [lotB] using ((hdB 0 a b).fun_sub (hasDerivAt_curl hdE a b)).fun_add (hL 0 _ _ _ _)
+
+/-- **The first variation of a family of solutions of the nonlinear EB system through Minkowski
+space solves the linearized EB system**: if `NonlinearEB` holds for every `ε` along a family that
+is differentiable at `ε = 0` with `γ 0 = 0`, `E 0 = B 0 = 0` (e.g. the frame data of a family of
+vacuum metrics, `vacuum_nonlinearEB`, through Minkowski space in its Cartesian frame), the
+derivative jets satisfy `EBJet` (`linearization_nonlinearEB`: the derivatives of the residuals,
+which vanish identically, are the residuals of `EBJet`). -/
+theorem ebJet_of_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ}
+    {dE dB : ℝ → Jet4} {γ' : FrameConn} {E' B' : Matrix (Fin 3) (Fin 3) ℝ} {dE' dB' : Jet4}
+    (hγ : ∀ l κ ν, HasDerivAt (fun ε => γ ε l κ ν) (γ' l κ ν) 0)
+    (hE : ∀ i j, HasDerivAt (fun ε => E ε i j) (E' i j) 0)
+    (hB : ∀ i j, HasDerivAt (fun ε => B ε i j) (B' i j) 0)
+    (hdE : ∀ μ i j, HasDerivAt (fun ε => dE ε μ i j) (dE' μ i j) 0)
+    (hdB : ∀ μ i j, HasDerivAt (fun ε => dB ε μ i j) (dB' μ i j) 0)
+    (hγ0 : γ 0 = 0) (hE0 : E 0 = 0) (hB0 : B 0 = 0)
+    (hN : ∀ ε, NonlinearEB (γ ε) (E ε) (B ε) (dE ε) (dB ε)) : EBJet dE' dB' := by
+  obtain ⟨h1, h2, h3, h4⟩ :=
+    linearization_nonlinearEB hγ hE hB hdE hdB hγ0 hE0 hB0
+  have z : ∀ {f : ℝ → ℝ} {f' : ℝ}, HasDerivAt f f' 0 → (∀ ε, f ε = 0) → f' = 0 :=
+    fun hf h0 => hf.unique ((hasDerivAt_const (0 : ℝ) (0 : ℝ)).congr_of_eventuallyEq
+      (Filter.Eventually.of_forall fun ε => h0 ε))
+  refine ⟨funext fun a => z (h1 a) fun ε => congrFun (hN ε).1 a,
+    funext fun a => z (h2 a) fun ε => congrFun (hN ε).2.1 a,
+    Matrix.ext fun a b => z (h3 a b) fun ε => congrFun (congrFun (hN ε).2.2.1 a) b,
+    Matrix.ext fun a b => z (h4 a b) fun ε => congrFun (congrFun (hN ε).2.2.2 a) b⟩
 
 /-! ### Every vacuum metric satisfies the nonlinear EB system -/
 

@@ -613,6 +613,20 @@ theorem _root_.Feec.HilbertComplex.constrainedFEEC : F.Verdict := by
 /-- The constrained FEEC theorem as the special case of `approxFEEC` (`constrainedFEEC`). -/
 alias constrainedFEEC_of_approxFEEC := constrainedFEEC
 
+/-- **The residuals vanish in the limit exactly along the data that keep the constraint** (a
+corollary of the verdict of `approxFEEC` with the dense core, for every closed `K`, reducing or
+not): for every `x ∈ W` and every family `ιₕ vₕ → x`, the residuals `dist(ιₕ e^{tLₕ} vₕ, K)` tend to
+`0` at every `t ≥ 0` iff `e^{tL} x ∈ K` for every `t ≥ 0`
+(`DissipFEEC.Verdict.tendsto_infDist_zero_iff`). -/
+theorem tendsto_infDist_zero_iff [F.l.NeBot] {x : PiLp 2 W} {v : ∀ h, F.toApprox.X h}
+    (hv : F.toApprox.Converges v x) :
+    (∀ t, 0 ≤ t → Tendsto (fun h => infDist (F.toApprox.sol h (v h) t) (F.K : Set (PiLp 2 W)))
+      F.l (𝓝 0)) ↔ ∀ t, 0 ≤ t → H.waveGroup.S t x ∈ F.K := by
+  have : F.toApprox.l.NeBot := ‹F.l.NeBot›
+  refine ((approxFEEC F.toApprox F.toCore).tendsto_infDist_zero_iff F.isClosed_K
+    ⟨0, F.K.zero_mem⟩ (F.mem_toCore_closure x) hv).trans ?_
+  exact forall₂_congr fun t ht => by rw [F.toApprox.S_eq_waveGroup ht]; rfl
+
 /-- **The rate class of degreewise regular data**, from degreewise best-approximation estimates:
 the data of the trajectory scale (`DissipFEEC.RegScale.trajectory`, class norm `Λ`) of the states
 whose components and those of `L y` satisfy the degreewise regularity `Reg`, for data in

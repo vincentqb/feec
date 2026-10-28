@@ -257,6 +257,17 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > non-vacuity witness for `qMinusJackson`; a closed-form slip velocity in `D(Δ)`; explicit
 > Runge–Kutta under a CFL condition, trajectory consistency of general rational schemes.
 
+> **Status (2026-10-28): physics bridges to the crown.** The strong-symmetry EB systems (4.14),
+> (4.16) are read through the FEEC theorem on `𝕋³`, `ℝ³`, mirror cubes and boxes
+> (`Feec.Instances.EinsteinBianchiGradCurl`), with the TT plane waves of linearized gravity as exact
+> eigenmodes (`GradCurl.planeWave_verdict`) and Prop 3.6 for the first variation of the nonlinear
+> system (`Feec.EinsteinBianchi.tsd_propagates_variation`); for every discretization of the thesis'
+> complex on bounded domains the data with vanishing TSD residuals are `K*`
+> (`Feec.Instances.EinsteinBianchiBounded`); Maxwell for forms, every discretization
+> (`Feec.Instances.MaxwellForms`); Sobolev rates on the cube (`Corollaries.Cube.FEM.feec_sobolev`).
+> Open: a conforming family of the thesis' complex; the classical-to-`L²` identification of the
+> plane waves and of the forms system with the windows of `H̊Λ` (index casts `k + ↑i`).
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

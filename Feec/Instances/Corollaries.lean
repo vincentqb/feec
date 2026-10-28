@@ -4,9 +4,10 @@ public import Feec.HilbertComplex.Approximation.Crown
 public import Feec.HilbertComplex.Reducing
 public import Feec.Instances.Maxwell
 public import Feec.Models.Cube.HeatFEM
+public import Feec.Models.Cube.SobolevRateHigh
 
 /-!
-# Corollaries of the FEEC theorem: acoustics, slip Stokes, time stepping, magnetostatics
+# Corollaries of the FEEC theorem: acoustics, slip Stokes, time stepping, Sobolev rates, magnetostatics
 
 Short corollaries of the FEEC theorem (`Feec.HilbertComplex.ConformingFamily.feec`) for every
 conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`, and their instances on the finite
@@ -42,6 +43,11 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
   scheme is `Feec.Instances.FullyDiscrete.maxwell_cubePMC_crankNicolson`) and for the Hodge heat equation (`heat_fullyDiscrete`; on the
   cube with a nonzero datum, `Cube.FEM.heat_crankNicolson`), read from the field `full` of the
   FEEC theorem;
+* **Sobolev data at the optimal order** (`Cube.FEM.feec_sobolev`): on the cube, for every admissible
+  sequence `S` reproducing `P_p` with `2 (p + 1) > n`, the rated FEEC theorem at the Jackson
+  estimate of `Hˢ(Q)` data (`Feec.Models.Cube.FEM.sobolevHighJackson`, `s ≥ 0`, order
+  `h^{min(s, p + 1)}`): the mixed method, the semidiscrete wave and heat equations on every window
+  and the fully discrete schemes converge at that order for Sobolev data ([Arnold2018], Ch. 7);
 * **magnetostatics** (`Cube.FEM.magnetostatic`, `Parallelepiped.magnetostatic`): the static FEEC
   verdict of `HΛ` and `H̊Λ` in degrees `1` and `2` in dimension `3`, the mixed formulations of
   `curl curl u - grad div u = f` with natural and essential boundary conditions
@@ -274,6 +280,17 @@ theorem magnetostatic (S : PolySeq) :
   ⟨(polyFamily 3 S).feec.static closedRangeAt 1, (polyFamily 3 S).feec.static closedRangeAt 2,
     (polyFamilyMin 3 S).feec.static closedRangeAt_min 1,
     (polyFamilyMin 3 S).feec.static closedRangeAt_min 2⟩
+
+/-- **The FEEC theorem for Sobolev data on the cube at the optimal order** `h^{min(s, p + 1)}`:
+for every admissible sequence `S` reproducing `P_p` in the degrees of the problem, `2 (p + 1) > n`,
+the rated verdict (`ConformingFamily.feec_rated`) at the Jackson estimate of `Hˢ(Q)` data
+(`sobolevHighJackson`, every real `s ≥ 0`): rates `O(L h^{min(s, p + 1)})` of the mixed method, of
+the semidiscrete wave and heat equations on every window and of the fully discrete schemes for
+data with `Hˢ(Q)` components bounded by `L`. [AFW2010], Thm 3.9; [QuennevilleBelair2015],
+Thm 4.14; [Arnold2018], Ch. 7 -/
+theorem feec_sobolev (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1)) :
+    ConformingFamily.Verdict.Rated (polyFamily n S) (sobolevHighJackson n S hns) :=
+  (polyFamily n S).feec_rated _
 
 end Cube.FEM
 

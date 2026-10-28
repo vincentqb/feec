@@ -3,6 +3,8 @@ module
 public import Feec.Instances.EinsteinBianchiSobolev
 public import Feec.Models.Cube.MirrorWaveRegularity
 public import Feec.Physics.EinsteinBianchi.BoundedConvergence
+public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
+public import Feec.Physics.EinsteinBianchi.Unconditional
 
 /-!
 # The constrained FEEC theorem for the linearized Einstein–Bianchi system
@@ -54,7 +56,12 @@ trace-free and divergence-free. This file reads the constrained FEEC theorem
   all large `N` (`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`): the
   failure half of item 4 of the constrained FEEC theorem. This half is read on the finite element
   scheme, not through `ConstrainedFEEC`: no family of finite-dimensional subcomplexes of the thesis'
-  complex with commuting projections is constructed here.
+  complex with commuting projections is constructed here. Measured against that exact solution,
+  the scheme converges at the rate `O(h)` for orbits bounded in `C²`
+  (`einsteinBianchi_thesisCube_waveFEM_rate_smooth`, from `Feec.EinsteinBianchi.WaveFEM.waveFEM_cube`
+  with the regular decomposition proved) and for data in `D(L³)` under multiplier and skew-field
+  bounds (`einsteinBianchi_thesisCube_waveFEM_rate`, from
+  `Feec.EinsteinBianchi.WaveFEM.waveFEM_rate_of_mem_domain`).
 
 **Scope.** The spectral rate classes are approximation classes (truncation errors of
 `ξ₀, L ξ₀, L² ξ₀` of order `(N + 1)^{-α}`); they contain the TSD Sobolev data on `𝕋³` and on the
@@ -614,6 +621,74 @@ theorem standardCubeVerdict : StandardCubeVerdict := by
       (einsteinBianchi_thesisCube hT hB hT0).2⟩
   obtain ⟨p, C, hT, hB, -⟩ := Feec.Models.Cube.FEM.tableRows_H1
   exact ⟨p, C, hT, hB⟩
+
+/-- **The `O(h)` rate of the thesis' scheme (6.5) on the cube for orbits bounded in `C²`**, with no
+regularity hypothesis (the regular decomposition `CurlPotential` of `H̊(curl)` is a theorem,
+`Feec.EinsteinBianchi.WaveFEM.waveFEM_cube`): for admissible smoothers, the solution of (6.5) from
+the elliptic projection (6.4) of an exact solution whose states are bounded in `C²` by `L` (with
+multipliers bounded by `L`) is within `K L (1 + t) h_N` of it. The rate is measured against the
+exact solution, which leaves TSD (`StandardCubeVerdict`). [QuennevilleBelair2015], §6.3, (6.5),
+Table 6.1 -/
+abbrev StandardCubeWaveFEMRateSmooth : Prop :=
+  ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
+    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C),
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_ : 0 < T) {f : ℝ → Wv W1}
+      (_ : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
+      0 ≤ L →
+      (∀ t ∈ Icc 0 T, IsSmoothState L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
+        IsSmoothState L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) →
+      (∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖) →
+      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N f),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((cubeFEM hT hB N).ellipticDataH (s.σ 0) (s.φ 0) (s.u 0)
+              (s.M 0) (s.ρ 0) (s.ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖s.σ t - sh.σ t‖ ^ 2 + ‖s.u t - sh.u t‖ ^ 2 +
+          ‖s.M t - sh.M t‖ ^ 2 + ‖s.ρ t - sh.ρ t‖ ^ 2) ≤ K * L * (1 + t) * meshSize N
+
+/-- **`O(h)` rate of the thesis' scheme (6.5) for `C²` orbits**: `StandardCubeWaveFEMRateSmooth`
+(`Feec.EinsteinBianchi.WaveFEM.waveFEM_cube`). [QuennevilleBelair2015], §6.3, (6.5) -/
+theorem einsteinBianchi_thesisCube_waveFEM_rate_smooth : StandardCubeWaveFEMRateSmooth := by
+  obtain ⟨p, C, hT, hB, -, -, -, -, h⟩ := waveFEM_cube
+  exact ⟨p, C, hT, hB, h⟩
+
+/-- **The `O(h)` rate of the thesis' scheme (6.5) on the cube for data in `D(L³)`** (the forms
+model of (6.2)): there is `K`, independent of `N`, `T` and the data, such that for `U₀ ∈ D(L³)`
+whose multipliers, skew fields and stationary part are bounded by `Λ` (along the orbit for the
+multipliers and skew fields of `L U(t)`, `L² U(t)`), the solution of (6.5) from the elliptic
+projection (6.4) is within `K (Σ_{j ≤ 3} ‖Lʲ U₀‖ + (1 + T) Λ) (1 + t) h_N` of the classical
+solution. [QuennevilleBelair2015], §6.3, (6.5), Table 6.1 -/
+abbrev StandardCubeWaveFEMRate : Prop :=
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {U₀ : WS}
+      (hU₀ : MemDomainPow formsShort.wave 3 U₀) {Λ : ℝ}, 0 ≤ Λ →
+      (∀ μ : U1, |multOf (aOf U₀) (bOf U₀) μ| ≤ Λ * ‖μ‖) →
+      (∀ t ∈ Icc 0 T, ∀ j, 1 ≤ j → j ≤ 2 → ∀ μ : U1,
+        |multOf (aOf (waveOf^[j] (waveOrbit U₀ t))) (bOf (waveOf^[j] (waveOrbit U₀ t))) μ| ≤
+          Λ * ‖μ‖) →
+      SobRel 1 Λ 2 (compML U₀) →
+      (∀ t ∈ Icc 0 T, ∀ j, 1 ≤ j → j ≤ 2 →
+        SobRel 1 Λ 2 (compML (waveOf^[j] (waveOrbit U₀ t)))) →
+      (∀ a, SobRel 1 Λ 2 (compρL (projKer U₀) a)) →
+      ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+        (sh.σ 0, sh.u 0, sh.M 0, sh.ρ 0) =
+          (Feec.BGG.ellipticProjection (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
+            (Feec.BGG.exists_sub_eq_of_surjective (cubeWave_S0_surjective hT hB N))
+            (Feec.BGG.ellipticRhs ((cubeFEM hT hB N).ellipticDataH
+              ((orbitExact hU₀ T).σ 0) ((orbitExact hU₀ T).φ 0) ((orbitExact hU₀ T).u 0)
+              ((orbitExact hU₀ T).M 0) ((orbitExact hU₀ T).ρ 0) ((orbitExact hU₀ T).ℓ 0)) 0)).1.1 ∧
+        ∀ t ∈ Icc 0 T, √(‖(orbitExact hU₀ T).σ t - sh.σ t‖ ^ 2 +
+          ‖(orbitExact hU₀ T).u t - sh.u t‖ ^ 2 + ‖(orbitExact hU₀ T).M t - sh.M t‖ ^ 2 +
+          ‖(orbitExact hU₀ T).ρ t - sh.ρ t‖ ^ 2) ≤
+            K * (domNorm3 U₀ + (1 + T) * Λ) * (1 + t) * meshSize N
+
+/-- **`O(h)` rate of the thesis' scheme (6.5) for `D(L³)` data**: `StandardCubeWaveFEMRate`
+(`Feec.EinsteinBianchi.WaveFEM.waveFEM_rate_of_mem_domain`, through the Sobolev-data rate
+`cubeWave_rate_sobolev` of `Feec.Models.Cube.WeakSymmetrySobolevRate`). [QuennevilleBelair2015],
+§6.3, (6.5) -/
+theorem einsteinBianchi_thesisCube_waveFEM_rate : StandardCubeWaveFEMRate hT hB :=
+  waveFEM_rate_of_mem_domain hT hB
 
 end StandardBoundary
 

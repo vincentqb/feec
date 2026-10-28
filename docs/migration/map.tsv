@@ -5493,5 +5493,5 @@ Feec.Instances.EinsteinBianchi.exists_J_eq_starProjection_band	Feec.Instances.Ei
 Feec.Models.Cube.DeRham.EvenMultiplier	-	deleted-helper
 Feec.Models.Cube.DeRham.EvenMultiplier.symbol	-	deleted-helper
 Feec.Models.Cube.DeRham.box	Feec.Fourier.Torus.bandN	dedup
-Feec.Models.Cube.DeRham.mem_box	Feec.Fourier.Torus.bandN	dedup
+Feec.Models.Cube.DeRham.mem_box	Feec.Fourier.Torus.mem_bandN	dedup
 Feec.Models.Cube.DeRham.summable_norm_sq_count	Feec.Fourier.hasSum_norm_sq_count	dedup

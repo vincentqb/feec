@@ -66,6 +66,9 @@ abbrev Mat := EuclideanSpace ℂ (Fin 3 × Fin 3)
 /-- Frequencies `ξ ∈ ℝ³`. -/
 abbrev Freq := EuclideanSpace ℝ (Fin 3)
 
+/-- A real `3 × 3` matrix as an element of `Mat`. -/
+def ofRealMat (A : Matrix (Fin 3) (Fin 3) ℝ) : Mat := WithLp.toLp 2 fun p => (A p.1 p.2 : ℂ)
+
 /-- The matrix of an element of `Mat`. -/
 def toMatrix : Mat →ₗ[ℂ] Matrix (Fin 3) (Fin 3) ℂ where
   toFun M := Matrix.of fun a b => M (a, b)
@@ -359,6 +362,9 @@ def gradCurl : FibreComplex ℂ Freq ComplexShape.fin3 (W3 Vec Mat Mat) where
 
 @[simp] theorem gradCurl_m01 (ξ : Freq) : gradCurl.m 0 1 ξ = grad ξ := rfl
 @[simp] theorem gradCurl_m12 (ξ : Freq) : gradCurl.m 1 2 ξ = curl ξ := rfl
+
+theorem gradCurl_m_eq_zero {i j : Fin 3} (h : ¬ ComplexShape.fin3.Rel i j) (ξ : Freq) :
+    gradCurl.m i j ξ = 0 := by rw [gradCurl.shape i j h]; rfl
 
 theorem gradCurl_isHomogeneous01 : gradCurl.IsHomogeneous 0 1 1 := fun t ξ _ => by
   rw [gradCurl_m01, gradCurl_m01, grad_smul, pow_one]; rfl

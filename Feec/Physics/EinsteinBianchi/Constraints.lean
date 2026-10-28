@@ -15,9 +15,10 @@ The linearized EB system (4.14) is the Hodge wave equation of the matrix grad–
 constraints propagate depends on the domain and the boundary conditions:
 
 * **on `ℝ³`**, classically (`C²` fields with compact spatial support, the energy method):
-  `tsd_propagates_classical`; for the first variation of every family of solutions of the
-  nonlinear EB system through Minkowski space (linearized gravity: the frame data of a family of
-  vacuum metrics, `vacuum_nonlinearEB`), `tsd_propagates_variation`; and in `L²` (any strong
+  `tsd_propagates_classical`; for the first variation of a family of solutions of the nonlinear EB
+  system through Minkowski space, `tsd_propagates_variation` (the frame data of vacuum metrics solve
+  the nonlinear system, `vacuum_nonlinearEB`; no nonzero such family is constructed here); and in
+  `L²` (any strong
   solution, any forcing in the constraint): `euclidean_tsd_propagates`;
 * **on the torus `𝕋³`**: `torus_tsd_propagates`;
 * **on every open cube with tensorial mirror boundary conditions**: `cube_tsd_propagates`,
@@ -59,10 +60,11 @@ theorem tsd_propagates_classical {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 
   tsd_propagates hEc hBc hsupp hEeq hBeq h0 t ht x
 
 /-- **Prop 3.6 for linearized gravity**: along a family of solutions of the nonlinear EB system
-through Minkowski space (`γ 0 = 0`, `E 0 = B 0 = 0`; e.g. the frame data of a family of vacuum
-metrics, `vacuum_nonlinearEB`), the first variations `E'`, `B'`, whose jets are the variations of
-the jets, solve the linearized EB system at every point (`ebJet_of_nonlinearEB`); when they are
-`C²` with compact spatial support, TSD data stay TSD (`tsd_propagates_classical`).
+through Minkowski space (`γ 0 = 0`, `E 0 = B 0 = 0`), the first variations `E'`, `B'`, whose jets
+are the variations of the jets, solve the linearized EB system at every point
+(`ebJet_of_nonlinearEB`); when they are `C²` with compact spatial support, TSD data stay TSD
+(`tsd_propagates_classical`). The frame data of vacuum metrics satisfy `hN` (`vacuum_nonlinearEB`);
+no nonzero family satisfying all the hypotheses is constructed here.
 [QuennevilleBelair2015], §3.4, Prop 3.6 (corrected) -/
 theorem tsd_propagates_variation {γ : ℝ → (Fin 4 → ℝ) → FrameConn}
     {E B : ℝ → (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} {dE dB : ℝ → (Fin 4 → ℝ) → Jet4}

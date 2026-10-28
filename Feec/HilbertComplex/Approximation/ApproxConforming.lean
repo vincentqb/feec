@@ -356,6 +356,26 @@ theorem toApprox_sol (h : κ) (ζ : H.totalD.GraphSpace) (t : ℝ) :
       rw [← e', ← C0Group.map_add_apply, add_neg_cancel, C0Group.S_zero_apply]
     rw [this]
 
+/-- **The method is exact on the eigenvectors of `L` in `Vₕ`**: if `x ∈ ∏ Vₕⁱ` and `L x = c x`,
+the discrete solution from `(x, 𝐝 x)` is `e^{tc} x` (`Pₕ (x, 𝐝 x) = (x, 𝐝 x)`,
+`Lₕ x = Qₕ L x = c x`). -/
+theorem graphFst_discrete_of_wave_eq_smul (h : κ) {x : H.wave.domain}
+    (hx : (x : PiLp 2 W) ∈ totalSub (F.V h).V) {c : 𝕜} (e : H.wave x = c • (x : PiLp 2 W))
+    (t : ℝ) :
+    H.totalD.graphFst (F.discrete h (waveLift H x) t) =
+      NormedSpace.exp (t • c) • (x : PiLp 2 W) := by
+  set v : F.Xh h := ⟨x, hx⟩
+  have hv : F.ellipticProj h (waveLift H x) = v :=
+    Subtype.ext (by rw [coe_ellipticProj, ellipticProjection_of_mem _ hx]; rfl)
+  have hw : F.discreteWave h v = c • v := by
+    rw [← hv, F.discreteWave_ellipticProj, hv, e, _root_.map_smul,
+      Submodule.orthogonalProjectionOnto_mem_subspace_eq_self v, sub_self, zero_add]
+  rw [← F.toApprox_sol, hv, toApprox_sol_eq,
+    (C0Group.isIsometric_ofBounded (F.discreteWave_skew h)).S_eq_of_generator_eq_smul
+      (C0Group.mem_domain_generator_ofBounded _ v)
+      (by rw [C0Group.generator_ofBounded_apply]; exact hw)]
+  rfl
+
 /-- **Every semi-discrete solution is a discrete orbit**: on `[0, T]` (`T ≥ 0`), a solution of
 (4.10) is `ιₕ e^{tLₕ} v` with `ιₕ v = ξₕ(0)`. -/
 theorem exists_eq_sol {T : ℝ} (hT : 0 ≤ T) {h : κ} {ξh ξh' : ℝ → H.totalD.GraphSpace}

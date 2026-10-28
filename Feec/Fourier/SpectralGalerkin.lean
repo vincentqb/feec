@@ -351,6 +351,9 @@ variable {d : Type*} [Fintype d]
 def bandN (N : ℕ) : Set (d → ℤ) := {k | ∀ j, |k j| ≤ N}
 
 omit [Fintype d] in
+theorem mem_bandN {N : ℕ} {k : d → ℤ} : k ∈ bandN N ↔ ∀ j, |k j| ≤ N := Iff.rfl
+
+omit [Fintype d] in
 theorem bandN_mono : Monotone (bandN (d := d)) := fun N M h k hk j =>
   (hk j).trans (by exact_mod_cast h)
 

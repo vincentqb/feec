@@ -11,12 +11,16 @@ electric conductor, `σ' = -d†E`, `E' = dσ - d†B`, `B' = dE`, are the Hodge
 short complex `H̊Λᵏ(Ω) → H̊Λᵏ⁺¹(Ω) → L²Λᵏ⁺²(Ω)` of the minimal realizations of the exterior
 derivative (`Feec.Maxwell.pecForms`; `d = d_min`, `d† = (dᵗ)_max = -δ`, the weak codifferential,
 `Feec.Domain.deRham_dual_minimalComplex_d`), with the Gauss laws `σ = 0`, `d†E = 0`, `d_min B = 0`
-as constraint (complex fields). For every constrained FEEC discretization of this complex (every conforming family
-of it, with the Gauss laws), the verdict of the constrained FEEC theorem holds, the Gauss laws
-reduce `L` (`ShortHilbertComplex.reducingSubcomplex_divFreeSub`), propagate along strong solutions
-with forcing in them (`Feec.Maxwell.pecForms_gauss_propagates`), and the Gauss residual of the
-discrete solutions tends to `0` (`formsFEEC`). On the cube `Q = (0, ½)ⁿ` the complex is the window
-of `H̊Λ(Q)` discretized by `Feec.Instances.Maxwell.cubePEC` and `cubePolyPEC`.
+as constraint (complex fields). For every constrained FEEC discretization of this complex with the
+Gauss laws as constraint, the verdict of the constrained FEEC theorem holds, the Gauss laws reduce
+`L` (`ShortHilbertComplex.reducingSubcomplex_divFreeSub`), propagate along strong solutions with
+forcing in them (`Feec.Maxwell.pecForms_gauss_propagates`), and the Gauss residual of the discrete
+solutions tends to `0` (`formsFEEC`).
+
+**Scope.** No discretization of `pecForms` is constructed here, so `formsFEEC` is a statement
+about every one that will be. The constructed discretizations of PEC Maxwell,
+`Feec.Instances.Maxwell.cubePEC` and `cubePolyPEC` on the cube, are of a window of `H̊Λ(Q)` whose
+degrees are indexed `k + ↑i`; its identification with `pecForms` on `Q` is open.
 
 ## References
 
@@ -64,7 +68,7 @@ structure Verdict (G : ConstrainedFEEC (pecForms ℂ hΩ k).toHilbertComplex κ)
         (G.discrete h (waveLift _ x) t)) (G.K : Set (FormSpace ℂ Ω k))) (fun _ => 0) G.l (Icc 0 T)
 
 /-- **The FEEC theorem for Maxwell's equations for forms**: `constrainedFEEC` for every
-discretization with the Gauss laws, which reduce `L`
+discretization with the Gauss laws (none is constructed yet), which reduce `L`
 (`ShortHilbertComplex.reducingSubcomplex_divFreeSub`) and propagate
 (`Feec.Maxwell.pecForms_gauss_propagates`). [QuennevilleBelair2015], Thms 4.6, 4.14, Prop. 4.16 -/
 theorem formsFEEC (G : ConstrainedFEEC (pecForms ℂ hΩ k).toHilbertComplex κ)

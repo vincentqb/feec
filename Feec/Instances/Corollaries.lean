@@ -7,7 +7,7 @@ public import Feec.Models.Cube.HeatFEM
 public import Feec.Models.Cube.SobolevRateHigh
 
 /-!
-# Corollaries of the FEEC theorem: acoustics, slip Stokes, time stepping, Sobolev rates, magnetostatics
+# Corollaries of the FEEC theorem: acoustics, slip Stokes, time stepping, rates, magnetostatics
 
 Short corollaries of the FEEC theorem (`Feec.HilbertComplex.ConformingFamily.feec`) for every
 conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`, and their instances on the finite

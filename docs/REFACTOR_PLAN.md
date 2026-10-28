@@ -260,13 +260,18 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > **Status (2026-10-28): physics bridges to the crown.** The strong-symmetry EB systems (4.14),
 > (4.16) are read through the FEEC theorem on `𝕋³`, `ℝ³`, mirror cubes and boxes
 > (`Feec.Instances.EinsteinBianchiGradCurl`), with the TT plane waves of linearized gravity as exact
-> eigenmodes (`GradCurl.planeWave_verdict`) and Prop 3.6 for the first variation of the nonlinear
-> system (`Feec.EinsteinBianchi.tsd_propagates_variation`); for every discretization of the thesis'
-> complex on bounded domains the data with vanishing TSD residuals are `K*`
-> (`Feec.Instances.EinsteinBianchiBounded`); Maxwell for forms, every discretization
+> eigenmodes (`GradCurl.planeWave_verdict`: amplitudes, Fourier image and exact discrete solutions)
+> and Prop 3.6 for the first variation of the nonlinear system
+> (`Feec.EinsteinBianchi.tsd_propagates_variation`, consumed by no verdict); for every
+> discretization of the thesis' complex on bounded domains the data with vanishing TSD residuals
+> are `K*` (`Feec.Instances.EinsteinBianchiBounded`); Maxwell for forms, every discretization
 > (`Feec.Instances.MaxwellForms`); Sobolev rates on the cube (`Corollaries.Cube.FEM.feec_sobolev`).
-> Open: a conforming family of the thesis' complex; the classical-to-`L²` identification of the
-> plane waves and of the forms system with the windows of `H̊Λ` (index casts `k + ↑i`).
+> Open: a conforming family of the thesis' complex and of `pecForms` (both verdicts are
+> conditional until one exists); the identification of the strong solutions of (4.14) with values
+> in `K` with the (weak) solutions of the EB system; the real plane-wave fields as elements of
+> `L²(𝕋³)`; the forms system on `Q` as the `H̊Λ` window of `cubePEC` (index casts `k + ↑i`); a
+> nonzero family of vacuum metrics for `tsd_propagates_variation`; a route through the crown for
+> the `O(h)` rates of scheme (6.5) (`Feec.EinsteinBianchi.WaveFEM`, not a `ConstrainedFEEC`).
 
 ## 0. Decisions
 

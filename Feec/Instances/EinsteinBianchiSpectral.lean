@@ -28,8 +28,8 @@ of `Feec.Instances.EinsteinBianchi`.
   `Feec.Instances.EinsteinBianchi` is `bandFamily.toFEEC (totalSub constraint) isClosed_totalSub`);
 * `bandFamilyQ`: their pull-back to the BGG complex on the cube `Q = (0, ½)³` with mirror boundary
   conditions (cosine–sine bands, through the mirror extensions: the mirror action preserves the
-  bands, `act_mem_torusBand`; `mirrorSpectralFamily` for every mirror complex); `mirrorBands`,
-  `mirrorApprox`, `mirrorCore`,
+  bands, `act_mem_torusBand`; `mirrorSpectralFamily` for every complex embedded onto the fields of
+  a symbol complex on `ℤ³` fixed by the mirror flips); `mirrorBands`, `mirrorApprox`, `mirrorCore`,
   `einsteinBianchi_mirror_approxFEEC` (`mirrorFEEC`).
 
 ## References
@@ -95,7 +95,8 @@ instance (N : ℕ) (i : Fin 3) : (band N i).HasOrthogonalProjection :=
   Fourier.hasOrthogonalProjection_band _ (Fourier.Torus.finite_bandN N).measurableSet i
 
 /-- **The Fourier spectral family of the periodic BGG complex** (5.1): the bands `|n|_∞ ≤ N`. -/
-def bandFamily : SpectralFamily complex := bandSpectralFamily (Fourier.Torus.symbolComplex bggFamily)
+def bandFamily : SpectralFamily complex :=
+  bandSpectralFamily (Fourier.Torus.symbolComplex bggFamily)
 
 end Torus
 
@@ -120,9 +121,11 @@ omit [Fintype ι] in
 /-- **A mirror action preserves the Fourier bands** (`|flip_k n|_∞ = |n|_∞`): for symmetries of a
 torus complex whose frequency reflections are the mirror flips `n ↦ flip_k n`. -/
 theorem act_mem_torusBand (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n) (N : ℕ)
-    (g : Multiplicative (Fin 3 → ZMod 2)) (i : ι) {x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))}
-    (hx : x ∈ (bandSpectralFamily S).B N i) : Y.toAction.act g i x ∈ (bandSpectralFamily S).B N i := by
-  refine Y.act_mem_fibreSub (K := fun i n => bandFibre (𝕜 := ℂ) (E := E) (Fourier.Torus.bandN N) i n)
+    (g : Multiplicative (Fin 3 → ZMod 2)) (i : ι)
+    {x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))} (hx : x ∈ (bandSpectralFamily S).B N i) :
+    Y.toAction.act g i x ∈ (bandSpectralFamily S).B N i := by
+  refine Y.act_mem_fibreSub
+    (K := fun i n => bandFibre (𝕜 := ℂ) (E := E) (Fourier.Torus.bandN N) i n)
     (fun k i n v hv => ?_) g i hx
   rw [hY] at hv
   by_cases hn : n ∈ Fourier.Torus.bandN N

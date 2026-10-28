@@ -37,10 +37,10 @@ eigenvalue `-ω²` is, at every frequency, an eigenvector of `W(a)²`
   `Torus.mem_invariantCore_of_forward_invariant`: every constant-coefficient complex on `𝕋ᵈ`.
 * `SymbolComplex.waveSym`, `SymbolComplex.wave_apply_count`,
   `SymbolComplex.waveSym_sq_of_isEigenSq`.
-* `SymbolComplex.modeField`, `SymbolComplex.wave_modeField`, **`SymbolComplex.waveGroup_modeField`**:
-  a single Fourier mode `δ_k v` (a plane wave) whose amplitude is an eigenvector of the wave
-  symbol, `W(k) v = c v`, evolves by `e^{tL} δ_k v = exp(t c) δ_k v`
-  (`HilbertComplex.waveGroup_S_eq_of_wave_eq_smul`).
+* `SymbolComplex.modeField`, `SymbolComplex.wave_modeField`,
+  **`SymbolComplex.waveGroup_modeField`**: a single Fourier mode `δ_k v` (a plane wave) whose
+  amplitude is an eigenvector of the wave symbol, `W(k) v = c v`, evolves by
+  `e^{tL} δ_k v = exp(t c) δ_k v` (`HilbertComplex.waveGroup_S_eq_of_wave_eq_smul`).
 
 ## References
 

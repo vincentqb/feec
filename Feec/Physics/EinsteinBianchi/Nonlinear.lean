@@ -390,8 +390,8 @@ theorem linearization_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix
 
 /-- **The first variation of a family of solutions of the nonlinear EB system through Minkowski
 space solves the linearized EB system**: if `NonlinearEB` holds for every `ε` along a family that
-is differentiable at `ε = 0` with `γ 0 = 0`, `E 0 = B 0 = 0` (e.g. the frame data of a family of
-vacuum metrics, `vacuum_nonlinearEB`, through Minkowski space in its Cartesian frame), the
+is differentiable at `ε = 0` with `γ 0 = 0`, `E 0 = B 0 = 0` (the frame data of vacuum metrics
+satisfy `NonlinearEB`, `vacuum_nonlinearEB`; Minkowski space in its Cartesian frame is `ε = 0`), the
 derivative jets satisfy `EBJet` (`linearization_nonlinearEB`: the derivatives of the residuals,
 which vanish identically, are the residuals of `EBJet`). -/
 theorem ebJet_of_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ}

@@ -33,7 +33,7 @@ verdict). The analysis of the invariant core identifies these data:
   spectrum and only trigonometric polynomials of the wrong parity are TSD), for every
   `{0} × S₁ × S₂` with `S₁, S₂ ⊆ L²(TSD)`;
 * on `Q = (0, ½)³` these stationary data form an infinite-dimensional space: the magnetic fields
-  `(0, 0, ∇²(e^{-t x₁} cos(t x₂)))` (`cube_residual_tendsto_zero_hess`,
+  `(0, 0, ∇²(e^{-τ x₁} cos(τ x₂)))` (`cube_residual_tendsto_zero_hess`,
   `Feec.Models.Cube.Parity.inj₂_hessQ_mem_invariantCore`;
   `Feec.Models.BoundedDomain.linearIndependent_hessL2_expCos`).
 
@@ -111,8 +111,8 @@ theorem cube_residual_tendsto_zero_iff {b : R3} {s : ℝ} (hs : 0 < s)
 
 open Feec.Models.Cube in
 /-- **The stationary magnetic data of `Q` have vanishing residuals** for every discretization with
-the TSD constraint: the Hessians `(0, 0, ∇²(e^{-t x₁} cos(t x₂)))` of harmonic functions, linearly
-independent for distinct `t` (`Feec.Models.BoundedDomain.linearIndependent_hessL2_expCos`), lie in
+the TSD constraint: the Hessians `(0, 0, ∇²(e^{-τ x₁} cos(τ x₂)))` of harmonic functions, linearly
+independent for distinct `τ` (`Feec.Models.BoundedDomain.linearIndependent_hessL2_expCos`), lie in
 `K*`. [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected) -/
 theorem cube_residual_tendsto_zero_hess (G : ConstrainedFEEC RowWise.cubeComplex κ) [G.l.NeBot]
     (hK : G.K = totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (Geometry.Q (Fin 3)) (Fin 3)))

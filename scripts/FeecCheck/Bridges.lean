@@ -13,9 +13,9 @@ cosine–sine spectral families of all the mirror complexes
 `Feec.Models.Cube.Smoothing` (even Fourier multipliers on the cube, used by nothing: the smoothers
 of the finite element method are those of `Feec.Models.Cube.SmoothingEstimates` and
 `Feec.Models.Cube.ParitySmoother`) is deleted; its frequency boxes are the bands
-`Feec.Fourier.Torus.bandN` and its summability lemma is `Feec.Fourier.hasSum_norm_sq_count`. The
-theorems `bridges_old_*` state the deleted results verbatim (with the deleted definition `box`
-unfolded) and derive them from the new API.
+`Feec.Fourier.Torus.bandN` (`Feec.Fourier.Torus.mem_bandN`) and its summability lemma is
+`Feec.Fourier.hasSum_norm_sq_count`. The theorems `bridges_old_*` state the deleted results
+verbatim (with the deleted definition `box` unfolded) and derive them from the new API.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -48,8 +48,7 @@ theorem bridges_old_summable_norm_sq_count {d : Type*} [Fintype d] {E : Type*}
 `‖q‖_∞ ≤ K` is the band `Feec.Fourier.Torus.bandN K`. -/
 theorem bridges_old_mem_box {d : Type*} [Fintype d] [DecidableEq d] {K : ℕ} {q : d → ℤ} :
     q ∈ (Fintype.piFinset fun _ => Finset.Icc (-(K : ℤ)) K) ↔ ∀ a, |q a| ≤ K := by
-  change _ ↔ q ∈ Feec.Fourier.Torus.bandN K
-  simp only [Fintype.mem_piFinset, Finset.mem_Icc, Feec.Fourier.Torus.bandN, Set.mem_ofPred_eq,
-    abs_le]
+  refine Iff.trans ?_ Feec.Fourier.Torus.mem_bandN
+  simp only [Fintype.mem_piFinset, Finset.mem_Icc, Feec.Fourier.Torus.mem_bandN, abs_le]
 
 end FeecCheck.Bridges

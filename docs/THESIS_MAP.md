@@ -531,7 +531,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 ### Sec §2.8
 
 - cited: `Feec.Counterexamples.LinearizedGravity.not_accel_printed`, `Feec.EinsteinBianchi.planeWave_EB`, `Feec.EinsteinBianchi.planeWave_weyl`, `Feec.Instances.EinsteinBianchi.GradCurl.PlaneWaveVerdict`, `Feec.LinearizedGravity.IsTT`, `Feec.LinearizedGravity.isTT_iff`, `Feec.LinearizedGravity.tt_accel`, `Feec.TT.ttProj`, `Feec.TT.ttProj_mem`
-- modules: Feec.Algebra.TransverseTraceless, Feec.Counterexamples.LinearizedGravity, Feec.Instances.EinsteinBianchiGradCurl, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge, Feec.Physics.LinearizedGravity.PlaneWave
+- modules: Feec.Algebra.TransverseTraceless, Feec.Counterexamples.LinearizedGravity, Feec.Counterexamples.Sharpness, Feec.Instances.EinsteinBianchiGradCurl, Feec.Physics.EinsteinBianchi.Fields, Feec.Physics.LinearizedGravity.Einstein, Feec.Physics.LinearizedGravity.Gauge, Feec.Physics.LinearizedGravity.PlaneWave
 
 ### Sec §3.1
 
@@ -596,7 +596,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 ### Sec §4.8
 
 - cited: `Feec.Counterexamples.MixedWave.not_isMixedWeak`, `Feec.HodgeWave.IsMixedWeak`, `Feec.HodgeWave.IsMixedWeak.isSecondOrderWeak`, `Feec.HodgeWave.IsSecondOrderWeak`, `Feec.HodgeWave.IsSecondOrderWeak.exists_isMixedWeak`, `Feec.HodgeWave.IsWeakSolution`, `Feec.HodgeWave.not_isMixedWeak_of_inner_ne_zero`
-- modules: Feec.Counterexamples.MixedWave, Feec.HilbertComplex.HodgeWave, Feec.HilbertComplex.SecondOrder
+- modules: Feec.Counterexamples.MixedWave, Feec.Counterexamples.Sharpness, Feec.HilbertComplex.HodgeWave, Feec.HilbertComplex.SecondOrder
 
 ### Sec §4.9
 
@@ -631,7 +631,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 ### Sec §5.2
 
 - cited: `Feec.BGG.Discrete`, `Feec.BGG.Discrete.Compatible`, `Feec.BGG.Discrete.exact_mid_h`, `Feec.BGG.Discrete.exists_sub_S0h_eq`, `Feec.BGG.IsMixedSolution`, `Feec.BGG.anticomm_of_comm_proj`, `Feec.BGG.exists_discreteSolution_regular`, `Feec.BGG.exists_of_exact_rows`, `Feec.BGG.mixedForm_bijective`, `Feec.BGG.surjective_of_comp_eq`
-- modules: Feec.Counterexamples.DiscreteBGG, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent, Feec.Instances.EinsteinBianchiGauss
+- modules: Feec.Counterexamples.DiscreteBGG, Feec.Counterexamples.Sharpness, Feec.HilbertComplex.BGG.Discrete, Feec.HilbertComplex.BGG.TimeDependent, Feec.Instances.EinsteinBianchiGauss
 
 ### Sec §5.3
 
@@ -646,7 +646,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 ### Sec §6.2
 
 - cited: `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate`, `Feec.BGG.Discrete.infSup_shiftedForm_h`, `Feec.BGG.Discrete.strang_of_isEllipticProjection`, `Feec.BGG.Discrete.strang_rate_of_regularPotential`, `Feec.BGG.Discrete.strang_shiftedForm_h`, `Feec.BGG.DiscreteSolution`, `Feec.BGG.DiscreteSolution.norm_sub_le_of_ellipticProjection`, `Feec.BGG.DiscreteSolution.norm_sub_le_of_ellipticProjection_L2`, `Feec.BGG.ExactWave.exists_discreteSolution_rate`, `Feec.BGG.ExactWave.exists_discreteSolution_rate_harm`, `Feec.BGG.HarmonicStability.exists_discreteSolution_norm_sub_le_rate`, `Feec.BGG.HarmonicStability.strang_shiftedForm_h`, `Feec.BGG.IsEllipticProjection`, `Feec.BGG.IsEllipticProjection.galerkin`, `Feec.BGG.discreteSkewForm`, `Feec.BGG.ellipticProjection`, `Feec.BGG.eq_zero_of_isEllipticProjection`, `Feec.BGG.existsUnique_isEllipticProjection`, `Feec.BGG.exists_discreteSolution_norm_sub_le`, `Feec.BGG.exists_discreteSolution_norm_sub_le_L2`, `Feec.BGG.exists_discreteSolution_norm_sub_le_ellipticProjection`, `Feec.BGG.norm_sub_le_of_ellipticProjection`, `Feec.BGG.norm_sub_le_of_ellipticProjection_L2`, `Feec.BGG.projected_compatible_phi_iff`, `Feec.BGG.projected_compatible_u`, `Feec.BGG.projected_compatible_u_L2`, `Feec.Counterexamples.ConstrainedEvolution.not_projected_compatible_phi`, `Feec.Models.Cube.MirrorWeakSymmetry.mirrorWave_converges`, `Feec.Models.Cube.MirrorWeakSymmetry.mirrorWave_rate`, `Feec.Models.Cube.WeakSymmetry.cubeFEM_ellipticProjection_rate_tr`, `Feec.Models.Cube.WeakSymmetry.cubeFEM_ellipticProjection_rate_trS1`, `Feec.Models.Cube.WeakSymmetry.cubeWave_rate`, `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr`
-- modules: Feec.Counterexamples.ConstrainedEvolution, Feec.HilbertComplex.Approximation.ApproxComplexCrime, Feec.HilbertComplex.BGG.DiscreteWave, Feec.HilbertComplex.BGG.EllipticProjection, Feec.HilbertComplex.BGG.Harmonic, Feec.HilbertComplex.BGG.TimeDependent, Feec.Instances.EinsteinBianchi, Feec.Instances.EinsteinBianchiFEMComplex, Feec.Instances.EinsteinBianchiFEMCubeEll, Feec.Instances.EinsteinBianchiFEMDefect, Feec.Instances.EinsteinBianchiFEMElliptic, Feec.Instances.EinsteinBianchiFEMGenerator, Feec.Instances.EinsteinBianchiFEMMirror, Feec.Instances.EinsteinBianchiFEMMirrorEll, Feec.Instances.EinsteinBianchiGauss, Feec.Models.Cube.MirrorWeakSymmetryConvergence, Feec.Models.Cube.MirrorWeakSymmetryFEM, Feec.Models.Cube.MirrorWeakSymmetryTSD, Feec.Models.Cube.WeakSymmetryConvergence, Feec.Models.Cube.WeakSymmetryTangentialRate, Feec.Models.Cube.WeakSymmetryWave, Feec.Physics.EinsteinBianchi.BoundedConvergence, Feec.Physics.EinsteinBianchi.BoundedFailure, Feec.Physics.EinsteinBianchi.WaveFEM, Feec.Physics.EinsteinBianchi.WaveFEMTangential
+- modules: Feec.Counterexamples.ConstrainedEvolution, Feec.Counterexamples.Sharpness, Feec.HilbertComplex.Approximation.ApproxComplexCrime, Feec.HilbertComplex.BGG.DiscreteWave, Feec.HilbertComplex.BGG.EllipticProjection, Feec.HilbertComplex.BGG.Harmonic, Feec.HilbertComplex.BGG.TimeDependent, Feec.Instances.EinsteinBianchi, Feec.Instances.EinsteinBianchiFEMComplex, Feec.Instances.EinsteinBianchiFEMCubeEll, Feec.Instances.EinsteinBianchiFEMDefect, Feec.Instances.EinsteinBianchiFEMElliptic, Feec.Instances.EinsteinBianchiFEMGenerator, Feec.Instances.EinsteinBianchiFEMMirror, Feec.Instances.EinsteinBianchiFEMMirrorEll, Feec.Instances.EinsteinBianchiGauss, Feec.Models.Cube.MirrorWeakSymmetryConvergence, Feec.Models.Cube.MirrorWeakSymmetryFEM, Feec.Models.Cube.MirrorWeakSymmetryTSD, Feec.Models.Cube.WeakSymmetryConvergence, Feec.Models.Cube.WeakSymmetryTangentialRate, Feec.Models.Cube.WeakSymmetryWave, Feec.Physics.EinsteinBianchi.BoundedConvergence, Feec.Physics.EinsteinBianchi.BoundedFailure, Feec.Physics.EinsteinBianchi.WaveFEM, Feec.Physics.EinsteinBianchi.WaveFEMTangential
 
 ### Sec §6.3
 

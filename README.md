@@ -32,16 +32,21 @@ complex has `ℌ = 0`, a conforming family and no static verdict).
 `Feec.Counterexamples.crownSharpness` (`Counterexamples/Sharpness.lean`) collects this with the
 counterexamples showing that the TSD constraint is not reducing on bounded domains (so only the
 departure clause applies to it) and that `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not a subcomplex.
+`Feec.Counterexamples.crownCorrections` (same file) collects the thesis corrections next to the
+crown: the weak-symmetry discretization, not a stacked BGG family, has no uniqueness without
+exactness at `V_h¹` and no solution for some data (Props 5.3–5.4, 6.2); the second-order wave form
+is equivalent to the first-order one of the wave clause only under a compatibility condition
+(§4.8); the TT plane waves of the Einstein–Bianchi instance need the corrected gauge of Prop 2.6
+(§2.8).
 `Feec.Instances.crownNonVacuity` (`Instances/CrownNonVacuity.lean`) instantiates the rated crown
 on the Whitney forms of the cube, with closed range and `ℌ⁰ ≠ 0`, a non-reducing constraint for
 which the departure clause fires, and a nonzero heat datum, and collects the non-vacuity
 witnesses of the layers.
 
-All but 14 of the 392 modules feed the crown: each is imported, transitively, by `Crown.lean` or
-by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 14
-are thesis corrections outside the crown's hypotheses
-(`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`,
-with `HilbertComplex.SecondOrder`), the weak-symmetry scheme (6.5) and its rates, which is not a
+All but 9 of the 392 modules feed the crown: each is imported, transitively, by `Crown.lean` or
+by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 9
+are `Counterexamples.Curvature` (`G = 0 ⇔ Ric = 0` fails in dimension `2`; the crown's physics is
+four-dimensional), the weak-symmetry scheme (6.5) and its rates, which is not a
 conforming family (`Instances.EinsteinBianchi{FEMDefect, Gauss}`,
 `Models.Cube.WeakSymmetrySobolevRate`, `EinsteinBianchi.{Unconditional, WaveFEMRegularity}`), and
 `Algebra.Proxy3`, `TimeStepping.BlockMatrix`, `Variational.Fortin`, which no verdict uses.

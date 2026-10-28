@@ -38,13 +38,15 @@ energy conservation and decay, propagation of the weighted Gauss laws `div (ε E
 * `MeasureTheory.Lp.isSelfAdjoint_matMul`, `MeasureTheory.Lp.le_re_inner_matMul`.
 * `Maxwell.Medium.isotropic_ε_apply`, `Maxwell.Medium.isotropic_μ_apply`:
   `(ε E)_j = ε(x) E_j(x)` and `(μ H)_j = μ(x) H_j(x)` a.e.
+* `Maxwell.norm_isotropicFactor_mul_norm_symm_le`, `Maxwell.Medium.isotropic_cond_le`: the
+  condition numbers of `√s` and of the isotropic medium are at most `√(b / a)`.
 * `Maxwell.Medium.exists_anisotropic`.
 
 ## References
 
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (evolution problems)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4 (weighted `L²` inner products)
+  §6.1 (variable coefficients, weighted `L²` inner products)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -72,6 +74,9 @@ theorem coeFn_mulL2 (G : Lp 𝕜 ∞ μ) (u : Lp 𝕜 2 μ) :
     mulL2 G u =ᵐ[μ] fun x => G x * u x :=
   Lp.coeFn_lpSMul (r := 2) G u
 
+theorem norm_mulL2_le (G : Lp 𝕜 ∞ μ) : ‖mulL2 G‖ ≤ ‖G‖ :=
+  LinearMap.mkContinuous_norm_le _ (norm_nonneg G) _
+
 /-- **The adjoint of a multiplication** is multiplication by the conjugate:
 `⟪G u, v⟫ = ⟪u, G' v⟫` for `G' = Ḡ` a.e. -/
 theorem inner_mulL2 {G G' : Lp 𝕜 ∞ μ} (h : ∀ᵐ x ∂μ, G' x = conj (G x)) (u v : Lp 𝕜 2 μ) :
@@ -91,6 +96,11 @@ theorem coeFn_ofBound (g : α → 𝕜) (hg : AEStronglyMeasurable g μ) (C : �
     (hC : ∀ᵐ x ∂μ, ‖g x‖ ≤ C) : ofBound g hg C hC =ᵐ[μ] g :=
   MemLp.coeFn_toLp _
 
+theorem norm_ofBound_le (g : α → 𝕜) (hg : AEStronglyMeasurable g μ) {C : ℝ} (hC₀ : 0 ≤ C)
+    (hC : ∀ᵐ x ∂μ, ‖g x‖ ≤ C) : ‖ofBound g hg C hC‖ ≤ C := by
+  rw [ofBound, Lp.norm_toLp, eLpNorm_exponent_top hg]
+  exact ENNReal.toReal_le_of_le_ofReal hC₀ (eLpNormEssSup_le_of_ae_bound hC)
+
 /-! ### Componentwise action on `ℓ²`-sums -/
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {ι : Type*} [Fintype ι]
@@ -107,6 +117,14 @@ theorem inner_diagL {T T' : E →L[𝕜] E} (h : ∀ x y, ⟪T x, y⟫_𝕜 = �
     ⟪diagL T u, v⟫_𝕜 = ⟪u, diagL T' v⟫_𝕜 := by
   simp only [PiLp.inner_apply]
   exact Finset.sum_congr rfl fun j _ => h (u j) (v j)
+
+theorem norm_diagL_le (T : E →L[𝕜] E) : ‖(diagL T : PiLp 2 (fun _ : ι => E) →L[𝕜] _)‖ ≤ ‖T‖ := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg T) fun u => ?_
+  refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
+  rw [PiLp.norm_sq_eq_of_L2, mul_pow, PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
+  refine Finset.sum_le_sum fun j _ => ?_
+  rw [← mul_pow]
+  exact pow_le_pow_left₀ (norm_nonneg _) (T.le_opNorm (u j)) 2
 
 /-! ### Multiplication by a matrix field -/
 
@@ -275,6 +293,30 @@ def isotropicFactor : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) ≃L[𝕜] PiLp 2 (fun
         x h1 h2 h3
       rw [h1, h2, ← mul_assoc, h3, one_mul])
 
+/-- `‖√s‖ ≤ √b`. -/
+theorem norm_isotropicFactor_le :
+    ‖(isotropicFactor 𝕜 ι hs ha hab :
+      PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ ≤ √b :=
+  (Lp.norm_diagL_le _).trans
+    ((Lp.norm_mulL2_le _).trans (Lp.norm_ofBound_le _ _ (Real.sqrt_nonneg b) _))
+
+/-- `‖1/√s‖ ≤ 1/√a`. -/
+theorem norm_isotropicFactor_symm_le :
+    ‖((isotropicFactor 𝕜 ι hs ha hab).symm :
+      PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ ≤ (√a)⁻¹ :=
+  (Lp.norm_diagL_le _).trans
+    ((Lp.norm_mulL2_le _).trans (Lp.norm_ofBound_le _ _ (inv_nonneg.2 (Real.sqrt_nonneg a)) _))
+
+/-- **The condition number of the factor** `√s` is at most `√(b / a)`. -/
+theorem norm_isotropicFactor_mul_norm_symm_le :
+    ‖(isotropicFactor 𝕜 ι hs ha hab :
+      PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ *
+      ‖((isotropicFactor 𝕜 ι hs ha hab).symm :
+        PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ ≤ √(b / a) := by
+  rw [Real.sqrt_div' b ha.le, div_eq_mul_inv]
+  exact mul_le_mul (norm_isotropicFactor_le hs ha hab) (norm_isotropicFactor_symm_le hs ha hab)
+    (norm_nonneg _) (Real.sqrt_nonneg b)
+
 /-- The factor `√s` is **self-adjoint**. -/
 theorem adjoint_isotropicFactor :
     ContinuousLinearMap.adjoint (isotropicFactor 𝕜 ι hs ha hab :
@@ -324,6 +366,11 @@ theorem Medium.isotropic_ε_apply (u : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) (j :
 theorem Medium.isotropic_μ_apply (u : PiLp 2 (fun _ : κ => Lp 𝕜 2 μ)) (j : κ) :
     ((Medium.isotropic 𝕜 ι κ hε hμ ha hεb hμb).μ u) j =ᵐ[μ] fun x => (μ' x : 𝕜) * u j x :=
   adjoint_isotropicFactor_comp_apply hμ ha hμb u j
+
+/-- **The condition number of the isotropic medium** is at most `√(b / a)`. -/
+theorem Medium.isotropic_cond_le : (Medium.isotropic 𝕜 ι κ hε hμ ha hεb hμb).cond ≤ √(b / a) :=
+  max_le (norm_isotropicFactor_mul_norm_symm_le hε ha hεb)
+    (norm_isotropicFactor_mul_norm_symm_le hμ ha hμb)
 
 /-! ### Anisotropic media (over `ℂ`) -/
 

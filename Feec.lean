@@ -161,6 +161,7 @@ public import Feec.HilbertComplex.Approximation.MixedError
 public import Feec.HilbertComplex.Approximation.PerturbFEEC
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
 public import Feec.HilbertComplex.Approximation.RationalScheme
+public import Feec.HilbertComplex.Approximation.Reweight
 public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.RitzResolvent
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
@@ -228,6 +229,7 @@ public import Feec.Instances.EinsteinBianchiSpectral
 public import Feec.Instances.EuclideanBand
 public import Feec.Instances.FullyDiscrete
 public import Feec.Instances.Maxwell
+public import Feec.Instances.MaxwellMedia
 public import Feec.Instances.Perturbed
 public import Feec.Instances.RungeKutta
 public import Feec.Mesh.Basic

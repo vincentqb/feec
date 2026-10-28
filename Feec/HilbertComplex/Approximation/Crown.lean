@@ -5,6 +5,7 @@ public import Feec.HilbertComplex.Approximation.FullyDiscrete
 public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.PerturbFEEC
 public import Feec.HilbertComplex.Approximation.RationalScheme
+public import Feec.HilbertComplex.Approximation.Reweight
 
 /-!
 # The FEEC theorem
@@ -76,7 +77,12 @@ Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` wit
 `constrainedFEEC_perturbed`; each field is the layer verdict itself. Every finite element family
 with bounded smoothed projections is a conforming family (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`,
 `P_r⁻Λ` on the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the
-cube, `FEM.qMinusFamily`), so the crown holds for each.
+cube, `FEM.qMinusFamily`), so the crown holds for each. Conforming families and their Jackson
+estimates transfer to every reweighted complex `H.conj a` (weighted inner products, variable
+coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with uniformly
+bounded condition numbers), so the crown holds for them as well, e.g. for Maxwell's equations in
+every linear medium given by factors `ε = e† e`, `μ = m† m`, in particular isotropic media
+(`Feec.Instances.MaxwellMedia`; anisotropic media once real factors are supplied).
 
 **Outside the crown.**
 

@@ -83,6 +83,13 @@ theorem inner_adjoint_symm_apply (a : E ≃L[𝕜] F) (x : E) (y : F) :
     ⟪a.adjoint.symm x, y⟫_𝕜 = ⟪x, a.symm y⟫_𝕜 :=
   ContinuousLinearMap.adjoint_inner_left _ _ _
 
+theorem norm_adjoint (a : E ≃L[𝕜] F) : ‖(a.adjoint : F →L[𝕜] E)‖ = ‖(a : E →L[𝕜] F)‖ :=
+  ContinuousLinearMap.adjoint.norm_map _
+
+theorem norm_adjoint_symm (a : E ≃L[𝕜] F) :
+    ‖(a.adjoint.symm : E →L[𝕜] F)‖ = ‖(a.symm : F →L[𝕜] E)‖ :=
+  ContinuousLinearMap.adjoint.norm_map _
+
 /-- `a†† = a`. -/
 theorem adjoint_adjoint (a : E ≃L[𝕜] F) : a.adjoint.adjoint = a := by
   ext x
@@ -164,6 +171,17 @@ theorem mem_conj_graph_iff {p : E' × F'} :
     refine ⟨⟨p.1, hp⟩, rfl, ?_⟩
     rw [conj_apply, ← (b.apply_symm_apply p.2), ← show T x = b.symm p.2 from hx2]
     exact congrArg b (apply_congr' _ _ _ hx1'.symm)
+
+/-- `N(b T a⁻¹) = a N(T)`. -/
+theorem mem_ker_conj_iff {y : E'} : y ∈ (T.conj a b).ker ↔ a.symm y ∈ T.ker := by
+  simp only [mem_ker_iff]
+  constructor
+  · rintro ⟨z, rfl, hz⟩
+    exact ⟨⟨_, z.2⟩, rfl, b.map_eq_zero_iff.1 hz⟩
+  · rintro ⟨z, hz, h0⟩
+    refine ⟨⟨y, show a.symm y ∈ T.domain from hz ▸ z.2⟩, rfl, ?_⟩
+    rw [conj_apply, ← b.map_zero, ← h0]
+    exact congrArg b (apply_congr' _ _ _ hz)
 
 /-- The conjugate of a closed operator is closed. -/
 theorem isClosed_conj (hT : T.IsClosed) : (T.conj a b).IsClosed := by

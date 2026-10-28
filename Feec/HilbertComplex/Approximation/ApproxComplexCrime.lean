@@ -78,7 +78,10 @@ core (its convergence is not re-proved) and adds the complex-level structure.
 * **The cochain special case**: `ApproxComplex.toCrime` (zero cochain defect,
   `ApproxComplex.Family.cochainDefect_toCrimeFamily`) has `ofComplexCrime F.toCrime = ofComplex F`
   (`ApproxFEEC.ofComplexCrime_toCrime`, by `rfl`) and the same comparison on `D(L²)`
-  (`ApproxFEEC.ofComplexCrimeCore_toCrime_p`).
+  (`ApproxFEEC.ofComplexCrimeCore_toCrime_p`); in particular a conforming discretization is the
+  case of zero defects (`ConstrainedFEEC.toCrime`, `toCrime_J`, `toCrime_cochainDefect`,
+  `toCrime_sol`), the embedding through which the crown contains the FEEC theorem for these
+  families (`ApproxComplexCrime.feec`, `Feec.HilbertComplex.Approximation.Crown`).
 * **Galerkin cores** (`ApproxComplexCrime.ofGalerkinCore`): the discrete solutions are those of
   the given discretization (`ofComplexCrime_ofGalerkinCore_sol`), the comparison is the given one
   (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative). Complexification of a
@@ -1238,6 +1241,33 @@ theorem ofComplexCrimeCore_toCrime_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave
   rfl
 
 end ApproxFEEC
+
+namespace ConstrainedFEEC
+
+variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
+
+/-- **The conforming case of an approximating family of discrete differential spaces**: a
+constrained FEEC discretization (subcomplexes `Vₕ ⊆ W` with commuting cochain projections),
+read as `F.toComplex.toCrime`. Both Holst–Stern defects vanish (`toCrime_J`,
+`toCrime_cochainDefect`), and its discrete solutions are those of the subcomplex scheme
+(`toCrime_sol`). [HolstStern2012], §3 -/
+abbrev toCrime : ApproxComplexCrime H κ := F.toComplex.toCrime
+
+/-- **Zero inner-product defect**: the reading maps are the inclusions, `Jₕ = iₕ* iₕ = 1`. -/
+theorem toCrime_J (h : κ) : F.toCrime.toFamily.J h = 1 := F.toFamily_J h
+
+/-- **Zero cochain defect**: the inclusions are cochain maps. -/
+theorem toCrime_cochainDefect (h : κ) (y : H.wave.domain) :
+    F.toCrime.toFamily.cochainDefect h y = 0 :=
+  F.toFamily.cochainDefect_toCrimeFamily h y
+
+/-- **The discrete solutions are those of the subcomplex scheme** (4.10) of
+[QuennevilleBelair2015], through `Vₕ ≅ Xₕ` (`ConstrainedFEEC.toComplex_sol`). -/
+theorem toCrime_sol (h : κ) (v : PiLp 2 (F.toFamily.V h)) (t : ℝ) :
+    (ApproxFEEC.ofComplexCrime F.toCrime).sol h v t = F.toApprox.sol h (F.toXh h v) t :=
+  F.toComplex_sol h v t
+
+end ConstrainedFEEC
 
 end Cochain
 

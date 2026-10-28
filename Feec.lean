@@ -222,6 +222,7 @@ public import Feec.Instances.EinsteinBianchiAbsorbing
 public import Feec.Instances.EinsteinBianchiBounded
 public import Feec.Instances.EinsteinBianchiFEM
 public import Feec.Instances.EinsteinBianchiFEMComplex
+public import Feec.Instances.EinsteinBianchiFEMCrown
 public import Feec.Instances.EinsteinBianchiFEMCube
 public import Feec.Instances.EinsteinBianchiFEMCubeEll
 public import Feec.Instances.EinsteinBianchiFEMDefect

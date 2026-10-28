@@ -293,6 +293,16 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > bridge (scheme (6.5)); real anisotropic medium factors; the identification of the Ch. 7
 > compression with the crown's `Lₕ`; finite speed of propagation for damped absorbing problems.
 
+> **Status (2026-10-28): the crown over approximating families.** `ApproxComplexCrime.feec`
+> (`Crown.lean`) is the FEEC theorem for Holst–Stern families with an inner-product and a cochain
+> defect; conforming families are its zero-defect case (`ConstrainedFEEC.toCrime`, the last
+> field `crime` of `ConformingFamily.Verdict`; `FeecCheck.Crown.crown_old_verdict` keeps the old
+> verdict). The weak-symmetry scheme (6.5) is an instance under both boundary conditions with
+> rates (`Feec.Instances.EinsteinBianchiFEMCrown`), which ties
+> `Instances.EinsteinBianchi{FEMDefect, Gauss}`, `Models.Cube.WeakSymmetrySobolevRate` and
+> `EinsteinBianchi.{Unconditional, WaveFEMRegularity}` to the crown. Open: a non-stationary datum in
+> the Sobolev rate class of the thesis' boundary conditions.
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

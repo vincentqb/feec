@@ -37,13 +37,20 @@ on the Whitney forms of the cube, with closed range and `ℌ⁰ ≠ 0`, a non-re
 which the departure clause fires, and a nonzero heat datum, and collects the non-vacuity
 witnesses of the layers.
 
-All but 14 of the 392 modules feed the crown: each is imported, transitively, by `Crown.lean` or
-by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 14
+The FEEC theorem for approximating families with variational crimes in the sense of Holst and
+Stern (`Feec.HilbertComplex.ApproxComplexCrime.feec`: reading maps that need not be inclusions nor
+cochain maps, an inner-product and a cochain defect) is on the crown's tree: the crown imports it
+and consumes it on its zero-defect instance, every conforming window read as such a family (the
+last field `crime` of `ConformingFamily.Verdict`; the identification is at the level of data, and
+on conforming windows the field adds the Strang, residual and defect estimates). The weak-symmetry
+scheme (6.5) of the thesis applies the crime theorem under both boundary conditions, with its rates
+(`Feec.Instances.EinsteinBianchiFEMCrown`).
+
+All but 9 of the 393 modules feed the crown: each is imported, transitively, by `Crown.lean` or
+by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 9
 are thesis corrections outside the crown's hypotheses
 (`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`,
-with `HilbertComplex.SecondOrder`), the weak-symmetry scheme (6.5) and its rates, which is not a
-conforming family (`Instances.EinsteinBianchi{FEMDefect, Gauss}`,
-`Models.Cube.WeakSymmetrySobolevRate`, `EinsteinBianchi.{Unconditional, WaveFEMRegularity}`), and
+with `HilbertComplex.SecondOrder`) and
 `Algebra.Proxy3`, `TimeStepping.BlockMatrix`, `Variational.Fortin`, which no verdict uses.
 
 ## The approximating FEEC theorem

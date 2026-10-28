@@ -15,7 +15,8 @@ cochain projections (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.infSup`
 
 On the way, the testing lemmas `Feec.TimeStepping.inner_eq_sum_repr` and
 `Feec.TimeStepping.eq_of_inner_basis` were generalized from `ℝ` to every `RCLike` field, and the
-continuous inf-sup hypothesis of Fortin's lemma (`Feec.Variational.IsFortinOperator.discrete_infSup`,
+continuous inf-sup hypothesis of Fortin's lemma
+(`Feec.Variational.IsFortinOperator.discrete_infSup`,
 `Feec.Variational.existsUnique_discrete_isSaddleSolution`) is now required on `Yₕ` only. The
 theorems `linalg_old_*` state the old results verbatim and derive them from the new ones.
 

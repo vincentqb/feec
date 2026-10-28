@@ -916,9 +916,9 @@ degree, `Lₕ = dₕ - dₕ*`), the signed matrix `diag(ε) (M + (τₕ/2) K)` i
 coefficients of the iterate `Pₕ v` are the unique solution of its system
 (`TimeStepping.isHermitian_signed_cn`, `DissipFEEC.crankNicolson_signed_mulVec_iff`).
 [QuennevilleBelair2015], Ch. 7; [PaigeSaunders1975] -/
-theorem SkewFEEC.crankNicolson_signed [CompleteSpace E] {A : E →ₗ.[𝕜] E} {κ : Type*} (F : SkewFEEC.{u} A κ)
-    {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : Type*} [Fintype n] [DecidableEq n]
-    (b : Module.Basis n 𝕜 (F.X h)) (ε : n → ℝ) (hε : ∀ i, ε i * ε i = 1)
+theorem SkewFEEC.crankNicolson_signed [CompleteSpace E] {A : E →ₗ.[𝕜] E} {κ : Type*}
+    (F : SkewFEEC.{u} A κ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : Type*} [Fintype n]
+    [DecidableEq n] (b : Module.Basis n 𝕜 (F.X h)) (ε : n → ℝ) (hε : ∀ i, ε i * ε i = 1)
     (hMε : ∀ i j, ⟪b i, b j⟫_𝕜 ≠ 0 → ε i = ε j)
     (hKε : ∀ i j, ⟪b i, F.L h (b j)⟫_𝕜 ≠ 0 → ε i = -ε j) (v : F.X h) :
     (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b +

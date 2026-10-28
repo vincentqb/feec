@@ -78,12 +78,13 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
   {a : X →L[𝕜] X →L⋆[𝕜] 𝕜} {b : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {Xh : Submodule 𝕜 X}
   {Yh : Submodule 𝕜 Y} {P : X → X} {C β γ : ℝ}
 
-/-- **Discrete Brezzi via Fortin.** On complete (e.g. closed or finite-dimensional) discrete spaces `Xₕ`, `Yₕ`, let `Bₕ` be the
-discrete constraint operator of `b` (`b vₕ qₕ = ⟪qₕ, Bₕ vₕ⟫`). If `b` has the continuous inf-sup
-property (inf over `q ∈ Yₕ`), a Fortin operator with bound `C` exists, and `a` has the inf-sup property
-and separates on the discrete kernel `ker Bₕ`, then the discrete saddle point problem is uniquely
-solvable for all discrete data. [QuennevilleBelair2015], Thm 4.11 (discrete form); the discrete
-conditions go back to [Brezzi1974]. -/
+/-- **Discrete Brezzi via Fortin.** On complete (e.g. closed or finite-dimensional) discrete
+spaces `Xₕ`, `Yₕ`, let `Bₕ` be the discrete constraint operator of `b` (`b vₕ qₕ = ⟪qₕ, Bₕ vₕ⟫`).
+If `b` has the continuous inf-sup property (inf over `q ∈ Yₕ`), a Fortin operator with bound `C`
+exists, and `a` has the inf-sup property and separates on the discrete kernel `ker Bₕ`, then the
+discrete saddle point problem is uniquely solvable for all discrete data.
+[QuennevilleBelair2015], Thm 4.11 (discrete form); the discrete conditions go back to
+[Brezzi1974]. -/
 theorem existsUnique_discrete_isSaddleSolution [CompleteSpace Xh] [CompleteSpace Yh]
     (hP : IsFortinOperator b Xh Yh P C) (hC : 0 < C) (hβ : 0 < β)
     (hb : ∀ q ∈ Yh, β * ‖q‖ ≤ ‖b.flip q‖)

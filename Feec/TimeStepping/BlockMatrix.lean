@@ -75,6 +75,22 @@ namespace Feec.TimeStepping
 
 variable {n R : Type*} [Fintype n] [DecidableEq n] [CommRing R]
 
+omit [Fintype n] [DecidableEq n] in
+/-- The entries of a signed matrix: if `M` couples only unknowns with equal signs and `K` only
+unknowns with opposite signs, then `ε j (M i j - s K i j) = ε i (M i j + s K i j)`. -/
+private theorem signed_entry (ε : n → R) {M K : Matrix n n R} (hMε : ∀ i j, M i j ≠ 0 → ε i = ε j)
+    (hKε : ∀ i j, K i j ≠ 0 → ε i = -ε j) (s : R) (i j : n) :
+    ε j * (M i j + s * -K i j) = ε i * (M i j + s * K i j) := by
+  have e1 : ε j * M i j = ε i * M i j := by
+    by_cases h : M i j = 0
+    · rw [h, mul_zero, mul_zero]
+    · rw [hMε i j h]
+  have e2 : ε j * (s * -K i j) = ε i * (s * K i j) := by
+    by_cases h : K i j = 0
+    · simp [h]
+    · rw [hKε i j h]; ring
+  linear_combination e1 + e2
+
 /-- **Signed symmetrization**: if `M` is symmetric and couples only unknowns with equal signs,
 and `K` is skew and couples only unknowns with opposite signs, then `diag(ε) (M + s K)` is
 symmetric. [QuennevilleBelair2015], Ch. 7 -/
@@ -86,15 +102,7 @@ theorem isSymm_diagonal_mul_add_smul (ε : n → R) {M K : Matrix n n R} (hM : M
   have hMji : M j i = M i j := by simpa using congrFun (congrFun hM.eq i) j
   have hKji : K j i = -K i j := by simpa using congrFun (congrFun hK i) j
   rw [hMji, hKji]
-  have e1 : ε j * M i j = ε i * M i j := by
-    by_cases h : M i j = 0
-    · rw [h, mul_zero, mul_zero]
-    · rw [hMε i j h]
-  have e2 : ε j * (s * -K i j) = ε i * (s * K i j) := by
-    by_cases h : K i j = 0
-    · simp [h]
-    · rw [hKε i j h]; ring
-  linear_combination e1 + e2
+  linear_combination signed_entry ε hMε hKε s i j
 
 /-- The signed system `diag(ε) A x = diag(ε) b` has the solutions of `A x = b` when
 `ε i² = 1`. [QuennevilleBelair2015], Ch. 7 -/
@@ -121,15 +129,7 @@ theorem isHermitian_diagonal_mul_add_smul [StarRing R] (ε : n → R) {M K : Mat
     star_add, hε, hs, hM.apply]
   have hKji : star (K j i) = -K i j := by simpa using congrFun (congrFun hK i) j
   rw [hKji]
-  have e1 : ε j * M i j = ε i * M i j := by
-    by_cases h : M i j = 0
-    · rw [h, mul_zero, mul_zero]
-    · rw [hMε i j h]
-  have e2 : ε j * (s * -K i j) = ε i * (s * K i j) := by
-    by_cases h : K i j = 0
-    · simp [h]
-    · rw [hKε i j h]; ring
-  linear_combination e1 + e2
+  linear_combination signed_entry ε hMε hKε s i j
 
 /-! ### Crank–Nicolson for a bounded generator in a basis -/
 
@@ -140,12 +140,17 @@ open scoped InnerProductSpace
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
 omit [DecidableEq n] in
+/-- Expansion of `⟪w, T y⟫` in the coordinates of `y`. -/
+theorem inner_map_eq_sum_repr (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) (w y : E) :
+    ⟪w, T y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, T (b j)⟫_𝕜 := by
+  conv_lhs => rw [← b.sum_repr y, map_sum, inner_sum]
+  simp only [map_smul, inner_smul_right]
+
+omit [DecidableEq n] in
 /-- Expansion of `⟪w, y⟫` in the coordinates of `y`. -/
 theorem inner_eq_sum_repr (b : Module.Basis n 𝕜 E) (w y : E) :
-    ⟪w, y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, b j⟫_𝕜 := by
-  conv_lhs => rw [← b.sum_repr y]
-  rw [inner_sum]
-  simp [inner_smul_right]
+    ⟪w, y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, b j⟫_𝕜 :=
+  inner_map_eq_sum_repr b LinearMap.id w y
 
 omit [DecidableEq n] in
 /-- Testing against a basis determines a vector. -/
@@ -173,10 +178,8 @@ omit [DecidableEq n] in
 theorem inner_basis_apply_eq_neg_stiffness_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E)
     (y : E) : (fun i => ⟪b i, T y⟫_𝕜) = -(stiffness b T *ᵥ b.equivFun y) := by
   funext i
-  have e : ⟪b i, T y⟫_𝕜 = ∑ j, b.repr y j * ⟪b i, T (b j)⟫_𝕜 := by
-    conv_lhs => rw [← b.sum_repr y, map_sum, inner_sum]
-    simp only [map_smul, inner_smul_right]
-  simp [e, mulVec, dotProduct, stiffness, mul_comm]
+  rw [inner_map_eq_sum_repr b T]
+  simp [mulVec, dotProduct, stiffness, mul_comm]
 
 omit [DecidableEq n] in
 /-- **A Crank–Nicolson step is the assembled system**: `u'` is a CN step from `u` with half step

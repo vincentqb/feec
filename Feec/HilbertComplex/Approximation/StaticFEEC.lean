@@ -33,7 +33,9 @@ closed range and `ℌʲ` is finite-dimensional, then at the degree `j` (and its 
   Fortin operators `Π τ = πʲ ρ`, `ρ` the Poincaré lift of the projection of `d τ` onto `𝔅ₕᵏ`
   (`Subcomplex.CochainProjection.exists_isFortinOperator`), which transfer the continuous inf-sup
   condition (`norm_le_norm_constraintForm_flip`) with a constant independent of `h`
-  (`Subcomplex.CochainProjection.infSup`, from `Variational.IsFortinOperator.discrete_infSup`).
+  (`Subcomplex.CochainProjection.infSup`, from `Variational.IsFortinOperator.discrete_infSup`);
+  it is equivalent to the discrete Poincaré inequality `poincare`, and the discrete Brezzi theorem
+  (`Variational.existsUnique_discrete_isSaddleSolution`) is not used for `wellPosed`.
 
 With a Jackson estimate (`ConformingFamily.Jackson`, of any real order; from best approximation in
 `W` through the projections, `ConformingFamily.Jackson.ofInfDist`) the error is `O(hᵒʳᵈ)` for
@@ -248,7 +250,8 @@ theorem exists_isFortinOperator {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP :
     ⟨fun τ => ⟨(S.toHilbertComplex.d j (c.next j)).toGraphSpace
       ⟨⟨P.π j (ρ τ), P.mem j _⟩, Submodule.mem_top⟩, rfl⟩, fun τ q hq => ?_, fun τ => ?_⟩⟩
   · change ⟪q, H.d j (c.next j) ⟨P.π j (ρ τ), _⟩⟫_𝕜 = ⟪q, D τ⟫_𝕜
-    rw [hd, ← Submodule.inner_starProjection_left_eq_right, Submodule.starProjection_eq_self_iff.2 hq]
+    rw [hd, ← Submodule.inner_starProjection_left_eq_right,
+      Submodule.starProjection_eq_self_iff.2 hq]
   · refine (LinearPMap.norm_toGraphSpace_le _ _).trans ?_
     rw [hd]
     have h1 := hπ (ρ τ)
@@ -434,7 +437,8 @@ structure StaticVerdict (j : ι) : Prop where
     Tendsto (fun h => (F.V h).mixedError hij hjk f σ u p) F.l (𝓝 0)
   /-- the uniform discrete inf-sup condition of `d` on `𝔅ₕᵏ`,
   `β ‖q‖ ≤ sup_{τ ∈ Vₕʲ} |⟪q, d τ⟫| / ‖τ‖_V`, by Fortin's criterion with the Fortin operators of
-  the projections ([BoffiBrezziFortin2013], §5.4) -/
+  the projections ([BoffiBrezziFortin2013], §5.4); it is equivalent to `poincare` (test
+  `q = dₕ τ` against its preimage `τ ⊥ 𝔷ₕʲ`), here transferred from the continuous inf-sup -/
   infSup {k : ι} (hjk : c.Rel j k) : ∃ β : ℝ, 0 < β ∧ ∀ (h : κ), ∀ q ∈ (F.V h).boundariesW k,
     β * ‖q‖ ≤ ‖((H.constraintForm j k).flip q).comp ((F.V h).domainSub j).subtypeL‖
 

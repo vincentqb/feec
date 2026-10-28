@@ -98,10 +98,10 @@ under both boundary conditions, with its rates (`Feec.Instances.EinsteinBianchiF
 The crown is assembled from the layer theorems: `ConformingFamily.staticFEEC`, `approxFEEC` and
 `constrainedFEEC` for the conforming windows (`ConstrainedFEEC.toApprox` with the core of the wave
 Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` with
-`SkewFEEC.norm_S_sub_leapfrog_le` (`constrainedFEEC_fullyDiscrete`), and
-`constrainedFEEC_perturbed`, and `ApproxComplexCrime.feec` (from `approxFEEC_ofComplexCrime`,
-`dissipFEEC_fullyDiscrete` and `perturbFEEC`); each field is the layer verdict itself. Every finite
-element family with bounded smoothed projections is a conforming family
+`SkewFEEC.norm_S_sub_leapfrog_le` and `SkewFEEC.crankNicolson_signed`
+(`constrainedFEEC_fullyDiscrete`), `constrainedFEEC_perturbed`, and `ApproxComplexCrime.feec` (from
+`approxFEEC_ofComplexCrime`, `dissipFEEC_fullyDiscrete` and `perturbFEEC`); each field is the layer
+verdict itself. Every finite element family with bounded smoothed projections is a conforming family
 (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`, `P_r⁻Λ` on
 the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the cube,
 `FEM.qMinusFamily`), so the crown holds for each. It also holds for every discrete BGG complex of
@@ -111,15 +111,14 @@ range under the hypotheses of the analytic BGG theorem (`BGG.HilbertData.Stacked
 the Hessian, elasticity and div-div complexes, `Feec.Domain.hessianFEEC`,
 `Feec.Domain.elasticityFEEC`, `Feec.Domain.divDivFEEC`). Conforming families and their Jackson
 estimates transfer to every reweighted complex `H.conj a` (weighted inner products, variable
-coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with
-uniformly bounded condition numbers), so the crown holds for them as well, e.g. for Maxwell's
-equations in every linear medium given by factors `ε = e† e`, `μ = m† m`, in particular isotropic
-media (`Feec.Instances.MaxwellMedia`; anisotropic media once real factors are supplied). The
-physics instances read through the crown: the Einstein–Bianchi systems (4.14), (4.16) on `𝕋³`, `ℝ³`,
-mirror cubes and boxes, with the TT plane waves as exact modes
-(`Feec.Instances.EinsteinBianchiGradCurl`), damped waves and Ohmic loss
-(`Feec.Instances.Perturbed`), and, for every discretization (none is constructed yet), the TSD
-residuals on bounded domains and Maxwell's equations for forms
+coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with uniformly
+bounded condition numbers), so the crown holds for them as well, e.g. for Maxwell's equations in
+every linear medium given by factors `ε = e† e`, `μ = m† m`, in particular isotropic media
+(`Feec.Instances.MaxwellMedia`; anisotropic media once real factors are supplied). The physics
+instances read through the crown: the Einstein–Bianchi systems (4.14), (4.16) on `𝕋³`, `ℝ³`, mirror
+cubes and boxes, with the TT plane waves as exact modes (`Feec.Instances.EinsteinBianchiGradCurl`),
+damped waves and Ohmic loss (`Feec.Instances.Perturbed`), and, for every discretization (none is
+constructed yet), the TSD residuals on bounded domains and Maxwell's equations for forms
 (`Feec.Instances.EinsteinBianchiBounded`, `Feec.Instances.MaxwellForms`).
 
 **Sharpness and non-vacuity.** Closed range of `𝔅ᵏ` is necessary for the static verdict at
@@ -215,7 +214,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
 /-- **The fully discrete verdict** of a constrained FEEC discretization `G`: the fully discrete
 FEEC theorem (`dissipFEEC_fullyDiscrete`) for every time scheme of the wave discretization (with
 the core of the wave Ritz projection) and of the heat discretization (with the heat core), and
-the error of explicit leapfrog for the wave discretization under the CFL condition. -/
+the error of explicit leapfrog for the wave discretization under the CFL condition, and the
+Hermitian signed linear systems of its Crank–Nicolson steps. -/
 structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
   /-- the fully discrete wave equation, for every time scheme -/
   wave (Θ : G.toApprox.TimeScheme) : Θ.Verdict G.toCore
@@ -233,13 +233,33 @@ structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
         ‖G.toApprox.incl h‖ * ‖R.p x h 0 - v‖ +
         ‖G.toApprox.incl h‖ * (√(1 + c) * ‖w 1 - exp ((τ : 𝕜) • G.toApprox.L h) v‖ / √(1 - c) +
           n * τ * τ ^ 2 * ‖(G.toApprox.L h ^ 3) v‖ / (3 * (1 - c)))
+  /-- the linear systems of Crank–Nicolson for the wave equation: in a basis `b` of `Xₕ` with
+  signs `ε i = ±1` adapted to it (basis functions of different signs orthogonal, `Lₕ` coupling
+  only opposite signs), the signed matrix `diag(ε) (M + (τₕ/2) K)` (Gram matrix `M`, stiffness `K`
+  of `Lₕ`) is Hermitian and has the coefficients of the iterate `Pₕ v` as the unique solution of
+  its system, so MINRES applies (bases indexed by `Fin m`, to which every finite basis
+  reindexes) -/
+  crankNicolson_signed {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {m : ℕ}
+    (b : Module.Basis (Fin m) 𝕜 (G.toApprox.X h)) (ε : Fin m → ℝ)
+    (hε : ∀ i, ε i * ε i = 1) (hMε : ∀ i j, ⟪b i, b j⟫_𝕜 ≠ 0 → ε i = ε j)
+    (hKε : ∀ i j, ⟪b i, G.toApprox.L h (b j)⟫_𝕜 ≠ 0 → ε i = -ε j) (v : G.toApprox.X h) :
+    (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b +
+        ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (G.toApprox.L h))).IsHermitian ∧
+      ∀ w, (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b +
+          ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (G.toApprox.L h))).mulVec w =
+        (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b -
+          ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (G.toApprox.L h))).mulVec
+            (b.equivFun v) ↔
+      w = b.equivFun ((G.toApprox.crankNicolson τ hτ).P h v)
 
 /-- **The fully discrete FEEC theorem for a constrained FEEC discretization**: wave and heat, every
-time scheme, and leapfrog under the CFL condition. -/
+time scheme, leapfrog under the CFL condition, and the Hermitian signed systems of
+Crank–Nicolson. -/
 theorem constrainedFEEC_fullyDiscrete (G : ConstrainedFEEC H κ) : G.FullVerdict :=
   ⟨fun Θ => dissipFEEC_fullyDiscrete G.toCore Θ,
     fun hcr _ Θ => dissipFEEC_fullyDiscrete (G.heatCore hcr) Θ,
-    G.toApprox.norm_S_sub_leapfrog_le⟩
+    G.toApprox.norm_S_sub_leapfrog_le,
+    fun hτ h _ b ε hε hMε hKε v => G.toApprox.crankNicolson_signed hτ h b ε hε hMε hKε v⟩
 
 variable {ρ : Type*}
 

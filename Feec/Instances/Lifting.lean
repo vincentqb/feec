@@ -44,7 +44,11 @@ What is **not** proved here: the identification of the compression `A₀` of `fe
 iterates of the crown's `DissipFEEC.crankNicolson`, so the `fem4gr` iterates and `lifted` are not
 yet the same statement; a consistency bound for the loads `bₙ`, which would give a forced rate; and
 the link of the three-field step `TimeStepping.IsFullCNStep` (solved by MINRES after the signed
-symmetrization of `Feec.TimeStepping.BlockMatrix`) to the crown's schemes.
+symmetrization of `Feec.TimeStepping.BlockMatrix`) to the crown's schemes; the crown's own
+Crank–Nicolson iterates solve the signed system in every basis
+(`Feec.HilbertComplex.DissipFEEC.crankNicolson_signed_mulVec_iff`), Hermitian in bases with signs
+adapted to the parity grading (`Feec.HilbertComplex.SkewFEEC.crankNicolson_signed`, the crown's
+`ConstrainedFEEC.FullVerdict.crankNicolson_signed`), and no instance builds such a basis.
 
 ## References
 

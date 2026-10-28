@@ -46,12 +46,12 @@ on conforming windows the field adds the Strang, residual and defect estimates).
 scheme (6.5) of the thesis applies the crime theorem under both boundary conditions, with its rates
 (`Feec.Instances.EinsteinBianchiFEMCrown`).
 
-All but 9 of the 393 modules feed the crown: each is imported, transitively, by `Crown.lean` or
-by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 9
+All but 7 of the 393 modules feed the crown: each is imported, transitively, by `Crown.lean` or
+by a module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions). The 7
 are thesis corrections outside the crown's hypotheses
 (`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`,
 with `HilbertComplex.SecondOrder`) and
-`Algebra.Proxy3`, `TimeStepping.BlockMatrix`, `Variational.Fortin`, which no verdict uses.
+`Algebra.Proxy3`, which no verdict uses.
 
 ## The approximating FEEC theorem
 

@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.SkewFEEC
+public import Feec.TimeStepping.BlockMatrix
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Trajectory
 public import Feec.TimeStepping.Forced
@@ -85,7 +86,12 @@ consistent of order `1` with `K = θ + 1/2` and Crank–Nicolson of order `2` wi
 `K = 1/12`. **Discrete constraint propagation**:
 `thetaScheme_pow_mem`, `crankNicolson_pow_mem`: a closed subspace `Kₕ ⊆ Xₕ` with `Lₕ Kₕ ⊆ Kₕ` is
 kept by every iterate. **Energy conservation**: for a skew FEEC discretization,
-`SkewFEEC.norm_crankNicolson_pow_apply`: `‖Pₕⁿ v‖ = ‖v‖`. **Explicit leapfrog** (a two-step scheme,
+`SkewFEEC.norm_crankNicolson_pow_apply`: `‖Pₕⁿ v‖ = ‖v‖`. **The linear systems of
+Crank–Nicolson**: in a basis of `Xₕ`, the iterate `Pₕ v` is the unique solution of the signed
+system `diag(ε) (M + (τₕ/2) K) w = diag(ε) (M - (τₕ/2) K) c(v)` (Gram matrix `M`, stiffness `K`
+of `Lₕ`; `DissipFEEC.crankNicolson_signed_mulVec_iff`), Hermitian for a skew discretization and
+signs adapted to the basis, so MINRES solves it (`SkewFEEC.crankNicolson_signed`,
+`Feec.TimeStepping.BlockMatrix`). **Explicit leapfrog** (a two-step scheme,
 outside `TimeScheme`): `SkewFEEC.norm_S_sub_leapfrog_le` (any first step `u₁`) and
 `SkewFEEC.norm_S_sub_leapfrog_euler_le` (`u₁ = v + τ Lₕ v`): under the CFL condition
 `τ ‖Lₕ‖ ≤ c < 1` the error is the semidiscrete rate plus a second-order temporal error.
@@ -103,6 +109,8 @@ outside `TimeScheme`): `SkewFEEC.norm_S_sub_leapfrog_le` (any first step `u₁`)
   (leapfrog: discrete energy and CFL stability)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 7 (Crank–Nicolson for the Einstein–Bianchi system)
+* [C. C. Paige, M. A. Saunders, *Solution of sparse indefinite systems of linear equations*][PaigeSaunders1975]
+  (MINRES)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -875,6 +883,53 @@ theorem SkewFEEC.norm_crankNicolson_pow_apply [CompleteSpace E] {A : E →ₗ.[�
     ‖((F.crankNicolson τ hτ).P h ^ n) v‖ = ‖v‖ :=
   TimeStepping.norm_cayley_pow_apply
     ((F.L h).isSkewAdjoint_toPMap_top_iff.2 (C0Group.adjoint_eq_neg_of_skew (F.skew h))) _ n v
+
+open Matrix in
+/-- **The Crank–Nicolson iterate in a basis**: for a basis `b` of `Xₕ` (finite-dimensional), with
+Gram (mass) matrix `M`, the stiffness `K` of `Lₕ` (`TimeStepping.stiffness`, `M c' = -K c` for
+`ξₕ' = Lₕ ξₕ`) and signs `ε i = ±1`, the signed system
+`diag(ε) (M + (τₕ/2) K) w = diag(ε) (M - (τₕ/2) K) c(v)` has the coefficients of the iterate
+`Pₕ v` of `DissipFEEC.crankNicolson` as its unique solution. [QuennevilleBelair2015], Ch. 7 -/
+theorem DissipFEEC.crankNicolson_signed_mulVec_iff {A : E →ₗ.[𝕜] E} {κ : Type*}
+    (F : DissipFEEC.{u} A κ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : Type*} [Fintype n]
+    [DecidableEq n] (b : Module.Basis n 𝕜 (F.X h)) (ε : n → ℝ) (hε : ∀ i, ε i * ε i = 1)
+    (v : F.X h) (w : n → 𝕜) :
+    (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b +
+          ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (F.L h))) *ᵥ w =
+        (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b -
+          ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (F.L h))) *ᵥ b.equivFun v ↔
+      w = b.equivFun ((F.crankNicolson τ hτ).P h v) := by
+  have hA := (F.L h).isMDissipative_toPMap_top (F.dissipative h)
+  have hs : 0 < τ h / 2 := half_pos (hτ h)
+  have hP : TimeStepping.IsCNStep _ (τ h / 2) v ((F.crankNicolson τ hτ).P h v) :=
+    TimeStepping.isCNStep_cayley (hA.isResolvent_of_re_pos (by
+      rw [← RCLike.ofReal_inv, RCLike.ofReal_re]; positivity)) hs.ne' v
+  rw [TimeStepping.diagonal_mul_mulVec_iff_isCNStep b _ _ _ fun i => by exact_mod_cast hε i]
+  refine ⟨fun hw => ?_, fun hw => hw ▸ by simpa using hP⟩
+  rw [← hw.unique hA.dissipative hs.le hP, LinearEquiv.apply_symm_apply]
+
+open Matrix in
+/-- **MINRES for fully discrete Crank–Nicolson** of a skew FEEC discretization: for a basis `b`
+of `Xₕ` and signs `ε i = ±1` such that basis functions of different signs are orthogonal and
+`Lₕ` couples only basis functions of opposite signs (a basis adapted to the parity of the form
+degree, `Lₕ = dₕ - dₕ*`), the signed matrix `diag(ε) (M + (τₕ/2) K)` is Hermitian and the
+coefficients of the iterate `Pₕ v` are the unique solution of its system
+(`TimeStepping.isHermitian_signed_cn`, `DissipFEEC.crankNicolson_signed_mulVec_iff`).
+[QuennevilleBelair2015], Ch. 7; [PaigeSaunders1975] -/
+theorem SkewFEEC.crankNicolson_signed [CompleteSpace E] {A : E →ₗ.[𝕜] E} {κ : Type*}
+    (F : SkewFEEC.{u} A κ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : Type*} [Fintype n]
+    [DecidableEq n] (b : Module.Basis n 𝕜 (F.X h)) (ε : n → ℝ) (hε : ∀ i, ε i * ε i = 1)
+    (hMε : ∀ i j, ⟪b i, b j⟫_𝕜 ≠ 0 → ε i = ε j)
+    (hKε : ∀ i j, ⟪b i, F.L h (b j)⟫_𝕜 ≠ 0 → ε i = -ε j) (v : F.X h) :
+    (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b +
+        ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (F.L h))).IsHermitian ∧
+      ∀ w, (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b +
+          ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (F.L h))) *ᵥ w =
+        (Matrix.diagonal (fun i => (ε i : 𝕜)) * (Matrix.gram 𝕜 b -
+          ((τ h / 2 : ℝ) : 𝕜) • TimeStepping.stiffness b (F.L h))) *ᵥ b.equivFun v ↔
+      w = b.equivFun ((F.crankNicolson τ hτ).P h v) :=
+  ⟨TimeStepping.isHermitian_signed_cn b (F.skew h) ε hMε hKε _,
+    F.toDissipFEEC.crankNicolson_signed_mulVec_iff hτ h b ε hε v⟩
 
 /-- **Explicit leapfrog for a skew FEEC discretization, under the CFL condition**
 `τ ‖Lₕ‖ ≤ c < 1` (on finite element spaces `‖Lₕ‖ ≲ h⁻¹`, so `τ ≲ h`): with `u₀ = v` and any

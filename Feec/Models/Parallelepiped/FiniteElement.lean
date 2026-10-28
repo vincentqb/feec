@@ -330,8 +330,8 @@ def comapSub (S' : H'.Subcomplex) : H.Subcomplex where
     rw [← hI.comm i j ⟨x, _⟩ (S'.le_domain i j hx)]
     exact S'.mapsTo i j _ hx
 
-instance (S' : H'.Subcomplex) [∀ i, FiniteDimensional ℝ (S'.V i)] (i : ι) :
-    FiniteDimensional ℝ ((hI.comapSub S').V i) := by
+instance finiteDimensional_comapSub (S' : H'.Subcomplex) [∀ i, FiniteDimensional ℝ (S'.V i)]
+    (i : ι) : FiniteDimensional ℝ ((hI.comapSub S').V i) := by
   let f : (hI.comapSub S').V i →ₗ[ℝ] S'.V i :=
     { toFun := fun x => ⟨e i (x : W i), x.2⟩
       map_add' := fun x y => Subtype.ext (by simp)

@@ -271,15 +271,17 @@ subcomplexes, cochain projections, families of subcomplexes); `palomar/bgg/` is 
   best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/bgg/` (theorem FEEC.bggCohomology, about 250 lines): the algebraic BGG construction
-  of [ArnoldHu2021], §5.2 over any ring, for cochain complexes on ℤ of any length: for a stacked
+* `palomar/bgg/` (theorems FEEC.bggCohomology and FEEC.bggFinrank, about 280 lines): the
+  algebraic BGG construction of [ArnoldHu2021], §5.2 over any ring, for cochain complexes on ℤ of any length: for a stacked
   diagram `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and surjective for `i ≥ J`, the
   inclusion `Γ → T` into the twisted complex and the projection `Γ → Γ / Δ` onto the BGG complex
   are quasi-isomorphisms, `0 → V → T → Ṽ → 0` is short exact and the BGG complex is exact when
-  both rows are; from `Feec.BGG.Data.quasiIso_Γ` and `Feec.BGG.Data.quasiIso_derived`.
+  both rows are; over a field, the dimension bound of Theorem 6,
+  `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`; from `Feec.BGG.Data.quasiIso_Γ` and
+  `Feec.BGG.Data.quasiIso_derived`.
 
 The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
-that `Solution/Defs.lean` is the challenge without its compared theorem
+that `Solution/Defs.lean` is the challenge without its compared theorems
 (`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
 The comparator compares every constant the statement uses, proofs included, so proofs in a
 challenge must not create private auxiliary lemmas (named after their module, hence different in

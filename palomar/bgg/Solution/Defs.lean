@@ -5,14 +5,15 @@ public import Mathlib.Algebra.Homology.HomologicalComplexAbelian
 public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Homology.QuasiIso
+public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 
 /-!
 # The definitions of the challenge
 
-A verbatim copy of the definitions of `Challenge.lean` (everything but the theorem
-`FEEC.bggCohomology`), compiled against Mathlib alone so that their elaborated values are those
-of the challenge. The solution imports this module, the bridge to `Feec` and proves
-`FEEC.bggCohomology` (`Solution.lean`).
+A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
+`FEEC.bggCohomology` and `FEEC.bggFinrank`), compiled against Mathlib alone so that their
+elaborated values are those of the challenge. The solution imports this module, the bridge to
+`Feec` and proves both theorems (`Solution.lean`).
 
 ## References
 
@@ -200,7 +201,10 @@ def bggΓι (J : ℤ) : bggΓ S J ⟶ twisted S := subcomplexι _ _ _
 /-- The projection `Γ → Γ / Δ`. -/
 def bggπ (J : ℤ) : bggΓ S J ⟶ bgg S J := quotientπ _ _ _
 
-/-- **The BGG verdict at `J`.** -/
+/-- **The BGG verdict at `J`.** Its content, under the hypotheses of `FEEC.bggCohomology`, is
+the two quasi-isomorphisms `quasiIso_ι` and `quasiIso_π`; `homology` follows from them,
+`shortExact` holds for every `S` and `J`, and `acyclic` follows from `shortExact` and
+`homology`. They are stated for the reader. -/
 structure Verdict (J : ℤ) : Prop where
   /-- the inclusion `Γ → T` is a quasi-isomorphism -/
   quasiIso_ι : QuasiIso (bggΓι S J)

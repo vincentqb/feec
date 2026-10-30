@@ -13,7 +13,8 @@ complex is that of `Feec` (`BGG.twistComplex_toData`, by definition), the subcom
 BGG complex of `Feec` (`BGG.Γ_toData`, `BGG.Δ_toData`), and the injectivity/surjectivity
 hypothesis is `Feec.BGG.Data.InjSurj J` (`BGG.injSurj_toData`). The quasi-isomorphisms of
 `Feec.BGG.Data.quasiIso_Γ` and `Feec.BGG.Data.quasiIso_derived` give the verdict
-(`BGG.verdict`).
+(`BGG.verdict`); with the long exact sequence of the rows, the dimension bound over a field
+(`BGG.finiteDimensional_and_finrank_le`).
 
 ## References
 
@@ -109,5 +110,25 @@ theorem verdict {J : ℤ} (hinj : ∀ i < J, Function.Injective (S.f i))
   refine ⟨‹_›, ‹_›, hiso, rows_shortExact, fun hV hVt i => ?_⟩
   rw [HomologicalComplex.exactAt_iff_isZero_homology]
   exact ((rows_shortExact.acyclic_X₂ hV hVt) i).isZero_homology.of_iso (hiso i).some
+
+/-- **The dimension bound**: `Hⁱ(Γ / Δ) ≅ Hⁱ(T)` and `0 → V → T → Ṽ → 0`
+(`Feec`'s `CategoryTheory.ShortComplex.ShortExact.finrank_homology₂_le`). -/
+theorem finiteDimensional_and_finrank_le {K : Type u} [Field K]
+    {V Vt : CochainComplex (ModuleCat.{v} K) ℤ} {S : Vt ⟶ V⟦(1 : ℤ)⟧} {J : ℤ}
+    (hinj : ∀ i < J, Function.Injective (S.f i))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (S.f i)) (i : ℤ)
+    [FiniteDimensional K (V.homology i)] [FiniteDimensional K (Vt.homology i)] :
+    FiniteDimensional K ((bgg S J).homology i) ∧
+      Module.finrank K ((bgg S J).homology i) ≤
+        Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) := by
+  have hv := verdict hinj hsurj
+  obtain ⟨e⟩ := hv.homology i
+  have : FiniteDimensional K ((rows S).X₁.homology i) := ‹FiniteDimensional K (V.homology i)›
+  have : FiniteDimensional K ((rows S).X₃.homology i) := ‹FiniteDimensional K (Vt.homology i)›
+  have : FiniteDimensional K ((twisted S).homology i) :=
+    hv.shortExact.finiteDimensional_homology₂ i
+  refine ⟨e.toLinearEquiv.symm.finiteDimensional, ?_⟩
+  rw [e.toLinearEquiv.finrank_eq]
+  exact hv.shortExact.finrank_homology₂_le i
 
 end FEEC.BGG

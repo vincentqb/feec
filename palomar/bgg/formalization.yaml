@@ -6,7 +6,7 @@
 version: "v0.4"
 
 project:
-  name: "The algebraic BGG construction: the derived complex of a stacked diagram has the cohomology of the twisted complex"
+  name: "The algebraic BGG construction: the derived complex of a stacked diagram has the cohomology of the twisted complex, and its dimension bound"
   description: >-
     A Lean 4 formalization of the algebraic core of the Bernstein-Gelfand-Gelfand construction of
     Arnold and Hu (2021): two cochain complexes of modules (V, d) and (V~, d~) over any ring, on Z
@@ -19,8 +19,11 @@ project:
     Gamma -> Gamma / Delta are quasi-isomorphisms, so the BGG complex has the cohomology of the
     twisted complex in every degree; T is an extension 0 -> V -> T -> V~ -> 0 (whose long exact
     sequence relates its cohomology to the rows); and the BGG complex is exact when both rows are.
+    The second compared theorem FEEC.bggFinrank is the dimension bound of Arnold-Hu Theorem 6:
+    over a field, if both rows have finite-dimensional cohomology in degree i, so does the BGG
+    complex, with dim H^i(BGG) <= dim H^i(V) + dim H^i(V~).
     The statement is self-contained over Mathlib (ModuleCat, CochainComplex, QuasiIso,
-    ShortComplex.ShortExact); the proof is the library Feec of this repository
+    ShortComplex.ShortExact, Module.finrank); the proof is the library Feec of this repository
     (Feec.BGG.Data.quasiIso_Γ and Feec.BGG.Data.quasiIso_derived, in
     Feec/HilbertComplex/BGG/Derived.lean).
   authors:
@@ -41,13 +44,16 @@ sources:
       - "Kaibo Hu"
     id: "doi:10.1007/s10208-021-09498-9"
     type: "article"
-    location: "Found. Comput. Math. 21 (2021), §3 ((19)-(26), Theorem 6) and §5 ((58)-(59) the twisted complex, §5.2 splitting off an exact subcomplex)"
+    location: "Found. Comput. Math. 21 (2021), §3 ((19)-(26), Theorem 6) and §5 ((58)-(59) the twisted complex, §5.2 splitting off an exact subcomplex); locators checked against the arXiv preprint, not against the published version"
     relationship: "formalizes"
     note: >-
       §5 proves Theorem 6 in two steps: the twisted complex (§5.1) and its splitting into the
       output complex and an exact subcomplex (§5.2), so that the cohomology of the output complex
       is isomorphic to that of the twisted complex. The challenge states this second step, in
-      the algebraic setting, as a zigzag of quasi-isomorphisms.
+      the algebraic setting, as a zigzag of quasi-isomorphisms (FEEC.bggCohomology), and the
+      dimension bound of Theorem 6 that follows from it with the long exact sequence of the rows
+      (FEEC.bggFinrank). The equation and section numbers were checked against the arXiv
+      preprint; their agreement with the published article is not verified.
     author_endorsement: "not-contacted"
   - title: "Bernstein-Gelfand-Gelfand sequences"
     authors:
@@ -88,12 +94,17 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: FEEC.bggCohomology (Challenge.lean) for every ring R, every pair of
-    Z-indexed cochain complexes of R-modules, every morphism S : V~ -> V[1] and every index J.
+    Z-indexed cochain complexes of R-modules, every morphism S : V~ -> V[1] and every index J;
+    FEEC.bggFinrank, the same over a field, for every degree i where both rows have
+    finite-dimensional cohomology. Feec proves the cohomology isomorphism under a weaker
+    hypothesis than the compared one (Feec.BGG.Data.eliminates_bgg): S^i injective for i < J and
+    R(d^(j-1)) + R(S^(j-1)) = V^j for j > J (onto modulo d, a regular decomposition) instead of
+    S^i surjective for i >= J; this is the form that applies to Sobolev rows, where the
+    connecting maps of Arnold-Hu need not be onto. The challenge states the surjective form.
     Not compared (proved in Feec, outside the statement): the general elimination theorem on any
     complex shape with arbitrary eliminated index sets (Feec.BGG.Data.derivedHomologyIso), the
     identification of the spaces of the BGG complex with Arnold-Hu (24)-(25)
-    (Feec.BGG.Data.bggXEquivOfLt, bggXEquivOfBijective, bggΓEquivKer), the bound
-    dim H^i(BGG) <= dim H^i(V) + dim H^i(V~) over a field, the Hilbert-complex version with
+    (Feec.BGG.Data.bggXEquivOfLt, bggXEquivOfBijective, bggΓEquivKer), the Hilbert-complex version with
     closed ranges (Feec.HilbertComplex.BGG.Analytic), non-vacuity instances (connecting maps the
     identity, Feec.BGG.Data.injSurj_idShift; the Hessian diagram on smooth fields,
     Feec.Domain.injSurj_hessianBGG). Not formalized: the equality criterion (27) and the
@@ -134,7 +145,8 @@ automation:
     written for this submission by an AI agent and are to be reviewed by the author; the Solution
     translates them to the library Feec (Solution/Bridge.lean: the stacked diagram as
     Feec.BGG.Data, whose twisted complex is the challenge's by definition) and applies
-    Feec.BGG.Data.quasiIso_Γ and Feec.BGG.Data.quasiIso_derived.
+    Feec.BGG.Data.quasiIso_Γ and Feec.BGG.Data.quasiIso_derived, then, for the dimension bound,
+    Feec's CategoryTheory.ShortComplex.ShortExact.finrank_homology₂_le.
 
 fidelity:
   divergences: >-
@@ -152,8 +164,11 @@ fidelity:
     s^i injective for 0 <= i <= J (so s^J bijective): here S^i is injective only for i < J.
     (4) The conclusion is the cohomology isomorphism with the twisted complex (the second step of
     the proof of Theorem 6, §5.2), stated as two quasi-isomorphisms and as Nonempty isomorphisms
-    of the homology modules, plus the short exact sequence of rows; the dimension bound and the
-    equality criterion (27) of Theorem 6 and the explicit isomorphism of Theorem 7 are not stated.
+    of the homology modules, plus the short exact sequence of rows, and the dimension bound of
+    Theorem 6 over a field (FEEC.bggFinrank); the equality criterion (27) of Theorem 6 and the
+    explicit isomorphism of Theorem 7 are not stated. Of the five fields of FEEC.BGG.Verdict,
+    only quasiIso_ι and quasiIso_π carry content: homology follows from them, shortExact holds
+    for every S and J, and acyclic follows from shortExact and homology.
     (5) The anticommutation d S = -S d~ is encoded as a morphism of cochain complexes
     V~ -> V[1], with Mathlib's sign convention for the shift (differential -d on V[1]).
     (6) The name BGG follows Arnold-Hu; the representation-theoretic BGG resolution
@@ -175,11 +190,16 @@ alignment:
       lean: "FEEC.BGG.Verdict"
       module: "Challenge"
       status: "proved"
-      note: "Fields quasiIso_ι, quasiIso_π, homology, shortExact, acyclic."
+      note: "Fields quasiIso_ι, quasiIso_π (the content), homology, shortExact, acyclic (consequences, for the reader)."
     - source: "[ArnoldHu2021], §3 and §5"
       lean: "FEEC.bggCohomology"
       module: "Challenge"
       status: "proved"
       note: "The compared theorem; proved in Solution.lean through FEEC.BGG.verdict (Solution/Bridge.lean)."
+    - source: "[ArnoldHu2021], Theorem 6 (dim H^i of the output complex <= dim H^i(V) + dim H^i(V~))"
+      lean: "FEEC.bggFinrank"
+      module: "Challenge"
+      status: "proved"
+      note: "The second compared theorem; proved in Solution.lean through FEEC.BGG.finiteDimensional_and_finrank_le (Solution/Bridge.lean)."
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

@@ -5,6 +5,7 @@ public import Mathlib.Algebra.Homology.HomologicalComplexAbelian
 public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Homology.QuasiIso
+public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 
 /-!
 # The algebraic Bernstein–Gelfand–Gelfand construction
@@ -33,7 +34,9 @@ The theorem (`FEEC.bggCohomology`): if `Sⁱ` is injective for `i < J` and surje
 projection `Γ → Γ / Δ` are quasi-isomorphisms, so **the BGG complex has the cohomology of the
 twisted complex** in every degree ([ArnoldHu2021], §5.2); the twisted complex is an extension of
 `Ṽ` by `V`, whose long exact sequence in cohomology relates it to the rows; and the BGG complex
-is exact when both rows are. Complexes of any length are included (rows vanishing outside a
+is exact when both rows are. Over a field (`FEEC.bggFinrank`), the BGG complex has
+finite-dimensional cohomology where both rows do, with `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`
+([ArnoldHu2021], Theorem 6). Complexes of any length are included (rows vanishing outside a
 window).
 
 ## References
@@ -230,7 +233,10 @@ def bggΓι (J : ℤ) : bggΓ S J ⟶ twisted S := subcomplexι _ _ _
 /-- The projection `Γ → Γ / Δ`. -/
 def bggπ (J : ℤ) : bggΓ S J ⟶ bgg S J := quotientπ _ _ _
 
-/-- **The BGG verdict at `J`.** -/
+/-- **The BGG verdict at `J`.** Its content, under the hypotheses of `FEEC.bggCohomology`, is
+the two quasi-isomorphisms `quasiIso_ι` and `quasiIso_π`; `homology` follows from them,
+`shortExact` holds for every `S` and `J`, and `acyclic` follows from `shortExact` and
+`homology`. They are stated for the reader. -/
 structure Verdict (J : ℤ) : Prop where
   /-- the inclusion `Γ → T` is a quasi-isomorphism -/
   quasiIso_ι : QuasiIso (bggΓι S J)
@@ -254,6 +260,18 @@ cochain complexes of modules over any ring, with `Sⁱ` injective for `i < J` an
 theorem bggCohomology {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
     (hsurj : ∀ i, J ≤ i → Function.Surjective (S.f i)) : BGG.Verdict S J := by
+  sorry
+
+/-- **The dimension bound of the BGG complex** ([ArnoldHu2021], Theorem 6). Over a field, under
+the hypotheses of `FEEC.bggCohomology`, if both rows have finite-dimensional cohomology in
+degree `i`, so does the BGG complex, and `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
+theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} K) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (S.f i)) (i : ℤ)
+    [FiniteDimensional K (V.homology i)] [FiniteDimensional K (Vt.homology i)] :
+    FiniteDimensional K ((BGG.bgg S J).homology i) ∧
+      Module.finrank K ((BGG.bgg S J).homology i) ≤
+        Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) := by
   sorry
 
 end FEEC

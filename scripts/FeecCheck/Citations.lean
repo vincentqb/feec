@@ -133,8 +133,10 @@ def run : IO Report := do
     .group 2 (plus (noneOf ['*'])), lit "*][", .group 3 key, chr ']']
   let files := #[("Feec.lean" : System.FilePath)] ++ (← leanFiles "Feec") ++
     #[("palomar/static/Challenge.lean" : System.FilePath), "palomar/static/Solution.lean",
-      "palomar/dynamic/Challenge.lean", "palomar/dynamic/Solution.lean"] ++
-    (← leanFiles "palomar/static/Solution") ++ (← leanFiles "palomar/dynamic/Solution")
+      "palomar/dynamic/Challenge.lean", "palomar/dynamic/Solution.lean",
+      "palomar/vonneumann/Challenge.lean", "palomar/vonneumann/Solution.lean"] ++
+    (← leanFiles "palomar/static/Solution") ++ (← leanFiles "palomar/dynamic/Solution") ++
+    (← leanFiles "palomar/vonneumann/Solution")
   for f in files do
     let s := chars (← readText f)
     for m in cite.findAll s do

@@ -240,6 +240,36 @@ theorem supNorm_nonneg : 0 ≤ r.supNorm := (norm_nonneg _).trans (r.norm_eval_l
 theorem isAStable_iff : r.IsAStable ↔ r.supNorm ≤ 1 :=
   ⟨fun h => ciSup_le h, fun h y => (r.norm_eval_le_supNorm y).trans h⟩
 
+/-! ### Rational functions bounded in the left half-plane -/
+
+/-- **A real rational function bounded on the negative real axis is bounded at infinity**:
+`deg p ≤ deg q` if `|p(t)/q(t)| ≤ C` for `t ≤ 0`. -/
+theorem _root_.Feec.TimeStepping.natDegree_le_of_abs_div_le {p q : ℝ[X]} (hq : q ≠ 0) {C : ℝ}
+    (hC : ∀ t : ℝ, t ≤ 0 → |p.eval t / q.eval t| ≤ C) : p.natDegree ≤ q.natDegree := by
+  by_contra h
+  have h' := abs_div_tendsto_atBot_atTop_of_degree_gt p q (degree_lt_degree (not_le.1 h)) hq
+  obtain ⟨t, ht, ht0⟩ := ((h'.eventually_gt_atTop C).and (Filter.eventually_le_atBot 0)).exists
+  exact (hC t ht0).not_gt ht
+
+/-- **The scheme `p/q` of a real rational function bounded in the closed left half-plane**: `q`
+has no zero and `|p/q| ≤ C` for `re z ≤ 0` (for `C = 1`, the A-stability of [HairerWanner1996],
+§IV.3); then `deg p ≤ deg q` (`natDegree_le_of_abs_div_le`). -/
+def ofHalfPlane (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {C : ℝ}
+    (hC : ∀ z : ℂ, z.re ≤ 0 → ‖aeval z p / aeval z q‖ ≤ C) : RationalScheme where
+  num := p
+  den := q
+  natDegree_num_le := by
+    refine natDegree_le_of_abs_div_le (C := C) (fun h => hq 0 le_rfl (by simp [h])) fun t ht => ?_
+    have := hC t (by simpa using ht)
+    rw [← Complex.coe_algebraMap, aeval_algebraMap_apply_eq_algebraMap_eval,
+      aeval_algebraMap_apply_eq_algebraMap_eval] at this
+    simpa [← Complex.ofReal_div, Complex.norm_real, abs_div] using this
+  aeval_den_ne_zero := hq
+
+theorem supNorm_ofHalfPlane_le {p q : ℝ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {C : ℝ}
+    (hC : ∀ z : ℂ, z.re ≤ 0 → ‖aeval z p / aeval z q‖ ≤ C) : (ofHalfPlane p q hq hC).supNorm ≤ C :=
+  ciSup_le fun y => hC _ (by simp)
+
 /-! ### The operators `r(τ A)` -/
 
 variable {𝕜 V : Type*} [RCLike 𝕜] [NormedAddCommGroup V] [InnerProductSpace 𝕜 V]

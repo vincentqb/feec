@@ -2898,7 +2898,8 @@ theorem spectral_old_einsteinBianchi_constrainedFEEC_summary :
       Instances.EinsteinBianchi.MirrorNonvacuous) ∧
     Instances.EinsteinBianchi.MirrorFEMVerdict ∧ Instances.EinsteinBianchi.StandardCubeVerdict :=
   have h := Instances.EinsteinBianchi.einsteinBianchi_constrainedFEEC_summary
-  ⟨h.1, spectral_old_einsteinBianchi_euclidean, h.2⟩
+  ⟨⟨h.1.1.toTorusVerdict, h.1⟩, spectral_old_einsteinBianchi_euclidean,
+    ⟨h.2.1.1.toMirrorVerdict, h.2.1⟩, h.2.2⟩
 
 end BandEB
 
@@ -3725,8 +3726,9 @@ theorem eb_old_summary :
     -- the scheme (6.5) as an approximating FEEC discretization
     MirrorFEMApproxVerdict ∧ StandardCubeApproxVerdict :=
   have h := einsteinBianchi_constrainedFEEC_summary
-  ⟨⟨h.1, band_old_einsteinBianchi_euclidean_band, h.2.1, mirrorFEMVerdict_of_approxFEEC,
-    h.2.2.2⟩, eb_old_mirrorFEMApproxVerdict, eb_old_standardCubeApproxVerdict⟩
+  ⟨⟨⟨h.1.1.toTorusVerdict, h.1⟩, band_old_einsteinBianchi_euclidean_band,
+    ⟨h.2.1.1.toMirrorVerdict, h.2.1⟩, mirrorFEMVerdict_of_approxFEEC, h.2.2.2⟩,
+    eb_old_mirrorFEMApproxVerdict, eb_old_standardCubeApproxVerdict⟩
 
 end EinsteinBianchiOld
 

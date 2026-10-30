@@ -9,6 +9,7 @@ public import FeecCheck.SlipStokes
 public import FeecCheck.Bridges
 public import FeecCheck.LinAlg
 public import FeecCheck.Proxy3
+public import FeecCheck.InstanceVerdicts
 
 public section
 

@@ -7,3 +7,4 @@ import FeecCheck.SlipStokes
 import FeecCheck.Bridges
 import FeecCheck.LinAlg
 import FeecCheck.Proxy3
+import FeecCheck.RoughRates

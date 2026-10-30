@@ -1536,7 +1536,7 @@ omit [NeZero n] in
 /-- The old `Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high`. -/
 theorem poly_old_infDist_domainSub_le_sobGraph_high [NeZero n] {S : PolySeq}
     {p' : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p' C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
+    {p : ℕ} (_hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
     (hS0 : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
     (hS1 : ∀ k : ℕ, (k : ℤ) = j + 1 → polySpace n p k ≤ S.space n k)
     {σ : (complex n).domainSpace j} (hσ : SobGraph n s L σ) :
@@ -1544,8 +1544,8 @@ theorem poly_old_infDist_domainSub_le_sobGraph_high [NeZero n] {S : PolySeq}
       (1 + 2 * C) * (sobConstHighZ n S p j + sobConstHighZ n S p (j + 1)) *
         meshSize N ^ min s (p + 1) * L := by
   refine (infDist_domainSub_le_proj (hE.proj N) hE.two_mul_nonneg (hE.norm_proj_le N) j σ).trans ?_
-  have h1 := infDist_poly_le_sobAt_high S hns hs0 N hS0 hσ.1
-  have h2 := infDist_poly_le_sobAt_high S hns hs0 N hS1 hσ.2
+  have h1 := infDist_poly_le_sobAt_high S hs0 N hS0 hσ.1
+  have h2 := infDist_poly_le_sobAt_high S hs0 N hS1 hσ.2
   have := hE.two_mul_nonneg
   calc (1 + 2 * C) * (Metric.infDist ((complex n).domainIncl j σ) ((poly n S N).V j) +
         Metric.infDist ((complex n).d j (j + 1) ((complex n).domainCoord j (j + 1) σ))

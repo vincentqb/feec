@@ -43,8 +43,8 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
   scheme is `Feec.Instances.FullyDiscrete.maxwell_cubePMC_crankNicolson`) and for the Hodge heat equation (`heat_fullyDiscrete`; on the
   cube with a nonzero datum, `Cube.FEM.heat_crankNicolson`), read from the field `full` of the
   FEEC theorem;
-* **Sobolev data at the optimal order** (`Cube.FEM.feec_sobolev`): on the cube, for every admissible
-  sequence `S` reproducing `P_p` with `2 (p + 1) > n`, the rated FEEC theorem at the Jackson
+* **Sobolev data at the optimal order** (`Cube.FEM.feec_sobolev`): on the cube, in every dimension,
+  for every admissible sequence `S` reproducing `P_p`, the rated FEEC theorem at the Jackson
   estimate of `Hˢ(Q)` data (`Feec.Models.Cube.FEM.sobolevHighJackson`, `s ≥ 0`, order
   `h^{min(s, p + 1)}`): the mixed method, the semidiscrete wave and heat equations on every window
   and the fully discrete schemes converge at that order for Sobolev data ([Arnold2018], Ch. 7);
@@ -282,14 +282,14 @@ theorem magnetostatic (S : PolySeq) :
     (polyFamilyMin 3 S).feec.static closedRangeAt_min 2⟩
 
 /-- **The FEEC theorem for Sobolev data on the cube at the optimal order** `h^{min(s, p + 1)}`:
-for every admissible sequence `S` reproducing `P_p` in the degrees of the problem, `2 (p + 1) > n`,
-the rated verdict (`ConformingFamily.feec_rated`) at the Jackson estimate of `Hˢ(Q)` data
+for every admissible sequence `S` reproducing `P_p` in the degrees of the problem, in every
+dimension, the rated verdict (`ConformingFamily.feec_rated`) at the Jackson estimate of `Hˢ(Q)` data
 (`sobolevHighJackson`, every real `s ≥ 0`): rates `O(L h^{min(s, p + 1)})` of the mixed method, of
 the semidiscrete wave and heat equations on every window and of the fully discrete schemes for
 data with `Hˢ(Q)` components bounded by `L`. [AFW2010], Thm 3.9; [QuennevilleBelair2015],
 Thm 4.14; [Arnold2018], Ch. 7 -/
-theorem feec_sobolev (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1)) :
-    ConformingFamily.Verdict.Rated (polyFamily n S) (sobolevHighJackson n S hns) :=
+theorem feec_sobolev (S : PolySeq) (p : ℕ) :
+    ConformingFamily.Verdict.Rated (polyFamily n S) (sobolevHighJackson n S p) :=
   (polyFamily n S).feec_rated _
 
 end Cube.FEM

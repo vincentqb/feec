@@ -131,7 +131,7 @@ theorem polyForm_zero_le_cubeFormMinus (r : ℕ) :
 
 /-- **The algebra of the periodic table**, from `Feec.Algebra.PolynomialFormDim` and
 `Feec.Algebra.CubicalForm`. -/
-theorem periodicTable_of_feec (K : Type*) [Field K] [CharZero K] (n : ℕ) :
+theorem periodicTable_of_feec (K : Type*) [Field K] (n : ℕ) :
     PeriodicTable K n where
   finrank_polyForm r k := by
     rw [polyForm_eq_feec, Feec.Koszul.finrank_polyForm, Fintype.card_fin]
@@ -163,9 +163,12 @@ theorem periodicTable_of_feec (K : Type*) [Field K] [CharZero K] (n : ℕ) :
     rw [cubeFormMinus_eq_feec]
     exact ker_inf_eq_const (Feec.Koszul.cubeFormMinus_le_polyForm _ 0)
       (polyForm_zero_le_cubeFormMinus r)
-  disjoint_koszul r k := by
-    rw [polyForm_eq_feec, homForm_eq_feec, koszul_eq]
-    exact Feec.Koszul.disjoint_polyForm_map_koszul r k
+  homotopy r k ω hω := by
+    rw [homForm_eq_feec] at hω
+    simpa [extDeriv_eq, koszul_eq] using Feec.Koszul.extDeriv_koszul_add_koszul_extDeriv_of_mem hω
+  homForm_zero_eq r := by
+    rw [homForm_eq_feec, homForm_eq_feec, koszul_eq]
+    exact Feec.Koszul.map_koszul_homForm_one r
   polyForm_eq r k hr := by
     rw [polyFormMinus_eq_feec, homForm_eq_feec, polyForm_eq_feec, extDeriv_eq]
     exact ⟨Feec.Koszul.polyFormMinus_sup_map_extDeriv hr k,

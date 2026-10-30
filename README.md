@@ -271,15 +271,15 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes).
   best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/periodic/` (theorem FEEC.periodicTable, about 150 lines): the algebra of the periodic
-  table over every field of characteristic `0` in every dimension: the dimensions of `P_rΛᵏ`,
-  `P_r⁻Λᵏ` and `Q_r⁻Λᵏ`, exactness of their polynomial de Rham complexes (constants in degree
-  `0`) and the Koszul decompositions ([AFW2006], §3; [ArnoldBoffiBonizzoni2015], §3); from
+* `palomar/periodic/` (theorem FEEC.periodicTable, about 160 lines): the algebra of the periodic
+  table in every dimension: the dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_r⁻Λᵏ` and, in
+  characteristic `0`, exactness of their polynomial de Rham complexes (constants in degree `0`),
+  the homotopy formula and the Koszul decompositions ([AFW2006], §3; [ArnoldBoffiBonizzoni2015], §3); from
   `Feec.Algebra.PolynomialFormDim` and `Feec.Algebra.CubicalForm`. Its challenge has its own
   vocabulary (polynomial forms over `MvPolynomial`), not the Hilbert complexes above.
 
-The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in both
-that `Solution/Defs.lean` is the challenge without its compared theorem
+The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
+package that `Solution/Defs.lean` is the challenge without its compared theorem
 (`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
 Before a submission, judge each with the comparator (several minutes):
 

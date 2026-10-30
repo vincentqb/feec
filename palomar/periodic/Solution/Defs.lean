@@ -77,45 +77,50 @@ def cubeFormMinus (r k : ℕ) : Submodule K (PolyForm K n) :=
   kForm K n k fun s => restrictSupport K {α | ∀ j, α j + (if j ∈ s then 1 else 0) ≤ r}
 
 /-- **The algebra of the periodic table** over `K` in dimension `n`: dimensions, exactness of the
-polynomial de Rham complexes and the Koszul decompositions. -/
+polynomial de Rham complexes, the homotopy formula and the Koszul decompositions. -/
 structure PeriodicTable : Prop where
   /-- `dim P_rΛᵏ = C(r + n, r + k) C(r + k, k)` -/
   finrank_polyForm (r k : ℕ) :
     finrank K (polyForm K n r k) = (r + n).choose (r + k) * (r + k).choose k
   /-- `dim P_r⁻Λᵏ = C(r + n, r + k) C(r + k - 1, k)` -/
-  finrank_polyFormMinus (r k : ℕ) (hr : 1 ≤ r) :
+  finrank_polyFormMinus [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
     finrank K (polyFormMinus K n r k) = (r + n).choose (r + k) * (r + k - 1).choose k
   /-- `dim Q_r⁻Λᵏ = C(n, k) rᵏ (r + 1)ⁿ⁻ᵏ` -/
   finrank_cubeFormMinus (r k : ℕ) :
     finrank K (cubeFormMinus K n r k) = n.choose k * r ^ k * (r + 1) ^ (n - k)
   /-- `P_{r+1}Λᵏ → P_rΛ^{k+1} → P_{r-1}Λ^{k+2}` is exact -/
-  exact_polyForm (r k : ℕ) :
+  exact_polyForm [CharZero K] (r k : ℕ) :
     ker (extDeriv K n) ⊓ polyForm K n r (k + 1) = (polyForm K n (r + 1) k).map (extDeriv K n)
   /-- `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` is exact -/
-  exact_polyFormMinus (r k : ℕ) (hr : 1 ≤ r) :
+  exact_polyFormMinus [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
     ker (extDeriv K n) ⊓ polyFormMinus K n r (k + 1) =
       (polyFormMinus K n r k).map (extDeriv K n)
   /-- `Q_r⁻Λᵏ → Q_r⁻Λ^{k+1} → Q_r⁻Λ^{k+2}` is exact -/
-  exact_cubeFormMinus (r k : ℕ) :
+  exact_cubeFormMinus [CharZero K] (r k : ℕ) :
     ker (extDeriv K n) ⊓ cubeFormMinus K n r (k + 1) =
       (cubeFormMinus K n r k).map (extDeriv K n)
   /-- the closed `0`-forms of `P_rΛ⁰` are the constants `P_0Λ⁰` -/
-  closed_polyForm (r : ℕ) : ker (extDeriv K n) ⊓ polyForm K n r 0 = polyForm K n 0 0
+  closed_polyForm [CharZero K] (r : ℕ) :
+    ker (extDeriv K n) ⊓ polyForm K n r 0 = polyForm K n 0 0
   /-- the closed `0`-forms of `P_r⁻Λ⁰` are the constants -/
-  closed_polyFormMinus (r : ℕ) (hr : 1 ≤ r) :
+  closed_polyFormMinus [CharZero K] (r : ℕ) (hr : 1 ≤ r) :
     ker (extDeriv K n) ⊓ polyFormMinus K n r 0 = polyForm K n 0 0
   /-- the closed `0`-forms of `Q_r⁻Λ⁰` are the constants -/
-  closed_cubeFormMinus (r : ℕ) : ker (extDeriv K n) ⊓ cubeFormMinus K n r 0 = polyForm K n 0 0
-  /-- `P_{r+1}⁻Λᵏ = P_rΛᵏ ⊕ κ H_rΛ^{k+1}`: the sum defining `P_{r+1}⁻Λᵏ` is direct -/
-  disjoint_koszul (r k : ℕ) :
-    Disjoint (polyForm K n r k) ((homForm K n r (k + 1)).map (koszul K n))
+  closed_cubeFormMinus [CharZero K] (r : ℕ) :
+    ker (extDeriv K n) ⊓ cubeFormMinus K n r 0 = polyForm K n 0 0
+  /-- the homotopy formula `(dκ + κd) ω = (r + k) ω` for `ω ∈ H_rΛᵏ` -/
+  homotopy (r k : ℕ) (ω : PolyForm K n) (hω : ω ∈ homForm K n r k) :
+    extDeriv K n (koszul K n ω) + koszul K n (extDeriv K n ω) = ((r + k : ℕ) : K) • ω
+  /-- `H_{r+1}Λ⁰ = κ H_rΛ¹` -/
+  homForm_zero_eq [CharZero K] (r : ℕ) :
+    (homForm K n r 1).map (koszul K n) = homForm K n (r + 1) 0
   /-- `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ` -/
-  polyForm_eq (r k : ℕ) (hr : 1 ≤ r) :
+  polyForm_eq [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
     polyFormMinus K n r (k + 1) ⊔ (homForm K n (r + 1) k).map (extDeriv K n) =
         polyForm K n r (k + 1) ∧
       Disjoint (polyFormMinus K n r (k + 1)) ((homForm K n (r + 1) k).map (extDeriv K n))
   /-- `H_{r+1}Λ^{k+1} = κ H_rΛ^{k+2} ⊕ d H_{r+2}Λᵏ` -/
-  homForm_eq (r k : ℕ) :
+  homForm_eq [CharZero K] (r k : ℕ) :
     (homForm K n r (k + 2)).map (koszul K n) ⊔ (homForm K n (r + 2) k).map (extDeriv K n) =
         homForm K n (r + 1) (k + 1) ∧
       Disjoint ((homForm K n r (k + 2)).map (koszul K n))

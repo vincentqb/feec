@@ -6,7 +6,8 @@ public import FeecCheck.Util
 # Palomar gate
 
 `lake exe feec-palomar` (also run by `lake exe feec-gate`). Checks the Palomar submission
-packages `palomar/static/`, `palomar/dynamic/` and `palomar/periodic/` (README, "Palomar submission"); in each:
+packages `palomar/static/`, `palomar/dynamic/` and `palomar/periodic/` (README, "Palomar
+submission"); in each:
 
 1. `Solution/Defs.lean` is the copy of the definitions of `Challenge.lean`: the same imports and,
    after the module docstring, the same text with the compared theorem (the first name of

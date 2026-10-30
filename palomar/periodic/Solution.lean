@@ -25,11 +25,11 @@ universe u
 namespace FEEC
 
 /-- **The algebra of the periodic table of the finite elements** ([AFW2006], §3;
-[ArnoldBoffiBonizzoni2015], §3). Over every field of characteristic `0`, in every dimension `n`,
-the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_r⁻Λᵏ` have the dimensions of the periodic table, their
-polynomial de Rham complexes are exact with the constants as cohomology in degree `0`, and the
-Koszul decompositions hold (`PeriodicTable`). -/
-theorem periodicTable (K : Type u) [Field K] [CharZero K] (n : ℕ) : PeriodicTable K n :=
+[ArnoldBoffiBonizzoni2015], §3). In every dimension `n`, the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and
+`Q_r⁻Λᵏ` have the dimensions of the periodic table and, in characteristic `0`, their polynomial de
+Rham complexes are exact with the constants as cohomology in degree `0`; the homotopy formula and
+the Koszul decompositions hold (`PeriodicTable`). -/
+theorem periodicTable (K : Type u) [Field K] (n : ℕ) : PeriodicTable K n :=
   periodicTable_of_feec K n
 
 end FEEC

@@ -10,20 +10,22 @@ project:
   description: >-
     A Lean 4 formalization of the polynomial algebra behind the periodic table of the finite
     elements (Arnold-Logg 2014): the spaces of polynomial differential forms on K^n used by the
-    simplicial families P_r Lambda^k and P_r^- Lambda^k (Arnold-Falk-Winther 2006, §3) and the
-    cubical family Q_r^- Lambda^k (Arnold-Boffi-Bonizzoni 2015, §3). Over every field K of
-    characteristic 0, in every dimension n, form degree k and polynomial degree r, the compared
-    theorem FEEC.periodicTable states: (1) dim P_r Lambda^k = C(r+n, r+k) C(r+k, k),
+    simplicial families P_r Lambda^k and P_r^- Lambda^k (Arnold-Falk-Winther 2006, §3; 2010,
+    §5.1) and the cubical family Q_r^- Lambda^k (Arnold-Boffi-Bonizzoni 2015, §3). Over every
+    field K (of characteristic 0 for the clauses marked [CharZero K]: all but the dimensions of
+    P_r Lambda^k and Q_r^- Lambda^k and the homotopy formula), in every dimension n, form degree k
+    and polynomial degree r, the compared theorem FEEC.periodicTable states:
+    (1) dim P_r Lambda^k = C(r+n, r+k) C(r+k, k),
     dim P_r^- Lambda^k = C(r+n, r+k) C(r+k-1, k) (r >= 1) and
     dim Q_r^- Lambda^k = C(n, k) r^k (r+1)^(n-k); (2) the three polynomial de Rham complexes
     P_r Lambda^0 -> P_(r-1) Lambda^1 -> ..., P_r^- Lambda^0 -> P_r^- Lambda^1 -> ... and
     Q_r^- Lambda^0 -> Q_r^- Lambda^1 -> ... are exact: in positive degree the closed forms are
     exactly the exterior derivatives of the previous space, in degree 0 they are the constants;
-    (3) the Koszul decompositions P_(r+1)^- Lambda^k = P_r Lambda^k (+) kappa H_r Lambda^(k+1),
-    P_r Lambda^(k+1) = P_r^- Lambda^(k+1) (+) d H_(r+1) Lambda^k and
-    H_(r+1) Lambda^(k+1) = kappa H_r Lambda^(k+2) (+) d H_(r+2) Lambda^k (direct sums of
-    subspaces), kappa the Koszul differential and H_r the forms with homogeneous coefficients of
-    degree r. The statement is self-contained over Mathlib (MvPolynomial, its submodules
+    (3) the homotopy formula (d kappa + kappa d) omega = (r + k) omega on H_r Lambda^k and the
+    Koszul decompositions H_(r+1) Lambda^0 = kappa H_r Lambda^1,
+    H_(r+1) Lambda^(k+1) = kappa H_r Lambda^(k+2) (+) d H_(r+2) Lambda^k and
+    P_r Lambda^(k+1) = P_r^- Lambda^(k+1) (+) d H_(r+1) Lambda^k (direct sums of subspaces),
+    kappa the Koszul differential and H_r the forms with homogeneous coefficients of degree r. The statement is self-contained over Mathlib (MvPolynomial, its submodules
     homogeneousSubmodule, restrictTotalDegree and restrictSupport, Submodule.pi, finrank); the
     proof is the library Feec of this repository (Feec.Algebra.PolynomialFormDim,
     Feec.Algebra.CubicalForm).
@@ -52,6 +54,20 @@ sources:
       The dimension formulas of P_r Lambda^k and P_r^- Lambda^k, the exactness of the polynomial
       de Rham complexes and the Koszul decompositions of §3. Theorem numbers were not checked
       against the published text; the statement cites §3 as a whole.
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §5.1 (polynomial differential forms and the Koszul complex)"
+    relationship: "formalizes"
+    note: >-
+      The same results as AFW2006 §3, with the homotopy formula and the Koszul decompositions
+      (§5.1.2-§5.1.4), which the library's docstrings cite. The subsection numbers come from those
+      docstrings and were not checked against the published text.
     author_endorsement: "not-contacted"
   - title: "Finite element differential forms on curvilinear cubic meshes and their approximation properties"
     authors:
@@ -88,11 +104,11 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: FEEC.periodicTable (Challenge.lean) for every field of
-    characteristic 0, every n, k and r (r >= 1 where P_r^- appears). Not compared (proved in
-    Feec, outside the statement): the dimension of P_r Lambda^k over every commutative field
-    without characteristic assumption, the homotopy formula d kappa + kappa d = (r + k) on
-    H_r Lambda^k, the strict inclusions P_(r-1) < P_r^- < P_r, the tensor-product
+    Formalized and compared: FEEC.periodicTable (Challenge.lean) for every field (of
+    characteristic 0 where marked), every n, k and r (r >= 1 where P_r^- appears). Not compared
+    (proved in Feec, outside the statement): the homotopy formula over every commutative ring,
+    the directness of P_(r+1)^- = P_r (+) kappa H_r (immediate from the grading), the strict
+    inclusions P_(r-1) < P_r^- < P_r, the tensor-product
     characterization of Q_b^- Lambda^k as a span of products of one-dimensional factors and its
     anisotropic multidegree version, the serendipity spaces S_r Lambda^k, and the finite element
     spaces on meshes (degrees of freedom, unisolvence, Whitney forms).
@@ -141,19 +157,24 @@ fidelity:
     (kappa omega)_s = sum_(j not in s) eps(j,s) x_j omega_(s u j), eps(j,s) = (-1)^#{l in s | l < j},
     rather than through Mathlib's exterior powers or Kahler differentials. A k-form is a form
     vanishing off #s = k; all spaces are subspaces of the space of all forms.
-    (2) The coefficients are in an arbitrary field of characteristic 0 (the sources work over R).
+    (2) The coefficients are in an arbitrary field, of characteristic 0 in every clause but the
+    dimensions of P_r Lambda^k and Q_r^- Lambda^k and the homotopy formula (the sources work
+    over R).
     (3) P_r^- Lambda^k is defined as P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1), the sources'
     definition, for r >= 1; at r = 0 the definition takes an unused junk value and the clauses
-    assume r >= 1. Since P_(r+1)^- = P_r + kappa H_r by definition, the content of the first
-    Koszul decomposition is that the sum is direct.
+    assume r >= 1. The decomposition P_(r+1)^- = P_r (+) kappa H_r is not stated: the sum is the
+    definition and its directness is immediate from the grading (kappa H_r consists of forms
+    with homogeneous coefficients of degree r + 1); its content enters through the dimension of
+    P_r^- and the homotopy formula.
     (4) Exactness is stated degree by degree as an identity of subspaces,
     ker d intersected with the space of (k+1)-forms = d(space of k-forms), and the degree-0
     cohomology as ker d intersected with the 0-forms = P_0 Lambda^0 (the constants); not as a
     HomologicalComplex in Mathlib's homological algebra.
-    (5) The decompositions are stated where both summands are generic: P_r Lambda^k = P_r^-
-    Lambda^k (+) d H_(r+1) Lambda^(k-1) for k >= 1, r >= 1 and H_r Lambda^k = kappa
-    H_(r-1) Lambda^(k+1) (+) d H_(r+1) Lambda^(k-1) for r, k >= 1; the degenerate cases
-    (k = 0 or r = 0) are not stated.
+    (5) The decompositions are stated as P_r Lambda^k = P_r^- Lambda^k (+) d H_(r+1)
+    Lambda^(k-1) for k >= 1, r >= 1, H_r Lambda^k = kappa H_(r-1) Lambda^(k+1) (+) d H_(r+1)
+    Lambda^(k-1) for r, k >= 1 and H_r Lambda^0 = kappa H_(r-1) Lambda^1 for r >= 1; the
+    degenerate cases with r = 0 (H_0 Lambda^k = d H_1 Lambda^(k-1), P_0 Lambda^k =
+    d H_1 Lambda^(k-1) for k >= 1) are not stated.
     (6) Q_r^- Lambda^k is defined by its coordinate description (omega_s a combination of
     monomials x^alpha with alpha_j <= r - 1 for j in s and alpha_j <= r otherwise), not as the
     tensor product of one-dimensional P_r^- spaces; the equivalence is proved in Feec but not
@@ -173,11 +194,11 @@ review:
 alignment:
   namespace: "FEEC"
   statements:
-    - source: "[AFW2006] §3; [ArnoldBoffiBonizzoni2015] §3"
+    - source: "[AFW2006] §3; [AFW2010] §5.1; [ArnoldBoffiBonizzoni2015] §3"
       lean: "FEEC.PeriodicTable"
       module: "Challenge"
       status: "proved"
-      note: "Fields finrank_polyForm, finrank_polyFormMinus, finrank_cubeFormMinus, exact_polyForm, exact_polyFormMinus, exact_cubeFormMinus, closed_polyForm, closed_polyFormMinus, closed_cubeFormMinus, disjoint_koszul, polyForm_eq, homForm_eq."
+      note: "Fields finrank_polyForm, finrank_polyFormMinus, finrank_cubeFormMinus, exact_polyForm, exact_polyFormMinus, exact_cubeFormMinus, closed_polyForm, closed_polyFormMinus, closed_cubeFormMinus, homotopy, homForm_zero_eq, polyForm_eq, homForm_eq."
     - source: "[AFW2006] §3; [ArnoldBoffiBonizzoni2015] §3"
       lean: "FEEC.periodicTable"
       module: "Challenge"

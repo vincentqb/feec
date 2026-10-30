@@ -19,6 +19,8 @@ being `b = fun _ => r`): the faces of the cube are then the directions with `b_j
 
 ## Main definitions
 
+* `Feec.Koszul.supportForm R d k S`: the span of the monomial `k`-forms `x^α dx_s`, `α ∈ S s`
+  (`finrank_supportForm`: its dimension is the number of these monomials);
 * `Feec.Koszul.cubeSupport b s`: the exponents `α` with `α_j + [j ∈ s] ≤ b_j`;
 * `Feec.Koszul.cubeFormMinus R b k`: `Q_b⁻Λᵏ`, the `k`-forms whose coefficient `ω_s` is supported
   on `cubeSupport b s`;
@@ -52,8 +54,8 @@ exactness proof is the classical Poincaré lemma by integration along one coordi
 the operators `hⱼ` and `Pⱼ` preserve the tensor-product degree bounds direction by direction, so
 it works for any multidegree `b`.
 
-The other cubical families, the serendipity forms `S_rΛᵏ` [ArnoldAwanou2014] and the trimmed
-serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019], are not formalized.
+The serendipity forms `S_rΛᵏ` [ArnoldAwanou2014] are in `Feec.Algebra.SerendipityForm`; the
+trimmed serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019] are not formalized.
 
 ## References
 
@@ -118,6 +120,82 @@ theorem sgn_mul_mem [LinearOrder d] {M : Submodule R (MvPolynomial d R)} (j : d)
   rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], ← smul_eq_C_mul]
   exact M.smul_mem _ hp
 
+/-! ### Monomial spaces of forms -/
+
+section Support
+
+variable (R d) in
+/-- The `k`-forms whose coefficients `ω_s` are supported on `S s`: the span of the monomial forms
+`x^α dx_s`, `#s = k`, `α ∈ S s`. -/
+def supportForm (k : ℕ) (S : Finset d → Set (d →₀ ℕ)) : Submodule R (PolyForm R d) where
+  carrier := {ω | IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (S s)}
+  zero_mem' := ⟨fun _ _ => rfl, fun _ => Submodule.zero_mem _⟩
+  add_mem' {ω η} hω hη := ⟨fun s hs => by simp [hω.1 s hs, hη.1 s hs],
+    fun s => Submodule.add_mem _ (hω.2 s) (hη.2 s)⟩
+  smul_mem' c ω hω := ⟨fun s hs => by simp [hω.1 s hs], fun s => Submodule.smul_mem _ c (hω.2 s)⟩
+
+theorem supportForm_mono {S T : Finset d → Set (d →₀ ℕ)} (h : ∀ s, S s ⊆ T s) (k : ℕ) :
+    supportForm R d k S ≤ supportForm R d k T :=
+  fun _ hω => ⟨hω.1, fun s => restrictSupport_mono R (h s) (hω.2 s)⟩
+
+/-- The monomial form `x^α dx_s` lies in `supportForm #s S` when `α ∈ S s`. -/
+theorem single_monomial_mem_supportForm [DecidableEq d] {S : Finset d → Set (d →₀ ℕ)}
+    {s : Finset d} {α : d →₀ ℕ} (hα : α ∈ S s) :
+    (Pi.single s (monomial α 1) : PolyForm R d) ∈ supportForm R d #s S := by
+  refine ⟨fun t ht => Pi.single_eq_of_ne (fun h => ht (by rw [h])) _, fun t => ?_⟩
+  by_cases ht : t = s
+  · subst ht; rw [Pi.single_eq_same]
+    exact (monomial_mem_restrictSupport R).2 (Or.inl hα)
+  · rw [Pi.single_eq_of_ne ht]; exact Submodule.zero_mem _
+
+/-- A form of `supportForm k S` is a combination of its monomial forms: a submodule containing
+them contains `supportForm k S`. -/
+theorem supportForm_le_of_single [DecidableEq d] [Fintype d] {k : ℕ}
+    {S : Finset d → Set (d →₀ ℕ)} {V : Submodule R (PolyForm R d)}
+    (h : ∀ s : Finset d, #s = k → ∀ α ∈ S s, (Pi.single s (monomial α 1) : PolyForm R d) ∈ V) :
+    supportForm R d k S ≤ V := fun ω hω => by
+  rw [← univ_sum_single ω]
+  refine Submodule.sum_mem _ fun s _ => ?_
+  by_cases hs : #s = k
+  · exact map_mem_of_mem_restrictSupport (LinearMap.single R (fun _ => MvPolynomial d R) s)
+      (fun α hα => h s hs α hα) (hω.2 s)
+  · rw [hω.1 s hs, Pi.single_zero]; exact Submodule.zero_mem _
+
+variable (R) in
+/-- A form of `supportForm k S` is the family of its coefficients on the `k`-subsets. -/
+def supportFormEquiv (k : ℕ) (S : Finset d → Set (d →₀ ℕ)) :
+    supportForm R d k S ≃ₗ[R] ((s : {s : Finset d // #s = k}) → restrictSupport R (S s.1)) where
+  toFun ω := fun s => ⟨ω.1 s.1, ω.2.2 s.1⟩
+  invFun c := ⟨fun s => if h : #s = k then (c ⟨s, h⟩ : MvPolynomial d R) else 0,
+    fun s hs => by simp [hs], fun s => by
+      by_cases h : #s = k
+      · simp only [h, ↓reduceDIte]; exact (c ⟨s, h⟩).2
+      · simp only [h, ↓reduceDIte]; exact Submodule.zero_mem _⟩
+  left_inv ω := by
+    refine Subtype.ext (funext fun s => ?_)
+    simp only
+    split_ifs with h
+    · rfl
+    · exact (ω.2.1 s h).symm
+  right_inv c := funext fun s => Subtype.ext (by simp [s.2])
+  map_add' ω η := rfl
+  map_smul' c ω := rfl
+
+/-- **The dimension of a monomial space** is the number of its monomial forms:
+`dim supportForm k S = Σ_{#s = k} #(S s)`. -/
+theorem finrank_supportForm {K : Type*} [Field K] [Fintype d] {k : ℕ}
+    {S : Finset d → Set (d →₀ ℕ)} (hS : ∀ s, (S s).Finite) :
+    Module.finrank K (supportForm K d k S) = ∑ s ∈ powersetCard k univ, Nat.card (S s) := by
+  have : ∀ s : {s : Finset d // #s = k}, Module.Finite K (restrictSupport K (S s.1)) :=
+    fun s => haveI := (hS s.1).to_subtype; Module.Finite.of_basis (basisRestrictSupport K _)
+  rw [(supportFormEquiv K k S).finrank_eq, Module.finrank_pi_fintype]
+  simp_rw [fun s : {s : Finset d // #s = k} =>
+    Module.finrank_eq_nat_card_basis (basisRestrictSupport K (S s.1))]
+  exact (Finset.sum_subtype (powersetCard k univ) (fun s => by simp [mem_powersetCard])
+    (fun s => Nat.card (S s))).symm
+
+end Support
+
 /-! ### The spaces -/
 
 section Spaces
@@ -142,12 +220,8 @@ variable (R) in
 /-- `Q_b⁻Λᵏ`: the `k`-forms whose coefficient `ω_s` has degree `≤ b_j - [j ∈ s]` in each
 variable `x_j`; for `b = fun _ => r` the trimmed tensor-product space `Q_r⁻Λᵏ` of the cube.
 [ArnoldBoffiBonizzoni2015], §3 -/
-def cubeFormMinus (b : d → ℕ) (k : ℕ) : Submodule R (PolyForm R d) where
-  carrier := {ω | IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (cubeSupport b s)}
-  zero_mem' := ⟨fun _ _ => rfl, fun _ => Submodule.zero_mem _⟩
-  add_mem' {ω η} hω hη := ⟨fun s hs => by simp [hω.1 s hs, hη.1 s hs],
-    fun s => Submodule.add_mem _ (hω.2 s) (hη.2 s)⟩
-  smul_mem' c ω hω := ⟨fun s hs => by simp [hω.1 s hs], fun s => Submodule.smul_mem _ c (hω.2 s)⟩
+def cubeFormMinus (b : d → ℕ) (k : ℕ) : Submodule R (PolyForm R d) :=
+  supportForm R d k (cubeSupport b)
 
 theorem mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d} :
     ω ∈ cubeFormMinus R b k ↔ IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (cubeSupport b s) :=
@@ -212,22 +286,8 @@ variable (R) in
 /-- A form of `Q_b⁻Λᵏ` is the family of its coefficients on the `k`-subsets. -/
 def cubeFormMinusEquiv (b : d → ℕ) (k : ℕ) :
     cubeFormMinus R b k ≃ₗ[R]
-      ((s : {s : Finset d // #s = k}) → restrictSupport R (cubeSupport b s.1)) where
-  toFun ω := fun s => ⟨ω.1 s.1, ω.2.2 s.1⟩
-  invFun c := ⟨fun s => if h : #s = k then (c ⟨s, h⟩ : MvPolynomial d R) else 0,
-    fun s hs => by simp [hs], fun s => by
-      by_cases h : #s = k
-      · simp only [h, ↓reduceDIte]; exact (c ⟨s, h⟩).2
-      · simp only [h, ↓reduceDIte]; exact Submodule.zero_mem _⟩
-  left_inv ω := by
-    refine Subtype.ext (funext fun s => ?_)
-    simp only
-    split_ifs with h
-    · rfl
-    · exact (ω.2.1 s h).symm
-  right_inv c := funext fun s => Subtype.ext (by simp [s.2])
-  map_add' ω η := rfl
-  map_smul' c ω := rfl
+      ((s : {s : Finset d // #s = k}) → restrictSupport R (cubeSupport b s.1)) :=
+  supportFormEquiv R k (cubeSupport b)
 
 variable {K : Type*} [Field K] [Fintype d]
 

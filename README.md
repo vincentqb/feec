@@ -272,16 +272,17 @@ challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.js
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
 * `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
-  VonNeumann.inequality_dissipative, about 80 lines, Mathlib vocabulary only): von Neumann's
-  inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every complex inner product space,
-  its rational form on Hilbert spaces, and `‖r(τA)‖ ≤ sup_{re z ≤ 0} |r(z)|` for real rational
-  `r` without poles in the closed left half-plane, bounded dissipative `A` over ℝ or ℂ and
-  `τ ≥ 0` (A-stable schemes are unconditionally stable); from
-  `ContinuousLinearMap.norm_aeval_mul_inverse_le` and
-  `Feec.TimeStepping.RationalScheme.ofHalfPlane`.
+  VonNeumann.inequality_dissipative, VonNeumann.cayley_contraction, about 100 lines, Mathlib
+  vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of
+  every complex inner product space, its rational form on Hilbert spaces,
+  `‖r(τA)‖ ≤ sup_y |r(iy)|` for real rational `r` without poles in the closed left half-plane,
+  bounded dissipative `A` over ℝ or ℂ and `τ ≥ 0` (A-stable schemes are unconditionally stable),
+  and the Cayley transform of an m-dissipative, possibly unbounded, `A` as the unique contraction
+  mapping `x - τAx` to `x + τAx`; from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
+  `Feec.TimeStepping.RationalScheme.ofBounded` and `Feec.TimeStepping.norm_cayley_le`.
 
 The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
-that `Solution/Defs.lean` is the challenge without its compared theorem
+that `Solution/Defs.lean` is the challenge without its compared theorems
 (`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
 Before a submission, judge each with the comparator (several minutes):
 

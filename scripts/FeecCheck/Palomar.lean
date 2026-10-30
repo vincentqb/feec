@@ -10,10 +10,10 @@ packages `palomar/*/` of `packages` (README, "Palomar submission"); in each:
 
 1. `Solution/Defs.lean` is the copy of the definitions of `Challenge.lean`: the same imports and,
    after the module docstring, the same text with the compared theorems (the names of
-   `theorem_names` in `comparator.json`, without their namespace; each with its docstring,
-   statement and proof, up to the next blank line) removed. The module docstring of `Defs.lean`
-   is its own. `lake exe feec-palomar --write` regenerates `Defs.lean` from the challenge,
-   keeping that docstring.
+   `theorem_names` in `comparator.json`, declared fully qualified or inside their namespaces;
+   each with its docstring, statement and proof, up to the next blank line) removed. The module
+   docstring of `Defs.lean` is its own. `lake exe feec-palomar --write` regenerates `Defs.lean`
+   from the challenge, keeping that docstring.
 2. `lake build` in the package succeeds (its bridge `Solution/Bridge.lean` still compiles against
    `Feec`), with no warning but the `sorry` of `Challenge.lean`.
 
@@ -35,22 +35,24 @@ def splitDoc (ls : Array String) : Option (Array String × Array String × Array
   let j ← (ls.extract i ls.size).findIdx? (· == "-/")
   return (ls.extract 0 i, ls.extract i (i + j + 1), ls.extract (i + j + 1) ls.size)
 
-/-- The text without the theorem `name`: from the docstring opening before `theorem name ` to the
-next blank line, inclusive. -/
+/-- The text without the theorem `name`: from the docstring opening before `theorem n ` to the
+next blank line, inclusive, where `n` is the longest dotted suffix of `name` (`A.B.c`, `B.c`,
+`c`) declared so, whatever the enclosing namespaces. -/
 def dropTheorem (name : String) (ls : Array String) : Option (Array String) := do
-  let t ← ls.findIdx? (·.startsWith s!"theorem {name} ")
+  let parts := name.splitOn "."
+  let t ← (List.range parts.length).findSome? fun k =>
+    ls.findIdx? (·.startsWith s!"theorem {".".intercalate (parts.drop k)} ")
   let d ← ((ls.extract 0 t).toList.reverse.findIdx? (·.startsWith "/--")).map (t - 1 - ·)
   let b := ((ls.extract t ls.size).findIdx? (· == "")).getD (ls.size - t)
   return ls.extract 0 d ++ ls.extract (t + b + 1) ls.size
 
-/-- The compared theorems: the entries of `theorem_names` in `comparator.json`, without their
-namespace (`FEEC.staticFEEC` is `staticFEEC`). -/
+/-- The compared theorems: the entries of `theorem_names` in `comparator.json`, fully qualified
+(`FEEC.staticFEEC`). -/
 def theoremNames (json : String) : Option (List String) :=
   match json.splitOn "\"theorem_names\": [" with
   | [_, rest] => do
     let names := ((rest.splitOn "]").headD "").splitOn "," |>.map fun n =>
-      let n := String.ofList (n.toList.filter fun c => c != '"' && !c.isWhitespace)
-      ".".intercalate (n.splitOn ".").tail
+      String.ofList (n.toList.filter fun c => c != '"' && !c.isWhitespace)
     if names.any (·.isEmpty) then none else some names
   | _ => none
 

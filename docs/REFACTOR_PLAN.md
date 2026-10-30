@@ -315,6 +315,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > to the parity grading in an instance; the three-block `IsFullCNStep` against `Lₕ`; the PEC side
 > of the proxies; a bridge from the wave-group orbits to `IsMixedWeak`.
 
+> **Status (2026-10-30): integration of four branches.** The Palomar package `palomar/` (one
+> compared theorem, `palomar/Challenge.lean`, gate check `Palomar`; LICENSE and a public
+> repository are the user's); the Einstein–Bianchi instance verdicts as structures (WP8,
+> `ConstrainedFEEC.Verdict.residual_rate`); Sobolev rates on the cube in every dimension, without
+> `2 r_eff > n` (`Feec.Models.Cube.FEM.norm_formL2_sub_glue_globalInterp_le_sum`); the serendipity
+> forms `S_rΛᵏ` (off the tree, above). Open: Sobolev rates off the cube (a quasi-interpolant), the
+> degrees of freedom and conforming family of `S_rΛᵏ`, the face identification (27).
+
 ## 0. Decisions
 
 Design 2 is the base: all three judges picked it. The grafts below come from Designs 0 and 1.

@@ -25,6 +25,8 @@ estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smoo
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate
 classes) and `O(hᵒʳᵈ + τ^{p/(p+2)})` uniformly in `h` for every Jackson datum and every one-step
 `TimeScheme` (smoothing by time averages; not leapfrog); `docs/crown.pdf` renders the module.
+For `Hˢ` data on the cube the rates `O(h^{min(s, r_eff)})` hold in every dimension and order
+(`Feec.Instances.Corollaries.Cube.FEM.feec_sobolev`; no condition `2 r_eff > n`).
 
 Closed range of `𝔅ᵏ` is necessary for the static clause at `j → k` (the uniform discrete
 Poincaré inequality forces it, `ConformingFamily.StaticVerdict.closedRangeAt`; the periodic
@@ -54,10 +56,10 @@ scheme (6.5) of the thesis applies the crime theorem under both boundary conditi
 (`Feec.Instances.EinsteinBianchiFEMCrown`).
 
 Every module but `Algebra.SerendipityForm` and `Algebra.SerendipityFormDim` (the serendipity
-forms `S_rΛᵏ` of the cube; no degrees of freedom or conforming family yet, so nothing for the crown
-to consume) is on the crown's tree: each is imported, transitively, by `Crown.lean` or by a module that applies it
-(`Feec.Instances`, the sharpness and non-vacuity companions), and is used there. The last ones
-tied: the scheme (6.5) and its rates (above),
+forms `S_rΛᵏ` of the cube; no degrees of freedom or conforming family yet, so nothing for the
+crown to consume) is on the crown's tree: each is imported, transitively, by `Crown.lean` or by a
+module that applies it (`Feec.Instances`, the sharpness and non-vacuity companions), and is used
+there. The last ones tied: the scheme (6.5) and its rates (above),
 `TimeStepping.BlockMatrix` (the Hermitian signed Crank–Nicolson systems, the last field
 `crankNicolson_signed` of the fully discrete verdict), `Variational.Fortin` (the uniform discrete
 inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the cochain projections),

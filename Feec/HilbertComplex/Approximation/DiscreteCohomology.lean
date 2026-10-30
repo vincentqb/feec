@@ -45,7 +45,8 @@ The isomorphism criterion itself (`CochainProjection.cohomologyMap_injective`) n
 * **`CochainProjection.finrank_cohomology_eq`**, **`CochainProjection.finrank_harmonicW_eq`**,
   `CochainProjection.finiteDimensional_harmonic`.
 * `CochainProjection.norm_sub_π_lt_of_harmonicGap_lt_one`.
-* `CochainProjection.norm_sub_π_le_infDist`, **`CochainProjection.tendsto_harmonicGap`**.
+* `CochainProjection.norm_sub_π_le_infDist`, `CochainProjection.tendsto_harmonicGap_of_tendsto`,
+  **`CochainProjection.tendsto_harmonicGap`**.
 * **`CochainProjection.eventually_finrank_cohomology_eq`**,
   `CochainProjection.eventually_finrank_harmonicW_eq`: along any filter on which the harmonic gap
   tends to zero.
@@ -215,15 +216,12 @@ theorem norm_sub_π_le_infDist (P : S.CochainProjection) {i : ι} {C : ℝ} (hC 
     exact key v hv
   rwa [div_le_iff₀' h1] at h2
 
-/-- **The harmonic gap tends to zero** (cf. [AFW2010], Thm 3.5 and §3.4): for a family of
-subcomplexes `Vₕ` with cochain projections uniformly bounded in `W` by `C`, approximating every
-harmonic form (`dist(q, Vₕ) → 0`), and a finite-dimensional harmonic space `ℌʲ`,
-`μₕ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - πₕ q‖ → 0`. -/
-theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
-    (P : ∀ h, (S h).CochainProjection) {j : ι} [FiniteDimensional 𝕜 (H.harmonic j)] {C : ℝ}
-    (hC : 0 ≤ C) (hπ : ∀ h x, ‖(P h).π j x‖ ≤ C * ‖x‖)
-    (happrox : ∀ q ∈ H.harmonic j,
-      Tendsto (fun h => Metric.infDist q ((S h).V j : Set (W j))) l (𝓝 0)) :
+/-- **The harmonic gap tends to zero as soon as `πₕ q → q` on `ℌʲ`**, for a finite-dimensional
+harmonic space `ℌʲ`: in a basis `(bₖ)` of `ℌʲ`, `μₕ ≤ Σₖ ‖cₖ‖ ‖bₖ - πₕ bₖ‖`, `cₖ` the
+coordinate functionals. -/
+theorem tendsto_harmonicGap_of_tendsto {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
+    (P : ∀ h, (S h).CochainProjection) {j : ι} [FiniteDimensional 𝕜 (H.harmonic j)]
+    (hconv : ∀ q ∈ H.harmonic j, Tendsto (fun h => ‖q - (P h).π j q‖) l (𝓝 0)) :
     Tendsto (fun h => (P h).harmonicGap j) l (𝓝 0) := by
   classical
   -- a basis of `ℌʲ` and the (continuous) coordinate functionals
@@ -231,19 +229,16 @@ theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomple
   set m := Module.finrank 𝕜 (H.harmonic j)
   set coord : Fin m → H.harmonic j →L[𝕜] 𝕜 := fun k =>
     LinearMap.toContinuousLinearMap (b.coord k)
-  -- the gap is bounded by `(1 + C) Σ_k ‖c_k‖ dist(b_k, Vₕ)`
-  set g : κ → ℝ := fun h => (1 + C) * ∑ k, ‖coord k‖ *
-    Metric.infDist ((b k : H.harmonic j) : W j) ((S h).V j : Set (W j))
+  set e : κ → Fin m → ℝ := fun h k =>
+    ‖((b k : H.harmonic j) : W j) - (P h).π j ((b k : H.harmonic j) : W j)‖
+  set g : κ → ℝ := fun h => ∑ k, ‖coord k‖ * e h k
   have hg : Tendsto g l (𝓝 0) := by
-    have : Tendsto g l (𝓝 ((1 + C) * ∑ k : Fin m, ‖coord k‖ * 0)) :=
-      (tendsto_finsetSum _ fun k _ =>
-        (happrox _ (b k).2).const_mul ‖coord k‖).const_mul (1 + C)
+    have : Tendsto g l (𝓝 (∑ k : Fin m, ‖coord k‖ * 0)) :=
+      tendsto_finsetSum _ fun k _ => (hconv _ (b k).2).const_mul ‖coord k‖
     simpa using this
   have hle : ∀ h, (P h).harmonicGap j ≤ g h := by
     intro h
-    have hg0 : 0 ≤ g h := by
-      refine mul_nonneg (by linarith) (Finset.sum_nonneg fun k _ => ?_)
-      exact mul_nonneg (norm_nonneg _) Metric.infDist_nonneg
+    have hg0 : 0 ≤ g h := Finset.sum_nonneg fun k _ => mul_nonneg (norm_nonneg _) (norm_nonneg _)
     refine (P h).harmonicGap_le hg0 fun q hq => ?_
     set q' : H.harmonic j := ⟨q, hq⟩
     have hrepr : q = ∑ k, (b.repr q' k) • ((b k : H.harmonic j) : W j) := by
@@ -259,20 +254,33 @@ theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomple
           conv_lhs => rw [hrepr]
           rw [map_sum]
           simp only [_root_.map_smul, smul_sub, Finset.sum_sub_distrib]
-      _ ≤ ∑ k, ‖b.repr q' k‖ * ‖((b k : H.harmonic j) : W j) -
-            (P h).π j ((b k : H.harmonic j) : W j)‖ := by
+      _ ≤ ∑ k, ‖b.repr q' k‖ * e h k := by
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun k _ => ?_)
           rw [norm_smul]
-      _ ≤ ∑ k, (‖coord k‖ * ‖q‖) * ((1 + C) *
-            Metric.infDist ((b k : H.harmonic j) : W j) ((S h).V j : Set (W j))) := by
-          refine Finset.sum_le_sum fun k _ => ?_
-          exact mul_le_mul (hcoord k) ((P h).norm_sub_π_le_infDist hC (hπ h) _)
-            (norm_nonneg _) (by positivity)
+      _ ≤ ∑ k, (‖coord k‖ * ‖q‖) * e h k :=
+          Finset.sum_le_sum fun k _ => mul_le_mul_of_nonneg_right (hcoord k) (norm_nonneg _)
       _ = g h * ‖q‖ := by
-          simp only [g, Finset.mul_sum, Finset.sum_mul]
+          simp only [g, Finset.sum_mul]
           refine Finset.sum_congr rfl fun k _ => ?_
           ring
   exact squeeze_zero (fun h => (P h).harmonicGap_nonneg j) hle hg
+
+/-- **The harmonic gap tends to zero** (cf. [AFW2010], Thm 3.5 and §3.4): for a family of
+subcomplexes `Vₕ` with cochain projections uniformly bounded in `W` by `C`, approximating every
+harmonic form (`dist(q, Vₕ) → 0`), and a finite-dimensional harmonic space `ℌʲ`,
+`μₕ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - πₕ q‖ → 0` (`tendsto_harmonicGap_of_tendsto`, with
+`‖q - πₕ q‖ ≤ (1 + C) dist(q, Vₕ)`). -/
+theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
+    (P : ∀ h, (S h).CochainProjection) {j : ι} [FiniteDimensional 𝕜 (H.harmonic j)] {C : ℝ}
+    (hC : 0 ≤ C) (hπ : ∀ h x, ‖(P h).π j x‖ ≤ C * ‖x‖)
+    (happrox : ∀ q ∈ H.harmonic j,
+      Tendsto (fun h => Metric.infDist q ((S h).V j : Set (W j))) l (𝓝 0)) :
+    Tendsto (fun h => (P h).harmonicGap j) l (𝓝 0) :=
+  tendsto_harmonicGap_of_tendsto P fun q hq => by
+    have h0 := (happrox q hq).const_mul (1 + C)
+    rw [mul_zero] at h0
+    exact squeeze_zero (fun _ => norm_nonneg _)
+      (fun h => (P h).norm_sub_π_le_infDist hC (hπ h) q) h0
 
 end HarmonicGap
 

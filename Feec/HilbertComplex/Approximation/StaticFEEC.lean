@@ -8,15 +8,18 @@ public import Feec.Variational.Fortin
 /-!
 # The static FEEC theorem
 
-The approximation theory of [AFW2010], §3.3–§3.4 for the mixed Hodge Laplacian, for a conforming
-family `F` (`Feec.HilbertComplex.ConformingFamily`: finite-dimensional subcomplexes `Vₕ` along a
-filter, commuting cochain projections `πₕ` bounded in `W` uniformly in `h`, the approximation
-property) of a Hilbert complex on any scalar field `𝕜` (`RCLike`) and any `ComplexShape`.
+The approximation theory of [AFW2010], §3.3–§3.4 for the mixed Hodge Laplacian, for a
+**graph-bounded family** `G` (`Feec.HilbertComplex.GraphFamily`, the hypotheses of [AFW2010], §3.3:
+finite-dimensional subcomplexes `Vₕ` along a filter, commuting cochain projections `πₕ` bounded in
+the graph norm uniformly in `h`, the approximation property in the graph norm) of a Hilbert
+complex on any scalar field `𝕜` (`RCLike`) and any `ComplexShape`. Every conforming family
+(`Feec.HilbertComplex.ConformingFamily`, bounds and approximation in `W`) is one
+(`ConformingFamily.toGraphFamily`), and its static verdict is that of its graph-bounded family.
 
-**The static FEEC theorem** `ConformingFamily.staticFEEC` (statement
-`ConformingFamily.StaticVerdict F j`, a structure whose fields are the conclusions): if `H` has
-closed range and `ℌʲ` is finite-dimensional, then at the degree `j` (and its neighbours
-`i → j → k`), with constants independent of `h`,
+**The static FEEC theorem** `GraphFamily.staticFEEC` (statement `GraphFamily.StaticVerdict G j`, a
+structure whose fields are the conclusions): if `H` has closed range at `j` and at the next degree
+`k` and `ℌʲ` is finite-dimensional, then at the degree `j` (and its neighbours `i → j → k`), with
+constants independent of `h`,
 
 * `poincare`: the uniform discrete Poincaré inequality `‖v‖ ≤ c ‖dₕ v‖` on `Vₕʲ ⊥ 𝔷ₕʲ`
   ([AFW2010], Thm 3.6);
@@ -36,6 +39,8 @@ closed range and `ℌʲ` is finite-dimensional, then at the degree `j` (and its 
   (`Subcomplex.CochainProjection.infSup`, from `Variational.IsFortinOperator.discrete_infSup`);
   it is equivalent to the discrete Poincaré inequality `poincare`, and the discrete Brezzi theorem
   (`Variational.existsUnique_discrete_isSaddleSolution`) is not used for `wellPosed`.
+
+For a conforming family, `ConformingFamily.staticFEEC` assumes closed range in every degree.
 
 With a Jackson estimate (`ConformingFamily.Jackson`, of any real order; from best approximation in
 `W` through the projections, `ConformingFamily.Jackson.ofInfDist`) the error is `O(hᵒʳᵈ)` for
@@ -57,11 +62,14 @@ projections (`ConformingFamily.hasUniformProj`).
 
 * `Subcomplex.mixedError`: `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖`.
 * `Subcomplex.HasUniformProj l S`.
-* `ConformingFamily.StaticVerdict F j`.
+* `GraphFamily H κ`, `GraphFamily.StaticVerdict G j`; `ConformingFamily.toGraphFamily`,
+  `ConformingFamily.StaticVerdict F j`.
 * `ConformingFamily.Jackson.ofInfDist`: a Jackson estimate from best approximation in `W`.
 
 ## Main results
 
+* **`GraphFamily.staticFEEC`**, `GraphFamily.quasiOptimal`, `GraphFamily.tendsto_harmonicGap`,
+  `GraphFamily.eventually_bijective_cohomologyMap`.
 * **`ConformingFamily.staticFEEC`**, **`ConformingFamily.StaticVerdict.rate`**;
   `ConformingFamily.quasiOptimal`, `ConformingFamily.rate` (closed range at `j`, `k` only),
   `ConformingFamily.Jackson.approx_le`; `ConformingFamily.rate_static_L2`, the improved `L²` rate
@@ -228,14 +236,14 @@ theorem norm_sub_le_rate {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C 
 /-- **The cochain projections give Fortin operators** for the constraint form `⟪q, d τ⟫` on
 `Vʲ × Wᵏ`, relative to the discrete spaces `Vₕʲ ⊆ Vʲ` and `𝔅ₕᵏ ⊆ Wᵏ`: for `τ ∈ Vʲ`, lift the
 orthogonal projection of `d τ` onto `𝔅ₕᵏ` to `ρ ⊥ 𝔷ʲ` with `‖ρ‖ ≤ c_P ‖d τ‖` and set
-`Π τ = πʲ ρ`; then `d Π τ = πᵏ d ρ = P_{𝔅ₕ} d τ`, so `b(Π τ, q) = b(τ, q)` on `𝔅ₕᵏ`, and
-`‖Π τ‖_V ≤ (C c_P + 1) ‖τ‖_V`. [BoffiBrezziFortin2013], §5.4; [AFW2010], Thm 3.6 -/
-theorem exists_isFortinOperator {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP : 0 ≤ cP)
-    (hC : 0 ≤ C)
+`Π τ = πʲ ρ`; then `d Π τ = πᵏ d ρ = P_{𝔅ₕ} d τ`, so `b(Π τ, q) = b(τ, q)` on `𝔅ₕᵏ`, and, `π`
+bounded by `C` in the graph norm, `‖Π τ‖_V ≤ (C √(1 + c_P²) + 1) ‖τ‖_V`.
+[BoffiBrezziFortin2013], §5.4; [AFW2010], Thm 3.6 -/
+theorem exists_isFortinOperator {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hC : 0 ≤ C)
     (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
-    (hπ : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) :
+    (hπ : P.IsGraphBounded j k C) :
     ∃ Pf : H.domainSpace j → H.domainSpace j, Variational.IsFortinOperator
-      (H.constraintForm j k) (S.domainSub j) (S.boundariesW k) Pf (C * cP + 1) := by
+      (H.constraintForm j k) (S.domainSub j) (S.boundariesW k) Pf (C * √(1 + cP ^ 2) + 1) := by
   have : FiniteDimensional 𝕜 (S.boundariesW k) :=
     Submodule.finiteDimensional_of_le (S.boundariesW_le_V k)
   set D : H.domainSpace j → W k := fun τ => H.d j k (H.domainCoord j k τ)
@@ -254,26 +262,41 @@ theorem exists_isFortinOperator {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP :
       Submodule.starProjection_eq_self_iff.2 hq]
   · refine (LinearPMap.norm_toGraphSpace_le _ _).trans ?_
     rw [hd]
-    have h1 := hπ (ρ τ)
-    have h2 := hρ τ
+    set a := ‖P.π j (ρ τ)‖
+    set q := ‖Q (D τ)‖
+    have h1 : a ≤ C * √(1 + cP ^ 2) * q := by
+      have h := hπ (ρ τ)
+      rw [hdρ] at h
+      have h2 := hρ τ
+      have hr := norm_nonneg ((ρ τ : (H.d j (c.next j)).domain) : W j)
+      have hq := norm_nonneg (Q (D τ))
+      have hs : (C * √(1 + cP ^ 2) * q) ^ 2 = C ^ 2 * ((1 + cP ^ 2) * q ^ 2) := by
+        rw [mul_pow, mul_pow, Real.sq_sqrt (by positivity)]; ring
+      have hsq : a ^ 2 ≤ (C * √(1 + cP ^ 2) * q) ^ 2 := by
+        rw [hs]
+        have h3 : ‖((ρ τ : (H.d j (c.next j)).domain) : W j)‖ ^ 2 ≤ cP ^ 2 * q ^ 2 := by
+          rw [← mul_pow]; exact pow_le_pow_left₀ hr h2 2
+        nlinarith [sq_nonneg ‖H.d j (c.next j) ⟨P.π j (ρ τ), S.le_domain j _ (P.mem j _)⟩‖,
+          sq_nonneg C]
+      exact (abs_le_of_sq_le_sq' hsq (by positivity)).2
     have h3 := (S.boundariesW _).norm_starProjection_apply_le (D τ)
     have h4 := H.norm_d_domainCoord_le j (c.next j) τ
-    calc ‖P.π j (ρ τ)‖ + ‖Q (D τ)‖ ≤ C * (cP * ‖Q (D τ)‖) + ‖Q (D τ)‖ :=
-          add_le_add_left (h1.trans (mul_le_mul_of_nonneg_left h2 hC)) _
-      _ = (C * cP + 1) * ‖Q (D τ)‖ := by ring
-      _ ≤ (C * cP + 1) * ‖τ‖ := by gcongr; exact h3.trans h4
+    calc a + q ≤ C * √(1 + cP ^ 2) * q + q := add_le_add_left h1 _
+      _ = (C * √(1 + cP ^ 2) + 1) * q := by ring
+      _ ≤ (C * √(1 + cP ^ 2) + 1) * ‖τ‖ := by gcongr; exact h3.trans h4
 
 /-- **The uniform discrete inf-sup condition through Fortin's criterion**: with the Fortin
 operators of `exists_isFortinOperator` and the continuous inf-sup condition
 `norm_le_norm_constraintForm_flip`, `β ‖q‖ ≤ sup_{τ ∈ Vₕʲ} |⟪q, d τ⟫| / ‖τ‖_V` on `𝔅ₕᵏ` with
-`β = ((c_P + 1)(C c_P + 1))⁻¹`, depending on the subcomplex only through the bound `C` of `π`
-(`Variational.IsFortinOperator.discrete_infSup`). [BoffiBrezziFortin2013], §5.4; [Fortin1977] -/
+`β = ((c_P + 1)(C √(1 + c_P²) + 1))⁻¹`, depending on the subcomplex only through the graph-norm
+bound `C` of `π` (`Variational.IsFortinOperator.discrete_infSup`). [BoffiBrezziFortin2013], §5.4;
+[Fortin1977] -/
 theorem infSup {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP : 0 ≤ cP) (hC : 0 ≤ C)
     (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
-    (hπ : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) {q : W k} (hq : q ∈ S.boundariesW k) :
-    ((cP + 1) * (C * cP + 1))⁻¹ * ‖q‖ ≤
+    (hπ : P.IsGraphBounded j k C) {q : W k} (hq : q ∈ S.boundariesW k) :
+    ((cP + 1) * (C * √(1 + cP ^ 2) + 1))⁻¹ * ‖q‖ ≤
       ‖((H.constraintForm j k).flip q).comp (S.domainSub j).subtypeL‖ := by
-  obtain ⟨Pf, hPf⟩ := P.exists_isFortinOperator hjk hcP hC hP hπ
+  obtain ⟨Pf, hPf⟩ := P.exists_isFortinOperator hjk hC hP hπ
   have h := hPf.discrete_infSup (by positivity) (β := (cP + 1)⁻¹) (fun q hq => by
     rw [inv_mul_le_iff₀ (by positivity)]
     exact norm_le_norm_constraintForm_flip hjk hcP hP (S.boundariesW_le k hq)) q hq
@@ -342,6 +365,193 @@ end HasUniformProj
 
 end Subcomplex
 
+/-! ### Graph-bounded families -/
+
+/-- **A graph-bounded family** of `H` along the filter `l` (the hypotheses of [AFW2010], §3.3):
+finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ` bounded uniformly in `h` in the
+graph norm of `Vⁱ` (the domain space, with the norm of `D(d i (c.next i))`: `‖πₕ x‖_V ≤ C ‖x‖_V`),
+and the approximation property in that norm, `dist_V(σ, Vₕⁱ) → 0` for every `σ ∈ Vⁱ`. Every
+conforming family is one (`ConformingFamily.toGraphFamily`, bounds and approximation in `W`). -/
+structure GraphFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
+  /-- the filter along which the discretization is refined (e.g. `h → 0`) -/
+  l : Filter κ
+  /-- the discrete subcomplexes -/
+  V : κ → H.Subcomplex
+  [finiteDimensional : ∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
+  /-- the commuting cochain projections -/
+  π : ∀ h, (V h).CochainProjection
+  bound_π : ∃ C, ∀ h i, (π h).IsGraphBounded i (c.next i) C
+  /-- the approximation property in the graph norm: `dist_V(σ, Vₕⁱ) → 0` for every `σ ∈ Vⁱ` -/
+  approx : ∀ i (σ : H.domainSpace i), Tendsto (fun h => infDist σ ((V h).domainSub i)) l (𝓝 0)
+
+attribute [instance] GraphFamily.finiteDimensional
+
+namespace GraphFamily
+
+variable {κ : Type*} (G : GraphFamily H κ)
+
+/-- A uniform bound `C ≥ 1` of the cochain projections in the graph norm. -/
+def projBound : ℝ := max |G.bound_π.choose| 1
+
+theorem one_le_projBound : 1 ≤ G.projBound := le_max_right _ _
+
+theorem isGraphBounded_next (h : κ) (i : ι) :
+    (G.π h).IsGraphBounded i (c.next i) G.projBound := fun x => by
+  refine (G.bound_π.choose_spec h i x).trans (mul_le_mul_of_nonneg_right ?_ (by positivity))
+  rw [← sq_abs]
+  exact pow_le_pow_left₀ (abs_nonneg _) (le_max_left _ _) 2
+
+/-- The projections are bounded by `projBound` in the graph norm at every related pair. -/
+theorem isGraphBounded (h : κ) {i j : ι} (hij : c.Rel i j) :
+    (G.π h).IsGraphBounded i j G.projBound := by
+  obtain rfl := c.next_eq' hij
+  exact G.isGraphBounded_next h i
+
+/-- `πₕ b → b` for every cycle `b`: `‖b - πₕ b‖ ≤ (1 + C) dist_V(b, Vₕ)`. -/
+theorem tendsto_sub_π_of_mem_cycles {j : ι} {b : W j} (hb : b ∈ H.cycles j) :
+    Tendsto (fun h => ‖b - (G.π h).π j b‖) G.l (𝓝 0) := by
+  have hC : 0 < 1 + G.projBound := by linarith [G.one_le_projBound]
+  have h0 := (G.approx j (cyclesToDomainSpace hb)).const_mul (1 + G.projBound)
+  rw [mul_zero] at h0
+  refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) h0
+  rw [← div_le_iff₀' hC]
+  refine (le_infDist ⟨0, zero_mem _⟩).2 fun y hy => ?_
+  obtain ⟨w, rfl⟩ := hy
+  rw [div_le_iff₀' hC, dist_eq_norm]
+  exact (G.π h).norm_sub_π_le_of_mem_cycles_of_next (by linarith [G.one_le_projBound])
+    (G.isGraphBounded_next h j) hb w
+
+/-- **The harmonic gap tends to zero** where `ℌʲ` is finite-dimensional. [AFW2010], Thm 3.5 -/
+theorem tendsto_harmonicGap {j : ι} [FiniteDimensional 𝕜 (H.harmonic j)] :
+    Tendsto (fun h => (G.π h).harmonicGap j) G.l (𝓝 0) :=
+  Subcomplex.CochainProjection.tendsto_harmonicGap_of_tendsto G.π fun _ hq =>
+    G.tendsto_sub_π_of_mem_cycles (H.harmonic_le_cycles _ hq)
+
+/-- **The projections eventually induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`** where `H` has closed
+range at `i` and `ℌⁱ` is finite-dimensional: the harmonic gap is eventually below `1`.
+[AFW2010], Thm 3.4, Thm 3.5 -/
+theorem eventually_bijective_cohomologyMap {i : ι} [FiniteDimensional 𝕜 (H.harmonic i)]
+    (hi : H.ClosedRangeAt i) : ∀ᶠ h in G.l, Function.Bijective ((G.π h).cohomologyMap i) :=
+  (G.tendsto_harmonicGap.eventually (gt_mem_nhds one_pos)).mono fun h h1 =>
+    ⟨(G.π h).cohomologyMap_injective hi fun _ hq hq0 =>
+      (G.π h).norm_sub_π_lt_of_harmonicGap_lt_one (fun _ hq' =>
+        (G.π h).norm_sub_π_harmonic_le_of_next (zero_le_one.trans G.one_le_projBound)
+          (G.isGraphBounded_next h i) hq') h1 hq hq0,
+      (G.π h).cohomologyMap_surjective i⟩
+
+/-- **Quasi-optimality of the mixed method** ([AFW2010], Thm 3.9), with closed range at `j` and `k`
+only: the error of the mixed method is at most `K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`, with
+`K` independent of `h` and `μₕ` the harmonic gap of `πₕ`. -/
+theorem quasiOptimal {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
+    (hk : H.ClosedRangeAt k) : ∃ K : ℝ, 0 ≤ K ∧
+    ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
+    H.IsMixedSolution i j k f σ u p → ∀ h : κ,
+    (G.V h).mixedError hij hjk f σ u p ≤
+      K * (infDist σ ((G.V h).domainSub i) + infDist u ((G.V h).domainSub j) +
+        infDist (p : W j) ((G.V h).harmonicW j) +
+        (G.π h).harmonicGap j *
+          infDist (H.boundaryPart j (H.domainIncl j u)) ((G.V h).domainSub j)) := by
+  have hC := G.one_le_projBound
+  obtain ⟨cP, -, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj hk
+  exact ⟨_, by have := zero_le_one.trans hC; positivity, fun hs h =>
+    (G.π h).norm_sub_le_infDist_harmonicGap hij hjk hC hPi hPj (G.isGraphBounded h hij)
+      (G.isGraphBounded h hjk) hs⟩
+
+/-! ### The static FEEC theorem -/
+
+/-- **The conclusions of the static FEEC theorem** (`staticFEEC`) for a graph-bounded family `G`
+at the degree `j`, with constants independent of `h`. [AFW2010], §3.3–§3.4 -/
+structure StaticVerdict (j : ι) : Prop where
+  /-- the uniform discrete Poincaré inequality `‖v‖ ≤ C ‖dₕ v‖` on `Vₕʲ ⊥ 𝔷ₕʲ` ([AFW2010],
+  Thm 3.6) -/
+  poincare {k : ι} (hjk : c.Rel j k) : ∃ C : ℝ, ∀ (h : κ) {x : W j} (hx : x ∈ (G.V h).V j),
+    (∀ y ∈ (G.V h).cyclesW j, ⟪y, x⟫_𝕜 = 0) → ‖x‖ ≤ C * ‖H.d j k ⟨x, (G.V h).le_domain j k hx⟩‖
+  /-- the discrete mixed problem is uniquely solvable, `‖xₕ‖ ≤ C ‖fₕ‖` ([AFW2010], Thm 3.8) -/
+  wellPosed {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) : ∃ C : ℝ, ∀ (h : κ) (f : (G.V h).V j),
+    (∃! x, (G.V h).toHilbertComplex.mixedForm i j k x = (G.V h).toHilbertComplex.mixedRHS i j f) ∧
+    ∀ x : (G.V h).toHilbertComplex.MixedSpace i j,
+      (G.V h).toHilbertComplex.mixedForm i j k x = (G.V h).toHilbertComplex.mixedRHS i j f →
+        ‖x‖ ≤ C * ‖f‖
+  /-- the harmonic gap `μₕ = sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - πₕ q‖` tends to `0` ([AFW2010], Thm 3.5) -/
+  harmonicGap : Tendsto (fun h => (G.π h).harmonicGap j) G.l (𝓝 0)
+  /-- `πₕ` eventually induces isomorphisms `Hʲ(H) ≅ Hʲ(Vₕ)`, `[z] ↦ [πₕ z]` ([AFW2010],
+  Thm 3.4) -/
+  cohomology : ∀ᶠ h in G.l, Function.Bijective ((G.π h).cohomologyMap j)
+  /-- quasi-optimality: `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤
+  K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`, `E` the distances to `Vₕ` and to `ℌₕ`
+  ([AFW2010], Thm 3.9) -/
+  quasiOptimal {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) : ∃ K : ℝ, 0 ≤ K ∧
+    ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
+    H.IsMixedSolution i j k f σ u p → ∀ h : κ,
+    (G.V h).mixedError hij hjk f σ u p ≤
+      K * (infDist σ ((G.V h).domainSub i) + infDist u ((G.V h).domainSub j) +
+        infDist (p : W j) ((G.V h).harmonicW j) +
+        (G.π h).harmonicGap j * infDist (H.boundaryPart j (H.domainIncl j u)) ((G.V h).domainSub j))
+  /-- the discrete solutions converge: the error of the mixed method tends to `0` -/
+  converges {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {f : W j} {σ : H.domainSpace i}
+    {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
+    Tendsto (fun h => (G.V h).mixedError hij hjk f σ u p) G.l (𝓝 0)
+  /-- the uniform discrete inf-sup condition of `d` on `𝔅ₕᵏ`,
+  `β ‖q‖ ≤ sup_{τ ∈ Vₕʲ} |⟪q, d τ⟫| / ‖τ‖_V`, by Fortin's criterion with the Fortin operators of
+  the projections ([BoffiBrezziFortin2013], §5.4); it is equivalent to `poincare` (test
+  `q = dₕ τ` against its preimage `τ ⊥ 𝔷ₕʲ`), here transferred from the continuous inf-sup -/
+  infSup {k : ι} (hjk : c.Rel j k) : ∃ β : ℝ, 0 < β ∧ ∀ (h : κ), ∀ q ∈ (G.V h).boundariesW k,
+    β * ‖q‖ ≤ ‖((H.constraintForm j k).flip q).comp ((G.V h).domainSub j).subtypeL‖
+
+/-- **The static FEEC theorem.** For a graph-bounded family `G` of a Hilbert complex `H` (the
+hypotheses of [AFW2010], §3.3), at a degree `j` where `H` has closed range (`𝔅ʲ` closed), with
+closed range at the next degree (`𝔅ᵏ` closed, `j → k`) and a finite-dimensional `ℌʲ`
+(`StaticVerdict`), with constants independent of `h`:
+
+1. (**stability**) the uniform discrete Poincaré inequality on `Vₕʲ ⊥ 𝔷ₕʲ`, the uniform
+   well-posedness of the discrete mixed Hodge Laplacian, `‖xₕ‖ ≤ C ‖fₕ‖`, and the uniform
+   discrete inf-sup condition;
+2. (**harmonic forms and cohomology**) the harmonic gap tends to `0` and `πₕ` eventually induces
+   isomorphisms `Hʲ(H) ≅ Hʲ(Vₕ)`;
+3. (**quasi-optimality**) the error of the mixed method is at most
+   `K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`;
+4. (**convergence**) the discrete solutions converge to the solution of the mixed problem.
+
+[AFW2010], Thm 3.4, 3.5, 3.6, 3.8, 3.9; [Arnold2018], Thm 5.3, 5.5 -/
+theorem staticFEEC (j : ι) (hj : H.ClosedRangeAt j) (hk : ∀ k, c.Rel j k → H.ClosedRangeAt k)
+    [FiniteDimensional 𝕜 (H.harmonic j)] : G.StaticVerdict j := by
+  have hC := G.one_le_projBound
+  have hC0 := zero_le_one.trans hC
+  have hgap : Tendsto (fun h => (G.π h).harmonicGap j) G.l (𝓝 0) := G.tendsto_harmonicGap
+  have hqo {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) := G.quasiOptimal hij hjk hj (hk k hjk)
+  refine ⟨fun {k} hjk => ?_, fun {i k} hij hjk => ?_, hgap, G.eventually_bijective_cohomologyMap hj,
+    hqo, fun {i k} hij hjk f σ u p hs => ?_, fun {k} hjk => ?_⟩
+  · obtain ⟨cP, -, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hk k hjk)
+    exact ⟨G.projBound * √(1 + cP ^ 2), fun h x hx hxo =>
+      (G.π h).norm_le_of_forall_inner_eq_zero_of_graph hjk hP hC0 (G.isGraphBounded h hjk) hx hxo⟩
+  · obtain ⟨cP, -, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj (hk k hjk)
+    exact ⟨16 * (G.projBound * √(1 + cP ^ 2)) ^ 2, fun h f =>
+      ⟨(G.V h).toHilbertComplex.existsUnique_mixed hij hjk (Subcomplex.CochainProjection.one_le_mul_sqrt hC)
+          ((G.π h).poincare_toHilbertComplex_of_graph hij hPi hC0 (G.isGraphBounded h hij))
+          ((G.π h).poincare_toHilbertComplex_of_graph hjk hPj hC0 (G.isGraphBounded h hjk)) f,
+        fun x hx => (G.V h).toHilbertComplex.norm_le_of_mixed hij hjk (Subcomplex.CochainProjection.one_le_mul_sqrt hC)
+          ((G.π h).poincare_toHilbertComplex_of_graph hij hPi hC0 (G.isGraphBounded h hij))
+          ((G.π h).poincare_toHilbertComplex_of_graph hjk hPj hC0 (G.isGraphBounded h hjk)) hx⟩⟩
+  · -- the four distances tend to `0` (the harmonic one through the projections)
+    obtain ⟨K, -, hK⟩ := hqo hij hjk
+    have hq : Tendsto (fun h => infDist (p : W j) ((G.V h).harmonicW j)) G.l (𝓝 0) := by
+      have h0 := (G.approx j (cyclesToDomainSpace (H.harmonic_le_cycles j p.2))).const_mul
+        (1 + G.projBound)
+      rw [mul_zero] at h0
+      exact squeeze_zero (fun _ => infDist_nonneg) (fun h => (G.π h).infDist_harmonicW_le hjk
+        hC0 (G.isGraphBounded h hjk) p.2) h0
+    have h0 := ((((G.approx i σ).add (G.approx j u)).add hq).add
+      (hgap.mul (G.approx j (H.boundaryPart j (H.domainIncl j u))))).const_mul K
+    simp only [add_zero, mul_zero] at h0
+    exact squeeze_zero (fun h => (G.V h).mixedError_nonneg hij hjk f σ u p) (fun h => hK hs h) h0
+  · -- Fortin's criterion with the Fortin operators of the projections
+    obtain ⟨cP, hcP, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hk k hjk)
+    have hcP0 : 0 ≤ cP := by linarith
+    exact ⟨_, by positivity, fun h q hq => (G.π h).infSup hjk hcP0 hC0 hP
+      (G.isGraphBounded h hjk) hq⟩
+
+end GraphFamily
+
 /-! ### Conforming families -/
 
 namespace ConformingFamily
@@ -353,27 +563,40 @@ theorem isGraphBounded (h : κ) (i j : ι) : (F.π h).IsGraphBounded i j F.projB
   (F.π h).isGraphBounded_of_norm_le (F.norm_π_le h i) (F.norm_π_le h j)
 
 /-- **Distance to `Vₕ` in the graph norm** through the projection:
-`dist_V(σ, Vₕⁱ) ≤ (1 + C) (dist(σ, Vₕⁱ) + dist(d σ, Vₕʲ))`, since `d πₕ σ = πₕ d σ`. -/
-theorem infDist_domainSub_le (h : κ) {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) :
+`dist_V(σ, Vₕⁱ) ≤ (1 + C) (dist(σ, Vₕⁱ) + dist(d σ, Vₕʲ))`, `j = c.next i`, since
+`d πₕ σ = πₕ d σ`. -/
+theorem infDist_domainSub_le (h : κ) {i : ι} (σ : H.domainSpace i) :
     infDist σ ((F.V h).domainSub i) ≤ (1 + F.projBound) *
       (infDist (H.domainIncl i σ) ((F.V h).V i : Set (W i)) +
-        infDist (H.d i j (H.domainCoord i j σ)) ((F.V h).V j : Set (W j))) := by
+        infDist (H.d i (c.next i) (H.domainCoord i _ σ)) ((F.V h).V (c.next i) : Set (W _))) := by
   have hC := zero_le_one.trans F.one_le_projBound
-  refine ((F.V h).infDist_domainSub_le hij σ ((F.π h).mem i (H.domainIncl i σ))).trans ?_
-  have e : H.d i j ⟨(F.π h).π i (H.domainIncl i σ), (F.V h).le_domain i j ((F.π h).mem i _)⟩ =
-      (F.π h).π j (H.d i j (H.domainCoord i j σ)) := (F.π h).comm i j (H.domainCoord i j σ)
+  refine ((F.V h).infDist_domainSub_le_of_next σ ((F.π h).mem i (H.domainIncl i σ))).trans ?_
+  have e : H.d i (c.next i) ⟨(F.π h).π i (H.domainIncl i σ),
+      (F.V h).le_domain i _ ((F.π h).mem i _)⟩ =
+      (F.π h).π (c.next i) (H.d i (c.next i) (H.domainCoord i _ σ)) :=
+    (F.π h).comm i _ (H.domainCoord i _ σ)
   rw [e, mul_add]
   exact add_le_add ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h i) _)
-    ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h j) _)
+    ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h _) _)
 
 /-- **The approximation property in the graph norm**: `dist_V(σ, Vₕⁱ) → 0` for every `σ ∈ Vⁱ`. -/
-theorem tendsto_infDist_domainSub {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) :
+theorem tendsto_infDist_domainSub {i : ι} (σ : H.domainSpace i) :
     Tendsto (fun h => infDist σ ((F.V h).domainSub i)) F.l (𝓝 0) := by
   have h0 : Tendsto (fun h => (1 + F.projBound) *
       (infDist (H.domainIncl i σ) ((F.V h).V i : Set (W i)) +
-        infDist (H.d i j (H.domainCoord i j σ)) ((F.V h).V j : Set (W j)))) F.l (𝓝 0) := by
-    simpa using ((F.approx i _).add (F.approx j _)).const_mul (1 + F.projBound)
-  exact squeeze_zero (fun _ => infDist_nonneg) (fun h => F.infDist_domainSub_le h hij σ) h0
+        infDist (H.d i (c.next i) (H.domainCoord i _ σ))
+          ((F.V h).V (c.next i) : Set (W _)))) F.l (𝓝 0) := by
+    simpa using ((F.approx i _).add (F.approx _ _)).const_mul (1 + F.projBound)
+  exact squeeze_zero (fun _ => infDist_nonneg) (fun h => F.infDist_domainSub_le h σ) h0
+
+/-- **A conforming family is a graph-bounded family**: bounds and approximation in `W` give
+bounds and approximation in the graph norm. -/
+def toGraphFamily : GraphFamily H κ where
+  l := F.l
+  V := F.V
+  π := F.π
+  bound_π := ⟨F.projBound, fun h i => F.isGraphBounded h i _⟩
+  approx _ σ := F.tendsto_infDist_domainSub σ
 
 /-- **A conforming family has uniformly bounded projections with vanishing harmonic gap**, where
 the harmonic forms are finite-dimensional. -/
@@ -383,9 +606,7 @@ theorem hasUniformProj [∀ j, FiniteDimensional 𝕜 (H.harmonic j)] :
     fun _ => F.tendsto_harmonicGap⟩
 
 /-- **Quasi-optimality of the mixed method** for a conforming family ([AFW2010], Thm 3.9), with
-closed range at `j` and `k` only (no finite-dimensionality of `ℌ`): the error of the mixed method
-is at most `K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`, with `K` independent of `h` and `μₕ` the
-harmonic gap of `πₕ`. -/
+closed range at `j` and `k` only (no finite-dimensionality of `ℌ`; `GraphFamily.quasiOptimal`). -/
 theorem quasiOptimal {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
     (hk : H.ClosedRangeAt k) : ∃ K : ℝ, 0 ≤ K ∧
     ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
@@ -394,53 +615,14 @@ theorem quasiOptimal {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.Cl
       K * (infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
         infDist (p : W j) ((F.V h).harmonicW j) +
         (F.π h).harmonicGap j *
-          infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j)) := by
-  have hC := F.one_le_projBound
-  obtain ⟨cP, -, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj hk
-  exact ⟨_, by have := zero_le_one.trans hC; positivity, fun hs h =>
-    (F.π h).norm_sub_le_infDist_harmonicGap hij hjk hC hPi hPj (F.isGraphBounded h i j)
-      (F.isGraphBounded h j k) hs⟩
+          infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j)) :=
+  F.toGraphFamily.quasiOptimal hij hjk hj hk
 
 /-! ### The static FEEC theorem -/
 
-/-- **The conclusions of the static FEEC theorem** (`staticFEEC`) for a conforming family `F` at
-the degree `j`, with constants independent of `h`. [AFW2010], §3.3–§3.4 -/
-structure StaticVerdict (j : ι) : Prop where
-  /-- the uniform discrete Poincaré inequality `‖v‖ ≤ C ‖dₕ v‖` on `Vₕʲ ⊥ 𝔷ₕʲ` ([AFW2010],
-  Thm 3.6) -/
-  poincare {k : ι} (hjk : c.Rel j k) : ∃ C : ℝ, ∀ (h : κ) {x : W j} (hx : x ∈ (F.V h).V j),
-    (∀ y ∈ (F.V h).cyclesW j, ⟪y, x⟫_𝕜 = 0) → ‖x‖ ≤ C * ‖H.d j k ⟨x, (F.V h).le_domain j k hx⟩‖
-  /-- the discrete mixed problem is uniquely solvable, `‖xₕ‖ ≤ C ‖fₕ‖` ([AFW2010], Thm 3.8) -/
-  wellPosed {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) : ∃ C : ℝ, ∀ (h : κ) (f : (F.V h).V j),
-    (∃! x, (F.V h).toHilbertComplex.mixedForm i j k x = (F.V h).toHilbertComplex.mixedRHS i j f) ∧
-    ∀ x : (F.V h).toHilbertComplex.MixedSpace i j,
-      (F.V h).toHilbertComplex.mixedForm i j k x = (F.V h).toHilbertComplex.mixedRHS i j f →
-        ‖x‖ ≤ C * ‖f‖
-  /-- the harmonic gap `μₕ = sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - πₕ q‖` tends to `0` ([AFW2010], Thm 3.5) -/
-  harmonicGap : Tendsto (fun h => (F.π h).harmonicGap j) F.l (𝓝 0)
-  /-- `πₕ` eventually induces isomorphisms `Hʲ(H) ≅ Hʲ(Vₕ)`, `[z] ↦ [πₕ z]` ([AFW2010],
-  Thm 3.4) -/
-  cohomology : ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap j)
-  /-- quasi-optimality: `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤
-  K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`, `E` the distances to `Vₕ` and to `ℌₕ`
-  ([AFW2010], Thm 3.9) -/
-  quasiOptimal {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) : ∃ K : ℝ, 0 ≤ K ∧
-    ∀ {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
-    H.IsMixedSolution i j k f σ u p → ∀ h : κ,
-    (F.V h).mixedError hij hjk f σ u p ≤
-      K * (infDist σ ((F.V h).domainSub i) + infDist u ((F.V h).domainSub j) +
-        infDist (p : W j) ((F.V h).harmonicW j) +
-        (F.π h).harmonicGap j * infDist (H.boundaryPart j (H.domainIncl j u)) ((F.V h).domainSub j))
-  /-- the discrete solutions converge: the error of the mixed method tends to `0` -/
-  converges {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {f : W j} {σ : H.domainSpace i}
-    {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
-    Tendsto (fun h => (F.V h).mixedError hij hjk f σ u p) F.l (𝓝 0)
-  /-- the uniform discrete inf-sup condition of `d` on `𝔅ₕᵏ`,
-  `β ‖q‖ ≤ sup_{τ ∈ Vₕʲ} |⟪q, d τ⟫| / ‖τ‖_V`, by Fortin's criterion with the Fortin operators of
-  the projections ([BoffiBrezziFortin2013], §5.4); it is equivalent to `poincare` (test
-  `q = dₕ τ` against its preimage `τ ⊥ 𝔷ₕʲ`), here transferred from the continuous inf-sup -/
-  infSup {k : ι} (hjk : c.Rel j k) : ∃ β : ℝ, 0 < β ∧ ∀ (h : κ), ∀ q ∈ (F.V h).boundariesW k,
-    β * ‖q‖ ≤ ‖((H.constraintForm j k).flip q).comp ((F.V h).domainSub j).subtypeL‖
+/-- **The conclusions of the static FEEC theorem** for a conforming family `F` at the degree `j`:
+those of its graph-bounded family (`GraphFamily.StaticVerdict`). [AFW2010], §3.3–§3.4 -/
+abbrev StaticVerdict (j : ι) : Prop := F.toGraphFamily.StaticVerdict j
 
 /-! ### Rates from Jackson estimates -/
 
@@ -545,52 +727,14 @@ theorem rate {ρ : Type*} (J : F.Jackson ρ) (s : ρ) {i j k : ι} (hij : c.Rel 
 
 variable (F)
 
-/-- **The static FEEC theorem.** For a conforming family `F` of a Hilbert complex `H` with closed
-range, and a finite-dimensional `ℌʲ` (`StaticVerdict`), with constants independent of `h`:
-
-1. (**stability**) the uniform discrete Poincaré inequality on `Vₕʲ ⊥ 𝔷ₕʲ` and the uniform
-   well-posedness of the discrete mixed Hodge Laplacian, `‖xₕ‖ ≤ C ‖fₕ‖`;
-2. (**harmonic forms and cohomology**) the harmonic gap tends to `0` and `πₕ` eventually induces
-   isomorphisms `Hʲ(H) ≅ Hʲ(Vₕ)`;
-3. (**quasi-optimality**) the error of the mixed method is at most
-   `K (E_V(σ) + E_V(u) + E(p) + μₕ E_V(P_𝔅 u))`;
-4. (**convergence**) the discrete solutions converge to the solution of the mixed problem; with a
-   Jackson estimate, at the rate `hᵒʳᵈ` for regular solutions (`StaticVerdict.rate`).
-
+/-- **The static FEEC theorem** for a conforming family `F` of a Hilbert complex `H` with closed
+range and a finite-dimensional `ℌʲ`: the static FEEC theorem of its graph-bounded family
+(`GraphFamily.staticFEEC`, which needs closed range at `j` and at the next degree only); with a
+Jackson estimate, the rate `hᵒʳᵈ` for regular solutions (`StaticVerdict.rate`).
 [AFW2010], Thm 3.4, 3.5, 3.6, 3.8, 3.9; [Arnold2018], Thm 5.3, 5.5 -/
 theorem staticFEEC (hcr : ∀ i, H.ClosedRangeAt i) (j : ι) [FiniteDimensional 𝕜 (H.harmonic j)] :
-    F.StaticVerdict j := by
-  have hC := F.one_le_projBound
-  have hgap : Tendsto (fun h => (F.π h).harmonicGap j) F.l (𝓝 0) := F.tendsto_harmonicGap
-  have hqo {i k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) := F.quasiOptimal hij hjk (hcr j) (hcr k)
-  refine ⟨fun {k} hjk => ?_, fun {i k} hij hjk => ?_, hgap,
-    F.eventually_bijective_cohomologyMap (hcr j), hqo, fun {i k} hij hjk f σ u p hs => ?_,
-    fun {k} hjk => ?_⟩
-  · obtain ⟨cP, -, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hcr k)
-    exact ⟨F.projBound * cP, fun h x hx hxo => (F.π h).norm_le_of_forall_inner_eq_zero hjk hP
-      (zero_le_one.trans hC) (F.norm_π_le h j) hx hxo⟩
-  · obtain ⟨cP, hcP, hPi, hPj⟩ := H.exists_poincare_pair hij hjk (hcr j) (hcr k)
-    exact ⟨16 * (F.projBound * cP) ^ 2, fun h f =>
-      ⟨(F.π h).existsUnique_mixed hij hjk hcP hC hPi hPj (F.norm_π_le h i) (F.norm_π_le h j) f,
-        fun x hx => (F.π h).norm_le_of_mixed hij hjk hcP hC hPi hPj (F.norm_π_le h i)
-          (F.norm_π_le h j) hx⟩⟩
-  · -- the four distances tend to `0` (the harmonic one through the projections)
-    obtain ⟨K, -, hK⟩ := hqo hij hjk
-    have hq : Tendsto (fun h => infDist (p : W j) ((F.V h).harmonicW j)) F.l (𝓝 0) := by
-      have h0 := (F.tendsto_infDist_domainSub hjk
-        (cyclesToDomainSpace (H.harmonic_le_cycles j p.2))).const_mul (1 + F.projBound)
-      rw [mul_zero] at h0
-      exact squeeze_zero (fun _ => infDist_nonneg) (fun h => (F.π h).infDist_harmonicW_le hjk
-        (zero_le_one.trans hC) (F.isGraphBounded h j k) p.2) h0
-    have h0 := ((((F.tendsto_infDist_domainSub hij σ).add (F.tendsto_infDist_domainSub hjk u)).add
-      hq).add (hgap.mul (F.tendsto_infDist_domainSub hjk
-        (H.boundaryPart j (H.domainIncl j u))))).const_mul K
-    simp only [add_zero, mul_zero] at h0
-    exact squeeze_zero (fun h => (F.V h).mixedError_nonneg hij hjk f σ u p) (fun h => hK hs h) h0
-  · -- Fortin's criterion with the Fortin operators of the projections
-    obtain ⟨cP, hcP, hP⟩ := H.exists_poincare_of_closedRangeAt hjk (hcr k)
-    exact ⟨_, by positivity, fun h q hq => (F.π h).infSup hjk (by linarith)
-      (zero_le_one.trans hC) hP (F.norm_π_le h j) hq⟩
+    F.StaticVerdict j :=
+  F.toGraphFamily.staticFEEC j (hcr j) fun k _ => hcr k
 
 /-! ### Closed range is necessary -/
 

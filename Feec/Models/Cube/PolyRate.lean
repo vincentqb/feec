@@ -128,7 +128,7 @@ def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx 
 `∂Q`, stronger than vanishing tangential traces (e.g. `∏ᵢ sin (2π xᵢ)` on `(0, ½)ⁿ` is excluded);
 the rates with vanishing traces below are stated for this class. The general case of `H̊Λ(Q)` is
 covered, without a rate, by the quasi-optimality of the static FEEC theorem for `polyFamilyMin`
-(`Feec.HilbertComplex.ConformingFamily.StaticVerdict.quasiOptimal`). The class with
+(`Feec.HilbertComplex.GraphFamily.StaticVerdict.quasiOptimal`). The class with
 vanishing tangential traces only, `FEM.IsCsFormTr` of `Feec.Models.Cube.TangentialRate`, contains
 this one with the same bound (`IsCsFormMin.isCsFormTr`) and carries the same rates. -/
 def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=

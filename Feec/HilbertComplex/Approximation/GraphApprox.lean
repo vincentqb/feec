@@ -149,11 +149,9 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 /-- **Distance to the discrete domain space**: for `v ∈ Vₕⁱ`, the graph-norm distance of `σ` to
 `Vₕⁱ` is at most `‖σ - v‖ + ‖d σ - d v‖` (the quantity bounded by interpolation estimates;
 `domainSub` enters `CochainProjection.norm_sub_le_infDist`). -/
-theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) {v : W i}
-    (hv : v ∈ S.V i) :
+theorem infDist_domainSub_le_of_next {i : ι} (σ : H.domainSpace i) {v : W i} (hv : v ∈ S.V i) :
     Metric.infDist σ (S.domainSub i) ≤ ‖H.domainIncl i σ - v‖ +
-      ‖H.d i j (H.domainCoord i j σ) - H.d i j ⟨v, S.le_domain i j hv⟩‖ := by
-  obtain rfl := c.next_eq' hij
+      ‖H.d i (c.next i) (H.domainCoord i _ σ) - H.d i (c.next i) ⟨v, S.le_domain i _ hv⟩‖ := by
   obtain ⟨x, rfl, -, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq σ
   have hmem : (H.d i (c.next i)).toGraphSpace ⟨v, S.le_domain i _ hv⟩ ∈ S.domainSub i :=
     ⟨(S.toHilbertComplex.d i (c.next i)).toGraphSpace ⟨⟨v, hv⟩, Submodule.mem_top⟩, rfl⟩
@@ -162,6 +160,15 @@ theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i)
   refine (LinearPMap.norm_toGraphSpace_le _ _).trans (le_of_eq ?_)
   rw [LinearPMap.map_sub]
   rfl
+
+/-- **Distance to the discrete domain space** at a related pair `i → j`
+(`infDist_domainSub_le_of_next`). -/
+theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) {v : W i}
+    (hv : v ∈ S.V i) :
+    Metric.infDist σ (S.domainSub i) ≤ ‖H.domainIncl i σ - v‖ +
+      ‖H.d i j (H.domainCoord i j σ) - H.d i j ⟨v, S.le_domain i j hv⟩‖ := by
+  obtain rfl := c.next_eq' hij
+  exact S.infDist_domainSub_le_of_next σ hv
 
 /-- **Graph-norm distance from a degreewise approximation**: a `v ∈ Vₕⁱ` within `ε` of `σ`, with
 `d (σ - v)` within `ε`, gives `dist_V(σ, Vₕⁱ) ≤ 2 ε`. -/

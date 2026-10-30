@@ -12,7 +12,7 @@ Hermitian system of `BlockMatrix` in every basis of the discrete space
 (`Feec.HilbertComplex.DissipFEEC.crankNicolson_signed_mulVec_iff`,
 `Feec.HilbertComplex.SkewFEEC.crankNicolson_signed`), and the static verdict carries the uniform
 discrete inf-sup condition, proved by Fortin's criterion with the Fortin operators built from the
-cochain projections (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.infSup`,
+cochain projections (`Feec.HilbertComplex.GraphFamily.StaticVerdict.infSup`,
 `Feec.HilbertComplex.Subcomplex.CochainProjection.exists_isFortinOperator`).
 
 On the way, the testing lemmas `Feec.TimeStepping.inner_eq_sum_repr` and

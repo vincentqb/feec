@@ -160,19 +160,27 @@ theorem isGraphBounded_of_norm_le {i j : ι} {C : ℝ} (hπi : ∀ x, ‖P.π i 
   have := norm_nonneg (H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩)
   nlinarith
 
+/-- `‖π (ι x)‖ ≤ C ‖x‖_V`, for `π` bounded in the graph norm of `Vⁱ` (that of `d i (c.next i)`,
+the norm of `W` at a degree without successor). -/
+theorem norm_π_domainIncl_le_of_next {i : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded i (c.next i) C) (x : H.domainSpace i) :
+    ‖P.π i (H.domainIncl i x)‖ ≤ C * ‖x‖ := by
+  have h : ‖P.π i (H.domainIncl i x)‖ ^ 2 +
+      ‖H.d i (c.next i) ⟨P.π i (H.domainIncl i x), S.le_domain i _ (P.mem i _)⟩‖ ^ 2 ≤
+        C ^ 2 * (‖H.domainIncl i x‖ ^ 2 + ‖H.d i (c.next i) (H.domainCoord i _ x)‖ ^ 2) :=
+    hπ (H.domainCoord i _ x)
+  rw [← H.norm_sq_domainSpace i] at h
+  have h' : ‖P.π i (H.domainIncl i x)‖ ^ 2 ≤ (C * ‖x‖) ^ 2 := by
+    rw [mul_pow]; nlinarith [sq_nonneg ‖H.d i (c.next i) ⟨P.π i (H.domainIncl i x),
+      S.le_domain i _ (P.mem i _)⟩‖]
+  exact (abs_le_of_sq_le_sq' h' (mul_nonneg hC (norm_nonneg x))).2
+
 /-- `‖π (ι x)‖ ≤ C ‖x‖_V`. -/
 theorem norm_π_domainIncl_le {i j : ι} (hij : c.Rel i j) {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded i j C) (x : H.domainSpace i) :
     ‖P.π i (H.domainIncl i x)‖ ≤ C * ‖x‖ := by
-  have h : ‖P.π i (H.domainIncl i x)‖ ^ 2 +
-      ‖H.d i j ⟨P.π i (H.domainIncl i x), S.le_domain i j (P.mem i _)⟩‖ ^ 2 ≤
-        C ^ 2 * (‖H.domainIncl i x‖ ^ 2 + ‖H.d i j (H.domainCoord i j x)‖ ^ 2) :=
-    hπ (H.domainCoord i j x)
-  rw [← H.norm_sq_domainSpace_of_rel hij] at h
-  have h' : ‖P.π i (H.domainIncl i x)‖ ^ 2 ≤ (C * ‖x‖) ^ 2 := by
-    rw [mul_pow]; nlinarith [sq_nonneg ‖H.d i j ⟨P.π i (H.domainIncl i x),
-      S.le_domain i j (P.mem i _)⟩‖]
-  exact (abs_le_of_sq_le_sq' h' (mul_nonneg hC (norm_nonneg x))).2
+  obtain rfl := c.next_eq' hij
+  exact P.norm_π_domainIncl_le_of_next hC hπ x
 
 /-- `π` maps boundaries to discrete boundaries. -/
 theorem mem_boundariesW {j : ι} {b : W j} (hb : b ∈ H.boundaries j) :
@@ -266,19 +274,26 @@ theorem harmonicGap_le {j : ι} {μ : ℝ} (hμ0 : 0 ≤ μ)
     (hμ _ q.1.2).trans (mul_le_of_le_one_right hμ0 q.2)) hμ0
 
 /-- A graph-bounded projection has finite harmonic gap: `‖q - π q‖ ≤ (1 + C) ‖q‖` on `ℌʲ`. -/
-theorem norm_sub_π_harmonic_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
-    (hπ : P.IsGraphBounded j k C) {q : W j} (hq : q ∈ H.harmonic j) :
+theorem norm_sub_π_harmonic_le_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j (c.next j) C) {q : W j} (hq : q ∈ H.harmonic j) :
     ‖q - P.π j q‖ ≤ (1 + C) * ‖q‖ := by
   have hz := H.harmonic_le_cycles j hq
-  have h := P.norm_π_domainIncl_le hjk hC hπ (cyclesToDomainSpace hz)
+  have h := P.norm_π_domainIncl_le_of_next hC hπ (cyclesToDomainSpace hz)
   have hn : ‖cyclesToDomainSpace hz‖ = ‖q‖ := by
-    have := H.norm_sq_domainSpace_of_rel hjk (cyclesToDomainSpace hz)
+    have := H.norm_sq_domainSpace j (cyclesToDomainSpace hz)
     rw [domainIncl_cyclesToDomainSpace, d_domainCoord_cyclesToDomainSpace, norm_zero,
       zero_pow two_ne_zero, add_zero] at this
     exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 this
   rw [domainIncl_cyclesToDomainSpace, hn] at h
   calc ‖q - P.π j q‖ ≤ ‖q‖ + ‖P.π j q‖ := norm_sub_le _ _
     _ ≤ _ := by linarith
+
+/-- A graph-bounded projection has finite harmonic gap: `‖q - π q‖ ≤ (1 + C) ‖q‖` on `ℌʲ`. -/
+theorem norm_sub_π_harmonic_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j k C) {q : W j} (hq : q ∈ H.harmonic j) :
+    ‖q - P.π j q‖ ≤ (1 + C) * ‖q‖ := by
+  obtain rfl := c.next_eq' hjk
+  exact P.norm_sub_π_harmonic_le_of_next hC hπ hq
 
 /-! ### The consistency term -/
 
@@ -320,8 +335,8 @@ theorem norm_inner_le_of_orthogonal_harmonic {j : ι} (hj : H.ClosedRangeAt j) {
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)] in
 /-- `‖(I - π) b‖ ≤ (1 + C) ‖b - v‖_V` for a cycle `b` and any `v ∈ Vₕʲ`. -/
-theorem norm_sub_π_le_of_mem_cycles {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
-    (hπ : P.IsGraphBounded j k C) {b : W j} (hb : b ∈ H.cycles j)
+theorem norm_sub_π_le_of_mem_cycles_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j (c.next j) C) {b : W j} (hb : b ∈ H.cycles j)
     (w : S.toHilbertComplex.domainSpace j) :
     ‖b - P.π j b‖ ≤ (1 + C) * ‖cyclesToDomainSpace hb - S.embD j w‖ := by
   set x := cyclesToDomainSpace hb - S.embD j w
@@ -334,8 +349,17 @@ theorem norm_sub_π_le_of_mem_cycles {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC 
   rw [e]
   calc _ ≤ ‖H.domainIncl j x‖ + ‖P.π j (H.domainIncl j x)‖ := norm_sub_le _ _
     _ ≤ ‖x‖ + C * ‖x‖ := add_le_add (H.norm_domainIncl_le j x)
-        (P.norm_π_domainIncl_le hjk hC hπ x)
+        (P.norm_π_domainIncl_le_of_next hC hπ x)
     _ = _ := by ring
+
+variable [∀ i, FiniteDimensional 𝕜 (S.V i)] in
+/-- `‖(I - π) b‖ ≤ (1 + C) ‖b - v‖_V` for a cycle `b` and any `v ∈ Vₕʲ`. -/
+theorem norm_sub_π_le_of_mem_cycles {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j k C) {b : W j} (hb : b ∈ H.cycles j)
+    (w : S.toHilbertComplex.domainSpace j) :
+    ‖b - P.π j b‖ ≤ (1 + C) * ‖cyclesToDomainSpace hb - S.embD j w‖ := by
+  obtain rfl := c.next_eq' hjk
+  exact P.norm_sub_π_le_of_mem_cycles_of_next hC hπ hb w
 
 /-! ### Uniform discrete stability with a graph-bounded projection -/
 

@@ -256,7 +256,7 @@ nested Lake project sharing the dependencies of the root package
 Mathlib alone, a `Solution.lean` proving it from `Feec` through `Solution/Bridge.lean` (the
 challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.json` and
 `formalization.yaml`. The static and dynamic packages copy the same vocabulary (Hilbert complexes
-on ℤ, subcomplexes, cochain projections, families of subcomplexes).
+on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others are self-contained.
 
 * `palomar/static/` (theorem FEEC.staticFEEC, about 250 lines): the a priori theory of the mixed
   Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the degrees used (cochain
@@ -274,9 +274,10 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes).
 * `palomar/periodic/` (theorem FEEC.periodicTable, about 160 lines): the algebra of the periodic
   table in every dimension: the dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_r⁻Λᵏ` and, in
   characteristic `0`, exactness of their polynomial de Rham complexes (constants in degree `0`),
-  the homotopy formula and the Koszul decompositions ([AFW2006], §3; [ArnoldBoffiBonizzoni2015], §3); from
-  `Feec.Algebra.PolynomialFormDim` and `Feec.Algebra.CubicalForm`. Its challenge has its own
-  vocabulary (polynomial forms over `MvPolynomial`), not the Hilbert complexes above.
+  the homotopy formula and the Koszul decompositions ([AFW2006], §3;
+  [ArnoldBoffiBonizzoni2015], §3); from `Feec.Algebra.PolynomialFormDim` and
+  `Feec.Algebra.CubicalForm`. Its challenge has its own vocabulary (polynomial forms over
+  `MvPolynomial`), not the Hilbert complexes above.
 * `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
   VonNeumann.inequality_dissipative, VonNeumann.cayley_contraction, about 100 lines, Mathlib
   vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of
@@ -286,11 +287,22 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes).
   and the Cayley transform of an m-dissipative, possibly unbounded, `A` as the unique contraction
   mapping `x - τAx` to `x + τAx`; from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
   `Feec.TimeStepping.RationalScheme.ofBounded` and `Feec.TimeStepping.norm_cayley_le`.
+* `palomar/bgg/` (theorems FEEC.bggCohomology and FEEC.bggFinrank, about 280 lines): the
+  algebraic BGG construction of [ArnoldHu2021], §5.2 over any ring, for cochain complexes on ℤ
+  of any length: for a stacked diagram `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and
+  surjective for `i ≥ J`, the inclusion `Γ → T` into the twisted complex and the projection
+  `Γ → Γ / Δ` onto the BGG complex are quasi-isomorphisms, `0 → V → T → Ṽ → 0` is short exact
+  and the BGG complex is exact when both rows are; over a field, the dimension bound of Theorem 6,
+  `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`; from `Feec.BGG.Data.quasiIso_Γ` and
+  `Feec.BGG.Data.quasiIso_derived`.
 
 The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
 package (each directory `palomar/*/` with a `comparator.json`) that `Solution/Defs.lean` is the
-challenge without its compared theorems
-(`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
+challenge without its compared theorems (`lake exe feec-palomar --write` regenerates it) and that
+the package builds against `Feec`.
+The comparator compares every constant the statement uses, proofs included, so proofs in a
+challenge must not create private auxiliary lemmas (named after their module, hence different in
+`Solution/Defs.lean`), such as `simp` with `←` lemmas and some `omega` calls.
 Before a submission, judge each with the comparator (several minutes):
 
 ```bash
@@ -298,6 +310,7 @@ cd palomar/static && lake build && lake comparator
 cd palomar/dynamic && lake build && lake comparator
 cd palomar/periodic && lake build && lake comparator
 cd palomar/vonneumann && lake build && lake comparator
+cd palomar/bgg && lake build && lake comparator
 ```
 
 ## Citing

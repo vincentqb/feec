@@ -12,33 +12,47 @@ Rates `h^{min(s, r_eff)}` of the finite element methods of every admissible sequ
 Freudenthal meshes of `Q = (0, ½)ⁿ` for data in the Sobolev spaces of
 `Feec.Models.Cube.Sobolev`, every real `s ≥ 0`, where `r_eff = p + 1` and `S` reproduces `P_p`
 in the degrees used (`polySpace n p k ≤ S.space n k`, e.g. `FEM.PolyOrder n S p`,
-`FEM.PolyOrderAt n S p j`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`), under the condition
-**`2 r_eff > n`** (`n < 2 * (p + 1)`): the canonical interpolant uses point values, which
-`H^{r_eff}` controls by the Sobolev embedding ([Evans2010], §5.6). This holds for every
-`r_eff ≥ 2` in dimension `n ≤ 3`; for `r_eff = 1` the rate `h^{min(s,1)}` is
-`Feec.Models.Cube.SobolevRate`.
+`FEM.PolyOrderAt n S p j`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`), in **every dimension**
+`n` and every order (no condition `2 r_eff > n`; for `r_eff = 1` also
+`Feec.Models.Cube.SobolevRate`).
 
 **Method.** Truncate the Fourier series of an extension (or of the parity extension) at
 `M = N + 1 ≈ 1/(2h_N)`: `‖u - u_M‖ ≤ h_N^q ‖u‖_s`, `q = min(s, r_eff)`. By the Bernstein inequality
 (`sum_norm_iteratedFDeriv_truncQ_sq_le`), `‖D^{r_eff} u_M‖_{L²(Q)} ≲ M^{r_eff - q} ‖u‖_s`, and the
-`L²` interpolation error from `L²` derivatives (`norm_formL2_sub_glue_globalInterp_le`:
-`‖w - Π_h w‖ ≤ C h_N^{r_eff} ‖D^{r_eff} w‖_{L²(Q)}`) gives `dist(u_M, Vₕ) ≲ h_N^q ‖u‖_s`
-(`meshSize_pow_mul_rpow_le`). The local estimate (`sum_integral_sq_sub_globalInterp_le`) is the
-Sobolev embedding on each Freudenthal simplex for the averaged Taylor polynomial
-(`norm_sub_degPart_avgTaylorPoly_le`, from `Feec.FiniteElement.enorm_sub_avgTaylorPoly_le_L2`;
-`|T| = h_Nⁿ/n!`, `volume_closedInterior_mesh`) combined with the `C⁰` quasi-optimality of the
-canonical interpolant (`Poly.abs_sub_globalInterp_le_of_near`, the DOF bounds of
-`Feec.Models.Cube.PolySmoothingEstimates`, uniform over the Kuhn simplices); the simplices
-overlap boundedly (`sum_integral_closedInterior_le`). The parity version interpolates with
-vanishing boundary DOFs on the faces normal to `J` (`truncField_face`,
-`exists_mem_polyPartial_le_L2`). Graph norms, the mixed Hodge Laplacian and the semi-discrete
+`L²` interpolation error with lower-order terms (`norm_formL2_sub_glue_globalInterp_le_sum`:
+`‖w - Π_h w‖ ≤ C h_N^{r_eff} Σ_{i ≤ ⌊n/2⌋ + 1} h_Nⁱ ‖D^{r_eff + i} w‖_{L²(Q)}`), in which every term
+is `≲ h_N^q ‖u‖_s` for the band-limited `u_M` (`meshSize_pow_mul_sqrt_integral_truncField_le`,
+`meshSize_pow_mul_rpow_le`), gives `dist(u_M, Vₕ) ≲ h_N^q ‖u‖_s`
+(`norm_formL2_truncField_sub_glue_le`). The local estimate
+(`sum_integral_sq_sub_globalInterp_le_sum`) is the `C⁰` estimate
+`|w - Π_T w| ≤ C h_N^{r_eff} sup_T ‖D^{r_eff} w‖` of the canonical interpolant
+(`Poly.abs_sub_globalInterp_le`, the DOF bounds of `Feec.Models.Cube.PolySmoothingEstimates`,
+uniform over the Kuhn simplices) with the Sobolev embedding of `D^{r_eff} w` on each simplex at the
+order `⌊n/2⌋ + 1 > n/2` (`norm_iteratedFDeriv_le_mesh`, from `Feec.FiniteElement.enorm_le_L2`;
+`|T| = h_Nⁿ/n!`, `volume_closedInterior_mesh`); the simplices overlap boundedly
+(`sum_integral_closedInterior_le`). The point values of the degrees of freedom are harmless because
+the data are smoothed first: the classical route for rough data replaces the canonical
+interpolant by a quasi-interpolant ([Clement1975]; [ScottZhang1990]) or by the smoothed
+projections ([AFW2010], §5); here the Fourier truncation plays the role of the smoothing, and only
+its derivatives of order `≤ r_eff + ⌊n/2⌋ + 1` enter. For `2 r_eff > n` the sharper local estimate
+with the single term `h_N^{r_eff} ‖D^{r_eff} w‖` (`sum_integral_sq_sub_globalInterp_le`, the
+Sobolev embedding of `w` itself, [Ciarlet2002], Thm 3.1.4) is also proved, with its own
+constant `sobConstHighEmb` (`norm_formL2_truncField_sub_glue_le_emb`); any such bound on the
+truncations gives a rate (`infDist_poly_le_sobolevQ_of_near`). The parity version
+interpolates with vanishing boundary DOFs on the faces normal to `J` (`truncField_face`,
+`exists_mem_polyPartial_of_le`). Graph norms, the mixed Hodge Laplacian and the semi-discrete
 Hodge wave equation follow through the uniformly bounded cochain projections (which exist for
 every `S` and `J`: `polySmoothingEstimates_exists`, `paritySmoothing_exists`) as in
 `Feec.Models.Cube.SobolevRate`.
 
 ## Main results
 
-* **Best approximation**: **`infDist_poly_le_sobolevQ_high`**
+* **Interpolation error with lower-order terms**, every dimension:
+  `norm_formL2_sub_glue_globalInterp_le_sum`; for `2(p + 1) > n` the single-term
+  `norm_formL2_sub_glue_globalInterp_le`.
+* **Best approximation**, from any interpolation bound on the truncations:
+  `infDist_poly_le_sobolevQ_of_near`, `infDist_polyPartial_le_sobolevPar_of_near`.
+* **Best approximation at the optimal rate**: **`infDist_poly_le_sobolevQ_high`**
   (`dist(y, Vₕᵏ) ≤ C h_N^{min(s, p+1)} ‖y‖_{Hˢ(Q)}`), **`infDist_polyPartial_le_sobolevPar_high`**
   (`HΛ_J(Q)`, every class `J`, `‖y‖_{s,J}`); in every degree `infDist_poly_le_sobAt_high`,
   `infDist_polyPartial_le_sobAtPar_high`.
@@ -48,7 +62,7 @@ every `S` and `J`: `polySmoothingEstimates_exists`, `paritySmoothing_exists`) as
   **`mixed_rate_sobolevPar_high`** (error `≤ K L h_N^{min(s, p+1)}` for `S` reproducing `P_p` in
   the degrees `i, i + 1, i + 2`), the `_of_polyOrderAt` variant, and the bottom row
   `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of Tables 5.1/6.1 on `1`-forms at the rate `h^{min(s,2)}`
-  (`mixed_rate_lagrangeP2_sobolevQ`, `n ≤ 3`).
+  (`mixed_rate_lagrangeP2_sobolevQ`, every `n`).
 * **Semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14) on every window:
   `PolySmoothingEstimates.norm_sub_le_window_sobolevQ_high`; with no smoothing hypothesis,
   `exists_norm_sub_le_window_sobolevQ_high` (the smoothing estimates from
@@ -58,18 +72,18 @@ every `S` and `J`: `polySmoothingEstimates_exists`, `paritySmoothing_exists`) as
 
 | Setting | proved | condition |
 |---|---|---|
-| `HΛ(Q)`, `y ∈ Hˢ(Q)` | `h^{min(s, r_eff)}` | `2 r_eff > n` |
-| `HΛ_J(Q)`, `H̊Λ(Q)`, `y ∈ Hˢ_J(Q)` | `h^{min(s, r_eff)}` | `2 r_eff > n` |
-| graph norm, `σ, dσ ∈ Hˢ` | `h^{min(s, r_eff)}` | `2 r_eff > n` (degrees `j, j + 1`) |
-| mixed Hodge Laplacian | `h^{min(s, r_eff)}` | `2 r_eff > n` (degrees `i, i+1, i+2`) |
-| semi-discrete Hodge wave | `h^{min(s, r_eff)}` | `2 r_eff > n` (degrees of the window) |
+| `HΛ(Q)`, `y ∈ Hˢ(Q)` | `h^{min(s, r_eff)}` | none |
+| `HΛ_J(Q)`, `H̊Λ(Q)`, `y ∈ Hˢ_J(Q)` | `h^{min(s, r_eff)}` | none |
+| graph norm, `σ, dσ ∈ Hˢ` | `h^{min(s, r_eff)}` | degrees `j, j + 1` |
+| mixed Hodge Laplacian | `h^{min(s, r_eff)}` | degrees `i, i+1, i+2` |
+| semi-discrete Hodge wave | `h^{min(s, r_eff)}` | degrees of the window |
 
 *Remark* (not a theorem here): the exponents are the optimal orders of the `L²` best
 approximation by piecewise polynomials of degree `p`; no lower bound is formalized.
 
-What remains: the condition `2 r_eff > n` for `r_eff ≥ 2` in dimension `n ≥ 4` (it would need a
-Scott–Zhang type quasi-interpolant instead of the canonical one), the improved `L²` estimates of [AFW2010], §3.5 for the
-mixed method, and the BGG rates of Tables 5.1/6.1 for Sobolev data.
+What remains: Sobolev rates off the cube (parallelepipeds, star-shaped domains: there the data
+have no Fourier truncation, and a quasi-interpolant would be needed), the improved `L²` estimates
+of [AFW2010], §3.5 for the mixed method, and the BGG rates of Tables 5.1/6.1 for Sobolev data.
 
 No hypothesis is assumed beyond the data (the smoothing estimates `hE` exist for every sequence
 and class).
@@ -85,6 +99,10 @@ and class).
 * [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
   §9.1 (Sobolev spaces)
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6 (Sobolev inequalities)
+* [Ph. Clément, *Approximation by finite element functions using local regularization*][Clement1975]
+  (quasi-interpolation of rough data)
+* [L. R. Scott, S. Zhang, *Finite element interpolation of nonsmooth functions satisfying boundary conditions*][ScottZhang1990]
+  (quasi-interpolation of rough data)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
 
@@ -228,6 +246,26 @@ theorem volume_closedInterior_mesh {N : ℕ} {T : Affine.Simplex ℝ (Fin n → 
   rw [← Measure.real, h1, Measure.real, volume_closedInterior_kuhnSimplex]
   simp [div_eq_mul_inv]
 
+/-- The constant `dⁿ / (n p! |T|)` of the averaged Taylor polynomial on a Freudenthal simplex is
+`embA n p` (`|T| = h_Nⁿ / n!`, `d = h_N`). -/
+theorem avgTaylorConst_mesh [NeZero n] {N : ℕ} (p : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) :
+    avgTaylorConst n p (hN N) T.closedInterior = ENNReal.ofReal (embA n p) := by
+  have hn : (n : ℝ) ≠ 0 := by exact_mod_cast NeZero.ne n
+  have hh := hN_pos N
+  rw [avgTaylorConst, volume_closedInterior_mesh hT, ← ENNReal.ofReal_div_of_pos (by positivity)]
+  congr 1
+  unfold embA
+  have : (n.factorial : ℝ) ≠ 0 := by positivity
+  have : (p.factorial : ℝ) ≠ 0 := by positivity
+  field_simp
+
+/-- The square root of the Riesz constant as a real number, for `2(p + 1) > n`. -/
+theorem rieszConst_rpow_half {p : ℕ} (hns : n < 2 * (p + 1)) {h : ℝ} (hh : 0 ≤ h) :
+    rieszConst n (2 * (p + 1)) (2 * n) h ^ (1 / 2 : ℝ) = ENNReal.ofReal (√(rieszR n p h)) := by
+  rw [show rieszConst n (2 * (p + 1)) (2 * n) h = ENNReal.ofReal (rieszR n p h) from rfl,
+    ENNReal.ofReal_rpow_of_nonneg (rieszR_nonneg hns hh) (by norm_num), Real.sqrt_eq_rpow]
+
 /-- **Sobolev embedding on a Freudenthal simplex** (`2(p + 1) > n`): the degree-`k` part `P` of
 the averaged Taylor polynomial of order `p + 1` (`avgTaylorPoly`, a form of `P_pΛᵏ`) satisfies
 `sup_T ‖w - P‖ ≤ (n!/(n p!)) (R(h_N))^{1/2} (∫_T ‖D^{p+1} w‖²)^{1/2}`
@@ -249,20 +287,6 @@ theorem norm_sub_degPart_avgTaylorPoly_le [NeZero n] {N k p : ℕ} (hns : n < 2 
   have h := enorm_sub_avgTaylorPoly_le_L2 hn hTc (convex_closedInterior T)
     (volume_closedInterior_ne_zero T) isOpen_univ (subset_univ _) hns hw.contDiffOn hd hx
   -- the three factors as real numbers
-  have hA : avgTaylorConst n p (hN N) T.closedInterior = ENNReal.ofReal (embA n p) := by
-    rw [avgTaylorConst, volume_closedInterior_mesh hT,
-      ← ENNReal.ofReal_div_of_pos (by positivity)]
-    congr 1
-    unfold embA
-    have : (n.factorial : ℝ) ≠ 0 := by positivity
-    have : (p.factorial : ℝ) ≠ 0 := by positivity
-    have : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
-    field_simp
-  have hR : rieszConst n (2 * (p + 1)) (2 * n) (hN N) ^ (1 / 2 : ℝ) =
-      ENNReal.ofReal (√(rieszR n p (hN N))) := by
-    rw [show rieszConst n (2 * (p + 1)) (2 * n) (hN N) = ENNReal.ofReal (rieszR n p (hN N)) from
-      rfl, ENNReal.ofReal_rpow_of_nonneg (rieszR_nonneg hns hh.le) (by norm_num),
-      Real.sqrt_eq_rpow]
   have hDc : ContinuousOn (iteratedFDeriv ℝ (p + 1) w) T.closedInterior :=
     (hw.continuous_iteratedFDeriv le_rfl).continuousOn
   have hI : (∫⁻ z in T.closedInterior, ‖iteratedFDeriv ℝ (p + 1) w z‖ₑ ^ 2) ^ (1 / 2 : ℝ) =
@@ -270,7 +294,8 @@ theorem norm_sub_degPart_avgTaylorPoly_le [NeZero n] {N k p : ℕ} (hns : n < 2 
     rw [integral_norm_sq_eq_toReal_lintegral hTm hDc, Real.sqrt_eq_rpow,
       ← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg (by norm_num),
       ENNReal.ofReal_toReal (setLIntegral_enorm_sq_lt_top hTc hDc).ne]
-  rw [hA, hR, hI, ← ENNReal.ofReal_mul (embA_nonneg p), ← ENNReal.ofReal_mul
+  rw [avgTaylorConst_mesh p hT, rieszConst_rpow_half hns hh.le, hI,
+    ← ENNReal.ofReal_mul (embA_nonneg p), ← ENNReal.ofReal_mul
     (mul_nonneg (embA_nonneg p) (Real.sqrt_nonneg _))] at h
   have e : w x - degPartField k (avgTaylorPoly T.closedInterior w (p + 1)) x =
       degPart k (w x - avgTaylorPoly T.closedInterior w (p + 1) x) := by
@@ -459,7 +484,336 @@ theorem norm_formL2_sub_glue_globalInterp_le [NeZero n] (S : PolySeq) {N k p : �
   have := globalL2Const_nonneg (n := n) S k p
   exact (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 h4
 
+/-! #### With lower-order terms, in every dimension -/
+
+/-- **Sobolev embedding of `D^r w` on a Freudenthal simplex**, with the lower-order terms
+(`Feec.FiniteElement.enorm_le_L2` for `f = D^r w`, `|T| = h_Nⁿ/n!`, `d = h_N`): for `2(ν + 1) > n`
+and every `r`, `sup_T ‖D^r w‖ ≤ Σ_{i ≤ ν} h_Nⁱ/i! (n!/h_Nⁿ ∫_T ‖D^{i+r} w‖²)^{1/2} +
+(n!/(n ν!)) R(h_N)^{1/2} (∫_T ‖D^{ν+1+r} w‖²)^{1/2}`. -/
+theorem norm_iteratedFDeriv_le_mesh [NeZero n] {N r ν : ℕ} (hnν : n < 2 * (ν + 1))
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {w : FormField n}
+    (hw : ContDiff ℝ ∞ w) {y : Fin n → ℝ} (hy : y ∈ T.closedInterior) :
+    ‖iteratedFDeriv ℝ r w y‖ ≤ ∑ i ∈ range (ν + 1), hN N ^ i / i.factorial *
+        √(n.factorial / hN N ^ n * ∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (i + r) w z‖ ^ 2) +
+      embA n ν * √(rieszR n ν (hN N)) *
+        √(∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (ν + 1 + r) w z‖ ^ 2) := by
+  have hn : 0 < n := Nat.pos_of_ne_zero (NeZero.ne n)
+  have hh := hN_pos N
+  have hTc : IsCompact T.closedInterior := T.isCompact_closedInterior
+  have hTm : MeasurableSet T.closedInterior := hTc.isClosed.measurableSet
+  have hd : ∀ x ∈ T.closedInterior, ∀ y ∈ T.closedInterior, ‖x - y‖ ≤ hN N := by
+    obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
+    exact fun x hx y hy => norm_sub_le_of_mem_cubeSimplex hx hy
+  set g := iteratedFDeriv ℝ r w
+  have hg : ContDiff ℝ ∞ g := hw.iteratedFDeriv_right (by exact_mod_cast le_top)
+  have h := enorm_le_L2 hn hTc (convex_closedInterior T) (volume_closedInterior_ne_zero T)
+    isOpen_univ (subset_univ _) hnν (hg.of_le (by exact_mod_cast le_top)).contDiffOn hd hy
+  -- the integrals as real numbers
+  have hI : ∀ i, (∫⁻ z in T.closedInterior, ‖iteratedFDeriv ℝ i g z‖ₑ ^ 2) =
+      ENNReal.ofReal (∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (i + r) w z‖ ^ 2) := by
+    intro i
+    have e : ∀ z, ‖iteratedFDeriv ℝ i g z‖ₑ = ‖iteratedFDeriv ℝ (i + r) w z‖ₑ := fun z => by
+      rw [← ofReal_norm, ← ofReal_norm, norm_iteratedFDeriv_iteratedFDeriv]
+    have hDc : ContinuousOn (iteratedFDeriv ℝ (i + r) w) T.closedInterior :=
+      (hw.continuous_iteratedFDeriv (by exact_mod_cast le_top)).continuousOn
+    simp_rw [e]
+    rw [integral_norm_sq_eq_toReal_lintegral hTm hDc,
+      ENNReal.ofReal_toReal (setLIntegral_enorm_sq_lt_top hTc hDc).ne]
+  have hJ : ∀ i, 0 ≤ ∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (i + r) w z‖ ^ 2 := fun i =>
+    setIntegral_nonneg hTm fun _ _ => sq_nonneg _
+  have hvol : volume T.closedInterior = ENNReal.ofReal (hN N ^ n / n.factorial) :=
+    volume_closedInterior_mesh hT
+  have havg : ∀ i, (⨍⁻ z in T.closedInterior, ‖iteratedFDeriv ℝ i g z‖ₑ ^ 2 ∂volume) ^
+      (1 / 2 : ℝ) = ENNReal.ofReal
+        (√(n.factorial / hN N ^ n *
+          ∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (i + r) w z‖ ^ 2)) := by
+    intro i
+    rw [setLAverage_eq, hI, hvol, ← ENNReal.ofReal_div_of_pos (by positivity),
+      ENNReal.ofReal_rpow_of_nonneg (div_nonneg (hJ i) (by positivity)) (by norm_num),
+      Real.sqrt_eq_rpow]
+    congr 2
+    field_simp
+  have hlast : (∫⁻ z in T.closedInterior, ‖iteratedFDeriv ℝ (ν + 1) g z‖ₑ ^ 2) ^ (1 / 2 : ℝ) =
+      ENNReal.ofReal (√(∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (ν + 1 + r) w z‖ ^ 2)) := by
+    rw [hI, ENNReal.ofReal_rpow_of_nonneg (hJ _) (by norm_num), Real.sqrt_eq_rpow]
+  simp_rw [havg] at h
+  rw [avgTaylorConst_mesh ν hT, rieszConst_rpow_half hnν hh.le, hlast, ← ofReal_norm] at h
+  have hE := embA_nonneg (n := n) ν
+  have hE' : 0 ≤ embA n ν * √(rieszR n ν (hN N)) := mul_nonneg hE (Real.sqrt_nonneg _)
+  rw [← ENNReal.ofReal_mul hE, ← ENNReal.ofReal_mul hE'] at h
+  simp_rw [← ENNReal.ofReal_mul (div_nonneg (pow_nonneg hh.le _) (Nat.cast_nonneg _))] at h
+  have hS : ∀ i ∈ range (ν + 1), 0 ≤ hN N ^ i / i.factorial *
+      √(n.factorial / hN N ^ n * ∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (i + r) w z‖ ^ 2) :=
+    fun i _ => mul_nonneg (div_nonneg (pow_nonneg hh.le _) (Nat.cast_nonneg _))
+      (Real.sqrt_nonneg _)
+  rw [← ENNReal.ofReal_sum_of_nonneg hS, ← ENNReal.ofReal_add (Finset.sum_nonneg hS)
+    (mul_nonneg hE' (Real.sqrt_nonneg _))] at h
+  exact (ENNReal.ofReal_le_ofReal_iff (add_nonneg (Finset.sum_nonneg hS)
+    (mul_nonneg hE' (Real.sqrt_nonneg _)))).1 h
+
+variable (n) in
+/-- The constant `2ⁿ C_I² (2 (ν + 1) n! + 2 A_ν² C_ν)`, `ν = ⌊n/2⌋`, of the local `L²`
+interpolation error with lower-order terms (`sum_integral_sq_sub_globalInterp_le_sum`). -/
+def localL2SumConst (S : PolySeq) (k : ℕ) : ℝ :=
+  2 ^ n * interpCi n S k ^ 2 *
+    (((2 * (n / 2 + 1) * n.factorial : ℕ) : ℝ) + 2 * embA n (n / 2) ^ 2 * rieszC n (n / 2))
+
+theorem localL2SumConst_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ localL2SumConst n S k := by
+  have := rieszC_nonneg (n := n) (p := n / 2) (by omega)
+  unfold localL2SumConst; positivity
+
+/-- **The local `L²` interpolation error with lower-order terms**, in every dimension: for
+`P_pΛᵏ ⊆ P(T)ᵏ` and a smooth degree-`k` form `w`,
+`‖w - Π_T w‖²_{L²(T)} ≤ C h_N^{2(p+1)} Σ_{i ≤ ⌊n/2⌋ + 1} h_N^{2i} ∫_T ‖D^{i+p+1} w‖²`,
+`C = localL2SumConst n S k` independent of `N`, `T` and `p`: the `C⁰` estimate
+`|w - Π_T w| ≤ C_I h_N^{p+1} sup_T ‖D^{p+1} w‖` (`Poly.abs_sub_globalInterp_le`) and the Sobolev
+embedding of `D^{p+1} w` (`norm_iteratedFDeriv_le_mesh`, order `⌊n/2⌋ + 1`). Unlike
+`sum_integral_sq_sub_globalInterp_le` there is no condition `2(p + 1) > n`. -/
+theorem sum_integral_sq_sub_globalInterp_le_sum [NeZero n] (S : PolySeq) {N k p : ℕ}
+    (hs : polySpace n p k ≤ S.space n k) (T : (mesh n N).simplices)
+    {w : FormField n} (hw : ContDiff ℝ ∞ w) (hdeg : ∀ x, IsDeg k (w x)) :
+    ∑ t : formIdx n k, ∫ x in (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+      (w x t.1 - ((((polyElement n S).globalInterp (mesh n N) k ⟨w, hw.continuous⟩ :
+        (polyElement n S).Piecewise (mesh n N) k) T : (polyElement n S).space T k) :
+          FormField n) x t.1) ^ 2 ≤
+      localL2SumConst n S k * hN N ^ (2 * (p + 1)) * ∑ i ∈ range (n / 2 + 2), hN N ^ (2 * i) *
+        ∫ y in (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+          ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2 := by
+  set ν := n / 2
+  have hnν : n < 2 * (ν + 1) := by omega
+  set T' : Affine.Simplex ℝ (Fin n → ℝ) n := T.1
+  have hT : T' ∈ (mesh n N).simplices := T.2
+  have hh := hN_pos N
+  set h := hN N
+  set I : ℕ → ℝ := fun i => ∫ y in T'.closedInterior, ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2
+  have hI : ∀ i, 0 ≤ I i := fun i => setIntegral_nonneg
+    T'.isCompact_closedInterior.isClosed.measurableSet fun _ _ => sq_nonneg _
+  set b : ℕ → ℝ := fun i => h ^ i / i.factorial * √(n.factorial / h ^ n * I i)
+  set c : ℝ := embA n ν * √(rieszR n ν h) * √(I (ν + 1))
+  set M : ℝ := ∑ i ∈ range (ν + 1), b i + c
+  have hb : ∀ i, 0 ≤ b i := fun i => mul_nonneg (by positivity) (Real.sqrt_nonneg _)
+  have hc : 0 ≤ c :=
+    mul_nonneg (mul_nonneg (embA_nonneg ν) (Real.sqrt_nonneg _)) (Real.sqrt_nonneg _)
+  have hM : ∀ y ∈ T'.closedInterior, ‖iteratedFDeriv ℝ (p + 1) w y‖ ≤ M := fun y hy =>
+    norm_iteratedFDeriv_le_mesh (r := p + 1) hnν hT hw hy
+  have hw1 : ContDiff ℝ (p + 1) w := hw.of_le (by exact_mod_cast le_top)
+  set Iw : (polyElement n S).space T k := (((polyElement n S).globalInterp (mesh n N) k
+    ⟨w, hw.continuous⟩ : (polyElement n S).Piecewise (mesh n N) k) T)
+  have hIwc : Continuous (Iw : FormField n) :=
+    (PolyKind.contDiff_of_mem_space Iw.2).continuous
+  set e := interpCi n S k * (h ^ (p + 1) * M)
+  have hpt : ∀ x ∈ T'.closedInterior, ∀ t : Finset (Fin n),
+      |w x t - (Iw : FormField n) x t| ≤ e := fun x hx t =>
+    Poly.abs_sub_globalInterp_le S hs (dofBound_dofConst S k) (dofConst_nonneg S k)
+      (coeffBound_coeffConst S k) T hw1 hdeg hM hx t
+  obtain ⟨m, σ, hmσ⟩ := mem_mesh_simplices.1 hT
+  have hone : ∀ t : formIdx n k, ∫ x in T'.closedInterior,
+      (w x t.1 - (Iw : FormField n) x t.1) ^ 2 ≤ h ^ n * e ^ 2 := by
+    intro t
+    have hc : Continuous fun x => (w x t.1 - (Iw : FormField n) x t.1) ^ 2 :=
+      (((continuous_apply t.1).comp hw.continuous).sub ((continuous_apply t.1).comp hIwc)).pow 2
+    have := integral_cubeSimplex_le m σ hc (fun x hx => by
+      rw [hmσ] at hx
+      rw [← sq_abs]
+      exact pow_le_pow_left₀ (abs_nonneg _) (hpt x hx t.1) 2) (fun x => sq_nonneg _)
+    rwa [hmσ] at this
+  -- `hⁿ M² ≤ K Σ_{i ≤ ν + 1} h^{2i} I_i`
+  have hb2 : ∀ i, h ^ n * b i ^ 2 ≤ n.factorial * (h ^ (2 * i) * I i) := by
+    intro i
+    have hf : (1 : ℝ) ≤ (i.factorial : ℝ) ^ 2 := by
+      have := i.factorial_pos
+      exact_mod_cast Nat.one_le_pow _ _ this
+    have e : h ^ n * b i ^ 2 = n.factorial * (h ^ (2 * i) * I i) / (i.factorial : ℝ) ^ 2 := by
+      simp only [b]
+      rw [mul_pow, div_pow, Real.sq_sqrt (by have := hI i; positivity)]
+      field_simp
+      ring
+    rw [e]
+    exact div_le_self (by have := hI i; positivity) hf
+  have hc2 : h ^ n * c ^ 2 = embA n ν ^ 2 * rieszC n ν * (h ^ (2 * (ν + 1)) * I (ν + 1)) := by
+    simp only [c]
+    rw [mul_pow, mul_pow, Real.sq_sqrt (rieszR_nonneg hnν hh.le), Real.sq_sqrt (hI _)]
+    have := pow_mul_rieszR (n := n) (p := ν) hh
+    calc h ^ n * (embA n ν ^ 2 * rieszR n ν h * I (ν + 1)) =
+        (h ^ n * rieszR n ν h) * embA n ν ^ 2 * I (ν + 1) := by ring
+      _ = _ := by rw [this]; ring
+  set S0 := ∑ i ∈ range (ν + 1), h ^ (2 * i) * I i
+  have hS0 : 0 ≤ S0 := Finset.sum_nonneg fun i _ => mul_nonneg (by positivity) (hI i)
+  have hL0 : 0 ≤ h ^ (2 * (ν + 1)) * I (ν + 1) := mul_nonneg (by positivity) (hI _)
+  have hK0 : 0 ≤ embA n ν ^ 2 * rieszC n ν := mul_nonneg (sq_nonneg _) (rieszC_nonneg hnν)
+  have hMb : h ^ n * M ^ 2 ≤ (((2 * (ν + 1) * n.factorial : ℕ) : ℝ) +
+      2 * embA n ν ^ 2 * rieszC n ν) * ∑ i ∈ range (ν + 2), h ^ (2 * i) * I i := by
+    have h1 : M ^ 2 ≤ 2 * (∑ i ∈ range (ν + 1), b i) ^ 2 + 2 * c ^ 2 := by
+      nlinarith [sq_nonneg (∑ i ∈ range (ν + 1), b i - c)]
+    have h2 : (∑ i ∈ range (ν + 1), b i) ^ 2 ≤ (ν + 1) * ∑ i ∈ range (ν + 1), b i ^ 2 := by
+      have := sq_sum_le_card_mul_sum_sq (s := range (ν + 1)) (f := b)
+      simpa using this
+    have h3 : h ^ n * ∑ i ∈ range (ν + 1), b i ^ 2 ≤ n.factorial * S0 := by
+      rw [Finset.mul_sum, Finset.mul_sum]; exact Finset.sum_le_sum fun i _ => hb2 i
+    have hhn : 0 ≤ h ^ n := by positivity
+    rw [Finset.sum_range_succ]
+    push_cast
+    calc h ^ n * M ^ 2 ≤ h ^ n * (2 * ((ν + 1) * ∑ i ∈ range (ν + 1), b i ^ 2) + 2 * c ^ 2) := by
+          gcongr; linarith
+      _ = 2 * (ν + 1) * (h ^ n * ∑ i ∈ range (ν + 1), b i ^ 2) + 2 * (h ^ n * c ^ 2) := by ring
+      _ ≤ 2 * (ν + 1) * (n.factorial * S0) +
+          2 * (embA n ν ^ 2 * rieszC n ν * (h ^ (2 * (ν + 1)) * I (ν + 1))) := by
+          rw [hc2]; gcongr
+      _ ≤ _ := by
+          have : (0 : ℝ) ≤ n.factorial := by positivity
+          have : (0 : ℝ) ≤ ν := by positivity
+          nlinarith [mul_nonneg hK0 hS0, mul_nonneg this hL0, mul_nonneg (mul_nonneg this this) hL0]
+  have hci := sq_nonneg (interpCi n S k)
+  calc ∑ t : formIdx n k, ∫ x in T'.closedInterior, (w x t.1 - (Iw : FormField n) x t.1) ^ 2
+      ≤ ∑ _t : formIdx n k, h ^ n * e ^ 2 := Finset.sum_le_sum fun t _ => hone t
+    _ = Fintype.card (formIdx n k) * (h ^ n * e ^ 2) := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+    _ ≤ 2 ^ n * (h ^ n * e ^ 2) :=
+        mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
+    _ = 2 ^ n * interpCi n S k ^ 2 * h ^ (2 * (p + 1)) * (h ^ n * M ^ 2) := by
+        simp only [e]; ring
+    _ ≤ 2 ^ n * interpCi n S k ^ 2 * h ^ (2 * (p + 1)) * ((((2 * (ν + 1) * n.factorial : ℕ) : ℝ) +
+      2 * embA n ν ^ 2 * rieszC n ν) * ∑ i ∈ range (ν + 2), h ^ (2 * i) * I i) := by gcongr
+    _ = _ := by unfold localL2SumConst; ring
+
+variable (n) in
+/-- The constant `(6ⁿ n! localL2SumConst)^{1/2}` of the global `L²` interpolation error with
+lower-order terms. -/
+def globalL2SumConst (S : PolySeq) (k : ℕ) : ℝ :=
+  √(localL2SumConst n S k * (6 ^ n * n.factorial : ℕ))
+
+theorem globalL2SumConst_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ globalL2SumConst n S k :=
+  Real.sqrt_nonneg _
+
+/-- **The global `L²` interpolation error with lower-order terms** on the Freudenthal meshes, in
+every dimension: `‖w - Π_h w‖_{L²(Q)} ≤ C h_N^{p+1} Σ_{i ≤ ⌊n/2⌋ + 1} h_Nⁱ ‖D^{i+p+1} w‖_{L²(Q)}`
+for `P_pΛᵏ ⊆ P(T)ᵏ`, `C = globalL2SumConst n S k` (`sum_integral_sq_sub_globalInterp_le_sum`,
+bounded overlap). -/
+theorem norm_formL2_sub_glue_globalInterp_le_sum [NeZero n] (S : PolySeq) {N k p : ℕ}
+    (hs : polySpace n p k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ ∞ w)
+    (hdeg : ∀ x, IsDeg k (w x)) :
+    ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨w, hw.continuous⟩ - (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw.continuous⟩ :
+            (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+      globalL2SumConst n S k * hN N ^ (p + 1) * ∑ i ∈ range (n / 2 + 2), hN N ^ i *
+        √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2) := by
+  set u := ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw.continuous⟩ :
+    (polyElement n S).Piecewise (mesh n N) k)
+  have hK := localL2SumConst_nonneg (n := n) S k
+  have hh := (hN_pos N).le
+  set J : ℕ → ℝ := fun i => ∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2
+  have hJ : ∀ i, 0 ≤ J i := fun i =>
+    setIntegral_nonneg (isOpen_cubeDomain n).measurableSet fun _ _ => sq_nonneg _
+  have hsq := norm_sq_formL2_sub_glue_le (polyElement n S) (mesh n N)
+    (isOpen_mesh_domain n N).measurableSet k ⟨w, hw.continuous⟩ u
+  have h2 : ∑ T ∈ (mesh n N).simplices, ∑ s : formIdx n k, ∫ x in T.closedInterior,
+      (w x s.1 - (polyElement n S).extendPW (mesh n N) u T x s.1) ^ 2 ≤
+      ∑ T ∈ (mesh n N).simplices, localL2SumConst n S k * hN N ^ (2 * (p + 1)) *
+        ∑ i ∈ range (n / 2 + 2), hN N ^ (2 * i) *
+          ∫ y in T.closedInterior, ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2 := by
+    refine Finset.sum_le_sum fun T hT => ?_
+    have e : ∀ x, (polyElement n S).extendPW (mesh n N) u T x =
+        ((u (⟨T, hT⟩ : (mesh n N).simplices) : (polyElement n S).space
+          (⟨T, hT⟩ : (mesh n N).simplices) k) : FormField n) x := fun x => by
+      rw [(polyElement n S).extendPW_of_mem (mesh n N) u hT]
+    simp_rw [e]
+    exact sum_integral_sq_sub_globalInterp_le_sum S hs (⟨T, hT⟩ : (mesh n N).simplices) hw hdeg
+  have h3 : ∀ i, ∑ T ∈ (mesh n N).simplices,
+      ∫ y in T.closedInterior, ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2 ≤
+        ((6 ^ n * n.factorial : ℕ) : ℝ) * J i := fun i =>
+    sum_integral_closedInterior_le N
+      (((hw.continuous_iteratedFDeriv (by exact_mod_cast le_top)).norm).pow 2)
+      (fun _ => sq_nonneg _)
+  set x : ℕ → ℝ := fun i => hN N ^ i * √(J i)
+  have hx : ∀ i, 0 ≤ x i := fun i => mul_nonneg (pow_nonneg hh _) (Real.sqrt_nonneg _)
+  have hxs : ∑ i ∈ range (n / 2 + 2), x i ^ 2 ≤ (∑ i ∈ range (n / 2 + 2), x i) ^ 2 := by
+    rw [sq, Finset.sum_mul]
+    refine Finset.sum_le_sum fun i hi => ?_
+    rw [sq]
+    exact mul_le_mul_of_nonneg_left (Finset.single_le_sum (fun j _ => hx j) hi) (hx i)
+  have h4 : ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨w, hw.continuous⟩ - (polyElement n S).glue (mesh n N) k u‖ ^ 2 ≤
+      (globalL2SumConst n S k * hN N ^ (p + 1) * ∑ i ∈ range (n / 2 + 2), x i) ^ 2 := by
+    refine hsq.trans (h2.trans ?_)
+    rw [← Finset.mul_sum, mul_pow, mul_pow, globalL2SumConst, Real.sq_sqrt (by positivity),
+      ← pow_mul, mul_comm (p + 1) 2, Finset.sum_comm]
+    calc localL2SumConst n S k * hN N ^ (2 * (p + 1)) * ∑ i ∈ range (n / 2 + 2),
+          ∑ T ∈ (mesh n N).simplices, hN N ^ (2 * i) *
+            ∫ y in T.closedInterior, ‖iteratedFDeriv ℝ (i + (p + 1)) w y‖ ^ 2
+        ≤ localL2SumConst n S k * hN N ^ (2 * (p + 1)) * ∑ i ∈ range (n / 2 + 2),
+            ((6 ^ n * n.factorial : ℕ) : ℝ) * x i ^ 2 := by
+          gcongr with i
+          rw [← Finset.mul_sum, mul_pow, Real.sq_sqrt (hJ i), ← pow_mul, mul_comm i 2]
+          calc hN N ^ (2 * i) * _ ≤ hN N ^ (2 * i) * (((6 ^ n * n.factorial : ℕ) : ℝ) * J i) :=
+                mul_le_mul_of_nonneg_left (h3 i) (by positivity)
+            _ = _ := by ring
+      _ ≤ _ := by
+          rw [← Finset.mul_sum]
+          have : (0 : ℝ) ≤ ((6 ^ n * n.factorial : ℕ) : ℝ) := by positivity
+          calc localL2SumConst n S k * hN N ^ (2 * (p + 1)) *
+                (((6 ^ n * n.factorial : ℕ) : ℝ) * ∑ i ∈ range (n / 2 + 2), x i ^ 2)
+              ≤ localL2SumConst n S k * hN N ^ (2 * (p + 1)) *
+                (((6 ^ n * n.factorial : ℕ) : ℝ) * (∑ i ∈ range (n / 2 + 2), x i) ^ 2) := by
+                gcongr
+            _ = _ := by ring
+  have := globalL2SumConst_nonneg (n := n) S k
+  exact (sq_le_sq₀ (norm_nonneg _) (by
+    have := Finset.sum_nonneg fun i (_ : i ∈ range (n / 2 + 2)) => hx i
+    positivity)).1 h4
+
 /-! #### In the finite element spaces of the cube -/
+
+/-- **The canonical interpolant in `Vₕᵏ ⊆ HΛᵏ(Q)`**: a bound `e` of the `L²` interpolation error
+`‖w - Π_h w‖` on the mesh domain bounds the distance of `w` to `(poly n S N).V k`. -/
+theorem exists_mem_poly_of_le [NeZero n] (S : PolySeq) (N k : ℕ) {w : FormField n}
+    (hw : Continuous w) {e : ℝ}
+    (he : ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨w, hw⟩ - (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw⟩ :
+            (polyElement n S).Piecewise (mesh n N) k)‖ ≤ e) :
+    ∃ v ∈ (poly n S N).V k,
+      ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw⟩ - v‖ ≤ e := by
+  refine (deRham ℝ n).maximalSubcomplexOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
+    (isOpen_cubeDomain n) (S.subcomplex (mesh n N) (isOpen_mesh_domain n N))
+    (fun Θ hΘ S' => ∀ hb : Bornology.IsBounded Θ,
+      ∃ v ∈ S'.V k, ‖formL2 hΘ.measurableSet hb k ⟨w, hw⟩ - asForm n v‖ ≤ e) ?_
+    (isBounded_cubeDomain n)
+  intro hb
+  set u := (polyElement n S).globalInterp (mesh n N) k ⟨w, hw⟩
+  exact ⟨(polyElement n S).glue (mesh n N) k (u : (polyElement n S).Piecewise (mesh n N) k),
+    ⟨u, rfl⟩, he⟩
+
+/-- **The canonical interpolant in `V_{h,Γ_J}ᵏ ⊆ HΛ_Jᵏ(Q)`**: as `exists_mem_poly_of_le`, for a
+form whose tangential components vanish on the faces normal to `J`, with the interpolant in
+`(polyPartial n S N J).V k` (vanishing boundary DOFs on those faces). -/
+theorem exists_mem_polyPartial_of_le [NeZero n] (S : PolySeq) (J : Finset (Fin n)) (N k : ℕ)
+    {w : FormField n} (hw : Continuous w)
+    (hJ : ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
+      w x t = 0)
+    {e : ℝ} (he : ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨w, hw⟩ - (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw⟩ :
+            (polyElement n S).Piecewise (mesh n N) k)‖ ≤ e) :
+    ∃ v ∈ (polyPartial n S N J).V k,
+      ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw⟩ - v‖ ≤ e := by
+  have hV : ∃ v ∈ (polyElement n S).VPartial (mesh n N) (partialFaces n J) k,
+      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+          ⟨w, hw⟩ - v‖ ≤ e := by
+    set u := (polyElement n S).globalInterp (mesh n N) k ⟨w, hw⟩
+    exact ⟨(polyElement n S).glue (mesh n N) k (u : (polyElement n S).Piecewise (mesh n N) k),
+      ⟨⟨_, globalInterp_mem_globalSpacePartial_of_face (polyElement n S) (mesh n N) J k _ hJ⟩,
+        rfl⟩, he⟩
+  have key : ∀ (Ω' : Set (Fin n → ℝ)) (h : (mesh n N).domain = Ω') (hΩ' : IsOpen Ω')
+      (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (hb : Bornology.IsBounded Ω'),
+      ∃ v ∈ (partialSubcomplexOfEq h (isOpen_of_eq_Q (mesh_domain_eq_Q N))
+          (mesh_domain_eq_Q N).le hΩ' hΩQ' J
+          (subcomplexPart (polyElement n S) (mesh n N) (mesh_domain_eq_Q N) J)).V k,
+        ‖formL2 hΩ'.measurableSet hb k ⟨w, hw⟩ - v‖ ≤ e := by
+    rintro Ω' rfl hΩ' hΩQ' hb
+    exact hV
+  exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n)
+    (isBounded_cubeDomain n)
 
 /-- **`L²` interpolation from `L²` derivatives in `Vₕᵏ ⊆ HΛᵏ(Q)`**: for a smooth degree-`k` form
 `w`, some `v ∈ (poly n S N).V k` has
@@ -470,26 +824,13 @@ theorem exists_mem_poly_le_L2 [NeZero n] (S : PolySeq) (N k p : ℕ)
     ∃ v ∈ (poly n S N).V k,
       ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
           ⟨w, hw.continuous⟩ - v‖ ≤ globalL2Const n S k p * meshSize N ^ (p + 1) *
-        √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2) := by
-  refine (deRham ℝ n).maximalSubcomplexOfEq_induction (mesh_domain n N) (isOpen_mesh_domain n N)
-    (isOpen_cubeDomain n) (S.subcomplex (mesh n N) (isOpen_mesh_domain n N))
-    (fun Θ hΘ S' => ∀ hb : Bornology.IsBounded Θ,
-      ∃ v ∈ S'.V k,
-        ‖formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - asForm n v‖ ≤
-          globalL2Const n S k p * meshSize N ^ (p + 1) *
-            √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2)) ?_
-    (isBounded_cubeDomain n)
-  intro hb
-  set M := mesh n N
-  set u := (polyElement n S).globalInterp M k ⟨w, hw.continuous⟩
-  refine ⟨(polyElement n S).glue M k (u : (polyElement n S).Piecewise M k), ⟨u, rfl⟩, ?_⟩
-  have h := norm_formL2_sub_glue_globalInterp_le S (N := N) hs hns hw hdeg
-  rwa [hN_eq_meshSize] at h
+        √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2) :=
+  exists_mem_poly_of_le S N k hw.continuous
+    (hN_eq_meshSize N ▸ norm_formL2_sub_glue_globalInterp_le S hs hns hw hdeg)
 
 /-- **`L²` interpolation from `L²` derivatives in `V_{h,Γ_J}ᵏ ⊆ HΛ_Jᵏ(Q)`**: as
 `exists_mem_poly_le_L2`, for a form whose tangential components vanish on the faces normal to
-`J`, with the interpolant in `(polyPartial n S N J).V k` (vanishing boundary DOFs on those
-faces). -/
+`J` (`exists_mem_polyPartial_of_le`). -/
 theorem exists_mem_polyPartial_le_L2 [NeZero n] (S : PolySeq) (J : Finset (Fin n)) (N k p : ℕ)
     (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {w : FormField n}
     (hw : ContDiff ℝ ∞ w) (hdeg : ∀ x, IsDeg k (w x))
@@ -498,29 +839,9 @@ theorem exists_mem_polyPartial_le_L2 [NeZero n] (S : PolySeq) (J : Finset (Fin n
     ∃ v ∈ (polyPartial n S N J).V k,
       ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
           ⟨w, hw.continuous⟩ - v‖ ≤ globalL2Const n S k p * meshSize N ^ (p + 1) *
-        √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2) := by
-  have hV : ∃ v ∈ (polyElement n S).VPartial (mesh n N) (partialFaces n J) k,
-      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
-          ⟨w, hw.continuous⟩ - v‖ ≤ globalL2Const n S k p * meshSize N ^ (p + 1) *
-        √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2) := by
-    set u := (polyElement n S).globalInterp (mesh n N) k ⟨w, hw.continuous⟩
-    refine ⟨(polyElement n S).glue (mesh n N) k (u : (polyElement n S).Piecewise (mesh n N) k),
-      ⟨⟨_, globalInterp_mem_globalSpacePartial_of_face (polyElement n S) (mesh n N) J k _ hJ⟩,
-        rfl⟩, ?_⟩
-    have h := norm_formL2_sub_glue_globalInterp_le S (N := N) hs hns hw hdeg
-    rwa [hN_eq_meshSize] at h
-  have key : ∀ (Ω' : Set (Fin n → ℝ)) (h : (mesh n N).domain = Ω') (hΩ' : IsOpen Ω')
-      (hΩQ' : Ω' ⊆ Geometry.Q (Fin n)) (hb : Bornology.IsBounded Ω'),
-      ∃ v ∈ (partialSubcomplexOfEq h (isOpen_of_eq_Q (mesh_domain_eq_Q N))
-          (mesh_domain_eq_Q N).le hΩ' hΩQ' J
-          (subcomplexPart (polyElement n S) (mesh n N) (mesh_domain_eq_Q N) J)).V k,
-        ‖formL2 hΩ'.measurableSet hb k ⟨w, hw.continuous⟩ - v‖ ≤
-          globalL2Const n S k p * meshSize N ^ (p + 1) *
-            √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2) := by
-    rintro Ω' rfl hΩ' hΩQ' hb
-    exact hV
-  exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n)
-    (isBounded_cubeDomain n)
+        √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) w y‖ ^ 2) :=
+  exists_mem_polyPartial_of_le S J N k hw.continuous hJ
+    (hN_eq_meshSize N ▸ norm_formL2_sub_glue_globalInterp_le S hs hns hw hdeg)
 
 /-! ### The truncations as smooth forms on the cube -/
 
@@ -611,114 +932,195 @@ theorem meshSize_pow_mul_rpow_le {q : ℝ} {r : ℕ} (hq0 : 0 ≤ q) (hqr : q �
     _ ≤ A ^ r * h ^ q := by
         rw [h4]; exact mul_le_mul_of_nonneg_right h3 (Real.rpow_nonneg hh.le _)
 
-variable (n) in
-/-- The constant of the optimal-rate best-approximation estimate in degree `k` for an order-`p`
-sequence (`r_eff = p + 1`): `1 + C_glob (2ⁿ n^{p+1})^{1/2} ((1 + n) π²)^{p+1}`. -/
-def sobConstHigh (S : PolySeq) (k p : ℕ) : ℝ :=
-  1 + globalL2Const n S k p * √(2 ^ n * (n : ℝ) ^ (p + 1)) * ((1 + n) * Real.pi ^ 2) ^ (p + 1)
-
-theorem sobConstHigh_nonneg (S : PolySeq) (k p : ℕ) : 0 ≤ sobConstHigh n S k p := by
-  have := globalL2Const_nonneg (n := n) S k p
-  unfold sobConstHigh; positivity
-
-/-- **The interpolation step of the optimal rate**: for an extension `x ∈ Hˢ(𝕋ⁿ)`,
-`0 ≤ q ≤ p + 1` and `q ≤ s`, the bound `C_glob h_N^{p+1} ‖D^{p+1} u_M‖_{L²(Q)}` of the
-interpolation error of the truncation `u_M` (`M = N + 1`, `exists_mem_poly_le_L2`) is
-`≤ (sobConstHigh - 1) h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}` (Bernstein inequality and
-`meshSize_pow_mul_rpow_le`). -/
-theorem exists_mem_near_truncField_le (S : PolySeq) {k p : ℕ} {q s : ℝ} (hq0 : 0 ≤ q)
-    (hqp : q ≤ p + 1) (hqs : q ≤ s)
-    {x : Seq n k} (hx : MemSob s x) (N : ℕ) :
-    √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) (truncField k x (N + 1)) y‖ ^ 2) *
-        meshSize N ^ (p + 1) * globalL2Const n S k p ≤
-      (sobConstHigh n S k p - 1) * meshSize N ^ q * √(sobSum s x) := by
+/-- **The Bernstein step of the optimal rate**: for an extension `x ∈ Hˢ(𝕋ⁿ)`, `0 ≤ q ≤ r` and
+`q ≤ s`, the truncation `u_M` (`M = N + 1`) satisfies
+`h_N^r ‖D^r u_M‖_{L²(Q)} ≤ (2ⁿ n^r)^{1/2} ((1 + n) π²)^r h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}`
+(`sum_norm_iteratedFDeriv_truncQ_sq_le`, `meshSize_pow_mul_rpow_le`). -/
+theorem meshSize_pow_mul_sqrt_integral_truncField_le {k r : ℕ} {q s : ℝ} (hq0 : 0 ≤ q)
+    (hqr : q ≤ r) (hqs : q ≤ s) {x : Seq n k} (hx : MemSob s x) (N : ℕ) :
+    meshSize N ^ r * √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ r (truncField k x (N + 1)) y‖ ^ 2) ≤
+      √(2 ^ n * (n : ℝ) ^ r) * ((1 + n) * Real.pi ^ 2) ^ r * meshSize N ^ q * √(sobSum s x) := by
   have hq : MemSob q x := hx.mono hqs
-  have hB := sum_norm_iteratedFDeriv_truncQ_sq_le (p := p + 1) (by exact_mod_cast hqp) hq (N + 1)
+  have hB := sum_norm_iteratedFDeriv_truncQ_sq_le (p := r) hqr hq (N + 1)
   rw [← integral_cubeDomain_eq] at hB
-  have hK := globalL2Const_nonneg (n := n) S k p
   have hh := (meshSize_pos N).le
   set A : ℝ := (1 + n * (2 * Real.pi * ((N + 1 : ℕ) : ℝ)) ^ 2)
   have hA : 0 ≤ A := by positivity
-  have hsq : √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) (truncField k x (N + 1)) y‖ ^ 2) ≤
-      √(2 ^ n * (n : ℝ) ^ (p + 1)) * A ^ ((((p + 1 : ℕ) : ℝ) - q) / 2) * √(sobSum s x) := by
+  have hsq : √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ r (truncField k x (N + 1)) y‖ ^ 2) ≤
+      √(2 ^ n * (n : ℝ) ^ r) * A ^ (((r : ℝ) - q) / 2) * √(sobSum s x) := by
     refine (Real.sqrt_le_sqrt hB).trans (le_of_eq_of_le ?_ (mul_le_mul_of_nonneg_left
       (Real.sqrt_le_sqrt (sobSum_mono hqs hx)) (by positivity)))
     rw [Real.sqrt_mul (by positivity), Real.sqrt_mul (Real.rpow_nonneg hA _),
       Real.sqrt_eq_rpow (A ^ _), ← Real.rpow_mul hA]
-    push_cast
     ring_nf
-  have hm := meshSize_pow_mul_rpow_le (n := n) hq0 (r := p + 1) (by exact_mod_cast hqp) N
-  calc √(∫ y in cubeDomain n, ‖iteratedFDeriv ℝ (p + 1) (truncField k x (N + 1)) y‖ ^ 2) *
-        meshSize N ^ (p + 1) * globalL2Const n S k p
-      ≤ √(2 ^ n * (n : ℝ) ^ (p + 1)) * A ^ ((((p + 1 : ℕ) : ℝ) - q) / 2) * √(sobSum s x) *
-        meshSize N ^ (p + 1) * globalL2Const n S k p := by gcongr
-    _ = globalL2Const n S k p * √(2 ^ n * (n : ℝ) ^ (p + 1)) * √(sobSum s x) *
-        (meshSize N ^ (p + 1) * A ^ ((((p + 1 : ℕ) : ℝ) - q) / 2)) := by ring
-    _ ≤ globalL2Const n S k p * √(2 ^ n * (n : ℝ) ^ (p + 1)) * √(sobSum s x) *
-        (((1 + n) * Real.pi ^ 2) ^ (p + 1) * meshSize N ^ q) :=
+  have hm := meshSize_pow_mul_rpow_le (n := n) hq0 hqr N
+  calc meshSize N ^ r * √(∫ y in cubeDomain n,
+        ‖iteratedFDeriv ℝ r (truncField k x (N + 1)) y‖ ^ 2)
+      ≤ meshSize N ^ r * (√(2 ^ n * (n : ℝ) ^ r) * A ^ (((r : ℝ) - q) / 2) * √(sobSum s x)) := by
+        gcongr
+    _ = √(2 ^ n * (n : ℝ) ^ r) * √(sobSum s x) * (meshSize N ^ r * A ^ (((r : ℝ) - q) / 2)) := by
+        ring
+    _ ≤ √(2 ^ n * (n : ℝ) ^ r) * √(sobSum s x) * (((1 + n) * Real.pi ^ 2) ^ r * meshSize N ^ q) :=
         mul_le_mul_of_nonneg_left hm (by positivity)
-    _ = _ := by unfold sobConstHigh; ring
+    _ = _ := by ring
 
-/-- **Best approximation of `Hˢ(Q)` forms at the optimal rate**
-(`infDist_poly_le_sobolevQ_high`; [AFW2010], §5; [Arnold2018], Ch. 7): for a sequence `S`
-reproducing `P_pΛᵏ` in degree `k` (`r_eff = p + 1`, e.g. `FEM.PolyOrder n S p`) with
-`2 r_eff > n` (every `r_eff ≥ 2` for `n ≤ 3`), and every real `s ≥ 0`,
-`dist(y, Vₕᵏ) ≤ C h_N^{min(s, r_eff)} ‖y‖_{Hˢ(Q)}`, `C = sobConstHigh n S k p` independent of
-`N` and `s`. The proof truncates an extension at `M = N + 1 ≈ 1/(2h_N)`
-(`norm_sub_Jinvf_trunc_le`), bounds `‖D^{r_eff} u_M‖_{L²(Q)}` by the Bernstein inequality
-(`sum_norm_iteratedFDeriv_truncQ_sq_le`) and interpolates `u_M` with the `L²` estimate of the
-canonical interpolant (`exists_mem_poly_le_L2`). -/
-theorem infDist_poly_le_sobolevQ_high [NeZero n] (S : PolySeq) (k p : ℕ)
-    (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s)
-    (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
-    Metric.infDist y ((poly n S N).V k) ≤
-      sobConstHigh n S k p * meshSize N ^ min s (p + 1) * qNorm k s (toQ k y) := by
+variable (n) in
+/-- The constant of the optimal-rate best-approximation estimate in degree `k` for an order-`p`
+sequence (`r_eff = p + 1`):
+`1 + C_glob Σ_{i ≤ ⌊n/2⌋ + 1} (2ⁿ n^{i+p+1})^{1/2} ((1 + n) π²)^{i+p+1}`,
+`C_glob = globalL2SumConst n S k`. -/
+def sobConstHigh (S : PolySeq) (k p : ℕ) : ℝ :=
+  1 + globalL2SumConst n S k * ∑ i ∈ range (n / 2 + 2),
+    √(2 ^ n * (n : ℝ) ^ (i + (p + 1))) * ((1 + n) * Real.pi ^ 2) ^ (i + (p + 1))
+
+theorem sobConstHigh_nonneg (S : PolySeq) (k p : ℕ) : 0 ≤ sobConstHigh n S k p := by
+  have := globalL2SumConst_nonneg (n := n) S k
+  unfold sobConstHigh; positivity
+
+/-- **The interpolation step of the optimal rate**: for an extension `x ∈ Hˢ(𝕋ⁿ)`,
+`0 ≤ q ≤ p + 1` and `q ≤ s`, the canonical interpolant of the truncation `u_M` (`M = N + 1`)
+satisfies `‖u_M - Π_h u_M‖ ≤ (sobConstHigh - 1) h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}`, in every dimension
+(`norm_formL2_sub_glue_globalInterp_le_sum`, and the Bernstein step
+`meshSize_pow_mul_sqrt_integral_truncField_le` in each order `i + p + 1 ≥ q`). -/
+theorem norm_formL2_truncField_sub_glue_le [NeZero n] (S : PolySeq) {k p : ℕ}
+    (hs : polySpace n p k ≤ S.space n k) {q s : ℝ} (hq0 : 0 ≤ q) (hqp : q ≤ p + 1)
+    (hqs : q ≤ s) {x : Seq n k} (hx : MemSob s x) (N : ℕ) :
+    ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+      (polyElement n S).glue (mesh n N) k
+        ((polyElement n S).globalInterp (mesh n N) k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+            (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+      (sobConstHigh n S k p - 1) * meshSize N ^ q * √(sobSum s x) := by
+  have hG := globalL2SumConst_nonneg (n := n) S k
+  have hb := norm_formL2_sub_glue_globalInterp_le_sum S (N := N) hs
+    (contDiff_truncField x (N + 1)) (isDeg_truncField k x (N + 1))
+  rw [hN_eq_meshSize] at hb
+  refine hb.trans ?_
+  rw [mul_assoc, Finset.mul_sum, Finset.mul_sum, sobConstHigh, add_sub_cancel_left,
+    Finset.mul_sum, Finset.sum_mul, Finset.sum_mul]
+  refine Finset.sum_le_sum fun i _ => ?_
+  rw [← mul_assoc (meshSize N ^ (p + 1)), ← pow_add, add_comm (p + 1) i, mul_assoc, mul_assoc,
+    mul_assoc]
+  refine mul_le_mul_of_nonneg_left ?_ hG
+  have := meshSize_pow_mul_sqrt_integral_truncField_le hq0 (r := i + (p + 1))
+    (by push_cast; linarith) hqs hx N
+  linarith
+
+variable (n) in
+/-- The constant of the optimal-rate estimate through the embedding of `w` itself
+(`2(p + 1) > n`, `norm_formL2_truncField_sub_glue_le_emb`):
+`1 + C_glob (2ⁿ n^{p+1})^{1/2} ((1 + n) π²)^{p+1}`, `C_glob = globalL2Const n S k p`. -/
+def sobConstHighEmb (S : PolySeq) (k p : ℕ) : ℝ :=
+  1 + globalL2Const n S k p * √(2 ^ n * (n : ℝ) ^ (p + 1)) * ((1 + n) * Real.pi ^ 2) ^ (p + 1)
+
+theorem sobConstHighEmb_nonneg (S : PolySeq) (k p : ℕ) : 0 ≤ sobConstHighEmb n S k p := by
+  have := globalL2Const_nonneg (n := n) S k p
+  unfold sobConstHighEmb; positivity
+
+/-- **The interpolation step of the optimal rate for `2(p + 1) > n`**: as
+`norm_formL2_truncField_sub_glue_le`, with the single-term estimate
+`norm_formL2_sub_glue_globalInterp_le` (embedding of `w` itself) and the Bernstein step in the
+order `p + 1` only, and the constant `sobConstHighEmb`. -/
+theorem norm_formL2_truncField_sub_glue_le_emb [NeZero n] (S : PolySeq) {k p : ℕ}
+    (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {q s : ℝ} (hq0 : 0 ≤ q)
+    (hqp : q ≤ p + 1) (hqs : q ≤ s) {x : Seq n k} (hx : MemSob s x) (N : ℕ) :
+    ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+      (polyElement n S).glue (mesh n N) k
+        ((polyElement n S).globalInterp (mesh n N) k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+            (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+      (sobConstHighEmb n S k p - 1) * meshSize N ^ q * √(sobSum s x) := by
+  have hb := norm_formL2_sub_glue_globalInterp_le S (N := N) hs hns
+    (contDiff_truncField x (N + 1)) (isDeg_truncField k x (N + 1))
+  rw [hN_eq_meshSize] at hb
+  have hB := meshSize_pow_mul_sqrt_integral_truncField_le hq0 (r := p + 1)
+    (by exact_mod_cast hqp) hqs hx N
+  have hG := globalL2Const_nonneg (n := n) S k p
+  refine hb.trans ?_
+  rw [sobConstHighEmb, add_sub_cancel_left]
+  have := mul_le_mul_of_nonneg_left hB hG
+  linarith
+
+/-- **Best approximation of `Hˢ(Q)` forms from an interpolation bound on the truncations**
+(`infDist_poly_le_sobolevQ_of_near`): if, for `0 ≤ q ≤ s`, the canonical interpolant of the
+truncation `u_M` (`M = N + 1`) of every `x ∈ Hˢ(𝕋ⁿ)` has
+`‖u_M - Π_h u_M‖ ≤ (C - 1) h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}`, then
+`dist(y, Vₕᵏ) ≤ C h_N^q ‖y‖_{Hˢ(Q)}`. The truncation error of an extension is
+`≤ h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}` (`norm_sub_Jinvf_trunc_le`, `M ≈ 1/(2h_N)`). -/
+theorem infDist_poly_le_sobolevQ_of_near [NeZero n] (S : PolySeq) {k N : ℕ} {C q s : ℝ}
+    (hC : 0 ≤ C) (hq0 : 0 ≤ q) (hqs : q ≤ s)
+    (hnear : ∀ x : Seq n k, MemSob s x →
+      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+        (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k
+            ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+              (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+        (C - 1) * meshSize N ^ q * √(sobSum s x))
+    (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
+    Metric.infDist y ((poly n S N).V k) ≤ C * meshSize N ^ q * qNorm k s (toQ k y) := by
   have hh := meshSize_pos N
-  set q := min s (p + 1)
-  have hq0 : 0 ≤ q := le_min hs0 (by positivity)
-  refine le_mul_qNorm hy (mul_nonneg (sobConstHigh_nonneg S k p) (Real.rpow_nonneg hh.le q))
-    fun x hx hxu => ?_
+  refine le_mul_qNorm hy (mul_nonneg hC (Real.rpow_nonneg hh.le q)) fun x hx hxu => ?_
   set M := N + 1
   set w := truncField k x M
   have hw := contDiff_truncField x M
   set z' := formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩
   have hz : toQ k z' = Jinvf k (trunc M k x) := toQ_formL2_truncField k x M
-  obtain ⟨v, hv, hzv⟩ := exists_mem_poly_le_L2 S N k p hs hns hw (isDeg_truncField k x M)
+  obtain ⟨v, hv, hzv⟩ := exists_mem_poly_of_le S N k hw.continuous (hnear x hx)
   set σ := √(sobSum s x)
   have h1 : ‖y - z'‖ ≤ meshSize N ^ q * σ := by
     have e : ‖y - z'‖ = ‖Jinvf k x - Jinvf k (trunc M k x)‖ := by
       rw [← (toQ k).norm_map, map_sub, hz, hxu]
     rw [e]
-    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono (min_le_left _ _)) M).trans ?_
+    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono hqs) M).trans ?_
     exact mul_le_mul (rpow_neg_le_meshSize_rpow hq0 N)
-      (Real.sqrt_le_sqrt (sobSum_mono (min_le_left _ _) hx)) (Real.sqrt_nonneg _)
-      (Real.rpow_nonneg hh.le _)
-  have h2 : ‖z' - v‖ ≤ (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := by
-    refine hzv.trans ?_
-    have := exists_mem_near_truncField_le S hq0 (min_le_right _ _) (min_le_left _ _) hx N
-    linarith
+      (Real.sqrt_le_sqrt (sobSum_mono hqs hx)) (Real.sqrt_nonneg _) (Real.rpow_nonneg hh.le _)
   calc Metric.infDist y ((poly n S N).V k) ≤ dist y v := Metric.infDist_le_dist_of_mem hv
     _ = ‖y - v‖ := dist_eq_norm y v
     _ ≤ ‖y - z'‖ + ‖z' - v‖ := norm_sub_le_norm_sub_add_norm_sub y z' v
-    _ ≤ meshSize N ^ q * σ + (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := add_le_add h1 h2
-    _ = sobConstHigh n S k p * meshSize N ^ q * σ := by ring
+    _ ≤ meshSize N ^ q * σ + (C - 1) * meshSize N ^ q * σ := add_le_add h1 hzv
+    _ = C * meshSize N ^ q * σ := by ring
 
-/-- **Best approximation of the parity classes at the optimal rate**
-(`infDist_polyPartial_le_sobolevPar_high`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`,
-`dist(y, V_{h,Γ_J}ᵏ) ≤ C' h_N^{min(s, r_eff)} ‖y‖_{s,J}`, `C' = 2^{n/2} sobConstHigh n S k p`.
-The parity truncation `truncPar` stays in the class, its tangential components vanish on the faces
-normal to `J` (`truncField_face`), and the canonical interpolant has vanishing boundary DOFs
-there (`exists_mem_polyPartial_le_L2`). -/
-theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Finset (Fin n))
-    (k p : ℕ) (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {s : ℝ}
-    (hs0 : 0 ≤ s) (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
-    (hy : toQ k y ∈ sobolevPar J k s) :
+/-- **Best approximation of `Hˢ(Q)` forms at the optimal rate**
+(`infDist_poly_le_sobolevQ_high`; [AFW2010], §5; [Arnold2018], Ch. 7): for a sequence `S`
+reproducing `P_pΛᵏ` in degree `k` (`r_eff = p + 1`, e.g. `FEM.PolyOrder n S p`), in every
+dimension, and every real `s ≥ 0`,
+`dist(y, Vₕᵏ) ≤ C h_N^{min(s, r_eff)} ‖y‖_{Hˢ(Q)}`, `C = sobConstHigh n S k p` independent of
+`N` and `s`: `infDist_poly_le_sobolevQ_of_near` with the interpolation step
+`norm_formL2_truncField_sub_glue_le` (the `L²` estimate of the canonical interpolant with
+lower-order terms, and the Bernstein inequality in every order `r_eff + i`). -/
+theorem infDist_poly_le_sobolevQ_high [NeZero n] (S : PolySeq) (k p : ℕ)
+    (hs : polySpace n p k ≤ S.space n k) {s : ℝ} (hs0 : 0 ≤ s)
+    (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
+    Metric.infDist y ((poly n S N).V k) ≤
+      sobConstHigh n S k p * meshSize N ^ min s (p + 1) * qNorm k s (toQ k y) :=
+  have hq0 : 0 ≤ min s (p + 1) := le_min hs0 (by positivity)
+  infDist_poly_le_sobolevQ_of_near S (sobConstHigh_nonneg S k p) hq0 (min_le_left _ _)
+    (fun _ hx => norm_formL2_truncField_sub_glue_le S hs hq0 (min_le_right _ _)
+      (min_le_left _ _) hx N) y hy
+
+/-- **Best approximation of the parity classes from an interpolation bound on the truncations**
+(`infDist_polyPartial_le_sobolevPar_of_near`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`, the
+hypothesis of `infDist_poly_le_sobolevQ_of_near` gives
+`dist(y, V_{h,Γ_J}ᵏ) ≤ 2^{n/2} C h_N^q ‖y‖_{s,J}`. The parity truncation `truncPar` stays in the
+class, its tangential components vanish on the faces normal to `J` (`truncField_face`), and the
+canonical interpolant has vanishing boundary DOFs there (`exists_mem_polyPartial_of_le`). -/
+theorem infDist_polyPartial_le_sobolevPar_of_near [NeZero n] (S : PolySeq) (J : Finset (Fin n))
+    {k N : ℕ} {C q s : ℝ} (hq0 : 0 ≤ q) (hqs : q ≤ s)
+    (hnear : ∀ x : Seq n k, MemSob s x →
+      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+        (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k
+            ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+              (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+        (C - 1) * meshSize N ^ q * √(sobSum s x))
+    (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevPar J k s) :
     Metric.infDist y ((polyPartial n S N J).V k) ≤
-      √(2 ^ n) * sobConstHigh n S k p * meshSize N ^ min s (p + 1) *
-        parNorm J k s (toQ k y) := by
+      √(2 ^ n) * C * meshSize N ^ q * parNorm J k s (toQ k y) := by
   have hh := meshSize_pos N
-  set q := min s (p + 1)
-  have hq0 : 0 ≤ q := le_min hs0 (by positivity)
   set u := toQ k y
   set x := JfJ J k u
   have hx : MemSob s x := (mem_sobolevPar J k).1 hy
@@ -728,8 +1130,8 @@ theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Fin
   have hw := contDiff_truncField x M
   set z' := formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩
   have hz : toQ k z' = Jinvf k (trunc M k x) := toQ_formL2_truncField k x M
-  obtain ⟨v, hv, hzv⟩ := exists_mem_polyPartial_le_L2 S J N k p hs hns hw
-    (isDeg_truncField k x M) (truncField_face J k u M)
+  obtain ⟨v, hv, hzv⟩ := exists_mem_polyPartial_of_le S J N k hw.continuous
+    (truncField_face J k u M) (hnear x hx)
   set σ := √(sobSum s x)
   have hσ : σ = √(2 ^ n) * parNorm J k s u := by
     show √(sobSum s (JfJ J k u)) = _
@@ -739,19 +1141,30 @@ theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Fin
     have e : ‖y - z'‖ = ‖Jinvf k x - Jinvf k (trunc M k x)‖ := by
       rw [← (toQ k).norm_map, map_sub, hz, hxu]
     rw [e]
-    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono (min_le_left _ _)) M).trans ?_
+    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono hqs) M).trans ?_
     exact mul_le_mul (rpow_neg_le_meshSize_rpow hq0 N)
-      (Real.sqrt_le_sqrt (sobSum_mono (min_le_left _ _) hx)) (Real.sqrt_nonneg _)
-      (Real.rpow_nonneg hh.le _)
-  have h2 : ‖z' - v‖ ≤ (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := by
-    refine hzv.trans ?_
-    have := exists_mem_near_truncField_le S hq0 (min_le_right _ _) (min_le_left _ _) hx N
-    linarith
+      (Real.sqrt_le_sqrt (sobSum_mono hqs hx)) (Real.sqrt_nonneg _) (Real.rpow_nonneg hh.le _)
   calc Metric.infDist y ((polyPartial n S N J).V k) ≤ dist y v := Metric.infDist_le_dist_of_mem hv
     _ = ‖y - v‖ := dist_eq_norm y v
     _ ≤ ‖y - z'‖ + ‖z' - v‖ := norm_sub_le_norm_sub_add_norm_sub y z' v
-    _ ≤ meshSize N ^ q * σ + (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := add_le_add h1 h2
+    _ ≤ meshSize N ^ q * σ + (C - 1) * meshSize N ^ q * σ := add_le_add h1 hzv
     _ = _ := by rw [hσ]; ring
+
+/-- **Best approximation of the parity classes at the optimal rate**
+(`infDist_polyPartial_le_sobolevPar_high`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`,
+`dist(y, V_{h,Γ_J}ᵏ) ≤ C' h_N^{min(s, r_eff)} ‖y‖_{s,J}`, `C' = 2^{n/2} sobConstHigh n S k p`
+(`infDist_polyPartial_le_sobolevPar_of_near`, `norm_formL2_truncField_sub_glue_le`). -/
+theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Finset (Fin n))
+    (k p : ℕ) (hs : polySpace n p k ≤ S.space n k) {s : ℝ}
+    (hs0 : 0 ≤ s) (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
+    (hy : toQ k y ∈ sobolevPar J k s) :
+    Metric.infDist y ((polyPartial n S N J).V k) ≤
+      √(2 ^ n) * sobConstHigh n S k p * meshSize N ^ min s (p + 1) *
+        parNorm J k s (toQ k y) :=
+  have hq0 : 0 ≤ min s (p + 1) := le_min hs0 (by positivity)
+  infDist_polyPartial_le_sobolevPar_of_near S J hq0 (min_le_left _ _)
+    (fun _ hx => norm_formL2_truncField_sub_glue_le S hs hq0 (min_le_right _ _)
+      (min_le_left _ _) hx N) y hy
 
 /-! ### Sobolev data in every degree, graph norms -/
 
@@ -768,7 +1181,7 @@ theorem sobConstHighZ_nonneg (S : PolySeq) (p : ℕ) (j : ℤ) : 0 ≤ sobConstH
 
 /-- **Best approximation in every degree** for `Hˢ(Q)` data at the optimal rate, for a sequence
 reproducing `P_p` in the degree `j`. -/
-theorem infDist_poly_le_sobAt_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1))
+theorem infDist_poly_le_sobAt_high [NeZero n] (S : PolySeq) {p : ℕ}
     {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
     (hS : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
     {y : L2F ℝ (cubeDomain n) (formIdx n j)} (hy : SobAt n s L j y) :
@@ -776,7 +1189,7 @@ theorem infDist_poly_le_sobAt_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
       sobConstHighZ n S p j * meshSize N ^ min s (p + 1) * L := by
   rcases j with k | k
   · obtain ⟨h1, h2⟩ := hy
-    refine (infDist_poly_le_sobolevQ_high S k p (hS k rfl) hns hs0 N y h1).trans ?_
+    refine (infDist_poly_le_sobolevQ_high S k p (hS k rfl) hs0 N y h1).trans ?_
     exact mul_le_mul_of_nonneg_left h2
       (mul_nonneg (sobConstHigh_nonneg S k p) (Real.rpow_nonneg (meshSize_pos N).le _))
   · have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
@@ -787,11 +1200,11 @@ theorem infDist_poly_le_sobAt_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
 
 variable (n) in
 /-- **The Jackson estimate of the complexes of `S` for `Hˢ(Q)` data at the optimal rate**, for a
-sequence reproducing `P_p` with `2 (p + 1) > n` in the degrees of the form and of its differential:
+sequence reproducing `P_p` in the degrees of the form and of its differential, in every dimension:
 `Hˢ(Q)` components (`SobComp`), `s ≥ 0`, at the order `h_N^{min(s, p + 1)}`, from the best
 approximation `infDist_poly_le_sobAt_high` through the projections
 (`ConformingFamily.Jackson.ofInfDist`). -/
-def sobolevHighJackson [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1)) :
+def sobolevHighJackson [NeZero n] (S : PolySeq) (p : ℕ) :
     (polyFamily n S).Jackson (Set.Ici (0 : ℝ)) :=
   .ofInfDist _ meshSize (fun N => (meshSize_pos N).le) tendsto_meshSize
     (fun s l L x => (∀ d : ℕ, (d : ℤ) = l ∨ (d : ℤ) = l + 1 → polySpace n p d ≤ S.space n d) ∧
@@ -802,20 +1215,20 @@ def sobolevHighJackson [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1)
       have h0 := sobConstHighZ_nonneg (n := n) S p i
       have h1 := sobConstHighZ_nonneg (n := n) S p (i + 1)
       have hh := mul_nonneg hL (Real.rpow_nonneg (meshSize_pos N).le (min (s : ℝ) (p + 1)))
-      refine ⟨(infDist_poly_le_sobAt_high S hns s.2 N (fun d hd => hx.1 d (.inl hd))
+      refine ⟨(infDist_poly_le_sobAt_high S s.2 N (fun d hd => hx.1 d (.inl hd))
         hx.2.1).trans (by nlinarith), fun j hij hxj => ?_⟩
       obtain rfl : i + 1 = j := hij
-      exact (infDist_poly_le_sobAt_high S hns s.2 N (fun d hd => hx.1 d (.inr hd))
+      exact (infDist_poly_le_sobAt_high S s.2 N (fun d hd => hx.1 d (.inr hd))
         (hx.2.2 hxj)).trans (by nlinarith)
 
 /-- **Convergence of the mixed method at the optimal rate `h^{min(s, r_eff)}` for `Hˢ(Q)`
 solutions** (`mixed_rate_sobolevQ_high`; [AFW2010], Thm 3.9, with
 `infDist_poly_le_sobolevQ_high`; [Arnold2018], Ch. 7): for every admissible sequence `S` that
-reproduces `P_p` in the degrees `i, i + 1 = j, j + 1` (`r_eff = p + 1`, `2 r_eff > n`) and every
+reproduces `P_p` in the degrees `i, i + 1 = j, j + 1` (`r_eff = p + 1`, every dimension) and every
 real `s ≥ 0`, if `σ, dσ, u, du, P_𝔅 u, d P_𝔅 u` and the harmonic part `q` lie in `Hˢ(Q)` with
 norms `≤ L`, the error is `≤ K L h_N^{min(s, r_eff)}`, `K` independent of `N`, `s` and the
 solution. -/
-theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1))
+theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ}
     {s : ℝ} (hs0 : 0 ≤ s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k)
     (hS : ∀ d : ℕ, i ≤ d → (d : ℤ) ≤ i + 2 → polySpace n p d ≤ S.space n d) :
@@ -834,7 +1247,7 @@ theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2
             (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
       K * L * meshSize N ^ min s (p + 1) := by
   obtain ⟨K, hK⟩ := ((polyFamily n S).staticFEEC closedRangeAt j).rate
-    (sobolevHighJackson n S hns) ⟨s, hs0⟩ hij hjk
+    (sobolevHighJackson n S p) ⟨s, hs0⟩ hij hjk
   have hij' : i + 1 = j := hij
   have hi (d : ℕ) (hd : (d : ℤ) = i ∨ (d : ℤ) = i + 1) := hS d (by omega) (by omega)
   have hj (d : ℕ) (hd : (d : ℤ) = j ∨ (d : ℤ) = j + 1) := hS d (by omega) (by omega)
@@ -850,7 +1263,7 @@ theorem mixed_rate_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2
 `Hˢ(Q)` components and a sequence reproducing `P_p` in the degrees of the window. -/
 theorem PolySmoothingEstimates.exists_mem_window_le_sob_high [NeZero n] {S : PolySeq}
     {p' : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p' C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (hL0 : 0 ≤ L) {a : ℤ} {m : ℕ}
+    {p : ℕ} {s L : ℝ} (hs0 : 0 ≤ s) (hL0 : 0 ≤ L) {a : ℤ} {m : ℕ}
     (hS : ∀ k : ℕ, a ≤ k → (k : ℤ) ≤ a + m → polySpace n p k ≤ S.space n k)
     (ζ : ((complex n).window a m).totalD.GraphSpace)
     (hζ : ∀ i : Fin m, SobComp n s L (((complex n).window a m).totalD.graphFst ζ i)) (N : ℕ) :
@@ -880,7 +1293,7 @@ theorem PolySmoothingEstimates.exists_mem_window_le_sob_high [NeZero n] {S : Pol
         fun k hk => hS k (by omega) (by have := i.2; omega)
       have hO1 : ∀ k : ℕ, (k : ℤ) = a + i + 1 → polySpace n p k ≤ S.space n k :=
         fun k hk => hS k (by omega) (by have := i.2; omega)
-      have h0 := infDist_poly_le_sobAt_high S hns hs0 N hO (hζ i).1
+      have h0 := infDist_poly_le_sobAt_high S hs0 N hO (hζ i).1
       have hA : (1 + 2 * C) * Metric.infDist xi ((poly n S N).V (a + i)) ≤
           (1 + 2 * C) * K * e * L := by
         have hs := sobConstHighZ_nonneg (n := n) S p (a + i + 1)
@@ -896,7 +1309,7 @@ theorem PolySmoothingEstimates.exists_mem_window_le_sob_high [NeZero n] {S : Pol
           (1 + 2 * C) * Metric.infDist ((complex n).d (a + i) (a + i + 1) ⟨xi, hx⟩)
             ((poly n S N).V (a + i + 1)) ≤ (1 + 2 * C) * K * e * L := by
         intro hx
-        have h1 := infDist_poly_le_sobAt_high S hns hs0 N hO1 ((hζ i).2 hx)
+        have h1 := infDist_poly_le_sobAt_high S hs0 N hO1 ((hζ i).2 hx)
         have hs := sobConstHighZ_nonneg (n := n) S p (a + i)
         calc (1 + 2 * C) * Metric.infDist ((complex n).d (a + i) (a + i + 1) ⟨xi, hx⟩)
               ((poly n S N).V (a + i + 1)) ≤
@@ -919,7 +1332,7 @@ with `infDist_poly_le_sobolevQ_high`), on every window of `HΛ(Q)`, for solution
 `Hˢ(Q)` uniformly on `[t₀, t₁]` and a sequence reproducing `P_p` in the degrees of the window. -/
 theorem PolySmoothingEstimates.norm_sub_le_window_sobolevQ_high [NeZero n] {S : PolySeq}
     {p' : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p' C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) (a : ℤ) (m : ℕ)
+    {p : ℕ} {s : ℝ} (hs0 : 0 ≤ s) (a : ℤ) (m : ℕ)
     (hS : ∀ k : ℕ, a ≤ k → (k : ℤ) ≤ a + m → polySpace n p k ≤ S.space n k) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complex n).window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -938,8 +1351,8 @@ theorem PolySmoothingEstimates.norm_sub_le_window_sobolevQ_high [NeZero n] {S : 
           (sobConstHighZ n S p (a + i) + sobConstHighZ n S p (a + i + 1))) *
             meshSize N ^ min s (p + 1) * L)) :=
   ((poly n S N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N) (fun τ hτ =>
-    ⟨hE.exists_mem_window_le_sob_high hns hs0 hL0 hS (ξ τ) (fun i => (hreg τ hτ i).1) N,
-      hE.exists_mem_window_le_sob_high hns hs0 hL0 hS (ξ' τ) (fun i => (hreg τ hτ i).2) N⟩) ht
+    ⟨hE.exists_mem_window_le_sob_high hs0 hL0 hS (ξ τ) (fun i => (hreg τ hτ i).1) N,
+      hE.exists_mem_window_le_sob_high hs0 hL0 hS (ξ' τ) (fun i => (hreg τ hτ i).2) N⟩) ht
 
 /-! ### The parity classes: `HΛ_J(Q)` with `Hˢ_J(Q)` data, optimal rate -/
 
@@ -961,14 +1374,14 @@ theorem sobConstHighParZ_nonneg (S : PolySeq) (p : ℕ) (j : ℤ) :
 
 /-- **Best approximation in every degree** for `Hˢ_J(Q)` data at the optimal rate. -/
 theorem infDist_polyPartial_le_sobAtPar_high [NeZero n] (S : PolySeq) {p : ℕ}
-    (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
+    {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
     (hS : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
     {y : L2F ℝ (cubeDomain n) (formIdx n j)} (hy : SobAtPar n J s L j y) :
     Metric.infDist y ((polyPartial n S N J).V j) ≤
       sobConstHighParZ n S p j * meshSize N ^ min s (p + 1) * L := by
   rcases j with k | k
   · obtain ⟨h1, h2⟩ := hy
-    refine (infDist_polyPartial_le_sobolevPar_high S J k p (hS k rfl) hns hs0 N y h1).trans ?_
+    refine (infDist_polyPartial_le_sobolevPar_high S J k p (hS k rfl) hs0 N y h1).trans ?_
     exact mul_le_mul_of_nonneg_left h2 (mul_nonneg (mul_nonneg (Real.sqrt_nonneg _)
       (sobConstHigh_nonneg S k p)) (Real.rpow_nonneg (meshSize_pos N).le _))
   · have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
@@ -980,7 +1393,7 @@ variable {J} in
 (`infDist_domainSub_le_sobGraphPar_high`) through the parity-smoothed projections. -/
 theorem ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar_high [NeZero n] {S : PolySeq}
     {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
-    {p : ℕ} (hns : n < 2 * (p + 1)) {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
+    {p : ℕ} {s L : ℝ} (hs0 : 0 ≤ s) (N : ℕ) {j : ℤ}
     (hS0 : ∀ k : ℕ, (k : ℤ) = j → polySpace n p k ≤ S.space n k)
     (hS1 : ∀ k : ℕ, (k : ℤ) = j + 1 → polySpace n p k ≤ S.space n k)
     {σ : (complexPart n J).domainSpace j} (hσ : SobGraphPar n J s L σ) :
@@ -988,8 +1401,8 @@ theorem ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar_high [NeZero n
       (1 + 2 * C) * (sobConstHighParZ n S p j + sobConstHighParZ n S p (j + 1)) *
         meshSize N ^ min s (p + 1) * L := by
   refine (infDist_domainSub_le_proj (hE.proj N) hE.two_mul_nonneg (hE.norm_proj_le N) j σ).trans ?_
-  have h1 := infDist_polyPartial_le_sobAtPar_high J S hns hs0 N hS0 hσ.1
-  have h2 := infDist_polyPartial_le_sobAtPar_high J S hns hs0 N hS1 hσ.2
+  have h1 := infDist_polyPartial_le_sobAtPar_high J S hs0 N hS0 hσ.1
+  have h2 := infDist_polyPartial_le_sobAtPar_high J S hs0 N hS1 hσ.2
   have := hE.two_mul_nonneg
   calc (1 + 2 * C) * (Metric.infDist ((complexPart n J).domainIncl j σ)
         ((polyPartial n S N J).V j) +
@@ -1003,10 +1416,10 @@ theorem ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar_high [NeZero n
 set_option maxHeartbeats 800000 in
 /-- **Convergence of the mixed method in `HΛ_J(Q)` at the optimal rate for `Hˢ_J(Q)` solutions**
 (`mixed_rate_sobolevPar_high`), for every class `J` and every admissible sequence reproducing
-`P_p` in the degrees `i, i + 1, i + 2` (`2(p + 1) > n`, every real `s ≥ 0`): error
+`P_p` in the degrees `i, i + 1, i + 2` (every dimension, every real `s ≥ 0`): error
 `≤ K L h_N^{min(s, p+1)}` ([AFW2010], Thm 3.9, with the parity smoother and the Poincaré
 inequality of `HΛ_J(Q)`). -/
-theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n < 2 * (p + 1))
+theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ}
     {s : ℝ} (hs0 : 0 ≤ s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k)
     (hS : ∀ d : ℕ, i ≤ d → (d : ℤ) ≤ i + 2 → polySpace n p d ≤ S.space n d) :
@@ -1056,13 +1469,13 @@ theorem mixed_rate_sobolevPar_high [NeZero n] (S : PolySeq) {p : ℕ} (hns : n <
       ((complexPart n J).harmonic_le_cycles j q.2)) :=
     ⟨by rw [HilbertComplex.domainIncl_cyclesToDomainSpace]; exact hq,
       by rw [HilbertComplex.d_domainCoord_cyclesToDomainSpace]; exact sobAtPar_zero J hL0 _⟩
-  have h1 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSσ0 hSσ1 hσ).trans
+  have h1 := (hE.infDist_domainSub_le_sobGraphPar_high hs0 N hSσ0 hSσ1 hσ).trans
     (hle _ _ (by linarith))
-  have h2 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hu).trans
+  have h2 := (hE.infDist_domainSub_le_sobGraphPar_high hs0 N hSu0 hSu1 hu).trans
     (hle _ _ (by linarith))
-  have h3 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hg).trans
+  have h3 := (hE.infDist_domainSub_le_sobGraphPar_high hs0 N hSu0 hSu1 hg).trans
     (hle _ _ (by linarith))
-  have h4 := (hE.infDist_domainSub_le_sobGraphPar_high hns hs0 N hSu0 hSu1 hBu).trans
+  have h4 := (hE.infDist_domainSub_le_sobGraphPar_high hs0 N hSu0 hSu1 hBu).trans
     (hle _ _ (by linarith))
   refine (norm_sub_discreteMixedSolution_le (hE.proj N) hij rfl (by linarith [hE.half_le])
     (norm_le_of_mem_orthogonal_cycles_part J hij) (norm_le_of_mem_orthogonal_cycles_part J rfl)
@@ -1091,7 +1504,7 @@ theorem degrees_of_polyOrderAt {S : PolySeq} {p : ℕ} {i j : ℤ} (hij : i + 1 
 /-- **`mixed_rate_sobolevQ_high` for the degreewise orders** (`_of_polyOrderAt`): a sequence
 reproducing `P_p` in the degrees `i, j, j + 1` (`PolyOrderAt` at `i` and `j = i + 1 ≥ 0`). -/
 theorem mixed_rate_sobolevQ_high_of_polyOrderAt [NeZero n] (S : PolySeq) {p : ℕ}
-    (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) {i j k : ℤ}
+    {s : ℝ} (hs0 : 0 ≤ s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) (hj : 0 ≤ j)
     (hSi : PolyOrderAt n S p i) (hSj : PolyOrderAt n S p j) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
@@ -1108,13 +1521,13 @@ theorem mixed_rate_sobolevQ_high_of_polyOrderAt [NeZero n] (S : PolySeq) {p : �
           (((Subcomplex.CochainProjection.discreteMixedSolution (poly n S N) hij hjk f).snd.snd :
             (poly n S N).V j) : L2F ℝ (cubeDomain n) (formIdx n j))‖ ≤
       K * L * meshSize N ^ min s (p + 1) :=
-  mixed_rate_sobolevQ_high S hns hs0 hij hjk (degrees_of_polyOrderAt hij hj hSi hSj)
+  mixed_rate_sobolevQ_high S hs0 hij hjk (degrees_of_polyOrderAt hij hj hSi hSj)
 
 /-- **The bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` on `1`-forms at the rate `h^{min(s,2)}` for
-`Hˢ(Q)` solutions** (`mixed_rate_lagrangeP2_sobolevQ`, `n ≤ 3`): the Hodge Laplacian in degree
-`1` uses only `P₂Λ⁰, P₂⁻Λ¹, P₁Λ²`, which contain `P₁` (`r_eff = 2`, `2 r_eff = 4 > n`), although
+`Hˢ(Q)` solutions** (`mixed_rate_lagrangeP2_sobolevQ`, every dimension): the Hodge Laplacian in
+degree `1` uses only `P₂Λ⁰, P₂⁻Λ¹, P₁Λ²`, which contain `P₁` (`r_eff = 2`), although
 `P₀Λ³` limits the global order to `h`; [AFW2010], Thm 3.9. -/
-theorem mixed_rate_lagrangeP2_sobolevQ [NeZero n] (hn3 : n ≤ 3) {s : ℝ} (hs0 : 0 ≤ s) :
+theorem mixed_rate_lagrangeP2_sobolevQ [NeZero n] {s : ℝ} (hs0 : 0 ≤ s) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n 1)} {σ : (complex n).domainSpace 0}
     {u : (complex n).domainSpace 1} {q : (complex n).harmonic 1},
     (complex n).IsMixedSolution 0 1 2 f σ u q → ∀ {L : ℝ}, 0 ≤ L →
@@ -1132,8 +1545,8 @@ theorem mixed_rate_lagrangeP2_sobolevQ [NeZero n] (hn3 : n ≤ 3) {s : ℝ} (hs0
             (i := 0) (j := 1) (k := 2) rfl rfl f).snd.snd :
             (poly n PolySeq.lagrangeP2 N).V 1) : L2F ℝ (cubeDomain n) (formIdx n 1))‖ ≤
       K * L * meshSize N ^ min s 2 := by
-  have h := mixed_rate_sobolevQ_high_of_polyOrderAt (n := n) PolySeq.lagrangeP2 (p := 1)
-    (by omega) hs0 (i := 0) (j := 1) (k := 2) rfl rfl (by norm_num)
+  have h := mixed_rate_sobolevQ_high_of_polyOrderAt (n := n) PolySeq.lagrangeP2 (p := 1) hs0
+    (i := 0) (j := 1) (k := 2) rfl rfl (by norm_num)
     lagrangeP2_polyOrderAt_zero lagrangeP2_polyOrderAt_one
   rw [show ((1 : ℕ) : ℝ) + 1 = 2 by norm_num] at h
   exact h
@@ -1146,7 +1559,7 @@ theorem mixed_rate_lagrangeP2_sobolevQ [NeZero n] (hn3 : n ≤ 3) {s : ℝ} (hs0
 with the smoothing estimates supplied by `polySmoothingEstimates_exists`; the constant `K` depends
 only on `S`, `p` and the window. -/
 theorem exists_norm_sub_le_window_sobolevQ_high [NeZero n] (S : PolySeq) {p : ℕ}
-    (hns : n < 2 * (p + 1)) {s : ℝ} (hs0 : 0 ≤ s) (a : ℤ) (m : ℕ)
+    {s : ℝ} (hs0 : 0 ≤ s) (a : ℤ) (m : ℕ)
     (hS : ∀ k : ℕ, a ≤ k → (k : ℤ) ≤ a + m → polySpace n p k ≤ S.space n k) :
     ∃ K : ℝ, 0 ≤ K ∧ ∀ {t₀ t₁ : ℝ} {ξ ξ' : ℝ → ((complex n).window a m).totalD.GraphSpace},
       HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ' →
@@ -1172,7 +1585,7 @@ theorem exists_norm_sub_le_window_sobolevQ_high [NeZero n] (S : PolySeq) {p : �
     (sobConstHighZ n S p (a + i) + sobConstHighZ n S p (a + i + 1))),
     mul_nonneg (by positivity) (mul_nonneg (by linarith) hK),
     fun {t₀ t₁ ξ ξ'} hξ {ξh ξh'} hξh h0 {L} hL0 hreg N {t} ht => ?_⟩
-  refine (hE.norm_sub_le_window_sobolevQ_high hns hs0 a m hS hξ hξh h0 hL0 hreg N ht).trans
+  refine (hE.norm_sub_le_window_sobolevQ_high hs0 a m hS hξ hξh h0 hL0 hreg N ht).trans
     (le_of_eq ?_)
   ring
 

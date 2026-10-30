@@ -64,7 +64,13 @@ holds for every order `≥ 1` in every dimension. The interpolation
 estimates need `2(s + 1) > n`: the moment degrees of freedom of `Π_T` (`∫_f tr_f ω ∧ η`, down
 to vertex values) need point values, which `H^{s+1}` controls only through the Sobolev embedding
 `H^{s+1} ⊂ C⁰` ([Evans2010], §5.6). In dimension `n ≤ 3` this is every `s ≥ 1`, and `s ≥ 0` for
-`n = 1`. The dimension is assumed `n ≥ 1` (the time integral of the Riesz argument is `1/n`).
+`n = 1`. The embedding with lower-order terms `enorm_le_L2`, applied to `D^{s+1} f` instead of
+`f`, avoids the restriction at the price of the derivatives of the orders
+`s + 1, …, s + ⌊n/2⌋ + 2`; this file provides only that embedding, and the interpolation
+estimates on physical simplices below keep `2(s + 1) > n`. The interpolation estimate with
+lower-order terms is assembled on the Freudenthal simplices of the cube only
+(`Feec.Models.Cube.FEM.sum_integral_sq_sub_globalInterp_le_sum`). The dimension is assumed
+`n ≥ 1` (the time integral of the Riesz argument is `1/n`).
 
 ## Main definitions
 
@@ -79,6 +85,7 @@ to vertex values) need point values, which `H^{s+1}` controls only through the S
 * `enorm_sub_avgTaylorPoly_le_riesz`: the Riesz-potential bound.
 * `lintegral_sub_avgTaylorPoly_sq_le`: **`L²` Bramble–Hilbert**.
 * `enorm_sub_avgTaylorPoly_le_L2`: **Sobolev embedding** for `2(k + 1) > n`.
+* `enorm_le_L2`: the Sobolev embedding with the lower-order terms (`enorm_avgTaylorPoly_le`).
 * `IsRefInterpolant.lintegral_sub_sq_le_L2`: the reference interpolation error in `L²`.
 * `lintegral_sub_transportInterp_sq_le_L2`, `exists_formL2Sq_sub_polyInterp_le_L2`,
   `exists_formL2Sq_sub_polyMinusInterp_le_L2`: physical simplices.
@@ -945,6 +952,124 @@ theorem enorm_sub_avgTaylorPoly_le_L2 [CompleteSpace G] (hn : 0 < n) {K U : Set 
           rieszConst n (2 * (k + 1)) (2 * n) d ^ (1 / 2 : ℝ)) := by
         gcongr
     _ = _ := by ring
+
+/-- **Iterated derivatives of iterated derivatives**: `‖Dⁱ (Dʲ f)(x)‖ = ‖D^{i+j} f(x)‖` (the
+currying isometries `continuousMultilinearCurryLeftEquiv`, `norm_iteratedFDeriv_fderiv`). -/
+theorem norm_iteratedFDeriv_iteratedFDeriv {E F : Type*} [NormedAddCommGroup E]
+    [NormedSpace ℝ E] [NormedAddCommGroup F] [NormedSpace ℝ F] (f : E → F) (i j : ℕ) (x : E) :
+    ‖iteratedFDeriv ℝ i (iteratedFDeriv ℝ j f) x‖ = ‖iteratedFDeriv ℝ (i + j) f x‖ := by
+  induction j generalizing i with
+  | zero =>
+    rw [iteratedFDeriv_zero_eq_comp, LinearIsometryEquiv.norm_iteratedFDeriv_comp_left,
+      add_zero]
+  | succ j ih =>
+    have e : iteratedFDeriv ℝ (j + 1) f =
+        (continuousMultilinearCurryLeftEquiv ℝ (fun _ : Fin (j + 1) => E) F).symm ∘
+          fderiv ℝ (iteratedFDeriv ℝ j f) := iteratedFDeriv_succ_eq_comp_left
+    rw [e, LinearIsometryEquiv.norm_iteratedFDeriv_comp_left (𝕜 := ℝ)
+      (F := E →L[ℝ] E [×j]→L[ℝ] F) (G := E [×(j + 1)]→L[ℝ] F), norm_iteratedFDeriv_fderiv, ih,
+      Nat.add_right_comm, Nat.add_assoc]
+
+/-- **Cauchy–Schwarz for the average**: `|K|⁻¹ ∫_K g ≤ (⨍_K g²)^{1/2}`. -/
+theorem inv_mul_setLIntegral_le_sqrt {K : Set (Fin n → ℝ)} (hK0 : volume K ≠ 0)
+    (hKt : volume K ≠ ∞) {g : (Fin n → ℝ) → ℝ≥0∞} (hg : AEMeasurable g (volume.restrict K)) :
+    (volume K)⁻¹ * ∫⁻ z in K, g z ≤ (⨍⁻ z in K, g z ^ 2 ∂volume) ^ (1 / 2 : ℝ) := by
+  set V := volume K
+  have hH := ENNReal.lintegral_mul_le_Lp_mul_Lq (volume.restrict K) Real.HolderConjugate.two_two
+    hg aemeasurable_const (g := fun _ => (1 : ℝ≥0∞))
+  simp only [Pi.mul_apply, mul_one, ENNReal.one_rpow, lintegral_const,
+    Measure.restrict_apply_univ, one_mul] at hH
+  have hV : V⁻¹ = (V⁻¹) ^ (1 / 2 : ℝ) * (V⁻¹) ^ (1 / 2 : ℝ) := by
+    rw [← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num)]; norm_num
+  have hV1 : (V⁻¹) ^ (1 / 2 : ℝ) * V ^ (1 / 2 : ℝ) = 1 := by
+    rw [← ENNReal.mul_rpow_of_nonneg _ _ (by norm_num), ENNReal.inv_mul_cancel hK0 hKt,
+      ENNReal.one_rpow]
+  have hg2 : ∫⁻ z in K, g z ^ (2 : ℝ) = ∫⁻ z in K, g z ^ 2 := by simp_rw [ENNReal.rpow_two]
+  rw [setLAverage_eq, ENNReal.div_eq_inv_mul, ENNReal.mul_rpow_of_nonneg _ _ (by norm_num)]
+  calc V⁻¹ * ∫⁻ z in K, g z
+      ≤ V⁻¹ * ((∫⁻ z in K, g z ^ (2 : ℝ)) ^ (1 / 2 : ℝ) * V ^ (1 / 2 : ℝ)) := by gcongr
+    _ = (V⁻¹) ^ (1 / 2 : ℝ) * ((V⁻¹) ^ (1 / 2 : ℝ) * V ^ (1 / 2 : ℝ)) *
+        (∫⁻ z in K, g z ^ 2) ^ (1 / 2 : ℝ) := by conv_lhs => rw [hV, hg2]
+                                                 ring
+    _ = _ := by rw [hV1, mul_one]
+
+/-- **The averaged Taylor polynomial is bounded by the `L²` averages of the derivatives**: for `K`
+compact with `|K| > 0`, `‖x - y‖ ≤ d` on `K` and `x ∈ K`,
+`‖Q_m f(x)‖ ≤ Σ_{i < m} dⁱ/i! (⨍_K ‖Dⁱ f‖²)^{1/2}` (the Taylor terms at each base point and
+`inv_mul_setLIntegral_le_sqrt`). -/
+theorem enorm_avgTaylorPoly_le [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK : IsCompact K)
+    (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U) {m : ℕ} {f : (Fin n → ℝ) → G}
+    (hf : ContDiffOn ℝ m f U) {d : ℝ} (hd : ∀ x ∈ K, ∀ y ∈ K, ‖x - y‖ ≤ d) {x : Fin n → ℝ}
+    (hx : x ∈ K) :
+    ‖avgTaylorPoly K f m x‖ₑ ≤ ∑ i ∈ Finset.range m, ENNReal.ofReal (d ^ i / i.factorial) *
+      (⨍⁻ z in K, ‖iteratedFDeriv ℝ i f z‖ₑ ^ 2 ∂volume) ^ (1 / 2 : ℝ) := by
+  have hKm : MeasurableSet K := hK.isClosed.measurableSet
+  have hKt : volume K ≠ ∞ := hK.measure_lt_top.ne
+  have hd0 : 0 ≤ d := by simpa using hd x hx x hx
+  have hc : ∀ i ∈ Finset.range m, ContinuousOn (iteratedFDeriv ℝ i f) K := fun i hi =>
+    (continuousOn_iteratedFDeriv_of_isOpen hU hf
+      (by exact_mod_cast (Finset.mem_range.1 hi).le)).mono hKU
+  set T : (Fin n → ℝ) → G := fun y => taylorPoly f y m x
+  have hTc : ContinuousOn T K := by
+    refine continuousOn_finsetSum _ fun i hi => ContinuousOn.const_smul ?_ _
+    exact continuous_eval.comp_continuousOn ((hc i hi).prodMk (by fun_prop))
+  have h1 : ‖avgTaylorPoly K f m x‖ₑ ≤ (volume K)⁻¹ * ∫⁻ y in K, ‖T y‖ₑ := by
+    have hr : volume.real K ≠ 0 := by
+      rw [measureReal_def]; exact ENNReal.toReal_ne_zero.2 ⟨hK0, hKt⟩
+    rw [avgTaylorPoly, setAverage_eq, enorm_smul]
+    gcongr
+    · rw [Real.enorm_eq_ofReal (inv_nonneg.2 measureReal_nonneg), ENNReal.ofReal_inv_of_pos
+        (lt_of_le_of_ne measureReal_nonneg (Ne.symm hr)), measureReal_def,
+        ENNReal.ofReal_toReal hKt]
+    · exact enorm_integral_le_lintegral_enorm _
+  have h2 : ∀ y ∈ K, ‖T y‖ₑ ≤ ∑ i ∈ Finset.range m,
+      ENNReal.ofReal (d ^ i / i.factorial) * ‖iteratedFDeriv ℝ i f y‖ₑ := by
+    intro y hy
+    refine (enorm_sum_le _ _).trans (Finset.sum_le_sum fun i _ => ?_)
+    rw [← ofReal_norm, ← ofReal_norm, ← ENNReal.ofReal_mul (by positivity)]
+    refine ENNReal.ofReal_le_ofReal ?_
+    rw [norm_smul, Real.norm_of_nonneg (by positivity)]
+    have hL := (iteratedFDeriv ℝ i f y).le_opNorm (fun _ => x - y)
+    rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin] at hL
+    have hxy : ‖x - y‖ ^ i ≤ d ^ i := pow_le_pow_left₀ (norm_nonneg _) (hd x hx y hy) i
+    calc (i.factorial : ℝ)⁻¹ * ‖iteratedFDeriv ℝ i f y (fun _ => x - y)‖
+        ≤ (i.factorial : ℝ)⁻¹ * (‖iteratedFDeriv ℝ i f y‖ * d ^ i) := by
+          gcongr
+          exact hL.trans (mul_le_mul_of_nonneg_left hxy (norm_nonneg _))
+      _ = _ := by ring
+  have hm : ∀ i ∈ Finset.range m,
+      AEMeasurable (fun z => ‖iteratedFDeriv ℝ i f z‖ₑ) (volume.restrict K) := fun i hi =>
+    (continuous_enorm.comp_continuousOn (hc i hi)).aemeasurable hKm
+  calc ‖avgTaylorPoly K f m x‖ₑ ≤ (volume K)⁻¹ * ∫⁻ y in K, ‖T y‖ₑ := h1
+    _ ≤ (volume K)⁻¹ * ∫⁻ y in K, ∑ i ∈ Finset.range m,
+          ENNReal.ofReal (d ^ i / i.factorial) * ‖iteratedFDeriv ℝ i f y‖ₑ := by
+        exact mul_le_mul_right (setLIntegral_mono' hKm h2) _
+    _ = ∑ i ∈ Finset.range m, ENNReal.ofReal (d ^ i / i.factorial) *
+          ((volume K)⁻¹ * ∫⁻ y in K, ‖iteratedFDeriv ℝ i f y‖ₑ) := by
+        rw [lintegral_finsetSum' _ fun i hi => (hm i hi).const_mul _, Finset.mul_sum]
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]; ring
+    _ ≤ _ := Finset.sum_le_sum fun i hi => by
+        gcongr; exact inv_mul_setLIntegral_le_sqrt hK0 hKt (hm i hi)
+
+/-- **Sobolev embedding with the lower-order terms** `H^{k+1}(K) ⊂ C(K)`, `2(k + 1) > n`, in
+a-priori form for `C^{k+1}` functions:
+`sup_K ‖f‖ ≤ Σ_{i ≤ k} dⁱ/i! (⨍_K ‖Dⁱ f‖²)^{1/2} + dⁿ/(n k! |K|) · C₂^{1/2} ‖D^{k+1} f‖_{L²(K)}`
+(`enorm_sub_avgTaylorPoly_le_L2` for `f - Q_{k+1} f`, `enorm_avgTaylorPoly_le` for `Q_{k+1} f`;
+[Evans2010], §5.6). Applied to `f = D^{s+1} w` it bounds `sup_K ‖D^{s+1} w‖` by `L²` norms of
+derivatives of every order `≥ s + 1`, with no condition on `s`. -/
+theorem enorm_le_L2 [CompleteSpace G] (hn : 0 < n) {K U : Set (Fin n → ℝ)}
+    (hK : IsCompact K) (hKc : Convex ℝ K) (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U)
+    {k : ℕ} (hnk : n < 2 * (k + 1)) {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ (k + 1) f U)
+    {d : ℝ} (hd : ∀ x ∈ K, ∀ y ∈ K, ‖x - y‖ ≤ d) {x : Fin n → ℝ} (hx : x ∈ K) :
+    ‖f x‖ₑ ≤ ∑ i ∈ Finset.range (k + 1), ENNReal.ofReal (d ^ i / i.factorial) *
+        (⨍⁻ z in K, ‖iteratedFDeriv ℝ i f z‖ₑ ^ 2 ∂volume) ^ (1 / 2 : ℝ) +
+      avgTaylorConst n k d K * rieszConst n (2 * (k + 1)) (2 * n) d ^ (1 / 2 : ℝ) *
+        (∫⁻ z in K, ‖iteratedFDeriv ℝ (k + 1) f z‖ₑ ^ 2) ^ (1 / 2 : ℝ) := by
+  calc ‖f x‖ₑ = ‖avgTaylorPoly K f (k + 1) x + (f x - avgTaylorPoly K f (k + 1) x)‖ₑ := by
+        rw [add_sub_cancel]
+    _ ≤ _ := (enorm_add_le _ _).trans (add_le_add (enorm_avgTaylorPoly_le hK hK0 hU hKU hf hd hx)
+        (enorm_sub_avgTaylorPoly_le_L2 hn hK hKc hK0 hU hKU hnk hf hd hx))
 
 end ConvexSet
 

@@ -250,13 +250,13 @@ LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-g
 
 ## Palomar submission
 
-`palomar/` holds two submissions for the [Palomar registry](https://palomar-registry.org), each a
+`palomar/` holds the submissions for the [Palomar registry](https://palomar-registry.org), each a
 nested Lake project sharing the dependencies of the root package
 (`packagesDir = "../../.lake/packages"`), with a `Challenge.lean` restating its statement over
 Mathlib alone, a `Solution.lean` proving it from `Feec` through `Solution/Bridge.lean` (the
 challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.json` and
-`formalization.yaml`. Both copy the same vocabulary (Hilbert complexes on ℤ, subcomplexes,
-cochain projections, families of subcomplexes).
+`formalization.yaml`. The static and dynamic packages copy the same vocabulary (Hilbert complexes
+on ℤ, subcomplexes, cochain projections, families of subcomplexes).
 
 * `palomar/static/` (theorem FEEC.staticFEEC, about 250 lines): the a priori theory of the mixed
   Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the degrees used (cochain
@@ -271,15 +271,22 @@ cochain projections, families of subcomplexes).
   best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
+* `palomar/periodic/` (theorem FEEC.periodicTable, about 160 lines): the algebra of the periodic
+  table in every dimension: the dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_r⁻Λᵏ` and, in
+  characteristic `0`, exactness of their polynomial de Rham complexes (constants in degree `0`),
+  the homotopy formula and the Koszul decompositions ([AFW2006], §3; [ArnoldBoffiBonizzoni2015], §3); from
+  `Feec.Algebra.PolynomialFormDim` and `Feec.Algebra.CubicalForm`. Its challenge has its own
+  vocabulary (polynomial forms over `MvPolynomial`), not the Hilbert complexes above.
 
-The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in both
-that `Solution/Defs.lean` is the challenge without its compared theorem
+The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
+package that `Solution/Defs.lean` is the challenge without its compared theorem
 (`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
 Before a submission, judge each with the comparator (several minutes):
 
 ```bash
 cd palomar/static && lake build && lake comparator
 cd palomar/dynamic && lake build && lake comparator
+cd palomar/periodic && lake build && lake comparator
 ```
 
 ## Citing

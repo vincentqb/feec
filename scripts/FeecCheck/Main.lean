@@ -27,7 +27,7 @@ documentation cites):
 | `docs/THESIS_MAP.md` up to date | `feec-thesismap --check` | yes |
 | migration coverage | `feec-mapcheck --strict` | yes |
 | names in `README.md` and `docs/*.md` exist | `feec-docnames` | yes (and `FeecCheck`) |
-| `palomar/{static,dynamic}`: `Defs.lean` copies the challenge, `lake build` | `feec-palomar` | no (builds both packages) |
+| `palomar/{static,dynamic,periodic}`: `Defs.lean` copies the challenge, `lake build` | `feec-palomar` | no (builds each package) |
 
 Run from the root of the repository (as `lake exe` does) after `lake build`; the executables that
 import `Feec` declare `needs = ["Feec"]` (`feec-gate` and `feec-docnames` also `"FeecCheck"`), so

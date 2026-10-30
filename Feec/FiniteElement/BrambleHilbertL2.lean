@@ -64,9 +64,13 @@ holds for every order `≥ 1` in every dimension. The interpolation
 estimates need `2(s + 1) > n`: the moment degrees of freedom of `Π_T` (`∫_f tr_f ω ∧ η`, down
 to vertex values) need point values, which `H^{s+1}` controls only through the Sobolev embedding
 `H^{s+1} ⊂ C⁰` ([Evans2010], §5.6). In dimension `n ≤ 3` this is every `s ≥ 1`, and `s ≥ 0` for
-`n = 1`. Rates without it follow by embedding `D^{s+1} f` instead of `f`, at the price of the
-derivatives of the orders `s + 1, …, s + ⌊n/2⌋ + 2` (`enorm_le_L2`; used for the Fourier
-truncations of Sobolev data in `Feec.Models.Cube.SobolevRateHigh`). The dimension is assumed `n ≥ 1` (the time integral of the Riesz argument is `1/n`).
+`n = 1`. The embedding with lower-order terms `enorm_le_L2`, applied to `D^{s+1} f` instead of
+`f`, avoids the restriction at the price of the derivatives of the orders
+`s + 1, …, s + ⌊n/2⌋ + 2`; this file provides only that embedding, and the interpolation
+estimates on physical simplices below keep `2(s + 1) > n`. The interpolation estimate with
+lower-order terms is assembled on the Freudenthal simplices of the cube only
+(`Feec.Models.Cube.FEM.sum_integral_sq_sub_globalInterp_le_sum`). The dimension is assumed
+`n ≥ 1` (the time integral of the Riesz argument is `1/n`).
 
 ## Main definitions
 

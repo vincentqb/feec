@@ -36,7 +36,9 @@ interpolant by a quasi-interpolant ([Clement1975]; [ScottZhang1990]) or by the s
 projections ([AFW2010], §5); here the Fourier truncation plays the role of the smoothing, and only
 its derivatives of order `≤ r_eff + ⌊n/2⌋ + 1` enter. For `2 r_eff > n` the sharper local estimate
 with the single term `h_N^{r_eff} ‖D^{r_eff} w‖` (`sum_integral_sq_sub_globalInterp_le`, the
-Sobolev embedding of `w` itself, [Ciarlet2002], Thm 3.1.4) is also proved. The parity version
+Sobolev embedding of `w` itself, [Ciarlet2002], Thm 3.1.4) is also proved, with its own
+constant `sobConstHighEmb` (`norm_formL2_truncField_sub_glue_le_emb`); any such bound on the
+truncations gives a rate (`infDist_poly_le_sobolevQ_of_near`). The parity version
 interpolates with vanishing boundary DOFs on the faces normal to `J` (`truncField_face`,
 `exists_mem_polyPartial_of_le`). Graph norms, the mixed Hodge Laplacian and the semi-discrete
 Hodge wave equation follow through the uniformly bounded cochain projections (which exist for
@@ -48,7 +50,9 @@ every `S` and `J`: `polySmoothingEstimates_exists`, `paritySmoothing_exists`) as
 * **Interpolation error with lower-order terms**, every dimension:
   `norm_formL2_sub_glue_globalInterp_le_sum`; for `2(p + 1) > n` the single-term
   `norm_formL2_sub_glue_globalInterp_le`.
-* **Best approximation**: **`infDist_poly_le_sobolevQ_high`**
+* **Best approximation**, from any interpolation bound on the truncations:
+  `infDist_poly_le_sobolevQ_of_near`, `infDist_polyPartial_le_sobolevPar_of_near`.
+* **Best approximation at the optimal rate**: **`infDist_poly_le_sobolevQ_high`**
   (`dist(y, Vₕᵏ) ≤ C h_N^{min(s, p+1)} ‖y‖_{Hˢ(Q)}`), **`infDist_polyPartial_le_sobolevPar_high`**
   (`HΛ_J(Q)`, every class `J`, `‖y‖_{s,J}`); in every degree `infDist_poly_le_sobAt_high`,
   `infDist_polyPartial_le_sobAtPar_high`.
@@ -242,6 +246,26 @@ theorem volume_closedInterior_mesh {N : ℕ} {T : Affine.Simplex ℝ (Fin n → 
   rw [← Measure.real, h1, Measure.real, volume_closedInterior_kuhnSimplex]
   simp [div_eq_mul_inv]
 
+/-- The constant `dⁿ / (n p! |T|)` of the averaged Taylor polynomial on a Freudenthal simplex is
+`embA n p` (`|T| = h_Nⁿ / n!`, `d = h_N`). -/
+theorem avgTaylorConst_mesh [NeZero n] {N : ℕ} (p : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) :
+    avgTaylorConst n p (hN N) T.closedInterior = ENNReal.ofReal (embA n p) := by
+  have hn : (n : ℝ) ≠ 0 := by exact_mod_cast NeZero.ne n
+  have hh := hN_pos N
+  rw [avgTaylorConst, volume_closedInterior_mesh hT, ← ENNReal.ofReal_div_of_pos (by positivity)]
+  congr 1
+  unfold embA
+  have : (n.factorial : ℝ) ≠ 0 := by positivity
+  have : (p.factorial : ℝ) ≠ 0 := by positivity
+  field_simp
+
+/-- The square root of the Riesz constant as a real number, for `2(p + 1) > n`. -/
+theorem rieszConst_rpow_half {p : ℕ} (hns : n < 2 * (p + 1)) {h : ℝ} (hh : 0 ≤ h) :
+    rieszConst n (2 * (p + 1)) (2 * n) h ^ (1 / 2 : ℝ) = ENNReal.ofReal (√(rieszR n p h)) := by
+  rw [show rieszConst n (2 * (p + 1)) (2 * n) h = ENNReal.ofReal (rieszR n p h) from rfl,
+    ENNReal.ofReal_rpow_of_nonneg (rieszR_nonneg hns hh) (by norm_num), Real.sqrt_eq_rpow]
+
 /-- **Sobolev embedding on a Freudenthal simplex** (`2(p + 1) > n`): the degree-`k` part `P` of
 the averaged Taylor polynomial of order `p + 1` (`avgTaylorPoly`, a form of `P_pΛᵏ`) satisfies
 `sup_T ‖w - P‖ ≤ (n!/(n p!)) (R(h_N))^{1/2} (∫_T ‖D^{p+1} w‖²)^{1/2}`
@@ -263,20 +287,6 @@ theorem norm_sub_degPart_avgTaylorPoly_le [NeZero n] {N k p : ℕ} (hns : n < 2 
   have h := enorm_sub_avgTaylorPoly_le_L2 hn hTc (convex_closedInterior T)
     (volume_closedInterior_ne_zero T) isOpen_univ (subset_univ _) hns hw.contDiffOn hd hx
   -- the three factors as real numbers
-  have hA : avgTaylorConst n p (hN N) T.closedInterior = ENNReal.ofReal (embA n p) := by
-    rw [avgTaylorConst, volume_closedInterior_mesh hT,
-      ← ENNReal.ofReal_div_of_pos (by positivity)]
-    congr 1
-    unfold embA
-    have : (n.factorial : ℝ) ≠ 0 := by positivity
-    have : (p.factorial : ℝ) ≠ 0 := by positivity
-    have : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
-    field_simp
-  have hR : rieszConst n (2 * (p + 1)) (2 * n) (hN N) ^ (1 / 2 : ℝ) =
-      ENNReal.ofReal (√(rieszR n p (hN N))) := by
-    rw [show rieszConst n (2 * (p + 1)) (2 * n) (hN N) = ENNReal.ofReal (rieszR n p (hN N)) from
-      rfl, ENNReal.ofReal_rpow_of_nonneg (rieszR_nonneg hns hh.le) (by norm_num),
-      Real.sqrt_eq_rpow]
   have hDc : ContinuousOn (iteratedFDeriv ℝ (p + 1) w) T.closedInterior :=
     (hw.continuous_iteratedFDeriv le_rfl).continuousOn
   have hI : (∫⁻ z in T.closedInterior, ‖iteratedFDeriv ℝ (p + 1) w z‖ₑ ^ 2) ^ (1 / 2 : ℝ) =
@@ -284,7 +294,8 @@ theorem norm_sub_degPart_avgTaylorPoly_le [NeZero n] {N k p : ℕ} (hns : n < 2 
     rw [integral_norm_sq_eq_toReal_lintegral hTm hDc, Real.sqrt_eq_rpow,
       ← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg (by norm_num),
       ENNReal.ofReal_toReal (setLIntegral_enorm_sq_lt_top hTc hDc).ne]
-  rw [hA, hR, hI, ← ENNReal.ofReal_mul (embA_nonneg p), ← ENNReal.ofReal_mul
+  rw [avgTaylorConst_mesh p hT, rieszConst_rpow_half hns hh.le, hI,
+    ← ENNReal.ofReal_mul (embA_nonneg p), ← ENNReal.ofReal_mul
     (mul_nonneg (embA_nonneg p) (Real.sqrt_nonneg _))] at h
   have e : w x - degPartField k (avgTaylorPoly T.closedInterior w (p + 1)) x =
       degPart k (w x - avgTaylorPoly T.closedInterior w (p + 1) x) := by
@@ -522,24 +533,11 @@ theorem norm_iteratedFDeriv_le_mesh [NeZero n] {N r ν : ℕ} (hnν : n < 2 * (�
       Real.sqrt_eq_rpow]
     congr 2
     field_simp
-  have hA : avgTaylorConst n ν (hN N) T.closedInterior = ENNReal.ofReal (embA n ν) := by
-    rw [avgTaylorConst, hvol, ← ENNReal.ofReal_div_of_pos (by positivity)]
-    congr 1
-    unfold embA
-    have : (n.factorial : ℝ) ≠ 0 := by positivity
-    have : (ν.factorial : ℝ) ≠ 0 := by positivity
-    have : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
-    field_simp
-  have hR : rieszConst n (2 * (ν + 1)) (2 * n) (hN N) ^ (1 / 2 : ℝ) =
-      ENNReal.ofReal (√(rieszR n ν (hN N))) := by
-    rw [show rieszConst n (2 * (ν + 1)) (2 * n) (hN N) = ENNReal.ofReal (rieszR n ν (hN N)) from
-      rfl, ENNReal.ofReal_rpow_of_nonneg (rieszR_nonneg hnν hh.le) (by norm_num),
-      Real.sqrt_eq_rpow]
   have hlast : (∫⁻ z in T.closedInterior, ‖iteratedFDeriv ℝ (ν + 1) g z‖ₑ ^ 2) ^ (1 / 2 : ℝ) =
       ENNReal.ofReal (√(∫ z in T.closedInterior, ‖iteratedFDeriv ℝ (ν + 1 + r) w z‖ ^ 2)) := by
     rw [hI, ENNReal.ofReal_rpow_of_nonneg (hJ _) (by norm_num), Real.sqrt_eq_rpow]
   simp_rw [havg] at h
-  rw [hA, hR, hlast, ← ofReal_norm] at h
+  rw [avgTaylorConst_mesh ν hT, rieszConst_rpow_half hnν hh.le, hlast, ← ofReal_norm] at h
   have hE := embA_nonneg (n := n) ν
   have hE' : 0 ≤ embA n ν * √(rieszR n ν (hN N)) := mul_nonneg hE (Real.sqrt_nonneg _)
   rw [← ENNReal.ofReal_mul hE, ← ENNReal.ofReal_mul hE'] at h
@@ -596,9 +594,8 @@ theorem sum_integral_sq_sub_globalInterp_le_sum [NeZero n] (S : PolySeq) {N k p 
   have hb : ∀ i, 0 ≤ b i := fun i => mul_nonneg (by positivity) (Real.sqrt_nonneg _)
   have hc : 0 ≤ c :=
     mul_nonneg (mul_nonneg (embA_nonneg ν) (Real.sqrt_nonneg _)) (Real.sqrt_nonneg _)
-  have hM : ∀ y ∈ T'.closedInterior, ‖iteratedFDeriv ℝ (p + 1) w y‖ ≤ M := fun y hy => by
-    have := norm_iteratedFDeriv_le_mesh (r := p + 1) hnν hT hw hy
-    exact this
+  have hM : ∀ y ∈ T'.closedInterior, ‖iteratedFDeriv ℝ (p + 1) w y‖ ≤ M := fun y hy =>
+    norm_iteratedFDeriv_le_mesh (r := p + 1) hnν hT hw hy
   have hw1 : ContDiff ℝ (p + 1) w := hw.of_le (by exact_mod_cast le_top)
   set Iw : (polyElement n S).space T k := (((polyElement n S).globalInterp (mesh n N) k
     ⟨w, hw.continuous⟩ : (polyElement n S).Piecewise (mesh n N) k) T)
@@ -1010,65 +1007,120 @@ theorem norm_formL2_truncField_sub_glue_le [NeZero n] (S : PolySeq) {k p : ℕ}
     (by push_cast; linarith) hqs hx N
   linarith
 
-/-- **Best approximation of `Hˢ(Q)` forms at the optimal rate**
-(`infDist_poly_le_sobolevQ_high`; [AFW2010], §5; [Arnold2018], Ch. 7): for a sequence `S`
-reproducing `P_pΛᵏ` in degree `k` (`r_eff = p + 1`, e.g. `FEM.PolyOrder n S p`), in every
-dimension, and every real `s ≥ 0`,
-`dist(y, Vₕᵏ) ≤ C h_N^{min(s, r_eff)} ‖y‖_{Hˢ(Q)}`, `C = sobConstHigh n S k p` independent of
-`N` and `s`. The proof truncates an extension at `M = N + 1 ≈ 1/(2h_N)`
-(`norm_sub_Jinvf_trunc_le`), bounds `‖D^{r_eff} u_M‖_{L²(Q)}` by the Bernstein inequality
-(`sum_norm_iteratedFDeriv_truncQ_sq_le`) in every order `r_eff + i`, and interpolates `u_M`
-with the `L²` estimate of the canonical interpolant with lower-order terms
-(`norm_formL2_truncField_sub_glue_le`). -/
-theorem infDist_poly_le_sobolevQ_high [NeZero n] (S : PolySeq) (k p : ℕ)
-    (hs : polySpace n p k ≤ S.space n k) {s : ℝ} (hs0 : 0 ≤ s)
-    (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
-    Metric.infDist y ((poly n S N).V k) ≤
-      sobConstHigh n S k p * meshSize N ^ min s (p + 1) * qNorm k s (toQ k y) := by
+variable (n) in
+/-- The constant of the optimal-rate estimate through the embedding of `w` itself
+(`2(p + 1) > n`, `norm_formL2_truncField_sub_glue_le_emb`):
+`1 + C_glob (2ⁿ n^{p+1})^{1/2} ((1 + n) π²)^{p+1}`, `C_glob = globalL2Const n S k p`. -/
+def sobConstHighEmb (S : PolySeq) (k p : ℕ) : ℝ :=
+  1 + globalL2Const n S k p * √(2 ^ n * (n : ℝ) ^ (p + 1)) * ((1 + n) * Real.pi ^ 2) ^ (p + 1)
+
+theorem sobConstHighEmb_nonneg (S : PolySeq) (k p : ℕ) : 0 ≤ sobConstHighEmb n S k p := by
+  have := globalL2Const_nonneg (n := n) S k p
+  unfold sobConstHighEmb; positivity
+
+/-- **The interpolation step of the optimal rate for `2(p + 1) > n`**: as
+`norm_formL2_truncField_sub_glue_le`, with the single-term estimate
+`norm_formL2_sub_glue_globalInterp_le` (embedding of `w` itself) and the Bernstein step in the
+order `p + 1` only, and the constant `sobConstHighEmb`. -/
+theorem norm_formL2_truncField_sub_glue_le_emb [NeZero n] (S : PolySeq) {k p : ℕ}
+    (hs : polySpace n p k ≤ S.space n k) (hns : n < 2 * (p + 1)) {q s : ℝ} (hq0 : 0 ≤ q)
+    (hqp : q ≤ p + 1) (hqs : q ≤ s) {x : Seq n k} (hx : MemSob s x) (N : ℕ) :
+    ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+        ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+      (polyElement n S).glue (mesh n N) k
+        ((polyElement n S).globalInterp (mesh n N) k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+            (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+      (sobConstHighEmb n S k p - 1) * meshSize N ^ q * √(sobSum s x) := by
+  have hb := norm_formL2_sub_glue_globalInterp_le S (N := N) hs hns
+    (contDiff_truncField x (N + 1)) (isDeg_truncField k x (N + 1))
+  rw [hN_eq_meshSize] at hb
+  have hB := meshSize_pow_mul_sqrt_integral_truncField_le hq0 (r := p + 1)
+    (by exact_mod_cast hqp) hqs hx N
+  have hG := globalL2Const_nonneg (n := n) S k p
+  refine hb.trans ?_
+  rw [sobConstHighEmb, add_sub_cancel_left]
+  have := mul_le_mul_of_nonneg_left hB hG
+  linarith
+
+/-- **Best approximation of `Hˢ(Q)` forms from an interpolation bound on the truncations**
+(`infDist_poly_le_sobolevQ_of_near`): if, for `0 ≤ q ≤ s`, the canonical interpolant of the
+truncation `u_M` (`M = N + 1`) of every `x ∈ Hˢ(𝕋ⁿ)` has
+`‖u_M - Π_h u_M‖ ≤ (C - 1) h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}`, then
+`dist(y, Vₕᵏ) ≤ C h_N^q ‖y‖_{Hˢ(Q)}`. The truncation error of an extension is
+`≤ h_N^q ‖x‖_{Hˢ(𝕋ⁿ)}` (`norm_sub_Jinvf_trunc_le`, `M ≈ 1/(2h_N)`). -/
+theorem infDist_poly_le_sobolevQ_of_near [NeZero n] (S : PolySeq) {k N : ℕ} {C q s : ℝ}
+    (hC : 0 ≤ C) (hq0 : 0 ≤ q) (hqs : q ≤ s)
+    (hnear : ∀ x : Seq n k, MemSob s x →
+      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+        (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k
+            ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+              (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+        (C - 1) * meshSize N ^ q * √(sobSum s x))
+    (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
+    Metric.infDist y ((poly n S N).V k) ≤ C * meshSize N ^ q * qNorm k s (toQ k y) := by
   have hh := meshSize_pos N
-  set q := min s (p + 1)
-  have hq0 : 0 ≤ q := le_min hs0 (by positivity)
-  refine le_mul_qNorm hy (mul_nonneg (sobConstHigh_nonneg S k p) (Real.rpow_nonneg hh.le q))
-    fun x hx hxu => ?_
+  refine le_mul_qNorm hy (mul_nonneg hC (Real.rpow_nonneg hh.le q)) fun x hx hxu => ?_
   set M := N + 1
   set w := truncField k x M
   have hw := contDiff_truncField x M
   set z' := formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩
   have hz : toQ k z' = Jinvf k (trunc M k x) := toQ_formL2_truncField k x M
-  obtain ⟨v, hv, hzv⟩ := exists_mem_poly_of_le S N k hw.continuous
-    (norm_formL2_truncField_sub_glue_le S hs hq0 (min_le_right _ _) (min_le_left _ _) hx N)
+  obtain ⟨v, hv, hzv⟩ := exists_mem_poly_of_le S N k hw.continuous (hnear x hx)
   set σ := √(sobSum s x)
   have h1 : ‖y - z'‖ ≤ meshSize N ^ q * σ := by
     have e : ‖y - z'‖ = ‖Jinvf k x - Jinvf k (trunc M k x)‖ := by
       rw [← (toQ k).norm_map, map_sub, hz, hxu]
     rw [e]
-    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono (min_le_left _ _)) M).trans ?_
+    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono hqs) M).trans ?_
     exact mul_le_mul (rpow_neg_le_meshSize_rpow hq0 N)
-      (Real.sqrt_le_sqrt (sobSum_mono (min_le_left _ _) hx)) (Real.sqrt_nonneg _)
-      (Real.rpow_nonneg hh.le _)
-  have h2 : ‖z' - v‖ ≤ (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := hzv
+      (Real.sqrt_le_sqrt (sobSum_mono hqs hx)) (Real.sqrt_nonneg _) (Real.rpow_nonneg hh.le _)
   calc Metric.infDist y ((poly n S N).V k) ≤ dist y v := Metric.infDist_le_dist_of_mem hv
     _ = ‖y - v‖ := dist_eq_norm y v
     _ ≤ ‖y - z'‖ + ‖z' - v‖ := norm_sub_le_norm_sub_add_norm_sub y z' v
-    _ ≤ meshSize N ^ q * σ + (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := add_le_add h1 h2
-    _ = sobConstHigh n S k p * meshSize N ^ q * σ := by ring
+    _ ≤ meshSize N ^ q * σ + (C - 1) * meshSize N ^ q * σ := add_le_add h1 hzv
+    _ = C * meshSize N ^ q * σ := by ring
 
-/-- **Best approximation of the parity classes at the optimal rate**
-(`infDist_polyPartial_le_sobolevPar_high`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`,
-`dist(y, V_{h,Γ_J}ᵏ) ≤ C' h_N^{min(s, r_eff)} ‖y‖_{s,J}`, `C' = 2^{n/2} sobConstHigh n S k p`.
-The parity truncation `truncPar` stays in the class, its tangential components vanish on the faces
-normal to `J` (`truncField_face`), and the canonical interpolant has vanishing boundary DOFs
-there (`exists_mem_polyPartial_of_le`). -/
-theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Finset (Fin n))
-    (k p : ℕ) (hs : polySpace n p k ≤ S.space n k) {s : ℝ}
-    (hs0 : 0 ≤ s) (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
-    (hy : toQ k y ∈ sobolevPar J k s) :
+/-- **Best approximation of `Hˢ(Q)` forms at the optimal rate**
+(`infDist_poly_le_sobolevQ_high`; [AFW2010], §5; [Arnold2018], Ch. 7): for a sequence `S`
+reproducing `P_pΛᵏ` in degree `k` (`r_eff = p + 1`, e.g. `FEM.PolyOrder n S p`), in every
+dimension, and every real `s ≥ 0`,
+`dist(y, Vₕᵏ) ≤ C h_N^{min(s, r_eff)} ‖y‖_{Hˢ(Q)}`, `C = sobConstHigh n S k p` independent of
+`N` and `s`: `infDist_poly_le_sobolevQ_of_near` with the interpolation step
+`norm_formL2_truncField_sub_glue_le` (the `L²` estimate of the canonical interpolant with
+lower-order terms, and the Bernstein inequality in every order `r_eff + i`). -/
+theorem infDist_poly_le_sobolevQ_high [NeZero n] (S : PolySeq) (k p : ℕ)
+    (hs : polySpace n p k ≤ S.space n k) {s : ℝ} (hs0 : 0 ≤ s)
+    (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
+    Metric.infDist y ((poly n S N).V k) ≤
+      sobConstHigh n S k p * meshSize N ^ min s (p + 1) * qNorm k s (toQ k y) :=
+  have hq0 : 0 ≤ min s (p + 1) := le_min hs0 (by positivity)
+  infDist_poly_le_sobolevQ_of_near S (sobConstHigh_nonneg S k p) hq0 (min_le_left _ _)
+    (fun _ hx => norm_formL2_truncField_sub_glue_le S hs hq0 (min_le_right _ _)
+      (min_le_left _ _) hx N) y hy
+
+/-- **Best approximation of the parity classes from an interpolation bound on the truncations**
+(`infDist_polyPartial_le_sobolevPar_of_near`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`, the
+hypothesis of `infDist_poly_le_sobolevQ_of_near` gives
+`dist(y, V_{h,Γ_J}ᵏ) ≤ 2^{n/2} C h_N^q ‖y‖_{s,J}`. The parity truncation `truncPar` stays in the
+class, its tangential components vanish on the faces normal to `J` (`truncField_face`), and the
+canonical interpolant has vanishing boundary DOFs there (`exists_mem_polyPartial_of_le`). -/
+theorem infDist_polyPartial_le_sobolevPar_of_near [NeZero n] (S : PolySeq) (J : Finset (Fin n))
+    {k N : ℕ} {C q s : ℝ} (hq0 : 0 ≤ q) (hqs : q ≤ s)
+    (hnear : ∀ x : Seq n k, MemSob s x →
+      ‖formL2 (isOpen_mesh_domain n N).measurableSet (mesh n N).isBounded_domain k
+          ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ -
+        (polyElement n S).glue (mesh n N) k
+          ((polyElement n S).globalInterp (mesh n N) k
+            ⟨truncField k x (N + 1), (contDiff_truncField x (N + 1)).continuous⟩ :
+              (polyElement n S).Piecewise (mesh n N) k)‖ ≤
+        (C - 1) * meshSize N ^ q * √(sobSum s x))
+    (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevPar J k s) :
     Metric.infDist y ((polyPartial n S N J).V k) ≤
-      √(2 ^ n) * sobConstHigh n S k p * meshSize N ^ min s (p + 1) *
-        parNorm J k s (toQ k y) := by
+      √(2 ^ n) * C * meshSize N ^ q * parNorm J k s (toQ k y) := by
   have hh := meshSize_pos N
-  set q := min s (p + 1)
-  have hq0 : 0 ≤ q := le_min hs0 (by positivity)
   set u := toQ k y
   set x := JfJ J k u
   have hx : MemSob s x := (mem_sobolevPar J k).1 hy
@@ -1079,8 +1131,7 @@ theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Fin
   set z' := formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k ⟨w, hw.continuous⟩
   have hz : toQ k z' = Jinvf k (trunc M k x) := toQ_formL2_truncField k x M
   obtain ⟨v, hv, hzv⟩ := exists_mem_polyPartial_of_le S J N k hw.continuous
-    (truncField_face J k u M)
-    (norm_formL2_truncField_sub_glue_le S hs hq0 (min_le_right _ _) (min_le_left _ _) hx N)
+    (truncField_face J k u M) (hnear x hx)
   set σ := √(sobSum s x)
   have hσ : σ = √(2 ^ n) * parNorm J k s u := by
     show √(sobSum s (JfJ J k u)) = _
@@ -1090,16 +1141,30 @@ theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Fin
     have e : ‖y - z'‖ = ‖Jinvf k x - Jinvf k (trunc M k x)‖ := by
       rw [← (toQ k).norm_map, map_sub, hz, hxu]
     rw [e]
-    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono (min_le_left _ _)) M).trans ?_
+    refine (norm_sub_Jinvf_trunc_le hq0 (hx.mono hqs) M).trans ?_
     exact mul_le_mul (rpow_neg_le_meshSize_rpow hq0 N)
-      (Real.sqrt_le_sqrt (sobSum_mono (min_le_left _ _) hx)) (Real.sqrt_nonneg _)
-      (Real.rpow_nonneg hh.le _)
-  have h2 : ‖z' - v‖ ≤ (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := hzv
+      (Real.sqrt_le_sqrt (sobSum_mono hqs hx)) (Real.sqrt_nonneg _) (Real.rpow_nonneg hh.le _)
   calc Metric.infDist y ((polyPartial n S N J).V k) ≤ dist y v := Metric.infDist_le_dist_of_mem hv
     _ = ‖y - v‖ := dist_eq_norm y v
     _ ≤ ‖y - z'‖ + ‖z' - v‖ := norm_sub_le_norm_sub_add_norm_sub y z' v
-    _ ≤ meshSize N ^ q * σ + (sobConstHigh n S k p - 1) * meshSize N ^ q * σ := add_le_add h1 h2
+    _ ≤ meshSize N ^ q * σ + (C - 1) * meshSize N ^ q * σ := add_le_add h1 hzv
     _ = _ := by rw [hσ]; ring
+
+/-- **Best approximation of the parity classes at the optimal rate**
+(`infDist_polyPartial_le_sobolevPar_high`): for `y ∈ Hˢ_J(Q; Λᵏ)`, every class `J`,
+`dist(y, V_{h,Γ_J}ᵏ) ≤ C' h_N^{min(s, r_eff)} ‖y‖_{s,J}`, `C' = 2^{n/2} sobConstHigh n S k p`
+(`infDist_polyPartial_le_sobolevPar_of_near`, `norm_formL2_truncField_sub_glue_le`). -/
+theorem infDist_polyPartial_le_sobolevPar_high [NeZero n] (S : PolySeq) (J : Finset (Fin n))
+    (k p : ℕ) (hs : polySpace n p k ≤ S.space n k) {s : ℝ}
+    (hs0 : 0 ≤ s) (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
+    (hy : toQ k y ∈ sobolevPar J k s) :
+    Metric.infDist y ((polyPartial n S N J).V k) ≤
+      √(2 ^ n) * sobConstHigh n S k p * meshSize N ^ min s (p + 1) *
+        parNorm J k s (toQ k y) :=
+  have hq0 : 0 ≤ min s (p + 1) := le_min hs0 (by positivity)
+  infDist_polyPartial_le_sobolevPar_of_near S J hq0 (min_le_left _ _)
+    (fun _ hx => norm_formL2_truncField_sub_glue_le S hs hq0 (min_le_right _ _)
+      (min_le_left _ _) hx N) y hy
 
 /-! ### Sobolev data in every degree, graph norms -/
 

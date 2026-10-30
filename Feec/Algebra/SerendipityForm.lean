@@ -14,7 +14,7 @@ the degree ignoring the variables which enter linearly and do not enter the alte
 ([ArnoldAwanou2014], §2: `sdeg = deg - ldeg`). With `M_rΛᵏ` the span of the monomial `k`-forms of
 superlinear degree `≤ r`, the serendipity forms are
 
-  `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ`.
+  `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ`  (`M_{-1}Λ^{k+1} = 0`).
 
 This is the space `P_rΛᵏ + J_rΛᵏ + d J_{r+1}Λ^{k-1}` of [ArnoldAwanou2014], (17): by
 [ArnoldAwanou2014], Prop 3.1, `J_rΛᵏ = κ M_{r-1}Λ^{k+1}` restricted to the polynomial degrees
@@ -37,13 +37,14 @@ superlinear degree `≤ r`.
   ([ArnoldAwanou2014], Thm 3.3; `isSubcomplex_serendipityForm`);
 * `serendipityForm_mono`: **`S_rΛᵏ ⊆ S_{r+1}Λᵏ`** ([ArnoldAwanou2014], Thm 3.4);
 * `superlinForm_le_serendipityForm`, `serendipityForm_le_superlinForm`:
-  **`M_{r-1}Λᵏ ⊆ S_rΛᵏ ⊆ M_{r+1}Λᵏ`** (the second inclusion is the degree property,
+  **`M_rΛᵏ ⊆ S_{r+1}Λᵏ`**, **`S_rΛᵏ ⊆ M_{r+1}Λᵏ`** (the second inclusion is the degree property,
   [ArnoldAwanou2014], Thm 3.2); `serendipityForm_zero`: **`S_rΛ⁰ = M_rΛ⁰`** (`r ≥ 1`), the
-  serendipity space, and `serendipityForm_zero_le_cubeFormMinus`: `P_rΛ⁰ ⊆ S_rΛ⁰ ⊆ Q_rΛ⁰`;
-* `cubeTrace_mem_serendipityForm`: **the trace property** `tr_f S_rΛᵏ ⊆ S_rΛᵏ` on every
-  coordinate plane `f` ([ArnoldAwanou2014], Thm 3.5), and `image_cubeTrace_serendipityForm`: the
-  traces of `S_rΛᵏ` on `f` are exactly the forms of `S_rΛᵏ` living on `f` (fixed by `tr_f`;
-  [ArnoldAwanou2014], (27)).
+  serendipity space, and `serendipityForm_zero_le_cubeFormMinus`: `S_rΛ⁰ ⊆ Q_rΛ⁰`;
+* `cubeTrace_mem_serendipityForm`: **stability under traces** `tr_f S_rΛᵏ ⊆ S_rΛᵏ` on every
+  coordinate plane `f` (the stability half of [ArnoldAwanou2014], Thm 3.5), and
+  `image_cubeTrace_serendipityForm`: the traces of `S_rΛᵏ` on `f` are the trace-fixed forms of
+  `S_rΛᵏ`. That these are the serendipity forms of the face ([ArnoldAwanou2014], (27)) is not
+  proved.
 
 ## Implementation notes
 
@@ -51,7 +52,7 @@ Every space is defined by monomial supports, coefficientwise, as `Q_b⁻Λᵏ`
 (`Feec.Algebra.CubicalForm`); the forms on a coordinate plane are the forms fixed by its trace
 `Feec.Koszul.cubeTrace`. The trace property is proved without induction on the form degree: the
 trace commutes with `κ` up to a form of `M_rΛᵏ` (`cubeTrace_koszul_sub_mem_superlinForm`), and
-`M_{r-1}Λᵏ ⊆ S_rΛᵏ` by the homotopy formula.
+`M_rΛᵏ ⊆ S_{r+1}Λᵏ` by the homotopy formula.
 
 The dimension, `dim S_rΛᵏ = dim M_rΛᵏ`, is in `Feec.Algebra.SerendipityFormDim`. The degrees of
 freedom and their unisolvence ([ArnoldAwanou2014], (21), Thm 3.6 (2)) are not formalized, nor the
@@ -86,7 +87,7 @@ def superlinDeg (s : Finset d) (α : d →₀ ℕ) : ℕ := ∑ j, if j ∉ s �
 def superlinSupport (r : ℕ) (s : Finset d) : Set (d →₀ ℕ) := {α | superlinDeg s α ≤ r}
 
 /-- A termwise bound with one extra unit at `j`. -/
-theorem sum_le_sum_add_one {f g : d → ℕ} (j : d) (h : ∀ i, f i ≤ g i + if i = j then 1 else 0) :
+private theorem sum_le_sum_add_one {f g : d → ℕ} (j : d) (h : ∀ i, f i ≤ g i + if i = j then 1 else 0) :
     ∑ i, f i ≤ ∑ i, g i + 1 := by
   calc ∑ i, f i ≤ ∑ i, (g i + if i = j then 1 else 0) := sum_le_sum fun i _ => h i
     _ = ∑ i, g i + 1 := by rw [sum_add_distrib, sum_ite_eq' univ j]; simp
@@ -133,7 +134,7 @@ theorem superlinSupport_mono {r r' : ℕ} (h : r ≤ r') (s : Finset d) :
 
 variable (R d) in
 /-- `M_rΛᵏ`: the `k`-forms spanned by the monomial forms of superlinear degree `≤ r`.
-[ArnoldAwanou2014], Thm 3.2 -/
+[ArnoldAwanou2014], §2 -/
 def superlinForm (r k : ℕ) : Submodule R (PolyForm R d) := supportForm R d k (superlinSupport r)
 
 theorem mem_superlinForm {r k : ℕ} {ω : PolyForm R d} :
@@ -207,32 +208,40 @@ theorem koszul_mem_superlinForm {r k : ℕ} {ω : PolyForm R d}
 
 variable (R d) in
 /-- **The serendipity forms** `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ`, the space
-`P_rΛᵏ + J_rΛᵏ + d J_{r+1}Λ^{k-1}` of [ArnoldAwanou2014], (17). -/
+`P_rΛᵏ + J_rΛᵏ + d J_{r+1}Λ^{k-1}` of [ArnoldAwanou2014], (17); the middle summand is absent for
+`r = 0` (`M_{-1} = 0`: `J_0Λᵏ = 0`). -/
 def serendipityForm (r k : ℕ) : Submodule R (PolyForm R d) :=
-  polyForm R d r k ⊔ (superlinForm R d (r - 1) (k + 1)).map (koszulₗ R d) ⊔
-    ((superlinForm R d r k).map (koszulₗ R d)).map (extDerivₗ R d)
+  polyForm R d r k ⊔
+    (if r = 0 then ⊥ else (superlinForm R d (r - 1) (k + 1)).map (koszulₗ R d)) ⊔
+      ((superlinForm R d r k).map (koszulₗ R d)).map (extDerivₗ R d)
 
 theorem polyForm_le_serendipityForm (r k : ℕ) : polyForm R d r k ≤ serendipityForm R d r k :=
   le_sup_left.trans le_sup_left
 
 theorem koszul_mem_serendipityForm {r k : ℕ} {ω : PolyForm R d}
-    (h : ω ∈ superlinForm R d (r - 1) (k + 1)) : koszul ω ∈ serendipityForm R d r k :=
-  Submodule.mem_sup_left (Submodule.mem_sup_right (Submodule.mem_map_of_mem h))
+    (h : ω ∈ superlinForm R d r (k + 1)) : koszul ω ∈ serendipityForm R d (r + 1) k :=
+  Submodule.mem_sup_left (Submodule.mem_sup_right (by
+    rw [ite_eq_right r.succ_ne_zero]; exact Submodule.mem_map_of_mem h))
 
 theorem extDeriv_koszul_mem_serendipityForm {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ superlinForm R d r k) : extDeriv (koszul ω) ∈ serendipityForm R d r k :=
   Submodule.mem_sup_right (Submodule.mem_map_of_mem (Submodule.mem_map_of_mem h))
 
 /-- Membership in `S_rΛᵏ` by its three summands. -/
-theorem serendipityForm_induction {r k : ℕ} {P : PolyForm R d → Prop} (h0 : ∀ ω ∈ polyForm R d r k, P ω)
-    (h1 : ∀ ω ∈ superlinForm R d (r - 1) (k + 1), P (koszul ω))
+theorem serendipityForm_induction {r k : ℕ} {P : PolyForm R d → Prop}
+    (h0 : ∀ ω ∈ polyForm R d r k, P ω)
+    (h1 : ∀ r', r' + 1 = r → ∀ ω ∈ superlinForm R d r' (k + 1), P (koszul ω))
     (h2 : ∀ ω ∈ superlinForm R d r k, P (extDeriv (koszul ω)))
     (hadd : ∀ ω η, P ω → P η → P (ω + η)) {ω : PolyForm R d} (h : ω ∈ serendipityForm R d r k) :
     P ω := by
   obtain ⟨a, ha, c, ⟨γ, hγ, rfl⟩, rfl⟩ := Submodule.mem_sup.1 h
-  obtain ⟨p, hp, b, ⟨β, hβ, rfl⟩, rfl⟩ := Submodule.mem_sup.1 ha
+  obtain ⟨p, hp, b, hb, rfl⟩ := Submodule.mem_sup.1 ha
   obtain ⟨γ, hγ, rfl⟩ := hγ
-  exact hadd _ _ (hadd _ _ (h0 p hp) (h1 β hβ)) (h2 γ hγ)
+  refine hadd _ _ (hadd _ _ (h0 p hp) ?_) (h2 γ hγ)
+  split_ifs at hb with hr
+  · rw [(Submodule.mem_bot R).1 hb]; simpa using h0 0 (Submodule.zero_mem _)
+  · obtain ⟨β, hβ, rfl⟩ := hb
+    exact h1 (r - 1) (by omega) β hβ
 
 /-- **The degree property** `S_rΛᵏ ⊆ M_{r+1}Λᵏ`: every monomial of a serendipity form has
 superlinear degree `≤ r + 1`. [ArnoldAwanou2014], Thm 3.2 -/
@@ -240,7 +249,7 @@ theorem serendipityForm_le_superlinForm (r k : ℕ) :
     serendipityForm R d r k ≤ superlinForm R d (r + 1) k := fun ω h =>
   serendipityForm_induction
     (fun _ hω => superlinForm_mono (Nat.le_succ r) k (polyForm_le_superlinForm r k hω))
-    (fun _ hω => superlinForm_mono (by omega) k (koszul_mem_superlinForm hω))
+    (fun _ h _ hω => superlinForm_mono (by omega) k (koszul_mem_superlinForm hω))
     (fun _ hω => by
       cases k with
       | zero => rw [IsDeg.koszul_eq_zero hω.1, extDeriv_zero]; exact Submodule.zero_mem _
@@ -255,7 +264,7 @@ theorem extDeriv_mem_serendipityForm {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ serendipityForm R d (r + 1) k) : extDeriv ω ∈ serendipityForm R d r (k + 1) :=
   serendipityForm_induction
     (fun _ hω => polyForm_le_serendipityForm r (k + 1) (extDeriv_mem_polyForm hω))
-    (fun _ hω => extDeriv_koszul_mem_serendipityForm (by simpa using hω))
+    (fun _ h _ hω => extDeriv_koszul_mem_serendipityForm (by rwa [Nat.succ_injective h] at hω))
     (fun _ _ => by rw [extDeriv_extDeriv]; exact Submodule.zero_mem _)
     (fun ω η hω hη => by rw [extDeriv_add]; exact add_mem hω hη) h
 
@@ -269,8 +278,12 @@ theorem isSubcomplex_serendipityForm (r k : ℕ) :
 /-- **The inclusion property** `S_rΛᵏ ⊆ S_{r'}Λᵏ` (`r ≤ r'`). [ArnoldAwanou2014], Thm 3.4 -/
 theorem serendipityForm_mono {r r' : ℕ} (h : r ≤ r') (k : ℕ) :
     serendipityForm R d r k ≤ serendipityForm R d r' k :=
-  sup_le_sup (sup_le_sup (polyForm_mono h k)
-    (Submodule.map_mono (superlinForm_mono (Nat.sub_le_sub_right h 1) _)))
+  sup_le_sup (sup_le_sup (polyForm_mono h k) (by
+    split_ifs with hr hr'
+    · exact le_rfl
+    · exact bot_le
+    · omega
+    · exact Submodule.map_mono (superlinForm_mono (Nat.sub_le_sub_right h 1) _)))
     (Submodule.map_mono (Submodule.map_mono (superlinForm_mono h k)))
 
 /-! ### `0`-forms: the serendipity space -/
@@ -293,7 +306,7 @@ theorem koszul_single_singleton (j : d) (p : MvPolynomial d R) :
     rw [Pi.single_eq_of_ne this, mul_zero]
 
 /-- A termwise bound with one unit to spare at `j`. -/
-theorem sum_add_one_le {f g : d → ℕ} (j : d) (h : ∀ i, f i + (if i = j then 1 else 0) ≤ g i) :
+private theorem sum_add_one_le {f g : d → ℕ} (j : d) (h : ∀ i, f i + (if i = j then 1 else 0) ≤ g i) :
     ∑ i, f i + 1 ≤ ∑ i, g i := by
   calc ∑ i, f i + 1 = ∑ i, (f i + if i = j then 1 else 0) := by
         rw [sum_add_distrib, sum_ite_eq' univ j]; simp
@@ -320,7 +333,7 @@ theorem serendipityForm_zero {r : ℕ} (hr : 1 ≤ r) :
     serendipityForm R d r 0 = superlinForm R d r 0 := by
   refine le_antisymm (fun ω h => serendipityForm_induction
     (fun _ hω => polyForm_le_superlinForm r 0 hω)
-    (fun _ hω => by simpa [Nat.sub_add_cancel hr] using koszul_mem_superlinForm hω)
+    (fun _ h _ hω => h ▸ koszul_mem_superlinForm hω)
     (fun _ hω => by rw [IsDeg.koszul_eq_zero hω.1, extDeriv_zero]; exact Submodule.zero_mem _)
     (fun _ _ => add_mem) h) (supportForm_le_of_single fun s hs α hα => ?_)
   obtain rfl := card_eq_zero.1 hs
@@ -339,7 +352,7 @@ theorem serendipityForm_zero {r : ℕ} (hr : 1 ≤ r) :
     rw [← hm, ← koszul_single_singleton]
     have h1 := single_monomial_mem_supportForm (R := R) hβ
     rw [card_singleton] at h1
-    exact koszul_mem_serendipityForm h1
+    simpa [Nat.sub_add_cancel hr] using koszul_mem_serendipityForm h1
   by_cases hsup : ∃ j, 2 ≤ α j
   · obtain ⟨j, hj⟩ := hsup
     exact hκ j (by omega) (by
@@ -359,7 +372,7 @@ theorem serendipityForm_zero {r : ℕ} (hr : 1 ≤ r) :
         · simp [hi]; omega]
       exact Nat.zero_le _)
 
-/-- **`P_rΛ⁰ ⊆ S_rΛ⁰ ⊆ Q_rΛ⁰`** (`r ≥ 1`): a polynomial of superlinear degree `≤ r` has degree
+/-- **`S_rΛ⁰ ⊆ Q_rΛ⁰`** (`r ≥ 1`): a polynomial of superlinear degree `≤ r` has degree
 `≤ r` in each variable. -/
 theorem serendipityForm_zero_le_cubeFormMinus {r : ℕ} (hr : 1 ≤ r) :
     serendipityForm R d r 0 ≤ cubeFormMinus R (fun _ => r) 0 := by
@@ -489,17 +502,17 @@ theorem cubeTrace_koszul_sub_mem_superlinForm (f : d → Option R) {r k : ℕ} {
       rw [ite_eq_right fun h' => hs fun j hj => h' j (mem_insert_of_mem hj), mul_zero]]
     exact Submodule.zero_mem _
 
-/-! ### `M_{r-1}Λᵏ ⊆ S_rΛᵏ` and the trace property -/
+/-! ### `M_rΛᵏ ⊆ S_{r+1}Λᵏ` and stability under traces -/
 
 variable {K : Type*} [Field K] [CharZero K]
 
-/-- **`M_{r-1}Λᵏ ⊆ S_rΛᵏ`**: by the homotopy formula, a monomial form `μ` of degree `j` is
-`(j + k)⁻¹ (κ dμ + d κμ)` with `dμ ∈ M_{r-1}Λ^{k+1}` and `μ ∈ M_rΛᵏ`. -/
+/-- **`M_rΛᵏ ⊆ S_{r+1}Λᵏ`**: by the homotopy formula, a monomial form `μ` of degree `j` is
+`(j + k)⁻¹ (κ dμ + d κμ)` with `dμ ∈ M_rΛ^{k+1}` and `μ ∈ M_{r+1}Λᵏ`. -/
 theorem superlinForm_le_serendipityForm (r k : ℕ) :
-    superlinForm K d (r - 1) k ≤ serendipityForm K d r k := by
+    superlinForm K d r k ≤ serendipityForm K d (r + 1) k := by
   refine supportForm_le_of_single fun s hs α hα => ?_
   set μ : PolyForm K d := Pi.single s (monomial α 1)
-  have hμ : μ ∈ superlinForm K d (r - 1) k := hs ▸ single_monomial_mem_supportForm hα
+  have hμ : μ ∈ superlinForm K d r k := hs ▸ single_monomial_mem_supportForm hα
   have hhom : IsHomogeneousForm α.degree μ := fun t => by
     by_cases ht : t = s
     · subst ht; simpa [μ] using isHomogeneous_monomial (1 : K) rfl
@@ -508,7 +521,7 @@ theorem superlinForm_le_serendipityForm (r k : ℕ) :
   rw [Nat.cast_smul_eq_nsmul] at H
   by_cases h0 : α.degree + k = 0
   · -- a constant `0`-form
-    refine polyForm_le_serendipityForm r k ⟨hμ.1, fun t => ?_⟩
+    refine polyForm_le_serendipityForm (r + 1) k ⟨hμ.1, fun t => ?_⟩
     by_cases ht : t = s
     · subst ht
       have : (α.sum fun _ => id) = α.degree := rfl
@@ -520,20 +533,22 @@ theorem superlinForm_le_serendipityForm (r k : ℕ) :
         one_smul]
     rw [hμ']
     refine Submodule.smul_mem _ _ (add_mem
-      (extDeriv_koszul_mem_serendipityForm (superlinForm_mono (Nat.sub_le r 1) k hμ))
+      (extDeriv_koszul_mem_serendipityForm (superlinForm_mono r.le_succ k hμ))
       (koszul_mem_serendipityForm (extDeriv_mem_superlinForm hμ)))
 
 /-- **The trace property** `tr_f S_rΛᵏ ⊆ S_rΛᵏ` on every coordinate plane
 `f = {x_j = c_j : f j = some c_j}`: `tr_f κ M_{r-1}Λ^{k+1} ⊆ κ M_{r-1}Λ^{k+1} + M_{r-1}Λᵏ`,
 `tr_f dκ M_rΛᵏ = d tr_f κ M_rΛᵏ ⊆ dκ M_rΛᵏ + d M_rΛ^{k-1}`, and `M_{r-1}Λᵏ ⊆ S_rΛᵏ`,
-`d M_rΛ^{k-1} ⊆ d S_{r+1}Λ^{k-1} ⊆ S_rΛᵏ`. [ArnoldAwanou2014], Thm 3.5 -/
+`d M_rΛ^{k-1} ⊆ d S_{r+1}Λ^{k-1} ⊆ S_rΛᵏ`. This is the stability half of [ArnoldAwanou2014],
+Thm 3.5; that the traces are the serendipity forms `S_rΛᵏ(f)` of the face is not proved. -/
 theorem cubeTrace_mem_serendipityForm (f : d → Option K) {r k : ℕ} {ω : PolyForm K d}
     (h : ω ∈ serendipityForm K d r k) : cubeTrace f ω ∈ serendipityForm K d r k :=
   serendipityForm_induction
     (fun _ hp => polyForm_le_serendipityForm r k (cubeTrace_mem_polyForm f hp))
-    (fun a ha => by
+    (fun r' hr a ha => by
+      subst hr
       rw [← sub_add_cancel (cubeTrace f (koszul a)) (koszul (cubeTrace f a))]
-      exact add_mem (superlinForm_le_serendipityForm r k
+      exact add_mem (superlinForm_le_serendipityForm r' k
         (cubeTrace_koszul_sub_mem_superlinForm f ha))
         (koszul_mem_serendipityForm (cubeTrace_mem_superlinForm f ha)))
     (fun b hb => by
@@ -545,14 +560,14 @@ theorem cubeTrace_mem_serendipityForm (f : d → Option K) {r k : ℕ} {ω : Pol
         rw [← extDeriv_cubeTrace, ← sub_add_cancel (cubeTrace f (koszul b))
           (koszul (cubeTrace f b)), extDeriv_add]
         have hρ := cubeTrace_koszul_sub_mem_superlinForm f hb
-        exact add_mem (extDeriv_mem_serendipityForm (superlinForm_le_serendipityForm (r + 1) k
-          (by simpa using hρ)))
+        exact add_mem (extDeriv_mem_serendipityForm (superlinForm_le_serendipityForm r k hρ))
           (extDeriv_koszul_mem_serendipityForm (cubeTrace_mem_superlinForm f hb)))
     (fun ω η hω hη => by rw [cubeTrace_add]; exact add_mem hω hη) h
 
-/-- **The traces of `S_rΛᵏ` on a coordinate plane `f` are the serendipity forms on `f`**: the
-image of `tr_f` is the set of the forms of `S_rΛᵏ` fixed by `tr_f` (which live on `f`: no
-`dx_j` and no `x_j` in the fixed directions). [ArnoldAwanou2014], (27) -/
+/-- **The traces of `S_rΛᵏ` on a coordinate plane `f` are the trace-fixed forms of `S_rΛᵏ`**
+(those living on `f`: no `dx_j` and no `x_j` in the fixed directions), from the stability
+`tr_f S_rΛᵏ ⊆ S_rΛᵏ` and `tr_f ∘ tr_f = tr_f`. Identifying them with the serendipity forms of
+the face, in its free coordinates ([ArnoldAwanou2014], (27)), is not proved. -/
 theorem image_cubeTrace_serendipityForm (f : d → Option K) (r k : ℕ) :
     cubeTrace f '' (serendipityForm K d r k : Set (PolyForm K d)) =
       {θ | θ ∈ serendipityForm K d r k ∧ cubeTrace f θ = θ} := by

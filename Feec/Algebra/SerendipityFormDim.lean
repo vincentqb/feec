@@ -20,9 +20,9 @@ of `κ`, `dim S_rΛᵏ = dim P_rΛᵏ + dim κ H_{r-1}Λ^{k+1} + dim κ H_rΛᵏ
 
 ## Main definitions
 
-* `Feec.Koszul.monoFilter P`, `Feec.Koszul.formFilter P`: the parts of a polynomial and of a
+* `Feec.Koszul.monomialFilter P`, `Feec.Koszul.formFilter P`: the parts of a polynomial and of a
   polynomial form supported on the monomials satisfying `P`;
-* `Feec.Koszul.wt s α`: the weight `α + 1_s` of `x^α dx_s`, preserved by `κ` and `d`;
+* `Feec.Koszul.formWeight s α`: the weight `α + 1_s` of `x^α dx_s`, preserved by `κ` and `d`;
 * `Feec.Koszul.highForm R d r k`: `H_rΛᵏ`, the monomial `k`-forms of superlinear degree `≤ r` and
   degree `> r`.
 
@@ -72,59 +72,60 @@ omit [LinearOrder d] [Fintype d]
 
 open Classical in
 /-- The part of a polynomial supported on the exponents satisfying `P`. -/
-def monoFilter (P : (d →₀ ℕ) → Prop) : MvPolynomial d R →ₗ[R] MvPolynomial d R :=
+def monomialFilter (P : (d →₀ ℕ) → Prop) : MvPolynomial d R →ₗ[R] MvPolynomial d R :=
   (basisMonomials d R).constr R fun α => if P α then monomial α 1 else 0
 
 open Classical in
-theorem monoFilter_monomial (P : (d →₀ ℕ) → Prop) (β : d →₀ ℕ) :
-    monoFilter P (monomial β (1 : R)) = if P β then monomial β 1 else 0 := by
-  rw [monoFilter, show monomial β (1 : R) = basisMonomials d R β from rfl,
+theorem monomialFilter_monomial (P : (d →₀ ℕ) → Prop) (β : d →₀ ℕ) :
+    monomialFilter P (monomial β (1 : R)) = if P β then monomial β 1 else 0 := by
+  rw [monomialFilter, show monomial β (1 : R) = basisMonomials d R β from rfl,
     Module.Basis.constr_basis]
   rfl
 
-theorem coeff_monoFilter_of_pos {P : (d →₀ ℕ) → Prop} {α : d →₀ ℕ} (hα : P α)
-    (p : MvPolynomial d R) : (monoFilter P p).coeff α = p.coeff α := by
+theorem coeff_monomialFilter_of_pos {P : (d →₀ ℕ) → Prop} {α : d →₀ ℕ} (hα : P α)
+    (p : MvPolynomial d R) : (monomialFilter P p).coeff α = p.coeff α := by
   classical
-  have : lcoeff R α ∘ₗ monoFilter P = lcoeff R α := (basisMonomials d R).ext fun β => by
-    simp only [coe_basisMonomials, LinearMap.coe_comp, Function.comp_apply, monoFilter_monomial,
+  have : lcoeff R α ∘ₗ monomialFilter P = lcoeff R α := (basisMonomials d R).ext fun β => by
+    simp only [coe_basisMonomials, LinearMap.coe_comp, Function.comp_apply, monomialFilter_monomial,
       lcoeff_apply]
     split_ifs with hβ
     · rfl
     · simp [coeff_monomial, show β ≠ α from fun h => hβ (h ▸ hα)]
   exact LinearMap.congr_fun this p
 
-theorem coeff_monoFilter_of_neg {P : (d →₀ ℕ) → Prop} {α : d →₀ ℕ} (hα : ¬P α)
-    (p : MvPolynomial d R) : (monoFilter P p).coeff α = 0 := by
+theorem coeff_monomialFilter_of_neg {P : (d →₀ ℕ) → Prop} {α : d →₀ ℕ} (hα : ¬P α)
+    (p : MvPolynomial d R) : (monomialFilter P p).coeff α = 0 := by
   classical
-  have : lcoeff R α ∘ₗ monoFilter P = 0 := (basisMonomials d R).ext fun β => by
-    simp only [coe_basisMonomials, LinearMap.coe_comp, Function.comp_apply, monoFilter_monomial,
+  have : lcoeff R α ∘ₗ monomialFilter P = 0 := (basisMonomials d R).ext fun β => by
+    simp only [coe_basisMonomials, LinearMap.coe_comp, Function.comp_apply, monomialFilter_monomial,
       lcoeff_apply, LinearMap.zero_apply]
     split_ifs with hβ
     · simp [coeff_monomial, show β ≠ α from fun h => hα (h ▸ hβ)]
     · simp
   exact LinearMap.congr_fun this p
 
-theorem monoFilter_mem_restrictSupport {P : (d →₀ ℕ) → Prop} {S : Set (d →₀ ℕ)}
+theorem monomialFilter_mem_restrictSupport {P : (d →₀ ℕ) → Prop} {S : Set (d →₀ ℕ)}
     {p : MvPolynomial d R} (hp : p ∈ restrictSupport R S) :
-    monoFilter P p ∈ restrictSupport R {α | α ∈ S ∧ P α} := by
+    monomialFilter P p ∈ restrictSupport R {α | α ∈ S ∧ P α} := by
   rw [mem_restrictSupport_iff] at hp ⊢
   intro α hα
   rw [Finset.mem_coe, mem_support_iff] at hα
   by_cases h : P α
-  · rw [coeff_monoFilter_of_pos h] at hα; exact ⟨hp (Finset.mem_coe.2 (mem_support_iff.2 hα)), h⟩
-  · exact absurd (coeff_monoFilter_of_neg h p) hα
+  · rw [coeff_monomialFilter_of_pos h] at hα; exact ⟨hp (Finset.mem_coe.2 (mem_support_iff.2 hα)), h⟩
+  · exact absurd (coeff_monomialFilter_of_neg h p) hα
 
-theorem monoFilter_add_monoFilter_not (P : (d →₀ ℕ) → Prop) (p : MvPolynomial d R) :
-    monoFilter P p + monoFilter (fun α => ¬P α) p = p := by
+theorem monomialFilter_add_monomialFilter_not (P : (d →₀ ℕ) → Prop) (p : MvPolynomial d R) :
+    monomialFilter P p + monomialFilter (fun α => ¬P α) p = p := by
   classical
-  have : monoFilter P + monoFilter (fun α => ¬P α) = (LinearMap.id : MvPolynomial d R →ₗ[R] _) :=
+  have : monomialFilter P + monomialFilter (fun α => ¬P α) =
+      (LinearMap.id : MvPolynomial d R →ₗ[R] _) :=
     (basisMonomials d R).ext fun β => by
-      simp only [coe_basisMonomials, LinearMap.add_apply, monoFilter_monomial, LinearMap.id_apply]
+      simp only [coe_basisMonomials, LinearMap.add_apply, monomialFilter_monomial, LinearMap.id_apply]
       by_cases h : P β <;> simp [h]
   exact LinearMap.congr_fun this p
 
-theorem monoFilter_X_mul [DecidableEq d] (P : (d →₀ ℕ) → Prop) (j : d) (p : MvPolynomial d R) :
-    monoFilter P (X j * p) = X j * monoFilter (fun α => P (α + Finsupp.single j 1)) p := by
+theorem monomialFilter_X_mul [DecidableEq d] (P : (d →₀ ℕ) → Prop) (j : d) (p : MvPolynomial d R) :
+    monomialFilter P (X j * p) = X j * monomialFilter (fun α => P (α + Finsupp.single j 1)) p := by
   ext α
   rw [coeff_X_mul']
   by_cases hj : j ∈ α.support
@@ -132,14 +133,14 @@ theorem monoFilter_X_mul [DecidableEq d] (P : (d →₀ ℕ) → Prop) (j : d) (
       (Finsupp.single_le_iff.2 (Nat.one_le_iff_ne_zero.2 (Finsupp.mem_support_iff.1 hj)))
     rw [ite_eq_left hj]
     by_cases hP : P α
-    · rw [coeff_monoFilter_of_pos hP, coeff_monoFilter_of_pos (P := fun α => P (α + _))
+    · rw [coeff_monomialFilter_of_pos hP, coeff_monomialFilter_of_pos (P := fun α => P (α + _))
         (by rwa [this]), coeff_X_mul', ite_eq_left hj]
-    · rw [coeff_monoFilter_of_neg hP, coeff_monoFilter_of_neg (P := fun α => P (α + _))
+    · rw [coeff_monomialFilter_of_neg hP, coeff_monomialFilter_of_neg (P := fun α => P (α + _))
         (by rwa [this])]
   · rw [ite_eq_right hj]
     by_cases hP : P α
-    · rw [coeff_monoFilter_of_pos hP, coeff_X_mul', ite_eq_right hj]
-    · rw [coeff_monoFilter_of_neg hP]
+    · rw [coeff_monomialFilter_of_pos hP, coeff_X_mul', ite_eq_right hj]
+    · rw [coeff_monomialFilter_of_neg hP]
 
 end Filter
 
@@ -147,49 +148,50 @@ end Filter
 
 /-- The part of a polynomial form whose monomial forms `x^α dx_s` satisfy `P s α`. -/
 def formFilter (P : Finset d → (d →₀ ℕ) → Prop) (ω : PolyForm R d) : PolyForm R d :=
-  fun s => monoFilter (P s) (ω s)
+  fun s => monomialFilter (P s) (ω s)
 
 omit [LinearOrder d] [Fintype d] in
 theorem formFilter_add_formFilter_not (P : Finset d → (d →₀ ℕ) → Prop) (ω : PolyForm R d) :
     formFilter P ω + formFilter (fun s α => ¬P s α) ω = ω :=
-  funext fun s => monoFilter_add_monoFilter_not (P s) (ω s)
+  funext fun s => monomialFilter_add_monomialFilter_not (P s) (ω s)
 
 omit [LinearOrder d] [Fintype d] in
 theorem formFilter_mem_supportForm [DecidableEq d] (P : Finset d → (d →₀ ℕ) → Prop) {k : ℕ}
     {S : Finset d → Set (d →₀ ℕ)} {ω : PolyForm R d} (h : ω ∈ supportForm R d k S) :
     formFilter P ω ∈ supportForm R d k (fun s => {α | α ∈ S s ∧ P s α}) :=
-  ⟨fun s hs => by simp [formFilter, h.1 s hs], fun s => monoFilter_mem_restrictSupport (h.2 s)⟩
+  ⟨fun s hs => by simp [formFilter, h.1 s hs], fun s => monomialFilter_mem_restrictSupport (h.2 s)⟩
 
 /-- The weight `α + 1_s` of the monomial form `x^α dx_s`: `κ` and `d` move a unit between `α` and
 `1_s`. -/
-def wt (s : Finset d) (α : d →₀ ℕ) (i : d) : ℕ := α i + if i ∈ s then 1 else 0
+def formWeight (s : Finset d) (α : d →₀ ℕ) (i : d) : ℕ := α i + if i ∈ s then 1 else 0
 
 omit [Fintype d] in
-theorem wt_add_single {s : Finset d} {j : d} (hj : j ∉ s) (α : d →₀ ℕ) :
-    wt s (α + Finsupp.single j 1) = wt (insert j s) α := funext fun i => by
+theorem formWeight_add_single {s : Finset d} {j : d} (hj : j ∉ s) (α : d →₀ ℕ) :
+    formWeight s (α + Finsupp.single j 1) = formWeight (insert j s) α := funext fun i => by
   by_cases hi : i = j
-  · subst hi; simp [wt, hj]
-  · simp [wt, hi]
+  · subst hi; simp [formWeight, hj]
+  · simp [formWeight, hi]
 
 omit [Fintype d] in
-theorem wt_sub_single {s : Finset d} {j : d} (hj : j ∈ s) {α : d →₀ ℕ} (hα : 1 ≤ α j) :
-    wt s (α - Finsupp.single j 1) = wt (s.erase j) α := funext fun i => by
+theorem formWeight_sub_single {s : Finset d} {j : d} (hj : j ∈ s) {α : d →₀ ℕ} (hα : 1 ≤ α j) :
+    formWeight s (α - Finsupp.single j 1) = formWeight (s.erase j) α := funext fun i => by
   by_cases hi : i = j
-  · subst hi; simp [wt, hj]; omega
-  · simp [wt, hi]
+  · subst hi; simp [formWeight, hj]; omega
+  · simp [formWeight, hi]
 
 /-- **The filters by weight commute with `κ`**. -/
-theorem koszul_formFilter_wt (Q : (d → ℕ) → Prop) (ω : PolyForm R d) :
-    koszul (formFilter (fun s α => Q (wt s α)) ω) = formFilter (fun s α => Q (wt s α)) (koszul ω) := by
+theorem koszul_formFilter_formWeight (Q : (d → ℕ) → Prop) (ω : PolyForm R d) :
+    koszul (formFilter (fun s α => Q (formWeight s α)) ω) =
+      formFilter (fun s α => Q (formWeight s α)) (koszul ω) := by
   funext s
   simp only [koszul_apply, formFilter, map_sum]
   refine sum_congr rfl fun j hj => ?_
-  rw [mul_assoc, mul_assoc, map_sgn_mul, monoFilter_X_mul]
-  simp_rw [wt_add_single (mem_compl.1 hj)]
+  rw [mul_assoc, mul_assoc, map_sgn_mul, monomialFilter_X_mul]
+  simp_rw [formWeight_add_single (mem_compl.1 hj)]
 
-theorem koszul_formFilter_wt_eq_zero (Q : (d → ℕ) → Prop) {ω : PolyForm R d}
-    (h : koszul ω = 0) : koszul (formFilter (fun s α => Q (wt s α)) ω) = 0 := by
-  rw [koszul_formFilter_wt, h]
+theorem koszul_formFilter_formWeight_eq_zero (Q : (d → ℕ) → Prop) {ω : PolyForm R d}
+    (h : koszul ω = 0) : koszul (formFilter (fun s α => Q (formWeight s α)) ω) = 0 := by
+  rw [koszul_formFilter_formWeight, h]
   funext s
   simp [formFilter]
 
@@ -344,9 +346,9 @@ theorem wedge_divMonomial_mem_supportForm (u : d) {k : ℕ} {S T : Finset d → 
   · rw [Pi.single_eq_of_ne hju, mul_zero, zero_mul]; exact Submodule.zero_mem _
 
 /-- The second phase of the exactness proof: weights `≤ 1`, vanishing outside `T`. -/
-theorem mem_map_koszul_highForm_of_wt_le_one {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Finset d) :
-    ∀ θ ∈ supportForm R d k (fun s => {α | α ∈ highSupport r s ∧ (∀ i, wt s α i ≤ 1) ∧
-        ∀ i ∉ T, wt s α i = 0}), koszul θ = 0 →
+theorem mem_map_koszul_highForm_of_formWeight_le_one {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Finset d) :
+    ∀ θ ∈ supportForm R d k (fun s => {α | α ∈ highSupport r s ∧ (∀ i, formWeight s α i ≤ 1) ∧
+        ∀ i ∉ T, formWeight s α i = 0}), koszul θ = 0 →
       θ ∈ (highForm R d (r - 1) (k + 1)).map (koszulₗ R d) := by
   induction T using Finset.induction_on with
   | empty =>
@@ -354,12 +356,12 @@ theorem mem_map_koszul_highForm_of_wt_le_one {r : ℕ} (hr : 1 ≤ r) {k : ℕ} 
     -- every weight vanishes: `θ` would be a constant `0`-form of degree `> r`
     suffices θ = 0 by rw [this]; exact Submodule.zero_mem _
     funext s
-    have hS : {α | α ∈ highSupport r s ∧ (∀ i, wt s α i ≤ 1) ∧
-        ∀ i ∉ (∅ : Finset d), wt s α i = 0} = ∅ := by
+    have hS : {α | α ∈ highSupport r s ∧ (∀ i, formWeight s α i ≤ 1) ∧
+        ∀ i ∉ (∅ : Finset d), formWeight s α i = 0} = ∅ := by
       refine Set.eq_empty_of_forall_notMem fun α hα => ?_
       obtain ⟨⟨-, hdeg⟩, -, h0⟩ := hα
       have : α = 0 := Finsupp.ext fun i => by
-        have := h0 i (notMem_empty i); simp only [wt] at this; simp; omega
+        have := h0 i (notMem_empty i); simp only [formWeight] at this; simp; omega
       subst this; simp at hdeg
     have h0 : θ s ∈ restrictSupport R (∅ : Set (d →₀ ℕ)) := hS ▸ hθ.2 s
     show θ s = 0
@@ -367,17 +369,17 @@ theorem mem_map_koszul_highForm_of_wt_le_one {r : ℕ} (hr : 1 ≤ r) {k : ℕ} 
       (Set.subset_empty_iff.1 ((mem_restrictSupport_iff R).1 h0)))
   | insert u T hu ih =>
     intro θ hθ hκ
-    rw [← formFilter_add_formFilter_not (fun s α => 1 ≤ wt s α u) θ]
+    rw [← formFilter_add_formFilter_not (fun s α => 1 ≤ formWeight s α u) θ]
     refine Submodule.add_mem _ ?_ (ih _ ?_ ?_)
     · -- the part with `x_u` or `dx_u`
-      have hθ₁ := formFilter_mem_supportForm (fun s α => 1 ≤ wt s α u) hθ
+      have hθ₁ := formFilter_mem_supportForm (fun s α => 1 ≤ formWeight s α u) hθ
       refine ⟨_, wedge_divMonomial_mem_supportForm u hθ₁ fun t ht α hα hαu => ⟨?_, ?_⟩,
-        koszul_wedge_divMonomial u (koszul_formFilter_wt_eq_zero (fun w => 1 ≤ w u) hκ)
+        koszul_wedge_divMonomial u (koszul_formFilter_formWeight_eq_zero (fun w => 1 ≤ w u) hκ)
           fun t hut => modMonomial_eq_zero (hθ₁.2 t) fun α hα => by
-            simpa [wt, hut] using hα.2⟩
+            simpa [formWeight, hut] using hα.2⟩
       · rw [superlinDeg_eq_zero fun i => by
-          change wt t (α - Finsupp.single u 1) i ≤ 1
-          rw [wt_sub_single ht hαu]
+          change formWeight t (α - Finsupp.single u 1) i ≤ 1
+          rw [formWeight_sub_single ht hαu]
           exact hα.1.2.1 i]
         exact Nat.zero_le _
       · have := degree_sub_single_add_one hαu; have := hα.1.1.2; omega
@@ -387,29 +389,29 @@ theorem mem_map_koszul_highForm_of_wt_le_one {r : ℕ} (hr : 1 ≤ r) {k : ℕ} 
       by_cases hiu : i = u
       · subst hiu; have := hα.2; omega
       · exact hα.1.2.2 i (by simp [hiu, hi])
-    · exact koszul_formFilter_wt_eq_zero (fun w => ¬1 ≤ w u) hκ
+    · exact koszul_formFilter_formWeight_eq_zero (fun w => ¬1 ≤ w u) hκ
 
 /-- The first phase of the exactness proof: weights `≤ 1` outside `T`. -/
-theorem mem_map_koszul_highForm_of_wt {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Finset d) :
-    ∀ θ ∈ supportForm R d k (fun s => {α | α ∈ highSupport r s ∧ ∀ i ∉ T, wt s α i ≤ 1}),
+theorem mem_map_koszul_highForm_of_formWeight {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Finset d) :
+    ∀ θ ∈ supportForm R d k (fun s => {α | α ∈ highSupport r s ∧ ∀ i ∉ T, formWeight s α i ≤ 1}),
       koszul θ = 0 → θ ∈ (highForm R d (r - 1) (k + 1)).map (koszulₗ R d) := by
   induction T using Finset.induction_on with
   | empty =>
     intro θ hθ hκ
-    refine mem_map_koszul_highForm_of_wt_le_one hr univ θ (supportForm_mono ?_ k hθ) hκ
+    refine mem_map_koszul_highForm_of_formWeight_le_one hr univ θ (supportForm_mono ?_ k hθ) hκ
     intro s α hα
     exact ⟨hα.1, fun i => hα.2 i (notMem_empty i), fun i hi => absurd (mem_univ i) hi⟩
   | insert u T hu ih =>
     intro θ hθ hκ
-    rw [← formFilter_add_formFilter_not (fun s α => 2 ≤ wt s α u) θ]
+    rw [← formFilter_add_formFilter_not (fun s α => 2 ≤ formWeight s α u) θ]
     refine Submodule.add_mem _ ?_ (ih _ ?_ ?_)
     · -- the part superlinear in `u`: `dx_u ∧ θ / x_u` has a lower superlinear degree
-      have hθ₁ := formFilter_mem_supportForm (fun s α => 2 ≤ wt s α u) hθ
+      have hθ₁ := formFilter_mem_supportForm (fun s α => 2 ≤ formWeight s α u) hθ
       refine ⟨_, wedge_divMonomial_mem_supportForm u hθ₁ fun t ht α hα hαu => ⟨?_, ?_⟩,
-        koszul_wedge_divMonomial u (koszul_formFilter_wt_eq_zero (fun w => 2 ≤ w u) hκ)
+        koszul_wedge_divMonomial u (koszul_formFilter_formWeight_eq_zero (fun w => 2 ≤ w u) hκ)
           fun t hut => modMonomial_eq_zero (hθ₁.2 t) fun α hα => by
-            have := hα.2; simp [wt, hut] at this; omega⟩
-      · have h2 : 2 ≤ α u := by have := hα.2; simpa [wt] using this
+            have := hα.2; simp [formWeight, hut] at this; omega⟩
+      · have h2 : 2 ≤ α u := by have := hα.2; simpa [formWeight] using this
         have := superlinDeg_sub_single_add_one ht h2
         have := hα.1.1.1
         omega
@@ -420,7 +422,7 @@ theorem mem_map_koszul_highForm_of_wt {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Fi
       by_cases hiu : i = u
       · subst hiu; have := hα.2; omega
       · exact hα.1.2 i (by simp [hiu, hi])
-    · exact koszul_formFilter_wt_eq_zero (fun w => ¬2 ≤ w u) hκ
+    · exact koszul_formFilter_formWeight_eq_zero (fun w => ¬2 ≤ w u) hκ
 
 /-- **Exactness of the Koszul complex at bounded superlinear degree**: for `r ≥ 1`, a `κ`-closed
 form of `H_rΛᵏ` is `κ` of a form of `H_{r-1}Λ^{k+1}`, over any commutative ring.
@@ -428,9 +430,9 @@ form of `H_rΛᵏ` is `κ` of a form of `H_{r-1}Λ^{k+1}`, over any commutative 
 theorem mem_map_koszul_highForm {r k : ℕ} (hr : 1 ≤ r) {θ : PolyForm R d}
     (h : θ ∈ highForm R d r k) (hκ : koszul θ = 0) :
     θ ∈ (highForm R d (r - 1) (k + 1)).map (koszulₗ R d) :=
-  mem_map_koszul_highForm_of_wt hr univ θ
+  mem_map_koszul_highForm_of_formWeight hr univ θ
     (supportForm_mono (S := highSupport r)
-      (T := fun s => {α | α ∈ highSupport r s ∧ ∀ i ∉ (univ : Finset d), wt s α i ≤ 1})
+      (T := fun s => {α | α ∈ highSupport r s ∧ ∀ i ∉ (univ : Finset d), formWeight s α i ≤ 1})
       (fun _ _ hα => ⟨hα, fun i hi => absurd (mem_univ i) hi⟩) k h) hκ
 
 /-! ### Sums of monomial spaces -/
@@ -536,13 +538,14 @@ theorem serendipityForm_eq_sup {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
         ((highForm R d r k).map (koszulₗ R d)).map (extDerivₗ R d)) := by
   refine le_antisymm (fun ω h => serendipityForm_induction ?_ ?_ ?_ (fun _ _ => add_mem) h) ?_
   · exact fun ω hω => Submodule.mem_sup_left hω
-  · intro a ha
+  · rintro r' rfl a ha
+    rw [Nat.add_sub_cancel]
     rw [← polyForm_sup_highForm] at ha
     obtain ⟨a₁, ha₁, a₂, ha₂, rfl⟩ := Submodule.mem_sup.1 ha
     rw [koszul_add]
     refine add_mem (Submodule.mem_sup_left ?_)
       (Submodule.mem_sup_right (Submodule.mem_sup_left (Submodule.mem_map_of_mem ha₂)))
-    simpa [Nat.sub_add_cancel hr] using koszul_mem_polyForm ha₁
+    simpa using koszul_mem_polyForm ha₁
   · intro b hb
     rw [← polyForm_sup_highForm] at hb
     obtain ⟨b₁, hb₁, b₂, hb₂, rfl⟩ := Submodule.mem_sup.1 hb
@@ -554,7 +557,7 @@ theorem serendipityForm_eq_sup {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     | succ k => simpa using extDeriv_mem_polyForm (koszul_mem_polyForm hb₁)
   · refine sup_le (polyForm_le_serendipityForm r k) (sup_le ?_ ?_)
     · rintro _ ⟨a, ha, rfl⟩
-      exact koszul_mem_serendipityForm (highForm_le_superlinForm _ _ ha)
+      simpa [Nat.sub_add_cancel hr] using koszul_mem_serendipityForm (highForm_le_superlinForm _ _ ha)
     · rintro _ ⟨_, ⟨b, hb, rfl⟩, rfl⟩
       exact extDeriv_koszul_mem_serendipityForm (highForm_le_superlinForm _ _ hb)
 

@@ -307,7 +307,9 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > Crank–Nicolson systems (`FullVerdict.crankNicolson_signed`, from `TimeStepping.BlockMatrix`),
 > the discrete inf-sup by Fortin operators (`StaticVerdict.infSup`), the vector-proxy Maxwell
 > verdict (`Instances.Maxwell.vec_maxwellFEEC`, from `Algebra.Proxy3`) and the by-reference
-> `crownCorrections`, 0 of 394 modules are off the tree (14 of 392 before). Open: a basis adapted
+> `crownCorrections`, 0 of 394 modules are off the tree (14 of 392 before). Since then off the
+> tree: `Algebra.SerendipityForm{,Dim}` (the serendipity forms `S_rΛᵏ`, tied once they carry a
+> conforming family). Open: a basis adapted
 > to the parity grading in an instance; the three-block `IsFullCNStep` against `Lₕ`; the PEC side
 > of the proxies; a bridge from the wave-group orbits to `IsMixedWeak`.
 

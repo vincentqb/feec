@@ -247,8 +247,8 @@ theorem mirrorWaveFEMConvergence_of_approxFEEC : MirrorWaveFEMConvergence hT hB 
 /-- **The model verdict of the mirror scheme (6.5) is a corollary of the approximating FEEC
 theorem.** -/
 theorem mirrorFEMVerdict_of_approxFEEC : MirrorFEMVerdict :=
-  ⟨exists_mirror_estimates, fun hT hB => ⟨mirrorWaveFEMConvergence_of_approxFEEC hT hB,
-    mirrorWaveFEMRate_of_approxFEEC hT hB, mirrorWaveFEMRateSobolev_of_approxFEEC hT hB⟩⟩
+  ⟨exists_mirror_estimates, mirrorWaveFEMConvergence_of_approxFEEC,
+    mirrorWaveFEMRate_of_approxFEEC, mirrorWaveFEMRateSobolev_of_approxFEEC⟩
 
 end ModelCorollary
 

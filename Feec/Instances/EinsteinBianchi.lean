@@ -122,49 +122,50 @@ abbrev torusRate (α T : ℝ) : torusFEEC.RateClass T :=
   bandFamily.rateClass (totalSub constraint) isClosed_totalSub α T
 
 /-- **The verdict of the constrained FEEC theorem for the EB system on `𝕋³`** (Fourier spectral
-method): `K` reduces `L`; TSD data stay TSD for all `t ∈ ℝ`; for `ξ₀ ∈ D(L)` the discrete
-solutions converge to `e^{tL} ξ₀` uniformly on `[0, T]`; for `ξ₀ ∈ D(L) ∩ K` the constraint
-residual is bounded by the error and tends to `0` uniformly on `[0, T]`; for data in the
-approximation class of order `α` (`SpectralFamily.rateData`), the error and the residual are
-`≤ (1 + C_P)(1 + t)² (N + 1)^{-α} ‖ξ₀‖_α`. -/
-abbrev TorusVerdict : Prop :=
-    complex.wave.IsReducing (totalSub constraint) ∧
-    (∀ t, ∀ x ∈ totalSub constraint, complex.waveGroup.S t x ∈ totalSub constraint) ∧
-    (∀ T : ℝ, ∀ x : complex.wave.domain, TendstoUniformlyOn
-      (fun N t => complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t))
-      (fun t => complex.waveGroup.S t x) atTop (Icc 0 T)) ∧
-    (∀ x : complex.wave.domain, (x : PiLp 2 Space) ∈ totalSub constraint → ∀ T : ℝ,
-      (∀ N t, infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t))
-          (totalSub constraint : Set (PiLp 2 Space)) ≤
-        ‖complex.waveGroup.S t x -
-          complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t)‖) ∧
-      TendstoUniformlyOn
-        (fun N t => infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t))
-          (totalSub constraint : Set (PiLp 2 Space))) (fun _ => 0) atTop (Icc 0 T)) ∧
-    ∀ (α T : ℝ) (x : PiLp 2 Space) (hx : x ∈ bandFamily.rateData α) (N : ℕ), ∀ t ∈ Icc 0 T,
+method): the verdict of `constrainedFEEC` for `torusFEEC`, and the instance-only fields: `K`
+reduces `L`, so TSD data stay TSD for all `t ∈ ℝ`, and for TSD data in `D(L)` the constraint
+residual is bounded by the error, tends to `0` uniformly on `[0, T]` and, on a rate class, is
+`≤ (1 + C_P)(1 + t)² C hᵅ ‖ξ₀‖_class`. -/
+structure TorusVerdict : Prop extends torusFEEC.Verdict where
+  /-- the TSD constraint reduces `L` -/
+  isReducing : complex.wave.IsReducing torusFEEC.K
+  /-- TSD data stay TSD for all `t ∈ ℝ` -/
+  tsd_propagates (t : ℝ) (x : PiLp 2 Space) (hxK : x ∈ torusFEEC.K) :
+    complex.waveGroup.S t x ∈ torusFEEC.K
+  /-- the TSD residual is bounded by the error -/
+  tsd_residual_le (x : complex.wave.domain) (hxK : (x : PiLp 2 Space) ∈ torusFEEC.K) (N : ℕ)
+    (t : ℝ) :
+    infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t))
+        (torusFEEC.K : Set (PiLp 2 Space)) ≤
       ‖complex.waveGroup.S t x -
-          complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex ⟨x, hx.1⟩) t)‖ ≤
-        (1 + ellipticConst complex) * (1 + t) ^ 2 *
-          (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x) ∧
-      (x ∈ totalSub constraint →
-        infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex ⟨x, hx.1⟩) t))
-            (totalSub constraint : Set (PiLp 2 Space)) ≤
-          (1 + ellipticConst complex) * (1 + t) ^ 2 *
-            (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x))
+        complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t)‖
+  /-- the TSD residual tends to `0` uniformly on `[0, T]` -/
+  tsd_residual_tendsto (x : complex.wave.domain) (hxK : (x : PiLp 2 Space) ∈ torusFEEC.K)
+    (T : ℝ) :
+    TendstoUniformlyOn
+      (fun N t => infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex x) t))
+        (torusFEEC.K : Set (PiLp 2 Space))) (fun _ => 0) torusFEEC.l (Icc 0 T)
+  /-- the TSD residual of data in a rate class is at most the rate of the error -/
+  tsd_residual_rate {T : ℝ} (R : torusFEEC.RateClass T) {x : PiLp 2 Space} (hxR : x ∈ R.Data)
+    (hxK : x ∈ torusFEEC.K) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (complex.totalD.graphFst
+        (torusFEEC.discrete N (waveLift complex ⟨x, R.mem_domain x hxR⟩) t))
+        (torusFEEC.K : Set (PiLp 2 Space)) ≤
+      (1 + ellipticConst complex) * (1 + t) ^ 2 * (R.C * R.meshSize N ^ R.α * R.classNorm x)
 
 /-- **The constrained FEEC theorem for the EB system on `𝕋³`** (Fourier spectral method):
-`TorusVerdict`, read off `constrainedFEEC_of_approxFEEC torusFEEC` (the statement of
-`constrainedFEEC`, derived from `approxFEEC`). [QuennevilleBelair2015], Thm 4.14,
-Prop 4.17, Ch. 6 -/
-theorem einsteinBianchi_torus_constrainedFEEC : TorusVerdict := by
-  have V := torusFEEC.constrainedFEEC_of_approxFEEC
-  exact ⟨torusFEEC_isReducing, V.propagates_iff.1 torusFEEC_isReducing, fun T x => V.converges x T,
-    fun x hx T => ⟨V.residual_le torusFEEC_isReducing x hx,
-      V.residual_tendsto torusFEEC_isReducing x hx T⟩,
-    fun α T x hx N t ht => ⟨V.rate (torusRate α T) hx N ht,
-      fun hxK => (torusFEEC.infDist_le_norm_sub
-        (V.propagates_iff.1 torusFEEC_isReducing t x hxK)).trans
-        (V.rate (torusRate α T) hx N ht)⟩⟩
+`TorusVerdict`, the verdict of `constrainedFEEC torusFEEC` with `K` reducing `L`.
+[QuennevilleBelair2015], Thm 4.14, Prop 4.17, Ch. 6 -/
+theorem einsteinBianchi_torus_constrainedFEEC : TorusVerdict :=
+  have V := constrainedFEEC torusFEEC
+  { V with
+    isReducing := torusFEEC_isReducing
+    tsd_propagates := V.propagates_iff.1 torusFEEC_isReducing
+    tsd_residual_le := V.residual_le torusFEEC_isReducing
+    tsd_residual_tendsto := V.residual_tendsto torusFEEC_isReducing
+    tsd_residual_rate := fun R _ hxR hxK N _ ht =>
+      (torusFEEC.infDist_le_norm_sub (V.propagates_iff.1 torusFEEC_isReducing _ _ hxK)).trans
+        (V.rate R hxR N ht) }
 
 /-- `k₀ = (0, 0, 1)` and `-k₀` lie in the band `|n|_∞ ≤ 1`. -/
 theorem mem_bandN_one_of_mem {n : Fin 3 → ℤ}
@@ -183,39 +184,57 @@ theorem cosState_mem_band : Models.Cube.MirrorBGG.cosState ∈ totalSub (band 1)
   exact hn (mem_bandN_one_of_mem (not_not.1 fun h' =>
     h (Models.Cube.MirrorWeakSymmetry.cosState_finite i n h')))
 
-/-- **The Sobolev verdict on `𝕋³`**: a TSD datum `ξ₀` in `H^{2+s}(𝕋³)`, `s ≥ 0`, lies in `D(L)`,
-and the error and the constraint residual of the Fourier spectral solutions are
-`≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` on `[0, T]`. -/
-abbrev TorusSobolevVerdict : Prop :=
-  ∀ (x : PiLp 2 Space), x ∈ totalSub constraint → ∀ {s : ℝ}, 0 ≤ s → MemSobStateT (2 + s) x →
-    x ∈ complex.wave.domain ∧ ∀ (hx : x ∈ complex.wave.domain) (N : ℕ) {T t : ℝ}, t ∈ Icc 0 T →
-      ‖complex.waveGroup.S t x -
-          complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex ⟨x, hx⟩) t)‖ ≤
-        (1 + ellipticConst complex) * (1 + t) ^ 2 *
-          ((1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x))) ∧
-      infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex ⟨x, hx⟩) t))
-          (totalSub constraint : Set (PiLp 2 Space)) ≤
-        (1 + ellipticConst complex) * (1 + t) ^ 2 *
-          ((1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x)))
+/-- **The Sobolev verdict on `𝕋³`**: `TorusVerdict`, and a TSD datum `ξ₀` in `H^{2+s}(𝕋³)`,
+`s ≥ 0`, lies in `D(L)`, and the error and the constraint residual of the Fourier spectral
+solutions are `≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` on `[0, T]`. -/
+structure TorusSobolevVerdict : Prop extends TorusVerdict where
+  /-- a TSD datum in `H^{2+s}`, `s ≥ 0`, lies in `D(L)` -/
+  sobolev_mem_domain {x : PiLp 2 Space} (hxK : x ∈ torusFEEC.K) {s : ℝ} (hs : 0 ≤ s)
+    (hx : MemSobStateT (2 + s) x) : x ∈ complex.wave.domain
+  /-- the error is `≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` -/
+  sobolev_rate {x : PiLp 2 Space} (hxK : x ∈ torusFEEC.K) {s : ℝ} (hs : 0 ≤ s)
+    (hx : MemSobStateT (2 + s) x) (hD : x ∈ complex.wave.domain) (N : ℕ) {T t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    ‖complex.waveGroup.S t x -
+        complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex ⟨x, hD⟩) t)‖ ≤
+      (1 + ellipticConst complex) * (1 + t) ^ 2 *
+        ((1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x)))
+  /-- and so is the constraint residual -/
+  sobolev_residual_rate {x : PiLp 2 Space} (hxK : x ∈ torusFEEC.K) {s : ℝ} (hs : 0 ≤ s)
+    (hx : MemSobStateT (2 + s) x) (hD : x ∈ complex.wave.domain) (N : ℕ) {T t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    infDist (complex.totalD.graphFst (torusFEEC.discrete N (waveLift complex ⟨x, hD⟩) t))
+        (torusFEEC.K : Set (PiLp 2 Space)) ≤
+      (1 + ellipticConst complex) * (1 + t) ^ 2 *
+        ((1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x)))
+
+/-- The band rate `(N + 1)^{-s} ‖ξ₀‖_s` of a TSD datum in `H^{2+s}` is at most
+`(N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}`, scaled by `(1 + C_P)(1 + t)²`. -/
+theorem torus_rate_le_sobolev {x : PiLp 2 Space} (hxK : x ∈ totalSub constraint) {s : ℝ}
+    (hs : 0 ≤ s) (hx : MemSobStateT (2 + s) x) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    (1 + ellipticConst complex) * (1 + t) ^ 2 *
+        (1 * (1 / ((N : ℝ) + 1)) ^ s * bandFamily.rateNorm s x) ≤
+      (1 + ellipticConst complex) * (1 + t) ^ 2 *
+        ((1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x))) := by
+  have := ellipticConst_nonneg complex
+  rw [one_mul]
+  exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left
+    (mem_rateData_of_memSobStateT hxK hs hx).2 (by positivity)) (by positivity)
 
 /-- **Sobolev rate of the constrained FEEC theorem on `𝕋³`**: `TorusSobolevVerdict`, from the
 rate of `einsteinBianchi_torus_constrainedFEEC` for the class of order `s`, which contains the
 TSD data of `H^{2+s}` (`mem_rateData_of_memSobStateT`). [QuennevilleBelair2015], Thm 4.14,
 Ch. 6 -/
-theorem einsteinBianchi_torus_constrainedFEEC_sobolev : TorusSobolevVerdict := by
-  intro x hK s hs h
-  obtain ⟨hD, hn⟩ := mem_rateData_of_memSobStateT hK hs h
-  refine ⟨hD.1, fun hx N T t ht => ?_⟩
-  have hrate := einsteinBianchi_torus_constrainedFEEC.2.2.2.2 s T x hD N t ht
-  have hC : 0 ≤ (1 + ellipticConst complex) * (1 + t) ^ 2 := by
-    have := ellipticConst_nonneg complex
-    have : 0 ≤ t := ht.1
-    positivity
-  have hle : 1 * (1 / ((N : ℝ) + 1)) ^ s * bandFamily.rateNorm s x ≤
-      (1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x)) := by
-    rw [one_mul]; exact mul_le_mul_of_nonneg_left hn (by positivity)
-  exact ⟨hrate.1.trans (mul_le_mul_of_nonneg_left hle hC),
-    (hrate.2 hK).trans (mul_le_mul_of_nonneg_left hle hC)⟩
+theorem einsteinBianchi_torus_constrainedFEEC_sobolev : TorusSobolevVerdict :=
+  have V := einsteinBianchi_torus_constrainedFEEC
+  { V with
+    sobolev_mem_domain := fun hxK _ hs hx => (mem_rateData_of_memSobStateT hxK hs hx).1.1
+    sobolev_rate := fun hxK _ hs hx _ N T _ ht =>
+      (V.rate (torusRate _ T) (mem_rateData_of_memSobStateT hxK hs hx).1 N ht).trans
+        (torus_rate_le_sobolev hxK hs hx N ht.1)
+    sobolev_residual_rate := fun hxK _ hs hx _ N T _ ht =>
+      (V.tsd_residual_rate (torusRate _ T) (mem_rateData_of_memSobStateT hxK hs hx).1 hxK N
+        ht).trans (torus_rate_le_sobolev hxK hs hx N ht.1) }
 
 /-- **Non-vacuity on `𝕋³`**: (i) the TSD datum `(0, E₀, (0, 0))`,
 `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, lies in `D(L) ∩ K`, is not stationary (`L ξ₀ ≠ 0`), and lies
@@ -262,86 +281,100 @@ abbrev mirrorRate (α T : ℝ) : mirrorFEEC.RateClass T :=
   bandFamilyQ.rateClass (totalSub tsdQ) isClosed_totalSub α T
 
 /-- **The verdict of the constrained FEEC theorem for the EB system on the cube with mirror
-boundary conditions** (cosine–sine spectral method): `K` reduces `L`; TSD data stay TSD for all
-`t ∈ ℝ`; the discrete solutions converge to the TSD solution uniformly on `[0, T]`; the
-constraint residual is bounded by the error and tends to `0`; for data in the approximation class
-of order `α` the error and the residual are `≤ (1 + C_P)(1 + t)² (N + 1)^{-α} ‖ξ₀‖_α`. -/
-abbrev MirrorVerdict : Prop :=
-    complexQ.wave.IsReducing (totalSub tsdQ) ∧
-    (∀ t, ∀ x ∈ totalSub tsdQ, complexQ.waveGroup.S t x ∈ totalSub tsdQ) ∧
-    (∀ T : ℝ, ∀ x : complexQ.wave.domain, TendstoUniformlyOn
-      (fun N t => complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t))
-      (fun t => complexQ.waveGroup.S t x) atTop (Icc 0 T)) ∧
-    (∀ x : complexQ.wave.domain, (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ → ∀ T : ℝ,
-      (∀ N t, infDist (complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t))
-          (totalSub tsdQ : Set (PiLp 2 SpaceQ)) ≤
-        ‖complexQ.waveGroup.S t x -
-          complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t)‖) ∧
-      TendstoUniformlyOn
-        (fun N t => infDist
-          (complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t))
-          (totalSub tsdQ : Set (PiLp 2 SpaceQ))) (fun _ => 0) atTop (Icc 0 T)) ∧
-    ∀ (α T : ℝ) (x : PiLp 2 SpaceQ) (hx : x ∈ bandFamilyQ.rateData α) (N : ℕ), ∀ t ∈ Icc 0 T,
+boundary conditions** (cosine–sine spectral method): the verdict of `constrainedFEEC` for
+`mirrorFEEC`, and the instance-only fields: `K` reduces `L`, so TSD data stay TSD for all
+`t ∈ ℝ`, and for TSD data in `D(L)` the constraint residual is bounded by the error, tends to `0`
+uniformly on `[0, T]` and, on a rate class, is `≤ (1 + C_P)(1 + t)² C hᵅ ‖ξ₀‖_class`. -/
+structure MirrorVerdict : Prop extends mirrorFEEC.Verdict where
+  /-- the TSD constraint reduces `L` -/
+  isReducing : complexQ.wave.IsReducing mirrorFEEC.K
+  /-- TSD data stay TSD for all `t ∈ ℝ` -/
+  tsd_propagates (t : ℝ) (x : PiLp 2 SpaceQ) (hxK : x ∈ mirrorFEEC.K) :
+    complexQ.waveGroup.S t x ∈ mirrorFEEC.K
+  /-- the TSD residual is bounded by the error -/
+  tsd_residual_le (x : complexQ.wave.domain) (hxK : (x : PiLp 2 SpaceQ) ∈ mirrorFEEC.K) (N : ℕ)
+    (t : ℝ) :
+    infDist (complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t))
+        (mirrorFEEC.K : Set (PiLp 2 SpaceQ)) ≤
       ‖complexQ.waveGroup.S t x -
-          complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ ⟨x, hx.1⟩) t)‖ ≤
-        (1 + ellipticConst complexQ) * (1 + t) ^ 2 *
-          (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x) ∧
-      (x ∈ totalSub tsdQ →
-        infDist (complexQ.totalD.graphFst
-            (mirrorFEEC.discrete N (waveLift complexQ ⟨x, hx.1⟩) t))
-            (totalSub tsdQ : Set (PiLp 2 SpaceQ)) ≤
-          (1 + ellipticConst complexQ) * (1 + t) ^ 2 *
-            (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x))
+        complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t)‖
+  /-- the TSD residual tends to `0` uniformly on `[0, T]` -/
+  tsd_residual_tendsto (x : complexQ.wave.domain) (hxK : (x : PiLp 2 SpaceQ) ∈ mirrorFEEC.K)
+    (T : ℝ) :
+    TendstoUniformlyOn
+      (fun N t => infDist
+        (complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ x) t))
+        (mirrorFEEC.K : Set (PiLp 2 SpaceQ))) (fun _ => 0) mirrorFEEC.l (Icc 0 T)
+  /-- the TSD residual of data in a rate class is at most the rate of the error -/
+  tsd_residual_rate {T : ℝ} (R : mirrorFEEC.RateClass T) {x : PiLp 2 SpaceQ} (hxR : x ∈ R.Data)
+    (hxK : x ∈ mirrorFEEC.K) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    infDist (complexQ.totalD.graphFst
+        (mirrorFEEC.discrete N (waveLift complexQ ⟨x, R.mem_domain x hxR⟩) t))
+        (mirrorFEEC.K : Set (PiLp 2 SpaceQ)) ≤
+      (1 + ellipticConst complexQ) * (1 + t) ^ 2 * (R.C * R.meshSize N ^ R.α * R.classNorm x)
 
 /-- **The constrained FEEC theorem for the EB system on the cube with mirror boundary
-conditions**: `MirrorVerdict`, read off `constrainedFEEC_of_approxFEEC mirrorFEEC` (the
-statement of `constrainedFEEC`, derived from `approxFEEC`). [QuennevilleBelair2015],
-Thm 4.14, Prop 4.17 (corrected), Ch. 6 -/
-theorem einsteinBianchi_mirror_constrainedFEEC : MirrorVerdict := by
-  have V := mirrorFEEC.constrainedFEEC_of_approxFEEC
-  exact ⟨mirrorFEEC_isReducing, V.propagates_iff.1 mirrorFEEC_isReducing,
-    fun T x => V.converges x T,
-    fun x hx T => ⟨V.residual_le mirrorFEEC_isReducing x hx,
-      V.residual_tendsto mirrorFEEC_isReducing x hx T⟩,
-    fun α T x hx N t ht => ⟨V.rate (mirrorRate α T) hx N ht,
-      fun hxK => (mirrorFEEC.infDist_le_norm_sub
-        (V.propagates_iff.1 mirrorFEEC_isReducing t x hxK)).trans
-        (V.rate (mirrorRate α T) hx N ht)⟩⟩
+conditions**: `MirrorVerdict`, the verdict of `constrainedFEEC mirrorFEEC` with `K` reducing
+`L`. [QuennevilleBelair2015], Thm 4.14, Prop 4.17 (corrected), Ch. 6 -/
+theorem einsteinBianchi_mirror_constrainedFEEC : MirrorVerdict :=
+  have V := constrainedFEEC mirrorFEEC
+  { V with
+    isReducing := mirrorFEEC_isReducing
+    tsd_propagates := V.propagates_iff.1 mirrorFEEC_isReducing
+    tsd_residual_le := V.residual_le mirrorFEEC_isReducing
+    tsd_residual_tendsto := V.residual_tendsto mirrorFEEC_isReducing
+    tsd_residual_rate := fun R _ hxR hxK N _ ht =>
+      (mirrorFEEC.infDist_le_norm_sub (V.propagates_iff.1 mirrorFEEC_isReducing _ _ hxK)).trans
+        (V.rate R hxR N ht) }
 
-/-- **The Sobolev verdict on the mirror cube**: for a TSD datum `ξ₀ ∈ D(L²)` with mirror
-extension in `H^{2+s}`, `s ≥ 0`, the error and the constraint residual of the cosine–sine
-spectral solutions are `≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` on `[0, T]`. -/
-abbrev MirrorSobolevVerdict : Prop :=
-  ∀ (D : Models.Cube.MirrorWeakSymmetry.TSDDatum) {s : ℝ}, 0 ≤ s →
-    Models.Cube.MirrorWeakSymmetry.MemSobState (2 + s) D.U₀ → ∀ (N : ℕ) {T t : ℝ},
-    t ∈ Icc 0 T →
+/-- **The Sobolev verdict on the mirror cube**: `MirrorVerdict`, and for a TSD datum
+`ξ₀ ∈ D(L²)` with mirror extension in `H^{2+s}`, `s ≥ 0`, the error and the constraint residual
+of the cosine–sine spectral solutions are `≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` on
+`[0, T]`. -/
+structure MirrorSobolevVerdict : Prop extends MirrorVerdict where
+  /-- the error is `≤ (1 + C_P)(1 + t)² (N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}` -/
+  sobolev_rate (D : Models.Cube.MirrorWeakSymmetry.TSDDatum) {s : ℝ} (hs : 0 ≤ s)
+    (hD : Models.Cube.MirrorWeakSymmetry.MemSobState (2 + s) D.U₀) (N : ℕ) {T t : ℝ}
+    (ht : t ∈ Icc 0 T) :
     ‖complexQ.waveGroup.S t D.U₀ -
         complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ ⟨D.U₀, D.mem⟩) t)‖ ≤
       (1 + ellipticConst complexQ) * (1 + t) ^ 2 * ((1 / ((N : ℝ) + 1)) ^ s *
-        (3 * √(Models.Cube.MirrorWeakSymmetry.sobState (2 + s) D.U₀))) ∧
+        (3 * √(Models.Cube.MirrorWeakSymmetry.sobState (2 + s) D.U₀)))
+  /-- and so is the constraint residual -/
+  sobolev_residual_rate (D : Models.Cube.MirrorWeakSymmetry.TSDDatum) {s : ℝ} (hs : 0 ≤ s)
+    (hD : Models.Cube.MirrorWeakSymmetry.MemSobState (2 + s) D.U₀) (N : ℕ) {T t : ℝ}
+    (ht : t ∈ Icc 0 T) :
     infDist (complexQ.totalD.graphFst (mirrorFEEC.discrete N (waveLift complexQ ⟨D.U₀, D.mem⟩) t))
-        (totalSub tsdQ : Set (PiLp 2 SpaceQ)) ≤
+        (mirrorFEEC.K : Set (PiLp 2 SpaceQ)) ≤
       (1 + ellipticConst complexQ) * (1 + t) ^ 2 * ((1 / ((N : ℝ) + 1)) ^ s *
         (3 * √(Models.Cube.MirrorWeakSymmetry.sobState (2 + s) D.U₀)))
+
+/-- The band rate `(N + 1)^{-s} ‖ξ₀‖_s` of a mirror TSD datum in `H^{2+s}` is at most
+`(N + 1)^{-s} · 3 ‖ξ₀‖_{2+s}`, scaled by `(1 + C_P)(1 + t)²`. -/
+theorem mirror_rate_le_sobolev (D : Models.Cube.MirrorWeakSymmetry.TSDDatum) {s : ℝ} (hs : 0 ≤ s)
+    (hD : Models.Cube.MirrorWeakSymmetry.MemSobState (2 + s) D.U₀) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    (1 + ellipticConst complexQ) * (1 + t) ^ 2 *
+        (1 * (1 / ((N : ℝ) + 1)) ^ s * bandFamilyQ.rateNorm s D.U₀) ≤
+      (1 + ellipticConst complexQ) * (1 + t) ^ 2 * ((1 / ((N : ℝ) + 1)) ^ s *
+        (3 * √(Models.Cube.MirrorWeakSymmetry.sobState (2 + s) D.U₀))) := by
+  have := ellipticConst_nonneg complexQ
+  rw [one_mul]
+  exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left
+    (mem_rateData_of_memSobState D hs hD).2 (by positivity)) (by positivity)
 
 /-- **Sobolev rate of the constrained FEEC theorem on the mirror cube**: `MirrorSobolevVerdict`,
 from `constrainedFEEC_rate` for the rate class of order `s`, which contains the datum
 (`mem_rateData_of_memSobState`). The cos datum lies in every `H^{2+s}`
 (`cosDatum_memSobState`). [QuennevilleBelair2015], Thm 4.14, Ch. 6 -/
-theorem einsteinBianchi_mirror_constrainedFEEC_sobolev : MirrorSobolevVerdict := by
-  intro D s hs h N T t ht
-  obtain ⟨hD, hn⟩ := mem_rateData_of_memSobState D hs h
-  have hrate := einsteinBianchi_mirror_constrainedFEEC.2.2.2.2 s T D.U₀ hD N t ht
-  have hC : 0 ≤ (1 + ellipticConst complexQ) * (1 + t) ^ 2 := by
-    have := ellipticConst_nonneg complexQ
-    have : 0 ≤ t := ht.1
-    positivity
-  have hle : 1 * (1 / ((N : ℝ) + 1)) ^ s * bandFamilyQ.rateNorm s D.U₀ ≤
-      (1 / ((N : ℝ) + 1)) ^ s *
-        (3 * √(Models.Cube.MirrorWeakSymmetry.sobState (2 + s) D.U₀)) := by
-    rw [one_mul]; exact mul_le_mul_of_nonneg_left hn (by positivity)
-  exact ⟨hrate.1.trans (mul_le_mul_of_nonneg_left hle hC),
-    (hrate.2 D.tsd).trans (mul_le_mul_of_nonneg_left hle hC)⟩
+theorem einsteinBianchi_mirror_constrainedFEEC_sobolev : MirrorSobolevVerdict :=
+  have V := einsteinBianchi_mirror_constrainedFEEC
+  { V with
+    sobolev_rate := fun D _ hs hD N T _ ht =>
+      (V.rate (mirrorRate _ T) (mem_rateData_of_memSobState D hs hD).1 N ht).trans
+        (mirror_rate_le_sobolev D hs hD N ht.1)
+    sobolev_residual_rate := fun D _ hs hD N T _ ht =>
+      (V.tsd_residual_rate (mirrorRate _ T) (mem_rateData_of_memSobState D hs hD).1 D.tsd N
+        ht).trans (mirror_rate_le_sobolev D hs hD N ht.1) }
 
 /-- The mirror datum `(0, E₀, (0, 0))` on `Q` is band-limited: its mirror extension is the
 torus datum, with modes `±k₀`. -/
@@ -472,19 +505,33 @@ theorem einsteinBianchi_mirror_waveFEM_rate_sobolev : MirrorWaveFEMRateSobolev h
 /-- **The verdict on the mirror finite element scheme (6.5)**: admissible parity smoothers exist,
 and for each of them the scheme converges to the TSD solution `e^{tL} ξ₀`
 (`MirrorWaveFEMConvergence`), with the `O(h)` rate for `D(L³)` data (`MirrorWaveFEMRate`) and the
-`O(hˢ)` rate for `H^{2+s}` data (`MirrorWaveFEMRateSobolev`). -/
-abbrev MirrorFEMVerdict : Prop :=
-  (∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),
-      ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C ∧
-        ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) ∧
-    ∀ {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
-      (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
-      (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C),
-      MirrorWaveFEMConvergence hT hB ∧ MirrorWaveFEMRate hT hB ∧ MirrorWaveFEMRateSobolev hT hB
+`O(hˢ)` rate for `H^{2+s}` data (`MirrorWaveFEMRateSobolev`). The scheme is not an instance of
+`ConstrainedFEEC`; its verdict as an approximating FEEC discretization is
+`Feec.Instances.EinsteinBianchi.MirrorFEMApprox.Verdict`. -/
+structure MirrorFEMVerdict : Prop where
+  /-- admissible parity smoothers exist -/
+  exists_estimates : ∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),
+    ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C ∧
+      ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C
+  /-- the scheme converges to the TSD solution -/
+  converges {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+    (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+    (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) :
+    MirrorWaveFEMConvergence hT hB
+  /-- at the rate `O(h)` for TSD data in `D(L³)` -/
+  rate {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+    (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+    (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) :
+    MirrorWaveFEMRate hT hB
+  /-- and `O(hˢ)` for TSD data in `H^{2+s}`, `0 ≤ s ≤ 1` -/
+  rate_sobolev {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+    (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
+    (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) :
+    MirrorWaveFEMRateSobolev hT hB
 
 theorem mirrorFEMVerdict : MirrorFEMVerdict :=
-  ⟨exists_mirror_estimates, fun hT hB => ⟨einsteinBianchi_mirror_waveFEM hT hB,
-    einsteinBianchi_mirror_waveFEM_rate hT hB, einsteinBianchi_mirror_waveFEM_rate_sobolev hT hB⟩⟩
+  ⟨exists_mirror_estimates, einsteinBianchi_mirror_waveFEM, einsteinBianchi_mirror_waveFEM_rate,
+    einsteinBianchi_mirror_waveFEM_rate_sobolev⟩
 
 end MirrorFEM
 
@@ -594,26 +641,32 @@ exist, and for all of them the full conclusion of `einsteinBianchi_thesisCube` h
 solution from the datum leaves TSD, the scheme has solutions whose initial states converge, every
 such family converges to the exact solution uniformly on `[0, T]`, and its discrete fields leave
 TSD at some `t ∈ [0, T]` for all large `N`. [QuennevilleBelair2015], Prop 4.17, §6.3 -/
-abbrev StandardCubeVerdict : Prop :=
-    (betaDatum ∈ thesisTSD ∧ ¬ matrixComplex.wave.IsReducing thesisTSD) ∧
-    (∀ (K : Submodule ℝ (PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
-        (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) [K.HasOrthogonalProjection],
-      betaDatum ∈ K → (∀ x ∈ K, (x 1 : L2F ℝ (cubeDomain 3) Ix) ∈ tsd (cubeDomain 3)) →
-        ¬ matrixComplex.wave.IsReducing K) ∧
-    ((∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ),
-        PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C ∧
-          PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) ∧
-      ∀ {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
-        (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
-        (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T),
-        StandardCubeFailure hT hB hT0)
+structure StandardCubeVerdict : Prop where
+  /-- the TSD constraint contains the datum `(0, 0, (0, β))` -/
+  betaDatum_mem : betaDatum ∈ thesisTSD
+  /-- and does not reduce `L` -/
+  not_isReducing : ¬ matrixComplex.wave.IsReducing thesisTSD
+  /-- no closed constraint containing the datum and imposing `E ∈ L²(TSD)` reduces `L` -/
+  not_isReducing_of_mem (K : Submodule ℝ (PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
+      (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) [K.HasOrthogonalProjection]
+    (h0 : betaDatum ∈ K) (hE : ∀ x ∈ K, (x 1 : L2F ℝ (cubeDomain 3) Ix) ∈ tsd (cubeDomain 3)) :
+    ¬ matrixComplex.wave.IsReducing K
+  /-- admissible smoothers exist -/
+  exists_estimates : ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ),
+    PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C ∧
+      PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C
+  /-- for each of them, the scheme converges to the exact solution, which leaves TSD, and its
+  discrete fields leave TSD -/
+  failure {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+    (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
+    (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T) :
+    StandardCubeFailure hT hB hT0
 
-theorem standardCubeVerdict : StandardCubeVerdict := by
-  refine ⟨⟨betaDatum_mem_thesisTSD, not_isReducing_thesisTSD⟩,
-    fun K _ h0 hE => not_isReducing_thesisCube K h0 hE, ?_, fun hT hB T hT0 =>
-      (einsteinBianchi_thesisCube hT hB hT0).2⟩
-  obtain ⟨p, C, hT, hB, -⟩ := Feec.Models.Cube.FEM.tableRows_H1
-  exact ⟨p, C, hT, hB⟩
+theorem standardCubeVerdict : StandardCubeVerdict :=
+  ⟨betaDatum_mem_thesisTSD, not_isReducing_thesisTSD,
+    fun K _ h0 hE => not_isReducing_thesisCube K h0 hE,
+    have ⟨p, C, hT, hB, _⟩ := Feec.Models.Cube.FEM.tableRows_H1; ⟨p, C, hT, hB⟩,
+    fun hT hB _ hT0 => (einsteinBianchi_thesisCube hT hB hT0).2⟩
 
 end StandardBoundary
 

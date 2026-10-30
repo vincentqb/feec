@@ -229,13 +229,14 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > hypothesis (`Feec.Models.Cube.MirrorWaveRegularity`). `docs/OVERVIEW.md` lists what remains.
 > All are imported by `Feec.lean` and the full gate passes.
 
-> **Status (2026-10-27): the FEEC theorem (crown), open item.** The verdicts of the Einstein–Bianchi
-> rows `TorusVerdict`, `TorusSobolevVerdict`, `MirrorVerdict`, `MirrorSobolevVerdict`,
-> `MirrorFEMVerdict`, `StandardCubeVerdict` (`Feec.Instances.EinsteinBianchi`) and
-> `AbsorbingVerdict` (`Feec.Instances.EinsteinBianchiAbsorbing`) are still `Prop` conjunctions,
-> not structures extending the verdict of the layer theorem they read; only
-> `MirrorFEMApprox.Verdict`, `StandardCubeApprox.Verdict` and `EuclideanBand.EuclideanEBVerdict`
-> are.
+> **Status (2026-10-30): the FEEC theorem (crown), instance verdicts.** The verdicts of the
+> Einstein–Bianchi rows are structures: `TorusVerdict`, `MirrorVerdict`
+> (`Feec.Instances.EinsteinBianchi`) extend `ConstrainedFEEC.Verdict` of `torusFEEC`, `mirrorFEEC`
+> (fields `isReducing`, `tsd_propagates`, `tsd_residual_le`, `tsd_residual_tendsto`,
+> `tsd_residual_rate`); `TorusSobolevVerdict`, `MirrorSobolevVerdict` extend them;
+> `AbsorbingVerdict` (`Feec.Instances.EinsteinBianchiAbsorbing`) extends `DissipFEEC.Verdict` of
+> `absorbingGalerkin`; `MirrorFEMVerdict`, `StandardCubeVerdict` (model theorems, no layer theorem
+> upstream) have named fields. `FeecCheck.InstanceVerdicts` keeps the old conjunctions.
 
 > **Status (2026-10-27): analytic BGG on `L²`, open item.** The Hessian, elasticity and div-div
 > verdicts (`Feec.Domain.BGGRealization`) assume only the regular decompositions after `J`

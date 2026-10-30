@@ -51,57 +51,78 @@ namespace Feec.Instances.EinsteinBianchi
 
 open Feec.Models.Cube.Absorbing Feec.Models.Cube.Geometry
 
-/-- **The absorbing verdict** (statement). -/
-abbrev AbsorbingVerdict : Prop :=
-    -- 1. well-posedness and radiation
-    (absorbing.IsMDissipative ∧
-      (∀ E B : C1Field, E.tan + B.flux = 0 →
-        ∃ h : (WithLp.toLp 2 (E.l2, B.l2) : State) ∈ absorbing.domain,
-          absorbing ⟨_, h⟩ = WithLp.toLp 2 (-B.curlL2, E.curlL2) ∧
-            impedanceTriple.trace ⟨_, h⟩ = E.tan) ∧
-      (∀ (u₀ : absorbing.domain) (t : ℝ), 0 ≤ t →
-        ‖absorbingSemigroup.S t u₀‖ ^ 2 = ‖(u₀ : State)‖ ^ 2 -
-          2 * ∫ s in (0 : ℝ)..t, ‖impedanceTriple.traceExt (absorbingSemigroup.S s u₀)‖ ^ 2) ∧
-      ∃ u : absorbing.domain, ⟪absorbing u, (u : State)⟫_ℝ < 0) ∧
-    -- 2. the constraint: Gauss laws and TSD on the domain of dependence, TSD not invariant
-    ((∀ u₀ ∈ tsdPair, ∀ t, 0 ≤ t → ∀ φ : Fin 3 → R3 → ℝ, IsTestField (Q (Fin 3)) φ →
-        (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x *
-          pd ij.2 (φ ij.1) x = 0) ∧
-        ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x *
-          pd ij.2 (φ ij.1) x = 0) ∧
-      (∀ u₀ ∈ tsdPair, ∀ t, 0 ≤ t → ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),
-        SymTF (absorbingSemigroup.S t u₀).fst y ∧ SymTF (absorbingSemigroup.S t u₀).snd y) ∧
-      ¬ ∀ t, 0 ≤ t → ∀ x ∈ tsdPair, absorbingSemigroup.S t x ∈ tsdPair) ∧
-    -- 3. finite speed
-    (∀ (T : ℝ) (u₀ : State) (W : ℝ → State), IsWeakRowEB T W → W 0 = u₀ → ∀ t ∈ Icc 0 T,
-      ∀ j, ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),
-        toField (absorbingSemigroup.S t u₀) j y = toField (W t) j y) ∧
-    -- 4. the semi-discrete scheme
-    ((absorbingGalerkinCore.Data.topologicalClosure = ⊤ ∧
-        absorbingGalerkin.Verdict absorbingGalerkinCore) ∧
-      (∀ (n : ℕ) (x : absorbingGalerkin.X n) (t : ℝ), 0 ≤ t →
-        ‖absorbingGalerkin.sol n x t‖ ^ 2 = ‖absorbingGalerkin.incl n x‖ ^ 2 -
-          2 * ∫ s in (0 : ℝ)..t,
-            ‖galerkinData.Γh n ((C0Group.ofBounded (galerkinData.Lh n)).S s x).fst‖ ^ 2) ∧
-      ∀ T : ℝ, 0 < T → ∃ x ∈ tsdPair, ∃ t ∈ Icc 0 T, absorbingSemigroup.S t x ∉ tsdPair ∧
-        0 < infDist (absorbingSemigroup.S t x) (tsdPair : Set State) ∧
-        Tendsto (fun n => absorbingGalerkin.incl n (absorbingGalerkin.proj n x)) atTop (𝓝 x) ∧
-        ∀ v : ∀ n, absorbingGalerkin.X n,
-          Tendsto (fun n => absorbingGalerkin.incl n (v n)) atTop (𝓝 x) →
-          Tendsto (fun n => infDist (absorbingGalerkin.sol n (v n) t) (tsdPair : Set State))
-            atTop (𝓝 (infDist (absorbingSemigroup.S t x) (tsdPair : Set State))))
+/-- **The absorbing verdict**: the verdict of the dissipative FEEC theorem for the semi-discrete
+scheme `absorbingGalerkin` with its dense core (`K = tsdPair`), and the instance-only fields:
+well-posedness and radiation, the constraint (Gauss laws, TSD on the domain of dependence, TSD
+not invariant), finite speed, and the discrete energy identity and TSD residuals of positive
+limit of the scheme. -/
+structure AbsorbingVerdict : Prop extends absorbingGalerkin.Verdict absorbingGalerkinCore where
+  /-- the generator is m-dissipative -/
+  isMDissipative : absorbing.IsMDissipative
+  /-- smooth states with the boundary condition `n × E + B_τ = 0` are in the domain, where the
+  generator is `(-curl B, curl E)` and the trace is `E_τ` -/
+  smooth_mem_domain (E B : C1Field) (hEB : E.tan + B.flux = 0) :
+    ∃ h : (WithLp.toLp 2 (E.l2, B.l2) : State) ∈ absorbing.domain,
+      absorbing ⟨_, h⟩ = WithLp.toLp 2 (-B.curlL2, E.curlL2) ∧
+        impedanceTriple.trace ⟨_, h⟩ = E.tan
+  /-- the energy decreases by twice the outgoing flux `∫₀ᵗ ‖E_τ‖²_{L²(∂Q)}` -/
+  energy_flux (u₀ : absorbing.domain) (t : ℝ) (ht : 0 ≤ t) :
+    ‖absorbingSemigroup.S t u₀‖ ^ 2 = ‖(u₀ : State)‖ ^ 2 -
+      2 * ∫ s in (0 : ℝ)..t, ‖impedanceTriple.traceExt (absorbingSemigroup.S s u₀)‖ ^ 2
+  /-- strictly from some state -/
+  exists_inner_neg : ∃ u : absorbing.domain, ⟪absorbing u, (u : State)⟫_ℝ < 0
+  /-- the Gauss laws propagate from TSD data -/
+  gauss (u₀ : State) (hu₀ : u₀ ∈ tsdPair) (t : ℝ) (ht : 0 ≤ t) (φ : Fin 3 → R3 → ℝ)
+    (hφ : IsTestField (Q (Fin 3)) φ) :
+    (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x *
+      pd ij.2 (φ ij.1) x = 0) ∧
+    ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x * pd ij.2 (φ ij.1) x = 0
+  /-- TSD holds on the domain of dependence of TSD data -/
+  symTF_depDomain (u₀ : State) (hu₀ : u₀ ∈ tsdPair) (t : ℝ) (ht : 0 ≤ t) :
+    ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),
+      SymTF (absorbingSemigroup.S t u₀).fst y ∧ SymTF (absorbingSemigroup.S t u₀).snd y
+  /-- but TSD is not invariant -/
+  not_invariant : ¬ ∀ t, 0 ≤ t → ∀ x ∈ tsdPair, absorbingSemigroup.S t x ∈ tsdPair
+  /-- (**finite speed**) the absorbing solution equals every weak solution of the system in `Q`
+  with the same data on the domain of dependence -/
+  eq_depDomain (T : ℝ) (u₀ : State) (W : ℝ → State) (hW : IsWeakRowEB T W) (hW0 : W 0 = u₀)
+    (t : ℝ) (ht : t ∈ Icc 0 T) (j : FIdx) :
+    ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),
+      toField (absorbingSemigroup.S t u₀) j y = toField (W t) j y
+  /-- the core of the scheme is dense -/
+  dense_core : absorbingGalerkinCore.Data.topologicalClosure = ⊤
+  /-- the discrete energy decreases by twice the discrete outgoing flux -/
+  discrete_energy_flux (n : ℕ) (x : absorbingGalerkin.X n) (t : ℝ) (ht : 0 ≤ t) :
+    ‖absorbingGalerkin.sol n x t‖ ^ 2 = ‖absorbingGalerkin.incl n x‖ ^ 2 -
+      2 * ∫ s in (0 : ℝ)..t,
+        ‖galerkinData.Γh n ((C0Group.ofBounded (galerkinData.Lh n)).S s x).fst‖ ^ 2
+  /-- before every `T > 0` some TSD datum leaves TSD, and the TSD residuals of every convergent
+  family of discrete solutions tend to its positive residual -/
+  residual_not_invariant (T : ℝ) (hT : 0 < T) :
+    ∃ x ∈ tsdPair, ∃ t ∈ Icc 0 T, absorbingSemigroup.S t x ∉ tsdPair ∧
+      0 < infDist (absorbingSemigroup.S t x) (tsdPair : Set State) ∧
+      Tendsto (fun n => absorbingGalerkin.incl n (absorbingGalerkin.proj n x)) atTop (𝓝 x) ∧
+      ∀ v : ∀ n, absorbingGalerkin.X n,
+        Tendsto (fun n => absorbingGalerkin.incl n (v n)) atTop (𝓝 x) →
+        Tendsto (fun n => infDist (absorbingGalerkin.sol n (v n) t) (tsdPair : Set State))
+          atTop (𝓝 (infDist (absorbingSemigroup.S t x) (tsdPair : Set State)))
 
 /-- **The linearized Einstein–Bianchi system on the cube with absorbing boundary conditions**:
 well posed and radiating, the Gauss laws propagate, TSD holds on the domain of dependence but is
 not invariant, finite speed of propagation, and the semi-discrete scheme converges (the
 `dissipFEEC` verdict) with TSD residuals of positive limit. -/
 theorem absorbingVerdict : AbsorbingVerdict :=
-  ⟨⟨isMDissipative_absorbing, mem_domain_of_smooth, fun u₀ _ ht => norm_sq_absorbingSemigroup u₀ ht,
-      exists_inner_absorbing_neg⟩,
-    ⟨fun _ hu₀ _ ht φ hφ => absorbingSemigroup_divFree hu₀ ht φ hφ,
-      fun _ hu₀ _ ht => absorbingSemigroup_symTF_depDomain hu₀ ht, not_invariant_tsdPair⟩,
-    fun _ _ _ hW hW0 _ ht j => absorbingSemigroup_eq_depDomain hW hW0 ht j,
-    ⟨absorbingGalerkin_verdict, fun n x _ ht => absorbingGalerkin_energy n x ht,
-      fun _ hT => absorbingGalerkin_residual_not_invariant hT⟩⟩
+  { absorbingGalerkin_verdict.2 with
+    isMDissipative := isMDissipative_absorbing
+    smooth_mem_domain := mem_domain_of_smooth
+    energy_flux := fun u₀ _ ht => norm_sq_absorbingSemigroup u₀ ht
+    exists_inner_neg := exists_inner_absorbing_neg
+    gauss := fun _ hu₀ _ ht φ hφ => absorbingSemigroup_divFree hu₀ ht φ hφ
+    symTF_depDomain := fun _ hu₀ _ ht => absorbingSemigroup_symTF_depDomain hu₀ ht
+    not_invariant := not_invariant_tsdPair
+    eq_depDomain := fun _ _ _ hW hW0 _ ht j => absorbingSemigroup_eq_depDomain hW hW0 ht j
+    dense_core := absorbingGalerkin_verdict.1
+    discrete_energy_flux := fun n x _ ht => absorbingGalerkin_energy n x ht
+    residual_not_invariant := fun _ hT => absorbingGalerkin_residual_not_invariant hT }
 
 end Feec.Instances.EinsteinBianchi

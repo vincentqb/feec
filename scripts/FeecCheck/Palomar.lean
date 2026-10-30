@@ -5,8 +5,9 @@ public import FeecCheck.Util
 /-!
 # Palomar gate
 
-`lake exe feec-palomar` (also run by `lake exe feec-gate`). Checks the two Palomar submission
-packages `palomar/static/` and `palomar/dynamic/` (README, "Palomar submission"); in each:
+`lake exe feec-palomar` (also run by `lake exe feec-gate`). Checks the Palomar submission
+packages `palomar/static/`, `palomar/dynamic/` and `palomar/bgg/` (README, "Palomar
+submission"); in each:
 
 1. `Solution/Defs.lean` is the copy of the definitions of `Challenge.lean`: the same imports and,
    after the module docstring, the same text with the compared theorem (the first name of
@@ -25,7 +26,7 @@ public section
 namespace FeecCheck.Palomar
 
 /-- The submission packages. -/
-def packages : Array System.FilePath := #["palomar/static", "palomar/dynamic"]
+def packages : Array System.FilePath := #["palomar/static", "palomar/dynamic", "palomar/bgg"]
 
 /-- The lines before the module docstring, the module docstring (`/-!` to the first line `-/`)
 and the lines after it. -/

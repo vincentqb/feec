@@ -250,13 +250,13 @@ LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-g
 
 ## Palomar submission
 
-`palomar/` holds two submissions for the [Palomar registry](https://palomar-registry.org), each a
+`palomar/` holds submissions for the [Palomar registry](https://palomar-registry.org), each a
 nested Lake project sharing the dependencies of the root package
 (`packagesDir = "../../.lake/packages"`), with a `Challenge.lean` restating its statement over
 Mathlib alone, a `Solution.lean` proving it from `Feec` through `Solution/Bridge.lean` (the
 challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.json` and
-`formalization.yaml`. Both copy the same vocabulary (Hilbert complexes on ℤ, subcomplexes,
-cochain projections, families of subcomplexes).
+`formalization.yaml`. The first two copy the same vocabulary (Hilbert complexes on ℤ,
+subcomplexes, cochain projections, families of subcomplexes); `palomar/bgg/` is purely algebraic.
 
 * `palomar/static/` (theorem FEEC.staticFEEC, about 250 lines): the a priori theory of the mixed
   Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the degrees used (cochain
@@ -271,15 +271,25 @@ cochain projections, families of subcomplexes).
   best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
+* `palomar/bgg/` (theorem FEEC.bggCohomology, about 250 lines): the algebraic BGG construction
+  of [ArnoldHu2021], §5.2 over any ring, for cochain complexes on ℤ of any length: for a stacked
+  diagram `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and surjective for `i ≥ J`, the
+  inclusion `Γ → T` into the twisted complex and the projection `Γ → Γ / Δ` onto the BGG complex
+  are quasi-isomorphisms, `0 → V → T → Ṽ → 0` is short exact and the BGG complex is exact when
+  both rows are; from `Feec.BGG.Data.quasiIso_Γ` and `Feec.BGG.Data.quasiIso_derived`.
 
-The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in both
+The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
 that `Solution/Defs.lean` is the challenge without its compared theorem
 (`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
+The comparator compares every constant the statement uses, proofs included, so proofs in a
+challenge must not create private auxiliary lemmas (named after their module, hence different in
+`Solution/Defs.lean`), such as `simp` with `←` lemmas and some `omega` calls.
 Before a submission, judge each with the comparator (several minutes):
 
 ```bash
 cd palomar/static && lake build && lake comparator
 cd palomar/dynamic && lake build && lake comparator
+cd palomar/bgg && lake build && lake comparator
 ```
 
 ## Citing

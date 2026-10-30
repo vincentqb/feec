@@ -551,8 +551,8 @@ holds for each smoother; with the thesis' boundary conditions, `thesisTSD` conta
 `StandardCubeApprox.Verdict` holds for each smoother. -/
 theorem einsteinBianchi_summary :
     -- the constrained FEEC verdicts, with the approximating `ℝ³` row
-    ((TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧ EuclideanBand.EuclideanEBVerdict ∧
-      (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧ MirrorFEMVerdict ∧
+    ((TorusSobolevVerdict ∧ TorusNonvacuous) ∧ EuclideanBand.EuclideanEBVerdict ∧
+      (MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧ MirrorFEMVerdict ∧
       StandardCubeVerdict) ∧
     -- the scheme (6.5) with mirror boundary conditions
     ((∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),

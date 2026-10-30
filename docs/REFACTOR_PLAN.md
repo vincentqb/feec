@@ -232,8 +232,9 @@ I ran each with `lake env lean` against the pinned Mathlib (rev `6e2a148e`).
 > **Status (2026-10-30): the FEEC theorem (crown), instance verdicts.** The verdicts of the
 > Einstein–Bianchi rows are structures: `TorusVerdict`, `MirrorVerdict`
 > (`Feec.Instances.EinsteinBianchi`) extend `ConstrainedFEEC.Verdict` of `torusFEEC`, `mirrorFEEC`
-> (fields `isReducing`, `tsd_propagates`, `tsd_residual_le`, `tsd_residual_tendsto`,
-> `tsd_residual_rate`); `TorusSobolevVerdict`, `MirrorSobolevVerdict` extend them;
+> by the one field `isReducing` (propagation and the residual bounds follow from the parent,
+> `ConstrainedFEEC.Verdict.residual_rate`); `TorusSobolevVerdict`, `MirrorSobolevVerdict` extend
+> them (`mem_domain_sobolev`, `rate_sobolev`, `tsd_residual_rate_sobolev`);
 > `AbsorbingVerdict` (`Feec.Instances.EinsteinBianchiAbsorbing`) extends `DissipFEEC.Verdict` of
 > `absorbingGalerkin`; `MirrorFEMVerdict`, `StandardCubeVerdict` (model theorems, no layer theorem
 > upstream) have named fields. `FeecCheck.InstanceVerdicts` keeps the old conjunctions.

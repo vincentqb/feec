@@ -1,5 +1,6 @@
 import Feec.Instances.EinsteinBianchi
 import Feec.Instances.EinsteinBianchiAbsorbing
+import Feec.Instances.EinsteinBianchiFEM
 
 /-!
 # Regression tests: the instance verdicts of the Einstein–Bianchi rows
@@ -11,8 +12,11 @@ now structures: the spectral rows extend the verdict of the constrained FEEC the
 (`ConstrainedFEEC.Verdict` of `torusFEEC`, `mirrorFEEC`), each Sobolev verdict extends its row,
 the absorbing verdict extends the verdict of the dissipative FEEC theorem
 (`DissipFEEC.Verdict` of `absorbingGalerkin`), and the two finite element rows, which are not
-instances of a layer theorem, have named fields. The theorems `wp8_old_*` state the old
-conjunctions verbatim and derive them from the new structures.
+instances of a layer theorem, have named fields. The theorems `ebVerdict_old_*` state the old
+conjunctions verbatim and derive them from the new structures: the consequences of the reducing
+constraint (propagation, residual bounds) are read off the parent verdict and `isReducing`, and
+the summaries `einsteinBianchi_constrainedFEEC_summary`, `einsteinBianchi_summary` no longer list
+`TorusVerdict`, `MirrorVerdict` next to the Sobolev verdicts that extend them.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -29,7 +33,7 @@ section Torus
 open Feec.Models.Torus.BGG
 
 /-- The old `TorusVerdict`. -/
-theorem wp8_old_torusVerdict :
+theorem ebVerdict_old_torusVerdict :
     complex.wave.IsReducing (totalSub constraint) ∧
     (∀ t, ∀ x ∈ totalSub constraint, complex.waveGroup.S t x ∈ totalSub constraint) ∧
     (∀ T : ℝ, ∀ x : complex.wave.domain, TendstoUniformlyOn
@@ -55,13 +59,13 @@ theorem wp8_old_torusVerdict :
             (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamily.rateNorm α x))
  :=
   have V := einsteinBianchi_torus_constrainedFEEC
-  ⟨V.isReducing, V.tsd_propagates, fun T x => V.converges x T,
-    fun x hx T => ⟨V.tsd_residual_le x hx, V.tsd_residual_tendsto x hx T⟩,
+  ⟨V.isReducing, V.propagates_iff.1 V.isReducing, fun T x => V.converges x T,
+    fun x hx T => ⟨V.residual_le V.isReducing x hx, V.residual_tendsto V.isReducing x hx T⟩,
     fun α T _ hx N _ ht => ⟨V.rate (torusRate α T) hx N ht,
-      fun hxK => V.tsd_residual_rate (torusRate α T) hx hxK N ht⟩⟩
+      fun hxK => V.residual_rate V.isReducing (torusRate α T) hx hxK N ht⟩⟩
 
 /-- The old `TorusSobolevVerdict`. -/
-theorem wp8_old_torusSobolevVerdict :
+theorem ebVerdict_old_torusSobolevVerdict :
   ∀ (x : PiLp 2 Space), x ∈ totalSub constraint → ∀ {s : ℝ}, 0 ≤ s → MemSobStateT (2 + s) x →
     x ∈ complex.wave.domain ∧ ∀ (hx : x ∈ complex.wave.domain) (N : ℕ) {T t : ℝ}, t ∈ Icc 0 T →
       ‖complex.waveGroup.S t x -
@@ -74,8 +78,8 @@ theorem wp8_old_torusSobolevVerdict :
           ((1 / ((N : ℝ) + 1)) ^ s * (3 * √(sobStateT (2 + s) x)))
  :=
   have V := einsteinBianchi_torus_constrainedFEEC_sobolev
-  fun _ hK _ hs h => ⟨V.sobolev_mem_domain hK hs h, fun hx N _ _ ht =>
-    ⟨V.sobolev_rate hK hs h hx N ht, V.sobolev_residual_rate hK hs h hx N ht⟩⟩
+  fun _ hK _ hs h => ⟨V.mem_domain_sobolev hK hs h, fun hx N _ _ ht =>
+    ⟨V.rate_sobolev hK hs h hx N ht, V.tsd_residual_rate_sobolev hK hs h hx N ht⟩⟩
 
 end Torus
 
@@ -84,7 +88,7 @@ section Mirror
 open Feec.Models.Cube.MirrorBGG
 
 /-- The old `MirrorVerdict`. -/
-theorem wp8_old_mirrorVerdict :
+theorem ebVerdict_old_mirrorVerdict :
     complexQ.wave.IsReducing (totalSub tsdQ) ∧
     (∀ t, ∀ x ∈ totalSub tsdQ, complexQ.waveGroup.S t x ∈ totalSub tsdQ) ∧
     (∀ T : ℝ, ∀ x : complexQ.wave.domain, TendstoUniformlyOn
@@ -112,13 +116,13 @@ theorem wp8_old_mirrorVerdict :
             (1 * (1 / ((N : ℝ) + 1)) ^ α * bandFamilyQ.rateNorm α x))
  :=
   have V := einsteinBianchi_mirror_constrainedFEEC
-  ⟨V.isReducing, V.tsd_propagates, fun T x => V.converges x T,
-    fun x hx T => ⟨V.tsd_residual_le x hx, V.tsd_residual_tendsto x hx T⟩,
+  ⟨V.isReducing, V.propagates_iff.1 V.isReducing, fun T x => V.converges x T,
+    fun x hx T => ⟨V.residual_le V.isReducing x hx, V.residual_tendsto V.isReducing x hx T⟩,
     fun α T _ hx N _ ht => ⟨V.rate (mirrorRate α T) hx N ht,
-      fun hxK => V.tsd_residual_rate (mirrorRate α T) hx hxK N ht⟩⟩
+      fun hxK => V.residual_rate V.isReducing (mirrorRate α T) hx hxK N ht⟩⟩
 
 /-- The old `MirrorSobolevVerdict`. -/
-theorem wp8_old_mirrorSobolevVerdict :
+theorem ebVerdict_old_mirrorSobolevVerdict :
   ∀ (D : Models.Cube.MirrorWeakSymmetry.TSDDatum) {s : ℝ}, 0 ≤ s →
     Models.Cube.MirrorWeakSymmetry.MemSobState (2 + s) D.U₀ → ∀ (N : ℕ) {T t : ℝ},
     t ∈ Icc 0 T →
@@ -132,7 +136,8 @@ theorem wp8_old_mirrorSobolevVerdict :
         (3 * √(Models.Cube.MirrorWeakSymmetry.sobState (2 + s) D.U₀)))
  :=
   have V := einsteinBianchi_mirror_constrainedFEEC_sobolev
-  fun D _ hs h N _ _ ht => ⟨V.sobolev_rate D hs h N ht, V.sobolev_residual_rate D hs h N ht⟩
+  fun D _ hs h N _ _ ht =>
+    ⟨V.rate_sobolev D hs h N ht, V.tsd_residual_rate_sobolev D hs h N ht⟩
 
 end Mirror
 
@@ -143,7 +148,7 @@ open Feec.Models.Cube.FEM (ParitySmoothingEstimates)
 open Feec.FiniteElement (PolySeq)
 
 /-- The old `MirrorFEMVerdict`. -/
-theorem wp8_old_mirrorFEMVerdict :
+theorem ebVerdict_old_mirrorFEMVerdict :
   (∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),
       ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C ∧
         ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C) ∧
@@ -167,7 +172,7 @@ open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSy
   Feec.EinsteinBianchi.BoundedFailure Feec.EinsteinBianchi.BoundedConvergence
 
 /-- The old `StandardCubeVerdict`. -/
-theorem wp8_old_standardCubeVerdict :
+theorem ebVerdict_old_standardCubeVerdict :
     (betaDatum ∈ thesisTSD ∧ ¬ matrixComplex.wave.IsReducing thesisTSD) ∧
     (∀ (K : Submodule ℝ (PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
         (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))))) [K.HasOrthogonalProjection],
@@ -193,7 +198,7 @@ open MeasureTheory Feec.Domain Feec.Models.BoundedDomain Feec.Models.Cube.Absorb
   Feec.Models.Cube.Geometry
 
 /-- The old `AbsorbingVerdict`. -/
-theorem wp8_old_absorbingVerdict :
+theorem ebVerdict_old_absorbingVerdict :
     -- 1. well-posedness and radiation
     (absorbing.IsMDissipative ∧
       (∀ E B : C1Field, E.tan + B.flux = 0 →
@@ -238,5 +243,58 @@ theorem wp8_old_absorbingVerdict :
     ⟨⟨V.dense_core, V.toVerdict⟩, V.discrete_energy_flux, V.residual_not_invariant⟩⟩
 
 end Absorbing
+
+section Summary
+
+/-- The old `einsteinBianchi_constrainedFEEC_summary`, verbatim. -/
+theorem ebVerdict_old_constrainedFEEC_summary :
+    (TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧
+    (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧
+    MirrorFEMVerdict ∧ StandardCubeVerdict :=
+  have h := einsteinBianchi_constrainedFEEC_summary
+  ⟨⟨h.1.1.toTorusVerdict, h.1⟩, ⟨h.2.1.1.toMirrorVerdict, h.2.1⟩, h.2.2⟩
+
+open Feec.Instances Feec.Instances.EinsteinBianchi.FEM
+
+attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
+  ShortHilbertComplex.instIsScalarTowerRealW3
+
+/-- The old `einsteinBianchi_summary`, verbatim. -/
+theorem ebVerdict_old_summary :
+    -- the constrained FEEC verdicts, with the approximating `ℝ³` row
+    ((TorusVerdict ∧ TorusSobolevVerdict ∧ TorusNonvacuous) ∧ EuclideanBand.EuclideanEBVerdict ∧
+      (MirrorVerdict ∧ MirrorSobolevVerdict ∧ MirrorNonvacuous) ∧ MirrorFEMVerdict ∧
+      StandardCubeVerdict) ∧
+    -- the scheme (6.5) with mirror boundary conditions
+    ((∃ (ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3) (C : ℝ),
+        Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅ Feec.FiniteElement.PolySeq.lowestOrder
+          ρ C ∧ ∀ a : Fin 3, Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a}
+            Feec.FiniteElement.PolySeq.lagrangeP2 ρ C) ∧
+      (Feec.Models.Cube.MirrorWeakSymmetry.cosDatum.U₀ ∈ mirrorL3Data ∧
+        (∀ s, Feec.Models.Cube.MirrorWeakSymmetry.cosDatum.U₀ ∈ mirrorSobData s) ∧
+        Feec.Models.Cube.MirrorWeakSymmetry.cosDatum.U₀ ∉
+          Feec.Models.Cube.MirrorBGG.complexQ.waveGroup.stationary) ∧
+      ∀ {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
+        (hT : Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 ∅
+          Feec.FiniteElement.PolySeq.lowestOrder ρ C)
+        (hB : ∀ a : Fin 3, Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a}
+          Feec.FiniteElement.PolySeq.lagrangeP2 ρ C), MirrorFEMApprox.Verdict hT hB) ∧
+    -- the scheme (6.5) with the thesis' boundary conditions
+    ((Feec.EinsteinBianchi.BoundedFailure.betaDatum ∈ thesisTSD ∧
+        ¬ Feec.EinsteinBianchi.MatrixModel.matrixComplex.wave.IsReducing thesisTSD) ∧
+      (∃ (p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)) (C : ℝ),
+        Feec.Models.Cube.FEM.PolySmoothingEstimatesMin 3 Feec.FiniteElement.PolySeq.lowestOrder
+          p C ∧ Feec.Models.Cube.FEM.PolySmoothingEstimatesMin 3
+            Feec.FiniteElement.PolySeq.lagrangeP2 p C) ∧
+      ∀ {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
+        (hT : Feec.Models.Cube.FEM.PolySmoothingEstimatesMin 3
+          Feec.FiniteElement.PolySeq.lowestOrder p C)
+        (hB : Feec.Models.Cube.FEM.PolySmoothingEstimatesMin 3
+          Feec.FiniteElement.PolySeq.lagrangeP2 p C), StandardCubeApprox.Verdict hT hB) :=
+  have h := einsteinBianchi_summary
+  ⟨⟨⟨h.1.1.1.toTorusVerdict, h.1.1⟩, h.1.2.1, ⟨h.1.2.2.1.1.toMirrorVerdict, h.1.2.2.1⟩,
+    h.1.2.2.2⟩, h.2⟩
+
+end Summary
 
 end FeecCheck.InstanceVerdicts

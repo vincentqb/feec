@@ -63,7 +63,8 @@ of the wave Ritz projection (`ConstrainedFEEC.waveRitz`, the elliptic projection
    [QuennevilleBelair2015], Prop. 4.13, Thm 4.14).
 4. `residual_le`, `residual_tendsto`: if `K` reduces `L`, the **constraint residual** of the
    discrete solution is bounded by the error, `dist(ξₕ(t), K) ≤ ‖ξ(t) - ξₕ(t)‖`
-   (`ConstrainedFEEC.infDist_le_norm_sub`), so it tends to `0` uniformly on `[0, T]`;
+   (`ConstrainedFEEC.infDist_le_norm_sub`), so it tends to `0` uniformly on `[0, T]` and, on a
+   rate class, is at most the rate of the error (`ConstrainedFEEC.Verdict.residual_rate`);
    `leaves`: if `K` does not reduce `L`, then for every `T > 0` there are data in `K` (or in `Kᗮ`,
    the complementary constraint) whose exact solution leaves the constraint `Q` at some
    `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), Q)` of every convergent discretization tend to
@@ -645,6 +646,18 @@ structure ConstrainedFEEC.Verdict (F : ConstrainedFEEC H κ) : Prop where
   the projections `πₕ` eventually induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`, `[z] ↦ [πₕ z]` -/
   cohomology {i : ι} [FiniteDimensional 𝕜 (H.harmonic i)] (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap i)
+
+variable {F} in
+/-- (**constraint residual rate**) if `K` reduces `L`, the residual of data in `K` and in a rate
+class is at most the rate of the error, `dist(ξₕ(t), K) ≤ (1 + C_P)(1 + t)² C hᵅ ‖ξ₀‖_class`
+(`propagates_iff`, `ConstrainedFEEC.infDist_le_norm_sub`, `rate`). -/
+theorem ConstrainedFEEC.Verdict.residual_rate (V : F.Verdict) (hK : H.wave.IsReducing F.K)
+    {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W} (hxR : x ∈ R.Data) (hxK : x ∈ F.K) (h : κ) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    infDist (H.totalD.graphFst (F.discrete h (waveLift H ⟨x, R.mem_domain x hxR⟩) t))
+        (F.K : Set (PiLp 2 W)) ≤
+      (1 + ellipticConst H) * (1 + t) ^ 2 * (R.C * R.meshSize h ^ R.α * R.classNorm x) :=
+  (F.infDist_le_norm_sub (V.propagates_iff.1 hK t x hxK)).trans (V.rate R hxR h ht)
 
 end Main
 

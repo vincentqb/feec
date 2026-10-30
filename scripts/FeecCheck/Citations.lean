@@ -1,10 +1,12 @@
-import FeecCheck.Util
+module
+
+public import FeecCheck.Util
 
 /-!
 # Citation gate
 
 `lake exe feec-citations` (also run by `lake exe feec-gate`). Checks every Lean file of the library
-(`Feec.lean` and `Feec/**/*.lean`):
+(`Feec.lean`, `Feec/**/*.lean` and the Lean files of `palomar/`):
 
 1. every bracketed citation key `[Key]` (Key = AuthorYear, e.g. `[QuennevilleBelair2015]`,
    `[AFW2010]`) has an entry in `docs/references.bib`;
@@ -24,6 +26,8 @@ The BibTeX reader is the small subset `docs/references.bib` uses: `@type{key,` e
 `author`/`title` fields, `and`-separated `Last, First` (or `Last, Jr, First`) names, the accents
 `\'`, `\"`, `` \` ``, `\v` and the math titles `{$L^2$}`, `{$L_2$}`.
 -/
+
+public section
 
 namespace FeecCheck.Citations
 
@@ -127,7 +131,8 @@ def run : IO Report := do
   -- `^\* \[([^\[\]]*), \*([^*]+)\*\]\[(KEY)\]` (multiline)
   let entry := seqs [.bol, lit "* [", .group 1 (.star (noneOf ['[', ']'])), lit ", *",
     .group 2 (plus (noneOf ['*'])), lit "*][", .group 3 key, chr ']']
-  let files := #[("Feec.lean" : System.FilePath)] ++ (← leanFiles "Feec")
+  let files := #[("Feec.lean" : System.FilePath)] ++ (← leanFiles "Feec") ++
+    #[("palomar/Challenge.lean" : System.FilePath), "palomar/Solution.lean"] ++ (← leanFiles "palomar/Solution")
   for f in files do
     let s := chars (← readText f)
     for m in cite.findAll s do

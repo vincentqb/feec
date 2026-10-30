@@ -222,10 +222,11 @@ order of layers of `docs/REFACTOR_PLAN.md` §1), the axiom audit (only `propext`
 `Classical.choice`, `Quot.sound`), banned identifiers, `docs/THESIS_MAP.md` up to date, the
 migration coverage of `docs/migration/map.tsv`, and the names of the documentation (every Lean name
 in backticks in `README.md` and `docs/*.md` is a declaration, module or namespace; historical
-regions may also name pre-refactor declarations, see `scripts/FeecCheck/DocNames.lean`). It exits
+regions may also name pre-refactor declarations, see `scripts/FeecCheck/DocNames.lean`), and the
+Palomar package (below). It exits
 nonzero on any failure and prints each violation as `path:line: message`. Each check is also an
 executable of its own (`feec-citations`, `feec-layering`, `feec-axioms`, `feec-naming`,
-`feec-thesismap`, `feec-mapcheck`, `feec-docnames`); `lake exe feec-thesismap` regenerates
+`feec-thesismap`, `feec-mapcheck`, `feec-docnames`, `feec-palomar`); `lake exe feec-thesismap` regenerates
 `docs/THESIS_MAP.md`.
 
 `lake exe feec-deps [OUT_DIR]` (`scripts/FeecCheck/Deps.lean`, default `.lake/feec-deps`) is a
@@ -241,6 +242,26 @@ toolchain's libraries:
 
 ```bash
 LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-gate
+```
+
+## Palomar submission
+
+`palomar/` is a nested Lake project packaging the headline for the
+[Palomar registry](https://palomar-registry.org): `palomar/Challenge.lean` restates over Mathlib
+alone (about 340 lines) a Hilbert complex on ℤ, conforming families and the conclusions of the
+crown (static: cohomology, well-posedness and convergence of the mixed method; wave and heat on
+every window: well-posedness, semidiscrete and θ-scheme convergence for every datum, propagation
+of constraints iff reducing) as one theorem, FEEC.feec; `palomar/Solution.lean` proves it from the
+crown through `palomar/Solution/Bridge.lean`, with the challenge's definitions copied verbatim in
+`palomar/Solution/Defs.lean`. `palomar/comparator.json` and `palomar/formalization.yaml` are the
+submission metadata. The gate (`lake exe feec-gate`, check `Palomar`; alone,
+`lake exe feec-palomar`) checks that `Solution/Defs.lean` is the challenge without its theorem
+(`lake exe feec-palomar --write` regenerates it) and that `palomar/` builds against `Feec`; it
+shares the dependencies of the root package (`packagesDir = "../.lake/packages"`). Before a
+submission, judge it with the comparator (several minutes):
+
+```bash
+cd palomar && lake build && lake comparator
 ```
 
 ## Citing

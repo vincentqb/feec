@@ -1,6 +1,8 @@
-import FeecCheck.Regex
-import Std.Data.HashMap
-import Std.Data.HashSet
+module
+
+public import FeecCheck.Regex
+public import Std.Data.HashMap
+public import Std.Data.HashSet
 
 /-!
 # Shared helpers of the gate checks
@@ -11,6 +13,8 @@ Lean files of `Feec/`, line numbers, and a few string functions with Python's se
 Every check runs from the root of the repository (`lake exe` does), returns a `Report` (the
 `path:line: message` errors and informational lines) and never throws on a violation.
 -/
+
+public section
 
 namespace FeecCheck
 

@@ -1,5 +1,7 @@
-import FeecCheck.Util
-import FeecCheck.Env
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
 
 /-!
 # Naming gate
@@ -25,6 +27,8 @@ Banned (see `rules`):
 
 Each hit is reported at the declaration, `path:line` (module names at line 1).
 -/
+
+public section
 
 namespace FeecCheck.Naming
 

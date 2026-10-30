@@ -82,6 +82,12 @@ root = "FeecCheck.Exe.DocNames"
 supportInterpreter = true
 needs = ["Feec", "FeecCheck"]
 
+[[lean_exe]]
+name = "feec-palomar"
+srcDir = "scripts"
+root = "FeecCheck.Exe.Palomar"
+supportInterpreter = true
+
 # Dependency analysis for the minimality pass (not a gate check): `lake exe feec-deps [OUT_DIR]`,
 # `lake exe feec-deps --strip FILE OUT` (scripts/FeecCheck/Deps.lean).
 [[lean_exe]]

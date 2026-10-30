@@ -1,4 +1,6 @@
-import Lean
+module
+
+public import Lean
 
 /-!
 # The environment of `Feec`
@@ -8,6 +10,8 @@ the `.olean` files of `lake build Feec` (the executables declare `needs = ["Feec
 builds the library first). They do not link `Feec`: importing at run time keeps the executables
 small and their build independent of the library.
 -/
+
+public section
 
 namespace FeecCheck
 

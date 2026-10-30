@@ -1,18 +1,20 @@
-import Feec.HilbertComplex.Approximation.StaticFEEC
-import Feec.HilbertComplex.Approximation.Ritz
-import Feec.HilbertComplex.Approximation.RitzResolvent
-import Feec.HilbertComplex.Approximation.ApproxConforming
-import Feec.HilbertComplex.Approximation.FullyDiscrete
-import Feec.HilbertComplex.Approximation.Crown
-import Feec.Models.Cube.HeatFEM
-import Feec.Models.Cube.InhomogeneousError
-import Feec.Models.Cube.SobolevRateHigh
-import Feec.Models.Cube.TangentialRate
-import Feec.Models.Parallelepiped.FiniteElement
-import Feec.Models.StarShaped.PolyFiniteElement
-import Feec.Instances.EinsteinBianchiFEM
-import Feec.Instances.EinsteinBianchiFEMDefect
-import Feec.Instances.EuclideanBand
+module
+
+public import Feec.HilbertComplex.Approximation.StaticFEEC
+public import Feec.HilbertComplex.Approximation.Ritz
+public import Feec.HilbertComplex.Approximation.RitzResolvent
+public import Feec.HilbertComplex.Approximation.ApproxConforming
+public import Feec.HilbertComplex.Approximation.FullyDiscrete
+public import Feec.HilbertComplex.Approximation.Crown
+public import Feec.Models.Cube.HeatFEM
+public import Feec.Models.Cube.InhomogeneousError
+public import Feec.Models.Cube.SobolevRateHigh
+public import Feec.Models.Cube.TangentialRate
+public import Feec.Models.Parallelepiped.FiniteElement
+public import Feec.Models.StarShaped.PolyFiniteElement
+public import Feec.Instances.EinsteinBianchiFEM
+public import Feec.Instances.EinsteinBianchiFEMDefect
+public import Feec.Instances.EuclideanBand
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -159,6 +161,8 @@ This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`) and fails that build if a conclusion is
 dropped or a re-derivation breaks.
 -/
+
+public section
 
 open Set Filter Topology
 
@@ -3142,7 +3146,7 @@ private theorem norm_sub_sol_pairInit_le (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
   exact norm_sub_mirrorReEmb_le hy _ _
 
 /-- The constant of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain`. -/
-private def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose
+def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose
 
 private theorem mirrorRateK_nonneg : 0 ≤ mirrorRateK hT hB :=
   (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.1
@@ -3198,7 +3202,7 @@ private def mirrorFEMRate (T : ℝ) (hT0 : 0 < T) : (mirrorFEMApprox hT hB).Rate
     (2 * mirrorRateK hT hB * (1 + T)) (mirrorFEM_hrate hT hB hT0)
 
 /-- The constant of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_sobolev_of_add_two`. -/
-private def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose
+def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose
 
 private theorem mirrorSobK_nonneg : 0 ≤ mirrorSobK hT hB :=
   (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose_spec.1

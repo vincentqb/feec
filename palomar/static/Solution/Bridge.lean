@@ -1,23 +1,25 @@
 module
 
 public import Solution.Defs
-public import Feec.HilbertComplex.Approximation.Crown
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!
 # The bridge from the challenge to `Feec`
 
 The vocabulary of `Challenge.lean` restates over Mathlib the objects of `Feec`: a Hilbert complex
 of the challenge is a `Feec.HilbertComplex` on `ComplexShape.up ℤ` (`HilbertComplex.toFeec`, the
-same fields), and so are its subcomplexes, cochain projections and conforming families. This
-module identifies the challenge's cycles, boundaries, harmonic forms, mixed solutions, window
-operators and discrete operators with those of `Feec`, and turns the verdicts of
-`Feec.HilbertComplex.ConformingFamily.feec` into the conclusions of the challenge.
+same fields), and so are its subcomplexes and cochain projections; a conforming family with
+cochain projections bounded in the graph norm and the approximation property in the graph norm
+is a `Feec.HilbertComplex.GraphFamily` (`ConformingFamily.toGraphFamily`). This module identifies
+the challenge's cycles, boundaries, harmonic forms, harmonic gaps, graph-norm distances and mixed
+solutions with those of `Feec`, and turns the verdict of `Feec.HilbertComplex.GraphFamily.staticFEEC`
+into the conclusions of the challenge (`ConformingFamily.staticVerdict`).
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4
 
-Bibliography: [references.bib](../../docs/references.bib)
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
@@ -34,7 +36,7 @@ namespace HilbertComplex
 
 variable (H : HilbertComplex 𝕜 W)
 
-/-! ### The complex, its subcomplexes and conforming families in `Feec` -/
+/-! ### The complex, its subcomplexes and cochain projections in `Feec` -/
 
 /-- The complex as a `Feec` Hilbert complex on `ComplexShape.up ℤ`. -/
 def toFeec : Feec.HilbertComplex 𝕜 (ComplexShape.up ℤ) W where
@@ -80,19 +82,75 @@ def CochainProjection.toFeec {S : H.Subcomplex} (P : S.CochainProjection) :
     S.toFeec.CochainProjection :=
   ⟨P.π, P.mem, P.proj, P.comm⟩
 
+/-- The harmonic gap is that of `Feec`. -/
+theorem CochainProjection.harmonicGap_toFeec {S : H.Subcomplex} (P : S.CochainProjection)
+    (j : ℤ) : P.toFeec.harmonicGap j = P.harmonicGap j := by
+  unfold Feec.HilbertComplex.Subcomplex.CochainProjection.harmonicGap
+    Subcomplex.CochainProjection.harmonicGap
+  rw [H.harmonic_eq j]
+  rfl
+
+theorem graphDist_nonneg (i j : ℤ) (x : W i) (y : W j) : 0 ≤ S.graphDist i j x y :=
+  le_ciInf fun _ => by positivity
+
+/-- The graph-norm distance of `Feec` is at most that of the challenge. -/
+theorem infDist_domainSub_le [∀ i, FiniteDimensional 𝕜 (S.V i)] {i j : ℤ}
+    (hij : (ComplexShape.up ℤ).Rel i j) (σ : H.toFeec.domainSpace i) :
+    Metric.infDist σ (S.toFeec.domainSub i) ≤
+      S.graphDist i j (H.toFeec.domainIncl i σ) (H.d i j (H.toFeec.domainCoord i j σ)) :=
+  le_ciInf fun v => S.toFeec.infDist_domainSub_le hij σ v.2
+
+/-- For a cycle `b`, the same with `d b = 0`. -/
+theorem infDist_cycles_le [∀ i, FiniteDimensional 𝕜 (S.V i)] {j : ℤ} {b : W j}
+    (hb : b ∈ H.toFeec.cycles j) :
+    Metric.infDist (Feec.HilbertComplex.cyclesToDomainSpace hb) (S.toFeec.domainSub j) ≤
+      S.graphDist j (j + 1) b 0 := by
+  have := S.infDist_domainSub_le (rel_add_one j) (Feec.HilbertComplex.cyclesToDomainSpace hb)
+  rw [Feec.HilbertComplex.domainIncl_cyclesToDomainSpace] at this
+  convert this using 2
+  exact (Feec.HilbertComplex.d_domainCoord_cyclesToDomainSpace (H := H.toFeec) (j + 1) hb).symm
+
 end Subcomplex
 
 variable {H} {κ : Type*}
 
-/-- The conforming family as a `Feec` conforming family. -/
-def ConformingFamily.toFeec (F : H.ConformingFamily κ) :
-    Feec.HilbertComplex.ConformingFamily H.toFeec κ where
+/-- **A conforming family with graph-bounded projections and the approximation property in the
+graph norm is a `Feec` graph-bounded family**: the bound `‖π x‖ + ‖d π x‖ ≤ C (‖x‖ + ‖d x‖)`
+gives `‖π x‖_V ≤ 2 |C| ‖x‖_V`. -/
+def ConformingFamily.toGraphFamily (F : H.ConformingFamily κ)
+    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : (H.d i (i + 1)).domain),
+      ‖(F.π h).π i x‖ +
+        ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖ ≤
+          C * (‖(x : W i)‖ + ‖H.d i (i + 1) x‖))
+    (happrox : ∀ (i : ℤ) (x : (H.d i (i + 1)).domain),
+      Tendsto (fun h => (F.V h).graphDist i (i + 1) x (H.d i (i + 1) x)) F.l (𝓝 0)) :
+    Feec.HilbertComplex.GraphFamily H.toFeec κ where
   l := F.l
   V h := (F.V h).toFeec
   finiteDimensional h i := F.finiteDimensional h i
   π h := (F.π h).toFeec
-  bound_π := F.bound_π
-  approx := F.approx
+  bound_π := by
+    obtain ⟨C, hC⟩ := hπ
+    refine ⟨2 * |C|, fun h i => ?_⟩
+    rw [(ComplexShape.up ℤ).next_eq' (rel_add_one i)]
+    intro x
+    have h1 := (hC h i x).trans (mul_le_mul_of_nonneg_right (le_abs_self C) (by positivity))
+    set a := ‖(F.π h).π i x‖
+    set b := ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖
+    set r := ‖(x : W i)‖
+    set s := ‖H.d i (i + 1) x‖
+    change a ^ 2 + b ^ 2 ≤ (2 * |C|) ^ 2 * (r ^ 2 + s ^ 2)
+    have ha : 0 ≤ a := norm_nonneg _
+    have hb : 0 ≤ b := norm_nonneg _
+    have hr : 0 ≤ r := norm_nonneg _
+    have hs : 0 ≤ s := norm_nonneg _
+    have hc := abs_nonneg C
+    have h2 : (a + b) ^ 2 ≤ (|C| * (r + s)) ^ 2 := pow_le_pow_left₀ (by positivity) h1 2
+    nlinarith [sq_nonneg (r - s)]
+  approx i σ := by
+    have h0 := happrox i (H.toFeec.domainCoord i (i + 1) σ)
+    refine squeeze_zero (fun _ => Metric.infDist_nonneg) (fun h => ?_) h0
+    exact (F.V h).infDist_domainSub_le (rel_add_one i) σ
 
 end HilbertComplex
 
@@ -353,15 +411,29 @@ theorem mixedError_le {j : ℤ} (σ σ' : H.toFeec.domainSpace (j - 1))
 
 variable {κ : Type*}
 
-/-- **The static verdict** from `Feec`'s static FEEC theorem. -/
+theorem starProjection_congr {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    {K K' : Submodule 𝕜 E} (h : K = K') [K.HasOrthogonalProjection] [K'.HasOrthogonalProjection]
+    (x : E) : K.starProjection x = K'.starProjection x := by
+  subst h; rfl
+
+/-- **The static verdict** from `Feec`'s static FEEC theorem for graph-bounded families. -/
 theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
-    (hcr : ∀ i, IsClosed (H.boundaries i : Set (W i))) (j : ℤ)
-    [FiniteDimensional 𝕜 (H.harmonic j)] : F.StaticVerdict j := by
-  have hcr' : ∀ i, H.toFeec.ClosedRangeAt i := fun i => (H.closedRangeAt_iff i).2 (hcr i)
+    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : (H.d i (i + 1)).domain),
+      ‖(F.π h).π i x‖ +
+        ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖ ≤
+          C * (‖(x : W i)‖ + ‖H.d i (i + 1) x‖))
+    (happrox : ∀ (i : ℤ) (x : (H.d i (i + 1)).domain),
+      Tendsto (fun h => (F.V h).graphDist i (i + 1) x (H.d i (i + 1) x)) F.l (𝓝 0))
+    (j : ℤ) (hj : IsClosed (H.boundaries j : Set (W j)))
+    (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) [FiniteDimensional 𝕜 (H.harmonic j)] :
+    F.StaticVerdict j := by
+  set G := F.toGraphFamily hπ happrox
+  have hcj := (H.closedRangeAt_iff j).2 hj
+  have hck := (H.closedRangeAt_iff (j + 1)).2 hj'
   have : FiniteDimensional 𝕜 (H.toFeec.harmonic j) := by rw [H.harmonic_eq]; infer_instance
-  have V := F.toFeec.staticFEEC hcr' j
+  have V := G.staticFEEC j hcj fun k hk => by obtain rfl : j + 1 = k := hk; exact hck
   have hsol := fun f => H.isMixedSolution_of_feec (H.toFeec.isMixedSolution_mixedSolution
-    (rel_sub_one j) (rel_add_one j) (hcr' j) (hcr' (j + 1)) f)
+    (rel_sub_one j) (rel_add_one j) hcj hck f)
   have hdsol := fun h f => (F.V h).isMixedSolution_of_feec
     (Feec.HilbertComplex.Subcomplex.CochainProjection.isMixedSolution_discreteMixedSolution
       (F.V h).toFeec (rel_sub_one j) (rel_add_one j) f)
@@ -370,18 +442,72 @@ theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
   have uqh := fun h {f σ σ' u u' p p'} => @IsMixedSolution.unique _ _ _ _ _ _ H j
     ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) (F.V h).harmonic_cond
     (F.V h).harmonic_cond' f σ σ' u u' p p'
-  refine ⟨?_, fun f => ⟨(_, _, _), hsol f, fun x hx => ?_⟩, fun h f => ⟨(_, _, _), hdsol h f, fun x hx => ?_⟩,
-    fun {f σ u p} hs {σh uh ph} hsh => ?_⟩
+  have hgap : ∀ h, (G.π h).harmonicGap j = (F.π h).harmonicGap j := fun h =>
+    (F.π h).harmonicGap_toFeec j
+  refine ⟨?_, ?_, ?_, fun f => ⟨(_, _, _), hsol f, fun x hx => ?_⟩,
+    fun h f => ⟨(_, _, _), hdsol h f, fun x hx => ?_⟩, ?_, fun {f σ u p} hs {σh uh ph} hsh => ?_⟩
   · filter_upwards [V.cohomology] with h hh
     exact (F.V h).cohomologyIncl_bijective (F.π h) hh.1
+  · have h0 := V.harmonicGap
+    simp only [hgap] at h0
+    exact h0
+  · obtain ⟨C, hC⟩ := V.poincare (rel_add_one j)
+    refine ⟨C, fun h v hv hz => hC h hv fun y hy => hz y ⟨hy.1, ?_⟩⟩
+    rw [← H.cycles_eq]; exact hy.2
   · obtain ⟨h1, h2, h3⟩ := uq hx (hsol f)
     exact Prod.ext h1 (Prod.ext h2 h3)
   · obtain ⟨h1, h2, h3⟩ := uqh h hx (hdsol h f)
     exact Prod.ext h1 (Prod.ext h2 h3)
+  · obtain ⟨K, hK0, hK⟩ := V.quasiOptimal (rel_sub_one j) (rel_add_one j)
+    have hC0 : 0 ≤ G.projBound := zero_le_one.trans G.one_le_projBound
+    refine ⟨2 * (K * (1 + G.projBound)), fun {f σ u p} hs h {σh uh ph} hsh => ?_⟩
+    obtain ⟨rfl, rfl, rfl⟩ := uq hs (hsol f)
+    obtain ⟨h1, h2, h3⟩ := uqh h hsh (hdsol h f)
+    rw [h1, h2, h3]
+    set X := H.toFeec.mixedSolution (rel_sub_one j) (rel_add_one j) hcj hck f
+    have e := hK (H.toFeec.isMixedSolution_mixedSolution (rel_sub_one j) (rel_add_one j) hcj hck f) h
+    have a1 := (F.V h).infDist_domainSub_le (rel_sub_one j) X.fst
+    have a2 := (F.V h).infDist_domainSub_le (rel_add_one j) X.snd.fst
+    have a3 := ((G.π h).infDist_harmonicW_le (rel_add_one j) hC0 (G.isGraphBounded h (rel_add_one j))
+      X.snd.snd.2).trans (mul_le_mul_of_nonneg_left
+        ((F.V h).infDist_cycles_le (H.toFeec.harmonic_le_cycles j X.snd.snd.2)) (by linarith))
+    have hBc := congrArg Submodule.topologicalClosure (H.boundaries_eq j)
+    have hbz : (H.boundaries j).topologicalClosure.starProjection
+        (H.toFeec.domainIncl j X.snd.fst) ∈ H.toFeec.cycles j := by
+      rw [← starProjection_congr hBc]
+      exact H.toFeec.closure_boundaries_le_cycles j (Submodule.starProjection_apply_mem _ _)
+    have eb : H.toFeec.boundaryPart j (H.toFeec.domainIncl j X.snd.fst) =
+        Feec.HilbertComplex.cyclesToDomainSpace hbz :=
+      H.toFeec.domainIncl_injective j (by
+        rw [Feec.HilbertComplex.domainIncl_cyclesToDomainSpace]
+        exact starProjection_congr hBc _)
+    have a4 := (F.V h).infDist_cycles_le hbz
+    rw [eb] at e
+    have hμ := (G.π h).harmonicGap_nonneg j
+    rw [hgap h] at e hμ
+    have g1 := (F.V h).graphDist_nonneg (j - 1) j (H.toFeec.domainIncl (j - 1) X.fst)
+      (H.d (j - 1) j (H.toFeec.domainCoord (j - 1) j X.fst))
+    have g2 := (F.V h).graphDist_nonneg j (j + 1) (H.toFeec.domainIncl j X.snd.fst)
+      (H.d j (j + 1) (H.toFeec.domainCoord j (j + 1) X.snd.fst))
+    have g3 := (F.V h).graphDist_nonneg j (j + 1) (X.snd.snd : W j) 0
+    have g4 := (F.V h).graphDist_nonneg j (j + 1)
+      ((H.boundaries j).topologicalClosure.starProjection (H.toFeec.domainIncl j X.snd.fst)) 0
+    refine (mixedError_le _ _ _ _ _ _).trans ?_
+    refine (mul_le_mul_of_nonneg_left e zero_le_two).trans ?_
+    rw [mul_assoc 2]
+    refine mul_le_mul_of_nonneg_left ?_ zero_le_two
+    rw [mul_assoc]
+    refine mul_le_mul_of_nonneg_left ?_ hK0
+    have key : ∀ {a b c d A B P D μ C' : ℝ}, a ≤ A → b ≤ B → c ≤ (1 + C') * P → d ≤ D →
+        0 ≤ μ → 0 ≤ C' → 0 ≤ A → 0 ≤ B → 0 ≤ D →
+        a + b + c + μ * d ≤ (1 + C') * (A + B + P + μ * D) := by
+      intro a b c d A B P D μ C' h1 h2 h3 h4 h5 h6 h7 h8 h9
+      nlinarith [mul_le_mul_of_nonneg_left h4 h5, mul_nonneg h6 h7, mul_nonneg h6 h8,
+        mul_nonneg h6 (mul_nonneg h5 h9)]
+    exact key a1 a2 a3 a4 hμ hC0 g1 g2 g4
   · obtain ⟨rfl, rfl, rfl⟩ := uq hs (hsol f)
     have hT := (V.converges (rel_sub_one j) (rel_add_one j)
-      (H.toFeec.isMixedSolution_mixedSolution (rel_sub_one j) (rel_add_one j) (hcr' j)
-        (hcr' (j + 1)) f)).const_mul 2
+      (H.toFeec.isMixedSolution_mixedSolution (rel_sub_one j) (rel_add_one j) hcj hck f)).const_mul 2
     rw [mul_zero] at hT
     refine squeeze_zero (fun _ => by unfold mixedError; positivity) (fun h => ?_) hT
     obtain ⟨h1, h2, h3⟩ := uqh h (hsh h) (hdsol h f)
@@ -389,273 +515,5 @@ theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
     exact mixedError_le _ _ _ _ _ _
 
 end HilbertComplex
-
-/-! ### Evolutions -/
-
-section Evolution
-
-variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
-  [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {κ : Type*}
-
-omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
-theorem IsStrongSolution.congr {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u v : ℝ → E}
-    (hu : IsStrongSolution A I u) (h : EqOn v u I) : IsStrongSolution A I v :=
-  ⟨hu.1.congr h, fun t ht => by
-    obtain ⟨w, hw, hd⟩ := hu.2 t ht
-    exact ⟨w, h ht ▸ hw, hd.congr h (h ht)⟩⟩
-
-omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
-theorem isStrongSolution_iff {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u : ℝ → E} :
-    IsStrongSolution A I u ↔ Feec.Evolution.IsStrongSolution A I 0 u := by
-  refine ⟨fun h => ⟨h.1, fun t ht => ?_⟩, fun h => ⟨h.continuousOn, fun t ht => ?_⟩⟩
-  · obtain ⟨v, hv, hd⟩ := h.2 t ht
-    exact ⟨v, hv, by simpa using hd⟩
-  · obtain ⟨v, hv, hd⟩ := h.deriv t ht
-    exact ⟨v, hv, by simpa using hd⟩
-
-omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- A dissipative `B` has no nonzero `z = c B z` with `c ≥ 0`. -/
-theorem eq_zero_of_eq_smul {B : E →L[𝕜] E} (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) {c : ℝ}
-    (hc : 0 ≤ c) {z : E} (hz : z = (c : 𝕜) • B z) : z = 0 := by
-  have h : ⟪z, z⟫_𝕜 = ⟪(c : 𝕜) • B z, z⟫_𝕜 := by rw [← hz]
-  rw [inner_smul_left, RCLike.conj_ofReal] at h
-  have h' := congrArg RCLike.re h
-  rw [RCLike.re_ofReal_mul, inner_self_eq_norm_sq] at h'
-  have : ‖z‖ ^ 2 ≤ 0 := h' ▸ mul_nonpos_of_nonneg_of_nonpos hc (hB z)
-  exact norm_eq_zero.1 (by nlinarith [norm_nonneg z])
-
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **The θ-iterates are the powers of the θ-step** `r_θ(τ B)` for a dissipative `B`. -/
-theorem theta_eq_pow {B : E →L[𝕜] E} (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) {θ τ : ℝ}
-    (hθ : 1 / 2 ≤ θ) (hτ : 0 < τ) {w : ℕ → E}
-    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n))
-    (n : ℕ) :
-    w n = (Feec.TimeStepping.thetaStep ((B : E →ₗ[𝕜] E).toPMap ⊤) (θ : 𝕜) τ ^ n) (w 0) := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-    rw [pow_succ', ContinuousLinearMap.mul_def, ContinuousLinearMap.comp_apply, ← ih]
-    set u' := Feec.TimeStepping.thetaStep ((B : E →ₗ[𝕜] E).toPMap ⊤) (θ : 𝕜) τ (w n)
-    obtain ⟨_, hu'⟩ := Feec.TimeStepping.isThetaStep_thetaStep_of_isMDissipative
-      (θ := (θ : 𝕜)) (B.isMDissipative_toPMap_top hB) (by rw [RCLike.ofReal_re]; linarith) hτ (w n)
-    change u' - w n = (τ : 𝕜) • B ((θ : 𝕜) • u' + (1 - (θ : 𝕜)) • w n) at hu'
-    refine sub_eq_zero.1 (eq_zero_of_eq_smul hB (mul_nonneg hτ.le (by linarith : (0 : ℝ) ≤ θ)) ?_)
-    calc w (n + 1) - u' = (w (n + 1) - w n) - (u' - w n) := by abel
-      _ = (τ : 𝕜) • (B ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n) -
-          B ((θ : 𝕜) • u' + (1 - (θ : 𝕜)) • w n)) := by rw [hw n, hu', smul_sub]
-      _ = (τ : 𝕜) • B ((θ : 𝕜) • (w (n + 1) - u')) := by
-        rw [← _root_.map_sub, smul_sub]; congr 2; abel
-      _ = ((τ * θ : ℝ) : 𝕜) • B (w (n + 1) - u') := by
-        rw [_root_.map_smul, smul_smul, RCLike.ofReal_mul]
-
-omit [IsScalarTower ℝ 𝕜 E] in
-/-- **The evolution verdict from `Feec`'s**: the conclusions of the dissipative and fully discrete
-FEEC theorems, restated. -/
-theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → Submodule 𝕜 E}
-    [∀ h, CompleteSpace (X h)] {B : ∀ h, X h →L[𝕜] X h} {S S' : ℝ → E →L[𝕜] E} (hSS' : ∀ t, 0 ≤ t → S t = S' t)
-    (hA : A.IsMDissipative)
-    (hB : ∀ h x, RCLike.re ⟪B h x, x⟫_𝕜 ≤ 0)
-    (hsol : ∀ (x : A.domain) (T : ℝ),
-      Feec.Evolution.IsClassicalSolution A (Icc 0 T) 0 fun t => S' t x)
-    (huniq : ∀ (x : A.domain) (T : ℝ) (U : ℝ → E), U 0 = x →
-      Feec.Evolution.IsStrongSolution A (Icc 0 T) 0 U → EqOn U (fun t => S' t x) (Icc 0 T))
-    (hanti : ∀ x, AntitoneOn (fun t => ‖S' t x‖) (Ici 0)) (hS0 : ∀ x, S' 0 x = x)
-    (hconv : ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ T : ℝ,
-      TendstoUniformlyOn (fun h t => ((Feec.C0Group.ofBounded (B h)).S t (v h) : E))
-        (fun t => S' t x) l (Icc 0 T))
-    (htheta : ∀ (θ : ℝ) (_ : 1 / 2 ≤ θ) (τ : κ → ℝ) (_ : ∀ h, 0 < τ h), Tendsto τ l (𝓝 0) →
-      ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ (T ε : ℝ), 0 < ε →
-        ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
-          ‖S' (n * τ h) x - ((Feec.TimeStepping.thetaStep ((B h : X h →ₗ[𝕜] X h).toPMap ⊤)
-            (θ : 𝕜) (τ h) ^ n) (v h) : E)‖ < ε) :
-    EvolutionVerdict A l X B S where
-  dense := hA.dense_domain
-  solution x hx T := (isStrongSolution_iff.2 (hsol ⟨x, hx⟩ T).toIsStrongSolution).congr
-    fun t ht => by simp only [hSS' t ht.1]
-  unique x hx T u hu0 hu := fun t ht => by
-    simp only [hSS' t ht.1]; exact huniq ⟨x, hx⟩ T u hu0 (isStrongSolution_iff.1 hu) ht
-  contraction x t ht := by
-    have := hanti x (Set.mem_Ici.2 le_rfl) ht ht
-    dsimp only at this
-    rwa [hS0, ← hSS' t ht] at this
-  semidiscrete x v hv T := by
-    simpa only [Feec.C0Group.ofBounded_S] using
-      (hconv x v hv T).congr_right fun t ht => by simp only [hSS' t ht.1]
-  theta θ hθ τ hτ hτ0 x w hw hw0 T ε hε := by
-    filter_upwards [htheta θ hθ τ hτ hτ0 x (fun h => w h 0) hw0 T ε hε] with h hh n hn
-    rw [theta_eq_pow (hB h) hθ (hτ h) (hw h) n, hSS' _ hn.1]
-    exact hh n hn
-
-end Evolution
-
-/-! ### Windows -/
-
-namespace HilbertComplex
-
-section Window
-
-variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
-
-theorem totalD_eq : H.totalD a m = (H.toFeec.window a m).totalD := by
-  refine LinearPMap.ext rfl fun x hx hy => ?_
-  ext j
-  rw [Feec.HilbertComplex.totalD_apply]
-  rfl
-
-theorem wave_eq : H.wave a m = (H.toFeec.window a m).wave := by
-  rw [wave, totalD_eq, Feec.HilbertComplex.wave_eq]
-
-omit [∀ i, CompleteSpace (W i)] in
-theorem sq_eq {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] (A : E →ₗ.[𝕜] E) : sq A = A.sq := by
-  have hd : (sq A).domain = A.sq.domain := by
-    ext x
-    constructor
-    · rintro ⟨⟨y, hy, rfl⟩, hx⟩
-      exact ⟨hx, hy⟩
-    · rintro ⟨hx, hAx⟩
-      exact ⟨Submodule.mem_map.2 ⟨⟨x, hx⟩, hAx, rfl⟩, hx⟩
-  exact LinearPMap.ext hd fun x hx hy => rfl
-
-theorem heat_eq : sq (H.wave a m) = -(H.toFeec.window a m).hodgeLaplacian := by
-  rw [sq_eq, wave_eq, Feec.HilbertComplex.hodgeLaplacian, neg_neg]
-
-/-- Closed ranges of `H` give closed ranges of every window. -/
-theorem closedRangeAt_window (hcr : ∀ i, IsClosed (H.boundaries i : Set (W i))) (i : Fin m) :
-    (H.toFeec.window a m).ClosedRangeAt i := by
-  by_cases hi : (ComplexShape.window m).Rel ((ComplexShape.window m).prev i) i
-  · rw [Feec.HilbertComplex.ClosedRangeAt, Feec.HilbertComplex.boundaries_eq _ hi]
-    have hrel : (ComplexShape.up ℤ).Rel (a + (((ComplexShape.window m).prev i : Fin m) : ℕ))
-        (a + ((i : ℕ) : ℤ)) := by
-      change _ + 1 = _
-      rw [ComplexShape.window_rel] at hi
-      omega
-    have := (H.closedRangeAt_iff _).2 (hcr (a + ((i : ℕ) : ℤ)))
-    rwa [Feec.HilbertComplex.ClosedRangeAt, H.toFeec.boundaries_eq hrel] at this
-  · rw [Feec.HilbertComplex.ClosedRangeAt, Feec.HilbertComplex.boundaries_eq_bot_of_not_rel _ hi,
-      Submodule.bot_coe]
-    exact isClosed_singleton
-
-/-- Finite-dimensional harmonic fields `N(L)` give finite-dimensional harmonic forms of every
-degree of the window. -/
-theorem finiteDimensional_harmonic_window [FiniteDimensional 𝕜 (H.wave a m).ker] (i : Fin m) :
-    FiniteDimensional 𝕜 ((H.toFeec.window a m).harmonic i) := by
-  have : FiniteDimensional 𝕜 (H.toFeec.window a m).wave.ker := by
-    rw [← wave_eq]; infer_instance
-  classical
-  let f : (H.toFeec.window a m).harmonic i →ₗ[𝕜] PiLp 2 fun i : Fin m => W (a + ((i : ℕ) : ℤ)) :=
-    (WithLp.linearEquiv 2 𝕜 (∀ i : Fin m, W (a + ((i : ℕ) : ℤ)))).symm.toLinearMap ∘ₗ
-      LinearMap.single 𝕜 (fun i : Fin m => W (a + ((i : ℕ) : ℤ))) i ∘ₗ
-        ((H.toFeec.window a m).harmonic i).subtype
-  have hf : Function.Injective f := fun v w hvw => Subtype.ext (by
-    simpa [f] using congrFun (congrArg WithLp.ofLp hvw) i)
-  refine Module.Finite.of_injective (LinearMap.codRestrict ((H.toFeec.window a m).wave.ker) f
-    fun v => (H.toFeec.window a m).mem_ker_wave_iff.2 fun j => ?_) fun v w hvw =>
-      hf (congrArg Subtype.val hvw)
-  by_cases hj : j = i
-  · subst hj
-    simp [f]
-  · simp [f, hj]
-
-end Window
-
-end HilbertComplex
-
-/-! ### The wave and heat verdicts -/
-
-omit [∀ i, CompleteSpace (W i)] in
-theorem isReducing_iff {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
-    IsReducing A K ↔ A.IsReducing K :=
-  ⟨fun h => ⟨fun x => (h x).1, fun x => (h x).2⟩, fun h x => ⟨h.proj_mem x, h.comm x⟩⟩
-
-namespace HilbertComplex.ConformingFamily
-
-variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.ConformingFamily κ) (a : ℤ) (m : ℕ)
-  (K : Submodule 𝕜 (Total W a m)) (hK : IsClosed (K : Set (Total W a m)))
-
-instance (h : κ) : CompleteSpace (F.Xh a m h) := FiniteDimensional.complete 𝕜 _
-
-theorem Dh_eq (h : κ) : F.Dh a m h = (F.toFeec.windowFEEC a m K hK).discreteD h :=
-  ContinuousLinearMap.ext fun _ => Subtype.ext (LinearPMap.apply_eq_of_eq (H.totalD_eq a m) _ _ rfl)
-
-theorem Lh_eq (h : κ) : F.Lh a m h = (F.toFeec.windowFEEC a m K hK).discreteWave h := by
-  rw [Lh, F.Dh_eq a m K hK]
-  rfl
-
-theorem Lh_sq_eq (h : κ) :
-    (F.Lh a m h ^ 2 : F.Xh a m h →L[𝕜] F.Xh a m h) = (F.toFeec.windowFEEC a m K hK).heatGen h := by
-  set G := F.toFeec.windowFEEC a m K hK
-  set D := G.discreteD h
-  have hdh : (G.totalSubcomplex h).dh () () = D := ContinuousLinearMap.ext fun _ => rfl
-  have hD : D * D = 0 := ContinuousLinearMap.ext fun x => Subtype.ext
-    ((H.toFeec.window a m).totalD_comp_totalD ⟨x, G.Xh_mem_domain h x⟩)
-  have hD' : D.adjoint * D.adjoint = 0 := by
-    rw [ContinuousLinearMap.mul_def, ← ContinuousLinearMap.adjoint_comp,
-      ← ContinuousLinearMap.mul_def, hD]
-    exact LinearIsometryEquiv.map_zero _
-  rw [pow_two, F.Lh_eq a m K hK]
-  show (G.discreteWave h * G.discreteWave h : G.Xh h →L[𝕜] G.Xh h) = _
-  rw [Feec.HilbertComplex.ConstrainedFEEC.discreteWave, sub_mul,
-    mul_sub, mul_sub, hD, hD', Feec.HilbertComplex.ConstrainedFEEC.heatGen,
-    Feec.HilbertComplex.Subcomplex.laplacian, hdh, ← ContinuousLinearMap.mul_def,
-    ← ContinuousLinearMap.mul_def]
-  abel
-
-omit [∀ i, CompleteSpace (W i)] in
-theorem isClosed_top : IsClosed ((⊤ : Submodule 𝕜 (Total W a m)) : Set (Total W a m)) := by
-  rw [Submodule.top_coe]; exact isClosed_univ
-
-variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
-
-/-- **The wave verdict** from `Feec`'s approximating, skew-adjoint and fully discrete FEEC
-theorems on the window. -/
-theorem waveVerdict : ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
-    EvolutionVerdict (H.wave a m) F.l (F.Xh a m) (F.Lh a m) S ∧ (∀ t x, ‖S t x‖ = ‖x‖) ∧
-    (∀ s t, S (s + t) = S s ∘L S t) ∧
-    ∀ (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection],
-      IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K := by
-  set G := F.toFeec.windowFEEC a m ⊤ (isClosed_top a m)
-  have V := F.toFeec.feec.wave a m ⊤ (isClosed_top a m)
-  have VF := F.toFeec.feec.full a m ⊤ (isClosed_top a m)
-  refine ⟨G.toApprox.U, ?_, V.norm_U, fun s t => G.toApprox.isSkewAdjoint.group.map_add s t,
-    fun K _ => ?_⟩
-  · have hL : F.Lh a m = fun h => G.discreteWave h := funext (F.Lh_eq a m ⊤ (isClosed_top a m))
-    rw [H.wave_eq a m, hL]
-    exact evolutionVerdict_of (S' := G.toApprox.S) (fun t ht => (V.S_eq_U ht).symm)
-      G.toApprox.isMDissipative G.toApprox.dissipative V.isClassicalSolution V.unique V.antitone
-      (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
-      (fun x v hv T => V.converges (G.mem_toCore_closure x) hv T)
-      (fun θ hθ τ hτ hτ0 x v hv T ε hε =>
-        (VF.wave (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
-          (G.mem_toCore_closure x) hv hτ0 T hε)
-  · have hK : IsClosed (K : Set (Total W a m)) := by
-      rw [← K.orthogonal_orthogonal]; exact Kᗮ.isClosed_orthogonal
-    have VK := F.toFeec.feec.wave a m K hK
-    rw [isReducing_iff, H.wave_eq a m]
-    exact VK.isReducing_iff_invariant
-
-/-- **The heat verdict** from `Feec`'s heat and fully discrete FEEC theorems on the window. -/
-theorem heatVerdict (hcr : ∀ i, IsClosed (H.boundaries i : Set (W i)))
-    [FiniteDimensional 𝕜 (H.wave a m).ker] : ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
-    EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S := by
-  have hcrw := H.closedRangeAt_window a m hcr
-  have := H.finiteDimensional_harmonic_window a m
-  set G := F.toFeec.windowFEEC a m ⊤ (isClosed_top a m)
-  have V := F.toFeec.feec.heat a m ⊤ (isClosed_top a m) hcrw
-  have VF := F.toFeec.feec.full a m ⊤ (isClosed_top a m)
-  have hZ : ∀ x, x ∈ (G.heatCore hcrw).Data.topologicalClosure := fun x => by
-    rw [G.dense_heatCore_data hcrw]; exact Submodule.mem_top
-  refine ⟨G.toHeat.S, ?_⟩
-  have hL : (fun h => F.Lh a m h ^ 2) = fun h => G.heatGen h :=
-    funext (F.Lh_sq_eq a m ⊤ (isClosed_top a m))
-  rw [H.heat_eq a m, hL]
-  exact evolutionVerdict_of (S' := G.toHeat.S) (fun _ _ => rfl) G.toHeat.isMDissipative
-    G.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
-    (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
-    (fun x v hv T => V.converges (hZ x) hv T)
-    (fun θ hθ τ hτ hτ0 x v hv T ε hε =>
-      (VF.heat hcrw (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
-        (hZ x) hv hτ0 T hε)
-
-end HilbertComplex.ConformingFamily
 
 end FEEC

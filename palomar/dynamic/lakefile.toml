@@ -1,8 +1,8 @@
-name = "FeecPalomar"
+name = "FeecPalomarDynamic"
 version = "0.1.0"
 defaultTargets = ["Challenge", "Solution"]
 # Share the dependencies (and the Mathlib cache) of the root package.
-packagesDir = "../.lake/packages"
+packagesDir = "../../.lake/packages"
 
 [leanOptions]
 pp.unicode.fun = true
@@ -17,7 +17,7 @@ rev = "6e2a148e19b0c1dbde6f99cdcfa73fe1f4094ed4"
 # The proof development: the root package of this repository.
 [[require]]
 name = "Feec"
-path = ".."
+path = "../.."
 
 # The statement: imports Lean core and Mathlib only.
 [[lean_lib]]

@@ -132,7 +132,9 @@ def run : IO Report := do
   let entry := seqs [.bol, lit "* [", .group 1 (.star (noneOf ['[', ']'])), lit ", *",
     .group 2 (plus (noneOf ['*'])), lit "*][", .group 3 key, chr ']']
   let files := #[("Feec.lean" : System.FilePath)] ++ (← leanFiles "Feec") ++
-    #[("palomar/Challenge.lean" : System.FilePath), "palomar/Solution.lean"] ++ (← leanFiles "palomar/Solution")
+    #[("palomar/static/Challenge.lean" : System.FilePath), "palomar/static/Solution.lean",
+      "palomar/dynamic/Challenge.lean", "palomar/dynamic/Solution.lean"] ++
+    (← leanFiles "palomar/static/Solution") ++ (← leanFiles "palomar/dynamic/Solution")
   for f in files do
     let s := chars (← readText f)
     for m in cite.findAll s do

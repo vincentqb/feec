@@ -227,7 +227,7 @@ order of layers of `docs/REFACTOR_PLAN.md` §1), the axiom audit (only `propext`
 migration coverage of `docs/migration/map.tsv`, and the names of the documentation (every Lean name
 in backticks in `README.md` and `docs/*.md` is a declaration, module or namespace; historical
 regions may also name pre-refactor declarations, see `scripts/FeecCheck/DocNames.lean`), and the
-Palomar package (below). It exits
+Palomar packages (below). It exits
 nonzero on any failure and prints each violation as `path:line: message`. Each check is also an
 executable of its own (`feec-citations`, `feec-layering`, `feec-axioms`, `feec-naming`,
 `feec-thesismap`, `feec-mapcheck`, `feec-docnames`, `feec-palomar`); `lake exe feec-thesismap` regenerates
@@ -250,22 +250,35 @@ LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-g
 
 ## Palomar submission
 
-`palomar/` is a nested Lake project packaging the headline for the
-[Palomar registry](https://palomar-registry.org): `palomar/Challenge.lean` restates over Mathlib
-alone (about 340 lines) a Hilbert complex on ℤ, conforming families and the conclusions of the
-crown (static: cohomology, well-posedness and convergence of the mixed method; wave and heat on
-every window: well-posedness, semidiscrete and θ-scheme convergence for every datum, propagation
-of constraints iff reducing) as one theorem, FEEC.feec; `palomar/Solution.lean` proves it from the
-crown through `palomar/Solution/Bridge.lean`, with the challenge's definitions copied verbatim in
-`palomar/Solution/Defs.lean`. `palomar/comparator.json` and `palomar/formalization.yaml` are the
-submission metadata. The gate (`lake exe feec-gate`, check `Palomar`; alone,
-`lake exe feec-palomar`) checks that `Solution/Defs.lean` is the challenge without its theorem
-(`lake exe feec-palomar --write` regenerates it) and that `palomar/` builds against `Feec`; it
-shares the dependencies of the root package (`packagesDir = "../.lake/packages"`). Before a
-submission, judge it with the comparator (several minutes):
+`palomar/` holds two submissions for the [Palomar registry](https://palomar-registry.org), each a
+nested Lake project sharing the dependencies of the root package
+(`packagesDir = "../../.lake/packages"`), with a `Challenge.lean` restating its statement over
+Mathlib alone, a `Solution.lean` proving it from `Feec` through `Solution/Bridge.lean` (the
+challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.json` and
+`formalization.yaml`. Both copy the same vocabulary (Hilbert complexes on ℤ, subcomplexes,
+cochain projections, conforming families).
+
+* `palomar/static/` (theorem FEEC.staticFEEC, about 220 lines): the a priori theory of the mixed Hodge
+  Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses (cochain projections bounded in the
+  graph norm, approximation in the graph norm, closed range in degrees `j` and `j + 1`):
+  eventual cohomology isomorphism, vanishing harmonic gap, uniform discrete Poincaré inequality,
+  unique solvability, quasi-optimal graph-norm error bound; from
+  `Feec.HilbertComplex.GraphFamily.staticFEEC`.
+* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 300 lines): the Hodge wave and heat equations on
+  every window for `W`-bounded projections: well-posedness, convergence for every datum, the
+  error bound `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + C (1 + t) M` by the graph-norm best
+  approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
+  residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
+  `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
+
+The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in both
+that `Solution/Defs.lean` is the challenge without its compared theorem
+(`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
+Before a submission, judge each with the comparator (several minutes):
 
 ```bash
-cd palomar && lake build && lake comparator
+cd palomar/static && lake build && lake comparator
+cd palomar/dynamic && lake build && lake comparator
 ```
 
 ## Citing

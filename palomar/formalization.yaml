@@ -1,0 +1,202 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of the FEEC theorem (`palomar/`).
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: "The FEEC theorem: finite element exterior calculus for Hilbert complexes, static, wave and heat"
+  description: >-
+    A Lean 4 formalization of the approximation theory of finite element exterior calculus
+    (FEEC) for an arbitrary Hilbert complex of closed densely defined operators on Z and an
+    arbitrary conforming family of finite-dimensional subcomplexes with uniformly bounded
+    commuting projections and the approximation property. The compared theorem FEEC.feec
+    states: (static) with closed ranges and finite-dimensional harmonic forms in degree j,
+    the inclusion eventually induces an isomorphism of discrete and continuous cohomology,
+    the mixed Hodge Laplacian and its Galerkin discretizations are uniquely solvable and the
+    discrete solutions converge in the graph norm; (wave) on every window of the complex the
+    Hodge wave equation for d - d* is well posed with a unitary group, its semidiscrete Galerkin
+    solutions and its theta-schemes (theta >= 1/2) converge for every datum as h and the time
+    step tend to 0, and a closed constraint is propagated by the flow iff it reduces d - d*;
+    (heat) with closed ranges and finite-dimensional harmonic fields, the same for the Hodge
+    heat equation. The statement is self-contained over Mathlib; the proof is the library
+    Feec of this repository (the crown theorem Feec.HilbertComplex.ConformingFamily.feec).
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.NA", "math.FA"]
+  msc2020: ["65N30", "65M60", "65M12", "58A14", "58J10", "35L05", "35K05"]
+
+sources:
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.4 (Theorems 3.4, 3.8, 3.9)"
+    relationship: "adapts"
+    note: >-
+      The static part: discrete cohomology, well-posedness and convergence of the mixed method
+      for a conforming family. Adapted: the bounded cochain projections are bounded in W (as
+      the smoothed projections of §5.5) rather than in the graph norm, and convergence is
+      stated qualitatively (quasi-optimality and rates are proved in Feec but not compared).
+    author_endorsement: "not-contacted"
+  - title: "A New Approach to Finite Element Simulations of General Relativity"
+    authors:
+      - "Vincent Quenneville-Bélair"
+    id: "http://hdl.handle.net/11299/175309"
+    type: "PhD thesis, University of Minnesota, 2015"
+    location: "Ch. 4 (Theorems 4.6, 4.7, 4.14, Proposition 4.17)"
+    relationship: "formalizes"
+    note: >-
+      The semidiscrete Hodge wave equation for a Hilbert complex: well-posedness, convergence
+      of the semidiscrete solutions, and propagation of constraints iff they reduce the wave
+      operator. The formalization is by the thesis author.
+    author_endorsement: "participated"
+  - title: "Galerkin Finite Element Methods for Parabolic Problems"
+    authors:
+      - "Vidar Thomée"
+    id: "doi:10.1007/3-540-33122-0"
+    type: "book"
+    location: "Springer, 2nd ed., 2006, Ch. 7"
+    relationship: "background"
+    note: "Theta-schemes and their unconditional stability for theta >= 1/2."
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus for evolution problems"
+    authors:
+      - "Andrew Gillette"
+      - "Michael Holst"
+      - "Yunrong Zhu"
+    id: "doi:10.4208/jcm.1610-m2015-0319"
+    type: "article"
+    location: "J. Comput. Math. 35 (2017)"
+    relationship: "background"
+    note: "The semidiscrete Hodge heat equation in FEEC."
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus, homological techniques, and applications"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1017/S0962492906210018"
+    type: "article"
+    location: "Acta Numerica 15 (2006)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Hilbert complexes"
+    authors:
+      - "Jochen Brüning"
+      - "Matthias Lesch"
+    id: "doi:10.1016/0022-1236(92)90147-B"
+    type: "article"
+    location: "J. Funct. Anal. 108 (1992)"
+    relationship: "background"
+    note: "The abstract setting of Hilbert complexes of closed densely defined operators."
+    author_endorsement: "not-contacted"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: FEEC.feec (Challenge.lean) for every RCLike field, every Hilbert
+    complex on Z, every conforming family along any filter, every degree j (static) and every
+    window [a, a+m) (wave, heat). Not compared (proved in Feec, outside the statement): rates
+    from Jackson estimates, quasi-optimality and the harmonic gap, discrete Poincaré and inf-sup
+    constants, energy identities, constraint residuals and departure of non-reducing
+    constraints, leapfrog, Crank-Nicolson signed systems, Runge-Kutta and rational schemes,
+    perturbations, variational crimes, and the concrete finite element families (Whitney,
+    P_r, P_r^-, cubical Q^-) and physical instances.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals (the thesis and the FEEC literature), the
+        statement design and the review standard; agents proposed and proved lemmas.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge statement and its definitions were
+    written for this submission and reviewed by the author; the Solution translates them to the
+    library Feec (Solution/Bridge.lean) and applies Feec.HilbertComplex.ConformingFamily.feec.
+
+fidelity:
+  divergences: >-
+    (1) Mathlib has no C0-semigroups: the exact evolutions are operator families S asserted to
+    exist and characterized by strong solutions (unique, D(A) dense, contraction), so S is
+    unique for t >= 0; for the wave, S is a unitary group with S(s+t) = S(s) S(t).
+    (2) Convergence statements are qualitative (every datum, every family of discrete data
+    converging to it); the rates of the source are not part of the compared statement.
+    (3) The cochain projections are uniformly bounded in W, the hypothesis of the smoothed
+    projections ([AFW2010] §5.5), stronger than graph-norm boundedness of [AFW2010] §3.3.
+    (4) The differential is encoded as d i j for all pairs, zero unless j = i + 1.
+    (5) Static cohomology: the map induced by the inclusion V_h ⊆ W is bijective eventually
+    (the source states the map induced by the projection; the two are inverse).
+    (6) The heat equation is u' = (d - d*)^2 u = -Δu, with discrete generator L_h^2 = -Δ_h.
+    (7) Windows: the evolutions live on the l2 sum of m consecutive degrees, with the window's
+    own closedness hypotheses for the heat equation (closed ranges of H; finite-dimensional
+    kernel of d - d* on the window).
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    The author reviewed the Challenge definitions and statement. Every merge of the library was
+    gated by a full build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound
+    only), regression snapshots and an independent AI review. No external mathematical review.
+
+alignment:
+  namespace: "FEEC"
+  statements:
+    - source: "[AFW2010], Thms 3.4, 3.8, 3.9"
+      lean: "FEEC.HilbertComplex.ConformingFamily.StaticVerdict"
+      module: "Challenge"
+      status: "proved (qualitative convergence)"
+      note: "Field `static` of FEEC.HilbertComplex.ConformingFamily.Verdict, proved by FEEC.feec."
+    - source: "[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [Thomee2006], Ch. 7"
+      lean: "FEEC.HilbertComplex.ConformingFamily.Verdict"
+      module: "Challenge"
+      status: "proved (qualitative convergence)"
+      note: "Field `wave`: well-posedness, unitary group, semidiscrete and theta-scheme convergence, propagation iff reducing."
+    - source: "[AFW2010], Thm 3.9; [GilletteHolstZhu2017]"
+      lean: "FEEC.HilbertComplex.ConformingFamily.Verdict"
+      module: "Challenge"
+      status: "proved (qualitative convergence)"
+      note: "Field `heat`."
+    - source: "all of the above"
+      lean: "FEEC.feec"
+      module: "Challenge"
+      status: "proved"
+      note: "The compared theorem; proved in Solution.lean from Feec.HilbertComplex.ConformingFamily.feec."
+
+acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

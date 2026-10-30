@@ -243,6 +243,22 @@ toolchain's libraries:
 LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-gate
 ```
 
+## Palomar submission
+
+`palomar/` is a nested Lake project packaging the headline for the
+[Palomar registry](https://palomar-registry.org): `palomar/Challenge.lean` restates over Mathlib
+alone (about 330 lines) a Hilbert complex on ℤ, conforming families and the conclusions of the
+crown (static: cohomology, well-posedness and convergence of the mixed method; wave and heat on
+every window: well-posedness, semidiscrete and θ-scheme convergence for every datum, propagation
+of constraints iff reducing) as one theorem, FEEC.feec; `palomar/Solution.lean` proves it from the
+crown through `palomar/Solution/Bridge.lean`, with the challenge's definitions copied verbatim in
+`palomar/Solution/Defs.lean`. `palomar/comparator.json` and `palomar/formalization.yaml` are the
+submission metadata. Build and judge it with
+
+```bash
+cd palomar && lake build && lake comparator
+```
+
 ## Citing
 
 ```bibtex

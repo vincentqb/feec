@@ -109,6 +109,14 @@ def leanFiles (dir : System.FilePath) : IO (Array System.FilePath) := do
     if !(← f.isDir) then out := out.push f
   return out.qsort (·.toString < ·.toString)
 
+/-- The Palomar submission packages: the directories `palomar/*` with a `comparator.json`,
+sorted. -/
+def palomarPackages : IO (Array System.FilePath) := do
+  let mut out := #[]
+  for e in ← System.FilePath.readDir "palomar" do
+    if ← (e.path / "comparator.json").pathExists then out := out.push e.path
+  return out.qsort (·.toString < ·.toString)
+
 /-- `Feec/Foo/Bar.lean` ↦ `Feec.Foo.Bar`. -/
 def moduleOfPath (f : System.FilePath) : String :=
   ".".intercalate ((f.withExtension "").components)

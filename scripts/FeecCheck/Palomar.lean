@@ -6,14 +6,15 @@ public import FeecCheck.Util
 # Palomar gate
 
 `lake exe feec-palomar` (also run by `lake exe feec-gate`). Checks the Palomar submission
-packages `palomar/static/`, `palomar/dynamic/` and `palomar/periodic/` (README, "Palomar
-submission"); in each:
+packages, the directories `palomar/*/` with a `comparator.json` (`palomarPackages`; README,
+"Palomar submission"); in each:
 
 1. `Solution/Defs.lean` is the copy of the definitions of `Challenge.lean`: the same imports and,
-   after the module docstring, the same text with the compared theorem (the first name of
-   `theorem_names` in `comparator.json`; its docstring, statement and proof, up to the next blank
-   line) removed. The module docstring of `Defs.lean` is its own. `lake exe feec-palomar --write`
-   regenerates `Defs.lean` from the challenge, keeping that docstring.
+   after the module docstring, the same text with the compared theorems (the names of
+   `theorem_names` in `comparator.json`, declared fully qualified or inside their namespaces;
+   each with its docstring, statement and proof, up to the next blank line) removed. The module
+   docstring of `Defs.lean` is its own. `lake exe feec-palomar --write` regenerates `Defs.lean`
+   from the challenge, keeping that docstring.
 2. `lake build` in the package succeeds (its bridge `Solution/Bridge.lean` still compiles against
    `Feec`), with no warning but the `sorry` of `Challenge.lean`.
 
@@ -25,9 +26,6 @@ public section
 
 namespace FeecCheck.Palomar
 
-/-- The submission packages. -/
-def packages : Array System.FilePath := #["palomar/static", "palomar/dynamic", "palomar/periodic"]
-
 /-- The lines before the module docstring, the module docstring (`/-!` to the first line `-/`)
 and the lines after it. -/
 def splitDoc (ls : Array String) : Option (Array String × Array String × Array String) := do
@@ -35,30 +33,39 @@ def splitDoc (ls : Array String) : Option (Array String × Array String × Array
   let j ← (ls.extract i ls.size).findIdx? (· == "-/")
   return (ls.extract 0 i, ls.extract i (i + j + 1), ls.extract (i + j + 1) ls.size)
 
-/-- The text without the theorem `name`: from the docstring opening before `theorem name ` to the
-next blank line, inclusive. -/
+/-- The text without the theorem `name`: from the docstring opening before `theorem n ` to the
+next blank line, inclusive, where `n` is the longest dotted suffix of `name` (`A.B.c`, `B.c`,
+`c`) declared so, whatever the enclosing namespaces. -/
 def dropTheorem (name : String) (ls : Array String) : Option (Array String) := do
-  let t ← ls.findIdx? (·.startsWith s!"theorem {name} ")
+  let parts := name.splitOn "."
+  let t ← (List.range parts.length).findSome? fun k =>
+    ls.findIdx? (·.startsWith s!"theorem {".".intercalate (parts.drop k)} ")
   let d ← ((ls.extract 0 t).toList.reverse.findIdx? (·.startsWith "/--")).map (t - 1 - ·)
   let b := ((ls.extract t ls.size).findIdx? (· == "")).getD (ls.size - t)
   return ls.extract 0 d ++ ls.extract (t + b + 1) ls.size
 
-/-- The compared theorem: the first entry of `theorem_names` in `comparator.json`, without the
-namespace `FEEC.`. -/
-def theoremName (json : String) : Option String :=
-  match json.splitOn "\"theorem_names\": [\"FEEC." with
-  | [_, rest] => (rest.splitOn "\"").head?
+/-- The compared theorems: the entries of `theorem_names` in `comparator.json`, fully qualified
+(`FEEC.staticFEEC`). -/
+def theoremNames (json : String) : Option (List String) :=
+  match json.splitOn "\"theorem_names\": [" with
+  | [_, rest] => do
+    let names := ((rest.splitOn "]").headD "").splitOn "," |>.map fun n =>
+      String.ofList (n.toList.filter fun c => c != '"' && !c.isWhitespace)
+    if names.any (·.isEmpty) then none else some names
   | _ => none
 
-/-- The expected `Defs.lean`: the imports and the body of the challenge (without the theorem)
+/-- The expected `Defs.lean`: the imports and the body of the challenge (without the theorems)
 around the module docstring of the current `Defs.lean`. -/
-def expected (pkg : System.FilePath) (name chal cur : String) : Except String String := do
+def expected (pkg : System.FilePath) (names : List String) (chal cur : String) :
+    Except String String := do
   let some (imps, _, body) := splitDoc (pyLines chal)
     | throw s!"{pkg / "Challenge.lean"}: no module docstring"
   let some (_, doc, _) := splitDoc (pyLines cur)
     | throw s!"{pkg / "Solution" / "Defs.lean"}: no module docstring"
-  let some body := dropTheorem name body
-    | throw s!"{pkg / "Challenge.lean"}: no `theorem {name}`"
+  let body ← names.foldlM (init := body) fun body name => do
+    let some body := dropTheorem name body
+      | throw s!"{pkg / "Challenge.lean"}: no `theorem {name}`"
+    return body
   return "\n".intercalate (imps ++ doc ++ body).toList ++ "\n"
 
 /-- `lake build` in `pkg`, outside the environment of the calling `lake exe`. -/
@@ -78,10 +85,10 @@ def build (pkg : System.FilePath) : IO (Except String Unit) := do
 def runPackage (pkg : System.FilePath) (write doBuild : Bool) (rep : Report) : IO Report := do
   let mut rep := rep
   let defs := pkg / "Solution" / "Defs.lean"
-  let some name := theoremName (← readText (pkg / "comparator.json"))
-    | return rep.addError s!"{pkg / "comparator.json"}: no theorem name `FEEC.…`"
+  let some names := theoremNames (← readText (pkg / "comparator.json"))
+    | return rep.addError s!"{pkg / "comparator.json"}: no theorem names `Namespace.name`"
   let cur ← readText defs
-  match expected pkg name (← readText (pkg / "Challenge.lean")) cur with
+  match expected pkg names (← readText (pkg / "Challenge.lean")) cur with
   | .error e => rep := rep.addError e
   | .ok exp =>
     if exp != cur then
@@ -93,11 +100,13 @@ def runPackage (pkg : System.FilePath) (write doBuild : Bool) (rep : Report) : I
           regenerate with `lake exe feec-palomar --write`"
   if doBuild then
     if let .error e ← build pkg then rep := rep.addError e
-  return rep.addInfo s!"Palomar: {defs} against FEEC.{name} of {pkg / "Challenge.lean"}\
+  return rep.addInfo s!"Palomar: {defs} against {", ".intercalate names} of \
+    {pkg / "Challenge.lean"}\
     {if doBuild then s!", lake build in {pkg}" else ""}"
 
 def run (write : Bool := false) (doBuild : Bool := true) : IO Report := do
   let mut rep : Report := { name := "Palomar" }
+  let packages ← palomarPackages
   for pkg in packages do
     rep ← runPackage pkg write doBuild rep
   return rep.addInfo s!"Palomar: {packages.size} packages, {rep.errors.size} errors"

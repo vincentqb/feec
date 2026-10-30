@@ -277,9 +277,19 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes).
   the homotopy formula and the Koszul decompositions ([AFW2006], §3; [ArnoldBoffiBonizzoni2015], §3); from
   `Feec.Algebra.PolynomialFormDim` and `Feec.Algebra.CubicalForm`. Its challenge has its own
   vocabulary (polynomial forms over `MvPolynomial`), not the Hilbert complexes above.
+* `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
+  VonNeumann.inequality_dissipative, VonNeumann.cayley_contraction, about 100 lines, Mathlib
+  vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of
+  every complex inner product space, its rational form on Hilbert spaces,
+  `‖r(τA)‖ ≤ sup_y |r(iy)|` for real rational `r` without poles in the closed left half-plane,
+  bounded dissipative `A` over ℝ or ℂ and `τ ≥ 0` (A-stable schemes are unconditionally stable),
+  and the Cayley transform of an m-dissipative, possibly unbounded, `A` as the unique contraction
+  mapping `x - τAx` to `x + τAx`; from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
+  `Feec.TimeStepping.RationalScheme.ofBounded` and `Feec.TimeStepping.norm_cayley_le`.
 
 The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
-package that `Solution/Defs.lean` is the challenge without its compared theorem
+package (each directory `palomar/*/` with a `comparator.json`) that `Solution/Defs.lean` is the
+challenge without its compared theorems
 (`lake exe feec-palomar --write` regenerates it) and that the package builds against `Feec`.
 Before a submission, judge each with the comparator (several minutes):
 
@@ -287,6 +297,7 @@ Before a submission, judge each with the comparator (several minutes):
 cd palomar/static && lake build && lake comparator
 cd palomar/dynamic && lake build && lake comparator
 cd palomar/periodic && lake build && lake comparator
+cd palomar/vonneumann && lake build && lake comparator
 ```
 
 ## Citing

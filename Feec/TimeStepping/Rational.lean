@@ -1,5 +1,6 @@
 module
 
+public import Feec.ForMathlib.Analysis.Polynomial
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
 public import Feec.TimeStepping.Convergence
 
@@ -239,6 +240,35 @@ theorem supNorm_nonneg : 0 ≤ r.supNorm := (norm_nonneg _).trans (r.norm_eval_l
 
 theorem isAStable_iff : r.IsAStable ↔ r.supNorm ≤ 1 :=
   ⟨fun h => ciSup_le h, fun h y => (r.norm_eval_le_supNorm y).trans h⟩
+
+/-! ### Rational functions bounded on the imaginary axis -/
+
+/-- **The scheme `p/q` of a real rational function bounded on the imaginary axis**: `q` has no
+zero for `re z ≤ 0` and `|p(iy)/q(iy)| ≤ C` for `y ∈ ℝ` (for `C = 1`, A-stability); then
+`deg p ≤ deg q` (`Polynomial.natDegree_le_of_norm_div_le` along `y ↦ iy`). -/
+def ofBounded (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {C : ℝ}
+    (hC : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ C) :
+    RationalScheme where
+  num := p
+  den := q
+  natDegree_num_le := by
+    have hl : Filter.Tendsto (fun y : ℝ => (y : ℂ) * Complex.I) Filter.atTop
+        (Bornology.cobounded ℂ) := by
+      rw [← tendsto_norm_atTop_iff_cobounded]
+      simpa using Filter.tendsto_abs_atTop_atTop
+    have h := Polynomial.natDegree_le_of_norm_div_le (P := p.map (algebraMap ℝ ℂ))
+      (Q := q.map (algebraMap ℝ ℂ)) hl (C := C)
+      (Filter.eventually_map.2 (.of_forall fun y => by
+        rw [eval_map_algebraMap]; exact hq _ (by simp)))
+      (Filter.eventually_map.2 (.of_forall fun y => by
+        rw [eval_map_algebraMap, eval_map_algebraMap]; exact hC y))
+    simpa only [natDegree_map] using h
+  aeval_den_ne_zero := hq
+
+theorem supNorm_ofBounded_le {p q : ℝ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {C : ℝ}
+    (hC : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ C) :
+    (ofBounded p q hq hC).supNorm ≤ C :=
+  ciSup_le hC
 
 /-! ### The operators `r(τ A)` -/
 

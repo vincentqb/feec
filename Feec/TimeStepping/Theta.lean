@@ -317,6 +317,52 @@ theorem norm_thetaStep_le (hA : A.IsMDissipative) (hθ : 1 / 2 ≤ RCLike.re θ)
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun u => by
     simpa using norm_thetaStep_apply_le hA hθ hτ u
 
+/-! ### The Cayley transform of an m-dissipative operator -/
+
+private theorem re_half : RCLike.re (1 / 2 : 𝕜) = 1 / 2 := by
+  rw [show (1 / 2 : 𝕜) = ((1 / 2 : ℝ) : 𝕜) by push_cast; ring, RCLike.ofReal_re]
+
+/-- For m-dissipative `A` and `s > 0`, `cayley A s u` is the CN step from `u`. -/
+theorem _root_.LinearPMap.IsMDissipative.isCNStep_cayley (hA : A.IsMDissipative) (hs : 0 < s)
+    (u : E) : IsCNStep A s u (cayley A s u) := by
+  rw [isCNStep_iff_isThetaStep, cayley_eq_thetaStep]
+  exact isThetaStep_thetaStep_of_isMDissipative hA (by rw [re_half]; norm_num) (by linarith) u
+
+/-- **The Cayley transform of an m-dissipative operator is a contraction**: `‖cayley A s‖ ≤ 1`
+for `s > 0`. -/
+theorem norm_cayley_le (hA : A.IsMDissipative) (hs : 0 < s) : ‖cayley A s‖ ≤ 1 := by
+  rw [cayley_eq_thetaStep]
+  exact norm_thetaStep_le hA (by rw [re_half]) (by linarith)
+
+/-- **The Cayley transform maps `x - s A x` to `x + s A x`** for m-dissipative `A`, `s > 0`. -/
+theorem cayley_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) (x : A.domain) :
+    cayley A s ((x : E) - (s : 𝕜) • A x) = x + (s : 𝕜) • A x := by
+  have h2 : (x : E) + (s : 𝕜) • A x + ((x : E) - (s : 𝕜) • A x) = (2 : 𝕜) • (x : E) := by
+    module
+  have hm : (x : E) + (s : 𝕜) • A x + ((x : E) - (s : 𝕜) • A x) ∈ A.domain :=
+    h2 ▸ A.domain.smul_mem _ x.2
+  have hstep : IsCNStep A s ((x : E) - (s : 𝕜) • A x) (x + (s : 𝕜) • A x) := by
+    refine ⟨hm, ?_⟩
+    have : A ⟨_, hm⟩ = (2 : 𝕜) • A x :=
+      (congrArg A (Subtype.ext h2 : (⟨_, hm⟩ : A.domain) = (2 : 𝕜) • x)).trans (A.map_smul _ _)
+    rw [this]; module
+  exact (hA.isCNStep_cayley hs _).unique hA.dissipative hs.le hstep
+
+/-- **The Cayley transform is the only operator mapping `x - s A x` to `x + s A x`**, for
+m-dissipative `A` and `s > 0` (`1 - s A` is onto). -/
+theorem eq_cayley_of_apply_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) {T : E →L[𝕜] E}
+    (hT : ∀ x : A.domain, T ((x : E) - (s : 𝕜) • A x) = x + (s : 𝕜) • A x) : T = cayley A s := by
+  ext u
+  obtain ⟨hw, e⟩ := hA.isCNStep_cayley hs u
+  set x : A.domain := (2 : 𝕜)⁻¹ • ⟨_, hw⟩
+  have hAx : A x = (2 : 𝕜)⁻¹ • A ⟨_, hw⟩ := A.map_smul _ _
+  have hx : (x : E) = (2 : 𝕜)⁻¹ • (cayley A s u + u) := rfl
+  have h1 : (x : E) - (s : 𝕜) • A x = u := by
+    rw [hAx, hx, smul_comm, ← e]; module
+  have h2 : (x : E) + (s : 𝕜) • A x = cayley A s u := by
+    rw [hAx, hx, smul_comm, ← e]; module
+  rw [← h1, hT, h2, h1]
+
 /-- **The θ-scheme with `re θ = 1/2` is an isometry** for skew-adjoint `A` and every `τ ≠ 0`
 (both time directions); for `θ = 1/2` this is `norm_cayley_apply`. -/
 theorem norm_thetaStep_apply_eq (hA : A.IsSkewAdjoint) (hθ : RCLike.re θ = 1 / 2) (hτ : τ ≠ 0)

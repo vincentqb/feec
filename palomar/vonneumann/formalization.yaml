@@ -1,0 +1,216 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of von Neumann's inequality and A-stable
+# time stepping (`palomar/vonneumann/`).
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: "Von Neumann's inequality and the unconditional stability of A-stable time stepping"
+  description: >-
+    A contraction is an operator that never lengthens a vector. Von Neumann proved in 1951 that
+    applying a polynomial to a contraction on a Hilbert space never produces an operator larger
+    than the largest value the polynomial takes on the unit circle: the circle controls every
+    contraction at once. Numerical time stepping is where this pays off. To solve u' = A u, a
+    one-step method replaces the exact evolution e^(tau A) by a rational function r(tau A) of the
+    step; if r is bounded by 1 on the imaginary axis (A-stability) and A is dissipative (energy
+    never grows), then von Neumann's inequality, transported to the half-plane by the Cayley
+    transform, shows r(tau A) is itself a contraction for every step size tau: the scheme cannot
+    blow up however large the step.
+    In Lean 4 over Mathlib: (1) for a contraction T of a complex inner product space, not
+    necessarily complete, and a complex polynomial p, ||p(T)|| <= sup over the unit circle of
+    |p|; (2) on a complex Hilbert space, for polynomials p, q with q free of zeros in the closed
+    unit disc, q(T) is invertible and ||p(T) q(T)^(-1)|| <= sup over the unit circle of |p/q|;
+    (3) for a real rational function r = p/q without poles in the closed left half-plane and
+    with |r(iy)| <= C on the imaginary axis, every bounded dissipative operator A
+    (re <Ax, x> <= 0) of a real or complex Hilbert space and every step tau >= 0, q(tau A) is
+    invertible and ||r(tau A)|| <= C, so A-stable schemes (C = 1) are contractions for every
+    step size; (4) for an m-dissipative, possibly unbounded, A and tau > 0, exactly one bounded
+    operator maps x - tau A x to x + tau A x on the domain of A, the Cayley transform, and it is
+    a contraction, the bridge by which (2) bounds r(tau A) for every m-dissipative A. The
+    statements use Mathlib's polynomials (Polynomial.aeval), bounded operators, partially defined
+    linear maps (LinearPMap) and Ring.inverse only; the proof is the library Feec of this
+    repository (Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.TimeStepping.Rational,
+    Feec.TimeStepping.Theta).
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.FA", "math.NA"]
+  msc2020: ["47A30", "47A60", "47A25", "47B44", "65L20", "65M12"]
+
+sources:
+  - title: "Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes"
+    authors:
+      - "John von Neumann"
+    id: "doi:10.1002/mana.3210040124"
+    type: "article"
+    location: "Math. Nachr. 4 (1951)"
+    relationship: "formalizes"
+    note: >-
+      Von Neumann's inequality: the closed unit disc is a spectral set of every contraction of a
+      Hilbert space (here: for polynomials on every complex inner product space, and for
+      rational functions with poles outside the closed disc on Hilbert spaces).
+    author_endorsement: "n/a"
+  - title: "Solving Ordinary Differential Equations II"
+    authors:
+      - "Ernst Hairer"
+      - "Gerhard Wanner"
+    id: "doi:10.1007/978-3-642-05221-7"
+    type: "book"
+    location: "Springer Ser. Comput. Math. 14, 2nd ed. (1996), §IV.3 and §IV.11"
+    relationship: "formalizes"
+    note: >-
+      §IV.3: stability functions and A-stability (|r(z)| <= 1 on the closed left half-plane).
+      §IV.11 (Contractivity for linear problems, von Neumann's theorem): ||r(hA)|| <= sup over
+      re z <= 0 of |r(z)| for dissipative A in a Euclidean norm, stated there in finite
+      dimension; here on every real or complex Hilbert space. Section numbers recalled, not
+      checked against the printed book.
+    author_endorsement: "not-contacted"
+  - title: "The stability of rational approximations of analytic semigroups"
+    authors:
+      - "Michel Crouzeix"
+      - "Stig Larsson"
+      - "Sergei Piskarev"
+      - "Vidar Thomée"
+    id: "doi:10.1007/BF01990345"
+    type: "article"
+    location: "BIT 33 (1993)"
+    relationship: "background"
+    note: >-
+      Stability of rational approximations r(tau A)^n of analytic semigroups in Banach spaces;
+      context for the stability question, not the source of the statements formalized here.
+    author_endorsement: "not-contacted"
+  - title: "On Rational Approximations of Semigroups"
+    authors:
+      - "Philip Brenner"
+      - "Vidar Thomée"
+    id: "doi:10.1137/0716051"
+    type: "article"
+    location: "SIAM J. Numer. Anal. 16 (1979)"
+    relationship: "background"
+    note: "Stability and convergence of rational approximations r(tau A)^n of e^(t A)."
+    author_endorsement: "not-contacted"
+  - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
+    authors:
+      - "Amnon Pazy"
+    id: "doi:10.1007/978-1-4612-5561-1"
+    type: "book"
+    location: "Appl. Math. Sci. 44, Springer (1983), §1.4"
+    relationship: "background"
+    note: "m-dissipative operators (dissipative with mu - A onto for some mu > 0), Lumer-Phillips."
+    author_endorsement: "not-contacted"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: VonNeumann.inequality, VonNeumann.inequality_rational,
+    VonNeumann.inequality_dissipative and VonNeumann.cayley_contraction (Challenge.lean). Not
+    compared (proved in Feec, outside the statement): the bound ||r(tau A)|| <= sup_y |r(iy)|
+    for m-dissipative, possibly unbounded, A as one statement
+    (Feec.TimeStepping.RationalScheme.norm_step_le), consistency of order p and the
+    Brenner-Thomee error bound ||r(tau L)^n y - e^(tL) y|| <= K t tau^p ||L^(p+1) y||, symmetric
+    schemes as isometries for skew L, the theta-schemes and Runge-Kutta stability functions.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals, the statement design and the review standard;
+        agents proposed and proved lemmas and wrote this submission.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design and review of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge statements were written for this
+    submission; the Solution applies ContinuousLinearMap.norm_aeval_le_of_norm_le_one,
+    ContinuousLinearMap.norm_aeval_mul_inverse_le and, through
+    Feec.TimeStepping.RationalScheme.ofBounded (Solution/Bridge.lean),
+    Feec.TimeStepping.RationalScheme.norm_apply_le, and Feec.TimeStepping.norm_cayley_le,
+    cayley_sub_smul and eq_cayley_of_apply_sub_smul.
+
+fidelity:
+  divergences: >-
+    (1) The supremum is expressed by a bound C: if |p| <= C on the unit circle then
+    ||p(T)|| <= C (equivalent to ||p(T)|| <= sup; by the maximum principle the circle and the
+    closed disc give the same supremum, and the circle is the weaker hypothesis).
+    (2) Von Neumann's inequality in its classical generality is for Hilbert spaces; the
+    polynomial form here holds on every complex inner product space, and the rational form
+    needs completeness (for the invertibility of q(T)).
+    (3) The half-plane statement is for bounded dissipative A. For m-dissipative,
+    possibly unbounded, A the challenge states the Cayley contraction (4) instead of a bound on
+    r(tau A): Mathlib has no functional calculus r(tau A) for unbounded A, and defining it in the
+    challenge (as r~(C_tau) with r~(w) = r((w - 1)/(w + 1)), Feec.TimeStepping.RationalScheme.step)
+    would add custom definitions; the bound then follows from (2) applied to C_tau and r~ (over
+    the complex numbers; over the reals through complexification), proved in Feec
+    (Feec.TimeStepping.RationalScheme.norm_step_le) but not compared. The hypothesis of (3) is
+    the bound on the imaginary axis, weaker than on the closed left half-plane (equivalent to it
+    by the maximum principle, given no poles there), so (3) is the stronger form.
+    (4) The rational function in the dissipative form has real coefficients (as stability
+    functions of Runge-Kutta methods do), so that it acts over 𝕜 = ℝ as well as ℂ; complex
+    coefficients are not covered by (3). r is the pair (p, q), not a reduced fraction; its
+    poles are the zeros of q, assumed outside the closed left half-plane. No consistency with
+    e^z is assumed: (3) holds for every such r, schemes or not.
+    (5) Unconditional stability is the bound ||r(tau A)|| <= 1; the bound for powers,
+    ||r(tau A)^n|| <= 1, follows by submultiplicativity and is not stated.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    The author reviewed the Challenge statements. Every merge of the library was gated by a full
+    build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
+    independent AI review. No external mathematical review.
+
+alignment:
+  namespace: "VonNeumann"
+  statements:
+    - source: "[VonNeumann1951]"
+      lean: "VonNeumann.inequality"
+      module: "Challenge"
+      status: "proved"
+      note: "Polynomials, every complex inner product space."
+    - source: "[VonNeumann1951]"
+      lean: "VonNeumann.inequality_rational"
+      module: "Challenge"
+      status: "proved"
+      note: "Rational functions with poles outside the closed unit disc, complex Hilbert spaces."
+    - source: "[HairerWanner1996], §IV.11"
+      lean: "VonNeumann.inequality_dissipative"
+      module: "Challenge"
+      status: "proved"
+      note: "Real rational functions bounded on the imaginary axis, bounded dissipative A, tau >= 0."
+    - source: "[Pazy1983], §1.4 (m-dissipative operators)"
+      lean: "VonNeumann.cayley_contraction"
+      module: "Challenge"
+      status: "proved"
+      note: "The Cayley transform of an m-dissipative, possibly unbounded, A is a contraction."
+
+acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

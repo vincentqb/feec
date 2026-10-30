@@ -25,7 +25,6 @@ superlinear degree `≤ r`.
 ## Main definitions
 
 * `Feec.Koszul.superlinDeg s α`: the superlinear degree of `x^α dx_s`;
-* `Feec.Koszul.supportForm R d k S`: the span of the monomial `k`-forms `x^α dx_s`, `α ∈ S s`;
 * `Feec.Koszul.superlinForm R d r k`: `M_rΛᵏ`, the `k`-forms whose coefficient `ω_s` is supported
   on the exponents of superlinear degree `≤ r`;
 * `Feec.Koszul.serendipityForm R d r k`: `S_rΛᵏ`.
@@ -131,50 +130,6 @@ theorem superlinDeg_filter_le {f : d → Option R} {s t : Finset d} (hs : s ⊆ 
 theorem superlinSupport_mono {r r' : ℕ} (h : r ≤ r') (s : Finset d) :
     superlinSupport r s ⊆ superlinSupport r' s := fun _ hα => le_trans hα h
 
-section Support
-
-omit [LinearOrder d] [Fintype d]
-variable [DecidableEq d]
-
-variable (R d) in
-/-- The `k`-forms whose coefficients `ω_s` are supported on `S s`: the span of the monomial forms
-`x^α dx_s`, `#s = k`, `α ∈ S s`. -/
-def supportForm (k : ℕ) (S : Finset d → Set (d →₀ ℕ)) : Submodule R (PolyForm R d) where
-  carrier := {ω | IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (S s)}
-  zero_mem' := ⟨fun _ _ => rfl, fun _ => Submodule.zero_mem _⟩
-  add_mem' {ω η} hω hη := ⟨fun s hs => by simp [hω.1 s hs, hη.1 s hs],
-    fun s => Submodule.add_mem _ (hω.2 s) (hη.2 s)⟩
-  smul_mem' c ω hω := ⟨fun s hs => by simp [hω.1 s hs], fun s => Submodule.smul_mem _ c (hω.2 s)⟩
-
-omit [DecidableEq d] in
-theorem supportForm_mono {S T : Finset d → Set (d →₀ ℕ)} (h : ∀ s, S s ⊆ T s) (k : ℕ) :
-    supportForm R d k S ≤ supportForm R d k T :=
-  fun _ hω => ⟨hω.1, fun s => restrictSupport_mono R (h s) (hω.2 s)⟩
-
-/-- The monomial form `x^α dx_s` lies in `supportForm #s S` when `α ∈ S s`. -/
-theorem single_monomial_mem_supportForm {S : Finset d → Set (d →₀ ℕ)} {s : Finset d}
-    {α : d →₀ ℕ} (hα : α ∈ S s) :
-    (Pi.single s (monomial α 1) : PolyForm R d) ∈ supportForm R d #s S := by
-  refine ⟨fun t ht => Pi.single_eq_of_ne (fun h => ht (by rw [h])) _, fun t => ?_⟩
-  by_cases ht : t = s
-  · subst ht; rw [Pi.single_eq_same]
-    exact (monomial_mem_restrictSupport R).2 (Or.inl hα)
-  · rw [Pi.single_eq_of_ne ht]; exact Submodule.zero_mem _
-
-/-- A form of `supportForm k S` is a combination of its monomial forms: a submodule containing
-them contains `supportForm k S`. -/
-theorem supportForm_le_of_single [Fintype d] {k : ℕ} {S : Finset d → Set (d →₀ ℕ)}
-    {V : Submodule R (PolyForm R d)}
-    (h : ∀ s : Finset d, #s = k → ∀ α ∈ S s, (Pi.single s (monomial α 1) : PolyForm R d) ∈ V) :
-    supportForm R d k S ≤ V := fun ω hω => by
-  rw [← univ_sum_single ω]
-  refine Submodule.sum_mem _ fun s _ => ?_
-  by_cases hs : #s = k
-  · exact map_mem_of_mem_restrictSupport (LinearMap.single R (fun _ => MvPolynomial d R) s)
-      (fun α hα => h s hs α hα) (hω.2 s)
-  · rw [hω.1 s hs, Pi.single_zero]; exact Submodule.zero_mem _
-
-end Support
 
 variable (R d) in
 /-- `M_rΛᵏ`: the `k`-forms spanned by the monomial forms of superlinear degree `≤ r`.
@@ -189,24 +144,34 @@ theorem superlinForm_mono {r r' : ℕ} (h : r ≤ r') (k : ℕ) :
     superlinForm R d r k ≤ superlinForm R d r' k :=
   supportForm_mono (fun s => superlinSupport_mono h s) k
 
-/-- `M_rΛᵏ ⊆ Q_{r+1}⁻Λᵏ`: a monomial form of superlinear degree `≤ r` has degree `≤ r` in the
-variables of the alternator and `≤ r + 1` in the others. -/
+/-- A monomial form of superlinear degree `≤ r` has degree `≤ r` in the variables of the
+alternator and `≤ r + 1` in the others. -/
+theorem superlinSupport_subset_cubeSupport (r : ℕ) (s : Finset d) :
+    superlinSupport r s ⊆ cubeSupport (fun _ => r + 1) s := fun α (hα : superlinDeg s α ≤ r) j => by
+  have := (single_le_sum (f := fun i => if i ∉ s ∧ α i = 1 then 0 else α i)
+    (fun _ _ => Nat.zero_le _) (mem_univ j)).trans hα
+  show α j + _ ≤ r + 1
+  by_cases hj : j ∈ s
+  · simp only [hj, not_true_eq_false, false_and, ↓reduceIte] at this ⊢; omega
+  · by_cases h1 : α j = 1
+    · simp [hj, h1]
+    · simp only [hj, h1, not_false_eq_true, and_false, ↓reduceIte] at this ⊢; omega
+
+/-- `M_rΛᵏ ⊆ Q_{r+1}⁻Λᵏ`. -/
 theorem superlinForm_le_cubeFormMinus (r k : ℕ) :
     superlinForm R d r k ≤ cubeFormMinus R (fun _ => r + 1) k :=
-  fun _ hω => ⟨hω.1, fun s => restrictSupport_mono R (s := superlinSupport r s)
-    (t := cubeSupport (fun _ => r + 1) s) (fun α hα j => by
-      have := (single_le_sum (f := fun i => if i ∉ s ∧ α i = 1 then 0 else α i)
-        (fun _ _ => Nat.zero_le _) (mem_univ j)).trans hα
-      show α j + _ ≤ r + 1
-      by_cases hj : j ∈ s
-      · simp only [hj, not_true_eq_false, false_and, ↓reduceIte] at this ⊢; omega
-      · by_cases h1 : α j = 1
-        · simp [hj, h1]
-        · simp only [hj, h1, not_false_eq_true, and_false, ↓reduceIte] at this ⊢; omega)
-    (hω.2 s)⟩
+  supportForm_mono (superlinSupport_subset_cubeSupport r) k
 
 instance {K : Type*} [Field K] (r k : ℕ) : FiniteDimensional K (superlinForm K d r k) :=
   Submodule.finiteDimensional_of_le (superlinForm_le_cubeFormMinus r k)
+
+/-- `dim M_rΛᵏ = Σ_{#s = k} #{α | sdeg (x^α dx_s) ≤ r}`, the number of monomial `k`-forms of
+superlinear degree `≤ r`. -/
+theorem finrank_superlinForm {K : Type*} [Field K] (r k : ℕ) :
+    Module.finrank K (superlinForm K d r k) =
+      ∑ s ∈ powersetCard k univ, Nat.card (superlinSupport (d := d) r s) :=
+  finrank_supportForm fun s =>
+    (Set.toFinite (cubeSupport (fun _ => r + 1) s)).subset (superlinSupport_subset_cubeSupport r s)
 
 /-- **`P_rΛᵏ ⊆ M_rΛᵏ`**: the superlinear degree is at most the degree. -/
 theorem polyForm_le_superlinForm (r k : ℕ) : polyForm R d r k ≤ superlinForm R d r k :=

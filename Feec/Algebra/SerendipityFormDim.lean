@@ -663,7 +663,8 @@ theorem finrank_highForm {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Submodule.finrank_map_subtype_eq]
 
 /-- **The dimension of the serendipity forms** ([ArnoldAwanou2014], Thm 3.6 (1)): for `r ≥ 1`,
-`dim S_rΛᵏ = dim M_rΛᵏ`, the number of monomial `k`-forms of superlinear degree `≤ r`. -/
+`dim S_rΛᵏ = dim M_rΛᵏ`, the number of monomial `k`-forms of superlinear degree `≤ r`
+(`finrank_superlinForm`). -/
 theorem finrank_serendipityForm {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Module.finrank K (serendipityForm K d r k) = Module.finrank K (superlinForm K d r k) := by
   set A := (highForm K d (r - 1) (k + 1)).map (koszulₗ K d)

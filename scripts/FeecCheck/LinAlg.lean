@@ -12,8 +12,10 @@ Hermitian system of `BlockMatrix` in every basis of the discrete space
 (`Feec.HilbertComplex.DissipFEEC.crankNicolson_signed_mulVec_iff`,
 `Feec.HilbertComplex.SkewFEEC.crankNicolson_signed`), and the static verdict carries the uniform
 discrete inf-sup condition, proved by Fortin's criterion with the Fortin operators built from the
-cochain projections (`Feec.HilbertComplex.GraphFamily.StaticVerdict.infSup`,
-`Feec.HilbertComplex.Subcomplex.CochainProjection.exists_isFortinOperator`).
+cochain projections (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.infSup`,
+`Feec.HilbertComplex.Subcomplex.CochainProjection.exists_isFortinOperator`, for projections bounded
+in the graph norm; for projections bounded in `W` in degree `j`,
+`Feec.HilbertComplex.Subcomplex.CochainProjection.exists_isFortinOperator_of_norm_le`).
 
 On the way, the testing lemmas `Feec.TimeStepping.inner_eq_sum_repr` and
 `Feec.TimeStepping.eq_of_inner_basis` were generalized from `ℝ` to every `RCLike` field, and the
@@ -82,5 +84,36 @@ theorem linalg_old_existsUnique_discrete_isSaddleSolution [CompleteSpace Xh] [Co
   existsUnique_discrete_isSaddleSolution hP hC hβ (fun q _ => hb q) hZ hZs F G
 
 end Hilbert
+
+
+section Fortin
+
+open Feec.HilbertComplex
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex 𝕜 c W} {S : H.Subcomplex} [∀ i, FiniteDimensional 𝕜 (S.V i)]
+  (P : S.CochainProjection)
+
+/-- The old `Feec.HilbertComplex.Subcomplex.CochainProjection.exists_isFortinOperator` (bound in
+`W` in degree `j`, constant `C c_P + 1`). -/
+theorem linalg_old_exists_isFortinOperator {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP : 0 ≤ cP)
+    (hC : 0 ≤ C)
+    (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+    (hπ : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) :
+    ∃ Pf : H.domainSpace j → H.domainSpace j, Variational.IsFortinOperator
+      (H.constraintForm j k) (S.domainSub j) (S.boundariesW k) Pf (C * cP + 1) :=
+  P.exists_isFortinOperator_of_norm_le hjk hcP hC hP hπ
+
+/-- The old `Feec.HilbertComplex.Subcomplex.CochainProjection.infSup` (bound in `W` in degree `j`,
+`β = ((c_P + 1)(C c_P + 1))⁻¹`). -/
+theorem linalg_old_infSup {j k : ι} (hjk : c.Rel j k) {cP C : ℝ} (hcP : 0 ≤ cP) (hC : 0 ≤ C)
+    (hP : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
+    (hπ : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) {q : W k} (hq : q ∈ S.boundariesW k) :
+    ((cP + 1) * (C * cP + 1))⁻¹ * ‖q‖ ≤
+      ‖((H.constraintForm j k).flip q).comp (S.domainSub j).subtypeL‖ :=
+  P.infSup_of_norm_le hjk hcP hC hP hπ hq
+
+end Fortin
 
 end FeecCheck.LinAlg

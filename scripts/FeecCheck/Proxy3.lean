@@ -1,4 +1,6 @@
-import Feec.Algebra.Proxy3
+module
+
+public import Feec.Algebra.Proxy3
 
 /-!
 # Regression tests: the vector proxies of `Feec.Algebra.Proxy3`
@@ -10,6 +12,8 @@ partial derivatives, `Feec.Koszul.Proxy3.vec1_coordD`, `vec2_coordD`, `vol_coord
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
+
+public section
 
 namespace FeecCheck.Proxy3
 

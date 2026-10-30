@@ -1,5 +1,7 @@
-import Feec.Instances.Maxwell
-import Feec.HilbertComplex.Approximation.ApproxComplexCrime
+module
+
+public import Feec.Instances.Maxwell
+public import Feec.HilbertComplex.Approximation.ApproxComplexCrime
 
 /-!
 # Regression tests: the concrete Maxwell verdicts
@@ -31,6 +33,8 @@ new API:
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
+
+public section
 
 open scoped InnerProductSpace
 open Set Filter Topology LinearPMap Metric

@@ -1,4 +1,6 @@
-import FeecCheck.Util
+module
+
+public import FeecCheck.Util
 
 /-!
 # Citation gate
@@ -24,6 +26,8 @@ The BibTeX reader is the small subset `docs/references.bib` uses: `@type{key,` e
 `author`/`title` fields, `and`-separated `Last, First` (or `Last, Jr, First`) names, the accents
 `\'`, `\"`, `` \` ``, `\v` and the math titles `{$L^2$}`, `{$L_2$}`.
 -/
+
+public section
 
 namespace FeecCheck.Citations
 

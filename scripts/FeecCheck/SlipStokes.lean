@@ -1,4 +1,6 @@
-import Feec.Instances.Corollaries
+module
+
+public import Feec.Instances.Corollaries
 
 /-!
 # Regression tests: the slip Stokes witness on the cube
@@ -12,6 +14,8 @@ results verbatim and derive them from the new API.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
+
+public section
 
 open Set LinearPMap
 

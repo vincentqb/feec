@@ -1,5 +1,7 @@
-import FeecCheck.Util
-import FeecCheck.Env
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
 
 /-!
 # Declaration snapshot
@@ -23,6 +25,8 @@ set and empty otherwise:
 This produced `docs/migration/old_theorems.tsv` once, at the pre-migration HEAD; that file is
 frozen, so `OUT` is required (there is no default that would overwrite it).
 -/
+
+public section
 
 namespace FeecCheck.Snapshot
 

@@ -1,6 +1,8 @@
-import FeecCheck.Util
-import FeecCheck.Env
-import FeecCheck.ThesisMap
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
+public import FeecCheck.ThesisMap
 
 /-!
 # Migration coverage gate
@@ -25,6 +27,8 @@ Fails on a missing declaration, a malformed row, a `main` row mapped to `deleted
 thesis citation missing from `THESIS_MAP.md`. With `--strict`, also while some row of
 `old_theorems.tsv` is not covered by `map.tsv` (the end-of-migration gate).
 -/
+
+public section
 
 namespace FeecCheck.MapCheck
 

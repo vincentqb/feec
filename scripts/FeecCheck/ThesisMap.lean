@@ -1,5 +1,7 @@
-import FeecCheck.Util
-import FeecCheck.Env
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
 
 /-!
 # Thesis map
@@ -22,6 +24,8 @@ not up to date. Sources, per declaration of a `Feec.*` module:
 Rerun after renames: entries follow the declarations as long as the new declarations carry a
 `[QuennevilleBelair2015], ...` citation in their docstring.
 -/
+
+public section
 
 namespace FeecCheck.ThesisMap
 

@@ -1,4 +1,6 @@
-import FeecCheck.Util
+module
+
+public import FeecCheck.Util
 
 /-!
 # Layering gate
@@ -32,6 +34,8 @@ here means the table was edited wrongly):
 
 Violations are reported at the import line, `path:line`.
 -/
+
+public section
 
 namespace FeecCheck.Layering
 

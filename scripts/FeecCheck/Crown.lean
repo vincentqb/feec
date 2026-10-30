@@ -1,18 +1,20 @@
-import Feec.HilbertComplex.Approximation.StaticFEEC
-import Feec.HilbertComplex.Approximation.Ritz
-import Feec.HilbertComplex.Approximation.RitzResolvent
-import Feec.HilbertComplex.Approximation.ApproxConforming
-import Feec.HilbertComplex.Approximation.FullyDiscrete
-import Feec.HilbertComplex.Approximation.Crown
-import Feec.Models.Cube.HeatFEM
-import Feec.Models.Cube.InhomogeneousError
-import Feec.Models.Cube.SobolevRateHigh
-import Feec.Models.Cube.TangentialRate
-import Feec.Models.Parallelepiped.FiniteElement
-import Feec.Models.StarShaped.PolyFiniteElement
-import Feec.Instances.EinsteinBianchiFEM
-import Feec.Instances.EinsteinBianchiFEMDefect
-import Feec.Instances.EuclideanBand
+module
+
+public import Feec.HilbertComplex.Approximation.StaticFEEC
+public import Feec.HilbertComplex.Approximation.Ritz
+public import Feec.HilbertComplex.Approximation.RitzResolvent
+public import Feec.HilbertComplex.Approximation.ApproxConforming
+public import Feec.HilbertComplex.Approximation.FullyDiscrete
+public import Feec.HilbertComplex.Approximation.Crown
+public import Feec.Models.Cube.HeatFEM
+public import Feec.Models.Cube.InhomogeneousError
+public import Feec.Models.Cube.SobolevRateHigh
+public import Feec.Models.Cube.TangentialRate
+public import Feec.Models.Parallelepiped.FiniteElement
+public import Feec.Models.StarShaped.PolyFiniteElement
+public import Feec.Instances.EinsteinBianchiFEM
+public import Feec.Instances.EinsteinBianchiFEMDefect
+public import Feec.Instances.EuclideanBand
 
 /-!
 # Regression tests: nothing is lost on the way to the crown
@@ -159,6 +161,8 @@ This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`) and fails that build if a conclusion is
 dropped or a re-derivation breaks.
 -/
+
+public section
 
 open Set Filter Topology
 
@@ -3101,18 +3105,18 @@ abbrev mirrorFEMCore : (mirrorFEMApprox hT hB).Core :=
 
 /-- The old helpers of the orbit rate classes (`mirrorSource_zero`, `toSourceFree`, `pairInit`,
 `mirrorFEMApprox_sol_pairInit`, `norm_sub_sol_pairInit_le`), verbatim. -/
-private theorem mirrorSource_zero (N : ℕ) (t : ℝ) : mirrorSource hT hB N 0 t = 0 :=
+theorem mirrorSource_zero (N : ℕ) (t : ℝ) : mirrorSource hT hB N 0 t = 0 :=
   ext_inner_right ℝ fun v => by
     rw [inner_mirrorSource, Pi.zero_apply, inner_zero_left, inner_zero_left]
 
 /-- A solution of (6.5) with the (vanishing) projected source as a solution without source. -/
-private def toSourceFree (N : ℕ) {T : ℝ}
+def toSourceFree (N : ℕ) {T : ℝ}
     (s : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) :
     Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T 0 :=
   s.ofEqOn fun t _ => (mirrorSource_zero hT hB N t).symm
 
 /-- The discrete initial value of a pair of solutions of (6.5) (real and imaginary parts). -/
-private def pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
+def pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) :
     (mirrorFEMApprox hT hB).X N :=
   WithLp.toLp 2 (DiscreteSolution.hiddenInit hT0 (toSourceFree hT hB N s),
@@ -3120,7 +3124,7 @@ private def pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
 
 /-- **The complex discrete solution from a pair of solutions of (6.5)**:
 `ι' e^{tL'}(v, v') = Rt(state of s)(t) + i Rt(state of s')(t)`. -/
-private theorem mirrorFEMApprox_sol_pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
+theorem mirrorFEMApprox_sol_pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     (mirrorFEMApprox hT hB).sol N (pairInit hT hB N hT0 s s') t =
@@ -3132,7 +3136,7 @@ private theorem mirrorFEMApprox_sol_pairInit (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
 /-- **The error of a pair of solutions of (6.5)** against the TSD solution: at most the error of
 the real part plus the error of the imaginary part, each being the quantity of
 `mirror_waveFEM` for the data `ξ₀` and `-i ξ₀`. -/
-private theorem norm_sub_sol_pairInit_le (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
+theorem norm_sub_sol_pairInit_le (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0)) {t : ℝ}
     (ht : t ∈ Icc 0 T) {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ) :
     ‖y - (mirrorFEMApprox hT hB).sol N (pairInit hT hB N hT0 s s') t‖ ≤
@@ -3142,16 +3146,16 @@ private theorem norm_sub_sol_pairInit_le (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
   exact norm_sub_mirrorReEmb_le hy _ _
 
 /-- The constant of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain`. -/
-private def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose
+def mirrorRateK : ℝ := (mirror_waveFEM_rate_of_mem_domain hT hB).choose
 
-private theorem mirrorRateK_nonneg : 0 ≤ mirrorRateK hT hB :=
+theorem mirrorRateK_nonneg : 0 ≤ mirrorRateK hT hB :=
   (mirror_waveFEM_rate_of_mem_domain hT hB).choose_spec.1
 
 -- the budget of the deleted `EinsteinBianchiFEMMirrorCore` (main): obtaining the discrete
 -- solution of the model rate unfolds the mirror scheme `mirrorWave`
 set_option maxHeartbeats 400000 in
 /-- The model rate (`mirror_waveFEM_rate_of_mem_domain`) for one TSD datum of `D(L³)`. -/
-private theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ}
+theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ}
     (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) (h3 : (tsdDatumOf hx).LLU₀ ∈ complexQ.wave.domain) {T : ℝ} (hT0 : 0 < T) :
     ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
       ∀ t ∈ Icc 0 T, tsdErr ((tsdDatumOf hx).U t) (dState hT hB N (toSourceFree hT hB N sh) t) ≤
@@ -3164,7 +3168,7 @@ private theorem mirrorFEM_rate_datum (N : ℕ) {x : PiLp 2 SpaceQ}
 /-- **The model rate of the mirror scheme for TSD data of `D(L³)`**
 (`mirror_waveFEM_rate_of_mem_domain` for `ξ₀` and `-i ξ₀`): for every `N`, some discrete initial
 value gives `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_N ‖ξ₀‖_{L³}` on `[0, T]`. -/
-private theorem mirrorFEM_hrate {T : ℝ} (hT0 : 0 < T) :
+theorem mirrorFEM_hrate {T : ℝ} (hT0 : 0 < T) :
     ∀ x ∈ mirrorL3Data, ∀ N, ∃ v : (mirrorFEMApprox hT hB).X N, ∀ t ∈ Icc 0 T,
       ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
         2 * mirrorRateK hT hB * (1 + T) * meshSize N ^ (1 : ℝ) * mirrorL3Norm x := by
@@ -3193,21 +3197,21 @@ private theorem mirrorFEM_hrate {T : ℝ} (hT0 : 0 < T) :
 
 /-- **The rate class of order `1`**: TSD data of `D(L³)` with the norm
 `‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`, `C = 6 K (1 + T)` and `C' = 0` (orbit comparison). -/
-private def mirrorFEMRate (T : ℝ) (hT0 : 0 < T) : (mirrorFEMApprox hT hB).RateClass T :=
+def mirrorFEMRate (T : ℝ) (hT0 : 0 < T) : (mirrorFEMApprox hT hB).RateClass T :=
   ApproxFEEC.orbitRate (mirrorFEMApprox_isOrthogonal hT hB) mirrorL3Data mirrorL3Norm meshSize 1
     (2 * mirrorRateK hT hB * (1 + T)) (mirrorFEM_hrate hT hB hT0)
 
 /-- The constant of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_sobolev_of_add_two`. -/
-private def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose
+def mirrorSobK : ℝ := (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose
 
-private theorem mirrorSobK_nonneg : 0 ≤ mirrorSobK hT hB :=
+theorem mirrorSobK_nonneg : 0 ≤ mirrorSobK hT hB :=
   (mirror_waveFEM_rate_sobolev_of_add_two hT hB).choose_spec.1
 
 -- the budget of the deleted `EinsteinBianchiFEMMirrorCore` (main): obtaining the discrete
 -- solution of the model rate unfolds the mirror scheme `mirrorWave`
 set_option maxHeartbeats 400000 in
 /-- The model Sobolev rate (`mirror_waveFEM_rate_sobolev_of_add_two`) for one TSD datum. -/
-private theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
+theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
     (hx : x ∈ tsdQℝ ⊓ complexQℝ.wave.domainSq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     (h : MemSobState (2 + s) x) {T : ℝ} (hT0 : 0 < T) :
     ∃ sh : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T (mirrorSource hT hB N 0),
@@ -3219,7 +3223,7 @@ private theorem mirrorFEM_sobolev_datum (N : ℕ) {x : PiLp 2 SpaceQ}
 
 /-- **The model Sobolev rate of the mirror scheme** (`mirror_waveFEM_rate_sobolev_of_add_two` for
 `ξ₀` and `-i ξ₀`): `‖e^{tL} ξ₀ - ι' e^{tL'} v‖ ≤ 2 K (1 + T) h_Nˢ ‖ξ₀‖_{2+s}` on `[0, T]`. -/
-private theorem mirrorFEM_hrate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+theorem mirrorFEM_hrate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     ∀ x ∈ mirrorSobData s, ∀ N, ∃ v : (mirrorFEMApprox hT hB).X N, ∀ t ∈ Icc 0 T,
       ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N v t‖ ≤
         2 * mirrorSobK hT hB * (1 + T) * meshSize N ^ s * √(sobState (2 + s) x) := by
@@ -3249,7 +3253,7 @@ private theorem mirrorFEM_hrate_sobolev {T s : ℝ} (hT0 : 0 < T) (hs0 : 0 ≤ s
 
 /-- **The rate class of order `s ∈ [0, 1]`**: TSD data with mirror extension in `H^{2+s}`, norm
 `‖ξ₀‖_{2+s}`, `C = 6 K (1 + T)` and `C' = 0`. -/
-private def mirrorFEMRateSobolev (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+def mirrorFEMRateSobolev (T s : ℝ) (hT0 : 0 < T) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     (mirrorFEMApprox hT hB).RateClass T :=
   ApproxFEEC.orbitRate (mirrorFEMApprox_isOrthogonal hT hB) (mirrorSobData s)
     (fun x => √(sobState (2 + s) x)) meshSize s (2 * mirrorSobK hT hB * (1 + T))

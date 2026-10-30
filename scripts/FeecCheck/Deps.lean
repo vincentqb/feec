@@ -1,8 +1,10 @@
-import FeecCheck.Util
-import FeecCheck.Env
-import FeecCheck.Snapshot
-import FeecCheck.Citations
-import FeecCheck.MapCheck
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
+public import FeecCheck.Snapshot
+public import FeecCheck.Citations
+public import FeecCheck.MapCheck
 
 /-!
 # Dependency analysis of `Feec` (minimality)
@@ -67,6 +69,8 @@ The analysis was validated by compiling stripped copies of eleven modules from n
 (437 dead groups, about 3950 lines) against the built library with the options of
 `lakefile.toml` (`lake env lean -DmaxSynthPendingDepth=3 …`): no error, no warning.
 -/
+
+public section
 
 namespace FeecCheck.Deps
 

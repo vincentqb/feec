@@ -1,5 +1,7 @@
-import Feec.HilbertComplex.Approximation.ApproxFEEC
-import Feec.HilbertComplex.Approximation.ApproxConforming
+module
+
+public import Feec.HilbertComplex.Approximation.ApproxFEEC
+public import Feec.HilbertComplex.Approximation.ApproxConforming
 
 /-!
 # Regression tests: nothing is lost from the verdicts
@@ -26,6 +28,8 @@ This file is part of the `FeecCheck` library, not of `Feec`: it is compiled by
 `lake build FeecCheck` (and so by `lake exe feec-gate`), not by a plain `lake build`, and fails
 that build if a conclusion is dropped.
 -/
+
+public section
 
 open scoped InnerProductSpace
 open Set Filter Topology LinearPMap Metric

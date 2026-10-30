@@ -1,9 +1,14 @@
-import FeecCheck.Main
-import FeecCheck.Deps
-import FeecCheck.Verdicts
-import FeecCheck.Crown
-import FeecCheck.MaxwellInstances
-import FeecCheck.SlipStokes
-import FeecCheck.Bridges
-import FeecCheck.LinAlg
-import FeecCheck.Proxy3
+module
+
+public import FeecCheck.Main
+public import FeecCheck.Deps
+public import FeecCheck.Verdicts
+public import FeecCheck.Crown
+public import FeecCheck.MaxwellInstances
+public import FeecCheck.SlipStokes
+public import FeecCheck.Bridges
+public import FeecCheck.LinAlg
+public import FeecCheck.Proxy3
+
+public section
+

@@ -1,5 +1,7 @@
-import FeecCheck.Util
-import FeecCheck.Env
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
 
 /-!
 # Axiom audit
@@ -10,6 +12,8 @@ axioms are among `propext`, `Classical.choice`, `Quot.sound`. This rejects `sorr
 `sorry`/`admit`), `Lean.ofReduceBool`/`Lean.trustCompiler` (from `native_decide`) and any user
 `axiom`. Each offending constant is reported at its declaration, `path:line`.
 -/
+
+public section
 
 namespace FeecCheck.Axioms
 

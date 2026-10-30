@@ -1,6 +1,8 @@
-import FeecCheck.Util
-import FeecCheck.Env
-import FeecCheck.Citations
+module
+
+public import FeecCheck.Util
+public import FeecCheck.Env
+public import FeecCheck.Citations
 
 /-!
 # Doc-name gate
@@ -60,6 +62,8 @@ minimal. Citation keys of `docs/references.bib` (`AFW2010`) also resolve.
 
 Violations are reported as `path:line: message` at the line where the span starts.
 -/
+
+public section
 
 namespace FeecCheck.DocNames
 

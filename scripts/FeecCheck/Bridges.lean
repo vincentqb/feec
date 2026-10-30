@@ -1,4 +1,6 @@
-import Feec.Instances.EinsteinBianchiSpectral
+module
+
+public import Feec.Instances.EinsteinBianchiSpectral
 
 /-!
 # Regression tests: the mirror bands of the Einstein–Bianchi spectral families
@@ -19,6 +21,8 @@ verbatim (with the deleted definition `box` unfolded) and derive them from the n
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
+
+public section
 
 namespace FeecCheck.Bridges
 

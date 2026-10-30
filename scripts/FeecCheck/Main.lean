@@ -1,11 +1,13 @@
-import FeecCheck.Axioms
-import FeecCheck.Citations
-import FeecCheck.DocNames
-import FeecCheck.Layering
-import FeecCheck.MapCheck
-import FeecCheck.Naming
-import FeecCheck.Snapshot
-import FeecCheck.ThesisMap
+module
+
+public import FeecCheck.Axioms
+public import FeecCheck.Citations
+public import FeecCheck.DocNames
+public import FeecCheck.Layering
+public import FeecCheck.MapCheck
+public import FeecCheck.Naming
+public import FeecCheck.Snapshot
+public import FeecCheck.ThesisMap
 
 /-!
 # Command-line entry points
@@ -29,6 +31,8 @@ Run from the root of the repository (as `lake exe` does) after `lake build`; the
 import `Feec` declare `needs = ["Feec"]` (`feec-gate` and `feec-docnames` also `"FeecCheck"`), so
 `lake exe` builds the libraries first.
 -/
+
+public section
 
 namespace FeecCheck
 

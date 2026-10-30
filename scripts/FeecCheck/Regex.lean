@@ -1,3 +1,5 @@
+module
+
 /-!
 # A small backtracking regular-expression engine
 
@@ -12,6 +14,8 @@ Character classes follow Python's Unicode `str` semantics where the checks depen
 and blocks that occur in the library (Latin, Greek, Cyrillic, IPA and phonetic modifiers, super- and
 subscripts, letterlike symbols, number forms, mathematical alphanumerics).
 -/
+
+public section
 
 namespace FeecCheck
 

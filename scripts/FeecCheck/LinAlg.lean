@@ -1,5 +1,7 @@
-import Feec.HilbertComplex.Approximation.FullyDiscrete
-import Feec.HilbertComplex.Approximation.StaticFEEC
+module
+
+public import Feec.HilbertComplex.Approximation.FullyDiscrete
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!
 # Regression tests: the block systems and Fortin operators under the crown
@@ -22,6 +24,8 @@ theorems `linalg_old_*` state the old results verbatim and derive them from the 
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
+
+public section
 
 namespace FeecCheck.LinAlg
 

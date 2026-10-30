@@ -256,18 +256,19 @@ nested Lake project sharing the dependencies of the root package
 Mathlib alone, a `Solution.lean` proving it from `Feec` through `Solution/Bridge.lean` (the
 challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.json` and
 `formalization.yaml`. Both copy the same vocabulary (Hilbert complexes on ℤ, subcomplexes,
-cochain projections, conforming families).
+cochain projections, families of subcomplexes).
 
-* `palomar/static/` (theorem FEEC.staticFEEC, about 220 lines): the a priori theory of the mixed Hodge
-  Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses (cochain projections bounded in the
-  graph norm, approximation in the graph norm, closed range in degrees `j` and `j + 1`):
-  eventual cohomology isomorphism, vanishing harmonic gap, uniform discrete Poincaré inequality,
-  unique solvability, quasi-optimal graph-norm error bound; from
-  `Feec.HilbertComplex.GraphFamily.staticFEEC`.
-* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 300 lines): the Hodge wave and heat equations on
-  every window for `W`-bounded projections: well-posedness, convergence for every datum, the
-  error bound `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + C (1 + t) M` by the graph-norm best
-  approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
+* `palomar/static/` (theorem FEEC.staticFEEC, about 250 lines): the a priori theory of the mixed
+  Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the degrees used (cochain
+  projections bounded in the graph norm in degrees `j - 1`, `j`; closed range in degrees `j`,
+  `j + 1`): the gap estimate on `ℌʲ`, uniform discrete Poincaré inequality, unique solvability
+  and uniform stability, quasi-optimal graph-norm error bound; with approximation in the graph
+  norm and finite-dimensional `ℌʲ`, vanishing harmonic gap, eventual cohomology isomorphism and
+  convergence; from `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`.
+* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 310 lines): the Hodge wave and heat
+  equations on every window for `W`-bounded projections: well-posedness, convergence for every
+  datum, the error bound `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + C (1 + t) M` by the graph-norm
+  best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
 

@@ -56,7 +56,7 @@ open Filter Topology Set LinearPMap
 
 namespace FEEC
 
-/-! ### Hilbert complexes and conforming families -/
+/-! ### Hilbert complexes and families of subcomplexes -/
 
 /-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
 zero unless `j = i + 1`, with `R(d i j) ⊆ D(d j k)` and `d j k ∘ d i j = 0`. -/
@@ -93,9 +93,10 @@ structure Subcomplex.CochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcom
   comm : ∀ i j (x : (H.d i j).domain),
     H.d i j ⟨π i x, S.le_domain i j (mem i x)⟩ = π j (H.d i j x)
 
-/-- A **conforming family** of `H` along the filter `l` (the refinement `h → 0`):
-finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ`. -/
-structure ConformingFamily (κ : Type*) where
+/-- A **family of subcomplexes** of `H` along the filter `l` (the refinement `h → 0`):
+finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ`. It carries no bound and no
+approximation property: these are hypotheses of the theorem. -/
+structure SubcomplexFamily (κ : Type*) where
   /-- the filter of the refinement `h → 0` -/
   l : Filter κ
   /-- the subcomplexes -/
@@ -104,7 +105,7 @@ structure ConformingFamily (κ : Type*) where
   /-- the cochain projections -/
   π : ∀ h, (V h).CochainProjection
 
-attribute [instance] ConformingFamily.finiteDimensional
+attribute [instance] SubcomplexFamily.finiteDimensional
 
 end HilbertComplex
 
@@ -140,7 +141,7 @@ def semiflow {X : Submodule 𝕜 E} (B : X →L[𝕜] X) (t : ℝ) : X →L[𝕜
 
 /-- **The FEEC theorem for an evolution** `u' = A u` approximated by `uₕ' = Bₕ uₕ` on the
 finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique strong solution
-from `x ∈ D(A)` (`D(A)` dense) and has nonincreasing norm; the semidiscrete solutions
+from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, and `S t x` has nonincreasing norm; the semidiscrete solutions
 `exp(t Bₕ) vₕ` (`semiflow`) converge to `S t x` uniformly on `[0, T]` from every family
 `vₕ → x`; and so do the θ-schemes `wₙ₊₁ - wₙ = τₕ Bₕ (θ wₙ₊₁ + (1 - θ) wₙ)`, `θ ≥ 1/2`, as
 `h, τₕ → 0`. -/
@@ -150,6 +151,7 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
   solution (x : E) (hx : x ∈ A.domain) (T : ℝ) : IsStrongSolution A (Icc 0 T) fun t => S t x
   unique (x : E) (hx : x ∈ A.domain) (T : ℝ) (u : ℝ → E) (hu0 : u 0 = x)
     (hu : IsStrongSolution A (Icc 0 T) u) : EqOn u (fun t => S t x) (Icc 0 T)
+  initial (x : E) : S 0 x = x
   contraction (x : E) {t : ℝ} (ht : 0 ≤ t) : ‖S t x‖ ≤ ‖x‖
   semidiscrete (x : E) (v : ∀ h, X h) (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) :
     TendstoUniformlyOn (fun h (t : ℝ) => (semiflow (B h) t (v h) : E))
@@ -204,9 +206,9 @@ def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m
 
 end Window
 
-namespace ConformingFamily
+namespace SubcomplexFamily
 
-variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.ConformingFamily κ) (a : ℤ) (m : ℕ)
+variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) (a : ℤ) (m : ℕ)
 
 /-- The discrete total space `Xₕ = Vₕᵃ ⊕ ⋯ ⊕ Vₕ^{a+m-1}`. -/
 def Xh (h : κ) : Submodule 𝕜 (Total W a m) where
@@ -262,7 +264,8 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
   /-- a closed constraint `K` propagates iff it reduces `L` -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
-  /-- and then the residual `dist(uₕ(t), K)` of a discrete solution is at most its error -/
+  /-- and then the residual `dist(uₕ(t), K)` of a discrete solution is at most its error (from
+  `propagates_iff`, since `S t x ∈ K`) -/
   residual_le (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection]
     (hK : IsReducing (H.wave a m) K) {x : Total W a m} (hx : x ∈ K) (h : κ) (v : F.Xh a m h)
     (t : ℝ) : Metric.infDist (semiflow (F.Lh a m h) t v : Total W a m) K ≤
@@ -280,7 +283,7 @@ structure DynamicVerdict : Prop where
     [FiniteDimensional 𝕜 (H.wave a m).ker] : ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
 
-end ConformingFamily
+end SubcomplexFamily
 
 end HilbertComplex
 
@@ -289,11 +292,11 @@ end HilbertComplex
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The FEEC theorem for the Hodge wave and heat equations** ([QuennevilleBelair2015], Thms 4.6,
-4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a conforming
-family whose cochain projections are bounded uniformly in `W`, `‖πₕ x‖ ≤ C ‖x‖`, and which
+4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a family of
+subcomplexes whose cochain projections are bounded uniformly in `W`, `‖πₕ x‖ ≤ C ‖x‖`, and which
 approximates every `w ∈ Wⁱ`. On every window, `F` satisfies the wave and heat verdicts
-(`ConformingFamily.DynamicVerdict`). -/
-theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.ConformingFamily κ)
+(`SubcomplexFamily.DynamicVerdict`). -/
+theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
     (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
     (happrox : ∀ (i : ℤ) (w : W i),
       Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0))

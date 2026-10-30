@@ -8,13 +8,13 @@ public import Feec.HilbertComplex.Approximation.Crown
 
 The vocabulary of `Challenge.lean` restates over Mathlib the objects of `Feec`: a Hilbert complex
 of the challenge is a `Feec.HilbertComplex` on `ComplexShape.up ℤ` (`HilbertComplex.toFeec`, the
-same fields), and so are its subcomplexes and cochain projections; a conforming family with
+same fields), and so are its subcomplexes and cochain projections; a family of subcomplexes with
 cochain projections bounded in `W` and the approximation property in `W` is a
-`Feec.HilbertComplex.ConformingFamily` (`ConformingFamily.toFeec`). This module identifies the
+`Feec.HilbertComplex.ConformingFamily` (`SubcomplexFamily.toFeec`). This module identifies the
 challenge's window operators and discrete operators with those of `Feec`, and turns the verdicts
 of `Feec.HilbertComplex.ConformingFamily.feec` and the conforming rate
 `Feec.HilbertComplex.ConstrainedFEEC.rate_le` into the conclusions of the challenge
-(`ConformingFamily.waveVerdict`, `ConformingFamily.heatVerdict`).
+(`SubcomplexFamily.waveVerdict`, `SubcomplexFamily.heatVerdict`).
 
 ## References
 
@@ -76,9 +76,9 @@ end Subcomplex
 
 variable {H} {κ : Type*}
 
-/-- **A conforming family with `W`-bounded projections and the approximation property in `W` is a
+/-- **A family of subcomplexes with `W`-bounded projections and the approximation property in `W` is a
 `Feec` conforming family.** -/
-def ConformingFamily.toFeec (F : H.ConformingFamily κ)
+def SubcomplexFamily.toFeec (F : H.SubcomplexFamily κ)
     (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
     (happrox : ∀ (i : ℤ) (w : W i),
       Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0)) :
@@ -91,8 +91,8 @@ def ConformingFamily.toFeec (F : H.ConformingFamily κ)
   approx := happrox
 
 /-- **The subcomplex `Vₕ` alone** as a `Feec` conforming family over `Unit` (along `⊥`): the
-setting of the per-`h` error bound (`ConformingFamily.error_le`). -/
-def ConformingFamily.single (F : H.ConformingFamily κ)
+setting of the per-`h` error bound (`SubcomplexFamily.error_le`). -/
+def SubcomplexFamily.single (F : H.SubcomplexFamily κ)
     (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖) (h : κ) :
     Feec.HilbertComplex.ConformingFamily H.toFeec Unit where
   l := ⊥
@@ -188,6 +188,7 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
     fun t ht => by simp only [hSS' t ht.1]
   unique x hx T u hu0 hu := fun t ht => by
     simp only [hSS' t ht.1]; exact huniq ⟨x, hx⟩ T u hu0 (isStrongSolution_iff.1 hu) ht
+  initial x := by rw [hSS' 0 le_rfl]; exact hS0 x
   contraction x t ht := by
     have := hanti x (Set.mem_Ici.2 le_rfl) ht ht
     dsimp only at this
@@ -284,9 +285,9 @@ theorem isReducing_iff {E : Type*} [NormedAddCommGroup E] [InnerProductSpace �
     IsReducing A K ↔ A.IsReducing K :=
   ⟨fun h => ⟨fun x => (h x).1, fun x => (h x).2⟩, fun h x => ⟨h.proj_mem x, h.comm x⟩⟩
 
-namespace HilbertComplex.ConformingFamily
+namespace HilbertComplex.SubcomplexFamily
 
-variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.ConformingFamily κ)
+variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ)
   (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
   (happrox : ∀ (i : ℤ) (w : W i),
     Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0))
@@ -340,7 +341,7 @@ theorem graphDist_nonneg (h : κ) (y : (H.totalD a m).domain) : 0 ≤ F.graphDis
 
 include hπ in
 /-- **The per-`h` error bound with slack** `δ > 0`, from the conforming rate
-`Feec.HilbertComplex.ConstrainedFEEC.rate_le` on the subcomplex `Vₕ` alone (`ConformingFamily.single`), for the
+`Feec.HilbertComplex.ConstrainedFEEC.rate_le` on the subcomplex `Vₕ` alone (`SubcomplexFamily.single`), for the
 rate class of the single datum `x` with norm `M + δ`. -/
 theorem error_le_add (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
     (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) (v : F.Xh a m h) {t M δ : ℝ}
@@ -502,6 +503,6 @@ theorem heatVerdict
       (VF.heat hcrw (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
         (hZ x) hv hτ0 T hε)
 
-end HilbertComplex.ConformingFamily
+end HilbertComplex.SubcomplexFamily
 
 end FEEC

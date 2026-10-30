@@ -25,7 +25,7 @@ open Filter Topology LinearPMap
 
 namespace FEEC
 
-/-! ### Hilbert complexes and conforming families -/
+/-! ### Hilbert complexes and families of subcomplexes -/
 
 /-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
 zero unless `j = i + 1`, with `R(d i j) ⊆ D(d j k)` and `d j k ∘ d i j = 0`. -/
@@ -62,9 +62,10 @@ structure Subcomplex.CochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcom
   comm : ∀ i j (x : (H.d i j).domain),
     H.d i j ⟨π i x, S.le_domain i j (mem i x)⟩ = π j (H.d i j x)
 
-/-- A **conforming family** of `H` along the filter `l` (the refinement `h → 0`):
-finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ`. -/
-structure ConformingFamily (κ : Type*) where
+/-- A **family of subcomplexes** of `H` along the filter `l` (the refinement `h → 0`):
+finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ`. It carries no bound and no
+approximation property: these are hypotheses of the theorem. -/
+structure SubcomplexFamily (κ : Type*) where
   /-- the filter of the refinement `h → 0` -/
   l : Filter κ
   /-- the subcomplexes -/
@@ -73,7 +74,7 @@ structure ConformingFamily (κ : Type*) where
   /-- the cochain projections -/
   π : ∀ h, (V h).CochainProjection
 
-attribute [instance] ConformingFamily.finiteDimensional
+attribute [instance] SubcomplexFamily.finiteDimensional
 
 /-! ### Cohomology and harmonic forms -/
 
@@ -113,7 +114,8 @@ def cohomologyIncl (i : ℤ) : S.cohomology i →ₗ[𝕜] H.cohomology i :=
     exact ⟨Submodule.inclusion (S.le_domain (i - 1) i) y, hy⟩
 
 /-- The distance `inf_{v ∈ Vⁱ} ‖x - v‖ + ‖y - d i j v‖`; for `y = d x`, the distance from `x` to
-`Vⁱ` in the graph norm of `d i j`. -/
+`Vⁱ` in the graph norm of `d i j`. (It takes `x` and `y` in `W`, so that it applies to the
+harmonic form `p` and to `P_𝔅 u`, with `y = 0`, without their membership in `D(d)`.) -/
 def graphDist (i j : ℤ) (x : W i) (y : W j) : ℝ :=
   ⨅ v : S.V i, ‖x - v‖ + ‖y - H.d i j ⟨v, S.le_domain i j v.2⟩‖
 
@@ -146,13 +148,32 @@ def mixedError (j : ℤ) (σ σ' : (H.d (j - 1) j).domain) (u u' : (H.d j (j + 1
 
 variable {H} {κ : Type*}
 
-/-- **The conclusions of the static FEEC theorem** in degree `j` for the conforming family `F`,
-with constants independent of `h`. -/
-structure ConformingFamily.StaticVerdict (F : H.ConformingFamily κ) (j : ℤ) : Prop where
-  /-- the inclusion `Vₕ ⊆ W` eventually induces an isomorphism `Hʲ(Vₕ) ≅ Hʲ` -/
-  cohomology : ∀ᶠ h in F.l, Function.Bijective ((F.V h).cohomologyIncl j)
-  /-- the harmonic gap tends to `0` -/
-  harmonicGap : Tendsto (fun h => (F.π h).harmonicGap j) F.l (𝓝 0)
+/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly in
+`h`: `‖πₕ x‖ + ‖d πₕ x‖ ≤ C (‖x‖ + ‖d x‖)` on `D(d i (i + 1))`. -/
+def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∃ C : ℝ, ∀ (h : κ) (x : (H.d i (i + 1)).domain), ‖(F.π h).π i x‖ +
+    ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖ ≤
+      C * (‖(x : W i)‖ + ‖H.d i (i + 1) x‖)
+
+/-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
+`Vₕⁱ` in the graph norm tends to `0`. -/
+def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∀ x : (H.d i (i + 1)).domain,
+    Tendsto (fun h => (F.V h).graphDist i (i + 1) x (H.d i (i + 1) x)) F.l (𝓝 0)
+
+/-- **The conclusions of the static FEEC theorem** in degree `j` for the family of subcomplexes
+`F`, with constants independent of `h`. -/
+structure SubcomplexFamily.StaticVerdict (F : H.SubcomplexFamily κ) (j : ℤ) : Prop where
+  /-- the gap from `ℌʲ` to `ℌₕʲ`: `dist(q, ℌₕʲ) ≤ ‖q - πₕ q‖` -/
+  harmonicDist (h : κ) (q : W j) (hq : q ∈ H.harmonic j) :
+    Metric.infDist q ((F.V h).harmonic j) ≤ ‖q - (F.π h).π j q‖
+  /-- where `F` approximates in degree `j` and `ℌʲ` is finite-dimensional, the harmonic gap tends
+  to `0` -/
+  harmonicGap (ha : F.Approximates j) [FiniteDimensional 𝕜 (H.harmonic j)] :
+    Tendsto (fun h => (F.π h).harmonicGap j) F.l (𝓝 0)
+  /-- and the inclusion `Vₕ ⊆ W` eventually induces an isomorphism `Hʲ(Vₕ) ≅ Hʲ` -/
+  cohomology (ha : F.Approximates j) [FiniteDimensional 𝕜 (H.harmonic j)] :
+    ∀ᶠ h in F.l, Function.Bijective ((F.V h).cohomologyIncl j)
   /-- the uniform discrete Poincaré inequality on `Vₕʲ ⊥ 𝔷ₕʲ` -/
   poincare : ∃ C : ℝ, ∀ (h : κ) (v : W j) (hv : v ∈ (F.V h).V j),
     (∀ z ∈ (F.V h).cycles j, ⟪z, v⟫_𝕜 = 0) →
@@ -164,6 +185,11 @@ structure ConformingFamily.StaticVerdict (F : H.ConformingFamily κ) (j : ℤ) :
   existsUnique_discrete (h : κ) (f : W j) :
     ∃! x : (H.d (j - 1) j).domain × (H.d j (j + 1)).domain × W j,
       H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f x.1 x.2.1 x.2.2
+  /-- the discrete solutions are stable: `‖σₕ‖_V + ‖uₕ‖_V + ‖pₕ‖ ≤ C ‖f‖` -/
+  stable : ∃ C : ℝ, ∀ (h : κ) {f : W j} {σh : (H.d (j - 1) j).domain}
+    {uh : (H.d j (j + 1)).domain} {ph : W j},
+    H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f σh uh ph →
+      H.mixedError j σh 0 uh 0 ph 0 ≤ C * ‖f‖
   /-- the discrete solutions are quasi-optimal in the graph norm, `P_𝔅` the orthogonal
   projection onto the closure of `𝔅ʲ` -/
   quasiOptimal : ∃ C : ℝ, ∀ {f : W j} {σ : (H.d (j - 1) j).domain} {u : (H.d j (j + 1)).domain}
@@ -174,8 +200,9 @@ structure ConformingFamily.StaticVerdict (F : H.ConformingFamily κ) (j : ℤ) :
       (F.V h).graphDist j (j + 1) u (H.d j (j + 1) u) + (F.V h).graphDist j (j + 1) p 0 +
       (F.π h).harmonicGap j *
         (F.V h).graphDist j (j + 1) ((H.boundaries j).topologicalClosure.starProjection u) 0)
-  /-- the discrete solutions converge in the graph norm -/
-  converges {f : W j} {σ : (H.d (j - 1) j).domain} {u : (H.d j (j + 1)).domain} {p : W j}
+  /-- where `F` approximates in degrees `j - 1` and `j`, the discrete solutions converge in the
+  graph norm -/
+  converges (ha : F.Approximates (j - 1)) (ha' : F.Approximates j) {f : W j} {σ : (H.d (j - 1) j).domain} {u : (H.d j (j + 1)).domain} {p : W j}
     (hs : H.IsMixedSolution j ⊤ ⊤ (H.harmonic j) f σ u p)
     {σh : κ → (H.d (j - 1) j).domain} {uh : κ → (H.d j (j + 1)).domain} {ph : κ → W j}
     (hsh : ∀ h, H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f

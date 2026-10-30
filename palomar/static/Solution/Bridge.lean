@@ -8,12 +8,12 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 The vocabulary of `Challenge.lean` restates over Mathlib the objects of `Feec`: a Hilbert complex
 of the challenge is a `Feec.HilbertComplex` on `ComplexShape.up ℤ` (`HilbertComplex.toFeec`, the
-same fields), and so are its subcomplexes and cochain projections; a conforming family with
-cochain projections bounded in the graph norm and the approximation property in the graph norm
-is a `Feec.HilbertComplex.GraphFamily` (`ConformingFamily.toGraphFamily`). This module identifies
+same fields), and so are its subcomplexes and cochain projections; a family of subcomplexes is a
+`Feec.HilbertComplex.SubcomplexFamily` (`SubcomplexFamily.toFeec`), to which the graph-norm bounds
+and the approximation property transfer degree by degree. This module identifies
 the challenge's cycles, boundaries, harmonic forms, harmonic gaps, graph-norm distances and mixed
-solutions with those of `Feec`, and turns the verdict of `Feec.HilbertComplex.GraphFamily.staticFEEC`
-into the conclusions of the challenge (`ConformingFamily.staticVerdict`).
+solutions with those of `Feec`, and turns the verdict of `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`
+into the conclusions of the challenge (`SubcomplexFamily.staticVerdict`).
 
 ## References
 
@@ -114,43 +114,42 @@ end Subcomplex
 
 variable {H} {κ : Type*}
 
-/-- **A conforming family with graph-bounded projections and the approximation property in the
-graph norm is a `Feec` graph-bounded family**: the bound `‖π x‖ + ‖d π x‖ ≤ C (‖x‖ + ‖d x‖)`
-gives `‖π x‖_V ≤ 2 |C| ‖x‖_V`. -/
-def ConformingFamily.toGraphFamily (F : H.ConformingFamily κ)
-    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : (H.d i (i + 1)).domain),
-      ‖(F.π h).π i x‖ +
-        ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖ ≤
-          C * (‖(x : W i)‖ + ‖H.d i (i + 1) x‖))
-    (happrox : ∀ (i : ℤ) (x : (H.d i (i + 1)).domain),
-      Tendsto (fun h => (F.V h).graphDist i (i + 1) x (H.d i (i + 1) x)) F.l (𝓝 0)) :
-    Feec.HilbertComplex.GraphFamily H.toFeec κ where
+/-- The family as a `Feec` family of subcomplexes. -/
+def SubcomplexFamily.toFeec (F : H.SubcomplexFamily κ) :
+    Feec.HilbertComplex.SubcomplexFamily H.toFeec κ where
   l := F.l
   V h := (F.V h).toFeec
   finiteDimensional h i := F.finiteDimensional h i
   π h := (F.π h).toFeec
-  bound_π := by
-    obtain ⟨C, hC⟩ := hπ
-    refine ⟨2 * |C|, fun h i => ?_⟩
-    rw [(ComplexShape.up ℤ).next_eq' (rel_add_one i)]
-    intro x
-    have h1 := (hC h i x).trans (mul_le_mul_of_nonneg_right (le_abs_self C) (by positivity))
-    set a := ‖(F.π h).π i x‖
-    set b := ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖
-    set r := ‖(x : W i)‖
-    set s := ‖H.d i (i + 1) x‖
-    change a ^ 2 + b ^ 2 ≤ (2 * |C|) ^ 2 * (r ^ 2 + s ^ 2)
-    have ha : 0 ≤ a := norm_nonneg _
-    have hb : 0 ≤ b := norm_nonneg _
-    have hr : 0 ≤ r := norm_nonneg _
-    have hs : 0 ≤ s := norm_nonneg _
-    have hc := abs_nonneg C
-    have h2 : (a + b) ^ 2 ≤ (|C| * (r + s)) ^ 2 := pow_le_pow_left₀ (by positivity) h1 2
-    nlinarith [sq_nonneg (r - s)]
-  approx i σ := by
-    have h0 := happrox i (H.toFeec.domainCoord i (i + 1) σ)
-    refine squeeze_zero (fun _ => Metric.infDist_nonneg) (fun h => ?_) h0
-    exact (F.V h).infDist_domainSub_le (rel_add_one i) σ
+
+/-- **Graph-norm bounds transfer**: `‖π x‖ + ‖d π x‖ ≤ C (‖x‖ + ‖d x‖)` gives
+`‖π x‖_V ≤ 2 |C| ‖x‖_V`. -/
+theorem SubcomplexFamily.isGraphBounded_toFeec {F : H.SubcomplexFamily κ} {i : ℤ}
+    (hπ : F.IsGraphBounded i) : F.toFeec.IsGraphBounded i := by
+  obtain ⟨C, hC⟩ := hπ
+  refine ⟨2 * |C|, fun h => ?_⟩
+  rw [(ComplexShape.up ℤ).next_eq' (rel_add_one i)]
+  intro x
+  have h1 := (hC h x).trans (mul_le_mul_of_nonneg_right (le_abs_self C) (by positivity))
+  set a := ‖(F.π h).π i x‖
+  set b := ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖
+  set r := ‖(x : W i)‖
+  set s := ‖H.d i (i + 1) x‖
+  change a ^ 2 + b ^ 2 ≤ (2 * |C|) ^ 2 * (r ^ 2 + s ^ 2)
+  have ha : 0 ≤ a := norm_nonneg _
+  have hb : 0 ≤ b := norm_nonneg _
+  have hr : 0 ≤ r := norm_nonneg _
+  have hs : 0 ≤ s := norm_nonneg _
+  have hc := abs_nonneg C
+  have h2 : (a + b) ^ 2 ≤ (|C| * (r + s)) ^ 2 := pow_le_pow_left₀ (by positivity) h1 2
+  nlinarith [sq_nonneg (r - s)]
+
+/-- **The approximation property transfers**: the graph-norm distance of `Feec` is at most that
+of the challenge. -/
+theorem SubcomplexFamily.approximates_toFeec {F : H.SubcomplexFamily κ} {i : ℤ}
+    (ha : F.Approximates i) : F.toFeec.Approximates i := fun σ =>
+  squeeze_zero (fun _ => Metric.infDist_nonneg)
+    (fun h => (F.V h).infDist_domainSub_le (rel_add_one i) σ) (ha (H.toFeec.domainCoord i (i + 1) σ))
 
 end HilbertComplex
 
@@ -411,27 +410,42 @@ theorem mixedError_le {j : ℤ} (σ σ' : H.toFeec.domainSpace (j - 1))
 
 variable {κ : Type*}
 
+/-- A discrete triple of `Feec`'s mixed space of norm at most `B` has graph-norm size at most
+`6 B` in the challenge. -/
+theorem Subcomplex.mixedError_le_of_norm_le (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
+    {j : ℤ} (x : S.toFeec.toHilbertComplex.MixedSpace (j - 1) j) {B : ℝ} (hx : ‖x‖ ≤ B) :
+    H.mixedError j (H.toFeec.domainCoord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x))) 0
+      (H.toFeec.domainCoord j (j + 1) (S.toFeec.embD j (WithLp.snd x).fst)) 0
+      (((WithLp.snd x).snd : S.toFeec.V j) : W j) 0 ≤ 6 * B := by
+  have e := mixedError_le (H := H) (j := j) (S.toFeec.embD (j - 1) (WithLp.fst x)) 0
+    (S.toFeec.embD j (WithLp.snd x).fst) 0 (((WithLp.snd x).snd : S.toFeec.V j) : W j) 0
+  rw [_root_.map_zero, _root_.map_zero] at e
+  refine e.trans ?_
+  simp only [sub_zero, LinearIsometry.norm_map, Submodule.norm_coe]
+  have n1 := WithLp.norm_fst_le (x := x)
+  have n2 := WithLp.norm_snd_le (x := x)
+  have n3 := WithLp.norm_fst_le (x := WithLp.snd x)
+  have n4 := WithLp.norm_snd_le (x := WithLp.snd x)
+  linarith
+
 theorem starProjection_congr {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     {K K' : Submodule 𝕜 E} (h : K = K') [K.HasOrthogonalProjection] [K'.HasOrthogonalProjection]
     (x : E) : K.starProjection x = K'.starProjection x := by
   subst h; rfl
 
-/-- **The static verdict** from `Feec`'s static FEEC theorem for graph-bounded families. -/
-theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
-    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : (H.d i (i + 1)).domain),
-      ‖(F.π h).π i x‖ +
-        ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖ ≤
-          C * (‖(x : W i)‖ + ‖H.d i (i + 1) x‖))
-    (happrox : ∀ (i : ℤ) (x : (H.d i (i + 1)).domain),
-      Tendsto (fun h => (F.V h).graphDist i (i + 1) x (H.d i (i + 1) x)) F.l (𝓝 0))
-    (j : ℤ) (hj : IsClosed (H.boundaries j : Set (W j)))
-    (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) [FiniteDimensional 𝕜 (H.harmonic j)] :
-    F.StaticVerdict j := by
-  set G := F.toGraphFamily hπ happrox
+/-- **The static verdict** from `Feec`'s static FEEC theorem for families of subcomplexes. -/
+theorem SubcomplexFamily.staticVerdict (F : H.SubcomplexFamily κ) (j : ℤ)
+    (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
+    (hj : IsClosed (H.boundaries j : Set (W j)))
+    (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) : F.StaticVerdict j := by
+  set G := F.toFeec
   have hcj := (H.closedRangeAt_iff j).2 hj
   have hck := (H.closedRangeAt_iff (j + 1)).2 hj'
-  have : FiniteDimensional 𝕜 (H.toFeec.harmonic j) := by rw [H.harmonic_eq]; infer_instance
-  have V := G.staticFEEC j hcj fun k hk => by obtain rfl : j + 1 = k := hk; exact hck
+  have hbi : G.IsGraphBounded ((ComplexShape.up ℤ).prev j) := by
+    rw [(ComplexShape.up ℤ).prev_eq' (rel_sub_one j)]
+    exact SubcomplexFamily.isGraphBounded_toFeec hπ
+  have V := G.staticFEEC j hbi (SubcomplexFamily.isGraphBounded_toFeec hπ') hcj fun k hk => by
+    obtain rfl : j + 1 = k := hk; exact hck
   have hsol := fun f => H.isMixedSolution_of_feec (H.toFeec.isMixedSolution_mixedSolution
     (rel_sub_one j) (rel_add_one j) hcj hck f)
   have hdsol := fun h f => (F.V h).isMixedSolution_of_feec
@@ -444,13 +458,21 @@ theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
     (F.V h).harmonic_cond' f σ σ' u u' p p'
   have hgap : ∀ h, (G.π h).harmonicGap j = (F.π h).harmonicGap j := fun h =>
     (F.π h).harmonicGap_toFeec j
-  refine ⟨?_, ?_, ?_, fun f => ⟨(_, _, _), hsol f, fun x hx => ?_⟩,
-    fun h f => ⟨(_, _, _), hdsol h f, fun x hx => ?_⟩, ?_, fun {f σ u p} hs {σh uh ph} hsh => ?_⟩
-  · filter_upwards [V.cohomology] with h hh
-    exact (F.V h).cohomologyIncl_bijective (F.π h) hh.1
-  · have h0 := V.harmonicGap
+  refine ⟨fun h q hq => ?_, fun ha _ => ?_, fun ha _ => ?_, ?_,
+    fun f => ⟨(_, _, _), hsol f, fun x hx => ?_⟩, fun h f => ⟨(_, _, _), hdsol h f, fun x hx => ?_⟩,
+    ?_, ?_, fun ha ha' {f σ u p} hs {σh uh ph} hsh => ?_⟩
+  · have hq' : q ∈ H.toFeec.harmonic j := (H.harmonic_eq j).symm ▸ hq
+    have hm : ((G.V h).harmonicW j).starProjection q ∈ (F.V h).harmonic j := by
+      rw [← (F.V h).harmonic_eq j]; exact Submodule.starProjection_apply_mem _ q
+    exact (Metric.infDist_le_dist_of_mem hm).trans
+      (by rw [dist_eq_norm]; exact V.harmonicDist h hq')
+  · have : FiniteDimensional 𝕜 (H.toFeec.harmonic j) := by rw [H.harmonic_eq]; infer_instance
+    have h0 := V.harmonicGap (SubcomplexFamily.approximates_toFeec ha)
     simp only [hgap] at h0
     exact h0
+  · have : FiniteDimensional 𝕜 (H.toFeec.harmonic j) := by rw [H.harmonic_eq]; infer_instance
+    filter_upwards [V.cohomology (SubcomplexFamily.approximates_toFeec ha)] with h hh
+    exact (F.V h).cohomologyIncl_bijective (F.π h) hh.1
   · obtain ⟨C, hC⟩ := V.poincare (rel_add_one j)
     refine ⟨C, fun h v hv hz => hC h hv fun y hy => hz y ⟨hy.1, ?_⟩⟩
     rw [← H.cycles_eq]; exact hy.2
@@ -458,9 +480,26 @@ theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
     exact Prod.ext h1 (Prod.ext h2 h3)
   · obtain ⟨h1, h2, h3⟩ := uqh h hx (hdsol h f)
     exact Prod.ext h1 (Prod.ext h2 h3)
+  · -- stability, from `Feec`'s uniform stability for the data `P_{Vₕ} f`
+    obtain ⟨C, hC⟩ := V.wellPosed (rel_sub_one j) (rel_add_one j)
+    refine ⟨6 * max C 0, fun h {f σh uh ph} hsh => ?_⟩
+    obtain ⟨h1, h2, h3⟩ := uqh h hsh (hdsol h f)
+    rw [h1, h2, h3]
+    have hx := (hC h (((F.V h).toFeec.V j).orthogonalProjectionOnto f)).2 _
+      ((F.V h).toFeec.toHilbertComplex.mixedForm_mixedSolution (rel_sub_one j) (rel_add_one j)
+        ((F.V h).toFeec.closedRangeAt _) ((F.V h).toFeec.closedRangeAt _)
+        (((F.V h).toFeec.V j).orthogonalProjectionOnto f))
+    have hPf : ‖((F.V h).toFeec.V j).orthogonalProjectionOnto f‖ ≤ ‖f‖ :=
+      ((F.V h).toFeec.V j).norm_orthogonalProjectionOnto_apply_le f
+    exact ((F.V h).mixedError_le_of_norm_le
+      (Feec.HilbertComplex.Subcomplex.CochainProjection.discreteMixedSolution (F.V h).toFeec
+        (rel_sub_one j) (rel_add_one j) f) (hx.trans
+      ((mul_le_mul_of_nonneg_right (le_max_left C 0) (norm_nonneg _)).trans
+        (mul_le_mul_of_nonneg_left hPf (le_max_right C 0))))).trans_eq (mul_assoc _ _ _).symm
   · obtain ⟨K, hK0, hK⟩ := V.quasiOptimal (rel_sub_one j) (rel_add_one j)
-    have hC0 : 0 ≤ G.projBound := zero_le_one.trans G.one_le_projBound
-    refine ⟨2 * (K * (1 + G.projBound)), fun {f σ u p} hs h {σh uh ph} hsh => ?_⟩
+    obtain ⟨Cb, hCb, -, hCbj⟩ := hbi.exists_bound (SubcomplexFamily.isGraphBounded_toFeec hπ')
+    have hC0 : 0 ≤ Cb := zero_le_one.trans hCb
+    refine ⟨2 * (K * (1 + Cb)), fun {f σ u p} hs h {σh uh ph} hsh => ?_⟩
     obtain ⟨rfl, rfl, rfl⟩ := uq hs (hsol f)
     obtain ⟨h1, h2, h3⟩ := uqh h hsh (hdsol h f)
     rw [h1, h2, h3]
@@ -468,7 +507,7 @@ theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
     have e := hK (H.toFeec.isMixedSolution_mixedSolution (rel_sub_one j) (rel_add_one j) hcj hck f) h
     have a1 := (F.V h).infDist_domainSub_le (rel_sub_one j) X.fst
     have a2 := (F.V h).infDist_domainSub_le (rel_add_one j) X.snd.fst
-    have a3 := ((G.π h).infDist_harmonicW_le (rel_add_one j) hC0 (G.isGraphBounded h (rel_add_one j))
+    have a3 := ((G.π h).infDist_harmonicW_le (rel_add_one j) hC0 ((hCbj h).of_next (rel_add_one j))
       X.snd.snd.2).trans (mul_le_mul_of_nonneg_left
         ((F.V h).infDist_cycles_le (H.toFeec.harmonic_le_cycles j X.snd.snd.2)) (by linarith))
     have hBc := congrArg Submodule.topologicalClosure (H.boundaries_eq j)
@@ -507,6 +546,7 @@ theorem ConformingFamily.staticVerdict (F : H.ConformingFamily κ)
     exact key a1 a2 a3 a4 hμ hC0 g1 g2 g4
   · obtain ⟨rfl, rfl, rfl⟩ := uq hs (hsol f)
     have hT := (V.converges (rel_sub_one j) (rel_add_one j)
+      (SubcomplexFamily.approximates_toFeec ha) (SubcomplexFamily.approximates_toFeec ha')
       (H.toFeec.isMixedSolution_mixedSolution (rel_sub_one j) (rel_add_one j) hcj hck f)).const_mul 2
     rw [mul_zero] at hT
     refine squeeze_zero (fun _ => by unfold mixedError; positivity) (fun h => ?_) hT

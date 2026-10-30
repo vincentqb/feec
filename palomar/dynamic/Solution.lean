@@ -7,7 +7,7 @@ public import Solution.Bridge
 
 `FEEC.dynamicFEEC` of `Challenge.lean`, proved from `Feec.HilbertComplex.ConformingFamily.feec`
 and `Feec.HilbertComplex.ConstrainedFEEC.rate_le` through the bridge `Solution.Bridge`: the wave
-verdict (`ConformingFamily.waveVerdict`) and the heat verdict (`ConformingFamily.heatVerdict`).
+verdict (`SubcomplexFamily.waveVerdict`) and the heat verdict (`SubcomplexFamily.heatVerdict`).
 
 ## References
 
@@ -29,11 +29,11 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommG
   [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The FEEC theorem for the Hodge wave and heat equations** ([QuennevilleBelair2015], Thms 4.6,
-4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a conforming
-family whose cochain projections are bounded uniformly in `W`, `‖πₕ x‖ ≤ C ‖x‖`, and which
+4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a family of
+subcomplexes whose cochain projections are bounded uniformly in `W`, `‖πₕ x‖ ≤ C ‖x‖`, and which
 approximates every `w ∈ Wⁱ`. On every window, `F` satisfies the wave and heat verdicts
-(`ConformingFamily.DynamicVerdict`). -/
-theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.ConformingFamily κ)
+(`SubcomplexFamily.DynamicVerdict`). -/
+theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
     (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
     (happrox : ∀ (i : ℤ) (w : W i),
       Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0))

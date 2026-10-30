@@ -11,16 +11,18 @@ project:
     A Lean 4 formalization of the a priori approximation theory of finite element exterior
     calculus (Arnold-Falk-Winther 2010, §3.3-§3.4) for an arbitrary Hilbert complex of closed
     densely defined operators on Z and an arbitrary family of finite-dimensional subcomplexes
-    with commuting cochain projections bounded uniformly in the graph norm and the
-    approximation property in the graph norm. The compared theorem FEEC.staticFEEC states: in a
-    degree j where the ranges of d^(j-1) and d^j are closed and the harmonic forms are
-    finite-dimensional, the inclusion eventually induces an isomorphism of discrete and
-    continuous cohomology, the harmonic gap tends to 0, the discrete Poincare inequality holds
-    uniformly, the mixed Hodge Laplacian and its Galerkin discretizations are uniquely
-    solvable, and the discrete solutions are quasi-optimal in the graph norm (error at most
-    C times the best approximation of sigma, u, p and, weighted by the harmonic gap, of the
-    boundary part of u), hence converge. The statement is self-contained over Mathlib; the
-    proof is the library Feec of this repository (Feec.HilbertComplex.GraphFamily.staticFEEC).
+    with commuting cochain projections. The compared theorem FEEC.staticFEEC assumes, in a degree
+    j, projections bounded uniformly in the graph norm in degrees j-1 and j and closed ranges of
+    d^(j-1) and d^j, and states: dist(q, discrete harmonic forms) <= ||q - pi_h q|| on the
+    harmonic forms; the discrete Poincare inequality holds uniformly; the mixed Hodge Laplacian
+    and its Galerkin discretizations are uniquely solvable, with discrete solutions bounded by
+    C ||f||; the discrete solutions are quasi-optimal in the graph norm (error at most C times the
+    best approximation of sigma, u, p and, weighted by the harmonic gap, of the boundary part of
+    u). Where the subcomplexes approximate in the graph norm (degree j; degrees j-1 and j for
+    convergence) and the harmonic forms are finite-dimensional, the harmonic gap tends to 0, the
+    inclusion eventually induces an isomorphism of discrete and continuous cohomology, and the
+    discrete solutions converge. The statement is self-contained over Mathlib; the proof is the
+    library Feec of this repository (Feec.HilbertComplex.SubcomplexFamily.staticFEEC).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -44,9 +46,9 @@ sources:
     relationship: "formalizes"
     note: >-
       The a priori theory of §3.3-§3.4 for the mixed Hodge Laplacian: discrete cohomology,
-      harmonic gap, uniform discrete Poincare inequality, unique solvability and quasi-optimal
-      graph-norm error bound, under the hypotheses of §3.3 (cochain projections bounded in the
-      graph norm, approximation property in the graph norm).
+      harmonic gap, uniform discrete Poincare inequality, unique solvability and stability, and
+      the quasi-optimal graph-norm error bound, under the hypotheses of §3.3 (cochain projections
+      bounded in the graph norm, approximation property in the graph norm) in the degrees used.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus, homological techniques, and applications"
     authors:
@@ -74,11 +76,11 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: FEEC.staticFEEC (Challenge.lean) for every RCLike field, every
-    Hilbert complex on Z, every conforming family along any filter with graph-norm bounded
-    projections and graph-norm approximation, every degree j. Not compared (proved in Feec,
-    outside the statement): explicit constants, uniform stability of the discrete solution
-    operator, the discrete inf-sup condition by Fortin operators, rates from Jackson estimates,
-    the improved L2 estimate under elliptic regularity, the necessity of closed range, and the
+    Hilbert complex on Z, every family of subcomplexes along any filter, every degree j. Not
+    compared (proved in Feec, outside the statement): explicit constants, the reverse gap
+    estimate from discrete to continuous harmonic forms ([AFW2010] Thm 3.5, second inequality),
+    the discrete inf-sup condition by Fortin operators, rates from Jackson estimates, the
+    improved L2 estimate under elliptic regularity, the necessity of closed range, and the
     concrete finite element families (Whitney, P_r, P_r^-, cubical Q^-, serendipity spaces).
   sorry_count: 0
   sorry_in_definitions: 0
@@ -118,20 +120,25 @@ automation:
 fidelity:
   divergences: >-
     (1) The cochain projections are linear maps on all of W^i, bounded only on D(d) in the graph
-    norm (||pi x|| + ||d pi x|| <= C (||x|| + ||d x||)); [AFW2010] §3.3 has projections on the
-    domain V only. Every such projection extends linearly (not continuously) to W^i, so the
-    hypothesis is equivalent; it is not restricted to the degrees j - 1, j used.
+    norm (||pi x|| + ||d pi x|| <= C (||x|| + ||d x||)), in degrees j - 1 and j; [AFW2010] §3.3
+    has projections on the domain V only. Every such projection extends linearly (not
+    continuously) to W^i, so the hypothesis is equivalent.
     (2) The graph norm is ||x|| + ||d x|| (the source uses the equivalent (||x||^2 + ||dx||^2)^(1/2));
     the constants differ by a factor at most 2.
     (3) Quasi-optimality is an inequality with an existential constant C independent of h and of
     the data; in the error the harmonic term is ||p - p_h|| in W, the distances are in the graph
-    norm to V_h (for p and P_B u, whose differentials vanish, ||p - v|| + ||d v||).
-    (4) Static cohomology: the map induced by the inclusion V_h ⊆ W is eventually bijective (the
-    source states the map induced by the projection; the two are inverse).
-    (5) The differential is encoded as d i j for all pairs, zero unless j = i + 1.
-    (6) Finite dimension of the harmonic forms in degree j is assumed (needed for the cohomology
-    isomorphism and the vanishing harmonic gap); closed range is assumed in degrees j and j + 1
-    only.
+    norm to V_h (for p and P_B u, whose differentials vanish, ||p - v|| + ||d v||). Uniform
+    stability is the bound ||sigma_h||_V + ||u_h||_V + ||p_h|| <= C ||f|| of the discrete
+    solutions (the source states the inf-sup constant of the discrete mixed form).
+    (4) Thm 3.5 is stated by its first inequality, dist(q, H_h) <= ||q - pi_h q|| on the harmonic
+    forms, and the vanishing harmonic gap; the cohomology map is the one induced by the
+    inclusion V_h ⊆ W (the source states the map induced by the projection; the two are inverse).
+    (5) The differential is encoded as d i j for all pairs, zero unless j = i + 1. The family of
+    subcomplexes (SubcomplexFamily) carries no bound and no approximation property; these are
+    hypotheses (of the theorem, and of the clauses that need them).
+    (6) Closed range is assumed in degrees j and j + 1 only; the approximation property and the
+    finite dimension of the harmonic forms only in the clauses about harmonic forms, cohomology
+    and convergence.
 
 review:
   status: "self-assessed"
@@ -146,10 +153,10 @@ alignment:
   namespace: "FEEC"
   statements:
     - source: "[AFW2010], Thms 3.4, 3.5, 3.6, 3.8, 3.9"
-      lean: "FEEC.HilbertComplex.ConformingFamily.StaticVerdict"
+      lean: "FEEC.HilbertComplex.SubcomplexFamily.StaticVerdict"
       module: "Challenge"
       status: "proved"
-      note: "Fields cohomology, harmonicGap, poincare, existsUnique, existsUnique_discrete, quasiOptimal, converges."
+      note: "Fields harmonicDist, harmonicGap, cohomology, poincare, existsUnique, existsUnique_discrete, stable, quasiOptimal, converges."
     - source: "[AFW2010], §3.3-§3.4"
       lean: "FEEC.staticFEEC"
       module: "Challenge"

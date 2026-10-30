@@ -10,7 +10,7 @@ project:
   description: >-
     A Lean 4 formalization of the semidiscrete finite element exterior calculus of the Hodge
     wave and heat equations for an arbitrary Hilbert complex of closed densely defined operators
-    on Z and an arbitrary conforming family of finite-dimensional subcomplexes with commuting
+    on Z and an arbitrary family of finite-dimensional subcomplexes with commuting
     cochain projections bounded uniformly in W and the approximation property. The compared
     theorem FEEC.dynamicFEEC states, on every window of consecutive degrees: the Hodge wave
     equation for L = d - d* is well posed with a unitary group S; its semidiscrete Galerkin
@@ -105,7 +105,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: FEEC.dynamicFEEC (Challenge.lean) for every RCLike field, every
-    Hilbert complex on Z, every conforming family along any filter with W-bounded projections
+    Hilbert complex on Z, every family of subcomplexes along any filter with W-bounded projections
     and the approximation property, every window [a, a+m). Not compared (proved in Feec, outside
     the statement): rates from Jackson and Sobolev estimates, the uniform fully discrete rate
     O(h^alpha + tau^(p/(p+2))), energy identities, departure of non-reducing constraints,
@@ -159,9 +159,16 @@ fidelity:
     x in D(L^2); the theta-schemes and the heat equation are stated qualitatively.
     (4) The differential is encoded as d i j for all pairs, zero unless j = i + 1.
     (5) The heat equation is u' = (d - d*)^2 u = -Δu, with discrete generator L_h^2 = -Δ_h.
-    (6) Windows: the evolutions live on the l2 sum of m consecutive degrees; the heat equation
-    assumes closed ranges in the degrees a + 1, ..., a + m - 1 of the window and a
-    finite-dimensional kernel of d - d* on the window.
+    (6) Windows: the evolutions live on the l2 sum of m consecutive degrees a, ..., a + m - 1 of
+    the truncated complex W^a -> ... -> W^(a+m-1): the differentials d^(a-1) into the window and
+    d^(a+m-1) out of it are dropped, so for an interior window L = d - d* is the Hodge-Dirac
+    operator of the truncated complex, not the restriction of the Hodge-Dirac operator of the
+    full complex (the source's setting is the full finite complex, the window [a, a+m) covering
+    all nonzero degrees). The heat equation assumes closed ranges in the degrees a + 1, ...,
+    a + m - 1 of the window and a finite-dimensional kernel of d - d* on the window.
+    (7) S(0) = 1 is part of the verdict; the residual bound for reducing constraints follows from
+    propagation in one line and is stated for the record. The family of subcomplexes
+    (SubcomplexFamily) carries no bound and no approximation property: these are hypotheses.
 
 review:
   status: "self-assessed"
@@ -176,12 +183,12 @@ alignment:
   namespace: "FEEC"
   statements:
     - source: "[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7"
-      lean: "FEEC.HilbertComplex.ConformingFamily.WaveVerdict"
+      lean: "FEEC.HilbertComplex.SubcomplexFamily.WaveVerdict"
       module: "Challenge"
       status: "proved"
       note: "Well-posedness, unitary group, semidiscrete and theta-scheme convergence, error bound, propagation iff reducing, residual bound."
     - source: "[GilletteHolstZhu2017]; [AFW2010], Thm 3.9 (elliptic convergence)"
-      lean: "FEEC.HilbertComplex.ConformingFamily.DynamicVerdict"
+      lean: "FEEC.HilbertComplex.SubcomplexFamily.DynamicVerdict"
       module: "Challenge"
       status: "proved (qualitative convergence)"
       note: "Field `heat`."

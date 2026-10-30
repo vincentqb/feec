@@ -52,8 +52,8 @@ exactness proof is the classical Poincaré lemma by integration along one coordi
 the operators `hⱼ` and `Pⱼ` preserve the tensor-product degree bounds direction by direction, so
 it works for any multidegree `b`.
 
-The other cubical families, the serendipity forms `S_rΛᵏ` [ArnoldAwanou2014] and the trimmed
-serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019], are not formalized.
+The serendipity forms `S_rΛᵏ` [ArnoldAwanou2014] are in `Feec.Algebra.SerendipityForm`; the
+trimmed serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019] are not formalized.
 
 ## References
 

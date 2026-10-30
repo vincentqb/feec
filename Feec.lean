@@ -9,6 +9,8 @@ public import Feec.Algebra.Metric
 public import Feec.Algebra.PolynomialForm
 public import Feec.Algebra.PolynomialFormDim
 public import Feec.Algebra.Proxy3
+public import Feec.Algebra.SerendipityForm
+public import Feec.Algebra.SerendipityFormDim
 public import Feec.Algebra.TransverseTraceless
 public import Feec.Algebra.Wedge
 public import Feec.Counterexamples.BallEigenDense

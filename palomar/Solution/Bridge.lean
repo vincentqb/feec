@@ -15,7 +15,9 @@ operators and discrete operators with those of `Feec`, and turns the verdicts of
 
 ## References
 
-See `Challenge.lean`.
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace

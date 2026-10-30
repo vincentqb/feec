@@ -1,6 +1,8 @@
 name = "FeecPalomar"
 version = "0.1.0"
 defaultTargets = ["Challenge", "Solution"]
+# Share the dependencies (and the Mathlib cache) of the root package.
+packagesDir = "../.lake/packages"
 
 [leanOptions]
 pp.unicode.fun = true

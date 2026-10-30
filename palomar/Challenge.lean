@@ -27,7 +27,7 @@ every such *conforming family* along a filter `h → 0`:
    Prop. 4.17; [Thomee2006], Ch. 7);
 3. (**heat**) with closed ranges and finite-dimensional harmonic fields of the window, the same
    for the Hodge heat equation `u' = (𝐝 - 𝐝*)² u = -Δ u` with the discrete generators `Lₕ²`
-   ([AFW2010], Thm 3.9; [GilletteHolstZhu2017]).
+   ([GilletteHolstZhu2017], via the elliptic convergence of [AFW2010], Thm 3.9).
 
 Mathlib has no `C₀`-semigroups: the exact evolutions are the operator families `S` that the
 theorem asserts to exist, characterized by their strong solutions (unique, so `S` is unique on
@@ -241,7 +241,6 @@ structure ConformingFamily.StaticVerdict (F : H.ConformingFamily κ) (j : ℤ) :
     (hsh : ∀ h, H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f
       (σh h) (uh h) (ph h)) :
     Tendsto (fun h => H.mixedError j σ (σh h) u (uh h) p (ph h)) F.l (𝓝 0)
-
 
 section Window
 

@@ -16,7 +16,9 @@ solution imports this module, the bridge to `Feec` and proves `FEEC.feec` (`Solu
 
 ## References
 
-See `Challenge.lean`.
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
@@ -211,7 +213,6 @@ structure ConformingFamily.StaticVerdict (F : H.ConformingFamily κ) (j : ℤ) :
     (hsh : ∀ h, H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f
       (σh h) (uh h) (ph h)) :
     Tendsto (fun h => H.mixedError j σ (σh h) u (uh h) p (ph h)) F.l (𝓝 0)
-
 
 section Window
 

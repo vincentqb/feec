@@ -165,6 +165,10 @@ fidelity:
     (7) Windows: the evolutions live on the l2 sum of m consecutive degrees, with the window's
     own closedness hypotheses for the heat equation (closed ranges of H; finite-dimensional
     kernel of d - d* on the window).
+    (8) Closed ranges are assumed in every degree (for all i, the boundaries of degree i are
+    closed), for the static part in degree j as for the heat equation on a window, as the
+    crown of Feec does; the source needs them only in the degrees involved (j and j + 1 for
+    the static part, the degrees the window involves for the heat equation).
 
 review:
   status: "self-assessed"
@@ -188,7 +192,7 @@ alignment:
       module: "Challenge"
       status: "proved (qualitative convergence)"
       note: "Field `wave`: well-posedness, unitary group, semidiscrete and theta-scheme convergence, propagation iff reducing."
-    - source: "[AFW2010], Thm 3.9; [GilletteHolstZhu2017]"
+    - source: "[GilletteHolstZhu2017]; [AFW2010], Thm 3.9 (elliptic convergence)"
       lean: "FEEC.HilbertComplex.ConformingFamily.Verdict"
       module: "Challenge"
       status: "proved (qualitative convergence)"

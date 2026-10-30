@@ -6,6 +6,7 @@ public import FeecCheck.DocNames
 public import FeecCheck.Layering
 public import FeecCheck.MapCheck
 public import FeecCheck.Naming
+public import FeecCheck.Palomar
 public import FeecCheck.Snapshot
 public import FeecCheck.ThesisMap
 
@@ -26,6 +27,7 @@ documentation cites):
 | `docs/THESIS_MAP.md` up to date | `feec-thesismap --check` | yes |
 | migration coverage | `feec-mapcheck --strict` | yes |
 | names in `README.md` and `docs/*.md` exist | `feec-docnames` | yes (and `FeecCheck`) |
+| `palomar/`: `Defs.lean` copies the challenge, `lake build` | `feec-palomar` | no (builds `palomar/`) |
 
 Run from the root of the repository (as `lake exe` does) after `lake build`; the executables that
 import `Feec` declare `needs = ["Feec"]` (`feec-gate` and `feec-docnames` also `"FeecCheck"`), so
@@ -85,6 +87,11 @@ def mainDocNames : List String → IO UInt32
   | [] => do finish [← DocNames.run (← loadFeec (withChecks := true))]
   | _ => usage "lake exe feec-docnames"
 
+def mainPalomar : List String → IO UInt32
+  | [] => do finish [← Palomar.run]
+  | ["--write"] => do finish [← Palomar.run (write := true)]
+  | _ => usage "lake exe feec-palomar [--write]"
+
 def mainSnapshot : List String → IO UInt32
   | [out] => if out.startsWith "-" then usage "lake exe feec-snapshot OUT" else do
     finish [← Snapshot.run (← loadFeec) out]
@@ -99,6 +106,7 @@ def mainGate : List String → IO UInt32
     rs := rs.push (← ThesisMap.run env (check := true))
     rs := rs.push (← MapCheck.run env true)
     rs := rs.push (← DocNames.run env)
+    rs := rs.push (← Palomar.run)
     for r in rs do
       r.print
       IO.println ""

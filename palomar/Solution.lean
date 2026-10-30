@@ -11,7 +11,11 @@ verdict (`ConformingFamily.waveVerdict`) and the heat verdict (`ConformingFamily
 
 ## References
 
-See `Challenge.lean`.
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015], §4.4–§4.6
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
+
+Bibliography: [references.bib](../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

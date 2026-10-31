@@ -181,7 +181,9 @@ fidelity:
     for V_h = 0 with H nonzero); the proof here inverts it on its range after the orthogonal
     projection onto the range, so the statement holds under the source's hypotheses.
     FEEC.exists_subcomplexFamily_iff assumes closed range in every degree, which the direction
-    from bounded projections (Thm 3.6 and (30), whose proof uses (28)) needs.
+    from bounded projections needs for the uniform Poincare inequality of Thm 3.6 only; (28) and
+    (30) hold without it (q - P_H q lies in the closure of B, which a graph-bounded pi maps into
+    the finite-dimensional B_h).
     (6) Finite-dimensional H^j in the vanishing of the harmonic gap and the eventual isomorphisms:
     the setting of the source (finite-dimensional cohomology, as for the de Rham complex), and
     necessary: for d = 0 on an infinite-dimensional W^j, V_h the span of the first n vectors of an

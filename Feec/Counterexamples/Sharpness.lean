@@ -59,7 +59,7 @@ crown does not give the corresponding conclusions there.
   uniformly in `h`). It cannot be weakened beyond discrete stability, and discrete stability
   suffices: for a complex with closed range, uniformly bounded cochain projections exist iff the
   discrete Poincaré inequality and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly
-  (`HilbertComplex.Subcomplex.exists_isGraphBounded_iff`; [AFW2010], Thms 3.6, 3.7, (30)).
+  (`HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff`; [AFW2010], Thms 3.6, 3.7, (30)).
 
 ## Thesis corrections
 
@@ -184,10 +184,11 @@ structure CrownSharpness : Prop where
   core_ball : type_of% @BallEigenDense.coreSub_le_stationary_ball3_iff
   /-- `ConformingFamily.V`, subcomplexes: `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not one -/
   subcomplex : type_of% @PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus.{u, v}
-  /-- `Verdict.static`, bounded projections (through `SubcomplexFamily.staticFEEC`): under closed
-  range, uniformly graph-bounded cochain projections exist iff the discrete Poincaré inequality
-  and the harmonic bound hold uniformly (a characterization; [AFW2010], Thms 3.6, 3.7) -/
-  projections : type_of% @HilbertComplex.Subcomplex.exists_isGraphBounded_iff.{u, v, u, v}
+  /-- `Verdict.static`, bounded projections (the hypothesis `SubcomplexFamily.IsGraphBounded` of
+  `SubcomplexFamily.staticFEEC`): under closed range, a family of subcomplexes on `Vₕ` with
+  uniformly graph-bounded projections exists iff the discrete Poincaré inequality and the
+  harmonic bound hold uniformly (a characterization; [AFW2010], Thms 3.6, 3.7) -/
+  projections : type_of% @HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff.{u, v, u, v}
 
 /-- **What the counterexamples show about the crown's hypotheses** (`CrownSharpness`). -/
 theorem crownSharpness : CrownSharpness.{u, v} :=
@@ -197,7 +198,7 @@ theorem crownSharpness : CrownSharpness.{u, v} :=
     BoundedBGG.bggComplex_verdict, CubeStationary.mem_invariantCore_tsd_iff,
     BoxStationary.mem_invariantCore_tsd_iff_box, BallEigenDense.coreSub_le_stationary_ball3_iff,
     PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus,
-    HilbertComplex.Subcomplex.exists_isGraphBounded_iff⟩
+    HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff⟩
 
 /-! ### Thesis corrections -/
 

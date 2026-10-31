@@ -1,6 +1,7 @@
 module
 
-public import Feec.HilbertComplex.Approximation.QuasiOptimal
+public import Feec.HilbertComplex.Approximation.StaticFEEC
+public import Feec.HilbertComplex.Homology
 
 /-!
 # Bounded cochain projections from discrete stability
@@ -24,10 +25,13 @@ projection onto the range removes that hypothesis. No closed range is needed.
 Conversely (`Subcomplex.CochainProjection.discretePoincare`, [AFW2010], Thm 3.6, and
 `Subcomplex.CochainProjection.harmonicBound`, [AFW2010], (30)), a projection bounded by `C` in
 the graph norm gives both conditions with constants depending only on `C` and the Poincaré
-constants of the complex. For a family of subcomplexes of a complex with closed range,
+constants of the complex; the harmonic bound needs no closed range, since `π` maps `cl 𝔅ʲ` into
+`𝔅ₕʲ` (`Subcomplex.CochainProjection.mem_boundariesW_of_mem_closure`). For a family of
+subcomplexes of a complex with closed range (needed for the Poincaré inequality),
 **uniformly bounded cochain projections exist iff the two conditions hold uniformly**
-(`Subcomplex.exists_isGraphBounded_iff`): the hypothesis of the static FEEC theorem
-(`SubcomplexFamily.staticFEEC`) is equivalent to discrete stability.
+(`Subcomplex.exists_isGraphBounded_iff`): the hypothesis `SubcomplexFamily.IsGraphBounded` of
+the static FEEC theorem (`SubcomplexFamily.staticFEEC`) is equivalent to discrete stability
+(`SubcomplexFamily.exists_isGraphBounded_iff`).
 
 The cochain projections of `Feec` are maps of `Wⁱ`; one defined on the domain complex extends
 linearly, not continuously, along an algebraic complement of the domain
@@ -44,7 +48,7 @@ linearly, not continuously, along an algebraic complement of the domain
 * **`Subcomplex.exists_cochainProjection`** ([AFW2010], Thm 3.7),
   `Subcomplex.isGraphBounded_stableProjection`.
 * `Subcomplex.CochainProjection.discretePoincare`, `Subcomplex.CochainProjection.harmonicBound`.
-* **`Subcomplex.exists_isGraphBounded_iff`**.
+* **`Subcomplex.exists_isGraphBounded_iff`**, **`SubcomplexFamily.exists_isGraphBounded_iff`**.
 
 ## References
 
@@ -74,9 +78,16 @@ def domainProj (i : ι) : W i →ₗ[𝕜] (H.d i (c.next i)).domain :=
 theorem domainProj_apply {i : ι} (x : (H.d i (c.next i)).domain) : H.domainProj i x = x :=
   Submodule.projectionOnto_apply_left _ x
 
-theorem mem_cycles_of_d_eq_zero {j : ι} {x : W j} (hx : x ∈ (H.d j (c.next j)).domain)
-    (h : H.d j (c.next j) ⟨x, hx⟩ = 0) : x ∈ H.cycles j :=
-  mem_ker_iff.2 ⟨⟨x, hx⟩, rfl, h⟩
+/-- A cycle orthogonal to `ℌʲ` lies in `cl 𝔅ʲ` (no closed range; `cl 𝔅ʲ ⊕ ℌʲ = 𝔷ʲ`). -/
+theorem mem_closure_boundaries_of_mem_cycles {j : ι} {z : W j} (hz : z ∈ H.cycles j)
+    (ho : z ∈ (H.harmonic j)ᗮ) : z ∈ (H.boundaries j).topologicalClosure := by
+  rw [← H.closure_boundaries_sup_harmonic j] at hz
+  obtain ⟨b, hb, h, hh, rfl⟩ := Submodule.mem_sup.1 hz
+  have h1 : ⟪h, b + h⟫_𝕜 = 0 := Submodule.inner_right_of_mem_orthogonal hh ho
+  rw [inner_add_right, (H.isOrtho_closure_boundaries_harmonic j).symm.inner_eq hh hb,
+    zero_add] at h1
+  rw [inner_self_eq_zero.1 h1, add_zero]
+  exact hb
 
 private theorem starProjection_congr {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     {K K' : Submodule 𝕜 E} (h : K = K') [K.HasOrthogonalProjection] [K'.HasOrthogonalProjection]
@@ -164,7 +175,7 @@ theorem discretePoincare_of_not_rel {j : ι} (hj : ¬ c.Rel j (c.next j)) (C : �
     S.DiscretePoincare j C := fun x hx hxo => by
   have h0 := H.apply_eq_zero_of_not_rel hj ⟨x, S.le_domain j _ hx⟩
   have hx0 : x = 0 :=
-    inner_self_eq_zero.1 (hxo x ⟨hx, H.mem_cycles_of_d_eq_zero (S.le_domain j _ hx) h0⟩)
+    inner_self_eq_zero.1 (hxo x ⟨hx, H.mem_cycles_iff.2 ⟨S.le_domain j _ hx, h0⟩⟩)
   rw [h0, hx0]
   simp
 
@@ -183,13 +194,41 @@ theorem CochainProjection.discretePoincare (P : S.CochainProjection) {j : ι}
   rw [Real.sq_sqrt (by positivity)]
   nlinarith
 
-/-- **The harmonic bound from a bounded cochain projection** ([AFW2010], (30)): under closed
-range at `j`, if `π` is bounded by `C` in the graph norm, then `‖q‖ ≤ (2 + C) ‖P_ℌ q‖` on `ℌₕʲ`
-(from `‖q - P_ℌ q‖ ≤ ‖(I - π) P_ℌ q‖`, [AFW2010], (28)). -/
-theorem CochainProjection.harmonicBound (P : S.CochainProjection) {j : ι}
-    (hj : H.ClosedRangeAt j) {C : ℝ} (hC : 0 ≤ C) (hπ : P.IsGraphBounded j (c.next j) C) :
+/-- A projection bounded in the graph norm maps `cl 𝔅ʲ` into the finite-dimensional `𝔅ₕʲ`: on
+cycles the graph norm is the norm of `W`, so `π` is continuous there. -/
+theorem CochainProjection.mem_boundariesW_of_mem_closure {j : ι} [FiniteDimensional 𝕜 (S.V j)]
+    (P : S.CochainProjection) {C : ℝ} (hC : 0 ≤ C) (hπ : P.IsGraphBounded j (c.next j) C)
+    {b : W j} (hb : b ∈ (H.boundaries j).topologicalClosure) : P.π j b ∈ S.boundariesW j := by
+  have : FiniteDimensional 𝕜 (S.boundariesW j) :=
+    Submodule.finiteDimensional_of_le (S.boundariesW_le_V j)
+  rw [← SetLike.mem_coe, ← (S.boundariesW j).closed_of_finiteDimensional.closure_eq,
+    Metric.mem_closure_iff]
+  intro ε hε
+  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hb
+  obtain ⟨y, hy, hby⟩ := Metric.mem_closure_iff.1 hb (ε / (C + 1)) (by positivity)
+  refine ⟨P.π j y, P.mem_boundariesW hy, ?_⟩
+  have hz : b - y ∈ H.cycles j := sub_mem (H.closure_boundaries_le_cycles j (by
+    rwa [← SetLike.mem_coe, Submodule.topologicalClosure_coe])) (H.boundaries_le_cycles j hy)
+  rw [dist_eq_norm] at hby ⊢
+  rw [← _root_.map_sub]
+  calc ‖P.π j (b - y)‖ ≤ C * ‖b - y‖ := P.norm_π_le_of_mem_cycles_of_next hC hπ hz
+    _ ≤ (C + 1) * ‖b - y‖ := by nlinarith [norm_nonneg (b - y)]
+    _ < (C + 1) * (ε / (C + 1)) := by gcongr
+    _ = ε := by field_simp
+
+/-- **The harmonic bound from a bounded cochain projection** ([AFW2010], (30)): if `π` is bounded
+by `C` in the graph norm, then `‖q‖ ≤ (2 + C) ‖P_ℌ q‖` on `ℌₕʲ` (from
+`‖q - P_ℌ q‖ ≤ ‖(I - π) P_ℌ q‖`, [AFW2010], (28)). No closed range is needed:
+`q - P_ℌ q ∈ cl 𝔅ʲ` and `π (cl 𝔅ʲ) ⊆ 𝔅ₕʲ`. -/
+theorem CochainProjection.harmonicBound {j : ι} [FiniteDimensional 𝕜 (S.V j)]
+    (P : S.CochainProjection)
+    {C : ℝ} (hC : 0 ≤ C) (hπ : P.IsGraphBounded j (c.next j) C) :
     S.HarmonicBound j (2 + C) := fun q hq => by
-  have h1 := P.norm_sub_starProjection_harmonic_le hj hq
+  have hqz : q ∈ H.cycles j := S.cyclesW_le_cycles j (S.harmonicW_le_cyclesW j hq)
+  have h1 := P.norm_sub_starProjection_harmonic_le_of_mem hq
+    (P.mem_boundariesW_of_mem_closure hC hπ (H.mem_closure_boundaries_of_mem_cycles
+      (sub_mem hqz (H.harmonic_le_cycles j (Submodule.starProjection_apply_mem _ q)))
+      (Submodule.sub_starProjection_mem_orthogonal q)))
   have h2 := P.norm_sub_π_harmonic_le_of_next hC hπ
     (Submodule.starProjection_apply_mem (H.harmonic j) q)
   have h3 := norm_le_norm_sub_add q ((H.harmonic j).starProjection q)
@@ -229,7 +268,7 @@ theorem dPerp_apply (j : ι) (x : S.cyclesPerp j) :
 theorem dPerp_injective (j : ι) : Function.Injective (S.dPerp j) := by
   refine (injective_iff_map_eq_zero _).2 fun x hx => Subtype.ext ?_
   have hz : (x : W j) ∈ S.cyclesW j :=
-    ⟨S.cyclesPerp_le_V j x.2, H.mem_cycles_of_d_eq_zero _ ((S.dPerp_apply j x).symm.trans hx)⟩
+    ⟨S.cyclesPerp_le_V j x.2, H.mem_cycles_iff.2 ⟨_, (S.dPerp_apply j x).symm.trans hx⟩⟩
   exact inner_self_eq_zero.1 (Submodule.inner_right_of_mem_orthogonal hz x.2.2)
 
 /-- `d (Vₕʲ ⊥ 𝔷ₕʲ) = d Vₕʲ`, the discrete boundaries of the next degree. -/
@@ -304,8 +343,8 @@ theorem d_poincareLift (j : ι) (x : (H.d j (c.next j)).domain) :
 /-- `v - Qₕ v` is a discrete cycle for `v ∈ Vₕʲ`. -/
 theorem sub_poincareLift_mem_cyclesW {j : ι} {x : W j} (hx : x ∈ S.V j) :
     x - S.poincareLift j ⟨x, S.le_domain j _ hx⟩ ∈ S.cyclesW j := by
-  refine ⟨sub_mem hx (S.poincareLift_mem_V j _), H.mem_cycles_of_d_eq_zero
-    (S.le_domain j _ (sub_mem hx (S.poincareLift_mem_V j _))) ?_⟩
+  refine ⟨sub_mem hx (S.poincareLift_mem_V j _), H.mem_cycles_iff.2
+    ⟨S.le_domain j _ (sub_mem hx (S.poincareLift_mem_V j _)), ?_⟩⟩
   have e : (⟨x - S.poincareLift j ⟨x, S.le_domain j _ hx⟩,
       S.le_domain j _ (sub_mem hx (S.poincareLift_mem_V j _))⟩ : (H.d j (c.next j)).domain) =
       ⟨x, S.le_domain j _ hx⟩ - ⟨_, S.le_domain j _ (S.poincareLift_mem_V j _)⟩ := rfl
@@ -444,7 +483,7 @@ def stableProjection (hinj : ∀ j, Function.Injective (S.harmonicProj j)) : S.C
   CochainProjection.ofDomain S (fun j => S.stableProj j (hinj j))
     (fun j => S.stableProj_mem j (hinj j)) (fun j => S.stableProj_of_mem j (hinj j)) fun j x => by
     rw [d_stableProj, stableProj_apply,
-      S.poincareLift_eq_zero _ (H.mem_cycles_of_d_eq_zero _ (H.d_comp_d _ _ _ x)), sub_zero,
+      S.poincareLift_eq_zero _ (H.mem_cycles_iff.2 ⟨_, H.d_comp_d _ _ _ x⟩), sub_zero,
       add_zero]
     by_cases hj : c.Rel j (c.next j)
     · have hB : H.d j (c.next j) x ∈ H.boundaries (c.next j) := by
@@ -527,7 +566,7 @@ theorem exists_isGraphBounded_iff {κ : Type*} (V : κ → H.Subcomplex)
   · obtain ⟨C, hC⟩ := hπ i
     have hC' : ∀ h, (π h).IsGraphBounded i (c.next i) |C| := fun h x =>
       (hC h x).trans_eq (by rw [sq_abs])
-    have hH := fun h => (π h).harmonicBound (hcr i) (abs_nonneg C) (hC' h)
+    have hH := fun h => (π h).harmonicBound (abs_nonneg C) (hC' h)
     by_cases hi : c.Rel i (c.next i)
     · obtain ⟨cP, -, hP⟩ := H.exists_poincare_of_closedRangeAt hi (hcr _)
       exact ⟨_, _, fun h => ⟨(π h).discretePoincare hi hP (abs_nonneg C) (hC' h), hH h⟩⟩
@@ -539,5 +578,20 @@ theorem exists_isGraphBounded_iff {κ : Type*} (V : κ → H.Subcomplex)
           (hc i h).1.abs ((hc i h).2.mono (le_max_left _ _))⟩⟩
 
 end Subcomplex
+
+/-- **The hypothesis of the static FEEC theorem is discrete stability** ([AFW2010], Thms 3.6, 3.7
+and (30)): for finite-dimensional subcomplexes `Vₕ` of a Hilbert complex with closed range, refined
+along `l`, there is a family of subcomplexes `G` on `Vₕ` with projections bounded in the graph norm
+uniformly in `h` (`SubcomplexFamily.IsGraphBounded`, the hypothesis of
+`SubcomplexFamily.staticFEEC`) in every degree iff, in every degree, the discrete Poincaré
+inequality on `Vₕʲ ⊥ 𝔷ₕʲ` and the harmonic bound on `ℌₕʲ` hold uniformly in `h`. -/
+theorem SubcomplexFamily.exists_isGraphBounded_iff {κ : Type*} (l : Filter κ)
+    (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)] (hcr : ∀ i, H.ClosedRangeAt i) :
+    (∃ G : SubcomplexFamily H κ, G.l = l ∧ G.V = V ∧ ∀ i, G.IsGraphBounded i) ↔
+      ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).DiscretePoincare i c₁ ∧ (V h).HarmonicBound i c₂ := by
+  rw [← Subcomplex.exists_isGraphBounded_iff V hcr]
+  refine ⟨?_, fun ⟨π, hπ⟩ => ⟨⟨l, V, π⟩, rfl, rfl, hπ⟩⟩
+  rintro ⟨G, -, rfl, hG⟩
+  exact ⟨G.π, hG⟩
 
 end Feec.HilbertComplex

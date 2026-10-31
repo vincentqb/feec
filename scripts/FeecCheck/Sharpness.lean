@@ -8,8 +8,9 @@ public import Feec.Counterexamples.Sharpness
 The statements of `Feec.HilbertComplex.Subcomplex.exists_cochainProjection` ([AFW2010], Thm 3.7)
 and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` (Thms 3.6, 3.7 and (30)), written
 out verbatim and proved from the library, and the field `projections` of the crown's sharpness
-record `Feec.Counterexamples.CrownSharpness`, read back as the characterization. A change of
-either statement fails `lake build FeecCheck`.
+record `Feec.Counterexamples.CrownSharpness` (`SubcomplexFamily.exists_isGraphBounded_iff`), read
+back with `SubcomplexFamily.IsGraphBounded` unfolded. A change of any of these statements fails
+`lake build FeecCheck`.
 
 ## References
 
@@ -43,11 +44,23 @@ example (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)] {c₁ c₂ : 
         ((1 + c₁ j) * (1 + c₂ j)) ^ 2 * (‖(x : W j)‖ ^ 2 + ‖H.d j (c.next j) x‖ ^ 2) :=
   S.exists_cochainProjection hc₁ hc₂ hP hH
 
-/-- The crown's sharpness field `projections` is the characterization of bounded projections. -/
+/-- [AFW2010], Thms 3.6, 3.7, (30), for bare projections. -/
 example {κ : Type} (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
     (hcr : ∀ i, H.ClosedRangeAt i) :
     (∃ π : ∀ h, (V h).CochainProjection, ∀ i, ∃ C, ∀ h, (π h).IsGraphBounded i (c.next i) C) ↔
       ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).DiscretePoincare i c₁ ∧ (V h).HarmonicBound i c₂ :=
-  Feec.Counterexamples.crownSharpness.{0, 0}.projections V hcr
+  Subcomplex.exists_isGraphBounded_iff V hcr
+
+/-- The crown's sharpness field `projections`: the hypothesis `SubcomplexFamily.IsGraphBounded`
+of the static FEEC theorem is discrete stability. -/
+example {κ : Type} (l : Filter κ) (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
+    (hcr : ∀ i, H.ClosedRangeAt i) :
+    (∃ G : SubcomplexFamily H κ, G.l = l ∧ G.V = V ∧ ∀ i, ∃ C, ∀ h,
+        ∀ x : (H.d i (c.next i)).domain,
+          ‖(G.π h).π i x‖ ^ 2 +
+              ‖H.d i (c.next i) ⟨(G.π h).π i x, (G.V h).le_domain i _ ((G.π h).mem i x)⟩‖ ^ 2 ≤
+            C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i (c.next i) x‖ ^ 2)) ↔
+      ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).DiscretePoincare i c₁ ∧ (V h).HarmonicBound i c₂ :=
+  Feec.Counterexamples.crownSharpness.{0, 0}.projections l V hcr
 
 end FeecCheck.Sharpness

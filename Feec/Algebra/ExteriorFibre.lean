@@ -153,6 +153,32 @@ theorem interior_add_left (ζ ζ' : d → R) (ω : Finset d → R) :
   funext s; simp [interior, mul_add, add_mul, sum_add_distrib]
 
 omit [Fintype d] in
+theorem wedge_smul_left (c : R) (ξ : d → R) (ω : Finset d → R) :
+    wedge (c • ξ) ω = c • wedge ξ ω := by
+  funext s; simp only [wedge_apply, Pi.smul_apply, smul_eq_mul, mul_sum]
+  exact sum_congr rfl fun _ _ => by ring
+
+omit [Fintype d] in
+/-- `dx_j ∧ dx_s = ε(j, s) dx_{s ∪ j}` for `j ∉ s`. -/
+theorem wedge_single_single {j : d} {s : Finset d} (hj : j ∉ s) :
+    wedge (Pi.single j (1 : R)) (Pi.single s (1 : R)) =
+      (sgn j s : R) • (Pi.single (insert j s) 1 : Finset d → R) := by
+  funext t
+  rw [wedge_apply, Pi.smul_apply, smul_eq_mul]
+  by_cases hjt : j ∈ t
+  · rw [sum_eq_single j (fun l _ hlj => by simp [hlj]) (fun h => absurd hjt h)]
+    simp only [Pi.single_eq_same, mul_one]
+    by_cases hts : t = insert j s
+    · subst hts; simp [erase_insert hj, sgn_insert_self]
+    · have : t.erase j ≠ s := fun h => hts (by rw [← h, insert_erase hjt])
+      simp [this, hts]
+  · have hts : t ≠ insert j s := fun h => hjt (h ▸ mem_insert_self j s)
+    rw [sum_eq_zero fun l hl => by
+      have : l ≠ j := fun h => hjt (h ▸ hl)
+      simp [this]]
+    simp [hts]
+
+omit [Fintype d] in
 /-- **Anticommutation** `ξ ∧ η ∧ ω + η ∧ ξ ∧ ω = 0`. -/
 theorem wedge_wedge_add_wedge_wedge (ξ η : d → R) (ω : Finset d → R) :
     wedge ξ (wedge η ω) + wedge η (wedge ξ ω) = 0 := by

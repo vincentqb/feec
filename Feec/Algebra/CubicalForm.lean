@@ -34,12 +34,12 @@ being `b = fun _ => r`): the faces of the cube are then the directions with `b_j
 
 * `cubeFormMinus_eq_span`: **`Q_b⁻Λᵏ` is the span of the tensor products** of factors in
   `P_{b_j}Λ⁰(I)` and `P_{b_j - 1}Λ¹(I)` with form degrees summing to `k`
-  ([ArnoldBoffiBonizzoni2015], §3);
+  ([ArnoldBoffiBonizzoni2015], §5);
 * `extDeriv_mem_cubeFormMinus`: **`d Q_b⁻Λᵏ ⊆ Q_b⁻Λ^{k+1}`** (a subcomplex of the polynomial
   de Rham complex, `isSubcomplex_cubeFormMinus`);
 * `finrank_cubeFormMinus`: `dim Q_b⁻Λᵏ = Σ_{#s = k} Πⱼ (b_j + 1 - [j ∈ s])`, and
   `finrank_cubeFormMinus_const`: **`dim Q_r⁻Λᵏ = (n choose k) rᵏ (r + 1)ⁿ⁻ᵏ`**
-  ([ArnoldBoffiBonizzoni2015], §3; [ArnoldAwanou2014], §2);
+  ([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2);
 * the homotopy formula `extDeriv_cubeHomotopy_add`: `d hⱼ + hⱼ d = 1 - Pⱼ` for the integration
   `hⱼ` in the direction `x_j` and the restriction `Pⱼ` to the hyperplane `x_j = 0`;
 * **polynomial exactness** (characteristic zero): `exists_extDeriv_eq_of_mem_cubeFormMinus`, a
@@ -60,7 +60,8 @@ trimmed serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019] are not formaliz
 ## References
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3 (the spaces `Q_r⁻Λᵏ`, their dimension and degrees of freedom)
+  §3 (tensor products of complexes), §5 (the spaces `Q_r⁻Λᵏ`, their dimension and degrees
+  of freedom)
 * [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
   §2 (the tensor-product family `Q_r⁻Λᵏ`)
 * [A. Gillette, T. Kloefkorn, *Trimmed serendipity finite element differential forms*][GilletteKloefkorn2019]
@@ -219,7 +220,7 @@ theorem update_mem_cubeSupport_erase {b : d → ℕ} {s : Finset d} {α : d →�
 variable (R) in
 /-- `Q_b⁻Λᵏ`: the `k`-forms whose coefficient `ω_s` has degree `≤ b_j - [j ∈ s]` in each
 variable `x_j`; for `b = fun _ => r` the trimmed tensor-product space `Q_r⁻Λᵏ` of the cube.
-[ArnoldBoffiBonizzoni2015], §3 -/
+[ArnoldBoffiBonizzoni2015], §5 -/
 def cubeFormMinus (b : d → ℕ) (k : ℕ) : Submodule R (PolyForm R d) :=
   supportForm R d k (cubeSupport b)
 
@@ -237,7 +238,7 @@ theorem cubeFormMinus_le_polyForm [Fintype d] (b : d → ℕ) (k : ℕ) :
     exact sum_le_sum fun j _ => (Nat.le_add_right _ _).trans (hα' j)⟩
 
 /-- **`d Q_b⁻Λᵏ ⊆ Q_b⁻Λ^{k+1}`**: `∂ⱼ` lowers the degree in `x_j` exactly where `dx_j` is added.
-[ArnoldBoffiBonizzoni2015], §3 -/
+[ArnoldBoffiBonizzoni2015], §5 -/
 theorem extDeriv_mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ cubeFormMinus R b k) : extDeriv ω ∈ cubeFormMinus R b (k + 1) := by
   refine ⟨IsDeg.extDeriv h.1, fun s => Submodule.sum_mem _ fun j hj => sgn_mul_mem j s
@@ -301,7 +302,7 @@ theorem finrank_restrictSupport_cubeSupport (b : d → ℕ) (s : Finset d) :
     Nat.card_congr (cubeSupportEquiv b s), Nat.card_eq_fintype_card, Fintype.card_pi]
   simp
 
-/-- **`dim Q_b⁻Λᵏ = Σ_{#s = k} Πⱼ (b_j + 1 - [j ∈ s])`**. [ArnoldBoffiBonizzoni2015], §3 -/
+/-- **`dim Q_b⁻Λᵏ = Σ_{#s = k} Πⱼ (b_j + 1 - [j ∈ s])`**. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem finrank_cubeFormMinus (b : d → ℕ) (k : ℕ) :
     Module.finrank K (cubeFormMinus K b k) =
       ∑ s ∈ powersetCard k univ, ∏ j, (b j + 1 - if j ∈ s then 1 else 0) := by
@@ -310,7 +311,7 @@ theorem finrank_cubeFormMinus (b : d → ℕ) (k : ℕ) :
   exact (Finset.sum_subtype (powersetCard k univ) (fun s => by simp [mem_powersetCard])
     (fun s => ∏ j, (b j + 1 - if j ∈ s then 1 else 0))).symm
 
-/-- **`dim Q_r⁻Λᵏ = (n choose k) rᵏ (r + 1)ⁿ⁻ᵏ`** on the `n`-cube. [ArnoldBoffiBonizzoni2015], §3;
+/-- **`dim Q_r⁻Λᵏ = (n choose k) rᵏ (r + 1)ⁿ⁻ᵏ`** on the `n`-cube. [ArnoldBoffiBonizzoni2015], §5;
 [ArnoldAwanou2014], §2 -/
 theorem finrank_cubeFormMinus_const (r k : ℕ) :
     Module.finrank K (cubeFormMinus K (fun _ : d => r) k) =
@@ -525,7 +526,7 @@ omit [CommRing R] [Fintype d] [LinearOrder d] in
 theorem faceDeg_le (b : d → ℕ) (f : d → Option R) (j : d) : faceDeg b f j ≤ b j := by
   unfold faceDeg; split_ifs <;> omega
 
-/-- **The trace property**: `tr_f Q_b⁻Λᵏ ⊆ Q_b⁻Λᵏ(f)`. [ArnoldBoffiBonizzoni2015], §3 -/
+/-- **The trace property**: `tr_f Q_b⁻Λᵏ ⊆ Q_b⁻Λᵏ(f)`. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem cubeTrace_mem {b : d → ℕ} {k : ℕ} {ω : PolyForm R d} (h : ω ∈ cubeFormMinus R b k)
     (f : d → Option R) : cubeTrace f ω ∈ cubeFormMinus R (faceDeg b f) k := by
   refine ⟨fun s hs => by simp [cubeTrace, h.1 s hs], fun s => ?_⟩
@@ -583,7 +584,7 @@ theorem cubeTrace_eq_self {b : d → ℕ} {f : d → Option R} {k : ℕ} {ω : P
     exact (hsupp γ (h.2 s hγ) j (by simpa using hj)).2 hjs
 
 /-- **`tr_f Q_b⁻Λᵏ = Q_b⁻Λᵏ(f)`**: the traces of `Q_b⁻Λᵏ` on a coordinate plane are the forms of
-the same family on the plane. [ArnoldBoffiBonizzoni2015], §3 -/
+the same family on the plane. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem image_cubeTrace (b : d → ℕ) (f : d → Option R) (k : ℕ) :
     cubeTrace f '' (cubeFormMinus R b k : Set (PolyForm R d)) =
       cubeFormMinus R (faceDeg b f) k := by
@@ -786,7 +787,7 @@ theorem cubeTrace_zeroFace_univ (ω : PolyForm K d) :
   · rw [ite_eq_right fun h => hs (eq_empty_of_forall_notMem h), Pi.single_eq_of_ne hs]
 
 /-- **Polynomial exactness of `Q_b⁻Λ`**: a closed form of `Q_b⁻Λ^{k+1}` is `d η` with
-`η ∈ Q_b⁻Λᵏ`. [ArnoldBoffiBonizzoni2015], §3 -/
+`η ∈ Q_b⁻Λᵏ`. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem exists_extDeriv_eq_of_mem_cubeFormMinus [CharZero K] {b : d → ℕ} {k : ℕ}
     {ω : PolyForm K d} (h : ω ∈ cubeFormMinus K b (k + 1)) (hd : extDeriv ω = 0) :
     ∃ η ∈ cubeFormMinus K b k, extDeriv η = ω := by
@@ -867,7 +868,7 @@ theorem prodForm_monomial (s : Finset d) (α : d →₀ ℕ) :
 
 /-- **`Q_b⁻Λᵏ` is spanned by tensor products** of `1`-dimensional factors `ωⱼ ∈ P_{b_j}Λ⁰(I)`
 or `P_{b_j - 1}Λ¹(I)` (`= P_{b_j}⁻Λ⁰(I)`, `P_{b_j}⁻Λ¹(I)`) whose form degrees `e_j` sum to `k`:
-`Q_b⁻Λᵏ = Σ_{Σ e_j = k} ⊗ⱼ P_{b_j}⁻Λ^{e_j}(I)` (`b_j ≥ 1`). [ArnoldBoffiBonizzoni2015], §3 -/
+`Q_b⁻Λᵏ = Σ_{Σ e_j = k} ⊗ⱼ P_{b_j}⁻Λ^{e_j}(I)` (`b_j ≥ 1`). [ArnoldBoffiBonizzoni2015], §5 -/
 theorem cubeFormMinus_eq_span {b : d → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℕ) :
     cubeFormMinus R b k = Submodule.span R {θ | ∃ (e : d → ℕ) (ω : d → PolyForm R Unit),
       ∑ j, e j = k ∧ (∀ j, ω j ∈ polyForm R Unit (b j - e j) (e j)) ∧ prodForm ω = θ} := by

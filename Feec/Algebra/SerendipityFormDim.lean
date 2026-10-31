@@ -32,8 +32,6 @@ of `κ`, `dim S_rΛᵏ = dim P_rΛᵏ + dim κ H_{r-1}Λ^{k+1} + dim κ H_rΛᵏ
   `κ (dx_j ∧ ω / x_j)` (Cartan's identity twice);
 * `mem_map_koszul_highForm`: **`ker κ ∩ H_rΛᵏ = κ H_{r-1}Λ^{k+1}`** (`r ≥ 1`), over any commutative
   ring ([ArnoldAwanou2014], Thm 2.3): splitting along the weights, the superlinear variables first;
-* `koszul_eq_zero_of_extDeriv_koszul_eq_zero`: `d` is injective on the range of `κ`
-  (characteristic zero);
 * `finrank_serendipityForm`: **`dim S_rΛᵏ = dim M_rΛᵏ`** (`r ≥ 1`) ([ArnoldAwanou2014], Thm 3.6).
 
 ## Implementation notes
@@ -616,30 +614,6 @@ theorem homComp_zero_koszul (ω : PolyForm R d) : homComp 0 (koszul ω) = 0 := b
 section Dim
 
 variable {K : Type*} [Field K] [CharZero K]
-
-/-- **`d` is injective on the range of `κ`**: a closed form `κ ω` vanishes (on each homogeneous
-component, the homotopy formula is multiplication by `deg + #s > 0`). -/
-theorem koszul_eq_zero_of_extDeriv_koszul_eq_zero {ω : PolyForm K d}
-    (h : extDeriv (koszul ω) = 0) : koszul ω = 0 := by
-  have hc : ∀ j, homComp j (koszul ω) = 0 := by
-    rintro (_ | j)
-    · exact homComp_zero_koszul ω
-    · funext s
-      have hκ : koszul (homComp (j + 1) (koszul ω)) = 0 := by rw [homComp_koszul, koszul_koszul]
-      have hd : extDeriv (homComp (j + 1) (koszul ω)) = 0 := by
-        rw [← homComp_extDeriv, h]; funext t; simp [homComp_apply]
-      have H := extDeriv_koszul_add_koszul_extDeriv (homComp (j + 1) (koszul ω)) s
-      simp only [homComp_apply] at H ⊢
-      rw [hκ, hd, extDeriv_zero, koszul_zero, Pi.zero_apply, add_zero,
-        (homogeneousComponent_isHomogeneous (j + 1) (koszul ω s)).sum_X_mul_pderiv,
-        nsmul_eq_mul, ← add_mul] at H
-      refine (mul_eq_zero.1 H.symm).resolve_left ?_
-      rw [show ((#s : MvPolynomial d K) + ((j + 1 : ℕ) : MvPolynomial d K)) =
-        C ((#s + (j + 1) : ℕ) : K) by simp]
-      exact (C_eq_zero.not).2 (Nat.cast_ne_zero.2 (by omega))
-  funext s
-  rw [← sum_homogeneousComponent (koszul ω s), Pi.zero_apply]
-  exact sum_eq_zero fun j _ => congrFun (hc j) s
 
 instance (r k : ℕ) : FiniteDimensional K (highForm K d r k) :=
   Submodule.finiteDimensional_of_le (highForm_le_superlinForm r k)

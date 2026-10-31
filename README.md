@@ -271,13 +271,14 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
   residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/periodic/` (theorem FEEC.periodicTable, about 160 lines): the algebra of the periodic
-  table in every dimension: the dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_r⁻Λᵏ` and, in
-  characteristic `0`, exactness of their polynomial de Rham complexes (constants in degree `0`),
-  the homotopy formula and the Koszul decompositions ([AFW2006], §3;
-  [ArnoldBoffiBonizzoni2015], §3); from `Feec.Algebra.PolynomialFormDim` and
-  `Feec.Algebra.CubicalForm`. Its challenge has its own vocabulary (polynomial forms over
-  `MvPolynomial`), not the Hilbert complexes above.
+* `palomar/periodic/` (theorem FEEC.periodicTable, about 250 lines): the algebra of the periodic
+  table in every dimension, for polynomial forms `MvPolynomial ⊗ ExteriorAlgebra` of Mathlib:
+  the dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_b⁻Λᵏ` (any multidegree) and, in characteristic `0`,
+  their polynomial de Rham complexes as Mathlib cochain complexes, exact in positive degree with
+  the constants as closed `0`-forms, the homotopy formula and the Koszul decompositions of
+  [AFW2006], §3 and [ArnoldBoffiBonizzoni2015], §5; from `Feec.Algebra.ExteriorAlgebraForm`
+  (coefficient forms as Mathlib's exterior algebra), `Feec.Algebra.PolynomialFormDim` and
+  `Feec.Algebra.CubicalForm`.
 * `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
   VonNeumann.inequality_dissipative, VonNeumann.cayley_contraction, about 100 lines, Mathlib
   vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of

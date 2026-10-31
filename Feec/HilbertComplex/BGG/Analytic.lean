@@ -14,7 +14,12 @@ Sobolev BGG sequences of [CapHu2024]. The algebraic eliminations `Γ E ⊇ Δ F`
 `Feec.HilbertComplex.BGG.Derived` are then subspaces of `Vⁱ ⊕ Ṽⁱ` (`ℓ²` product), `Γ E` closed,
 and the derived complex `Γ E / Δ F` is
 realized as the Hilbert complex (`BoundedData.derivedComplex`) of the spaces
-`Υⁱ = Γⁱ ⊖ Δⁱ` with the compressed differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. It exists for
+`Υⁱ = Γⁱ ⊖ Δⁱ` with the compressed differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. The quotient
+norm of `Γⁱ / Δⁱ`, from the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ`, is the norm of `Υⁱ`: `y ↦ [y]` is an
+isometry `Υⁱ → Γⁱ / Δⁱ` (`BoundedData.toDerivedQuotL`), onto when `Δ F` is closed
+(`BoundedData.derivedQuotLEquiv`), and it carries the compressed differentials to the bounded
+differentials `[x] ↦ [dσ - Sφ, d̃φ]` of the quotient (`BoundedData.derivedQuotD`); this is the
+Hilbert-space structure of the subquotient model of the output complex. It exists for
 all data, as a complex of bounded operators; when `Δ F` is closed it is isomorphic, as a complex,
 to `derived E F` (`BoundedData.derivedComplexIso`). Hence, **for closed `Δ F` and under the
 elimination hypotheses `Data.Eliminates E F`**:
@@ -50,10 +55,17 @@ for instance under the compactness property
 * `BoundedData.twistL`: the twisted differential on `Vⁱ ⊕ Ṽⁱ`; `BoundedData.ΓL`, `BoundedData.ΔL`.
 * `BoundedData.derivedSpace E F i = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)`, `BoundedData.derivedD`,
   `BoundedData.derivedComplex`: the derived complex as a Hilbert complex.
+* `BoundedData.derivedQuotL E F i = Γⁱ / Δⁱ` with the quotient norm of the `ℓ²` norm,
+  `BoundedData.toDerivedQuotL : Υⁱ →ₗᵢ Γⁱ / Δⁱ`, `BoundedData.twistΓL`, `BoundedData.derivedQuotD`:
+  the bounded differentials of `Γ / Δ` for the quotient norm.
 
 ## Main results
 
 * `BoundedData.derivedComplexIso`: `derivedComplex` is `derived E F` (closed `Δ F`).
+* `BoundedData.norm_toDerivedQuotLinear`, `BoundedData.derivedQuotLEquiv`,
+  `BoundedData.derivedQuotD_toDerivedQuotL`: **the quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm
+  of `Υⁱ`** (`‖[y]‖ = ‖y‖` on `Γⁱ ⊖ Δⁱ`), so for closed `Δ F` the quotient is a Hilbert space
+  isometric to `Υⁱ`, with bounded differentials intertwined with those of `derivedComplex`.
 * `BoundedData.isClosed_bgg_Δ`: the exact part of the BGG complex is closed when the connecting
   maps before `J` are bounded below.
 * `BoundedData.derivedComplexCohomologyEquiv`: its cohomology is that of the twisted complex.
@@ -293,6 +305,68 @@ theorem toDerived_injective (i : ι) : Function.Injective (D.toDerived E F i) :=
   rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at this
   exact (Submodule.mem_bot 𝕜).2 (Subtype.ext this)
 
+/-! ### The quotient norm of `Γⁱ / Δⁱ` -/
+
+/-- **`Γⁱ / Δⁱ` with the quotient norm** of the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ` (seminormed; the Hilbert
+space `Υⁱ` up to an isometry when `Δ` is closed, `derivedQuotLEquiv`). -/
+abbrev derivedQuotL (i : ι) : Type u := D.ΓL E i ⧸ (D.ΔL E F i).comap (D.ΓL E i).subtype
+
+/-- `Υⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`, as a linear map. -/
+def toDerivedQuotLinear (i : ι) : D.derivedSpace E F i →ₗ[𝕜] D.derivedQuotL E F i :=
+  ((D.ΔL E F i).comap (D.ΓL E i).subtype).mkQ ∘ₗ
+    LinearMap.codRestrict (D.ΓL E i) (D.derivedSpace E F i).subtype fun y => y.2.1
+
+omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
+/-- `y ⊥ Δ`: `‖y‖ ≤ ‖y - δ‖` for `δ ∈ Δ`. -/
+theorem norm_le_norm_sub {i : ι} (y : D.derivedSpace E F i) {δ : WithLp 2 (V i × Vt i)}
+    (hδ : δ ∈ D.ΔL E F i) : ‖(y : WithLp 2 (V i × Vt i))‖ ≤ ‖(y : WithLp 2 (V i × Vt i)) - δ‖ := by
+  have h0 : inner 𝕜 (y : WithLp 2 (V i × Vt i)) (-δ) = 0 := by
+    rw [inner_neg_right, Submodule.inner_left_of_mem_orthogonal hδ y.2.2, neg_zero]
+  have h := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero _ _ h0
+  rw [← sub_eq_add_neg] at h
+  nlinarith [norm_nonneg ((y : WithLp 2 (V i × Vt i)) - δ), norm_nonneg (y : WithLp 2 (V i × Vt i)),
+    norm_nonneg (-δ)]
+
+omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
+/-- **The quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm of `Υⁱ = Γⁱ ⊖ Δⁱ`**: `‖[y]‖ = ‖y‖`. -/
+theorem norm_toDerivedQuotLinear {i : ι} (y : D.derivedSpace E F i) :
+    ‖D.toDerivedQuotLinear E F i y‖ = ‖y‖ := by
+  refine le_antisymm (Submodule.Quotient.norm_mk_le ((D.ΔL E F i).comap (D.ΓL E i).subtype)
+    (⟨y, y.2.1⟩ : D.ΓL E i)) (le_of_forall_pos_lt_add fun ε hε => ?_)
+  obtain ⟨m, hm, hlt⟩ := Submodule.Quotient.norm_mk_lt (D.toDerivedQuotLinear E F i y) hε
+  have hm' : Submodule.Quotient.mk (⟨y, y.2.1⟩ : D.ΓL E i) = Submodule.Quotient.mk m := hm.symm
+  have hδ : (y : WithLp 2 (V i × Vt i)) - m ∈ D.ΔL E F i :=
+    (Submodule.Quotient.eq ((D.ΔL E F i).comap (D.ΓL E i).subtype)).1 hm'
+  calc ‖y‖ = ‖(y : WithLp 2 (V i × Vt i))‖ := rfl
+    _ ≤ ‖(y : WithLp 2 (V i × Vt i)) - ((y : WithLp 2 (V i × Vt i)) - m)‖ :=
+      D.norm_le_norm_sub E F y hδ
+    _ = ‖m‖ := by rw [sub_sub_cancel]; rfl
+    _ < _ := hlt
+
+/-- **`Υⁱ → Γⁱ / Δⁱ` is an isometry** for the quotient norm. -/
+def toDerivedQuotL (i : ι) : D.derivedSpace E F i →ₗᵢ[𝕜] D.derivedQuotL E F i :=
+  ⟨D.toDerivedQuotLinear E F i, D.norm_toDerivedQuotLinear E F⟩
+
+omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
+theorem toDerivedQuotL_apply (i : ι) (y : D.derivedSpace E F i) :
+    D.toDerivedQuotL E F i y = Submodule.Quotient.mk ⟨y, y.2.1⟩ := rfl
+
+/-- The twisted differential `Γⁱ → Γʲ`, a bounded operator. -/
+def twistΓL (i j : ι) : D.ΓL E i →L[𝕜] D.ΓL E j :=
+  (D.twistL i j ∘L (D.ΓL E i).subtypeL).codRestrict (D.ΓL E j) fun x =>
+    D.twistL_mem_ΓL E i j x.2
+
+/-- **The bounded differentials of `Γ / Δ` for the quotient norm**, `[x] ↦ [twist x]`. -/
+def derivedQuotD (i j : ι) : D.derivedQuotL E F i →L[𝕜] D.derivedQuotL E F j :=
+  ((D.ΔL E F i).comap (D.ΓL E i).subtype).liftQL
+    (((D.ΔL E F j).comap (D.ΓL E j).subtype).mkQL ∘L D.twistΓL E i j) fun _ hx =>
+      (Submodule.Quotient.mk_eq_zero _).2 (D.twistL_mem_ΔL E F i j hx)
+
+omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
+theorem derivedQuotD_mk (i j : ι) (x : D.ΓL E i) :
+    D.derivedQuotD E F i j (Submodule.Quotient.mk x) =
+      Submodule.Quotient.mk (D.twistΓL E i j x) := rfl
+
 omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
 variable {F} in
 theorem isClosed_ΔL (hΔ : ∀ i, IsClosed (D.Δ F i : Set (V i × Vt i))) (i : ι) :
@@ -345,6 +419,30 @@ def derivedComplexIso : (D.derivedComplex E F).toModuleCat ≅ D.derived E F :=
 def derivedComplexCohomologyEquivDerived (i : ι) :
     (D.derivedComplex E F).cohomology i ≃ₗ[𝕜] (D.derived E F).homology i :=
   HilbertComplex.cohomologyEquivOfIso (D.derivedComplexIso E hΔ) i
+
+theorem toDerivedQuotL_surjective (i : ι) : Function.Surjective (D.toDerivedQuotL E F i) := by
+  intro q
+  obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
+  refine ⟨⟨(D.ΔL E F i)ᗮ.starProjection x, D.starProjection_mem_ΓL E F x.2,
+    Submodule.starProjection_apply_mem _ _⟩, ?_⟩
+  rw [toDerivedQuotL_apply, Submodule.Quotient.eq]
+  have h := neg_mem (D.sub_starProjection_mem_ΔL E hΔ (x : WithLp 2 (V i × Vt i)))
+  rw [neg_sub] at h
+  exact h
+
+/-- **`Γⁱ / Δⁱ` with the quotient norm is isometric to the Hilbert space `Υⁱ`** when `Δ` is
+closed: the quotient norm is a Hilbert norm. -/
+def derivedQuotLEquiv (i : ι) : D.derivedSpace E F i ≃ₗᵢ[𝕜] D.derivedQuotL E F i :=
+  LinearIsometryEquiv.ofSurjective _ (D.toDerivedQuotL_surjective E hΔ i)
+
+/-- **The isometry intertwines the differentials**: `[·]` carries the compressed differentials of
+`Υ` to the bounded differentials of `Γ / Δ`. -/
+theorem derivedQuotD_toDerivedQuotL (i j : ι) (y : D.derivedSpace E F i) :
+    D.derivedQuotD E F i j (D.toDerivedQuotL E F i y) =
+      D.toDerivedQuotL E F j (D.derivedD E F i j y) := by
+  rw [toDerivedQuotL_apply, derivedQuotD_mk, toDerivedQuotL_apply, Submodule.Quotient.eq]
+  have := D.twistL_sub_derivedD_mem E F i j y
+  rwa [IsClosed.submodule_topologicalClosure_eq (D.isClosed_ΔL E hΔ j)] at this
 
 variable {E} (h : D.Eliminates E F)
 include h

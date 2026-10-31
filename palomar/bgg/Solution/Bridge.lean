@@ -3,6 +3,7 @@ module
 public import Solution.Defs
 public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.Connecting
+public import Feec.HilbertComplex.BGG.SumComplex
 
 /-!
 # The bridge from the challenge to `Feec`
@@ -269,6 +270,21 @@ end Identification
 
 /-! ### The sum complex ([ArnoldHu2021], Theorem 7) -/
 
+theorem isIso_sumToTwisted {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
+    (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
+    IsIso (sumToTwisted S K hK) := by
+  refine @HomologicalComplex.Hom.isIso_of_components _ _ _ _ _ _ _ _ fun i => ?_
+  rw [ConcreteCategory.isIso_iff_bijective]
+  refine ⟨fun a b hab => ?_, fun x => ⟨((x.1 - K i x.2, x.2) : V.X i × Vt.X i), ?_⟩⟩
+  · have h2' := congrArg (fun y : V.X i × Vt.X i => y.2) hab
+    have h1' := congrArg (fun y : V.X i × Vt.X i => y.1) hab
+    have h2 : a.2 = b.2 := h2'
+    have h1 : a.1 + K i a.2 = b.1 + K i b.2 := h1'
+    rw [h2, add_left_inj] at h1
+    exact Prod.ext h1 h2
+  · exact Prod.ext (sub_add_cancel x.1 (K i x.2)) rfl
+
 theorem sum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
     (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
@@ -277,20 +293,113 @@ theorem sum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
         (∀ i, J ≤ i →
           LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (conn S i (i + 1)) = ⊤) →
         ∀ i, Nonempty ((bgg S J).homology i ≅ (twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
-  have hiso : IsIso (sumToTwisted S K hK) := by
-    refine @HomologicalComplex.Hom.isIso_of_components _ _ _ _ _ _ _ _ fun i => ?_
-    rw [ConcreteCategory.isIso_iff_bijective]
-    refine ⟨fun a b hab => ?_, fun x => ⟨((x.1 - K i x.2, x.2) : V.X i × Vt.X i), ?_⟩⟩
-    · have h2' := congrArg (fun y : V.X i × Vt.X i => y.2) hab
-      have h1' := congrArg (fun y : V.X i × Vt.X i => y.1) hab
-      have h2 : a.2 = b.2 := h2'
-      have h1 : a.1 + K i a.2 = b.1 + K i b.2 := h1'
-      rw [h2, add_left_inj] at h1
-      exact Prod.ext h1 h2
-    · exact Prod.ext (sub_add_cancel x.1 (K i x.2)) rfl
+  have hiso := isIso_sumToTwisted S K hK
   refine ⟨fun i φ hφ => ⟨K i φ, by rw [hK, hφ, map_zero, sub_zero]⟩, hiso, fun J hinj hsurj i => ?_⟩
   obtain ⟨e⟩ := (verdict hinj hsurj).homology i
   exact ⟨e ≪≫ ((HomologicalComplex.homologyFunctor _ _ i).mapIso (asIso (sumToTwisted S K hK))).symm⟩
+
+/-! ### The explicit cochain map (30) and Corollary 1 ([ArnoldHu2021], Theorem 7) -/
+
+section Explicit
+
+variable {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+
+theorem represents_iff {C : CochainComplex (ModuleCat.{v} R) ℤ} {i : ℤ} {H : Submodule R (C.X i)} :
+    Represents C i H ↔ C.Represents i H := by
+  have hp : (ComplexShape.up ℤ).prev i = i - 1 := CochainComplex.prev ℤ i
+  have hn : (ComplexShape.up ℤ).next i = i + 1 := CochainComplex.next ℤ i
+  constructor
+  · rintro ⟨h1, h2⟩
+    exact ⟨by rw [hp, hn]; exact h1, by rw [hp]; exact h2⟩
+  · rintro ⟨h1, h2⟩
+    exact ⟨by rw [hp, hn] at h1; exact h1, by rw [hp] at h2; exact h2⟩
+
+/-- The rows of `toData S` without connecting maps are the data of `S = 0`. -/
+theorem sumData_toData (S : Vt ⟶ V⟦(1 : ℤ)⟧) :
+    (toData S).sumData = toData (0 : Vt ⟶ V⟦(1 : ℤ)⟧) := by
+  have h : (fun i j => (0 : Vt.X i →ₗ[R] V.X j)) = conn (0 : Vt ⟶ V⟦(1 : ℤ)⟧) := by
+    funext i j
+    by_cases hij : i + 1 = j <;> simp [conn, hij]
+  unfold Feec.BGG.Data.sumData toData
+  congr
+
+variable {S : Vt ⟶ V⟦(1 : ℤ)⟧} {K : ∀ i, Vt.X i →ₗ[R] V.X i} {J : ℤ}
+  {t : ∀ i j, V.X j →ₗ[R] Vt.X i}
+
+theorem sumMap_eq (i : ℤ) (x : V.X i × Vt.X i) :
+    sumMap S K t J i x = (toData S).bggProjMap J t i (x.1 + K i x.2, x.2) := by
+  rcases lt_trichotomy i J with hi | rfl | hi
+  · rw [Feec.BGG.Data.bggProjMap_of_lt hi]; simp [sumMap, hi]
+  · rw [Feec.BGG.Data.bggProjMap_of_eq rfl]; simp [sumMap]; rfl
+  · rw [Feec.BGG.Data.bggProjMap_of_gt hi, Feec.BGG.Data.kerProj_apply]
+    simp only [sumMap, not_lt.2 hi.le, hi.ne', ↓reduceIte]
+    refine Prod.ext rfl ?_
+    have e : (toData S).dt (i - 1) i = (Vt.d (i - 1) i).hom := rfl
+    have e' : (toData S).S i (i + 1) = conn S i (i + 1) := rfl
+    simp only [e, e', map_add]
+    abel
+
+theorem quasiIso_eqToHom_comp {A B C : CochainComplex (ModuleCat.{v} R) ℤ} (e : A = B) (g : B ⟶ C)
+    [QuasiIso g] : QuasiIso (eqToHom e ≫ g) := by
+  subst e
+  rwa [eqToHom_refl, Category.id_comp]
+
+theorem explicit_aux
+    (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
+    (h : (toData S).InjSurjWith J t) (G H : ∀ i, Submodule R (V.X i × Vt.X i))
+    (hG : (toData S).Γ (J < ·) = G) (hH : (toData S).Δ (· < J) = H)
+    (hs : ∀ i j, ∀ x ∈ G i, (twisted S).d i j x ∈ G j)
+    (hs' : ∀ i j, ∀ x ∈ (fun i => (H i).comap (G i).subtype) i,
+      (subcomplex (twisted S) G hs).d i j x ∈ (fun i => (H i).comap (G i).subtype) j) :
+    ∃ κ : twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧) ⟶
+        quotient (subcomplex (twisted S) G hs) (fun i => (H i).comap (G i).subtype) hs',
+      (∀ i x, ∃ hx : sumMap S K t J i x ∈ G i,
+        (κ.f i).hom x = Submodule.Quotient.mk ⟨_, hx⟩) ∧ QuasiIso κ ∧
+      ∀ i (H' : Submodule R (V.X i)) (Ht' : Submodule R (Vt.X i)), Represents V i H' →
+        Represents Vt i Ht' → Represents (quotient (subcomplex (twisted S) G hs)
+          (fun i => (H i).comap (G i).subtype) hs') i ((H'.prod Ht').map (κ.f i).hom) := by
+  subst hG hH
+  have hK' : (toData S).IsNullHomotopy K := fun i _ hij μ => by
+    obtain rfl : i + 1 = _ := hij
+    exact hK i μ
+  have e : (toData (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).twistComplex = (toData S).sumComplex :=
+    (congrArg Feec.BGG.Data.twistComplex (sumData_toData S)).symm
+  let κ : twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧) ⟶ (toData S).bgg J :=
+    eqToHom e ≫ (toData S).bggSumMap t hK' h
+  have hκ (i : ℤ) : κ.f i = ((toData S).bggSumMap t hK' h).f i := by
+    erw [HomologicalComplex.comp_f, HomologicalComplex.eqToHom_f]
+    exact Category.id_comp _
+  have : QuasiIso κ :=
+    have := Feec.BGG.Data.quasiIso_bggSumMap h hK'
+    quasiIso_eqToHom_comp e _
+  refine ⟨κ, fun i x => ⟨sumMap_eq (S := S) (K := K) i x ▸ (toData S).bggProjMap_mem_Γ h i _, ?_⟩,
+    this, fun i H' Ht' hH' hHt' => represents_iff.2 ?_⟩
+  · rw [hκ]
+    exact (Feec.BGG.Data.bggSumMap_apply h hK' i x).trans
+      (congrArg Submodule.Quotient.mk (Subtype.ext (sumMap_eq i x).symm))
+  · rw [hκ]
+    exact Feec.BGG.Data.bgg_represents h hK' ⟨(represents_iff.1 hH').1, (represents_iff.1 hH').2⟩
+      ⟨(represents_iff.1 hHt').1, (represents_iff.1 hHt').2⟩
+
+/-- **The explicit cochain map (30) of Theorem 7 and Corollary 1**, from
+`Feec.BGG.Data.bggSumMap`, `Feec.BGG.Data.quasiIso_bggSumMap` and `Feec.BGG.Data.bgg_represents`. -/
+theorem explicit (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
+    (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
+    (J : ℤ) (t : ∀ i j, V.X j →ₗ[R] Vt.X i) (hinj : ∀ i ≤ J, Function.Injective (S.f i))
+    (ht : ∀ i, J ≤ i → ∀ v, conn S i (i + 1) (t i (i + 1) v) = v) :
+    ∃ κ : twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧) ⟶ bgg S J,
+      (∀ i x, ∃ hx : sumMap S K t J i x ∈ Γ S J i,
+        (κ.f i).hom x = Submodule.Quotient.mk ⟨_, hx⟩) ∧ QuasiIso κ ∧
+      ∀ i (H : Submodule R (V.X i)) (Ht : Submodule R (Vt.X i)), Represents V i H →
+        Represents Vt i Ht → Represents (bgg S J) i ((H.prod Ht).map (κ.f i).hom) := by
+  have h : (toData S).InjSurjWith J t :=
+    ⟨fun i hi => by
+      change Function.Injective (conn S i (i + 1))
+      rw [conn_succ]; exact hinj i hi,
+     fun i j hij hi v => by subst hij; exact ht i hi v⟩
+  exact explicit_aux hK h _ _ (Γ_toData S J) (Δ_toData S J) _ _
+
+end Explicit
 
 /-! ### Bounded Hilbert complexes -/
 

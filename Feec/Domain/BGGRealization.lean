@@ -233,13 +233,14 @@ theorem maximalData_S (hΩ : IsOpen Ω) (k : ℤ) :
 /-- **Analytic BGG for the maximal realizations**: if the matrices `M k`, `k ≤ J`, have left
 inverses, then wherever the maximal complexes of the two rows have finite-dimensional cohomology
 and the regular decompositions after `J` hold, the BGG complex `bgg J` of their domain complexes
-has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
+has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, and the explicit map (30) of
+[ArnoldHu2021], Theorem 7 is a quasi-isomorphism (`HilbertData.BGGVerdict`). -/
 theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen Ω) {J : ℤ}
     (hN : ∀ k ≤ J, ∃ N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜, N * M k = 1)
     (htop : (B.maximalData M hM hΩ).RegularDecomposition J)
     (i : ℤ) [FiniteDimensional 𝕜 ((B.top.maximalComplex hΩ).cohomology i)]
     [FiniteDimensional 𝕜 ((B.bot.maximalComplex hΩ).cohomology i)] :
-    (B.maximalData M hM hΩ).DerivedVerdict (J < ·) (· < J) i :=
+    (B.maximalData M hM hΩ).BGGVerdict J i :=
   have : FiniteDimensional 𝕜 ((B.maximalData M hM hΩ).H.cohomology i) :=
     ‹FiniteDimensional 𝕜 ((B.top.maximalComplex hΩ).cohomology i)›
   have : FiniteDimensional 𝕜 ((B.maximalData M hM hΩ).Ht.cohomology i) :=
@@ -362,8 +363,8 @@ theorem hessianMaximalData_derivedVerdict (hΩ : IsOpen Ω)
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)]
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
     (hessianMaximalData 𝕜 hΩ).DerivedVerdict (0 < ·) (· < 0) i :=
-  (hessianBGG 𝕜).maximalData_bggVerdict hessianSMat hessianS_apply_eq hΩ hessianSMat_leftInv
-    htop i
+  ((hessianBGG 𝕜).maximalData_bggVerdict hessianSMat hessianS_apply_eq hΩ hessianSMat_leftInv
+    htop i).toDerivedVerdict
 
 /-- **The analytic BGG theorem for the elasticity diagram on `Ω`**, under the regular
 decompositions after `1`. -/
@@ -371,8 +372,8 @@ theorem elasticityMaximalData_derivedVerdict (hΩ : IsOpen Ω)
     (htop : (elasticityMaximalData 𝕜 hΩ).RegularDecomposition 1) (i : ℤ)
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
     (elasticityMaximalData 𝕜 hΩ).DerivedVerdict (1 < ·) (· < 1) i :=
-  (elasticityBGG 𝕜).maximalData_bggVerdict elasticitySMat elasticityS_apply_eq hΩ
-    elasticitySMat_leftInv htop i
+  ((elasticityBGG 𝕜).maximalData_bggVerdict elasticitySMat elasticityS_apply_eq hΩ
+    elasticitySMat_leftInv htop i).toDerivedVerdict
 
 /-- **The analytic BGG theorem for the div-div diagram on `Ω`**, under the regular decompositions
 after `2`. -/
@@ -381,7 +382,8 @@ theorem divDivMaximalData_derivedVerdict (hΩ : IsOpen Ω)
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)]
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)] :
     (divDivMaximalData 𝕜 hΩ).DerivedVerdict (2 < ·) (· < 2) i :=
-  (divDivBGG 𝕜).maximalData_bggVerdict divDivSMat divDivS_apply_eq hΩ divDivSMat_leftInv htop i
+  ((divDivBGG 𝕜).maximalData_bggVerdict divDivSMat divDivS_apply_eq hΩ divDivSMat_leftInv htop
+    i).toDerivedVerdict
 
 end Instances
 

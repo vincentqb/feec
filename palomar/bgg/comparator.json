@@ -1,7 +1,7 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.bggCohomology", "FEEC.bggIdentification", "FEEC.bggFinrank", "FEEC.bggSum", "FEEC.bggClosedRange"],
+  "theorem_names": ["FEEC.bggCohomology", "FEEC.bggIdentification", "FEEC.bggFinrank", "FEEC.bggSum", "FEEC.bggExplicit", "FEEC.bggClosedRange"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

@@ -23,6 +23,8 @@ BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact
 * `HomologicalComplex.sub K P hP`, `HomologicalComplex.quo K P hP`: the subcomplex and the
   quotient complex, with `subι : K.sub P hP ⟶ K` and `quoπ : K ⟶ K.quo P hP`.
 * `HomologicalComplex.subQuo K P hP`: the short exact sequence `0 → K.sub P → K → K.quo P → 0`.
+* `HomologicalComplex.Represents K i H`: `H` represents the cohomology of `K` at `i`,
+  `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`.
 
 ## Main results
 
@@ -38,11 +40,13 @@ BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact
   over a field, `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes,
   with equality iff `H(X₁) → H(X₂)` is injective and `H(X₂) → H(X₃)` surjective
   (`…finrank_homology₂_eq_iff`).
+* `HomologicalComplex.Represents.map`: a quasi-isomorphism carries cohomology representatives to
+  cohomology representatives ([ArnoldHu2021], Corollary 1).
 
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5.2 (removing an exact
-  subcomplex)
+  subcomplex), Corollary 1 (cohomology representatives)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -285,3 +289,75 @@ theorem finrank_homology₂_eq_iff (hS : S.ShortExact) (i : ι)
     omega
 
 end CategoryTheory.ShortComplex.ShortExact
+
+/-! ### Cohomology representatives -/
+
+namespace HomologicalComplex
+
+variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
+  {K L : HomologicalComplex (ModuleCat.{v} R) c}
+
+variable (K) in
+/-- **`H` represents the cohomology of `K` at `i`**: the cycles are the direct sum of the boundaries
+and `H`, `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`. -/
+structure Represents (i : ι) (H : Submodule R (K.X i)) : Prop where
+  sup_eq : LinearMap.range (K.d (c.prev i) i).hom ⊔ H = LinearMap.ker (K.d i (c.next i)).hom
+  disjoint : Disjoint (LinearMap.range (K.d (c.prev i) i).hom) H
+
+theorem d_f_eq_zero (f : K ⟶ L) {i j : ι} {x : K.X i} (hx : K.d i j x = 0) :
+    L.d i j (f.f i x) = 0 := by
+  rw [← ModuleCat.comp_apply, f.comm, ModuleCat.comp_apply, hx, map_zero]
+
+/-- The class of a cycle `x` is mapped by `f` to the class of `f x`. -/
+theorem homologyMap_homologyπ_cyclesMk (f : K ⟶ L) {i j : ι} (hj : c.next i = j) (x : K.X i)
+    (hx : K.d i j x = 0) :
+    homologyMap f i (K.homologyπ i (K.cyclesMk x j hj hx)) =
+      L.homologyπ i (L.cyclesMk (f.f i x) j hj (d_f_eq_zero f hx)) := by
+  rw [← ModuleCat.comp_apply, homologyπ_naturality, ModuleCat.comp_apply]
+  congr 1
+  refine (ModuleCat.mono_iff_injective (L.iCycles i)).1 inferInstance ?_
+  rw [← ModuleCat.comp_apply, cyclesMap_i, ModuleCat.comp_apply]
+  exact (congrArg (f.f i) (K.i_cyclesMk x j hj hx)).trans (L.i_cyclesMk _ j hj _).symm
+
+/-- **A quasi-isomorphism maps cohomology representatives to cohomology representatives**: if
+`N(dⁱ) = R(dⁱ⁻¹) ⊕ H` in `K`, then `N(dⁱ) = R(dⁱ⁻¹) ⊕ f(H)` in `L`. -/
+theorem Represents.map (f : K ⟶ L) {i : ι} [QuasiIsoAt f i] {H : Submodule R (K.X i)}
+    (h : K.Represents i H) : L.Represents i (H.map (f.f i).hom) := by
+  have hb : Function.Bijective (homologyMap f i) := by
+    have := (quasiIsoAt_iff_isIso_homologyMap f i).1 inferInstance
+    exact ConcreteCategory.bijective_of_isIso (homologyMap f i)
+  have hH : H ≤ LinearMap.ker (K.d i (c.next i)).hom := h.sup_eq ▸ le_sup_right
+  have hf : ∀ b, f.f i (K.d (c.prev i) i b) = L.d (c.prev i) i (f.f (c.prev i) b) := fun b => by
+    rw [← ModuleCat.comp_apply, ← f.comm, ModuleCat.comp_apply]
+  refine ⟨le_antisymm (sup_le ?_ ?_) fun y hy => ?_, Submodule.disjoint_def.2 ?_⟩
+  · rintro _ ⟨y, rfl⟩
+    change L.d i (c.next i) (L.d (c.prev i) i y) = 0
+    rw [← ModuleCat.comp_apply, L.d_comp_d]; rfl
+  · rintro _ ⟨x, hx, rfl⟩
+    exact d_f_eq_zero f (hH hx)
+  · obtain ⟨a, ha⟩ := hb.2 (L.homologyπ i (L.cyclesMk y _ rfl hy))
+    obtain ⟨x, hx, rfl⟩ := K.exists_homologyπ_cyclesMk_moduleCat rfl a
+    rw [homologyMap_homologyπ_cyclesMk] at ha
+    have h0 : L.homologyπ i (L.cyclesMk y _ rfl hy -
+        L.cyclesMk (f.f i x) _ rfl (d_f_eq_zero f hx)) = 0 := by
+      rw [map_sub, ha, sub_self]
+    obtain ⟨w, hw⟩ := (L.homologyπ_eq_zero_iff_moduleCat rfl _).1 h0
+    have hw' : L.d (c.prev i) i w = y - f.f i x := hw.trans (by
+      rw [map_sub]
+      exact congrArg₂ (· - ·) (L.i_cyclesMk _ _ rfl _) (L.i_cyclesMk _ _ rfl _))
+    obtain ⟨_, ⟨b, rfl⟩, k, hk, rfl⟩ := Submodule.mem_sup.1 (h.sup_eq ▸ hx :
+      x ∈ LinearMap.range (K.d (c.prev i) i).hom ⊔ H)
+    rw [map_add, hf, eq_sub_iff_add_eq, ← add_assoc, ← map_add] at hw'
+    rw [← hw']
+    exact Submodule.add_mem_sup ⟨_, rfl⟩ ⟨k, hk, rfl⟩
+  · rintro _ ⟨w, hw⟩ ⟨k, hk, rfl⟩
+    have h0 : homologyMap f i (K.homologyπ i (K.cyclesMk k _ rfl (hH hk))) =
+        homologyMap f i 0 :=
+      (homologyMap_homologyπ_cyclesMk f rfl k (hH hk)).trans
+        (((L.homologyπ_eq_zero_iff_moduleCat rfl _).2
+          ⟨w, hw.trans (L.i_cyclesMk _ _ rfl _).symm⟩).trans (map_zero _).symm)
+    obtain ⟨b, hb'⟩ := (K.homologyπ_eq_zero_iff_moduleCat rfl _).1 (hb.1 h0)
+    rw [Submodule.disjoint_def.1 h.disjoint k ⟨b, hb'.trans (K.i_cyclesMk _ _ rfl _)⟩ hk,
+      map_zero]
+
+end HomologicalComplex

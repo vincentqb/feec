@@ -47,6 +47,10 @@ and also `Sᴶ` injective):
   `S` induces zero on cohomology and `(ω, μ) ↦ (ω + Kμ, μ)` is an isomorphism from the sum complex
   `V × Ṽ` onto `T`; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has
   the cohomology of the sum complex.
+* `FEEC.bggExplicit` ([ArnoldHu2021], (30), Theorem 7 and Corollary 1): under (28), with `Sⁱ`
+  injective up to `J` and right inverses `tⁱ⁺¹` of `Sⁱ` from `J` on, the explicit map
+  `BGG.sumMap` is a cochain map from the sum complex to the BGG complex, a quasi-isomorphism, and
+  it carries cohomology representatives `H × H̃` of the rows to those of the BGG complex.
 * `FEEC.bggClosedRange` (bounded Hilbert complexes, `Sⁱ` bounded below for `i < J`;
   [ArnoldHu2021], Theorem 6 and the remark after it): `Γⁱ`, `Δⁱ` are closed, so `Γⁱ / Δⁱ` is a
   Hilbert space with bounded differentials, and the differentials have closed range where both
@@ -58,9 +62,9 @@ Complexes of any length are included (rows vanishing outside a window). Non-vacu
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((19)–(28), Theorems 6
-  and 7, Proposition 1: the input diagram, the output complex and its cohomology) and §5
-  ((58)–(59): the twisted complex; §5.2: splitting off an exact subcomplex)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((19)–(31), Theorems 6
+  and 7, Proposition 1, Corollary 1: the input diagram, the output complex and its cohomology)
+  and §5 ((58)–(59): the twisted complex; §5.2: splitting off an exact subcomplex)
 * [I. N. Bernstein, I. M. Gelfand, S. I. Gelfand, *Differential operators on the base affine space and a study of g-modules*][BernsteinGelfandGelfand1975]
   (the BGG resolution)
 * [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
@@ -365,6 +369,26 @@ def sumToTwisted (K : ∀ i, Vt.X i →ₗ[R] V.X i)
     simp only [HomologicalComplex.zero_f, ModuleCat.hom_zero, LinearMap.zero_apply, sub_zero]
     rw [sub_sub_eq_add_sub, add_right_comm, add_sub_cancel_right]
 
+/-- **`H` represents the cohomology of `C` in degree `i`**: `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`. -/
+def Represents (C : CochainComplex (ModuleCat.{v} R) ℤ) (i : ℤ) (H : Submodule R (C.X i)) :
+    Prop :=
+  LinearMap.range (C.d (i - 1) i).hom ⊔ H = LinearMap.ker (C.d i (i + 1)).hom ∧
+    Disjoint (LinearMap.range (C.d (i - 1) i).hom) H
+
+/-- **The cochain map (30)** ([ArnoldHu2021], Theorem 7) from the sum complex to the BGG complex
+at `J`, for maps `Kⁱ : Ṽⁱ → Vⁱ` and right inverses `tⁱ⁺¹ : Vⁱ⁺¹ → Ṽⁱ` of `Sⁱ` (`i ≥ J`; e.g. the
+Moore–Penrose inverses of (29)), with `P = 1 - tⁱ⁺¹Sⁱ` (onto `N(Sⁱ)` along `R(tⁱ⁺¹)`): a
+representative in `Γⁱ` of the image of `(ω, μ)`. Before `J` it is `(ω + Kμ, μ)` and at `J`
+`(ω + Kμ, tᴶ⁺¹d(ω + Kμ))`, of class `[ω + Kμ]` in `Vⁱ / R(Sⁱ⁻¹)` (Arnold–Hu: `P_{R^⊥}(ω + Kμ)`);
+after `J` it is `(0, P(d̃ tω + (I + d̃ tK)μ))`. -/
+def sumMap (K : ∀ i, Vt.X i →ₗ[R] V.X i) (t : ∀ i j, V.X j →ₗ[R] Vt.X i) (J i : ℤ)
+    (x : V.X i × Vt.X i) : V.X i × Vt.X i :=
+  if i < J then (x.1 + K i x.2, x.2)
+  else if i = J then (x.1 + K i x.2, t i (i + 1) (V.d i (i + 1) (x.1 + K i x.2)))
+  else
+    let φ := Vt.d (i - 1) i (t (i - 1) i x.1) + (x.2 + Vt.d (i - 1) i (t (i - 1) i (K i x.2)))
+    (0, φ - t i (i + 1) (conn S i (i + 1) φ))
+
 /-- **Non-vacuity**: `Ṽ = V⟦1⟧` with `S = 𝟙` (`Sⁱ = id`) satisfies the hypotheses of
 `FEEC.bggCohomology` at every `J`. -/
 theorem hypotheses_id (V : CochainComplex (ModuleCat.{v} R) ℤ) (J : ℤ) :
@@ -471,6 +495,24 @@ theorem bggSum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) �
           LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) →
         ∀ i, Nonempty ((BGG.bgg S J).homology i ≅
           (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
+  sorry
+
+/-- **The explicit cochain map of Theorem 7 and the cohomology representatives of Corollary 1**
+([ArnoldHu2021], (30), (31)). If `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)), `Sⁱ` is injective for `i ≤ J` and
+`tⁱ⁺¹` is a right inverse of `Sⁱ` for `i ≥ J` ((23), (29)), then `BGG.sumMap` defines a cochain
+map `κ` from the sum complex to the BGG complex at `J` (with values in `Γ`), `κ` induces an
+isomorphism on cohomology (Theorem 7), and if `H`, `H̃` represent the cohomology of the rows in
+degree `i`, then `κ(H × H̃)` represents the cohomology of the BGG complex (Corollary 1). -/
+theorem bggExplicit {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
+    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
+    (J : ℤ) (t : ∀ i j, V.X j →ₗ[R] Vt.X i) (hinj : ∀ i ≤ J, Function.Injective (S.f i))
+    (ht : ∀ i, J ≤ i → ∀ v, BGG.conn S i (i + 1) (t i (i + 1) v) = v) :
+    ∃ κ : BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧) ⟶ BGG.bgg S J,
+      (∀ i x, ∃ hx : BGG.sumMap S K t J i x ∈ BGG.Γ S J i,
+        (κ.f i).hom x = Submodule.Quotient.mk ⟨_, hx⟩) ∧ QuasiIso κ ∧
+      ∀ i (H : Submodule R (V.X i)) (Ht : Submodule R (Vt.X i)), BGG.Represents V i H →
+        BGG.Represents Vt i Ht → BGG.Represents (BGG.bgg S J) i ((H.prod Ht).map (κ.f i).hom) := by
   sorry
 
 /-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed

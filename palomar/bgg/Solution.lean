@@ -5,18 +5,20 @@ public import Solution.Bridge
 /-!
 # The BGG construction (solution)
 
-`FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum` and
-`FEEC.bggClosedRange` of
+`FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum`,
+`FEEC.bggExplicit` and `FEEC.bggClosedRange` of
 `Challenge.lean`, proved through the bridge `Solution.Bridge` (`FEEC.BGG.verdict`,
 `FEEC.BGG.identification`, `FEEC.BGG.finiteDimensional_and_finrank_le`, `FEEC.BGG.sum`,
-`FEEC.BGG.closedRange`)
+`FEEC.BGG.explicit`, `FEEC.BGG.closedRange`)
 from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
-`Feec.BGG.Data.finrank_twistComplex_homology_eq_iff` and
+`Feec.BGG.Data.finrank_twistComplex_homology_eq_iff`, `Feec.BGG.Data.bggProj`,
+`Feec.BGG.Data.quasiIso_of_Γι_comp`, `HomologicalComplex.Represents.map` and
 `Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist`.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (24)–(27), Theorem 6 and §5
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (24)–(31), Theorems 6 and 7,
+  Corollary 1 and §5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -79,6 +81,24 @@ theorem bggSum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) �
         ∀ i, Nonempty ((BGG.bgg S J).homology i ≅
           (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) :=
   BGG.sum S K hK
+
+/-- **The explicit cochain map of Theorem 7 and the cohomology representatives of Corollary 1**
+([ArnoldHu2021], (30), (31)). If `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)), `Sⁱ` is injective for `i ≤ J` and
+`tⁱ⁺¹` is a right inverse of `Sⁱ` for `i ≥ J` ((23), (29)), then `BGG.sumMap` defines a cochain
+map `κ` from the sum complex to the BGG complex at `J` (with values in `Γ`), `κ` induces an
+isomorphism on cohomology (Theorem 7), and if `H`, `H̃` represent the cohomology of the rows in
+degree `i`, then `κ(H × H̃)` represents the cohomology of the BGG complex (Corollary 1). -/
+theorem bggExplicit {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
+    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
+    (J : ℤ) (t : ∀ i j, V.X j →ₗ[R] Vt.X i) (hinj : ∀ i ≤ J, Function.Injective (S.f i))
+    (ht : ∀ i, J ≤ i → ∀ v, BGG.conn S i (i + 1) (t i (i + 1) v) = v) :
+    ∃ κ : BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧) ⟶ BGG.bgg S J,
+      (∀ i x, ∃ hx : BGG.sumMap S K t J i x ∈ BGG.Γ S J i,
+        (κ.f i).hom x = Submodule.Quotient.mk ⟨_, hx⟩) ∧ QuasiIso κ ∧
+      ∀ i (H : Submodule R (V.X i)) (Ht : Submodule R (Vt.X i)), BGG.Represents V i H →
+        BGG.Represents Vt i Ht → BGG.Represents (BGG.bgg S J) i ((H.prod Ht).map (κ.f i).hom) :=
+  BGG.explicit S K hK J t hinj ht
 
 /-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed
 ranges** ([ArnoldHu2021], Theorem 6 and the remark after it). Let `d`, `d̃` be complexes of

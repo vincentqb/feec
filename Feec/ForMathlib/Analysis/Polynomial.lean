@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.Polynomial.Basic
+public import Mathlib.Topology.Algebra.Polynomial
 
 /-!
 # Rational functions bounded towards infinity
@@ -11,6 +12,10 @@ filter converging to infinity (for instance along the imaginary axis of `ℂ`), 
 `Polynomial.isLittleO_cobounded_of_degree_lt`. It shows that a stability function bounded on the
 imaginary axis has `deg P ≤ deg Q` ([HairerWanner1996], §IV.3).
 
+**`Polynomial.X_pow_dvd_of_isBigO`**: over a nontrivially normed field, a polynomial that is
+`O(zⁿ)` at `0` is divisible by `Xⁿ`; it turns the order condition `r(z) - e^z = O(z^{p+1})` of a
+stability function into a divisibility of polynomials.
+
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
@@ -18,7 +23,7 @@ imaginary axis has `deg P ≤ deg Q` ([HairerWanner1996], §IV.3).
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open Filter Bornology Asymptotics
+open Filter Bornology Asymptotics Topology
 
 @[expose] public section
 
@@ -41,5 +46,31 @@ theorem natDegree_le_of_norm_div_le {l : Filter 𝕜} [l.NeBot] (hl : l ≤ cobo
   rw [norm_div, div_le_iff₀ hq] at hCz
   rw [inv_mul_eq_div, le_div_iff₀ (by positivity)] at hz
   nlinarith [mul_le_mul_of_nonneg_right (le_abs_self C) hq.le]
+
+/-- **A polynomial that is `O(zⁿ)` at `0` is divisible by `Xⁿ`**: write `P = Xᵐ U` with
+`U(0) ≠ 0`; if `m < n`, then `U(z) = O(z^{n-m}) → 0` on the punctured neighbourhood of `0`. -/
+theorem X_pow_dvd_of_isBigO {𝕂 : Type*} [NontriviallyNormedField 𝕂] {P : 𝕂[X]} {n : ℕ}
+    (h : (fun z => P.eval z) =O[𝓝 0] fun z => z ^ n) : X ^ n ∣ P := by
+  rcases eq_or_ne P 0 with rfl | hP
+  · exact dvd_zero _
+  obtain ⟨U, hPU, hU⟩ := exists_eq_pow_rootMultiplicity_mul_and_not_dvd P hP 0
+  simp only [map_zero, sub_zero] at hPU hU
+  set m := rootMultiplicity 0 P
+  rcases le_or_gt n m with hm | hm
+  · exact (pow_dvd_pow X hm).trans ⟨U, hPU⟩
+  have hU0 : U.eval 0 ≠ 0 := by rwa [X_dvd_iff, coeff_zero_eq_eval_zero] at hU
+  obtain ⟨c, hc⟩ := h.bound
+  have hb : (fun z => U.eval z) =O[𝓝[≠] 0] fun z => z ^ (n - m) := by
+    refine IsBigO.of_bound c ?_
+    filter_upwards [nhdsWithin_le_nhds hc, self_mem_nhdsWithin] with z hz hz0
+    have hzm : 0 < ‖z‖ ^ m := pow_pos (norm_pos_iff.2 hz0) m
+    rw [hPU, eval_mul, eval_pow, eval_X, norm_mul, norm_pow, norm_pow,
+      ← Nat.add_sub_cancel' hm.le, pow_add, mul_left_comm] at hz
+    rw [norm_pow]
+    exact le_of_mul_le_mul_left hz hzm
+  have h0 : Tendsto (fun z : 𝕂 => z ^ (n - m)) (𝓝[≠] 0) (𝓝 0) :=
+    ((continuous_pow _).tendsto' 0 0 (zero_pow (by omega))).mono_left nhdsWithin_le_nhds
+  exact absurd (tendsto_nhds_unique
+    (((Polynomial.continuous U).tendsto 0).mono_left nhdsWithin_le_nhds) (hb.trans_tendsto h0)) hU0
 
 end Polynomial

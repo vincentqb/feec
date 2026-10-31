@@ -363,6 +363,28 @@ theorem eq_cayley_of_apply_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) {T : E 
     rw [hAx, hx, smul_comm, ← e]; module
   rw [← h1, hT, h2, h1]
 
+/-- **Implicit Euler is the only operator mapping `x - τ A x` to `x`**: for m-dissipative `A`
+and `τ > 0`, `T (x - τ A x) = x` on `D(A)` iff `T = (1 - τ A)⁻¹ = τ⁻¹ R(τ⁻¹)` (`1 - τ A` is
+onto). -/
+theorem apply_sub_smul_eq_iff (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) (T : E →L[𝕜] E) :
+    (∀ x : A.domain, T ((x : E) - (τ : 𝕜) • A x) = x) ↔
+      T = (τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹ := by
+  have hR : IsResolvent A (τ : 𝕜)⁻¹ (resolvent A (τ : 𝕜)⁻¹) :=
+    hA.isResolvent_of_re_pos (by rw [← RCLike.ofReal_inv, RCLike.ofReal_re]; positivity)
+  have hτ' : (τ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hτ.ne'
+  have e : ∀ x : A.domain, (x : E) - (τ : 𝕜) • A x = (τ : 𝕜) • ((τ : 𝕜)⁻¹ • (x : E) - A x) :=
+    fun x => by rw [smul_sub, smul_smul, mul_inv_cancel₀ hτ', one_smul]
+  have hS : ∀ x : A.domain, ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹) ((x : E) - (τ : 𝕜) • A x) = x :=
+    fun x => by
+      rw [e, _root_.smul_apply, _root_.map_smul, hR.apply_sub, smul_smul, inv_mul_cancel₀ hτ',
+        one_smul]
+  refine ⟨fun hT => ?_, fun h => h ▸ hS⟩
+  ext y
+  have hy : y = (hR.toDomain ((τ : 𝕜)⁻¹ • y) : E) -
+      (τ : 𝕜) • A (hR.toDomain ((τ : 𝕜)⁻¹ • y)) := by
+    rw [e, hR.coe_toDomain, hR.sub_apply_toDomain, smul_smul, mul_inv_cancel₀ hτ', one_smul]
+  rw [hy, hT, hS]
+
 /-- **The θ-scheme with `re θ = 1/2` is an isometry** for skew-adjoint `A` and every `τ ≠ 0`
 (both time directions); for `θ = 1/2` this is `norm_cayley_apply`. -/
 theorem norm_thetaStep_apply_eq (hA : A.IsSkewAdjoint) (hθ : RCLike.re θ = 1 / 2) (hτ : τ ≠ 0)

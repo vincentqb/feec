@@ -3,17 +3,20 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Algebra.Polynomial.AlgebraMap
 public import Mathlib.Analysis.Normed.Operator.Mul
+public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.Analysis.SpecialFunctions.Exp
 public import Mathlib.LinearAlgebra.LinearPMap
 
 /-!
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`VonNeumann.inequality`, `VonNeumann.inequality_rational`, `VonNeumann.inequality_dissipative`
-and `VonNeumann.cayley_contraction`),
-compiled against Mathlib alone so that their elaborated values are those of the challenge; the
+`VonNeumann.inequality`, `VonNeumann.inequality_rational`, `VonNeumann.inequality_dissipative`,
+`VonNeumann.inequality_mdissipative`, their real forms `VonNeumann.inequality_dissipative_real`
+and `VonNeumann.inequality_mdissipative_real`, `VonNeumann.cayley_contraction`,
+`VonNeumann.error_bound` and `VonNeumann.error_bound_real`), compiled against Mathlib alone so that their elaborated values are those of the challenge; the
 challenge defines nothing, so only its imports and opens remain. The solution imports this
-module, the bridge to `Feec` and proves the four theorems (`Solution.lean`).
+module, the bridge to `Feec` and proves the nine theorems (`Solution.lean`).
 
 ## References
 
@@ -22,8 +25,8 @@ module, the bridge to `Feec` and proves the four theorems (`Solution.lean`).
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
-open Polynomial
+open scoped InnerProductSpace Topology
+open Polynomial Asymptotics
 
 @[expose] public noncomputable section
 

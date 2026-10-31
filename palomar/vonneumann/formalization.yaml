@@ -18,20 +18,29 @@ project:
     never grows), then von Neumann's inequality, transported to the half-plane by the Cayley
     transform, shows r(tau A) is itself a contraction for every step size tau: the scheme cannot
     blow up however large the step.
-    In Lean 4 over Mathlib: (1) for a contraction T of a complex inner product space, not
-    necessarily complete, and a complex polynomial p, ||p(T)|| <= sup over the unit circle of
-    |p|; (2) on a complex Hilbert space, for polynomials p, q with q free of zeros in the closed
-    unit disc, q(T) is invertible and ||p(T) q(T)^(-1)|| <= sup over the unit circle of |p/q|;
-    (3) for a real rational function r = p/q without poles in the closed left half-plane and
-    with |r(iy)| <= C on the imaginary axis, every bounded dissipative operator A
-    (re <Ax, x> <= 0) of a real or complex Hilbert space and every step tau >= 0, q(tau A) is
-    invertible and ||r(tau A)|| <= C, so A-stable schemes (C = 1) are contractions for every
-    step size; (4) for an m-dissipative, possibly unbounded, A and tau > 0, exactly one bounded
-    operator maps x - tau A x to x + tau A x on the domain of A, the Cayley transform, and it is
-    a contraction, the bridge by which (2) bounds r(tau A) for every m-dissipative A. The
+    In Lean 4 over Mathlib, with suprema in [0, infinity]: (1) for a contraction T of a complex
+    inner product space, not necessarily complete, and a complex polynomial p, ||p(T)|| <= sup
+    over the unit circle of |p|; (2) on a complex Hilbert space, for polynomials p, q with q free
+    of zeros in the closed unit disc, q(T) is invertible and ||p(T) q(T)^(-1)|| <= sup over the
+    unit circle of |p/q|; (3) for a complex rational function r = p/q without poles in the closed
+    left half-plane, every bounded dissipative operator A (re <Ax, x> <= 0) of a complex Hilbert
+    space, every step tau >= 0 and every n, q(tau A) is invertible and
+    ||r(tau A)^n|| <= (sup_y |r(iy)|)^n; (4) the same for m-dissipative, possibly unbounded, A,
+    tau > 0 and r bounded at infinity (deg p <= deg q), with r(tau A) = P(S) Q(S)^(-1) through the resolvent S = (1 - tau A)^(-1), the unique
+    bounded operator mapping x - tau A x to x, where P(s) = s^N p(1 - 1/s) and
+    Q(s) = s^N q(1 - 1/s), N = deg q, are written out as sums; (5) the real forms of (3) and (4):
+    real r on real or complex Hilbert spaces (Runge-Kutta stability functions on real spaces);
+    (6) the Cayley transform of an m-dissipative A is the unique bounded operator mapping
+    x - tau A x to x + tau A x, and a contraction; (7) the Brenner-Thomee error bound: for an
+    A-stable r of order m (r(z) - e^z = O(z^(m+1)) at 0) there is K, depending on r only, with
+    ||r(tau A)^n x - e^(n tau A) x|| <= K n tau tau^m ||A^(m+1) x|| for every bounded dissipative
+    A, tau >= 0, n and x: complex r on every complex Hilbert space, real r on every real or
+    complex Hilbert space. So A-stable schemes are
+    contractions, with all their powers, for every step size and every m-dissipative A. The
     statements use Mathlib's polynomials (Polynomial.aeval), bounded operators, partially defined
-    linear maps (LinearPMap) and Ring.inverse only; the proof is the library Feec of this
-    repository (Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.TimeStepping.Rational,
+    linear maps (LinearPMap), Ring.inverse, NormedSpace.exp, Asymptotics.IsBigO and the extended
+    norm only; the proof is the library Feec of this repository
+    (Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.TimeStepping.Rational,
     Feec.TimeStepping.Theta).
   authors:
     - "Vincent Quenneville-Bélair"
@@ -55,7 +64,8 @@ sources:
     note: >-
       Von Neumann's inequality: the closed unit disc is a spectral set of every contraction of a
       Hilbert space (here: for polynomials on every complex inner product space, and for
-      rational functions with poles outside the closed disc on Hilbert spaces).
+      rational functions with poles outside the closed disc on Hilbert spaces). Paper not
+      consulted; the statement as recalled in [HairerWanner1996], §IV.11.
     author_endorsement: "n/a"
   - title: "Solving Ordinary Differential Equations II"
     authors:
@@ -68,9 +78,11 @@ sources:
     note: >-
       §IV.3: stability functions and A-stability (|r(z)| <= 1 on the closed left half-plane).
       §IV.11 (Contractivity for linear problems, von Neumann's theorem): ||r(hA)|| <= sup over
-      re z <= 0 of |r(z)| for dissipative A in a Euclidean norm, stated there in finite
-      dimension; here on every real or complex Hilbert space. Section numbers recalled, not
-      checked against the printed book.
+      re z <= 0 of |r(z)| for a rational r bounded on re z <= 0 and A with logarithmic norm
+      mu(A) <= 0 in an inner product norm (A dissipative), stated there for matrices; here on
+      every complex Hilbert space, for bounded and for m-dissipative A, with the supremum over
+      the imaginary axis only, and for real r also on real Hilbert spaces. Section numbers and
+      the precise wording recalled, not checked against the printed book.
     author_endorsement: "not-contacted"
   - title: "The stability of rational approximations of analytic semigroups"
     authors:
@@ -93,8 +105,17 @@ sources:
     id: "doi:10.1137/0716051"
     type: "article"
     location: "SIAM J. Numer. Anal. 16 (1979)"
-    relationship: "background"
-    note: "Stability and convergence of rational approximations r(tau A)^n of e^(t A)."
+    relationship: "formalizes"
+    note: >-
+      Convergence of rational approximations: for r stable and of order m,
+      ||r(tau A)^n x - e^(n tau A) x|| <= C t tau^m ||A^(m+1) x||, t = n tau, for generators A
+      of semigroups with x in the domain of A^(m+1). Formalized as a specialization: bounded
+      dissipative A of Hilbert spaces (complex r on complex spaces, real r on real or complex
+      spaces), where A-stability gives the stability ||r(tau A)^n|| <= 1, with C uniform in A,
+      the space, tau and n. Not compared: unbounded generators, Banach spaces (where stability
+      may only hold with a growing bound on ||r(tau A)^n||), and the estimates for less smooth
+      data (x in the domain of a lower power of A, with a lower rate). Paper not consulted;
+      statement and scope as recalled.
     author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
@@ -111,12 +132,15 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: VonNeumann.inequality, VonNeumann.inequality_rational,
-    VonNeumann.inequality_dissipative and VonNeumann.cayley_contraction (Challenge.lean). Not
-    compared (proved in Feec, outside the statement): the bound ||r(tau A)|| <= sup_y |r(iy)|
-    for m-dissipative, possibly unbounded, A as one statement
-    (Feec.TimeStepping.RationalScheme.norm_step_le), consistency of order p and the
-    Brenner-Thomee error bound ||r(tau L)^n y - e^(tL) y|| <= K t tau^p ||L^(p+1) y||, symmetric
-    schemes as isometries for skew L, the theta-schemes and Runge-Kutta stability functions.
+    VonNeumann.inequality_dissipative, VonNeumann.inequality_mdissipative,
+    VonNeumann.inequality_dissipative_real, VonNeumann.inequality_mdissipative_real,
+    VonNeumann.cayley_contraction, VonNeumann.error_bound and VonNeumann.error_bound_real
+    (Challenge.lean). Not compared
+    (proved in Feec, outside the statement): that P(S) Q(S)^(-1) is p(tau A) q(tau A)^(-1) for
+    bounded A (Feec.TimeStepping.resolventEval_eq_aeval,
+    Feec.TimeStepping.RationalScheme.step_toPMap), symmetric schemes as isometries for skew A,
+    discrete constraint propagation, the theta-schemes and Runge-Kutta stability functions; the
+    parts of Brenner-Thomee listed under that source and in divergence (3).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -149,36 +173,53 @@ automation:
   spend_usd: "not tracked"
   notes: >-
     Human-directed, AI-written development. The Challenge statements were written for this
-    submission; the Solution applies ContinuousLinearMap.norm_aeval_le_of_norm_le_one,
-    ContinuousLinearMap.norm_aeval_mul_inverse_le and, through
-    Feec.TimeStepping.RationalScheme.ofBounded (Solution/Bridge.lean),
-    Feec.TimeStepping.RationalScheme.norm_apply_le, and Feec.TimeStepping.norm_cayley_le,
-    cayley_sub_smul and eq_cayley_of_apply_sub_smul.
+    submission; the Solution applies, through Solution/Bridge.lean (real bounds to suprema in
+    [0, infinity]), ContinuousLinearMap.norm_aeval_le_of_norm_le_one,
+    ContinuousLinearMap.norm_aeval_mul_inverse_le,
+    Feec.TimeStepping.norm_resolventEval_mul_inverse_le,
+    norm_aeval_mul_inverse_le_of_dissipative, norm_aeval_mul_inverse_pow_sub_exp_le and
+    X_pow_dvd_sub_mul_expTaylor (complex coefficients), Feec.TimeStepping.RationalScheme.ofBounded, norm_apply_le, norm_step_le,
+    step_eq_resolventEval (real coefficients), Feec.TimeStepping.apply_sub_smul_eq_iff,
+    norm_cayley_le, cayley_sub_smul, eq_cayley_of_apply_sub_smul, and
+    Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le with hasOrder_of_isBigO.
 
 fidelity:
   divergences: >-
-    (1) The supremum is expressed by a bound C: if |p| <= C on the unit circle then
-    ||p(T)|| <= C (equivalent to ||p(T)|| <= sup; by the maximum principle the circle and the
-    closed disc give the same supremum, and the circle is the weaker hypothesis).
-    (2) Von Neumann's inequality in its classical generality is for Hilbert spaces; the
-    polynomial form here holds on every complex inner product space, and the rational form
-    needs completeness (for the invertibility of q(T)).
-    (3) The half-plane statement is for bounded dissipative A. For m-dissipative,
-    possibly unbounded, A the challenge states the Cayley contraction (4) instead of a bound on
-    r(tau A): Mathlib has no functional calculus r(tau A) for unbounded A, and defining it in the
-    challenge (as r~(C_tau) with r~(w) = r((w - 1)/(w + 1)), Feec.TimeStepping.RationalScheme.step)
-    would add custom definitions; the bound then follows from (2) applied to C_tau and r~ (over
-    the complex numbers; over the reals through complexification), proved in Feec
-    (Feec.TimeStepping.RationalScheme.norm_step_le) but not compared. The hypothesis of (3) is
-    the bound on the imaginary axis, weaker than on the closed left half-plane (equivalent to it
-    by the maximum principle, given no poles there), so (3) is the stronger form.
-    (4) The rational function in the dissipative form has real coefficients (as stability
-    functions of Runge-Kutta methods do), so that it acts over 𝕜 = ℝ as well as ℂ; complex
-    coefficients are not covered by (3). r is the pair (p, q), not a reduced fraction; its
-    poles are the zeros of q, assumed outside the closed left half-plane. No consistency with
-    e^z is assumed: (3) holds for every such r, schemes or not.
-    (5) Unconditional stability is the bound ||r(tau A)|| <= 1; the bound for powers,
-    ||r(tau A)^n|| <= 1, follows by submultiplicativity and is not stated.
+    (1) Encodings. r = p/q is the pair (p, q), not a reduced fraction; its poles are the zeros
+    of q, assumed outside the closed left half-plane (outside the closed unit disc in the
+    rational form of von Neumann's inequality). The suprema are taken in [0, infinity] with the
+    extended norm, so they are the suprema of the sources, infinite when r is unbounded on the
+    imaginary axis (then the bounds are vacuous). For m-dissipative A, r(tau A) is defined in the
+    statement as P(S) Q(S)^(-1) at the resolvent S = (1 - tau A)^(-1), with
+    P(S) = sum_(k <= N) p_k (S - 1)^k S^(N-k), N = deg q (that is s^N p(1 - 1/s) at s = S, and
+    1 - 1/s = tau A there); Mathlib has no functional calculus for unbounded operators. These
+    statements assume deg p <= deg q: then P(S) carries every coefficient of p, and r(tau A) is
+    bounded, as it must be for unbounded A (deg p > deg q makes r unbounded on the axis, so this
+    loses only vacuous cases). That P(S) Q(S)^(-1) is p(tau A) q(tau A)^(-1) for bounded A is
+    proved in Feec, not compared. In the error bounds, "K depending on r only" is stated as
+    "exists K, for all spaces E": Lean quantifies the universe of E outside the statement, so
+    each universe has its own K; the proof gives the same K in every universe,
+    sup_y |rho(iy)/q(iy)| + 1/(m+1)! for the remainder rho = (p - q T_m)/X^(m+1). The resolvent at
+    1/tau, with mu - A onto for one mu > 0, is the m-dissipativity of Pazy, §1.4.
+    (2) Stronger than the sources. The polynomial form of von Neumann's inequality holds on
+    every complex inner product space; the rational form needs completeness, as in the source
+    (q(T) need not be invertible on an incomplete space: the right shift on finitely supported
+    sequences and q = 2 - X). The half-plane forms take the supremum over the imaginary axis,
+    not over the closed left half-plane (Hairer-Wanner); the two agree by the maximum principle
+    given no poles there, and the axis is the smaller set. They hold on every Hilbert space and
+    for unbounded m-dissipative A, not only for matrices; for real r also on real Hilbert
+    spaces; and they bound all powers r(tau A)^n.
+    (3) Brenner-Thomee: the error bound is stated for bounded dissipative A only, with the
+    constant uniform in A, the space, tau and n. For an unbounded generator A, e^(t A) is a
+    C_0-semigroup, absent from Mathlib, and x in D(A^(m+1)) needs powers of unbounded
+    operators; stating it would need a custom semigroup definition in the challenge, and
+    proving it the consistency estimate for unbounded A through the resolvent calculus, which
+    Feec does not have (estimated 600 to 1000 lines). Banach spaces and nonsmooth data are not
+    covered either: off Hilbert spaces von Neumann's inequality fails, and the stability bound
+    of Brenner-Thomee needs the Laplace-transform (Hille-Phillips) representation of r(tau A),
+    absent from Mathlib (estimated well over 1000 lines). Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
+    Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
+    hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.
 
 review:
   status: "self-assessed"
@@ -206,11 +247,36 @@ alignment:
       lean: "VonNeumann.inequality_dissipative"
       module: "Challenge"
       status: "proved"
-      note: "Real rational functions bounded on the imaginary axis, bounded dissipative A, tau >= 0."
+      note: "Complex rational r, bounded dissipative A, complex Hilbert spaces, tau >= 0, powers."
+    - source: "[HairerWanner1996], §IV.11; [Pazy1983], §1.4"
+      lean: "VonNeumann.inequality_mdissipative"
+      module: "Challenge"
+      status: "proved"
+      note: "Complex rational r, m-dissipative A, r(tau A) through the resolvent, powers."
+    - source: "[HairerWanner1996], §IV.11"
+      lean: "VonNeumann.inequality_dissipative_real"
+      module: "Challenge"
+      status: "proved"
+      note: "Real rational r, bounded dissipative A, real or complex Hilbert spaces."
+    - source: "[HairerWanner1996], §IV.11; [Pazy1983], §1.4"
+      lean: "VonNeumann.inequality_mdissipative_real"
+      module: "Challenge"
+      status: "proved"
+      note: "Real rational r, m-dissipative A, real or complex Hilbert spaces."
     - source: "[Pazy1983], §1.4 (m-dissipative operators)"
       lean: "VonNeumann.cayley_contraction"
       module: "Challenge"
       status: "proved"
       note: "The Cayley transform of an m-dissipative, possibly unbounded, A is a contraction."
+    - source: "[BrennerThomee1979]"
+      lean: "VonNeumann.error_bound"
+      module: "Challenge"
+      status: "proved"
+      note: "Complex A-stable r of order m, bounded dissipative A, complex Hilbert spaces."
+    - source: "[BrennerThomee1979]"
+      lean: "VonNeumann.error_bound_real"
+      module: "Challenge"
+      status: "proved"
+      note: "Real A-stable r of order m, bounded dissipative A, real or complex Hilbert spaces."
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

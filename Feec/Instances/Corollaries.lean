@@ -48,6 +48,10 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
   estimate of `Hˢ(Q)` data (`Feec.Models.Cube.FEM.sobolevHighJackson`, `s ≥ 0`, order
   `h^{min(s, p + 1)}`): the mixed method, the semidiscrete wave and heat equations on every window
   and the fully discrete schemes converge at that order for Sobolev data ([Arnold2018], Ch. 7);
+* **affinely invariant shape spaces** (`Cube.FEM.feec_affineInvariant`): the FEEC verdict of the
+  family of every admissible sequence, whose shape spaces are in every degree `k ≥ 1` affinely
+  invariant spaces `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Thm 3.5), the classified
+  affinely invariant spaces ([AFW2006], Thm 3.6);
 * **magnetostatics** (`Cube.FEM.magnetostatic`, `Parallelepiped.magnetostatic`): the static FEEC
   verdict of `HΛ` and `H̊Λ` in degrees `1` and `2` in dimension `3`, the mixed formulations of
   `curl curl u - grad div u = f` with natural and essential boundary conditions
@@ -58,6 +62,8 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.2 (the Hodge Laplacian), Thms 3.4–3.9
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3.4, Thms 3.5–3.6 (affinely invariant spaces of polynomial forms)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thms 4.6, 4.7, 4.14, Prop. 4.17
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
@@ -292,6 +298,22 @@ Thm 4.14; [Arnold2018], Ch. 7 -/
 theorem feec_sobolev (S : PolySeq) (p : ℕ) :
     ConformingFamily.Verdict.Rated (polyFamily n S) (sobolevHighJackson n S p) :=
   (polyFamily n S).feec_rated _
+
+/-- **The FEEC theorem on affinely invariant shape spaces**: for every admissible sequence `S`, the
+FEEC verdict of its family on the cube, whose shape spaces are, in every degree `k ≥ 1`, the
+affinely invariant spaces `X(r, s, k, n) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`, `s ≤ r`, of [AFW2006],
+Theorem 3.5 (`PolySeq.exists_space_eq_sup`), which for `0 < k < n` are all the nonzero
+finite-dimensional affinely invariant spaces of polynomial `k`-forms with the spaces
+`dP_{r+1}Λ^{k-1}` ([AFW2006], Theorem 3.6, `Feec.FiniteElement.IsAffineInvariant.eq_sup`). -/
+theorem feec_affineInvariant (S : PolySeq) :
+    (polyFamily n S).Verdict ∧ ∀ k, 1 ≤ k → ∃ r s, s ≤ r ∧
+      IsAffineInvariant ((Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map
+          (Koszul.extDerivₗ ℝ (Fin n)) ⊔
+        (Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Koszul.koszulₗ ℝ (Fin n))) ∧
+      S.space n k = ((Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map
+          (Koszul.extDerivₗ ℝ (Fin n)) ⊔
+        (Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Koszul.koszulₗ ℝ (Fin n))).map (evalForm n) :=
+  ⟨(polyFamily n S).feec, fun _ hk => S.exists_space_eq_sup hk⟩
 
 end Cube.FEM
 

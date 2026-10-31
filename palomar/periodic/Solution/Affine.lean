@@ -1,0 +1,156 @@
+module
+
+public import Solution.Bridge
+public import Feec.FiniteElement.AffineInvariantForm
+
+/-!
+# The bridge for the affinely invariant spaces
+
+The pullback `pullback n B b` of the challenge, `(p ∘ φ) ⊗ Λ(Bᵀ)`, is carried by
+`Feec.Koszul.formEquiv` to the pullback `Feec.FiniteElement.polyPullback B b` of the coefficient
+forms (`formEquiv_pullback`): on the exterior algebra, `Λ(Bᵀ)` acts on the coefficients as the
+fibre pullback `Feec.ExteriorFibre.pullback B` (`coeffs_map_dualMap`), both being multiplicative
+and agreeing on the covectors. The invariance predicates and the spaces `X(r, s, k)` correspond
+(`isAffineInvariant_iff`, `isLinearInvariant_iff`, `map_invariantForm`), and the conclusions are
+those of `Feec.FiniteElement.InvariantForm` and `Feec.FiniteElement.AffineInvariantForm`
+(`affineInvariantForms_of_feec`).
+
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3.4
+
+Bibliography: [references.bib](../../../docs/references.bib)
+-/
+
+open Finset MvPolynomial Module LinearMap
+
+@[expose] public noncomputable section
+
+namespace FEEC
+
+variable {n : ℕ}
+
+local notation "Φ" => Feec.Koszul.formEquiv ℝ (Fin n)
+
+open Feec.ExteriorFibre in
+/-- `Λ(Bᵀ)` acts on the coefficients as the fibre pullback by `B`. -/
+theorem coeffs_map_dualMap (B : Fin n → Fin n → ℝ)
+    (x : ExteriorAlgebra ℝ (Module.Dual ℝ (Fin n → ℝ))) :
+    coeffs ℝ (Fin n) (ExteriorAlgebra.map (Matrix.toLin' (Matrix.of B)).dualMap x) =
+      Feec.ExteriorFibre.pullback B (coeffs ℝ (Fin n) x) := by
+  induction x using CliffordAlgebra.left_induction with
+  | algebraMap c =>
+    rw [AlgHom.commutes, coeffs_algebraMap, pullback_smul, pullback_single_empty]
+  | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, pullback_add]
+  | ι_mul x ξ hx =>
+    have hξ : coord ℝ (Fin n) ((Matrix.toLin' (Matrix.of B)).dualMap ξ) = covPullback B (coord ℝ (Fin n) ξ) := by
+      funext l
+      rw [coord_apply, LinearMap.dualMap_apply, covPullback]
+      rw [show Matrix.toLin' (Matrix.of B) (Pi.single l 1) =
+          ∑ i, B i l • (Pi.single i 1 : Fin n → ℝ) by
+        funext i
+        rw [Matrix.toLin'_apply]
+        simp [Matrix.mulVec, dotProduct, Pi.single_apply]]
+      simp [map_sum, mul_comm]
+    rw [map_mul, ExteriorAlgebra.map_apply_ι, coeffs_ι_mul, coeffs_ι_mul, hx, hξ, pullback_wedge]
+
+/-- **`formEquiv` carries the pullback of the challenge to the pullback of `Feec`.** -/
+theorem formEquiv_pullback (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) (ω : Form ℝ n) :
+    Φ (pullback n B b ω) = Feec.FiniteElement.polyPullback B b (Φ ω) := by
+  induction ω using TensorProduct.inductionOn with
+  | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, Feec.FiniteElement.polyPullback_add]
+  | tmul p x =>
+    funext t
+    simp only [pullback, TensorProduct.map_tmul, AlgHom.toLinearMap_apply,
+      Feec.Koszul.formEquiv_tmul, coeffs_map_dualMap, Feec.FiniteElement.polyPullback_apply,
+      Feec.ExteriorFibre.pullback_apply, Finset.sum_smul]
+    refine sum_congr rfl fun s _ => ?_
+    rw [smul_eq_C_mul, smul_eq_C_mul, map_mul, map_mul, Feec.FiniteElement.polySubst]
+    simp only [algHom_C, algebraMap_eq]
+    ring
+
+theorem map_pullback (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) (V : Submodule ℝ (Form ℝ n)) :
+    (V.map (pullback n B b)).map (Φ).toLinearMap =
+      (V.map (Φ).toLinearMap).map (Feec.FiniteElement.polyPullbackₗ B b) := by
+  rw [← Submodule.map_comp, ← Submodule.map_comp]
+  congr 1
+  exact LinearMap.ext fun ω => formEquiv_pullback B b ω
+
+theorem isAffineInvariant_iff (V : Submodule ℝ (Form ℝ n)) :
+    IsAffineInvariant n V ↔ Feec.FiniteElement.IsAffineInvariant (V.map (Φ).toLinearMap) := by
+  refine ⟨fun h B b ω hω => ?_, fun h B b => ?_⟩
+  · have := (map_le_iff (n := n)).2 (h B b)
+    rw [map_pullback] at this
+    exact this ⟨ω, hω, rfl⟩
+  · rw [← map_le_iff, map_pullback]
+    rintro _ ⟨ω, hω, rfl⟩
+    exact h B b ω hω
+
+theorem isLinearInvariant_iff (V : Submodule ℝ (Form ℝ n)) :
+    IsLinearInvariant n V ↔ Feec.FiniteElement.IsLinearInvariant (V.map (Φ).toLinearMap) := by
+  refine ⟨fun h B ω hω => ?_, fun h B => ?_⟩
+  · have := (map_le_iff (n := n)).2 (h B)
+    rw [map_pullback] at this
+    exact this ⟨ω, hω, rfl⟩
+  · rw [← map_le_iff, map_pullback]
+    rintro _ ⟨ω, hω, rfl⟩
+    exact h B ω hω
+
+theorem map_invariantForm (r s k : ℕ) :
+    (invariantForm n r s k).map (Φ).toLinearMap =
+      (Feec.Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map (Feec.Koszul.extDerivₗ ℝ (Fin n)) ⊔
+        (Feec.Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Feec.Koszul.koszulₗ ℝ (Fin n)) := by
+  rw [invariantForm, Submodule.map_sup, map_map_extDeriv, map_map_koszul, map_polyForm,
+    map_polyForm]
+
+theorem map_map_extDeriv_polyForm (r k : ℕ) :
+    ((polyForm ℝ n r k).map (extDeriv ℝ n)).map (Φ).toLinearMap =
+      (Feec.Koszul.polyForm ℝ (Fin n) r k).map (Feec.Koszul.extDerivₗ ℝ (Fin n)) := by
+  rw [map_map_extDeriv, map_polyForm]
+
+variable (n) in
+theorem affineInvariantForms_of_feec : AffineInvariantForms n where
+  eq_of_le_homForm m k W hW hle := by
+    have h := ((isLinearInvariant_iff W).1 hW).eq_of_le_homForm_succ
+      (by rw [← map_homForm]; exact (map_le_iff (n := n)).2 hle)
+    rcases h with h | h | h | h
+    · left
+      exact map_eq_iff.1 (h.trans (Submodule.map_bot _).symm)
+    · right; left
+      exact map_eq_iff.1 (h.trans (by rw [map_map_extDeriv, map_homForm]))
+    · right; right; left
+      exact map_eq_iff.1 (h.trans (by rw [map_map_koszul, map_homForm]))
+    · right; right; right
+      exact map_eq_iff.1 (h.trans (map_homForm _ _).symm)
+  isAffineInvariant_map_extDeriv r k := by
+    rw [isAffineInvariant_iff, map_map_extDeriv_polyForm]
+    exact Feec.FiniteElement.isAffineInvariant_map_extDeriv _ _
+  isAffineInvariant_invariantForm r s k hk hs := by
+    rw [isAffineInvariant_iff, map_invariantForm]
+    exact Feec.FiniteElement.isAffineInvariant_sup hk hs
+  invariantForm_eq_polyFormMinus r k hk := by
+    rw [← map_eq_iff, map_invariantForm, map_polyFormMinus]
+    exact Feec.FiniteElement.sup_eq_polyFormMinus hk
+  invariantForm_eq_polyForm r k hk := by
+    rw [← map_eq_iff, map_invariantForm, map_polyForm]
+    exact Feec.FiniteElement.sup_eq_polyForm hk
+  eq_invariantForm k hk hkn V hfin hV hdeg hne := by
+    have : FiniteDimensional ℝ (V.map (Φ).toLinearMap) := Module.Finite.map V _
+    have hdeg' : ∀ ω ∈ V.map (Φ).toLinearMap, Feec.ExteriorFibre.IsDeg k ω := by
+      intro ω hω
+      have := (map_le_iff (n := n)).2 hdeg hω
+      rw [map_kForm] at this
+      exact this.1
+    have hne' : V.map (Φ).toLinearMap ≠ ⊥ := by
+      rwa [Ne, ← Submodule.map_bot (Φ).toLinearMap, map_eq_iff]
+    obtain ⟨r, h⟩ := ((isAffineInvariant_iff V).1 hV).eq_sup hdeg' hk hkn hne'
+    refine ⟨r, ?_⟩
+    rcases h with h | ⟨s, hs, h⟩
+    · left
+      rwa [← map_map_extDeriv_polyForm, map_eq_iff] at h
+    · right
+      refine ⟨s, hs, ?_⟩
+      rwa [← map_invariantForm, map_eq_iff] at h
+
+end FEEC

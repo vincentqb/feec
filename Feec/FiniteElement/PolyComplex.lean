@@ -1,5 +1,6 @@
 module
 
+public import Feec.FiniteElement.AffineInvariantForm
 public import Feec.FiniteElement.PolyElement
 
 /-!
@@ -244,6 +245,67 @@ theorem lagrangeP2_eq_ofKinds :
     · simp only [lagrangeP2, ofKinds, Finset.Ioo_eq_empty (show ¬(k + 3 < 3) by omega),
         Finset.filter_empty, Finset.card_empty]
       simp
+
+end PolySeq
+
+/-! ### The shape spaces among the affinely invariant spaces -/
+
+namespace PolyKind
+
+/-- The polynomial forms of the family, `P_rΛᵏ` or `P_r⁻Λᵏ`, in `Koszul.PolyForm`. -/
+def form : PolyKind → ℕ → ℕ → Submodule ℝ (Koszul.PolyForm ℝ (Fin n))
+  | full, r, k => Koszul.polyForm ℝ (Fin n) r k
+  | trimmed, r, k => Koszul.polyFormMinus ℝ (Fin n) r k
+
+theorem space_eq_map_form (κ : PolyKind) (r k : ℕ) :
+    κ.space n r k = (κ.form r k).map (evalForm n) := by
+  cases κ <;> rfl
+
+/-- The degree `r'` of the `d`-part `dP_{r'+1}Λ^{k-1}` of the family: `r` for `P_rΛᵏ`, `r - 1`
+for `P_r⁻Λᵏ`. -/
+def dDeg : PolyKind → ℕ → ℕ
+  | full, r => r
+  | trimmed, r => r - 1
+
+/-- **The shape spaces of the periodic table are spaces `X(r', r - 1, k, n)` of [AFW2006],
+Theorem 3.5** (`1 ≤ r`, `1 ≤ k`): `P_rΛᵏ = dP_{r+1}Λ^{k-1} + κP_{r-1}Λ^{k+1}` and
+`P_r⁻Λᵏ = dP_rΛ^{k-1} + κP_{r-1}Λ^{k+1}`. -/
+theorem form_eq_sup (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
+    κ.form (n := n) r k =
+      (Koszul.polyForm ℝ (Fin n) (κ.dDeg r + 1) (k - 1)).map (Koszul.extDerivₗ ℝ (Fin n)) ⊔
+        (Koszul.polyForm ℝ (Fin n) (r - 1) (k + 1)).map (Koszul.koszulₗ ℝ (Fin n)) := by
+  obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
+  cases κ
+  · exact (sup_eq_polyForm hk).symm
+  · exact (sup_eq_polyFormMinus hk).symm
+
+theorem le_dDeg (κ : PolyKind) (r : ℕ) : r - 1 ≤ κ.dDeg r := by
+  cases κ <;> simp [dDeg]
+
+/-- **The shape spaces of the periodic table are affinely invariant** ([AFW2006], Theorem 3.5). -/
+theorem isAffineInvariant_form (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
+    IsAffineInvariant (κ.form (n := n) r k) := by
+  rw [κ.form_eq_sup hr hk]
+  exact isAffineInvariant_sup hk (κ.le_dDeg r)
+
+end PolyKind
+
+namespace PolySeq
+
+/-- **The spaces of an admissible sequence are affinely invariant spaces `X(r, s, k, n)`**
+([AFW2006], Theorem 3.5) in every degree `k ≥ 1`: the first two of the three kinds of
+affinely invariant spaces of polynomial `k`-forms, which are all of them for `0 < k < n`
+([AFW2006], Theorem 3.6, `IsAffineInvariant.eq_sup`); the third, `s < r - 1`, is in no admissible
+sequence. -/
+theorem exists_space_eq_sup (S : PolySeq) {k : ℕ} (hk : 1 ≤ k) :
+    ∃ r s, s ≤ r ∧
+      IsAffineInvariant ((Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map (Koszul.extDerivₗ ℝ (Fin n)) ⊔
+        (Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Koszul.koszulₗ ℝ (Fin n))) ∧
+      S.space n k = ((Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map (Koszul.extDerivₗ ℝ (Fin n)) ⊔
+        (Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Koszul.koszulₗ ℝ (Fin n))).map (evalForm n) := by
+  refine ⟨(S.kind k).dDeg (S.deg k), S.deg k - 1, (S.kind k).le_dDeg _,
+    isAffineInvariant_sup hk ((S.kind k).le_dDeg _), ?_⟩
+  rw [PolySeq.space, PolyKind.space_eq_map_form, PolyKind.form_eq_sup _ (S.one_le_deg k) hk]
 
 end PolySeq
 

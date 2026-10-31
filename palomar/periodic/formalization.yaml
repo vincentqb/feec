@@ -51,13 +51,23 @@ project:
     (r + k >= 1), the strict inclusions
     P_(r-1) Lambda^k < P_r^- Lambda^k (k < n) and P_r^- Lambda^(k+1) < P_r Lambda^(k+1) (k < n),
     and that a closed form of P_(r+1)^- Lambda^k lies in P_r Lambda^k (H_r: the forms with
-    homogeneous coefficients of degree r). The
+    homogeneous coefficients of degree r). A second compared theorem, FEEC.affineInvariantForms,
+    states over K = R the classification of the affinely invariant spaces of AFW2006 §3.4, with
+    the pullback phi^*(p (x) theta) = (p o phi) (x) Lambda(B^T) theta along phi(x) = B x + b
+    (MvPolynomial.aeval tensor ExteriorAlgebra.map of the dual map): the subspaces of H_r Lambda^k
+    invariant under the pullback of every linear map are 0, d H_(r+1) Lambda^(k-1),
+    kappa H_(r-1) Lambda^(k+1) and H_r Lambda^k (r, k >= 1); X(r, s, k) = d P_(r+1) Lambda^(k-1) +
+    kappa P_s Lambda^(k+1) is affinely invariant for s <= r, X(r, r, k) = P_(r+1)^- Lambda^k and
+    X(r+1, r, k) = P_(r+1) Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
+    finite-dimensional affinely invariant space of k-forms is d P_(r+1) Lambda^(k-1) or some
+    X(r, s, k), s <= r (Theorem 3.6). The
     statement is self-contained over Mathlib (MvPolynomial and its submodules
     homogeneousSubmodule, restrictTotalDegree and restrictSupport, TensorProduct, ExteriorAlgebra,
     exteriorPower, CliffordAlgebra.contractLeft, CochainComplex, ModuleCat, finrank); the proof is
     the library Feec of this repository (Feec.Algebra.ExteriorAlgebraForm identifies Mathlib's
     exterior algebra with the coefficient forms of Feec; Feec.Algebra.PolynomialFormDim,
-    Feec.Algebra.CubicalForm).
+    Feec.Algebra.CubicalForm, Feec.FiniteElement.InvariantForm,
+    Feec.FiniteElement.AffineInvariantForm).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -77,7 +87,7 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
     type: "article"
-    location: "Acta Numerica 15 (2006), §3.1-§3.3, §3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.4, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.17), (3.21), (3.22), Lemma 3.8"
+    location: "Acta Numerica 15 (2006), §3.1-§3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.6, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.18), the decomposition (3.10) into irreducible linear-invariant subspaces, (3.21), (3.22), Lemma 3.8"
     relationship: "formalizes"
     note: >-
       Locators checked against the published text (author-hosted PDF of the Acta Numerica
@@ -100,9 +110,17 @@ sources:
       k >= 1. The second half of (3.1), dim H_r Lambda^k(R^n) = dim P_r Lambda^k(R^(n-1)), is
       false as printed (n = 1, k = 1, r = 0: dim H_0 Lambda^1(R) = 1, P_0 Lambda^1(R^0) = 0); the
       proof of (3.13) uses it as dim H_r Lambda^k(R^n) = dim P_r(R^(n-1)) dim Alt^k R^n, which is
-      what the statement asserts, in closed form C(n, k) C(n+r-1, r). Not formalized: §3.4 and
-      the pullback identities (3.4) and (3.7) of §3.1-§3.2 (see fidelity.divergences (6)), the
-      2^(n-1) intermediate resolutions of §3.5, §3.6.
+      what the statement asserts, in closed form C(n, k) C(n+r-1, r). §3.4 (FEEC.affineInvariantForms,
+      over R): the irreducibility of the summands of (3.10) under the pullback of linear maps,
+      (3.18), Theorem 3.5 with its cases s = r and s = r - 1, Theorem 3.6. AFW derive the
+      irreducibility from Fulton-Harris (6.9); Feec proves it directly (weight parts of diagonal
+      pullbacks, an explicit generator and a pullback reaching it from every form not in the
+      other summand), with the hypothesis of Theorem 3.6 (all linear maps, singular ones
+      included) rather than GL(n). Not formalized: the description of the third kind of
+      Theorem 3.5 (s < r - 1) as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its
+      strict inclusions, the identities (3.4) and (3.7) as separate statements (used in the
+      proofs, Feec.FiniteElement.polyPullback_mem_polyForm, polyPullback_koszul), the 2^(n-1)
+      intermediate resolutions of §3.5, §3.6.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -157,13 +175,24 @@ sources:
     relationship: "background"
     author_endorsement: "not-contacted"
 
+  - title: "Representation Theory: A First Course"
+    authors:
+      - "William Fulton"
+      - "Joe Harris"
+    id: "doi:10.1007/978-1-4612-0979-9"
+    type: "book"
+    location: "Graduate Texts in Mathematics 129, §6.1, (6.9)"
+    relationship: "background"
+    note: "The source of AFW2006's irreducibility claim; the formalization proves it without representation theory."
+    author_endorsement: "not-contacted"
+
 related_formalizations: []
 
 status:
   scope: >-
     Formalized and compared: FEEC.periodicTable (Challenge.lean) for every field (of
     characteristic 0 where marked), every n, k, r and multidegree b (r >= 1 where the sources
-    require it). Not compared (proved in Feec, outside the statement): the homotopy formula over
+    require it), and FEEC.affineInvariantForms over R, every n, k, r, s. Not compared (proved in Feec, outside the statement): the homotopy formula over
     every commutative ring, the tensor-product characterization of Q_b^- Lambda^k as a span of
     products of one-dimensional factors (Feec.Koszul.cubeFormMinus_eq_span), the serendipity
     spaces S_r Lambda^k, the admissible P/P^- sequences of the periodic table
@@ -238,16 +267,17 @@ fidelity:
     restated: it would need tensor products of cochain complexes and their realization as forms
     on I^n (the identification Alt^k R^m (x) Alt^l R^n -> Alt^(k+l) R^(m+n)), roughly 150 more
     lines of statement for the same space.
-    (6) Not formalized from the sources: AFW2006 §3.4 together with the pullback identities
-    (3.4) (phi* P_r Lambda^k in P_r Lambda^k for affine phi, phi* H_r Lambda^k in H_r Lambda^k for
-    linear phi) and (3.7) (phi* kappa = kappa phi* for linear phi, phi* kappa omega - kappa phi* omega
-    in P_r Lambda^(k-1) for affine phi): the pullback of polynomial forms under affine maps is in
-    neither Mathlib nor Feec; stating it as an algebra map of P(K^n) (x) Lambda(K^n)* (MvPolynomial.aeval
-    tensor ExteriorAlgebra.map) takes about 25 lines, and the proofs (substitution degree bounds,
-    exterior powers under ExteriorAlgebra.map, naturality of the contraction) about 250 lines of
-    new Feec, for statements AFW use only to motivate affine-invariant finite element spaces; the
-    classification Theorems 3.5-3.6 rest on the representation theory of GL(n) of Fulton-Harris,
-    absent from Mathlib (inherent). The 2^(n-1) intermediate resolutions of §3.5 (proved in Feec
+    (6) AFW2006 §3.4 is stated over R only (FEEC.affineInvariantForms; the library's pullback
+    Feec.FiniteElement.polyPullback is real), with invariance under the pullback of every affine
+    (resp. linear) map, singular maps included, as in the hypothesis of Theorem 3.6; AFW's
+    sentence on H_r Lambda^k concerns GL(n), and invariance under invertible maps only is not
+    stated. The irreducibility is stated for r, k >= 1 (r = m + 1, k = k' + 1 in the statement),
+    the case of AFW's sentence; AFW's Theorem 3.6 is stated with s >= -1, here as the two
+    alternatives s = -1 (d P_(r+1) Lambda^(k-1)) and 0 <= s <= r. Not formalized from §3.4: the
+    description of the third kind of Theorem 3.5 (s < r - 1) as the forms of P_r Lambda^k with
+    d omega in P_s Lambda^(k+1), and its strict inclusions; the pullback identities (3.4) and (3.7)
+    are not stated separately (Feec proves them, Feec.FiniteElement.polyPullback_mem_polyForm,
+    polyPullback_koszul). The 2^(n-1) intermediate resolutions of §3.5 (proved in Feec
     as admissible sequences, Feec.FiniteElement.PolySeq.ofKinds; about 40 lines of statement for
     the sequence encoding, while the two extreme resolutions, their inclusion and Lemma 3.8 are
     stated). §3.6 (change of origin). Everything beyond the polynomial algebra: meshes, degrees of
@@ -306,5 +336,19 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "The compared theorem; proved in Solution.lean from FEEC.periodicTable_of_feec (Solution/Bridge.lean)."
+    - source: "[AFW2006] §3.4: (3.10) irreducible, (3.18), Theorems 3.5-3.6"
+      lean: "FEEC.AffineInvariantForms"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Fields: eq_of_le_homForm (the invariant subspaces of H_r Lambda^k),
+        isAffineInvariant_map_extDeriv ((3.18)), isAffineInvariant_invariantForm (Theorem 3.5),
+        invariantForm_eq_polyFormMinus, invariantForm_eq_polyForm (Theorem 3.5, s = r and
+        s = r - 1), eq_invariantForm (Theorem 3.6).
+    - source: "[AFW2006] §3.4"
+      lean: "FEEC.affineInvariantForms"
+      module: "Challenge"
+      status: "proved"
+      note: "Compared theorem; proved in Solution.lean from FEEC.affineInvariantForms_of_feec (Solution/Affine.lean)."
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

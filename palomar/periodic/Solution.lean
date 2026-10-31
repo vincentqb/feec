@@ -1,5 +1,6 @@
 module
 
+public import Solution.Affine
 public import Solution.Bridge
 
 /-!
@@ -8,7 +9,9 @@ public import Solution.Bridge
 `FEEC.periodicTable` of `Challenge.lean`, proved from `Feec.Algebra.PolynomialFormDim` and
 `Feec.Algebra.CubicalForm` through the bridge `Solution.Bridge` (`periodicTable_of_feec`), which
 identifies the forms `MvPolynomial ⊗ ExteriorAlgebra` of the challenge with the coefficient forms of
-`Feec` (`Feec.Algebra.ExteriorAlgebraForm`).
+`Feec` (`Feec.Algebra.ExteriorAlgebraForm`), and `FEEC.affineInvariantForms` from
+`Feec.FiniteElement.InvariantForm` and `Feec.FiniteElement.AffineInvariantForm` through
+`Solution.Affine` (`affineInvariantForms_of_feec`).
 
 ## References
 
@@ -33,5 +36,13 @@ Rham complexes are resolutions of the constants; the homotopy formula and the Ko
 decompositions hold (`PeriodicTable`). -/
 theorem periodicTable (K : Type u) [Field K] (n : ℕ) : PeriodicTable K n :=
   periodicTable_of_feec K n
+
+/-- **The affinely invariant spaces of polynomial differential forms** on `ℝⁿ` ([AFW2006],
+Theorems 3.5–3.6): for `0 < k < n` they are the spaces `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`,
+`-1 ≤ s ≤ r`, among them `P_rΛᵏ` and `P_{r+1}⁻Λᵏ`; the summands `dH_{r+1}Λ^{k-1}` and
+`κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under the linear maps
+(`AffineInvariantForms`). -/
+theorem affineInvariantForms (n : ℕ) : AffineInvariantForms n :=
+  affineInvariantForms_of_feec n
 
 end FEEC

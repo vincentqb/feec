@@ -179,6 +179,7 @@ public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.Basic
 public import Feec.HilbertComplex.BGG.Conforming
+public import Feec.HilbertComplex.BGG.Connecting
 public import Feec.HilbertComplex.BGG.Derived
 public import Feec.HilbertComplex.BGG.DomainData
 public import Feec.HilbertComplex.BGG.Discrete

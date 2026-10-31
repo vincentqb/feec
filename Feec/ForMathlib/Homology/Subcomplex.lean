@@ -3,6 +3,7 @@ module
 public import Mathlib.Algebra.Category.ModuleCat.Abelian
 public import Mathlib.Algebra.Homology.HomologicalComplexAbelian
 public import Mathlib.Algebra.Homology.HomologySequenceLemmas
+public import Mathlib.Algebra.Homology.ConcreteCategory
 public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.Algebra.Homology.ShortComplex.ModuleCat
 public import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
@@ -30,8 +31,13 @@ BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact
   acyclic, `g` if the first is.
 * `HomologicalComplex.quo_acyclic`, `HomologicalComplex.sub_acyclic`: elementwise criteria.
 * `HomologicalComplex.quasiIso_subι`, `HomologicalComplex.quasiIso_quoπ`.
+* `HomologicalComplex.homologyπ_eq_zero_iff_moduleCat`,
+  `HomologicalComplex.exists_homologyπ_cyclesMk_moduleCat`: homology classes of complexes of
+  modules, elementwise.
 * `CategoryTheory.ShortComplex.ShortExact.finiteDimensional_homology₂`, `…finrank_homology₂_le`:
-  over a field, `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes.
+  over a field, `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes,
+  with equality iff `H(X₁) → H(X₂)` is injective and `H(X₂) → H(X₃)` surjective
+  (`…finrank_homology₂_eq_iff`).
 
 ## References
 
@@ -184,6 +190,40 @@ theorem quasiIso_quoπ (h : (K.sub P hP).Acyclic) : QuasiIso (K.quoπ P hP) :=
 
 end HomologicalComplex
 
+/-! ### Homology classes of complexes of modules -/
+
+namespace HomologicalComplex
+
+variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
+  (K : HomologicalComplex (ModuleCat.{v} R) c)
+
+/-- A cycle has zero homology class iff it is a boundary. -/
+theorem homologyπ_eq_zero_iff_moduleCat {i j : ι} (hij : c.prev j = i) (z : K.cycles j) :
+    K.homologyπ j z = 0 ↔ ∃ y : K.X i, K.d i j y = K.iCycles j z := by
+  have hex := ShortComplex.exact_of_g_is_cokernel
+    (ShortComplex.mk _ _ (K.toCycles_comp_homologyπ i j)) (K.homologyIsCokernel i j hij)
+  rw [ShortComplex.moduleCat_exact_iff] at hex
+  have hi : Function.Injective (K.iCycles j) :=
+    (ModuleCat.mono_iff_injective (K.iCycles j)).1 inferInstance
+  constructor
+  · intro hz
+    obtain ⟨y, rfl⟩ := hex z hz
+    exact ⟨y, by rw [← ModuleCat.comp_apply, K.toCycles_i]⟩
+  · rintro ⟨y, hy⟩
+    obtain rfl : K.toCycles i j y = z := hi (by rw [← ModuleCat.comp_apply, K.toCycles_i, hy])
+    rw [← ModuleCat.comp_apply, K.toCycles_comp_homologyπ]; rfl
+
+/-- Every homology class is the class of a cycle. -/
+theorem exists_homologyπ_cyclesMk_moduleCat {i j : ι} (hij : c.next i = j) (x : K.homology i) :
+    ∃ (y : K.X i) (hy : K.d i j y = 0), K.homologyπ i (K.cyclesMk y j hij hy) = x := by
+  obtain ⟨z, rfl⟩ := (ModuleCat.epi_iff_surjective (K.homologyπ i)).1 inferInstance x
+  refine ⟨K.iCycles i z, ?_, ?_⟩
+  · rw [← ModuleCat.comp_apply, ← hij, K.iCycles_d]; rfl
+  · congr 1
+    exact (ModuleCat.mono_iff_injective (K.iCycles i)).1 inferInstance (K.i_cyclesMk _ j hij _)
+
+end HomologicalComplex
+
 /-! ### Finite-dimensional homology in a short exact sequence -/
 
 namespace CategoryTheory.ShortComplex.ShortExact
@@ -219,5 +259,29 @@ theorem finrank_homology₂_le (hS : S.ShortExact) (i : ι)
   have h3 : finrank K (LinearMap.range g) ≤ finrank K (S.X₃.homology i) := Submodule.finrank_le _
   have := LinearMap.finrank_range_add_finrank_ker g
   omega
+
+/-- **Equality in `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)`** holds iff `H(X₁) → H(X₂)` is injective
+and `H(X₂) → H(X₃)` surjective, i.e. iff both adjacent connecting maps vanish. -/
+theorem finrank_homology₂_eq_iff (hS : S.ShortExact) (i : ι)
+    [FiniteDimensional K (S.X₁.homology i)] [FiniteDimensional K (S.X₃.homology i)] :
+    finrank K (S.X₂.homology i) = finrank K (S.X₁.homology i) + finrank K (S.X₃.homology i) ↔
+      Function.Injective (HomologicalComplex.homologyMap S.f i) ∧
+        Function.Surjective (HomologicalComplex.homologyMap S.g i) := by
+  have := hS.finiteDimensional_homology₂ i
+  have he := (hS.homology_exact₂ i).moduleCat_range_eq_ker
+  set f := (HomologicalComplex.homologyMap S.f i).hom
+  set g := (HomologicalComplex.homologyMap S.g i).hom
+  have h1 := LinearMap.finrank_range_add_finrank_ker f
+  have h2 := LinearMap.finrank_range_add_finrank_ker g
+  rw [← he] at h2
+  have h3 : finrank K (LinearMap.range g) ≤ finrank K (S.X₃.homology i) := Submodule.finrank_le _
+  change _ ↔ Function.Injective f ∧ Function.Surjective g
+  rw [← LinearMap.ker_eq_bot, ← LinearMap.range_eq_top, ← Submodule.finrank_eq_zero]
+  constructor
+  · intro h
+    exact ⟨by omega, Submodule.eq_top_of_finrank_eq (by omega)⟩
+  · rintro ⟨hf, hg⟩
+    rw [hg, finrank_top] at h2
+    omega
 
 end CategoryTheory.ShortComplex.ShortExact

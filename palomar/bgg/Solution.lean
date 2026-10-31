@@ -126,12 +126,12 @@ theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
   BGG.closedRange s hs J hinj hsurj i
 
 /-- **The orthogonal form of Theorem 7: the cochain map (30) with Moore–Penrose inverses**
-([ArnoldHu2021], (15)–(16), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
+([ArnoldHu2021], (24)–(26), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
 operators on Hilbert spaces and `s` bounded connecting maps with `d s = -s d̃`, null-homotopic,
 `sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)), with `sⁱ` injective for `i ≤ J`, surjective for `i ≥ J` ((23)) and
 of closed range for `i < J`; let `tⁱ⁺¹ = (sⁱ)†` (`BGG.moorePenrose`). Then there is a complex `Y`
 with isomorphisms `Yⁱ ≅ Υⁱ` onto the output spaces (`BGG.Υ`: `R(sⁱ⁻¹)ᗮ` up to `J`, `N(sⁱ)` after)
-carrying its differential to the output differentials (16), `P_{R(sⁱ)ᗮ} d` before `J`,
+carrying its differential to the output differentials (26), `P_{R(sⁱ)ᗮ} d` before `J`,
 `d̃ (sᴶ)† d` at `J`, `d̃` after `J`, and a quasi-isomorphism `κ` from the sum complex to `Y` which
 is the map (30): `(ω, μ) ↦ P_{R(sⁱ⁻¹)ᗮ}(ω + Kμ)` up to `J`, and in degree `i + 1 > J`,
 `(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; and `Y` is isomorphic to the BGG complex. -/

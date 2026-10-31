@@ -1,6 +1,7 @@
 module
 
 public import Feec.ForMathlib.InnerProductSpace.MoorePenrose
+public import Feec.ForMathlib.InnerProductSpace.OrthogonalClosure
 public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.SumComplex
 
@@ -8,12 +9,12 @@ public import Feec.HilbertComplex.BGG.SumComplex
 # The orthogonal model of the BGG complex and the cochain map (30) with Moore–Penrose inverses
 
 For bounded BGG data on Hilbert spaces (`Feec.BGG.BoundedData`) on `ℤ`, [ArnoldHu2021], §3,
-realize the BGG complex on the **output spaces** ((15), `BoundedData.Υ`)
+realize the BGG complex on the **output spaces** ((25), `BoundedData.Υ`)
 
   `Υⁱ = R(Sⁱ⁻¹)ᗮ ⊆ Vⁱ` (`i ≤ J`), `Υⁱ = N(Sⁱ) ⊆ Ṽⁱ` (`i > J`)
 
 (here as `R(Sⁱ⁻¹)ᗮ × 0` and `0 × N(Sⁱ)` inside `Vⁱ × Ṽⁱ`), with the **output differentials**
-((16), `BoundedData.orthDMap`)
+((26), `BoundedData.orthDMap`)
 
   `𝒟ⁱ = P_{R(Sⁱ)ᗮ} dⁱ` (`i < J`), `𝒟ᴶ = d̃ᴶ (Sᴶ)⁻¹ dᴶ`, `𝒟ⁱ = d̃ⁱ` (`i > J`).
 
@@ -47,10 +48,11 @@ representatives `H × H̃` of the rows to cohomology representatives of the outp
 * `BoundedData.SL`, `BoundedData.mpInv`: the connecting maps as bounded operators and their
   Moore–Penrose inverses.
 * `BoundedData.Υ`, `BoundedData.orthDMap`, `BoundedData.orthComplex`: the output complex
-  (15)–(16).
+  (24)–(26).
 * `BoundedData.toOrth`: the cochain map from `Γ / Δ` to the output complex.
 * `BoundedData.orthSumMap`: the cochain map (30).
-* `BoundedData.altShift`: `Data.altShift` as bounded data.
+* `BoundedData.axisData`, `BoundedData.planeAltShift`: scalar BGG data along the first axis of
+  subspaces of `𝕜²`, and `Data.altShift` so placed with non-zero output spaces.
 
 ## Main results
 
@@ -58,11 +60,13 @@ representatives `H × H̃` of the rows to cohomology representatives of the outp
 * `BoundedData.isIso_toOrth`.
 * `BoundedData.orthSumMap_of_le`, `BoundedData.orthSumMap_of_gt` ((30)),
   **`BoundedData.quasiIso_orthSumMap`** (Theorem 7), `BoundedData.orth_represents` (Corollary 1).
-* `BoundedData.altShift_quasiIso_orthSumMap`: non-vacuity, with nonzero `d`, `d̃` and `S`.
+* `BoundedData.planeAltShift_quasiIso_orthSumMap`: non-vacuity, with non-zero output spaces
+  `Υ⁰ = R(S⁻¹)ᗮ` and `Υ¹ = N(S¹)`, so that `S⁻¹` is not onto, `S¹` not one-to-one, and the
+  Moore–Penrose inverses are not inverses.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((15)–(16) the output
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((24)–(26) the output
   complex, (23), (28), (29) the Moore–Penrose inverse, (30), Theorem 7, Corollary 1, (31))
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -99,7 +103,7 @@ def mpInv (i j : ℤ) : V j →ₗ[𝕜] Vt i := (D.SL i j).moorePenrose
 variable {D} {J : ℤ}
 
 omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-theorem hasOrthogonalProjection_range {i j : ℤ} (hS : Function.Surjective (D.S i j)) :
+theorem hasOrthogonalProjection_range_of_surjective {i j : ℤ} (hS : Function.Surjective (D.S i j)) :
     (D.SL i j).range.HasOrthogonalProjection := by
   rw [show (D.SL i j).range = ⊤ from LinearMap.range_eq_top.2 hS]
   infer_instance
@@ -107,44 +111,41 @@ theorem hasOrthogonalProjection_range {i j : ℤ} (hS : Function.Surjective (D.S
 /-- `S t = 1` where `S` is onto. -/
 theorem S_mpInv {i j : ℤ} (hS : Function.Surjective (D.S i j)) (v : V j) :
     D.S i j (D.mpInv i j v) = v :=
-  have := hasOrthogonalProjection_range hS
+  have := hasOrthogonalProjection_range_of_surjective hS
   (D.SL i j).apply_moorePenrose_of_surjective hS v
 
 /-- `t S = 1` where `S` is bijective. -/
 theorem mpInv_S {i j : ℤ} (hS : Function.Bijective (D.S i j)) (φ : Vt i) :
     D.mpInv i j (D.S i j φ) = φ :=
-  have := hasOrthogonalProjection_range hS.2
+  have := hasOrthogonalProjection_range_of_surjective hS.2
   (D.SL i j).moorePenrose_apply_of_injective hS.1 φ
 
 /-- **The Moore–Penrose inverses are right inverses from `J` on** under the condition (23)
 of [ArnoldHu2021] (`Sⁱ` one-to-one for `i ≤ J`, onto for `i ≥ J`). -/
-theorem injSurjWith_mpInv (h : D.InjSurj J) (hJ : Function.Injective (D.S J (J + 1))) :
-    D.InjSurjWith J D.mpInv where
-  injective i hi := by
-    rcases hi.lt_or_eq with hi | rfl
-    · exact h.1 i hi
-    · exact hJ
+theorem injSurjWith_mpInv (hinj : ∀ i ≤ J, Function.Injective (D.S i (i + 1)))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (D.S i (i + 1))) : D.InjSurjWith J D.mpInv where
+  injective := hinj
   S_t i j hij hi v := by
     subst hij
-    exact S_mpInv (h.2 i hi) v
+    exact S_mpInv (hsurj i hi) v
 
 /-- **With the Moore–Penrose inverse, `1 - tⁱ⁺¹ Sⁱ` is the orthogonal projection `P_{N(Sⁱ)}`**
 where `Sⁱ` is onto. [ArnoldHu2021], (29) -/
 theorem kerProj_mpInv {i : ℤ} (hS : Function.Surjective (D.S i (i + 1))) (φ : Vt i) :
     D.kerProj D.mpInv i φ = (D.SL i (i + 1)).ker.starProjection φ :=
-  have := hasOrthogonalProjection_range hS
+  have := hasOrthogonalProjection_range_of_surjective hS
   (D.SL i (i + 1)).sub_moorePenrose_apply φ
 
-/-! ### The output complex (15)–(16) -/
+/-! ### The output complex (24)–(26) -/
 
 variable (D J)
 
-/-- **The output spaces** ([ArnoldHu2021], (15)) inside `Vⁱ × Ṽⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
+/-- **The output spaces** ([ArnoldHu2021], (25)) inside `Vⁱ × Ṽⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
 `0 × N(Sⁱ)` after `J`. -/
 def Υ (i : ℤ) : Submodule 𝕜 (V i × Vt i) :=
   if i ≤ J then (D.SL (i - 1) i).rangeᗮ.prod ⊥ else (⊥ : Submodule 𝕜 (V i)).prod (D.SL i (i + 1)).ker
 
-/-- **The output differentials** ([ArnoldHu2021], (16)) on `Vⁱ × Ṽⁱ`: `σ ↦ P_{R(Sⁱ)ᗮ} dσ`
+/-- **The output differentials** ([ArnoldHu2021], (26)) on `Vⁱ × Ṽⁱ`: `σ ↦ P_{R(Sⁱ)ᗮ} dσ`
 before `J`, `σ ↦ d̃ (Sᴶ)⁻¹ dσ` at `J` (`(Sᴶ)† = (Sᴶ)⁻¹` when `Sᴶ` is bijective), `φ ↦ d̃φ`
 after `J`. -/
 def orthDMap (i : ℤ) : V i × Vt i →ₗ[𝕜] V (i + 1) × Vt (i + 1) :=
@@ -209,7 +210,7 @@ theorem starProjection_d_starProjection (i : ℤ) (x : V i) :
 theorem dt_mpInv_d_starProjection (hJ : Function.Bijective (D.S J (J + 1))) (x : V J) :
     D.dt J (J + 1) (D.mpInv J (J + 1) (D.d J (J + 1) ((D.SL (J - 1) J).rangeᗮ.starProjection x))) =
       D.dt J (J + 1) (D.mpInv J (J + 1) (D.d J (J + 1) x)) := by
-  have := hasOrthogonalProjection_range hJ.2
+  have := hasOrthogonalProjection_range_of_surjective hJ.2
   let g : V J →L[𝕜] Vt (J + 1) := D.dtL J (J + 1) ∘L (D.SL J (J + 1)).moorePenrose ∘L D.dL J (J + 1)
   have hg : g ((D.SL (J - 1) J).rangeᗮ.starProjection x) = g x := by
     rw [← sub_eq_zero, ← map_sub, ← neg_sub, map_neg, neg_eq_zero]
@@ -254,7 +255,7 @@ theorem orthDMap_orthDMap (hJ : Function.Bijective (D.S J (J + 1))) {i : ℤ} {x
       rfl
 
 variable (D J) in
-/-- **The output complex** of [ArnoldHu2021], (14)–(16): the spaces `Υⁱ` with the
+/-- **The output complex** of [ArnoldHu2021], (24)–(26): the spaces `Υⁱ` with the
 differentials `𝒟ⁱ`, for `Sᴶ` bijective. -/
 def orthComplex (hJ : Function.Bijective (D.S J (J + 1))) : CochainComplex (ModuleCat.{u} 𝕜) ℤ :=
   CochainComplex.of (fun i => ModuleCat.of 𝕜 (D.Υ J i))
@@ -396,31 +397,34 @@ theorem isIso_toOrth (hJ : Function.Bijective (D.S J (J + 1)))
 
 /-! ### The cochain map (30) -/
 
-variable {K : ∀ i, Vt i →ₗ[𝕜] V i} (hK : D.IsNullHomotopy K) (h : D.InjSurj J)
-  (hJ : Function.Injective (D.S J (J + 1)))
+variable {K : ∀ i, Vt i →ₗ[𝕜] V i} (hK : D.IsNullHomotopy K)
+  (hinj : ∀ i ≤ J, Function.Injective (D.S i (i + 1)))
+  (hsurj : ∀ i, J ≤ i → Function.Surjective (D.S i (i + 1)))
 
 omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
 /-- Under (23), `Sᴶ` is bijective. -/
-theorem bijective_S (h : D.InjSurj J) (hJ : Function.Injective (D.S J (J + 1))) :
+theorem bijective_S (hinj : ∀ i ≤ J, Function.Injective (D.S i (i + 1)))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (D.S i (i + 1))) :
     Function.Bijective (D.S J (J + 1)) :=
-  ⟨hJ, h.2 J le_rfl⟩
+  ⟨hinj J le_rfl, hsurj J le_rfl⟩
 
 variable (D J) in
 /-- **The cochain map (30) of Theorem 7** in the orthogonal form of [ArnoldHu2021], from the
 sum complex to the output complex: `Data.bggSumMap` with the Moore–Penrose inverses, followed by
 `toOrth`. -/
-def orthSumMap (h : D.InjSurj J) (hJ : Function.Injective (D.S J (J + 1))) {K : ∀ i, Vt i →ₗ[𝕜] V i}
-    (hK : D.IsNullHomotopy K) : D.sumComplex ⟶ D.orthComplex J (bijective_S h hJ) :=
-  D.bggSumMap D.mpInv hK (injSurjWith_mpInv h hJ) ≫ D.toOrth J _
+def orthSumMap (hinj : ∀ i ≤ J, Function.Injective (D.S i (i + 1)))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (D.S i (i + 1))) {K : ∀ i, Vt i →ₗ[𝕜] V i}
+    (hK : D.IsNullHomotopy K) : D.sumComplex ⟶ D.orthComplex J (bijective_S hinj hsurj) :=
+  D.bggSumMap D.mpInv hK (injSurjWith_mpInv hinj hsurj) ≫ D.toOrth J _
 
 theorem coe_orthSumMap_apply (i : ℤ) (x : V i × Vt i) :
-    Subtype.val (((D.orthSumMap J h hJ hK).f i).hom x) =
+    Subtype.val (((D.orthSumMap J hinj hsurj hK).f i).hom x) =
       D.toOrthMap J i (D.bggProjMap J D.mpInv i (x.1 + K i x.2, x.2)) := by
   rfl
 
 /-- **(30) up to `J`**: `𝒦ⁱ(ω, μ) = P_{R(Sⁱ⁻¹)ᗮ}(ω + Kμ)`. [ArnoldHu2021], (30) -/
 theorem orthSumMap_of_le {i : ℤ} (hi : i ≤ J) (x : V i × Vt i) :
-    Subtype.val (((D.orthSumMap J h hJ hK).f i).hom x) =
+    Subtype.val (((D.orthSumMap J hinj hsurj hK).f i).hom x) =
       ((D.SL (i - 1) i).rangeᗮ.starProjection (x.1 + K i x.2), 0) := by
   rw [coe_orthSumMap_apply, toOrthMap_of_le hi]
   rcases hi.lt_or_eq with hi' | rfl
@@ -430,11 +434,11 @@ theorem orthSumMap_of_le {i : ℤ} (hi : i ≤ J) (x : V i × Vt i) :
 /-- **(30) after `J`**: `𝒦ⁱ(ω, μ) = P_{N(Sⁱ)}[d̃ tⁱ ω + (I + d̃ tⁱ K)μ]` with the Moore–Penrose
 inverse `tⁱ = (Sⁱ⁻¹)†`. [ArnoldHu2021], (30) -/
 theorem orthSumMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
-    Subtype.val (((D.orthSumMap J h hJ hK).f i).hom x) =
+    Subtype.val (((D.orthSumMap J hinj hsurj hK).f i).hom x) =
       (0, (D.SL i (i + 1)).ker.starProjection (D.dt (i - 1) i (D.mpInv (i - 1) i x.1) +
         (x.2 + D.dt (i - 1) i (D.mpInv (i - 1) i (K i x.2))))) := by
   rw [coe_orthSumMap_apply, toOrthMap_of_gt hi, Data.bggProjMap_of_gt hi,
-    kerProj_mpInv (h.2 i hi.le)]
+    kerProj_mpInv (hsurj i hi.le)]
   congr 2
   rw [map_add, map_add]
   abel
@@ -443,9 +447,9 @@ theorem orthSumMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
 under (23) with the ranges `R(Sⁱ⁻¹)`, `i ≤ J`, closed: an instance of `Data.quasiIso_of_Γι_comp`
 (`Data.quasiIso_bggSumMap`) composed with the isomorphism `toOrth`. -/
 theorem quasiIso_orthSumMap (hR : ∀ i ≤ J, IsClosed ((D.SL (i - 1) i).range : Set (V i))) :
-    QuasiIso (D.orthSumMap J h hJ hK) := by
-  have := Data.quasiIso_bggSumMap (injSurjWith_mpInv h hJ) hK
-  have := isIso_toOrth (bijective_S h hJ) hR
+    QuasiIso (D.orthSumMap J hinj hsurj hK) := by
+  have := Data.quasiIso_bggSumMap (injSurjWith_mpInv hinj hsurj) hK
+  have := isIso_toOrth (bijective_S hinj hsurj) hR
   unfold orthSumMap
   infer_instance
 
@@ -455,28 +459,176 @@ the output complex, `N(𝒟ⁱ) = R(𝒟ⁱ⁻¹) ⊕ 𝒦(H × H̃)`. -/
 theorem orth_represents (hR : ∀ i ≤ J, IsClosed ((D.SL (i - 1) i).range : Set (V i))) {i : ℤ}
     {H : Submodule 𝕜 (V i)} {Ht : Submodule 𝕜 (Vt i)} (hH : D.rowTop.Represents i H)
     (hHt : D.rowBot.Represents i Ht) :
-    (D.orthComplex J (bijective_S h hJ)).Represents i
-      ((H.prod Ht).map ((D.orthSumMap J h hJ hK).f i).hom) :=
-  have := quasiIso_orthSumMap hK h hJ hR
+    (D.orthComplex J (bijective_S hinj hsurj)).Represents i
+      ((H.prod Ht).map ((D.orthSumMap J hinj hsurj hK).f i).hom) :=
+  have := quasiIso_orthSumMap hK hinj hsurj hR
   (Data.represents_sumComplex hH hHt).map _
 
 /-! ### Non-vacuity -/
 
-variable (𝕜) in
-/-- `Data.altShift` on `𝕜` (`dⁱ = id` for even `i`, `d̃ⁱ = -dⁱ⁺¹`, `Sⁱ = id`), as bounded
-data. -/
-def altShift : BoundedData 𝕜 (ComplexShape.up ℤ) (fun _ => 𝕜) (fun _ => 𝕜) where
-  toData := Data.altShift 𝕜
+section NonVacuity
+
+variable (𝕜)
+
+/-- The orthogonal projection `x ↦ x₀ e₀` of `𝕜²` onto its first axis. -/
+def axisProj : EuclideanSpace 𝕜 (Fin 2) →ₗ[𝕜] EuclideanSpace 𝕜 (Fin 2) :=
+  (EuclideanSpace.projₗ 0).smulRight (EuclideanSpace.single 0 1)
+
+variable {𝕜}
+
+theorem axisProj_apply (x : EuclideanSpace 𝕜 (Fin 2)) :
+    axisProj 𝕜 x = x 0 • EuclideanSpace.single 0 1 := rfl
+
+theorem axisProj_axisProj (x : EuclideanSpace 𝕜 (Fin 2)) : axisProj 𝕜 (axisProj 𝕜 x) = axisProj 𝕜 x := by
+  simp [axisProj_apply]
+
+/-- `c • axisProj` between subspaces `A`, `B` of `𝕜²`, `B` containing the first axis. -/
+def axisMap {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))} (hB : LinearMap.range (axisProj 𝕜) ≤ B)
+    (c : 𝕜) : A →ₗ[𝕜] B :=
+  c • (axisProj 𝕜 ∘ₗ A.subtype).codRestrict B fun x => hB ⟨x, rfl⟩
+
+theorem coe_axisMap_apply {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) (c : 𝕜) (x : A) :
+    (axisMap hB c x : EuclideanSpace 𝕜 (Fin 2)) = c • axisProj 𝕜 x := rfl
+
+theorem axisMap_axisMap {A B C : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) (hC : LinearMap.range (axisProj 𝕜) ≤ C) (b c : 𝕜)
+    (x : A) : axisMap (A := B) hC c (axisMap hB b x) = axisMap hC (c * b) x := by
+  ext1
+  simp only [coe_axisMap_apply, map_smul, axisProj_axisProj, smul_smul]
+
+theorem axisMap_zero {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) : axisMap (A := A) hB 0 = 0 := by
+  simp [axisMap]
+
+theorem axisMap_neg {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) (c : 𝕜) (x : A) :
+    axisMap hB (-c) x = -axisMap hB c x := by
+  simp [axisMap]
+
+theorem axisMap_sub {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) (b c : 𝕜) (x : A) :
+    axisMap hB (b - c) x = axisMap hB b x - axisMap hB c x := by
+  simp [axisMap, sub_smul]
+
+/-- For linear maps of `𝕜`, `f 1 * g 1 = f (g 1)`. -/
+theorem apply_one_mul_apply_one (f g : 𝕜 →ₗ[𝕜] 𝕜) : f 1 * g 1 = f (g 1) := by
+  rw [mul_comm, ← smul_eq_mul, ← map_smul, smul_eq_mul, mul_one]
+
+variable {ι : Type*} {c : ComplexShape ι} (D₀ : Data 𝕜 c (fun _ => 𝕜) (fun _ => 𝕜))
+  {W Wt : ι → Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+
+/-- **Scalar BGG data along the first axis of subspaces of `𝕜²`**: the maps of `D₀` on `𝕜`,
+times `axisProj`, between subspaces `Wⁱ`, `W̃ⁱ` of `𝕜²` containing the first axis. -/
+def axisData (hW : ∀ i, LinearMap.range (axisProj 𝕜) ≤ W i)
+    (hWt : ∀ i, LinearMap.range (axisProj 𝕜) ≤ Wt i) :
+    BoundedData 𝕜 c (fun i => W i) (fun i => Wt i) where
+  d i j := axisMap (hW j) (D₀.d i j 1)
+  dt i j := axisMap (hWt j) (D₀.dt i j 1)
+  S i j := axisMap (hW j) (D₀.S i j 1)
+  shape_d i j h := by rw [D₀.shape_d i j h, LinearMap.zero_apply, axisMap_zero]
+  shape_dt i j h := by rw [D₀.shape_dt i j h, LinearMap.zero_apply, axisMap_zero]
+  shape_S i j h := by rw [D₀.shape_S i j h, LinearMap.zero_apply, axisMap_zero]
+  d_comp_d i j k x := by
+    rw [axisMap_axisMap, apply_one_mul_apply_one, D₀.d_comp_d, axisMap_zero, LinearMap.zero_apply]
+  dt_comp_dt i j k x := by
+    rw [axisMap_axisMap, apply_one_mul_apply_one, D₀.dt_comp_dt, axisMap_zero,
+      LinearMap.zero_apply]
+  anticomm i j k φ := by
+    rw [axisMap_axisMap, axisMap_axisMap, apply_one_mul_apply_one, apply_one_mul_apply_one,
+      D₀.anticomm, axisMap_neg]
   continuous_d _ _ := LinearMap.continuous_of_finiteDimensional _
   continuous_dt _ _ := LinearMap.continuous_of_finiteDimensional _
   continuous_S _ _ := LinearMap.continuous_of_finiteDimensional _
 
-variable (𝕜) in
-/-- **Non-vacuity of the orthogonal Theorem 7**: the cochain map (30) of `altShift` (nonzero `d`,
-`d̃` and `S`) is a quasi-isomorphism at every `J`. -/
-theorem altShift_quasiIso_orthSumMap (J : ℤ) :
-    QuasiIso ((altShift 𝕜).orthSumMap J (Data.altShift_injSurjWith 𝕜 J).injSurj
-      ((Data.altShift_injSurjWith 𝕜 J).injective J le_rfl) (Data.altShift_isNullHomotopy 𝕜)) :=
-  quasiIso_orthSumMap _ _ _ fun _ _ => Submodule.closed_of_finiteDimensional _
+variable {D₀}
+
+/-- `axisData` of null-homotopic scalar data is null-homotopic, with `K = K₀ ⊗ axisProj`. -/
+theorem axisData_isNullHomotopy (hW : ∀ i, LinearMap.range (axisProj 𝕜) ≤ W i)
+    (hWt : ∀ i, LinearMap.range (axisProj 𝕜) ≤ Wt i) {K₀ : ι → 𝕜 →ₗ[𝕜] 𝕜}
+    (hK₀ : D₀.IsNullHomotopy K₀) :
+    (axisData D₀ hW hWt).IsNullHomotopy fun i => axisMap (hW i) (K₀ i 1) := fun i j hij μ => by
+  change axisMap (hW j) _ μ =
+    axisMap (hW j) _ (axisMap (hW i) _ μ) - axisMap (hW j) _ (axisMap (hWt j) _ μ)
+  rw [axisMap_axisMap, axisMap_axisMap, apply_one_mul_apply_one, apply_one_mul_apply_one,
+    ← axisMap_sub, ← hK₀ i j hij]
+
+/-- `axisProj` is one-to-one on subspaces of the first axis. -/
+theorem injective_axisMap {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) (hA : A ≤ LinearMap.range (axisProj 𝕜)) :
+    Function.Injective (axisMap (A := A) hB 1) := fun x y h => by
+  obtain ⟨x', hx'⟩ := hA x.2
+  obtain ⟨y', hy'⟩ := hA y.2
+  have h := congrArg Subtype.val h
+  simp only [coe_axisMap_apply, one_smul, ← hx', ← hy', axisProj_axisProj] at h
+  exact Subtype.ext (hx'.symm.trans (h.trans hy'))
+
+/-- `axisProj` is onto the first axis from subspaces containing it. -/
+theorem surjective_axisMap {A B : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin 2))}
+    (hB : LinearMap.range (axisProj 𝕜) ≤ B) (hA : LinearMap.range (axisProj 𝕜) ≤ A)
+    (hB' : B ≤ LinearMap.range (axisProj 𝕜)) :
+    Function.Surjective (axisMap (A := A) hB 1) := fun y => by
+  obtain ⟨y', hy'⟩ := hB' y.2
+  refine ⟨⟨axisProj 𝕜 y', hA ⟨y', rfl⟩⟩, Subtype.ext ?_⟩
+  rw [coe_axisMap_apply, one_smul, axisProj_axisProj, hy']
+
+/-- `Sⁱʲ` of `axisData` is one-to-one where `W̃ⁱ` lies on the first axis and `D₀` has `Sⁱʲ = 1`. -/
+theorem injective_axisData_S (hW : ∀ i, LinearMap.range (axisProj 𝕜) ≤ W i)
+    (hWt : ∀ i, LinearMap.range (axisProj 𝕜) ≤ Wt i) {i j : ι} (h : D₀.S i j 1 = 1)
+    (hA : Wt i ≤ LinearMap.range (axisProj 𝕜)) : Function.Injective ((axisData D₀ hW hWt).S i j) := by
+  change Function.Injective (axisMap (hW j) (D₀.S i j 1))
+  rw [h]
+  exact injective_axisMap _ hA
+
+/-- `Sⁱʲ` of `axisData` is onto where `Wʲ` lies on the first axis and `D₀` has `Sⁱʲ = 1`. -/
+theorem surjective_axisData_S (hW : ∀ i, LinearMap.range (axisProj 𝕜) ≤ W i)
+    (hWt : ∀ i, LinearMap.range (axisProj 𝕜) ≤ Wt i) {i j : ι} (h : D₀.S i j 1 = 1)
+    (hB : W j ≤ LinearMap.range (axisProj 𝕜)) :
+    Function.Surjective ((axisData D₀ hW hWt).S i j) := by
+  change Function.Surjective (axisMap (hW j) (D₀.S i j 1))
+  rw [h]
+  exact surjective_axisMap _ (hWt i) hB
+
+variable (𝕜)
+
+/-- **A non-degenerate instance of the orthogonal Theorem 7**: `Data.altShift` along the first
+axis, with the second axis added to `V⁰` and to `Ṽ¹`. At `J = 0`, `S⁻¹ : 𝕜 e₀ → 𝕜²` is one-to-one
+but not onto, `S⁰ : 𝕜 e₀ → 𝕜 e₀` is bijective and `S¹ : 𝕜² → 𝕜 e₀` is onto but not one-to-one,
+so `R(S⁻¹)ᗮ = N(S¹) = 𝕜 e₁` and the Moore–Penrose inverses are not inverses. -/
+def planeAltShift :
+    BoundedData 𝕜 (ComplexShape.up ℤ)
+      (fun i => ↥(if i = 0 then ⊤ else LinearMap.range (axisProj 𝕜)))
+      (fun i => ↥(if i = 1 then ⊤ else LinearMap.range (axisProj 𝕜))) :=
+  axisData (Data.altShift 𝕜) (fun i => by split_ifs <;> simp) (fun i => by split_ifs <;> simp)
+
+/-- **Non-vacuity of the orthogonal Theorem 7, with non-zero output spaces**: for
+`planeAltShift` at `J = 0`, the cochain map (30) with the Moore–Penrose inverses is a
+quasi-isomorphism, and the output spaces `Υ⁰ = R(S⁻¹)ᗮ × 0` and `Υ¹ = 0 × N(S¹)` are non-zero.
+-/
+theorem planeAltShift_quasiIso_orthSumMap :
+    ∃ (hinj : ∀ i ≤ 0, Function.Injective ((planeAltShift 𝕜).S i (i + 1)))
+      (hsurj : ∀ i, 0 ≤ i → Function.Surjective ((planeAltShift 𝕜).S i (i + 1))),
+      QuasiIso ((planeAltShift 𝕜).orthSumMap 0 hinj hsurj
+        (axisData_isNullHomotopy _ _ (Data.altShift_isNullHomotopy 𝕜))) ∧
+      (planeAltShift 𝕜).Υ 0 0 ≠ ⊥ ∧ (planeAltShift 𝕜).Υ 0 1 ≠ ⊥ := by
+  have hS : ∀ i, (Data.altShift 𝕜).S i (i + 1) 1 = 1 := fun i => by simp [Data.altShift]
+  have e₁ : EuclideanSpace.single (1 : Fin 2) (1 : 𝕜) ≠ 0 := by simp
+  refine ⟨fun i hi => injective_axisData_S _ _ (hS i) (by simp [show i ≠ 1 by omega]),
+    fun i hi => surjective_axisData_S _ _ (hS i) (by simp [show i + 1 ≠ 0 by omega]),
+    quasiIso_orthSumMap _ _ _ fun _ _ => Submodule.closed_of_finiteDimensional _,
+    (Submodule.ne_bot_iff _).2 ⟨(⟨EuclideanSpace.single 1 1, by simp⟩, 0), ?_, ?_⟩,
+    (Submodule.ne_bot_iff _).2 ⟨(0, ⟨EuclideanSpace.single 1 1, by simp⟩), ?_, ?_⟩⟩
+  · rw [mem_Υ_of_le le_rfl]
+    refine ⟨(Submodule.mem_orthogonal _ _).2 ?_, rfl⟩
+    rintro _ ⟨φ, rfl⟩
+    simp [Submodule.coe_inner, planeAltShift, axisData, SL, coe_axisMap_apply, axisProj_apply,
+      EuclideanSpace.inner_single_right]
+  · exact fun h => e₁ (congrArg (fun x => (x.1 : EuclideanSpace 𝕜 (Fin 2))) h)
+  · rw [mem_Υ_of_gt zero_lt_one]
+    refine ⟨rfl, Subtype.ext ?_⟩
+    simp [planeAltShift, axisData, coe_axisMap_apply, axisProj_apply]
+  · exact fun h => e₁ (congrArg (fun x => (x.2 : EuclideanSpace 𝕜 (Fin 2))) h)
+
+end NonVacuity
 
 end Feec.BGG.BoundedData

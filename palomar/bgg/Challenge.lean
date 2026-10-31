@@ -468,7 +468,7 @@ def moorePenrose {E F : Type v} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E
       s.range.orthogonalProjectionOnto
   else 0
 
-/-- **The output spaces** of [ArnoldHu2021], (15), inside `Hⁱ × H̃ⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
+/-- **The output spaces** of [ArnoldHu2021], (25), inside `Hⁱ × H̃ⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
 `0 × N(sⁱ)` after `J`. -/
 def Υ (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
     (J i : ℤ) : Submodule 𝕜 (H i × Ht i) :=
@@ -575,12 +575,12 @@ theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
   sorry
 
 /-- **The orthogonal form of Theorem 7: the cochain map (30) with Moore–Penrose inverses**
-([ArnoldHu2021], (15)–(16), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
+([ArnoldHu2021], (24)–(26), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
 operators on Hilbert spaces and `s` bounded connecting maps with `d s = -s d̃`, null-homotopic,
 `sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)), with `sⁱ` injective for `i ≤ J`, surjective for `i ≥ J` ((23)) and
 of closed range for `i < J`; let `tⁱ⁺¹ = (sⁱ)†` (`BGG.moorePenrose`). Then there is a complex `Y`
 with isomorphisms `Yⁱ ≅ Υⁱ` onto the output spaces (`BGG.Υ`: `R(sⁱ⁻¹)ᗮ` up to `J`, `N(sⁱ)` after)
-carrying its differential to the output differentials (16), `P_{R(sⁱ)ᗮ} d` before `J`,
+carrying its differential to the output differentials (26), `P_{R(sⁱ)ᗮ} d` before `J`,
 `d̃ (sᴶ)† d` at `J`, `d̃` after `J`, and a quasi-isomorphism `κ` from the sum complex to `Y` which
 is the map (30): `(ω, μ) ↦ P_{R(sⁱ⁻¹)ᗮ}(ω + Kμ)` up to `J`, and in degree `i + 1 > J`,
 `(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; and `Y` is isomorphic to the BGG complex. -/

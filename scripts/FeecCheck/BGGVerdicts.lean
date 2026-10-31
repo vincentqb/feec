@@ -13,7 +13,8 @@ and derives it from the new structure. `HilbertData.bggVerdict` and
 `Domain.ConstCoeffBGG.maximalData_bggVerdict` now conclude `HilbertData.BGGVerdict`, which extends
 `DerivedVerdict` by the explicit map (30); `bggVerdict_old` and `maximalData_bggVerdict_old` state
 their earlier conclusions verbatim and derive them from the new ones. `BGGVerdict` then gained
-the field `quasiIso_orthSumMap` (the orthogonal form of (30) with the Moore–Penrose inverses);
+the fields `injective_domainData_S` and `quasiIso_orthSumMap` (the orthogonal form of (30) with the
+Moore–Penrose inverses);
 `bggVerdict_explicit_old` states its earlier fields verbatim and derives them from the new
 structure.
 
@@ -57,8 +58,9 @@ theorem bggVerdict_old {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
     [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i :=
   (D.bggVerdict hS htop i).toDerivedVerdict
 
-/-- The earlier `HilbertData.BGGVerdict` (before the field `quasiIso_orthSumMap`, the orthogonal
-form of (30) with the Moore–Penrose inverses), from the new one. -/
+/-- The earlier `HilbertData.BGGVerdict` (before the fields `injective_domainData_S` and
+`quasiIso_orthSumMap`, the orthogonal form of (30) with the Moore–Penrose inverses), from the new
+one. -/
 theorem bggVerdict_explicit_old {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] [∀ i, NormedAddCommGroup (Wt i)]
     [∀ i, InnerProductSpace 𝕜 (Wt i)] [∀ i, CompleteSpace (Wt i)]

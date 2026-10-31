@@ -34,10 +34,6 @@ satisfies the four Penrose equations `S S† S = S`, `S† S S† = S†`, `(S S
 * `ContinuousLinearMap.apply_moorePenrose_of_surjective`, `moorePenrose_apply_of_injective`.
 * `ContinuousLinearMap.comp_moorePenrose_comp`, `moorePenrose_comp_comp_moorePenrose`,
   `isSelfAdjoint_comp_moorePenrose`, `isSelfAdjoint_moorePenrose_comp`: the Penrose equations.
-* `ContinuousLinearMap.map_mem_orthogonal_orthogonal`,
-  `starProjection_orthogonal_apply_starProjection_orthogonal`,
-  `apply_eq_zero_of_mem_orthogonal_orthogonal`: a bounded operator carrying `A` into `B` carries
-  `Aᗮᗮ = cl A` into `Bᗮᗮ`, so `P_{Bᗮ} S P_{Aᗮ} = P_{Bᗮ} S`.
 
 ## References
 
@@ -74,31 +70,6 @@ theorem isClosed_range_of_hasOrthogonalProjection [S.range.HasOrthogonalProjecti
   S.range.orthogonal_orthogonal ▸ S.rangeᗮ.isClosed_orthogonal
 
 variable [CompleteSpace E]
-
-/-- **A bounded operator carrying `A` into `B` carries `Aᗮᗮ = cl A` into `Bᗮᗮ`**: for `w ∈ Bᗮ`,
-`⟪w, S x⟫ = ⟪S* w, x⟫` and `S* w ∈ Aᗮ`. -/
-theorem map_mem_orthogonal_orthogonal [CompleteSpace F] {A : Submodule 𝕜 E} {B : Submodule 𝕜 F}
-    (h : ∀ a ∈ A, S a ∈ B) {x : E} (hx : x ∈ Aᗮᗮ) : S x ∈ Bᗮᗮ :=
-  (Submodule.mem_orthogonal _ _).2 fun w hw => by
-    rw [← adjoint_inner_left]
-    exact Submodule.inner_right_of_mem_orthogonal ((Submodule.mem_orthogonal _ _).2 fun a ha => by
-      rw [adjoint_inner_right]
-      exact Submodule.inner_right_of_mem_orthogonal (h a ha) hw) hx
-
-/-- **`P_{Bᗮ} S P_{Aᗮ} = P_{Bᗮ} S`** for a bounded operator `S` carrying `A` into `B`. -/
-theorem starProjection_orthogonal_apply_starProjection_orthogonal [CompleteSpace F]
-    {A : Submodule 𝕜 E} {B : Submodule 𝕜 F} (h : ∀ a ∈ A, S a ∈ B) (x : E) :
-    Bᗮ.starProjection (S (Aᗮ.starProjection x)) = Bᗮ.starProjection (S x) := by
-  have hc := S.map_mem_orthogonal_orthogonal h (Aᗮ.sub_starProjection_mem_orthogonal x)
-  rw [← sub_eq_zero, ← map_sub, ← map_sub, ← neg_sub, map_neg, map_neg, neg_eq_zero,
-    Bᗮ.starProjection_apply_eq_zero_iff]
-  exact hc
-
-/-- **A bounded operator vanishing on `A` vanishes on `Aᗮᗮ = cl A`.** -/
-theorem apply_eq_zero_of_mem_orthogonal_orthogonal [CompleteSpace F] {A : Submodule 𝕜 E}
-    (h : ∀ a ∈ A, S a = 0) {x : E} (hx : x ∈ Aᗮᗮ) : S x = 0 := by
-  have := S.map_mem_orthogonal_orthogonal (B := ⊥) (fun a ha => (h a ha).symm ▸ zero_mem _) hx
-  rwa [Submodule.bot_orthogonal_eq_top, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at this
 
 /-- `S x = S (P_{N(S)ᗮ} x)`. -/
 theorem apply_starProjection_orthogonal_ker (x : E) :

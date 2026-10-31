@@ -417,7 +417,7 @@ def moorePenrose {E F : Type v} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E
       s.range.orthogonalProjectionOnto
   else 0
 
-/-- **The output spaces** of [ArnoldHu2021], (15), inside `Hⁱ × H̃ⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
+/-- **The output spaces** of [ArnoldHu2021], (25), inside `Hⁱ × H̃ⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
 `0 × N(sⁱ)` after `J`. -/
 def Υ (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
     (J i : ℤ) : Submodule 𝕜 (H i × Ht i) :=

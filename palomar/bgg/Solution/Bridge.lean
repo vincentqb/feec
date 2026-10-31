@@ -552,15 +552,11 @@ theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1
   have hmp (i : ℤ) (y : H (i + 1)) : D.mpInv i (i + 1) y = moorePenrose (s i) y := by
     change (D.SL i (i + 1)).moorePenrose y = _
     rw [SL_boundedData, moorePenrose_eq]
-  have hinj' : D.InjSurj J :=
-    ⟨fun i hi => by
-      change Function.Injective (D.S i (i + 1))
-      exact fun a b hab => hinj i hi.le (by rwa [hS, hS] at hab),
-    fun i hi y => by
-      obtain ⟨φ, rfl⟩ := hsurj i hi y
-      exact ⟨φ, hS i φ⟩⟩
-  have hJ : Function.Injective (D.S J (J + 1)) := fun a b hab =>
-    hinj J le_rfl (by rwa [hS, hS] at hab)
+  have hinj' : ∀ i ≤ J, Function.Injective (D.S i (i + 1)) := fun i hi a b hab =>
+    hinj i hi (by rwa [hS, hS] at hab)
+  have hsurj' : ∀ i, J ≤ i → Function.Surjective (D.S i (i + 1)) := fun i hi y => by
+    obtain ⟨φ, rfl⟩ := hsurj i hi y
+    exact ⟨φ, hS i φ⟩
   have hK' : D.IsNullHomotopy K := by
     rintro i _ rfl μ
     rw [hS, hdD, hdtD]
@@ -569,11 +565,11 @@ theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1
     obtain ⟨a, rfl⟩ : ∃ a, i = a + 1 := ⟨i - 1, by ring⟩
     rw [add_sub_cancel_right, SL_boundedData, LinearMap.coe_range]
     exact hR a (by omega)
-  have hJb : Function.Bijective (D.S J (J + 1)) := ⟨hJ, hinj'.2 J le_rfl⟩
+  have hJb : Function.Bijective (D.S J (J + 1)) := ⟨hinj' J le_rfl, hsurj' J le_rfl⟩
   have e₀ : twisted (0 : ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧) = D.sumComplex :=
     (congrArg Feec.BGG.Data.twistComplex (sumData_toData S)).symm
-  let κ := eqToHom e₀ ≫ D.orthSumMap J hinj' hJ hK'
-  have hκ (i : ℤ) : κ.f i = (D.orthSumMap J hinj' hJ hK').f i := by
+  let κ := eqToHom e₀ ≫ D.orthSumMap J hinj' hsurj' hK'
+  have hκ (i : ℤ) : κ.f i = (D.orthSumMap J hinj' hsurj' hK').f i := by
     erw [HomologicalComplex.comp_f, HomologicalComplex.eqToHom_f]
     exact Category.id_comp _
   refine ⟨D.orthComplex J hJb, fun i => LinearEquiv.ofEq _ _ (Υ_boundedData s hs J i), κ,
@@ -589,13 +585,13 @@ theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1
     rfl
   · change Subtype.val ((κ.f i).hom x) = _
     rw [hκ]
-    exact Feec.BGG.BoundedData.orthSumMap_of_le hK' hinj' hJ hi x
+    exact Feec.BGG.BoundedData.orthSumMap_of_le hK' hinj' hsurj' hi x
   · change Subtype.val ((κ.f (i + 1)).hom x) = _
     rw [hκ]
-    refine (Feec.BGG.BoundedData.orthSumMap_of_gt hK' hinj' hJ (i := i + 1) (by omega) x).trans ?_
+    refine (Feec.BGG.BoundedData.orthSumMap_of_gt hK' hinj' hsurj' (i := i + 1) (by omega) x).trans ?_
     rw [Feec.BGG.Data.dt_t_prev rfl, Feec.BGG.Data.dt_t_prev rfl, hmp, hmp, hdtD, hdtD,
       SL_boundedData]
-  · have := Feec.BGG.BoundedData.quasiIso_orthSumMap hK' hinj' hJ hR'
+  · have := Feec.BGG.BoundedData.quasiIso_orthSumMap hK' hinj' hsurj' hR'
     exact quasiIso_eqToHom_comp e₀ _
   · have := Feec.BGG.BoundedData.isIso_toOrth hJb hR'
     exact ⟨(asIso (D.toOrth J hJb)).symm ≪≫ eqToIso (bgg_toData S J)⟩

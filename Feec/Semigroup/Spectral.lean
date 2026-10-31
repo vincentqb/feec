@@ -379,17 +379,6 @@ open Feec
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] in
-theorem _root_.Feec.Operator.IsResolvent.injective {z : 𝕜} {R : E →L[𝕜] E}
-    (hR : IsResolvent A z R) : Function.Injective R := by
-  refine (injective_iff_map_eq_zero R).2 fun y hy => ?_
-  have h := hR.sub_apply y
-  have h0 : (⟨R y, hR.mem_domain y⟩ : A.domain) = 0 := Subtype.ext hy
-  rw [h0, LinearPMap.map_zero] at h
-  change z • R y - 0 = y at h
-  rw [show R y = 0 from hy, smul_zero, sub_zero] at h
-  exact h.symm
-
 /-- **Compact resolvent ⇒ the eigenvectors of `A²` are dense.** For skew-adjoint `A` with
 `(1 - A)⁻¹` compact, `T = (1 - A)⁻¹ ((1 - A)⁻¹)† = (1 - A)⁻¹ (1 + A)⁻¹` is compact, self-adjoint
 and injective; by the spectral theorem its eigenvectors span a dense subspace, and each is an

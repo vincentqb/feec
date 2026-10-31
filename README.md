@@ -305,8 +305,9 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   VonNeumann.inequality_dissipative, VonNeumann.inequality_mdissipative, their real forms
   VonNeumann.inequality_dissipative_real and VonNeumann.inequality_mdissipative_real,
   VonNeumann.cayley_contraction, VonNeumann.error_bound, VonNeumann.error_bound_real,
-  VonNeumann.error_bound_mdissipative and VonNeumann.error_bound_mdissipative_real, about
-  290 lines, Mathlib vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
+  VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
+  VonNeumann.error_bound_quasi_real and VonNeumann.error_bound_banach_real, about
+  370 lines, Mathlib vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
   complex inner product space and its rational form on Hilbert spaces;
   `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for rational `r` without poles in the closed left half-plane
   and every bounded dissipative or m-dissipative, possibly unbounded, `A` (complex `r` on
@@ -318,13 +319,22 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   and for m-dissipative, possibly unbounded, `A` with `x ∈ D(A^{m+1})` and `e^{tA}` the
   semigroup characterized by its strong solutions (complex `r` on complex spaces, real `r` on
   real or complex spaces);
+  for `A - ω` m-dissipative (quasi-contractive semigroups, e.g. `L + B` with `B` bounded) the
+  bound `K e^{κωnτ} nτ τᵐ ‖A^{m+1} x‖` for `ωτ ≤ c₀`, `c₀`, `K`, `κ` depending on `r` only; and
+  on Banach spaces, for a strongly continuous semigroup, the bound
+  `Mₛ (K₀ + M/(m+1)!) M nτ τᵐ ‖A^{m+1} x‖` given the stability `‖r(τA)ᵏ‖ ≤ Mₛ` and the
+  remainder bound `‖ρ(τA)‖ ≤ K₀`, with `Q(R)` invertible (not automatic off Hilbert spaces);
   from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
   `Feec.TimeStepping.norm_resolventEval_mul_inverse_le`,
   `Feec.TimeStepping.RationalScheme.ofBounded`, `Feec.TimeStepping.norm_cayley_le` and
   `Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le` and
   `Feec.TimeStepping.norm_aeval_mul_inverse_pow_sub_exp_le`, and for unbounded `A`
-  `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le` and
-  `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_semigroup_le` (Yosida limit).
+  `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le` (from the Banach-space
+  bound) and `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_semigroup_le` (Yosida
+  limit),
+  `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` (shift `r(z + ωτ)`) and
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le` (Lax–Richtmyer on Banach
+  spaces).
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
   FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram

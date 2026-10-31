@@ -110,6 +110,34 @@ theorem apply_domain (hR : IsResolvent A z R) (x : A.domain) :
   have h : A x = z • (x : E) - (z • (x : E) - A x) := by abel
   rw [h, _root_.map_sub, _root_.map_smul, hR.apply_sub]
 
+/-- A resolvent is injective. -/
+theorem injective (hR : IsResolvent A z R) : Function.Injective R := by
+  refine (injective_iff_map_eq_zero R).2 fun y hy => ?_
+  have h := hR.sub_apply y
+  have h0 : (⟨R y, hR.mem_domain y⟩ : A.domain) = 0 := Subtype.ext hy
+  rw [h0, LinearPMap.map_zero] at h
+  change z • R y - 0 = y at h
+  rw [show R y = 0 from hy, smul_zero, sub_zero] at h
+  exact h.symm
+
+/-- A resolvent of `A - ω` at `z - ω` is a resolvent of `A` at `z`. -/
+theorem of_neg_smul_vadd {ω : 𝕜}
+    (h : IsResolvent (((-ω) • (LinearMap.id : E →ₗ[𝕜] E)) +ᵥ A) (z - ω) R) : IsResolvent A z R where
+  mem_domain := h.mem_domain
+  sub_apply y := by
+    have := h.sub_apply y
+    rw [LinearPMap.vadd_apply] at this
+    refine Eq.trans ?_ this
+    simp only [LinearMap.neg_apply, LinearMap.smul_apply, LinearMap.id_apply, sub_smul, neg_smul]
+    abel
+  apply_sub x := by
+    have := h.apply_sub x
+    rw [LinearPMap.vadd_apply] at this
+    refine Eq.trans ?_ this
+    congr 1
+    simp only [LinearMap.neg_apply, LinearMap.smul_apply, LinearMap.id_apply, sub_smul, neg_smul]
+    abel
+
 /-- **Resolvent identity** `R(z) - R(w) = (w - z) R(z) R(w)`. -/
 theorem sub_eq (hR : IsResolvent A z R) (hS : IsResolvent A w S) :
     R - S = (w - z) • (R * S) := by

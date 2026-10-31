@@ -55,7 +55,12 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    the exact wave and heat equations alone by every A-stable rational scheme of order `p` has
    the error `K nτ τᵖ ‖L^{p+1} x‖` on `D(L^{p+1})` (the data of the domain scale), with the
    constant of the discrete schemes (Brenner–Thomée for the unbounded generators,
-   `ConstrainedFEEC.FullVerdict.exact_wave`, `ConstrainedFEEC.FullVerdict.exact_heat`); the field
+   `ConstrainedFEEC.FullVerdict.exact_wave`, `ConstrainedFEEC.FullVerdict.exact_heat`), and with
+   every bounded perturbation `B`, not necessarily dissipative, the error
+   `K e^{κ‖B‖nτ} nτ τᵖ ‖(L + B)^{p+1} x‖` for `‖B‖τ ≤ c₀` against the Dyson–Phillips semigroup
+   (Brenner–Thomée for quasi-contractive semigroups, through the shift `r(z + ‖B‖τ)` and the
+   Banach-space form of the bound, `ConstrainedFEEC.FullVerdict.exact_perturbed_wave`,
+   `ConstrainedFEEC.FullVerdict.exact_perturbed_heat`); the field
    carries
    **forcing and inhomogeneous boundary data**: the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` have the
    comparison error plus the summed consistency defects (the discrete Duhamel formula,
@@ -230,7 +235,8 @@ FEEC theorem (`dissipFEEC_fullyDiscrete`) for every time scheme of the wave disc
 the core of the wave Ritz projection) and of the heat discretization (with the heat core), and
 the error of explicit leapfrog for the wave discretization under the CFL condition, the
 Hermitian signed linear systems of its Crank–Nicolson steps, and the Brenner–Thomée error of
-every A-stable rational scheme for the exact wave and heat equations (unbounded generators). -/
+every A-stable rational scheme for the exact wave and heat equations (unbounded generators),
+also with every bounded perturbation (quasi-contractive semigroups). -/
 structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
   /-- the fully discrete wave equation, for every time scheme -/
   wave (Θ : G.toApprox.TimeScheme) : Θ.Verdict G.toCore
@@ -282,6 +288,28 @@ structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
     ‖(r.step (-H.hodgeLaplacian) τ ^ n) x - G.toHeat.S (n * τ) x‖ ≤
       ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p *
         ‖(DissipFEEC.genExt (-H.hodgeLaplacian))^[p + 1] x‖
+  /-- the time discretization of the exact wave equation with every bounded perturbation `B`, not
+  necessarily dissipative, by every A-stable rational scheme `r` of order `p`:
+  `‖r(τ(L + B))ⁿ x - S_B(nτ) x‖ ≤ K e^{κ‖B‖nτ} nτ τᵖ ‖(L + B)^{p+1} x‖` for `‖B‖τ ≤ c₀`, with `S_B`
+  the Dyson–Phillips perturbation and `c₀`, `K`, `κ` depending only on `r` (Brenner–Thomée for
+  quasi-contractive semigroups, `DissipFEEC.exists_norm_step_pow_sub_perturb_le`) -/
+  exact_perturbed_wave (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) : ∃ c₀ : ℝ, 0 < c₀ ∧ ∃ K κ : ℝ, 0 ≤ K ∧ 0 ≤ κ ∧
+      ∀ (B : PiLp 2 W →L[𝕜] PiLp 2 W) {τ : ℝ}, 0 < τ → ‖B‖ * τ ≤ c₀ → ∀ (n : ℕ) {x : PiLp 2 W},
+        x ∈ DissipFEEC.iterDomain ((B : PiLp 2 W →ₗ[𝕜] PiLp 2 W) +ᵥ H.wave) (p + 1) →
+        ‖(r.step ((B : PiLp 2 W →ₗ[𝕜] PiLp 2 W) +ᵥ H.wave) τ ^ n) x -
+            (G.toApprox.isMDissipative.semigroup.perturb B).S (n * τ) x‖ ≤
+          K * Real.exp (κ * ‖B‖ * (n * τ)) * (n * τ) * τ ^ p *
+            ‖(DissipFEEC.genExt ((B : PiLp 2 W →ₗ[𝕜] PiLp 2 W) +ᵥ H.wave))^[p + 1] x‖
+  /-- the same for the exact heat equation with every bounded perturbation, generator `-Δ + B` -/
+  exact_perturbed_heat (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) : ∃ c₀ : ℝ, 0 < c₀ ∧ ∃ K κ : ℝ, 0 ≤ K ∧ 0 ≤ κ ∧
+      ∀ (B : PiLp 2 W →L[𝕜] PiLp 2 W) {τ : ℝ}, 0 < τ → ‖B‖ * τ ≤ c₀ → ∀ (n : ℕ) {x : PiLp 2 W},
+        x ∈ DissipFEEC.iterDomain ((B : PiLp 2 W →ₗ[𝕜] PiLp 2 W) +ᵥ -H.hodgeLaplacian) (p + 1) →
+        ‖(r.step ((B : PiLp 2 W →ₗ[𝕜] PiLp 2 W) +ᵥ -H.hodgeLaplacian) τ ^ n) x -
+            (G.toHeat.isMDissipative.semigroup.perturb B).S (n * τ) x‖ ≤
+          K * Real.exp (κ * ‖B‖ * (n * τ)) * (n * τ) * τ ^ p *
+            ‖(DissipFEEC.genExt ((B : PiLp 2 W →ₗ[𝕜] PiLp 2 W) +ᵥ -H.hodgeLaplacian))^[p + 1] x‖
 
 /-- **The fully discrete FEEC theorem for a constrained FEEC discretization**: wave and heat, every
 time scheme, leapfrog under the CFL condition, the Hermitian signed systems of Crank–Nicolson, and
@@ -292,7 +320,9 @@ theorem constrainedFEEC_fullyDiscrete (G : ConstrainedFEEC H κ) : G.FullVerdict
     G.toApprox.norm_S_sub_leapfrog_le,
     fun hτ h _ b ε hε hMε hKε v => G.toApprox.crankNicolson_signed hτ h b ε hε hMε hKε v,
     fun r hr _ hp _ hτ n _ hx => G.toApprox.norm_step_pow_sub_S_le r hr hp hτ n hx,
-    fun r hr _ hp _ hτ n _ hx => G.toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx⟩
+    fun r hr _ hp _ hτ n _ hx => G.toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx,
+    fun r hr _ hp => G.toApprox.exists_norm_step_pow_sub_perturb_le r hr hp,
+    fun r hr _ hp => G.toHeat.exists_norm_step_pow_sub_perturb_le r hr hp⟩
 
 variable {ρ : Type*}
 

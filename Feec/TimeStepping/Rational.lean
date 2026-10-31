@@ -40,17 +40,22 @@ over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ
   to `x` (`apply_sub_smul_eq_iff`).
 * **Complex coefficients** (`norm_resolventEval_mul_inverse_le`): for complex polynomials
   `p`, `q` with `deg p ≤ deg q`, `q` free of zeros for `re z ≤ 0`, and every m-dissipative `A`
-  of a complex Hilbert space, `‖P(S) Q(S)⁻¹‖ ≤ sup_y |p(iy)/q(iy)|`; for bounded `L`,
-  `P(S) Q(S)⁻¹ = p(L) q(L)⁻¹` at `S = (1 - L)⁻¹` (`resolventEval_eq_aeval`).
+  of a complex Hilbert space, `‖P(S) Q(S)⁻¹‖ ≤ sup_y |p(iy)/q(iy)|` (finite:
+  `bddAbove_norm_div_imaginary`); for bounded `L`, `P(S) Q(S)⁻¹ = p(L) q(L)⁻¹` at
+  `S = (1 - L)⁻¹` (`resolventEval_eq_aeval`), so `‖p(L) q(L)⁻¹‖ ≤ sup_y |p(iy)/q(iy)|` for bounded
+  dissipative `L` (`norm_aeval_mul_inverse_le_of_dissipative`).
 * **Order from the asymptotics** (`RationalScheme.hasOrder_of_isBigO`): `r(z) - e^z = O(z^{p+1})`
-  at `0` gives order `p`.
+  at `0` gives order `p`; over `ℂ`, `X^{p+1} ∣ n - d Tₚ` (`X_pow_dvd_sub_mul_expTaylor`).
 * **Consistency** (`RationalScheme.isConsistent`): a scheme of order `p` is consistent of order
   `p` with every bounded dissipative `L`, with constant
   `K = sup_y |(r(iy) - Tₚ(iy))/(iy)^{p+1}| + 1/(p+1)!`: `r = Tₚ + X^{p+1} ρ` with `ρ` the
   remainder scheme (`RationalScheme.remainder`, same denominator), whose norm at `τ L` is bounded
   by von Neumann's inequality again (`apply_eq_add`).
 * **`RationalScheme.norm_apply_pow_sub_exp_le`** (Brenner–Thomée): at `t = n τ`,
-  `‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵖ ‖L^{p+1} y‖` for every bounded dissipative `L`.
+  `‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵖ ‖L^{p+1} y‖` for every bounded dissipative `L`; for complex
+  coefficients `norm_aeval_mul_inverse_pow_sub_exp_le`; both through the consistency of
+  `n(τL) d(τL)⁻¹` from `n = d Tₚ + X^{p+1} ρ` over `𝕜`
+  (`RationalScheme.isConsistent_aeval_mul_inverse`).
 * **Discrete constraint propagation** (`RationalScheme.apply_mem_of_mapsTo`): a closed subspace
   `K` with `L K ⊆ K` is kept by `r(L)`.
 * **Symmetric schemes** (`RationalScheme.IsSymmetric`, `n(z) = d(-z)`: the diagonal Padé and
@@ -200,6 +205,80 @@ theorem re_cayley_inv (w : ℂ) : ((w - 1) / (w + 1)).re = (‖w‖ ^ 2 - 1) / �
     sub_zero, Complex.add_im, add_zero]
   ring
 
+/-- If `q` has no zero for `re z ≤ 0`, then `q̃` (to degree `deg q`) has no zero in the closed
+unit disc: `(w - 1)/(w + 1)` lies in the closed left half-plane, and `q̃(-1) = q_N (-2)ᴺ`. -/
+theorem eval_cayleyPoly_ne_zero {q : ℂ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {w : ℂ}
+    (hw : ‖w‖ ≤ 1) : (cayleyPoly q.natDegree q).eval w ≠ 0 := by
+  have hq0 : q ≠ 0 := fun h => hq 0 (by simp) (by simp [h])
+  rcases eq_or_ne w (-1) with rfl | hw1
+  · rw [eval_neg_one_cayleyPoly, ← leadingCoeff]
+    exact mul_ne_zero (leadingCoeff_ne_zero.2 hq0) (pow_ne_zero _ (by norm_num))
+  have hw0 : w + 1 ≠ 0 := fun h => hw1 (eq_neg_of_add_eq_zero_left h)
+  rw [eval_cayleyPoly le_rfl hw1]
+  refine mul_ne_zero (pow_ne_zero _ hw0) (hq _ ?_)
+  rw [re_cayley_inv]
+  exact div_nonpos_of_nonpos_of_nonneg (by nlinarith [norm_nonneg w]) (by positivity)
+
+/-- On the unit circle (without `-1`), `p̃/q̃` is `p/q` on the imaginary axis, for
+`deg p ≤ deg q`. -/
+theorem eval_cayleyPoly_div {p q : ℂ[X]} (hpq : p.natDegree ≤ q.natDegree) {ζ : ℂ}
+    (hζ : ‖ζ‖ = 1) (hζ1 : ζ ≠ -1) :
+    (cayleyPoly q.natDegree p).eval ζ / (cayleyPoly q.natDegree q).eval ζ =
+      p.eval (((ζ - 1) / (ζ + 1)).im * Complex.I) /
+        q.eval (((ζ - 1) / (ζ + 1)).im * Complex.I) := by
+  have hζ0 : ζ + 1 ≠ 0 := fun h => hζ1 (eq_neg_of_add_eq_zero_left h)
+  have hre : ((ζ - 1) / (ζ + 1)).re = 0 := by rw [re_cayley_inv, hζ]; simp
+  have e : ((ζ - 1) / (ζ + 1)).im * Complex.I = (ζ - 1) / (ζ + 1) := by
+    conv_rhs => rw [← Complex.re_add_im ((ζ - 1) / (ζ + 1)), hre]
+    simp
+  rw [e, eval_cayleyPoly hpq hζ1, eval_cayleyPoly le_rfl hζ1,
+    mul_div_mul_left _ _ (pow_ne_zero _ hζ0)]
+
+/-- **A complex rational function `p/q` with `deg p ≤ deg q` and no pole on the closed left
+half-plane is bounded on the imaginary axis**: `p̃/q̃` is continuous on the unit circle, and
+`y ↦ (1 + iy)/(1 - iy)` maps the axis into it. -/
+theorem bddAbove_norm_div_imaginary {p q : ℂ[X]} (hpq : p.natDegree ≤ q.natDegree)
+    (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) :
+    BddAbove (Set.range fun y : ℝ => ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖) := by
+  obtain ⟨K, hK⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
+    (f := fun w : ℂ => (cayleyPoly q.natDegree p).eval w / (cayleyPoly q.natDegree q).eval w)
+    ((Polynomial.continuous _).continuousOn.div (Polynomial.continuous _).continuousOn
+      fun w hw => eval_cayleyPoly_ne_zero hq (mem_sphere_zero_iff_norm.1 hw).le)
+  refine ⟨K, ?_⟩
+  rintro _ ⟨y, rfl⟩
+  have h1 : (1 : ℂ) - y * Complex.I ≠ 0 := fun h => by
+    simpa using congrArg Complex.re h
+  set ζ := (1 + y * Complex.I) / (1 - y * Complex.I)
+  have hn : ‖(1 : ℂ) + y * Complex.I‖ = ‖(1 : ℂ) - y * Complex.I‖ := by
+    rw [← Complex.norm_conj]; congr 1; simp [Complex.ext_iff]
+  have hζ : ‖ζ‖ = 1 := by rw [norm_div, hn, div_self (norm_ne_zero_iff.2 h1)]
+  have hζ1 : ζ ≠ -1 := fun h => by
+    rw [div_eq_iff h1] at h
+    have := congrArg Complex.re h
+    norm_num at this
+  have e : (ζ - 1) / (ζ + 1) = y * Complex.I := by
+    have h2 : (1 : ℂ) + y * Complex.I + (1 - y * Complex.I) = 2 := by ring
+    simp only [ζ]
+    field_simp
+    rw [h2]; ring
+  have := hK ζ (mem_sphere_zero_iff_norm.2 hζ)
+  rw [eval_cayleyPoly_div hpq hζ hζ1, e] at this
+  simpa using this
+
+/-- A complex rational function bounded on the imaginary axis is bounded at infinity:
+`deg p ≤ deg q` (`Polynomial.natDegree_le_of_norm_div_le` along `y ↦ iy`). -/
+theorem natDegree_le_of_norm_div_imaginary_le {p q : ℂ[X]}
+    (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {C : ℝ}
+    (hC : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ C) :
+    p.natDegree ≤ q.natDegree := by
+  have hl : Filter.Tendsto (fun y : ℝ => (y : ℂ) * Complex.I) Filter.atTop
+      (Bornology.cobounded ℂ) := by
+    rw [← tendsto_norm_atTop_iff_cobounded]
+    simpa using Filter.tendsto_abs_atTop_atTop
+  exact Polynomial.natDegree_le_of_norm_div_le hl (C := C)
+    (Filter.eventually_map.2 (.of_forall fun y => hq _ (by simp)))
+    (Filter.eventually_map.2 (.of_forall hC))
+
 end CayleyPoly
 
 /-! ### Rational schemes -/
@@ -216,6 +295,34 @@ end CayleyPoly
 
 /-- The Taylor polynomial `Tₚ = ∑_{j ≤ p} Xʲ/j!` of the exponential. -/
 def expTaylor (p : ℕ) : ℝ[X] := ∑ j ∈ range (p + 1), C (1 / (j.factorial : ℝ)) * X ^ j
+
+/-- **Order from the asymptotics, complex coefficients**: if `q(0) ≠ 0` and
+`p(z)/q(z) - e^z = O(z^{m+1})` at `0`, then `X^{m+1}` divides `p - q Tₘ`
+(`p - q Tₘ = q (p/q - e^z) + q (e^z - Tₘ)`, `Polynomial.X_pow_dvd_of_isBigO`). [HairerWanner1996],
+§IV.3 -/
+theorem X_pow_dvd_sub_mul_expTaylor {p q : ℂ[X]} (hq : q.eval 0 ≠ 0) {m : ℕ}
+    (h : (fun z : ℂ => p.eval z / q.eval z - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
+    X ^ (m + 1) ∣ p - q * (expTaylor m).map (algebraMap ℝ ℂ) := by
+  have hd : Filter.Tendsto (fun z : ℂ => q.eval z) (𝓝 0) (𝓝 (q.eval 0)) :=
+    q.continuous.tendsto 0
+  have hd0 : ∀ᶠ z : ℂ in 𝓝 0, q.eval z ≠ 0 := hd.eventually_ne hq
+  have hexp : (fun z : ℂ => Complex.exp z - ((expTaylor m).map (algebraMap ℝ ℂ)).eval z) =O[𝓝 0]
+      fun z => z ^ (m + 1) := by
+    refine IsBigO.of_bound ((m + 1).succ * ((m + 1).factorial * (m + 1 : ℕ) : ℝ)⁻¹) ?_
+    filter_upwards [Metric.closedBall_mem_nhds (0 : ℂ) one_pos] with z hz
+    rw [mem_closedBall_zero_iff] at hz
+    have e : ((expTaylor m).map (algebraMap ℝ ℂ)).eval z =
+        ∑ j ∈ range (m + 1), z ^ j / j.factorial := by
+      simp [expTaylor, div_eq_inv_mul]
+    rw [e, norm_pow]
+    exact (Complex.exp_bound hz (Nat.succ_pos m)).trans_eq (mul_comm _ _)
+  have hsum := (hd.isBigO_one ℂ).mul h |>.add ((hd.isBigO_one ℂ).mul hexp)
+  simp only [one_mul] at hsum
+  refine X_pow_dvd_of_isBigO (hsum.congr' ?_ (by simp))
+  filter_upwards [hd0] with z hz
+  simp only [eval_sub, eval_mul]
+  field_simp
+  ring
 
 namespace RationalScheme
 
@@ -270,33 +377,12 @@ theorem eval_cayley {ζ : ℂ} (hζ : ‖ζ‖ = 1) (hζ1 : ζ ≠ -1) :
   rw [e, cnum, cden, aeval_cayleyPoly_complex r.natDegree_num_le hζ1,
     aeval_cayleyPoly_complex le_rfl hζ1, mul_div_mul_left _ _ (pow_ne_zero _ hζ0), eval]
 
-/-- `r` is bounded on the imaginary axis (`ñ/d̃` is continuous on the unit circle). -/
+/-- `r` is bounded on the imaginary axis (`bddAbove_norm_div_imaginary`). -/
 theorem bddAbove : BddAbove (Set.range fun y : ℝ => ‖r.eval (y * Complex.I)‖) := by
-  obtain ⟨K, hK⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
-    (f := fun w : ℂ => aeval w r.cnum / aeval w r.cden)
-    ((Polynomial.continuous_aeval _).continuousOn.div
-      (Polynomial.continuous_aeval _).continuousOn fun w hw =>
-        r.aeval_cden_ne_zero (mem_sphere_zero_iff_norm.1 hw).le)
-  refine ⟨K, ?_⟩
-  rintro _ ⟨y, rfl⟩
-  have h1 : (1 : ℂ) - y * Complex.I ≠ 0 := fun h => by
-    simpa using congrArg Complex.re h
-  set ζ := (1 + y * Complex.I) / (1 - y * Complex.I)
-  have hn : ‖(1 : ℂ) + y * Complex.I‖ = ‖(1 : ℂ) - y * Complex.I‖ := by
-    rw [← Complex.norm_conj]; congr 1; simp [Complex.ext_iff]
-  have hζ : ‖ζ‖ = 1 := by rw [norm_div, hn, div_self (norm_ne_zero_iff.2 h1)]
-  have hζ1 : ζ ≠ -1 := fun h => by
-    rw [div_eq_iff h1] at h
-    have := congrArg Complex.re h
-    norm_num at this
-  have e : (ζ - 1) / (ζ + 1) = y * Complex.I := by
-    have h2 : (1 : ℂ) + y * Complex.I + (1 - y * Complex.I) = 2 := by ring
-    simp only [ζ]
-    field_simp
-    rw [h2]; ring
-  have := hK ζ (mem_sphere_zero_iff_norm.2 hζ)
-  rw [r.eval_cayley hζ hζ1, e] at this
-  simpa using this
+  simpa only [eval, eval_map_algebraMap] using bddAbove_norm_div_imaginary
+    (p := r.num.map (algebraMap ℝ ℂ)) (q := r.den.map (algebraMap ℝ ℂ))
+    (by simpa only [natDegree_map] using r.natDegree_num_le)
+    (fun z hz => by rw [eval_map_algebraMap]; exact r.aeval_den_ne_zero z hz)
 
 theorem norm_eval_le_supNorm (y : ℝ) : ‖r.eval (y * Complex.I)‖ ≤ r.supNorm :=
   le_ciSup r.bddAbove y
@@ -317,17 +403,10 @@ def ofBounded (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) 
   num := p
   den := q
   natDegree_num_le := by
-    have hl : Filter.Tendsto (fun y : ℝ => (y : ℂ) * Complex.I) Filter.atTop
-        (Bornology.cobounded ℂ) := by
-      rw [← tendsto_norm_atTop_iff_cobounded]
-      simpa using Filter.tendsto_abs_atTop_atTop
-    have h := Polynomial.natDegree_le_of_norm_div_le (P := p.map (algebraMap ℝ ℂ))
-      (Q := q.map (algebraMap ℝ ℂ)) hl (C := C)
-      (Filter.eventually_map.2 (.of_forall fun y => by
-        rw [eval_map_algebraMap]; exact hq _ (by simp)))
-      (Filter.eventually_map.2 (.of_forall fun y => by
-        rw [eval_map_algebraMap, eval_map_algebraMap]; exact hC y))
-    simpa only [natDegree_map] using h
+    simpa only [natDegree_map] using natDegree_le_of_norm_div_imaginary_le
+      (p := p.map (algebraMap ℝ ℂ)) (q := q.map (algebraMap ℝ ℂ)) (C := C)
+      (fun z hz => by rw [eval_map_algebraMap]; exact hq z hz)
+      (fun y => by rw [eval_map_algebraMap, eval_map_algebraMap]; exact hC y)
   aeval_den_ne_zero := hq
 
 theorem supNorm_ofBounded_le {p q : ℝ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {C : ℝ}
@@ -540,42 +619,60 @@ theorem apply_eq_add {p : ℕ} (hp : r.HasOrder p) {L : V →L[𝕜] V}
 
 omit [CompleteSpace V] in
 /-- **Order from the asymptotics**: if `r(z) - e^z = O(z^{p+1})` at `0`, then `r` has order `p`
-(`X^{p+1}` divides `n - d Tₚ = d (r - e^z) + d (e^z - Tₚ)`, `Polynomial.X_pow_dvd_of_isBigO`).
-[HairerWanner1996], §IV.3 -/
+(`X_pow_dvd_sub_mul_expTaylor`). [HairerWanner1996], §IV.3 -/
 theorem hasOrder_of_isBigO {p : ℕ}
     (h : (fun z : ℂ => r.eval z - Complex.exp z) =O[𝓝 0] fun z => z ^ (p + 1)) :
     r.HasOrder p := by
-  set G := (r.num - r.den * expTaylor p).map (algebraMap ℝ ℂ)
-  suffices hG : X ^ (p + 1) ∣ G by
-    rw [HasOrder, X_pow_dvd_iff]
-    intro d hd
-    have := (X_pow_dvd_iff.1 hG) d hd
-    rwa [coeff_map, Complex.coe_algebraMap, Complex.ofReal_eq_zero] at this
-  have hd : Filter.Tendsto (fun z : ℂ => aeval z r.den) (𝓝 0) (𝓝 (aeval 0 r.den)) :=
-    (Polynomial.continuous_aeval _).tendsto 0
-  have hd0 : ∀ᶠ z : ℂ in 𝓝 0, aeval z r.den ≠ 0 :=
-    hd.eventually_ne (r.aeval_den_ne_zero 0 (by simp))
-  have hexp : (fun z : ℂ => Complex.exp z - aeval z (expTaylor p)) =O[𝓝 0]
-      fun z => z ^ (p + 1) := by
-    refine IsBigO.of_bound ((p + 1).succ * ((p + 1).factorial * (p + 1 : ℕ) : ℝ)⁻¹) ?_
-    filter_upwards [Metric.closedBall_mem_nhds (0 : ℂ) one_pos] with z hz
-    rw [mem_closedBall_zero_iff] at hz
-    have e : aeval z (expTaylor p) = ∑ j ∈ range (p + 1), z ^ j / j.factorial := by
-      simp [expTaylor, div_eq_inv_mul]
-    rw [e, norm_pow]
-    exact (Complex.exp_bound hz (Nat.succ_pos p)).trans_eq (mul_comm _ _)
-  have hsum := (hd.isBigO_one ℂ).mul h |>.add ((hd.isBigO_one ℂ).mul hexp)
-  simp only [one_mul] at hsum
-  refine X_pow_dvd_of_isBigO (hsum.congr' ?_ (by simp))
-  filter_upwards [hd0] with z hz
-  simp only [G, eval_map_algebraMap, map_sub, map_mul, eval]
-  field_simp
-  ring
+  have hG := X_pow_dvd_sub_mul_expTaylor (p := r.num.map (algebraMap ℝ ℂ))
+    (q := r.den.map (algebraMap ℝ ℂ))
+    (by rw [eval_map_algebraMap]; exact r.aeval_den_ne_zero 0 (by simp))
+    (by simpa only [eval_map_algebraMap, RationalScheme.eval] using h)
+  rw [HasOrder, X_pow_dvd_iff]
+  intro d hd
+  have := (X_pow_dvd_iff.1 hG) d hd
+  rwa [← Polynomial.map_mul, ← Polynomial.map_sub, coeff_map, Complex.coe_algebraMap,
+    Complex.ofReal_eq_zero] at this
 
 omit [CompleteSpace V] in
 private theorem commute_apply {L : V →L[𝕜] V} {B : V →L[𝕜] V} (h : Commute B L) :
     Commute (r.apply B) L :=
   (commute_aeval h _).mul_left (commute_ringInverse (commute_aeval h _).symm).symm
+
+/-- **Consistency from the expansion `p = q Tₘ + X^{m+1} ρ`**, over `𝕜`: for a bounded
+dissipative `L` and `τ ≥ 0` with `q(τL)` invertible and `‖ρ(τL) q(τL)⁻¹‖ ≤ K₀`, the step
+`p(τL) q(τL)⁻¹ = Tₘ(τL) + (τL)^{m+1} ρ(τL) q(τL)⁻¹` is consistent of order `m` with constant
+`K₀ + 1/(m+1)!`. -/
+theorem isConsistent_aeval_mul_inverse [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V]
+    {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ} (hτ : 0 ≤ τ) {m : ℕ}
+    {p q ρ : 𝕜[X]} (h : p = q * (expTaylor m).map (algebraMap ℝ 𝕜) + X ^ (m + 1) * ρ)
+    (hq : IsUnit (aeval ((τ : 𝕜) • L) q)) {K₀ : ℝ}
+    (hρ : ‖aeval ((τ : 𝕜) • L) ρ * Ring.inverse (aeval ((τ : 𝕜) • L) q)‖ ≤ K₀) :
+    IsConsistent L (aeval ((τ : 𝕜) • L) p * Ring.inverse (aeval ((τ : 𝕜) • L) q)) τ m
+      (K₀ + 1 / (m + 1).factorial) := by
+  set T := (expTaylor m).map (algebraMap ℝ 𝕜)
+  have hτL : Commute ((τ : 𝕜) • L) L := (Commute.refl L).smul_left _
+  have he : aeval ((τ : 𝕜) • L) p * Ring.inverse (aeval ((τ : 𝕜) • L) q) =
+      aeval ((τ : 𝕜) • L) T + ((τ : 𝕜) • L) ^ (m + 1) *
+        (aeval ((τ : 𝕜) • L) ρ * Ring.inverse (aeval ((τ : 𝕜) • L) q)) := by
+    rw [h, map_add, map_mul, map_mul, map_pow, aeval_X, add_mul,
+      ((Commute.all q T).map (aeval ((τ : 𝕜) • L))).eq, Ring.mul_inverse_cancel_right _ _ hq,
+      mul_assoc]
+  have hc : Commute (aeval ((τ : 𝕜) • L) ρ * Ring.inverse (aeval ((τ : 𝕜) • L) q))
+      (L ^ (m + 1)) :=
+    ((commute_aeval hτL ρ).mul_left
+      (commute_ringInverse (commute_aeval hτL q).symm).symm).pow_right _
+  refine isConsistent_of_eq hL hτ hρ fun y => ?_
+  rw [he, add_apply, smul_pow, smul_mul_assoc, smul_apply, ← mul_apply_eq_comp, hc.eq,
+    mul_apply_eq_comp]
+  congr 1
+  · simp only [T, expTaylor, Polynomial.map_sum, Polynomial.map_mul, map_C, Polynomial.map_pow,
+      map_X, map_sum, map_mul, aeval_C, map_pow, aeval_X, _root_.sum_apply]
+    refine sum_congr rfl fun j _ => ?_
+    rw [smul_pow, mul_smul_comm, ← Algebra.smul_def, smul_smul, smul_apply,
+      RCLike.real_smul_eq_coe_smul (K := 𝕜)]
+    congr 1
+    simp [div_eq_inv_mul, mul_comm]
+  · rw [RCLike.real_smul_eq_coe_smul (K := 𝕜)]; push_cast; rfl
 
 /-- **Consistency of an order-`p` scheme**: `r(τ L)` is consistent of order `p` with every bounded
 dissipative `L`, with the constant `sup_y |ρ(iy)| + 1/(p+1)!` (`ρ` the remainder), uniformly in
@@ -585,20 +682,10 @@ theorem isConsistent [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V] {L : V →L[
     IsConsistent L (r.apply ((τ : 𝕜) • L)) τ p
       ((r.remainder p).supNorm + 1 / (p + 1).factorial) := by
   have hτL := dissipative_smul hL hτ
-  refine isConsistent_of_eq hL hτ ((r.remainder p).norm_apply_le hτL) fun y => ?_
-  have hc : Commute ((r.remainder p).apply ((τ : 𝕜) • L)) (L ^ (p + 1)) :=
-    ((r.remainder p).commute_apply ((Commute.refl L).smul_left _)).pow_right _
-  rw [r.apply_eq_add hp hτL, add_apply, smul_pow, smul_mul_assoc, smul_apply, ← mul_apply_eq_comp,
-    hc.eq, mul_apply_eq_comp]
-  congr 1
-  · simp only [expTaylor, Polynomial.map_sum, Polynomial.map_mul, map_C, Polynomial.map_pow,
-      map_X, map_sum, map_mul, aeval_C, map_pow, aeval_X, _root_.sum_apply]
-    refine sum_congr rfl fun j _ => ?_
-    rw [smul_pow, mul_smul_comm, ← Algebra.smul_def, smul_smul, smul_apply,
-      RCLike.real_smul_eq_coe_smul (K := 𝕜)]
-    congr 1
-    simp [div_eq_inv_mul, mul_comm]
-  · rw [RCLike.real_smul_eq_coe_smul (K := 𝕜)]; push_cast; rfl
+  refine isConsistent_aeval_mul_inverse hL hτ ?_ (r.isUnit_aeval_den hτL)
+    ((r.remainder p).norm_apply_le hτL)
+  conv_lhs => rw [r.num_eq_add hp]
+  simp only [Polynomial.map_add, Polynomial.map_mul, Polynomial.map_pow, map_X]
 
 /-- **The Brenner–Thomée error of an A-stable scheme of order `p`**: at `t = n τ`,
 `‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵖ ‖L^{p+1} y‖` with `K = sup_y |ρ(iy)| + 1/(p+1)!`, for every
@@ -816,26 +903,11 @@ theorem norm_resolventEval_mul_inverse_le {A : E →ₗ.[ℂ] E} (hA : A.IsMDiss
       ‖resolventEval q.natDegree p ((τ : ℂ)⁻¹ • resolvent A (τ : ℂ)⁻¹) *
         Ring.inverse (resolventEval q.natDegree q ((τ : ℂ)⁻¹ • resolvent A (τ : ℂ)⁻¹))‖ ≤ K := by
   set N := q.natDegree
-  have hq0 : q ≠ 0 := fun h => hq 0 (by simp) (by simp [h])
-  have hq' : ∀ w : ℂ, ‖w‖ ≤ 1 → (cayleyPoly N q).eval w ≠ 0 := fun w hw => by
-    rcases eq_or_ne w (-1) with rfl | hw1
-    · rw [eval_neg_one_cayleyPoly, ← leadingCoeff]
-      exact mul_ne_zero (leadingCoeff_ne_zero.2 hq0) (pow_ne_zero _ (by norm_num))
-    have hw0 : w + 1 ≠ 0 := fun h => hw1 (eq_neg_of_add_eq_zero_left h)
-    rw [eval_cayleyPoly le_rfl hw1]
-    refine mul_ne_zero (pow_ne_zero _ hw0) (hq _ ?_)
-    rw [re_cayley_inv]
-    exact div_nonpos_of_nonpos_of_nonneg (by nlinarith [norm_nonneg w]) (by positivity)
+  have hq' : ∀ w : ℂ, ‖w‖ ≤ 1 → (cayleyPoly N q).eval w ≠ 0 := fun w hw =>
+    eval_cayleyPoly_ne_zero hq hw
   have hK' : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 →
       ‖(cayleyPoly N p).eval ζ / (cayleyPoly N q).eval ζ‖ ≤ K := fun ζ hζ hζ1 => by
-    have hζ0 : ζ + 1 ≠ 0 := fun h => hζ1 (eq_neg_of_add_eq_zero_left h)
-    have hre : ((ζ - 1) / (ζ + 1)).re = 0 := by rw [re_cayley_inv, hζ]; simp
-    have e : ((ζ - 1) / (ζ + 1)).im * Complex.I = (ζ - 1) / (ζ + 1) := by
-      conv_rhs => rw [← Complex.re_add_im ((ζ - 1) / (ζ + 1)), hre]
-      simp
-    rw [eval_cayleyPoly hpq hζ1, eval_cayleyPoly le_rfl hζ1,
-      mul_div_mul_left _ _ (pow_ne_zero _ hζ0), ← e]
-    exact hK _
+    rw [eval_cayleyPoly_div hpq hζ hζ1]; exact hK _
   obtain ⟨hu, hn⟩ := ContinuousLinearMap.norm_aeval_mul_inverse_le (norm_cayley_le hA hτ) hq' hK'
   rw [cayley_eq_two_mul_sub_one, aeval_two_mul_sub_one_cayleyPoly] at hu hn
   rw [aeval_two_mul_sub_one_cayleyPoly] at hn
@@ -864,6 +936,61 @@ theorem resolventEval_eq_aeval {L : E →L[ℂ] E} (hL : ∀ x, RCLike.re ⟪L x
     (commute_aeval hSL.symm f).symm.pow_left N
   exact ⟨(hc q).isUnit_mul_iff.trans (and_iff_right hU),
     mul_inverse_mul_of_commute hU (hc p) (hc q)⟩
+
+
+/-- **Von Neumann's theorem for bounded dissipative operators, complex coefficients**: for
+complex polynomials `p`, `q` with `deg p ≤ deg q`, `q` free of zeros for `re z ≤ 0` and
+`|p(iy)/q(iy)| ≤ K`, and every bounded dissipative `L` of a complex Hilbert space, `q(L)` is
+invertible and `‖p(L) q(L)⁻¹‖ ≤ K` (`norm_resolventEval_mul_inverse_le`, `resolventEval_eq_aeval`).
+[HairerWanner1996], §IV.11 -/
+theorem norm_aeval_mul_inverse_le_of_dissipative {L : E →L[ℂ] E}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_ℂ ≤ 0) {p q : ℂ[X]} (hpq : p.natDegree ≤ q.natDegree)
+    (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {K : ℝ}
+    (hK : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ K) :
+    IsUnit (aeval L q) ∧ ‖aeval L p * Ring.inverse (aeval L q)‖ ≤ K := by
+  have h := norm_resolventEval_mul_inverse_le (L.isMDissipative_toPMap_top hL) one_pos hpq hq hK
+  simp only [Complex.ofReal_one, inv_one, one_smul] at h
+  obtain ⟨hu, he⟩ := resolventEval_eq_aeval hL hpq le_rfl
+  exact ⟨hu.1 h.1, he ▸ h.2⟩
+
+/-- **The Brenner–Thomée error, complex coefficients**: let `r = p/q` be complex, without poles
+for `re z ≤ 0`, A-stable (`|r(iy)| ≤ 1`) and of order `m` (`X^{m+1} ∣ p - q Tₘ`, from
+`r(z) - e^z = O(z^{m+1})` by `X_pow_dvd_sub_mul_expTaylor`). With the remainder
+`ρ = (p - q Tₘ)/X^{m+1}` and `K = sup_y |ρ(iy)/q(iy)| + 1/(m+1)!`, at `t = n τ`,
+`‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵐ ‖L^{m+1} y‖` for every bounded dissipative `L` of a complex
+Hilbert space. [BrennerThomee1979] -/
+theorem norm_aeval_mul_inverse_pow_sub_exp_le {L : E →L[ℂ] E}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_ℂ ≤ 0) {p q : ℂ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0)
+    (hr : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ 1) {m : ℕ}
+    (hm : X ^ (m + 1) ∣ p - q * (expTaylor m).map (algebraMap ℝ ℂ)) {τ : ℝ} (hτ : 0 ≤ τ)
+    (n : ℕ) (y : E) :
+    ‖((aeval ((τ : ℂ) • L) p * Ring.inverse (aeval ((τ : ℂ) • L) q)) ^ n) y -
+        exp (((n * τ : ℝ) : ℂ) • L) y‖ ≤
+      ((⨆ y : ℝ, ‖((p - q * (expTaylor m).map (algebraMap ℝ ℂ)) /ₘ X ^ (m + 1)).eval
+          (y * Complex.I) / q.eval (y * Complex.I)‖) + 1 / (m + 1).factorial) *
+        (n * τ) * τ ^ m * ‖(L ^ (m + 1)) y‖ := by
+  set T := (expTaylor m).map (algebraMap ℝ ℂ)
+  set ρ := (p - q * T) /ₘ X ^ (m + 1)
+  have hpq := natDegree_le_of_norm_div_imaginary_le hq hr
+  have hρq : ρ.natDegree ≤ q.natDegree := by
+    rw [natDegree_divByMonic _ (monic_X_pow _), natDegree_X_pow]
+    have h1 := natDegree_sub_le p (q * T)
+    have h2 := natDegree_mul_le (p := q) (q := T)
+    have h3 : T.natDegree ≤ m := natDegree_map_le.trans (natDegree_expTaylor_le m)
+    omega
+  have hexp : p = q * T + X ^ (m + 1) * ρ := by
+    have h := modByMonic_add_div (p - q * T) (X ^ (m + 1))
+    rw [(modByMonic_eq_zero_iff_dvd (monic_X_pow _)).2 hm, zero_add] at h
+    linear_combination -h
+  have hb := bddAbove_norm_div_imaginary hρq hq
+  have hτL := dissipative_smul (𝕜 := ℂ) hL hτ
+  have hc := isConsistent_aeval_mul_inverse hL hτ hexp
+    (norm_aeval_mul_inverse_le_of_dissipative hτL hpq hq hr).1
+    (norm_aeval_mul_inverse_le_of_dissipative hτL hρq hq fun y => le_ciSup hb y).2
+  have := norm_pow_apply_sub_exp_le hL (M := 1) (n := n)
+    (fun k _ => norm_pow_le_one (norm_aeval_mul_inverse_le_of_dissipative hτL hpq hq hr).2 k) hτ
+    (add_nonneg ((norm_nonneg _).trans (le_ciSup hb 0)) (by positivity)) hc y
+  simpa using this
 
 end Complex
 

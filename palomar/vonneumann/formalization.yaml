@@ -25,16 +25,17 @@ project:
     unit circle of |p/q|; (3) for a complex rational function r = p/q without poles in the closed
     left half-plane, every bounded dissipative operator A (re <Ax, x> <= 0) of a complex Hilbert
     space, every step tau >= 0 and every n, q(tau A) is invertible and
-    ||r(tau A)^n|| <= (sup_y |r(iy)|)^n; (4) the same for m-dissipative, possibly unbounded, A and
-    tau > 0, with r(tau A) = P(S) Q(S)^(-1) through the resolvent S = (1 - tau A)^(-1), the unique
+    ||r(tau A)^n|| <= (sup_y |r(iy)|)^n; (4) the same for m-dissipative, possibly unbounded, A,
+    tau > 0 and r bounded at infinity (deg p <= deg q), with r(tau A) = P(S) Q(S)^(-1) through the resolvent S = (1 - tau A)^(-1), the unique
     bounded operator mapping x - tau A x to x, where P(s) = s^N p(1 - 1/s) and
     Q(s) = s^N q(1 - 1/s), N = deg q, are written out as sums; (5) the real forms of (3) and (4):
     real r on real or complex Hilbert spaces (Runge-Kutta stability functions on real spaces);
     (6) the Cayley transform of an m-dissipative A is the unique bounded operator mapping
-    x - tau A x to x + tau A x, and a contraction; (7) the Brenner-Thomee error bound: for a real
+    x - tau A x to x + tau A x, and a contraction; (7) the Brenner-Thomee error bound: for an
     A-stable r of order m (r(z) - e^z = O(z^(m+1)) at 0) there is K, depending on r only, with
     ||r(tau A)^n x - e^(n tau A) x|| <= K n tau tau^m ||A^(m+1) x|| for every bounded dissipative
-    A of every real or complex Hilbert space, tau >= 0, n and x. So A-stable schemes are
+    A, tau >= 0, n and x: complex r on every complex Hilbert space, real r on every real or
+    complex Hilbert space. So A-stable schemes are
     contractions, with all their powers, for every step size and every m-dissipative A. The
     statements use Mathlib's polynomials (Polynomial.aeval), bounded operators, partially defined
     linear maps (LinearPMap), Ring.inverse, NormedSpace.exp, Asymptotics.IsBigO and the extended
@@ -108,9 +109,13 @@ sources:
     note: >-
       Convergence of rational approximations: for r stable and of order m,
       ||r(tau A)^n x - e^(n tau A) x|| <= C t tau^m ||A^(m+1) x||, t = n tau, for generators A
-      of semigroups with x in the domain of A^(m+1). Formalized for bounded dissipative A of
-      Hilbert spaces, where A-stability gives the stability ||r(tau A)^n|| <= 1, with C uniform
-      in A, the space, tau and n. Paper not consulted; statement as recalled.
+      of semigroups with x in the domain of A^(m+1). Formalized as a specialization: bounded
+      dissipative A of Hilbert spaces (complex r on complex spaces, real r on real or complex
+      spaces), where A-stability gives the stability ||r(tau A)^n|| <= 1, with C uniform in A,
+      the space, tau and n. Not compared: unbounded generators, Banach spaces (where stability
+      may only hold with a growing bound on ||r(tau A)^n||), and the estimates for less smooth
+      data (x in the domain of a lower power of A, with a lower rate). Paper not consulted;
+      statement and scope as recalled.
     author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
@@ -129,11 +134,13 @@ status:
     Formalized and compared: VonNeumann.inequality, VonNeumann.inequality_rational,
     VonNeumann.inequality_dissipative, VonNeumann.inequality_mdissipative,
     VonNeumann.inequality_dissipative_real, VonNeumann.inequality_mdissipative_real,
-    VonNeumann.cayley_contraction and VonNeumann.error_bound (Challenge.lean). Not compared
+    VonNeumann.cayley_contraction, VonNeumann.error_bound and VonNeumann.error_bound_real
+    (Challenge.lean). Not compared
     (proved in Feec, outside the statement): that P(S) Q(S)^(-1) is p(tau A) q(tau A)^(-1) for
     bounded A (Feec.TimeStepping.resolventEval_eq_aeval,
     Feec.TimeStepping.RationalScheme.step_toPMap), symmetric schemes as isometries for skew A,
-    discrete constraint propagation, the theta-schemes and Runge-Kutta stability functions.
+    discrete constraint propagation, the theta-schemes and Runge-Kutta stability functions; the
+    parts of Brenner-Thomee listed under that source and in divergence (3).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -169,8 +176,9 @@ automation:
     submission; the Solution applies, through Solution/Bridge.lean (real bounds to suprema in
     [0, infinity]), ContinuousLinearMap.norm_aeval_le_of_norm_le_one,
     ContinuousLinearMap.norm_aeval_mul_inverse_le,
-    Feec.TimeStepping.norm_resolventEval_mul_inverse_le and resolventEval_eq_aeval (complex
-    coefficients), Feec.TimeStepping.RationalScheme.ofBounded, norm_apply_le, norm_step_le,
+    Feec.TimeStepping.norm_resolventEval_mul_inverse_le,
+    norm_aeval_mul_inverse_le_of_dissipative, norm_aeval_mul_inverse_pow_sub_exp_le and
+    X_pow_dvd_sub_mul_expTaylor (complex coefficients), Feec.TimeStepping.RationalScheme.ofBounded, norm_apply_le, norm_step_le,
     step_eq_resolventEval (real coefficients), Feec.TimeStepping.apply_sub_smul_eq_iff,
     norm_cayley_le, cayley_sub_smul, eq_cayley_of_apply_sub_smul, and
     Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le with hasOrder_of_isBigO.
@@ -183,9 +191,15 @@ fidelity:
     extended norm, so they are the suprema of the sources, infinite when r is unbounded on the
     imaginary axis (then the bounds are vacuous). For m-dissipative A, r(tau A) is defined in the
     statement as P(S) Q(S)^(-1) at the resolvent S = (1 - tau A)^(-1), with
-    P(S) = sum_(k <= N) p_k (S - 1)^k S^(N-k) (that is s^N p(1 - 1/s) at s = S, and
-    1 - 1/s = tau A there); Mathlib has no functional calculus for unbounded operators. That this
-    is p(tau A) q(tau A)^(-1) for bounded A is proved in Feec, not compared. The resolvent at
+    P(S) = sum_(k <= N) p_k (S - 1)^k S^(N-k), N = deg q (that is s^N p(1 - 1/s) at s = S, and
+    1 - 1/s = tau A there); Mathlib has no functional calculus for unbounded operators. These
+    statements assume deg p <= deg q: then P(S) carries every coefficient of p, and r(tau A) is
+    bounded, as it must be for unbounded A (deg p > deg q makes r unbounded on the axis, so this
+    loses only vacuous cases). That P(S) Q(S)^(-1) is p(tau A) q(tau A)^(-1) for bounded A is
+    proved in Feec, not compared. In the error bounds, "K depending on r only" is stated as
+    "exists K, for all spaces E": Lean quantifies the universe of E outside the statement, so
+    each universe has its own K; the proof gives the same K in every universe,
+    sup_y |rho(iy)/q(iy)| + 1/(m+1)! for the remainder rho = (p - q T_m)/X^(m+1). The resolvent at
     1/tau, with mu - A onto for one mu > 0, is the m-dissipativity of Pazy, §1.4.
     (2) Stronger than the sources. The polynomial form of von Neumann's inequality holds on
     every complex inner product space; the rational form needs completeness, as in the source
@@ -200,11 +214,10 @@ fidelity:
     C_0-semigroup, absent from Mathlib, and x in D(A^(m+1)) needs powers of unbounded
     operators; stating it would need a custom semigroup definition in the challenge, and
     proving it the consistency estimate for unbounded A through the resolvent calculus, which
-    Feec does not have (estimated 600 to 1000 lines). The error bound is stated for real
-    coefficients only (all Runge-Kutta and Pade stability functions are real); the complex form
-    would duplicate the consistency theory of Feec.TimeStepping.RationalScheme (remainder
-    scheme, consistency, Lax-type error sum) for complex coefficients, estimated 200 lines, for
-    no scheme in use. Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
+    Feec does not have (estimated 600 to 1000 lines). Banach spaces and nonsmooth data are not
+    covered either: off Hilbert spaces von Neumann's inequality fails, and the stability bound
+    of Brenner-Thomee needs the Laplace-transform (Hille-Phillips) representation of r(tau A),
+    absent from Mathlib (estimated well over 1000 lines). Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
     Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
     hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.
 
@@ -259,6 +272,11 @@ alignment:
       lean: "VonNeumann.error_bound"
       module: "Challenge"
       status: "proved"
-      note: "Real A-stable r of order m, bounded dissipative A, constant depending on r only."
+      note: "Complex A-stable r of order m, bounded dissipative A, complex Hilbert spaces."
+    - source: "[BrennerThomee1979]"
+      lean: "VonNeumann.error_bound_real"
+      module: "Challenge"
+      status: "proved"
+      note: "Real A-stable r of order m, bounded dissipative A, real or complex Hilbert spaces."
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

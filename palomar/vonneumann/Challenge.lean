@@ -24,9 +24,10 @@ dissipative operator `A` (`re ⟪A x, x⟫ ≤ 0`), every step `τ` and every `n
 `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ`: for bounded `A` and `τ ≥ 0` with `r(τA) = p(τA) q(τA)⁻¹`
 (`VonNeumann.inequality_dissipative`), and for m-dissipative, possibly unbounded, `A` (the
 generators of contraction semigroups, [Pazy1983], §1.4) and `τ > 0` with `r(τA)` through the
-resolvent `S = (1 - τA)⁻¹`: `r(τA) = P(S) Q(S)⁻¹` for `P(s) = sᴺ p(1 - 1/s)` and
-`Q(s) = sᴺ q(1 - 1/s)`, `N = deg q`, polynomials since `1 - 1/s = τA` at `s = S`; for bounded `A`
-this is `p(τA) Sᴺ (q(τA) Sᴺ)⁻¹ = p(τA) q(τA)⁻¹` (`VonNeumann.inequality_mdissipative`). These are
+resolvent `S = (1 - τA)⁻¹`, for `deg p ≤ deg q` (`r` bounded at infinity, as `r(τA)` must be
+for unbounded `A`): `r(τA) = P(S) Q(S)⁻¹` for `P(s) = sᴺ p(1 - 1/s)` and `Q(s) = sᴺ q(1 - 1/s)`,
+`N = deg q`, polynomials since `1 - 1/s = τA` at `s = S`; for bounded `A` this is
+`p(τA) Sᴺ (q(τA) Sᴺ)⁻¹ = p(τA) q(τA)⁻¹` (`VonNeumann.inequality_mdissipative`). These are
 stated for complex `r` on complex Hilbert spaces, and for real `r` (the stability functions of
 Runge–Kutta methods) on real or complex Hilbert spaces (`VonNeumann.inequality_dissipative_real`,
 `VonNeumann.inequality_mdissipative_real`). The suprema are taken in `[0, ∞]`. So an A-stable
@@ -37,8 +38,9 @@ operator mapping `x - τAx` to `x + τAx`, a contraction (`VonNeumann.cayley_con
 
 **The error of an A-stable scheme of order `m`** ([BrennerThomee1979]): if moreover
 `r(z) - e^z = O(z^{m+1})` at `0`, there is a constant `K`, depending on `r` only, such that
-`‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖` for every bounded dissipative `A` of every real
-or complex Hilbert space, `τ ≥ 0`, `n` and `x` (`VonNeumann.error_bound`).
+`‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖` for every bounded dissipative `A`, `τ ≥ 0`, `n`
+and `x`: for complex `r` on every complex Hilbert space (`VonNeumann.error_bound`), for real `r`
+on every real or complex Hilbert space (`VonNeumann.error_bound_real`).
 
 The operator `p(T)` is `Polynomial.aeval T p`; `q(T)⁻¹` is `Ring.inverse` in the Banach algebra
 of bounded operators; a real polynomial acts over `𝕜` through `Polynomial.map (algebraMap ℝ 𝕜)`;
@@ -96,7 +98,8 @@ theorem inequality_dissipative {E : Type*} [NormedAddCommGroup E] [InnerProductS
 /-- **Von Neumann's theorem for m-dissipative operators**. Let `A` be a possibly unbounded
 operator of a complex Hilbert space, dissipative (`re ⟪A x, x⟫ ≤ 0` on its domain) with `μ - A`
 onto for some `μ > 0` (m-dissipative, [Pazy1983], §1.4), `r = p/q` a complex rational function
-without poles in the closed left half-plane, `N = deg q` and `τ > 0`. Exactly one bounded
+without poles in the closed left half-plane and bounded at infinity (`deg p ≤ deg q`), `N = deg q`
+and `τ > 0`. Exactly one bounded
 operator `S` satisfies `S (x - τAx) = x` on the domain, the resolvent `(1 - τA)⁻¹`;
 `Q(S) = ∑_{k ≤ N} qₖ (S - 1)ᵏ S^{N-k}` is invertible, and `r(τA) = P(S) Q(S)⁻¹`,
 `P(S) = ∑_{k ≤ N} pₖ (S - 1)ᵏ S^{N-k}`, satisfies `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every
@@ -104,7 +107,8 @@ operator `S` satisfies `S (x - τAx) = x` on the domain, the resolvent `(1 - τA
 theorem inequality_mdissipative {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
     [CompleteSpace E] {A : E →ₗ.[ℂ] E} (hA : ∀ x : A.domain, (⟪A x, (x : E)⟫_ℂ).re ≤ 0)
     (hA' : ∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : ℂ) • (x : E) - A x = y)
-    (p q : ℂ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {τ : ℝ} (hτ : 0 < τ) :
+    (p q : ℂ[X]) (hpq : p.natDegree ≤ q.natDegree) (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0)
+    {τ : ℝ} (hτ : 0 < τ) :
     ∃ S : E →L[ℂ] E,
       (∀ T : E →L[ℂ] E, (∀ x : A.domain, T ((x : E) - (τ : ℂ) • A x) = x) ↔ T = S) ∧
       let P := ∑ k ∈ Finset.range (q.natDegree + 1),
@@ -135,15 +139,16 @@ of `VonNeumann.inequality_mdissipative`, over `𝕜 = ℝ` or `ℂ`. Let `A` be 
 possibly unbounded operator of a Hilbert space over `𝕜`, dissipative
 (`re ⟪A x, x⟫ ≤ 0` on its domain) with `μ - A` onto for some `μ > 0` (m-dissipative,
 [Pazy1983], §1.4), `r = p/q` a real rational function without poles in the closed left
-half-plane, `N = deg q` and `τ > 0`. Exactly one bounded operator `S` satisfies `S (x - τAx) = x`
-on the domain, the resolvent `(1 - τA)⁻¹`; `Q(S) = ∑_{k ≤ N} qₖ (S - 1)ᵏ S^{N-k}` is invertible,
-and `r(τA) = P(S) Q(S)⁻¹`, `P(S) = ∑_{k ≤ N} pₖ (S - 1)ᵏ S^{N-k}`, satisfies
-`‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n`. -/
+half-plane and bounded at infinity (`deg p ≤ deg q`), `N = deg q` and `τ > 0`. Exactly one
+bounded operator `S` satisfies `S (x - τAx) = x` on the domain, the resolvent `(1 - τA)⁻¹`;
+`Q(S) = ∑_{k ≤ N} qₖ (S - 1)ᵏ S^{N-k}` is invertible, and `r(τA) = P(S) Q(S)⁻¹`,
+`P(S) = ∑_{k ≤ N} pₖ (S - 1)ᵏ S^{N-k}`, satisfies `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n`. -/
 theorem inequality_mdissipative_real {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] [CompleteSpace E] {A : E →ₗ.[𝕜] E}
     (hA : ∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0)
     (hA' : ∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y)
-    (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {τ : ℝ} (hτ : 0 < τ) :
+    (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
+    {τ : ℝ} (hτ : 0 < τ) :
     ∃ S : E →L[𝕜] E,
       (∀ T : E →L[𝕜] E, (∀ x : A.domain, T ((x : E) - (τ : 𝕜) • A x) = x) ↔ T = S) ∧
       let P := ∑ k ∈ Finset.range (q.natDegree + 1),
@@ -170,11 +175,26 @@ theorem cayley_contraction {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
   sorry
 
 /-- **The error of an A-stable scheme of order `m`** ([BrennerThomee1979]). Let `r = p/q` be a
-real rational function without poles in the closed left half-plane, A-stable (`|r(iy)| ≤ 1`),
-of order `m` (`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such that, for every
-bounded dissipative operator `A` of a Hilbert space over `𝕜 = ℝ` or `ℂ`, every `τ ≥ 0`, `n` and
-`x`, `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖`. -/
-theorem error_bound (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
+complex rational function without poles in the closed left half-plane, A-stable
+(`|r(iy)| ≤ 1`), of order `m` (`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such
+that, for every bounded dissipative operator `A` of a complex Hilbert space, every `τ ≥ 0`, `n`
+and `x`, `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖`. -/
+theorem error_bound (p q : ℂ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0)
+    (hr : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ 1) {m : ℕ}
+    (hm : (fun z : ℂ => p.eval z / q.eval z - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
+    ∃ K : ℝ, ∀ {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+      (A : E →L[ℂ] E), (∀ x, (⟪A x, x⟫_ℂ).re ≤ 0) → ∀ τ : ℝ, 0 ≤ τ → ∀ (n : ℕ) (x : E),
+        ‖((aeval ((τ : ℂ) • A) p * Ring.inverse (aeval ((τ : ℂ) • A) q)) ^ n) x -
+            NormedSpace.exp (((n * τ : ℝ) : ℂ) • A) x‖ ≤
+          K * (n * τ) * τ ^ m * ‖(A ^ (m + 1)) x‖ := by
+  sorry
+
+/-- **The error of an A-stable scheme of order `m`, real coefficients** ([BrennerThomee1979]).
+Let `r = p/q` be a real rational function without poles in the closed left half-plane, A-stable
+(`|r(iy)| ≤ 1`), of order `m` (`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such
+that, for every bounded dissipative operator `A` of a Hilbert space over `𝕜 = ℝ` or `ℂ`, every
+`τ ≥ 0`, `n` and `x`, `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖`. -/
+theorem error_bound_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
     (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
     ∃ K : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]

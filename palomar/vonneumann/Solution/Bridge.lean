@@ -62,19 +62,6 @@ theorem enorm_pow_le_iSup_pow {ι : Sort*} {M F : Type*} [SeminormedRing M]
         exact ENNReal.ofReal_le_ofReal (norm_pow_le' a n.succ_pos)
     _ ≤ (⨆ i, ‖f i‖ₑ) ^ (n + 1) := pow_le_pow_left' (enorm_le_iSup a f h) _
 
-/-- A complex rational function bounded on the imaginary axis is bounded at infinity:
-`deg p ≤ deg q` (`Polynomial.natDegree_le_of_norm_div_le` along `y ↦ iy`). -/
-theorem natDegree_le_of_imaginary {p q : ℂ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {C : ℝ}
-    (hC : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ C) :
-    p.natDegree ≤ q.natDegree := by
-  have hl : Filter.Tendsto (fun y : ℝ => (y : ℂ) * Complex.I) Filter.atTop
-      (Bornology.cobounded ℂ) := by
-    rw [← tendsto_norm_atTop_iff_cobounded]
-    simpa using Filter.tendsto_abs_atTop_atTop
-  exact Polynomial.natDegree_le_of_norm_div_le hl (C := C)
-    (Filter.eventually_map.2 (.of_forall fun y => hq _ (by simp)))
-    (Filter.eventually_map.2 (.of_forall hC))
-
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
 /-- `p(L) q(L)⁻¹` is the operator `r(L)` of the scheme `r = p/q`. -/

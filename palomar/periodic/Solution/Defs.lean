@@ -20,9 +20,9 @@ the challenge. The solution imports this module, the bridge to `Feec` and proves
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3
+  §3.1–§3.3, §3.5
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3
+  §5
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -105,6 +105,9 @@ structure PeriodicTable : Prop where
   /-- `dim P_rΛᵏ = C(r + n, r + k) C(r + k, k)` -/
   finrank_polyForm (r k : ℕ) :
     finrank K (polyForm K n r k) = (r + n).choose (r + k) * (r + k).choose k
+  /-- `dim H_rΛᵏ = C(n, k) C(n + r - 1, r)` (`dim H_r(Kⁿ) = dim P_r(Kⁿ⁻¹)`) -/
+  finrank_homForm (r k : ℕ) :
+    finrank K (homForm K n r k) = n.choose k * (n + r - 1).choose r
   /-- `dim P_r⁻Λᵏ = C(r + n, r + k) C(r + k - 1, k)` (`r ≥ 1`) -/
   finrank_polyFormMinus [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
     finrank K (polyFormMinus K n r k) = (r + n).choose (r + k) * (r + k - 1).choose k
@@ -125,6 +128,18 @@ structure PeriodicTable : Prop where
   extDeriv_comp_extDeriv : extDeriv K n ∘ₗ extDeriv K n = 0
   /-- `κ ∘ κ = 0` -/
   koszul_comp_koszul : koszul K n ∘ₗ koszul K n = 0
+  /-- the Leibniz rule `κ(ω ∧ η) = κω ∧ η + (-1)ᵏ ω ∧ κη` for a `k`-form `ω` -/
+  koszul_mul (k : ℕ) (ω η : Form K n) (hω : ω ∈ kForm K n ⊤ k) :
+    koszul K n (ω * η) = koszul K n ω * η + (-1 : K) ^ k • (ω * koszul K n η)
+  /-- `P_rΛᵏ ∧ P_sΛˡ ⊆ P_{r+s}Λ^{k+l}` -/
+  polyForm_mul_le (r s k l : ℕ) :
+    polyForm K n r k * polyForm K n s l ≤ polyForm K n (r + s) (k + l)
+  /-- `P_r⁻Λᵏ ∧ P_s⁻Λˡ ⊆ P_{r+s}⁻Λ^{k+l}` -/
+  polyFormMinus_mul_le [CharZero K] (r s k l : ℕ) :
+    polyFormMinus K n r k * polyFormMinus K n s l ≤ polyFormMinus K n (r + s) (k + l)
+  /-- `P_s P_r⁻Λᵏ ⊆ P_{r+s}⁻Λᵏ` -/
+  polyForm_zero_mul_le [CharZero K] (r s k : ℕ) :
+    polyForm K n s 0 * polyFormMinus K n r k ≤ polyFormMinus K n (r + s) k
   /-- `d P_{r-k}Λᵏ ⊆ P_{r-k-1}Λ^{k+1}` -/
   map_polyFormSeq_le (r k : ℕ) :
     (polyFormSeq K n r k).map (extDeriv K n) ≤ polyFormSeq K n r (k + 1)
@@ -134,6 +149,9 @@ structure PeriodicTable : Prop where
   /-- `d Q_b⁻Λᵏ ⊆ Q_b⁻Λ^{k+1}` -/
   map_cubeFormMinus_le (b : Fin n → ℕ) (k : ℕ) :
     (cubeFormMinus K n b k).map (extDeriv K n) ≤ cubeFormMinus K n b (k + 1)
+  /-- `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_0Λʳ → 0` is a subcomplex of `P_r⁻Λ⁰ → P_r⁻Λ¹ → ⋯` (`r ≥ 1`) -/
+  polyFormSeq_le_polyFormMinus [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
+    polyFormSeq K n r k ≤ polyFormMinus K n r k
   /-- `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_0Λʳ → 0` is exact in positive degree -/
   exactAt_polyForm [CharZero K] (r k : ℕ) :
     (deRham extDeriv_comp_extDeriv (map_polyFormSeq_le r)).ExactAt (k + 1)
@@ -152,6 +170,31 @@ structure PeriodicTable : Prop where
   /-- the closed `0`-forms of `Q_b⁻Λ⁰` are the constants -/
   closed_cubeFormMinus [CharZero K] (b : Fin n → ℕ) :
     ker (extDeriv K n) ⊓ cubeFormMinus K n b 0 = polyForm K n 0 0
+  /-- `H_rΛ⁰ → H_{r-1}Λ¹ → ⋯ → H_{r-n}Λⁿ` is exact in positive degree:
+  `ker d ∩ H_rΛ^{k+1} ⊆ d H_{r+1}Λᵏ` -/
+  ker_extDeriv_inf_homForm_le [CharZero K] (r k : ℕ) :
+    ker (extDeriv K n) ⊓ homForm K n r (k + 1) ≤ (homForm K n (r + 1) k).map (extDeriv K n)
+  /-- and in degree `0` for `r ≥ 1`: `ker d ∩ H_{r+1}Λ⁰ = 0` -/
+  ker_extDeriv_inf_homForm_zero [CharZero K] (r : ℕ) :
+    ker (extDeriv K n) ⊓ homForm K n (r + 1) 0 = ⊥
+  /-- the Koszul complex `0 → H_{r-n}Λⁿ → ⋯ → H_{r-1}Λ¹ → H_rΛ⁰ → 0` is exact (`r ≥ 1`):
+  `ker κ ∩ H_{r+1}Λᵏ ⊆ κ H_rΛ^{k+1}` -/
+  ker_koszul_inf_homForm_le [CharZero K] (r k : ℕ) :
+    ker (koszul K n) ⊓ homForm K n (r + 1) k ≤ (homForm K n r (k + 1)).map (koszul K n)
+  /-- and `ker κ ∩ H_0Λ^{k+1} = 0` -/
+  ker_koszul_inf_homForm_zero [CharZero K] (k : ℕ) :
+    ker (koszul K n) ⊓ homForm K n 0 (k + 1) = ⊥
+  /-- the Koszul complex `0 → P_{r-n}Λⁿ → ⋯ → P_{r-1}Λ¹ → P_rΛ⁰ → 0` is exact in positive
+  degree: `ker κ ∩ P_{r+1}Λ^{k+1} ⊆ κ P_rΛ^{k+2}` -/
+  ker_koszul_inf_polyForm_le [CharZero K] (r k : ℕ) :
+    ker (koszul K n) ⊓ polyForm K n (r + 1) (k + 1) ≤ (polyForm K n r (k + 2)).map (koszul K n)
+  /-- and `ker κ ∩ P_0Λ^{k+1} = 0` -/
+  ker_koszul_inf_polyForm_zero [CharZero K] (k : ℕ) :
+    ker (koszul K n) ⊓ polyForm K n 0 (k + 1) = ⊥
+  /-- its cohomology at `P_{r+1}Λ⁰` is the constants: `P_{r+1}Λ⁰ = κ P_rΛ¹ ⊕ P_0Λ⁰` -/
+  polyForm_zero_eq_koszul [CharZero K] (r : ℕ) :
+    (polyForm K n r 1).map (koszul K n) ⊔ polyForm K n 0 0 = polyForm K n (r + 1) 0 ∧
+      Disjoint ((polyForm K n r 1).map (koszul K n)) (polyForm K n 0 0)
   /-- the homotopy formula `(dκ + κd) ω = (r + k) ω` for `ω ∈ H_rΛᵏ` -/
   homotopy (r k : ℕ) (ω : Form K n) (hω : ω ∈ homForm K n r k) :
     extDeriv K n (koszul K n ω) + koszul K n (extDeriv K n ω) = ((r + k : ℕ) : K) • ω
@@ -179,6 +222,9 @@ structure PeriodicTable : Prop where
         polyForm K n (r + 1) (k + 1) ∧
       Disjoint ((polyForm K n r (k + 2)).map (koszul K n))
         ((polyForm K n (r + 2) k).map (extDeriv K n))
+  /-- `P_0Λ^{k+1} = d P_1Λᵏ` -/
+  polyForm_zero_left_eq [CharZero K] (k : ℕ) :
+    (polyForm K n 1 k).map (extDeriv K n) = polyForm K n 0 (k + 1)
   /-- `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ` -/
   polyForm_eq [CharZero K] (r k : ℕ) :
     polyFormMinus K n r (k + 1) ⊔ (homForm K n (r + 1) k).map (extDeriv K n) =
@@ -187,14 +233,20 @@ structure PeriodicTable : Prop where
   /-- the sum `P_{r+1}⁻Λᵏ = P_rΛᵏ ⊕ κ H_rΛ^{k+1}` is direct -/
   disjoint_polyForm_map_koszul (r k : ℕ) :
     Disjoint (polyForm K n r k) ((homForm K n r (k + 1)).map (koszul K n))
+  /-- `P_{r+1}⁻Λᵏ = P_rΛᵏ + κ P_rΛ^{k+1}` -/
+  polyFormMinus_eq_sup_map_koszul (r k : ℕ) :
+    polyFormMinus K n (r + 1) k = polyForm K n r k ⊔ (polyForm K n r (k + 1)).map (koszul K n)
+  /-- `d P_r⁻Λᵏ = d P_rΛᵏ` -/
+  map_extDeriv_polyFormMinus [CharZero K] (r k : ℕ) :
+    (polyFormMinus K n r k).map (extDeriv K n) = (polyForm K n r k).map (extDeriv K n)
   /-- `P_r⁻Λ⁰ = P_rΛ⁰` (`r ≥ 1`) -/
   polyFormMinus_zero [CharZero K] (r : ℕ) (hr : 1 ≤ r) :
     polyFormMinus K n r 0 = polyForm K n r 0
   /-- `P_r⁻Λⁿ = P_{r-1}Λⁿ` (`r ≥ 1`) -/
   polyFormMinus_top [CharZero K] (r : ℕ) (hr : 1 ≤ r) :
     polyFormMinus K n r n = polyForm K n (r - 1) n
-  /-- `P_r⁻Λᵏ = {ω ∈ P_rΛᵏ | κω ∈ P_rΛᵏ⁻¹}` (`r ≥ 1`), the equivalent definition -/
-  polyFormMinus_eq_inf_comap [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
+  /-- `P_r⁻Λᵏ = {ω ∈ P_rΛᵏ | κω ∈ P_rΛᵏ⁻¹}` (`r + k ≥ 1`), the equivalent definition -/
+  polyFormMinus_eq_inf_comap [CharZero K] (r k : ℕ) (hrk : 1 ≤ r + k) :
     polyFormMinus K n r k = polyForm K n r k ⊓ (polyForm K n r (k - 1)).comap (koszul K n)
   /-- `P_{r-1}Λᵏ ⊊ P_r⁻Λᵏ` (`r ≥ 1`, `k < n`) -/
   polyForm_lt_polyFormMinus (r k : ℕ) (hr : 1 ≤ r) (hk : k < n) :

@@ -18,7 +18,7 @@ dimensions and the exactness of the two polynomial de Rham complexes ([AFW2006],
 
 The homogeneous components `homComp j ω` of a polynomial form (coefficientwise
 `MvPolynomial.homogeneousComponent`) commute with `d` and `κ` up to the degree shift
-(`homComp_extDeriv`), which reduces everything to the homogeneous homotopy
+(`homComp_extDeriv`, `homComp_koszul`), which reduces everything to the homogeneous homotopy
 formula `(dκ + κd) ω = (r + k) ω` on `H_rΛᵏ`.
 
 ## Main results
@@ -30,7 +30,8 @@ Over any field:
   (and `P_0Λᵏ = H_0Λᵏ`, `polyForm_zero_eq_homForm`);
 * `finrank_polyForm`: `dim P_rΛᵏ = (r + n choose r + k) (r + k choose k)`;
 * `polyFormMinus_succ`, `disjoint_polyForm_map_koszul`:
-  `P_{r+1}⁻Λᵏ = P_rΛᵏ ⊕ κ H_rΛ^{k+1}`;
+  `P_{r+1}⁻Λᵏ = P_rΛᵏ ⊕ κ H_rΛ^{k+1}`, and `polyFormMinus_succ_eq_sup_map_koszul_polyForm`:
+  `P_{r+1}⁻Λᵏ = P_rΛᵏ + κ P_rΛ^{k+1}`;
 * finite-dimensionality instances for `homForm`, `polyForm`, `polyFormMinus`.
 
 In characteristic zero:
@@ -51,7 +52,11 @@ In characteristic zero:
   `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` (`r ≥ 1`), and in degree `0`
   `mem_polyForm_zero_of_extDeriv_eq_zero` (the closed `0`-forms are the constants `P_0Λ⁰`);
 * `mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero`: a closed form of `P_r⁻Λᵏ` lies in
-  `P_{r-1}Λᵏ` ([AFW2006], Thm 3.4; [AFW2010], Thm 5.4).
+  `P_{r-1}Λᵏ` ([AFW2006], Thm 3.4; [AFW2010], Thm 5.4);
+* **the Koszul complexes**: `eq_zero_of_mem_homForm_zero_of_koszul_eq_zero` (`κ` is injective on
+  `H_0Λ^{k+1}`), `exists_koszul_eq_of_mem_polyForm` for
+  `P_rΛ^{k+2} → P_{r+1}Λ^{k+1} → P_{r+2}Λᵏ`, and `map_koszul_polyForm_sup_polyForm_zero`,
+  `disjoint_map_koszul_polyForm_polyForm_zero`: `P_{r+1}Λ⁰ = κ P_rΛ¹ ⊕ P_0Λ⁰` ([AFW2006], §3.2).
 
 The edge case `r + k = 0` is excluded exactly where it fails: `H_0Λ⁰` (the constants) is not
 `κ(·) + d(·)`, and the closed `0`-forms are the constants rather than `0`.
@@ -176,7 +181,46 @@ theorem homComp_extDeriv (j : ℕ) (ω : PolyForm R d) :
   rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], homogeneousComponent_C_mul,
     homogeneousComponent_pderiv]
 
+omit [LinearOrder d] in
+theorem degree_sub_single_add_one {α : d →₀ ℕ} {j : d} (hj : 1 ≤ α j) :
+    (α - Finsupp.single j 1).degree + 1 = α.degree := by
+  conv_rhs => rw [← tsub_add_cancel_of_le (Finsupp.single_le_iff.2 hj)]
+  rw [map_add, Finsupp.degree_single]
+
 variable [Fintype d]
+
+/-- `κ` raises the polynomial degree by one: `(κω)_{j+1} = κ(ω_j)`. -/
+theorem homComp_koszul (j : ℕ) (ω : PolyForm R d) :
+    homComp (j + 1) (koszul ω) = koszul (homComp j ω) := by
+  funext s
+  simp only [homComp_apply, koszul_apply, map_sum]
+  refine sum_congr rfl fun i _ => ?_
+  rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], mul_assoc, mul_assoc,
+    homogeneousComponent_C_mul]
+  congr 1
+  ext α
+  rw [coeff_homogeneousComponent, coeff_X_mul', coeff_X_mul', coeff_homogeneousComponent]
+  by_cases hi : i ∈ α.support
+  · rw [ite_eq_left hi, ite_eq_left hi]
+    have := degree_sub_single_add_one (Nat.one_le_iff_ne_zero.2 (Finsupp.mem_support_iff.1 hi))
+    by_cases hd : α.degree = j + 1
+    · rw [ite_eq_left hd, ite_eq_left (by omega)]
+    · rw [ite_eq_right hd, ite_eq_right (by omega)]
+  · rw [ite_eq_right hi]; split_ifs <;> rfl
+
+/-- `κω` has no component of degree `0`. -/
+theorem homComp_zero_koszul (ω : PolyForm R d) : homComp 0 (koszul ω) = 0 := by
+  funext s
+  ext α
+  rw [homComp_apply, coeff_homogeneousComponent, Pi.zero_apply]
+  split_ifs with hα
+  · obtain rfl : α = 0 := (Finsupp.degree_eq_zero_iff α).1 hα
+    rw [koszul_apply, coeff_sum]
+    refine sum_eq_zero fun j _ => ?_
+    rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], mul_assoc, coeff_C_mul,
+      coeff_X_mul']
+    simp
+  · rfl
 
 end Order
 
@@ -268,6 +312,20 @@ theorem polyFormMinus_succ (r k : ℕ) :
 theorem disjoint_polyForm_map_koszul (r k : ℕ) :
     Disjoint (polyForm R d r k) ((homForm R d r (k + 1)).map (koszulₗ R d)) :=
   (disjoint_polyForm_homForm r k).mono_right (map_koszul_homForm_le_succ r k)
+
+/-- **`P_{r+1}⁻Λᵏ = P_rΛᵏ + κ P_rΛ^{k+1}`**, the second form of the definition (the sum need not
+be direct): `κ` of the components of degree `< r` lies in `P_rΛᵏ`. [AFW2006], §3.3 -/
+theorem polyFormMinus_succ_eq_sup_map_koszul_polyForm (r k : ℕ) :
+    polyFormMinus R d (r + 1) k =
+      polyForm R d r k ⊔ (polyForm R d r (k + 1)).map (koszulₗ R d) := by
+  refine le_antisymm (sup_le_sup_left (Submodule.map_mono (homForm_le_polyForm r _)) _)
+    (sup_le le_sup_left ?_)
+  rintro _ ⟨ω, hω, rfl⟩
+  rw [← sum_homComp hω, map_sum, Finset.sum_range_succ]
+  refine Submodule.add_mem_sup (Submodule.sum_mem _ fun j hj => ?_)
+    ⟨_, homComp_mem_homForm hω.1 r, rfl⟩
+  have := koszul_mem_homForm (homComp_mem_homForm hω.1 j)
+  exact polyForm_mono (by simp at hj; omega) k (homForm_le_polyForm _ _ this)
 
 end Order
 
@@ -807,6 +865,54 @@ theorem disjoint_map_koszul_polyForm_map_extDeriv (r k : ℕ) :
     rw [← hb, extDerivₗ_apply, extDeriv_extDeriv]
   · rw [show koszulₗ K d a ∅ = 0 from hdeg ∅ (by simp)]
     simp
+
+/-! #### The Koszul complexes -/
+
+/-- **`κ` is injective on `H_0Λ^{k+1}`**: the left end of the homogeneous Koszul complex. -/
+theorem eq_zero_of_mem_homForm_zero_of_koszul_eq_zero {k : ℕ} {ω : PolyForm K d}
+    (h : ω ∈ homForm K d 0 (k + 1)) (hκ : koszul ω = 0) : ω = 0 := by
+  obtain ⟨η, hη, rfl⟩ := exists_koszul_eq_of_koszul_eq_zero (by omega) h hκ
+  exact eq_zero_of_mem_homForm_of_mem_polyForm (koszul_mem_homForm hη) (homForm_le_polyForm _ _ h)
+
+/-- **Exactness of the polynomial Koszul complex** `P_rΛ^{k+2} → P_{r+1}Λ^{k+1} → P_{r+2}Λᵏ`:
+a `κ`-closed `ω ∈ P_{r+1}Λ^{k+1}` is `κ η` with `η = Σⱼ (j + k + 1)⁻¹ d ωⱼ ∈ P_rΛ^{k+2}` (`ωⱼ` the
+homogeneous components of `ω`). [AFW2006], §3.2 -/
+theorem exists_koszul_eq_of_mem_polyForm {r k : ℕ} {ω : PolyForm K d}
+    (h : ω ∈ polyForm K d (r + 1) (k + 1)) (hκ : koszul ω = 0) :
+    ∃ η ∈ polyForm K d r (k + 2), koszul η = ω := by
+  refine ⟨∑ j ∈ range (r + 2), ((j + (k + 1) : ℕ) : K)⁻¹ • extDeriv (homComp j ω),
+    Submodule.sum_mem _ fun j hj => Submodule.smul_mem _ _ ?_, ?_⟩
+  · have := extDeriv_mem_homForm (homComp_mem_homForm h.1 j)
+    exact polyForm_mono (by simp at hj; omega) _ (homForm_le_polyForm _ _ this)
+  · rw [← koszulₗ_apply, map_sum]
+    conv_rhs => rw [← sum_homComp h]
+    refine sum_congr rfl fun j _ => ?_
+    have hκj : koszul (homComp j ω) = 0 := by rw [← homComp_koszul, hκ, homComp_zero]
+    have := extDeriv_koszul_add_koszul_extDeriv_of_mem (homComp_mem_homForm h.1 j)
+    rw [hκj, extDeriv_zero, zero_add] at this
+    rw [map_smul, koszulₗ_apply, this, smul_smul, inv_mul_cancel₀ (Nat.cast_ne_zero.2 (by omega)),
+      one_smul]
+
+/-- **The cohomology of the polynomial Koszul complex at `P_{r+1}Λ⁰` is the constants**:
+`P_{r+1}Λ⁰ = κ P_rΛ¹ + P_0Λ⁰`. [AFW2006], §3.2 -/
+theorem map_koszul_polyForm_sup_polyForm_zero (r : ℕ) :
+    (polyForm K d r 1).map (koszulₗ K d) ⊔ polyForm K d 0 0 = polyForm K d (r + 1) 0 := by
+  refine le_antisymm (sup_le ?_ (polyForm_mono (by omega) 0)) fun ω h => ?_
+  · rintro _ ⟨η, hη, rfl⟩
+    simpa using koszul_mem_polyForm hη
+  · rw [← sum_homComp h, Finset.sum_range_succ']
+    refine Submodule.add_mem_sup (Submodule.sum_mem _ fun j hj => ?_)
+      (homForm_le_polyForm _ _ (homComp_mem_homForm h.1 0))
+    obtain ⟨η, hη, he⟩ := (map_koszul_homForm_one j).ge (homComp_mem_homForm h.1 (j + 1))
+    exact ⟨η, polyForm_mono (by simp at hj; omega) 1 (homForm_le_polyForm _ _ hη), he⟩
+
+omit [CharZero K] in
+/-- The sum `P_{r+1}Λ⁰ = κ P_rΛ¹ ⊕ P_0Λ⁰` is direct: `κω` has no constant term. -/
+theorem disjoint_map_koszul_polyForm_polyForm_zero (r : ℕ) :
+    Disjoint ((polyForm K d r 1).map (koszulₗ K d)) (polyForm K d 0 0) := by
+  rw [Submodule.disjoint_def]
+  rintro _ ⟨η, -, rfl⟩ h
+  rw [← sum_homComp h, Finset.sum_range_one, koszulₗ_apply, homComp_zero_koszul]
 
 end CharZero
 

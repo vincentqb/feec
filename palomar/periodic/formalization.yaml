@@ -20,23 +20,35 @@ project:
     (Mathlib's CliffordAlgebra.contractLeft). Over every field K (of characteristic 0 for the
     clauses marked [CharZero K]), in every dimension n, form degree k and polynomial degree r, the
     compared theorem FEEC.periodicTable states: (1) dim P_r Lambda^k = C(r+n, r+k) C(r+k, k),
-    dim P_r^- Lambda^k = C(r+n, r+k) C(r+k-1, k) (r >= 1), dim kappa H_r Lambda^(k+1) =
+    dim H_r Lambda^k = C(n, k) C(n+r-1, r), dim P_r^- Lambda^k = C(r+n, r+k) C(r+k-1, k) (r >= 1), dim kappa H_r Lambda^(k+1) =
     dim d H_(r+1) Lambda^k = C(n+r, r+k+1) C(r+k, k), dim Q_b^- Lambda^k =
     sum_(#s = k) prod_j (b_j + 1 - [j in s]) and dim Q_r^- Lambda^k = C(n, k) r^k (r+1)^(n-k);
-    (2) d o d = 0, kappa o kappa = 0, and the three polynomial de Rham complexes
+    (2) d o d = 0, kappa o kappa = 0, the Leibniz rule
+    kappa(omega wedge eta) = kappa omega wedge eta + (-1)^k omega wedge kappa eta (the wedge product
+    is the product of the algebra), the closures P_r Lambda^k wedge P_s Lambda^l in
+    P_(r+s) Lambda^(k+l), P_r^- Lambda^k wedge P_s^- Lambda^l in P_(r+s)^- Lambda^(k+l) and
+    P_s P_r^- Lambda^k in P_(r+s)^- Lambda^k, and the three polynomial de Rham complexes
     P_r Lambda^0 -> P_(r-1) Lambda^1 -> ... -> P_0 Lambda^r -> 0, P_r^- Lambda^0 -> P_r^- Lambda^1 -> ...
     and Q_b^- Lambda^0 -> Q_b^- Lambda^1 -> ... are cochain complexes of K-vector spaces
     (CochainComplex (ModuleCat K) N), exact (HomologicalComplex.ExactAt) in every positive degree,
-    whose closed 0-forms are the constants (r >= 1 for P_r^-); (3) the homotopy formula
+    whose closed 0-forms are the constants (r >= 1 for P_r^-), the first a subcomplex of the
+    second (r >= 1); the homogeneous de Rham complexes H_r Lambda^0 -> H_(r-1) Lambda^1 -> ... and
+    the homogeneous and polynomial Koszul complexes 0 -> H_(r-n) Lambda^n -> ... -> H_r Lambda^0 -> 0
+    and 0 -> P_(r-n) Lambda^n -> ... -> P_r Lambda^0 -> 0 are exact, but for the constants
+    (P_(r+1) Lambda^0 = kappa P_r Lambda^1 (+) P_0 Lambda^0), as kernel-in-image identities;
+    (3) the homotopy formula
     (d kappa + kappa d) omega = (r + k) omega on H_r Lambda^k, the injectivity of d on the range of
     kappa and of kappa on the range of d, the Koszul decompositions
     H_(r+1) Lambda^(k+1) = kappa H_r Lambda^(k+2) (+) d H_(r+2) Lambda^k,
     H_(r+1) Lambda^0 = kappa H_r Lambda^1, H_0 Lambda^(k+1) = d H_1 Lambda^k,
-    P_(r+1) Lambda^(k+1) = kappa P_r Lambda^(k+2) (+) d P_(r+2) Lambda^k and
-    P_r Lambda^(k+1) = P_r^- Lambda^(k+1) (+) d H_(r+1) Lambda^k (every r, P_0^- = 0), the
-    direct sum P_(r+1)^- Lambda^k = P_r Lambda^k (+) kappa H_r Lambda^(k+1),
-    P_r^- Lambda^0 = P_r Lambda^0, P_r^- Lambda^n = P_(r-1) Lambda^n, the equivalent definition
-    P_r^- Lambda^k = {omega in P_r Lambda^k | kappa omega in P_r Lambda^(k-1)}, the strict inclusions
+    P_(r+1) Lambda^(k+1) = kappa P_r Lambda^(k+2) (+) d P_(r+2) Lambda^k,
+    P_0 Lambda^(k+1) = d P_1 Lambda^k and
+    P_r Lambda^(k+1) = P_r^- Lambda^(k+1) (+) d H_(r+1) Lambda^k (every r, P_0^- = 0), hence
+    d P_r^- Lambda^k = d P_r Lambda^k, the two forms
+    P_(r+1)^- Lambda^k = P_r Lambda^k (+) kappa H_r Lambda^(k+1) = P_r Lambda^k + kappa P_r Lambda^(k+1)
+    of the definition, P_r^- Lambda^0 = P_r Lambda^0, P_r^- Lambda^n = P_(r-1) Lambda^n, the
+    equivalent definition P_r^- Lambda^k = {omega in P_r Lambda^k | kappa omega in P_r Lambda^(k-1)}
+    (r + k >= 1), the strict inclusions
     P_(r-1) Lambda^k < P_r^- Lambda^k (k < n) and P_r^- Lambda^(k+1) < P_r Lambda^(k+1) (k < n),
     and that a closed form of P_(r+1)^- Lambda^k lies in P_r Lambda^k (H_r: the forms with
     homogeneous coefficients of degree r). The
@@ -65,20 +77,32 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
     type: "article"
-    location: "Acta Numerica 15 (2006), §3.1-§3.3, §3.5: (3.1), (3.5), Theorems 3.1-3.4, (3.10), (3.11), the definition of P_r^- Lambda^k and its equivalent form, (3.15), (3.21), (3.22)"
+    location: "Acta Numerica 15 (2006), §3.1-§3.3, §3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.4, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.17), (3.21), (3.22), Lemma 3.8"
     relationship: "formalizes"
     note: >-
       Locators checked against the published text (author-hosted PDF of the Acta Numerica
-      article). Formalized: (3.1) and (3.15) (dimensions), (3.5) (kappa o kappa = 0), Theorem 3.1
-      (homotopy formula (3.9)), Theorem 3.2 (injectivity), (3.10) with its edge cases r = 0 and
-      k = 0, (3.11) for k >= 1 (as printed it also claims k = 0, false for the constants:
-      P_r Lambda^0 contains the constants, which are neither in kappa P_(r-1) Lambda^1 nor in the
-      range of d), Theorem 3.3, §3.3 (definition, convention P_r^- Lambda^k = 0 for r <= 0,
-      directness of P_(r-1) + kappa H_(r-1), equivalent definition, P_r^- Lambda^0 = P_r Lambda^0,
-      P_r^- Lambda^n = P_(r-1) Lambda^n, strict inclusions), Theorem 3.4, and the resolutions
-      (3.21), (3.22) of §3.5. Not formalized: (3.16)-(3.17), §3.4 (affine invariance and the
-      classification Theorems 3.5-3.6), the 2^(n-1) intermediate resolutions of §3.5 (Lemma 3.8 is
-      covered by the stated decompositions), §3.6.
+      article). Formalized: (3.1) and (3.15) (dimensions); (3.2), (3.3), (3.8) and the
+      non-homogeneous Koszul complex after (3.8) (exactness, as kernel-in-image identities; (3.3)
+      as the resolution (3.21)); (3.5) (kappa o kappa = 0); (3.6) (the Leibniz rule for kappa);
+      Theorem 3.1 (homotopy formula (3.9)); Theorem 3.2 (injectivity); (3.10) with its edge cases
+      r = 0 and k = 0; (3.11) for k >= 1, with its case r = 0 (P_0 Lambda^(k+1) = d P_1 Lambda^k);
+      Theorem 3.3; §3.3: the definition in both forms P_(r-1) + kappa H_(r-1) (direct) and
+      P_(r-1) + kappa P_(r-1), the convention P_r^- Lambda^k = 0 for r <= 0, the equivalent
+      definition, P_r^- Lambda^0 = P_r Lambda^0, P_r^- Lambda^n = P_(r-1) Lambda^n, the strict
+      inclusions, the closure P_r wedge P_s in P_(r+s), (3.16) and (3.17); Theorem 3.4; the
+      resolutions (3.21), (3.22) of §3.5 and the subcomplex inclusion (3.21) in (3.22);
+      Lemma 3.8: (1) is the definition and d P_r Lambda^k in P_(r-1) Lambda^(k+1)
+      (map_polyFormSeq_le), (2) is Theorem 3.4 (ker_inf_polyFormMinus_le), (3) is
+      map_extDeriv_polyFormMinus (d P_r^- = d P_r), from the identity
+      P_r = P_r^- + d P_(r+1) Lambda^(k-1) of its proof (polyForm_eq). Errata: (3.11) as printed
+      also claims k = 0, false for the constants (P_r Lambda^0 contains the constants, which are
+      neither in kappa P_(r-1) Lambda^1 nor in the range of d); the statement asserts it for
+      k >= 1. The second half of (3.1), dim H_r Lambda^k(R^n) = dim P_r Lambda^k(R^(n-1)), is
+      false as printed (n = 1, k = 1, r = 0: dim H_0 Lambda^1(R) = 1, P_0 Lambda^1(R^0) = 0); the
+      proof of (3.13) uses it as dim H_r Lambda^k(R^n) = dim P_r(R^(n-1)) dim Alt^k R^n, which is
+      what the statement asserts, in closed form C(n, k) C(n+r-1, r). Not formalized: §3.4 and
+      the pullback identities (3.4) and (3.7) of §3.1-§3.2 (see fidelity.divergences (6)), the
+      2^(n-1) intermediate resolutions of §3.5, §3.6.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -91,8 +115,8 @@ sources:
     relationship: "formalizes"
     note: >-
       The same results as AFW2006 §3 (Theorem 5.1 = Theorem 3.1, (69) = (3.10), Theorem 5.3 =
-      Theorem 3.3, §5.1.3 = §3.3, Theorem 5.4 = Theorem 3.4 with dP_r = dP_r^-, (71)-(72) =
-      (3.21)-(3.22)). Locators checked against arXiv:0906.4325, the preprint of the published
+      Theorem 3.3, §5.1.3 = §3.3, Theorem 5.4 = Theorem 3.4 (ker_inf_polyFormMinus_le) and
+      dP_r Lambda^k = dP_r^- Lambda^k (map_extDeriv_polyFormMinus), (71)-(72) = (3.21)-(3.22)). Locators checked against arXiv:0906.4325, the preprint of the published
       article; the published pagination was not checked.
     author_endorsement: "not-contacted"
   - title: "Finite element differential forms on curvilinear cubic meshes and their approximation properties"
@@ -214,21 +238,31 @@ fidelity:
     restated: it would need tensor products of cochain complexes and their realization as forms
     on I^n (the identification Alt^k R^m (x) Alt^l R^n -> Alt^(k+l) R^(m+n)), roughly 150 more
     lines of statement for the same space.
-    (6) Not formalized from the sources: AFW2006 (3.16)-(3.17) (the wedge product closure
-    P_r^- Lambda^k wedge P_s^- Lambda^l in P_(r+s)^- Lambda^(k+l); the wedge product is available
-    in the statement, the proof would need the Koszul-complex argument through the algebra
-    product, about 150 lines of Feec), §3.4 (affine invariance needs the pullback of polynomial
-    forms, absent from Mathlib, about 60 lines of statement and several hundred of proof; the
-    classification Theorem 3.6 rests on the representation theory of GL(n) of Fulton-Harris,
-    absent from Mathlib), the 2^(n-1) intermediate resolutions of §3.5 (proved in Feec as
-    admissible sequences, about 40 lines of statement), §3.6 (change of origin); the exactness of
-    the homogeneous complexes (3.2), (3.8) separately (it follows from the stated Theorem 3.1 and
-    (3.10)); and everything beyond the polynomial algebra: meshes, degrees of freedom,
-    unisolvence and the serendipity column of the periodic table (Feec proves them; their
-    statement needs integration over the faces of simplices and cubes and would not fit the
-    budget of a self-contained challenge).
-    (7) Source erratum: AFW2006 (3.11) (and its AFW2010 counterpart) is stated for all k; at k = 0
-    it fails for the constants, and the statement asserts it for k >= 1.
+    (6) Not formalized from the sources: AFW2006 §3.4 together with the pullback identities
+    (3.4) (phi* P_r Lambda^k in P_r Lambda^k for affine phi, phi* H_r Lambda^k in H_r Lambda^k for
+    linear phi) and (3.7) (phi* kappa = kappa phi* for linear phi, phi* kappa omega - kappa phi* omega
+    in P_r Lambda^(k-1) for affine phi): the pullback of polynomial forms under affine maps is in
+    neither Mathlib nor Feec; stating it as an algebra map of P(K^n) (x) Lambda(K^n)* (MvPolynomial.aeval
+    tensor ExteriorAlgebra.map) takes about 25 lines, and the proofs (substitution degree bounds,
+    exterior powers under ExteriorAlgebra.map, naturality of the contraction) about 250 lines of
+    new Feec, for statements AFW use only to motivate affine-invariant finite element spaces; the
+    classification Theorems 3.5-3.6 rest on the representation theory of GL(n) of Fulton-Harris,
+    absent from Mathlib (inherent). The 2^(n-1) intermediate resolutions of §3.5 (proved in Feec
+    as admissible sequences, Feec.FiniteElement.PolySeq.ofKinds; about 40 lines of statement for
+    the sequence encoding, while the two extreme resolutions, their inclusion and Lemma 3.8 are
+    stated). §3.6 (change of origin). Everything beyond the polynomial algebra: meshes, degrees of
+    freedom, unisolvence and the serendipity column of the periodic table (Feec proves them;
+    their statement needs integration over the faces of simplices and cubes and would not fit the
+    budget of a self-contained challenge). The exactness of the homogeneous de Rham and Koszul
+    complexes and of the non-homogeneous Koszul complex is stated as kernel-in-image identities
+    (ker d meet S_(k+1) <= d S_k), not as CochainComplex.ExactAt: the Koszul complexes are chain
+    complexes with decreasing form degree and would need a second complex builder; the identities
+    are the content of ExactAt (Solution/Bridge.lean, exactAt_deRham_iff).
+    (7) Source errata: AFW2006 (3.11) (and its AFW2010 counterpart) is stated for all k; at k = 0
+    it fails for the constants, and the statement asserts it for k >= 1. The second half of
+    AFW2006 (3.1), dim H_r Lambda^k(R^n) = dim P_r Lambda^k(R^(n-1)), is false as printed
+    (n = k = 1, r = 0); the statement asserts the identity the source uses in the proof of (3.13),
+    dim H_r Lambda^k(R^n) = dim P_r(R^(n-1)) C(n, k) = C(n, k) C(n+r-1, r).
 
 review:
   status: "self-assessed"
@@ -247,17 +281,26 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: >-
-        Fields: finrank_polyForm ((3.1)), finrank_polyFormMinus ((3.15)),
+        Fields: finrank_polyForm, finrank_homForm ((3.1)), finrank_polyFormMinus ((3.15)),
         finrank_map_koszul_homForm (Theorem 3.3), finrank_cubeFormMinus,
         finrank_cubeFormMinus_const (ABB §5), extDeriv_comp_extDeriv, koszul_comp_koszul ((3.5)),
-        map_polyFormSeq_le, map_polyFormMinus_le, map_cubeFormMinus_le, exactAt_polyForm
-        ((3.21)), exactAt_polyFormMinus ((3.22)), exactAt_cubeFormMinus, closed_polyForm,
-        closed_polyFormMinus, closed_cubeFormMinus, homotopy (Theorem 3.1),
-        koszul_eq_zero_of_extDeriv_koszul, extDeriv_eq_zero_of_koszul_extDeriv (Theorem 3.2),
-        homForm_eq, homForm_zero_eq, homForm_zero_left_eq ((3.10)), polyForm_eq_koszul ((3.11),
-        k >= 1), polyForm_eq (Lemma 3.8), disjoint_polyForm_map_koszul, polyFormMinus_zero,
-        polyFormMinus_top, polyFormMinus_eq_inf_comap, polyForm_lt_polyFormMinus,
-        polyFormMinus_lt_polyForm (§3.3), ker_inf_polyFormMinus_le (Theorem 3.4).
+        koszul_mul ((3.6)), polyForm_mul_le (§3.3, before (3.16)), polyFormMinus_mul_le ((3.16)),
+        polyForm_zero_mul_le ((3.17)), map_polyFormSeq_le, map_polyFormMinus_le,
+        map_cubeFormMinus_le, polyFormSeq_le_polyFormMinus (§3.5, (3.21) a subcomplex of (3.22)),
+        exactAt_polyForm ((3.21)), exactAt_polyFormMinus ((3.22)), exactAt_cubeFormMinus,
+        closed_polyForm, closed_polyFormMinus, closed_cubeFormMinus,
+        ker_extDeriv_inf_homForm_le, ker_extDeriv_inf_homForm_zero ((3.2)),
+        ker_koszul_inf_homForm_le, ker_koszul_inf_homForm_zero ((3.8)),
+        ker_koszul_inf_polyForm_le, ker_koszul_inf_polyForm_zero, polyForm_zero_eq_koszul (the
+        Koszul complex after (3.8)), homotopy (Theorem 3.1), koszul_eq_zero_of_extDeriv_koszul,
+        extDeriv_eq_zero_of_koszul_extDeriv (Theorem 3.2), homForm_eq, homForm_zero_eq,
+        homForm_zero_left_eq ((3.10)), polyForm_eq_koszul ((3.11), k >= 1), polyForm_zero_left_eq
+        ((3.11), r = 0), polyForm_eq (the identity P_r = P_r^- + d P_(r+1) Lambda^(k-1) in the
+        proof of Lemma 3.8), disjoint_polyForm_map_koszul, polyFormMinus_eq_sup_map_koszul,
+        polyFormMinus_zero, polyFormMinus_top, polyFormMinus_eq_inf_comap,
+        polyForm_lt_polyFormMinus, polyFormMinus_lt_polyForm (§3.3), map_extDeriv_polyFormMinus
+        (Lemma 3.8 (3); AFW2010 Theorem 5.4, second sentence), ker_inf_polyFormMinus_le
+        (Theorem 3.4; Lemma 3.8 (2)).
     - source: "[AFW2006] §3; [ArnoldBoffiBonizzoni2015] §5"
       lean: "FEEC.periodicTable"
       module: "Challenge"

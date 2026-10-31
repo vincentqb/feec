@@ -296,12 +296,6 @@ def highForm (r k : ℕ) : Submodule R (PolyForm R d) := supportForm R d k (high
 theorem highForm_le_superlinForm (r k : ℕ) : highForm R d r k ≤ superlinForm R d r k :=
   supportForm_mono (S := highSupport r) (T := superlinSupport r) (fun _ _ hα => hα.1) k
 
-omit [LinearOrder d] [Fintype d] in
-theorem degree_sub_single_add_one {α : d →₀ ℕ} {j : d} (hj : 1 ≤ α j) :
-    (α - Finsupp.single j 1).degree + 1 = α.degree := by
-  conv_rhs => rw [← tsub_add_cancel_of_le (Finsupp.single_le_iff.2 hj)]
-  rw [map_add, Finsupp.degree_single]
-
 /-- `κ H_{r-1}Λ^{k+1} ⊆ H_rΛᵏ` (`r ≥ 1`). -/
 theorem koszul_mem_highForm {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d}
     (h : ω ∈ highForm R d (r - 1) (k + 1)) : koszul ω ∈ highForm R d r k := by
@@ -575,39 +569,6 @@ theorem sup_le_supportForm_degree {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     | succ k =>
       exact extDeriv_mem_supportForm_degree (koszul_mem_supportForm_degree
         (supportForm_mono (S := highSupport r) (fun _ _ hα => hα.2) _ hb))
-
-/-! ### Homogeneous components of `κ` -/
-
-theorem homComp_koszul (j : ℕ) (ω : PolyForm R d) :
-    homComp (j + 1) (koszul ω) = koszul (homComp j ω) := by
-  funext s
-  simp only [homComp_apply, koszul_apply, map_sum]
-  refine sum_congr rfl fun i _ => ?_
-  rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], mul_assoc, mul_assoc,
-    homogeneousComponent_C_mul]
-  congr 1
-  ext α
-  rw [coeff_homogeneousComponent, coeff_X_mul', coeff_X_mul', coeff_homogeneousComponent]
-  by_cases hi : i ∈ α.support
-  · rw [ite_eq_left hi, ite_eq_left hi]
-    have := degree_sub_single_add_one (Nat.one_le_iff_ne_zero.2 (Finsupp.mem_support_iff.1 hi))
-    by_cases hd : α.degree = j + 1
-    · rw [ite_eq_left hd, ite_eq_left (by omega)]
-    · rw [ite_eq_right hd, ite_eq_right (by omega)]
-  · rw [ite_eq_right hi]; split_ifs <;> rfl
-
-theorem homComp_zero_koszul (ω : PolyForm R d) : homComp 0 (koszul ω) = 0 := by
-  funext s
-  ext α
-  rw [homComp_apply, coeff_homogeneousComponent, Pi.zero_apply]
-  split_ifs with hα
-  · obtain rfl : α = 0 := (Finsupp.degree_eq_zero_iff α).1 hα
-    rw [koszul_apply, coeff_sum]
-    refine sum_eq_zero fun j _ => ?_
-    rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], mul_assoc, coeff_C_mul,
-      coeff_X_mul']
-    simp
-  · rfl
 
 /-! ### Dimension (characteristic zero) -/
 

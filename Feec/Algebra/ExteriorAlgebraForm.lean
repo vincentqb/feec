@@ -34,12 +34,16 @@ contraction `CliffordAlgebra.contractLeft`) are `Feec.Koszul.extDeriv` and `Feec
   `coeffs (dx_{σ₁} ∧ ⋯ ∧ dx_{σ_k}) = dx_s` for increasing `σ` with image `s`;
 * `formEquiv_tensorExtDeriv`, `formEquiv_tensorKoszul`: the two models of `d` and `κ` agree;
 * `map_formEquiv_range_mapIncl`: `S ⊗ ⋀ᵏ(K^d)*` is `Feec.Koszul.coeffForm K k S`;
-  `map_formEquiv_iSup`: `⨁_σ restrictSupport (T σ) ⊗ dx_σ` is `Feec.Koszul.supportForm K d k T`.
+  `map_formEquiv_iSup`: `⨁_σ restrictSupport (T σ) ⊗ dx_σ` is `Feec.Koszul.supportForm K d k T`;
+* `contractLeft_mul_of_mem`, `tensorKoszul_mul`: the Leibniz rules
+  `ψ ⌋ (x ∧ y) = (ψ ⌋ x) ∧ y + (-1)ᵏ x ∧ (ψ ⌋ y)` and `κ(ω ∧ η) = κω ∧ η + (-1)ᵏ ω ∧ κη`, the wedge
+  product of `P(K^d) ⊗ Λ(K^d)*` being the product of the algebra; `range_mapIncl_mul_le`:
+  `(S ⊗ ⋀ᵏ) ∧ (T ⊗ ⋀ˡ) ⊆ S T ⊗ ⋀^{k+l}`.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.1–§3.2 (polynomial differential forms, the Koszul differential)
+  §3.1–§3.2 (polynomial differential forms, the Koszul differential, (3.6))
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -196,6 +200,29 @@ variable (K d) in
 def coeffsEquiv [Fintype d] : ExteriorAlgebra K (Module.Dual K (d → K)) ≃ₗ[K] (Finset d → K) :=
   LinearEquiv.ofBijective (coeffs K d) coeffs_bijective
 
+/-- **The Leibniz rule for the contraction**: `ψ ⌋ (x ∧ y) = (ψ ⌋ x) ∧ y + (-1)ᵏ x ∧ (ψ ⌋ y)` for
+`x ∈ ⋀ᵏM`. -/
+theorem contractLeft_mul_of_mem {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
+    (ψ : Module.Dual R M) {k : ℕ} {x : ExteriorAlgebra R M} (hx : x ∈ ⋀[R]^k M)
+    (y : ExteriorAlgebra R M) :
+    CliffordAlgebra.contractLeft ψ (x * y) = CliffordAlgebra.contractLeft ψ x * y +
+      (-1 : R) ^ k • (x * CliffordAlgebra.contractLeft ψ y) := by
+  rw [← ExteriorAlgebra.ιMulti_span_fixedDegree] at hx
+  induction hx using Submodule.span_induction with
+  | mem x hx =>
+    obtain ⟨v, rfl⟩ := hx
+    induction k with
+    | zero => simp
+    | succ k ih =>
+      rw [ExteriorAlgebra.ιMulti_succ_apply, mul_assoc, ExteriorAlgebra.ι,
+        CliffordAlgebra.contractLeft_ι_mul, CliffordAlgebra.contractLeft_ι_mul,
+        ← ExteriorAlgebra.ι, ih, pow_succ]
+      simp only [sub_mul, mul_add, smul_mul_assoc, mul_smul_comm, mul_assoc]
+      module
+  | zero => simp
+  | add x y _ _ hx hy => simp only [add_mul, map_add, hx, hy, smul_add]; abel
+  | smul c x _ hx => simp only [smul_mul_assoc, map_smul, hx, smul_add, smul_comm c]
+
 end Feec.ExteriorFibre
 
 namespace Feec.Koszul
@@ -342,5 +369,60 @@ theorem map_formEquiv_iSup (T : Finset d → Set (d →₀ ℕ)) (k : ℕ) :
     simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.flip_apply,
       TensorProduct.mk_apply, LinearEquiv.coe_coe]
     rw [formEquiv_tmul_eq_single (coeffs_ιMulti_proj σ.strictMono), hσ]
+
+/-! ### The wedge product -/
+
+omit [LinearOrder d] [Fintype d] in
+/-- `P_r P_s ⊆ P_{r+s}`. -/
+theorem restrictTotalDegree_mul_le (r s : ℕ) :
+    restrictTotalDegree d K r * restrictTotalDegree d K s ≤ restrictTotalDegree d K (r + s) :=
+  Submodule.mul_le.2 fun p hp q hq => by
+    rw [mem_restrictTotalDegree] at hp hq ⊢
+    exact (totalDegree_mul p q).trans (add_le_add hp hq)
+
+omit [LinearOrder d] [Fintype d] in
+/-- `(S ⊗ ⋀ᵏ) ∧ (T ⊗ ⋀ˡ) ⊆ S T ⊗ ⋀^{k+l}`: the wedge product of `P(K^d) ⊗ Λ(K^d)*` is the
+product of the algebra. -/
+theorem range_mapIncl_mul_le (S T : Submodule K (MvPolynomial d K)) (k l : ℕ) :
+    LinearMap.range (TensorProduct.mapIncl S (⋀[K]^k (Module.Dual K (d → K)))) *
+        LinearMap.range (TensorProduct.mapIncl T (⋀[K]^l (Module.Dual K (d → K)))) ≤
+      LinearMap.range (TensorProduct.mapIncl (S * T) (⋀[K]^(k + l) (Module.Dual K (d → K)))) := by
+  rw [TensorProduct.range_mapIncl, TensorProduct.range_mapIncl, TensorProduct.range_mapIncl,
+    Submodule.map₂_eq_span_image2, Submodule.map₂_eq_span_image2, Submodule.span_mul_span,
+    Submodule.map₂_eq_span_image2]
+  refine Submodule.span_mono ?_
+  rintro _ ⟨_, ⟨p, hp, x, hx, rfl⟩, _, ⟨q, hq, y, hy, rfl⟩, rfl⟩
+  refine ⟨p * q, Submodule.mul_mem_mul hp hq, x * y, ?_,
+    (Algebra.TensorProduct.tmul_mul_tmul _ _ _ _).symm⟩
+  rw [SetLike.mem_coe, show ⋀[K]^(k + l) (Module.Dual K (d → K)) =
+    ⋀[K]^k (Module.Dual K (d → K)) * ⋀[K]^l (Module.Dual K (d → K)) from pow_add _ _ _]
+  exact Submodule.mul_mem_mul hx hy
+
+theorem tensorKoszul_tmul (p : MvPolynomial d K) (x : ExteriorAlgebra K (Module.Dual K (d → K))) :
+    tensorKoszul K d (p ⊗ₜ x) = ∑ j, (X j * p) ⊗ₜ
+      CliffordAlgebra.contractLeft (Module.Dual.eval K (d → K) (Pi.single j 1)) x := by
+  simp [tensorKoszul]
+
+/-- **The Leibniz rule for `κ`**: `κ (ω ∧ η) = κω ∧ η + (-1)ᵏ ω ∧ κη` for a `k`-form `ω`.
+[AFW2006], (3.6) -/
+theorem tensorKoszul_mul {k : ℕ} {ω : TensorForm K d}
+    (hω : ω ∈ LinearMap.range (TensorProduct.mapIncl ⊤ (⋀[K]^k (Module.Dual K (d → K)))))
+    (η : TensorForm K d) :
+    tensorKoszul K d (ω * η) =
+      tensorKoszul K d ω * η + (-1 : K) ^ k • (ω * tensorKoszul K d η) := by
+  rw [TensorProduct.range_mapIncl, Submodule.map₂_eq_span_image2] at hω
+  induction hω using Submodule.span_induction with
+  | mem ω hω =>
+    obtain ⟨p, -, x, hx, rfl⟩ := hω
+    induction η using TensorProduct.inductionOn with
+    | add η η' h h' => simp only [mul_add, map_add, h, h', smul_add]; abel
+    | tmul q y =>
+      simp only [TensorProduct.mk_apply, Algebra.TensorProduct.tmul_mul_tmul, tensorKoszul_tmul,
+        contractLeft_mul_of_mem _ hx, Finset.sum_mul, Finset.mul_sum, Finset.smul_sum,
+        TensorProduct.tmul_add, Finset.sum_add_distrib, TensorProduct.tmul_smul]
+      simp only [mul_assoc, mul_left_comm p]
+  | zero => simp
+  | add ω ω' _ _ h h' => simp only [add_mul, map_add, h, h', smul_add]; abel
+  | smul c ω _ h => simp only [smul_mul_assoc, map_smul, h, smul_add, smul_comm c]
 
 end Feec.Koszul

@@ -18,7 +18,9 @@ derivative and the Koszul differential of the challenge to `Feec.Koszul.extDeriv
 from the dimension counts, the polynomial Poincaré lemmas and the Koszul decompositions of
 `Feec.Algebra.PolynomialFormDim` and `Feec.Algebra.CubicalForm` (`periodicTable_of_feec`);
 exactness of a complex `deRham` is the identity `ker d ∩ S_{k+1} ⊆ d S_k`
-(`exactAt_deRham_iff`).
+(`exactAt_deRham_iff`). The wedge closures of `P_r⁻Λ` follow from the Leibniz rule for `κ`
+(`Feec.Koszul.tensorKoszul_mul`) and the equivalent definition `ω ∈ P_rΛᵏ, κω ∈ P_rΛᵏ⁻¹`
+(`mul_mem_of_koszul_mem`).
 
 ## References
 
@@ -76,6 +78,12 @@ theorem map_ker_extDeriv :
   ext ω
   simp only [Submodule.mem_map_equiv, mem_ker, Feec.Koszul.extDerivₗ_apply]
   rw [← (Φ).map_eq_zero_iff, formEquiv_extDeriv, LinearEquiv.apply_symm_apply]
+
+theorem map_ker_koszul :
+    (ker (koszul K n)).map (Φ).toLinearMap = ker (Feec.Koszul.koszulₗ K (Fin n)) := by
+  ext ω
+  simp only [Submodule.mem_map_equiv, mem_ker, Feec.Koszul.koszulₗ_apply]
+  rw [← (Φ).map_eq_zero_iff, formEquiv_koszul, LinearEquiv.apply_symm_apply]
 
 theorem map_inf (A B : Submodule K (Form K n)) :
     (A ⊓ B).map (Φ).toLinearMap = A.map (Φ).toLinearMap ⊓ B.map (Φ).toLinearMap :=
@@ -204,6 +212,100 @@ theorem polyForm_zero_le_cubeFormMinus (b : Fin n → ℕ) :
   simp only [notMem_empty, ite_false]
   omega
 
+/-! ### Standalone forms of the fields used by other fields -/
+
+section Helpers
+
+variable (K n)
+
+theorem extDeriv_comp_extDeriv' : extDeriv K n ∘ₗ extDeriv K n = 0 :=
+  LinearMap.ext fun ω => (Feec.Koszul.formEquiv K (Fin n)).injective
+    (by simp [formEquiv_extDeriv, Feec.Koszul.extDeriv_extDeriv])
+
+variable {K n}
+
+theorem polyForm_le_kForm_top (r k : ℕ) : polyForm K n r k ≤ kForm K n ⊤ k :=
+  TensorProduct.range_mapIncl_mono le_top le_rfl
+
+/-- `κ` vanishes on `0`-forms. -/
+theorem koszul_eq_zero_of_mem_kForm_zero {S : Submodule K (MvPolynomial (Fin n) K)}
+    {ω : Form K n} (h : ω ∈ kForm K n S 0) : koszul K n ω = 0 := by
+  have h' : Φ ω ∈ Feec.Koszul.coeffForm K 0 S := map_kForm S 0 ▸ Submodule.mem_map_of_mem h
+  exact (Φ).injective (by rw [formEquiv_koszul, map_zero]; exact Feec.Koszul.IsDeg.koszul_eq_zero h'.1)
+
+theorem koszul_mul' {k : ℕ} {ω : Form K n} (hω : ω ∈ kForm K n ⊤ k) (η : Form K n) :
+    koszul K n (ω * η) = koszul K n ω * η + (-1 : K) ^ k • (ω * koszul K n η) :=
+  Feec.Koszul.tensorKoszul_mul hω η
+
+theorem polyForm_mul_le' (r s k l : ℕ) :
+    polyForm K n r k * polyForm K n s l ≤ polyForm K n (r + s) (k + l) :=
+  (Feec.Koszul.range_mapIncl_mul_le _ _ k l).trans
+    (TensorProduct.range_mapIncl_mono (Feec.Koszul.restrictTotalDegree_mul_le r s) le_rfl)
+
+/-- The products of forms `ω ∈ P_rΛᵏ`, `κω ∈ P_rΛᵏ⁻¹` and `η ∈ P_sΛˡ`, `κη ∈ P_sΛˡ⁻¹`: by the
+Leibniz rule, `ωη ∈ P_{r+s}Λ^{k+l}` and `κ(ωη) ∈ P_{r+s}Λ^{k+l-1}`. -/
+theorem mul_mem_of_koszul_mem {r s k l : ℕ} {ω η : Form K n}
+    (hω : ω ∈ polyForm K n r k) (hκω : koszul K n ω ∈ polyForm K n r (k - 1))
+    (hη : η ∈ polyForm K n s l) (hκη : koszul K n η ∈ polyForm K n s (l - 1)) :
+    ω * η ∈ polyForm K n (r + s) (k + l) ∧
+      koszul K n (ω * η) ∈ polyForm K n (r + s) (k + l - 1) := by
+  refine ⟨polyForm_mul_le' r s k l (Submodule.mul_mem_mul hω hη), ?_⟩
+  rw [koszul_mul' (polyForm_le_kForm_top r k hω)]
+  refine Submodule.add_mem _ ?_ (Submodule.smul_mem _ _ ?_)
+  · cases k with
+    | zero => rw [koszul_eq_zero_of_mem_kForm_zero hω, zero_mul]; exact Submodule.zero_mem _
+    | succ k =>
+      rw [show k + 1 + l - 1 = k + l by omega]
+      exact polyForm_mul_le' r s k l (Submodule.mul_mem_mul (by simpa using hκω) hη)
+  · cases l with
+    | zero => rw [koszul_eq_zero_of_mem_kForm_zero hη, mul_zero]; exact Submodule.zero_mem _
+    | succ l =>
+      rw [show k + (l + 1) - 1 = k + l by omega]
+      exact polyForm_mul_le' r s k l (Submodule.mul_mem_mul hω (by simpa using hκη))
+
+theorem extDeriv_eq_zero_of_mem_polyForm_zero' [CharZero K] {k : ℕ} {ω : Form K n}
+    (h : ω ∈ polyForm K n 0 k) : extDeriv K n ω = 0 := by
+  have h' : Φ ω ∈ Feec.Koszul.polyForm K (Fin n) 0 k :=
+    map_polyForm (K := K) 0 k ▸ Submodule.mem_map_of_mem h
+  exact (Φ).injective (by
+    rw [formEquiv_extDeriv, map_zero]; exact Feec.Koszul.extDeriv_eq_zero_of_mem_polyForm_zero h')
+
+theorem polyForm_eq' [CharZero K] (r k : ℕ) :
+    polyFormMinus K n r (k + 1) ⊔ (homForm K n (r + 1) k).map (extDeriv K n) =
+        polyForm K n r (k + 1) ∧
+      Disjoint (polyFormMinus K n r (k + 1)) ((homForm K n (r + 1) k).map (extDeriv K n)) := by
+  cases r with
+  | zero =>
+    refine ⟨?_, by simp [polyFormMinus]⟩
+    rw [polyFormMinus, bot_sup_eq, ← map_eq_iff, map_map_extDeriv, map_homForm, map_polyForm,
+      Feec.Koszul.polyForm_zero_eq_homForm]
+    exact Feec.Koszul.map_extDeriv_homForm_one k
+  | succ r =>
+    refine ⟨map_eq_iff.1 ?_, disjoint_of_map ?_⟩
+    · rw [Submodule.map_sup, map_polyFormMinus, map_map_extDeriv, map_homForm, map_polyForm]
+      exact Feec.Koszul.polyFormMinus_sup_map_extDeriv (by omega) k
+    · rw [map_polyFormMinus, map_map_extDeriv, map_homForm]
+      exact Feec.Koszul.disjoint_polyFormMinus_map_extDeriv (by omega) k
+
+theorem polyFormMinus_eq_inf_comap' [CharZero K] (r k : ℕ) (hrk : 1 ≤ r + k) :
+    polyFormMinus K n r k = polyForm K n r k ⊓ (polyForm K n r (k - 1)).comap (koszul K n) := by
+  rw [← map_eq_iff, map_inf, map_comap_koszul, map_polyForm, map_polyForm]
+  cases r with
+  | zero =>
+    obtain ⟨k, rfl⟩ : ∃ k', k = k' + 1 := ⟨k - 1, by omega⟩
+    rw [polyFormMinus, Submodule.map_bot, eq_comm, eq_bot_iff]
+    rintro ω ⟨hω, hκ⟩
+    rw [Feec.Koszul.polyForm_zero_eq_homForm] at hω
+    have hκ0 : Feec.Koszul.koszul ω = 0 := Feec.Koszul.eq_zero_of_mem_homForm_of_mem_polyForm
+      (by simpa using Feec.Koszul.koszul_mem_homForm hω) hκ
+    exact (Submodule.mem_bot K).2
+      (Feec.Koszul.eq_zero_of_mem_homForm_zero_of_koszul_eq_zero hω hκ0)
+  | succ r =>
+    rw [map_polyFormMinus]
+    exact Feec.Koszul.polyFormMinus_succ_eq_inf_comap r k
+
+end Helpers
+
 /-! ### The theorem -/
 
 /-- **The algebra of the periodic table**, from `Feec.Algebra.PolynomialFormDim` and
@@ -211,6 +313,8 @@ theorem polyForm_zero_le_cubeFormMinus (b : Fin n → ℕ) :
 theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K n where
   finrank_polyForm r k := by
     rw [finrank_eq, map_polyForm, Feec.Koszul.finrank_polyForm, Fintype.card_fin]
+  finrank_homForm r k := by
+    rw [finrank_eq, map_homForm, Feec.Koszul.finrank_homForm, Fintype.card_fin]
   finrank_polyFormMinus r k hr := by
     rw [finrank_eq, map_polyFormMinus_of_le hr, Feec.Koszul.finrank_polyFormMinus hr,
       Fintype.card_fin]
@@ -225,10 +329,27 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
   finrank_cubeFormMinus_const r k := by
     rw [finrank_eq, map_cubeFormMinus, Feec.Koszul.finrank_cubeFormMinus_const, Fintype.card_fin,
       mul_assoc]
-  extDeriv_comp_extDeriv := LinearMap.ext fun ω => (Feec.Koszul.formEquiv K (Fin n)).injective
-    (by simp [formEquiv_extDeriv, Feec.Koszul.extDeriv_extDeriv])
+  extDeriv_comp_extDeriv := extDeriv_comp_extDeriv' K n
   koszul_comp_koszul := LinearMap.ext fun ω => (Feec.Koszul.formEquiv K (Fin n)).injective
     (by simp [formEquiv_koszul, Feec.Koszul.koszul_koszul])
+  koszul_mul _ _ η hω := koszul_mul' hω η
+  polyForm_mul_le := polyForm_mul_le'
+  polyFormMinus_mul_le r s k l := by
+    rcases Nat.eq_zero_or_pos r with rfl | hr
+    · simp [polyFormMinus]
+    rcases Nat.eq_zero_or_pos s with rfl | hs
+    · simp [polyFormMinus]
+    rw [polyFormMinus_eq_inf_comap' r k (by omega), polyFormMinus_eq_inf_comap' s l (by omega),
+      polyFormMinus_eq_inf_comap' (r + s) (k + l) (by omega)]
+    exact Submodule.mul_le.2 fun ω hω η hη => mul_mem_of_koszul_mem hω.1 hω.2 hη.1 hη.2
+  polyForm_zero_mul_le r s k := by
+    rcases Nat.eq_zero_or_pos r with rfl | hr
+    · simp [polyFormMinus]
+    rw [polyFormMinus_eq_inf_comap' r k (by omega), polyFormMinus_eq_inf_comap' (r + s) k (by omega)]
+    refine Submodule.mul_le.2 fun p hp ω hω => ?_
+    have := mul_mem_of_koszul_mem hp
+      (by rw [koszul_eq_zero_of_mem_kForm_zero hp]; exact Submodule.zero_mem _) hω.1 hω.2
+    rwa [add_comm s r, zero_add] at this
   map_polyFormSeq_le r k := by
     rw [← map_le_iff, map_map_extDeriv, map_polyFormSeq, map_polyFormSeq]
     split_ifs with h1 h2 h2
@@ -251,6 +372,19 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     rw [← map_le_iff, map_map_extDeriv, map_cubeFormMinus, map_cubeFormMinus]
     rintro _ ⟨ω, hω, rfl⟩
     exact Feec.Koszul.extDeriv_mem_cubeFormMinus hω
+  polyFormSeq_le_polyFormMinus r k hr := by
+    obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
+    unfold polyFormSeq
+    split_ifs with h
+    · cases k with
+      | zero =>
+        rw [← map_le_iff, map_polyForm, map_polyFormMinus, Nat.sub_zero,
+          Feec.Koszul.polyFormMinus_zero (by omega)]
+      | succ k =>
+        refine le_trans ?_ (le_sup_left : polyForm K n r (k + 1) ≤ polyFormMinus K n (r + 1) (k + 1))
+        rw [← map_le_iff, map_polyForm, map_polyForm]
+        exact Feec.Koszul.polyForm_mono (by omega) _
+    · exact bot_le
   exactAt_polyForm r k := by
     refine exactAt_deRham_of_feec _ _ k fun ω hω hd => ?_
     rw [map_polyFormSeq] at hω ⊢
@@ -285,6 +419,43 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_cubeFormMinus, map_polyForm]
     exact ker_inf_eq_const (Feec.Koszul.cubeFormMinus_le_polyForm _ 0)
       (polyForm_zero_le_cubeFormMinus b)
+  ker_extDeriv_inf_homForm_le r k := by
+    rw [← map_le_iff, map_inf, map_ker_extDeriv, map_homForm, map_map_extDeriv, map_homForm]
+    rintro ω ⟨hd, hω⟩
+    obtain ⟨η, hη, he⟩ := Feec.Koszul.exists_extDeriv_eq_of_extDeriv_eq_zero (by omega) hω hd
+    exact ⟨η, by simpa using hη, he⟩
+  ker_extDeriv_inf_homForm_zero r := by
+    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_homForm, Submodule.map_bot, eq_bot_iff]
+    rintro ω ⟨hd, hω⟩
+    exact (Submodule.mem_bot K).2 (Feec.Koszul.eq_zero_of_mem_homForm_of_mem_polyForm hω
+      (Feec.Koszul.polyForm_mono (Nat.zero_le r) 0
+        (Feec.Koszul.mem_polyForm_zero_of_extDeriv_eq_zero hω.1 hd)))
+  ker_koszul_inf_homForm_le r k := by
+    rw [← map_le_iff, map_inf, map_ker_koszul, map_homForm, map_map_koszul, map_homForm]
+    rintro ω ⟨hκ, hω⟩
+    obtain ⟨η, hη, he⟩ := Feec.Koszul.exists_koszul_eq_of_koszul_eq_zero (by omega) hω hκ
+    exact ⟨η, by simpa using hη, he⟩
+  ker_koszul_inf_homForm_zero k := by
+    rw [← map_eq_iff, map_inf, map_ker_koszul, map_homForm, Submodule.map_bot, eq_bot_iff]
+    rintro ω ⟨hκ, hω⟩
+    exact (Submodule.mem_bot K).2
+      (Feec.Koszul.eq_zero_of_mem_homForm_zero_of_koszul_eq_zero hω hκ)
+  ker_koszul_inf_polyForm_le r k := by
+    rw [← map_le_iff, map_inf, map_ker_koszul, map_polyForm, map_map_koszul, map_polyForm]
+    rintro ω ⟨hκ, hω⟩
+    exact Feec.Koszul.exists_koszul_eq_of_mem_polyForm hω hκ
+  ker_koszul_inf_polyForm_zero k := by
+    rw [← map_eq_iff, map_inf, map_ker_koszul, map_polyForm, Submodule.map_bot, eq_bot_iff,
+      Feec.Koszul.polyForm_zero_eq_homForm]
+    rintro ω ⟨hκ, hω⟩
+    exact (Submodule.mem_bot K).2
+      (Feec.Koszul.eq_zero_of_mem_homForm_zero_of_koszul_eq_zero hω hκ)
+  polyForm_zero_eq_koszul r := by
+    refine ⟨map_eq_iff.1 ?_, disjoint_of_map ?_⟩
+    · rw [Submodule.map_sup, map_map_koszul, map_polyForm, map_polyForm, map_polyForm]
+      exact Feec.Koszul.map_koszul_polyForm_sup_polyForm_zero r
+    · rw [map_map_koszul, map_polyForm, map_polyForm]
+      exact Feec.Koszul.disjoint_map_koszul_polyForm_polyForm_zero r
   homotopy r k ω hω := by
     have hω' : Feec.Koszul.formEquiv K (Fin n) ω ∈ Feec.Koszul.homForm K (Fin n) r k :=
       map_homForm (K := K) r k ▸ Submodule.mem_map_of_mem hω
@@ -320,32 +491,42 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
       exact Feec.Koszul.map_koszul_polyForm_sup_map_extDeriv r k
     · rw [map_map_koszul, map_map_extDeriv, map_polyForm, map_polyForm]
       exact Feec.Koszul.disjoint_map_koszul_polyForm_map_extDeriv r k
-  polyForm_eq r k := by
-    cases r with
-    | zero =>
-      refine ⟨?_, by simp [polyFormMinus]⟩
-      rw [polyFormMinus, bot_sup_eq, ← map_eq_iff, map_map_extDeriv, map_homForm, map_polyForm,
-        Feec.Koszul.polyForm_zero_eq_homForm]
-      exact Feec.Koszul.map_extDeriv_homForm_one k
-    | succ r =>
-      refine ⟨map_eq_iff.1 ?_, disjoint_of_map ?_⟩
-      · rw [Submodule.map_sup, map_polyFormMinus, map_map_extDeriv, map_homForm, map_polyForm]
-        exact Feec.Koszul.polyFormMinus_sup_map_extDeriv (by omega) k
-      · rw [map_polyFormMinus, map_map_extDeriv, map_homForm]
-        exact Feec.Koszul.disjoint_polyFormMinus_map_extDeriv (by omega) k
+  polyForm_zero_left_eq k := by
+    rw [← map_eq_iff, map_map_extDeriv, map_polyForm, map_polyForm]
+    refine le_antisymm ?_ ?_
+    · rintro _ ⟨ω, hω, rfl⟩
+      simpa using Feec.Koszul.extDeriv_mem_polyForm hω
+    · rw [Feec.Koszul.polyForm_zero_eq_homForm, ← Feec.Koszul.map_extDeriv_homForm_one]
+      exact Submodule.map_mono (Feec.Koszul.homForm_le_polyForm 1 k)
+  polyForm_eq := polyForm_eq'
   disjoint_polyForm_map_koszul r k := disjoint_of_map (by
     rw [map_polyForm, map_map_koszul, map_homForm]
     exact Feec.Koszul.disjoint_polyForm_map_koszul r k)
+  polyFormMinus_eq_sup_map_koszul r k := by
+    rw [← map_eq_iff, map_polyFormMinus, Submodule.map_sup, map_polyForm, map_map_koszul,
+      map_polyForm]
+    exact Feec.Koszul.polyFormMinus_succ_eq_sup_map_koszul_polyForm r k
+  map_extDeriv_polyFormMinus r k := by
+    cases k with
+    | zero =>
+      cases r with
+      | zero =>
+        refine (Submodule.map_bot _).trans (eq_bot_iff.2 ?_).symm
+        rintro _ ⟨ω, hω, rfl⟩
+        exact (Submodule.mem_bot K).2 (extDeriv_eq_zero_of_mem_polyForm_zero' hω)
+      | succ r =>
+        rw [← map_eq_iff, map_map_extDeriv, map_map_extDeriv, map_polyFormMinus, map_polyForm,
+          Feec.Koszul.polyFormMinus_zero (by omega)]
+    | succ k =>
+      rw [← (polyForm_eq' r k).1, Submodule.map_sup, ← Submodule.map_comp,
+        extDeriv_comp_extDeriv', Submodule.map_zero, sup_bot_eq]
   polyFormMinus_zero r hr := by
     rw [← map_eq_iff, map_polyFormMinus_of_le hr, map_polyForm]
     exact Feec.Koszul.polyFormMinus_zero hr
   polyFormMinus_top r hr := by
     rw [← map_eq_iff, map_polyFormMinus_of_le hr, map_polyForm]
     simpa using Feec.Koszul.polyFormMinus_top (K := K) (d := Fin n) hr
-  polyFormMinus_eq_inf_comap r k hr := by
-    obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
-    rw [← map_eq_iff, map_inf, map_comap_koszul, map_polyFormMinus, map_polyForm, map_polyForm]
-    exact Feec.Koszul.polyFormMinus_succ_eq_inf_comap r k
+  polyFormMinus_eq_inf_comap := polyFormMinus_eq_inf_comap'
   polyForm_lt_polyFormMinus r k hr hk := by
     rw [← map_lt_iff, map_polyForm, map_polyFormMinus_of_le hr]
     exact Feec.Koszul.polyForm_lt_polyFormMinus hr (by simpa using hk)

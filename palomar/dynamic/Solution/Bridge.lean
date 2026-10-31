@@ -197,6 +197,15 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
   theta_temporal θ hθ h τ hτ w hw n := by
     rw [theta_eq_pow (hB h) hθ hτ hw n, norm_sub_rev]
     exact Feec.TimeStepping.norm_thetaStep_pow_sub_exp_le (hB h) hθ hτ n (w 0)
+  crankNicolson_temporal h τ hτ w hw n := by
+    have e1 : ((1 / 2 : ℝ) : 𝕜) = 1 / 2 := by push_cast; ring
+    have e2 : (1 - (1 / 2 : 𝕜)) = 1 / 2 := by ring
+    have hw' : ∀ n, w (n + 1) - w n = (τ : 𝕜) •
+        B h (((1 / 2 : ℝ) : 𝕜) • w (n + 1) + (1 - ((1 / 2 : ℝ) : 𝕜)) • w n) := fun n => by
+      rw [hw n, e1, e2, smul_add]
+    rw [theta_eq_pow (hB h) le_rfl hτ hw' n, norm_sub_rev,
+      ← Feec.TimeStepping.cayley_half_eq_thetaStep]
+    exact Feec.TimeStepping.norm_cayley_pow_sub_exp_le (hB h) hτ n (w 0)
 
 end Evolution
 
@@ -281,39 +290,35 @@ theorem SubcomplexFamily.Approximates.eventually {i j : ℤ} (hj : i + 1 = j)
   exact exists_lt_of_ciInf_lt hh
 
 /-- **The window of the family approximates in the graph norm in every degree of the window**:
-in a degree with a successor in the window, by the approximation property; in the last degree
-(no differential in the window), in `W`, since `D(d)` is dense. -/
-theorem SubcomplexFamily.approximates_window (happrox : ∀ i : Fin m, F.Approximates (a + (i : ℕ)))
+in a degree with a successor in the window, by the approximation property in the graph norm; in
+the last degree (no differential in the window), by the approximation property in `W`. -/
+theorem SubcomplexFamily.approximates_window
+    (happrox : ∀ i : Fin m, (i : ℕ) + 1 < m → F.Approximates (a + (i : ℕ)))
+    (happrox' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
+      Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0))
     (i : Fin m) : (F.toFeec.window a m).Approximates i := by
   intro σ
   refine tendsto_order.2 ⟨fun b hb => Eventually.of_forall fun _ => hb.trans_le
     Metric.infDist_nonneg, fun ε hε => ?_⟩
   by_cases hi : (i : ℕ) + 1 < m
   · have hij : (ComplexShape.window m).Rel i ⟨(i : ℕ) + 1, hi⟩ := rfl
-    filter_upwards [(happrox i).eventually F (add_succ a i)
+    filter_upwards [(happrox i hi).eventually F (add_succ a i)
       ((H.toFeec.window a m).domainCoord i ⟨(i : ℕ) + 1, hi⟩ σ) hε] with h ⟨v, hv⟩
     have := (F.toFeec.window a m).finiteDimensional h
     exact (Feec.HilbertComplex.Subcomplex.infDist_domainSub_le ((F.toFeec.window a m).V h) hij σ
       (v := (v : W (a + (i : ℕ)))) v.2).trans_lt hv
   · have hni : ∀ k, ¬ (ComplexShape.window m).Rel i k := fun k hk => by
       rw [ComplexShape.window_rel] at hk; omega
-    obtain ⟨y, hy, hyw⟩ := (H.dense (a + (i : ℕ)) (a + (i : ℕ) + 1)).exists_dist_lt
-      ((H.toFeec.window a m).domainIncl i σ) (half_pos hε)
-    filter_upwards [(happrox i).eventually F rfl ⟨y, hy⟩ (half_pos hε)] with h ⟨v, hv⟩
+    filter_upwards [(tendsto_order.1 (happrox' i (by omega)
+      ((H.toFeec.window a m).domainIncl i σ))).2 ε hε] with h hh
+    obtain ⟨v, hv, hvd⟩ := (Metric.infDist_lt_iff ⟨0, Submodule.zero_mem _⟩).1 hh
     have := (F.toFeec.window a m).finiteDimensional h
     have hz : ∀ z, (H.toFeec.window a m).d i ((ComplexShape.window m).next i) z = 0 :=
       fun z => (H.toFeec.window a m).apply_eq_zero_of_not_rel (hni _) z
     refine (Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_of_next
-      ((F.toFeec.window a m).V h) σ (v := (v : W (a + (i : ℕ)))) v.2).trans_lt ?_
-    rw [hz, hz, sub_zero, norm_zero, add_zero]
-    rw [dist_eq_norm] at hyw
-    have : ‖y - (v : W (a + (i : ℕ)))‖ < ε / 2 :=
-      lt_of_le_of_lt (le_add_of_nonneg_right (norm_nonneg _)) hv
-    calc ‖(H.toFeec.window a m).domainIncl i σ - (v : W (a + (i : ℕ)))‖
-        ≤ ‖(H.toFeec.window a m).domainIncl i σ - y‖ + ‖y - (v : W (a + (i : ℕ)))‖ :=
-          norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ < ε / 2 + ε / 2 := add_lt_add hyw this
-      _ = ε := add_halves ε
+      ((F.toFeec.window a m).V h) σ (v := v) hv).trans_lt ?_
+    rw [hz, hz, sub_zero, norm_zero, add_zero, ← dist_eq_norm]
+    exact hvd
 
 /-- The graph-norm bound in degree `i`, read in the graph norm of `d i j`, `j = i + 1`. -/
 theorem SubcomplexFamily.IsGraphBounded.of_eq {i j : ℤ} (hj : i + 1 = j) (hb : F.IsGraphBounded i) :
@@ -366,14 +371,14 @@ theorem isReducing_iff {E : Type*} [NormedAddCommGroup E] [InnerProductSpace �
 namespace HilbertComplex.SubcomplexFamily
 
 variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) (a : ℤ) (m : ℕ)
-  (happrox : ∀ i : Fin m, F.Approximates (a + (i : ℕ)))
+  (happrox : ∀ i, (F.toFeec.window a m).Approximates i)
   (K : Submodule 𝕜 (Total W a m)) (hK : IsClosed (K : Set (Total W a m)))
 
 instance (h : κ) : CompleteSpace (F.Xh a m h) := FiniteDimensional.complete 𝕜 _
 
 /-- The window of `F` with the constraint `K`, a constrained FEEC discretization. -/
 abbrev feecWindow : Feec.HilbertComplex.ConstrainedFEEC (H.toFeec.window a m) κ :=
-  windowFEEC H a m F.toFeec (F.approximates_window a m happrox) K hK
+  windowFEEC H a m F.toFeec happrox K hK
 
 /-- The subcomplex `Vₕ` alone on the window, a constrained FEEC discretization over `Unit`. -/
 abbrev singleWindow (h : κ) : Feec.HilbertComplex.ConstrainedFEEC (H.toFeec.window a m) Unit :=
@@ -568,11 +573,22 @@ theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
           (G.mem_toCore_closure x) hv hτ0 T hε)
   refine ⟨G.toApprox.U, ⟨hEV, V.norm_U, fun s t => G.toApprox.isSkewAdjoint.group.map_add s t,
     fun x hx hx2 h v _ _ ht hM => F.error_le a m x hx hx2 h v ht hM,
-    fun x hx hx2 θ hθ h τ hτ w hw n M hM => ?_, hprop, fun K _ hK x hx h v t => ?_⟩⟩
+    fun x hx hx2 θ hθ h τ hτ w hw n M hM => ?_, fun x hx hx2 h τ hτ w hw n M hM => ?_, hprop,
+    fun K _ hK x hx h v t => ?_⟩⟩
   · have h1 : ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ ≤
         ‖(w 0 : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + n * τ) * M :=
       F.error_le a m x hx hx2 h (w 0) (t := n * τ) (M := M) (by positivity) hM
     have h2 := hEV.theta_temporal θ hθ h hτ w hw n
+    calc ‖G.toApprox.U (n * τ) x - (w n : Total W a m)‖ ≤
+          ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ +
+            ‖semiflow (F.Lh a m h) (n * τ) (w 0) - w n‖ := by
+          rw [← Submodule.norm_coe, Submodule.coe_sub]
+          exact norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ ≤ _ := by linarith
+  · have h1 : ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ ≤
+        ‖(w 0 : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + n * τ) * M :=
+      F.error_le a m x hx hx2 h (w 0) (t := n * τ) (M := M) (by positivity) hM
+    have h2 := hEV.crankNicolson_temporal h hτ w hw n
     calc ‖G.toApprox.U (n * τ) x - (w n : Total W a m)‖ ≤
           ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ +
             ‖semiflow (F.Lh a m h) (n * τ) (w 0) - w n‖ := by

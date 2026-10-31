@@ -13,18 +13,19 @@ project:
     densely defined operators on Z and an arbitrary family of finite-dimensional subcomplexes
     with commuting cochain projections and the approximation property of [AFW2010] §3.3 in the
     graph norm. The compared theorem FEEC.dynamicFEEC states, on every window [a, a+m) of
-    consecutive degrees in which the family approximates in the graph norm: the Hodge wave
+    consecutive degrees in which the family approximates in the graph norm of the window (graph
+    norm in the degrees a, ..., a+m-2, norm of W in the last degree): the Hodge wave
     equation for L = d - d* is well posed with a unitary group S; its semidiscrete Galerkin
     solutions converge for every datum, with the error bound ||S(t)x - exp(t L_h) v|| <=
     ||v - x|| + 2 (1 + 4 sqrt 3) (1 + t) M for x in D(L^2), M a bound of the graph-norm best
     approximation errors of the trajectories of x and L x on [0, t] (C_P = 4 sqrt 3 the bound of
     the elliptic projections); the theta-schemes (theta >= 1/2) converge as h and the time step
-    tend to 0, with temporal error (theta + 1/2) n tau tau ||L_h^2 w_0|| and the fully discrete
-    error bound ||S(n tau)x - w_n|| <= ||w_0 - x|| + 2 (1 + 4 sqrt 3)(1 + n tau) M +
-    (theta + 1/2) n tau tau ||L_h^2 w_0||; a closed constraint propagates iff it reduces L, and
+    tend to 0, with temporal error (theta + 1/2) n tau tau ||L_h^2 w_0|| (of second order,
+    5/12 n tau tau^2 ||L_h^3 w_0||, for Crank-Nicolson) and the fully discrete error bounds
+    ||S(n tau)x - w_n|| <= ||w_0 - x|| + 2 (1 + 4 sqrt 3)(1 + n tau) M + (temporal error); a closed constraint propagates iff it reduces L, and
     then the constraint residual of the discrete solutions is bounded by their error; with
-    projections bounded in the graph norm of the window and closed ranges, the same convergence
-    (and temporal error) for the Hodge heat equation. No bound of the projections is assumed for
+    projections bounded in the graph norm of the window (in W in its last degree) and closed
+    ranges, the same convergence (and temporal errors) for the Hodge heat equation. No bound of the projections is assumed for
     the wave equation. The statement is self-contained over Mathlib; the proof is the library
     Feec of this repository (Feec.HilbertComplex.approxFEEC, dissipFEEC_fullyDiscrete,
     ConstrainedFEEC.heatFEEC, ConstrainedFEEC.rate_le).
@@ -112,8 +113,10 @@ status:
   scope: >-
     Formalized and compared: FEEC.dynamicFEEC (Challenge.lean) for every RCLike field, every
     Hilbert complex on Z, every family of subcomplexes along any filter, every window [a, a+m)
-    in whose degrees the family approximates in the graph norm (no bound of the projections for
-    the wave; graph-norm bounds in the window for the heat equation). Not compared (proved in
+    in which the family approximates in the graph norm of the window (graph norm in the degrees
+    a, ..., a+m-2, W-norm in the last degree; no bound of the projections for the wave; for the
+    heat equation, projections bounded in the graph norm in the degrees a, ..., a+m-2 and in W in
+    the last degree). Not compared (proved in
     Feec, outside the statement): the heat rates from the static rates of the mixed method
     (ConstrainedFEEC.rate_heat), rates from Jackson and Sobolev estimates, the uniform fully
     discrete rate O(h^alpha + tau^(p/(p+2))) for every one-step scheme, energy identities,
@@ -164,23 +167,33 @@ fidelity:
     which makes S unique for t >= 0; for the wave, S is a unitary group with S(s+t) = S(s) S(t).
     Defining C0-semigroups, their generators and the Hille-Yosida/Stone theorems over Mathlib
     would exceed the 1000-line budget.
-    (2) Hypotheses, as in [AFW2010] §3.3: the family approximates in the graph norm of d^i in the
-    degrees i = a, ..., a+m-1 of the window (in the last degree, which has no differential in the
-    truncated window, only the W-approximation that follows is used). The wave conclusions assume
+    (2) Hypotheses, as in [AFW2010] §3.3 for the truncated window: the family approximates in
+    the graph norm of d^i in the degrees i = a, ..., a+m-2 and in W in the last degree a+m-1,
+    which has no differential in the truncated window (the graph-norm approximation of the full
+    complex in that degree implies it, so this is weaker than [AFW2010] §3.3). The wave conclusions assume
     no bound of the cochain projections at all (the elliptic projections are bounded on every
     subcomplex, C_P = 4 sqrt 3, [QuennevilleBelair2015] Prop. 4.13). The heat conclusions assume
     the projections bounded uniformly in the graph norm in the degrees a, ..., a+m-2 and in W in
     the last degree a+m-1, i.e. bounded in the graph norm of the truncated window (for a window
     ending at the top of the complex, d^(a+m-1) = 0 and this is the graph-norm bound of
-    [AFW2010] §3.3), and closed ranges in the degrees a+1, ..., a+m-1; no finite-dimensionality of
+    [AFW2010] §3.3; for an interior window the W-bound in the last degree differs from the
+    V-bound of [AFW2010] §3.3 there, neither implying the other in general; the smoothed
+    projections of [AFW2010] satisfy both), and closed ranges in the degrees a+1, ..., a+m-1; no finite-dimensionality of
     the harmonic forms is assumed.
     (3) The error bound has the explicit constant 2 (1 + C_P), C_P = 4 sqrt 3, and measures best
     approximation of the trajectories of x and L x in the graph norm ||y - w|| + ||d y - d w|| of
     the total differential; it is stated for x in D(L^2), the regularity at which the trajectory
-    of L x lies in D(d) (for x in D(L) only, S(s) L x need not lie in D(d) and the hypothesis on
-    M fails). The theta-schemes carry the temporal error (theta + 1/2) n tau tau ||B_h^2 w_0||
-    (B_h = L_h for the wave, L_h^2 for the heat) and, for the wave, the fully discrete error bound
-    (the sum of the semidiscrete and temporal errors).
+    of L x lies in D(d) (for x in D(L) only, S(s) L x need not lie in D(d); the hypothesis on M
+    would then not control the trajectory of L x, and the bound would be unjustified).
+    The theta-schemes carry the temporal error (theta + 1/2) n tau tau ||B_h^2 w_0|| (B_h = L_h
+    for the wave, L_h^2 for the heat), of first order for every theta >= 1/2; Crank-Nicolson
+    (theta = 1/2) carries the second-order temporal error 5/12 n tau tau^2 ||B_h^3 w_0|| of
+    [Thomee2006] Ch. 7 (the constant 5/12 is not sharp; the leading constant is 1/12). For the
+    wave, the fully discrete error bounds are the sums of the semidiscrete and temporal errors.
+    Their temporal terms are in the discrete norms ||L_h^2 w_0||, ||L_h^3 w_0||, which are not
+    bounded uniformly in h for arbitrary w_0, so they are per-h bounds, not a uniform fully
+    discrete rate O(h^r + tau^p); the uniform rate (temporal term in continuous norms of the
+    data, through a Ritz projection of the initial value) is proved in Feec and not compared.
     (4) Not stated, by cost: a quantitative semidiscrete heat error bound. In Feec it is
     ConstrainedFEEC.rate_heat: ||S(t)x - exp(t L_h^2) R_h x|| <= (2 + 3t) K L h^ord for data
     whose mixed solutions are regular along the orbit, R_h = G_h Q_h Delta + P_H_h Q_h the heat
@@ -217,12 +230,12 @@ alignment:
       lean: "FEEC.HilbertComplex.SubcomplexFamily.WaveVerdict"
       module: "Challenge"
       status: "proved"
-      note: "Well-posedness, unitary group, semidiscrete and theta-scheme convergence, error bound with C = 2 (1 + 4 sqrt 3), temporal and fully discrete theta-scheme errors, propagation iff reducing, residual bound."
+      note: "Well-posedness, unitary group, semidiscrete and theta-scheme convergence, error bound with C = 2 (1 + 4 sqrt 3), temporal and fully discrete theta-scheme errors (second order for Crank-Nicolson), propagation iff reducing, residual bound."
     - source: "[GilletteHolstZhu2017]; [AFW2010], Thm 3.9 (elliptic convergence)"
       lean: "FEEC.HilbertComplex.SubcomplexFamily.DynamicVerdict"
       module: "Challenge"
       status: "proved (convergence and temporal error; no spatial heat rate)"
-      note: "Field `heat`, under graph-norm bounds of the projections in the window and closed ranges."
+      note: "Field `heat`, under bounds of the projections in the graph norm in the degrees a, ..., a+m-2 and in W in the last degree, and closed ranges."
     - source: "all of the above"
       lean: "FEEC.dynamicFEEC"
       module: "Challenge"

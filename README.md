@@ -265,13 +265,15 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   and uniform stability, quasi-optimal graph-norm error bound; with approximation in the graph
   norm and finite-dimensional `ℌʲ`, vanishing harmonic gap, eventual cohomology isomorphism and
   convergence; from `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`.
-* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 345 lines): the Hodge wave and heat
-  equations on every window in which the subcomplexes approximate in the graph norm
-  ([AFW2010], §3.3; no bound of the projections for the wave, graph-norm bounds for the heat):
+* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 370 lines): the Hodge wave and heat
+  equations on every window in which the subcomplexes approximate in the graph norm of the
+  window ([AFW2010], §3.3; graph norm in all but the last degree, `W` in the last; no bound of
+  the projections for the wave, projections bounded in these same norms for the heat):
   well-posedness, convergence for every datum, the error bound
   `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + 2 (1 + 4√3) (1 + t) M` by the graph-norm best
-  approximation of the trajectory, θ-schemes with their temporal and fully discrete error bounds,
-  propagation of constraints iff reducing and the residual bound; from
+  approximation of the trajectory, θ-schemes with their temporal and fully discrete error bounds
+  (second order for Crank–Nicolson), propagation of constraints iff reducing and the residual
+  bound; from
   `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
 * `palomar/periodic/` (theorem FEEC.periodicTable, about 160 lines): the algebra of the periodic

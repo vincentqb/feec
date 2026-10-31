@@ -138,7 +138,8 @@ finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique
 from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, and `S t x` has nonincreasing norm; the semidiscrete solutions
 `exp(t Bₕ) vₕ` (`semiflow`) converge to `S t x` uniformly on `[0, T]` from every family
 `vₕ → x`; and so do the θ-schemes `wₙ₊₁ - wₙ = τₕ Bₕ (θ wₙ₊₁ + (1 - θ) wₙ)`, `θ ≥ 1/2`, as
-`h, τₕ → 0`, with the temporal error `‖exp(nτ Bₕ) w₀ - wₙ‖ ≤ (θ + 1/2) nτ τ ‖Bₕ² w₀‖`. -/
+`h, τₕ → 0`, with the temporal error `‖exp(nτ Bₕ) w₀ - wₙ‖ ≤ (θ + 1/2) nτ τ ‖Bₕ² w₀‖`, of second
+order `5/12 nτ τ² ‖Bₕ³ w₀‖` for Crank–Nicolson (`θ = 1/2`). -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
   dense : Dense (A.domain : Set E)
@@ -159,6 +160,9 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
     (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n))
     (n : ℕ) :
     ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ (θ + 1 / 2) * (n * τ) * τ * ‖(B h ^ 2) (w 0)‖
+  crankNicolson_temporal (h : κ) {τ : ℝ} (hτ : 0 < τ) (w : ℕ → X h)
+    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((1 / 2 : 𝕜) • (w (n + 1) + w n))) (n : ℕ) :
+    ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ 5 / 12 * (n * τ) * τ ^ 2 * ‖(B h ^ 3) (w 0)‖
 
 end Evolution
 
@@ -273,6 +277,17 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
         F.graphDist a m h y ≤ M) :
     ‖S (n * τ) x - (w n : Total W a m)‖ ≤ ‖(w 0 : Total W a m) - x‖ +
       2 * (1 + 4 * √3) * (1 + n * τ) * M + (θ + 1 / 2) * (n * τ) * τ * ‖(F.Lh a m h ^ 2) (w 0)‖
+  /-- the fully discrete error bound of Crank–Nicolson, of second order in time:
+  `‖S(nτ) x - wₙ‖ ≤ ‖w₀ - x‖ + 2 (1 + C_P) (1 + nτ) M + 5/12 nτ τ² ‖Lₕ³ w₀‖` -/
+  crankNicolson_error (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
+    (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) {τ : ℝ} (hτ : 0 < τ)
+    (w : ℕ → F.Xh a m h)
+    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • F.Lh a m h ((1 / 2 : 𝕜) • (w (n + 1) + w n)))
+    (n : ℕ) {M : ℝ} (hM : ∀ s ∈ Icc 0 (n * τ), ∀ y : (H.totalD a m).domain,
+      (y : Total W a m) = S s x ∨ (y : Total W a m) = S s (H.wave a m ⟨x, hx⟩) →
+        F.graphDist a m h y ≤ M) :
+    ‖S (n * τ) x - (w n : Total W a m)‖ ≤ ‖(w 0 : Total W a m) - x‖ +
+      2 * (1 + 4 * √3) * (1 + n * τ) * M + 5 / 12 * (n * τ) * τ ^ 2 * ‖(F.Lh a m h ^ 3) (w 0)‖
   /-- a closed constraint `K` propagates iff it reduces `L` -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
@@ -288,9 +303,9 @@ window. -/
 structure DynamicVerdict : Prop where
   /-- the wave equation `ξ' = L ξ` -/
   wave : ∃ S, F.WaveVerdict a m S
-  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm of the window
-  (in its last degree, which has no differential in the window, in `W`) and closed ranges in the
-  window -/
+  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm in the degrees
+  `a, …, a + m - 2` and in `W` in the last degree `a + m - 1` (which has no differential in the
+  window), and closed ranges in the window -/
   heat (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
     (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m →
       ∃ C : ℝ, ∀ (h : κ) (x : W (a + (i : ℕ))), ‖(F.π h).π _ x‖ ≤ C * ‖x‖)

@@ -14,7 +14,9 @@ Finite element exterior calculus ([AFW2006], [AFW2010]) approximates a Hilbert c
 `⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely defined operators by finite-dimensional subcomplexes `Vₕ`
 with commuting cochain projections `πₕ`. The theorem below (`FEEC.dynamicFEEC`) states, on every
 window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` (with total differential `𝐝`) of a family of subcomplexes with the
-approximation property of [AFW2010], §3.3 in the graph norm in the degrees of the window:
+approximation property of [AFW2010], §3.3 in the graph norm of the window (the graph norm in the
+degrees `a, …, a + m - 2`, the norm of `W` in the last degree, which has no differential in the
+window):
 
 1. (**wave**) the Hodge wave equation `ξ' = L ξ`, `L = 𝐝 - 𝐝*`, is well posed (strong solutions,
    a unitary group `S`); its semidiscrete Galerkin solutions `exp(t Lₕ) vₕ` converge to `S(t) x`
@@ -22,13 +24,15 @@ approximation property of [AFW2010], §3.3 in the graph norm in the degrees of t
    `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + 2 (1 + C_P) (1 + t) M` for `x ∈ D(L²)`, `M` a bound of
    the graph-norm distances of `S(s) x` and `S(s) L x` to `Xₕ = ⊕ Vₕ` for `s ∈ [0, t]` and
    `C_P = 4√3` the bound of the elliptic projections; the θ-schemes, `θ ≥ 1/2`, converge as
-   `h, τ → 0`, with the temporal error `(θ + 1/2) nτ τ ‖Lₕ² w₀‖` and the fully discrete error
-   bound; a closed constraint `K` is propagated by the flow iff it reduces `L`, and then the
-   constraint residual of the discrete solutions is bounded by their error
+   `h, τ → 0`, with the temporal error `(θ + 1/2) nτ τ ‖Lₕ² w₀‖` (`5/12 nτ τ² ‖Lₕ³ w₀‖` for
+   Crank–Nicolson) and the fully discrete error bounds; a closed constraint `K` is propagated by
+   the flow iff it reduces `L`, and then the constraint residual of the discrete solutions is
+   bounded by their error
    ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.13, 4.17; [Thomee2006], Ch. 7);
-2. (**heat**) with projections bounded in the graph norm in the window and closed ranges in the
-   window, the same convergence for the Hodge heat equation `u' = L² u = -Δ u` with the discrete
-   generators `Lₕ²` ([GilletteHolstZhu2017], via the elliptic convergence of [AFW2010], Thm 3.9).
+2. (**heat**) with projections bounded in the graph norm of the window (in `W` in its last
+   degree) and closed ranges in the window, the same convergence for the Hodge heat equation
+   `u' = L² u = -Δ u` with the discrete generators `Lₕ²` ([GilletteHolstZhu2017], via the
+   elliptic convergence of [AFW2010], Thm 3.9).
 
 Mathlib has no `C₀`-semigroups: the exact evolutions are the operator families `S` that the
 theorem asserts to exist, characterized by their strong solutions (unique, so `S` is unique on
@@ -166,7 +170,8 @@ finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique
 from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, and `S t x` has nonincreasing norm; the semidiscrete solutions
 `exp(t Bₕ) vₕ` (`semiflow`) converge to `S t x` uniformly on `[0, T]` from every family
 `vₕ → x`; and so do the θ-schemes `wₙ₊₁ - wₙ = τₕ Bₕ (θ wₙ₊₁ + (1 - θ) wₙ)`, `θ ≥ 1/2`, as
-`h, τₕ → 0`, with the temporal error `‖exp(nτ Bₕ) w₀ - wₙ‖ ≤ (θ + 1/2) nτ τ ‖Bₕ² w₀‖`. -/
+`h, τₕ → 0`, with the temporal error `‖exp(nτ Bₕ) w₀ - wₙ‖ ≤ (θ + 1/2) nτ τ ‖Bₕ² w₀‖`, of second
+order `5/12 nτ τ² ‖Bₕ³ w₀‖` for Crank–Nicolson (`θ = 1/2`). -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
   dense : Dense (A.domain : Set E)
@@ -187,6 +192,9 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
     (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n))
     (n : ℕ) :
     ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ (θ + 1 / 2) * (n * τ) * τ * ‖(B h ^ 2) (w 0)‖
+  crankNicolson_temporal (h : κ) {τ : ℝ} (hτ : 0 < τ) (w : ℕ → X h)
+    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((1 / 2 : 𝕜) • (w (n + 1) + w n))) (n : ℕ) :
+    ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ 5 / 12 * (n * τ) * τ ^ 2 * ‖(B h ^ 3) (w 0)‖
 
 end Evolution
 
@@ -301,6 +309,17 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
         F.graphDist a m h y ≤ M) :
     ‖S (n * τ) x - (w n : Total W a m)‖ ≤ ‖(w 0 : Total W a m) - x‖ +
       2 * (1 + 4 * √3) * (1 + n * τ) * M + (θ + 1 / 2) * (n * τ) * τ * ‖(F.Lh a m h ^ 2) (w 0)‖
+  /-- the fully discrete error bound of Crank–Nicolson, of second order in time:
+  `‖S(nτ) x - wₙ‖ ≤ ‖w₀ - x‖ + 2 (1 + C_P) (1 + nτ) M + 5/12 nτ τ² ‖Lₕ³ w₀‖` -/
+  crankNicolson_error (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
+    (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) {τ : ℝ} (hτ : 0 < τ)
+    (w : ℕ → F.Xh a m h)
+    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • F.Lh a m h ((1 / 2 : 𝕜) • (w (n + 1) + w n)))
+    (n : ℕ) {M : ℝ} (hM : ∀ s ∈ Icc 0 (n * τ), ∀ y : (H.totalD a m).domain,
+      (y : Total W a m) = S s x ∨ (y : Total W a m) = S s (H.wave a m ⟨x, hx⟩) →
+        F.graphDist a m h y ≤ M) :
+    ‖S (n * τ) x - (w n : Total W a m)‖ ≤ ‖(w 0 : Total W a m) - x‖ +
+      2 * (1 + 4 * √3) * (1 + n * τ) * M + 5 / 12 * (n * τ) * τ ^ 2 * ‖(F.Lh a m h ^ 3) (w 0)‖
   /-- a closed constraint `K` propagates iff it reduces `L` -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
@@ -316,9 +335,9 @@ window. -/
 structure DynamicVerdict : Prop where
   /-- the wave equation `ξ' = L ξ` -/
   wave : ∃ S, F.WaveVerdict a m S
-  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm of the window
-  (in its last degree, which has no differential in the window, in `W`) and closed ranges in the
-  window -/
+  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm in the degrees
+  `a, …, a + m - 2` and in `W` in the last degree `a + m - 1` (which has no differential in the
+  window), and closed ranges in the window -/
   heat (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
     (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m →
       ∃ C : ℝ, ∀ (h : κ) (x : W (a + (i : ℕ))), ‖(F.π h).π _ x‖ ≤ C * ‖x‖)
@@ -337,10 +356,14 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The FEEC theorem for the Hodge wave and heat equations** ([QuennevilleBelair2015], Thms 4.6,
 4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a family of
-subcomplexes which approximates in the graph norm in the degrees `a, …, a + m - 1`. On the window
-`[a, a + m)`, `F` satisfies the wave and heat verdicts (`SubcomplexFamily.DynamicVerdict`). -/
+subcomplexes which approximates in the graph norm in the degrees `a, …, a + m - 2` and in `W` in
+the degree `a + m - 1`. On the window `[a, a + m)`, `F` satisfies the wave and heat verdicts
+(`SubcomplexFamily.DynamicVerdict`). -/
 theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (a : ℤ)
-    (m : ℕ) (happrox : ∀ i : Fin m, F.Approximates (a + (i : ℕ))) : F.DynamicVerdict a m := by
+    (m : ℕ) (happrox : ∀ i : Fin m, (i : ℕ) + 1 < m → F.Approximates (a + (i : ℕ)))
+    (happrox' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
+      Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0)) :
+    F.DynamicVerdict a m := by
   sorry
 
 end FEEC

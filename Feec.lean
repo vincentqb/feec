@@ -116,6 +116,7 @@ public import Feec.ForMathlib.Homology.Subcomplex
 public import Feec.ForMathlib.InnerProductSpace.Complexification
 public import Feec.ForMathlib.InnerProductSpace.Diagonal
 public import Feec.ForMathlib.InnerProductSpace.Isometry
+public import Feec.ForMathlib.InnerProductSpace.MoorePenrose
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
@@ -191,6 +192,7 @@ public import Feec.HilbertComplex.BGG.Discrete
 public import Feec.HilbertComplex.BGG.DiscreteWave
 public import Feec.HilbertComplex.BGG.EllipticProjection
 public import Feec.HilbertComplex.BGG.Harmonic
+public import Feec.HilbertComplex.BGG.Orthogonal
 public import Feec.HilbertComplex.BGG.SumComplex
 public import Feec.HilbertComplex.BGG.TimeDependent
 public import Feec.HilbertComplex.BGG.ToComplex

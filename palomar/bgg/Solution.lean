@@ -6,10 +6,10 @@ public import Solution.Bridge
 # The BGG construction (solution)
 
 `FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum`,
-`FEEC.bggExplicit` and `FEEC.bggClosedRange` of
+`FEEC.bggExplicit`, `FEEC.bggClosedRange` and `FEEC.bggOrthogonal` of
 `Challenge.lean`, proved through the bridge `Solution.Bridge` (`FEEC.BGG.verdict`,
 `FEEC.BGG.identification`, `FEEC.BGG.finiteDimensional_and_finrank_le`, `FEEC.BGG.sum`,
-`FEEC.BGG.explicit`, `FEEC.BGG.closedRange`)
+`FEEC.BGG.explicit`, `FEEC.BGG.closedRange`, `FEEC.BGG.orthogonal`)
 from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
 `Feec.BGG.Data.finrank_twistComplex_homology_eq_iff`, `Feec.BGG.Data.bggProj`,
 `Feec.BGG.Data.quasiIso_of_Γι_comp`, `HomologicalComplex.Represents.map` and
@@ -124,5 +124,44 @@ theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
         IsClosed ((BGG.Δ S J i ⊔ (BGG.Γ S J (i - 1)).map (BGG.twist S (i - 1) i) :
           Submodule 𝕜 _) : Set (H i × Ht i))) :=
   BGG.closedRange s hs J hinj hsurj i
+
+/-- **The orthogonal form of Theorem 7: the cochain map (30) with Moore–Penrose inverses**
+([ArnoldHu2021], (15)–(16), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
+operators on Hilbert spaces and `s` bounded connecting maps with `d s = -s d̃`, null-homotopic,
+`sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)), with `sⁱ` injective for `i ≤ J`, surjective for `i ≥ J` ((23)) and
+of closed range for `i < J`; let `tⁱ⁺¹ = (sⁱ)†` (`BGG.moorePenrose`). Then there is a complex `Y`
+with isomorphisms `Yⁱ ≅ Υⁱ` onto the output spaces (`BGG.Υ`: `R(sⁱ⁻¹)ᗮ` up to `J`, `N(sⁱ)` after)
+carrying its differential to the output differentials (16), `P_{R(sⁱ)ᗮ} d` before `J`,
+`d̃ (sᴶ)† d` at `J`, `d̃` after `J`, and a quasi-isomorphism `κ` from the sum complex to `Y` which
+is the map (30): `(ω, μ) ↦ P_{R(sⁱ⁻¹)ᗮ}(ω + Kμ)` up to `J`, and in degree `i + 1 > J`,
+`(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; and `Y` is isomorphic to the BGG complex. -/
+theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
+    [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
+    [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+    [∀ i, CompleteSpace (Ht i)]
+    (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
+    (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (K : ∀ i, Ht i →ₗ[𝕜] H i) (hK : ∀ i μ, s i μ = d i (K i μ) - K (i + 1) (dt i μ))
+    (J : ℤ) (hinj : ∀ i ≤ J, Function.Injective (s i))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (s i))
+    (hR : ∀ i < J, IsClosed (Set.range (s i))) :
+    let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
+    let P := fun i => (BGG.rangeS S i : Submodule 𝕜 (H i))ᗮ.starProjection
+    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ) (e : ∀ i, Y.X i ≃ₗ[𝕜] BGG.Υ (hd := hd) (hdt := hdt) s hs J i)
+      (κ : BGG.twisted (0 : BGG.ofBounded dt hdt ⟶ (BGG.ofBounded d hd)⟦(1 : ℤ)⟧) ⟶ Y),
+      (∀ i < J, ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
+        (P (i + 1) (d i (e i y : H i × Ht i).1), 0)) ∧
+      (∀ y, (e (J + 1) (Y.d J (J + 1) y) : H (J + 1) × Ht (J + 1)) =
+        (0, dt J (BGG.moorePenrose (s J) (d J (e J y : H J × Ht J).1)))) ∧
+      (∀ i, J < i → ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
+        (0, dt i (e i y : H i × Ht i).2)) ∧
+      (∀ i ≤ J, ∀ x : H i × Ht i, (e i ((κ.f i).hom x) : H i × Ht i) = (P i (x.1 + K i x.2), 0)) ∧
+      (∀ i, J ≤ i → ∀ x : H (i + 1) × Ht (i + 1),
+        (e (i + 1) ((κ.f (i + 1)).hom x) : H (i + 1) × Ht (i + 1)) =
+          (0, (s (i + 1)).ker.starProjection (dt i (BGG.moorePenrose (s i) x.1) +
+            (x.2 + dt i (BGG.moorePenrose (s i) (K (i + 1) x.2)))))) ∧
+      QuasiIso κ ∧ Nonempty (Y ≅ BGG.bgg S J) :=
+  BGG.orthogonal d hd dt hdt s hs K hK J hinj hsurj hR
 
 end FEEC

@@ -31,7 +31,14 @@ project:
     FEEC.staticFEEC_uniform states that the constant depends only on the bound c of pi_h and the
     Poincare constant c_P (||v||_V <= c_P ||dv|| on V^i orthogonal to the cycles, in degrees j-1
     and j): there is one function Phi such that, for every complex, family and degree with these
-    bounds, every conclusion holds with the constant Phi(c, c_P).
+    bounds, every conclusion holds with the constant Phi(c, c_P). The third compared theorem
+    FEEC.exists_cochainProjection is the converse (Thm 3.7): a finite-dimensional subcomplex with
+    the discrete Poincare inequality ||v||_V <= c1 ||dv|| on V_h orthogonal to the discrete cycles
+    and ||q|| <= c2 ||P_H q|| on the discrete harmonic forms, in every degree, has a cochain
+    projection bounded by (1 + c1)(1 + c2) in the graph norm. The fourth,
+    FEEC.exists_subcomplexFamily_iff, combines it with Thm 3.6 and (30): for a complex with closed
+    ranges, uniformly graph-bounded cochain projections onto a family of subcomplexes exist iff
+    the two conditions hold uniformly in h.
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -51,13 +58,15 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
     type: "article"
-    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.4 (Theorems 3.4, 3.5, 3.6, 3.8, 3.9)"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.4 (Theorems 3.4, 3.5, 3.6, 3.7, 3.8, 3.9; (30))"
     relationship: "formalizes"
     note: >-
       The a priori theory of §3.3-§3.4 for the mixed Hodge Laplacian: discrete cohomology,
       harmonic gap, uniform discrete Poincare inequality, unique solvability and stability, and
       the quasi-optimal graph-norm error bound, under the hypotheses of §3.3 (cochain projections
-      bounded in the graph norm, approximation property in the graph norm) in the degrees used.
+      bounded in the graph norm, approximation property in the graph norm) in the degrees used;
+      and the converse Thm 3.7 (bounded cochain projections from the discrete Poincare
+      inequality and (30)).
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus, homological techniques, and applications"
     authors:
@@ -89,10 +98,11 @@ status:
     Hilbert complex on Z, every family of subcomplexes along any filter, every degree j:
     [AFW2010] Thm 3.5 inequalities (27) and (28) (the gap bound (29) follows from them and is
     not stated separately), Thm 3.4 (strict-gap form and eventual form), Thm 3.6, Thm 3.8
-    (unique solvability, uniform inf-sup, stability), Thm 3.9 and convergence. Not compared:
-    Thm 3.7 (the converse: a discrete Poincare inequality and ||q||_V <= c ||P_H q||_V give a
-    bounded cochain projection), which is not formalized; and, proved in Feec but outside the
-    statement, the explicit form of the constant (the solution takes
+    (unique solvability, uniform inf-sup, stability), Thm 3.9 and convergence; and
+    FEEC.exists_cochainProjection (Thm 3.7, with the explicit bound (1 + c1)(1 + c2)) and
+    FEEC.exists_subcomplexFamily_iff (Thms 3.6, 3.7 and (30): bounded projections iff discrete
+    stability, uniformly in h). Not compared, proved in Feec but outside the
+    statement: the explicit form of the constant (the solution takes
     Phi(c, c_P) = 256 (1 + K^2) (1 + max(c, 1))^2 with K = max(c, 1) (1 + c_P^2)^(1/2)), rates
     from Jackson estimates, the improved L2 estimate under elliptic regularity (§3.5), the
     necessity of closed range, and the concrete finite element families (Whitney, P_r, P_r^-,
@@ -130,7 +140,9 @@ automation:
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written for this submission and reviewed by the author; the Solution translates them to the
-    library Feec (Solution/Bridge.lean) and applies Feec.HilbertComplex.SubcomplexFamily.staticFEEC.
+    library Feec (Solution/Bridge.lean, Solution/Existence.lean) and applies
+    Feec.HilbertComplex.SubcomplexFamily.staticFEEC, Feec.HilbertComplex.Subcomplex.exists_cochainProjection
+    and Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff.
 
 fidelity:
   divergences: >-
@@ -160,7 +172,17 @@ fidelity:
     (4) Hypotheses localized to the degrees used, so weaker than the source's global ones: bounded
     projections in degrees j - 1 and j, closed range in degrees j and j + 1, the approximation
     property only in the clauses that need it.
-    (5) Finite-dimensional H^j in the vanishing of the harmonic gap and the eventual isomorphisms:
+    (5) Thm 3.7: the source assumes a bounded closed complex; FEEC.exists_cochainProjection
+    assumes no closed range, allows constants c1^i, c2^i depending on the degree (the source's
+    are one pair), takes them nonnegative, and states the bound (1 + c1)(1 + c2) (the source:
+    bounded in terms of c1 and c2). The harmonic bound ||q|| <= c2 ||P_H q|| is in the W norm,
+    equal to the V norm of the source on the cycles q and P_H q. The source's proof inverts
+    P_H : H_h -> H on all of H, which needs P_H(H_h) = H (not implied by the hypotheses, e.g.
+    for V_h = 0 with H nonzero); the proof here inverts it on its range after the orthogonal
+    projection onto the range, so the statement holds under the source's hypotheses.
+    FEEC.exists_subcomplexFamily_iff assumes closed range in every degree, which the direction
+    from bounded projections (Thm 3.6 and (30), whose proof uses (28)) needs.
+    (6) Finite-dimensional H^j in the vanishing of the harmonic gap and the eventual isomorphisms:
     the setting of the source (finite-dimensional cohomology, as for the de Rham complex), and
     necessary: for d = 0 on an infinite-dimensional W^j, V_h the span of the first n vectors of an
     orthonormal basis and pi_h the orthogonal projection, mu_h = 1 for every h and H^j(V_h) is
@@ -189,6 +211,16 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "The second compared theorem; proved in Solution.lean from the explicit constants of Feec (Solution.Bridge, HilbertComplex.SubcomplexFamily.staticVerdict_of)."
+    - source: "[AFW2010], Thm 3.7"
+      lean: "FEEC.exists_cochainProjection"
+      module: "Challenge"
+      status: "proved"
+      note: "The third compared theorem; proved in Solution.lean from Feec.HilbertComplex.Subcomplex.exists_cochainProjection (the projection P_Bh + R_h P_H (I - Q_h) + Q_h of the source's proof) through Solution.Existence."
+    - source: "[AFW2010], Thms 3.6, 3.7 and (30)"
+      lean: "FEEC.exists_subcomplexFamily_iff"
+      module: "Challenge"
+      status: "proved"
+      note: "The fourth compared theorem; proved in Solution.lean from Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff."
     - source: "[AFW2010], §3.3-§3.4"
       lean: "FEEC.staticFEEC"
       module: "Challenge"

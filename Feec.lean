@@ -154,6 +154,7 @@ public import Feec.HilbertComplex.Approximation.ApproxFEEC
 public import Feec.HilbertComplex.Approximation.ApproxFEECWitness
 public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
 public import Feec.HilbertComplex.Approximation.CochainProjection
+public import Feec.HilbertComplex.Approximation.CochainProjectionExistence
 public import Feec.HilbertComplex.Approximation.ConformingFamily
 public import Feec.HilbertComplex.Approximation.ConstrainedFEEC
 public import Feec.HilbertComplex.Approximation.Crown

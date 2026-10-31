@@ -32,6 +32,13 @@ ranges of `dʲ⁻¹` and `dʲ` are closed, then, with a constant `C` independent
 constant `c_P` of `‖v‖_V ≤ c_P ‖d v‖` on `Vⁱ ⊥ 𝔷ⁱ` in degrees `j - 1` and `j` (which exists iff the
 ranges are closed): `C = Φ(c, c_P)` for one function `Φ` and every complex, family and degree.
 
+Conversely ([AFW2010], Thm 3.7), `FEEC.exists_cochainProjection`: a finite-dimensional
+subcomplex with the discrete Poincaré inequality `‖v‖_V ≤ c₁ ‖d v‖` on `Vₕⁱ ⊥ 𝔷ₕⁱ` and the bound
+`‖q‖ ≤ c₂ ‖P_ℌ q‖` on `ℌₕⁱ` in every degree has a cochain projection bounded by
+`(1 + c₁)(1 + c₂)` in the graph norm (no closed range needed); with Thm 3.6 and (30),
+`FEEC.exists_subcomplexFamily_iff`: for a complex with closed ranges, uniformly bounded cochain
+projections exist iff these two conditions hold uniformly in `h`.
+
 The differential of the complex is encoded as a family `d i j : Wⁱ → Wʲ` of all pairs, zero
 unless `j = i + 1`.
 
@@ -39,7 +46,7 @@ unless `j = i + 1`.
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3–§3.4
+  §3.3–§3.4 (Thm 3.7 for the converse)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -263,6 +270,17 @@ def PoincareBy (i : ℤ) (c : ℝ) : Prop :=
   ∀ v : (H.d i (i + 1)).domain, (v : W i) ∈ (H.cycles i)ᗮ →
     H.graphNorm i (i + 1) v ≤ c * ‖H.d i (i + 1) v‖
 
+/-- The **discrete Poincaré inequality** `‖v‖_V ≤ c ‖d v‖` on `Vⁱ ⊥ 𝔷ₕⁱ` with constant `c`. -/
+def Subcomplex.PoincareBy (S : H.Subcomplex) (i : ℤ) (c : ℝ) : Prop :=
+  ∀ (v : W i) (hv : v ∈ S.V i), (∀ z ∈ S.cycles i, ⟪z, v⟫_𝕜 = 0) →
+    H.graphNorm i (i + 1) ⟨v, S.le_domain i (i + 1) hv⟩ ≤
+      c * ‖H.d i (i + 1) ⟨v, S.le_domain i (i + 1) hv⟩‖
+
+/-- The **harmonic bound** `‖q‖ ≤ c ‖P_ℌ q‖` on the discrete harmonic forms `ℌₕⁱ` with constant
+`c` (on cycles the graph norm is the norm of `W`). -/
+def Subcomplex.HarmonicBoundBy (S : H.Subcomplex) (i : ℤ) (c : ℝ) : Prop :=
+  ∀ q ∈ S.harmonic i, ‖q‖ ≤ c * ‖(H.harmonic i).starProjection q‖
+
 /-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
 `Vₕⁱ` in the graph norm tends to `0`. -/
 def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
@@ -363,6 +381,31 @@ theorem staticFEEC_uniform : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [
     {κ : Type w} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ},
     F.IsGraphBoundedBy (j - 1) c → F.IsGraphBoundedBy j c →
     H.PoincareBy (j - 1) cP → H.PoincareBy j cP → F.StaticVerdict j (Φ c cP) := by
+  sorry
+
+/-- **Bounded cochain projections from discrete stability** ([AFW2010], Thm 3.7). Let `S` be a
+finite-dimensional subcomplex. If in every degree `i` the discrete Poincaré inequality
+`‖v‖_V ≤ c₁ⁱ ‖d v‖` holds on `Vⁱ ⊥ 𝔷ₕⁱ` and `‖q‖ ≤ c₂ⁱ ‖P_ℌ q‖` holds on `ℌₕⁱ`, then `S` has a
+cochain projection bounded in the graph norm by `(1 + c₁ⁱ)(1 + c₂ⁱ)` in every degree `i`. -/
+theorem exists_cochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex)
+    [∀ i, FiniteDimensional 𝕜 (S.V i)] {c₁ c₂ : ℤ → ℝ} (hc₁ : ∀ i, 0 ≤ c₁ i)
+    (hc₂ : ∀ i, 0 ≤ c₂ i) (hP : ∀ i, S.PoincareBy i (c₁ i))
+    (hH : ∀ i, S.HarmonicBoundBy i (c₂ i)) :
+    ∃ P : S.CochainProjection, ∀ i (x : (H.d i (i + 1)).domain),
+      H.graphNorm i (i + 1) ⟨P.π i x, S.le_domain i (i + 1) (P.π i x).2⟩ ≤
+        (1 + c₁ i) * (1 + c₂ i) * H.graphNorm i (i + 1) x := by
+  sorry
+
+/-- **Uniformly bounded cochain projections exist iff discrete stability holds uniformly**
+([AFW2010], Thms 3.6, 3.7 and (30)). Let `Vₕ` be finite-dimensional subcomplexes of a complex
+whose ranges are closed. A family of subcomplexes on `Vₕ` with cochain projections bounded in
+the graph norm uniformly in `h` in every degree exists iff in every degree the discrete Poincaré
+inequality and the harmonic bound hold with constants independent of `h`. -/
+theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
+    (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
+    (hcr : ∀ i, IsClosed (H.boundaries i : Set (W i))) :
+    (∃ F : H.SubcomplexFamily κ, F.l = l ∧ F.V = V ∧ ∀ i, F.IsGraphBounded i) ↔
+      ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).PoincareBy i c₁ ∧ (V h).HarmonicBoundBy i c₂ := by
   sorry
 
 end FEEC

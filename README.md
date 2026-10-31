@@ -33,7 +33,11 @@ Poincaré inequality forces it, `ConformingFamily.StaticVerdict.closedRangeAt`; 
 complex has `ℌ = 0`, a conforming family and no static verdict).
 `Feec.Counterexamples.crownSharpness` (`Counterexamples/Sharpness.lean`) collects this with the
 counterexamples showing that the TSD constraint is not reducing on bounded domains (so only the
-departure clause applies to it) and that `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not a subcomplex.
+departure clause applies to it) and that `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not a subcomplex, and with the
+characterization of the static layer's hypothesis: under closed range, uniformly graph-bounded
+cochain projections exist iff the discrete Poincaré inequality and `‖q‖ ≤ c ‖P_ℌ q‖` on `ℌₕ` hold
+uniformly (`Feec.HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff`;
+Arnold–Falk–Winther 2010, Thms 3.6, 3.7).
 `Feec.Counterexamples.crownCorrections` (same file) collects, by reference, the thesis
 corrections bearing on the crown (the statements involve no crown object; the tie is documentary):
 the weak-symmetry discretization, not a stacked BGG family, has no uniqueness without exactness at
@@ -258,7 +262,8 @@ challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.js
 `formalization.yaml`. The static and dynamic packages copy the same vocabulary (Hilbert complexes
 on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others are self-contained.
 
-* `palomar/static/` (theorems FEEC.staticFEEC, FEEC.staticFEEC_uniform, about 370 lines): the a
+* `palomar/static/` (theorems FEEC.staticFEEC, FEEC.staticFEEC_uniform,
+  FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, about 410 lines): the a
   priori theory of the mixed Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the
   degrees used (cochain projections `V → Vₕ` bounded in the graph norm in degrees `j - 1`, `j`; closed range in degrees
   `j`, `j + 1`): both gap estimates between `ℌʲ` and `ℌₕʲ`, the cohomology isomorphisms under the
@@ -266,8 +271,12 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   and stability, quasi-optimal graph-norm error bound; with approximation in the graph norm and
   finite-dimensional `ℌʲ`, vanishing harmonic gap, eventual cohomology isomorphisms and
   convergence; one constant `Φ(c, c_P)` of the projection bound and the Poincaré constant only,
-  for every complex (FEEC.staticFEEC_uniform); from `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`
-  and the explicit constants of `Feec`.
+  for every complex (FEEC.staticFEEC_uniform); the converse, Thm 3.7: the discrete Poincaré
+  inequality and `‖q‖ ≤ c₂ ‖P_ℌ q‖` on `ℌₕ` give a cochain projection bounded by `(1 + c₁)(1 + c₂)`
+  (FEEC.exists_cochainProjection), so under closed range uniformly bounded projections exist iff
+  discrete stability holds uniformly (FEEC.exists_subcomplexFamily_iff); from
+  `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`, `Feec.HilbertComplex.Subcomplex.exists_cochainProjection`,
+  `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` and the explicit constants of `Feec`.
 * `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 370 lines): the Hodge wave and heat
   equations on every window in which the subcomplexes approximate in the graph norm of the
   window ([AFW2010], §3.3; graph norm in all but the last degree, `W` in the last; no bound of

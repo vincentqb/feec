@@ -230,21 +230,16 @@ theorem mem_boundariesW {j : ι} {b : W j} (hb : b ∈ H.boundaries j) :
 
 /-! ### The gap between `ℌ` and `ℌₕ` -/
 
-/-- **The harmonic gap, discrete to continuous**: for `q ∈ ℌₕ`,
-`‖q - P_ℌ q‖ ≤ ‖P_ℌ q - π P_ℌ q‖`. See [AFW2010], Thm 3.5. -/
-theorem norm_sub_starProjection_harmonic_le {j : ι} (hj : H.ClosedRangeAt j) {q : W j}
-    (hq : q ∈ S.harmonicW j) :
+/-- `‖q - P_ℌ q‖ ≤ ‖P_ℌ q - π P_ℌ q‖` for `q ∈ ℌₕ` with `π (q - P_ℌ q) ∈ 𝔅ₕ` (the core of
+`norm_sub_starProjection_harmonic_le`; [AFW2010], (28)). -/
+theorem norm_sub_starProjection_harmonic_le_of_mem {j : ι} {q : W j} (hq : q ∈ S.harmonicW j)
+    (hB : P.π j (q - (H.harmonic j).starProjection q) ∈ S.boundariesW j) :
     ‖q - (H.harmonic j).starProjection q‖ ≤
       ‖(H.harmonic j).starProjection q - P.π j ((H.harmonic j).starProjection q)‖ := by
   set r := (H.harmonic j).starProjection q
   have hrH : r ∈ H.harmonic j := Submodule.starProjection_apply_mem _ _
-  have hqz : q ∈ H.cycles j := S.cyclesW_le_cycles j (S.harmonicW_le_cyclesW j hq)
-  have hqrB : q - r ∈ H.boundaries j :=
-    H.mem_boundaries_of_mem_cycles hj (sub_mem hqz (H.harmonic_le_cycles j hrH))
-      (Submodule.sub_starProjection_mem_orthogonal q)
   have hBh : q - P.π j r ∈ S.boundariesW j := by
-    have := P.mem_boundariesW hqrB
-    rwa [_root_.map_sub, P.proj j q (S.harmonicW_le_V j hq)] at this
+    rwa [_root_.map_sub, P.proj j q (S.harmonicW_le_V j hq)] at hB
   have hperp : ⟪q - r, q - P.π j r⟫ = 0 := by
     have h1 : ⟪q - P.π j r, q⟫ = 0 := (S.mem_harmonicW_iff.1 hq).2.2 _ hBh
     have h2 : ⟪q - P.π j r, r⟫ = 0 :=
@@ -262,6 +257,17 @@ theorem norm_sub_starProjection_harmonic_le {j : ι} (hj : H.ClosedRangeAt j) {q
   rcases (norm_nonneg (q - r)).eq_or_lt with h | h
   · rw [← h]; exact norm_nonneg _
   · exact le_of_mul_le_mul_left (by nlinarith) h
+
+/-- **The harmonic gap, discrete to continuous**: for `q ∈ ℌₕ`,
+`‖q - P_ℌ q‖ ≤ ‖P_ℌ q - π P_ℌ q‖`. See [AFW2010], Thm 3.5. -/
+theorem norm_sub_starProjection_harmonic_le {j : ι} (hj : H.ClosedRangeAt j) {q : W j}
+    (hq : q ∈ S.harmonicW j) :
+    ‖q - (H.harmonic j).starProjection q‖ ≤
+      ‖(H.harmonic j).starProjection q - P.π j ((H.harmonic j).starProjection q)‖ :=
+  P.norm_sub_starProjection_harmonic_le_of_mem hq (P.mem_boundariesW
+    (H.mem_boundaries_of_mem_cycles hj (sub_mem (S.cyclesW_le_cycles j (S.harmonicW_le_cyclesW j hq))
+      (H.harmonic_le_cycles j (Submodule.starProjection_apply_mem _ _)))
+      (Submodule.sub_starProjection_mem_orthogonal q)))
 
 /-- With a gap bound `‖q - π q‖ ≤ μ ‖q‖` on `ℌ`: `‖q - P_ℌ q‖ ≤ μ ‖q‖` for `q ∈ ℌₕ`. -/
 theorem norm_sub_starProjection_harmonic_le_mul {j : ι} (hj : H.ClosedRangeAt j) {μ : ℝ}
@@ -313,18 +319,23 @@ theorem harmonicGap_le {j : ι} {μ : ℝ} (hμ0 : 0 ≤ μ)
   exact Real.iSup_le (fun (q : {q : H.harmonic j // ‖(q : W j)‖ ≤ 1}) =>
     (hμ _ q.1.2).trans (mul_le_of_le_one_right hμ0 q.2)) hμ0
 
-/-- A graph-bounded projection has finite harmonic gap: `‖q - π q‖ ≤ (1 + C) ‖q‖` on `ℌʲ`. -/
-theorem norm_sub_π_harmonic_le_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
-    (hπ : P.IsGraphBounded j (c.next j) C) {q : W j} (hq : q ∈ H.harmonic j) :
-    ‖q - P.π j q‖ ≤ (1 + C) * ‖q‖ := by
-  have hz := H.harmonic_le_cycles j hq
+/-- On cycles the graph norm is the norm of `W`: `‖π z‖ ≤ C ‖z‖` for `z ∈ 𝔷ʲ`. -/
+theorem norm_π_le_of_mem_cycles_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j (c.next j) C) {z : W j} (hz : z ∈ H.cycles j) :
+    ‖P.π j z‖ ≤ C * ‖z‖ := by
   have h := P.norm_π_domainIncl_le_of_next hC hπ (cyclesToDomainSpace hz)
-  have hn : ‖cyclesToDomainSpace hz‖ = ‖q‖ := by
+  have hn : ‖cyclesToDomainSpace hz‖ = ‖z‖ := by
     have := H.norm_sq_domainSpace j (cyclesToDomainSpace hz)
     rw [domainIncl_cyclesToDomainSpace, d_domainCoord_cyclesToDomainSpace, norm_zero,
       zero_pow two_ne_zero, add_zero] at this
     exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 this
-  rw [domainIncl_cyclesToDomainSpace, hn] at h
+  rwa [domainIncl_cyclesToDomainSpace, hn] at h
+
+/-- A graph-bounded projection has finite harmonic gap: `‖q - π q‖ ≤ (1 + C) ‖q‖` on `ℌʲ`. -/
+theorem norm_sub_π_harmonic_le_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded j (c.next j) C) {q : W j} (hq : q ∈ H.harmonic j) :
+    ‖q - P.π j q‖ ≤ (1 + C) * ‖q‖ := by
+  have h := P.norm_π_le_of_mem_cycles_of_next hC hπ (H.harmonic_le_cycles j hq)
   calc ‖q - P.π j q‖ ≤ ‖q‖ + ‖P.π j q‖ := norm_sub_le _ _
     _ ≤ _ := by linarith
 

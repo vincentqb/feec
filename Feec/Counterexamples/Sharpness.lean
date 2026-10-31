@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.Approximation.Crown
+public import Feec.HilbertComplex.Approximation.CochainProjectionExistence
 public import Feec.Counterexamples.BallEigenDense
 public import Feec.Counterexamples.BoundedBGG
 public import Feec.Counterexamples.BoxStationary
@@ -22,9 +23,10 @@ public import Feec.Counterexamples.PolynomialForms
 the FEEC theorem (`Feec.HilbertComplex.ConformingFamily.feec`,
 `Feec.HilbertComplex.ConformingFamily.Verdict`); `crownSharpness` proves it. Each field is the
 statement of a theorem, by reference (`type_of%`). Only closed range is shown to be *necessary*
-(dropping it breaks a conclusion of the crown); for the reducing and subcomplex hypotheses the
-entries show that they fail for the constraints and spaces of interest, so the crown does not
-give the corresponding conclusions there.
+(dropping it breaks a conclusion of the crown); the bounded-projection hypothesis of the static
+layer is characterized (it is equivalent to discrete stability); for the reducing and subcomplex
+hypotheses the entries show that they fail for the constraints and spaces of interest, so the
+crown does not give the corresponding conclusions there.
 
 * **Closed range** (the hypothesis `hcr` of `Verdict.static`). Closed range of `𝔅ᵏ` is necessary
   for the static verdict at `j → k`: its uniform discrete Poincaré inequality forces it
@@ -52,6 +54,12 @@ give the corresponding conclusions there.
   moving TSD eigenfield (`BallEigenDense.coreSub_le_stationary_ball3_iff`).
 * **Subcomplexes** (a conforming family consists of subcomplexes): the natural pairs
   `P_{r+1}Λ⁰ × P_r⁻Λ¹` are not (`PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus`).
+* **Bounded cochain projections** (the hypothesis of the static layer
+  `SubcomplexFamily.staticFEEC` behind `Verdict.static`: projections bounded in the graph norm
+  uniformly in `h`). It cannot be weakened beyond discrete stability, and discrete stability
+  suffices: for a complex with closed range, uniformly bounded cochain projections exist iff the
+  discrete Poincaré inequality and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly
+  (`HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff`; [AFW2010], Thms 3.6, 3.7, (30)).
 
 ## Thesis corrections
 
@@ -112,7 +120,7 @@ on is documentary, stated below.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §2.4, §2.8, §4.2, §4.6, §4.8, §4.10–4.11, §5.2, §6.2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3
+  §3.3, Thms 3.6, 3.7
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -144,7 +152,8 @@ universe u v w
 /-- **What the counterexamples show about the crown's hypotheses** (`ConformingFamily.Verdict`):
 closed range is necessary for the static verdict; the reducing hypothesis of the residual clauses
 fails for the TSD constraint, so only the departure branch applies to it; the subcomplex
-hypothesis fails for the pairs `P_{r+1}Λ⁰ × P_r⁻Λ¹`. Each field is the statement of the named
+hypothesis fails for the pairs `P_{r+1}Λ⁰ × P_r⁻Λ¹`; bounded cochain projections are equivalent
+to discrete stability. Each field is the statement of the named
 theorem. -/
 structure CrownSharpness : Prop where
   /-- `Verdict.static`, closed range is necessary: no conforming family of the periodic complex
@@ -175,6 +184,11 @@ structure CrownSharpness : Prop where
   core_ball : type_of% @BallEigenDense.coreSub_le_stationary_ball3_iff
   /-- `ConformingFamily.V`, subcomplexes: `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not one -/
   subcomplex : type_of% @PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus.{u, v}
+  /-- `Verdict.static`, bounded projections (the hypothesis `SubcomplexFamily.IsGraphBounded` of
+  `SubcomplexFamily.staticFEEC`): under closed range, a family of subcomplexes on `Vₕ` with
+  uniformly graph-bounded projections exists iff the discrete Poincaré inequality and the
+  harmonic bound hold uniformly (a characterization; [AFW2010], Thms 3.6, 3.7) -/
+  projections : type_of% @HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff.{u, v, u, v}
 
 /-- **What the counterexamples show about the crown's hypotheses** (`CrownSharpness`). -/
 theorem crownSharpness : CrownSharpness.{u, v} :=
@@ -183,7 +197,8 @@ theorem crownSharpness : CrownSharpness.{u, v} :=
     BoundedSymTSD.tsd_not_propagates, EveryBallSymTSD.tsd_not_propagates,
     BoundedBGG.bggComplex_verdict, CubeStationary.mem_invariantCore_tsd_iff,
     BoxStationary.mem_invariantCore_tsd_iff_box, BallEigenDense.coreSub_le_stationary_ball3_iff,
-    PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus⟩
+    PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus,
+    HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff⟩
 
 /-! ### Thesis corrections -/
 

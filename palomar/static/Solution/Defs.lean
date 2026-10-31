@@ -237,6 +237,17 @@ def PoincareBy (i : ℤ) (c : ℝ) : Prop :=
   ∀ v : (H.d i (i + 1)).domain, (v : W i) ∈ (H.cycles i)ᗮ →
     H.graphNorm i (i + 1) v ≤ c * ‖H.d i (i + 1) v‖
 
+/-- The **discrete Poincaré inequality** `‖v‖_V ≤ c ‖d v‖` on `Vⁱ ⊥ 𝔷ₕⁱ` with constant `c`. -/
+def Subcomplex.PoincareBy (S : H.Subcomplex) (i : ℤ) (c : ℝ) : Prop :=
+  ∀ (v : W i) (hv : v ∈ S.V i), (∀ z ∈ S.cycles i, ⟪z, v⟫_𝕜 = 0) →
+    H.graphNorm i (i + 1) ⟨v, S.le_domain i (i + 1) hv⟩ ≤
+      c * ‖H.d i (i + 1) ⟨v, S.le_domain i (i + 1) hv⟩‖
+
+/-- The **harmonic bound** `‖q‖ ≤ c ‖P_ℌ q‖` on the discrete harmonic forms `ℌₕⁱ` with constant
+`c` (on cycles the graph norm is the norm of `W`). -/
+def Subcomplex.HarmonicBoundBy (S : H.Subcomplex) (i : ℤ) (c : ℝ) : Prop :=
+  ∀ q ∈ S.harmonic i, ‖q‖ ≤ c * ‖(H.harmonic i).starProjection q‖
+
 /-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
 `Vₕⁱ` in the graph norm tends to `0`. -/
 def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=

@@ -12,7 +12,7 @@ polynomial forms, `ω_m` written in the local coordinates `y ∈ [0, 1]^d` of th
 (in the coordinates of `m`; `y_j = 1` if `m'_j = m_j + 1`, `y_j = 0` if `m'_j = m_j - 1`), and
 **tangential continuity** is the equality of the traces of `ω_m` and `ω_{m'}` on it
 (`cubeCompatible`). The global space is `Q_b⁻Λᵏ(𝒯_h) = cubeGlobalSpace N b k`: the tangentially
-continuous piecewise forms of `Q_b⁻Λᵏ` ([ArnoldBoffiBonizzoni2015], §3; [ArnoldAwanou2014], §2;
+continuous piecewise forms of `Q_b⁻Λᵏ` ([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2;
 the assembly is that of [AFW2006], §5).
 
 The local degrees of freedom (`Feec.FiniteElement.Cube.cubeDof`) are numbered globally by tensor
@@ -50,7 +50,7 @@ indexed by `∀ j, Fin (N j)` over any finite linearly ordered set of directions
 ## References
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3 (the spaces `Q_r⁻Λᵏ(𝒯_h)` and their degrees of freedom)
+  §5 (the spaces `Q_r⁻Λᵏ(𝒯_h)` and their degrees of freedom)
 * [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
   §2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
@@ -614,7 +614,7 @@ theorem cubeGlobalInterp_of_mem (ω : cubeCompatible N) (hω : ω.1 ∈ cubeGlob
   funext fun m => by
     rw [cubeGlobalInterp_apply, cubeInterp_of_mem _ ((mem_cubeGlobalSpace.1 hω).2 m)]
 
-/-- **The global interpolant commutes with `d`**: `Π_h d = d Π_h`. [ArnoldBoffiBonizzoni2015], §3 -/
+/-- **The global interpolant commutes with `d`**: `Π_h d = d Π_h`. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem cubeGlobalInterp_extDeriv (ω : cubeCompatible N) :
     (cubeGlobalInterp (k := k + 1) hN hb ⟨_, extDeriv_mem_cubeCompatible ω.2⟩ :
         CubeCell N → PolyForm ℝ d) =

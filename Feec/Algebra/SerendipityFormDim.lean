@@ -32,8 +32,6 @@ of `κ`, `dim S_rΛᵏ = dim P_rΛᵏ + dim κ H_{r-1}Λ^{k+1} + dim κ H_rΛᵏ
   `κ (dx_j ∧ ω / x_j)` (Cartan's identity twice);
 * `mem_map_koszul_highForm`: **`ker κ ∩ H_rΛᵏ = κ H_{r-1}Λ^{k+1}`** (`r ≥ 1`), over any commutative
   ring ([ArnoldAwanou2014], Thm 2.3): splitting along the weights, the superlinear variables first;
-* `koszul_eq_zero_of_extDeriv_koszul_eq_zero`: `d` is injective on the range of `κ`
-  (characteristic zero);
 * `finrank_serendipityForm`: **`dim S_rΛᵏ = dim M_rΛᵏ`** (`r ≥ 1`) ([ArnoldAwanou2014], Thm 3.6).
 
 ## Implementation notes
@@ -297,12 +295,6 @@ def highForm (r k : ℕ) : Submodule R (PolyForm R d) := supportForm R d k (high
 
 theorem highForm_le_superlinForm (r k : ℕ) : highForm R d r k ≤ superlinForm R d r k :=
   supportForm_mono (S := highSupport r) (T := superlinSupport r) (fun _ _ hα => hα.1) k
-
-omit [LinearOrder d] [Fintype d] in
-theorem degree_sub_single_add_one {α : d →₀ ℕ} {j : d} (hj : 1 ≤ α j) :
-    (α - Finsupp.single j 1).degree + 1 = α.degree := by
-  conv_rhs => rw [← tsub_add_cancel_of_le (Finsupp.single_le_iff.2 hj)]
-  rw [map_add, Finsupp.degree_single]
 
 /-- `κ H_{r-1}Λ^{k+1} ⊆ H_rΛᵏ` (`r ≥ 1`). -/
 theorem koszul_mem_highForm {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d}
@@ -578,68 +570,11 @@ theorem sup_le_supportForm_degree {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
       exact extDeriv_mem_supportForm_degree (koszul_mem_supportForm_degree
         (supportForm_mono (S := highSupport r) (fun _ _ hα => hα.2) _ hb))
 
-/-! ### Homogeneous components of `κ` -/
-
-theorem homComp_koszul (j : ℕ) (ω : PolyForm R d) :
-    homComp (j + 1) (koszul ω) = koszul (homComp j ω) := by
-  funext s
-  simp only [homComp_apply, koszul_apply, map_sum]
-  refine sum_congr rfl fun i _ => ?_
-  rw [show (sgn i s : MvPolynomial d R) = C (sgn i s) by simp [sgn], mul_assoc, mul_assoc,
-    homogeneousComponent_C_mul]
-  congr 1
-  ext α
-  rw [coeff_homogeneousComponent, coeff_X_mul', coeff_X_mul', coeff_homogeneousComponent]
-  by_cases hi : i ∈ α.support
-  · rw [ite_eq_left hi, ite_eq_left hi]
-    have := degree_sub_single_add_one (Nat.one_le_iff_ne_zero.2 (Finsupp.mem_support_iff.1 hi))
-    by_cases hd : α.degree = j + 1
-    · rw [ite_eq_left hd, ite_eq_left (by omega)]
-    · rw [ite_eq_right hd, ite_eq_right (by omega)]
-  · rw [ite_eq_right hi]; split_ifs <;> rfl
-
-theorem homComp_zero_koszul (ω : PolyForm R d) : homComp 0 (koszul ω) = 0 := by
-  funext s
-  ext α
-  rw [homComp_apply, coeff_homogeneousComponent, Pi.zero_apply]
-  split_ifs with hα
-  · obtain rfl : α = 0 := (Finsupp.degree_eq_zero_iff α).1 hα
-    rw [koszul_apply, coeff_sum]
-    refine sum_eq_zero fun j _ => ?_
-    rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], mul_assoc, coeff_C_mul,
-      coeff_X_mul']
-    simp
-  · rfl
-
 /-! ### Dimension (characteristic zero) -/
 
 section Dim
 
 variable {K : Type*} [Field K] [CharZero K]
-
-/-- **`d` is injective on the range of `κ`**: a closed form `κ ω` vanishes (on each homogeneous
-component, the homotopy formula is multiplication by `deg + #s > 0`). -/
-theorem koszul_eq_zero_of_extDeriv_koszul_eq_zero {ω : PolyForm K d}
-    (h : extDeriv (koszul ω) = 0) : koszul ω = 0 := by
-  have hc : ∀ j, homComp j (koszul ω) = 0 := by
-    rintro (_ | j)
-    · exact homComp_zero_koszul ω
-    · funext s
-      have hκ : koszul (homComp (j + 1) (koszul ω)) = 0 := by rw [homComp_koszul, koszul_koszul]
-      have hd : extDeriv (homComp (j + 1) (koszul ω)) = 0 := by
-        rw [← homComp_extDeriv, h]; funext t; simp [homComp_apply]
-      have H := extDeriv_koszul_add_koszul_extDeriv (homComp (j + 1) (koszul ω)) s
-      simp only [homComp_apply] at H ⊢
-      rw [hκ, hd, extDeriv_zero, koszul_zero, Pi.zero_apply, add_zero,
-        (homogeneousComponent_isHomogeneous (j + 1) (koszul ω s)).sum_X_mul_pderiv,
-        nsmul_eq_mul, ← add_mul] at H
-      refine (mul_eq_zero.1 H.symm).resolve_left ?_
-      rw [show ((#s : MvPolynomial d K) + ((j + 1 : ℕ) : MvPolynomial d K)) =
-        C ((#s + (j + 1) : ℕ) : K) by simp]
-      exact (C_eq_zero.not).2 (Nat.cast_ne_zero.2 (by omega))
-  funext s
-  rw [← sum_homogeneousComponent (koszul ω s), Pi.zero_apply]
-  exact sum_eq_zero fun j _ => congrFun (hc j) s
 
 instance (r k : ℕ) : FiniteDimensional K (highForm K d r k) :=
   Submodule.finiteDimensional_of_le (highForm_le_superlinForm r k)

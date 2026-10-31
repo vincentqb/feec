@@ -28,7 +28,7 @@ hypothesis:
 ## References
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3 (the spaces `Q_r⁻Λᵏ(𝒯_h)`), §4 (approximation)
+  §5 (the spaces `Q_r⁻Λᵏ(𝒯_h)`), §4 (approximation)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3 (conforming families: bounded cochain projections, approximation), §5.5 (smoothed
   projections)

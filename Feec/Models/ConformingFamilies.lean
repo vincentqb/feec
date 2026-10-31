@@ -61,7 +61,7 @@ hypothesis on every mesh family of a parallelepiped
   §3–§5 (the periodic table of the spaces `P_rΛ`, `P_r⁻Λ`)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3 (the spaces `Q_r⁻Λᵏ`)
+  §5 (the spaces `Q_r⁻Λᵏ`)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/

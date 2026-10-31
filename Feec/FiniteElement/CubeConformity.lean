@@ -17,7 +17,7 @@ is the field `cellField L ω m = F_m^{-*} ω_m` on the cell `m`, `F_m(y) = h (m 
 `h = L / N`. We show that
 tangential continuity (`cubeCompatible`: equal traces on common faces) gives
 `HΛᵏ((0, L)ⁿ)`-conformity, with the weak exterior derivative the piecewise one
-([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §3).
+([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §5).
 
 The proof reuses the simplicial conformity theorem `extDeriv_pieceL2_mem_maximal_domain` on the
 Freudenthal refinement of the cubical mesh (`cubeRefinement`, whose simplices `h (m + K_σ)`
@@ -52,7 +52,7 @@ those of the (equal) polynomial traces of `ω_m` and `ω_{m'}` (`tangentialTrace
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §5 (piecewise smooth forms with single-valued traces lie in `HΛᵏ`)
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3
+  §5
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -324,7 +324,7 @@ theorem cubeRefinement_domain :
 theorem isOpen_cubeRefinement_domain : IsOpen (cubeRefinement n L N).domain := by
   rw [cubeRefinement_domain]; exact isOpen_set_pi Set.finite_univ fun _ _ => isOpen_Ioo
 
-/-- **`HΛᵏ`-conformity of the cubical spaces** ([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §3): a
+/-- **`HΛᵏ`-conformity of the cubical spaces** ([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §5): a
 tangentially continuous piecewise polynomial `k`-form on the cubical mesh of `(0, L)ⁿ` with `N`
 cells per direction lies in `HΛᵏ((0, L)ⁿ) = D(d_max)`, and `d_max` is the piecewise exterior
 derivative. The piecewise field is glued on the Freudenthal refinement, each simplex carrying the

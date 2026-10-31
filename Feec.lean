@@ -1,6 +1,7 @@
 module
 
 public import Feec.Algebra.CubicalForm
+public import Feec.Algebra.ExteriorAlgebraForm
 public import Feec.Algebra.ExteriorFibre
 public import Feec.Algebra.Koszul
 public import Feec.Algebra.LeviCivita

@@ -63,7 +63,7 @@ with `d` (`cubeGlue_cubeFieldGlobalInterp_extDeriv`).
 ## References
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §4 (approximation by `Q_r⁻Λᵏ` on affine cubical meshes), §3 (commuting degrees of freedom)
+  §4 (approximation by `Q_r⁻Λᵏ` on affine cubical meshes), §5 (commuting degrees of freedom)
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
   (interpolation error for affine-equivalent families)
 
@@ -1143,7 +1143,7 @@ theorem cubeT_cubeFieldInterp (hb : ∀ j, 1 ≤ b j) {t : Finset (Fin n)} {β :
   exact congrArg _ (fieldDof_cubeFieldInterp hb ⟨⟨t, ht⟩, ⟨β, hβ⟩⟩ w)
 
 /-- **The canonical interpolant commutes with `d`** on fields of class `C¹` near `[0, 1]ⁿ`:
-`Π(d w) = d(Π w)` ([ArnoldBoffiBonizzoni2015], §3). -/
+`Π(d w) = d(Π w)` ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem cubeFieldInterp_extDeriv (hb : ∀ j, 1 ≤ b j) {w : FormField n} {U : Set (Fin n → ℝ)}
     (hU : IsOpen U) (hKU : closedCube n ⊆ U) (hw : ContDiffOn ℝ 1 w U) :
     cubeFieldInterp (k + 1) hb (extDeriv w) = extDeriv (cubeFieldInterp k hb w) := by

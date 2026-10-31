@@ -70,11 +70,6 @@ variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d]
 @[simp] theorem wedge_zero_left (ω : Finset d → R) : wedge (0 : d → R) ω = 0 := by
   funext s; simp [wedge_apply]
 
-theorem wedge_smul_left (c : R) (ξ : d → R) (ω : Finset d → R) :
-    wedge (c • ξ) ω = c • wedge ξ ω := by
-  funext s; simp only [wedge_apply, Pi.smul_apply, smul_eq_mul, mul_sum]
-  exact sum_congr rfl fun _ _ => by ring
-
 theorem wedge_sum {β : Type*} (ξ : d → R) (u : Finset β) (f : β → Finset d → R) :
     wedge ξ (∑ b ∈ u, f b) = ∑ b ∈ u, wedge ξ (f b) := by
   funext s; simp only [wedge_apply, Finset.sum_apply, mul_sum]
@@ -87,25 +82,6 @@ theorem wedge_sum_left {β : Type*} (u : Finset β) (ξ : β → d → R) (ω : 
 
 theorem wedge_neg_left (ξ : d → R) (ω : Finset d → R) : wedge (-ξ) ω = -wedge ξ ω := by
   rw [show -ξ = (-1 : R) • ξ by simp, wedge_smul_left]; simp
-
-/-- `dx_j ∧ dx_s = ε(j, s) dx_{s ∪ j}` for `j ∉ s`. -/
-theorem wedge_single_single {j : d} {s : Finset d} (hj : j ∉ s) :
-    wedge (Pi.single j (1 : R)) (Pi.single s (1 : R)) =
-      (sgn j s : R) • (Pi.single (insert j s) 1 : Finset d → R) := by
-  funext t
-  rw [wedge_apply, Pi.smul_apply, smul_eq_mul]
-  by_cases hjt : j ∈ t
-  · rw [sum_eq_single j (fun l _ hlj => by simp [hlj]) (fun h => absurd hjt h)]
-    simp only [Pi.single_eq_same, mul_one]
-    by_cases hts : t = insert j s
-    · subst hts; simp [erase_insert hj, sgn_insert_self]
-    · have : t.erase j ≠ s := fun h => hts (by rw [← h, insert_erase hjt])
-      simp [this, hts]
-  · have hts : t ≠ insert j s := fun h => hjt (h ▸ mem_insert_self j s)
-    rw [sum_eq_zero fun l hl => by
-      have : l ≠ j := fun h => hjt (h ▸ hl)
-      simp [this]]
-    simp [hts]
 
 /-! ### Iterated exterior products of covectors -/
 

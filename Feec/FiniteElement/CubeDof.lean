@@ -16,7 +16,7 @@ public import Mathlib.MeasureTheory.Function.LocallyIntegrable
 # Degrees of freedom of `Q_r⁻Λᵏ`: unisolvence, traces and the commuting interpolant
 
 The degrees of freedom of the tensor-product family `Q_r⁻Λᵏ` on the cube `[0, 1]ⁿ`
-([ArnoldBoffiBonizzoni2015], §3; [ArnoldAwanou2014], §2) are the moments
+([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2) are the moments
 
   `ω ↦ ∫_g tr_g ω ∧ η`, `η ∈ Q_{r-1}⁻Λ^{m-k}(g)`,
 
@@ -56,7 +56,7 @@ determination for free.
   `dofTest_mem_cubeFormMinus`: the test forms lie in `Q_{b-1}⁻Λ^{m-k}` of their face;
 * `card_cubeDofIdx`, `isUnisolvent_cubeDof`: **unisolvence of the degrees of freedom of
   `Q_b⁻Λᵏ(f)`**, for all `n`, `k` and degrees `b`, on the cube and on each of its faces
-  ([ArnoldBoffiBonizzoni2015], §3);
+  ([ArnoldBoffiBonizzoni2015], §5);
 * `cubeTrace_eq_zero_of_cubeDof_eq_zero`: **the degrees of freedom of the faces of `f` determine
   the trace on `f`**;
 * `cubeDof_extDeriv_mem_span`: **Stokes compatibility**, `ℓ ∘ d` is a combination of
@@ -66,7 +66,7 @@ determination for free.
 ## References
 
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3 (degrees of freedom, unisolvence and the commuting projection of `Q_r⁻Λᵏ`)
+  §5 (degrees of freedom, unisolvence and the commuting projection of `Q_r⁻Λᵏ`)
 * [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
   §2 (the tensor-product construction)
 
@@ -374,7 +374,7 @@ def momentDof (f : d → Option ℝ) (s : Finset d) (α : d →₀ ℕ) : PolyFo
 /-- The indices `(s, α)` of the monomial basis `x^α dx_s` of `Q_b⁻Λᵏ`. -/
 abbrev CubeDofIdx (b : d → ℕ) (k : ℕ) := Σ s : {s : Finset d // #s = k}, cubeSupport b s.1
 
-/-- **The degrees of freedom of `Q_b⁻Λᵏ(f)`** ([ArnoldBoffiBonizzoni2015], §3), indexed like
+/-- **The degrees of freedom of `Q_b⁻Λᵏ(f)`** ([ArnoldBoffiBonizzoni2015], §5), indexed like
 the monomial basis: the moments `ω ↦ ∫_g tr_g ω ∧ x^β dx_{G ∖ s}` on the faces
 `g = dofFace f s α ⊆ f`. On each face `g` of dimension `m ≥ k` the test forms are monomials of
 `Q_{b-1}⁻Λ^{m-k}(g)` (`dofTest_mem_cubeFormMinus`). -/
@@ -549,7 +549,7 @@ theorem eq_zero_of_tensorDof_eq_zero (hfb : IsFaceDeg f b) {p : MvPolynomial d �
   simp only [Equiv.symm_apply_apply, Pi.zero_apply] at this
   rw [this, monomial_zero]
 
-/-- **The degrees of freedom of `Q_b⁻Λᵏ(f)` vanish only on `0`**. [ArnoldBoffiBonizzoni2015], §3 -/
+/-- **The degrees of freedom of `Q_b⁻Λᵏ(f)` vanish only on `0`**. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem eq_zero_of_cubeDof_eq_zero (hfb : IsFaceDeg f b) {ω : PolyForm ℝ d}
     (hω : ω ∈ cubeFormMinus ℝ b k) (h : ∀ i : CubeDofIdx b k, cubeDof f i ω = 0) : ω = 0 := by
   funext s
@@ -572,7 +572,7 @@ theorem card_cubeDofIdx (b : d → ℕ) (k : ℕ) :
 /-- **Unisolvence of the degrees of freedom of `Q_b⁻Λᵏ(f)`**, for every face `f` of the cube and
 every degree `b` on `f` (`b_j ≥ 1` free, `b_j = 0` fixed), in any dimension and form degree: in
 particular `Q_r⁻Λᵏ` (`r ≥ 1`) on the cube (`isFaceDeg_none`) and on each of its faces
-(`isFaceDeg_faceDeg`). [ArnoldBoffiBonizzoni2015], §3 -/
+(`isFaceDeg_faceDeg`). [ArnoldBoffiBonizzoni2015], §5 -/
 theorem isUnisolvent_cubeDof (hfb : IsFaceDeg f b) (k : ℕ) :
     IsUnisolvent fun i : CubeDofIdx b k => cubeDof f i ∘ₗ (cubeFormMinus ℝ b k).subtype := by
   rw [isUnisolvent_iff_forall_eq_zero _ (card_cubeDofIdx b k).symm]
@@ -588,7 +588,7 @@ theorem momentDof_cubeTrace (f : d → Option ℝ) (s : Finset d) (α : d →₀
   cases f j <;> rfl
 
 /-- **Trace determination**: the degrees of freedom of the faces of `f` determine the trace of
-`ω ∈ Q_b⁻Λᵏ` on `f` (`b ≥ 1`). [ArnoldBoffiBonizzoni2015], §3 -/
+`ω ∈ Q_b⁻Λᵏ` on `f` (`b ≥ 1`). [ArnoldBoffiBonizzoni2015], §5 -/
 theorem cubeTrace_eq_zero_of_cubeDof_eq_zero (hb : ∀ j, 1 ≤ b j) {ω : PolyForm ℝ d}
     (hω : ω ∈ cubeFormMinus ℝ b k) (h : ∀ i : CubeDofIdx (faceDeg b f) k, cubeDof f i ω = 0) :
     cubeTrace f ω = 0 :=
@@ -716,7 +716,7 @@ theorem cubeInterp_of_mem (hfb : IsFaceDeg f b) {ω : PolyForm ℝ d}
     (cubeFormMinus ℝ b k).subtype (fun _ => rfl) ⟨ω, hω⟩)
 
 /-- **The commuting property** `Π d = d Π` of the canonical interpolants of `Q_b⁻Λ(f)`.
-[ArnoldBoffiBonizzoni2015], §3 -/
+[ArnoldBoffiBonizzoni2015], §5 -/
 theorem cubeInterp_extDeriv (hfb : IsFaceDeg f b) (ω : PolyForm ℝ d) :
     (cubeInterp f b (k + 1) hfb (extDeriv ω) : PolyForm ℝ d) =
       extDeriv (cubeInterp f b k hfb ω : PolyForm ℝ d) :=

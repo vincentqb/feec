@@ -18,7 +18,7 @@ hypotheses (`Data.quasiIso_of_Γι_comp`), and so is `r` composed with `Data.sum
 cohomology representatives (`HomologicalComplex.Represents.map`).
 
 For the BGG complex `bgg J` of [ArnoldHu2021], with `Sⁱ` injective for `i ≤ J` and right
-inverses `tⁱ⁺¹` of `Sⁱ` for `i ≥ J` (`Data.IsRightInverse`: the condition (23) with a choice of
+inverses `tⁱ⁺¹` of `Sⁱ` for `i ≥ J` (`Data.InjSurjWith`: the condition (23) with a choice of
 the inverses of (29), e.g. the Moore–Penrose inverses), the explicit **cochain retraction**
 `Π : T → Γ` of the inclusion (`Data.bggProj`, the cochain projection (67) of [ArnoldHu2021], §5.2,
 read in the subquotient model) is
@@ -39,7 +39,9 @@ cohomology** (`Data.quasiIso_bggSumMap`, Theorem 7), so it carries cohomology re
 ## Main definitions
 
 * `Feec.BGG.Data.sumData`, `Data.sumComplex`, `Data.IsNullHomotopy`, `Data.sumIso`.
-* `Data.IsRightInverse`, `Data.kerProj`, `Data.bggLift`, `Data.bggProj`, `Data.bggSumMap`.
+* `Data.InjSurjWith`, `Data.kerProj`, `Data.bggProjMap`, `Data.bggProj`, `Data.bggSumMap`.
+* `Data.altShift`: `R` with `dⁱ = id` for even `i`, `0` for odd `i`, its shift `d̃ⁱ = -dⁱ⁺¹`, and
+  `Sⁱ = id`.
 
 ## Main results
 
@@ -48,7 +50,9 @@ cohomology** (`Data.quasiIso_bggSumMap`, Theorem 7), so it carries cohomology re
 * `Data.Γι_bggProj`: `Π` is a retraction of `Γ → T`; `Data.quasiIso_bggProj`.
 * `Data.quasiIso_bggSumMap` ([ArnoldHu2021], Theorem 7) and its formulas (30).
 * `Data.represents_sumComplex`, `Data.bgg_represents` ([ArnoldHu2021], Corollary 1, (31)).
-* `Data.idShift_isRightInverse`: non-vacuity.
+* `Data.idShift_injSurjWith`: non-vacuity of `InjSurjWith`; `Data.altShift_quasiIso_bggSumMap`,
+  `Data.altShift_bgg_represents`: non-vacuity of Theorem 7 and Corollary 1, with nonzero `d`, `d̃`
+  and `S` (`Data.altShift`).
 
 ## References
 
@@ -201,18 +205,19 @@ variable {V Vt : ℤ → Type v} [∀ i, AddCommGroup (V i)] [∀ i, Module R (V
   (J : ℤ) (t : ∀ i j, V j →ₗ[R] Vt i)
 
 /-- **`Sⁱ` is injective for `i ≤ J` and `tⁱ⁺¹` is a right inverse of `Sⁱ` for `i ≥ J`**: the
-condition (23) of [ArnoldHu2021] with a choice of right inverses, e.g. the Moore–Penrose
-inverses of (29). -/
-structure IsRightInverse : Prop where
+injectivity/surjectivity condition (23) of [ArnoldHu2021] (`InjSurj`, `InjSurjWith.injSurj`) with a
+choice of right inverses, e.g. the Moore–Penrose inverses of (29). -/
+structure InjSurjWith : Prop where
   injective : ∀ i ≤ J, Function.Injective (D.S i (i + 1))
   S_t : ∀ i j, i + 1 = j → J ≤ i → ∀ v, D.S i j (t i j v) = v
 
-/-- `P = 1 - tⁱ⁺¹ Sⁱ`: the projection of `Ṽⁱ` onto `N(Sⁱ)` along `R(tⁱ⁺¹)`. -/
+/-- `P = 1 - tⁱ⁺¹ Sⁱ`. For `J ≤ i`, under `InjSurjWith` (`Sⁱ tⁱ⁺¹ = 1`), it is the projection of
+`Ṽⁱ` onto `N(Sⁱ)` along `R(tⁱ⁺¹)` (`InjSurjWith.S_kerProj`, `kerProj_of_S`). -/
 def kerProj (i : ℤ) : Vt i →ₗ[R] Vt i := LinearMap.id - t i (i + 1) ∘ₗ D.S i (i + 1)
 
-/-- **The cochain retraction of `Γ → T`** in degree `i`: `(ω, μ)` before `J`, `(ω, tᴶ⁺¹ dω)` at `J`,
+/-- **The underlying map of the cochain retraction `Π : T → Γ`** (`bggProj`) in degree `i`: `(ω, μ)` before `J`, `(ω, tᴶ⁺¹ dω)` at `J`,
 `(0, P(μ + d̃ tⁱ ω))` after `J` ([ArnoldHu2021], (67)). -/
-def bggLift (i : ℤ) : V i × Vt i →ₗ[R] V i × Vt i :=
+def bggProjMap (i : ℤ) : V i × Vt i →ₗ[R] V i × Vt i :=
   if i < J then LinearMap.id
   else if i = J then
     (LinearMap.fst R _ _).prod (t i (i + 1) ∘ₗ D.d i (i + 1) ∘ₗ LinearMap.fst R _ _)
@@ -221,16 +226,16 @@ def bggLift (i : ℤ) : V i × Vt i →ₗ[R] V i × Vt i :=
 
 variable {D J t}
 
-theorem bggLift_of_lt {i : ℤ} (hi : i < J) (x : V i × Vt i) : D.bggLift J t i x = x := by
-  simp [bggLift, hi]
+theorem bggProjMap_of_lt {i : ℤ} (hi : i < J) (x : V i × Vt i) : D.bggProjMap J t i x = x := by
+  simp [bggProjMap, hi]
 
-theorem bggLift_of_eq {i : ℤ} (hi : i = J) (x : V i × Vt i) :
-    D.bggLift J t i x = (x.1, t i (i + 1) (D.d i (i + 1) x.1)) := by
-  simp [bggLift, hi]
+theorem bggProjMap_of_eq {i : ℤ} (hi : i = J) (x : V i × Vt i) :
+    D.bggProjMap J t i x = (x.1, t i (i + 1) (D.d i (i + 1) x.1)) := by
+  simp [bggProjMap, hi]
 
-theorem bggLift_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
-    D.bggLift J t i x = (0, D.kerProj t i (x.2 + D.dt (i - 1) i (t (i - 1) i x.1))) := by
-  simp [bggLift, not_lt.2 hi.le, hi.ne']
+theorem bggProjMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
+    D.bggProjMap J t i x = (0, D.kerProj t i (x.2 + D.dt (i - 1) i (t (i - 1) i x.1))) := by
+  simp [bggProjMap, not_lt.2 hi.le, hi.ne']
 
 theorem kerProj_apply (i : ℤ) (φ : Vt i) :
     D.kerProj t i φ = φ - t i (i + 1) (D.S i (i + 1) φ) := rfl
@@ -243,41 +248,41 @@ theorem dt_t_prev {a k : ℤ} (h : a + 1 = k) (v : V k) :
 theorem kerProj_of_S {i : ℤ} {φ : Vt i} (hφ : D.S i (i + 1) φ = 0) : D.kerProj t i φ = φ := by
   rw [kerProj_apply, hφ, map_zero, sub_zero]
 
-variable (h : D.IsRightInverse J t)
+variable (h : D.InjSurjWith J t)
 include h
 
-theorem IsRightInverse.S_t' {i : ℤ} (hi : J ≤ i) (v : V (i + 1)) :
+theorem InjSurjWith.S_t' {i : ℤ} (hi : J ≤ i) (v : V (i + 1)) :
     D.S i (i + 1) (t i (i + 1) v) = v :=
   h.S_t i _ rfl hi v
 
-theorem IsRightInverse.t_S (φ : Vt J) : t J (J + 1) (D.S J (J + 1) φ) = φ :=
+theorem InjSurjWith.t_S (φ : Vt J) : t J (J + 1) (D.S J (J + 1) φ) = φ :=
   h.injective J le_rfl (h.S_t' le_rfl _)
 
-theorem IsRightInverse.S_kerProj {i : ℤ} (hi : J ≤ i) (φ : Vt i) :
+theorem InjSurjWith.S_kerProj {i : ℤ} (hi : J ≤ i) (φ : Vt i) :
     D.S i (i + 1) (D.kerProj t i φ) = 0 := by
   rw [kerProj_apply, map_sub, h.S_t' hi, sub_self]
 
 /-- The retraction lands in `Γ`. -/
-theorem bggLift_mem_Γ (i : ℤ) (x : V i × Vt i) : D.bggLift J t i x ∈ D.Γ (J < ·) i := by
+theorem bggProjMap_mem_Γ (i : ℤ) (x : V i × Vt i) : D.bggProjMap J t i x ∈ D.Γ (J < ·) i := by
   rcases lt_trichotomy i J with hi | rfl | hi
   · rw [D.bgg_Γ_of_lt hi]; trivial
-  · rw [bggLift_of_eq rfl, D.mem_bgg_Γ_self, h.S_t' le_rfl]
-  · rw [bggLift_of_gt hi, D.mem_bgg_Γ_of_gt hi]
+  · rw [bggProjMap_of_eq rfl, D.mem_bgg_Γ_self, h.S_t' le_rfl]
+  · rw [bggProjMap_of_gt hi, D.mem_bgg_Γ_of_gt hi]
     exact ⟨rfl, h.S_kerProj hi.le _⟩
 
 /-- **The retraction is a cochain map**, `T Π = Π T`. -/
-theorem twist_bggLift (i : ℤ) (x : V i × Vt i) :
-    D.twist i (i + 1) (D.bggLift J t i x) = D.bggLift J t (i + 1) (D.twist i (i + 1) x) := by
+theorem twist_bggProjMap (i : ℤ) (x : V i × Vt i) :
+    D.twist i (i + 1) (D.bggProjMap J t i x) = D.bggProjMap J t (i + 1) (D.twist i (i + 1) x) := by
   obtain ⟨ω, μ⟩ := x
   rcases lt_trichotomy (i + 1) J with hi | hi | hi
-  · rw [bggLift_of_lt (by omega), bggLift_of_lt hi]
-  · rw [bggLift_of_lt (by omega), bggLift_of_eq hi]
+  · rw [bggProjMap_of_lt (by omega), bggProjMap_of_lt hi]
+  · rw [bggProjMap_of_lt (by omega), bggProjMap_of_eq hi]
     obtain rfl := hi
     refine Prod.ext rfl ?_
     simp only [twist_apply, map_sub, D.d_comp_d, D.anticomm, zero_sub, neg_neg]
     exact (h.t_S _).symm
   · rcases (by omega : i = J ∨ J < i) with rfl | hi'
-    · rw [bggLift_of_eq rfl, bggLift_of_gt hi, dt_t_prev rfl]
+    · rw [bggProjMap_of_eq rfl, bggProjMap_of_gt hi, dt_t_prev rfl]
       have hd := h.S_t' le_rfl (D.d i (i + 1) ω)
       have hk : D.S (i + 1) (i + 1 + 1) (D.dt i (i + 1) (t i (i + 1) (D.d i (i + 1) ω))) = 0 := by
         rw [← neg_eq_zero, ← D.anticomm, hd, D.d_comp_d]
@@ -285,7 +290,7 @@ theorem twist_bggLift (i : ℤ) (x : V i × Vt i) :
       change D.dt i (i + 1) (t i (i + 1) (D.d i (i + 1) ω)) = D.kerProj t (i + 1)
         (D.dt i (i + 1) μ + D.dt i (i + 1) (t i (i + 1) (D.d i (i + 1) ω - D.S i (i + 1) μ)))
       rw [map_sub, h.t_S, map_sub, add_sub_cancel, kerProj_of_S hk]
-    · rw [bggLift_of_gt hi', bggLift_of_gt hi, dt_t_prev rfl]
+    · rw [bggProjMap_of_gt hi', bggProjMap_of_gt hi, dt_t_prev rfl]
       have hd : D.S i (i + 1) (D.dt (i - 1) i (t (i - 1) i ω)) = -D.d i (i + 1) ω := by
         rw [← neg_neg (D.S i (i + 1) _), ← D.anticomm, h.S_t (i - 1) i (by omega) (by omega)]
       set y := μ + D.dt (i - 1) i (t (i - 1) i ω)
@@ -301,51 +306,48 @@ theorem twist_bggLift (i : ℤ) (x : V i × Vt i) :
       rw [← key, kerProj_of_S hk]
 
 /-- The retraction is the identity on `Γ`. -/
-theorem bggLift_of_mem {i : ℤ} {x : V i × Vt i} (hx : x ∈ D.Γ (J < ·) i) :
-    D.bggLift J t i x = x := by
+theorem bggProjMap_of_mem {i : ℤ} {x : V i × Vt i} (hx : x ∈ D.Γ (J < ·) i) :
+    D.bggProjMap J t i x = x := by
   obtain ⟨σ, φ⟩ := x
   rcases lt_trichotomy i J with hi | rfl | hi
-  · exact bggLift_of_lt hi _
-  · rw [bggLift_of_eq rfl, (D.mem_bgg_Γ_self).1 hx, h.t_S]
+  · exact bggProjMap_of_lt hi _
+  · rw [bggProjMap_of_eq rfl, (D.mem_bgg_Γ_self).1 hx, h.t_S]
   · obtain ⟨h1, h2⟩ := (D.mem_bgg_Γ_of_gt hi).1 hx
     simp only at h1 h2
-    rw [bggLift_of_gt hi, h1, map_zero, map_zero, add_zero, kerProj_of_S h2]
+    rw [bggProjMap_of_gt hi, h1, map_zero, map_zero, add_zero, kerProj_of_S h2]
 
 variable (D t) in
 /-- **The cochain retraction `Π : T → Γ` of the inclusion** ([ArnoldHu2021], (67) and Lemma 9, in
 the subquotient model). -/
 def bggProj : D.twistComplex ⟶ D.ΓComplex (J < ·) where
   f i := ModuleCat.ofHom (X := D.twistComplex.X i) (Y := (D.ΓComplex (J < ·)).X i)
-    ((D.bggLift J t i).codRestrict (D.Γ (J < ·) i) (D.bggLift_mem_Γ h i))
+    ((D.bggProjMap J t i).codRestrict (D.Γ (J < ·) i) (D.bggProjMap_mem_Γ h i))
   comm' i j hij := by
     obtain rfl : i + 1 = j := hij
-    exact ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (D.twist_bggLift h i x))
+    exact ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (D.twist_bggProjMap h i x))
 
 /-- **`Π` is a retraction of `Γ → T`**. -/
 theorem Γι_bggProj : D.Γι (J < ·) ≫ D.bggProj t h = 𝟙 _ := by
   ext i x : 3
-  exact Subtype.ext (D.bggLift_of_mem h x.2)
+  exact Subtype.ext (D.bggProjMap_of_mem h x.2)
 
-/-- **The retraction `Π` is a quasi-isomorphism** under the injectivity/surjectivity condition. -/
-theorem quasiIso_bggProj (htop : ∀ j, J < j →
-    LinearMap.range (D.d (j - 1) j) ⊔ LinearMap.range (D.S (j - 1) j) = ⊤) :
-    QuasiIso (D.bggProj t h) := by
-  have := quasiIso_Γ (D := D) (E := (J < ·)) fun j hj => by
-    rw [CochainComplex.prev]; exact htop j hj
-  have : QuasiIso (D.Γι (J < ·) ≫ D.bggProj t h) := by rw [Γι_bggProj]; infer_instance
-  exact quasiIso_of_comp_left (D.Γι (J < ·)) (D.bggProj t h)
-
-theorem IsRightInverse.injSurj : D.InjSurj J :=
+theorem InjSurjWith.injSurj : D.InjSurj J :=
   ⟨fun i hi => h.injective i hi.le, fun i hi v => ⟨t i (i + 1) v, h.S_t' hi v⟩⟩
 
-theorem IsRightInverse.bijective : Function.Bijective (D.S J (J + 1)) :=
+theorem InjSurjWith.bijective : Function.Bijective (D.S J (J + 1)) :=
   ⟨h.injective J le_rfl, h.injSurj.2 J le_rfl⟩
+
+/-- **The retraction `Π` is a quasi-isomorphism.** -/
+theorem quasiIso_bggProj : QuasiIso (D.bggProj t h) := by
+  have := quasiIso_Γ (D := D) h.injSurj.eliminates.top
+  have : QuasiIso (D.Γι (J < ·) ≫ D.bggProj t h) := by rw [Γι_bggProj]; infer_instance
+  exact quasiIso_of_comp_left (D.Γι (J < ·)) (D.bggProj t h)
 
 omit h in
 variable (D t) in
 /-- **The cochain map (30) of Theorem 7** from the sum complex to the BGG complex:
 `(ω, μ) ↦ [Π(ω + Kμ, μ)]`. [ArnoldHu2021], (30) -/
-def bggSumMap {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K) (h : D.IsRightInverse J t) :
+def bggSumMap {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K) (h : D.InjSurjWith J t) :
     D.sumComplex ⟶ D.bgg J :=
   (D.sumIso hK).hom ≫ D.bggProj t h ≫ D.derivedπ _ _
 
@@ -353,7 +355,7 @@ variable {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K)
 
 theorem bggSumMap_apply (i : ℤ) (x : V i × Vt i) :
     ((D.bggSumMap t hK h).f i).hom x =
-      Submodule.Quotient.mk ⟨D.bggLift J t i (x.1 + K i x.2, x.2), D.bggLift_mem_Γ h i _⟩ := by
+      Submodule.Quotient.mk ⟨D.bggProjMap J t i (x.1 + K i x.2, x.2), D.bggProjMap_mem_Γ h i _⟩ := by
   simp only [bggSumMap, HomologicalComplex.comp_f, ModuleCat.hom_comp]
   rfl
 
@@ -362,7 +364,7 @@ theorem bggXEquivOfLt_bggSumMap {i : ℤ} (hi : i < J) (x : V i × Vt i) :
     D.bggXEquivOfLt hi (((D.bggSumMap t hK h).f i).hom x) =
       Submodule.Quotient.mk (x.1 + K i x.2) := by
   rw [bggSumMap_apply]
-  exact (D.bggXEquivOfLt_mk hi _).trans (congrArg _ (congrArg Prod.fst (bggLift_of_lt hi _)))
+  exact (D.bggXEquivOfLt_mk hi _).trans (congrArg _ (congrArg Prod.fst (bggProjMap_of_lt hi _)))
 
 /-- **(30) at `J`**: `(ω, μ) ↦ [ω + Kμ] ∈ Vᴶ / R(Sᴶ⁻¹)` (`Sᴶ` is bijective). -/
 theorem bggXEquivOfBijective_bggSumMap (x : V J × Vt J) :
@@ -370,7 +372,7 @@ theorem bggXEquivOfBijective_bggSumMap (x : V J × Vt J) :
       Submodule.Quotient.mk (x.1 + K J x.2) := by
   rw [bggSumMap_apply]
   exact (D.bggXEquivOfBijective_mk h.bijective _).trans
-    (congrArg _ (congrArg Prod.fst (bggLift_of_eq rfl _)))
+    (congrArg _ (congrArg Prod.fst (bggProjMap_of_eq rfl _)))
 
 /-- **(30) after `J`**: `(ω, μ) ↦ P(d̃ tω + (I + d̃ tK)μ) ∈ N(Sⁱ)`. -/
 theorem bggSumMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
@@ -380,8 +382,8 @@ theorem bggSumMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
         (x.2 + D.dt (i - 1) i (t (i - 1) i (K i x.2))))) := by
   rw [bggSumMap_apply]
   refine (congrArg Subtype.val (Submodule.quotEquivOfEqBot_apply_mk _ _ _)).trans ?_
-  change D.bggLift J t i (x.1 + K i x.2, x.2) = _
-  rw [bggLift_of_gt hi]
+  change D.bggProjMap J t i (x.1 + K i x.2, x.2) = _
+  rw [bggProjMap_of_gt hi]
   congr 2
   rw [map_add, map_add]
   abel
@@ -407,13 +409,81 @@ end Up
 /-! ### Non-vacuity -/
 
 variable (R) in
-/-- **`idShift` (`Sⁱ = id`) with `tⁱ⁺¹ = id` satisfies `IsRightInverse` at every `J`**, so its
-cochain retraction `bggProj` is a quasi-isomorphism (`quasiIso_bggProj`). -/
-theorem idShift_isRightInverse (J : ℤ) :
-    (idShift R).IsRightInverse J fun i j => if i + 1 = j then LinearMap.id else 0 where
+/-- **`idShift` (`Sⁱ = id`) with `tⁱ⁺¹ = id` satisfies `InjSurjWith` at every `J`**, so its
+cochain retraction `bggProj` is a quasi-isomorphism (`quasiIso_bggProj`). Its connecting maps are
+null-homotopic only for `R` trivial (`d = d̃ = 0`); see `altShift` for Theorem 7. -/
+theorem idShift_injSurjWith (J : ℤ) :
+    (idShift R).InjSurjWith J fun i j => if i + 1 = j then LinearMap.id else 0 where
   injective i _ := by
     rw [show (idShift R).S i (i + 1) = LinearMap.id from ite_eq_left rfl]
     exact Function.injective_id
   S_t i j hij _ v := by simp [idShift, hij]
+
+variable (R) in
+/-- **`R` with `dⁱ = id` for even `i` and `0` for odd `i`, its shift `d̃ⁱ = -dⁱ⁺¹`, connected by
+`Sⁱ = id`**: BGG data with nonzero differentials and connecting maps, null-homotopic
+(`altShift_isNullHomotopy`, `K = id`) and satisfying `InjSurjWith` with `t = id` at every `J`
+(`altShift_injSurjWith`). -/
+def altShift : Data R (ComplexShape.up ℤ) (fun _ => R) (fun _ => R) where
+  d i j := if i + 1 = j ∧ Even i then LinearMap.id else 0
+  dt i j := if i + 1 = j ∧ Odd i then -LinearMap.id else 0
+  S i j := if i + 1 = j then LinearMap.id else 0
+  shape_d _ _ h := ite_eq_right fun h' => h h'.1
+  shape_dt _ _ h := ite_eq_right fun h' => h h'.1
+  shape_S _ _ h := ite_eq_right h
+  d_comp_d i j k x := by
+    by_cases h : j + 1 = k ∧ Even j
+    · obtain ⟨rfl, hj⟩ := h
+      have : ¬ (i + 1 = j ∧ Even i) := fun h' => Int.not_even_iff_odd.2 (h'.1 ▸ h'.2.add_one) hj
+      simp only [ite_eq_right this, LinearMap.zero_apply, map_zero]
+    · simp only [ite_eq_right h, LinearMap.zero_apply]
+  dt_comp_dt i j k x := by
+    by_cases h : j + 1 = k ∧ Odd j
+    · obtain ⟨rfl, hj⟩ := h
+      have : ¬ (i + 1 = j ∧ Odd i) := fun h' => Int.not_odd_iff_even.2 (h'.1 ▸ h'.2.add_one) hj
+      simp only [ite_eq_right this, LinearMap.zero_apply, map_zero]
+    · simp only [ite_eq_right h, LinearMap.zero_apply]
+  anticomm i j k φ := by
+    by_cases hij : i + 1 = j
+    · subst hij
+      by_cases hjk : i + 1 + 1 = k
+      · rcases Int.even_or_odd i with hi | hi
+        · simp [hjk, Int.not_even_iff_odd.2 hi.add_one, Int.not_odd_iff_even.2 hi]
+        · simp [hjk, hi.add_one, hi]
+      · simp [hjk]
+    · simp [hij]
+
+variable (R) in
+/-- `altShift` has null-homotopic connecting maps, `S = d - d̃` (`K = id`). -/
+theorem altShift_isNullHomotopy : (altShift R).IsNullHomotopy fun _ => LinearMap.id := by
+  rintro i _ rfl μ
+  rcases Int.even_or_odd i with hi | hi
+  · simp [altShift, hi, Int.not_odd_iff_even.2 hi]
+  · simp [altShift, hi, Int.not_even_iff_odd.2 hi]
+
+variable (R) in
+/-- `altShift` with `tⁱ⁺¹ = id` satisfies `InjSurjWith` at every `J`. -/
+theorem altShift_injSurjWith (J : ℤ) :
+    (altShift R).InjSurjWith J fun i j => if i + 1 = j then LinearMap.id else 0 where
+  injective i _ := by
+    rw [show (altShift R).S i (i + 1) = LinearMap.id from ite_eq_left rfl]
+    exact Function.injective_id
+  S_t i j hij _ v := by simp [altShift, hij]
+
+variable (R) in
+/-- **Non-vacuity of Theorem 7**: the cochain map (30) of `altShift` is a quasi-isomorphism at
+every `J`. -/
+theorem altShift_quasiIso_bggSumMap (J : ℤ) :
+    QuasiIso ((altShift R).bggSumMap _ (altShift_isNullHomotopy R) (altShift_injSurjWith R J)) :=
+  quasiIso_bggSumMap _ _
+
+variable (R) in
+/-- **Non-vacuity of Corollary 1**: the cochain map (30) of `altShift` carries cohomology
+representatives of the rows to cohomology representatives of `bgg J`. -/
+theorem altShift_bgg_represents (J : ℤ) {i : ℤ} {H Ht : Submodule R R}
+    (hH : (altShift R).rowTop.Represents i H) (hHt : (altShift R).rowBot.Represents i Ht) :
+    ((altShift R).bgg J).Represents i ((H.prod Ht).map
+      (((altShift R).bggSumMap _ (altShift_isNullHomotopy R) (altShift_injSurjWith R J)).f i).hom) :=
+  bgg_represents _ _ hH hHt
 
 end Feec.BGG.Data

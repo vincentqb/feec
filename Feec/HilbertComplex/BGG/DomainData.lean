@@ -30,9 +30,11 @@ domain complexes are.
   bound, the Hilbert quotient norm of `Γ / Δ` (`BoundedData.derivedQuotLEquiv`), and Theorem 7
   and Corollary 1 of [ArnoldHu2021] (`Data.quasiIso_sumIso_comp`, `Data.derived_represents`).
 * `HilbertData.antilipschitz_domainS`: `S` bounded below is bounded below between the domains.
-* `HilbertData.isClosed_Δ_and_eliminates_bgg`, **`HilbertData.bggVerdict`**: the analytic BGG
-  theorem for the BGG complex `bgg J`, from the connecting maps up to `J` bounded below and the
-  regular decompositions after `J` (`HilbertData.RegularDecomposition`).
+* `HilbertData.isClosed_Δ_and_eliminates_bgg`, `HilbertData.BGGVerdict`,
+  **`HilbertData.bggVerdict`**: the analytic BGG theorem for the BGG complex `bgg J`, from the
+  connecting maps up to `J` bounded below and the regular decompositions after `J`
+  (`HilbertData.RegularDecomposition`), with the explicit map (30) of Theorem 7
+  (`Data.quasiIso_bggSumMap`, `Data.bgg_represents`).
 
 ## References
 
@@ -249,16 +251,39 @@ theorem isClosed_Δ_and_eliminates_bgg {J : ℤ}
   exact ⟨D.domainData.isClosed_bgg_Δ hS',
     Data.eliminates_bgg (fun i hi => (hS' i hi).choose_spec.injective) htop⟩
 
+/-- **The analytic BGG verdict for `bgg J` at `i`**: the analytic BGG verdict (`DerivedVerdict`)
+and, for right inverses `t` of the connecting maps from `J` on (`Data.InjSurjWith`) and
+null-homotopic connecting maps `S = dK - Kd̃`, the explicit cochain map (30) from the sum complex
+(`Data.bggSumMap`) induces an isomorphism on cohomology (Theorem 7) and carries cohomology
+representatives `H × H̃` of the rows to cohomology representatives of `bgg J` (Corollary 1). -/
+structure BGGVerdict (J i : ℤ) : Prop extends D.DerivedVerdict (J < ·) (· < J) i where
+  /-- [ArnoldHu2021], Theorem 7 -/
+  quasiIso_bggSumMap : ∀ {t : ∀ i j, D.H.domainSpace j →ₗ[𝕜] D.Ht.domainSpace i}
+    (ht : D.domainData.InjSurjWith J t) {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i}
+    (hK : D.domainData.IsNullHomotopy K), QuasiIso (D.domainData.bggSumMap t hK ht)
+  /-- [ArnoldHu2021], Corollary 1, (31) -/
+  bgg_represents : ∀ {t : ∀ i j, D.H.domainSpace j →ₗ[𝕜] D.Ht.domainSpace i}
+    (ht : D.domainData.InjSurjWith J t) {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i}
+    (hK : D.domainData.IsNullHomotopy K)
+    {H : Submodule 𝕜 (D.H.domainSpace i)} {Ht : Submodule 𝕜 (D.Ht.domainSpace i)},
+    D.domainData.rowTop.Represents i H → D.domainData.rowBot.Represents i Ht →
+    (D.domainData.bgg J).Represents i ((H.prod Ht).map ((D.domainData.bggSumMap t hK ht).f i).hom)
+
 /-- **Analytic BGG for the BGG complex of two Hilbert complexes**: if the connecting maps `Sⁱ`,
 `i ≤ J`, are bounded below and the regular decompositions after `J` hold, then wherever the two
 complexes have finite-dimensional cohomology the BGG complex `bgg J` of their domain complexes has
 closed range and finite-dimensional cohomology of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`. The
 exact part is closed and the other elimination hypotheses hold by `S` bounded below
-(`BoundedData.isClosed_bgg_Δ`, `antilipschitz_domainS`). [ArnoldHu2021], Theorem 6 -/
+(`BoundedData.isClosed_bgg_Δ`, `antilipschitz_domainS`). With right inverses of `S` from `J` on
+and null-homotopic connecting maps, the explicit map (30) is a quasi-isomorphism carrying
+cohomology representatives to cohomology representatives. [ArnoldHu2021], Theorems 6 and 7,
+Corollary 1 -/
 theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
     (htop : D.RegularDecomposition J) (i : ℤ) [FiniteDimensional 𝕜 (D.H.cohomology i)]
-    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i :=
+    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.BGGVerdict J i :=
   have h := D.isClosed_Δ_and_eliminates_bgg hS htop
-  D.derivedVerdict h.1 h.2 i
+  { D.derivedVerdict h.1 h.2 i with
+    quasiIso_bggSumMap := fun ht _ hK => Data.quasiIso_bggSumMap ht hK
+    bgg_represents := fun ht _ hK _ _ hH hHt => Data.bgg_represents ht hK hH hHt }
 
 end Feec.BGG.HilbertData

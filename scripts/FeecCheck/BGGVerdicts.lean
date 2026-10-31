@@ -1,6 +1,6 @@
 module
 
-public import Feec.HilbertComplex.BGG.DomainData
+public import Feec.Domain.BGGRealization
 
 /-!
 # Regression test: the analytic BGG verdict
@@ -9,7 +9,10 @@ public import Feec.HilbertComplex.BGG.DomainData
 (the Hilbert quotient norm of `Γ / Δ`), `quasiIso_sum` and `represents` (Theorem 7 and
 Corollary 1 of [ArnoldHu2021]) after its first three. `derivedVerdict_old` states the earlier
 three-field verdict (closed range, finite-dimensional cohomology, the dimension bound) verbatim
-and derives it from the new structure.
+and derives it from the new structure. `HilbertData.bggVerdict` and
+`Domain.ConstCoeffBGG.maximalData_bggVerdict` now conclude `HilbertData.BGGVerdict`, which extends
+`DerivedVerdict` by the explicit map (30); `bggVerdict_old` and `maximalData_bggVerdict_old` state
+their earlier conclusions verbatim and derive them from the new ones.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -40,5 +43,30 @@ theorem derivedVerdict_old (v : D.DerivedVerdict E F i) :
       Module.finrank 𝕜 ((D.domainData.derivedComplex E F).cohomology i) ≤
         Module.finrank 𝕜 (D.H.cohomology i) + Module.finrank 𝕜 (D.Ht.cohomology i) :=
   ⟨v.closedRangeAt, v.finiteDimensional, v.finrank_le⟩
+
+/-- The earlier `HilbertData.bggVerdict`, from the new one. -/
+theorem bggVerdict_old {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] [∀ i, NormedAddCommGroup (Wt i)]
+    [∀ i, InnerProductSpace 𝕜 (Wt i)] [∀ i, CompleteSpace (Wt i)]
+    (D : HilbertData 𝕜 (ComplexShape.up ℤ) W Wt) {J : ℤ}
+    (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
+    (htop : D.RegularDecomposition J) (i : ℤ) [FiniteDimensional 𝕜 (D.H.cohomology i)]
+    [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i :=
+  (D.bggVerdict hS htop i).toDerivedVerdict
+
+open MeasureTheory in
+/-- The earlier `Domain.ConstCoeffBGG.maximalData_bggVerdict`, from the new one. -/
+theorem maximalData_bggVerdict_old {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
+    [(volume : Measure E).IsAddHaarMeasure] {Ω : Set E} (B : Domain.ConstCoeffBGG E 𝕜)
+    (M : ∀ k, Matrix (B.top.ι (k + 1)) (B.bot.ι k) 𝕜)
+    (hM : ∀ k f, (B.S k).apply f = (Domain.ConstCoeffOp.ofMatrix (M k)).apply f)
+    [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen Ω) {J : ℤ}
+    (hN : ∀ k ≤ J, ∃ N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜, N * M k = 1)
+    (htop : (B.maximalData M hM hΩ).RegularDecomposition J)
+    (i : ℤ) [FiniteDimensional 𝕜 ((B.top.maximalComplex hΩ).cohomology i)]
+    [FiniteDimensional 𝕜 ((B.bot.maximalComplex hΩ).cohomology i)] :
+    (B.maximalData M hM hΩ).DerivedVerdict (J < ·) (· < J) i :=
+  (B.maximalData_bggVerdict M hM hΩ hN htop i).toDerivedVerdict
 
 end FeecCheck.BGGVerdicts

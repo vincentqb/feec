@@ -135,8 +135,13 @@ status:
     Feec.BGG.Data.bggProj, Γι_bggProj, quasiIso_bggProj) and Theorem 7 and Corollary 1 for every
     complex shape and every elimination (Feec.BGG.Data.quasiIso_sumIso_comp,
     Feec.BGG.Data.derived_represents; fields quasiIso_sum and represents of
-    Feec.BGG.HilbertData.DerivedVerdict); non-vacuity instances (connecting maps the identity,
+    Feec.BGG.HilbertData.DerivedVerdict), and the explicit map (30) for bgg J
+    (Feec.BGG.Data.bggSumMap, quasiIso_bggSumMap, bgg_represents; fields quasiIso_bggSumMap and
+    bgg_represents of Feec.BGG.HilbertData.BGGVerdict, the conclusion of
+    Feec.BGG.HilbertData.bggVerdict); non-vacuity instances (connecting maps the identity,
     Feec.BGG.Data.injSurj_idShift and Feec.BGG.BoundedData.idShift_derivedComplex_closedRangeAt;
+    for Theorem 7 and Corollary 1 with nonzero d, d~ and S = dK - Kd~, Feec.BGG.Data.altShift,
+    altShift_quasiIso_bggSumMap, altShift_bgg_represents;
     the Hessian diagram on smooth fields, Feec.Domain.injSurj_hessianBGG). The challenge itself
     proves that S = 𝟙 : V[1] -> V[1] satisfies the hypotheses at every J (FEEC.BGG.hypotheses_id).
   sorry_count: 0
@@ -223,7 +228,10 @@ fidelity:
     all-degree form. Theorem 6's dimension bound is stated where both rows have finite-dimensional
     cohomology; Arnold-Hu's inequality is vacuous otherwise.
     Scope. (9) Every claim of (24)-(31), Theorems 6 and 7, Proposition 1 and Corollary 1 is
-    stated, in the encodings (1)-(4); Corollary 1 as: if N(d^i) = R(d^(i-1)) (+) H^i and
+    stated, in the encodings (1)-(4): the Hilbert structure of Theorem 6 only as closedness of
+    Gamma and Delta, per (3) (the quotient norm is proved in Feec, not compared), and (30) only in
+    the quotient model, per (4) (its orthogonal form with P_(R⊥) and the Moore-Penrose inverse is
+    not stated); Corollary 1 as: if N(d^i) = R(d^(i-1)) (+) H^i and
     N(d~^i) = R(d~^(i-1)) (+) H~^i (BGG.Represents), then N(D^i) = R(D^(i-1)) (+) kappa(H^i x H~^i)
     in the BGG complex, kappa(H x H~) being the image under (30) as in (31). Outside the submission: the applications of §4 (elasticity, Hessian and div div complexes; Feec proves the
     Hessian diagram, Feec.Domain.injSurj_hessianBGG, not compared) and the uniform representation of

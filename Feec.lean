@@ -390,6 +390,7 @@ public import Feec.TimeStepping.Convergence
 public import Feec.TimeStepping.Forced
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Rational
+public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RungeKutta
 public import Feec.TimeStepping.Theta
 public import Feec.TimeStepping.Trajectory

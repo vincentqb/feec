@@ -55,7 +55,11 @@ over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ
   `‖r(τ L)ⁿ y - e^{tL} y‖ ≤ K t τᵖ ‖L^{p+1} y‖` for every bounded dissipative `L`; for complex
   coefficients `norm_aeval_mul_inverse_pow_sub_exp_le`; both through the consistency of
   `n(τL) d(τL)⁻¹` from `n = d Tₚ + X^{p+1} ρ` over `𝕜`
-  (`RationalScheme.isConsistent_aeval_mul_inverse`).
+  (`RationalScheme.isConsistent_aeval_mul_inverse`). For unbounded m-dissipative generators,
+  with the same constant: `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`
+  (`Feec.TimeStepping.RationalSemigroup`), through the Cayley form of a bounded `L`,
+  `f̃(C) g̃(C)⁻¹ = f(τ L) g(τ L)⁻¹` (`aeval_cayley_mul_inverse`), and the resolvent form
+  `P(S) Q(S)⁻¹ = f̃(C) g̃(C)⁻¹` (`resolventEval_mul_inverse_eq`).
 * **Discrete constraint propagation** (`RationalScheme.apply_mem_of_mapsTo`): a closed subspace
   `K` with `L K ⊆ K` is kept by `r(L)`.
 * **Symmetric schemes** (`RationalScheme.IsSymmetric`, `n(z) = d(-z)`: the diagonal Padé and
@@ -447,7 +451,8 @@ theorem norm_step_le_one {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : �
   (r.norm_step_le hA hτ).2.trans (r.isAStable_iff.1 hr)
 
 omit [CompleteSpace V] in
-private theorem commute_ringInverse {M : Type*} [MonoidWithZero M] {a b : M} (h : Commute a b) :
+/-- `a` commutes with `Ring.inverse b` when it commutes with `b`. -/
+theorem commute_ringInverse {M : Type*} [MonoidWithZero M] {a b : M} (h : Commute a b) :
     Commute a (Ring.inverse b) := by
   by_cases hb : IsUnit b
   · obtain ⟨u, rfl⟩ := hb
@@ -495,23 +500,33 @@ private theorem exists_cayley_eq {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪
   · show (2 * μ) • R - 1 = 2 * (μ • R) - 1
     rw [two_mul (μ • R), two_mul μ, add_smul]
 
-/-- **For bounded `L`, `r(τ A)` is `n(τ L) d(τ L)⁻¹`**. -/
-theorem step_toPMap {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ} (hτ : 0 < τ) :
-    r.step ((L : V →ₗ[𝕜] V).toPMap ⊤) τ = r.apply ((τ : 𝕜) • L) := by
+/-- **The Cayley form of a bounded `L`**: for `deg f, deg g ≤ N` and the Cayley transform `C` of
+`L` (`τ > 0`), `f̃(C) g̃(C)⁻¹ = f(τ L) g(τ L)⁻¹` with `f̃ = cayleyPoly N f`, since
+`f̃(C) = (2 S)ᴺ f(τ L)` at `S = (1 - τ L)⁻¹` (`aeval_cayleyPoly`). -/
+theorem _root_.Feec.TimeStepping.aeval_cayley_mul_inverse {L : V →L[𝕜] V}
+    (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ} (hτ : 0 < τ) {N : ℕ} {f g : 𝕜[X]}
+    (hf : f.natDegree ≤ N) (hg : g.natDegree ≤ N) :
+    aeval (cayley ((L : V →ₗ[𝕜] V).toPMap ⊤) τ) (cayleyPoly N f) *
+        Ring.inverse (aeval (cayley ((L : V →ₗ[𝕜] V).toPMap ⊤) τ) (cayleyPoly N g)) =
+      aeval ((τ : 𝕜) • L) f * Ring.inverse (aeval ((τ : 𝕜) • L) g) := by
   obtain ⟨S, hS, hS', hSL, hC, -⟩ := exists_cayley_eq hL hτ
   have hSτ : Commute S ((τ : 𝕜) • L) := hSL.smul_right _
   have h2 : IsUnit (2 : V →L[𝕜] V) := by
     have := (isUnit_iff_ne_zero.2 (two_ne_zero : (2 : 𝕜) ≠ 0)).map (algebraMap 𝕜 (V →L[𝕜] V))
     rwa [map_ofNat] at this
-  have hU : IsUnit ((2 * S) ^ r.den.natDegree) :=
-    (h2.mul ⟨⟨S, 1 - (τ : 𝕜) • L, hS, hS'⟩, rfl⟩).pow _
-  have hc : Commute ((2 * S) ^ r.den.natDegree) ((τ : 𝕜) • L) :=
+  have hU : IsUnit ((2 * S) ^ N) := (h2.mul ⟨⟨S, 1 - (τ : 𝕜) • L, hS, hS'⟩, rfl⟩).pow _
+  have hc : Commute ((2 * S) ^ N) ((τ : 𝕜) • L) :=
     ((Commute.ofNat_left 2 _).mul_left hSτ).pow_left _
-  rw [step, apply, hC, cnum, cden, cayleyPoly_map, cayleyPoly_map,
-    aeval_cayleyPoly hS hSτ ((natDegree_map_le).trans r.natDegree_num_le),
-    aeval_cayleyPoly hS hSτ (natDegree_map_le)]
+  rw [hC, aeval_cayleyPoly hS hSτ hf, aeval_cayleyPoly hS hSτ hg]
   exact mul_inverse_mul_of_commute hU (commute_aeval hc.symm _).symm
     (commute_aeval hc.symm _).symm
+
+/-- **For bounded `L`, `r(τ A)` is `n(τ L) d(τ L)⁻¹`**. -/
+theorem step_toPMap {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ} (hτ : 0 < τ) :
+    r.step ((L : V →ₗ[𝕜] V).toPMap ⊤) τ = r.apply ((τ : 𝕜) • L) := by
+  rw [step, apply, cnum, cden, cayleyPoly_map, cayleyPoly_map]
+  exact aeval_cayley_mul_inverse hL hτ ((natDegree_map_le).trans r.natDegree_num_le)
+    natDegree_map_le
 
 omit [CompleteSpace V] in
 theorem dissipative_smul {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {τ : ℝ}
@@ -547,6 +562,25 @@ theorem norm_apply_le_one {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x�
 /-! ### `r(τ A)` through the resolvent -/
 
 omit [CompleteSpace V] in
+/-- **The resolvent form is the Cayley form**: with `S = (1 - τ A)⁻¹ = τ⁻¹ R(τ⁻¹)`,
+`P(S) Q(S)⁻¹ = f̃(C) g̃(C)⁻¹` for `P(s) = sᴺ f(1 - 1/s)`, `Q(s) = sᴺ g(1 - 1/s)`
+(`resolventEval`), `f̃ = cayleyPoly N f` and the Cayley transform `C = 2 S - 1`
+(`aeval_two_mul_sub_one_cayleyPoly`). -/
+theorem _root_.Feec.TimeStepping.resolventEval_mul_inverse_eq (A : V →ₗ.[𝕜] V) (τ : ℝ) (N : ℕ)
+    (f g : 𝕜[X]) :
+    resolventEval N f ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹) *
+        Ring.inverse (resolventEval N g ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹)) =
+      aeval (cayley A τ) (cayleyPoly N f) * Ring.inverse (aeval (cayley A τ) (cayleyPoly N g)) := by
+  have h2 : IsUnit (2 : V →L[𝕜] V) := by
+    have := (isUnit_iff_ne_zero.2 (two_ne_zero : (2 : 𝕜) ≠ 0)).map (algebraMap 𝕜 (V →L[𝕜] V))
+    rwa [map_ofNat] at this
+  have hc : ∀ x : V →L[𝕜] V, Commute ((2 : V →L[𝕜] V) ^ N) x := fun x =>
+    (Commute.ofNat_left 2 x).pow_left _
+  rw [cayley_eq_two_mul_sub_one, aeval_two_mul_sub_one_cayleyPoly,
+    aeval_two_mul_sub_one_cayleyPoly]
+  exact (mul_inverse_mul_of_commute (h2.pow _) (hc _) (hc _)).symm
+
+omit [CompleteSpace V] in
 /-- **`r(τ A)` through the resolvent**: with `S = (1 - τ A)⁻¹ = τ⁻¹ R(τ⁻¹)` and `N = deg d`,
 `r(τ A) = P(S) Q(S)⁻¹` for `P(s) = sᴺ n(1 - 1/s)` and `Q(s) = sᴺ d(1 - 1/s)` (`resolventEval`),
 since the Cayley transform is `C = 2 S - 1` (`aeval_two_mul_sub_one_cayleyPoly`). -/
@@ -556,14 +590,7 @@ theorem step_eq_resolventEval (A : V →ₗ.[𝕜] V) (τ : ℝ) :
           ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹) *
         Ring.inverse (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜))
           ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹)) := by
-  have h2 : IsUnit (2 : V →L[𝕜] V) := by
-    have := (isUnit_iff_ne_zero.2 (two_ne_zero : (2 : 𝕜) ≠ 0)).map (algebraMap 𝕜 (V →L[𝕜] V))
-    rwa [map_ofNat] at this
-  have hc : ∀ x : V →L[𝕜] V, Commute ((2 : V →L[𝕜] V) ^ r.den.natDegree) x := fun x =>
-    (Commute.ofNat_left 2 x).pow_left _
-  rw [step, cayley_eq_two_mul_sub_one, cnum, cden, cayleyPoly_map, cayleyPoly_map,
-    aeval_two_mul_sub_one_cayleyPoly, aeval_two_mul_sub_one_cayleyPoly]
-  exact mul_inverse_mul_of_commute (h2.pow _) (hc _) (hc _)
+  rw [resolventEval_mul_inverse_eq, step, cnum, cden, cayleyPoly_map, cayleyPoly_map]
 
 /-- `Q(S) = sᴺ d(1 - 1/s)` at `S = (1 - τ A)⁻¹` is invertible, for m-dissipative `A` and
 `τ > 0`. -/

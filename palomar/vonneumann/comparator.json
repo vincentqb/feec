@@ -9,7 +9,9 @@
     "VonNeumann.inequality_mdissipative_real",
     "VonNeumann.cayley_contraction",
     "VonNeumann.error_bound",
-    "VonNeumann.error_bound_real"
+    "VonNeumann.error_bound_real",
+    "VonNeumann.error_bound_mdissipative",
+    "VonNeumann.error_bound_mdissipative_real"
   ],
   "definition_names": [],
   "permitted_axioms": [

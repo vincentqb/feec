@@ -124,10 +124,11 @@ theorem cube_nonvacuous (hn : 2 ≤ n) :
           ∃ t ∈ Icc (-T) T, ((complex n).window 1 3).waveGroup.S t x ∉ cubePotential n) ∧
       ∃ x ∈ (((whitneyFamily n).windowFEEC 0 (n + 1) ⊤
         (by rw [Submodule.top_coe]; exact isClosed_univ)).heatCore
-          (closedRangeAt_heatWindow n)).Data, x ≠ 0 := by
+          (closedRangeAt_heatWindow n) ((whitneyFamily n).isGraphBounded_windowFEEC _ _ _ _)).Data,
+        x ≠ 0 := by
   have hV := (whitneyFamily n).feec_rated (whitneyJackson n)
   refine ⟨hV, closedRangeAt, ?_, cube_not_isReducing_potential hn, fun T hT => ?_,
-    exists_mem_heatCore_data_ne_zero n _⟩
+    exists_mem_heatCore_data_ne_zero n _ _⟩
   · rw [harmonic_zero_eq_span, Ne, Submodule.span_singleton_eq_bot]
     exact oneForm_ne_zero
   · obtain ⟨x, hxK, t, ht, hout, -⟩ := (hV.constrained 1 3 _ Maxwell.isClosed_potential).leaves_symm

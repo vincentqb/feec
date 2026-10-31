@@ -30,7 +30,7 @@ equation ([QuennevilleBelair2015], Thm 4.14).
   `infDist_polyPartial_le_sobolevPar_min`.
 * **Graph norm**: the Jackson estimate `sobolevJackson` of the complexes of `S` for `Hˢ(Q)`
   components (`SobComp`, from `SobGraph`), through the projections
-  (`ConformingFamily.Jackson.ofInfDist`);
+  (`SubcomplexFamily.Jackson.ofInfDist`);
   `ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar`
   (`σ, dσ ∈ Hˢ`, `SobGraphPar`; degrees in `ℤ`, `SobAt`, `SobAtPar`).
 * **Mixed Hodge–Laplace problem**: **`mixed_rate_sobolevQ`** (`HΛ(Q)`) and
@@ -541,7 +541,7 @@ theorem SobAt.sobComp_of_mem_cycles {s L : ℝ} (hL : 0 ≤ L) {j : ℤ}
 variable (n) in
 /-- **The Jackson estimate of the complexes of `S` for `Hˢ(Q)` data, `0 ≤ s ≤ 1`**: `Hˢ(Q)`
 components (`SobComp`) at the order `h_N^s`, from the best approximation `infDist_poly_le_sobAt`
-through the projections (`ConformingFamily.Jackson.ofInfDist`). -/
+through the projections (`SubcomplexFamily.Jackson.ofInfDist`). -/
 def sobolevJackson (S : PolySeq) : (polyFamily n S).Jackson (Set.Icc (0 : ℝ) 1) :=
   .ofInfDist _ meshSize (fun N => (meshSize_pos N).le) tendsto_meshSize
     (fun s _ L x => SobComp n s L x) (fun s => s)

@@ -936,8 +936,8 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
 
 /-- The discrete complexes `Vₕ` of a constrained FEEC discretization (subcomplexes with the `W`
-inner products, `Subcomplex.toHilbertComplex`), with `iₕ` the inclusions and `πₕ` the cochain
-projections. -/
+inner products, `Subcomplex.toHilbertComplex`), with `iₕ` the inclusions and `πₕ` the orthogonal
+projections onto `Vₕⁱ`. -/
 def toFamily : ApproxComplex.Family H κ where
   V h i := ↥((F.V h).V i)
   completeSpace _ _ := FiniteDimensional.complete 𝕜 _
@@ -945,14 +945,12 @@ def toFamily : ApproxComplex.Family H κ where
   incl h i := ((F.V h).V i).subtypeL
   incl_mem h i j v := (F.V h).le_domain i j v.2
   incl_d _ _ _ _ := rfl
-  proj h i := LinearMap.mkContinuous
-    (LinearMap.codRestrict ((F.V h).V i) ((F.π h).π i) ((F.π h).mem i)) F.projConst
-    fun x => F.norm_π_le h i x
-  proj_incl h i v := Subtype.ext ((F.π h).proj i _ v.2)
-  bound := ⟨max 1 F.projConst, fun h i =>
-    ⟨(ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
-      rw [one_mul]; exact le_rfl).trans (le_max_left _ _),
-    (LinearMap.mkContinuous_norm_le _ F.projConst_nonneg _).trans (le_max_right _ _)⟩⟩
+  proj h i := ((F.V h).V i).orthogonalProjectionOnto
+  proj_incl h i v := Submodule.orthogonalProjectionOnto_mem_subspace_eq_self v
+  bound := ⟨1, fun h i =>
+    ⟨ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [one_mul]; exact le_rfl,
+      ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+        rw [one_mul]; exact ((F.V h).V i).norm_orthogonalProjectionOnto_apply_le x⟩⟩
 
 /-- `iₕ` is isometric: `Jₕ = 1`. -/
 theorem toFamily_J (h : κ) : F.toFamily.J h = 1 := by
@@ -961,32 +959,12 @@ theorem toFamily_J (h : κ) : F.toFamily.J h = 1 := by
     PiLp.inner_apply]
   rfl
 
-theorem inclL_projL_toFamily (h : κ) (x : PiLp 2 W) :
-    F.toFamily.inclL h (F.toFamily.projL h x) = F.piProj h x := rfl
-
-/-- **The graph-norm approximation property of the conforming family**, from
-`graphApprox_of_commute` with `L²` approximation `Πₕ → 1` and commutation defect
-`𝐝ₕ Πₕ ζ₁ - Πₕ ζ₂ = 0` (`Πₕ` is a cochain projection). -/
-theorem toFamily_graphApprox : F.toFamily.GraphApprox F.l := by
-  refine F.toFamily.graphApprox_of_commute (fun x => ?_) dense_univ fun ζ _ => ?_
-  · rw [Metric.tendsto_nhds]
-    intro ε hε
-    have hC := F.projConst_nonneg
-    filter_upwards [F.dense x (ε / (2 * (1 + F.projConst))) (by positivity)] with h ⟨w, hw, hxw⟩
-    rw [dist_eq_norm, inclL_projL_toFamily, norm_sub_rev]
-    refine (F.norm_sub_piProj_le h x hw).trans_lt ?_
-    calc (1 + F.projConst) * ‖x - w‖ ≤ (1 + F.projConst) * (ε / (2 * (1 + F.projConst))) :=
-          mul_le_mul_of_nonneg_left hxw.le (by positivity)
-      _ = ε / 2 := by field_simp
-      _ < ε := half_lt_self hε
-  · obtain ⟨x, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ζ
-    have e : ∀ h, F.toFamily.D h (F.toFamily.projL h x) = F.toFamily.projL h (H.totalD x) :=
-      fun h => by
-        refine F.toFamily.inclL_injective h ?_
-        rw [F.toFamily.inclL_D]
-        exact F.totalD_piProj h x
-    simp only [graphFst_toGraphSpace, graphSnd_toGraphSpace]
-    exact (tendsto_const_nhds (x := (0 : ℝ))).congr fun h => by rw [e h, sub_self, norm_zero]
+/-- **The graph-norm approximation property of the family** (`ConstrainedFEEC.dense_graph`). -/
+theorem toFamily_graphApprox : F.toFamily.GraphApprox F.l := fun ζ ε hε => by
+  filter_upwards [F.dense_graph ζ ε hε] with h ⟨w, hw, hlt⟩
+  refine ⟨WithLp.toLp 2 fun i => ⟨H.totalD.graphFst w i, hw i⟩, ?_⟩
+  convert hlt using 3
+  exact H.totalD.graphFst_injective (by rw [F.toFamily.graphFst_graphIncl]; rfl)
 
 /-- **A constrained FEEC discretization is an approximating family of discrete complexes**,
 with zero inner-product defect (`toFamily_J`) and graph-norm approximation from the commuting

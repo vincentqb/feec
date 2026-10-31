@@ -8,20 +8,26 @@ version: "v0.4"
 project:
   name: "The FEEC theorem for the Hodge wave and heat equations on Hilbert complexes"
   description: >-
-    A Lean 4 formalization of the semidiscrete finite element exterior calculus of the Hodge
-    wave and heat equations for an arbitrary Hilbert complex of closed densely defined operators
-    on Z and an arbitrary family of finite-dimensional subcomplexes with commuting
-    cochain projections bounded uniformly in W and the approximation property. The compared
-    theorem FEEC.dynamicFEEC states, on every window of consecutive degrees: the Hodge wave
+    A Lean 4 formalization of the semidiscrete and fully discrete finite element exterior
+    calculus of the Hodge wave and heat equations for an arbitrary Hilbert complex of closed
+    densely defined operators on Z and an arbitrary family of finite-dimensional subcomplexes
+    with commuting cochain projections and the approximation property of [AFW2010] §3.3 in the
+    graph norm. The compared theorem FEEC.dynamicFEEC states, on every window [a, a+m) of
+    consecutive degrees in which the family approximates in the graph norm: the Hodge wave
     equation for L = d - d* is well posed with a unitary group S; its semidiscrete Galerkin
     solutions converge for every datum, with the error bound ||S(t)x - exp(t L_h) v|| <=
-    ||v - x|| + C (1 + t) M for x in D(L^2), M a bound of the graph-norm best approximation errors
-    of the trajectories of x and L x on [0, t]; the theta-schemes (theta >= 1/2) converge as h
-    and the time step tend to 0; a closed constraint propagates iff it reduces L, and then the
-    constraint residual of the discrete solutions is bounded by their error; with closed ranges
-    and finite-dimensional harmonic fields, the same convergence for the Hodge heat equation.
-    The statement is self-contained over Mathlib; the proof is the library Feec of this
-    repository (Feec.HilbertComplex.ConformingFamily.feec, Feec.HilbertComplex.ConstrainedFEEC.rate_le).
+    ||v - x|| + 2 (1 + 4 sqrt 3) (1 + t) M for x in D(L^2), M a bound of the graph-norm best
+    approximation errors of the trajectories of x and L x on [0, t] (C_P = 4 sqrt 3 the bound of
+    the elliptic projections); the theta-schemes (theta >= 1/2) converge as h and the time step
+    tend to 0, with temporal error (theta + 1/2) n tau tau ||L_h^2 w_0|| and the fully discrete
+    error bound ||S(n tau)x - w_n|| <= ||w_0 - x|| + 2 (1 + 4 sqrt 3)(1 + n tau) M +
+    (theta + 1/2) n tau tau ||L_h^2 w_0||; a closed constraint propagates iff it reduces L, and
+    then the constraint residual of the discrete solutions is bounded by their error; with
+    projections bounded in the graph norm of the window and closed ranges, the same convergence
+    (and temporal error) for the Hodge heat equation. No bound of the projections is assumed for
+    the wave equation. The statement is self-contained over Mathlib; the proof is the library
+    Feec of this repository (Feec.HilbertComplex.approxFEEC, dissipFEEC_fullyDiscrete,
+    ConstrainedFEEC.heatFEEC, ConstrainedFEEC.rate_le).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -105,12 +111,15 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: FEEC.dynamicFEEC (Challenge.lean) for every RCLike field, every
-    Hilbert complex on Z, every family of subcomplexes along any filter with W-bounded projections
-    and the approximation property, every window [a, a+m). Not compared (proved in Feec, outside
-    the statement): rates from Jackson and Sobolev estimates, the uniform fully discrete rate
-    O(h^alpha + tau^(p/(p+2))), energy identities, departure of non-reducing constraints,
-    leapfrog, Crank-Nicolson signed systems, Runge-Kutta and rational schemes, perturbations,
-    variational crimes, and the concrete finite element families and physical instances.
+    Hilbert complex on Z, every family of subcomplexes along any filter, every window [a, a+m)
+    in whose degrees the family approximates in the graph norm (no bound of the projections for
+    the wave; graph-norm bounds in the window for the heat equation). Not compared (proved in
+    Feec, outside the statement): the heat rates from the static rates of the mixed method
+    (ConstrainedFEEC.rate_heat), rates from Jackson and Sobolev estimates, the uniform fully
+    discrete rate O(h^alpha + tau^(p/(p+2))) for every one-step scheme, energy identities,
+    departure of non-reducing constraints, leapfrog, Crank-Nicolson signed systems, Runge-Kutta
+    and rational schemes, perturbations, variational crimes, and the concrete finite element
+    families and physical instances.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -144,31 +153,53 @@ automation:
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written for this submission and reviewed by the author; the Solution translates them to the
-    library Feec (Solution/Bridge.lean) and applies Feec.HilbertComplex.ConformingFamily.feec and Feec.HilbertComplex.ConstrainedFEEC.rate_le.
+    library Feec (Solution/Bridge.lean) and applies Feec.HilbertComplex.approxFEEC,
+    Feec.HilbertComplex.dissipFEEC_fullyDiscrete, Feec.HilbertComplex.ConstrainedFEEC.heatFEEC and
+    Feec.HilbertComplex.ConstrainedFEEC.rate_le.
 
 fidelity:
   divergences: >-
-    (1) Mathlib has no C0-semigroups: the exact evolutions are operator families S asserted to
-    exist and characterized by strong solutions (unique, D(A) dense, contraction), so S is
-    unique for t >= 0; for the wave, S is a unitary group with S(s+t) = S(s) S(t).
-    (2) The cochain projections are uniformly bounded in W, the hypothesis of the smoothed
-    projections ([AFW2010] §5.5), stronger than graph-norm boundedness of [AFW2010] §3.3.
-    (3) The error bound has an existential constant C (in the proof 2 (1 + C_P), C_P the bound
-    of the elliptic projections) and measures best approximation of the trajectories of x and
-    L x in the graph norm ||y - w|| + ||d y - d w|| of the total differential; it is stated for
-    x in D(L^2); the theta-schemes and the heat equation are stated qualitatively.
-    (4) The differential is encoded as d i j for all pairs, zero unless j = i + 1.
-    (5) The heat equation is u' = (d - d*)^2 u = -Δu, with discrete generator L_h^2 = -Δ_h.
-    (6) Windows: the evolutions live on the l2 sum of m consecutive degrees a, ..., a + m - 1 of
+    (1) Inherent: Mathlib has no C0-semigroups, so the exact evolutions are operator families S
+    asserted to exist and characterized by strong solutions (unique, D(A) dense, contraction),
+    which makes S unique for t >= 0; for the wave, S is a unitary group with S(s+t) = S(s) S(t).
+    Defining C0-semigroups, their generators and the Hille-Yosida/Stone theorems over Mathlib
+    would exceed the 1000-line budget.
+    (2) Hypotheses, as in [AFW2010] §3.3: the family approximates in the graph norm of d^i in the
+    degrees i = a, ..., a+m-1 of the window (in the last degree, which has no differential in the
+    truncated window, only the W-approximation that follows is used). The wave conclusions assume
+    no bound of the cochain projections at all (the elliptic projections are bounded on every
+    subcomplex, C_P = 4 sqrt 3, [QuennevilleBelair2015] Prop. 4.13). The heat conclusions assume
+    the projections bounded uniformly in the graph norm in the degrees a, ..., a+m-2 and in W in
+    the last degree a+m-1, i.e. bounded in the graph norm of the truncated window (for a window
+    ending at the top of the complex, d^(a+m-1) = 0 and this is the graph-norm bound of
+    [AFW2010] §3.3), and closed ranges in the degrees a+1, ..., a+m-1; no finite-dimensionality of
+    the harmonic forms is assumed.
+    (3) The error bound has the explicit constant 2 (1 + C_P), C_P = 4 sqrt 3, and measures best
+    approximation of the trajectories of x and L x in the graph norm ||y - w|| + ||d y - d w|| of
+    the total differential; it is stated for x in D(L^2), the regularity at which the trajectory
+    of L x lies in D(d) (for x in D(L) only, S(s) L x need not lie in D(d) and the hypothesis on
+    M fails). The theta-schemes carry the temporal error (theta + 1/2) n tau tau ||B_h^2 w_0||
+    (B_h = L_h for the wave, L_h^2 for the heat) and, for the wave, the fully discrete error bound
+    (the sum of the semidiscrete and temporal errors).
+    (4) Not stated, by cost: a quantitative semidiscrete heat error bound. In Feec it is
+    ConstrainedFEEC.rate_heat: ||S(t)x - exp(t L_h^2) R_h x|| <= (2 + 3t) K L h^ord for data
+    whose mixed solutions are regular along the orbit, R_h = G_h Q_h Delta + P_H_h Q_h the heat
+    Ritz projection. Stating it needs the mixed Hodge Laplacian, the discrete Green operator and
+    harmonic projection, the heat Ritz projection and a regularity class in the challenge
+    (about 80-120 lines) and a bridge identifying them with Feec's (about 300-500 lines); the
+    static rate behind it is the subject of palomar/static.
+    (5) Presentation: the differential is encoded as d i j for all pairs, zero unless j = i + 1.
+    (6) The heat equation is u' = (d - d*)^2 u = -Delta u, with discrete generator L_h^2 = -Delta_h.
+    (7) Windows: the evolutions live on the l2 sum of m consecutive degrees a, ..., a + m - 1 of
     the truncated complex W^a -> ... -> W^(a+m-1): the differentials d^(a-1) into the window and
     d^(a+m-1) out of it are dropped, so for an interior window L = d - d* is the Hodge-Dirac
     operator of the truncated complex, not the restriction of the Hodge-Dirac operator of the
     full complex (the source's setting is the full finite complex, the window [a, a+m) covering
-    all nonzero degrees). The heat equation assumes closed ranges in the degrees a + 1, ...,
-    a + m - 1 of the window and a finite-dimensional kernel of d - d* on the window.
-    (7) S(0) = 1 is part of the verdict; the residual bound for reducing constraints follows from
-    propagation in one line and is stated for the record. The family of subcomplexes
-    (SubcomplexFamily) carries no bound and no approximation property: these are hypotheses.
+    all nonzero degrees).
+    (8) S(0) = 1 is part of the verdict; the residual bound for reducing constraints follows from
+    propagation in one line and is stated for the record, as is the fully discrete wave bound.
+    The family of subcomplexes (SubcomplexFamily) carries no bound and no approximation
+    property: these are hypotheses (Approximates, IsGraphBounded, as in palomar/static).
 
 review:
   status: "self-assessed"
@@ -186,16 +217,16 @@ alignment:
       lean: "FEEC.HilbertComplex.SubcomplexFamily.WaveVerdict"
       module: "Challenge"
       status: "proved"
-      note: "Well-posedness, unitary group, semidiscrete and theta-scheme convergence, error bound, propagation iff reducing, residual bound."
+      note: "Well-posedness, unitary group, semidiscrete and theta-scheme convergence, error bound with C = 2 (1 + 4 sqrt 3), temporal and fully discrete theta-scheme errors, propagation iff reducing, residual bound."
     - source: "[GilletteHolstZhu2017]; [AFW2010], Thm 3.9 (elliptic convergence)"
       lean: "FEEC.HilbertComplex.SubcomplexFamily.DynamicVerdict"
       module: "Challenge"
-      status: "proved (qualitative convergence)"
-      note: "Field `heat`."
+      status: "proved (convergence and temporal error; no spatial heat rate)"
+      note: "Field `heat`, under graph-norm bounds of the projections in the window and closed ranges."
     - source: "all of the above"
       lean: "FEEC.dynamicFEEC"
       module: "Challenge"
       status: "proved"
-      note: "The compared theorem; proved in Solution.lean from Feec.HilbertComplex.ConformingFamily.feec and ConstrainedFEEC.rate_le."
+      note: "The compared theorem; proved in Solution.lean from Feec.HilbertComplex.approxFEEC, dissipFEEC_fullyDiscrete, ConstrainedFEEC.heatFEEC and ConstrainedFEEC.rate_le."
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

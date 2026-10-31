@@ -438,24 +438,24 @@ def wavePerturbation : G.toApprox.Perturbation :=
 
 /-- **The perturbed heat discretization**: the Galerkin perturbation `-Δₕ + Pₕ B ιₕ` of the heat
 discretization by a bounded dissipative `B`, a discretization of `u' = (-Δ + B) u`. -/
-def heatPerturbation (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
+def heatPerturbation (hcr : ∀ i, H.ClosedRangeAt i) (hb : ∀ i, G.IsGraphBounded i) :
     G.toHeat.Perturbation :=
   DissipFEEC.Perturbation.galerkin B hB (fun _ _ => rfl)
-    fun _ => DissipFEEC.tendsto_incl_proj _ (G.heatCore hcr)
-      (G.dense_heatCore_data hcr ▸ Submodule.mem_top)
+    fun _ => DissipFEEC.tendsto_incl_proj _ (G.heatCore hcr hb)
+      (G.dense_heatCore_data hcr hb ▸ Submodule.mem_top)
 
 /-- **The perturbed verdict of a constrained FEEC discretization** for a bounded dissipative `B`:
 the perturbed verdicts (`DissipFEEC.Perturbation.Verdict`) of the wave discretization of `L + B`
 with the perturbation of the wave core, and of the heat discretization of `-Δ + B` with the
-perturbation of the heat core (closed range, finite-dimensional harmonic forms). -/
+perturbation of the heat core (closed range, projections bounded in the graph norm). -/
 structure PerturbedVerdict : Prop where
   /-- the damped wave equation `ξ' = (L + B) ξ` -/
   wave : (G.wavePerturbation B hB).Verdict
     ((G.wavePerturbation B hB).core G.toCore G.toCore_closure_eq_top)
   /-- the perturbed heat equation `u' = (-Δ + B) u` -/
-  heat (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
-    (G.heatPerturbation B hB hcr).Verdict
-      ((G.heatPerturbation B hB hcr).core (G.heatCore hcr) (G.dense_heatCore_data hcr))
+  heat (hcr : ∀ i, H.ClosedRangeAt i) (hb : ∀ i, G.IsGraphBounded i) :
+    (G.heatPerturbation B hB hcr hb).Verdict
+      ((G.heatPerturbation B hB hcr hb).core (G.heatCore hcr hb) (G.dense_heatCore_data hcr hb))
 
 end ConstrainedFEEC
 
@@ -465,7 +465,7 @@ the perturbed wave and heat equations satisfy the perturbed verdict (`perturbFEE
 theorem constrainedFEEC_perturbed (G : ConstrainedFEEC H κ) (B : PiLp 2 W →L[𝕜] PiLp 2 W)
     (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : G.PerturbedVerdict B hB :=
   ⟨perturbFEEC _ G.toCore_closure_eq_top _,
-    fun hcr _ => perturbFEEC _ (G.dense_heatCore_data hcr) _⟩
+    fun hcr hb => perturbFEEC _ (G.dense_heatCore_data hcr hb) _⟩
 
 end Conforming
 

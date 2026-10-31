@@ -2979,7 +2979,7 @@ example : type_of% (constrainedFEEC (F.windowFEEC a m K hK)) := F.feec.constrain
 
 example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
-    type_of% ((F.windowFEEC a m K hK).heatFEEC hcr) :=
+    type_of% ((F.windowFEEC a m K hK).heatFEEC hcr (F.isGraphBounded_windowFEEC a m K hK)) :=
   F.feec.heat a m K hK hcr
 
 example (Θ : (F.windowFEEC a m K hK).toApprox.TimeScheme) :
@@ -2989,8 +2989,9 @@ example (Θ : (F.windowFEEC a m K hK).toApprox.TimeScheme) :
 example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)]
     (Θ : (F.windowFEEC a m K hK).toHeat.TimeScheme) :
-    type_of% (dissipFEEC_fullyDiscrete ((F.windowFEEC a m K hK).heatCore hcr) Θ) :=
-  (F.feec.full a m K hK).heat hcr Θ
+    type_of% (dissipFEEC_fullyDiscrete ((F.windowFEEC a m K hK).heatCore hcr
+      (F.isGraphBounded_windowFEEC a m K hK)) Θ) :=
+  (F.feec.full a m K hK).heat hcr _ Θ
 
 /-- The θ-schemes (`θ ≥ 1/2`; implicit Euler at `θ = 1`) and Crank–Nicolson are time schemes of
 the wave and heat discretizations, so their fully discrete verdicts are fields of the crown. -/
@@ -3002,11 +3003,11 @@ example (θ : ℝ) (hθ : 1 / 2 ≤ θ) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h
       ((F.windowFEEC a m K hK).toApprox.crankNicolson τ hτ).Verdict
         (F.windowFEEC a m K hK).toCore ∧
       ((F.windowFEEC a m K hK).toHeat.thetaScheme θ hθ τ hτ).Verdict
-        ((F.windowFEEC a m K hK).heatCore hcr) ∧
+        ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) ∧
       ((F.windowFEEC a m K hK).toHeat.crankNicolson τ hτ).Verdict
-        ((F.windowFEEC a m K hK).heatCore hcr) :=
+        ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) :=
   ⟨(F.feec.full a m K hK).wave _, (F.feec.full a m K hK).wave _,
-    (F.feec.full a m K hK).heat hcr _, (F.feec.full a m K hK).heat hcr _⟩
+    (F.feec.full a m K hK).heat hcr _ _, (F.feec.full a m K hK).heat hcr _ _⟩
 
 example {T : ℝ} (R : (F.windowFEEC a m K hK).toApprox.RateClass T)
     {x : PiLp 2 fun i : Fin m => V (a + i)} (hx : x ∈ R.Data) (h : κ)
@@ -3041,7 +3042,7 @@ example {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) {x : PiLp 2 fun i : Fin m =>
 
 example (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] (s : ρ) :
-    type_of% ((F.windowFEEC a m K hK).rate_heat hcr
+    type_of% ((F.windowFEEC a m K hK).rate_heat hcr (F.isGraphBounded_windowFEEC a m K hK)
       ((F.windowFEEC a m K hK).totalJackson (J.window a m)) s) :=
   (F.feec_rated J).rate_heat a m K hK hcr s
 
@@ -3057,7 +3058,8 @@ open Feec.Models.Cube.FEM in
 field `heat` of the crown of the finite element family of every admissible sequence, on the
 window `HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` with the trivial constraint. -/
 example (n : ℕ) [NeZero n] (S : FiniteElement.PolySeq) :
-    (heatFamily n S).toHeat.Verdict ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) :=
+    (heatFamily n S).toHeat.Verdict ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)
+      (isGraphBounded_heatFamily n S)) :=
   (polyFamily n S).feec.heat 0 (n + 1) ⊤ _ (closedRangeAt_heatWindow n)
 
 end CrownCube
@@ -3786,7 +3788,8 @@ structure OldVerdict (F : ConformingFamily H κ) : Prop where
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
     (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
     [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
-    (F.windowFEEC a m K hK).toHeat.Verdict ((F.windowFEEC a m K hK).heatCore hcr)
+    (F.windowFEEC a m K hK).toHeat.Verdict ((F.windowFEEC a m K hK).heatCore hcr
+      (F.isGraphBounded_windowFEEC a m K hK))
   /-- the fully discrete wave and heat FEEC theorems on every window with every closed
   constraint, for every time scheme, and leapfrog under the CFL condition -/
   full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
@@ -3801,7 +3804,8 @@ structure OldVerdict (F : ConformingFamily H κ) : Prop where
 
 /-- The old verdict is the new one without its last field. -/
 theorem crown_old_verdict (F : ConformingFamily H κ) : OldVerdict F :=
-  ⟨F.feec.static, F.feec.wave, F.feec.constrained, F.feec.heat, F.feec.full, F.feec.perturbed⟩
+  ⟨F.feec.static, F.feec.wave, F.feec.constrained, fun a m K hK hcr _ => F.feec.heat a m K hK hcr,
+    F.feec.full, F.feec.perturbed⟩
 
 variable (F : ConformingFamily H κ) (a : α) (m : ℕ)
   (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))

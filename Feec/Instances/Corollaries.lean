@@ -114,9 +114,8 @@ eliminated), and for every datum `x ∈ ker 𝐝†` (in degree `1` of `HΛ(Ω)`
 `div u = 0`, `u · ν = 0`) and every family of discrete data with `ιₕ vₕ → x` the constraint
 residuals of the discrete heat flows tend to `0` uniformly on `[0, T]`. [AFW2010], §3.2;
 [GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4, Ch. 6 -/
-theorem slipStokes (a : α) (m : ℕ) (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
-    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
-    (slipStokesFEEC F a m).toHeat.Verdict ((slipStokesFEEC F a m).heatCore hcr) ∧
+theorem slipStokes (a : α) (m : ℕ) (hcr : ∀ i, (H.window a m).ClosedRangeAt i) :
+    (slipStokesFEEC F a m).toHeat.Verdict ((slipStokesFEEC F a m).heatCore hcr (F.isGraphBounded_windowFEEC a m _ _)) ∧
       (slipStokesFEEC F a m).toHeat.Keeps (slipStokesFEEC F a m).toHeat.K ∧
       ∀ {x} (_ : x ∈ ((H.window a m).totalD†).ker) {v : ∀ h, (slipStokesFEEC F a m).toHeat.X h},
         (slipStokesFEEC F a m).toHeat.Converges v x → ∀ T,
@@ -124,7 +123,7 @@ theorem slipStokes (a : α) (m : ℕ) (hcr : ∀ i, (H.window a m).ClosedRangeAt
           (fun h t => infDist ((slipStokesFEEC F a m).toHeat.sol h (v h) t)
             (slipStokesFEEC F a m).toHeat.K) (fun _ => 0) (slipStokesFEEC F a m).toHeat.l
           (Icc 0 T) := by
-  have V : (slipStokesFEEC F a m).toHeat.Verdict ((slipStokesFEEC F a m).heatCore hcr) :=
+  have V : (slipStokesFEEC F a m).toHeat.Verdict ((slipStokesFEEC F a m).heatCore hcr (F.isGraphBounded_windowFEEC a m _ _)) :=
     F.feec.heat a m _ _ hcr
   have hK := (V.isReducing_iff.1 (H.window a m).isReducing_hodgeLaplacian_ker_adjoint.neg).1
   refine ⟨V, hK, fun hx _ hv T => V.residual_tendsto hK hx ?_ hv T⟩
@@ -154,18 +153,18 @@ theorem maxwell_fullyDiscrete (a : α) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : κ 
       V.residual_tendsto_iterates hK hx ((Maxwell.feec F a).mem_toCore_closure _) hv hτ0 T hε⟩
 
 /-- **Crank–Nicolson and the θ-schemes for the Hodge heat equation** on every window with closed
-range and finite-dimensional harmonic forms, with every closed constraint: the fully discrete
+range, with every closed constraint: the fully discrete
 verdicts (field `full` of the FEEC theorem). [Thomee2006], Ch. 7–9 -/
 theorem heat_fullyDiscrete (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
-    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
-    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] (θ : ℝ) (hθ : 1 / 2 ≤ θ)
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (θ : ℝ) (hθ : 1 / 2 ≤ θ)
     {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) :
     ((F.windowFEEC a m K hK).toHeat.crankNicolson τ hτ).Verdict
-        ((F.windowFEEC a m K hK).heatCore hcr) ∧
+        ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) ∧
       ((F.windowFEEC a m K hK).toHeat.thetaScheme θ hθ τ hτ).Verdict
-        ((F.windowFEEC a m K hK).heatCore hcr) :=
-  ⟨(F.feec.full a m K hK).heat hcr _, (F.feec.full a m K hK).heat hcr _⟩
+        ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) :=
+  ⟨(F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _,
+    (F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _⟩
 
 /-- **The mixed method converges for every source**: in a degree `j` with closed range around it
 and finite-dimensional harmonic forms, the discrete mixed solutions of every `f ∈ Wʲ` converge to
@@ -216,7 +215,8 @@ field `u` is not given in closed form, and `u ∈ D(Δ)` is not claimed: the sli
 window still holds (`Corollaries.slipStokes`). [GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4, Ch. 6 -/
 theorem slipStokes (S : PolySeq) (hn : 2 ≤ n) :
     ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Verdict
-        ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)) ∧
+        ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)
+          ((polyFamily n S).isGraphBounded_windowFEEC 0 (n + 1) _ _)) ∧
       (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Keeps
         (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.K) ∧
       ∃ u : L2F ℝ (cubeDomain n) (formIdx n 1), u ≠ 0 ∧
@@ -241,7 +241,8 @@ theorem slipStokes (S : PolySeq) (hn : 2 ≤ n) :
   have hK0 := (heatWindow n).single_mem_ker_adjoint_totalD_of_mem_orthogonal
     (Submodule.orthogonal_le ((heatWindow n).boundaries_le_cycles _) hu.1)
   refine ⟨⟨V, hK⟩, u, hu0, hu, hK0, hres hK0 (DissipFEEC.tendsto_incl_proj _
-    ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)) ?_)⟩
+    ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)
+          ((polyFamily n S).isGraphBounded_windowFEEC 0 (n + 1) _ _)) ?_)⟩
   rw [ConstrainedFEEC.dense_heatCore_data]
   exact Submodule.mem_top
 
@@ -262,10 +263,10 @@ in the core (`crown_heat_nonvacuous`). -/
 theorem heat_crankNicolson (S : PolySeq) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : ℕ → ℝ}
     (hτ : ∀ N, 0 < τ N) :
     ((heatFamily n S).toHeat.crankNicolson τ hτ).Verdict
-        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) ∧
+        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n) (isGraphBounded_heatFamily n S)) ∧
       ((heatFamily n S).toHeat.thetaScheme θ hθ τ hτ).Verdict
-        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) ∧
-      ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)).Data, x ≠ 0 :=
+        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n) (isGraphBounded_heatFamily n S)) ∧
+      ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n) (isGraphBounded_heatFamily n S)).Data, x ≠ 0 :=
   ⟨(heat_fullyDiscrete (polyFamily n S) 0 (n + 1) ⊤ _ _ θ hθ hτ).1,
     (heat_fullyDiscrete (polyFamily n S) 0 (n + 1) ⊤ _ _ θ hθ hτ).2,
     (crown_heat_nonvacuous n S).2⟩

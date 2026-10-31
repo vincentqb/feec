@@ -12,22 +12,23 @@ public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 Finite element exterior calculus ([AFW2006], [AFW2010]) approximates a Hilbert complex
 `⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely defined operators by finite-dimensional subcomplexes `Vₕ`
-with commuting cochain projections `πₕ`. The theorem below (`FEEC.dynamicFEEC`) states, for
-cochain projections bounded uniformly in `W` and the approximation property in `W`, on every
-window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` (with total differential `𝐝`):
+with commuting cochain projections `πₕ`. The theorem below (`FEEC.dynamicFEEC`) states, on every
+window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` (with total differential `𝐝`) of a family of subcomplexes with the
+approximation property of [AFW2010], §3.3 in the graph norm in the degrees of the window:
 
 1. (**wave**) the Hodge wave equation `ξ' = L ξ`, `L = 𝐝 - 𝐝*`, is well posed (strong solutions,
    a unitary group `S`); its semidiscrete Galerkin solutions `exp(t Lₕ) vₕ` converge to `S(t) x`
    uniformly on `[0, T]` for every datum `x` and every family `vₕ → x`, with the error bound
-   `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + C (1 + t) M` for `x ∈ D(L²)`, `M` a bound of the
-   graph-norm distances of `S(s) x` and `S(s) L x` to `Xₕ = ⊕ Vₕ` for `s ∈ [0, t]`; the
-   θ-schemes, `θ ≥ 1/2`, converge as `h, τ → 0`; a closed constraint `K` is propagated by the
-   flow iff it reduces `L`, and then the constraint residual of the discrete solutions is
-   bounded by their error ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.13, 4.17;
-   [Thomee2006], Ch. 7);
-2. (**heat**) with closed ranges in the window and finite-dimensional harmonic fields `N(L)`, the
-   same convergence for the Hodge heat equation `u' = L² u = -Δ u` with the discrete generators
-   `Lₕ²` ([GilletteHolstZhu2017], via the elliptic convergence of [AFW2010], Thm 3.9).
+   `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + 2 (1 + C_P) (1 + t) M` for `x ∈ D(L²)`, `M` a bound of
+   the graph-norm distances of `S(s) x` and `S(s) L x` to `Xₕ = ⊕ Vₕ` for `s ∈ [0, t]` and
+   `C_P = 4√3` the bound of the elliptic projections; the θ-schemes, `θ ≥ 1/2`, converge as
+   `h, τ → 0`, with the temporal error `(θ + 1/2) nτ τ ‖Lₕ² w₀‖` and the fully discrete error
+   bound; a closed constraint `K` is propagated by the flow iff it reduces `L`, and then the
+   constraint residual of the discrete solutions is bounded by their error
+   ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.13, 4.17; [Thomee2006], Ch. 7);
+2. (**heat**) with projections bounded in the graph norm in the window and closed ranges in the
+   window, the same convergence for the Hodge heat equation `u' = L² u = -Δ u` with the discrete
+   generators `Lₕ²` ([GilletteHolstZhu2017], via the elliptic convergence of [AFW2010], Thm 3.9).
 
 Mathlib has no `C₀`-semigroups: the exact evolutions are the operator families `S` that the
 theorem asserts to exist, characterized by their strong solutions (unique, so `S` is unique on
@@ -107,6 +108,27 @@ structure SubcomplexFamily (κ : Type*) where
 
 attribute [instance] SubcomplexFamily.finiteDimensional
 
+/-- The distance `inf_{v ∈ Vⁱ} ‖x - v‖ + ‖y - d i j v‖`; for `y = d x`, the distance from `x` to
+`Vⁱ` in the graph norm of `d i j`. -/
+def Subcomplex.graphDist {H : HilbertComplex 𝕜 W} (S : H.Subcomplex) (i j : ℤ) (x : W i)
+    (y : W j) : ℝ :=
+  ⨅ v : S.V i, ‖x - v‖ + ‖y - H.d i j ⟨v, S.le_domain i j v.2⟩‖
+
+variable {H} {κ : Type*}
+
+/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly in
+`h`: `‖πₕ x‖ + ‖d πₕ x‖ ≤ C (‖x‖ + ‖d x‖)` on `D(d i (i + 1))`. -/
+def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∃ C : ℝ, ∀ (h : κ) (x : (H.d i (i + 1)).domain), ‖(F.π h).π i x‖ +
+    ‖H.d i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).mem i x)⟩‖ ≤
+      C * (‖(x : W i)‖ + ‖H.d i (i + 1) x‖)
+
+/-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
+`Vₕⁱ` in the graph norm tends to `0`. -/
+def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∀ x : (H.d i (i + 1)).domain,
+    Tendsto (fun h => (F.V h).graphDist i (i + 1) x (H.d i (i + 1) x)) F.l (𝓝 0)
+
 end HilbertComplex
 
 /-! ### Evolutions -/
@@ -144,7 +166,7 @@ finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique
 from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, and `S t x` has nonincreasing norm; the semidiscrete solutions
 `exp(t Bₕ) vₕ` (`semiflow`) converge to `S t x` uniformly on `[0, T]` from every family
 `vₕ → x`; and so do the θ-schemes `wₙ₊₁ - wₙ = τₕ Bₕ (θ wₙ₊₁ + (1 - θ) wₙ)`, `θ ≥ 1/2`, as
-`h, τₕ → 0`. -/
+`h, τₕ → 0`, with the temporal error `‖exp(nτ Bₕ) w₀ - wₙ‖ ≤ (θ + 1/2) nτ τ ‖Bₕ² w₀‖`. -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
   dense : Dense (A.domain : Set E)
@@ -161,6 +183,10 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
       (τ h : 𝕜) • B h ((θ : 𝕜) • w h (n + 1) + (1 - (θ : 𝕜)) • w h n))
     (hw0 : Tendsto (fun h => (w h 0 : E)) l (𝓝 x)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T → ‖S (n * τ h) x - w h n‖ < ε
+  theta_temporal (θ : ℝ) (hθ : 1 / 2 ≤ θ) (h : κ) {τ : ℝ} (hτ : 0 < τ) (w : ℕ → X h)
+    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n))
+    (n : ℕ) :
+    ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ (θ + 1 / 2) * (n * τ) * τ * ‖(B h ^ 2) (w 0)‖
 
 end Evolution
 
@@ -254,13 +280,27 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
   add (s t : ℝ) : S (s + t) = S s ∘L S t
   /-- the semidiscrete error bound: for `x ∈ D(L²)`, if the graph-norm distances of `S(s) x` and
   `S(s) L x` to `Xₕ` are at most `M` for `s ∈ [0, t]`, then
-  `‖S(t) x - exp(t Lₕ) v‖ ≤ ‖v - x‖ + C (1 + t) M` -/
-  error : ∃ C : ℝ, ∀ (x : Total W a m) (hx : x ∈ (H.wave a m).domain),
-    H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain → ∀ (h : κ) (v : F.Xh a m h) {t M : ℝ}, 0 ≤ t →
-    (∀ s ∈ Icc 0 t, ∀ y : (H.totalD a m).domain,
+  `‖S(t) x - exp(t Lₕ) v‖ ≤ ‖v - x‖ + 2 (1 + C_P) (1 + t) M`, `C_P = 4√3` the uniform bound of
+  the elliptic projections -/
+  error (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
+    (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) (v : F.Xh a m h) {t M : ℝ}
+    (ht : 0 ≤ t) (hM : ∀ s ∈ Icc 0 t, ∀ y : (H.totalD a m).domain,
       (y : Total W a m) = S s x ∨ (y : Total W a m) = S s (H.wave a m ⟨x, hx⟩) →
-        F.graphDist a m h y ≤ M) →
-    ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤ ‖(v : Total W a m) - x‖ + C * (1 + t) * M
+        F.graphDist a m h y ≤ M) :
+    ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
+      ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
+  /-- the fully discrete error bound of the θ-schemes, `θ ≥ 1/2`: under the hypotheses of `error`
+  at `t = nτ`, `‖S(nτ) x - wₙ‖ ≤ ‖w₀ - x‖ + 2 (1 + C_P) (1 + nτ) M + (θ + 1/2) nτ τ ‖Lₕ² w₀‖`
+  (from `error` and the temporal error) -/
+  theta_error (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
+    (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (θ : ℝ) (hθ : 1 / 2 ≤ θ) (h : κ) {τ : ℝ}
+    (hτ : 0 < τ) (w : ℕ → F.Xh a m h) (hw : ∀ n, w (n + 1) - w n =
+      (τ : 𝕜) • F.Lh a m h ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n)) (n : ℕ) {M : ℝ}
+    (hM : ∀ s ∈ Icc 0 (n * τ), ∀ y : (H.totalD a m).domain,
+      (y : Total W a m) = S s x ∨ (y : Total W a m) = S s (H.wave a m ⟨x, hx⟩) →
+        F.graphDist a m h y ≤ M) :
+    ‖S (n * τ) x - (w n : Total W a m)‖ ≤ ‖(w 0 : Total W a m) - x‖ +
+      2 * (1 + 4 * √3) * (1 + n * τ) * M + (θ + 1 / 2) * (n * τ) * τ * ‖(F.Lh a m h ^ 2) (w 0)‖
   /-- a closed constraint `K` propagates iff it reduces `L` -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
@@ -276,11 +316,15 @@ window. -/
 structure DynamicVerdict : Prop where
   /-- the wave equation `ξ' = L ξ` -/
   wave : ∃ S, F.WaveVerdict a m S
-  /-- the heat equation `u' = L² u`, with closed ranges in the window and finite-dimensional
-  harmonic fields `N(L)` -/
-  heat (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ)))))
-    [FiniteDimensional 𝕜 (H.wave a m).ker] : ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
+  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm of the window
+  (in its last degree, which has no differential in the window, in `W`) and closed ranges in the
+  window -/
+  heat (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
+    (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m →
+      ∃ C : ℝ, ∀ (h : κ) (x : W (a + (i : ℕ))), ‖(F.π h).π _ x‖ ≤ C * ‖x‖)
+    (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
+      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
+    ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
 
 end SubcomplexFamily
@@ -293,14 +337,10 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The FEEC theorem for the Hodge wave and heat equations** ([QuennevilleBelair2015], Thms 4.6,
 4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a family of
-subcomplexes whose cochain projections are bounded uniformly in `W`, `‖πₕ x‖ ≤ C ‖x‖`, and which
-approximates every `w ∈ Wⁱ`. On every window, `F` satisfies the wave and heat verdicts
-(`SubcomplexFamily.DynamicVerdict`). -/
-theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
-    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
-    (happrox : ∀ (i : ℤ) (w : W i),
-      Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0))
-    (a : ℤ) (m : ℕ) : F.DynamicVerdict a m := by
+subcomplexes which approximates in the graph norm in the degrees `a, …, a + m - 1`. On the window
+`[a, a + m)`, `F` satisfies the wave and heat verdicts (`SubcomplexFamily.DynamicVerdict`). -/
+theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (a : ℤ)
+    (m : ℕ) (happrox : ∀ i : Fin m, F.Approximates (a + (i : ℕ))) : F.DynamicVerdict a m := by
   sorry
 
 end FEEC

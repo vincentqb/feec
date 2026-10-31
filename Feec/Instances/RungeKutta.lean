@@ -52,8 +52,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [Is
   {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {κ : Type*} (F : ConformingFamily H κ)
 
 /-- **Every A-stable rational scheme in the FEEC theorem**: on every window with every closed
-constraint, the fully discrete wave verdict, and with closed range and finite-dimensional
-harmonic forms the fully discrete heat verdict, for the A-stable rational scheme `r` of order
+constraint, the fully discrete wave verdict, and with closed range the fully discrete heat
+verdict, for the A-stable rational scheme `r` of order
 `p ≥ 1` (field `full` of the FEEC theorem). [BrennerThomee1979] -/
 theorem full_rationalScheme (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) {r : RationalScheme}
@@ -61,11 +61,11 @@ theorem full_rationalScheme (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i
     (hτ : ∀ h, 0 < τ h) :
     ((F.windowFEEC a m K hK).toApprox.rationalScheme r hr hp hp0 τ hτ).Verdict
         (F.windowFEEC a m K hK).toCore ∧
-      ∀ (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
-        [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)],
+      ∀ (hcr : ∀ i, (H.window a m).ClosedRangeAt i),
         ((F.windowFEEC a m K hK).toHeat.rationalScheme r hr hp hp0 τ hτ).Verdict
-          ((F.windowFEEC a m K hK).heatCore hcr) :=
-  ⟨(F.feec.full a m K hK).wave _, fun hcr _ => (F.feec.full a m K hK).heat hcr _⟩
+          ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) :=
+  ⟨(F.feec.full a m K hK).wave _,
+    fun hcr => (F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _⟩
 
 /-- **Maxwell's equations with the two-stage Gauss–Legendre method** in the window
 `V a → V (a+1) → V (a+2)` with the Gauss laws (`Feec.Instances.Maxwell.feec`): the fully discrete
@@ -95,13 +95,13 @@ discrete verdicts, of orders `3` and `2` (field `full` of the FEEC theorem). [Ha
 §IV.5, §IV.6 -/
 theorem heat_radauIIA2 (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
-    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
-    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) :
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) :
     ((F.windowFEEC a m K hK).toHeat.radauIIA2 τ hτ).Verdict
-        ((F.windowFEEC a m K hK).heatCore hcr) ∧
+        ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) ∧
       ((F.windowFEEC a m K hK).toHeat.sdirk2 τ hτ).Verdict
-        ((F.windowFEEC a m K hK).heatCore hcr) :=
-  ⟨(F.feec.full a m K hK).heat hcr _, (F.feec.full a m K hK).heat hcr _⟩
+        ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK)) :=
+  ⟨(F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _,
+    (F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _⟩
 
 end Family
 
@@ -131,10 +131,10 @@ theorem maxwell_gaussLegendre2 (S : PolySeq) (a : ℤ) {τ : ℕ → ℝ} (hτ :
 admissible sequence `S`): the fully discrete verdicts, with a nonzero datum in the core. -/
 theorem heat_radauIIA2 (S : PolySeq) {τ : ℕ → ℝ} (hτ : ∀ N, 0 < τ N) :
     ((heatFamily n S).toHeat.radauIIA2 τ hτ).Verdict
-        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) ∧
+        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n) (isGraphBounded_heatFamily n S)) ∧
       ((heatFamily n S).toHeat.sdirk2 τ hτ).Verdict
-        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) ∧
-      ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)).Data, x ≠ 0 :=
+        ((heatFamily n S).heatCore (closedRangeAt_heatWindow n) (isGraphBounded_heatFamily n S)) ∧
+      ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n) (isGraphBounded_heatFamily n S)).Data, x ≠ 0 :=
   ⟨(RungeKutta.heat_radauIIA2 (polyFamily n S) 0 (n + 1) ⊤ _ _ hτ).1,
     (RungeKutta.heat_radauIIA2 (polyFamily n S) 0 (n + 1) ⊤ _ _ hτ).2,
     (crown_heat_nonvacuous n S).2⟩

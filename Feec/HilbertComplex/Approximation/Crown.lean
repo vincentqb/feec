@@ -34,7 +34,7 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    with a positive residual in the limit ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14,
    Prop. 4.17); these are the conclusions of the skew-adjoint and dissipative FEEC theorems for
    the wave operator ([HolstStern2012], Thms 3.9, 3.10 for the elliptic analogues);
-3. (**heat**, `heat`) on every window with closed range and finite-dimensional harmonic forms, the
+3. (**heat**, `heat`) on every window with closed range, the
    semidiscrete Hodge heat equation `uₕ' = -Δₕ uₕ` is well-posed, dissipates energy and converges
    for every datum, with the heat Ritz projection `Rₕ = Gₕ Qₕ Δ + P_ℌₕ Qₕ` built from the static
    mixed method ([AFW2010], Thm 3.9; [Wheeler1973]; [GilletteHolstZhu2017]);
@@ -111,7 +111,7 @@ range under the hypotheses of the analytic BGG theorem (`BGG.HilbertData.Stacked
 the Hessian, elasticity and div-div complexes, `Feec.Domain.hessianFEEC`,
 `Feec.Domain.elasticityFEEC`, `Feec.Domain.divDivFEEC`). Conforming families and their Jackson
 estimates transfer to every reweighted complex `H.conj a` (weighted inner products, variable
-coefficients: `ConformingFamily.conj`, `ConformingFamily.Jackson.conj`, for weights with uniformly
+coefficients: `ConformingFamily.conj`, `SubcomplexFamily.Jackson.conj`, for weights with uniformly
 bounded condition numbers), so the crown holds for them as well, e.g. for Maxwell's equations in
 every linear medium given by factors `ε = e† e`, `μ = m† m`, in particular isotropic media
 (`Feec.Instances.MaxwellMedia`; anisotropic media once real factors are supplied). The physics
@@ -225,8 +225,8 @@ structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
   /-- the fully discrete wave equation, for every time scheme -/
   wave (Θ : G.toApprox.TimeScheme) : Θ.Verdict G.toCore
   /-- the fully discrete heat equation, for every time scheme -/
-  heat (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)]
-    (Θ : G.toHeat.TimeScheme) : Θ.Verdict (G.heatCore hcr)
+  heat (hcr : ∀ i, H.ClosedRangeAt i) (hb : ∀ i, G.IsGraphBounded i)
+    (Θ : G.toHeat.TimeScheme) : Θ.Verdict (G.heatCore hcr hb)
   /-- explicit leapfrog for the wave equation under the CFL condition `τ ‖Lₕ‖ ≤ c < 1`: the
   semidiscrete rate plus the error of the first step and a second-order temporal error -/
   leapfrog {T : ℝ} (R : G.toApprox.RateClass T) {x : PiLp 2 W} (hx : x ∈ R.Data) (h : κ)
@@ -262,7 +262,7 @@ time scheme, leapfrog under the CFL condition, and the Hermitian signed systems 
 Crank–Nicolson. -/
 theorem constrainedFEEC_fullyDiscrete (G : ConstrainedFEEC H κ) : G.FullVerdict :=
   ⟨fun Θ => dissipFEEC_fullyDiscrete G.toCore Θ,
-    fun hcr _ Θ => dissipFEEC_fullyDiscrete (G.heatCore hcr) Θ,
+    fun hcr hb Θ => dissipFEEC_fullyDiscrete (G.heatCore hcr hb) Θ,
     G.toApprox.norm_S_sub_leapfrog_le,
     fun hτ h _ b ε hε hMε hKε v => G.toApprox.crankNicolson_signed hτ h b ε hε hMε hKε v⟩
 
@@ -295,23 +295,23 @@ structure ConstrainedFEEC.FullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ)
             (G.jacksonWaveRateClass J T s hL).meshSize h ^ (G.jacksonWaveRateClass J T s hL).α *
               (G.jacksonWaveRateClass J T s hL).classNorm x))
   /-- the fully discrete heat equation -/
-  heat (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] {T : ℝ} (s : ρ)
+  heat (hcr : ∀ i, H.ClosedRangeAt i) (hb : ∀ i, G.IsGraphBounded i) {T : ℝ} (s : ρ)
     {L : ℝ} (hL : 0 ≤ L) (Θ : G.toHeat.TimeScheme) {K : ℝ} (hΘ : Θ.IsTrajConsistent K)
-    (Sm : (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).toComparison.Smooth (Θ.p + 1))
-    {x : PiLp 2 W} (hx : x ∈ (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).Data)
+    (Sm : (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).toComparison.Smooth (Θ.p + 1))
+    {x : PiLp 2 W} (hx : x ∈ (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).Data)
     (hxs : x ∈ Sm.Data) (h : κ) (v : G.toHeat.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
     ‖G.toHeat.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
-      (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C *
-          (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
-            (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
-          (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x +
+      (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).C *
+          (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).meshSize h ^
+            (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).α *
+          (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).classNorm x +
         ‖G.toHeat.incl h‖ * Θ.M T *
-          (‖(G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).p x h 0 - v‖ +
+          (‖(G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).p x h 0 - v‖ +
             n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x +
-              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C' *
-                (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
-                  (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
-                (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x))
+              (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).C' *
+                (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).meshSize h ^
+                  (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).α *
+                (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).classNorm x))
   /-- the fully discrete wave equation for every datum of the Jackson class and every time
   scheme: the spatial rate plus `O(τₕ^{p/(p+2)})`, uniformly in `h` -/
   wave_uniform {T : ℝ} (s : ρ) {L : ℝ} (hL : 0 ≤ L) (Θ : G.toApprox.TimeScheme) {x : PiLp 2 W}
@@ -333,40 +333,40 @@ structure ConstrainedFEEC.FullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ)
               ‖(G.jacksonWaveRateClass J T s hL).p x h 0‖))
   /-- the fully discrete heat equation for every datum of the Jackson class and every time
   scheme: the spatial rate plus `O(τₕ^{p/(p+2)})`, uniformly in `h` -/
-  heat_uniform (hcr : ∀ i, H.ClosedRangeAt i) [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] {T : ℝ}
+  heat_uniform (hcr : ∀ i, H.ClosedRangeAt i) (hb : ∀ i, G.IsGraphBounded i) {T : ℝ}
     (s : ρ) {L : ℝ} (hL : 0 ≤ L) (Θ : G.toHeat.TimeScheme) {x : PiLp 2 W}
-    (hx : x ∈ (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).Data) (h : κ)
+    (hx : x ∈ (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).Data) (h : κ)
     (v : G.toHeat.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T)
     (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
     ‖G.toHeat.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
-      ((G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C + ‖G.toHeat.incl h‖ *
-          (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C' * (n * Θ.τ h)) *
-          ((G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
-              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
-            (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x) +
+      ((G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).C + ‖G.toHeat.incl h‖ *
+          (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).C' * (n * Θ.τ h)) *
+          ((G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).meshSize h ^
+              (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).α *
+            (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).classNorm x) +
         ‖G.toHeat.incl h‖ * (Θ.M T *
-            ‖(G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).p x h 0 - v‖ +
+            ‖(G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).p x h 0 - v‖ +
           (1 + Θ.M T) * (Θ.p + 1) * G.toHeat.boundConst *
-            (2 * (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C + ‖G.toHeat.incl h‖ *
-              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).C' * T) *
-            ((G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).meshSize h ^
-                (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).α *
-              (G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).classNorm x) +
+            (2 * (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).C + ‖G.toHeat.incl h‖ *
+              (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).C' * T) *
+            ((G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).meshSize h ^
+                (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).α *
+              (G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).classNorm x) +
           Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * G.toHeat.boundConst *
             ‖DissipFEEC.genExt (-H.hodgeLaplacian) x‖ + Θ.M T * Θ.K * (n * Θ.τ h) *
-              2 ^ (Θ.p + 1) * ‖(G.jacksonHeatRateClass hcr (G.totalJackson J) s hL T).p x h 0‖))
+              2 ^ (Θ.p + 1) * ‖(G.jacksonHeatRateClass hcr hb (G.totalJackson J) s hL T).p x h 0‖))
 
 /-- **The fully discrete rates of a Jackson estimate** (`ConstrainedFEEC.FullRate`), the field
 `rate_smooth_iterates` of the fully discrete verdicts at the Jackson rate classes. -/
 theorem constrainedFEEC_fullRate (G : ConstrainedFEEC H κ) (J : G.Jackson ρ) : G.FullRate J :=
   ⟨fun _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
       ((constrainedFEEC_fullyDiscrete G).wave Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn,
-    fun hcr _ _ _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
-      ((constrainedFEEC_fullyDiscrete G).heat hcr Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn,
+    fun hcr hb _ _ _ _ Θ _ hΘ Sm _ hx hxs h v _ hn =>
+      ((constrainedFEEC_fullyDiscrete G).heat hcr hb Θ).rate_smooth_iterates hΘ _ Sm hx hxs h v hn,
     fun s _ hL Θ _ hx h v _ hn hτT => ((constrainedFEEC_fullyDiscrete G).wave Θ).rate_uniform_iterates
       _ hx ((ConstrainedFEEC.RateClass.ofJackson G J _ s hL).mem_domain _ hx) h v hn hτT,
-    fun hcr _ _ _ _ _ Θ _ hx h v _ hn hτT =>
-      ((constrainedFEEC_fullyDiscrete G).heat hcr Θ).rate_uniform_iterates _ hx hx.1.1 h v hn hτT⟩
+    fun hcr hb _ _ _ _ Θ _ hx h v _ hn hτT =>
+      ((constrainedFEEC_fullyDiscrete G).heat hcr hb Θ).rate_uniform_iterates _ hx hx.1.1 h v hn hτT⟩
 
 end Full
 
@@ -503,6 +503,14 @@ abbrev windowFEEC (F : ConformingFamily H κ) (a : α) (m : ℕ)
     ConstrainedFEEC (H.window a m) κ :=
   (F.window a m).withConstraint K hK
 
+omit [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)] in
+/-- The projections of the conforming window are bounded in the graph norm in every degree. -/
+theorem isGraphBounded_windowFEEC (F : ConformingFamily H κ) (a : α) (m : ℕ)
+    (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    ∀ i, (F.windowFEEC a m K hK).IsGraphBounded i :=
+  (F.window a m).isGraphBounded_toSubcomplexFamily
+
 /-- **The conforming window as an approximating family with variational crimes**: the window
 with the constraint `K` (`windowFEEC`) read as an approximating family of discrete differential
 spaces with zero inner-product and cochain defects (`ConstrainedFEEC.toCrime`). -/
@@ -531,13 +539,12 @@ structure Verdict (F : ConformingFamily H κ) : Prop where
   constrained (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
     (F.windowFEEC a m K hK).Verdict
-  /-- the heat FEEC theorem on every window with closed range and finite-dimensional harmonic
-  forms, with every closed constraint -/
+  /-- the heat FEEC theorem on every window with closed range, with every closed constraint -/
   heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
-    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
-    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
-    (F.windowFEEC a m K hK).toHeat.Verdict ((F.windowFEEC a m K hK).heatCore hcr)
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) :
+    (F.windowFEEC a m K hK).toHeat.Verdict
+      ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK))
   /-- the fully discrete wave and heat FEEC theorems on every window with every closed
   constraint, for every time scheme, and leapfrog under the CFL condition -/
   full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
@@ -559,8 +566,7 @@ structure Verdict (F : ConformingFamily H κ) : Prop where
 /-- **The FEEC theorem.** For every conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
 the static FEEC theorem in every degree (closed range, finite-dimensional harmonic forms), and on
 every window with every closed constraint the semidiscrete wave FEEC theorem (approximating and
-constrained), the heat FEEC theorem (closed range and finite-dimensional harmonic forms of the
-window), the fully discrete theorems for every time scheme and for leapfrog under the CFL
+constrained), the heat FEEC theorem (closed range of the window), the fully discrete theorems for every time scheme and for leapfrog under the CFL
 condition, and the perturbed theorems for every bounded dissipative perturbation. [AFW2010],
 Thms 3.4–3.9; [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [BrennerThomee1979];
 [Pazy1983], §3.1, §3.3, §3.4 -/
@@ -568,7 +574,7 @@ theorem feec (F : ConformingFamily H κ) : F.Verdict :=
   ⟨fun hcr j _ => F.staticFEEC hcr j,
     fun a m K hK => approxFEEC _ (F.windowFEEC a m K hK).toCore,
     fun a m K hK => constrainedFEEC (F.windowFEEC a m K hK),
-    fun a m K hK hcr _ => (F.windowFEEC a m K hK).heatFEEC hcr,
+    fun a m K hK hcr => (F.windowFEEC a m K hK).heatFEEC hcr (F.isGraphBounded_windowFEEC a m K hK),
     fun a m K hK => constrainedFEEC_fullyDiscrete (F.windowFEEC a m K hK),
     fun a m K hK B hB => constrainedFEEC_perturbed (F.windowFEEC a m K hK) B hB,
     fun a m K hK => (F.windowCrime a m K hK).feec⟩
@@ -612,8 +618,7 @@ structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
   constant of the static rate ([AFW2010], Thm 3.9 along the heat flow) -/
   rate_heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
-    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
-    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] (s : ρ) :
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ) :
     ∃ C, 0 ≤ C ∧ ∀ {L : ℝ}, 0 ≤ L →
     ∀ {T : ℝ} {x : PiLp 2 fun i : Fin m => V (a + i)},
       x ∈ (-(H.window a m).hodgeLaplacian).sqDomain →
@@ -639,7 +644,8 @@ theorem feec_rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Verdict.Rate
   ⟨F.feec, fun s _ _ _ hij hjk hj hk => F.rate J s hij hjk hj hk,
     fun a m K hK _ s _ hL _ hx h _ ht => (F.windowFEEC a m K hK).rate_le
       (ConstrainedFEEC.RateClass.ofJackson _ (J.window a m) _ s hL) hx h ht,
-    fun a m K hK hcr _ s => (F.windowFEEC a m K hK).rate_heat hcr _ s,
+    fun a m K hK hcr s => (F.windowFEEC a m K hK).rate_heat hcr
+      (F.isGraphBounded_windowFEEC a m K hK) _ s,
     fun a m K hK => constrainedFEEC_fullRate (F.windowFEEC a m K hK) (J.window a m)⟩
 
 end ConformingFamily

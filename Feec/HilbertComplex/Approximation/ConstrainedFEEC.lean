@@ -1,9 +1,6 @@
 module
 
-public import Feec.HilbertComplex.Approximation.ConformingFamily
-public import Feec.HilbertComplex.Approximation.Convergence
-public import Feec.HilbertComplex.Approximation.DiscreteCohomology
-public import Feec.HilbertComplex.Approximation.GraphApprox
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 public import Feec.HilbertComplex.InvariantCore
 
 /-!
@@ -11,20 +8,23 @@ public import Feec.HilbertComplex.InvariantCore
 
 A **constrained FEEC discretization** (`Feec.HilbertComplex.ConstrainedFEEC`) of a Hilbert
 complex `H` (any finite index type `ι`, any `ComplexShape`; e.g. a window of a complex on `ℤ` or
-a short complex on `Fin 3`) is a **conforming family** (`Feec.HilbertComplex.ConformingFamily`,
-the data of [AFW2010], §3.3 with the bounds in `W`) with a closed constraint
-(`ConformingFamily.withConstraint`):
+a short complex on `Fin 3`) is a family of subcomplexes with the approximation property of
+[AFW2010], §3.3 and a closed constraint:
 
 * a family `Vₕ` (indexed by any type `κ`, along a filter `l`, e.g. `h → 0` or `N → ∞`) of
-  finite-dimensional **subcomplexes** with **commuting cochain projections** `πₕ`, uniformly
-  bounded in `W`;
-* the **approximation property**: `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ`, so every `x ∈ W = ⊕ Wⁱ`
-  is approximated by `∏ Vₕⁱ` (`ConformingFamily.dense`). The commuting projections upgrade it to
-  the graph norm of `Γ(𝐝)` (`ConstrainedFEEC.dense_graph`: `‖ζ - Πₕ ζ‖_Γ ≤ 2 (1 + C) δ`), which
-  drives the convergence;
+  finite-dimensional **subcomplexes** with **commuting cochain projections** `πₕ`
+  (`Feec.HilbertComplex.SubcomplexFamily`), with no bound;
+* the **approximation property in the graph norm** in every degree
+  (`SubcomplexFamily.Approximates`), so that `Vₕ` approximates `Γ(𝐝)`
+  (`ConstrainedFEEC.dense_graph`), which drives the convergence, and `W` (`ConstrainedFEEC.dense`);
 * a closed **constraint subspace** `K` of the total space `W`.
 
-Every finite element family with uniformly bounded smoothed projections is a conforming family
+The wave theory needs no bound of the projections (the elliptic projections are bounded on every
+subcomplex, [QuennevilleBelair2015], Prop. 4.13); their bounds in the graph norm
+(`SubcomplexFamily.IsGraphBounded`) are hypotheses of the discrete cohomology (item 5) and of the
+heat theory (`Feec.HilbertComplex.Approximation.HeatFEEC`). A conforming family
+(`Feec.HilbertComplex.ConformingFamily`, bounds and approximation in `W`) with a closed constraint
+is one (`ConformingFamily.withConstraint`). Every finite element family with uniformly bounded smoothed projections is a conforming family
 (`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`, `P_r⁻Λ` on
 the cube, parallelepipeds and star-shaped domains), so the theorem below holds for each of them,
 on every window and with every closed constraint.
@@ -72,13 +72,14 @@ of the wave Ritz projection (`ConstrainedFEEC.waveRitz`, the elliptic projection
    with `D(L) ∩ K` dense in `K`, the data lie in `D(L) ∩ K` itself and `Q = K` (`leaves_graded`).
    Without a grading, when `D(L) ∩ K` is dense in `K`, some datum of `D(L) ∩ K` leaves `K` at some
    `t ∈ [-T, T]` (`leaves_symm`).
-5. `cohomology` (`ConformingFamily.eventually_bijective_cohomologyMap`): wherever `H` has closed
-   range and finite-dimensional harmonic forms, the projections `πₕ` eventually induce
-   isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)` ([AFW2010], Thm 3.4, Thm 3.5).
+5. `cohomology` (`SubcomplexFamily.eventually_bijective_cohomologyMap`): wherever the projections
+   are bounded in the graph norm and `H` has closed range and finite-dimensional harmonic forms,
+   the projections `πₕ` eventually induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)` ([AFW2010], Thm 3.4,
+   Thm 3.5).
 
-The cochain projections enter twice: the total projection `Πₕ` (`ConstrainedFEEC.piProj`)
-commutes with `𝐝` and turns the approximation property in `W` into the graph-norm approximation
-behind items 3 and 4 (`ConstrainedFEEC.dense_graph`), and they give the uniform discrete Poincaré
+The cochain projections enter only through bounds: the total projection `Πₕ`
+(`ConstrainedFEEC.piProj`) commutes with `𝐝`, and with bounds in the graph norm it drives the
+static theory of the heat equation; bounded in `W` it gives the uniform discrete Poincaré
 inequality `constrainedFEEC_discretePoincare` ([AFW2010], Thm 3.6).
 
 Further: the data of the non-vacuity witness `constrainedFEEC_nonvacuous` (on `𝕜 --id--> 𝕜 → 0`
@@ -147,20 +148,68 @@ theorem ConformingFamily.dense {κ : Type*} {H : HilbertComplex 𝕜 c W} (F : C
     _ < δ := e
 
 /-- A **constrained FEEC discretization** of the Hodge wave equation of the Hilbert complex `H`
-(on a finite index type): a conforming family (finite-dimensional subcomplexes `Vₕ`, `h : κ`
-along the filter `l`, with commuting cochain projections `πₕ` uniformly bounded in `W` and the
-approximation property) and a closed constraint subspace `K` of the total space. See [AFW2010],
-§3.3, [Arnold2018], Ch. 5 and [QuennevilleBelair2015], §4.6, §4.7. -/
-structure ConstrainedFEEC (H : HilbertComplex 𝕜 c W) (κ : Type*) extends ConformingFamily H κ where
+(on a finite index type): a family of subcomplexes (finite-dimensional subcomplexes `Vₕ`, `h : κ`
+along the filter `l`, with commuting cochain projections `πₕ`) with the approximation property of
+[AFW2010], §3.3 in the graph norm in every degree (`SubcomplexFamily.Approximates`), and a closed
+constraint subspace `K` of the total space. No bound of the projections is assumed: the wave
+theory needs none (the elliptic projections are bounded uniformly on every subcomplex,
+[QuennevilleBelair2015], Prop. 4.13); the bounds in the graph norm
+(`SubcomplexFamily.IsGraphBounded`) are hypotheses of the discrete cohomology and of the heat
+theory. A conforming family with a closed constraint is one (`ConformingFamily.withConstraint`).
+See [AFW2010], §3.3, [Arnold2018], Ch. 5 and [QuennevilleBelair2015], §4.6, §4.7. -/
+structure ConstrainedFEEC (H : HilbertComplex 𝕜 c W) (κ : Type*) extends SubcomplexFamily H κ where
+  /-- the approximation property in the graph norm, in every degree -/
+  approximates : ∀ i, toSubcomplexFamily.Approximates i
   /-- the constraint subspace -/
   K : Submodule 𝕜 (PiLp 2 W)
   isClosed_K : IsClosed (K : Set (PiLp 2 W))
 
-/-- **A conforming family with a closed constraint** is a constrained FEEC discretization. -/
+/-- **A conforming family with a closed constraint** is a constrained FEEC discretization: bounds
+and approximation in `W` give approximation in the graph norm
+(`ConformingFamily.approximates_toSubcomplexFamily`). -/
 def ConformingFamily.withConstraint {κ : Type*} {H : HilbertComplex 𝕜 c W}
     (F : ConformingFamily H κ) (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
-    ConstrainedFEEC H κ :=
-  { F with K := K, isClosed_K := hK }
+    ConstrainedFEEC H κ where
+  toSubcomplexFamily := F.toSubcomplexFamily
+  approximates := F.approximates_toSubcomplexFamily
+  K := K
+  isClosed_K := hK
+
+/-- **The shifted form is bounded by `2`** on every graph space:
+`|A(ξ, ψ)| ≤ ‖ψ₁‖ ‖ξ₁‖ + ‖ψ₂‖ ‖ξ₁‖ + ‖ψ₁‖ ‖ξ₂‖ ≤ 2 ‖ξ‖ ‖ψ‖`. -/
+theorem _root_.Feec.HodgeWave.norm_shiftedForm_le {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] (T : E →ₗ.[𝕜] E) : ‖HodgeWave.shiftedForm T‖ ≤ 2 := by
+  refine ContinuousLinearMap.opNorm_le_bound₂ _ zero_le_two fun ξ ψ => ?_
+  rw [HodgeWave.shiftedForm_apply, HodgeWave.waveForm_apply]
+  have hξ := HodgeWave.norm_sq_graphSpace ξ
+  have hψ := HodgeWave.norm_sq_graphSpace ψ
+  set x1 := ‖T.graphFst ξ‖
+  set x2 := ‖T.graphSnd ξ‖
+  set p1 := ‖T.graphFst ψ‖
+  set p2 := ‖T.graphSnd ψ‖
+  have h1 : ‖⟪T.graphFst ψ, T.graphFst ξ⟫_𝕜‖ ≤ p1 * x1 := norm_inner_le_norm _ _
+  have h2 : ‖⟪T.graphSnd ψ, T.graphFst ξ⟫_𝕜‖ ≤ p2 * x1 := norm_inner_le_norm _ _
+  have h3 : ‖⟪T.graphFst ψ, T.graphSnd ξ⟫_𝕜‖ ≤ p1 * x2 := norm_inner_le_norm _ _
+  have hx1 : 0 ≤ x1 := norm_nonneg _
+  have hx2 : 0 ≤ x2 := norm_nonneg _
+  have hp1 : 0 ≤ p1 := norm_nonneg _
+  have hp2 : 0 ≤ p2 := norm_nonneg _
+  have hX := norm_nonneg ξ
+  have hP := norm_nonneg ψ
+  have a1 : p1 * x1 ≤ ‖ξ‖ * ‖ψ‖ := by
+    have : p1 ≤ ‖ψ‖ := by nlinarith
+    have : x1 ≤ ‖ξ‖ := by nlinarith
+    nlinarith
+  have a2 : p2 * x1 + p1 * x2 ≤ ‖ξ‖ * ‖ψ‖ := by
+    refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
+    rw [mul_pow, hξ, hψ]
+    nlinarith [sq_nonneg (p2 * x2 - p1 * x1)]
+  calc ‖⟪T.graphFst ψ, T.graphFst ξ⟫_𝕜 + (⟪T.graphSnd ψ, T.graphFst ξ⟫_𝕜 -
+        ⟪T.graphFst ψ, T.graphSnd ξ⟫_𝕜)‖
+      ≤ ‖⟪T.graphFst ψ, T.graphFst ξ⟫_𝕜‖ + (‖⟪T.graphSnd ψ, T.graphFst ξ⟫_𝕜‖ +
+        ‖⟪T.graphFst ψ, T.graphSnd ξ⟫_𝕜‖) :=
+        (norm_add_le _ _).trans (add_le_add le_rfl (norm_sub_le _ _))
+    _ ≤ 2 * ‖ξ‖ * ‖ψ‖ := by linarith
 
 /-- The uniform bound `C_P = √12 ‖A‖` of the elliptic projections of all subcomplexes of `H`
 ([QuennevilleBelair2015], Prop. 4.13). -/
@@ -168,6 +217,15 @@ def ellipticConst (H : HilbertComplex 𝕜 c W) : ℝ := ‖shiftedForm H.totalD
 
 theorem ellipticConst_nonneg (H : HilbertComplex 𝕜 c W) : 0 ≤ ellipticConst H := by
   unfold ellipticConst; positivity
+
+/-- **`C_P ≤ 4√3`** (`‖A‖ ≤ 2`): the bound `‖Pₕ‖ ≤ 2√12` of [QuennevilleBelair2015], Prop. 4.13. -/
+theorem ellipticConst_le (H : HilbertComplex 𝕜 c W) : ellipticConst H ≤ 4 * √3 := by
+  unfold ellipticConst
+  have h := HodgeWave.norm_shiftedForm_le H.totalD
+  have h3 : (0 : ℝ) < √3 := by positivity
+  rw [div_le_iff₀ (by positivity)]
+  have e : 4 * √3 * (1 / 2 / √3) = 2 := by field_simp; ring
+  linarith
 
 /-- The graph-space lift `x ↦ (x, 𝐝 x)` of `x ∈ D(L)`. -/
 def waveLift (H : HilbertComplex 𝕜 c W) (x : H.wave.domain) : H.totalD.GraphSpace :=
@@ -207,38 +265,6 @@ theorem piProj_of_mem (h : κ) {x : PiLp 2 W} (hx : x ∈ totalSub (F.V h).V) :
     F.piProj h x = x :=
   PiLp.ext fun i => (F.π h).proj i _ (hx i)
 
-/-- A nonnegative uniform bound of the cochain projections. -/
-def projConst : ℝ := max F.bound_π.choose 0
-
-omit [Fintype ι] in
-theorem projConst_nonneg : 0 ≤ F.projConst := le_max_right _ _
-
-omit [Fintype ι] in
-theorem norm_π_le (h : κ) (i : ι) (y : W i) : ‖(F.π h).π i y‖ ≤ F.projConst * ‖y‖ :=
-  (F.bound_π.choose_spec h i y).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-
-/-- `‖Πₕ x‖ ≤ C ‖x‖`, uniformly in `h`. -/
-theorem norm_piProj_le (h : κ) (x : PiLp 2 W) : ‖F.piProj h x‖ ≤ F.projConst * ‖x‖ := by
-  have h0 := F.projConst_nonneg
-  have hsq : ‖F.piProj h x‖ ^ 2 ≤ (F.projConst * ‖x‖) ^ 2 := by
-    rw [mul_pow, PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
-    refine Finset.sum_le_sum fun i _ => ?_
-    rw [piProj_apply, ← mul_pow]
-    exact pow_le_pow_left₀ (norm_nonneg _) (F.norm_π_le h i _) 2
-  have := norm_nonneg (F.piProj h x)
-  nlinarith [mul_nonneg h0 (norm_nonneg x)]
-
-/-- **Quasi-optimality of the cochain projection** in `W`: `‖y - Πₕ y‖ ≤ (1 + C) ‖y - w‖` for
-every `w ∈ Vₕ`. [AFW2010], §3.3 -/
-theorem norm_sub_piProj_le (h : κ) (y : PiLp 2 W) {w : PiLp 2 W}
-    (hw : w ∈ totalSub (F.V h).V) : ‖y - F.piProj h y‖ ≤ (1 + F.projConst) * ‖y - w‖ := by
-  have e : y - F.piProj h y = (y - w) - F.piProj h (y - w) := by
-    rw [_root_.map_sub, F.piProj_of_mem h hw]; abel
-  rw [e]
-  have := F.norm_piProj_le h (y - w)
-  calc _ ≤ ‖y - w‖ + ‖F.piProj h (y - w)‖ := norm_sub_le _ _
-    _ ≤ _ := by linarith
-
 theorem piProj_mem_domain (h : κ) (x : PiLp 2 W) : F.piProj h x ∈ H.totalD.domain :=
   fun i j => (F.V h).le_domain i j ((F.π h).mem i _)
 
@@ -249,46 +275,40 @@ theorem totalD_piProj (h : κ) (x : H.totalD.domain) :
   rw [totalD_apply, piProj_apply, totalD_apply, map_sum]
   exact Finset.sum_congr rfl fun i _ => (F.π h).comm i j ⟨(x : PiLp 2 W) i, x.2 i j⟩
 
-/-- **The approximation property in the graph norm**, from the approximation property in `W` and
-the uniformly bounded commuting cochain projections: `Πₕ ζ` approximates `ζ ∈ Γ(𝐝)` since
-`‖x - Πₕ x‖ ≤ (1 + C) ‖x - w₁‖` and `‖𝐝 x - 𝐝 Πₕ x‖ = ‖(1 - Πₕ) 𝐝 x‖ ≤ (1 + C) ‖𝐝 x - w₂‖`.
-[AFW2010], §3.3 -/
+/-- **The approximation property in the graph space of the total differential**, from the
+approximation property in the graph norm in every degree (`Subcomplex.exists_mem_graphSub_le_of_infDist`):
+every `ζ ∈ Γ(𝐝)` is approximated by `Vₕ`. [AFW2010], §3.3 -/
 theorem dense_graph (ζ : H.totalD.GraphSpace) (δ : ℝ) (hδ : 0 < δ) :
     ∀ᶠ h in F.l, ∃ w ∈ (F.V h).graphSub, ‖ζ - w‖ < δ := by
   obtain ⟨x, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq ζ
-  have hC := F.projConst_nonneg
-  set ε := δ / (2 * (1 + F.projConst)) with hε
-  have hε0 : 0 < ε := by positivity
-  filter_upwards [F.dense (x : PiLp 2 W) ε hε0, F.dense (H.totalD x) ε hε0] with h hw₁ hw₂
-  obtain ⟨w₁, hw₁, h₁⟩ := hw₁
-  obtain ⟨w₂, hw₂, h₂⟩ := hw₂
-  set y : H.totalD.domain := ⟨F.piProj h x, F.piProj_mem_domain h x⟩
-  refine ⟨H.totalD.toGraphSpace y, fun i => F.piProj_mem h x i, ?_⟩
-  have e1 : H.totalD.graphFst (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y) =
-      (x : PiLp 2 W) - F.piProj h x := by
-    rw [H.totalD.graphFst.map_sub]; rfl
-  have e2 : H.totalD.graphSnd (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y) =
-      H.totalD x - F.piProj h (H.totalD x) := by
-    rw [H.totalD.graphSnd.map_sub, graphSnd_toGraphSpace, graphSnd_toGraphSpace, F.totalD_piProj]
-  have hsq := norm_sq_graphSpace (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y)
-  rw [e1, e2] at hsq
-  have a1 := F.norm_sub_piProj_le h (x : PiLp 2 W) hw₁
-  have a2 := F.norm_sub_piProj_le h (H.totalD x) hw₂
-  have b1 : (1 + F.projConst) * ‖(x : PiLp 2 W) - w₁‖ < (1 + F.projConst) * ε :=
-    mul_lt_mul_of_pos_left h₁ (by linarith)
-  have b2 : (1 + F.projConst) * ‖H.totalD x - w₂‖ < (1 + F.projConst) * ε :=
-    mul_lt_mul_of_pos_left h₂ (by linarith)
-  have hδε : 2 * ((1 + F.projConst) * ε) = δ := by
-    rw [hε]; field_simp
-  have c1 := a1.trans_lt b1
-  have c2 := a2.trans_lt b2
-  have n1 := norm_nonneg ((x : PiLp 2 W) - F.piProj h x)
-  have n2 := norm_nonneg (H.totalD x - F.piProj h (H.totalD x))
-  have n3 := norm_nonneg (H.totalD.toGraphSpace x - H.totalD.toGraphSpace y)
-  have hm : 0 < (1 + F.projConst) * ε := by positivity
-  have hlt : ‖H.totalD.toGraphSpace x - H.totalD.toGraphSpace y‖ ^ 2 < δ ^ 2 := by
-    rw [hsq, ← hδε]; nlinarith
-  nlinarith
+  set m : ℝ := (Fintype.card ι : ℝ) + (Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)
+  have hm : 0 < m + 1 := by positivity
+  set ε := δ / (m + 1)
+  have hε : 0 < ε := div_pos hδ hm
+  filter_upwards [Filter.eventually_all.2 fun i => (tendsto_order.1 (F.approximates i
+    ((H.d i (c.next i)).toGraphSpace ⟨(x : PiLp 2 W) i, x.2 i _⟩))).2 ε hε] with h hh
+  obtain ⟨w, hw, hle⟩ := (F.V h).exists_mem_graphSub_le_of_infDist x hh
+  refine ⟨w, hw, hle.trans_lt ?_⟩
+  have : m * ε < (m + 1) * ε := by nlinarith
+  calc m * ε < (m + 1) * ε := this
+    _ = δ := by simp only [ε]; field_simp
+
+/-- **The approximation property in `W`**: the total spaces `Xₕ = ∏ Vₕⁱ` approximate every
+`x ∈ W` (`dense_graph`, `D(𝐝)` dense). -/
+theorem dense (x : PiLp 2 W) (δ : ℝ) (hδ : 0 < δ) :
+    ∀ᶠ h in F.l, ∃ w ∈ totalSub (F.V h).V, ‖x - w‖ < δ := by
+  obtain ⟨y, hy, hxy⟩ := (H.dense_totalD_domain).exists_dist_lt x (half_pos hδ)
+  filter_upwards [F.dense_graph (H.totalD.toGraphSpace ⟨y, hy⟩) (δ / 2) (half_pos hδ)] with h
+    ⟨w, hw, hlt⟩
+  refine ⟨H.totalD.graphFst w, hw, ?_⟩
+  have h1 : ‖y - H.totalD.graphFst w‖ < δ / 2 := by
+    rw [show y = H.totalD.graphFst (H.totalD.toGraphSpace ⟨y, hy⟩) from rfl,
+      ← H.totalD.graphFst.map_sub]
+    exact (norm_graphFst_le _).trans_lt hlt
+  rw [dist_eq_norm] at hxy
+  calc ‖x - H.totalD.graphFst w‖ ≤ ‖x - y‖ + ‖y - H.totalD.graphFst w‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ < δ / 2 + δ / 2 := add_lt_add hxy h1
+    _ = δ := add_halves δ
 
 /-- A constrained FEEC discretization is approximating (uniformly bounded elliptic projections,
 [QuennevilleBelair2015], Prop. 4.13, and the approximation property in the graph norm,
@@ -545,15 +565,16 @@ theorem ConstrainedFEEC.infDist_le_norm_sub {y z : PiLp 2 W} (hy : y ∈ F.K) :
 /-! ### The discrete Poincaré inequality -/
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] [Fintype ι] in
-/-- **The uniform discrete Poincaré inequality** given by the uniformly bounded cochain
-projections: if `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ ∩ D(d i j)`, there is `C ≥ 0` with
+/-- **The uniform discrete Poincaré inequality** given by cochain projections bounded uniformly in
+`W` (`hπ`; with bounds in the graph norm, `SubcomplexFamily.StaticVerdict.poincare`): if `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ ∩ D(d i j)`, there is `C ≥ 0` with
 `‖x‖ ≤ C c_P ‖d x‖` for every `h` and every `x ∈ Vₕⁱ` orthogonal to the discrete cycles.
 [AFW2010], Thm 3.6; [Arnold2018], Thm 5.3 -/
-theorem constrainedFEEC_discretePoincare {i j : ι} (hij : c.Rel i j) {cP : ℝ}
+theorem constrainedFEEC_discretePoincare (hπ : ∃ C, ∀ h i x, ‖(F.π h).π i x‖ ≤ C * ‖x‖)
+    {i j : ι} (hij : c.Rel i j) {cP : ℝ}
     (hP : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖) :
     ∃ C, 0 ≤ C ∧ ∀ h, ∀ x (hx : x ∈ (F.V h).V i), (∀ y ∈ (F.V h).cyclesW i, ⟪y, x⟫_𝕜 = 0) →
       ‖x‖ ≤ C * cP * ‖H.d i j ⟨x, (F.V h).le_domain i j hx⟩‖ := by
-  obtain ⟨C, hC⟩ := F.bound_π
+  obtain ⟨C, hC⟩ := hπ
   refine ⟨max C 0, le_max_right _ _, fun h x hx hxo => ?_⟩
   exact (F.π h).norm_le_of_forall_inner_eq_zero hij hP (le_max_right _ _)
     (fun y => (hC h i y).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)))
@@ -642,9 +663,11 @@ structure ConstrainedFEEC.Verdict (F : ConstrainedFEEC H κ) : Prop where
         (F.K : Set (PiLp 2 W))) F.l (𝓝 (infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)))) ∧
       ∀ᶠ h in F.l, infDist (H.waveGroup.S t x) (F.K : Set (PiLp 2 W)) / 2 <
         infDist (H.totalD.graphFst (F.discrete h (waveLift H x) t)) (F.K : Set (PiLp 2 W))
-  /-- (**discrete cohomology**) if `H` has closed range at `i` and `ℌⁱ` is finite-dimensional,
-  the projections `πₕ` eventually induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`, `[z] ↦ [πₕ z]` -/
-  cohomology {i : ι} [FiniteDimensional 𝕜 (H.harmonic i)] (hi : H.ClosedRangeAt i) :
+  /-- (**discrete cohomology**) if the projections are bounded in the graph norm in degree `i`,
+  `H` has closed range at `i` and `ℌⁱ` is finite-dimensional, the projections `πₕ` eventually
+  induce isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`, `[z] ↦ [πₕ z]` -/
+  cohomology {i : ι} (hb : F.IsGraphBounded i) [FiniteDimensional 𝕜 (H.harmonic i)]
+    (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap i)
 
 variable {F} in
@@ -712,13 +735,8 @@ def topProj : (topSub 𝕜).CochainProjection where
   comm _ _ _ := rfl
 
 variable (𝕜) in
-/-- The constrained FEEC discretization of `𝕜 --id--> 𝕜 → 0` with `Vₕ = W`, `πₕ = id`, and a
-closed constraint `K`. -/
-def idFEEC (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
-    (hK : _root_.IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) :
-    ConstrainedFEEC (idComplex 𝕜) ℕ where
-  K := K
-  isClosed_K := hK
+/-- The conforming family of `𝕜 --id--> 𝕜 → 0` with `Vₕ = W` and `πₕ = id`. -/
+def idFamily : ConformingFamily (idComplex 𝕜) ℕ where
   l := atTop
   V _ := topSub 𝕜
   π _ := topProj 𝕜
@@ -726,6 +744,14 @@ def idFEEC (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
   approx i w := by
     rw [infDist_zero_of_mem (show w ∈ ((topSub 𝕜).V i : Set _) from Submodule.mem_top)]
     exact tendsto_const_nhds
+
+variable (𝕜) in
+/-- The constrained FEEC discretization of `𝕜 --id--> 𝕜 → 0` with `Vₕ = W`, `πₕ = id`, and a
+closed constraint `K`. -/
+def idFEEC (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
+    (hK : _root_.IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) :
+    ConstrainedFEEC (idComplex 𝕜) ℕ :=
+  (idFamily 𝕜).withConstraint K hK
 
 variable (𝕜) in
 /-- The constraint `𝕜 × 0 × 0`. -/

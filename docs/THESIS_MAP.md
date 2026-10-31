@@ -20,7 +20,7 @@ declaration is listed under a thesis id when
 Every backticked name in a list item below is checked by `lake exe feec-mapcheck`
 (the declaration must exist).
 
-Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1050 distinct declarations (133 current homes of thesis-numbered old names).
+Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 equations/sections/chapters, 1051 distinct declarations (133 current homes of thesis-numbered old names).
 
 ## Results
 
@@ -171,7 +171,7 @@ Counts at generation: 42 numbered results (Thm/Prop/Cor/Lemma/Remark/Def), 80 eq
 
 - named: `Feec.Variational.InfSup.of_testMap`
 - old: Feec.Complex3.prop_4_13, Feec.Complex3.prop_4_13_V, Feec.Complex3.prop_4_13_infSup, Feec.Complex3.prop_4_13_lower, Feec.Complex3.prop_4_13_test_norm
-- cited: `Feec.BGG.Discrete.infSup_shiftedForm_h`, `Feec.HilbertComplex.ConstrainedFEEC.isApproximating`, `Feec.HilbertComplex.HasCompactPropertyAt`, `Feec.HilbertComplex.constrainedFEEC_rate`, `Feec.HilbertComplex.ellipticConst`, `Feec.HodgeWave.infSup_shiftedForm`, `Feec.HodgeWave.norm_ellipticProjection_le`, `Feec.Variational.InfSup.of_testMap`, `Feec.Variational.InfSup.restrict_of_testMap`
+- cited: `Feec.BGG.Discrete.infSup_shiftedForm_h`, `Feec.HilbertComplex.ConstrainedFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.isApproximating`, `Feec.HilbertComplex.HasCompactPropertyAt`, `Feec.HilbertComplex.constrainedFEEC_rate`, `Feec.HilbertComplex.ellipticConst`, `Feec.HilbertComplex.ellipticConst_le`, `Feec.HodgeWave.infSup_shiftedForm`, `Feec.HodgeWave.norm_ellipticProjection_le`, `Feec.Variational.InfSup.of_testMap`, `Feec.Variational.InfSup.restrict_of_testMap`
 - modules: Feec.HilbertComplex.Approximation.ApproxConforming, Feec.HilbertComplex.Approximation.ConstrainedFEEC, Feec.HilbertComplex.Approximation.Convergence, Feec.HilbertComplex.BGG.EllipticProjection, Feec.HilbertComplex.Compactness, Feec.HilbertComplex.Mixed, Feec.Variational.InfSup
 
 ### Thm 4.14

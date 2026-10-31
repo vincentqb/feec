@@ -5279,8 +5279,8 @@ Feec.Models.Cube.FEM.ParitySmoothingEstimates.isGraphBounded_proj	Feec.HilbertCo
 Feec.Models.Cube.FEM.polySmoothedProjection_uniform	Feec.HilbertComplex.ConformingFamily.hasUniformProj	dedup
 Feec.Models.Cube.FEM.polySmoothedProjection_uniform_min	Feec.HilbertComplex.ConformingFamily.hasUniformProj	dedup
 Feec.Models.Cube.FEM.PolySmoothingEstimates.existsUnique_mixed	Feec.HilbertComplex.ConformingFamily.StaticVerdict.wellPosed	dedup
-Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph	Feec.HilbertComplex.ConformingFamily.Jackson.ofInfDist	dedup
-Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high	Feec.HilbertComplex.ConformingFamily.Jackson.ofInfDist	dedup
+Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph	Feec.HilbertComplex.SubcomplexFamily.Jackson.ofInfDist	dedup
+Feec.Models.Cube.FEM.PolySmoothingEstimates.infDist_domainSub_le_sobGraph_high	Feec.HilbertComplex.SubcomplexFamily.Jackson.ofInfDist	dedup
 Feec.Models.Cube.FEM.PolySmoothingEstimates.isGraphBounded_proj	Feec.HilbertComplex.Subcomplex.CochainProjection.isGraphBounded_of_norm_le	dedup
 Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.existsUnique_mixed	Feec.HilbertComplex.ConformingFamily.StaticVerdict.wellPosed	dedup
 Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.isGraphBounded_proj	Feec.HilbertComplex.Subcomplex.CochainProjection.isGraphBounded_of_norm_le	dedup

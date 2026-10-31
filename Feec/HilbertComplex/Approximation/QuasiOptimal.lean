@@ -160,6 +160,46 @@ theorem isGraphBounded_of_norm_le {i j : ι} {C : ℝ} (hπi : ∀ x, ‖P.π i 
   have := norm_nonneg (H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩)
   nlinarith
 
+/-- **A graph bound in the form `‖π x‖ + ‖d π x‖ ≤ C (‖x‖ + ‖d x‖)`** gives `IsGraphBounded` with
+the constant `√2 C`. -/
+theorem isGraphBounded_of_add_le {i j : ι} {C : ℝ}
+    (hπ : ∀ x : (H.d i j).domain, ‖P.π i x‖ + ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖ ≤
+      C * (‖(x : W i)‖ + ‖H.d i j x‖)) : P.IsGraphBounded i j (√2 * C) := fun x => by
+  have h := hπ x
+  have a := norm_nonneg (P.π i x)
+  have b := norm_nonneg (H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩)
+  have a' := norm_nonneg (x : W i)
+  have b' := norm_nonneg (H.d i j x)
+  have h2 : (√2 * C) ^ 2 = 2 * C ^ 2 := by rw [mul_pow, Real.sq_sqrt (by norm_num)]
+  rw [h2]
+  have hs : (‖P.π i x‖ + ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖) ^ 2 ≤
+      (C * (‖(x : W i)‖ + ‖H.d i j x‖)) ^ 2 := pow_le_pow_left₀ (by positivity) h 2
+  nlinarith [sq_nonneg (‖(x : W i)‖ - ‖H.d i j x‖)]
+
+/-- **`IsGraphBounded` gives a graph bound in the form** `‖π x‖ + ‖d π x‖ ≤ √2 C (‖x‖ + ‖d x‖)`. -/
+theorem IsGraphBounded.add_le {P : S.CochainProjection} {i j : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : P.IsGraphBounded i j C)
+    (x : (H.d i j).domain) :
+    ‖P.π i x‖ + ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖ ≤
+      √2 * C * (‖(x : W i)‖ + ‖H.d i j x‖) := by
+  have h := hπ x
+  set a := ‖P.π i x‖
+  set b := ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖
+  set a' := ‖(x : W i)‖
+  set b' := ‖H.d i j x‖
+  have ha : 0 ≤ a := norm_nonneg _
+  have hb : 0 ≤ b := norm_nonneg _
+  have ha' : 0 ≤ a' := norm_nonneg _
+  have hb' : 0 ≤ b' := norm_nonneg _
+  have h2 : (0 : ℝ) ≤ √2 := Real.sqrt_nonneg 2
+  have h22 : √2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+  refine abs_le_of_sq_le_sq' ?_ (by positivity) |>.2
+  have : (a + b) ^ 2 ≤ 2 * (a ^ 2 + b ^ 2) := by nlinarith [sq_nonneg (a - b)]
+  have : a' ^ 2 + b' ^ 2 ≤ (a' + b') ^ 2 := by nlinarith
+  calc (a + b) ^ 2 ≤ 2 * (C ^ 2 * (a' ^ 2 + b' ^ 2)) := by nlinarith
+    _ ≤ 2 * (C ^ 2 * (a' + b') ^ 2) := by gcongr
+    _ = (√2 * C * (a' + b')) ^ 2 := by rw [mul_pow, mul_pow, h22]; ring
+
 /-- `‖π (ι x)‖ ≤ C ‖x‖_V`, for `π` bounded in the graph norm of `Vⁱ` (that of `d i (c.next i)`,
 the norm of `W` at a degree without successor). -/
 theorem norm_π_domainIncl_le_of_next {i : ι} {C : ℝ} (hC : 0 ≤ C)

@@ -31,12 +31,13 @@ parallelepipeds and domains star-shaped with respect to a ball) is one
 * `Feec.HilbertComplex.ConformingFamily H κ`; the constructor `ConformingFamily.ofExists` from the
   existence of uniformly bounded cochain projections; `ConformingFamily.projBound`, a uniform bound
   `≥ 1` of the projections.
-* `ConformingFamily.Jackson`: a Jackson estimate for `F`, data over the family (a mesh size
+* `SubcomplexFamily H κ`: the family of subcomplexes underlying a conforming family (no bounds);
+  `SubcomplexFamily.Jackson`: a Jackson estimate for it, data over the family (a mesh size
   `hₕ → 0` and classes `Reg s` approximated at the orders `hₕ^{ord s}`), the hypothesis of the rates
   of the static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.rate`).
 * `Subcomplex.window`, `Subcomplex.CochainProjection.window`, `ConformingFamily.window`: the window
   `Vₕᵃ → ⋯ → Vₕ^{a+m-1}` of a family of a complex on `ComplexShape.up α` (`α = ℕ, ℤ`), a family of
-  the window `H.window a m`; `ConformingFamily.Jackson.window`, the Jackson estimate of the window.
+  the window `H.window a m`; `SubcomplexFamily.Jackson.window`, the Jackson estimate of the window.
 
 ## Main results
 
@@ -81,13 +82,13 @@ theorem tendsto_infDist_submodule_iff {𝕜 E κ : Type*} [NormedField 𝕜]
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
 
-/-- A **conforming family** of the Hilbert complex `H`: finite-dimensional subcomplexes `Vₕ`
-(`h : κ`, refined along the filter `l`) with commuting cochain projections `πₕ`, uniformly bounded
-in `W`, and the approximation property `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ`. These strengthen
-the hypotheses of the approximation theory of [AFW2010], §3.3 (bounds and approximation in `V`)
-to bounds and approximation in `W`, as for the smoothed projections of [AFW2010], §5.5 (cf.
-[Arnold2018], Ch. 5, [HolstStern2012], §3, [QuennevilleBelair2015], §4.6). -/
-structure ConformingFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
+/-- **A family of subcomplexes** of `H` along the filter `l`: finite-dimensional subcomplexes `Vₕ`
+with cochain projections `πₕ`, with no bound and no approximation property. The hypotheses of
+[AFW2010], §3.3 are properties of it, degree by degree: the projections are bounded uniformly in
+`h` in the graph norm (`SubcomplexFamily.IsGraphBounded`), and `Vₕ` approximates in the graph norm
+(`SubcomplexFamily.Approximates`). A conforming family (`ConformingFamily`) is one, bounded and
+approximating in `W`. -/
+structure SubcomplexFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the filter along which the discretization is refined (e.g. `h → 0`) -/
   l : Filter κ
   /-- the discrete subcomplexes -/
@@ -95,11 +96,49 @@ structure ConformingFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   [finiteDimensional : ∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
   /-- the commuting cochain projections -/
   π : ∀ h, (V h).CochainProjection
+
+attribute [instance] SubcomplexFamily.finiteDimensional
+
+/-- A **conforming family** of the Hilbert complex `H`: a family of subcomplexes
+(finite-dimensional subcomplexes `Vₕ`, `h : κ`, refined along the filter `l`, with commuting
+cochain projections `πₕ`) whose projections are uniformly bounded in `W`, with the approximation
+property `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ`. These strengthen the hypotheses of the
+approximation theory of [AFW2010], §3.3 (bounds and approximation in `V`) to bounds and
+approximation in `W`, as for the smoothed projections of [AFW2010], §5.5 (cf. [Arnold2018], Ch. 5,
+[HolstStern2012], §3, [QuennevilleBelair2015], §4.6). -/
+structure ConformingFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) extends SubcomplexFamily H κ where
   bound_π : ∃ C, ∀ h i x, ‖(π h).π i x‖ ≤ C * ‖x‖
   /-- the approximation property: `dist(w, Vₕⁱ) → 0` for every `w ∈ Wⁱ` -/
   approx : ∀ i (w : W i), Tendsto (fun h => infDist w ((V h).V i : Set (W i))) l (𝓝 0)
 
-attribute [instance] ConformingFamily.finiteDimensional
+namespace SubcomplexFamily
+
+variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (G : SubcomplexFamily H κ)
+
+/-- **A Jackson estimate** for a family of subcomplexes `G` (cf. [AFW2010], §3.4; [Arnold2018], Ch. 7): a
+mesh size `hₕ → 0` and, for every regularity index `s : ρ`, a class `Reg s` of forms with a bound
+`L` (`Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L`) approximated in `Vₕⁱ` in the graph
+norm at the real order `hₕ^{ord s}`: `‖x - v‖, ‖d (x - v)‖ ≤ B_{s,i} L hₕ^{ord s}`. It is data
+over `G`, not a strengthening of it: one family carries Jackson estimates for several classes
+(`C²` forms at order `1`, `C^{s+2}` forms at order `s + 1`, `Hˢ` forms at order `s`, …). -/
+structure Jackson (ρ : Type*) where
+  /-- the mesh size -/
+  meshSize : κ → ℝ
+  meshSize_nonneg : ∀ h, 0 ≤ meshSize h
+  tendsto_meshSize : Tendsto meshSize G.l (𝓝 0)
+  /-- `Reg s i L x`: the form `x ∈ Wⁱ` is `s`-regular with bound `L` -/
+  Reg : ρ → ∀ i, ℝ → W i → Prop
+  /-- the order of approximation of the class `s` (real, for the Sobolev classes) -/
+  ord : ρ → ℝ
+  /-- the constants of the Jackson estimate -/
+  B : ρ → ι → ℝ
+  B_nonneg : ∀ s i, 0 ≤ B s i
+  jackson : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x → ∃ v, ∃ hv : v ∈ (G.V h).V i,
+    ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
+      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((G.V h).le_domain i j hv)⟩‖ ≤
+        B s i * (L * meshSize h ^ ord s)
+
+end SubcomplexFamily
 
 namespace ConformingFamily
 
@@ -133,29 +172,6 @@ theorem one_le_projBound : 1 ≤ F.projBound := le_max_right _ _
 theorem norm_π_le (h : κ) (i : ι) (x : W i) : ‖(F.π h).π i x‖ ≤ F.projBound * ‖x‖ :=
   (F.bound_π.choose_spec h i x).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
 
-/-- **A Jackson estimate** for a conforming family `F` (cf. [AFW2010], §3.4; [Arnold2018], Ch. 7): a
-mesh size `hₕ → 0` and, for every regularity index `s : ρ`, a class `Reg s` of forms with a bound
-`L` (`Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L`) approximated in `Vₕⁱ` in the graph
-norm at the real order `hₕ^{ord s}`: `‖x - v‖, ‖d (x - v)‖ ≤ B_{s,i} L hₕ^{ord s}`. It is data
-over `F`, not a strengthening of it: one family carries Jackson estimates for several classes
-(`C²` forms at order `1`, `C^{s+2}` forms at order `s + 1`, `Hˢ` forms at order `s`, …). -/
-structure Jackson (ρ : Type*) where
-  /-- the mesh size -/
-  meshSize : κ → ℝ
-  meshSize_nonneg : ∀ h, 0 ≤ meshSize h
-  tendsto_meshSize : Tendsto meshSize F.l (𝓝 0)
-  /-- `Reg s i L x`: the form `x ∈ Wⁱ` is `s`-regular with bound `L` -/
-  Reg : ρ → ∀ i, ℝ → W i → Prop
-  /-- the order of approximation of the class `s` (real, for the Sobolev classes) -/
-  ord : ρ → ℝ
-  /-- the constants of the Jackson estimate -/
-  B : ρ → ι → ℝ
-  B_nonneg : ∀ s i, 0 ≤ B s i
-  jackson : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
-    ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
-      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
-        B s i * (L * meshSize h ^ ord s)
-
 end ConformingFamily
 
 /-! ### Windows -/
@@ -183,25 +199,31 @@ def Subcomplex.CochainProjection.window {S : H.Subcomplex} (P : S.CochainProject
 
 variable {κ : Type*}
 
-/-- **The window of a conforming family**: the windows `Vₕᵃ → ⋯ → Vₕ^{a + m - 1}` of the
-subcomplexes, with the windows of the cochain projections, a conforming family of the window
+/-- **The window of a family of subcomplexes**: the windows `Vₕᵃ → ⋯ → Vₕ^{a + m - 1}` of the
+subcomplexes, with the windows of the cochain projections, a family of subcomplexes of the window
 `H.window a m`. -/
+def SubcomplexFamily.window (G : SubcomplexFamily H κ) (a : α) (m : ℕ) :
+    SubcomplexFamily (H.window a m) κ where
+  l := G.l
+  V h := (G.V h).window a m
+  finiteDimensional h i := inferInstanceAs (FiniteDimensional 𝕜 ((G.V h).V (a + i)))
+  π h := (G.π h).window a m
+
+/-- **The window of a conforming family**: the window of its family of subcomplexes
+(`SubcomplexFamily.window`), a conforming family of the window `H.window a m`. -/
 def ConformingFamily.window (F : ConformingFamily H κ) (a : α) (m : ℕ) :
     ConformingFamily (H.window a m) κ where
-  l := F.l
-  V h := (F.V h).window a m
-  finiteDimensional h i := inferInstanceAs (FiniteDimensional 𝕜 ((F.V h).V (a + i)))
-  π h := (F.π h).window a m
+  toSubcomplexFamily := F.toSubcomplexFamily.window a m
   bound_π := by
     obtain ⟨C, hC⟩ := F.bound_π
     exact ⟨C, fun h i x => hC h _ x⟩
   approx i w := F.approx (a + i) w
 
-/-- **The window of a Jackson estimate**: a Jackson estimate of `F`, read in the degrees
-`a, …, a + m - 1`, is a Jackson estimate of the window `F.window a m`, with the same mesh size,
+/-- **The window of a Jackson estimate**: a Jackson estimate of `G`, read in the degrees
+`a, …, a + m - 1`, is a Jackson estimate of the window `G.window a m`, with the same mesh size,
 classes, orders and constants. -/
-def ConformingFamily.Jackson.window {F : ConformingFamily H κ} {ρ : Type*} (J : F.Jackson ρ)
-    (a : α) (m : ℕ) : (F.window a m).Jackson ρ where
+def SubcomplexFamily.Jackson.window {G : SubcomplexFamily H κ} {ρ : Type*} (J : G.Jackson ρ)
+    (a : α) (m : ℕ) : (G.window a m).Jackson ρ where
   meshSize := J.meshSize
   meshSize_nonneg := J.meshSize_nonneg
   tendsto_meshSize := J.tendsto_meshSize

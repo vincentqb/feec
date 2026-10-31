@@ -181,4 +181,28 @@ theorem infDist_domainSub_le_two_mul {i j : ι} (hij : c.Rel i j) (σ : H.domain
   rw [← LinearPMap.map_sub, two_mul]
   exact add_le_add h1 (h2 (H.domainCoord i j σ).2)
 
+/-- **Degreewise graph-norm approximation gives graph-space approximation of the total
+differential**: if every component `xᵢ` of `x ∈ D(𝐝)` is within `ε` of `Vₕⁱ` in the graph norm
+of `d i (c.next i)`, then some point of `graphSub` is within `(m + m²) ε` of `(x, 𝐝 x)`,
+`m = #ι` (`exists_mem_graphSub_le`). -/
+theorem exists_mem_graphSub_le_of_infDist [Fintype ι] (x : H.totalD.domain) {ε : ℝ}
+    (hx : ∀ i, Metric.infDist ((H.d i (c.next i)).toGraphSpace ⟨(x : PiLp 2 W) i, x.2 i _⟩)
+      (S.domainSub i) < ε) :
+    ∃ w ∈ S.graphSub, ‖H.totalD.toGraphSpace x - w‖ ≤
+      ((Fintype.card ι : ℝ) + (Fintype.card ι : ℝ) * (Fintype.card ι : ℝ)) * ε := by
+  refine S.exists_mem_graphSub_le x fun i => ?_
+  set σ := (H.d i (c.next i)).toGraphSpace ⟨(x : PiLp 2 W) i, x.2 i _⟩
+  obtain ⟨w, ⟨a, rfl⟩, hlt⟩ := (Metric.infDist_lt_iff ⟨0, (S.domainSub i).zero_mem⟩).1 (hx i)
+  rw [dist_eq_norm] at hlt
+  have e : H.domainIncl i (σ - S.embD i a) = (x : PiLp 2 W) i - S.toW i a := by
+    rw [_root_.map_sub]; rfl
+  refine ⟨S.toW i a, (S.toHilbertComplex.domainIncl i a).2, ?_, fun j hxj => ?_⟩
+  · rw [← e]; exact ((H.norm_domainIncl_le i _).trans hlt.le)
+  · have e' : H.d i j ⟨(x : PiLp 2 W) i - S.toW i a,
+        Submodule.sub_mem _ hxj (S.le_domain i j (S.toHilbertComplex.domainIncl i a).2)⟩ =
+        H.d i j (H.domainCoord i j (σ - S.embD i a)) :=
+      congrArg (H.d i j) (Subtype.ext e.symm)
+    rw [e']
+    exact (H.norm_d_domainCoord_le i j _).trans hlt.le
+
 end Feec.HilbertComplex.Subcomplex

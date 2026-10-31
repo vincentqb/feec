@@ -86,13 +86,17 @@ status:
   scope: >-
     Formalized and compared: FEEC.staticFEEC and FEEC.staticFEEC_uniform (Challenge.lean; the
     constants as a function of c and c_P only) for every RCLike field, every
-    Hilbert complex on Z, every family of subcomplexes along any filter, every degree j: both
-    inequalities of [AFW2010] Thm 3.5, Thm 3.4 (strict-gap form and eventual form), Thm 3.6,
-    Thm 3.8 (unique solvability, uniform inf-sup, stability), Thm 3.9 and convergence. Not
-    compared (proved in Feec, outside the statement): the explicit form of the constant (the
-    solution takes Phi(c, c_P) = 256 (1 + K^2) (1 + max(c, 1))^2, K = max(c, 1) (1 + c_P^2)^(1/2)), rates from Jackson estimates, the improved L2 estimate under elliptic
-    regularity (§3.5), the necessity of closed range, and the concrete finite element families
-    (Whitney, P_r, P_r^-, cubical Q^-, serendipity spaces).
+    Hilbert complex on Z, every family of subcomplexes along any filter, every degree j:
+    [AFW2010] Thm 3.5 inequalities (27) and (28) (the gap bound (29) follows from them and is
+    not stated separately), Thm 3.4 (strict-gap form and eventual form), Thm 3.6, Thm 3.8
+    (unique solvability, uniform inf-sup, stability), Thm 3.9 and convergence. Not compared:
+    Thm 3.7 (the converse: a discrete Poincare inequality and ||q||_V <= c ||P_H q||_V give a
+    bounded cochain projection), which is not formalized; and, proved in Feec but outside the
+    statement, the explicit form of the constant (the solution takes
+    Phi(c, c_P) = 256 (1 + K^2) (1 + max(c, 1))^2 with K = max(c, 1) (1 + c_P^2)^(1/2)), rates
+    from Jackson estimates, the improved L2 estimate under elliptic regularity (§3.5), the
+    necessity of closed range, and the concrete finite element families (Whitney, P_r, P_r^-,
+    cubical Q^-, serendipity spaces).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]

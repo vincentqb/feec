@@ -259,8 +259,8 @@ challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.js
 on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others are self-contained.
 
 * `palomar/static/` (theorems FEEC.staticFEEC, FEEC.staticFEEC_uniform, about 370 lines): the a
-  priori theory of the mixed Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the degrees used (cochain
-  projections `V → Vₕ` bounded in the graph norm in degrees `j - 1`, `j`; closed range in degrees
+  priori theory of the mixed Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the
+  degrees used (cochain projections `V → Vₕ` bounded in the graph norm in degrees `j - 1`, `j`; closed range in degrees
   `j`, `j + 1`): both gap estimates between `ℌʲ` and `ℌₕʲ`, the cohomology isomorphisms under the
   strict gap, uniform discrete Poincaré inequality, unique solvability, uniform inf-sup condition
   and stability, quasi-optimal graph-norm error bound; with approximation in the graph norm and

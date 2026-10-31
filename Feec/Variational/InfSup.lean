@@ -120,6 +120,23 @@ theorem of_forall_exists_norm_le_one (hγ : 0 < γ)
     _ ≤ ‖B x‖ * 1 := by gcongr
     _ = ‖B x‖ := mul_one _
 
+/-- **Test vectors of every size**: under the inf-sup condition, every `x` and `t ≥ 0` have a `y`
+with `‖y‖ ≤ t` and `(γ / 2) ‖x‖ t ≤ |B x y|`, a test-vector form of the inf-sup condition
+(cf. [AFW2010], Thm 3.2). A converse of `of_forall_exists_norm_le_one`. -/
+theorem exists_norm_le_mul_le (h : InfSup B γ) (x : X) {t : ℝ} (ht : 0 ≤ t) :
+    ∃ y : Y, ‖y‖ ≤ t ∧ γ / 2 * ‖x‖ * t ≤ ‖B x y‖ := by
+  rcases (norm_nonneg x).eq_or_lt with hx | hx
+  · exact ⟨0, by rwa [norm_zero], by rw [← hx]; simp⟩
+  · have hlt : γ / 2 * ‖x‖ < ‖B x‖ :=
+      (by nlinarith [h.pos] : γ / 2 * ‖x‖ < γ * ‖x‖).trans_le (h.le x)
+    obtain ⟨z, hz1, hz⟩ := (B x).exists_lt_apply_of_lt_opNorm hlt
+    refine ⟨(t : 𝕜) • z, ?_, ?_⟩
+    · rw [norm_smul, RCLike.norm_ofReal, abs_of_nonneg ht]
+      nlinarith [norm_nonneg z]
+    · rw [ContinuousLinearMap.map_smulₛₗ, norm_smul, RingHomIsometric.norm_map, RCLike.norm_ofReal,
+        abs_of_nonneg ht]
+      nlinarith
+
 /-- **Inf-sup by a test map.** If `T` satisfies `‖T x‖ ≤ M ‖x‖` and `c ‖x‖² ≤ re B x (T x)`,
 then `B` satisfies the inf-sup condition with constant `c / M`. `T` need not be linear.
 [QuennevilleBelair2015], Prop 4.13 -/

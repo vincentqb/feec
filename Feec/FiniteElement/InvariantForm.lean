@@ -49,7 +49,8 @@ coefficients of degree `m + 1` and the constants `m + k`, `m + k + 1` of the hom
 the Poincaré lemma. It cannot be dropped: in characteristic `3` the binary quartics `x⁴, x³y, xy³,
 y⁴` span a subspace of `H_4Λ⁰(K²)` invariant under every linear map (`(ax + by)³ = a³x³ + b³y³`)
 that is neither `0`, nor `H_4Λ⁰`, nor closed (`d(x³y) = x³ dy`), while every `0`-form is
-`κ`-closed. Over a finite field `F_q` the polynomial `x^q y - x y^q` spans a line of `H_{q+1}Λ⁰`
+`κ`-closed; for `1`-forms, if `U` is their span, `U dx + U dy` (dimension `8`) is invariant in
+`H_4Λ¹(K²)` and none of `0`, `dH_5Λ⁰` (dimension `6`), `κH_3Λ²` (`4`), `H_4Λ¹` (`10`). Over a finite field `F_q` the polynomial `x^q y - x y^q` spans a line of `H_{q+1}Λ⁰`
 mapped to itself by every linear map (`B^*` multiplies it by `det B`), and not closed
 (`d(x^q y - x y^q) = x^q dy - y^q dx`).
 
@@ -64,9 +65,9 @@ mapped to itself by every linear map (`B^*` multiplies it by `det B`), and not c
 
 * `IsGLInvariant.isLinearInvariant`: over an infinite field, `GL(n)`-invariance is linear
   invariance (`isAffineInvariant_of_forall_units` for the affine maps);
-* `IsLinearInvariant.eq_of_le_homForm`: **the linearly (equivalently, `GL(n)`-) invariant
-  subspaces of `H_mΛᵏ`**, and
-  `IsLinearInvariant.eq_of_le_homForm_succ` with the summands as the images `dH_{m+1}Λ^{k-1}`,
+* `IsGLInvariant.eq_of_le_homForm`, `IsLinearInvariant.eq_of_le_homForm`: **the `GL(n)`-
+  (equivalently, linearly) invariant subspaces of `H_mΛᵏ`**, and
+  `IsGLInvariant.eq_of_le_homForm_succ`, `IsLinearInvariant.eq_of_le_homForm_succ` with the summands as the images `dH_{m+1}Λ^{k-1}`,
   `κH_{m-1}Λ^{k+1}` (`homForm_inf_ker_extDeriv`, `homForm_inf_ker_koszul`), which are linearly
   invariant (`isLinearInvariant_map_extDeriv_homForm`, `isLinearInvariant_map_koszul_homForm`);
 * `IsLinearInvariant.closed_le`, `IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero`: a form
@@ -277,7 +278,8 @@ theorem IsLinearInvariant.weightPart_mem [Infinite K] {W : Submodule K (PolyForm
   exact hW _ _ hω
 
 /-- An operator commuting with the diagonal pullbacks commutes with the weight parts. -/
-theorem weightPart_comm [Infinite K] (e : Fin n → ℕ) (T : PolyForm K (Fin n) →ₗ[K] PolyForm K (Fin n))
+theorem weightPart_comm [Infinite K] (e : Fin n → ℕ)
+    (T : PolyForm K (Fin n) →ₗ[K] PolyForm K (Fin n))
     (hT : ∀ (c : K) ω, T (polyPullback (diagMatrix fun i => c ^ e i) 0 ω) =
       polyPullback (diagMatrix fun i => c ^ e i) 0 (T ω)) (j : ℕ) (ω : PolyForm K (Fin n)) :
     T (weightPart e j ω) = weightPart e j (T ω) := by
@@ -295,8 +297,8 @@ theorem weightPart_comm [Infinite K] (e : Fin n → ℕ) (T : PolyForm K (Fin n)
 /-! ### Pullbacks commute with `d`, linear pullbacks with `κ` -/
 
 /-- **Chain rule** for the affine substitution: `∂_l (p ∘ F) = Σᵢ B_{il} (∂ᵢ p) ∘ F`. -/
-theorem pderiv_polySubst {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K) (p : MvPolynomial (Fin n) K)
-    (l : Fin m) : pderiv l (polySubst B b p) = ∑ i, polySubst B b (pderiv i p) * C (B i l) := by
+theorem pderiv_polySubst {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K)
+    (p : MvPolynomial (Fin n) K) (l : Fin m) : pderiv l (polySubst B b p) = ∑ i, polySubst B b (pderiv i p) * C (B i l) := by
   induction p using MvPolynomial.induction_on with
   | C a => simp [polySubst]
   | add p q hp hq => simp [hp, hq, add_mul, sum_add_distrib]
@@ -312,16 +314,18 @@ theorem pderiv_polySubst {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K)
     exact sum_congr rfl fun i _ => by ring
 
 /-- `F^* dω = d F^* ω` for affine `F`. -/
-theorem polyPullback_extDeriv {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K) (ω : PolyForm K (Fin n)) :
+theorem polyPullback_extDeriv {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K)
+    (ω : PolyForm K (Fin n)) :
     polyPullback B b (Koszul.extDeriv ω) = Koszul.extDeriv (polyPullback B b ω) := by
   have hpd : ∀ (l : Fin m) (α : Finset (Fin n) → MvPolynomial (Fin m) K),
-      (fun t => pderiv l (pullback (fun i l => C (B i l)) α t)) = pullback (fun i l => C (B i l)) (fun s => pderiv l (α s)) := by
+      (fun t => pderiv l (pullback (fun i l => C (B i l)) α t)) =
+        pullback (fun i l => C (B i l)) (fun s => pderiv l (α s)) := by
     intro l α
     funext t
     simp only [pullback_apply, map_sum, Derivation.leibniz, smul_eq_mul]
     refine sum_congr rfl fun s _ => ?_
-    rw [show wedgeProd (fun i l => C (B i l)) s t = C (wedgeProd B s t) from (map_wedgeProd C B s t).symm, pderiv_C,
-      mul_zero, zero_add, mul_comm]
+    rw [show wedgeProd (fun i l => C (B i l)) s t = C (wedgeProd B s t) from
+      (map_wedgeProd C B s t).symm, pderiv_C, mul_zero, zero_add, mul_comm]
   have hsub : ∀ i, (fun s => polySubst B b (wedge (Pi.single i 1) (Koszul.pderivForm i ω) s)) =
       wedge (Pi.single i 1) (fun s => polySubst B b (pderiv i (ω s))) := by
     intro i
@@ -334,7 +338,8 @@ theorem polyPullback_extDeriv {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n �
     · subst h; simp
     · simp [h]
   have hcov : ∀ i, covPullback (fun i l => (C (B i l) : MvPolynomial (Fin m) K)) (Pi.single i 1) =
-      ∑ l, (C (B i l) : MvPolynomial (Fin m) K) • (Pi.single l 1 : Fin m → MvPolynomial (Fin m) K) := by
+      ∑ l, (C (B i l) : MvPolynomial (Fin m) K) •
+        (Pi.single l 1 : Fin m → MvPolynomial (Fin m) K) := by
     intro i
     funext l
     simp [covPullback, Finset.sum_apply, Pi.single_apply]
@@ -710,10 +715,11 @@ theorem IsLinearInvariant.extDeriv_mem [CharZero K] {W : Submodule K (PolyForm K
   exact key u hu β (by rw [Finsupp.degree_eq_weight_one]; exact hw)
 
 /-- **Reaching the generator**: a linearly invariant space containing `ω ∈ H_mΛ^{k+1}` with
-`κω ≠ 0` contains the closed forms of `H_mΛ^{k+1}` (`κ` vanishes on `0`-forms). With `(κω)_s(a) ≠ 0` and `p ∉ s`, the pullback
-along `x̂ ↦ a x̂_p + Σ_{l ∈ s} x̂_l e_l` followed by the multi-weight part `x_p^m dx_{p ∪ s}` is a
-multiple of `x_p^m dx_{p ∪ s}`, nonzero as its `κ` has the coefficient `(κω)_s(a)` at
-`x_p^{m+1} dx_s`; `IsLinearInvariant.extDeriv_mem` and the polynomial Poincaré lemma conclude. -/
+`κω ≠ 0` contains the closed forms of `H_mΛ^{k+1}` (`κ` vanishes on `0`-forms). With
+`(κω)_s(a) ≠ 0` and `p ∉ s`, the pullback along `x̂ ↦ a x̂_p + Σ_{l ∈ s} x̂_l e_l` followed by the
+multi-weight part `x_p^m dx_{p ∪ s}` is a multiple of `x_p^m dx_{p ∪ s}`, nonzero as its `κ` has
+the coefficient `(κω)_s(a)` at `x_p^{m+1} dx_s`; `IsLinearInvariant.extDeriv_mem` and the
+polynomial Poincaré lemma conclude. -/
 theorem IsLinearInvariant.closed_le [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
     (hW : IsLinearInvariant W) {m k : ℕ} {ω : PolyForm K (Fin n)} (hω : ω ∈ W)
     (hωH : ω ∈ homForm K (Fin n) m k) (hκ : Koszul.koszul ω ≠ 0) :
@@ -754,7 +760,8 @@ theorem IsLinearInvariant.closed_le [CharZero K] {W : Submodule K (PolyForm K (F
         rw [Finsupp.single_apply, ite_eq_right]; exact fun h => hi (h ▸ mem_insert_self p s)) hdeg,
       ← Pi.single_smul', X_pow_eq_monomial, smul_monomial, smul_eq_mul, mul_one]
   -- `κ ω₂` has the coefficient `(κω)_s(a)` at `x_p^{m+1} dx_s`
-  have hκω₂ : (Koszul.koszul ω₂ s).coeff (Finsupp.single p (m + 1)) = eval a (Koszul.koszul ω s) := by
+  have hκω₂ :
+      (Koszul.koszul ω₂ s).coeff (Finsupp.single p (m + 1)) = eval a (Koszul.koszul ω s) := by
     have hμ : ∀ i, (Finsupp.single p (m + 1)) i + (if i ∈ s then 1 else 0) = μ i := by
       intro i
       by_cases hip : i = p
@@ -762,7 +769,8 @@ theorem IsLinearInvariant.closed_le [CharZero K] {W : Submodule K (PolyForm K (F
       · by_cases his : i ∈ s
         · simp [μ, Finsupp.single_apply, Ne.symm hip, his]
         · simp [μ, Finsupp.single_apply, Ne.symm hip, his, hip]
-    rw [koszul_multiPart, multiPart, coeff_restrictForm, ite_eq_left hμ, ← polyPullback_koszul_linear]
+    rw [koszul_multiPart, multiPart, coeff_restrictForm, ite_eq_left hμ,
+      ← polyPullback_koszul_linear]
     rw [polyPullback_apply, sum_eq_single s (fun u _ hu => by
       rw [wedgeProd_id_cols hBcols, ite_eq_right hu, C_0, mul_zero]) (by simp),
       wedgeProd_id_cols hBcols, ite_eq_left rfl, C_1, mul_one]
@@ -1000,7 +1008,8 @@ theorem exists_polyPullback_add_smul {m : ℕ} (B A : Fin n → Fin m → K) (b 
     exact hB c i l
   refine ⟨∑ t, (P t).natDegree + 1, fun i t => (P t).coeff i, by omega, fun c => ?_⟩
   funext t
-  rw [← hP, Polynomial.coe_evalRingHom, Polynomial.eval_eq_sum_range' (n := ∑ t, (P t).natDegree + 1)
+  rw [← hP, Polynomial.coe_evalRingHom,
+    Polynomial.eval_eq_sum_range' (n := ∑ t, (P t).natDegree + 1)
     (Nat.lt_succ_of_le (single_le_sum (f := fun t => (P t).natDegree) (fun _ _ => Nat.zero_le _)
       (mem_univ t))), Finset.sum_apply]
   refine sum_congr rfl fun i _ => ?_
@@ -1041,7 +1050,6 @@ theorem polyPullback_mem_of_forall_units [Infinite K] {W : Submodule K (PolyForm
   rw [h0]
   exact mem_of_eventually_sum_pow_smul_mem hev hN
 
-
 /-- Invariance under the pullbacks `x ↦ g x` by the invertible linear maps, `g ∈ GL(n)`. -/
 def IsGLInvariant (W : Submodule K (PolyForm K (Fin n))) : Prop :=
   ∀ g : GL (Fin n) K, ∀ ω ∈ W, polyPullback (g : Matrix (Fin n) (Fin n) K) 0 ω ∈ W
@@ -1050,6 +1058,24 @@ def IsGLInvariant (W : Submodule K (PolyForm K (Fin n))) : Prop :=
 theorem IsGLInvariant.isLinearInvariant [Infinite K] {W : Submodule K (PolyForm K (Fin n))}
     (hW : IsGLInvariant W) : IsLinearInvariant W :=
   fun B ω hω => polyPullback_mem_of_forall_units (fun g => hW g ω hω) B
+
+/-- **The `GL(n)`-invariant subspaces of `H_mΛᵏ`** (`m + k > 0`, characteristic `0`): `0`, the
+closed forms, the `κ`-closed forms and `H_mΛᵏ`. [AFW2006], §3.4 -/
+theorem IsGLInvariant.eq_of_le_homForm [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsGLInvariant W) {m k : ℕ} (hmk : 0 < m + k) (hle : W ≤ homForm K (Fin n) m k) :
+    W = ⊥ ∨ W = homForm K (Fin n) m k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ∨
+      W = homForm K (Fin n) m k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ∨
+        W = homForm K (Fin n) m k :=
+  hW.isLinearInvariant.eq_of_le_homForm hmk hle
+
+/-- **[AFW2006], §3.4: the `GL(n)`-invariant subspaces of `H_rΛᵏ` are `0`, `κH_{r-1}Λ^{k+1}`,
+`dH_{r+1}Λ^{k-1}` and `H_rΛᵏ`** (`r, k ≥ 1`, characteristic `0`). -/
+theorem IsGLInvariant.eq_of_le_homForm_succ [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsGLInvariant W) {m k : ℕ} (hle : W ≤ homForm K (Fin n) (m + 1) (k + 1)) :
+    W = ⊥ ∨ W = (homForm K (Fin n) (m + 2) k).map (extDerivₗ K (Fin n)) ∨
+      W = (homForm K (Fin n) m (k + 2)).map (koszulₗ K (Fin n)) ∨
+        W = homForm K (Fin n) (m + 1) (k + 1) :=
+  hW.isLinearInvariant.eq_of_le_homForm_succ hle
 
 /-- **Over an infinite field, invariance under the invertible affine maps is affine
 invariance.** -/

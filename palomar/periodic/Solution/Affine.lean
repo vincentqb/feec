@@ -138,7 +138,7 @@ theorem affineInvariantForms_of_feec [CharZero K] : AffineInvariantForms K n whe
     exact ⟨Feec.FiniteElement.isLinearInvariant_map_extDeriv_homForm r k,
       Feec.FiniteElement.isLinearInvariant_map_koszul_homForm r k⟩
   eq_of_le_homForm m k W hW hle := by
-    have h := ((isGLInvariant_iff W).1 hW).isLinearInvariant.eq_of_le_homForm_succ
+    have h := ((isGLInvariant_iff W).1 hW).eq_of_le_homForm_succ
       (by rw [← map_homForm]; exact (map_le_iff (n := n)).2 hle)
     rcases h with h | h | h | h
     · left

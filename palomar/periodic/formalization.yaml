@@ -53,15 +53,16 @@ project:
     and that a closed form of P_(r+1)^- Lambda^k lies in P_r Lambda^k (H_r: the forms with
     homogeneous coefficients of degree r). A second compared theorem, FEEC.affineInvariantForms,
     states over every field K of characteristic 0 the classification of the affinely invariant
-    spaces of AFW2006 §3.4, with the pullback phi^*(p (x) theta) = (p o phi) (x) Lambda(B^T) theta along phi(x) = B x + b
+    spaces of AFW2006 §3.4, with the pullback
+    phi^*(p (x) theta) = (p o phi) (x) Lambda(B^T) theta along phi(x) = B x + b
     (MvPolynomial.aeval tensor ExteriorAlgebra.map of the dual map): d H_r Lambda^k and
-    kappa H_r Lambda^k are invariant under the pullback of every linear map, and the subspaces of
-    H_r Lambda^k invariant under GL(n, K) are 0, d H_(r+1) Lambda^(k-1), kappa H_(r-1) Lambda^(k+1) and
-    H_r Lambda^k (r, k >= 1); X(r, s, k) = d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1) is
+    kappa H_r Lambda^k are invariant under the pullback of every linear map, and the subspaces
+    of H_r Lambda^k invariant under GL(n, K) are 0, d H_(r+1) Lambda^(k-1),
+    kappa H_(r-1) Lambda^(k+1) and H_r Lambda^k (r, k >= 1); X(r, s, k) = d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1) is
     affinely invariant for s <= r, X(r, r, k) = P_(r+1)^- Lambda^k, X(r+1, r, k) = P_(r+1) Lambda^k
     and d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
-    finite-dimensional space of k-forms invariant under the invertible affine maps is d P_(r+1) Lambda^(k-1) or some
-    X(r, s, k), s <= r (Theorem 3.6). The
+    finite-dimensional space of k-forms invariant under the invertible affine maps is
+    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). The
     statement is self-contained over Mathlib (MvPolynomial and its submodules
     homogeneousSubmodule, restrictTotalDegree and restrictSupport, TensorProduct, ExteriorAlgebra,
     exteriorPower, CliffordAlgebra.contractLeft, CochainComplex, ModuleCat, finrank); the proof is
@@ -111,20 +112,20 @@ sources:
       k >= 1. The second half of (3.1), dim H_r Lambda^k(R^n) = dim P_r Lambda^k(R^(n-1)), is
       false as printed (n = 1, k = 1, r = 0: dim H_0 Lambda^1(R) = 1, P_0 Lambda^1(R^0) = 0); the
       proof of (3.13) uses it as dim H_r Lambda^k(R^n) = dim P_r(R^(n-1)) dim Alt^k R^n, which is
-      what the statement asserts, in closed form C(n, k) C(n+r-1, r). §3.4 (FEEC.affineInvariantForms,
-      over every field of characteristic 0): the invariance of the summands of (3.10) under the
-      pullback of linear maps and their irreducibility under GL(n), (3.18), Theorem 3.5 with its cases s = r and s = r - 1 (r = 0 included),
-      Theorem 3.6. AFW derive the
+      what the statement asserts, in closed form C(n, k) C(n+r-1, r). §3.4
+      (FEEC.affineInvariantForms, over every field of characteristic 0): the invariance of the summands of (3.10) under the
+      pullback of linear maps and their irreducibility under GL(n), (3.18), Theorem 3.5 with its
+      cases s = r and s = r - 1 (r = 0 included), Theorem 3.6. AFW derive the
       irreducibility from Fulton-Harris (6.9); Feec proves it directly (weight parts of diagonal
       pullbacks, an explicit generator and a pullback reaching it from every form not in the
       other summand), first for invariance under all linear maps, then under GL(n) alone: over an
       infinite field c -> (B + c I)^* omega is a polynomial curve, in a GL(n)-invariant space at
       the cofinitely many c with det(B + c I) != 0, hence with its value B^* omega at c = 0
       (Feec.FiniteElement.polyPullback_mem_of_forall_units). Characteristic 0 cannot be dropped
-      (in characteristic 3 the span of x^4, x^3 y, x y^3, y^4 in H_4 Lambda^0(K^2) is invariant
-      under every linear map and not in the list), nor infinitude (over F_q, x^q y - x y^q spans
-      a line of H_(q+1) Lambda^0 that every linear map multiplies by its determinant). Not
-      formalized: the description of the third kind of
+      (checked by hand, not formalized): in characteristic 3, with U the span of x^4, x^3 y,
+      x y^3, y^4, the space U dx + U dy of H_4 Lambda^1(K^2) (dimension 8) is invariant under
+      every linear map and is none of 0, d H_5 Lambda^0 (dimension 6), kappa H_3 Lambda^2 (4)
+      and H_4 Lambda^1 (10). Not formalized: the description of the third kind of
       Theorem 3.5 (s < r - 1) as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its
       strict inclusions, the identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate
       statements (used in the proofs, Feec.FiniteElement.polyPullback_mem_polyForm,
@@ -201,7 +202,8 @@ status:
   scope: >-
     Formalized and compared: FEEC.periodicTable (Challenge.lean) for every field (of
     characteristic 0 where marked), every n, k, r and multidegree b (r >= 1 where the sources
-    require it), and FEEC.affineInvariantForms over every field of characteristic 0, every n, k, r, s. Not compared (proved in Feec, outside the statement): the homotopy formula over
+    require it), and FEEC.affineInvariantForms over every field of characteristic 0, every n,
+    k, r, s. Not compared (proved in Feec, outside the statement): the homotopy formula over
     every commutative ring, the tensor-product characterization of Q_b^- Lambda^k as a span of
     products of one-dimensional factors (Feec.Koszul.cubeFormMinus_eq_span), the serendipity
     spaces S_r Lambda^k, the admissible P/P^- sequences of the periodic table

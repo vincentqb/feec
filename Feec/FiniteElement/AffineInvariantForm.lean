@@ -239,8 +239,8 @@ theorem IsAffineInvariant.koszulClosed_le_of_succ {V : Submodule K (PolyForm K (
   have hμ := hV.isLinearInvariant.homComp_mem hτ hdeg (j + 1)
   refine hV.isLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero hμ
     (Koszul.homComp_mem_homForm hdeg _) ?_
-  rw [← Koszul.homComp_extDeriv, ← polyPullback_extDeriv, extDeriv_koszul_of_extDeriv_eq_zero hηH hηd,
-    polyPullback_smul, homComp_smul, homComp_translate_single_X_pow, smul_smul]
+  rw [← Koszul.homComp_extDeriv, ← polyPullback_extDeriv,
+    extDeriv_koszul_of_extDeriv_eq_zero hηH hηd, polyPullback_smul, homComp_smul, homComp_translate_single_X_pow, smul_smul]
   exact smul_ne_zero (mul_ne_zero (Nat.cast_ne_zero.2 (by omega))
     (Nat.cast_ne_zero.2 (by omega))) (single_X_pow_ne_zero t p j)
 

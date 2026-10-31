@@ -1,6 +1,7 @@
 module
 
 public import Feec.Domain.BGGRealization
+public import Feec.Instances.CrownNonVacuity
 
 /-!
 # Regression test: the analytic BGG verdict
@@ -17,6 +18,9 @@ the fields `injective_domainData_S` and `quasiIso_orthSumMap` (the orthogonal fo
 Moore–Penrose inverses);
 `bggVerdict_explicit_old` states its earlier fields verbatim and derives them from the new
 structure.
+`Instances.CrownNonVacuity` gained a last field `bgg`, the explicit map (30) on the smooth
+Hessian, elasticity and div-div complexes; `crownNonVacuity_bgg` checks, by `type_of%`, that it is
+the statement of `Domain.smoothBGGVerdict`.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -92,5 +96,11 @@ theorem maximalData_bggVerdict_old {E : Type*} [NormedAddCommGroup E] [NormedSpa
     [FiniteDimensional 𝕜 ((B.bot.maximalComplex hΩ).cohomology i)] :
     (B.maximalData M hM hΩ).DerivedVerdict (J < ·) (· < J) i :=
   (B.maximalData_bggVerdict M hM hΩ hN htop i).toDerivedVerdict
+
+universe u in
+/-- The last field of `Instances.CrownNonVacuity` is the statement of `Domain.smoothBGGVerdict`. -/
+theorem crownNonVacuity_bgg (h : Instances.CrownNonVacuity.{u}) :
+    type_of% @Domain.smoothBGGVerdict.{u} :=
+  h.bgg
 
 end FeecCheck.BGGVerdicts

@@ -2,6 +2,7 @@ module
 
 public import Feec.Domain.ConstrainedComplex
 public import Feec.HilbertComplex.BGG.Derived
+public import Feec.HilbertComplex.BGG.SumComplex
 
 /-!
 # BGG complexes of constant-coefficient operators
@@ -13,7 +14,9 @@ the algebraic BGG construction of `Feec.HilbertComplex.BGG.Derived` applies: for
 given by constant matrices (`ConstCoeffOp.ofMatrix`), left inverses make `S` injective and right
 inverses surjective on smooth fields, which is how the injectivity/surjectivity condition
 `Data.InjSurj J` is checked, and then the BGG complex `bgg J` has the cohomology of the twisted
-complex (`Data.bggHomologyIso`).
+complex (`Data.bggHomologyIso`). Right-inverse matrices give right inverses on smooth fields, so the
+condition holds with explicit right inverses (`ConstCoeffBGG.injSurjWith_predMap`,
+`Data.InjSurjWith`), as the explicit cochain map (30) of [ArnoldHu2021] requires.
 
 The de Rham complex of `ℝ³` with values in `𝕜ᵐ` is `deRhamVec m`, in vector proxies
 `𝕜ᵐ --grad--> 𝕜^{m×3} --curl--> 𝕜^{m×3} --div--> 𝕜ᵐ` (row-wise operators); stacked de Rham
@@ -37,6 +40,8 @@ pointwise-constrained complex of constant-coefficient operators
 
 * `ConstCoeffOp.smoothMap_ofMatrix_injective`, `ConstCoeffOp.smoothMap_ofMatrix_surjective`:
   matrices with left (right) inverses are injective (surjective) on smooth fields.
+* `ConstCoeffBGG.injSurjWith_predMap`: the condition `Data.InjSurjWith J` on smooth fields, with
+  explicit right inverses (`ConstCoeffBGG.predMap`).
 
 ## References
 
@@ -238,6 +243,26 @@ def smoothData : BGG.Data 𝕜 (ComplexShape.up ℤ) (fun k => smoothFields E �
 @[simp] theorem smoothData_S (k : ℤ) : B.smoothData.S k (k + 1) = (B.S k).smoothMap :=
   BGG.Data.succMap_succ (X := fun k => smoothFields E 𝕜 (B.bot.ι k))
     (Y := fun k => smoothFields E 𝕜 (B.top.ι k)) (fun k => (B.S k).smoothMap) k
+
+/-- Maps `T k : Vᵏ⁺¹ → Ṽᵏ` of smooth fields as the family `t i j : Vʲ → Ṽⁱ` of
+`BGG.Data.InjSurjWith`: `T i` transported along `i + 1 = j`, and `0` otherwise. -/
+def predMap (T : ∀ k, smoothFields E 𝕜 (B.top.ι (k + 1)) →ₗ[𝕜] smoothFields E 𝕜 (B.bot.ι k))
+    (i j : ℤ) : smoothFields E 𝕜 (B.top.ι j) →ₗ[𝕜] smoothFields E 𝕜 (B.bot.ι i) :=
+  if h : i + 1 = j then h ▸ T i else 0
+
+/-- **The injectivity/surjectivity condition with explicit right inverses on smooth fields**: if
+`Sᵏ` is injective on smooth fields for `k ≤ J` and `T k` is a right inverse of `Sᵏ` for `k ≥ J`,
+the smooth BGG data satisfy `BGG.Data.InjSurjWith J` with the right inverses `T`. -/
+theorem injSurjWith_predMap {J : ℤ}
+    {T : ∀ k, smoothFields E 𝕜 (B.top.ι (k + 1)) →ₗ[𝕜] smoothFields E 𝕜 (B.bot.ι k)}
+    (hinj : ∀ k ≤ J, Function.Injective (B.S k).smoothMap)
+    (hT : ∀ k, J ≤ k → ∀ v, (B.S k).smoothMap (T k v) = v) :
+    B.smoothData.InjSurjWith J (B.predMap T) where
+  injective k hk := by rw [smoothData_S]; exact hinj k hk
+  S_t i j hij hi v := by
+    subst hij
+    simp only [predMap, dite_true, smoothData_S]
+    exact hT i hi v
 
 end ConstCoeffBGG
 

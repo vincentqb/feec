@@ -167,7 +167,20 @@ status:
     altShift_quasiIso_bggSumMap, altShift_bgg_represents, and for the orthogonal form
     Feec.BGG.BoundedData.planeAltShift_quasiIso_orthSumMap, with nonzero output spaces
     R(S^(-1))^perp and N(S^1), S^(-1) not onto and S^1 not one-to-one;
-    the Hessian diagram on smooth fields, Feec.Domain.injSurj_hessianBGG). The challenge itself
+    the Hessian diagram on smooth fields, Feec.Domain.injSurj_hessianBGG); and, proved in Feec but
+    not compared (the challenge has no differential operators), the explicit map (30) on the
+    smooth Hessian, elasticity and div-div complexes of R^3 with no hypothesis: right inverses
+    from right-inverse matrices (Feec.Domain.injSurjWith_hessianBGG, injSurjWith_elasticityBGG,
+    injSurjWith_divDivBGG), the Koszul null-homotopies S = dK - Kd~ with K multiplication by
+    k(x) = sum_l c_l x_l (Feec.Domain.koszul_isNullHomotopy), Theorem 7
+    (Feec.Domain.quasiIso_hessianSumMap, quasiIso_elasticitySumMap, quasiIso_divDivSumMap) and
+    Corollary 1 in degree 0, where the image of the constant pairs under (30) represents the
+    cohomology (Feec.Domain.smoothBGGVerdict); that image is [c + K^0 c~], informally the affine
+    functions, the infinitesimal rigid motions and the lowest-order Raviart-Thomas fields (the
+    identification is not formalized). Between the L^2 domain complexes S^J is not onto (not
+    formalized), so the explicit-map fields of Feec.BGG.HilbertData.BGGVerdict, including
+    quasiIso_orthSumMap (its surjectivity hypothesis fails at J), are vacuous for these three
+    complexes on L^2 domains. The challenge itself
     proves that S = 𝟙 : V[1] -> V[1] satisfies the hypotheses at every J (FEEC.BGG.hypotheses_id).
   sorry_count: 0
   sorry_in_definitions: 0

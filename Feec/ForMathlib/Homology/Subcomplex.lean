@@ -42,6 +42,8 @@ BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact
   (`…finrank_homology₂_eq_iff`).
 * `HomologicalComplex.Represents.map`: a quasi-isomorphism carries cohomology representatives to
   cohomology representatives ([ArnoldHu2021], Corollary 1).
+* `HomologicalComplex.represents_ker_of_subsingleton`: after a zero space the cohomology is
+  represented by the cycles.
 
 ## References
 
@@ -303,6 +305,17 @@ and `H`, `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`. -/
 structure Represents (i : ι) (H : Submodule R (K.X i)) : Prop where
   sup_eq : LinearMap.range (K.d (c.prev i) i).hom ⊔ H = LinearMap.ker (K.d i (c.next i)).hom
   disjoint : Disjoint (LinearMap.range (K.d (c.prev i) i).hom) H
+
+/-- **After a zero space the cohomology is represented by the cycles**: if `Kⁱ⁻¹ = 0`, then `N(dⁱ)`
+represents the cohomology of `K` at `i`. -/
+theorem represents_ker_of_subsingleton {i : ι} (h : Subsingleton (K.X (c.prev i))) :
+    K.Represents i (LinearMap.ker (K.d i (c.next i)).hom) := by
+  have hr : LinearMap.range (K.d (c.prev i) i).hom = ⊥ := by
+    refine eq_bot_iff.2 ?_
+    rintro _ ⟨y, rfl⟩
+    rw [Subsingleton.elim y 0, map_zero]
+    exact Submodule.zero_mem _
+  exact ⟨by rw [hr, bot_sup_eq], by rw [hr]; exact disjoint_bot_left⟩
 
 theorem d_f_eq_zero (f : K ⟶ L) {i j : ι} {x : K.X i} (hx : K.d i j x = 0) :
     L.d i j (f.f i x) = 0 := by

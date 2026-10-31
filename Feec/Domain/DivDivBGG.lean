@@ -9,7 +9,8 @@ public import Feec.Domain.ElasticityBGG
 The de Rham complex of `ℝ³` with values in `𝕜³` (`deRhamVec 3`) stacked over the scalar de Rham
 complex (`deRhamVec 1`), linked by `S⁰ ψ = ψ I`, `S¹ = -mskw` and `S² = I`, is BGG data of
 constant-coefficient operators (`divDivBGG`): `S⁰` and `S¹` are one-to-one and `S²` is bijective,
-so the injectivity/surjectivity condition holds at `J = 2` (**`injSurj_divDivBGG`**). Its BGG
+so the injectivity/surjectivity condition holds at `J = 2` with the explicit right inverse `divDivT`
+(**`injSurjWith_divDivBGG`**, `injSurj_divDivBGG`). Its BGG
 complex `bgg 2` eliminates `V³` against `S²` and `Ṽ⁰, Ṽ¹` against `S⁰, S¹`, and **is the div-div
 complex** `𝕜³ --dev grad--> T --sym curl--> Sym --div div--> 𝕜` of `Feec.Domain.DivDivComplex` on
 smooth fields (**`divDivBGGIso`**): in degree `1` the quotient `V¹ / R(S⁰) = 𝕜^{3×3} / 𝕜 I ≅ T`,
@@ -25,7 +26,7 @@ twisted de Rham complex (`divDivSmoothComplexHomologyIso`).
 
 ## Main results
 
-* **`injSurj_divDivBGG`**, `divDivBGGHomologyIso`.
+* **`injSurjWith_divDivBGG`**, `injSurj_divDivBGG`, `divDivBGGHomologyIso`.
 * **`divDivBGGIso`**, `divDivSmoothComplexHomologyIso`.
 
 ## References
@@ -162,30 +163,45 @@ theorem ddN2_mul_ddS2 : ddN2 * ddS2 = (1 : Matrix (Fin 1 × Fin 3) (Fin 1 × Fin
   fin_cases a; fin_cases b
   fin_cases l <;> fin_cases l' <;> simp [Matrix.mul_apply, ddS2, ddN2]
 
-/-- **The div-div diagram satisfies the injectivity/surjectivity condition at `J = 2`**:
-`ψ ↦ ψ I` and `-mskw` are one-to-one, `I` is onto. [ArnoldHu2021], (23), §4.1 -/
-theorem injSurj_divDivBGG : (divDivBGG 𝕜).smoothData.InjSurj 2 := by
-  refine ⟨fun i hi => ?_, fun i hi => ?_⟩
-  · rw [ConstCoeffBGG.smoothData_S]
-    by_cases h0 : i = 0
-    · subst h0
-      have h := smoothMap_ofMatrix_injective (E := Fin 3 → ℝ) (ddN0_mul_ddS0 (𝕜 := 𝕜))
-      exact h
-    by_cases h1 : i = 1
-    · subst h1
-      have h := smoothMap_ofMatrix_injective (E := Fin 3 → ℝ) (ddN1_mul_ddS1 (𝕜 := 𝕜))
-      exact h
-    have := isEmpty_vecIdx 1 (k := i) (Or.inl (by omega))
-    have hs := subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜) (ι := vecIdx 1 i)
-    exact fun a b _ => hs.elim a b
-  · rw [ConstCoeffBGG.smoothData_S]
-    by_cases h2 : i = 2
-    · subst h2
-      have h := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (ddS2_mul_ddN2 (𝕜 := 𝕜))
-      exact h
-    have := isEmpty_vecIdx 3 (k := i + 1) (Or.inr (by omega))
-    have hs := subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜) (ι := vecIdx 3 (i + 1))
-    exact fun y => ⟨0, hs.elim _ _⟩
+variable (𝕜) in
+/-- The right inverse `ddN2` of `I` on smooth fields (`0` elsewhere). -/
+def divDivT : ∀ k : ℤ, smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 (k + 1)) →ₗ[𝕜]
+    smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 1 k)
+  | .ofNat 2 => (ofMatrix ddN2).smoothMap
+  | _ => 0
+
+/-- **The div-div diagram satisfies the injectivity/surjectivity condition at `J = 2` with the
+right inverses `divDivT`**: `ψ ↦ ψ I`, `-mskw` and `I` are one-to-one, `I` is onto.
+[ArnoldHu2021], (23), §4.1 -/
+theorem injSurjWith_divDivBGG :
+    (divDivBGG 𝕜).smoothData.InjSurjWith 2 ((divDivBGG 𝕜).predMap (divDivT 𝕜)) := by
+  refine ConstCoeffBGG.injSurjWith_predMap _ (fun k hk => ?_) fun k hk v => ?_
+  · match k, hk with
+    | .ofNat 0, _ => exact smoothMap_ofMatrix_injective (ddN0_mul_ddS0 (𝕜 := 𝕜))
+    | .ofNat 1, _ => exact smoothMap_ofMatrix_injective (ddN1_mul_ddS1 (𝕜 := 𝕜))
+    | .ofNat 2, _ => exact smoothMap_ofMatrix_injective (ddN2_mul_ddS2 (𝕜 := 𝕜))
+    | .ofNat (n + 3), hk => exact absurd hk (by simp only [Int.ofNat_eq_natCast]; omega)
+    | .negSucc n, _ =>
+      have := isEmpty_vecIdx 1 (k := .negSucc n) (Or.inl (Int.negSucc_lt_zero n))
+      exact fun a b _ => (subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜)).elim a b
+  · refine Subtype.ext ?_
+    match k, hk with
+    | .ofNat 2, _ =>
+      change (ofMatrix ddS2 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
+        ((ofMatrix ddN2).apply v.1) = v.1
+      rw [ofMatrix_apply_ofMatrix, ddS2_mul_ddN2, ofMatrix_one_apply]
+    | .ofNat (n + 3), _ =>
+      have := isEmpty_vecIdx 3 (k := .ofNat (n + 3) + 1)
+        (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega))
+      exact funext fun i => isEmptyElim i
+    | .ofNat 0, hk => exact absurd hk (by decide)
+    | .ofNat 1, hk => exact absurd hk (by decide)
+    | .negSucc n, hk => exact absurd hk (by simp only [not_le]; omega)
+
+/-- **The div-div diagram satisfies the injectivity/surjectivity condition at `J = 2`**
+(`injSurjWith_divDivBGG`). [ArnoldHu2021], (23), §4.1 -/
+theorem injSurj_divDivBGG : (divDivBGG 𝕜).smoothData.InjSurj 2 :=
+  injSurjWith_divDivBGG.injSurj
 
 /-- **The div-div BGG complex has the cohomology of the twisted de Rham complex.**
 [ArnoldHu2021], §5.2 -/
@@ -203,11 +219,8 @@ abbrev divDivSmoothComplex : CochainComplex (ModuleCat 𝕜) ℤ :=
   (divDivConstCoeffComplex 𝕜).smoothComplex (divDivMat 𝕜) divDivOp_matMapsTo
 
 theorem bijective_divDivBGG_S_two :
-    Function.Bijective ((divDivBGG 𝕜).smoothData.S 2 (2 + 1)) := by
-  rw [ConstCoeffBGG.smoothData_S]
-  have h1 := smoothMap_ofMatrix_injective (E := Fin 3 → ℝ) (ddN2_mul_ddS2 (𝕜 := 𝕜))
-  have h2 := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (ddS2_mul_ddN2 (𝕜 := 𝕜))
-  exact ⟨h1, h2⟩
+    Function.Bijective ((divDivBGG 𝕜).smoothData.S 2 (2 + 1)) :=
+  injSurjWith_divDivBGG.bijective
 
 theorem range_divDivBGG_S_neg_one :
     LinearMap.range ((divDivBGG 𝕜).smoothData.S (0 - 1) 0) = ⊥ := by

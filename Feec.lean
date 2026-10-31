@@ -38,6 +38,7 @@ public import Feec.Counterexamples.Sharpness
 public import Feec.Domain.Affine
 public import Feec.Domain.BGG
 public import Feec.Domain.BGGFEEC
+public import Feec.Domain.BGGKoszul
 public import Feec.Domain.BGGRealization
 public import Feec.Domain.Complexes
 public import Feec.Domain.ConstCoeffOp

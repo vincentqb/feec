@@ -73,6 +73,7 @@ public import Feec.Evolution.Solution
 public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
 public import Feec.Examples.NonVacuity
+public import Feec.FiniteElement.AffineInvariantForm
 public import Feec.FiniteElement.Assembly
 public import Feec.FiniteElement.BrambleHilbert
 public import Feec.FiniteElement.BrambleHilbertL2
@@ -84,6 +85,7 @@ public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.InterpolationError
 public import Feec.FiniteElement.InverseEstimate
+public import Feec.FiniteElement.InvariantForm
 public import Feec.FiniteElement.LocalDof
 public import Feec.FiniteElement.LocalSpace
 public import Feec.FiniteElement.MeshDivergence

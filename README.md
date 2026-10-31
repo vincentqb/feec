@@ -288,7 +288,7 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   mapping `x - τAx` to `x + τAx`; from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
   `Feec.TimeStepping.RationalScheme.ofBounded` and `Feec.TimeStepping.norm_cayley_le`.
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
-  FEEC.bggSum and FEEC.bggClosedRange, about 470 lines): the BGG construction of [ArnoldHu2021],
+  FEEC.bggSum and FEEC.bggClosedRange, about 500 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram
   `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and onto modulo `d` for `i ≥ J`, the inclusion
   `Γ → T` into the twisted complex and the projection `Γ → Γ / Δ` onto the BGG complex are

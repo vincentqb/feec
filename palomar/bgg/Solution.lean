@@ -65,18 +65,20 @@ theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} 
 
 /-- **Cohomology through the sum complex** ([ArnoldHu2021], Theorem 7 and Proposition 1). If
 `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` for maps `Kⁱ : Ṽⁱ → Vⁱ` ((28)), then `S` induces the zero maps on cohomology
-((27)), the cochain map `(ω, μ) ↦ (ω + Kμ, μ)` from the sum complex `V ⊕ Ṽ` to the twisted complex
-is an isomorphism, and, under the hypotheses of `FEEC.bggCohomology`, the BGG complex has the
-cohomology of the sum complex, `Hⁱ(V) ⊕ Hⁱ(Ṽ)`. -/
+((27), Proposition 1) and the cochain map `(ω, μ) ↦ (ω + Kμ, μ)` from the sum complex (the
+twisted complex of `S = 0`: `Vⁱ × Ṽⁱ` with differential `d × d̃`) to the twisted complex is an
+isomorphism; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has the
+cohomology of the sum complex (Theorem 7). -/
 theorem bggSum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
-    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
-    (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i →
-      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
+    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
     (∀ i, BGG.InducesZero S i) ∧ IsIso (BGG.sumToTwisted S K hK) ∧
-      ∀ i, Nonempty ((BGG.bgg S J).homology i ≅ (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) :=
-  BGG.sum S K hK J hinj hsurj
+      ∀ J, (∀ i < J, Function.Injective (S.f i)) →
+        (∀ i, J ≤ i →
+          LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) →
+        ∀ i, Nonempty ((BGG.bgg S J).homology i ≅
+          (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) :=
+  BGG.sum S K hK
 
 /-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed
 ranges** ([ArnoldHu2021], Theorem 6 and the remark after it). Let `d`, `d̃` be complexes of

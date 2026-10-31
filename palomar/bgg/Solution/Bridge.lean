@@ -271,12 +271,12 @@ end Identification
 
 theorem sum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
-    (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
-    (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i →
-      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (conn S i (i + 1)) = ⊤) :
+    (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
     (∀ i, InducesZero S i) ∧ IsIso (sumToTwisted S K hK) ∧
-      ∀ i, Nonempty ((bgg S J).homology i ≅ (twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
+      ∀ J, (∀ i < J, Function.Injective (S.f i)) →
+        (∀ i, J ≤ i →
+          LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (conn S i (i + 1)) = ⊤) →
+        ∀ i, Nonempty ((bgg S J).homology i ≅ (twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
   have hiso : IsIso (sumToTwisted S K hK) := by
     refine @HomologicalComplex.Hom.isIso_of_components _ _ _ _ _ _ _ _ fun i => ?_
     rw [ConcreteCategory.isIso_iff_bijective]
@@ -288,7 +288,7 @@ theorem sum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
       rw [h2, add_left_inj] at h1
       exact Prod.ext h1 h2
     · exact Prod.ext (sub_add_cancel x.1 (K i x.2)) rfl
-  refine ⟨fun i φ hφ => ⟨K i φ, by rw [hK, hφ, map_zero, sub_zero]⟩, hiso, fun i => ?_⟩
+  refine ⟨fun i φ hφ => ⟨K i φ, by rw [hK, hφ, map_zero, sub_zero]⟩, hiso, fun J hinj hsurj i => ?_⟩
   obtain ⟨e⟩ := (verdict hinj hsurj).homology i
   exact ⟨e ≪≫ ((HomologicalComplex.homologyFunctor _ _ i).mapIso (asIso (sumToTwisted S K hK))).symm⟩
 

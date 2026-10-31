@@ -12,10 +12,10 @@ public import Mathlib.Topology.MetricSpace.Antilipschitz
 /-!
 # The definitions of the challenge
 
-A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.bggCohomology` and `FEEC.bggFinrank`), compiled against Mathlib alone so that their
-elaborated values are those of the challenge. The solution imports this module, the bridge to
-`Feec` and proves both theorems (`Solution.lean`).
+A verbatim copy of the definitions of `Challenge.lean` (everything but the compared theorems of
+`comparator.json`), compiled against Mathlib alone so that their elaborated values are those of
+the challenge. The solution imports this module, the bridge to `Feec` and proves the compared
+theorems (`Solution.lean`).
 
 ## References
 
@@ -342,6 +342,19 @@ abbrev ofBounded (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) 
     CochainComplex (ModuleCat.{v} 𝕜) ℤ :=
   CochainComplex.of (fun i => ModuleCat.of 𝕜 (H i)) (fun i => ModuleCat.ofHom (d i))
     fun i => ModuleCat.hom_ext (LinearMap.ext (hd i))
+
+/-- **Non-vacuity** of `FEEC.bggClosedRange`: `H̃ⁱ = Hⁱ⁺¹`, `d̃ⁱ = -dⁱ⁺¹` and `sⁱ = id` form a
+complex and connecting maps with `d s = -s d̃`, bounded below and onto at every `J`. -/
+theorem hypotheses_bounded_id (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (J : ℤ) :
+    (∀ i x, (-d (i + 1 + 1)) ((-d (i + 1)) x) = 0) ∧
+    (∀ i x, d (i + 1) (ContinuousLinearMap.id 𝕜 (H (i + 1)) x) =
+      -ContinuousLinearMap.id 𝕜 (H (i + 1 + 1)) ((-d (i + 1)) x)) ∧
+    (∀ i < J, ∃ C, AntilipschitzWith C (ContinuousLinearMap.id 𝕜 (H (i + 1)))) ∧
+    ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
+      LinearMap.range (ContinuousLinearMap.id 𝕜 (H (i + 1)) : H (i + 1) →ₗ[𝕜] H (i + 1)) = ⊤ :=
+  ⟨fun _ _ => by simp [hd], fun _ _ => by simp, fun _ _ => ⟨1, AntilipschitzWith.id⟩,
+    fun _ _ => by simp⟩
 
 variable {Ht : ℤ → Type v} [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
   {d : ∀ i, H i →L[𝕜] H (i + 1)} {hd : ∀ i x, d (i + 1) (d i x) = 0}

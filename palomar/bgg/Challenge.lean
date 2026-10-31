@@ -44,15 +44,17 @@ and also `Sᴶ` injective):
   finite-dimensional cohomology, so does the BGG complex, `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`,
   with equality iff `Sⁱ⁻¹` and `Sⁱ` induce the zero maps on cohomology, `S N(d̃) ⊆ R(d)` ((27)).
 * `FEEC.bggSum` ([ArnoldHu2021], Theorem 7 and Proposition 1): if `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)),
-  `S` induces zero on cohomology, `(ω, μ) ↦ (ω + Kμ, μ)` is an isomorphism from the sum complex
-  `V ⊕ Ṽ` onto `T`, and the BGG complex has the cohomology of the sum complex.
+  `S` induces zero on cohomology and `(ω, μ) ↦ (ω + Kμ, μ)` is an isomorphism from the sum complex
+  `V × Ṽ` onto `T`; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has
+  the cohomology of the sum complex.
 * `FEEC.bggClosedRange` (bounded Hilbert complexes, `Sⁱ` bounded below for `i < J`;
   [ArnoldHu2021], Theorem 6 and the remark after it): `Γⁱ`, `Δⁱ` are closed, so `Γⁱ / Δⁱ` is a
   Hilbert space with bounded differentials, and the differentials have closed range where both
   rows have finite-dimensional cohomology.
 
-Complexes of any length are included (rows vanishing outside a window). `BGG.hypotheses_id`:
-`S = 𝟙 : V⟦1⟧ ⟶ V⟦1⟧` satisfies the hypotheses at every `J`.
+Complexes of any length are included (rows vanishing outside a window). Non-vacuity:
+`BGG.hypotheses_id` (`S = 𝟙 : V⟦1⟧ ⟶ V⟦1⟧`) and `BGG.hypotheses_bounded_id` (`sⁱ = id`,
+`d̃ⁱ = -dⁱ⁺¹`) satisfy the hypotheses at every `J`.
 
 ## References
 
@@ -388,6 +390,19 @@ abbrev ofBounded (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) 
   CochainComplex.of (fun i => ModuleCat.of 𝕜 (H i)) (fun i => ModuleCat.ofHom (d i))
     fun i => ModuleCat.hom_ext (LinearMap.ext (hd i))
 
+/-- **Non-vacuity** of `FEEC.bggClosedRange`: `H̃ⁱ = Hⁱ⁺¹`, `d̃ⁱ = -dⁱ⁺¹` and `sⁱ = id` form a
+complex and connecting maps with `d s = -s d̃`, bounded below and onto at every `J`. -/
+theorem hypotheses_bounded_id (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (J : ℤ) :
+    (∀ i x, (-d (i + 1 + 1)) ((-d (i + 1)) x) = 0) ∧
+    (∀ i x, d (i + 1) (ContinuousLinearMap.id 𝕜 (H (i + 1)) x) =
+      -ContinuousLinearMap.id 𝕜 (H (i + 1 + 1)) ((-d (i + 1)) x)) ∧
+    (∀ i < J, ∃ C, AntilipschitzWith C (ContinuousLinearMap.id 𝕜 (H (i + 1)))) ∧
+    ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
+      LinearMap.range (ContinuousLinearMap.id 𝕜 (H (i + 1)) : H (i + 1) →ₗ[𝕜] H (i + 1)) = ⊤ :=
+  ⟨fun _ _ => by simp [hd], fun _ _ => by simp, fun _ _ => ⟨1, AntilipschitzWith.id⟩,
+    fun _ _ => by simp⟩
+
 variable {Ht : ℤ → Type v} [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
   {d : ∀ i, H i →L[𝕜] H (i + 1)} {hd : ∀ i x, d (i + 1) (d i x) = 0}
   {dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)} {hdt : ∀ i x, dt (i + 1) (dt i x) = 0}
@@ -443,17 +458,19 @@ theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} 
 
 /-- **Cohomology through the sum complex** ([ArnoldHu2021], Theorem 7 and Proposition 1). If
 `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` for maps `Kⁱ : Ṽⁱ → Vⁱ` ((28)), then `S` induces the zero maps on cohomology
-((27)), the cochain map `(ω, μ) ↦ (ω + Kμ, μ)` from the sum complex `V ⊕ Ṽ` to the twisted complex
-is an isomorphism, and, under the hypotheses of `FEEC.bggCohomology`, the BGG complex has the
-cohomology of the sum complex, `Hⁱ(V) ⊕ Hⁱ(Ṽ)`. -/
+((27), Proposition 1) and the cochain map `(ω, μ) ↦ (ω + Kμ, μ)` from the sum complex (the
+twisted complex of `S = 0`: `Vⁱ × Ṽⁱ` with differential `d × d̃`) to the twisted complex is an
+isomorphism; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has the
+cohomology of the sum complex (Theorem 7). -/
 theorem bggSum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
-    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ))
-    (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i →
-      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
+    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
     (∀ i, BGG.InducesZero S i) ∧ IsIso (BGG.sumToTwisted S K hK) ∧
-      ∀ i, Nonempty ((BGG.bgg S J).homology i ≅ (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
+      ∀ J, (∀ i < J, Function.Injective (S.f i)) →
+        (∀ i, J ≤ i →
+          LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) →
+        ∀ i, Nonempty ((BGG.bgg S J).homology i ≅
+          (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
   sorry
 
 /-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed

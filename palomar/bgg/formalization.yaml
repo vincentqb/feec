@@ -24,9 +24,10 @@ project:
     differential d~ (S^J)^(-1) d at J. FEEC.bggFinrank, over a field, Theorem 6: where both rows
     have finite-dimensional cohomology, so does the BGG complex, dim H^i <= dim H^i(V) + dim H^i(V~),
     with equality iff S^(i-1) and S^i induce zero on cohomology (27). FEEC.bggSum, Theorem 7 and
-    Proposition 1: if S = dK - Kd~ (28), S induces zero on cohomology, (omega, mu) ->
-    (omega + K mu, mu) is an isomorphism from the sum complex onto T, and the BGG complex has the
-    cohomology of the sum complex. FEEC.bggClosedRange, for bounded Hilbert complexes with S^i
+    Proposition 1: if S = dK - Kd~ (28), S induces zero on cohomology and (omega, mu) ->
+    (omega + K mu, mu) is an isomorphism from the sum complex onto T, with no further hypothesis;
+    under the hypotheses of FEEC.bggCohomology at any J, the BGG complex has the cohomology of the
+    sum complex. FEEC.bggClosedRange, for bounded Hilbert complexes with S^i
     bounded below for i < J: Gamma^i and Delta^i are closed in V^i x V~^i, and the BGG
     differentials have closed range where both rows have finite-dimensional cohomology.
     The statement is self-contained over Mathlib (ModuleCat, CochainComplex, QuasiIso,
@@ -176,11 +177,16 @@ fidelity:
     built with the Moore-Penrose inverse of s, from the sum complex to the orthogonal output
     complex; the challenge states its content in its own model: the explicit cochain isomorphism
     (omega, mu) -> (omega + K mu, mu) of the sum complex (the twisted complex of S = 0) onto T,
-    followed by the zigzag of FEEC.bggCohomology, as an isomorphism of cohomology. (5) Of the five
+    followed by the zigzag of FEEC.bggCohomology, as an isomorphism of cohomology. The compared
+    conclusion asserts only that an isomorphism H^i(Gamma / Delta) = H^i(V x V~) exists; that it is
+    induced by these explicit cochain maps follows from IsIso of the cochain map and from
+    quasiIso_ι, quasiIso_π of FEEC.BGG.Verdict, and that the specific map (30) induces it is not
+    stated. H^i of the sum complex V x V~ is not further identified with H^i(V) (+) H^i(V~) as a
+    biproduct. (5) Of the five
     fields of FEEC.BGG.Verdict, only quasiIso_ι and quasiIso_π carry content: homology follows from
     them, shortExact holds for every S and J, and acyclic follows from shortExact and homology.
     Generality beyond the source (strengthenings, not gaps). (6) Arnold-Hu work with bounded
-    Hilbert complexes indexed 0..n, spaces Z^i = V^i (x) E^i and connecting maps id (x) s^i with s^i
+    Hilbert complexes indexed 0..n, spaces Z^i = V^i (x) E^i, Z~^i = V^(i+1) (x) E~^i ((20)) and connecting maps id (x) s^i with s^i
     between finite-dimensional spaces; the algebraic theorems hold over any ring, on Z (finite
     complexes vanish outside a window), for arbitrary S, and the Hilbert theorem for arbitrary
     bounded S. (7) The hypothesis is weaker than the J-injectivity/surjectivity condition (23),
@@ -193,7 +199,10 @@ fidelity:
     all-degree form. Theorem 6's dimension bound is stated where both rows have finite-dimensional
     cohomology; Arnold-Hu's inequality is vacuous otherwise.
     Scope. (9) Every claim of (24)-(28), Theorems 6 and 7 and Proposition 1 is stated, in the
-    encodings (1)-(4). Outside the submission: the applications of §4 (elasticity, Hessian and div div complexes; Feec proves the
+    encodings (1)-(4). Not stated: Corollary 1 ((31), explicit cohomology representatives
+    P_(R^perp)(H^i + K^i H~^i) in the orthogonal output complex), which needs the orthogonal model
+    of (1) and the Moore-Penrose inverse of (4) as Lean objects, and the explicit map (30) of
+    Theorem 7 (see (4)). Outside the submission: the applications of §4 (elasticity, Hessian and div div complexes; Feec proves the
     Hessian diagram, Feec.Domain.injSurj_hessianBGG, not compared) and the uniform representation of
     cohomology of §2 (Costabel-McIntosh) are not part of this submission.
     (10) The name BGG follows Arnold-Hu; the representation-theoretic BGG resolution
